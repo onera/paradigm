@@ -1594,11 +1594,11 @@ PDM_part_mesh_dump_ensight
      PDM_free(pface_vtx[i]);
     }
   }
- PDM_free(pface_vtx_idx );
- PDM_free(pface_vtx     );
- PDM_free(val_num_part  );
- PDM_free(val_bound_id  );
- PDM_free(val_bound_type);
+  PDM_free(pface_vtx_idx );
+  PDM_free(pface_vtx     );
+  PDM_free(val_num_part  );
+  PDM_free(val_bound_id  );
+  PDM_free(val_bound_type);
 
   if (vtx_vtx != NULL) {
     for (int i = 0; i < pmesh->n_part; i++) {

@@ -207,7 +207,7 @@ _bezier_matrix_quad
     }
   }
 
- PDM_free(a);
+  PDM_free(a);
 }
 
 
@@ -1327,7 +1327,7 @@ PDM_bezier_bounding_boxes
     }
   }
 
- PDM_free(bezier_coord);
+  PDM_free(bezier_coord);
   if (matrix != NULL) {
    PDM_free(matrix);
   }

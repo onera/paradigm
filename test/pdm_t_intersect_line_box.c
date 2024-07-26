@@ -230,7 +230,7 @@ main
   for (PDM_g_num_t i = 0; i < 6*distrib_box[i_rank]; i++) {
     rand();
   }
- PDM_free(distrib_box);
+  PDM_free(distrib_box);
 
   double *box_centers;
   PDM_malloc(box_centers,n_box * 3,double);
@@ -266,7 +266,7 @@ main
   PDM_g_num_t *box_ln_to_gn = PDM_gnum_get (gen_gnum, 0);
 
   PDM_gnum_free (gen_gnum);
- PDM_free(box_centers);
+  PDM_free(box_centers);
 
 
 
@@ -280,7 +280,7 @@ main
   for (PDM_g_num_t i = 0; i < 6*distrib_line[i_rank]; i++) {
     rand();
   }
- PDM_free(distrib_line);
+  PDM_free(distrib_line);
 
   double *line_centers;
   PDM_malloc(line_centers,n_line * 3,double);
@@ -316,7 +316,7 @@ main
   PDM_g_num_t *line_ln_to_gn = PDM_gnum_get (gen_gnum, 0);
 
   PDM_gnum_free (gen_gnum);
- PDM_free(line_centers);
+  PDM_free(line_centers);
 
 
 
@@ -424,7 +424,7 @@ main
   PDM_MPI_Allgatherv (box_extents, 6*n_box, PDM_MPI_DOUBLE,
                       all_box_extents, all_n_box, recv_shift, PDM_MPI_DOUBLE,
                       comm);
- PDM_free(recv_shift);
+  PDM_free(recv_shift);
 
   PDM_g_num_t ln_wrong = 0;
   double invdir[3];
@@ -464,9 +464,9 @@ main
       }
     }
   }
- PDM_free(all_n_box);
- PDM_free(all_box_ln_to_gn);
- PDM_free(all_box_extents);
+  PDM_free(all_n_box);
+  PDM_free(all_box_ln_to_gn);
+  PDM_free(all_box_extents);
 
 
   PDM_g_num_t gn_wrong;
@@ -480,16 +480,16 @@ main
   /*
    *  Free memory
    */
- PDM_free(intersecting_box_idx);
- PDM_free(intersecting_box_g_num);
+  PDM_free(intersecting_box_idx);
+  PDM_free(intersecting_box_g_num);
 
   PDM_dbbtree_free (dbbt);
   PDM_box_set_destroy (&box_set);
 
- PDM_free(box_extents);
- PDM_free(box_ln_to_gn);
- PDM_free(line_coords);
- PDM_free(line_ln_to_gn);
+  PDM_free(box_extents);
+  PDM_free(box_ln_to_gn);
+  PDM_free(line_coords);
+  PDM_free(line_ln_to_gn);
 
   PDM_MPI_Finalize();
 

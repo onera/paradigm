@@ -240,7 +240,7 @@ PDM_surf_part_t *part
     }
   }
 
- PDM_free(nHashTable);
+  PDM_free(nHashTable);
 
   /*
    * Compress edges
@@ -310,11 +310,11 @@ PDM_surf_part_t *part
     part->vtxEdge[part->vtxEdgeIdx[vtx1] + n_vtxEdge[vtx1]++] = i+1;
     part->vtxEdge[part->vtxEdgeIdx[vtx2] + n_vtxEdge[vtx2]++] = i+1;
   }
- PDM_free(n_vtxEdge);
+  PDM_free(n_vtxEdge);
 
- PDM_free(hashTable);
- PDM_free(hashTableIdx);
- PDM_free(listEdges);
+  PDM_free(hashTable);
+  PDM_free(hashTableIdx);
+  PDM_free(listEdges);
 
   /*
    * Re-allocation to real size
@@ -352,7 +352,7 @@ PDM_surf_part_t *part
     }
   }
 
- PDM_free(edgesToCompressEdges);
+  PDM_free(edgesToCompressEdges);
 
   /*
    * face -> edge connectivity
@@ -459,10 +459,10 @@ PDM_surf_part_t *part
     }
   }
 
- PDM_free(vtxEdge);
+  PDM_free(vtxEdge);
 
- PDM_free(edgeFaceUncompress);
- PDM_free(n_faceEdge);
+  PDM_free(edgeFaceUncompress);
+  PDM_free(n_faceEdge);
 
 }
 

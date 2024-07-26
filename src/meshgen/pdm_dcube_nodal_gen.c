@@ -681,7 +681,7 @@ _generate_corners
   for (int i = 0; i < dgroup_elt_idx[n_group]; i++) {
     dgroup_elt[i] = distrib_corner[i_rank] + i + 1;
   }
- PDM_free(distrib_corner);
+  PDM_free(distrib_corner);
 
   // PDM_log_trace_array_int(dgroup_elt_idx, n_group+1, "dgroup_elt_idx : ");
   // PDM_log_trace_connectivity_long(dgroup_elt_idx, dgroup_elt, n_group, "dgroup_elt : ");
@@ -1398,8 +1398,8 @@ _generate_pyramid_surf
                                         dquad_vtx,
                                         PDM_OWNERSHIP_KEEP);
 
- PDM_free(distrib_tria);
- PDM_free(distrib_quad);
+  PDM_free(distrib_tria);
+  PDM_free(distrib_quad);
 
 
   /* Groups */
@@ -1625,8 +1625,8 @@ _generate_prism_surf
                                         dquad_vtx,
                                         PDM_OWNERSHIP_KEEP);
 
- PDM_free(distrib_tria);
- PDM_free(distrib_quad);
+  PDM_free(distrib_tria);
+  PDM_free(distrib_quad);
 
   /* Groups */
   PDM_Mesh_nodal_elt_t t_elt_face[3] = {t_tria,
@@ -2050,7 +2050,7 @@ _gen_poly2d
       }
     }
   }
- PDM_free(distrib_bar);
+  PDM_free(distrib_bar);
 
   /*
    *  Corner
@@ -2168,7 +2168,7 @@ _gen_poly2d
                                   dcorner_elt_idx,
                                   dcorner_elt,
                                   PDM_OWNERSHIP_KEEP);
- PDM_free(distrib_point);
+  PDM_free(distrib_point);
 
   /* Ridge */
   PDM_g_num_t *distrib_ridge[2] = {NULL, NULL};
@@ -2193,8 +2193,8 @@ _gen_poly2d
       dridge_elt[dridge_elt_idx[i]+j] = ridge_idx[i] + distrib_ridge[i/2][i_rank] + j + 1;
     }
   }
- PDM_free(distrib_ridge[0]);
- PDM_free(distrib_ridge[1]);
+  PDM_free(distrib_ridge[0]);
+  PDM_free(distrib_ridge[1]);
 
   PDM_DMesh_nodal_elmts_group_set(dmesh_nodal->ridge,
                                   n_ridge,
@@ -2215,10 +2215,10 @@ _gen_poly2d
                              "poly2d_corner");
   }
 
- PDM_free(distrib_vtx);
- PDM_free(distrib_tria);
- PDM_free(distrib_quad);
- PDM_free(distrib_poly);
+  PDM_free(distrib_vtx);
+  PDM_free(distrib_tria);
+  PDM_free(distrib_quad);
+  PDM_free(distrib_poly);
 
   return dmesh_nodal;
 }
@@ -2347,7 +2347,7 @@ PDM_dcube_nodal_gen_free
     PDM_DMesh_nodal_free(dcube->dmesh_nodal);
   }
 
- PDM_free(dcube);
+  PDM_free(dcube);
 }
 
 
@@ -2551,7 +2551,7 @@ PDM_dcube_nodal_gen_build
       }
     }
   }
- PDM_free(distrib_vtx);
+  PDM_free(distrib_vtx);
 
 
   dcube->distrib_bar = PDM_compute_uniform_entity_distribution(dcube->comm, gn_bar);
@@ -2799,7 +2799,7 @@ PDM_dcube_nodal_cart_topo
       }
     }
   }
- PDM_free(distrib_i);
+  PDM_free(distrib_i);
 
   /* j-direction */
   PDM_g_num_t *distrib_j = PDM_compute_uniform_entity_distribution(comm,
@@ -2839,7 +2839,7 @@ PDM_dcube_nodal_cart_topo
       }
     }
   }
- PDM_free(distrib_j);
+  PDM_free(distrib_j);
 
   /* k-direction */
   PDM_g_num_t *distrib_k = PDM_compute_uniform_entity_distribution(comm,
@@ -2899,8 +2899,8 @@ PDM_dcube_nodal_cart_topo
     }
   }
 
- PDM_free(distrib_k);
- PDM_free(i_period);
+  PDM_free(distrib_k);
+  PDM_free(i_period);
 
 
   if(0 == 1) {
@@ -3093,7 +3093,7 @@ PDM_generate_cart_topo_lines
 
     i_interface++;
   }
- PDM_free(distrib_i);
+  PDM_free(distrib_i);
 
 
   for(int i_itrf = 0; i_itrf < n_interface; ++i_itrf) {
@@ -3106,7 +3106,7 @@ PDM_generate_cart_topo_lines
   }
 
 
- PDM_free(i_period);
+  PDM_free(i_period);
 
   if(0 == 1) {
     for(int i_itrf = 0; i_itrf < n_interface; ++i_itrf) {

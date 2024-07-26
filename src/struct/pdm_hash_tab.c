@@ -317,12 +317,12 @@ PDM_hash_tab_t *ht
   for (int i = 0; i<_ht->keyMax; i++) {
    PDM_free(_ht->data[i]);
   }
- PDM_free(_ht->data);
- PDM_free(_ht->nDataKey);
- PDM_free(_ht->mDataKey);
- PDM_free(_ht->key_info);
+  PDM_free(_ht->data);
+  PDM_free(_ht->nDataKey);
+  PDM_free(_ht->mDataKey);
+  PDM_free(_ht->key_info);
 
- PDM_free(_ht);
+  PDM_free(_ht);
 
   return NULL;
 }

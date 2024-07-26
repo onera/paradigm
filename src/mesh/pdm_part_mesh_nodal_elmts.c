@@ -174,7 +174,7 @@ _block_std_free
     _block_std->_parent_entity_g_num = NULL;
   }
 
- PDM_free(_block_std);
+  PDM_free(_block_std);
   return NULL;
 }
 
@@ -299,7 +299,7 @@ _block_poly2d_free
     _block_poly2d->_parent_num = NULL;
   }
 
- PDM_free(_block_poly2d);
+  PDM_free(_block_poly2d);
 
   return NULL;
 }
@@ -501,7 +501,7 @@ _block_poly3d_free
     _block_poly3d->_parent_entity_g_num = NULL;
   }
 
- PDM_free(_block_poly3d);
+  PDM_free(_block_poly3d);
   return NULL;
 }
 
@@ -2220,7 +2220,7 @@ PDM_part_mesh_nodal_elmts_free
     }
   }
 
- PDM_free(pmne);
+  PDM_free(pmne);
   pmne = NULL;
 }
 
@@ -3354,21 +3354,21 @@ PDM_part_mesh_nodal_elmts_create_from_part2d
   for (int i_part = 0; i_part < n_part; i_part++) {
    PDM_free(num_cell_parent_to_local[i_part]);
   }
- PDM_free(num_cell_parent_to_local);
+  PDM_free(num_cell_parent_to_local);
 
 
- PDM_free(prepa_blocks->n_cell);
- PDM_free(prepa_blocks->n_face);
- PDM_free(prepa_blocks->n_tria);
- PDM_free(prepa_blocks->n_quad);
- PDM_free(prepa_blocks->n_poly2d);
- PDM_free(prepa_blocks->l_connec_poly2d);
- PDM_free(prepa_blocks->face_vtx_idx);
- PDM_free(prepa_blocks->face_vtx);
- PDM_free(prepa_blocks->cell_face_idx);
- PDM_free(prepa_blocks->cell_face);
- PDM_free(prepa_blocks->numabs);
- PDM_free(prepa_blocks);
+  PDM_free(prepa_blocks->n_cell);
+  PDM_free(prepa_blocks->n_face);
+  PDM_free(prepa_blocks->n_tria);
+  PDM_free(prepa_blocks->n_quad);
+  PDM_free(prepa_blocks->n_poly2d);
+  PDM_free(prepa_blocks->l_connec_poly2d);
+  PDM_free(prepa_blocks->face_vtx_idx);
+  PDM_free(prepa_blocks->face_vtx);
+  PDM_free(prepa_blocks->cell_face_idx);
+  PDM_free(prepa_blocks->cell_face);
+  PDM_free(prepa_blocks->numabs);
+  PDM_free(prepa_blocks);
   prepa_blocks = NULL;
 
   return pmne;
@@ -6476,10 +6476,10 @@ PDM_part_mesh_nodal_elmts_extend_to_encompassing_comm
     //   (*pmne)->n_elmts[i] = 0;
     // }
   }
- PDM_free(i_null_rank);
- PDM_free(block_type);
- PDM_free(block_order);
- PDM_free(block_len_ho_ordering);
+  PDM_free(i_null_rank);
+  PDM_free(block_type);
+  PDM_free(block_order);
+  PDM_free(block_len_ho_ordering);
   if (char_buf != NULL) {
    PDM_free(char_buf);
   }

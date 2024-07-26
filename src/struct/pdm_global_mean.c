@@ -157,11 +157,11 @@ PDM_global_mean_free
     gmean->btp = PDM_block_to_part_free (gmean->btp);
   }
 
- PDM_free(gmean->g_nums);
- PDM_free(gmean->n_elts);
- PDM_free(gmean->local_field);
- PDM_free(gmean->local_weight);
- PDM_free(gmean->global_mean_field);
+  PDM_free(gmean->g_nums);
+  PDM_free(gmean->n_elts);
+  PDM_free(gmean->local_field);
+  PDM_free(gmean->local_weight);
+  PDM_free(gmean->global_mean_field);
 
   for (int i = 0; i < gmean->n_part; i++) {
     if (gmean->strides[i] != NULL) {
@@ -177,7 +177,7 @@ PDM_global_mean_free
    PDM_free(gmean->s_weight);
   }
 
- PDM_free(gmean);
+  PDM_free(gmean);
 
 }
 
@@ -310,7 +310,7 @@ PDM_global_mean_field_compute
     stride_idx[i+1] = stride_idx[i] + block_field_stride[i]/gmean->stride;
   }
 
- PDM_free(block_field_stride);
+  PDM_free(block_field_stride);
 
   for (int i = 0; i < n_elt_block; i++) {
     for (int j = stride_idx[i]; j < stride_idx[i+1]; j++) {
@@ -345,7 +345,7 @@ PDM_global_mean_field_compute
                                   NULL,
                         (void **) gmean->global_mean_field);
 
- PDM_free(block_field);
+  PDM_free(block_field);
   if (block_weight != NULL) {
    PDM_free(block_weight);
   }
@@ -365,7 +365,7 @@ PDM_global_mean_field_compute
     _stride_w = NULL;
   }
 
- PDM_free(stride_idx);
+  PDM_free(stride_idx);
 }
 
 /*----------------------------------------------------------------------------*/

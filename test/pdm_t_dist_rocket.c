@@ -204,7 +204,7 @@ _gen_cloud_random
     }
   }
 
- PDM_free(distrib);
+  PDM_free(distrib);
 }
 
 
@@ -310,7 +310,7 @@ _gen_cloud_grid
                                        dface_group_idx,
                                        dface_group);
 
- PDM_free(dcell_part);
+  PDM_free(dcell_part);
 
 
   PDM_malloc(*n_pts,n_part,int);
@@ -614,7 +614,7 @@ _gen_rocket
       ivtx++;
     }
   }
- PDM_free(distrib_vtx);
+  PDM_free(distrib_vtx);
 
 
   /*
@@ -747,7 +747,7 @@ _gen_rocket
       ifac += n_tri_k;
     }
   }
- PDM_free(distrib_edge);
+  PDM_free(distrib_edge);
 
 
   /* Edge groups */
@@ -762,7 +762,7 @@ _gen_rocket
   for (PDM_g_num_t i = distrib_edge_lim[i_rank]; i < distrib_edge_lim[i_rank+1]; i++) {
     _dedge_group[_dedge_group_idx[1]++] = 1 + i;
   }
- PDM_free(distrib_edge_lim);
+  PDM_free(distrib_edge_lim);
 
   /*
    *  Faces
@@ -882,7 +882,7 @@ _gen_rocket
       iedg += n_edge_k;
     }
   }
- PDM_free(distrib_face);
+  PDM_free(distrib_face);
 }
 
 
@@ -1716,9 +1716,9 @@ int main(int argc, char *argv[])
    PDM_free(tgt_coord[i_part]);
    PDM_free(tgt_g_num[i_part]);
   }
- PDM_free(n_tgt);
- PDM_free(tgt_coord);
- PDM_free(tgt_g_num);
+  PDM_free(n_tgt);
+  PDM_free(tgt_coord);
+  PDM_free(tgt_g_num);
 
   for (int i_part = 0; i_part < n_part_src; i_part++) {
    PDM_free(vtx_coord[i_part]);
@@ -1727,13 +1727,13 @@ int main(int argc, char *argv[])
    PDM_free(face_vtx[i_part]);
    PDM_free(face_g_num[i_part]);
   }
- PDM_free(n_vtx);
- PDM_free(vtx_coord);
- PDM_free(vtx_g_num);
- PDM_free(n_face);
- PDM_free(face_vtx_idx);
- PDM_free(face_vtx);
- PDM_free(face_g_num);
+  PDM_free(n_vtx);
+  PDM_free(vtx_coord);
+  PDM_free(vtx_g_num);
+  PDM_free(n_face);
+  PDM_free(face_vtx_idx);
+  PDM_free(face_vtx);
+  PDM_free(face_g_num);
 
 
   PDM_MPI_Finalize();

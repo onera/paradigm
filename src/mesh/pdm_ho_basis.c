@@ -450,7 +450,7 @@ _set_L2_basis_equi
     }
   }
 
- PDM_free(xi);
+  PDM_free(xi);
 }
 
 

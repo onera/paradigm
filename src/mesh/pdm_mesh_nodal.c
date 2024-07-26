@@ -336,7 +336,7 @@ _block_std_free
     _block_std->_parent_entity_g_num = NULL;
   }
 
- PDM_free(_block_std);
+  PDM_free(_block_std);
   return NULL;
 }
 
@@ -462,7 +462,7 @@ _block_poly2d_free
     _block_poly2d->_parent_num = NULL;
   }
 
- PDM_free(_block_poly2d);
+  PDM_free(_block_poly2d);
 
   return NULL;
 }
@@ -652,7 +652,7 @@ _block_poly3d_free
     _block_poly3d->_parent_num = NULL;
   }
 
- PDM_free(_block_poly3d);
+  PDM_free(_block_poly3d);
   return NULL;
 }
 
@@ -3863,7 +3863,7 @@ PDM_Mesh_nodal_cell_vtx_connectivity_get
     }
   }
 
- PDM_free(n_vtx_per_elt);
+  PDM_free(n_vtx_per_elt);
 
   *cellvtx_idx = mesh->cell_vtx_idx[id_part];
   *cellvtx     = mesh->cell_vtx[id_part];
@@ -6908,7 +6908,7 @@ PDM_Mesh_nodal_reorder_elt_vtx
   //   }
   // }
 
- PDM_free(tmp);
+  PDM_free(tmp);
 }
 
 

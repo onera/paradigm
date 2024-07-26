@@ -307,12 +307,12 @@ int main(int argc, char *argv[])
   /*
    *  Free memory
    */
- PDM_free(node_coord);
+  PDM_free(node_coord);
   for (int i = 0; i < 2; i++) {
    PDM_free(sub_node_coord[i]);
   }
- PDM_free(deriv_node_coord);
- PDM_free(elt_node);
+  PDM_free(deriv_node_coord);
+  PDM_free(elt_node);
 
   PDM_MPI_Finalize();
 

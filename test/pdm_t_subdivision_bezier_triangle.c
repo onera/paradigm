@@ -625,16 +625,16 @@ int main(int argc, char *argv[])
   /*
    *  Free memory
    */
- PDM_free(node_uv);
- PDM_free(node_xyz);
- PDM_free(tria_node);
+  PDM_free(node_uv);
+  PDM_free(node_xyz);
+  PDM_free(tria_node);
   for (int i = 0; i < 3; i++) {
    PDM_free(sub3_node_xyz[i]);
   }
   for (int i = 0; i < 4; i++) {
    PDM_free(sub_node_xyz[i]);
   }
- PDM_free(sub1_node_xyz);
+  PDM_free(sub1_node_xyz);
 
   PDM_MPI_Finalize();
 

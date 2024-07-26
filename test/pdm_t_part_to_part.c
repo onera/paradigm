@@ -363,7 +363,7 @@ int main(int argc, char *argv[])
   for (int i = 0; i < n_part1; i++) {
    PDM_free(part1_field[i]);
   }
- PDM_free(part1_field);
+  PDM_free(part1_field);
 
   PDM_part_to_part_reverse_iexch (ptp,
                                   PDM_MPI_COMM_KIND_P2P,
@@ -412,8 +412,8 @@ int main(int argc, char *argv[])
    PDM_free(part2_stride[i]);
    PDM_free(part2_data  [i]);
   }
- PDM_free(part2_stride);
- PDM_free(part2_data);
+  PDM_free(part2_stride);
+  PDM_free(part2_data);
 
 
   part2_stride = NULL;
@@ -465,7 +465,7 @@ int main(int argc, char *argv[])
 
    PDM_free(part2_data2[i]);
   }
- PDM_free(part2_data2);
+  PDM_free(part2_data2);
 
 
 
@@ -492,8 +492,8 @@ int main(int argc, char *argv[])
    PDM_free(part1_stride[i]);
    PDM_free(part1_data  [i]);
   }
- PDM_free(part1_stride);
- PDM_free(part1_data);
+  PDM_free(part1_stride);
+  PDM_free(part1_data);
 
   part1_stride = NULL;
   // log_trace("1\n");
@@ -557,7 +557,7 @@ int main(int argc, char *argv[])
 
    PDM_free(part1_data2[i]);
   }
- PDM_free(part1_data2);
+  PDM_free(part1_data2);
 
 
   /*
@@ -581,17 +581,17 @@ int main(int argc, char *argv[])
    PDM_free(part2_field[i]);
   }
 
- PDM_free(n_elt1);
- PDM_free(gnum_elt1);
- PDM_free(part1_to_part2_idx);
- PDM_free(part1_to_part2);
+  PDM_free(n_elt1);
+  PDM_free(gnum_elt1);
+  PDM_free(part1_to_part2_idx);
+  PDM_free(part1_to_part2);
 
- PDM_free(part1_stride);
- PDM_free(part1_data);
- PDM_free(part1_field);
- PDM_free(part2_stride);
- PDM_free(part2_data);
- PDM_free(part2_field);
+  PDM_free(part1_stride);
+  PDM_free(part1_data);
+  PDM_free(part1_field);
+  PDM_free(part2_stride);
+  PDM_free(part2_data);
+  PDM_free(part2_field);
 
   if (i_rank == 0) {
     printf("-- End\n");

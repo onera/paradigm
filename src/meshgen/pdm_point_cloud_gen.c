@@ -149,7 +149,7 @@ PDM_point_cloud_gen_random
     }
   }
 
- PDM_free(distrib_pts);
+  PDM_free(distrib_pts);
 }
 
 void
@@ -286,7 +286,7 @@ PDM_point_cloud_gen_cartesian
     _pts_coord[3 * i + 2] = z_min + indk * step_z;
   }
 
- PDM_free(distrib);
+  PDM_free(distrib);
 
 
   *pts_coord    = _pts_coord;

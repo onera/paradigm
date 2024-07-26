@@ -364,12 +364,12 @@ int main(int argc, char *argv[])
   }
 
 
- PDM_free(distrib_ridge  );
- PDM_free(dridge_vtx     );
- PDM_free(dgroup_edge_idx);
- PDM_free(dgroup_edge    );
- PDM_free(dridge_face_group_idx);
- PDM_free(dridge_face_group    );
+  PDM_free(distrib_ridge  );
+  PDM_free(dridge_vtx     );
+  PDM_free(dgroup_edge_idx);
+  PDM_free(dgroup_edge    );
+  PDM_free(dridge_face_group_idx);
+  PDM_free(dridge_face_group    );
 
 
   PDM_dmesh_nodal_to_dmesh_free(dmntodm);

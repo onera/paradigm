@@ -320,9 +320,9 @@ char *argv[]
   //               pts_inside_ball_dist2[j], ball_radius2[i]);
   //   }
   // }
- PDM_free(pts_inside_ball_idx);
- PDM_free(pts_inside_ball_l_num);
- PDM_free(pts_inside_ball_dist2);
+  PDM_free(pts_inside_ball_idx);
+  PDM_free(pts_inside_ball_l_num);
+  PDM_free(pts_inside_ball_dist2);
 
 
 
@@ -415,14 +415,14 @@ char *argv[]
   /* Free */
   PDM_kdtree_seq_free(kdt);
   PDM_octree_seq_free(oct);
- PDM_free(src_coord);
- PDM_free(src_g_num);
- PDM_free(tgt_coord);
- PDM_free(tgt_g_num);
- PDM_free(ball_radius2);
- PDM_free(pts_inside_ball_idx);
- PDM_free(pts_inside_ball_l_num);
- PDM_free(pts_inside_ball_dist2);
+  PDM_free(src_coord);
+  PDM_free(src_g_num);
+  PDM_free(tgt_coord);
+  PDM_free(tgt_g_num);
+  PDM_free(ball_radius2);
+  PDM_free(pts_inside_ball_idx);
+  PDM_free(pts_inside_ball_l_num);
+  PDM_free(pts_inside_ball_dist2);
 
   if (i_rank == 0) {
     PDM_printf ("-- End\n");

@@ -153,7 +153,7 @@ _unique_quadruplet
   *unique_neighbor_entity_idx = _unique_neighbor_entity_idx;
   *unique_neighbor_entity_n   = _unique_neighbor_entity_n;
   *unique_neighbor_entity     = _unique_neighbor_entity;
- PDM_free(order);
+  PDM_free(order);
 }
 
 static
@@ -475,8 +475,8 @@ _exchange_and_sort_neighbor
 
   }
 
- PDM_free(concat_neighbor_opp_idx);
- PDM_free(concat_neighbor_opp    );
+  PDM_free(concat_neighbor_opp_idx);
+  PDM_free(concat_neighbor_opp    );
 
   *all_neighbor_idx  = filter_neighbor_idx;
   *all_neighbor_desc = filter_neighbor_desc;
@@ -947,31 +947,31 @@ PDM_part_domain_interface_free
    PDM_free(dom_intrf->interface_dom_face     [i_domain]);
 
   }
- PDM_free(dom_intrf->n_part);
+  PDM_free(dom_intrf->n_part);
 
- PDM_free(dom_intrf->interface_pn_vtx       );
- PDM_free(dom_intrf->interface_vtx_ln_to_gn );
- PDM_free(dom_intrf->interface_sgn_vtx      );
- PDM_free(dom_intrf->interface_sens_vtx     );
- PDM_free(dom_intrf->interface_ids_vtx      );
- PDM_free(dom_intrf->interface_ids_vtx_idx  );
- PDM_free(dom_intrf->interface_dom_vtx      );
+  PDM_free(dom_intrf->interface_pn_vtx       );
+  PDM_free(dom_intrf->interface_vtx_ln_to_gn );
+  PDM_free(dom_intrf->interface_sgn_vtx      );
+  PDM_free(dom_intrf->interface_sens_vtx     );
+  PDM_free(dom_intrf->interface_ids_vtx      );
+  PDM_free(dom_intrf->interface_ids_vtx_idx  );
+  PDM_free(dom_intrf->interface_dom_vtx      );
 
- PDM_free(dom_intrf->interface_pn_edge       );
- PDM_free(dom_intrf->interface_edge_ln_to_gn );
- PDM_free(dom_intrf->interface_sgn_edge      );
- PDM_free(dom_intrf->interface_sens_edge     );
- PDM_free(dom_intrf->interface_ids_edge      );
- PDM_free(dom_intrf->interface_ids_edge_idx  );
- PDM_free(dom_intrf->interface_dom_edge      );
+  PDM_free(dom_intrf->interface_pn_edge       );
+  PDM_free(dom_intrf->interface_edge_ln_to_gn );
+  PDM_free(dom_intrf->interface_sgn_edge      );
+  PDM_free(dom_intrf->interface_sens_edge     );
+  PDM_free(dom_intrf->interface_ids_edge      );
+  PDM_free(dom_intrf->interface_ids_edge_idx  );
+  PDM_free(dom_intrf->interface_dom_edge      );
 
- PDM_free(dom_intrf->interface_pn_face      );
- PDM_free(dom_intrf->interface_face_ln_to_gn);
- PDM_free(dom_intrf->interface_sgn_face     );
- PDM_free(dom_intrf->interface_sens_face    );
- PDM_free(dom_intrf->interface_ids_face     );
- PDM_free(dom_intrf->interface_ids_face_idx );
- PDM_free(dom_intrf->interface_dom_face     );
+  PDM_free(dom_intrf->interface_pn_face      );
+  PDM_free(dom_intrf->interface_face_ln_to_gn);
+  PDM_free(dom_intrf->interface_sgn_face     );
+  PDM_free(dom_intrf->interface_sens_face    );
+  PDM_free(dom_intrf->interface_ids_face     );
+  PDM_free(dom_intrf->interface_ids_face_idx );
+  PDM_free(dom_intrf->interface_dom_face     );
 
   for(int i_interface = 0; i_interface < dom_intrf->n_interface; ++i_interface) {
     if(dom_intrf->translation_vect[i_interface]   != NULL) {
@@ -988,12 +988,12 @@ PDM_part_domain_interface_free
     }
   }
 
- PDM_free(dom_intrf->translation_vect  );
- PDM_free(dom_intrf->rotation_direction);
- PDM_free(dom_intrf->rotation_center   );
- PDM_free(dom_intrf->rotation_angle    );
+  PDM_free(dom_intrf->translation_vect  );
+  PDM_free(dom_intrf->rotation_direction);
+  PDM_free(dom_intrf->rotation_center   );
+  PDM_free(dom_intrf->rotation_angle    );
 
- PDM_free(dom_intrf);
+  PDM_free(dom_intrf);
 }
 
 
@@ -1545,7 +1545,7 @@ PDM_part_domain_interface_as_graph
   /*
    * Realloc
    */
- PDM_free(composed_id_tmp);
+  PDM_free(composed_id_tmp);
   PDM_realloc(composed_id_idx ,composed_id_idx , (i_composed_interface+1)              ,int        );
   PDM_realloc(composed_id     ,composed_id     , composed_id_idx[i_composed_interface] ,int        );
   PDM_realloc(composed_key    ,composed_key    , (i_composed_interface+1)              ,PDM_g_num_t);
@@ -1574,7 +1574,7 @@ PDM_part_domain_interface_as_graph
       PDM_log_trace_graph_nuplet_int(_neighbor_entity_idx, _neighbor_entity_desc, 4, n_elmt, "_neighbor_entity_desc :");
     }
   }
- PDM_free(composed_key_update_idx);
+  PDM_free(composed_key_update_idx);
 
   int n_rank = -1;
   PDM_MPI_Comm_size(dom_intrf->comm, &n_rank);
@@ -1586,7 +1586,7 @@ PDM_part_domain_interface_as_graph
     max_loc = PDM_MAX(max_loc, composed_id_gnum[i]);
     composed_id_n[i] = composed_id_idx[i+1] - composed_id_idx[i];
   }
- PDM_free(composed_id_idx);
+  PDM_free(composed_id_idx);
   PDM_g_num_t max_glob = -1;
   PDM_MPI_Allreduce(&max_loc, &max_glob, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, dom_intrf->comm);
 
@@ -1622,8 +1622,8 @@ PDM_part_domain_interface_as_graph
                          &_composed_id_n,
              (void **)   &_composed_id);
 
- PDM_free(composed_id);
- PDM_free(composed_id_n);
+  PDM_free(composed_id);
+  PDM_free(composed_id_n);
 
   int _n_g_interface = PDM_part_to_block_n_elt_block_get(ptb);
   PDM_g_num_t *ptb_composed_ln_to_gn_sorted = PDM_part_to_block_block_gnum_get(ptb);
@@ -1634,10 +1634,10 @@ PDM_part_domain_interface_as_graph
   }
 
 
- PDM_free(distrib_interf);
+  PDM_free(distrib_interf);
 
- PDM_free(composed_key);
- PDM_free(sgn_interf_to_interf);
+  PDM_free(composed_key);
+  PDM_free(sgn_interf_to_interf);
 
 
   /*
@@ -1663,7 +1663,7 @@ PDM_part_domain_interface_as_graph
       _composed_id_idx[i+1] = _composed_id_idx[i] + _composed_id_n[i];
     }
   }
- PDM_free(_composed_id_n);
+  PDM_free(_composed_id_n);
 
   PDM_part_to_block_free(ptb);
 
@@ -1689,16 +1689,16 @@ PDM_part_domain_interface_as_graph
    PDM_free(neighbor_opp_idx  [i_part]);
    PDM_free(neighbor_opp_desc [i_part]);
   }
- PDM_free(neighbor_n        );
- PDM_free(neighbor_idx      );
- PDM_free(neighbor_desc     );
- PDM_free(neighbor_interface);
- PDM_free(neighbor_opp_n    );
- PDM_free(neighbor_opp_idx  );
- PDM_free(neighbor_opp_desc );
+  PDM_free(neighbor_n        );
+  PDM_free(neighbor_idx      );
+  PDM_free(neighbor_desc     );
+  PDM_free(neighbor_interface);
+  PDM_free(neighbor_opp_n    );
+  PDM_free(neighbor_opp_idx  );
+  PDM_free(neighbor_opp_desc );
 
- PDM_free(n_entity_bound);
- PDM_free(n_tot_part_by_domain);
+  PDM_free(n_entity_bound);
+  PDM_free(n_tot_part_by_domain);
 
 
   *n_g_interface                = _n_g_interface;
@@ -2057,10 +2057,10 @@ PDM_part_domain_interface_view_by_part
    PDM_free(part1_to_part2_triplet  [i_part]);
    PDM_free(part1_to_part2_interface[i_part]);
   }
- PDM_free(part1_to_part2_gnum     );
- PDM_free(part1_to_part2_idx      );
- PDM_free(part1_to_part2_triplet  );
- PDM_free(part1_to_part2_interface);
+  PDM_free(part1_to_part2_gnum     );
+  PDM_free(part1_to_part2_idx      );
+  PDM_free(part1_to_part2_triplet  );
+  PDM_free(part1_to_part2_interface);
 
   PDM_part_to_part_free(ptp);
 
@@ -2115,9 +2115,9 @@ PDM_part_domain_interface_translate
                                      &composed_interface_idx,
                                      &composed_interface,
                                      &composed_ln_to_gn_sorted);
- PDM_free(composed_interface_idx);
- PDM_free(composed_interface);
- PDM_free(composed_ln_to_gn_sorted);
+  PDM_free(composed_interface_idx);
+  PDM_free(composed_interface);
+  PDM_free(composed_ln_to_gn_sorted);
 
   int n_part_loc_all_domain = 0;
   for(int i_dom = 0; i_dom < dom_intrf->n_domain; ++i_dom) {
@@ -2156,8 +2156,8 @@ PDM_part_domain_interface_translate
     }
     shift_part += n_part[i_dom];
   }
- PDM_free(pdi_neighbor_idx);
- PDM_free(pdi_neighbor);
+  PDM_free(pdi_neighbor_idx);
+  PDM_free(pdi_neighbor);
 
   /*
    * Prepare exchange by transform with local interface information - We change frame
@@ -2217,10 +2217,10 @@ PDM_part_domain_interface_translate
    PDM_free(neighbor_idx      [i_part]);
    PDM_free(neighbor_desc     [i_part]);
   }
- PDM_free(neighbor_interface);
- PDM_free(neighbor_idx      );
- PDM_free(neighbor_desc     );
- PDM_free(n_entity1);
+  PDM_free(neighbor_interface);
+  PDM_free(neighbor_idx      );
+  PDM_free(neighbor_desc     );
+  PDM_free(n_entity1);
 
 
 
@@ -2634,12 +2634,12 @@ PDM_part_domain_interface_to_domain_interface
                            dinterface_ids,
                            dinterface_dom);
 
- PDM_free(pn_interface);
- PDM_free(interface_ln_to_gn);
- PDM_free(interface_entity1_ln_to_gn);
- PDM_free(interface_sgn             );
- PDM_free(interface_sens            );
- PDM_free(interface_dom             );
+  PDM_free(pn_interface);
+  PDM_free(interface_ln_to_gn);
+  PDM_free(interface_entity1_ln_to_gn);
+  PDM_free(interface_sgn             );
+  PDM_free(interface_sens            );
+  PDM_free(interface_dom             );
 
   // log_trace("PDM_part_domain_interface_to_domain_interface end\n");
 
@@ -2839,7 +2839,7 @@ PDM_part_domain_interface_add
   for(int i_part = 0; i_part < n_part_loc_all_domain; ++i_part) {
    PDM_free(is_entity1_on_itrf[i_part]);
   }
- PDM_free(is_entity1_on_itrf);
+  PDM_free(is_entity1_on_itrf);
 
   /*
    * Translate in distributed
@@ -2916,15 +2916,15 @@ PDM_part_domain_interface_add
                                              pn_entity2,
                                              entity2_ln_to_gn,
                                              dom_intrf);
- PDM_free(dn_entity1);
- PDM_free(dn_entity2);
+  PDM_free(dn_entity1);
+  PDM_free(dn_entity2);
 
   for(int i_dom = 0; i_dom < dom_intrf->n_domain; ++i_dom) {
    PDM_free(dfilter_entity2_entity1_idx[i_dom]);
    PDM_free(dfilter_entity2_entity1    [i_dom]);
   }
- PDM_free(dfilter_entity2_entity1_idx);
- PDM_free(dfilter_entity2_entity1);
+  PDM_free(dfilter_entity2_entity1_idx);
+  PDM_free(dfilter_entity2_entity1);
 
 
   PDM_domain_interface_free(ditrf);
@@ -3136,7 +3136,7 @@ PDM_part_domain_interface_face2vtx
   for(int i_part = 0; i_part < n_part_loc_all_domain; ++i_part) {
    PDM_free(is_face_on_itrf[i_part]);
   }
- PDM_free(is_face_on_itrf);
+  PDM_free(is_face_on_itrf);
 
   PDM_domain_interface_translate_face2vtx(ditrf,
                                           dn_vtx,
@@ -3160,15 +3160,15 @@ PDM_part_domain_interface_face2vtx
                                              pvtx_ln_to_gn,
                                              dom_intrf);
   ditrf->is_result[PDM_BOUND_TYPE_VTX] = 1;
- PDM_free(dn_vtx);
- PDM_free(dn_face);
+  PDM_free(dn_vtx);
+  PDM_free(dn_face);
 
   for(int i_dom = 0; i_dom < dom_intrf->n_domain; ++i_dom) {
    PDM_free(dfilter_face_vtx_idx[i_dom]);
    PDM_free(dfilter_face_vtx    [i_dom]);
   }
- PDM_free(dfilter_face_vtx_idx);
- PDM_free(dfilter_face_vtx);
+  PDM_free(dfilter_face_vtx_idx);
+  PDM_free(dfilter_face_vtx);
 
 
   PDM_domain_interface_free(ditrf);
@@ -3181,12 +3181,12 @@ PDM_part_domain_interface_face2vtx
    PDM_free(interface_sens         [i_interface]);
    PDM_free(interface_dom          [i_interface]);
   }
- PDM_free(pn_interface);
- PDM_free(interface_ln_to_gn);
- PDM_free(interface_face_ln_to_gn);
- PDM_free(interface_sgn             );
- PDM_free(interface_sens            );
- PDM_free(interface_dom             );
+  PDM_free(pn_interface);
+  PDM_free(interface_ln_to_gn);
+  PDM_free(interface_face_ln_to_gn);
+  PDM_free(interface_sgn             );
+  PDM_free(interface_sens            );
+  PDM_free(interface_dom             );
 
 }
 

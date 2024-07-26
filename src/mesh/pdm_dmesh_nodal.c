@@ -1985,7 +1985,7 @@ PDM_dmesh_nodal_find_topological_ridge
                          NULL,
              (void ***) &dedge_face_group_tmp);
   int *dedge_face_group = dedge_face_group_tmp[0];
- PDM_free(dedge_face_group_tmp);
+  PDM_free(dedge_face_group_tmp);
   PDM_block_to_part_free(btp);
 
   // PDM_log_trace_array_int(dedge_face_group, dn_edge_twice, "dedge_face_group ::");
@@ -2210,18 +2210,18 @@ PDM_dmesh_nodal_find_topological_ridge
   //PDM_free(dgroup_edge);
   //PDM_free(dridge_vtx);
 
- PDM_free(distrib_ridge);
- PDM_free(dgroup_edge_n);
+  PDM_free(distrib_ridge);
+  PDM_free(dgroup_edge_n);
 
- PDM_free(edge_doublet);
- PDM_free(edge_group  );
- PDM_free(pridge_edge );
+  PDM_free(edge_doublet);
+  PDM_free(edge_group  );
+  PDM_free(pridge_edge );
 
   PDM_gnum_free(gen_gnum);
 
- PDM_free(pface_group);
- PDM_free(dface_group);
- PDM_free(dedge_face_group);
+  PDM_free(pface_group);
+  PDM_free(dface_group);
+  PDM_free(dedge_face_group);
 
   PDM_dmesh_nodal_to_dmesh_free(dmn_to_dm);
 

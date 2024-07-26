@@ -367,8 +367,8 @@ _cc_radix_sort_with_order
   }
   // printf("_cc_radix_sort_with_order end ::%d --> %d :: %d \n", end-beg, place_init, place_power);
 
- PDM_free(count_curr);
- PDM_free(count_next);
+  PDM_free(count_curr);
+  PDM_free(count_next);
 
 }
 
@@ -414,7 +414,7 @@ _std_radix_sort
     }
   }
 
- PDM_free(range);
+  PDM_free(range);
 
 }
 
@@ -469,7 +469,7 @@ _std_radix_sort_with_order
     }
   }
 
- PDM_free(range);
+  PDM_free(range);
 
 }
 
@@ -532,7 +532,7 @@ PDM_radix_sort_long
   }
 
 
- PDM_free(tmp);
+  PDM_free(tmp);
 
 }
 

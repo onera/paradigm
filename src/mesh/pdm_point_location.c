@@ -974,12 +974,12 @@ _locate_in_tetrahedron
     distance[id_pt] = distance_face[ipt];
   }
 
- PDM_free(pts_out);
- PDM_free(pts_out_coord);
- PDM_free(id_face);
- PDM_free(bar_coord_face);
- PDM_free(distance_face);
- PDM_free(closest_point_face);
+  PDM_free(pts_out);
+  PDM_free(pts_out_coord);
+  PDM_free(id_face);
+  PDM_free(bar_coord_face);
+  PDM_free(distance_face);
+  PDM_free(closest_point_face);
 }
 
 
@@ -1658,7 +1658,7 @@ _locate_in_cell_3d
     //PDM_free(inside_polygon);
   }
 
- PDM_free(pts_out);
+  PDM_free(pts_out);
 
 }
 

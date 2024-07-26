@@ -595,7 +595,7 @@ void PDM_io_array_write_end
 
   /* Libération mémoire de la structure  */
 
- PDM_free(PDM_io_tabs);
+  PDM_free(PDM_io_tabs);
   PDM_io_tabs = NULL;
 
   /* Libération mémoire des tableaux de concatenation  */
@@ -992,7 +992,7 @@ void PDM_io_array_read_end
 
   /* Libération mémoire de la structure  */
 
- PDM_free(PDM_io_tabs);
+  PDM_free(PDM_io_tabs);
   PDM_io_tabs = NULL;
 
   /* Libération mémoire des tableaux de concatenation  */

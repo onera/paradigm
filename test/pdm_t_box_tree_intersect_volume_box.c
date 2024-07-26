@@ -126,7 +126,7 @@ PDM_g_num_t **box_ln_to_gn
   for (PDM_g_num_t i = 0; i < 6*distrib_box[i_rank]; i++) {
     rand();
   }
- PDM_free(distrib_box);
+  PDM_free(distrib_box);
 
   double *box_centers;
   PDM_malloc(box_centers,n_box * 3,double);
@@ -162,7 +162,7 @@ PDM_g_num_t **box_ln_to_gn
   *box_ln_to_gn = PDM_gnum_get (gen_gnum, 0);
 
   PDM_gnum_free (gen_gnum);
- PDM_free(box_centers);
+  PDM_free(box_centers);
 
   return n_box;
 }
@@ -623,7 +623,7 @@ int main(int argc, char *argv[])
     }
   }
 
- PDM_free(vol_boxes);
+  PDM_free(vol_boxes);
 
   if (vtk) {
     PDM_box_tree_write_vtk("box_tree_normalized.vtk",
@@ -637,16 +637,16 @@ int main(int argc, char *argv[])
                            0);
   }
 
- PDM_free(volume_box_idx);
- PDM_free(volume_box_l_num);
- PDM_free(volume_plane_idx);
- PDM_free(origin);
- PDM_free(box_ln_to_gn);
- PDM_free(box_extents);
- PDM_free(n);
- PDM_free(pt_plane);
- PDM_free(edge);
- PDM_free(direction_pt);
+  PDM_free(volume_box_idx);
+  PDM_free(volume_box_l_num);
+  PDM_free(volume_plane_idx);
+  PDM_free(origin);
+  PDM_free(box_ln_to_gn);
+  PDM_free(box_extents);
+  PDM_free(n);
+  PDM_free(pt_plane);
+  PDM_free(edge);
+  PDM_free(direction_pt);
   PDM_box_set_destroy(&boxes);
   PDM_box_tree_destroy(&bt);
 

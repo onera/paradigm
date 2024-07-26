@@ -241,7 +241,7 @@ _build_edge_edge_connectivity
     }
   }
 
- PDM_free(vtx_edge);
+  PDM_free(vtx_edge);
 }
 
 
@@ -342,9 +342,9 @@ _build_face_face_connectivity
       }
     } // End of loop on current face's edges
   } // End of loop on faces
- PDM_free(key_edge_n);
- PDM_free(key_edge_idx);
- PDM_free(key_edge);
+  PDM_free(key_edge_n);
+  PDM_free(key_edge_idx);
+  PDM_free(key_edge);
 
   if (0) {
     int *idx = PDM_array_new_idx_from_const_stride_int(stride, n_face);
@@ -597,8 +597,8 @@ _projection_on_background_mesh_get2
     }
 
   } // End of while loop
- PDM_free(is_visited);
- PDM_free(stack);
+  PDM_free(is_visited);
+  PDM_free(stack);
 
   *closest_back_elt = closest_elt;
 
@@ -710,13 +710,13 @@ _bezier_to_lagrange
     }
 
   }
- PDM_free(ec);
- PDM_free(is_set);
- PDM_free(weight);
- PDM_free(uvw_node);
+  PDM_free(ec);
+  PDM_free(is_set);
+  PDM_free(weight);
+  PDM_free(uvw_node);
 
   memcpy(vtx_coord, lag, sizeof(double) * n_vtx * 3);
- PDM_free(lag);
+  PDM_free(lag);
 }
 
 /**
@@ -925,7 +925,7 @@ int main(int argc, char *argv[])
                                   field_name,
                                   field);
   }
- PDM_free(visiting_order);
+  PDM_free(visiting_order);
 
 
 
@@ -970,16 +970,16 @@ int main(int argc, char *argv[])
                                NULL,
                                NULL);
   }
- PDM_free(history_bar);
+  PDM_free(history_bar);
 
 
 
- PDM_free(vtx_coord);
- PDM_free(elt_vtx);
- PDM_free(elt_vtx_idx);
- PDM_free(elt_elt);
- PDM_free(history_elt);
- PDM_free(history_proj);
+  PDM_free(vtx_coord);
+  PDM_free(elt_vtx);
+  PDM_free(elt_vtx_idx);
+  PDM_free(elt_elt);
+  PDM_free(history_elt);
+  PDM_free(history_proj);
 
   PDM_MPI_Finalize();
 

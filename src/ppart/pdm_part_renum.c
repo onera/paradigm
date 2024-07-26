@@ -217,7 +217,7 @@ const int  n_face,
   PDM_part_renum_array_face_cell (n_face,
                                   old_to_new_order,
                                   face_cell);
- PDM_free(old_to_new_order);
+  PDM_free(old_to_new_order);
 
 }
 
@@ -249,7 +249,7 @@ int         *face_cell
     face_cell[i*2+1] = oldface_cell[new_to_old_order[i]*2+1];
   }
 
- PDM_free(oldface_cell);
+  PDM_free(oldface_cell);
 }
 
 
@@ -283,7 +283,7 @@ int       *array
     array[i] = sign * (old_to_new_order[old_idx-1] + 1);
   }
 
- PDM_free(old_array);
+  PDM_free(old_array);
 }
 
 /**
@@ -331,8 +331,8 @@ int         start
     entity1_entity1[i] = sign * (old_to_new_order[old_idx-start] + start);
   }
 
- PDM_free(old_array);
- PDM_free(old_to_new_order);
+  PDM_free(old_array);
+  PDM_free(old_to_new_order);
 }
 
 
@@ -371,7 +371,7 @@ int       *array
     }
   }
 
- PDM_free(old_array);
+  PDM_free(old_array);
 }
 
 /**
@@ -424,8 +424,8 @@ int       *connectivities
     }
   }
 
- PDM_free(old_connectivities);
- PDM_free(old_connectivity_idx);
+  PDM_free(old_connectivities);
+  PDM_free(old_connectivity_idx);
 
 }
 
@@ -736,9 +736,9 @@ _dual_graph_firstrank
 
   /* Free temporary arrays*/
 
- PDM_free(cell_cell_n);
- PDM_free(cell_cell);
- PDM_free(cell_cell_idx);
+  PDM_free(cell_cell_n);
+  PDM_free(cell_cell);
+  PDM_free(cell_cell_idx);
 
   //Remove duplicate cells of the dual graph
   //We use the following scheme:
@@ -1922,7 +1922,7 @@ int     *new_to_old_order
   }
 
   /* Free */
- PDM_free(old_to_new_order);
+  PDM_free(old_to_new_order);
 
 }
 
@@ -2002,7 +2002,7 @@ int     *new_to_old_order
                      part->edge_ln_to_gn); // OK
   }
 
- PDM_free(old_to_new_order);
+  PDM_free(old_to_new_order);
 }
 
 /**
@@ -2097,7 +2097,7 @@ int     *new_to_old_order
                    part->vtx_ln_to_gn); // OK
 
   /* Free */
- PDM_free(old_to_new_order);
+  PDM_free(old_to_new_order);
 
 }
 

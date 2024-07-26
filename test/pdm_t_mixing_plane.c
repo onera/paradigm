@@ -554,7 +554,7 @@ _get_polygon
                                     2,
                                     field_name,
                                     field_value);
- PDM_free(connec);
+  PDM_free(connec);
 }
 
 
@@ -926,8 +926,8 @@ _mixing_plane
   if (tri_state != NULL) {
     PDM_triangulate_state_destroy(tri_state);
   }
- PDM_free(tri_vtx);
- PDM_free(nodes);
+  PDM_free(tri_vtx);
+  PDM_free(nodes);
 
   if (visu) {
    PDM_free(dbg_coord);
@@ -1131,7 +1131,7 @@ char *argv[]
   PDM_malloc(global_band_area,n_band,double);
   PDM_MPI_Allreduce(local_band_area, global_band_area, n_band,
                     PDM_MPI_DOUBLE, PDM_MPI_SUM, comm);
- PDM_free(local_band_area);
+  PDM_free(local_band_area);
 
   for (int band_id = 0; band_id < n_band; band_id++) {
     double hi = PDM_MIN(levels[band_id+1], length);
@@ -1145,10 +1145,10 @@ char *argv[]
                 err, err/exact_area);
     }
   }
- PDM_free(global_band_area);
+  PDM_free(global_band_area);
 
   /* Free memory */
- PDM_free(levels);
+  PDM_free(levels);
   PDM_multipart_free(mpart);
 
   for (int ipart = 0; ipart < n_part; ipart++) {
@@ -1159,18 +1159,18 @@ char *argv[]
    PDM_free(vtx_field[ipart]);
    PDM_free(face_vtx [ipart]);
   }
- PDM_free(face_band_idx );
- PDM_free(face_band     );
- PDM_free(face_band_area);
+  PDM_free(face_band_idx );
+  PDM_free(face_band     );
+  PDM_free(face_band_area);
 
- PDM_free(n_vtx);
- PDM_free(vtx_coord);
- PDM_free(vtx_field);
- PDM_free(n_face);
- PDM_free(face_vtx_idx);
- PDM_free(face_vtx);
- PDM_free(vtx_ln_to_gn);
- PDM_free(face_ln_to_gn);
+  PDM_free(n_vtx);
+  PDM_free(vtx_coord);
+  PDM_free(vtx_field);
+  PDM_free(n_face);
+  PDM_free(face_vtx_idx);
+  PDM_free(face_vtx);
+  PDM_free(vtx_ln_to_gn);
+  PDM_free(face_ln_to_gn);
 
   PDM_MPI_Barrier(comm);
 

@@ -291,12 +291,12 @@ _point_cloud_from_mesh_vtx
   *n_pts_l = dNVtx;
   *coord   = dVtxCoord;
 
- PDM_free(dFaceVtxIdx);
- PDM_free(dFaceVtx);
- PDM_free(dEdgeVtx);
- PDM_free(dEdgeFace);
- PDM_free(dEdgeGroupIdx);
- PDM_free(dEdgeGroup);
+  PDM_free(dFaceVtxIdx);
+  PDM_free(dFaceVtx);
+  PDM_free(dEdgeVtx);
+  PDM_free(dEdgeFace);
+  PDM_free(dEdgeGroupIdx);
+  PDM_free(dEdgeGroup);
 }
 
 
@@ -1088,7 +1088,7 @@ int main(int argc, char *argv[])
     pts_gnum[i] = distrib[i_rank] + i + 1;
   }
 
- PDM_free(distrib);
+  PDM_free(distrib);
   #endif
   }
 
@@ -1449,8 +1449,8 @@ int main(int argc, char *argv[])
     }
   }
 
- PDM_free(recv_field[0]);
- PDM_free(recv_field);
+  PDM_free(recv_field[0]);
+  PDM_free(recv_field);
 
 
   double gmax_err;
@@ -1484,36 +1484,36 @@ int main(int argc, char *argv[])
    PDM_free(src_field[ipart]);
    PDM_free(send_field[ipart]);
   }
- PDM_free(faceVtxIdx);
- PDM_free(faceVtx);
- PDM_free(nFace);
- PDM_free(faceEdgeIdx);
- PDM_free(faceEdge);
- PDM_free(faceLNToGN);
- PDM_free(nEdge);
- PDM_free(edgeVtxIdx);
- PDM_free(edgeVtx);
- PDM_free(nVtx);
- PDM_free(vtxCoord);
- PDM_free(vtxLNToGN);
+  PDM_free(faceVtxIdx);
+  PDM_free(faceVtx);
+  PDM_free(nFace);
+  PDM_free(faceEdgeIdx);
+  PDM_free(faceEdge);
+  PDM_free(faceLNToGN);
+  PDM_free(nEdge);
+  PDM_free(edgeVtxIdx);
+  PDM_free(edgeVtx);
+  PDM_free(nVtx);
+  PDM_free(vtxCoord);
+  PDM_free(vtxLNToGN);
 
- PDM_free(src_field);
- PDM_free(send_field);
+  PDM_free(src_field);
+  PDM_free(send_field);
   /*PDM_part_free (ppart_id);
 
 
- PDM_free(dvtx_coord);
- PDM_free(dface_vtx_idx);
- PDM_free(dface_vtx);
- PDM_free(dFaceEdge);
- PDM_free(dEdgeVtx);
- PDM_free(dEdgeFace);
- PDM_free(dEdgeGroupIdx);
- PDM_free(dEdgeGroup);
- PDM_free(dEdgeVtxIdx);*/
+  PDM_free(dvtx_coord);
+  PDM_free(dface_vtx_idx);
+  PDM_free(dface_vtx);
+  PDM_free(dFaceEdge);
+  PDM_free(dEdgeVtx);
+  PDM_free(dEdgeFace);
+  PDM_free(dEdgeGroupIdx);
+  PDM_free(dEdgeGroup);
+  PDM_free(dEdgeVtxIdx);*/
 
- PDM_free(pts_coords);
- PDM_free(pts_gnum);
+  PDM_free(pts_coords);
+  PDM_free(pts_gnum);
 
   PDM_MPI_Finalize();
 

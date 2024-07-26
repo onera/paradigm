@@ -191,7 +191,7 @@ PDM_multipart_t      **_mpart
   /* Run */
   PDM_multipart_compute (mpart);
 
- PDM_free(n_part_domains);
+  PDM_free(n_part_domains);
 
   *_mpart = mpart;
 

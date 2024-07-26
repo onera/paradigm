@@ -181,10 +181,10 @@ PDM_multi_block_merge_create
     if (i_block == n_block)
      PDM_free(_send_orig_g_num[i_block]); //Only last was allocated
   }
- PDM_free(_send_stride);
- PDM_free(_selected_g_num);
- PDM_free(_send_orig_g_num);
- PDM_free(_n_selected);
+  PDM_free(_send_stride);
+  PDM_free(_selected_g_num);
+  PDM_free(_send_orig_g_num);
+  PDM_free(_n_selected);
 
   if(0 == 1) {
     PDM_log_trace_array_int(recv_stride, dn_merge, "recv_n :: ");
@@ -245,10 +245,10 @@ PDM_multi_block_merge_create
     PDM_log_trace_array_long(merge_gnum   , mbm->dn_new_block    , "merge_gnum :: ");
   }
 
- PDM_free(recv_stride);
- PDM_free(recv_idx);
- PDM_free(dnew_to_old_idx);
- PDM_free(blk_send_orig_g_num);
+  PDM_free(recv_stride);
+  PDM_free(recv_idx);
+  PDM_free(dnew_to_old_idx);
+  PDM_free(blk_send_orig_g_num);
 
   mbm->mbtp = PDM_multi_block_to_part_create(mbm->multi_block_distrib,
                                              mbm->n_block,
@@ -293,7 +293,7 @@ PDM_multi_block_merge_exch
   }
 
   *merge_block_data = tmp_block_data_out[0];
- PDM_free(tmp_block_data_out);
+  PDM_free(tmp_block_data_out);
 
 }
 
@@ -365,7 +365,7 @@ static void _dist_data_update
                           &recv_stride,
                (void **)  &_data); //Recycle memory
 
- PDM_free(dold_to_new_n);
+  PDM_free(dold_to_new_n);
   PDM_block_to_part_free(btp_update);
 
   //Some ids may have been removed, so we have to update stride and to be carefull
@@ -391,8 +391,8 @@ static void _dist_data_update
   PDM_realloc( _data_realloc , _data , w_idx,PDM_g_num_t);
   *data = _data_realloc;
 
- PDM_free(recv_stride);
- PDM_free(data_sign);
+  PDM_free(recv_stride);
+  PDM_free(data_sign);
 }
 
 void
@@ -478,7 +478,7 @@ PDM_multi_block_merge_exch_and_update
   for (int i_block = 0; i_block < n_block; i_block++) {
    PDM_free(shifted_block_data[i_block]);
   }
- PDM_free(shifted_block_data);
+  PDM_free(shifted_block_data);
 }
 
 
@@ -527,15 +527,15 @@ PDM_multi_block_merge_free
 )
 {
 
- PDM_free(mbm->multi_block_distrib);
- PDM_free(mbm->blocks_ini_dn);
- PDM_free(mbm->dold_to_new_idx);
- PDM_free(mbm->dold_to_new);
- PDM_free(mbm->distrib_merge);
- PDM_free(mbm->old_distrib);
+  PDM_free(mbm->multi_block_distrib);
+  PDM_free(mbm->blocks_ini_dn);
+  PDM_free(mbm->dold_to_new_idx);
+  PDM_free(mbm->dold_to_new);
+  PDM_free(mbm->distrib_merge);
+  PDM_free(mbm->old_distrib);
 
   PDM_multi_block_to_part_free(mbm->mbtp);
- PDM_free(mbm);
+  PDM_free(mbm);
 }
 
 

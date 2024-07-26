@@ -208,13 +208,13 @@ PDM_memory_stats_free
     }
   }
 
- PDM_free(ms->snapshot_name);
- PDM_free(ms->curr_real_mem);
- PDM_free(ms->peak_real_mem);
- PDM_free(ms->curr_virt_mem);
- PDM_free(ms->peak_virt_mem);
+  PDM_free(ms->snapshot_name);
+  PDM_free(ms->curr_real_mem);
+  PDM_free(ms->peak_real_mem);
+  PDM_free(ms->curr_virt_mem);
+  PDM_free(ms->peak_virt_mem);
 
- PDM_free(ms);
+  PDM_free(ms);
 }
 
 

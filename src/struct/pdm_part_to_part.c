@@ -904,7 +904,7 @@ _p2p_stride_var_data_issend
   for (int i = 0; i < ptp->n_part1; i++) {
    PDM_free(part1_to_part2_data_idx[i]);
   }
- PDM_free(part1_to_part2_data_idx);
+  PDM_free(part1_to_part2_data_idx);
 
   for (int i = 0; i < ptp->n_active_rank_send; i++) {
     int dest = ptp->active_rank_send[i];
@@ -1018,7 +1018,7 @@ _p2p_stride_var_data_reverse_issend
   for (int i = 0; i < ptp->n_part2; i++) {
    PDM_free(part2_to_part1_data_idx[i]);
   }
- PDM_free(part2_to_part1_data_idx);
+  PDM_free(part2_to_part1_data_idx);
 
   for (int i = 0; i < ptp->n_active_rank_recv; i++) {
     int dest = ptp->active_rank_recv[i];
@@ -1306,12 +1306,12 @@ _alltotall_stride_var_iexch
       }
     }
   }
- PDM_free(blk_send_idx);
+  PDM_free(blk_send_idx);
 
   for (int i = 0; i < ptp->n_part1; i++) {
    PDM_free(part1_to_part2_data_idx[i]);
   }
- PDM_free(part1_to_part2_data_idx);
+  PDM_free(part1_to_part2_data_idx);
 
   /*
    *  Exchange data
@@ -1336,7 +1336,7 @@ _alltotall_stride_var_iexch
                      PDM_MPI_UNSIGNED_CHAR,
                      ptp->comm);
 
- PDM_free(blk_send_stride);
+  PDM_free(blk_send_stride);
 
   int *blk_recv_idx;
   PDM_malloc(blk_recv_idx, (ptp->default_i_recv_buffer[ptp->n_rank] + 1) ,int);
@@ -1344,7 +1344,7 @@ _alltotall_stride_var_iexch
   for(int i = 0; i < ptp->default_i_recv_buffer[ptp->n_rank]; ++i) {
     blk_recv_idx[i+1] = blk_recv_idx[i] + blk_recv_stride[i];
   }
- PDM_free(blk_recv_stride);
+  PDM_free(blk_recv_stride);
 
   // Keep recv stride for  post-treatment
   ptp->async_exch_part2_stride[_request] = _part2_stride;
@@ -1438,7 +1438,7 @@ _alltotall_stride_var_wait_and_post
     }
   }
 
- PDM_free(ptp->async_exch_recv_idx[request]);
+  PDM_free(ptp->async_exch_recv_idx[request]);
   ptp->async_exch_recv_idx[request] = NULL;
 
   _free_async_send (ptp, request_send);
@@ -1448,7 +1448,7 @@ _alltotall_stride_var_wait_and_post
   for (int i = 0; i < ptp->n_part2; i++) {
    PDM_free(part2_idx[i]);
   }
- PDM_free(part2_idx);
+  PDM_free(part2_idx);
 }
 
 
@@ -1668,8 +1668,8 @@ _p2p_stride_var_iexch
 
   ptp->async_exch_subrequest[request][0] = send_request_data;
 
- PDM_free(send_n);
- PDM_free(blk_send_idx);
+  PDM_free(send_n);
+  PDM_free(blk_send_idx);
 
 
   unsigned char* *_part2_data;
@@ -1953,8 +1953,8 @@ _p2p_stride_var_reverse_iexch
 
   ptp->async_exch_subrequest[request][0] = send_request_data;
 
- PDM_free(send_n);
- PDM_free(blk_send_idx);
+  PDM_free(send_n);
+  PDM_free(blk_send_idx);
 
 
 
@@ -2070,13 +2070,13 @@ _p2p_stride_var_iexch_wait
   }
 
   //_free_async_exch (ptp, request);
- PDM_free(ptp->async_recv_part2_data[request_irecv]);
+  PDM_free(ptp->async_recv_part2_data[request_irecv]);
   ptp->async_recv_part2_data[request_irecv] = NULL;
 
   for (int i = 0; i < ptp->n_part2; i++) {
    PDM_free(part2_idx[i]);
   }
- PDM_free(part2_idx);
+  PDM_free(part2_idx);
 
 }
 
@@ -2164,7 +2164,7 @@ _p2p_stride_var_reverse_iexch_wait
   for (int i = 0; i < ptp->n_part1; i++) {
    PDM_free(part1_idx[i]);
   }
- PDM_free(part1_idx);
+  PDM_free(part1_idx);
 
 }
 
@@ -2658,7 +2658,7 @@ _create
 
   }
 
- PDM_free(idx_elt_part);
+  PDM_free(idx_elt_part);
 
   /* 3 - Define Default_n_send_buffer and  Default_i_send_buffer */
 
@@ -2755,21 +2755,21 @@ _create
   for (int i = 0; i < n_part1; i++) {
    PDM_free(gnum1_to_send_buffer_n[i]);
   }
- PDM_free(gnum1_to_send_buffer_n);
+  PDM_free(gnum1_to_send_buffer_n);
 
- PDM_free(n_elt_part);
- PDM_free(order);
+  PDM_free(n_elt_part);
+  PDM_free(order);
 
- PDM_free(_merge_part1_to_part2_rank2);
- PDM_free(_merge_part1_to_part2_part2);
- PDM_free(_merge_part1_to_part2_lnum2);
- PDM_free(_merge_part1_to_part2_rank1);
- PDM_free(_merge_part1_to_part2_part1);
- PDM_free(_merge_part1_to_part2_lnum1);
- PDM_free(_merge_part1_to_part2_addr1);
+  PDM_free(_merge_part1_to_part2_rank2);
+  PDM_free(_merge_part1_to_part2_part2);
+  PDM_free(_merge_part1_to_part2_lnum2);
+  PDM_free(_merge_part1_to_part2_rank1);
+  PDM_free(_merge_part1_to_part2_part1);
+  PDM_free(_merge_part1_to_part2_lnum1);
+  PDM_free(_merge_part1_to_part2_addr1);
 
- PDM_free(idx_part1_to_part2_rank);
- PDM_free(n_part1_to_part2_rank);
+  PDM_free(idx_part1_to_part2_rank);
+  PDM_free(n_part1_to_part2_rank);
 
 
   /* 5 - Define Default_n_recv_buffer and  Default_i_recv_buffer */
@@ -2814,14 +2814,14 @@ _create
     }
   }
 
- PDM_free(merge_part1_to_part2_rank2);
- PDM_free(merge_part1_to_part2_part2);
- PDM_free(merge_part1_to_part2_lnum2);
- PDM_free(merge_part1_to_part2_rank1);
- PDM_free(merge_part1_to_part2_part1);
- PDM_free(merge_part1_to_part2_lnum1);
- PDM_free(merge_part1_to_part2_addr1);
- PDM_free(i_send_buffer);
+  PDM_free(merge_part1_to_part2_rank2);
+  PDM_free(merge_part1_to_part2_part2);
+  PDM_free(merge_part1_to_part2_lnum2);
+  PDM_free(merge_part1_to_part2_rank1);
+  PDM_free(merge_part1_to_part2_part1);
+  PDM_free(merge_part1_to_part2_lnum1);
+  PDM_free(merge_part1_to_part2_addr1);
+  PDM_free(i_send_buffer);
 
   PDM_MPI_Alltoallv (int_s_buff, ptp->default_n_send_buffer, ptp->default_i_send_buffer, PDM_MPI_INT,
                      int_r_buff, ptp->default_n_recv_buffer, ptp->default_i_recv_buffer, PDM_MPI_INT,
@@ -3080,20 +3080,20 @@ _create
     }
   }
 
- PDM_free(order);
+  PDM_free(order);
 
- PDM_free(int_s_buff);
- PDM_free(int_r_buff);
+  PDM_free(int_s_buff);
+  PDM_free(int_r_buff);
 
- PDM_free(gnum_s_buff);
- PDM_free(gnum_r_buff);
+  PDM_free(gnum_s_buff);
+  PDM_free(gnum_r_buff);
 
   for (int i = 0; i < n_part2; i++) {
    PDM_free(ielt_to_ref[i]);
    PDM_free(tag_elt2[i]);
   }
- PDM_free(tag_elt2);
- PDM_free(ielt_to_ref);
+  PDM_free(tag_elt2);
+  PDM_free(ielt_to_ref);
 
   // Create tag for P2P
   void  *max_tag_tmp;
@@ -4253,7 +4253,7 @@ PDM_part_to_part_reverse_irecv_post
   }
 
   _free_async_recv (ptp, request);
- PDM_free(ptp->async_recv_part2_data[request]);
+  PDM_free(ptp->async_recv_part2_data[request]);
 }
 
 /**
@@ -5564,12 +5564,12 @@ PDM_part_to_part_free
     return NULL;
   }
 
- PDM_free(ptp->n_elt1);
- PDM_free(ptp->n_elt2);
+  PDM_free(ptp->n_elt1);
+  PDM_free(ptp->n_elt2);
   for(int i_part = 0; i_part < ptp->n_part1; ++i_part) {
    PDM_free(ptp->part1_to_part2_idx[i_part]);
   }
- PDM_free(ptp->part1_to_part2_idx);
+  PDM_free(ptp->part1_to_part2_idx);
 
   if (ptp->gnum1_to_send_buffer != NULL) {
     for (int i = 0; i < ptp->n_part1; i++) {
@@ -5610,8 +5610,8 @@ PDM_part_to_part_free
    PDM_free(ptp->recv_buffer_to_duplicate);
   }
 
- PDM_free(ptp->active_rank_send);
- PDM_free(ptp->active_rank_recv);
+  PDM_free(ptp->active_rank_send);
+  PDM_free(ptp->active_rank_recv);
 
   if (ptp->async_send_l_array != 0) {
     for (int i = 0; i < ptp->async_send_l_array; i++) {
@@ -5664,10 +5664,10 @@ PDM_part_to_part_free
    PDM_free(ptp->async_recv_part2_data);
   }
 
- PDM_free(ptp->default_n_send_buffer);
- PDM_free(ptp->default_i_send_buffer);
- PDM_free(ptp->default_n_recv_buffer);
- PDM_free(ptp->default_i_recv_buffer);
+  PDM_free(ptp->default_n_send_buffer);
+  PDM_free(ptp->default_i_send_buffer);
+  PDM_free(ptp->default_n_recv_buffer);
+  PDM_free(ptp->default_i_recv_buffer);
 
   if (ptp->async_exch_l_array > 0) {
     for (int i = 0; i < ptp->async_exch_l_array; i++) {
@@ -5712,7 +5712,7 @@ PDM_part_to_part_free
     PDM_MPI_Comm_free(&ptp->comm);
   }
 
- PDM_free(ptp);
+  PDM_free(ptp);
   return NULL;
 
 }

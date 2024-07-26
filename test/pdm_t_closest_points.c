@@ -501,10 +501,10 @@ main
 
   /* Free */
 
- PDM_free(src_coord);
- PDM_free(src_g_num);
- PDM_free(tgt_coord);
- PDM_free(tgt_g_num);
+  PDM_free(src_coord);
+  PDM_free(src_g_num);
+  PDM_free(tgt_coord);
+  PDM_free(tgt_g_num);
 
   if (i_rank == 0) {
 

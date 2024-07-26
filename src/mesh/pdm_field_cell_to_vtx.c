@@ -320,15 +320,15 @@ _prepare_cell_center
     }
   }
 
- PDM_free(pn_cell);
- PDM_free(pcell_face_idx);
- PDM_free(pcell_face    );
- PDM_free(pface_edge_idx);
- PDM_free(pface_edge    );
- PDM_free(pface_vtx_idx );
- PDM_free(pface_vtx     );
- PDM_free(pedge_vtx     );
- PDM_free(pvtx_coord    );
+  PDM_free(pn_cell);
+  PDM_free(pcell_face_idx);
+  PDM_free(pcell_face    );
+  PDM_free(pface_edge_idx);
+  PDM_free(pface_edge    );
+  PDM_free(pface_vtx_idx );
+  PDM_free(pface_vtx     );
+  PDM_free(pedge_vtx     );
+  PDM_free(pvtx_coord    );
 }
 
 static
@@ -1224,8 +1224,8 @@ _interpolate_one_part
   }
 
   *result_field = _result_field;
- PDM_free(pvtx_cell_coords_opp_idx      );
- PDM_free(pvtx_face_bound_coords_opp_idx);
+  PDM_free(pvtx_cell_coords_opp_idx      );
+  PDM_free(pvtx_face_bound_coords_opp_idx);
 }
 
 static
@@ -1798,8 +1798,8 @@ PDM_field_cell_to_vtx_compute
    PDM_free(pvtx_cell_coords  [i_part]);
    PDM_free(pvtx_cell_coords_n[i_part]);
   }
- PDM_free(pvtx_cell_coords  );
- PDM_free(pvtx_cell_coords_n);
+  PDM_free(pvtx_cell_coords  );
+  PDM_free(pvtx_cell_coords_n);
 
   /* Compute weight */
 
@@ -2089,10 +2089,10 @@ PDM_field_cell_to_vtx_exch
    PDM_free(pvtx_face_field_n[i_part]);
    PDM_free(pvtx_face_field  [i_part]);
   }
- PDM_free(pvtx_cell_field_n);
- PDM_free(pvtx_cell_field  );
- PDM_free(pvtx_face_field_n);
- PDM_free(pvtx_face_field  );
+  PDM_free(pvtx_cell_field_n);
+  PDM_free(pvtx_cell_field  );
+  PDM_free(pvtx_face_field_n);
+  PDM_free(pvtx_face_field  );
 
   /*
    * Post-treatment
@@ -2117,10 +2117,10 @@ PDM_field_cell_to_vtx_exch
    PDM_free(pvtx_face_field_opp_n[i_part]);
    PDM_free(pvtx_face_field_opp  [i_part]);
   }
- PDM_free(pvtx_cell_field_opp_n);
- PDM_free(pvtx_cell_field_opp  );
- PDM_free(pvtx_face_field_opp_n);
- PDM_free(pvtx_face_field_opp  );
+  PDM_free(pvtx_cell_field_opp_n);
+  PDM_free(pvtx_cell_field_opp  );
+  PDM_free(pvtx_face_field_opp_n);
+  PDM_free(pvtx_face_field_opp  );
 
 
 }
@@ -2171,10 +2171,10 @@ PDM_field_cell_to_vtx_free
    PDM_free(fctv->entity_part_bound_part_idx[i_kind]);
    PDM_free(fctv->entity_part_bound         [i_kind]);
   }
- PDM_free(fctv->entity_part_bound_proc_idx);
- PDM_free(fctv->entity_part_bound_part_idx);
- PDM_free(fctv->entity_part_bound         );
- PDM_free(fctv->graph_comm_is_defined     );
+  PDM_free(fctv->entity_part_bound_proc_idx);
+  PDM_free(fctv->entity_part_bound_part_idx);
+  PDM_free(fctv->entity_part_bound         );
+  PDM_free(fctv->graph_comm_is_defined     );
 
   for(int i_kind = 0; i_kind < PDM_GEOMETRY_KIND_MAX; ++i_kind) {
     fctv->group_is_defined     [i_kind] = 0;
@@ -2189,9 +2189,9 @@ PDM_field_cell_to_vtx_free
    PDM_free(fctv->n_group_entity[i_kind]);
    PDM_free(fctv->group_entity  [i_kind]);
   }
- PDM_free(fctv->n_group_entity);
- PDM_free(fctv->group_entity);
- PDM_free(fctv->group_is_defined);
+  PDM_free(fctv->n_group_entity);
+  PDM_free(fctv->group_entity);
+  PDM_free(fctv->group_is_defined);
 
 
   int shift_part = 0;
@@ -2218,24 +2218,24 @@ PDM_field_cell_to_vtx_free
     }
     shift_part += fctv->n_part[i_domain];
   }
- PDM_free(fctv->neighbor_idx      );
- PDM_free(fctv->neighbor_desc     );
- PDM_free(fctv->neighbor_interface);
- PDM_free(fctv->pvtx_cell_n);
- PDM_free(fctv->pvtx_cell_idx);
- PDM_free(fctv->pvtx_cell);
+  PDM_free(fctv->neighbor_idx      );
+  PDM_free(fctv->neighbor_desc     );
+  PDM_free(fctv->neighbor_interface);
+  PDM_free(fctv->pvtx_cell_n);
+  PDM_free(fctv->pvtx_cell_idx);
+  PDM_free(fctv->pvtx_cell);
 
- PDM_free(fctv->pvtx_cell_coords_opp_n      );
- PDM_free(fctv->pvtx_cell_coords_opp        );
- PDM_free(fctv->pvtx_face_bound_coords_opp_n);
- PDM_free(fctv->pvtx_face_bound_coords_opp  );
+  PDM_free(fctv->pvtx_cell_coords_opp_n      );
+  PDM_free(fctv->pvtx_cell_coords_opp        );
+  PDM_free(fctv->pvtx_face_bound_coords_opp_n);
+  PDM_free(fctv->pvtx_face_bound_coords_opp  );
 
- PDM_free(fctv->vtx_face_bound_idx   );
- PDM_free(fctv->vtx_face_bound_n     );
- PDM_free(fctv->vtx_face_bound       );
- PDM_free(fctv->vtx_face_bound_group );
- PDM_free(fctv->vtx_face_bound_coords);
- PDM_free(fctv->pn_vtx);
+  PDM_free(fctv->vtx_face_bound_idx   );
+  PDM_free(fctv->vtx_face_bound_n     );
+  PDM_free(fctv->vtx_face_bound       );
+  PDM_free(fctv->vtx_face_bound_group );
+  PDM_free(fctv->vtx_face_bound_coords);
+  PDM_free(fctv->pn_vtx);
 
 
 
@@ -2243,15 +2243,15 @@ PDM_field_cell_to_vtx_free
    PDM_free(fctv->parts      [i_domain]);
    PDM_free(fctv->cell_center[i_domain]);
   }
- PDM_free(fctv->parts);
- PDM_free(fctv->pmn);
- PDM_free(fctv->n_part_idx);
- PDM_free(fctv->n_part_g_idx);
- PDM_free(fctv->n_part);
- PDM_free(fctv->n_group);
- PDM_free(fctv->cell_center);
+  PDM_free(fctv->parts);
+  PDM_free(fctv->pmn);
+  PDM_free(fctv->n_part_idx);
+  PDM_free(fctv->n_part_g_idx);
+  PDM_free(fctv->n_part);
+  PDM_free(fctv->n_group);
+  PDM_free(fctv->cell_center);
 
- PDM_free(fctv);
+  PDM_free(fctv);
 }
 
 

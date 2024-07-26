@@ -696,11 +696,11 @@ int main(int argc, char *argv[])
    PDM_free(cellVtxGN[i_part]);
   }
 
- PDM_free(local_field);
- PDM_free(local_weight);
- PDM_free(global_mean_field_ptr);
- PDM_free(cellVtxGN);
- PDM_free(dcell_part);
+  PDM_free(local_field);
+  PDM_free(local_weight);
+  PDM_free(global_mean_field_ptr);
+  PDM_free(cellVtxGN);
+  PDM_free(dcell_part);
 
   PDM_part_free(ppart);
 

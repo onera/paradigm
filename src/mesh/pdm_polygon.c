@@ -827,7 +827,7 @@ PDM_polygon_status_t PDM_polygon_point_in_3d
                                                        //char_length,
                                                        NULL);
 
- PDM_free(xy);
+  PDM_free(xy);
   return stat;
 }
 

@@ -193,7 +193,7 @@ PDM_multipart_t      **_mpart
   /* Run */
   PDM_multipart_compute (mpart);
 
- PDM_free(n_part_domains);
+  PDM_free(n_part_domains);
 
   *_mpart = mpart;
 
@@ -882,27 +882,27 @@ int main(int argc, char *argv[])
   PDM_part_extension_free(pe);
   PDM_part_to_part_free(ptp);
 
- PDM_free(face_vtx_n  );
- PDM_free(cell_face_n );
- PDM_free(extension_vtx_gnum_idx );
+  PDM_free(face_vtx_n  );
+  PDM_free(cell_face_n );
+  PDM_free(extension_vtx_gnum_idx );
 
- PDM_free(pvtx_edge_idx);
- PDM_free(pvtx_edge);
- PDM_free(pedge_group_idx);
- PDM_free(pedge_group);
- PDM_free(pedge_face_idx);
- PDM_free(pedge_face);
- PDM_free(pedge_vtx_idx);
- PDM_free(pface_vtx);
- PDM_free(pface_cell_idx);
- PDM_free(pface_cell);
- PDM_free(pface_group_idx);
- PDM_free(pface_group);
- PDM_free(pvtx_group_idx);
- PDM_free(pvtx_group    );
+  PDM_free(pvtx_edge_idx);
+  PDM_free(pvtx_edge);
+  PDM_free(pedge_group_idx);
+  PDM_free(pedge_group);
+  PDM_free(pedge_face_idx);
+  PDM_free(pedge_face);
+  PDM_free(pedge_vtx_idx);
+  PDM_free(pface_vtx);
+  PDM_free(pface_cell_idx);
+  PDM_free(pface_cell);
+  PDM_free(pface_group_idx);
+  PDM_free(pface_group);
+  PDM_free(pvtx_group_idx);
+  PDM_free(pvtx_group    );
 
- PDM_free(normalisation );
- PDM_free(pvtx_coord_new);
+  PDM_free(normalisation );
+  PDM_free(pvtx_coord_new);
 
   PDM_MPI_Finalize();
   return 0;

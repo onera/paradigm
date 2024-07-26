@@ -150,7 +150,7 @@ _define_rank_distrib(const int             sampling_factor,
   PDM_MPI_Allreduce(l_distrib, g_distrib, n_samples,
                     PDM_MPI_DOUBLE, PDM_MPI_SUM, comm);
 
- PDM_free(l_distrib);
+  PDM_free(l_distrib);
 
   /* Define the cumulative frequency related to g_distribution */
   cfreq[0] = 0.;
@@ -302,7 +302,7 @@ _update_sampling(int            sampling_factor,
 
   new_sampling[n_samples] = _sampling[n_samples];
 
- PDM_free(_sampling);
+  PDM_free(_sampling);
 
   /* Return pointers */
 
@@ -703,9 +703,9 @@ PDM_GCC_SUPPRESS_WARNING_POP
     }
   } /* End of while */
 
- PDM_free(distrib);
- PDM_free(cfreq);
- PDM_free(sampling);
+  PDM_free(distrib);
+  PDM_free(cfreq);
+  PDM_free(sampling);
 
   sampling = best_sampling;
 
@@ -715,7 +715,7 @@ PDM_GCC_SUPPRESS_WARNING_POP
     int id = i * sampling_factor;
     _rank_index[i] = sampling[id];
   }
- PDM_free(sampling);
+  PDM_free(sampling);
 
   *rank_index = _rank_index;
 }

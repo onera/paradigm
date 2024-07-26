@@ -78,8 +78,8 @@ PDM_compute_center_from_descending_connectivity
   /*for(int i = 0; i < dentity1_entity2_idx[dn_entity1]; ++i) {
     dentity1_entity2[i]     = dentity1_entity2[i]*dentity1_entity2_sgn[i];
     }*/
- PDM_free(dentity1_entity2_sgn);
- PDM_free(dentity1_entity2_abs);
+  PDM_free(dentity1_entity2_sgn);
+  PDM_free(dentity1_entity2_abs);
 
   int strid_one = 1;
   double **tmp_entity1_entity2_coord;
@@ -91,7 +91,7 @@ PDM_compute_center_from_descending_connectivity
                            NULL,
                 (void ***) &tmp_entity1_entity2_coord);
   double *dentity1_entity2_coord = tmp_entity1_entity2_coord[0];
- PDM_free(tmp_entity1_entity2_coord);
+  PDM_free(tmp_entity1_entity2_coord);
   PDM_block_to_part_free(btp_entity1_coord);
 
   for(int i_entity1 = 0; i_entity1 < dn_entity1; ++i_entity1) {
@@ -110,7 +110,7 @@ PDM_compute_center_from_descending_connectivity
     dentity1_coord[3*i_entity1+2] = dentity1_coord[3*i_entity1+2]*inv;
 
   }
- PDM_free(dentity1_entity2_coord);
+  PDM_free(dentity1_entity2_coord);
 
 }
 
@@ -140,8 +140,8 @@ PDM_compute_dface_normal
                                                                      &dface_vtx_idx[dn_face],
                                                                      1,
                                                                      comm);
- PDM_free(dface_vtx_sgn);
- PDM_free(dface_vtx_abs);
+  PDM_free(dface_vtx_sgn);
+  PDM_free(dface_vtx_abs);
 
   int strid_one = 1;
   double **tmp_face_vtx_coord;
@@ -153,7 +153,7 @@ PDM_compute_dface_normal
                            NULL,
                 (void ***) &tmp_face_vtx_coord);
   double *dface_vtx_coord = tmp_face_vtx_coord[0];
- PDM_free(tmp_face_vtx_coord);
+  PDM_free(tmp_face_vtx_coord);
   PDM_block_to_part_free(btp_entity1_coord);
 
   // double* _dface_vtx_ptr = dface_vtx_coord;
@@ -169,7 +169,7 @@ PDM_compute_dface_normal
     // _dface_vtx_ptr += 3 * n_vtx_per_face;
 
   }
- PDM_free(dface_vtx_coord);
+  PDM_free(dface_vtx_coord);
 }
 
 
@@ -275,9 +275,9 @@ PDM_compute_vtx_characteristic_length
                          NULL,
           (void ***)    &tmp_vtx_vtx_coord);
   double *pvtx_vtx_coord = tmp_vtx_vtx_coord[0];
- PDM_free(tmp_vtx_vtx_coord);
+  PDM_free(tmp_vtx_vtx_coord);
   PDM_block_to_part_free(btp);
- PDM_free(dvtx_vtx    );
+  PDM_free(dvtx_vtx    );
 
   double *char_length;
   PDM_malloc(char_length,dn_vtx ,double);
@@ -303,11 +303,11 @@ PDM_compute_vtx_characteristic_length
 
   *dchar_length_out = char_length;
 
- PDM_free(distrib_vtx );
- PDM_free(distrib_edge);
- PDM_free(distrib_face);
- PDM_free(pvtx_vtx_coord);
- PDM_free(dvtx_vtx_idx);
+  PDM_free(distrib_vtx );
+  PDM_free(distrib_edge);
+  PDM_free(distrib_face);
+  PDM_free(pvtx_vtx_coord);
+  PDM_free(dvtx_vtx_idx);
 }
 
 

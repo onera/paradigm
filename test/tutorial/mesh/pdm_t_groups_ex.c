@@ -451,18 +451,18 @@ int main(int argc, char *argv[])
 
 
   /* Free memory */
- PDM_free(cell_face_idx );
- PDM_free(cell_face     );
- PDM_free(face_edge_idx );
- PDM_free(face_edge     );
- PDM_free(edge_vtx_idx  );
- PDM_free(edge_vtx      );
- PDM_free(vtx_coord     );
- PDM_free(group_face_idx);
- PDM_free(group_face    );
- PDM_free(group_edge_idx);
- PDM_free(group_edge    );
- PDM_free(cell_vtx      );
+  PDM_free(cell_face_idx );
+  PDM_free(cell_face     );
+  PDM_free(face_edge_idx );
+  PDM_free(face_edge     );
+  PDM_free(edge_vtx_idx  );
+  PDM_free(edge_vtx      );
+  PDM_free(vtx_coord     );
+  PDM_free(group_face_idx);
+  PDM_free(group_face    );
+  PDM_free(group_edge_idx);
+  PDM_free(group_edge    );
+  PDM_free(cell_vtx      );
 
   PDM_MPI_Finalize();
   return 0;

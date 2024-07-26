@@ -234,7 +234,7 @@ void PDM_array_repart_per_col_int
     int col = elem_col[i_elem];
     ordered[ordered_idx[col] + count[col]++] = i_elem;
   }
- PDM_free(count);
+  PDM_free(count);
 }
 
 #ifdef __cplusplus

@@ -371,11 +371,11 @@ int main(int argc, char *argv[])
   }
 
 
- PDM_free(vtx_coord    );
- PDM_free(face_vtx_idx );
- PDM_free(face_vtx     );
- PDM_free(cell_face_idx);
- PDM_free(cell_face    );
+  PDM_free(vtx_coord    );
+  PDM_free(face_vtx_idx );
+  PDM_free(face_vtx     );
+  PDM_free(cell_face_idx);
+  PDM_free(cell_face    );
 
 
   PDM_MPI_Finalize();

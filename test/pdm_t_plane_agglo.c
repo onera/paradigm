@@ -359,7 +359,7 @@ _create_split_mesh
                                        dEdgeGroupIdx,
                                        dEdgeGroup);
 
- PDM_free(dcell_part);
+  PDM_free(dcell_part);
 
   double *elapsed  = NULL;
   double *cpu      = NULL;
@@ -420,15 +420,15 @@ _create_split_mesh
   /*   PDM_printf ("       * total              : %i\n", bound_part_faces_sum);    */
   /* } */
 
- PDM_free(dvtx_coord);
- PDM_free(dface_vtx_idx);
- PDM_free(dface_vtx);
- PDM_free(dFaceEdge);
- PDM_free(dEdgeVtxIdx);
- PDM_free(dEdgeVtx);
- PDM_free(dEdgeFace);
- PDM_free(dEdgeGroupIdx);
- PDM_free(dEdgeGroup);
+  PDM_free(dvtx_coord);
+  PDM_free(dface_vtx_idx);
+  PDM_free(dface_vtx);
+  PDM_free(dFaceEdge);
+  PDM_free(dEdgeVtxIdx);
+  PDM_free(dEdgeVtx);
+  PDM_free(dEdgeFace);
+  PDM_free(dEdgeGroupIdx);
+  PDM_free(dEdgeGroup);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
 
@@ -569,7 +569,7 @@ _export_ini_mesh
     debPartProcs[i+1] = debPartProcs[i] + n_partProcs[i];
   }
 
- PDM_free(n_partProcs);
+  PDM_free(n_partProcs);
 
   PDM_writer_step_beg (id_cs, 0.);
 
@@ -688,10 +688,10 @@ _export_ini_mesh
    PDM_free(faceEdgeNB1[i_part]);
   }
 
- PDM_free(edgeVtxIdx1);
- PDM_free(edgeVtxNB1);
- PDM_free(faceEdgeIdx1);
- PDM_free(faceEdgeNB1);
+  PDM_free(edgeVtxIdx1);
+  PDM_free(edgeVtxNB1);
+  PDM_free(faceEdgeIdx1);
+  PDM_free(faceEdgeNB1);
 
   /* Creation des variables :
      - numero de partition
@@ -835,10 +835,10 @@ _export_ini_mesh
    PDM_free(val_coo_xyz[i_part]);
   }
 
- PDM_free(val_num_part);
- PDM_free(val_coo_x);
- PDM_free(val_coo_xyz);
- PDM_free(nsom_part);
+  PDM_free(val_num_part);
+  PDM_free(val_coo_x);
+  PDM_free(val_coo_xyz);
+  PDM_free(nsom_part);
 
   PDM_writer_step_end (id_cs);
   PDM_writer_geom_data_free (id_cs,
@@ -848,7 +848,7 @@ _export_ini_mesh
                         id_geom);
   PDM_writer_free (id_cs);
 
- PDM_free(debPartProcs);
+  PDM_free(debPartProcs);
 
 
 }

@@ -323,7 +323,7 @@ _read_distributed_stl
                            char_length);
 
   PDM_gnum_compute(gen_gnum);
- PDM_free(char_length);
+  PDM_free(char_length);
 
   PDM_g_num_t* _dface_vtx = PDM_gnum_get(gen_gnum, 0);
   PDM_gnum_free(gen_gnum);
@@ -360,7 +360,7 @@ _read_distributed_stl
                          NULL,
                 (void**) &_dvtx_coord);
 
- PDM_free(dface_vtx_coord);
+  PDM_free(dface_vtx_coord);
 
   if (debug) {
     char outfilename[999];
@@ -391,14 +391,14 @@ _read_distributed_stl
   //PDM_free(_dvtx_coord);
   //PDM_free(_dface_vtx);
 
- PDM_free(tmp_dface_vtx_idx);
+  PDM_free(tmp_dface_vtx_idx);
   //PDM_free(tmp_dface_vtx);
 
- PDM_free(tmp_dface_vtx_n  );
+  PDM_free(tmp_dface_vtx_n  );
   //PDM_free(tmp_dvtx_coord  );
 
- PDM_free(init_distrib_vtx );
- PDM_free(init_distrib_face);
+  PDM_free(init_distrib_vtx );
+  PDM_free(init_distrib_face);
 
   if(i_rank == 0) {
    PDM_free(face_normal  );
@@ -514,8 +514,8 @@ PDM_reader_stl_dmesh_nodal
                                                distrib_face,
                                                dvtx_coord,
                                                dface_vtx);
- PDM_free(distrib_vtx);
- PDM_free(distrib_face);
+  PDM_free(distrib_vtx);
+  PDM_free(distrib_face);
 
   return dmn;
 }

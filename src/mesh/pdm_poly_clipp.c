@@ -473,8 +473,8 @@ double nB[3]
     vtx_currA = vtx_currA->next;
   }
 
- PDM_free(boundsA);
- PDM_free(boundsB);
+  PDM_free(boundsA);
+  PDM_free(boundsB);
 
 }
 
@@ -1407,8 +1407,8 @@ double                **polyClippCoordsB
       }
     }
   }
- PDM_free(vtxA_origin);
- PDM_free(vtxB_origin);
+  PDM_free(vtxA_origin);
+  PDM_free(vtxB_origin);
 
   /*
    * Tag Intersection points

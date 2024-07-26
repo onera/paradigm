@@ -1213,7 +1213,7 @@ int PDM_MPI_File_close(PDM_MPI_File *fh)
 {
   int code =  MPI_File_close(mpi_file[*fh]);
 
- PDM_free(mpi_file[*fh]);
+  PDM_free(mpi_file[*fh]);
 
   mpi_file[*fh] = NULL;
   n_mpi_file -= 1;
@@ -1711,7 +1711,7 @@ int PDM_MPI_Wait(PDM_MPI_Request *request)
   int code = MPI_Wait(&_request, MPI_STATUS_IGNORE);
   assert(code == 0);
 
- PDM_free(mpi_request[*request]);
+  PDM_free(mpi_request[*request]);
   mpi_request[*request] = NULL;
   n_mpi_request += -1;
   *request = PDM_MPI_REQUEST_NULL;
@@ -1746,7 +1746,7 @@ int PDM_MPI_Test(PDM_MPI_Request *request, int *flag)
     return code; // Message was not ready
   }
 
- PDM_free(mpi_request[*request]);
+  PDM_free(mpi_request[*request]);
   mpi_request[*request] = NULL;
   n_mpi_request += -1;
   *request = PDM_MPI_REQUEST_NULL;
@@ -1788,7 +1788,7 @@ int PDM_MPI_Type_create_hindexed (int count,
                                &mpi_newtype);
 
   *newtype = _mpi_2_pdm_mpi_datatype(mpi_newtype);
- PDM_free(_array_of_displacements);
+  PDM_free(_array_of_displacements);
   return _mpi_2_pdm_mpi_err(code);
 
 }
@@ -1842,7 +1842,7 @@ int PDM_MPI_Type_free(PDM_MPI_Datatype *datatype)
 {
   MPI_Datatype mpi_type = _pdm_mpi_2_mpi_datatype(*datatype);
   int code = MPI_Type_free(&mpi_type);
- PDM_free(mpi_datatype[*datatype]);
+  PDM_free(mpi_datatype[*datatype]);
   mpi_datatype[*datatype] = NULL;
   *datatype = PDM_MPI_DATATYPE_NULL;
   n_mpi_datatype += -1;
@@ -2245,8 +2245,8 @@ int PDM_MPI_Alltoallv_p2p(void *sendbuf, int *sendcounts, int *sdispls, PDM_MPI_
     }
   }
 
- PDM_free(request_r);
- PDM_free(request_s);
+  PDM_free(request_r);
+  PDM_free(request_s);
 
   return _mpi_2_pdm_mpi_err(code);
 
@@ -2318,8 +2318,8 @@ int PDM_MPI_Alltoallv_p2p_l(void *sendbuf, int *sendcounts, size_t *sdispls, PDM
     }
   }
 
- PDM_free(request_r);
- PDM_free(request_s);
+  PDM_free(request_r);
+  PDM_free(request_s);
 
   return _mpi_2_pdm_mpi_err(code);
 
@@ -2584,8 +2584,8 @@ int PDM_MPI_Ialltoallv_p2p_wait (PDM_MPI_Request **request_s,
     }
   }
 
- PDM_free(*request_r);
- PDM_free(*request_s);
+  PDM_free(*request_r);
+  PDM_free(*request_s);
 
   *request_r = NULL;
   *request_s = NULL;
@@ -2701,7 +2701,7 @@ int PDM_MPI_Get_ialltoallv(PDM_MPI_Win       win_send,
   PDM_UNUSED(sendcounts);
   PDM_UNUSED(sendbuf   ); // Implicit in win_send
 
- PDM_free(target_disp);
+  PDM_free(target_disp);
   return _mpi_2_pdm_mpi_err(code);
 }
 
@@ -2738,7 +2738,7 @@ int PDM_MPI_Win_free(PDM_MPI_Win *win)
   MPI_Win _win = _pdm_mpi_2_mpi_win(*win);
   int code = MPI_Win_free(&_win);
 
- PDM_free(mpi_win[*win]);
+  PDM_free(mpi_win[*win]);
   mpi_win[*win] = NULL;
   n_mpi_win += -1;
   *win = PDM_MPI_WIN_NULL;
@@ -2974,7 +2974,7 @@ void* PDM_mpi_win_shared_get(PDM_mpi_win_shared_t *wins){
 void PDM_mpi_win_shared_free(PDM_mpi_win_shared_t *wins){
   MPI_Win_free(&wins->win);
   wins->ptr = NULL;
- PDM_free(wins);
+  PDM_free(wins);
 }
 
 
@@ -3383,11 +3383,11 @@ PDM_MPI_setup_hybrid_dist_comm_graph
   int n_degrees_out = recv_idx[n_rank];
   int *neighbor_out = recv_opp_i_rank; // Already sort normaly
 
- PDM_free(send_n);
- PDM_free(recv_n);
- PDM_free(send_idx);
- PDM_free(recv_idx);
- PDM_free(send_cur_i_rank);
+  PDM_free(send_n);
+  PDM_free(recv_n);
+  PDM_free(send_idx);
+  PDM_free(recv_idx);
+  PDM_free(send_cur_i_rank);
 
 
   PDM_MPI_Comm comm_dist_graph;
@@ -3406,7 +3406,7 @@ PDM_MPI_setup_hybrid_dist_comm_graph
   PDM_mpi_win_shared_free(wnuma_core_gid);
   PDM_mpi_win_shared_free(wnuma_by_numa_idx);
 
- PDM_free(recv_opp_i_rank);
+  PDM_free(recv_opp_i_rank);
 
   *comm_shared_out     = comm_shared;
   *comm_dist_graph_out = comm_dist_graph;
@@ -3529,11 +3529,11 @@ PDM_MPI_setup_dist_graph_from_neighbor_in
   int n_degrees_out = recv_idx[n_rank];
   int *neighbor_out = recv_opp_i_rank; // Already sort normaly
 
- PDM_free(send_n);
- PDM_free(recv_n);
- PDM_free(send_idx);
- PDM_free(recv_idx);
- PDM_free(send_cur_i_rank);
+  PDM_free(send_n);
+  PDM_free(recv_n);
+  PDM_free(send_idx);
+  PDM_free(recv_idx);
+  PDM_free(send_cur_i_rank);
 
   PDM_MPI_Dist_graph_create_adjacent(comm,
                                      n_degree_in,

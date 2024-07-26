@@ -553,9 +553,9 @@ main
       box_pts[idx_write] = ptree->new_to_old[ipt];
     }
   }
- PDM_free(pts_box_idx);
- PDM_free(pts_box    );
- PDM_free(box_pts_n    );
+  PDM_free(pts_box_idx);
+  PDM_free(pts_box    );
+  PDM_free(box_pts_n    );
 
   t3 = PDM_MPI_Wtime();
   printf("new : build %12.5es, sollicitate %12.5es, total %12.5es\n", t2-t1, t3-t2, t3-t1);
@@ -609,10 +609,10 @@ main
 
     printf("n_err = %d\n", n_err);
   }
- PDM_free(box_pts_idx2);
- PDM_free(box_pts2);
- PDM_free(box_pts_idx);
- PDM_free(box_pts);
+  PDM_free(box_pts_idx2);
+  PDM_free(box_pts2);
+  PDM_free(box_pts_idx);
+  PDM_free(box_pts);
 
   PDM_point_tree_seq_free(ptree);
   PDM_point_tree_seq_free(ptree2);
@@ -641,10 +641,10 @@ main
                         box_g_num);
   }
 
- PDM_free(pts_coord);
- PDM_free(pts_g_num);
- PDM_free(box_extents);
- PDM_free(box_g_num);
+  PDM_free(pts_coord);
+  PDM_free(pts_g_num);
+  PDM_free(box_extents);
+  PDM_free(box_g_num);
 
 
   PDM_MPI_Finalize ();

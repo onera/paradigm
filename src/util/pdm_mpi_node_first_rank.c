@@ -233,15 +233,15 @@ PDM_MPI_Comm comm
 
   // Clean up.
 
- PDM_free(send);
+  PDM_free(send);
   send = NULL;
 
- PDM_free(recv);
+  PDM_free(recv);
   recv = NULL;
 
   PDM_MPI_Comm_free(&nodeComm);
 
- PDM_free(hostname);
+  PDM_free(hostname);
   hostname = NULL;
 
   // Affichage
@@ -297,7 +297,7 @@ PDM_MPI_Comm comm
   size_t hostnameLength;
 
   PDM_io_get_hostname(&hostname, &hostnameLength);
- PDM_free(hostname);
+  PDM_free(hostname);
   hostname = NULL;
 
   return nodeRank;

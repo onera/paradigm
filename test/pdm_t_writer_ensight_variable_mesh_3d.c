@@ -206,11 +206,11 @@ int main(int argc, char *argv[])
 
   PDM_writer_free(wrt);
 
- PDM_free(coords);
- PDM_free(elt_vtx_idx);
- PDM_free(elt_vtx);
- PDM_free(vtx_ln_to_gn);
- PDM_free(elt_ln_to_gn);
+  PDM_free(coords);
+  PDM_free(elt_vtx_idx);
+  PDM_free(elt_vtx);
+  PDM_free(vtx_ln_to_gn);
+  PDM_free(elt_ln_to_gn);
 
 
   PDM_MPI_Finalize();

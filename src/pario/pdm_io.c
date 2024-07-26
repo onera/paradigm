@@ -490,7 +490,7 @@ static void _calcul_parametres_distribution_bloc
 
   }
 
- PDM_free(n_absolue_bloc_rangs);
+  PDM_free(n_absolue_bloc_rangs);
 
   /* Calcul des index  */
 
@@ -4469,7 +4469,7 @@ int PDM_io_mkdir
     }
     idx += 1;
   }
- PDM_free(tmp_path);
+  PDM_free(tmp_path);
   return err;
 }
 

@@ -421,8 +421,8 @@ const PDM_Mesh_nodal_elt_t   elt_type,
     }
 
   } // End of loop on vertices
- PDM_free(base_vtx_normal[0]);
- PDM_free(base_vtx_normal[1]);
+  PDM_free(base_vtx_normal[0]);
+  PDM_free(base_vtx_normal[1]);
 
 
 
@@ -570,7 +570,7 @@ main
                  &base_edge_vtx,
                  &base_n_vtx,
                  &base_vtx_coord1);
- PDM_free(base_edge_vtx);
+  PDM_free(base_edge_vtx);
 
   double *base_vtx_coord2 = NULL;
   _gen_circle(n,
@@ -627,9 +627,9 @@ main
                           &distrib_vtx,
                           &dvtx_coord);
 
- PDM_free(base_edge_vtx);
- PDM_free(base_vtx_coord1);
- PDM_free(base_vtx_coord2);
+  PDM_free(base_edge_vtx);
+  PDM_free(base_vtx_coord1);
+  PDM_free(base_vtx_coord2);
 
 
 
@@ -653,9 +653,9 @@ main
   }
   PDM_DMesh_nodal_free(dmn);
 
- PDM_free(distrib_face );
- PDM_free(dface_vtx_idx);
- PDM_free(distrib_vtx  );
+  PDM_free(distrib_face );
+  PDM_free(dface_vtx_idx);
+  PDM_free(distrib_vtx  );
 
   PDM_MPI_Finalize();
 

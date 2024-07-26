@@ -730,14 +730,14 @@ PDM_reader_gamma_dmesh_nodal
   PDM_block_to_block_free(btb_prism);
   PDM_block_to_block_free(btb_hexa);
 
- PDM_free(init_distrib_vtx  );
- PDM_free(init_distrib_edge );
- PDM_free(init_distrib_tria );
- PDM_free(init_distrib_quad );
- PDM_free(init_distrib_tetra);
- PDM_free(init_distrib_pyra );
- PDM_free(init_distrib_prism);
- PDM_free(init_distrib_hexa );
+  PDM_free(init_distrib_vtx  );
+  PDM_free(init_distrib_edge );
+  PDM_free(init_distrib_tria );
+  PDM_free(init_distrib_quad );
+  PDM_free(init_distrib_tetra);
+  PDM_free(init_distrib_pyra );
+  PDM_free(init_distrib_prism);
+  PDM_free(init_distrib_hexa );
 
   if (i_rank == 0) {
     if (0) {
@@ -903,8 +903,8 @@ PDM_reader_gamma_dmesh_nodal
                               &dgroup_edge,
                               dmn->comm);
   }
- PDM_free(dedge_group_idx);
- PDM_free(dedge_group);
+  PDM_free(dedge_group_idx);
+  PDM_free(dedge_group);
 
   // PDM_log_trace_array_int(dgroup_edge_idx, n_group_edge+1, "dgroup_edge_idx : ");
 
@@ -984,8 +984,8 @@ PDM_reader_gamma_dmesh_nodal
 
     counters[grp]++;
   }
- PDM_free(dtria_group);
- PDM_free(dquad_group);
+  PDM_free(dtria_group);
+  PDM_free(dquad_group);
 
   // -------- Set groups
   PDM_DMesh_nodal_elmts_group_set(
@@ -994,10 +994,10 @@ PDM_reader_gamma_dmesh_nodal
     PDM_OWNERSHIP_KEEP
   );
 
- PDM_free(distrib_group);
- PDM_free(tria_ln_to_gn);
- PDM_free(quad_ln_to_gn);
- PDM_free(counters);
+  PDM_free(distrib_group);
+  PDM_free(tria_ln_to_gn);
+  PDM_free(quad_ln_to_gn);
+  PDM_free(counters);
 
   /* Tetra groups */
   int _n_group_tetra = 0;
@@ -1020,8 +1020,8 @@ PDM_reader_gamma_dmesh_nodal
                               &dgroup_tetra_idx,
                               &dgroup_tetra,
                               dmn->comm);
- PDM_free(dtetra_group_idx);
- PDM_free(dtetra_group);
+  PDM_free(dtetra_group_idx);
+  PDM_free(dtetra_group);
 
   // PDM_log_trace_array_int(dgroup_face_idx, n_group_face+1, "dgroup_face_idx : ");
 
@@ -1031,14 +1031,14 @@ PDM_reader_gamma_dmesh_nodal
                                   dgroup_tetra,
                                   PDM_OWNERSHIP_KEEP);
 
- PDM_free(distrib_vtx  );
- PDM_free(distrib_edge );
- PDM_free(distrib_tria );
- PDM_free(distrib_quad );
- PDM_free(distrib_tetra);
- PDM_free(distrib_pyra );
- PDM_free(distrib_prism);
- PDM_free(distrib_hexa );
+  PDM_free(distrib_vtx  );
+  PDM_free(distrib_edge );
+  PDM_free(distrib_tria );
+  PDM_free(distrib_quad );
+  PDM_free(distrib_tetra);
+  PDM_free(distrib_pyra );
+  PDM_free(distrib_prism);
+  PDM_free(distrib_hexa );
 
   return dmn;
 }

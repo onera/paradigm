@@ -214,7 +214,7 @@ int main(int argc, char *argv[])
                                         &tmp_dextract_vtx_coord);
 
   double* dextract_vtx_coord = tmp_dextract_vtx_coord[0];
- PDM_free(tmp_dextract_vtx_coord);
+  PDM_free(tmp_dextract_vtx_coord);
 
   /*
    *  Echange de champs
@@ -274,7 +274,7 @@ int main(int argc, char *argv[])
     (const PDM_g_num_t **)  &pextract_old_to_new,
     (unsigned char ***)     &tmp_dextract_face_tag);
   int* dextract_face_tag = tmp_dextract_face_tag[0];
- PDM_free(tmp_dextract_face_tag);
+  PDM_free(tmp_dextract_face_tag);
 
   /*
    * To true partition for visu
@@ -289,7 +289,7 @@ int main(int argc, char *argv[])
      (const PDM_g_num_t **) &extract_face_ln_to_gn,
      (unsigned char    ***) &tmp_pextract_face_tag);
   int *pextract_face_tag = tmp_pextract_face_tag[0];
- PDM_free(tmp_pextract_face_tag);
+  PDM_free(tmp_pextract_face_tag);
 
   double** tmp_pextract_vtx_coord = NULL;
   PDM_part_dcoordinates_to_pcoordinates(comm,
@@ -300,7 +300,7 @@ int main(int argc, char *argv[])
                  (const PDM_g_num_t **) &pextract_vtx_ln_to_gn,
                                         &tmp_pextract_vtx_coord);
   double* pextract_vtx_coord = tmp_pextract_vtx_coord[0];
- PDM_free(tmp_pextract_vtx_coord);
+  PDM_free(tmp_pextract_vtx_coord);
 
   if (post) {
     char filename[999];
@@ -316,28 +316,28 @@ int main(int argc, char *argv[])
                            pextract_face_tag);
   }
 
- PDM_free(dface_group_tag);
- PDM_free(dextract_face_tag);
- PDM_free(dextract_vtx_coord);
- PDM_free(extract_face_ln_to_gn);
- PDM_free(pextract_face_tag);
+  PDM_free(dface_group_tag);
+  PDM_free(dextract_face_tag);
+  PDM_free(dextract_vtx_coord);
+  PDM_free(extract_face_ln_to_gn);
+  PDM_free(pextract_face_tag);
 
- PDM_free(extract_face_distribution);
- PDM_free(extract_vtx_distribution );
- PDM_free(dextract_face_vtx_idx    );
- PDM_free(dextract_face_vtx        );
- PDM_free(dparent_face_g_num       );
- PDM_free(dparent_vtx_g_num        );
- PDM_free(pextract_old_to_new      );
- PDM_free(dface_group_init_distrib );
+  PDM_free(extract_face_distribution);
+  PDM_free(extract_vtx_distribution );
+  PDM_free(dextract_face_vtx_idx    );
+  PDM_free(dextract_face_vtx        );
+  PDM_free(dparent_face_g_num       );
+  PDM_free(dparent_vtx_g_num        );
+  PDM_free(pextract_old_to_new      );
+  PDM_free(dface_group_init_distrib );
 
- PDM_free(pextract_vtx_ln_to_gn);
- PDM_free(pextract_face_vtx_idx);
- PDM_free(pextract_face_vtx    );
- PDM_free(pextract_vtx_coord   );
+  PDM_free(pextract_vtx_ln_to_gn);
+  PDM_free(pextract_face_vtx_idx);
+  PDM_free(pextract_face_vtx    );
+  PDM_free(pextract_vtx_coord   );
 
- PDM_free(face_distribution);
- PDM_free(vtx_distribution );
+  PDM_free(face_distribution);
+  PDM_free(vtx_distribution );
 
   PDM_dcube_gen_free(dcube);
 

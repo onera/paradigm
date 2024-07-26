@@ -1175,13 +1175,13 @@ char *argv[]
    PDM_free(vtx_ln_to_gn [i_part]);
   }
 
- PDM_free(n_face);
- PDM_free(n_vtx);
- PDM_free(face_vtx_idx);
- PDM_free(face_vtx   );
- PDM_free(face_ln_to_gn);
- PDM_free(vtx_coord  );
- PDM_free(vtx_ln_to_gn );
+  PDM_free(n_face);
+  PDM_free(n_vtx);
+  PDM_free(face_vtx_idx);
+  PDM_free(face_vtx   );
+  PDM_free(face_ln_to_gn);
+  PDM_free(vtx_coord  );
+  PDM_free(vtx_ln_to_gn );
 
   PDM_MPI_Finalize ();
 

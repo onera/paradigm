@@ -764,7 +764,7 @@ _mesh_from_file
                                                    *pn_elt,
                                                    *pelt_ln_to_gn,
                                                    NULL);
- PDM_free(pvtx_ln_to_gn);
+  PDM_free(pvtx_ln_to_gn);
 
   PDM_multipart_free(mpart);
   PDM_DMesh_nodal_free(dmn);
@@ -1265,19 +1265,19 @@ int main(int argc, char *argv[])
    PDM_free(pelt_ln_to_gn  [ipart]);
    PDM_free(pvtx_coord     [ipart]);
   }
- PDM_free(pts_idx);
- PDM_free(pts_coord);
- PDM_free(distance);
- PDM_free(projected_coord);
- PDM_free(bar_coord_idx);
- PDM_free(bar_coord);
- PDM_free(uvw);
- PDM_free(pelt_ln_to_gn);
- PDM_free(pvtx_coord);
+  PDM_free(pts_idx);
+  PDM_free(pts_coord);
+  PDM_free(distance);
+  PDM_free(projected_coord);
+  PDM_free(bar_coord_idx);
+  PDM_free(bar_coord);
+  PDM_free(uvw);
+  PDM_free(pelt_ln_to_gn);
+  PDM_free(pvtx_coord);
 
- PDM_free(pn_pts);
- PDM_free(pn_vtx);
- PDM_free(pn_elt);
+  PDM_free(pn_pts);
+  PDM_free(pn_vtx);
+  PDM_free(pn_elt);
 
   PDM_part_mesh_nodal_elmts_free(pmne);
 

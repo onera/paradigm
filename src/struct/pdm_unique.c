@@ -232,7 +232,7 @@ PDM_inplace_unique_long2
     unique_order[order[idx-l]] = idx_save;
   }
 
- PDM_free(order);
+  PDM_free(order);
 
   return new_size;
 }
@@ -311,12 +311,12 @@ PDM_unique_long_with_distrib
 
   PDM_realloc(_unique_dentity1_entity2_gnum ,_unique_dentity1_entity2_gnum , unique_size ,PDM_g_num_t);
 
- PDM_free(rank_id_idx);
- PDM_free(rank_id_n);
- PDM_free(order);
- PDM_free(unique_tag);
+  PDM_free(rank_id_idx);
+  PDM_free(rank_id_n);
+  PDM_free(order);
+  PDM_free(unique_tag);
 
- PDM_free(tmp_dentity1_entity2_gnum);
+  PDM_free(tmp_dentity1_entity2_gnum);
 
   *unique_order                 = _unique_order;
   *unique_dentity1_entity2_gnum = _unique_dentity1_entity2_gnum;

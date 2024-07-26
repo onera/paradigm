@@ -623,8 +623,8 @@ _cll_to_polydata
                          NULL,
                          NULL);
 
- PDM_free(vtx_coord);
- PDM_free(face_vtx);
+  PDM_free(vtx_coord);
+  PDM_free(face_vtx);
 }
 
 
@@ -715,8 +715,8 @@ _cll_to_polydata2
                          NULL,
                          NULL);
 
- PDM_free(vtx_coord);
- PDM_free(face_vtx);
+  PDM_free(vtx_coord);
+  PDM_free(face_vtx);
 
   // return n_vtx;
 }
@@ -1642,7 +1642,7 @@ PDM_mesh_intersection_vol_vol_atomic_compute
   for (int i = 0; i < max_size; i++) {
    PDM_free(cll_storage[i]);
   }
- PDM_free(cll_storage);
+  PDM_free(cll_storage);
 
   return volumeA + volumeB;
 }

@@ -656,7 +656,7 @@ _calcul_numabs_face_poly3d
     face_abs[i] += n_face_procs[i_proc];
   }
 
- PDM_free(n_face_procs);
+  PDM_free(n_face_procs);
 
   /* Retour à l'envoyeur de la numérotation absolue */
 
@@ -675,7 +675,7 @@ _calcul_numabs_face_poly3d
     current_octet += n_octet_exch;
   }
 
- PDM_free(face_abs);
+  PDM_free(face_abs);
 
   PDM_MPI_Alltoallv((void *) recv_buff_data,
                     recv_buff_n,
@@ -716,13 +716,13 @@ _calcul_numabs_face_poly3d
 
   /* Liberation memoire */
 
- PDM_free(send_buff_n);
- PDM_free(send_buff_idx);
- PDM_free(send_buff_data);
- PDM_free(recv_buff_n);
- PDM_free(recv_buff_idx);
- PDM_free(recv_buff_data);
- PDM_free(d_elt_proc);
+  PDM_free(send_buff_n);
+  PDM_free(send_buff_idx);
+  PDM_free(send_buff_data);
+  PDM_free(recv_buff_n);
+  PDM_free(recv_buff_idx);
+  PDM_free(recv_buff_data);
+  PDM_free(d_elt_proc);
 
 }
 
@@ -877,7 +877,7 @@ PDM_writer_t *cs
   _geom_close(cs);
   PDM_writer_ensight_t *PDM_writer_ensight = (PDM_writer_ensight_t *) cs->sortie_fmt;
   PDM_writer_ensight_case_lib(PDM_writer_ensight->ensight_case);
- PDM_free(cs->sortie_fmt);
+  PDM_free(cs->sortie_fmt);
 }
 
 /*----------------------------------------------------------------------------
@@ -1106,8 +1106,8 @@ PDM_writer_ensight_geom_write
                          coord_tmp);
   }
 
- PDM_free(coord_tmp);
- PDM_free(numabs_tmp);
+  PDM_free(coord_tmp);
+  PDM_free(numabs_tmp);
 
   /* Ecriture des blocs standard */
   const int n_blocks   = PDM_part_mesh_nodal_n_section_get  (geom->mesh_nodal);

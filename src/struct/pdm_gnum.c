@@ -902,7 +902,7 @@ _gnum_from_coords_compute
     PDM_points_merge_free (pts_merge);
   }
 
- PDM_free(coords);
+  PDM_free(coords);
 
 }
 
@@ -1175,15 +1175,15 @@ _gnum_from_parent_compute
 
   /* Liberation memoire */
 
- PDM_free(send_buff_idx);
- PDM_free(send_buff_n);
- PDM_free(recv_buff_idx);
- PDM_free(recv_buff_n);
- PDM_free(send_buff_numabs);
- PDM_free(recv_buff_numabs);
- PDM_free(d_elt_proc);
- PDM_free(numabs_tmp);
- PDM_free(n_elt_stocke_procs);
+  PDM_free(send_buff_idx);
+  PDM_free(send_buff_n);
+  PDM_free(recv_buff_idx);
+  PDM_free(recv_buff_n);
+  PDM_free(send_buff_numabs);
+  PDM_free(recv_buff_numabs);
+  PDM_free(d_elt_proc);
+  PDM_free(numabs_tmp);
+  PDM_free(n_elt_stocke_procs);
 
 }
 
@@ -1317,7 +1317,7 @@ _gnum_from_parent_compute_opt
     recv_gnum[i] = (PDM_g_num_t) unique_order[i] + global_num_shift + 1;
   }
 
- PDM_free(unique_order);
+  PDM_free(unique_order);
 
   /*
    * Reverse exchange
@@ -1352,15 +1352,15 @@ _gnum_from_parent_compute_opt
     }
   }
 
- PDM_free(send_gnum);
- PDM_free(recv_gnum);
+  PDM_free(send_gnum);
+  PDM_free(recv_gnum);
 
- PDM_free(send_buff_n  );
- PDM_free(send_buff_idx);
- PDM_free(recv_buff_n  );
- PDM_free(recv_buff_idx);
+  PDM_free(send_buff_n  );
+  PDM_free(send_buff_idx);
+  PDM_free(recv_buff_n  );
+  PDM_free(recv_buff_idx);
 
- PDM_free(distrib);
+  PDM_free(distrib);
 
 }
 
@@ -1634,13 +1634,13 @@ _gnum_from_parent_compute_nuplet
     }
   }
 
- PDM_free(already_treat  );
- PDM_free(same_entity_idx);
- PDM_free(tmp_parent     );
- PDM_free(order_parent   );
+  PDM_free(already_treat  );
+  PDM_free(same_entity_idx);
+  PDM_free(tmp_parent     );
+  PDM_free(order_parent   );
 
- PDM_free(order);
- PDM_free(key_conflict_idx);
+  PDM_free(order);
+  PDM_free(key_conflict_idx);
 
 
   PDM_g_num_t current_global_num = i_abs_entity;
@@ -1687,18 +1687,18 @@ _gnum_from_parent_compute_nuplet
   for(int i_part = 0; i_part < gen_gnum->n_part; ++i_part) {
    PDM_free(key_ln_to_gn[i_part]);
   }
- PDM_free(key_ln_to_gn);
- PDM_free(send_key);
- PDM_free(send_elmts);
- PDM_free(recv_key);
- PDM_free(recv_elmts);
+  PDM_free(key_ln_to_gn);
+  PDM_free(send_key);
+  PDM_free(send_elmts);
+  PDM_free(recv_key);
+  PDM_free(recv_elmts);
 
- PDM_free(send_buff_n  );
- PDM_free(send_buff_idx);
- PDM_free(recv_buff_n  );
- PDM_free(recv_buff_idx);
+  PDM_free(send_buff_n  );
+  PDM_free(send_buff_idx);
+  PDM_free(recv_buff_n  );
+  PDM_free(recv_buff_idx);
 
- PDM_free(distrib);
+  PDM_free(distrib);
 }
 
 /*=============================================================================
@@ -1956,10 +1956,10 @@ PDM_gen_gnum_t *gen_gnum
     }
   }
 
- PDM_free(gen_gnum->g_nums);
- PDM_free(gen_gnum->n_elts);
+  PDM_free(gen_gnum->g_nums);
+  PDM_free(gen_gnum->n_elts);
 
- PDM_free(gen_gnum);
+  PDM_free(gen_gnum);
 
 }
 

@@ -2089,11 +2089,11 @@ char *argv[]
                     d_recv, n_recv, i_recv, PDM_MPI_DOUBLE,
                     PDM_MPI_COMM_WORLD);
 
- PDM_free(n_send);
- PDM_free(b_send);
- PDM_free(i_send);
- PDM_free(n_recv);
- PDM_free(d_send);
+  PDM_free(n_send);
+  PDM_free(b_send);
+  PDM_free(i_send);
+  PDM_free(n_recv);
+  PDM_free(d_send);
 
   int **check_graph;
   PDM_malloc(check_graph,n_part,int*);
@@ -2118,7 +2118,7 @@ char *argv[]
     check_graph[ipart2][2*ielt2+1] = ielt1;
   }
 
- PDM_free(d_recv);
+  PDM_free(d_recv);
 
   for (int ipart = 0; ipart < n_part; ipart++) {
     for (int i = 0; i < nFace[1][ipart]; i++) {
@@ -2150,10 +2150,10 @@ char *argv[]
   for (int ipart = 0; ipart < n_part; ipart++) {
    PDM_free(check_graph[ipart]);
   }
- PDM_free(check_graph);
+  PDM_free(check_graph);
 
- PDM_free(i_recv);
- PDM_free(b_recv);
+  PDM_free(i_recv);
+  PDM_free(b_recv);
 
   /*
    *  Export overlay mesh
@@ -2195,13 +2195,13 @@ char *argv[]
    PDM_free(surfOlB[ipart]);
   }
 
- PDM_free(sFieldA);
- PDM_free(sFieldOlA);
- PDM_free(centerA);
- PDM_free(rFieldB);
- PDM_free(rFieldOlB);
- PDM_free(surfB);
- PDM_free(surfOlB);
+  PDM_free(sFieldA);
+  PDM_free(sFieldOlA);
+  PDM_free(centerA);
+  PDM_free(rFieldB);
+  PDM_free(rFieldOlB);
+  PDM_free(surfB);
+  PDM_free(surfOlB);
 
   for (int imesh = 0; imesh < 2; imesh++) {
 

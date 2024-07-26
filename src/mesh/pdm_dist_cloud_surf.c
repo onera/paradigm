@@ -998,9 +998,9 @@ _dist_cloud_surf_compute
     PDM_timer_resume(dist->timer);
 
   } // End of loop on point clouds
- PDM_free(part_n_elt);
- PDM_free(part_elt_g_num);
- PDM_free(part_elt_extents);
+  PDM_free(part_n_elt);
+  PDM_free(part_elt_g_num);
+  PDM_free(part_elt_extents);
 
   PDM_timer_hang_on(dist->timer);
   dist->times_elapsed[END] = PDM_timer_elapsed(dist->timer);
@@ -2900,18 +2900,18 @@ PDM_dist_cloud_surf_distri_data
   PDM_part_to_part_reverse_iexch_wait(ptp,request_tag);
 
   PDM_part_to_part_free(ptp);
- PDM_free(n_face_surf);
- PDM_free(n_pts_cloud);
- PDM_free(face_ln_to_gn);
- PDM_free(pts_ln_to_gn);
+  PDM_free(n_face_surf);
+  PDM_free(n_pts_cloud);
+  PDM_free(face_ln_to_gn);
+  PDM_free(pts_ln_to_gn);
   for (int i_part = 0; i_part < n_part_cloud; i_part++) {
     if (1==0) {
       PDM_log_trace_array_double(*cloud_data[i_part], n_pts_cloud[i_part], "clouddata");
     }
    PDM_free(closest_elt_gnum_idx[i_part]);
   }
- PDM_free(closest_elt_gnum_idx);
- PDM_free(closest_elt_gnum);
+  PDM_free(closest_elt_gnum_idx);
+  PDM_free(closest_elt_gnum);
 }
 
 
@@ -2958,7 +2958,7 @@ PDM_dist_cloud_surf_free
    PDM_free(dist->points_cloud[i_point_cloud].closest_elt_gnum);
   }
 
- PDM_free(dist->points_cloud);
+  PDM_free(dist->points_cloud);
 
   PDM_timer_free(dist->timer);
 
@@ -2968,7 +2968,7 @@ PDM_dist_cloud_surf_free
     }
   }
 
- PDM_free(dist);
+  PDM_free(dist);
 }
 
 

@@ -87,7 +87,7 @@ PDM_DMesh_nodal_section_std_t *_section_std
     }
   }
 
- PDM_free(_section_std);
+  PDM_free(_section_std);
 }
 
 
@@ -129,7 +129,7 @@ PDM_DMesh_nodal_section_poly2d_t *_section_poly2d
     }
   }
 
- PDM_free(_section_poly2d);
+  PDM_free(_section_poly2d);
 }
 
 /**
@@ -175,7 +175,7 @@ PDM_DMesh_nodal_section_poly3d_t *_section_poly3d
       _section_poly3d->_cell_face = NULL;
     }
   }
- PDM_free(_section_poly3d);
+  PDM_free(_section_poly3d);
 }
 
 
@@ -427,7 +427,7 @@ PDM_dmesh_nodal_elmts_t* dmn_elts
    PDM_free(dmn_elts->delmt_child_distrib);
   }
 
- PDM_free(dmn_elts);
+  PDM_free(dmn_elts);
 }
 
 int
@@ -1218,7 +1218,7 @@ const char                    *ho_ordering
 
   section->ho_ordering = ho_ordering;
 
- PDM_free(__delt_node);
+  PDM_free(__delt_node);
 }
 
 

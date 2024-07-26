@@ -898,7 +898,7 @@ _heap_fill_pn_sub_edge
 
 
   }
- PDM_free(uNodes);
+  PDM_free(uNodes);
 }
 
 
@@ -1532,7 +1532,7 @@ _default_location_generic_1d
 
   }
 
- PDM_free(weightsPn);
+  PDM_free(weightsPn);
 
   return dist2;
 
@@ -1986,7 +1986,7 @@ _heap_fill_pn_sub_tria
     iend += order - j;
   }
 
- PDM_free(uv_nodes);
+  PDM_free(uv_nodes);
 }
 
 
@@ -2150,7 +2150,7 @@ _heap_fill_qn_sub_tria
     }
   }
 
- PDM_free(uvNodes);
+  PDM_free(uvNodes);
 }
 
 
@@ -2796,7 +2796,7 @@ _default_location_generic_2d
 
   }
 
- PDM_free(weightsPn);
+  PDM_free(weightsPn);
 
   return dist2;
 
@@ -3371,7 +3371,7 @@ _heap_fill_pn_tetra_sub_tetra
     ibeg ++;
   }
 
- PDM_free(uvw_nodes);
+  PDM_free(uvw_nodes);
 }
 
 
@@ -3820,7 +3820,7 @@ _heap_fill_pn_pyra_sub_tetra
     ibeg += step;
   }
 
- PDM_free(uvw_nodes);
+  PDM_free(uvw_nodes);
 }
 
 
@@ -4246,7 +4246,7 @@ _heap_fill_pn_prism_sub_tetra
   } // End of k-loop
 
 
- PDM_free(uvw_nodes);
+  PDM_free(uvw_nodes);
 }
 
 
@@ -4522,7 +4522,7 @@ _heap_fill_pn_hexa_sub_tetra
     }
   }
 
- PDM_free(uvw_nodes);
+  PDM_free(uvw_nodes);
 }
 
 
@@ -5232,7 +5232,7 @@ _default_location_generic_3d
 
   }
 
- PDM_free(weightsPn);
+  PDM_free(weightsPn);
 
 
 

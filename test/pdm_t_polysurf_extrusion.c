@@ -853,14 +853,14 @@ int main(int argc, char *argv[])
   /*
    *  Finalize
    */
- PDM_free(dcell_face_idx);
- PDM_free(dcell_face);
- PDM_free(dface_cell);
- PDM_free(dface_vtx_idx);
- PDM_free(dface_vtx);
- PDM_free(dvtx_coord);
- PDM_free(dface_group_idx);
- PDM_free(dface_group);
+  PDM_free(dcell_face_idx);
+  PDM_free(dcell_face);
+  PDM_free(dface_cell);
+  PDM_free(dface_vtx_idx);
+  PDM_free(dface_vtx);
+  PDM_free(dvtx_coord);
+  PDM_free(dface_group_idx);
+  PDM_free(dface_group);
 
   if (use_multipart) {
     PDM_multipart_free (mpart);

@@ -1093,10 +1093,10 @@ PDM_part_mesh_nodal_free
     pmn->vtx = NULL;
   }
 
- PDM_free(pmn->n_vol   );
- PDM_free(pmn->n_surf  );
- PDM_free(pmn->n_ridge );
- PDM_free(pmn->n_corner);
+  PDM_free(pmn->n_vol   );
+  PDM_free(pmn->n_surf  );
+  PDM_free(pmn->n_ridge );
+  PDM_free(pmn->n_corner);
 
   if (pmn->section_kind != NULL) {
    PDM_free(pmn->section_kind);
@@ -1105,7 +1105,7 @@ PDM_part_mesh_nodal_free
    PDM_free(pmn->section_id);
   }
 
- PDM_free(pmn);
+  PDM_free(pmn);
 }
 
 

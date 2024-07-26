@@ -188,7 +188,7 @@ _delmt_vtx_to_pelmt_vtx
                                                                    n_part,
                                                                    dmne->comm);
 
- PDM_free(block_elmts_disbrib_idx);
+  PDM_free(block_elmts_disbrib_idx);
 
   /*
    * Exchange connectivity
@@ -209,7 +209,7 @@ _delmt_vtx_to_pelmt_vtx
     pelmts_stride_idx[i_part] = PDM_array_new_idx_from_sizes_int(pelmts_stride[i_part], pn_elmt[i_part]);
    PDM_free(pelmts_stride[i_part]);
   }
- PDM_free(pelmts_stride);
+  PDM_free(pelmts_stride);
   /*
    * Exchange type of elements
    */
@@ -229,10 +229,10 @@ _delmt_vtx_to_pelmt_vtx
    PDM_free(block_elmts_types[i_section]);
    PDM_free(stride_one[i_section]);
   }
- PDM_free(block_elmts_n_vtx);
- PDM_free(block_elmts_types);
- PDM_free(block_elmts_connec);
- PDM_free(stride_one);
+  PDM_free(block_elmts_n_vtx);
+  PDM_free(block_elmts_types);
+  PDM_free(block_elmts_connec);
+  PDM_free(stride_one);
 
   /* Set output */
   *pelmt_strid_idx_out = pelmts_stride_idx;
@@ -401,7 +401,7 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
                                                                    n_part,
                                                                    dmne->comm);
 
- PDM_free(block_elmts_disbrib_idx);
+  PDM_free(block_elmts_disbrib_idx);
 
   /*
    * Exchange connectivity
@@ -441,10 +441,10 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
    PDM_free(block_elmts_types[i_section]);
    PDM_free(stride_one[i_section]);
   }
- PDM_free(block_elmts_n_vtx);
- PDM_free(block_elmts_types);
- PDM_free(block_elmts_connec);
- PDM_free(stride_one);
+  PDM_free(block_elmts_n_vtx);
+  PDM_free(block_elmts_types);
+  PDM_free(block_elmts_connec);
+  PDM_free(stride_one);
 
   PDM_multi_block_to_part_free(mbtp);
 
@@ -779,12 +779,12 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
   }
 
 
- PDM_free(pelmt_by_section_n       );
- PDM_free(connec                   );
- PDM_free(connec_idx               );
- PDM_free(parent_num               );
- PDM_free(numabs                   );
- PDM_free(sparent_entitity_ln_to_gn);
+  PDM_free(pelmt_by_section_n       );
+  PDM_free(connec                   );
+  PDM_free(connec_idx               );
+  PDM_free(parent_num               );
+  PDM_free(numabs                   );
+  PDM_free(sparent_entitity_ln_to_gn);
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
    PDM_free(pelmts_connec         [i_part]);
@@ -795,16 +795,16 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
    PDM_free(vtx_order             [i_part]);
    PDM_free(section_elmts_ln_to_gn[i_part]);
   }
- PDM_free(sorted_vtx_ln_to_gn);
- PDM_free(vtx_order);
- PDM_free(pelmts_connec);
- PDM_free(pelmts_stride);
- PDM_free(pelmts_types );
- PDM_free(pid_section  );
- PDM_free(section_order);
- PDM_free(section_ho_ordering);
- PDM_free(pelmts_stride_idx);
- PDM_free(section_elmts_ln_to_gn);
+  PDM_free(sorted_vtx_ln_to_gn);
+  PDM_free(vtx_order);
+  PDM_free(pelmts_connec);
+  PDM_free(pelmts_stride);
+  PDM_free(pelmts_types );
+  PDM_free(pid_section  );
+  PDM_free(section_order);
+  PDM_free(section_ho_ordering);
+  PDM_free(pelmts_stride_idx);
+  PDM_free(section_elmts_ln_to_gn);
 
   return pmne;
 }
@@ -871,9 +871,9 @@ PDM_reverse_dparent_gnum
   for (int i_part = 0; i_part < n_part+1; ++i_part) {
    PDM_free(weights_both[i_part]);
   }
- PDM_free(weights_both);
- PDM_free(lngn_both);
- PDM_free(n_elts_both);
+  PDM_free(weights_both);
+  PDM_free(lngn_both);
+  PDM_free(n_elts_both);
 
   PDM_part_to_block_t* ptb = PDM_part_to_block_create_from_distrib(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                                    PDM_PART_TO_BLOCK_POST_MERGE,
@@ -925,8 +925,8 @@ PDM_reverse_dparent_gnum
   int dn_parent                 = PDM_part_to_block_n_elt_block_get(ptb);
   PDM_g_num_t* blk_dparent_gnum = PDM_part_to_block_block_gnum_get(ptb);
 
- PDM_free(pblk_child_n   );
- PDM_free(pblk_child_gnum);
+  PDM_free(pblk_child_n   );
+  PDM_free(pblk_child_gnum);
 
   /*
    * At this stage we have in each block of parent the global number of child
@@ -987,9 +987,9 @@ PDM_reverse_dparent_gnum
 
   PDM_block_to_part_free(btp);
   PDM_part_to_block_free(ptb);
- PDM_free(distrib);
- PDM_free(blk_child_n);
- PDM_free(blk_child_gnum);
+  PDM_free(distrib);
+  PDM_free(blk_child_n);
+  PDM_free(blk_child_gnum);
   //PDM_free(block_distrib_tmp_idx);
 
   /*
@@ -1059,9 +1059,9 @@ PDM_reverse_dparent_gnum
    PDM_free(_pchild_n[i_part]);
    PDM_free(_tmp_pchild_n[i_part]);
   }
- PDM_free(_pchild_n);
- PDM_free(_tmp_pchild_n);
- PDM_free(_tmp_pchild_parent_gnum);
+  PDM_free(_pchild_n);
+  PDM_free(_tmp_pchild_n);
+  PDM_free(_tmp_pchild_parent_gnum);
 
   *pelmt_to_entity   = _pelmt_to_entity;
   *pchild_gnum        = _pchild_gnum;
@@ -1337,9 +1337,9 @@ PDM_generate_ho_vtx_ln_to_gn
 
   }
 
- PDM_free(s_connec_volumic    );
- PDM_free(s_connec_surfacic   );
- PDM_free(s_connec_ridge      );
+  PDM_free(s_connec_volumic    );
+  PDM_free(s_connec_surfacic   );
+  PDM_free(s_connec_ridge      );
   if(pelmt_volumic_connec != NULL){
     for(int i_part = 0; i_part < n_part; ++i_part) {
       if (pelmt_volumic_connec [i_part] != NULL) {
@@ -1585,7 +1585,7 @@ PDM_dmesh_nodal_elmts_to_extract_dmesh_nodal_elmts
     }
    PDM_free(extract_gnum_elmt[i_section]);
   }
- PDM_free(extract_gnum_elmt);
+  PDM_free(extract_gnum_elmt);
 
   /* Generate child gnum */
   PDM_gnum_compute (gen_gnum);
@@ -1699,11 +1699,11 @@ PDM_dmesh_nodal_elmts_to_extract_dmesh_nodal_elmts
    PDM_free(dextract_block_elmts_gnum[i]);
   }
 
- PDM_free(delmt_sorted_by_section);
- PDM_free(dn_elmt_by_section_idx);
- PDM_free(dn_elmt_by_section_n);
- PDM_free(dextract_block_elmts_gnum);
- PDM_free(dn_extract_elmt);
+  PDM_free(delmt_sorted_by_section);
+  PDM_free(dn_elmt_by_section_idx);
+  PDM_free(dn_elmt_by_section_n);
+  PDM_free(dextract_block_elmts_gnum);
+  PDM_free(dn_extract_elmt);
 
   return extract_dmne;
 }

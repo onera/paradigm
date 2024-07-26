@@ -261,7 +261,7 @@ _generate_volume_mesh
   PDM_multipart_dmesh_nodal_set(mpart, 0, dmn);
   PDM_multipart_compute(mpart);
 
- PDM_free(n_part_domains);
+  PDM_free(n_part_domains);
 
 
   *_mpart = mpart;
@@ -735,8 +735,8 @@ _create_wall_surf
    PDM_free(psurf_face_vtx_g_num[i_part]);
    PDM_free(psurf_face_vtx_n    [i_part]);
   }
- PDM_free(psurf_face_vtx_g_num);
- PDM_free(psurf_face_vtx_n);
+  PDM_free(psurf_face_vtx_g_num);
+  PDM_free(psurf_face_vtx_n);
 
   PDM_g_num_t *distrib_face_child = PDM_compute_entity_distribution(comm, dn_face);
 
@@ -771,11 +771,11 @@ _create_wall_surf
   PDM_g_num_t *pequi_surf_vtx_ln_to_gn = tmp_pequi_surf_vtx_ln_to_gn[0];
   int         *pequi_surf_face_vtx_idx = tmp_pequi_surf_face_vtx_idx[0];
   int         *pequi_surf_face_vtx     = tmp_pequi_surf_face_vtx    [0];
- PDM_free(tmp_pequi_surf_nvtx        );
- PDM_free(tmp_pequi_surf_vtx_ln_to_gn);
- PDM_free(tmp_pequi_surf_face_vtx_idx);
- PDM_free(tmp_pequi_surf_face_vtx    );
- PDM_free(dface_vtx_idx    );
+  PDM_free(tmp_pequi_surf_nvtx        );
+  PDM_free(tmp_pequi_surf_vtx_ln_to_gn);
+  PDM_free(tmp_pequi_surf_face_vtx_idx);
+  PDM_free(tmp_pequi_surf_face_vtx    );
+  PDM_free(dface_vtx_idx    );
 
   PDM_block_to_part_t* btp_vtx = PDM_block_to_part_create_from_sparse_block(blk_vtx_gnum,
                                                                             dn_vtx,
@@ -794,17 +794,17 @@ _create_wall_surf
                          NULL,
             (void ***)   &tmp_pvtx_coord);
   double* pequi_surf_vtx_coord = tmp_pvtx_coord[0];
- PDM_free(tmp_pvtx_coord);
- PDM_free(dvtx_coords);
+  PDM_free(tmp_pvtx_coord);
+  PDM_free(dvtx_coords);
 
   PDM_block_to_part_free(btp_vtx);
 
   PDM_part_to_block_free(ptb_face);
   PDM_part_to_block_free(ptb_vtx);
- PDM_free(distrib_face_child);
+  PDM_free(distrib_face_child);
 
- PDM_free(dface_vtx_n);
- PDM_free(dface_vtx);
+  PDM_free(dface_vtx_n);
+  PDM_free(dface_vtx);
 
 
   *pn_cell_out        = pn_cell;
@@ -1058,7 +1058,7 @@ _create_wall_ray
     }
   }
 
- PDM_free(distrib_vtx);
+  PDM_free(distrib_vtx);
 
   if(0 == 1) {
     char filename[999];
@@ -1589,7 +1589,7 @@ char *argv[]
                          dline_data,
                          NULL,
           (void ***)     &pline_data);
- PDM_free(dline_data);
+  PDM_free(dline_data);
 
 
   for(int i_part = 0; i_part < n_part_line; ++i_part) {
@@ -1625,13 +1625,13 @@ char *argv[]
    PDM_free(pline_to_cell_velocity[i_part]);
    PDM_free(pline_data[i_part]);
   }
- PDM_free(pline_to_cell_center);
- PDM_free(pline_to_cell_velocity);
- PDM_free(pseudo_distance);
- PDM_free(pseudo_coords  );
- PDM_free(order_by_dist  );
- PDM_free(closest_elt_gnum);
- PDM_free(pline_data);
+  PDM_free(pline_to_cell_center);
+  PDM_free(pline_to_cell_velocity);
+  PDM_free(pseudo_distance);
+  PDM_free(pseudo_coords  );
+  PDM_free(order_by_dist  );
+  PDM_free(closest_elt_gnum);
+  PDM_free(pline_data);
 
 
   PDM_mesh_intersection_free(mi);
@@ -1647,30 +1647,30 @@ char *argv[]
    PDM_free(cell_center        [i_part]);
    PDM_free(velocity           [i_part]);
   }
- PDM_free(psurf_vtx );
- PDM_free(psurf_face);
- PDM_free(psurf_vtx_coord);
- PDM_free(psurf_face_vtx_idx);
- PDM_free(psurf_face_vtx);
- PDM_free(psurf_face_ln_to_gn);
- PDM_free(psurf_vtx_ln_to_gn);
- PDM_free(cell_center);
- PDM_free(pcell_ln_to_gn);
- PDM_free(pn_cell);
- PDM_free(velocity);
- PDM_free(pray_ln_to_gn);
- PDM_free(pvtx_ln_to_gn);
- PDM_free(psurf_face_normal);
- PDM_free(psurf_face_center);
- PDM_free(ray_coord);
- PDM_free(pray_vtx);
+  PDM_free(psurf_vtx );
+  PDM_free(psurf_face);
+  PDM_free(psurf_vtx_coord);
+  PDM_free(psurf_face_vtx_idx);
+  PDM_free(psurf_face_vtx);
+  PDM_free(psurf_face_ln_to_gn);
+  PDM_free(psurf_vtx_ln_to_gn);
+  PDM_free(cell_center);
+  PDM_free(pcell_ln_to_gn);
+  PDM_free(pn_cell);
+  PDM_free(velocity);
+  PDM_free(pray_ln_to_gn);
+  PDM_free(pvtx_ln_to_gn);
+  PDM_free(psurf_face_normal);
+  PDM_free(psurf_face_center);
+  PDM_free(ray_coord);
+  PDM_free(pray_vtx);
 
- PDM_free(pequi_surf_face_vtx_idx        );
- PDM_free(pequi_surf_face_vtx            );
- PDM_free(pequi_surf_face_ln_to_gn       );
- PDM_free(pequi_surf_parent_face_ln_to_gn);
- PDM_free(pequi_surf_vtx_ln_to_gn        );
- PDM_free(pequi_surf_vtx_coord           );
+  PDM_free(pequi_surf_face_vtx_idx        );
+  PDM_free(pequi_surf_face_vtx            );
+  PDM_free(pequi_surf_face_ln_to_gn       );
+  PDM_free(pequi_surf_parent_face_ln_to_gn);
+  PDM_free(pequi_surf_vtx_ln_to_gn        );
+  PDM_free(pequi_surf_vtx_coord           );
 
 
   PDM_DMesh_nodal_free(dmn_vol_a);

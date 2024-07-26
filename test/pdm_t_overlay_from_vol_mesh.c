@@ -259,7 +259,7 @@ _generate_surf_mesh_1d
                  (const PDM_g_num_t **) &_surf_vtx_ln_to_gn,
                                         &tmp_vtx_coord);
   _surf_vtx_coord = tmp_vtx_coord[0];
- PDM_free(tmp_vtx_coord);
+  PDM_free(tmp_vtx_coord);
 
 
   *psurf_n_face       = _psurf_n_face;
@@ -271,11 +271,11 @@ _generate_surf_mesh_1d
   *surf_vtx_coord     = _surf_vtx_coord;
 
 
- PDM_free(dvtx_coord);
- PDM_free(distrib_face);
- PDM_free(distrib_vtx);
- PDM_free(dface_vtx_idx);
- PDM_free(dface_vtx);
+  PDM_free(dvtx_coord);
+  PDM_free(distrib_face);
+  PDM_free(distrib_vtx);
+  PDM_free(dface_vtx_idx);
+  PDM_free(dface_vtx);
 }
 
 
@@ -873,37 +873,37 @@ int main(int argc, char *argv[])
   PDM_ol_del (ol);
   PDM_extract_part_free(extrp);
 
- PDM_free(surf_face_vtx_idx  );
- PDM_free(surf_face_vtx      );
- PDM_free(surf_face_ln_to_gn );
- PDM_free(surf_vtx_ln_to_gn  );
- PDM_free(surf_vtx_coord     );
+  PDM_free(surf_face_vtx_idx  );
+  PDM_free(surf_face_vtx      );
+  PDM_free(surf_face_ln_to_gn );
+  PDM_free(surf_vtx_ln_to_gn  );
+  PDM_free(surf_vtx_coord     );
 
   for (int i_part = 0; i_part < n_part_domains; i_part++){
    PDM_free(selected_face_l_num[i_part]);
   }
- PDM_free(selected_face_l_num);
- PDM_free(pn_cell);
- PDM_free(pn_face);
- PDM_free(pn_vtx);
- PDM_free(pn_select_face);
+  PDM_free(selected_face_l_num);
+  PDM_free(pn_cell);
+  PDM_free(pn_face);
+  PDM_free(pn_vtx);
+  PDM_free(pn_select_face);
 
- PDM_free(pcell_ln_to_gn);
- PDM_free(pface_ln_to_gn);
- PDM_free(pvtx_ln_to_gn );
- PDM_free(pcell_face    );
- PDM_free(pcell_face_idx);
- PDM_free(pface_vtx     );
- PDM_free(pface_vtx_idx );
- PDM_free(pvtx_coord    );
+  PDM_free(pcell_ln_to_gn);
+  PDM_free(pface_ln_to_gn);
+  PDM_free(pvtx_ln_to_gn );
+  PDM_free(pcell_face    );
+  PDM_free(pcell_face_idx);
+  PDM_free(pface_vtx     );
+  PDM_free(pface_vtx_idx );
+  PDM_free(pvtx_coord    );
 
- PDM_free(pn_extract_face       );
- PDM_free(pn_extract_vtx        );
- PDM_free(pextract_face_vtx     );
- PDM_free(pextract_face_vtx_idx );
- PDM_free(pextract_vtx          );
- PDM_free(pextract_face_ln_to_gn);
- PDM_free(pextract_vtx_ln_to_gn );
+  PDM_free(pn_extract_face       );
+  PDM_free(pn_extract_vtx        );
+  PDM_free(pextract_face_vtx     );
+  PDM_free(pextract_face_vtx_idx );
+  PDM_free(pextract_vtx          );
+  PDM_free(pextract_face_ln_to_gn);
+  PDM_free(pextract_vtx_ln_to_gn );
 
   PDM_multipart_free(mpart);
   PDM_dcube_gen_free(dcube);

@@ -787,10 +787,10 @@ main
 
   PDM_gnum_free (gen_gnum);
 
- PDM_free(char_length);
- PDM_free(faceVtxA_merge);
- PDM_free(vtxCoordA_merge);
- PDM_free(vtxLNToGNA_merge);
+  PDM_free(char_length);
+  PDM_free(faceVtxA_merge);
+  PDM_free(vtxCoordA_merge);
+  PDM_free(vtxLNToGNA_merge);
 
   faceVtxA_merge = _faceVtxA_merge;
   vtxCoordA_merge = _vtxCoordA_merge;
@@ -1156,7 +1156,7 @@ main
     sFieldA[i+2*nFaceA] = sFieldA[i];
   }
 
- PDM_free(centerA);
+  PDM_free(centerA);
 
   int           nOlFaceA;
   int           nOlLinkedFaceA;
@@ -1433,8 +1433,8 @@ main
                         ens_geoA_merge);
 
   PDM_writer_free (ens_meshA);
- PDM_free(faceVtxNA);
- PDM_free(faceVtxNA_merge);
+  PDM_free(faceVtxNA);
+  PDM_free(faceVtxNA_merge);
 
 
   PDM_writer_t *ens_meshB = PDM_writer_create ("Ensight",
@@ -1507,7 +1507,7 @@ main
                         ens_geoB);
 
   PDM_writer_free (ens_meshB);
- PDM_free(faceVtxNB);
+  PDM_free(faceVtxNB);
 
 
   _export_ol_mesh (PDM_MPI_COMM_WORLD,
@@ -1521,46 +1521,46 @@ main
   // Free
   //
 
- PDM_free(sFieldA);
- PDM_free(rFieldB);
- PDM_free(sFieldOlA);
- PDM_free(rFieldOlB);
- PDM_free(surfB);
- PDM_free(surfOlB);
- PDM_free(ol_surface_vector);
- PDM_free(ol_center);
- PDM_free(ol_characteristicLength);
- PDM_free(ol_isDegenerated);
+  PDM_free(sFieldA);
+  PDM_free(rFieldB);
+  PDM_free(sFieldOlA);
+  PDM_free(rFieldOlB);
+  PDM_free(surfB);
+  PDM_free(surfOlB);
+  PDM_free(ol_surface_vector);
+  PDM_free(ol_center);
+  PDM_free(ol_characteristicLength);
+  PDM_free(ol_isDegenerated);
 
- PDM_free(olFaceIniVtxIdxA);
- PDM_free(olFaceIniVtxA);
- PDM_free(olface_vtx_idxA);
- PDM_free(olface_vtxA);
- PDM_free(olLinkedface_procIdxA);
- PDM_free(olLinkedFaceA);
- PDM_free(olface_ln_to_gnA);
- PDM_free(olCoordsA);
- PDM_free(olvtx_ln_to_gnA);
- PDM_free(initToOlFaceIdxA);
- PDM_free(initToOlFaceA);
+  PDM_free(olFaceIniVtxIdxA);
+  PDM_free(olFaceIniVtxA);
+  PDM_free(olface_vtx_idxA);
+  PDM_free(olface_vtxA);
+  PDM_free(olLinkedface_procIdxA);
+  PDM_free(olLinkedFaceA);
+  PDM_free(olface_ln_to_gnA);
+  PDM_free(olCoordsA);
+  PDM_free(olvtx_ln_to_gnA);
+  PDM_free(initToOlFaceIdxA);
+  PDM_free(initToOlFaceA);
 
- PDM_free(olFaceIniVtxIdxB);
- PDM_free(olFaceIniVtxB);
- PDM_free(olface_vtx_idxB);
- PDM_free(olface_vtxB);
- PDM_free(olLinkedface_procIdxB);
- PDM_free(olLinkedFaceB);
- PDM_free(olface_ln_to_gnB);
- PDM_free(olCoordsB);
- PDM_free(olvtx_ln_to_gnB);
- PDM_free(initToOlFaceIdxB);
- PDM_free(initToOlFaceB);
+  PDM_free(olFaceIniVtxIdxB);
+  PDM_free(olFaceIniVtxB);
+  PDM_free(olface_vtx_idxB);
+  PDM_free(olface_vtxB);
+  PDM_free(olLinkedface_procIdxB);
+  PDM_free(olLinkedFaceB);
+  PDM_free(olface_ln_to_gnB);
+  PDM_free(olCoordsB);
+  PDM_free(olvtx_ln_to_gnB);
+  PDM_free(initToOlFaceIdxB);
+  PDM_free(initToOlFaceB);
 
- PDM_free(faceVtxIdxA_merge);
- PDM_free(faceVtxA_merge);
- PDM_free(vtxCoordA_merge);
- PDM_free(vtxLNToGNA_merge);
- PDM_free(faceLNToGNA_merge);
+  PDM_free(faceVtxIdxA_merge);
+  PDM_free(faceVtxA_merge);
+  PDM_free(vtxCoordA_merge);
+  PDM_free(vtxLNToGNA_merge);
+  PDM_free(faceLNToGNA_merge);
 
   PDM_ol_del (ol);
 

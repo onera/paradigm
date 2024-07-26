@@ -508,11 +508,11 @@ int main(int argc, char *argv[])
    PDM_free(part_local_field[i_part]);
    PDM_free(part_reduced_field[i_part]);
   }
- PDM_free(part_n_vtx);
- PDM_free(part_vtx_ln_to_gn);
- PDM_free(part_local_field);
- PDM_free(part_reduced_field);
- PDM_free(dcell_part);
+  PDM_free(part_n_vtx);
+  PDM_free(part_vtx_ln_to_gn);
+  PDM_free(part_local_field);
+  PDM_free(part_reduced_field);
+  PDM_free(dcell_part);
 
   PDM_part_free (ppart);
 

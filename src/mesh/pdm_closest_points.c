@@ -208,15 +208,15 @@ _closest_points_reverse_results
                           (void **) cls->tgt_cloud->closest_src_dist,
                                     &block_src_dist_n,
                           (void **) &block_tgt_in_src_dist);
- PDM_free(block_src_dist_n); // Same than block_tgt_in_src_n
+  PDM_free(block_src_dist_n); // Same than block_tgt_in_src_n
 
   for (int i_part = 0; i_part < cls->tgt_cloud->n_part; i_part++) {
    PDM_free(tgt_g_num  [i_part]);
    PDM_free(tgt_g_num_n[i_part]);
   }
- PDM_free(tgt_g_num  );
- PDM_free(tgt_g_num_n);
- PDM_free(n_points);
+  PDM_free(tgt_g_num  );
+  PDM_free(tgt_g_num_n);
+  PDM_free(n_points);
 
   int i_rank;
   int n_rank;
@@ -311,14 +311,14 @@ _closest_points_reverse_results
    PDM_free(tgt_in_src_n[i_part]);
    PDM_free(useless_stride[i_part]);
   }
- PDM_free(tgt_in_src_n);
- PDM_free(useless_stride);
+  PDM_free(tgt_in_src_n);
+  PDM_free(useless_stride);
 
   PDM_block_to_part_free(btp);
- PDM_free(_block_distrib_idx);
- PDM_free(block_tgt_in_src_n);
- PDM_free(block_tgt_in_src_g_num);
- PDM_free(block_tgt_in_src_dist);
+  PDM_free(_block_distrib_idx);
+  PDM_free(block_tgt_in_src_n);
+  PDM_free(block_tgt_in_src_g_num);
+  PDM_free(block_tgt_in_src_dist);
 }
 
 
@@ -622,8 +622,8 @@ PDM_closest_point_t *cls
   // PDM_log_trace_array_double(closest_src_dist, n_tgt * cls->n_closest, "closest_src_dist:: " );
 
   /* Restore partitions */
- PDM_free(tgt_coord);
- PDM_free(tgt_g_num);
+  PDM_free(tgt_coord);
+  PDM_free(tgt_g_num);
   n_tgt = 0;
 
   PDM_malloc(cls->tgt_cloud->closest_src_gnum,cls->tgt_cloud->n_part,PDM_g_num_t *);
@@ -646,8 +646,8 @@ PDM_closest_point_t *cls
     }
     n_tgt += cls->n_closest * cls->tgt_cloud->n_points[i_part];
   }
- PDM_free(closest_src_gnum);
- PDM_free(closest_src_dist);
+  PDM_free(closest_src_gnum);
+  PDM_free(closest_src_dist);
 
 
   /* Sort closest source points in ascending order of global id */
@@ -673,8 +673,8 @@ PDM_closest_point_t *cls
       }
     }
   }
- PDM_free(tmp);
- PDM_free(order);
+  PDM_free(tmp);
+  PDM_free(order);
 
 
   //-->GPU
@@ -840,8 +840,8 @@ PDM_closest_point_t  *cls
     }
   }
 
- PDM_free(cls->tgt_cloud->closest_src_gnum);
- PDM_free(cls->tgt_cloud->closest_src_dist);
+  PDM_free(cls->tgt_cloud->closest_src_gnum);
+  PDM_free(cls->tgt_cloud->closest_src_dist);
 
   int free_tgt_in_src_gnum = (cls->owner == PDM_OWNERSHIP_KEEP) ||
      ( cls->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !cls->tgt_in_src_results_is_getted)||
@@ -878,9 +878,9 @@ PDM_closest_point_t  *cls
     }
   }
 
- PDM_free(cls->src_cloud->tgt_in_src_idx);
- PDM_free(cls->src_cloud->tgt_in_src);
- PDM_free(cls->src_cloud->tgt_in_src_dist);
+  PDM_free(cls->src_cloud->tgt_in_src_idx);
+  PDM_free(cls->src_cloud->tgt_in_src);
+  PDM_free(cls->src_cloud->tgt_in_src_dist);
 
   if (cls->tgt_cloud->gnum != NULL) {
    PDM_free(cls->tgt_cloud->gnum);
@@ -916,7 +916,7 @@ PDM_closest_point_t  *cls
     cls->ptp = NULL;
   }
 
- PDM_free(cls);
+  PDM_free(cls);
 
 }
 
@@ -1024,7 +1024,7 @@ PDM_transform_to_parent_gnum
 
   PDM_part_to_block_free(ptb);
   PDM_block_to_part_free(btp);
- PDM_free(block_parent);
+  PDM_free(block_parent);
 }
 
 /**

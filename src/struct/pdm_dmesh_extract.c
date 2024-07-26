@@ -113,9 +113,9 @@ _rebuild_group
   int         *dextract_bound_entity_idx      = tmp_dextract_bound_entity_idx     [0];
   int         *dextract_bound_entity          = tmp_dextract_bound_entity         [0];
   PDM_g_num_t *dextract_bound_entity_ln_to_gn = tmp_dextract_bound_entity_ln_to_gn[0];
- PDM_free(tmp_dextract_bound_entity_idx     );
- PDM_free(tmp_dextract_bound_entity         );
- PDM_free(tmp_dextract_bound_entity_ln_to_gn);
+  PDM_free(tmp_dextract_bound_entity_idx     );
+  PDM_free(tmp_dextract_bound_entity         );
+  PDM_free(tmp_dextract_bound_entity_ln_to_gn);
 
   if(0 == 1) {
     PDM_log_trace_array_int (dextract_bound_entity         , dextract_bound_entity_idx[n_group_entity], "dextract_bound_entity ::");
@@ -169,8 +169,8 @@ _rebuild_group
 
 
   //PDM_free(dextract_bound_entity_idx     );
- PDM_free(dextract_bound_entity         );
- PDM_free(dextract_bound_entity_ln_to_gn);
+  PDM_free(dextract_bound_entity         );
+  PDM_free(dextract_bound_entity_ln_to_gn);
 }
 
 static
@@ -259,9 +259,9 @@ _rebuild_group_nodal
   int         *dextract_bound_entity_idx      = tmp_dextract_bound_entity_idx     [0];
   int         *dextract_bound_entity          = tmp_dextract_bound_entity         [0];
   PDM_g_num_t *dextract_bound_entity_ln_to_gn = tmp_dextract_bound_entity_ln_to_gn[0];
- PDM_free(tmp_dextract_bound_entity_idx     );
- PDM_free(tmp_dextract_bound_entity         );
- PDM_free(tmp_dextract_bound_entity_ln_to_gn);
+  PDM_free(tmp_dextract_bound_entity_idx     );
+  PDM_free(tmp_dextract_bound_entity         );
+  PDM_free(tmp_dextract_bound_entity_ln_to_gn);
 
   if(0 == 1) {
     PDM_log_trace_array_int (dextract_bound_entity         , dextract_bound_entity_idx[n_group_entity], "dextract_bound_entity ::");
@@ -316,8 +316,8 @@ _rebuild_group_nodal
 
 
   //PDM_free(dextract_bound_entity_idx     );
- PDM_free(dextract_bound_entity         );
- PDM_free(dextract_bound_entity_ln_to_gn);
+  PDM_free(dextract_bound_entity         );
+  PDM_free(dextract_bound_entity_ln_to_gn);
 }
 
 
@@ -479,12 +479,12 @@ _dmesh_extract_3d
   _rebuild_group(dme, distrib_edge, PDM_MESH_ENTITY_EDGE, PDM_BOUND_TYPE_EDGE);
   _rebuild_group(dme, distrib_vtx , PDM_MESH_ENTITY_VTX,  PDM_BOUND_TYPE_VTX );
 
- PDM_free(distrib_cell);
- PDM_free(distrib_face);
+  PDM_free(distrib_cell);
+  PDM_free(distrib_face);
   if(distrib_edge != NULL) {
    PDM_free(distrib_edge);
   }
- PDM_free(distrib_vtx );
+  PDM_free(distrib_vtx );
 
 
 
@@ -625,11 +625,11 @@ _dmesh_extract_2d
   _rebuild_group(dme, distrib_edge, PDM_MESH_ENTITY_EDGE, PDM_BOUND_TYPE_EDGE);
   _rebuild_group(dme, distrib_vtx , PDM_MESH_ENTITY_VTX,  PDM_BOUND_TYPE_VTX );
 
- PDM_free(distrib_face);
+  PDM_free(distrib_face);
   if(distrib_edge != NULL) {
    PDM_free(distrib_edge);
   }
- PDM_free(distrib_vtx );
+  PDM_free(distrib_vtx );
 }
 
 
@@ -683,7 +683,7 @@ _dmesh_extract_1d
                                              &dme->parent_extract_gnum             [PDM_MESH_ENTITY_VTX]);
 
   dme->dmesh_extract->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX] = PDM_TRUE;
- PDM_free(dme->dmesh_extract->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_VTX]);
+  PDM_free(dme->dmesh_extract->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_VTX]);
   dme->dmesh_extract->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_VTX] = NULL;
   if(dedge_vtx_idx == NULL)  {
    PDM_free(_dedge_vtx_idx);
@@ -701,8 +701,8 @@ _dmesh_extract_1d
   _rebuild_group(dme, distrib_edge, PDM_MESH_ENTITY_EDGE, PDM_BOUND_TYPE_EDGE);
   _rebuild_group(dme, distrib_vtx , PDM_MESH_ENTITY_VTX,  PDM_BOUND_TYPE_VTX );
 
- PDM_free(distrib_edge);
- PDM_free(distrib_vtx );
+  PDM_free(distrib_edge);
+  PDM_free(distrib_vtx );
 
 }
 
@@ -733,7 +733,7 @@ _dmesh_extract_0d
                                                       &dme->n_selected,
                                                       1,
                                                       dme->comm);
- PDM_free(weight);
+  PDM_free(weight);
 
   int          dn_extract_vtx      = PDM_part_to_block_n_elt_block_get  (ptb);
   PDM_g_num_t *dextract_gnum_vtx   = PDM_part_to_block_block_gnum_get   (ptb);
@@ -756,7 +756,7 @@ _dmesh_extract_0d
                                                                                     dme->comm);
   _rebuild_group(dme, distrib_vtx , PDM_MESH_ENTITY_VTX, PDM_BOUND_TYPE_VTX );
 
- PDM_free(distrib_vtx );
+  PDM_free(distrib_vtx );
 }
 
 
@@ -866,7 +866,7 @@ _dmesh_extract_nodal
 
 
 
- PDM_free(tmp_dvtx_coord);
+  PDM_free(tmp_dvtx_coord);
 
 }
 
@@ -1333,7 +1333,7 @@ PDM_dmesh_extract_free
     PDM_DMesh_nodal_free(dme->dmesh_nodal_extract);
   }
 
- PDM_free(dme);
+  PDM_free(dme);
 }
 
 #ifdef __cplusplus

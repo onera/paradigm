@@ -602,43 +602,43 @@ int main(int argc, char *argv[])
                                field_name,
                                vtx_field);
   }
- PDM_free(face_vtx);
- PDM_free(face_group_n);
- PDM_free(edge_group_n);
- PDM_free(edge_surface_n);
- PDM_free(vtx_ridge_n);
- PDM_free(vtx_surface_n);
+  PDM_free(face_vtx);
+  PDM_free(face_group_n);
+  PDM_free(edge_group_n);
+  PDM_free(edge_surface_n);
+  PDM_free(vtx_ridge_n);
+  PDM_free(vtx_surface_n);
 
- PDM_free(face_group_idx);
- PDM_free(face_group);
- PDM_free(edge_group_idx);
- PDM_free(edge_group);
- PDM_free(edge_face_idx);
- PDM_free(edge_face);
- PDM_free(vtx_edge_idx);
- PDM_free(vtx_edge);
+  PDM_free(face_group_idx);
+  PDM_free(face_group);
+  PDM_free(edge_group_idx);
+  PDM_free(edge_group);
+  PDM_free(edge_face_idx);
+  PDM_free(edge_face);
+  PDM_free(vtx_edge_idx);
+  PDM_free(vtx_edge);
 
- PDM_free(edge_surface_idx);
- PDM_free(edge_surface    );
- PDM_free(vtx_surface_idx );
- PDM_free(vtx_surface     );
- PDM_free(vtx_ridge_idx   );
- PDM_free(vtx_ridge       );
+  PDM_free(edge_surface_idx);
+  PDM_free(edge_surface    );
+  PDM_free(vtx_surface_idx );
+  PDM_free(vtx_surface     );
+  PDM_free(vtx_ridge_idx   );
+  PDM_free(vtx_ridge       );
 
 
   /* Free memory */
- PDM_free(cell_face_idx );
- PDM_free(cell_face     );
- PDM_free(face_edge_idx );
- PDM_free(face_edge     );
- PDM_free(edge_vtx_idx  );
- PDM_free(edge_vtx      );
- PDM_free(vtx_coord     );
- PDM_free(group_face_idx);
- PDM_free(group_face    );
- PDM_free(group_edge_idx);
- PDM_free(group_edge    );
- PDM_free(cell_vtx      );
+  PDM_free(cell_face_idx );
+  PDM_free(cell_face     );
+  PDM_free(face_edge_idx );
+  PDM_free(face_edge     );
+  PDM_free(edge_vtx_idx  );
+  PDM_free(edge_vtx      );
+  PDM_free(vtx_coord     );
+  PDM_free(group_face_idx);
+  PDM_free(group_face    );
+  PDM_free(group_edge_idx);
+  PDM_free(group_edge    );
+  PDM_free(cell_vtx      );
 
   PDM_MPI_Finalize();
   return 0;

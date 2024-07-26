@@ -485,9 +485,9 @@ PDM_part_graph_compute_from_face_cell
 
   /* Free temporary arrays*/
 
- PDM_free(cell_cell_n);
- PDM_free(cell_cell);
- PDM_free(cell_cell_idx);
+  PDM_free(cell_cell_n);
+  PDM_free(cell_cell);
+  PDM_free(cell_cell_idx);
 
   //Remove duplicate cells of the dual graph
   //We use the following scheme:

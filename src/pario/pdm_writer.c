@@ -659,7 +659,7 @@ _parse_options
   } while (pch != NULL);
 
 
- PDM_free(_options_str);
+  PDM_free(_options_str);
 }
 
 /**
@@ -861,8 +861,8 @@ PDM_writer_free
 
   /* Liberation des differents elements de la structure */
 
- PDM_free(cs->rep_sortie);
- PDM_free(cs->nom_sortie);
+  PDM_free(cs->rep_sortie);
+  PDM_free(cs->nom_sortie);
 
   /* Liberation des variables */
 
@@ -949,7 +949,7 @@ PDM_writer_free
 
   /* Liberation de la structure */
 
- PDM_free(cs);
+  PDM_free(cs);
   cs = NULL;
 }
 

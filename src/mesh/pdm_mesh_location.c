@@ -331,8 +331,8 @@ _dump_point_cloud
      PDM_free(g_num[ipart]);
     }
   }
- PDM_free(val_num_part);
- PDM_free(connec);
+  PDM_free(val_num_part);
+  PDM_free(connec);
   if (g_num != ppts_ln_to_gn) {
    PDM_free(g_num);
   }
@@ -816,7 +816,7 @@ _preconditioner_closer_upper_bound_dist
                                        closest_vtx_g_num,
                                        closest_vtx_dist2);
 
- PDM_free(closest_vtx_g_num);
+  PDM_free(closest_vtx_g_num);
 
 
 
@@ -841,7 +841,7 @@ _preconditioner_closer_upper_bound_dist
                                                             &dbox_pts_idx,
                                                             &dbox_pts_g_num,
                                                             &dbox_pts_coord);
- PDM_free(closest_vtx_dist2);
+  PDM_free(closest_vtx_dist2);
   // if (pcloud->n_part > 1) {
   //  PDM_free(pts_ln_to_gn);
   //  PDM_free(pts_coord);
@@ -857,7 +857,7 @@ _preconditioner_closer_upper_bound_dist
   for (int i = 0; i < n_extract_boxes; i++) {
     (*delt_pts_n)[i] = dbox_pts_idx[i+1] - dbox_pts_idx[i];
   }
- PDM_free(dbox_pts_idx);
+  PDM_free(dbox_pts_idx);
 
   *delt_pts_g_num = dbox_pts_g_num;
   *delt_pts_coord = dbox_pts_coord;
@@ -1921,12 +1921,12 @@ PDM_mesh_location_free
       ml->ptp[icloud] = NULL;
     }
   }
- PDM_free(ml->ptp);
- PDM_free(ml->ptp_ownership);
+  PDM_free(ml->ptp);
+  PDM_free(ml->ptp_ownership);
 
   PDM_timer_free(ml->timer);
 
- PDM_free(ml);
+  PDM_free(ml);
 }
 
 /**
@@ -4365,8 +4365,8 @@ PDM_mesh_location_compute
   b_t_cpu_s   = e_t_cpu_s;
   PDM_timer_resume(ml->timer);
 
- PDM_free(req_pts_proj_coord);
- PDM_free(req_pts_dist2);
+  PDM_free(req_pts_proj_coord);
+  PDM_free(req_pts_dist2);
 
 
 
@@ -4374,9 +4374,9 @@ PDM_mesh_location_compute
    PDM_free(elt_extents[ipart]);
    PDM_free(elt_g_num  [ipart]);
   }
- PDM_free(elt_extents);
- PDM_free(elt_g_num);
- PDM_free(pn_elt);
+  PDM_free(elt_extents);
+  PDM_free(elt_g_num);
+  PDM_free(pn_elt);
 
   PDM_MPI_Barrier (ml->comm);
   PDM_timer_hang_on(ml->timer);

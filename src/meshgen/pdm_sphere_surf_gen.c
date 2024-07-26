@@ -388,9 +388,9 @@ PDM_sphere_surf_gen_nodal
                            distrib_vtx,
                            distrib_face);
 
- PDM_free(distrib_vtx);
- PDM_free(distrib_face);
- PDM_free(dface_vtx_idx);
+  PDM_free(distrib_vtx);
+  PDM_free(distrib_face);
+  PDM_free(dface_vtx_idx);
 }
 
 
@@ -850,9 +850,9 @@ PDM_sphere_surf_icosphere_gen_nodal
                            distrib_vtx,
                            distrib_face);
 
- PDM_free(distrib_vtx);
- PDM_free(distrib_face);
- PDM_free(dface_vtx_idx);
+  PDM_free(distrib_vtx);
+  PDM_free(distrib_face);
+  PDM_free(dface_vtx_idx);
 }
 
 

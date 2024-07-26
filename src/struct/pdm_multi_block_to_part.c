@@ -242,7 +242,7 @@ PDM_multi_block_to_part_create
     PDM_log_trace_array_int(mbtp->distributed_data    , mbtp->distributed_data_idx[mbtp->n_rank], "mbtp->distributed_data:: ");
   }
 
- PDM_free(requested_data);
+  PDM_free(requested_data);
 
   return (PDM_multi_block_to_part_t *) mbtp;
 }
@@ -498,11 +498,11 @@ PDM_multi_block_to_part_exch2
                       i_recv_buffer,
                       PDM_MPI_BYTE,
                       mbtp->comm);
- PDM_free(send_buffer);
- PDM_free(n_send_buffer);
- PDM_free(i_send_buffer);
- PDM_free(n_recv_buffer);
- PDM_free(i_recv_buffer);
+  PDM_free(send_buffer);
+  PDM_free(n_send_buffer);
+  PDM_free(i_send_buffer);
+  PDM_free(n_recv_buffer);
+  PDM_free(i_recv_buffer);
 
   PDM_malloc(*(unsigned char ***) part_data, mbtp->n_part,unsigned char *);
   _part_data = (*(unsigned char ***) part_data);
@@ -570,7 +570,7 @@ PDM_multi_block_to_part_exch2
     }
   }
 
- PDM_free(recv_buffer);
+  PDM_free(recv_buffer);
 }
 
 
@@ -593,27 +593,27 @@ PDM_multi_block_to_part_free
   for(int i_block = 0; i_block < mbtp->n_block; ++i_block) {
    PDM_free(mbtp->block_distrib_idx[i_block]);
   }
- PDM_free(mbtp->block_distrib_idx);
- PDM_free(mbtp->multi_distrib_idx);
+  PDM_free(mbtp->block_distrib_idx);
+  PDM_free(mbtp->multi_distrib_idx);
 
   for (int i = 0; i < mbtp->n_part; i++) {
    PDM_free(mbtp->ind[i]);
   }
- PDM_free(mbtp->ind);
+  PDM_free(mbtp->ind);
 
- PDM_free(mbtp->n_elt);
- PDM_free(mbtp->distributed_data);
- PDM_free(mbtp->distributed_data_idx);
- PDM_free(mbtp->distributed_data_n);
- PDM_free(mbtp->distributed_block_idx);
- PDM_free(mbtp->distributed_block_n);
- PDM_free(mbtp->requested_data_idx);
- PDM_free(mbtp->requested_data_n);
- PDM_free(mbtp->requested_block_idx);
- PDM_free(mbtp->requested_block_n);
+  PDM_free(mbtp->n_elt);
+  PDM_free(mbtp->distributed_data);
+  PDM_free(mbtp->distributed_data_idx);
+  PDM_free(mbtp->distributed_data_n);
+  PDM_free(mbtp->distributed_block_idx);
+  PDM_free(mbtp->distributed_block_n);
+  PDM_free(mbtp->requested_data_idx);
+  PDM_free(mbtp->requested_data_n);
+  PDM_free(mbtp->requested_block_idx);
+  PDM_free(mbtp->requested_block_n);
 
 
- PDM_free(mbtp);
+  PDM_free(mbtp);
 
   return NULL;
 }

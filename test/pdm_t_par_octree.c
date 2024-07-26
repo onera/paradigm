@@ -477,8 +477,8 @@ char *argv[]
 
   /* Free */
 
- PDM_free(coords);
- PDM_free(gnum);
+  PDM_free(coords);
+  PDM_free(gnum);
 
   if (i_rank == 0) {
     PDM_printf ("-- End\n");

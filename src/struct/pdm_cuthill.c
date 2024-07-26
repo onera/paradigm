@@ -595,7 +595,7 @@ int node_num
   _i4vec_reverse ( *iccsze, perm );
 
   /**  Free memory. **/
- PDM_free(deg);// delete [] deg;
+  PDM_free(deg);// delete [] deg;
 
 
   return;
@@ -668,8 +668,8 @@ int perm[]
     }
   }
 
- PDM_free(level_row); //delete [] level_row;
- PDM_free(mask);      //delete [] mask;
+  PDM_free(level_row); //delete [] level_row;
+  PDM_free(mask);      //delete [] mask;
 
   return;
 }
@@ -713,8 +713,8 @@ PDM_cuthill_checkbandwidth
 
   int dualBandWidth = _adj_bandwidth(dual_graph_idx_tmp[n_elm], dual_graph_idx_tmp, dual_graph_tmp);
 
- PDM_free(dual_graph_idx_tmp);
- PDM_free(dual_graph_tmp);
+  PDM_free(dual_graph_idx_tmp);
+  PDM_free(dual_graph_tmp);
   return dualBandWidth;
 }
 
@@ -772,8 +772,8 @@ PDM_cuthill_generate
     PDM_printf("\n");
   }
   /** Free **/
- PDM_free(dual_graph_idx_tmp);
- PDM_free(dual_graph_tmp);
+  PDM_free(dual_graph_idx_tmp);
+  PDM_free(dual_graph_tmp);
 }
 
 #ifdef  __cplusplus

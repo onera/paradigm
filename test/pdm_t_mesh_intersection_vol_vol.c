@@ -1286,7 +1286,7 @@ main
   PDM_DMesh_nodal_free(dmn_a);
   PDM_multipart_free(mpart_a);
 
- PDM_free(tetraisation_pt_coord);
+  PDM_free(tetraisation_pt_coord);
 
   PDM_MPI_Barrier(comm);
 

@@ -86,8 +86,8 @@ const void* b,
   carr_i[ni] = '\0';
   carr_j[nj] = '\0';
   int i_comp = strcmp(carr_i, carr_j);
- PDM_free(carr_i);
- PDM_free(carr_j);
+  PDM_free(carr_i);
+  PDM_free(carr_j);
   if(i_comp >= 0){
     return 0;
   } else {

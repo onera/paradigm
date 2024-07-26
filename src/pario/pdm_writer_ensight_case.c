@@ -356,7 +356,7 @@ _del_vars(PDM_writer_ensight_case_t  *const this_case)
 
   }
 
- PDM_free(this_case->var);
+  PDM_free(this_case->var);
 }
 
 /*============================================================================
@@ -797,7 +797,7 @@ const int                   append
 
   /* Free structure and return */
 
- PDM_free(this_case);
+  PDM_free(this_case);
 
   return NULL;
 }

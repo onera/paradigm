@@ -497,8 +497,8 @@ int main(int argc, char *argv[])
   PDM_multipart_free(mpart_surf);
   PDM_DMesh_nodal_free(dmn_surf);
 
- PDM_free(pts_coord);
- PDM_free(pts_g_num);
+  PDM_free(pts_coord);
+  PDM_free(pts_g_num);
 
 
   PDM_MPI_Barrier(comm);

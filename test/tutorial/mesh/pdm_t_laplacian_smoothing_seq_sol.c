@@ -283,7 +283,7 @@ int main(int argc, char *argv[])
       }
     }
   }
- PDM_free(edge_face_n);
+  PDM_free(edge_face_n);
 
   /* Compute normalization factor for each vtx (constant over time) */
   double *normalization;
@@ -359,15 +359,15 @@ int main(int argc, char *argv[])
       break;
     }
   }
- PDM_free(normalization);
- PDM_free(new_vtx_coord);
- PDM_free(is_boundary_vtx);
+  PDM_free(normalization);
+  PDM_free(new_vtx_coord);
+  PDM_free(is_boundary_vtx);
 
- PDM_free(face_edge_idx);
- PDM_free(face_edge    );
- PDM_free(face_vtx     );
- PDM_free(edge_vtx     );
- PDM_free(vtx_coord    );
+  PDM_free(face_edge_idx);
+  PDM_free(face_edge    );
+  PDM_free(face_vtx     );
+  PDM_free(edge_vtx     );
+  PDM_free(vtx_coord    );
 
   PDM_MPI_Finalize();
   return 0;

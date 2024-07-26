@@ -1146,7 +1146,7 @@ PDM_triangulate_polygon(int                             dim,
       triangle_vertices[i] = __triangle_vertices[i] + 1;
   }
 
- PDM_free(_triangle_vertices);
+  PDM_free(_triangle_vertices);
   return n_triangles;
 }
 

@@ -146,12 +146,12 @@ _generate_sections
   PDM_realloc(post_section_kind ,post_section_kind , n_section_post ,int        );
   PDM_realloc(post_section_n    ,post_section_n    , n_section_post ,PDM_g_num_t);
 
- PDM_free(g_section_kind);
- PDM_free(g_section_n);
- PDM_free(section_kind_idx);
- PDM_free(section_kind_n);
- PDM_free(section_n);
- PDM_free(section_kind);
+  PDM_free(g_section_kind);
+  PDM_free(g_section_n);
+  PDM_free(section_kind_idx);
+  PDM_free(section_kind_n);
+  PDM_free(section_n);
+  PDM_free(section_kind);
 
 
   if(1 == 0) {
@@ -194,7 +194,7 @@ _generate_sections
     local_post_section_idx[i+1] = local_post_section_idx[i] + local_post_section_n[i];
   }
 
- PDM_free(post_section_idx );
+  PDM_free(post_section_idx );
 
   *out_post_section_n    = post_section_n;
   *out_post_section_kind = post_section_kind;
@@ -454,10 +454,10 @@ _rebuild_dmesh_nodal_2d
 
   }
 
- PDM_free(post_section_kind);
- PDM_free(post_section_n   );
- PDM_free(local_post_section_n  );
- PDM_free(local_post_section_idx);
+  PDM_free(post_section_kind);
+  PDM_free(post_section_n   );
+  PDM_free(local_post_section_n  );
+  PDM_free(local_post_section_idx);
 
   if(1 == 0) {
     printf("n_section_tri    = %i\n", n_section_tri   );
@@ -612,17 +612,17 @@ _rebuild_dmesh_nodal_2d
   // PDM_block_to_part_free(btp);
 
 
- PDM_free(distrib_bar);
+  PDM_free(distrib_bar);
 
- PDM_free(pedge_vtx_bnd_idx);
- PDM_free(pedge_bnd_vtx    );
- PDM_free(pvtx_bnd_ln_to_gn);
- PDM_free(dedge_vtx_idx);
+  PDM_free(pedge_vtx_bnd_idx);
+  PDM_free(pedge_bnd_vtx    );
+  PDM_free(pvtx_bnd_ln_to_gn);
+  PDM_free(dedge_vtx_idx);
 
- PDM_free(pface_ln_to_gn);
- PDM_free(pvtx_ln_to_gn);
- PDM_free(pface_vtx_idx);
- PDM_free(pface_vtx    );
+  PDM_free(pface_ln_to_gn);
+  PDM_free(pvtx_ln_to_gn);
+  PDM_free(pface_vtx_idx);
+  PDM_free(pface_vtx    );
 
 }
 
@@ -1296,7 +1296,7 @@ _rebuild_dmesh_nodal_by_kind_3d
                  (const PDM_g_num_t **) &pvtx_ln_to_gn,
                                         &tmp_pvtx_coords);
   double *pvtx_coords = tmp_pvtx_coords[0];
- PDM_free(tmp_pvtx_coords);
+  PDM_free(tmp_pvtx_coords);
 
   /*
    * Reconstruction of volumic part
@@ -1478,19 +1478,19 @@ _rebuild_dmesh_nodal_by_kind_3d
    PDM_free(ln_to_gn);
   }
 
- PDM_free(pcell_ln_to_gn);
- PDM_free(pface_vtx_idx);
- PDM_free(pface_vtx    );
- PDM_free(pvtx_ln_to_gn);
- PDM_free(pcell_face_idx);
- PDM_free(pcell_face    );
- PDM_free(pface_ln_to_gn);
- PDM_free(pvtx_coords);
+  PDM_free(pcell_ln_to_gn);
+  PDM_free(pface_vtx_idx);
+  PDM_free(pface_vtx    );
+  PDM_free(pvtx_ln_to_gn);
+  PDM_free(pcell_face_idx);
+  PDM_free(pcell_face    );
+  PDM_free(pface_ln_to_gn);
+  PDM_free(pvtx_coords);
 
- PDM_free(section_n);
- PDM_free(g_section_n);
- PDM_free(pcell_vtx_gnum);
- PDM_free(pcell_vtx_n);
+  PDM_free(section_n);
+  PDM_free(g_section_n);
+  PDM_free(pcell_vtx_gnum);
+  PDM_free(pcell_vtx_n);
 
 
 }
@@ -1594,7 +1594,7 @@ _rebuild_dmesh_nodal_3d
                  (const PDM_g_num_t **) &pvtx_ln_to_gn,
                                         &tmp_pvtx_coords);
   double *pvtx_coords = tmp_pvtx_coords[0];
- PDM_free(tmp_pvtx_coords);
+  PDM_free(tmp_pvtx_coords);
 
   /*
    * Reconstruction of volumic part
@@ -1780,20 +1780,20 @@ _rebuild_dmesh_nodal_3d
    PDM_free(ln_to_gn);
   }
 
- PDM_free(post_section_n        );
- PDM_free(post_section_kind     );
- PDM_free(local_post_section_n  );
- PDM_free(local_post_section_idx);
+  PDM_free(post_section_n        );
+  PDM_free(post_section_kind     );
+  PDM_free(local_post_section_n  );
+  PDM_free(local_post_section_idx);
 
 
- PDM_free(pcell_ln_to_gn);
- PDM_free(pface_vtx_idx);
- PDM_free(pface_vtx    );
- PDM_free(pvtx_ln_to_gn);
- PDM_free(pcell_face_idx);
- PDM_free(pcell_face    );
- PDM_free(pface_ln_to_gn);
- PDM_free(pvtx_coords);
+  PDM_free(pcell_ln_to_gn);
+  PDM_free(pface_vtx_idx);
+  PDM_free(pface_vtx    );
+  PDM_free(pvtx_ln_to_gn);
+  PDM_free(pcell_face_idx);
+  PDM_free(pcell_face    );
+  PDM_free(pface_ln_to_gn);
+  PDM_free(pvtx_coords);
 
   /*
    * Recuperation des bords
@@ -1963,15 +1963,15 @@ _rebuild_dmesh_nodal_3d
 
 
 
- PDM_free(post_section_face_bnd_n        );
- PDM_free(post_section_face_bnd_kind     );
- PDM_free(local_post_section_face_bnd_n  );
- PDM_free(local_post_section_face_bnd_idx);
- PDM_free(distrib_face_bnd);
+  PDM_free(post_section_face_bnd_n        );
+  PDM_free(post_section_face_bnd_kind     );
+  PDM_free(local_post_section_face_bnd_n  );
+  PDM_free(local_post_section_face_bnd_idx);
+  PDM_free(distrib_face_bnd);
 
- PDM_free(pface_vtx_bnd_idx);
- PDM_free(pface_bnd_vtx    );
- PDM_free(pvtx_bnd_ln_to_gn);
+  PDM_free(pface_vtx_bnd_idx);
+  PDM_free(pface_bnd_vtx    );
+  PDM_free(pvtx_bnd_ln_to_gn);
 
 }
 
@@ -2336,20 +2336,20 @@ PDM_dmesh_to_dmesh_nodal_free
     return;
   }
 
- PDM_free(dm_to_dmn->dcell_face    );
- PDM_free(dm_to_dmn->dcell_face_idx);
- PDM_free(dm_to_dmn->dface_edge    );
- PDM_free(dm_to_dmn->dface_edge_idx);
- PDM_free(dm_to_dmn->dface_vtx     );
- PDM_free(dm_to_dmn->dface_vtx_idx );
- PDM_free(dm_to_dmn->dedge_vtx     );
- PDM_free(dm_to_dmn->dvtx_coords   );
- PDM_free(dm_to_dmn->dparent_elmt_position);
+  PDM_free(dm_to_dmn->dcell_face    );
+  PDM_free(dm_to_dmn->dcell_face_idx);
+  PDM_free(dm_to_dmn->dface_edge    );
+  PDM_free(dm_to_dmn->dface_edge_idx);
+  PDM_free(dm_to_dmn->dface_vtx     );
+  PDM_free(dm_to_dmn->dface_vtx_idx );
+  PDM_free(dm_to_dmn->dedge_vtx     );
+  PDM_free(dm_to_dmn->dvtx_coords   );
+  PDM_free(dm_to_dmn->dparent_elmt_position);
 
- PDM_free(dm_to_dmn->distrib_cell);
- PDM_free(dm_to_dmn->distrib_face);
- PDM_free(dm_to_dmn->distrib_edge);
- PDM_free(dm_to_dmn->distrib_vtx );
+  PDM_free(dm_to_dmn->distrib_cell);
+  PDM_free(dm_to_dmn->distrib_face);
+  PDM_free(dm_to_dmn->distrib_edge);
+  PDM_free(dm_to_dmn->distrib_vtx );
 
   for(int i_mesh = 0; i_mesh < dm_to_dmn->n_mesh; ++i_mesh ) {
    PDM_free(dm_to_dmn->n_bound   [i_mesh]);
@@ -2371,13 +2371,13 @@ PDM_dmesh_to_dmesh_nodal_free
 
   }
 
- PDM_free(dm_to_dmn->n_blk_gnum     );
- PDM_free(dm_to_dmn->blk_entity_gnum);
- PDM_free(dm_to_dmn->blk_elmt_gnum  );
+  PDM_free(dm_to_dmn->n_blk_gnum     );
+  PDM_free(dm_to_dmn->blk_entity_gnum);
+  PDM_free(dm_to_dmn->blk_elmt_gnum  );
 
- PDM_free(dm_to_dmn->n_bound      );
- PDM_free(dm_to_dmn->dbound       );
- PDM_free(dm_to_dmn->dbound_idx   );
+  PDM_free(dm_to_dmn->n_bound      );
+  PDM_free(dm_to_dmn->dbound       );
+  PDM_free(dm_to_dmn->dbound_idx   );
 
   if(dm_to_dmn->results_is_getted == PDM_FALSE) {
     for(int i_mesh = 0; i_mesh < dm_to_dmn->n_mesh; ++i_mesh) {
@@ -2385,9 +2385,9 @@ PDM_dmesh_to_dmesh_nodal_free
     }
   }
 
- PDM_free(dm_to_dmn->dmn);
+  PDM_free(dm_to_dmn->dmn);
 
- PDM_free(dm_to_dmn);
+  PDM_free(dm_to_dmn);
   dm_to_dmn = NULL;
 }
 
@@ -2426,7 +2426,7 @@ PDM_dmesh_to_dmesh_nodal_update_group
                          NULL,
               (void ***) &tmp_entity_to_elmt);
   PDM_g_num_t *entity_to_elmt = tmp_entity_to_elmt[0];
- PDM_free(tmp_entity_to_elmt);
+  PDM_free(tmp_entity_to_elmt);
 
   // PDM_log_trace_array_long(entity_to_elmt, dn_elmt_bound, "entity_to_elmt ::");
 

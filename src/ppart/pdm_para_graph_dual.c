@@ -441,8 +441,8 @@ const int              compute_dnode_to_arc,
     }
   }
 
- PDM_free(recv_strid);
- PDM_free(recv_node_node);
+  PDM_free(recv_strid);
+  PDM_free(recv_node_node);
 
   /*
    * Each block can have multiple same cell, we need to compress them
@@ -455,7 +455,7 @@ const int              compute_dnode_to_arc,
                                             node_node_n,
                                             _dual_graph);
 
- PDM_free(node_node_n);
+  PDM_free(node_node_n);
 
   /*
    * Realloc
@@ -565,10 +565,10 @@ const int              compute_dnode_to_arc,
   /*
    * Exchange is done we can free direclty memory
    */
- PDM_free(dnode_ln_to_gn);
- PDM_free(arc_strid);
- PDM_free(node_strid);
- PDM_free(dopposite_node);
+  PDM_free(dnode_ln_to_gn);
+  PDM_free(arc_strid);
+  PDM_free(node_strid);
+  PDM_free(dopposite_node);
   if(compute_dnode_to_arc){
    PDM_free(darc_g);
   }
@@ -654,7 +654,7 @@ const PDM_g_num_t     *dnode_arc,
                              comm);
 
   int* send_stride = PDM_array_const_int(dnode_arc_idx[dn_node], 1);
- PDM_free(arc_ln_to_gn);
+  PDM_free(arc_ln_to_gn);
 
   int        *recv_stride = NULL;
   PDM_g_num_t  *recv_data = NULL;
@@ -716,10 +716,10 @@ const PDM_g_num_t     *dnode_arc,
   }
 
   PDM_part_to_block_free(ptb);
- PDM_free(node_g);
- PDM_free(send_stride);
- PDM_free(recv_stride);
- PDM_free(recv_data);
+  PDM_free(node_g);
+  PDM_free(send_stride);
+  PDM_free(recv_stride);
+  PDM_free(recv_data);
 
   /*
    * Now we have a arc_to_node connectivity, we can call graph_dual_from_arc2node
@@ -733,7 +733,7 @@ const PDM_g_num_t     *dnode_arc,
                                     0,
                                     NULL,
                                     NULL);
- PDM_free(darc_to_node);
+  PDM_free(darc_to_node);
 }
 
 /**
@@ -840,10 +840,10 @@ const PDM_g_num_t   *dface_vtx,
                                        dual_graph_idx,
                                        dual_graph);
 
- PDM_free(dcell_vtx);
- PDM_free(dcell_vtx_idx);
- PDM_free(dvtx_cell_idx);
- PDM_free(dvtx_cell);
+  PDM_free(dcell_vtx);
+  PDM_free(dcell_vtx_idx);
+  PDM_free(dvtx_cell_idx);
+  PDM_free(dvtx_cell);
 
 
   // Realloc

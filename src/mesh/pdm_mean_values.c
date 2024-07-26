@@ -506,10 +506,10 @@ PDM_mean_values_polygon_2d
     }
   }
 
- PDM_free(s);
- PDM_free(r);
- PDM_free(A);
- PDM_free(D);
+  PDM_free(s);
+  PDM_free(r);
+  PDM_free(A);
+  PDM_free(D);
 }
 
 
@@ -574,8 +574,8 @@ PDM_mean_values_polygon_3d
                               pts_uv,
                               mean_value_coord);
 
- PDM_free(vtx_uv);
- PDM_free(pts_uv);
+  PDM_free(vtx_uv);
+  PDM_free(pts_uv);
 }
 
 
@@ -864,10 +864,10 @@ PDM_mean_values_polyhedron
     }
   }
 
- PDM_free(inv_dist);
- PDM_free(u);
- PDM_free(tan_half_alpha);
- PDM_free(theta);
+  PDM_free(inv_dist);
+  PDM_free(u);
+  PDM_free(tan_half_alpha);
+  PDM_free(theta);
 }
 
 
@@ -1004,7 +1004,7 @@ PDM_mean_values_polygon
       }
     }
   }
- PDM_free(normal);
+  PDM_free(normal);
 
   double sum_w = 0.0;
   for (i = 0; i < n_vtx; i++) {
@@ -1019,9 +1019,9 @@ PDM_mean_values_polygon
     }
   }
 
- PDM_free(dist);
- PDM_free(u);
- PDM_free(tan_half_theta);
+  PDM_free(dist);
+  PDM_free(u);
+  PDM_free(tan_half_theta);
 }
 
 void
@@ -1297,9 +1297,9 @@ PDM_mean_value_coordinates_polyhedron
     }
   }
 
- PDM_free(u);
- PDM_free(d);
- PDM_free(tri_vtx);
+  PDM_free(u);
+  PDM_free(d);
+  PDM_free(tri_vtx);
 }
 
 

@@ -256,7 +256,7 @@ _update_sampling(int     n_sample,
 
   new_sampling[n_sample] = _sampling[n_sample];
 
- PDM_free(_sampling);
+  PDM_free(_sampling);
 
   /* Return pointers */
   *sampling = new_sampling;
@@ -346,7 +346,7 @@ _approx_median_point
     }
 
   } /* End of while */
- PDM_free(sampling);
+  PDM_free(sampling);
 
   // PDM_log_trace_array_double(best_sampling, n_sample+1, "best_sampling : ");
 
@@ -704,7 +704,7 @@ _build_kdtree
                            kdtree,
                            point_range,
                            tmp_new_to_old);
- PDM_free(tmp_new_to_old);
+  PDM_free(tmp_new_to_old);
 
 
   if (kdtree->n_nodes > 1) {
@@ -908,7 +908,7 @@ PDM_kdtree_seq_free
 
   _l_nodes_free(kdtree);
 
- PDM_free(kdtree);
+  PDM_free(kdtree);
 }
 
 
@@ -1213,7 +1213,7 @@ PDM_kdtree_seq_points_inside_balls
 
 
   } // End of loop on points
- PDM_free(stack);
+  PDM_free(stack);
 
   s_pib = pib_idx[n_ball];
   PDM_realloc(*ball_pts_l_num ,*ball_pts_l_num , s_pib,int   );
@@ -1293,8 +1293,8 @@ PDM_kdtree_seq_extract_extent
       }
     }
   }
- PDM_free(stack_id);
- PDM_free(stack_depth);
+  PDM_free(stack_id);
+  PDM_free(stack_depth);
 
   double *_extents;
   PDM_malloc(_extents,n_extract * 6 ,double);
@@ -1518,7 +1518,7 @@ PDM_kdtree_seq_points_inside_boxes
     } /* End While */
   } /* End boxe loop */
 
- PDM_free(stack_id);
+  PDM_free(stack_id);
   PDM_realloc(*pts_l_num ,*pts_l_num , _pts_idx[n_box],int);
 }
 
@@ -1682,9 +1682,9 @@ double           *closest_kdtree_pt_dist2
 
   }
 
- PDM_free(inbox_stack);
- PDM_free(min_dist2_stack);
- PDM_free(stack);
+  PDM_free(inbox_stack);
+  PDM_free(min_dist2_stack);
+  PDM_free(stack);
 
 }
 

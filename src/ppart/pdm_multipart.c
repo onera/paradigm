@@ -341,7 +341,7 @@ _part_free
   }
 
 
- PDM_free(part);
+  PDM_free(part);
 }
 
 
@@ -460,17 +460,17 @@ _create_dparent_num_corner
              (void **)  &blk_child_gnum);
 
   *dparent_gnum_corner = blk_child_gnum;
- PDM_free(blk_child_n);
+  PDM_free(blk_child_n);
 
   PDM_part_to_block_free(ptb);
   for (int i_section = 0; i_section < n_section; i_section++) {
    PDM_free(corner_ln_to_gn[i_section]);
    PDM_free(corner_vtx_n[i_section]);
   }
- PDM_free(corner_ln_to_gn);
- PDM_free(corner_vtx_n);
- PDM_free(corner_vtx);
- PDM_free(dn_corner);
+  PDM_free(corner_ln_to_gn);
+  PDM_free(corner_vtx_n);
+  PDM_free(corner_vtx);
+  PDM_free(dn_corner);
 
   *distrib_corner = _distrib_corner;
 }
@@ -582,12 +582,12 @@ _compute_part_mesh_nodal_3d
    PDM_free(psurf_to_face_g_num[i_part]);
    PDM_free(psurf_to_entity    [i_part]);
   }
- PDM_free(psurf_to_entity);
- PDM_free(pn_surf);
- PDM_free(psurf_gnum);
- PDM_free(psurf_to_face_g_num);
- PDM_free(pface_ln_to_gn);
- PDM_free(pn_face);
+  PDM_free(psurf_to_entity);
+  PDM_free(pn_surf);
+  PDM_free(psurf_gnum);
+  PDM_free(psurf_to_face_g_num);
+  PDM_free(pface_ln_to_gn);
+  PDM_free(pn_face);
 
   PDM_part_mesh_nodal_elmts_t* pmn_ridge = NULL;
 
@@ -725,11 +725,11 @@ _compute_part_mesh_nodal_3d
                                   PDM_OWNERSHIP_KEEP);
   }
 
- PDM_free(pcell_ln_to_gn);
- PDM_free(pn_cell);
- PDM_free(pvtx_ln_to_gn);
- PDM_free(pvtx_coord);
- PDM_free(pn_vtx);
+  PDM_free(pcell_ln_to_gn);
+  PDM_free(pn_cell);
+  PDM_free(pvtx_ln_to_gn);
+  PDM_free(pvtx_coord);
+  PDM_free(pn_vtx);
 
   return pmn;
 }
@@ -833,10 +833,10 @@ _compute_part_mesh_nodal_2d
    PDM_free(pridge_to_edge_g_num[i_part]);
    PDM_free(pridge_to_entity[i_part]);
   }
- PDM_free(pridge_to_entity);
- PDM_free(pn_ridge);
- PDM_free(pridge_gnum);
- PDM_free(pridge_to_edge_g_num);
+  PDM_free(pridge_to_entity);
+  PDM_free(pn_ridge);
+  PDM_free(pridge_gnum);
+  PDM_free(pridge_to_edge_g_num);
 
   PDM_part_mesh_nodal_elmts_t* pmn_corner = NULL;
 
@@ -919,14 +919,14 @@ _compute_part_mesh_nodal_2d
     //PDM_free(lvtx_ln_to_gn);
   }
 
- PDM_free(pedge_ln_to_gn);
- PDM_free(pn_edge);
- PDM_free(pface_ln_to_gn);
- PDM_free(pn_face);
+  PDM_free(pedge_ln_to_gn);
+  PDM_free(pn_edge);
+  PDM_free(pface_ln_to_gn);
+  PDM_free(pn_face);
 
- PDM_free(pvtx_ln_to_gn);
- PDM_free(pvtx_coord);
- PDM_free(pn_vtx);
+  PDM_free(pvtx_ln_to_gn);
+  PDM_free(pvtx_coord);
+  PDM_free(pn_vtx);
   return pmn;
 }
 
@@ -1065,12 +1065,12 @@ _compute_part_mesh_nodal_1d
                                   PDM_OWNERSHIP_KEEP);
   }
 
- PDM_free(pedge_ln_to_gn);
- PDM_free(pn_edge);
+  PDM_free(pedge_ln_to_gn);
+  PDM_free(pn_edge);
 
- PDM_free(pvtx_ln_to_gn);
- PDM_free(pvtx_coord);
- PDM_free(pn_vtx);
+  PDM_free(pvtx_ln_to_gn);
+  PDM_free(pvtx_coord);
+  PDM_free(pn_vtx);
   return pmn;
 }
 
@@ -1482,7 +1482,7 @@ _warm_up_for_split
   } else {
    PDM_free(delmt_to_arc_idx);
   }
- PDM_free(distrib_arc);
+  PDM_free(distrib_arc);
 
   *out_dual_graph_idx = dual_graph_idx;
   *out_dual_graph     = dual_graph;
@@ -1863,9 +1863,9 @@ _part_mesh_t       *pmeshes,
                                    PDM_OWNERSHIP_KEEP);
   }
 
- PDM_free(pentity_bound_idx               );
- PDM_free(pentity_bound                   );
- PDM_free(pentity_bound_ln_to_gn          );
+  PDM_free(pentity_bound_idx               );
+  PDM_free(pentity_bound                   );
+  PDM_free(pentity_bound_ln_to_gn          );
 }
 
 static
@@ -1907,7 +1907,7 @@ _deduce_part_connectivity_0d
                                 PDM_OWNERSHIP_KEEP);
   }
 
- PDM_free(pvtx_coord);
+  PDM_free(pvtx_coord);
 }
 
 static
@@ -2151,9 +2151,9 @@ _deduce_part_connectivity_3d
                                    NULL,
                                    PDM_OWNERSHIP_KEEP);
   }
- PDM_free(pface_cell);
- PDM_free(pcell_face_idx);
- PDM_free(pcell_face);
+  PDM_free(pface_cell);
+  PDM_free(pcell_face_idx);
+  PDM_free(pcell_face);
 
 
   /*
@@ -2289,7 +2289,7 @@ _deduce_part_connectivity_2d
                                    NULL,
                                    PDM_OWNERSHIP_KEEP);
   }
- PDM_free(pedge_face);
+  PDM_free(pedge_face);
 
   /*
    * Group (usefull for ordering)
@@ -2417,7 +2417,7 @@ PDM_MPI_Comm       comm
                               &pn_node,
                               &pnode_ln_to_gn,
                                NULL);
- PDM_free(node_part);
+  PDM_free(node_part);
 
   if(0 == 1) {
     for(int i_part = 0; i_part < n_part; ++i_part) {
@@ -2594,9 +2594,9 @@ PDM_MPI_Comm       comm
    PDM_free(pinternal_vtx_bound[ipart]);
     //PDM_free(pinternal_vtx_priority[ipart]);
   }
- PDM_free(pinternal_vtx_bound_proc_idx);
- PDM_free(pinternal_vtx_bound_part_idx);
- PDM_free(pinternal_vtx_bound);
+  PDM_free(pinternal_vtx_bound_proc_idx);
+  PDM_free(pinternal_vtx_bound_part_idx);
+  PDM_free(pinternal_vtx_bound);
 
   /* MAP on _part_t to reuse ordering */
   _part_t** parts = _map_part_t_with_part_mesh(pmeshes->pmesh);
@@ -2612,7 +2612,7 @@ PDM_MPI_Comm       comm
   PDM_part_renum_face(parts, n_part, pmeshes->renum_method[PDM_MESH_ENTITY_FACE], (void*) pmeshes->renum_method_properties[PDM_MESH_ENTITY_FACE]);
   PDM_part_renum_edge(parts, n_part, pmeshes->renum_method[PDM_MESH_ENTITY_EDGE], (void*) pmeshes->renum_method_properties[PDM_MESH_ENTITY_EDGE]);
   PDM_part_renum_vtx (parts, n_part, pmeshes->renum_method[PDM_MESH_ENTITY_VTX ], (void*) pmeshes->renum_method_properties[PDM_MESH_ENTITY_VTX ]);
- PDM_free(pinternal_vtx_priority);
+  PDM_free(pinternal_vtx_priority);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
 
@@ -2650,7 +2650,7 @@ PDM_MPI_Comm       comm
 
     _part_free(parts[i_part]);
   }
- PDM_free(parts);
+  PDM_free(parts);
 
   /*
    * All entities are reorder - In case of HO mesh we need to append all ho vtx in vtx_ln_to_gn AND pvtx_coord
@@ -2818,9 +2818,9 @@ PDM_MPI_Comm       comm
                                       PDM_OWNERSHIP_KEEP);
 
   }
- PDM_free(pinternal_vtx_bound_proc_idx);
- PDM_free(pinternal_vtx_bound_part_idx);
- PDM_free(pinternal_vtx_bound);
+  PDM_free(pinternal_vtx_bound_proc_idx);
+  PDM_free(pinternal_vtx_bound_part_idx);
+  PDM_free(pinternal_vtx_bound);
 
   if(own_edge_distrib == 1) {
    PDM_free(edge_distrib);
@@ -2856,9 +2856,9 @@ PDM_MPI_Comm       comm
    PDM_free(pvtx_ln_to_gn);
     //PDM_free(pvtx_coord);
   }
- PDM_free(distrib_node);
- PDM_free(vtx_distrib);
- PDM_free(distrib_partition);
+  PDM_free(distrib_node);
+  PDM_free(vtx_distrib);
+  PDM_free(distrib_partition);
 }
 
 /*=============================================================================
@@ -4094,15 +4094,15 @@ PDM_multipart_free
       multipart->dmn_to_dm[i_domain] = NULL;
     }
   }
- PDM_free(multipart->pmeshes);
- PDM_free(multipart->dmeshes);
- PDM_free(multipart->dmeshes_nodal);
- PDM_free(multipart->dmn_to_dm);
- PDM_free(multipart->is_owner_dmeshes);
- PDM_free(multipart->n_part);
+  PDM_free(multipart->pmeshes);
+  PDM_free(multipart->dmeshes);
+  PDM_free(multipart->dmeshes_nodal);
+  PDM_free(multipart->dmn_to_dm);
+  PDM_free(multipart->is_owner_dmeshes);
+  PDM_free(multipart->n_part);
 
   //PDM_part_renum_method_purge();
- PDM_free(multipart);
+  PDM_free(multipart);
   multipart = NULL;
 
   // PDM_printf("Cleaned from PDM_multipart_free\n");
@@ -4378,12 +4378,12 @@ PDM_multipart_stat_get
     *bound_part_faces_median = (int) ((s_tot[mid-1] + s_tot[mid])/2.);
   }
 
- PDM_free(n_part_proc);
- PDM_free(n_tot);
- PDM_free(s_tot);
- PDM_free(n_loc);
- PDM_free(s_loc);
- PDM_free(dpart_proc);
+  PDM_free(n_part_proc);
+  PDM_free(n_tot);
+  PDM_free(s_tot);
+  PDM_free(n_loc);
+  PDM_free(s_loc);
+  PDM_free(dpart_proc);
 }
 
 

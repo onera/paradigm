@@ -622,10 +622,10 @@ const double           zero_z,
   for (int i = 1; i < dcube->n_face_group + 1; i++)
     _dface_group_idx[i] += _dface_group_idx[i-1];
 
- PDM_free(distrib_vtx);
- PDM_free(distrib_face);
- PDM_free(distrib_cell);
- PDM_free(distrib_face_lim);
+  PDM_free(distrib_vtx);
+  PDM_free(distrib_face);
+  PDM_free(distrib_cell);
+  PDM_free(distrib_face_lim);
 
   return (PDM_dcube_t*) dcube;
 }
@@ -734,6 +734,6 @@ PDM_dcube_t        *dcube
      PDM_free(dcube->dface_group);
   }
 
- PDM_free(dcube);
+  PDM_free(dcube);
 
 }

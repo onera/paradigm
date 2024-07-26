@@ -599,10 +599,10 @@ PDM_boxes_destroy(PDM_boxes_t  *boxes)
     return;
   }
 
- PDM_free(boxes->g_num);
- PDM_free(boxes->extents);
- PDM_free(boxes->origin);
- PDM_free(boxes->n_boxes_orig);
+  PDM_free(boxes->g_num);
+  PDM_free(boxes->extents);
+  PDM_free(boxes->origin);
+  PDM_free(boxes->n_boxes_orig);
   boxes->g_num = NULL;
   boxes->extents = NULL;
   boxes->origin = NULL;
@@ -677,7 +677,7 @@ PDM_box_set_remove_duplicate(PDM_box_set_t  *boxes)
   }
   boxes->local_boxes->n_boxes = idx;
 
- PDM_free(selected);
+  PDM_free(selected);
 }
 
 
@@ -1030,14 +1030,14 @@ PDM_box_set_redistribute(const PDM_box_distrib_t  *distrib,
 
   /* Prepare to replace the local arrays */
   _local_boxes->n_boxes = recv_shift[distrib->n_ranks];
- PDM_free(_local_boxes->g_num);
- PDM_free(_local_boxes->extents);
- PDM_free(_local_boxes->origin);
+  PDM_free(_local_boxes->g_num);
+  PDM_free(_local_boxes->extents);
+  PDM_free(_local_boxes->origin);
   /*
   boxes->n_boxes = recv_shift[distrib->n_ranks];
- PDM_free(boxes->g_num);
- PDM_free(boxes->extents);
- PDM_free(boxes->origin);
+  PDM_free(boxes->g_num);
+  PDM_free(boxes->extents);
+  PDM_free(boxes->origin);
   */
 
   PDM_malloc(_local_boxes->g_num,_local_boxes->n_boxes ,PDM_g_num_t);
@@ -1093,13 +1093,13 @@ PDM_box_set_redistribute(const PDM_box_distrib_t  *distrib,
 
   /* Free buffers */
 
- PDM_free(send_g_num);
- PDM_free(send_extents);
- PDM_free(send_origin);
- PDM_free(send_count);
- PDM_free(send_shift);
- PDM_free(recv_count);
- PDM_free(recv_shift);
+  PDM_free(send_g_num);
+  PDM_free(send_extents);
+  PDM_free(send_origin);
+  PDM_free(send_count);
+  PDM_free(send_shift);
+  PDM_free(recv_count);
+  PDM_free(recv_shift);
 
 }
 
@@ -1337,7 +1337,7 @@ PDM_box_set_recv_data_from_origin_distrib
   PDM_MPI_Alltoallv(curr_loc, curr_count, curr_shift, PDM_MPI_INT,
                 orig_loc, orig_count, orig_shift, PDM_MPI_INT,
                 boxes->comm);
- PDM_free(curr_loc);
+  PDM_free(curr_loc);
 
   for (int i = 0; i < s_comm+1; i++) {
     curr_shift[i] = curr_shift[i]/2;
@@ -1562,12 +1562,12 @@ PDM_box_set_recv_data_from_origin_distrib
   if (orig_stride != NULL)
    PDM_free(orig_stride);
 
- PDM_free(curr_count);
- PDM_free(curr_shift);
- PDM_free(orig_count);
- PDM_free(orig_shift);
- PDM_free(orig_loc);
- PDM_free(idxCurrToBuff);
+  PDM_free(curr_count);
+  PDM_free(curr_shift);
+  PDM_free(orig_count);
+  PDM_free(orig_shift);
+  PDM_free(orig_loc);
+  PDM_free(idxCurrToBuff);
 
 }
 
@@ -1674,7 +1674,7 @@ PDM_box_set_send_data_to_origin_distrib
                     orig_loc, orig_count, orig_shift, PDM_MPI_INT,
                     boxes->comm);
 
- PDM_free(curr_loc);
+  PDM_free(curr_loc);
 
   for (int i = 0; i < s_comm+1; i++) {
     curr_shift[i] = curr_shift[i]/2;
@@ -1928,11 +1928,11 @@ PDM_box_set_send_data_to_origin_distrib
   if (curr_stride != NULL)
    PDM_free(curr_stride);
 
- PDM_free(orig_count);
- PDM_free(curr_count);
- PDM_free(orig_shift);
- PDM_free(curr_shift);
- PDM_free(orig_loc);
+  PDM_free(orig_count);
+  PDM_free(curr_count);
+  PDM_free(orig_shift);
+  PDM_free(curr_shift);
+  PDM_free(orig_loc);
 
 }
 
@@ -2122,7 +2122,7 @@ PDM_box_copy_boxes_to_shm
   }
 
 
- PDM_free(s_shm_data_in_all_nodes);
+  PDM_free(s_shm_data_in_all_nodes);
   // PDM_MPI_Comm_free(&boxes->comm_shared);
 }
 
@@ -2324,11 +2324,11 @@ PDM_box_distrib_clean(PDM_box_distrib_t  *distrib)
   } /* End of loop on ranks */
 
   /* Memory management */
- PDM_free(distrib->index);
+  PDM_free(distrib->index);
   PDM_realloc(distrib->list ,distrib->list , new_index[distrib->n_ranks] ,int);
   distrib->index = new_index;
 
- PDM_free(counter);
+  PDM_free(counter);
 }
 
 

@@ -203,7 +203,7 @@ _gen_cube_cell_centers
 
   *npts = _npts;
 
- PDM_free(distribCell);
+  PDM_free(distribCell);
 }
 
 
@@ -231,7 +231,7 @@ int main(int argc, char *argv[])
   char *version = PDM_version_get();
 
   printf("Version de ParaDiGM : %s\n", version);
- PDM_free(version);
+  PDM_free(version);
 
   /*
    *  Set default values
@@ -455,8 +455,8 @@ int main(int argc, char *argv[])
       n_wrong++;
     }
   }
- PDM_free(true_closest_src_gnum);
- PDM_free(true_closest_src_dist);
+  PDM_free(true_closest_src_gnum);
+  PDM_free(true_closest_src_dist);
 
   /*PDM_g_num_t wrong_percentage = 0;
   if (n_tgt > 0) {
@@ -508,11 +508,11 @@ int main(int argc, char *argv[])
   /* Free */
   PDM_closest_points_free (clsp);
 
- PDM_free(tgt_coords);
- PDM_free(tgt_gnum);
+  PDM_free(tgt_coords);
+  PDM_free(tgt_gnum);
 
- PDM_free(src_coords);
- PDM_free(src_gnum);
+  PDM_free(src_coords);
+  PDM_free(src_gnum);
 
 
   PDM_MPI_Finalize();

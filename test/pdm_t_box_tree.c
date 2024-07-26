@@ -436,8 +436,8 @@ int main(int argc, char *argv[])
   double complexity = n_tgt_box;
   printf("PDM_box_tree_get_boxes_intersects time : %12.5e -  %12.5e - complexity = %12.5e \n", dt, dt/complexity, complexity);
 
- PDM_free(shared_to_box_idx);
- PDM_free(shared_to_box    );
+  PDM_free(shared_to_box_idx);
+  PDM_free(shared_to_box    );
 
   t1 = PDM_MPI_Wtime();
   int  *box_pts_idx = NULL;
@@ -452,22 +452,22 @@ int main(int argc, char *argv[])
   complexity = (double) n_pts;
   printf("PDM_box_tree_boxes_containing_points time : %12.5e - %12.5e - complexity = %12.5e \n", dt, dt/complexity, complexity);
 
- PDM_free(box_pts_idx);
- PDM_free(box_pts);
+  PDM_free(box_pts_idx);
+  PDM_free(box_pts);
 
 
   PDM_box_set_destroy (&box_set);
   PDM_box_set_destroy (&box_target);
   PDM_box_tree_destroy(&box_tree);
 
- PDM_free(init_location_proc);
- PDM_free(init_location_tgt_box);
- PDM_free(box_extents);
- PDM_free(box_gnum);
- PDM_free(tgt_box_extents);
- PDM_free(tgt_box_gnum);
- PDM_free(pt_coord);
- PDM_free(pt_gnum);
+  PDM_free(init_location_proc);
+  PDM_free(init_location_tgt_box);
+  PDM_free(box_extents);
+  PDM_free(box_gnum);
+  PDM_free(tgt_box_extents);
+  PDM_free(tgt_box_gnum);
+  PDM_free(pt_coord);
+  PDM_free(pt_gnum);
 
 
   PDM_MPI_Barrier (PDM_MPI_COMM_WORLD);

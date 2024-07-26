@@ -124,7 +124,7 @@ PDM_vtk_write_polydata_cf
                          face_g_num,
                          face_color);
 
- PDM_free(c_filename);
+  PDM_free(c_filename);
 }
 
 /**
@@ -161,7 +161,7 @@ PDM_vtk_write_point_cloud_cf
                             vtx_g_num,
                             color);
 
- PDM_free(c_filename);
+  PDM_free(c_filename);
 }
 
 /*============================================================================
@@ -3126,7 +3126,7 @@ PDM_vtk_read_to_dmesh_nodal
 
 
   PDM_block_to_block_free(btb_vtx);
- PDM_free(init_distrib_vtx);
+  PDM_free(init_distrib_vtx);
 
 
 
@@ -3192,7 +3192,7 @@ PDM_vtk_read_to_dmesh_nodal
 
   /* Vertices */
   dn_vtx = (int) (distrib_vtx[i_rank+1] - distrib_vtx[i_rank]);
- PDM_free(distrib_vtx);
+  PDM_free(distrib_vtx);
 
   PDM_DMesh_nodal_coord_set(dmn,
                             dn_vtx,

@@ -223,7 +223,7 @@ PDM_part_assemble_partitions
 
    PDM_free(tmp_pn_entity);
   }
- PDM_free(dentity_stri);
+  PDM_free(dentity_stri);
 
   int* _pn_entity = *pn_entity;
   int offset = 0;
@@ -619,7 +619,7 @@ PDM_part_distgroup_to_partgroup
     int l_elmt = blk_gnum[i_elmt] - _entity_distribution[i_rank] - 1;
     blk_stri_full[l_elmt] = blk_stri[i_elmt];
   }
- PDM_free(blk_stri);
+  PDM_free(blk_stri);
 
   // int* blk_stri_full = blk_stri;
 
@@ -776,24 +776,24 @@ PDM_part_distgroup_to_partgroup
     }
   }
 
- PDM_free(count_group);
- PDM_free(blk_stri_full);
- PDM_free(part_data);
- PDM_free(part_stri);
- PDM_free(blk_data);
+  PDM_free(count_group);
+  PDM_free(blk_stri_full);
+  PDM_free(part_data);
+  PDM_free(part_stri);
+  PDM_free(blk_data);
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
    PDM_free(part_group_stri[i_part]);
    PDM_free(part_group_data[i_part]);
   }
- PDM_free(part_group_stri);
- PDM_free(part_group_data);
+  PDM_free(part_group_stri);
+  PDM_free(part_group_data);
   PDM_part_to_block_free(ptb_group);
   PDM_block_to_part_free(btp);
   for(int i_group = 0; i_group < n_group; ++i_group) {
    PDM_free(groups_distribution[i_group]);
   }
- PDM_free(groups_distribution);
+  PDM_free(groups_distribution);
 }
 
 
@@ -865,7 +865,7 @@ _dconnectivity_to_pconnectivity_abs
              (int  ***)  &pstride,
              (void ***)   pconnectivity_abs);
 
- PDM_free(blk_stri);
+  PDM_free(blk_stri);
 
   /*
    * Panic verbose
@@ -897,7 +897,7 @@ _dconnectivity_to_pconnectivity_abs
   for(int i_part = 0; i_part < n_part; ++i_part) {
    PDM_free(pstride[i_part]);
   }
- PDM_free(pstride);
+  PDM_free(pstride);
 }
 
 /**
@@ -1149,15 +1149,15 @@ PDM_part_multi_dconnectivity_to_pconnectivity_sort
    PDM_free(pconnectivity_abs_cat[i_part]);
    PDM_free(pconnectivity_cat[i_part]);
   }
- PDM_free(pconnectivity_abs_cat);
- PDM_free(pconnectivity_cat);
+  PDM_free(pconnectivity_abs_cat);
+  PDM_free(pconnectivity_cat);
 
- PDM_free(pn_vtx);
+  PDM_free(pn_vtx);
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
    PDM_free(unique_order[i_part]);
   }
- PDM_free(unique_order);
+  PDM_free(unique_order);
 }
 
 /**
@@ -1275,9 +1275,9 @@ PDM_part_dconnectivity_to_pconnectivity_sort
    PDM_free(pconnectivity_abs[i_part]);
    PDM_free(unique_order[i_part]);
   }
- PDM_free(pconnectivity_abs);
- PDM_free(unique_order);
- PDM_free(pn_child);
+  PDM_free(pconnectivity_abs);
+  PDM_free(unique_order);
+  PDM_free(pn_child);
 }
 
 
@@ -1318,10 +1318,10 @@ PDM_part_dconnectivity_to_pconnectivity_sort_single_part
   *pconnectivity_idx = tmp_pconnectivity_idx[0];
   *pconnectivity     = tmp_pconnectivity[0];
 
- PDM_free(tmp_pn_child_entity);
- PDM_free(tmp_pchild_ln_to_gn);
- PDM_free(tmp_pconnectivity_idx);
- PDM_free(tmp_pconnectivity);
+  PDM_free(tmp_pn_child_entity);
+  PDM_free(tmp_pchild_ln_to_gn);
+  PDM_free(tmp_pconnectivity_idx);
+  PDM_free(tmp_pconnectivity);
 }
 
 /**
@@ -1406,7 +1406,7 @@ PDM_part_dconnectivity_to_pconnectivity_hash
              (int  ***)  &pstride,
              (void ***)  &pconnectivity_tmp);
 
- PDM_free(blk_stri);
+  PDM_free(blk_stri);
 
   /*
    * Panic verbose
@@ -1560,8 +1560,8 @@ PDM_part_dconnectivity_to_pconnectivity_hash
    PDM_free(pstride[i_part]);
    PDM_free(pconnectivity_tmp[i_part]);
   }
- PDM_free(pstride);
- PDM_free(pconnectivity_tmp);
+  PDM_free(pstride);
+  PDM_free(pconnectivity_tmp);
 }
 
 
@@ -1770,7 +1770,7 @@ PDM_part_generate_entity_graph_comm
                 (void **) proc_part_data,
                           &proc_blk_stri,
                 (void **) &proc_blk_data);
- PDM_free(proc_blk_stri);
+  PDM_free(proc_blk_stri);
 
   int* part_blk_data = NULL;
   PDM_part_to_block_exch (ptb,
@@ -1799,11 +1799,11 @@ PDM_part_generate_entity_graph_comm
    PDM_free(proc_part_data[i_part]);
    PDM_free(part_part_data[i_part]);
   }
- PDM_free(proc_part_stri);
- PDM_free(proc_part_data);
- PDM_free(part_part_data);
- PDM_free(part_stri);
- PDM_free(part_data);
+  PDM_free(proc_part_stri);
+  PDM_free(proc_part_data);
+  PDM_free(part_part_data);
+  PDM_free(part_stri);
+  PDM_free(part_data);
 
   /*
    * Panic verbose
@@ -1869,7 +1869,7 @@ PDM_part_generate_entity_graph_comm
     proc_data_current += proc_blk_stri[i_block];
     part_data_current += proc_blk_stri[i_block];
   }
- PDM_free(n_owner_entity_by_rank);
+  PDM_free(n_owner_entity_by_rank);
 
   /*
    * Compress data
@@ -1949,11 +1949,11 @@ PDM_part_generate_entity_graph_comm
   /*
    * Free
    */
- PDM_free(blk_data);
- PDM_free(blk_stri);
- PDM_free(proc_blk_data);
- PDM_free(part_blk_data);
- PDM_free(proc_blk_stri);
+  PDM_free(blk_data);
+  PDM_free(blk_stri);
+  PDM_free(proc_blk_data);
+  PDM_free(part_blk_data);
+  PDM_free(proc_blk_stri);
 
   /*
    * Interface for pdm_part is  :
@@ -2124,8 +2124,8 @@ PDM_part_generate_entity_graph_comm
    PDM_free(part_stri[i_part]);
    PDM_free(part_data[i_part]);
   }
- PDM_free(part_stri);
- PDM_free(part_data);
+  PDM_free(part_stri);
+  PDM_free(part_data);
   PDM_block_to_part_free(btp);
 }
 
@@ -2191,7 +2191,7 @@ PDM_compute_graph_comm_entity_ownership
   for (int i_part = 0; i_part < n_part; i_part++) {
    PDM_free(tmp_rank_and_part[i_part]);
   }
- PDM_free(tmp_rank_and_part);
+  PDM_free(tmp_rank_and_part);
 
   PDM_part_to_block_reverse_exch(ptb,
                                  sizeof(int),
@@ -2222,8 +2222,8 @@ PDM_compute_graph_comm_entity_ownership
   for (int i_part = 0; i_part < n_part; i_part++) {
    PDM_free(tmp_rank_and_part[i_part]);
   }
- PDM_free(tmp_rank_and_part);
- PDM_free(blk_rank_and_part);
+  PDM_free(tmp_rank_and_part);
+  PDM_free(blk_rank_and_part);
   PDM_part_to_block_free(ptb);
 
   *n_owned_entity    = _n_owned_entity;
@@ -2284,7 +2284,7 @@ PDM_compute_graph_comm_entity_ownership_single_part
                          NULL,
               (void **) &blk_rank);
 
- PDM_free(tmp_rank);
+  PDM_free(tmp_rank);
 
   int **tmp_rank_clean = NULL;
 
@@ -2309,9 +2309,9 @@ PDM_compute_graph_comm_entity_ownership_single_part
 
   PDM_realloc(_lnum_owned_entity ,_lnum_owned_entity , _n_owned_entity,int);
 
- PDM_free(tmp_rank_clean[0]);
- PDM_free(tmp_rank_clean   );
- PDM_free(blk_rank         );
+  PDM_free(tmp_rank_clean[0]);
+  PDM_free(tmp_rank_clean   );
+  PDM_free(blk_rank         );
   PDM_part_to_block_free(ptb);
 
   *n_owned_entity    = _n_owned_entity;
@@ -2530,8 +2530,8 @@ PDM_part_dentity_group_to_pentity_group
     }
    PDM_free(pentity_group_n[i_part]);
   }
- PDM_free(pentity_group_n);
- PDM_free(dentity_group_n);
+  PDM_free(pentity_group_n);
+  PDM_free(dentity_group_n);
 
   *pentity_group_idx = _pentity_group_idx;
 }
@@ -2638,7 +2638,7 @@ PDM_extend_mesh
              (void *  )   dual_graph,
              (int  ***)  &part_dual_graph_n,
              (void ***)  &part_dual_graph);
- PDM_free(dual_graph_n);
+  PDM_free(dual_graph_n);
 
   int* *part_dual_graph_idx;
   PDM_malloc(part_dual_graph_idx, n_part ,int*);
@@ -2714,9 +2714,9 @@ PDM_extend_mesh
    PDM_free(part_dual_graph_idx[i_part]);
    PDM_free(part_dual_graph[i_part]);
   }
- PDM_free(part_dual_graph_n);
- PDM_free(part_dual_graph_idx);
- PDM_free(part_dual_graph);
+  PDM_free(part_dual_graph_n);
+  PDM_free(part_dual_graph_idx);
+  PDM_free(part_dual_graph);
 }
 
 /**
@@ -2873,8 +2873,8 @@ PDM_compute_face_edge_from_face_vtx
    PDM_free(pface_vtx_n     [i_part]);
    PDM_free(pface_vtx_g_num [i_part]);
   }
- PDM_free(pface_vtx_n     );
- PDM_free(pface_vtx_g_num );
+  PDM_free(pface_vtx_n     );
+  PDM_free(pface_vtx_g_num );
 
 
   PDM_g_num_t* face_distribution = PDM_part_to_block_distrib_index_get(ptb);
@@ -2906,10 +2906,10 @@ PDM_compute_face_edge_from_face_vtx
                               NULL,
                               tmp_parent_elmt_pos);
   assert(n_edge_current == n_edge_elt_tot);
- PDM_free(tmp_parent_elmt_pos);
- PDM_free(dface_vtx);
- PDM_free(dface_vtx_idx);
- PDM_free(dface_vtx_n);
+  PDM_free(tmp_parent_elmt_pos);
+  PDM_free(dface_vtx);
+  PDM_free(dface_vtx_idx);
+  PDM_free(dface_vtx_n);
 
   int dn_edge = 0;
   PDM_g_num_t  *edge_distrib   = NULL;
@@ -2946,8 +2946,8 @@ PDM_compute_face_edge_from_face_vtx
                               1,
                               &dface_edge_idx,
                               &dface_edge);
- PDM_free(dedge_face_idx);
- PDM_free(dedge_face    );
+  PDM_free(dedge_face_idx);
+  PDM_free(dedge_face    );
 
   int          *_pn_edge        = NULL;
   PDM_g_num_t **_pedge_ln_to_gn = NULL;
@@ -2964,8 +2964,8 @@ PDM_compute_face_edge_from_face_vtx
                                               &_pedge_ln_to_gn,
                                               &_pface_edge_idx,
                                               &_pface_edge);
- PDM_free(dface_edge_idx);
- PDM_free(dface_edge);
+  PDM_free(dface_edge_idx);
+  PDM_free(dface_edge);
 
   int          *_ptmp_n_vtx        = NULL;
   PDM_g_num_t **_ptmp_vtx_ln_to_gn = NULL;
@@ -3011,12 +3011,12 @@ PDM_compute_face_edge_from_face_vtx
 
   }
 
- PDM_free(edge_distrib  );
- PDM_free(dedge_vtx_idx );
- PDM_free(dedge_vtx     );
- PDM_free(_ptmp_vtx_ln_to_gn);
- PDM_free(_pedge_vtx_idx);
- PDM_free(_ptmp_n_vtx);
+  PDM_free(edge_distrib  );
+  PDM_free(dedge_vtx_idx );
+  PDM_free(dedge_vtx     );
+  PDM_free(_ptmp_vtx_ln_to_gn);
+  PDM_free(_pedge_vtx_idx);
+  PDM_free(_ptmp_n_vtx);
 
   PDM_part_to_block_free(ptb);
 
@@ -3177,8 +3177,8 @@ PDM_pconnectivity_to_pconnectivity_keep
    PDM_free(send_entity1_entity2_n[i_part]);
    PDM_free(send_entity1_entity2  [i_part]);
   }
- PDM_free(send_entity1_entity2_n);
- PDM_free(send_entity1_entity2  );
+  PDM_free(send_entity1_entity2_n);
+  PDM_free(send_entity1_entity2  );
 
   /*
    * Post-treatment
@@ -3230,8 +3230,8 @@ PDM_pconnectivity_to_pconnectivity_keep
    PDM_free(recv_entity1_entity2_n[i_part]);
    PDM_free(recv_entity1_entity2  [i_part]);
   }
- PDM_free(recv_entity1_entity2_n);
- PDM_free(recv_entity1_entity2  );
+  PDM_free(recv_entity1_entity2_n);
+  PDM_free(recv_entity1_entity2  );
 
 
   *n_part2_entity2           = _n_part2_entity2;
@@ -3513,14 +3513,14 @@ PDM_pconnectivity_to_pconnectivity_from_location_keep
    PDM_free(send_entity1_entity2         [i_part]);
    PDM_free(send_entity1_entity2_location[i_part]);
   }
- PDM_free(send_entity1_entity2_n);
- PDM_free(send_entity1_entity2  );
- PDM_free(send_entity1_entity2_location  );
+  PDM_free(send_entity1_entity2_n);
+  PDM_free(send_entity1_entity2  );
+  PDM_free(send_entity1_entity2_location  );
 
   for(int i_part = 0; i_part < n_part2; ++i_part) {
    PDM_free(recv_entity1_entity2_location_n[i_part]);
   }
- PDM_free(recv_entity1_entity2_location_n);
+  PDM_free(recv_entity1_entity2_location_n);
 
   /*
    * Post-treatment
@@ -3602,9 +3602,9 @@ PDM_pconnectivity_to_pconnectivity_from_location_keep
    PDM_free(recv_entity1_entity2         [i_part]);
    PDM_free(recv_entity1_entity2_location[i_part]);
   }
- PDM_free(recv_entity1_entity2_n);
- PDM_free(recv_entity1_entity2  );
- PDM_free(recv_entity1_entity2_location);
+  PDM_free(recv_entity1_entity2_n);
+  PDM_free(recv_entity1_entity2  );
+  PDM_free(recv_entity1_entity2_location);
 
 
   *n_part2_entity2                = _n_part2_entity2;

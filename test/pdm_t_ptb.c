@@ -106,12 +106,12 @@ char *argv[]
 
   PDM_part_to_block_free (ptb);
 
- PDM_free(numabs);
- PDM_free(weights);
- PDM_free(weights_sum_procs);
- PDM_free(stride);
- PDM_free(block_stride);
- PDM_free(block_weights);
+  PDM_free(numabs);
+  PDM_free(weights);
+  PDM_free(weights_sum_procs);
+  PDM_free(stride);
+  PDM_free(block_stride);
+  PDM_free(block_weights);
 
   if (i_rank == 0) {
     PDM_printf("-- End\n");

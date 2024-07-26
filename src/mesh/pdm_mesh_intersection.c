@@ -316,17 +316,17 @@ _export_vtk_3d
 
 
 
- PDM_free(pn_extract_cell       );
- PDM_free(pn_extract_face       );
- PDM_free(pn_extract_vtx        );
- PDM_free(pextract_cell_face    );
- PDM_free(pextract_cell_face_idx);
- PDM_free(pextract_face_vtx     );
- PDM_free(pextract_face_vtx_idx );
- PDM_free(pextract_vtx          );
- PDM_free(pextract_cell_ln_to_gn);
- PDM_free(pextract_face_ln_to_gn);
- PDM_free(pextract_vtx_ln_to_gn );
+  PDM_free(pn_extract_cell       );
+  PDM_free(pn_extract_face       );
+  PDM_free(pn_extract_vtx        );
+  PDM_free(pextract_cell_face    );
+  PDM_free(pextract_cell_face_idx);
+  PDM_free(pextract_face_vtx     );
+  PDM_free(pextract_face_vtx_idx );
+  PDM_free(pextract_vtx          );
+  PDM_free(pextract_cell_ln_to_gn);
+  PDM_free(pextract_face_ln_to_gn);
+  PDM_free(pextract_vtx_ln_to_gn );
 }
 
 static
@@ -1038,7 +1038,7 @@ _redistrib_boxes
                                                               comm);
 
   int n_elt_block_a = PDM_part_to_block_n_elt_block_get (ptb_boxes_a);
- PDM_free(weight);
+  PDM_free(weight);
 
   PDM_g_num_t *block_gnum_a = PDM_part_to_block_block_gnum_get (ptb_boxes_a);
 
@@ -1070,7 +1070,7 @@ _redistrib_boxes
                (void **) &box_a_to_box_b_g_num,
                          &block_a_boxes_b_stride,
                (void **) &block_a_boxes_b_gnum_data);
- PDM_free(box_a_to_box_b_g_num);
+  PDM_free(box_a_to_box_b_g_num);
 
 
   // if (1) {
@@ -1206,9 +1206,9 @@ _redistrib_boxes
   }
 
 
- PDM_free(part_stride_a);
- PDM_free(count_elts_a);
- PDM_free(count_elts_b);
+  PDM_free(part_stride_a);
+  PDM_free(count_elts_a);
+  PDM_free(count_elts_b);
 
   PDM_box_distrib_clean (distrib_a);
   PDM_box_distrib_clean (distrib_b);
@@ -1249,8 +1249,8 @@ _redistrib_boxes
                          block_a_boxes_b_gnum_data,
                          &tmp_redistribute_box_a_to_box_b_n,
            (void ***)    &tmp_redistribute_box_a_to_box_b_g_num);
- PDM_free(block_a_boxes_b_stride);
- PDM_free(block_a_boxes_b_gnum_data);
+  PDM_free(block_a_boxes_b_stride);
+  PDM_free(block_a_boxes_b_gnum_data);
 
   // if (1) {
   //   int idx = 0;
@@ -1268,8 +1268,8 @@ _redistrib_boxes
 
   int         *redistribute_box_a_to_box_b_n     = tmp_redistribute_box_a_to_box_b_n    [0];
   PDM_g_num_t *redistribute_box_a_to_box_b_g_num = tmp_redistribute_box_a_to_box_b_g_num[0];
- PDM_free(tmp_redistribute_box_a_to_box_b_n    );
- PDM_free(tmp_redistribute_box_a_to_box_b_g_num);
+  PDM_free(tmp_redistribute_box_a_to_box_b_n    );
+  PDM_free(tmp_redistribute_box_a_to_box_b_g_num);
 
 
   /*
@@ -1308,10 +1308,10 @@ _redistrib_boxes
   *redistribute_box_a_to_box_b_idx = _redistribute_box_a_to_box_b_idx;
   *redistribute_box_a_to_box_b     = _redistribute_box_a_to_box_b;
 
- PDM_free(order);
- PDM_free(gnum_elt_mesh_b_cp);
- PDM_free(redistribute_box_a_to_box_b_n    );
- PDM_free(redistribute_box_a_to_box_b_g_num);
+  PDM_free(order);
+  PDM_free(gnum_elt_mesh_b_cp);
+  PDM_free(redistribute_box_a_to_box_b_n    );
+  PDM_free(redistribute_box_a_to_box_b_g_num);
 }
 
 
@@ -1814,8 +1814,8 @@ _export_ensight3d
     val_gnum[i] = (PDM_real_t) cell_ln_to_gn[i];
     val_vol [i] = (PDM_real_t) volume[i];
   }
- PDM_free(volume);
- PDM_free(center);
+  PDM_free(volume);
+  PDM_free(center);
 
   PDM_writer_var_set(wrt,
                      id_var_rank,
@@ -1855,9 +1855,9 @@ _export_ensight3d
 
   PDM_writer_free(wrt);
 
- PDM_free(val_rank);
- PDM_free(val_gnum);
- PDM_free(val_vol );
+  PDM_free(val_rank);
+  PDM_free(val_gnum);
+  PDM_free(val_vol );
   //PDM_free(cell_face_n);
   //PDM_free(face_vtx_n);
 
@@ -1981,8 +1981,8 @@ _build_ptp
     PDM_realloc(elt_a_elt_b_init_loc   ,elt_a_elt_b_init_loc   , idx_write_init_loc * 3,int        );
   }
   //PDM_free(elt_b_init_loc);
- PDM_free(elt_b_init_loc_n);
- PDM_free(elt_b_init_loc_idx);
+  PDM_free(elt_b_init_loc_n);
+  PDM_free(elt_b_init_loc_idx);
 
 
   // dbg prints?
@@ -2013,7 +2013,7 @@ _build_ptp
                          &request_g_num);
 
   PDM_part_to_part_iexch_wait(ptp_a, request_g_num);
- PDM_free(elt_a_elt_b_g_num);
+  PDM_free(elt_a_elt_b_g_num);
 
 
   mi->elt_a_elt_b_volume = NULL;
@@ -2063,10 +2063,10 @@ _build_ptp
   PDM_part_to_part_iexch_wait(ptp_a, request_volume);
   PDM_part_to_part_iexch_wait(ptp_a, request_init_loc_n);
   PDM_part_to_part_iexch_wait(ptp_a, request_init_loc);
- PDM_free(elt_a_elt_b_init_loc_stride);
- PDM_free(elt_a_elt_b_init_loc);
- PDM_free(elt_a_elt_b_init_loc_n);
- PDM_free(elt_a_elt_b_n);
+  PDM_free(elt_a_elt_b_init_loc_stride);
+  PDM_free(elt_a_elt_b_init_loc);
+  PDM_free(elt_a_elt_b_init_loc_n);
+  PDM_free(elt_a_elt_b_n);
 
 
   int  *n_ref_a = NULL;
@@ -2199,9 +2199,9 @@ _build_ptp
 
    PDM_free(user_elt_a_b_init_loc_n[ipart]);
   }
- PDM_free(user_elt_a_b_n);
- PDM_free(user_elt_a_b_init_loc_n);
- PDM_free(user_elt_a_b_init_loc_stride);
+  PDM_free(user_elt_a_b_n);
+  PDM_free(user_elt_a_b_init_loc_n);
+  PDM_free(user_elt_a_b_init_loc_stride);
 
 
   int *user_n_elt_b;
@@ -2266,9 +2266,9 @@ _build_ptp
      PDM_free(user_elt_ln_to_gn_a[ipart]);
     }
   }
- PDM_free(user_elt_a_b_init_loc_idx);
- PDM_free(user_elt_a_b_init_loc    );
- PDM_free(user_elt_ln_to_gn_a);
+  PDM_free(user_elt_a_b_init_loc_idx);
+  PDM_free(user_elt_a_b_init_loc    );
+  PDM_free(user_elt_ln_to_gn_a);
 
   /* Reverse weights */
   if (1) {
@@ -2288,8 +2288,8 @@ _build_ptp
     PDM_part_to_part_iexch_wait(mi->ptp, request_volume);
   }
 
- PDM_free(user_n_elt_a);
- PDM_free(user_n_elt_b);
+  PDM_free(user_n_elt_a);
+  PDM_free(user_n_elt_b);
 }
 
 
@@ -3090,9 +3090,9 @@ _mesh_intersection_vol_vol
 
   } // End of loop on cells A
 
- PDM_free(faceB_triaB_idx);
- PDM_free(triaB_vtxB);
- PDM_free(triaA_vtxA);
+  PDM_free(faceB_triaB_idx);
+  PDM_free(triaB_vtxB);
+  PDM_free(triaA_vtxA);
   PDM_triangulate_state_destroy(tri_state);
 
   if (dbg_enabled) {
@@ -3151,8 +3151,8 @@ _mesh_intersection_vol_vol
     mi->global_vol_A   = g_total_volume_A;
   }
 
- PDM_free(cellA_center);
- PDM_free(cellA_volume);
+  PDM_free(cellA_center);
+  PDM_free(cellA_volume);
 
   for (int i = 0; i < 2; i++) {
     if (is_owner_face_vtx[i]) {
@@ -3169,7 +3169,7 @@ _mesh_intersection_vol_vol
              a_to_b,
              a_to_b_volume);
 
- PDM_free(a_to_b_volume);
+  PDM_free(a_to_b_volume);
 }
 
 static
@@ -3452,11 +3452,11 @@ _mesh_intersection_vol_line
   if (owner_face_vtxA == PDM_OWNERSHIP_USER) {
    PDM_free(faceA_vtxA);
   }
- PDM_free(poly_coord);
- PDM_free(face_normal);
- PDM_free(face_center);
- PDM_free(intersection_coord);
- PDM_free(intersection_stat);
+  PDM_free(poly_coord);
+  PDM_free(face_normal);
+  PDM_free(face_center);
+  PDM_free(intersection_coord);
+  PDM_free(intersection_stat);
 
   /*
    * Creation du part_to_part
@@ -3532,8 +3532,8 @@ _mesh_intersection_vol_line
                          &request_init_loc);
   PDM_part_to_part_iexch_wait(ptp_a, request_init_loc);
 
- PDM_free(elt_a_elt_b_init_loc);
- PDM_free(cellA_lineB_post_g_num);
+  PDM_free(elt_a_elt_b_init_loc);
+  PDM_free(cellA_lineB_post_g_num);
 
   int  *n_ref_a = NULL;
   int **ref_a   = NULL;
@@ -3588,7 +3588,7 @@ _mesh_intersection_vol_line
 
     //PDM_free(user_elt_a_b_idx);
   }
- PDM_free(user_elt_a_b_n);
+  PDM_free(user_elt_a_b_n);
 
   int *user_n_elt_b;
   PDM_malloc(user_n_elt_b,mi->n_part_mesh[1] ,int);
@@ -3623,15 +3623,15 @@ _mesh_intersection_vol_line
      PDM_free(user_elt_ln_to_gn_a[ipart]);
     }
   }
- PDM_free(user_elt_a_b_init_loc_idx);
- PDM_free(user_elt_a_b_init_loc    );
- PDM_free(user_elt_ln_to_gn_a);
- PDM_free(user_n_elt_a);
- PDM_free(user_n_elt_b);
+  PDM_free(user_elt_a_b_init_loc_idx);
+  PDM_free(user_elt_a_b_init_loc    );
+  PDM_free(user_elt_ln_to_gn_a);
+  PDM_free(user_n_elt_a);
+  PDM_free(user_n_elt_b);
 
- PDM_free(cellA_lineB_post);
- PDM_free(cellA_lineB_post_idx);
- PDM_free(cellA_lineB_post_n);
+  PDM_free(cellA_lineB_post);
+  PDM_free(cellA_lineB_post_idx);
+  PDM_free(cellA_lineB_post_n);
 
 }
 
@@ -4335,13 +4335,13 @@ _mesh_intersection_surf_line
       }
     }
   }
- PDM_free(order);
+  PDM_free(order);
 
- PDM_free(edgeA_inter_n);
- PDM_free(edgeA_inter_idx);
- PDM_free(edgeA_inter_t);
- PDM_free(edgeA_inter_edgeB);
- PDM_free(edgeA_inter_crossing);
+  PDM_free(edgeA_inter_n);
+  PDM_free(edgeA_inter_idx);
+  PDM_free(edgeA_inter_t);
+  PDM_free(edgeA_inter_edgeB);
+  PDM_free(edgeA_inter_crossing);
 
 
   /* Deal with 'undef' edges B */
@@ -4442,11 +4442,11 @@ _mesh_intersection_surf_line
    PDM_free(faceA_coord);
   }
 
- PDM_free(edgeB_inter_n);
- PDM_free(edgeB_inter_idx);
- PDM_free(edgeB_inter_t);
- PDM_free(edgeB_inter_edgeA);
- PDM_free(edgeB_inter_crossing);
+  PDM_free(edgeB_inter_n);
+  PDM_free(edgeB_inter_idx);
+  PDM_free(edgeB_inter_t);
+  PDM_free(edgeB_inter_edgeA);
+  PDM_free(edgeB_inter_crossing);
 
 
 
@@ -4529,20 +4529,20 @@ _mesh_intersection_surf_line
   }
 
 
- PDM_free(edgeA_faceA);
+  PDM_free(edgeA_faceA);
 
 
 
 
   /* Results, do not free */
- PDM_free(subedgeA_parent);
- PDM_free(subedgeA_center);
- PDM_free(subedgeA_vector);
+  PDM_free(subedgeA_parent);
+  PDM_free(subedgeA_center);
+  PDM_free(subedgeA_vector);
 
- PDM_free(subedgeB_parent);
- PDM_free(subedgeB_faceA );
- PDM_free(subedgeB_center);
- PDM_free(subedgeB_vector);
+  PDM_free(subedgeB_parent);
+  PDM_free(subedgeB_faceA );
+  PDM_free(subedgeB_center);
+  PDM_free(subedgeB_vector);
 
 
 }
@@ -5220,7 +5220,7 @@ _mesh_intersection_surf_surf
               PDM_ABS(g_total_area_AB - exact)/exact);
 
   }
- PDM_free(faceB_normals);
+  PDM_free(faceB_normals);
   for (int i = 0; i < 2; i++) {
     if (mi->mesh[i] == NULL) {
      PDM_free(face_vtx_idx[i]);
@@ -5234,7 +5234,7 @@ _mesh_intersection_surf_surf
              a_to_b,
              a_to_b_volume);
 
- PDM_free(a_to_b_volume);
+  PDM_free(a_to_b_volume);
 }
 
 
@@ -5494,8 +5494,8 @@ PDM_mesh_intersection_compute
   for(int i_part = 0; i_part < n_part[1]; ++i_part) {
    PDM_free(extents_mesh[1][i_part]);
   }
- PDM_free(extents_mesh[0]);
- PDM_free(extents_mesh[1]);
+  PDM_free(extents_mesh[0]);
+  PDM_free(extents_mesh[1]);
 
   // Check for zero extracted boxes
   for (int imesh = 0; imesh < 2; imesh++) {
@@ -5600,8 +5600,8 @@ PDM_mesh_intersection_compute
                    &redistribute_box_a_to_box_b_idx,
                    &redistribute_box_a_to_box_b);
   
- PDM_free(box_a_to_box_b_idx);
- PDM_free(box_a_to_box_b);
+  PDM_free(box_a_to_box_b_idx);
+  PDM_free(box_a_to_box_b);
 
 
   /*
@@ -5983,7 +5983,7 @@ PDM_mesh_intersection_free
     }
   }
 
- PDM_free(mi);
+  PDM_free(mi);
 }
 
 /**

@@ -314,10 +314,10 @@ PDM_octree_free
 
   //free (octree->extents_proc);
 
- PDM_free(_octree->n_points);
- PDM_free(_octree->g_num);
- PDM_free(_octree->used_rank);
- PDM_free(_octree->used_rank_extents);
+  PDM_free(_octree->n_points);
+  PDM_free(_octree->g_num);
+  PDM_free(_octree->used_rank);
+  PDM_free(_octree->used_rank_extents);
 
   PDM_box_set_destroy(&(_octree->rank_boxes));
 
@@ -329,7 +329,7 @@ PDM_octree_free
     PDM_MPI_Comm_free (&(_octree->rank_comm));
   }
 
- PDM_free(octree);
+  PDM_free(octree);
 }
 
 
@@ -457,7 +457,7 @@ PDM_octree_build
     }
   }
 
- PDM_free(n_pts_proc);
+  PDM_free(n_pts_proc);
 
   PDM_realloc(extents_proc ,extents_proc , s_extents * n_used_rank,double);
 
@@ -492,8 +492,8 @@ PDM_octree_build
                           PDM_BOX_TREE_ASYNC_LEVEL);
   _update_bt_statistics(&(_octree->bts_shared), _octree->bt_shared);
 
- PDM_free(gnum_proc);
- PDM_free(initLocation_proc);
+  PDM_free(gnum_proc);
+  PDM_free(initLocation_proc);
 
   _octree->used_rank_extents = extents_proc;
 }
@@ -909,7 +909,7 @@ double           *closest_octree_pt_dist2
                      recv_pts, n_recv_pts, i_recv_pts, PDM_MPI_DOUBLE,
                      _octree->comm);
 
- PDM_free(rank_min_max_dist);
+  PDM_free(rank_min_max_dist);
 
   for (int i = 0; i < n_rank; i++) {
     n_send_pts[i] = n_send_pts[i]/3;
@@ -946,8 +946,8 @@ double           *closest_octree_pt_dist2
             " closest point in the closest process \n");
   }
 
- PDM_free(closest_pt);
- PDM_free(recv_pts);
+  PDM_free(closest_pt);
+  PDM_free(recv_pts);
 
   /************************************************************
    *
@@ -961,7 +961,7 @@ double           *closest_octree_pt_dist2
                      recv_dist, n_send_pts, i_send_pts, PDM_MPI_DOUBLE,
                      _octree->comm);
 
- PDM_free(closest_dist);
+  PDM_free(closest_dist);
 
   double *upper_bound_dist;
   PDM_malloc(upper_bound_dist,n_pts,double);
@@ -988,8 +988,8 @@ double           *closest_octree_pt_dist2
             " exchange closest distance \n");
   }
 
- PDM_free(recv_dist);
- PDM_free(rank_id);
+  PDM_free(recv_dist);
+  PDM_free(rank_id);
 
   /****************************************************************************
    *
@@ -1044,7 +1044,7 @@ double           *closest_octree_pt_dist2
   }
 
 
- PDM_free(upper_bound_dist);
+  PDM_free(upper_bound_dist);
   PDM_MPI_Alltoall (n_send_pts, 1, PDM_MPI_INT,
                     n_recv_pts, 1, PDM_MPI_INT,
                     _octree->comm);
@@ -1744,23 +1744,23 @@ double           *closest_octree_pt_dist2
    PDM_free(__closest_octree_pt_dist2);
   }
 
- PDM_free(stride_ptb);
+  PDM_free(stride_ptb);
 
- PDM_free(i_boxes);
- PDM_free(boxes);
+  PDM_free(i_boxes);
+  PDM_free(boxes);
 
- PDM_free(data_send_pts1);
- PDM_free(data_recv_pts1);
- PDM_free(n_send_pts1);
- PDM_free(n_recv_pts1);
- PDM_free(i_send_pts1);
- PDM_free(i_recv_pts1);
- PDM_free(data_send_gnum1);
- PDM_free(data_recv_gnum1);
- PDM_free(n_send_gnum1);
- PDM_free(n_recv_gnum1);
- PDM_free(i_send_gnum1);
- PDM_free(i_recv_gnum1);
+  PDM_free(data_send_pts1);
+  PDM_free(data_recv_pts1);
+  PDM_free(n_send_pts1);
+  PDM_free(n_recv_pts1);
+  PDM_free(i_send_pts1);
+  PDM_free(i_recv_pts1);
+  PDM_free(data_send_gnum1);
+  PDM_free(data_recv_gnum1);
+  PDM_free(n_send_gnum1);
+  PDM_free(n_recv_gnum1);
+  PDM_free(i_send_gnum1);
+  PDM_free(i_recv_gnum1);
   if (n_exch > 1) {
    PDM_free(data_send_pts2);
    PDM_free(data_recv_pts2);
@@ -1779,9 +1779,9 @@ double           *closest_octree_pt_dist2
    PDM_free(send_bounds2);
   }
 
- PDM_free(_closest_octree_pt_id);
- PDM_free(_closest_octree_pt_dist2);
- PDM_free(_closest_octree_pt_g_num);
+  PDM_free(_closest_octree_pt_id);
+  PDM_free(_closest_octree_pt_dist2);
+  PDM_free(_closest_octree_pt_g_num);
 }
 
 
