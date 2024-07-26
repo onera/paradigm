@@ -523,7 +523,7 @@ int main(int argc, char *argv[])
 
   // > Plane isosurface
   double plane_equation [4] = {1.,0.,0.,0.5};
-  double plane_isovalues[3] = {-0.30,0.,0.30};
+  double plane_isovalues[3] = {-0.50,0.,0.50};
   int iso1 = PDM_isosurface_add(isos, 
                                 PDM_ISO_SURFACE_KIND_PLANE,
                                 3,
@@ -562,6 +562,8 @@ int main(int argc, char *argv[])
    */
   PDM_isosurface_compute(isos, iso1);
   PDM_isosurface_reset(isos, iso1);
+  double plane_isovalues2[2] = {-0.30,0.30};
+  PDM_isosurface_set_isovalues(isos, iso1, 2, plane_isovalues2);
   PDM_isosurface_compute(isos, iso1);
   PDM_isosurface_compute(isos, iso2);
   int n_iso = iso2+1;

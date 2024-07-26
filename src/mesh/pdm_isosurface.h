@@ -434,6 +434,27 @@ PDM_isosurface_add
 
 /**
  *
+ * \brief Reset isovalues of given isosurface.
+ *
+ * \param [in]  isos           \ref PDM_isosurface_t instance
+ * \param [in]  id_isosurface  Iso-surface identifier
+ * \param [in]  n_isovalues    Number of iso-values to capture
+ * \param [in]  isovalues      Iso-values to capture (size = \p n_isovalues)
+ *
+ */
+
+void
+PDM_isosurface_set_isovalues
+(
+  PDM_isosurface_t *isos,
+  int               id_isosurface,
+  int               n_isovalues,
+  double           *isovalues
+);
+
+
+/**
+ *
  * \brief Set source field equation
  *
  * \param [in]  isos           \ref PDM_isosurface_t instance

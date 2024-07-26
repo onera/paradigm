@@ -3655,7 +3655,7 @@ PDM_isosurface_marching_algo
     /* 
      * Visu
      */
-    if (debug) {
+    if (debug_visu) {
 
       log_trace("\n");
       log_trace("iso_n_edge = %d\n", iso_n_edge[i_part]);
