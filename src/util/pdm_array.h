@@ -37,6 +37,7 @@ double*      PDM_array_const_double(const int size, const double      value);
 
 // Create a range array
 int* PDM_array_new_range_int(const int size);
+int* PDM_array_new_arange_int(const int start, const int end, const int step);
 
 // Create an index array from a size array
 int*         PDM_array_new_idx_from_sizes_int (const int *size_array, const int size);

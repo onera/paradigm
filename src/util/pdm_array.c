@@ -109,6 +109,18 @@ int* PDM_array_new_range_int(const int size) {
   }
   return array;
 }
+/*
+ * Allocate a new int array starting at start, incremented by step and finishing at end max
+*/
+int* PDM_array_new_arange_int(const int start, const int end, const int step) {
+  int size = (end-start)/step+1;
+  int *array;
+  PDM_malloc(array, size, int);
+  for (int i = 0; i < size; ++i) {
+    array[i] = start+i*step;
+  }
+  return array;
+}
 
 /*
  * Allocate a new array index array (size=size+1) and fill it from
