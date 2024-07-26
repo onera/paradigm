@@ -2905,6 +2905,15 @@ PDM_compute_face_edge_from_face_vtx
                               NULL,
                               NULL,
                               tmp_parent_elmt_pos);
+
+  /* Fix for partial block */
+  PDM_g_num_t *dface_gnum = PDM_part_to_block_block_gnum_get(ptb);
+  for (int i_face = 0; i_face < dn_face; i_face++) {
+    for (int i = dface_vtx_idx[i_face]; i < dface_vtx_idx[i_face+1]; i++) {
+      tmp_dface_edge[i] = dface_gnum[i_face];
+    }
+  }
+
   assert(n_edge_current == n_edge_elt_tot);
  PDM_free(tmp_parent_elmt_pos);
  PDM_free(dface_vtx);
