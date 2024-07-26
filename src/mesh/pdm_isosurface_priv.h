@@ -187,6 +187,26 @@ struct _pdm_isosurface_t {
   int **face_vtx;
   int **edge_vtx;
 
+  // > Nodal connectivities
+
+  int          *extract_n_vtx;
+  double      **extract_vtx_coord;
+  PDM_g_num_t **extract_vtx_gnum; // from initial mesh
+  int         **extract_vtx_lnum; // from initial mesh
+
+  int          *extract_n_tri;
+  int         **extract_tri_vtx;
+  PDM_g_num_t **extract_tri_gnum; // from initial mesh
+  int         **extract_tri_lnum; // from initial mesh
+  int          *extract_tri_n_group; // from initial mesh
+  int         **extract_tri_tag; // from initial mesh
+
+  int          *extract_n_tetra;
+  int         **extract_tetra_vtx;
+  PDM_g_num_t **extract_tetra_gnum; // from initial mesh
+  int         **extract_tetra_lnum; // from initial mesh
+  // int         **tri_tag;
+
   // > Boundaries
   int          *n_group_face;
   int         **group_face_idx;
@@ -219,6 +239,7 @@ struct _pdm_isosurface_t {
   PDM_g_num_t    ***iso_vtx_gnum;
   int            ***iso_vtx_lparent_idx;
   int            ***iso_vtx_lparent;
+  PDM_g_num_t    ***iso_vtx_parent_gnum;
   double         ***iso_vtx_parent_weight;
   int            ***isovalue_vtx_idx;
 
@@ -228,6 +249,7 @@ struct _pdm_isosurface_t {
   PDM_g_num_t   ***iso_edge_gnum;
   int           ***iso_edge_lparent_idx;
   int           ***iso_edge_lparent;
+  PDM_g_num_t   ***iso_edge_parent_gnum;
   int             *iso_n_edge_group;
   int           ***iso_edge_group_idx;
   int           ***iso_edge_group_lnum;
@@ -244,6 +266,7 @@ struct _pdm_isosurface_t {
   PDM_g_num_t   ***iso_face_gnum;
   int           ***iso_face_lparent_idx;
   int           ***iso_face_lparent;
+  PDM_g_num_t   ***iso_face_parent_gnum;
   int           ***isovalue_face_idx;
 
   // PDM_g_num_t    **distrib_iso_face;

@@ -443,48 +443,61 @@ _compute_iso_field
 
   if (isos->kind[id_isosurface] == PDM_ISO_SURFACE_KIND_FIELD) {
     if (use_extract) {
-      if (isos->extract_kind == PDM_EXTRACT_PART_KIND_REEQUILIBRATE) {
-        PDM_part_to_part_t *ptp = NULL;
-        PDM_extract_part_part_to_part_get(isos->extrp[id_isosurface],
-                                          PDM_MESH_ENTITY_VTX,
-                                          &ptp,
-                                          PDM_OWNERSHIP_KEEP);
-        assert(ptp != NULL);
+      if (!_is_nodal(isos)) {
+        if (isos->extract_kind == PDM_EXTRACT_PART_KIND_REEQUILIBRATE) {
+          PDM_part_to_part_t *ptp = NULL;
+          PDM_extract_part_part_to_part_get(isos->extrp[id_isosurface],
+                                            PDM_MESH_ENTITY_VTX,
+                                            &ptp,
+                                            PDM_OWNERSHIP_KEEP);
+          assert(ptp != NULL);
 
-        int request = -1;
-        PDM_part_to_part_reverse_iexch(ptp,
-                                       PDM_MPI_COMM_KIND_P2P ,
-                                       PDM_STRIDE_CST_INTERLACED,
-                                       PDM_PART_TO_PART_DATA_DEF_ORDER_PART2,
-                                       1,
-                                       sizeof(double),
-                                       NULL,
-                      (const void  **) isos->field[id_isosurface],
-                                       NULL,
-                            (void ***) &isos->extract_field[id_isosurface],
-                                       &request);
+          int request = -1;
+          PDM_part_to_part_reverse_iexch(ptp,
+                                         PDM_MPI_COMM_KIND_P2P ,
+                                         PDM_STRIDE_CST_INTERLACED,
+                                         PDM_PART_TO_PART_DATA_DEF_ORDER_PART2,
+                                         1,
+                                         sizeof(double),
+                                         NULL,
+                        (const void  **) isos->field[id_isosurface],
+                                         NULL,
+                              (void ***) &isos->extract_field[id_isosurface],
+                                         &request);
 
-        PDM_part_to_part_reverse_iexch_wait(ptp, request);
-      }
-      else if (isos->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL) {
-        PDM_malloc(isos->extract_field[id_isosurface], isos->n_part, double *);
+          PDM_part_to_part_reverse_iexch_wait(ptp, request);
+        }
+        else if (isos->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL) {
+          PDM_malloc(isos->extract_field[id_isosurface], isos->n_part, double *);
 
-        for (int i_part = 0; i_part < isos->iso_n_part; i_part++) {
-          int *parent = NULL;
-          int n_vtx = PDM_extract_part_parent_lnum_get(isos->extrp[id_isosurface],
-                                                       i_part,
-                                                       PDM_MESH_ENTITY_VTX,
-                                                       &parent,
-                                                       PDM_OWNERSHIP_KEEP);
+          for (int i_part = 0; i_part < isos->iso_n_part; i_part++) {
+            int *parent = NULL;
+            int n_vtx = PDM_extract_part_parent_lnum_get(isos->extrp[id_isosurface],
+                                                         i_part,
+                                                         PDM_MESH_ENTITY_VTX,
+                                                         &parent,
+                                                         PDM_OWNERSHIP_KEEP);
 
-          PDM_malloc(isos->extract_field[id_isosurface][i_part], n_vtx, double);
-          for (int i = 0; i < n_vtx; i++) {
-            isos->extract_field[id_isosurface][i_part][i] = isos->field[id_isosurface][i_part][parent[i] - 1];
+            PDM_malloc(isos->extract_field[id_isosurface][i_part], n_vtx, double);
+            for (int i = 0; i < n_vtx; i++) {
+              isos->extract_field[id_isosurface][i_part][i] = isos->field[id_isosurface][i_part][parent[i] - 1];
+            }
           }
+        }
+        else {
+          PDM_error(__FILE__, __LINE__, 0, "Invalid extract_kind %d\n", (int) isos->extract_kind);
         }
       }
       else {
-        PDM_error(__FILE__, __LINE__, 0, "Invalid extract_kind %d\n", (int) isos->extract_kind);
+        // > For now nodal has not extract part so we fake it
+        PDM_malloc(isos->extract_field[id_isosurface], isos->n_part, double *);
+        for (int i_part = 0; i_part < isos->iso_n_part; i_part++) {
+          PDM_malloc(isos->extract_field[id_isosurface][i_part], isos->extract_n_vtx[i_part], double);
+          for (int i = 0; i < isos->extract_n_vtx[i_part]; i++) {
+            isos->extract_field[id_isosurface][i_part][i] = isos->field[id_isosurface][i_part][i];
+          }
+        }
+        return;
       }
 
     }
@@ -519,10 +532,16 @@ _compute_iso_field
     }
     field = isos->extract_field[id_isosurface];
     for (int i_part = 0; i_part < isos->n_part; i_part++) {
-      n_vtx[i_part] = PDM_extract_part_vtx_coord_get(isos->extrp[id_isosurface],
-                                                     i_part,
-                                                     &vtx_coord[i_part],
-                                                     PDM_OWNERSHIP_KEEP);
+      if (!_is_nodal(isos)) {
+        n_vtx[i_part] = PDM_extract_part_vtx_coord_get(isos->extrp[id_isosurface],
+                                                       i_part,
+                                                       &vtx_coord[i_part],
+                                                       PDM_OWNERSHIP_KEEP);
+      }
+      else {
+        n_vtx    [i_part] = isos->extract_n_vtx    [i_part];
+        vtx_coord[i_part] = isos->extract_vtx_coord[i_part];
+      }
     }
   }
   else {
@@ -653,6 +672,50 @@ _cross_any_level_ngon
 }
 // <<---
 
+
+
+/**
+ * \brief Convert group info into tag
+ */
+static int
+_convert_group_info_to_tag
+(
+  PDM_part_mesh_nodal_t  *pmn,
+  int                     i_part,
+  int                     n_elt,
+  PDM_geometry_kind_t     geom_kind,
+  int                   **elt_bnd_tag_out
+)
+{
+  int debug = 0;
+
+  *elt_bnd_tag_out = PDM_array_zeros_int(n_elt);
+  int *elt_bnd_tag = *elt_bnd_tag_out;
+  int n_group = PDM_part_mesh_nodal_n_group_get(pmn, geom_kind);
+  for (int i_group=0; i_group<n_group; ++i_group) {
+    int          n_group_elmt    = 0;
+    int         *group_elmt_lnum = 0;
+    PDM_g_num_t *group_elmt_gnum = 0;
+    PDM_part_mesh_nodal_group_get(pmn,
+                                  geom_kind,
+                                  i_part,
+                                  i_group,
+                                 &n_group_elmt,
+                                 &group_elmt_lnum,
+                                 &group_elmt_gnum,
+                                  PDM_OWNERSHIP_KEEP);
+    for (int i_elmt=0; i_elmt<n_group_elmt; ++i_elmt) {
+      assert(elt_bnd_tag[group_elmt_lnum[i_elmt]-1]==0);
+      elt_bnd_tag[group_elmt_lnum[i_elmt]-1] = i_group+1;
+    }
+  }
+  if (debug==1) {
+    PDM_log_trace_array_int(elt_bnd_tag, n_elt, "elt_bnd_tag ::");
+  }
+  return n_group;
+}
+
+
 static void
 _extract
 (
@@ -667,61 +730,137 @@ _extract
     isos->part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
   }
 
-  PDM_extract_part_t *extrp = PDM_extract_part_create(isos->entry_mesh_dim,
-                                                      isos->n_part,
-                                                      isos->n_part,
-                                                      isos->extract_kind,
-                                                      isos->part_method,
-                                                      PDM_FALSE,
-                                                      PDM_OWNERSHIP_KEEP,
-                                                      isos->comm);
-  isos->extrp[id_isosurface] = extrp;
-
-
-  int  *n_extract    = PDM_array_zeros_int(isos->n_part);
-  int **extract_lnum = NULL;
-  PDM_malloc(extract_lnum, isos->n_part, int *);
-
-  int          *pn_cell        = NULL;
-  int          *pn_face        = NULL;
-  int          *pn_edge        = NULL;
-  int          *pn_vtx         = NULL;
-  int         **pcell_face_idx = NULL;
-  int         **pcell_face     = NULL;
-  int         **pface_edge_idx = NULL;
-  int         **pface_edge     = NULL;
-  int         **pface_vtx_idx  = NULL;
-  int         **pface_vtx      = NULL;
-  int         **pedge_vtx      = NULL;
-  double      **pvtx_coord     = NULL;
-  PDM_g_num_t **pcell_ln_to_gn = NULL;
-  PDM_g_num_t **pface_ln_to_gn = NULL;
-  PDM_g_num_t **pedge_ln_to_gn = NULL;
-  PDM_g_num_t **pvtx_ln_to_gn  = NULL;
 
   if (_is_nodal(isos)) {
-    // Nodal
-    PDM_malloc(pn_cell       , isos->n_part, int          );
-    PDM_malloc(pn_face       , isos->n_part, int          );
-    PDM_malloc(pn_edge       , isos->n_part, int          );
-    PDM_malloc(pn_vtx        , isos->n_part, int          );
-    PDM_malloc(pcell_ln_to_gn, isos->n_part, PDM_g_num_t *);
-    PDM_malloc(pface_ln_to_gn, isos->n_part, PDM_g_num_t *);
-    PDM_malloc(pvtx_ln_to_gn , isos->n_part, PDM_g_num_t *);
+    // // Nodal
+    // PDM_malloc(pn_cell       , isos->n_part, int          );
+    // PDM_malloc(pn_face       , isos->n_part, int          );
+    // PDM_malloc(pn_edge       , isos->n_part, int          );
+    // PDM_malloc(pn_vtx        , isos->n_part, int          );
+    // PDM_malloc(pcell_ln_to_gn, isos->n_part, PDM_g_num_t *);
+    // PDM_malloc(pface_ln_to_gn, isos->n_part, PDM_g_num_t *);
+    // PDM_malloc(pvtx_ln_to_gn , isos->n_part, PDM_g_num_t *);
 
-    if (isos->entry_mesh_dim == 2) {
-      for (int i_part = 0; i_part < isos->n_part; i_part++) {
-        pn_cell[i_part] = 0;
-      }
+    // if (isos->entry_mesh_dim == 2) {
+    //   for (int i_part = 0; i_part < isos->n_part; i_part++) {
+    //     pn_cell[i_part] = 0;
+    //   }
+    // }
+
+    printf("WARNING: active sub mesh extraction not implemented for nodal. Algo may be slow...\n");
+
+    if (isos->extract_n_vtx==NULL) {
+      PDM_malloc(isos->extract_n_vtx    , isos->n_part, int          );
+      PDM_malloc(isos->extract_vtx_coord, isos->n_part, double      *);
+      PDM_malloc(isos->extract_vtx_gnum , isos->n_part, PDM_g_num_t *);
+      PDM_malloc(isos->extract_vtx_lnum , isos->n_part, int         *);
+
+      PDM_malloc(isos->extract_n_tri      , isos->n_part, int          );
+      PDM_malloc(isos->extract_tri_vtx    , isos->n_part, int         *);
+      PDM_malloc(isos->extract_tri_gnum   , isos->n_part, PDM_g_num_t *);
+      PDM_malloc(isos->extract_tri_lnum   , isos->n_part, int         *);
+      PDM_malloc(isos->extract_tri_n_group, isos->n_part, int          );
+      PDM_malloc(isos->extract_tri_tag    , isos->n_part, int         *);
+
+      PDM_malloc(isos->extract_n_tetra   , isos->n_part, int          );
+      PDM_malloc(isos->extract_tetra_vtx , isos->n_part, int         *);
+      PDM_malloc(isos->extract_tetra_gnum, isos->n_part, PDM_g_num_t *);
+      PDM_malloc(isos->extract_tetra_lnum, isos->n_part, int         *);
     }
 
+    int n_section = PDM_part_mesh_nodal_n_section_get(isos->pmesh_nodal);
+    for (int i_part = 0; i_part < isos->n_part; i_part++) {
+
+      isos->extract_n_vtx    [i_part] = PDM_part_mesh_nodal_n_vtx_get    (isos->pmesh_nodal, i_part);
+      isos->extract_vtx_coord[i_part] = PDM_part_mesh_nodal_vtx_coord_get(isos->pmesh_nodal, i_part);
+      isos->extract_vtx_gnum [i_part] = PDM_part_mesh_nodal_vtx_g_num_get(isos->pmesh_nodal, i_part);
+      isos->extract_vtx_lnum [i_part] = PDM_array_new_arange_int(1, isos->extract_n_vtx[i_part], 1);
+
+      for (int i_section = 0; i_section < n_section; i_section++) {
+        PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_section_elt_type_get(isos->pmesh_nodal, i_section);
+
+        int n_elt = PDM_part_mesh_nodal_section_n_elt_get(isos->pmesh_nodal, i_section, i_part);
+
+        int         *connec;
+        PDM_g_num_t *gnum;
+        int         *parent_num;
+        PDM_g_num_t *parent_entity_g_num;
+        PDM_part_mesh_nodal_section_std_get(isos->pmesh_nodal,
+                                            i_section,
+                                            i_part,
+                                            &connec,
+                                            &gnum,
+                                            &parent_num,
+                                            &parent_entity_g_num,
+                                            PDM_OWNERSHIP_BAD_VALUE);
+        switch (t_elt) {
+
+          case PDM_MESH_NODAL_POINT: {
+            break;
+          }
+          case PDM_MESH_NODAL_BAR2: {
+            break;
+          }
+          case PDM_MESH_NODAL_TRIA3: {
+            isos->extract_n_tri      [i_part] = n_elt;
+            isos->extract_tri_vtx    [i_part] = connec;
+            isos->extract_tri_gnum   [i_part] = gnum;
+            isos->extract_tri_lnum   [i_part] = PDM_array_new_arange_int(1, n_elt, 1);
+            isos->extract_tri_n_group[i_part] = _convert_group_info_to_tag(isos->pmesh_nodal, i_part, n_elt,
+                                                                           PDM_GEOMETRY_KIND_SURFACIC,
+                                                                          &isos->extract_tri_tag[i_part]);
+            break;
+          }
+          case PDM_MESH_NODAL_TETRA4: {
+            isos->extract_n_tetra    [i_part] = n_elt;
+            isos->extract_tetra_vtx  [i_part] = connec;
+            isos->extract_tetra_gnum [i_part] = gnum;
+            isos->extract_tetra_lnum [i_part] = PDM_array_new_arange_int(1, n_elt, 1);
+            break;
+          }
+          default:{
+            PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: only full tri and tetra nodal meshes are managed for now (section with element type = %d)\n", t_elt);
+          }
+        }
+      }  // End loop on sections
+    } // End loop on partitions
     // TODO...
     // PDM_extract_part_part_nodal_set...
-    PDM_error(__FILE__, __LINE__, 0, "_extract Nodal not implemented yet\n");
+    // PDM_error(__FILE__, __LINE__, 0, "_extract Nodal not implemented yet\n");
   }
+  else { // Ngon
 
-  else {
-    // Ngon
+    PDM_extract_part_t *extrp = PDM_extract_part_create(isos->entry_mesh_dim,
+                                                        isos->n_part,
+                                                        isos->n_part,
+                                                        isos->extract_kind,
+                                                        isos->part_method,
+                                                        PDM_FALSE,
+                                                        PDM_OWNERSHIP_KEEP,
+                                                        isos->comm);
+    isos->extrp[id_isosurface] = extrp;
+
+
+    int  *n_extract    = PDM_array_zeros_int(isos->n_part);
+    int **extract_lnum = NULL;
+    PDM_malloc(extract_lnum, isos->n_part, int *);
+
+    int          *pn_cell        = NULL;
+    int          *pn_face        = NULL;
+    int          *pn_edge        = NULL;
+    int          *pn_vtx         = NULL;
+    int         **pcell_face_idx = NULL;
+    int         **pcell_face     = NULL;
+    int         **pface_edge_idx = NULL;
+    int         **pface_edge     = NULL;
+    int         **pface_vtx_idx  = NULL;
+    int         **pface_vtx      = NULL;
+    int         **pedge_vtx      = NULL;
+    double      **pvtx_coord     = NULL;
+    PDM_g_num_t **pcell_ln_to_gn = NULL;
+    PDM_g_num_t **pface_ln_to_gn = NULL;
+    PDM_g_num_t **pedge_ln_to_gn = NULL;
+    PDM_g_num_t **pvtx_ln_to_gn  = NULL;
 
     pn_cell        = isos->n_cell;
     pn_face        = isos->n_face;
@@ -862,76 +1001,53 @@ _extract
       PDM_realloc(extract_lnum[i_part], extract_lnum[i_part], n_extract[i_part], int);
     }
 
-  } // End Ngon
 
-  PDM_extract_part_n_group_set(extrp, PDM_BOUND_TYPE_FACE, isos->n_group_face[0]);
+    PDM_extract_part_n_group_set(extrp, PDM_BOUND_TYPE_FACE, isos->n_group_face[0]);
 
-  for (int i_part = 0; i_part < isos->n_part; i_part++) {
-    PDM_extract_part_part_set(extrp,
-                              i_part,
-                              pn_cell       [i_part],
-                              pn_face       [i_part],
-                              pn_edge       [i_part],
-                              pn_vtx        [i_part],
-                              pcell_face_idx[i_part],
-                              pcell_face    [i_part],
-                              pface_edge_idx[i_part],
-                              pface_edge    [i_part],
-                              pedge_vtx     [i_part],
-                              pface_vtx_idx [i_part],
-                              pface_vtx     [i_part],
-                              pcell_ln_to_gn[i_part],
-                              pface_ln_to_gn[i_part],
-                              pedge_ln_to_gn[i_part],
-                              pvtx_ln_to_gn [i_part],
-                              pvtx_coord    [i_part]);
+    for (int i_part = 0; i_part < isos->n_part; i_part++) {
+      PDM_extract_part_part_set(extrp,
+                                i_part,
+                                pn_cell       [i_part],
+                                pn_face       [i_part],
+                                pn_edge       [i_part],
+                                pn_vtx        [i_part],
+                                pcell_face_idx[i_part],
+                                pcell_face    [i_part],
+                                pface_edge_idx[i_part],
+                                pface_edge    [i_part],
+                                pedge_vtx     [i_part],
+                                pface_vtx_idx [i_part],
+                                pface_vtx     [i_part],
+                                pcell_ln_to_gn[i_part],
+                                pface_ln_to_gn[i_part],
+                                pedge_ln_to_gn[i_part],
+                                pvtx_ln_to_gn [i_part],
+                                pvtx_coord    [i_part]);
 
-    PDM_extract_part_selected_lnum_set(extrp,
-                                       i_part,
-                                       n_extract   [i_part],
-                                       extract_lnum[i_part]);
+      PDM_extract_part_selected_lnum_set(extrp,
+                                         i_part,
+                                         n_extract   [i_part],
+                                         extract_lnum[i_part]);
 
-    for (int i_group = 0; i_group < isos->n_group_face[0]; i_group++) {
-      PDM_extract_part_part_group_set(extrp,
-                                      i_part,
-                                      i_group,
-                                      PDM_BOUND_TYPE_FACE,
-                                      isos->group_face_idx[i_part][i_group+1] - isos->group_face_idx[i_part][i_group],
-                                      isos->group_face[i_part]      + isos->group_face_idx[i_part][i_group],
-                                      isos->group_face_gnum[i_part] + isos->group_face_idx[i_part][i_group]);
+      for (int i_group = 0; i_group < isos->n_group_face[0]; i_group++) {
+        PDM_extract_part_part_group_set(extrp,
+                                        i_part,
+                                        i_group,
+                                        PDM_BOUND_TYPE_FACE,
+                                        isos->group_face_idx[i_part][i_group+1] - isos->group_face_idx[i_part][i_group],
+                                        isos->group_face[i_part]      + isos->group_face_idx[i_part][i_group],
+                                        isos->group_face_gnum[i_part] + isos->group_face_idx[i_part][i_group]);
+      }
     }
-  }
 
+    PDM_extract_part_compute(extrp);
 
-  PDM_extract_part_compute(extrp);
-
-
-  if (_is_nodal(isos)) {
-    // for (int i_part = 0; i_part < isos->n_part; i_part++) {
-    //   PDM_free(pn_cell       [i_part]);
-    //   PDM_free(pn_face       [i_part]);
-    //   PDM_free(pn_edge       [i_part]);
-    //   PDM_free(pn_vtx        [i_part]);
-    //   PDM_free(pcell_ln_to_gn[i_part]);
-    //   PDM_free(pface_ln_to_gn[i_part]);
-    //   PDM_free(pedge_ln_to_gn[i_part]);
-    //   PDM_free(pvtx_ln_to_gn [i_part]);
-    // }
-    // PDM_free(pn_cell       );
-    // PDM_free(pn_face       );
-    // PDM_free(pn_edge       );
-    // PDM_free(pn_vtx        );
-    // PDM_free(pcell_ln_to_gn);
-    // PDM_free(pface_ln_to_gn);
-    // PDM_free(pedge_ln_to_gn);
-    // PDM_free(pvtx_ln_to_gn );
-  }
-
-  for (int i_part = 0; i_part < isos->n_part; i_part++) {
-    PDM_free(extract_lnum[i_part]);
-  }
-  PDM_free(n_extract   );
-  PDM_free(extract_lnum);
+    for (int i_part = 0; i_part < isos->n_part; i_part++) {
+      PDM_free(extract_lnum[i_part]);
+    }
+    PDM_free(n_extract   );
+    PDM_free(extract_lnum);
+  } // End Ngon
 }
 
 
@@ -945,11 +1061,6 @@ _ngonize
   int               id_iso
 )
 {
-  if (!_is_nodal(isos)) {
-    // Already ngon
-    return;
-  }
-
   assert(isos->extrp[id_iso] != NULL);
 
   PDM_part_mesh_nodal_elmts_t *extract_pmne = NULL;
@@ -1061,8 +1172,14 @@ _free_iso_vtx
       if (isos->iso_owner_gnum[id_iso][i_part][PDM_MESH_ENTITY_VTX]==PDM_OWNERSHIP_KEEP) {
         PDM_free(isos->iso_vtx_gnum[id_iso][i_part]);
       }
-      PDM_free(isos->iso_vtx_lparent_idx   [id_iso][i_part]);
-      PDM_free(isos->iso_vtx_lparent       [id_iso][i_part]);
+      if (isos->iso_owner_lparent[id_iso][i_part][PDM_MESH_ENTITY_VTX]==PDM_OWNERSHIP_KEEP) {
+        PDM_free(isos->iso_vtx_lparent_idx[id_iso][i_part]);
+        PDM_free(isos->iso_vtx_lparent    [id_iso][i_part]);
+      }
+      if (isos->extract_kind==PDM_EXTRACT_PART_KIND_REEQUILIBRATE) {
+        PDM_free(isos->iso_vtx_lparent_idx[id_iso][i_part]);
+        PDM_free(isos->iso_vtx_parent_gnum[id_iso][i_part]);
+      }
       if (isos->iso_owner_vtx_parent_weight[id_iso][i_part]==PDM_OWNERSHIP_KEEP) {
         PDM_free(isos->iso_vtx_parent_weight[id_iso][i_part]);
       }
@@ -1075,6 +1192,7 @@ _free_iso_vtx
   PDM_free(isos->iso_vtx_gnum         [id_iso]);
   PDM_free(isos->iso_vtx_lparent_idx  [id_iso]);
   PDM_free(isos->iso_vtx_lparent      [id_iso]);
+  PDM_free(isos->iso_vtx_parent_gnum  [id_iso]);
   PDM_free(isos->iso_vtx_parent_weight[id_iso]);
   PDM_free(isos->isovalue_vtx_idx     [id_iso]);
 }
@@ -1095,8 +1213,14 @@ _free_iso_edge
       if (isos->iso_owner_gnum[id_iso][i_part][PDM_MESH_ENTITY_EDGE]==PDM_OWNERSHIP_KEEP) {
         PDM_free(isos->iso_edge_gnum[id_iso][i_part]);
       }
-      PDM_free(isos->iso_edge_lparent_idx[id_iso][i_part]);
-      PDM_free(isos->iso_edge_lparent    [id_iso][i_part]);
+      if (isos->iso_owner_lparent[id_iso][i_part][PDM_MESH_ENTITY_EDGE]==PDM_OWNERSHIP_KEEP) {
+        PDM_free(isos->iso_edge_lparent_idx[id_iso][i_part]);
+        PDM_free(isos->iso_edge_lparent    [id_iso][i_part]);
+      }
+      if (isos->extract_kind==PDM_EXTRACT_PART_KIND_REEQUILIBRATE) {
+        PDM_free(isos->iso_edge_lparent_idx[id_iso][i_part]);
+        PDM_free(isos->iso_edge_parent_gnum[id_iso][i_part]);
+      }
       PDM_free(isos->iso_edge_group_idx  [id_iso][i_part]);
       PDM_free(isos->iso_edge_group_lnum [id_iso][i_part]);
       PDM_free(isos->iso_edge_group_gnum [id_iso][i_part]);
@@ -1109,6 +1233,7 @@ _free_iso_edge
   PDM_free(isos->iso_edge_gnum       [id_iso]);
   PDM_free(isos->iso_edge_lparent_idx[id_iso]);
   PDM_free(isos->iso_edge_lparent    [id_iso]);
+  PDM_free(isos->iso_edge_parent_gnum[id_iso]);
   PDM_free(isos->iso_edge_group_idx  [id_iso]);
   PDM_free(isos->iso_edge_group_lnum [id_iso]);
   PDM_free(isos->iso_edge_group_gnum [id_iso]);
@@ -1132,8 +1257,14 @@ _free_iso_face
       if (isos->iso_owner_gnum[id_iso][i_part][PDM_MESH_ENTITY_FACE]==PDM_OWNERSHIP_KEEP) {
         PDM_free(isos->iso_face_gnum[id_iso][i_part]);
       }
-      PDM_free(isos->iso_face_lparent_idx[id_iso][i_part]);
-      PDM_free(isos->iso_face_lparent    [id_iso][i_part]);
+      if (isos->iso_owner_lparent[id_iso][i_part][PDM_MESH_ENTITY_FACE]==PDM_OWNERSHIP_KEEP) {
+        PDM_free(isos->iso_face_lparent_idx[id_iso][i_part]);
+        PDM_free(isos->iso_face_lparent    [id_iso][i_part]);
+      }
+      if (isos->extract_kind==PDM_EXTRACT_PART_KIND_REEQUILIBRATE) {
+        PDM_free(isos->iso_face_lparent_idx[id_iso][i_part]);
+        PDM_free(isos->iso_face_parent_gnum[id_iso][i_part]);
+      }
       PDM_free(isos->isovalue_face_idx   [id_iso][i_part]);
     }
   }
@@ -1144,6 +1275,7 @@ _free_iso_face
   PDM_free(isos->iso_face_vtx        [id_iso]);
   PDM_free(isos->iso_face_lparent_idx[id_iso]);
   PDM_free(isos->iso_face_lparent    [id_iso]);
+  PDM_free(isos->iso_face_parent_gnum[id_iso]);
   PDM_free(isos->isovalue_face_idx   [id_iso]);
 }
 
@@ -1158,22 +1290,18 @@ _free_field
 {
   if (isos->field[id_iso]!=NULL) {
     for (int i_part=0; i_part<isos->n_part; ++i_part) {
-      if (isos->kind[id_iso]!=PDM_ISO_SURFACE_KIND_FIELD && isos->field[id_iso][i_part]!=NULL) {
+      if (isos->kind[id_iso]!=PDM_ISO_SURFACE_KIND_FIELD) {
         PDM_free(isos->field[id_iso][i_part]);
       }
     }
     if (!partial) PDM_free(isos->field[id_iso]);
   }
-  if (!partial) isos->field[id_iso] = NULL;
 
   if (isos->extract_field[id_iso] != NULL) {
     for (int i_part = 0; i_part < isos->iso_n_part; i_part++) {
-      if (isos->extract_field[id_iso][i_part] != NULL) {
-        PDM_free(isos->extract_field[id_iso][i_part]);
-      }
+      PDM_free(isos->extract_field[id_iso][i_part]);
     }
     PDM_free(isos->extract_field[id_iso]);
-    isos->extract_field[id_iso] = NULL;
   }
 }
 
@@ -1197,6 +1325,20 @@ _free_owner
   PDM_free(isos->iso_owner_connec  [id_iso]);
   PDM_free(isos->iso_owner_lparent [id_iso]);
   PDM_free(isos->iso_owner_edge_bnd[id_iso]);
+}
+
+
+static void
+_free_nodal_extract_parts
+(
+  PDM_isosurface_t *isos
+)
+{
+  for (int i_part=0; i_part<isos->n_part; ++i_part) {
+    PDM_free(isos->extract_vtx_lnum  [i_part]);
+    PDM_free(isos->extract_tri_lnum  [i_part]);
+    PDM_free(isos->extract_tri_tag   [i_part]);
+    PDM_free(isos->extract_tetra_lnum[i_part]);
   }
 }
 
@@ -1260,8 +1402,11 @@ _isosurface_compute
   /* Evaluate field on extracted mesh */
   _compute_iso_field(isos, id_isosurface, 1); // hide in '_extract'?
 
-  /* If nodal with sections other than TRIA3 and TETRA4, fall back to ngon */
-  _ngonize(isos, id_isosurface);
+  // Comment because not implemented yet and i need to test full tetra/tri
+  // /* If nodal with sections other than TRIA3 and TETRA4, fall back to ngon */
+  // if (_is_nodal(isos)) {
+  //   _ngonize(isos, id_isosurface);
+  // }
 
   /* Build isosurface mesh */
   if (_is_nodal(isos)) {
@@ -1330,6 +1475,12 @@ _isosurface_compute
     _part_to_dist(isos, id_isosurface);
   }
 
+  // > Free mesh extraction arrays for nodal
+  if (_is_nodal(isos)) {
+    _free_nodal_extract_parts(isos);
+  }
+
+}
 
 
 static
@@ -1481,6 +1632,23 @@ PDM_isosurface_create
   // isos->n_group_vtx    = NULL;
   // isos->group_vtx_idx  = NULL;
   // isos->group_vtx      = NULL;
+  
+  isos->extract_n_vtx     = NULL;
+  isos->extract_vtx_coord = NULL;
+  isos->extract_vtx_gnum  = NULL;
+  isos->extract_vtx_lnum  = NULL;
+
+  isos->extract_n_tri       = NULL;
+  isos->extract_tri_vtx     = NULL;
+  isos->extract_tri_gnum    = NULL;
+  isos->extract_tri_lnum    = NULL;
+  isos->extract_tri_n_group = NULL;
+  isos->extract_tri_tag     = NULL;
+  
+  isos->extract_n_tetra    = NULL;
+  isos->extract_tetra_vtx  = NULL;
+  isos->extract_tetra_gnum = NULL;
+  isos->extract_tetra_lnum = NULL;
 
   isos->we_have_edges = -1;
 
@@ -1496,6 +1664,7 @@ PDM_isosurface_create
   isos->iso_vtx_gnum          = NULL;
   isos->iso_vtx_lparent_idx   = NULL;
   isos->iso_vtx_lparent       = NULL;
+  isos->iso_vtx_parent_gnum   = NULL;
   isos->iso_vtx_parent_weight = NULL;
   isos->isovalue_vtx_idx      = NULL;
 
@@ -1504,6 +1673,7 @@ PDM_isosurface_create
   isos->iso_edge_gnum         = NULL;
   isos->iso_edge_lparent_idx  = NULL;
   isos->iso_edge_lparent      = NULL;
+  isos->iso_edge_parent_gnum  = NULL;
   isos->iso_n_edge_group      = NULL;
   isos->iso_edge_group_idx    = NULL;
   isos->iso_edge_group_lnum   = NULL;
@@ -1516,6 +1686,7 @@ PDM_isosurface_create
   isos->iso_face_gnum         = NULL;
   isos->iso_face_lparent_idx  = NULL;
   isos->iso_face_lparent      = NULL;
+  isos->iso_face_parent_gnum  = NULL;
   isos->isovalue_face_idx     = NULL;
 
   // > Part_to_part between iso entities and entry mesh entites
@@ -1635,6 +1806,7 @@ PDM_isosurface_add
   PDM_realloc(isos->iso_vtx_gnum         , isos->iso_vtx_gnum         , isos->n_isosurface, PDM_g_num_t  **);
   PDM_realloc(isos->iso_vtx_lparent_idx  , isos->iso_vtx_lparent_idx  , isos->n_isosurface, int          **);
   PDM_realloc(isos->iso_vtx_lparent      , isos->iso_vtx_lparent      , isos->n_isosurface, int          **);
+  PDM_realloc(isos->iso_vtx_parent_gnum  , isos->iso_vtx_parent_gnum  , isos->n_isosurface, PDM_g_num_t  **);
   PDM_realloc(isos->iso_vtx_parent_weight, isos->iso_vtx_parent_weight, isos->n_isosurface, double       **);
   PDM_realloc(isos->isovalue_vtx_idx     , isos->isovalue_vtx_idx     , isos->n_isosurface, int          **);
   isos->iso_n_vtx            [id_isosurface] = NULL;
@@ -1642,6 +1814,7 @@ PDM_isosurface_add
   isos->iso_vtx_gnum         [id_isosurface] = NULL;
   isos->iso_vtx_lparent_idx  [id_isosurface] = NULL;
   isos->iso_vtx_lparent      [id_isosurface] = NULL;
+  isos->iso_vtx_parent_gnum  [id_isosurface] = NULL;
   isos->iso_vtx_parent_weight[id_isosurface] = NULL;
   isos->isovalue_vtx_idx     [id_isosurface] = NULL;
 
@@ -1651,6 +1824,7 @@ PDM_isosurface_add
   PDM_realloc(isos->iso_edge_gnum       , isos->iso_edge_gnum       , isos->n_isosurface, PDM_g_num_t  **);
   PDM_realloc(isos->iso_edge_lparent_idx, isos->iso_edge_lparent_idx, isos->n_isosurface, int          **);
   PDM_realloc(isos->iso_edge_lparent    , isos->iso_edge_lparent    , isos->n_isosurface, int          **);
+  PDM_realloc(isos->iso_edge_parent_gnum, isos->iso_edge_parent_gnum, isos->n_isosurface, PDM_g_num_t  **);
   PDM_realloc(isos->iso_n_edge_group    , isos->iso_n_edge_group    , isos->n_isosurface, int            );
   PDM_realloc(isos->iso_edge_group_idx  , isos->iso_edge_group_idx  , isos->n_isosurface, int          **);
   PDM_realloc(isos->iso_edge_group_lnum , isos->iso_edge_group_lnum , isos->n_isosurface, int          **);
@@ -1661,6 +1835,7 @@ PDM_isosurface_add
   isos->iso_edge_gnum       [id_isosurface] = NULL;
   isos->iso_edge_lparent_idx[id_isosurface] = NULL;
   isos->iso_edge_lparent    [id_isosurface] = NULL;
+  isos->iso_edge_parent_gnum[id_isosurface] = NULL;
   isos->iso_n_edge_group    [id_isosurface] = 0;
   isos->iso_edge_group_idx  [id_isosurface] = NULL;
   isos->iso_edge_group_lnum [id_isosurface] = NULL;
@@ -1674,6 +1849,7 @@ PDM_isosurface_add
   PDM_realloc(isos->iso_face_gnum       , isos->iso_face_gnum       , isos->n_isosurface, PDM_g_num_t  **);
   PDM_realloc(isos->iso_face_lparent_idx, isos->iso_face_lparent_idx, isos->n_isosurface, int          **);
   PDM_realloc(isos->iso_face_lparent    , isos->iso_face_lparent    , isos->n_isosurface, int          **);
+  PDM_realloc(isos->iso_face_parent_gnum, isos->iso_face_parent_gnum, isos->n_isosurface, PDM_g_num_t  **);
   PDM_realloc(isos->isovalue_face_idx   , isos->isovalue_face_idx   , isos->n_isosurface, int          **);
   isos->iso_n_face          [id_isosurface] = NULL;
   isos->iso_face_vtx_idx    [id_isosurface] = NULL;
@@ -1681,6 +1857,7 @@ PDM_isosurface_add
   isos->iso_face_gnum       [id_isosurface] = NULL;
   isos->iso_face_lparent_idx[id_isosurface] = NULL;
   isos->iso_face_lparent    [id_isosurface] = NULL;
+  isos->iso_face_parent_gnum[id_isosurface] = NULL;
   isos->isovalue_face_idx   [id_isosurface] = NULL;
 
   // > Part_to_part between iso entities and entry mesh entites
@@ -1894,6 +2071,24 @@ PDM_isosurface_free
   PDM_free(isos->group_face);
   PDM_free(isos->group_face_gnum);
 
+  // > Free mesh extraction arrays for nodal
+  PDM_free(isos->extract_n_vtx    );
+  PDM_free(isos->extract_vtx_coord);
+  PDM_free(isos->extract_vtx_gnum );
+  PDM_free(isos->extract_vtx_lnum );
+
+  PDM_free(isos->extract_n_tri      );
+  PDM_free(isos->extract_tri_vtx    );
+  PDM_free(isos->extract_tri_gnum   );
+  PDM_free(isos->extract_tri_lnum   );
+  PDM_free(isos->extract_tri_n_group);
+  PDM_free(isos->extract_tri_tag    );
+
+  PDM_free(isos->extract_n_tetra   );
+  PDM_free(isos->extract_tetra_vtx );
+  PDM_free(isos->extract_tetra_gnum);
+  PDM_free(isos->extract_tetra_lnum);
+
 
   for (int id_iso=0; id_iso<isos->n_isosurface; ++id_iso) {
     if (isos->n_isovalues[id_iso]>0) {
@@ -1934,6 +2129,7 @@ PDM_isosurface_free
   PDM_free(isos->iso_vtx_gnum);
   PDM_free(isos->iso_vtx_lparent_idx);
   PDM_free(isos->iso_vtx_lparent);
+  PDM_free(isos->iso_vtx_parent_gnum);
   PDM_free(isos->iso_vtx_parent_weight);
   PDM_free(isos->isovalue_vtx_idx);
   
@@ -1942,6 +2138,7 @@ PDM_isosurface_free
   PDM_free(isos->iso_edge_gnum);
   PDM_free(isos->iso_edge_lparent_idx);
   PDM_free(isos->iso_edge_lparent);
+  PDM_free(isos->iso_edge_parent_gnum);
   PDM_free(isos->iso_n_edge_group);
   PDM_free(isos->iso_edge_group_idx);
   PDM_free(isos->iso_edge_group_lnum);
@@ -1954,6 +2151,7 @@ PDM_isosurface_free
   PDM_free(isos->iso_face_gnum);
   PDM_free(isos->iso_face_lparent_idx);
   PDM_free(isos->iso_face_lparent);
+  PDM_free(isos->iso_face_parent_gnum);
   PDM_free(isos->isovalue_face_idx);
 
 
