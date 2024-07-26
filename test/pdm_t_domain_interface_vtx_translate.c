@@ -455,19 +455,19 @@ int main
     PDM_dcube_nodal_gen_free(dcube[i]);
   }
 
- PDM_free(dm);
- PDM_free(dn_vtx);
- PDM_free(dn_face);
- PDM_free(dn_edge);
- PDM_free(dface_vtx_idx);
- PDM_free(dface_vtx);
- PDM_free(dedge_vtx_idx);
- PDM_free(dedge_vtx);
+  PDM_free(dm);
+  PDM_free(dn_vtx);
+  PDM_free(dn_face);
+  PDM_free(dn_edge);
+  PDM_free(dface_vtx_idx);
+  PDM_free(dface_vtx);
+  PDM_free(dedge_vtx_idx);
+  PDM_free(dedge_vtx);
 
   PDM_dmesh_nodal_to_dmesh_free(dmn_to_dm);
   PDM_domain_interface_free(dom_intrf);
- PDM_free(dcube);
- PDM_free(dmn);
+  PDM_free(dcube);
+  PDM_free(dmn);
 
   if (i_rank == 0) {
     printf("-- End\n");

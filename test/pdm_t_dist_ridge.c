@@ -168,7 +168,7 @@ _gen_lines
     (*line_vtx)[(*line_vtx_idx)[i+1]++] = i + 2;
   }
 
- PDM_free(distrib);
+  PDM_free(distrib);
 }
 
 
@@ -224,9 +224,9 @@ _gen_point_cloud
   *pts_g_num = PDM_gnum_get (gen_gnum, 0);
 
   PDM_gnum_free (gen_gnum);
- PDM_free(char_length);
+  PDM_free(char_length);
 
- PDM_free(distrib_pts);
+  PDM_free(distrib_pts);
 }
 
 
@@ -379,7 +379,7 @@ int main(int argc, char *argv[])
                          line_coord,
                          line_g_num,
                          NULL);
-   PDM_free(line_coord);
+    PDM_free(line_coord);
 
 
 
@@ -420,7 +420,7 @@ int main(int argc, char *argv[])
                          line_coord,
                          pts_g_num,
                          NULL);
-   PDM_free(line_coord);
+    PDM_free(line_coord);
 
   }
 
@@ -431,13 +431,13 @@ int main(int argc, char *argv[])
   PDM_dist_cloud_surf_free (dist);
 
 
- PDM_free(line_vtx_idx);
- PDM_free(line_vtx);
- PDM_free(line_g_num);
- PDM_free(vtx_coord);
- PDM_free(vtx_g_num);
- PDM_free(pts_coord);
- PDM_free(pts_g_num);
+  PDM_free(line_vtx_idx);
+  PDM_free(line_vtx);
+  PDM_free(line_g_num);
+  PDM_free(vtx_coord);
+  PDM_free(vtx_g_num);
+  PDM_free(pts_coord);
+  PDM_free(pts_g_num);
 
 
   PDM_MPI_Finalize();

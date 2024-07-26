@@ -640,17 +640,17 @@ int main(int argc, char *argv[])
         PDM_writer_var_set(id_cs, id_var_opp_proc_id, geom_ids[i_domain], i_part, val_opp_proc_id);
         PDM_writer_var_set(id_cs, id_var_opp_part_id, geom_ids[i_domain], i_part, val_opp_part_id);
 
-       PDM_free(val_cell_id    );
-       PDM_free(val_gpart_id   );
-       PDM_free(val_lpart_id   );
-       PDM_free(val_proc_id    );
-       PDM_free(val_opp_proc_id);
-       PDM_free(val_opp_part_id);
+        PDM_free(val_cell_id    );
+        PDM_free(val_gpart_id   );
+        PDM_free(val_lpart_id   );
+        PDM_free(val_proc_id    );
+        PDM_free(val_opp_proc_id);
+        PDM_free(val_opp_part_id);
 
         ipartdomain++;
       }
     }
-   PDM_free(partdomainshift);
+    PDM_free(partdomainshift);
 
     if (i_rank==0) PDM_printf("Write variables\n");
     PDM_writer_var_write(id_cs, id_var_cell_id    );
@@ -672,56 +672,56 @@ int main(int argc, char *argv[])
       PDM_writer_geom_data_free(id_cs, geom_ids[i_domain]);
       PDM_writer_geom_free(id_cs, geom_ids[i_domain]);
     }
-   PDM_free(geom_ids);
+    PDM_free(geom_ids);
     PDM_writer_free(id_cs);
     for (int i_part = 0; i_part < tn_part_proc; i_part++){
-     PDM_free(comm_visu[i_part]);
-     PDM_free(pface_vtx_n[i_part]);
-     PDM_free(pcell_face_n[i_part]);
+      PDM_free(comm_visu[i_part]);
+      PDM_free(pface_vtx_n[i_part]);
+      PDM_free(pcell_face_n[i_part]);
     }
-   PDM_free(comm_visu);
-   PDM_free(pface_vtx_n);
-   PDM_free(pcell_face_n);
-   PDM_free(pn_cell);
-   PDM_free(pn_vtx);
+    PDM_free(comm_visu);
+    PDM_free(pface_vtx_n);
+    PDM_free(pcell_face_n);
+    PDM_free(pn_cell);
+    PDM_free(pn_vtx);
     if (i_rank==0) PDM_printf("Post treatment completed\n");
   }
 
   /* Free memory */
   for (int i_domain = 0; i_domain < n_domain; i_domain++) {
-   PDM_free(dface_bnd_idx[i_domain]);
-   PDM_free(dface_bnd[i_domain]);
-   PDM_free(dface_join_idx[i_domain]);
-   PDM_free(dface_join[i_domain]);
+    PDM_free(dface_bnd_idx[i_domain]);
+    PDM_free(dface_bnd[i_domain]);
+    PDM_free(dface_join_idx[i_domain]);
+    PDM_free(dface_join[i_domain]);
     if(n_domain > 1) {
-     PDM_free(djoins_ids[i_domain]);
+      PDM_free(djoins_ids[i_domain]);
     }
     PDM_dmesh_free(dmesh[i_domain]);
     PDM_dcube_gen_free(dcube[i_domain]);
   }
- PDM_free(dcube);
- PDM_free(dn_cell);
- PDM_free(dn_face);
- PDM_free(dn_vtx);
- PDM_free(n_face_group);
- PDM_free(dface_group_s);
- PDM_free(dface_vtx_s);
- PDM_free(dface_cell);
- PDM_free(dface_vtx_idx);
- PDM_free(dface_vtx);
- PDM_free(dvtx_coord);
- PDM_free(dface_group_idx);
- PDM_free(dface_group);
- PDM_free(dface_bnd_idx);
- PDM_free(dface_bnd);
- PDM_free(dface_join_idx);
- PDM_free(dface_join);
- PDM_free(djoins_ids);
+  PDM_free(dcube);
+  PDM_free(dn_cell);
+  PDM_free(dn_face);
+  PDM_free(dn_vtx);
+  PDM_free(n_face_group);
+  PDM_free(dface_group_s);
+  PDM_free(dface_vtx_s);
+  PDM_free(dface_cell);
+  PDM_free(dface_vtx_idx);
+  PDM_free(dface_vtx);
+  PDM_free(dvtx_coord);
+  PDM_free(dface_group_idx);
+  PDM_free(dface_group);
+  PDM_free(dface_bnd_idx);
+  PDM_free(dface_bnd);
+  PDM_free(dface_join_idx);
+  PDM_free(dface_join);
+  PDM_free(djoins_ids);
   //PDM_free(join_to_opposite);
 
   PDM_multipart_free(mpart);
- PDM_free(dmesh);
- PDM_free(n_part_domains);
+  PDM_free(dmesh);
+  PDM_free(n_part_domains);
 
   if (i_rank==0) PDM_printf("pdm_t_multipart run finalized\n");
   PDM_MPI_Finalize();

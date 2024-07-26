@@ -357,7 +357,7 @@ main
     edge_vtx[2*i+1] = order[i+1] + 1;
   }
 
- PDM_free(pts_code2);
+  PDM_free(pts_code2);
 
   double *_order;
   PDM_malloc(_order,n_pts,double);
@@ -386,7 +386,7 @@ main
   //                                              field_name,
   //                                              field_value);
 
- PDM_free(edge_vtx);
+  PDM_free(edge_vtx);
 
 
   double *box_extents;
@@ -415,8 +415,8 @@ main
   //                     n_pts,
   //                     box_extents,
   //                     g_num);
- PDM_free(box_extents);
- PDM_free(g_num);
+  PDM_free(box_extents);
+  PDM_free(g_num);
 
 
   int *order2;
@@ -432,7 +432,7 @@ main
   // for (int i = 0; i < n_pts; i++) {
   //   log_trace("%6d / %6d\n", order[i], order2[i]);
   // }
- PDM_free(order2);
+  PDM_free(order2);
 
 
   for (int i = 0; i < n_pts; i++) {
@@ -449,12 +449,12 @@ main
     //           flat_code[i], dble);
   }
 
- PDM_free(pts_coord);
- PDM_free(pts_code);
- PDM_free(order);
- PDM_free(reverse_order);
- PDM_free(_order);
- PDM_free(flat_code);
+  PDM_free(pts_coord);
+  PDM_free(pts_code);
+  PDM_free(order);
+  PDM_free(reverse_order);
+  PDM_free(_order);
+  PDM_free(flat_code);
 
   PDM_MPI_Finalize ();
 

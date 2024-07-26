@@ -198,14 +198,14 @@ char *argv[]
    * Free
    */
   PDM_gnum_from_hv_free(gnum_fhv_id);
- PDM_free(part_stri);
- PDM_free(part_data);
- PDM_free(n_elmts);
+  PDM_free(part_stri);
+  PDM_free(part_data);
+  PDM_free(n_elmts);
   for(int i_part = 0; i_part < n_part; ++i_part){
-   PDM_free(part_key[i_part]);
+    PDM_free(part_key[i_part]);
   }
- PDM_free(part_key);
- PDM_free(ln_to_gn);
+  PDM_free(part_key);
+  PDM_free(ln_to_gn);
 
   if (i_rank == 0) {
     PDM_printf ("-- End\n");

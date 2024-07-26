@@ -497,8 +497,8 @@ int main(int argc, char *argv[])
           }
         }
       }
-     PDM_free(_face_cell_idx);
-     PDM_free(_face_cell);
+      PDM_free(_face_cell_idx);
+      PDM_free(_face_cell);
 
       int *is_bdr_edge = PDM_array_zeros_int(n_edge);
       for (int iedge = 0; iedge < n_edge; iedge++) {
@@ -578,8 +578,8 @@ int main(int argc, char *argv[])
                                              &downwind_point_out);
 
       if (!triangulate) {
-       PDM_free(face_center);
-       PDM_free(face_normal);
+        PDM_free(face_center);
+        PDM_free(face_normal);
       }
 
       /* Check for errors */
@@ -593,9 +593,9 @@ int main(int argc, char *argv[])
         }
       }
 
-     PDM_free(is_bdr_face);
-     PDM_free(is_bdr_vtx);
-     PDM_free(is_bdr_edge);
+      PDM_free(is_bdr_face);
+      PDM_free(is_bdr_vtx);
+      PDM_free(is_bdr_edge);
 
 
       /* Visualisation */
@@ -793,34 +793,34 @@ int main(int argc, char *argv[])
                                           field_name,
                                           field_value);
 
-       PDM_free(_face_vtx_idx);
-       PDM_free(_face_vtx);
-       PDM_free(_face_edge);
-       PDM_free(_face_updown);
-       PDM_free(_face_ln_to_gn);
-       PDM_free(_cellface_vtx_idx);
-       PDM_free(_cellface_vtx);
-       PDM_free(_cellface_updown);
-       PDM_free(_cellface_ln_to_gn);
+        PDM_free(_face_vtx_idx);
+        PDM_free(_face_vtx);
+        PDM_free(_face_edge);
+        PDM_free(_face_updown);
+        PDM_free(_face_ln_to_gn);
+        PDM_free(_cellface_vtx_idx);
+        PDM_free(_cellface_vtx);
+        PDM_free(_cellface_updown);
+        PDM_free(_cellface_ln_to_gn);
       }
 
 
 
 
-     PDM_free(upwind_cell_out);
-     PDM_free(downwind_cell_out);
-     PDM_free(upwind_face_out);
-     PDM_free(downwind_face_out);
-     PDM_free(upwind_point_out);
-     PDM_free(downwind_point_out);
+      PDM_free(upwind_cell_out);
+      PDM_free(downwind_cell_out);
+      PDM_free(upwind_face_out);
+      PDM_free(downwind_face_out);
+      PDM_free(upwind_point_out);
+      PDM_free(downwind_point_out);
 
 
-     PDM_free(vtx_cell_idx);
-     PDM_free(vtx_cell);
-     PDM_free(cell_vtx_idx);
-     PDM_free(cell_vtx);
-     PDM_free(face_vtx_idx);
-     PDM_free(face_vtx);
+      PDM_free(vtx_cell_idx);
+      PDM_free(vtx_cell);
+      PDM_free(cell_vtx_idx);
+      PDM_free(cell_vtx);
+      PDM_free(face_vtx_idx);
+      PDM_free(face_vtx);
 
     }
   }

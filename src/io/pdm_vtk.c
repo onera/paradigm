@@ -124,7 +124,7 @@ PDM_vtk_write_polydata_cf
                          face_g_num,
                          face_color);
 
- PDM_free(c_filename);
+  PDM_free(c_filename);
 }
 
 /**
@@ -161,7 +161,7 @@ PDM_vtk_write_point_cloud_cf
                             vtx_g_num,
                             color);
 
- PDM_free(c_filename);
+  PDM_free(c_filename);
 }
 
 /*============================================================================
@@ -477,7 +477,7 @@ static int *_vtk_lagrange_tria_to_ijk (const int order) {
       ijk[idx++] = ijk_sub[2*i  ] + 1;
       ijk[idx++] = ijk_sub[2*i+1] + 1;
     }
-   PDM_free(ijk_sub);
+    PDM_free(ijk_sub);
   }
 
   return ijk;
@@ -653,7 +653,7 @@ static int *_vtk_lagrange_tetra_to_ijk (const int order) {
       ijk[idx++] = ijk_sub[2*i  ] + 1;
       ijk[idx++] = 0;
     }
-   PDM_free(ijk_sub);
+    PDM_free(ijk_sub);
 
     // volume
     if (order == 4) {
@@ -667,7 +667,7 @@ static int *_vtk_lagrange_tetra_to_ijk (const int order) {
       for (int i = 0; i < 3*n_sub; i++) {
         ijk[idx++] = ijk_sub[i] + 1;
       }
-     PDM_free(ijk_sub);
+      PDM_free(ijk_sub);
     }
   }
 
@@ -2950,15 +2950,15 @@ PDM_vtk_read_to_dmesh_nodal
     gvtx_coord = prepa.vtx_coord;
 
     if (prepa.elt_vtx_idx != NULL) {
-     PDM_free(prepa.elt_vtx_idx);
+      PDM_free(prepa.elt_vtx_idx);
     }
 
     if (prepa.elt_vtx != NULL) {
-     PDM_free(prepa.elt_vtx);
+      PDM_free(prepa.elt_vtx);
     }
 
     if (prepa.elt_type != NULL) {
-     PDM_free(prepa.elt_type);
+      PDM_free(prepa.elt_type);
     }
   }
 
@@ -3030,8 +3030,8 @@ PDM_vtk_read_to_dmesh_nodal
           }
         }
       }
-     PDM_free(char_buf);
-     PDM_free(l_name);
+      PDM_free(char_buf);
+      PDM_free(l_name);
 
       PDM_MPI_Bcast((void *) prepa.field[i].field_type  , n_field[i], PDM_MPI_INT, 0, comm);
       PDM_MPI_Bcast((void *) prepa.field[i].field_stride, n_field[i], PDM_MPI_INT, 0, comm);
@@ -3101,7 +3101,7 @@ PDM_vtk_read_to_dmesh_nodal
                 (void **) &dvtx_coord);
 
   if (gvtx_coord != NULL) {
-   PDM_free(gvtx_coord);
+    PDM_free(gvtx_coord);
   }
 
   if (*n_vtx_field > 0) {
@@ -3118,15 +3118,15 @@ PDM_vtk_read_to_dmesh_nodal
                     (void **) &(*vtx_field_value)[i]);
 
       if (i_rank == 0) {
-       PDM_free(prepa.field[0].field_value[i]);
+        PDM_free(prepa.field[0].field_value[i]);
       }
     }
-   PDM_free(prepa.field[0].field_value);
+    PDM_free(prepa.field[0].field_value);
   }
 
 
   PDM_block_to_block_free(btb_vtx);
- PDM_free(init_distrib_vtx);
+  PDM_free(init_distrib_vtx);
 
 
 
@@ -3154,7 +3154,7 @@ PDM_vtk_read_to_dmesh_nodal
                                 dpoly2d_vtx_n,
                       (void **) &delt_vtx[t]);
         if (gpoly2d_vtx_n != NULL) {
-         PDM_free(gpoly2d_vtx_n);
+          PDM_free(gpoly2d_vtx_n);
         }
       }
       else if (t == PDM_MESH_NODAL_POLY_3D) {
@@ -3174,10 +3174,10 @@ PDM_vtk_read_to_dmesh_nodal
       }
 
       if (gelt_vtx[t] != NULL) {
-       PDM_free(gelt_vtx[t]);
+        PDM_free(gelt_vtx[t]);
       }
       PDM_block_to_block_free(btb);
-     PDM_free(init_distrib);
+      PDM_free(init_distrib);
     }
   }
 
@@ -3192,7 +3192,7 @@ PDM_vtk_read_to_dmesh_nodal
 
   /* Vertices */
   dn_vtx = (int) (distrib_vtx[i_rank+1] - distrib_vtx[i_rank]);
- PDM_free(distrib_vtx);
+  PDM_free(distrib_vtx);
 
   PDM_DMesh_nodal_coord_set(dmn,
                             dn_vtx,
@@ -3225,7 +3225,7 @@ PDM_vtk_read_to_dmesh_nodal
 
       if (t == PDM_MESH_NODAL_POLY_2D) {
         int *dpoly2d_vtx_idx = PDM_array_new_idx_from_sizes_int(dpoly2d_vtx_n, dn_elt[t]);
-       PDM_free(dpoly2d_vtx_n);
+        PDM_free(dpoly2d_vtx_n);
 
         PDM_DMesh_nodal_elmts_section_poly2d_set(dmne,
                                                  id_section,
@@ -3256,22 +3256,22 @@ PDM_vtk_read_to_dmesh_nodal
                                           delt_vtx[t],
                                           dn_elt[t],
                                           "delt_vtx : ");
-         PDM_free(connec_idx);
+          PDM_free(connec_idx);
         }
       }
 
 
-     PDM_free(distrib_elt[t]);
+      PDM_free(distrib_elt[t]);
     }
   }
 
   if (*n_elt_field > 0) {
     for (int i = 0; i < *n_elt_field; i++) {
       if (i_rank == 0) {
-       PDM_free(prepa.field[1].field_value[i]);
+        PDM_free(prepa.field[1].field_value[i]);
       }
     }
-   PDM_free(prepa.field[1].field_value);
+    PDM_free(prepa.field[1].field_value);
   }
 
 

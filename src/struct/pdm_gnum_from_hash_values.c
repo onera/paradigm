@@ -805,28 +805,28 @@ _gnum_from_hv_compute
     }
   }
 
- PDM_free(n_key_send);
- PDM_free(n_key_recv);
- PDM_free(n_data_send);
- PDM_free(n_data_recv);
- PDM_free(i_key_send);
- PDM_free(i_key_recv);
- PDM_free(i_data_send);
- PDM_free(i_data_recv);
- PDM_free(send_buffer_keys);
- PDM_free(recv_buffer_keys);
- PDM_free(send_buffer_data);
- PDM_free(recv_buffer_data);
- PDM_free(send_buffer_stri);
- PDM_free(recv_buffer_stri);
- PDM_free(blk_ln_to_gn);
- PDM_free(part_ln_to_gn);
+  PDM_free(n_key_send);
+  PDM_free(n_key_recv);
+  PDM_free(n_data_send);
+  PDM_free(n_data_recv);
+  PDM_free(i_key_send);
+  PDM_free(i_key_recv);
+  PDM_free(i_data_send);
+  PDM_free(i_data_recv);
+  PDM_free(send_buffer_keys);
+  PDM_free(recv_buffer_keys);
+  PDM_free(send_buffer_data);
+  PDM_free(recv_buffer_data);
+  PDM_free(send_buffer_stri);
+  PDM_free(recv_buffer_stri);
+  PDM_free(blk_ln_to_gn);
+  PDM_free(part_ln_to_gn);
   for(int i_part = 0; i_part < _gnum_from_hv->n_part; ++i_part){
-   PDM_free(elmt_to_proc[i_part]);
+    PDM_free(elmt_to_proc[i_part]);
   }
- PDM_free(elmt_to_proc);
- PDM_free(order);
- PDM_free(us);
+  PDM_free(elmt_to_proc);
+  PDM_free(order);
+  PDM_free(us);
 
   /*
    * Timer
@@ -1132,20 +1132,20 @@ PDM_gnum_from_hv_free
   if(( _gnum_from_hv->owner == PDM_OWNERSHIP_KEEP ) ||
      ( _gnum_from_hv->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !_gnum_from_hv->tag_results_get)) {
     for (int i = 0; i < _gnum_from_hv->n_part; i++) {
-     PDM_free(_gnum_from_hv->g_nums[i]);
+      PDM_free(_gnum_from_hv->g_nums[i]);
     }
   }
 
- PDM_free(_gnum_from_hv->g_nums);
- PDM_free(_gnum_from_hv->n_elts);
- PDM_free(_gnum_from_hv->part_hkeys);
- PDM_free(_gnum_from_hv->part_hstri);
- PDM_free(_gnum_from_hv->part_hdata);
- PDM_free(_gnum_from_hv->distribution);
+  PDM_free(_gnum_from_hv->g_nums);
+  PDM_free(_gnum_from_hv->n_elts);
+  PDM_free(_gnum_from_hv->part_hkeys);
+  PDM_free(_gnum_from_hv->part_hstri);
+  PDM_free(_gnum_from_hv->part_hdata);
+  PDM_free(_gnum_from_hv->distribution);
 
   PDM_timer_free(_gnum_from_hv->timer);
 
- PDM_free(_gnum_from_hv);
+  PDM_free(_gnum_from_hv);
   _gnum_from_hv = NULL;
 }
 

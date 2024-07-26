@@ -151,7 +151,7 @@ int main(int argc, char *argv[])
                                      order,
                                      PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_BARHO, order),
                                      ijk);
-   PDM_free(ijk);
+    PDM_free(ijk);
   }
 
 
@@ -222,8 +222,8 @@ int main(int argc, char *argv[])
     }
 
     printf("max_diff = %e\n", max_diff);
-   PDM_free(weight);
-   PDM_free(weight2);
+    PDM_free(weight);
+    PDM_free(weight2);
   }
 
 
@@ -307,12 +307,12 @@ int main(int argc, char *argv[])
   /*
    *  Free memory
    */
- PDM_free(node_coord);
+  PDM_free(node_coord);
   for (int i = 0; i < 2; i++) {
-   PDM_free(sub_node_coord[i]);
+    PDM_free(sub_node_coord[i]);
   }
- PDM_free(deriv_node_coord);
- PDM_free(elt_node);
+  PDM_free(deriv_node_coord);
+  PDM_free(elt_node);
 
   PDM_MPI_Finalize();
 

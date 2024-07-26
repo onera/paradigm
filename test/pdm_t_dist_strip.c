@@ -298,7 +298,7 @@ int main(int argc, char *argv[])
                                       dface_group_idx,
                                       dface_group);
 
- PDM_free(dcell_part);
+  PDM_free(dcell_part);
 
   int n_point_cloud = 1;
   PDM_dist_cloud_surf_t* dist = PDM_dist_cloud_surf_create (PDM_MESH_NATURE_MESH_SETTED,
@@ -896,39 +896,39 @@ int main(int argc, char *argv[])
   PDM_dist_cloud_surf_free (dist);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
-   PDM_free(select_face[i_part]);
-   PDM_free(select_vtx[i_part]);
+    PDM_free(select_face[i_part]);
+    PDM_free(select_vtx[i_part]);
 
-   PDM_free(surface_face_vtx_idx[i_part]);
-   PDM_free(surface_face_vtx[i_part]);
-   PDM_free(surface_coords[i_part]);
+    PDM_free(surface_face_vtx_idx[i_part]);
+    PDM_free(surface_face_vtx[i_part]);
+    PDM_free(surface_coords[i_part]);
 
-   PDM_free(surface_face_parent_gnum[i_part]);
-   PDM_free(surface_vtx_parent_gnum[i_part]);
+    PDM_free(surface_face_parent_gnum[i_part]);
+    PDM_free(surface_vtx_parent_gnum[i_part]);
 
-   PDM_free(char_length[i_part]);
-   PDM_free(pts_coords[i_part]);
+    PDM_free(char_length[i_part]);
+    PDM_free(pts_coords[i_part]);
 
   }
 
- PDM_free(char_length);
- PDM_free(pts_coords);
+  PDM_free(char_length);
+  PDM_free(pts_coords);
 
- PDM_free(select_face);
- PDM_free(select_vtx);
+  PDM_free(select_face);
+  PDM_free(select_vtx);
 
- PDM_free(n_select_face);
- PDM_free(n_select_vtx);
+  PDM_free(n_select_face);
+  PDM_free(n_select_vtx);
 
- PDM_free(surface_face_vtx_idx);
- PDM_free(surface_face_vtx);
- PDM_free(surface_coords);
+  PDM_free(surface_face_vtx_idx);
+  PDM_free(surface_face_vtx);
+  PDM_free(surface_coords);
 
- PDM_free(surface_face_parent_gnum);
- PDM_free(surface_vtx_parent_gnum);
+  PDM_free(surface_face_parent_gnum);
+  PDM_free(surface_vtx_parent_gnum);
 
- PDM_free(surface_face_gnum);
- PDM_free(surface_vtx_gnum);
+  PDM_free(surface_face_gnum);
+  PDM_free(surface_vtx_gnum);
 
   PDM_gnum_free(gen_gnum_face);
   PDM_gnum_free(gen_gnum_vtx);

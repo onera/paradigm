@@ -667,14 +667,14 @@ int main(int argc, char *argv[])
 
 
   for (int i_part = 0; i_part < n_part; i_part++) {
-   PDM_free(edge_data[i_part]);
-   PDM_free(edge_stri[i_part]);
-   PDM_free(edge_hkey[i_part]);
+    PDM_free(edge_data[i_part]);
+    PDM_free(edge_stri[i_part]);
+    PDM_free(edge_hkey[i_part]);
   }
- PDM_free(edge_data);
- PDM_free(edge_stri);
- PDM_free(edge_hkey);
- PDM_free(dcell_part);
+  PDM_free(edge_data);
+  PDM_free(edge_stri);
+  PDM_free(edge_hkey);
+  PDM_free(dcell_part);
 
   PDM_part_free(ppart);
 

@@ -267,22 +267,22 @@ char *argv[]
 
   /* Free memory */
   for (int i = 0; i < n_part; i++) {
-   PDM_free(neighbor_idx [i]);
-   PDM_free(neighbor_desc[i]);
+    PDM_free(neighbor_idx [i]);
+    PDM_free(neighbor_desc[i]);
 
-   PDM_free(send_n[i]);
-   PDM_free(send_i[i]);
-   PDM_free(recv_n[i]);
-   PDM_free(recv_i[i]);
+    PDM_free(send_n[i]);
+    PDM_free(send_i[i]);
+    PDM_free(recv_n[i]);
+    PDM_free(recv_i[i]);
     //PDM_free(recv_desc[i]);
   }
- PDM_free(neighbor_idx );
- PDM_free(neighbor_desc);
- PDM_free(send_n);
- PDM_free(send_i);
- PDM_free(recv_n);
- PDM_free(recv_i);
- PDM_free(n_elt);
+  PDM_free(neighbor_idx );
+  PDM_free(neighbor_desc);
+  PDM_free(send_n);
+  PDM_free(send_i);
+  PDM_free(recv_n);
+  PDM_free(recv_i);
+  PDM_free(n_elt);
   //PDM_free(recv_desc);
 
   PDM_distant_neighbor_free(dngb);

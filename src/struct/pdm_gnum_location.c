@@ -256,11 +256,11 @@ PDM_gnum_location_compute
   //                          &request_id);
 
   for (int i = 0; i < gnum_loc->n_part_in; i++) {
-   PDM_free(part_stride[i]);
-   PDM_free(part_data[i]);
+    PDM_free(part_stride[i]);
+    PDM_free(part_data[i]);
   }
- PDM_free(part_data);
- PDM_free(part_stride);
+  PDM_free(part_data);
+  PDM_free(part_stride);
 
 
   PDM_g_num_t* block_g_num = PDM_part_to_block_block_gnum_get (ptb);
@@ -290,15 +290,15 @@ PDM_gnum_location_compute
       gnum_loc->location_idx[i][j+1] = gnum_loc->location_idx[i][j] + part_stride[i][j];
     }
   }
- PDM_free(block_stride);
- PDM_free(block_data);
+  PDM_free(block_stride);
+  PDM_free(block_data);
   //PDM_free(block_distrib_index_correct);
 
   for (int i = 0; i < gnum_loc->n_part_out; i++) {
-   PDM_free(part_stride[i]);
+    PDM_free(part_stride[i]);
   }
 
- PDM_free(part_stride);
+  PDM_free(part_stride);
 
   PDM_part_to_block_free (ptb);
   PDM_block_to_part_free (btp);
@@ -354,29 +354,29 @@ PDM_gnum_location_free
 )
 {
 
- PDM_free(gnum_loc->n_elts_in);
- PDM_free(gnum_loc->g_nums_in);
+  PDM_free(gnum_loc->n_elts_in);
+  PDM_free(gnum_loc->g_nums_in);
 
- PDM_free(gnum_loc->n_elts_out);
- PDM_free(gnum_loc->g_nums_out);
+  PDM_free(gnum_loc->n_elts_out);
+  PDM_free(gnum_loc->g_nums_out);
 
   if(( gnum_loc->owner == PDM_OWNERSHIP_KEEP ) ||
      ( gnum_loc->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !gnum_loc->tag_results_get)) {
     for (int i = 0; i < gnum_loc->n_part_out; i++) {
-     PDM_free(gnum_loc->location_idx[i]);
+      PDM_free(gnum_loc->location_idx[i]);
     }
     //PDM_free(gnum_loc->location_idx);
 
     for (int i = 0; i < gnum_loc->n_part_out; i++) {
-     PDM_free(gnum_loc->location[i]);
+      PDM_free(gnum_loc->location[i]);
     }
     //PDM_free(gnum_loc->location);
   }
 
- PDM_free(gnum_loc->location_idx);
- PDM_free(gnum_loc->location);
+  PDM_free(gnum_loc->location_idx);
+  PDM_free(gnum_loc->location);
 
- PDM_free(gnum_loc);
+  PDM_free(gnum_loc);
 
 }
 

@@ -111,7 +111,7 @@ PDM_dcompute_cell_center
                                                            &pvtx_ln_to_gn,
                                                            &pface_vtx_idx,
                                                            &pface_vtx);
- PDM_free(dface_ln_to_gn);
+  PDM_free(dface_ln_to_gn);
 
   /*PDM_log_trace_connectivity_long(dface_vtx_idx, dface_vtx, dn_face, "dface_vtx : ");
   PDM_log_trace_connectivity_int (pface_vtx_idx, pface_vtx, dn_face, "pface_vtx : ");
@@ -128,8 +128,8 @@ PDM_dcompute_cell_center
                                         (const PDM_g_num_t **) &pvtx_ln_to_gn,
                                         &tmp_pvtx_coord);
   double *pvtx_coord = tmp_pvtx_coord[0];
- PDM_free(tmp_pvtx_coord);
- PDM_free(pvtx_ln_to_gn);
+  PDM_free(tmp_pvtx_coord);
+  PDM_free(pvtx_ln_to_gn);
 
 
   /* Compute face centers */
@@ -153,9 +153,9 @@ PDM_dcompute_cell_center
       dface_center[3*i + k] *= normalization;
     }
   }
- PDM_free(pvtx_coord);
- PDM_free(pface_vtx_idx);
- PDM_free(pface_vtx);
+  PDM_free(pvtx_coord);
+  PDM_free(pface_vtx_idx);
+  PDM_free(pface_vtx);
 
   /* Compute cell centers */
   PDM_compute_center_from_descending_connectivity (dcell_face_idx,
@@ -165,7 +165,7 @@ PDM_dcompute_cell_center
                                                    cell_center,
                                                    dface_center,
                                                    comm);
- PDM_free(dface_center);
+  PDM_free(dface_center);
 }
 /*=============================================================================
  * Public function definitions
@@ -232,7 +232,7 @@ PDM_part_entity_geom
                                 hilbert_codes_idx,
                                 comm);
 
- PDM_free(weight);
+  PDM_free(weight);
 
   /** Remplissage de cell_parts -> en fct des codes Hilbert **/
 
@@ -244,8 +244,8 @@ PDM_part_entity_geom
 
   }
 
- PDM_free(hilbert_codes_idx);
- PDM_free(hilbert_codes);
+  PDM_free(hilbert_codes_idx);
+  PDM_free(hilbert_codes);
 }
 
 /**
@@ -326,10 +326,10 @@ PDM_part_geom
                        dcell_part);
 
   if(dcell_weight != NULL) {
-   PDM_free(dcell_weight_d);
+    PDM_free(dcell_weight_d);
   }
 
- PDM_free(barycenter_coords);
+  PDM_free(barycenter_coords);
 }
 
 
@@ -390,9 +390,9 @@ PDM_part_geom_1d
                        dedge_weight,
                        dedge_part);
 
- PDM_free(distrib_vtx);
- PDM_free(dedge_center);
- PDM_free(dedge_vtx_idx);
+  PDM_free(distrib_vtx);
+  PDM_free(dedge_center);
+  PDM_free(dedge_vtx_idx);
 }
 
 void
@@ -453,9 +453,9 @@ PDM_part_geom_2d
                                                     comm);
 
 
-   PDM_free(dedge_vtx_idx);
-   PDM_free(dedge_center);
-   PDM_free(distrib_edge);
+    PDM_free(dedge_vtx_idx);
+    PDM_free(dedge_center);
+    PDM_free(distrib_edge);
   }
 
   PDM_part_entity_geom(method,
@@ -466,8 +466,8 @@ PDM_part_geom_2d
                        dface_weight,
                        dface_part);
 
- PDM_free(distrib_vtx);
- PDM_free(dface_center);
+  PDM_free(distrib_vtx);
+  PDM_free(dface_center);
 }
 
 
@@ -531,7 +531,7 @@ PDM_dreorder_from_coords
                                 NULL, // No need order
                                 hilbert_codes_idx,
                                 comm);
- PDM_free(weight);
+  PDM_free(weight);
 
   /** Remplissage de cell_parts -> en fct des codes Hilbert **/
   for(int i = 0; i < dn_vtx; ++i) {
@@ -562,7 +562,7 @@ PDM_dreorder_from_coords
                              &dn_vtx,
                              1,
                              comm);
- PDM_free(distrib_rank);
+  PDM_free(distrib_rank);
 
   const int n_vtx_block = PDM_part_to_block_n_elt_block_get (ptb);
 
@@ -593,8 +593,8 @@ PDM_dreorder_from_coords
                           NULL,
                 (void **) &blk_ln_to_gn);
 
- PDM_free(hilbert_codes_idx);
- PDM_free(hilbert_codes);
+  PDM_free(hilbert_codes_idx);
+  PDM_free(hilbert_codes);
   PDM_part_to_block_free(ptb);
 
   /* Reorder locally */
@@ -605,7 +605,7 @@ PDM_dreorder_from_coords
     hilbert_order [i] = i;
   }
   PDM_sort_double (blk_hilbert_codes, hilbert_order, n_vtx_block);
- PDM_free(blk_hilbert_codes);
+  PDM_free(blk_hilbert_codes);
 
 
   /* Apply order to blk_ln_to_gn */
@@ -614,8 +614,8 @@ PDM_dreorder_from_coords
   for(int i = 0; i < n_vtx_block; ++i) {
     sorted_blk_ln_to_gn[i] = blk_ln_to_gn[hilbert_order[i]];
   }
- PDM_free(blk_ln_to_gn);
- PDM_free(hilbert_order);
+  PDM_free(blk_ln_to_gn);
+  PDM_free(hilbert_order);
 
   PDM_g_num_t* distrib_blk_vtx = PDM_compute_entity_distribution(comm, n_vtx_block);
   PDM_block_to_part_t* btp = PDM_block_to_part_create(distrib_blk_vtx,
@@ -633,8 +633,8 @@ PDM_dreorder_from_coords
                          NULL,
               (void **) &ln_to_gn);
   PDM_block_to_part_free(btp);
- PDM_free(sorted_blk_ln_to_gn);
- PDM_free(distrib_blk_vtx);
+  PDM_free(sorted_blk_ln_to_gn);
+  PDM_free(distrib_blk_vtx);
 }
 
 
@@ -675,7 +675,7 @@ PDM_dreorder_from_length
   assert (sizeof(double) == sizeof(PDM_hilbert_code_t));
   PDM_sort_double (tmp_hilbert_codes, hilbert_order, dn_length);
 
- PDM_free(tmp_hilbert_codes);
+  PDM_free(tmp_hilbert_codes);
 
   PDM_hilbert_code_t *hilbert_codes_idx;
   PDM_malloc(hilbert_codes_idx,(n_rank+1) ,PDM_hilbert_code_t);
@@ -691,7 +691,7 @@ PDM_dreorder_from_length
                                 comm);
 
 
- PDM_free(weight);
+  PDM_free(weight);
 
   /** Remplissage de cell_parts -> en fct des codes Hilbert **/
   for(int i = 0; i < dn_length; ++i) {
@@ -722,7 +722,7 @@ PDM_dreorder_from_length
                              &dn_length,
                              1,
                              comm);
- PDM_free(distrib_rank);
+  PDM_free(distrib_rank);
 
   const int n_vtx_block = PDM_part_to_block_n_elt_block_get (ptb);
 
@@ -753,7 +753,7 @@ PDM_dreorder_from_length
                           NULL,
                 (void **) &blk_ln_to_gn);
 
- PDM_free(hilbert_codes_idx);
+  PDM_free(hilbert_codes_idx);
   PDM_part_to_block_free(ptb);
 
   /* Reorder locally */
@@ -764,7 +764,7 @@ PDM_dreorder_from_length
   }
   PDM_sort_double (blk_hilbert_codes, hilbert_order, n_vtx_block);
   //PDM_log_trace_array_double(blk_hilbert_codes, n_vtx_block, "tmp_edge_length : ");
- PDM_free(blk_hilbert_codes);
+  PDM_free(blk_hilbert_codes);
 
 
   /* Apply order to blk_ln_to_gn */
@@ -773,8 +773,8 @@ PDM_dreorder_from_length
   for(int i = 0; i < n_vtx_block; ++i) {
     sorted_blk_ln_to_gn[i] = blk_ln_to_gn[hilbert_order[i]];
   }
- PDM_free(blk_ln_to_gn);
- PDM_free(hilbert_order);
+  PDM_free(blk_ln_to_gn);
+  PDM_free(hilbert_order);
 
   PDM_g_num_t* distrib_blk_vtx = PDM_compute_entity_distribution(comm, n_vtx_block);
   PDM_block_to_part_t* btp = PDM_block_to_part_create(distrib_blk_vtx,
@@ -792,8 +792,8 @@ PDM_dreorder_from_length
                          NULL,
               (void **) &ln_to_gn);
   PDM_block_to_part_free(btp);
- PDM_free(sorted_blk_ln_to_gn);
- PDM_free(distrib_blk_vtx);
+  PDM_free(sorted_blk_ln_to_gn);
+  PDM_free(distrib_blk_vtx);
 }
 
 

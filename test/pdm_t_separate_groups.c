@@ -454,10 +454,10 @@ _read_gamma_mesh
   PDM_block_to_block_free(btb_tria);
   PDM_block_to_block_free(btb_tetra);
 
- PDM_free(init_distrib_vtx  );
- PDM_free(init_distrib_edge );
- PDM_free(init_distrib_tria );
- PDM_free(init_distrib_tetra);
+  PDM_free(init_distrib_vtx  );
+  PDM_free(init_distrib_edge );
+  PDM_free(init_distrib_tria );
+  PDM_free(init_distrib_tetra);
 
   // int mesh_dimension = dim;
   // if (dim == 3 && gn_tetra == 0) {
@@ -539,8 +539,8 @@ _read_gamma_mesh
                               &dgroup_edge_idx,
                               &dgroup_edge,
                               dmn->comm);
- PDM_free(dedge_group_idx);
- PDM_free(dedge_group);
+  PDM_free(dedge_group_idx);
+  PDM_free(dedge_group);
 
   PDM_DMesh_nodal_elmts_group_set(dmn->ridge,
                                   n_group_edge,
@@ -573,8 +573,8 @@ _read_gamma_mesh
                               &dgroup_face_idx,
                               &dgroup_face,
                               dmn->comm);
- PDM_free(dface_group_idx);
- PDM_free(dtria_group);
+  PDM_free(dface_group_idx);
+  PDM_free(dtria_group);
 
   PDM_DMesh_nodal_elmts_group_set(dmn->surfacic,
                                   n_group_face,
@@ -582,10 +582,10 @@ _read_gamma_mesh
                                   dgroup_face,
                                   PDM_OWNERSHIP_KEEP);
 
- PDM_free(distrib_vtx  );
- PDM_free(distrib_edge );
- PDM_free(distrib_tria );
- PDM_free(distrib_tetra);
+  PDM_free(distrib_vtx  );
+  PDM_free(distrib_edge );
+  PDM_free(distrib_tria );
+  PDM_free(distrib_tetra);
 
   return dmn;
 }
@@ -686,8 +686,8 @@ _separate_groups
                            NULL,
                 (void ***) ridge_dedge_vtx);
     PDM_block_to_part_free(btp_edge);
-   PDM_free(pedge_ln_to_gn);
-   PDM_free(ridge_dn_edge);
+    PDM_free(pedge_ln_to_gn);
+    PDM_free(ridge_dn_edge);
   }
 
 
@@ -748,8 +748,8 @@ _separate_groups
                            NULL,
                 (void ***) surface_dface_vtx);
     PDM_block_to_part_free(btp_face);
-   PDM_free(pface_ln_to_gn);
-   PDM_free(surface_dn_face);
+    PDM_free(pface_ln_to_gn);
+    PDM_free(surface_dn_face);
   }
 
 }
@@ -801,7 +801,7 @@ _dump_dstd_elt
                                                            &pvtx_ln_to_gn,
                                                            &pelt_vtx_idx,
                                                            &pelt_vtx);
- PDM_free(delt_vtx_idx);
+  PDM_free(delt_vtx_idx);
 
   double **tmp_pvtx_coord = NULL;
   PDM_part_dcoordinates_to_pcoordinates(comm,
@@ -812,7 +812,7 @@ _dump_dstd_elt
                  (const PDM_g_num_t **) &pvtx_ln_to_gn,
                                         &tmp_pvtx_coord);
   double *pvtx_coord = tmp_pvtx_coord[0];
- PDM_free(tmp_pvtx_coord);
+  PDM_free(tmp_pvtx_coord);
 
   assert(order == 1 && elt_type <= PDM_MESH_NODAL_HEXA8);
 
@@ -828,11 +828,11 @@ _dump_dstd_elt
                              NULL,
                              NULL);
 
- PDM_free(pelt_ln_to_gn);
- PDM_free(pvtx_ln_to_gn);
- PDM_free(pelt_vtx_idx);
- PDM_free(pelt_vtx);
- PDM_free(pvtx_coord);
+  PDM_free(pelt_ln_to_gn);
+  PDM_free(pvtx_ln_to_gn);
+  PDM_free(pelt_vtx_idx);
+  PDM_free(pelt_vtx);
+  PDM_free(pvtx_coord);
 
 }
 
@@ -954,22 +954,22 @@ int main(int argc, char *argv[])
   PDM_DMesh_nodal_free(dmn);
 
   for (int i = 0; i < n_ridge; i++) {
-   PDM_free(ridge_dedge_vtx[i]);
-   PDM_free(ridge_distrib_edge[i]);
+    PDM_free(ridge_dedge_vtx[i]);
+    PDM_free(ridge_distrib_edge[i]);
   }
- PDM_free(ridge_dedge_vtx);
- PDM_free(ridge_distrib_edge);
+  PDM_free(ridge_dedge_vtx);
+  PDM_free(ridge_distrib_edge);
 
   for (int i = 0; i < n_surface; i++) {
-   PDM_free(surface_dface_vtx[i]);
-   PDM_free(surface_distrib_face[i]);
+    PDM_free(surface_dface_vtx[i]);
+    PDM_free(surface_distrib_face[i]);
   }
- PDM_free(surface_dface_vtx);
- PDM_free(surface_distrib_face);
+  PDM_free(surface_dface_vtx);
+  PDM_free(surface_distrib_face);
 
   if (ownership == PDM_OWNERSHIP_USER) {
-   PDM_free(dvtx_coord);
-   PDM_free(distrib_vtx);
+    PDM_free(dvtx_coord);
+    PDM_free(distrib_vtx);
   }
 
   if (i_rank == 0) {

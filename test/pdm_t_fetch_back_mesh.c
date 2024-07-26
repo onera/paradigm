@@ -254,7 +254,7 @@ _fetch_back_mesh_partial_dist_cloud_surf
                                        closest_back_vtx_gnum,
                                        closest_back_vtx_dist2);
   PDM_para_octree_free(octree);
- PDM_free(closest_back_vtx_gnum); // unused
+  PDM_free(closest_back_vtx_gnum); // unused
 
   /* Threshold upper bound distance */
   if (0) {
@@ -263,7 +263,7 @@ _fetch_back_mesh_partial_dist_cloud_surf
                                                 closest_back_vtx_dist2[edge_id]);
     }
   }
- PDM_free(pwork_edge_length);
+  PDM_free(pwork_edge_length);
 
 
   /*
@@ -276,8 +276,8 @@ _fetch_back_mesh_partial_dist_cloud_surf
                                                  closest_back_vtx_dist2,
                                                  pwork_edge_back_face_idx,
                                                  pwork_edge_back_face);
- PDM_free(inserted_pt_coord);
- PDM_free(closest_back_vtx_dist2);
+  PDM_free(inserted_pt_coord);
+  PDM_free(closest_back_vtx_dist2);
 }
 
 
@@ -426,7 +426,7 @@ _fetch_back_mesh_Bruno
                          proj_line_coord,
                          pback_vtx_ln_to_gn,
                          NULL);
-   PDM_free(proj_line_coord);
+    PDM_free(proj_line_coord);
 
   }
 
@@ -453,7 +453,7 @@ _fetch_back_mesh_Bruno
                                                     (const PDM_g_num_t **) &closest_elt_gnum,
                                                                            comm);
 
- PDM_free(closest_elt_gnum_idx);
+  PDM_free(closest_elt_gnum_idx);
 
 
   // int    **part_stride = NULL;
@@ -474,7 +474,7 @@ _fetch_back_mesh_Bruno
 
   PDM_part_to_part_reverse_iexch_wait(ptp, request_return_selected);
   double *recv_line_coord = tmp_part_data[0];
- PDM_free(tmp_part_data);
+  PDM_free(tmp_part_data);
 
   if (verbose) {
     // PDM_log_trace_array_double(recv_line_coord, 6*pback_n_vtx, "recv_line_coord ::");
@@ -588,15 +588,15 @@ _fetch_back_mesh_Bruno
                                     line_to_back_idx,
                                     line_to_back);
 
- PDM_free(recv_line_coord);
+  PDM_free(recv_line_coord);
 
 
   PDM_part_to_part_free(ptp);
 
   PDM_dist_cloud_surf_dump_times(dist);
   PDM_dist_cloud_surf_free (dist);
- PDM_free(line_coord);
- PDM_free(pwork_edge_vtx_idx);
+  PDM_free(line_coord);
+  PDM_free(pwork_edge_vtx_idx);
 
   PDM_dbbtree_free(dbbt);
   PDM_box_set_destroy(&box_set);
@@ -720,7 +720,7 @@ int main(int argc, char *argv[])
                  (const PDM_g_num_t **) &pback_vtx_ln_to_gn,
                                         &tmp_pback_vtx_coord);
   double *pback_vtx_coord = tmp_pback_vtx_coord[0];
- PDM_free(tmp_pback_vtx_coord);
+  PDM_free(tmp_pback_vtx_coord);
 
 
 
@@ -858,7 +858,7 @@ int main(int argc, char *argv[])
 
   PDM_multipart_compute(mpart);
 
- PDM_free(n_part_domains);
+  PDM_free(n_part_domains);
 
 
 
@@ -1028,7 +1028,7 @@ int main(int argc, char *argv[])
                  (const PDM_g_num_t **) &pwork_back_vtx_ln_to_gn,
                                         &tmp_pwork_back_vtx_coord);
   double *pwork_back_vtx_coord = tmp_pwork_back_vtx_coord[0];
- PDM_free(tmp_pwork_back_vtx_coord);
+  PDM_free(tmp_pwork_back_vtx_coord);
 
 
   if (vtk) {
@@ -1054,18 +1054,18 @@ int main(int argc, char *argv[])
                            line_to_back,
                            halo_color);
 
-   PDM_free(halo_color);
+    PDM_free(halo_color);
   }
 
 
 
- PDM_free(pwork_back_vtx_ln_to_gn);
- PDM_free(pwork_back_face_vtx_idx);
- PDM_free(pwork_back_face_vtx);
- PDM_free(pwork_back_vtx_coord);
+  PDM_free(pwork_back_vtx_ln_to_gn);
+  PDM_free(pwork_back_face_vtx_idx);
+  PDM_free(pwork_back_face_vtx);
+  PDM_free(pwork_back_vtx_coord);
 
- PDM_free(line_to_back_idx);
- PDM_free(line_to_back);
+  PDM_free(line_to_back_idx);
+  PDM_free(line_to_back);
 
 
   /*
@@ -1073,18 +1073,18 @@ int main(int argc, char *argv[])
    */
   PDM_multipart_free(mpart);
   PDM_DMesh_nodal_free(dmn);
- PDM_free(dback_vtx_coord);
- PDM_free(dback_face_vtx_idx);
- PDM_free(dback_face_vtx);
- PDM_free(back_distrib_vtx);
- PDM_free(back_distrib_face);
- PDM_free(dback_face_ln_to_gn);
- PDM_free(back_face_extents);
+  PDM_free(dback_vtx_coord);
+  PDM_free(dback_face_vtx_idx);
+  PDM_free(dback_face_vtx);
+  PDM_free(back_distrib_vtx);
+  PDM_free(back_distrib_face);
+  PDM_free(dback_face_ln_to_gn);
+  PDM_free(back_face_extents);
 
- PDM_free(pback_vtx_ln_to_gn);
- PDM_free(pback_vtx_coord);
- PDM_free(pback_face_vtx_idx);
- PDM_free(pback_face_vtx);
+  PDM_free(pback_vtx_ln_to_gn);
+  PDM_free(pback_vtx_coord);
+  PDM_free(pback_face_vtx_idx);
+  PDM_free(pback_face_vtx);
 
 
   PDM_MPI_Finalize ();

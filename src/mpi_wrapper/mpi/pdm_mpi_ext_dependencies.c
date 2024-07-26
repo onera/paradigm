@@ -246,35 +246,35 @@ PDM_INTEL_SUPPRESS_WARNING_POP;
   }
 
   if (__vtxdist != NULL) {
-   PDM_free(__vtxdist);
+    PDM_free(__vtxdist);
   }
 
   if (__xadj != NULL) {
-   PDM_free(__xadj);
+    PDM_free(__xadj);
   }
 
   if (__adjncy != NULL) {
-   PDM_free(__adjncy);
+    PDM_free(__adjncy);
   }
 
   if (__part != NULL) {
-   PDM_free(__part);
+    PDM_free(__part);
   }
 
   if (__vwgt != NULL) {
-   PDM_free(__vwgt);
+    PDM_free(__vwgt);
   }
 
   if (__adjwgt != NULL) {
-   PDM_free(__adjwgt);
+    PDM_free(__adjwgt);
   }
 
   if (__tpwgts != NULL) {
-   PDM_free(__tpwgts);
+    PDM_free(__tpwgts);
   }
 
   if (__ubvec != NULL) {
-   PDM_free(__ubvec);
+    PDM_free(__ubvec);
   }
 
 
@@ -445,24 +445,24 @@ PDM_INTEL_SUPPRESS_WARNING_POP;
     for (int i = 0; i < _vertlocnbr; i++) {
       part[i] = __part[i];
     }
-   PDM_free(__part);
+    PDM_free(__part);
   }
 
   if (__vertloctab != NULL) {
-   PDM_free(__vertloctab);
+    PDM_free(__vertloctab);
   }
 
 
   if (__edgeloctab != NULL) {
-   PDM_free(__edgeloctab);
+    PDM_free(__edgeloctab);
   }
 
   if (__veloloctab != NULL) {
-   PDM_free(__veloloctab);
+    PDM_free(__veloloctab);
   }
 
   if (__edloloctab != NULL) {
-   PDM_free(__edloloctab);
+    PDM_free(__edloloctab);
   }
 
 }

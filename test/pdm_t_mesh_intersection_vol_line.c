@@ -235,7 +235,7 @@ _generate_volume_mesh
   PDM_multipart_dmesh_nodal_set(mpart, 0, dmn);
   PDM_multipart_compute(mpart);
 
- PDM_free(n_part_domains);
+  PDM_free(n_part_domains);
 
 
   *_mpart = mpart;
@@ -419,7 +419,7 @@ _generate_ray
   *edge_vtx_out      = edge_vtx;
   *pn_ray            = dn_ray;
 
- PDM_free(distrib_ray);
+  PDM_free(distrib_ray);
 }
 
 
@@ -593,10 +593,10 @@ char *argv[]
 
   PDM_MPI_Barrier (PDM_MPI_COMM_WORLD);
 
- PDM_free(pvtx_coord);
- PDM_free(pedge_vtx);
- PDM_free(pedge_ln_to_gn);
- PDM_free(pvtx_ln_to_gn);
+  PDM_free(pvtx_coord);
+  PDM_free(pedge_vtx);
+  PDM_free(pedge_ln_to_gn);
+  PDM_free(pvtx_ln_to_gn);
   if (i_rank == 0) {
     PDM_printf ("-- End\n");
     fflush(stdout);

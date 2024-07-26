@@ -244,7 +244,7 @@ _gen_cube_vol
     }
   }
 
- PDM_free(distribCell);
+  PDM_free(distribCell);
 }
 
 
@@ -390,9 +390,9 @@ _points_within_radius
       printf("\n");
     }
   }
- PDM_free(_tgt_coord);
- PDM_free(_tgt_g_num);
- PDM_free(_tgt_radius2);
+  PDM_free(_tgt_coord);
+  PDM_free(_tgt_g_num);
+  PDM_free(_tgt_radius2);
 
   /* Restore partitions */
   PDM_malloc(*close_points_idx,n_part_tgt,int *);
@@ -425,9 +425,9 @@ _points_within_radius
 
     idx_part += n_tgt[i_part];
   }
- PDM_free(_close_pts_idx);
- PDM_free(_close_pts_g_num);
- PDM_free(_close_pts_dist2);
+  PDM_free(_close_pts_idx);
+  PDM_free(_close_pts_g_num);
+  PDM_free(_close_pts_dist2);
 
   /* Free parallel octree */
   PDM_para_octree_free (octree);
@@ -655,7 +655,7 @@ int main(int argc, char *argv[])
     tgt_g_num = PDM_gnum_get (id_gnum, 0);
 
     PDM_gnum_free (id_gnum);
-   PDM_free(tgt_char_length);
+    PDM_free(tgt_char_length);
   }
 
 
@@ -880,19 +880,19 @@ int main(int argc, char *argv[])
   /*
    *  Finalize
    */
- PDM_free(src_coord);
- PDM_free(src_g_num);
- PDM_free(tgt_coord);
- PDM_free(tgt_g_num);
- PDM_free(tgt_radius);
+  PDM_free(src_coord);
+  PDM_free(src_g_num);
+  PDM_free(tgt_coord);
+  PDM_free(tgt_g_num);
+  PDM_free(tgt_radius);
   for (int i = 0; i < n_part_tgt; i++) {
-   PDM_free(close_points_idx[i]);
-   PDM_free(close_points_g_num[i]);
-   PDM_free(close_points_dist2[i]);
+    PDM_free(close_points_idx[i]);
+    PDM_free(close_points_g_num[i]);
+    PDM_free(close_points_dist2[i]);
   }
- PDM_free(close_points_idx);
- PDM_free(close_points_g_num);
- PDM_free(close_points_dist2);
+  PDM_free(close_points_idx);
+  PDM_free(close_points_g_num);
+  PDM_free(close_points_dist2);
 
   PDM_MPI_Finalize();
 

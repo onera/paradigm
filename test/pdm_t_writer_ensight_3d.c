@@ -257,7 +257,7 @@ int main(int argc, char *argv[])
                                       dface_group_idx,
                                       dface_group);
 
- PDM_free(dcell_part);
+  PDM_free(dcell_part);
 
   double  *elapsed = NULL;
   double  *cpu = NULL;
@@ -383,7 +383,7 @@ int main(int argc, char *argv[])
     debPartProcs[i+1] = debPartProcs[i] + n_partProcs[i];
   }
 
- PDM_free(n_partProcs);
+  PDM_free(n_partProcs);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
 
@@ -507,7 +507,7 @@ int main(int argc, char *argv[])
 
   }
 
- PDM_free(debPartProcs);
+  PDM_free(debPartProcs);
 
   PDM_writer_geom_write(id_cs,
                         id_geom);
@@ -535,9 +535,9 @@ int main(int argc, char *argv[])
                       id_var_num_part);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
-   PDM_free(val_num_part[i_part]);
+    PDM_free(val_num_part[i_part]);
   }
- PDM_free(val_num_part);
+  PDM_free(val_num_part);
 
   for (int nstep = 0; nstep < 10; nstep++) {
 
@@ -585,16 +585,16 @@ int main(int argc, char *argv[])
   }
 
   for (int i_part = 0; i_part < n_part; i_part++) {
-   PDM_free(cell_faceNb[i_part]);
-   PDM_free(face_vtxNb[i_part]);
-   PDM_free(val_coo_x[i_part]);
-   PDM_free(val_coo_xyz[i_part]);
+    PDM_free(cell_faceNb[i_part]);
+    PDM_free(face_vtxNb[i_part]);
+    PDM_free(val_coo_x[i_part]);
+    PDM_free(val_coo_xyz[i_part]);
   }
- PDM_free(val_coo_x);
- PDM_free(val_coo_xyz);
- PDM_free(cell_faceNb);
- PDM_free(face_vtxNb);
- PDM_free(nsom_part);
+  PDM_free(val_coo_x);
+  PDM_free(val_coo_xyz);
+  PDM_free(cell_faceNb);
+  PDM_free(face_vtxNb);
+  PDM_free(nsom_part);
 
   PDM_writer_var_free(id_cs,
                       id_var_coo_x);

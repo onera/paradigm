@@ -743,10 +743,10 @@ _gen_distributed_mesh
   for (int i = 1; i < *n_face_group + 1; i++)
     _dface_group_idx[i] += _dface_group_idx[i-1];
 
- PDM_free(distrib_vtx);
- PDM_free(distrib_face);
- PDM_free(distrib_cell);
- PDM_free(distrib_face_lim);
+  PDM_free(distrib_vtx);
+  PDM_free(distrib_face);
+  PDM_free(distrib_cell);
+  PDM_free(distrib_face_lim);
 }
 
 
@@ -1020,14 +1020,14 @@ int main(int argc, char *argv[])
                                        dface_group_idx,
                                        dface_group);
 
- PDM_free(dcell_part);
+  PDM_free(dcell_part);
 
- PDM_free(dface_cell);
- PDM_free(dface_vtx_idx);
- PDM_free(dface_vtx);
- PDM_free(dvtx_coord);
- PDM_free(dface_group_idx);
- PDM_free(dface_group);
+  PDM_free(dface_cell);
+  PDM_free(dface_vtx_idx);
+  PDM_free(dface_vtx);
+  PDM_free(dvtx_coord);
+  PDM_free(dface_group_idx);
+  PDM_free(dface_group);
 
   int n_point_cloud = 1;
   PDM_dist_cloud_surf_t *id_dist = PDM_dist_cloud_surf_create (PDM_MESH_NATURE_MESH_SETTED,
@@ -1175,7 +1175,7 @@ int main(int argc, char *argv[])
                            face_data,
                            n_vtx,
                            vtx);
-     PDM_free(face_data);
+      PDM_free(face_data);
 
       int *_face_vtx_idx;
       PDM_malloc(_face_vtx_idx,(face_group_idx[n_face_group] + 1),int);
@@ -1203,9 +1203,9 @@ int main(int argc, char *argv[])
                            face_data,
                            n_vtx,
                            vtx);
-     PDM_free(face_data);
-     PDM_free(_face_vtx_idx);
-     PDM_free(_face_vtx);
+      PDM_free(face_data);
+      PDM_free(_face_vtx_idx);
+      PDM_free(_face_vtx);
     }
 
     int iii = 0;
@@ -1386,7 +1386,7 @@ int main(int argc, char *argv[])
                            face_data,//NULL,
                            n_select_vtx[i_part],
                            surface_coords[i_part]);
-     PDM_free(face_data);
+      PDM_free(face_data);
     }
 
     int n_cell;
@@ -1650,7 +1650,7 @@ int main(int argc, char *argv[])
                            tface_data,
                            tn_vtx/3,
                            tvtx_coord);
-     PDM_free(tface_data);
+      PDM_free(tface_data);
     }
 
     int *all_tn_face;
@@ -1684,14 +1684,14 @@ int main(int argc, char *argv[])
     PDM_MPI_Allgatherv (tface_g_num, tn_face, PDM__PDM_MPI_G_NUM,
                         gface_g_num, all_tn_face, shift_face, PDM__PDM_MPI_G_NUM,
                         PDM_MPI_COMM_WORLD);
-   PDM_free(tface_g_num);
+    PDM_free(tface_g_num);
 
     double *gvtx_coord;
     PDM_malloc(gvtx_coord,gn_vtx,double);
     PDM_MPI_Allgatherv (tvtx_coord, tn_vtx, PDM_MPI_DOUBLE,
                         gvtx_coord, all_tn_vtx, shift_vtx, PDM_MPI_DOUBLE,
                         PDM_MPI_COMM_WORLD);
-   PDM_free(tvtx_coord);
+    PDM_free(tvtx_coord);
     gn_vtx /= 3;
 
     int *gface_vtx;
@@ -1704,8 +1704,8 @@ int main(int argc, char *argv[])
     PDM_MPI_Allgatherv (tface_vtx, 4*tn_face, PDM_MPI_INT,
                         gface_vtx, all_tn_face, shift_face, PDM_MPI_INT,
                         PDM_MPI_COMM_WORLD);
-   PDM_free(tface_vtx);
-   PDM_free(tface_vtx_idx);
+    PDM_free(tface_vtx);
+    PDM_free(tface_vtx_idx);
 
     for (int i = 0; i < n_rank; i++) {
       for (int j = shift_face[i]; j < shift_face[i+1]; j++) {
@@ -1740,7 +1740,7 @@ int main(int argc, char *argv[])
                            gface_data,
                            gn_vtx,
                            gvtx_coord);
-     PDM_free(gface_data);
+      PDM_free(gface_data);
     }
 
     if (1) {
@@ -1875,26 +1875,26 @@ int main(int argc, char *argv[])
       }
     }
 
-   PDM_free(gface_vtx);
-   PDM_free(gface_vtx_idx);
+    PDM_free(gface_vtx);
+    PDM_free(gface_vtx_idx);
 
-   PDM_free(gface_g_num);
-   PDM_free(gvtx_coord);
-   PDM_free(shift_face);
-   PDM_free(shift_vtx);
-   PDM_free(shift_face_vtx);
-   PDM_free(all_tn_face);
-   PDM_free(all_tn_vtx);
-   PDM_free(all_tl_face_vtx);
+    PDM_free(gface_g_num);
+    PDM_free(gvtx_coord);
+    PDM_free(shift_face);
+    PDM_free(shift_vtx);
+    PDM_free(shift_face_vtx);
+    PDM_free(all_tn_face);
+    PDM_free(all_tn_vtx);
+    PDM_free(all_tl_face_vtx);
   }
   //<<--
 
   for (int i_part = 0; i_part < n_part; i_part++) {
-   PDM_free(cell_center[i_part]);
-   PDM_free(cell_volume[i_part]);
+    PDM_free(cell_center[i_part]);
+    PDM_free(cell_volume[i_part]);
   }
- PDM_free(cell_center);
- PDM_free(cell_volume);
+  PDM_free(cell_center);
+  PDM_free(cell_volume);
 
   PDM_part_free(ppart);
 
@@ -1902,33 +1902,33 @@ int main(int argc, char *argv[])
   PDM_dist_cloud_surf_free (id_dist);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
-   PDM_free(select_face[i_part]);
-   PDM_free(select_vtx[i_part]);
+    PDM_free(select_face[i_part]);
+    PDM_free(select_vtx[i_part]);
 
-   PDM_free(surface_face_vtx_idx[i_part]);
-   PDM_free(surface_face_vtx[i_part]);
-   PDM_free(surface_coords[i_part]);
+    PDM_free(surface_face_vtx_idx[i_part]);
+    PDM_free(surface_face_vtx[i_part]);
+    PDM_free(surface_coords[i_part]);
 
-   PDM_free(surface_face_parent_gnum[i_part]);
-   PDM_free(surface_vtx_parent_gnum[i_part]);
+    PDM_free(surface_face_parent_gnum[i_part]);
+    PDM_free(surface_vtx_parent_gnum[i_part]);
 
   }
 
- PDM_free(select_face);
- PDM_free(select_vtx);
+  PDM_free(select_face);
+  PDM_free(select_vtx);
 
- PDM_free(n_select_face);
- PDM_free(n_select_vtx);
+  PDM_free(n_select_face);
+  PDM_free(n_select_vtx);
 
- PDM_free(surface_face_vtx_idx);
- PDM_free(surface_face_vtx);
- PDM_free(surface_coords);
+  PDM_free(surface_face_vtx_idx);
+  PDM_free(surface_face_vtx);
+  PDM_free(surface_coords);
 
- PDM_free(surface_face_parent_gnum);
- PDM_free(surface_vtx_parent_gnum);
+  PDM_free(surface_face_parent_gnum);
+  PDM_free(surface_vtx_parent_gnum);
 
- PDM_free(surface_face_gnum);
- PDM_free(surface_vtx_gnum);
+  PDM_free(surface_face_gnum);
+  PDM_free(surface_vtx_gnum);
 
   PDM_gnum_free(id_gnum_face);
   PDM_gnum_free(id_gnum_vtx);

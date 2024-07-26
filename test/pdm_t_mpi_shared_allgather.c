@@ -604,10 +604,10 @@ hybrid_exchange_numa(PDM_MPI_Comm comm)
   PDM_mpi_win_shared_free(wshared_vals_out_idx);
   PDM_mpi_win_shared_free(wshared_vals_out);
 
- PDM_free(n_vals_out);
- PDM_free(recv_shift);
- PDM_free(val);
- PDM_free(neighbor_in);
+  PDM_free(n_vals_out);
+  PDM_free(recv_shift);
+  PDM_free(val);
+  PDM_free(neighbor_in);
   PDM_MPI_Comm_free(&comm_shared);
   PDM_MPI_Comm_free(&comm_dist_graph);
 

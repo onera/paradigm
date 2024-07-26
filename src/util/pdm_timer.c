@@ -290,7 +290,7 @@ double PDM_timer_elapsed(PDM_timer_t *timer)
 
 void PDM_timer_free(PDM_timer_t *timer)
 {
- PDM_free(timer);
+  PDM_free(timer);
 }
 
 #ifdef __cplusplus

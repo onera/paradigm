@@ -389,7 +389,7 @@ PDM_block_to_part_time_per_step_dump
                       (PDM_l_num_t) s_buffer,
                       buffer);
 
- PDM_free(buffer);
+  PDM_free(buffer);
 
   // Finalize parallel write
   PDM_io_close(writer);
@@ -469,7 +469,7 @@ PDM_block_to_part_comm_graph_dump
                               &i_rank_gnum,
                               (const void *) buffer);
 
- PDM_free(buffer);
+  PDM_free(buffer);
 
   // Finalize parallel write
   PDM_io_close(writer);
@@ -586,7 +586,7 @@ PDM_block_to_part_create_from_sparse_block
                     PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, comm);
 
   if(_block_distrib_idx[n_rank] == 0) {
-   PDM_free(_block_distrib_idx);
+    PDM_free(_block_distrib_idx);
     _block_distrib_idx = PDM_compute_uniform_entity_distribution(comm, gmax_part_g_num);
   }
 
@@ -599,7 +599,7 @@ PDM_block_to_part_create_from_sparse_block
                                                                                    n_elt,
                                                                                    n_part,
                                                                                    comm);
- PDM_free(_block_distrib_idx);
+  PDM_free(_block_distrib_idx);
   return btp;
 }
 
@@ -805,7 +805,7 @@ PDM_block_to_part_create
   PDM_MPI_Allreduce (&(btp->pttopt_comm), &tmp, 1, PDM_MPI_INT, PDM_MPI_MAX, comm);
   btp->pttopt_comm = tmp;
 
- PDM_free(requested_data);
+  PDM_free(requested_data);
 
   int n_rank_recv = 0;
   int n_rank_send = 0;
@@ -1027,7 +1027,7 @@ PDM_block_to_part_exch_in_place
     } else {
       block_stride_idx = PDM_array_new_idx_from_sizes_int(block_stride, btp->n_elt_partial_block);
     }
-   PDM_free(send_stride);
+    PDM_free(send_stride);
   }
 
   else {
@@ -1220,9 +1220,9 @@ PDM_block_to_part_exch_in_place
       }
     }
 
-   PDM_free(s_request);
-   PDM_free(r_request);
-   PDM_free(active_rank);
+    PDM_free(s_request);
+    PDM_free(r_request);
+    PDM_free(active_rank);
 
   }
 
@@ -1321,8 +1321,8 @@ PDM_block_to_part_exch_in_place
                           mpi_type,
                           btp->comm);
   
-       PDM_free(_i_send_buffer);
-       PDM_free(_i_recv_buffer);
+        PDM_free(_i_send_buffer);
+        PDM_free(_i_recv_buffer);
       }
   
       else {
@@ -1360,16 +1360,16 @@ PDM_block_to_part_exch_in_place
   }
 
   for (int i = 0; i < n_active_buffer; i++) {
-   PDM_free(send_buffer[i]);
+    PDM_free(send_buffer[i]);
   }
- PDM_free(send_buffer);
- PDM_free(n_send_buffer);
- PDM_free(i_send_buffer);
- PDM_free(n_recv_buffer);
- PDM_free(i_recv_buffer);
+  PDM_free(send_buffer);
+  PDM_free(n_send_buffer);
+  PDM_free(i_send_buffer);
+  PDM_free(n_recv_buffer);
+  PDM_free(i_recv_buffer);
 
   if (block_stride_idx != NULL) {
-   PDM_free(block_stride_idx);
+    PDM_free(block_stride_idx);
   }
 
   /*
@@ -1405,12 +1405,12 @@ PDM_block_to_part_exch_in_place
     }
 
     for (int i = 0; i < btp->n_part; i++) {
-     PDM_free(part_idx[i]);
+      PDM_free(part_idx[i]);
     }
 
-   PDM_free(recv_idx);
-   PDM_free(part_idx);
-   PDM_free(recv_stride);
+    PDM_free(recv_idx);
+    PDM_free(part_idx);
+    PDM_free(recv_stride);
   }
 
   else if (t_stride == PDM_STRIDE_CST_INTERLACED) {
@@ -1442,7 +1442,7 @@ PDM_block_to_part_exch_in_place
   btp_t_elaps[DATA_EXCHANGE] += (t2_elaps - t1_elaps);
   btp_t_cpu[DATA_EXCHANGE] += (t2_cpu - t1_cpu);
 
- PDM_free(recv_buffer);
+  PDM_free(recv_buffer);
 
 }
 
@@ -1685,9 +1685,9 @@ PDM_block_to_part_exch
         }
       }
     }
-   PDM_free(send_stride);
+    PDM_free(send_stride);
     //PDM_free(send_stride_idx);
-   PDM_free(block_stride_idx);
+    PDM_free(block_stride_idx);
 
   }
 
@@ -1781,8 +1781,8 @@ PDM_block_to_part_exch
                         mpi_type,
                         btp->comm);
 
-     PDM_free(_i_send_buffer);
-     PDM_free(_i_recv_buffer);
+      PDM_free(_i_send_buffer);
+      PDM_free(_i_recv_buffer);
     }
 
     else {
@@ -1810,11 +1810,11 @@ PDM_block_to_part_exch
   //                     mpi_type,
   //                     btp->comm);
 
- PDM_free(send_buffer);
- PDM_free(n_send_buffer);
- PDM_free(i_send_buffer);
- PDM_free(n_recv_buffer);
- PDM_free(i_recv_buffer);
+  PDM_free(send_buffer);
+  PDM_free(n_send_buffer);
+  PDM_free(i_send_buffer);
+  PDM_free(n_recv_buffer);
+  PDM_free(i_recv_buffer);
 
   /*
    * Partitions filling
@@ -1856,12 +1856,12 @@ PDM_block_to_part_exch
     }
 
     for (int i = 0; i < btp->n_part; i++) {
-     PDM_free(part_idx[i]);
+      PDM_free(part_idx[i]);
     }
 
-   PDM_free(recv_idx);
-   PDM_free(part_idx);
-   PDM_free(recv_stride);
+    PDM_free(recv_idx);
+    PDM_free(part_idx);
+    PDM_free(recv_stride);
   }
 
   else if (t_stride == PDM_STRIDE_CST_INTERLACED) {
@@ -1893,7 +1893,7 @@ PDM_block_to_part_exch
   btp_t_elaps[DATA_EXCHANGE] += (t2_elaps - t1_elaps);
   btp_t_cpu[DATA_EXCHANGE] += (t2_cpu - t1_cpu);
 
- PDM_free(recv_buffer);
+  PDM_free(recv_buffer);
   PDM_MPI_Type_free(&mpi_type);
 
 }
@@ -1916,23 +1916,23 @@ PDM_block_to_part_free
 {
 
   for (int i = 0; i < btp->n_part; i++) {
-   PDM_free(btp->ind[i]);
+    PDM_free(btp->ind[i]);
   }
 
- PDM_free(btp->ind);
- PDM_free(btp->n_elt);
- PDM_free(btp->block_distrib_idx);
- PDM_free(btp->distributed_data);
- PDM_free(btp->distributed_data_idx);
- PDM_free(btp->distributed_data_n);
- PDM_free(btp->requested_data_idx);
- PDM_free(btp->requested_data_n);
+  PDM_free(btp->ind);
+  PDM_free(btp->n_elt);
+  PDM_free(btp->block_distrib_idx);
+  PDM_free(btp->distributed_data);
+  PDM_free(btp->distributed_data_idx);
+  PDM_free(btp->distributed_data_n);
+  PDM_free(btp->requested_data_idx);
+  PDM_free(btp->requested_data_n);
 
   if(btp->idx_partial != NULL) {
-   PDM_free(btp->idx_partial);
+    PDM_free(btp->idx_partial);
   }
 
- PDM_free(btp);
+  PDM_free(btp);
 
   n_btp--;
   if (n_btp == 0) {

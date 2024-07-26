@@ -239,9 +239,9 @@ int main(int argc, char *argv[])
     for(int i = 0; i < pn_elmt[i_part]; ++i) {
       assert(pfield_post[i_part][i] == pln_to_to_gn[i_part][i]);
     }
-   PDM_free(pfield_post[i_part]);
+    PDM_free(pfield_post[i_part]);
   }
- PDM_free(pfield_post);
+  PDM_free(pfield_post);
 
   /*
    * Stride Var check
@@ -271,11 +271,11 @@ int main(int argc, char *argv[])
       assert(pfield_post      [i_part][i] == pln_to_to_gn[i_part][i]);
       assert(pfield_post_strid[i_part][i] == 1);
     }
-   PDM_free(pfield_post      [i_part]);
-   PDM_free(pfield_post_strid[i_part]);
+    PDM_free(pfield_post      [i_part]);
+    PDM_free(pfield_post_strid[i_part]);
   }
- PDM_free(pfield_post);
- PDM_free(pfield_post_strid);
+  PDM_free(pfield_post);
+  PDM_free(pfield_post_strid);
 
 
   /*
@@ -321,12 +321,12 @@ int main(int argc, char *argv[])
       PDM_log_trace_array_long(pfield_post[i_part], s_data, "pfield_post : ");
     }
 
-   PDM_free(pfield_post      [i_part]);
-   PDM_free(pfield_post_strid[i_part]);
+    PDM_free(pfield_post      [i_part]);
+    PDM_free(pfield_post_strid[i_part]);
   }
 
- PDM_free(pfield_post);
- PDM_free(pfield_post_strid);
+  PDM_free(pfield_post);
+  PDM_free(pfield_post_strid);
 
   /*
    * Madness asynchronous exchange
@@ -360,29 +360,29 @@ int main(int argc, char *argv[])
       PDM_log_trace_array_long(pfield_post[i_part], s_data, "pfield_post : ");
     }
 
-   PDM_free(pfield_post      [i_part]);
-   PDM_free(pfield_post_strid[i_part]);
+    PDM_free(pfield_post      [i_part]);
+    PDM_free(pfield_post_strid[i_part]);
   }
 
- PDM_free(pfield_post);
- PDM_free(pfield_post_strid);
+  PDM_free(pfield_post);
+  PDM_free(pfield_post_strid);
 
 
 
   PDM_part_to_block_free(ptb);
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
-   PDM_free(pln_to_to_gn[i_part]);
-   PDM_free(pfield      [i_part]);
+    PDM_free(pln_to_to_gn[i_part]);
+    PDM_free(pfield      [i_part]);
   }
 
- PDM_free(dfield_post);
- PDM_free(pln_to_to_gn);
- PDM_free(distrib_init_elmt);
- PDM_free(pfield);
- PDM_free(dfield);
- PDM_free(dfield_strid);
- PDM_free(pn_elmt);
+  PDM_free(dfield_post);
+  PDM_free(pln_to_to_gn);
+  PDM_free(distrib_init_elmt);
+  PDM_free(pfield);
+  PDM_free(dfield);
+  PDM_free(dfield_strid);
+  PDM_free(pn_elmt);
 
   PDM_MPI_Finalize ();
   return 0;

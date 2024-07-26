@@ -526,12 +526,12 @@ int main(int argc, char *argv[])
   }
 
 
- PDM_free(pts_coord);
- PDM_free(pts_proj );
- PDM_free(pts_error);
- PDM_free(pts_stat );
- PDM_free(pts_dist );
- PDM_free(pts_g_num);
+  PDM_free(pts_coord);
+  PDM_free(pts_proj );
+  PDM_free(pts_error);
+  PDM_free(pts_stat );
+  PDM_free(pts_dist );
+  PDM_free(pts_g_num);
 
   printf("%d OK / %d\n", count_ok, n_pts);
 

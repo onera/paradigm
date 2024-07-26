@@ -280,10 +280,10 @@ int main(int argc, char *argv[])
                                      user_to_ijk);
   }
 
- PDM_free(perm);
- PDM_free(rnd);
- PDM_free(ijk_to_ijk);
- PDM_free(user_to_ijk);
+  PDM_free(perm);
+  PDM_free(rnd);
+  PDM_free(ijk_to_ijk);
+  PDM_free(user_to_ijk);
 
 
   /*int *user_to_ijk = PDM_ho_ordering_user_to_ijk_get ("PDM_HO_ORDERING_VTK",
@@ -416,10 +416,10 @@ int main(int argc, char *argv[])
 
     printf("type %d OK\n", (int) (type));
 
-   PDM_free(ijk_to_user);
+    PDM_free(ijk_to_user);
   }
 
- PDM_free(user_to_ijk);*/
+  PDM_free(user_to_ijk);*/
 
 
   PDM_MPI_Finalize();

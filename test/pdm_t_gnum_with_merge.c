@@ -420,7 +420,7 @@ _create_split_mesh
                                        dedge_group_idx,
                                        dedge_group);
 
- PDM_free(dcell_part);
+  PDM_free(dcell_part);
 
   double  *elapsed = NULL;
   double  *cpu = NULL;
@@ -462,15 +462,15 @@ _create_split_mesh
 
 
 
- PDM_free(dvtx_coord);
- PDM_free(dface_vtx_idx);
- PDM_free(dface_vtx);
- PDM_free(dface_edge);
- PDM_free(dedge_vtx_idx);
- PDM_free(dedge_vtx);
- PDM_free(dedge_face);
- PDM_free(dedge_group_idx);
- PDM_free(dedge_group);
+  PDM_free(dvtx_coord);
+  PDM_free(dface_vtx_idx);
+  PDM_free(dface_vtx);
+  PDM_free(dface_edge);
+  PDM_free(dedge_vtx_idx);
+  PDM_free(dedge_vtx);
+  PDM_free(dedge_face);
+  PDM_free(dedge_group_idx);
+  PDM_free(dedge_group);
 
   PDM_gen_gnum_t* gen_gnum2 = PDM_gnum_create (3, n_part, PDM_TRUE, 1e-3, pdm_mpi_comm, PDM_OWNERSHIP_KEEP);
 
@@ -723,17 +723,17 @@ _create_split_mesh
 //  PDM_g_num_t *n2 = PDM_part_to_block_block_gnum_get (ptb2);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
-   PDM_free(char_length[i_part]);
+    PDM_free(char_length[i_part]);
   }
- PDM_free(char_length);
+  PDM_free(char_length);
 
- PDM_free(_numabs);
- PDM_free(block_numabs);
- PDM_free(block_numabs2);
- PDM_free(n_vtxs);
- PDM_free(vtx_ln_to_gns);
- PDM_free(numabs_init);
- PDM_free(distrib);
+  PDM_free(_numabs);
+  PDM_free(block_numabs);
+  PDM_free(block_numabs2);
+  PDM_free(n_vtxs);
+  PDM_free(vtx_ln_to_gns);
+  PDM_free(numabs_init);
+  PDM_free(distrib);
 
   PDM_gnum_free (gen_gnum2);
 

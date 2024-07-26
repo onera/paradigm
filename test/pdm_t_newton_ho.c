@@ -373,7 +373,7 @@ int main(int argc, char *argv[])
                                  &converged,
                                  work_array);
   printf("converged? %d\n", converged);
- PDM_free(work_array);
+  PDM_free(work_array);
 
 
   double uvw3[3];
@@ -412,7 +412,7 @@ int main(int argc, char *argv[])
   printf("dist_newton = %e, dist_subdiv = %e, delta = %e, relatif = %e\n",
          sqrt(dist2), sqrt(dist3), sqrt(dist2) - sqrt(dist3), (sqrt(dist2) - sqrt(dist3))/sqrt(dist2));
 
- PDM_free(weight);
+  PDM_free(weight);
 
 
   if (visu) {
@@ -476,16 +476,16 @@ int main(int argc, char *argv[])
                                   NULL,
                                   NULL);
 
-   PDM_free(connec);
+    PDM_free(connec);
   }
 
   PDM_MPI_Finalize();
 
 
- PDM_free(parent_node_coord);
- PDM_free(pts_coord);
- PDM_free(proj_coord);
- PDM_free(proj_coord3);
+  PDM_free(parent_node_coord);
+  PDM_free(pts_coord);
+  PDM_free(proj_coord);
+  PDM_free(proj_coord3);
 
   return 0;
 }

@@ -238,7 +238,7 @@ const int                n_part,
     }
   }
 
- PDM_free(recvEltN);
+  PDM_free(recvEltN);
 
   for (int i = 0; i < graph_bound->nExchRank; i++) {
     int iProc = graph_bound->exchRank[i];
@@ -330,7 +330,7 @@ const int                n_part,
     }
   }
 
- PDM_free(sendOfferedElts);
+  PDM_free(sendOfferedElts);
 
   /*
    * Allocation arrays to storage offered elements
@@ -512,7 +512,7 @@ const int                n_part,
     PDM_printf ("\n");
   }
 
- PDM_free(nOfferedEltProc);
+  PDM_free(nOfferedEltProc);
 
   for (int i = 0; i < graph_bound->nExchRank; i++) {
     int iProc = graph_bound->exchRank[i];
@@ -600,7 +600,7 @@ const int                n_part,
     }
   }
 
- PDM_free(gNumOfferedEltsSend);
+  PDM_free(gNumOfferedEltsSend);
 
   if (0 == 1) {
     PDM_printf ("gNumOfferedEltsRecv : ");
@@ -690,7 +690,7 @@ const int                n_part,
     }
   }
 
- PDM_free(hashTableN);
+  PDM_free(hashTableN);
 
   /*
    * TagGhost link about an other ghost element (>0) or a new local (<0)
@@ -756,12 +756,12 @@ const int                n_part,
     }
   }
 
- PDM_free(gNumOfferedEltsRecv);
+  PDM_free(gNumOfferedEltsRecv);
 
   for (int i = 0; i < n_part; i++) {
-   PDM_free(eltToPartBound[i]);
+    PDM_free(eltToPartBound[i]);
   }
- PDM_free(eltToPartBound);
+  PDM_free(eltToPartBound);
 
   /*
    * Remove double elements
@@ -895,10 +895,10 @@ const int                n_part,
     }
   }
 
- PDM_free(hashTableIdx);
- PDM_free(hashTableGnum);
- PDM_free(hashTableDataLoc);
- PDM_free(hashTableDataNumLoc);
+  PDM_free(hashTableIdx);
+  PDM_free(hashTableGnum);
+  PDM_free(hashTableDataLoc);
+  PDM_free(hashTableDataNumLoc);
 
   if (0 == 1) {
 
@@ -1049,7 +1049,7 @@ const int                n_part,
     }
   }
 
- PDM_free(nNewGhostElt);
+  PDM_free(nNewGhostElt);
 
   for (int i = 0; i < graph_bound->nGhostElt; i++) {
     if (tagGhostElt[i] > 0) {
@@ -1160,16 +1160,16 @@ const int                n_part,
 
   PDM_realloc(newGhostEltElt ,newGhostEltElt , newGhostEltEltIdx2[nTotalNewGhost],int);
 
- PDM_free(tagEltElt);
+  PDM_free(tagEltElt);
 
- PDM_free(newGhostEltEltIdx);
+  PDM_free(newGhostEltEltIdx);
   newGhostEltEltIdx = newGhostEltEltIdx2;
 
- PDM_free(oldToNewGhost);
- PDM_free(nNewGhostEltElt);
- PDM_free(ghostEltElt);
- PDM_free(ghostEltEltPart);
- PDM_free(ghostEltEltIdx);
+  PDM_free(oldToNewGhost);
+  PDM_free(nNewGhostEltElt);
+  PDM_free(ghostEltElt);
+  PDM_free(ghostEltEltPart);
+  PDM_free(ghostEltEltIdx);
 
   ghostEltElt = newGhostEltElt;
   ghostEltEltPart = newGhostEltEltPart;
@@ -1258,22 +1258,22 @@ const int                n_part,
    * Clean up
    */
 
- PDM_free(nNewSendElt);
- PDM_free(graph_bound->sendElt);
- PDM_free(graph_bound->sendEltPart);
- PDM_free(graph_bound->sendEltIdx);
+  PDM_free(nNewSendElt);
+  PDM_free(graph_bound->sendElt);
+  PDM_free(graph_bound->sendEltPart);
+  PDM_free(graph_bound->sendEltIdx);
 
   graph_bound->sendElt     = newSendElt;
   graph_bound->sendEltPart = newSendEltPart;
   graph_bound->sendEltIdx  = newSendEltIdx;
   graph_bound->nSendElt = graph_bound->sendEltIdx[lComm];
 
- PDM_free(oldGhostEltIdx);
- PDM_free(tagGhostElt);
- PDM_free(recvTagGhostElt);
+  PDM_free(oldGhostEltIdx);
+  PDM_free(tagGhostElt);
+  PDM_free(recvTagGhostElt);
 
- PDM_free(recvOfferedElts);
- PDM_free(newLocalGhost);
+  PDM_free(recvOfferedElts);
+  PDM_free(newLocalGhost);
 
   /*
    * Build structure for each part
@@ -1358,7 +1358,7 @@ const int                n_part,
     }
     PDM_array_accumulate_int(ghostEltPartIdx, nGhostEltPart+1);
 
-   PDM_free(tagGhostEltPart[i]);
+    PDM_free(tagGhostEltPart[i]);
 
   }
 
@@ -1366,10 +1366,10 @@ const int                n_part,
   graph_bound->sendEltPart = newSendEltPart;
   graph_bound->sendEltIdx  = newSendEltIdx;
 
- PDM_free(ghostEltEltIdx);
- PDM_free(ghostEltEltPart);
- PDM_free(ghostEltElt);
- PDM_free(tagGhostEltPart);
+  PDM_free(ghostEltEltIdx);
+  PDM_free(ghostEltEltPart);
+  PDM_free(ghostEltElt);
+  PDM_free(tagGhostEltPart);
 
   return graph_bound;
 
@@ -1581,7 +1581,7 @@ PDM_graph_bound_t *graph_bound
     int *_recvBuffer = (int *) graph_bound->recvBuffer;
     int **ghostField = (int **) graph_bound->ghostField;
 
-   PDM_free(_sendBuffer);
+    PDM_free(_sendBuffer);
 
     for (int i = 0; i < graph_bound->n_part; i++) {
       int *ghostFieldPart        = ghostField[i];
@@ -1595,7 +1595,7 @@ PDM_graph_bound_t *graph_bound
       }
     }
 
-   PDM_free(_recvBuffer);
+    PDM_free(_recvBuffer);
     break;
   }
 
@@ -1604,7 +1604,7 @@ PDM_graph_bound_t *graph_bound
     double *_recvBuffer = (double *) graph_bound->recvBuffer;
     double **ghostField = (double **) graph_bound->ghostField;
 
-   PDM_free(_sendBuffer);
+    PDM_free(_sendBuffer);
 
     for (int i = 0; i < graph_bound->n_part; i++) {
       double *ghostFieldPart        = ghostField[i];
@@ -1618,7 +1618,7 @@ PDM_graph_bound_t *graph_bound
       }
     }
 
-   PDM_free(_recvBuffer);
+    PDM_free(_recvBuffer);
     break;
   }
 
@@ -1654,33 +1654,33 @@ PDM_graph_bound_t *graph_bound
 {
   if (graph_bound != NULL) {
     if (graph_bound->exchRank != NULL)
-     PDM_free(graph_bound->exchRank);
+      PDM_free(graph_bound->exchRank);
     if (graph_bound->sendBuffer != NULL)
-     PDM_free(graph_bound->sendBuffer);
+      PDM_free(graph_bound->sendBuffer);
     if (graph_bound->sendRequest != NULL)
-     PDM_free(graph_bound->sendRequest);
+      PDM_free(graph_bound->sendRequest);
     if (graph_bound->recvRequest != NULL)
-     PDM_free(graph_bound->recvRequest);
+      PDM_free(graph_bound->recvRequest);
     if (graph_bound->sendEltIdx != NULL)
-     PDM_free(graph_bound->sendEltIdx);
+      PDM_free(graph_bound->sendEltIdx);
     if (graph_bound->sendElt != NULL)
-     PDM_free(graph_bound->sendElt);
+      PDM_free(graph_bound->sendElt);
     if (graph_bound->sendEltPart != NULL)
-     PDM_free(graph_bound->sendEltPart);
+      PDM_free(graph_bound->sendEltPart);
     if (graph_bound->ghostEltIdx != NULL)
-     PDM_free(graph_bound->ghostEltIdx);
+      PDM_free(graph_bound->ghostEltIdx);
     if (graph_bound->partBound != NULL)
-     PDM_free(graph_bound->partBound);
+      PDM_free(graph_bound->partBound);
     for (int i = 0; i < graph_bound->n_part; i++) {
-     PDM_free(graph_bound->ghostEltPartIdx[i]);
-     PDM_free(graph_bound->ghostEltPartElt[i]);
-     PDM_free(graph_bound->ghostEltPart2GhostElt[i]);
+      PDM_free(graph_bound->ghostEltPartIdx[i]);
+      PDM_free(graph_bound->ghostEltPartElt[i]);
+      PDM_free(graph_bound->ghostEltPart2GhostElt[i]);
     }
-   PDM_free(graph_bound->ghostEltPartIdx);
-   PDM_free(graph_bound->nGhostEltPart);
-   PDM_free(graph_bound->ghostEltPartElt);
-   PDM_free(graph_bound->ghostEltPart2GhostElt);
-   PDM_free(graph_bound);
+    PDM_free(graph_bound->ghostEltPartIdx);
+    PDM_free(graph_bound->nGhostEltPart);
+    PDM_free(graph_bound->ghostEltPartElt);
+    PDM_free(graph_bound->ghostEltPart2GhostElt);
+    PDM_free(graph_bound);
   }
   return NULL;
 }

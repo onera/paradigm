@@ -234,7 +234,7 @@ _polygon_plane_3d(const int    n_vertices,
     }
 
     if (_tmp_coords_p != NULL) {
-     PDM_free(_tmp_coords_p);
+      PDM_free(_tmp_coords_p);
       tmp_coords = NULL;
     }
 
@@ -875,16 +875,16 @@ PDM_triangulate_state_destroy(PDM_triangulate_state_t  *this_state)
 {
   if (this_state != NULL) {
     if (this_state->triangle_vertices != NULL) {
-     PDM_free(this_state->triangle_vertices);
-     PDM_free(this_state->coords);
-     PDM_free(this_state->list_previous);
-     PDM_free(this_state->list_next);
-     PDM_free(this_state->edge_vertices);
-     PDM_free(this_state->edge_neighbors);
-     PDM_free(this_state->edge_is_delaunay);
-     PDM_free(this_state->concave);
+      PDM_free(this_state->triangle_vertices);
+      PDM_free(this_state->coords);
+      PDM_free(this_state->list_previous);
+      PDM_free(this_state->list_next);
+      PDM_free(this_state->edge_vertices);
+      PDM_free(this_state->edge_neighbors);
+      PDM_free(this_state->edge_is_delaunay);
+      PDM_free(this_state->concave);
     }
-   PDM_free(this_state);
+    PDM_free(this_state);
   }
 
   return NULL;
@@ -1146,7 +1146,7 @@ PDM_triangulate_polygon(int                             dim,
       triangle_vertices[i] = __triangle_vertices[i] + 1;
   }
 
- PDM_free(_triangle_vertices);
+  PDM_free(_triangle_vertices);
   return n_triangles;
 }
 

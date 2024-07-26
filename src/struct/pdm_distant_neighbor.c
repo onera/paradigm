@@ -451,7 +451,7 @@ const int           *n_entity,
   /*
    * Free
    */
- PDM_free(requested_data);
+  PDM_free(requested_data);
 
   return (PDM_distant_neighbor_t* ) dn;
 }
@@ -642,10 +642,10 @@ PDM_distant_neighbor_exch
     // log_trace("PDM_distant_neighbor_exch::send_buffer END \n ");
 
     for(int i_part = 0; i_part < dn->n_part; i_part++){
-     PDM_free(stride_idx[i_part]);
+      PDM_free(stride_idx[i_part]);
     }
-   PDM_free(stride_idx);
-   PDM_free(send_stride);
+    PDM_free(stride_idx);
+    PDM_free(send_stride);
 
   } else if (t_stride == PDM_STRIDE_CST_INTERLACED) {
 
@@ -701,10 +701,10 @@ PDM_distant_neighbor_exch
                       PDM_MPI_BYTE,
                       dn->comm);
 
- PDM_free(send_buffer);
- PDM_free(n_send_buffer);
- PDM_free(n_recv_buffer);
- PDM_free(i_recv_buffer);
+  PDM_free(send_buffer);
+  PDM_free(n_send_buffer);
+  PDM_free(n_recv_buffer);
+  PDM_free(i_recv_buffer);
 
   PDM_malloc((*(unsigned char ***) recv_entity_data), dn->n_part ,unsigned char *);
   unsigned char **_recv_entity_data = (*(unsigned char ***) recv_entity_data);
@@ -776,7 +776,7 @@ PDM_distant_neighbor_exch
     for(int i_part = 0; i_part < dn->n_part; i_part++){
     PDM_free(_recv_entity_stride_idx[i_part]);
     }
-   PDM_free(_recv_entity_stride_idx);
+    PDM_free(_recv_entity_stride_idx);
 
   } else if (t_stride == PDM_STRIDE_CST_INTERLACED) {
 
@@ -802,13 +802,13 @@ PDM_distant_neighbor_exch
   /*
    * Free
    */
- PDM_free(i_send_buffer);
- PDM_free(recv_buffer);
+  PDM_free(i_send_buffer);
+  PDM_free(recv_buffer);
   if(recv_stride_idx != NULL){
-   PDM_free(recv_stride_idx);
+    PDM_free(recv_stride_idx);
   }
   if(recv_stride != NULL){
-   PDM_free(recv_stride);
+    PDM_free(recv_stride);
   }
 
 }
@@ -1002,10 +1002,10 @@ PDM_distant_neighbor_exch_int
     // log_trace("PDM_distant_neighbor_exch::send_buffer END \n ");
 
     for(int i_part = 0; i_part < dn->n_part; i_part++){
-     PDM_free(stride_idx[i_part]);
+      PDM_free(stride_idx[i_part]);
     }
-   PDM_free(stride_idx);
-   PDM_free(send_stride);
+    PDM_free(stride_idx);
+    PDM_free(send_stride);
 
   } else if (t_stride == PDM_STRIDE_CST_INTERLACED) {
 
@@ -1079,10 +1079,10 @@ PDM_distant_neighbor_exch_int
                       dn->comm);
 
 
- PDM_free(send_buffer);
- PDM_free(n_send_buffer);
- PDM_free(n_recv_buffer);
- PDM_free(i_recv_buffer);
+  PDM_free(send_buffer);
+  PDM_free(n_send_buffer);
+  PDM_free(n_recv_buffer);
+  PDM_free(i_recv_buffer);
 
   /*
    * Une seule valeur est echangé mais plusieurs occurence peuvent exister donc on passe du buffer MPI
@@ -1159,7 +1159,7 @@ PDM_distant_neighbor_exch_int
     for(int i_part = 0; i_part < dn->n_part; i_part++){
     PDM_free(_recv_entity_stride_idx[i_part]);
     }
-   PDM_free(_recv_entity_stride_idx);
+    PDM_free(_recv_entity_stride_idx);
 
 
   } else if (t_stride == PDM_STRIDE_CST_INTERLACED) {
@@ -1190,13 +1190,13 @@ PDM_distant_neighbor_exch_int
   /*
    * Free
    */
- PDM_free(i_send_buffer);
- PDM_free(recv_buffer);
+  PDM_free(i_send_buffer);
+  PDM_free(recv_buffer);
   if(recv_stride_idx != NULL){
-   PDM_free(recv_stride_idx);
+    PDM_free(recv_stride_idx);
   }
   if(recv_stride != NULL){
-   PDM_free(recv_stride);
+    PDM_free(recv_stride);
   }
 
 }
@@ -1218,24 +1218,24 @@ PDM_distant_neighbor_free
 {
 
   for(int i_part = 0; i_part < dn->n_part; i_part++){
-   PDM_free(dn->order[i_part]);
-   PDM_free(dn->order_unique[i_part]);
-   PDM_free(dn->ind[i_part]);
+    PDM_free(dn->order[i_part]);
+    PDM_free(dn->order_unique[i_part]);
+    PDM_free(dn->ind[i_part]);
   }
- PDM_free(dn->order);
- PDM_free(dn->order_unique);
- PDM_free(dn->ind);
+  PDM_free(dn->order);
+  PDM_free(dn->order_unique);
+  PDM_free(dn->ind);
 
- PDM_free(dn->requested_data_n);
- PDM_free(dn->requested_data_idx);
- PDM_free(dn->distributed_part_idx);
- PDM_free(dn->distributed_part_n);
+  PDM_free(dn->requested_data_n);
+  PDM_free(dn->requested_data_idx);
+  PDM_free(dn->distributed_part_idx);
+  PDM_free(dn->distributed_part_n);
 
- PDM_free(dn->distributed_data);
- PDM_free(dn->distributed_data_n);
- PDM_free(dn->distributed_data_idx);
+  PDM_free(dn->distributed_data);
+  PDM_free(dn->distributed_data_n);
+  PDM_free(dn->distributed_data_idx);
 
- PDM_free(dn);
+  PDM_free(dn);
 
 }
 

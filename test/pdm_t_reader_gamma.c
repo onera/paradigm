@@ -357,18 +357,18 @@ int main(int argc, char *argv[])
     PDM_writer_step_end(id_cs);
 
     for (int i = 0; i < n_part; i++) {
-     PDM_free(face_vtx_n[i]);
-     PDM_free(cell_face_n[i]);
+      PDM_free(face_vtx_n[i]);
+      PDM_free(cell_face_n[i]);
       if (use_edge) {
-       PDM_free(pface_vtx[i]);
+        PDM_free(pface_vtx[i]);
       }
-     PDM_free(val_num_part[i]);
+      PDM_free(val_num_part[i]);
     }
-   PDM_free(face_vtx_n);
-   PDM_free(cell_face_n);
-   PDM_free(pface_vtx_idx);
-   PDM_free(pface_vtx);
-   PDM_free(val_num_part);
+    PDM_free(face_vtx_n);
+    PDM_free(cell_face_n);
+    PDM_free(pface_vtx_idx);
+    PDM_free(pface_vtx);
+    PDM_free(val_num_part);
 
     PDM_writer_free(id_cs);
   }

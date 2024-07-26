@@ -389,28 +389,28 @@ int main(int argc, char *argv[])
                                       &pedge_ln_to_gn);
 
   for (int i_part = 0; i_part < n_part_domains; i_part++) {
-   PDM_free(pface_edge_idx[i_part]);
-   PDM_free(pface_edge    [i_part]);
-   PDM_free(pedge_vtx     [i_part]);
-   PDM_free(pedge_ln_to_gn[i_part]);
+    PDM_free(pface_edge_idx[i_part]);
+    PDM_free(pface_edge    [i_part]);
+    PDM_free(pedge_vtx     [i_part]);
+    PDM_free(pedge_ln_to_gn[i_part]);
   }
- PDM_free(pface_edge_idx);
- PDM_free(pface_edge    );
- PDM_free(pedge_vtx     );
- PDM_free(pedge_ln_to_gn);
- PDM_free(pn_edge);
+  PDM_free(pface_edge_idx);
+  PDM_free(pface_edge    );
+  PDM_free(pedge_vtx     );
+  PDM_free(pedge_ln_to_gn);
+  PDM_free(pn_edge);
 
- PDM_free(pn_cell);
- PDM_free(pn_face);
- PDM_free(pn_vtx);
- PDM_free(pcell_face);
- PDM_free(pcell_face_idx);
- PDM_free(pvtx_coord);
- PDM_free(pface_vtx);
- PDM_free(pface_vtx_idx);
- PDM_free(pcell_ln_to_gn);
- PDM_free(pface_ln_to_gn);
- PDM_free(pvtx_ln_to_gn);
+  PDM_free(pn_cell);
+  PDM_free(pn_face);
+  PDM_free(pn_vtx);
+  PDM_free(pcell_face);
+  PDM_free(pcell_face_idx);
+  PDM_free(pvtx_coord);
+  PDM_free(pface_vtx);
+  PDM_free(pface_vtx_idx);
+  PDM_free(pcell_ln_to_gn);
+  PDM_free(pface_ln_to_gn);
+  PDM_free(pvtx_ln_to_gn);
 
   PDM_multipart_free(mpart);
   PDM_dcube_gen_free(dcube);

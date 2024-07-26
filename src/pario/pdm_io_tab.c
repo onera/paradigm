@@ -512,7 +512,7 @@ void PDM_io_array_write_end
               }
             }
 
-           PDM_free(partition);
+            PDM_free(partition);
 
           }
 
@@ -586,26 +586,26 @@ void PDM_io_array_write_end
                                     (const void *) donnees_ecrit);
       }
       if (_n_partition_local == 1)
-       PDM_free(partitions[0]);
+        PDM_free(partitions[0]);
 
-     PDM_free(tab->partitions_locales);
-     PDM_free(tab);
+      PDM_free(tab->partitions_locales);
+      PDM_free(tab);
     }
   }
 
   /* Libération mémoire de la structure  */
 
- PDM_free(PDM_io_tabs);
+  PDM_free(PDM_io_tabs);
   PDM_io_tabs = NULL;
 
   /* Libération mémoire des tableaux de concatenation  */
 
   if (n_composantes_concatene != NULL)
-   PDM_free(n_composantes_concatene);
+    PDM_free(n_composantes_concatene);
   if (indirection_concatene != NULL)
-   PDM_free(indirection_concatene);
+    PDM_free(indirection_concatene);
   if (donnees_concatene != NULL)
-   PDM_free(donnees_concatene);
+    PDM_free(donnees_concatene);
 
 }
 
@@ -973,7 +973,7 @@ void PDM_io_array_read_end
               }
             }
 
-           PDM_free(partition);
+            PDM_free(partition);
 
           }
         }
@@ -982,27 +982,27 @@ void PDM_io_array_read_end
       /* Libération mémoire du tableau  */
 
       if (_n_partition_local == 1)
-       PDM_free(partitions[0]);
+        PDM_free(partitions[0]);
 
-     PDM_free(tab->partitions_locales);
-     PDM_free(tab);
+      PDM_free(tab->partitions_locales);
+      PDM_free(tab);
 
     }
   }
 
   /* Libération mémoire de la structure  */
 
- PDM_free(PDM_io_tabs);
+  PDM_free(PDM_io_tabs);
   PDM_io_tabs = NULL;
 
   /* Libération mémoire des tableaux de concatenation  */
 
   if (n_composantes_concatene != NULL)
-   PDM_free(n_composantes_concatene);
+    PDM_free(n_composantes_concatene);
   if (indirection_concatene != NULL)
-   PDM_free(indirection_concatene);
+    PDM_free(indirection_concatene);
   if (donnees_concatene != NULL)
-   PDM_free(donnees_concatene);
+    PDM_free(donnees_concatene);
 
 }
 

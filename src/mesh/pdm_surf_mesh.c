@@ -184,7 +184,7 @@ PDM_surf_mesh_t *mesh
     if (mesh->part != NULL) {
       for (int i = 0; i < mesh->n_part; i++)
         mesh->part[i] = PDM_surf_part_free(mesh->part[i]);
-     PDM_free(mesh->part);
+      PDM_free(mesh->part);
       mesh->part = NULL;
 
     }
@@ -192,10 +192,10 @@ PDM_surf_mesh_t *mesh
     mesh->interPartEdgeGraph = PDM_graph_bound_free (mesh->interPartEdgeGraph);
     mesh->interPartVtxGraph = PDM_graph_bound_free (mesh->interPartVtxGraph);
 
-   PDM_free(mesh->vtxPartBound);
-   PDM_free(mesh->edgePartBound);
+    PDM_free(mesh->vtxPartBound);
+    PDM_free(mesh->edgePartBound);
 
-   PDM_free(mesh);
+    PDM_free(mesh);
   }
 
   return NULL;
@@ -307,8 +307,8 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
     }
   }
 
- PDM_free(nHashTable);
- PDM_free(nIntEdgePart);
+  PDM_free(nHashTable);
+  PDM_free(nIntEdgePart);
 
   /*
    * Compute global numbering for inter partition boundary edges (intra processus)
@@ -417,9 +417,9 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
       hashTable[j+1] = -1;
     }
   }
- PDM_free(hashTable);
- PDM_free(hashTableIdx);
- PDM_free(nEdgeBoundPart);
+  PDM_free(hashTable);
+  PDM_free(hashTableIdx);
+  PDM_free(nEdgeBoundPart);
 
   /*
    * Update global numbering
@@ -544,7 +544,7 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
     edgeToSendN[i_rank1] += nDataToSend;
   }
 
- PDM_free(edgeWithoutNG);
+  PDM_free(edgeWithoutNG);
 
   /*
    * Receive keys from the others processes
@@ -609,7 +609,7 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
    }
   }
 
- PDM_free(dNHashTable);
+  PDM_free(dNHashTable);
 
   PDM_g_num_t *gNBoundPartEdge;
   PDM_malloc(gNBoundPartEdge, 1 * nRecvKey, PDM_g_num_t);
@@ -724,9 +724,9 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
     edgeToRecv[i*nDataToSend    ] = gNBoundPartEdge[i] + gNCurrentProcs[myRank];
   }
 
- PDM_free(nIntEdgeProcs);
- PDM_free(dHashTable);
- PDM_free(dHashTableIdx);
+  PDM_free(nIntEdgeProcs);
+  PDM_free(dHashTable);
+  PDM_free(dHashTableIdx);
 
   /*
    * Return to sender of results
@@ -742,9 +742,9 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
                 PDM__PDM_MPI_G_NUM,
                 mesh->comm);
 
- PDM_free(edgeToRecvN);
- PDM_free(edgeToRecvIdx);
- PDM_free(edgeToRecv);
+  PDM_free(edgeToRecvN);
+  PDM_free(edgeToRecvIdx);
+  PDM_free(edgeToRecv);
 
   /*
    * Copy data already computed (intra processus boundary partition)
@@ -810,13 +810,13 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
   PDM_MPI_Allreduce(&nGEdgeProc, &(mesh->nGEdge), 1,
                 PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, mesh->comm);
 
- PDM_free(edgePartCur);
- PDM_free(nKeyProcs);
- PDM_free(edgeToSendN);
- PDM_free(edgeToSendIdx);
- PDM_free(edgeToSend);
- PDM_free(gNBoundPartEdge);
- PDM_free(gNCurrentProcs);
+  PDM_free(edgePartCur);
+  PDM_free(nKeyProcs);
+  PDM_free(edgeToSendN);
+  PDM_free(edgeToSendIdx);
+  PDM_free(edgeToSend);
+  PDM_free(gNBoundPartEdge);
+  PDM_free(gNCurrentProcs);
 
 }
 
@@ -968,7 +968,7 @@ PDM_surf_mesh_t *mesh
     }
     PDM_array_reset_int(tagVtx, maxn_vtx, 0);
   }
- PDM_free(tagVtx);
+  PDM_free(tagVtx);
 
   /*
    * Receive keys from the others processes
@@ -1034,8 +1034,8 @@ PDM_surf_mesh_t *mesh
     }
   }
 
- PDM_free(dNHashTable);
- PDM_free(nKeyProcs);
+  PDM_free(dNHashTable);
+  PDM_free(nKeyProcs);
 
   /*
    * Look for
@@ -1126,9 +1126,9 @@ PDM_surf_mesh_t *mesh
     }
   }
 
- PDM_free(dHashTable);
- PDM_free(dHashTableIdx);
- PDM_free(_cpVtxToRecv);
+  PDM_free(dHashTable);
+  PDM_free(dHashTableIdx);
+  PDM_free(_cpVtxToRecv);
 
   PDM_MPI_Alltoallv(vtxToRecv,
                 vtxToRecvN,
@@ -1140,9 +1140,9 @@ PDM_surf_mesh_t *mesh
                 PDM__PDM_MPI_G_NUM,
                 mesh->comm);
 
- PDM_free(vtxToRecv);
- PDM_free(vtxToRecvN);
- PDM_free(vtxToRecvIdx);
+  PDM_free(vtxToRecv);
+  PDM_free(vtxToRecvN);
+  PDM_free(vtxToRecvIdx);
 
   int **nConnectedElt;
   PDM_malloc(nConnectedElt,mesh->n_part,int *);
@@ -1226,12 +1226,12 @@ PDM_surf_mesh_t *mesh
 
   for (int i = 0; i < n_part; i++) {
     nEltPartBound[i] = 0;
-   PDM_free(nConnectedElt[i]);
-   PDM_free(nOfferElt[i]);
+    PDM_free(nConnectedElt[i]);
+    PDM_free(nOfferElt[i]);
   }
 
- PDM_free(nOfferElt);
- PDM_free(nConnectedElt);
+  PDM_free(nOfferElt);
+  PDM_free(nConnectedElt);
 
   for (int i = 0; i < lComm; i++) {
 
@@ -1288,10 +1288,10 @@ PDM_surf_mesh_t *mesh
     }
   }
 
- PDM_free(nEltPartBound);
- PDM_free(vtx_to_sendN);
- PDM_free(vtx_to_sendIdx);
- PDM_free(vtx_to_send);
+  PDM_free(nEltPartBound);
+  PDM_free(vtx_to_sendN);
+  PDM_free(vtx_to_sendIdx);
+  PDM_free(vtx_to_send);
 
 }
 
@@ -1440,8 +1440,8 @@ PDM_surf_mesh_build_ghost_element
       }
     }
 
-   PDM_free(part->vtxEdgeIdx);
-   PDM_free(part->vtxEdge);
+    PDM_free(part->vtxEdgeIdx);
+    PDM_free(part->vtxEdge);
 
     part->vtxEdgeIdx = newVtxEdgeIdx;
     part->vtxEdge = newVtxEdge;
@@ -1462,7 +1462,7 @@ PDM_surf_mesh_build_ghost_element
       }
     }
 
-   PDM_free(cptVtxEdge);
+    PDM_free(cptVtxEdge);
   }
 }
 
@@ -1597,7 +1597,7 @@ PDM_surf_mesh_t *mesh
 
   PDM_graph_bound_exch_data_wait (mesh->interPartVtxGraph);
 
- PDM_free(lEdgeGhost);
+  PDM_free(lEdgeGhost);
 
   /*
    * Compute caracteristic length with local contribution
@@ -1646,9 +1646,9 @@ PDM_surf_mesh_t *mesh
    */
 
   for (int i = 0; i < n_part; i++) {
-   PDM_free(lEdge[i]);
+    PDM_free(lEdge[i]);
   }
- PDM_free(lEdge);
+  PDM_free(lEdge);
 }
 
 
@@ -1869,7 +1869,7 @@ PDM_surf_mesh_is_plane_surface
       }
 
     }
-   PDM_free(normalSums);
+    PDM_free(normalSums);
   }
   else {
     isPlane = 0;
@@ -1925,9 +1925,9 @@ PDM_surf_mesh_is_plane_surface
 
     PDM_part_to_block_free (ptb);
 
-   PDM_free(_gnums);
-   PDM_free(_n_elts);
-   PDM_free(_coords);
+    PDM_free(_gnums);
+    PDM_free(_n_elts);
+    PDM_free(_coords);
 
     for (int j = 0; j < n_elt_block; j++) {
       for (int k = 0; k < 3; k++) {
@@ -1935,7 +1935,7 @@ PDM_surf_mesh_is_plane_surface
       }
     }
 
-   PDM_free(_dcoords);
+    PDM_free(_dcoords);
 
     PDM_MPI_Allreduce (center, barycenter, 3,
                        PDM__PDM_MPI_REAL, PDM_MPI_SUM, mesh->comm);

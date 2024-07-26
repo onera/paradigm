@@ -461,19 +461,19 @@ _gen_pmn
                                                  vtx_g_num);
 
   for (int i_section = 0; i_section < n_section; i_section++) {
-   PDM_free(n_cell         [i_section]);
-   PDM_free(cell_vtx       [i_section]);
-   PDM_free(cell_g_num     [i_section]);
-   PDM_free(cell_parent_num[i_section]);
+    PDM_free(n_cell         [i_section]);
+    PDM_free(cell_vtx       [i_section]);
+    PDM_free(cell_g_num     [i_section]);
+    PDM_free(cell_parent_num[i_section]);
   }
 
- PDM_free(n_cell         );
- PDM_free(cell_vtx       );
- PDM_free(cell_g_num     );
- PDM_free(cell_parent_num);
- PDM_free(n_vtx          );
- PDM_free(vtx_coord      );
- PDM_free(vtx_g_num      );
+  PDM_free(n_cell         );
+  PDM_free(cell_vtx       );
+  PDM_free(cell_g_num     );
+  PDM_free(cell_parent_num);
+  PDM_free(n_vtx          );
+  PDM_free(vtx_coord      );
+  PDM_free(vtx_g_num      );
 
   return pmn;
 }
@@ -730,9 +730,9 @@ int main(int argc, char *argv[])
   PDM_part_to_part_iexch_wait(ptp, request);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
-   PDM_free(send_field[i_part]);
+    PDM_free(send_field[i_part]);
   }
- PDM_free(send_field);
+  PDM_free(send_field);
 
 
   double lmax_err = 0.;
@@ -833,15 +833,15 @@ int main(int argc, char *argv[])
                                         3,
                                         field_name,
                                         field_value);
-     PDM_free(exact);
-     PDM_free(interp);
-     PDM_free(location);
-     PDM_free(proj);
+      PDM_free(exact);
+      PDM_free(interp);
+      PDM_free(location);
+      PDM_free(proj);
     }
 
-   PDM_free(recv_field[i_part]);
+    PDM_free(recv_field[i_part]);
   }
- PDM_free(recv_field);
+  PDM_free(recv_field);
 
   double gmax_err;
   PDM_MPI_Allreduce(&lmax_err, &gmax_err, 1, PDM_MPI_DOUBLE,

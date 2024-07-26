@@ -310,8 +310,8 @@ main
     }
 
     t2 = PDM_MPI_Wtime();
-   PDM_free(hilbert_box_codes);
-   PDM_free(box_order);
+    PDM_free(hilbert_box_codes);
+    PDM_free(box_order);
 
     printf("Hilbert box times : %12.5e \n", t2 - t1);
 
@@ -326,8 +326,8 @@ main
     PDM_order_array(n_pts,     sizeof(PDM_g_num_t), order, pts_g_num);
     t2 = PDM_MPI_Wtime();
     printf("Hilbert times : %12.5e \n", t2 - t1);
-   PDM_free(hilbert_codes);
-   PDM_free(order);
+    PDM_free(hilbert_codes);
+    PDM_free(order);
 
     for(int i = 0; i < n_pts; ++i) {
       pts_g_num[i] = i + 1;
@@ -414,11 +414,11 @@ main
     printf("PDM_hilbert_build_rank_index : %12.5e \n", t2 - t1);
     // PDM_log_trace_array_double(rank_index, n_part, "rank_index :: ");
 
-   PDM_free(rank_index);
-   PDM_free(expli_box_codes);
-   PDM_free(expli_box_extents);
-   PDM_free(blk_box_center);
-   PDM_free(weight);
+    PDM_free(rank_index);
+    PDM_free(expli_box_codes);
+    PDM_free(expli_box_extents);
+    PDM_free(blk_box_center);
+    PDM_free(weight);
   }
 
 
@@ -553,9 +553,9 @@ main
       box_pts[idx_write] = ptree->new_to_old[ipt];
     }
   }
- PDM_free(pts_box_idx);
- PDM_free(pts_box    );
- PDM_free(box_pts_n    );
+  PDM_free(pts_box_idx);
+  PDM_free(pts_box    );
+  PDM_free(box_pts_n    );
 
   t3 = PDM_MPI_Wtime();
   printf("new : build %12.5es, sollicitate %12.5es, total %12.5es\n", t2-t1, t3-t2, t3-t1);
@@ -609,10 +609,10 @@ main
 
     printf("n_err = %d\n", n_err);
   }
- PDM_free(box_pts_idx2);
- PDM_free(box_pts2);
- PDM_free(box_pts_idx);
- PDM_free(box_pts);
+  PDM_free(box_pts_idx2);
+  PDM_free(box_pts2);
+  PDM_free(box_pts_idx);
+  PDM_free(box_pts);
 
   PDM_point_tree_seq_free(ptree);
   PDM_point_tree_seq_free(ptree2);
@@ -641,10 +641,10 @@ main
                         box_g_num);
   }
 
- PDM_free(pts_coord);
- PDM_free(pts_g_num);
- PDM_free(box_extents);
- PDM_free(box_g_num);
+  PDM_free(pts_coord);
+  PDM_free(pts_g_num);
+  PDM_free(box_extents);
+  PDM_free(box_g_num);
 
 
   PDM_MPI_Finalize ();

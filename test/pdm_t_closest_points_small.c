@@ -223,10 +223,10 @@ main
   }
 
   
- PDM_free(expected_closest_gnum);
- PDM_free(expected_closest_dist);
- PDM_free(closest_src_gnum);
- PDM_free(closest_src_dist);
+  PDM_free(expected_closest_gnum);
+  PDM_free(expected_closest_dist);
+  PDM_free(closest_src_gnum);
+  PDM_free(closest_src_dist);
 
   PDM_MPI_Barrier (PDM_MPI_COMM_WORLD);
   PDM_MPI_Finalize ();

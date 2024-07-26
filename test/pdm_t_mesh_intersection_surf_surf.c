@@ -312,7 +312,7 @@ _generate_surface_mesh
   PDM_multipart_dmesh_nodal_set(mpart, 0, dmn);
   PDM_multipart_compute(mpart);
 
- PDM_free(n_part_domains);
+  PDM_free(n_part_domains);
 
 
   *_mpart = mpart;
@@ -699,15 +699,15 @@ char *argv[]
     PDM_MPI_Barrier(comm);
 
     for (int ipart = 0; ipart < n_part; ipart++) {
-     PDM_free(pelt_a_elt_b_n[ipart]);
+      PDM_free(pelt_a_elt_b_n[ipart]);
     }
-   PDM_free(pelt_a_elt_b_n     );
-   PDM_free(pelt_a_elt_b_volume);
+    PDM_free(pelt_a_elt_b_n     );
+    PDM_free(pelt_a_elt_b_volume);
 
     for (int ipart = 0; ipart < n_part; ipart++) {
-     PDM_free(pelt_b_elt_a_volume[ipart]);
+      PDM_free(pelt_b_elt_a_volume[ipart]);
     }
-   PDM_free(pelt_b_elt_a_volume);
+    PDM_free(pelt_b_elt_a_volume);
 
 
     PDM_part_to_part_free(ptp);

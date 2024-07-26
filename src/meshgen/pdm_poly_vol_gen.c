@@ -1319,8 +1319,8 @@ PDM_poly_vol_gen
   }
 
 
- PDM_free(distrib_vtx);
- PDM_free(distrib_face);
- PDM_free(distrib_cell);
- PDM_free(distrib_face_lim);
+  PDM_free(distrib_vtx);
+  PDM_free(distrib_face);
+  PDM_free(distrib_cell);
+  PDM_free(distrib_face_lim);
 }

@@ -227,7 +227,7 @@ long PDM_file_seq_tell(PDM_file_seq_t *fichier)
 
 void PDM_file_seq_close(PDM_file_seq_t *fichier)
 {
- PDM_free(fichier->nom);
+  PDM_free(fichier->nom);
   fclose(fichier->fichier);
 }
 

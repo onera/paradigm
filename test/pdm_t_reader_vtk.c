@@ -251,7 +251,7 @@ int main(int argc, char *argv[])
                   (void ***) &pvtx_field[i]);
 
 
-     PDM_free(dvtx_field_value[i]);
+      PDM_free(dvtx_field_value[i]);
     }
     PDM_block_to_part_free(btp);
 
@@ -324,9 +324,9 @@ int main(int argc, char *argv[])
                             id_var_vtx[i]);
 
         for (int j = 0; j < n_part; j++) {
-         PDM_free(val_vtx[j]);
+          PDM_free(val_vtx[j]);
         }
-       PDM_free(val_vtx);
+        PDM_free(val_vtx);
       }
 
 
@@ -334,7 +334,7 @@ int main(int argc, char *argv[])
 
       PDM_writer_free(wrt);
 
-     PDM_free(id_var_vtx);
+      PDM_free(id_var_vtx);
     }
 
 
@@ -436,22 +436,22 @@ int main(int argc, char *argv[])
     // }
 
 
-   PDM_free(pn_vtx);
-   PDM_free(pvtx_ln_to_gn);
+    PDM_free(pn_vtx);
+    PDM_free(pvtx_ln_to_gn);
 
     for (int i = 0; i < n_vtx_field; i++) {
       for (int j = 0; j < n_part; j++) {
-       PDM_free(pvtx_field[i][j]);
+        PDM_free(pvtx_field[i][j]);
       }
-     PDM_free(pvtx_field[i]);
-     PDM_free(vtx_field_name  [i]);
+      PDM_free(pvtx_field[i]);
+      PDM_free(vtx_field_name  [i]);
     }
-   PDM_free(pvtx_field);
+    PDM_free(pvtx_field);
 
-   PDM_free(vtx_field_name  );
-   PDM_free(vtx_field_type  );
-   PDM_free(vtx_field_stride);
-   PDM_free(dvtx_field_value);
+    PDM_free(vtx_field_name  );
+    PDM_free(vtx_field_type  );
+    PDM_free(vtx_field_stride);
+    PDM_free(dvtx_field_value);
   }
 
 

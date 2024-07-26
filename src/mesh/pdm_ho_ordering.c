@@ -559,7 +559,7 @@ _ordering_free
   if (ord->user_to_ijk != NULL)PDM_free(ord->user_to_ijk);
   if (ord->ijk_to_user != NULL)PDM_free(ord->ijk_to_user);
 
- PDM_free(ord);
+  PDM_free(ord);
 }
 
 static void
@@ -596,8 +596,8 @@ _ho_ordering_free
 
   }
 
- PDM_free(hoo->name);
- PDM_free(hoo);
+  PDM_free(hoo->name);
+  PDM_free(hoo);
 }
 
 
@@ -901,7 +901,7 @@ void
     _ho_ordering_free (ho_orderings[i]);
   }
 
- PDM_free(ho_orderings);
+  PDM_free(ho_orderings);
 }
 
 

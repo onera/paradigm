@@ -273,7 +273,7 @@ _cube_mesh
                                        dface_group_idx,
                                        dface_group);
 
- PDM_free(dcell_part);
+  PDM_free(dcell_part);
 
   PDM_dcube_gen_free(dcube);
 
@@ -1031,10 +1031,10 @@ int main(int argc, char *argv[])
                                           &projected_coord);
 
     //assert (n_located == 0 && n_unlocated == n_cell);
-   PDM_free(cell_center2[ipart]);
-   PDM_free(cell_volume2[ipart]);
-   PDM_free(cell_center1[ipart]);
-   PDM_free(cell_volume1[ipart]);
+    PDM_free(cell_center2[ipart]);
+    PDM_free(cell_volume2[ipart]);
+    PDM_free(cell_center1[ipart]);
+    PDM_free(cell_volume1[ipart]);
 
   }
 
@@ -1144,9 +1144,9 @@ int main(int argc, char *argv[])
   PDM_part_to_part_irecv_wait (ptp, recv_request);
 
   for (int i = 0; i < n_part; i++) {
-   PDM_free(gnum1_gnum2_data[i]);
+    PDM_free(gnum1_gnum2_data[i]);
   }
- PDM_free(gnum1_gnum2_data);
+  PDM_free(gnum1_gnum2_data);
 
 
   PDM_g_num_t **ptp2_s_data;
@@ -1189,9 +1189,9 @@ int main(int argc, char *argv[])
   PDM_part_to_part_irecv_wait (ptp2, recv_request);
 
   for (int i = 0; i < n_part; i++) {
-   PDM_free(ptp2_s_data[i]);
+    PDM_free(ptp2_s_data[i]);
   }
- PDM_free(ptp2_s_data);
+  PDM_free(ptp2_s_data);
 
 
   for (int i = 0; i < n_part; i++) {
@@ -1358,34 +1358,34 @@ int main(int argc, char *argv[])
   }
 
   for (int i = 0; i < n_part; i++) {
-   PDM_free(gnum_elt1_recv[i]);
-   PDM_free(gnum_elt2_recv[i]);
-   PDM_free(location_idx[i]);
+    PDM_free(gnum_elt1_recv[i]);
+    PDM_free(gnum_elt2_recv[i]);
+    PDM_free(location_idx[i]);
   }
 
- PDM_free(gnum_elt1_recv);
- PDM_free(gnum_elt2_recv);
+  PDM_free(gnum_elt1_recv);
+  PDM_free(gnum_elt2_recv);
 
- PDM_free(cell_center1);
- PDM_free(cell_volume1);
- PDM_free(cell_center2);
- PDM_free(cell_volume2);
- PDM_free(location_idx);
- PDM_free(location);
+  PDM_free(cell_center1);
+  PDM_free(cell_volume1);
+  PDM_free(cell_center2);
+  PDM_free(cell_volume2);
+  PDM_free(location_idx);
+  PDM_free(location);
 
- PDM_free(elt_pts_inside_idx);
- PDM_free(points_gnum);
- PDM_free(points_coords); 
- PDM_free(points_uvw); 
- PDM_free(points_weights_idx);
- PDM_free(points_weights);
- PDM_free(points_dist2); 
- PDM_free(points_projected_coords);
+  PDM_free(elt_pts_inside_idx);
+  PDM_free(points_gnum);
+  PDM_free(points_coords); 
+  PDM_free(points_uvw); 
+  PDM_free(points_weights_idx);
+  PDM_free(points_weights);
+  PDM_free(points_dist2); 
+  PDM_free(points_projected_coords);
 
- PDM_free(gnum_elt1);
- PDM_free(n_elt1);
- PDM_free(gnum_elt2);
- PDM_free(n_elt2);
+  PDM_free(gnum_elt1);
+  PDM_free(n_elt1);
+  PDM_free(gnum_elt2);
+  PDM_free(n_elt2);
 
   PDM_mesh_location_free (id_loc1);
 

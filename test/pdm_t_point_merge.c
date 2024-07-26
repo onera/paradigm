@@ -348,8 +348,8 @@ _dmesh_extract_from_group_id
                  (const PDM_g_num_t **) &pextract_vtx_ln_to_gn,
                                         &tmp_pextract_vtx_coord);
   double* pextract_vtx_coord = tmp_pextract_vtx_coord[0];
- PDM_free(tmp_pextract_vtx_coord);
- PDM_free(extract_vtx_distribution);
+  PDM_free(tmp_pextract_vtx_coord);
+  PDM_free(extract_vtx_distribution);
 
   if (post) {
     char filename[999];
@@ -366,13 +366,13 @@ _dmesh_extract_from_group_id
   }
 
   //PDM_free(dextract_face_vtx);
- PDM_free(pextract_vtx_ln_to_gn);
- PDM_free(pextract_face_vtx_idx);
- PDM_free(pextract_face_vtx    );
- PDM_free(pextract_vtx_coord    );
+  PDM_free(pextract_vtx_ln_to_gn);
+  PDM_free(pextract_face_vtx_idx);
+  PDM_free(pextract_face_vtx    );
+  PDM_free(pextract_vtx_coord    );
 
- PDM_free(distrib_face_extract);
- PDM_free(extract_face_ln_to_gn);
+  PDM_free(distrib_face_extract);
+  PDM_free(extract_face_ln_to_gn);
 
   PDM_dmesh_extract_free(dme);
 
@@ -721,38 +721,38 @@ int main(int argc, char *argv[])
                                   &itrf_gnum_opp);
 
   for(int i_itrf = 0; i_itrf < n_g_interface; ++i_itrf) {
-   PDM_free(itrf_gnum_cur[i_itrf]);
-   PDM_free(itrf_gnum_opp[i_itrf]);
+    PDM_free(itrf_gnum_cur[i_itrf]);
+    PDM_free(itrf_gnum_opp[i_itrf]);
   }
 
- PDM_free(interface_cloud_pair);
- PDM_free(dn_vtx_itrf);
- PDM_free(itrf_gnum_cur);
- PDM_free(itrf_gnum_opp);
+  PDM_free(interface_cloud_pair);
+  PDM_free(dn_vtx_itrf);
+  PDM_free(itrf_gnum_cur);
+  PDM_free(itrf_gnum_opp);
 
   PDM_points_merge_free(pts_merge);
 
- PDM_free(dextract_m1_face_edge_idx   );
- PDM_free(dextract_m1_face_edge       );
- PDM_free(dextract_m1_face_vtx        );
- PDM_free(dextract_m1_edge_vtx        );
- PDM_free(dextract_m1_face_parent_gnum);
- PDM_free(dextract_m1_edge_parent_gnum);
- PDM_free(dextract_m1_vtx_parent_gnum );
- PDM_free(dextract_m1_vtx_coord       );
+  PDM_free(dextract_m1_face_edge_idx   );
+  PDM_free(dextract_m1_face_edge       );
+  PDM_free(dextract_m1_face_vtx        );
+  PDM_free(dextract_m1_edge_vtx        );
+  PDM_free(dextract_m1_face_parent_gnum);
+  PDM_free(dextract_m1_edge_parent_gnum);
+  PDM_free(dextract_m1_vtx_parent_gnum );
+  PDM_free(dextract_m1_vtx_coord       );
 
- PDM_free(dextract_m2_face_edge_idx   );
- PDM_free(dextract_m2_face_edge       );
- PDM_free(dextract_m2_face_vtx        );
- PDM_free(dextract_m2_edge_vtx        );
- PDM_free(dextract_m2_face_parent_gnum);
- PDM_free(dextract_m2_edge_parent_gnum);
- PDM_free(dextract_m2_vtx_parent_gnum );
- PDM_free(dextract_m2_vtx_coord       );
+  PDM_free(dextract_m2_face_edge_idx   );
+  PDM_free(dextract_m2_face_edge       );
+  PDM_free(dextract_m2_face_vtx        );
+  PDM_free(dextract_m2_edge_vtx        );
+  PDM_free(dextract_m2_face_parent_gnum);
+  PDM_free(dextract_m2_edge_parent_gnum);
+  PDM_free(dextract_m2_vtx_parent_gnum );
+  PDM_free(dextract_m2_vtx_coord       );
 
 
- PDM_free(dchar_lenght_m1);
- PDM_free(dchar_lenght_m2);
+  PDM_free(dchar_lenght_m1);
+  PDM_free(dchar_lenght_m2);
 
 
   PDM_dmesh_free(dm1);

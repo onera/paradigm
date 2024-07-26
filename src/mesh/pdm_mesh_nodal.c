@@ -74,21 +74,21 @@ _vtx_free
 
     if ((vtx->_coords != NULL && vtx->owner == PDM_OWNERSHIP_KEEP) ||
          (vtx->coords != NULL && vtx->is_coords_get == 0)) {
-     PDM_free(vtx->_coords);
+      PDM_free(vtx->_coords);
       vtx->_coords = NULL;
     }
 
     if (vtx->_numparent != NULL && vtx->owner == PDM_OWNERSHIP_KEEP) {
-     PDM_free(vtx->_numparent);
+      PDM_free(vtx->_numparent);
       vtx->_numparent = NULL;
     }
 
     if (vtx->_numabs != NULL && vtx->owner == PDM_OWNERSHIP_KEEP) {
-     PDM_free(vtx->_numabs);
+      PDM_free(vtx->_numabs);
       vtx->_numabs = NULL;
     }
 
-   PDM_free(vtx);
+    PDM_free(vtx);
   }
   return NULL;
 }
@@ -226,13 +226,13 @@ _block_std_free_partial
       for (int i = 0; i < _block_std->n_part; i++) {
         if (_block_std->_connec[i] != NULL) {
           if (_block_std->owner == PDM_OWNERSHIP_KEEP) {
-           PDM_free(_block_std->_connec[i]);
+            PDM_free(_block_std->_connec[i]);
           }
           _block_std->_connec[i] = NULL;
         }
       }
     }
-   PDM_free(_block_std->_connec);
+    PDM_free(_block_std->_connec);
     _block_std->_connec = NULL;
   }
 
@@ -241,13 +241,13 @@ _block_std_free_partial
       for (int i = 0; i < _block_std->n_part; i++) {
         if (_block_std->_numabs[i] != NULL) {
           if (_block_std->owner == PDM_OWNERSHIP_KEEP) {
-           PDM_free(_block_std->_numabs[i]);
+            PDM_free(_block_std->_numabs[i]);
           }
           _block_std->_numabs[i] = NULL;
         }
       }
     }
-   PDM_free(_block_std->_numabs);
+    PDM_free(_block_std->_numabs);
     _block_std->_numabs = NULL;
   }
 
@@ -279,7 +279,7 @@ _block_std_free
   _block_std_free_partial(_block_std);
 
   if (_block_std->n_elt != NULL) {
-   PDM_free(_block_std->n_elt);
+    PDM_free(_block_std->n_elt);
     _block_std->n_elt = NULL;
   }
 
@@ -287,11 +287,11 @@ _block_std_free
     if (_block_std->numabs_int_owner == PDM_OWNERSHIP_KEEP) {
       for (int j = 0; j < _block_std->n_part; j++) {
         if (_block_std->numabs_int[j] != NULL) {
-         PDM_free(_block_std->numabs_int[j]);
+          PDM_free(_block_std->numabs_int[j]);
         }
       }
     }
-   PDM_free(_block_std->numabs_int);
+    PDM_free(_block_std->numabs_int);
     _block_std->numabs_int = NULL;
   }
 
@@ -299,16 +299,16 @@ _block_std_free
     if (_block_std->cell_centers_owner == PDM_OWNERSHIP_KEEP) {
       for (int j = 0; j < _block_std->n_part; j++) {
         if (_block_std->cell_centers[j] != NULL) {
-         PDM_free(_block_std->cell_centers[j]);
+          PDM_free(_block_std->cell_centers[j]);
         }
       }
     }
-   PDM_free(_block_std->cell_centers);
+    PDM_free(_block_std->cell_centers);
     _block_std->cell_centers = NULL;
   }
 
   if (_block_std->cell_centers_to_compute != NULL) {
-   PDM_free(_block_std->cell_centers_to_compute);
+    PDM_free(_block_std->cell_centers_to_compute);
     _block_std->cell_centers_to_compute = NULL;
   }
 
@@ -316,11 +316,11 @@ _block_std_free
     if (_block_std->owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_std->n_part; i++) {
         if (_block_std->_parent_num[i] != NULL)
-         PDM_free(_block_std->_parent_num[i]);
+          PDM_free(_block_std->_parent_num[i]);
         _block_std->_parent_num[i] = NULL;
       }
     }
-   PDM_free(_block_std->_parent_num);
+    PDM_free(_block_std->_parent_num);
     _block_std->_parent_num = NULL;
   }
 
@@ -328,15 +328,15 @@ _block_std_free
     if (_block_std->owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_std->n_part; i++) {
         if (_block_std->_parent_entity_g_num[i] != NULL)
-         PDM_free(_block_std->_parent_entity_g_num[i]);
+          PDM_free(_block_std->_parent_entity_g_num[i]);
         _block_std->_parent_entity_g_num[i] = NULL;
       }
     }
-   PDM_free(_block_std->_parent_entity_g_num);
+    PDM_free(_block_std->_parent_entity_g_num);
     _block_std->_parent_entity_g_num = NULL;
   }
 
- PDM_free(_block_std);
+  PDM_free(_block_std);
   return NULL;
 }
 
@@ -361,11 +361,11 @@ _block_poly2d_free_partial
     if (_block_poly2d->owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_poly2d->n_part; i++) {
         if (_block_poly2d->_connec_idx[i] != NULL)
-         PDM_free(_block_poly2d->_connec_idx[i]);
+          PDM_free(_block_poly2d->_connec_idx[i]);
         _block_poly2d->_connec_idx[i] = NULL;
       }
     }
-   PDM_free(_block_poly2d->_connec_idx);
+    PDM_free(_block_poly2d->_connec_idx);
     _block_poly2d->_connec_idx = NULL;
   }
 
@@ -373,11 +373,11 @@ _block_poly2d_free_partial
     if (_block_poly2d->owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_poly2d->n_part; i++) {
         if (_block_poly2d->_connec[i] != NULL)
-         PDM_free(_block_poly2d->_connec[i]);
+          PDM_free(_block_poly2d->_connec[i]);
         _block_poly2d->_connec[i] = NULL;
       }
     }
-   PDM_free(_block_poly2d->_connec);
+    PDM_free(_block_poly2d->_connec);
     _block_poly2d->_connec = NULL;
   }
 
@@ -385,11 +385,11 @@ _block_poly2d_free_partial
     if (_block_poly2d->owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_poly2d->n_part; i++) {
         if (_block_poly2d->_numabs[i] != NULL)
-         PDM_free(_block_poly2d->_numabs[i]);
+          PDM_free(_block_poly2d->_numabs[i]);
         _block_poly2d->_numabs[i] = NULL;
       }
     }
-   PDM_free(_block_poly2d->_numabs);
+    PDM_free(_block_poly2d->_numabs);
     _block_poly2d->_numabs = NULL;
   }
 
@@ -416,7 +416,7 @@ _block_poly2d_free
   _block_poly2d_free_partial(_block_poly2d);
 
   if (_block_poly2d->n_elt != NULL) {
-   PDM_free(_block_poly2d->n_elt);
+    PDM_free(_block_poly2d->n_elt);
     _block_poly2d->n_elt = NULL;
   }
 
@@ -425,11 +425,11 @@ _block_poly2d_free
 
       for (int j = 0; j < _block_poly2d->n_part; j++) {
         if (_block_poly2d->numabs_int[j] != NULL) {
-         PDM_free(_block_poly2d->numabs_int[j]);
+          PDM_free(_block_poly2d->numabs_int[j]);
         }
       }
     }
-   PDM_free(_block_poly2d->numabs_int);
+    PDM_free(_block_poly2d->numabs_int);
     _block_poly2d->numabs_int = NULL;
   }
 
@@ -437,16 +437,16 @@ _block_poly2d_free
     if (_block_poly2d->cell_centers_owner == PDM_OWNERSHIP_KEEP) {
       for (int j = 0; j < _block_poly2d->n_part; j++) {
         if (_block_poly2d->cell_centers[j] != NULL) {
-         PDM_free(_block_poly2d->cell_centers[j]);
+          PDM_free(_block_poly2d->cell_centers[j]);
         }
       }
     }
-   PDM_free(_block_poly2d->cell_centers);
+    PDM_free(_block_poly2d->cell_centers);
     _block_poly2d->cell_centers = NULL;
   }
 
   if (_block_poly2d->cell_centers_to_compute != NULL) {
-   PDM_free(_block_poly2d->cell_centers_to_compute);
+    PDM_free(_block_poly2d->cell_centers_to_compute);
     _block_poly2d->cell_centers_to_compute = NULL;
   }
 
@@ -454,15 +454,15 @@ _block_poly2d_free
     if (_block_poly2d->owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_poly2d->n_part; i++) {
         if (_block_poly2d->_parent_num[i] != NULL)
-         PDM_free(_block_poly2d->_parent_num[i]);
+          PDM_free(_block_poly2d->_parent_num[i]);
         _block_poly2d->_parent_num[i] = NULL;
       }
     }
-   PDM_free(_block_poly2d->_parent_num);
+    PDM_free(_block_poly2d->_parent_num);
     _block_poly2d->_parent_num = NULL;
   }
 
- PDM_free(_block_poly2d);
+  PDM_free(_block_poly2d);
 
   return NULL;
 }
@@ -488,11 +488,11 @@ _block_poly3d_free_partial
     if (_block_poly3d->owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_poly3d->n_part; i++) {
         if (_block_poly3d->_facvtx_idx[i] != NULL)
-         PDM_free(_block_poly3d->_facvtx_idx[i]);
+          PDM_free(_block_poly3d->_facvtx_idx[i]);
         _block_poly3d->_facvtx_idx[i] = NULL;
       }
     }
-   PDM_free(_block_poly3d->_facvtx_idx);
+    PDM_free(_block_poly3d->_facvtx_idx);
     _block_poly3d->_facvtx_idx = NULL;
   }
 
@@ -500,11 +500,11 @@ _block_poly3d_free_partial
     if (_block_poly3d->owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_poly3d->n_part; i++) {
         if (_block_poly3d->_facvtx[i] != NULL)
-         PDM_free(_block_poly3d->_facvtx[i]);
+          PDM_free(_block_poly3d->_facvtx[i]);
         _block_poly3d->_facvtx[i] = NULL;
       }
     }
-   PDM_free(_block_poly3d->_facvtx);
+    PDM_free(_block_poly3d->_facvtx);
     _block_poly3d->_facvtx = NULL;
   }
 
@@ -512,11 +512,11 @@ _block_poly3d_free_partial
     if (_block_poly3d->owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_poly3d->n_part; i++) {
         if (_block_poly3d->_cellfac_idx[i] != NULL)
-         PDM_free(_block_poly3d->_cellfac_idx[i]);
+          PDM_free(_block_poly3d->_cellfac_idx[i]);
         _block_poly3d->_cellfac_idx[i] = NULL;
       }
     }
-   PDM_free(_block_poly3d->_cellfac_idx);
+    PDM_free(_block_poly3d->_cellfac_idx);
     _block_poly3d->_cellfac_idx = NULL;
   }
 
@@ -524,11 +524,11 @@ _block_poly3d_free_partial
     if (_block_poly3d->owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_poly3d->n_part; i++) {
         if (_block_poly3d->_cellfac[i] != NULL)
-         PDM_free(_block_poly3d->_cellfac[i]);
+          PDM_free(_block_poly3d->_cellfac[i]);
         _block_poly3d->_cellfac[i] = NULL;
       }
     }
-   PDM_free(_block_poly3d->_cellfac);
+    PDM_free(_block_poly3d->_cellfac);
     _block_poly3d->_cellfac = NULL;
   }
 
@@ -536,11 +536,11 @@ _block_poly3d_free_partial
     if (_block_poly3d->owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_poly3d->n_part; i++) {
         if (_block_poly3d->_cellvtx_idx[i] != NULL)
-         PDM_free(_block_poly3d->_cellvtx_idx[i]);
+          PDM_free(_block_poly3d->_cellvtx_idx[i]);
         _block_poly3d->_cellvtx_idx[i] = NULL;
       }
     }
-   PDM_free(_block_poly3d->_cellvtx_idx);
+    PDM_free(_block_poly3d->_cellvtx_idx);
     _block_poly3d->_cellvtx_idx = NULL;
   }
 
@@ -548,11 +548,11 @@ _block_poly3d_free_partial
     if (_block_poly3d->owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_poly3d->n_part; i++) {
         if (_block_poly3d->_cellvtx[i] != NULL)
-         PDM_free(_block_poly3d->_cellvtx[i]);
+          PDM_free(_block_poly3d->_cellvtx[i]);
         _block_poly3d->_cellvtx[i] = NULL;
       }
     }
-   PDM_free(_block_poly3d->_cellvtx);
+    PDM_free(_block_poly3d->_cellvtx);
     _block_poly3d->_cellvtx = NULL;
   }
 
@@ -560,11 +560,11 @@ _block_poly3d_free_partial
     if (_block_poly3d->owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_poly3d->n_part; i++) {
         if (_block_poly3d->_numabs[i] != NULL)
-         PDM_free(_block_poly3d->_numabs[i]);
+          PDM_free(_block_poly3d->_numabs[i]);
         _block_poly3d->_numabs[i] = NULL;
       }
     }
-   PDM_free(_block_poly3d->_numabs);
+    PDM_free(_block_poly3d->_numabs);
     _block_poly3d->_numabs = NULL;
   }
 
@@ -572,11 +572,11 @@ _block_poly3d_free_partial
     if (_block_poly3d->owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_poly3d->n_part; i++) {
         if (_block_poly3d->_face_ln_to_gn[i] != NULL)
-         PDM_free(_block_poly3d->_face_ln_to_gn[i]);
+          PDM_free(_block_poly3d->_face_ln_to_gn[i]);
         _block_poly3d->_face_ln_to_gn[i] = NULL;
       }
     }
-   PDM_free(_block_poly3d->_face_ln_to_gn);
+    PDM_free(_block_poly3d->_face_ln_to_gn);
     _block_poly3d->_face_ln_to_gn = NULL;
   }
 }
@@ -602,12 +602,12 @@ _block_poly3d_free
   _block_poly3d_free_partial(_block_poly3d);
 
   if (_block_poly3d->n_elt != NULL) {
-   PDM_free(_block_poly3d->n_elt);
+    PDM_free(_block_poly3d->n_elt);
     _block_poly3d->n_elt = NULL;
   }
 
   if (_block_poly3d->n_face!= NULL) {
-   PDM_free(_block_poly3d->n_face);
+    PDM_free(_block_poly3d->n_face);
     _block_poly3d->n_face= NULL;
   }
 
@@ -615,11 +615,11 @@ _block_poly3d_free
     if (_block_poly3d->numabs_int_owner == PDM_OWNERSHIP_KEEP) {
       for (int j = 0; j < _block_poly3d->n_part; j++) {
         if (_block_poly3d->numabs_int[j] != NULL) {
-         PDM_free(_block_poly3d->numabs_int[j]);
+          PDM_free(_block_poly3d->numabs_int[j]);
         }
       }
     }
-   PDM_free(_block_poly3d->numabs_int);
+    PDM_free(_block_poly3d->numabs_int);
     _block_poly3d->numabs_int = NULL;
   }
 
@@ -627,16 +627,16 @@ _block_poly3d_free
     if (_block_poly3d->cell_centers_owner == PDM_OWNERSHIP_KEEP) {
       for (int j = 0; j < _block_poly3d->n_part; j++) {
         if (_block_poly3d->cell_centers[j] != NULL) {
-         PDM_free(_block_poly3d->cell_centers[j]);
+          PDM_free(_block_poly3d->cell_centers[j]);
         }
       }
     }
-   PDM_free(_block_poly3d->cell_centers);
+    PDM_free(_block_poly3d->cell_centers);
     _block_poly3d->cell_centers = NULL;
   }
 
   if (_block_poly3d->cell_centers_to_compute != NULL) {
-   PDM_free(_block_poly3d->cell_centers_to_compute);
+    PDM_free(_block_poly3d->cell_centers_to_compute);
     _block_poly3d->cell_centers_to_compute = NULL;
   }
 
@@ -644,15 +644,15 @@ _block_poly3d_free
     if (_block_poly3d->owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_poly3d->n_part; i++) {
         if (_block_poly3d->_parent_num[i] != NULL)
-         PDM_free(_block_poly3d->_parent_num[i]);
+          PDM_free(_block_poly3d->_parent_num[i]);
         _block_poly3d->_parent_num[i] = NULL;
       }
     }
-   PDM_free(_block_poly3d->_parent_num);
+    PDM_free(_block_poly3d->_parent_num);
     _block_poly3d->_parent_num = NULL;
   }
 
- PDM_free(_block_poly3d);
+  PDM_free(_block_poly3d);
   return NULL;
 }
 
@@ -1796,12 +1796,12 @@ PDM_Mesh_nodal_t *mesh
     if (mesh->cell_vtx_idx != NULL) {
       for (int i = 0; i< mesh->n_part; i++) {
         if(mesh->cell_vtx_idx[i] != NULL) {
-         PDM_free(mesh->cell_vtx[i]);
-         PDM_free(mesh->cell_vtx_idx[i]);
+          PDM_free(mesh->cell_vtx[i]);
+          PDM_free(mesh->cell_vtx_idx[i]);
         }
       }
-     PDM_free(mesh->cell_vtx);
-     PDM_free(mesh->cell_vtx_idx);
+      PDM_free(mesh->cell_vtx);
+      PDM_free(mesh->cell_vtx_idx);
     }
 
     mesh->cell_vtx_idx = NULL;
@@ -1809,13 +1809,13 @@ PDM_Mesh_nodal_t *mesh
 
     if (mesh->numabs != NULL) {
       for (int i = 0; i < mesh->n_part; i++) {
-       PDM_free(mesh->numabs[i]);
+        PDM_free(mesh->numabs[i]);
       }
-     PDM_free(mesh->numabs);
+      PDM_free(mesh->numabs);
     }
 
     if (mesh->blocks_id != NULL) {
-     PDM_free(mesh->blocks_id);
+      PDM_free(mesh->blocks_id);
     }
 
     mesh->blocks_id = NULL;
@@ -1827,7 +1827,7 @@ PDM_Mesh_nodal_t *mesh
         mesh->vtx[i] = _vtx_free (mesh->vtx[i]);
       }
 
-     PDM_free(mesh->vtx);
+      PDM_free(mesh->vtx);
       mesh->vtx = NULL;
     }
 
@@ -1836,7 +1836,7 @@ PDM_Mesh_nodal_t *mesh
       for (int i = 0; i < mesh->n_block_std; i++) {
         _block_std_free(mesh->blocks_std[i]);
       }
-     PDM_free(mesh->blocks_std);
+      PDM_free(mesh->blocks_std);
     }
 
     /* Free polygon blocks */
@@ -1844,7 +1844,7 @@ PDM_Mesh_nodal_t *mesh
       for (int i = 0; i < mesh->n_block_poly2d; i++) {
         _block_poly2d_free(mesh->blocks_poly2d[i]);
       }
-     PDM_free(mesh->blocks_poly2d);
+      PDM_free(mesh->blocks_poly2d);
     }
 
     /* Free polyhedron blocks */
@@ -1852,27 +1852,27 @@ PDM_Mesh_nodal_t *mesh
       for (int i = 0; i < mesh->n_block_poly3d; i++) {
         _block_poly3d_free(mesh->blocks_poly3d[i]);
       }
-     PDM_free(mesh->blocks_poly3d);
+      PDM_free(mesh->blocks_poly3d);
     }
 
     /* Free structure */
     if (mesh->num_cell_parent_to_local != NULL) {
       for (int i_part = 0; i_part < mesh->n_part; i_part++) {
         if (mesh->num_cell_parent_to_local[i_part] != NULL)
-         PDM_free(mesh->num_cell_parent_to_local[i_part]);
+          PDM_free(mesh->num_cell_parent_to_local[i_part]);
       }
-     PDM_free(mesh->num_cell_parent_to_local);
+      PDM_free(mesh->num_cell_parent_to_local);
       mesh->num_cell_parent_to_local = NULL;
     }
 
-   PDM_free(mesh->n_cell);
+    PDM_free(mesh->n_cell);
     mesh->n_cell = NULL;
 
     if (mesh->blocks_id != NULL) {
-     PDM_free(mesh->blocks_id);
+      PDM_free(mesh->blocks_id);
     }
 
-   PDM_free(mesh);
+    PDM_free(mesh);
     mesh = NULL;
   }
 }
@@ -3863,7 +3863,7 @@ PDM_Mesh_nodal_cell_vtx_connectivity_get
     }
   }
 
- PDM_free(n_vtx_per_elt);
+  PDM_free(n_vtx_per_elt);
 
   *cellvtx_idx = mesh->cell_vtx_idx[id_part];
   *cellvtx     = mesh->cell_vtx[id_part];
@@ -4412,7 +4412,7 @@ const PDM_ownership_t  ownership
             break;
           }
         }
-       PDM_free(tag_face_poly3d);
+        PDM_free(tag_face_poly3d);
       }
 
       if (som_elts[0] > 0)
@@ -4469,23 +4469,23 @@ const PDM_ownership_t  ownership
     }
 
     if (mesh->prepa_blocks != NULL) {
-     PDM_free(mesh->prepa_blocks->n_cell);
-     PDM_free(mesh->prepa_blocks->n_face);
-     PDM_free(mesh->prepa_blocks->n_tetra);
-     PDM_free(mesh->prepa_blocks->n_hexa);
-     PDM_free(mesh->prepa_blocks->n_prism);
-     PDM_free(mesh->prepa_blocks->n_pyramid);
-     PDM_free(mesh->prepa_blocks->n_poly3d);
-     PDM_free(mesh->prepa_blocks->face_vtx_idx);
-     PDM_free(mesh->prepa_blocks->face_vtx_nb);
-     PDM_free(mesh->prepa_blocks->face_vtx);
-     PDM_free(mesh->prepa_blocks->cell_face_idx);
-     PDM_free(mesh->prepa_blocks->cell_face_nb);
-     PDM_free(mesh->prepa_blocks->cell_face);
-     PDM_free(mesh->prepa_blocks->add_etat);
-     PDM_free(mesh->prepa_blocks->numabs);
-     PDM_free(mesh->prepa_blocks->face_ln_to_gn);
-     PDM_free(mesh->prepa_blocks);
+      PDM_free(mesh->prepa_blocks->n_cell);
+      PDM_free(mesh->prepa_blocks->n_face);
+      PDM_free(mesh->prepa_blocks->n_tetra);
+      PDM_free(mesh->prepa_blocks->n_hexa);
+      PDM_free(mesh->prepa_blocks->n_prism);
+      PDM_free(mesh->prepa_blocks->n_pyramid);
+      PDM_free(mesh->prepa_blocks->n_poly3d);
+      PDM_free(mesh->prepa_blocks->face_vtx_idx);
+      PDM_free(mesh->prepa_blocks->face_vtx_nb);
+      PDM_free(mesh->prepa_blocks->face_vtx);
+      PDM_free(mesh->prepa_blocks->cell_face_idx);
+      PDM_free(mesh->prepa_blocks->cell_face_nb);
+      PDM_free(mesh->prepa_blocks->cell_face);
+      PDM_free(mesh->prepa_blocks->add_etat);
+      PDM_free(mesh->prepa_blocks->numabs);
+      PDM_free(mesh->prepa_blocks->face_ln_to_gn);
+      PDM_free(mesh->prepa_blocks);
       mesh->prepa_blocks = NULL;
     }
   }
@@ -4858,18 +4858,18 @@ const PDM_ownership_t  ownership
     }
 
     if (mesh->prepa_blocks != NULL) {
-     PDM_free(mesh->prepa_blocks->n_cell);
-     PDM_free(mesh->prepa_blocks->n_tetra);
-     PDM_free(mesh->prepa_blocks->n_hexa);
-     PDM_free(mesh->prepa_blocks->n_prism);
-     PDM_free(mesh->prepa_blocks->n_pyramid);
-     PDM_free(mesh->prepa_blocks->n_poly3d);
-     PDM_free(mesh->prepa_blocks->cell_vtx_idx);
-     PDM_free(mesh->prepa_blocks->cell_vtx_nb);
-     PDM_free(mesh->prepa_blocks->cell_vtx);
-     PDM_free(mesh->prepa_blocks->add_etat);
-     PDM_free(mesh->prepa_blocks->numabs);
-     PDM_free(mesh->prepa_blocks);
+      PDM_free(mesh->prepa_blocks->n_cell);
+      PDM_free(mesh->prepa_blocks->n_tetra);
+      PDM_free(mesh->prepa_blocks->n_hexa);
+      PDM_free(mesh->prepa_blocks->n_prism);
+      PDM_free(mesh->prepa_blocks->n_pyramid);
+      PDM_free(mesh->prepa_blocks->n_poly3d);
+      PDM_free(mesh->prepa_blocks->cell_vtx_idx);
+      PDM_free(mesh->prepa_blocks->cell_vtx_nb);
+      PDM_free(mesh->prepa_blocks->cell_vtx);
+      PDM_free(mesh->prepa_blocks->add_etat);
+      PDM_free(mesh->prepa_blocks->numabs);
+      PDM_free(mesh->prepa_blocks);
       mesh->prepa_blocks = NULL;
     }
   }
@@ -5227,7 +5227,7 @@ const PDM_ownership_t  ownership
         }
       }
 
-     PDM_free(connec_som_are);
+      PDM_free(connec_som_are);
 
       if (som_elts[0] > 0)
         PDM_Mesh_nodal_block_std_set(mesh,
@@ -5258,21 +5258,21 @@ const PDM_ownership_t  ownership
                                         num_parent_poly2d);
     }
     if (mesh->prepa_blocks != NULL) {
-     PDM_free(mesh->prepa_blocks->n_cell);
-     PDM_free(mesh->prepa_blocks->n_face);
-     PDM_free(mesh->prepa_blocks->n_tria);
-     PDM_free(mesh->prepa_blocks->n_quad);
-     PDM_free(mesh->prepa_blocks->n_poly2d);
-     PDM_free(mesh->prepa_blocks->l_connec_poly2d);
-     PDM_free(mesh->prepa_blocks->face_vtx_idx);
-     PDM_free(mesh->prepa_blocks->face_vtx_nb);
-     PDM_free(mesh->prepa_blocks->face_vtx);
-     PDM_free(mesh->prepa_blocks->cell_face_idx);
-     PDM_free(mesh->prepa_blocks->cell_face_nb);
-     PDM_free(mesh->prepa_blocks->cell_face);
-     PDM_free(mesh->prepa_blocks->add_etat);
-     PDM_free(mesh->prepa_blocks->numabs);
-     PDM_free(mesh->prepa_blocks);
+      PDM_free(mesh->prepa_blocks->n_cell);
+      PDM_free(mesh->prepa_blocks->n_face);
+      PDM_free(mesh->prepa_blocks->n_tria);
+      PDM_free(mesh->prepa_blocks->n_quad);
+      PDM_free(mesh->prepa_blocks->n_poly2d);
+      PDM_free(mesh->prepa_blocks->l_connec_poly2d);
+      PDM_free(mesh->prepa_blocks->face_vtx_idx);
+      PDM_free(mesh->prepa_blocks->face_vtx_nb);
+      PDM_free(mesh->prepa_blocks->face_vtx);
+      PDM_free(mesh->prepa_blocks->cell_face_idx);
+      PDM_free(mesh->prepa_blocks->cell_face_nb);
+      PDM_free(mesh->prepa_blocks->cell_face);
+      PDM_free(mesh->prepa_blocks->add_etat);
+      PDM_free(mesh->prepa_blocks->numabs);
+      PDM_free(mesh->prepa_blocks);
       mesh->prepa_blocks = NULL;
     }
   }
@@ -5588,17 +5588,17 @@ const PDM_ownership_t  ownership
                                         num_parent_poly2d);
     }
     if (mesh->prepa_blocks != NULL) {
-     PDM_free(mesh->prepa_blocks->n_face);
-     PDM_free(mesh->prepa_blocks->n_tria);
-     PDM_free(mesh->prepa_blocks->n_quad);
-     PDM_free(mesh->prepa_blocks->n_poly2d);
-     PDM_free(mesh->prepa_blocks->l_connec_poly2d);
-     PDM_free(mesh->prepa_blocks->face_vtx_idx);
-     PDM_free(mesh->prepa_blocks->face_vtx_nb);
-     PDM_free(mesh->prepa_blocks->face_vtx);
-     PDM_free(mesh->prepa_blocks->add_etat);
-     PDM_free(mesh->prepa_blocks->numabs);
-     PDM_free(mesh->prepa_blocks);
+      PDM_free(mesh->prepa_blocks->n_face);
+      PDM_free(mesh->prepa_blocks->n_tria);
+      PDM_free(mesh->prepa_blocks->n_quad);
+      PDM_free(mesh->prepa_blocks->n_poly2d);
+      PDM_free(mesh->prepa_blocks->l_connec_poly2d);
+      PDM_free(mesh->prepa_blocks->face_vtx_idx);
+      PDM_free(mesh->prepa_blocks->face_vtx_nb);
+      PDM_free(mesh->prepa_blocks->face_vtx);
+      PDM_free(mesh->prepa_blocks->add_etat);
+      PDM_free(mesh->prepa_blocks->numabs);
+      PDM_free(mesh->prepa_blocks);
       mesh->prepa_blocks = NULL;
     }
   }
@@ -5829,9 +5829,9 @@ const PDM_ownership_t  ownership
                                        block->cell_centers[i_part],
                                        characteristicLength,
                                        isDegenerated);
-   PDM_free(volume);
-   PDM_free(characteristicLength);
-   PDM_free(isDegenerated);
+    PDM_free(volume);
+    PDM_free(characteristicLength);
+    PDM_free(isDegenerated);
 
   }
 
@@ -5880,9 +5880,9 @@ const PDM_ownership_t  ownership
                                      block->cell_centers[i_part],
                                      characteristicLength,
                                      isDegenerated);
-   PDM_free(surface_vector);
-   PDM_free(characteristicLength);
-   PDM_free(isDegenerated);
+    PDM_free(surface_vector);
+    PDM_free(characteristicLength);
+    PDM_free(isDegenerated);
 
   }
   else {
@@ -5937,7 +5937,7 @@ const PDM_ownership_t  ownership
                                      block->cell_centers[i_part],
                                      characteristicLength,
                                      isDegenerated);
-     PDM_free(length);
+      PDM_free(length);
       break;
     }
 
@@ -5952,7 +5952,7 @@ const PDM_ownership_t  ownership
                                     block->cell_centers[i_part],
                                     characteristicLength,
                                     isDegenerated);
-     PDM_free(surface_vector);
+      PDM_free(surface_vector);
       break;
     }
     case PDM_MESH_NODAL_QUAD4:
@@ -5966,7 +5966,7 @@ const PDM_ownership_t  ownership
                                     block->cell_centers[i_part],
                                     characteristicLength,
                                     isDegenerated);
-     PDM_free(surface_vector);
+      PDM_free(surface_vector);
       break;
     }
 
@@ -5981,7 +5981,7 @@ const PDM_ownership_t  ownership
                                      block->cell_centers[i_part],
                                      characteristicLength,
                                      isDegenerated);
-     PDM_free(volume);
+      PDM_free(volume);
       break;
     }
 
@@ -5997,7 +5997,7 @@ const PDM_ownership_t  ownership
                                        block->cell_centers[i_part],
                                        characteristicLength,
                                        isDegenerated);
-     PDM_free(volume);
+      PDM_free(volume);
       break;
     }
 
@@ -6013,7 +6013,7 @@ const PDM_ownership_t  ownership
                                      block->cell_centers[i_part],
                                      characteristicLength,
                                      isDegenerated);
-     PDM_free(volume);
+      PDM_free(volume);
       break;
     }
 
@@ -6029,7 +6029,7 @@ const PDM_ownership_t  ownership
                                     block->cell_centers[i_part],
                                     characteristicLength,
                                     isDegenerated);
-     PDM_free(volume);
+      PDM_free(volume);
       break;
     }
     case PDM_MESH_NODAL_POLY_2D:
@@ -6040,8 +6040,8 @@ const PDM_ownership_t  ownership
     }//end switch t_elt
 
 
-   PDM_free(characteristicLength);
-   PDM_free(isDegenerated);
+    PDM_free(characteristicLength);
+    PDM_free(isDegenerated);
 
   } // if id_block
 
@@ -6254,21 +6254,21 @@ PDM_Mesh_nodal_reset
     for (int i = 0; i < mesh->n_block_std; i++) {
       _block_std_free(mesh->blocks_std[i]);
     }
-   PDM_free(mesh->blocks_std);
+    PDM_free(mesh->blocks_std);
   }
 
   if (mesh->blocks_poly2d != NULL) {
     for (int i = 0; i < mesh->n_block_poly2d; i++) {
       _block_poly2d_free(mesh->blocks_poly2d[i]);
     }
-   PDM_free(mesh->blocks_poly2d);
+    PDM_free(mesh->blocks_poly2d);
   }
 
   if (mesh->blocks_poly3d != NULL) {
     for (int i = 0; i < mesh->n_block_poly3d; i++) {
       _block_poly3d_free(mesh->blocks_poly3d[i]);
     }
-   PDM_free(mesh->blocks_poly3d);
+    PDM_free(mesh->blocks_poly3d);
   }
 
   mesh->n_block_std              = 0;
@@ -6279,7 +6279,7 @@ PDM_Mesh_nodal_reset
   mesh->blocks_poly2d            = NULL;
   mesh->blocks_poly3d            = NULL;
   if (mesh->blocks_id != NULL) {
-   PDM_free(mesh->blocks_id);
+    PDM_free(mesh->blocks_id);
   }
   mesh->blocks_id                = NULL;
   mesh->n_blocks                 = 0;
@@ -6289,9 +6289,9 @@ PDM_Mesh_nodal_reset
   if (mesh->num_cell_parent_to_local != NULL) {
     for (int i_part = 0; i_part < mesh->n_part; i_part++) {
       if (mesh->num_cell_parent_to_local[i_part] != NULL)
-       PDM_free(mesh->num_cell_parent_to_local[i_part]);
+        PDM_free(mesh->num_cell_parent_to_local[i_part]);
     }
-   PDM_free(mesh->num_cell_parent_to_local);
+    PDM_free(mesh->num_cell_parent_to_local);
     mesh->num_cell_parent_to_local = NULL;
   }
 
@@ -6310,7 +6310,7 @@ PDM_Mesh_nodal_reset
         mesh->vtx[i]->parent = NULL;
       }
       if (mesh->vtx[i]->coords != NULL) {
-       PDM_free(mesh->vtx[i]->coords);
+        PDM_free(mesh->vtx[i]->coords);
         mesh->vtx[i]->coords = NULL;
       }
     }
@@ -6908,7 +6908,7 @@ PDM_Mesh_nodal_reorder_elt_vtx
   //   }
   // }
 
- PDM_free(tmp);
+  PDM_free(tmp);
 }
 
 

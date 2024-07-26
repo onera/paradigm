@@ -183,7 +183,7 @@ _split_surface_mesh
   PDM_multipart_dmesh_nodal_set(mpart, 0, dmn);
   PDM_multipart_compute(mpart);
 
- PDM_free(n_part_domains);
+  PDM_free(n_part_domains);
 
   *_mpart = mpart;
 }
@@ -422,8 +422,8 @@ main
                                                                &sm_n_face,
                                                                1,
                                                                comm);
- PDM_free(box_coord);
- PDM_free(weight);
+  PDM_free(box_coord);
+  PDM_free(weight);
 
   double *blk_box_extents = NULL;
   PDM_part_to_block_exch(ptb_box,
@@ -494,7 +494,7 @@ main
                           PDM_BOX_TREE_ASYNC_LEVEL);
   t2 = PDM_MPI_Wtime();
   printf("[%4d] PDM_box_tree_set_boxes  : %12.5es (%12.5es/box)\n", i_rank, t2 - t1, (t2 - t1) / (double) blk_n_box);
- PDM_free(init_location_box);
+  PDM_free(init_location_box);
 
   if (visu) {
     char filename2[999];
@@ -529,7 +529,7 @@ main
   PDM_MPI_Barrier(comm);
   t1 = PDM_MPI_Wtime();
   PDM_point_tree_seq_build(pbtree);
- PDM_free(blk_box_center);
+  PDM_free(blk_box_center);
 
   /* Fix extents */
   for (int i = 0; i < pbtree->n_nodes; i++) {
@@ -568,7 +568,7 @@ main
   PDM_box_tree_destroy(&btree);
   PDM_box_set_destroy (&box_set);
   PDM_part_to_block_free(ptb_box);
- PDM_free(blk_box_extents);
+  PDM_free(blk_box_extents);
 
   PDM_MPI_Comm_free(&comm_alone);
 

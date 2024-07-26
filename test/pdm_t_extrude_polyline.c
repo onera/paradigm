@@ -237,8 +237,8 @@ _gen_circle
     PDM_sort_int(rand_edge, perm_edge, *base_n_edge);
     PDM_sort_int(rand_vtx,  perm_vtx,  *base_n_vtx);
   }
- PDM_free(rand_edge);
- PDM_free(rand_vtx);
+  PDM_free(rand_edge);
+  PDM_free(rand_vtx);
 
   PDM_malloc(*base_edge_vtx,2 * (*base_n_edge),int);
   for (int i = 0; i < *base_n_edge; i++) {
@@ -257,8 +257,8 @@ _gen_circle
     (*base_vtx_coord)[3*perm_vtx[i]+2] = 0;
   }
 
- PDM_free(perm_edge);
- PDM_free(perm_vtx);
+  PDM_free(perm_edge);
+  PDM_free(perm_vtx);
 }
 
 
@@ -478,8 +478,8 @@ main
   }
   base_n_vtx += base_n_vtx2;
 
- PDM_free(base_edge_vtx2);
- PDM_free(base_vtx_coord2);
+  PDM_free(base_edge_vtx2);
+  PDM_free(base_vtx_coord2);
 
   if (visu && i_rank == 0) {
     PDM_vtk_write_std_elements("base_polyline.vtk",
@@ -589,7 +589,7 @@ main
                          id_var_part);
     PDM_writer_var_free(wrt,
                         id_var_part);
-   PDM_free(val_part);
+    PDM_free(val_part);
 
     PDM_writer_step_end(wrt);
 
@@ -599,14 +599,14 @@ main
 
 
   /* Free memory */
- PDM_free(base_edge_vtx);
- PDM_free(base_vtx_coord);
+  PDM_free(base_edge_vtx);
+  PDM_free(base_vtx_coord);
 
- PDM_free(face_vtx_idx );
- PDM_free(face_vtx     );
- PDM_free(face_ln_to_gn);
- PDM_free(vtx_coord    );
- PDM_free(vtx_ln_to_gn );
+  PDM_free(face_vtx_idx );
+  PDM_free(face_vtx     );
+  PDM_free(face_ln_to_gn);
+  PDM_free(vtx_coord    );
+  PDM_free(vtx_ln_to_gn );
 
   PDM_MPI_Finalize();
 

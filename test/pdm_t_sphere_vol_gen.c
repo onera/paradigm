@@ -314,8 +314,8 @@ _dmesh_nodal_dump_vtk
       int *pelt_group_idx = tmp_elt_group_idx[0];
       int *pelt_group     = tmp_elt_group    [0];
       // PDM_log_trace_connectivity_int(pelt_group_idx, pelt_group, n_elt, "pelt_group : ");
-     PDM_free(tmp_elt_group_idx);
-     PDM_free(tmp_elt_group);
+      PDM_free(tmp_elt_group_idx);
+      PDM_free(tmp_elt_group);
       // PDM_log_trace_array_long(delmt_ln_to_gn, n_elt, "  delmt_ln_to_gn (shifted) : ");
 
       n_field = 1;
@@ -325,8 +325,8 @@ _dmesh_nodal_dump_vtk
         assert (pelt_group_idx[i+1] == pelt_group_idx[i] + 1);
         field[0][i] = (double) pelt_group[i];
       }
-     PDM_free(pelt_group);
-     PDM_free(pelt_group_idx);
+      PDM_free(pelt_group);
+      PDM_free(pelt_group_idx);
     }
 
     /*
@@ -360,28 +360,28 @@ _dmesh_nodal_dump_vtk
                                     (const char   **) &field_name,
                                     (const double **) field);
     }
-   PDM_free(tmp_pvtx_coord);
-   PDM_free(pvtx_ln_to_gn);
-   PDM_free(pcell_vtx_idx);
-   PDM_free(pcell_vtx);
+    PDM_free(tmp_pvtx_coord);
+    PDM_free(pvtx_ln_to_gn);
+    PDM_free(pcell_vtx_idx);
+    PDM_free(pcell_vtx);
 
-   PDM_free(dconnec_idx);
-   PDM_free(delmt_ln_to_gn);
+    PDM_free(dconnec_idx);
+    PDM_free(delmt_ln_to_gn);
 
-   PDM_free(pvtx_coord_out);
+    PDM_free(pvtx_coord_out);
 
     shift += delmt_distribution[n_rank];
 
     if (dmne != NULL) {
-     PDM_free(field[0]);
-     PDM_free(field);
+      PDM_free(field[0]);
+      PDM_free(field);
     }
   }
 
   if (dmne != NULL) {
-   PDM_free(delt_group_idx);
-   PDM_free(delt_group);
-   PDM_free(distrib_elt);
+    PDM_free(delt_group_idx);
+    PDM_free(delt_group);
+    PDM_free(distrib_elt);
   }
 }
 
@@ -489,7 +489,7 @@ int main(int argc, char *argv[])
                                          order,
                                          PDM_Mesh_nodal_n_vtx_elt_get(type, order),
                                          ijk);
-       PDM_free(ijk);
+        PDM_free(ijk);
       }
     }
 

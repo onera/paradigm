@@ -123,7 +123,7 @@ PDM_g_num_t **box_ln_to_gn
   for (PDM_g_num_t i = 0; i < 6*distrib_box[i_rank]; i++) {
     rand();
   }
- PDM_free(distrib_box);
+  PDM_free(distrib_box);
 
   double *box_centers;
   PDM_malloc(box_centers,n_box * 3,double);
@@ -159,7 +159,7 @@ PDM_g_num_t **box_ln_to_gn
   *box_ln_to_gn = PDM_gnum_get (gen_gnum, 0);
 
   PDM_gnum_free (gen_gnum);
- PDM_free(box_centers);
+  PDM_free(box_centers);
 
   return n_box;
 }
@@ -626,15 +626,15 @@ int main(int argc, char *argv[])
 
     PDM_dbbtree_free(dbbt);
     PDM_box_set_destroy(&box_set);
-   PDM_free(volume_boxes_idx);
-   PDM_free(volume_boxes_g_num);
-   PDM_free(plane_normal);
-   PDM_free(plane_pt_coord);
-   PDM_free(dbbtree_box_extents);
-   PDM_free(dbbtree_box_g_num);
-   PDM_free(volume_box_extents);
-   PDM_free(volume_box_g_num);
-   PDM_free(volume_plane_idx);
+    PDM_free(volume_boxes_idx);
+    PDM_free(volume_boxes_g_num);
+    PDM_free(plane_normal);
+    PDM_free(plane_pt_coord);
+    PDM_free(dbbtree_box_extents);
+    PDM_free(dbbtree_box_g_num);
+    PDM_free(volume_box_extents);
+    PDM_free(volume_box_g_num);
+    PDM_free(volume_plane_idx);
 
   } // end if RANDOM or RANDOM_VARIABLE_STRIDE
 
@@ -771,8 +771,8 @@ int main(int argc, char *argv[])
         log_trace("\n");
       }
     }
-   PDM_free(volume_boxes_idx);
-   PDM_free(volume_boxes_g_num);
+    PDM_free(volume_boxes_idx);
+    PDM_free(volume_boxes_g_num);
 
     PDM_dbbtree_free(dbbt);
     PDM_box_set_destroy(&box_set);
@@ -907,9 +907,9 @@ int main(int argc, char *argv[])
     PDM_dbbtree_free(dbbt);
     PDM_box_set_destroy(&box_set);
 
-   PDM_free(volume_box_extents);
-   PDM_free(volume_box_g_num);
-   PDM_free(volume_boxes_idx);
+    PDM_free(volume_box_extents);
+    PDM_free(volume_box_g_num);
+    PDM_free(volume_boxes_idx);
   } // end if NO_COPIES
 
   PDM_MPI_Finalize ();

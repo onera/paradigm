@@ -205,13 +205,13 @@ const int          nFac,
           } /** End if (isSameFace) **/
 
           /** Free Cendidate ElemCon **/
-         PDM_free(ElmCon2);
+          PDM_free(ElmCon2);
 
         } /* Enf if Same Number of Vertex */
 
       }
       /** Free current ElemCon **/
-     PDM_free(ElmCon1);
+      PDM_free(ElmCon1);
 
     } /** End If alreadyTreat **/
 
@@ -242,7 +242,7 @@ const int          nFac,
 
 
   /** Free **/
- PDM_free(AlreadyTreat);
+  PDM_free(AlreadyTreat);
 
   return iAbsFace;
 
@@ -363,8 +363,8 @@ PDM_elt_parent_find
                                    parent);
 
   /* Free */
- PDM_free(elt_distrib);
- PDM_free(elt_to_find_distrib)  ;
+  PDM_free(elt_distrib);
+  PDM_free(elt_to_find_distrib)  ;
 
 }
 
@@ -570,7 +570,7 @@ PDM_elt_parent_find_from_distrib
    *  Creation of array of diplacement
    */
   int *BlkStriIdx = PDM_array_new_idx_from_sizes_int(BlkStri, BlkSize);
- PDM_free(BlkStri);
+  PDM_free(BlkStri);
 
   /* Find parent in distributed hash table */
 
@@ -689,8 +689,8 @@ PDM_elt_parent_find_from_distrib
   /*
    * Free
    */
- PDM_free(IdxFace);
- PDM_free(connectLocal);
+  PDM_free(IdxFace);
+  PDM_free(connectLocal);
 
 
   /* Verbose */
@@ -826,15 +826,15 @@ PDM_elt_parent_find_from_distrib
 
   PDM_part_to_block_free(ptb2);
 
- PDM_free(LNToGN);
- PDM_free(LNToGNElem);
- PDM_free(part_data);
- PDM_free(part_stri);
- PDM_free(BlkData   );
- PDM_free(BlkStriIdx);
- PDM_free(BlkData2   );
- PDM_free(FaceDistrib);
- PDM_free(connect);
+  PDM_free(LNToGN);
+  PDM_free(LNToGNElem);
+  PDM_free(part_data);
+  PDM_free(part_stri);
+  PDM_free(BlkData   );
+  PDM_free(BlkStriIdx);
+  PDM_free(BlkData2   );
+  PDM_free(FaceDistrib);
+  PDM_free(connect);
 
 }
 

@@ -241,7 +241,7 @@ char *argv[]
                                                            &n_src,
                                                            1,
                                                            comm);
- PDM_free(weight);
+  PDM_free(weight);
   // double t2 = PDM_MPI_Wtime();
   // log_trace("PDM_part_to_block_geom_create = %12.5e \n", t2 -t1);
 
@@ -352,17 +352,17 @@ char *argv[]
     //                                box_pts,
     //                                n_box,
     //                                "box_pts : ");
-   PDM_free(box_pts_idx);
-   PDM_free(box_pts);
+    PDM_free(box_pts_idx);
+    PDM_free(box_pts);
 
-   PDM_free(box_extents);
-   PDM_free(box_ln_to_gn);
+    PDM_free(box_extents);
+    PDM_free(box_ln_to_gn);
   }
 
   PDM_octree_seq_free(oct_equi);
 
 
- PDM_free(blk_src_coord);
+  PDM_free(blk_src_coord);
 
 
   /* Parallel octree */
@@ -389,8 +389,8 @@ char *argv[]
 
   /* Free */
 
- PDM_free(src_coord);
- PDM_free(src_g_num);
+  PDM_free(src_coord);
+  PDM_free(src_g_num);
 
   if (i_rank == 0) {
     PDM_printf ("-- End\n");

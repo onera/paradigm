@@ -246,14 +246,14 @@ writer_wrapper
                        id_geom,
                        i_part,
                        val_part);
-   PDM_free(val_part);
+    PDM_free(val_part);
 
     PDM_writer_var_set(wrt,
                        id_var_elt_gnum,
                        id_geom,
                        i_part,
                        val_gnum);
-   PDM_free(val_gnum);
+    PDM_free(val_gnum);
   }
 
 
@@ -277,7 +277,7 @@ writer_wrapper
                            i_part,
                            val);
       }
-     PDM_free(val);
+      PDM_free(val);
     }
 
     for (int i_field = 0; i_field < n_elt_field; i_field++) {
@@ -302,7 +302,7 @@ writer_wrapper
                            i_part,
                            val);
       }
-     PDM_free(val);
+      PDM_free(val);
     }
 
     for (int i_field = 0; i_field < n_vtx_field; i_field++) {
@@ -313,11 +313,11 @@ writer_wrapper
   PDM_writer_step_end(wrt);
 
   if (n_elt_field > 0) {
-   PDM_free(id_var_elt_field);
+    PDM_free(id_var_elt_field);
   }
 
   if (n_vtx_field > 0) {
-   PDM_free(id_var_vtx_field);
+    PDM_free(id_var_vtx_field);
   }
 
   PDM_writer_free(wrt);
@@ -659,7 +659,7 @@ _parse_options
   } while (pch != NULL);
 
 
- PDM_free(_options_str);
+  PDM_free(_options_str);
 }
 
 /**
@@ -861,8 +861,8 @@ PDM_writer_free
 
   /* Liberation des differents elements de la structure */
 
- PDM_free(cs->rep_sortie);
- PDM_free(cs->nom_sortie);
+  PDM_free(cs->rep_sortie);
+  PDM_free(cs->nom_sortie);
 
   /* Liberation des variables */
 
@@ -874,11 +874,11 @@ PDM_writer_free
         }
       }
 
-     PDM_free(cs->var_tab->var);
+      PDM_free(cs->var_tab->var);
       cs->var_tab->var = NULL;
     }
 
-   PDM_free(cs->var_tab);
+    PDM_free(cs->var_tab);
     cs->var_tab = NULL;
   }
 
@@ -886,15 +886,15 @@ PDM_writer_free
     for (int i = 0; i < cs->cst_global_var_tab.s_var; i++) {
       if (cs->cst_global_var_tab.var[i] != NULL) {
         if (cs->cst_global_var_tab.var[i]->nom_var != NULL) {
-         PDM_free(cs->cst_global_var_tab.var[i]->nom_var);
+          PDM_free(cs->cst_global_var_tab.var[i]->nom_var);
           cs->cst_global_var_tab.var[i]->nom_var = NULL;
         } 
-       PDM_free(cs->cst_global_var_tab.var[i]);
+        PDM_free(cs->cst_global_var_tab.var[i]);
         cs->cst_global_var_tab.var[i] = NULL;
       }
     }
 
-   PDM_free(cs->cst_global_var_tab.var);
+    PDM_free(cs->cst_global_var_tab.var);
     cs->cst_global_var_tab.var = NULL;
   }
 
@@ -902,13 +902,13 @@ PDM_writer_free
   if (cs->options != NULL) {
     for (int i = 0; i < cs->n_options; i++) {
       if ((cs->options[i]).nom != NULL) {
-       PDM_free((cs->options[i]).nom);
+        PDM_free((cs->options[i]).nom);
       }
       if ((cs->options[i]).val != NULL) {
-       PDM_free((cs->options[i]).val);
+        PDM_free((cs->options[i]).val);
       }
     }
-   PDM_free(cs->options);
+    PDM_free(cs->options);
   }
 
 
@@ -922,11 +922,11 @@ PDM_writer_free
         }
       }
 
-     PDM_free(cs->geom_tab->geom);
+      PDM_free(cs->geom_tab->geom);
       cs->geom_tab->geom = NULL;
     }
 
-   PDM_free(cs->geom_tab);
+    PDM_free(cs->geom_tab);
     cs->geom_tab = NULL;
   }
 
@@ -934,22 +934,22 @@ PDM_writer_free
     if (cs->name_map_tab->name_map != NULL) {
       for (int i = 0; i < cs->name_map_tab->n_name_map; i++) {
         if (cs->name_map_tab->name_map[i] != NULL) {
-         PDM_free(cs->name_map_tab->name_map[i]->public_name);
-         PDM_free(cs->name_map_tab->name_map[i]->private_name);
+          PDM_free(cs->name_map_tab->name_map[i]->public_name);
+          PDM_free(cs->name_map_tab->name_map[i]->private_name);
         }
       }
 
-     PDM_free(cs->name_map_tab->name_map);
+      PDM_free(cs->name_map_tab->name_map);
       cs->name_map_tab->name_map = NULL;
     }
 
-   PDM_free(cs->name_map_tab);
+    PDM_free(cs->name_map_tab);
     cs->name_map_tab = NULL;
   }
 
   /* Liberation de la structure */
 
- PDM_free(cs);
+  PDM_free(cs);
   cs = NULL;
 }
 
@@ -1234,7 +1234,7 @@ PDM_writer_geom_set_from_mesh_nodal
 
   geom->s_section = 10;
   if (geom->section_owner != NULL) {
-   PDM_free(geom->section_owner);
+    PDM_free(geom->section_owner);
     geom->section_owner = NULL;
   }
   PDM_malloc(geom->section_owner,geom->s_section,PDM_ownership_t);
@@ -1767,14 +1767,14 @@ PDM_writer_geom_cell3d_cellface_add
 
   if (face_som_nb != NULL) {
     if (geom->_face_vtx_idx[id_part] != NULL) {
-     PDM_free(geom->_face_vtx_idx[id_part]);
+      PDM_free(geom->_face_vtx_idx[id_part]);
       geom->_face_vtx_idx[id_part] = NULL;
     }
     geom->_face_vtx_idx[id_part] = _face_som_idx;
   }
   if (cell_face_nb != NULL) {
     if (geom->_cell_face_idx[id_part] != NULL) {
-     PDM_free(geom->_cell_face_idx[id_part]);
+      PDM_free(geom->_cell_face_idx[id_part]);
       geom->_cell_face_idx[id_part] = NULL;
     }
     geom->_cell_face_idx[id_part] = _cell_face_idx;
@@ -1965,7 +1965,7 @@ PDM_writer_geom_faces_facesom_add
                                         numabs,
                                         PDM_OWNERSHIP_KEEP);
   if (face_som_nb != NULL) {
-   PDM_free(_face_som_idx);
+    PDM_free(_face_som_idx);
   }
 }
 
@@ -2071,7 +2071,7 @@ PDM_writer_geom_free
       geom->mesh_nodal = NULL;      
     }
     if (geom->nom_geom != NULL) {
-     PDM_free(geom->nom_geom);
+      PDM_free(geom->nom_geom);
       geom->nom_geom = NULL;
     }
 
@@ -2086,28 +2086,28 @@ PDM_writer_geom_free
     }
 
     if (geom->section_owner != NULL) {
-     PDM_free(geom->section_owner);
+      PDM_free(geom->section_owner);
     }
 
     if (geom->_face_vtx_idx != NULL) {
       for (int i = 0; i < geom->n_part; i++) {
         if (geom->_face_vtx_idx[i] != NULL) {
-         PDM_free(geom->_face_vtx_idx[i]);
+          PDM_free(geom->_face_vtx_idx[i]);
         }
       }
-     PDM_free(geom->_face_vtx_idx);
+      PDM_free(geom->_face_vtx_idx);
     }
 
     if (geom->_cell_face_idx != NULL) {
       for (int i = 0; i < geom->n_part; i++) {
         if (geom->_cell_face_idx[i] != NULL) {
-         PDM_free(geom->_cell_face_idx[i]);
+          PDM_free(geom->_cell_face_idx[i]);
         }
       }
-     PDM_free(geom->_cell_face_idx);
+      PDM_free(geom->_cell_face_idx);
     }
 
-   PDM_free(geom);
+    PDM_free(geom);
     cs->geom_tab->geom[id_geom] = NULL;
   }
 }
@@ -2580,7 +2580,7 @@ PDM_writer_var_data_free
         if ((geom != NULL) && (var->_val[idx] != NULL)) {
           for (int j = 0; j < n_part; j++) {
             if (var->_val[idx][j] != NULL)
-             PDM_free(var->_val[idx][j]);
+              PDM_free(var->_val[idx][j]);
             var->_val[idx][j] = NULL;
           }
         }
@@ -2625,7 +2625,7 @@ PDM_writer_var_free
 
     if (var != NULL) {
 
-     PDM_free(var->nom_var);
+      PDM_free(var->nom_var);
 
       const int n_ind = cs->geom_tab->n_geom;
 
@@ -2633,11 +2633,11 @@ PDM_writer_var_free
         for (int i = 0; i < n_ind; i++) {
           int idx = i;
           if (var->_val[idx] != NULL)
-           PDM_free(var->_val[idx]);
+            PDM_free(var->_val[idx]);
           var->_val[idx] = NULL;
         }
 
-       PDM_free(var->_val);
+        PDM_free(var->_val);
         var->_val = NULL;
       }
 
@@ -2649,7 +2649,7 @@ PDM_writer_var_free
         (fmt_ptr->var_free_fct) (var);
       }
 
-     PDM_free(var);
+      PDM_free(var);
       cs->var_tab->var[id_var] = NULL;
 
     }
@@ -2744,15 +2744,15 @@ PDM_writer_fmt_free
 
     for (int i = 0; i < n_fmt_tab; i++) {
       if (fmt_tab[i] != NULL) {
-       PDM_free(fmt_tab[i]->name);
-       PDM_free(fmt_tab[i]);
+        PDM_free(fmt_tab[i]->name);
+        PDM_free(fmt_tab[i]);
         fmt_tab[i] = NULL;
       }
     }
 
     n_fmt_tab = 0;
 
-   PDM_free(fmt_tab);
+    PDM_free(fmt_tab);
     fmt_tab = NULL;
 
   }

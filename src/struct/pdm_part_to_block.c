@@ -175,9 +175,9 @@ _counting_sort_long
     ptb->order[idx_write] = i;
   }
 
- PDM_free(block_n);
- PDM_free(block_idx);
- PDM_free(block_gnum);
+  PDM_free(block_n);
+  PDM_free(block_idx);
+  PDM_free(block_gnum);
 
 }
 
@@ -419,7 +419,7 @@ _distrib_data
         k++;
       }
 
-     PDM_free(rank_index);
+      PDM_free(rank_index);
 
     }
   } // If User
@@ -557,7 +557,7 @@ _distrib_data
 
   }
 
- PDM_free(send_gnum);
+  PDM_free(send_gnum);
 
   PDM_timer_hang_on(t_timer[CREATE_EXCHANGE]);
   double t6_elaps = PDM_timer_elapsed(t_timer[CREATE_EXCHANGE]);
@@ -741,7 +741,7 @@ _distrib_data_hilbert
   PDM_hilbert_encode_coords(dim, PDM_HILBERT_CS, extents, ptb->n_elt_proc, concat_vtx_coord, hilbert_codes);
 
   if(ptb->n_part > 1 ) {
-   PDM_free(concat_vtx_coord);
+    PDM_free(concat_vtx_coord);
   }
 
   PDM_hilbert_code_t *hilbert_codes_idx;
@@ -763,7 +763,7 @@ _distrib_data_hilbert
   }
 
   if(ptb->n_part > 1 ) {
-   PDM_free(concat_weight);
+    PDM_free(concat_weight);
   }
 
   PDM_malloc(ptb->n_send_data,ptb->s_comm,int);
@@ -794,7 +794,7 @@ _distrib_data_hilbert
     }
   }
 
- PDM_free(hilbert_codes_idx);
+  PDM_free(hilbert_codes_idx);
   PDM_MPI_Alltoall (ptb->n_send_data, 1, PDM_MPI_INT,
                     ptb->n_recv_data, 1, PDM_MPI_INT,
                     ptb->comm);
@@ -839,7 +839,7 @@ _distrib_data_hilbert
     }
   }
   //PDM_free(hilbert_order);
- PDM_free(hilbert_codes);
+  PDM_free(hilbert_codes);
 
   PDM_malloc(ptb->sorted_recv_gnum,ptb->tn_recv_data,PDM_g_num_t       );
   PDM_hilbert_code_t *sorted_recv_codes;
@@ -894,9 +894,9 @@ _distrib_data_hilbert
                           ptb->comm);
   }
 
- PDM_free(send_gnum);
- PDM_free(send_codes);
- PDM_free(part_idx);
+  PDM_free(send_gnum);
+  PDM_free(send_codes);
+  PDM_free(part_idx);
 
   if(0 == 1) {
     PDM_log_trace_array_long  (ptb->sorted_recv_gnum, ptb->tn_recv_data, "ptb->sorted_recv_gnum :: ");
@@ -973,7 +973,7 @@ _distrib_data_hilbert
   // Generate distribution
   PDM_distrib_compute(ptb->n_elt_block, ptb->data_distrib_index, -1, ptb->comm);
 
- PDM_free(sorted_recv_codes);
+  PDM_free(sorted_recv_codes);
 
   /*
    * To do : ptb->enable_reverse = 1;
@@ -1046,7 +1046,7 @@ _distrib_data_morton
   PDM_morton_encode_coords(dim, max_level, extents, ptb->n_elt_proc, concat_vtx_coord, morton_codes, d, s);
 
   if(ptb->n_part != 1) {
-   PDM_free(concat_vtx_coord);
+    PDM_free(concat_vtx_coord);
   }
 
   PDM_morton_code_t *morton_codes_idx;
@@ -1061,7 +1061,7 @@ _distrib_data_morton
                               ptb->comm);
 
   if(ptb->n_part != 1) {
-   PDM_free(concat_weight);
+    PDM_free(concat_weight);
   }
 
   PDM_malloc(ptb->n_send_data,ptb->s_comm,int);
@@ -1092,7 +1092,7 @@ _distrib_data_morton
     }
   }
 
- PDM_free(morton_codes_idx);
+  PDM_free(morton_codes_idx);
 
   PDM_MPI_Alltoall (ptb->n_send_data, 1, PDM_MPI_INT,
                     ptb->n_recv_data, 1, PDM_MPI_INT,
@@ -1140,7 +1140,7 @@ _distrib_data_morton
     }
   }
   //PDM_free(morton_order);
- PDM_free(morton_codes);
+  PDM_free(morton_codes);
 
   PDM_malloc(ptb->sorted_recv_gnum,ptb->tn_recv_data,PDM_g_num_t       );
   PDM_morton_code_t *sorted_recv_codes;
@@ -1206,9 +1206,9 @@ _distrib_data_morton
   }
 
   
- PDM_free(send_gnum);
- PDM_free(send_codes);
- PDM_free(part_idx);
+  PDM_free(send_gnum);
+  PDM_free(send_codes);
+  PDM_free(part_idx);
 
 
   if(0 == 1) {
@@ -1283,7 +1283,7 @@ _distrib_data_morton
   // Generate distribution
   PDM_distrib_compute(ptb->n_elt_block, ptb->data_distrib_index, -1, ptb->comm);
 
- PDM_free(sorted_recv_codes);
+  PDM_free(sorted_recv_codes);
 
   /*
    * To do : ptb->enable_reverse = 1;
@@ -1362,7 +1362,7 @@ _compute_global_weights
     }
     recv_weight[j] = block_weight[idx];
   }
- PDM_free(block_weight);
+  PDM_free(block_weight);
 
   /* Send back global weights */
 
@@ -1392,7 +1392,7 @@ _compute_global_weights
                            ptb->comm);
   }
 
- PDM_free(recv_weight);
+  PDM_free(recv_weight);
 
   /* Store global weights */
   PDM_malloc(ptb->weight_g,ptb->n_part,double *);
@@ -1405,8 +1405,8 @@ _compute_global_weights
       ptb->weight_g[i][j] = part_weight[ptb->i_send_data[rank] + send_count[rank]++];
     }
   }
- PDM_free(send_count);
- PDM_free(part_weight);
+  PDM_free(send_count);
+  PDM_free(part_weight);
 }
 
 /**
@@ -1669,7 +1669,7 @@ _prepare_exchange
 
     }
 
-   PDM_free(send_stride);
+    PDM_free(send_stride);
 
   }
 
@@ -1895,7 +1895,7 @@ _prepare_send_buffer
     }
 
     if (i_part != NULL)
-     PDM_free(i_part);
+      PDM_free(i_part);
   }
 }
 
@@ -1959,9 +1959,9 @@ _prepare_reverse_send_buffer
       }
     }
 
-   PDM_free(send_stride);
-   PDM_free(send_idx);
-   PDM_free(block_idx);
+    PDM_free(send_stride);
+    PDM_free(send_idx);
+    PDM_free(block_idx);
 
   }
   else  {
@@ -2054,8 +2054,8 @@ _post_treatment
       }
     }
 
-   PDM_free(recv_stride);
-   PDM_free(i_recv_stride);
+    PDM_free(recv_stride);
+    PDM_free(i_recv_stride);
 
     /*
      * post processing
@@ -2101,7 +2101,7 @@ _post_treatment
         s_block_data = idx2 / (int) s_data;
       }
     }
-   PDM_free(i_block_stride);
+    PDM_free(i_block_stride);
   } else {
 
     /*
@@ -2240,11 +2240,11 @@ _post_treatment_reverse
           _part_data[i][idx_write + k] = recv_buffer[idx_read+k];
         }
       }
-     PDM_free(_part_idx[i]);
+      PDM_free(_part_idx[i]);
     }
-   PDM_free(n_recv_strid);
-   PDM_free(_part_idx);
-   PDM_free(recv_stride);
+    PDM_free(n_recv_strid);
+    PDM_free(_part_idx);
+    PDM_free(recv_stride);
 
   } else { // PDM_STRIDE_CST_INTERLACED
 
@@ -2541,7 +2541,7 @@ PDM_part_to_block_time_per_step_dump
                       (PDM_l_num_t) s_buffer,
                       buffer);
 
- PDM_free(buffer);
+  PDM_free(buffer);
 
   // Finalize parallel write
   PDM_io_close(writer);
@@ -2621,7 +2621,7 @@ PDM_part_to_block_comm_graph_dump
                               &i_rank_gnum,
                               (const void *) buffer);
 
- PDM_free(buffer);
+  PDM_free(buffer);
 
   // Finalize parallel write
   PDM_io_close(writer);
@@ -3154,8 +3154,8 @@ PDM_part_to_block_exch
                         mpi_type,
                         ptb->comm);
 
-     PDM_free(_i_send_buffer); 
-     PDM_free(_i_recv_buffer); 
+      PDM_free(_i_send_buffer); 
+      PDM_free(_i_recv_buffer); 
     }
 
     else {
@@ -3183,11 +3183,11 @@ PDM_part_to_block_exch
     }
   }
 
- PDM_free(send_buffer);
- PDM_free(n_send_buffer);
- PDM_free(i_send_buffer);
- PDM_free(n_recv_buffer);
- PDM_free(i_recv_buffer);
+  PDM_free(send_buffer);
+  PDM_free(n_send_buffer);
+  PDM_free(i_send_buffer);
+  PDM_free(n_recv_buffer);
+  PDM_free(i_recv_buffer);
 
   int s_block_data = _post_treatment(ptb,
                                      s_data,
@@ -3198,7 +3198,7 @@ PDM_part_to_block_exch
                                      s_recv_buffer,
                                      block_stride,
                                      block_data);
- PDM_free(recv_buffer);
+  PDM_free(recv_buffer);
   PDM_MPI_Type_free(&mpi_type);
 
   PDM_timer_hang_on(t_timer[DATA_EXCHANGE]);
@@ -3343,8 +3343,8 @@ PDM_part_to_block_reverse_exch
                         mpi_type,
                         ptb->comm);
 
-     PDM_free(_i_send_buffer); 
-     PDM_free(_i_recv_buffer); 
+      PDM_free(_i_send_buffer); 
+      PDM_free(_i_recv_buffer); 
     }
 
     else {
@@ -3374,13 +3374,13 @@ PDM_part_to_block_reverse_exch
                           part_data);
   PDM_MPI_Type_free(&mpi_type);
 
- PDM_free(recv_buffer);
- PDM_free(send_buffer);
+  PDM_free(recv_buffer);
+  PDM_free(send_buffer);
 
- PDM_free(i_send_buffer);
- PDM_free(i_recv_buffer);
- PDM_free(n_send_buffer);
- PDM_free(n_recv_buffer);
+  PDM_free(i_send_buffer);
+  PDM_free(i_recv_buffer);
+  PDM_free(n_send_buffer);
+  PDM_free(n_recv_buffer);
 }
 
 /**
@@ -3521,8 +3521,8 @@ PDM_part_to_block_iexch
     i_recv_buffer[i] = (int ) tmp_i_recv_buffer[i];
   }
 
- PDM_free(tmp_i_send_buffer);
- PDM_free(tmp_i_recv_buffer);
+  PDM_free(tmp_i_send_buffer);
+  PDM_free(tmp_i_recv_buffer);
 
   if (k_comm == PDM_MPI_COMM_KIND_P2P) {
     printf ("Error PDM_part_to_block_iexch : "
@@ -3728,8 +3728,8 @@ PDM_part_to_block_reverse_iexch
     i_recv_buffer[i] = (int ) tmp_i_recv_buffer[i];
   }
 
- PDM_free(tmp_i_send_buffer);
- PDM_free(tmp_i_recv_buffer);
+  PDM_free(tmp_i_send_buffer);
+  PDM_free(tmp_i_recv_buffer);
 
   if (k_comm == PDM_MPI_COMM_KIND_P2P) {
     printf ("Error PDM_part_to_block_iexch : "
@@ -3847,12 +3847,12 @@ PDM_part_to_block_iexch_wait
     PDM_MPI_Win_free(&ptb->win_send[request_id]);
     ptb->win_send[request_id] = PDM_MPI_WIN_NULL;
   } else {
-   PDM_free(ptb->send_buffer  [request_id]);
+    PDM_free(ptb->send_buffer  [request_id]);
   }
- PDM_free(ptb->n_send_buffer[request_id]);
- PDM_free(ptb->i_send_buffer[request_id]);
- PDM_free(ptb->n_recv_buffer[request_id]);
- PDM_free(ptb->i_recv_buffer[request_id]);
+  PDM_free(ptb->n_send_buffer[request_id]);
+  PDM_free(ptb->i_send_buffer[request_id]);
+  PDM_free(ptb->n_recv_buffer[request_id]);
+  PDM_free(ptb->i_recv_buffer[request_id]);
 
   ptb->send_buffer  [request_id] = NULL;
   ptb->n_send_buffer[request_id] = NULL;
@@ -3882,7 +3882,7 @@ PDM_part_to_block_iexch_wait
     PDM_MPI_Win_free(&ptb->win_recv[request_id]);
     ptb->win_recv[request_id] = PDM_MPI_WIN_NULL;
   } else {
-   PDM_free(ptb->recv_buffer  [request_id]);
+    PDM_free(ptb->recv_buffer  [request_id]);
   }
   ptb->recv_stride [request_id] = NULL;
   ptb->recv_buffer [request_id] = NULL;
@@ -3939,10 +3939,10 @@ PDM_part_to_block_reverse_iexch_wait
     PDM_MPI_Win_free(&ptb->win_send[request_id]);
     ptb->win_send[request_id] = PDM_MPI_WIN_NULL;
   } else {
-   PDM_free(ptb->send_buffer  [request_id]);
+    PDM_free(ptb->send_buffer  [request_id]);
   }
- PDM_free(ptb->n_send_buffer[request_id]);
- PDM_free(ptb->i_send_buffer[request_id]);
+  PDM_free(ptb->n_send_buffer[request_id]);
+  PDM_free(ptb->i_send_buffer[request_id]);
 
   ptb->send_buffer  [request_id] = NULL;
   ptb->n_send_buffer[request_id] = NULL;
@@ -3969,9 +3969,9 @@ PDM_part_to_block_reverse_iexch_wait
                           ptb->part_stride  [request_id],
                           ptb->part_data    [request_id]);
 
- PDM_free(tmp_i_recv_buffer);
- PDM_free(ptb->n_recv_buffer[request_id]);
- PDM_free(ptb->i_recv_buffer[request_id]);
+  PDM_free(tmp_i_recv_buffer);
+  PDM_free(ptb->n_recv_buffer[request_id]);
+  PDM_free(ptb->i_recv_buffer[request_id]);
   ptb->n_recv_buffer[request_id] = NULL;
   ptb->i_recv_buffer[request_id] = NULL;
 
@@ -3983,7 +3983,7 @@ PDM_part_to_block_reverse_iexch_wait
     PDM_MPI_Win_free(&ptb->win_recv[request_id]);
     ptb->win_recv[request_id] = PDM_MPI_WIN_NULL;
   } else {
-   PDM_free(ptb->recv_buffer  [request_id]);
+    PDM_free(ptb->recv_buffer  [request_id]);
   }
   ptb->recv_stride [request_id] = NULL;
   ptb->recv_buffer [request_id] = NULL;
@@ -4115,8 +4115,8 @@ PDM_part_to_block_async_exch
     i_recv_buffer[i] = (int ) tmp_i_recv_buffer[i];
   }
 
- PDM_free(tmp_i_send_buffer);
- PDM_free(tmp_i_recv_buffer);
+  PDM_free(tmp_i_send_buffer);
+  PDM_free(tmp_i_recv_buffer);
 
   PDM_MPI_Ialltoallv(send_buffer,
                      n_send_buffer,
@@ -4185,11 +4185,11 @@ PDM_part_to_block_asyn_get_raw
 
   assert(ptb->wait_status[request_id] == 1);
 
- PDM_free(ptb->send_buffer  [request_id]);
- PDM_free(ptb->n_send_buffer[request_id]);
- PDM_free(ptb->i_send_buffer[request_id]);
- PDM_free(ptb->n_recv_buffer[request_id]);
- PDM_free(ptb->i_recv_buffer[request_id]);
+  PDM_free(ptb->send_buffer  [request_id]);
+  PDM_free(ptb->n_send_buffer[request_id]);
+  PDM_free(ptb->i_send_buffer[request_id]);
+  PDM_free(ptb->n_recv_buffer[request_id]);
+  PDM_free(ptb->i_recv_buffer[request_id]);
 
   ptb->send_buffer  [request_id] = NULL;
   ptb->n_send_buffer[request_id] = NULL;
@@ -4244,11 +4244,11 @@ PDM_part_to_block_asyn_post_treatment
   // size_t s_send_buffer = ptb->i_send_buffer[request_id][ptb->s_comm - 1] + ptb->n_send_buffer[request_id][ptb->s_comm -1];
   size_t s_recv_buffer = ( ptb->i_recv_buffer[request_id][ptb->s_comm - 1] + ptb->n_recv_buffer[request_id][ptb->s_comm -1] )*s_data_tot;
 
- PDM_free(ptb->send_buffer  [request_id]);
- PDM_free(ptb->n_send_buffer[request_id]);
- PDM_free(ptb->i_send_buffer[request_id]);
- PDM_free(ptb->n_recv_buffer[request_id]);
- PDM_free(ptb->i_recv_buffer[request_id]);
+  PDM_free(ptb->send_buffer  [request_id]);
+  PDM_free(ptb->n_send_buffer[request_id]);
+  PDM_free(ptb->i_send_buffer[request_id]);
+  PDM_free(ptb->n_recv_buffer[request_id]);
+  PDM_free(ptb->i_recv_buffer[request_id]);
 
   ptb->send_buffer  [request_id] = NULL;
   ptb->n_send_buffer[request_id] = NULL;
@@ -4274,7 +4274,7 @@ PDM_part_to_block_asyn_post_treatment
   /*
    * Free
    */
- PDM_free(ptb->recv_buffer  [request_id]);
+  PDM_free(ptb->recv_buffer  [request_id]);
   ptb->recv_stride[request_id] = NULL;
   ptb->recv_buffer[request_id] = NULL;
 
@@ -4300,44 +4300,44 @@ PDM_part_to_block_free
 {
 
   if (ptb->active_ranks != NULL) {
-   PDM_free(ptb->active_ranks);
+    PDM_free(ptb->active_ranks);
     ptb->active_ranks = NULL;
   }
   if (ptb->dest_proc != NULL) {
-   PDM_free(ptb->dest_proc);
+    PDM_free(ptb->dest_proc);
     ptb->dest_proc = NULL;
   }
   if (ptb->data_distrib_index != NULL) {
-   PDM_free(ptb->data_distrib_index);
+    PDM_free(ptb->data_distrib_index);
     ptb->data_distrib_index = NULL;
   }
   if (ptb->i_send_data != NULL) {
-   PDM_free(ptb->i_send_data);
+    PDM_free(ptb->i_send_data);
     ptb->i_send_data = NULL;
   }
   if (ptb->i_recv_data != NULL) {
-   PDM_free(ptb->i_recv_data);
+    PDM_free(ptb->i_recv_data);
     ptb->i_recv_data = NULL;
   }
   if (ptb->n_send_data != NULL) {
-   PDM_free(ptb->n_send_data);
+    PDM_free(ptb->n_send_data);
     ptb->n_send_data = NULL;
   }
   if (ptb->n_recv_data != NULL) {
-   PDM_free(ptb->n_recv_data);
+    PDM_free(ptb->n_recv_data);
     ptb->n_recv_data = NULL;
   }
   if (ptb->sorted_recv_gnum != NULL) {
-   PDM_free(ptb->sorted_recv_gnum);
+    PDM_free(ptb->sorted_recv_gnum);
     ptb->sorted_recv_gnum = NULL;
   }
 
   if (ptb->enable_reverse == 1 && ptb->idx_partial != NULL) {
-   PDM_free(ptb->idx_partial);
+    PDM_free(ptb->idx_partial);
     ptb->idx_partial = NULL;
   }
   if (ptb->order != NULL) {
-   PDM_free(ptb->order);
+    PDM_free(ptb->order);
     ptb->order = NULL;
   }
 
@@ -4347,19 +4347,19 @@ PDM_part_to_block_free
   // }
   if ((ptb->t_post != PDM_PART_TO_BLOCK_POST_NOTHING      ) &&
       (ptb->t_post != PDM_PART_TO_BLOCK_POST_MERGE_UNIFORM) && (ptb->block_gnum != NULL)) {
-   PDM_free(ptb->block_gnum);
+    PDM_free(ptb->block_gnum);
     ptb->block_gnum = NULL;
   }
   if (ptb->block_gnum_count != NULL) {
-   PDM_free(ptb->block_gnum_count);
+    PDM_free(ptb->block_gnum_count);
     ptb->block_gnum_count=NULL;
   }
 
   if (ptb->weight_g != NULL) {
     for (int i = 0; i < ptb->n_part; i++) {
-     PDM_free(ptb->weight_g[i]);
+      PDM_free(ptb->weight_g[i]);
     }
-   PDM_free(ptb->weight_g);
+    PDM_free(ptb->weight_g);
   }
 
   /* This one check if all buffer has been correctly move or delete */
@@ -4380,29 +4380,29 @@ PDM_part_to_block_free
     assert(ptb->mpi_type     [i_req] == PDM_MPI_DATATYPE_NULL);
   }
 
- PDM_free(ptb->s_data       );
- PDM_free(ptb->t_stride     );
- PDM_free(ptb->cst_stride   );
- PDM_free(ptb->wait_status  );
- PDM_free(ptb->request_mpi  );
- PDM_free(ptb->send_buffer  );
- PDM_free(ptb->recv_buffer  );
- PDM_free(ptb->recv_stride  );
- PDM_free(ptb->n_send_buffer);
- PDM_free(ptb->i_send_buffer);
- PDM_free(ptb->n_recv_buffer);
- PDM_free(ptb->i_recv_buffer);
- PDM_free(ptb->block_stride );
- PDM_free(ptb->block_data   );
- PDM_free(ptb->part_stride  );
- PDM_free(ptb->part_data    );
+  PDM_free(ptb->s_data       );
+  PDM_free(ptb->t_stride     );
+  PDM_free(ptb->cst_stride   );
+  PDM_free(ptb->wait_status  );
+  PDM_free(ptb->request_mpi  );
+  PDM_free(ptb->send_buffer  );
+  PDM_free(ptb->recv_buffer  );
+  PDM_free(ptb->recv_stride  );
+  PDM_free(ptb->n_send_buffer);
+  PDM_free(ptb->i_send_buffer);
+  PDM_free(ptb->n_recv_buffer);
+  PDM_free(ptb->i_recv_buffer);
+  PDM_free(ptb->block_stride );
+  PDM_free(ptb->block_data   );
+  PDM_free(ptb->part_stride  );
+  PDM_free(ptb->part_data    );
 
- PDM_free(ptb->comm_kind);
- PDM_free(ptb->win_send );
- PDM_free(ptb->win_recv );
- PDM_free(ptb->mpi_type );
+  PDM_free(ptb->comm_kind);
+  PDM_free(ptb->win_send );
+  PDM_free(ptb->win_recv );
+  PDM_free(ptb->mpi_type );
 
- PDM_free(ptb);
+  PDM_free(ptb);
 
   n_ptb--;
   if (n_ptb == 0) {
@@ -4490,7 +4490,7 @@ PDM_part_to_block_adapt_partial_block_to_block
     _block_n[i1] = block_n_tmp[i1];
   }
 
- PDM_free(block_n_tmp);
+  PDM_free(block_n_tmp);
 
   PDM_g_num_t old_max = _block_distrib_idx[ptb->s_comm];
   PDM_g_num_t new_max = n_g_block;
