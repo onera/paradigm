@@ -641,9 +641,9 @@ _create_wall_surf
     PDM_gnum_set_from_parents(gnum_face, i_part, n_surf_face[i_part], _psurf_face_ln_to_gn);
     PDM_gnum_set_from_parents(gnum_vtx , i_part, n_surf_vtx [i_part], psurf_vtx_ln_to_gn [i_part] );
 
-   PDM_free(vtx_flags);
-   PDM_free(face_bnd);
-   PDM_free(face_vtx);
+    PDM_free(vtx_flags);
+    PDM_free(face_bnd);
+    PDM_free(face_vtx);
 
   }
 
@@ -698,8 +698,8 @@ _create_wall_surf
 
   /* A laisser après le ptb vu qu'on ecrase psurf_vtx_ln_to_gn */
   for(int i_part = 0; i_part < n_part; ++i_part) {
-   PDM_free(psurf_face_ln_to_gn[i_part]);
-   PDM_free(psurf_vtx_ln_to_gn [i_part]);
+    PDM_free(psurf_face_ln_to_gn[i_part]);
+    PDM_free(psurf_vtx_ln_to_gn [i_part]);
     psurf_face_ln_to_gn[i_part] = PDM_gnum_get(gnum_face, 0);
     psurf_vtx_ln_to_gn [i_part] = PDM_gnum_get(gnum_vtx , 0);
   }
@@ -732,8 +732,8 @@ _create_wall_surf
           (void **)      &dface_vtx);
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
-   PDM_free(psurf_face_vtx_g_num[i_part]);
-   PDM_free(psurf_face_vtx_n    [i_part]);
+    PDM_free(psurf_face_vtx_g_num[i_part]);
+    PDM_free(psurf_face_vtx_n    [i_part]);
   }
   PDM_free(psurf_face_vtx_g_num);
   PDM_free(psurf_face_vtx_n);
@@ -1621,9 +1621,9 @@ char *argv[]
   PDM_block_to_part_free(btp);
 
   for(int i_part = 0; i_part < n_part_line; ++i_part) {
-   PDM_free(pline_to_cell_center  [i_part]);
-   PDM_free(pline_to_cell_velocity[i_part]);
-   PDM_free(pline_data[i_part]);
+    PDM_free(pline_to_cell_center  [i_part]);
+    PDM_free(pline_to_cell_velocity[i_part]);
+    PDM_free(pline_data[i_part]);
   }
   PDM_free(pline_to_cell_center);
   PDM_free(pline_to_cell_velocity);
@@ -1639,13 +1639,13 @@ char *argv[]
   PDM_dist_cloud_surf_free(dist);
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
-   PDM_free(psurf_vtx_coord    [i_part]);
-   PDM_free(psurf_face_vtx_idx [i_part]);
-   PDM_free(psurf_face_vtx     [i_part]);
-   PDM_free(psurf_face_ln_to_gn[i_part]);
-   PDM_free(psurf_vtx_ln_to_gn [i_part]);
-   PDM_free(cell_center        [i_part]);
-   PDM_free(velocity           [i_part]);
+    PDM_free(psurf_vtx_coord    [i_part]);
+    PDM_free(psurf_face_vtx_idx [i_part]);
+    PDM_free(psurf_face_vtx     [i_part]);
+    PDM_free(psurf_face_ln_to_gn[i_part]);
+    PDM_free(psurf_vtx_ln_to_gn [i_part]);
+    PDM_free(cell_center        [i_part]);
+    PDM_free(velocity           [i_part]);
   }
   PDM_free(psurf_vtx );
   PDM_free(psurf_face);

@@ -501,7 +501,7 @@ PDM_dconnectivity_transpose
                                                       &dentity2_entity1_n,
                                                       entity2_distrib[n_rank]);
     dn_entity2_recv = distrib2_idx_full[i_rank+1] - distrib2_idx_full[i_rank];
-   PDM_free(distrib2_idx_full);
+    PDM_free(distrib2_idx_full);
   }
 
   if(save_entity_distrib == 1) {
@@ -958,7 +958,7 @@ PDM_dentity_group_signed_transpose
 
 
   for(int i_group = 0; i_group < n_group; ++i_group) {
-   PDM_free(select_entity[i_group]);
+    PDM_free(select_entity[i_group]);
     PDM_part_to_block_free(ptb[i_group]);
   }
   PDM_free(ptb);

@@ -167,7 +167,7 @@ _determine_A_outside
     }
 
     // cll remains as is
-   PDM_free(*outside);
+    PDM_free(*outside);
     *outside = NULL;
     return;
   }
@@ -228,14 +228,14 @@ _determine_A_outside
 
             if (i == 4) {
               (*outside)->head = (*cll)->head;
-             PDM_free(*cll);
+              PDM_free(*cll);
               *cll = NULL;
               return;
             } // plane X+Y+Z=1
 
             else {
-             PDM_free(*cll);
-             PDM_free(*outside);
+              PDM_free(*cll);
+              PDM_free(*outside);
               *cll     = NULL;
               *outside = NULL;
               return;
@@ -251,7 +251,7 @@ _determine_A_outside
 
             if (i == 4) {
               // cll remains as is
-             PDM_free(*outside);
+              PDM_free(*outside);
               *outside = NULL;
               return;
             } // plane X+Y+Z=1
@@ -270,14 +270,14 @@ _determine_A_outside
 
             if (i == 4) {
               // cll remains as is
-             PDM_free(*outside);
+              PDM_free(*outside);
               *outside = NULL;
               return;
             } // plane X+Y+Z=1
 
             else {
-             PDM_free(*cll);
-             PDM_free(*outside);
+              PDM_free(*cll);
+              PDM_free(*outside);
               *cll     = NULL;
               *outside = NULL;
               return;
@@ -298,7 +298,7 @@ _determine_A_outside
 
               if (i == 4) {
                 (*outside)->head = (*cll)->head;
-               PDM_free(*cll);
+                PDM_free(*cll);
                 *cll = NULL;
                 return;
               } // plane X+Y+Z=1
@@ -321,7 +321,7 @@ _determine_A_outside
 
               if (i == 4) {
                 // cll remains as is
-               PDM_free(*outside);
+                PDM_free(*outside);
                 *outside = NULL;
                 return;
               } // plane X+Y+Z=1
@@ -346,7 +346,7 @@ _determine_A_outside
 
                 if (i == 4) {
                   // cll remains as is
-                 PDM_free(*outside);
+                  PDM_free(*outside);
                   *outside = NULL;
                   return;
                 } // plane X+Y+Z=1
@@ -365,14 +365,14 @@ _determine_A_outside
 
                 if (i == 4) {
                   (*outside)->head = (*cll)->head;
-                 PDM_free(*cll);
+                  PDM_free(*cll);
                   *cll = NULL;
                   return;
                 } // plane X+Y+Z=1
 
                 else {
-                 PDM_free(*cll);
-                 PDM_free(*outside);
+                  PDM_free(*cll);
+                  PDM_free(*outside);
                   *cll     = NULL;
                   *outside = NULL;
                   return;
@@ -477,14 +477,14 @@ _determine_A_outside
       if (fc < 0) {
         if (i == 4) {
           (*outside)->head = (*cll)->head;
-         PDM_free(*cll);
+          PDM_free(*cll);
           *cll = NULL;
           return;
         } // plane X+Y+Z=1
 
         else {
-         PDM_free(*cll);
-         PDM_free(*outside);
+          PDM_free(*cll);
+          PDM_free(*outside);
           *cll     = NULL;
           *outside = NULL;
           return;
@@ -494,7 +494,7 @@ _determine_A_outside
 
     // reconnect linked lists
     if (i == 4) {
-     PDM_free(*outside);
+      PDM_free(*outside);
       *outside = NULL;
     }
     if (intersect_idx == 2) {
@@ -1640,7 +1640,7 @@ PDM_mesh_intersection_vol_vol_atomic_compute
   if (A != NULL)PDM_free(A);
   if (B != NULL)PDM_free(B);
   for (int i = 0; i < max_size; i++) {
-   PDM_free(cll_storage[i]);
+    PDM_free(cll_storage[i]);
   }
   PDM_free(cll_storage);
 

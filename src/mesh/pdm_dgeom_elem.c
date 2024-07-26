@@ -219,8 +219,8 @@ PDM_compute_vtx_characteristic_length
                                          0,
                                          &dvtx_vtx_idx,
                                          &dvtx_vtx);
-   PDM_free(dvtx_face_idx);
-   PDM_free(dvtx_face    );
+    PDM_free(dvtx_face_idx);
+    PDM_free(dvtx_face    );
 
   } else {
 
@@ -251,9 +251,9 @@ PDM_compute_vtx_characteristic_length
                                          &dvtx_vtx_idx,
                                          &dvtx_vtx);
 
-   PDM_free(dedge_vtx_idx);
-   PDM_free(dvtx_edge_idx);
-   PDM_free(dvtx_edge    );
+    PDM_free(dedge_vtx_idx);
+    PDM_free(dvtx_edge_idx);
+    PDM_free(dvtx_edge    );
   }
 
   /*

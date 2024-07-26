@@ -389,10 +389,10 @@ int main(int argc, char *argv[])
                                       &pedge_ln_to_gn);
 
   for (int i_part = 0; i_part < n_part_domains; i_part++) {
-   PDM_free(pface_edge_idx[i_part]);
-   PDM_free(pface_edge    [i_part]);
-   PDM_free(pedge_vtx     [i_part]);
-   PDM_free(pedge_ln_to_gn[i_part]);
+    PDM_free(pface_edge_idx[i_part]);
+    PDM_free(pface_edge    [i_part]);
+    PDM_free(pedge_vtx     [i_part]);
+    PDM_free(pedge_ln_to_gn[i_part]);
   }
   PDM_free(pface_edge_idx);
   PDM_free(pface_edge    );

@@ -686,8 +686,8 @@ _separate_groups
                            NULL,
                 (void ***) ridge_dedge_vtx);
     PDM_block_to_part_free(btp_edge);
-   PDM_free(pedge_ln_to_gn);
-   PDM_free(ridge_dn_edge);
+    PDM_free(pedge_ln_to_gn);
+    PDM_free(ridge_dn_edge);
   }
 
 
@@ -748,8 +748,8 @@ _separate_groups
                            NULL,
                 (void ***) surface_dface_vtx);
     PDM_block_to_part_free(btp_face);
-   PDM_free(pface_ln_to_gn);
-   PDM_free(surface_dn_face);
+    PDM_free(pface_ln_to_gn);
+    PDM_free(surface_dn_face);
   }
 
 }
@@ -954,22 +954,22 @@ int main(int argc, char *argv[])
   PDM_DMesh_nodal_free(dmn);
 
   for (int i = 0; i < n_ridge; i++) {
-   PDM_free(ridge_dedge_vtx[i]);
-   PDM_free(ridge_distrib_edge[i]);
+    PDM_free(ridge_dedge_vtx[i]);
+    PDM_free(ridge_distrib_edge[i]);
   }
   PDM_free(ridge_dedge_vtx);
   PDM_free(ridge_distrib_edge);
 
   for (int i = 0; i < n_surface; i++) {
-   PDM_free(surface_dface_vtx[i]);
-   PDM_free(surface_distrib_face[i]);
+    PDM_free(surface_dface_vtx[i]);
+    PDM_free(surface_distrib_face[i]);
   }
   PDM_free(surface_dface_vtx);
   PDM_free(surface_distrib_face);
 
   if (ownership == PDM_OWNERSHIP_USER) {
-   PDM_free(dvtx_coord);
-   PDM_free(distrib_vtx);
+    PDM_free(dvtx_coord);
+    PDM_free(distrib_vtx);
   }
 
   if (i_rank == 0) {

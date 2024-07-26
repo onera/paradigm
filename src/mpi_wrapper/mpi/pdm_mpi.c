@@ -1013,7 +1013,7 @@ int PDM_MPI_Finalize (void)
         mpi_file[i] = NULL;
       }
     }
-   PDM_free(mpi_file);
+    PDM_free(mpi_file);
     l_mpi_file = 0;
     n_mpi_file = 0;
   }
@@ -1021,11 +1021,11 @@ int PDM_MPI_Finalize (void)
     for (int i = 0; i < l_mpi_comm; i++) {
       if (mpi_comm[i] != NULL) {
         MPI_Comm_free(mpi_comm[i]);
-       PDM_free(mpi_comm[i]);
+        PDM_free(mpi_comm[i]);
         mpi_comm[i] = NULL;
       }
     }
-   PDM_free(mpi_comm);
+    PDM_free(mpi_comm);
     l_mpi_comm = 0;
     n_mpi_comm = 0;
   }
@@ -1037,7 +1037,7 @@ int PDM_MPI_Finalize (void)
         mpi_request[i] = NULL;
       }
     }
-   PDM_free(mpi_request);
+    PDM_free(mpi_request);
     l_mpi_request = 0;
     n_mpi_request = 0;
   }
@@ -1049,7 +1049,7 @@ int PDM_MPI_Finalize (void)
         mpi_win[i] = NULL;
       }
     }
-   PDM_free(mpi_win);
+    PDM_free(mpi_win);
     l_mpi_win = 0;
     n_mpi_win = 0;
   }
@@ -1061,7 +1061,7 @@ int PDM_MPI_Finalize (void)
         mpi_datatype[i] = NULL;
       }
     }
-   PDM_free(mpi_datatype);
+    PDM_free(mpi_datatype);
     l_mpi_datatype = 0;
     n_mpi_datatype = 0;
   }
@@ -1172,9 +1172,9 @@ int PDM_MPI_File_open(PDM_MPI_Comm comm, char *filename, int amode, PDM_MPI_File
       }
     } while (pch != NULL);
 
-   PDM_free(cp_hints);
-   PDM_free(name);
-   PDM_free(value);
+    PDM_free(cp_hints);
+    PDM_free(name);
+    PDM_free(value);
 
   }
 
@@ -1717,7 +1717,7 @@ int PDM_MPI_Wait(PDM_MPI_Request *request)
   *request = PDM_MPI_REQUEST_NULL;
 
   if (n_mpi_request == 0) {
-   PDM_free(mpi_request);
+    PDM_free(mpi_request);
     mpi_request = NULL;
 
     l_mpi_request = 0;
@@ -1752,7 +1752,7 @@ int PDM_MPI_Test(PDM_MPI_Request *request, int *flag)
   *request = PDM_MPI_REQUEST_NULL;
 
   if (n_mpi_request == 0) {
-   PDM_free(mpi_request);
+    PDM_free(mpi_request);
     mpi_request = NULL;
 
     l_mpi_request = 0;
@@ -2372,8 +2372,8 @@ int PDM_MPI_Alltoallv_l(void *sendbuf, int *sendcounts, size_t *sdispls,
                   _pdm_mpi_2_mpi_datatype(recvtype),
                   _pdm_mpi_2_mpi_comm(comm));
 
-   PDM_free(_sdispls);
-   PDM_free(_rdispls);
+    PDM_free(_sdispls);
+    PDM_free(_rdispls);
   }
 
   else {
@@ -2434,8 +2434,8 @@ int PDM_MPI_Alltoallv_l(void *sendbuf, int *sendcounts, size_t *sdispls,
       }
     }
 
-   PDM_free(request_r);
-   PDM_free(request_s);
+    PDM_free(request_r);
+    PDM_free(request_s);
   }
 
   return _mpi_2_pdm_mpi_err(code);
@@ -2744,7 +2744,7 @@ int PDM_MPI_Win_free(PDM_MPI_Win *win)
   *win = PDM_MPI_WIN_NULL;
 
   if (n_mpi_win == 0) {
-   PDM_free(mpi_win);
+    PDM_free(mpi_win);
     mpi_win = NULL;
 
     l_mpi_win = 0;
@@ -2823,7 +2823,7 @@ int PDM_MPI_Comm_free(PDM_MPI_Comm *comm)
     MPI_Comm mpi_comm_loc = _pdm_mpi_2_mpi_comm(*comm);
     code = MPI_Comm_free(&mpi_comm_loc);
 
-   PDM_free(mpi_comm[*comm]);
+    PDM_free(mpi_comm[*comm]);
     mpi_comm[*comm] = NULL;
     n_mpi_comm += -1;
     return _mpi_2_pdm_mpi_err(code);
@@ -3301,7 +3301,7 @@ PDM_MPI_setup_hybrid_dist_comm_graph
     }
     PDM_MPI_Allgatherv(lnuma_core_gid, n_rank_in_shm, PDM_MPI_INT,
                        numa_core_gid , numa_by_numa_n, numa_by_numa_idx, PDM_MPI_INT, comm_master_of_shm);
-   PDM_free(lnuma_core_gid);
+    PDM_free(lnuma_core_gid);
   }
   PDM_MPI_Barrier(comm_shared);
   PDM_mpi_win_shared_sync(wnuma_core_gid);

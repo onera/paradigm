@@ -690,10 +690,10 @@ int main(int argc, char *argv[])
       }
     }
 
-   PDM_free(local_field[i_part]);
-   PDM_free(local_weight[i_part]);
-   PDM_free(global_mean_field_ptr[i_part]);
-   PDM_free(cellVtxGN[i_part]);
+    PDM_free(local_field[i_part]);
+    PDM_free(local_weight[i_part]);
+    PDM_free(global_mean_field_ptr[i_part]);
+    PDM_free(cellVtxGN[i_part]);
   }
 
   PDM_free(local_field);

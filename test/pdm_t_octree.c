@@ -352,11 +352,11 @@ char *argv[]
     //                                box_pts,
     //                                n_box,
     //                                "box_pts : ");
-   PDM_free(box_pts_idx);
-   PDM_free(box_pts);
+    PDM_free(box_pts_idx);
+    PDM_free(box_pts);
 
-   PDM_free(box_extents);
-   PDM_free(box_ln_to_gn);
+    PDM_free(box_extents);
+    PDM_free(box_ln_to_gn);
   }
 
   PDM_octree_seq_free(oct_equi);

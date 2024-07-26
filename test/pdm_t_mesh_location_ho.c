@@ -537,7 +537,7 @@ int main(int argc, char *argv[])
                                        order,
                                        PDM_Mesh_nodal_n_vtx_elt_get(type, order),
                                        ijk);
-     PDM_free(ijk);
+      PDM_free(ijk);
     }
   }
 
@@ -904,7 +904,7 @@ int main(int argc, char *argv[])
                                                    1,
                                                    field_name,
                                                    field_value);
-     PDM_free(pcell_vtx_out);
+      PDM_free(pcell_vtx_out);
     }
   }
 
@@ -919,8 +919,8 @@ int main(int argc, char *argv[])
   PDM_free(tgt_field_exact);
 
   for (int i = 0; i < n_part; i++) {
-   PDM_free(send_field[i]);
-   PDM_free(src_field [i]);
+    PDM_free(send_field[i]);
+    PDM_free(src_field [i]);
   }
   PDM_free(send_field);
   PDM_free(src_field );

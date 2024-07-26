@@ -379,7 +379,7 @@ int main(int argc, char *argv[])
                          line_coord,
                          line_g_num,
                          NULL);
-   PDM_free(line_coord);
+    PDM_free(line_coord);
 
 
 
@@ -420,7 +420,7 @@ int main(int argc, char *argv[])
                          line_coord,
                          pts_g_num,
                          NULL);
-   PDM_free(line_coord);
+    PDM_free(line_coord);
 
   }
 

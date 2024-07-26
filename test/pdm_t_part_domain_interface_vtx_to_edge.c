@@ -583,17 +583,17 @@ int main
 
   for (int i_dom = 0; i_dom < n_domain; i_dom++) {
     for (int i_part = 0; i_part < pn_n_part[i_dom]; i_part++) {
-     PDM_free(pedge_vtx_idx [i_dom][i_part]);
+      PDM_free(pedge_vtx_idx [i_dom][i_part]);
     }
-   PDM_free(pn_face       [i_dom]);
-   PDM_free(pn_edge       [i_dom]);
-   PDM_free(pface_ln_to_gn[i_dom]);
-   PDM_free(pedge_ln_to_gn[i_dom]);
-   PDM_free(pn_vtx        [i_dom]);
-   PDM_free(pvtx_ln_to_gn [i_dom]);
-   PDM_free(pface_vtx     [i_dom]);
-   PDM_free(pedge_vtx_idx [i_dom]);
-   PDM_free(pedge_vtx     [i_dom]);
+    PDM_free(pn_face       [i_dom]);
+    PDM_free(pn_edge       [i_dom]);
+    PDM_free(pface_ln_to_gn[i_dom]);
+    PDM_free(pedge_ln_to_gn[i_dom]);
+    PDM_free(pn_vtx        [i_dom]);
+    PDM_free(pvtx_ln_to_gn [i_dom]);
+    PDM_free(pface_vtx     [i_dom]);
+    PDM_free(pedge_vtx_idx [i_dom]);
+    PDM_free(pedge_vtx     [i_dom]);
   }
 
   PDM_free(pn_n_part     );

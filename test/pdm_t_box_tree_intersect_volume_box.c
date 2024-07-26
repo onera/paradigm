@@ -522,9 +522,9 @@ int main(int argc, char *argv[])
                                0,
                                NULL,
                                NULL);
-   PDM_free(vtx_coord);
-   PDM_free(vtx_g_num);
-   PDM_free(face_vtx);
+    PDM_free(vtx_coord);
+    PDM_free(vtx_g_num);
+    PDM_free(face_vtx);
   }
 
 

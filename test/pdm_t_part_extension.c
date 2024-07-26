@@ -374,12 +374,12 @@ _visu
   PDM_writer_step_end(id_cs);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
-   PDM_free(face_vtx_n[i_part]);
-   PDM_free(cell_face_n[i_part]);
-   PDM_free(val_num_part[i_part]);
-   PDM_free(val_cell_num[i_part]);
-   PDM_free(val_num_rank[i_part]);
-   PDM_free(val_cell_gnum[i_part]);
+    PDM_free(face_vtx_n[i_part]);
+    PDM_free(cell_face_n[i_part]);
+    PDM_free(val_num_part[i_part]);
+    PDM_free(val_cell_num[i_part]);
+    PDM_free(val_num_rank[i_part]);
+    PDM_free(val_cell_gnum[i_part]);
   }
   PDM_free(distrib_part);
   PDM_free(face_vtx_n);

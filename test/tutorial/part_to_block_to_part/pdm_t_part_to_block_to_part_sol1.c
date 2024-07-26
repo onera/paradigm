@@ -288,8 +288,8 @@ int main(int argc, char *argv[])
   PDM_free(summed_block_data);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
-   PDM_free(part_stride2[i_part]);
-   PDM_free(part_data2[i_part]);
+    PDM_free(part_stride2[i_part]);
+    PDM_free(part_data2[i_part]);
   }
   PDM_free(part_stride2);
   PDM_free(part_data2);

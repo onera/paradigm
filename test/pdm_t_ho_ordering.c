@@ -416,7 +416,7 @@ int main(int argc, char *argv[])
 
     printf("type %d OK\n", (int) (type));
 
-   PDM_free(ijk_to_user);
+    PDM_free(ijk_to_user);
   }
 
   PDM_free(user_to_ijk);*/

@@ -349,7 +349,7 @@ _build_face_face_connectivity
   if (0) {
     int *idx = PDM_array_new_idx_from_const_stride_int(stride, n_face);
     PDM_log_trace_connectivity_int(idx, face_face, n_face, "face_face : ");
-   PDM_free(idx);
+    PDM_free(idx);
   }
 }
 

@@ -712,8 +712,8 @@ int main(int argc, char *argv[])
       } // end if no group
     } // end loop on vertices
 
-   PDM_free(pvtx_coord_neighbours[i_part]);
-   PDM_free(pvtx_coord_neighbours);
+    PDM_free(pvtx_coord_neighbours[i_part]);
+    PDM_free(pvtx_coord_neighbours);
   } // end loop Laplace Smoothing stepping
 
   /* Free entities */

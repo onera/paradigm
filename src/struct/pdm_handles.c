@@ -127,10 +127,10 @@ PDM_Handles_free
 )
 {
   if (handles != NULL) {
-   PDM_free(handles->array);
-   PDM_free(handles->idx);
-   PDM_free(handles->idx_inv);
-   PDM_free(handles);
+    PDM_free(handles->array);
+    PDM_free(handles->idx);
+    PDM_free(handles->idx_inv);
+    PDM_free(handles);
   }
   return NULL;
 }
@@ -245,7 +245,7 @@ PDM_Handles_handle_free
 
   if (st_free_data) {
     if (handles->array[handle_idx] != NULL) {
-     PDM_free(handles->array[handle_idx]);
+      PDM_free(handles->array[handle_idx]);
     }
   }
 

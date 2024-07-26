@@ -3746,7 +3746,7 @@ PDM_printf ("****  PDM_edges_intersect_poly_add  OK  ***************************
   			}
   		}
       if(eir != NULL){
-       PDM_free(eir);
+        PDM_free(eir);
       }
   	}
   }
@@ -3812,7 +3812,7 @@ PDM_printf ("****  PDM_edges_intersect_poly_add  OK  ***************************
 	  		}
 	  	}
       if(eir != NULL){
-       PDM_free(eir);
+        PDM_free(eir);
       }
 	  }
   }

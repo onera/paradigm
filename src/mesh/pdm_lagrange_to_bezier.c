@@ -290,7 +290,7 @@ PDM_lagrange_to_bezier_bar
     PDM_linear_algebra_linsolve_gauss(n_nodes, 3, B, bez);
 
     if (matrix == NULL) {
-     PDM_free(B);
+      PDM_free(B);
     }
   }
 
@@ -406,7 +406,7 @@ PDM_lagrange_to_bezier_tria
     PDM_linear_algebra_linsolve_gauss(n_nodes, 3, B, bez);
 
     if (matrix == NULL) {
-     PDM_free(B);
+      PDM_free(B);
     }
   }
 
@@ -562,7 +562,7 @@ PDM_lagrange_to_bezier_quad
     PDM_linear_algebra_linsolve_gauss(n_nodes, 3, B, bez);
 
     if (matrix == NULL) {
-     PDM_free(B);
+      PDM_free(B);
     }
   }
 }
@@ -715,9 +715,9 @@ PDM_lagrange_to_bezier_tetra
     }
 
     if (matrix == NULL) {
-     PDM_free(B);
+      PDM_free(B);
     }
-   PDM_free(work);
+    PDM_free(work);
   }
   #undef ijk2idx
 }
@@ -878,9 +878,9 @@ PDM_lagrange_to_bezier_pyramid
     }
 
     if (matrix == NULL) {
-     PDM_free(B);
+      PDM_free(B);
     }
-   PDM_free(work);
+    PDM_free(work);
   }
 
   #undef ijk2idx
@@ -1067,9 +1067,9 @@ PDM_lagrange_to_bezier_prism
 
 
     if (matrix == NULL) {
-     PDM_free(B);
+      PDM_free(B);
     }
-   PDM_free(work);
+    PDM_free(work);
   }
 
   #undef ijk2idx
@@ -1270,9 +1270,9 @@ PDM_lagrange_to_bezier_hexa
     }
 
     if (matrix == NULL) {
-     PDM_free(B);
+      PDM_free(B);
     }
-   PDM_free(work);
+    PDM_free(work);
   }
 
 }
@@ -1329,7 +1329,7 @@ PDM_bezier_bounding_boxes
 
   PDM_free(bezier_coord);
   if (matrix != NULL) {
-   PDM_free(matrix);
+    PDM_free(matrix);
   }
 }
 

@@ -896,18 +896,18 @@ int main(int argc, char *argv[])
   PDM_dist_cloud_surf_free (dist);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
-   PDM_free(select_face[i_part]);
-   PDM_free(select_vtx[i_part]);
+    PDM_free(select_face[i_part]);
+    PDM_free(select_vtx[i_part]);
 
-   PDM_free(surface_face_vtx_idx[i_part]);
-   PDM_free(surface_face_vtx[i_part]);
-   PDM_free(surface_coords[i_part]);
+    PDM_free(surface_face_vtx_idx[i_part]);
+    PDM_free(surface_face_vtx[i_part]);
+    PDM_free(surface_coords[i_part]);
 
-   PDM_free(surface_face_parent_gnum[i_part]);
-   PDM_free(surface_vtx_parent_gnum[i_part]);
+    PDM_free(surface_face_parent_gnum[i_part]);
+    PDM_free(surface_vtx_parent_gnum[i_part]);
 
-   PDM_free(char_length[i_part]);
-   PDM_free(pts_coords[i_part]);
+    PDM_free(char_length[i_part]);
+    PDM_free(pts_coords[i_part]);
 
   }
 

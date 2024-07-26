@@ -88,27 +88,27 @@ _vtx_free
 {
   if (vtx != NULL) {
     if (vtx->distrib != NULL) {
-     PDM_free(vtx->distrib);
+      PDM_free(vtx->distrib);
       vtx->distrib = NULL;
     }
 
     if(vtx->owner == PDM_OWNERSHIP_KEEP) {
       if(vtx->_coords != NULL) {
-       PDM_free(vtx->_coords);
+        PDM_free(vtx->_coords);
         vtx->_coords = NULL;
       }
 
       if(vtx->dvtx_tag != NULL) {
-       PDM_free(vtx->dvtx_tag);
+        PDM_free(vtx->dvtx_tag);
         vtx->dvtx_tag = NULL;
       }
 
       if(vtx->dvtx_parent_g_num != NULL) {
-       PDM_free(vtx->dvtx_parent_g_num);
+        PDM_free(vtx->dvtx_parent_g_num);
         vtx->dvtx_parent_g_num = NULL;
       }
     }
-   PDM_free(vtx);
+    PDM_free(vtx);
   }
   return NULL;
 }
@@ -260,7 +260,7 @@ PDM_DMesh_nodal_free
       PDM_DMesh_nodal_elmts_free(dmesh_nodal->corner);
     }
 
-   PDM_free(dmesh_nodal);
+    PDM_free(dmesh_nodal);
   }
 }
 
@@ -1455,7 +1455,7 @@ PDM_dmesh_nodal_transfer_to_new_dmesh_nodal
                              NULL,
                   (void ***) &tmp_delmt_vtx_new);
     PDM_g_num_t *delmt_vtx_new = tmp_delmt_vtx_new[0];
-   PDM_free(tmp_delmt_vtx_new);
+    PDM_free(tmp_delmt_vtx_new);
 
     int id_section_post = PDM_DMesh_nodal_section_add(dmn_out,
                                                       geom_kind,
@@ -1527,10 +1527,10 @@ PDM_dmesh_nodal_transfer_to_new_dmesh_nodal_gen
                              &tmp_delmt_vtx_new_n,
                   (void ***) &tmp_delmt_vtx_new);
     PDM_g_num_t *delmt_vtx_new = tmp_delmt_vtx_new[0];
-   PDM_free(tmp_delmt_vtx_new);
-   PDM_free(tmp_delmt_vtx_new_n[0]);
-   PDM_free(tmp_delmt_vtx_new_n);
-   PDM_free(dvtx_old_to_n);
+    PDM_free(tmp_delmt_vtx_new);
+    PDM_free(tmp_delmt_vtx_new_n[0]);
+    PDM_free(tmp_delmt_vtx_new_n);
+    PDM_free(dvtx_old_to_n);
 
     int id_section_post = PDM_DMesh_nodal_section_add(dmn_out,
                                                       geom_kind,
@@ -1681,8 +1681,8 @@ PDM_dmesh_nodal_dump_vtk
                                               &tmp_elt_group);
       int *pelt_group_idx = tmp_elt_group_idx[0];
       int *pelt_group     = tmp_elt_group    [0];
-     PDM_free(tmp_elt_group_idx);
-     PDM_free(tmp_elt_group);
+      PDM_free(tmp_elt_group_idx);
+      PDM_free(tmp_elt_group);
 
       n_field = 1;
       PDM_malloc(field,n_field,double *);
@@ -1691,8 +1691,8 @@ PDM_dmesh_nodal_dump_vtk
         assert (pelt_group_idx[i+1] == pelt_group_idx[i] + 1);
         field[0][i] = (double) pelt_group[i];
       }
-     PDM_free(pelt_group);
-     PDM_free(pelt_group_idx);
+      PDM_free(pelt_group);
+      PDM_free(pelt_group_idx);
     }
 
     /*
@@ -1725,30 +1725,30 @@ PDM_dmesh_nodal_dump_vtk
                   (const char   **) &field_name,
                   (const double **) field);
     }
-   PDM_free(tmp_pvtx_coord);
-   PDM_free(pvtx_ln_to_gn);
-   PDM_free(pcell_vtx_idx);
-   PDM_free(pcell_vtx);
+    PDM_free(tmp_pvtx_coord);
+    PDM_free(pvtx_ln_to_gn);
+    PDM_free(pcell_vtx_idx);
+    PDM_free(pcell_vtx);
 
     if (t_elt != PDM_MESH_NODAL_POLY_2D) {
-     PDM_free(dconnec_idx);
+      PDM_free(dconnec_idx);
     }
-   PDM_free(delmt_ln_to_gn);
+    PDM_free(delmt_ln_to_gn);
 
-   PDM_free(pvtx_coord_out);
+    PDM_free(pvtx_coord_out);
 
     shift += delmt_distribution[n_rank];
 
     if (dmne != NULL) {
-     PDM_free(field[0]);
-     PDM_free(field);
+      PDM_free(field[0]);
+      PDM_free(field);
     }
   }
 
   if (dmne != NULL) {
-   PDM_free(delt_group_idx);
-   PDM_free(delt_group);
-   PDM_free(distrib_elt);
+    PDM_free(delt_group_idx);
+    PDM_free(delt_group);
+    PDM_free(distrib_elt);
   }
 }
 
@@ -2175,7 +2175,7 @@ PDM_dmesh_nodal_find_topological_ridge
                    (const PDM_g_num_t **) &pvtx_ln_to_gn,
                                           &tmp_pvtx_coord);
     double *pvtx_coord = tmp_pvtx_coord[0];
-   PDM_free(tmp_pvtx_coord);
+    PDM_free(tmp_pvtx_coord);
 
     const char *field_name[] = {0 };
     const int  *field[1] = {NULL};
@@ -2196,12 +2196,12 @@ PDM_dmesh_nodal_find_topological_ridge
 
 
 
-   PDM_free(pvtx_coord);
-   PDM_free(pridge_vtx);
-   PDM_free(pridge_vtx_idx);
-   PDM_free(pvtx_ln_to_gn);
-   PDM_free(pridge_ln_to_gn);
-   PDM_free(dridge_vtx_idx);
+    PDM_free(pvtx_coord);
+    PDM_free(pridge_vtx);
+    PDM_free(pridge_vtx_idx);
+    PDM_free(pvtx_ln_to_gn);
+    PDM_free(pridge_ln_to_gn);
+    PDM_free(dridge_vtx_idx);
 
   }
 
@@ -2258,7 +2258,7 @@ PDM_dmesh_nodal_revert_orientation
         dconnec[i*n_vtx_per_elmt+k] = tmp[n_vtx_per_elmt-k-1];
       }
     }
-   PDM_free(tmp);
+    PDM_free(tmp);
   }
 }
 

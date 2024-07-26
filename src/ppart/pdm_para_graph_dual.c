@@ -502,7 +502,7 @@ const int              compute_dnode_to_arc,
                                                         req_id_node_arc,
                                                        &recv_node2arc_strid,
                                              (void **) &recv_node2arc);
-   PDM_free(recv_node2arc_strid); // Always 1
+    PDM_free(recv_node2arc_strid); // Always 1
 
     /*
      * Post treatment
@@ -537,7 +537,7 @@ const int              compute_dnode_to_arc,
       _dnode_to_arc[_dnode_to_arc_idx[ielmt] + node_to_arc_n[ielmt]++] = recv_node2arc[i_recv];
     }
 
-   PDM_free(recv_node2arc);
+    PDM_free(recv_node2arc);
 
     if( 0 == 1 ){
       printf("n_node_block:: %d \n", n_node_block);
@@ -556,7 +556,7 @@ const int              compute_dnode_to_arc,
     // for(int i_node = 0; i_node < n_node_block; ++i_node){
     //   _dnode_to_arc_idx[i_node+1] = _dnode_to_arc_idx[i_node] + node_to_arc_n[i_node];
     // }
-   PDM_free(node_to_arc_n);
+    PDM_free(node_to_arc_n);
 
   }
 
@@ -570,7 +570,7 @@ const int              compute_dnode_to_arc,
   PDM_free(node_strid);
   PDM_free(dopposite_node);
   if(compute_dnode_to_arc){
-   PDM_free(darc_g);
+    PDM_free(darc_g);
   }
 
   PDM_part_to_block_free (ptb_dual);
@@ -1014,8 +1014,8 @@ const PDM_MPI_Comm      comm
                                   comm);
         // printf("PDM_ParMETIS_dpart %d | %d  END\n", n_part, dn_elmt);
 
-       PDM_free(ubvec);
-       PDM_free(tpwgts);
+        PDM_free(ubvec);
+        PDM_free(tpwgts);
       #endif
         break;
     }

@@ -146,12 +146,12 @@ PDM_global_reduce_free
 
   for (int i = 0; i < gre->n_part; i++) {
     if (gre->strides[i] != NULL) {
-     PDM_free(gre->strides[i]);
+      PDM_free(gre->strides[i]);
     }
   }
 
   if (gre->strides != NULL) {
-   PDM_free(gre->strides);
+    PDM_free(gre->strides);
   }
 
   PDM_free(gre);

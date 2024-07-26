@@ -435,11 +435,11 @@ _compute_uvw
     if (dist <= tolerance2) {
       // log_trace("converged :) %e %e %e\n", uvw[0], uvw[1], uvw[2]);
 
-     PDM_free(weight    );
-     PDM_free(dweight_du);
-     PDM_free(dweight_dv);
-     PDM_free(dweight_dw);
-     PDM_free(_weight);
+      PDM_free(weight    );
+      PDM_free(dweight_du);
+      PDM_free(dweight_dv);
+      PDM_free(dweight_dw);
+      PDM_free(_weight);
       return 1;
     }
 
@@ -616,7 +616,7 @@ int main(int argc, char *argv[])
                                        order,
                                        PDM_Mesh_nodal_n_vtx_elt_get(type, order),
                                        ijk);
-     PDM_free(ijk);
+      PDM_free(ijk);
     }
   }
 

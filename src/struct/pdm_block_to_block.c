@@ -230,8 +230,8 @@ PDM_block_to_block_exch
                     _btb->comm);
 
   if (t_stride == PDM_STRIDE_VAR_INTERLACED) {
-   PDM_free(n_send_buffer);
-   PDM_free(n_recv_buffer);
+    PDM_free(n_send_buffer);
+    PDM_free(n_recv_buffer);
   }
   PDM_free(i_send_buffer);
   PDM_free(i_recv_buffer);
@@ -332,8 +332,8 @@ PDM_block_to_block_exch_with_mpi_type
                     _btb->comm);
 
   if (t_stride == PDM_STRIDE_VAR_INTERLACED) {
-   PDM_free(n_send_buffer);
-   PDM_free(n_recv_buffer);
+    PDM_free(n_send_buffer);
+    PDM_free(n_recv_buffer);
   }
   PDM_free(i_send_buffer);
   PDM_free(i_recv_buffer);

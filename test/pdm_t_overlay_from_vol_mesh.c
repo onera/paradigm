@@ -569,7 +569,7 @@ int main(int argc, char *argv[])
     pn_select_face     [i_part] = n_select_face;
 
     // PDM_log_trace_array_int (selected_face_l_num[i_part], n_select_face, "selected_face_l_num : ");
-   PDM_free(face_center);
+    PDM_free(face_center);
 
   }
 
@@ -851,17 +851,17 @@ int main(int argc, char *argv[])
                                NULL);
       }
 
-     PDM_free(ol_face_ini_vtx_idx);
-     PDM_free(ol_face_ini_vtx);
-     PDM_free(ol_face_vtx_idx);
-     PDM_free(ol_face_vtx);
-     PDM_free(ol_linked_face_proc_idx);
-     PDM_free(ol_linked_face);
-     PDM_free(ol_face_ln_to_gn);
-     PDM_free(ol_vtx_coords);
-     PDM_free(ol_vtx_ln_to_gn);
-     PDM_free(init_to_ol_face_idx);
-     PDM_free(init_to_ol_face);
+      PDM_free(ol_face_ini_vtx_idx);
+      PDM_free(ol_face_ini_vtx);
+      PDM_free(ol_face_vtx_idx);
+      PDM_free(ol_face_vtx);
+      PDM_free(ol_linked_face_proc_idx);
+      PDM_free(ol_linked_face);
+      PDM_free(ol_face_ln_to_gn);
+      PDM_free(ol_vtx_coords);
+      PDM_free(ol_vtx_ln_to_gn);
+      PDM_free(init_to_ol_face_idx);
+      PDM_free(init_to_ol_face);
 
     }
     mesht = PDM_OL_MESH_B;
@@ -880,7 +880,7 @@ int main(int argc, char *argv[])
   PDM_free(surf_vtx_coord     );
 
   for (int i_part = 0; i_part < n_part_domains; i_part++){
-   PDM_free(selected_face_l_num[i_part]);
+    PDM_free(selected_face_l_num[i_part]);
   }
   PDM_free(selected_face_l_num);
   PDM_free(pn_cell);

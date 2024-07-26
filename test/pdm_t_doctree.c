@@ -261,9 +261,9 @@ char *argv[]
                                           &box_pts,
                                           &pts_coord);
 
-   PDM_free(box_pts_idx);
-   PDM_free(box_pts    );
-   PDM_free(pts_coord  );
+    PDM_free(box_pts_idx);
+    PDM_free(box_pts    );
+    PDM_free(pts_coord  );
   }
 
 

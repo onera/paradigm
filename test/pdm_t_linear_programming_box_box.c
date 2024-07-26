@@ -543,8 +543,8 @@ int main(int argc, char *argv[])
   PDM_free(box_ln_to_gn);
 
   for (int j = 0; j < n_box; j++) {
-   PDM_free(box_tag_names[j]);
-   PDM_free(box_tag[j]);
+    PDM_free(box_tag_names[j]);
+    PDM_free(box_tag[j]);
   }
   PDM_free(box_tag_names);
   PDM_free(box_tag);

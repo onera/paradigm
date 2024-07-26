@@ -695,16 +695,16 @@ int main(int argc, char *argv[])
 
     PDM_part_to_part_iexch_wait (ptp, request_exch);
 
-   PDM_free(_equi_extract_cell_face);
+    PDM_free(_equi_extract_cell_face);
     _equi_extract_cell_face = NULL;
 
     for (int i = 0; i < n_part_domains; i++) {
-     PDM_free(part1_stride[i]);
+      PDM_free(part1_stride[i]);
     }
-   PDM_free(part1_stride);
+    PDM_free(part1_stride);
 
-   PDM_free(part2_stride[0]);
-   PDM_free(part2_stride);
+    PDM_free(part2_stride[0]);
+    PDM_free(part2_stride);
 
   }
 
@@ -1154,13 +1154,13 @@ int main(int argc, char *argv[])
     PDM_part_to_part_reverse_iexch_wait (ptp_vtx, request_exch);
 
     equi_extract_vtx_coord = part1_data[0];
-   PDM_free(part1_data);
-   PDM_free(part1_stride[0]);
-   PDM_free(part1_stride);
+    PDM_free(part1_data);
+    PDM_free(part1_stride[0]);
+    PDM_free(part1_stride);
     for(int i_part = 0; i_part < n_part_domains; ++i_part) {
-     PDM_free(part2_stride[i_part]);
+      PDM_free(part2_stride[i_part]);
     }
-   PDM_free(part2_stride);
+    PDM_free(part2_stride);
   }
 
   PDM_part_to_part_free(ptp_vtx);
@@ -1227,16 +1227,16 @@ int main(int argc, char *argv[])
 
 
   for (int i_part = 0; i_part < n_part_domains; i_part++){
-   PDM_free(cell_center       [i_part]);
-   PDM_free(selected_g_num    [i_part]);
-   PDM_free(selected_g_num_idx[i_part]);
-   PDM_free(weight[i_part]);
-   PDM_free(tmp_extract_cell_center[i_part]);
-   PDM_free(pextract_cell_face[i_part]);
-   PDM_free(pextract_cell_face_idx[i_part]);
-   PDM_free(pextract_cell_center[i_part]);
-   PDM_free(send_face_vtx[i_part]);
-   PDM_free(send_vtx_coord[i_part]);
+    PDM_free(cell_center       [i_part]);
+    PDM_free(selected_g_num    [i_part]);
+    PDM_free(selected_g_num_idx[i_part]);
+    PDM_free(weight[i_part]);
+    PDM_free(tmp_extract_cell_center[i_part]);
+    PDM_free(pextract_cell_face[i_part]);
+    PDM_free(pextract_cell_face_idx[i_part]);
+    PDM_free(pextract_cell_center[i_part]);
+    PDM_free(send_face_vtx[i_part]);
+    PDM_free(send_vtx_coord[i_part]);
   }
   PDM_free(cell_center);
   PDM_free(selected_g_num);

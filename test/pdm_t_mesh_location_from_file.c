@@ -326,9 +326,9 @@ _dump_mesh
   }
 
   for (int ipart = 0; ipart < n_part; ipart++) {
-   PDM_free(val_num_part[ipart]);
-   PDM_free(pface_vtx_n [ipart]);
-   PDM_free(pcell_face_n[ipart]);
+    PDM_free(val_num_part[ipart]);
+    PDM_free(pface_vtx_n [ipart]);
+    PDM_free(pcell_face_n[ipart]);
   }
   PDM_free(val_num_part);
   PDM_free(pface_vtx_n );
@@ -458,8 +458,8 @@ _dump_point_cloud
   }
 
   for (int ipart = 0; ipart < n_part; ipart++) {
-   PDM_free(val_num_part[ipart]);
-   PDM_free(connec[ipart]);
+    PDM_free(val_num_part[ipart]);
+    PDM_free(connec[ipart]);
   }
   PDM_free(val_num_part);
   PDM_free(connec);
@@ -902,7 +902,7 @@ int main(int argc, char *argv[])
                                        center,
                                        NULL,
                                        NULL);
-   PDM_free(center);
+    PDM_free(center);
 
     for (int i = 0; i < n_cell; i++) {
       if (volume[i] < 0) {
@@ -912,7 +912,7 @@ int main(int argc, char *argv[])
         }
       }
     }
-   PDM_free(volume);
+    PDM_free(volume);
 
 
 
@@ -1137,7 +1137,7 @@ int main(int argc, char *argv[])
       ppts_field1[ipart][pt_id] = tmp_ppts_field[ipart][i];
     }
 
-   PDM_free(tmp_ppts_field[ipart]);
+    PDM_free(tmp_ppts_field[ipart]);
   }
   PDM_free(tmp_ppts_field);
 
@@ -1189,7 +1189,7 @@ int main(int argc, char *argv[])
       }
     }
 
-   PDM_free(tmp_pelt_field[ipart]);
+    PDM_free(tmp_pelt_field[ipart]);
   }
   PDM_free(tmp_pelt_field);
 
@@ -1267,7 +1267,7 @@ int main(int argc, char *argv[])
       max_err = PDM_MAX(max_err, err);
     }
 
-   PDM_free(tmp_ppts_field3[ipart]);
+    PDM_free(tmp_ppts_field3[ipart]);
   }
   PDM_free(tmp_ppts_field3);
 
@@ -1316,10 +1316,10 @@ int main(int argc, char *argv[])
   }
 
   for (int ipart = 0; ipart < n_part_mesh; ipart++) {
-   PDM_free(pelt_field1    [ipart]);
-   PDM_free(pelt_field2    [ipart]);
-   PDM_free(pvtx_field3     [ipart]);
-   PDM_free(pelt_pts_field3[ipart]);
+    PDM_free(pelt_field1    [ipart]);
+    PDM_free(pelt_field2    [ipart]);
+    PDM_free(pvtx_field3     [ipart]);
+    PDM_free(pelt_pts_field3[ipart]);
   }
   PDM_free(pelt_field1);
   PDM_free(pelt_field2);
@@ -1327,9 +1327,9 @@ int main(int argc, char *argv[])
   PDM_free(pelt_pts_field3);
 
   for (int ipart = 0; ipart < n_part_cloud; ipart++) {
-   PDM_free(ppts_field1[ipart]);
-   PDM_free(ppts_field2[ipart]);
-   PDM_free(ppts_field3[ipart]);
+    PDM_free(ppts_field1[ipart]);
+    PDM_free(ppts_field2[ipart]);
+    PDM_free(ppts_field3[ipart]);
   }
   PDM_free(ppts_field1);
   PDM_free(ppts_field2);
@@ -1355,7 +1355,7 @@ int main(int argc, char *argv[])
   /* Free memory */
   if (use_edge) {
     for (int ipart = 0; ipart < n_part_mesh; ipart++) {
-     PDM_free(pface_vtx[ipart]);
+      PDM_free(pface_vtx[ipart]);
     }
   }
   PDM_free(pface_vtx_idx);
@@ -1370,8 +1370,8 @@ int main(int argc, char *argv[])
   PDM_free(pn_vtx);
 
   for (int ipart = 0; ipart < n_part_cloud; ipart++) {
-   PDM_free(ppts_coord   [ipart]);
-   PDM_free(ppts_ln_to_gn[ipart]);
+    PDM_free(ppts_coord   [ipart]);
+    PDM_free(ppts_ln_to_gn[ipart]);
   }
   PDM_free(ppts_coord);
   PDM_free(ppts_ln_to_gn);

@@ -772,8 +772,8 @@ int main(int argc, char *argv[])
   }
 
   for (int i = 0; i < n_box; i++) {
-   PDM_free(box_tag[i]);
-   PDM_free(box_tag_names[i]);
+    PDM_free(box_tag[i]);
+    PDM_free(box_tag_names[i]);
   }
   PDM_free(coord);
   PDM_free(box_tag);

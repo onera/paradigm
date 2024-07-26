@@ -6421,7 +6421,7 @@ _compute_uvw_ho
                                   0,
                                   NULL,
                                   NULL);
-   PDM_free(connec);
+    PDM_free(connec);
   }
 
   double *weight     = work_array;
@@ -6860,7 +6860,7 @@ PDM_ho_location_newton
   }
 
   if (work_array == NULL) {
-   PDM_free(_work_array);
+    PDM_free(_work_array);
   }
 
   return dist2;

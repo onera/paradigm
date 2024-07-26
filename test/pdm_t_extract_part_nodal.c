@@ -417,7 +417,7 @@ int main(int argc, char *argv[])
       cell_center[i_part][3*i_cell+2] = cell_center[i_part][3*i_cell+2] / n_face_on_cell;
     }
 
-   PDM_free(face_center);
+    PDM_free(face_center);
 
     PDM_malloc(selected_l_num[i_part],  n_cell          ,int        );
 
@@ -658,9 +658,9 @@ int main(int argc, char *argv[])
   PDM_part_mesh_nodal_elmts_free(pmne_vol);
 
   for (int i_part = 0; i_part < n_part_domains; i_part++){
-   PDM_free(cell_center       [i_part]);
-   PDM_free(selected_l_num    [i_part]);
-   PDM_free(target_g_num      [i_part]);
+    PDM_free(cell_center       [i_part]);
+    PDM_free(selected_l_num    [i_part]);
+    PDM_free(target_g_num      [i_part]);
   }
   PDM_free(cell_center);
   PDM_free(selected_l_num);

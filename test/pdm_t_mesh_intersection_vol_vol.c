@@ -450,14 +450,14 @@ _generate_volume_mesh
 
   if (elt_type == PDM_MESH_NODAL_POLY_3D) {
     PDM_dmesh_free(dmesh);
-   PDM_free(dvtx_coord);
-   PDM_free(dcell_face_idx);
-   PDM_free(dcell_face);
-   PDM_free(dface_cell);
-   PDM_free(dface_vtx_idx);
-   PDM_free(dface_vtx);
-   PDM_free(dface_group_idx);
-   PDM_free(dface_group);
+    PDM_free(dvtx_coord);
+    PDM_free(dcell_face_idx);
+    PDM_free(dcell_face);
+    PDM_free(dface_cell);
+    PDM_free(dface_vtx_idx);
+    PDM_free(dface_vtx);
+    PDM_free(dface_group_idx);
+    PDM_free(dface_group);
   }
 
   *_mpart = mpart;
@@ -731,15 +731,15 @@ _set_mesh_nodal
 
     // PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmne, PDM_OWNERSHIP_KEEP);
 
-   PDM_free(n_cell       );
-   PDM_free(n_face       );
-   PDM_free(face_vtx_idx );
-   PDM_free(face_vtx     );
-   PDM_free(face_ln_to_gn);
-   PDM_free(cell_face_idx);
-   PDM_free(cell_face    );
-   PDM_free(vtx_coord    );
-   PDM_free(cell_ln_to_gn);
+    PDM_free(n_cell       );
+    PDM_free(n_face       );
+    PDM_free(face_vtx_idx );
+    PDM_free(face_vtx     );
+    PDM_free(face_ln_to_gn);
+    PDM_free(cell_face_idx);
+    PDM_free(cell_face    );
+    PDM_free(vtx_coord    );
+    PDM_free(cell_ln_to_gn);
   }
 
   // if (1) {
@@ -870,24 +870,24 @@ _read_volume_mesh
 
     if (n_vtx_field > 0) {
       for (int i = 0; i < n_vtx_field; i++) {
-       PDM_free(vtx_field_name [i]);
-       PDM_free(vtx_field_value[i]);
+        PDM_free(vtx_field_name [i]);
+        PDM_free(vtx_field_value[i]);
       }
-     PDM_free(vtx_field_name );
-     PDM_free(vtx_field_type );
-     PDM_free(vtx_field_stride);
-     PDM_free(vtx_field_value);
+      PDM_free(vtx_field_name );
+      PDM_free(vtx_field_type );
+      PDM_free(vtx_field_stride);
+      PDM_free(vtx_field_value);
     }
 
     if (n_elt_field > 0) {
       for (int i = 0; i < n_elt_field; i++) {
-       PDM_free(elt_field_name [i]);
+        PDM_free(elt_field_name [i]);
         //PDM_free(elt_field_value[i]);
       }
-     PDM_free(elt_field_name );
-     PDM_free(elt_field_type );
-     PDM_free(elt_field_stride);
-     PDM_free(elt_field_value);
+      PDM_free(elt_field_name );
+      PDM_free(elt_field_type );
+      PDM_free(elt_field_stride);
+      PDM_free(elt_field_value);
     }
   }
   else if (strcmp(file_extension, "mesh") == 0) {
@@ -1228,15 +1228,15 @@ main
     PDM_part_to_part_free(ptp);
 
     for (int ipart = 0; ipart < n_part; ipart++) {
-     PDM_free(pelt_a_elt_b_n[ipart]);
+      PDM_free(pelt_a_elt_b_n[ipart]);
     }
-   PDM_free(pelt_a_elt_b_n     );
-   PDM_free(pelt_a_elt_b_volume);
+    PDM_free(pelt_a_elt_b_n     );
+    PDM_free(pelt_a_elt_b_volume);
 
     for (int ipart = 0; ipart < n_part; ipart++) {
-     PDM_free(pelt_b_elt_a_volume[ipart]);
+      PDM_free(pelt_b_elt_a_volume[ipart]);
     }
-   PDM_free(pelt_b_elt_a_volume);
+    PDM_free(pelt_b_elt_a_volume);
   }
 
 

@@ -426,7 +426,7 @@ _fetch_back_mesh_Bruno
                          proj_line_coord,
                          pback_vtx_ln_to_gn,
                          NULL);
-   PDM_free(proj_line_coord);
+    PDM_free(proj_line_coord);
 
   }
 
@@ -1054,7 +1054,7 @@ int main(int argc, char *argv[])
                            line_to_back,
                            halo_color);
 
-   PDM_free(halo_color);
+    PDM_free(halo_color);
   }
 
 

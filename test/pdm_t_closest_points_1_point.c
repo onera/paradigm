@@ -312,8 +312,8 @@ main (int argc, char *argv[])
 
   if (i_rank == 0) {
     printf("-- End\n");
-   PDM_free(src_coord);
-   PDM_free(src_g_num);
+    PDM_free(src_coord);
+    PDM_free(src_g_num);
   }
 
 

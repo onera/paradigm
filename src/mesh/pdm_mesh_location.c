@@ -325,16 +325,16 @@ _dump_point_cloud
   }
 
   for (int ipart = 0; ipart < n_part; ipart++) {
-   PDM_free(val_num_part[ipart]);
-   PDM_free(connec[ipart]);
+    PDM_free(val_num_part[ipart]);
+    PDM_free(connec[ipart]);
     if (g_num != ppts_ln_to_gn) {
-     PDM_free(g_num[ipart]);
+      PDM_free(g_num[ipart]);
     }
   }
   PDM_free(val_num_part);
   PDM_free(connec);
   if (g_num != ppts_ln_to_gn) {
-   PDM_free(g_num);
+    PDM_free(g_num);
   }
 
   PDM_writer_step_end(wrt);
@@ -528,10 +528,10 @@ const int                           n_part,
                                       0,
                                       NULL,
                                       NULL);
-       PDM_free(pcell_vtx_out);
+        PDM_free(pcell_vtx_out);
       }
 
-     PDM_free(gnum);
+      PDM_free(gnum);
     }
   }
 }
@@ -1736,38 +1736,38 @@ PDM_mesh_location_free
         if(( ml->owner == PDM_OWNERSHIP_KEEP ) ||
            ( ml->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !ml->tag_points_in_elt_get)) {
           for (int i_part = 0; i_part < _points_in_elements->n_part; ++i_part) {
-           PDM_free(_points_in_elements->pts_inside_idx[i_part]);
-           PDM_free(_points_in_elements->gnum[i_part]);
-           PDM_free(_points_in_elements->uvw[i_part]);
-           PDM_free(_points_in_elements->coords[i_part]);
-           PDM_free(_points_in_elements->projected_coords[i_part]);
-           PDM_free(_points_in_elements->weights_idx[i_part]);
-           PDM_free(_points_in_elements->weights[i_part]);
-           PDM_free(_points_in_elements->dist2[i_part]);
+            PDM_free(_points_in_elements->pts_inside_idx[i_part]);
+            PDM_free(_points_in_elements->gnum[i_part]);
+            PDM_free(_points_in_elements->uvw[i_part]);
+            PDM_free(_points_in_elements->coords[i_part]);
+            PDM_free(_points_in_elements->projected_coords[i_part]);
+            PDM_free(_points_in_elements->weights_idx[i_part]);
+            PDM_free(_points_in_elements->weights[i_part]);
+            PDM_free(_points_in_elements->dist2[i_part]);
           }
         }
-       PDM_free(_points_in_elements->pts_inside_idx);
-       PDM_free(_points_in_elements->n_elts);
-       PDM_free(_points_in_elements->gnum);
-       PDM_free(_points_in_elements->uvw);
-       PDM_free(_points_in_elements->coords);
-       PDM_free(_points_in_elements->projected_coords);
-       PDM_free(_points_in_elements->weights_idx);
-       PDM_free(_points_in_elements->weights);
-       PDM_free(_points_in_elements->dist2);
+        PDM_free(_points_in_elements->pts_inside_idx);
+        PDM_free(_points_in_elements->n_elts);
+        PDM_free(_points_in_elements->gnum);
+        PDM_free(_points_in_elements->uvw);
+        PDM_free(_points_in_elements->coords);
+        PDM_free(_points_in_elements->projected_coords);
+        PDM_free(_points_in_elements->weights_idx);
+        PDM_free(_points_in_elements->weights);
+        PDM_free(_points_in_elements->dist2);
         //PDM_free(_points_in_elements);
       }
 
       if (pcloud->n_points != NULL) {
-       PDM_free(pcloud->n_points);
+        PDM_free(pcloud->n_points);
       }
 
       if (pcloud->coords != NULL) {
-       PDM_free(pcloud->coords);
+        PDM_free(pcloud->coords);
       }
 
       if (pcloud->gnum != NULL) {
-       PDM_free(pcloud->gnum);
+        PDM_free(pcloud->gnum);
       }
 
       if (pcloud->location != NULL) {
@@ -1775,55 +1775,55 @@ PDM_mesh_location_free
            ( ml->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !ml->tag_point_location_get)) {
           for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
             if (pcloud->location[ipart] != NULL) {
-             PDM_free(pcloud->location[ipart]);
+              PDM_free(pcloud->location[ipart]);
             }
             if (pcloud->dist2[ipart] != NULL) {
-             PDM_free(pcloud->dist2[ipart]);
+              PDM_free(pcloud->dist2[ipart]);
             }
             if (pcloud->projected_coords[ipart] != NULL) {
-             PDM_free(pcloud->projected_coords[ipart]);
+              PDM_free(pcloud->projected_coords[ipart]);
             }
           }
         }
-       PDM_free(pcloud->location);
-       PDM_free(pcloud->dist2);
-       PDM_free(pcloud->projected_coords);
+        PDM_free(pcloud->location);
+        PDM_free(pcloud->dist2);
+        PDM_free(pcloud->projected_coords);
       }
 
       if (pcloud->uvw != NULL) {
         for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
           if (pcloud->uvw[ipart] != NULL) {
-           PDM_free(pcloud->uvw[ipart]);
+            PDM_free(pcloud->uvw[ipart]);
           }
         }
-       PDM_free(pcloud->uvw);
+        PDM_free(pcloud->uvw);
       }
 
       if (pcloud->weights_idx != NULL) {
         for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
           if (pcloud->weights_idx[ipart] != NULL) {
-           PDM_free(pcloud->weights_idx[ipart]);
+            PDM_free(pcloud->weights_idx[ipart]);
           }
         }
-       PDM_free(pcloud->weights_idx);
+        PDM_free(pcloud->weights_idx);
       }
 
       if (pcloud->weights != NULL) {
         for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
           if (pcloud->weights[ipart] != NULL) {
-           PDM_free(pcloud->weights[ipart]);
+            PDM_free(pcloud->weights[ipart]);
           }
         }
-       PDM_free(pcloud->weights);
+        PDM_free(pcloud->weights);
       }
 
 
       if (pcloud->n_located != NULL) {
-       PDM_free(pcloud->n_located);
+        PDM_free(pcloud->n_located);
       }
 
       if (pcloud->n_un_located != NULL) {
-       PDM_free(pcloud->n_un_located);
+        PDM_free(pcloud->n_un_located);
       }
 
       if (pcloud->located != NULL) {
@@ -1832,11 +1832,11 @@ PDM_mesh_location_free
            ( ml->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !ml->tag_located_get)) {
           for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
             if (pcloud->located[ipart] != NULL) {
-             PDM_free(pcloud->located[ipart]);
+              PDM_free(pcloud->located[ipart]);
             }
           }
         }
-       PDM_free(pcloud->located);
+        PDM_free(pcloud->located);
         pcloud->located = NULL;
       }
 
@@ -1845,21 +1845,21 @@ PDM_mesh_location_free
            ( ml->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !ml->tag_unlocated_get)) {
           for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
             if (pcloud->un_located[ipart] != NULL) {
-             PDM_free(pcloud->un_located[ipart]);
+              PDM_free(pcloud->un_located[ipart]);
             }
           }
         }
-       PDM_free(pcloud->un_located);
+        PDM_free(pcloud->un_located);
         pcloud->un_located = NULL;
       }
 
     }
     if (ml->points_in_elements != NULL) {
-     PDM_free(ml->points_in_elements);
+      PDM_free(ml->points_in_elements);
     }
     ml->points_in_elements = NULL;
 
-   PDM_free(ml->point_clouds);
+    PDM_free(ml->point_clouds);
     ml->point_clouds = NULL;
   }
 
@@ -1874,13 +1874,13 @@ PDM_mesh_location_free
         if(( ml->owner == PDM_OWNERSHIP_KEEP ) ||
            ( ml->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !ml->tag_cell_vtx_get)) {
           if(ml->cell_vtx_idx[i] != NULL) {
-           PDM_free(ml->cell_vtx[i]);
-           PDM_free(ml->cell_vtx_idx[i]);
+            PDM_free(ml->cell_vtx[i]);
+            PDM_free(ml->cell_vtx_idx[i]);
           }
         }
       }
-     PDM_free(ml->cell_vtx);
-     PDM_free(ml->cell_vtx_idx);
+      PDM_free(ml->cell_vtx);
+      PDM_free(ml->cell_vtx_idx);
     }
 
     ml->cell_vtx_idx = NULL;
@@ -1893,25 +1893,25 @@ PDM_mesh_location_free
       if(ml->cell_face_n != NULL){
         for (int i = 0; i< _n_part; i++) {
           if(ml->cell_face_n[i] != NULL) {
-           PDM_free(ml->cell_face_n[i]);
+            PDM_free(ml->cell_face_n[i]);
           }
         }
-       PDM_free(ml->cell_face_n);
+        PDM_free(ml->cell_face_n);
       }
 
       if(ml->face_vtx_n != NULL){
         for (int i = 0; i< _n_part; i++) {
           if(ml->face_vtx_n[i] != NULL) {
-           PDM_free(ml->face_vtx_n[i]);
+            PDM_free(ml->face_vtx_n[i]);
           }
         }
-       PDM_free(ml->face_vtx_n);
+        PDM_free(ml->face_vtx_n);
       }
     }
   }
 
   if(ml->is_elmt_select_by_user != NULL) {
-   PDM_free(ml->is_elmt_select_by_user);
+    PDM_free(ml->is_elmt_select_by_user);
   }
 
 
@@ -2197,7 +2197,7 @@ PDM_mesh_location_compute
         elt_g_num[ipart][idx] = _elt_g_num[ielt];
         memcpy(elt_extents[ipart] + 6*idx, _extents + 6*ielt, sizeof(double)*6);
       }
-     PDM_free(_extents);
+      PDM_free(_extents);
     }
   }
 
@@ -2437,7 +2437,7 @@ PDM_mesh_location_compute
         log_trace("no point cloud extraction\n");
       }
       if (n_select_pts != NULL) {
-       PDM_free(n_select_pts);
+        PDM_free(n_select_pts);
       }
       n_select_pts          = pcloud->n_points;
       select_pts_g_num_user = pcloud->gnum;
@@ -2456,9 +2456,9 @@ PDM_mesh_location_compute
 
     if (select_pts_l_num != NULL) {
       for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
-       PDM_free(select_pts_l_num[ipart]);
+        PDM_free(select_pts_l_num[ipart]);
       }
-     PDM_free(select_pts_l_num);
+      PDM_free(select_pts_l_num);
     }
 
 
@@ -2591,7 +2591,7 @@ PDM_mesh_location_compute
         log_trace("no mesh extraction\n");
       }
       if (n_select_elt != NULL) {
-       PDM_free(n_select_elt);
+        PDM_free(n_select_elt);
       }
       n_select_elt          = pn_elt;
       select_elt_extents    = elt_extents;
@@ -2634,9 +2634,9 @@ PDM_mesh_location_compute
                                                                  pcloud->n_part,
                                                                  ml->comm);
     for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
-     PDM_free(weight[ipart]);
+      PDM_free(weight[ipart]);
     }
-   PDM_free(weight);
+    PDM_free(weight);
 
     int dn_pts = PDM_part_to_block_n_elt_block_get(ptb_pts);
     PDM_g_num_t *dpts_g_num_user = PDM_part_to_block_block_gnum_get(ptb_pts);
@@ -2695,13 +2695,13 @@ PDM_mesh_location_compute
 
       idx_read += blk_coord_n[i];
     }
-   PDM_free(blk_coord_n);
-   PDM_free(tmp_blk_pts_coord);
+    PDM_free(blk_coord_n);
+    PDM_free(tmp_blk_pts_coord);
 
     for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
-     PDM_free(pstride_one[ipart]);
+      PDM_free(pstride_one[ipart]);
     }
-   PDM_free(pstride_one);
+    PDM_free(pstride_one);
 
     if (dbg_enabled) {
       char filename[999];
@@ -2765,11 +2765,11 @@ PDM_mesh_location_compute
                                               ml->comm);
 
       for (int ipart = 0; ipart < n_part; ipart++) {
-       PDM_free(select_box_center[ipart]);
-       PDM_free(weight[ipart]);
+        PDM_free(select_box_center[ipart]);
+        PDM_free(weight[ipart]);
       }
-     PDM_free(select_box_center);
-     PDM_free(weight);
+      PDM_free(select_box_center);
+      PDM_free(weight);
 
 
       dn_elt1 = PDM_part_to_block_n_elt_block_get(ptb_elt);
@@ -3008,9 +3008,9 @@ PDM_mesh_location_compute
           PDM_doctree_dump_times(doct);
           PDM_doctree_free(doct);
           if (init_location_pts != NULL) {
-           PDM_free(init_location_pts);
+            PDM_free(init_location_pts);
           }
-         PDM_free(init_location_box);
+          PDM_free(init_location_box);
           break;
         }
         case PDM_MESH_LOCATION_DBBTREE: {
@@ -3098,12 +3098,12 @@ PDM_mesh_location_compute
                     "PDM_mesh_location : unknown location method %d\n", (int) ml->method);
         }
       }
-     PDM_free(delt_extents1);
-     PDM_free(delmt_g_num_geom);
+      PDM_free(delt_extents1);
+      PDM_free(delmt_g_num_geom);
 
     }
-   PDM_free(dpts_g_num_geom);
-   PDM_free(dpts_coord);
+    PDM_free(dpts_g_num_geom);
+    PDM_free(dpts_coord);
 
 
     PDM_MPI_Barrier (ml->comm);
@@ -3174,7 +3174,7 @@ PDM_mesh_location_compute
     }
 
     int *delt_pts_idx2 = PDM_array_new_idx_from_sizes_int(delt_pts_n2, dn_elt2);
-   PDM_free(delt_pts_n2);
+    PDM_free(delt_pts_n2);
 
 
 
@@ -3204,7 +3204,7 @@ PDM_mesh_location_compute
                              NULL,
               (void ***)    &tmp_delt_parent_g_num2);
       delt_parent_g_num2 = tmp_delt_parent_g_num2[0];
-     PDM_free(tmp_delt_parent_g_num2);
+      PDM_free(tmp_delt_parent_g_num2);
 
       // TODO : Adpat when we merge elmt and take : delt_init_location_user_unified
       int **tmp_delt_init_location2 = NULL;
@@ -3216,8 +3216,8 @@ PDM_mesh_location_compute
                              NULL,
            (void ***)        &tmp_delt_init_location2);
       delt_init_location2 = tmp_delt_init_location2[0];
-     PDM_free(tmp_delt_init_location2);
-     PDM_free(delt_init_location_user);
+      PDM_free(tmp_delt_init_location2);
+      PDM_free(delt_init_location_user);
 
       PDM_block_to_part_free(btp_elmt_geom_to_elmt_user);
     }
@@ -3414,15 +3414,15 @@ PDM_mesh_location_compute
     int    *delt_pts_weight_idx2 = pelt_pts_weight_idx2[0];
     double *delt_pts_weight2     = pelt_pts_weight2    [0];
     double *delt_pts_uvw2        = pelt_pts_uvw2       [0];
-   PDM_free(pelt_pts_distance2  );
-   PDM_free(pelt_pts_proj_coord2);
-   PDM_free(pelt_pts_weight_idx2);
-   PDM_free(pelt_pts_weight2    );
-   PDM_free(pelt_pts_uvw2       );
+    PDM_free(pelt_pts_distance2  );
+    PDM_free(pelt_pts_proj_coord2);
+    PDM_free(pelt_pts_weight_idx2);
+    PDM_free(pelt_pts_weight2    );
+    PDM_free(pelt_pts_uvw2       );
 
     PDM_part_mesh_nodal_elmts_free(extract_pmne);
     PDM_extract_part_free(extrp);
-   PDM_free(delt_init_location2);
+    PDM_free(delt_init_location2);
 
     PDM_MPI_Barrier (ml->comm);
     PDM_timer_hang_on(ml->timer);
@@ -3517,7 +3517,7 @@ PDM_mesh_location_compute
                                                         &n_pts_unique,
                                                         1,
                                                         ml->comm);
-   PDM_free(part_weight);
+    PDM_free(part_weight);
 
     int    *block_pts_elt_n     = NULL;
     double *block_pts_elt_dist2 = NULL;
@@ -3529,8 +3529,8 @@ PDM_mesh_location_compute
                  (void **) &local_pts_elt_dist2,
                            &block_pts_elt_n,
                  (void **) &block_pts_elt_dist2);
-   PDM_free(block_pts_elt_n);
-   PDM_free(local_pts_elt_dist2);
+    PDM_free(block_pts_elt_n);
+    PDM_free(local_pts_elt_dist2);
 
     PDM_g_num_t *block_pts_elt_id = NULL;
     PDM_part_to_block_exch(ptb,
@@ -3541,9 +3541,9 @@ PDM_mesh_location_compute
                  (void **) &local_pts_elt_g_num,
                            &block_pts_elt_n,
                  (void **) &block_pts_elt_id);
-   PDM_free(part_elt_id);
-   PDM_free(part_stride);
-   PDM_free(local_pts_elt_g_num);
+    PDM_free(part_elt_id);
+    PDM_free(part_stride);
+    PDM_free(local_pts_elt_g_num);
 
 
     /* Pick closest elt for each point in current block */
@@ -3582,9 +3582,9 @@ PDM_mesh_location_compute
                                       block_pts_elt_id,
                                       block_n_pts,
                                       "block_pts_elt_id (post) : ");
-     PDM_free(block_pts_elt_idx);
+      PDM_free(block_pts_elt_idx);
     }
-   PDM_free(block_pts_elt_dist2);
+    PDM_free(block_pts_elt_dist2);
 
 
     /* Send back to elements */
@@ -3598,9 +3598,9 @@ PDM_mesh_location_compute
                                    NULL,
                         (void ***) &tmp_part_elt_id);
     part_elt_id = tmp_part_elt_id[0];
-   PDM_free(tmp_part_elt_id);
-   PDM_free(block_pts_elt_n);
-   PDM_free(block_pts_elt_id);
+    PDM_free(tmp_part_elt_id);
+    PDM_free(block_pts_elt_n);
+    PDM_free(block_pts_elt_id);
     PDM_part_to_block_free(ptb);
 
 
@@ -3659,20 +3659,20 @@ PDM_mesh_location_compute
         }
       } // End of loop on current elt's pts
     } // End of loop on elts in frame 2
-   PDM_free(delt_parent_g_num2  );
-   PDM_free(delt_pts_idx2       );
-   PDM_free(delt_pts_coord2     );
-   PDM_free(delt_pts_distance2  );
-   PDM_free(delt_pts_proj_coord2);
-   PDM_free(delt_pts_weight_idx2);
-   PDM_free(delt_pts_weight2    );
-   PDM_free(delt_pts_uvw2       );
-   PDM_free(part_elt_id         );
-   PDM_free(delt_g_num_geom2    );
-   PDM_free(delt_pts_g_num_geom );
+    PDM_free(delt_parent_g_num2  );
+    PDM_free(delt_pts_idx2       );
+    PDM_free(delt_pts_coord2     );
+    PDM_free(delt_pts_distance2  );
+    PDM_free(delt_pts_proj_coord2);
+    PDM_free(delt_pts_weight_idx2);
+    PDM_free(delt_pts_weight2    );
+    PDM_free(delt_pts_uvw2       );
+    PDM_free(part_elt_id         );
+    PDM_free(delt_g_num_geom2    );
+    PDM_free(delt_pts_g_num_geom );
 
-   PDM_free(pts_unique_order);
-   PDM_free(pts_ln_to_gn);
+    PDM_free(pts_unique_order);
+    PDM_free(pts_ln_to_gn);
 
     int final_n_pts = idx;
     PDM_realloc(final_elt_pts_g_num_geom ,final_elt_pts_g_num_geom , final_n_pts,PDM_g_num_t);
@@ -3705,8 +3705,8 @@ PDM_mesh_location_compute
                            NULL,
             (void ***)    &tmp_final_elt_pts_g_num);
     PDM_g_num_t *final_elt_pts_g_num = tmp_final_elt_pts_g_num[0];
-   PDM_free(tmp_final_elt_pts_g_num);
-   PDM_free(final_elt_pts_g_num_geom); // No longer used
+    PDM_free(tmp_final_elt_pts_g_num);
+    PDM_free(final_elt_pts_g_num_geom); // No longer used
 
     /*
      * Exchange init_location
@@ -3722,11 +3722,11 @@ PDM_mesh_location_compute
             (void ***)    &tmp_final_elt_pts_triplet);
     int *final_elt_pts_triplet_n = tmp_final_elt_pts_triplet_n[0];
     int *final_elt_pts_triplet   = tmp_final_elt_pts_triplet  [0];
-   PDM_free(tmp_final_elt_pts_triplet_n);
-   PDM_free(tmp_final_elt_pts_triplet);
+    PDM_free(tmp_final_elt_pts_triplet_n);
+    PDM_free(tmp_final_elt_pts_triplet);
 
-   PDM_free(dpts_init_location_pts_n);
-   PDM_free(dpts_init_location_pts);
+    PDM_free(dpts_init_location_pts_n);
+    PDM_free(dpts_init_location_pts);
 
     idx_read = 0;
     int *final_elt_pts_triplet_idx;
@@ -3954,7 +3954,7 @@ PDM_mesh_location_compute
         for (int i = 0; i < n_ref_elt[ipart]; i++) {
           pts_in_elt->pts_inside_idx[ipart][ref_elt[ipart][i]] = pts_in_elt_n[ipart][i];
         }
-       PDM_free(pts_in_elt_n[ipart]);
+        PDM_free(pts_in_elt_n[ipart]);
 
         for (int i = 0; i < n_unref_elt[ipart]; i++) {
           pts_in_elt->pts_inside_idx[ipart][unref_elt[ipart][i]] = 0;
@@ -3964,7 +3964,7 @@ PDM_mesh_location_compute
           pts_in_elt->pts_inside_idx[ipart][i+1] += pts_in_elt->pts_inside_idx[ipart][i];
         }
       }
-     PDM_free(pts_in_elt_n);
+      PDM_free(pts_in_elt_n);
 
       PDM_malloc(pts_in_elt->weights_idx,n_part,int *);
       for (int ipart = 0; ipart < n_part; ipart++) {
@@ -3982,15 +3982,15 @@ PDM_mesh_location_compute
       if (!full_async) {
         PDM_part_to_part_iexch_wait(ptp_elt, request_pts_dist2);
         PDM_part_to_part_iexch_wait(ptp_elt, request_pts_coord);
-       PDM_free(final_elt_pts_coord);
+        PDM_free(final_elt_pts_coord);
         PDM_part_to_part_iexch_wait(ptp_elt, request_pts_proj_coord);
         PDM_part_to_part_iexch_wait(ptp_elt, request_pts_weight);
         PDM_part_to_part_iexch_wait(ptp_elt, request_pts_uvw);
-       PDM_free(final_elt_pts_uvw);
-       PDM_free(final_elt_pts_n  );
+        PDM_free(final_elt_pts_uvw);
+        PDM_free(final_elt_pts_n  );
       }
 
-     PDM_free(elt_pts_weight_stride);
+      PDM_free(elt_pts_weight_stride);
     }
 
 
@@ -4001,9 +4001,9 @@ PDM_mesh_location_compute
     if (ml->reverse_result) {
 
       PDM_part_to_part_iexch_wait(ptp_elt, request_pts_triplet);
-     PDM_free(final_elt_pts_triplet_stride);
+      PDM_free(final_elt_pts_triplet_stride);
       PDM_part_to_part_iexch_wait(ptp_elt, request_pts_triplet_n);
-     PDM_free(final_elt_pts_triplet_n);
+      PDM_free(final_elt_pts_triplet_n);
 
       int  *n_ref_elt = NULL;
       int **ref_elt   = NULL;
@@ -4020,7 +4020,7 @@ PDM_mesh_location_compute
       int **pts_in_elt_triplet_idx;
       PDM_malloc(pts_in_elt_triplet_idx,n_part,int *);
       for (int ipart = 0; ipart < n_part; ipart++) {
-       PDM_free(stride_pts_triplet[ipart]);
+        PDM_free(stride_pts_triplet[ipart]);
 
         int _n_pts = pts_in_elt->pts_inside_idx[ipart][pn_elt[ipart]];
 
@@ -4050,7 +4050,7 @@ PDM_mesh_location_compute
                                          3,
                                          _n_pts,
                                          "pts_in_elt_triplet      : ");
-         PDM_free(_idx);
+          PDM_free(_idx);
         }
 
 
@@ -4064,17 +4064,17 @@ PDM_mesh_location_compute
                            order,
                            pts_in_elt_triplet_n[ipart][i]);
         }
-       PDM_free(order);
+        PDM_free(order);
 
-       PDM_free(pts_in_elt_triplet_n[ipart]);
+        PDM_free(pts_in_elt_triplet_n[ipart]);
 
       }
-     PDM_free(stride_pts_triplet);
-     PDM_free(pts_in_elt_triplet_n);
-     PDM_free(final_elt_pts_triplet);
-     PDM_free(final_elt_pts_triplet_idx);
-     PDM_free(final_elt_pts_idx);
-     PDM_free(final_elt_pts_g_num);
+      PDM_free(stride_pts_triplet);
+      PDM_free(pts_in_elt_triplet_n);
+      PDM_free(final_elt_pts_triplet);
+      PDM_free(final_elt_pts_triplet_idx);
+      PDM_free(final_elt_pts_idx);
+      PDM_free(final_elt_pts_g_num);
 
       // PDM_part_to_part_free(ptp_elt);
 
@@ -4089,11 +4089,11 @@ PDM_mesh_location_compute
                                                                   ml->comm);
 
       for (int ipart = 0; ipart < n_part; ipart++) {
-       PDM_free(pts_in_elt_triplet    [ipart]);
-       PDM_free(pts_in_elt_triplet_idx[ipart]);
+        PDM_free(pts_in_elt_triplet    [ipart]);
+        PDM_free(pts_in_elt_triplet_idx[ipart]);
       }
-     PDM_free(pts_in_elt_triplet);
-     PDM_free(pts_in_elt_triplet_idx);
+      PDM_free(pts_in_elt_triplet);
+      PDM_free(pts_in_elt_triplet_idx);
 
     } // end ml->reverse_result
 
@@ -4194,11 +4194,11 @@ PDM_mesh_location_compute
                         field_value);
 
       for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
-       PDM_free(is_located[ipart]);
-       PDM_free(location  [ipart]);
+        PDM_free(is_located[ipart]);
+        PDM_free(location  [ipart]);
       }
-     PDM_free(is_located);
-     PDM_free(location);
+      PDM_free(is_located);
+      PDM_free(location);
     }
 
     if (full_async) {
@@ -4239,18 +4239,18 @@ PDM_mesh_location_compute
     if (ptp_elt != NULL) {
       if (full_async) {
         PDM_part_to_part_iexch_wait(ptp_elt, request_pts_uvw);
-       PDM_free(final_elt_pts_uvw);
-       PDM_free(final_elt_pts_n  );
+        PDM_free(final_elt_pts_uvw);
+        PDM_free(final_elt_pts_n  );
         PDM_part_to_part_iexch_wait(ptp_elt, request_pts_weight);
         PDM_part_to_part_iexch_wait(ptp_elt, request_pts_coord);
-       PDM_free(final_elt_pts_coord);
+        PDM_free(final_elt_pts_coord);
       }
       for (int ipart = 0; ipart < n_part; ipart++) {
-       PDM_free(stride_pts_weight[ipart]);
-       PDM_free(stride_pts       [ipart]);
+        PDM_free(stride_pts_weight[ipart]);
+        PDM_free(stride_pts       [ipart]);
       }
-     PDM_free(stride_pts_weight);
-     PDM_free(stride_pts       );
+      PDM_free(stride_pts_weight);
+      PDM_free(stride_pts       );
       PDM_part_to_part_free(ptp_elt);
     }
 
@@ -4274,46 +4274,46 @@ PDM_mesh_location_compute
     PDM_timer_resume(ml->timer);
 
     /* Free memory */
-   PDM_free(final_elt_pts_distance  );
-   PDM_free(final_elt_pts_proj_coord);
-   PDM_free(final_elt_pts_weight_idx);
-   PDM_free(final_elt_pts_weight    );
+    PDM_free(final_elt_pts_distance  );
+    PDM_free(final_elt_pts_proj_coord);
+    PDM_free(final_elt_pts_weight_idx);
+    PDM_free(final_elt_pts_weight    );
 
 
     if (use_extracted_pts) {
       for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
-       PDM_free(select_pts_g_num_user[ipart]);
-       PDM_free(select_pts_coord     [ipart]);
+        PDM_free(select_pts_g_num_user[ipart]);
+        PDM_free(select_pts_coord     [ipart]);
       }
-     PDM_free(select_pts_g_num_user);
-     PDM_free(select_pts_coord);
-     PDM_free(n_select_pts);
+      PDM_free(select_pts_g_num_user);
+      PDM_free(select_pts_coord);
+      PDM_free(n_select_pts);
     }
     for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
-     PDM_free(select_pts_init_location[ipart]);
+      PDM_free(select_pts_init_location[ipart]);
     }
-   PDM_free(select_pts_init_location);
+    PDM_free(select_pts_init_location);
 
 
     if (use_extracted_mesh) {
       for (int ipart = 0; ipart < n_part; ipart++) {
-       PDM_free(select_elt_extents   [ipart]);
-       PDM_free(select_elt_g_num_user[ipart]);
+        PDM_free(select_elt_extents   [ipart]);
+        PDM_free(select_elt_g_num_user[ipart]);
       }
-     PDM_free(select_elt_extents);
-     PDM_free(select_elt_g_num_user);
-     PDM_free(n_select_elt);
+      PDM_free(select_elt_extents);
+      PDM_free(select_elt_g_num_user);
+      PDM_free(n_select_elt);
     }
     if (select_elt_l_num != NULL) {
       for (int ipart = 0; ipart < n_part; ipart++) {
-       PDM_free(select_elt_l_num[ipart]);
+        PDM_free(select_elt_l_num[ipart]);
       }
-     PDM_free(select_elt_l_num);
+      PDM_free(select_elt_l_num);
     }
     for (int ipart = 0; ipart < n_part; ipart++) {
-     PDM_free(select_elt_init_location_user[ipart]);
+      PDM_free(select_elt_init_location_user[ipart]);
     }
-   PDM_free(select_elt_init_location_user);
+    PDM_free(select_elt_init_location_user);
 
     PDM_part_to_block_free(ptb_pts);
     if (ptb_elt != NULL) {
@@ -4371,8 +4371,8 @@ PDM_mesh_location_compute
 
 
   for (int ipart = 0; ipart < n_part; ipart++) {
-   PDM_free(elt_extents[ipart]);
-   PDM_free(elt_g_num  [ipart]);
+    PDM_free(elt_extents[ipart]);
+    PDM_free(elt_g_num  [ipart]);
   }
   PDM_free(elt_extents);
   PDM_free(elt_g_num);

@@ -227,7 +227,7 @@ PDM_MPI_Comm comm
     nodeRank = nodeRank2;
 
     PDM_MPI_Comm_free(&nodeComm2);
-   PDM_free(hostInComm);
+    PDM_free(hostInComm);
 
   }
 
@@ -349,10 +349,10 @@ size_t *hostname_length
     if (error == -1) {
       if (errno == ENAMETOOLONG) {
         allocateMore = 1;
-       PDM_free(hostname); hostname = NULL;
+        PDM_free(hostname); hostname = NULL;
       }
       else {
-       PDM_free(hostname);
+        PDM_free(hostname);
         hostname = NULL;
 
         PDM_error(__FILE__, __LINE__, 0, "gethostname failed with error %d: %s.\n", errno, strerror(errno));

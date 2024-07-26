@@ -137,7 +137,7 @@ _median_point
     int h = n_pts / 2;
     // log_trace("n_pts = %d, h = %d\n", n_pts, h);
     mid = 0.5*(x[h] + x[h+1]);
-   PDM_free(x);
+    PDM_free(x);
   }
 
   return mid;
@@ -756,16 +756,16 @@ _l_nodes_free
 {
   if (kdtree->nodes != NULL) {
 
-   PDM_free(kdtree->nodes->ancestor_id);
-   PDM_free(kdtree->nodes->is_leaf);
-   PDM_free(kdtree->nodes->depth);
-   PDM_free(kdtree->nodes->children_id);
-   PDM_free(kdtree->nodes->range);
-   PDM_free(kdtree->nodes->idx);
-   PDM_free(kdtree->nodes->n_points);
-   PDM_free(kdtree->nodes->extents);
+    PDM_free(kdtree->nodes->ancestor_id);
+    PDM_free(kdtree->nodes->is_leaf);
+    PDM_free(kdtree->nodes->depth);
+    PDM_free(kdtree->nodes->children_id);
+    PDM_free(kdtree->nodes->range);
+    PDM_free(kdtree->nodes->idx);
+    PDM_free(kdtree->nodes->n_points);
+    PDM_free(kdtree->nodes->extents);
 
-   PDM_free(kdtree->nodes);
+    PDM_free(kdtree->nodes);
 
     kdtree->nodes = NULL;
   }
@@ -895,15 +895,15 @@ PDM_kdtree_seq_free
 )
 {
   if (kdtree->_pts_coord != NULL) {
-   PDM_free(kdtree->_pts_coord);
+    PDM_free(kdtree->_pts_coord);
   }
 
   if (kdtree->new_to_old != NULL) {
-   PDM_free(kdtree->new_to_old);
+    PDM_free(kdtree->new_to_old);
   }
 
   if (kdtree->old_to_new != NULL) {
-   PDM_free(kdtree->old_to_new);
+    PDM_free(kdtree->old_to_new);
   }
 
   _l_nodes_free(kdtree);

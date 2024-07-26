@@ -787,7 +787,7 @@ PDM_reader_gamma_dmesh_nodal
                                           dedge_vtx,
                                           PDM_OWNERSHIP_KEEP);
   } else {
-   PDM_free(dedge_vtx);
+    PDM_free(dedge_vtx);
   }
 
   // -------- Surfacic section
@@ -803,7 +803,7 @@ PDM_reader_gamma_dmesh_nodal
                                           dtria_vtx,
                                           PDM_OWNERSHIP_KEEP);
   } else {
-   PDM_free(dtria_vtx);
+    PDM_free(dtria_vtx);
   }
 
   // ------------ Quad surfacic section
@@ -820,7 +820,7 @@ PDM_reader_gamma_dmesh_nodal
       PDM_OWNERSHIP_KEEP
     );
   } else {
-   PDM_free(dquad_vtx);
+    PDM_free(dquad_vtx);
   }
 
   if (mesh_dimension == 3) {
@@ -835,7 +835,7 @@ PDM_reader_gamma_dmesh_nodal
                                             dtetra_vtx,
                                             PDM_OWNERSHIP_KEEP);
     } else {
-     PDM_free(dtetra_vtx);
+      PDM_free(dtetra_vtx);
     }
 
     if (gn_pyra > 0) {
@@ -847,7 +847,7 @@ PDM_reader_gamma_dmesh_nodal
                                             dpyra_vtx,
                                             PDM_OWNERSHIP_KEEP);
     } else {
-     PDM_free(dpyra_vtx);
+      PDM_free(dpyra_vtx);
     }
 
     if (gn_prism > 0) {
@@ -859,7 +859,7 @@ PDM_reader_gamma_dmesh_nodal
                                             dprism_vtx,
                                             PDM_OWNERSHIP_KEEP);
     } else {
-     PDM_free(dprism_vtx);
+      PDM_free(dprism_vtx);
     }
 
     if (gn_hexa > 0) {
@@ -871,7 +871,7 @@ PDM_reader_gamma_dmesh_nodal
                                             dhexa_vtx,
                                             PDM_OWNERSHIP_KEEP);
     } else {
-     PDM_free(dhexa_vtx);
+      PDM_free(dhexa_vtx);
     }
   }
 

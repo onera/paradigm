@@ -604,7 +604,7 @@ const int     *face_vtx
   PDM_free(orientedface_cell);
   PDM_free(processedFace);
   if (face_cell == NULL) {
-   PDM_free(_faceCell);
+    PDM_free(_faceCell);
   }
 
   PDM_timer_hang_on (t1);

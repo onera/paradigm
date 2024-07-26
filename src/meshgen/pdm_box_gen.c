@@ -148,7 +148,7 @@ PDM_box_gen_random
                               NULL);
 
     PDM_gnum_compute (gen_gnum);
-   PDM_free(box_centers);
+    PDM_free(box_centers);
 
     *box_ln_to_gn = PDM_gnum_get (gen_gnum, 0);
 

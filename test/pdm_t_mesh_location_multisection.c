@@ -461,10 +461,10 @@ _gen_pmn
                                                  vtx_g_num);
 
   for (int i_section = 0; i_section < n_section; i_section++) {
-   PDM_free(n_cell         [i_section]);
-   PDM_free(cell_vtx       [i_section]);
-   PDM_free(cell_g_num     [i_section]);
-   PDM_free(cell_parent_num[i_section]);
+    PDM_free(n_cell         [i_section]);
+    PDM_free(cell_vtx       [i_section]);
+    PDM_free(cell_g_num     [i_section]);
+    PDM_free(cell_parent_num[i_section]);
   }
 
   PDM_free(n_cell         );
@@ -730,7 +730,7 @@ int main(int argc, char *argv[])
   PDM_part_to_part_iexch_wait(ptp, request);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
-   PDM_free(send_field[i_part]);
+    PDM_free(send_field[i_part]);
   }
   PDM_free(send_field);
 
@@ -833,13 +833,13 @@ int main(int argc, char *argv[])
                                         3,
                                         field_name,
                                         field_value);
-     PDM_free(exact);
-     PDM_free(interp);
-     PDM_free(location);
-     PDM_free(proj);
+      PDM_free(exact);
+      PDM_free(interp);
+      PDM_free(location);
+      PDM_free(proj);
     }
 
-   PDM_free(recv_field[i_part]);
+    PDM_free(recv_field[i_part]);
   }
   PDM_free(recv_field);
 

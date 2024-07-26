@@ -97,11 +97,11 @@ _exchange_point_list
     }
 
     PDM_block_to_part_free(btp);
-   PDM_free(join_ln_to_gn);
+    PDM_free(join_ln_to_gn);
   }
 
   for(int i_group_join = 0; i_group_join < n_group_join; ++i_group_join) {
-   PDM_free(distrib_join[i_group_join]);
+    PDM_free(distrib_join[i_group_join]);
   }
   PDM_free(distrib_join);
 }
@@ -452,8 +452,8 @@ int main(int argc, char *argv[])
 
   /* Free memory */
   for (int i_domain = 0; i_domain < n_domain; i_domain++) {
-   PDM_free(dface_bnd_idx [i_domain]);
-   PDM_free(dface_bnd     [i_domain]);
+    PDM_free(dface_bnd_idx [i_domain]);
+    PDM_free(dface_bnd     [i_domain]);
     PDM_dcube_gen_free(dcube[i_domain]);
   }
   PDM_free(dcube);
@@ -481,8 +481,8 @@ int main(int argc, char *argv[])
 
   for (i_interface = 0; i_interface < n_interface; i_interface++)
   {
-   PDM_free(interface_ids_f[i_interface]);
-   PDM_free(interface_dom_f[i_interface]);
+    PDM_free(interface_ids_f[i_interface]);
+    PDM_free(interface_dom_f[i_interface]);
   }
   PDM_free(interface_dn_f );
   PDM_free(interface_ids_f);

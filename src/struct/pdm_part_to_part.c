@@ -95,7 +95,7 @@ _free_async_send
 )
 {
   if (ptp->async_send_request[request] != NULL) {
-   PDM_free(ptp->async_send_request[request]);
+    PDM_free(ptp->async_send_request[request]);
   }
   ptp->async_send_request[request] = NULL;
 
@@ -103,19 +103,19 @@ _free_async_send
   ptp->async_send_cst_stride[request] = -1;
   ptp->async_send_tag[request]        = -1;
   if (ptp->async_send_buffer[request] != NULL) {
-   PDM_free(ptp->async_send_buffer[request]);
+    PDM_free(ptp->async_send_buffer[request]);
   }
   ptp->async_send_buffer[request] = NULL;
 
   if ((ptp->async_n_send_buffer[request] != NULL) &&
       (ptp->async_n_send_buffer[request] != ptp->default_n_send_buffer)) {
-   PDM_free(ptp->async_n_send_buffer[request]);
+    PDM_free(ptp->async_n_send_buffer[request]);
   }
   ptp->async_n_send_buffer[request] = NULL;
 
   if ((ptp->async_i_send_buffer[request] != NULL) &&
       (ptp->async_i_send_buffer[request] != ptp->default_i_send_buffer)) {
-   PDM_free(ptp->async_i_send_buffer[request]);
+    PDM_free(ptp->async_i_send_buffer[request]);
   }
   ptp->async_i_send_buffer[request] = NULL;
 
@@ -140,7 +140,7 @@ _free_async_recv
 )
 {
   if (ptp->async_recv_request[request] != NULL) {
-   PDM_free(ptp->async_recv_request[request]);
+    PDM_free(ptp->async_recv_request[request]);
   }
   ptp->async_recv_request[request] = NULL;
 
@@ -149,24 +149,24 @@ _free_async_recv
   ptp->async_recv_tag[request]        = -1;
 
   if (ptp->async_recv_buffer[request]  != NULL) {
-   PDM_free(ptp->async_recv_buffer[request]);
+    PDM_free(ptp->async_recv_buffer[request]);
   }
   ptp->async_recv_buffer[request]   = NULL;
 
   if ((ptp->async_n_recv_buffer[request] != NULL) &&
       (ptp->async_n_recv_buffer[request] != ptp->default_n_recv_buffer)) {
-   PDM_free(ptp->async_n_recv_buffer[request]);
+    PDM_free(ptp->async_n_recv_buffer[request]);
   }
   ptp->async_n_recv_buffer[request] = NULL;
 
   if ((ptp->async_i_recv_buffer[request] != NULL) &&
       (ptp->async_i_recv_buffer[request] != ptp->default_i_recv_buffer)) {
-   PDM_free(ptp->async_i_recv_buffer[request]);
+    PDM_free(ptp->async_i_recv_buffer[request]);
   }
   ptp->async_i_recv_buffer[request]   = NULL;
 
   if (ptp->async_recv_part2_data[request] != NULL) {
-   PDM_free(ptp->async_recv_part2_data[request]);
+    PDM_free(ptp->async_recv_part2_data[request]);
     ptp->async_recv_part2_data[request] = NULL;
   }
 
@@ -197,12 +197,12 @@ _free_async_exch
   }
 
   if (ptp->async_exch_recv_n[request] != NULL) {
-   PDM_free(ptp->async_exch_recv_n[request]);
+    PDM_free(ptp->async_exch_recv_n[request]);
     ptp->async_exch_recv_n[request] = NULL;
   }
 
   if (ptp->async_exch_recv_idx[request] != NULL) {
-   PDM_free(ptp->async_exch_recv_idx[request]);
+    PDM_free(ptp->async_exch_recv_idx[request]);
     ptp->async_exch_recv_idx[request] = NULL;
   }
   ptp->async_exch_part2_stride[request]   = NULL;
@@ -902,7 +902,7 @@ _p2p_stride_var_data_issend
   }
 
   for (int i = 0; i < ptp->n_part1; i++) {
-   PDM_free(part1_to_part2_data_idx[i]);
+    PDM_free(part1_to_part2_data_idx[i]);
   }
   PDM_free(part1_to_part2_data_idx);
 
@@ -1016,7 +1016,7 @@ _p2p_stride_var_data_reverse_issend
   }
 
   for (int i = 0; i < ptp->n_part2; i++) {
-   PDM_free(part2_to_part1_data_idx[i]);
+    PDM_free(part2_to_part1_data_idx[i]);
   }
   PDM_free(part2_to_part1_data_idx);
 
@@ -1309,7 +1309,7 @@ _alltotall_stride_var_iexch
   PDM_free(blk_send_idx);
 
   for (int i = 0; i < ptp->n_part1; i++) {
-   PDM_free(part1_to_part2_data_idx[i]);
+    PDM_free(part1_to_part2_data_idx[i]);
   }
   PDM_free(part1_to_part2_data_idx);
 
@@ -1378,11 +1378,11 @@ _alltotall_stride_var_iexch
 
   if (__part1_to_part2_stride != NULL) {
     for (int i = 0; i < ptp->n_part1; i++) {
-     PDM_free(__part1_to_part2_stride[i]);
-     PDM_free(__part1_to_part2_data[i]);
+      PDM_free(__part1_to_part2_stride[i]);
+      PDM_free(__part1_to_part2_data[i]);
     }
-   PDM_free(__part1_to_part2_stride);
-   PDM_free(__part1_to_part2_data);
+    PDM_free(__part1_to_part2_stride);
+    PDM_free(__part1_to_part2_data);
   }
 
 }
@@ -1446,7 +1446,7 @@ _alltotall_stride_var_wait_and_post
   _free_async_alltoall (ptp, request);
 
   for (int i = 0; i < ptp->n_part2; i++) {
-   PDM_free(part2_idx[i]);
+    PDM_free(part2_idx[i]);
   }
   PDM_free(part2_idx);
 }
@@ -1607,7 +1607,7 @@ _p2p_stride_var_iexch
 
     blk_send_idx = PDM_array_new_idx_from_sizes_int(blk_send_stride,
                                                     n_blk_send);
-   PDM_free(blk_send_stride);
+    PDM_free(blk_send_stride);
 
 
 
@@ -1648,7 +1648,7 @@ _p2p_stride_var_iexch
 
     ptp->async_exch_recv_idx[request] = PDM_array_new_idx_from_sizes_int(blk_recv_stride,
                                                                          n_blk_recv);
-   PDM_free(blk_recv_stride);
+    PDM_free(blk_recv_stride);
   }
 
 
@@ -1704,11 +1704,11 @@ _p2p_stride_var_iexch
 
   if (__part1_to_part2_stride != NULL) {
     for (int i = 0; i < ptp->n_part1; i++) {
-     PDM_free(__part1_to_part2_stride[i]);
-     PDM_free(__part1_to_part2_data[i]);
+      PDM_free(__part1_to_part2_stride[i]);
+      PDM_free(__part1_to_part2_data[i]);
     }
-   PDM_free(__part1_to_part2_stride);
-   PDM_free(__part1_to_part2_data);
+    PDM_free(__part1_to_part2_stride);
+    PDM_free(__part1_to_part2_data);
   }
 }
 
@@ -1798,7 +1798,7 @@ _p2p_stride_var_reverse_iexch
         }
       }
 
-     PDM_free(part2_idx);
+      PDM_free(part2_idx);
     }
 
   }
@@ -1895,7 +1895,7 @@ _p2p_stride_var_reverse_iexch
 
     blk_send_idx = PDM_array_new_idx_from_sizes_int(blk_send_stride,
                                                     n_blk_send);
-   PDM_free(blk_send_stride);
+    PDM_free(blk_send_stride);
 
 
 
@@ -1932,7 +1932,7 @@ _p2p_stride_var_reverse_iexch
 
     ptp->async_exch_recv_idx[request] = PDM_array_new_idx_from_sizes_int(blk_recv_stride,
                                                                          n_blk_recv);
-   PDM_free(blk_recv_stride);
+    PDM_free(blk_recv_stride);
   }
 
 
@@ -1986,11 +1986,11 @@ _p2p_stride_var_reverse_iexch
 
   if (__part2_to_part1_stride != NULL) {
     for (int i = 0; i < ptp->n_part2; i++) {
-     PDM_free(__part2_to_part1_stride[i]);
-     PDM_free(__part2_to_part1_data[i]);
+      PDM_free(__part2_to_part1_stride[i]);
+      PDM_free(__part2_to_part1_data[i]);
     }
-   PDM_free(__part2_to_part1_stride);
-   PDM_free(__part2_to_part1_data);
+    PDM_free(__part2_to_part1_stride);
+    PDM_free(__part2_to_part1_data);
 
   }
 
@@ -2074,7 +2074,7 @@ _p2p_stride_var_iexch_wait
   ptp->async_recv_part2_data[request_irecv] = NULL;
 
   for (int i = 0; i < ptp->n_part2; i++) {
-   PDM_free(part2_idx[i]);
+    PDM_free(part2_idx[i]);
   }
   PDM_free(part2_idx);
 
@@ -2162,7 +2162,7 @@ _p2p_stride_var_reverse_iexch_wait
   //_free_async_exch (ptp, request);
 
   for (int i = 0; i < ptp->n_part1; i++) {
-   PDM_free(part1_idx[i]);
+    PDM_free(part1_idx[i]);
   }
   PDM_free(part1_idx);
 
@@ -2753,7 +2753,7 @@ _create
   }
 
   for (int i = 0; i < n_part1; i++) {
-   PDM_free(gnum1_to_send_buffer_n[i]);
+    PDM_free(gnum1_to_send_buffer_n[i]);
   }
   PDM_free(gnum1_to_send_buffer_n);
 
@@ -2989,7 +2989,7 @@ _create
       }
     }
 
-   PDM_free(ptp->recv_buffer_to_ref_lnum2[i]);
+    PDM_free(ptp->recv_buffer_to_ref_lnum2[i]);
     ptp->recv_buffer_to_ref_lnum2[i] = _recv_buffer_to_ref_lnum2;
 
     int *_old_gnum1_come_from_idx;
@@ -3032,7 +3032,7 @@ _create
     PDM_realloc(ptp->recv_buffer_to_ref_lnum2[i] ,ptp->recv_buffer_to_ref_lnum2[i] , cpt ,int);
     PDM_realloc(ptp->recv_buffer_to_duplicate[i] ,ptp->recv_buffer_to_duplicate[i] , 2 * cpt1,int);
 
-   PDM_free(_old_gnum1_come_from_idx);
+    PDM_free(_old_gnum1_come_from_idx);
 
   }
 
@@ -3089,8 +3089,8 @@ _create
   PDM_free(gnum_r_buff);
 
   for (int i = 0; i < n_part2; i++) {
-   PDM_free(ielt_to_ref[i]);
-   PDM_free(tag_elt2[i]);
+    PDM_free(ielt_to_ref[i]);
+    PDM_free(tag_elt2[i]);
   }
   PDM_free(tag_elt2);
   PDM_free(ielt_to_ref);
@@ -4021,7 +4021,7 @@ PDM_part_to_part_irecv_post
         }
       }
     }
-   PDM_free(ptp->async_recv_part2_data[request]);
+    PDM_free(ptp->async_recv_part2_data[request]);
     ptp->async_recv_part2_data[request] = NULL;
   }
 
@@ -4451,11 +4451,11 @@ PDM_part_to_part_iexch
 
     if (t_part1_data_def == PDM_PART_TO_PART_DATA_DEF_ORDER_PART1) {
       for (int i = 0; i < ptp->n_part1; i++) {
-       PDM_free(__part1_to_part2_data[i]);
+        PDM_free(__part1_to_part2_data[i]);
       }
     }
-   PDM_free(__part1_to_part2_data);
-   PDM_free(___part2_data);
+    PDM_free(__part1_to_part2_data);
+    PDM_free(___part2_data);
 
   }
 
@@ -4587,9 +4587,9 @@ PDM_part_to_part_iexch
 
     if (__part1_to_part2_data != NULL) {
       for (int i = 0; i < ptp->n_part1; i++) {
-       PDM_free(__part1_to_part2_data[i]);
+        PDM_free(__part1_to_part2_data[i]);
       }
-     PDM_free(__part1_to_part2_data);
+      PDM_free(__part1_to_part2_data);
       __part1_to_part2_data = NULL;
     }
   }
@@ -5096,12 +5096,12 @@ PDM_part_to_part_reverse_iexch
 
     if (t_part2_data_def == PDM_PART_TO_PART_DATA_DEF_ORDER_PART2) {
       for (int i = 0; i < ptp->n_part2; i++) {
-       PDM_free(__part2_to_part1_data[i]);
+        PDM_free(__part2_to_part1_data[i]);
       }
     }
-   PDM_free(__part2_to_part1_data);
+    PDM_free(__part2_to_part1_data);
     __part2_to_part1_data = NULL;
-   PDM_free(___part1_data);
+    PDM_free(___part1_data);
     ___part1_data = NULL;
   }
 
@@ -5231,9 +5231,9 @@ PDM_part_to_part_reverse_iexch
 
     if (__part2_to_part1_data != NULL) {
       for (int i = 0; i < ptp->n_part2; i++) {
-       PDM_free(__part2_to_part1_data[i]);
+        PDM_free(__part2_to_part1_data[i]);
       }
-     PDM_free(__part2_to_part1_data);
+      PDM_free(__part2_to_part1_data);
       __part2_to_part1_data = NULL;
     }
 
@@ -5567,47 +5567,47 @@ PDM_part_to_part_free
   PDM_free(ptp->n_elt1);
   PDM_free(ptp->n_elt2);
   for(int i_part = 0; i_part < ptp->n_part1; ++i_part) {
-   PDM_free(ptp->part1_to_part2_idx[i_part]);
+    PDM_free(ptp->part1_to_part2_idx[i_part]);
   }
   PDM_free(ptp->part1_to_part2_idx);
 
   if (ptp->gnum1_to_send_buffer != NULL) {
     for (int i = 0; i < ptp->n_part1; i++) {
-     PDM_free(ptp->gnum1_to_send_buffer[i]);
+      PDM_free(ptp->gnum1_to_send_buffer[i]);
     }
-   PDM_free(ptp->gnum1_to_send_buffer);
+    PDM_free(ptp->gnum1_to_send_buffer);
   }
 
   if (ptp->gnum1_to_send_buffer_idx != NULL) {
     for (int i = 0; i < ptp->n_part1; i++) {
-     PDM_free(ptp->gnum1_to_send_buffer_idx[i]);
+      PDM_free(ptp->gnum1_to_send_buffer_idx[i]);
     }
-   PDM_free(ptp->gnum1_to_send_buffer_idx);
+    PDM_free(ptp->gnum1_to_send_buffer_idx);
   }
 
   if (ptp->recv_buffer_to_ref_lnum2 != NULL) {
     for (int i = 0; i < ptp->n_part2; i++) {
       if (ptp->ref_lnum2[i] != NULL) {
-       PDM_free(ptp->ref_lnum2[i]);
+        PDM_free(ptp->ref_lnum2[i]);
       }
       if (ptp->unref_lnum2[i] != NULL) {
-       PDM_free(ptp->unref_lnum2[i]);
+        PDM_free(ptp->unref_lnum2[i]);
       }
-     PDM_free(ptp->gnum1_come_from_idx[i]);
-     PDM_free(ptp->gnum1_come_from[i]);
-     PDM_free(ptp->recv_buffer_to_ref_lnum2[i]);
-     PDM_free(ptp->recv_buffer_to_duplicate_idx[i]);
-     PDM_free(ptp->recv_buffer_to_duplicate[i]);
+      PDM_free(ptp->gnum1_come_from_idx[i]);
+      PDM_free(ptp->gnum1_come_from[i]);
+      PDM_free(ptp->recv_buffer_to_ref_lnum2[i]);
+      PDM_free(ptp->recv_buffer_to_duplicate_idx[i]);
+      PDM_free(ptp->recv_buffer_to_duplicate[i]);
     }
-   PDM_free(ptp->recv_buffer_to_ref_lnum2);
-   PDM_free(ptp->ref_lnum2);
-   PDM_free(ptp->unref_lnum2);
-   PDM_free(ptp->n_ref_lnum2);
-   PDM_free(ptp->n_unref_lnum2);
-   PDM_free(ptp->gnum1_come_from_idx);
-   PDM_free(ptp->gnum1_come_from);
-   PDM_free(ptp->recv_buffer_to_duplicate_idx);
-   PDM_free(ptp->recv_buffer_to_duplicate);
+    PDM_free(ptp->recv_buffer_to_ref_lnum2);
+    PDM_free(ptp->ref_lnum2);
+    PDM_free(ptp->unref_lnum2);
+    PDM_free(ptp->n_ref_lnum2);
+    PDM_free(ptp->n_unref_lnum2);
+    PDM_free(ptp->gnum1_come_from_idx);
+    PDM_free(ptp->gnum1_come_from);
+    PDM_free(ptp->recv_buffer_to_duplicate_idx);
+    PDM_free(ptp->recv_buffer_to_duplicate);
   }
 
   PDM_free(ptp->active_rank_send);
@@ -5616,52 +5616,52 @@ PDM_part_to_part_free
   if (ptp->async_send_l_array != 0) {
     for (int i = 0; i < ptp->async_send_l_array; i++) {
       if (ptp->async_send_buffer[i] != NULL) {
-       PDM_free(ptp->async_send_buffer[i]);
+        PDM_free(ptp->async_send_buffer[i]);
       }
       if (ptp->async_n_send_buffer[i] != NULL) {
-       PDM_free(ptp->async_n_send_buffer[i]);
+        PDM_free(ptp->async_n_send_buffer[i]);
       }
       if (ptp->async_i_send_buffer[i] != NULL) {
-       PDM_free(ptp->async_i_send_buffer[i]);
+        PDM_free(ptp->async_i_send_buffer[i]);
       }
       if (ptp->async_send_request[i] != NULL) {
-       PDM_free(ptp->async_send_request[i]);
+        PDM_free(ptp->async_send_request[i]);
       }
     }
-   PDM_free(ptp->async_send_free);
-   PDM_free(ptp->async_send_s_data);
-   PDM_free(ptp->async_send_cst_stride);
-   PDM_free(ptp->async_send_tag);
-   PDM_free(ptp->async_send_request);
-   PDM_free(ptp->async_send_buffer);
-   PDM_free(ptp->async_n_send_buffer);
-   PDM_free(ptp->async_i_send_buffer);
+    PDM_free(ptp->async_send_free);
+    PDM_free(ptp->async_send_s_data);
+    PDM_free(ptp->async_send_cst_stride);
+    PDM_free(ptp->async_send_tag);
+    PDM_free(ptp->async_send_request);
+    PDM_free(ptp->async_send_buffer);
+    PDM_free(ptp->async_n_send_buffer);
+    PDM_free(ptp->async_i_send_buffer);
   }
 
   if (ptp->async_recv_l_array != 0) {
     for (int i = 0; i < ptp->async_recv_l_array; i++) {
       if (ptp->async_recv_buffer[i] != NULL) {
-       PDM_free(ptp->async_recv_buffer[i]);
+        PDM_free(ptp->async_recv_buffer[i]);
       }
       if (ptp->async_n_recv_buffer[i] != NULL) {
-       PDM_free(ptp->async_n_recv_buffer[i]);
+        PDM_free(ptp->async_n_recv_buffer[i]);
       }
       if (ptp->async_i_recv_buffer[i] != NULL) {
-       PDM_free(ptp->async_i_recv_buffer[i]);
+        PDM_free(ptp->async_i_recv_buffer[i]);
       }
       if (ptp->async_recv_request[i] != NULL) {
-       PDM_free(ptp->async_recv_request[i]);
+        PDM_free(ptp->async_recv_request[i]);
       }
     }
-   PDM_free(ptp->async_recv_free);
-   PDM_free(ptp->async_recv_s_data);
-   PDM_free(ptp->async_recv_cst_stride);
-   PDM_free(ptp->async_recv_tag);
-   PDM_free(ptp->async_recv_request);
-   PDM_free(ptp->async_recv_buffer);
-   PDM_free(ptp->async_n_recv_buffer);
-   PDM_free(ptp->async_i_recv_buffer);
-   PDM_free(ptp->async_recv_part2_data);
+    PDM_free(ptp->async_recv_free);
+    PDM_free(ptp->async_recv_s_data);
+    PDM_free(ptp->async_recv_cst_stride);
+    PDM_free(ptp->async_recv_tag);
+    PDM_free(ptp->async_recv_request);
+    PDM_free(ptp->async_recv_buffer);
+    PDM_free(ptp->async_n_recv_buffer);
+    PDM_free(ptp->async_i_recv_buffer);
+    PDM_free(ptp->async_recv_part2_data);
   }
 
   PDM_free(ptp->default_n_send_buffer);
@@ -5671,29 +5671,29 @@ PDM_part_to_part_free
 
   if (ptp->async_exch_l_array > 0) {
     for (int i = 0; i < ptp->async_exch_l_array; i++) {
-     PDM_free(ptp->async_exch_subrequest[i]);
+      PDM_free(ptp->async_exch_subrequest[i]);
       if (ptp->async_exch_recv_n[i] != NULL) {
-       PDM_free(ptp->async_exch_recv_n[i]);
+        PDM_free(ptp->async_exch_recv_n[i]);
       }
       if (ptp->async_exch_recv_idx[i] != NULL) {
-       PDM_free(ptp->async_exch_recv_idx[i]);
+        PDM_free(ptp->async_exch_recv_idx[i]);
       }
     }
 
-   PDM_free(ptp->async_exch_free);
-   PDM_free(ptp->async_exch_subrequest);
-   PDM_free(ptp->async_exch_subrequest_s);
-   PDM_free(ptp->async_exch_t_stride);
-   PDM_free(ptp->async_exch_k_comm);
-   PDM_free(ptp->async_exch_recv_n);
-   PDM_free(ptp->async_exch_recv_idx);
-   PDM_free(ptp->async_exch_part2_stride);
+    PDM_free(ptp->async_exch_free);
+    PDM_free(ptp->async_exch_subrequest);
+    PDM_free(ptp->async_exch_subrequest_s);
+    PDM_free(ptp->async_exch_t_stride);
+    PDM_free(ptp->async_exch_k_comm);
+    PDM_free(ptp->async_exch_recv_n);
+    PDM_free(ptp->async_exch_recv_idx);
+    PDM_free(ptp->async_exch_part2_stride);
 
   }
 
   if (ptp->async_alltoall_l_array > 0) {
-   PDM_free(ptp->async_alltoall_free);
-   PDM_free(ptp->async_alltoall_subrequest);
+    PDM_free(ptp->async_alltoall_free);
+    PDM_free(ptp->async_alltoall_subrequest);
   }
 
   ptp->async_exch_n_free  = 0;

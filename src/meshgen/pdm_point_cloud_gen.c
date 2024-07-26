@@ -139,7 +139,7 @@ PDM_point_cloud_gen_random
     *g_num = PDM_gnum_get (gen_gnum, 0);
 
     PDM_gnum_free (gen_gnum);
-   PDM_free(char_length);
+    PDM_free(char_length);
   }
 
   else {

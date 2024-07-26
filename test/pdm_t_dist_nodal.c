@@ -491,7 +491,7 @@ int main(int argc, char *argv[])
   PDM_free(surf_pface_edge    );
   PDM_free(surf_pface_edge_idx);
   for(int i_part = 0; i_part < n_part; i_part++) {
-   PDM_free(surf_pface_vtx[i_part]);
+    PDM_free(surf_pface_vtx[i_part]);
   }
   PDM_free(surf_pface_vtx     );
   PDM_free(surf_pedge_vtx     );

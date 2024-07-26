@@ -159,7 +159,7 @@ _export_vtk_2d
                            NULL);
 
 
-   PDM_free(face_vtx);
+    PDM_free(face_vtx);
   }
 }
 
@@ -293,8 +293,8 @@ _export_vtk_3d
                            NULL);
 
     if (owner == PDM_OWNERSHIP_KEEP) {
-     PDM_free(pextract_face_vtx    [i_part]);
-     PDM_free(pextract_face_vtx_idx[i_part]);
+      PDM_free(pextract_face_vtx    [i_part]);
+      PDM_free(pextract_face_vtx_idx[i_part]);
     }
 
   }
@@ -576,7 +576,7 @@ _compute_mesh_nodal_extents
         memcpy(extents[i_part] + 6*idx, _extents + 6*i, sizeof(double)*6);
       }
     }
-   PDM_free(_extents);
+    PDM_free(_extents);
 
     for (int i = 0; i < part_n_elt; i++) {
       for (int k = 0; k < 3; k++) {
@@ -659,7 +659,7 @@ _compute_part_mesh_extents
                           extents[i_part],
                           global_extents);
       if (face_vtx == NULL) {
-       PDM_free(_face_vtx);
+        PDM_free(_face_vtx);
       }
     }
   } else if(dim_mesh == 2) {
@@ -710,7 +710,7 @@ _compute_part_mesh_extents
                             tolerance,
                             extents[i_part],
                             global_extents);
-       PDM_free(edge_vtx_idx);
+        PDM_free(edge_vtx_idx);
       }
     }
 
@@ -739,7 +739,7 @@ _compute_part_mesh_extents
                                         extents[i_part],
                                         global_extents);
 
-     PDM_free(edge_vtx_idx);
+      PDM_free(edge_vtx_idx);
     }
   }
   *extents_out = extents;
@@ -2085,7 +2085,7 @@ _build_ptp
   // int **user_a_b_init_loc;
   // PDM_malloc(user_a_b_init_loc,mi->n_part_mesh[0]);// size = user_a_b_init_loc_idx[user_a_b_idx[user_n_elt_a]] (*3?,int         *)
   for (int ipart = 0; ipart < mi->n_part_mesh[0]; ipart++) {
-   PDM_free(user_elt_a_b_init_loc_stride[ipart]);
+    PDM_free(user_elt_a_b_init_loc_stride[ipart]);
     if (mi->mesh_nodal[0] == NULL && mi->mesh[0] != NULL) {
       user_n_elt_a[ipart] = PDM_part_mesh_n_entity_get(mi->mesh[0],
                                                        ipart,
@@ -2169,7 +2169,7 @@ _build_ptp
       int elt_a_id = ref_a[ipart][i] - 1;
       mi->elt_a_elt_b_idx[ipart][elt_a_id+1] = user_elt_a_b_n[ipart][i];
     }
-   PDM_free(user_elt_a_b_n[ipart]);
+    PDM_free(user_elt_a_b_n[ipart]);
 
     for (int i = 0; i < user_n_elt_a[ipart]; i++) {
       mi->elt_a_elt_b_idx[ipart][i+1] += mi->elt_a_elt_b_idx[ipart][i];
@@ -2195,9 +2195,9 @@ _build_ptp
                        order,
                        user_elt_a_b_init_loc_n[ipart][i]);
     }
-   PDM_free(order);
+    PDM_free(order);
 
-   PDM_free(user_elt_a_b_init_loc_n[ipart]);
+    PDM_free(user_elt_a_b_init_loc_n[ipart]);
   }
   PDM_free(user_elt_a_b_n);
   PDM_free(user_elt_a_b_init_loc_n);
@@ -2260,10 +2260,10 @@ _build_ptp
                                                       (const int         **) user_elt_a_b_init_loc,     // size = user_a_b_init_loc_idx[user_a_b_idx[user_n_elt_a]] (*3?)
                                                                              mi->comm);
   for (int ipart = 0; ipart < mi->n_part_mesh[0]; ipart++) {
-   PDM_free(user_elt_a_b_init_loc_idx[ipart]);
-   PDM_free(user_elt_a_b_init_loc    [ipart]);
+    PDM_free(user_elt_a_b_init_loc_idx[ipart]);
+    PDM_free(user_elt_a_b_init_loc    [ipart]);
     if (mi->mesh_nodal[0] != NULL) {
-     PDM_free(user_elt_ln_to_gn_a[ipart]);
+      PDM_free(user_elt_ln_to_gn_a[ipart]);
     }
   }
   PDM_free(user_elt_a_b_init_loc_idx);
@@ -2543,9 +2543,9 @@ _mesh_intersection_vol_vol
                                    __face_vtx,
                                    __face_cell_ln_to_gn,
                                    NULL);
-           PDM_free(__face_vtx);
-           PDM_free(__face_vtx_idx);
-           PDM_free(__face_cell_ln_to_gn);
+            PDM_free(__face_vtx);
+            PDM_free(__face_vtx_idx);
+            PDM_free(__face_cell_ln_to_gn);
 
           }
           else {
@@ -3039,10 +3039,10 @@ _mesh_intersection_vol_vol
                                                                       &local_n_vtxB,
                                                                       &local_face_vtxB,
                                                                       &vtk_n_faceB);
-               PDM_free(local_vtx_coordA);
-               PDM_free(local_face_vtxA);
-               PDM_free(local_vtx_coordB);
-               PDM_free(local_face_vtxB);
+                PDM_free(local_vtx_coordA);
+                PDM_free(local_face_vtxA);
+                PDM_free(local_vtx_coordB);
+                PDM_free(local_face_vtxB);
               }
               else if (method == 1) {
                 volume = PDM_mesh_intersection_vol_vol_atomic_compute2(triaB_coord);
@@ -3156,7 +3156,7 @@ _mesh_intersection_vol_vol
 
   for (int i = 0; i < 2; i++) {
     if (is_owner_face_vtx[i]) {
-     PDM_free(face_vtx[i]);
+      PDM_free(face_vtx[i]);
     }
 
     if (extract_part_mesh[i] != NULL) {
@@ -3450,7 +3450,7 @@ _mesh_intersection_vol_line
 
 
   if (owner_face_vtxA == PDM_OWNERSHIP_USER) {
-   PDM_free(faceA_vtxA);
+    PDM_free(faceA_vtxA);
   }
   PDM_free(poly_coord);
   PDM_free(face_normal);
@@ -3570,7 +3570,7 @@ _mesh_intersection_vol_line
       int elt_a_id = ref_a[i_part][i] - 1;
       mi->elt_a_elt_b_idx[i_part][elt_a_id+1] = user_elt_a_b_n[i_part][i];
     }
-   PDM_free(user_elt_a_b_n[i_part]);
+    PDM_free(user_elt_a_b_n[i_part]);
 
     for (int i = 0; i < user_n_elt_a[i_part]; i++) {
       mi->elt_a_elt_b_idx[i_part][i+1] += mi->elt_a_elt_b_idx[i_part][i];
@@ -3617,10 +3617,10 @@ _mesh_intersection_vol_line
                                                                              mi->comm);
 
   for (int ipart = 0; ipart < mi->n_part_mesh[0]; ipart++) {
-   PDM_free(user_elt_a_b_init_loc_idx[ipart]);
-   PDM_free(user_elt_a_b_init_loc    [ipart]);
+    PDM_free(user_elt_a_b_init_loc_idx[ipart]);
+    PDM_free(user_elt_a_b_init_loc    [ipart]);
     if (mi->mesh_nodal[0] != NULL) {
-     PDM_free(user_elt_ln_to_gn_a[ipart]);
+      PDM_free(user_elt_ln_to_gn_a[ipart]);
     }
   }
   PDM_free(user_elt_a_b_init_loc_idx);
@@ -4205,7 +4205,7 @@ _mesh_intersection_surf_line
                                          NULL,
                                          NULL);
 
-   PDM_free(dbg_subedgeA_coord);
+    PDM_free(dbg_subedgeA_coord);
   }
 
   if (dbg_enabled) {
@@ -4437,9 +4437,9 @@ _mesh_intersection_surf_line
 
     }
 
-   PDM_free(edgeB_faceA);
-   PDM_free(faceA_vtxA);
-   PDM_free(faceA_coord);
+    PDM_free(edgeB_faceA);
+    PDM_free(faceA_vtxA);
+    PDM_free(faceA_coord);
   }
 
   PDM_free(edgeB_inter_n);
@@ -4478,7 +4478,7 @@ _mesh_intersection_surf_line
                                          NULL,
                                          NULL);
 
-   PDM_free(dbg_subedgeB_coord);
+    PDM_free(dbg_subedgeB_coord);
   }
 
 
@@ -4525,7 +4525,7 @@ _mesh_intersection_surf_line
       log_trace("faceA %d : bilan = %e\n", i, mag);
     }
 
-   PDM_free(faceA_bilan);
+    PDM_free(faceA_bilan);
   }
 
 
@@ -4828,7 +4828,7 @@ _mesh_intersection_surf_surf
                              NULL);
 
       if (face_vtx[i] == NULL) {
-       PDM_free(_face_vtx);
+        PDM_free(_face_vtx);
       }
     }
   }
@@ -5223,8 +5223,8 @@ _mesh_intersection_surf_surf
   PDM_free(faceB_normals);
   for (int i = 0; i < 2; i++) {
     if (mi->mesh[i] == NULL) {
-     PDM_free(face_vtx_idx[i]);
-     PDM_free(face_vtx    [i]);
+      PDM_free(face_vtx_idx[i]);
+      PDM_free(face_vtx    [i]);
     }
   }
 
@@ -5489,10 +5489,10 @@ PDM_mesh_intersection_compute
   }
 
   for(int i_part = 0; i_part < n_part[0]; ++i_part) {
-   PDM_free(extents_mesh[0][i_part]);
+    PDM_free(extents_mesh[0][i_part]);
   }
   for(int i_part = 0; i_part < n_part[1]; ++i_part) {
-   PDM_free(extents_mesh[1][i_part]);
+    PDM_free(extents_mesh[1][i_part]);
   }
   PDM_free(extents_mesh[0]);
   PDM_free(extents_mesh[1]);
@@ -5511,14 +5511,14 @@ PDM_mesh_intersection_compute
       for (int i = 0; i < 2; i++) {
         mi->extrp_mesh[i] = NULL;
         for (int i_part = 0; i_part < n_part[i]; i_part++) {
-         PDM_free(extract_elmt_init_location[i][i_part]);
-         PDM_free(extract_box_extents       [i][i_part]);
-         PDM_free(extract_elmt_ln_to_gn     [i][i_part]);
+          PDM_free(extract_elmt_init_location[i][i_part]);
+          PDM_free(extract_box_extents       [i][i_part]);
+          PDM_free(extract_elmt_ln_to_gn     [i][i_part]);
         }
-       PDM_free(n_extract_elmt            [i]);
-       PDM_free(extract_elmt_init_location[i]);
-       PDM_free(extract_box_extents       [i]);
-       PDM_free(extract_elmt_ln_to_gn     [i]);
+        PDM_free(n_extract_elmt            [i]);
+        PDM_free(extract_elmt_init_location[i]);
+        PDM_free(extract_box_extents       [i]);
+        PDM_free(extract_elmt_ln_to_gn     [i]);
       }
       mi->box_a_box_b_idx = NULL;
       mi->box_a_box_b     = NULL;
@@ -5554,14 +5554,14 @@ PDM_mesh_intersection_compute
   /* Free extraction */
   for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
     for(int i_part = 0; i_part < n_part[i_mesh]; ++i_part) {
-     PDM_free(extract_elmt_init_location[i_mesh][i_part]);
-     PDM_free(extract_box_extents       [i_mesh][i_part]);
-     PDM_free(extract_elmt_ln_to_gn     [i_mesh][i_part]);
+      PDM_free(extract_elmt_init_location[i_mesh][i_part]);
+      PDM_free(extract_box_extents       [i_mesh][i_part]);
+      PDM_free(extract_elmt_ln_to_gn     [i_mesh][i_part]);
     }
-   PDM_free(n_extract_elmt            [i_mesh]);
-   PDM_free(extract_elmt_init_location[i_mesh]);
-   PDM_free(extract_box_extents       [i_mesh]);
-   PDM_free(extract_elmt_ln_to_gn     [i_mesh]);
+    PDM_free(n_extract_elmt            [i_mesh]);
+    PDM_free(extract_elmt_init_location[i_mesh]);
+    PDM_free(extract_box_extents       [i_mesh]);
+    PDM_free(extract_elmt_ln_to_gn     [i_mesh]);
   }
 
   // Check for zero candidates
@@ -5577,8 +5577,8 @@ PDM_mesh_intersection_compute
       PDM_box_set_destroy(&boxes_mesh[imesh]);
     }
 
-   PDM_free(box_a_to_box_b_idx);
-   PDM_free(box_a_to_box_b);
+    PDM_free(box_a_to_box_b_idx);
+    PDM_free(box_a_to_box_b);
     PDM_dbbtree_free(dbbtree_mesh_a);
 
     mi->box_a_box_b_idx = NULL;
@@ -5754,8 +5754,8 @@ PDM_mesh_intersection_compute
     PDM_box_set_destroy (&boxes_mesh[0]);
     PDM_box_set_destroy (&boxes_mesh[1]);
 
-   PDM_free(redistribute_box_a_to_box_b_idx);
-   PDM_free(redistribute_box_a_to_box_b    );
+    PDM_free(redistribute_box_a_to_box_b_idx);
+    PDM_free(redistribute_box_a_to_box_b    );
 
     for (int imesh = 0; imesh < 2; imesh++) {
       if (mi->mesh_nodal[imesh] == NULL && mi->mesh[imesh] == NULL) {
@@ -5900,11 +5900,11 @@ PDM_mesh_intersection_free
         (mi->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !mi->tag_elt_a_elt_b_get)) {
       for (int ipart = 0; ipart < mi->n_part_mesh[0]; ipart++) {
         if (mi->elt_a_elt_b_idx[ipart] != NULL) {
-         PDM_free(mi->elt_a_elt_b_idx[ipart]);
+          PDM_free(mi->elt_a_elt_b_idx[ipart]);
         }
       }
     }
-   PDM_free(mi->elt_a_elt_b_idx);
+    PDM_free(mi->elt_a_elt_b_idx);
   }
 
   if (mi->elt_a_elt_b != NULL) {
@@ -5912,17 +5912,17 @@ PDM_mesh_intersection_free
         (mi->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !mi->tag_elt_a_elt_b_get)) {
       for (int ipart = 0; ipart < mi->n_part_mesh[0]; ipart++) {
         if (mi->elt_a_elt_b[ipart] != NULL) {
-         PDM_free(mi->elt_a_elt_b[ipart]);
+          PDM_free(mi->elt_a_elt_b[ipart]);
         }
       }
   }
-   PDM_free(mi->elt_a_elt_b);
+    PDM_free(mi->elt_a_elt_b);
   }
 
   if (mi->box_a_box_b != NULL) {
     if ((mi->owner == PDM_OWNERSHIP_KEEP ) ||
         (mi->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !mi->tag_box_a_box_b_get)) {
-     PDM_free(mi->box_a_box_b);
+      PDM_free(mi->box_a_box_b);
       mi->box_a_box_b = NULL;
     }
   }
@@ -5930,7 +5930,7 @@ PDM_mesh_intersection_free
   if (mi->box_a_box_b_idx != NULL) {
     if ((mi->owner == PDM_OWNERSHIP_KEEP ) ||
         (mi->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !mi->tag_box_a_box_b_get)) {
-     PDM_free(mi->box_a_box_b_idx);
+      PDM_free(mi->box_a_box_b_idx);
       mi->box_a_box_b = NULL;
     }
   }
@@ -5950,11 +5950,11 @@ PDM_mesh_intersection_free
         (mi->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !mi->tag_elt_a_elt_b_get)) {
       for (int ipart = 0; ipart < mi->n_part_mesh[0]; ipart++) {
         if (mi->elt_a_elt_b_volume[ipart] != NULL) {
-         PDM_free(mi->elt_a_elt_b_volume[ipart]);
+          PDM_free(mi->elt_a_elt_b_volume[ipart]);
         }
       }
     }
-   PDM_free(mi->elt_a_elt_b_volume);
+    PDM_free(mi->elt_a_elt_b_volume);
   }
 
   if (mi->elt_b_elt_a_volume != NULL) {
@@ -5962,11 +5962,11 @@ PDM_mesh_intersection_free
         (mi->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !mi->tag_elt_b_elt_a_get)) {
       for (int ipart = 0; ipart < mi->n_part_mesh[1]; ipart++) {
         if (mi->elt_b_elt_a_volume[ipart] != NULL) {
-         PDM_free(mi->elt_b_elt_a_volume[ipart]);
+          PDM_free(mi->elt_b_elt_a_volume[ipart]);
         }
       }
     }
-   PDM_free(mi->elt_b_elt_a_volume);
+    PDM_free(mi->elt_b_elt_a_volume);
   }
 
   for (int imesh = 0; imesh < 2; imesh++) {
@@ -5975,11 +5975,11 @@ PDM_mesh_intersection_free
           (mi->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !mi->tag_elt_volume_get[imesh])) {
         for (int ipart = 0; ipart < mi->n_part_mesh[imesh]; ipart++) {
           if (mi->elt_volume[imesh][ipart] != NULL) {
-           PDM_free(mi->elt_volume[imesh][ipart]);
+            PDM_free(mi->elt_volume[imesh][ipart]);
           }
         }
       }
-     PDM_free(mi->elt_volume[imesh]);
+      PDM_free(mi->elt_volume[imesh]);
     }
   }
 
@@ -6138,7 +6138,7 @@ PDM_mesh_intersection_elt_volume_get
                                          center,
                                          NULL,
                                          NULL);
-       PDM_free(center);
+        PDM_free(center);
         for (int i = 0; i < n_face; i++) {
           mi->elt_volume[imesh][ipart][i] = PDM_MODULE(mi->elt_volume[imesh][ipart] + 3*i);
         }
@@ -6177,7 +6177,7 @@ PDM_mesh_intersection_elt_volume_get
                                                         center,
                                                         NULL,
                                                         NULL);
-       PDM_free(center);
+        PDM_free(center);
         break;
       }
       default:
@@ -6187,7 +6187,7 @@ PDM_mesh_intersection_elt_volume_get
 
 
       if (mi->dim_mesh[imesh] > 1 && face_vtx == NULL) {
-       PDM_free(_face_vtx);
+        PDM_free(_face_vtx);
       }
     }
     else if (mi->mesh_nodal[imesh] != NULL) {

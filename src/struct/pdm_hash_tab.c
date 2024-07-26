@@ -208,7 +208,7 @@ void           *key
 
   for (int i = 0; i < _ht->nDataKey[_key]; i++) {
     if (_ht->data[_key][i] != NULL) {
-     PDM_free(_ht->data[_key][i]);
+      PDM_free(_ht->data[_key][i]);
     }
     _ht->data[_key][i] = NULL;
   }
@@ -315,7 +315,7 @@ PDM_hash_tab_t *ht
   _hash_tab_t *_ht = (_hash_tab_t *) ht;
 
   for (int i = 0; i<_ht->keyMax; i++) {
-   PDM_free(_ht->data[i]);
+    PDM_free(_ht->data[i]);
   }
   PDM_free(_ht->data);
   PDM_free(_ht->nDataKey);

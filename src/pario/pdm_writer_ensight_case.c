@@ -346,13 +346,13 @@ _del_vars(PDM_writer_ensight_case_t  *const this_case)
 
     PDM_writer_ensight_case_var_t  *var = this_case->var[i];
 
-   PDM_free(var->name);
-   PDM_free(var->case_line);
-   PDM_free(var->file_name_base);
+    PDM_free(var->name);
+    PDM_free(var->case_line);
+    PDM_free(var->file_name_base);
     if (var->file_name != NULL)
-     PDM_free(var->file_name);
+      PDM_free(var->file_name);
 
-   PDM_free(var);
+    PDM_free(var);
 
   }
 
@@ -778,7 +778,7 @@ const int                   append
 
   PDM_free(this_case->geom_file_name_base);
     if (this_case->geom_file_name != NULL)
-     PDM_free(this_case->geom_file_name);
+      PDM_free(this_case->geom_file_name);
 
    /* Free variable entries */
 

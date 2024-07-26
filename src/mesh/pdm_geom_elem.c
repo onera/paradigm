@@ -2144,8 +2144,8 @@ PDM_geom_elem_polyhedra_properties
                         }
                       }
 
-                     PDM_free(data[j]);
-                     PDM_free(data[jCurrentEdge]);
+                      PDM_free(data[j]);
+                      PDM_free(data[jCurrentEdge]);
                       data[j] = NULL;
                       data[jCurrentEdge] = NULL;
 
@@ -2347,9 +2347,9 @@ PDM_geom_elem_polyhedra_properties
   PDM_free(polyhedraVertices);
 
   if (!isOriented) {
-   PDM_free(keyPoly);
-   PDM_free(tagFace);
-   PDM_free(stack);
+    PDM_free(keyPoly);
+    PDM_free(tagFace);
+    PDM_free(stack);
     PDM_hash_tab_free (hashOrient);
   }
 
@@ -2723,7 +2723,7 @@ PDM_geom_elem_edge_upwind_and_downwind
           vtx_cell_gnum[idx_write++] = cell_ln_to_gn[cell_id];
         }
         PDM_order_gnum_s(vtx_cell_gnum, 1, order, n_cell_per_vtx);
-       PDM_free(vtx_cell_gnum);
+        PDM_free(vtx_cell_gnum);
       } else {
         for(int i = 0; i < n_cell_per_vtx; ++i) {
           order[i] = i;
@@ -2841,7 +2841,7 @@ PDM_geom_elem_edge_upwind_and_downwind
 
       } // End of loop on current vertex's cells
 
-     PDM_free(order);
+      PDM_free(order);
 
       /* Reverse ray direction */
       ray_direction[0] = -ray_direction[0];
@@ -2860,11 +2860,11 @@ PDM_geom_elem_edge_upwind_and_downwind
   }
 
   if (tri_vtx != NULL) {
-   PDM_free(tri_vtx);
+    PDM_free(tri_vtx);
   }
 
   if (poly_coord != NULL) {
-   PDM_free(poly_coord);
+    PDM_free(poly_coord);
   }
 }
 

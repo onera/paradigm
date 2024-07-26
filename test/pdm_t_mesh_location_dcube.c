@@ -1197,8 +1197,8 @@ int main(int argc, char *argv[])
   PDM_free(recv_field);
 
   for (int ipart = 0; ipart < n_part; ipart++) {
-   PDM_free(src_field [ipart]);
-   PDM_free(send_field[ipart]);
+    PDM_free(src_field [ipart]);
+    PDM_free(send_field[ipart]);
   }
   PDM_free(src_field );
   PDM_free(send_field);

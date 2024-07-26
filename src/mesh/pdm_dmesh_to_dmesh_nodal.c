@@ -297,10 +297,10 @@ _rebuild_dmesh_nodal_2d
 
     pface_vtx_idx = pface_edge_idx;
 
-   PDM_free(pface_edge    );
-   PDM_free(pedge_ln_to_gn);
-   PDM_free(pedge_vtx_idx);
-   PDM_free(pedge_vtx    );
+    PDM_free(pface_edge    );
+    PDM_free(pedge_ln_to_gn);
+    PDM_free(pedge_vtx_idx);
+    PDM_free(pedge_vtx    );
   } else {
     PDM_part_dconnectivity_to_pconnectivity_sort_single_part(comm,
                                                              distrib_face,
@@ -416,8 +416,8 @@ _rebuild_dmesh_nodal_2d
              (int  **)     &blk_face_vtx_n,
              (void **)     &blk_face_vtx);
 
-   PDM_free(send_face_vtx_n);
-   PDM_free(send_face_vtx);
+    PDM_free(send_face_vtx_n);
+    PDM_free(send_face_vtx);
 
 
     PDM_Mesh_nodal_elt_t t_elt = (PDM_Mesh_nodal_elt_t) post_section_kind[i_section];
@@ -445,12 +445,12 @@ _rebuild_dmesh_nodal_2d
                                       PDM_OWNERSHIP_KEEP);
     }
 
-   PDM_free(blk_face_vtx_n);
+    PDM_free(blk_face_vtx_n);
     //PDM_free(blk_face_vtx);
 
     PDM_part_to_block_free(ptb);
-   PDM_free(distrib_elmt);
-   PDM_free(ln_to_gn);
+    PDM_free(distrib_elmt);
+    PDM_free(ln_to_gn);
 
   }
 
@@ -1473,9 +1473,9 @@ _rebuild_dmesh_nodal_by_kind_3d
                                       PDM_OWNERSHIP_KEEP);
     }
 
-   PDM_free(blk_cell_vtx_n);
-   PDM_free(distrib_elmt);
-   PDM_free(ln_to_gn);
+    PDM_free(blk_cell_vtx_n);
+    PDM_free(distrib_elmt);
+    PDM_free(ln_to_gn);
   }
 
   PDM_free(pcell_ln_to_gn);
@@ -1732,7 +1732,7 @@ _rebuild_dmesh_nodal_3d
       int i_vtx = pcell_vtx[i];
       send_cell_vtx[i] = pvtx_ln_to_gn[i_vtx-1];
     }
-   PDM_free(pcell_vtx);
+    PDM_free(pcell_vtx);
 
     PDM_part_to_block_exch(ptb,
                            sizeof(PDM_g_num_t),
@@ -1743,8 +1743,8 @@ _rebuild_dmesh_nodal_3d
                            NULL,
              (void **)     &blk_cell_vtx);
 
-   PDM_free(send_cell_vtx_n);
-   PDM_free(send_cell_vtx);
+    PDM_free(send_cell_vtx_n);
+    PDM_free(send_cell_vtx);
 
 
     PDM_Mesh_nodal_elt_t t_elt = (PDM_Mesh_nodal_elt_t) post_section_kind[i_section];
@@ -1776,8 +1776,8 @@ _rebuild_dmesh_nodal_3d
     //PDM_free(blk_face_vtx);
 
     PDM_part_to_block_free(ptb);
-   PDM_free(distrib_elmt);
-   PDM_free(ln_to_gn);
+    PDM_free(distrib_elmt);
+    PDM_free(ln_to_gn);
   }
 
   PDM_free(post_section_n        );
@@ -1954,9 +1954,9 @@ _rebuild_dmesh_nodal_3d
     }
 
     PDM_part_to_block_free(ptb);
-   PDM_free(face_vtx_gnum);
+    PDM_free(face_vtx_gnum);
     //PDM_free(distrib_elmt);
-   PDM_free(ln_to_gn);
+    PDM_free(ln_to_gn);
   }
 
 
@@ -2352,22 +2352,22 @@ PDM_dmesh_to_dmesh_nodal_free
   PDM_free(dm_to_dmn->distrib_vtx );
 
   for(int i_mesh = 0; i_mesh < dm_to_dmn->n_mesh; ++i_mesh ) {
-   PDM_free(dm_to_dmn->n_bound   [i_mesh]);
-   PDM_free(dm_to_dmn->dbound    [i_mesh]);
-   PDM_free(dm_to_dmn->dbound_idx[i_mesh]);
+    PDM_free(dm_to_dmn->n_bound   [i_mesh]);
+    PDM_free(dm_to_dmn->dbound    [i_mesh]);
+    PDM_free(dm_to_dmn->dbound_idx[i_mesh]);
 
     for(int i = 0; i < PDM_BOUND_TYPE_MAX; ++i){
       if(dm_to_dmn->blk_entity_gnum[i_mesh][i] != NULL){
-       PDM_free(dm_to_dmn->blk_entity_gnum[i_mesh][i]);
+        PDM_free(dm_to_dmn->blk_entity_gnum[i_mesh][i]);
       }
       if(dm_to_dmn->blk_elmt_gnum[i_mesh][i] != NULL){
-       PDM_free(dm_to_dmn->blk_elmt_gnum[i_mesh][i]);
+        PDM_free(dm_to_dmn->blk_elmt_gnum[i_mesh][i]);
       }
     }
 
-   PDM_free(dm_to_dmn->n_blk_gnum     [i_mesh]);
-   PDM_free(dm_to_dmn->blk_entity_gnum[i_mesh]);
-   PDM_free(dm_to_dmn->blk_elmt_gnum  [i_mesh]);
+    PDM_free(dm_to_dmn->n_blk_gnum     [i_mesh]);
+    PDM_free(dm_to_dmn->blk_entity_gnum[i_mesh]);
+    PDM_free(dm_to_dmn->blk_elmt_gnum  [i_mesh]);
 
   }
 

@@ -235,9 +235,9 @@ PDM_part_graph_split
 
         if (flag_weights != 0) {
           if(ubvec!= NULL)
-           PDM_free(ubvec);
+            PDM_free(ubvec);
           if(tpwgts!= NULL)
-           PDM_free(tpwgts);
+            PDM_free(tpwgts);
           // if(adjwgt!= NULL)
           //  PDM_free(adjwgt);
         }
@@ -363,8 +363,8 @@ PDM_part_graph_split
 
         /** CHECK H_CODES **/
 
-       PDM_free(cellCenter);
-       PDM_free(cellPond);
+        PDM_free(cellCenter);
+        PDM_free(cellPond);
 
         int *newToOldOrder;
         PDM_malloc(newToOldOrder,part_ini->n_cell ,int);
@@ -375,8 +375,8 @@ PDM_part_graph_split
         PDM_sort_double (hilbert_codes, *cell_part, part_ini->n_cell);
 
         /* Free */
-       PDM_free(hilbert_codes);
-       PDM_free(newToOldOrder);
+        PDM_free(hilbert_codes);
+        PDM_free(newToOldOrder);
 
         break;
       }
@@ -678,9 +678,9 @@ PDM_part_graph_split_bis
 
       if (flag_weights != 0) {
         if(ubvec!= NULL)
-         PDM_free(ubvec);
+          PDM_free(ubvec);
         if(tpwgts!= NULL)
-         PDM_free(tpwgts);
+          PDM_free(tpwgts);
         // if(adjwgt!= NULL)
         //  PDM_free(adjwgt);
       }

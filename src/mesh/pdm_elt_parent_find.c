@@ -205,13 +205,13 @@ const int          nFac,
           } /** End if (isSameFace) **/
 
           /** Free Cendidate ElemCon **/
-         PDM_free(ElmCon2);
+          PDM_free(ElmCon2);
 
         } /* Enf if Same Number of Vertex */
 
       }
       /** Free current ElemCon **/
-     PDM_free(ElmCon1);
+      PDM_free(ElmCon1);
 
     } /** End If alreadyTreat **/
 

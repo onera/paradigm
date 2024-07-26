@@ -554,7 +554,7 @@ int main(int argc, char *argv[])
                       id_var_num_part);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
-   PDM_free(val_num_part[i_part]);
+    PDM_free(val_num_part[i_part]);
   }
   PDM_free(val_num_part);
 
@@ -604,10 +604,10 @@ int main(int argc, char *argv[])
   }
 
   for (int i_part = 0; i_part < n_part; i_part++) {
-   PDM_free(cell_faceNb[i_part]);
-   PDM_free(face_vtxNb[i_part]);
-   PDM_free(val_coo_x[i_part]);
-   PDM_free(val_coo_xyz[i_part]);
+    PDM_free(cell_faceNb[i_part]);
+    PDM_free(face_vtxNb[i_part]);
+    PDM_free(val_coo_x[i_part]);
+    PDM_free(val_coo_xyz[i_part]);
   }
   PDM_free(cell_faceNb);
   PDM_free(face_vtxNb);

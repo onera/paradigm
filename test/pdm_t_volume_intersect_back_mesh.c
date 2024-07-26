@@ -988,8 +988,8 @@ int main(int argc, char *argv[])
   PDM_free(d_box_volume_idx);
   PDM_free(d_box_volume_g_num);
   for (int ivol = 0; ivol < total_n_edges; ivol++) {
-   PDM_free(volume[ivol]);
-   PDM_free(volume_names[ivol]);
+    PDM_free(volume[ivol]);
+    PDM_free(volume_names[ivol]);
   }
   PDM_free(volume);
   PDM_free(volume_names);
@@ -1148,7 +1148,7 @@ int main(int argc, char *argv[])
                                        PDM_MESH_NODAL_TRIA3,
                                        &proj_pt_coord);
     memcpy(back_face_proj_pts + 3*icav, proj_pt_coord, sizeof(double) * 3);
-   PDM_free(proj_pt_coord);
+    PDM_free(proj_pt_coord);
 
   } // end loop on cavities
 

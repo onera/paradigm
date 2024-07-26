@@ -716,22 +716,22 @@ PDM_dcube_t        *dcube
 {
   if(dcube->owner == PDM_OWNERSHIP_KEEP) {
     if (dcube->dface_cell  != NULL)
-     PDM_free(dcube->dface_cell);
+      PDM_free(dcube->dface_cell);
 
     if (dcube->dface_vtx_idx  != NULL)
-     PDM_free(dcube->dface_vtx_idx);
+      PDM_free(dcube->dface_vtx_idx);
 
     if (dcube->dface_vtx  != NULL)
-     PDM_free(dcube->dface_vtx);
+      PDM_free(dcube->dface_vtx);
 
     if (dcube->dvtx_coord  != NULL)
-     PDM_free(dcube->dvtx_coord);
+      PDM_free(dcube->dvtx_coord);
 
     if (dcube->dface_group_idx  != NULL)
-     PDM_free(dcube->dface_group_idx);
+      PDM_free(dcube->dface_group_idx);
 
     if (dcube->dface_group  != NULL)
-     PDM_free(dcube->dface_group);
+      PDM_free(dcube->dface_group);
   }
 
   PDM_free(dcube);

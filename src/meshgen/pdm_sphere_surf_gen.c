@@ -1011,7 +1011,7 @@ PDM_sphere_surf_icosphere_gen_part
                                               _face_edge,
                                               _edge_vtx,
                                               &(*pface_vtx)[ipart]);
-     PDM_free(_face_edge);
+      PDM_free(_face_edge);
     }
   }
 

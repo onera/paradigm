@@ -682,10 +682,10 @@ _export_ini_mesh
                         id_geom);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
-   PDM_free(edgeVtxIdx1[i_part]);
-   PDM_free(edgeVtxNB1[i_part]);
-   PDM_free(faceEdgeIdx1[i_part]);
-   PDM_free(faceEdgeNB1[i_part]);
+    PDM_free(edgeVtxIdx1[i_part]);
+    PDM_free(edgeVtxNB1[i_part]);
+    PDM_free(faceEdgeIdx1[i_part]);
+    PDM_free(faceEdgeNB1[i_part]);
   }
 
   PDM_free(edgeVtxIdx1);
@@ -830,9 +830,9 @@ _export_ini_mesh
                        id_var_coo_xyz);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
-   PDM_free(val_num_part[i_part]);
-   PDM_free(val_coo_x[i_part]);
-   PDM_free(val_coo_xyz[i_part]);
+    PDM_free(val_num_part[i_part]);
+    PDM_free(val_coo_x[i_part]);
+    PDM_free(val_coo_xyz[i_part]);
   }
 
   PDM_free(val_num_part);
@@ -1389,7 +1389,7 @@ char *argv[]
                                                        have_face_group);
 
   if (_agglo_method != NULL) {
-   PDM_free(_agglo_method);
+    PDM_free(_agglo_method);
   }
 
   for (int i_part = 0; i_part < n_part; i_part++) {

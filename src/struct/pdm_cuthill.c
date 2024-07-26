@@ -510,7 +510,7 @@ int node_num
 
   if ( *iccsze == 1 )
   {
-   PDM_free(deg);// delete [] deg;
+    PDM_free(deg);// delete [] deg;
     return;
   }
   /*   Carry out the reordering.
@@ -661,8 +661,8 @@ int perm[]
        */
       if ( node_num < num )
       {
-       PDM_free(level_row); //delete [] level_row;
-       PDM_free(mask);      //delete [] mask;
+        PDM_free(level_row); //delete [] level_row;
+        PDM_free(mask);      //delete [] mask;
         return;
       }
     }

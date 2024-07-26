@@ -643,8 +643,8 @@ PDM_mean_values_polyhedron
     // handle special case when the point is really close to a vertex
     if (l2 < eps2) {
       weights[i] = 1.0;
-     PDM_free(inv_dist);
-     PDM_free(u);
+      PDM_free(inv_dist);
+      PDM_free(u);
       return;
     }
 
@@ -829,10 +829,10 @@ PDM_mean_values_polyhedron
         }
       }
 
-     PDM_free(inv_dist);
-     PDM_free(u);
-     PDM_free(tan_half_alpha);
-     PDM_free(theta);
+      PDM_free(inv_dist);
+      PDM_free(u);
+      PDM_free(tan_half_alpha);
+      PDM_free(theta);
       return;
     }
 
@@ -922,8 +922,8 @@ PDM_mean_values_polygon
       }
 
       weights[i] = 1.0;
-     PDM_free(dist);
-     PDM_free(u);
+      PDM_free(dist);
+      PDM_free(u);
       return;
     }
 
@@ -992,9 +992,9 @@ PDM_mean_values_polygon
 
       weights[i] = dist[ip] / (dist[i] + dist[ip]);
       weights[ip] = dist[i] / (dist[i] + dist[ip]);
-     PDM_free(dist);
-     PDM_free(u);
-     PDM_free(normal);
+      PDM_free(dist);
+      PDM_free(u);
+      PDM_free(normal);
       return;
 
     } else {
@@ -1070,8 +1070,8 @@ PDM_mean_value_coordinates_polyhedron
     if (uu < eps2) {
       mean_value_coord[ivtx] = 1.;
 
-     PDM_free(u);
-     PDM_free(d);
+      PDM_free(u);
+      PDM_free(d);
       return;
     }
 
@@ -1228,13 +1228,13 @@ PDM_mean_value_coordinates_polyhedron
             mean_value_coord[id_vtx] = mean_value_coord_face[j];
           }
 
-         PDM_free(face_coord);
-         PDM_free(mean_value_coord_face);
+          PDM_free(face_coord);
+          PDM_free(mean_value_coord_face);
         }
 
-       PDM_free(u);
-       PDM_free(d);
-       PDM_free(tri_vtx);
+        PDM_free(u);
+        PDM_free(d);
+        PDM_free(tri_vtx);
 
         if (dbg_enabled) {
           printf("point located on face %d (PDM_PI - h = %g)\n", iface, PDM_PI - h);

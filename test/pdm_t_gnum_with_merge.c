@@ -723,7 +723,7 @@ _create_split_mesh
 //  PDM_g_num_t *n2 = PDM_part_to_block_block_gnum_get (ptb2);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
-   PDM_free(char_length[i_part]);
+    PDM_free(char_length[i_part]);
   }
   PDM_free(char_length);
 

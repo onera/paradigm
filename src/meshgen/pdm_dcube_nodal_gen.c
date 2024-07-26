@@ -927,7 +927,7 @@ _generate_ridges
                                   PDM_OWNERSHIP_KEEP);
 
   for (int i = 0; i < dim; i++) {
-   PDM_free(distrib[i]);
+    PDM_free(distrib[i]);
   }
 }
 
@@ -1070,7 +1070,7 @@ _set_surf_groups
                                   PDM_OWNERSHIP_KEEP);
 
   for (int i = 0; i < 3; i++) {
-   PDM_free(distrib[i]);
+    PDM_free(distrib[i]);
   }
 }
 
@@ -1474,7 +1474,7 @@ _generate_pyramid_surf
                                   PDM_OWNERSHIP_KEEP);
 
   for (int i = 0; i < n_group; i++) {
-   PDM_free(distrib[i]);
+    PDM_free(distrib[i]);
   }
 }
 

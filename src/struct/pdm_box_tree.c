@@ -1734,9 +1734,9 @@ _free_tree_arrays(PDM_box_tree_t  *bt)
 
   /*PDM_box_tree_data_t *_local_data = bt->local_data;
     assert(_local_data != NULL);
-   PDM_free(_local_data->nodes);
-   PDM_free(_local_data->child_ids);
-   PDM_free(_local_data->box_ids);*/
+    PDM_free(_local_data->nodes);
+    PDM_free(_local_data->child_ids);
+    PDM_free(_local_data->box_ids);*/
   _free_tree_data_arrays(bt->local_data);
 }
 
@@ -3619,11 +3619,11 @@ PDM_box_tree_data_destroy(PDM_box_tree_data_t  *btd)
   _free_tree_data_arrays(btd);
 
   if (btd->stack != NULL) {
-   PDM_free(btd->stack);
+    PDM_free(btd->stack);
   }
 
   if (btd->pos_stack != NULL) {
-   PDM_free(btd->pos_stack);
+    PDM_free(btd->pos_stack);
   }
 }
 
@@ -3656,8 +3656,8 @@ PDM_box_tree_destroy(PDM_box_tree_t  **bt)
       PDM_mpi_win_shared_free(_bt->wbox_tree_data[i].w_child_ids);
       PDM_mpi_win_shared_free(_bt->wbox_tree_data[i].w_box_ids  );
     }
-   PDM_free(_bt->wbox_tree_data);
-   PDM_free(_bt->shm_data);
+    PDM_free(_bt->wbox_tree_data);
+    PDM_free(_bt->shm_data);
   }
 
   // Free local tree data
@@ -3834,7 +3834,7 @@ PDM_box_tree_set_boxes(PDM_box_tree_t      *bt,
 
     /* replace current tree by the tree computed at a higher level */
     _free_tree_arrays(bt);
-   PDM_free(bt->local_data);
+    PDM_free(bt->local_data);
     *bt = tmp_bt; /* Overwrite bt members with those of next_bt */
     _get_box_tree_stats(bt);
 
@@ -4734,7 +4734,7 @@ PDM_box_tree_min_dist_max_box
   PDM_free(min_dist2_stack);
 
   if (_pts != pts) {
-   PDM_free(_pts);
+    PDM_free(_pts);
   }
 
 }
@@ -4930,7 +4930,7 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get
 
   PDM_realloc(*boxes ,*boxes , _pts_box_idx[n_pts],int);
   if (pts != _pts) {
-   PDM_free(_pts);
+    PDM_free(_pts);
   }
 
   PDM_free(tag);
@@ -5142,7 +5142,7 @@ _box_tree_closest_upper_bound_dist_boxes_impl
 
   PDM_realloc(*pts_box ,*pts_box , _pts_box_idx[n_pts],int);
   if (pts != _pts) {
-   PDM_free(_pts);
+    PDM_free(_pts);
   }
 
   PDM_free(tag);
@@ -5488,12 +5488,12 @@ PDM_box_tree_copy_to_ranks
       icopied++;
     }
 
-   PDM_free(nodes_is_leaf);
-   PDM_free(nodes_n_boxes);
-   PDM_free(nodes_start_id);
-   PDM_free(nodes_morton);
-   PDM_free(child_ids);
-   PDM_free(box_ids);
+    PDM_free(nodes_is_leaf);
+    PDM_free(nodes_n_boxes);
+    PDM_free(nodes_start_id);
+    PDM_free(nodes_morton);
+    PDM_free(child_ids);
+    PDM_free(box_ids);
   }
 
   *n_copied_ranks = bt->n_copied_ranks;
@@ -5608,7 +5608,7 @@ PDM_box_tree_free_copies
   PDM_box_set_free_copies(&bt->boxes);
 
   if (bt->copied_ranks != NULL) {
-   PDM_free(bt->copied_ranks);
+    PDM_free(bt->copied_ranks);
     bt->copied_ranks = NULL;
   }
 
@@ -5616,7 +5616,7 @@ PDM_box_tree_free_copies
     for (int i = 0; i < bt->n_copied_ranks; i++) {
       PDM_box_tree_data_destroy(&(bt->rank_data[i]));
     }
-   PDM_free(bt->rank_data);
+    PDM_free(bt->rank_data);
     bt->rank_data = NULL;
   }
 
@@ -5774,7 +5774,7 @@ PDM_box_tree_points_inside_boxes
   } // Loop over points
 
   if (pts_coord != _pts_coord) {
-   PDM_free(_pts_coord);
+    PDM_free(_pts_coord);
   }
 
   PDM_free(is_visited_box);
@@ -5954,7 +5954,7 @@ _box_tree_boxes_containing_points_impl
   } // End of loop on points
 
   if (pts_coord != _pts_coord) {
-   PDM_free(_pts_coord);
+    PDM_free(_pts_coord);
   }
 
   PDM_free(is_visited_box);
@@ -6343,7 +6343,7 @@ PDM_box_tree_ellipsoids_containing_points
   } // End of loop on points
 
   if (pts_coord != _pts_coord) {
-   PDM_free(_pts_coord);
+    PDM_free(_pts_coord);
   }
 
   PDM_free(is_visited_box);
@@ -6532,7 +6532,7 @@ _box_tree_intersect_lines_boxes_impl
   } // End of loop on points
 
   if (line_coord != _line_coord) {
-   PDM_free(_line_coord);
+    PDM_free(_line_coord);
   }
 
   PDM_free(is_visited_box);
@@ -6886,7 +6886,7 @@ PDM_box_tree_intersect_boxes_boxes
   } // End of loop on points
 
   if (tgt_box_extents != _tgt_box_extents) {
-   PDM_free(_tgt_box_extents);
+    PDM_free(_tgt_box_extents);
   }
 
   PDM_free(is_visited_box);
@@ -7138,10 +7138,10 @@ PDM_box_tree_intersect_volume_boxes
 
   // Free's
   if (plane_pt_coord != plane_pt_coord_normalized) {
-   PDM_free(plane_pt_coord_normalized);
+    PDM_free(plane_pt_coord_normalized);
   }
   if (plane_normal != plane_normal_normalized) {
-   PDM_free(plane_normal_normalized);
+    PDM_free(plane_normal_normalized);
   }
   PDM_free(is_visited_box);
   PDM_free(stack);
@@ -8426,8 +8426,8 @@ PDM_tree_intersection_point_box
   PDM_free(queues[0]);
   PDM_free(queues[1]);
   if (subdiv_crit == SUBDIVISION_CRITERION_DEPTH) {
-   PDM_free(queues_depth[0]);
-   PDM_free(queues_depth[1]);
+    PDM_free(queues_depth[0]);
+    PDM_free(queues_depth[1]);
   }
 
   /* Re-arrange result */
@@ -8441,16 +8441,16 @@ PDM_tree_intersection_point_box
       bp[j] = __box_pts[i][j];
     }
 
-   PDM_free(__box_pts[i]);
+    PDM_free(__box_pts[i]);
   }
   PDM_free(__box_pts_n);
   PDM_free(__box_pts);
 
   if(queue0_depth != NULL) {
-   PDM_free(queue0_depth);
+    PDM_free(queue0_depth);
   }
   if(queue1_depth != NULL) {
-   PDM_free(queue1_depth);
+    PDM_free(queue1_depth);
   }
 
 

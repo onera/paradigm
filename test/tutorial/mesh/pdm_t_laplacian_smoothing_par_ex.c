@@ -656,8 +656,8 @@ int main(int argc, char *argv[])
     PDM_part_to_block_free(ptb);
     PDM_block_to_part_free(btp);
 
-   PDM_free(dstrid_new_vtx_coord);
-   PDM_free(dnew_vtx_coord);
+    PDM_free(dstrid_new_vtx_coord);
+    PDM_free(dnew_vtx_coord);
 
   } // end loop on Laplacian Smoothing steps
 

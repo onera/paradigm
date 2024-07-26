@@ -2493,35 +2493,35 @@ double                 *face_vtxEpsB
   PDM_free(vtxBOnEdgeAEir);
 
   if (_faceToEdgeA != faceToEdgeA) {
-   PDM_free(_faceToEdgeA);
+    PDM_free(_faceToEdgeA);
   }
 
   if (_faceToVtxA  != faceToVtxA) { /* EQU == */
-   PDM_free(_faceToVtxA);
+    PDM_free(_faceToVtxA);
   }
 
   if (_face_vtxCooA != face_vtxCooA) { /* EQU == */
-   PDM_free(_face_vtxCooA);
+    PDM_free(_face_vtxCooA);
   }
 
   if (_face_vtxEpsA != face_vtxEpsA) { /* EQU == */
-   PDM_free(_face_vtxEpsA);
+    PDM_free(_face_vtxEpsA);
   }
 
   if (_faceToEdgeB != faceToEdgeB) {
-   PDM_free(_faceToEdgeB);
+    PDM_free(_faceToEdgeB);
   }
 
   if (_faceToVtxB != faceToVtxB) { /* EQU == */
-   PDM_free(_faceToVtxB);
+    PDM_free(_faceToVtxB);
   }
 
   if (_face_vtxCooB != face_vtxCooB) { /* EQU == */
-   PDM_free(_face_vtxCooB);
+    PDM_free(_face_vtxCooB);
   }
 
   if (_face_vtxEpsB != face_vtxEpsB) { /* EQU == */
-   PDM_free(_face_vtxEpsB);
+    PDM_free(_face_vtxEpsB);
   }
   if (vb) {
     PDM_printf ("==== PDM_edges_intersect_poly_add ==== terminated ====\n");
@@ -4203,7 +4203,7 @@ PDM_g_num_t            *nAbsNewVtxB
   PDM_part_to_block_free (ptbBForA);
 
   if (b_lNewPointsA_true_pack != NULL)
-   PDM_free(b_lNewPointsA_true_pack);
+    PDM_free(b_lNewPointsA_true_pack);
 
   PDM_block_to_part_free (btpAForB);
   PDM_part_to_block_free (ptbAForB);

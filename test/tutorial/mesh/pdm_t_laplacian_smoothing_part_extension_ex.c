@@ -541,7 +541,7 @@ int main(int argc, char *argv[])
       pvtx_coord_extension[3*i+1] = pvtx_coord_extension_new[i_part][3*i+1];
     } // end loop on extension coordinates
 
-   PDM_free(pvtx_coord_extension_new);
+    PDM_free(pvtx_coord_extension_new);
 
   } // end Laplacian Smoothing loop
 

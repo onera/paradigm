@@ -642,10 +642,10 @@ PDM_distant_neighbor_exch
     // log_trace("PDM_distant_neighbor_exch::send_buffer END \n ");
 
     for(int i_part = 0; i_part < dn->n_part; i_part++){
-     PDM_free(stride_idx[i_part]);
+      PDM_free(stride_idx[i_part]);
     }
-   PDM_free(stride_idx);
-   PDM_free(send_stride);
+    PDM_free(stride_idx);
+    PDM_free(send_stride);
 
   } else if (t_stride == PDM_STRIDE_CST_INTERLACED) {
 
@@ -776,7 +776,7 @@ PDM_distant_neighbor_exch
     for(int i_part = 0; i_part < dn->n_part; i_part++){
     PDM_free(_recv_entity_stride_idx[i_part]);
     }
-   PDM_free(_recv_entity_stride_idx);
+    PDM_free(_recv_entity_stride_idx);
 
   } else if (t_stride == PDM_STRIDE_CST_INTERLACED) {
 
@@ -805,10 +805,10 @@ PDM_distant_neighbor_exch
   PDM_free(i_send_buffer);
   PDM_free(recv_buffer);
   if(recv_stride_idx != NULL){
-   PDM_free(recv_stride_idx);
+    PDM_free(recv_stride_idx);
   }
   if(recv_stride != NULL){
-   PDM_free(recv_stride);
+    PDM_free(recv_stride);
   }
 
 }
@@ -1002,10 +1002,10 @@ PDM_distant_neighbor_exch_int
     // log_trace("PDM_distant_neighbor_exch::send_buffer END \n ");
 
     for(int i_part = 0; i_part < dn->n_part; i_part++){
-     PDM_free(stride_idx[i_part]);
+      PDM_free(stride_idx[i_part]);
     }
-   PDM_free(stride_idx);
-   PDM_free(send_stride);
+    PDM_free(stride_idx);
+    PDM_free(send_stride);
 
   } else if (t_stride == PDM_STRIDE_CST_INTERLACED) {
 
@@ -1159,7 +1159,7 @@ PDM_distant_neighbor_exch_int
     for(int i_part = 0; i_part < dn->n_part; i_part++){
     PDM_free(_recv_entity_stride_idx[i_part]);
     }
-   PDM_free(_recv_entity_stride_idx);
+    PDM_free(_recv_entity_stride_idx);
 
 
   } else if (t_stride == PDM_STRIDE_CST_INTERLACED) {
@@ -1193,10 +1193,10 @@ PDM_distant_neighbor_exch_int
   PDM_free(i_send_buffer);
   PDM_free(recv_buffer);
   if(recv_stride_idx != NULL){
-   PDM_free(recv_stride_idx);
+    PDM_free(recv_stride_idx);
   }
   if(recv_stride != NULL){
-   PDM_free(recv_stride);
+    PDM_free(recv_stride);
   }
 
 }
@@ -1218,9 +1218,9 @@ PDM_distant_neighbor_free
 {
 
   for(int i_part = 0; i_part < dn->n_part; i_part++){
-   PDM_free(dn->order[i_part]);
-   PDM_free(dn->order_unique[i_part]);
-   PDM_free(dn->ind[i_part]);
+    PDM_free(dn->order[i_part]);
+    PDM_free(dn->order_unique[i_part]);
+    PDM_free(dn->ind[i_part]);
   }
   PDM_free(dn->order);
   PDM_free(dn->order_unique);

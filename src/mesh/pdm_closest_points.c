@@ -211,8 +211,8 @@ _closest_points_reverse_results
   PDM_free(block_src_dist_n); // Same than block_tgt_in_src_n
 
   for (int i_part = 0; i_part < cls->tgt_cloud->n_part; i_part++) {
-   PDM_free(tgt_g_num  [i_part]);
-   PDM_free(tgt_g_num_n[i_part]);
+    PDM_free(tgt_g_num  [i_part]);
+    PDM_free(tgt_g_num_n[i_part]);
   }
   PDM_free(tgt_g_num  );
   PDM_free(tgt_g_num_n);
@@ -297,8 +297,8 @@ _closest_points_reverse_results
         idx_read = idx_read + n_tgt;
       }
     }
-   PDM_free(tgt_order);
-   PDM_free(tgt_dist);
+    PDM_free(tgt_order);
+    PDM_free(tgt_dist);
   }
 
   PDM_malloc(cls->src_cloud->tgt_in_src_idx, cls->src_cloud->n_part ,int *);
@@ -308,8 +308,8 @@ _closest_points_reverse_results
     /* Réallocation à la bonne taille sans doublon */
     PDM_realloc(cls->src_cloud->tgt_in_src     [i_part] ,cls->src_cloud->tgt_in_src     [i_part] , cls->src_cloud->tgt_in_src_idx[i_part][cls->src_cloud->n_points[i_part]],PDM_g_num_t);
     PDM_realloc(cls->src_cloud->tgt_in_src_dist[i_part] ,cls->src_cloud->tgt_in_src_dist[i_part] , cls->src_cloud->tgt_in_src_idx[i_part][cls->src_cloud->n_points[i_part]],double);
-   PDM_free(tgt_in_src_n[i_part]);
-   PDM_free(useless_stride[i_part]);
+    PDM_free(tgt_in_src_n[i_part]);
+    PDM_free(useless_stride[i_part]);
   }
   PDM_free(tgt_in_src_n);
   PDM_free(useless_stride);
@@ -826,7 +826,7 @@ PDM_closest_point_t  *cls
     if (cls->tgt_cloud->closest_src_gnum != NULL) {
       for (int j = 0; j < cls->tgt_cloud->n_part ; j++) {
         if (cls->tgt_cloud->closest_src_gnum[j] != NULL) {
-         PDM_free(cls->tgt_cloud->closest_src_gnum[j]);
+          PDM_free(cls->tgt_cloud->closest_src_gnum[j]);
         }
       }
     }
@@ -834,7 +834,7 @@ PDM_closest_point_t  *cls
     if (cls->tgt_cloud->closest_src_dist != NULL) {
       for (int j = 0; j < cls->tgt_cloud->n_part ; j++) {
         if (cls->tgt_cloud->closest_src_dist[j] != NULL) {
-         PDM_free(cls->tgt_cloud->closest_src_dist[j]);
+          PDM_free(cls->tgt_cloud->closest_src_dist[j]);
         }
       }
     }
@@ -854,7 +854,7 @@ PDM_closest_point_t  *cls
     if (cls->src_cloud->tgt_in_src != NULL) {
       for (int j = 0; j < cls->src_cloud->n_part ; j++) {
         if (cls->src_cloud->tgt_in_src[j] != NULL) {
-         PDM_free(cls->src_cloud->tgt_in_src[j]);
+          PDM_free(cls->src_cloud->tgt_in_src[j]);
         }
       }
     }
@@ -863,7 +863,7 @@ PDM_closest_point_t  *cls
     if (cls->src_cloud->tgt_in_src_dist != NULL) {
       for (int j = 0; j < cls->src_cloud->n_part ; j++) {
         if (cls->src_cloud->tgt_in_src_dist[j] != NULL) {
-         PDM_free(cls->src_cloud->tgt_in_src_dist[j]);
+          PDM_free(cls->src_cloud->tgt_in_src_dist[j]);
         }
       }
     }
@@ -872,7 +872,7 @@ PDM_closest_point_t  *cls
     if (cls->src_cloud->tgt_in_src_idx != NULL) {
       for (int j = 0; j < cls->src_cloud->n_part ; j++) {
         if (cls->src_cloud->tgt_in_src_idx[j] != NULL) {
-         PDM_free(cls->src_cloud->tgt_in_src_idx[j]);
+          PDM_free(cls->src_cloud->tgt_in_src_idx[j]);
         }
       }
     }
@@ -883,30 +883,30 @@ PDM_closest_point_t  *cls
   PDM_free(cls->src_cloud->tgt_in_src_dist);
 
   if (cls->tgt_cloud->gnum != NULL) {
-   PDM_free(cls->tgt_cloud->gnum);
+    PDM_free(cls->tgt_cloud->gnum);
   }
   if (cls->tgt_cloud->coords != NULL) {
-   PDM_free(cls->tgt_cloud->coords);
+    PDM_free(cls->tgt_cloud->coords);
   }
   if (cls->tgt_cloud->n_points != NULL) {
-   PDM_free(cls->tgt_cloud->n_points);
+    PDM_free(cls->tgt_cloud->n_points);
   }
   if (cls->tgt_cloud != NULL) {
-   PDM_free(cls->tgt_cloud);
+    PDM_free(cls->tgt_cloud);
   }
 
 
   if (cls->src_cloud->gnum != NULL) {
-   PDM_free(cls->src_cloud->gnum);
+    PDM_free(cls->src_cloud->gnum);
   }
   if (cls->src_cloud->coords != NULL) {
-   PDM_free(cls->src_cloud->coords);
+    PDM_free(cls->src_cloud->coords);
   }
   if (cls->src_cloud->n_points != NULL) {
-   PDM_free(cls->src_cloud->n_points);
+    PDM_free(cls->src_cloud->n_points);
   }
   if (cls->src_cloud != NULL) {
-   PDM_free(cls->src_cloud);
+    PDM_free(cls->src_cloud);
   }
 
   PDM_timer_free(cls->timer);

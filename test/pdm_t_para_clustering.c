@@ -62,7 +62,7 @@ _compute_gnum
   PDM_gnum_compute(gnum);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
-   PDM_free(entity_ln_to_gn[i_part]);
+    PDM_free(entity_ln_to_gn[i_part]);
     entity_ln_to_gn[i_part] = PDM_gnum_get(gnum, i_part);
   }
 
@@ -755,9 +755,9 @@ int main(int argc, char *argv[])
 
     _max_g_num = _max_g_num + m_layer_vtx[i_layer];
 
-   PDM_free(tmp_data_octree[0]);
-   PDM_free(tmp_data_octree);
-   PDM_free(part_octree_to_bnd_vtx_idx);
+    PDM_free(tmp_data_octree[0]);
+    PDM_free(tmp_data_octree);
+    PDM_free(part_octree_to_bnd_vtx_idx);
     PDM_part_to_part_free(ptp_octree);
     PDM_para_octree_free(octree);
 
@@ -958,8 +958,8 @@ int main(int argc, char *argv[])
     PDM_realloc(gnum_bnd_vtx_min_dist[i_part] ,gnum_bnd_vtx_min_dist[i_part] , n_bnd_vtx_min_dist[i_part],PDM_g_num_t);
     PDM_realloc(bnd_vtx_min_dist     [i_part] ,bnd_vtx_min_dist     [i_part] , 3 * n_bnd_vtx_min_dist[i_part],double     );
 
-   PDM_free(sorted_gnum);
-   PDM_free(order);
+    PDM_free(sorted_gnum);
+    PDM_free(order);
 
     int_to_bnd_vtx_idx[i_part] = PDM_array_new_idx_from_sizes_int(n_int_to_bnd_vtx[i_part], n_int_vtx[i_part]);
 
@@ -1336,8 +1336,8 @@ int main(int argc, char *argv[])
       }
     }
 
-   PDM_free(sorted_gnum);
-   PDM_free(order);
+    PDM_free(sorted_gnum);
+    PDM_free(order);
 
     PDM_realloc(red_blk_int_to_bnd_vtx_triplet ,red_blk_int_to_bnd_vtx_triplet , 3 * red_blk_int_to_bnd_vtx_idx[blk_n_int_vtx] ,int        );
     PDM_realloc(red_blk_int_to_bnd_vtx         ,red_blk_int_to_bnd_vtx         ,             red_blk_int_to_bnd_vtx_idx[blk_n_int_vtx] ,PDM_g_num_t);
@@ -1718,8 +1718,8 @@ int main(int argc, char *argv[])
                             NULL);
     }
 
-   PDM_free(tmp_bnd_vtx[i_part]);
-   PDM_free(tmp_int_vtx[i_part]);
+    PDM_free(tmp_bnd_vtx[i_part]);
+    PDM_free(tmp_int_vtx[i_part]);
 
   }
 
@@ -1737,38 +1737,38 @@ int main(int argc, char *argv[])
   }
 
   for (int i_part = 0; i_part < n_part_bnd+1; i_part++) {
-   PDM_free(gnum_bnd_vtx[i_part]);
-   PDM_free(bnd_vtx     [i_part]);
-   PDM_free(data_bnd_vtx[i_part]);
+    PDM_free(gnum_bnd_vtx[i_part]);
+    PDM_free(bnd_vtx     [i_part]);
+    PDM_free(data_bnd_vtx[i_part]);
   }
   for (int i_part = 0; i_part < n_part_bnd; i_part++) {
-   PDM_free(gnum_bnd_face     [i_part]);
-   PDM_free(bnd_face_vtx_idx  [i_part]);
-   PDM_free(bnd_face_vtx      [i_part]);
-   PDM_free(bnd_to_all_vtx    [i_part]);
-   PDM_free(bnd_to_all_vtx_idx[i_part]);
+    PDM_free(gnum_bnd_face     [i_part]);
+    PDM_free(bnd_face_vtx_idx  [i_part]);
+    PDM_free(bnd_face_vtx      [i_part]);
+    PDM_free(bnd_to_all_vtx    [i_part]);
+    PDM_free(bnd_to_all_vtx_idx[i_part]);
   }
   for (int i_part = 0; i_part < n_part; i_part++) {
-   PDM_free(gnum_int_vtx          [i_part]);
-   PDM_free(weight_int_vtx        [i_part]);
-   PDM_free(int_vtx               [i_part]);
-   PDM_free(gnum_bnd_vtx_min_dist [i_part]);
-   PDM_free(bnd_vtx_min_dist      [i_part]);
-   PDM_free(n_int_to_bnd_vtx      [i_part]);
-   PDM_free(id_int_to_bnd_vtx     [i_part]);
-   PDM_free(int_to_bnd_vtx_idx    [i_part]);
-   PDM_free(int_to_bnd_vtx        [i_part]);
-   PDM_free(int_to_bnd_vtx_triplet[i_part]);
-   PDM_free(stride_3              [i_part]);
+    PDM_free(gnum_int_vtx          [i_part]);
+    PDM_free(weight_int_vtx        [i_part]);
+    PDM_free(int_vtx               [i_part]);
+    PDM_free(gnum_bnd_vtx_min_dist [i_part]);
+    PDM_free(bnd_vtx_min_dist      [i_part]);
+    PDM_free(n_int_to_bnd_vtx      [i_part]);
+    PDM_free(id_int_to_bnd_vtx     [i_part]);
+    PDM_free(int_to_bnd_vtx_idx    [i_part]);
+    PDM_free(int_to_bnd_vtx        [i_part]);
+    PDM_free(int_to_bnd_vtx_triplet[i_part]);
+    PDM_free(stride_3              [i_part]);
   }
   for (int i_layer = 0; i_layer < n_layer; i_layer++) {
-   PDM_free(gnum_layer_vtx  [i_layer]);
-   PDM_free(distri_layer_vtx[i_layer]);
-   PDM_free(layer_vtx       [i_layer]);
-   PDM_free(data_layer_vtx  [i_layer]);
+    PDM_free(gnum_layer_vtx  [i_layer]);
+    PDM_free(distri_layer_vtx[i_layer]);
+    PDM_free(layer_vtx       [i_layer]);
+    PDM_free(data_layer_vtx  [i_layer]);
   }
   for (int j_rank = 0; j_rank < n_rank; j_rank++) {
-   PDM_free(distri_layer_vtx_transposed[j_rank]);
+    PDM_free(distri_layer_vtx_transposed[j_rank]);
   }
   PDM_free(gnum_bnd_face                 );
   PDM_free(bnd_face_vtx_idx              );

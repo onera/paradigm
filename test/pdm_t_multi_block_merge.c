@@ -256,7 +256,7 @@ int main(int argc, char *argv[])
   PDM_free(dn_vtx);
   PDM_free(dn_face);
   for (int i_block = 0; i_block < n_block; i_block++) {
-   PDM_free(dface_vtx_idx[i_block]);
+    PDM_free(dface_vtx_idx[i_block]);
   }
   PDM_free(dface_vtx_idx);
   PDM_free(dface_vtx);
@@ -523,11 +523,11 @@ int main(int argc, char *argv[])
 
   PDM_free(dmerge_elmt_vtx);
   for(int i_block = 0; i_block < n_block ; ++i_block) {
-   PDM_free(selected_g_num[i_block]);
-   PDM_free(selected_elmt_g_num[i_block]);
+    PDM_free(selected_g_num[i_block]);
+    PDM_free(selected_elmt_g_num[i_block]);
   }
   for(int i_block = 0; i_block < n_block ; ++i_block) {
-   PDM_free(stride_one[i_block]);
+    PDM_free(stride_one[i_block]);
   }
   PDM_free(stride_one);
   PDM_free(block_elmt_vtx);

@@ -178,7 +178,7 @@ _export_ol_mesh
       debPartProcs[i+1] = debPartProcs[i] + n_part_procs[i];
     }
 
-   PDM_free(n_part_procs);
+    PDM_free(n_part_procs);
 
     /*
      * Debut des ecritures
@@ -347,8 +347,8 @@ _export_ol_mesh
                           id_geom[imesh]);
 
     for (int ipart = 0; ipart < n_part; ipart++) {
-     PDM_free(_olface_nb[ipart]);
-     PDM_free(_olface_idx[ipart]);
+      PDM_free(_olface_nb[ipart]);
+      PDM_free(_olface_idx[ipart]);
     }
 
     PDM_writer_var_write (id_cs[imesh],
@@ -382,16 +382,16 @@ _export_ol_mesh
                          id_var_field[imesh]);
 
     for (int ipart = 0; ipart < n_part; ipart++) {
-     PDM_free(val_num_part[ipart]);
-     PDM_free(val_match[ipart]);
-     PDM_free(val_cell_match[ipart]);
-     PDM_free(val_origin[ipart]);
+      PDM_free(val_num_part[ipart]);
+      PDM_free(val_match[ipart]);
+      PDM_free(val_cell_match[ipart]);
+      PDM_free(val_origin[ipart]);
     }
 
-   PDM_free(val_num_part);
-   PDM_free(val_match);
-   PDM_free(val_cell_match);
-   PDM_free(val_origin);
+    PDM_free(val_num_part);
+    PDM_free(val_match);
+    PDM_free(val_cell_match);
+    PDM_free(val_origin);
 
     PDM_writer_step_end (id_cs[imesh]);
     PDM_writer_geom_data_free (id_cs[imesh],
@@ -401,9 +401,9 @@ _export_ol_mesh
                           id_geom[imesh]);
     PDM_writer_free (id_cs[imesh]);
 
-   PDM_free(_olface_nb);
-   PDM_free(_olface_idx);
-   PDM_free(debPartProcs);
+    PDM_free(_olface_nb);
+    PDM_free(_olface_idx);
+    PDM_free(debPartProcs);
   }
 
 }

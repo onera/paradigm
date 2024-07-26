@@ -476,7 +476,7 @@ int main(int argc, char *argv[])
                                   NULL,
                                   NULL);
 
-   PDM_free(connec);
+    PDM_free(connec);
   }
 
   PDM_MPI_Finalize();

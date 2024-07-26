@@ -221,8 +221,8 @@ int main(int argc, char *argv[])
   PDM_free(drand_number   );
   PDM_free(distrib_elmt   );
   for(int i_part = 0; i_part < n_part; ++i_part) {
-   PDM_free(pelmts_ln_to_gn[i_part]);
-   PDM_free(prand_number   [i_part]);
+    PDM_free(pelmts_ln_to_gn[i_part]);
+    PDM_free(prand_number   [i_part]);
   }
   PDM_free(pelmts_ln_to_gn);
   PDM_free(prand_number);

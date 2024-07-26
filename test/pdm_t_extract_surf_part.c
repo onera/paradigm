@@ -582,8 +582,8 @@ int main(int argc, char *argv[])
   PDM_extract_part_free(extrp);
 
   for (int i_part = 0; i_part < n_part_domains; i_part++){
-   PDM_free(selected_face_l_num[i_part]);
-   PDM_free(face_center        [i_part]);
+    PDM_free(selected_face_l_num[i_part]);
+    PDM_free(face_center        [i_part]);
   }
   PDM_free(selected_face_l_num);
   PDM_free(pn_cell);

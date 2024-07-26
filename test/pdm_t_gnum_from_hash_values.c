@@ -202,7 +202,7 @@ char *argv[]
   PDM_free(part_data);
   PDM_free(n_elmts);
   for(int i_part = 0; i_part < n_part; ++i_part){
-   PDM_free(part_key[i_part]);
+    PDM_free(part_key[i_part]);
   }
   PDM_free(part_key);
   PDM_free(ln_to_gn);

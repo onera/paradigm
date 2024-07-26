@@ -165,16 +165,16 @@ PDM_global_mean_free
 
   for (int i = 0; i < gmean->n_part; i++) {
     if (gmean->strides[i] != NULL) {
-     PDM_free(gmean->strides[i]);
+      PDM_free(gmean->strides[i]);
     }
   }
 
   if (gmean->strides != NULL) {
-   PDM_free(gmean->strides);
+    PDM_free(gmean->strides);
   }
 
   if (gmean->s_weight != NULL) {
-   PDM_free(gmean->s_weight);
+    PDM_free(gmean->s_weight);
   }
 
   PDM_free(gmean);
@@ -288,7 +288,7 @@ PDM_global_mean_field_compute
                   (void **) gmean->local_weight,
                             &block_weight_stride,
                   (void **) &block_weight);
-   PDM_free(block_weight_stride);
+    PDM_free(block_weight_stride);
   }
 
   //TODO: Remplisage du tableau moyenne
@@ -347,7 +347,7 @@ PDM_global_mean_field_compute
 
   PDM_free(block_field);
   if (block_weight != NULL) {
-   PDM_free(block_weight);
+    PDM_free(block_weight);
   }
 
   for (int i = 0; i < gmean->n_part; i++) {
@@ -359,9 +359,9 @@ PDM_global_mean_field_compute
 
   if (_stride_w != NULL) {
     for (int i = 0; i < gmean->n_part; i++) {
-     PDM_free(_stride_w[i]);
+      PDM_free(_stride_w[i]);
     }
-   PDM_free(_stride_w);
+    PDM_free(_stride_w);
     _stride_w = NULL;
   }
 

@@ -692,7 +692,7 @@ _define_rank_distrib(int                       dim,
             i, 1.0, 1.0, 1.0, 0);
 
     fclose(dbg_file);
-   PDM_free(rfilename);
+    PDM_free(rfilename);
 
   }
 

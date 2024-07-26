@@ -1031,10 +1031,10 @@ int main(int argc, char *argv[])
                                           &projected_coord);
 
     //assert (n_located == 0 && n_unlocated == n_cell);
-   PDM_free(cell_center2[ipart]);
-   PDM_free(cell_volume2[ipart]);
-   PDM_free(cell_center1[ipart]);
-   PDM_free(cell_volume1[ipart]);
+    PDM_free(cell_center2[ipart]);
+    PDM_free(cell_volume2[ipart]);
+    PDM_free(cell_center1[ipart]);
+    PDM_free(cell_volume1[ipart]);
 
   }
 
@@ -1144,7 +1144,7 @@ int main(int argc, char *argv[])
   PDM_part_to_part_irecv_wait (ptp, recv_request);
 
   for (int i = 0; i < n_part; i++) {
-   PDM_free(gnum1_gnum2_data[i]);
+    PDM_free(gnum1_gnum2_data[i]);
   }
   PDM_free(gnum1_gnum2_data);
 
@@ -1189,7 +1189,7 @@ int main(int argc, char *argv[])
   PDM_part_to_part_irecv_wait (ptp2, recv_request);
 
   for (int i = 0; i < n_part; i++) {
-   PDM_free(ptp2_s_data[i]);
+    PDM_free(ptp2_s_data[i]);
   }
   PDM_free(ptp2_s_data);
 
@@ -1358,9 +1358,9 @@ int main(int argc, char *argv[])
   }
 
   for (int i = 0; i < n_part; i++) {
-   PDM_free(gnum_elt1_recv[i]);
-   PDM_free(gnum_elt2_recv[i]);
-   PDM_free(location_idx[i]);
+    PDM_free(gnum_elt1_recv[i]);
+    PDM_free(gnum_elt2_recv[i]);
+    PDM_free(location_idx[i]);
   }
 
   PDM_free(gnum_elt1_recv);

@@ -176,10 +176,10 @@ PDM_multi_block_merge_create
   PDM_g_num_t* merge_gnum = PDM_part_to_block_block_gnum_get(ptb);
 
   for(int i_block = 0; i_block < n_block+1; ++i_block) {
-   PDM_free(_send_stride [i_block]);
-   PDM_free(_selected_g_num[i_block]);
+    PDM_free(_send_stride [i_block]);
+    PDM_free(_selected_g_num[i_block]);
     if (i_block == n_block)
-     PDM_free(_send_orig_g_num[i_block]); //Only last was allocated
+      PDM_free(_send_orig_g_num[i_block]); //Only last was allocated
   }
   PDM_free(_send_stride);
   PDM_free(_selected_g_num);
@@ -289,7 +289,7 @@ PDM_multi_block_merge_exch
 
   if(t_stride == PDM_STRIDE_VAR_INTERLACED) {
     *merge_block_stride = tmp_block_strid_out[0];
-   PDM_free(tmp_block_strid_out);
+    PDM_free(tmp_block_strid_out);
   }
 
   *merge_block_data = tmp_block_data_out[0];
@@ -476,7 +476,7 @@ PDM_multi_block_merge_exch_and_update
   *merge_block_data    = dparent_child_mbm;
 
   for (int i_block = 0; i_block < n_block; i_block++) {
-   PDM_free(shifted_block_data[i_block]);
+    PDM_free(shifted_block_data[i_block]);
   }
   PDM_free(shifted_block_data);
 }

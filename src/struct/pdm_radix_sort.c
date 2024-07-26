@@ -282,7 +282,7 @@ _cc_radix_sort
   place = 1;
   while(place < place_init){
     int* range = _counting_sort(v, tmp, beg, end, place);
-   PDM_free(range);
+    PDM_free(range);
     place *= _radix_base;
   }
 
@@ -397,7 +397,7 @@ _std_radix_sort
   place /= _radix_base;
 
   if(place == 0) {
-   PDM_free(range);
+    PDM_free(range);
     return;
   }
 
@@ -455,7 +455,7 @@ _std_radix_sort_with_order
   }
 
   if(place == 0) {
-   PDM_free(range);
+    PDM_free(range);
     return;
   }
 
@@ -528,7 +528,7 @@ PDM_radix_sort_long
     PDM_malloc(order_tmp, (lArray+1) ,int);
     _std_radix_sort_with_order(array, tmp, order, order_tmp, 0, lArray, place, place_power);
     // _std_radix_sort(array, tmp, 0, lArray, place);
-   PDM_free(order_tmp);
+    PDM_free(order_tmp);
   }
 
 

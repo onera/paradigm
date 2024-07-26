@@ -506,7 +506,7 @@ PDM_dmesh_free
 
   if(dmesh->is_owner_vtx_coord ==  PDM_TRUE) {
     if(dmesh->_dvtx_coord != NULL) {
-     PDM_free(dmesh->_dvtx_coord);
+      PDM_free(dmesh->_dvtx_coord);
     }
   }
   dmesh->_dvtx_coord       = NULL;
@@ -522,10 +522,10 @@ PDM_dmesh_free
       if(dmesh->is_owner_connectivity[i] == PDM_TRUE) {
 
         if(dmesh->dconnectivity[i] != NULL){
-         PDM_free(dmesh->dconnectivity[i]);
+          PDM_free(dmesh->dconnectivity[i]);
         }
         if(dmesh->dconnectivity_idx[i] != NULL){
-         PDM_free(dmesh->dconnectivity_idx[i]);
+          PDM_free(dmesh->dconnectivity_idx[i]);
         }
         dmesh->dconnectivity    [i] = NULL;
         dmesh->dconnectivity_idx[i] = NULL;
@@ -539,10 +539,10 @@ PDM_dmesh_free
 
         //printf(" dmesh_free :: %i \n", i);
         if(dmesh->dbound[i] != NULL) {
-         PDM_free(dmesh->dbound[i]);
+          PDM_free(dmesh->dbound[i]);
         }
         if(dmesh->dbound_idx[i] != NULL){
-         PDM_free(dmesh->dbound_idx[i]);
+          PDM_free(dmesh->dbound_idx[i]);
         }
         dmesh->dbound    [i] = NULL;
         dmesh->dbound_idx[i] = NULL;
@@ -562,22 +562,22 @@ PDM_dmesh_free
 
   /* This result is never getted so we can free them */
   if(dmesh->cell_distrib != NULL) {
-   PDM_free(dmesh->cell_distrib);
+    PDM_free(dmesh->cell_distrib);
     dmesh->cell_distrib = NULL;
   }
 
   if(dmesh->face_distrib != NULL) {
-   PDM_free(dmesh->face_distrib);
+    PDM_free(dmesh->face_distrib);
     dmesh->face_distrib = NULL;
   }
 
   if(dmesh->edge_distrib != NULL) {
-   PDM_free(dmesh->edge_distrib);
+    PDM_free(dmesh->edge_distrib);
     dmesh->edge_distrib = NULL;
   }
 
   if(dmesh->vtx_distrib != NULL) {
-   PDM_free(dmesh->vtx_distrib);
+    PDM_free(dmesh->vtx_distrib);
     dmesh->vtx_distrib = NULL;
   }
 

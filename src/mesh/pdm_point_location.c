@@ -909,7 +909,7 @@ _locate_in_tetrahedron
 
 
   if (n_pts_out == 0) {
-   PDM_free(pts_out);
+    PDM_free(pts_out);
     return;
   }
 
@@ -1259,7 +1259,7 @@ _locate_in_cell_3d
   } // End loop on points
 
   if (elt_type != PDM_MESH_NODAL_PRISM6) {
-   PDM_free(_cell_coord);
+    PDM_free(_cell_coord);
   }
 
 
@@ -2231,7 +2231,7 @@ _locate_in_polyhedron
   }
 
   if (_tri_vtx != tri_vtx) {
-   PDM_free(_tri_vtx);
+    PDM_free(_tri_vtx);
   }
 
 
@@ -2498,7 +2498,7 @@ PDM_point_location_nodal
             _uvw[3*ipt] = _uvw[3*ipt+1] = _uvw[3*ipt+2] = -1.;
           }
         } // End of loop on polygons
-       PDM_free(poly_coord);
+        PDM_free(poly_coord);
 
       } // end if PDM_MESH_NODAL_POLY_2D
 
@@ -2632,12 +2632,12 @@ PDM_point_location_nodal
           }
         } // End of loop on polyhedra
 
-       PDM_free(_vtx_id);
-       PDM_free(_face_orientation);
-       PDM_free(_face_vtx_idx);
-       PDM_free(_face_vtx);
-       PDM_free(_vtx_coord);
-       PDM_free(_tri_vtx);
+        PDM_free(_vtx_id);
+        PDM_free(_face_orientation);
+        PDM_free(_face_vtx_idx);
+        PDM_free(_face_vtx);
+        PDM_free(_vtx_coord);
+        PDM_free(_tri_vtx);
         PDM_triangulate_state_destroy(_tri_state);
 
       } // end if PDM_MESH_NODAL_POLY_3D
@@ -2967,8 +2967,8 @@ PDM_point_location_nodal
 
             } // End of loop on elt
             // log_trace("%d converged / %d\n", count_converged, count);
-           PDM_free(elt_coord);
-           PDM_free(work_array);
+            PDM_free(elt_coord);
+            PDM_free(work_array);
             break;
           } // end case HO LAGRANGE
 

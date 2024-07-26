@@ -480,10 +480,10 @@ PDM_points_merge_free
      ( pm->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !pm->results_is_getted)){
     for (int i = 0; i < pm->n_point_clouds; i++) {
       if (pm->candidates_idx[i] != NULL) {
-       PDM_free(pm->candidates_idx[i]);
+        PDM_free(pm->candidates_idx[i]);
       }
       if (pm->candidates_desc[i] != NULL) {
-       PDM_free(pm->candidates_desc[i]);
+        PDM_free(pm->candidates_desc[i]);
       }
     }
   }
@@ -959,7 +959,7 @@ PDM_points_merge_process
   /* Free local data */
 
   for (int i = 0; i < pm->n_point_clouds; i++) {
-   PDM_free(candidates_n[i]);
+    PDM_free(candidates_n[i]);
   }
 
   PDM_free(candidates_n);
@@ -1091,7 +1091,7 @@ PDM_points_merge_make_interface
     for(int i = 0; i < _n_points; ++i) {
       points_gnum[i_cloud][i] = i + distri[i_rank] + 1;
     }
-   PDM_free(distri);
+    PDM_free(distri);
   }
 
   /*
@@ -1120,7 +1120,7 @@ PDM_points_merge_make_interface
   PDM_malloc(part1_cloud,pm->n_point_clouds ,int         *);
   for(int i_cloud = 0; i_cloud < pm->n_point_clouds; ++i_cloud) {
     part1_concat_gnum[i_cloud] = PDM_gnum_get(gnum, i_cloud);
-   PDM_free(part1_nuplet[i_cloud]);
+    PDM_free(part1_nuplet[i_cloud]);
     // PDM_log_trace_array_long(part1_concat_gnum[i_cloud], n_elt1[i_cloud], "part1_concat_gnum ::");
 
     PDM_malloc(part1_cloud[i_cloud],pm->n_points[i_cloud] ,int);
@@ -1202,8 +1202,8 @@ PDM_points_merge_make_interface
                                        &gnum1_come_from);
 
   for(int i_cloud = 0; i_cloud < pm->n_point_clouds; ++i_cloud) {
-   PDM_free(part1_concat_gnum[i_cloud]);
-   PDM_free(part1_cloud[i_cloud]);
+    PDM_free(part1_concat_gnum[i_cloud]);
+    PDM_free(part1_cloud[i_cloud]);
   }
   PDM_free(part1_concat_gnum);
   PDM_free(part1_cloud);
@@ -1267,7 +1267,7 @@ PDM_points_merge_make_interface
                                                       pm->n_point_clouds,
                                                       pm->comm);
   for (int i_cloud=0; i_cloud < pm->n_point_clouds; i_cloud++) {
-   PDM_free(weight[i_cloud]);
+    PDM_free(weight[i_cloud]);
   }
   PDM_free(weight);
 
@@ -1295,8 +1295,8 @@ PDM_points_merge_make_interface
 
   PDM_free(n_itrf);
   for(int i_cloud = 0; i_cloud < pm->n_point_clouds; ++i_cloud) {
-   PDM_free(itrf_pair[i_cloud]);
-   PDM_free(_itrf_pair[i_cloud]);
+    PDM_free(itrf_pair[i_cloud]);
+    PDM_free(_itrf_pair[i_cloud]);
   }
   PDM_free(itrf_pair);
   PDM_free(_itrf_pair);
@@ -1409,7 +1409,7 @@ PDM_points_merge_make_interface
 
 
   for(int i_cloud = 0; i_cloud < pm->n_point_clouds; ++i_cloud) {
-   PDM_free(points_gnum[i_cloud]);
+    PDM_free(points_gnum[i_cloud]);
   }
   PDM_free(points_gnum);
   PDM_part_to_part_free(ptp);
@@ -1442,7 +1442,7 @@ PDM_points_merge_make_interface
                                                              &pn_vtx,
                                                              1,
                                                              pm->comm);
-   PDM_free(l_weight);
+    PDM_free(l_weight);
 
     dn_vtx_itrf[i_itrf] = PDM_part_to_block_n_elt_block_get(ptb_itrf);
 
@@ -1496,7 +1496,7 @@ PDM_points_merge_make_interface
 
   PDM_free(all_itrf_gnum);
   for(int i_cloud = 0; i_cloud < pm->n_point_clouds; ++i_cloud) {
-   PDM_free(itrf_gnum[i_cloud]);
+    PDM_free(itrf_gnum[i_cloud]);
   }
   PDM_free(itrf_gnum);
 
@@ -1504,8 +1504,8 @@ PDM_points_merge_make_interface
   PDM_free(entity_itrf_n  );
 
   for(int i_cloud = 0; i_cloud < pm->n_point_clouds; ++i_cloud) {
-   PDM_free(vtx_opp_gnum [i_cloud]);
-   PDM_free(vtx_opp_cloud[i_cloud]);
+    PDM_free(vtx_opp_gnum [i_cloud]);
+    PDM_free(vtx_opp_cloud[i_cloud]);
   }
   PDM_free(vtx_opp_gnum );
   PDM_free(vtx_opp_cloud);

@@ -419,7 +419,7 @@ _distrib_data
         k++;
       }
 
-     PDM_free(rank_index);
+      PDM_free(rank_index);
 
     }
   } // If User
@@ -741,7 +741,7 @@ _distrib_data_hilbert
   PDM_hilbert_encode_coords(dim, PDM_HILBERT_CS, extents, ptb->n_elt_proc, concat_vtx_coord, hilbert_codes);
 
   if(ptb->n_part > 1 ) {
-   PDM_free(concat_vtx_coord);
+    PDM_free(concat_vtx_coord);
   }
 
   PDM_hilbert_code_t *hilbert_codes_idx;
@@ -763,7 +763,7 @@ _distrib_data_hilbert
   }
 
   if(ptb->n_part > 1 ) {
-   PDM_free(concat_weight);
+    PDM_free(concat_weight);
   }
 
   PDM_malloc(ptb->n_send_data,ptb->s_comm,int);
@@ -1046,7 +1046,7 @@ _distrib_data_morton
   PDM_morton_encode_coords(dim, max_level, extents, ptb->n_elt_proc, concat_vtx_coord, morton_codes, d, s);
 
   if(ptb->n_part != 1) {
-   PDM_free(concat_vtx_coord);
+    PDM_free(concat_vtx_coord);
   }
 
   PDM_morton_code_t *morton_codes_idx;
@@ -1061,7 +1061,7 @@ _distrib_data_morton
                               ptb->comm);
 
   if(ptb->n_part != 1) {
-   PDM_free(concat_weight);
+    PDM_free(concat_weight);
   }
 
   PDM_malloc(ptb->n_send_data,ptb->s_comm,int);
@@ -1669,7 +1669,7 @@ _prepare_exchange
 
     }
 
-   PDM_free(send_stride);
+    PDM_free(send_stride);
 
   }
 
@@ -1895,7 +1895,7 @@ _prepare_send_buffer
     }
 
     if (i_part != NULL)
-     PDM_free(i_part);
+      PDM_free(i_part);
   }
 }
 
@@ -1959,9 +1959,9 @@ _prepare_reverse_send_buffer
       }
     }
 
-   PDM_free(send_stride);
-   PDM_free(send_idx);
-   PDM_free(block_idx);
+    PDM_free(send_stride);
+    PDM_free(send_idx);
+    PDM_free(block_idx);
 
   }
   else  {
@@ -2054,8 +2054,8 @@ _post_treatment
       }
     }
 
-   PDM_free(recv_stride);
-   PDM_free(i_recv_stride);
+    PDM_free(recv_stride);
+    PDM_free(i_recv_stride);
 
     /*
      * post processing
@@ -2101,7 +2101,7 @@ _post_treatment
         s_block_data = idx2 / (int) s_data;
       }
     }
-   PDM_free(i_block_stride);
+    PDM_free(i_block_stride);
   } else {
 
     /*
@@ -2240,11 +2240,11 @@ _post_treatment_reverse
           _part_data[i][idx_write + k] = recv_buffer[idx_read+k];
         }
       }
-     PDM_free(_part_idx[i]);
+      PDM_free(_part_idx[i]);
     }
-   PDM_free(n_recv_strid);
-   PDM_free(_part_idx);
-   PDM_free(recv_stride);
+    PDM_free(n_recv_strid);
+    PDM_free(_part_idx);
+    PDM_free(recv_stride);
 
   } else { // PDM_STRIDE_CST_INTERLACED
 
@@ -3154,8 +3154,8 @@ PDM_part_to_block_exch
                         mpi_type,
                         ptb->comm);
 
-     PDM_free(_i_send_buffer); 
-     PDM_free(_i_recv_buffer); 
+      PDM_free(_i_send_buffer); 
+      PDM_free(_i_recv_buffer); 
     }
 
     else {
@@ -3343,8 +3343,8 @@ PDM_part_to_block_reverse_exch
                         mpi_type,
                         ptb->comm);
 
-     PDM_free(_i_send_buffer); 
-     PDM_free(_i_recv_buffer); 
+      PDM_free(_i_send_buffer); 
+      PDM_free(_i_recv_buffer); 
     }
 
     else {
@@ -3847,7 +3847,7 @@ PDM_part_to_block_iexch_wait
     PDM_MPI_Win_free(&ptb->win_send[request_id]);
     ptb->win_send[request_id] = PDM_MPI_WIN_NULL;
   } else {
-   PDM_free(ptb->send_buffer  [request_id]);
+    PDM_free(ptb->send_buffer  [request_id]);
   }
   PDM_free(ptb->n_send_buffer[request_id]);
   PDM_free(ptb->i_send_buffer[request_id]);
@@ -3882,7 +3882,7 @@ PDM_part_to_block_iexch_wait
     PDM_MPI_Win_free(&ptb->win_recv[request_id]);
     ptb->win_recv[request_id] = PDM_MPI_WIN_NULL;
   } else {
-   PDM_free(ptb->recv_buffer  [request_id]);
+    PDM_free(ptb->recv_buffer  [request_id]);
   }
   ptb->recv_stride [request_id] = NULL;
   ptb->recv_buffer [request_id] = NULL;
@@ -3939,7 +3939,7 @@ PDM_part_to_block_reverse_iexch_wait
     PDM_MPI_Win_free(&ptb->win_send[request_id]);
     ptb->win_send[request_id] = PDM_MPI_WIN_NULL;
   } else {
-   PDM_free(ptb->send_buffer  [request_id]);
+    PDM_free(ptb->send_buffer  [request_id]);
   }
   PDM_free(ptb->n_send_buffer[request_id]);
   PDM_free(ptb->i_send_buffer[request_id]);
@@ -3983,7 +3983,7 @@ PDM_part_to_block_reverse_iexch_wait
     PDM_MPI_Win_free(&ptb->win_recv[request_id]);
     ptb->win_recv[request_id] = PDM_MPI_WIN_NULL;
   } else {
-   PDM_free(ptb->recv_buffer  [request_id]);
+    PDM_free(ptb->recv_buffer  [request_id]);
   }
   ptb->recv_stride [request_id] = NULL;
   ptb->recv_buffer [request_id] = NULL;
@@ -4300,44 +4300,44 @@ PDM_part_to_block_free
 {
 
   if (ptb->active_ranks != NULL) {
-   PDM_free(ptb->active_ranks);
+    PDM_free(ptb->active_ranks);
     ptb->active_ranks = NULL;
   }
   if (ptb->dest_proc != NULL) {
-   PDM_free(ptb->dest_proc);
+    PDM_free(ptb->dest_proc);
     ptb->dest_proc = NULL;
   }
   if (ptb->data_distrib_index != NULL) {
-   PDM_free(ptb->data_distrib_index);
+    PDM_free(ptb->data_distrib_index);
     ptb->data_distrib_index = NULL;
   }
   if (ptb->i_send_data != NULL) {
-   PDM_free(ptb->i_send_data);
+    PDM_free(ptb->i_send_data);
     ptb->i_send_data = NULL;
   }
   if (ptb->i_recv_data != NULL) {
-   PDM_free(ptb->i_recv_data);
+    PDM_free(ptb->i_recv_data);
     ptb->i_recv_data = NULL;
   }
   if (ptb->n_send_data != NULL) {
-   PDM_free(ptb->n_send_data);
+    PDM_free(ptb->n_send_data);
     ptb->n_send_data = NULL;
   }
   if (ptb->n_recv_data != NULL) {
-   PDM_free(ptb->n_recv_data);
+    PDM_free(ptb->n_recv_data);
     ptb->n_recv_data = NULL;
   }
   if (ptb->sorted_recv_gnum != NULL) {
-   PDM_free(ptb->sorted_recv_gnum);
+    PDM_free(ptb->sorted_recv_gnum);
     ptb->sorted_recv_gnum = NULL;
   }
 
   if (ptb->enable_reverse == 1 && ptb->idx_partial != NULL) {
-   PDM_free(ptb->idx_partial);
+    PDM_free(ptb->idx_partial);
     ptb->idx_partial = NULL;
   }
   if (ptb->order != NULL) {
-   PDM_free(ptb->order);
+    PDM_free(ptb->order);
     ptb->order = NULL;
   }
 
@@ -4347,19 +4347,19 @@ PDM_part_to_block_free
   // }
   if ((ptb->t_post != PDM_PART_TO_BLOCK_POST_NOTHING      ) &&
       (ptb->t_post != PDM_PART_TO_BLOCK_POST_MERGE_UNIFORM) && (ptb->block_gnum != NULL)) {
-   PDM_free(ptb->block_gnum);
+    PDM_free(ptb->block_gnum);
     ptb->block_gnum = NULL;
   }
   if (ptb->block_gnum_count != NULL) {
-   PDM_free(ptb->block_gnum_count);
+    PDM_free(ptb->block_gnum_count);
     ptb->block_gnum_count=NULL;
   }
 
   if (ptb->weight_g != NULL) {
     for (int i = 0; i < ptb->n_part; i++) {
-     PDM_free(ptb->weight_g[i]);
+      PDM_free(ptb->weight_g[i]);
     }
-   PDM_free(ptb->weight_g);
+    PDM_free(ptb->weight_g);
   }
 
   /* This one check if all buffer has been correctly move or delete */

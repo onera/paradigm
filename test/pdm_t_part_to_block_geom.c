@@ -311,7 +311,7 @@ main
                               debug_gnum,
                               NULL);
 
-   PDM_free(debug_gnum);
+    PDM_free(debug_gnum);
   }
 
   /*
@@ -341,7 +341,7 @@ main
       first = hilbert_codes[i];
     }
     // PDM_log_trace_array_double(hilbert_codes, n_parent, "hilbert_codes ::");
-   PDM_free(hilbert_codes);
+    PDM_free(hilbert_codes);
   }
   PDM_part_to_block_free(ptb);
 

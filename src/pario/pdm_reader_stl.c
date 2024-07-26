@@ -401,12 +401,12 @@ _read_distributed_stl
   PDM_free(init_distrib_face);
 
   if(i_rank == 0) {
-   PDM_free(face_normal  );
-   PDM_free(vtx_coord    );
-   PDM_free(face_vtx_idx );
-   PDM_free(face_vtx     );
-   PDM_free(face_vtx_n   );
-   PDM_free(face_vtx_coord);
+    PDM_free(face_normal  );
+    PDM_free(vtx_coord    );
+    PDM_free(face_vtx_idx );
+    PDM_free(face_vtx     );
+    PDM_free(face_vtx_n   );
+    PDM_free(face_vtx_coord);
   }
 }
 
@@ -506,7 +506,7 @@ PDM_reader_stl_dmesh_nodal
   /* Split mesh */
   /* !!! We assume we only have triangles */
   if (dface_vtx_idx != NULL){
-   PDM_free(dface_vtx_idx);
+    PDM_free(dface_vtx_idx);
   }
 
   PDM_dmesh_nodal_t *dmn = _create_dmesh_nodal(comm,

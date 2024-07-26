@@ -1740,8 +1740,8 @@ double           *closest_octree_pt_dist2
   }
 
   if (n_exch > 1) {
-   PDM_free(__closest_octree_pt_g_num);
-   PDM_free(__closest_octree_pt_dist2);
+    PDM_free(__closest_octree_pt_g_num);
+    PDM_free(__closest_octree_pt_dist2);
   }
 
   PDM_free(stride_ptb);
@@ -1762,21 +1762,21 @@ double           *closest_octree_pt_dist2
   PDM_free(i_send_gnum1);
   PDM_free(i_recv_gnum1);
   if (n_exch > 1) {
-   PDM_free(data_send_pts2);
-   PDM_free(data_recv_pts2);
-   PDM_free(n_send_pts2);
-   PDM_free(n_recv_pts2);
-   PDM_free(i_send_pts2);
-   PDM_free(i_recv_pts2);
-   PDM_free(data_send_gnum2);
-   PDM_free(data_recv_gnum2);
-   PDM_free(n_send_gnum2);
-   PDM_free(n_recv_gnum2);
-   PDM_free(i_send_gnum2);
-   PDM_free(i_recv_gnum2);
-   PDM_free(send_counts);
-   PDM_free(send_bounds1);
-   PDM_free(send_bounds2);
+    PDM_free(data_send_pts2);
+    PDM_free(data_recv_pts2);
+    PDM_free(n_send_pts2);
+    PDM_free(n_recv_pts2);
+    PDM_free(i_send_pts2);
+    PDM_free(i_recv_pts2);
+    PDM_free(data_send_gnum2);
+    PDM_free(data_recv_gnum2);
+    PDM_free(n_send_gnum2);
+    PDM_free(n_recv_gnum2);
+    PDM_free(i_send_gnum2);
+    PDM_free(i_recv_gnum2);
+    PDM_free(send_counts);
+    PDM_free(send_bounds1);
+    PDM_free(send_bounds2);
   }
 
   PDM_free(_closest_octree_pt_id);

@@ -66,17 +66,17 @@ _l_node_free
 {
   if (octree->nodes != NULL) {
 
-   PDM_free(octree->nodes->ancestor_id);
-   PDM_free(octree->nodes->is_leaf);
-   PDM_free(octree->nodes->location_in_ancestor);
-   PDM_free(octree->nodes->depth);
-   PDM_free(octree->nodes->children_id);
-   PDM_free(octree->nodes->range);
-   PDM_free(octree->nodes->idx);
-   PDM_free(octree->nodes->n_points);
-   PDM_free(octree->nodes->extents);
+    PDM_free(octree->nodes->ancestor_id);
+    PDM_free(octree->nodes->is_leaf);
+    PDM_free(octree->nodes->location_in_ancestor);
+    PDM_free(octree->nodes->depth);
+    PDM_free(octree->nodes->children_id);
+    PDM_free(octree->nodes->range);
+    PDM_free(octree->nodes->idx);
+    PDM_free(octree->nodes->n_points);
+    PDM_free(octree->nodes->extents);
 
-   PDM_free(octree->nodes);
+    PDM_free(octree->nodes);
 
     octree->nodes = NULL;
   }

@@ -304,9 +304,9 @@ char *argv[]
   PDM_free(send_entity_var_data);
   PDM_free(send_entity_var_stri);
   for(int i_cloud = 0; i_cloud < n_cloud; i_cloud++){
-   PDM_free(recv_entity_data[i_cloud]);
-   PDM_free(recv_entity_var_stri[i_cloud]);
-   PDM_free(recv_entity_var_data[i_cloud]);
+    PDM_free(recv_entity_data[i_cloud]);
+    PDM_free(recv_entity_var_stri[i_cloud]);
+    PDM_free(recv_entity_var_data[i_cloud]);
   }
   PDM_free(recv_entity_data);
   PDM_free(recv_entity_var_stri);

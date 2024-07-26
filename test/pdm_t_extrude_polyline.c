@@ -589,7 +589,7 @@ main
                          id_var_part);
     PDM_writer_var_free(wrt,
                         id_var_part);
-   PDM_free(val_part);
+    PDM_free(val_part);
 
     PDM_writer_step_end(wrt);
 

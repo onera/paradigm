@@ -1190,7 +1190,7 @@ _gen_from_base_mesh
   } // End of loop on vertices
   PDM_free(tria_j_idx);
   for (int k = 0; k < n-2; k++) {
-   PDM_free(tetra_j_idx[k]);
+    PDM_free(tetra_j_idx[k]);
   }
   PDM_free(tetra_j_idx);
   PDM_free(tetra_k_idx);

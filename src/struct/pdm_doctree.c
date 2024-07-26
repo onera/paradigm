@@ -95,7 +95,7 @@ _redistribute_pts_geom
                                                            doct->comm);
 
   for(int i_part = 0; i_part < doct->n_part_cloud; ++i_part) {
-   PDM_free(weight[i_part]);
+    PDM_free(weight[i_part]);
   }
   PDM_free(weight);
 
@@ -151,11 +151,11 @@ _redistribute_pts_geom
                  (void **) &blk_init_location_pts);
 
     blk_init_location_pts_idx = PDM_array_new_idx_from_sizes_int(blk_init_location_pts_n, dn_pts);
-   PDM_free(blk_init_location_pts_n);
+    PDM_free(blk_init_location_pts_n);
   }
 
   for(int i_part = 0; i_part < doct->n_part_cloud; ++i_part) {
-   PDM_free(stride_one[i_part]);
+    PDM_free(stride_one[i_part]);
   }
   PDM_free(stride_one);
 
@@ -897,8 +897,8 @@ PDM_doctree_build
   // PDM_log_trace_array_long(reorder_blk_pts_gnum, n_pts_tot, "reorder_blk_pts_gnum : ");
 
   if(have_pts_init_location) {
-   PDM_free(dinit_location_pts_idx);
-   PDM_free(dinit_location_pts);
+    PDM_free(dinit_location_pts_idx);
+    PDM_free(dinit_location_pts);
   }
 
   if(0 == 1) {
@@ -1686,9 +1686,9 @@ PDM_doctree_build
                                                      doct->comm);
 
   for(int i_shm = 0; i_shm < n_rank_in_shm; ++i_shm) {
-   PDM_free(res_box_weight[i_shm]);
-   PDM_free(box_pts_idx   [i_shm]);
-   PDM_free(box_pts_l_num [i_shm]);
+    PDM_free(res_box_weight[i_shm]);
+    PDM_free(box_pts_idx   [i_shm]);
+    PDM_free(box_pts_l_num [i_shm]);
   }
   PDM_free(box_pts_idx   );
   PDM_free(box_pts_l_num );
@@ -1729,10 +1729,10 @@ PDM_doctree_build
 
   PDM_free(block_stride);
   for(int i_shm = 0; i_shm < n_rank_in_shm; ++i_shm) {
-   PDM_free(res_box_pts_coords[i_shm]);
-   PDM_free(res_box_pts_gnum  [i_shm]);
-   PDM_free(res_box_strid     [i_shm]);
-   PDM_free(res_box_g_num     [i_shm]);
+    PDM_free(res_box_pts_coords[i_shm]);
+    PDM_free(res_box_pts_gnum  [i_shm]);
+    PDM_free(res_box_strid     [i_shm]);
+    PDM_free(res_box_g_num     [i_shm]);
   }
   PDM_free(part_n_box    );
 
@@ -1799,8 +1799,8 @@ PDM_doctree_build
       idx2 += tmp_n;
       block_pts_in_box_n[i] = tmp_n;
     }
-   PDM_free(order);
-   PDM_free(tmp_coord);
+    PDM_free(order);
+    PDM_free(tmp_coord);
   }
   //<<--
 
@@ -1820,7 +1820,7 @@ PDM_doctree_build
                                "");
     }
     log_trace("sum_weight = %d\n", idx[n_unit_op_equi_elt_block]);
-   PDM_free(idx);
+    PDM_free(idx);
   }
 
   PDM_mpi_win_shared_unlock_all (wshared_entity_coord  );
@@ -2019,9 +2019,9 @@ PDM_doctree_free
   PDM_free(doct->pts_init_location);
 
   if (doct->ownership == PDM_OWNERSHIP_KEEP) {
-   PDM_free(doct->block_pts_in_box_g_num);
-   PDM_free(doct->block_pts_in_box_coord);
-   PDM_free(doct->block_pts_in_box_n    );
+    PDM_free(doct->block_pts_in_box_g_num);
+    PDM_free(doct->block_pts_in_box_coord);
+    PDM_free(doct->block_pts_in_box_n    );
   }
 
   //PDM_free(doct->equi_pts_init_location_idx);

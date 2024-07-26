@@ -256,8 +256,8 @@ PDM_gnum_location_compute
   //                          &request_id);
 
   for (int i = 0; i < gnum_loc->n_part_in; i++) {
-   PDM_free(part_stride[i]);
-   PDM_free(part_data[i]);
+    PDM_free(part_stride[i]);
+    PDM_free(part_data[i]);
   }
   PDM_free(part_data);
   PDM_free(part_stride);
@@ -295,7 +295,7 @@ PDM_gnum_location_compute
   //PDM_free(block_distrib_index_correct);
 
   for (int i = 0; i < gnum_loc->n_part_out; i++) {
-   PDM_free(part_stride[i]);
+    PDM_free(part_stride[i]);
   }
 
   PDM_free(part_stride);
@@ -363,12 +363,12 @@ PDM_gnum_location_free
   if(( gnum_loc->owner == PDM_OWNERSHIP_KEEP ) ||
      ( gnum_loc->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !gnum_loc->tag_results_get)) {
     for (int i = 0; i < gnum_loc->n_part_out; i++) {
-     PDM_free(gnum_loc->location_idx[i]);
+      PDM_free(gnum_loc->location_idx[i]);
     }
     //PDM_free(gnum_loc->location_idx);
 
     for (int i = 0; i < gnum_loc->n_part_out; i++) {
-     PDM_free(gnum_loc->location[i]);
+      PDM_free(gnum_loc->location[i]);
     }
     //PDM_free(gnum_loc->location);
   }

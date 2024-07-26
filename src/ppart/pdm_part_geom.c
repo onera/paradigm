@@ -326,7 +326,7 @@ PDM_part_geom
                        dcell_part);
 
   if(dcell_weight != NULL) {
-   PDM_free(dcell_weight_d);
+    PDM_free(dcell_weight_d);
   }
 
   PDM_free(barycenter_coords);
@@ -453,9 +453,9 @@ PDM_part_geom_2d
                                                     comm);
 
 
-   PDM_free(dedge_vtx_idx);
-   PDM_free(dedge_center);
-   PDM_free(distrib_edge);
+    PDM_free(dedge_vtx_idx);
+    PDM_free(dedge_center);
+    PDM_free(distrib_edge);
   }
 
   PDM_part_entity_geom(method,

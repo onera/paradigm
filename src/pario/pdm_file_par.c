@@ -656,7 +656,7 @@ PDM_file_par_close
 {
 
   if (PDM_file_par != NULL) {
-   PDM_free(PDM_file_par->nom);
+    PDM_free(PDM_file_par->nom);
 
     PDM_MPI_File_close(&(PDM_file_par->fichier));
 

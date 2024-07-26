@@ -721,8 +721,8 @@ int main(int argc, char *argv[])
                                   &itrf_gnum_opp);
 
   for(int i_itrf = 0; i_itrf < n_g_interface; ++i_itrf) {
-   PDM_free(itrf_gnum_cur[i_itrf]);
-   PDM_free(itrf_gnum_opp[i_itrf]);
+    PDM_free(itrf_gnum_cur[i_itrf]);
+    PDM_free(itrf_gnum_opp[i_itrf]);
   }
 
   PDM_free(interface_cloud_pair);

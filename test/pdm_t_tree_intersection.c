@@ -368,14 +368,14 @@ main
         }
 
         PDM_sort_int(rand_val, order, n_box);
-       PDM_free(rand_val);
+        PDM_free(rand_val);
 
         for (int i = 0; i < n_box; i++) {
           memcpy(_box_extents + 6*i, box_extents + 6*order[i], sizeof(double) * 6);
           box_g_num[order[i]] = i+1;
         }
-       PDM_free(order);
-       PDM_free(box_extents);
+        PDM_free(order);
+        PDM_free(box_extents);
         box_extents = _box_extents;
       }
 
@@ -464,14 +464,14 @@ main
       }
 
       PDM_sort_int(rand_val, order, n_pts);
-     PDM_free(rand_val);
+      PDM_free(rand_val);
 
       for (int i = 0; i < n_pts; i++) {
         memcpy(_pts_coord + 3*i, pts_coord + 3*order[i], sizeof(double) * 3);
         pts_g_num[order[i]] = i+1;
       }
-     PDM_free(order);
-     PDM_free(pts_coord);
+      PDM_free(order);
+      PDM_free(pts_coord);
       pts_coord = _pts_coord;
     }
 
@@ -616,7 +616,7 @@ main
     //                                 box_pts_g_num,
     //                                 n_box,
     //                                 "box_pts  : ");
-   PDM_free(box_pts_g_num);
+    PDM_free(box_pts_g_num);
   }
 
 

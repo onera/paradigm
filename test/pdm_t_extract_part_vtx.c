@@ -510,7 +510,7 @@ int main(int argc, char *argv[])
 
 
   for (int i_part = 0; i_part < n_part_domains; i_part++){
-   PDM_free(selected_l_num[i_part]);
+    PDM_free(selected_l_num[i_part]);
   }
   PDM_free(selected_l_num);
   PDM_free(pn_cell);

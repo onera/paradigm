@@ -328,8 +328,8 @@ main
     t2 = PDM_MPI_Wtime();
     t_sollicitation[iptree] = t2 - t1;
 
-   PDM_free(box_pts_idx);
-   PDM_free(box_pts);
+    PDM_free(box_pts_idx);
+    PDM_free(box_pts);
   }
 
 
@@ -343,8 +343,8 @@ main
                                            &box_pts);
     t2 = PDM_MPI_Wtime();
     t_sollicitation[2+iptree] = t2 - t1;
-   PDM_free(box_pts_idx);
-   PDM_free(box_pts);
+    PDM_free(box_pts_idx);
+    PDM_free(box_pts);
   }
 
 

@@ -102,28 +102,28 @@ PDM_interpolate_from_mesh_location_free
 
     _points_in_element_t *_points_in_elements = interp_from_ml->points_in_elements + icloud;
 
-   PDM_free(_points_in_elements->n_elts);
-   PDM_free(_points_in_elements->pts_inside_idx);
-   PDM_free(_points_in_elements->gnum);
-   PDM_free(_points_in_elements->uvw);
-   PDM_free(_points_in_elements->coords);
-   PDM_free(_points_in_elements->projected_coords);
-   PDM_free(_points_in_elements->weights_idx);
-   PDM_free(_points_in_elements->weights);
-   PDM_free(_points_in_elements->dist2);
+    PDM_free(_points_in_elements->n_elts);
+    PDM_free(_points_in_elements->pts_inside_idx);
+    PDM_free(_points_in_elements->gnum);
+    PDM_free(_points_in_elements->uvw);
+    PDM_free(_points_in_elements->coords);
+    PDM_free(_points_in_elements->projected_coords);
+    PDM_free(_points_in_elements->weights_idx);
+    PDM_free(_points_in_elements->weights);
+    PDM_free(_points_in_elements->dist2);
 
     _point_cloud_t *pcloud = interp_from_ml->point_clouds + icloud;
 
     if (pcloud->n_points != NULL) {
-     PDM_free(pcloud->n_points);
+      PDM_free(pcloud->n_points);
     }
 
     if (pcloud->coords != NULL) {
-     PDM_free(pcloud->coords);
+      PDM_free(pcloud->coords);
     }
 
     if (pcloud->gnum != NULL) {
-     PDM_free(pcloud->gnum);
+      PDM_free(pcloud->gnum);
     }
 
   }
@@ -300,13 +300,13 @@ PDM_interpolate_from_mesh_location_exch
   PDM_block_to_part_free(btp);
 
   for(int i_part = 0; i_part < pcloud->n_part; ++i_part){
-   PDM_free(part_strid[i_part]);
+    PDM_free(part_strid[i_part]);
   }
   PDM_free(part_strid);
 
   for(int i_part = 0; i_part < interp_from_ml->n_part_src; ++i_part){
-   PDM_free(cloud_data_in_current_src[i_part]);
-   PDM_free(cloud_data_in_current_src_n[i_part]);
+    PDM_free(cloud_data_in_current_src[i_part]);
+    PDM_free(cloud_data_in_current_src_n[i_part]);
   }
   PDM_free(cloud_data_in_current_src);
   PDM_free(cloud_data_in_current_src_n);
@@ -465,15 +465,15 @@ PDM_interpolate_from_mesh_location_exch_inplace
   PDM_block_to_part_free(btp);
 
   for(int i_part = 0; i_part < pcloud->n_part; ++i_part){
-   PDM_free(part_strid[i_part]);
-   PDM_free(tmp_cloud_data_out[i_part]);
+    PDM_free(part_strid[i_part]);
+    PDM_free(tmp_cloud_data_out[i_part]);
   }
   PDM_free(part_strid);
   PDM_free(tmp_cloud_data_out);
 
   for(int i_part = 0; i_part < interp_from_ml->n_part_src; ++i_part){
-   PDM_free(cloud_data_in_current_src[i_part]);
-   PDM_free(cloud_data_in_current_src_n[i_part]);
+    PDM_free(cloud_data_in_current_src[i_part]);
+    PDM_free(cloud_data_in_current_src_n[i_part]);
   }
   PDM_free(cloud_data_in_current_src);
   PDM_free(cloud_data_in_current_src_n);

@@ -184,7 +184,7 @@ PDM_surf_mesh_t *mesh
     if (mesh->part != NULL) {
       for (int i = 0; i < mesh->n_part; i++)
         mesh->part[i] = PDM_surf_part_free(mesh->part[i]);
-     PDM_free(mesh->part);
+      PDM_free(mesh->part);
       mesh->part = NULL;
 
     }
@@ -192,10 +192,10 @@ PDM_surf_mesh_t *mesh
     mesh->interPartEdgeGraph = PDM_graph_bound_free (mesh->interPartEdgeGraph);
     mesh->interPartVtxGraph = PDM_graph_bound_free (mesh->interPartVtxGraph);
 
-   PDM_free(mesh->vtxPartBound);
-   PDM_free(mesh->edgePartBound);
+    PDM_free(mesh->vtxPartBound);
+    PDM_free(mesh->edgePartBound);
 
-   PDM_free(mesh);
+    PDM_free(mesh);
   }
 
   return NULL;
@@ -1226,8 +1226,8 @@ PDM_surf_mesh_t *mesh
 
   for (int i = 0; i < n_part; i++) {
     nEltPartBound[i] = 0;
-   PDM_free(nConnectedElt[i]);
-   PDM_free(nOfferElt[i]);
+    PDM_free(nConnectedElt[i]);
+    PDM_free(nOfferElt[i]);
   }
 
   PDM_free(nOfferElt);
@@ -1440,8 +1440,8 @@ PDM_surf_mesh_build_ghost_element
       }
     }
 
-   PDM_free(part->vtxEdgeIdx);
-   PDM_free(part->vtxEdge);
+    PDM_free(part->vtxEdgeIdx);
+    PDM_free(part->vtxEdge);
 
     part->vtxEdgeIdx = newVtxEdgeIdx;
     part->vtxEdge = newVtxEdge;
@@ -1462,7 +1462,7 @@ PDM_surf_mesh_build_ghost_element
       }
     }
 
-   PDM_free(cptVtxEdge);
+    PDM_free(cptVtxEdge);
   }
 }
 
@@ -1646,7 +1646,7 @@ PDM_surf_mesh_t *mesh
    */
 
   for (int i = 0; i < n_part; i++) {
-   PDM_free(lEdge[i]);
+    PDM_free(lEdge[i]);
   }
   PDM_free(lEdge);
 }
@@ -1869,7 +1869,7 @@ PDM_surf_mesh_is_plane_surface
       }
 
     }
-   PDM_free(normalSums);
+    PDM_free(normalSums);
   }
   else {
     isPlane = 0;
@@ -1925,9 +1925,9 @@ PDM_surf_mesh_is_plane_surface
 
     PDM_part_to_block_free (ptb);
 
-   PDM_free(_gnums);
-   PDM_free(_n_elts);
-   PDM_free(_coords);
+    PDM_free(_gnums);
+    PDM_free(_n_elts);
+    PDM_free(_coords);
 
     for (int j = 0; j < n_elt_block; j++) {
       for (int k = 0; k < 3; k++) {
@@ -1935,7 +1935,7 @@ PDM_surf_mesh_is_plane_surface
       }
     }
 
-   PDM_free(_dcoords);
+    PDM_free(_dcoords);
 
     PDM_MPI_Allreduce (center, barycenter, 3,
                        PDM__PDM_MPI_REAL, PDM_MPI_SUM, mesh->comm);

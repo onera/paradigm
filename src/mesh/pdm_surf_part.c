@@ -131,26 +131,26 @@ PDM_surf_part_free
     part->face_vtx_idx = NULL;
     part->face_vtx = NULL;
     if (part->faceEdgeIdx != NULL)
-     PDM_free(part->faceEdgeIdx);
+      PDM_free(part->faceEdgeIdx);
     if (part->faceEdge != NULL)
-     PDM_free(part->faceEdge);
+      PDM_free(part->faceEdge);
 
     part->face_ln_to_gn = NULL;
     part->coords = NULL;
     if (part->vtxEdgeIdx != NULL)
-     PDM_free(part->vtxEdgeIdx);
+      PDM_free(part->vtxEdgeIdx);
     if (part->vtxEdge != NULL)
-     PDM_free(part->vtxEdge);
+      PDM_free(part->vtxEdge);
     part->vtx_ln_to_gn = NULL;
 
     if (part->edgeFace != NULL)
-     PDM_free(part->edgeFace);
+      PDM_free(part->edgeFace);
 
     if (part->edgeVtx != NULL)
-     PDM_free(part->edgeVtx);
+      PDM_free(part->edgeVtx);
 
     if (part->edgeLnToGn != NULL)
-     PDM_free(part->edgeLnToGn);
+      PDM_free(part->edgeLnToGn);
 
     if (part->edgePartBound != NULL)
       part->edgePartBound = PDM_part_bound_free(part->edgePartBound);
@@ -158,15 +158,15 @@ PDM_surf_part_free
       part->vtxPartBound = PDM_part_bound_free(part->vtxPartBound);
 
     if (part->carLgthVtx != NULL)
-     PDM_free(part->carLgthVtx);
+      PDM_free(part->carLgthVtx);
 
     if (part->faceNormal != NULL)
-     PDM_free(part->faceNormal);
+      PDM_free(part->faceNormal);
 
     if (part->extents != NULL)
-     PDM_free(part->extents);
+      PDM_free(part->extents);
 
-   PDM_free(part);
+    PDM_free(part);
   }
 
   return NULL;

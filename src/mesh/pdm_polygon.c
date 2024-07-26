@@ -945,7 +945,7 @@ int PDM_polygon_3d_to_2d
   }
 
   if (normal == NULL) {
-   PDM_free(_normal);
+    PDM_free(_normal);
   }
 
   return 1;

@@ -393,7 +393,7 @@ PDM_multi_block_to_part_exch2
 
     }
 
-   PDM_free(send_stride);
+    PDM_free(send_stride);
 
     s_send_buffer = i_send_buffer[n_rank1] + n_send_buffer[n_rank1];
     s_recv_buffer = i_recv_buffer[n_rank1] + n_recv_buffer[n_rank1];
@@ -433,9 +433,9 @@ PDM_multi_block_to_part_exch2
       }
     }
     for(int i_block = 0; i_block < mbtp->n_block; ++i_block) {
-     PDM_free(block_stride_idx[i_block]);
+      PDM_free(block_stride_idx[i_block]);
     }
-   PDM_free(block_stride_idx);
+    PDM_free(block_stride_idx);
 
   } else if (t_stride == PDM_STRIDE_CST_INTERLACED) {
 
@@ -539,11 +539,11 @@ PDM_multi_block_to_part_exch2
     }
 
     for (int i = 0; i < mbtp->n_part; i++) {
-     PDM_free(part_idx[i]);
+      PDM_free(part_idx[i]);
     }
-   PDM_free(recv_idx);
-   PDM_free(part_idx);
-   PDM_free(recv_stride);
+    PDM_free(recv_idx);
+    PDM_free(part_idx);
+    PDM_free(recv_stride);
 
   } else if (t_stride == PDM_STRIDE_CST_INTERLACED) {
 
@@ -591,13 +591,13 @@ PDM_multi_block_to_part_free
 {
 
   for(int i_block = 0; i_block < mbtp->n_block; ++i_block) {
-   PDM_free(mbtp->block_distrib_idx[i_block]);
+    PDM_free(mbtp->block_distrib_idx[i_block]);
   }
   PDM_free(mbtp->block_distrib_idx);
   PDM_free(mbtp->multi_distrib_idx);
 
   for (int i = 0; i < mbtp->n_part; i++) {
-   PDM_free(mbtp->ind[i]);
+    PDM_free(mbtp->ind[i]);
   }
   PDM_free(mbtp->ind);
 

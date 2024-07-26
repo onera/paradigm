@@ -163,17 +163,17 @@ const void* b,
 
       for(int k = 0; k < ni; ++k){
         if(sort_arr_i[k] < sort_arr_j[k]) {
-         PDM_free(sort_arr_i);
-         PDM_free(sort_arr_j);
+          PDM_free(sort_arr_i);
+          PDM_free(sort_arr_j);
           return 1;
         } else if( sort_arr_i[k] > sort_arr_j[k] ) {
-         PDM_free(sort_arr_i);
-         PDM_free(sort_arr_j);
+          PDM_free(sort_arr_i);
+          PDM_free(sort_arr_j);
           return 0;
         }
       }
-     PDM_free(sort_arr_i);
-     PDM_free(sort_arr_j);
+      PDM_free(sort_arr_i);
+      PDM_free(sort_arr_j);
     } else {
       return ni < nj;
     }

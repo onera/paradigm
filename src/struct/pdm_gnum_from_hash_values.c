@@ -822,7 +822,7 @@ _gnum_from_hv_compute
   PDM_free(blk_ln_to_gn);
   PDM_free(part_ln_to_gn);
   for(int i_part = 0; i_part < _gnum_from_hv->n_part; ++i_part){
-   PDM_free(elmt_to_proc[i_part]);
+    PDM_free(elmt_to_proc[i_part]);
   }
   PDM_free(elmt_to_proc);
   PDM_free(order);
@@ -1132,7 +1132,7 @@ PDM_gnum_from_hv_free
   if(( _gnum_from_hv->owner == PDM_OWNERSHIP_KEEP ) ||
      ( _gnum_from_hv->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !_gnum_from_hv->tag_results_get)) {
     for (int i = 0; i < _gnum_from_hv->n_part; i++) {
-     PDM_free(_gnum_from_hv->g_nums[i]);
+      PDM_free(_gnum_from_hv->g_nums[i]);
     }
   }
 

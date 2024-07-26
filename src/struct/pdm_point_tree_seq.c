@@ -137,7 +137,7 @@ _median_point
     int h = n_pts / 2;
     // log_trace("n_pts = %d, h = %d\n", n_pts, h);
     mid = 0.5*(x[h] + x[h+1]);
-   PDM_free(x);
+    PDM_free(x);
   }
 
   return mid;
@@ -1401,17 +1401,17 @@ _l_nodes_free
 {
   if (ptree->nodes != NULL) {
 
-   PDM_free(ptree->nodes->ancestor_id);
-   PDM_free(ptree->nodes->is_leaf);
-   PDM_free(ptree->nodes->depth);
-   PDM_free(ptree->nodes->location_in_ancestor);
-   PDM_free(ptree->nodes->children_id);
-   PDM_free(ptree->nodes->range);
-   PDM_free(ptree->nodes->idx);
-   PDM_free(ptree->nodes->n_points);
-   PDM_free(ptree->nodes->extents);
+    PDM_free(ptree->nodes->ancestor_id);
+    PDM_free(ptree->nodes->is_leaf);
+    PDM_free(ptree->nodes->depth);
+    PDM_free(ptree->nodes->location_in_ancestor);
+    PDM_free(ptree->nodes->children_id);
+    PDM_free(ptree->nodes->range);
+    PDM_free(ptree->nodes->idx);
+    PDM_free(ptree->nodes->n_points);
+    PDM_free(ptree->nodes->extents);
 
-   PDM_free(ptree->nodes);
+    PDM_free(ptree->nodes);
 
     ptree->nodes = NULL;
   }
@@ -1562,30 +1562,30 @@ PDM_point_tree_seq_free
 {
   if (ptree != NULL) {
     if (ptree->_pts_coord != NULL) {
-     PDM_free(ptree->_pts_coord);
+      PDM_free(ptree->_pts_coord);
     }
 
     if (ptree->new_to_old != NULL) {
-     PDM_free(ptree->new_to_old);
+      PDM_free(ptree->new_to_old);
     }
 
     if (ptree->old_to_new != NULL) {
-     PDM_free(ptree->old_to_new);
+      PDM_free(ptree->old_to_new);
     }
 
     if(ptree->leaf_box_ids != NULL) {
-     PDM_free(ptree->leaf_box_ids);
+      PDM_free(ptree->leaf_box_ids);
     }
     if(ptree->leaf_box_idx != NULL) {
-     PDM_free(ptree->leaf_box_idx);
+      PDM_free(ptree->leaf_box_idx);
     }
     if(ptree->leaf_ids != NULL) {
-     PDM_free(ptree->leaf_ids);
+      PDM_free(ptree->leaf_ids);
     }
 
     _l_nodes_free(ptree);
 
-   PDM_free(ptree);
+    PDM_free(ptree);
   }
 }
 
@@ -3781,7 +3781,7 @@ PDM_tree_intersection_point_box2
       bp[j] = __box_pts[i][j];
     }
 
-   PDM_free(__box_pts[i]);
+    PDM_free(__box_pts[i]);
   }
   PDM_free(__box_pts_n);
   PDM_free(__box_pts);

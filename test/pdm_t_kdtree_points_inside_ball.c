@@ -403,10 +403,10 @@ char *argv[]
     //             closest_octree_pt_id[2*i], closest_octree_pt_id[2*i+1], closest_octree_pt_dist2[i]);
     // }
 
-   PDM_free(closest_kdtree_pt_id);
-   PDM_free(closest_kdtree_pt_dist2);
-   PDM_free(closest_octree_pt_id);
-   PDM_free(closest_octree_pt_dist2);
+    PDM_free(closest_kdtree_pt_id);
+    PDM_free(closest_kdtree_pt_dist2);
+    PDM_free(closest_octree_pt_id);
+    PDM_free(closest_octree_pt_dist2);
   }
 
 

@@ -563,8 +563,8 @@ int main(int argc, char *argv[])
       pface_field[i_part][iface] = center[3*iface];
     }
 
-   PDM_free(surface_vector);
-   PDM_free(center);
+    PDM_free(surface_vector);
+    PDM_free(center);
   }
 
   // // 1.5) Test
@@ -637,7 +637,7 @@ int main(int argc, char *argv[])
 
   // 4) Send back to origin frame
   for (int i_part = 0; i_part < n_part_domains; i_part++) {
-   PDM_free(part1_stride[i_part]);
+    PDM_free(part1_stride[i_part]);
   }
   PDM_free(part1_stride);
   double **pface_field2 = NULL;
@@ -665,7 +665,7 @@ int main(int argc, char *argv[])
     for (int iface = 0; iface < n_ref_face[i_part]; iface++) {
       pface_field[i_part][ref_face[i_part][iface] - 1] = pface_field2[i_part][iface];
     }
-   PDM_free(pface_field2[i_part]);
+    PDM_free(pface_field2[i_part]);
   }
   PDM_free(pface_field2);
 
@@ -733,12 +733,12 @@ int main(int argc, char *argv[])
   }
 
   for (int i_part = 0; i_part < n_part_domains; i_part++) {
-   PDM_free(pface_field[i_part]);
+    PDM_free(pface_field[i_part]);
   }
   PDM_free(pface_field);
 
   for (int i_part = 0; i_part < n_part_out; i_part++) {
-   PDM_free(pextract_face_field[i_part]);
+    PDM_free(pextract_face_field[i_part]);
   }
   PDM_free(pextract_face_field);
 
@@ -756,7 +756,7 @@ int main(int argc, char *argv[])
 
 
   for (int i_part = 0; i_part < n_part_domains; i_part++){
-   PDM_free(target_g_num    [i_part]);
+    PDM_free(target_g_num    [i_part]);
   }
   PDM_free(pn_target_cell);
   PDM_free(target_g_num);

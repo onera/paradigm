@@ -930,7 +930,7 @@ _mixing_plane
   PDM_free(nodes);
 
   if (visu) {
-   PDM_free(dbg_coord);
+    PDM_free(dbg_coord);
   }
 }
 PDM_GCC_SUPPRESS_WARNING_POP
@@ -1152,12 +1152,12 @@ char *argv[]
   PDM_multipart_free(mpart);
 
   for (int ipart = 0; ipart < n_part; ipart++) {
-   PDM_free(face_band_idx [ipart]);
-   PDM_free(face_band     [ipart]);
-   PDM_free(face_band_area[ipart]);
+    PDM_free(face_band_idx [ipart]);
+    PDM_free(face_band     [ipart]);
+    PDM_free(face_band_area[ipart]);
 
-   PDM_free(vtx_field[ipart]);
-   PDM_free(face_vtx [ipart]);
+    PDM_free(vtx_field[ipart]);
+    PDM_free(face_vtx [ipart]);
   }
   PDM_free(face_band_idx );
   PDM_free(face_band     );

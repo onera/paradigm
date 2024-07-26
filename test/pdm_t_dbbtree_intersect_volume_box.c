@@ -626,15 +626,15 @@ int main(int argc, char *argv[])
 
     PDM_dbbtree_free(dbbt);
     PDM_box_set_destroy(&box_set);
-   PDM_free(volume_boxes_idx);
-   PDM_free(volume_boxes_g_num);
-   PDM_free(plane_normal);
-   PDM_free(plane_pt_coord);
-   PDM_free(dbbtree_box_extents);
-   PDM_free(dbbtree_box_g_num);
-   PDM_free(volume_box_extents);
-   PDM_free(volume_box_g_num);
-   PDM_free(volume_plane_idx);
+    PDM_free(volume_boxes_idx);
+    PDM_free(volume_boxes_g_num);
+    PDM_free(plane_normal);
+    PDM_free(plane_pt_coord);
+    PDM_free(dbbtree_box_extents);
+    PDM_free(dbbtree_box_g_num);
+    PDM_free(volume_box_extents);
+    PDM_free(volume_box_g_num);
+    PDM_free(volume_plane_idx);
 
   } // end if RANDOM or RANDOM_VARIABLE_STRIDE
 
@@ -771,8 +771,8 @@ int main(int argc, char *argv[])
         log_trace("\n");
       }
     }
-   PDM_free(volume_boxes_idx);
-   PDM_free(volume_boxes_g_num);
+    PDM_free(volume_boxes_idx);
+    PDM_free(volume_boxes_g_num);
 
     PDM_dbbtree_free(dbbt);
     PDM_box_set_destroy(&box_set);
@@ -907,9 +907,9 @@ int main(int argc, char *argv[])
     PDM_dbbtree_free(dbbt);
     PDM_box_set_destroy(&box_set);
 
-   PDM_free(volume_box_extents);
-   PDM_free(volume_box_g_num);
-   PDM_free(volume_boxes_idx);
+    PDM_free(volume_box_extents);
+    PDM_free(volume_box_g_num);
+    PDM_free(volume_boxes_idx);
   } // end if NO_COPIES
 
   PDM_MPI_Finalize ();
