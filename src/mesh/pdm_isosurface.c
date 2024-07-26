@@ -202,17 +202,15 @@ _do_we_have_edges
         continue;
       }
 
-      if (isos->n_edge[i_part] > 0) {
-        if (isos->face_edge_idx[i_part] != NULL &&
-            isos->face_edge    [i_part] != NULL &&
-            isos->edge_vtx     [i_part] != NULL) {
-          i_have_edges = 1;
-        }
+      if (isos->face_edge_idx[i_part] != NULL &&
+          isos->face_edge    [i_part] != NULL &&
+          isos->edge_vtx     [i_part] != NULL) {
+        i_have_edges = 1;
       }
 
       if (isos->face_vtx_idx[i_part] != NULL &&
           isos->face_vtx    [i_part] != NULL) {
-        i_have_edges = 1;
+        i_have_face_vtx = 1;
       }
     }
   }
