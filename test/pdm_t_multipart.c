@@ -279,7 +279,7 @@ int main(int argc, char *argv[])
     }
 
     // Second pass to copy
-    dface_bnd PDM_malloc([i_domain],dface_bnd_idx [i_domain][n_bnd] ,PDM_g_num_t);
+    PDM_malloc(dface_bnd [i_domain],dface_bnd_idx [i_domain][n_bnd] ,PDM_g_num_t);
     PDM_malloc(dface_join[i_domain],dface_join_idx[i_domain][n_jn ] ,PDM_g_num_t);
     i_bnd = 0;
     i_jn  = 0;

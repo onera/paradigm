@@ -249,7 +249,7 @@ _dump_mesh
                               pvtx_ln_to_gn[ipart],
                               PDM_OWNERSHIP_USER);
 
-    pface_vtx_n PDM_malloc([ipart],pn_face[ipart],int);
+    PDM_malloc(pface_vtx_n [ipart],pn_face[ipart],int);
     PDM_malloc(pcell_face_n[ipart],pn_cell[ipart],int);
 
     for (int i = 0; i < pn_cell[ipart]; i++) {
@@ -1204,7 +1204,7 @@ int main(int argc, char *argv[])
   double **pelt_pts_field3;
   PDM_malloc(pelt_pts_field3,n_part_mesh,double *);
   for (int ipart = 0; ipart < n_part_mesh; ipart++) {
-    pvtx_field3     PDM_malloc([ipart],pn_vtx[ipart],double);
+    PDM_malloc(pvtx_field3     [ipart],pn_vtx[ipart],double);
     for (int i = 0; i < pn_vtx[ipart]; i++) {
       pvtx_field3[ipart][i] = _eval_field(pvtx_coord[ipart][3*i  ],
                                           pvtx_coord[ipart][3*i+1],

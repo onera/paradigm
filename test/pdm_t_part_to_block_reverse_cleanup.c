@@ -152,7 +152,7 @@ int main(int argc, char *argv[])
     pn_elmt[i_part] = dn_elmt + n_elmt_add_rand;
 
     PDM_malloc(pln_to_to_gn[i_part],pn_elmt[i_part] ,PDM_g_num_t);
-    pfield      PDM_malloc([i_part],pn_elmt[i_part] ,int        );
+    PDM_malloc(pfield      [i_part],pn_elmt[i_part] ,int        );
     for(int i = 0; i < pn_elmt[i_part]; ++i) {
       unsigned int seed = (unsigned int) (distrib_init_elmt[i_rank] + i);
       srand(seed);

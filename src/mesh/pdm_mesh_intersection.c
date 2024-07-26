@@ -795,9 +795,9 @@ _select_elements_by_global_bbox
     //                     NULL);
 
     n_extract_elmt[i_part] = 0;
-    extract_box_extents       PDM_malloc([i_part],6 * n_entity ,double     );
+    PDM_malloc(extract_box_extents       [i_part],6 * n_entity ,double     );
     PDM_malloc(extract_elmt_init_location[i_part],3 * n_entity ,int        );
-    extract_elmt_ln_to_gn     PDM_malloc([i_part],    n_entity ,PDM_g_num_t);
+    PDM_malloc(extract_elmt_ln_to_gn     [i_part],    n_entity ,PDM_g_num_t);
 
     double *_box_extents = box_extents[i_part];
 
@@ -911,9 +911,9 @@ _select_elements_by_global_bbox_nodal
     }
 
     n_extract_elmt[i_part] = 0;
-    extract_box_extents       PDM_malloc([i_part],6 * n_entity ,double     );
+    PDM_malloc(extract_box_extents       [i_part],6 * n_entity ,double     );
     PDM_malloc(extract_elmt_init_location[i_part],3 * n_entity ,int        );
-    extract_elmt_ln_to_gn     PDM_malloc([i_part],    n_entity ,PDM_g_num_t);
+    PDM_malloc(extract_elmt_ln_to_gn     [i_part],    n_entity ,PDM_g_num_t);
 
     double *_box_extents = box_extents[i_part];
 
@@ -5457,15 +5457,15 @@ PDM_mesh_intersection_compute
                                             &extract_elmt_ln_to_gn[imesh]);
     }
     else {
-      n_extract_elmt            PDM_malloc([imesh],n_part[imesh],int          );
-      extract_box_extents       PDM_malloc([imesh],n_part[imesh],double      *);
+      PDM_malloc(n_extract_elmt            [imesh],n_part[imesh],int          );
+      PDM_malloc(extract_box_extents       [imesh],n_part[imesh],double      *);
       PDM_malloc(extract_elmt_init_location[imesh],n_part[imesh],int         *);
-      extract_elmt_ln_to_gn     PDM_malloc([imesh],n_part[imesh],PDM_g_num_t *);
+      PDM_malloc(extract_elmt_ln_to_gn     [imesh],n_part[imesh],PDM_g_num_t *);
       for (int ipart = 0; ipart < n_part[imesh]; ipart++) {
         n_extract_elmt[imesh][ipart] = 0;
-        extract_box_extents       PDM_malloc([imesh][ipart],0,double     );
+        PDM_malloc(extract_box_extents       [imesh][ipart],0,double     );
         PDM_malloc(extract_elmt_init_location[imesh][ipart],0,int        );
-        extract_elmt_ln_to_gn     PDM_malloc([imesh][ipart],0,PDM_g_num_t);
+        PDM_malloc(extract_elmt_ln_to_gn     [imesh][ipart],0,PDM_g_num_t);
       }
     }
 

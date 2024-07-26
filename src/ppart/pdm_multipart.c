@@ -418,7 +418,7 @@ _create_dparent_num_corner
 
     dn_corner[i_section] = n_elt;
     PDM_malloc(corner_ln_to_gn[i_section], n_elt ,PDM_g_num_t);
-    corner_vtx_n   PDM_malloc([i_section], n_elt ,int        );
+    PDM_malloc(corner_vtx_n   [i_section], n_elt ,int        );
     corner_vtx     [i_section] = connec;
     for(int i = 0; i < n_elt; ++i) {
       corner_vtx_n   [i_section][i] = 1;

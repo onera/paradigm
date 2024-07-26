@@ -425,10 +425,10 @@ int main(int argc, char *argv[])
       cell_center[i_part][3*i_cell+2] = cell_center[i_part][3*i_cell+2] / n_face_on_cell;
     }
 
-   PDM_free(face_center);
+    PDM_free(face_center);
 
-    selected_g_num         PDM_malloc([i_part],  n_cell          ,PDM_g_num_t);
-    selected_g_num_idx     PDM_malloc([i_part], (n_cell + 1)     ,int        );
+    PDM_malloc(selected_g_num         [i_part],  n_cell          ,PDM_g_num_t);
+    PDM_malloc(selected_g_num_idx     [i_part], (n_cell + 1)     ,int        );
     PDM_malloc(tmp_extract_cell_center[i_part],  3 * n_cell      ,double     );
 
     /*
@@ -468,7 +468,7 @@ int main(int argc, char *argv[])
     pn_select_cell         [i_part] = n_select_cell;
     PDM_realloc(tmp_extract_cell_center[i_part] ,tmp_extract_cell_center[i_part] , 3 * n_select_cell ,double);
 
-    weight        PDM_malloc([i_part],n_select_cell ,double);
+    PDM_malloc(weight        [i_part],n_select_cell ,double);
     for(int i = 0; i < n_select_cell; ++i) {
       weight        [i_part][i] = 1.;
     }
@@ -592,7 +592,7 @@ int main(int argc, char *argv[])
   for (int i_part = 0; i_part < n_part_domains; i_part++){
 
     PDM_malloc(pextract_cell_face_idx[i_part], (    pn_select_cell[i_part]+1) ,int   );
-    pextract_cell_center  PDM_malloc([i_part], (3 * pn_select_cell[i_part]  ) ,double);
+    PDM_malloc(pextract_cell_center  [i_part], (3 * pn_select_cell[i_part]  ) ,double);
 
     int i_extract_cell = 0;
     pextract_cell_face_idx[i_part][0] = 0;

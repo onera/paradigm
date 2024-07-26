@@ -207,7 +207,7 @@ PDM_interpolate_from_mesh_location_exch
     //printf("n_point_tot[%i] = %i \n", i_part, n_point_tot[i_part]);
     // printf("pcloud->n_points[%i] = %i \n", i_part, pcloud->n_points[i_part]);
 
-    cloud_data_in_current_src  PDM_malloc([i_part], _elt_pts_inside_idx[n_elmt] ,double);
+    PDM_malloc(cloud_data_in_current_src  [i_part], _elt_pts_inside_idx[n_elmt] ,double);
     PDM_malloc(cloud_data_in_current_src_n[i_part], _elt_pts_inside_idx[n_elmt] ,int   );
 
     for(int i_cell = 0; i_cell < n_cell; ++i_cell) {
@@ -358,7 +358,7 @@ PDM_interpolate_from_mesh_location_exch_inplace
 
     // printf("n_point_tot[%i] = %i \n", i_part, n_point_tot[i_part]);
 
-    cloud_data_in_current_src  PDM_malloc([i_part], _elt_pts_inside_idx[n_elmt] ,double);
+    PDM_malloc(cloud_data_in_current_src  [i_part], _elt_pts_inside_idx[n_elmt] ,double);
     PDM_malloc(cloud_data_in_current_src_n[i_part], _elt_pts_inside_idx[n_elmt] ,int   );
 
     for(int i_cell = 0; i_cell < n_elmt; ++i_cell) {

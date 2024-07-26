@@ -895,7 +895,7 @@ PDM_dentity_group_signed_transpose
   }
 
   for(int i_group = 0; i_group < n_group; ++i_group) {
-    select_entity  PDM_malloc([i_group], select_entity_n[i_group] ,PDM_g_num_t);
+    PDM_malloc(select_entity  [i_group], select_entity_n[i_group] ,PDM_g_num_t);
     select_entity_n[i_group] = 0;
   }
 

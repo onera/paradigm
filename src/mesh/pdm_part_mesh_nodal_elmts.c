@@ -6511,8 +6511,8 @@ PDM_part_mesh_nodal_elmts_n_group_set
   pmne->ownership_group = ownership_group;
 
   for(int i_part = 0; i_part < pmne->n_part; ++i_part) {
-    pmne->n_group_elmt  PDM_malloc([i_part],n_group ,int           );
-    pmne->group_elmt    PDM_malloc([i_part],n_group ,int         * );
+    PDM_malloc(pmne->n_group_elmt  [i_part],n_group ,int           );
+    PDM_malloc(pmne->group_elmt    [i_part],n_group ,int         * );
     PDM_malloc(pmne->group_ln_to_gn[i_part],n_group ,PDM_g_num_t * );
 
     for(int i_group = 0; i_group < pmne->n_group; ++i_group) {

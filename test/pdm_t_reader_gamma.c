@@ -301,7 +301,7 @@ int main(int argc, char *argv[])
                                       &vtx_ln_to_gn,
                                       PDM_OWNERSHIP_KEEP);
 
-      face_vtx_n PDM_malloc([i_part],n_face,int);
+      PDM_malloc(face_vtx_n [i_part],n_face,int);
       PDM_malloc(cell_face_n[i_part],n_cell,int);
 
       for (int i = 0; i < n_cell; i++) {

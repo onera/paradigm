@@ -290,7 +290,7 @@ _compute_face_vtx
                            &_edgeGroupLNToGN);
 
     (*n_face)[ipart] = _n_face;
-    (*face_vtx_idx) PDM_malloc([ipart],(_n_face + 1),int);
+    PDM_malloc((*face_vtx_idx) [ipart],(_n_face + 1),int);
     PDM_malloc((*face_vtx)[ipart],_sFaceEdge,int);
     PDM_malloc((*face_ln_to_gn)[ipart],_n_face,PDM_g_num_t);
 
@@ -688,7 +688,7 @@ _create_split_mesh
       int _n_face = 0;
       int _sFaceEdge = 0;
       (*n_face)[ipart] = _n_face;
-      (*face_vtx_idx) PDM_malloc([ipart],(_n_face + 1),int);
+      PDM_malloc((*face_vtx_idx)[ipart],(_n_face + 1),int);
       (*face_vtx_idx) [ipart][0] = 0;
       PDM_malloc((*face_vtx)[ipart],_sFaceEdge,int);
       PDM_malloc((*face_ln_to_gn)[ipart],_n_face,PDM_g_num_t);

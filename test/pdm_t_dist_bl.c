@@ -579,12 +579,12 @@ _create_wall_surf
     }
 
 
-    psurf_vtx_coord     PDM_malloc([i_part],3 * n_surf_face_vtx          ,double     );
-    psurf_face_vtx_idx  PDM_malloc([i_part],   ( n_surf_face[i_part] +1) ,int        );
-    psurf_face_vtx_n    PDM_malloc([i_part],   ( n_surf_face[i_part]   ) ,int        );
-    psurf_face_vtx      PDM_malloc([i_part],    n_surf_face_vtx          ,int        );
-    psurf_face_ln_to_gn PDM_malloc([i_part],    n_surf_face[i_part]      ,PDM_g_num_t);
-    psurf_vtx_ln_to_gn  PDM_malloc([i_part],    n_surf_face_vtx          ,PDM_g_num_t);
+    PDM_malloc(psurf_vtx_coord     [i_part],3 * n_surf_face_vtx          ,double     );
+    PDM_malloc(psurf_face_vtx_idx  [i_part],   ( n_surf_face[i_part] +1) ,int        );
+    PDM_malloc(psurf_face_vtx_n    [i_part],   ( n_surf_face[i_part]   ) ,int        );
+    PDM_malloc(psurf_face_vtx      [i_part],    n_surf_face_vtx          ,int        );
+    PDM_malloc(psurf_face_ln_to_gn [i_part],    n_surf_face[i_part]      ,PDM_g_num_t);
+    PDM_malloc(psurf_vtx_ln_to_gn  [i_part],    n_surf_face_vtx          ,PDM_g_num_t);
     PDM_malloc(psurf_face_vtx_g_num[i_part],    n_surf_face_vtx          ,PDM_g_num_t);
 
     double      *_psurf_vtx_coord      = psurf_vtx_coord     [i_part];

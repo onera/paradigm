@@ -14759,7 +14759,7 @@ PDM_para_octree_points_inside_boxes_shared_block_frame
 
 
       PDM_malloc(res_box_weight[i_shm],n_lbox ,double);
-      res_box_strid PDM_malloc([i_shm],n_lbox ,int   );
+      PDM_malloc(res_box_strid [i_shm],n_lbox ,int   );
 
       for(int i = 0; i < n_lbox; ++i ){
         res_box_strid [i_shm][i] = box_pts_idx[i_shm][i+1] - box_pts_idx[i_shm][i];
@@ -14772,7 +14772,7 @@ PDM_para_octree_points_inside_boxes_shared_block_frame
       int *_box_pts_idx   = box_pts_idx  [i_shm];
       int *_box_pts_l_num = box_pts_l_num[i_shm];
       PDM_malloc(res_box_pts_coords[i_shm],3 * _box_pts_idx[n_lbox] ,double     );
-      res_box_pts_gnum  PDM_malloc([i_shm],    _box_pts_idx[n_lbox] ,PDM_g_num_t);
+      PDM_malloc(res_box_pts_gnum  [i_shm],    _box_pts_idx[n_lbox] ,PDM_g_num_t);
 
       for(int i = 0;  i < _box_pts_idx[n_lbox]; ++i) {
         int l_num = _box_pts_l_num[i];

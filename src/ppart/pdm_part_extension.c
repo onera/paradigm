@@ -1132,7 +1132,7 @@ _exchange_and_sort_neighbor
     int *_neighbor_desc  = neighbor_desc     [i_part];
     int *_neighbor_intrf = neighbor_interface[i_part];
 
-    filter_neighbor_idx PDM_malloc([i_part],     (n_entity[i_part] + 1)                       ,int);
+    PDM_malloc(filter_neighbor_idx [i_part],     (n_entity[i_part] + 1)                       ,int);
     PDM_malloc(filter_neighbor_desc[i_part], 4 * (_concat_neighbor_opp_idx[n_entity[i_part]]) ,int);
 
     int *_filter_neighbor_idx = filter_neighbor_idx [i_part];
@@ -1273,10 +1273,10 @@ _generate_graph_comm_with_extended
     n_entity_tot     [i_part] = n_entity[i_part] + n_entity_extended[i_part];
 
     PDM_malloc(neighbor_idx[i_part],(n_entity_tot[i_part]+1) ,int);
-    neighbor_n  PDM_malloc([i_part], n_entity_tot[i_part]    ,int);
+    PDM_malloc(neighbor_n  [i_part], n_entity_tot[i_part]    ,int);
 
     PDM_malloc(neighbor_opp_idx[i_part],(n_entity_tot[i_part]+1) ,int);
-    neighbor_opp_n  PDM_malloc([i_part], n_entity_tot[i_part]    ,int);
+    PDM_malloc(neighbor_opp_n  [i_part], n_entity_tot[i_part]    ,int);
 
     for(int i = 0; i < n_entity_tot[i_part]; ++i) {
       neighbor_n    [i_part][i] = 0;
@@ -1460,8 +1460,8 @@ _generate_graph_comm_with_extended
       _neighbor_opp_n[i_entity] = 0;
     }
 
-    neighbor_desc     PDM_malloc([i_part], 3 * _neighbor_idx    [n_entity_tot[i_part]] ,int);
-    neighbor_opp_desc PDM_malloc([i_part], 4 * _neighbor_opp_idx[n_entity_tot[i_part]] ,int);
+    PDM_malloc(neighbor_desc     [i_part], 3 * _neighbor_idx    [n_entity_tot[i_part]] ,int);
+    PDM_malloc(neighbor_opp_desc [i_part], 4 * _neighbor_opp_idx[n_entity_tot[i_part]] ,int);
     PDM_malloc(neighbor_interface[i_part],     _neighbor_idx[n_entity_tot[i_part]] ,int);
     int* _neighbor_desc      = neighbor_desc     [i_part];
     int* _neighbor_opp_desc  = neighbor_opp_desc [i_part];
@@ -1987,7 +1987,7 @@ _create_cell_cell_graph
         part_ext->entity_cell_idx[i_part+shift_part] = face_cell_idx[i_domain][i_part];
         part_ext->entity_cell    [i_part+shift_part] = face_cell    [i_domain][i_part];
 
-        part_ext->entity_cell_n  PDM_malloc([i_part+shift_part], pn_face[i_part] ,int);
+        PDM_malloc(part_ext->entity_cell_n  [i_part+shift_part], pn_face[i_part] ,int);
         for(int i_face = 0; i_face < pn_face[i_part]; ++i_face) {
           int n_connected = part_ext->entity_cell_idx[i_part+shift_part][i_face+1] - part_ext->entity_cell_idx[i_part+shift_part][i_face];
           part_ext->entity_cell_n[i_part+shift_part][i_face] = n_connected;
@@ -2099,7 +2099,7 @@ _create_cell_cell_graph
          */
         part_ext->entity_cell_idx[i_part+shift_part] = vtx_cell_idx;
         part_ext->entity_cell    [i_part+shift_part] = vtx_cell    ;
-        part_ext->entity_cell_n  PDM_malloc([i_part+shift_part], pn_vtx ,int);
+        PDM_malloc(part_ext->entity_cell_n  [i_part+shift_part], pn_vtx ,int);
         for(int i_vtx = 0; i_vtx < pn_vtx; ++i_vtx) {
           int n_connected = part_ext->entity_cell_idx[i_part+shift_part][i_vtx+1] - part_ext->entity_cell_idx[i_part+shift_part][i_vtx];
           part_ext->entity_cell_n[i_part+shift_part][i_vtx] = n_connected;
@@ -2186,16 +2186,16 @@ _compute_other_domain_interface
     PDM_malloc(pface_edge, part_ext->n_domain ,int         **);
 
     for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
-      pn_vtx        PDM_malloc([i_domain], part_ext->n_domain ,int          );
-      pn_edge       PDM_malloc([i_domain], part_ext->n_domain ,int          );
-      pn_face       PDM_malloc([i_domain], part_ext->n_domain ,int          );
-      pvtx_ln_to_gn PDM_malloc([i_domain], part_ext->n_domain ,PDM_g_num_t *);
+      PDM_malloc(pn_vtx        [i_domain], part_ext->n_domain ,int          );
+      PDM_malloc(pn_edge       [i_domain], part_ext->n_domain ,int          );
+      PDM_malloc(pn_face       [i_domain], part_ext->n_domain ,int          );
+      PDM_malloc(pvtx_ln_to_gn [i_domain], part_ext->n_domain ,PDM_g_num_t *);
       PDM_malloc(pedge_ln_to_gn[i_domain], part_ext->n_domain ,PDM_g_num_t *);
       PDM_malloc(pface_ln_to_gn[i_domain], part_ext->n_domain ,PDM_g_num_t *);
-      pedge_vtx_idx PDM_malloc([i_domain], part_ext->n_domain ,int         *);
-      pedge_vtx     PDM_malloc([i_domain], part_ext->n_domain ,int         *);
+      PDM_malloc(pedge_vtx_idx [i_domain], part_ext->n_domain ,int         *);
+      PDM_malloc(pedge_vtx     [i_domain], part_ext->n_domain ,int         *);
       PDM_malloc(pface_edge_idx[i_domain], part_ext->n_domain ,int         *);
-      pface_edge    PDM_malloc([i_domain], part_ext->n_domain ,int         *);
+      PDM_malloc(pface_edge    [i_domain], part_ext->n_domain ,int         *);
 
       for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
         pn_vtx        [i_domain][i_part] = part_ext->parts[i_domain][i_part].n_vtx;
@@ -2207,7 +2207,7 @@ _compute_other_domain_interface
         pface_edge_idx[i_domain][i_part] = part_ext->parts[i_domain][i_part].face_edge_idx;
         pface_edge    [i_domain][i_part] = part_ext->parts[i_domain][i_part].face_edge;
         // pedge_vtx     [i_domain][i_part] = part_ext->parts[i_domain][i_part].edge_vtx;
-        pedge_vtx     PDM_malloc([i_domain][i_part],(2 * pn_edge[i_domain][i_part]) ,int);
+        PDM_malloc(pedge_vtx     [i_domain][i_part],(2 * pn_edge[i_domain][i_part]) ,int);
 
 
         int *_edge_vtx = part_ext->parts[i_domain][i_part].edge_vtx;
@@ -2218,7 +2218,7 @@ _compute_other_domain_interface
         }
 
         int _nedge = pn_edge[i_domain][i_part];
-        pedge_vtx_idx PDM_malloc([i_domain][i_part],(_nedge+1) ,int);
+        PDM_malloc(pedge_vtx_idx [i_domain][i_part],(_nedge+1) ,int);
 
         pedge_vtx_idx [i_domain][i_part][0] = 0;
         for(int i = 0; i < _nedge; ++i) {
@@ -2449,7 +2449,7 @@ _warm_up_domain_interface
         PDM_malloc(gentity2_entity1_n[i_part+shift_part], (pn_entity[i_domain][i_part]) ,int);
         int         *_edge_vtx    = part_ext->parts[i_domain][i_part].edge_vtx;
         PDM_g_num_t *vtx_ln_to_gn = part_ext->parts[i_domain][i_part].vtx_ln_to_gn;
-        gentity2_entity1  PDM_malloc([i_part+shift_part], (2 * pn_entity[i_domain][i_part]) ,PDM_g_num_t);
+        PDM_malloc(gentity2_entity1  [i_part+shift_part], (2 * pn_entity[i_domain][i_part]) ,PDM_g_num_t);
 
 
         // Reform complete connectivity and replace implicit sens of edge_vtx
@@ -2487,7 +2487,7 @@ _warm_up_domain_interface
           assert(_face_edge     != NULL);
 
           PDM_malloc(gentity2_entity1_n[i_part+shift_part], _n_face ,int);
-          gentity2_entity1  PDM_malloc([i_part+shift_part], _face_edge_idx[_n_face] ,PDM_g_num_t);
+          PDM_malloc(gentity2_entity1  [i_part+shift_part], _face_edge_idx[_n_face] ,PDM_g_num_t);
 
           for(int i = 0; i < _n_face; ++i) {
             gentity2_entity1_n[i_part+shift_part][i] = _face_edge_idx[i+1] - _face_edge_idx[i];
@@ -2512,7 +2512,7 @@ _warm_up_domain_interface
           PDM_g_num_t *vtx_ln_to_gn  = part_ext->parts[i_domain][i_part].vtx_ln_to_gn;
 
           PDM_malloc(gentity2_entity1_n[i_part+shift_part], _n_face ,int);
-          gentity2_entity1  PDM_malloc([i_part+shift_part], _face_vtx_idx[_n_face] ,PDM_g_num_t);
+          PDM_malloc(gentity2_entity1  [i_part+shift_part], _face_vtx_idx[_n_face] ,PDM_g_num_t);
 
           for(int i = 0; i < _n_face; ++i) {
             gentity2_entity1_n[i_part+shift_part][i] = _face_vtx_idx[i+1] - _face_vtx_idx[i];
@@ -2562,7 +2562,7 @@ _warm_up_domain_interface
 
   for(int i_part = 0; i_part < n_part_loc_all_domain; ++i_part) {
     neighbor_idx      [i_part] = pdi_neighbor_idx[i_part];
-    neighbor_desc     PDM_malloc([i_part], 3 * (neighbor_idx [i_part][n_entity[i_part]]) ,int);
+    PDM_malloc(neighbor_desc     [i_part], 3 * (neighbor_idx [i_part][n_entity[i_part]]) ,int);
     PDM_malloc(neighbor_interface[i_part],     (neighbor_idx [i_part][n_entity[i_part]]) ,int);
 
     /* Copy */
@@ -2574,14 +2574,14 @@ _warm_up_domain_interface
     }
     // PDM_log_trace_graph_nuplet_int(neighbor_idx[i_part], neighbor_desc[i_part], 3, n_entity[i_part], "neighbor_desc (debug) :");
     // PDM_log_trace_graph_nuplet_int(neighbor_idx[i_part], pdi_neighbor[i_part], 4, n_entity[i_part], "neighbor_desc (debug) :");
-   PDM_free(pdi_neighbor[i_part]);
+    PDM_free(pdi_neighbor[i_part]);
 
   }
- PDM_free(pdi_neighbor_idx);
- PDM_free(pdi_neighbor);
- PDM_free(composed_interface_idx);
- PDM_free(composed_interface);
- PDM_free(composed_ln_to_gn_sorted);
+  PDM_free(pdi_neighbor_idx);
+  PDM_free(pdi_neighbor);
+  PDM_free(composed_interface_idx);
+  PDM_free(composed_interface);
+  PDM_free(composed_ln_to_gn_sorted);
 
   /*
    * All partition of all domain is treated in the same time
@@ -2633,8 +2633,8 @@ _warm_up_domain_interface
       PDM_g_num_t *_entity_ln_to_gn_opp = entity_ln_to_gn_opp[i_part+shift_part];
 
       PDM_malloc(opp_interface_and_gnum[i_part+shift_part], 2 * _neighbor_idx[n_entity[i_part+shift_part]] ,PDM_g_num_t);
-      current_lentity       PDM_malloc([i_part+shift_part],     _neighbor_idx[n_entity[i_part+shift_part]] ,int        );
-      current_sens          PDM_malloc([i_part+shift_part],     _neighbor_idx[n_entity[i_part+shift_part]] ,int        );
+      PDM_malloc(current_lentity       [i_part+shift_part],     _neighbor_idx[n_entity[i_part+shift_part]] ,int        );
+      PDM_malloc(current_sens          [i_part+shift_part],     _neighbor_idx[n_entity[i_part+shift_part]] ,int        );
       PDM_g_num_t *_opp_interface_and_gnum = opp_interface_and_gnum[i_part+shift_part];
       int         *_current_lentity = current_lentity[i_part+shift_part];
       int         *_current_sens    = current_sens   [i_part+shift_part];
@@ -3076,7 +3076,7 @@ _create_cell_graph_comm
         PDM_error(__FILE__, __LINE__, 0, "PDM_part_extension_compute wrong extend_type \n");
       }
 
-      part_ext->neighbor_idx       PDM_malloc([i_part+shift_part],    (part_ext->n_entity_bound[i_part+shift_part]+1) ,int);
+      PDM_malloc(part_ext->neighbor_idx       [i_part+shift_part],    (part_ext->n_entity_bound[i_part+shift_part]+1) ,int);
 
       int n_cell = part_ext->parts[i_domain][i_part].n_cell;
       part_ext->n_cell[i_part+shift_part] = n_cell;
@@ -3196,7 +3196,7 @@ _create_cell_graph_comm
       }
 
 
-      part_ext->neighbor_desc     PDM_malloc([i_part+shift_part], 3 * _neighbor_idx[part_ext->n_entity_bound[i_part+shift_part]] ,int);
+      PDM_malloc(part_ext->neighbor_desc     [i_part+shift_part], 3 * _neighbor_idx[part_ext->n_entity_bound[i_part+shift_part]] ,int);
       PDM_malloc(part_ext->neighbor_interface[i_part+shift_part],     _neighbor_idx[part_ext->n_entity_bound[i_part+shift_part]] ,int);
       int* _neighbor_desc      = part_ext->neighbor_desc     [i_part+shift_part];
       int* _neighbor_interface = part_ext->neighbor_interface[i_part+shift_part];
@@ -3754,7 +3754,7 @@ _compute_dual_graph
 
       /* Allocate current depth and shorcut */
       PDM_malloc(part_ext->cell_cell_extended_idx[i_depth][i_part+shift_part], (n_cell + 1 ) ,int);
-      part_ext->cell_cell_extended_n  PDM_malloc([i_depth][i_part+shift_part], (n_cell     ) ,int);
+      PDM_malloc(part_ext->cell_cell_extended_n  [i_depth][i_part+shift_part], (n_cell     ) ,int);
 
       int* _prev_cell_cell_extended_n   = prev_cell_cell_extended_n  [i_part+shift_part];
       int* _prev_cell_cell_extended_idx = prev_cell_cell_extended_idx[i_part+shift_part];
@@ -4300,7 +4300,7 @@ _compute_first_extended_cell_graph
 
       int n_cell = part_ext->n_cell[i_part+shift_part];
       PDM_malloc(part_ext->cell_cell_extended_idx[i_depth_cur][i_part+shift_part], (n_cell + 1 ) ,int);
-      part_ext->cell_cell_extended_n  PDM_malloc([i_depth_cur][i_part+shift_part], (n_cell     ) ,int);
+      PDM_malloc(part_ext->cell_cell_extended_n  [i_depth_cur][i_part+shift_part], (n_cell     ) ,int);
 
       int* _dist_neighbor_cell_n         = part_ext->dist_neighbor_cell_n        [i_part+shift_part];
       int* _dist_neighbor_cell_idx       = part_ext->dist_neighbor_cell_idx      [i_part+shift_part];
@@ -4554,9 +4554,9 @@ _prune_cell_cell_extented
       PDM_malloc(order, s_tot ,int);
       PDM_order_lnum_s(_quad_cell_cell_extended, 4, order, s_tot);
 
-      part_ext->cell_cell_extended_pruned    PDM_malloc([i_part+shift_part],  3 * s_tot ,int);
+      PDM_malloc(part_ext->cell_cell_extended_pruned    [i_part+shift_part],  3 * s_tot ,int);
       PDM_malloc(part_ext->cell_cell_extended_pruned_idx[i_part+shift_part], (n_cell+1) ,int);
-      part_ext->cell_cell_interface_pruned   PDM_malloc([i_part+shift_part],      s_tot ,int);
+      PDM_malloc(part_ext->cell_cell_interface_pruned   [i_part+shift_part],      s_tot ,int);
 
       int* _cell_cell_extended_pruned     = part_ext->cell_cell_extended_pruned    [i_part+shift_part];
       int* _cell_cell_extended_pruned_idx = part_ext->cell_cell_extended_pruned_idx[i_part+shift_part];
@@ -5094,7 +5094,7 @@ _generate_extended_partition_connectivity
 //       int s_cell_face = cell_face_idx[n_cell];
 
 //       PDM_malloc(cell_face_n[i_part+shift_part], n_cell      ,int        );
-//       gcell_face PDM_malloc([i_part+shift_part], s_cell_face ,PDM_g_num_t);
+//       PDM_malloc(gcell_face [i_part+shift_part], s_cell_face ,PDM_g_num_t);
 
 //       PDM_g_num_t* face_ln_to_gn = part_ext->parts[i_domain][i_part].face_ln_to_gn;
 
@@ -5275,9 +5275,9 @@ _rebuild_connectivity
       int s_entity1_entity2 = _pentity1_entity2_idx[pn_entity1];
 
       PDM_malloc(entity1_entity2_n[i_part+shift_part], pn_entity1        ,int        );
-      gentity1_entity2 PDM_malloc([i_part+shift_part], s_entity1_entity2 ,PDM_g_num_t);
+      PDM_malloc(gentity1_entity2 [i_part+shift_part], s_entity1_entity2 ,PDM_g_num_t);
 
-      part_and_proc_id PDM_malloc([i_part+shift_part], 2 * s_entity1_entity2 ,int);
+      PDM_malloc(part_and_proc_id [i_part+shift_part], 2 * s_entity1_entity2 ,int);
 
       PDM_g_num_t* _pentity2_ln_to_gn = entity2_ln_to_gn[i_part+shift_part];
 
@@ -5743,7 +5743,7 @@ _rebuild_connectivity_edge_vtx
       PDM_malloc(edge_vtx_idx[i_part+shift_part],(n_edge[i_part+shift_part]+1) ,int);
       // edge_vtx    [i_part+shift_part] = part_ext->parts[i_domain][i_part].edge_vtx;
 
-      edge_vtx    PDM_malloc([i_part+shift_part],(2 * n_edge[i_part+shift_part]) ,int);
+      PDM_malloc(edge_vtx    [i_part+shift_part],(2 * n_edge[i_part+shift_part]) ,int);
       int *_edge_vtx = part_ext->parts[i_domain][i_part].edge_vtx;
 
       for(int i_edge = 0; i_edge < n_edge      [i_part+shift_part]; ++i_edge) {
@@ -5885,7 +5885,7 @@ _rebuild_face_group
         face_group_n[i_part+shift_part][i_face] = 0;
       }
 
-      face_group_idg     PDM_malloc([i_part+shift_part], face_group_idx[pn_face] ,int        );
+      PDM_malloc(face_group_idg     [i_part+shift_part], face_group_idx[pn_face] ,int        );
       PDM_malloc(face_group_ln_to_gn[i_part+shift_part], face_group_idx[pn_face] ,PDM_g_num_t);
       PDM_malloc(face_ln_to_gn_check[i_part+shift_part], face_group_idx[pn_face] ,PDM_g_num_t);
 
@@ -5995,7 +5995,7 @@ _rebuild_face_group
 
       // printf(" _pborder_face_group_idx[%i] = %i\n", n_face_group, _pborder_face_group_idx[n_face_group]);
 
-      part_ext->border_face_group         PDM_malloc([shift_part+i_part], _pborder_face_group_idx[n_face_group] ,int        );
+      PDM_malloc(part_ext->border_face_group         [shift_part+i_part], _pborder_face_group_idx[n_face_group] ,int        );
       PDM_malloc(part_ext->border_face_group_ln_to_gn[shift_part+i_part], _pborder_face_group_idx[n_face_group] ,PDM_g_num_t);
 
       int         *_pborder_face_group          = part_ext->border_face_group         [shift_part+i_part];
@@ -6413,11 +6413,11 @@ PDM_part_extension_compute
   PDM_malloc(part_ext->n_unique_order_cell_cell_extended, (depth + 1) ,int   *);
 
   for(int i_depth = 0; i_depth < depth; ++i_depth) {
-    part_ext->cell_cell_extended_idx           PDM_malloc([i_depth], n_part_loc_all_domain ,int *);
-    part_ext->cell_cell_extended_n             PDM_malloc([i_depth], n_part_loc_all_domain ,int *);
-    part_ext->cell_cell_extended               PDM_malloc([i_depth], n_part_loc_all_domain ,int *);
-    part_ext->unique_order_cell_cell_extended  PDM_malloc([i_depth], n_part_loc_all_domain ,int *);
-    part_ext->cell_cell_interface              PDM_malloc([i_depth], n_part_loc_all_domain ,int *);
+    PDM_malloc(part_ext->cell_cell_extended_idx           [i_depth], n_part_loc_all_domain ,int *);
+    PDM_malloc(part_ext->cell_cell_extended_n             [i_depth], n_part_loc_all_domain ,int *);
+    PDM_malloc(part_ext->cell_cell_extended               [i_depth], n_part_loc_all_domain ,int *);
+    PDM_malloc(part_ext->unique_order_cell_cell_extended  [i_depth], n_part_loc_all_domain ,int *);
+    PDM_malloc(part_ext->cell_cell_interface              [i_depth], n_part_loc_all_domain ,int *);
     PDM_malloc(part_ext->n_unique_order_cell_cell_extended[i_depth], n_part_loc_all_domain ,int  );
   }
 
@@ -6704,7 +6704,7 @@ PDM_part_extension_compute
   //     n_vtx        [i_part+shift_part] = part_ext->parts[i_domain][i_part].n_vtx;
   //     gnum_check   [i_part+shift_part] = part_ext->parts[i_domain][i_part].vtx_ln_to_gn;
 
-  //     stride    PDM_malloc([i_part+shift_part], part_ext->parts[i_domain][i_part].n_vtx ,int );
+  //     PDM_malloc(stride    [i_part+shift_part], part_ext->parts[i_domain][i_part].n_vtx ,int );
 
   //     for( int i_vtx = 0; i_vtx < part_ext->parts[i_domain][i_part].n_vtx; i_vtx++) {
   //        stride    [i_part+shift_part][i_vtx] = 1;
@@ -7815,8 +7815,8 @@ PDM_part_to_part_create_from_extension
     }
 
     _n_selected_cell_to_send       [i_part] = n_ext_to_send;
-    _selected_cell_to_send_idx     PDM_malloc([i_part],(n_ext_to_send+1) ,int        );
-    _selected_cell_to_send         PDM_malloc([i_part], n_ext_to_send    ,int        );
+    PDM_malloc(_selected_cell_to_send_idx     [i_part],(n_ext_to_send+1) ,int        );
+    PDM_malloc(_selected_cell_to_send         [i_part], n_ext_to_send    ,int        );
     PDM_malloc(_selected_cell_to_send_ln_to_gn[i_part], n_ext_to_send    ,PDM_g_num_t);
 
     int idx_write = 0;

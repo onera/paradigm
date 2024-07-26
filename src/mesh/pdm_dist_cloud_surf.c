@@ -1212,7 +1212,7 @@ _dist_cloud_surf_compute_optim
         max_n_elt = PDM_MAX(max_n_elt, n_elt);
       }
 
-      part_elt_g_num  PDM_malloc([i_part],part_n_elt[i_part],PDM_g_num_t);
+      PDM_malloc(part_elt_g_num  [i_part],part_n_elt[i_part],PDM_g_num_t);
       PDM_malloc(part_elt_extents[i_part],part_n_elt[i_part] * 6,double);
 
       double *_extents;

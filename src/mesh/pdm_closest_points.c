@@ -125,7 +125,7 @@ _closest_points_reverse_results
     // }
 
     n_points[i_part] = cls->tgt_cloud->n_points[i_part] * cls->n_closest;
-    tgt_g_num  PDM_malloc([i_part], n_points[i_part] ,PDM_g_num_t);
+    PDM_malloc(tgt_g_num  [i_part], n_points[i_part] ,PDM_g_num_t);
     PDM_malloc(tgt_g_num_n[i_part], n_points[i_part] ,int        );
 
     // PDM_log_trace_array_long(cls->tgt_cloud->closest_src_gnum[i_part], cls->tgt_cloud->n_points[i_part], "cls->tgt_cloud->closest_src_gnum:: " );

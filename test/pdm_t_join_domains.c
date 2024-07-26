@@ -734,13 +734,13 @@ int main
   PDM_malloc(pface_vtx, n_domain ,int         **);
   for (int i_dom = 0; i_dom < n_domain; i_dom++) {
     pn_n_part     [i_dom] = n_part;
-    pn_face       PDM_malloc([i_dom], n_part ,int          );
-    pn_edge       PDM_malloc([i_dom], n_part ,int          );
+    PDM_malloc(pn_face       [i_dom], n_part ,int          );
+    PDM_malloc(pn_edge       [i_dom], n_part ,int          );
     PDM_malloc(pface_ln_to_gn[i_dom], n_part ,PDM_g_num_t *);
     PDM_malloc(pedge_ln_to_gn[i_dom], n_part ,PDM_g_num_t *);
-    pn_vtx        PDM_malloc([i_dom], n_part ,int          );
-    pvtx_ln_to_gn PDM_malloc([i_dom], n_part ,PDM_g_num_t *);
-    pface_vtx     PDM_malloc([i_dom], n_part ,int         *);
+    PDM_malloc(pn_vtx        [i_dom], n_part ,int          );
+    PDM_malloc(pvtx_ln_to_gn [i_dom], n_part ,PDM_g_num_t *);
+    PDM_malloc(pface_vtx     [i_dom], n_part ,int         *);
     for (int i_part = 0; i_part < pn_n_part[i_dom]; i_part++) {
       pn_face[i_dom][i_part] = PDM_multipart_part_ln_to_gn_get(mpart,
                                                                i_dom,

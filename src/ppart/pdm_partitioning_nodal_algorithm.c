@@ -509,7 +509,7 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
   PDM_malloc(vtx_order, n_part ,int         *);
   for(int i_part = 0; i_part < n_part; ++i_part) {
     PDM_malloc(sorted_vtx_ln_to_gn[i_part],pn_vtx[i_part] ,PDM_g_num_t);
-    vtx_order          PDM_malloc([i_part],pn_vtx[i_part] ,int        );
+    PDM_malloc(vtx_order          [i_part],pn_vtx[i_part] ,int        );
 
     for(int i = 0; i < pn_vtx[i_part]; ++i) {
       sorted_vtx_ln_to_gn[i_part][i] = vtx_ln_to_gn[i_part][i];
@@ -563,13 +563,13 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
       PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(pmne, id_section);
 
       // int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get (t_elt, order);
-      // connec    PDM_malloc([i_section], n_elmt_in_section * n_vtx_per_elmt ,int        );
+      // PDM_malloc(connec    [i_section], n_elmt_in_section * n_vtx_per_elmt ,int        );
       if (t_elt == PDM_MESH_NODAL_POLY_2D) {
         PDM_malloc(connec_idx[i_section],(n_elmt_in_section + 1),int);
         connec_idx[i_section][0] = 0;
         pelmt_by_section_n[i_section] = 0;
       }
-      numabs    PDM_malloc([i_section], n_elmt_in_section                  ,PDM_g_num_t);
+      PDM_malloc(numabs    [i_section], n_elmt_in_section                  ,PDM_g_num_t);
       PDM_malloc(parent_num[i_section], n_elmt_in_section                  ,int        );
 
       if(pparent_entitity_ln_to_gn != NULL) {

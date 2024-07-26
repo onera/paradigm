@@ -421,7 +421,7 @@ const int   *n_entity1,
   for(int i_part = 0; i_part < n_part; ++i_part) {
 
     PDM_malloc(_entity1_entity2_idx[i_part], (    n_entity1[i_part] + 1) ,int);
-    _entity1_entity2    PDM_malloc([i_part], (2 * n_entity1[i_part]    ) ,int);
+    PDM_malloc(_entity1_entity2    [i_part], (2 * n_entity1[i_part]    ) ,int);
 
     int idx = 0;
     _entity1_entity2_idx[i_part][0] = 0;

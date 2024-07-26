@@ -2819,8 +2819,8 @@ PDM_compute_face_edge_from_face_vtx
       _max_vtx_gnum = PDM_MAX(pvtx_ln_to_gn[i_part][i_vtx], _max_vtx_gnum);
     }
 
-    pface_vtx_n     PDM_malloc([i_part],                       pn_face[i_part]  ,int        );
-    pface_vtx_g_num PDM_malloc([i_part], pface_vtx_idx[i_part][pn_face[i_part]] ,PDM_g_num_t);
+    PDM_malloc(pface_vtx_n     [i_part],                       pn_face[i_part]  ,int        );
+    PDM_malloc(pface_vtx_g_num [i_part], pface_vtx_idx[i_part][pn_face[i_part]] ,PDM_g_num_t);
     for(int i_face = 0; i_face < pn_face[i_part]; ++i_face) {
 
       pface_vtx_n[i_part][i_face] = pface_vtx_idx[i_part][i_face+1] - pface_vtx_idx[i_part][i_face];
@@ -3216,7 +3216,7 @@ PDM_pconnectivity_to_pconnectivity_keep
     PDM_realloc(_part2_entity2_ln_to_gn[i_part] ,_part2_entity2_ln_to_gn[i_part] ,  n_extract_entity2      ,PDM_g_num_t);
 
     /* Recompute local numbering */
-    _part2_entity1_entity2 PDM_malloc([i_part], n_recv_entity1_entity2 ,int        );
+    PDM_malloc(_part2_entity1_entity2 [i_part], n_recv_entity1_entity2 ,int        );
 
     for(int idx = 0; idx < n_recv_entity1_entity2; ++idx) {
       int g_sgn  = PDM_SIGN(recv_entity1_entity2[i_part][idx]);
@@ -3451,7 +3451,7 @@ PDM_pconnectivity_to_pconnectivity_from_location_keep
       }
     }
 
-    send_entity1_entity2         PDM_malloc([i_part],     n_tot_send ,PDM_g_num_t);
+    PDM_malloc(send_entity1_entity2         [i_part],     n_tot_send ,PDM_g_num_t);
     PDM_malloc(send_entity1_entity2_location[i_part], 3 * n_tot_send ,int        );
     int idx_write = 0;
     for(int j = 0; j < n_ref_entity1[i_part]; ++j) {
@@ -3557,7 +3557,7 @@ PDM_pconnectivity_to_pconnectivity_from_location_keep
     int n_recv_entity1_entity2 = _part2_entity1_entity2_idx[i_part][n_part2_entity1[i_part]];
 
 
-    _part2_entity2_ln_to_gn        PDM_malloc([i_part],     n_recv_entity1_entity2      ,PDM_g_num_t);
+    PDM_malloc(_part2_entity2_ln_to_gn        [i_part],     n_recv_entity1_entity2      ,PDM_g_num_t);
 
     int *unique_order_entity2;
     PDM_malloc(unique_order_entity2, n_recv_entity1_entity2 ,int);
@@ -3587,7 +3587,7 @@ PDM_pconnectivity_to_pconnectivity_from_location_keep
     // PDM_log_trace_array_int(_part2_entity2_to_part1_entity2[i_part], 3*n_extract_entity2, "_part2_entity2_to_part1_entity2 :");
 
     /* Recompute local numbering */
-    _part2_entity1_entity2 PDM_malloc([i_part], n_recv_entity1_entity2 ,int        );
+    PDM_malloc(_part2_entity1_entity2 [i_part], n_recv_entity1_entity2 ,int        );
 
     for(int idx = 0; idx < n_recv_entity1_entity2; ++idx) {
       int g_sgn  = PDM_SIGN(recv_entity1_entity2[i_part][idx]);

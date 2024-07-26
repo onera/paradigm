@@ -86,7 +86,7 @@ _rebuild_group
   assert(dme->btp_bound_ownership               [bound_type] == NULL);
 
   PDM_malloc(dme->btp_bound_entity_to_extract_entity[bound_type],n_group_entity ,PDM_block_to_part_t *);
-  dme->btp_bound_ownership               PDM_malloc([bound_type],n_group_entity ,PDM_ownership_t      );
+  PDM_malloc(dme->btp_bound_ownership               [bound_type],n_group_entity ,PDM_ownership_t      );
 
   dme->n_bound[bound_type] = n_group_entity;
 
@@ -220,7 +220,7 @@ _rebuild_group_nodal
   assert(dme->btp_bound_ownership               [bound_type] == NULL);
 
   PDM_malloc(dme->btp_bound_entity_to_extract_entity[bound_type],n_group_entity ,PDM_block_to_part_t *);
-  dme->btp_bound_ownership               PDM_malloc([bound_type],n_group_entity ,PDM_ownership_t      );
+  PDM_malloc(dme->btp_bound_ownership               [bound_type],n_group_entity ,PDM_ownership_t      );
 
   dme->n_bound[bound_type] = n_group_entity;
 

@@ -943,7 +943,7 @@ int main(int argc, char *argv[])
   double **pface_pts_field3;
   PDM_malloc(pface_pts_field3,n_part_mesh,double *);
   for (int ipart = 0; ipart < n_part_mesh; ipart++) {
-    pvtx_field3     PDM_malloc([ipart],pn_vtx[ipart],double);
+    PDM_malloc(pvtx_field3     [ipart],pn_vtx[ipart],double);
     for (int i = 0; i < pn_vtx[ipart]; i++) {
       pvtx_field3[ipart][i] = cos(6*pvtx_coord[ipart][3*i+2]);
     }

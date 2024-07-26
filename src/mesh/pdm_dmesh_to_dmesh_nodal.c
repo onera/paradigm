@@ -2179,13 +2179,13 @@ PDM_dmesh_to_dmesh_nodal_create
 
   for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
 
-    dm_to_dmn->n_bound   PDM_malloc([i_mesh], PDM_BOUND_TYPE_MAX ,int          );
-    dm_to_dmn->dbound    PDM_malloc([i_mesh], PDM_BOUND_TYPE_MAX ,PDM_g_num_t *);
+    PDM_malloc(dm_to_dmn->n_bound   [i_mesh], PDM_BOUND_TYPE_MAX ,int          );
+    PDM_malloc(dm_to_dmn->dbound    [i_mesh], PDM_BOUND_TYPE_MAX ,PDM_g_num_t *);
     PDM_malloc(dm_to_dmn->dbound_idx[i_mesh], PDM_BOUND_TYPE_MAX ,int         *);
 
-    dm_to_dmn->n_blk_gnum     PDM_malloc([i_mesh], PDM_BOUND_TYPE_MAX ,int          );
+    PDM_malloc(dm_to_dmn->n_blk_gnum     [i_mesh], PDM_BOUND_TYPE_MAX ,int          );
     PDM_malloc(dm_to_dmn->blk_entity_gnum[i_mesh], PDM_BOUND_TYPE_MAX ,PDM_g_num_t *);
-    dm_to_dmn->blk_elmt_gnum  PDM_malloc([i_mesh], PDM_BOUND_TYPE_MAX ,PDM_g_num_t *);
+    PDM_malloc(dm_to_dmn->blk_elmt_gnum  [i_mesh], PDM_BOUND_TYPE_MAX ,PDM_g_num_t *);
 
     for(int i = 0; i < PDM_BOUND_TYPE_MAX; ++i ) {
       dm_to_dmn->n_bound   [i_mesh][i] = 0;
