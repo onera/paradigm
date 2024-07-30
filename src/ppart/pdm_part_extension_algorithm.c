@@ -2467,7 +2467,7 @@ _unique_entities_and_update_connectivity
   int            keep_all_parent
 )
 {
-  int debug = 1;
+  int debug = 0;
 
   int has_sens = 0;
   if (pentity_sens!=NULL) {
@@ -5298,6 +5298,7 @@ PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2
       // > Faces
       _tell_me_more_received(pn_entity1_extended          [i_part],
                              pentity1_extended_ln_to_gn   [i_part],
+                             pentity1_extended_to_pentity1_idx   [i_part],
                              pextract_entity1_entity2_idx [i_part],
                              pextract_entity1_entity2_gnum[i_part],
                              pextract_entity1_entity2_triplet[i_part],
@@ -5306,6 +5307,7 @@ PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2
       // > Edges
       _tell_me_more_received(pn_entity1_extended          [i_part],
                              pentity1_extended_ln_to_gn   [i_part],
+                             pentity1_extended_to_pentity1_idx   [i_part],
                              pextract_entity1_entity2_idx [i_part],
                              pextract_entity1_entity2_gnum[i_part],
                              pextract_entity1_entity2_triplet[i_part],
@@ -5383,6 +5385,7 @@ PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2
       if (entity2_has_sens==1) {
         _tell_me_more_valid_entities(pn_entity1_extended          [i_part],
                                      pentity1_extended_ln_to_gn   [i_part],
+                                     pentity1_extended_to_pentity1_idx   [i_part],
                                      pextract_entity1_entity2_idx [i_part],
                                      pextract_entity1_entity2_gnum[i_part],
                                      pextract_entity1_entity2_sign[i_part],
@@ -5395,6 +5398,7 @@ PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2
       else {
         _tell_me_more_valid_entities(pn_entity1_extended          [i_part],
                                      pentity1_extended_ln_to_gn   [i_part],
+                                     pentity1_extended_to_pentity1_idx   [i_part],
                                      pextract_entity1_entity2_idx [i_part],
                                      pextract_entity1_entity2_gnum[i_part],
                                      NULL,

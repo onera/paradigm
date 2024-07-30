@@ -2045,9 +2045,11 @@ _part_extension_3d
     int         *next_dcell_itrf_gnum_and_itrf_strid = NULL;
     PDM_g_num_t *next_dcell_itrf_gnum_and_itrf_data  = NULL;
 
-    log_trace("\n\n");
-    log_trace("========================================= \n");
-    log_trace("PDM_part_extension_entity1_to_entity2 beg \n");
+    if (debug==1) {
+      log_trace("\n\n");
+      log_trace("========================================= \n");
+      log_trace("PDM_part_extension_entity1_to_entity2 beg \n");
+    }
     PDM_part_extension_entity1_to_entity2(shift_by_domain_cell, // Attention il va evoluer lui
                                           part_ext->ln_part_tot,
                                           pn_vtx,
@@ -2083,10 +2085,11 @@ _part_extension_3d
                                           &next_dcell_itrf_gnum_and_itrf_strid,
                                           &next_dcell_itrf_gnum_and_itrf_data,
                                           part_ext->comm);
-    log_trace("\n\n");
-    log_trace("PDM_part_extension_entity1_to_entity2 end \n");
-    log_trace("========================================= \n");
-
+    if (debug==1) {
+      log_trace("\n\n");
+      log_trace("PDM_part_extension_entity1_to_entity2 end \n");
+      log_trace("========================================= \n");
+    }
 
     free(prev_dcell_itrf_blk_gnum           );
     free(prev_dcell_itrf_blk_ancstr_strd    );
@@ -2180,9 +2183,11 @@ _part_extension_3d
     int         *next_dface_itrf_gnum_and_itrf_sens  = NULL;
 
 
-    log_trace("\n\n\n\n");
-    log_trace("=================================================================================\n");
-    log_trace("PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2 beg (Cell->Face)\n");
+    if (debug==1) {
+      log_trace("\n\n\n\n");
+      log_trace("=================================================================================\n");
+      log_trace("PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2 beg (Cell->Face)\n");
+    }
     PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2(part_ext->ln_part_tot,
                                                                      part_ext->n_interface,
                                                                      shift_by_domain_face,
@@ -2226,9 +2231,11 @@ _part_extension_3d
                                                                      &next_dface_itrf_gnum_and_itrf_data,
                                                                      &next_dface_itrf_gnum_and_itrf_sens,
                                                                      part_ext->comm);
-    log_trace("\n\n");
-    log_trace("PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2 end (Cell->Face)\n");
-    log_trace("=================================================================================\n");
+    if (debug==1) {
+      log_trace("\n\n");
+      log_trace("PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2 end (Cell->Face)\n");
+      log_trace("=================================================================================\n");
+    }
 
     free(prev_dface_itrf_blk_gnum           );
     free(prev_dface_itrf_blk_ancstr_strd    );
@@ -2256,9 +2263,11 @@ _part_extension_3d
 
 
     if(part_ext->have_edge == 1) {
-      log_trace("\n\n\n\n");
-      log_trace("=================================================================================\n");
-      log_trace("PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2 beg (Face->Edge)\n");
+      if (debug==1) {
+        log_trace("\n\n\n\n");
+        log_trace("=================================================================================\n");
+        log_trace("PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2 beg (Face->Edge)\n");
+      }
       PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2(part_ext->ln_part_tot,
                                                                        part_ext->n_interface,
                                                                        shift_by_domain_edge,
@@ -2302,9 +2311,11 @@ _part_extension_3d
                                                                        &next_dedge_itrf_gnum_and_itrf_data,
                                                                        &next_dedge_itrf_gnum_and_itrf_sens,
                                                                        part_ext->comm);
-      log_trace("\n\n");
-      log_trace("PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2 end (Face->Edge)\n");
-      log_trace("=================================================================================\n");
+      if (debug==1) {
+        log_trace("\n\n");
+        log_trace("PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2 end (Face->Edge)\n");
+        log_trace("=================================================================================\n");
+      }
 
       free(prev_dedge_itrf_blk_gnum);
       free(prev_dedge_itrf_blk_ancstr_strd);
@@ -2331,9 +2342,11 @@ _part_extension_3d
       part_ext->dentity_itrf_gnum_and_itrf_sens [PDM_BOUND_TYPE_EDGE] = prev_dedge_itrf_gnum_and_itrf_sens;
 
 
-      log_trace("\n\n\n\n");
-      log_trace("================================================================================\n");
-      log_trace("PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2 beg (Edge->Vtx)\n");
+      if (debug==1) {
+        log_trace("\n\n\n\n");
+        log_trace("================================================================================\n");
+        log_trace("PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2 beg (Edge->Vtx)\n");
+      }
 
       PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2(part_ext->ln_part_tot,
                                                                        part_ext->n_interface,
@@ -2378,9 +2391,11 @@ _part_extension_3d
                                                                       &next_dvtx_itrf_gnum_and_itrf_data,
                                                                        NULL,
                                                                        part_ext->comm);
-      log_trace("\n\n");
-      log_trace("PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2 end (Edge->Vtx)\n");
-      log_trace("================================================================================\n");
+      if (debug==1) {
+        log_trace("\n\n");
+        log_trace("PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2 end (Edge->Vtx)\n");
+        log_trace("================================================================================\n");
+      }
 
       free(prev_dvtx_itrf_blk_gnum);
       free(prev_dvtx_itrf_blk_ancstr_strd);
@@ -2409,9 +2424,12 @@ _part_extension_3d
     }
     else {
 
-      log_trace("\n\n\n\n");
-      log_trace("================================================================================ \n");
-      log_trace("PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2 beg (Face->Vtx) \n");
+      if (debug==1) {
+        log_trace("\n\n\n\n");
+        log_trace("================================================================================ \n");
+        log_trace("PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2 beg (Face->Vtx) \n");
+      }
+
       PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2(part_ext->ln_part_tot,
                                                                        part_ext->n_interface,
                                                                        shift_by_domain_vtx, // Attention il va evoluer lui
@@ -2455,9 +2473,11 @@ _part_extension_3d
                                                                       &next_dvtx_itrf_gnum_and_itrf_data,
                                                                        NULL,
                                                                        part_ext->comm);
-      log_trace("\n\n");
-      log_trace("PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2 end (Face->Vtx) \n");
-      log_trace("================================================================================ \n");
+      if (debug==1) {
+        log_trace("\n\n");
+        log_trace("PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2 end (Face->Vtx) \n");
+        log_trace("================================================================================ \n");
+      }
 
       free(prev_dvtx_itrf_blk_gnum           );
       free(prev_dvtx_itrf_blk_ancstr_strd    );
@@ -3488,9 +3508,12 @@ _part_extension_2d
     int         *next_dface_itrf_blk_path_itrf       = NULL;
     int         *next_dface_itrf_gnum_and_itrf_strid = NULL;
     PDM_g_num_t *next_dface_itrf_gnum_and_itrf_data  = NULL;
-    log_trace("\n\n");
-    log_trace("========================================= \n");
-    log_trace("PDM_part_extension_entity1_to_entity2 beg \n");
+    
+    if (debug==1) {
+      log_trace("\n\n");
+      log_trace("========================================= \n");
+      log_trace("PDM_part_extension_entity1_to_entity2 beg \n");
+    }
 
     PDM_part_extension_entity1_to_entity2(shift_by_domain_face, // Attention il va evoluer lui
                                           part_ext->ln_part_tot,
@@ -3527,9 +3550,11 @@ _part_extension_2d
                                           &next_dface_itrf_gnum_and_itrf_strid,
                                           &next_dface_itrf_gnum_and_itrf_data,
                                           part_ext->comm);
-    log_trace("\n\n");
-    log_trace("PDM_part_extension_entity1_to_entity2 end \n");
-    log_trace("========================================= \n");
+    if (debug==1) {
+      log_trace("\n\n");
+      log_trace("PDM_part_extension_entity1_to_entity2 end \n");
+      log_trace("========================================= \n");
+    }
     // if(step == 1) {
     //   exit(1);
     // }
@@ -3607,9 +3632,11 @@ _part_extension_2d
 
 
     if(part_ext->have_edge == 1) {
-      log_trace("\n\n\n\n");
-      log_trace("=================================================================================\n");
-      log_trace("PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2 beg (Face->Edge)\n");
+      if (debug==1) {
+        log_trace("\n\n\n\n");
+        log_trace("=================================================================================\n");
+        log_trace("PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2 beg (Face->Edge)\n");
+      }
       PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2(part_ext->ln_part_tot,
                                                                        part_ext->n_interface,
                                                                        shift_by_domain_edge,
@@ -3653,9 +3680,11 @@ _part_extension_2d
                                                                        &next_dedge_itrf_gnum_and_itrf_data,
                                                                        &next_dedge_itrf_gnum_and_itrf_sens,
                                                                        part_ext->comm);
-      log_trace("\n\n");
-      log_trace("PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2 end (Face->Edge)\n");
-      log_trace("=================================================================================\n");
+      if (debug==1) {
+        log_trace("\n\n");
+        log_trace("PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2 end (Face->Edge)\n");
+        log_trace("=================================================================================\n");
+      }
 
       free(prev_dedge_itrf_blk_gnum);
       free(prev_dedge_itrf_blk_ancstr_strd);
@@ -3681,10 +3710,11 @@ _part_extension_2d
       part_ext->dentity_itrf_gnum_and_itrf_data [PDM_BOUND_TYPE_EDGE] = prev_dedge_itrf_gnum_and_itrf_data;
       part_ext->dentity_itrf_gnum_and_itrf_sens [PDM_BOUND_TYPE_EDGE] = prev_dedge_itrf_gnum_and_itrf_sens;
 
-
-      log_trace("\n\n\n\n");
-      log_trace("================================================================================\n");
-      log_trace("PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2 beg (Edge->Vtx)\n");
+      if (debug==1) {
+        log_trace("\n\n\n\n");
+        log_trace("================================================================================\n");
+        log_trace("PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2 beg (Edge->Vtx)\n");
+      }
 
       PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2(part_ext->ln_part_tot,
                                                                        part_ext->n_interface,
@@ -3729,9 +3759,11 @@ _part_extension_2d
                                                                       &next_dvtx_itrf_gnum_and_itrf_data,
                                                                        NULL,
                                                                        part_ext->comm);
-      log_trace("\n\n");
-      log_trace("PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2 end (Edge->Vtx)\n");
-      log_trace("================================================================================\n");
+      if (debug==1) {
+        log_trace("\n\n");
+        log_trace("PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2 end (Edge->Vtx)\n");
+        log_trace("================================================================================\n");
+      }
 
       for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
         free(pedge_extended_to_pedge_sens[i_part]);
@@ -3765,9 +3797,11 @@ _part_extension_2d
     }
     else {
 
-      log_trace("\n\n\n\n");
-      log_trace("================================================================================ \n");
-      log_trace("PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2 beg (Face->Vtx) \n");
+      if (debug==1) {
+        log_trace("\n\n\n\n");
+        log_trace("================================================================================ \n");
+        log_trace("PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2 beg (Face->Vtx) \n");
+      }
       PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2(part_ext->ln_part_tot,
                                                                        part_ext->n_interface,
                                                                        shift_by_domain_vtx,
@@ -3811,9 +3845,11 @@ _part_extension_2d
                                                                       &next_dvtx_itrf_gnum_and_itrf_data,
                                                                        NULL,
                                                                        part_ext->comm);
-      log_trace("\n\n");
-      log_trace("PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2 end (Face->Vtx) \n");
-      log_trace("================================================================================ \n");
+      if (debug==1) {
+        log_trace("\n\n");
+        log_trace("PDM_part_extension_pentity1_entity2_to_extended_pentity1_entity2 end (Face->Vtx) \n");
+        log_trace("================================================================================ \n");
+      }
 
       free(prev_dvtx_itrf_blk_gnum           );
       free(prev_dvtx_itrf_blk_ancstr_strd    );
