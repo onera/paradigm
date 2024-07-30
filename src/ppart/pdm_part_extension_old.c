@@ -5943,17 +5943,28 @@ PDM_part_extension_create
   part_ext->cell_cell_extended_pruned         = NULL;
   part_ext->cell_cell_interface_pruned        = NULL;
 
+  part_ext->cell_cell_extended_idx2       = NULL;
+  part_ext->cell_cell_extended2           = NULL;
+  part_ext->cell_cell_path_itrf_idx       = NULL;
+  part_ext->cell_cell_path_itrf           = NULL;
+
   part_ext->face_face_extended_idx        = NULL;
   part_ext->face_face_extended            = NULL;
   part_ext->face_face_interface           = NULL;
+  part_ext->face_face_path_itrf_idx       = NULL;
+  part_ext->face_face_path_itrf           = NULL;
 
   part_ext->edge_edge_extended_idx        = NULL;
   part_ext->edge_edge_extended            = NULL;
   part_ext->edge_edge_interface           = NULL;
+  part_ext->edge_edge_path_itrf_idx       = NULL;
+  part_ext->edge_edge_path_itrf           = NULL;
 
   part_ext->vtx_vtx_extended_idx          = NULL;
   part_ext->vtx_vtx_extended              = NULL;
   part_ext->vtx_vtx_interface             = NULL;
+  part_ext->vtx_vtx_path_itrf_idx         = NULL;
+  part_ext->vtx_vtx_path_itrf             = NULL;
 
   part_ext->border_cell_face_idx          = NULL;
   part_ext->border_cell_face              = NULL;

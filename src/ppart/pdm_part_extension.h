@@ -288,12 +288,60 @@ PDM_part_extension_ln_to_gn_get
 int
 PDM_part_extension_interface_get
 (
- PDM_part_extension_t     *part_ext,
- int                       i_domain,
- int                       i_part,
- PDM_mesh_entities_t       mesh_entity,
- int                     **interface_no
+  PDM_part_extension_t     *part_ext,
+  int                       i_domain,
+  int                       i_part,
+  PDM_mesh_entities_t       mesh_entity,
+  int                     **interface_no
 );
+
+/**
+ *
+ * \brief Get graph between part entities and new entities
+ *
+ * \param [in]  part_ext               \p PDM_part_extension_t structure instance
+ * \param [in]  i_domain               Domain identifier
+ * \param [in]  i_part                 Partition identifier
+ * \param [in]  mesh_entity            Type of mesh entity
+ * \param [out] pentity_to_entity_idx  Graph triplet index
+ * \param [out] pentity_to_entity      Graph triplet
+ *
+ */
+void
+PDM_part_extension_graph_get
+(
+  PDM_part_extension_t     *part_ext,
+  int                       i_domain,
+  int                       i_part,
+  PDM_mesh_entities_t       mesh_entity,
+  int                     **pentity_to_entity_idx,
+  int                     **pentity_to_entity
+);
+
+
+/**
+ *
+ * \brief Get interface path for new entities on partition
+ *
+ * \param [in]  part_ext            \p PDM_part_extension_t structure instance
+ * \param [in]  i_domain            Domain identifier
+ * \param [in]  i_part              Partition identifier
+ * \param [in]  mesh_entity         Type of mesh entity
+ * \param [out] path_interface_idx  Interface path index
+ * \param [out] path_interface      Interface path
+ *
+ */
+void
+PDM_part_extension_path_interface_get
+(
+  PDM_part_extension_t     *part_ext,
+  int                       i_domain,
+  int                       i_part,
+  PDM_mesh_entities_t       mesh_entity,
+  int                     **path_itrf_idx,
+  int                     **path_itrf
+);
+
 
 /**
  *

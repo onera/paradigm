@@ -94,6 +94,10 @@ struct _pdm_part_extension_t {
   int ***cell_cell_extended_n;
   int ***cell_cell_extended;
   int ***cell_cell_interface;
+  int  **cell_cell_extended_idx2;
+  int  **cell_cell_extended2;
+  int  **cell_cell_path_itrf_idx;
+  int  **cell_cell_path_itrf;
   int ***unique_order_cell_cell_extended;
   int  **n_unique_order_cell_cell_extended;
   int  **border_cell_list;
@@ -116,14 +120,20 @@ struct _pdm_part_extension_t {
   int **face_face_extended_idx;
   int **face_face_extended;
   int **face_face_interface;
+  int **face_face_path_itrf_idx;
+  int **face_face_path_itrf;
 
   int **edge_edge_extended_idx;
   int **edge_edge_extended;
   int **edge_edge_interface;
+  int **edge_edge_path_itrf_idx;
+  int **edge_edge_path_itrf;
 
   int **vtx_vtx_extended_idx;
   int **vtx_vtx_extended;
   int **vtx_vtx_interface;
+  int **vtx_vtx_path_itrf_idx;
+  int **vtx_vtx_path_itrf;
 
   /* Results */
   int **border_cell_face_idx;
