@@ -17,6 +17,9 @@ variables:
 default:
   tags: #All jobs uses jamacar-slurm executor
     - slurm
+  id_tokens:
+    CI_JOB_JWT:
+      aud: https://gitlab.onera.net
 
 
 init_repo:
