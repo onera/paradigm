@@ -86,8 +86,7 @@ program testf
   fid = fid + i_rank
   open(unit=fid, &
        file=&
-       PDM_MESH_DIR_F&
-       //"/test/meshes/mixed_elements_cellvtx."//strnum,&
+       PDM_MESH_DIR_F//"/test/meshes/mixed_elements_cellvtx."//strnum,&
        action='read')
 
   do i = 1,26
