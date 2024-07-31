@@ -135,6 +135,9 @@ _generate_part_entitiy_connectivity
   PDM_MPI_Comm_size (comm, &n_rank);
   PDM_MPI_Comm_rank (comm, &i_rank);
 
+  PDM_UNUSED(n_elmt_vol_tot);
+  PDM_UNUSED(elmt_cell_entity_idx);
+
   /*
    * Generate key
    */

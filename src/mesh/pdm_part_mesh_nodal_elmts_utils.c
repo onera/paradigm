@@ -717,7 +717,7 @@ PDM_part_mesh_nodal_elmts_decompose_edges_get_size
 
 
 void
-PDM_part_mesh_nodal_std_decomposes_local_edges
+PDM_part_mesh_nodal_std_decompose_local_edges
 (
        PDM_Mesh_nodal_elt_t  t_elt,
        int                   n_elt,
@@ -1023,7 +1023,7 @@ PDM_part_mesh_nodal_elmts_sections_local_decompose_edges
                                                     PDM_OWNERSHIP_KEEP);
         }
 
-        PDM_part_mesh_nodal_std_decomposes_local_edges(t_elt,
+        PDM_part_mesh_nodal_std_decompose_local_edges(t_elt,
                                                        n_elt,
                                                        order,
                                                        _parent_node,
@@ -1055,7 +1055,7 @@ PDM_part_mesh_nodal_elmts_sections_local_decompose_edges
 
 
 void
-PDM_part_mesh_nodal_std_decomposes_local_faces
+PDM_part_mesh_nodal_std_decompose_local_faces
 (
        PDM_Mesh_nodal_elt_t  t_elt,
        int                   n_elt,
@@ -1367,18 +1367,18 @@ PDM_part_mesh_nodal_elmts_sections_local_decompose_faces
                                                     PDM_OWNERSHIP_KEEP);
         }
 
-        PDM_part_mesh_nodal_std_decomposes_local_faces(t_elt,
-                                                       n_elt,
-                                                       order,
-                                                       _parent_node,
-                                                       &n_elt_current,
-                                                       &n_face_current,
-                                                       elt_vtx,
-                                                       elmt_face_vtx_idx   [i_part],
-                                                       elmt_face_vtx       [i_part],
-                                                       elmt_face_idx       [i_part],
-                                                       parent_elmt         [i_part],
-                                                       parent_elmt_position[i_part]);
+        PDM_part_mesh_nodal_std_decompose_local_faces(t_elt,
+                                                      n_elt,
+                                                      order,
+                                                      _parent_node,
+                                                      &n_elt_current,
+                                                      &n_face_current,
+                                                      elt_vtx,
+                                                      elmt_face_vtx_idx   [i_part],
+                                                      elmt_face_vtx       [i_part],
+                                                      elmt_face_idx       [i_part],
+                                                      parent_elmt         [i_part],
+                                                      parent_elmt_position[i_part]);
 
       }
 
