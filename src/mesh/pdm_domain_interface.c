@@ -5210,6 +5210,7 @@ PDM_domain_interface_make_flat_view
   int                   ***entity_opp_sens_out
 )
 {
+  int debug = 0;
 
   int          *interface_dn  = NULL;
   PDM_g_num_t **interface_ids = NULL;
@@ -5307,7 +5308,7 @@ PDM_domain_interface_make_flat_view
 
     assert(n_gnum == n_connected_l); // ie all recv_stride == 1
 
-    if (1 == 1) {
+    if (debug == 1) {
       PDM_log_trace_array_long(PDM_part_to_block_block_gnum_get(ptb), n_gnum, "gnum");
       PDM_log_trace_array_int (recv_stride, n_gnum       , "recv_stride ::");
       PDM_log_trace_array_long(recv_data  , n_connected_l, "recv_data   ::");
@@ -5357,7 +5358,7 @@ PDM_domain_interface_make_flat_view2
   int                    **dentity2_itrf_gnum_and_itrf_sens
 )
 {
-
+  int debug = 0;
   log_trace("TODO : check sign and sens in PDM_domain_interface_make_flat_view2 \n");
 
   int          *interface_dn  = NULL;
@@ -5469,10 +5470,10 @@ PDM_domain_interface_make_flat_view2
 
   int n_gnum = PDM_part_to_block_n_elt_block_get(ptb);
 
-  log_trace("n_gnum = %d ; n_connected_l = %d \n",n_gnum, n_connected_l);
+  // log_trace("n_gnum = %d ; n_connected_l = %d \n",n_gnum, n_connected_l);
   // assert(n_gnum == n_connected_l); // ie all recv_stride == 1
 
-  if (1 == 1) {
+  if (debug == 1) {
     PDM_log_trace_array_long(PDM_part_to_block_block_gnum_get(ptb), n_gnum, "gnum");
     PDM_log_trace_array_int (recv_stride, n_gnum       , "recv_stride ::");
     PDM_log_trace_array_long(recv_data  , n_connected_l, "recv_data   ::");

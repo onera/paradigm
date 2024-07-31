@@ -234,9 +234,18 @@ PDM_part_extension_free
  * \return Number of leading entities
  *
  */
-
 int
 PDM_part_extension_connectivity_get
+(
+ PDM_part_extension_t     *part_ext,
+ int                       i_domain,
+ int                       i_part,
+ PDM_connectivity_type_t   connectivity_type,
+ int                     **connect_idx,
+ int                     **connect
+);
+int
+PDM_part_extension_connectivity_get2
 (
  PDM_part_extension_t     *part_ext,
  int                       i_domain,
@@ -260,7 +269,6 @@ PDM_part_extension_connectivity_get
  * \return  Number of entities
  *
  */
-
 int
 PDM_part_extension_ln_to_gn_get
 (
@@ -270,6 +278,16 @@ PDM_part_extension_ln_to_gn_get
  PDM_mesh_entities_t       mesh_entity,
  PDM_g_num_t             **ln_to_gn
 );
+int
+PDM_part_extension_ln_to_gn_get2
+(
+ PDM_part_extension_t     *part_ext,
+ int                       i_domain,
+ int                       i_part,
+ PDM_mesh_entities_t       mesh_entity,
+ PDM_g_num_t             **ln_to_gn
+);
+
 
 /**
  *
@@ -314,7 +332,7 @@ PDM_part_extension_graph_get
   int                       i_domain,
   int                       i_part,
   PDM_mesh_entities_t       mesh_entity,
-  int                     **pentity_to_entity_idx,
+  // int                     **pentity_to_entity_idx,
   int                     **pentity_to_entity
 );
 
@@ -384,7 +402,6 @@ PDM_part_extension_group_get
  * \return  Number of extended vertices
  *
  */
-
 int
 PDM_part_extension_vtx_coord_get
 (
@@ -393,6 +410,15 @@ PDM_part_extension_vtx_coord_get
  int                       i_part,
  double                  **vtx_coord
 );
+int
+PDM_part_extension_vtx_coord_get2
+(
+ PDM_part_extension_t     *part_ext,
+ int                       i_domain,
+ int                       i_part,
+ double                  **vtx_coord
+);
+
 
 /**
  *

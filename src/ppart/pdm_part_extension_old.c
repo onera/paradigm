@@ -5966,21 +5966,24 @@ PDM_part_extension_create
   part_ext->vtx_vtx_path_itrf_idx         = NULL;
   part_ext->vtx_vtx_path_itrf             = NULL;
 
+  part_ext->n_cell_border                 = NULL;
   part_ext->border_cell_face_idx          = NULL;
   part_ext->border_cell_face              = NULL;
 
+  part_ext->n_face_border                 = NULL;
   part_ext->border_face_edge_idx          = NULL;
   part_ext->border_face_edge              = NULL;
-
-  part_ext->border_edge_vtx_idx           = NULL;
-  part_ext->border_edge_vtx               = NULL;
-
   part_ext->border_face_vtx_idx           = NULL;
   part_ext->border_face_vtx               = NULL;
+
+  part_ext->n_edge_border                 = NULL;
+  part_ext->border_edge_vtx_idx           = NULL;
+  part_ext->border_edge_vtx               = NULL;
 
   part_ext->border_face_group_idx         = NULL;
   part_ext->border_face_group             = NULL;
 
+  part_ext->n_vtx_border                  = NULL;
   part_ext->border_vtx                    = NULL;
 
   part_ext->border_cell_ln_to_gn          = NULL;

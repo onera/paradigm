@@ -62,7 +62,6 @@ struct _pdm_part_extension_t {
   int **neighbor_interface;
   int  *n_entity_bound;
   int  *n_cell;
-  int  *n_cell_border;
 
   /* Graph of cell */
   int **dist_neighbor_cell_n;
@@ -136,30 +135,35 @@ struct _pdm_part_extension_t {
   int **vtx_vtx_path_itrf;
 
   /* Results */
-  int **border_cell_face_idx;
-  int **border_cell_face;
+  int          *n_cell_border;
+  PDM_g_num_t **border_cell_ln_to_gn;
+  int         **border_cell_face_idx;
+  int         **border_cell_face;
 
-  int **border_face_edge_idx;
-  int **border_face_edge;
+  int          *n_face_border;
+  PDM_g_num_t **border_face_ln_to_gn;
+  int         **border_face_edge_idx;
+  int         **border_face_edge;
+  int         **border_face_vtx_idx;
+  int         **border_face_vtx;
 
-  int **border_edge_vtx_idx;
-  int **border_edge_vtx;
+  int          *n_edge_border;
+  PDM_g_num_t **border_edge_ln_to_gn;
+  int         **border_edge_vtx_idx;
+  int         **border_edge_vtx;
 
-  int **border_face_vtx_idx;
-  int **border_face_vtx;
+  int          *n_vtx_border;
+  PDM_g_num_t **border_vtx_ln_to_gn;
+  double      **border_vtx;
+  
 
   // int  *n_face_group;
   int **border_face_group_idx;
   int **border_face_group;
 
-  PDM_g_num_t **border_cell_ln_to_gn;
-  PDM_g_num_t **border_face_ln_to_gn;
-  PDM_g_num_t **border_edge_ln_to_gn;
-  PDM_g_num_t **border_vtx_ln_to_gn;
 
   PDM_g_num_t **border_face_group_ln_to_gn;
 
-  double **border_vtx;
 
   /* Shift by domain for all entities */
   PDM_g_num_t *shift_by_domain_cell;
