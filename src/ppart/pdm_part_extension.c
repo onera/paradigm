@@ -5268,6 +5268,30 @@ PDM_part_extension_free
           free(part_ext->cur_sens_vtx[i_part+shift_part]);
         }
 
+        if(part_ext->face_face_extended_idx != NULL) {
+          free(part_ext->face_face_extended_idx[i_part+shift_part]);
+        }
+
+        if(part_ext->face_face_extended != NULL) {
+          free(part_ext->face_face_extended[i_part+shift_part]);
+        }
+
+        if(part_ext->edge_edge_extended_idx != NULL) {
+          free(part_ext->edge_edge_extended_idx[i_part+shift_part]);
+        }
+
+        if(part_ext->edge_edge_extended != NULL) {
+          free(part_ext->edge_edge_extended[i_part+shift_part]);
+        }
+
+        if(part_ext->vtx_vtx_extended_idx != NULL) {
+          free(part_ext->vtx_vtx_extended_idx[i_part+shift_part]);
+        }
+
+        if(part_ext->vtx_vtx_extended != NULL) {
+          free(part_ext->vtx_vtx_extended[i_part+shift_part]);
+        }
+
 
         if(part_ext->owner_vtx_part_bound == 1) {
           free(part_ext->parts[i_domain][i_part].vtx_part_bound_proc_idx);
@@ -5344,10 +5368,10 @@ PDM_part_extension_free
   free(part_ext->neighbor_desc);
   free(part_ext->neighbor_interface);
 
-  if( part_ext->cell_cell_extended != NULL ||
+  if( (part_ext->cell_cell_extended != NULL ||
       part_ext->face_face_extended != NULL ||
       part_ext->edge_edge_extended != NULL ||
-      part_ext->  vtx_vtx_extended != NULL) {
+      part_ext->  vtx_vtx_extended != NULL) && part_ext->compute_kind != 0 ) {
     int shift_part = 0;
 
     for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
@@ -5486,6 +5510,8 @@ PDM_part_extension_free
     free(part_ext->cell_cell);
 
     if(part_ext->face_face_extended_idx != NULL) {
+      free(part_ext->face_face_extended);
+      free(part_ext->face_face_extended_idx);
       free(part_ext->face_face_interface);
     }
 
@@ -5602,7 +5628,7 @@ PDM_part_extension_free
     free(part_ext->cell_cell_extended);
     free(part_ext->cell_cell_path_itrf_idx);
     free(part_ext->cell_cell_path_itrf);
-    free(part_ext->cell_cell_extended);
+    // free(part_ext->cell_cell_extended);
     free(part_ext->unique_order_cell_cell_extended);
     free(part_ext->cell_cell_interface);
     free(part_ext->n_unique_order_cell_cell_extended);
