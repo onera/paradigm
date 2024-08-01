@@ -269,6 +269,7 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
  PDM_g_num_t                 **pparent_entitity_ln_to_gn
 )
 {
+  PDM_UNUSED(pelmt_to_entity);
 
   int n_section = dmne->n_section;
   PDM_g_num_t          **block_elmts_disbrib_idx;
