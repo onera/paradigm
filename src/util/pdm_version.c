@@ -13,6 +13,7 @@
 
 #include "pdm_version.h"
 #include "pdm_config.h"
+#include "pdm_priv.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -42,7 +43,7 @@ PDM_version_get
 )
 {
   char *_version;
-  _version = malloc(sizeof(char) * (strlen(PDM_VERSION) + 1));
+  PDM_malloc(_version,(strlen(PDM_VERSION) + 1),char);
 
   strcpy(_version, PDM_VERSION);
   return _version;

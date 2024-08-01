@@ -125,7 +125,8 @@ int main(int argc, char *argv[])
 
   int dn_elmt = distrib_elmt[i_rank+1] - distrib_elmt[i_rank];
 
-  PDM_g_num_t* drand_number = malloc(dn_elmt * sizeof(PDM_g_num_t));
+  PDM_g_num_t *drand_number;
+  PDM_malloc(drand_number,dn_elmt ,PDM_g_num_t);
   for(int i = 0; i < dn_elmt; ++i) {
     unsigned int seed = (unsigned int) (distrib_elmt[i_rank] + i);
     srand(seed);
@@ -143,12 +144,14 @@ int main(int argc, char *argv[])
    *        Each proc take ln_to_gn = One over n_rank elemnts but with a selection strategy by freq
    */
   int n_part                    = 1;
-  int          *pn_elmts        = malloc( n_part * sizeof(int           ));
-  PDM_g_num_t **pelmts_ln_to_gn = malloc( n_part * sizeof(PDM_g_num_t * ));
+  int *pn_elmts;
+  PDM_malloc(pn_elmts, n_part ,int           );
+  PDM_g_num_t **pelmts_ln_to_gn;
+  PDM_malloc(pelmts_ln_to_gn, n_part ,PDM_g_num_t * );
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
     pn_elmts       [i_part] = dn_elmt / freq;
-    pelmts_ln_to_gn[i_part] = malloc( pn_elmts[i_part] * sizeof(PDM_g_num_t));
+    PDM_malloc(pelmts_ln_to_gn[i_part], pn_elmts[i_part] ,PDM_g_num_t);
     PDM_g_num_t next_gnum = i_rank+1;
     for(int i = 0; i < pn_elmts[i_part]; ++i) {
       pelmts_ln_to_gn[i_part][i] = next_gnum;
@@ -207,13 +210,13 @@ int main(int argc, char *argv[])
    *  Enjoy using multiple procs and see in paradigm_*.log how data is selected among all procs
    */
 
-  free(drand_number   );
-  free(distrib_elmt   );
+  PDM_free(drand_number   );
+  PDM_free(distrib_elmt   );
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    free(pelmts_ln_to_gn[i_part]);
+    PDM_free(pelmts_ln_to_gn[i_part]);
   }
-  free(pelmts_ln_to_gn);
-  free(pn_elmts);
+  PDM_free(pelmts_ln_to_gn);
+  PDM_free(pn_elmts);
 
   PDM_MPI_Finalize ();
   return 0;

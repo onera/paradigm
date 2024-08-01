@@ -11,6 +11,7 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
+#include "pdm_priv.h"
 #include "pdm_config.h"
 #include "pdm_mpi.h"
 #include "pdm_mpi_ext_dependencies.h"
@@ -114,7 +115,7 @@ int    *part
 
     if(tpwgts != NULL){
 
-      __tpwgts = malloc (sizeof(real_t) * _ncon * _n_parts);
+      PDM_malloc(__tpwgts,_ncon * _n_parts,real_t);
       _tpwgts  = __tpwgts;
 
       for (int i = 0; i < _ncon * _n_parts; i++) {
@@ -123,7 +124,7 @@ int    *part
     } /* End if tpwgts */
 
     if(ubvec != NULL){
-      __ubvec = malloc (sizeof(real_t) * _ncon);
+      PDM_malloc(__ubvec,_ncon,real_t);
       _ubvec  = __ubvec;
 
       for (int i = 0; i < _ncon; i++) {
@@ -156,8 +157,8 @@ int    *part
   }
 
   else {
-    __xadj    = (idx_t *) malloc (sizeof(idx_t) * (_n_vtxs + 1));
-    __adjncy  = (idx_t *) malloc (sizeof(idx_t) * nEdge);
+    PDM_malloc(__xadj,(_n_vtxs + 1),idx_t);
+    PDM_malloc(__adjncy,nEdge,idx_t);
     _xadj    = __xadj;
     _adjncy  = __adjncy;
 
@@ -170,7 +171,7 @@ int    *part
     }
 
     if (vwgt != NULL) {
-      __vwgt = (idx_t *) malloc (sizeof(idx_t) * _n_vtxs);
+      PDM_malloc(__vwgt,_n_vtxs,idx_t);
       for (int i = 0; i < _n_vtxs; i++) {
         __vwgt[i] = vwgt[i];
       }
@@ -180,7 +181,7 @@ int    *part
     }
 
     if (adjwgt != NULL) {
-      __adjwgt = (idx_t *) malloc (sizeof(idx_t) * nEdge);
+      PDM_malloc(__adjwgt,nEdge,idx_t);
       for (int i = 0; i < nEdge; i++) {
         __adjwgt[i] = adjwgt[i];
       }
@@ -189,7 +190,7 @@ int    *part
       __adjwgt = NULL;
     }
 
-    __part = (idx_t *) malloc (sizeof(idx_t) * _n_vtxs);
+    PDM_malloc(__part,_n_vtxs,idx_t);
 
     _vwgt   = __vwgt;
     _adjwgt = __adjwgt;
@@ -218,31 +219,31 @@ int    *part
   }
 
   if (__xadj != NULL) {
-    free (__xadj);
+    PDM_free(__xadj);
   }
 
   if (__adjncy != NULL) {
-    free (__adjncy);
+    PDM_free(__adjncy);
   }
 
   if (__part != NULL) {
-    free (__part);
+    PDM_free(__part);
   }
 
   if (__vwgt != NULL) {
-    free (__vwgt);
+    PDM_free(__vwgt);
   }
 
   if (__adjwgt != NULL) {
-    free (__adjwgt);
+    PDM_free(__adjwgt);
   }
 
   if (__tpwgts != NULL) {
-    free (__tpwgts);
+    PDM_free(__tpwgts);
   }
 
   if (__ubvec != NULL) {
-    free (__ubvec);
+    PDM_free(__ubvec);
   }
 
   return rval;
@@ -309,7 +310,7 @@ int    *part
 
     if(tpwgts != NULL){
 
-      __tpwgts = malloc (sizeof(real_t) * _ncon * _n_parts);
+      PDM_malloc(__tpwgts,_ncon * _n_parts,real_t);
       _tpwgts  = __tpwgts;
 
       for (int i = 0; i < _ncon * _n_parts; i++) {
@@ -318,7 +319,7 @@ int    *part
     } /* End if tpwgts */
 
     if(ubvec != NULL){
-      __ubvec = malloc (sizeof(real_t) * _ncon);
+      PDM_malloc(__ubvec,_ncon,real_t);
       _ubvec  = __ubvec;
 
       for (int i = 0; i < _ncon; i++) {
@@ -351,8 +352,8 @@ int    *part
   }
 
   else {
-    __xadj    = (idx_t *) malloc (sizeof(idx_t) * (_n_vtxs + 1));
-    __adjncy  = (idx_t *) malloc (sizeof(idx_t) * nEdge);
+    PDM_malloc(__xadj,(_n_vtxs + 1),idx_t);
+    PDM_malloc(__adjncy,nEdge,idx_t);
     _xadj    = __xadj;
     _adjncy  = __adjncy;
 
@@ -365,7 +366,7 @@ int    *part
     }
 
     if (vwgt != NULL) {
-      __vwgt = (idx_t *) malloc (sizeof(idx_t) * _n_vtxs);
+      PDM_malloc(__vwgt,_n_vtxs,idx_t);
       for (int i = 0; i < _n_vtxs; i++) {
         __vwgt[i] = vwgt[i];
       }
@@ -375,7 +376,7 @@ int    *part
     }
 
     if (adjwgt != NULL) {
-      __adjwgt = (idx_t *) malloc (sizeof(idx_t) * nEdge);
+      PDM_malloc(__adjwgt,nEdge,idx_t);
       for (int i = 0; i < nEdge; i++) {
         __adjwgt[i] = adjwgt[i];
       }
@@ -384,7 +385,7 @@ int    *part
       __adjwgt = NULL;
     }
 
-    __part = (idx_t *) malloc (sizeof(idx_t) * _n_vtxs);
+    PDM_malloc(__part,_n_vtxs,idx_t);
 
     _vwgt   = __vwgt;
     _adjwgt = __adjwgt;
@@ -413,31 +414,31 @@ int    *part
   }
 
   if (__xadj != NULL) {
-    free (__xadj);
+    PDM_free(__xadj);
   }
 
   if (__adjncy != NULL) {
-    free (__adjncy);
+    PDM_free(__adjncy);
   }
 
   if (__part != NULL) {
-    free (__part);
+    PDM_free(__part);
   }
 
   if (__vwgt != NULL) {
-    free (__vwgt);
+    PDM_free(__vwgt);
   }
 
   if (__adjwgt != NULL) {
-    free (__adjwgt);
+    PDM_free(__adjwgt);
   }
 
   if (__tpwgts != NULL) {
-    free (__tpwgts);
+    PDM_free(__tpwgts);
   }
 
   if (__ubvec != NULL) {
-    free (__ubvec);
+    PDM_free(__ubvec);
   }
 
   return rval;
@@ -502,10 +503,10 @@ int *part
   }
 
   else {
-    __verttab = (SCOTCH_Num *) malloc (sizeof(SCOTCH_Num) * (_vertnbr + 1));
+    PDM_malloc(__verttab,(_vertnbr + 1),SCOTCH_Num);
     __vendtab = __verttab + 1;
-    __edgetab = (SCOTCH_Num *) malloc (sizeof(SCOTCH_Num) * _edgesiz);
-    __part    = (SCOTCH_Num *) malloc (sizeof(SCOTCH_Num) * _vertnbr);
+    PDM_malloc(__edgetab,_edgesiz,SCOTCH_Num);
+    PDM_malloc(__part,_vertnbr,SCOTCH_Num);
 
     for (int i = 0; i < _vertnbr + 1; i++) {
       __verttab[i] = dualGraphIdx[i];
@@ -519,14 +520,14 @@ int *part
     __edlotab = NULL;
 
     if (cell_weight != NULL) {
-      __velotab = (SCOTCH_Num *) malloc (sizeof(SCOTCH_Num) * _vertnbr);
+      PDM_malloc(__velotab,_vertnbr,SCOTCH_Num);
       for (int i = 0; i < _vertnbr; i++) {
         __velotab[i] = cell_weight[i];
       }
     }
 
     if (edgeWeight != NULL) {
-      __edlotab = (SCOTCH_Num *) malloc (sizeof(SCOTCH_Num) * _edgesiz);
+      PDM_malloc(__edlotab,_edgesiz,SCOTCH_Num);
       for (int i = 0; i < _edgesiz; i++) {
         __edlotab[i] = edgeWeight[i];
       }
@@ -590,23 +591,23 @@ int *part
   SCOTCH_graphExit (&grafptr);
 
   if (__verttab != NULL) {
-    free (__verttab);
+    PDM_free(__verttab);
   }
 
   if (__edgetab != NULL) {
-    free (__edgetab);
+    PDM_free(__edgetab);
   }
 
   if (__velotab != NULL) {
-    free (__velotab);
+    PDM_free(__velotab);
   }
 
   if (__part != NULL) {
-    free (__part);
+    PDM_free(__part);
   }
 
   if (__edlotab != NULL) {
-    free (__edlotab);
+    PDM_free(__edlotab);
   }
 
 }

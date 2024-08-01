@@ -206,7 +206,8 @@ int main(int argc, char *argv[])
   /*
    *  Visu VTK
    */
-  PDM_g_num_t *dvtx_ln_to_gn = malloc(sizeof(PDM_g_num_t) * dn_vtx);
+  PDM_g_num_t *dvtx_ln_to_gn;
+  PDM_malloc(dvtx_ln_to_gn,dn_vtx,PDM_g_num_t);
   for (int i = 0; i < dn_vtx; i++) {
     dvtx_ln_to_gn[i] = distrib_vtx[i_rank] + i + 1;
   }
@@ -232,7 +233,8 @@ int main(int argc, char *argv[])
   int         *pcell_vtx     = NULL;
   double      *pvtx_coord    = NULL;
 
-  PDM_g_num_t *pcell_ln_to_gn = malloc(sizeof(PDM_g_num_t) * dn_cell);
+  PDM_g_num_t *pcell_ln_to_gn;
+  PDM_malloc(pcell_ln_to_gn,dn_cell,PDM_g_num_t);
   for (int i = 0; i < dn_cell; i++) {
     pcell_ln_to_gn[i] = distrib_cell[i_rank] + i + 1;
   }
@@ -257,7 +259,7 @@ int main(int argc, char *argv[])
                  (const PDM_g_num_t **) &pvtx_ln_to_gn,
                                         &tmp_pvtx_coord);
   pvtx_coord = tmp_pvtx_coord[0];
-  free(tmp_pvtx_coord);
+  PDM_free(tmp_pvtx_coord);
 
 
 
@@ -275,7 +277,8 @@ int main(int argc, char *argv[])
                                NULL,
                                NULL);
   }
-  double *volume = malloc(sizeof(double) * dn_cell);
+  double *volume;
+  PDM_malloc(volume,dn_cell,double);
   // PDM_geom_elem_tetra_oriented_volume(dn_cell,
   //                                     pcell_vtx,
   //                                     pvtx_coord,
@@ -303,24 +306,24 @@ int main(int argc, char *argv[])
     }
   }
   // log_trace("%d cells with negative volume / %d\n", count, dn_cell);
-  free(volume);
+  PDM_free(volume);
 
-  free(pvtx_ln_to_gn);
-  free(pcell_vtx_idx);
-  free(pcell_vtx);
-  free(pvtx_coord);
-  free(dcell_vtx_idx);
-
-
-  free(dvtx_ln_to_gn);
-  free(distrib_vtx);
-  free(distrib_face);
-  free(distrib_cell);
+  PDM_free(pvtx_ln_to_gn);
+  PDM_free(pcell_vtx_idx);
+  PDM_free(pcell_vtx);
+  PDM_free(pvtx_coord);
+  PDM_free(dcell_vtx_idx);
 
 
-  free(dvtx_coord);
-  free(dface_vtx);
-  free(dcell_vtx);
+  PDM_free(dvtx_ln_to_gn);
+  PDM_free(distrib_vtx);
+  PDM_free(distrib_face);
+  PDM_free(distrib_cell);
+
+
+  PDM_free(dvtx_coord);
+  PDM_free(dface_vtx);
+  PDM_free(dcell_vtx);
 
 
 
@@ -343,7 +346,7 @@ int main(int argc, char *argv[])
                              "icoball_surface_");
   }
   PDM_DMesh_nodal_free(dmn);
-  free(pcell_ln_to_gn);
+  PDM_free(pcell_ln_to_gn);
 
   PDM_MPI_Finalize();
 

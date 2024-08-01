@@ -8,6 +8,7 @@
 #include <string.h>
 
 #include "pdm.h"
+#include "pdm_priv.h"
 #include "pdm_config.h"
 #include "pdm_mpi.h"
 #include "pdm_part.h"
@@ -173,10 +174,11 @@ int main(int argc, char *argv[])
              &use_multipart);
 
   // Choose to use part or multipart
-  char *buffer = malloc(sizeof(int)*8+1);
+  char *buffer;
+  PDM_malloc(buffer,8+1, char);
   sprintf(buffer, "%d", use_multipart);
   setenv("PDM_USE_MULTIPART", buffer, 1);
-  free(buffer);
+  PDM_free(buffer);
 
   // debug
   int dbg_part_dcube = 0;
@@ -295,8 +297,8 @@ int main(int argc, char *argv[])
                              &dcell_face_idx,
                              &dcell_face,
                              comm);
-  free(cell_distri);
-  free(face_distri);
+  PDM_free(cell_distri);
+  PDM_free(face_distri);
 
   /*
    *  Create mesh partitions
@@ -304,7 +306,8 @@ int main(int argc, char *argv[])
 
   int have_dcell_part = 0;
 
-  int *dcell_part = (int *) malloc(dn_cell*sizeof(int));
+  int *dcell_part;
+  PDM_malloc(dcell_part,dn_cell,int);
   int *renum_properties_cell = NULL;
   int *renum_properties_face = NULL;
   int n_property_cell = 0;
@@ -339,8 +342,8 @@ int main(int argc, char *argv[])
                                       dface_group);
 
 
-  free(dcell_face_idx);
-  free(dcell_face    );
+  PDM_free(dcell_face_idx);
+  PDM_free(dcell_face    );
 
   if (time_and_stat && !use_multipart) {
 
@@ -574,7 +577,7 @@ int main(int argc, char *argv[])
       PDM_printf("       * total              : %i\n", bound_part_faces_sum);
     }
   }
-  free(dcell_part);
+  PDM_free(dcell_part);
   PDM_part_free(ppart);
 
   PDM_dcube_gen_free(dcube);

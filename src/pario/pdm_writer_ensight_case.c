@@ -131,8 +131,7 @@ _add_time(PDM_writer_ensight_case_time_t  *const time_set,
 
   time_set->n_time_values += 1;
 
-  time_set->time_value = (double *) realloc (time_set->time_value,
-                                             time_set->n_time_values * sizeof(double));
+  PDM_realloc(time_set->time_value ,time_set->time_value ,                                             time_set->n_time_values ,double);
 
   time_set->time_value[time_set->n_time_values - 1] = time_value;
 
@@ -166,9 +165,9 @@ _add_var(PDM_writer_ensight_case_t       *const this_case,
   size_t l = strlen(name);
 
   this_case->n_vars += 1;
-  var = (PDM_writer_ensight_case_var_t *) malloc (sizeof(PDM_writer_ensight_case_var_t));
+  PDM_malloc(var,1,PDM_writer_ensight_case_var_t);
 
-  var->name = (char *) malloc( (l + 1) * sizeof(char));
+  PDM_malloc(var->name, (l + 1) ,char);
   strcpy(var->name, name);
 
   /* Create description (49 chars max) */
@@ -277,9 +276,7 @@ _add_var(PDM_writer_ensight_case_t       *const this_case,
 
   size_t base_len = strlen(name);
 
-  var->file_name_base = (char *) malloc (
-             (  this_case->dir_name_length + prefix_len
-                + base_len + 1) * sizeof(char));
+  PDM_malloc(var->file_name_base, this_case->dir_name_length + prefix_len + base_len + 1, char);
   sprintf(var->file_name_base, "%s.", this_case->file_name_prefix);
 
   strcat(var->file_name_base, name);
@@ -307,9 +304,7 @@ _add_var(PDM_writer_ensight_case_t       *const this_case,
 
   /* Now we may finish associated case file line */
 
-  var->case_line = (char *) malloc (
-             (  strlen(line) + strlen(var->file_name_base) + 6
-                - this_case->dir_name_length + 1) * sizeof(char));
+  PDM_malloc(var->case_line, strlen(line) + strlen(var->file_name_base) + 6 - this_case->dir_name_length + 1, char);
 
   strcpy(var->case_line, line);
   strcat(var->case_line, var->file_name_base + this_case->dir_name_length);
@@ -329,8 +324,7 @@ _add_var(PDM_writer_ensight_case_t       *const this_case,
             this_case->case_file_name, name);
   }
 
-  this_case->var =
-    (PDM_writer_ensight_case_var_t **) realloc (this_case->var, this_case->n_vars * sizeof(PDM_writer_ensight_case_var_t *));
+  PDM_realloc(this_case->var ,this_case->var , this_case->n_vars ,PDM_writer_ensight_case_var_t *);
 
   this_case->var[this_case->n_vars - 1] = var;
 
@@ -352,17 +346,17 @@ _del_vars(PDM_writer_ensight_case_t  *const this_case)
 
     PDM_writer_ensight_case_var_t  *var = this_case->var[i];
 
-    free(var->name);
-    free(var->case_line);
-    free(var->file_name_base);
+    PDM_free(var->name);
+    PDM_free(var->case_line);
+    PDM_free(var->file_name_base);
     if (var->file_name != NULL)
-      free(var->file_name);
+      PDM_free(var->file_name);
 
-    free(var);
+    PDM_free(var);
 
   }
 
-  free(this_case->var);
+  PDM_free(this_case->var);
 }
 
 /*============================================================================
@@ -400,11 +394,11 @@ const int                   append
 
   /* Create and initialize structure */
 
-  this_case = (PDM_writer_ensight_case_t *) malloc (sizeof(PDM_writer_ensight_case_t));
+  PDM_malloc(this_case,1,PDM_writer_ensight_case_t);
 
   /* Initialize base name and partial file names */
 
-  this_case->name = (char *) malloc((strlen(name) + 1) * sizeof(char));
+  PDM_malloc(this_case->name,(strlen(name) + 1) ,char);
   strcpy(this_case->name, name);
   name_len = strlen(name);
 
@@ -421,7 +415,7 @@ const int                   append
 
   this_case->dir_name_length = (int) prefix_len;
 
-  this_case->case_file_name = (char *) malloc((prefix_len + name_len + 6) * sizeof(char));
+  PDM_malloc(this_case->case_file_name,(prefix_len + name_len + 6) ,char);
   if (dir_prefix != NULL) {
     strcpy(this_case->case_file_name, dir_prefix);
     strcat(this_case->case_file_name, "/");
@@ -433,8 +427,7 @@ const int                   append
     this_case->case_file_name[prefix_len + i] = (char) toupper(name[i]);
   this_case->case_file_name[prefix_len + name_len] = '\0';
 
-  this_case->file_name_prefix = (char *) malloc((strlen(this_case->case_file_name) + 1) *
-                                                sizeof(char));
+  PDM_malloc(this_case->file_name_prefix, strlen(this_case->case_file_name) + 1, char);
   strcpy(this_case->file_name_prefix, this_case->case_file_name);
   for (i = 0 ; i < name_len ; i++)
     this_case->file_name_prefix[prefix_len + i]
@@ -459,8 +452,7 @@ const int                   append
 
   char extension[5] = ".geo";
 
-  this_case->geom_file_name_base = (char *) malloc((strlen(this_case->file_name_prefix)
-                                                    + strlen(extension) + 1 ) * sizeof(char));
+  PDM_malloc(this_case->geom_file_name_base, strlen(this_case->file_name_prefix) + strlen(extension) + 1, char);
 
   strcpy(this_case->geom_file_name_base, this_case->file_name_prefix);
   strcat(this_case->geom_file_name_base, extension);
@@ -691,7 +683,7 @@ const int                   append
 
       if (retval != NULL) {
 
-        this_case->time_set = (PDM_writer_ensight_case_time_t *) malloc(sizeof(PDM_writer_ensight_case_time_t));
+        PDM_malloc(this_case->time_set,1,PDM_writer_ensight_case_time_t);
         this_case->time_set->time_value = NULL;
         this_case->time_set->n_time_values = 0;
 
@@ -780,13 +772,13 @@ const int                   append
 
    /* Free names */
 
-   free(this_case->name);
-   free(this_case->case_file_name);
-   free(this_case->file_name_prefix);
+  PDM_free(this_case->name);
+  PDM_free(this_case->case_file_name);
+  PDM_free(this_case->file_name_prefix);
 
-   free(this_case->geom_file_name_base);
+  PDM_free(this_case->geom_file_name_base);
     if (this_case->geom_file_name != NULL)
-      free(this_case->geom_file_name);
+      PDM_free(this_case->geom_file_name);
 
    /* Free variable entries */
 
@@ -796,16 +788,16 @@ const int                   append
 
    if (this_case->time_set != NULL) {
      if (this_case->time_set->time_value != NULL) {
-       free(this_case->time_set->time_value);
+      PDM_free(this_case->time_set->time_value);
        this_case->time_set->time_value = NULL;
      }
-     free(this_case->time_set);
+    PDM_free(this_case->time_set);
      this_case->time_set = NULL;
    }
 
   /* Free structure and return */
 
-  free(this_case);
+  PDM_free(this_case);
 
   return NULL;
 }
@@ -981,7 +973,7 @@ const double time_value
 )
 {
   if (this_case->time_set == NULL) {
-    this_case->time_set = (PDM_writer_ensight_case_time_t *) malloc(sizeof(PDM_writer_ensight_case_time_t));
+    PDM_malloc(this_case->time_set,1,PDM_writer_ensight_case_time_t);
     this_case->time_set->time_value = NULL;
     this_case->time_set->n_time_values = 0;
   }
@@ -991,7 +983,7 @@ const double time_value
   if (this_case->time_dependency != PDM_WRITER_TOPO_CST) {
 
     if (this_case->geom_file_name == NULL) {
-      this_case->geom_file_name = (char *) malloc(sizeof(char) * strlen(this_case->geom_file_name_base) + 7);
+      PDM_malloc(this_case->geom_file_name,strlen(this_case->geom_file_name_base) + 7,char);
     }
 
     int geom_index = this_case->time_set->n_time_values;
@@ -1006,7 +998,7 @@ const double time_value
     PDM_writer_ensight_case_var_t  *var = this_case->var[i];
     if (var->time_dep == PDM_WRITER_ON) {
       if (var->file_name == NULL) {
-        var->file_name = (char *) malloc(sizeof(char) * strlen(var->file_name_base) + 7);
+        PDM_malloc(var->file_name,strlen(var->file_name_base) + 7,char);
       }
 
       int geom_index = this_case->time_set->n_time_values;

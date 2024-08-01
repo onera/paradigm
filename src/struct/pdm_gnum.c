@@ -320,12 +320,12 @@ _gnum_from_coords_compute
 
   if (gen_gnum->merge) {
 
-    gen_gnum->index = malloc (sizeof(int *) * gen_gnum->n_part);
+    PDM_malloc(gen_gnum->index,gen_gnum->n_part,int *);
 
     pts_merge = PDM_points_merge_create (gen_gnum->n_part, gen_gnum->tolerance, gen_gnum->comm, PDM_OWNERSHIP_KEEP);
 
     for (int i_part = 0; i_part < gen_gnum->n_part; i_part++) {
-      gen_gnum->index[i_part] = malloc (sizeof(int) * gen_gnum->n_elts[i_part]);
+      PDM_malloc(gen_gnum->index[i_part],gen_gnum->n_elts[i_part],int);
       PDM_points_merge_cloud_set (pts_merge, i_part, gen_gnum->n_elts[i_part],
                                   gen_gnum->coords[i_part], gen_gnum->char_length[i_part]);
       for (int i = 0; i < gen_gnum->n_elts[i_part]; i++) {
@@ -374,7 +374,8 @@ _gnum_from_coords_compute
     }
   }
 
-  double *coords = malloc (sizeof(double) * gen_gnum->dim * n_entities);
+  double *coords;
+  PDM_malloc(coords,gen_gnum->dim * n_entities,double);
 
   if (gen_gnum->merge) {
     for (int i_part = 0; i_part < gen_gnum->n_part; i_part++) {
@@ -405,7 +406,7 @@ _gnum_from_coords_compute
     fflush(stdout);
   }
 
-  m_code = malloc (n_entities * sizeof(PDM_morton_code_t));
+  PDM_malloc(m_code,n_entities ,PDM_morton_code_t);
   order = NULL;
 
   double d[3];
@@ -438,8 +439,8 @@ _gnum_from_coords_compute
     PDM_g_num_t *block_global_num = NULL, *part_global_num = NULL;
     PDM_morton_code_t *morton_index = NULL;
 
-    weight = malloc (n_entities * sizeof(double));
-    morton_index = malloc ((n_ranks + 1) * sizeof(PDM_morton_code_t));
+    PDM_malloc(weight,n_entities ,double);
+    PDM_malloc(morton_index,(n_ranks + 1) ,PDM_morton_code_t);
 
     for (int i = 0; i < n_entities; i++) {
       weight[i] = 1;
@@ -458,9 +459,9 @@ _gnum_from_coords_compute
       fflush(stdout);
     }
 
-    // free(order);
-    free(weight);
-    c_rank = malloc (n_entities * sizeof(int));
+    //PDM_free(order);
+    PDM_free(weight);
+    PDM_malloc(c_rank,n_entities ,int);
 
     for (int i = 0; i < n_entities; i++) {
       size_t _c_rank = PDM_morton_quantile_search((size_t) n_ranks,
@@ -469,16 +470,16 @@ _gnum_from_coords_compute
       c_rank[i] = (int) _c_rank;
     }
 
-    free(morton_index);
-    free(m_code);
+    PDM_free(morton_index);
+    PDM_free(m_code);
 
     /* Build send_buf, send_count and send_shift
        to build a rank to coords indexed list */
 
-    send_count = malloc (n_ranks * sizeof (int));
-    recv_count = malloc (n_ranks * sizeof (int));
-    send_shift = malloc ((n_ranks + 1) * sizeof (int));
-    recv_shift = malloc ((n_ranks + 1) * sizeof (int));
+    PDM_malloc(send_count,n_ranks ,int);
+    PDM_malloc(recv_count,n_ranks ,int);
+    PDM_malloc(send_shift,(n_ranks + 1) ,int);
+    PDM_malloc(recv_shift,(n_ranks + 1) ,int);
 
     for (rank_id = 0; rank_id < n_ranks; rank_id++)
       send_count[rank_id] = 0;
@@ -503,7 +504,7 @@ _gnum_from_coords_compute
 
     /* Build send and receive buffers */
 
-    send_coords = malloc (send_shift[n_ranks] * sizeof(double));
+    PDM_malloc(send_coords,send_shift[n_ranks] ,double);
 
     for (rank_id = 0; rank_id < n_ranks; rank_id++)
       send_count[rank_id] = 0;
@@ -516,7 +517,7 @@ _gnum_from_coords_compute
       send_count[rank_id] += gen_gnum->dim;
     }
 
-    recv_coords = malloc (recv_shift[n_ranks] * sizeof(double));
+    PDM_malloc(recv_coords,recv_shift[n_ranks] ,double);
 
     /* Exchange coords between processes */
 
@@ -528,14 +529,14 @@ _gnum_from_coords_compute
       fflush(stdout);
     }
 
-    free(send_coords);
+    PDM_free(send_coords);
 
     /* Now re-build Morton codes on block distribution */
 
     n_block_ents = recv_shift[n_ranks] / gen_gnum->dim;
 
-    m_code = malloc (n_block_ents * sizeof(PDM_morton_code_t));
-    order = malloc (n_block_ents * sizeof(PDM_l_num_t));
+    PDM_malloc(m_code,n_block_ents ,PDM_morton_code_t);
+    PDM_malloc(order,n_block_ents ,PDM_l_num_t);
 
     PDM_morton_encode_coords(gen_gnum->dim,
                              level,
@@ -561,15 +562,15 @@ _gnum_from_coords_compute
        such that for each slice, the global number of an entity is equal to
        the cumulative number of sub-entities */
 
-    free(m_code);
-    free(recv_coords);
-    block_global_num = malloc(n_block_ents * sizeof(PDM_g_num_t));
+    PDM_free(m_code);
+    PDM_free(recv_coords);
+    PDM_malloc(block_global_num,n_block_ents ,PDM_g_num_t);
 
     for (int i = 0; i < n_block_ents; i++) {
       block_global_num[order[i]] = (PDM_g_num_t) i + 1;
     }
 
-    free(order);
+    PDM_free(order);
 
     current_global_num = (PDM_g_num_t) n_block_ents;
 
@@ -597,7 +598,7 @@ _gnum_from_coords_compute
 
     send_shift[n_ranks] /= gen_gnum->dim;
 
-    part_global_num = malloc (send_shift[n_ranks] * sizeof(PDM_g_num_t));
+    PDM_malloc(part_global_num,send_shift[n_ranks] ,PDM_g_num_t);
 
     PDM_MPI_Alltoallv(block_global_num, recv_count, recv_shift, PDM__PDM_MPI_G_NUM,
                       part_global_num, send_count, send_shift, PDM__PDM_MPI_G_NUM,
@@ -617,7 +618,7 @@ _gnum_from_coords_compute
 
       int k = 0;
       for (int i_part = 0; i_part < gen_gnum->n_part; i_part++) {
-        gen_gnum->g_nums[i_part] = malloc (sizeof(PDM_g_num_t) * gen_gnum->n_elts[i_part]);
+        PDM_malloc(gen_gnum->g_nums[i_part],gen_gnum->n_elts[i_part],PDM_g_num_t);
         for (int j1 = 0; j1 < gen_gnum->n_elts[i_part]; j1++) {
           gen_gnum->g_nums[i_part][j1] = -1;
         }
@@ -632,10 +633,14 @@ _gnum_from_coords_compute
         }
       }
 
-      int *send_count2 = malloc (n_ranks * sizeof (int));
-      int *recv_count2 = malloc (n_ranks * sizeof (int));
-      int *send_shift2 = malloc ((n_ranks + 1) * sizeof (int));
-      int *recv_shift2 = malloc ((n_ranks + 1) * sizeof (int));
+      int *send_count2;
+      PDM_malloc(send_count2,n_ranks ,int);
+      int *recv_count2;
+      PDM_malloc(recv_count2,n_ranks ,int);
+      int *send_shift2;
+      PDM_malloc(send_shift2,(n_ranks + 1) ,int);
+      int *recv_shift2;
+      PDM_malloc(recv_shift2,(n_ranks + 1) ,int);
 
       /*
        * Count number of values to send
@@ -702,10 +707,10 @@ _gnum_from_coords_compute
        * Send values
        */
 
-      PDM_g_num_t *send_buff = (PDM_g_num_t *)
-              malloc (sizeof(PDM_g_num_t)*send_shift2[n_ranks]);
-      PDM_g_num_t *recv_buff = (PDM_g_num_t *)
-              malloc (sizeof(PDM_g_num_t)*recv_shift2[n_ranks]);
+      PDM_g_num_t *send_buff;
+      PDM_malloc(send_buff, send_shift2[n_ranks], PDM_g_num_t);
+      PDM_g_num_t *recv_buff;
+      PDM_malloc(recv_buff, recv_shift2[n_ranks], PDM_g_num_t);
 
       for (int i_part = 0; i_part < gen_gnum->n_part; i_part++) {
 
@@ -763,19 +768,19 @@ _gnum_from_coords_compute
          gen_gnum->g_nums[i_part][ipt] = gnum;
       }
 
-      free (send_buff);
-      free (recv_buff);
-      free (send_count2);
-      free (recv_count2);
-      free (send_shift2);
-      free (recv_shift2);
+      PDM_free(send_buff);
+      PDM_free(recv_buff);
+      PDM_free(send_count2);
+      PDM_free(recv_count2);
+      PDM_free(send_shift2);
+      PDM_free(recv_shift2);
 
     }
 
     else {
       int k = 0;
       for (int i_part = 0; i_part < gen_gnum->n_part; i_part++) {
-        gen_gnum->g_nums[i_part] = malloc (sizeof(PDM_g_num_t) * gen_gnum->n_elts[i_part]);
+        PDM_malloc(gen_gnum->g_nums[i_part],gen_gnum->n_elts[i_part],PDM_g_num_t);
         for (int j1 = 0; j1 < gen_gnum->n_elts[i_part]; j1++) {
           rank_id = c_rank[k++];
           shift = send_shift[rank_id] + send_count[rank_id];
@@ -788,15 +793,15 @@ _gnum_from_coords_compute
 
     /* Free memory */
 
-    free(c_rank);
+    PDM_free(c_rank);
 
-    free(block_global_num);
-    free(part_global_num);
+    PDM_free(block_global_num);
+    PDM_free(part_global_num);
 
-    free(send_count);
-    free(recv_count);
-    free(send_shift);
-    free(recv_shift);
+    PDM_free(send_count);
+    PDM_free(recv_count);
+    PDM_free(send_shift);
+    PDM_free(recv_shift);
 
     /* Get final maximum global number value */
 
@@ -811,15 +816,16 @@ _gnum_from_coords_compute
 
   else if (n_ranks == 1) {
 
-    order = malloc (n_entities * sizeof(PDM_l_num_t));
+    PDM_malloc(order,n_entities ,PDM_l_num_t);
 
     PDM_morton_local_order(n_entities, m_code, order);
 
     _check_morton_ordering(gen_gnum->dim, n_entities, coords, m_code, order);
 
-    free(m_code);
+    PDM_free(m_code);
 
-    PDM_g_num_t *tmp_gnum = malloc (sizeof(PDM_g_num_t) * n_entities);
+    PDM_g_num_t *tmp_gnum;
+    PDM_malloc(tmp_gnum,n_entities,PDM_g_num_t);
 
     for (int i = 0; i < n_entities; i++) {
       tmp_gnum[order[i]] = (PDM_g_num_t) i+1;
@@ -827,10 +833,11 @@ _gnum_from_coords_compute
 
     if (gen_gnum->merge) {
 
-      int *_entities = malloc (sizeof(int) * 2 * n_entities);
+      int *_entities;
+      PDM_malloc(_entities,2 * n_entities,int);
       int k = 0;
       for (int i_part = 0; i_part < gen_gnum->n_part; i_part++) {
-        gen_gnum->g_nums[i_part] = malloc (sizeof(PDM_g_num_t) * gen_gnum->n_elts[i_part]);
+        PDM_malloc(gen_gnum->g_nums[i_part],gen_gnum->n_elts[i_part],PDM_g_num_t);
         for (int j1 = 0; j1 < gen_gnum->n_elts[i_part]; j1++) {
           gen_gnum->g_nums[i_part][j1] = -1;
           if (gen_gnum->index[i_part][j1] != -1) {
@@ -846,7 +853,7 @@ _gnum_from_coords_compute
         k += 1;
       }
 
-      free (_entities);
+      PDM_free(_entities);
 
       for (int i_part = 0; i_part < gen_gnum->n_part; i_part++) {
         int *candidates_idx;
@@ -873,15 +880,15 @@ _gnum_from_coords_compute
 
       int k = 0;
       for (int i_part = 0; i_part < gen_gnum->n_part; i_part++) {
-        gen_gnum->g_nums[i_part] = malloc (sizeof(PDM_g_num_t) * gen_gnum->n_elts[i_part]);
+        PDM_malloc(gen_gnum->g_nums[i_part],gen_gnum->n_elts[i_part],PDM_g_num_t);
         for (int j1 = 0; j1 <  gen_gnum->n_elts[i_part]; j1++) {
           gen_gnum->g_nums[i_part][j1] = tmp_gnum[k++];
         }
       }
     }
 
-    free(order);
-    free(tmp_gnum);
+    PDM_free(order);
+    PDM_free(tmp_gnum);
 
     gen_gnum->n_g_elt = n_entities;
 
@@ -889,13 +896,13 @@ _gnum_from_coords_compute
 
   if (gen_gnum->merge) {
     for (int i_part = 0; i_part < gen_gnum->n_part; i_part++) {
-      free (gen_gnum->index[i_part]);
+      PDM_free(gen_gnum->index[i_part]);
     }
-    free(gen_gnum->index);
+    PDM_free(gen_gnum->index);
     PDM_points_merge_free (pts_merge);
   }
 
-  free (coords);
+  PDM_free(coords);
 
 }
 
@@ -921,11 +928,15 @@ _gnum_from_parent_compute
   PDM_MPI_Comm_rank(gen_gnum->comm,
                 &i_proc);
 
-  int *send_buff_n   = (int *) malloc(sizeof(int) * n_procs);
-  int *send_buff_idx = (int *) malloc(sizeof(int) * n_procs);
+  int *send_buff_n;
+  PDM_malloc(send_buff_n,n_procs,int);
+  int *send_buff_idx;
+  PDM_malloc(send_buff_idx,n_procs,int);
 
-  int *recv_buff_n   = (int *) malloc(sizeof(int) * n_procs);
-  int *recv_buff_idx = (int *) malloc(sizeof(int) * n_procs);
+  int *recv_buff_n;
+  PDM_malloc(recv_buff_n,n_procs,int);
+  int *recv_buff_idx;
+  PDM_malloc(recv_buff_idx,n_procs,int);
 
   /* Calcul du nombre total d'elements du bloc */
 
@@ -952,8 +963,8 @@ _gnum_from_parent_compute
     recv_buff_idx[j] = 0;
   }
 
-  PDM_g_num_t *d_elt_proc =
-          (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * (n_procs + 1));
+  PDM_g_num_t *d_elt_proc;
+  PDM_malloc(d_elt_proc, n_procs + 1, PDM_g_num_t);
 
 
   PDM_g_num_t div_entiere = max_parent / n_procs;
@@ -1005,15 +1016,16 @@ _gnum_from_parent_compute
   PDM_g_num_t _l_numabs_tmp = d_elt_proc[i_proc+1] - d_elt_proc[i_proc];
   int l_numabs_tmp = (int) _l_numabs_tmp;
 
-  PDM_g_num_t *numabs_tmp = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * l_numabs_tmp);
+  PDM_g_num_t *numabs_tmp;
+  PDM_malloc(numabs_tmp,l_numabs_tmp,PDM_g_num_t);
 
-  PDM_g_num_t *n_elt_stocke_procs = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * (n_procs+1));
+  PDM_g_num_t *n_elt_stocke_procs;
+  PDM_malloc(n_elt_stocke_procs,(n_procs+1),PDM_g_num_t);
 
-  PDM_g_num_t *send_buff_numabs = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) *
-                                                       n_elt_loc_total);
-  PDM_g_num_t *recv_buff_numabs = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) *
-                                                      (recv_buff_idx[n_procs - 1] +
-                                                       recv_buff_n[n_procs - 1]));
+  PDM_g_num_t *send_buff_numabs;
+  PDM_malloc(send_buff_numabs, n_elt_loc_total, PDM_g_num_t);
+  PDM_g_num_t *recv_buff_numabs;
+  PDM_malloc(recv_buff_numabs, recv_buff_idx[n_procs - 1] + recv_buff_n[n_procs - 1], PDM_g_num_t);
 
   for (int j = 0; j < n_procs; j++) {
     send_buff_n[j] = 0;
@@ -1150,7 +1162,7 @@ _gnum_from_parent_compute
 
   for (int j = 0; j < gen_gnum->n_part; j++) {
 
-    gen_gnum->g_nums[j] = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * gen_gnum->n_elts[j]);
+    PDM_malloc(gen_gnum->g_nums[j],gen_gnum->n_elts[j],PDM_g_num_t);
 
     for (int k = 0; k < gen_gnum->n_elts[j]; k++) {
       const int i_elt_proc = PDM_binary_search_gap_long(gen_gnum->parent[j][k],
@@ -1163,15 +1175,15 @@ _gnum_from_parent_compute
 
   /* Liberation memoire */
 
-  free(send_buff_idx);
-  free(send_buff_n);
-  free(recv_buff_idx);
-  free(recv_buff_n);
-  free(send_buff_numabs);
-  free(recv_buff_numabs);
-  free(d_elt_proc);
-  free(numabs_tmp);
-  free(n_elt_stocke_procs);
+  PDM_free(send_buff_idx);
+  PDM_free(send_buff_n);
+  PDM_free(recv_buff_idx);
+  PDM_free(recv_buff_n);
+  PDM_free(send_buff_numabs);
+  PDM_free(recv_buff_numabs);
+  PDM_free(d_elt_proc);
+  PDM_free(numabs_tmp);
+  PDM_free(n_elt_stocke_procs);
 
 }
 
@@ -1209,11 +1221,15 @@ _gnum_from_parent_compute_opt
   /*
    * Create send buffer
    */
-  int *send_buff_n   = (int *) malloc( n_rank    * sizeof(int));
-  int *send_buff_idx = (int *) malloc((n_rank+1) * sizeof(int));
+  int *send_buff_n;
+  PDM_malloc(send_buff_n, n_rank    ,int);
+  int *send_buff_idx;
+  PDM_malloc(send_buff_idx,(n_rank+1) ,int);
 
-  int *recv_buff_n   = (int *) malloc( n_rank    * sizeof(int));
-  int *recv_buff_idx = (int *) malloc((n_rank+1) * sizeof(int));
+  int *recv_buff_n;
+  PDM_malloc(recv_buff_n, n_rank    ,int);
+  int *recv_buff_idx;
+  PDM_malloc(recv_buff_idx,(n_rank+1) ,int);
 
   /* Comptage du nombre d'elements a envoyer a chaque processus */
   for (int j = 0; j < n_rank; j++) {
@@ -1257,7 +1273,8 @@ _gnum_from_parent_compute_opt
   /*
    * Exchange key and val associate
    */
-  PDM_g_num_t *send_gnum   = malloc(          send_buff_idx[n_rank] * sizeof(PDM_g_num_t));
+  PDM_g_num_t *send_gnum;
+  PDM_malloc(send_gnum,          send_buff_idx[n_rank] ,PDM_g_num_t);
 
   for (int j = 0; j < gen_gnum->n_part; j++) {
     for (int k = 0; k < gen_gnum->n_elts[j]; k++) {
@@ -1270,7 +1287,8 @@ _gnum_from_parent_compute_opt
     }
   }
 
-  PDM_g_num_t *recv_gnum = malloc( recv_buff_idx[n_rank] * sizeof(PDM_g_num_t));
+  PDM_g_num_t *recv_gnum;
+  PDM_malloc(recv_gnum, recv_buff_idx[n_rank] ,PDM_g_num_t);
   PDM_MPI_Alltoallv((void *) send_gnum,
                     send_buff_n,
                     send_buff_idx,
@@ -1285,7 +1303,8 @@ _gnum_from_parent_compute_opt
   /*
    *
    */
-  int *unique_order = malloc(recv_buff_idx[n_rank] * sizeof(int));
+  int *unique_order;
+  PDM_malloc(unique_order,recv_buff_idx[n_rank] ,int);
   int n_unique = PDM_inplace_unique_long2(recv_gnum, unique_order, 0, recv_buff_idx[n_rank]-1);
 
   PDM_g_num_t current_global_num = n_unique;
@@ -1298,7 +1317,7 @@ _gnum_from_parent_compute_opt
     recv_gnum[i] = (PDM_g_num_t) unique_order[i] + global_num_shift + 1;
   }
 
-  free(unique_order);
+  PDM_free(unique_order);
 
   /*
    * Reverse exchange
@@ -1321,7 +1340,7 @@ _gnum_from_parent_compute_opt
   }
   for (int j = 0; j < gen_gnum->n_part; j++) {
 
-    gen_gnum->g_nums[j] = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * gen_gnum->n_elts[j]);
+    PDM_malloc(gen_gnum->g_nums[j],gen_gnum->n_elts[j],PDM_g_num_t);
 
     for (int k = 0; k < gen_gnum->n_elts[j]; k++) {
       const int t_rank = PDM_binary_search_gap_long (gen_gnum->parent[j][k]-1,
@@ -1333,15 +1352,15 @@ _gnum_from_parent_compute_opt
     }
   }
 
-  free(send_gnum);
-  free(recv_gnum);
+  PDM_free(send_gnum);
+  PDM_free(recv_gnum);
 
-  free(send_buff_n  );
-  free(send_buff_idx);
-  free(recv_buff_n  );
-  free(recv_buff_idx);
+  PDM_free(send_buff_n  );
+  PDM_free(send_buff_idx);
+  PDM_free(recv_buff_n  );
+  PDM_free(recv_buff_idx);
 
-  free(distrib);
+  PDM_free(distrib);
 
 }
 
@@ -1358,9 +1377,10 @@ _gnum_from_parent_compute_nuplet
 
   /* Generate a keys */
   int nuplet = gen_gnum->nuplet;
-  PDM_g_num_t **key_ln_to_gn = malloc(gen_gnum->n_part * sizeof(PDM_g_num_t *));
+  PDM_g_num_t **key_ln_to_gn;
+  PDM_malloc(key_ln_to_gn,gen_gnum->n_part ,PDM_g_num_t *);
   for(int i_part = 0; i_part < gen_gnum->n_part; ++i_part) {
-    key_ln_to_gn[i_part] = malloc(gen_gnum->n_elts[i_part] * sizeof(PDM_g_num_t));
+    PDM_malloc(key_ln_to_gn[i_part],gen_gnum->n_elts[i_part] ,PDM_g_num_t);
     for(int i = 0; i < gen_gnum->n_elts[i_part]; ++i) {
       key_ln_to_gn[i_part][i] = 1;
       for(int k = 0; k < nuplet; ++k) {
@@ -1391,11 +1411,15 @@ _gnum_from_parent_compute_nuplet
   /*
    * Create send buffer
    */
-  int *send_buff_n   = (int *) malloc( n_rank    * sizeof(int));
-  int *send_buff_idx = (int *) malloc((n_rank+1) * sizeof(int));
+  int *send_buff_n;
+  PDM_malloc(send_buff_n, n_rank    ,int);
+  int *send_buff_idx;
+  PDM_malloc(send_buff_idx,(n_rank+1) ,int);
 
-  int *recv_buff_n   = (int *) malloc( n_rank    * sizeof(int));
-  int *recv_buff_idx = (int *) malloc((n_rank+1) * sizeof(int));
+  int *recv_buff_n;
+  PDM_malloc(recv_buff_n, n_rank    ,int);
+  int *recv_buff_idx;
+  PDM_malloc(recv_buff_idx,(n_rank+1) ,int);
 
   /* Comptage du nombre d'elements a envoyer a chaque processus */
   for (int j = 0; j < n_rank; j++) {
@@ -1439,8 +1463,10 @@ _gnum_from_parent_compute_nuplet
   /*
    * Exchange key and val associate
    */
-  PDM_g_num_t *send_key   = malloc(          send_buff_idx[n_rank] * sizeof(PDM_g_num_t));
-  PDM_g_num_t *send_elmts = malloc( nuplet * send_buff_idx[n_rank] * sizeof(PDM_g_num_t));
+  PDM_g_num_t *send_key;
+  PDM_malloc(send_key,          send_buff_idx[n_rank] ,PDM_g_num_t);
+  PDM_g_num_t *send_elmts;
+  PDM_malloc(send_elmts, nuplet * send_buff_idx[n_rank] ,PDM_g_num_t);
 
   for (int j = 0; j < gen_gnum->n_part; j++) {
     for (int k = 0; k < gen_gnum->n_elts[j]; k++) {
@@ -1461,8 +1487,10 @@ _gnum_from_parent_compute_nuplet
   PDM_MPI_Type_create_contiguous(nuplet, PDM__PDM_MPI_G_NUM, &mpi_entity_type);
   PDM_MPI_Type_commit(&mpi_entity_type);
 
-  PDM_g_num_t *recv_key   = malloc(          recv_buff_idx[n_rank] * sizeof(PDM_g_num_t));
-  PDM_g_num_t *recv_elmts = malloc( nuplet * recv_buff_idx[n_rank] * sizeof(PDM_g_num_t));
+  PDM_g_num_t *recv_key;
+  PDM_malloc(recv_key,          recv_buff_idx[n_rank] ,PDM_g_num_t);
+  PDM_g_num_t *recv_elmts;
+  PDM_malloc(recv_elmts, nuplet * recv_buff_idx[n_rank] ,PDM_g_num_t);
   PDM_MPI_Alltoallv((void *) send_key,
                     send_buff_n,
                     send_buff_idx,
@@ -1489,13 +1517,15 @@ _gnum_from_parent_compute_nuplet
    * Sort incoming key
    */
   int n_recv_key = recv_buff_idx[n_rank];
-  int *order = malloc(n_recv_key * sizeof(int));
+  int *order;
+  PDM_malloc(order,n_recv_key ,int);
   PDM_order_gnum_s(recv_key, 1, order, n_recv_key);
 
   int n_conflit_to_solve = 0;
   PDM_g_num_t last_gnum = -1;
 
-  int *key_conflict_idx = malloc((n_recv_key+1) * sizeof(int));
+  int *key_conflict_idx;
+  PDM_malloc(key_conflict_idx,(n_recv_key+1) ,int);
   key_conflict_idx[0] = 0;
   for(int i = 0; i < n_recv_key; ++i) {
     if(recv_key[order[i]] != last_gnum){
@@ -1528,10 +1558,14 @@ _gnum_from_parent_compute_nuplet
     }
   }
 
-  int         *already_treat      = (int         *) malloc(         n_max_entity_per_key    * sizeof(int        ) );
-  int         *same_entity_idx    = (int         *) malloc(        (n_max_entity_per_key+1) * sizeof(int        ) );
-  PDM_g_num_t *tmp_parent         = (PDM_g_num_t *) malloc(nuplet * n_max_entity_per_key    * sizeof(PDM_g_num_t) );
-  int         *order_parent       = (int         *) malloc(         n_max_entity_per_key    * sizeof(int        ) );
+  int *already_treat;
+  PDM_malloc(already_treat,         n_max_entity_per_key    ,int        );
+  int *same_entity_idx;
+  PDM_malloc(same_entity_idx,        (n_max_entity_per_key+1) ,int        );
+  PDM_g_num_t *tmp_parent;
+  PDM_malloc(tmp_parent,nuplet * n_max_entity_per_key    ,PDM_g_num_t);
+  int *order_parent;
+  PDM_malloc(order_parent,         n_max_entity_per_key    ,int        );
 
   int i_abs_entity   = 0;
   for(int i = 0; i < n_conflit_to_solve; ++i) {
@@ -1600,13 +1634,13 @@ _gnum_from_parent_compute_nuplet
     }
   }
 
-  free(already_treat  );
-  free(same_entity_idx);
-  free(tmp_parent     );
-  free(order_parent   );
+  PDM_free(already_treat  );
+  PDM_free(same_entity_idx);
+  PDM_free(tmp_parent     );
+  PDM_free(order_parent   );
 
-  free(order);
-  free(key_conflict_idx);
+  PDM_free(order);
+  PDM_free(key_conflict_idx);
 
 
   PDM_g_num_t current_global_num = i_abs_entity;
@@ -1638,7 +1672,7 @@ _gnum_from_parent_compute_nuplet
   }
   for (int j = 0; j < gen_gnum->n_part; j++) {
 
-    gen_gnum->g_nums[j] = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * gen_gnum->n_elts[j]);
+    PDM_malloc(gen_gnum->g_nums[j],gen_gnum->n_elts[j],PDM_g_num_t);
 
     for (int k = 0; k < gen_gnum->n_elts[j]; k++) {
       const int t_rank = PDM_binary_search_gap_long (key_ln_to_gn[j][k]-1,
@@ -1651,20 +1685,20 @@ _gnum_from_parent_compute_nuplet
   }
 
   for(int i_part = 0; i_part < gen_gnum->n_part; ++i_part) {
-    free(key_ln_to_gn[i_part]);
+    PDM_free(key_ln_to_gn[i_part]);
   }
-  free(key_ln_to_gn);
-  free(send_key);
-  free(send_elmts);
-  free(recv_key);
-  free(recv_elmts);
+  PDM_free(key_ln_to_gn);
+  PDM_free(send_key);
+  PDM_free(send_elmts);
+  PDM_free(recv_key);
+  PDM_free(recv_elmts);
 
-  free(send_buff_n  );
-  free(send_buff_idx);
-  free(recv_buff_n  );
-  free(recv_buff_idx);
+  PDM_free(send_buff_n  );
+  PDM_free(send_buff_idx);
+  PDM_free(recv_buff_n  );
+  PDM_free(recv_buff_idx);
 
-  free(distrib);
+  PDM_free(distrib);
 }
 
 /*=============================================================================
@@ -1695,7 +1729,8 @@ PDM_gnum_create
  const PDM_ownership_t owner
 )
 {
-  PDM_gen_gnum_t *gen_gnum = (PDM_gen_gnum_t *) malloc(sizeof(PDM_gen_gnum_t));
+  PDM_gen_gnum_t *gen_gnum;
+  PDM_malloc(gen_gnum,1,PDM_gen_gnum_t);
 
   gen_gnum->comm              = comm;
   gen_gnum->owner             = owner;
@@ -1707,11 +1742,11 @@ PDM_gnum_create
   gen_gnum->merge       = merge;
   gen_gnum->tolerance   = tolerance;
   gen_gnum->n_g_elt     = -1;
-  gen_gnum->g_nums      = (PDM_g_num_t **) malloc (sizeof(PDM_g_num_t * ) * n_part);
+  PDM_malloc(gen_gnum->g_nums,n_part,PDM_g_num_t * );
   gen_gnum->coords      = NULL;
   gen_gnum->char_length = NULL;
   gen_gnum->parent      = NULL;
-  gen_gnum->n_elts      = (int *) malloc (sizeof(int) * n_part);
+  PDM_malloc(gen_gnum->n_elts,n_part,int);
   gen_gnum->index       = NULL;
 
   for (int i = 0; i < n_part; i++) {
@@ -1752,14 +1787,14 @@ PDM_gnum_set_from_coords
 )
 {
   if (gen_gnum->coords == NULL) {
-    gen_gnum->coords = (double **) malloc (sizeof(double * ) * gen_gnum->n_part);
+    PDM_malloc(gen_gnum->coords,gen_gnum->n_part,double * );
     for (int i = 0; i < gen_gnum->n_part; i++) {
       gen_gnum->coords[i_part] = NULL;
     }
   }
 
   if (gen_gnum->merge && gen_gnum->char_length == NULL) {
-    gen_gnum->char_length = (double **) malloc (sizeof(double * ) * gen_gnum->n_part);
+    PDM_malloc(gen_gnum->char_length,gen_gnum->n_part,double * );
     for (int i = 0; i < gen_gnum->n_part; i++) {
       gen_gnum->char_length[i_part] = NULL;
     }
@@ -1796,7 +1831,7 @@ PDM_gnum_set_from_parents
 {
 
   if (gen_gnum->parent == NULL) {
-    gen_gnum->parent = (PDM_g_num_t **) malloc (sizeof(PDM_g_num_t * ) * gen_gnum->n_part);
+    PDM_malloc(gen_gnum->parent,gen_gnum->n_part,PDM_g_num_t * );
     for (int i = 0; i < gen_gnum->n_part; i++) {
       gen_gnum->parent[i_part] = NULL;
     }
@@ -1903,28 +1938,28 @@ PDM_gen_gnum_t *gen_gnum
 {
 
   if (gen_gnum->coords != NULL) {
-    free (gen_gnum->coords);
+    PDM_free(gen_gnum->coords);
   }
 
   if (gen_gnum->char_length != NULL) {
-    free (gen_gnum->char_length);
+    PDM_free(gen_gnum->char_length);
   }
 
   if (gen_gnum->parent != NULL) {
-    free (gen_gnum->parent);
+    PDM_free(gen_gnum->parent);
   }
 
   if(( gen_gnum->owner == PDM_OWNERSHIP_KEEP ) ||
      ( gen_gnum->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !gen_gnum->results_is_getted)){
     for (int i = 0; i < gen_gnum->n_part; i++) {
-      free (gen_gnum->g_nums[i]);
+      PDM_free(gen_gnum->g_nums[i]);
     }
   }
 
-  free (gen_gnum->g_nums);
-  free (gen_gnum->n_elts);
+  PDM_free(gen_gnum->g_nums);
+  PDM_free(gen_gnum->n_elts);
 
-  free (gen_gnum);
+  PDM_free(gen_gnum);
 
 }
 

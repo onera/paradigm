@@ -269,7 +269,7 @@ int main(int argc, char *argv[])
     PDM_log_trace_connectivity_long(dface_edge_idx, dface_vtx_check, dn_face, "dface_vtx_check ::");
     PDM_log_trace_connectivity_long(dface_vtx_idx, tmp_dface_vtx, dn_face, "dface_vtx ::");
   }
-  free(dface_vtx_check);
+  PDM_free(dface_vtx_check);
 
 
   PDM_dmesh_nodal_to_dmesh_free(dmntodm);

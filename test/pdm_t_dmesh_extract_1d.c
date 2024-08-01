@@ -266,7 +266,7 @@ int main(int argc, char *argv[])
                                                    PDM_OWNERSHIP_KEEP);
 
   assert(dextract_edge_vtx_idx == NULL);
-  dextract_edge_vtx_idx = malloc( (dn_extract_edge+1) * sizeof(int));
+  PDM_malloc(dextract_edge_vtx_idx, (dn_extract_edge+1) ,int);
   for(int i_edge = 0; i_edge < dn_extract_edge+1; ++i_edge) {
     dextract_edge_vtx_idx[i_edge] = 2*i_edge;
   }
@@ -279,7 +279,8 @@ int main(int argc, char *argv[])
 
   PDM_g_num_t *distrib_edge_extract = PDM_compute_entity_distribution(comm, dn_extract_edge);
 
-  PDM_g_num_t* extract_edge_ln_to_gn = malloc(dn_extract_edge * sizeof(PDM_g_num_t));
+  PDM_g_num_t *extract_edge_ln_to_gn;
+  PDM_malloc(extract_edge_ln_to_gn,dn_extract_edge ,PDM_g_num_t);
   for(int i = 0; i < dn_extract_edge; ++i) {
     extract_edge_ln_to_gn[i] = distrib_edge_extract[i_rank] + i + 1;
   }
@@ -311,8 +312,8 @@ int main(int argc, char *argv[])
                  (const PDM_g_num_t **) &pextract_vtx_ln_to_gn,
                                         &tmp_pextract_vtx_coord);
   double* pextract_vtx_coord = tmp_pextract_vtx_coord[0];
-  free(tmp_pextract_vtx_coord);
-  free(extract_vtx_distribution);
+  PDM_free(tmp_pextract_vtx_coord);
+  PDM_free(extract_vtx_distribution);
 
   if (post) {
     char filename[999];
@@ -328,14 +329,14 @@ int main(int argc, char *argv[])
                            NULL);
   }
 
-  free(pextract_vtx_ln_to_gn);
-  free(pextract_edge_vtx_idx);
-  free(pextract_edge_vtx    );
-  free(pextract_vtx_coord   );
-  free(dextract_edge_vtx_idx);
+  PDM_free(pextract_vtx_ln_to_gn);
+  PDM_free(pextract_edge_vtx_idx);
+  PDM_free(pextract_edge_vtx    );
+  PDM_free(pextract_vtx_coord   );
+  PDM_free(dextract_edge_vtx_idx);
 
-  free(distrib_edge_extract);
-  free(extract_edge_ln_to_gn);
+  PDM_free(distrib_edge_extract);
+  PDM_free(extract_edge_ln_to_gn);
 
   PDM_dmesh_extract_free(dme);
 

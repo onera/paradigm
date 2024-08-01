@@ -201,7 +201,8 @@ char *argv[]
                                            NULL, // global_extents
                                            local_tree_kind);
 
-  int *init_location_pts = malloc(3 * n_src * sizeof(int));
+  int *init_location_pts;
+  PDM_malloc(init_location_pts,3 * n_src ,int);
   for(int i = 0; i < n_src; ++i) {
     init_location_pts[3*i  ] = i_rank;
     init_location_pts[3*i+1] = 0; // i_part
@@ -230,7 +231,8 @@ char *argv[]
                         &box_extents,
                         &box_gnum);
 
-  int *init_location_box = malloc(3 * n_box * sizeof(int));
+  int *init_location_box;
+  PDM_malloc(init_location_box,3 * n_box ,int);
   for(int i = 0; i < n_box; ++i) {
     init_location_box[3*i  ] = i_rank;
     init_location_box[3*i+1] = 0; // i_part
@@ -259,22 +261,22 @@ char *argv[]
                                           &box_pts,
                                           &pts_coord);
 
-    free(box_pts_idx);
-    free(box_pts    );
-    free(pts_coord  );
+    PDM_free(box_pts_idx);
+    PDM_free(box_pts    );
+    PDM_free(pts_coord  );
   }
 
 
   PDM_doctree_free(doct);
 
 
-  free(box_gnum);
-  free(box_extents);
-  free(init_location_box);
-  free(init_location_pts);
+  PDM_free(box_gnum);
+  PDM_free(box_extents);
+  PDM_free(init_location_box);
+  PDM_free(init_location_pts);
 
-  free (src_coord);
-  free (src_g_num);
+  PDM_free(src_coord);
+  PDM_free(src_g_num);
 
   if (i_rank == 0) {
     PDM_printf ("-- End\n");

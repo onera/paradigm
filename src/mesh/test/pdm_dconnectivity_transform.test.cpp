@@ -4,6 +4,7 @@
 #include "pdm_doctest.h"
 #include "pdm_dconnectivity_transform.h"
 #include "pdm_logging.h"
+#include "pdm_priv.h"
 
 /*
  *  Use case
@@ -65,10 +66,10 @@ MPI_TEST_CASE("[pdm_dconnectivity_transform] - 1p - dcell_face + dface_vtx = dce
   //                              &dcell_vtx_idx_2,
   //                              &dcell_vtx_2);
 
-  free(dcell_vtx_idx);
-  free(dcell_vtx);
-  free(dvtx_cell_idx);
-  free(dvtx_cell);
+  PDM_free(dcell_vtx_idx);
+  PDM_free(dcell_vtx);
+  PDM_free(dvtx_cell_idx);
+  PDM_free(dvtx_cell);
 
 }
 
@@ -151,11 +152,11 @@ MPI_TEST_CASE("[pdm_dconnectivity_transform] - 2p - dcell_face + dface_vtx = dce
   //                              0,
   //                              &dvtx_cell_idx,
   //                              &dvtx_cell);
-  // free(dvtx_cell_idx);
-  // free(dvtx_cell);
+  // PDM_free(dvtx_cell_idx);
+  // PDM_free(dvtx_cell);
 
-  free(dcell_vtx_idx);
-  free(dcell_vtx);
+  PDM_free(dcell_vtx_idx);
+  PDM_free(dcell_vtx);
 
 }
 
@@ -180,7 +181,7 @@ MPI_TEST_CASE("[pdm_dconnectivity_transform] - 1p - PDM_dorder_reverse",1) {
   MPI_CHECK_EQ_C_ARRAY(0, old_to_new, old_to_new_expected.data(), dn_entity);
 
   // PDM_log_trace_array_long(old_to_new, dn_entity, "old_to_new : ");
-  free(old_to_new);
+  PDM_free(old_to_new);
 
 }
 
@@ -214,6 +215,6 @@ MPI_TEST_CASE("[pdm_dconnectivity_transform] - 2p - PDM_dorder_reverse",2) {
   MPI_CHECK_EQ_C_ARRAY(1, old_to_new, old_to_new_expected_p1.data(), dn_entity);
 
   // PDM_log_trace_array_long(old_to_new, dn_entity, "old_to_new : ");
-  free(old_to_new);
+  PDM_free(old_to_new);
 
 }

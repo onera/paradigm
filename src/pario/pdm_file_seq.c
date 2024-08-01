@@ -17,6 +17,8 @@
 #include "pdm_file_seq.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
+#include "pdm.h"
+#include "pdm_priv.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -76,9 +78,10 @@ PDM_file_seq_t *PDM_file_seq_open(const char *nom,
                                 const PDM_file_seq_mode_t mode)
 {
 
-  PDM_file_seq_t *fichier = (PDM_file_seq_t *) malloc(sizeof(PDM_file_seq_t));
+  PDM_file_seq_t *fichier;
+  PDM_malloc(fichier,1,PDM_file_seq_t);
 
-  fichier->nom = (char *) malloc(strlen(nom) + 1);
+  PDM_malloc(fichier->nom, strlen(nom) + 1, char);
   strcpy(fichier->nom, nom);
   fichier->mode = mode;
 
@@ -224,7 +227,7 @@ long PDM_file_seq_tell(PDM_file_seq_t *fichier)
 
 void PDM_file_seq_close(PDM_file_seq_t *fichier)
 {
-  free(fichier->nom);
+  PDM_free(fichier->nom);
   fclose(fichier->fichier);
 }
 

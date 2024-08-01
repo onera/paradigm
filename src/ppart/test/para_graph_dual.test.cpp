@@ -2,6 +2,7 @@
 #include "pdm.h"
 #include "pdm_doctest.h"
 #include "pdm_para_graph_dual.h"
+#include "pdm_priv.h"
 
 
 
@@ -84,12 +85,12 @@ MPI_TEST_CASE("[pdm_para_graph_dual] - 1p - dual from arc2node", 1) {
     CHECK_EQ_C_ARRAY(dcell_face, expc_cell_face, 48);
    }
 
-  free(dual_graph_idx);
-  free(dual_graph);
+  PDM_free(dual_graph_idx);
+  PDM_free(dual_graph);
   if (dcell_face_idx != NULL)
-    free(dcell_face_idx);
+    PDM_free(dcell_face_idx);
   if (dcell_face != NULL)
-    free(dcell_face);
+    PDM_free(dcell_face);
 }
 
 MPI_TEST_CASE("[pdm_para_graph_dual] - 3p - dual from arc2node", 3) {
@@ -172,10 +173,10 @@ MPI_TEST_CASE("[pdm_para_graph_dual] - 3p - dual from arc2node", 3) {
     }
    }
 
-  if(dual_graph_idx != NULL) free(dual_graph_idx);
-  if(dual_graph     != NULL) free(dual_graph    );
-  if(dcell_face_idx != NULL) free(dcell_face_idx);
-  if(dcell_face     != NULL) free(dcell_face    );
+  if(dual_graph_idx != NULL) PDM_free(dual_graph_idx);
+  if(dual_graph     != NULL) PDM_free(dual_graph    );
+  if(dcell_face_idx != NULL) PDM_free(dcell_face_idx);
+  if(dcell_face     != NULL) PDM_free(dcell_face    );
 }
 
 
@@ -245,8 +246,8 @@ MPI_TEST_CASE("[pdm_para_graph_dual] - 1p - dual from node2arc", 1) {
     CHECK_EQ_C_ARRAY(dual_graph, expc_graph, 24);
    }
 
-  free(dual_graph_idx);
-  free(dual_graph);
+  PDM_free(dual_graph_idx);
+  PDM_free(dual_graph);
 }
 
 MPI_TEST_CASE("[pdm_para_graph_dual] - 3p - dual from node2arc", 3) {
@@ -322,8 +323,8 @@ MPI_TEST_CASE("[pdm_para_graph_dual] - 3p - dual from node2arc", 3) {
       CHECK_EQ_C_ARRAY(dual_graph, expc_graph, 6);
     }
   }
-  free(dual_graph_idx);
-  free(dual_graph);
+  PDM_free(dual_graph_idx);
+  PDM_free(dual_graph);
 }
 
 MPI_TEST_CASE("[pdm_para_graph_dual] - 3p - Split graph with PARMetis", 3) {
@@ -446,6 +447,6 @@ MPI_TEST_CASE("[pdm_para_graph_dual] - 3p - Split graph with PARMetis", 3) {
         CHECK_EQ_C_ARRAY(cell_part, expc_cell_part, dn_cell);
       }
     }
-    free(cell_part);
+    PDM_free(cell_part);
   }
 }

@@ -85,10 +85,10 @@ char *argv[]
   size_t **part_key = NULL;
   if(n_rank == 1){
     n_part = 2;
-    n_elmts   = (int *     ) malloc( n_part * sizeof(int    ));
-    part_stri = (int **    ) malloc( n_part * sizeof(int*   ));
-    part_data = (int **    ) malloc( n_part * sizeof(int*   ));
-    part_key  = (size_t ** ) malloc( n_part * sizeof(size_t*));
+    PDM_malloc(n_elmts, n_part ,int    );
+    PDM_malloc(part_stri, n_part ,int*   );
+    PDM_malloc(part_data, n_part ,int*   );
+    PDM_malloc(part_key, n_part ,size_t*);
 
     n_elmts[0] = 4;
     n_elmts[1] = 4;
@@ -101,10 +101,10 @@ char *argv[]
 
   } else if( n_rank == 2) {
     n_part = 1;
-    n_elmts   = (int *     ) malloc( n_part * sizeof(int    ));
-    part_stri = (int **    ) malloc( n_part * sizeof(int*   ));
-    part_data = (int **    ) malloc( n_part * sizeof(int*   ));
-    part_key  = (size_t ** ) malloc( n_part * sizeof(size_t*));
+    PDM_malloc(n_elmts, n_part ,int    );
+    PDM_malloc(part_stri, n_part ,int*   );
+    PDM_malloc(part_data, n_part ,int*   );
+    PDM_malloc(part_key, n_part ,size_t*);
 
     if( i_rank == 0) {
       n_elmts[0] = 4;
@@ -123,7 +123,7 @@ char *argv[]
    * Compute key
    */
   for(int i_part = 0; i_part < n_part; i_part++){
-    part_key[i_part] = (size_t *) malloc(n_elmts[i_part] * sizeof(size_t));
+    PDM_malloc(part_key[i_part],n_elmts[i_part] ,size_t);
     int idx = 0;
     for(int ielmt = 0; ielmt < n_elmts[i_part]; ++ielmt){
       size_t key = 0;
@@ -161,7 +161,8 @@ char *argv[]
   /*
    *
    */
-  PDM_g_num_t** ln_to_gn = (PDM_g_num_t **) malloc(n_part * sizeof(PDM_g_num_t *));
+  PDM_g_num_t* *ln_to_gn;
+  PDM_malloc(ln_to_gn,n_part ,PDM_g_num_t *);
   for(int i_part = 0; i_part < n_part; ++i_part){
     ln_to_gn[i_part] = PDM_gnum_from_hv_get(gnum_fhv_id, i_part);
     if (verbose) {
@@ -197,14 +198,14 @@ char *argv[]
    * Free
    */
   PDM_gnum_from_hv_free(gnum_fhv_id);
-  free(part_stri);
-  free(part_data);
-  free(n_elmts);
+  PDM_free(part_stri);
+  PDM_free(part_data);
+  PDM_free(n_elmts);
   for(int i_part = 0; i_part < n_part; ++i_part){
-    free(part_key[i_part]);
+    PDM_free(part_key[i_part]);
   }
-  free(part_key);
-  free(ln_to_gn);
+  PDM_free(part_key);
+  PDM_free(ln_to_gn);
 
   if (i_rank == 0) {
     PDM_printf ("-- End\n");

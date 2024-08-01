@@ -449,6 +449,7 @@ Now we write the mesh that we just got to be able to visualize it later on **(no
   ! call PDM_pointer_array_part_set(pelt_ln_to_gn, 0, elt_ln_to_gn)
 
   ! call writer_wrapper(comm,          &
+  !                     i_rank,        &
   !                     "visu",        &
   !                     "pmesh",       &
   !                     1,             &
@@ -662,6 +663,7 @@ Now we write the mesh that we just got to be able to visualize it later on **(no
   call PDM_pointer_array_part_set(pcell_face,     0, cell_face)
 
   call writer_wrapper(comm,                            &
+                      i_rank,                          &
                       "visu",                          &
                       "pmesh",                         &
                       1,                               &
@@ -1103,6 +1105,7 @@ Before handling the allocated memory, we output the mesh partition extension (no
   elt_fields(1)%name = "extension"
 
   call writer_wrapper(comm,           &
+                      i_rank,         &
                       "visu",         &
                       "pext",         &
                       1,              &

@@ -218,8 +218,8 @@ cdef class DistributedMeshNodal:
                                           PDM_OWNERSHIP_USER)
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
-    def set_poly2d_section(self, 
-                           NPY.ndarray[NPY.int32_t, mode='c', ndim=1] poly_connectivity_idx, 
+    def set_poly2d_section(self,
+                           NPY.ndarray[NPY.int32_t, mode='c', ndim=1] poly_connectivity_idx,
                            NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] poly_connectivity):
         id_section = PDM_DMesh_nodal_section_add(self.dmn, _PDM_GEOMETRY_KIND_SURFACIC, _PDM_MESH_NODAL_POLY_2D)
 
@@ -532,9 +532,16 @@ def ComputeDistributionFromDelmt(int         dnelt,
 
     return elt_distrib
 
+
 # ------------------------------------------------------------------------
+def get_n_vtx_from_element(PDM_Mesh_nodal_elt_t type,
+                           int                  order=1):
+    """
+    """
+    return PDM_Mesh_nodal_n_vertices_element(type, order)
 
 
+# ------------------------------------------------------------------------
 def find_topological_ridge(DMeshNodal pydmn):
   """
   find_topological_ridge(pydmn)

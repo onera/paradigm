@@ -29,6 +29,8 @@
 #include "pdm_timer.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
+#include "pdm.h"
+#include "pdm_priv.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -85,7 +87,8 @@ struct _pdm_timer_t {
 
 PDM_timer_t *PDM_timer_create(void)
 {
-  PDM_timer_t *timer = (PDM_timer_t *) malloc(sizeof(PDM_timer_t));
+  PDM_timer_t *timer;
+  PDM_malloc(timer,1,PDM_timer_t);
   PDM_timer_init(timer);
 
   return timer;
@@ -287,7 +290,7 @@ double PDM_timer_elapsed(PDM_timer_t *timer)
 
 void PDM_timer_free(PDM_timer_t *timer)
 {
-  free(timer);
+  PDM_free(timer);
 }
 
 #ifdef __cplusplus

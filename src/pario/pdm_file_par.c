@@ -18,6 +18,8 @@
 #include "pdm_file_par.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
+#include "pdm.h"
+#include "pdm_priv.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -107,9 +109,10 @@ PDM_file_par_t
 {
   int _mode = PDM_MPI_MODE_RDWR;
 
-  PDM_file_par_t *PDM_file_par = (PDM_file_par_t *) malloc(sizeof(PDM_file_par_t));
+  PDM_file_par_t *PDM_file_par;
+  PDM_malloc(PDM_file_par,1,PDM_file_par_t);
 
-  PDM_file_par->nom = (char *) malloc(strlen(nom) + 1);
+  PDM_malloc(PDM_file_par->nom, strlen(nom) + 1, char);
   strcpy(PDM_file_par->nom, nom);
 
   PDM_file_par->mode = mode;
@@ -653,7 +656,7 @@ PDM_file_par_close
 {
 
   if (PDM_file_par != NULL) {
-    free(PDM_file_par->nom);
+    PDM_free(PDM_file_par->nom);
 
     PDM_MPI_File_close(&(PDM_file_par->fichier));
 

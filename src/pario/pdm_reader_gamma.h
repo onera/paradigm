@@ -66,21 +66,12 @@ PDM_reader_gamma_dmesh_nodal
 
 
 void
-PDM_write_meshb
-(
-  const char   *filename,
-  const int     n_vtx,
-  const int     n_tetra,
-  const int     n_tri,
-  const int     n_edge,
-  const double *vtx_coords,
-  const int    *vtx_tags,
-  const int    *tetra_vtx,
-  const int    *tetra_tag,
-  const int    *tria_vtx,
-  const int    *tria_tag,
-  const int    *edge_vtx,
-  const int    *edge_tag
+PDM_write_meshb(
+  const char         *filename,
+  const int          *n_elt_table,
+        int         **tag_table,
+        PDM_g_num_t **vtx_connect_table,
+  const double       *vtx_coords
 );
 
 

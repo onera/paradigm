@@ -203,7 +203,8 @@ int main(int argc, char *argv[])
   int dn_cell = distrib_cell[i_rank+1] - distrib_cell[i_rank];
 
   int n_cell_extract = dn_cell/2;
-  PDM_g_num_t *selected_cell_gnum = malloc(n_cell_extract * sizeof(PDM_g_num_t));
+  PDM_g_num_t *selected_cell_gnum;
+  PDM_malloc(selected_cell_gnum,n_cell_extract ,PDM_g_num_t);
 
   for(int i = 0; i < n_cell_extract; ++i) {
     unsigned int seed = (unsigned int) (distrib_cell[i_rank] + i);
@@ -221,8 +222,8 @@ int main(int argc, char *argv[])
   PDM_dmesh_extract_dmesh_nodal_set(dme, dmn);
   PDM_dmesh_extract_compute(dme);
 
-  free(distrib_cell);
-  free(selected_cell_gnum);
+  PDM_free(distrib_cell);
+  PDM_free(selected_cell_gnum);
 
   PDM_dmesh_nodal_t* extract_dmn = NULL;
   PDM_dmesh_extract_dmesh_nodal_get(dme, &extract_dmn, PDM_OWNERSHIP_KEEP);

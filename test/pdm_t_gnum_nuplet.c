@@ -151,7 +151,8 @@ char *argv[]
   PDM_g_num_t* distrib = PDM_compute_uniform_entity_distribution(comm, n_g_elmts);
   int dn_elmts = distrib[i_rank+1] - distrib[i_rank];
 
-  PDM_g_num_t* elmts_ln_to_gn = (PDM_g_num_t *) malloc(nuplet * dn_elmts * sizeof(PDM_g_num_t));
+  PDM_g_num_t *elmts_ln_to_gn;
+  PDM_malloc(elmts_ln_to_gn,nuplet * dn_elmts ,PDM_g_num_t);
 
   int seed = 0;
   for(int i = 0; i < dn_elmts; ++i) {
@@ -190,8 +191,8 @@ char *argv[]
 
   PDM_gnum_free(gen_gnum);
 
-  free(distrib);
-  free(elmts_ln_to_gn);
+  PDM_free(distrib);
+  PDM_free(elmts_ln_to_gn);
   PDM_MPI_Finalize ();
 
   return 0;

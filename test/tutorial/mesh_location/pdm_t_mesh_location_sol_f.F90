@@ -502,6 +502,7 @@ program tp_mesh_location
 
 
   call writer_wrapper(comm,                      &
+                      i_rank,                    & 
                       "mesh_location_sol_f",     &
                       "src_mesh",                &
                       src_n_part,                &
@@ -517,6 +518,7 @@ program tp_mesh_location
 
 
   call writer_wrapper(comm,                  &
+                      i_rank,                    & 
                       "mesh_location_sol_f", &
                       "tgt_mesh",            &
                       tgt_n_part,            &

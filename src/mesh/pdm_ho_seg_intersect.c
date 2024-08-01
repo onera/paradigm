@@ -149,7 +149,8 @@ _determinant_3x3
 // {
 
 
-//   *line_box_intersection_point = malloc(sizeof(double) * 3 * n_boxes);
+// *line_box_intersection_point;
+// PDM_malloc(line_box_intersection_point,3 * n_boxes,double);
 
 //   double x[3];
 //   double x_in[3];
@@ -263,7 +264,7 @@ double                    **intersection_point
   line1_side = PDM_DOT_PRODUCT(n, face0line1);
 
   if (line0_side * line1_side < 0) {
-    *intersection_point = malloc(sizeof(double) * 3);
+    PDM_malloc(*intersection_point,3,double);
     out = 1;
     double t = ((n[0] + 1) * face_coord0[0] + (n[1] + 1) *  face_coord0[1] +  (n[2] + 1) *  face_coord0[2] + d);
     t -= (line_coord0[0] + line_coord0[1] + line_coord0[2]);
@@ -287,7 +288,7 @@ _ho_bounding_box_line_intersect_points_get
  double         **box_line_intersect_points // for each box the intersection points with a given line (2 per box)
 )
 {
-  *box_line_intersect_points     = malloc(sizeof(double) * line_boxes_idx[n_line] * 6);
+  PDM_malloc(*box_line_intersect_points,line_boxes_idx[n_line] * 6,double);
   double *_box_line_intersect_points = *box_line_intersect_points;
 
   int count_plane_intersect = 0;
@@ -339,8 +340,8 @@ _ho_bounding_box_line_intersect_points_get
           count_plane_intersect++;
         } // end if on the face
 
-        free(*intersection_point);
-        free(intersection_point);
+        PDM_free(*intersection_point);
+        PDM_free(intersection_point);
 
       } // end if there is an intersection
 
@@ -367,8 +368,8 @@ _ho_bounding_box_line_intersect_points_get
           count_plane_intersect++;
         } // end if on the face
 
-        free(*intersection_point);
-        free(intersection_point);
+        PDM_free(*intersection_point);
+        PDM_free(intersection_point);
 
       } // end if there is an intersection
 
@@ -395,8 +396,8 @@ _ho_bounding_box_line_intersect_points_get
           count_plane_intersect++;
         } // end if on the face
 
-        free(*intersection_point);
-        free(intersection_point);
+        PDM_free(*intersection_point);
+        PDM_free(intersection_point);
 
       } // end if there is an intersection
 
@@ -423,8 +424,8 @@ _ho_bounding_box_line_intersect_points_get
           count_plane_intersect++;
         } // end if on the face
 
-        free(*intersection_point);
-        free(intersection_point);
+        PDM_free(*intersection_point);
+        PDM_free(intersection_point);
 
       } // end if there is an intersection
 
@@ -451,8 +452,8 @@ _ho_bounding_box_line_intersect_points_get
           count_plane_intersect++;
         } // end if on the face
 
-        free(*intersection_point);
-        free(intersection_point);
+        PDM_free(*intersection_point);
+        PDM_free(intersection_point);
 
       } // end if there is an intersection
 
@@ -479,8 +480,8 @@ _ho_bounding_box_line_intersect_points_get
           count_plane_intersect++;
         } // end if on the face
 
-        free(*intersection_point);
-        free(intersection_point);
+        PDM_free(*intersection_point);
+        PDM_free(intersection_point);
 
       } // end if there is an intersection
 
@@ -693,7 +694,7 @@ PDM_ho_seg_intersect_P1_line
   {
   case PDM_MESH_NODAL_TRIA3:
 
-    *newton_initial_point = malloc(sizeof(double) * 3 * line_boxes_idx[back_face_line_idx[n_back_face_to_intersect]]);
+    PDM_malloc(*newton_initial_point,3 * line_boxes_idx[back_face_line_idx[n_back_face_to_intersect]],double);
 
     // Get intersection between line and P1 approximation (to get starting point)
 
@@ -826,7 +827,7 @@ PDM_ho_seg_intersect_compute
    *                                         - extents (equivalent to line_boxes_extents_coords)
    */
 
-  *line_box_intersection_point = malloc(sizeof(double) * (*line_boxes_idx)[n_line]);
+  PDM_malloc(*line_box_intersection_point,(*line_boxes_idx)[n_line],double);
 
   // Get the intersection between the lines and those boxes
 

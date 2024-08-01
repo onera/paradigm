@@ -213,8 +213,8 @@ char *argv[]
   PDM_multipart_free(mpart);
   PDM_dmesh_free(dm);
 
-  free (dpts_coord);
-  free (distrib_pts);
+  PDM_free(dpts_coord);
+  PDM_free(distrib_pts);
 
   if (i_rank == 0) {
     PDM_printf ("-- End\n");

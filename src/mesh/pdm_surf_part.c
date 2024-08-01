@@ -76,7 +76,8 @@ const double     *coords,
 const PDM_g_num_t *vtx_ln_to_gn
 )
 {
-  PDM_surf_part_t *_part = (PDM_surf_part_t *) malloc(sizeof(PDM_surf_part_t));
+  PDM_surf_part_t *_part;
+  PDM_malloc(_part,1,PDM_surf_part_t);
 
   _part->n_face                = n_face;
   _part->nGhostFace           = 0;
@@ -130,26 +131,26 @@ PDM_surf_part_free
     part->face_vtx_idx = NULL;
     part->face_vtx = NULL;
     if (part->faceEdgeIdx != NULL)
-      free(part->faceEdgeIdx);
+      PDM_free(part->faceEdgeIdx);
     if (part->faceEdge != NULL)
-      free(part->faceEdge);
+      PDM_free(part->faceEdge);
 
     part->face_ln_to_gn = NULL;
     part->coords = NULL;
     if (part->vtxEdgeIdx != NULL)
-      free(part->vtxEdgeIdx);
+      PDM_free(part->vtxEdgeIdx);
     if (part->vtxEdge != NULL)
-      free(part->vtxEdge);
+      PDM_free(part->vtxEdge);
     part->vtx_ln_to_gn = NULL;
 
     if (part->edgeFace != NULL)
-      free(part->edgeFace);
+      PDM_free(part->edgeFace);
 
     if (part->edgeVtx != NULL)
-      free(part->edgeVtx);
+      PDM_free(part->edgeVtx);
 
     if (part->edgeLnToGn != NULL)
-      free(part->edgeLnToGn);
+      PDM_free(part->edgeLnToGn);
 
     if (part->edgePartBound != NULL)
       part->edgePartBound = PDM_part_bound_free(part->edgePartBound);
@@ -157,15 +158,15 @@ PDM_surf_part_free
       part->vtxPartBound = PDM_part_bound_free(part->vtxPartBound);
 
     if (part->carLgthVtx != NULL)
-      free (part->carLgthVtx);
+      PDM_free(part->carLgthVtx);
 
     if (part->faceNormal != NULL)
-      free (part->faceNormal);
+      PDM_free(part->faceNormal);
 
     if (part->extents != NULL)
-      free (part->extents);
+      PDM_free(part->extents);
 
-    free(part);
+    PDM_free(part);
   }
 
   return NULL;
@@ -214,8 +215,10 @@ PDM_surf_part_t *part
   hashTableIdx[0] = 0;
   PDM_array_accumulate_int(hashTableIdx, lHashTableIdx);
 
-  int *listEdges = (int *) malloc(sizeof(int) * l_edges);
-  int *edgeFaceUncompress = (int *) malloc(sizeof(int) * l_edges/2);
+  int *listEdges;
+  PDM_malloc(listEdges,l_edges,int);
+  int *edgeFaceUncompress;
+  PDM_malloc(edgeFaceUncompress,l_edges/2,int);
   l_edges = 0;
 
   int max_n_vtx_face = 0;
@@ -237,7 +240,7 @@ PDM_surf_part_t *part
     }
   }
 
-  free(nHashTable);
+  PDM_free(nHashTable);
 
   /*
    * Compress edges
@@ -250,7 +253,7 @@ PDM_surf_part_t *part
    * First allocation to l_edges
    */
 
-  part->edgeVtx  = (int *) malloc(sizeof(int) * l_edges);
+  PDM_malloc(part->edgeVtx,l_edges,int);
   part->nEdge    = 0;
 
   /*
@@ -298,7 +301,7 @@ PDM_surf_part_t *part
   for (int i = 0; i < part->n_vtx; i++) {
     part->vtxEdgeIdx[i+1] = part->vtxEdgeIdx[i+1] + part->vtxEdgeIdx[i];
   }
-  part->vtxEdge  = (int *) malloc(sizeof(int) * part->vtxEdgeIdx[part->n_vtx]);
+  PDM_malloc(part->vtxEdge,part->vtxEdgeIdx[part->n_vtx],int);
   int *n_vtxEdge  = PDM_array_zeros_int(part->n_vtx);
 
   for (int i = 0; i < part->nEdge; i++) {
@@ -307,17 +310,17 @@ PDM_surf_part_t *part
     part->vtxEdge[part->vtxEdgeIdx[vtx1] + n_vtxEdge[vtx1]++] = i+1;
     part->vtxEdge[part->vtxEdgeIdx[vtx2] + n_vtxEdge[vtx2]++] = i+1;
   }
-  free(n_vtxEdge);
+  PDM_free(n_vtxEdge);
 
-  free(hashTable);
-  free(hashTableIdx);
-  free(listEdges);
+  PDM_free(hashTable);
+  PDM_free(hashTableIdx);
+  PDM_free(listEdges);
 
   /*
    * Re-allocation to real size
    */
 
-  part->edgeVtx = (int *) realloc(part->edgeVtx, sizeof(int) * 2 * nEdge);
+  PDM_realloc(part->edgeVtx ,part->edgeVtx , 2 * nEdge,int);
 
   /*
    * edge -> face connectivity
@@ -349,16 +352,16 @@ PDM_surf_part_t *part
     }
   }
 
-  free(edgesToCompressEdges);
+  PDM_free(edgesToCompressEdges);
 
   /*
    * face -> edge connectivity
    */
 
-  part->faceEdgeIdx = (int *) malloc(sizeof(int) * (part->n_face + 1));
+  PDM_malloc(part->faceEdgeIdx,(part->n_face + 1),int);
   memcpy(part->faceEdgeIdx, part->face_vtx_idx, sizeof(int) * (part->n_face + 1));
   const int *faceEdgeIdx = part->faceEdgeIdx;
-  part->faceEdge = (int *) malloc(sizeof(int) * faceEdgeIdx[part->n_face]);
+  PDM_malloc(part->faceEdge,faceEdgeIdx[part->n_face],int);
   int *n_faceEdge = PDM_array_zeros_int(part->n_face);
 
   for (int i = 0; i < nEdge; i++) {
@@ -456,10 +459,10 @@ PDM_surf_part_t *part
     }
   }
 
-  free (vtxEdge);
+  PDM_free(vtxEdge);
 
-  free(edgeFaceUncompress);
-  free(n_faceEdge);
+  PDM_free(edgeFaceUncompress);
+  PDM_free(n_faceEdge);
 
 }
 

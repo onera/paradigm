@@ -9,6 +9,7 @@
 #include <assert.h>
 
 #include "pdm.h"
+#include "pdm_priv.h"
 #include "pdm_config.h"
 #include "pdm_mpi.h"
 #include "pdm_printf.h"
@@ -154,8 +155,10 @@ int main(int argc, char *argv[])
 
   int elt_dim = PDM_Mesh_nodal_elt_dim_get(t_elt);
 
-  int *ijk_to_ijk  = malloc (sizeof(int) * n_nodes * elt_dim);
-  int *user_to_ijk = malloc (sizeof(int) * n_nodes * elt_dim);
+  int *ijk_to_ijk;
+  PDM_malloc(ijk_to_ijk,n_nodes * elt_dim,int);
+  int *user_to_ijk;
+  PDM_malloc(user_to_ijk,n_nodes * elt_dim,int);
   int idx = 0;
 
   switch(t_elt) {
@@ -246,8 +249,10 @@ int main(int argc, char *argv[])
   char name[999];
 
 
-  double *rnd  = malloc (sizeof(double) * n_nodes);
-  int    *perm = malloc (sizeof(int   ) * n_nodes);
+  double *rnd;
+  PDM_malloc(rnd,n_nodes,double);
+  int *perm;
+  PDM_malloc(perm,n_nodes,int   );
 
   for (int irep = 0; irep < n_rep; irep++) {
 
@@ -275,10 +280,10 @@ int main(int argc, char *argv[])
                                      user_to_ijk);
   }
 
-  free (perm);
-  free (rnd);
-  free (ijk_to_ijk);
-  free (user_to_ijk);
+  PDM_free(perm);
+  PDM_free(rnd);
+  PDM_free(ijk_to_ijk);
+  PDM_free(user_to_ijk);
 
 
   /*int *user_to_ijk = PDM_ho_ordering_user_to_ijk_get ("PDM_HO_ORDERING_VTK",
@@ -306,7 +311,8 @@ int main(int argc, char *argv[])
 
   /*int n_nodes_max = PDM_Mesh_nodal_n_vtx_elt_get (PDM_MESH_NODAL_HEXA8, order);
 
-  int *user_to_ijk = malloc (sizeof(int) * n_nodes_max * 3);
+  int *user_to_ijk;
+  PDM_malloc(user_to_ijk,n_nodes_max * 3,int);
   int *ijk_to_user = NULL;
   int idx;
 
@@ -410,10 +416,10 @@ int main(int argc, char *argv[])
 
     printf("type %d OK\n", (int) (type));
 
-    free (ijk_to_user);
+    PDM_free(ijk_to_user);
   }
 
-  free (user_to_ijk);*/
+  PDM_free(user_to_ijk);*/
 
 
   PDM_MPI_Finalize();

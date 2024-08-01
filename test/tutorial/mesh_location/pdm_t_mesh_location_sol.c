@@ -350,15 +350,17 @@ int main(int argc, char *argv[])
 
 
   // Interpolate second field (node-based)
-  double **src_vtx_field2 = malloc(sizeof(double *) * src_n_part);
+  double **src_vtx_field2;
+  PDM_malloc(src_vtx_field2,src_n_part,double *);
   for (int i_part = 0; i_part < src_n_part; i_part++) {
-    src_vtx_field2[i_part] = malloc(sizeof(double) * src_n_vtx[i_part]);
+    PDM_malloc(src_vtx_field2[i_part],src_n_vtx[i_part],double);
     for (int i_vtx = 0; i_vtx < src_n_vtx[i_part]; i_vtx++) {
       src_vtx_field2[i_part][i_vtx] = src_vtx_coord[i_part][3*i_vtx];
     }
   }
 
-  double **src_send_field2 = malloc(sizeof(double *) * src_n_part);
+  double **src_send_field2;
+  PDM_malloc(src_send_field2,src_n_part,double *);
   for (int i_part = 0; i_part < src_n_part; i_part++) {
     int         *src_to_tgt_idx          = NULL;
     PDM_g_num_t *points_gnum             = NULL;
@@ -390,7 +392,7 @@ int main(int argc, char *argv[])
 
     int n_pts = src_to_tgt_idx[src_n_face[i_part]];
 
-    src_send_field2[i_part] = malloc(sizeof(double) * n_pts);
+    PDM_malloc(src_send_field2[i_part],n_pts,double);
     for (int i_elt = 0; i_elt < src_n_face[i_part]; i_elt++) {
       for (int i_pt = src_to_tgt_idx[i_elt]; i_pt < src_to_tgt_idx[i_elt+1]; i_pt++) {
         src_send_field2[i_part][i_pt] = 0;
@@ -428,14 +430,14 @@ int main(int argc, char *argv[])
 
   // Check received fields
   double **tgt_field[3];
-  tgt_field[0] = malloc(sizeof(double *) * tgt_n_part);
-  tgt_field[1] = malloc(sizeof(double *) * tgt_n_part);
-  tgt_field[2] = malloc(sizeof(double *) * tgt_n_part);
+  PDM_malloc(tgt_field[0],tgt_n_part,double *);
+  PDM_malloc(tgt_field[1],tgt_n_part,double *);
+  PDM_malloc(tgt_field[2],tgt_n_part,double *);
 
   for (int i_part = 0; i_part < tgt_n_part; i_part++) {
-    tgt_field[0][i_part] = malloc(sizeof(double) * tgt_n_vtx[i_part]);
-    tgt_field[1][i_part] = malloc(sizeof(double) * tgt_n_vtx[i_part]);
-    tgt_field[2][i_part] = malloc(sizeof(double) * tgt_n_vtx[i_part]);
+    PDM_malloc(tgt_field[0][i_part],tgt_n_vtx[i_part],double);
+    PDM_malloc(tgt_field[1][i_part],tgt_n_vtx[i_part],double);
+    PDM_malloc(tgt_field[2][i_part],tgt_n_vtx[i_part],double);
 
     double *tgt_field1 = tgt_field[0][i_part];
     double *tgt_field2 = tgt_field[1][i_part];
@@ -489,9 +491,10 @@ int main(int argc, char *argv[])
   };
 
 
-  double **src_elt_field_values = malloc(sizeof(double *) * src_n_part);
+  double **src_elt_field_values;
+  PDM_malloc(src_elt_field_values,src_n_part,double *);
   for (int i_part = 0; i_part < src_n_part; i_part++) {
-    src_elt_field_values[i_part] = malloc(sizeof(double) * src_n_face[i_part]);
+    PDM_malloc(src_elt_field_values[i_part],src_n_face[i_part],double);
     for (int i_elt = 0; i_elt < src_n_face[i_part]; i_elt++) {
       src_elt_field_values[i_part][i_elt] = (double) src_face_ln_to_gn[i_part][i_elt];
     }
@@ -521,9 +524,9 @@ int main(int argc, char *argv[])
                  &src_vtx_field2);
 
   for (int i_part = 0; i_part < src_n_part; i_part++) {
-    free(src_elt_field_values[i_part]);
+    PDM_free(src_elt_field_values[i_part]);
   }
-  free(src_elt_field_values);
+  PDM_free(src_elt_field_values);
 
 
   writer_wrapper(comm,
@@ -556,62 +559,62 @@ int main(int argc, char *argv[])
   PDM_part_to_part_free(ptp); // /!\ Ownership
 
   for (int i_part = 0; i_part < src_n_part; i_part++) {
-    free(src_vtx_coord    [i_part]);
-    free(src_edge_vtx     [i_part]);
-    free(src_face_edge_idx[i_part]);
-    free(src_face_edge    [i_part]);
-    free(src_face_vtx     [i_part]);
-    free(src_vtx_ln_to_gn [i_part]);
-    free(src_edge_ln_to_gn[i_part]);
-    free(src_face_ln_to_gn[i_part]);
-    free(src_vtx_field2   [i_part]);
-    free(src_send_field2  [i_part]);
+    PDM_free(src_vtx_coord    [i_part]);
+    PDM_free(src_edge_vtx     [i_part]);
+    PDM_free(src_face_edge_idx[i_part]);
+    PDM_free(src_face_edge    [i_part]);
+    PDM_free(src_face_vtx     [i_part]);
+    PDM_free(src_vtx_ln_to_gn [i_part]);
+    PDM_free(src_edge_ln_to_gn[i_part]);
+    PDM_free(src_face_ln_to_gn[i_part]);
+    PDM_free(src_vtx_field2   [i_part]);
+    PDM_free(src_send_field2  [i_part]);
   }
-  free(src_n_vtx        );
-  free(src_n_edge       );
-  free(src_n_face       );
-  free(src_vtx_coord    );
-  free(src_edge_vtx     );
-  free(src_face_edge_idx);
-  free(src_face_edge    );
-  free(src_face_vtx     );
-  free(src_vtx_ln_to_gn );
-  free(src_edge_ln_to_gn);
-  free(src_face_ln_to_gn);
-  free(src_vtx_field2   );
-  free(src_send_field2  ); // can be free'd right after PDM_part_to_part_iexch_wait(ptp, &request2);
+  PDM_free(src_n_vtx        );
+  PDM_free(src_n_edge       );
+  PDM_free(src_n_face       );
+  PDM_free(src_vtx_coord    );
+  PDM_free(src_edge_vtx     );
+  PDM_free(src_face_edge_idx);
+  PDM_free(src_face_edge    );
+  PDM_free(src_face_vtx     );
+  PDM_free(src_vtx_ln_to_gn );
+  PDM_free(src_edge_ln_to_gn);
+  PDM_free(src_face_ln_to_gn);
+  PDM_free(src_vtx_field2   );
+  PDM_free(src_send_field2  ); // can be free'd right after PDM_part_to_part_iexch_wait(ptp, &request2);
 
   for (int i_part = 0; i_part < tgt_n_part; i_part++) {
-    free(tgt_vtx_coord    [i_part]);
-    free(tgt_edge_vtx     [i_part]);
-    free(tgt_face_edge_idx[i_part]);
-    free(tgt_face_edge    [i_part]);
-    free(tgt_face_vtx     [i_part]);
-    free(tgt_vtx_ln_to_gn [i_part]);
-    free(tgt_edge_ln_to_gn[i_part]);
-    free(tgt_face_ln_to_gn[i_part]);
-    free(tgt_recv_field1  [i_part]);
-    free(tgt_recv_field2  [i_part]);
-    free(tgt_field[0][i_part]);
-    free(tgt_field[1][i_part]);
-    free(tgt_field[2][i_part]);
+    PDM_free(tgt_vtx_coord    [i_part]);
+    PDM_free(tgt_edge_vtx     [i_part]);
+    PDM_free(tgt_face_edge_idx[i_part]);
+    PDM_free(tgt_face_edge    [i_part]);
+    PDM_free(tgt_face_vtx     [i_part]);
+    PDM_free(tgt_vtx_ln_to_gn [i_part]);
+    PDM_free(tgt_edge_ln_to_gn[i_part]);
+    PDM_free(tgt_face_ln_to_gn[i_part]);
+    PDM_free(tgt_recv_field1  [i_part]);
+    PDM_free(tgt_recv_field2  [i_part]);
+    PDM_free(tgt_field[0][i_part]);
+    PDM_free(tgt_field[1][i_part]);
+    PDM_free(tgt_field[2][i_part]);
   }
-  free(tgt_n_vtx        );
-  free(tgt_n_edge       );
-  free(tgt_n_face       );
-  free(tgt_vtx_coord    );
-  free(tgt_edge_vtx     );
-  free(tgt_face_edge_idx);
-  free(tgt_face_edge    );
-  free(tgt_face_vtx     );
-  free(tgt_vtx_ln_to_gn );
-  free(tgt_edge_ln_to_gn);
-  free(tgt_face_ln_to_gn);
-  free(tgt_recv_field1  );
-  free(tgt_recv_field2  );
-  free(tgt_field[0]);
-  free(tgt_field[1]);
-  free(tgt_field[2]);
+  PDM_free(tgt_n_vtx        );
+  PDM_free(tgt_n_edge       );
+  PDM_free(tgt_n_face       );
+  PDM_free(tgt_vtx_coord    );
+  PDM_free(tgt_edge_vtx     );
+  PDM_free(tgt_face_edge_idx);
+  PDM_free(tgt_face_edge    );
+  PDM_free(tgt_face_vtx     );
+  PDM_free(tgt_vtx_ln_to_gn );
+  PDM_free(tgt_edge_ln_to_gn);
+  PDM_free(tgt_face_ln_to_gn);
+  PDM_free(tgt_recv_field1  );
+  PDM_free(tgt_recv_field2  );
+  PDM_free(tgt_field[0]);
+  PDM_free(tgt_field[1]);
+  PDM_free(tgt_field[2]);
 
   // Finalize
   PDM_MPI_Finalize();

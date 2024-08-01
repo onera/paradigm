@@ -218,7 +218,8 @@ int main(int argc, char *argv[])
   }
   int have_dcell_part = 0;
 
-  int *dcell_part = (int *) malloc(dn_cell*sizeof(int));
+  int *dcell_part;
+  PDM_malloc(dcell_part,dn_cell,int);
   int *renum_properties_cell = NULL;
   int *renum_properties_face = NULL;
   int n_property_cell = 0;
@@ -255,10 +256,14 @@ int main(int argc, char *argv[])
 
 
 
-  int *part_n_vtx = malloc (sizeof(int) * n_part);
-  PDM_g_num_t **part_vtx_ln_to_gn  = malloc (sizeof(PDM_g_num_t *) * n_part);
-  double      **part_local_field   = malloc (sizeof(double *)      * n_part);
-  double      **part_reduced_field = malloc (sizeof(double *)      * n_part);
+  int *part_n_vtx;
+  PDM_malloc(part_n_vtx,n_part,int);
+  PDM_g_num_t **part_vtx_ln_to_gn;
+  PDM_malloc(part_vtx_ln_to_gn,n_part,PDM_g_num_t *);
+  double **part_local_field;
+  PDM_malloc(part_local_field,n_part,double *);
+  double **part_reduced_field;
+  PDM_malloc(part_reduced_field,n_part,double *);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
 
@@ -327,17 +332,17 @@ int main(int argc, char *argv[])
                            &face_group_ln_to_gn);
 
     part_n_vtx[i_part] = n_vtx;
-    part_vtx_ln_to_gn[i_part] = malloc (sizeof(PDM_g_num_t) * n_vtx);
+    PDM_malloc(part_vtx_ln_to_gn[i_part],n_vtx,PDM_g_num_t);
     memcpy (part_vtx_ln_to_gn[i_part], vtx_ln_to_gn, sizeof(PDM_g_num_t) * n_vtx);
 
-    part_local_field[i_part] = malloc (sizeof(double) * n_vtx * 3);
+    PDM_malloc(part_local_field[i_part],n_vtx * 3,double);
     for (int i = 0; i < n_vtx; i++) {
       for (int j = 0; j < 3; j++) {
         part_local_field[i_part][3*i+j] = (i_rank + 1) * vtx_coord[3*i+j];
       }
     }
 
-    part_reduced_field[i_part] = malloc (sizeof(double) * n_vtx * 3);
+    PDM_malloc(part_reduced_field[i_part],n_vtx * 3,double);
   }
 
 
@@ -499,15 +504,15 @@ int main(int argc, char *argv[])
 
 
   for (int i_part = 0; i_part < n_part; i_part++) {
-    free (part_vtx_ln_to_gn[i_part]);
-    free (part_local_field[i_part]);
-    free (part_reduced_field[i_part]);
+    PDM_free(part_vtx_ln_to_gn[i_part]);
+    PDM_free(part_local_field[i_part]);
+    PDM_free(part_reduced_field[i_part]);
   }
-  free (part_n_vtx);
-  free (part_vtx_ln_to_gn);
-  free (part_local_field);
-  free (part_reduced_field);
-  free (dcell_part);
+  PDM_free(part_n_vtx);
+  PDM_free(part_vtx_ln_to_gn);
+  PDM_free(part_local_field);
+  PDM_free(part_reduced_field);
+  PDM_free(dcell_part);
 
   PDM_part_free (ppart);
 

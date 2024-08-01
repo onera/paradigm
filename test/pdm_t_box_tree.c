@@ -153,8 +153,10 @@ _generate_cartesian_cloud
 )
 {
   PDM_g_num_t n_pts = n_vtx_x * n_vtx_y * n_vtx_z;
-  double      *pt_coord = malloc( 3 * n_pts * sizeof(double));
-  PDM_g_num_t *pt_gnum  = malloc(     n_pts * sizeof(PDM_g_num_t));
+  double *pt_coord;
+  PDM_malloc(pt_coord, 3 * n_pts ,double);
+  PDM_g_num_t *pt_gnum;
+  PDM_malloc(pt_gnum,     n_pts ,PDM_g_num_t);
 
   double step_x = length / (double) (n_vtx_x - 1);
   double step_y = length / (double) (n_vtx_y - 1);
@@ -197,8 +199,10 @@ _generate_cartesian_boxes
   PDM_g_num_t n_box = (n_vtx_x - 1) * ( n_vtx_y - 1) * ( n_vtx_z - 1);
   // PDM_g_num_t n_box = (n_vtx_x) * ( n_vtx_y) * ( n_vtx_z);
   *n_box_out = n_box;
-  double      *box_coord = malloc( 6 * n_box * sizeof(double));
-  PDM_g_num_t *box_gnum  = malloc(     n_box * sizeof(PDM_g_num_t));
+  double *box_coord;
+  PDM_malloc(box_coord, 6 * n_box ,double);
+  PDM_g_num_t *box_gnum;
+  PDM_malloc(box_gnum,     n_box ,PDM_g_num_t);
 
   double step_x = length / (double) (n_vtx_x - 1);
   double step_y = length / (double) (n_vtx_y - 1);
@@ -432,8 +436,8 @@ int main(int argc, char *argv[])
   double complexity = n_tgt_box;
   printf("PDM_box_tree_get_boxes_intersects time : %12.5e -  %12.5e - complexity = %12.5e \n", dt, dt/complexity, complexity);
 
-  free(shared_to_box_idx);
-  free(shared_to_box    );
+  PDM_free(shared_to_box_idx);
+  PDM_free(shared_to_box    );
 
   t1 = PDM_MPI_Wtime();
   int  *box_pts_idx = NULL;
@@ -448,22 +452,22 @@ int main(int argc, char *argv[])
   complexity = (double) n_pts;
   printf("PDM_box_tree_boxes_containing_points time : %12.5e - %12.5e - complexity = %12.5e \n", dt, dt/complexity, complexity);
 
-  free(box_pts_idx);
-  free(box_pts);
+  PDM_free(box_pts_idx);
+  PDM_free(box_pts);
 
 
   PDM_box_set_destroy (&box_set);
   PDM_box_set_destroy (&box_target);
   PDM_box_tree_destroy(&box_tree);
 
-  free(init_location_proc);
-  free(init_location_tgt_box);
-  free(box_extents);
-  free(box_gnum);
-  free(tgt_box_extents);
-  free(tgt_box_gnum);
-  free(pt_coord);
-  free(pt_gnum);
+  PDM_free(init_location_proc);
+  PDM_free(init_location_tgt_box);
+  PDM_free(box_extents);
+  PDM_free(box_gnum);
+  PDM_free(tgt_box_extents);
+  PDM_free(tgt_box_gnum);
+  PDM_free(pt_coord);
+  PDM_free(pt_gnum);
 
 
   PDM_MPI_Barrier (PDM_MPI_COMM_WORLD);
