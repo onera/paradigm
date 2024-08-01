@@ -3055,7 +3055,7 @@ _part_extension_3d
       }
 
 
-
+      printf("part_ext->extend_type = %i \n", part_ext->extend_type);
 
       /*
        * Update graphe - Only extend idx since no connextion is create AT this stage
@@ -3072,6 +3072,8 @@ _part_extension_3d
         abort();
         // pn_entity_extended        = pn_edge_extended[i_part];
         // pn_entity                 = pn_edge         [i_part];
+      } else {
+        printf(" oooooooooooooooooooo \n");
       }
       // log_trace("pn_concat_entity_extended = %i \n", pn_concat_entity_extended);
 
@@ -3262,7 +3264,9 @@ _part_extension_3d
         free(pedge_extended_to_pedge_idx      [i_part]);
         free(pedge_extended_to_pedge_triplet  [i_part]);
         free(pedge_extended_to_pedge_interface[i_part]);
-        free(pedge_extended_to_pedge_sens     [i_part]);
+        if(pedge_extended_to_pedge_sens != NULL && pedge_extended_to_pedge_sens     [i_part] != NULL) {
+          free(pedge_extended_to_pedge_sens     [i_part]);
+        }
 
         free(pextended_face_edge_idx[i_part]);
         free(pextended_face_edge    [i_part]);
