@@ -1734,20 +1734,20 @@ PDM_part_domain_interface_view_by_part
     n_part_loc_all_domain += pdi->n_part[i_dom];
   }
 
-  int *pn_entity_num;
-  PDM_malloc(pn_entity_num, n_part_loc_all_domain ,int  );
-  int **pentity_num;
-  PDM_malloc(pentity_num, n_part_loc_all_domain ,int *);
-  int **pentity_opp_location_idx;
-  PDM_malloc(pentity_opp_location_idx, n_part_loc_all_domain ,int *);
-  int **pentity_opp_location;
-  PDM_malloc(pentity_opp_location, n_part_loc_all_domain ,int *);
-  int **pentity_opp_interface_idx;
-  PDM_malloc(pentity_opp_interface_idx, n_part_loc_all_domain ,int *);
-  int **pentity_opp_interface;
-  PDM_malloc(pentity_opp_interface, n_part_loc_all_domain ,int *);
-  int **pentity_opp_sens;
-  PDM_malloc(pentity_opp_sens, n_part_loc_all_domain ,int *);
+  int  *pn_entity_num              = NULL;
+  int **pentity_num                = NULL;
+  int **pentity_opp_location_idx   = NULL;
+  int **pentity_opp_location       = NULL;
+  int **pentity_opp_interface_idx  = NULL;
+  int **pentity_opp_interface      = NULL;
+  int **pentity_opp_sens           = NULL;
+  PDM_malloc(pn_entity_num            , n_part_loc_all_domain, int  );
+  PDM_malloc(pentity_num              , n_part_loc_all_domain, int *);
+  PDM_malloc(pentity_opp_location_idx , n_part_loc_all_domain, int *);
+  PDM_malloc(pentity_opp_location     , n_part_loc_all_domain, int *);
+  PDM_malloc(pentity_opp_interface_idx, n_part_loc_all_domain, int *);
+  PDM_malloc(pentity_opp_interface    , n_part_loc_all_domain, int *);
+  PDM_malloc(pentity_opp_sens         , n_part_loc_all_domain, int *);
 
 
   int s_part = 0;
@@ -1927,16 +1927,16 @@ PDM_part_domain_interface_view_by_part
    * Exchange to have all opposit gnum
    */
 
-  int **part1_to_part2_idx;
-  PDM_malloc(part1_to_part2_idx,n_part_loc_all_domain ,int         *);
-  int **part1_to_part2_triplet_idx;
-  PDM_malloc(part1_to_part2_triplet_idx,n_part_loc_all_domain ,int *);
-  int **part1_to_part2_triplet;
-  PDM_malloc(part1_to_part2_triplet,n_part_loc_all_domain ,int         *);
-  int **part1_to_part2_interface;
-  PDM_malloc(part1_to_part2_interface,n_part_loc_all_domain ,int         *);
-  PDM_g_num_t **part1_to_part2_gnum;
-  PDM_malloc(part1_to_part2_gnum,n_part_loc_all_domain ,PDM_g_num_t *);
+  int         **part1_to_part2_idx         = NULL;
+  int         **part1_to_part2_triplet_idx = NULL;
+  int         **part1_to_part2_triplet     = NULL;
+  int         **part1_to_part2_interface   = NULL;
+  PDM_g_num_t **part1_to_part2_gnum        = NULL;
+  PDM_malloc(part1_to_part2_idx,         n_part_loc_all_domain, int         *);
+  // PDM_malloc(part1_to_part2_triplet_idx, n_part_loc_all_domain, int         *);
+  PDM_malloc(part1_to_part2_triplet,     n_part_loc_all_domain, int         *);
+  PDM_malloc(part1_to_part2_interface,   n_part_loc_all_domain, int         *);
+  PDM_malloc(part1_to_part2_gnum,        n_part_loc_all_domain, PDM_g_num_t *);
 
   int li_part = 0;
   for(int i_dom = 0; i_dom < pdi->n_domain; ++i_dom) {

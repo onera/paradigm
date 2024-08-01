@@ -47,14 +47,16 @@ extern "C" {
  */
 int* PDM_array_copy_int(const int *array, const int size) {
   assert (size >= 0);
-  int *array_cp = (int *) malloc(size * sizeof(int));
+  int *array_cp = NULL;
+  PDM_malloc(array_cp, size, int);
   assert (array != NULL);
   for (int i = 0; i < size; i++) array_cp[i] = array[i];
   return array_cp;
 }
 PDM_g_num_t* PDM_array_copy_gnum(const PDM_g_num_t *array, const int size) {
   assert (size >= 0);
-  PDM_g_num_t *array_cp = (PDM_g_num_t *) malloc(size * sizeof(PDM_g_num_t));
+  PDM_g_num_t *array_cp = NULL;
+  PDM_malloc(array_cp, size, PDM_g_num_t);
   assert (array != NULL);
   for (int i = 0; i < size; i++) array_cp[i] = array[i];
   return array_cp;
@@ -73,14 +75,16 @@ int* PDM_array_zeros_int(const int size) {
 }
 PDM_g_num_t* PDM_array_zeros_gnum(const int size) {
   assert (size >= 0);
-  PDM_g_num_t *array = (PDM_g_num_t *) malloc(size * sizeof(PDM_g_num_t));
+  PDM_g_num_t *array = NULL;
+  PDM_malloc(array, size, PDM_g_num_t);
   assert (array != NULL);
   for (int i = 0; i < size; i++) array[i] = 0;
   return array;
 }
 double* PDM_array_zeros_double(const int size) {
   assert (size >= 0);
-  double *array = (double *) malloc(size * sizeof(double));
+  double *array = NULL;
+  PDM_malloc(array, size, double);
   assert (array != NULL);
   for (int i = 0; i < size; i++) array[i] = 0.;
   return array;
@@ -126,7 +130,8 @@ int* PDM_array_new_range_int(const int size) {
   return array;
 }
 int* PDM_array_new_range_with_step_int(const int size, const int step) {
-  int* array = (int *) malloc(size*sizeof(int));
+  int* array = NULL;;
+  PDM_malloc(array, size, int);
   for (int i = 0; i < size; ++i) {
     array[i] = i*step;
   }
@@ -165,7 +170,8 @@ int* PDM_array_new_idx_from_const_stride_int(const int stride, const int size) {
  * the index array (which must be of size `size+1`)
 */
 int* PDM_array_new_size_from_idx_int(const int *idx_array, const int size) {
-  int *size_array = (int *) malloc((size) * sizeof(int));
+  int *size_array = NULL;
+  PDM_malloc(size_array, size, int);
   for (int i = 0; i < size; i++) size_array[i] = idx_array[i+1] - idx_array[i];
   return size_array;
 }
