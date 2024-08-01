@@ -353,6 +353,38 @@ PDM_part_mesh_nodal_elmts_sections_local_decompose_faces
   int                         ***out_parent_elmt_position
 );
 
+
+/**
+ * \brief Compute link between a parent and child PartMeshNodalElmts
+ *
+ * \note Dimension of \p pmne_parent must be greater than that of \p pmne_child
+ *
+ * \param [in]  pmne_parent               Pointer to parent \ref PDM_part_mesh_nodal_elmts_t instance
+ * \param [in]  pmne_child                Pointer to child \ref PDM_part_mesh_nodal_elmts_t instance
+ * \param [in]  only_child_link           Build only ascending link (child->parent)
+ * \param [out] out_child_to_parent_idx   Index for child->parent connectivity (size = n_child+1 (total number of elt in \p pmne_child))
+ * \param [out] out_child_to_parent       Child->parent connectivity (SIGN???)
+ * \param [out] out_n_entity              Number of child entities in pmne_parent (if \p only_child_link is PDM_FALSE, size = \p n_part)
+ * \param [out] out_entity_to_vtx_idx     Index for ChildEntity->Vertex connectivity (if \p only_child_link is PDM_FALSE, size = \p n_part and for each part, size = \p out_n_entity + 1)
+ * \param [out] out_entity_to_vtx         ChildEntity->Vertex connectivity (if \p only_child_link is PDM_FALSE, size = \p n_part)
+ * \param [out] out_parent_to_entity_idx  Index for ParentEntity->ChildEntity connectivity (if \p only_child_link is PDM_FALSE, size = \p n_part)
+ * \param [out] out_parent_to_entity      ParentEntity->ChildEntity connectivity (if \p only_child_link is PDM_FALSE, size = \p n_part)
+ */
+void
+PDM_part_mesh_nodal_elmts_compute_child_entities
+(
+ PDM_part_mesh_nodal_elmts_t   *pmne_parent,
+ PDM_part_mesh_nodal_elmts_t   *pmne_child,
+ PDM_bool_t                     only_child_link,
+ int                         ***out_child_to_parent_idx,
+ int                         ***out_child_to_parent,
+ int                          **out_n_entity,
+ int                         ***out_entity_to_vtx_idx,
+ int                         ***out_entity_to_vtx,
+ int                         ***out_parent_to_entity_idx,
+ int                         ***out_parent_to_entity
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

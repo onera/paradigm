@@ -27,6 +27,9 @@
 #include "pdm_geom_elem.h"
 #include "pdm_array.h"
 #include "pdm_vtk.h"
+#include "pdm_compare_operator.h"
+#include "pdm_sort.h"
+#include "pdm_binary_search.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -214,6 +217,341 @@ static const int hexa_face_vtx[] = {
   2, 6, 5, 1,
   1, 5, 4, 0
 };
+
+
+
+static
+void
+_compute_keys
+(
+  int   n_entity1,
+  int  *entity1_vtx_idx,
+  int  *entity1_vtx,
+  int **keys_out
+)
+{
+  int *keys = NULL;
+  PDM_malloc(keys, n_entity1, int);
+  for (int i = 0; i < n_entity1; ++i) {
+    int key = 0;
+    for (int j = entity1_vtx_idx[i]; j < entity1_vtx_idx[i+1]; ++j) {
+      key += entity1_vtx[j];
+    }
+    keys[i] = key;
+  }
+  *keys_out = keys;
+}
+
+
+static
+void
+_generate_entity_connectivity
+(
+  int          n_parent_decompose_entity2,
+  int         *parent_decompose_entity2_vtx_idx,
+  int         *parent_decompose_entity2_vtx,
+  int         *parent_decompose_parent_entity2,
+  // int         *parent_decompose_parent_entity2_position,
+  int          n_child_decompose_entity2,
+  int         *child_decompose_entity2_vtx_idx,
+  int         *child_decompose_entity2_vtx,
+  // int         *child_decompose_parent_entity2,
+  // int         *child_decompose_parent_entity2_position,
+  int        **out_child_to_parent_idx,
+  int        **out_child_to_parent,
+  int          pn_entity1,
+  int         *pentity1_entity2_idx,
+  int         *pentity1_entity2,
+  int         *out_pn_entity2,
+  int         *pentity2_vtx_idx,
+  int         *pentity2_vtx,
+  PDM_bool_t   only_child_link
+)
+{
+  /* Hash table from key = sum of vtx */
+  int *parent_keys = NULL;
+  int *child_keys  = NULL;
+
+  _compute_keys(n_parent_decompose_entity2,
+                parent_decompose_entity2_vtx_idx,
+                parent_decompose_entity2_vtx,
+                &parent_keys);
+
+  _compute_keys(n_child_decompose_entity2,
+                child_decompose_entity2_vtx_idx,
+                child_decompose_entity2_vtx,
+                &child_keys);
+
+  if (0 == 1) {
+    PDM_log_trace_array_int(parent_keys, n_parent_decompose_entity2, "parent_keys ::");
+    PDM_log_trace_array_int(child_keys , n_child_decompose_entity2 , "child_keys  ::");
+  }
+
+  int *order     = NULL;
+  int *is_solved = NULL;
+  PDM_malloc(order    , n_parent_decompose_entity2, int);
+  PDM_malloc(is_solved, n_parent_decompose_entity2, int);
+
+  for (int i = 0; i < n_parent_decompose_entity2; ++i) {
+    order    [i] = i;
+    is_solved[i] = 0;
+  }
+  PDM_sort_int(parent_keys, order, n_parent_decompose_entity2);
+
+  /* Identify keys in conflict */
+  int n_conflit_to_solve = 0;
+  int last_key = -1;
+
+  int *key_conflict_idx = NULL;
+  int *key_to_conflict  = NULL;
+  PDM_malloc(key_conflict_idx, n_parent_decompose_entity2+1, int);
+  PDM_malloc(key_to_conflict , n_parent_decompose_entity2  , int);
+
+  key_conflict_idx[0] = 0;
+  for (int i = 0; i < n_parent_decompose_entity2; ++i) {
+    if (parent_keys[i] != last_key){
+      key_conflict_idx[n_conflit_to_solve+1] = key_conflict_idx[n_conflit_to_solve]+1;
+      n_conflit_to_solve++;
+      last_key = parent_keys[i];
+    } else {
+      key_conflict_idx[n_conflit_to_solve]++;
+    }
+    key_to_conflict[i] = n_conflit_to_solve-1;
+  }
+
+
+
+  int n_max_entity_per_key = 0;
+  for (int i = 0; i < n_conflit_to_solve; ++i) {
+    n_max_entity_per_key = PDM_MAX(n_max_entity_per_key, key_conflict_idx[i+1]-key_conflict_idx[i]);
+  }
+  for (int i = 0; i < n_child_decompose_entity2; ++i) {
+    int n_vtx_child = child_decompose_entity2_vtx_idx[i+1] - child_decompose_entity2_vtx_idx[i];
+    n_max_entity_per_key = PDM_MAX(n_max_entity_per_key, n_vtx_child);
+  }
+
+  int *pentity1_entity2_n = NULL;
+  if (only_child_link == PDM_FALSE) {
+    pentity1_entity2_n = PDM_array_zeros_int(pn_entity1);
+  }
+
+
+  int  pn_entity2 = 0;
+  int *child_to_parent_idx = NULL;
+  int *child_to_parent     = NULL;
+  PDM_malloc(child_to_parent_idx, n_child_decompose_entity2+1                     , int);
+  PDM_malloc(child_to_parent    , n_child_decompose_entity2 * n_max_entity_per_key, int);
+
+
+  /*
+   * Solve conflicts
+   */
+  if (0 == 1) {
+    PDM_log_trace_array_int(key_conflict_idx, n_conflit_to_solve, "key_conflict_idx ::  ");
+    PDM_log_trace_array_int(key_to_conflict , n_parent_decompose_entity2, "key_to_conflict ::  ");
+    for (int i = 0; i < n_conflit_to_solve; ++i) {
+      log_trace(" ------ i = %i \n", i);
+      for (int i_key = key_conflict_idx[i]; i_key < key_conflict_idx[i+1]; ++i_key) {
+        int i_conflict = order[i_key];
+        int beg = parent_decompose_entity2_vtx_idx[i_conflict];
+        int n_vtx_in_entity = parent_decompose_entity2_vtx_idx[i_conflict+1] - beg;
+        log_trace(" \t i_key = %i | beg = %i / n = %i : ", parent_keys[i_key], beg, n_vtx_in_entity);
+        PDM_log_trace_array_int(parent_decompose_entity2_vtx + beg, n_vtx_in_entity, "");
+      }
+    }
+    log_trace("-----------------------------------\n\n\n");
+  }
+
+  int *sens_entity      = NULL;
+  int *same_entity_num  = NULL;
+  PDM_malloc(sens_entity    , n_max_entity_per_key, int);
+  PDM_malloc(same_entity_num, n_max_entity_per_key, int);
+
+  /* If we are only interested in the link child->parent */
+  child_to_parent_idx[0] = 0;
+  for (int i = 0; i < n_child_decompose_entity2; ++i) {
+
+    int child_key = child_keys[i];
+
+    child_to_parent_idx[i+1] = child_to_parent_idx[i];
+
+    int pos_key = PDM_binary_search_int(child_key, parent_keys, n_parent_decompose_entity2);
+    assert(pos_key >= 0);
+    int i_conflict = key_to_conflict[pos_key];
+
+    int beg_1       = child_decompose_entity2_vtx_idx[i  ];
+    int n_vtx_child = child_decompose_entity2_vtx_idx[i+1] - beg_1;
+
+
+    /* Brute force */
+    int n_conflict_entitys = key_conflict_idx[i_conflict+1] - key_conflict_idx[i_conflict];
+
+    int idx_next_same_entity = 0;
+    sens_entity    [idx_next_same_entity] = 1;
+    same_entity_num[idx_next_same_entity++] = i_conflict;
+    // PDM_log_trace_array_int(&child_decompose_entity2_vtx[beg_1], n_vtx_child, "child   : ");
+
+    for (int idx_entity = 0; idx_entity < n_conflict_entitys; ++idx_entity) {
+
+      int idx_decompose_entity1 = order[key_conflict_idx[i_conflict]+idx_entity];
+
+      int beg_2        = parent_decompose_entity2_vtx_idx[idx_decompose_entity1  ];
+      int n_vtx_parent = parent_decompose_entity2_vtx_idx[idx_decompose_entity1+1] - beg_2;
+
+      // PDM_log_trace_array_int(&parent_decompose_entity2_vtx[beg_2], n_vtx_parent, "  parent : ");
+
+      int is_same_entity = PDM_compare_unsigned_ordered_nuplets_int(n_vtx_child,
+                                                                    &child_decompose_entity2_vtx[beg_1],
+                                                                    n_vtx_parent,
+                                                                    &parent_decompose_entity2_vtx[beg_2]);
+      // log_trace("  is_same_entity = %d\n", is_same_entity);
+      if (is_same_entity != 0) {
+        sens_entity    [idx_next_same_entity  ] = is_same_entity;
+        same_entity_num[idx_next_same_entity++] = idx_decompose_entity1;
+
+        int i_entity1 = parent_decompose_parent_entity2[idx_decompose_entity1]-1;
+
+        // Keep link between both
+        child_to_parent[child_to_parent_idx[i+1]++] = i_entity1+1; // Attention il peut avoir le parent_num
+        is_solved[idx_decompose_entity1] = 1;
+      }
+    } /* End conflict */
+
+    /* Normalement on a trouvé mais on check quand même :p */
+    assert(idx_next_same_entity > 1);
+
+    if (only_child_link == PDM_FALSE) {
+      /* Generate new entity2 and append in connectivity entity2_vtx*/
+      pentity2_vtx_idx[pn_entity2+1] = pentity2_vtx_idx[pn_entity2];
+      for (int idx_vtx = 0; idx_vtx < n_vtx_child; ++idx_vtx) {
+        pentity2_vtx[pentity2_vtx_idx[pn_entity2+1]++] = child_decompose_entity2_vtx[beg_1+idx_vtx];
+      }
+
+      /* Apply sens for all entity found - First is excluded because it's BC !!!! */
+      for (int k = 1; k < idx_next_same_entity; ++k) {
+        int idx_decompose_entity = same_entity_num[k];
+        int t_entity             = parent_decompose_parent_entity2[idx_decompose_entity]-1;
+        int sign                 = sens_entity[k];
+
+        int idx_write = pentity1_entity2_idx[t_entity] + pentity1_entity2_n[t_entity]++;
+        pentity1_entity2[idx_write] = sign * (pn_entity2+1); // Vient de l'exterieur
+
+        is_solved[idx_decompose_entity] = 1;
+      }
+
+      // Go to next
+      pn_entity2++;
+    }
+  }
+
+  PDM_realloc(child_to_parent, child_to_parent, child_to_parent_idx[n_child_decompose_entity2], int);
+
+  if (0 == 1) {
+    PDM_log_trace_connectivity_int(child_to_parent_idx, child_to_parent, n_child_decompose_entity2, "child_to_parent ::");
+    PDM_log_trace_connectivity_int(pentity2_vtx_idx, pentity2_vtx, pn_entity2, "pentity2_vtx ::");
+  }
+
+  *out_child_to_parent_idx = child_to_parent_idx;
+  *out_child_to_parent     = child_to_parent;
+
+  if (only_child_link == PDM_TRUE) {
+    *out_pn_entity2 = 0;
+    PDM_free(key_conflict_idx);
+    PDM_free(key_to_conflict );
+    PDM_free(parent_keys     );
+    PDM_free(child_keys      );
+    PDM_free(order           );
+    PDM_free(sens_entity     );
+    PDM_free(same_entity_num );
+    PDM_free(is_solved       );
+    return;
+  }
+
+
+  /*
+   * Si on veut la nouvelle connectivité
+   *   - On utilise le child_to_parent et on marque "as solved" le conflict associé
+   *   - On remplis directement le parent_child
+   *   - Attention au parent_num
+   */
+  for (int i = 0; i < n_conflit_to_solve; ++i) {
+
+    int n_conflict_entitys = key_conflict_idx[i+1] - key_conflict_idx[i];
+
+    for (int j = 0; j < n_conflict_entitys; ++j ) {
+      int idx_decompose_entity1 = order[key_conflict_idx[i]+j];
+      if (is_solved[idx_decompose_entity1] == 1) {
+        continue;
+      }
+
+      int beg_1  = parent_decompose_entity2_vtx_idx[idx_decompose_entity1  ];
+      int n_vtx1 = parent_decompose_entity2_vtx_idx[idx_decompose_entity1+1] - beg_1;
+
+      int idx_next_same_entity = 0;
+      sens_entity    [idx_next_same_entity] = 1;
+      same_entity_num[idx_next_same_entity++] = idx_decompose_entity1;
+
+      for (int k = j+1; k < n_conflict_entitys; ++k) {
+
+        int idx_decompose_entity2 = order[key_conflict_idx[i]+k];
+        if (is_solved[idx_decompose_entity2] == 1) {
+          continue;
+        }
+
+        int beg_2  = parent_decompose_entity2_vtx_idx[idx_decompose_entity2  ];
+        int n_vtx2 = parent_decompose_entity2_vtx_idx[idx_decompose_entity2+1] - beg_2;
+
+        int is_same_entity = PDM_compare_unsigned_ordered_nuplets_int(n_vtx1,
+                                                                      &parent_decompose_entity2_vtx[beg_1],
+                                                                      n_vtx2,
+                                                                      &parent_decompose_entity2_vtx[beg_2]);
+
+        if (is_same_entity != 0) {
+          sens_entity    [idx_next_same_entity  ] = is_same_entity;
+          same_entity_num[idx_next_same_entity++] = idx_decompose_entity2;
+        }
+      } /* End conflict */
+
+      /* Generate new entity2 and append in connectivity entity2_vtx*/
+      pentity2_vtx_idx[pn_entity2+1] = pentity2_vtx_idx[pn_entity2];
+      for (int idx_vtx = 0; idx_vtx < n_vtx1; ++idx_vtx) {
+        pentity2_vtx[pentity2_vtx_idx[pn_entity2+1]++] = parent_decompose_entity2_vtx[beg_1+idx_vtx];
+      }
+
+      /* Apply sens for all entity found */
+      for (int k = 0; k < idx_next_same_entity; ++k) {
+        int idx_decompose_entity = same_entity_num[k];
+        int t_entity             = parent_decompose_parent_entity2[idx_decompose_entity]-1;
+        int sign                 = sens_entity[k];
+
+        int idx_write = pentity1_entity2_idx[t_entity] + pentity1_entity2_n[t_entity]++;
+        pentity1_entity2[idx_write] = sign * (pn_entity2+1); // Vient de l'exterieur
+
+        is_solved[idx_decompose_entity] = 1;
+      }
+
+      // Go to next
+      pn_entity2++;
+
+    }
+  }
+
+  if (only_child_link == PDM_FALSE) {
+    PDM_free(pentity1_entity2_n);
+  }
+
+  *out_pn_entity2 = pn_entity2;
+
+  PDM_free(key_conflict_idx);
+  PDM_free(key_to_conflict );
+  PDM_free(parent_keys     );
+  PDM_free(child_keys      );
+  PDM_free(order           );
+  PDM_free(sens_entity     );
+  PDM_free(same_entity_num );
+  PDM_free(is_solved       );
+}
+
 
 
 /*=============================================================================
@@ -1393,6 +1731,176 @@ PDM_part_mesh_nodal_elmts_sections_local_decompose_faces
   *out_parent_elmt           = parent_elmt;
   *out_parent_elmt_position  = parent_elmt_position;
 
+}
+
+
+
+void
+PDM_part_mesh_nodal_elmts_compute_child_entities
+(
+ PDM_part_mesh_nodal_elmts_t   *pmne_parent,
+ PDM_part_mesh_nodal_elmts_t   *pmne_child,
+ PDM_bool_t                     only_child_link,
+ int                         ***out_child_to_parent_idx,
+ int                         ***out_child_to_parent,
+ int                          **out_n_entity,
+ int                         ***out_entity_to_vtx_idx,
+ int                         ***out_entity_to_vtx,
+ int                         ***out_parent_to_entity_idx,
+ int                         ***out_parent_to_entity
+ )
+{
+  int dim_parent = pmne_parent->mesh_dimension;
+  int dim_child  = pmne_child ->mesh_dimension;
+
+  if (dim_parent <= dim_child) {
+    PDM_error(__FILE__, __LINE__, 0, "Parent dimension must be greater than child dimension\n");
+  }
+
+  int n_part = pmne_parent->n_part;
+  if (pmne_child->n_part != n_part) {
+    PDM_error(__FILE__, __LINE__, 0, "Parent and child pmne must have same n_part\n");
+  }
+
+
+  int  *n_decompose_parent_entity             = NULL;
+  int **decompose_parent_entity_idx           = NULL; // Size = n_elemt+1
+  int **decompose_parent_entity_vtx_idx       = NULL; // Size = n_decompose_parent_entity_vtx+1
+  int **decompose_parent_entity_vtx           = NULL;
+  int **decompose_parent_parent_elmt          = NULL;
+  int **decompose_parent_parent_elmt_position = NULL;
+
+  int  *n_decompose_child_entity              = NULL;
+  int **decompose_child_entity_idx            = NULL; // Size = n_elemt+1
+  int **decompose_child_entity_vtx_idx        = NULL; // Size = n_decompose_child_entity_vtx+1
+  int **decompose_child_entity_vtx            = NULL;
+  int **decompose_child_parent_elmt           = NULL;
+  int **decompose_child_parent_elmt_position  = NULL;
+
+  void (*_decompose) (PDM_part_mesh_nodal_elmts_t   *,
+                      int                          **,
+                      int                         ***,
+                      int                         ***,
+                      int                         ***,
+                      int                         ***,
+                      int                         ***);
+
+  switch (dim_child) {
+    case 2: {
+      _decompose = &PDM_part_mesh_nodal_elmts_sections_local_decompose_faces;
+      break;
+    }
+    case 1: {
+      _decompose = &PDM_part_mesh_nodal_elmts_sections_local_decompose_edges;
+      break;
+    }
+    default : {
+      PDM_error(__FILE__, __LINE__, 0, "Invalid dim_child %d\n", dim_child);
+    }
+  }
+
+  _decompose(pmne_parent,
+             &n_decompose_parent_entity,
+             &decompose_parent_entity_idx,
+             &decompose_parent_entity_vtx_idx,
+             &decompose_parent_entity_vtx,
+             &decompose_parent_parent_elmt,
+             &decompose_parent_parent_elmt_position);
+
+  _decompose(pmne_child,
+             &n_decompose_child_entity,
+             &decompose_child_entity_idx,
+             &decompose_child_entity_vtx_idx,
+             &decompose_child_entity_vtx,
+             &decompose_child_parent_elmt,
+             &decompose_child_parent_elmt_position);
+
+
+
+
+  int **decompose_parent_entity = NULL;
+  int  *pn_entity               = NULL;
+  int **pentity_vtx_idx         = NULL;
+  int **pentity_vtx             = NULL;
+  int **child_to_parent_idx     = NULL;
+  int **child_to_parent         = NULL;
+
+
+  if (only_child_link == PDM_FALSE) {
+    PDM_malloc(decompose_parent_entity, n_part, int *);
+  }
+  PDM_malloc(pn_entity          , n_part, int  );
+  PDM_malloc(pentity_vtx_idx    , n_part, int *);
+  PDM_malloc(pentity_vtx        , n_part, int *);
+  PDM_malloc(child_to_parent_idx, n_part, int *);
+  PDM_malloc(child_to_parent    , n_part, int *);
+
+  for (int i_part = 0; i_part < n_part; i_part++) {
+
+    int pn_parent = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne_parent, i_part);
+
+    int *_decompose_parent_entity = NULL;
+    if (only_child_link == PDM_FALSE) {
+      PDM_malloc(decompose_parent_entity[i_part], decompose_parent_entity_idx[i_part][pn_parent], int);
+      _decompose_parent_entity = decompose_parent_entity[i_part];
+    }
+    PDM_malloc(pentity_vtx_idx[i_part], n_decompose_parent_entity      [i_part] + 1,                                int);
+    PDM_malloc(pentity_vtx    [i_part], decompose_parent_entity_vtx_idx[i_part][n_decompose_parent_entity[i_part]], int);
+
+    pentity_vtx_idx[i_part][0] = 0;
+    _generate_entity_connectivity(n_decompose_parent_entity            [i_part],
+                                  decompose_parent_entity_vtx_idx      [i_part],
+                                  decompose_parent_entity_vtx          [i_part],
+                                  decompose_parent_parent_elmt         [i_part],
+                                  // decompose_parent_parent_elmt_position[i_part],
+                                  n_decompose_child_entity             [i_part],
+                                  decompose_child_entity_vtx_idx       [i_part],
+                                  decompose_child_entity_vtx           [i_part],
+                                  // decompose_child_parent_elmt          [i_part],
+                                  // decompose_child_parent_elmt_position [i_part],
+                                  &child_to_parent_idx                 [i_part],
+                                  &child_to_parent                     [i_part],
+                                  pn_parent,
+                                  decompose_parent_entity_idx          [i_part],
+                                  _decompose_parent_entity,
+                                  &pn_entity                           [i_part],
+                                  pentity_vtx_idx                      [i_part],
+                                  pentity_vtx                          [i_part],
+                                  only_child_link);
+
+    PDM_realloc(pentity_vtx_idx[i_part], pentity_vtx_idx[i_part], pn_entity[i_part] + 1                     , int);
+    PDM_realloc(pentity_vtx    [i_part], pentity_vtx    [i_part], pentity_vtx_idx[i_part][pn_entity[i_part]], int);
+
+    PDM_free(decompose_parent_entity_vtx_idx      [i_part]);
+    PDM_free(decompose_parent_entity_vtx          [i_part]);
+    PDM_free(decompose_parent_parent_elmt         [i_part]);
+    PDM_free(decompose_parent_parent_elmt_position[i_part]);
+    PDM_free(decompose_child_entity_idx           [i_part]);
+    PDM_free(decompose_child_entity_vtx_idx       [i_part]);
+    PDM_free(decompose_child_entity_vtx           [i_part]);
+    PDM_free(decompose_child_parent_elmt          [i_part]); // if needed, pass as [out] arguments
+    PDM_free(decompose_child_parent_elmt_position [i_part]); // if needed, pass as [out] arguments
+  }
+
+  PDM_free(n_decompose_parent_entity            );
+  PDM_free(decompose_parent_entity_vtx_idx      );
+  PDM_free(decompose_parent_entity_vtx          );
+  PDM_free(decompose_parent_parent_elmt         );
+  PDM_free(decompose_parent_parent_elmt_position);
+  PDM_free(n_decompose_child_entity             );
+  PDM_free(decompose_child_entity_idx           );
+  PDM_free(decompose_child_entity_vtx_idx       );
+  PDM_free(decompose_child_entity_vtx           );
+  PDM_free(decompose_child_parent_elmt          );
+  PDM_free(decompose_child_parent_elmt_position );
+
+  *out_n_entity             = pn_entity;
+  *out_child_to_parent_idx  = child_to_parent_idx;
+  *out_child_to_parent      = child_to_parent;
+  *out_entity_to_vtx_idx    = pentity_vtx_idx;
+  *out_entity_to_vtx        = pentity_vtx;
+  *out_parent_to_entity_idx = decompose_parent_entity_idx;
+  *out_parent_to_entity     = decompose_parent_entity;
 }
 
 /*----------------------------------------------------------------------------*/
