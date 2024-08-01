@@ -2837,7 +2837,7 @@ _create_cell_graph_comm
       }
 
       int have_vtx_part_bound = 0;
-      PDM_MPI_Allreduce(&have_vtx_part_bound,
+      PDM_MPI_Allreduce(&lhave_vtx_part_bound,
                         &have_vtx_part_bound, 1, PDM_MPI_INT, PDM_MPI_MAX, part_ext->comm);
 
       if(have_vtx_part_bound == 0) {

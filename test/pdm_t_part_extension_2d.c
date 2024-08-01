@@ -528,7 +528,7 @@ _part_extension
                                                                   &pface_extented_to_pface_interface,
                                                                   comm);
 
-  if(1 == 1) {
+  if(0 == 1) {
     for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
       int n_triplet = pface_extented_to_pface_idx[i_part][ pn_face_extented[i_part]];
       PDM_log_trace_array_long(pface_extented_ln_to_gn          [i_part], pn_face_extented[i_part]  , "pface_extented_ln_to_gn : ");
@@ -669,7 +669,7 @@ _part_extension
   /*
    * Concatenate
    */
-  if(1 == 1) {
+  if(0 == 1) {
     for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
 
       int pn_concat_vtx  = pflat_n_vtx [i_part] + pn_vtx_extented [i_part];
@@ -732,9 +732,9 @@ _part_extension
       }
 
 
-      PDM_log_trace_array_int(concat_face_vtx_idx, pn_concat_face+1, "concat_face_vtx_idx ::");
       // PDM_log_trace_array_int(concat_face_vtx_idx, pn_concat_face+1, "concat_face_vtx_idx ::");
-      PDM_log_trace_connectivity_int(concat_face_vtx_idx, concat_face_vtx, pn_concat_face, "concat_face_vtx ::");
+      // PDM_log_trace_array_int(concat_face_vtx_idx, pn_concat_face+1, "concat_face_vtx_idx ::");
+      // PDM_log_trace_connectivity_int(concat_face_vtx_idx, concat_face_vtx, pn_concat_face, "concat_face_vtx ::");
 
 
       char filename[999];

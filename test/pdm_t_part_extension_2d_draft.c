@@ -660,7 +660,7 @@ int main
   int l_part = 0;
   for (int i_dom = 0; i_dom < n_domain; i_dom++) {
     for (int i_part = 0; i_part < pn_n_part[i_dom]; i_part++){
-      if (1) {
+      if (0) {
         log_trace("\ni_dom = %d; i_part = %d\n", i_dom, i_part);
       }
 
@@ -700,7 +700,7 @@ int main
                                              PDM_CONNECTIVITY_TYPE_EDGE_VTX,
                                             &extended_edge_vtx_idx,
                                             &extended_edge_vtx);
-        if (1) {
+        if (1 == 0) {
           log_trace("\n");
           log_trace("FACE::\n");
           log_trace("extended_n_face = %d\n", extended_n_face);
@@ -727,7 +727,7 @@ int main
                                             &extended_face_vtx_idx,
                                             &extended_face_vtx);
 
-        if (1) {
+        if (1 == 0) {
           log_trace("\n");
           log_trace("FACE::\n");
           log_trace("extended_n_face = %d\n", extended_n_face);
@@ -743,7 +743,7 @@ int main
                                                        &extended_vtx_gnum);
       PDM_part_extension_vtx_coord_get2(part_ext, i_dom, i_part,
                                        &extended_vtx_coord);
-      if (1) {
+      if (1 == 0) {
         log_trace("\n");
         log_trace("VTX::\n");
         log_trace("extended_n_vtx = %d\n", extended_n_vtx);
@@ -767,7 +767,7 @@ int main
                                             PDM_MESH_ENTITY_FACE,
                                            &face_face_path_itrf_idx,
                                            &face_face_path_itrf);
-      if (1) {
+      if (1 == 0) {
         log_trace("FACE::\n");
         // int n_extended = face_face_extended_idx[pn_face[i_dom][i_part]];
         int n_extended = extended_n_face;
@@ -791,7 +791,7 @@ int main
                                               PDM_MESH_ENTITY_EDGE,
                                              &edge_edge_path_itrf_idx,
                                              &edge_edge_path_itrf);
-        if (1) {
+        if (1 == 0) {
           log_trace("EDGE::\n");
           // int n_extended = edge_edge_extended_idx[pn_vtx[i_dom][i_part]];
           int n_extended = extended_n_edge;
@@ -815,7 +815,7 @@ int main
                                             PDM_MESH_ENTITY_VTX,
                                            &vtx_vtx_path_itrf_idx,
                                            &vtx_vtx_path_itrf);
-      if (1) {
+      if (1 == 0) {
         log_trace("VTX::\n");
         // int n_extended = vtx_vtx_extended_idx[pn_vtx[i_dom][i_part]];
         int n_extended = extended_n_vtx;

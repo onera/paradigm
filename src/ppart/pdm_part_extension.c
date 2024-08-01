@@ -3067,7 +3067,7 @@ _part_extension_3d
         // pn_entity_extended        = pn_edge_extended[i_part];
         // pn_entity                 = pn_edge         [i_part];
       }
-      log_trace("pn_concat_entity_extended = %i \n", pn_concat_entity_extended);
+      // log_trace("pn_concat_entity_extended = %i \n", pn_concat_entity_extended);
 
       /*
        * Only extend the index array since connexion is freeze for one step
@@ -3270,7 +3270,9 @@ _part_extension_3d
       free(pface_extended_to_pface_idx      [i_part]);
       free(pface_extended_to_pface_triplet  [i_part]);
       free(pface_extended_to_pface_interface[i_part]);
-      free(pface_extended_to_pface_sens     [i_part]);
+      if(pface_extended_to_pface_sens != NULL && pface_extended_to_pface_sens     [i_part] != NULL) {
+        free(pface_extended_to_pface_sens     [i_part]);
+      }
 
       free(pcell_extended_ln_to_gn          [i_part]);
       free(pcell_extended_to_pcell_idx      [i_part]);
@@ -3777,7 +3779,10 @@ _part_extension_2d
     int i_rank;
     PDM_MPI_Comm_rank(part_ext->comm, &i_rank);
     if (i_rank==0) printf("Computing DEPTH %d (step = %i) \n", i_depth, step);
-    log_trace("\n\n\n >> DEPTH %d step = %i\n", i_depth, step);
+
+    if (debug==1) {
+      log_trace("\n\n\n >> DEPTH %d step = %i\n", i_depth, step);
+    }
     double t_start = PDM_MPI_Wtime();
 
     /* Use descending connectivity to deduce connectivity and extend_face */
@@ -4198,7 +4203,10 @@ _part_extension_2d
      * Concatenate all information to continue recursion
      */
     for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
-      log_trace("  -> i_part = %d \n", i_part);
+
+      if (debug==1) {
+        log_trace("  -> i_part = %d \n", i_part);
+      }
 
       /* Update size */
       pn_vtx_extended_old              [i_part]  = pfull_n_vtx_extended[i_part];
@@ -4382,7 +4390,7 @@ _part_extension_2d
         // pn_entity_extended        = pn_edge_extended[i_part];
         // pn_entity                 = pn_edge         [i_part];
       }
-      log_trace("pn_concat_entity_extended = %i \n", pn_concat_entity_extended);
+      // log_trace("pn_concat_entity_extended = %i \n", pn_concat_entity_extended);
 
       /*
        * Only extend the index array since connexion is freeze for one step
@@ -4518,7 +4526,7 @@ _part_extension_2d
 
     PDM_MPI_Allreduce(&_pn_face_extended_tot, &pn_face_extended_tot, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, part_ext->comm);
 
-    log_trace("pn_face_extended_tot = %i (local = %i ) \n", pn_face_extended_tot, _pn_face_extended_tot);
+    // log_trace("pn_face_extended_tot = %i (local = %i ) \n", pn_face_extended_tot, _pn_face_extended_tot);
 
     /*
      * Free

@@ -248,8 +248,8 @@ _extend_by_depth
 
   for(int i_depth = 0; i_depth < n_depth; ++i_depth) {
 
-    log_trace(" ------------------------------- i_depth = %i \n ", i_depth);
-    log_trace("                                              \n ");
+    // log_trace(" ------------------------------- i_depth = %i \n ", i_depth);
+    // log_trace("                                              \n ");
 
     PDM_part_extension_interface_by_entity1_to_interface_by_entity2(pdi,
                                                                     PDM_BOUND_TYPE_VTX,
@@ -305,7 +305,7 @@ _extend_by_depth
 
     }
 
-    if(1 == 1) {
+    if(0 == 1) {
       for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
         int n_triplet = pedge_extented_to_pedge_idx[i_part][ pn_edge_extented[i_part]];
         PDM_log_trace_array_long(pedge_extented_ln_to_gn          [i_part], pn_edge_extented[i_part]  , "pedge_extented_ln_to_gn           ::");
@@ -359,8 +359,8 @@ _extend_by_depth
         pn_vtx_extented_all [l_part] = pn_vtx_extented [l_part];
         pn_edge_extented_all[l_part] = pn_edge_extented[l_part];
 
-        log_trace("[depth=%i] - extent_by_depth : cur_pn_vtx  = %i | n_vtx_extented   = %i \n", i_depth, cur_pn_vtx [i_dom][i_part], pn_vtx_extented [l_part]);
-        log_trace("[depth=%i] - extent_by_depth : cur_pn_edge = %i | pn_edge_extented = %i \n", i_depth, cur_pn_edge[i_dom][i_part], pn_edge_extented[l_part]);
+        // log_trace("[depth=%i] - extent_by_depth : cur_pn_vtx  = %i | n_vtx_extented   = %i \n", i_depth, cur_pn_vtx [i_dom][i_part], pn_vtx_extented [l_part]);
+        // log_trace("[depth=%i] - extent_by_depth : cur_pn_edge = %i | pn_edge_extented = %i \n", i_depth, cur_pn_edge[i_dom][i_part], pn_edge_extented[l_part]);
 
         int *edge_kind = malloc(pn_concat_edge * sizeof(int));
         int *vtx_kind  = malloc(pn_concat_vtx  * sizeof(int));
@@ -408,8 +408,8 @@ _extend_by_depth
         }
         free(cur_pvtx_hint     [i_dom][i_part]);
 
-        PDM_log_trace_array_long(concat_edge_ln_to_gn, pn_concat_edge, "concat_edge_ln_to_gn ::");
-        PDM_log_trace_array_long(concat_vtx_ln_to_gn , pn_concat_vtx , "concat_vtx_ln_to_gn  ::");
+        // PDM_log_trace_array_long(concat_edge_ln_to_gn, pn_concat_edge, "concat_edge_ln_to_gn ::");
+        // PDM_log_trace_array_long(concat_vtx_ln_to_gn , pn_concat_vtx , "concat_vtx_ln_to_gn  ::");
 
         /* Swap */
         cur_pn_vtx        [i_dom][i_part] = pn_concat_vtx;
@@ -785,7 +785,7 @@ _part_extension
   /*
    * Export vtk
    */
-  if(1 == 1) {
+  if(0 == 1) {
 
     for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
 
@@ -839,7 +839,7 @@ _part_extension
       }
 
 
-      PDM_log_trace_connectivity_int(concat_edge_vtx_idx, concat_edge_vtx, pn_concat_edge, "concat_edge_vtx  ::");
+      // PDM_log_trace_connectivity_int(concat_edge_vtx_idx, concat_edge_vtx, pn_concat_edge, "concat_edge_vtx  ::");
 
       free(concat_edge_vtx_idx);
 
