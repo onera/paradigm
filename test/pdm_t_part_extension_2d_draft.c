@@ -755,7 +755,7 @@ int main
       /**
        * Get graph to init partition
        */
-      int *face_face_extended_idx  = NULL;
+      // int *face_face_extended_idx  = NULL;
       int *face_face_extended      = NULL;
       int *face_face_path_itrf_idx = NULL;
       int *face_face_path_itrf     = NULL;
@@ -778,7 +778,7 @@ int main
         PDM_log_trace_array_int(face_face_path_itrf    , n_itrf                  , "\t face_face_path_itrf     ::");
       }
 
-      int *edge_edge_extended_idx  = NULL;
+      // int *edge_edge_extended_idx  = NULL;
       int *edge_edge_extended      = NULL;
       int *edge_edge_path_itrf_idx = NULL;
       int *edge_edge_path_itrf     = NULL;
@@ -803,7 +803,7 @@ int main
         }
       }
 
-      int *vtx_vtx_extended_idx  = NULL;
+      // int *vtx_vtx_extended_idx  = NULL;
       int *vtx_vtx_extended      = NULL;
       int *vtx_vtx_path_itrf_idx = NULL;
       int *vtx_vtx_path_itrf     = NULL;

@@ -1991,6 +1991,10 @@ _part_extension_3d
   int           *pn_edge          = (int         * ) malloc( part_ext->n_domain * sizeof(int          ));
   int           *pn_face          = (int         * ) malloc( part_ext->n_domain * sizeof(int          ));
   int           *pn_cell          = (int         * ) malloc( part_ext->n_domain * sizeof(int          ));
+  int           *pn_init_vtx      = (int         * ) malloc( part_ext->n_domain * sizeof(int          ));
+  int           *pn_init_edge     = (int         * ) malloc( part_ext->n_domain * sizeof(int          ));
+  int           *pn_init_face     = (int         * ) malloc( part_ext->n_domain * sizeof(int          ));
+  int           *pn_init_cell     = (int         * ) malloc( part_ext->n_domain * sizeof(int          ));
 
   /* ln_to_gn */
   PDM_g_num_t  **pvtx_ln_to_gn    = (PDM_g_num_t **) malloc( part_ext->n_domain * sizeof(PDM_g_num_t *));
@@ -2019,11 +2023,15 @@ _part_extension_3d
   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
     for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
       pn_vtx          [lpart] = part_ext->parts[i_domain][i_part].n_vtx;
+      pn_init_vtx     [lpart] = part_ext->parts[i_domain][i_part].n_vtx;
       if(part_ext->have_edge == 1) {
         pn_edge       [lpart] = part_ext->parts[i_domain][i_part].n_edge;
+        pn_init_edge  [lpart] = part_ext->parts[i_domain][i_part].n_edge;
       }
       pn_face         [lpart] = part_ext->parts[i_domain][i_part].n_face;
+      pn_init_face    [lpart] = part_ext->parts[i_domain][i_part].n_face;
       pn_cell         [lpart] = part_ext->parts[i_domain][i_part].n_cell;
+      pn_init_cell    [lpart] = part_ext->parts[i_domain][i_part].n_cell;
 
 
       /* Copy to realloc after all step */
@@ -3387,9 +3395,269 @@ _part_extension_3d
     double t_end = PDM_MPI_Wtime();
 
     if (i_rank==0) printf(" (%.3fs)\n", t_end - t_start);
-
-
   }
+
+
+  /**
+   * Copy extended entities on part_extension structure
+   */
+  // > Cells
+  _store_extended_entity(part_ext, 
+                         pn_init_cell,
+                         pn_cell,
+                         pcell_ln_to_gn,
+                         pcell_face_idx,
+                         pcell_face,
+                        &part_ext->n_cell_border,
+                        &part_ext->border_cell_ln_to_gn,
+                        &part_ext->border_cell_face_idx,
+                        &part_ext->border_cell_face);
+
+  // > Faces
+  if(part_ext->have_edge == 1) {
+    _store_extended_entity(part_ext, 
+                           pn_init_face,
+                           pn_face,
+                           pface_ln_to_gn,
+                           pface_edge_idx,
+                           pface_edge,
+                          &part_ext->n_face_border,
+                          &part_ext->border_face_ln_to_gn,
+                          &part_ext->border_face_edge_idx,
+                          &part_ext->border_face_edge);
+
+    _store_extended_entity(part_ext, 
+                           pn_init_edge,
+                           pn_edge,
+                           pedge_ln_to_gn,
+                           pedge_vtx_idx,
+                           pedge_vtx,
+                          &part_ext->n_edge_border,
+                          &part_ext->border_edge_ln_to_gn,
+                          &part_ext->border_edge_vtx_idx,
+                          &part_ext->border_edge_vtx);
+  }
+  else {
+    _store_extended_entity(part_ext, 
+                           pn_init_face,
+                           pn_face,
+                           pface_ln_to_gn,
+                           pface_vtx_idx,
+                           pface_vtx,
+                          &part_ext->n_face_border,
+                          &part_ext->border_face_ln_to_gn,
+                          &part_ext->border_face_vtx_idx,
+                          &part_ext->border_face_vtx);
+  }
+
+  // _store_extended_entity(part_ext, 
+  //                        pn_init_vtx,
+  //                        pn_vtx,
+  //                        pvtx_ln_to_gn,
+  //                        NULL,
+  //                        NULL,
+  //                       &part_ext->n_vtx_border,
+  //                       &part_ext->border_vtx_ln_to_gn,
+  //                        NULL,
+  //                        NULL);
+  _store_extended_vtx(part_ext, 
+                         pn_init_vtx,
+                         pn_vtx,
+                         pvtx_ln_to_gn,
+                         pvtx_coords,
+                        &part_ext->n_vtx_border,
+                        &part_ext->border_vtx_ln_to_gn,
+                        &part_ext->border_vtx);
+
+
+  /**
+   * Need to get distributed data_base info on partition
+   */
+
+  // > Cells
+  int         **pcell_ancstr_strd    = NULL;
+  PDM_g_num_t **pcell_ancstr         = NULL;
+  // int         **pcell_path_itrf_strd = NULL;
+  // int         **pcell_path_itrf      = NULL;
+  _get_block_data_base_on_part_ext( part_ext,
+                                    prev_dcell_itrf_n_blk,
+                                    prev_dcell_itrf_blk_gnum,
+                                    prev_dcell_itrf_blk_ancstr_strd,
+                                    prev_dcell_itrf_blk_ancstr,
+                                    prev_dcell_itrf_blk_path_itrf_strd,
+                                    prev_dcell_itrf_blk_path_itrf,
+                                    part_ext->n_cell_border,
+                                    part_ext->border_cell_ln_to_gn,
+                                   &pcell_ancstr_strd,
+                                   &pcell_ancstr,
+                                   // &pcell_path_itrf_strd,
+                                   &part_ext->cell_cell_path_itrf_idx,
+                                   &part_ext->cell_cell_path_itrf);
+
+
+  // > Faces
+  int         **pface_ancstr_strd    = NULL;
+  PDM_g_num_t **pface_ancstr         = NULL;
+  // int         **pface_path_itrf_strd = NULL;
+  // int         **pface_path_itrf      = NULL;
+  _get_block_data_base_on_part_ext( part_ext,
+                                    prev_dface_itrf_n_blk,
+                                    prev_dface_itrf_blk_gnum,
+                                    prev_dface_itrf_blk_ancstr_strd,
+                                    prev_dface_itrf_blk_ancstr,
+                                    prev_dface_itrf_blk_path_itrf_strd,
+                                    prev_dface_itrf_blk_path_itrf,
+                                    part_ext->n_face_border,
+                                    part_ext->border_face_ln_to_gn,
+                                   &pface_ancstr_strd,
+                                   &pface_ancstr,
+                                   // &pface_path_itrf_strd,
+                                   &part_ext->face_face_path_itrf_idx,
+                                   &part_ext->face_face_path_itrf);
+
+
+  // > Edges
+  int         **pedge_ancstr_strd    = NULL;
+  PDM_g_num_t **pedge_ancstr         = NULL;
+  // int         **pedge_path_itrf_strd = NULL;
+  // int         **pedge_path_itrf      = NULL;
+  if(part_ext->have_edge == 1) {
+    _get_block_data_base_on_part_ext( part_ext,
+                                      prev_dedge_itrf_n_blk,
+                                      prev_dedge_itrf_blk_gnum,
+                                      prev_dedge_itrf_blk_ancstr_strd,
+                                      prev_dedge_itrf_blk_ancstr,
+                                      prev_dedge_itrf_blk_path_itrf_strd,
+                                      prev_dedge_itrf_blk_path_itrf,
+                                      part_ext->n_edge_border,
+                                      part_ext->border_edge_ln_to_gn,
+                                     &pedge_ancstr_strd,
+                                     &pedge_ancstr,
+                                     // &pedge_path_itrf_strd,
+                                     &part_ext->edge_edge_path_itrf_idx,
+                                     &part_ext->edge_edge_path_itrf);
+  }
+
+  // > Vertex
+  int         **pvtx_ancstr_strd    = NULL;
+  PDM_g_num_t **pvtx_ancstr         = NULL;
+  // int         **pvtx_path_itrf_strd = NULL;
+  // int         **pvtx_path_itrf      = NULL;
+  _get_block_data_base_on_part_ext( part_ext,
+                                    prev_dvtx_itrf_n_blk,
+                                    prev_dvtx_itrf_blk_gnum,
+                                    prev_dvtx_itrf_blk_ancstr_strd,
+                                    prev_dvtx_itrf_blk_ancstr,
+                                    prev_dvtx_itrf_blk_path_itrf_strd,
+                                    prev_dvtx_itrf_blk_path_itrf,
+                                    part_ext->n_vtx_border,
+                                    part_ext->border_vtx_ln_to_gn,
+                                   &pvtx_ancstr_strd,
+                                   &pvtx_ancstr,
+                                   // &pvtx_path_itrf_strd,
+                                   &part_ext->vtx_vtx_path_itrf_idx,
+                                   &part_ext->vtx_vtx_path_itrf);
+
+
+  /**
+   * Use ancestor info to build graph between original partition and extended partition
+   */
+  // > Cells
+  _build_part_extension_graph_to_old(part_ext,
+                                     pn_init_cell,
+                                     pcell_ln_to_gn,
+                                     part_ext->n_cell_border,
+                                     part_ext->border_cell_ln_to_gn,
+                                     pcell_ancstr_strd,
+                                     pcell_ancstr,
+                                     // pcell_path_itrf_strd,
+                                     // pcell_path_itrf,
+                                    &part_ext->cell_cell_extended2);
+
+  // > Faces
+  _build_part_extension_graph_to_old(part_ext,
+                                     pn_init_face,
+                                     pface_ln_to_gn,
+                                     part_ext->n_face_border,
+                                     part_ext->border_face_ln_to_gn,
+                                     pface_ancstr_strd,
+                                     pface_ancstr,
+                                     // pface_path_itrf_strd,
+                                     // pface_path_itrf,
+                                    &part_ext->face_face_extended);
+
+  // > Edges
+  if(part_ext->have_edge == 1) {
+    _build_part_extension_graph_to_old(part_ext,
+                                       pn_init_edge,
+                                       pedge_ln_to_gn,
+                                       part_ext->n_edge_border,
+                                       part_ext->border_edge_ln_to_gn,
+                                       pedge_ancstr_strd,
+                                       pedge_ancstr,
+                                       // pedge_path_itrf_strd,
+                                       // pedge_path_itrf,
+                                      &part_ext->edge_edge_extended);
+  }
+
+  // > Vertex
+  _build_part_extension_graph_to_old(part_ext,
+                                     pn_init_vtx,
+                                     pvtx_ln_to_gn,
+                                     part_ext->n_vtx_border,
+                                     part_ext->border_vtx_ln_to_gn,
+                                     pvtx_ancstr_strd,
+                                     pvtx_ancstr,
+                                     // pvtx_path_itrf_strd,
+                                     // pvtx_path_itrf,
+                                    &part_ext->vtx_vtx_extended);
+
+  for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
+    free(pcell_ancstr_strd   [i_part]);
+    free(pcell_ancstr        [i_part]);
+    // free(pcell_path_itrf_strd[i_part]);
+    // free(pcell_path_itrf     [i_part]);
+
+    free(pface_ancstr_strd   [i_part]);
+    free(pface_ancstr        [i_part]);
+    // free(pface_path_itrf_strd[i_part]);
+    // free(pface_path_itrf     [i_part]);
+
+    if(part_ext->have_edge == 1) {
+      free(pedge_ancstr_strd   [i_part]);
+      free(pedge_ancstr        [i_part]);
+      // free(pedge_path_itrf_strd[i_part]);
+      // free(pedge_path_itrf     [i_part]);
+    }
+
+    free(pvtx_ancstr_strd    [i_part]);
+    free(pvtx_ancstr         [i_part]);
+    // free(pvtx_path_itrf_strd [i_part]);
+    // free(pvtx_path_itrf      [i_part]);
+  }
+  free(pcell_ancstr_strd);
+  free(pcell_ancstr);
+  // free(pcell_path_itrf_strd);
+  // free(pcell_path_itrf);
+
+  free(pface_ancstr_strd);
+  free(pface_ancstr);
+  // free(pface_path_itrf_strd);
+  // free(pface_path_itrf);
+  
+  if(part_ext->have_edge == 1) {
+    free(pedge_ancstr_strd);
+    free(pedge_ancstr);
+    // free(pedge_path_itrf_strd);
+    // free(pedge_path_itrf);
+  }
+  
+  free(pvtx_ancstr_strd);
+  free(pvtx_ancstr);
+  // free(pvtx_path_itrf_strd);
+  // free(pvtx_path_itrf);
+
+
 
   free(prev_dcell_itrf_blk_gnum           );
   free(prev_dcell_itrf_blk_ancstr_strd    );
@@ -3440,12 +3708,16 @@ _part_extension_3d
   }
 
   free(pn_vtx);
+  free(pn_init_vtx);
   free(pvtx_ln_to_gn);
   free(pn_edge);
+  free(pn_init_edge);
   free(pedge_ln_to_gn);
   free(pn_face);
+  free(pn_init_face);
   free(pface_ln_to_gn);
   free(pn_cell);
+  free(pn_init_cell);
   free(pcell_ln_to_gn);
   free(pcell_alrdy_sent);
   free(pcell_face_idx);
@@ -5397,6 +5669,13 @@ PDM_part_extension_free
     for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
       for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
 
+        if(part_ext->cell_cell_path_itrf_idx != NULL) {
+          // free(part_ext->cell_cell_extended_idx [i_part+shift_part]);
+          free(part_ext->cell_cell_extended2    [i_part+shift_part]);
+          free(part_ext->cell_cell_path_itrf_idx[i_part+shift_part]);
+          free(part_ext->cell_cell_path_itrf    [i_part+shift_part]);
+        }
+
         if(part_ext->face_face_path_itrf_idx != NULL) {
           // free(part_ext->face_face_extended_idx [i_part+shift_part]);
           free(part_ext->face_face_extended     [i_part+shift_part]);
@@ -5420,6 +5699,11 @@ PDM_part_extension_free
       }
       shift_part += part_ext->n_part[i_domain];
     }
+    // free(part_ext->cell_cell_extended_idx);
+    free(part_ext->cell_cell_extended2);
+    free(part_ext->cell_cell_path_itrf_idx);
+    free(part_ext->cell_cell_path_itrf);
+
     // free(part_ext->face_face_extended_idx);
     free(part_ext->face_face_extended);
     free(part_ext->face_face_path_itrf_idx);
