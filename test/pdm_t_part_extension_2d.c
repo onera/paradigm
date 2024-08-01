@@ -1209,7 +1209,7 @@ int main
                                                    &pflat_vtx_coords,
                                                    PDM_OWNERSHIP_KEEP);
 
-      if(1 == 1) {
+      if(0 == 1) {
         char filename[999];
         sprintf(filename, "out_edge_i_part=%i_%i_%i.vtk", i_part, i_dom, i_rank);
         PDM_vtk_write_std_elements(filename,

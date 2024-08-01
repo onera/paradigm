@@ -2292,7 +2292,10 @@ _part_extension_3d
     int i_rank;
     PDM_MPI_Comm_rank(part_ext->comm, &i_rank);
     if (i_rank==0) printf("Computing DEPTH %d (step = %i) \n", i_depth, step);
-    log_trace("\n\n\n >> DEPTH %d step = %i\n", i_depth, step);
+
+    if(debug == 1) {
+      log_trace("\n\n\n >> DEPTH %d step = %i\n", i_depth, step);
+    }
     double t_start = PDM_MPI_Wtime();
 
 
@@ -2835,7 +2838,10 @@ _part_extension_3d
      * Concatenate all information to continue recursion
      */
     for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
-      log_trace("  -> i_part = %d \n", i_part);
+
+      if(debug == 1) {
+        log_trace("  -> i_part = %d \n", i_part);
+      }
 
       /* Update size */
       pn_vtx_extended_old              [i_part]  = pfull_n_vtx_extended[i_part];
@@ -3234,7 +3240,9 @@ _part_extension_3d
 
     PDM_MPI_Allreduce(&_pn_cell_extended_tot, &pn_cell_extended_tot, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, part_ext->comm);
 
-    log_trace("pn_cell_extended_tot = %i (local = %i ) \n", pn_cell_extended_tot, _pn_cell_extended_tot);
+    if(debug == 1) {
+      log_trace("pn_cell_extended_tot = %i (local = %i ) \n", pn_cell_extended_tot, _pn_cell_extended_tot);
+    }
 
 
     /*
