@@ -465,11 +465,13 @@ _compute_offset
   int **pn_face       = NULL;
   int **pn_edge       = NULL;
   int **pn_vtx        = NULL;
+  int **pn_edge_group = NULL;
   int **pn_face_group = NULL;
   PDM_malloc(pn_cell      , part_ext->n_domain, int *);
   PDM_malloc(pn_face      , part_ext->n_domain, int *);
   PDM_malloc(pn_edge      , part_ext->n_domain, int *);
   PDM_malloc(pn_vtx       , part_ext->n_domain, int *);
+  PDM_malloc(pn_edge_group, part_ext->n_domain, int *);
   PDM_malloc(pn_face_group, part_ext->n_domain, int *);
 
   PDM_g_num_t ***cell_ln_to_gn       = NULL;
@@ -477,10 +479,12 @@ _compute_offset
   PDM_g_num_t ***edge_ln_to_gn       = NULL;
   PDM_g_num_t ***vtx_ln_to_gn        = NULL;
   PDM_g_num_t ***face_group_ln_to_gn = NULL;
+  PDM_g_num_t ***edge_group_ln_to_gn = NULL;
   PDM_malloc(cell_ln_to_gn      , part_ext->n_domain, PDM_g_num_t **);
   PDM_malloc(face_ln_to_gn      , part_ext->n_domain, PDM_g_num_t **);
   PDM_malloc(edge_ln_to_gn      , part_ext->n_domain, PDM_g_num_t **);
   PDM_malloc(vtx_ln_to_gn       , part_ext->n_domain, PDM_g_num_t **);
+  PDM_malloc(edge_group_ln_to_gn, part_ext->n_domain, PDM_g_num_t **);
   PDM_malloc(face_group_ln_to_gn, part_ext->n_domain, PDM_g_num_t **);
 
   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
@@ -488,6 +492,7 @@ _compute_offset
     PDM_malloc(pn_face      [i_domain], part_ext->n_part[i_domain], int);
     PDM_malloc(pn_edge      [i_domain], part_ext->n_part[i_domain], int);
     PDM_malloc(pn_vtx       [i_domain], part_ext->n_part[i_domain], int);
+    PDM_malloc(pn_edge_group[i_domain], part_ext->n_part[i_domain], int);
     PDM_malloc(pn_face_group[i_domain], part_ext->n_part[i_domain], int);
 
     PDM_malloc(cell_ln_to_gn      [i_domain], part_ext->n_part[i_domain], PDM_g_num_t *);
@@ -495,6 +500,7 @@ _compute_offset
     PDM_malloc(edge_ln_to_gn      [i_domain], part_ext->n_part[i_domain], PDM_g_num_t *);
     PDM_malloc(vtx_ln_to_gn       [i_domain], part_ext->n_part[i_domain], PDM_g_num_t *);
     PDM_malloc(face_group_ln_to_gn[i_domain], part_ext->n_part[i_domain], PDM_g_num_t *);
+    PDM_malloc(edge_group_ln_to_gn[i_domain], part_ext->n_part[i_domain], PDM_g_num_t *);
 
     for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
 
@@ -502,7 +508,11 @@ _compute_offset
       pn_face            [i_domain][i_part] = part_ext->parts[i_domain][i_part].n_face;
       pn_edge            [i_domain][i_part] = part_ext->parts[i_domain][i_part].n_edge;
       pn_vtx             [i_domain][i_part] = part_ext->parts[i_domain][i_part].n_vtx;
+      pn_edge_group      [i_domain][i_part] = 0;
       pn_face_group      [i_domain][i_part] = 0;
+      if (part_ext->parts[i_domain][i_part].n_edge_group > 0) {
+        pn_edge_group      [i_domain][i_part] = part_ext->parts[i_domain][i_part].edge_bound_idx[part_ext->parts[i_domain][i_part].n_edge_group];
+      }
       if (part_ext->parts[i_domain][i_part].n_face_group > 0) {
         pn_face_group      [i_domain][i_part] = part_ext->parts[i_domain][i_part].face_bound_idx[part_ext->parts[i_domain][i_part].n_face_group];
       }
@@ -511,7 +521,8 @@ _compute_offset
       face_ln_to_gn      [i_domain][i_part] = part_ext->parts[i_domain][i_part].face_ln_to_gn;
       edge_ln_to_gn      [i_domain][i_part] = part_ext->parts[i_domain][i_part].edge_ln_to_gn;
       vtx_ln_to_gn       [i_domain][i_part] = part_ext->parts[i_domain][i_part].vtx_ln_to_gn;
-      face_group_ln_to_gn[i_domain][i_part] = part_ext->parts[i_domain][i_part].face_group_ln_to_gn;
+      edge_group_ln_to_gn[i_domain][i_part] = part_ext->parts[i_domain][i_part].edge_bound_ln_to_gn;
+      face_group_ln_to_gn[i_domain][i_part] = part_ext->parts[i_domain][i_part].face_bound_ln_to_gn;
 
     }
   }
@@ -544,6 +555,13 @@ _compute_offset
                                                                         vtx_ln_to_gn,
                                                                         part_ext->comm);
 
+  assert(part_ext->shift_by_domain_edge_group == NULL);
+  part_ext->shift_by_domain_edge_group = PDM_compute_offset_ln_to_gn_by_domain(part_ext->n_domain,
+                                                                               part_ext->n_part,
+                                                                               pn_edge_group,
+                                                                               edge_group_ln_to_gn,
+                                                                               part_ext->comm);
+
   assert(part_ext->shift_by_domain_face_group == NULL);
   part_ext->shift_by_domain_face_group = PDM_compute_offset_ln_to_gn_by_domain(part_ext->n_domain,
                                                                                part_ext->n_part,
@@ -556,12 +574,14 @@ _compute_offset
     PDM_free(pn_face      [i_domain]);
     PDM_free(pn_edge      [i_domain]);
     PDM_free(pn_vtx       [i_domain]);
+    PDM_free(pn_edge_group[i_domain]);
     PDM_free(pn_face_group[i_domain]);
 
     PDM_free(cell_ln_to_gn      [i_domain]);
     PDM_free(face_ln_to_gn      [i_domain]);
     PDM_free(edge_ln_to_gn      [i_domain]);
     PDM_free(vtx_ln_to_gn       [i_domain]);
+    PDM_free(edge_group_ln_to_gn[i_domain]);
     PDM_free(face_group_ln_to_gn[i_domain]);
   }
 
@@ -569,12 +589,14 @@ _compute_offset
   PDM_free(pn_face      );
   PDM_free(pn_edge      );
   PDM_free(pn_vtx       );
+  PDM_free(pn_edge_group);
   PDM_free(pn_face_group);
 
   PDM_free(cell_ln_to_gn      );
   PDM_free(face_ln_to_gn      );
   PDM_free(edge_ln_to_gn      );
   PDM_free(vtx_ln_to_gn       );
+  PDM_free(edge_group_ln_to_gn);
   PDM_free(face_group_ln_to_gn);
 }
 
@@ -592,22 +614,26 @@ _offset_parts_by_domain
   int **pn_face       = NULL;
   int **pn_edge       = NULL;
   int **pn_vtx        = NULL;
+  int **pn_edge_group = NULL;
   int **pn_face_group = NULL;
   PDM_malloc(pn_cell      , part_ext->n_domain, int *);
   PDM_malloc(pn_face      , part_ext->n_domain, int *);
   PDM_malloc(pn_edge      , part_ext->n_domain, int *);
   PDM_malloc(pn_vtx       , part_ext->n_domain, int *);
+  PDM_malloc(pn_edge_group, part_ext->n_domain, int *);
   PDM_malloc(pn_face_group, part_ext->n_domain, int *);
 
   PDM_g_num_t ***cell_ln_to_gn       = NULL;
   PDM_g_num_t ***face_ln_to_gn       = NULL;
   PDM_g_num_t ***edge_ln_to_gn       = NULL;
   PDM_g_num_t ***vtx_ln_to_gn        = NULL;
+  PDM_g_num_t ***edge_group_ln_to_gn = NULL;
   PDM_g_num_t ***face_group_ln_to_gn = NULL;
   PDM_malloc(cell_ln_to_gn      , part_ext->n_domain, PDM_g_num_t **);
   PDM_malloc(face_ln_to_gn      , part_ext->n_domain, PDM_g_num_t **);
   PDM_malloc(edge_ln_to_gn      , part_ext->n_domain, PDM_g_num_t **);
   PDM_malloc(vtx_ln_to_gn       , part_ext->n_domain, PDM_g_num_t **);
+  PDM_malloc(edge_group_ln_to_gn, part_ext->n_domain, PDM_g_num_t **);
   PDM_malloc(face_group_ln_to_gn, part_ext->n_domain, PDM_g_num_t **);
 
   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
@@ -615,12 +641,14 @@ _offset_parts_by_domain
     PDM_malloc(pn_face      [i_domain], part_ext->n_part[i_domain], int);
     PDM_malloc(pn_edge      [i_domain], part_ext->n_part[i_domain], int);
     PDM_malloc(pn_vtx       [i_domain], part_ext->n_part[i_domain], int);
+    PDM_malloc(pn_edge_group[i_domain], part_ext->n_part[i_domain], int);
     PDM_malloc(pn_face_group[i_domain], part_ext->n_part[i_domain], int);
 
     PDM_malloc(cell_ln_to_gn      [i_domain], part_ext->n_part[i_domain], PDM_g_num_t *);
     PDM_malloc(face_ln_to_gn      [i_domain], part_ext->n_part[i_domain], PDM_g_num_t *);
     PDM_malloc(edge_ln_to_gn      [i_domain], part_ext->n_part[i_domain], PDM_g_num_t *);
     PDM_malloc(vtx_ln_to_gn       [i_domain], part_ext->n_part[i_domain], PDM_g_num_t *);
+    PDM_malloc(edge_group_ln_to_gn[i_domain], part_ext->n_part[i_domain], PDM_g_num_t *);
     PDM_malloc(face_group_ln_to_gn[i_domain], part_ext->n_part[i_domain], PDM_g_num_t *);
 
     for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
@@ -629,7 +657,11 @@ _offset_parts_by_domain
       pn_face            [i_domain][i_part] = part_ext->parts[i_domain][i_part].n_face;
       pn_edge            [i_domain][i_part] = part_ext->parts[i_domain][i_part].n_edge;
       pn_vtx             [i_domain][i_part] = part_ext->parts[i_domain][i_part].n_vtx;
+      pn_edge_group      [i_domain][i_part] = 0;
       pn_face_group      [i_domain][i_part] = 0;
+      if (part_ext->parts[i_domain][i_part].n_edge_group > 0) {
+        pn_edge_group      [i_domain][i_part] = part_ext->parts[i_domain][i_part].edge_bound_idx[part_ext->parts[i_domain][i_part].n_edge_group];
+      }
       if (part_ext->parts[i_domain][i_part].n_face_group > 0) {
         pn_face_group      [i_domain][i_part] = part_ext->parts[i_domain][i_part].face_bound_idx[part_ext->parts[i_domain][i_part].n_face_group];
       }
@@ -638,7 +670,8 @@ _offset_parts_by_domain
       face_ln_to_gn      [i_domain][i_part] = part_ext->parts[i_domain][i_part].face_ln_to_gn;
       edge_ln_to_gn      [i_domain][i_part] = part_ext->parts[i_domain][i_part].edge_ln_to_gn;
       vtx_ln_to_gn       [i_domain][i_part] = part_ext->parts[i_domain][i_part].vtx_ln_to_gn;
-      face_group_ln_to_gn[i_domain][i_part] = part_ext->parts[i_domain][i_part].face_group_ln_to_gn;
+      edge_group_ln_to_gn[i_domain][i_part] = part_ext->parts[i_domain][i_part].edge_bound_ln_to_gn;
+      face_group_ln_to_gn[i_domain][i_part] = part_ext->parts[i_domain][i_part].face_bound_ln_to_gn;
 
     }
   }
@@ -674,6 +707,13 @@ _offset_parts_by_domain
 
   PDM_offset_ln_to_gn_by_domain(part_ext->n_domain,
                                 part_ext->n_part,
+                                pn_edge_group,
+                                edge_group_ln_to_gn,
+                                part_ext->shift_by_domain_edge_group,
+                                sens);
+
+  PDM_offset_ln_to_gn_by_domain(part_ext->n_domain,
+                                part_ext->n_part,
                                 pn_face_group,
                                 face_group_ln_to_gn,
                                 part_ext->shift_by_domain_face_group,
@@ -684,12 +724,14 @@ _offset_parts_by_domain
     PDM_free(pn_face      [i_domain]);
     PDM_free(pn_edge      [i_domain]);
     PDM_free(pn_vtx       [i_domain]);
+    PDM_free(pn_edge_group[i_domain]);
     PDM_free(pn_face_group[i_domain]);
 
     PDM_free(cell_ln_to_gn      [i_domain]);
     PDM_free(face_ln_to_gn      [i_domain]);
     PDM_free(edge_ln_to_gn      [i_domain]);
     PDM_free(vtx_ln_to_gn       [i_domain]);
+    PDM_free(edge_group_ln_to_gn[i_domain]);
     PDM_free(face_group_ln_to_gn[i_domain]);
   }
 
@@ -697,12 +739,14 @@ _offset_parts_by_domain
   PDM_free(pn_face      );
   PDM_free(pn_edge      );
   PDM_free(pn_vtx       );
+  PDM_free(pn_edge_group);
   PDM_free(pn_face_group);
 
   PDM_free(cell_ln_to_gn      );
   PDM_free(face_ln_to_gn      );
   PDM_free(edge_ln_to_gn      );
   PDM_free(vtx_ln_to_gn       );
+  PDM_free(edge_group_ln_to_gn);
   PDM_free(face_group_ln_to_gn);
 }
 
@@ -1096,16 +1140,22 @@ static
 void
 _build_part_extension_graph_to_old
 (
- PDM_part_extension_t *part_ext,
- int                  *init_n_entity,
- PDM_g_num_t         **init_entity_gnum,
- int                  *new_n_entity,
- PDM_g_num_t         **new_entity_gnum,
- int                 **new_entity_ancstr_strd,
- PDM_g_num_t         **new_entity_ancstr,
- // int                 **new_entity_path_itrf_strd,
- // int                 **new_entity_path_itrf,
- int                ***out_pentity_to_entity_trplt
+  PDM_part_extension_t *part_ext,
+  int                  *init_n_entity,
+  PDM_g_num_t         **init_entity_gnum,
+  int                  *init_n_entity_group,
+  int                 **init_entity_group_tag,
+  PDM_g_num_t         **init_entity_group_gnum,
+  int                  *new_n_entity,
+  PDM_g_num_t         **new_entity_gnum,
+  int                 **new_entity_ancstr_strd,
+  PDM_g_num_t         **new_entity_ancstr,
+  // int                 **new_entity_path_itrf_strd,
+  // int                 **new_entity_path_itrf,
+  int                ***out_pentity_to_entity_trplt,
+  int                ***out_pentity_group_idx,
+  int                ***out_pentity_group,
+  PDM_g_num_t        ***out_pentity_group_gnum
 )
 {
   int debug = 0;
@@ -1113,6 +1163,7 @@ _build_part_extension_graph_to_old
     log_trace("\n\n _build_part_extension_graph_to_old\n\n");
   }
 
+  int have_group = init_entity_group_tag!=NULL;
 
   /**
    * Build part_to_part between new entities all ancestors
@@ -1195,7 +1246,7 @@ _build_part_extension_graph_to_old
     }
   }
 
-  int request_exch_ancstr = 0;
+  int request_exch = 0;
   int **rcvd_trplt      = NULL;
   PDM_part_to_part_reverse_iexch( ptp,
                           PDM_MPI_COMM_KIND_P2P,
@@ -1207,8 +1258,39 @@ _build_part_extension_graph_to_old
         (const void **)   pentity_trplt,
                           NULL,
               (void ***) &rcvd_trplt,
-                         &request_exch_ancstr);
-  PDM_part_to_part_reverse_iexch_wait(ptp, request_exch_ancstr);
+                         &request_exch);
+  PDM_part_to_part_reverse_iexch_wait(ptp, request_exch);
+
+  int         **rcvd_group_tag  = NULL;
+  PDM_g_num_t **rcvd_group_gnum = NULL;
+  if (have_group) {
+    PDM_part_to_part_reverse_iexch( ptp,
+                            PDM_MPI_COMM_KIND_P2P,
+                            PDM_STRIDE_CST_INTERLACED,
+                            PDM_PART_TO_PART_DATA_DEF_ORDER_PART2,
+                            1,
+                            sizeof(int),
+          (const int  **)   NULL,
+          (const void **)   init_entity_group_tag,
+                            NULL,
+                (void ***) &rcvd_group_tag,
+                           &request_exch);
+    PDM_part_to_part_reverse_iexch_wait(ptp, request_exch);
+
+    PDM_part_to_part_reverse_iexch( ptp,
+                            PDM_MPI_COMM_KIND_P2P,
+                            PDM_STRIDE_CST_INTERLACED,
+                            PDM_PART_TO_PART_DATA_DEF_ORDER_PART2,
+                            1,
+                            sizeof(PDM_g_num_t),
+          (const int  **)   NULL,
+          (const void **)   init_entity_group_gnum,
+                            NULL,
+                (void ***) &rcvd_group_gnum,
+                           &request_exch);
+    PDM_part_to_part_reverse_iexch_wait(ptp, request_exch); 
+  }
+
 
   if (debug==1) {
     for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
@@ -1216,19 +1298,74 @@ _build_part_extension_graph_to_old
       int i_read_path = 0;
       for (int i_entity=0; i_entity<new_n_entity[i_part]; ++i_entity) {
         log_trace("gnum "PDM_FMT_G_NUM" \n", new_entity_gnum[i_part][i_entity]);
-        log_trace("   from gnum "PDM_FMT_G_NUM" \n", l_entity_ancstr[i_part][i_entity]);
+        log_trace("\t from gnum "PDM_FMT_G_NUM" \n", l_entity_ancstr[i_part][i_entity]);
         // log_trace("   via path ");
         // for (int i_itrf=0; i_itrf<new_entity_path_itrf_strd[i_part][i_entity]; ++i_itrf) {
         //   log_trace("%d ", new_entity_path_itrf[i_part][i_read_path]);
         //   i_read_path++;
         // }
         log_trace("\n");
-        log_trace("   received triplet %d %d %d\n", 
+        log_trace("\t received triplet %d %d %d\n", 
                   rcvd_trplt[i_part][3*i_entity  ], 
                   rcvd_trplt[i_part][3*i_entity+1], 
                   rcvd_trplt[i_part][3*i_entity+2]);
+        if (have_group) {
+          log_trace("\t get tag %d (with gnum "PDM_FMT_G_NUM"\n", 
+              rcvd_group_tag [i_part][i_entity],
+              rcvd_group_gnum[i_part][i_entity]);
+        }
       }
     }
+  }
+
+  
+  /**
+   * Transform tag into group
+   */
+  int         **entity_group_idx  = NULL;
+  int         **entity_group      = NULL;
+  PDM_g_num_t **entity_group_gnum = NULL;
+  if (have_group) {
+    PDM_malloc(entity_group_idx , part_ext->ln_part_tot, int         *);
+    PDM_malloc(entity_group     , part_ext->ln_part_tot, int         *);
+    PDM_malloc(entity_group_gnum, part_ext->ln_part_tot, PDM_g_num_t *);
+
+    for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
+      int *entity_group_n = NULL;
+      PDM_calloc(entity_group_n, init_n_entity_group[i_part], int);
+
+      // > Count number of entities in group
+      for (int i_entity=0; i_entity<new_n_entity[i_part]; ++i_entity) {
+        int group_tag = rcvd_group_tag[i_part][i_entity];
+        if (group_tag>0) {
+          entity_group_n[group_tag-1]++;
+        }
+      }
+
+      // > Set idx and alloc
+      entity_group_idx[i_part] = PDM_array_new_idx_from_sizes_int(entity_group_n, init_n_entity_group[i_part]);
+      PDM_array_reset_int(entity_group_n, init_n_entity_group[i_part], 0);
+
+      int n_entity_in_group = entity_group_idx[i_part][init_n_entity_group[i_part]];
+      PDM_malloc(entity_group     [i_part], n_entity_in_group, int        );
+      PDM_malloc(entity_group_gnum[i_part], n_entity_in_group, PDM_g_num_t);
+
+      // > Fill
+      for (int i_entity=0; i_entity<new_n_entity[i_part]; ++i_entity) {
+        int group_tag = rcvd_group_tag[i_part][i_entity];
+        if (group_tag>0) {
+          int i_write = entity_group_idx[i_part][group_tag-1] + entity_group_n[group_tag-1];
+          entity_group     [i_part][i_write] = i_entity+1;
+          entity_group_gnum[i_part][i_write] = rcvd_group_gnum[i_part][i_entity];
+          entity_group_n[group_tag-1]++;
+        }
+      }
+      free(entity_group_n);
+      free(rcvd_group_tag [i_part]);
+      free(rcvd_group_gnum[i_part]);
+    }
+    free(rcvd_group_tag);
+    free(rcvd_group_gnum);
   }
 
   for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
@@ -1243,6 +1380,11 @@ _build_part_extension_graph_to_old
       
 
   *out_pentity_to_entity_trplt = rcvd_trplt;
+  if (have_group) {
+    *out_pentity_group_idx       = entity_group_idx;
+    *out_pentity_group           = entity_group;
+    *out_pentity_group_gnum      = entity_group_gnum;
+  }
 }
 
 
@@ -2098,6 +2240,14 @@ _part_extension_3d
   PDM_malloc(pedge_vtx_idx , part_ext->n_domain, int *);
   PDM_malloc(pedge_vtx     , part_ext->n_domain, int *);
 
+  /* Groups */
+  int          *pn_face_group    = NULL;
+  int         **pface_group_tag  = NULL;
+  PDM_g_num_t **pface_group_gnum = NULL;
+  PDM_malloc(pn_face_group   , part_ext->n_domain, int          );
+  PDM_malloc(pface_group_tag , part_ext->n_domain, int         *);
+  PDM_malloc(pface_group_gnum, part_ext->n_domain, PDM_g_num_t *);
+
   /* Coordinates */
   double **pvtx_coords = NULL;
   PDM_malloc(pvtx_coords, part_ext->n_domain, double *);
@@ -2195,12 +2345,38 @@ _part_extension_3d
         }
       }
 
-
+      PDM_calloc(pface_group_tag [lpart], pn_face[lpart], int        );
+      PDM_calloc(pface_group_gnum[lpart], pn_face[lpart], PDM_g_num_t);
 
       /* Coordinnates */
       PDM_malloc(pvtx_coords[lpart], 3 * pn_vtx [lpart], double);
       for(int i_vtx = 0; i_vtx < 3 * pn_vtx[lpart]; ++i_vtx) {
         pvtx_coords   [lpart][i_vtx] = part_ext->parts[i_domain][i_part].vtx[i_vtx];
+      }
+
+
+      // > Transform group into tag
+      /**
+       * Warning n_domain not implemented yet
+       * May be necessary to shift groud_id over all domain
+       * as well as groud_gnum
+       */
+      assert(part_ext->n_domain==1);
+
+      int          _n_group           = part_ext->parts[i_domain][i_part].n_face_group;
+      int         *_group_entity_idx  = part_ext->parts[i_domain][i_part].face_bound_idx;
+      int         *_group_entity      = part_ext->parts[i_domain][i_part].face_bound;
+      PDM_g_num_t *_group_entity_gnum = part_ext->parts[i_domain][i_part].face_bound_ln_to_gn;
+      pn_face_group[lpart] = _n_group;
+      for (int i_group=0; i_group<_n_group; ++i_group) {
+        for (int i_entity=_group_entity_idx[i_group  ];
+                 i_entity<_group_entity_idx[i_group+1];
+                 ++i_entity) {
+          int lnum = _group_entity     [i_entity];
+          int gnum = _group_entity_gnum[i_entity];
+          pface_group_tag [lpart][lnum-1] = i_group+1;
+          pface_group_gnum[lpart][lnum-1] = gnum;
+        }
       }
 
       lpart++;
@@ -3177,7 +3353,7 @@ _part_extension_3d
       }
 
 
-      printf("part_ext->extend_type = %i \n", part_ext->extend_type);
+      // printf("part_ext->extend_type = %i \n", part_ext->extend_type);
 
       /*
        * Update graphe - Only extend idx since no connextion is create AT this stage
@@ -3680,51 +3856,75 @@ _part_extension_3d
   _build_part_extension_graph_to_old(part_ext,
                                      pn_init_cell,
                                      pcell_ln_to_gn,
+                                     NULL,
+                                     NULL,
+                                     NULL,
                                      part_ext->n_cell_border,
                                      part_ext->border_cell_ln_to_gn,
                                      pcell_ancstr_strd,
                                      pcell_ancstr,
                                      // pcell_path_itrf_strd,
                                      // pcell_path_itrf,
-                                    &part_ext->cell_cell_extended2);
+                                    &part_ext->cell_cell_extended2,
+                                     NULL,
+                                     NULL,
+                                     NULL);
 
   // > Faces
   _build_part_extension_graph_to_old(part_ext,
                                      pn_init_face,
                                      pface_ln_to_gn,
+                                     pn_face_group,
+                                     pface_group_tag,
+                                     pface_group_gnum,
                                      part_ext->n_face_border,
                                      part_ext->border_face_ln_to_gn,
                                      pface_ancstr_strd,
                                      pface_ancstr,
                                      // pface_path_itrf_strd,
                                      // pface_path_itrf,
-                                    &part_ext->face_face_extended);
+                                    &part_ext->face_face_extended,
+                                    &part_ext->border_face_group_idx,
+                                    &part_ext->border_face_group,
+                                    &part_ext->border_face_group_ln_to_gn);
 
   // > Edges
   if(part_ext->have_edge == 1) {
     _build_part_extension_graph_to_old(part_ext,
                                        pn_init_edge,
                                        pedge_ln_to_gn,
+                                       NULL,
+                                       NULL,
+                                       NULL,
                                        part_ext->n_edge_border,
                                        part_ext->border_edge_ln_to_gn,
                                        pedge_ancstr_strd,
                                        pedge_ancstr,
                                        // pedge_path_itrf_strd,
                                        // pedge_path_itrf,
-                                      &part_ext->edge_edge_extended);
+                                      &part_ext->edge_edge_extended,
+                                       NULL,
+                                       NULL,
+                                       NULL);
   }
 
   // > Vertex
   _build_part_extension_graph_to_old(part_ext,
                                      pn_init_vtx,
                                      pvtx_ln_to_gn,
+                                     NULL,
+                                     NULL,
+                                     NULL,
                                      part_ext->n_vtx_border,
                                      part_ext->border_vtx_ln_to_gn,
                                      pvtx_ancstr_strd,
                                      pvtx_ancstr,
                                      // pvtx_path_itrf_strd,
                                      // pvtx_path_itrf,
-                                    &part_ext->vtx_vtx_extended);
+                                    &part_ext->vtx_vtx_extended,
+                                     NULL,
+                                     NULL,
+                                     NULL);
 
   for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
     PDM_free(pcell_ancstr_strd   [i_part]);
@@ -3818,6 +4018,8 @@ _part_extension_3d
       PDM_free(pface_vtx_idx    [i_part]);
       PDM_free(pface_vtx        [i_part]);
     }
+    PDM_free(pface_group_tag    [i_part]);
+    PDM_free(pface_group_gnum   [i_part]);
     PDM_free(pvtx_coords        [i_part]);
   }
 
@@ -3844,6 +4046,9 @@ _part_extension_3d
   PDM_free(pface_vtx);
   PDM_free(pedge_vtx_idx);
   PDM_free(pedge_vtx);
+  PDM_free(pn_face_group);
+  PDM_free(pface_group_tag);
+  PDM_free(pface_group_gnum);
   PDM_free(pvtx_coords);
 
 
@@ -3972,6 +4177,15 @@ _part_extension_2d
   PDM_malloc(pedge_vtx_idx , part_ext->n_domain, int *);
   PDM_malloc(pedge_vtx     , part_ext->n_domain, int *);
 
+  /* Groups */
+  int          *pn_edge_group    = NULL;
+  int         **pedge_group_tag  = NULL;
+  PDM_g_num_t **pedge_group_gnum = NULL;
+  PDM_malloc(pn_edge_group   , part_ext->n_domain, int          );
+  PDM_malloc(pedge_group_tag , part_ext->n_domain, int         *);
+  PDM_malloc(pedge_group_gnum, part_ext->n_domain, PDM_g_num_t *);
+
+
   /* Coordinates */
   double **pvtx_coords = NULL;
   PDM_malloc(pvtx_coords, part_ext->n_domain, double *);
@@ -4001,6 +4215,9 @@ _part_extension_2d
         PDM_malloc(pedge_vtx_idx [lpart],   pn_edge[lpart]+1 , int        );
         PDM_malloc(pedge_vtx     [lpart], 2*pn_edge[lpart]   , int        );
         pedge_vtx_idx    [lpart][0] = 0;
+
+        PDM_calloc(pedge_group_tag [lpart],  pn_edge[lpart]   , int        );
+        PDM_calloc(pedge_group_gnum[lpart],  pn_edge[lpart]   , PDM_g_num_t);
       }
       else {
         PDM_malloc(pface_vtx_idx[lpart],                                                pn_face[lpart]+1, int);
@@ -4014,8 +4231,10 @@ _part_extension_2d
         pface_ln_to_gn  [lpart][i_face] = part_ext->parts[i_domain][i_part].face_ln_to_gn[i_face];
         pface_alrdy_sent[lpart][i_face] = 0;
       }
-      for(int i_edge = 0; i_edge < pn_edge[lpart]; ++i_edge) {
-        pedge_ln_to_gn[lpart][i_edge] = part_ext->parts[i_domain][i_part].edge_ln_to_gn[i_edge];
+      if(part_ext->have_edge == 1) {
+        for(int i_edge = 0; i_edge < pn_edge[lpart]; ++i_edge) {
+          pedge_ln_to_gn[lpart][i_edge] = part_ext->parts[i_domain][i_part].edge_ln_to_gn[i_edge];
+        }
       }
       for(int i_vtx = 0; i_vtx < pn_vtx[lpart]; ++i_vtx) {
         pvtx_ln_to_gn[lpart][i_vtx] = part_ext->parts[i_domain][i_part].vtx_ln_to_gn[i_vtx];
@@ -4045,6 +4264,33 @@ _part_extension_2d
 
       for(int i_vtx = 0; i_vtx < 3 * pn_vtx[lpart]; ++i_vtx) {
         pvtx_coords   [lpart][i_vtx] = part_ext->parts[i_domain][i_part].vtx[i_vtx];
+      }
+
+      // > Transform group into tag
+      if (part_ext->have_edge) {
+        
+        /**
+         * Warning n_domain not implemented yet
+         * May be necessary to shift groud_id over all domain
+         * as well as groud_gnum
+         */
+        assert(part_ext->n_domain==1);
+
+        int          _n_group           = part_ext->parts[i_domain][i_part].n_edge_group;
+        int         *_group_entity_idx  = part_ext->parts[i_domain][i_part].edge_bound_idx;
+        int         *_group_entity      = part_ext->parts[i_domain][i_part].edge_bound;
+        PDM_g_num_t *_group_entity_gnum = part_ext->parts[i_domain][i_part].edge_bound_ln_to_gn;
+        pn_edge_group[lpart] = _n_group;
+        for (int i_group=0; i_group<_n_group; ++i_group) {
+          for (int i_entity=_group_entity_idx[i_group  ];
+                   i_entity<_group_entity_idx[i_group+1];
+                   ++i_entity) {
+            int lnum = _group_entity     [i_entity];
+            int gnum = _group_entity_gnum[i_entity];
+            pedge_group_tag [lpart][lnum-1] = i_group+1;
+            pedge_group_gnum[lpart][lnum-1] = gnum;
+          }
+        }
       }
 
       lpart++;
@@ -5220,39 +5466,57 @@ _part_extension_2d
   _build_part_extension_graph_to_old(part_ext,
                                      pn_init_face,
                                      pface_ln_to_gn,
+                                     NULL,
+                                     NULL,
+                                     NULL,
                                      part_ext->n_face_border,
                                      part_ext->border_face_ln_to_gn,
                                      pface_ancstr_strd,
                                      pface_ancstr,
                                      // pface_path_itrf_strd,
                                      // pface_path_itrf,
-                                    &part_ext->face_face_extended);
+                                    &part_ext->face_face_extended,
+                                     NULL,
+                                     NULL,
+                                     NULL);
 
   // > Edges
   if(part_ext->have_edge == 1) {
     _build_part_extension_graph_to_old(part_ext,
                                        pn_init_edge,
                                        pedge_ln_to_gn,
+                                       pn_edge_group,
+                                       pedge_group_tag,
+                                       pedge_group_gnum,
                                        part_ext->n_edge_border,
                                        part_ext->border_edge_ln_to_gn,
                                        pedge_ancstr_strd,
                                        pedge_ancstr,
                                        // pedge_path_itrf_strd,
                                        // pedge_path_itrf,
-                                      &part_ext->edge_edge_extended);
+                                      &part_ext->edge_edge_extended,
+                                      &part_ext->border_edge_group_idx,
+                                      &part_ext->border_edge_group,
+                                      &part_ext->border_edge_group_ln_to_gn);
   }
 
   // > Vertex
   _build_part_extension_graph_to_old(part_ext,
                                      pn_init_vtx,
                                      pvtx_ln_to_gn,
+                                     NULL,
+                                     NULL,
+                                     NULL,
                                      part_ext->n_vtx_border,
                                      part_ext->border_vtx_ln_to_gn,
                                      pvtx_ancstr_strd,
                                      pvtx_ancstr,
                                      // pvtx_path_itrf_strd,
                                      // pvtx_path_itrf,
-                                    &part_ext->vtx_vtx_extended);
+                                    &part_ext->vtx_vtx_extended,
+                                     NULL,
+                                     NULL,
+                                     NULL);
 
   for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
     PDM_free(pface_ancstr_strd   [i_part]);
@@ -5321,6 +5585,8 @@ _part_extension_2d
       PDM_free(pface_edge       [i_part]);
       PDM_free(pedge_vtx_idx    [i_part]);
       PDM_free(pedge_vtx        [i_part]);
+      PDM_free(pedge_group_tag  [i_part]);
+      PDM_free(pedge_group_gnum [i_part]);
     }
     else {
       PDM_free(pface_vtx_idx    [i_part]);
@@ -5345,6 +5611,9 @@ _part_extension_2d
   PDM_free(pface_vtx);
   PDM_free(pedge_vtx_idx);
   PDM_free(pedge_vtx);
+  PDM_free(pn_edge_group);
+  PDM_free(pedge_group_tag);
+  PDM_free(pedge_group_gnum);
   PDM_free(pvtx_coords);
 
 
@@ -5864,34 +6133,39 @@ PDM_part_extension_free
         }
 
         // > Face
-        //
-        if(part_ext->owner == PDM_OWNERSHIP_KEEP) {
-          if (part_ext->n_face_border!=NULL) {
-            PDM_free(part_ext->border_face_ln_to_gn[i_part+shift_part]);
-            if (part_ext->border_face_edge_idx!=NULL) {
-              PDM_free(part_ext->border_face_edge_idx[i_part+shift_part]);
-              PDM_free(part_ext->border_face_edge    [i_part+shift_part]);
-            }
-            if (part_ext->border_face_vtx_idx!=NULL) {
-              PDM_free(part_ext->border_face_vtx_idx[i_part+shift_part]);
-              PDM_free(part_ext->border_face_vtx    [i_part+shift_part]);
-            }
+        if (part_ext->n_face_border!=NULL) {
+          PDM_free(part_ext->border_face_ln_to_gn[i_part+shift_part]);
+          if (part_ext->border_face_edge_idx!=NULL) {
+            PDM_free(part_ext->border_face_edge_idx[i_part+shift_part]);
+            PDM_free(part_ext->border_face_edge    [i_part+shift_part]);
           }
+          if (part_ext->border_face_vtx_idx!=NULL) {
+            PDM_free(part_ext->border_face_vtx_idx[i_part+shift_part]);
+            PDM_free(part_ext->border_face_vtx    [i_part+shift_part]);
+          }
+          if (part_ext->border_face_group_idx!=NULL) {
+            PDM_free(part_ext->border_face_group_idx     [i_part+shift_part]);
+            PDM_free(part_ext->border_face_group         [i_part+shift_part]);
+            PDM_free(part_ext->border_face_group_ln_to_gn[i_part+shift_part]);
+          }
+        }
 
-          // > Edge
-          if (part_ext->n_edge_border!=NULL) {
-            PDM_free(part_ext->border_edge_ln_to_gn[i_part+shift_part]);
-            if (part_ext->border_edge_vtx_idx !=NULL) {
-              PDM_free(part_ext->border_edge_vtx_idx [i_part+shift_part]);
-              PDM_free(part_ext->border_edge_vtx     [i_part+shift_part]);
-            }
+        // > Edge
+        if (part_ext->n_edge_border!=NULL) {
+          PDM_free(part_ext->border_edge_ln_to_gn[i_part+shift_part]);
+          PDM_free(part_ext->border_edge_vtx_idx [i_part+shift_part]);
+          PDM_free(part_ext->border_edge_vtx     [i_part+shift_part]);
+          if (part_ext->border_edge_group_idx!=NULL) {
+            PDM_free(part_ext->border_edge_group_idx     [i_part+shift_part]);
+            PDM_free(part_ext->border_edge_group         [i_part+shift_part]);
+            PDM_free(part_ext->border_edge_group_ln_to_gn[i_part+shift_part]);
           }
+        }
 
-          // > Vtx
-          if (part_ext->n_vtx_border!=NULL) {
-            PDM_free(part_ext->border_vtx_ln_to_gn[i_part+shift_part]);
-            PDM_free(part_ext->border_vtx         [i_part+shift_part]);
-          }
+        // > Vtx
+        if (part_ext->n_vtx_border!=NULL) {
+          PDM_free(part_ext->border_vtx_ln_to_gn[i_part+shift_part]);
+          PDM_free(part_ext->border_vtx         [i_part+shift_part]);
         }
 
       }
@@ -5899,41 +6173,35 @@ PDM_part_extension_free
     }
 
     // > Cell
-    if (part_ext->n_cell_border!=NULL) {
-      PDM_free(part_ext->n_cell_border);
-      PDM_free(part_ext->border_cell_ln_to_gn);
-      PDM_free(part_ext->border_cell_face_idx);
-      PDM_free(part_ext->border_cell_face    );
-    }
+    PDM_free(part_ext->n_cell_border);
+    PDM_free(part_ext->border_cell_ln_to_gn);
+    PDM_free(part_ext->border_cell_face_idx);
+    PDM_free(part_ext->border_cell_face    );
 
     // > Face
-    if (part_ext->n_face_border!=NULL) {
-      PDM_free(part_ext->n_face_border);
-      PDM_free(part_ext->border_face_ln_to_gn);
-      if (part_ext->border_face_edge_idx!=NULL) {
-        PDM_free(part_ext->border_face_edge_idx);
-        PDM_free(part_ext->border_face_edge);
-      }
-      if (part_ext->border_face_vtx_idx!=NULL) {
-        PDM_free(part_ext->border_face_vtx_idx);
-        PDM_free(part_ext->border_face_vtx);
-      }
-    }
+    PDM_free(part_ext->n_face_border);
+    PDM_free(part_ext->border_face_ln_to_gn);
+    PDM_free(part_ext->border_face_edge_idx);
+    PDM_free(part_ext->border_face_edge);
+    PDM_free(part_ext->border_face_vtx_idx);
+    PDM_free(part_ext->border_face_vtx);
+    PDM_free(part_ext->border_face_group_idx);
+    PDM_free(part_ext->border_face_group);
+    PDM_free(part_ext->border_face_group_ln_to_gn);
 
     // > Edge
-    if (part_ext->n_edge_border!=NULL) {
-      PDM_free(part_ext->n_edge_border);
-      PDM_free(part_ext->border_edge_ln_to_gn);
-      PDM_free(part_ext->border_edge_vtx_idx);
-      PDM_free(part_ext->border_edge_vtx);
-    }
+    PDM_free(part_ext->n_edge_border);
+    PDM_free(part_ext->border_edge_ln_to_gn);
+    PDM_free(part_ext->border_edge_vtx_idx);
+    PDM_free(part_ext->border_edge_vtx);
+    PDM_free(part_ext->border_edge_group_idx);
+    PDM_free(part_ext->border_edge_group);
+    PDM_free(part_ext->border_edge_group_ln_to_gn);
 
     // > Vtx
-    if (part_ext->n_vtx_border!=NULL) {
-      PDM_free(part_ext->n_vtx_border);
-      PDM_free(part_ext->border_vtx_ln_to_gn);
-      PDM_free(part_ext->border_vtx);
-    }
+    PDM_free(part_ext->n_vtx_border);
+    PDM_free(part_ext->border_vtx_ln_to_gn);
+    PDM_free(part_ext->border_vtx);
 
   }
 
@@ -6132,6 +6400,7 @@ PDM_part_extension_free
   PDM_free(part_ext->shift_by_domain_edge);
   PDM_free(part_ext->shift_by_domain_vtx);
 
+  PDM_free(part_ext->shift_by_domain_edge_group);
   PDM_free(part_ext->shift_by_domain_face_group);
 
   if(part_ext->owner == PDM_OWNERSHIP_KEEP) {
@@ -6169,15 +6438,6 @@ PDM_part_extension_connectivity_get
  int                     **connect
 )
 {
-  if(part_ext->compute_kind == 1) {
-    return PDM_part_extension_connectivity_get2(part_ext,
-                                                i_domain,
-                                                i_part,
-                                                connectivity_type,
-                                                connect_idx,
-                                                connect);
-  }
-
   int n_entity = -1;
   int shift_part = part_ext->n_part_idx[i_domain];
   switch(connectivity_type)
@@ -6311,11 +6571,6 @@ PDM_part_extension_ln_to_gn_get
  PDM_g_num_t             **ln_to_gn
 )
 {
-
-  if(part_ext->compute_kind == 1) {
-    return PDM_part_extension_ln_to_gn_get2(part_ext, i_domain, i_part, mesh_entity, ln_to_gn);
-  }
-
   int n_entity = -1;
   int shift_part = part_ext->n_part_idx[i_domain];
   switch(mesh_entity)
@@ -6608,7 +6863,7 @@ PDM_part_extension_group_get
   {
     case PDM_MESH_ENTITY_CELL:
     {
-      abort();
+      PDM_error(__FILE__, __LINE__, 0, "PDM_MESH_ENTITY_CELL has no groups\n");
     }
     break;
 
@@ -6624,18 +6879,22 @@ PDM_part_extension_group_get
 
     case PDM_MESH_ENTITY_EDGE:
     {
-      abort();
+      int n_edge_group = part_ext->parts[i_domain][i_part].n_edge_group;
+      n_group                = n_edge_group;
+      *group_entity_idx      = part_ext->border_edge_group_idx     [shift_part+i_part];
+      *group_entity          = part_ext->border_edge_group         [shift_part+i_part];
+      *group_entity_ln_to_gn = part_ext->border_edge_group_ln_to_gn[shift_part+i_part];
     }
     break;
 
     case PDM_MESH_ENTITY_VTX:
     {
-      abort();
+      PDM_error(__FILE__, __LINE__, 0, "PDM_MESH_ENTITY_VTX has no groups\n");
     }
     break;
 
   default :
-    PDM_error(__FILE__, __LINE__, 0, "Unknown connectivity_type \n");
+    PDM_error(__FILE__, __LINE__, 0, "Unknown mesh_entity \n");
     break;
 
   }
@@ -6665,13 +6924,6 @@ PDM_part_extension_vtx_coord_get
  double                  **vtx_coord
 )
 {
-  if(part_ext->compute_kind == 1) {
-    return PDM_part_extension_vtx_coord_get2(part_ext,
-                                             i_domain,
-                                             i_part,
-                                             vtx_coord);
-  }
-
   int shift_part     = part_ext->n_part_idx[i_domain];
   int n_vtx          = part_ext->parts[i_domain][i_part].n_vtx;
   int n_vtx_extended = part_ext->vtx_vtx_extended_idx[shift_part+i_part][n_vtx];
