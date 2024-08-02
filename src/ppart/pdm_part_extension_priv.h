@@ -146,23 +146,22 @@ struct _pdm_part_extension_t {
   int         **border_face_edge;
   int         **border_face_vtx_idx;
   int         **border_face_vtx;
+  int         **border_face_group_idx;
+  int         **border_face_group;
+  PDM_g_num_t **border_face_group_ln_to_gn;
 
   int          *n_edge_border;
   PDM_g_num_t **border_edge_ln_to_gn;
   int         **border_edge_vtx_idx;
   int         **border_edge_vtx;
+  int         **border_edge_group_idx;
+  int         **border_edge_group;
+  PDM_g_num_t **border_edge_group_ln_to_gn;
 
   int          *n_vtx_border;
   PDM_g_num_t **border_vtx_ln_to_gn;
   double      **border_vtx;
   
-
-  // int  *n_face_group;
-  int **border_face_group_idx;
-  int **border_face_group;
-
-
-  PDM_g_num_t **border_face_group_ln_to_gn;
 
 
   /* Shift by domain for all entities */
@@ -170,6 +169,7 @@ struct _pdm_part_extension_t {
   PDM_g_num_t *shift_by_domain_face;
   PDM_g_num_t *shift_by_domain_edge;
   PDM_g_num_t *shift_by_domain_vtx;
+  PDM_g_num_t *shift_by_domain_edge_group;
   PDM_g_num_t *shift_by_domain_face_group;
 
   /* Composed interface */

@@ -6136,6 +6136,11 @@ PDM_part_extension_create
 
   part_ext->border_face_group_idx         = NULL;
   part_ext->border_face_group             = NULL;
+  part_ext->border_face_group_ln_to_gn    = NULL;
+
+  part_ext->border_edge_group_idx         = NULL;
+  part_ext->border_edge_group             = NULL;
+  part_ext->border_edge_group_ln_to_gn    = NULL;
 
   part_ext->n_vtx_border                  = NULL;
   part_ext->border_vtx                    = NULL;
@@ -6144,7 +6149,6 @@ PDM_part_extension_create
   part_ext->border_face_ln_to_gn          = NULL;
   part_ext->border_edge_ln_to_gn          = NULL;
   part_ext->border_vtx_ln_to_gn           = NULL;
-  part_ext->border_face_group_ln_to_gn    = NULL;
 
   part_ext->pdi = NULL;
 
@@ -6152,6 +6156,7 @@ PDM_part_extension_create
   part_ext->shift_by_domain_face       = NULL;
   part_ext->shift_by_domain_edge       = NULL;
   part_ext->shift_by_domain_vtx        = NULL;
+  part_ext->shift_by_domain_edge_group = NULL;
   part_ext->shift_by_domain_face_group = NULL;
 
 
