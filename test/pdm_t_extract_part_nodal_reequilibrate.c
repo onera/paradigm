@@ -17,6 +17,7 @@
 #include "pdm_logging.h"
 #include "pdm_dcube_nodal_gen.h"
 #include "pdm_reader_gamma.h"
+#include "pdm_poly_vol_gen.h"
 #include "pdm_multipart.h"
 #include "pdm_extract_part.h"
 #include "pdm_array.h"
@@ -70,6 +71,7 @@ _read_args
   int                   *n_part_out,
   PDM_Mesh_nodal_elt_t  *elt_type,
   char                 **filename,
+  PDM_split_dual_t      *part_method,
   int                   *visu,
   PDM_g_num_t           *n_vtx_seg
 )
@@ -137,12 +139,272 @@ _read_args
       }
     }
 
+    else if (strcmp(argv[i], "-hilbert") == 0) {
+      *part_method = PDM_SPLIT_DUAL_WITH_HILBERT;
+    }
+
+    else if (strcmp(argv[i], "-parmetis") == 0) {
+      *part_method = PDM_SPLIT_DUAL_WITH_PARMETIS;
+    }
+
+    else if (strcmp(argv[i], "-pt-scotch") == 0) {
+      *part_method = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+    }
+
     else {
       _usage(EXIT_FAILURE);
     }
     i++;
   }
 }
+
+
+static
+PDM_part_mesh_nodal_t *
+_gen_mesh
+(
+ PDM_MPI_Comm          comm,
+ const char           *mesh_file,
+ int                   n_part,
+ PDM_g_num_t           n_vtx_seg,
+ PDM_Mesh_nodal_elt_t  elt_type,
+ PDM_split_dual_t      part_method
+)
+{
+  PDM_dmesh_nodal_t *dmn   = NULL;
+  PDM_dmesh_t       *dmesh = NULL;
+
+  int n_domain = 1;
+  PDM_multipart_t *mpart = PDM_multipart_create(n_domain,
+                                                &n_part,
+                                                PDM_FALSE,
+                                                part_method,
+                                                PDM_PART_SIZE_HOMOGENEOUS,
+                                                NULL,
+                                                comm,
+                                                PDM_OWNERSHIP_KEEP);
+
+  if (mesh_file == NULL) {
+    if (elt_type == PDM_MESH_NODAL_POLY_3D) {
+      // Polyhedral mesh
+      PDM_g_num_t ng_cell      = 0;
+      PDM_g_num_t ng_face      = 0;
+      PDM_g_num_t ng_vtx       = 0;
+      int         dn_cell      = 0;
+      int         dn_face      = 0;
+      int         dn_edge      = 0;
+      int         dn_vtx       = 0;
+      int         n_face_group = 0;
+
+      double      *dvtx_coord       = NULL;
+      int         *dcell_face_idx   = NULL;
+      PDM_g_num_t *dcell_face       = NULL;
+      PDM_g_num_t *dface_cell       = NULL;
+      int         *dface_vtx_idx    = NULL;
+      PDM_g_num_t *dface_vtx        = NULL;
+      int         *dface_group_idx  = NULL;
+      PDM_g_num_t *dface_group      = NULL;
+
+      PDM_poly_vol_gen(comm,
+                       0.,
+                       0.,
+                       0.,
+                       1.,
+                       1.,
+                       1.,
+                       n_vtx_seg,
+                       n_vtx_seg,
+                       n_vtx_seg,
+                       0,
+                       0,
+                       &ng_cell,
+                       &ng_face,
+                       &ng_vtx,
+                       &n_face_group,
+                       &dn_cell,
+                       &dn_face,
+                       &dn_vtx,
+                       &dcell_face_idx,
+                       &dcell_face,
+                       &dface_cell,
+                       &dface_vtx_idx,
+                       &dface_vtx,
+                       &dvtx_coord,
+                       &dface_group_idx,
+                     &dface_group);
+
+      /* Generate dmesh */
+      dmesh = PDM_dmesh_create(PDM_OWNERSHIP_KEEP,
+                               dn_cell,
+                               dn_face,
+                               dn_edge,
+                               dn_vtx,
+                               comm);
+
+      PDM_dmesh_vtx_coord_set(dmesh,
+                              dvtx_coord,
+                              PDM_OWNERSHIP_KEEP);
+
+
+      PDM_dmesh_connectivity_set(dmesh,
+                                 PDM_CONNECTIVITY_TYPE_FACE_VTX,
+                                 dface_vtx,
+                                 dface_vtx_idx,
+                                 PDM_OWNERSHIP_KEEP);
+
+      PDM_dmesh_connectivity_set(dmesh,
+                                 PDM_CONNECTIVITY_TYPE_FACE_CELL,
+                                 dface_cell,
+                                 NULL,
+                                 PDM_OWNERSHIP_KEEP);
+
+      PDM_dmesh_connectivity_set(dmesh,
+                                 PDM_CONNECTIVITY_TYPE_CELL_FACE,
+                                 dcell_face,
+                                 dcell_face_idx,
+                                 PDM_OWNERSHIP_KEEP);
+
+
+
+      PDM_dmesh_bound_set(dmesh,
+                          PDM_BOUND_TYPE_FACE,
+                          n_face_group,
+                          dface_group,
+                          dface_group_idx,
+                          PDM_OWNERSHIP_KEEP);
+
+      PDM_dmesh_compute_distributions(dmesh);
+
+      PDM_multipart_dmesh_set(mpart, 0, dmesh);
+    }
+    else {
+      PDM_dcube_nodal_t *dcube = PDM_dcube_nodal_gen_create(comm,
+                                                            n_vtx_seg,
+                                                            n_vtx_seg,
+                                                            n_vtx_seg,
+                                                            1.,
+                                                            0.,
+                                                            0.,
+                                                            0.,
+                                                            elt_type,
+                                                            1,
+                                                            PDM_OWNERSHIP_USER);
+      PDM_dcube_nodal_gen_build(dcube);
+
+      dmn = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube);
+      PDM_dcube_nodal_gen_free(dcube);
+
+      PDM_dmesh_nodal_generate_distribution(dmn);
+
+      PDM_multipart_dmesh_nodal_set(mpart, 0, dmn);
+    }
+  }
+  else {
+    dmn = PDM_reader_gamma_dmesh_nodal(comm,
+                                       mesh_file,
+                                       0,
+                                       0);
+    PDM_multipart_dmesh_nodal_set(mpart, 0, dmn);
+  }
+
+
+  PDM_multipart_compute(mpart);
+
+
+  /* Let's go */
+  PDM_part_mesh_nodal_t *pmn = NULL;
+
+  if (elt_type == PDM_MESH_NODAL_POLY_3D) {
+    PDM_dmesh_free(dmesh);
+
+    pmn = PDM_part_mesh_nodal_create(3, n_part, comm);
+
+    for (int i_part = 0; i_part < n_part; i_part++) {
+
+      int *cell_face_idx = NULL;
+      int *cell_face     = NULL;
+      PDM_multipart_part_connectivity_get(mpart,
+                                          0,
+                                          i_part,
+                                          PDM_CONNECTIVITY_TYPE_CELL_FACE,
+                                          &cell_face_idx,
+                                          &cell_face,
+                                          PDM_OWNERSHIP_KEEP);
+
+      int *face_vtx_idx = NULL;
+      int *face_vtx     = NULL;
+      PDM_multipart_part_connectivity_get(mpart,
+                                          0,
+                                          i_part,
+                                          PDM_CONNECTIVITY_TYPE_FACE_VTX,
+                                          &face_vtx_idx,
+                                          &face_vtx,
+                                          PDM_OWNERSHIP_KEEP);
+
+      PDM_g_num_t *cell_ln_to_gn = NULL;
+      int n_cell = PDM_multipart_part_ln_to_gn_get(mpart,
+                                                   0,
+                                                   i_part,
+                                                   PDM_MESH_ENTITY_CELL,
+                                                   &cell_ln_to_gn,
+                                                   PDM_OWNERSHIP_KEEP);
+
+      PDM_g_num_t *face_ln_to_gn = NULL;
+      int n_face = PDM_multipart_part_ln_to_gn_get(mpart,
+                                                   0,
+                                                   i_part,
+                                                   PDM_MESH_ENTITY_FACE,
+                                                   &face_ln_to_gn,
+                                                   PDM_OWNERSHIP_KEEP);
+
+      PDM_g_num_t *vtx_ln_to_gn = NULL;
+      int n_vtx = PDM_multipart_part_ln_to_gn_get(mpart,
+                                                  0,
+                                                  i_part,
+                                                  PDM_MESH_ENTITY_VTX,
+                                                  &vtx_ln_to_gn,
+                                                  PDM_OWNERSHIP_USER);
+
+      double *vtx_coord = NULL;
+      PDM_multipart_part_vtx_coord_get(mpart,
+                                       0,
+                                       i_part,
+                                       &vtx_coord,
+                                       PDM_OWNERSHIP_USER);
+
+      PDM_part_mesh_nodal_coord_set(pmn,
+                                    i_part,
+                                    n_vtx,
+                                    vtx_coord,
+                                    vtx_ln_to_gn,
+                                    PDM_OWNERSHIP_KEEP);
+
+      PDM_part_mesh_nodal_cell3d_cellface_add(pmn,
+                                              i_part,
+                                              n_cell,
+                                              n_face,
+                                              face_vtx_idx,
+                                              face_vtx,
+                                              face_ln_to_gn,
+                                              cell_face_idx,
+                                              cell_face,
+                                              cell_ln_to_gn,
+                                              PDM_OWNERSHIP_KEEP);
+    }
+  }
+  else {
+    PDM_multipart_get_part_mesh_nodal(mpart,
+                                      0,
+                                      &pmn,
+                                      PDM_OWNERSHIP_KEEP);
+  }
+
+  PDM_DMesh_nodal_free(dmn);
+  PDM_multipart_free(mpart);
+
+  return pmn;
+}
+
 
 
 /**
@@ -171,12 +433,13 @@ int main
   /*
    *  Read args
    */
-  int                   n_part_in  = 1;
-  int                   n_part_out = 1;
-  PDM_Mesh_nodal_elt_t  elt_type   = PDM_MESH_NODAL_PRISM6;
-  char                 *mesh_file  = NULL;
-  int                   visu       = 0;
-  PDM_g_num_t           n_vtx_seg  = 10;
+  int                   n_part_in   = 1;
+  int                   n_part_out  = 1;
+  PDM_Mesh_nodal_elt_t  elt_type    = PDM_MESH_NODAL_PRISM6;
+  char                 *mesh_file   = NULL;
+  PDM_split_dual_t      part_method = PDM_SPLIT_DUAL_WITH_HILBERT;
+  int                   visu        = 0;
+  PDM_g_num_t           n_vtx_seg   = 10;
 
   int compute_child_gnum = 1;
 
@@ -186,60 +449,67 @@ int main
              &n_part_out,
              &elt_type,
              &mesh_file,
+             &part_method,
              &visu,
              &n_vtx_seg);
 
   /* Generate mesh */
-  PDM_dmesh_nodal_t *dmn = NULL;
-  if (mesh_file == NULL) {
-    PDM_dcube_nodal_t *dcube = PDM_dcube_nodal_gen_create(comm,
-                                                          n_vtx_seg,
-                                                          n_vtx_seg,
-                                                          n_vtx_seg,
-                                                          1.,
-                                                          0.,
-                                                          0.,
-                                                          0.,
-                                                          elt_type,
-                                                          1,
-                                                          PDM_OWNERSHIP_USER);
-    PDM_dcube_nodal_gen_build(dcube);
+  PDM_part_mesh_nodal_t *pmn = _gen_mesh(comm,
+                                         mesh_file,
+                                         n_part_in,
+                                         n_vtx_seg,
+                                         elt_type,
+                                         part_method);
+  // PDM_dmesh_nodal_t *dmn = NULL;
+  // if (mesh_file == NULL) {
+  //   PDM_dcube_nodal_t *dcube = PDM_dcube_nodal_gen_create(comm,
+  //                                                         n_vtx_seg,
+  //                                                         n_vtx_seg,
+  //                                                         n_vtx_seg,
+  //                                                         1.,
+  //                                                         0.,
+  //                                                         0.,
+  //                                                         0.,
+  //                                                         elt_type,
+  //                                                         1,
+  //                                                         PDM_OWNERSHIP_USER);
+  //   PDM_dcube_nodal_gen_build(dcube);
 
-    dmn = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube);
+  //   dmn = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube);
 
-    PDM_dmesh_nodal_generate_distribution(dmn);
-    PDM_dcube_nodal_gen_free(dcube);
-  }
-  else {
-    dmn = PDM_reader_gamma_dmesh_nodal(comm,
-                                       mesh_file,
-                                       0,
-                                       0);
-  }
+  //   PDM_dmesh_nodal_generate_distribution(dmn);
+  //   PDM_dcube_nodal_gen_free(dcube);
+  // }
+  // else {
+  //   dmn = PDM_reader_gamma_dmesh_nodal(comm,
+  //                                      mesh_file,
+  //                                      0,
+  //                                      0);
+  // }
 
-  int n_domain = 1;
-  PDM_multipart_t *mpart = PDM_multipart_create(n_domain,
-                                                &n_part_in,
-                                                PDM_FALSE,
-                                                PDM_SPLIT_DUAL_WITH_HILBERT,
-                                                PDM_PART_SIZE_HOMOGENEOUS,
-                                                NULL,
-                                                comm,
-                                                PDM_OWNERSHIP_KEEP);
+  // int n_domain = 1;
+  // PDM_multipart_t *mpart = PDM_multipart_create(n_domain,
+  //                                               &n_part_in,
+  //                                               PDM_FALSE,
+  //                                               part_method,
+  //                                               PDM_PART_SIZE_HOMOGENEOUS,
+  //                                               NULL,
+  //                                               comm,
+  //                                               PDM_OWNERSHIP_KEEP);
 
-  PDM_multipart_dmesh_nodal_set(mpart, 0, dmn);
+  // PDM_multipart_dmesh_nodal_set(mpart, 0, dmn);
 
-  PDM_multipart_compute(mpart);
+  // PDM_multipart_compute(mpart);
 
 
-  /* */
-  PDM_part_mesh_nodal_t *pmn;
-  PDM_multipart_get_part_mesh_nodal(mpart,
-                                    0,
-                                    &pmn,
-                                    PDM_OWNERSHIP_KEEP);
+  // /* Let's go */
+  // PDM_part_mesh_nodal_t *pmn;
+  // PDM_multipart_get_part_mesh_nodal(mpart,
+  //                                   0,
+  //                                   &pmn,
+  //                                   PDM_OWNERSHIP_KEEP);
 
-  // TODO : get appropriate geom_kind
+
   int mesh_dimension = PDM_part_mesh_nodal_mesh_dimension_get(pmn);
 
   PDM_geometry_kind_t geom_kind = PDM_GEOMETRY_KIND_VOLUMIC;
@@ -264,7 +534,7 @@ int main
                                                       n_part_in,
                                                       n_part_out,
                                                       PDM_EXTRACT_PART_KIND_REEQUILIBRATE,
-                                                      PDM_SPLIT_DUAL_WITH_HILBERT,
+                                                      part_method,
                                                       compute_child_gnum,
                                                       PDM_OWNERSHIP_KEEP,
                                                       comm);
@@ -291,7 +561,7 @@ int main
     PDM_g_num_t *vtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(pmn, i_part);
 
     int n_elt_tot = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, i_part);
-    log_trace("n_elt_tot = %d\n", n_elt_tot);
+    // log_trace("n_elt_tot = %d\n", n_elt_tot);
 
     PDM_malloc(extract_lnum[i_part], n_elt_tot, int        );
     PDM_malloc(elt_ln_to_gn[i_part], n_elt_tot, PDM_g_num_t);
@@ -325,7 +595,12 @@ int main
                                                      PDM_OWNERSHIP_KEEP);
       }
       else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
-        PDM_error(__FILE__, __LINE__, 0, "Poly3d not handled yet\n");
+        PDM_part_mesh_nodal_elmts_section_poly3d_cell_vtx_connect_get(pmne,
+                                                                      sections_id[i_section],
+                                                                      i_part,
+                                                                      &elt_vtx_idx,
+                                                                      &elt_vtx,
+                                                                      PDM_OWNERSHIP_KEEP);
       }
       else {
         int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, 1);
@@ -366,6 +641,7 @@ int main
           double z = vtx_coord[3*i_vtx+2];
 
           double f = x + y + z;
+          // double f = (y - 0.15) * 10 + 1;
 
           _min = PDM_MIN(_min, f);
           _max = PDM_MAX(_max, f);
@@ -385,7 +661,7 @@ int main
 
     PDM_realloc(extract_lnum[i_part], extract_lnum[i_part], n_extract[i_part], int);
 
-    PDM_log_trace_array_int(extract_lnum[i_part], n_extract[i_part], "extract_lnum : ");
+    // PDM_log_trace_array_int(extract_lnum[i_part], n_extract[i_part], "extract_lnum : ");
 
 
     int          n_cell        = 0;
@@ -495,8 +771,8 @@ int main
   /* Free memory */
   PDM_extract_part_free(extrp);
   PDM_part_mesh_nodal_free(pmn);
-  PDM_DMesh_nodal_free(dmn);
-  PDM_multipart_free(mpart);
+  // PDM_DMesh_nodal_free(dmn);
+  // PDM_multipart_free(mpart);
 
   if (i_rank == 0) {
     printf("End :D\n");
