@@ -3636,6 +3636,13 @@ PDM_part_mesh_nodal_elmts_elt_center_compute
 
     block->cell_centers_owner = ownership;
 
+    if (block->cell_centers_to_compute == NULL) {
+      PDM_malloc(block->cell_centers_to_compute,block->n_part,int);
+      for (int i = 0; i < block->n_part; i++) {
+        block->cell_centers_to_compute[i] = 1;
+      }
+    }
+
     if (block->cell_centers == NULL) {
       PDM_malloc(block->cell_centers,block->n_part,double *);
       for (int i = 0; i < block->n_part; i++) {
@@ -3688,6 +3695,13 @@ PDM_part_mesh_nodal_elmts_elt_center_compute
 
     block->cell_centers_owner = ownership;
 
+    if (block->cell_centers_to_compute == NULL) {
+      PDM_malloc(block->cell_centers_to_compute,block->n_part,int);
+      for (int i = 0; i < block->n_part; i++) {
+        block->cell_centers_to_compute[i] = 1;
+      }
+    }
+
 
     if (block->cell_centers == NULL) {
       PDM_malloc(block->cell_centers,block->n_part,double *);
@@ -3737,6 +3751,13 @@ PDM_part_mesh_nodal_elmts_elt_center_compute
     }
 
     block->cell_centers_owner = ownership;
+
+    if (block->cell_centers_to_compute == NULL) {
+      PDM_malloc(block->cell_centers_to_compute,block->n_part,int);
+      for (int i = 0; i < block->n_part; i++) {
+        block->cell_centers_to_compute[i] = 1;
+      }
+    }
 
     if (block->cell_centers == NULL) {
       PDM_malloc(block->cell_centers,block->n_part,double *);
@@ -3911,7 +3932,7 @@ PDM_part_mesh_nodal_elmts_elt_center_get
        PDM_ownership_t              ownership
 )
 {
-  double* elt_centers;
+  double* elt_centers = NULL;
   int _id_section;
   if (pmne == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
@@ -3931,7 +3952,9 @@ PDM_part_mesh_nodal_elmts_elt_center_get
       PDM_error (__FILE__, __LINE__, 0, "Bad block identifier\n");
     }
 
-    elt_centers = block->cell_centers[id_part] ;
+    if (block->cell_centers != NULL) {
+      elt_centers = block->cell_centers[id_part];
+    }
   }
 
   else if (id_section < PDM_BLOCK_ID_BLOCK_POLY3D) {
@@ -3949,7 +3972,9 @@ PDM_part_mesh_nodal_elmts_elt_center_get
       PDM_error (__FILE__, __LINE__, 0, "Bad block identifier\n");
     }
 
-    elt_centers = block->cell_centers[id_part] ;
+    if (block->cell_centers != NULL) {
+      elt_centers = block->cell_centers[id_part];
+    }
   }
 
   else {
@@ -3962,8 +3987,9 @@ PDM_part_mesh_nodal_elmts_elt_center_get
       if (block->cell_centers_owner            != PDM_OWNERSHIP_USER) block->cell_centers_owner = ownership;
     }
 
-    elt_centers = block->cell_centers[id_part] ;
-
+    if (block->cell_centers != NULL) {
+      elt_centers = block->cell_centers[id_part];
+    }
   }
 
   return elt_centers;
