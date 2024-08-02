@@ -5664,8 +5664,6 @@ PDM_part_extension_free
     return;
   }
 
-  return;
-
   if(part_ext->n_tot_part_by_domain != NULL) {
     PDM_free(part_ext->n_tot_part_by_domain);
     part_ext->n_tot_part_by_domain = NULL;
@@ -5866,29 +5864,34 @@ PDM_part_extension_free
         }
 
         // > Face
-        if (part_ext->n_face_border!=NULL) {
-          PDM_free(part_ext->border_face_ln_to_gn[i_part+shift_part]);
-          if (part_ext->border_face_edge_idx!=NULL) {
-            PDM_free(part_ext->border_face_edge_idx[i_part+shift_part]);
-            PDM_free(part_ext->border_face_edge    [i_part+shift_part]);
+        //
+        if(part_ext->owner == PDM_OWNERSHIP_KEEP) {
+          if (part_ext->n_face_border!=NULL) {
+            PDM_free(part_ext->border_face_ln_to_gn[i_part+shift_part]);
+            if (part_ext->border_face_edge_idx!=NULL) {
+              PDM_free(part_ext->border_face_edge_idx[i_part+shift_part]);
+              PDM_free(part_ext->border_face_edge    [i_part+shift_part]);
+            }
+            if (part_ext->border_face_vtx_idx!=NULL) {
+              PDM_free(part_ext->border_face_vtx_idx[i_part+shift_part]);
+              PDM_free(part_ext->border_face_vtx    [i_part+shift_part]);
+            }
           }
-          if (part_ext->border_face_vtx_idx!=NULL) {
-            PDM_free(part_ext->border_face_vtx_idx[i_part+shift_part]);
-            PDM_free(part_ext->border_face_vtx    [i_part+shift_part]);
+
+          // > Edge
+          if (part_ext->n_edge_border!=NULL) {
+            PDM_free(part_ext->border_edge_ln_to_gn[i_part+shift_part]);
+            if (part_ext->border_edge_vtx_idx !=NULL) {
+              PDM_free(part_ext->border_edge_vtx_idx [i_part+shift_part]);
+              PDM_free(part_ext->border_edge_vtx     [i_part+shift_part]);
+            }
           }
-        }
 
-        // > Edge
-        if (part_ext->n_edge_border!=NULL) {
-          PDM_free(part_ext->border_edge_ln_to_gn[i_part+shift_part]);
-          PDM_free(part_ext->border_edge_vtx_idx [i_part+shift_part]);
-          PDM_free(part_ext->border_edge_vtx     [i_part+shift_part]);
-        }
-
-        // > Vtx
-        if (part_ext->n_vtx_border!=NULL) {
-          PDM_free(part_ext->border_vtx_ln_to_gn[i_part+shift_part]);
-          PDM_free(part_ext->border_vtx         [i_part+shift_part]);
+          // > Vtx
+          if (part_ext->n_vtx_border!=NULL) {
+            PDM_free(part_ext->border_vtx_ln_to_gn[i_part+shift_part]);
+            PDM_free(part_ext->border_vtx         [i_part+shift_part]);
+          }
         }
 
       }
