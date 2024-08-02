@@ -739,6 +739,28 @@ PDM_part_mesh_nodal_elmts_n_group_get
        PDM_part_mesh_nodal_elmts_t  *pmne
 );
 
+/**
+ * \brief Return the cell->vertex connectivity
+ * The output pointers are owned by the user.
+ *
+ * \param [in]  pmne          Pointer to \ref PDM_part_mesh_nodal_elmts_t object
+ * \param [in]  i_part        Partition identifier
+ * \param [out] cell_vtx_idx  Index for the cell->vertex connectivity
+ * \param [out] cell_vtx      Cell->vertex connectivity
+ *
+ * \return Number of cells in current partition
+ *
+ */
+
+int
+PDM_part_mesh_nodal_elmts_cell_vtx_connect_get
+(
+        PDM_part_mesh_nodal_elmts_t  *pmne,
+  const int                           i_part,
+        int                         **cell_vtx_idx,
+        int                         **cell_vtx
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
