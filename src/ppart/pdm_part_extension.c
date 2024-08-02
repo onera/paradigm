@@ -5664,6 +5664,8 @@ PDM_part_extension_free
     return;
   }
 
+  return;
+
   if(part_ext->n_tot_part_by_domain != NULL) {
     PDM_free(part_ext->n_tot_part_by_domain);
     part_ext->n_tot_part_by_domain = NULL;
@@ -6164,6 +6166,15 @@ PDM_part_extension_connectivity_get
  int                     **connect
 )
 {
+  if(part_ext->compute_kind == 1) {
+    return PDM_part_extension_connectivity_get2(part_ext,
+                                                i_domain,
+                                                i_part,
+                                                connectivity_type,
+                                                connect_idx,
+                                                connect);
+  }
+
   int n_entity = -1;
   int shift_part = part_ext->n_part_idx[i_domain];
   switch(connectivity_type)
@@ -6297,6 +6308,11 @@ PDM_part_extension_ln_to_gn_get
  PDM_g_num_t             **ln_to_gn
 )
 {
+
+  if(part_ext->compute_kind == 1) {
+    return PDM_part_extension_ln_to_gn_get2(part_ext, i_domain, i_part, mesh_entity, ln_to_gn);
+  }
+
   int n_entity = -1;
   int shift_part = part_ext->n_part_idx[i_domain];
   switch(mesh_entity)
@@ -6646,6 +6662,13 @@ PDM_part_extension_vtx_coord_get
  double                  **vtx_coord
 )
 {
+  if(part_ext->compute_kind == 1) {
+    return PDM_part_extension_vtx_coord_get2(part_ext,
+                                             i_domain,
+                                             i_part,
+                                             vtx_coord);
+  }
+
   int shift_part     = part_ext->n_part_idx[i_domain];
   int n_vtx          = part_ext->parts[i_domain][i_part].n_vtx;
   int n_vtx_extended = part_ext->vtx_vtx_extended_idx[shift_part+i_part][n_vtx];
