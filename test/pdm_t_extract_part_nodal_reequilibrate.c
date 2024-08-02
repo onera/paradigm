@@ -231,7 +231,7 @@ _gen_mesh
                        &dface_vtx,
                        &dvtx_coord,
                        &dface_group_idx,
-                     &dface_group);
+                       &dface_group);
 
       /* Generate dmesh */
       dmesh = PDM_dmesh_create(PDM_OWNERSHIP_KEEP,
@@ -460,55 +460,6 @@ int main
                                          n_vtx_seg,
                                          elt_type,
                                          part_method);
-  // PDM_dmesh_nodal_t *dmn = NULL;
-  // if (mesh_file == NULL) {
-  //   PDM_dcube_nodal_t *dcube = PDM_dcube_nodal_gen_create(comm,
-  //                                                         n_vtx_seg,
-  //                                                         n_vtx_seg,
-  //                                                         n_vtx_seg,
-  //                                                         1.,
-  //                                                         0.,
-  //                                                         0.,
-  //                                                         0.,
-  //                                                         elt_type,
-  //                                                         1,
-  //                                                         PDM_OWNERSHIP_USER);
-  //   PDM_dcube_nodal_gen_build(dcube);
-
-  //   dmn = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube);
-
-  //   PDM_dmesh_nodal_generate_distribution(dmn);
-  //   PDM_dcube_nodal_gen_free(dcube);
-  // }
-  // else {
-  //   dmn = PDM_reader_gamma_dmesh_nodal(comm,
-  //                                      mesh_file,
-  //                                      0,
-  //                                      0);
-  // }
-
-  // int n_domain = 1;
-  // PDM_multipart_t *mpart = PDM_multipart_create(n_domain,
-  //                                               &n_part_in,
-  //                                               PDM_FALSE,
-  //                                               part_method,
-  //                                               PDM_PART_SIZE_HOMOGENEOUS,
-  //                                               NULL,
-  //                                               comm,
-  //                                               PDM_OWNERSHIP_KEEP);
-
-  // PDM_multipart_dmesh_nodal_set(mpart, 0, dmn);
-
-  // PDM_multipart_compute(mpart);
-
-
-  // /* Let's go */
-  // PDM_part_mesh_nodal_t *pmn;
-  // PDM_multipart_get_part_mesh_nodal(mpart,
-  //                                   0,
-  //                                   &pmn,
-  //                                   PDM_OWNERSHIP_KEEP);
-
 
   int mesh_dimension = PDM_part_mesh_nodal_mesh_dimension_get(pmn);
 
