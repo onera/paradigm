@@ -44,7 +44,7 @@ _usage
      "  -n_part_in  <n>   Number of partitions in initial mesh.\n\n"
      "  -n_part_out <n>   Number of partitions in extracted mesh.\n\n"
      "  -visu             Enable exports for visualization.\n\n"
-     "  -n          <n>   Number of vertices per side (only for automatically generated mesh).\n\n"
+     "  -n          <n>   Number of vertices per side.\n\n"
      );
 
   exit(exit_code);

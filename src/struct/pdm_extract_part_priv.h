@@ -29,6 +29,7 @@
 #include "pdm_mpi.h"
 #include "pdm_part_to_part.h"
 #include "pdm_part_mesh_nodal_elmts.h"
+#include "pdm_part_mesh_nodal.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -99,7 +100,10 @@ struct _pdm_extract_part_t
 
 
   /* If partition is described by elements */
+  int is_nodal;
   PDM_part_mesh_nodal_elmts_t *pmne;
+  PDM_part_mesh_nodal_t       *pmn;
+
 
   /* Which cell or face is selected */
   int                 *n_extract;
@@ -138,6 +142,8 @@ struct _pdm_extract_part_t
   /* If partition is described by elements */
   PDM_bool_t                   is_owner_extract_pmne;
   PDM_part_mesh_nodal_elmts_t *extract_pmne;
+
+  PDM_part_mesh_nodal_t       *extract_pmn;
 
   /* Part-to-part objects */
   PDM_part_to_part_t *ptp_entity   [PDM_MESH_ENTITY_MAX];
