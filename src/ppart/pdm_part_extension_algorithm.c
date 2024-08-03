@@ -3321,10 +3321,10 @@ PDM_part_extension_build_entity1_graph
 
       int *part1_to_part2_n = PDM_array_zeros_int(pn_entity1[li_part]);
 
-      int n_entity_bound = ppart_entity1_part_idx[i_part][n_g_part_tot];
+      int n_entity_bound = ppart_entity1_part_idx[li_part][n_g_part_tot];
 
       for(int idx_entity = 0; idx_entity < n_entity_bound; ++idx_entity) {
-        int i_entity = ppart_entity1[i_part][4*idx_entity]-1;
+        int i_entity = ppart_entity1[li_part][4*idx_entity]-1;
         part1_to_part2_n[i_entity] += 1;
       }
 
@@ -3348,10 +3348,10 @@ PDM_part_extension_build_entity1_graph
       // printf("n_connect_tot = %i \n", n_connect_tot);
 
       for(int idx_entity = 0; idx_entity < n_entity_bound; ++idx_entity) {
-        int i_entity     = ppart_entity1[i_part][4*idx_entity]-1;
-        int i_proc_opp   = ppart_entity1[i_part][4*idx_entity+1];
-        int i_part_opp   = ppart_entity1[i_part][4*idx_entity+2]-1;
-        int i_entity_opp = ppart_entity1[i_part][4*idx_entity+3]-1;
+        int i_entity     = ppart_entity1[li_part][4*idx_entity]-1;
+        int i_proc_opp   = ppart_entity1[li_part][4*idx_entity+1];
+        int i_part_opp   = ppart_entity1[li_part][4*idx_entity+2]-1;
+        int i_entity_opp = ppart_entity1[li_part][4*idx_entity+3]-1;
 
         int idx_write = part1_to_part2_idx[li_part][i_entity] + 3 * part1_to_part2_n[i_entity];
         part1_to_part2_triplet[li_part][idx_write  ] = i_proc_opp;
