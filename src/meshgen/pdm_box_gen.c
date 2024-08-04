@@ -110,7 +110,7 @@ PDM_box_gen_random
                                                                       gn_box);
   *n_box = (int) (distrib_box[i_rank+1] - distrib_box[i_rank]);
 
-  PDM_malloc(*box_extents,(*n_box) * 6,double);
+  PDM_malloc(*box_extents, (*n_box) * 6, double);
   for (int i = 0; i < (*n_box); i++) {
 
     unsigned int _seed = (unsigned int) (distrib_box[i_rank] + i) + 1;
@@ -128,7 +128,7 @@ PDM_box_gen_random
 
   if (geometric_g_num) {
     double *box_centers;
-    PDM_malloc(box_centers,(*n_box) * 3,double);
+    PDM_malloc(box_centers, (*n_box) * 3, double);
     for (int i = 0; i < (*n_box); i++) {
       for (int j = 0; j < 3; j++) {
         box_centers[3*i+j] = 0.5 * ((*box_extents)[6*i+j] + (*box_extents)[6*i+j+3]);
@@ -155,7 +155,7 @@ PDM_box_gen_random
     PDM_gnum_free (gen_gnum);
   }
   else {
-    PDM_malloc(*box_ln_to_gn,(*n_box),PDM_g_num_t);
+    PDM_malloc(*box_ln_to_gn, (*n_box), PDM_g_num_t);
     for (int i = 0; i < (*n_box); i++) {
       (*box_ln_to_gn)[i] = distrib_box[i_rank] + i + 1;
     }
@@ -213,10 +213,10 @@ PDM_box_gen_cartesian
 
   *n_box = (int) (distrib[i_rank+1] - distrib[i_rank]);
 
-  double *_box_extents;
-  PDM_malloc(_box_extents,(*n_box) * 6,double);
-  PDM_g_num_t *_box_ln_to_gn;
-  PDM_malloc(_box_ln_to_gn,(*n_box),PDM_g_num_t);
+  double      *_box_extents  = NULL;
+  PDM_g_num_t *_box_ln_to_gn = NULL;
+  PDM_malloc(_box_extents ,(*n_box) * 6, double     );
+  PDM_malloc(_box_ln_to_gn,(*n_box)    , PDM_g_num_t);
 
   double step_x = (x_max - x_min) / (double) (nx - 1);
   double step_y = (y_max - y_min) / (double) (ny - 1);
