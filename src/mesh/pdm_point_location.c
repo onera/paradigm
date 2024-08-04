@@ -828,7 +828,7 @@ _locate_in_tetrahedron
 
   int n_pts_out = 0;
   int *pts_out;
-  PDM_malloc(pts_out,n_pts,int);
+  PDM_malloc(pts_out, n_pts, int);
 
   double v[3][3];
   for (ivtx = 0; ivtx < 3; ivtx++) {
@@ -918,7 +918,7 @@ _locate_in_tetrahedron
    *  Locate points outside (closest points on boundary)
    */
   double *pts_out_coord;
-  PDM_malloc(pts_out_coord,n_pts_out * 3,double);
+  PDM_malloc(pts_out_coord, n_pts_out * 3, double);
   for (ipt = 0; ipt < n_pts_out; ipt++) {
     int id_pt = pts_out[ipt];
     for (idim = 0; idim < 3; idim++) {
@@ -935,14 +935,14 @@ _locate_in_tetrahedron
                              face_vtx_idx,
                              face_vtx);
 
-  int *id_face;
-  PDM_malloc(id_face,n_pts_out,int);
-  double *bar_coord_face;
-  PDM_malloc(bar_coord_face,n_pts_out * 3,double);
-  double *closest_point_face;
-  PDM_malloc(closest_point_face,n_pts_out * 3,double);
-  double *distance_face;
-  PDM_malloc(distance_face,n_pts_out,double);
+  int    *id_face            = NULL;
+  double *bar_coord_face     = NULL;
+  double *closest_point_face = NULL;
+  double *distance_face      = NULL;
+  PDM_malloc(id_face           , n_pts_out    , int   );
+  PDM_malloc(bar_coord_face    , n_pts_out * 3, double);
+  PDM_malloc(closest_point_face, n_pts_out * 3, double);
+  PDM_malloc(distance_face     , n_pts_out    , double);
   _locate_on_triangles (4,
                         face_vtx,
                         tetra_coord,
@@ -1022,7 +1022,7 @@ _locate_in_cell_3d
   const int n_vtx = PDM_Mesh_nodal_n_vertices_element (elt_type, order);
 
   int *pts_out;
-  PDM_malloc(pts_out,n_pts,int);
+  PDM_malloc(pts_out, n_pts, int);
   int n_pts_out = 0;
 
 
@@ -1054,7 +1054,7 @@ _locate_in_cell_3d
 
     //FIXME: Allocation a chaque passage. Prevoir buffer en argument alloue a 8 * 3
 
-    PDM_malloc(_cell_coord,n_vtx * 3,double);
+    PDM_malloc(_cell_coord, n_vtx * 3, double);
     _cell_coord[ 0] = cell_coord[ 0];
     _cell_coord[ 1] = cell_coord[ 1];
     _cell_coord[ 2] = cell_coord[ 2];
@@ -1270,12 +1270,6 @@ _locate_in_cell_3d
       int _ipt = pts_out[ipt];
       distance[_ipt] = HUGE_VAL;
     }
-
-    // int *closest_face;
- // ￿PDM_malloc(closest_face,n_pts_out,int);
-    // double *closest_point;
- // PDM_malloc(closest_point,n_pts_out * 3,double);
-    // int    *inside_polygon = PDM_array_zeros_int(n_pts_out);
 
     int n_face = -1;
     int face_vtx_idx[7];
@@ -1997,7 +1991,7 @@ _locate_in_polyhedron
     }
 
     if (_tri_vtx == NULL) {
-      PDM_malloc(_tri_vtx,(max_face_vtx_n - 2) * 3,int);
+      PDM_malloc(_tri_vtx, (max_face_vtx_n - 2) * 3, int);
     }
   }
 
@@ -2287,11 +2281,11 @@ PDM_point_location_nodal
 
   int *sections_id = PDM_part_mesh_nodal_elmts_sections_id_get(pmne);
 
-  PDM_malloc(*distance,n_part,double *);
-  PDM_malloc(*projected_coord,n_part,double *);
-  PDM_malloc(*bar_coord_idx,n_part,int    *);
-  PDM_malloc(*bar_coord,n_part,double *);
-  PDM_malloc(*uvw,n_part,double *);
+  PDM_malloc(*distance       , n_part, double *);
+  PDM_malloc(*projected_coord, n_part, double *);
+  PDM_malloc(*bar_coord_idx  , n_part, int    *);
+  PDM_malloc(*bar_coord      , n_part, double *);
+  PDM_malloc(*uvw            , n_part, double *);
 
   /* First loop to allocate */
   for (int ipart = 0; ipart < n_part; ipart++) {
@@ -2307,9 +2301,9 @@ PDM_point_location_nodal
 
     int n_pts = pts_idx[ipart][n_cell];
 
-    PDM_malloc((*distance)[ipart],n_pts,double);  
-    PDM_malloc(( *projected_coord)[ipart],n_pts * 3,double);
-    PDM_malloc((*uvw)[ipart],n_pts * 3,double);
+    PDM_malloc((*distance       )[ipart], n_pts    , double);
+    PDM_malloc((*projected_coord)[ipart], n_pts * 3, double);
+    PDM_malloc((*uvw            )[ipart], n_pts * 3, double);
     (*bar_coord_idx  )[ipart] = PDM_array_zeros_int(n_pts+1);
 
     int *_bar_coord_idx = (*bar_coord_idx)[ipart];
@@ -2418,7 +2412,7 @@ PDM_point_location_nodal
     for (int i = 0; i < n_pts; i++) {
       _bar_coord_idx[i+1] += _bar_coord_idx[i];
     }
-    PDM_malloc(( *bar_coord)[ipart],_bar_coord_idx[n_pts],double);
+    PDM_malloc(( *bar_coord)[ipart], _bar_coord_idx[n_pts], double);
 
   } // End of loop on parts
 
@@ -2468,7 +2462,7 @@ PDM_point_location_nodal
         }
 
         double *poly_coord;
-        PDM_malloc(poly_coord,n_vtx_max * 3,double);
+        PDM_malloc(poly_coord, n_vtx_max * 3, double);
 
         for (int ielt = 0; ielt < n_elt; ielt++) {
           int icell = ielt;
@@ -2559,22 +2553,22 @@ PDM_point_location_nodal
           s_face_vtx_max = PDM_MAX(s_face_vtx_max, s_face_vtx);
         }
 
-        int *_face_orientation;
-        PDM_malloc(_face_orientation,n_face_max,int);
-        int *_face_vtx_idx;
-        PDM_malloc(_face_vtx_idx,(n_face_max + 1),int);
+        int *_face_orientation = NULL;
+        int *_face_vtx_idx     = NULL;
+        PDM_malloc(_face_orientation,n_face_max    , int);
+        PDM_malloc(_face_vtx_idx    ,n_face_max + 1, int);
         _face_vtx_idx[0] = 0;
 
-        int *_face_vtx;
-        PDM_malloc(_face_vtx,s_face_vtx_max,int);
-        double *_vtx_coord;
-        PDM_malloc(_vtx_coord,n_vtx_max * 3,double);
+        int    *_face_vtx  = NULL;
+        double *_vtx_coord = NULL;
+        PDM_malloc(_face_vtx , s_face_vtx_max, int   );
+        PDM_malloc(_vtx_coord, n_vtx_max * 3 , double);
 
         PDM_triangulate_state_t *_tri_state = NULL;
         _tri_state = PDM_triangulate_state_create(s_face_vtx_max);
         int n_tri_vtx = PDM_MAX((s_face_vtx_max - 2) * 3, 0);
-        int *_tri_vtx;
-        PDM_malloc(_tri_vtx,n_tri_vtx,int);
+        int *_tri_vtx = NULL;
+        PDM_malloc(_tri_vtx, n_tri_vtx, int);
 
 
         for (int ielt = 0; ielt < n_elt; ielt++) {
@@ -2877,12 +2871,12 @@ PDM_point_location_nodal
             int n_node = PDM_Mesh_nodal_n_vtx_elt_get(t_elt,
                                                       order);
             double *elt_coord;
-            PDM_malloc(elt_coord,n_node * 3,double);
+            PDM_malloc(elt_coord, n_node * 3, double);
 
             int elt_dim = PDM_Mesh_nodal_elt_dim_get(t_elt);
 
             double *work_array;
-            PDM_malloc(work_array,n_node * (elt_dim+1),double);
+            PDM_malloc(work_array, n_node * (elt_dim+1), double);
 
             int *ijk_to_user = NULL;
             if (ho_ordering != NULL) {

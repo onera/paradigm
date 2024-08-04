@@ -429,19 +429,19 @@ PDM_points_merge_create
 )
 {
   PDM_points_merge_t *pm;
-  PDM_malloc(pm,1,PDM_points_merge_t);
+  PDM_malloc(pm, 1, PDM_points_merge_t);
 
   pm->comm              = comm;
   pm->owner             = owner;
   pm->results_is_getted = PDM_FALSE;
   pm->tolerance         = tolerance;
   pm->n_point_clouds    = n_point_cloud;
-  PDM_malloc(pm->n_points,n_point_cloud,int     );
-  PDM_malloc(pm->point_clouds,n_point_cloud, const double *);
-  PDM_malloc(pm->char_length,n_point_cloud, const double *);
+  PDM_malloc(pm->n_points    , n_point_cloud,       int     );
+  PDM_malloc(pm->point_clouds, n_point_cloud, const double *);
+  PDM_malloc(pm->char_length , n_point_cloud, const double *);
   pm->octree            = NULL;
-  PDM_malloc(pm->candidates_idx,n_point_cloud,int *);
-  PDM_malloc(pm->candidates_desc,n_point_cloud,int *);
+  PDM_malloc(pm->candidates_idx , n_point_cloud, int *);
+  PDM_malloc(pm->candidates_desc, n_point_cloud, int *);
 
   for (int i = 0; i < n_point_cloud; i++) {
     pm->candidates_idx [i] = NULL;
@@ -633,7 +633,7 @@ PDM_points_merge_process
   int n_tmp_store = 0;
 
   int *tmp_store;
-  PDM_malloc(tmp_store,s_tmp_store * 3,int);
+  PDM_malloc(tmp_store, s_tmp_store * 3, int);
 
 //  printf ("Extents proc \n");
 //  for (int k = 0; k < n_rank ; k++) {
@@ -697,16 +697,16 @@ PDM_points_merge_process
     val_send_n[tmp_store[3*i]]++;
   }
 
-  int *val_recv_n;
-  PDM_malloc(val_recv_n,n_rank,int);
+  int *val_recv_n = NULL;
+  PDM_malloc(val_recv_n, n_rank, int);
   PDM_MPI_Alltoall (val_send_n, 1, PDM_MPI_INT, val_recv_n, 1, PDM_MPI_INT, pm->comm);
 
   // Envoi des points + char length en option sur les autres procs (test bounding box)
 
-  int *val_send_idx;
-  PDM_malloc(val_send_idx,(n_rank+1),int);
-  int *val_recv_idx;
-  PDM_malloc(val_recv_idx,(n_rank+1),int);
+  int *val_send_idx = NULL;
+  int *val_recv_idx = NULL;
+  PDM_malloc(val_send_idx, n_rank+1, int);
+  PDM_malloc(val_recv_idx, n_rank+1, int);
 
   int _stride = 3 * 8 + 4 + 4; /* Coords + icloud + ipoint */
   if (pm->char_length != NULL) {
@@ -726,9 +726,9 @@ PDM_points_merge_process
     val_send_n[i] = 0;
   }
 
-  unsigned char *val_send;
+  unsigned char *val_send = NULL;
+  unsigned char *val_recv = NULL;
   PDM_malloc(val_send, val_send_idx[n_rank], unsigned char);
-  unsigned char *val_recv;
   PDM_malloc(val_recv, val_recv_idx[n_rank], unsigned char);
 
   for (int i = 0; i < n_tmp_store; i++) {
@@ -857,7 +857,7 @@ PDM_points_merge_process
    */
 
   for (int i = 0; i < pm->n_point_clouds; i++) {
-    PDM_malloc(pm->candidates_idx[i],(pm->n_points[i] + 1),int);
+    PDM_malloc(pm->candidates_idx[i], pm->n_points[i] + 1, int);
     pm->candidates_desc[i] = NULL;
   }
 
@@ -890,14 +890,14 @@ PDM_points_merge_process
 
   }
 
-  int **candidates_n;
-  PDM_malloc(candidates_n,pm->n_point_clouds,int*);
+  int **candidates_n = NULL;
+  PDM_malloc(candidates_n, pm->n_point_clouds, int*);
 
   for (int i = 0; i < pm->n_point_clouds; i++) {
     int *_candidates_idx = pm->candidates_idx[i];
     int _n_points = pm->n_points[i];
 
-    PDM_malloc(candidates_n[i],_n_points,int);
+    PDM_malloc(candidates_n[i], _n_points, int);
     int *_candidates_n = candidates_n[i];
 
     for (int j = 0; j < _n_points; j++) {
@@ -905,7 +905,7 @@ PDM_points_merge_process
       _candidates_n[j] = 0;
     }
 
-    PDM_malloc(pm->candidates_desc[i],_candidates_idx[_n_points]*3,int);
+    PDM_malloc(pm->candidates_desc[i], _candidates_idx[_n_points]*3, int);
 
   }
 
@@ -1069,10 +1069,10 @@ PDM_points_merge_make_interface
   PDM_MPI_Comm_rank(pm->comm, &i_rank);
   PDM_MPI_Comm_size(pm->comm, &n_rank);
 
-  int **candidates_idx;
-  PDM_malloc(candidates_idx,pm->n_point_clouds ,int *);
-  int **candidates_desc;
-  PDM_malloc(candidates_desc,pm->n_point_clouds ,int *);
+  int **candidates_idx  = NULL;
+  int **candidates_desc = NULL;
+  PDM_malloc(candidates_idx , pm->n_point_clouds, int *);
+  PDM_malloc(candidates_desc, pm->n_point_clouds, int *);
 
   for(int i_cloud = 0; i_cloud < pm->n_point_clouds; ++i_cloud) {
     PDM_points_merge_candidates_get(pm,
@@ -1082,12 +1082,12 @@ PDM_points_merge_make_interface
   }
 
   // Create a gnum view of points
-  PDM_g_num_t **points_gnum;
-  PDM_malloc(points_gnum,pm->n_point_clouds ,PDM_g_num_t*);
+  PDM_g_num_t **points_gnum = NULL;
+  PDM_malloc(points_gnum, pm->n_point_clouds, PDM_g_num_t*);
   for(int i_cloud = 0; i_cloud < pm->n_point_clouds; ++i_cloud) {
     PDM_g_num_t _n_points = pm->n_points[i_cloud];
     PDM_g_num_t *distri = PDM_compute_entity_distribution (pm->comm, _n_points);
-    PDM_malloc(points_gnum[i_cloud],_n_points ,PDM_g_num_t);
+    PDM_malloc(points_gnum[i_cloud], _n_points, PDM_g_num_t);
     for(int i = 0; i < _n_points; ++i) {
       points_gnum[i_cloud][i] = i + distri[i_rank] + 1;
     }
@@ -1100,10 +1100,10 @@ PDM_points_merge_make_interface
   PDM_gen_gnum_t *gnum = PDM_gnum_create(3, pm->n_point_clouds, PDM_TRUE, 1.e-3, pm->comm, PDM_OWNERSHIP_USER);
   PDM_gnum_set_parents_nuplet(gnum, 2); // (i_cloud / Gnum )
 
-  PDM_g_num_t **part1_nuplet;
-  PDM_malloc(part1_nuplet,pm->n_point_clouds ,PDM_g_num_t *);
+  PDM_g_num_t **part1_nuplet = NULL;
+  PDM_malloc(part1_nuplet, pm->n_point_clouds, PDM_g_num_t *);
   for(int i_cloud = 0; i_cloud < pm->n_point_clouds; ++i_cloud) {
-    PDM_malloc(part1_nuplet[i_cloud], 2 * pm->n_points[i_cloud] ,PDM_g_num_t);
+    PDM_malloc(part1_nuplet[i_cloud], 2 * pm->n_points[i_cloud], PDM_g_num_t);
 
     for(int i = 0; i < pm->n_points[i_cloud]; ++i) {
       part1_nuplet[i_cloud][2*i  ] = i_cloud;
@@ -1114,16 +1114,16 @@ PDM_points_merge_make_interface
   }
   PDM_gnum_compute(gnum);
 
-  PDM_g_num_t **part1_concat_gnum;
-  PDM_malloc(part1_concat_gnum,pm->n_point_clouds ,PDM_g_num_t *);
-  int **part1_cloud;
-  PDM_malloc(part1_cloud,pm->n_point_clouds ,int         *);
+  PDM_g_num_t **part1_concat_gnum = NULL;
+  int         **part1_cloud       = NULL;
+  PDM_malloc(part1_concat_gnum, pm->n_point_clouds, PDM_g_num_t *);
+  PDM_malloc(part1_cloud      , pm->n_point_clouds, int         *);
   for(int i_cloud = 0; i_cloud < pm->n_point_clouds; ++i_cloud) {
     part1_concat_gnum[i_cloud] = PDM_gnum_get(gnum, i_cloud);
     PDM_free(part1_nuplet[i_cloud]);
     // PDM_log_trace_array_long(part1_concat_gnum[i_cloud], n_elt1[i_cloud], "part1_concat_gnum ::");
 
-    PDM_malloc(part1_cloud[i_cloud],pm->n_points[i_cloud] ,int);
+    PDM_malloc(part1_cloud[i_cloud], pm->n_points[i_cloud], int);
     for(int i_vtx = 0; i_vtx < pm->n_points[i_cloud]; ++i_vtx) {
       part1_cloud[i_cloud][i_vtx] = i_cloud;
     }
@@ -1215,12 +1215,12 @@ PDM_points_merge_make_interface
   PDM_gen_gnum_t *gnum_itrf = PDM_gnum_create(3, pm->n_point_clouds, PDM_TRUE, 1.e-3, pm->comm, PDM_OWNERSHIP_USER);
   PDM_gnum_set_parents_nuplet(gnum_itrf, 2); // (min(i_cloud, i_cloud_opp) / max(i_cloud, i_cloud_opp) )
 
-  int *n_itrf;
-  PDM_malloc(n_itrf,pm->n_point_clouds ,int          );
-  PDM_g_num_t **itrf_pair;
-  PDM_malloc(itrf_pair,pm->n_point_clouds ,PDM_g_num_t *);
-  PDM_g_num_t **itrf_gnum;
-  PDM_malloc(itrf_gnum,pm->n_point_clouds ,PDM_g_num_t *);
+  int          *n_itrf    = NULL;
+  PDM_g_num_t **itrf_pair = NULL;
+  PDM_g_num_t **itrf_gnum = NULL;
+  PDM_malloc(n_itrf   , pm->n_point_clouds, int          );
+  PDM_malloc(itrf_pair, pm->n_point_clouds, PDM_g_num_t *);
+  PDM_malloc(itrf_gnum, pm->n_point_clouds, PDM_g_num_t *);
   for(int i_cloud = 0; i_cloud < pm->n_point_clouds; ++i_cloud) {
 
     int *_gnum1_come_from_idx = gnum1_come_from_idx[i_cloud];
@@ -1228,7 +1228,7 @@ PDM_points_merge_make_interface
 
     n_itrf[i_cloud] = n_come_from;
 
-    PDM_malloc(itrf_pair[i_cloud],2 * n_come_from ,PDM_g_num_t);
+    PDM_malloc(itrf_pair[i_cloud], 2 * n_come_from, PDM_g_num_t);
     for(int idx_vtx = 0; idx_vtx < n_ref[i_cloud]; ++idx_vtx) {
       // int i_vtx = ref[i_cloud][idx_vtx] - 1;
       for(int k = _gnum1_come_from_idx[idx_vtx]; k < _gnum1_come_from_idx[idx_vtx+1]; ++k) {
@@ -1250,10 +1250,10 @@ PDM_points_merge_make_interface
   /*
    * Rebuild a global interface and spread among all proc
    */
-  double **weight;
-  PDM_malloc(weight,pm->n_point_clouds ,double*);
+  double **weight = NULL;
+  PDM_malloc(weight, pm->n_point_clouds, double*);
   for (int i_cloud=0; i_cloud < pm->n_point_clouds; i_cloud++) {
-    PDM_malloc(weight[i_cloud],n_itrf[i_cloud] ,double);
+    PDM_malloc(weight[i_cloud], n_itrf[i_cloud], double);
     for (int j = 0; j < n_itrf[i_cloud]; j++) {
       weight[i_cloud][j] = 1.;
     }
@@ -1272,12 +1272,12 @@ PDM_points_merge_make_interface
   PDM_free(weight);
 
   // Cast here itrf_pair in int (we needed gnum before for gnum_from_parents)
-  int * *_itrf_pair;
- PDM_malloc(_itrf_pair,pm->n_point_clouds ,int*);
+  int * *_itrf_pair = NULL;
+  PDM_malloc(_itrf_pair, pm->n_point_clouds, int*);
   for(int i_cloud = 0; i_cloud < pm->n_point_clouds; ++i_cloud) {
     int *_gnum1_come_from_idx = gnum1_come_from_idx[i_cloud];
     int n_come_from = _gnum1_come_from_idx[n_ref[i_cloud]];
-    PDM_malloc(_itrf_pair[i_cloud],2 * n_come_from ,int);
+    PDM_malloc(_itrf_pair[i_cloud], 2 * n_come_from, int);
     for (int j=0; j < 2*n_come_from; ++j) {
       _itrf_pair[i_cloud][j] = itrf_pair[i_cloud][j];
     }
@@ -1303,10 +1303,10 @@ PDM_points_merge_make_interface
 
   int dn_interface = PDM_part_to_block_n_elt_block_get(ptb);
   PDM_g_num_t *distrib_itrf_gnum   = PDM_compute_entity_distribution(pm->comm, dn_interface);
-  int *distrib_itrf;
-  PDM_malloc(distrib_itrf,(n_rank+1) ,int);
-  int *distrib_itrf_n;
-  PDM_malloc(distrib_itrf_n, n_rank    ,int);
+  int *distrib_itrf   = NULL;
+  int *distrib_itrf_n = NULL;
+  PDM_malloc(distrib_itrf  , n_rank+1, int);
+  PDM_malloc(distrib_itrf_n, n_rank  , int);
 
   for(int i = 0; i < n_rank+1; ++i) {
     distrib_itrf[i] = distrib_itrf_gnum[i];
@@ -1324,10 +1324,10 @@ PDM_points_merge_make_interface
     PDM_log_trace_array_int(distrib_itrf  , n_rank+1, "distrib_itrf   ::");
   }
 
-  PDM_g_num_t *all_itrf_gnum;
-  PDM_malloc(all_itrf_gnum,    distrib_itrf[n_rank] ,PDM_g_num_t);
-  int *all_itrf_pair;
-  PDM_malloc(all_itrf_pair,2 * distrib_itrf[n_rank] ,int        );
+  PDM_g_num_t *all_itrf_gnum = NULL;
+  int         *all_itrf_pair = NULL;
+  PDM_malloc(all_itrf_gnum,     distrib_itrf[n_rank], PDM_g_num_t);
+  PDM_malloc(all_itrf_pair, 2 * distrib_itrf[n_rank], int        );
   PDM_MPI_Allgatherv(ditrf_gnum,
                      dn_interface,
                      PDM__PDM_MPI_G_NUM,
@@ -1378,18 +1378,18 @@ PDM_points_merge_make_interface
     }
   }
 
-  int *entity_itrf_idx;
-  PDM_malloc(entity_itrf_idx,(n_g_interface+1) ,int);
+  int *entity_itrf_idx = NULL;
+  PDM_malloc(entity_itrf_idx, n_g_interface+1, int);
   entity_itrf_idx[0] = 0;
   for(int i = 0; i < n_g_interface; ++i) {
     entity_itrf_idx[i+1] = entity_itrf_idx[i] + entity_itrf_n[i];
     entity_itrf_n  [i  ] = 0;
   }
 
-  PDM_g_num_t *concat_vtx_cur;
-  PDM_malloc(concat_vtx_cur,entity_itrf_idx[n_g_interface] ,PDM_g_num_t);
-  PDM_g_num_t *concat_vtx_opp;
-  PDM_malloc(concat_vtx_opp,entity_itrf_idx[n_g_interface] ,PDM_g_num_t);
+  PDM_g_num_t *concat_vtx_cur = NULL;
+  PDM_g_num_t *concat_vtx_opp = NULL;
+  PDM_malloc(concat_vtx_cur, entity_itrf_idx[n_g_interface], PDM_g_num_t);
+  PDM_malloc(concat_vtx_opp, entity_itrf_idx[n_g_interface], PDM_g_num_t);
 
   for(int i_cloud = 0; i_cloud < pm->n_point_clouds; ++i_cloud) {
     int *_gnum1_come_from_idx = gnum1_come_from_idx[i_cloud];
@@ -1415,12 +1415,12 @@ PDM_points_merge_make_interface
   PDM_part_to_part_free(ptp);
 
   /* Let's go */
-  int *dn_vtx_itrf;
-  PDM_malloc(dn_vtx_itrf,n_g_interface ,int          );
-  PDM_g_num_t **itrf_gnum_cur;
-  PDM_malloc(itrf_gnum_cur,n_g_interface ,PDM_g_num_t *);
-  PDM_g_num_t **itrf_gnum_opp;
-  PDM_malloc(itrf_gnum_opp,n_g_interface ,PDM_g_num_t *);
+  int          *dn_vtx_itrf   = NULL;
+  PDM_g_num_t **itrf_gnum_cur = NULL;
+  PDM_g_num_t **itrf_gnum_opp = NULL;
+  PDM_malloc(dn_vtx_itrf  , n_g_interface, int          );
+  PDM_malloc(itrf_gnum_cur, n_g_interface, PDM_g_num_t *);
+  PDM_malloc(itrf_gnum_opp, n_g_interface, PDM_g_num_t *);
   for(int i_itrf = 0; i_itrf < n_g_interface; ++i_itrf) {
 
     int beg = entity_itrf_idx[i_itrf];
@@ -1429,8 +1429,8 @@ PDM_points_merge_make_interface
     PDM_g_num_t *lconcat_vtx_cur = &concat_vtx_cur[beg];
     PDM_g_num_t *lconcat_vtx_opp = &concat_vtx_opp[beg];
 
-    double *l_weight;
-    PDM_malloc(l_weight,pn_vtx,double);
+    double *l_weight = NULL;
+    PDM_malloc(l_weight, pn_vtx, double);
     for (int j = 0; j < pn_vtx; j++) {
       l_weight[j] = 1.;
     }
