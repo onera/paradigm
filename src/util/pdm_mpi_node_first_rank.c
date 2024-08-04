@@ -46,8 +46,6 @@ extern "C" {
  * Max
  *----------------------------------------------------------------------------*/
 
-#define _CEDRE_IO_MAX(a,b)        (a) > (b) ? (a) : (b)
-
 /*============================================================================
  * Definition des types locaux
  *============================================================================*/
@@ -111,123 +109,123 @@ PDM_MPI_Comm comm
 {
 
   char * hostname = NULL;
-  size_t hostnameLength = 0;
+  size_t hostname_length = 0;
 
-// TODO: Use MPI_Get_processor_name instead of PDM_io_get_hostname
-//  int MPI_Get_processor_name(char *name, int *resultlen)
-  PDM_io_get_hostname(&hostname, &hostnameLength);
+  // TODO: Use MPI_Get_processor_name instead of PDM_io_get_hostname
+  //  int MPI_Get_processor_name(char *name, int *resultlen)
+  PDM_io_get_hostname(&hostname, &hostname_length);
 
   /* Détermine la clé de hachage */
 
-  uint32_t checkSum = _adler32(hostname, hostnameLength);
+  uint32_t check_sum = _adler32(hostname, hostname_length);
 
   if (0 == 1)
-    PDM_printf( "-- hostname adlerCode %s %ud\n", hostname, checkSum);
+    PDM_printf( "-- hostname adlerCode %s %ud\n", hostname, check_sum);
 
-  int commRank = -1;
-  PDM_MPI_Comm_rank(comm, &commRank);
+  int comm_rank = -1;
+  PDM_MPI_Comm_rank(comm, &comm_rank);
 
-  PDM_MPI_Comm nodeComm = PDM_MPI_COMM_NULL;
+  PDM_MPI_Comm node_comm = PDM_MPI_COMM_NULL;
 
   /* Détermine le communicateur local au noeud */
 
-  PDM_MPI_Comm_split(comm, checkSum, commRank, &nodeComm);
+  PDM_MPI_Comm_split(comm, check_sum, comm_rank, &node_comm);
 
   /* Détermine le rang dans communicateur du noeud */
 
-  int nodeRank;
-  PDM_MPI_Comm_rank(nodeComm, &nodeRank);
+  int node_rank;
+  PDM_MPI_Comm_rank(node_comm, &node_rank);
 
-  int nodeSize;
-  PDM_MPI_Comm_size(nodeComm, &nodeSize);
+  int node_size;
+  PDM_MPI_Comm_size(node_comm, &node_size);
 
   /* Vérifie si 2 noms de noeud ne rentrent pas en collision :
      Si c'est le cas, les processus de ces 2 noeuds sont
      regroupés dans un même communicateur */
 
-  int nSend = (int) hostnameLength;
+  int n_send = (int) hostname_length;
 
-  PDM_MPI_Allreduce((void *) &hostnameLength, (void *) &nSend, 1,
-                PDM_MPI_INT, PDM_MPI_MAX, nodeComm);
+  PDM_MPI_Allreduce((void *) &hostname_length, (void *) &n_send, 1,
+                PDM_MPI_INT, PDM_MPI_MAX, node_comm);
 
-  nSend += 1; /* \0 */
+  n_send += 1; /* \0 */
 
   char *send;
-  PDM_malloc(send,nSend,char);
+  PDM_malloc(send, n_send, char);
 
-  for (int i = 0; i < nSend; i++)
+  for (int i = 0; i < n_send; i++)
     send[i] = 0x00;
 
-  strncpy(send, hostname, nSend);
+  strncpy(send, hostname, n_send);
 
   char *recv;
-  PDM_malloc(recv,nSend * nodeSize,char);
-  PDM_MPI_Allgather((void * )send, nSend, PDM_MPI_CHAR, (void *)recv, nSend, PDM_MPI_CHAR, nodeComm);
+  PDM_malloc(recv, n_send * node_size, char);
+  PDM_MPI_Allgather((void * )send, n_send, PDM_MPI_CHAR, (void *)recv, n_send, PDM_MPI_CHAR, node_comm);
 
   char *neighbor = recv;
-  int localNodeRank = 0;
+  int local_node_rank = 0;
 
-  for (int i = 0; i < nodeSize; ++i) {
+  for (int i = 0; i < node_size; ++i) {
     if (strcmp(send, neighbor) == 0) {
-      if (i < nodeRank) {
-        ++localNodeRank;
+      if (i < node_rank) {
+        ++local_node_rank;
       }
       else {
         break;
       }
     }
-    neighbor += nSend;
+    neighbor += n_send;
   }
 
-  int isSameNode = (nodeRank != localNodeRank);
-  int isSameNodeMax;
+  int is_same_node = (node_rank != local_node_rank);
+  int is_same_node_max;
 
-  PDM_MPI_Allreduce((void *) &isSameNode, (void *) &isSameNodeMax, 1,
-                PDM_MPI_INT, PDM_MPI_MAX, nodeComm);
+  PDM_MPI_Allreduce((void *) &is_same_node, (void *) &is_same_node_max, 1,
+                PDM_MPI_INT, PDM_MPI_MAX, node_comm);
 
-  if (isSameNodeMax == 1) {
+  if (is_same_node_max == 1) {
 
     /* Traitement des collisions */
 
     neighbor = recv;
-    char *hostInComm;
-    PDM_malloc(hostInComm,nSend * nodeSize,char);
-    strncpy(hostInComm, recv, nSend);
-    int nHostInComm = 1;
+    char *host_in_comm;
+    PDM_malloc(host_in_comm, n_send * node_size, char);
+    strncpy(host_in_comm, recv, n_send);
+    int n_host_in_comm = 1;
 
-    for (int j = 1; j < nodeSize; j++) {
-      char *ptHostInComm = hostInComm;
-      for (int i = 0; i < nHostInComm; i++) {
-        if (strcmp(ptHostInComm, neighbor) != 0) {
-          strncpy(hostInComm + nHostInComm * nSend, neighbor, nSend);
-          nHostInComm += 1;
+    for (int j = 1; j < node_size; j++) {
+      char *pt_host_in_comm = host_in_comm;
+      for (int i = 0; i < n_host_in_comm; i++) {
+        if (strcmp(pt_host_in_comm, neighbor) != 0) {
+          strncpy(host_in_comm + n_host_in_comm * n_send, neighbor, n_send);
+          n_host_in_comm += 1;
           break;
         }
-        ptHostInComm += nSend;
+        pt_host_in_comm += n_send;
       }
-      neighbor += nSend;
+      neighbor += n_send;
     }
 
     int tag = 0;
-    for (int i = 0; i < nHostInComm; i++) {
-      char *ptHostInComm = hostInComm;
-      if (strcmp(ptHostInComm, send) == 0) {
+    for (int i = 0; i < n_host_in_comm; i++) {
+      char *pt_host_in_comm = host_in_comm;
+      if (strcmp(pt_host_in_comm, send) == 0) {
         tag = i;
         break;
       }
-      ptHostInComm += nSend;
+      pt_host_in_comm += n_send;
     }
 
-    PDM_MPI_Comm nodeComm2;
-    PDM_MPI_Comm_split(nodeComm, tag, nodeRank, &nodeComm2);
+    PDM_MPI_Comm node_comm2;
+    PDM_MPI_Comm_split(node_comm, tag, node_rank, &node_comm2);
 
-    int nodeRank2;
-    PDM_MPI_Comm_rank(nodeComm2, &nodeRank2);
+    int node_rank2;
+    PDM_MPI_Comm_rank(node_comm2, &node_rank2);
 
-    nodeRank = nodeRank2;
+    node_rank = node_rank2;
 
-    PDM_MPI_Comm_free(&nodeComm2);
-    PDM_free(hostInComm);
+    PDM_MPI_Comm_free(&node_comm2);
+    PDM_free(host_in_comm);
 
   }
 
@@ -239,7 +237,7 @@ PDM_MPI_Comm comm
   PDM_free(recv);
   recv = NULL;
 
-  PDM_MPI_Comm_free(&nodeComm);
+  PDM_MPI_Comm_free(&node_comm);
 
   PDM_free(hostname);
   hostname = NULL;
@@ -248,23 +246,23 @@ PDM_MPI_Comm comm
 
   if (0 == 1) {
 
-    int masterNodeRank = 0;
-    int nbIORank = 0;
-    if (nodeRank == 0)
-      masterNodeRank = 1;
+    int master_node_rank = 0;
+    int nb_io_rank = 0;
+    if (node_rank == 0)
+      master_node_rank = 1;
 
 
-    PDM_MPI_Allreduce((void *) &masterNodeRank, (void *) &nbIORank, 1,
+    PDM_MPI_Allreduce((void *) &master_node_rank, (void *) &nb_io_rank, 1,
                   PDM_MPI_INT, PDM_MPI_SUM, comm);
 
-    int commSize;
-    PDM_MPI_Comm_size(comm, &commSize);
-    if (commRank == 0)
-      PDM_printf("Part of ranks for parallel IO : %d/%d\n", nbIORank, commSize);
+    int comm_size;
+    PDM_MPI_Comm_size(comm, &comm_size);
+    if (comm_rank == 0)
+      PDM_printf("Part of ranks for parallel IO : %d/%d\n", nb_io_rank, comm_size);
 
   }
 
-  return nodeRank;
+  return node_rank;
 }
 
 /*============================================================================
@@ -289,18 +287,18 @@ PDM_MPI_Comm comm
 )
 {
 
-  int nodeRank = -1;
+  int node_rank = -1;
 
-  nodeRank = _node_rank_by_hash(comm);
+  node_rank = _node_rank_by_hash(comm);
 
   char * hostname;
-  size_t hostnameLength;
+  size_t hostname_length;
 
-  PDM_io_get_hostname(&hostname, &hostnameLength);
+  PDM_io_get_hostname(&hostname, &hostname_length);
   PDM_free(hostname);
   hostname = NULL;
 
-  return nodeRank;
+  return node_rank;
 }
 
 /*----------------------------------------------------------------------------
@@ -326,7 +324,7 @@ size_t *hostname_length
   char * hostname = NULL;
   size_t nHostname = 0;
 
-  int  allocateMore = 0;
+  int  allocate_more = 0;
 
   *hostname_ptr = NULL;
   *hostname_length = 0;
@@ -334,7 +332,7 @@ size_t *hostname_length
   do {
     nHostname += local_hostname_default_len;
 
-    PDM_malloc(hostname,nHostname,char);
+    PDM_malloc(hostname, nHostname, char);
 
     if (hostname == NULL) {
       PDM_error(__FILE__, __LINE__, 0, "allocating %lu bytes of memory for hostname failed: %s.\n",
@@ -348,7 +346,7 @@ size_t *hostname_length
 
     if (error == -1) {
       if (errno == ENAMETOOLONG) {
-        allocateMore = 1;
+        allocate_more = 1;
         PDM_free(hostname); hostname = NULL;
       }
       else {
@@ -361,18 +359,16 @@ size_t *hostname_length
 
     }
     else {
-      allocateMore = 0;
+      allocate_more = 0;
     }
 
-  } while (allocateMore == 1);
+  } while (allocate_more == 1);
 
   hostname[nHostname - 1] = 0x00;
 
   *hostname_length = strlen(hostname);
   *hostname_ptr = hostname;
 }
-
-#undef _CEDRE_IO_MAX
 
 #ifdef __cplusplus
 }
