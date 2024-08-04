@@ -40,10 +40,6 @@ extern "C" {
  * Local Macro definitions
  *============================================================================*/
 
-#define _MIN(a,b)   ((a) < (b) ?  (a) : (b))  /* Minimum of a et b */
-
-#define _MAX(a,b)   ((a) > (b) ?  (a) : (b))  /* Maximum of a et b */
-
 /*=============================================================================
  * Static global variables
  *============================================================================*/
@@ -563,9 +559,9 @@ _evaluate_distribution(int       n_ranges,
   for (i = 0; i < n_ranges; i++) {
 
     if (distribution[i] > optim)
-      d_up = _MAX(d_up, distribution[i] - optim);
+      d_up = PDM_MAX(d_up, distribution[i] - optim);
     else
-      d_low = _MAX(d_low, optim - distribution[i]);
+      d_low = PDM_MAX(d_low, optim - distribution[i]);
 
   }
 
@@ -617,7 +613,7 @@ _define_rank_distrib(int                       dim,
   /* Initialization */
 
   double *l_distrib;
-  PDM_malloc(l_distrib,n_samples ,double);
+  PDM_malloc(l_distrib, n_samples, double);
 
   for (int id = 0; id < n_samples; id++) {
     l_distrib[id] = 0;
@@ -674,7 +670,7 @@ _define_rank_distrib(int                       dim,
 
     len = strlen("DistribOutput_l.dat")+1+2;
     char *rfilename;
-    PDM_malloc(rfilename,len ,char);
+    PDM_malloc(rfilename, len, char);
     sprintf(rfilename, "DistribOutput_l%02d.dat", loop_id1);
 
     loop_id1++;
@@ -758,7 +754,7 @@ _update_sampling(int                  dim,
 
   /* Compute new_sampling */
 
-  PDM_malloc(new_sampling,(n_samples + 1),PDM_hilbert_code_t);
+  PDM_malloc(new_sampling, n_samples + 1, PDM_hilbert_code_t);
 
   new_sampling[0] = _sampling[0];
 
@@ -873,10 +869,10 @@ _bucket_sampling(int                       dim,
 
   /* Define the distribution associated to the current sampling array */
 
-  double *distrib;
-  PDM_malloc(distrib,n_samples      ,double);
-  double *cfreq;
-  PDM_malloc(cfreq,(n_samples + 1),double);
+  double *distrib = NULL;
+  double *cfreq   = NULL;
+  PDM_malloc(distrib, n_samples    , double);
+  PDM_malloc(cfreq  , n_samples + 1, double);
 
   _define_rank_distrib(dim,
                        n_ranks,
@@ -896,7 +892,7 @@ _bucket_sampling(int                       dim,
   best_fit = fit;
 
   PDM_hilbert_code_t *best_sampling;
-  PDM_malloc(best_sampling,(n_samples + 1),PDM_hilbert_code_t);
+  PDM_malloc(best_sampling, n_samples + 1, PDM_hilbert_code_t);
 
   for (i = 0; i < (n_samples + 1); i++)
     best_sampling[i] = _sampling[i];
@@ -982,7 +978,7 @@ PDM_hilbert_get_coord_extents_seq(      int    dim,
   /* Get global min/max coordinates */
 
   for (j = 0; j < (size_t)dim; j++) {
-    g_extents[j]       = DBL_MAX;
+    g_extents[j]       =  DBL_MAX;
     g_extents[j + dim] = -DBL_MAX;
   }
 
@@ -1086,7 +1082,7 @@ PDM_hilbert_encode_coords(int                  dim,
 
   for (i = 0; i < dim; i++) {
     d[i] = extents[i+dim] - extents[i];
-    d_max = _MAX(d_max, d[i]);
+    d_max = PDM_MAX(d_max, d[i]);
   }
 
   for (i = 0; i < dim; i++) {
@@ -1287,7 +1283,7 @@ PDM_hilbert_local_order_coords(int                  dim,
                                int                  order[])
 {
   PDM_hilbert_code_t *h_code;
-  PDM_malloc(h_code,n_coords,PDM_hilbert_code_t);
+  PDM_malloc(h_code, n_coords, PDM_hilbert_code_t);
 
   PDM_hilbert_encode_coords(dim, encode, extents, n_coords, coords, h_code);
 
@@ -1427,5 +1423,3 @@ PDM_hilbert_build_rank_index(int                       dim,
 }
 #endif /* __cplusplus */
 
-#undef _MIN
-#undef _MAX
