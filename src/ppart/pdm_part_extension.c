@@ -1355,7 +1355,7 @@ _build_part_extension_graph_to_old
         int group_tag = rcvd_group_tag[i_part][i_entity];
         if (group_tag>0) {
           int i_write = entity_group_idx[i_part][group_tag-1] + entity_group_n[group_tag-1];
-          entity_group     [i_part][i_write] = i_entity+1;
+          entity_group     [i_part][i_write] = init_n_entity[i_part]+i_entity+1;
           entity_group_gnum[i_part][i_write] = rcvd_group_gnum[i_part][i_entity];
           entity_group_n[group_tag-1]++;
         }

@@ -651,7 +651,7 @@ int main
                              &pface_group         [i_dom][i_part],
                              &pface_group_ln_to_gn[i_dom][i_part],
                               PDM_OWNERSHIP_KEEP);
-      if (1 == 0) {
+      if (1 == 1) {
         log_trace("i_dom = %d ; i_part = %d\n", i_dom, i_part);
         log_trace("\t pn_face_group = %d\n", pn_face_group[i_dom][i_part]);
         int n_face_in_group = pface_group_idx[i_dom][i_part][pn_face_group[i_dom][i_part]];
@@ -976,6 +976,108 @@ int main
         log_trace("extended_n_vtx = %d\n", extended_n_vtx);
         PDM_log_trace_array_long  (extended_vtx_gnum ,   extended_n_vtx, "\t extended_vtx_gnum  ::");
         PDM_log_trace_array_double(extended_vtx_coord, 3*extended_n_vtx, "\t extended_vtx_coord ::");
+      }
+
+
+      /**
+       * Try to inverse cell_face to see if pb
+       */
+      int compute_face_cell = 0;
+      if (compute_face_cell==1) {
+
+        int n_cell_tot = pn_cell[i_dom][i_part] + extended_n_cell;
+        int n_face_tot = pn_face[i_dom][i_part] + extended_n_face;
+        int extended_cell_face_size = extended_cell_face_idx[extended_n_cell];
+        int cell_face_size          = pcell_face_idx[i_dom][i_part][pn_cell[i_dom][i_part]];
+        int cell_face_size_tot      = cell_face_size + extended_cell_face_size;
+
+        int *concatenated_cell_face_idx = NULL;
+        int *concatenated_cell_face     = NULL;
+        PDM_malloc(concatenated_cell_face_idx, n_cell_tot+1      , int);
+        PDM_malloc(concatenated_cell_face    , cell_face_size_tot, int);
+        concatenated_cell_face_idx[0] = 0;
+
+        int i_write      = 0;
+        int i_write_conn = 0;
+
+        if (1 == 0) {
+          log_trace("init_n_cell = %d \n", pn_cell[i_dom][i_part]);
+          PDM_log_trace_array_int(pcell_face_idx[i_dom][i_part], pn_cell[i_dom][i_part]+1, "init_cell_face_idx :: ");
+          PDM_log_trace_array_int(pcell_face    [i_dom][i_part], cell_face_size          , "init_cell_face     :: ");
+          log_trace("extended_n_cell = %d \n", extended_n_cell);
+          PDM_log_trace_array_int(extended_cell_face_idx, extended_n_cell+1      , "extended_cell_face_idx :: ");
+          PDM_log_trace_array_int(extended_cell_face    , extended_cell_face_size, "extended_cell_face     :: ");
+        }
+
+        // > Fill init entities
+        for (int i_cell=0; i_cell<pn_cell[i_dom][i_part]; ++i_cell) {
+          int i_beg_face = pcell_face_idx[i_dom][i_part][i_cell  ];
+          int i_end_face = pcell_face_idx[i_dom][i_part][i_cell+1];
+          int n_face = i_end_face - i_beg_face;
+
+          concatenated_cell_face_idx[i_write+1] = concatenated_cell_face_idx[i_write] + n_face;
+          for (int i_face=i_beg_face; i_face<i_end_face; ++i_face) {
+            concatenated_cell_face[i_write_conn++] = pcell_face[i_dom][i_part][i_face];
+          }
+          i_write++;
+        }
+
+        // > Fill extended entities
+        for (int i_cell=0; i_cell<extended_n_cell; ++i_cell) {
+          int i_beg_face = extended_cell_face_idx[i_cell  ];
+          int i_end_face = extended_cell_face_idx[i_cell+1];
+          int n_face = i_end_face - i_beg_face;
+
+          concatenated_cell_face_idx[i_write+1] = concatenated_cell_face_idx[i_write] + n_face;
+          for (int i_face=i_beg_face; i_face<i_end_face; ++i_face) {
+            concatenated_cell_face[i_write_conn++] = extended_cell_face[i_face];
+          }
+          i_write++;
+        }
+
+
+        if (1 == 0) {
+          log_trace("tot_n_cell = %d \n", n_cell_tot);
+          PDM_log_trace_array_int(concatenated_cell_face_idx, n_cell_tot+1      , "tot_cell_face_idx :: ");
+          PDM_log_trace_array_int(concatenated_cell_face    , cell_face_size_tot, "tot_cell_face     :: ");
+        }
+
+        int *concatenated_face_cell_idx = NULL;
+        int *concatenated_face_cell     = NULL;
+        PDM_connectivity_transpose( n_cell_tot, n_face_tot,
+                                    concatenated_cell_face_idx,
+                                    concatenated_cell_face,
+                                   &concatenated_face_cell_idx,
+                                   &concatenated_face_cell);
+
+
+        if (1 == 0) {
+          log_trace("tot_n_face = %d \n", n_face_tot);
+          int size_face_cell = concatenated_face_cell_idx[n_face_tot];
+          PDM_log_trace_array_int(concatenated_face_cell_idx, n_face_tot+1  , "tot_face_cell_idx :: ");
+          PDM_log_trace_array_int(concatenated_face_cell    , size_face_cell, "tot_face_cell     :: ");
+          for (int i_face=0; i_face<n_face_tot; ++i_face) {
+
+            int i_beg_cell = concatenated_face_cell_idx[i_face  ];
+            int i_end_cell = concatenated_face_cell_idx[i_face+1];
+            log_trace("i_face = %d\n", i_face);
+            int same_sign = 1; 
+            for (int i_cell=i_beg_cell; i_cell<i_end_cell; ++i_cell) {
+              log_trace("\t cell %d\n", concatenated_face_cell[i_cell]);
+              if (i_cell==i_beg_cell) {
+                same_sign = 1;
+              }
+              else {
+                if (same_sign==PDM_SIGN(concatenated_face_cell[i_cell])) {
+                  same_sign = 0;
+                }
+              }
+            }
+            if (same_sign==0) {
+              log_trace("\t ---> SAME SIGN \n");
+            }
+          }
+        }
       }
 
 

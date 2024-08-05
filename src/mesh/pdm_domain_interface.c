@@ -3668,12 +3668,12 @@ PDM_domain_interface_translate_entity1_entity2
         // Brute force to identify sens
         for(int p = 0; p < n_data_cur; ++p) {
           PDM_g_num_t gnum_cur = PDM_ABS (lentity2_entity1_cur[p]);
-          // int         sgn_cur  = PDM_SIGN(lentity2_entity1_cur[p]);
+          int         sgn_cur  = PDM_SIGN(lentity2_entity1_cur[p]);
           for(int q = 0; q < n_data_cur; ++q) {
             PDM_g_num_t gnum_opp = PDM_ABS (lentity2_entity1_opp[q]);
             int         sgn_opp  = PDM_SIGN(lentity2_entity1_opp[q]);
             if(gnum_cur == gnum_opp && sens == 0) {
-              sens = sgn_opp;
+              sens = sgn_opp * sgn_cur;
             }
           }
         }
