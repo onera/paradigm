@@ -132,6 +132,13 @@ cdef extern from "pdm_part_extension.h":
                                     int                      *group_entity,
                                     PDM_g_num_t              *group_entity_ln_to_gn)
 
+  int PDM_part_extension_path_interface_get(PDM_part_extension_t     *part_ext,
+                                             int                       i_domain,
+                                             int                       i_part,
+                                             PDM_mesh_entities_t       mesh_entity,
+                                             int                     **path_itrf_idx,
+                                             int                     **path_itrf);
+
 cdef class PartExtension:
   """
   """
@@ -581,6 +588,44 @@ cdef class PartExtension:
     np_composed_ln_to_gn_sorted = create_numpy_or_none_g(composed_ln_to_gn_sorted, n_composed_interface)
 
     return (np_composed_interface_idx, np_composed_interface, np_composed_ln_to_gn_sorted)
+
+
+  # ------------------------------------------------------------------
+  def get_path_interface(self,
+                         int i_domain,
+                         int i_part,
+                         PDM_mesh_entities_t entity_type):
+    """
+    get_interface(i_domain, i_part, entity_type)
+    Get interface
+
+    Parameters:
+      i_domain    (int)                 : Domain identifier
+      i_part      (int)                 : Partition identifier
+      entity_type (PDM_mesh_entities_t) : Entity type
+
+    Returns:
+      Interfaces pathes (`np.ndarray[np.int32_t]`, `np.ndarray[np.int32_t]`)
+    """
+    cdef int          *path_itrf_idx
+    cdef int          *path_itrf
+    cdef NPY.npy_intp  dim
+
+    n_entity_extended = PDM_part_extension_path_interface_get(self._part_ext,
+                                                              i_domain,
+                                                              i_part,
+                                                              entity_type,
+                                                              &path_itrf_idx,
+                                                              &path_itrf)
+
+    np_path_itrf_idx = create_numpy_or_none_i(path_itrf_idx, n_entity_extended+1)
+
+    if (path_itrf == NULL): #np_path_itrf_idx can be None
+      np_path_itrf = None
+    else:
+      np_path_itrf = create_numpy_i(path_itrf, np_path_itrf_idx[n_entity_extended])
+
+    return (np_path_itrf_idx, np_path_itrf)
 
   # ------------------------------------------------------------------
   def group_get(self,

@@ -349,7 +349,7 @@ PDM_part_extension_graph_get
  * \param [out] path_interface      Interface path
  *
  */
-void
+int
 PDM_part_extension_path_interface_get
 (
   PDM_part_extension_t     *part_ext,
