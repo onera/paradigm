@@ -155,12 +155,12 @@ int main(int argc, char *argv[])
    *  Set default values
    */
 
-  PDM_g_num_t        n_vtx_seg = 10;
-  double             length    = 1.;
-  int                n_part    = 1;
-  int                post      = 0;
-  PDM_split_dual_t part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
-  PDM_Mesh_nodal_elt_t elt_type  = PDM_MESH_NODAL_HEXA8;
+  PDM_g_num_t          n_vtx_seg   = 10;
+  double               length      = 1.;
+  int                  n_part      = 1;
+  int                  post        = 0;
+  PDM_split_dual_t     part_method = PDM_SPLIT_DUAL_WITH_HILBERT;
+  PDM_Mesh_nodal_elt_t elt_type    = PDM_MESH_NODAL_HEXA8;
 
   /*
    *  Read args
@@ -253,10 +253,10 @@ int main(int argc, char *argv[])
   // PDM_extract_part_part_nodal_set(extrp, pmne);
 
 
-  int *pn_selected;
-  PDM_malloc(pn_selected,n_part ,int  );
-  int **selected_l_num;
-  PDM_malloc(selected_l_num,n_part ,int *);
+  int  *pn_selected    = NULL;
+  int **selected_l_num = NULL;
+  PDM_malloc(pn_selected   , n_part, int  );
+  PDM_malloc(selected_l_num, n_part, int *);
   // for(int i_part = 0; i_part < n_part; ++i_part) {
 
   //   PDM_g_num_t *vtx_ln_to_gn  = NULL;

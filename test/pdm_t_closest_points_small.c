@@ -155,10 +155,10 @@ main
 
 
   //Brute force expected results
-  PDM_g_num_t *expected_closest_gnum;
-  PDM_malloc(expected_closest_gnum,n_tgt,PDM_g_num_t);
-  double *expected_closest_dist;
-  PDM_malloc(expected_closest_dist,n_tgt,double);
+  PDM_g_num_t *expected_closest_gnum = NULL;
+  double      *expected_closest_dist = NULL;
+  PDM_malloc(expected_closest_gnum, n_tgt, PDM_g_num_t);
+  PDM_malloc(expected_closest_dist, n_tgt, double     );
   for (int i = 0; i < n_tgt; i++) {
     PDM_g_num_t arg_min = -1;
     double min_dist = 1E12;

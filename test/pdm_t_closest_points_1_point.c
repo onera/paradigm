@@ -157,12 +157,12 @@ _random_pts
     rand();
   }
 
-  PDM_malloc(*pts_g_num,(*n_pts),PDM_g_num_t);
+  PDM_malloc(*pts_g_num, (*n_pts), PDM_g_num_t);
   for (int i = 0; i < *n_pts; i++) {
     (*pts_g_num)[i] = distrib_pts[i_rank] + i + 1;
   }
 
-  PDM_malloc(*pts_coord,(*n_pts) * 3,double);
+  PDM_malloc(*pts_coord, (*n_pts) * 3, double);
   for (int i = 0; i < *n_pts; i++) {
     for (int j = 0; j < 3; j++) {
       (*pts_coord)[3*i + j] = length * (double) rand() / ((double) RAND_MAX);
@@ -244,8 +244,8 @@ main (int argc, char *argv[])
   PDM_g_num_t *src_g_num = NULL;
   if (i_rank == 0) {
     n_src = 1;
-    PDM_malloc(src_coord,n_src * 3,double);
-    PDM_malloc(src_g_num,n_src,PDM_g_num_t);
+    PDM_malloc(src_coord, n_src * 3, double     );
+    PDM_malloc(src_g_num, n_src    , PDM_g_num_t);
 
     for (int i = 0; i < 3; i++) {
       src_coord[i] = 0.5 * length;
@@ -288,8 +288,8 @@ main (int argc, char *argv[])
                           &closest_src_dist);
 
 
-  int *closest_src_idx;
-  PDM_malloc(closest_src_idx,(n_tgt + 1),int);
+  int *closest_src_idx = NULL;
+  PDM_malloc(closest_src_idx, n_tgt + 1, int);
   for (int i = 0; i <= n_tgt; i++) {
     closest_src_idx[i] = n_closest_points * i;
   }

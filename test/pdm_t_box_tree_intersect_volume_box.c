@@ -129,8 +129,8 @@ PDM_g_num_t **box_ln_to_gn
   PDM_free(distrib_box);
 
   double *box_centers;
-  PDM_malloc(box_centers,n_box * 3,double);
-  PDM_malloc(*box_extents,n_box * 6,double);
+  PDM_malloc( box_centers, n_box * 3, double);
+  PDM_malloc(*box_extents, n_box * 6, double);
   double *_box_extents = *box_extents;
   for (int i = 0; i < n_box; i++) {
     for (int j = 0; j < 3; j++) {
@@ -180,8 +180,8 @@ double **n_in,
 double **pt_plane_in
 )
 {
-  PDM_malloc(*n_in,12,double);
-  PDM_malloc(*pt_plane_in,12,double);
+  PDM_malloc(*n_in       , 12, double);
+  PDM_malloc(*pt_plane_in, 12, double);
 
   double *n = *n_in;
   double *pt_plane = *pt_plane_in;
@@ -264,9 +264,9 @@ PDM_g_num_t **vtx_g_num_in,
 int         **face_vtx_in
 )
 {
-  PDM_malloc(*vtx_coord_in,12 * 3,double);
-  PDM_malloc(*vtx_g_num_in,12,PDM_g_num_t);
-  PDM_malloc(*face_vtx_in,12,int);
+  PDM_malloc(*vtx_coord_in, 12 * 3, double     );
+  PDM_malloc(*vtx_g_num_in, 12    , PDM_g_num_t);
+  PDM_malloc(*face_vtx_in , 12    , int        );
 
   double *vtx_coord = *vtx_coord_in;
   PDM_g_num_t *vtx_g_num = *vtx_g_num_in;
@@ -471,7 +471,7 @@ int main(int argc, char *argv[])
   // Create volumes
 
   double *edge;
-  PDM_malloc(edge,9,double) ; // A---C---B
+  PDM_malloc(edge, 9, double) ; // A---C---B
   edge[0] = 0;
   edge[1] = 0;
   edge[2] = 0;
@@ -482,7 +482,7 @@ int main(int argc, char *argv[])
   edge[7] = 0;
   edge[8] = 0;
   double *direction_pt;
-  PDM_malloc(direction_pt,3,double) ; // C---D-->
+  PDM_malloc(direction_pt, 3, double) ; // C---D-->
   direction_pt[0] = 1;
   direction_pt[1] = 10;
   direction_pt[2] = 0;
@@ -584,7 +584,7 @@ int main(int argc, char *argv[])
 
   // Brute force box intersection computation
   int *vol_boxes;
-  PDM_malloc(vol_boxes,n_boxes,int);
+  PDM_malloc(vol_boxes, n_boxes, int);
   int count = 0;
   int check;
   for (int j = 0; j < n_boxes; j++) {
@@ -600,7 +600,7 @@ int main(int argc, char *argv[])
 
   int n_volumes = 1;
   int *volume_plane_idx;
-  PDM_malloc(volume_plane_idx,(n_volumes +1),int);
+  PDM_malloc(volume_plane_idx, n_volumes + 1, int);
   volume_plane_idx[0] = 0;
   volume_plane_idx[1] = 4;
 

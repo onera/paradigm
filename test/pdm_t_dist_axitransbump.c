@@ -202,14 +202,14 @@ _gen_distributed_mesh
   double step_t = (t_max - t_min) / (double) (n_t_seg - 1);
   double step_z = (z_max - z_min) / (double) (n_z_seg - 1);
 
-  PDM_g_num_t *distrib_vtx;
-  PDM_malloc(distrib_vtx,(n_rank + 1) ,PDM_g_num_t);
-  PDM_g_num_t *distrib_face;
-  PDM_malloc(distrib_face,(n_rank + 1) ,PDM_g_num_t);
-  PDM_g_num_t *distrib_cell;
-  PDM_malloc(distrib_cell,(n_rank + 1) ,PDM_g_num_t);
-  PDM_g_num_t *distrib_face_lim;
-  PDM_malloc(distrib_face_lim,(n_rank + 1) ,PDM_g_num_t);
+  PDM_g_num_t *distrib_vtx      = NULL;
+  PDM_g_num_t *distrib_face     = NULL;
+  PDM_g_num_t *distrib_cell     = NULL;
+  PDM_g_num_t *distrib_face_lim = NULL;
+  PDM_malloc(distrib_vtx     , n_rank + 1, PDM_g_num_t);
+  PDM_malloc(distrib_face    , n_rank + 1, PDM_g_num_t);
+  PDM_malloc(distrib_cell    , n_rank + 1, PDM_g_num_t);
+  PDM_malloc(distrib_face_lim, n_rank + 1, PDM_g_num_t);
 
   // Define distribution
 
@@ -264,12 +264,12 @@ _gen_distributed_mesh
 
   *n_face_group = 6;
 
-  PDM_malloc(*dface_cell,2*(*dn_face    )    ,PDM_g_num_t);
-  PDM_malloc(*dface_vtx_idx,  (*dn_face + 1)    ,int        );
-  PDM_malloc(*dface_vtx,4*(*dn_face    )    ,PDM_g_num_t);
-  PDM_malloc(*dvtx_coord,3*(*dn_vtx     )    ,double     );
-  PDM_malloc(*dface_group_idx,(*n_face_group + 1) ,int        );
-  PDM_malloc(*dface_group,dn_face_lim         ,PDM_g_num_t);
+  PDM_malloc(*dface_cell     , 2*(*dn_face    )   , PDM_g_num_t);
+  PDM_malloc(*dface_vtx_idx  ,   (*dn_face + 1)   , int        );
+  PDM_malloc(*dface_vtx      , 4*(*dn_face    )   , PDM_g_num_t);
+  PDM_malloc(*dvtx_coord     , 3*(*dn_vtx     )   , double     );
+  PDM_malloc(*dface_group_idx, (*n_face_group + 1), int        );
+  PDM_malloc(*dface_group    , dn_face_lim        , PDM_g_num_t);
 
   PDM_g_num_t  *_dface_cell      = *dface_cell;
   int          *_dface_vtx_idx   = *dface_vtx_idx;
@@ -980,7 +980,7 @@ int main(int argc, char *argv[])
   int have_dcell_part = 0;
 
   int *dcell_part;
-  PDM_malloc(dcell_part,dn_cell,int);
+  PDM_malloc(dcell_part, dn_cell, int);
 
   int *renum_properties_cell = NULL;
   int *renum_properties_face = NULL;
@@ -1035,39 +1035,39 @@ int main(int argc, char *argv[])
                                                                PDM_MPI_COMM_WORLD,
                                                                PDM_OWNERSHIP_KEEP);
 
-  int **select_face;
-  PDM_malloc(select_face,n_part,int *);
-  int *n_select_face;
-  PDM_malloc(n_select_face,n_part,int  );
-  int **select_vtx;
-  PDM_malloc(select_vtx,n_part,int *);
-  int *n_select_vtx;
-  PDM_malloc(n_select_vtx,n_part,int  );
+  int **select_face   = NULL;
+  int  *n_select_face = NULL;
+  int **select_vtx    = NULL;
+  int  *n_select_vtx  = NULL;
+  PDM_malloc(select_face  , n_part, int *);
+  PDM_malloc(n_select_face, n_part, int  );
+  PDM_malloc(select_vtx   , n_part, int *);
+  PDM_malloc(n_select_vtx , n_part, int  );
 
-  int **surface_face_vtx_idx;
-  PDM_malloc(surface_face_vtx_idx,n_part,int *);
-  int **surface_face_vtx;
-  PDM_malloc(surface_face_vtx,n_part,int *);
-  double **surface_coords;
-  PDM_malloc(surface_coords,n_part,double *);
+  int    **surface_face_vtx_idx = NULL;
+  int    **surface_face_vtx     = NULL;
+  double **surface_coords       = NULL;
+  PDM_malloc(surface_face_vtx_idx, n_part, int    *);
+  PDM_malloc(surface_face_vtx    , n_part, int    *);
+  PDM_malloc(surface_coords      , n_part, double *);
 
-  PDM_g_num_t **surface_face_parent_gnum;
-  PDM_malloc(surface_face_parent_gnum,n_part,PDM_g_num_t *);
-  PDM_g_num_t **surface_vtx_parent_gnum;
-  PDM_malloc(surface_vtx_parent_gnum,n_part,PDM_g_num_t *);
+  PDM_g_num_t **surface_face_parent_gnum = NULL;
+  PDM_g_num_t **surface_vtx_parent_gnum  = NULL;
+  PDM_malloc(surface_face_parent_gnum, n_part, PDM_g_num_t *);
+  PDM_malloc(surface_vtx_parent_gnum , n_part, PDM_g_num_t *);
 
-  const PDM_g_num_t **surface_face_gnum;
-  PDM_malloc(surface_face_gnum,n_part, const PDM_g_num_t *);
-  const PDM_g_num_t **surface_vtx_gnum;
-  PDM_malloc(surface_vtx_gnum,n_part, const PDM_g_num_t *);
+  const PDM_g_num_t **surface_face_gnum = NULL;
+  const PDM_g_num_t **surface_vtx_gnum  = NULL;
+  PDM_malloc(surface_face_gnum, n_part, const PDM_g_num_t *);
+  PDM_malloc(surface_vtx_gnum , n_part, const PDM_g_num_t *);
 
   PDM_gen_gnum_t *id_gnum_face = PDM_gnum_create (3, n_part, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD, PDM_OWNERSHIP_KEEP);
   PDM_gen_gnum_t *id_gnum_vtx  = PDM_gnum_create (3, n_part, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD, PDM_OWNERSHIP_KEEP);
 
-  double **cell_volume;
-  PDM_malloc(cell_volume,n_part,double *);
-  double **cell_center;
-  PDM_malloc(cell_center,n_part,double *);
+  double **cell_volume = NULL;
+  double **cell_center = NULL;
+  PDM_malloc(cell_volume, n_part, double *);
+  PDM_malloc(cell_center, n_part, double *);
 
   if (i_rank == 0) {
     printf("-- mesh dist set\n");
@@ -1103,13 +1103,13 @@ int main(int argc, char *argv[])
     n_select_face[i_part] = 0;
     n_select_vtx[i_part] = 0;
 
-    PDM_malloc(select_face[i_part],n_face,int);
+    PDM_malloc(select_face[i_part], n_face, int);
 
     for (int i = 0; i < n_face; i++) {
       select_face[i_part][i] = 0;
     }
 
-    PDM_malloc(select_vtx[i_part],n_vtx,int);
+    PDM_malloc(select_vtx[i_part], n_vtx, int);
 
     for (int i = 0; i < n_vtx; i++) {
       select_vtx[i_part][i] = 0;
@@ -1162,7 +1162,7 @@ int main(int argc, char *argv[])
       sprintf(filename, "%scheck_face_cell_%3.3d.vtk", pref, ifile);
 
       int *face_data;
-      PDM_malloc(face_data,n_face,int);
+      PDM_malloc(face_data, n_face, int);
       for (int i = 0; i < n_face; i++) {
         //int icel2 = face_cell[2*i+1];
         face_data[i] = (int) face_ln_to_gn[i];//icel2;
@@ -1177,11 +1177,11 @@ int main(int argc, char *argv[])
                            vtx);
       PDM_free(face_data);
 
-      int *_face_vtx_idx;
-      PDM_malloc(_face_vtx_idx,(face_group_idx[n_face_group] + 1),int);
-      int *_face_vtx;
-      PDM_malloc(_face_vtx,4 * face_group_idx[n_face_group],int);
-      PDM_malloc(face_data,face_group_idx[n_face_group],int);
+      int *_face_vtx_idx = NULL;
+      int *_face_vtx     = NULL;
+      PDM_malloc(_face_vtx_idx,     face_group_idx[n_face_group] + 1, int);
+      PDM_malloc(_face_vtx    , 4 * face_group_idx[n_face_group]    , int);
+      PDM_malloc(face_data    ,     face_group_idx[n_face_group]    , int);
       _face_vtx_idx[0] = 0;
       for (int i = 0; i < n_face_group; i++) {
         for (int j = face_group_idx[i]; j < face_group_idx[i+1]; j++) {
@@ -1260,14 +1260,14 @@ int main(int argc, char *argv[])
     }
     n_select_vtx[i_part] = idx - 1;
 
-    PDM_malloc(surface_face_vtx_idx[i_part],(n_select_face[i_part] + 1),int);
+    PDM_malloc(surface_face_vtx_idx[i_part], n_select_face[i_part] + 1, int);
     surface_face_vtx_idx[i_part][0] = 0;
-    PDM_malloc(surface_face_vtx[i_part],s_face_vtx,int);
+    PDM_malloc(surface_face_vtx[i_part], s_face_vtx, int);
 
-    PDM_malloc(surface_coords[i_part],3 * n_select_vtx[i_part],double);
+    PDM_malloc(surface_coords[i_part], 3 * n_select_vtx[i_part], double);
 
     PDM_malloc(surface_face_parent_gnum[i_part], n_select_face[i_part], PDM_g_num_t);
-    PDM_malloc(surface_vtx_parent_gnum[i_part], n_select_vtx[i_part], PDM_g_num_t);
+    PDM_malloc(surface_vtx_parent_gnum [i_part], n_select_vtx [i_part], PDM_g_num_t);
 
     surface_face_gnum[i_part] = NULL;
     surface_vtx_gnum[i_part] = NULL;
@@ -1375,7 +1375,7 @@ int main(int argc, char *argv[])
     if (post) {
       //int *face_data = PDM_array_const_int (n_select_face[i_part], i_rank);
       int *face_data;
-      PDM_malloc(face_data,n_select_face[i_part],int);
+      PDM_malloc(face_data, n_select_face[i_part], int);
       for (int i = 0; i < n_select_face[i_part]; i++) {
         face_data[i] = (int) surface_face_gnum[i_part][i];
       }
@@ -1453,11 +1453,11 @@ int main(int argc, char *argv[])
                            &face_group,
                            &face_group_ln_to_gn);
 
-    const int     isOriented = 0;
-    PDM_malloc(cell_volume[i_part],n_cell,double);
-    PDM_malloc(cell_center[i_part],3 * n_cell,double);
+    const int     is_oriented = 0;
+    PDM_malloc(cell_volume[i_part],     n_cell, double);
+    PDM_malloc(cell_center[i_part], 3 * n_cell, double);
 
-    PDM_geom_elem_polyhedra_properties (isOriented,
+    PDM_geom_elem_polyhedra_properties (is_oriented,
                                         n_cell,
                                         n_face,
                                        face_vtx_idx,
@@ -1597,14 +1597,14 @@ int main(int argc, char *argv[])
       tl_face_vtx += surface_face_vtx_idx[i_part][n_select_face[i_part]];
     }
 
-    int *tface_vtx_idx;
-    PDM_malloc(tface_vtx_idx,(tn_face+1),int);
-    int *tface_vtx;
-    PDM_malloc(tface_vtx,tl_face_vtx,int);
-    PDM_g_num_t *tface_g_num;
-    PDM_malloc(tface_g_num,tn_face,PDM_g_num_t);
-    double *tvtx_coord;
-    PDM_malloc(tvtx_coord,tn_vtx * 3,double);
+    int         *tface_vtx_idx = NULL;
+    int         *tface_vtx     = NULL;
+    PDM_g_num_t *tface_g_num   = NULL;
+    double      *tvtx_coord    = NULL;
+    PDM_malloc(tface_vtx_idx, tn_face+1  , int        );
+    PDM_malloc(tface_vtx    , tl_face_vtx, int        );
+    PDM_malloc(tface_g_num  , tn_face    , PDM_g_num_t);
+    PDM_malloc(tvtx_coord   , tn_vtx * 3 , double     );
     tn_face = 0;
     tn_vtx = 0;
     tl_face_vtx = 0;
@@ -1629,7 +1629,7 @@ int main(int argc, char *argv[])
 
     if (0) {
       int *tface_data;
-      PDM_malloc(tface_data,tn_face,int);
+      PDM_malloc(tface_data, tn_face, int);
       for (int i = 0; i < tn_face; i++) {
         tface_data[i] = (int) tface_g_num[i];
       }
@@ -1654,20 +1654,20 @@ int main(int argc, char *argv[])
     }
 
     int *all_tn_face;
-    PDM_malloc(all_tn_face,n_rank,int);
+    PDM_malloc(all_tn_face, n_rank, int);
     PDM_MPI_Allgather (&tn_face,    1, PDM_MPI_INT,
                        all_tn_face, 1, PDM_MPI_INT,
                        PDM_MPI_COMM_WORLD);
 
     tn_vtx *= 3;
     int *all_tn_vtx;
-    PDM_malloc(all_tn_vtx,n_rank,int);
+    PDM_malloc(all_tn_vtx, n_rank, int);
     PDM_MPI_Allgather (&tn_vtx,    1, PDM_MPI_INT,
                        all_tn_vtx, 1, PDM_MPI_INT,
                        PDM_MPI_COMM_WORLD);
 
     int *all_tl_face_vtx;
-    PDM_malloc(all_tl_face_vtx,n_rank,int);
+    PDM_malloc(all_tl_face_vtx, n_rank, int);
     PDM_MPI_Allgather (&tl_face_vtx,    1, PDM_MPI_INT,
                        all_tl_face_vtx, 1, PDM_MPI_INT,
                        PDM_MPI_COMM_WORLD);
@@ -1680,14 +1680,14 @@ int main(int argc, char *argv[])
     int gn_vtx = shift_vtx[n_rank];
 
     PDM_g_num_t *gface_g_num;
-    PDM_malloc(gface_g_num,gn_face,PDM_g_num_t);
+    PDM_malloc(gface_g_num, gn_face, PDM_g_num_t);
     PDM_MPI_Allgatherv (tface_g_num, tn_face, PDM__PDM_MPI_G_NUM,
                         gface_g_num, all_tn_face, shift_face, PDM__PDM_MPI_G_NUM,
                         PDM_MPI_COMM_WORLD);
     PDM_free(tface_g_num);
 
     double *gvtx_coord;
-    PDM_malloc(gvtx_coord,gn_vtx,double);
+    PDM_malloc(gvtx_coord, gn_vtx, double);
     PDM_MPI_Allgatherv (tvtx_coord, tn_vtx, PDM_MPI_DOUBLE,
                         gvtx_coord, all_tn_vtx, shift_vtx, PDM_MPI_DOUBLE,
                         PDM_MPI_COMM_WORLD);
@@ -1695,7 +1695,7 @@ int main(int argc, char *argv[])
     gn_vtx /= 3;
 
     int *gface_vtx;
-    PDM_malloc(gface_vtx,gn_face * 4,int);
+    PDM_malloc(gface_vtx, gn_face * 4, int);
     for (int i = 0; i < n_rank; i++) {
       all_tn_face[i] *= 4;
       shift_face[i+1] *= 4;
@@ -1718,7 +1718,7 @@ int main(int argc, char *argv[])
     }
 
     int *gface_vtx_idx;
-    PDM_malloc(gface_vtx_idx,(gn_face + 1),int);
+    PDM_malloc(gface_vtx_idx, gn_face + 1,int);
     gface_vtx_idx[0] = 0;
     for (int i = 0; i < gn_face; i++) {
       gface_vtx_idx[i+1] = gface_vtx_idx[i] + 4;
@@ -1726,7 +1726,7 @@ int main(int argc, char *argv[])
 
     if (post) {
       int *gface_data;
-      PDM_malloc(gface_data,gn_face,int);
+      PDM_malloc(gface_data, gn_face, int);
       for (int i = 0; i < gn_face; i++) {
         gface_data[i] = (int) gface_g_num[i];
       }
