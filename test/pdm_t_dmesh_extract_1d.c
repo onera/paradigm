@@ -266,7 +266,7 @@ int main(int argc, char *argv[])
                                                    PDM_OWNERSHIP_KEEP);
 
   assert(dextract_edge_vtx_idx == NULL);
-  PDM_malloc(dextract_edge_vtx_idx, (dn_extract_edge+1) ,int);
+  PDM_malloc(dextract_edge_vtx_idx, dn_extract_edge+1, int);
   for(int i_edge = 0; i_edge < dn_extract_edge+1; ++i_edge) {
     dextract_edge_vtx_idx[i_edge] = 2*i_edge;
   }
@@ -280,7 +280,7 @@ int main(int argc, char *argv[])
   PDM_g_num_t *distrib_edge_extract = PDM_compute_entity_distribution(comm, dn_extract_edge);
 
   PDM_g_num_t *extract_edge_ln_to_gn;
-  PDM_malloc(extract_edge_ln_to_gn,dn_extract_edge ,PDM_g_num_t);
+  PDM_malloc(extract_edge_ln_to_gn, dn_extract_edge, PDM_g_num_t);
   for(int i = 0; i < dn_extract_edge; ++i) {
     extract_edge_ln_to_gn[i] = distrib_edge_extract[i_rank] + i + 1;
   }
