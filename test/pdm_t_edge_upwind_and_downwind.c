@@ -465,7 +465,7 @@ int main(int argc, char *argv[])
                                               face_edge,
                                               edge_vtx,
                                               &face_vtx);
-      PDM_malloc(face_vtx_idx,(n_face + 1),int);
+      PDM_malloc(face_vtx_idx, n_face + 1, int);
       memcpy(face_vtx_idx, face_edge_idx, sizeof(int) * (n_face + 1));
 
       // PDM_log_trace_connectivity_int(face_vtx_idx, face_vtx, n_face, "face_vtx : ");
@@ -544,8 +544,8 @@ int main(int argc, char *argv[])
       double *face_center = NULL;
       double *face_normal = NULL;
       if (!triangulate) {
-        PDM_malloc(face_center,n_face * 3,double);
-        PDM_malloc(face_normal,n_face * 3,double);
+        PDM_malloc(face_center, n_face * 3, double);
+        PDM_malloc(face_normal, n_face * 3, double);
 
         PDM_geom_elem_polygon_properties(n_face,
                                          face_vtx_idx,
@@ -623,7 +623,7 @@ int main(int argc, char *argv[])
                                    NULL);
 
         double *updown;
-        PDM_malloc(updown,n_edge * 6,double);
+        PDM_malloc(updown, n_edge * 6, double);
         for (int i = 0; i < n_edge; i++) {
           int ivtx1 = edge_vtx[2*i  ]-1;
           int ivtx2 = edge_vtx[2*i+1]-1;
@@ -653,40 +653,35 @@ int main(int argc, char *argv[])
                             edge_ln_to_gn,
                             NULL);
 
-
-
-
         int _n_face = 0;
-        int *_face_vtx_idx;
-        PDM_malloc(_face_vtx_idx,(2*n_edge + 1),int);
-        int *_face_vtx;
-        PDM_malloc(_face_vtx,2*face_vtx_idx[n_face],int);
-        double *_face_edge;
-        PDM_malloc(_face_edge,2*n_edge,double);
-        double *_face_updown;
-        PDM_malloc(_face_updown,2*n_edge,double);
-        PDM_g_num_t *_face_ln_to_gn;
-        PDM_malloc(_face_ln_to_gn,2*n_edge,PDM_g_num_t);
+        int         *_face_vtx_idx  = NULL;
+        int         *_face_vtx      = NULL;
+        double      *_face_edge     = NULL;
+        double      *_face_updown   = NULL;
+        PDM_g_num_t *_face_ln_to_gn = NULL;
+        PDM_malloc(_face_vtx_idx , (2*n_edge + 1)          , int);
+        PDM_malloc(_face_vtx     , 2 * face_vtx_idx[n_face], int);
+        PDM_malloc(_face_edge    , 2 * n_edge              , double);
+        PDM_malloc(_face_updown  , 2 * n_edge              , double);
+        PDM_malloc(_face_ln_to_gn, 2 * n_edge              , PDM_g_num_t);
         _face_vtx_idx[0] = 0;
 
-
-
-        int _n_cellface = 0;
-        int _s_cellface = 6*2*n_edge;
-        int _s_cellface_vtx = _s_cellface * 8;
-        int *_cellface_vtx_idx;
-        PDM_malloc(_cellface_vtx_idx,(_s_cellface + 1),int);
-        int *_cellface_vtx;
-        PDM_malloc(_cellface_vtx,_s_cellface_vtx,int);
+        int _n_cellface        = 0;
+        int _s_cellface        = 6*2*n_edge;
+        int _s_cellface_vtx    = _s_cellface * 8;
+        int *_cellface_vtx_idx = NULL;
+        int *_cellface_vtx     = NULL;
+        PDM_malloc(_cellface_vtx_idx, (_s_cellface + 1), int);
+        PDM_malloc(_cellface_vtx    , _s_cellface_vtx  , int);
         _cellface_vtx_idx[0] = 0;
 
-        double *_cellface_updown;
-        PDM_malloc(_cellface_updown,_s_cellface,double     );
-        PDM_g_num_t *_cellface_ln_to_gn;
-        PDM_malloc(_cellface_ln_to_gn,_s_cellface,PDM_g_num_t);
+        double      *_cellface_updown   = NULL;
+        PDM_g_num_t *_cellface_ln_to_gn = NULL;
+        PDM_malloc(_cellface_updown  , _s_cellface, double     );
+        PDM_malloc(_cellface_ln_to_gn, _s_cellface, PDM_g_num_t);
 
         double *_updown_pts;
-        PDM_malloc(_updown_pts,2*n_edge*3,double);
+        PDM_malloc(_updown_pts, 2*n_edge*3, double);
         for (int iedge = 0; iedge < n_edge; iedge++) {
 
           if (upwind_face_out[iedge] >= 0) {
@@ -696,15 +691,14 @@ int main(int argc, char *argv[])
               _face_vtx[_face_vtx_idx[_n_face+1]++] = face_vtx[idx_vtx];
             }
 
-            _face_edge[_n_face]   = iedge;
-            _face_updown[_n_face] = 1;
+            _face_edge    [_n_face]   = iedge;
+            _face_updown  [_n_face] = 1;
             _face_ln_to_gn[_n_face] = edge_ln_to_gn[iedge];//face_ln_to_gn[face_id];
             memcpy(_updown_pts + 3*_n_face, upwind_point_out + 3*iedge, sizeof(double)*3);
             _n_face++;
 
 
             // realloc cellface?
-
             int cell_id = upwind_cell_out[iedge];
             for (int idx_face = cell_face_idx[cell_id]; idx_face < cell_face_idx[cell_id+1]; idx_face++) {
               int _face_id = PDM_ABS(cell_face[idx_face]) - 1;
