@@ -137,11 +137,13 @@ struct _pdm_part_extension_t {
   /* Results */
   int          *n_cell_border;
   PDM_g_num_t **border_cell_ln_to_gn;
+  PDM_g_num_t **border_cell_ln_to_gn_ancstr;
   int         **border_cell_face_idx;
   int         **border_cell_face;
 
   int          *n_face_border;
   PDM_g_num_t **border_face_ln_to_gn;
+  PDM_g_num_t **border_face_ln_to_gn_ancstr;
   int         **border_face_edge_idx;
   int         **border_face_edge;
   int         **border_face_vtx_idx;
@@ -152,6 +154,7 @@ struct _pdm_part_extension_t {
 
   int          *n_edge_border;
   PDM_g_num_t **border_edge_ln_to_gn;
+  PDM_g_num_t **border_edge_ln_to_gn_ancstr;
   int         **border_edge_vtx_idx;
   int         **border_edge_vtx;
   int         **border_edge_group_idx;
@@ -160,6 +163,7 @@ struct _pdm_part_extension_t {
 
   int          *n_vtx_border;
   PDM_g_num_t **border_vtx_ln_to_gn;
+  PDM_g_num_t **border_vtx_ln_to_gn_ancstr;
   double      **border_vtx;
   
 

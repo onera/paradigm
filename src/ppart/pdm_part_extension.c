@@ -1152,6 +1152,7 @@ _build_part_extension_graph_to_old
   PDM_g_num_t         **new_entity_ancstr,
   // int                 **new_entity_path_itrf_strd,
   // int                 **new_entity_path_itrf,
+  PDM_g_num_t        ***out_pentity_to_entity_ancstr,
   int                ***out_pentity_to_entity_trplt,
   int                ***out_pentity_group_idx,
   int                ***out_pentity_group,
@@ -1370,16 +1371,15 @@ _build_part_extension_graph_to_old
 
   for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
     PDM_free(l_entity_ancstr_idx[i_part]);
-    PDM_free(l_entity_ancstr    [i_part]);
     PDM_free(pentity_trplt      [i_part]);
   }
   PDM_free(l_entity_ancstr_idx);
-  PDM_free(l_entity_ancstr);
   PDM_free(pentity_trplt);
   PDM_part_to_part_free(ptp);
       
 
-  *out_pentity_to_entity_trplt = rcvd_trplt;
+  *out_pentity_to_entity_trplt   = rcvd_trplt;
+  *out_pentity_to_entity_ancstr  = l_entity_ancstr;
   if (have_group) {
     *out_pentity_group_idx       = entity_group_idx;
     *out_pentity_group           = entity_group;
@@ -2010,6 +2010,132 @@ _build_bound_graph
 
 }
 
+
+static
+void
+_build_rotation_matrix
+(
+  double  *rotation_direction,
+  double   rotation_angle,
+  int      sgn_itrf,
+  double **rotation_matrix
+)
+{
+  double angle = -sgn_itrf*rotation_angle;
+
+  if (PDM_ABS(rotation_direction[0])>1e-15 && 
+      PDM_ABS(rotation_direction[1])<1e-15 &&
+      PDM_ABS(rotation_direction[2])<1e-15) {
+    rotation_matrix[0][0] = 1.;
+    rotation_matrix[0][1] = 0.;
+    rotation_matrix[0][2] = 0.;
+
+    rotation_matrix[1][0] = 0.;
+    rotation_matrix[1][1] = cos(angle);
+    rotation_matrix[1][2] =-sin(angle);
+
+    rotation_matrix[2][0] = 0.;
+    rotation_matrix[2][1] = sin(angle);
+    rotation_matrix[2][2] = cos(angle);
+  }
+  else if (PDM_ABS(rotation_direction[0])<1e-15 && 
+           PDM_ABS(rotation_direction[1])>1e-15 &&
+           PDM_ABS(rotation_direction[2])<1e-15) {
+    rotation_matrix[0][0] = cos(angle);
+    rotation_matrix[0][1] = 0.;
+    rotation_matrix[0][2] = sin(angle);
+
+    rotation_matrix[1][0] = 0.;
+    rotation_matrix[1][1] = 1.;
+    rotation_matrix[1][2] = 0.;
+
+    rotation_matrix[2][0] =-sin(angle);
+    rotation_matrix[2][1] = 0.;
+    rotation_matrix[2][2] = cos(angle);
+  }
+  else if (PDM_ABS(rotation_direction[0])<1e-15 && 
+           PDM_ABS(rotation_direction[1])<1e-15 &&
+           PDM_ABS(rotation_direction[2])>1e-15) {
+    rotation_matrix[0][0] = cos(angle);
+    rotation_matrix[0][1] =-sin(angle);
+    rotation_matrix[0][2] = 0.;
+
+    rotation_matrix[1][0] = sin(angle);
+    rotation_matrix[1][1] = cos(angle);
+    rotation_matrix[1][2] = 0.;
+
+    rotation_matrix[2][0] = 0.;
+    rotation_matrix[2][1] = 0.;
+    rotation_matrix[2][2] = 1.;
+  }
+  else {
+    PDM_error(__FILE__, __LINE__, 0, "Don't know how to build rotation matrix around axis (%.3f,%.3f,%.3f)\n",
+                                  rotation_direction[0],
+                                  rotation_direction[1],
+                                  rotation_direction[2]);
+  } 
+}
+
+
+static
+void
+_build_homogeneous_matrix
+(
+  double **rotation_matrix,
+  double  *rotation_center,
+  double **homogeneous_matrix
+)
+{
+  double apply_center_matrix[3] = {0, 0., 0.};
+
+  for (int i=0; i<3; ++i) {
+    apply_center_matrix[i] = rotation_matrix[0][i]*rotation_center[0]
+                           + rotation_matrix[1][i]*rotation_center[1]
+                           + rotation_matrix[2][i]*rotation_center[2];
+
+    homogeneous_matrix[i][0] = rotation_matrix[i][0];
+    homogeneous_matrix[i][1] = rotation_matrix[i][1];
+    homogeneous_matrix[i][2] = rotation_matrix[i][2];
+    homogeneous_matrix[i][3] = rotation_center[i] - apply_center_matrix[i];
+  }
+
+  homogeneous_matrix[3][0] = 0.;
+  homogeneous_matrix[3][1] = 0.;
+  homogeneous_matrix[3][2] = 0.;
+  homogeneous_matrix[3][3] = 1.;
+}
+
+
+static
+void
+_apply_homogeneous_matrix
+(
+  double **homogeneous_matrix,
+  double  *vector
+)
+{
+
+  double _vector[4] = {0., 0., 0., 0.};
+  double _result[4] = {0., 0., 0., 0.};
+
+  _vector[0] = vector[0];
+  _vector[1] = vector[1];
+  _vector[2] = vector[2];
+  _vector[3] = 1.;
+
+  for (int i=0; i<4; ++i) {
+    _result[i] = homogeneous_matrix[0][i]*_vector[0]
+               + homogeneous_matrix[1][i]*_vector[1]
+               + homogeneous_matrix[2][i]*_vector[2]
+               + homogeneous_matrix[3][i]*_vector[3];
+  }
+
+  for (int i=0; i<3; ++i) {
+    vector[i] = _result[i];
+  }
+}
+
+
 static
 void
 _exchange_coord_and_apply_transform
@@ -2087,11 +2213,13 @@ double              ***pvtx_extended_coords_out
   }
   double  **translation_vector = NULL;
   double ***rotation_matrix    = NULL;
+  double ***homogeneous_matrix = NULL;
   double  **rotation_direction = NULL;
   double  **rotation_center    = NULL;
   double   *rotation_angle     = NULL;
   PDM_malloc(translation_vector, n_interface, double * );
   PDM_malloc(rotation_matrix   , n_interface, double **);
+  PDM_malloc(homogeneous_matrix, n_interface, double **);
   PDM_malloc(rotation_direction, n_interface, double * );
   PDM_malloc(rotation_center   , n_interface, double * );
   PDM_malloc(rotation_angle    , n_interface, double   );
@@ -2099,17 +2227,23 @@ double              ***pvtx_extended_coords_out
     translation_vector[i_interf] = NULL;
     PDM_part_domain_interface_translation_get(part_ext->pdi, i_interf, &translation_vector[i_interf]);
 
-    rotation_matrix[i_interf] = NULL;
+    rotation_matrix   [i_interf] = NULL;
+    homogeneous_matrix[i_interf] = NULL;
     PDM_part_domain_interface_rotation_get(part_ext->pdi,
                                            i_interf,
                                            &rotation_direction[i_interf],
                                            &rotation_center   [i_interf],
                                            &rotation_angle    [i_interf]);
-
-    if(rotation_center    [i_interf] != NULL) {
-      PDM_malloc(rotation_matrix[i_interf], 3, double *);
+    if(rotation_center[i_interf] != NULL) {
+      
+      // > Allocate tmp and transfo matrix
+      PDM_malloc(rotation_matrix   [i_interf], 3, double *);
+      PDM_malloc(homogeneous_matrix[i_interf], 4, double *);
       for(int k = 0; k < 3; ++k) {
         PDM_malloc(rotation_matrix[i_interf][k], 3, double);
+      }
+      for(int k = 0; k < 4; ++k) {
+        PDM_malloc(homogeneous_matrix[i_interf][k], 4, double);
       }
     }
   }
@@ -2122,6 +2256,22 @@ double              ***pvtx_extended_coords_out
         for(int k = 0; k < 3; ++k) {
           pextract_vtx_coords[i_part][3*i_vtx+k] += sgn_interface * translation_vector[PDM_ABS(i_interface)-1][k];
         }
+      }
+      if(i_interface != 0 && rotation_direction[PDM_ABS(i_interface)-1] != NULL) {
+
+        // > Build matrix
+        _build_rotation_matrix(rotation_direction[PDM_ABS(i_interface-1)],
+                               rotation_angle    [PDM_ABS(i_interface-1)],
+                               sgn_interface,
+                               rotation_matrix   [PDM_ABS(i_interface-1)]);
+
+        _build_homogeneous_matrix(rotation_matrix   [PDM_ABS(i_interface-1)],
+                                  rotation_center   [PDM_ABS(i_interface-1)],
+                                  homogeneous_matrix[PDM_ABS(i_interface-1)]);
+
+        // > Apply matrix
+        _apply_homogeneous_matrix(homogeneous_matrix[PDM_ABS(i_interface-1)],
+                                 &pextract_vtx_coords[i_part][3*i_vtx]);
       }
     }
 
@@ -2142,10 +2292,15 @@ double              ***pvtx_extended_coords_out
       for(int k = 0; k < 3; ++k) {
         PDM_free(rotation_matrix[i_interf][k]);
       }
+      for(int k = 0; k < 4; ++k) {
+        PDM_free(homogeneous_matrix[i_interf][k]);
+      }
       PDM_free(rotation_matrix[i_interf]);
+      PDM_free(homogeneous_matrix[i_interf]);
     }
   }
   PDM_free(translation_vector);
+  PDM_free(homogeneous_matrix);
   PDM_free(rotation_matrix);
   PDM_free(rotation_direction);
   PDM_free(rotation_center);
@@ -3865,6 +4020,7 @@ _part_extension_3d
                                      pcell_ancstr,
                                      // pcell_path_itrf_strd,
                                      // pcell_path_itrf,
+                                    &part_ext->border_cell_ln_to_gn_ancstr,
                                     &part_ext->cell_cell_extended2,
                                      NULL,
                                      NULL,
@@ -3883,6 +4039,7 @@ _part_extension_3d
                                      pface_ancstr,
                                      // pface_path_itrf_strd,
                                      // pface_path_itrf,
+                                    &part_ext->border_face_ln_to_gn_ancstr,
                                     &part_ext->face_face_extended,
                                     &part_ext->border_face_group_idx,
                                     &part_ext->border_face_group,
@@ -3902,6 +4059,7 @@ _part_extension_3d
                                        pedge_ancstr,
                                        // pedge_path_itrf_strd,
                                        // pedge_path_itrf,
+                                      &part_ext->border_edge_ln_to_gn_ancstr,
                                       &part_ext->edge_edge_extended,
                                        NULL,
                                        NULL,
@@ -3921,6 +4079,7 @@ _part_extension_3d
                                      pvtx_ancstr,
                                      // pvtx_path_itrf_strd,
                                      // pvtx_path_itrf,
+                                    &part_ext->border_vtx_ln_to_gn_ancstr,
                                     &part_ext->vtx_vtx_extended,
                                      NULL,
                                      NULL,
@@ -5475,6 +5634,7 @@ _part_extension_2d
                                      pface_ancstr,
                                      // pface_path_itrf_strd,
                                      // pface_path_itrf,
+                                    &part_ext->border_face_ln_to_gn_ancstr,
                                     &part_ext->face_face_extended,
                                      NULL,
                                      NULL,
@@ -5494,6 +5654,7 @@ _part_extension_2d
                                        pedge_ancstr,
                                        // pedge_path_itrf_strd,
                                        // pedge_path_itrf,
+                                      &part_ext->border_edge_ln_to_gn_ancstr,
                                       &part_ext->edge_edge_extended,
                                       &part_ext->border_edge_group_idx,
                                       &part_ext->border_edge_group,
@@ -5513,6 +5674,7 @@ _part_extension_2d
                                      pvtx_ancstr,
                                      // pvtx_path_itrf_strd,
                                      // pvtx_path_itrf,
+                                    &part_ext->border_vtx_ln_to_gn_ancstr,
                                     &part_ext->vtx_vtx_extended,
                                      NULL,
                                      NULL,
@@ -6130,6 +6292,7 @@ PDM_part_extension_free
         //   PDM_free(part_ext->border_cell_ln_to_gn[i_part+shift_part]);
         //   PDM_free(part_ext->border_cell_face_idx[i_part+shift_part]);
         //   PDM_free(part_ext->border_cell_face    [i_part+shift_part]);
+        //   PDM_free(part_ext->border_cell_ln_to_gn_ancstr[i_part+shift_part]);
         // }
 
         // // > Face
@@ -6148,6 +6311,7 @@ PDM_part_extension_free
         //     PDM_free(part_ext->border_face_group         [i_part+shift_part]);
         //     PDM_free(part_ext->border_face_group_ln_to_gn[i_part+shift_part]);
         //   }
+        //   PDM_free(part_ext->border_cell_ln_to_gn_ancstr[i_part+shift_part]);
         // }
 
         // // > Edge
@@ -6160,12 +6324,14 @@ PDM_part_extension_free
         //     PDM_free(part_ext->border_edge_group         [i_part+shift_part]);
         //     PDM_free(part_ext->border_edge_group_ln_to_gn[i_part+shift_part]);
         //   }
+        //   PDM_free(part_ext->border_edge_ln_to_gn_ancstr[i_part+shift_part]);
         // }
 
         // // > Vtx
         // if (part_ext->n_vtx_border!=NULL) {
         //   PDM_free(part_ext->border_vtx_ln_to_gn[i_part+shift_part]);
         //   PDM_free(part_ext->border_vtx         [i_part+shift_part]);
+        //   PDM_free(part_ext->border_vtx_ln_to_gn_ancstr[i_part+shift_part]);
         // }
 
       }
@@ -6676,6 +6842,71 @@ PDM_part_extension_ln_to_gn_get2
       n_entity     = part_ext->n_vtx_border[shift_part+i_part];
       *ln_to_gn    = part_ext->border_vtx_ln_to_gn[shift_part+i_part];
       // PDM_log_trace_array_int(*ln_to_gn, n_entity, "extent_vtx :: ");
+    }
+    break;
+
+  default :
+    PDM_error(__FILE__, __LINE__, 0, "Unknown mesh_entity \n");
+    break;
+
+  }
+
+  return n_entity;
+}
+
+
+/**
+ *
+ * \brief Get ancestor global ids
+ *
+ * \param [in]  part_ext          Pointer to \ref PDM_part_extension_t object
+ * \param [in]  i_domain          Id of current domain
+ * \param [in]  i_part            Id of current partition
+ * \param [in]  mesh_entity       Type of mesh entity
+ * \param [out] ancestor_ln_to_gn Ancestor global ids (size = \ref n_elt)
+ *
+ * \return  n_elt  Number of elements
+ *
+ */
+int
+PDM_part_extension_ancestor_ln_to_gn_get
+(
+ PDM_part_extension_t     *part_ext,
+ int                       i_domain,
+ int                       i_part,
+ PDM_mesh_entities_t       mesh_entity,
+ PDM_g_num_t             **ancestor_ln_to_gn
+)
+{
+  int n_entity = -1;
+  int shift_part = part_ext->n_part_idx[i_domain];
+  switch(mesh_entity)
+  {
+    case PDM_MESH_ENTITY_CELL:
+    {
+      n_entity           = part_ext->n_cell_border              [shift_part+i_part];
+      *ancestor_ln_to_gn = part_ext->border_cell_ln_to_gn_ancstr[shift_part+i_part];
+    }
+    break;
+
+    case PDM_MESH_ENTITY_FACE:
+    {
+      n_entity           = part_ext->n_face_border              [shift_part+i_part];
+      *ancestor_ln_to_gn = part_ext->border_face_ln_to_gn_ancstr[shift_part+i_part];
+    }
+    break;
+
+    case PDM_MESH_ENTITY_EDGE:
+    {
+      n_entity           = part_ext->n_edge_border              [shift_part+i_part];
+      *ancestor_ln_to_gn = part_ext->border_edge_ln_to_gn_ancstr[shift_part+i_part];
+    }
+    break;
+
+    case PDM_MESH_ENTITY_VTX:
+    {
+      n_entity           = part_ext->n_vtx_border              [shift_part+i_part];
+      *ancestor_ln_to_gn = part_ext->border_vtx_ln_to_gn_ancstr[shift_part+i_part];
     }
     break;
 

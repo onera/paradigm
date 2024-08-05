@@ -797,13 +797,17 @@ int main
        * Get graph to init partition
        */
       // int *face_face_extended_idx  = NULL;
-      int *face_face_extended      = NULL;
-      int *face_face_path_itrf_idx = NULL;
-      int *face_face_path_itrf     = NULL;
+      int         *face_face_extended      = NULL;
+      PDM_g_num_t *face_ancstr_gnum        = NULL;
+      int         *face_face_path_itrf_idx = NULL;
+      int         *face_face_path_itrf     = NULL;
       PDM_part_extension_graph_get(part_ext, i_dom, i_part,
                                    PDM_MESH_ENTITY_FACE,
                                   // &face_face_extended_idx,
                                   &face_face_extended);
+      PDM_part_extension_ancestor_ln_to_gn_get(part_ext, i_dom, i_part,
+                                               PDM_MESH_ENTITY_FACE,
+                                              &face_ancstr_gnum);
       PDM_part_extension_path_interface_get(part_ext, i_dom, i_part,
                                             PDM_MESH_ENTITY_FACE,
                                            &face_face_path_itrf_idx,
@@ -814,20 +818,25 @@ int main
         int n_extended = extended_n_face;
         int n_itrf     = face_face_path_itrf_idx[n_extended];
         // PDM_log_trace_array_int(face_face_extended_idx , pn_face[i_dom][i_part]+1, "\t face_face_extended_idx  ::");
-        PDM_log_trace_array_int(face_face_extended     ,3*n_extended             , "\t face_face_extended      ::");
-        PDM_log_trace_array_int(face_face_path_itrf_idx, n_extended              , "\t face_face_path_itrf_idx ::");
-        PDM_log_trace_array_int(face_face_path_itrf    , n_itrf                  , "\t face_face_path_itrf     ::");
+        PDM_log_trace_array_long(face_ancstr_gnum       ,  n_extended             , "\t face_ancstr_gnum        ::");
+        PDM_log_trace_array_int (face_face_extended     ,3*n_extended             , "\t face_face_extended      ::");
+        PDM_log_trace_array_int (face_face_path_itrf_idx,  n_extended             , "\t face_face_path_itrf_idx ::");
+        PDM_log_trace_array_int (face_face_path_itrf    ,  n_itrf                 , "\t face_face_path_itrf     ::");
       }
 
       // int *edge_edge_extended_idx  = NULL;
-      int *edge_edge_extended      = NULL;
-      int *edge_edge_path_itrf_idx = NULL;
-      int *edge_edge_path_itrf     = NULL;
+      int         *edge_edge_extended      = NULL;
+      PDM_g_num_t *edge_ancstr_gnum        = NULL;
+      int         *edge_edge_path_itrf_idx = NULL;
+      int         *edge_edge_path_itrf     = NULL;
       if (with_edges==1) {
         PDM_part_extension_graph_get(part_ext, i_dom, i_part,
                                      PDM_MESH_ENTITY_EDGE,
                                     // &edge_edge_extended_idx,
                                     &edge_edge_extended);
+        PDM_part_extension_ancestor_ln_to_gn_get(part_ext, i_dom, i_part,
+                                                 PDM_MESH_ENTITY_EDGE,
+                                                &edge_ancstr_gnum);
         PDM_part_extension_path_interface_get(part_ext, i_dom, i_part,
                                               PDM_MESH_ENTITY_EDGE,
                                              &edge_edge_path_itrf_idx,
@@ -838,20 +847,25 @@ int main
           int n_extended = extended_n_edge;
           int n_itrf     = edge_edge_path_itrf_idx[n_extended];
           // PDM_log_trace_array_int(edge_edge_extended_idx , pn_edge[i_dom][i_part]+1, "\t edge_edge_extended_idx  ::");
-          PDM_log_trace_array_int(edge_edge_extended     ,3*n_extended             , "\t edge_edge_extended      ::");
-          PDM_log_trace_array_int(edge_edge_path_itrf_idx, n_extended              , "\t edge_edge_path_itrf_idx ::");
-          PDM_log_trace_array_int(edge_edge_path_itrf    , n_itrf                  , "\t edge_edge_path_itrf     ::");
+          PDM_log_trace_array_long(edge_ancstr_gnum       ,  n_extended             , "\t edge_ancstr_gnum        ::");
+          PDM_log_trace_array_int (edge_edge_extended     ,3*n_extended             , "\t edge_edge_extended      ::");
+          PDM_log_trace_array_int (edge_edge_path_itrf_idx,  n_extended             , "\t edge_edge_path_itrf_idx ::");
+          PDM_log_trace_array_int (edge_edge_path_itrf    ,  n_itrf                 , "\t edge_edge_path_itrf     ::");
         }
       }
 
       // int *vtx_vtx_extended_idx  = NULL;
-      int *vtx_vtx_extended      = NULL;
-      int *vtx_vtx_path_itrf_idx = NULL;
-      int *vtx_vtx_path_itrf     = NULL;
+      int         *vtx_vtx_extended      = NULL;
+      PDM_g_num_t *vtx_ancstr_gnum       = NULL;
+      int         *vtx_vtx_path_itrf_idx = NULL;
+      int         *vtx_vtx_path_itrf     = NULL;
       PDM_part_extension_graph_get(part_ext, i_dom, i_part,
                                    PDM_MESH_ENTITY_VTX,
                                   // &vtx_vtx_extended_idx,
                                   &vtx_vtx_extended);
+      PDM_part_extension_ancestor_ln_to_gn_get(part_ext, i_dom, i_part,
+                                               PDM_MESH_ENTITY_VTX,
+                                              &vtx_ancstr_gnum);
       PDM_part_extension_path_interface_get(part_ext, i_dom, i_part,
                                             PDM_MESH_ENTITY_VTX,
                                            &vtx_vtx_path_itrf_idx,
@@ -862,9 +876,10 @@ int main
         int n_extended = extended_n_vtx;
         int n_itrf     = vtx_vtx_path_itrf_idx[n_extended];
         // PDM_log_trace_array_int(vtx_vtx_extended_idx , pn_vtx[i_dom][i_part]+1, "\t vtx_vtx_extended_idx  ::");
-        PDM_log_trace_array_int(vtx_vtx_extended     ,3*n_extended            , "\t vtx_vtx_extended      ::");
-        PDM_log_trace_array_int(vtx_vtx_path_itrf_idx, n_extended             , "\t vtx_vtx_path_itrf_idx ::");
-        PDM_log_trace_array_int(vtx_vtx_path_itrf    , n_itrf                 , "\t vtx_vtx_path_itrf     ::");
+        PDM_log_trace_array_long(vtx_ancstr_gnum       , n_extended            , "\t vtx_ancstr_gnum       ::");
+        PDM_log_trace_array_int (vtx_vtx_extended     ,3*n_extended            , "\t vtx_vtx_extended      ::");
+        PDM_log_trace_array_int (vtx_vtx_path_itrf_idx,  n_extended            , "\t vtx_vtx_path_itrf_idx ::");
+        PDM_log_trace_array_int (vtx_vtx_path_itrf    ,  n_itrf                , "\t vtx_vtx_path_itrf     ::");
       }
 
 

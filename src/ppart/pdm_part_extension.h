@@ -526,6 +526,29 @@ PDM_part_extension_ln_to_gn_set
 
 /**
  *
+ * \brief Get ancestor global ids
+ *
+ * \param [in]  part_ext          Pointer to \ref PDM_part_extension_t object
+ * \param [in]  i_domain          Id of current domain
+ * \param [in]  i_part            Id of current partition
+ * \param [in]  mesh_entity       Type of mesh entity
+ * \param [out] ancestor_ln_to_gn Ancestor global ids (size = \ref n_elt)
+ *
+ * \return  n_elt  Number of elements
+ *
+ */
+int
+PDM_part_extension_ancestor_ln_to_gn_get
+(
+ PDM_part_extension_t     *part_ext,
+ int                       i_domain,
+ int                       i_part,
+ PDM_mesh_entities_t       mesh_entity,
+ PDM_g_num_t             **ancestor_ln_to_gn
+);
+
+/**
+ *
  * \brief Set vertex coordinates
  *
  * \param [in]  part_ext     \p PDM_part_extension_t structure instance
