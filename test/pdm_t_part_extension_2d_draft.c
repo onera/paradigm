@@ -597,6 +597,7 @@ int main
    * Set partition extension
    */
   PDM_extend_type_t  extend_type = PDM_EXTEND_FROM_VTX;
+  // PDM_extend_type_t  extend_type = PDM_EXTEND_FROM_EDGE;
   PDM_part_extension_t *part_ext = PDM_part_extension_create(n_domain,
                                                              pn_n_part,
                                                              extend_type,
@@ -823,7 +824,7 @@ int main
                                            &face_face_path_itrf_idx,
                                            &face_face_path_itrf,
                                             PDM_OWNERSHIP_KEEP);
-      if (1 == 1) {
+      if (1 == 0) {
         log_trace("FACE::\n");
         // int n_extended = face_face_extended_idx[pn_face[i_dom][i_part]];
         int n_extended = extended_n_face;
@@ -855,7 +856,7 @@ int main
                                              &edge_edge_path_itrf_idx,
                                              &edge_edge_path_itrf,
                                               PDM_OWNERSHIP_KEEP);
-        if (1 == 1) {
+        if (1 == 0) {
           log_trace("EDGE::\n");
           // int n_extended = edge_edge_extended_idx[pn_vtx[i_dom][i_part]];
           int n_extended = extended_n_edge;
@@ -887,7 +888,7 @@ int main
                                            &vtx_vtx_path_itrf_idx,
                                            &vtx_vtx_path_itrf,
                                             PDM_OWNERSHIP_KEEP);
-      if (1 == 1) {
+      if (1 == 0) {
         log_trace("VTX::\n");
         // int n_extended = vtx_vtx_extended_idx[pn_vtx[i_dom][i_part]];
         int n_extended = extended_n_vtx;
