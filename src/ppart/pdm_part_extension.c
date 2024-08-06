@@ -1140,23 +1140,24 @@ static
 void
 _build_part_extension_graph_to_old
 (
-  PDM_part_extension_t *part_ext,
-  int                  *init_n_entity,
-  PDM_g_num_t         **init_entity_gnum,
-  int                  *init_n_entity_group,
-  int                 **init_entity_group_tag,
-  PDM_g_num_t         **init_entity_group_gnum,
-  int                  *new_n_entity,
-  PDM_g_num_t         **new_entity_gnum,
-  int                 **new_entity_ancstr_strd,
-  PDM_g_num_t         **new_entity_ancstr,
-  // int                 **new_entity_path_itrf_strd,
-  // int                 **new_entity_path_itrf,
-  PDM_g_num_t        ***out_pentity_to_entity_ancstr,
-  int                ***out_pentity_to_entity_trplt,
-  int                ***out_pentity_group_idx,
-  int                ***out_pentity_group,
-  PDM_g_num_t        ***out_pentity_group_gnum
+  PDM_part_extension_t  *part_ext,
+  int                   *init_n_entity,
+  PDM_g_num_t          **init_entity_gnum,
+  int                   *init_n_entity_group,
+  int                  **init_entity_group_tag,
+  PDM_g_num_t          **init_entity_group_gnum,
+  int                   *new_n_entity,
+  PDM_g_num_t          **new_entity_gnum,
+  int                  **new_entity_ancstr_strd,
+  PDM_g_num_t          **new_entity_ancstr,
+  // int                  **new_entity_path_itrf_strd,
+  // int                  **new_entity_path_itrf,
+  PDM_g_num_t         ***out_pentity_to_entity_ancstr,
+  int                 ***out_pentity_to_entity_trplt,
+  int                 ***out_pentity_group_idx,
+  int                 ***out_pentity_group,
+  PDM_g_num_t         ***out_pentity_group_gnum,
+  PDM_mesh_entities_t    mesh_entity
 )
 {
   int debug = 0;
@@ -1378,12 +1379,25 @@ _build_part_extension_graph_to_old
   PDM_part_to_part_free(ptp);
       
 
-  *out_pentity_to_entity_trplt   = rcvd_trplt;
-  *out_pentity_to_entity_ancstr  = l_entity_ancstr;
+  *out_pentity_to_entity_trplt  = rcvd_trplt;
+  *out_pentity_to_entity_ancstr = l_entity_ancstr;
+  // > Set ownership
+  for(int i_dom = 0; i_dom < part_ext->n_domain; ++i_dom) {
+    for (int i_part = 0; i_part < part_ext->n_part[i_dom]; i_part++) {
+      part_ext->ownership_border_ln_to_gn_ancstr[mesh_entity][i_dom][i_part] = PDM_OWNERSHIP_KEEP;
+    }
+  }
+
   if (have_group) {
     *out_pentity_group_idx       = entity_group_idx;
     *out_pentity_group           = entity_group;
     *out_pentity_group_gnum      = entity_group_gnum;
+    // > Set ownership
+    for(int i_dom = 0; i_dom < part_ext->n_domain; ++i_dom) {
+      for (int i_part = 0; i_part < part_ext->n_part[i_dom]; i_part++) {
+        part_ext->ownership_border_group[mesh_entity][i_dom][i_part] = PDM_OWNERSHIP_KEEP;
+      }
+    }
   }
 }
 
@@ -1393,21 +1407,22 @@ static
 void
 _get_block_data_base_on_part_ext
 (
- PDM_part_extension_t *part_ext,
- int                   dn_entity,
- PDM_g_num_t          *dentity_gnum,
- int                  *dentity_ancstr_strd,
- PDM_g_num_t          *dentity_ancstr,
- int                  *dentity_path_itrf_strd,
- int                  *dentity_path_itrf,
- int                  *pn_entity,
- PDM_g_num_t         **pentity_gnum,
- int                ***out_pentity_ancstr_strd,
- // int                ***out_pentity_ancstr_idx,
- PDM_g_num_t        ***out_pentity_ancstr,
- // int                ***out_pentity_path_itrf_strd,
- int                ***out_pentity_path_itrf_idx,
- int                ***out_pentity_path_itrf
+ PDM_part_extension_t  *part_ext,
+ int                    dn_entity,
+ PDM_g_num_t           *dentity_gnum,
+ int                   *dentity_ancstr_strd,
+ PDM_g_num_t           *dentity_ancstr,
+ int                   *dentity_path_itrf_strd,
+ int                   *dentity_path_itrf,
+ int                   *pn_entity,
+ PDM_g_num_t          **pentity_gnum,
+ int                 ***out_pentity_ancstr_strd,
+ // int                 ***out_pentity_ancstr_idx,
+ PDM_g_num_t         ***out_pentity_ancstr,
+ // int                 ***out_pentity_path_itrf_strd,
+ int                 ***out_pentity_path_itrf_idx,
+ int                 ***out_pentity_path_itrf,
+ PDM_mesh_entities_t    mesh_entity
 )
 {
   int debug = 0;
@@ -1486,6 +1501,14 @@ _get_block_data_base_on_part_ext
   // *out_pentity_path_itrf_strd = pentity_path_itrf_strd;
   *out_pentity_path_itrf_idx  = pentity_path_itrf_idx;
   *out_pentity_path_itrf      = pentity_path_itrf;
+  // > Set ownership
+  for(int i_dom = 0; i_dom < part_ext->n_domain; ++i_dom) {
+    for (int i_part = 0; i_part < part_ext->n_part[i_dom]; i_part++) {
+      part_ext->ownership_border_graph    [mesh_entity][i_dom][i_part] = PDM_OWNERSHIP_KEEP;
+      part_ext->ownership_border_path_itrf[mesh_entity][i_dom][i_part] = PDM_OWNERSHIP_KEEP;
+    }
+  }
+
 }
 
 
@@ -1493,16 +1516,18 @@ static
 void
 _store_extended_entity
 (
- PDM_part_extension_t *part_ext,
- int                  *pn_init_entity1,
- int                  *pn_entity1,
- PDM_g_num_t         **pentity1_gnum,
- int                 **pentity1_pentity2_idx,
- int                 **pentity1_pentity2,
- int                 **out_pn_entity1,
- PDM_g_num_t        ***out_pentity1_gnum,
- int                ***out_pentity1_pentity2_idx,
- int                ***out_pentity1_pentity2
+  PDM_part_extension_t      *part_ext,
+  int                       *pn_init_entity1,
+  int                       *pn_entity1,
+  PDM_g_num_t              **pentity1_gnum,
+  int                      **pentity1_pentity2_idx,
+  int                      **pentity1_pentity2,
+  int                      **out_pn_entity1,
+  PDM_g_num_t             ***out_pentity1_gnum,
+  int                     ***out_pentity1_pentity2_idx,
+  int                     ***out_pentity1_pentity2,
+  PDM_mesh_entities_t        mesh_entity,
+  PDM_connectivity_type_t    connectivity_type
 )
 {
   int debug = 0;
@@ -1565,12 +1590,28 @@ _store_extended_entity
     }
   }
 
-  *out_pn_entity1            = _out_pn_entity1;
-  *out_pentity1_gnum         = _out_pentity1_gnum;
+
+  *out_pn_entity1    = _out_pn_entity1;
+  *out_pentity1_gnum = _out_pentity1_gnum;
+  // > Set ownership
+  for(int i_dom = 0; i_dom < part_ext->n_domain; ++i_dom) {
+    for (int i_part = 0; i_part < part_ext->n_part[i_dom]; i_part++) {
+      part_ext->ownership_border_ln_to_gn[mesh_entity][i_dom][i_part] = PDM_OWNERSHIP_KEEP;
+    }
+  }
+
   if (has_connectivity) {
     *out_pentity1_pentity2_idx = _out_pentity1_pentity2_idx;
     *out_pentity1_pentity2     = _out_pentity1_pentity2;
+    // > Set ownership
+    for(int i_dom = 0; i_dom < part_ext->n_domain; ++i_dom) {
+      for (int i_part = 0; i_part < part_ext->n_part[i_dom]; i_part++) {
+        part_ext->ownership_border_connectivity[connectivity_type][i_dom][i_part] = PDM_OWNERSHIP_KEEP;
+      }
+    }
   }
+
+
 }
 
 
@@ -1628,6 +1669,13 @@ _store_extended_vtx
   *out_pn_entity1     = _out_pn_entity1;
   *out_pentity1_gnum  = _out_pentity1_gnum;
   *out_pentity1_coord = _out_pentity1_coord;
+  // > Set ownership
+  for(int i_dom = 0; i_dom < part_ext->n_domain; ++i_dom) {
+    for (int i_part = 0; i_part < part_ext->n_part[i_dom]; i_part++) {
+      part_ext->ownership_border_ln_to_gn [PDM_MESH_ENTITY_VTX][i_dom][i_part] = PDM_OWNERSHIP_KEEP;
+      part_ext->ownership_border_vtx_coord                     [i_dom][i_part] = PDM_OWNERSHIP_KEEP;
+    }
+  }
 }
 
 
@@ -3856,7 +3904,9 @@ _part_extension_3d
                         &part_ext->n_cell_border,
                         &part_ext->border_cell_ln_to_gn,
                         &part_ext->border_cell_face_idx,
-                        &part_ext->border_cell_face);
+                        &part_ext->border_cell_face,
+                         PDM_MESH_ENTITY_CELL, 
+                         PDM_CONNECTIVITY_TYPE_CELL_FACE);
 
   // > Faces
   if(part_ext->have_edge == 1) {
@@ -3869,7 +3919,9 @@ _part_extension_3d
                           &part_ext->n_face_border,
                           &part_ext->border_face_ln_to_gn,
                           &part_ext->border_face_edge_idx,
-                          &part_ext->border_face_edge);
+                          &part_ext->border_face_edge,
+                           PDM_MESH_ENTITY_FACE, 
+                           PDM_CONNECTIVITY_TYPE_FACE_EDGE);
 
     _store_extended_entity(part_ext, 
                            pn_init_edge,
@@ -3880,7 +3932,9 @@ _part_extension_3d
                           &part_ext->n_edge_border,
                           &part_ext->border_edge_ln_to_gn,
                           &part_ext->border_edge_vtx_idx,
-                          &part_ext->border_edge_vtx);
+                          &part_ext->border_edge_vtx,
+                           PDM_MESH_ENTITY_EDGE, 
+                           PDM_CONNECTIVITY_TYPE_EDGE_VTX);
   }
   else {
     _store_extended_entity(part_ext, 
@@ -3892,7 +3946,9 @@ _part_extension_3d
                           &part_ext->n_face_border,
                           &part_ext->border_face_ln_to_gn,
                           &part_ext->border_face_vtx_idx,
-                          &part_ext->border_face_vtx);
+                          &part_ext->border_face_vtx,
+                           PDM_MESH_ENTITY_FACE, 
+                           PDM_CONNECTIVITY_TYPE_FACE_VTX);
   }
 
   // _store_extended_entity(part_ext, 
@@ -3937,7 +3993,8 @@ _part_extension_3d
                                    &pcell_ancstr,
                                    // &pcell_path_itrf_strd,
                                    &part_ext->cell_cell_path_itrf_idx,
-                                   &part_ext->cell_cell_path_itrf);
+                                   &part_ext->cell_cell_path_itrf,
+                                    PDM_MESH_ENTITY_CELL);
 
 
   // > Faces
@@ -3958,7 +4015,8 @@ _part_extension_3d
                                    &pface_ancstr,
                                    // &pface_path_itrf_strd,
                                    &part_ext->face_face_path_itrf_idx,
-                                   &part_ext->face_face_path_itrf);
+                                   &part_ext->face_face_path_itrf,
+                                    PDM_MESH_ENTITY_FACE);
 
 
   // > Edges
@@ -3980,7 +4038,8 @@ _part_extension_3d
                                      &pedge_ancstr,
                                      // &pedge_path_itrf_strd,
                                      &part_ext->edge_edge_path_itrf_idx,
-                                     &part_ext->edge_edge_path_itrf);
+                                     &part_ext->edge_edge_path_itrf,
+                                      PDM_MESH_ENTITY_EDGE);
   }
 
   // > Vertex
@@ -4001,7 +4060,8 @@ _part_extension_3d
                                    &pvtx_ancstr,
                                    // &pvtx_path_itrf_strd,
                                    &part_ext->vtx_vtx_path_itrf_idx,
-                                   &part_ext->vtx_vtx_path_itrf);
+                                   &part_ext->vtx_vtx_path_itrf,
+                                    PDM_MESH_ENTITY_VTX);
 
 
   /**
@@ -4024,7 +4084,8 @@ _part_extension_3d
                                     &part_ext->cell_cell_extended2,
                                      NULL,
                                      NULL,
-                                     NULL);
+                                     NULL,
+                                     PDM_MESH_ENTITY_CELL);
 
   // > Faces
   _build_part_extension_graph_to_old(part_ext,
@@ -4043,7 +4104,8 @@ _part_extension_3d
                                     &part_ext->face_face_extended,
                                     &part_ext->border_face_group_idx,
                                     &part_ext->border_face_group,
-                                    &part_ext->border_face_group_ln_to_gn);
+                                    &part_ext->border_face_group_ln_to_gn,
+                                     PDM_MESH_ENTITY_FACE);
 
   // > Edges
   if(part_ext->have_edge == 1) {
@@ -4063,7 +4125,8 @@ _part_extension_3d
                                       &part_ext->edge_edge_extended,
                                        NULL,
                                        NULL,
-                                       NULL);
+                                       NULL,
+                                       PDM_MESH_ENTITY_EDGE);
   }
 
   // > Vertex
@@ -4083,7 +4146,8 @@ _part_extension_3d
                                     &part_ext->vtx_vtx_extended,
                                      NULL,
                                      NULL,
-                                     NULL);
+                                     NULL,
+                                     PDM_MESH_ENTITY_VTX);
 
   for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
     PDM_free(pcell_ancstr_strd   [i_part]);
@@ -5504,7 +5568,9 @@ _part_extension_2d
                           &part_ext->n_face_border,
                           &part_ext->border_face_ln_to_gn,
                           &part_ext->border_face_edge_idx,
-                          &part_ext->border_face_edge);
+                          &part_ext->border_face_edge,
+                           PDM_MESH_ENTITY_FACE, 
+                           PDM_CONNECTIVITY_TYPE_FACE_EDGE);
 
     _store_extended_entity(part_ext, 
                            pn_init_edge,
@@ -5515,7 +5581,9 @@ _part_extension_2d
                           &part_ext->n_edge_border,
                           &part_ext->border_edge_ln_to_gn,
                           &part_ext->border_edge_vtx_idx,
-                          &part_ext->border_edge_vtx);
+                          &part_ext->border_edge_vtx,
+                           PDM_MESH_ENTITY_EDGE, 
+                           PDM_CONNECTIVITY_TYPE_EDGE_VTX);
   }
   else {
     _store_extended_entity(part_ext, 
@@ -5527,7 +5595,9 @@ _part_extension_2d
                           &part_ext->n_face_border,
                           &part_ext->border_face_ln_to_gn,
                           &part_ext->border_face_vtx_idx,
-                          &part_ext->border_face_vtx);
+                          &part_ext->border_face_vtx,
+                           PDM_MESH_ENTITY_FACE, 
+                           PDM_CONNECTIVITY_TYPE_FACE_VTX);
   }
 
   // _store_extended_entity(part_ext, 
@@ -5572,7 +5642,8 @@ _part_extension_2d
                                    &pface_ancstr,
                                    // &pface_path_itrf_strd,
                                    &part_ext->face_face_path_itrf_idx,
-                                   &part_ext->face_face_path_itrf);
+                                   &part_ext->face_face_path_itrf,
+                                    PDM_MESH_ENTITY_FACE);
 
 
   // > Edges
@@ -5594,7 +5665,8 @@ _part_extension_2d
                                      &pedge_ancstr,
                                      // &pedge_path_itrf_strd,
                                      &part_ext->edge_edge_path_itrf_idx,
-                                     &part_ext->edge_edge_path_itrf);
+                                     &part_ext->edge_edge_path_itrf,
+                                      PDM_MESH_ENTITY_EDGE);
   }
 
   // > Vertex
@@ -5615,7 +5687,8 @@ _part_extension_2d
                                    &pvtx_ancstr,
                                    // &pvtx_path_itrf_strd,
                                    &part_ext->vtx_vtx_path_itrf_idx,
-                                   &part_ext->vtx_vtx_path_itrf);
+                                   &part_ext->vtx_vtx_path_itrf,
+                                    PDM_MESH_ENTITY_VTX);
 
 
   /**
@@ -5638,7 +5711,8 @@ _part_extension_2d
                                     &part_ext->face_face_extended,
                                      NULL,
                                      NULL,
-                                     NULL);
+                                     NULL,
+                                     PDM_MESH_ENTITY_FACE);
 
   // > Edges
   if(part_ext->have_edge == 1) {
@@ -5658,7 +5732,8 @@ _part_extension_2d
                                       &part_ext->edge_edge_extended,
                                       &part_ext->border_edge_group_idx,
                                       &part_ext->border_edge_group,
-                                      &part_ext->border_edge_group_ln_to_gn);
+                                      &part_ext->border_edge_group_ln_to_gn,
+                                       PDM_MESH_ENTITY_EDGE);
   }
 
   // > Vertex
@@ -5678,7 +5753,8 @@ _part_extension_2d
                                     &part_ext->vtx_vtx_extended,
                                      NULL,
                                      NULL,
-                                     NULL);
+                                     NULL,
+                                     PDM_MESH_ENTITY_VTX);
 
   for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
     PDM_free(pface_ancstr_strd   [i_part]);
@@ -6136,14 +6212,14 @@ PDM_part_extension_free
 
         PDM_free(part_ext->cur_sens_face[i_part+shift_part]);
         PDM_free(part_ext->cur_sens_edge[i_part+shift_part]);
-        PDM_free(part_ext->cur_sens_vtx[i_part+shift_part]);
+        PDM_free(part_ext->cur_sens_vtx [i_part+shift_part]);
 
         PDM_free(part_ext->face_face_extended_idx[i_part+shift_part]);
-        PDM_free(part_ext->face_face_extended[i_part+shift_part]);
+        PDM_free(part_ext->face_face_extended    [i_part+shift_part]);
         PDM_free(part_ext->edge_edge_extended_idx[i_part+shift_part]);
-        PDM_free(part_ext->edge_edge_extended[i_part+shift_part]);
-        PDM_free(part_ext->vtx_vtx_extended_idx[i_part+shift_part]);
-        PDM_free(part_ext->vtx_vtx_extended[i_part+shift_part]);
+        PDM_free(part_ext->edge_edge_extended    [i_part+shift_part]);
+        PDM_free(part_ext->vtx_vtx_extended_idx  [i_part+shift_part]);
+        PDM_free(part_ext->vtx_vtx_extended      [i_part+shift_part]);
 
         if(part_ext->owner_vtx_part_bound == 1) {
           PDM_free(part_ext->parts[i_domain][i_part].vtx_part_bound_proc_idx);
@@ -6229,30 +6305,38 @@ PDM_part_extension_free
     for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
       for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
 
-        if(part_ext->cell_cell_path_itrf_idx != NULL) {
+        if (part_ext->ownership_border_graph[PDM_MESH_ENTITY_CELL][i_domain][i_part]==PDM_OWNERSHIP_KEEP) {
           // PDM_free(part_ext->cell_cell_extended_idx [i_part+shift_part]);
           PDM_free(part_ext->cell_cell_extended2    [i_part+shift_part]);
+        }
+        if (part_ext->ownership_border_path_itrf[PDM_MESH_ENTITY_CELL][i_domain][i_part]==PDM_OWNERSHIP_KEEP) {
           PDM_free(part_ext->cell_cell_path_itrf_idx[i_part+shift_part]);
           PDM_free(part_ext->cell_cell_path_itrf    [i_part+shift_part]);
         }
 
-        if(part_ext->face_face_path_itrf_idx != NULL) {
+        if (part_ext->ownership_border_graph[PDM_MESH_ENTITY_FACE][i_domain][i_part]==PDM_OWNERSHIP_KEEP) {
           // PDM_free(part_ext->face_face_extended_idx [i_part+shift_part]);
           PDM_free(part_ext->face_face_extended     [i_part+shift_part]);
+        }
+        if (part_ext->ownership_border_path_itrf[PDM_MESH_ENTITY_FACE][i_domain][i_part]==PDM_OWNERSHIP_KEEP) {
           PDM_free(part_ext->face_face_path_itrf_idx[i_part+shift_part]);
           PDM_free(part_ext->face_face_path_itrf    [i_part+shift_part]);
         }
 
-        if(part_ext->edge_edge_path_itrf_idx != NULL) {
+        if (part_ext->ownership_border_graph[PDM_MESH_ENTITY_EDGE][i_domain][i_part]==PDM_OWNERSHIP_KEEP) {
           // PDM_free(part_ext->edge_edge_extended_idx [i_part+shift_part]);
           PDM_free(part_ext->edge_edge_extended     [i_part+shift_part]);
+        }
+        if (part_ext->ownership_border_path_itrf[PDM_MESH_ENTITY_EDGE][i_domain][i_part]==PDM_OWNERSHIP_KEEP) {
           PDM_free(part_ext->edge_edge_path_itrf_idx[i_part+shift_part]);
           PDM_free(part_ext->edge_edge_path_itrf    [i_part+shift_part]);
         }
 
-        if(part_ext->vtx_vtx_path_itrf_idx != NULL) {
+        if (part_ext->ownership_border_graph[PDM_MESH_ENTITY_VTX][i_domain][i_part]==PDM_OWNERSHIP_KEEP) {
           // PDM_free(part_ext->vtx_vtx_extended_idx [i_part+shift_part]);
           PDM_free(part_ext->vtx_vtx_extended     [i_part+shift_part]);
+        }
+        if (part_ext->ownership_border_path_itrf[PDM_MESH_ENTITY_VTX][i_domain][i_part]==PDM_OWNERSHIP_KEEP) {
           PDM_free(part_ext->vtx_vtx_path_itrf_idx[i_part+shift_part]);
           PDM_free(part_ext->vtx_vtx_path_itrf    [i_part+shift_part]);
         }
@@ -6287,52 +6371,66 @@ PDM_part_extension_free
     for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
       for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
         
-        // // > Cell
-        // if (part_ext->n_cell_border!=NULL) {
-        //   PDM_free(part_ext->border_cell_ln_to_gn[i_part+shift_part]);
-        //   PDM_free(part_ext->border_cell_face_idx[i_part+shift_part]);
-        //   PDM_free(part_ext->border_cell_face    [i_part+shift_part]);
-        //   PDM_free(part_ext->border_cell_ln_to_gn_ancstr[i_part+shift_part]);
-        // }
+        // > Cell
+        if (part_ext->ownership_border_ln_to_gn[PDM_MESH_ENTITY_CELL][i_domain][i_part]==PDM_OWNERSHIP_KEEP) {
+          PDM_free(part_ext->border_cell_ln_to_gn[i_part+shift_part]);
+        }
+        if (part_ext->ownership_border_connectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE][i_domain][i_part]==PDM_OWNERSHIP_KEEP) {
+          PDM_free(part_ext->border_cell_face_idx[i_part+shift_part]);
+          PDM_free(part_ext->border_cell_face    [i_part+shift_part]);
+        }
+        if (part_ext->ownership_border_ln_to_gn_ancstr[PDM_MESH_ENTITY_CELL][i_domain][i_part]==PDM_OWNERSHIP_KEEP) {
+          PDM_free(part_ext->border_cell_ln_to_gn_ancstr[i_part+shift_part]);
+        }
 
-        // // > Face
-        // if (part_ext->n_face_border!=NULL) {
-        //   PDM_free(part_ext->border_face_ln_to_gn[i_part+shift_part]);
-        //   if (part_ext->border_face_edge_idx!=NULL) {
-        //     PDM_free(part_ext->border_face_edge_idx[i_part+shift_part]);
-        //     PDM_free(part_ext->border_face_edge    [i_part+shift_part]);
-        //   }
-        //   if (part_ext->border_face_vtx_idx!=NULL) {
-        //     PDM_free(part_ext->border_face_vtx_idx[i_part+shift_part]);
-        //     PDM_free(part_ext->border_face_vtx    [i_part+shift_part]);
-        //   }
-        //   if (part_ext->border_face_group_idx!=NULL) {
-        //     PDM_free(part_ext->border_face_group_idx     [i_part+shift_part]);
-        //     PDM_free(part_ext->border_face_group         [i_part+shift_part]);
-        //     PDM_free(part_ext->border_face_group_ln_to_gn[i_part+shift_part]);
-        //   }
-        //   PDM_free(part_ext->border_cell_ln_to_gn_ancstr[i_part+shift_part]);
-        // }
+        // > Face
+        if (part_ext->ownership_border_ln_to_gn[PDM_MESH_ENTITY_FACE][i_domain][i_part]==PDM_OWNERSHIP_KEEP) {
+          PDM_free(part_ext->border_face_ln_to_gn[i_part+shift_part]);
+        }
+        if (part_ext->ownership_border_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE][i_domain][i_part]==PDM_OWNERSHIP_KEEP) {
+          PDM_free(part_ext->border_face_edge_idx[i_part+shift_part]);
+          PDM_free(part_ext->border_face_edge    [i_part+shift_part]);
+        }
+        if (part_ext->ownership_border_connectivity[PDM_CONNECTIVITY_TYPE_FACE_VTX][i_domain][i_part]==PDM_OWNERSHIP_KEEP) {
+          PDM_free(part_ext->border_face_vtx_idx[i_part+shift_part]);
+          PDM_free(part_ext->border_face_vtx    [i_part+shift_part]);
+        }
+        if (part_ext->ownership_border_group[PDM_MESH_ENTITY_FACE][i_domain][i_part]==PDM_OWNERSHIP_KEEP) {
+          PDM_free(part_ext->border_face_group_idx     [i_part+shift_part]);
+          PDM_free(part_ext->border_face_group         [i_part+shift_part]);
+          PDM_free(part_ext->border_face_group_ln_to_gn[i_part+shift_part]);
+        }
+        if (part_ext->ownership_border_ln_to_gn_ancstr[PDM_MESH_ENTITY_FACE][i_domain][i_part]==PDM_OWNERSHIP_KEEP) {
+          PDM_free(part_ext->border_face_ln_to_gn_ancstr[i_part+shift_part]);
+        }
 
-        // // > Edge
-        // if (part_ext->n_edge_border!=NULL) {
-        //   PDM_free(part_ext->border_edge_ln_to_gn[i_part+shift_part]);
-        //   PDM_free(part_ext->border_edge_vtx_idx [i_part+shift_part]);
-        //   PDM_free(part_ext->border_edge_vtx     [i_part+shift_part]);
-        //   if (part_ext->border_edge_group_idx!=NULL) {
-        //     PDM_free(part_ext->border_edge_group_idx     [i_part+shift_part]);
-        //     PDM_free(part_ext->border_edge_group         [i_part+shift_part]);
-        //     PDM_free(part_ext->border_edge_group_ln_to_gn[i_part+shift_part]);
-        //   }
-        //   PDM_free(part_ext->border_edge_ln_to_gn_ancstr[i_part+shift_part]);
-        // }
+        // > Edge
+        if (part_ext->ownership_border_ln_to_gn[PDM_MESH_ENTITY_EDGE][i_domain][i_part]==PDM_OWNERSHIP_KEEP) {
+          PDM_free(part_ext->border_edge_ln_to_gn[i_part+shift_part]);
+        }
+        if (part_ext->ownership_border_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX][i_domain][i_part]==PDM_OWNERSHIP_KEEP) {
+          PDM_free(part_ext->border_edge_vtx_idx[i_part+shift_part]);
+          PDM_free(part_ext->border_edge_vtx    [i_part+shift_part]);
+        }
+        if (part_ext->ownership_border_group[PDM_MESH_ENTITY_EDGE][i_domain][i_part]==PDM_OWNERSHIP_KEEP) {
+          PDM_free(part_ext->border_edge_group_idx     [i_part+shift_part]);
+          PDM_free(part_ext->border_edge_group         [i_part+shift_part]);
+          PDM_free(part_ext->border_edge_group_ln_to_gn[i_part+shift_part]);
+        }
+        if (part_ext->ownership_border_ln_to_gn_ancstr[PDM_MESH_ENTITY_EDGE][i_domain][i_part]==PDM_OWNERSHIP_KEEP) {
+          PDM_free(part_ext->border_edge_ln_to_gn_ancstr[i_part+shift_part]);
+        }
 
-        // // > Vtx
-        // if (part_ext->n_vtx_border!=NULL) {
-        //   PDM_free(part_ext->border_vtx_ln_to_gn[i_part+shift_part]);
-        //   PDM_free(part_ext->border_vtx         [i_part+shift_part]);
-        //   PDM_free(part_ext->border_vtx_ln_to_gn_ancstr[i_part+shift_part]);
-        // }
+        // > Vtx
+        if (part_ext->ownership_border_ln_to_gn[PDM_MESH_ENTITY_VTX][i_domain][i_part]==PDM_OWNERSHIP_KEEP) {
+          PDM_free(part_ext->border_vtx_ln_to_gn[i_part+shift_part]);
+        }
+        if (part_ext->ownership_border_vtx_coord[i_domain][i_part]==PDM_OWNERSHIP_KEEP) {
+          PDM_free(part_ext->border_vtx[i_part+shift_part]);
+        }
+        if (part_ext->ownership_border_ln_to_gn_ancstr[PDM_MESH_ENTITY_VTX][i_domain][i_part]==PDM_OWNERSHIP_KEEP) {
+          PDM_free(part_ext->border_vtx_ln_to_gn_ancstr[i_part+shift_part]);
+        }
 
       }
       shift_part += part_ext->n_part[i_domain];
@@ -6341,12 +6439,14 @@ PDM_part_extension_free
     // > Cell
     PDM_free(part_ext->n_cell_border);
     PDM_free(part_ext->border_cell_ln_to_gn);
+    PDM_free(part_ext->border_cell_ln_to_gn_ancstr);
     PDM_free(part_ext->border_cell_face_idx);
     PDM_free(part_ext->border_cell_face    );
 
     // > Face
     PDM_free(part_ext->n_face_border);
     PDM_free(part_ext->border_face_ln_to_gn);
+    PDM_free(part_ext->border_face_ln_to_gn_ancstr);
     PDM_free(part_ext->border_face_edge_idx);
     PDM_free(part_ext->border_face_edge);
     PDM_free(part_ext->border_face_vtx_idx);
@@ -6358,6 +6458,7 @@ PDM_part_extension_free
     // > Edge
     PDM_free(part_ext->n_edge_border);
     PDM_free(part_ext->border_edge_ln_to_gn);
+    PDM_free(part_ext->border_edge_ln_to_gn_ancstr);
     PDM_free(part_ext->border_edge_vtx_idx);
     PDM_free(part_ext->border_edge_vtx);
     PDM_free(part_ext->border_edge_group_idx);
@@ -6367,6 +6468,7 @@ PDM_part_extension_free
     // > Vtx
     PDM_free(part_ext->n_vtx_border);
     PDM_free(part_ext->border_vtx_ln_to_gn);
+    PDM_free(part_ext->border_vtx_ln_to_gn_ancstr);
     PDM_free(part_ext->border_vtx);
 
   }
@@ -6575,6 +6677,44 @@ PDM_part_extension_free
     PDM_free(part_ext->composed_ln_to_gn_sorted);
   }
 
+
+  /**
+   * Free ownerships
+   */
+  for (int i_entity=0; i_entity<PDM_MESH_ENTITY_MAX; ++i_entity) {
+    for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+      PDM_free(part_ext->ownership_border_ln_to_gn       [i_entity][i_domain]);
+      PDM_free(part_ext->ownership_border_ln_to_gn_ancstr[i_entity][i_domain]);
+      PDM_free(part_ext->ownership_border_group          [i_entity][i_domain]);
+      PDM_free(part_ext->ownership_border_graph          [i_entity][i_domain]);
+      PDM_free(part_ext->ownership_border_path_itrf      [i_entity][i_domain]);
+    }
+    PDM_free(part_ext->ownership_border_ln_to_gn       [i_entity]);
+    PDM_free(part_ext->ownership_border_ln_to_gn_ancstr[i_entity]);
+    PDM_free(part_ext->ownership_border_group          [i_entity]);
+    PDM_free(part_ext->ownership_border_graph          [i_entity]);
+    PDM_free(part_ext->ownership_border_path_itrf      [i_entity]);
+  }
+  PDM_free(part_ext->ownership_border_ln_to_gn);
+  PDM_free(part_ext->ownership_border_ln_to_gn_ancstr);
+  PDM_free(part_ext->ownership_border_group);
+  PDM_free(part_ext->ownership_border_graph);
+  PDM_free(part_ext->ownership_border_path_itrf);
+
+  for (int i_conn=0; i_conn<PDM_CONNECTIVITY_TYPE_MAX; ++i_conn) {
+    for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+      PDM_free(part_ext->ownership_border_connectivity[i_conn][i_domain]);
+    }
+    PDM_free(part_ext->ownership_border_connectivity[i_conn]);
+  }
+  PDM_free(part_ext->ownership_border_connectivity);
+
+  for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+    PDM_free(part_ext->ownership_border_vtx_coord[i_domain]);
+  }
+  PDM_free(part_ext->ownership_border_vtx_coord);
+
+
   PDM_free(part_ext);
 }
 
@@ -6604,15 +6744,6 @@ PDM_part_extension_connectivity_get
  int                     **connect
 )
 {
-  if(part_ext-> compute_kind == 1) {
-    return PDM_part_extension_connectivity_get2(part_ext,
-                                                i_domain,
-                                                i_part,
-                                                connectivity_type,
-                                                connect_idx,
-                                                connect);
-  }
-
   int n_entity = -1;
   int shift_part = part_ext->n_part_idx[i_domain];
   switch(connectivity_type)
@@ -6664,59 +6795,78 @@ PDM_part_extension_connectivity_get
 
   }
 
+  part_ext->ownership_border_connectivity[connectivity_type][i_domain][i_part] = PDM_OWNERSHIP_USER;
+
   return n_entity;
 }
+
 int
 PDM_part_extension_connectivity_get2
 (
- PDM_part_extension_t     *part_ext,
- int                       i_domain,
- int                       i_part,
- PDM_connectivity_type_t   connectivity_type,
- int                     **connect_idx,
- int                     **connect
+  PDM_part_extension_t     *part_ext,
+  int                       i_domain,
+  int                       i_part,
+  PDM_connectivity_type_t   connectivity_type,
+  int                     **connect_idx,
+  int                     **connect,
+  PDM_ownership_t           ownership
 )
 {
+  if(part_ext->compute_kind == 0) {
+    return PDM_part_extension_connectivity_get(part_ext,
+                                               i_domain,
+                                               i_part,
+                                               connectivity_type,
+                                               connect_idx,
+                                               connect);
+  }
+
   int n_entity = -1;
   int shift_part = part_ext->n_part_idx[i_domain];
-  switch(connectivity_type)
-  {
-    case PDM_CONNECTIVITY_TYPE_CELL_FACE:
+  if (part_ext->ownership_border_connectivity[connectivity_type][i_domain][i_part]!=PDM_OWNERSHIP_BAD_VALUE) {
+    switch(connectivity_type)
     {
-      n_entity     = part_ext->n_cell_border[shift_part+i_part];
-      *connect_idx = part_ext->border_cell_face_idx[shift_part+i_part];
-      *connect     = part_ext->border_cell_face    [shift_part+i_part];
+      case PDM_CONNECTIVITY_TYPE_CELL_FACE:
+      {
+        n_entity     = part_ext->n_cell_border       [shift_part+i_part];
+        *connect_idx = part_ext->border_cell_face_idx[shift_part+i_part];
+        *connect     = part_ext->border_cell_face    [shift_part+i_part];
+      }
+      break;
+
+      case PDM_CONNECTIVITY_TYPE_FACE_EDGE:
+      {
+        n_entity     = part_ext->n_face_border       [shift_part+i_part];
+        *connect_idx = part_ext->border_face_edge_idx[shift_part+i_part];
+        *connect     = part_ext->border_face_edge    [shift_part+i_part];
+      }
+      break;
+
+      case PDM_CONNECTIVITY_TYPE_FACE_VTX:
+      {
+        n_entity     = part_ext->n_face_border      [shift_part+i_part];
+        *connect_idx = part_ext->border_face_vtx_idx[shift_part+i_part];
+        *connect     = part_ext->border_face_vtx    [shift_part+i_part];
+      }
+      break;
+
+      case PDM_CONNECTIVITY_TYPE_EDGE_VTX:
+      {
+        n_entity     = part_ext->n_edge_border      [shift_part+i_part];
+        *connect_idx = part_ext->border_edge_vtx_idx[shift_part+i_part];
+        *connect     = part_ext->border_edge_vtx    [shift_part+i_part];
+      }
+      break;
+
+    default :
+      PDM_error(__FILE__, __LINE__, 0, "Unknown connectivity_type \n");
+      break;
+
     }
-    break;
-
-    case PDM_CONNECTIVITY_TYPE_FACE_EDGE:
-    {
-      n_entity     = part_ext->n_face_border[shift_part+i_part];
-      *connect_idx = part_ext->border_face_edge_idx[shift_part+i_part];
-      *connect     = part_ext->border_face_edge    [shift_part+i_part];
-    }
-    break;
-
-    case PDM_CONNECTIVITY_TYPE_FACE_VTX:
-    {
-      n_entity     = part_ext->n_face_border[shift_part+i_part];
-      *connect_idx = part_ext->border_face_vtx_idx[shift_part+i_part];
-      *connect     = part_ext->border_face_vtx    [shift_part+i_part];
-    }
-    break;
-
-    case PDM_CONNECTIVITY_TYPE_EDGE_VTX:
-    {
-      n_entity     = part_ext->n_edge_border[shift_part+i_part];
-      *connect_idx = part_ext->border_edge_vtx_idx[shift_part+i_part];
-      *connect     = part_ext->border_edge_vtx    [shift_part+i_part];
-    }
-    break;
-
-  default :
-    PDM_error(__FILE__, __LINE__, 0, "Unknown connectivity_type \n");
-    break;
-
+    part_ext->ownership_border_connectivity[connectivity_type][i_domain][i_part] = ownership;
+  }
+  else {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_part_extension_connectivity_get2 connectivity_type %d seems not to be computed.\n", connectivity_type);
   }
 
   return n_entity;
@@ -6739,22 +6889,13 @@ PDM_part_extension_connectivity_get2
 int
 PDM_part_extension_ln_to_gn_get
 (
- PDM_part_extension_t     *part_ext,
- int                       i_domain,
- int                       i_part,
- PDM_mesh_entities_t       mesh_entity,
- PDM_g_num_t             **ln_to_gn
+  PDM_part_extension_t     *part_ext,
+  int                       i_domain,
+  int                       i_part,
+  PDM_mesh_entities_t       mesh_entity,
+  PDM_g_num_t             **ln_to_gn
 )
 {
-
-  if(part_ext-> compute_kind == 1) {
-    return PDM_part_extension_ln_to_gn_get2(part_ext,
-                                            i_domain,
-                                            i_part,
-                                            mesh_entity,
-                                            ln_to_gn);
-  }
-
   int n_entity = -1;
   int shift_part = part_ext->n_part_idx[i_domain];
   switch(mesh_entity)
@@ -6797,123 +6938,132 @@ PDM_part_extension_ln_to_gn_get
   default :
     PDM_error(__FILE__, __LINE__, 0, "Unknown connectivity_type \n");
     break;
-
   }
+
+  part_ext->ownership_border_ln_to_gn[mesh_entity][i_domain][i_part] = PDM_OWNERSHIP_USER;
 
   return n_entity;
 }
 int
 PDM_part_extension_ln_to_gn_get2
 (
- PDM_part_extension_t     *part_ext,
- int                       i_domain,
- int                       i_part,
- PDM_mesh_entities_t       mesh_entity,
- PDM_g_num_t             **ln_to_gn
+  PDM_part_extension_t     *part_ext,
+  int                       i_domain,
+  int                       i_part,
+  PDM_mesh_entities_t       mesh_entity,
+  PDM_g_num_t             **ln_to_gn,
+  PDM_ownership_t           ownership
 )
 {
+
+  if(part_ext->compute_kind == 0) {
+    return PDM_part_extension_ln_to_gn_get(part_ext,
+                                            i_domain,
+                                            i_part,
+                                            mesh_entity,
+                                            ln_to_gn);
+  }
+
   int n_entity = -1;
   int shift_part = part_ext->n_part_idx[i_domain];
-  switch(mesh_entity)
-  {
-    case PDM_MESH_ENTITY_CELL:
+  if (part_ext->ownership_border_ln_to_gn[mesh_entity][i_domain][i_part]!=PDM_OWNERSHIP_BAD_VALUE) {
+    switch(mesh_entity)
     {
-      n_entity     = part_ext->n_cell_border[shift_part+i_part];
-      *ln_to_gn    = part_ext->border_cell_ln_to_gn[shift_part+i_part];
+      case PDM_MESH_ENTITY_CELL:
+      {
+        n_entity     = part_ext->n_cell_border[shift_part+i_part];
+        *ln_to_gn    = part_ext->border_cell_ln_to_gn[shift_part+i_part];
+      }
+      break;
+
+      case PDM_MESH_ENTITY_FACE:
+      {
+        n_entity     = part_ext->n_face_border[shift_part+i_part];
+        *ln_to_gn    = part_ext->border_face_ln_to_gn[shift_part+i_part];
+      }
+      break;
+
+      case PDM_MESH_ENTITY_EDGE:
+      {
+        n_entity     = part_ext->n_edge_border[shift_part+i_part];
+        *ln_to_gn    = part_ext->border_edge_ln_to_gn[shift_part+i_part];
+      }
+      break;
+
+      case PDM_MESH_ENTITY_VTX:
+      {
+        n_entity     = part_ext->n_vtx_border[shift_part+i_part];
+        *ln_to_gn    = part_ext->border_vtx_ln_to_gn[shift_part+i_part];
+      }
+      break;
+
+    default :
+      PDM_error(__FILE__, __LINE__, 0, "Unknown mesh_entity \n");
+      break;
     }
-    break;
-
-    case PDM_MESH_ENTITY_FACE:
-    {
-      n_entity     = part_ext->n_face_border[shift_part+i_part];
-      *ln_to_gn    = part_ext->border_face_ln_to_gn[shift_part+i_part];
-    }
-    break;
-
-    case PDM_MESH_ENTITY_EDGE:
-    {
-      n_entity     = part_ext->n_edge_border[shift_part+i_part];
-      *ln_to_gn    = part_ext->border_edge_ln_to_gn[shift_part+i_part];
-    }
-    break;
-
-    case PDM_MESH_ENTITY_VTX:
-    {
-      n_entity     = part_ext->n_vtx_border[shift_part+i_part];
-      *ln_to_gn    = part_ext->border_vtx_ln_to_gn[shift_part+i_part];
-      // PDM_log_trace_array_int(*ln_to_gn, n_entity, "extent_vtx :: ");
-    }
-    break;
-
-  default :
-    PDM_error(__FILE__, __LINE__, 0, "Unknown mesh_entity \n");
-    break;
-
+    part_ext->ownership_border_ln_to_gn[mesh_entity][i_domain][i_part] = ownership;
+  }
+  else {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_part_extension_ln_to_gn_get2 mesh_entity %d seems not to be computed.\n", mesh_entity);
   }
 
   return n_entity;
 }
 
 
-/**
- *
- * \brief Get ancestor global ids
- *
- * \param [in]  part_ext          Pointer to \ref PDM_part_extension_t object
- * \param [in]  i_domain          Id of current domain
- * \param [in]  i_part            Id of current partition
- * \param [in]  mesh_entity       Type of mesh entity
- * \param [out] ancestor_ln_to_gn Ancestor global ids (size = \ref n_elt)
- *
- * \return  n_elt  Number of elements
- *
- */
 int
 PDM_part_extension_ancestor_ln_to_gn_get
 (
- PDM_part_extension_t     *part_ext,
- int                       i_domain,
- int                       i_part,
- PDM_mesh_entities_t       mesh_entity,
- PDM_g_num_t             **ancestor_ln_to_gn
+  PDM_part_extension_t     *part_ext,
+  int                       i_domain,
+  int                       i_part,
+  PDM_mesh_entities_t       mesh_entity,
+  PDM_g_num_t             **ancestor_ln_to_gn,
+  PDM_ownership_t           ownership
 )
 {
   int n_entity = -1;
   int shift_part = part_ext->n_part_idx[i_domain];
-  switch(mesh_entity)
-  {
-    case PDM_MESH_ENTITY_CELL:
+  if (part_ext->ownership_border_ln_to_gn_ancstr[mesh_entity][i_domain][i_part]!=PDM_OWNERSHIP_BAD_VALUE) {
+    switch(mesh_entity)
     {
-      n_entity           = part_ext->n_cell_border              [shift_part+i_part];
-      *ancestor_ln_to_gn = part_ext->border_cell_ln_to_gn_ancstr[shift_part+i_part];
+      case PDM_MESH_ENTITY_CELL:
+      {
+        n_entity           = part_ext->n_cell_border              [shift_part+i_part];
+        *ancestor_ln_to_gn = part_ext->border_cell_ln_to_gn_ancstr[shift_part+i_part];
+      }
+      break;
+
+      case PDM_MESH_ENTITY_FACE:
+      {
+        n_entity           = part_ext->n_face_border              [shift_part+i_part];
+        *ancestor_ln_to_gn = part_ext->border_face_ln_to_gn_ancstr[shift_part+i_part];
+      }
+      break;
+
+      case PDM_MESH_ENTITY_EDGE:
+      {
+        n_entity           = part_ext->n_edge_border              [shift_part+i_part];
+        *ancestor_ln_to_gn = part_ext->border_edge_ln_to_gn_ancstr[shift_part+i_part];
+      }
+      break;
+
+      case PDM_MESH_ENTITY_VTX:
+      {
+        n_entity           = part_ext->n_vtx_border              [shift_part+i_part];
+        *ancestor_ln_to_gn = part_ext->border_vtx_ln_to_gn_ancstr[shift_part+i_part];
+      }
+      break;
+
+    default :
+      PDM_error(__FILE__, __LINE__, 0, "Unknown mesh_entity \n");
+      break;
+
     }
-    break;
-
-    case PDM_MESH_ENTITY_FACE:
-    {
-      n_entity           = part_ext->n_face_border              [shift_part+i_part];
-      *ancestor_ln_to_gn = part_ext->border_face_ln_to_gn_ancstr[shift_part+i_part];
-    }
-    break;
-
-    case PDM_MESH_ENTITY_EDGE:
-    {
-      n_entity           = part_ext->n_edge_border              [shift_part+i_part];
-      *ancestor_ln_to_gn = part_ext->border_edge_ln_to_gn_ancstr[shift_part+i_part];
-    }
-    break;
-
-    case PDM_MESH_ENTITY_VTX:
-    {
-      n_entity           = part_ext->n_vtx_border              [shift_part+i_part];
-      *ancestor_ln_to_gn = part_ext->border_vtx_ln_to_gn_ancstr[shift_part+i_part];
-    }
-    break;
-
-  default :
-    PDM_error(__FILE__, __LINE__, 0, "Unknown mesh_entity \n");
-    break;
-
+    part_ext->ownership_border_ln_to_gn_ancstr[mesh_entity][i_domain][i_part] = ownership;
+  }
+  else {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_part_extension_ancestor_ln_to_gn_get mesh_entity %d seems not to be computed.\n", mesh_entity);
   }
 
   return n_entity;
@@ -6998,46 +7148,52 @@ PDM_part_extension_graph_get
   int                       i_part,
   PDM_mesh_entities_t       mesh_entity,
   // int                     **pentity_to_entity_idx,
-  int                     **pentity_to_entity
+  int                     **pentity_to_entity,
+  PDM_ownership_t           ownership
 )
 {
   int shift_part = part_ext->n_part_idx[i_domain];
-  switch(mesh_entity)
-  {
-    case PDM_MESH_ENTITY_CELL:
+  if (part_ext->ownership_border_graph[mesh_entity][i_domain][i_part]!=PDM_OWNERSHIP_BAD_VALUE) {
+    switch(mesh_entity)
     {
-      // *pentity_to_entity_idx = part_ext->cell_cell_extended_idx2[shift_part+i_part];
-      *pentity_to_entity     = part_ext->cell_cell_extended2    [shift_part+i_part];
-      break;
-    }
+      case PDM_MESH_ENTITY_CELL:
+      {
+        // *pentity_to_entity_idx = part_ext->cell_cell_extended_idx2[shift_part+i_part];
+        *pentity_to_entity     = part_ext->cell_cell_extended2    [shift_part+i_part];
+        break;
+      }
 
-    case PDM_MESH_ENTITY_FACE:
-    {
-      // *pentity_to_entity_idx = part_ext->face_face_extended_idx[shift_part+i_part];
-      *pentity_to_entity     = part_ext->face_face_extended    [shift_part+i_part];
-      break;
-    }
+      case PDM_MESH_ENTITY_FACE:
+      {
+        // *pentity_to_entity_idx = part_ext->face_face_extended_idx[shift_part+i_part];
+        *pentity_to_entity     = part_ext->face_face_extended    [shift_part+i_part];
+        break;
+      }
 
-    case PDM_MESH_ENTITY_EDGE:
-    {
-      // *pentity_to_entity_idx = part_ext->edge_edge_extended_idx[shift_part+i_part];
-      *pentity_to_entity     = part_ext->edge_edge_extended    [shift_part+i_part];
-      break;
-    }
+      case PDM_MESH_ENTITY_EDGE:
+      {
+        // *pentity_to_entity_idx = part_ext->edge_edge_extended_idx[shift_part+i_part];
+        *pentity_to_entity     = part_ext->edge_edge_extended    [shift_part+i_part];
+        break;
+      }
 
-    case PDM_MESH_ENTITY_VTX:
-    {
-      // *pentity_to_entity_idx = part_ext->vtx_vtx_extended_idx[shift_part+i_part];
-      *pentity_to_entity     = part_ext->vtx_vtx_extended    [shift_part+i_part];
-      break;
-    }
+      case PDM_MESH_ENTITY_VTX:
+      {
+        // *pentity_to_entity_idx = part_ext->vtx_vtx_extended_idx[shift_part+i_part];
+        *pentity_to_entity     = part_ext->vtx_vtx_extended    [shift_part+i_part];
+        break;
+      }
 
-    default :
-    {
-      PDM_error(__FILE__, __LINE__, 0, "Unknown connectivity_type \n");
-      break;
+      default :
+      {
+        PDM_error(__FILE__, __LINE__, 0, "Unknown connectivity_type \n");
+        break;
+      }
     }
-
+    part_ext->ownership_border_graph[mesh_entity][i_domain][i_part] = ownership;
+  }
+  else {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_part_extension_graph_get mesh_entity %d seems not to be computed.\n", mesh_entity);
   }
 }
 
@@ -7050,51 +7206,57 @@ PDM_part_extension_path_interface_get
   int                       i_part,
   PDM_mesh_entities_t       mesh_entity,
   int                     **path_itrf_idx,
-  int                     **path_itrf
+  int                     **path_itrf,
+  PDM_ownership_t           ownership
 )
 {
   int shift_part = part_ext->n_part_idx[i_domain];
   int n_entity = 0;
-  switch(mesh_entity)
-  {
-    case PDM_MESH_ENTITY_CELL:
+  if (part_ext->ownership_border_path_itrf[mesh_entity][i_domain][i_part]!=PDM_OWNERSHIP_BAD_VALUE) {
+    switch(mesh_entity)
     {
-      n_entity       = part_ext->n_cell_border[shift_part+i_part];
-      *path_itrf_idx = part_ext->cell_cell_path_itrf_idx[shift_part+i_part];
-      *path_itrf     = part_ext->cell_cell_path_itrf    [shift_part+i_part];
-      break;
-    }
+      case PDM_MESH_ENTITY_CELL:
+      {
+        n_entity       = part_ext->n_cell_border[shift_part+i_part];
+        *path_itrf_idx = part_ext->cell_cell_path_itrf_idx[shift_part+i_part];
+        *path_itrf     = part_ext->cell_cell_path_itrf    [shift_part+i_part];
+        break;
+      }
 
-    case PDM_MESH_ENTITY_FACE:
-    {
-      n_entity       = part_ext->n_face_border[shift_part+i_part];
-      *path_itrf_idx = part_ext->face_face_path_itrf_idx[shift_part+i_part];
-      *path_itrf     = part_ext->face_face_path_itrf    [shift_part+i_part];
-      break;
-    }
+      case PDM_MESH_ENTITY_FACE:
+      {
+        n_entity       = part_ext->n_face_border[shift_part+i_part];
+        *path_itrf_idx = part_ext->face_face_path_itrf_idx[shift_part+i_part];
+        *path_itrf     = part_ext->face_face_path_itrf    [shift_part+i_part];
+        break;
+      }
 
-    case PDM_MESH_ENTITY_EDGE:
-    {
-      n_entity       = part_ext->n_edge_border[shift_part+i_part];
-      *path_itrf_idx = part_ext->edge_edge_path_itrf_idx[shift_part+i_part];
-      *path_itrf     = part_ext->edge_edge_path_itrf    [shift_part+i_part];
-      break;
-    }
+      case PDM_MESH_ENTITY_EDGE:
+      {
+        n_entity       = part_ext->n_edge_border[shift_part+i_part];
+        *path_itrf_idx = part_ext->edge_edge_path_itrf_idx[shift_part+i_part];
+        *path_itrf     = part_ext->edge_edge_path_itrf    [shift_part+i_part];
+        break;
+      }
 
-    case PDM_MESH_ENTITY_VTX:
-    {
-      n_entity       = part_ext->n_vtx_border[shift_part+i_part];
-      *path_itrf_idx = part_ext->vtx_vtx_path_itrf_idx[shift_part+i_part];
-      *path_itrf     = part_ext->vtx_vtx_path_itrf    [shift_part+i_part];
-      break;
-    }
+      case PDM_MESH_ENTITY_VTX:
+      {
+        n_entity       = part_ext->n_vtx_border[shift_part+i_part];
+        *path_itrf_idx = part_ext->vtx_vtx_path_itrf_idx[shift_part+i_part];
+        *path_itrf     = part_ext->vtx_vtx_path_itrf    [shift_part+i_part];
+        break;
+      }
 
-    default :
-    {
-      PDM_error(__FILE__, __LINE__, 0, "Unknown connectivity_type \n");
-      break;
+      default :
+      {
+        PDM_error(__FILE__, __LINE__, 0, "Unknown connectivity_type \n");
+        break;
+      }
     }
-
+    part_ext->ownership_border_path_itrf[mesh_entity][i_domain][i_part] = ownership;
+  }
+  else {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_part_extension_path_interface_get mesh_entity %d seems not to be computed.\n", mesh_entity);
   }
   return n_entity;
 }
@@ -7103,13 +7265,13 @@ PDM_part_extension_path_interface_get
 int
 PDM_part_extension_group_get
 (
- PDM_part_extension_t     *part_ext,
- int                       i_domain,
- int                       i_part,
- PDM_mesh_entities_t       mesh_entity,
- int                     **group_entity_idx,
- int                     **group_entity,
- PDM_g_num_t             **group_entity_ln_to_gn
+  PDM_part_extension_t     *part_ext,
+  int                       i_domain,
+  int                       i_part,
+  PDM_mesh_entities_t       mesh_entity,
+  int                     **group_entity_idx,
+  int                     **group_entity,
+  PDM_g_num_t             **group_entity_ln_to_gn
 )
 {
   int n_group = -1;
@@ -7153,6 +7315,83 @@ PDM_part_extension_group_get
     break;
 
   }
+  
+  part_ext->ownership_border_group[mesh_entity][i_domain][i_part] = PDM_OWNERSHIP_USER;
+
+  return n_group;
+}
+
+int
+PDM_part_extension_group_get2
+(
+  PDM_part_extension_t     *part_ext,
+  int                       i_domain,
+  int                       i_part,
+  PDM_mesh_entities_t       mesh_entity,
+  int                     **group_entity_idx,
+  int                     **group_entity,
+  PDM_g_num_t             **group_entity_ln_to_gn,
+  PDM_ownership_t           ownership
+)
+{
+
+  if(part_ext->compute_kind == 0) {
+    return PDM_part_extension_group_get(part_ext,
+                                            i_domain,
+                                            i_part,
+                                            mesh_entity,
+                                            group_entity_idx,
+                                            group_entity,
+                                            group_entity_ln_to_gn);
+  }
+
+  int n_group = -1;
+  int shift_part = part_ext->n_part_idx[i_domain];
+  if (part_ext->ownership_border_group[mesh_entity][i_domain][i_part]!=PDM_OWNERSHIP_BAD_VALUE) {
+    switch(mesh_entity)
+    {
+      case PDM_MESH_ENTITY_CELL:
+      {
+        PDM_error(__FILE__, __LINE__, 0, "PDM_MESH_ENTITY_CELL has no groups\n");
+      }
+      break;
+
+      case PDM_MESH_ENTITY_FACE:
+      {
+        int n_face_group = part_ext->parts[i_domain][i_part].n_face_group;
+        n_group                = n_face_group;
+        *group_entity_idx      = part_ext->border_face_group_idx     [shift_part+i_part];
+        *group_entity          = part_ext->border_face_group         [shift_part+i_part];
+        *group_entity_ln_to_gn = part_ext->border_face_group_ln_to_gn[shift_part+i_part];
+      }
+      break;
+
+      case PDM_MESH_ENTITY_EDGE:
+      {
+        int n_edge_group = part_ext->parts[i_domain][i_part].n_edge_group;
+        n_group                = n_edge_group;
+        *group_entity_idx      = part_ext->border_edge_group_idx     [shift_part+i_part];
+        *group_entity          = part_ext->border_edge_group         [shift_part+i_part];
+        *group_entity_ln_to_gn = part_ext->border_edge_group_ln_to_gn[shift_part+i_part];
+      }
+      break;
+
+      case PDM_MESH_ENTITY_VTX:
+      {
+        PDM_error(__FILE__, __LINE__, 0, "PDM_MESH_ENTITY_VTX has no groups\n");
+      }
+      break;
+
+    default :
+      PDM_error(__FILE__, __LINE__, 0, "Unknown mesh_entity \n");
+      break;
+
+    }
+    part_ext->ownership_border_group[mesh_entity][i_domain][i_part] = ownership;
+  }
+  else {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_part_extension_group_get2 mesh_entity %d seems not to be computed.\n", mesh_entity);
+  }
 
   return n_group;
 }
@@ -7173,38 +7412,43 @@ PDM_part_extension_group_get
 int
 PDM_part_extension_vtx_coord_get
 (
- PDM_part_extension_t     *part_ext,
- int                       i_domain,
- int                       i_part,
- double                  **vtx_coord
+  PDM_part_extension_t     *part_ext,
+  int                       i_domain,
+  int                       i_part,
+  double                  **vtx_coord
 )
 {
-  if(part_ext-> compute_kind == 1) {
-    return PDM_part_extension_vtx_coord_get2(part_ext,
-                                            i_domain,
-                                            i_part,
-                                            vtx_coord);
-  }
-
   int shift_part     = part_ext->n_part_idx[i_domain];
   int n_vtx          = part_ext->parts[i_domain][i_part].n_vtx;
   int n_vtx_extended = part_ext->vtx_vtx_extended_idx[shift_part+i_part][n_vtx];
   *vtx_coord = part_ext->border_vtx[shift_part+i_part];
+
+  part_ext->ownership_border_vtx_coord[i_domain][i_part] = PDM_OWNERSHIP_USER;
 
   return n_vtx_extended;
 }
 int
 PDM_part_extension_vtx_coord_get2
 (
- PDM_part_extension_t     *part_ext,
- int                       i_domain,
- int                       i_part,
- double                  **vtx_coord
+  PDM_part_extension_t     *part_ext,
+  int                       i_domain,
+  int                       i_part,
+  double                  **vtx_coord,
+  PDM_ownership_t           ownership
 )
 {
+  if(part_ext-> compute_kind == 0) {
+    return PDM_part_extension_vtx_coord_get(part_ext,
+                                            i_domain,
+                                            i_part,
+                                            vtx_coord);
+  }
+
   int shift_part     = part_ext->n_part_idx[i_domain];
   int n_vtx_extended = part_ext->n_vtx_border[shift_part+i_part];
   *vtx_coord = part_ext->border_vtx[shift_part+i_part];
+  
+  part_ext->ownership_border_vtx_coord[i_domain][i_part] = ownership;
 
   return n_vtx_extended;
 }

@@ -6052,8 +6052,72 @@ PDM_part_extension_create
     int n_part_g = -100;
     PDM_MPI_Allreduce(&n_part_l, &n_part_g, 1, PDM_MPI_INT, PDM_MPI_SUM, comm);
     part_ext->n_part_g_idx[i_domain+1] = part_ext->n_part_idx[i_domain] + n_part_g;
-
   }
+
+  /* Allocate ownership */
+  part_ext->ownership_border_ln_to_gn        = NULL;
+  part_ext->ownership_border_ln_to_gn_ancstr = NULL;
+  part_ext->ownership_border_connectivity    = NULL;
+  part_ext->ownership_border_vtx_coord       = NULL;
+  part_ext->ownership_border_group           = NULL;
+  part_ext->ownership_border_graph           = NULL;
+  part_ext->ownership_border_path_itrf       = NULL;
+  PDM_malloc(part_ext->ownership_border_ln_to_gn       , PDM_MESH_ENTITY_MAX      , PDM_ownership_t **);
+  PDM_malloc(part_ext->ownership_border_ln_to_gn_ancstr, PDM_MESH_ENTITY_MAX      , PDM_ownership_t **);
+  PDM_malloc(part_ext->ownership_border_group          , PDM_MESH_ENTITY_MAX      , PDM_ownership_t **);
+  PDM_malloc(part_ext->ownership_border_graph          , PDM_MESH_ENTITY_MAX      , PDM_ownership_t **);
+  PDM_malloc(part_ext->ownership_border_path_itrf      , PDM_MESH_ENTITY_MAX      , PDM_ownership_t **);
+  
+  for (int i_entity=0; i_entity<PDM_MESH_ENTITY_MAX; ++i_entity) {
+    
+    PDM_malloc(part_ext->ownership_border_ln_to_gn       [i_entity], n_domain, PDM_ownership_t *);
+    PDM_malloc(part_ext->ownership_border_ln_to_gn_ancstr[i_entity], n_domain, PDM_ownership_t *);
+    PDM_malloc(part_ext->ownership_border_group          [i_entity], n_domain, PDM_ownership_t *);
+    PDM_malloc(part_ext->ownership_border_graph          [i_entity], n_domain, PDM_ownership_t *);
+    PDM_malloc(part_ext->ownership_border_path_itrf      [i_entity], n_domain, PDM_ownership_t *);
+
+    for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
+
+      PDM_malloc(part_ext->ownership_border_ln_to_gn       [i_entity][i_domain], n_part[i_domain], PDM_ownership_t);
+      PDM_malloc(part_ext->ownership_border_ln_to_gn_ancstr[i_entity][i_domain], n_part[i_domain], PDM_ownership_t);
+      PDM_malloc(part_ext->ownership_border_group          [i_entity][i_domain], n_part[i_domain], PDM_ownership_t);
+      PDM_malloc(part_ext->ownership_border_graph          [i_entity][i_domain], n_part[i_domain], PDM_ownership_t);
+      PDM_malloc(part_ext->ownership_border_path_itrf      [i_entity][i_domain], n_part[i_domain], PDM_ownership_t);
+      
+      for (int i_part = 0; i_part < n_part[i_domain]; i_part++) {
+
+        part_ext->ownership_border_ln_to_gn       [i_entity][i_domain][i_part] = PDM_OWNERSHIP_BAD_VALUE;
+        part_ext->ownership_border_ln_to_gn_ancstr[i_entity][i_domain][i_part] = PDM_OWNERSHIP_BAD_VALUE;
+        part_ext->ownership_border_group          [i_entity][i_domain][i_part] = PDM_OWNERSHIP_BAD_VALUE;
+        part_ext->ownership_border_graph          [i_entity][i_domain][i_part] = PDM_OWNERSHIP_BAD_VALUE;
+        part_ext->ownership_border_path_itrf      [i_entity][i_domain][i_part] = PDM_OWNERSHIP_BAD_VALUE;
+      }
+    }
+  }
+
+  PDM_malloc(part_ext->ownership_border_connectivity, PDM_CONNECTIVITY_TYPE_MAX, PDM_ownership_t **);
+  for (int i_conn=0; i_conn<PDM_CONNECTIVITY_TYPE_MAX; ++i_conn) {
+    PDM_malloc(part_ext->ownership_border_connectivity[i_conn], n_domain, PDM_ownership_t *);
+
+    for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
+      PDM_malloc(part_ext->ownership_border_connectivity[i_conn][i_domain], n_part[i_domain], PDM_ownership_t);
+
+      for (int i_part = 0; i_part < n_part[i_domain]; i_part++) {
+        part_ext->ownership_border_connectivity[i_conn][i_domain][i_part] = PDM_OWNERSHIP_BAD_VALUE;
+      }
+    }
+  }
+
+  PDM_malloc(part_ext->ownership_border_vtx_coord, n_domain, PDM_ownership_t *);
+  for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
+    PDM_malloc(part_ext->ownership_border_vtx_coord[i_domain], n_part[i_domain], PDM_ownership_t);
+
+    for (int i_part = 0; i_part < n_part[i_domain]; i_part++) {
+      part_ext->ownership_border_vtx_coord[i_domain][i_part] = PDM_OWNERSHIP_BAD_VALUE;
+    }
+  }
+
+
 
   part_ext->neighbor_idx       = NULL;
   part_ext->neighbor_desc      = NULL;
@@ -6149,6 +6213,12 @@ PDM_part_extension_create
   part_ext->border_face_ln_to_gn          = NULL;
   part_ext->border_edge_ln_to_gn          = NULL;
   part_ext->border_vtx_ln_to_gn           = NULL;
+
+  part_ext->border_cell_ln_to_gn_ancstr   = NULL;
+  part_ext->border_face_ln_to_gn_ancstr   = NULL;
+  part_ext->border_edge_ln_to_gn_ancstr   = NULL;
+  part_ext->border_vtx_ln_to_gn_ancstr    = NULL;
+
 
   part_ext->pdi = NULL;
 

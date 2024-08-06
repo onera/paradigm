@@ -166,7 +166,14 @@ struct _pdm_part_extension_t {
   PDM_g_num_t **border_vtx_ln_to_gn_ancstr;
   double      **border_vtx;
   
-
+  /* Ownership */
+  PDM_ownership_t ***ownership_border_ln_to_gn;
+  PDM_ownership_t ***ownership_border_ln_to_gn_ancstr;
+  PDM_ownership_t ***ownership_border_connectivity;
+  PDM_ownership_t  **ownership_border_vtx_coord;
+  PDM_ownership_t ***ownership_border_group;
+  PDM_ownership_t ***ownership_border_graph;
+  PDM_ownership_t ***ownership_border_path_itrf;
 
   /* Shift by domain for all entities */
   PDM_g_num_t *shift_by_domain_cell;
