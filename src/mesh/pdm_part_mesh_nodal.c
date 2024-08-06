@@ -1122,6 +1122,10 @@ PDM_part_mesh_nodal_dump_vtk
 
   int n_part = PDM_part_mesh_nodal_n_part_get(pmn);
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
+  if (pmne == NULL) {
+    printf("Warning : NULL pmne\n");
+    return;
+  }
   for(int i_part = 0; i_part < n_part; ++i_part) {
 
     int pn_vtx = PDM_part_mesh_nodal_n_vtx_get(pmn, i_part);

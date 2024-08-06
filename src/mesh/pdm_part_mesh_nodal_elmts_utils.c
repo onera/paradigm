@@ -1064,6 +1064,7 @@ PDM_part_mesh_nodal_std_decompose_local_edges
        int                  *n_elt_current,
        int                  *n_edge_current,
  const int                  *connectivity_elmt_vtx,
+ const int                  *parent_num,
        int                  *elmt_edge_vtx_idx,
        int                  *elmt_edge_vtx,
        int                  *elmt_cell_edge_idx,
@@ -1141,10 +1142,26 @@ PDM_part_mesh_nodal_std_decompose_local_edges
   int *_parent_elmt               = parent_elmt          + _n_edge_current;
   int *_elmt_cell_edge_idx        = elmt_cell_edge_idx   + _n_elt_current;
 
+  if (parent_num != NULL) {
+    for (int i_elt = 0; i_elt < n_elt; i_elt++) {
+      int i_parent = parent_num[i_elt] + 1;
+      for (int i_edge = 0; i_edge < n_edge_elt; i_edge++) {
+        _parent_elmt[i_elt * n_edge_elt + i_edge] = i_parent;
+      }
+    }
+  }
+  else {
+    for (int i_elt = 0; i_elt < n_elt; i_elt++) {
+      int i_parent = _n_elt_current + i_elt + 1;
+      for (int i_edge = 0; i_edge < n_edge_elt; i_edge++) {
+        _parent_elmt[i_elt * n_edge_elt + i_edge] = i_parent;
+      }
+    }
+  }
+
   for (int i_elt = 0; i_elt < n_elt; i_elt++) {
     for (int i_edge = 0; i_edge < n_edge_elt; i_edge++) {
       _parent_elmt_position[i_elt * n_edge_elt + i_edge] = i_edge;
-      _parent_elmt         [i_elt * n_edge_elt + i_edge] = i_elt+1;
     }
     _elmt_cell_edge_idx[i_elt+1] = _elmt_cell_edge_idx[i_elt] + n_edge_elt;
 
@@ -1163,13 +1180,14 @@ PDM_part_mesh_nodal_std_decompose_local_edges
 
 
 void
-PDM_part_mesh_nodal_poly2d_decomposes_local_edges
+PDM_part_mesh_nodal_poly2d_decompose_local_edges
 (
        int                   n_elt,
        int                  *n_elt_current,
        int                  *n_edge_current,
  const int                  *connectivity_elmt_vtx,
  const int                  *connectivity_elmt_vtx_idx,
+ const int                  *parent_num,
        int                  *elmt_edge_vtx_idx,
        int                  *elmt_edge_vtx,
        int                  *elmt_cell_edge_idx,
@@ -1186,6 +1204,25 @@ PDM_part_mesh_nodal_poly2d_decomposes_local_edges
   int *_parent_elmt               = parent_elmt          + _n_edge_current;
   int *_elmt_cell_edge_idx        = elmt_cell_edge_idx   + _n_elt_current;
 
+  if (parent_num != NULL) {
+    for (int i_elt = 0; i_elt < n_elt; i_elt++) {
+      int i_parent = parent_num[i_elt] + 1;
+      int n_edge_elt = connectivity_elmt_vtx_idx[i_elt+1] - connectivity_elmt_vtx_idx[i_elt];
+      for (int i_edge = 0; i_edge < n_edge_elt; i_edge++) {
+        _parent_elmt[i_elt * n_edge_elt + i_edge] = i_parent;
+      }
+    }
+  }
+  else {
+    for (int i_elt = 0; i_elt < n_elt; i_elt++) {
+      int i_parent = _n_elt_current + i_elt + 1;
+      int n_edge_elt = connectivity_elmt_vtx_idx[i_elt+1] - connectivity_elmt_vtx_idx[i_elt];
+      for (int i_edge = 0; i_edge < n_edge_elt; i_edge++) {
+        _parent_elmt[i_elt * n_edge_elt + i_edge] = i_parent;
+      }
+    }
+  }
+
   int idx = 0;
   for (int ielt = 0; ielt < n_elt; ielt++) {
     // Reminder for poly2d -> Number of vertex = Number of edge
@@ -1195,7 +1232,6 @@ PDM_part_mesh_nodal_poly2d_decomposes_local_edges
     for (int i_edge = 0; i_edge < n_edge_elt; i_edge++) {
       _current_elmt_edge_vtx_idx[idx + 1] = _current_elmt_edge_vtx_idx[idx] + 2;
       _parent_elmt_position     [idx    ] = i_edge;
-      _parent_elmt              [idx    ] = ielt+1;
 
       _elmt_cell_edge_idx[ielt+1] = _elmt_cell_edge_idx[ielt] + n_edge_elt;
 
@@ -1296,6 +1332,11 @@ PDM_part_mesh_nodal_elmts_sections_local_decompose_edges
 
       int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne, id_section, i_part);
 
+      int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(pmne,
+                                                                 id_section,
+                                                                 i_part,
+                                                                 PDM_OWNERSHIP_BAD_VALUE);
+
       if (t_elt == PDM_MESH_NODAL_POLY_2D) {
         int *elt_vtx_idx = NULL;
         int *elt_vtx     = NULL;
@@ -1304,13 +1345,14 @@ PDM_part_mesh_nodal_elmts_sections_local_decompose_edges
                                                      i_part,
                                                      &elt_vtx_idx,
                                                      &elt_vtx,
-                                                     PDM_OWNERSHIP_KEEP);
+                                                     PDM_OWNERSHIP_BAD_VALUE);
 
-        PDM_part_mesh_nodal_poly2d_decomposes_local_edges(n_elt,
+        PDM_part_mesh_nodal_poly2d_decompose_local_edges(n_elt,
                                                           &n_elt_current,
                                                           &n_edge_current,
                                                           elt_vtx,
                                                           elt_vtx_idx,
+                                                          parent_num,
                                                           elmt_edge_vtx_idx   [i_part],
                                                           elmt_edge_vtx       [i_part],
                                                           elmt_edge_idx       [i_part],
@@ -1326,7 +1368,7 @@ PDM_part_mesh_nodal_elmts_sections_local_decompose_edges
 
         int         *elt_vtx             = NULL;
         PDM_g_num_t *elt_ln_to_gn        = NULL;
-        int         *parent_num          = NULL;
+        int         *_parent_num         = NULL;
         PDM_g_num_t *parent_entity_g_num = NULL;
 
         int *_parent_node = NULL;
@@ -1338,11 +1380,11 @@ PDM_part_mesh_nodal_elmts_sections_local_decompose_edges
                                                        i_part,
                                                        &elt_vtx,
                                                        &elt_ln_to_gn,
-                                                       &parent_num,
+                                                       &_parent_num,
                                                        &parent_entity_g_num,
                                                        &order,
                                                        &ho_ordering,
-                                                       PDM_OWNERSHIP_KEEP);
+                                                       PDM_OWNERSHIP_BAD_VALUE);
           PDM_Mesh_nodal_ho_parent_node(t_elt,
                                         order,
                                         ho_ordering,
@@ -1356,24 +1398,24 @@ PDM_part_mesh_nodal_elmts_sections_local_decompose_edges
                                                     i_part,
                                                     &elt_vtx,
                                                     &elt_ln_to_gn,
-                                                    &parent_num,
+                                                    &_parent_num,
                                                     &parent_entity_g_num,
-                                                    PDM_OWNERSHIP_KEEP);
+                                                    PDM_OWNERSHIP_BAD_VALUE);
         }
 
         PDM_part_mesh_nodal_std_decompose_local_edges(t_elt,
-                                                       n_elt,
-                                                       order,
-                                                       _parent_node,
-                                                       &n_elt_current,
-                                                       &n_edge_current,
-                                                       elt_vtx,
-                                                       elmt_edge_vtx_idx   [i_part],
-                                                       elmt_edge_vtx       [i_part],
-                                                       elmt_edge_idx       [i_part],
-                                                       parent_elmt         [i_part],
-                                                       parent_elmt_position[i_part]);
-
+                                                      n_elt,
+                                                      order,
+                                                      _parent_node,
+                                                      &n_elt_current,
+                                                      &n_edge_current,
+                                                      elt_vtx,
+                                                      parent_num,
+                                                      elmt_edge_vtx_idx   [i_part],
+                                                      elmt_edge_vtx       [i_part],
+                                                      elmt_edge_idx       [i_part],
+                                                      parent_elmt         [i_part],
+                                                      parent_elmt_position[i_part]);
       }
 
     } // End loop on sections
@@ -1402,6 +1444,7 @@ PDM_part_mesh_nodal_std_decompose_local_faces
        int                  *n_elt_current,
        int                  *n_face_current,
  const int                  *connectivity_elmt_vtx,
+ const int                  *parent_num,
        int                  *elmt_face_vtx_idx,
        int                  *elmt_face_vtx,
        int                  *elmt_cell_face_idx,
@@ -1495,6 +1538,24 @@ PDM_part_mesh_nodal_std_decompose_local_faces
   int *_parent_elmt               = parent_elmt          + _n_face_current;
   int *_elmt_cell_face_idx        = elmt_cell_face_idx   + _n_elt_current;
 
+
+  if (parent_num != NULL) {
+    for (int i_elt = 0; i_elt < n_elt; i_elt++) {
+      int i_parent = parent_num[i_elt] + 1;
+      for (int i_face = 0; i_face < n_face_elt; i_face++) {
+        _parent_elmt_position[i_elt * n_face_elt + i_face] = i_parent;
+      }
+    }
+  }
+  else {
+    for (int i_elt = 0; i_elt < n_elt; i_elt++) {
+      int i_parent = *n_elt_current + i_elt + 1;
+      for (int i_face = 0; i_face < n_face_elt; i_face++) {
+        _parent_elmt_position[i_elt * n_face_elt + i_face] = i_parent;
+      }
+    }
+  }
+
   for (int i_elt = 0; i_elt < n_elt; i_elt++) {
     for (int i_face = 0; i_face < n_face_elt; i_face++) {
       _parent_elmt_position[i_elt * n_face_elt + i_face] = i_face;
@@ -1518,13 +1579,14 @@ PDM_part_mesh_nodal_std_decompose_local_faces
 
 
 void
-PDM_part_mesh_nodal_poly2d_decomposes_local_faces
+PDM_part_mesh_nodal_poly2d_decompose_local_faces
 (
        int  n_elt,
        int *n_elt_current,
        int *n_face_current,
  const int *elt_vtx_idx,
  const int *elt_vtx,
+ const int *parent_num,
        int *elmt_face_vtx_idx,
        int *elmt_face_vtx,
        int *elmt_cell_face_idx,
@@ -1540,9 +1602,21 @@ PDM_part_mesh_nodal_poly2d_decomposes_local_faces
   int *_parent_elmt               = parent_elmt          + _n_face_current;
   int *_elmt_cell_face_idx        = elmt_cell_face_idx   + _n_elt_current;
 
+  if (parent_num != NULL) {
+    for (int i_elt = 0; i_elt < n_elt; i_elt++) {
+      int i_parent = parent_num[i_elt] + 1;
+      _parent_elmt[i_elt] = i_parent;
+    }
+  }
+  else {
+    for (int i_elt = 0; i_elt < n_elt; i_elt++) {
+      int i_parent = *n_elt_current + i_elt + 1;
+      _parent_elmt[i_elt] = i_parent;
+    }
+  }
+
   for (int i_elt = 0; i_elt < n_elt; i_elt++) {
     _parent_elmt_position[i_elt] = 0;
-    _parent_elmt         [i_elt] = i_elt+1;
 
     _elmt_cell_face_idx[i_elt+1] = _elmt_cell_face_idx[i_elt] + 1;
     _current_elmt_face_vtx_idx[i_elt+1] = _current_elmt_face_vtx_idx[i_elt];
@@ -1640,6 +1714,11 @@ PDM_part_mesh_nodal_elmts_sections_local_decompose_faces
 
       int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne, id_section, i_part);
 
+      int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(pmne,
+                                                                 id_section,
+                                                                 i_part,
+                                                                 PDM_OWNERSHIP_BAD_VALUE);
+
       if (t_elt == PDM_MESH_NODAL_POLY_2D) {
         int *elt_vtx_idx = NULL;
         int *elt_vtx     = NULL;
@@ -1650,16 +1729,17 @@ PDM_part_mesh_nodal_elmts_sections_local_decompose_faces
                                                      &elt_vtx,
                                                      PDM_OWNERSHIP_KEEP);
 
-        PDM_part_mesh_nodal_poly2d_decomposes_local_faces(n_elt,
-                                                          &n_elt_current,
-                                                          &n_face_current,
-                                                          elt_vtx,
-                                                          elt_vtx_idx,
-                                                          elmt_face_vtx_idx   [i_part],
-                                                          elmt_face_vtx       [i_part],
-                                                          elmt_face_idx       [i_part],
-                                                          parent_elmt         [i_part],
-                                                          parent_elmt_position[i_part]);
+        PDM_part_mesh_nodal_poly2d_decompose_local_faces(n_elt,
+                                                         &n_elt_current,
+                                                         &n_face_current,
+                                                         elt_vtx,
+                                                         elt_vtx_idx,
+                                                         parent_num,
+                                                         elmt_face_vtx_idx   [i_part],
+                                                         elmt_face_vtx       [i_part],
+                                                         elmt_face_idx       [i_part],
+                                                         parent_elmt         [i_part],
+                                                         parent_elmt_position[i_part]);
       }
       else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
         PDM_error(__FILE__, __LINE__, 0, "Poly3d not handled yet\n");
@@ -1670,7 +1750,7 @@ PDM_part_mesh_nodal_elmts_sections_local_decompose_faces
 
         int         *elt_vtx             = NULL;
         PDM_g_num_t *elt_ln_to_gn        = NULL;
-        int         *parent_num          = NULL;
+        int         *_parent_num         = NULL;
         PDM_g_num_t *parent_entity_g_num = NULL;
 
         int *_parent_node = NULL;
@@ -1682,7 +1762,7 @@ PDM_part_mesh_nodal_elmts_sections_local_decompose_faces
                                                        i_part,
                                                        &elt_vtx,
                                                        &elt_ln_to_gn,
-                                                       &parent_num,
+                                                       &_parent_num,
                                                        &parent_entity_g_num,
                                                        &order,
                                                        &ho_ordering,
@@ -1700,7 +1780,7 @@ PDM_part_mesh_nodal_elmts_sections_local_decompose_faces
                                                     i_part,
                                                     &elt_vtx,
                                                     &elt_ln_to_gn,
-                                                    &parent_num,
+                                                    &_parent_num,
                                                     &parent_entity_g_num,
                                                     PDM_OWNERSHIP_KEEP);
         }
@@ -1712,6 +1792,7 @@ PDM_part_mesh_nodal_elmts_sections_local_decompose_faces
                                                       &n_elt_current,
                                                       &n_face_current,
                                                       elt_vtx,
+                                                      parent_num,
                                                       elmt_face_vtx_idx   [i_part],
                                                       elmt_face_vtx       [i_part],
                                                       elmt_face_idx       [i_part],
@@ -1868,9 +1949,6 @@ PDM_part_mesh_nodal_elmts_compute_child_entities
                                   pentity_vtx                          [i_part],
                                   only_child_link);
 
-    PDM_realloc(pentity_vtx_idx[i_part], pentity_vtx_idx[i_part], pn_entity[i_part] + 1                     , int);
-    PDM_realloc(pentity_vtx    [i_part], pentity_vtx    [i_part], pentity_vtx_idx[i_part][pn_entity[i_part]], int);
-
     PDM_free(decompose_parent_entity_vtx_idx      [i_part]);
     PDM_free(decompose_parent_entity_vtx          [i_part]);
     PDM_free(decompose_parent_parent_elmt         [i_part]);
@@ -1880,6 +1958,16 @@ PDM_part_mesh_nodal_elmts_compute_child_entities
     PDM_free(decompose_child_entity_vtx           [i_part]);
     PDM_free(decompose_child_parent_elmt          [i_part]); // if needed, pass as [out] arguments
     PDM_free(decompose_child_parent_elmt_position [i_part]); // if needed, pass as [out] arguments
+
+    if (only_child_link) {
+      PDM_free(pentity_vtx_idx            [i_part]);
+      PDM_free(pentity_vtx                [i_part]);
+      PDM_free(decompose_parent_entity_idx[i_part]);
+    }
+    else {
+      PDM_realloc(pentity_vtx_idx[i_part], pentity_vtx_idx[i_part], pn_entity[i_part] + 1                     , int);
+      PDM_realloc(pentity_vtx    [i_part], pentity_vtx    [i_part], pentity_vtx_idx[i_part][pn_entity[i_part]], int);
+    }
   }
 
   PDM_free(n_decompose_parent_entity            );
@@ -1893,6 +1981,14 @@ PDM_part_mesh_nodal_elmts_compute_child_entities
   PDM_free(decompose_child_entity_vtx           );
   PDM_free(decompose_child_parent_elmt          );
   PDM_free(decompose_child_parent_elmt_position );
+
+  if (only_child_link) {
+    PDM_free(pn_entity                  );
+    PDM_free(pentity_vtx_idx            );
+    PDM_free(pentity_vtx                );
+    PDM_free(decompose_parent_entity_idx);
+    PDM_free(decompose_parent_entity    );
+  }
 
   *out_n_entity             = pn_entity;
   *out_child_to_parent_idx  = child_to_parent_idx;

@@ -182,6 +182,7 @@ PDM_part_mesh_nodal_poly2d_decomposes_edges
  * \param [inout] n_elt_current          Current position in concatenated sections
  * \param [inout] n_edge_current         Current position in concatenated edges
  * \param [in]    connectivity_elmt_vtx  Element->Vertex connectivity (local IDs)
+ * \param [in]    parent_num                 Element parent numbering (or NULL)
  * \param [inout] elmt_edge_vtx_idx      Index for ElementEdge->Vertex connectivity
  * \param [inout] elmt_edge_vtx          ElementEdge->Vertex connectivity (local IDs)
  * \param [inout] elmt_cell_edge_idx     Index for ElementEdge->Edge connectivity
@@ -199,6 +200,7 @@ PDM_part_mesh_nodal_std_decompose_local_edges
        int                  *n_elt_current,
        int                  *n_edge_current,
  const int                  *connectivity_elmt_vtx,
+ const int                  *parent_num,
        int                  *elmt_edge_vtx_idx,
        int                  *elmt_edge_vtx,
        int                  *elmt_cell_edge_idx,
@@ -215,6 +217,7 @@ PDM_part_mesh_nodal_std_decompose_local_edges
  * \param [inout] n_edge_current             Current position in concatenated edges
  * \param [in]    connectivity_elmt_vtx      Element->Vertex connectivity (local IDs)
  * \param [in]    connectivity_elmt_vtx_idx  Index for Element->Vertex connectivity
+ * \param [in]    parent_num                 Element parent numbering (or NULL)
  * \param [inout] elmt_edge_vtx_idx          Index for ElementEdge->Vertex connectivity
  * \param [inout] elmt_edge_vtx              ElementEdge->Vertex connectivity (local IDs)
  * \param [inout] elmt_cell_edge_idx         Index for ElementEdge->Edge connectivity
@@ -223,13 +226,14 @@ PDM_part_mesh_nodal_std_decompose_local_edges
  *
  */
 void
-PDM_part_mesh_nodal_poly2d_decomposes_local_edges
+PDM_part_mesh_nodal_poly2d_decompose_local_edges
 (
        int                   n_elt,
        int                  *n_elt_current,
        int                  *n_edge_current,
  const int                  *connectivity_elmt_vtx,
  const int                  *connectivity_elmt_vtx_idx,
+ const int                  *parent_num,
        int                  *elmt_edge_vtx_idx,
        int                  *elmt_edge_vtx,
        int                  *elmt_cell_edge_idx,
@@ -273,6 +277,7 @@ PDM_part_mesh_nodal_elmts_sections_local_decompose_edges
  * \param [inout] n_elt_current          Current position in concatenated sections
  * \param [inout] n_face_current         Current position in concatenated faces
  * \param [in]    connectivity_elmt_vtx  Element->Vertex connectivity (local IDs)
+ * \param [in]    parent_num             Element parent numbering (or NULL)
  * \param [inout] elmt_face_vtx_idx      Index for ElementFace->Vertex connectivity
  * \param [inout] elmt_face_vtx          ElementFace->Vertex connectivity (local IDs)
  * \param [inout] elmt_cell_face_idx     Index for ElementFace->Face connectivity
@@ -290,6 +295,7 @@ PDM_part_mesh_nodal_std_decompose_local_faces
        int                  *n_elt_current,
        int                  *n_face_current,
  const int                  *connectivity_elmt_vtx,
+ const int                  *parent_num,
        int                  *elmt_face_vtx_idx,
        int                  *elmt_face_vtx,
        int                  *elmt_cell_face_idx,
@@ -306,6 +312,7 @@ PDM_part_mesh_nodal_std_decompose_local_faces
  * \param [inout] n_face_current             Current position in concatenated faces
  * \param [in]    connectivity_elmt_vtx      Element->Vertex connectivity (local IDs)
  * \param [in]    connectivity_elmt_vtx_idx  Index for Element->Vertex connectivity
+ * \param [in]    parent_num                 Element parent numbering (or NULL)
  * \param [inout] elmt_face_vtx_idx          Index for Elementface->Vertex connectivity
  * \param [inout] elmt_face_vtx              ElementFace->Vertex connectivity (local IDs)
  * \param [inout] elmt_cell_face_idx         Index for ElementFace->Face connectivity
@@ -314,13 +321,14 @@ PDM_part_mesh_nodal_std_decompose_local_faces
  *
  */
 void
-PDM_part_mesh_nodal_poly2d_decomposes_local_faces
+PDM_part_mesh_nodal_poly2d_decompose_local_faces
 (
        int  n_elt,
        int *n_elt_current,
        int *n_face_current,
  const int *elt_vtx_idx,
  const int *elt_vtx,
+ const int *parent_num,
        int *elmt_face_vtx_idx,
        int *elmt_face_vtx,
        int *elmt_cell_face_idx,
