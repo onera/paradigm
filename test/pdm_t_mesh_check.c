@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
   PDM_g_num_t l_face_vtx = 8;
 
   double *coords;
-  PDM_malloc(coords,3 * n_vtx,double);
+  PDM_malloc(coords, 3 * n_vtx, double);
   int k = 0;
   for (int j = 0; j < n_j; j++) {
     for (int i = 0; i < n_i; i++) {
@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
 
 
   PDM_g_num_t *face_vtx;
-  PDM_malloc(face_vtx,l_face_vtx,PDM_g_num_t);
+  PDM_malloc(face_vtx, l_face_vtx, PDM_g_num_t);
   face_vtx[0] = 1;
   face_vtx[1] = 2;
   face_vtx[2] = 5;

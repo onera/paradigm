@@ -214,7 +214,7 @@ _generate_volume_mesh
   int n_domain = 1;
   // int n_part_domains = {n_part};
   int *n_part_domains;
-  PDM_malloc(n_part_domains,n_domain,int);
+  PDM_malloc(n_part_domains, n_domain, int);
   n_part_domains[0] = n_part;
 
   PDM_multipart_t *mpart = PDM_multipart_create(n_domain,
@@ -384,14 +384,14 @@ _generate_ray
 
   int dn_vtx = 2 * dn_ray;
 
-  PDM_g_num_t *vtx_ln_to_gn;
-  PDM_malloc(vtx_ln_to_gn,    dn_vtx ,PDM_g_num_t);
-  PDM_g_num_t *edge_ln_to_gn;
-  PDM_malloc(edge_ln_to_gn,    dn_ray ,PDM_g_num_t);
-  double *vtx_coord;
-  PDM_malloc(vtx_coord,3 * dn_vtx ,double     );
-  int *edge_vtx;
-  PDM_malloc(edge_vtx,3 * dn_ray ,int        );
+  PDM_g_num_t *vtx_ln_to_gn  = NULL;
+  PDM_g_num_t *edge_ln_to_gn = NULL;
+  double      *vtx_coord     = NULL;
+  int         *edge_vtx      = NULL;
+  PDM_malloc(vtx_ln_to_gn ,     dn_vtx, PDM_g_num_t );
+  PDM_malloc(edge_ln_to_gn,     dn_ray, PDM_g_num_t );
+  PDM_malloc(vtx_coord    , 3 * dn_vtx, double      );
+  PDM_malloc(edge_vtx     , 3 * dn_ray, int         );
 
   int i_vtx = 0;
   for(int i = 0; i < dn_ray; ++i) {

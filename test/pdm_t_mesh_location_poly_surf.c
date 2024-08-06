@@ -1295,10 +1295,10 @@ int main(int argc, char *argv[])
   /*
    *  Check location (interpolation of an affine field)
    */
-  double **src_field;
-  PDM_malloc(src_field,n_part,double *);
+  double **src_field = NULL;
+  PDM_malloc(src_field, n_part, double *);
   for (int ipart = 0; ipart < n_part; ipart++) {
-    PDM_malloc(src_field[ipart],n_vtx[ipart],double);
+    PDM_malloc(src_field[ipart], n_vtx[ipart], double);
     for (int i = 0; i < n_vtx[ipart]; i++) {
       src_field[ipart][i] = _eval_field(&vtx_coord[ipart][3*i]);
     }
@@ -1311,10 +1311,10 @@ int main(int argc, char *argv[])
                                      &ptp,
                                      PDM_OWNERSHIP_USER);
   if (ptp == NULL) {
-    int **pelt_pts_idx;
-    PDM_malloc(pelt_pts_idx,n_part,int         *);
-    PDM_g_num_t **pelt_pts_gnum;
-    PDM_malloc(pelt_pts_gnum,n_part,PDM_g_num_t *);
+    int         **pelt_pts_idx  = NULL;
+    PDM_g_num_t **pelt_pts_gnum = NULL;
+    PDM_malloc(pelt_pts_idx , n_part, int         *);
+    PDM_malloc(pelt_pts_gnum, n_part, PDM_g_num_t *);
     for (int ipart = 0; ipart < n_part; ipart++) {
       double *elt_pts_coord      = NULL;
       double *elt_pts_uvw        = NULL;
@@ -1350,8 +1350,8 @@ int main(int argc, char *argv[])
   }
 
 
-  double **send_field;
-  PDM_malloc(send_field,n_part,double *);
+  double **send_field = NULL;
+  PDM_malloc(send_field, n_part, double *);
   for (int ipart = 0; ipart < n_part; ipart++) {
     int         *elt_pts_idx        = NULL;
     PDM_g_num_t *elt_pts_gnum       = NULL;
@@ -1373,7 +1373,7 @@ int main(int argc, char *argv[])
                                         &elt_pts_dist2,
                                         &elt_pts_proj_coord);
 
-    PDM_malloc(send_field[ipart],elt_pts_idx[n_face[ipart]],double);
+    PDM_malloc(send_field[ipart], elt_pts_idx[n_face[ipart]], double);
     for (int ielt = 0; ielt < n_face[ipart]; ielt++) {
 
       int *fv = face_vtx[ipart] + face_vtx_idx[ipart][ielt];
