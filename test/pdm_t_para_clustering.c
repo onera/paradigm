@@ -88,16 +88,16 @@ _mean_data_per_leaf
   int _n_leaf = 0;
 
   int *extract_leaf_node_id;
-  PDM_malloc(extract_leaf_node_id,n_explicit_nodes ,int);
+  PDM_malloc(extract_leaf_node_id, n_explicit_nodes, int);
   for(int i_node = 0; i_node < n_explicit_nodes; i_node++) {
     if(leaf_id[i_node] != -1){
       extract_leaf_node_id[_n_leaf++] = i_node;
     }
   }
-  PDM_realloc(extract_leaf_node_id ,extract_leaf_node_id , _n_leaf ,int);
+  PDM_realloc(extract_leaf_node_id, extract_leaf_node_id, _n_leaf, int);
 
   double *_leaf_data_octree;
-  PDM_malloc(_leaf_data_octree,stride * _n_leaf ,double);
+  PDM_malloc(_leaf_data_octree, stride * _n_leaf, double);
 
   for (int i_leaf = 0; i_leaf < _n_leaf; i_leaf++) {
     _leaf_data_octree[3*i_leaf    ] = 0.0;
@@ -148,7 +148,7 @@ int main(int argc, char *argv[])
   double      min_dist                = pow(length/20, 2);
   int         n_layer                 = 4;
   int *n_vtx_in_leaf_per_layer;
-  PDM_malloc(n_vtx_in_leaf_per_layer,n_layer,int);
+  PDM_malloc(n_vtx_in_leaf_per_layer, n_layer, int);
   int         n_vtx_min_dist          = 10;
   int         depth_max               = 50;
   int         n_var                   = 4;
@@ -219,7 +219,7 @@ int main(int argc, char *argv[])
   int have_dcell_part = 0;
 
   int *dcell_part;
-  PDM_malloc(dcell_part,dn_cell,int);
+  PDM_malloc(dcell_part, dn_cell, int);
 
   int *renum_properties_cell = NULL;
   int *renum_properties_face = NULL;
@@ -261,39 +261,37 @@ int main(int argc, char *argv[])
 
   PDM_free(dcell_part);
 
-  PDM_g_num_t **gnum_bnd_face;
-  PDM_malloc(gnum_bnd_face,n_part_bnd,PDM_g_num_t *);
-  int **bnd_face_vtx_idx;
-  PDM_malloc(bnd_face_vtx_idx,n_part_bnd,int         *);
-  int **bnd_face_vtx;
-  PDM_malloc(bnd_face_vtx,n_part_bnd,int         *);
-  int *n_bnd_face;
-  PDM_malloc(n_bnd_face,n_part_bnd,int          );
+  PDM_g_num_t **gnum_bnd_face      = NULL;
+  PDM_g_num_t **gnum_bnd_vtx       = NULL;
+  PDM_g_num_t **gnum_int_vtx       = NULL;
+  PDM_g_num_t **bnd_to_all_vtx     = NULL;
+  PDM_g_num_t **gnum_all_vtx       = NULL;
+  int          *n_bnd_vtx          = NULL;
+  int         **bnd_face_vtx_idx   = NULL;
+  int         **bnd_face_vtx       = NULL;
+  int          *n_bnd_face         = NULL;
+  int          *n_all_vtx          = NULL;
+  int          *n_int_vtx          = NULL;
+  int         **bnd_to_all_vtx_idx = NULL;
+  double      **bnd_vtx            = NULL;
+  double      **data_bnd_vtx       = NULL;
+  double      **int_vtx            = NULL;
 
-  PDM_g_num_t **gnum_bnd_vtx;
-  PDM_malloc(gnum_bnd_vtx,(n_part_bnd+1),PDM_g_num_t *);
-  double **bnd_vtx;
-  PDM_malloc(bnd_vtx,(n_part_bnd+1),double      *);
-  double **data_bnd_vtx;
-  PDM_malloc(data_bnd_vtx,(n_part_bnd+1),double      *);
-  int *n_bnd_vtx;
-  PDM_malloc(n_bnd_vtx,(n_part_bnd+1),int          );
-
-  PDM_g_num_t **gnum_int_vtx;
-  PDM_malloc(gnum_int_vtx,n_part,PDM_g_num_t *);
-  double **int_vtx;
-  PDM_malloc(int_vtx,n_part,double      *);
-  int *n_int_vtx;
-  PDM_malloc(n_int_vtx,n_part,int          );
-
-  PDM_g_num_t **bnd_to_all_vtx;
-  PDM_malloc(bnd_to_all_vtx,n_part_bnd,PDM_g_num_t *);
-  int **bnd_to_all_vtx_idx;
-  PDM_malloc(bnd_to_all_vtx_idx,n_part_bnd,int         *);
-  PDM_g_num_t **gnum_all_vtx;
-  PDM_malloc(gnum_all_vtx,n_part,PDM_g_num_t *);
-  int *n_all_vtx;
-  PDM_malloc(n_all_vtx,n_part,int          );
+  PDM_malloc(gnum_bnd_face     , n_part_bnd    , PDM_g_num_t *);
+  PDM_malloc(bnd_face_vtx_idx  , n_part_bnd    , int         *);
+  PDM_malloc(bnd_face_vtx      , n_part_bnd    , int         *);
+  PDM_malloc(n_bnd_face        , n_part_bnd    , int          );
+  PDM_malloc(gnum_bnd_vtx      , n_part_bnd + 1, PDM_g_num_t *);
+  PDM_malloc(bnd_vtx           , n_part_bnd + 1, double      *);
+  PDM_malloc(data_bnd_vtx      , n_part_bnd + 1, double      *);
+  PDM_malloc(n_bnd_vtx         , n_part_bnd + 1, int          );
+  PDM_malloc(gnum_int_vtx      , n_part        , PDM_g_num_t *);
+  PDM_malloc(int_vtx           , n_part        , double      *);
+  PDM_malloc(n_int_vtx         , n_part        , int          );
+  PDM_malloc(bnd_to_all_vtx    , n_part_bnd    , PDM_g_num_t *);
+  PDM_malloc(bnd_to_all_vtx_idx, n_part_bnd    , int         *);
+  PDM_malloc(gnum_all_vtx      , n_part        , PDM_g_num_t *);
+  PDM_malloc(n_all_vtx         , n_part        , int          );
 
   PDM_extract_part_t* extrp = PDM_extract_part_create(2,
                                                       n_part,
@@ -460,7 +458,7 @@ int main(int argc, char *argv[])
                                          PDM_OWNERSHIP_USER);
 
     bnd_to_all_vtx_idx[i_part] = PDM_array_new_idx_from_const_stride_int(1, n_bnd_vtx[i_part]);
-    PDM_malloc(data_bnd_vtx      [i_part],n_var * n_bnd_vtx[i_part],double);
+    PDM_malloc(data_bnd_vtx[i_part], n_var * n_bnd_vtx[i_part], double);
 
     for (int i_vtx = 0; i_vtx < n_bnd_vtx[i_part]; i_vtx++) {
       for (int i_var = 0; i_var < n_var; i_var++) {
@@ -572,8 +570,8 @@ int main(int argc, char *argv[])
 
     n_int_vtx[i_part] = n_unref_vtx[i_part];
 
-    PDM_malloc(gnum_int_vtx[i_part],n_int_vtx[i_part],PDM_g_num_t);
-    PDM_malloc(int_vtx     [i_part],3 * n_int_vtx[i_part],double);
+    PDM_malloc(gnum_int_vtx[i_part],     n_int_vtx[i_part], PDM_g_num_t);
+    PDM_malloc(int_vtx     [i_part], 3 * n_int_vtx[i_part], double     );
 
     for (int i_vtx = 0; i_vtx < n_int_vtx[i_part]; i_vtx++) {
       gnum_int_vtx[i_part][  i_vtx    ] = vtx_ln_to_gn[unref_vtx[i_part][i_vtx]-1];
@@ -613,22 +611,22 @@ int main(int argc, char *argv[])
 
   _max_g_num = max_g_num + 1;
 
-  PDM_g_num_t **gnum_layer_vtx;
-  PDM_malloc(gnum_layer_vtx,n_layer   ,PDM_g_num_t *);
-  PDM_g_num_t **distri_layer_vtx;
-  PDM_malloc(distri_layer_vtx,n_layer, PDM_g_num_t *);
-  PDM_g_num_t **distri_layer_vtx_transposed;
-  PDM_malloc(distri_layer_vtx_transposed,n_rank, PDM_g_num_t *);
-  double **layer_vtx;
-  PDM_malloc(layer_vtx,n_layer   ,double      *);
-  double **data_layer_vtx;
-  PDM_malloc(data_layer_vtx,n_layer   ,double      *);
-  int *n_layer_vtx;
-  PDM_malloc(n_layer_vtx,n_layer   ,int          );
-  int *m_layer_vtx;
-  PDM_malloc(m_layer_vtx,n_layer   ,int          );
-  int *layer_vtx_idx;
-  PDM_malloc(layer_vtx_idx,(n_layer+1),int          );
+  PDM_g_num_t **gnum_layer_vtx              = NULL;
+  PDM_g_num_t **distri_layer_vtx            = NULL;
+  PDM_g_num_t **distri_layer_vtx_transposed = NULL;
+  double      **layer_vtx                   = NULL;
+  double      **data_layer_vtx              = NULL;
+  int          *n_layer_vtx                 = NULL;
+  int          *m_layer_vtx                 = NULL;
+  int          *layer_vtx_idx               = NULL;
+  PDM_malloc(gnum_layer_vtx             , n_layer    , PDM_g_num_t *);
+  PDM_malloc(distri_layer_vtx           , n_layer    , PDM_g_num_t *);
+  PDM_malloc(distri_layer_vtx_transposed, n_rank     , PDM_g_num_t *);
+  PDM_malloc(layer_vtx                  , n_layer    , double      *);
+  PDM_malloc(data_layer_vtx             , n_layer    , double      *);
+  PDM_malloc(n_layer_vtx                , n_layer    , int          );
+  PDM_malloc(m_layer_vtx                , n_layer    , int          );
+  PDM_malloc(layer_vtx_idx              , n_layer + 1, int          );
   layer_vtx_idx[0] = 0;
 
   for (int i_layer = 0; i_layer < n_layer; i_layer++) {
@@ -743,11 +741,11 @@ int main(int argc, char *argv[])
 
     data_layer_vtx[i_layer] = leaf_data_octree;
 
-    PDM_malloc(distri_layer_vtx[i_layer],(n_rank+1),PDM_g_num_t);
+    PDM_malloc(distri_layer_vtx[i_layer], n_rank+1, PDM_g_num_t);
     PDM_distrib_compute(n_leaf, distri_layer_vtx[i_layer], -1, comm);
 
     m_layer_vtx   [i_layer] = distri_layer_vtx[i_layer][n_rank];
-    PDM_malloc(gnum_layer_vtx[i_layer],m_layer_vtx[i_layer],PDM_g_num_t);
+    PDM_malloc(gnum_layer_vtx[i_layer], m_layer_vtx[i_layer], PDM_g_num_t);
 
     for (int i_vtx = 0; i_vtx < m_layer_vtx[i_layer]; i_vtx++) {
       gnum_layer_vtx[i_layer][i_vtx] = _max_g_num + i_vtx;
@@ -765,7 +763,7 @@ int main(int argc, char *argv[])
 
   for (int j_rank = 0; j_rank < n_rank; j_rank++) {
 
-    PDM_malloc(distri_layer_vtx_transposed[j_rank],(n_layer+1),PDM_g_num_t);
+    PDM_malloc(distri_layer_vtx_transposed[j_rank], n_layer+1, PDM_g_num_t);
     distri_layer_vtx_transposed[j_rank][0] = 0;
 
     for (int i_layer = 0; i_layer < n_layer; i_layer++) {
@@ -780,9 +778,9 @@ int main(int argc, char *argv[])
 
   n_bnd_vtx[n_part_bnd] = layer_vtx_idx[n_layer];
 
-  PDM_malloc(gnum_bnd_vtx[n_part_bnd],n_bnd_vtx[n_part_bnd],PDM_g_num_t);
-  PDM_malloc(bnd_vtx     [n_part_bnd],3     * n_bnd_vtx[n_part_bnd],double);
-  PDM_malloc(data_bnd_vtx[n_part_bnd],n_var * n_bnd_vtx[n_part_bnd],double);
+  PDM_malloc(gnum_bnd_vtx[n_part_bnd],         n_bnd_vtx[n_part_bnd], PDM_g_num_t);
+  PDM_malloc(bnd_vtx     [n_part_bnd], 3     * n_bnd_vtx[n_part_bnd], double     );
+  PDM_malloc(data_bnd_vtx[n_part_bnd], n_var * n_bnd_vtx[n_part_bnd], double     );
 
   int idx_write = 0;
 
@@ -808,16 +806,16 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
-  int **n_int_to_bnd_vtx;
-  PDM_malloc(n_int_to_bnd_vtx,n_part ,int         *);
-  int **id_int_to_bnd_vtx;
-  PDM_malloc(id_int_to_bnd_vtx,n_part ,int         *);
-  int **int_to_bnd_vtx_idx;
-  PDM_malloc(int_to_bnd_vtx_idx,n_part ,int         *);
-  PDM_g_num_t **int_to_bnd_vtx;
-  PDM_malloc(int_to_bnd_vtx,n_part ,PDM_g_num_t *);
-  int **int_to_bnd_vtx_triplet;
-  PDM_malloc(int_to_bnd_vtx_triplet,n_part ,int         *);
+  int         **n_int_to_bnd_vtx       = NULL;
+  int         **id_int_to_bnd_vtx      = NULL;
+  int         **int_to_bnd_vtx_idx     = NULL;
+  PDM_g_num_t **int_to_bnd_vtx         = NULL;
+  int         **int_to_bnd_vtx_triplet = NULL;
+  PDM_malloc(n_int_to_bnd_vtx      , n_part, int         *);
+  PDM_malloc(id_int_to_bnd_vtx     , n_part, int         *);
+  PDM_malloc(int_to_bnd_vtx_idx    , n_part, int         *);
+  PDM_malloc(int_to_bnd_vtx        , n_part, PDM_g_num_t *);
+  PDM_malloc(int_to_bnd_vtx_triplet, n_part, int         *);
 
   PDM_dist_cloud_surf_t *dcs = PDM_dist_cloud_surf_create(PDM_MESH_NATURE_MESH_SETTED,
                                                           1,
@@ -858,12 +856,12 @@ int main(int argc, char *argv[])
 
   PDM_dist_cloud_surf_compute(dcs);
 
-  PDM_g_num_t **gnum_bnd_vtx_min_dist;
-  PDM_malloc(gnum_bnd_vtx_min_dist,n_part,PDM_g_num_t *);
-  double **bnd_vtx_min_dist;
-  PDM_malloc(bnd_vtx_min_dist,n_part,double      *);
-  int *n_bnd_vtx_min_dist;
-  PDM_malloc(n_bnd_vtx_min_dist,n_part,int          );
+  PDM_g_num_t **gnum_bnd_vtx_min_dist = NULL;
+  double      **bnd_vtx_min_dist      = NULL;
+  int          *n_bnd_vtx_min_dist    = NULL;
+  PDM_malloc(gnum_bnd_vtx_min_dist, n_part, PDM_g_num_t *);
+  PDM_malloc(bnd_vtx_min_dist     , n_part, double      *);
+  PDM_malloc(n_bnd_vtx_min_dist   , n_part, int          );
 
   double _max_dist = 0.0;
   double  max_dist = 0.0;
@@ -891,17 +889,17 @@ int main(int argc, char *argv[])
 
   for (int i_part = 0; i_part < n_part; i_part++) {
 
-    PDM_malloc(gnum_bnd_vtx_min_dist[i_part],n_int_vtx[i_part],PDM_g_num_t);
-    PDM_malloc(bnd_vtx_min_dist     [i_part],3 * n_int_vtx[i_part],double);
+    PDM_malloc(gnum_bnd_vtx_min_dist[i_part],    n_int_vtx[i_part], PDM_g_num_t);
+    PDM_malloc(bnd_vtx_min_dist     [i_part],3 * n_int_vtx[i_part], double     );
     n_bnd_vtx_min_dist   [i_part] = 0;
 
-    PDM_malloc(n_int_to_bnd_vtx [i_part],n_int_vtx[i_part],int);
-    PDM_malloc(id_int_to_bnd_vtx[i_part],n_int_vtx[i_part],int);
+    PDM_malloc(n_int_to_bnd_vtx [i_part], n_int_vtx[i_part], int);
+    PDM_malloc(id_int_to_bnd_vtx[i_part], n_int_vtx[i_part], int);
 
-    PDM_g_num_t *sorted_gnum;
-    PDM_malloc(sorted_gnum,n_int_vtx[i_part],PDM_g_num_t);
-    int *order;
-    PDM_malloc(order,n_int_vtx[i_part],int        );
+    PDM_g_num_t *sorted_gnum = NULL;
+    int         *order       = NULL;
+    PDM_malloc(sorted_gnum, n_int_vtx[i_part], PDM_g_num_t);
+    PDM_malloc(order      , n_int_vtx[i_part], int        );
 
     PDM_g_num_t *closest_src_gnum = NULL;
     double      *closest_src_dist = NULL;
@@ -963,8 +961,8 @@ int main(int argc, char *argv[])
 
     int_to_bnd_vtx_idx[i_part] = PDM_array_new_idx_from_sizes_int(n_int_to_bnd_vtx[i_part], n_int_vtx[i_part]);
 
-    PDM_malloc(int_to_bnd_vtx        [i_part],int_to_bnd_vtx_idx[i_part][n_int_vtx[i_part]],PDM_g_num_t);
-    PDM_malloc(int_to_bnd_vtx_triplet[i_part],3 * int_to_bnd_vtx_idx[i_part][n_int_vtx[i_part]], int);
+    PDM_malloc(int_to_bnd_vtx        [i_part],     int_to_bnd_vtx_idx[i_part][n_int_vtx[i_part]], PDM_g_num_t);
+    PDM_malloc(int_to_bnd_vtx_triplet[i_part], 3 * int_to_bnd_vtx_idx[i_part][n_int_vtx[i_part]], int        );
 
     for (int i_vtx = 0; i_vtx < n_int_vtx[i_part]; i_vtx++) {
 
@@ -1114,15 +1112,15 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
-  double **weight_int_vtx;
-  PDM_malloc(weight_int_vtx,n_part ,double*);
-  int **stride_3;
-  PDM_malloc(stride_3,n_part ,int   *);
+  double **weight_int_vtx = NULL;
+  int    **stride_3       = NULL;
+  PDM_malloc(weight_int_vtx, n_part, double*);
+  PDM_malloc(stride_3      , n_part, int   *);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
 
-    PDM_malloc(weight_int_vtx[i_part],n_int_vtx[i_part],double);
-    PDM_malloc(stride_3      [i_part],n_int_vtx[i_part],int   );
+    PDM_malloc(weight_int_vtx[i_part], n_int_vtx[i_part], double);
+    PDM_malloc(stride_3      [i_part], n_int_vtx[i_part], int   );
 
     for (int i_vtx = 0; i_vtx < n_int_vtx[i_part]; i_vtx++) {
       weight_int_vtx[i_part][i_vtx] = (double) n_int_to_bnd_vtx[i_part][i_vtx];
@@ -1199,14 +1197,14 @@ int main(int argc, char *argv[])
 
   clock_t t = clock();
 
-  int *red_blk_int_to_bnd_vtx_idx;
-  PDM_malloc(red_blk_int_to_bnd_vtx_idx,(blk_n_int_vtx+1)                     ,int        );
-  int *red_blk_int_to_bnd_vtx_triplet;
-  PDM_malloc(red_blk_int_to_bnd_vtx_triplet,3 * blk_int_to_bnd_vtx_idx[blk_n_int_vtx],int);
-  PDM_g_num_t *red_blk_int_to_bnd_vtx;
-  PDM_malloc(red_blk_int_to_bnd_vtx,blk_int_to_bnd_vtx_idx[blk_n_int_vtx],PDM_g_num_t);
-  int *blk_to_red_blk_int_to_bnd_vtx;
-  PDM_malloc(blk_to_red_blk_int_to_bnd_vtx,blk_int_to_bnd_vtx_idx[blk_n_int_vtx],int        );
+  int         *red_blk_int_to_bnd_vtx_idx     = NULL;
+  int         *red_blk_int_to_bnd_vtx_triplet = NULL;
+  PDM_g_num_t *red_blk_int_to_bnd_vtx         = NULL;
+  int         *blk_to_red_blk_int_to_bnd_vtx  = NULL;
+  PDM_malloc(red_blk_int_to_bnd_vtx_idx    ,    blk_n_int_vtx+1                      , int        );
+  PDM_malloc(red_blk_int_to_bnd_vtx_triplet,3 * blk_int_to_bnd_vtx_idx[blk_n_int_vtx], int        );
+  PDM_malloc(red_blk_int_to_bnd_vtx        ,    blk_int_to_bnd_vtx_idx[blk_n_int_vtx], PDM_g_num_t);
+  PDM_malloc(blk_to_red_blk_int_to_bnd_vtx ,    blk_int_to_bnd_vtx_idx[blk_n_int_vtx], int        );
 
   if (data_reduction == 0) {
 
@@ -1226,10 +1224,10 @@ int main(int argc, char *argv[])
 
   } else {
 
-    PDM_g_num_t *sorted_gnum;
-    PDM_malloc(sorted_gnum,blk_int_to_bnd_vtx_idx[blk_n_int_vtx],PDM_g_num_t);
-    int *order;
-    PDM_malloc(order,blk_int_to_bnd_vtx_idx[blk_n_int_vtx],int        );
+    PDM_g_num_t *sorted_gnum = NULL;
+    int         *order       = NULL;
+    PDM_malloc(sorted_gnum, blk_int_to_bnd_vtx_idx[blk_n_int_vtx], PDM_g_num_t);
+    PDM_malloc(order      , blk_int_to_bnd_vtx_idx[blk_n_int_vtx], int        );
 
     red_blk_int_to_bnd_vtx_idx[0] = 0;
 
@@ -1465,10 +1463,10 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
-  double *dx;
-  PDM_malloc(dx,3,double);
-  double *dr;
-  PDM_malloc(dr,3,double);
+  double *dx = NULL;
+  double *dr = NULL;
+  PDM_malloc(dx, 3, double);
+  PDM_malloc(dr, 3, double);
   double  sdist;
   double  dist;
 

@@ -244,10 +244,10 @@ _dmesh_nodal_dump_vtk
     PDM_g_num_t          *dconnec            = PDM_DMesh_nodal_section_std_get    (dmn, geom_kind, id_section);
     PDM_Mesh_nodal_elt_t  t_elt              = PDM_DMesh_nodal_section_type_get   (dmn, geom_kind, id_section);
 
-    int *dconnec_idx;
-    PDM_malloc(dconnec_idx, (n_elt+1) ,int        );
-    PDM_g_num_t *delmt_ln_to_gn;
-    PDM_malloc(delmt_ln_to_gn, (n_elt  ) ,PDM_g_num_t);
+    int         *dconnec_idx    = NULL;
+    PDM_g_num_t *delmt_ln_to_gn = NULL;
+    PDM_malloc(dconnec_idx   , n_elt+1, int        );
+    PDM_malloc(delmt_ln_to_gn, n_elt  , PDM_g_num_t);
 
     int strid = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
     dconnec_idx[0] = 0;
@@ -319,8 +319,8 @@ _dmesh_nodal_dump_vtk
       // PDM_log_trace_array_long(delmt_ln_to_gn, n_elt, "  delmt_ln_to_gn (shifted) : ");
 
       n_field = 1;
-      PDM_malloc(field,n_field,double *);
-      PDM_malloc(field[0],n_elt,double);
+      PDM_malloc(field   , n_field, double *);
+      PDM_malloc(field[0], n_elt  , double  );
       for (int i = 0; i < n_elt; i++) {
         assert (pelt_group_idx[i+1] == pelt_group_idx[i] + 1);
         field[0][i] = (double) pelt_group[i];
