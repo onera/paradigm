@@ -555,19 +555,20 @@ _compute_offset
                                                                         vtx_ln_to_gn,
                                                                         part_ext->comm);
 
-  assert(part_ext->shift_by_domain_edge_group == NULL);
-  part_ext->shift_by_domain_edge_group = PDM_compute_offset_ln_to_gn_by_domain(part_ext->n_domain,
-                                                                               part_ext->n_part,
-                                                                               pn_edge_group,
-                                                                               edge_group_ln_to_gn,
-                                                                               part_ext->comm);
+  // Not used but keep for memory / debug
+  // assert(part_ext->shift_by_domain_edge_group == NULL);
+  // part_ext->shift_by_domain_edge_group = PDM_compute_offset_ln_to_gn_by_domain(part_ext->n_domain,
+  //                                                                              part_ext->n_part,
+  //                                                                              pn_edge_group,
+  //                                                                              edge_group_ln_to_gn,
+  //                                                                              part_ext->comm);
 
-  assert(part_ext->shift_by_domain_face_group == NULL);
-  part_ext->shift_by_domain_face_group = PDM_compute_offset_ln_to_gn_by_domain(part_ext->n_domain,
-                                                                               part_ext->n_part,
-                                                                               pn_face_group,
-                                                                               face_group_ln_to_gn,
-                                                                               part_ext->comm);
+  // assert(part_ext->shift_by_domain_face_group == NULL);
+  // part_ext->shift_by_domain_face_group = PDM_compute_offset_ln_to_gn_by_domain(part_ext->n_domain,
+  //                                                                              part_ext->n_part,
+  //                                                                              pn_face_group,
+  //                                                                              face_group_ln_to_gn,
+  //                                                                              part_ext->comm);
 
   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
     PDM_free(pn_cell      [i_domain]);
@@ -1185,13 +1186,12 @@ _build_part_extension_graph_to_old
 
     int i_read_ancstr = 0;
     for (int i_entity=0; i_entity<new_n_entity[i_part]; ++i_entity) {
-      int shift = shift_entity[part_ext->lpart_to_dom[i_part]];
       if (l_entity_ancstr_strd[i_part][i_entity]==0) {
-        l_entity_ancstr     [i_part][i_entity] = new_entity_gnum[i_part][i_entity]-shift;
+        l_entity_ancstr     [i_part][i_entity] = new_entity_gnum[i_part][i_entity];
         l_entity_ancstr_strd[i_part][i_entity] = 1;
       }
       else {
-        l_entity_ancstr[i_part][i_entity] = new_entity_ancstr[i_part][i_read_ancstr++]-shift;
+        l_entity_ancstr[i_part][i_entity] = new_entity_ancstr[i_part][i_read_ancstr++];
       }
     }
     l_entity_ancstr_idx[i_part] = PDM_array_new_idx_from_sizes_int(l_entity_ancstr_strd[i_part], new_n_entity[i_part]);
@@ -1365,6 +1365,16 @@ _build_part_extension_graph_to_old
           entity_group_n[group_tag-1]++;
         }
       }
+
+      if (debug == 1) {
+        log_trace("n_group = %d\n", init_n_entity_group[i_part]);
+        int size_group = entity_group_idx[i_part][init_n_entity_group[i_part]];
+        PDM_log_trace_connectivity_int(entity_group_idx [i_part],
+                                       entity_group     [i_part],
+                                       init_n_entity_group[i_part], "entity_group");
+        PDM_log_trace_array_long(entity_group_gnum[i_part], size_group                 , "entity_group_gnum ::");
+      }
+
       free(entity_group_n);
       free(rcvd_group_tag [i_part]);
       free(rcvd_group_gnum[i_part]);
@@ -1380,7 +1390,16 @@ _build_part_extension_graph_to_old
   PDM_free(l_entity_ancstr_idx);
   PDM_free(pentity_trplt);
   PDM_part_to_part_free(ptp);
-      
+
+  /*
+   * We reapply shift after part_to_part to avoid merge same gnum in part_to_part (but from different domain)
+   */
+  for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
+    for (int i_entity=0; i_entity<new_n_entity[i_part]; ++i_entity) {
+      int shift = shift_entity[part_ext->lpart_to_dom[i_part]];
+      l_entity_ancstr[i_part][i_entity] -= shift;
+    }
+  }
 
   *out_pentity_to_entity_trplt  = rcvd_trplt;
   *out_pentity_to_entity_ancstr = l_entity_ancstr;
