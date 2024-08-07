@@ -143,6 +143,7 @@ struct _pdm_extract_part_t
   PDM_bool_t                   is_owner_extract_pmne;
   PDM_part_mesh_nodal_elmts_t *extract_pmne;
 
+  PDM_bool_t                   is_owner_extract_pmn;
   PDM_part_mesh_nodal_t       *extract_pmn;
 
   /* Part-to-part objects */

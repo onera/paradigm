@@ -33,6 +33,7 @@
 #include "pdm_mpi.h"
 #include "pdm_part_to_part.h"
 #include "pdm_part_mesh_nodal_elmts.h"
+#include "pdm_part_mesh_nodal.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -247,6 +248,13 @@ PDM_extract_part_part_nodal_set
   PDM_part_mesh_nodal_elmts_t *pmne
 );
 
+void
+PDM_extract_part_part_nodal_set2
+(
+  PDM_extract_part_t    *extrp,
+  PDM_part_mesh_nodal_t *pmn
+);
+
 /**
  *
  * \brief Set entity center (ussefull for equilibrate / hilbert ordering )
@@ -417,6 +425,14 @@ PDM_extract_part_part_mesh_nodal_get
   PDM_extract_part_t           *extrp,
   PDM_part_mesh_nodal_elmts_t **extract_pmne,
   PDM_ownership_t               ownership
+);
+
+void
+PDM_extract_part_part_mesh_nodal_get2
+(
+  PDM_extract_part_t     *extrp,
+  PDM_part_mesh_nodal_t **extract_pmn,
+  PDM_ownership_t         ownership
 );
 
 
