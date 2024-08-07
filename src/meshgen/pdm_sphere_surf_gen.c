@@ -253,8 +253,8 @@ PDM_sphere_surf_gen
   int           dn_face       = (int) (_distrib_face[i_rank+1] - _distrib_face[i_rank]);
   int         *_dface_vtx_idx = NULL;
   PDM_g_num_t *_dface_vtx     = NULL;
-  PDM_malloc(_dface_vtx_idx,(dn_face + 1), int        );
-  PDM_malloc(_dface_vtx    , dn_face * 3 , PDM_g_num_t);
+  PDM_malloc(_dface_vtx_idx, dn_face + 1, int        );
+  PDM_malloc(_dface_vtx    , dn_face * 3, PDM_g_num_t);
 
   _dface_vtx_idx[0] = 0;
   for (int i = 0; i < dn_face; i++) {

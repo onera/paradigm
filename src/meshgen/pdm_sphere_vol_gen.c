@@ -1059,7 +1059,7 @@ _gen_from_base_mesh
 
   if (n > 1) {
     for (int k = 0; k < n-2; k++) {
-      PDM_malloc(tetra_j_idx[k], (n-1-k), int);
+      PDM_malloc(tetra_j_idx[k],  n-1-k, int);
       tetra_j_idx[k][0] = 0;
       for (int j = 0; j < n-2-k; j++) {
         tetra_j_idx[k][j+1] = tetra_j_idx[k][j] + n-2-k-j;
@@ -1259,7 +1259,7 @@ _gen_from_base_mesh
 
 
   int *hextet_k_idx[6];
-  PDM_malloc(hextet_k_idx[0], (n+2), int);
+  PDM_malloc(hextet_k_idx[0], n+2, int);
   hextet_k_idx[0][0] = 0;
   for (int k = 0; k < n+1; k++) {
     int p = n-k;
@@ -1267,7 +1267,7 @@ _gen_from_base_mesh
   }
   assert(hextet_k_idx[0][n+1] == subcell_hextet_n[0]);
 
-  PDM_malloc(hextet_k_idx[1], (n+1), int);
+  PDM_malloc(hextet_k_idx[1], n+1, int);
   hextet_k_idx[1][0] = 0;
   for (int k = 0; k < n; k++) {
     int p = n-1-k;

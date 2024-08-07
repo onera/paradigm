@@ -1105,7 +1105,7 @@ PDM_poly_vol_gen
   /*
    *  Cell-face
    */
-  PDM_malloc(*dcell_face_idx, (*dn_cell + 1), int);
+  PDM_malloc(*dcell_face_idx, *dn_cell + 1, int);
   int *_dcell_face_idx = *dcell_face_idx;
   _dcell_face_idx[0] = 0;
 
