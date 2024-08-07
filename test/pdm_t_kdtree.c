@@ -70,7 +70,7 @@ int exit_code
  *
  * \param [in]    argc   Number of arguments
  * \param [in]    argv   Arguments
- * \param [inout] nPts   Number of points
+ * \param [inout] n_pts  Number of points
  * \param [inout] ls     Low scalability
  * \param [inout] length Length of domains
  *
@@ -81,7 +81,7 @@ _read_args
 (
  int            argc,
  char         **argv,
- PDM_g_num_t   *nPts,
+ PDM_g_num_t   *n_pts,
  double        *radius,
  int           *local,
  int           *rand,
@@ -103,8 +103,8 @@ _read_args
         _usage(EXIT_FAILURE);
       }
       else {
-        long _nPts = atol(argv[i]);
-        *nPts = (PDM_g_num_t) _nPts;
+        long _n_pts = atol(argv[i]);
+        *n_pts = (PDM_g_num_t) _n_pts;
       }
     }
 
@@ -166,7 +166,7 @@ char *argv[]
   int n_rank;
   PDM_MPI_Comm_size (PDM_MPI_COMM_WORLD, &n_rank);
 
-  PDM_g_num_t nPts   = 10;
+  PDM_g_num_t n_pts  = 10;
   double      radius = 10.;
   int         local  = 0;
   int         rand   = 0;
@@ -174,7 +174,7 @@ char *argv[]
 
   _read_args(argc,
              argv,
-             &nPts,
+             &n_pts,
              &radius,
              &local,
              &rand,
@@ -198,7 +198,7 @@ char *argv[]
     PDM_point_cloud_gen_random (comm,
                                 0, // seed
                                 0, // geometric_g_num
-                                nPts,
+                                n_pts,
                                 -radius, -radius, -radius,
                                 radius, radius, radius,
                                 &n_src,
@@ -218,18 +218,16 @@ char *argv[]
     n_src = (int) (distrib[i_rank+1] - distrib[i_rank]);
     double *dvtx_coord = PDM_DMesh_nodal_vtx_get(dmn);
 
-    PDM_malloc(src_coord,n_src * 3,double);
+    PDM_malloc(src_coord, n_src * 3, double);
     memcpy(src_coord, dvtx_coord, sizeof(double) * n_src * 3);
 
-    PDM_malloc(src_g_num,n_src,PDM_g_num_t);
+    PDM_malloc(src_g_num, n_src, PDM_g_num_t);
     for (int i = 0; i < n_src; i++) {
       src_g_num[i] = distrib[i_rank] + i + 1;
     }
 
     PDM_DMesh_nodal_free(dmn);
   }
-
-
 
   int depth_max = 31;
   int points_in_leaf_max = 10;
@@ -266,18 +264,8 @@ char *argv[]
 
   PDM_kdtree_seq_free(kdt_orig);
 
-
-
-
-
-
-
-
-
-
-
-  double *weight;
-  PDM_malloc(weight, n_src ,double);
+  double *weight = NULL;
+  PDM_malloc(weight, n_src, double);
   for(int i = 0; i < n_src; ++i) {
     weight[i] = 1.;
   }

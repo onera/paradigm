@@ -207,7 +207,7 @@ int main(int argc, char *argv[])
    *  Visu VTK
    */
   PDM_g_num_t *dvtx_ln_to_gn;
-  PDM_malloc(dvtx_ln_to_gn,dn_vtx,PDM_g_num_t);
+  PDM_malloc(dvtx_ln_to_gn, dn_vtx, PDM_g_num_t);
   for (int i = 0; i < dn_vtx; i++) {
     dvtx_ln_to_gn[i] = distrib_vtx[i_rank] + i + 1;
   }
@@ -227,14 +227,14 @@ int main(int argc, char *argv[])
   int *dcell_vtx_idx = PDM_array_new_idx_from_const_stride_int(4,
                                                                dn_cell);
 
-  int          pn_vtx        = 0;
-  PDM_g_num_t *pvtx_ln_to_gn = NULL;
-  int         *pcell_vtx_idx = NULL;
-  int         *pcell_vtx     = NULL;
-  double      *pvtx_coord    = NULL;
+  int          pn_vtx         = 0;
+  PDM_g_num_t *pcell_ln_to_gn = NULL;
+  PDM_g_num_t *pvtx_ln_to_gn  = NULL;
+  int         *pcell_vtx_idx  = NULL;
+  int         *pcell_vtx      = NULL;
+  double      *pvtx_coord     = NULL;
 
-  PDM_g_num_t *pcell_ln_to_gn;
-  PDM_malloc(pcell_ln_to_gn,dn_cell,PDM_g_num_t);
+  PDM_malloc(pcell_ln_to_gn, dn_cell, PDM_g_num_t);
   for (int i = 0; i < dn_cell; i++) {
     pcell_ln_to_gn[i] = distrib_cell[i_rank] + i + 1;
   }
@@ -277,8 +277,8 @@ int main(int argc, char *argv[])
                                NULL,
                                NULL);
   }
-  double *volume;
-  PDM_malloc(volume,dn_cell,double);
+  double *volume = NULL;
+  PDM_malloc(volume, dn_cell, double);
   // PDM_geom_elem_tetra_oriented_volume(dn_cell,
   //                                     pcell_vtx,
   //                                     pvtx_coord,

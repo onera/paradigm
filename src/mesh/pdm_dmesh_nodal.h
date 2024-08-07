@@ -727,44 +727,6 @@ int               *n_sum_vtx_face_tot
 );
 
 /**
-*
-* \brief Concatenates all element sections blocks
-*
-* \param [in]   dmesh_nodal
-* \param [out]  section_idx        index of element section
-* \param [out]  cat_delt_vtx_idx   index of element
-* \param [out]  cat_delt_vtx       element vtx
-*
- * \return     Number sections
-*/
-int PDM_concat_elt_sections
-(
-  PDM_dmesh_nodal_t  *dmesh_nodal,
-  int               **section_idx,
-  int               **cat_delt_vtx_idx,
-  PDM_g_num_t       **cat_dcell_vtx
-);
-
-/**ss
-*
-* \brief Concatenates 3D element sections blocks
-*
-* \param [in]   dmesh_nodal
-* \param [out]  section_idx        index of element section
-* \param [out]  cat_delt_vtx_idx   index of element
-* \param [out]  cat_delt_vtx       element vtx
-*
- * \return     Number sections
-*/
-int PDM_concat_cell_sections
-(
-  PDM_dmesh_nodal_t  *dmesh_nodal,
-  int               **section_idx,
-  int               **cat_delt_vtx_idx,
-  PDM_g_num_t       **cat_delt_vtx
-);
-
-/**
  * \brief  Compute cell->cell connectivity
  *
  * \param [in]   hdl              Distributed nodal mesh handle

@@ -265,10 +265,10 @@ int main(int argc, char *argv[])
 
     int dn_extract_edge = distrib_ridge[i_rank+1] - distrib_ridge[i_rank];
 
-    int *dridge_vtx_idx;
-    PDM_malloc(dridge_vtx_idx,(dn_extract_edge+1) ,int);
-    PDM_g_num_t *ridge_ln_to_gn;
-    PDM_malloc(ridge_ln_to_gn,dn_extract_edge ,PDM_g_num_t);
+    int         *dridge_vtx_idx = NULL;
+    PDM_g_num_t *ridge_ln_to_gn = NULL;
+    PDM_malloc(dridge_vtx_idx, dn_extract_edge+1, int        );
+    PDM_malloc(ridge_ln_to_gn, dn_extract_edge  , PDM_g_num_t);
 
     dridge_vtx_idx[0] = 0;
     for(int i = 0; i < dn_extract_edge; ++i) {

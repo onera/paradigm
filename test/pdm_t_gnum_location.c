@@ -140,16 +140,16 @@ PDM_part_split_t           method,
  PDM_g_num_t   *n_g_vtx,
  PDM_g_num_t   *n_g_edge,
  int           *n_total_part,
- int           *nedge_group
+ int           *n_edge_group
 )
 {
   struct timeval t_elaps_debut;
 
   int i_rank;
-  int numProcs;
+  int n_rank;
 
   PDM_MPI_Comm_rank (pdm_mpi_comm, &i_rank);
-  PDM_MPI_Comm_size (pdm_mpi_comm, &numProcs);
+  PDM_MPI_Comm_size (pdm_mpi_comm, &n_rank);
 
   double        xmin = 0.;
   double        xmax = length;
@@ -159,15 +159,15 @@ PDM_part_split_t           method,
   PDM_g_num_t  ny = n_vtx_seg;
   int           dn_face;
   int           dn_vtx;
-  int           dnedge;
+  int           dn_edge;
   int          *dface_vtx_idx;
-  PDM_g_num_t *dface_vtx;
+  PDM_g_num_t  *dface_vtx;
   double       *dvtx_coord;
-  PDM_g_num_t *dface_edge;
-  PDM_g_num_t *dedge_vtx;
-  PDM_g_num_t *dedge_face;
+  PDM_g_num_t  *dface_edge;
+  PDM_g_num_t  *dedge_vtx;
+  PDM_g_num_t  *dedge_face;
   int          *dedge_group_idx;
-  PDM_g_num_t   *dedge_group;
+  PDM_g_num_t  *dedge_group;
 
   int           init_random = 0;
 
@@ -202,10 +202,10 @@ PDM_part_split_t           method,
                      &dface_vtx_idx,
                      &dface_vtx,
                      &dface_edge,
-                     &dnedge,
+                     &dn_edge,
                      &dedge_vtx,
                      &dedge_face,
-                     nedge_group,
+                     n_edge_group,
                      &dedge_group_idx,
                      &dedge_group);
 
@@ -214,7 +214,7 @@ PDM_part_split_t           method,
   // fin validation
 
   double *char_size;
-  PDM_malloc(char_size,dn_vtx,double);
+  PDM_malloc(char_size, dn_vtx, double);
   for (int j = 0; j < dn_vtx; j++) {
     char_size[j] = 1e-3;
   }
@@ -224,8 +224,8 @@ PDM_part_split_t           method,
 
   const PDM_g_num_t *_numabs = PDM_gnum_get (gen_gnum, 0);
 
-  PDM_g_num_t *_numabs2;
-  PDM_malloc(_numabs2,dn_vtx,PDM_g_num_t);
+  PDM_g_num_t *_numabs2 = NULL;
+  PDM_malloc(_numabs2, dn_vtx, PDM_g_num_t);
 
 
   for (int j = 0; j < dn_vtx; j++) {
@@ -280,7 +280,7 @@ PDM_part_split_t           method,
   if (0 == 1) {
 
     PDM_printf ("edgegroup : ");
-    for (int i = 0; i < *nedge_group; i++) {
+    for (int i = 0; i < *n_edge_group; i++) {
       for (int j = dedge_group_idx[i]; j <  dedge_group_idx[i+1]; j++)
         PDM_printf (" "PDM_FMT_G_NUM, dedge_group[j]);
       PDM_printf ("\n");
@@ -301,14 +301,14 @@ PDM_part_split_t           method,
     }
 
     PDM_printf ("dedge_vtx : ");
-    for (int i = 0; i < dnedge; i++) {
+    for (int i = 0; i < dn_edge; i++) {
       PDM_printf (" "PDM_FMT_G_NUM, dedge_vtx[2*i]);
       PDM_printf (" "PDM_FMT_G_NUM, dedge_vtx[2*i+1]);
       PDM_printf ("\n");
     }
 
     PDM_printf ("dedge_face : ");
-    for (int i = 0; i < dnedge; i++) {
+    for (int i = 0; i < dn_edge; i++) {
       PDM_printf (" "PDM_FMT_G_NUM, dedge_face[2*i]);
       PDM_printf (" "PDM_FMT_G_NUM, dedge_face[2*i+1]);
       PDM_printf ("\n");
@@ -321,25 +321,22 @@ PDM_part_split_t           method,
 
   int have_dcell_part = 0;
 
-  int *dcell_part;
-  PDM_malloc(dcell_part,dn_face,int);
-  int *dedge_vtxIdx;
-  PDM_malloc(dedge_vtxIdx,(dnedge+1),int);
+  int *dcell_part    = NULL;
+  int *dedge_vtx_idx = NULL;
+  PDM_malloc(dcell_part   , dn_face    , int);
+  PDM_malloc(dedge_vtx_idx, dn_edge + 1, int);
 
-  dedge_vtxIdx[0] = 0;
-  for (int i = 0; i < dnedge; i++) {
-    dedge_vtxIdx[i+1] = 2 + dedge_vtxIdx[i];
+  dedge_vtx_idx[0] = 0;
+  for (int i = 0; i < dn_edge; i++) {
+    dedge_vtx_idx[i+1] = 2 + dedge_vtx_idx[i];
   }
 
   /*
    *  Split mesh i
    */
-
-  // int ppart_id;
-
-  int n_property_cell = 0;
+  int  n_property_cell       = 0;
   int *renum_properties_cell = NULL;
-  int n_property_face = 0;
+  int  n_property_face       = 0;
   int *renum_properties_face = NULL;
 
   PDM_part_t *ppart = PDM_part_create (pdm_mpi_comm,
@@ -352,9 +349,9 @@ PDM_part_split_t           method,
                                        renum_properties_face,
                                        n_part,
                                        dn_face,
-                                       dnedge,
+                                       dn_edge,
                                        dn_vtx,
-                                       *nedge_group,
+                                       *n_edge_group,
                                        NULL,
                                        NULL,
                                        NULL,
@@ -362,7 +359,7 @@ PDM_part_split_t           method,
                                        have_dcell_part,
                                        dcell_part,
                                        dedge_face,
-                                       dedge_vtxIdx,
+                                       dedge_vtx_idx,
                                        dedge_vtx,
                                        NULL,
                                        dvtx_coord,
@@ -372,10 +369,10 @@ PDM_part_split_t           method,
 
   PDM_free(dcell_part);
 
-  double  *elapsed = NULL;
-  double  *cpu = NULL;
+  double  *elapsed  = NULL;
+  double  *cpu      = NULL;
   double  *cpu_user = NULL;
-  double  *cpu_sys = NULL;
+  double  *cpu_sys  = NULL;
 
   PDM_part_time_get (ppart,
                      &elapsed,
@@ -435,7 +432,7 @@ PDM_part_split_t           method,
   PDM_free(dface_vtx_idx);
   PDM_free(dface_vtx);
   PDM_free(dface_edge);
-  PDM_free(dedge_vtxIdx);
+  PDM_free(dedge_vtx_idx);
   PDM_free(dedge_vtx);
   PDM_free(dedge_face);
   PDM_free(dedge_group_idx);
@@ -444,27 +441,27 @@ PDM_part_split_t           method,
   for (int i_part = 0; i_part < n_part; i_part++) {
 
     int n_face;
-    int nEdge;
-    int nEdgePartBound;
+    int n_edge;
+    int n_edge_part_bound;
     int n_vtx;
     int n_proc;
-    int sFaceEdge;
-    int sEdgeVtx;
-    int sEdgeGroup;
-    int nedge_group2;
+    int s_face_edge;
+    int s_edge_vtx;
+    int s_edge_group;
+    int n_edge_group2;
 
     PDM_part_part_dim_get (ppart,
                            i_part,
                            &n_face,
-                           &nEdge,
-                           &nEdgePartBound,
+                           &n_edge,
+                           &n_edge_part_bound,
                            &n_vtx,
                            &n_proc,
                            n_total_part,
-                           &sFaceEdge,
-                           &sEdgeVtx,
-                           &sEdgeGroup,
-                           &nedge_group2);
+                           &s_face_edge,
+                           &s_edge_vtx,
+                           &s_edge_group,
+                           &n_edge_group2);
 
   }
 
@@ -492,14 +489,14 @@ char *argv[]
    *  Set default values
    */
 
-  PDM_g_num_t   n_vtx_seg = 4;
-  double        length  = 1.;
-  int           n_part   = 1;
-  PDM_part_split_t method  = PDM_PART_SPLIT_HILBERT;
-  int           have_random = 0;
+  PDM_g_num_t      n_vtx_seg   = 4;
+  double           length      = 1.;
+  int              n_part      = 1;
+  PDM_part_split_t method      = PDM_PART_SPLIT_HILBERT;
+  int              have_random = 0;
 
   int           i_rank;
-  int           numProcs;
+  int           n_rank;
 
   /*
    *  Read args
@@ -511,7 +508,7 @@ char *argv[]
               &length);
 
   PDM_MPI_Comm_rank (PDM_MPI_COMM_WORLD, &i_rank);
-  PDM_MPI_Comm_size (PDM_MPI_COMM_WORLD, &numProcs);
+  PDM_MPI_Comm_size (PDM_MPI_COMM_WORLD, &n_rank);
 
   /*
    *  Create a partitioned mesh
@@ -522,7 +519,7 @@ char *argv[]
   PDM_g_num_t n_g_edge;
   int imesh = 0;
   int n_total_part;
-  int nedge_group;
+  int n_edge_group;
 
   PDM_part_t* ppart = _create_split_mesh (imesh,
                                           PDM_MPI_COMM_WORLD,
@@ -535,7 +532,7 @@ char *argv[]
                                           &n_g_vtx,
                                           &n_g_edge,
                                           &n_total_part,
-                                          &nedge_group);
+                                          &n_edge_group);
 
   PDM_part_free(ppart);
 

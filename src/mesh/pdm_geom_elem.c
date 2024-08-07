@@ -235,7 +235,7 @@ _intersect_ray_face
 /**
  *  \brief Compute a dynamic geometric epsilon from a characteristic length
  *
- *    @param [in]  characteristicLength  Characteristic length
+ *    @param [in]  characteristic_length  Characteristic length
  *    @param [in]  consEpsilon           Constant part
  *    @return                            Geometric epsilon
  */
@@ -243,36 +243,36 @@ _intersect_ray_face
 double
 PDM_geom_elem_geometric_epsilon
 (
- const double characteristicLength,
- const double constEpsilon
+ const double characteristic_length,
+ const double const_epsilon
  )
 {
-  return PDM_MAX(constEpsilon * characteristicLength, GEOM_EPS_MIN);
+  return PDM_MAX(const_epsilon * characteristic_length, GEOM_EPS_MIN);
 }
 
 /**
  *  \brief Triangle surface vector
  *
- *  @param [in]  nTriangle      Number of triangles
+ *  @param [in]  n_triangle      Number of triangles
  *  @param [in]  connectivity   Connectivity
  *  @param [in]  coords         Vertice coordinates
  *  @param [out] surface_vector  Surface Vector
- *  @param [out] characteristicLength  Characteristic length (active if != NULL)
- *  @param [out] isDegenerated         Degenerated edge indicator (active if != NULL)
+ *  @param [out] characteristic_length  Characteristic length (active if != NULL)
+ *  @param [out] is_degenerated         Degenerated edge indicator (active if != NULL)
  */
 
 void
 PDM_geom_elem_tria_surface_vector
 (
- const int     nTriangle,
+ const int     n_triangle,
  const int    *connectivity,
  const double *coords,
  double       *surface_vector,
- double       *characteristicLength,
- int          *isDegenerated
+ double       *characteristic_length,
+ int          *is_degenerated
  )
 {
-  for (int itri = 0; itri < nTriangle; itri++) {
+  for (int itri = 0; itri < n_triangle; itri++) {
 
     const int i = connectivity[3*itri    ] - 1;
     const int j = connectivity[3*itri + 1] - 1;
@@ -290,7 +290,7 @@ PDM_geom_elem_tria_surface_vector
     v2[1] = coords[3*k + 1] - coords[3*i + 1];
     v2[2] = coords[3*k + 2] - coords[3*i + 2];
 
-    if (characteristicLength != NULL) {
+    if (characteristic_length != NULL) {
 
       double v3[3];
 
@@ -302,7 +302,7 @@ PDM_geom_elem_tria_surface_vector
       double normV2 = PDM_MODULE(v2);
       double normV3 = PDM_MODULE(v3);
 
-      characteristicLength[itri] = PDM_MIN(PDM_MIN(normV1, normV2), normV3);
+      characteristic_length[itri] = PDM_MIN(PDM_MIN(normV1, normV2), normV3);
 
     }
 
@@ -312,13 +312,13 @@ PDM_geom_elem_tria_surface_vector
     surface_vectorTri[1] *= 0.5;
     surface_vectorTri[2] *= 0.5;
 
-    if ((characteristicLength != NULL) && (isDegenerated != NULL)) {
+    if ((characteristic_length != NULL) && (is_degenerated != NULL)) {
 
       double normsurface_vectorTri = PDM_MODULE(surface_vectorTri);
-      double eps_loc = PDM_geom_elem_geometric_epsilon(characteristicLength[itri], GEOM_EPS_SURF);
-      isDegenerated[itri] = 0;
+      double eps_loc = PDM_geom_elem_geometric_epsilon(characteristic_length[itri], GEOM_EPS_SURF);
+      is_degenerated[itri] = 0;
       if (normsurface_vectorTri <= eps_loc)
-        isDegenerated[itri] = 1;
+        is_degenerated[itri] = 1;
 
     }
   }
@@ -327,7 +327,7 @@ PDM_geom_elem_tria_surface_vector
 /**
  *  \brief Triangle area
  *
- *  @param [in]  nTriangle      Number of triangles
+ *  @param [in]  n_triangle      Number of triangles
  *  @param [in]  surface_vector         surface_vector vectors
  *  @param [out] area           Area
  */
@@ -335,13 +335,13 @@ PDM_geom_elem_tria_surface_vector
 void
 PDM_geom_elem_tria_area
 (
- const int     nTriangle,
+ const int     n_triangle,
  const double *surface_vector,
  double *area
  )
 
 {
-  for (int itri = 0; itri < nTriangle; itri++) {
+  for (int itri = 0; itri < n_triangle; itri++) {
     const double *surface_vectorTri = surface_vector + 3*itri;
     area[itri] = PDM_MODULE(surface_vectorTri);
   }
@@ -350,7 +350,7 @@ PDM_geom_elem_tria_area
 /**
  *  \brief Triangle center
  *
- *  @param [in]  nTriangle      Number of triangles
+ *  @param [in]  n_triangle      Number of triangles
  *  @param [in]  connectivity   Connectivity
  *  @param [in]  coords         Vertice coordinates
  *  @param [out] center         center
@@ -359,23 +359,23 @@ PDM_geom_elem_tria_area
 void
 PDM_geom_elem_tria_center
 (
- const int     nTriangle,
+ const int     n_triangle,
  const int    *connectivity,
  const double *coords,
- double *center
- )
+       double *center
+)
 {
-  for (int itri = 0; itri < nTriangle; itri++) {
+  for (int itri = 0; itri < n_triangle; itri++) {
 
     const int i = connectivity[3*itri    ] - 1;
     const int j = connectivity[3*itri + 1] - 1;
     const int k = connectivity[3*itri + 2] - 1;
 
-    double *centerTri = center + 3*itri;
+    double *center_tri = center + 3*itri;
 
-    centerTri[0] = (coords[3*i    ] + coords[3*j    ] + coords[3*k    ])/3;
-    centerTri[1] = (coords[3*i + 1] + coords[3*j + 1] + coords[3*k + 1])/3;
-    centerTri[2] = (coords[3*i + 2] + coords[3*j + 2] + coords[3*k + 2])/3;
+    center_tri[0] = (coords[3*i    ] + coords[3*j    ] + coords[3*k    ])/3;
+    center_tri[1] = (coords[3*i + 1] + coords[3*j + 1] + coords[3*k + 1])/3;
+    center_tri[2] = (coords[3*i + 2] + coords[3*j + 2] + coords[3*k + 2])/3;
   }
 }
 
@@ -383,47 +383,47 @@ PDM_geom_elem_tria_center
 /**
  *  \brief Tetrahedra oriented volume
  *
- *  @param [in]  nTetrahedra           Number of tetrahedra
+ *  @param [in]  n_tetrahedra           Number of tetrahedra
  *  @param [in]  connectivity          Connectivity
  *  @param [in]  coords                Vertice coordinates
  *  @param [out] volume                Volume
- *  @param [out] characteristicLength  Characteristic length (active if != NULL)
- *  @param [out] isDegenerated         Degenerated edge indicator (active if != NULL)
+ *  @param [out] characteristic_length  Characteristic length (active if != NULL)
+ *  @param [out] is_degenerated         Degenerated edge indicator (active if != NULL)
  */
 
 void
 PDM_geom_elem_tetra_oriented_volume
 (
- const int     nTetrahedra,
+ const int     n_tetrahedra,
  const int    *connectivity,
  const double *coords,
  double       *volume,
- double       *characteristicLength,
- int         *isDegenerated
+ double       *characteristic_length,
+ int          *is_degenerated
  )
 {
-  for (int itet = 0; itet < nTetrahedra; itet++) {
+  for (int itet = 0; itet < n_tetrahedra; itet++) {
 
-    const int *connectivityTet = connectivity + 4*itet;
+    const int *tetra_vtx = connectivity + 4*itet;
 
-    const int i1 = connectivityTet[0] - 1;
-    const int i2 = connectivityTet[1] - 1;
-    const int i3 = connectivityTet[2] - 1;
-    const int i4 = connectivityTet[3] - 1;
+    const int i1 = tetra_vtx[0] - 1;
+    const int i2 = tetra_vtx[1] - 1;
+    const int i3 = tetra_vtx[2] - 1;
+    const int i4 = tetra_vtx[3] - 1;
 
-    const int nTriangle = 1;
+    const int n_triangle = 1;
     double surface_vector[3];
-    double faceCenter[3];
+    double face_center[3];
     double fC_i4[3];
 
-    PDM_geom_elem_tria_surface_vector(nTriangle,
-                                      connectivityTet,
+    PDM_geom_elem_tria_surface_vector(n_triangle,
+                                      tetra_vtx,
                                       coords,
                                       surface_vector,
                                       NULL,
                                       NULL);
 
-    if (characteristicLength != NULL) {
+    if (characteristic_length != NULL) {
 
       double vectV1V2[3] =
         {coords[3*i2    ] - coords[3*i1    ],
@@ -450,31 +450,31 @@ PDM_geom_elem_tetra_oriented_volume
       double normV2V3 = PDM_MODULE(vectV2V3);
       double normV1V4 = PDM_MODULE(vectV1V4);
 
-      characteristicLength[itet] = PDM_MIN(normV1V2,                    normV1V3);
-      characteristicLength[itet] = PDM_MIN(characteristicLength[itet],  normV2V3);
-      characteristicLength[itet] = PDM_MIN(characteristicLength[itet],  normV1V2);
-      characteristicLength[itet] = PDM_MIN(characteristicLength[itet],  normV1V3);
-      characteristicLength[itet] = PDM_MIN(characteristicLength[itet],  normV1V4);
+      characteristic_length[itet] = PDM_MIN(normV1V2,                    normV1V3);
+      characteristic_length[itet] = PDM_MIN(characteristic_length[itet],  normV2V3);
+      characteristic_length[itet] = PDM_MIN(characteristic_length[itet],  normV1V2);
+      characteristic_length[itet] = PDM_MIN(characteristic_length[itet],  normV1V3);
+      characteristic_length[itet] = PDM_MIN(characteristic_length[itet],  normV1V4);
 
     }
 
-    PDM_geom_elem_tria_center (nTriangle,
+    PDM_geom_elem_tria_center (n_triangle,
                                connectivity,
                                coords,
-                               faceCenter);
+                               face_center);
 
-    fC_i4[0] = coords[3*i4    ] - faceCenter[0];
-    fC_i4[1] = coords[3*i4 + 1] - faceCenter[1];
-    fC_i4[2] = coords[3*i4 + 2] - faceCenter[2];
+    fC_i4[0] = coords[3*i4    ] - face_center[0];
+    fC_i4[1] = coords[3*i4 + 1] - face_center[1];
+    fC_i4[2] = coords[3*i4 + 2] - face_center[2];
 
     volume[itet] = 1./3. * PDM_DOT_PRODUCT(fC_i4, surface_vector);
 
-    if ((characteristicLength != NULL) && (isDegenerated != NULL)) {
+    if ((characteristic_length != NULL) && (is_degenerated != NULL)) {
 
-      double eps_loc = PDM_geom_elem_geometric_epsilon(characteristicLength[itet], GEOM_EPS_VOL);
-      isDegenerated[itet] = 0;
+      double eps_loc = PDM_geom_elem_geometric_epsilon(characteristic_length[itet], GEOM_EPS_VOL);
+      is_degenerated[itet] = 0;
       if (volume[itet]  <= eps_loc)
-        isDegenerated[itet] = 1;
+        is_degenerated[itet] = 1;
 
     }
   }
@@ -483,7 +483,7 @@ PDM_geom_elem_tetra_oriented_volume
 /**
  *  \brief Tetrahedra center
  *
- *  @param [in]  nTetrahedra    Number of tetrahedra
+ *  @param [in]  n_tetrahedra    Number of tetrahedra
  *  @param [in]  connectivity   Connectivity
  *  @param [in]  coords         Vertice coordinates
  *  @param [out] center         center
@@ -492,14 +492,14 @@ PDM_geom_elem_tetra_oriented_volume
 void
 PDM_geom_elem_tetra_center
 (
- const int     nTetrahedra,
+ const int     n_tetrahedra,
  const int    *connectivity,
  const double *coords,
  double *center
  )
 
 {
-  for (int itet = 0; itet < nTetrahedra; itet++) {
+  for (int itet = 0; itet < n_tetrahedra; itet++) {
 
     const int i1 = connectivity[4*itet    ] - 1;
     const int i2 = connectivity[4*itet + 1] - 1;
@@ -509,11 +509,11 @@ PDM_geom_elem_tetra_center
     double *centerTet = center + 3*itet;
 
     centerTet[0] = (coords[3*i1    ] + coords[3*i2    ]
-                    + coords[3*i3    ] + coords[3*i4    ])/4;
+                  + coords[3*i3    ] + coords[3*i4    ])/4;
     centerTet[1] = (coords[3*i1 + 1] + coords[3*i2 + 1]
-                    + coords[3*i3 + 1] + coords[3*i4 + 1])/4;
+                  + coords[3*i3 + 1] + coords[3*i4 + 1])/4;
     centerTet[2] = (coords[3*i1 + 2] + coords[3*i2 + 2]
-                    + coords[3*i3 + 2] + coords[3*i4 + 2])/4;
+                  + coords[3*i3 + 2] + coords[3*i4 + 2])/4;
   }
 }
 
@@ -521,71 +521,71 @@ PDM_geom_elem_tetra_center
 /**
  *  \brief Tetrahedra Faces
  *
- *  @param [in]  nTetrahedra       Number of tetrahedra
+ *  @param [in]  n_tetrahedra       Number of tetrahedra
  *  @param [in]  orientation       Surface vector oriented towards inside cell (0) or outside (1)
  *  @param [in]  connectivity      Connectivity
- *  @param [out] faceConnectivity  Face connectivity
+ *  @param [out] face_connectivity  Face connectivity
  */
 
 void
 PDM_geom_elem_tetra_faces
 (
- const int     nTetrahedra,
+ const int     n_tetrahedra,
  const int     orientation,
  const int    *connectivity,
- int          *faceConnectivityIndex,
- int          *faceConnectivity
+ int          *face_connectivity_idx,
+ int          *face_connectivity
  )
 {
   const int n_face       = 4;         /* 4 triangles */
-  const int nVertex     = n_face * 3; /* 4 * 3 vertices */
-  const int nVertexElt  = 4;         /* 4 vertices */
+  const int n_vertex     = n_face * 3; /* 4 * 3 vertices */
+  const int n_vertex_elmt  = 4;         /* 4 vertices */
 
-  faceConnectivityIndex[0] = 0;
+  face_connectivity_idx[0] = 0;
 
-  for (int ielt = 0; ielt < nTetrahedra; ielt++) {
+  for (int ielt = 0; ielt < n_tetrahedra; ielt++) {
 
     for (int iface = 0; iface < n_face; iface++)
-      faceConnectivityIndex[ielt * n_face + iface + 1] =
-        faceConnectivityIndex[ielt * n_face + iface] + 3;
+      face_connectivity_idx[ielt * n_face + iface + 1] =
+        face_connectivity_idx[ielt * n_face + iface] + 3;
 
     if (orientation == 0) {
 
-      faceConnectivity[nVertex * ielt + 0]  = connectivity[nVertexElt * ielt    ];
-      faceConnectivity[nVertex * ielt + 1]  = connectivity[nVertexElt * ielt + 1];
-      faceConnectivity[nVertex * ielt + 2]  = connectivity[nVertexElt * ielt + 2];
+      face_connectivity[n_vertex * ielt + 0]  = connectivity[n_vertex_elmt * ielt    ];
+      face_connectivity[n_vertex * ielt + 1]  = connectivity[n_vertex_elmt * ielt + 1];
+      face_connectivity[n_vertex * ielt + 2]  = connectivity[n_vertex_elmt * ielt + 2];
 
-      faceConnectivity[nVertex * ielt + 3]  = connectivity[nVertexElt * ielt    ];
-      faceConnectivity[nVertex * ielt + 4]  = connectivity[nVertexElt * ielt + 3];
-      faceConnectivity[nVertex * ielt + 5]  = connectivity[nVertexElt * ielt + 1];
+      face_connectivity[n_vertex * ielt + 3]  = connectivity[n_vertex_elmt * ielt    ];
+      face_connectivity[n_vertex * ielt + 4]  = connectivity[n_vertex_elmt * ielt + 3];
+      face_connectivity[n_vertex * ielt + 5]  = connectivity[n_vertex_elmt * ielt + 1];
 
-      faceConnectivity[nVertex * ielt + 6]  = connectivity[nVertexElt * ielt    ];
-      faceConnectivity[nVertex * ielt + 7]  = connectivity[nVertexElt * ielt + 2];
-      faceConnectivity[nVertex * ielt + 8]  = connectivity[nVertexElt * ielt + 3];
+      face_connectivity[n_vertex * ielt + 6]  = connectivity[n_vertex_elmt * ielt    ];
+      face_connectivity[n_vertex * ielt + 7]  = connectivity[n_vertex_elmt * ielt + 2];
+      face_connectivity[n_vertex * ielt + 8]  = connectivity[n_vertex_elmt * ielt + 3];
 
-      faceConnectivity[nVertex * ielt + 9]  = connectivity[nVertexElt * ielt + 1];
-      faceConnectivity[nVertex * ielt + 10] = connectivity[nVertexElt * ielt + 3];
-      faceConnectivity[nVertex * ielt + 11] = connectivity[nVertexElt * ielt + 2];
+      face_connectivity[n_vertex * ielt + 9]  = connectivity[n_vertex_elmt * ielt + 1];
+      face_connectivity[n_vertex * ielt + 10] = connectivity[n_vertex_elmt * ielt + 3];
+      face_connectivity[n_vertex * ielt + 11] = connectivity[n_vertex_elmt * ielt + 2];
 
     }
 
     else {
 
-      faceConnectivity[nVertex * ielt + 0]  = connectivity[nVertexElt * ielt + 2];
-      faceConnectivity[nVertex * ielt + 1]  = connectivity[nVertexElt * ielt + 1];
-      faceConnectivity[nVertex * ielt + 2]  = connectivity[nVertexElt * ielt    ];
+      face_connectivity[n_vertex * ielt + 0]  = connectivity[n_vertex_elmt * ielt + 2];
+      face_connectivity[n_vertex * ielt + 1]  = connectivity[n_vertex_elmt * ielt + 1];
+      face_connectivity[n_vertex * ielt + 2]  = connectivity[n_vertex_elmt * ielt    ];
 
-      faceConnectivity[nVertex * ielt + 3]  = connectivity[nVertexElt * ielt + 1];
-      faceConnectivity[nVertex * ielt + 4]  = connectivity[nVertexElt * ielt + 3];
-      faceConnectivity[nVertex * ielt + 5]  = connectivity[nVertexElt * ielt    ];
+      face_connectivity[n_vertex * ielt + 3]  = connectivity[n_vertex_elmt * ielt + 1];
+      face_connectivity[n_vertex * ielt + 4]  = connectivity[n_vertex_elmt * ielt + 3];
+      face_connectivity[n_vertex * ielt + 5]  = connectivity[n_vertex_elmt * ielt    ];
 
-      faceConnectivity[nVertex * ielt + 6]  = connectivity[nVertexElt * ielt + 3];
-      faceConnectivity[nVertex * ielt + 7]  = connectivity[nVertexElt * ielt + 2];
-      faceConnectivity[nVertex * ielt + 8]  = connectivity[nVertexElt * ielt    ];
+      face_connectivity[n_vertex * ielt + 6]  = connectivity[n_vertex_elmt * ielt + 3];
+      face_connectivity[n_vertex * ielt + 7]  = connectivity[n_vertex_elmt * ielt + 2];
+      face_connectivity[n_vertex * ielt + 8]  = connectivity[n_vertex_elmt * ielt    ];
 
-      faceConnectivity[nVertex * ielt + 9]  = connectivity[nVertexElt * ielt + 2];
-      faceConnectivity[nVertex * ielt + 10] = connectivity[nVertexElt * ielt + 3];
-      faceConnectivity[nVertex * ielt + 11] = connectivity[nVertexElt * ielt + 1];
+      face_connectivity[n_vertex * ielt + 9]  = connectivity[n_vertex_elmt * ielt + 2];
+      face_connectivity[n_vertex * ielt + 10] = connectivity[n_vertex_elmt * ielt + 3];
+      face_connectivity[n_vertex * ielt + 11] = connectivity[n_vertex_elmt * ielt + 1];
 
     }
   }
@@ -595,99 +595,99 @@ PDM_geom_elem_tetra_faces
 /**
  *  \brief HexahedraFaces
  *
- *  @param [in]  nHexahedra        Number of hexahedra
+ *  @param [in]  n_hexahedra        Number of hexahedra
  *  @param [in]  orientation       Surface vector oriented towards inside cell (0) or outside (1)
  *  @param [in]  connectivity      Connectivity
- *  @param [out] faceConnectivity  Face connectivity
+ *  @param [out] face_connectivity  Face connectivity
  */
 
 void
 PDM_geom_elem_hexa_faces
 (
- const int     nHexahedra,
+ const int     n_hexahedra,
  const int     orientation,
  const int    *connectivity,
- int          *faceConnectivityIndex,
- int          *faceConnectivity
+ int          *face_connectivity_idx,
+ int          *face_connectivity
  )
 {
-  const int n_face       = 6;         /* 6 quadrangles */
-  const int nVertex     = n_face * 4; /* 6 * 4 vertices */
-  const int nVertexElt  = 8;         /* 8 vertices */
+  const int n_face        = 6;          /* 6 quadrangles  */
+  const int n_vertex      = n_face * 4; /* 6 * 4 vertices */
+  const int n_vertex_elmt = 8;          /* 8 vertices     */
 
-  faceConnectivityIndex[0] = 0;
+  face_connectivity_idx[0] = 0;
 
-  for (int ielt = 0; ielt < nHexahedra; ielt++) {
+  for (int ielt = 0; ielt < n_hexahedra; ielt++) {
 
-    for (int iface = 0; iface < n_face; iface++)
-      faceConnectivityIndex[ielt * n_face + iface + 1] =
-        faceConnectivityIndex[ielt * n_face + iface] + 4;
+    for (int iface = 0; iface < n_face; iface++) {
+      face_connectivity_idx[ielt * n_face + iface + 1] = face_connectivity_idx[ielt * n_face + iface] + 4;
+    }
 
     if (orientation == 0) {
 
-      faceConnectivity[nVertex * ielt + 0]  = connectivity[nVertexElt * ielt    ];
-      faceConnectivity[nVertex * ielt + 1]  = connectivity[nVertexElt * ielt + 1];
-      faceConnectivity[nVertex * ielt + 2]  = connectivity[nVertexElt * ielt + 2];
-      faceConnectivity[nVertex * ielt + 3]  = connectivity[nVertexElt * ielt + 3];
+      face_connectivity[n_vertex * ielt + 0]  = connectivity[n_vertex_elmt * ielt    ];
+      face_connectivity[n_vertex * ielt + 1]  = connectivity[n_vertex_elmt * ielt + 1];
+      face_connectivity[n_vertex * ielt + 2]  = connectivity[n_vertex_elmt * ielt + 2];
+      face_connectivity[n_vertex * ielt + 3]  = connectivity[n_vertex_elmt * ielt + 3];
 
-      faceConnectivity[nVertex * ielt + 4]  = connectivity[nVertexElt * ielt + 5];
-      faceConnectivity[nVertex * ielt + 5]  = connectivity[nVertexElt * ielt + 4];
-      faceConnectivity[nVertex * ielt + 6]  = connectivity[nVertexElt * ielt + 7];
-      faceConnectivity[nVertex * ielt + 7]  = connectivity[nVertexElt * ielt + 6];
+      face_connectivity[n_vertex * ielt + 4]  = connectivity[n_vertex_elmt * ielt + 5];
+      face_connectivity[n_vertex * ielt + 5]  = connectivity[n_vertex_elmt * ielt + 4];
+      face_connectivity[n_vertex * ielt + 6]  = connectivity[n_vertex_elmt * ielt + 7];
+      face_connectivity[n_vertex * ielt + 7]  = connectivity[n_vertex_elmt * ielt + 6];
 
-      faceConnectivity[nVertex * ielt + 8]  = connectivity[nVertexElt * ielt    ];
-      faceConnectivity[nVertex * ielt + 9]  = connectivity[nVertexElt * ielt + 3];
-      faceConnectivity[nVertex * ielt + 10] = connectivity[nVertexElt * ielt + 7];
-      faceConnectivity[nVertex * ielt + 11] = connectivity[nVertexElt * ielt + 4];
+      face_connectivity[n_vertex * ielt + 8]  = connectivity[n_vertex_elmt * ielt    ];
+      face_connectivity[n_vertex * ielt + 9]  = connectivity[n_vertex_elmt * ielt + 3];
+      face_connectivity[n_vertex * ielt + 10] = connectivity[n_vertex_elmt * ielt + 7];
+      face_connectivity[n_vertex * ielt + 11] = connectivity[n_vertex_elmt * ielt + 4];
 
-      faceConnectivity[nVertex * ielt + 12] = connectivity[nVertexElt * ielt + 3];
-      faceConnectivity[nVertex * ielt + 13] = connectivity[nVertexElt * ielt + 2];
-      faceConnectivity[nVertex * ielt + 14] = connectivity[nVertexElt * ielt + 6];
-      faceConnectivity[nVertex * ielt + 15] = connectivity[nVertexElt * ielt + 7];
+      face_connectivity[n_vertex * ielt + 12] = connectivity[n_vertex_elmt * ielt + 3];
+      face_connectivity[n_vertex * ielt + 13] = connectivity[n_vertex_elmt * ielt + 2];
+      face_connectivity[n_vertex * ielt + 14] = connectivity[n_vertex_elmt * ielt + 6];
+      face_connectivity[n_vertex * ielt + 15] = connectivity[n_vertex_elmt * ielt + 7];
 
-      faceConnectivity[nVertex * ielt + 16] = connectivity[nVertexElt * ielt + 1];
-      faceConnectivity[nVertex * ielt + 17] = connectivity[nVertexElt * ielt + 5];
-      faceConnectivity[nVertex * ielt + 18] = connectivity[nVertexElt * ielt + 6];
-      faceConnectivity[nVertex * ielt + 19] = connectivity[nVertexElt * ielt + 2];
+      face_connectivity[n_vertex * ielt + 16] = connectivity[n_vertex_elmt * ielt + 1];
+      face_connectivity[n_vertex * ielt + 17] = connectivity[n_vertex_elmt * ielt + 5];
+      face_connectivity[n_vertex * ielt + 18] = connectivity[n_vertex_elmt * ielt + 6];
+      face_connectivity[n_vertex * ielt + 19] = connectivity[n_vertex_elmt * ielt + 2];
 
-      faceConnectivity[nVertex * ielt + 20] = connectivity[nVertexElt * ielt    ];
-      faceConnectivity[nVertex * ielt + 21] = connectivity[nVertexElt * ielt + 4];
-      faceConnectivity[nVertex * ielt + 22] = connectivity[nVertexElt * ielt + 5];
-      faceConnectivity[nVertex * ielt + 23] = connectivity[nVertexElt * ielt + 1];
+      face_connectivity[n_vertex * ielt + 20] = connectivity[n_vertex_elmt * ielt    ];
+      face_connectivity[n_vertex * ielt + 21] = connectivity[n_vertex_elmt * ielt + 4];
+      face_connectivity[n_vertex * ielt + 22] = connectivity[n_vertex_elmt * ielt + 5];
+      face_connectivity[n_vertex * ielt + 23] = connectivity[n_vertex_elmt * ielt + 1];
 
     }
 
     else {
 
-      faceConnectivity[nVertex * ielt + 0]  = connectivity[nVertexElt * ielt + 3];
-      faceConnectivity[nVertex * ielt + 1]  = connectivity[nVertexElt * ielt + 2];
-      faceConnectivity[nVertex * ielt + 2]  = connectivity[nVertexElt * ielt + 1];
-      faceConnectivity[nVertex * ielt + 3]  = connectivity[nVertexElt * ielt    ];
+      face_connectivity[n_vertex * ielt + 0]  = connectivity[n_vertex_elmt * ielt + 3];
+      face_connectivity[n_vertex * ielt + 1]  = connectivity[n_vertex_elmt * ielt + 2];
+      face_connectivity[n_vertex * ielt + 2]  = connectivity[n_vertex_elmt * ielt + 1];
+      face_connectivity[n_vertex * ielt + 3]  = connectivity[n_vertex_elmt * ielt    ];
 
-      faceConnectivity[nVertex * ielt + 4]  = connectivity[nVertexElt * ielt + 6];
-      faceConnectivity[nVertex * ielt + 5]  = connectivity[nVertexElt * ielt + 7];
-      faceConnectivity[nVertex * ielt + 6]  = connectivity[nVertexElt * ielt + 4];
-      faceConnectivity[nVertex * ielt + 7]  = connectivity[nVertexElt * ielt + 5];
+      face_connectivity[n_vertex * ielt + 4]  = connectivity[n_vertex_elmt * ielt + 6];
+      face_connectivity[n_vertex * ielt + 5]  = connectivity[n_vertex_elmt * ielt + 7];
+      face_connectivity[n_vertex * ielt + 6]  = connectivity[n_vertex_elmt * ielt + 4];
+      face_connectivity[n_vertex * ielt + 7]  = connectivity[n_vertex_elmt * ielt + 5];
 
-      faceConnectivity[nVertex * ielt + 8]  = connectivity[nVertexElt * ielt + 4];
-      faceConnectivity[nVertex * ielt + 9]  = connectivity[nVertexElt * ielt + 7];
-      faceConnectivity[nVertex * ielt + 10] = connectivity[nVertexElt * ielt + 3];
-      faceConnectivity[nVertex * ielt + 11] = connectivity[nVertexElt * ielt    ];
+      face_connectivity[n_vertex * ielt + 8]  = connectivity[n_vertex_elmt * ielt + 4];
+      face_connectivity[n_vertex * ielt + 9]  = connectivity[n_vertex_elmt * ielt + 7];
+      face_connectivity[n_vertex * ielt + 10] = connectivity[n_vertex_elmt * ielt + 3];
+      face_connectivity[n_vertex * ielt + 11] = connectivity[n_vertex_elmt * ielt    ];
 
-      faceConnectivity[nVertex * ielt + 12] = connectivity[nVertexElt * ielt + 7];
-      faceConnectivity[nVertex * ielt + 13] = connectivity[nVertexElt * ielt + 6];
-      faceConnectivity[nVertex * ielt + 14] = connectivity[nVertexElt * ielt + 2];
-      faceConnectivity[nVertex * ielt + 15] = connectivity[nVertexElt * ielt + 3];
+      face_connectivity[n_vertex * ielt + 12] = connectivity[n_vertex_elmt * ielt + 7];
+      face_connectivity[n_vertex * ielt + 13] = connectivity[n_vertex_elmt * ielt + 6];
+      face_connectivity[n_vertex * ielt + 14] = connectivity[n_vertex_elmt * ielt + 2];
+      face_connectivity[n_vertex * ielt + 15] = connectivity[n_vertex_elmt * ielt + 3];
 
-      faceConnectivity[nVertex * ielt + 16] = connectivity[nVertexElt * ielt + 2];
-      faceConnectivity[nVertex * ielt + 17] = connectivity[nVertexElt * ielt + 6];
-      faceConnectivity[nVertex * ielt + 18] = connectivity[nVertexElt * ielt + 5];
-      faceConnectivity[nVertex * ielt + 19] = connectivity[nVertexElt * ielt + 1];
+      face_connectivity[n_vertex * ielt + 16] = connectivity[n_vertex_elmt * ielt + 2];
+      face_connectivity[n_vertex * ielt + 17] = connectivity[n_vertex_elmt * ielt + 6];
+      face_connectivity[n_vertex * ielt + 18] = connectivity[n_vertex_elmt * ielt + 5];
+      face_connectivity[n_vertex * ielt + 19] = connectivity[n_vertex_elmt * ielt + 1];
 
-      faceConnectivity[nVertex * ielt + 20] = connectivity[nVertexElt * ielt + 1];
-      faceConnectivity[nVertex * ielt + 21] = connectivity[nVertexElt * ielt + 5];
-      faceConnectivity[nVertex * ielt + 22] = connectivity[nVertexElt * ielt + 4];
-      faceConnectivity[nVertex * ielt + 23] = connectivity[nVertexElt * ielt + 0];
+      face_connectivity[n_vertex * ielt + 20] = connectivity[n_vertex_elmt * ielt + 1];
+      face_connectivity[n_vertex * ielt + 21] = connectivity[n_vertex_elmt * ielt + 5];
+      face_connectivity[n_vertex * ielt + 22] = connectivity[n_vertex_elmt * ielt + 4];
+      face_connectivity[n_vertex * ielt + 23] = connectivity[n_vertex_elmt * ielt + 0];
 
     }
   }
@@ -697,87 +697,87 @@ PDM_geom_elem_hexa_faces
 /**
  *  \brief Prism Faces
  *
- *  @param [in]  nPrism            Number of Prism
+ *  @param [in]  n_prism            Number of Prism
  *  @param [in]  orientation       Surface vector oriented towards inside cell (0) or outside (1)
  *  @param [in]  connectivity      Connectivity
- *  @param [out] faceConnectivity  Face connectivity
+ *  @param [out] face_connectivity  Face connectivity
  */
 
 void
 PDM_geom_elem_prism_faces
 (
- const int     nPrism,
+ const int     n_prism,
  const int     orientation,
  const int    *connectivity,
- int          *faceConnectivityIndex,
- int          *faceConnectivity
+ int          *face_connectivity_idx,
+ int          *face_connectivity
  )
 {
-  const int n_face       = 5;         /* 3 quadrangles + 2 triangles */
-  const int nVertex     = 3*4 + 2*3; /* */
-  const int nVertexElt  = 6;         /* 6 vertices */
+  const int n_face        = 5;         /* 3 quadrangles + 2 triangles */
+  const int n_vertex      = 3*4 + 2*3; /* */
+  const int n_vertex_elmt = 6;         /* 6 vertices */
 
-  faceConnectivityIndex[0] = 0;
+  face_connectivity_idx[0] = 0;
 
-  for (int ielt = 0; ielt < nPrism; ielt++) {
+  for (int ielt = 0; ielt < n_prism; ielt++) {
 
-    faceConnectivityIndex[ielt * n_face + 1] = faceConnectivityIndex[ielt * n_face    ] + 3;
-    faceConnectivityIndex[ielt * n_face + 2] = faceConnectivityIndex[ielt * n_face + 1] + 3;
-    faceConnectivityIndex[ielt * n_face + 3] = faceConnectivityIndex[ielt * n_face + 2] + 4;
-    faceConnectivityIndex[ielt * n_face + 4] = faceConnectivityIndex[ielt * n_face + 3] + 4;
-    faceConnectivityIndex[ielt * n_face + 5] = faceConnectivityIndex[ielt * n_face + 4] + 4;
+    face_connectivity_idx[ielt * n_face + 1] = face_connectivity_idx[ielt * n_face    ] + 3;
+    face_connectivity_idx[ielt * n_face + 2] = face_connectivity_idx[ielt * n_face + 1] + 3;
+    face_connectivity_idx[ielt * n_face + 3] = face_connectivity_idx[ielt * n_face + 2] + 4;
+    face_connectivity_idx[ielt * n_face + 4] = face_connectivity_idx[ielt * n_face + 3] + 4;
+    face_connectivity_idx[ielt * n_face + 5] = face_connectivity_idx[ielt * n_face + 4] + 4;
 
     if (orientation == 0) {
 
-      faceConnectivity[nVertex * ielt + 0]  = connectivity[nVertexElt * ielt    ];
-      faceConnectivity[nVertex * ielt + 1]  = connectivity[nVertexElt * ielt + 1];
-      faceConnectivity[nVertex * ielt + 2]  = connectivity[nVertexElt * ielt + 2];
+      face_connectivity[n_vertex * ielt + 0]  = connectivity[n_vertex_elmt * ielt    ];
+      face_connectivity[n_vertex * ielt + 1]  = connectivity[n_vertex_elmt * ielt + 1];
+      face_connectivity[n_vertex * ielt + 2]  = connectivity[n_vertex_elmt * ielt + 2];
 
-      faceConnectivity[nVertex * ielt + 3]  = connectivity[nVertexElt * ielt + 3];
-      faceConnectivity[nVertex * ielt + 4]  = connectivity[nVertexElt * ielt + 5];
-      faceConnectivity[nVertex * ielt + 5]  = connectivity[nVertexElt * ielt + 4];
+      face_connectivity[n_vertex * ielt + 3]  = connectivity[n_vertex_elmt * ielt + 3];
+      face_connectivity[n_vertex * ielt + 4]  = connectivity[n_vertex_elmt * ielt + 5];
+      face_connectivity[n_vertex * ielt + 5]  = connectivity[n_vertex_elmt * ielt + 4];
 
-      faceConnectivity[nVertex * ielt + 6]  = connectivity[nVertexElt * ielt + 2];
-      faceConnectivity[nVertex * ielt + 7]  = connectivity[nVertexElt * ielt + 1];
-      faceConnectivity[nVertex * ielt + 8]  = connectivity[nVertexElt * ielt + 4];
-      faceConnectivity[nVertex * ielt + 9]  = connectivity[nVertexElt * ielt + 5];
+      face_connectivity[n_vertex * ielt + 6]  = connectivity[n_vertex_elmt * ielt + 2];
+      face_connectivity[n_vertex * ielt + 7]  = connectivity[n_vertex_elmt * ielt + 1];
+      face_connectivity[n_vertex * ielt + 8]  = connectivity[n_vertex_elmt * ielt + 4];
+      face_connectivity[n_vertex * ielt + 9]  = connectivity[n_vertex_elmt * ielt + 5];
 
-      faceConnectivity[nVertex * ielt + 10] = connectivity[nVertexElt * ielt + 1];
-      faceConnectivity[nVertex * ielt + 11] = connectivity[nVertexElt * ielt    ];
-      faceConnectivity[nVertex * ielt + 12] = connectivity[nVertexElt * ielt + 3];
-      faceConnectivity[nVertex * ielt + 13] = connectivity[nVertexElt * ielt + 4];
+      face_connectivity[n_vertex * ielt + 10] = connectivity[n_vertex_elmt * ielt + 1];
+      face_connectivity[n_vertex * ielt + 11] = connectivity[n_vertex_elmt * ielt    ];
+      face_connectivity[n_vertex * ielt + 12] = connectivity[n_vertex_elmt * ielt + 3];
+      face_connectivity[n_vertex * ielt + 13] = connectivity[n_vertex_elmt * ielt + 4];
 
-      faceConnectivity[nVertex * ielt + 14] = connectivity[nVertexElt * ielt    ];
-      faceConnectivity[nVertex * ielt + 15] = connectivity[nVertexElt * ielt + 2];
-      faceConnectivity[nVertex * ielt + 16] = connectivity[nVertexElt * ielt + 5];
-      faceConnectivity[nVertex * ielt + 17] = connectivity[nVertexElt * ielt + 3];
+      face_connectivity[n_vertex * ielt + 14] = connectivity[n_vertex_elmt * ielt    ];
+      face_connectivity[n_vertex * ielt + 15] = connectivity[n_vertex_elmt * ielt + 2];
+      face_connectivity[n_vertex * ielt + 16] = connectivity[n_vertex_elmt * ielt + 5];
+      face_connectivity[n_vertex * ielt + 17] = connectivity[n_vertex_elmt * ielt + 3];
 
     }
 
     else {
 
-      faceConnectivity[nVertex * ielt + 0]  = connectivity[nVertexElt * ielt + 2];
-      faceConnectivity[nVertex * ielt + 1]  = connectivity[nVertexElt * ielt + 1];
-      faceConnectivity[nVertex * ielt + 2]  = connectivity[nVertexElt * ielt    ];
+      face_connectivity[n_vertex * ielt + 0]  = connectivity[n_vertex_elmt * ielt + 2];
+      face_connectivity[n_vertex * ielt + 1]  = connectivity[n_vertex_elmt * ielt + 1];
+      face_connectivity[n_vertex * ielt + 2]  = connectivity[n_vertex_elmt * ielt    ];
 
-      faceConnectivity[nVertex * ielt + 3]  = connectivity[nVertexElt * ielt + 4];
-      faceConnectivity[nVertex * ielt + 4]  = connectivity[nVertexElt * ielt + 5];
-      faceConnectivity[nVertex * ielt + 5]  = connectivity[nVertexElt * ielt + 3];
+      face_connectivity[n_vertex * ielt + 3]  = connectivity[n_vertex_elmt * ielt + 4];
+      face_connectivity[n_vertex * ielt + 4]  = connectivity[n_vertex_elmt * ielt + 5];
+      face_connectivity[n_vertex * ielt + 5]  = connectivity[n_vertex_elmt * ielt + 3];
 
-      faceConnectivity[nVertex * ielt + 6]  = connectivity[nVertexElt * ielt + 5];
-      faceConnectivity[nVertex * ielt + 7]  = connectivity[nVertexElt * ielt + 4];
-      faceConnectivity[nVertex * ielt + 8]  = connectivity[nVertexElt * ielt + 1];
-      faceConnectivity[nVertex * ielt + 9]  = connectivity[nVertexElt * ielt + 2];
+      face_connectivity[n_vertex * ielt + 6]  = connectivity[n_vertex_elmt * ielt + 5];
+      face_connectivity[n_vertex * ielt + 7]  = connectivity[n_vertex_elmt * ielt + 4];
+      face_connectivity[n_vertex * ielt + 8]  = connectivity[n_vertex_elmt * ielt + 1];
+      face_connectivity[n_vertex * ielt + 9]  = connectivity[n_vertex_elmt * ielt + 2];
 
-      faceConnectivity[nVertex * ielt + 10] = connectivity[nVertexElt * ielt + 4];
-      faceConnectivity[nVertex * ielt + 11] = connectivity[nVertexElt * ielt + 3];
-      faceConnectivity[nVertex * ielt + 12] = connectivity[nVertexElt * ielt    ];
-      faceConnectivity[nVertex * ielt + 13] = connectivity[nVertexElt * ielt + 1];
+      face_connectivity[n_vertex * ielt + 10] = connectivity[n_vertex_elmt * ielt + 4];
+      face_connectivity[n_vertex * ielt + 11] = connectivity[n_vertex_elmt * ielt + 3];
+      face_connectivity[n_vertex * ielt + 12] = connectivity[n_vertex_elmt * ielt    ];
+      face_connectivity[n_vertex * ielt + 13] = connectivity[n_vertex_elmt * ielt + 1];
 
-      faceConnectivity[nVertex * ielt + 14] = connectivity[nVertexElt * ielt + 3];
-      faceConnectivity[nVertex * ielt + 15] = connectivity[nVertexElt * ielt + 5];
-      faceConnectivity[nVertex * ielt + 16] = connectivity[nVertexElt * ielt + 2];
-      faceConnectivity[nVertex * ielt + 17] = connectivity[nVertexElt * ielt    ];
+      face_connectivity[n_vertex * ielt + 14] = connectivity[n_vertex_elmt * ielt + 3];
+      face_connectivity[n_vertex * ielt + 15] = connectivity[n_vertex_elmt * ielt + 5];
+      face_connectivity[n_vertex * ielt + 16] = connectivity[n_vertex_elmt * ielt + 2];
+      face_connectivity[n_vertex * ielt + 17] = connectivity[n_vertex_elmt * ielt    ];
 
     }
   }
@@ -786,83 +786,83 @@ PDM_geom_elem_prism_faces
 /**
  *  \brief Pyramid Faces
  *
- *  @param [in]  nPyramid          Number of pyramid
+ *  @param [in]  n_pyramid          Number of pyramid
  *  @param [in]  orientation       Surface vector oriented towards inside cell (0) or outside (1)
  *  @param [in]  connectivity      Connectivity
- *  @param [out] faceConnectivity  Face connectivity
+ *  @param [out] face_connectivity  Face connectivity
  */
 
 void
 PDM_geom_elem_pyramid_faces
 (
- const int   nPyramid,
+ const int   n_pyramid,
  const int   orientation,
  const int  *connectivity,
- int        *faceConnectivityIndex,
- int        *faceConnectivity
+ int        *face_connectivity_idx,
+ int        *face_connectivity
  )
 {
-  const int n_face       = 5;         /* 1 quadrangle + 4 triangles */
-  const int nVertex     = 1*4 + 4*3; /* */
-  const int nVertexElt  = 5;         /* 5 vertices */
+  const int n_face        = 5;         /* 1 quadrangle + 4 triangles */
+  const int n_vertex      = 1*4 + 4*3; /* */
+  const int n_vertex_elmt = 5;         /* 5 vertices */
 
-  faceConnectivityIndex[0] = 0;
+  face_connectivity_idx[0] = 0;
 
-  for (int ielt = 0; ielt < nPyramid; ielt++) {
+  for (int ielt = 0; ielt < n_pyramid; ielt++) {
 
-    faceConnectivityIndex[ielt * n_face + 1] = faceConnectivityIndex[ielt * n_face    ] + 4;
-    faceConnectivityIndex[ielt * n_face + 2] = faceConnectivityIndex[ielt * n_face + 1] + 3;
-    faceConnectivityIndex[ielt * n_face + 3] = faceConnectivityIndex[ielt * n_face + 2] + 3;
-    faceConnectivityIndex[ielt * n_face + 4] = faceConnectivityIndex[ielt * n_face + 3] + 3;
-    faceConnectivityIndex[ielt * n_face + 5] = faceConnectivityIndex[ielt * n_face + 4] + 3;
+    face_connectivity_idx[ielt * n_face + 1] = face_connectivity_idx[ielt * n_face    ] + 4;
+    face_connectivity_idx[ielt * n_face + 2] = face_connectivity_idx[ielt * n_face + 1] + 3;
+    face_connectivity_idx[ielt * n_face + 3] = face_connectivity_idx[ielt * n_face + 2] + 3;
+    face_connectivity_idx[ielt * n_face + 4] = face_connectivity_idx[ielt * n_face + 3] + 3;
+    face_connectivity_idx[ielt * n_face + 5] = face_connectivity_idx[ielt * n_face + 4] + 3;
 
     if (orientation == 0) {
 
-      faceConnectivity[nVertex * ielt + 0]  = connectivity[nVertexElt * ielt    ];
-      faceConnectivity[nVertex * ielt + 1]  = connectivity[nVertexElt * ielt + 1];
-      faceConnectivity[nVertex * ielt + 2]  = connectivity[nVertexElt * ielt + 2];
-      faceConnectivity[nVertex * ielt + 3]  = connectivity[nVertexElt * ielt + 3];
+      face_connectivity[n_vertex * ielt + 0]  = connectivity[n_vertex_elmt * ielt    ];
+      face_connectivity[n_vertex * ielt + 1]  = connectivity[n_vertex_elmt * ielt + 1];
+      face_connectivity[n_vertex * ielt + 2]  = connectivity[n_vertex_elmt * ielt + 2];
+      face_connectivity[n_vertex * ielt + 3]  = connectivity[n_vertex_elmt * ielt + 3];
 
-      faceConnectivity[nVertex * ielt + 4]  = connectivity[nVertexElt * ielt + 1];
-      faceConnectivity[nVertex * ielt + 5]  = connectivity[nVertexElt * ielt    ];
-      faceConnectivity[nVertex * ielt + 6]  = connectivity[nVertexElt * ielt + 4];
+      face_connectivity[n_vertex * ielt + 4]  = connectivity[n_vertex_elmt * ielt + 1];
+      face_connectivity[n_vertex * ielt + 5]  = connectivity[n_vertex_elmt * ielt    ];
+      face_connectivity[n_vertex * ielt + 6]  = connectivity[n_vertex_elmt * ielt + 4];
 
-      faceConnectivity[nVertex * ielt + 7]  = connectivity[nVertexElt * ielt + 2];
-      faceConnectivity[nVertex * ielt + 8]  = connectivity[nVertexElt * ielt + 1];
-      faceConnectivity[nVertex * ielt + 9]  = connectivity[nVertexElt * ielt + 4];
+      face_connectivity[n_vertex * ielt + 7]  = connectivity[n_vertex_elmt * ielt + 2];
+      face_connectivity[n_vertex * ielt + 8]  = connectivity[n_vertex_elmt * ielt + 1];
+      face_connectivity[n_vertex * ielt + 9]  = connectivity[n_vertex_elmt * ielt + 4];
 
-      faceConnectivity[nVertex * ielt + 10] = connectivity[nVertexElt * ielt + 3];
-      faceConnectivity[nVertex * ielt + 11] = connectivity[nVertexElt * ielt + 2];
-      faceConnectivity[nVertex * ielt + 12] = connectivity[nVertexElt * ielt + 4];
+      face_connectivity[n_vertex * ielt + 10] = connectivity[n_vertex_elmt * ielt + 3];
+      face_connectivity[n_vertex * ielt + 11] = connectivity[n_vertex_elmt * ielt + 2];
+      face_connectivity[n_vertex * ielt + 12] = connectivity[n_vertex_elmt * ielt + 4];
 
-      faceConnectivity[nVertex * ielt + 13] = connectivity[nVertexElt * ielt    ];
-      faceConnectivity[nVertex * ielt + 14] = connectivity[nVertexElt * ielt + 3];
-      faceConnectivity[nVertex * ielt + 15] = connectivity[nVertexElt * ielt + 4];
+      face_connectivity[n_vertex * ielt + 13] = connectivity[n_vertex_elmt * ielt    ];
+      face_connectivity[n_vertex * ielt + 14] = connectivity[n_vertex_elmt * ielt + 3];
+      face_connectivity[n_vertex * ielt + 15] = connectivity[n_vertex_elmt * ielt + 4];
 
     }
 
     else {
 
-      faceConnectivity[nVertex * ielt + 0]  = connectivity[nVertexElt * ielt + 3];
-      faceConnectivity[nVertex * ielt + 1]  = connectivity[nVertexElt * ielt + 2];
-      faceConnectivity[nVertex * ielt + 2]  = connectivity[nVertexElt * ielt + 1];
-      faceConnectivity[nVertex * ielt + 3]  = connectivity[nVertexElt * ielt    ];
+      face_connectivity[n_vertex * ielt + 0]  = connectivity[n_vertex_elmt * ielt + 3];
+      face_connectivity[n_vertex * ielt + 1]  = connectivity[n_vertex_elmt * ielt + 2];
+      face_connectivity[n_vertex * ielt + 2]  = connectivity[n_vertex_elmt * ielt + 1];
+      face_connectivity[n_vertex * ielt + 3]  = connectivity[n_vertex_elmt * ielt    ];
 
-      faceConnectivity[nVertex * ielt + 4]  = connectivity[nVertexElt * ielt + 4];
-      faceConnectivity[nVertex * ielt + 5]  = connectivity[nVertexElt * ielt    ];
-      faceConnectivity[nVertex * ielt + 6]  = connectivity[nVertexElt * ielt + 1];
+      face_connectivity[n_vertex * ielt + 4]  = connectivity[n_vertex_elmt * ielt + 4];
+      face_connectivity[n_vertex * ielt + 5]  = connectivity[n_vertex_elmt * ielt    ];
+      face_connectivity[n_vertex * ielt + 6]  = connectivity[n_vertex_elmt * ielt + 1];
 
-      faceConnectivity[nVertex * ielt + 7]  = connectivity[nVertexElt * ielt + 4];
-      faceConnectivity[nVertex * ielt + 8]  = connectivity[nVertexElt * ielt + 1];
-      faceConnectivity[nVertex * ielt + 9]  = connectivity[nVertexElt * ielt + 2];
+      face_connectivity[n_vertex * ielt + 7]  = connectivity[n_vertex_elmt * ielt + 4];
+      face_connectivity[n_vertex * ielt + 8]  = connectivity[n_vertex_elmt * ielt + 1];
+      face_connectivity[n_vertex * ielt + 9]  = connectivity[n_vertex_elmt * ielt + 2];
 
-      faceConnectivity[nVertex * ielt + 10] = connectivity[nVertexElt * ielt + 4];
-      faceConnectivity[nVertex * ielt + 11] = connectivity[nVertexElt * ielt + 2];
-      faceConnectivity[nVertex * ielt + 12] = connectivity[nVertexElt * ielt + 3];
+      face_connectivity[n_vertex * ielt + 10] = connectivity[n_vertex_elmt * ielt + 4];
+      face_connectivity[n_vertex * ielt + 11] = connectivity[n_vertex_elmt * ielt + 2];
+      face_connectivity[n_vertex * ielt + 12] = connectivity[n_vertex_elmt * ielt + 3];
 
-      faceConnectivity[nVertex * ielt + 13] = connectivity[nVertexElt * ielt + 4];
-      faceConnectivity[nVertex * ielt + 14] = connectivity[nVertexElt * ielt + 3];
-      faceConnectivity[nVertex * ielt + 15] = connectivity[nVertexElt * ielt    ];
+      face_connectivity[n_vertex * ielt + 13] = connectivity[n_vertex_elmt * ielt + 4];
+      face_connectivity[n_vertex * ielt + 14] = connectivity[n_vertex_elmt * ielt + 3];
+      face_connectivity[n_vertex * ielt + 15] = connectivity[n_vertex_elmt * ielt    ];
 
     }
   }
@@ -872,35 +872,35 @@ PDM_geom_elem_pyramid_faces
 /**
  *  \brief Edges properties
  *
- *  @param [in]  nEdges                Number of edges
+ *  @param [in]  n_edges                Number of edges
  *  @param [in]  connectivity          Connectivity
- *  @param [in]  nVertices             Number of vertices
+ *  @param [in]  n_vertices             Number of vertices
  *  @param [in]  coords                Vertices coordinates
  *  @param [out] length                Length
  *  @param [out] center                Center
- *  @param [out] characteristicLength  Characteristic length (active if != NULL)
- *  @param [out] isDegenerated         Degenerated edge indicator (active if != NULL)
+ *  @param [out] characteristic_length  Characteristic length (active if != NULL)
+ *  @param [out] is_degenerated         Degenerated edge indicator (active if != NULL)
  */
 
 void
 PDM_geom_elem_edges_properties
 (
- const int     nEdges,
+ const int     n_edges,
  const int    *connectivity,
  const double *coords,
  double       *length,
  double       *center,
- double       *characteristicLength,
- int         *isDegenerated
+ double       *characteristic_length,
+ int         *is_degenerated
  )
 {
 
-  for (int iedge = 0; iedge < nEdges; iedge++) {
+  for (int iedge = 0; iedge < n_edges; iedge++) {
 
-    const int *connectivityEdge = connectivity + 2*iedge;
+    const int *edge_vtx = connectivity + 2*iedge;
 
-    const int i1 = connectivityEdge[0] - 1;
-    const int i2 = connectivityEdge[1] - 1;
+    const int i1 = edge_vtx[0] - 1;
+    const int i2 = edge_vtx[1] - 1;
 
     double *centerEdge = center + 3*iedge;
 
@@ -914,13 +914,13 @@ PDM_geom_elem_edges_properties
                          + (coords[3*i2 + 2] - coords[3*i1 + 2])
                          * (coords[3*i2 + 2] - coords[3*i1 + 2]));
 
-    if (characteristicLength != NULL)
-      characteristicLength[iedge] = length[iedge];
+    if (characteristic_length != NULL)
+      characteristic_length[iedge] = length[iedge];
 
-    if (isDegenerated != NULL) {
-      isDegenerated[iedge] = 0;
+    if (is_degenerated != NULL) {
+      is_degenerated[iedge] = 0;
       if (length[iedge] < GEOM_EPS_DIST)
-        isDegenerated[iedge] = 1;
+        is_degenerated[iedge] = 1;
     }
   }
 }
@@ -929,36 +929,36 @@ PDM_geom_elem_edges_properties
 /**
  *  \brief Triangle properties
  *
- *  @param [in]  nTriangle             Number of triangles
+ *  @param [in]  n_triangle             Number of triangles
  *  @param [in]  connectivity          Connectivity
- *  @param [in]  nVertices             Number of vertices
+ *  @param [in]  n_vertices             Number of vertices
  *  @param [in]  coords                Vertices coordinates
  *  @param [out] surface_vector         Surface vector
  *  @param [out] center                Center
- *  @param [out] characteristicLength  Characteristic length (active if != NULL)
- *  @param [out] isDegenerated         Degenerated edge indicator (active if != NULL)
+ *  @param [out] characteristic_length  Characteristic length (active if != NULL)
+ *  @param [out] is_degenerated         Degenerated edge indicator (active if != NULL)
  */
 
 void
 PDM_geom_elem_tria_properties
 (
- const int     nTriangle,
+ const int     n_triangle,
  const int    *connectivity,
  const double *coords,
  double       *surface_vector,
  double       *center,
- double       *characteristicLength,
- int         *isDegenerated
+ double       *characteristic_length,
+ int         *is_degenerated
  )
 {
-  PDM_geom_elem_tria_surface_vector (nTriangle,
+  PDM_geom_elem_tria_surface_vector (n_triangle,
                                      connectivity,
                                      coords,
                                      surface_vector,
-                                     characteristicLength,
-                                     isDegenerated);
+                                     characteristic_length,
+                                     is_degenerated);
 
-  PDM_geom_elem_tria_center (nTriangle,
+  PDM_geom_elem_tria_center (n_triangle,
                              connectivity,
                              coords,
                              center);
@@ -969,37 +969,37 @@ PDM_geom_elem_tria_properties
 /**
  *  \brief Tetrahedra properties
  *
- *  @param [in]  nTetrahedra           Number of tetrahedra
+ *  @param [in]  n_tetrahedra           Number of tetrahedra
  *  @param [in]  connectivity          Connectivity
- *  @param [in]  nVertices             Number of vertices
+ *  @param [in]  n_vertices             Number of vertices
  *  @param [in]  coords                Vertices coordinates
  *  @param [out] volume                Volume
  *  @param [out] center                Center
- *  @param [out] characteristicLength  Characteristic length (active if != NULL)
- *  @param [out] isDegenerated         Degenerated edge indicator (active if != NULL)
+ *  @param [out] characteristic_length  Characteristic length (active if != NULL)
+ *  @param [out] is_degenerated         Degenerated edge indicator (active if != NULL)
  */
 
 void
 PDM_geom_elem_tetra_properties
 (
- const int     nTetrahedra,
+ const int     n_tetrahedra,
  const int    *connectivity,
  const double *coords,
  double       *volume,
  double       *center,
- double       *characteristicLength,
- int         *isDegenerated
+ double       *characteristic_length,
+ int         *is_degenerated
  )
 
 {
-  PDM_geom_elem_tetra_oriented_volume (nTetrahedra,
+  PDM_geom_elem_tetra_oriented_volume (n_tetrahedra,
                                        connectivity,
                                        coords,
                                        volume,
-                                       characteristicLength,
-                                       isDegenerated);
+                                       characteristic_length,
+                                       is_degenerated);
 
-  PDM_geom_elem_tetra_center (nTetrahedra,
+  PDM_geom_elem_tetra_center (n_tetrahedra,
                               connectivity,
                               coords,
                               center);
@@ -1009,14 +1009,14 @@ PDM_geom_elem_tetra_properties
 /**
  * \brief Quadrangle properties
  *
- *  @param [in]  nTriangle             Number of quadrangles
+ *  @param [in]  n_triangle             Number of quadrangles
  *  @param [in]  connectivity          Connectivity
- *  @param [in]  nVertices             Number of vertices
+ *  @param [in]  n_vertices             Number of vertices
  *  @param [in]  coords                Vertices coordinates
  *  @param [out] surface_vector         Surface vector
  *  @param [out] center                Center
- *  @param [out] characteristicLength  Characteristic length (active if != NULL)
- *  @param [out] isDegenerated         Degenerated edge indicator (active if != NULL)
+ *  @param [out] characteristic_length  Characteristic length (active if != NULL)
+ *  @param [out] is_degenerated         Degenerated edge indicator (active if != NULL)
  *
  *  @return                     The status of properties computation convergence
  */
@@ -1024,34 +1024,34 @@ PDM_geom_elem_tetra_properties
 int
 PDM_geom_elem_quad_properties
 (
- const int     nQuadrangle,
+ const int     n_quadrangle,
  const int    *connectivity,
  const double *coords,
- double       *surface_vector,
- double       *center,
- double       *characteristicLength,
- int         *isDegenerated
+       double *surface_vector,
+       double *center,
+       double *characteristic_length,
+       int    *is_degenerated
 )
 {
-  int *connectivityIndex;
-  PDM_malloc(connectivityIndex,(nQuadrangle + 1),int);
+  int *_connectivity_index = NULL;
+  PDM_malloc(_connectivity_index, n_quadrangle + 1, int);
   int convergence;
 
-  connectivityIndex[0] = 0;
-  for (int i = 1; i < nQuadrangle + 1; i++) {
-    connectivityIndex[i] = connectivityIndex[i-1] + 4;
+  _connectivity_index[0] = 0;
+  for (int i = 1; i < n_quadrangle + 1; i++) {
+    _connectivity_index[i] = _connectivity_index[i-1] + 4;
   }
 
-  convergence = PDM_geom_elem_polygon_properties(nQuadrangle,
-                                                 connectivityIndex,
+  convergence = PDM_geom_elem_polygon_properties(n_quadrangle,
+                                                 _connectivity_index,
                                                  connectivity,
                                                  coords,
                                                  surface_vector,
                                                  center,
-                                                 characteristicLength,
-                                                 isDegenerated);
+                                                 characteristic_length,
+                                                 is_degenerated);
 
-  PDM_free(connectivityIndex);
+  PDM_free(_connectivity_index);
 
   return convergence;
 }
@@ -1060,25 +1060,28 @@ PDM_geom_elem_quad_properties
  * \brief Compute the barycentric coordinates of a set of points inside
           their belonging polygons.
  *
- *  @param [in]  nPoints               Number of points
- *  @param [in]  ptsLocations          Numbering of the belonging polygons inside the connectivityIndex
- *  @param [in]  connectivityIndex     Mesh connectivity Index
+ *  @param [in]  n_points               Number of points
+ *  @param [in]  pts_locations          Numbering of the belonging polygons inside the _connectivity_index
+ *  @param [in]  _connectivity_index     Mesh connectivity Index
  *  @param [in]  connectivity          Mesh connectivity
  *  @param [in]  coords                Mesh coordinates
- *  @param [out] barCoordsIndex        Pointer to the barycentric coordinates index
- *  @param [out] barCoordsIndex        Pointer to the barycentric coordinates
+ *  @param [out] bar_coords_idx        Pointer to the barycentric coordinates index
+ *  @param [out] bar_coords_idx        Pointer to the barycentric coordinates
  *
  *  @return                     The status of properties computation convergence
  */
 
-int PDM_geom_elem_compute_polygon_barycentric_coordinates(const int           nPoints,
-                                                           const int          *ptsLocations,
-                                                           const double       *pts_coords,
-                                                           const int          *connectivityIndex,
-                                                           const int          *connectivity,
-                                                           const double       *coords,
-                                                           int               **barCoordsIndex,
-                                                           double            **barCoords
+int
+PDM_geom_elem_compute_polygon_barycentric_coordinates
+(
+  const int           n_points,
+  const int          *pts_locations,
+  const double       *pts_coords,
+  const int          *_connectivity_index,
+  const int          *connectivity,
+  const double       *coords,
+        int         **bar_coords_idx,
+        double      **bar_coords
 )
 {
 
@@ -1092,57 +1095,56 @@ int PDM_geom_elem_compute_polygon_barycentric_coordinates(const int           nP
   double* s = NULL;
   double* dist = NULL;
   double* aire = NULL;
-  double* proScal = NULL;
+  double* scal_prod = NULL;
 
-  PDM_malloc(*barCoordsIndex,(nPoints+1) ,int);
-  int* _barCoordsIndex = *barCoordsIndex;
+  PDM_malloc(*bar_coords_idx, n_points+1, int);
+  int* _bar_coords_index = *bar_coords_idx;
 
   int prev_n_sommets = 0;
   int n_sommets = 0;
 
-  _barCoordsIndex[0] = 0;
+  _bar_coords_index[0] = 0;
   /* Boucle sur les points distants */
-  for (int ipoint =  0; ipoint < nPoints; ipoint++ ) {
+  for (int ipoint =  0; ipoint < n_points; ipoint++ ) {
 
     /* Initialisation - Copie locale */
 
-    int isOnEdge = 0;
+    int is_on_edge = 0;
     int isVertex = 0;
-    int ielt = ptsLocations[ipoint] - 1;
+    int ielt = pts_locations[ipoint] - 1;
     prev_n_sommets = n_sommets;
-    n_sommets =  connectivityIndex[ielt+1] -
-                       connectivityIndex[ielt];
+    n_sommets =  _connectivity_index[ielt+1] - _connectivity_index[ielt];
 
-    local_pts[0] = pts_coords[3*ipoint];
+    local_pts[0] = pts_coords[3*ipoint    ];
     local_pts[1] = pts_coords[3*ipoint + 1];
     local_pts[2] = pts_coords[3*ipoint + 2];
 
     if (ipoint == 0) {
-      PDM_malloc(coords_sommets,3 * n_sommets,double);
-      PDM_malloc(s,3 * n_sommets,double);
-      PDM_malloc(dist,n_sommets,double);
-      PDM_malloc(aire,n_sommets,double);
-      PDM_malloc(proScal,n_sommets,double);
+      PDM_malloc(coords_sommets, 3 * n_sommets, double);
+      PDM_malloc(s             , 3 * n_sommets, double);
+      PDM_malloc(dist          ,     n_sommets, double);
+      PDM_malloc(aire          ,     n_sommets, double);
+      PDM_malloc(scal_prod     ,     n_sommets, double);
     }
     else {
       if (prev_n_sommets < n_sommets) {
-        PDM_realloc(coords_sommets ,coords_sommets , 3 * n_sommets,double);
-        PDM_realloc(s              ,s              , 3 * n_sommets,double);
-        PDM_realloc(dist           ,dist           , n_sommets,double);
-        PDM_realloc(aire           ,aire           , n_sommets,double);
-        PDM_realloc(proScal        ,proScal        , n_sommets,double);
+        PDM_realloc(coords_sommets, coords_sommets , 3 * n_sommets, double);
+        PDM_realloc(s             , s              , 3 * n_sommets, double);
+        PDM_realloc(dist          , dist           ,     n_sommets, double);
+        PDM_realloc(aire          , aire           ,     n_sommets, double);
+        PDM_realloc(scal_prod     , scal_prod      ,     n_sommets, double);
       }
     }
 
     for (int isom = 0; isom < n_sommets; isom++) {
       coords_sommets[3*isom]   =
-        coords[3*(connectivity[connectivityIndex[ielt]+isom]-1)];
+        coords[3*(connectivity[_connectivity_index[ielt]+isom]-1)];
 
       coords_sommets[3*isom+1] =
-        coords[3*(connectivity[connectivityIndex[ielt]+isom]-1)+1];
+        coords[3*(connectivity[_connectivity_index[ielt]+isom]-1)+1];
 
       coords_sommets[3*isom+2] =
-        coords[3*(connectivity[connectivityIndex[ielt]+isom]-1)+2];
+        coords[3*(connectivity[_connectivity_index[ielt]+isom]-1)+2];
     }
 
     /* Projection sur un plan moyen */
@@ -1224,14 +1226,14 @@ int PDM_geom_elem_compute_polygon_barycentric_coordinates(const int           nP
       dist[isom] = PDM_MODULE (vect);
     }
 
-    int currentVertex;
+    int current_vertex;
     for (int isom = 0; isom < n_sommets; isom++) {
       int inext = (isom + 1) % n_sommets;
       double *vect1 = &s[0] + 3 * isom;
       double *vect2 = &s[0] + 3 * inext;
       double pvect[3];
 
-      proScal[isom] = PDM_DOT_PRODUCT (vect1, vect2);
+      scal_prod[isom] = PDM_DOT_PRODUCT (vect1, vect2);
       PDM_CROSS_PRODUCT(pvect, vect1, vect2);
 
       double sign = PDM_DOT_PRODUCT (pvect, n);
@@ -1244,47 +1246,47 @@ int PDM_geom_elem_compute_polygon_barycentric_coordinates(const int           nP
       if (dist[isom] <= eps) {
 
         isVertex = 1;
-        currentVertex = isom;
+        current_vertex = isom;
         break;
       }
 
-      else if ((fabs(aire[isom]) <= eps)  && (proScal[isom] < 0)) {
+      else if ((fabs(aire[isom]) <= eps)  && (scal_prod[isom] < 0)) {
 
-        isOnEdge = 1;
-        currentVertex = isom;
+        is_on_edge = 1;
+        current_vertex = isom;
         break;
 
       }
 
     }
 
-    _barCoordsIndex[ipoint+1] = _barCoordsIndex[ipoint] + n_sommets;
+    _bar_coords_index[ipoint+1] = _bar_coords_index[ipoint] + n_sommets;
     //Vector/Pointer containing Barycentric coordinates
 
-    PDM_realloc(*barCoords ,*barCoords ,(_barCoordsIndex[ipoint+1]) ,double);
+    PDM_realloc(*bar_coords ,*bar_coords ,(_bar_coords_index[ipoint+1]) ,double);
 
-    double *_barCoords = *barCoords;
+    double *_bar_coords = *bar_coords;
 
-    double* _localBaryCoords  = &(_barCoords[ _barCoordsIndex[ipoint] ]);
+    double* _local_bary_coords  = &(_bar_coords[ _bar_coords_index[ipoint] ]);
 
     /* Le point distant est un sommet */
 
     if (isVertex) {
       for (int isom = 0; isom < n_sommets; isom++)
-        _localBaryCoords[isom] = 0.;
-      _localBaryCoords[currentVertex] = 1.;
+        _local_bary_coords[isom] = 0.;
+      _local_bary_coords[current_vertex] = 1.;
     }
-    else if (isOnEdge) {
+    else if (is_on_edge) {
       /* Le point distant est sur arete */
       for (int isom = 0; isom < n_sommets; isom++)
-        _localBaryCoords[isom] = 0.;
+        _local_bary_coords[isom] = 0.;
 
-      int nextPoint = (currentVertex + 1) % n_sommets;
+      int nextPoint = (current_vertex + 1) % n_sommets;
 
-      _localBaryCoords[currentVertex] =
-        dist[nextPoint]     / (dist[nextPoint]+dist[currentVertex]);
-      _localBaryCoords[nextPoint]     =
-        dist[currentVertex] / (dist[nextPoint]+dist[currentVertex]);
+      _local_bary_coords[current_vertex] =
+        dist[nextPoint]     / (dist[nextPoint]+dist[current_vertex]);
+      _local_bary_coords[nextPoint]     =
+        dist[current_vertex] / (dist[nextPoint]+dist[current_vertex]);
     }
     else {
       /* Cas general */
@@ -1295,31 +1297,31 @@ int PDM_geom_elem_compute_polygon_barycentric_coordinates(const int           nP
         int nextVertex = (isom + 1) % n_sommets;
 
         if (fabs(aire[previousVertex]) > eps)
-          coef += (dist[previousVertex] - proScal[previousVertex]/dist[isom]) / aire[previousVertex];
+          coef += (dist[previousVertex] - scal_prod[previousVertex]/dist[isom]) / aire[previousVertex];
         if (fabs(aire[isom]) > eps)
-          coef += (dist[nextVertex]     - proScal[isom]/dist[isom])           / aire[isom];
+          coef += (dist[nextVertex]     - scal_prod[isom]/dist[isom])           / aire[isom];
         sigma += coef;
-        _localBaryCoords[isom] = coef;
+        _local_bary_coords[isom] = coef;
       }
 
       if (PDM_ABS(sigma) >= eps ) {
         for (int isom = 0; isom < n_sommets; isom++) {
-          _localBaryCoords[isom] /= sigma;
+          _local_bary_coords[isom] /= sigma;
         }
       }
       else {
         double abs_sigma = fabs(sigma);
         printf("Warning : Mise à NAN %f %f\n", abs_sigma,  eps);
         for (int isom = 0; isom < n_sommets; isom++) {
-          _localBaryCoords[isom] = NAN;
+          _local_bary_coords[isom] = NAN;
         }
       }
 
       /* Check Result */
       for (int isom = 0; isom <  n_sommets; isom++) {
-        if ( isnan(_localBaryCoords[isom])     ||
-                   _localBaryCoords[isom] < 0. ||
-                   _localBaryCoords[isom] > 1. ) {
+        if ( isnan(_local_bary_coords[isom])     ||
+                   _local_bary_coords[isom] < 0. ||
+                   _local_bary_coords[isom] > 1. ) {
 
           convergence = 0;
   /*        double dist_min = DBL_MAX;
@@ -1327,7 +1329,7 @@ int PDM_geom_elem_compute_polygon_barycentric_coordinates(const int           nP
           double t_min;
 
           for (int k = 0; k < n_sommets; k++) {
-            _localBaryCoords[k] = 0.0;
+            _local_bary_coords[k] = 0.0;
           }
 
           for (int k = 0; k < n_sommets; k++) {
@@ -1347,8 +1349,8 @@ int PDM_geom_elem_compute_polygon_barycentric_coordinates(const int           nP
             }
           }
 
-          _localBaryCoords[k_min] = 1 - t_min;
-          _localBaryCoords[(k_min + 1) % n_sommets] = t_min;
+          _local_bary_coords[k_min] = 1 - t_min;
+          _local_bary_coords[(k_min + 1) % n_sommets] = t_min;
 */
           break;
 
@@ -1359,7 +1361,7 @@ int PDM_geom_elem_compute_polygon_barycentric_coordinates(const int           nP
     }
 
     if (0 == 1) {
-      if ((nPoints == 1) && (ptsLocations[0] == 1)) {
+      if ((n_points == 1) && (pts_locations[0] == 1)) {
 
         PDM_printf("coord %i %i :", ipoint+1, ielt+1);
         PDM_printf(" %12.5e %12.5e %12.5e", pts_coords[3*ipoint],
@@ -1369,7 +1371,7 @@ int PDM_geom_elem_compute_polygon_barycentric_coordinates(const int           nP
 
         PDM_printf("coo b %i :", ipoint+1);
         for (int isom = 0; isom < n_sommets; isom++) {
-          PDM_printf(" %f", _localBaryCoords[isom]);
+          PDM_printf(" %f", _local_bary_coords[isom]);
         }
         PDM_printf("\n");
       }
@@ -1380,7 +1382,7 @@ int PDM_geom_elem_compute_polygon_barycentric_coordinates(const int           nP
   PDM_free(s);
   PDM_free(aire);
   PDM_free(dist);
-  PDM_free(proScal);
+  PDM_free(scal_prod);
 
   return convergence;
 }
@@ -1390,14 +1392,14 @@ int PDM_geom_elem_compute_polygon_barycentric_coordinates(const int           nP
  *  \brief Polygon properties
  *
  *  @param [in]  nPolygon              Number of polygon
- *  @param [in]  connectivityIndex     Connectivity Index
+ *  @param [in]  _connectivity_index     Connectivity Index
  *  @param [in]  connectivity          Connectivity
- *  @param [in]  nVertices             Number of vertices
+ *  @param [in]  n_vertices             Number of vertices
  *  @param [in]  coords                Vertices coordinates
  *  @param [out] surface_vector         Surface vector
  *  @param [out] center                Center
- *  @param [out] characteristicLength  Characteristic length (active if != NULL)
- *  @param [out] isDegenerated         Degenerated edge indicator (active if != NULL)
+ *  @param [out] characteristic_length  Characteristic length (active if != NULL)
+ *  @param [out] is_degenerated         Degenerated edge indicator (active if != NULL)
  *
  *  @return                        The status of properties computation convergence
  */
@@ -1406,13 +1408,13 @@ int
 PDM_geom_elem_polygon_properties
 (
  const int     nPolygon,
- const int    *connectivityIndex,
+ const int    *_connectivity_index,
  const int    *connectivity,
  const double *coords,
  double       *surface_vector,
  double       *center,
- double       *characteristicLength,
- int         *isDegenerated
+ double       *characteristic_length,
+ int         *is_degenerated
 )
 {
 
@@ -1430,17 +1432,17 @@ PDM_geom_elem_polygon_properties
      * --------------------
      */
 
-    const int nVerticesFace = connectivityIndex[ifac + 1]
-      - connectivityIndex[ifac    ];
+    const int n_verticesFace = _connectivity_index[ifac + 1]
+      - _connectivity_index[ifac    ];
 
-    const int *connectivityFace = connectivity + connectivityIndex[ifac];
+    const int *connectivityFace = connectivity + _connectivity_index[ifac];
 
     double *surface_vectorFace = surface_vector + 3*ifac; /* Face surface vector */
 
     double *centerFace = center + 3*ifac; /* Face Center */
 
-    if (characteristicLength != NULL) {
-      characteristicLength[ifac] = big;
+    if (characteristic_length != NULL) {
+      characteristic_length[ifac] = big;
     }
 
     /*
@@ -1457,14 +1459,14 @@ PDM_geom_elem_polygon_properties
 
     /* Initialize face center to the barycenter */
 
-    for (int ivert = 0; ivert < nVerticesFace; ivert++) {
+    for (int ivert = 0; ivert < n_verticesFace; ivert++) {
       const int vert = connectivityFace[ivert] - 1;
       for (int i = 0; i < 3; i++)
         centerFace[i] += coords[3*vert + i];
     }
 
     for (int i = 0; i < 3; i++)
-      centerFace[i] /= nVerticesFace;
+      centerFace[i] /= n_verticesFace;
 
     /*
      * Compute cell center and surface vector
@@ -1482,10 +1484,10 @@ PDM_geom_elem_polygon_properties
 
       double areaFace = 0; /* Face area */
 
-      for (int ivert = 0; ivert < nVerticesFace; ivert++) {
+      for (int ivert = 0; ivert < n_verticesFace; ivert++) {
 
         const int vert1 = connectivityFace[ivert] - 1;
-        const int vert2 = connectivityFace[(ivert + 1) % nVerticesFace] - 1;
+        const int vert2 = connectivityFace[(ivert + 1) % n_verticesFace] - 1;
 
         /* Edge center */
 
@@ -1499,9 +1501,9 @@ PDM_geom_elem_polygon_properties
                               coords[3*vert2 + 1] - coords[3*vert1 + 1],
                               coords[3*vert2 + 2] - coords[3*vert1 + 2]};
 
-        if (characteristicLength != NULL) {
+        if (characteristic_length != NULL) {
           double norm_V1V2 = PDM_MODULE(vectV1V2);
-          characteristicLength[ifac] = PDM_MIN(characteristicLength[ifac], norm_V1V2);
+          characteristic_length[ifac] = PDM_MIN(characteristic_length[ifac], norm_V1V2);
         }
 
         /* Vector face center -> edge center */
@@ -1557,13 +1559,13 @@ PDM_geom_elem_polygon_properties
       }
     } /* while (1) */
 
-    if ((characteristicLength != NULL) && (isDegenerated != NULL)) {
+    if ((characteristic_length != NULL) && (is_degenerated != NULL)) {
 
       double normsurface_vector = PDM_MODULE(surface_vectorFace);
-      double eps_loc = PDM_geom_elem_geometric_epsilon(characteristicLength[ifac], GEOM_EPS_SURF);
-      isDegenerated[ifac] = 0;
+      double eps_loc = PDM_geom_elem_geometric_epsilon(characteristic_length[ifac], GEOM_EPS_SURF);
+      is_degenerated[ifac] = 0;
       if (normsurface_vector <= eps_loc)
-        isDegenerated[ifac] = 1;
+        is_degenerated[ifac] = 1;
     }
   } /* for (int ifac = 0; ifac < nPolygon; ifac++) */
 
@@ -1587,93 +1589,93 @@ PDM_geom_elem_polygon_properties
 /**
  *  \brief Hexahedra properties
  *
- *  @param [in]  nHexahedra            Number of hexahedra
+ *  @param [in]  n_hexahedra            Number of hexahedra
  *  @param [in]  connectivity          Connectivity
- *  @param [in]  nVertices             Number of vertices
+ *  @param [in]  n_vertices             Number of vertices
  *  @param [in]  coords                Vertices coordinates
  *  @param [out] volume                Volume
  *  @param [out] center                Center
- *  @param [out] characteristicLength  Characteristic length (active if != NULL)
- *  @param [out] isDegenerated         Degenerated edge indicator (active if != NULL)
+ *  @param [out] characteristic_length  Characteristic length (active if != NULL)
+ *  @param [out] is_degenerated         Degenerated edge indicator (active if != NULL)
  */
 
 void
 PDM_geom_elem_hexa_properties
 (
- const int     nHexahedra,
+ const int     n_hexahedra,
  const int    *connectivity,
- const int     nVertices,
+ const int     n_vertices,
  const double *coords,
  double       *volume,
  double       *center,
- double       *characteristicLength,
- int         *isDegenerated
+ double       *characteristic_length,
+ int         *is_degenerated
 )
 {
 
   const int orientation = 1; /*  Surface vector oriented towards inside cell outside */
 
-  const int nQuadrangle = 6;
-  const int nTriangle = 0;
-  const int nHexahedraFaces = nQuadrangle + nTriangle;
-  const int n_faces = nHexahedraFaces * nHexahedra;
+  const int n_quadrangle     = 6;
+  const int n_triangle       = 0;
+  const int n_hexahedraFaces = n_quadrangle + n_triangle;
+  const int n_faces          = n_hexahedraFaces * n_hexahedra;
 
-  int *faceConnectivity;
-  PDM_malloc(faceConnectivity,((nQuadrangle*4 + nTriangle*3) * nHexahedra),int);
-  int *faceConnectivityIdx;
-  PDM_malloc(faceConnectivityIdx,(n_faces + 1),int);
-  int *cellToFaceConnectivityIdx;
-  PDM_malloc(cellToFaceConnectivityIdx,(nHexahedra + 1),int);
-  int *cellToFaceConnectivity;
-  PDM_malloc(cellToFaceConnectivity,(n_faces),int);
+  int *face_connectivity          = NULL;
+  int *face_connectivity_idx      = NULL;
+  int *cell_face_connectivity_idx = NULL;
+  int *cell_face_connectivity     = NULL;
+  PDM_malloc(face_connectivity         , (n_quadrangle*4 + n_triangle*3) * n_hexahedra, int);
+  PDM_malloc(face_connectivity_idx     , n_faces + 1                                  , int);
+  PDM_malloc(cell_face_connectivity_idx, n_hexahedra + 1                              , int);
+  PDM_malloc(cell_face_connectivity    , n_faces                                      , int);
 
   /*
    * Get hexahedra faces
    */
 
-  PDM_geom_elem_hexa_faces (nHexahedra,
+  PDM_geom_elem_hexa_faces (n_hexahedra,
                             orientation,
                             connectivity,
-                            faceConnectivityIdx,
-                            faceConnectivity);
+                            face_connectivity_idx,
+                            face_connectivity);
 
   /*
    * Define cell to face connectivity
    */
 
-  for (int i = 0; i < n_faces; i++)
-    cellToFaceConnectivity[i] = i + 1;
+  for (int i = 0; i < n_faces; i++) {
+    cell_face_connectivity[i] = i + 1;
+  }
 
-  cellToFaceConnectivityIdx[0] = 0;
-  for (int i = 1; i < nHexahedra + 1; i++)
-    cellToFaceConnectivityIdx[i] = cellToFaceConnectivityIdx[i-1] + nHexahedraFaces;
+  cell_face_connectivity_idx[0] = 0;
+  for (int i = 1; i < n_hexahedra + 1; i++)
+    cell_face_connectivity_idx[i] = cell_face_connectivity_idx[i-1] + n_hexahedraFaces;
 
   /*
    * Compute Volume and center
    */
 
   PDM_geom_elem_polyhedra_properties (1,
-                                      nHexahedra,
+                                      n_hexahedra,
                                       n_faces,
-                                      faceConnectivityIdx,
-                                      faceConnectivity,
-                                      cellToFaceConnectivityIdx,
-                                      cellToFaceConnectivity,
-                                      nVertices,
+                                      face_connectivity_idx,
+                                      face_connectivity,
+                                      cell_face_connectivity_idx,
+                                      cell_face_connectivity,
+                                      n_vertices,
                                       coords,
                                       volume,
                                       center,
-                                      characteristicLength,
-                                      isDegenerated);
+                                      characteristic_length,
+                                      is_degenerated);
 
   /*
    * Free
    */
-
-  PDM_free(faceConnectivity);
-  PDM_free(faceConnectivityIdx);
-  PDM_free(cellToFaceConnectivity);
-  PDM_free(cellToFaceConnectivityIdx);
+  PDM_free(face_connectivity         );
+  PDM_free(face_connectivity_idx     );
+  PDM_free(cell_face_connectivity    );
+  PDM_free(cell_face_connectivity_idx);
 
 }
 
@@ -1681,94 +1683,93 @@ PDM_geom_elem_hexa_properties
 /**
  *  \brief Prism properties
  *
- *  @param [in]  nPrism                Number of prism
+ *  @param [in]  n_prism                Number of prism
  *  @param [in]  connectivity          Connectivity
- *  @param [in]  nVertices             Number of vertices
+ *  @param [in]  n_vertices             Number of vertices
  *  @param [in]  coords                Vertices coordinates
  *  @param [out] volume                Volume
  *  @param [out] center                Center
- *  @param [out] characteristicLength  Characteristic length (active if != NULL)
- *  @param [out] isDegenerated         Degenerated edge indicator (active if != NULL)
+ *  @param [out] characteristic_length  Characteristic length (active if != NULL)
+ *  @param [out] is_degenerated         Degenerated edge indicator (active if != NULL)
  */
 
 void
 PDM_geom_elem_prism_properties
 (
- const int     nPrism,
+ const int     n_prism,
  const int    *connectivity,
- const int     nVertices,
+ const int     n_vertices,
  const double *coords,
  double       *volume,
  double       *center,
- double       *characteristicLength,
- int         *isDegenerated
+ double       *characteristic_length,
+ int         *is_degenerated
 )
 {
 
   const int orientation = 1; //  Surface vector oriented towards inside cell outside
 
-  const int nQuadrangle = 3;
-  const int nTriangle = 2;
-  const int nPrismFaces = nQuadrangle + nTriangle;
-  const int n_faces = nPrismFaces * nPrism;
+  const int n_quadrangle  = 3;
+  const int n_triangle    = 2;
+  const int n_prism_faces = n_quadrangle + n_triangle;
+  const int n_faces       = n_prism_faces * n_prism;
 
-  int *faceConnectivity;
-  PDM_malloc(faceConnectivity,((nQuadrangle*4 + nTriangle*3) * nPrism),int);
-  int *faceConnectivityIdx;
-  PDM_malloc(faceConnectivityIdx,(n_faces + 1),int);
-  int *cellToFaceConnectivityIdx;
-  PDM_malloc(cellToFaceConnectivityIdx,(nPrism + 1),int);
-  int *cellToFaceConnectivity;
-  PDM_malloc(cellToFaceConnectivity,(n_faces),int);
+  int *face_connectivity          = NULL;
+  int *face_connectivity_idx      = NULL;
+  int *cell_face_connectivity_idx = NULL;
+  int *cell_face_connectivity     = NULL;
+  PDM_malloc(face_connectivity         , (n_quadrangle*4 + n_triangle*3) * n_prism, int);
+  PDM_malloc(face_connectivity_idx     , n_faces + 1                              , int);
+  PDM_malloc(cell_face_connectivity_idx, n_prism + 1                              , int);
+  PDM_malloc(cell_face_connectivity    , n_faces                                  , int);
 
   /*
    * Get prism faces
    */
-
-  PDM_geom_elem_prism_faces (nPrism,
+  PDM_geom_elem_prism_faces (n_prism,
                              orientation,
                              connectivity,
-                             faceConnectivityIdx,
-                             faceConnectivity);
+                             face_connectivity_idx,
+                             face_connectivity);
 
   /*
    * Define cell to face connectivity
    */
 
-  for (int i = 0; i < n_faces; i++)
-    cellToFaceConnectivity[i] = i + 1;
+  for (int i = 0; i < n_faces; i++) {
+    cell_face_connectivity[i] = i + 1;
+  }
 
-  cellToFaceConnectivityIdx[0] = 0;
-  for (int i = 1; i < nPrism + 1; i++)
-    cellToFaceConnectivityIdx[i] = cellToFaceConnectivityIdx[i-1] + nPrismFaces;
+  cell_face_connectivity_idx[0] = 0;
+  for (int i = 1; i < n_prism + 1; i++) {
+    cell_face_connectivity_idx[i] = cell_face_connectivity_idx[i-1] + n_prism_faces;
+  }
 
   /*
    * Compute Volume and center
    */
-
   PDM_geom_elem_polyhedra_properties (1,
-                                      nPrism,
+                                      n_prism,
                                       n_faces,
-                                      faceConnectivityIdx,
-                                      faceConnectivity,
-                                      cellToFaceConnectivityIdx,
-                                      cellToFaceConnectivity,
-                                      nVertices,
+                                      face_connectivity_idx,
+                                      face_connectivity,
+                                      cell_face_connectivity_idx,
+                                      cell_face_connectivity,
+                                      n_vertices,
                                       coords,
                                       volume,
                                       center,
-                                      characteristicLength,
-                                      isDegenerated);
+                                      characteristic_length,
+                                      is_degenerated);
 
 
   /*
    * Free
    */
-
-  PDM_free(faceConnectivity);
-  PDM_free(faceConnectivityIdx);
-  PDM_free(cellToFaceConnectivity);
-  PDM_free(cellToFaceConnectivityIdx);
+  PDM_free(face_connectivity         );
+  PDM_free(face_connectivity_idx     );
+  PDM_free(cell_face_connectivity    );
+  PDM_free(cell_face_connectivity_idx);
 
 }
 
@@ -1776,92 +1777,89 @@ PDM_geom_elem_prism_properties
 /**
  *  \brief Pyramid properties
  *
- *  @param [in]  nPyramid              Number of pyramid
- *  @param [in]  connectivity          Connectivity
- *  @param [in]  nVertices             Number of vertices
- *  @param [in]  coords                Vertices coordinates
- *  @param [out] volume                Volume
- *  @param [out] center                Center
- *  @param [out] characteristicLength  Characteristic length (active if != NULL)
- *  @param [out] isDegenerated         Degenerated edge indicator (active if != NULL)
+ *  @param [in]  n_pyramid              Number of pyramid
+ *  @param [in]  connectivity           Connectivity
+ *  @param [in]  n_vertices             Number of vertices
+ *  @param [in]  coords                 Vertices coordinates
+ *  @param [out] volume                 Volume
+ *  @param [out] center                 Center
+ *  @param [out] characteristic_length  Characteristic length (active if != NULL)
+ *  @param [out] is_degenerated         Degenerated edge indicator (active if != NULL)
  */
 
 void
 PDM_geom_elem_pyramid_properties
 (
- const int     nPyramid,
- const int    *connectivity,
- const int     nVertices,
- const double *coords,
- double       *volume,
- double       *center,
- double       *characteristicLength,
- int         *isDegenerated
+ const int      n_pyramid,
+ const int     *connectivity,
+ const int      n_vertices,
+ const double  *coords,
+       double  *volume,
+       double  *center,
+       double  *characteristic_length,
+       int     *is_degenerated
 )
 {
   const int orientation = 1; /*  Surface vector oriented towards inside cell outside */
 
-  const int nQuadrangle = 1;
-  const int nTriangle = 4;
-  const int nPyramidFaces = nQuadrangle + nTriangle;
-  const int n_faces = nPyramidFaces * nPyramid;
+  const int n_quadrangle    = 1;
+  const int n_triangle      = 4;
+  const int n_pyramid_faces = n_quadrangle + n_triangle;
+  const int n_faces         = n_pyramid_faces * n_pyramid;
 
-  int *faceConnectivity;
-  PDM_malloc(faceConnectivity,((nQuadrangle*4 + nTriangle*3) * nPyramid),int);
-  int *faceConnectivityIdx;
-  PDM_malloc(faceConnectivityIdx,(n_faces + 1),int);
-  int *cellToFaceConnectivityIdx;
-  PDM_malloc(cellToFaceConnectivityIdx,(nPyramid + 1),int);
-  int *cellToFaceConnectivity;
-  PDM_malloc(cellToFaceConnectivity,(n_faces),int);
+  int *face_connectivity          = NULL;
+  int *face_connectivity_idx      = NULL;
+  int *cell_face_connectivity_idx = NULL;
+  int *cell_face_connectivity     = NULL;
+  PDM_malloc(face_connectivity         , (n_quadrangle*4 + n_triangle*3) * n_pyramid, int);
+  PDM_malloc(face_connectivity_idx     , n_faces + 1                                , int);
+  PDM_malloc(cell_face_connectivity_idx, n_pyramid + 1                              , int);
+  PDM_malloc(cell_face_connectivity    , n_faces                                    , int);
 
   /*
    * Get pyramid faces
    */
-
-  PDM_geom_elem_pyramid_faces (nPyramid,
+  PDM_geom_elem_pyramid_faces (n_pyramid,
                                orientation,
                                connectivity,
-                               faceConnectivityIdx,
-                               faceConnectivity);
+                               face_connectivity_idx,
+                               face_connectivity);
 
   /*
    * Define cell to face connectivity
    */
 
   for (int i = 0; i < n_faces; i++)
-    cellToFaceConnectivity[i] = i + 1;
+    cell_face_connectivity[i] = i + 1;
 
-  cellToFaceConnectivityIdx[0] = 0;
-  for (int i = 1; i < nPyramid + 1; i++)
-    cellToFaceConnectivityIdx[i] = cellToFaceConnectivityIdx[i-1] + nPyramidFaces;
+  cell_face_connectivity_idx[0] = 0;
+  for (int i = 1; i < n_pyramid + 1; i++)
+    cell_face_connectivity_idx[i] = cell_face_connectivity_idx[i-1] + n_pyramid_faces;
 
   /*
    * Compute Volume and center
    */
-
   PDM_geom_elem_polyhedra_properties (1,
-                                      nPyramid,
+                                      n_pyramid,
                                       n_faces,
-                                      faceConnectivityIdx,
-                                      faceConnectivity,
-                                      cellToFaceConnectivityIdx,
-                                      cellToFaceConnectivity,
-                                      nVertices,
+                                      face_connectivity_idx,
+                                      face_connectivity,
+                                      cell_face_connectivity_idx,
+                                      cell_face_connectivity,
+                                      n_vertices,
                                       coords,
                                       volume,
                                       center,
-                                      characteristicLength,
-                                      isDegenerated);
+                                      characteristic_length,
+                                      is_degenerated);
 
   /*
    * Free
    */
-
-  PDM_free(faceConnectivity);
-  PDM_free(faceConnectivityIdx);
-  PDM_free(cellToFaceConnectivity);
-  PDM_free(cellToFaceConnectivityIdx);
+  PDM_free(face_connectivity);
+  PDM_free(face_connectivity_idx);
+  PDM_free(cell_face_connectivity);
+  PDM_free(cell_face_connectivity_idx);
 
 }
 
@@ -1869,89 +1867,79 @@ PDM_geom_elem_pyramid_properties
 /**
  *  \brief Polyhedra properties
  *
- *  Compute cellCenter and volume. Reorient cellToFaceConnectivity
+ *  Compute cellCenter and volume. Reorient cell_face_connectivity
  *
- *  @param [in]  isOriented                 1 if cellToFaceConnectivity is already oriented, 0 otherwise
- *  @param [in]  nPolyhedra                 Number of polyhedra
+ *  @param [in]  is_oriented                 1 if cell_face_connectivity is already oriented, 0 otherwise
+ *  @param [in]  n_polyhedra                 Number of polyhedra
  *  @param [in]  n_face                      Number of faces
- *  @param [in]  faceConnectivityIdx        Face connectivity index
- *  @param [in]  faceConnectivity           Face connectivity
- *  @param [in,out]  cellToFaceConnectivityIdx  Cell to face connectivity index
- *  @param [in,out]  cellToFaceConnectivity     Cell to face connectivity
- *  @param [in]  nVertices                  Number of vertices
+ *  @param [in]  face_connectivity_idx        Face connectivity index
+ *  @param [in]  face_connectivity           Face connectivity
+ *  @param [in,out]  cell_face_connectivity_idx  Cell to face connectivity index
+ *  @param [in,out]  cell_face_connectivity     Cell to face connectivity
+ *  @param [in]  n_vertices                  Number of vertices
  *  @param [in]  coords                     Vertices coordinates
  *  @param [out] volume                     Volume
  *  @param [out] center                     Center
- *  @param [out] characteristicLength       Characteristic length (active if != NULL)
- *  @param [out] isDegenerated              Degenerated edge indicator (active if != NULL)
+ *  @param [out] characteristic_length       Characteristic length (active if != NULL)
+ *  @param [out] is_degenerated              Degenerated edge indicator (active if != NULL)
  */
 
 void
 PDM_geom_elem_polyhedra_properties
 (
- const int     isOriented,
- const int     nPolyhedra,
+ const int     is_oriented,
+ const int     n_polyhedra,
  const int     n_face,
- const int    *faceConnectivityIdx,
- const int    *faceConnectivity,
- const int    *cellToFaceConnectivityIdx,
-       int    *cellToFaceConnectivity,
- const int     nVertices,
+ const int    *face_connectivity_idx,
+ const int    *face_connectivity,
+ const int    *cell_face_connectivity_idx,
+       int    *cell_face_connectivity,
+ const int     n_vertices,
  const double *coords,
  double       *volume,
  double       *center,
- double       *characteristicLength,
- int          *isDegenerated
+ double       *characteristic_length,
+ int          *is_degenerated
 )
 {
   const double big = 1e30;
   int convergence = 1;
   int *colorVertice;
-  PDM_malloc(colorVertice,nVertices,int);
+  PDM_malloc(colorVertice,n_vertices,int);
 
-  int  lPolyhedraVertices = 24;
-  int *polyhedraVertices;
-  PDM_malloc(polyhedraVertices,lPolyhedraVertices,int); //First allocation
+  int  lpolyhedra_vertices = 24;
+  int *polyhedra_vertices;
+  PDM_malloc(polyhedra_vertices,lpolyhedra_vertices,int); //First allocation
 
-  for (int i = 0; i < nVertices; i++)
+  for (int i = 0; i < n_vertices; i++){
     colorVertice[i] = false;
+  }
 
   /*
    * Compute face properties
    */
 
-  double *surface_vector;
-  PDM_malloc(surface_vector,3 *n_face,double);
-  double *faceCenter;
-  PDM_malloc(faceCenter,3 *n_face,double);
-
-  // PDM_printf( "faceConnectivity : \n");
-  // for (int ipoly = 0; ipoly < n_face; ipoly++) {
-  //   PDM_printf( "  - face %i : ", ipoly+1);
-  //   for (int j = faceConnectivityIdx[ipoly]; j < faceConnectivityIdx[ipoly+1]; j++) {
-  //     PDM_printf( "%i ",faceConnectivity[j]);
-  //   }
-  //   PDM_printf( "\n");
-  // }
-
-
+  double *surface_vector = NULL;
+  double *face_center    = NULL;
+  PDM_malloc(surface_vector, 3 *n_face, double);
+  PDM_malloc(face_center   , 3 *n_face, double);
 
   int convergenceFace = PDM_geom_elem_polygon_properties (n_face,
-                                                          faceConnectivityIdx,
-                                                          faceConnectivity,
+                                                          face_connectivity_idx,
+                                                          face_connectivity,
                                                           coords,
                                                           surface_vector,
-                                                          faceCenter,
+                                                          face_center,
                                                           NULL,
                                                           NULL);
 
   if (0 == 1) {
 
-    PDM_printf( "faceConnectivity : \n");
+    PDM_printf( "face_connectivity : \n");
     for (int ipoly = 0; ipoly < n_face; ipoly++) {
       PDM_printf( "  - face %i : ", ipoly+1);
-      for (int j = faceConnectivityIdx[ipoly]; j < faceConnectivityIdx[ipoly+1]; j++) {
-        PDM_printf( "%i ",faceConnectivity[j]);
+      for (int j = face_connectivity_idx[ipoly]; j < face_connectivity_idx[ipoly+1]; j++) {
+        PDM_printf( "%i ",face_connectivity[j]);
       }
       PDM_printf( "\n");
     }
@@ -1962,9 +1950,9 @@ PDM_geom_elem_polyhedra_properties
     }
     PDM_printf( "\n");
 
-    PDM_printf( "facecenter : ");
+    PDM_printf( "face_center : ");
     for (int ipoly = 0; ipoly < 3 * n_face; ipoly++) {
-      PDM_printf( "%12.5e ",faceCenter[ipoly]);
+      PDM_printf( "%12.5e ",face_center[ipoly]);
     }
     PDM_printf( "\n");
   }
@@ -1973,188 +1961,188 @@ PDM_geom_elem_polyhedra_properties
    * Loop on polyhedra
    */
 
-  int keyMax = 2 * nVertices;
+  int keyMax = 2 * n_vertices;
 
-  PDM_hash_tab_t *hashOrient = NULL;
-  int nKeyPoly = 0;
-  int sKeyPoly = 10;
+  PDM_hash_tab_t *hash_orient = NULL;
+  int n_key_poly = 0;
+  int s_key_poly = 10;
 
-  int *keyPoly = NULL;
+  int *key_poly = NULL;
 
   double volume_t = 0;
-  int maxNPolyFace = 0;
+  int max_n_poly_face = 0;
 
   int *stack = NULL;
-  int *tagFace = NULL;
+  int *tag_face = NULL;
 
-  if (!isOriented) {
+  if (!is_oriented) {
 
-    hashOrient = PDM_hash_tab_create (PDM_HASH_TAB_KEY_INT, &keyMax);
+    hash_orient = PDM_hash_tab_create (PDM_HASH_TAB_KEY_INT, &keyMax);
 
-    PDM_malloc(keyPoly,sKeyPoly,int);
+    PDM_malloc(key_poly, s_key_poly, int);
 
-    for (int ipoly = 0; ipoly < nPolyhedra; ipoly++) {
-      const int polyIdx   = cellToFaceConnectivityIdx[ipoly];
-      const int nPolyFace = cellToFaceConnectivityIdx[ipoly + 1] - polyIdx;
-      maxNPolyFace = PDM_MAX (maxNPolyFace, nPolyFace);
+    for (int ipoly = 0; ipoly < n_polyhedra; ipoly++) {
+      const int poly_idx   = cell_face_connectivity_idx[ipoly];
+      const int n_poly_face = cell_face_connectivity_idx[ipoly + 1] - poly_idx;
+      max_n_poly_face = PDM_MAX (max_n_poly_face, n_poly_face);
     }
 
-    PDM_malloc(stack,maxNPolyFace,int);
-    PDM_malloc(tagFace,maxNPolyFace,int);
+    PDM_malloc(stack   , max_n_poly_face, int);
+    PDM_malloc(tag_face, max_n_poly_face, int);
 
   }
 
-  for (int ipoly = 0; ipoly < nPolyhedra; ipoly++) {
+  for (int ipoly = 0; ipoly < n_polyhedra; ipoly++) {
 
-    double *polyCenter = center + 3*ipoly;
+    double *poly_center = center + 3*ipoly;
     double  disp[3];
 
-    const int polyIdx   = cellToFaceConnectivityIdx[ipoly];
-    const int nPolyFace = cellToFaceConnectivityIdx[ipoly + 1] - polyIdx;
+    const int poly_idx   = cell_face_connectivity_idx[ipoly];
+    const int n_poly_face = cell_face_connectivity_idx[ipoly + 1] - poly_idx;
 
-    if (characteristicLength != NULL)
-      characteristicLength[ipoly] = big;
+    if (characteristic_length != NULL)
+      characteristic_length[ipoly] = big;
 
     /*
      * Intialize cell center to the barycenter
      */
 
-    nKeyPoly = 0;
+    n_key_poly = 0;
 
     /* Search polyhedra vertices */
 
-    int nPolyhedraVertices = 0;
+    int n_polyhedra_vertices = 0;
 
-    for (int iface = 0; iface < nPolyFace; iface++) {
+    for (int iface = 0; iface < n_poly_face; iface++) {
 
-      if (!isOriented) {
-        tagFace[iface] = NOT_DEFINE;
+      if (!is_oriented) {
+        tag_face[iface] = NOT_DEFINE;
       }
 
-      const int face          = abs(cellToFaceConnectivity[polyIdx + iface]) - 1;
-      if (!isOriented) {
-        cellToFaceConnectivity[polyIdx + iface] = face+1;
+      const int face          = abs(cell_face_connectivity[poly_idx + iface]) - 1;
+      if (!is_oriented) {
+        cell_face_connectivity[poly_idx + iface] = face+1;
       }
-      const int faceIdx       = faceConnectivityIdx[face];
-      const int n_faceVertices = faceConnectivityIdx[face+1] - faceIdx;
+      const int face_idx       = face_connectivity_idx[face];
+      const int n_face_vertices = face_connectivity_idx[face+1] - face_idx;
 
-      for (int ivert = 0; ivert < n_faceVertices; ivert++) {
-        const int vertex = faceConnectivity[faceIdx + ivert] - 1;
+      for (int ivert = 0; ivert < n_face_vertices; ivert++) {
+        const int vertex = face_connectivity[face_idx + ivert] - 1;
 
-        if (!isOriented) {
-          const int inext = (ivert + 1) % n_faceVertices;
-          const int vertexNext = faceConnectivity[faceIdx + inext] - 1;
-          const int key = vertex + vertexNext;
+        if (!is_oriented) {
+          const int inext = (ivert + 1) % n_face_vertices;
+          const int vertex_next = face_connectivity[face_idx + inext] - 1;
+          const int key = vertex + vertex_next;
 
-          if (nKeyPoly >= sKeyPoly) {
-            sKeyPoly *= 2;
-            PDM_realloc(keyPoly ,keyPoly , sKeyPoly,int);
+          if (n_key_poly >= s_key_poly) {
+            s_key_poly *= 2;
+            PDM_realloc(key_poly, key_poly, s_key_poly, int);
           }
 
-          keyPoly[nKeyPoly++] = key;
+          key_poly[n_key_poly++] = key;
 
           int *edge;
           PDM_malloc(edge,3,int);
           edge[0] = vertex;
-          edge[1] = vertexNext;
+          edge[1] = vertex_next;
           edge[2] = iface;
 
-          PDM_hash_tab_data_add (hashOrient, (void *) &key, edge);
+          PDM_hash_tab_data_add (hash_orient, (void *) &key, edge);
         }
 
         if (!colorVertice[vertex]) {
           colorVertice[vertex] = 1;
 
-          if (nPolyhedraVertices >= lPolyhedraVertices) {
-            lPolyhedraVertices *= 2;
-            PDM_realloc(polyhedraVertices ,polyhedraVertices , lPolyhedraVertices,int);
+          if (n_polyhedra_vertices >= lpolyhedra_vertices) {
+            lpolyhedra_vertices *= 2;
+            PDM_realloc(polyhedra_vertices ,polyhedra_vertices , lpolyhedra_vertices,int);
           }
-          polyhedraVertices[nPolyhedraVertices++] = vertex;
+          polyhedra_vertices[n_polyhedra_vertices++] = vertex;
         }
       }
     }
 
-    if (!isOriented) {
-      int nStack = -1;
-      stack[++nStack] = 0;
-      tagFace[0] = IN_STACK;
+    if (!is_oriented) {
+      int n_stack = -1;
+      stack[++n_stack] = 0;
+      tag_face[0] = IN_STACK;
 
-      while (nStack >= 0) {
+      while (n_stack >= 0) {
 
-        int iFace = stack[nStack--];
+        int iFace = stack[n_stack--];
 
-        const int face          = abs(cellToFaceConnectivity[polyIdx + iFace]) - 1;
-        const int faceIdx       = faceConnectivityIdx[face];
-        const int n_faceVertices = faceConnectivityIdx[face+1] - faceIdx;
+        const int face          = abs(cell_face_connectivity[poly_idx + iFace]) - 1;
+        const int face_idx       = face_connectivity_idx[face];
+        const int n_face_vertices = face_connectivity_idx[face+1] - face_idx;
 
-        for (int ivert = 0; ivert < n_faceVertices; ivert++) {
-          const int inext = (ivert + 1) % n_faceVertices;
+        for (int ivert = 0; ivert < n_face_vertices; ivert++) {
+          const int inext = (ivert + 1) % n_face_vertices;
 
-          const int vertex = faceConnectivity[faceIdx + ivert] - 1;
-          const int vertexNext = faceConnectivity[faceIdx + inext] - 1;
-          int key = vertex + vertexNext;
+          const int vertex = face_connectivity[face_idx + ivert] - 1;
+          const int vertex_next = face_connectivity[face_idx + inext] - 1;
+          int key = vertex + vertex_next;
 
-          int nData = PDM_hash_tab_n_data_get (hashOrient, &key);
-          int **data = (int **) PDM_hash_tab_data_get (hashOrient, &key);
+          int n_data =          PDM_hash_tab_n_data_get(hash_orient, &key);
+          int **data = (int **) PDM_hash_tab_data_get  (hash_orient, &key);
 
-          int jCurrentEdge = -1;
-          for (int j = 0; j < nData; j++) {
+          int j_current_edge = -1;
+          for (int j = 0; j < n_data; j++) {
             if (data[j] != NULL) {
               int *_edge = data[j];
-              int isSameEdge    = (vertex == _edge[0]) && (vertexNext == _edge[1]);
-              int isSameFace    = iFace == _edge[2];
-              if (isSameEdge && isSameFace) {
-                jCurrentEdge = j;
+              int is_same_edge    = (vertex == _edge[0]) && (vertex_next == _edge[1]);
+              int is_same_face    = iFace == _edge[2];
+              if (is_same_edge && is_same_face) {
+                j_current_edge = j;
                 break;
               }
             }
           }
 
-          assert (jCurrentEdge > -1);
+          assert (j_current_edge > -1);
 
-          for (int j = 0; j < nData; j++) {
+          for (int j = 0; j < n_data; j++) {
             if (data[j] != NULL) {
               int *_edge = data[j];
-              int isInverseEdge = (vertex == _edge[1]) && (vertexNext == _edge[0]);
-              int isSameEdge    = (vertex == _edge[0]) && (vertexNext == _edge[1]);
-              int isSameFace    = iFace == _edge[2];
+              int is_inverse_edge = (vertex == _edge[1]) && (vertex_next == _edge[0]);
+              int is_same_edge    = (vertex == _edge[0]) && (vertex_next == _edge[1]);
+              int is_same_face    = iFace == _edge[2];
 
               int neighbour = _edge[2];
 
-              if (!isSameFace) {
-                if (isSameEdge || isInverseEdge) {
+              if (!is_same_face) {
+                if (is_same_edge || is_inverse_edge) {
 
-                  if (tagFace[iFace] < UNCHANGED_CYCLE) {
+                  if (tag_face[iFace] < UNCHANGED_CYCLE) {
 
-                    if (tagFace[neighbour] >= UNCHANGED_CYCLE) {
-                      if (tagFace[neighbour] == UNCHANGED_CYCLE) {
-                        if (isSameEdge) {
-                          tagFace[iFace] = CHANGED_CYCLE;
+                    if (tag_face[neighbour] >= UNCHANGED_CYCLE) {
+                      if (tag_face[neighbour] == UNCHANGED_CYCLE) {
+                        if (is_same_edge) {
+                          tag_face[iFace] = CHANGED_CYCLE;
                         }
                         else  {
-                          tagFace[iFace] = UNCHANGED_CYCLE;
+                          tag_face[iFace] = UNCHANGED_CYCLE;
                         }
                       }
                       else {
-                        if (isSameEdge) {
-                          tagFace[iFace] = UNCHANGED_CYCLE;
+                        if (is_same_edge) {
+                          tag_face[iFace] = UNCHANGED_CYCLE;
                         }
                         else  {
-                          tagFace[iFace] = CHANGED_CYCLE;
+                          tag_face[iFace] = CHANGED_CYCLE;
                         }
                       }
 
                       PDM_free(data[j]);
-                      PDM_free(data[jCurrentEdge]);
+                      PDM_free(data[j_current_edge]);
                       data[j] = NULL;
-                      data[jCurrentEdge] = NULL;
+                      data[j_current_edge] = NULL;
 
                     }
                   }
 
-                  if (tagFace[neighbour] == NOT_DEFINE) {
-                    stack[++nStack] = neighbour;
-                    tagFace[neighbour] = IN_STACK;
+                  if (tag_face[neighbour] == NOT_DEFINE) {
+                    stack[++n_stack] = neighbour;
+                    tag_face[neighbour] = IN_STACK;
                   }
 
                   break;
@@ -2165,16 +2153,16 @@ PDM_geom_elem_polyhedra_properties
           }
         }
 
-        if (tagFace[iFace] == IN_STACK) {
-          tagFace[iFace] = UNCHANGED_CYCLE;
+        if (tag_face[iFace] == IN_STACK) {
+          tag_face[iFace] = UNCHANGED_CYCLE;
         }
       }
 
 
-      for (int iface = 0; iface < nPolyFace; iface++) {
+      for (int iface = 0; iface < n_poly_face; iface++) {
 
-        if (tagFace[iface] == CHANGED_CYCLE) {
-          cellToFaceConnectivity[polyIdx + iface] = -cellToFaceConnectivity[polyIdx + iface];
+        if (tag_face[iface] == CHANGED_CYCLE) {
+          cell_face_connectivity[poly_idx + iface] = -cell_face_connectivity[poly_idx + iface];
         }
       }
 
@@ -2183,19 +2171,19 @@ PDM_geom_elem_polyhedra_properties
     /* Compute barycenter */
 
     for (int i = 0; i < 3; i++)
-      polyCenter[i] = 0.;
+      poly_center[i] = 0.;
 
-    for (int j = 0; j < nPolyhedraVertices; j++) {
-      const int vertex = polyhedraVertices[j];
+    for (int j = 0; j < n_polyhedra_vertices; j++) {
+      const int vertex = polyhedra_vertices[j];
       colorVertice[vertex] = false;
       for (int i = 0; i < 3; i++)
-        polyCenter[i] += coords[3*vertex + i];
+        poly_center[i] += coords[3*vertex + i];
     }
 
     for (int i = 0; i < 3; i++)
-      polyCenter[i] /= nPolyhedraVertices;
+      poly_center[i] /= n_polyhedra_vertices;
 
-    nPolyhedraVertices = 0;
+    n_polyhedra_vertices = 0;
 
     /*
      * Intialize volume
@@ -2214,35 +2202,35 @@ PDM_geom_elem_polyhedra_properties
      * Loop on faces
      */
 
-    for (int iface = 0; iface < nPolyFace; iface++) {
+    for (int iface = 0; iface < n_poly_face; iface++) {
 
-      const int face          = abs(cellToFaceConnectivity[polyIdx + iface]) - 1;
-      const int direction     = (cellToFaceConnectivity[polyIdx + iface] < 0) ? -1 : 1;
+      const int face          = abs(cell_face_connectivity[poly_idx + iface]) - 1;
+      const int direction     = (cell_face_connectivity[poly_idx + iface] < 0) ? -1 : 1;
 
-      const int faceIdx       = faceConnectivityIdx[face];
-      const int n_faceVertices = faceConnectivityIdx[face+1] - faceIdx;
+      const int face_idx        = face_connectivity_idx[face];
+      const int n_face_vertices = face_connectivity_idx[face+1] - face_idx;
 
       /*
        * Loop on vertices
        */
 
-      for (int ivert = 0; ivert < n_faceVertices; ivert++) {
+      for (int ivert = 0; ivert < n_face_vertices; ivert++) {
 
         int vert1;
         int vert2;
         int ivert1 = ivert;
 
         if (direction > 0) {
-          vert1 = faceConnectivity[faceIdx + ivert1] - 1;
-          vert2 = faceConnectivity[faceIdx + (ivert1 + 1) % n_faceVertices] - 1;
+          vert1 = face_connectivity[face_idx + ivert1] - 1;
+          vert2 = face_connectivity[face_idx + (ivert1 + 1) % n_face_vertices] - 1;
         }
         else {
-          ivert1 = n_faceVertices - 1 - ivert;
-          vert1 = faceConnectivity[faceIdx + (ivert1 + 1) % n_faceVertices] - 1;
-          vert2 = faceConnectivity[faceIdx + ivert1] - 1;
+          ivert1 = n_face_vertices - 1 - ivert;
+          vert1 = face_connectivity[face_idx + (ivert1 + 1) % n_face_vertices] - 1;
+          vert2 = face_connectivity[face_idx + ivert1] - 1;
         }
 
-        if (characteristicLength != NULL)  {
+        if (characteristic_length != NULL)  {
 
           /* Vector vert1 -> vert2 */
 
@@ -2253,30 +2241,30 @@ PDM_geom_elem_polyhedra_properties
 
           double normV1V2 = PDM_MODULE (vectV1V2);
 
-          characteristicLength[ipoly] = PDM_MIN(characteristicLength[ipoly], normV1V2);
+          characteristic_length[ipoly] = PDM_MIN(characteristic_length[ipoly], normV1V2);
 
         }
 
         /* Vector face center -> vert1 */
 
         double vectFCV1[3] =
-          {coords[3*vert1    ] - faceCenter[3 * face    ],
-           coords[3*vert1 + 1] - faceCenter[3 * face + 1],
-           coords[3*vert1 + 2] - faceCenter[3 * face + 2]};
+          {coords[3*vert1    ] - face_center[3 * face    ],
+           coords[3*vert1 + 1] - face_center[3 * face + 1],
+           coords[3*vert1 + 2] - face_center[3 * face + 2]};
 
         /* Vector face center -> vert2 */
 
         double vectFCV2[3] =
-          {coords[3*vert2    ] - faceCenter[3 * face    ],
-           coords[3*vert2 + 1] - faceCenter[3 * face + 1],
-           coords[3*vert2 + 2] - faceCenter[3 * face + 2]};
+          {coords[3*vert2    ] - face_center[3 * face    ],
+           coords[3*vert2 + 1] - face_center[3 * face + 1],
+           coords[3*vert2 + 2] - face_center[3 * face + 2]};
 
         /* Vector cell center -> face center */
 
         double vectCCFC[3] =
-          {faceCenter[3 * face    ] - polyCenter[0],
-           faceCenter[3 * face + 1] - polyCenter[1],
-           faceCenter[3 * face + 2] - polyCenter[2]};
+          {face_center[3 * face    ] - poly_center[0],
+           face_center[3 * face + 1] - poly_center[1],
+           face_center[3 * face + 2] - poly_center[2]};
 
         double surface_vectorTri[3];
         PDM_CROSS_PRODUCT (surface_vectorTri, vectFCV1, vectFCV2);
@@ -2301,10 +2289,10 @@ PDM_geom_elem_polyhedra_properties
 
     if (signeVol == -1) {
 
-      if (!isOriented) {
+      if (!is_oriented) {
         volume[ipoly] = -volume[ipoly];
-        for (int iface = 0; iface < nPolyFace; iface++) {
-          cellToFaceConnectivity[polyIdx + iface] = - cellToFaceConnectivity[polyIdx + iface];
+        for (int iface = 0; iface < n_poly_face; iface++) {
+          cell_face_connectivity[poly_idx + iface] = - cell_face_connectivity[poly_idx + iface];
         }
       }
 
@@ -2317,7 +2305,7 @@ PDM_geom_elem_polyhedra_properties
     double denomVol = 1 / PDM_MAX(fabs(volume[ipoly]), GEOM_EPS_MIN);
 
     for (int i = 0; i < 3; i++)
-      polyCenter[i] =  polyCenter[i] + signeVol * denomVol * disp[i];
+      poly_center[i] =  poly_center[i] + signeVol * denomVol * disp[i];
 
 
     volume_t += volume[ipoly];
@@ -2329,28 +2317,28 @@ PDM_geom_elem_polyhedra_properties
     if (!convergenceFace)
       convergence = false;
 
-    if ((characteristicLength != NULL) && (isDegenerated != NULL)) {
+    if ((characteristic_length != NULL) && (is_degenerated != NULL)) {
 
-      double eps_loc = PDM_geom_elem_geometric_epsilon (characteristicLength[ipoly], GEOM_EPS_VOL);
-      isDegenerated[ipoly] = 0;
+      double eps_loc = PDM_geom_elem_geometric_epsilon (characteristic_length[ipoly], GEOM_EPS_VOL);
+      is_degenerated[ipoly] = 0;
       if (fabs(volume[ipoly]) <= eps_loc)
-        isDegenerated[ipoly] = 1;
+        is_degenerated[ipoly] = 1;
     }
 
-    if (!isOriented) {
-      PDM_hash_tab_purge (hashOrient, PDM_TRUE);
+    if (!is_oriented) {
+      PDM_hash_tab_purge (hash_orient, PDM_TRUE);
     }
 
   }
   PDM_UNUSED(volume_t);
 
-  PDM_free(polyhedraVertices);
+  PDM_free(polyhedra_vertices);
 
-  if (!isOriented) {
-    PDM_free(keyPoly);
-    PDM_free(tagFace);
+  if (!is_oriented) {
+    PDM_free(key_poly);
+    PDM_free(tag_face);
     PDM_free(stack);
-    PDM_hash_tab_free (hashOrient);
+    PDM_hash_tab_free (hash_orient);
   }
 
   if (0 == 1) {
@@ -2361,32 +2349,32 @@ PDM_geom_elem_polyhedra_properties
     }
     PDM_printf( "\n");
 
-    PDM_printf( "facecenter : ");
+    PDM_printf( "face_center : ");
     for (int ipoly = 0; ipoly < 3 * n_face; ipoly++) {
-      PDM_printf( "%12.5e ",faceCenter[ipoly]);
+      PDM_printf( "%12.5e ",face_center[ipoly]);
     }
     PDM_printf( "\n");
 
     PDM_printf( "isDegenrated : ");
-    for (int ipoly = 0; ipoly < nPolyhedra; ipoly++) {
-      PDM_printf( "%i ",isDegenerated[ipoly]);
+    for (int ipoly = 0; ipoly < n_polyhedra; ipoly++) {
+      PDM_printf( "%i ",is_degenerated[ipoly]);
     }
     PDM_printf( "\n");
 
-    PDM_printf( "characteristicLength  : ");
-    for (int ipoly = 0; ipoly < nPolyhedra; ipoly++) {
-      PDM_printf( "%12.5e ",characteristicLength[ipoly]);
+    PDM_printf( "characteristic_length  : ");
+    for (int ipoly = 0; ipoly < n_polyhedra; ipoly++) {
+      PDM_printf( "%12.5e ",characteristic_length[ipoly]);
     }
     PDM_printf( "\n");
 
     PDM_printf( "volume  : ");
-    for (int ipoly = 0; ipoly < nPolyhedra; ipoly++) {
+    for (int ipoly = 0; ipoly < n_polyhedra; ipoly++) {
       PDM_printf( "%12.5e ",volume[ipoly]);
     }
     PDM_printf( "\n");
 
     PDM_printf( "center  : ");
-    for (int ipoly = 0; ipoly < 3 * nPolyhedra; ipoly++) {
+    for (int ipoly = 0; ipoly < 3 * n_polyhedra; ipoly++) {
       PDM_printf( "%12.5e ",center[ipoly]);
     }
     PDM_printf( "\n");
@@ -2394,7 +2382,7 @@ PDM_geom_elem_polyhedra_properties
   }
 
   PDM_free(surface_vector);
-  PDM_free(faceCenter);
+  PDM_free(face_center);
   PDM_free(colorVertice);
 
   if (!convergence)
@@ -2407,40 +2395,39 @@ PDM_geom_elem_polyhedra_properties
 void
 PDM_geom_elem_polyhedra_properties_triangulated
 (
- const int     isOriented,
- const int     nPolyhedra,
+ const int     is_oriented,
+ const int     n_polyhedra,
  const int     n_face,
- const int    *faceConnectivityIdx,
- const int    *faceConnectivity,
- const int    *cellToFaceConnectivityIdx,
-       int    *cellToFaceConnectivity,
- const int     nVertices,
+ const int    *face_connectivity_idx,
+ const int    *face_connectivity,
+ const int    *cell_face_connectivity_idx,
+       int    *cell_face_connectivity,
+ const int     n_vertices,
  const double *coords,
        double *volume,
        double *center,
-       double *characteristicLength,
-       int    *isDegenerated
+       double *characteristic_length,
+       int    *is_degenerated
 )
 {
-  PDM_UNUSED(nVertices);
-  PDM_UNUSED(characteristicLength);
+  PDM_UNUSED(n_vertices);
+  PDM_UNUSED(characteristic_length);
 
   /**
    * TO DO :
-   *  - compute characteristicLength
-   *  - handle (!isOriented) case
+   *  - compute characteristic_length
+   *  - handle (!is_oriented) case
    */
 
   /*
    * Triangulate faces
    */
-
   int max_face_vtx_n = 0;
   int *face_tria_idx;
-  PDM_malloc(face_tria_idx,(n_face + 1),int);
+  PDM_malloc(face_tria_idx, n_face + 1, int);
   face_tria_idx[0] = 0;
   for (int iface = 0; iface < n_face; iface++) {
-    int face_vtx_n = faceConnectivityIdx[iface+1] - faceConnectivityIdx[iface];
+    int face_vtx_n = face_connectivity_idx[iface+1] - face_connectivity_idx[iface];
     max_face_vtx_n = PDM_MAX(max_face_vtx_n, face_vtx_n);
     int face_tria_n = face_vtx_n - 2;
     face_tria_idx[iface+1] = face_tria_idx[iface] + face_tria_n;
@@ -2449,12 +2436,12 @@ PDM_geom_elem_polyhedra_properties_triangulated
   PDM_triangulate_state_t *tri_state = PDM_triangulate_state_create(max_face_vtx_n);
 
   int *tria_vtx;
-  PDM_malloc(tria_vtx,face_tria_idx[n_face] * 3,int);
+  PDM_malloc(tria_vtx, face_tria_idx[n_face] * 3, int);
 
   for (int iface = 0; iface < n_face; iface++) {
 
-    const int *_face_vtx = faceConnectivity + faceConnectivityIdx[iface];
-    int face_vtx_n = faceConnectivityIdx[iface+1] - faceConnectivityIdx[iface];
+    const int *_face_vtx = face_connectivity + face_connectivity_idx[iface];
+    int face_vtx_n = face_connectivity_idx[iface+1] - face_connectivity_idx[iface];
 
     int *_tria_vtx = tria_vtx + 3*face_tria_idx[iface];
 
@@ -2488,30 +2475,30 @@ PDM_geom_elem_polyhedra_properties_triangulated
   }
   PDM_triangulate_state_destroy(tri_state);
 
-  assert(isOriented == 1);
+  assert(is_oriented == 1);
 
 
-  for (int ipoly = 0; ipoly < nPolyhedra; ipoly++) {
+  for (int ipoly = 0; ipoly < n_polyhedra; ipoly++) {
 
-    double *polyCenter = center + 3*ipoly;
-    const int polyIdx   = cellToFaceConnectivityIdx[ipoly];
-    // const int nPolyFace = cellToFaceConnectivityIdx[ipoly + 1] - polyIdx;
+    double *poly_center = center + 3*ipoly;
+    const int poly_idx   = cell_face_connectivity_idx[ipoly];
+    // const int n_poly_face = cell_face_connectivity_idx[ipoly + 1] - poly_idx;
 
-    int ref_face = PDM_ABS(cellToFaceConnectivity[polyIdx]) - 1;
-    int ref_point = faceConnectivity[faceConnectivityIdx[ref_face]] - 1;
+    int ref_face = PDM_ABS(cell_face_connectivity[poly_idx]) - 1;
+    int ref_point = face_connectivity[face_connectivity_idx[ref_face]] - 1;
 
     int connec[4];
     connec[0] = ref_point+1;
     for (int i = 0; i < 3; i++) {
-      polyCenter[i] = 0;
+      poly_center[i] = 0;
     }
     volume[ipoly] = 0;
 
 
-    for (int iface = cellToFaceConnectivityIdx[ipoly]; iface < cellToFaceConnectivityIdx[ipoly+1]; iface++) {
+    for (int iface = cell_face_connectivity_idx[ipoly]; iface < cell_face_connectivity_idx[ipoly+1]; iface++) {
 
-      int face_id = PDM_ABS (cellToFaceConnectivity[iface]) - 1;
-      int sign    = PDM_SIGN(cellToFaceConnectivity[iface]);
+      int face_id = PDM_ABS (cell_face_connectivity[iface]) - 1;
+      int sign    = PDM_SIGN(cell_face_connectivity[iface]);
 
       for (int itria = face_tria_idx[face_id]; itria < face_tria_idx[face_id+1]; itria++) {
 
@@ -2533,7 +2520,7 @@ PDM_geom_elem_polyhedra_properties_triangulated
 
         volume[ipoly] += tetra_volume;
         for (int i = 0; i < 3; i++) {
-          polyCenter[i] += tetra_volume * tetra_center[i];
+          poly_center[i] += tetra_volume * tetra_center[i];
         }
 
       }
@@ -2541,14 +2528,14 @@ PDM_geom_elem_polyhedra_properties_triangulated
     }
 
     if (PDM_ABS(volume[ipoly]) < 1e-15) {
-      if (isDegenerated != NULL) {
-        isDegenerated[ipoly] = 1;
+      if (is_degenerated != NULL) {
+        is_degenerated[ipoly] = 1;
       }
     }
     else {
       double ivol = 1./volume[ipoly];
       for (int i = 0; i < 3; i++) {
-        polyCenter[i] *= ivol;
+        poly_center[i] *= ivol;
       }
     }
 
@@ -2613,12 +2600,12 @@ PDM_geom_elem_edge_upwind_and_downwind
 )
 {
   /* Allocate stuff */
-  PDM_malloc(*upwind_cell_out,n_edge,int   );
-  PDM_malloc(*downwind_cell_out,n_edge,int   );
-  PDM_malloc(*upwind_face_out,n_edge,int   );
-  PDM_malloc(*downwind_face_out,n_edge,int   );
-  PDM_malloc(*upwind_point_out,n_edge * 3,double);
-  PDM_malloc(*downwind_point_out,n_edge * 3,double);
+  PDM_malloc(*upwind_cell_out   ,     n_edge, int   );
+  PDM_malloc(*downwind_cell_out ,     n_edge, int   );
+  PDM_malloc(*upwind_face_out   ,     n_edge, int   );
+  PDM_malloc(*downwind_face_out ,     n_edge, int   );
+  PDM_malloc(*upwind_point_out  , 3 * n_edge, double);
+  PDM_malloc(*downwind_point_out, 3 * n_edge, double);
 
   int    *upwind_cell    = *upwind_cell_out;
   int    *downwind_cell  = *downwind_cell_out;
@@ -2659,15 +2646,15 @@ PDM_geom_elem_edge_upwind_and_downwind
       tri_state = PDM_triangulate_state_create(max_face_vtx_n);
     }
 
-    PDM_malloc(tri_vtx,(max_face_vtx_n - 2)*3,int);
+    PDM_malloc(tri_vtx, (max_face_vtx_n - 2)*3, int);
   }
   else {
-    PDM_malloc(poly_coord,max_face_vtx_n * 3,double);
+    PDM_malloc(poly_coord, max_face_vtx_n * 3, double);
   }
 
   int *is_visited_face = PDM_array_zeros_int(n_face);
   int *visited_face;
-  PDM_malloc(visited_face,n_face,int);
+  PDM_malloc(visited_face, n_face, int);
   int n_visited_face = 0;
 
   for (int iedge = 0; iedge < n_edge; iedge++) {
@@ -2712,11 +2699,11 @@ PDM_geom_elem_edge_upwind_and_downwind
 
       int n_cell_per_vtx = (vtx_cell_idx[vtx_id+1]-vtx_cell_idx[vtx_id]);
       int *order;
-      PDM_malloc(order,n_cell_per_vtx ,int);
+      PDM_malloc(order, n_cell_per_vtx, int);
 
       if(cell_ln_to_gn != NULL) {
         PDM_g_num_t *vtx_cell_gnum;
-        PDM_malloc(vtx_cell_gnum,n_cell_per_vtx ,PDM_g_num_t);
+        PDM_malloc(vtx_cell_gnum, n_cell_per_vtx, PDM_g_num_t);
         int idx_write = 0;
         for (int idx_cell = vtx_cell_idx[vtx_id]; idx_cell < vtx_cell_idx[vtx_id+1]; idx_cell++) {
           int cell_id = PDM_ABS(vtx_cell[idx_cell]) - 1;

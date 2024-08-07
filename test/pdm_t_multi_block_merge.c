@@ -188,20 +188,20 @@ int main(int argc, char *argv[])
   PDM_dmesh_nodal_dump_vtk(dmn2, PDM_GEOMETRY_KIND_VOLUMIC, "out_volumic_dcube2_");
 
   // Get interface data
-  int *n_group_elt;
-  PDM_malloc(n_group_elt,n_block ,int);
-  int **dgroup_elmt_idx;
-  PDM_malloc(dgroup_elmt_idx,n_block ,int*);
-  PDM_g_num_t **dgroup_elmt;
-  PDM_malloc(dgroup_elmt,n_block ,PDM_g_num_t*);
-  int *dn_vtx;
-  PDM_malloc(dn_vtx,n_block ,int);
-  int *dn_face;
-  PDM_malloc(dn_face,n_block ,int);
-  int **dface_vtx_idx;
-  PDM_malloc(dface_vtx_idx,n_block ,int*);
-  PDM_g_num_t **dface_vtx;
-  PDM_malloc(dface_vtx,n_block ,PDM_g_num_t*);
+  int          *n_group_elt     = NULL;
+  int         **dgroup_elmt_idx = NULL;
+  PDM_g_num_t **dgroup_elmt     = NULL;
+  int          *dn_vtx          = NULL;
+  int          *dn_face         = NULL;
+  int         **dface_vtx_idx   = NULL;
+  PDM_g_num_t **dface_vtx       = NULL;
+  PDM_malloc(n_group_elt    , n_block, int          );
+  PDM_malloc(dgroup_elmt_idx, n_block, int         *);
+  PDM_malloc(dgroup_elmt    , n_block, PDM_g_num_t *);
+  PDM_malloc(dn_vtx         , n_block, int          );
+  PDM_malloc(dn_face        , n_block, int          );
+  PDM_malloc(dface_vtx_idx  , n_block, int         *);
+  PDM_malloc(dface_vtx      , n_block, PDM_g_num_t *);
 
 
   PDM_dmesh_nodal_t* dmn[] = {dmn1, dmn2};
@@ -211,7 +211,7 @@ int main(int argc, char *argv[])
 
     dn_vtx[i_block]  = PDM_DMesh_nodal_n_vtx_get(dmn[i_block]);
     dn_face[i_block] = PDM_DMesh_nodal_section_n_elt_get(dmn[i_block], PDM_GEOMETRY_KIND_SURFACIC, 0);
-    PDM_malloc(dface_vtx_idx[i_block],(dn_face[i_block]+1),int);
+    PDM_malloc(dface_vtx_idx[i_block], dn_face[i_block]+1, int);
     for (int i = 0; i < dn_face[i_block]+1; i++)
       dface_vtx_idx[i_block][i] = 4*i;
     dface_vtx[i_block] = PDM_DMesh_nodal_section_std_get(dmn[i_block], PDM_GEOMETRY_KIND_SURFACIC, 0);
@@ -220,10 +220,10 @@ int main(int argc, char *argv[])
   // LAZY SETUP : we assume that we have only 2 blocks of same size to have same distribution :)
   assert (n_block == 2);
   int jn_size  = dgroup_elmt_idx[0][4] - dgroup_elmt_idx[0][3];
-  PDM_g_num_t *interface_face_ids;
-  PDM_malloc(interface_face_ids,2*jn_size,PDM_g_num_t);
-  int *interface_face_dom;
-  PDM_malloc(interface_face_dom,2*jn_size,int        );
+  PDM_g_num_t *interface_face_ids = NULL;
+  int         *interface_face_dom = NULL;
+  PDM_malloc(interface_face_ids, 2*jn_size, PDM_g_num_t);
+  PDM_malloc(interface_face_dom, 2*jn_size, int        );
   for (int i=0; i < jn_size; i++) {
     interface_face_ids[2*i]   = dgroup_elmt[0][dgroup_elmt_idx[0][3]+i];
     interface_face_ids[2*i+1] = dgroup_elmt[1][dgroup_elmt_idx[0][2]+i];
@@ -268,25 +268,24 @@ int main(int argc, char *argv[])
    * Concatenate blocks
    */
   PDM_g_num_t* *block_distrib_idx;
-  PDM_malloc(block_distrib_idx,n_block ,PDM_g_num_t *);
+  PDM_malloc(block_distrib_idx, n_block, PDM_g_num_t *);
   block_distrib_idx[0] = PDM_dmesh_nodal_vtx_distrib_get(dmn1);
   block_distrib_idx[1] = PDM_dmesh_nodal_vtx_distrib_get(dmn2);
 
   int *n_selected;
-  PDM_malloc(n_selected,n_block ,int);
+  PDM_malloc(n_selected, n_block, int);
   n_selected[0] = PDM_DMesh_nodal_n_vtx_get(dmn1);
   n_selected[1] = PDM_DMesh_nodal_n_vtx_get(dmn2);
 
   PDM_g_num_t* *selected_g_num;
-  PDM_malloc(selected_g_num,n_block ,PDM_g_num_t *);
+  PDM_malloc(selected_g_num, n_block, PDM_g_num_t *);
   for(int i_block = 0; i_block < n_block ; ++i_block) {
-    PDM_malloc(selected_g_num[i_block],n_selected[i_block] ,PDM_g_num_t);
+    PDM_malloc(selected_g_num[i_block], n_selected[i_block], PDM_g_num_t);
     PDM_log_trace_array_long(block_distrib_idx[i_block], n_rank+1, "block_distrib_idx ::");
     for(int i = 0; i < n_selected[i_block]; ++i) {
       selected_g_num[i_block][i] = block_distrib_idx[i_block][i_rank] + i + 1;
     }
   }
-
 
   PDM_multi_block_merge_t* mbm = PDM_multi_block_merge_create(block_distrib_idx,
                                                               n_block,
@@ -302,12 +301,12 @@ int main(int argc, char *argv[])
   // Exchange
 
   double* *dvtx_coord;
-  PDM_malloc(dvtx_coord,n_block ,double *);
+  PDM_malloc(dvtx_coord, n_block, double *);
   dvtx_coord[0] = PDM_DMesh_nodal_vtx_get(dmn1);
   dvtx_coord[1] = PDM_DMesh_nodal_vtx_get(dmn2);
 
   int* *stride_one;
-  PDM_malloc(stride_one,n_block ,int *);
+  PDM_malloc(stride_one, n_block, int *);
   for(int i_block = 0; i_block < n_block ; ++i_block) {
     stride_one[i_block] = PDM_array_const_int(1, 1);
   }
@@ -360,19 +359,19 @@ int main(int argc, char *argv[])
    */
 
   PDM_g_num_t* *block_elmt_distrib_idx;
-  PDM_malloc(block_elmt_distrib_idx,n_block ,PDM_g_num_t *);
+  PDM_malloc(block_elmt_distrib_idx, n_block, PDM_g_num_t *);
   block_elmt_distrib_idx[0] = (PDM_g_num_t *) PDM_DMesh_nodal_distrib_section_get(dmn1, PDM_GEOMETRY_KIND_VOLUMIC, 0);
   block_elmt_distrib_idx[1] = (PDM_g_num_t *) PDM_DMesh_nodal_distrib_section_get(dmn2, PDM_GEOMETRY_KIND_VOLUMIC, 0);
 
   int *n_elmt_selected;
-  PDM_malloc(n_elmt_selected,n_block ,int);
+  PDM_malloc(n_elmt_selected, n_block, int);
   n_elmt_selected[0] = PDM_DMesh_nodal_section_n_elt_get(dmn1, PDM_GEOMETRY_KIND_VOLUMIC, 0);
   n_elmt_selected[1] = PDM_DMesh_nodal_section_n_elt_get(dmn2, PDM_GEOMETRY_KIND_VOLUMIC, 0);
 
   PDM_g_num_t* *selected_elmt_g_num;
-  PDM_malloc(selected_elmt_g_num,n_block ,PDM_g_num_t *);
+  PDM_malloc(selected_elmt_g_num, n_block, PDM_g_num_t *);
   for(int i_block = 0; i_block < n_block ; ++i_block) {
-    PDM_malloc(selected_elmt_g_num[i_block],n_elmt_selected[i_block] ,PDM_g_num_t);
+    PDM_malloc(selected_elmt_g_num[i_block], n_elmt_selected[i_block], PDM_g_num_t);
     for(int i = 0; i < n_elmt_selected[i_block]; ++i) {
       selected_elmt_g_num[i_block][i] = block_elmt_distrib_idx[i_block][i_rank] + i + 1;
     }
@@ -381,12 +380,12 @@ int main(int argc, char *argv[])
   /*
    * Setup graph
    */
-  int *dmerge_elmt_idx;
-  PDM_malloc(dmerge_elmt_idx,1 ,int        );
-  int *dmerge_elmt_block_id;
-  PDM_malloc(dmerge_elmt_block_id,0 ,int        );
-  PDM_g_num_t *dmerge_elmt_g_num;
-  PDM_malloc(dmerge_elmt_g_num,0 ,PDM_g_num_t);
+  int         *dmerge_elmt_idx      = NULL;
+  int         *dmerge_elmt_block_id = NULL;
+  PDM_g_num_t *dmerge_elmt_g_num    = NULL;
+  PDM_malloc(dmerge_elmt_idx     , 1, int        );
+  PDM_malloc(dmerge_elmt_block_id, 0, int        );
+  PDM_malloc(dmerge_elmt_g_num   , 0, PDM_g_num_t);
   dmerge_elmt_idx[0] = 0;
 
   PDM_multi_block_merge_t* mbm_elmt = PDM_multi_block_merge_create(block_elmt_distrib_idx,
@@ -402,16 +401,16 @@ int main(int argc, char *argv[])
   /*
    * Exchange + Update
    */
-  PDM_g_num_t* *block_elmt_vtx;
-  PDM_malloc(block_elmt_vtx,n_block ,PDM_g_num_t *);
+  PDM_g_num_t* *block_elmt_vtx = NULL;
+  PDM_malloc(block_elmt_vtx, n_block, PDM_g_num_t *);
   block_elmt_vtx[0] = PDM_DMesh_nodal_section_std_get(dmn1, PDM_GEOMETRY_KIND_VOLUMIC, 0);
   block_elmt_vtx[1] = PDM_DMesh_nodal_section_std_get(dmn2, PDM_GEOMETRY_KIND_VOLUMIC, 0);
   int strid_cst = 8; // Because HEXA
 
-  int         *dmerge_elmt_vtx_stride = NULL;
-  PDM_g_num_t *dmerge_elmt_vtx = NULL;
-  int **stride_cst_ptr;
-  PDM_malloc(stride_cst_ptr,n_block,int*);
+  int          *dmerge_elmt_vtx_stride = NULL;
+  PDM_g_num_t  *dmerge_elmt_vtx        = NULL;
+  int         **stride_cst_ptr         = NULL;
+  PDM_malloc(stride_cst_ptr, n_block, int*);
   for (int ib = 0; ib < n_block; ib++) {
     stride_cst_ptr[ib] = &strid_cst;
   }
@@ -441,10 +440,10 @@ int main(int argc, char *argv[])
 
   printf("dn_merge_elmt = %i \n", dn_merge_elmt);
 
-  PDM_g_num_t *merge_elmt_ln_to_gn;
-  PDM_malloc(merge_elmt_ln_to_gn, dn_merge_elmt      ,PDM_g_num_t);
-  int *dconnec_idx;
-  PDM_malloc(dconnec_idx,(dn_merge_elmt + 1) ,int        );
+  PDM_g_num_t *merge_elmt_ln_to_gn = NULL;
+  int         *dconnec_idx         = NULL;
+  PDM_malloc(merge_elmt_ln_to_gn, dn_merge_elmt    , PDM_g_num_t);
+  PDM_malloc(dconnec_idx        , dn_merge_elmt + 1, int        );
 
   dconnec_idx[0] = 0;
   for(int i = 0; i < dn_merge_elmt; ++i) {
@@ -496,8 +495,8 @@ int main(int argc, char *argv[])
                              NULL,
                              NULL);
 
-  PDM_g_num_t *merge_vtx_ln_to_gn;
-  PDM_malloc(merge_vtx_ln_to_gn,dn_merge_vtx ,PDM_g_num_t);
+  PDM_g_num_t *merge_vtx_ln_to_gn = NULL;
+  PDM_malloc(merge_vtx_ln_to_gn, dn_merge_vtx, PDM_g_num_t);
   for(int i = 0; i < dn_merge_vtx; ++i) {
     merge_vtx_ln_to_gn[i] = distrib_merge_vtx[i_rank] + i + 1;
   }

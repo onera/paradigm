@@ -110,7 +110,7 @@ _PDM_part_renum_method_init
   if (renum_methods[entity] == NULL) {
     s_renum_methods[entity] = size;
     n_renum_methods[entity] = 0;
-    PDM_malloc(renum_methods[entity],s_renum_methods[entity],_renum_method_t *);
+    PDM_malloc(renum_methods[entity], s_renum_methods[entity], _renum_method_t *);
   }
 }
 
@@ -144,12 +144,12 @@ _PDM_part_renum_method_add
   }
 
   _renum_method_t *method_ptr;
-  PDM_malloc(method_ptr,1,_renum_method_t);
+  PDM_malloc(method_ptr, 1, _renum_method_t);
 
   int idx = n_renum_methods[entity];
   renum_methods[entity][n_renum_methods[entity]++] = method_ptr;
 
-  PDM_malloc(method_ptr->name,(strlen(name) + 1),char);
+  PDM_malloc(method_ptr->name, strlen(name) + 1, char);
   strcpy (method_ptr->name, name);
   method_ptr->fct = renum_fct;
 
@@ -173,8 +173,8 @@ const int n_elmt,
       int *order
 )
 {
-  int *tmp_array;
-  PDM_malloc(tmp_array,n_elmt,int);
+  int *tmp_array = NULL;
+  PDM_malloc(tmp_array, n_elmt, int);
 
   time_t _seed = time(NULL);
   srand(( unsigned int) _seed);
@@ -207,8 +207,8 @@ const int  n_face,
 )
 {
 
-  int *old_to_new_order;
-  PDM_malloc(old_to_new_order,n_cell ,int);
+  int *old_to_new_order = NULL;
+  PDM_malloc(old_to_new_order, n_cell, int);
 
   for(int i = 0; i < n_cell; i++) {
     old_to_new_order[new_to_old_order[i]] = i;
@@ -238,8 +238,8 @@ int         *new_to_old_order,
 int         *face_cell
 )
 {
-  int *oldface_cell;
-  PDM_malloc(oldface_cell,n_face * 2 ,int);
+  int *oldface_cell = NULL;
+  PDM_malloc(oldface_cell, n_face * 2, int);
   for(int i = 0; i < n_face * 2; ++i) {
     oldface_cell [i] = face_cell [i];
   }
@@ -270,8 +270,8 @@ const int *old_to_new_order,
 int       *array
 )
 {
-  int *old_array;
-  PDM_malloc(old_array,sizeArray,int);
+  int *old_array = NULL;
+  PDM_malloc(old_array, sizeArray, int);
 
   for (int i = 0; i < sizeArray; ++i) {
     old_array[i] = array[i];
@@ -312,14 +312,14 @@ int         start
                                  entity1_entity1);
 
 
-  int *old_to_new_order;
-  PDM_malloc(old_to_new_order,n_entity1 ,int);
+  int *old_to_new_order = NULL;
+  PDM_malloc(old_to_new_order, n_entity1, int);
   for(int i = 0; i < n_entity1; i++) {
     old_to_new_order[new_to_old_order[i]] = i;
   }
 
-  int *old_array;
-  PDM_malloc(old_array,entity1_entity1_idx[n_entity1],int);
+  int *old_array = NULL;
+  PDM_malloc(old_array, entity1_entity1_idx[n_entity1], int);
 
   for (int i = 0; i < entity1_entity1_idx[n_entity1]; ++i) {
     old_array[i] = entity1_entity1[i];
@@ -353,8 +353,8 @@ const int *old_to_new_order,
 int       *array
 )
 {
-  int *old_array;
-  PDM_malloc(old_array,2 * n_face,int);
+  int *old_array = NULL;
+  PDM_malloc(old_array, 2 * n_face, int);
 
   for (int i = 0; i < 2*n_face; ++i) {
     old_array[i] = array[i];
@@ -394,15 +394,15 @@ int       *connectivities
 )
 {
 
-  int *old_connectivities;
-  PDM_malloc(old_connectivities,connectivity_idx[n_elmt] ,int);
+  int *old_connectivities = NULL;
+  PDM_malloc(old_connectivities, connectivity_idx[n_elmt], int);
 
   for (int i = 0; i < connectivity_idx[n_elmt]; ++i) {
     old_connectivities[i] = connectivities[i];
   }
 
-  int *old_connectivity_idx;
-  PDM_malloc(old_connectivity_idx,(n_elmt + 1) ,int);
+  int *old_connectivity_idx = NULL;
+  PDM_malloc(old_connectivity_idx, n_elmt + 1, int);
 
   for (int i = 0; i < n_elmt+1; ++i) {
     old_connectivity_idx[i] = connectivity_idx[i];
@@ -454,8 +454,8 @@ double  *cell_center
 
   if (is_poly_3d) {
     const int is_oriented = 0;
-    double *volume;
-    PDM_malloc(volume,part->n_cell ,double);
+    double *volume = NULL;
+    PDM_malloc(volume, part->n_cell, double);
     int is_degenerated;
 
     if(1 == 0){
@@ -476,8 +476,8 @@ double  *cell_center
     else /*Trash patch */
     {
       /* Allocate */
-      double *cell_weight;
-      PDM_malloc(cell_weight,part->n_cell ,double);
+      double *cell_weight = NULL;
+      PDM_malloc(cell_weight, part->n_cell, double);
 
       /* Nulliffy cell_centerArray */
       for(int i_celll = 0; i_celll < part->n_cell; i_celll++) {
@@ -541,11 +541,11 @@ double  *cell_center
     PDM_free(volume);
   }
   else {   /* is_poly_3d */
-    double *surface_vector;
-    PDM_malloc(surface_vector,3 * part->n_cell,double);
+    double *surface_vector = NULL;
+    PDM_malloc(surface_vector, 3 * part->n_cell, double);
     int is_degenerated;
 
-    int *connectivity;
+    int *connectivity = NULL;
     PDM_malloc(connectivity, part->cell_face_idx[part->n_cell], int);
 
     int idx = 0;
@@ -668,8 +668,8 @@ _dual_graph_firstrank
 
   int *cell_cell = PDM_array_const_int(part_ini->cell_face_idx[part_ini->n_cell], -1);
 
-  int *cell_cell_idx;
-  PDM_malloc(cell_cell_idx,(part_ini->n_cell + 1) ,int);
+  int *cell_cell_idx = NULL;
+  PDM_malloc(cell_cell_idx, part_ini->n_cell + 1, int);
   for(int i = 0; i < part_ini->n_cell + 1; i++) {
     cell_cell_idx[i] = part_ini->cell_face_idx[i];
   }
@@ -711,7 +711,7 @@ _dual_graph_firstrank
   //We have then n_face elements in cell_cell whereas it needs to be composed of n_cell elements
 
   //    PDM_printf("(*cell_cell_comp_idx)[part_ini->n_cell] : %d \n", (*cell_cell_comp_idx)[part_ini->n_cell]);
-  PDM_malloc(*cell_cell_comp,(*cell_cell_comp_idx)[part_ini->n_cell] ,int);
+  PDM_malloc(*cell_cell_comp, (*cell_cell_comp_idx)[part_ini->n_cell], int);
 
   int cpt_cell_cell_comp = 0;
   for(int i = 0; i < part_ini->cell_face_idx[part_ini->n_cell]; i++) {
@@ -826,13 +826,12 @@ _renum_cells_hilbert
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
     _part_t *part = mesh_parts[i_part];
-    double *cell_center;
-    PDM_malloc(cell_center, part->n_cell * 3, double);
-    PDM_hilbert_code_t *hilbert_codes;
-    PDM_malloc(hilbert_codes, part->n_cell, PDM_hilbert_code_t);
+    double             *cell_center   = NULL;
+    PDM_hilbert_code_t *hilbert_codes = NULL;
+    PDM_malloc(cell_center  , part->n_cell * 3, double            );
+    PDM_malloc(hilbert_codes, part->n_cell    , PDM_hilbert_code_t);
 
     /** Barycentre computation **/
-
     _compute_cell_center (part, cell_center);
 
     double extents[3 * 2];
@@ -849,8 +848,8 @@ _renum_cells_hilbert
 
     PDM_free(cell_center);
 
-    int *new_to_old_order;
-    PDM_malloc(new_to_old_order,part->n_cell ,int);
+    int *new_to_old_order = NULL;
+    PDM_malloc(new_to_old_order, part->n_cell, int);
     for(int i = 0; i < part->n_cell; ++i) {
       new_to_old_order [i] = i;
     }
@@ -889,8 +888,8 @@ _renum_cells_cuthill
     const int n_cell = part->n_cell;
 
     /** Allocate reoerdering/permutation array **/
-    int *order;
-    PDM_malloc(order,n_cell,int);
+    int *order = NULL;
+    PDM_malloc(order, n_cell, int);
 
     /** Graph computation (in the new partition ) **/
     int *dual_graph_idx = NULL;
@@ -917,7 +916,7 @@ _renum_cells_cuthill
 
     /* Copy in partition */
     if(part->new_to_old_order_cell == NULL){
-      PDM_malloc(part->new_to_old_order_cell,n_cell,int);
+      PDM_malloc(part->new_to_old_order_cell, n_cell, int);
       for (int i = 0; i < n_cell; i++){
         part->new_to_old_order_cell[i] = order[i];
       }
@@ -951,8 +950,8 @@ _renum_cells_random
     _part_t *part = mesh_parts[i_part];
     const int n_cell = part->n_cell;
 
-    int *order;
-    PDM_malloc(order,n_cell,int);
+    int *order = NULL;
+    PDM_malloc(order, n_cell, int);
 
     _random_order (n_cell, order);
 
@@ -960,7 +959,7 @@ _renum_cells_random
 
     /* Copy in partition */
     if(part->new_to_old_order_cell == NULL){
-      PDM_malloc(part->new_to_old_order_cell,n_cell,int);
+      PDM_malloc(part->new_to_old_order_cell, n_cell, int);
       for (int i = 0; i < n_cell; i++){
         part->new_to_old_order_cell[i] = order[i];
       }
@@ -992,8 +991,8 @@ _renum_faces_random
     _part_t *part = mesh_parts[i_part];
     const int n_face = part->n_face;
 
-    int *order;
-    PDM_malloc(order,n_face,int);
+    int *order = NULL;
+    PDM_malloc(order, n_face, int);
 
     _random_order (n_face, order);
 
@@ -1001,7 +1000,7 @@ _renum_faces_random
 
     /* Copy in partition */
     if(part->new_to_old_order_face == NULL){
-      PDM_malloc(part->new_to_old_order_face,n_face,int);
+      PDM_malloc(part->new_to_old_order_face, n_face, int);
       for (int i = 0; i < n_face; i++){
         part->new_to_old_order_face[i] = order[i];
       }
@@ -1032,12 +1031,12 @@ _renum_faces_lexicographic
     _part_t *part = mesh_parts[i_part];
     const int n_face = part->n_face;
 
-    int *order;
-    PDM_malloc(order,n_face,int);
+    int *order = NULL;
+    PDM_malloc(order, n_face, int);
 
     /** Build a pre-array face cell ordered */
-    int *face_cell_tmp;
-    PDM_malloc(face_cell_tmp,2*n_face ,int);
+    int *face_cell_tmp = NULL;
+    PDM_malloc(face_cell_tmp, 2*n_face, int);
 
     for(int i = 0; i < n_face; i++) {
        int i_celll1 = PDM_ABS (part->face_cell[2*i  ]);
@@ -1061,7 +1060,7 @@ _renum_faces_lexicographic
     PDM_part_reorder_face (part, order);
 
     if(part->new_to_old_order_face == NULL){
-      PDM_malloc(part->new_to_old_order_face,n_face,int);
+      PDM_malloc(part->new_to_old_order_face, n_face, int);
       for (int i = 0; i < n_face; i++){
         part->new_to_old_order_face[i] = order[i];
       }
@@ -1091,17 +1090,17 @@ _renum_vtx_sort_int_ext
     _part_t *part = mesh_parts[i_part];
     const int n_vtx = part->n_vtx;
 
-    int *order;
-    PDM_malloc(order,n_vtx,int);
+    int *order = NULL;
+    PDM_malloc(order, n_vtx, int);
 
     // _random_order (n_vtx, order);
 
     /* By default the partition own all vertex */
     int n_kind = 3;
-    int *type_idx;
-    PDM_malloc(type_idx, (n_kind+1) ,int);
-    int *type_n;
-    PDM_malloc(type_n, (n_kind+1) ,int);
+    int *type_idx = NULL;
+    int *type_n   = NULL;
+    PDM_malloc(type_idx, n_kind+1, int);
+    PDM_malloc(type_n  , n_kind+1, int);
     for (int i = 0; i < n_kind + 1; i++){
       type_idx[i] = 0;
       type_n  [i] = 0;
@@ -1140,7 +1139,7 @@ _renum_vtx_sort_int_ext
 
     /* Copy in partition */
     if(part->new_to_old_order_vtx == NULL){
-      PDM_malloc(part->new_to_old_order_vtx,n_vtx,int);
+      PDM_malloc(part->new_to_old_order_vtx, n_vtx, int);
       for (int i = 0; i < n_vtx; i++){
         part->new_to_old_order_vtx[i] = order[i];
       }
@@ -1840,8 +1839,8 @@ int     *new_to_old_order
   }
 
   /** cell_face **/
-  int *old_to_new_order;
-  PDM_malloc(old_to_new_order,part->n_face ,int);
+  int *old_to_new_order = NULL;
+  PDM_malloc(old_to_new_order, part->n_face, int);
   for(int i = 0; i < part->n_face; i++) {
    old_to_new_order[new_to_old_order[i]] = i;
   }
@@ -1942,8 +1941,8 @@ int     *new_to_old_order
 )
 {
   /** face_vtx **/
-  int *old_to_new_order;
-  PDM_malloc(old_to_new_order,part->n_edge ,int);
+  int *old_to_new_order = NULL;
+  PDM_malloc(old_to_new_order, part->n_edge, int);
   for(int i = 0; i < part->n_edge; i++) {
     old_to_new_order[new_to_old_order[i]] = i;
   }
@@ -2021,8 +2020,8 @@ int     *new_to_old_order
 )
 {
   /** face_vtx **/
-  int *old_to_new_order;
-  PDM_malloc(old_to_new_order,part->n_vtx ,int);
+  int *old_to_new_order = NULL;
+  PDM_malloc(old_to_new_order, part->n_vtx, int);
   for(int i = 0; i < part->n_vtx; i++) {
    old_to_new_order[new_to_old_order[i]] = i;
   }

@@ -110,7 +110,7 @@ PDM_file_par_t
   int _mode = PDM_MPI_MODE_RDWR;
 
   PDM_file_par_t *PDM_file_par;
-  PDM_malloc(PDM_file_par,1,PDM_file_par_t);
+  PDM_malloc(PDM_file_par, 1, PDM_file_par_t);
 
   PDM_malloc(PDM_file_par->nom, strlen(nom) + 1, char);
   strcpy(PDM_file_par->nom, nom);

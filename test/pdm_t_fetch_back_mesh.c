@@ -226,10 +226,10 @@ _fetch_back_mesh_partial_dist_cloud_surf
 
 
   // -->> take this as an input (riemannian midpoint...)
-  double *inserted_pt_coord;
-  PDM_malloc(inserted_pt_coord,pwork_n_edge * 3,double);
-  double *pwork_edge_length;
-  PDM_malloc(pwork_edge_length,pwork_n_edge,double);
+  double *inserted_pt_coord = NULL;
+  double *pwork_edge_length = NULL;
+  PDM_malloc(inserted_pt_coord, pwork_n_edge * 3, double);
+  PDM_malloc(pwork_edge_length, pwork_n_edge    , double);
   for (int edge_id = 0; edge_id < pwork_n_edge; edge_id++) {
     int vtx_id1 = pwork_edge_vtx[2*edge_id  ] - 1;
     int vtx_id2 = pwork_edge_vtx[2*edge_id+1] - 1;
@@ -243,10 +243,10 @@ _fetch_back_mesh_partial_dist_cloud_surf
   }
   // <<--
 
-  PDM_g_num_t *closest_back_vtx_gnum;
-  PDM_malloc(closest_back_vtx_gnum,pwork_n_edge,PDM_g_num_t);
-  double *closest_back_vtx_dist2;
-  PDM_malloc(closest_back_vtx_dist2,pwork_n_edge,double);
+  PDM_g_num_t *closest_back_vtx_gnum  = NULL;
+  double      *closest_back_vtx_dist2 = NULL;
+  PDM_malloc(closest_back_vtx_gnum , pwork_n_edge, PDM_g_num_t);
+  PDM_malloc(closest_back_vtx_dist2, pwork_n_edge, double     );
   PDM_para_octree_single_closest_point(octree,
                                        pwork_n_edge,
                                        inserted_pt_coord,
@@ -314,7 +314,7 @@ _fetch_back_mesh_Bruno
   const double eps_extents = 1.0e-6;
 
   double *line_coord;
-  PDM_malloc(line_coord,6 * pwork_n_edge ,double);
+  PDM_malloc(line_coord, 6 * pwork_n_edge, double);
 
   for(int i_edge = 0; i_edge < pwork_n_edge; ++i_edge) {
     int i_vtx1 = PDM_ABS(pwork_edge_vtx[2*i_edge  ])-1;
@@ -407,7 +407,7 @@ _fetch_back_mesh_Bruno
 
 
     double *proj_line_coord;
-    PDM_malloc(proj_line_coord,pback_n_vtx * 6,double);
+    PDM_malloc(proj_line_coord, pback_n_vtx * 6, double);
     int idx = 0;
     for (int i = 0; i < pback_n_vtx; i++) {
 
@@ -439,7 +439,7 @@ _fetch_back_mesh_Bruno
    *     part2 = edge
    */
   int *closest_elt_gnum_idx;
-  PDM_malloc(closest_elt_gnum_idx,(pback_n_vtx+1) ,int);
+  PDM_malloc(closest_elt_gnum_idx, pback_n_vtx+1, int);
   for(int i = 0; i < pback_n_vtx+1; ++i) {
     closest_elt_gnum_idx[i] = i;
   }
@@ -690,7 +690,7 @@ int main(int argc, char *argv[])
   int dback_n_face = back_distrib_face[i_rank+1] - back_distrib_face[i_rank];
 
   PDM_g_num_t *dback_face_ln_to_gn;
-  PDM_malloc(dback_face_ln_to_gn,dback_n_face ,PDM_g_num_t);
+  PDM_malloc(dback_face_ln_to_gn, dback_n_face, PDM_g_num_t);
   for (int i = 0; i < dback_n_face; ++i) {
     dback_face_ln_to_gn[i] = back_distrib_face[i_rank] + i + 1;
   }
@@ -725,8 +725,8 @@ int main(int argc, char *argv[])
 
 
   /* Compute the bounding boxes of local faces */
-  double *back_face_extents;
-  PDM_malloc(back_face_extents,dback_n_face * 6,double);
+  double *back_face_extents = NULL;
+  PDM_malloc(back_face_extents, dback_n_face * 6, double);
   const double eps_extents = 1.0e-6;
   for (int iface = 0; iface < dback_n_face; iface++) {
 
@@ -835,8 +835,8 @@ int main(int argc, char *argv[])
   /* Split the mesh */
   PDM_split_dual_t part_method = PDM_SPLIT_DUAL_WITH_HILBERT;
   int n_domain                 = 1;
-  int *n_part_domains;
-  PDM_malloc(n_part_domains,n_domain,int);
+  int *n_part_domains = NULL;
+  PDM_malloc(n_part_domains, n_domain, int);
   n_part_domains[0]            = n_part;
 
   PDM_multipart_t *mpart = PDM_multipart_create(n_domain,
@@ -1035,7 +1035,7 @@ int main(int argc, char *argv[])
     char filename[999];
 
     int *halo_color;
-    PDM_malloc(halo_color, line_to_back_idx[pwork_n_edge] ,int);
+    PDM_malloc(halo_color, line_to_back_idx[pwork_n_edge], int);
 
     for(int i_line = 0; i_line < pwork_n_edge; ++i_line ){
       for(int idx = line_to_back_idx[i_line]; idx < line_to_back_idx[i_line+1]; ++idx) {

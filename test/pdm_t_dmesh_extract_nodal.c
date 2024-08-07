@@ -204,7 +204,7 @@ int main(int argc, char *argv[])
 
   int n_cell_extract = dn_cell/2;
   PDM_g_num_t *selected_cell_gnum;
-  PDM_malloc(selected_cell_gnum,n_cell_extract ,PDM_g_num_t);
+  PDM_malloc(selected_cell_gnum, n_cell_extract, PDM_g_num_t);
 
   for(int i = 0; i < n_cell_extract; ++i) {
     unsigned int seed = (unsigned int) (distrib_cell[i_rank] + i);

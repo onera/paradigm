@@ -61,23 +61,23 @@ _usage(int exit_code)
  *
  * \brief  Read arguments from the command line
  *
- * \param [in]      argc     Number of arguments
- * \param [in]      argv     Arguments
- * \param [inout]   n_faceSeg  Number of vertices on the cube side
- * \param [inout]   length   Cube length
- * \param [inout]   nClosest Number of closest points
- * \param [inout]   nTgt     Number of Target points
- * \param [inout]   n_part   Number of partitions par process
+ * \param [in]      argc        Number of arguments
+ * \param [in]      argv        Arguments
+ * \param [inout]   n_face_seg  Number of vertices on the cube side
+ * \param [inout]   length      Cube length
+ * \param [inout]   n_closest    Number of closest points
+ * \param [inout]   n_target    Number of Target points
+ * \param [inout]   n_part      Number of partitions par process
  *
  */
 
 static void
 _read_args(int            argc,
            char         **argv,
-           PDM_g_num_t   *n_faceSeg,
+           PDM_g_num_t   *n_face_seg,
            double        *length,
-           int           *nClosest,
-           PDM_g_num_t   *nTgt,
+           int           *n_closest,
+           PDM_g_num_t   *n_target,
            int           *n_part)
 {
   int i = 1;
@@ -94,8 +94,8 @@ _read_args(int            argc,
       if (i >= argc)
         _usage(EXIT_FAILURE);
       else {
-        long _n_faceSeg = atol(argv[i]);
-        *n_faceSeg = (PDM_g_num_t) _n_faceSeg;
+        long _n_face_seg = atol(argv[i]);
+        *n_face_seg = (PDM_g_num_t) _n_face_seg;
       }
     }
     else if (strcmp(argv[i], "-l") == 0) {
@@ -111,7 +111,7 @@ _read_args(int            argc,
         _usage(EXIT_FAILURE);
       }
       else {
-        *nClosest = atoi(argv[i]);
+        *n_closest = atoi(argv[i]);
       }
     }
     else if (strcmp(argv[i], "-t") == 0) {
@@ -120,8 +120,8 @@ _read_args(int            argc,
         _usage(EXIT_FAILURE);
       }
       else {
-        long _nTgt = atol(argv[i]);
-        *nTgt = (PDM_g_num_t) _nTgt;
+        long _n_target = atol(argv[i]);
+        *n_target = (PDM_g_num_t) _n_target;
       }
     }
     else if (strcmp(argv[i], "-n_part") == 0) {
@@ -144,7 +144,7 @@ static void
 _gen_cube_cell_centers
 (
  PDM_MPI_Comm       comm,
- const PDM_g_num_t  n_faceSeg,
+ const PDM_g_num_t  n_face_seg,
  const double       length,
  const double       zero_x,
  const double       zero_y,
@@ -160,50 +160,50 @@ _gen_cube_cell_centers
   PDM_MPI_Comm_size(comm, &n_rank);
   PDM_MPI_Comm_rank(comm, &i_rank);
 
-  PDM_g_num_t *distribCell;
-  PDM_malloc(distribCell,(n_rank + 1) ,PDM_g_num_t);
+  PDM_g_num_t *distrib_cell = NULL;
+  PDM_malloc(distrib_cell, n_rank + 1, PDM_g_num_t);
 
-  PDM_g_num_t n_cell      = n_faceSeg * n_faceSeg * n_faceSeg;
-  PDM_g_num_t n_face_face = n_faceSeg * n_faceSeg;
+  PDM_g_num_t n_cell      = n_face_seg * n_face_seg * n_face_seg;
+  PDM_g_num_t n_face_face = n_face_seg * n_face_seg;
 
   // Define distribution
-  distribCell[0] = 0;
-  PDM_g_num_t stepCell = n_cell / n_rank;
-  PDM_g_num_t remainderCell = n_cell % n_rank;
+  distrib_cell[0] = 0;
+  PDM_g_num_t step_cell      = n_cell / n_rank;
+  PDM_g_num_t remainder_cell = n_cell % n_rank;
 
   for (int i = 1; i < n_rank + 1; i++) {
-    distribCell[i]  = stepCell;
+    distrib_cell[i] = step_cell;
     const int i1 = i - 1;
-    if (i1 < remainderCell)
-      distribCell[i] += 1;
+    if (i1 < remainder_cell)
+      distrib_cell[i] += 1;
   }
 
   for (int i = 1; i < n_rank + 1; i++) {
-    distribCell[i] += distribCell[i-1];
+    distrib_cell[i] += distrib_cell[i-1];
   }
 
-  PDM_g_num_t _dn_cell = distribCell[i_rank+1] - distribCell[i_rank];
+  PDM_g_num_t _dn_cell = distrib_cell[i_rank+1] - distrib_cell[i_rank];
 
-  const double step = length / (double) n_faceSeg;
+  const double step = length / (double) n_face_seg;
 
-  PDM_malloc(*g_num,_dn_cell,PDM_g_num_t);
-  PDM_malloc(*coord,_dn_cell * 3,double);
+  PDM_malloc(*g_num, _dn_cell    , PDM_g_num_t);
+  PDM_malloc(*coord, _dn_cell * 3, double     );
 
   int _npts = 0;
-  for (PDM_g_num_t g = distribCell[i_rank]; g < distribCell[i_rank+1]; g++) {
-    PDM_g_num_t i = g % n_faceSeg;
-    PDM_g_num_t j = ((g - i) % n_face_face) / n_faceSeg;
-    PDM_g_num_t k = (g - i - n_faceSeg * j) / n_face_face;
+  for (PDM_g_num_t g = distrib_cell[i_rank]; g < distrib_cell[i_rank+1]; g++) {
+    PDM_g_num_t i = g % n_face_seg;
+    PDM_g_num_t j = ((g - i) % n_face_face) / n_face_seg;
+    PDM_g_num_t k = (g - i - n_face_seg * j) / n_face_face;
 
     (*coord)[3 * _npts    ] = (i + 0.5) * step + zero_x;
     (*coord)[3 * _npts + 1] = (j + 0.5) * step + zero_y;
     (*coord)[3 * _npts + 2] = (k + 0.5) * step + zero_z;
-    (*g_num)[_npts++] = g + 1;//1 + i + n_faceSeg * j + n_face_face * k;
+    (*g_num)[_npts++] = g + 1;//1 + i + n_face_seg * j + n_face_face * k;
   }
 
   *npts = _npts;
 
-  PDM_free(distribCell);
+  PDM_free(distrib_cell);
 }
 
 
@@ -222,11 +222,11 @@ _gen_cube_cell_centers
 int main(int argc, char *argv[])
 {
   int i_rank;
-  int numProcs;
+  int n_rank;
 
   PDM_MPI_Init(&argc, &argv);
   PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &i_rank);
-  PDM_MPI_Comm_size(PDM_MPI_COMM_WORLD, &numProcs);
+  PDM_MPI_Comm_size(PDM_MPI_COMM_WORLD, &n_rank);
 
   char *version = PDM_version_get();
 
@@ -237,12 +237,12 @@ int main(int argc, char *argv[])
    *  Set default values
    */
 
-  PDM_g_num_t  n_faceSeg = 10;
+  PDM_g_num_t  n_face_seg = 10;
   double        length   = 1.;
   int           n_part   = 1;
 
   int n_closest_points = 10;
-  PDM_g_num_t nTgt = 10;
+  PDM_g_num_t n_target = 10;
 
   /*
    *  Read args
@@ -250,10 +250,10 @@ int main(int argc, char *argv[])
 
   _read_args(argc,
              argv,
-             &n_faceSeg,
+             &n_face_seg,
              &length,
              &n_closest_points,
-             &nTgt,
+             &n_target,
              &n_part);
 
 
@@ -263,11 +263,11 @@ int main(int argc, char *argv[])
   PDM_g_num_t *tgt_gnum   = NULL;
   int _n_tgt_l;
 
-  double h = 0.5 * length / (double) n_faceSeg;
+  double h = 0.5 * length / (double) n_face_seg;
   PDM_point_cloud_gen_random (PDM_MPI_COMM_WORLD,
                               0, // seed
                               0, // geometric_g_num
-                              nTgt,
+                              n_target,
                               h, h, h,
                               length - 2*h, length - 2*h, length - 2*h,
                               &_n_tgt_l,
@@ -282,7 +282,7 @@ int main(int argc, char *argv[])
   double *src_coords = NULL;
   PDM_g_num_t *src_gnum = NULL;
   _gen_cube_cell_centers (PDM_MPI_COMM_WORLD,
-                          n_faceSeg,
+                          n_face_seg,
                           length,
                           0.,
                           0.,
@@ -291,7 +291,7 @@ int main(int argc, char *argv[])
                           &src_gnum,
                           &src_coords);
 
-  n_closest_points = PDM_MIN (n_closest_points, n_faceSeg*n_faceSeg*n_faceSeg);
+  n_closest_points = PDM_MIN (n_closest_points, n_face_seg*n_face_seg*n_face_seg);
 
 
   /* Init closest points structure */
@@ -340,16 +340,16 @@ int main(int argc, char *argv[])
   PDM_g_num_t n_wrong = 0;
   PDM_g_num_t n_tgt = 0;
 
-  PDM_g_num_t *true_closest_src_gnum;
-  PDM_malloc(true_closest_src_gnum,n_closest_points,PDM_g_num_t);
-  double *true_closest_src_dist;
-  PDM_malloc(true_closest_src_dist,n_closest_points,double);
+  PDM_g_num_t *true_closest_src_gnum = NULL;
+  double      *true_closest_src_dist = NULL;
+  PDM_malloc(true_closest_src_gnum, n_closest_points, PDM_g_num_t);
+  PDM_malloc(true_closest_src_dist, n_closest_points, double     );
   int n_cells_radius = (int) ceil(0.5 * pow((double) n_closest_points, 1./3.));
 
   int ijk0;
   int ijk_lo[3];
   int ijk_hi[3];
-  double cell_side = length / ((double) n_faceSeg);
+  double cell_side = length / ((double) n_face_seg);
   double cell_ctr[3];
 
   for (int itgt = 0; itgt < _n_tgt_l; itgt++) {
@@ -366,14 +366,14 @@ int main(int argc, char *argv[])
     // and define search region
     for (int idim = 0; idim < 3; idim++) {
       ijk0 = (int) floor(tgt_coords[3*itgt+idim] / cell_side);
-      ijk0 = PDM_MIN (PDM_MAX (ijk0, 0), n_faceSeg-1);
+      ijk0 = PDM_MIN (PDM_MAX (ijk0, 0), n_face_seg-1);
 
       if (ijk0 < n_cells_radius) {
         ijk_lo[idim] = 0;
         ijk_hi[idim] = 2*n_cells_radius;
-      } else if (ijk0 > n_faceSeg - n_cells_radius) {
-        ijk_hi[idim] = n_faceSeg;
-        ijk_lo[idim] = n_faceSeg - 2*n_cells_radius;
+      } else if (ijk0 > n_face_seg - n_cells_radius) {
+        ijk_hi[idim] = n_face_seg;
+        ijk_lo[idim] = n_face_seg - 2*n_cells_radius;
       } else {
         ijk_lo[idim] = ijk0 - n_cells_radius;
         ijk_hi[idim] = ijk0 + n_cells_radius;
@@ -388,7 +388,7 @@ int main(int argc, char *argv[])
         for (int i = ijk_lo[0]; i < ijk_hi[0]; i++) {
           cell_ctr[0] = (i + 0.5) * cell_side;
 
-          PDM_g_num_t gnum = 1 + i + n_faceSeg*j + n_faceSeg*n_faceSeg*k;
+          PDM_g_num_t gnum = 1 + i + n_face_seg*j + n_face_seg*n_face_seg*k;
 
           double dist = 0;
           for (int idim = 0; idim < 3; idim++) {
@@ -499,12 +499,6 @@ int main(int argc, char *argv[])
     //assert (n_wrong_total < 1);
   }
 
-
-
-
-
-
-
   /* Free */
   PDM_closest_points_free (clsp);
 
@@ -513,7 +507,6 @@ int main(int argc, char *argv[])
 
   PDM_free(src_coords);
   PDM_free(src_gnum);
-
 
   PDM_MPI_Finalize();
 

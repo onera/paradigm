@@ -318,7 +318,7 @@ const PDM_MPI_Comm comm,
 )
 {
   PDM_dmesh_nodal_elmts_t *dmn_elts;
-  PDM_malloc(dmn_elts,1,PDM_dmesh_nodal_elmts_t);
+  PDM_malloc(dmn_elts, 1, PDM_dmesh_nodal_elmts_t);
 
   dmn_elts->comm           = comm;
   dmn_elts->mesh_dimension = mesh_dimension;
@@ -493,8 +493,8 @@ const PDM_Mesh_nodal_elt_t     t_elt
     {
       id_block = dmn_elts->n_section_std++;
 
-      PDM_realloc(dmn_elts->sections_std ,dmn_elts->sections_std , dmn_elts->n_section_std ,PDM_DMesh_nodal_section_std_t * );
-      PDM_malloc(dmn_elts->sections_std[id_block],1,PDM_DMesh_nodal_section_std_t);
+      PDM_realloc(dmn_elts->sections_std, dmn_elts->sections_std, dmn_elts->n_section_std, PDM_DMesh_nodal_section_std_t *);
+      PDM_malloc (dmn_elts->sections_std[id_block], 1, PDM_DMesh_nodal_section_std_t);
       dmn_elts->sections_std[id_block]->t_elt       = t_elt;
       dmn_elts->sections_std[id_block]->n_elt       = -1;
       dmn_elts->sections_std[id_block]->_connec     = NULL;
@@ -512,8 +512,8 @@ const PDM_Mesh_nodal_elt_t     t_elt
       assert(dmn_elts->mesh_dimension == 2);
       id_block = dmn_elts->n_section_poly2d++;
 
-      PDM_realloc(dmn_elts->sections_poly2d ,dmn_elts->sections_poly2d , dmn_elts->n_section_poly2d ,PDM_DMesh_nodal_section_poly2d_t *);
-      PDM_malloc(dmn_elts->sections_poly2d[id_block],1,PDM_DMesh_nodal_section_poly2d_t);
+      PDM_realloc(dmn_elts->sections_poly2d          , dmn_elts->sections_poly2d, dmn_elts->n_section_poly2d, PDM_DMesh_nodal_section_poly2d_t *);
+      PDM_malloc (dmn_elts->sections_poly2d[id_block], 1, PDM_DMesh_nodal_section_poly2d_t);
       dmn_elts->sections_poly2d[id_block]->n_elt       = -1;
       dmn_elts->sections_poly2d[id_block]->_connec     = NULL;
       dmn_elts->sections_poly2d[id_block]->_connec_idx = NULL;
@@ -531,8 +531,8 @@ const PDM_Mesh_nodal_elt_t     t_elt
       id_block = dmn_elts->n_section_poly3d++;
       assert(dmn_elts->mesh_dimension == 3);
 
-      PDM_realloc(dmn_elts->sections_poly3d ,dmn_elts->sections_poly3d , dmn_elts->n_section_poly3d ,PDM_DMesh_nodal_section_poly3d_t *);
-      PDM_malloc(dmn_elts->sections_poly3d[id_block],1,PDM_DMesh_nodal_section_poly3d_t);
+      PDM_realloc(dmn_elts->sections_poly3d          , dmn_elts->sections_poly3d, dmn_elts->n_section_poly3d, PDM_DMesh_nodal_section_poly3d_t *);
+      PDM_malloc (dmn_elts->sections_poly3d[id_block], 1, PDM_DMesh_nodal_section_poly3d_t);
       dmn_elts->sections_poly3d[id_block]->n_elt          = -1;
       dmn_elts->sections_poly3d[id_block]->n_face         = -1;
       dmn_elts->sections_poly3d[id_block]->_face_vtx_idx  = NULL;
@@ -605,8 +605,8 @@ const char                    *ho_ordering
 
   id_block = dmn_elts->n_section_std++;
 
-  PDM_realloc(dmn_elts->sections_std ,dmn_elts->sections_std , dmn_elts->n_section_std ,PDM_DMesh_nodal_section_std_t * );
-  PDM_malloc(dmn_elts->sections_std[id_block],1,PDM_DMesh_nodal_section_std_t);
+  PDM_realloc(dmn_elts->sections_std          , dmn_elts->sections_std, dmn_elts->n_section_std, PDM_DMesh_nodal_section_std_t * );
+  PDM_malloc (dmn_elts->sections_std[id_block], 1, PDM_DMesh_nodal_section_std_t);
   dmn_elts->sections_std[id_block]->t_elt       = t_elt;
   dmn_elts->sections_std[id_block]->n_elt       = -1;
   dmn_elts->sections_std[id_block]->_connec     = NULL;
@@ -681,7 +681,7 @@ const int                n_elt,
   section->_connec = connec;
   section->owner   = owner;
 
-  PDM_malloc(section->distrib,(dmn_elts->n_rank + 1),PDM_g_num_t);
+  PDM_malloc(section->distrib, dmn_elts->n_rank + 1,PDM_g_num_t);
 
   /* Creation of distribution */
   PDM_g_num_t _n_elt = n_elt;
@@ -738,7 +738,7 @@ const PDM_l_num_t              n_elt,
   section->_connec     = connec;
   section->owner       = owner;
 
-  PDM_malloc(section->distrib,(dmn_elts->n_rank + 1),PDM_g_num_t);
+  PDM_malloc(section->distrib, dmn_elts->n_rank + 1, PDM_g_num_t);
 
   /* Creation of distribution */
   PDM_g_num_t _n_elt = n_elt;
@@ -925,7 +925,7 @@ const PDM_l_num_t               n_face,
   section->_cell_face     = cellfac;
   section->owner          = owner;
 
-  PDM_malloc(section->distrib,(dmn_elts->n_rank + 1),PDM_g_num_t);
+  PDM_malloc(section->distrib, dmn_elts->n_rank + 1, PDM_g_num_t);
 
   /* Creation of distribution */
   PDM_g_num_t _n_elt = n_elt;
@@ -1104,7 +1104,7 @@ PDM_dmesh_nodal_elmts_generate_distribution
   /* Creation of element distribution among all sections */
   // printf("dmn_elts->n_section : %i \n", dmn_elts->n_section);
   if(dmn_elts->section_distribution == NULL) {
-    PDM_malloc(dmn_elts->section_distribution,(dmn_elts->n_section + 1),PDM_g_num_t);
+    PDM_malloc(dmn_elts->section_distribution, dmn_elts->n_section + 1, PDM_g_num_t);
   }
   dmn_elts->section_distribution[0] = 0;
 
@@ -1149,8 +1149,8 @@ const char                    *ho_ordering
 
   int elt_node_n = PDM_Mesh_nodal_n_vtx_elt_get(section->t_elt,
                                                 section->order);
-  PDM_g_num_t *__delt_node;
-  PDM_malloc(__delt_node,elt_node_n,PDM_g_num_t);
+  PDM_g_num_t *__delt_node = NULL;
+  PDM_malloc(__delt_node, elt_node_n, PDM_g_num_t);
 
 
   PDM_Mesh_nodal_elt_t t_elt = section->t_elt;

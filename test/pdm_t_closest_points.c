@@ -420,8 +420,8 @@ main
     PDM_free(tgt_to_src_idx);
 
     // define field on src cloud
-    double *src_field;
-    PDM_malloc(src_field,n_src,double);
+    double *src_field = NULL;
+    PDM_malloc(src_field, n_src, double);
     for (int i = 0; i < n_src; i++) {
       // src_field[i] = src_coord[3*i];
       src_field[i] = cos(PDM_MODULE(src_coord+3*i));
@@ -445,8 +445,8 @@ main
     PDM_part_to_part_iexch_wait(ptp, request);
 
     // interpolate tgt field from closest src points (IDW)
-    double *tgt_field;
-    PDM_malloc(tgt_field,n_tgt,double);
+    double *tgt_field = NULL;
+    PDM_malloc(tgt_field, n_tgt, double);
     for (int i = 0; i < n_tgt; i++) {
       tgt_field[i] = _idw_interp(n_closest_points,
                                  &recv_field[0]   [n_closest_points*i],

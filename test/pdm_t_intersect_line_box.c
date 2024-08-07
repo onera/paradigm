@@ -232,10 +232,10 @@ main
   }
   PDM_free(distrib_box);
 
-  double *box_centers;
-  PDM_malloc(box_centers,n_box * 3,double);
-  double *box_extents;
-  PDM_malloc(box_extents,n_box * 6,double);
+  double *box_centers = NULL;
+  double *box_extents = NULL;
+  PDM_malloc(box_centers, n_box * 3, double);
+  PDM_malloc(box_extents, n_box * 6, double);
   for (int i = 0; i < n_box; i++) {
     for (int j = 0; j < 3; j++) {
       double x1 = _random01();
@@ -282,10 +282,10 @@ main
   }
   PDM_free(distrib_line);
 
-  double *line_centers;
-  PDM_malloc(line_centers,n_line * 3,double);
-  double *line_coords;
-  PDM_malloc(line_coords,n_line * 6,double);
+  double *line_centers = NULL;
+  double *line_coords  = NULL;
+  PDM_malloc(line_centers, n_line * 3, double);
+  PDM_malloc(line_coords , n_line * 6, double);
   for (int i = 0; i < n_line; i++) {
     for (int j = 0; j < 3; j++) {
       double x1 = _random01();
@@ -399,13 +399,13 @@ main
   /*
    *  Check
    */
-  PDM_g_num_t *all_box_ln_to_gn;
-  PDM_malloc(all_box_ln_to_gn,gn_box,PDM_g_num_t);
-  double *all_box_extents;
-  PDM_malloc(all_box_extents,gn_box * 6,double);
+  PDM_g_num_t *all_box_ln_to_gn = NULL;
+  double      *all_box_extents  = NULL;
+  PDM_malloc(all_box_ln_to_gn, gn_box    , PDM_g_num_t);
+  PDM_malloc(all_box_extents , gn_box * 6, double     );
 
-  int *all_n_box;
-  PDM_malloc(all_n_box,n_rank,int);
+  int *all_n_box = NULL;
+  PDM_malloc(all_n_box, n_rank, int);
   PDM_MPI_Allgather (&n_box,    1, PDM_MPI_INT,
                      all_n_box, 1, PDM_MPI_INT,
                      comm);

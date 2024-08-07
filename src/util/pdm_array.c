@@ -48,7 +48,7 @@ extern "C" {
 int* PDM_array_zeros_int(const int size) {
   assert (size >= 0);
   int *array;
-  PDM_malloc(array,size ,int);
+  PDM_malloc(array, size, int);
   assert (array != NULL);
   for (int i = 0; i < size; i++) array[i] = 0;
   return array;
@@ -60,7 +60,7 @@ int* PDM_array_zeros_int(const int size) {
 int* PDM_array_const_int(const int size, const int value) {
   assert (size >= 0);
   int *array;
-  PDM_malloc(array,size ,int);
+  PDM_malloc(array, size, int);
   assert (array != NULL);
   for (int i = 0; i < size; i++) array[i] = value;
   return array;
@@ -68,7 +68,7 @@ int* PDM_array_const_int(const int size, const int value) {
 PDM_g_num_t* PDM_array_const_gnum(const int size, const PDM_g_num_t value) {
   assert (size >= 0);
   PDM_g_num_t *array;
-  PDM_malloc(array,size ,PDM_g_num_t);
+  PDM_malloc(array, size, PDM_g_num_t);
   assert (array != NULL);
   for (int i = 0; i < size; i++) array[i] = value;
   return array;
@@ -76,7 +76,7 @@ PDM_g_num_t* PDM_array_const_gnum(const int size, const PDM_g_num_t value) {
 double* PDM_array_const_double(const int size, const double value) {
   assert (size >= 0);
   double *array;
-  PDM_malloc(array,size ,double);
+  PDM_malloc(array, size, double);
   assert (array != NULL);
   for (int i = 0; i < size; i++) array[i] = value;
   return array;
@@ -87,7 +87,7 @@ double* PDM_array_const_double(const int size, const double value) {
 */
 int* PDM_array_new_range_int(const int size) {
   int *array;
-  PDM_malloc(array,size,int);
+  PDM_malloc(array, size, int);
   for (int i = 0; i < size; ++i) {
     array[i] = i;
   }
@@ -100,14 +100,14 @@ int* PDM_array_new_range_int(const int size) {
 */
 int* PDM_array_new_idx_from_sizes_int(const int *size_array, const int size) {
   int *idx_array;
-  PDM_malloc(idx_array,(size+1) ,int);
+  PDM_malloc(idx_array, size+1, int);
   idx_array[0] = 0;
   for (int i = 0; i < size; i++) idx_array[i+1] = idx_array[i] + size_array[i];
   return idx_array;
 }
 PDM_g_num_t* PDM_array_new_idx_from_sizes_gnum(const int *size_array, const int size) {
   PDM_g_num_t *idx_array;
-  PDM_malloc(idx_array,(size+1) ,PDM_g_num_t);
+  PDM_malloc(idx_array, size+1, PDM_g_num_t);
   idx_array[0] = 0;
   for (int i = 0; i < size; i++) idx_array[i+1] = idx_array[i] + size_array[i];
   return idx_array;
@@ -115,7 +115,7 @@ PDM_g_num_t* PDM_array_new_idx_from_sizes_gnum(const int *size_array, const int 
 
 int* PDM_array_new_idx_from_const_stride_int(const int stride, const int size) {
   int *idx_array;
-  PDM_malloc(idx_array,(size+1) ,int);
+  PDM_malloc(idx_array, size+1, int);
   idx_array[0] = 0;
   for (int i = 0; i < size; i++) idx_array[i+1] = idx_array[i] + stride;
   return idx_array;
@@ -213,15 +213,15 @@ void PDM_array_count_per_col_int
 */
 void PDM_array_repart_per_col_int
 (
- const int   n_col,
- const int   n_elem,
+ const int  n_col,
+ const int  n_elem,
  const int *elem_col,
  int       *ordered_idx,
  int       *ordered
 )
 {
   int *count;
-  PDM_malloc(count,n_col ,int);
+  PDM_malloc(count, n_col, int);
   PDM_array_count_per_col_int(n_col, n_elem, elem_col, count);
 
   ordered_idx[0] = 0;

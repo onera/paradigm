@@ -219,8 +219,8 @@ int main(int argc, char *argv[])
   /*
    *  Echange de champs
    */
-  int *dface_group_tag;
-  PDM_malloc(dface_group_tag,dface_group_idx[n_face_group] ,int);
+  int *dface_group_tag = NULL;
+  PDM_malloc(dface_group_tag, dface_group_idx[n_face_group], int);
 
   PDM_g_num_t* dface_group_init_distrib = PDM_compute_entity_distribution(comm, dface_group_idx[n_face_group]);
   for(int i_group = 0; i_group < n_face_group; ++i_group) {
@@ -242,8 +242,8 @@ int main(int argc, char *argv[])
   /*
    *  Visulisation
    */
-  PDM_g_num_t *extract_face_ln_to_gn;
-  PDM_malloc(extract_face_ln_to_gn,dn_extract_face ,PDM_g_num_t);
+  PDM_g_num_t *extract_face_ln_to_gn = NULL;
+  PDM_malloc(extract_face_ln_to_gn, dn_extract_face, PDM_g_num_t);
 
   for(int i = 0; i < dn_extract_face; ++i) {
     extract_face_ln_to_gn[i] = extract_face_distribution[i_rank] + i + 1;

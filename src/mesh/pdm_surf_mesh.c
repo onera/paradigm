@@ -32,26 +32,6 @@ extern "C" {
 #endif
 #endif /* __cplusplus */
 
-/*=============================================================================
- * Macro definitions
- *============================================================================*/
-
-
-#define _DOT_PRODUCT(v1, v2) \
-  (v1[0]*v2[0] + v1[1]*v2[1] + v1[2]*v2[2])
-
-#define _CROSS_PRODUCT_3D(cross_v1_v2, v1, v2) ( \
- cross_v1_v2[0] = v1[1]*v2[2] - v1[2]*v2[1],   \
- cross_v1_v2[1] = v1[2]*v2[0] - v1[0]*v2[2],   \
- cross_v1_v2[2] = v1[0]*v2[1] - v1[1]*v2[0]  )
-
-#define _MODULE(v) \
-  sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2])
-
-#define _MIN(a,b)   ((a) < (b) ?  (a) : (b))  /* Minimum of a et b */
-
-#define _MAX(a,b)   ((a) > (b) ?  (a) : (b))  /* Maximum of a et b */
-
 /*============================================================================
  * Type
  *============================================================================*/
@@ -150,7 +130,7 @@ PDM_MPI_Comm comm
   PDM_MPI_Allreduce ((void *)&n_part, (void *)&(mesh->nGPart), 1,
                      PDM_MPI_INT, PDM_MPI_SUM, mesh->comm);
 
-  mesh->gMinCarLgthVtx = DBL_MAX;
+  mesh->gMinCarLgthVtx =  DBL_MAX;
   mesh->gMaxCarLgthVtx = -DBL_MAX;
   mesh->interPartEdgeGraph = NULL;
   mesh->interPartVtxGraph = NULL;
@@ -1572,7 +1552,7 @@ PDM_surf_mesh_t *mesh
       for (int j1 = 0; j1 < 3; j1++) {
         vEdge[j1] = coordVtx2[j1] - coordVtx1[j1];
       }
-      lEdge[i][j] = _MODULE (vEdge);
+      lEdge[i][j] = PDM_MODULE (vEdge);
     }
   }
 
@@ -1621,10 +1601,10 @@ PDM_surf_mesh_t *mesh
     for (int j = 0; j < n_vtx; j++) {
       for (int k = part->vtxEdgeIdx[j]; k < part->vtxEdgeIdx[j+1]; k++) {
         int edge = part->vtxEdge[k] - 1;
-        part->carLgthVtx[j] = _MIN (part->carLgthVtx[j], _lEdge[edge]);
+        part->carLgthVtx[j] = PDM_MIN (part->carLgthVtx[j], _lEdge[edge]);
       }
-      mesh->gMinCarLgthVtx = _MIN (mesh->gMinCarLgthVtx, part->carLgthVtx[j]);
-      mesh->gMaxCarLgthVtx = _MAX (mesh->gMaxCarLgthVtx, part->carLgthVtx[j]);
+      mesh->gMinCarLgthVtx = PDM_MIN (mesh->gMinCarLgthVtx, part->carLgthVtx[j]);
+      mesh->gMaxCarLgthVtx = PDM_MAX (mesh->gMaxCarLgthVtx, part->carLgthVtx[j]);
     }
 
   }
@@ -1707,7 +1687,7 @@ PDM_surf_mesh_face_normal_get
           v1[k1] = coords[3*idx1+k1] - coords[3*idx0+k1];
           v2[k1] = coords[3*idx2+k1] - coords[3*idx0+k1];
         }
-        _CROSS_PRODUCT_3D (subNorm, v1, v2);
+        PDM_CROSS_PRODUCT (subNorm, v1, v2);
         for (int k1 = 0; k1 < 3; k1++) {
           _faceNormal[k1] += subNorm[k1];
         }
@@ -1766,7 +1746,7 @@ PDM_surf_mesh_is_plane_surface
 
     for (int j = 0; j < n_face; j++) {
 
-      if (_DOT_PRODUCT(faceNormal, normalSum) > 0) {
+      if (PDM_DOT_PRODUCT(faceNormal, normalSum) > 0) {
         for (int k = 0; k < 3; k++) {
           normalSum[k] += faceNormal[3*j+k];
         }
@@ -1783,7 +1763,7 @@ PDM_surf_mesh_is_plane_surface
    * Normalize
    */
 
-  double _mod = _MAX(_MODULE (normalSum), epsilonAbs);
+  double _mod = PDM_MAX(PDM_MODULE (normalSum), epsilonAbs);
   for (int k = 0; k < 3; k++) {
     normalSum[k] = normalSum[k]/_mod;
   }
@@ -1800,11 +1780,11 @@ PDM_surf_mesh_is_plane_surface
     const double* _faceNormal = faceNormal;
     for (int j = 0; j < n_face; j++) {
       double faceNormalNorm[3];
-      double _mod1 = _MAX (_MODULE (_faceNormal), epsilonAbs);
+      double _mod1 = PDM_MAX (PDM_MODULE (_faceNormal), epsilonAbs);
       for (int k = 0; k < 3; k++) {
         faceNormalNorm[k] = _faceNormal[k]/_mod1;
       }
-      if ((1 - fabs (_DOT_PRODUCT(faceNormalNorm, normalSum))) > tolerance) {
+      if ((1 - fabs (PDM_DOT_PRODUCT(faceNormalNorm, normalSum))) > tolerance) {
         isPlane = 0;
         break;
       }
@@ -1862,7 +1842,7 @@ PDM_surf_mesh_is_plane_surface
         continue;
       }
 
-      if (  (1 - fabs (_DOT_PRODUCT (_normalSumRef, _normalSumRank)))
+      if (  (1 - fabs (PDM_DOT_PRODUCT (_normalSumRef, _normalSumRank)))
           > tolerance) {
         isPlane = 0;
         break;
@@ -2007,8 +1987,8 @@ PDM_surf_mesh_compute_faceExtentsMesh
         double *_coords = (double *) coords + 3 * iVtx;
 
         for (int k1 = 0; k1 < 3; k1++) {
-          _extents[k1]   = _MIN (_coords[k1], _extents[k1]);
-          _extents[3+k1] = _MAX (_coords[k1], _extents[3+k1]);
+          _extents[k1]   = PDM_MIN (_coords[k1], _extents[k1]);
+          _extents[3+k1] = PDM_MAX (_coords[k1], _extents[3+k1]);
         }
 
       }
@@ -2016,7 +1996,7 @@ PDM_surf_mesh_compute_faceExtentsMesh
       double delta = -DBL_MAX;
 
       for (int k1 = 0; k1 < 3; k1++) {
-        delta = _MAX (delta, fabs (_extents[k1+3] - _extents[k1]));
+        delta = PDM_MAX (delta, fabs (_extents[k1+3] - _extents[k1]));
       }
 
       delta *= tolerance;
@@ -2491,13 +2471,6 @@ PDM_surf_mesh_n_g_face_get
 
   return mesh->nGFace;
 }
-
-
-#undef _DOT_PRODUCT
-#undef _MODULE
-#undef _MIN
-#undef _MAX
-#undef _CROSS_PRODUCT_3D
 
 #ifdef __cplusplus
 }

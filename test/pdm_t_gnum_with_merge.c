@@ -157,10 +157,10 @@ _create_split_mesh
   struct timeval t_elaps_debut;
 
   int i_rank;
-  int num_procs;
+  int n_rank;
 
   PDM_MPI_Comm_rank (pdm_mpi_comm, &i_rank);
-  PDM_MPI_Comm_size (pdm_mpi_comm, &num_procs);
+  PDM_MPI_Comm_size (pdm_mpi_comm, &n_rank);
 
   double        xmin = 0.;
   double        xmax = length;
@@ -246,7 +246,7 @@ _create_split_mesh
   /*   } */
 
   /*   double *dd;
-   PDM_malloc(dd,dn_vtx,double); */
+   PDM_malloc(dd, dn_vtx, double); */
 
   /*   for (int j = 0; j < dn_vtx; j++) { */
   /*     dd[j] = 1e-5; */
@@ -351,10 +351,10 @@ _create_split_mesh
 
   int have_dcell_part = 0;
 
-  int *dcell_part;
-  PDM_malloc(dcell_part,dn_face,int);
-  int *dedge_vtx_idx;
-  PDM_malloc(dedge_vtx_idx,(dn_edge+1),int);
+  int *dcell_part    = NULL;
+  int *dedge_vtx_idx = NULL;
+  PDM_malloc(dcell_part   , dn_face    , int);
+  PDM_malloc(dedge_vtx_idx, dn_edge + 1, int);
 
   dedge_vtx_idx[0] = 0;
   for (int i = 0; i < dn_edge; i++) {
@@ -372,8 +372,8 @@ _create_split_mesh
   int n_property_face = 0;
   int *renum_properties_face = NULL;
 
-  PDM_g_num_t *distrib;
-  PDM_malloc(distrib,(num_procs+1) ,PDM_g_num_t);
+  PDM_g_num_t *distrib = NULL;
+  PDM_malloc(distrib, n_rank+1, PDM_g_num_t);
   PDM_g_num_t _dn_vtx = (PDM_g_num_t) dn_vtx;
 
   PDM_MPI_Allgather((void *) &_dn_vtx,
@@ -387,7 +387,7 @@ _create_split_mesh
   // mesh->face_distrib[0] = 1;
   distrib[0] = 0;
 
-  for (int i = 1; i < num_procs; i++) {
+  for (int i = 1; i < n_rank; i++) {
     distrib[i] +=  distrib[i-1];
   }
 
@@ -474,19 +474,19 @@ _create_split_mesh
 
   PDM_gen_gnum_t* gen_gnum2 = PDM_gnum_create (3, n_part, PDM_TRUE, 1e-3, pdm_mpi_comm, PDM_OWNERSHIP_KEEP);
 
-  double **char_length;
-  PDM_malloc(char_length,n_part,double *);
+  double **char_length = NULL;
+  PDM_malloc(char_length, n_part, double *);
 
-  int *n_vtxs;
-  PDM_malloc(n_vtxs,n_part,int);
-  PDM_g_num_t **vtx_ln_to_gns;
-  PDM_malloc(vtx_ln_to_gns,n_part,PDM_g_num_t *);
+  int          *n_vtxs        = NULL;
+  PDM_g_num_t **vtx_ln_to_gns = NULL;
+  PDM_malloc(n_vtxs       , n_part, int          );
+  PDM_malloc(vtx_ln_to_gns, n_part, PDM_g_num_t *);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
 
     int n_face;
-    int nEdge;
-    int nEdgePartBound;
+    int n_edge;
+    int n_edgePartBound;
     int n_vtx;
     int n_proc;
     int sFaceEdge;
@@ -497,8 +497,8 @@ _create_split_mesh
     PDM_part_part_dim_get (ppart,
                            i_part,
                            &n_face,
-                           &nEdge,
-                           &nEdgePartBound,
+                           &n_edge,
+                           &n_edgePartBound,
                            &n_vtx,
                            &n_proc,
                            n_total_part,
@@ -509,30 +509,30 @@ _create_split_mesh
 
     n_vtxs[i_part] = n_vtx;
 
-    PDM_malloc(char_length[i_part],n_vtx,double);
+    PDM_malloc(char_length[i_part], n_vtx, double);
 
     for (int j = 0; j < n_vtx; j++) {
       char_length[i_part][j] = HUGE_VAL;
     }
 
-    int          *cell_tag;
-    int          *cell_face_idx;
-    int          *cell_face;
-    PDM_g_num_t *cell_ln_to_gn;
-    int          *face_tag;
-    int          *face_cell;
-    int          *face_vtx_idx;
-    int          *face_vtx;
-    PDM_g_num_t *face_ln_to_gn;
-    int          *face_part_bound_proc_idx;
-    int          *face_part_bound_part_idx;
-    int          *face_part_bound;
-    int          *vtx_tag;
-    double       *vtx;
-    PDM_g_num_t *vtx_ln_to_gn;
-    int          *face_group_idx;
-    int          *face_group;
-    PDM_g_num_t *face_group_ln_to_gn;
+    int          *cell_tag                 = NULL;
+    int          *cell_face_idx            = NULL;
+    int          *cell_face                = NULL;
+    PDM_g_num_t  *cell_ln_to_gn            = NULL;
+    int          *face_tag                 = NULL;
+    int          *face_cell                = NULL;
+    int          *face_vtx_idx             = NULL;
+    int          *face_vtx                 = NULL;
+    PDM_g_num_t  *face_ln_to_gn            = NULL;
+    int          *face_part_bound_proc_idx = NULL;
+    int          *face_part_bound_part_idx = NULL;
+    int          *face_part_bound          = NULL;
+    int          *vtx_tag                  = NULL;
+    double       *vtx                      = NULL;
+    PDM_g_num_t  *vtx_ln_to_gn             = NULL;
+    int          *face_group_idx           = NULL;
+    int          *face_group               = NULL;
+    PDM_g_num_t  *face_group_ln_to_gn      = NULL;
 
     PDM_part_part_val_get(ppart,
                           i_part,
@@ -557,7 +557,7 @@ _create_split_mesh
 
     vtx_ln_to_gns[i_part] = vtx_ln_to_gn;
 
-    for (int j = 0; j < nEdge; j++) {
+    for (int j = 0; j < n_edge; j++) {
       int i1 = face_vtx_idx[j];
       int n = face_vtx_idx[j+1] - i1;
       for (int k = 0; k < n; k++) {
@@ -583,13 +583,12 @@ _create_split_mesh
   fflush(stdout);
   PDM_timer_free(timer);
 
-  const PDM_g_num_t **_numabs;
-  PDM_malloc(_numabs,n_part, const PDM_g_num_t *);
+  const PDM_g_num_t **_numabs = NULL;
+  PDM_malloc(_numabs, n_part, const PDM_g_num_t *);
 
   // Check
-
-  PDM_g_num_t *numabs_init;
-  PDM_malloc(numabs_init,dn_vtx,PDM_g_num_t);
+  PDM_g_num_t *numabs_init = NULL;
+  PDM_malloc(numabs_init, dn_vtx, PDM_g_num_t);
 
   for (int i = 0; i < dn_vtx; i++) {
     numabs_init[i] = distrib[i_rank] + 1 + i;
@@ -618,8 +617,8 @@ _create_split_mesh
     _numabs[i_part] = PDM_gnum_get (gen_gnum2, i_part);
 
     int n_face;
-    int nEdge;
-    int nEdgePartBound;
+    int n_edge;
+    int n_edgePartBound;
     int n_vtx;
     int n_proc;
     int sFaceEdge;
@@ -630,8 +629,8 @@ _create_split_mesh
     PDM_part_part_dim_get (ppart,
                            i_part,
                            &n_face,
-                           &nEdge,
-                           &nEdgePartBound,
+                           &n_edge,
+                           &n_edgePartBound,
                            &n_vtx,
                            &n_proc,
                            n_total_part,
@@ -773,7 +772,7 @@ char *argv[]
   int           have_random = 0;
 
   int           i_rank;
-  int           num_procs;
+  int           n_rank;
 
   /*
    *  Read args
@@ -786,7 +785,7 @@ char *argv[]
               &length);
 
   PDM_MPI_Comm_rank (PDM_MPI_COMM_WORLD, &i_rank);
-  PDM_MPI_Comm_size (PDM_MPI_COMM_WORLD, &num_procs);
+  PDM_MPI_Comm_size (PDM_MPI_COMM_WORLD, &n_rank);
 
   /*
    *  Create a partitioned mesh

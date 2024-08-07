@@ -39,43 +39,42 @@ extern "C" {
  *============================================================================*/
 
 static char *
-_fortran_to_c_string (
-  const char *application_name_f,
-  const int l_application_name_f
+_fortran_to_c_string
+(
+  const char *f_string,
+  const int l_f_string
 )
 {
-  char *application_name_c;
+  char *c_string;
   int imin = 0;
   int imax = 0;
 
-  while (imin < l_application_name_f && application_name_f[imin] == ' ') {
+  while (imin < l_f_string && f_string[imin] == ' ') {
     imin++;
   }
-  while (imax < l_application_name_f && application_name_f[l_application_name_f - imax - 1] == ' ') {
+  while (imax < l_f_string && f_string[l_f_string - imax - 1] == ' ') {
     imax++;
   }
 
-  imax = l_application_name_f - imax - 1;
+  imax = l_f_string - imax - 1;
 
   assert(imax >= imin);
 
-  if ((imax == l_application_name_f) || (imin == l_application_name_f)) {
-    PDM_malloc(application_name_c,(1),char);
-    // PDM_malloc(application_name_c,1,char);
-    application_name_c[0] = '\0';
+  if ((imax == l_f_string) || (imin == l_f_string)) {
+    PDM_malloc(c_string, 1, char);
+    c_string[0] = '\0';
   }
   else {
     int size = imax - imin + 2;
-    PDM_malloc(application_name_c,(size),char);
-    // PDM_malloc(application_name_c,size,char);
+    PDM_malloc(c_string, size, char);
     int index = 0;
     for (int k = imin ; k <= imax ; k++) {
-      application_name_c[index++] = application_name_f[k];
+      c_string[index++] = f_string[k];
     }
-    application_name_c[index] = '\0';
+    c_string[index] = '\0';
   }
 
-  return application_name_c;
+  return c_string;
 }
 
 /**
@@ -415,7 +414,7 @@ static int *_vtk_lagrange_bar_to_ijk (const int order) {
 
   int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get (PDM_MESH_NODAL_BARHO, order);
   int *ijk;
-  PDM_malloc(ijk,n_nodes,int);
+  PDM_malloc(ijk, n_nodes, int);
 
   int idx = 0;
   ijk[idx++] = 0;
@@ -435,7 +434,7 @@ static int *_vtk_lagrange_tria_to_ijk (const int order) {
 
   int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get (PDM_MESH_NODAL_TRIAHO, order);
   int *ijk;
-  PDM_malloc(ijk,n_nodes * 2,int);
+  PDM_malloc(ijk, 2 * n_nodes, int);
 
   int idx = 0;
 
@@ -488,7 +487,7 @@ static int *_vtk_lagrange_quad_to_ijk (const int order) {
 
   int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get (PDM_MESH_NODAL_QUADHO, order);
   int *ijk;
-  PDM_malloc(ijk,n_nodes * 2,int);
+  PDM_malloc(ijk, 2 * n_nodes, int);
 
   int idx = 0;
 
@@ -542,7 +541,7 @@ static int *_vtk_lagrange_tetra_to_ijk (const int order) {
 
   int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get (PDM_MESH_NODAL_TETRAHO, order);
   int *ijk;
-  PDM_malloc(ijk,n_nodes * 3,int);
+  PDM_malloc(ijk, 3 * n_nodes, int);
 
   int idx = 0;
 
@@ -679,7 +678,7 @@ static int *_vtk_lagrange_prism_to_ijk (const int order) {
 
   int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get (PDM_MESH_NODAL_PRISMHO, order);
   int *ijk;
-  PDM_malloc(ijk,n_nodes * 3,int);
+  PDM_malloc(ijk, 3 * n_nodes, int);
 
   int idx = 0;
 
@@ -795,7 +794,7 @@ static int *_vtk_lagrange_hexa_to_ijk (const int order) {
 
   int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get (PDM_MESH_NODAL_HEXAHO, order);
   int *ijk;
-  PDM_malloc(ijk,n_nodes * 3,int);
+  PDM_malloc(ijk, 3 * n_nodes, int);
 
   int idx = 0;
 
@@ -974,7 +973,7 @@ _vtk_read_points
   fscanf(f, PDM_FMT_G_NUM, n_vtx);
   fscanf(f, "%s", word); // coord type
 
-  PDM_malloc(*vtx_coord,(*n_vtx) * 3,double);
+  PDM_malloc(*vtx_coord, 3 * (*n_vtx), double);
 
   for (int i = 0; i < 3*(*n_vtx); i++) {
     fscanf(f, "%le", &(*vtx_coord)[i]);
@@ -1015,9 +1014,9 @@ _vtk_read_unstructured_grid
       }
       s_elt_vtx -= prepa->n_elt;
 
-      PDM_malloc(prepa->elt_vtx_idx,(prepa->n_elt + 1),int);
+      PDM_malloc(prepa->elt_vtx_idx, prepa->n_elt + 1, int        );
+      PDM_malloc(prepa->elt_vtx    , s_elt_vtx       , PDM_g_num_t);
       prepa->elt_vtx_idx[0] = 0;
-      PDM_malloc(prepa->elt_vtx,s_elt_vtx,PDM_g_num_t);
 
       for (int i = 0; i < prepa->n_elt; i++) {
         prepa->elt_vtx_idx[i+1] = prepa->elt_vtx_idx[i];
@@ -1041,7 +1040,7 @@ _vtk_read_unstructured_grid
         PDM_error(__FILE__, __LINE__, 0, "Incoherent number of cells (block CELL_TYPES)\n");
       }
 
-      PDM_malloc(prepa->elt_type,prepa->n_elt,PDM_Mesh_nodal_elt_t);
+      PDM_malloc(prepa->elt_type, prepa->n_elt, PDM_Mesh_nodal_elt_t);
       for (int i = 0; i < prepa->n_elt; i++) {
         int vtk_elt_type = -1;
         fscanf(f, "%d", &vtk_elt_type);
@@ -1088,10 +1087,10 @@ _vtk_read_polydata
       }
       s_elt_vtx -= prepa->n_elt;
 
-      PDM_malloc(prepa->elt_vtx_idx,(prepa->n_elt + 1),int);
+      PDM_malloc(prepa->elt_vtx_idx, prepa->n_elt + 1, int                 );
+      PDM_malloc(prepa->elt_vtx    , s_elt_vtx       , PDM_g_num_t         );
+      PDM_malloc(prepa->elt_type   , prepa->n_elt    , PDM_Mesh_nodal_elt_t);
       prepa->elt_vtx_idx[0] = 0;
-      PDM_malloc(prepa->elt_vtx,s_elt_vtx,PDM_g_num_t);
-      PDM_malloc(prepa->elt_type,prepa->n_elt,PDM_Mesh_nodal_elt_t);
 
       for (int i = 0; i < prepa->n_elt; i++) {
         prepa->elt_type[i] = PDM_MESH_NODAL_POLY_2D;
@@ -1168,8 +1167,8 @@ _vtk_read_field_values
  )
 {
   size_t s_data = _pdm_data_size(data_type);
-  char *tmp_values;
-  PDM_malloc(tmp_values,s_data * n * stride, char);
+  char *tmp_values = NULL;
+  PDM_malloc(tmp_values, s_data * n * stride, char);
   *values = (void *) tmp_values;
 
   if (data_type == PDM_INT) {
@@ -1225,15 +1224,15 @@ _vtk_read_fields
 
       fscanf(f, "%d", &n_field);
 
-      PDM_malloc(field_name,n_field,char     *);
-      PDM_malloc(field_type,n_field,PDM_data_t);
-      PDM_malloc(field_stride,n_field,int       );
-      PDM_malloc(field_value,n_field,void     *);
+      PDM_malloc(field_name  , n_field, char       *);
+      PDM_malloc(field_type  , n_field, PDM_data_t  );
+      PDM_malloc(field_stride, n_field, int         );
+      PDM_malloc(field_value , n_field, void       *);
 
       for (int i = 0; i < n_field; i++) {
         fscanf(f, "%s", word);
 
-        PDM_malloc(field_name[i],(strlen(word) + 1),char);
+        PDM_malloc(field_name[i], strlen(word) + 1, char);
         strcpy(field_name[i], word);
 
         fscanf(f, "%d", &field_stride[i]);
@@ -1262,10 +1261,10 @@ _vtk_read_fields
 
       n_field = 1;
 
-      PDM_malloc(field_name,n_field,char     *);
-      PDM_malloc(field_type,n_field,PDM_data_t);
-      PDM_malloc(field_stride,n_field,int       );
-      PDM_malloc(field_value,n_field,void     *);
+      PDM_malloc(field_name  , n_field, char       *);
+      PDM_malloc(field_type  , n_field, PDM_data_t  );
+      PDM_malloc(field_stride, n_field, int         );
+      PDM_malloc(field_value , n_field, void       *);
 
       if (strstr(word, "SCALARS") != NULL) {
        field_stride[0] = 1;
@@ -1281,7 +1280,7 @@ _vtk_read_fields
       }
 
       fscanf(f, "%s", word);
-      PDM_malloc(field_name[0],(strlen(word) + 1),char);
+      PDM_malloc(field_name[0], strlen(word) + 1, char);
       strcpy(field_name[0], word);
 
       fscanf(f, "%s", word);
@@ -1301,8 +1300,6 @@ _vtk_read_fields
       }
       fscanf(f, "%s", word);
       assert(strstr(word, "default") != NULL);
-
-
 
       _vtk_read_field_values(f,
                              n,
@@ -2437,7 +2434,7 @@ PDM_vtk_write_std_elements_ho
   int n_vtx_elt = PDM_Mesh_nodal_n_vtx_elt_get (elt_type, order);
   if(0 == 1) {
     int *vtk_idx;
-    PDM_malloc(vtk_idx,n_vtx_elt,int);
+    PDM_malloc(vtk_idx, n_vtx_elt, int);
     _ijk_to_vtk (elt_type, order, vtk_idx);
   }
 
@@ -2549,7 +2546,7 @@ PDM_vtk_write_std_elements_ho_with_vtx_field
   int n_vtx_elt = PDM_Mesh_nodal_n_vtx_elt_get (elt_type, order);
   if(0 == 1) {
     int *vtk_idx;
-    PDM_malloc(vtk_idx,n_vtx_elt,int);
+    PDM_malloc(vtk_idx, n_vtx_elt, int);
     _ijk_to_vtk (elt_type, order, vtk_idx);
   }
 
@@ -2758,7 +2755,7 @@ PDM_vtk_lagrange_to_ijk
   switch (elt_type) {
   case PDM_MESH_NODAL_POINT: {
     int *_ijk;
-    PDM_malloc(_ijk,1,int);
+    PDM_malloc(_ijk, 1, int);
     _ijk[0] = 0;
     return _ijk;
   }
@@ -2927,9 +2924,9 @@ PDM_vtk_read_to_dmesh_nodal
 
     for (PDM_Mesh_nodal_elt_t t = (PDM_Mesh_nodal_elt_t) 0; t < PDM_MESH_NODAL_N_ELEMENT_TYPES; t++) {
       if (gn_elt[t] > 0) {
-        PDM_malloc(gelt_vtx[t],idx[t],PDM_g_num_t);
+        PDM_malloc(gelt_vtx[t], idx[t], PDM_g_num_t);
         if (t == PDM_MESH_NODAL_POLY_2D) {
-          PDM_malloc(gpoly2d_vtx_n,gn_elt[t],int);
+          PDM_malloc(gpoly2d_vtx_n, gn_elt[t], int);
         }
       }
       idx[t] = 0;
@@ -2987,7 +2984,7 @@ PDM_vtk_read_to_dmesh_nodal
     if (n_field[i] > 0) {
       // Bcast field name, stride and type
       int *l_name;
-      PDM_malloc(l_name,n_field[i],int);
+      PDM_malloc(l_name, n_field[i], int);
       if (i_rank == 0) {
         for (int j = 0; j < n_field[i]; j++) {
           l_name[j] = strlen(prepa.field[i].field_name[j]) + 1;
@@ -2995,10 +2992,10 @@ PDM_vtk_read_to_dmesh_nodal
       }
       else {
         prepa.field[i].n_field = n_field[i];
-        PDM_malloc(prepa.field[i].field_name,n_field[i],char     *);
-        PDM_malloc(prepa.field[i].field_type,n_field[i],PDM_data_t);
-        PDM_malloc(prepa.field[i].field_stride,n_field[i],int       );
-        PDM_malloc(prepa.field[i].field_value,n_field[i],void     *);
+        PDM_malloc(prepa.field[i].field_name  , n_field[i], char     *);
+        PDM_malloc(prepa.field[i].field_type  , n_field[i], PDM_data_t);
+        PDM_malloc(prepa.field[i].field_stride, n_field[i], int       );
+        PDM_malloc(prepa.field[i].field_value , n_field[i], void     *);
       }
 
       PDM_MPI_Bcast(l_name, n_field[i], PDM_MPI_INT, 0, comm);
@@ -3008,7 +3005,7 @@ PDM_vtk_read_to_dmesh_nodal
         l_char_buf += l_name[j];
       }
       char *char_buf;
-      PDM_malloc(char_buf,l_char_buf,char);
+      PDM_malloc(char_buf, l_char_buf, char);
       if (i_rank == 0) {
         int idx = 0;
         for (int j = 0; j < n_field[i]; j++) {
@@ -3024,7 +3021,7 @@ PDM_vtk_read_to_dmesh_nodal
       if (i_rank != 0) {
         int idx = 0;
         for (int j = 0; j < n_field[i]; j++) {
-          PDM_malloc(prepa.field[i].field_name[j],l_name[j],char);
+          PDM_malloc(prepa.field[i].field_name[j], l_name[j], char);
           for (int k = 0; k < l_name[j]; k++) {
             prepa.field[i].field_name[j][k] = char_buf[idx++];
           }
@@ -3035,8 +3032,6 @@ PDM_vtk_read_to_dmesh_nodal
 
       PDM_MPI_Bcast((void *) prepa.field[i].field_type  , n_field[i], PDM_MPI_INT, 0, comm);
       PDM_MPI_Bcast((void *) prepa.field[i].field_stride, n_field[i], PDM_MPI_INT, 0, comm);
-
-
 
       if (dbg_enabled) {
         log_trace("i = %d\n", i);
@@ -3063,12 +3058,7 @@ PDM_vtk_read_to_dmesh_nodal
       }
 
     }
-
   }
-
-
-
-
 
   int mesh_dimension = -1;
   PDM_g_num_t gn_elt_dim[3] = {0};
@@ -3083,7 +3073,6 @@ PDM_vtk_read_to_dmesh_nodal
   if (dbg_enabled) {
     log_trace("mesh_dimension = %d\n", mesh_dimension);
   }
-
 
   /* Vertices*/
   PDM_g_num_t *init_distrib_vtx = PDM_compute_entity_distribution        (comm, dn_vtx);
@@ -3105,7 +3094,7 @@ PDM_vtk_read_to_dmesh_nodal
   }
 
   if (*n_vtx_field > 0) {
-    PDM_malloc(*vtx_field_value,(*n_vtx_field),void *);
+    PDM_malloc(*vtx_field_value, (*n_vtx_field), void *);
 
     for (int i = 0; i < *n_vtx_field; i++) {
       PDM_block_to_block_exch(btb_vtx,
@@ -3144,7 +3133,7 @@ PDM_vtk_read_to_dmesh_nodal
                                                             comm);
 
       if (t == PDM_MESH_NODAL_POLY_2D) {
-        PDM_malloc(dpoly2d_vtx_n,(distrib_elt[t][i_rank+1] - distrib_elt[t][i_rank]),int);
+        PDM_malloc(dpoly2d_vtx_n, distrib_elt[t][i_rank+1] - distrib_elt[t][i_rank], int);
         PDM_block_to_block_exch(btb,
                                 sizeof(PDM_g_num_t),
                                 PDM_STRIDE_VAR_INTERLACED,

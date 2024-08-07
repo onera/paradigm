@@ -134,7 +134,7 @@ _map_part_t_with_part_mesh
 {
   int n_part = pm->n_part;
   _part_t **pdm_part;
-  PDM_malloc(pdm_part,n_part ,_part_t *);
+  PDM_malloc(pdm_part, n_part, _part_t *);
   for(int i_part = 0; i_part < n_part; ++i_part) {
 
     pdm_part[i_part] = _part_create();
@@ -393,14 +393,14 @@ _create_dparent_num_corner
 
   int n_section = dmn_elts->n_section;
 
-  int *dn_corner;
-  PDM_malloc(dn_corner,n_section ,int          );
-  PDM_g_num_t **corner_ln_to_gn;
-  PDM_malloc(corner_ln_to_gn,n_section ,PDM_g_num_t *);
-  PDM_g_num_t **corner_vtx;
-  PDM_malloc(corner_vtx,n_section ,PDM_g_num_t *);
-  int **corner_vtx_n;
-  PDM_malloc(corner_vtx_n,n_section ,int         *);
+  int          *dn_corner       = NULL;
+  PDM_g_num_t **corner_ln_to_gn = NULL;
+  PDM_g_num_t **corner_vtx      = NULL;
+  int         **corner_vtx_n    = NULL;
+  PDM_malloc(dn_corner      , n_section, int          );
+  PDM_malloc(corner_ln_to_gn, n_section, PDM_g_num_t *);
+  PDM_malloc(corner_vtx     , n_section, PDM_g_num_t *);
+  PDM_malloc(corner_vtx_n   , n_section, int         *);
 
   for (int i_section = 0; i_section < n_section; i_section++) {
 
@@ -417,8 +417,8 @@ _create_dparent_num_corner
     PDM_g_num_t* connec = PDM_DMesh_nodal_elmts_section_std_get(dmn_elts, id_section);
 
     dn_corner[i_section] = n_elt;
-    PDM_malloc(corner_ln_to_gn[i_section], n_elt ,PDM_g_num_t);
-    PDM_malloc(corner_vtx_n   [i_section], n_elt ,int        );
+    PDM_malloc(corner_ln_to_gn[i_section], n_elt, PDM_g_num_t);
+    PDM_malloc(corner_vtx_n   [i_section], n_elt, int        );
     corner_vtx     [i_section] = connec;
     for(int i = 0; i < n_elt; ++i) {
       corner_vtx_n   [i_section][i] = 1;
@@ -443,7 +443,7 @@ _create_dparent_num_corner
   PDM_g_num_t* distrib_ptb = PDM_part_to_block_distrib_index_get(ptb);
 
   PDM_g_num_t *_distrib_corner;
-  PDM_malloc(_distrib_corner,(n_rank+1) ,PDM_g_num_t);
+  PDM_malloc(_distrib_corner, n_rank+1, PDM_g_num_t);
   for(int i = 0; i < n_rank+1; ++i) {
     _distrib_corner[i] = distrib_ptb[i];
   }
@@ -494,25 +494,26 @@ _compute_part_mesh_nodal_3d
   /*
    * Rebuild the volumic part from cell
    */
-  int *pn_cell;
-  PDM_malloc(pn_cell, n_part ,int          );
-  int *pn_face;
-  PDM_malloc(pn_face, n_part ,int          );
-  int *pn_vtx;
-  PDM_malloc(pn_vtx, n_part ,int          );
-  PDM_g_num_t **pcell_ln_to_gn;
-  PDM_malloc(pcell_ln_to_gn, n_part ,PDM_g_num_t *);
-  PDM_g_num_t **pface_ln_to_gn;
-  PDM_malloc(pface_ln_to_gn, n_part ,PDM_g_num_t *);
-  PDM_g_num_t **pvtx_ln_to_gn;
-  PDM_malloc(pvtx_ln_to_gn, n_part ,PDM_g_num_t *);
-  double **pvtx_coord;
-  PDM_malloc(pvtx_coord, n_part ,double      *);
+  int          *pn_cell        = NULL;
+  int          *pn_face        = NULL;
+  int          *pn_vtx         = NULL;
+  PDM_g_num_t **pcell_ln_to_gn = NULL;
+  PDM_g_num_t **pface_ln_to_gn = NULL;
+  PDM_g_num_t **pvtx_ln_to_gn  = NULL;
+  double      **pvtx_coord     = NULL;
+  PDM_malloc(pn_cell       , n_part, int          );
+  PDM_malloc(pn_face       , n_part, int          );
+  PDM_malloc(pn_vtx        , n_part, int          );
+  PDM_malloc(pcell_ln_to_gn, n_part, PDM_g_num_t *);
+  PDM_malloc(pface_ln_to_gn, n_part, PDM_g_num_t *);
+  PDM_malloc(pvtx_ln_to_gn , n_part, PDM_g_num_t *);
+  PDM_malloc(pvtx_coord    , n_part, double      *);
+
   for(int i_part = 0; i_part < n_part; ++i_part){
 
     pn_cell[i_part] = PDM_part_mesh_n_entity_get(pm->pmesh, i_part, PDM_MESH_ENTITY_CELL);
     pn_face[i_part] = PDM_part_mesh_n_entity_get(pm->pmesh, i_part, PDM_MESH_ENTITY_FACE);
-    pn_vtx [i_part] = PDM_part_mesh_n_entity_get(pm->pmesh, i_part, PDM_MESH_ENTITY_VTX);
+    pn_vtx [i_part] = PDM_part_mesh_n_entity_get(pm->pmesh, i_part, PDM_MESH_ENTITY_VTX );
 
     PDM_part_mesh_entity_ln_to_gn_get(pm->pmesh,
                                       i_part,
@@ -593,10 +594,10 @@ _compute_part_mesh_nodal_3d
 
   if(dmn->ridge != NULL) {
 
-    PDM_g_num_t **pedge_ln_to_gn;
-    PDM_malloc(pedge_ln_to_gn, n_part ,PDM_g_num_t *);
-    int *pn_edge;
-    PDM_malloc(pn_edge, n_part ,int          );
+    PDM_g_num_t **pedge_ln_to_gn = NULL;
+    int          *pn_edge        = NULL;
+    PDM_malloc(pedge_ln_to_gn, n_part, PDM_g_num_t *);
+    PDM_malloc(pn_edge       , n_part, int          );
     for(int i_part = 0; i_part < n_part; ++i_part) {
       pn_edge[i_part] = PDM_part_mesh_n_entity_get(pm->pmesh, i_part, PDM_MESH_ENTITY_EDGE);
       PDM_part_mesh_entity_ln_to_gn_get(pm->pmesh,
@@ -707,10 +708,10 @@ _compute_part_mesh_nodal_3d
   for(int i_part = 0; i_part < n_part; ++i_part) {
 
     // Copy coordinates because ownership between part_mesh and part_mesh_nodal is complicated
-    double *lvtx_coords;
-    PDM_malloc(lvtx_coords,3 * pn_vtx[i_part] ,double     );
-    PDM_g_num_t *lvtx_ln_to_gn;
-    PDM_malloc(lvtx_ln_to_gn,3 * pn_vtx[i_part] ,PDM_g_num_t);
+    double      *lvtx_coords   = NULL;
+    PDM_g_num_t *lvtx_ln_to_gn = NULL;
+    PDM_malloc(lvtx_coords  ,3 * pn_vtx[i_part], double     );
+    PDM_malloc(lvtx_ln_to_gn,3 * pn_vtx[i_part], PDM_g_num_t);
     for(int i_vtx = 0; i_vtx < 3 * pn_vtx[i_part]; ++i_vtx) {
       lvtx_coords[i_vtx] = pvtx_coord[i_part][i_vtx];
     }
@@ -752,17 +753,18 @@ _compute_part_mesh_nodal_2d
   /*
    * Rebuild the volumic part from cell
    */
-  PDM_g_num_t **pface_ln_to_gn;
-  PDM_malloc(pface_ln_to_gn, n_part ,PDM_g_num_t *);
-  int *pn_face;
-  PDM_malloc(pn_face, n_part ,int          );
+  int          *pn_face        = NULL;
+  PDM_g_num_t **pface_ln_to_gn = NULL;
+  PDM_malloc(pface_ln_to_gn, n_part, PDM_g_num_t *);
+  PDM_malloc(pn_face       , n_part, int          );
 
-  PDM_g_num_t **pvtx_ln_to_gn;
-  PDM_malloc(pvtx_ln_to_gn, n_part ,PDM_g_num_t *);
-  int *pn_vtx;
-  PDM_malloc(pn_vtx, n_part ,int          );
-  double **pvtx_coord;
-  PDM_malloc(pvtx_coord, n_part ,double      *);
+  int          *pn_vtx        = NULL;
+  PDM_g_num_t **pvtx_ln_to_gn = NULL;
+  double      **pvtx_coord    = NULL;
+  PDM_malloc(pvtx_ln_to_gn, n_part, PDM_g_num_t *);
+  PDM_malloc(pn_vtx       , n_part, int          );
+  PDM_malloc(pvtx_coord   , n_part, double      *);
+
   for(int i_part = 0; i_part < n_part; ++i_part){
     pn_face[i_part] = PDM_part_mesh_n_entity_get(pm->pmesh, i_part, PDM_MESH_ENTITY_FACE);
     pn_vtx [i_part] = PDM_part_mesh_n_entity_get(pm->pmesh, i_part, PDM_MESH_ENTITY_VTX);
@@ -791,10 +793,11 @@ _compute_part_mesh_nodal_2d
                                                                                          pface_ln_to_gn,
                                                                                          NULL);
 
-  PDM_g_num_t **pedge_ln_to_gn;
-  PDM_malloc(pedge_ln_to_gn, n_part ,PDM_g_num_t *);
-  int *pn_edge;
-  PDM_malloc(pn_edge, n_part ,int          );
+  int          *pn_edge        = NULL;
+  PDM_g_num_t **pedge_ln_to_gn = NULL;
+  PDM_malloc(pn_edge       , n_part, int          );
+  PDM_malloc(pedge_ln_to_gn, n_part, PDM_g_num_t *);
+
   for(int i_part = 0; i_part < n_part; ++i_part) {
     pn_edge[i_part] = PDM_part_mesh_n_entity_get(pm->pmesh, i_part, PDM_MESH_ENTITY_EDGE);
     PDM_part_mesh_entity_ln_to_gn_get(pm->pmesh,
@@ -900,10 +903,10 @@ _compute_part_mesh_nodal_2d
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
     // Copy coordinates because ownership between part_mesh and part_mesh_nodal is complicated
-    double *lvtx_coords;
-    PDM_malloc(lvtx_coords,3 * pn_vtx[i_part] ,double     );
-    PDM_g_num_t *lvtx_ln_to_gn;
-    PDM_malloc(lvtx_ln_to_gn,    pn_vtx[i_part] ,PDM_g_num_t);
+    double      *lvtx_coords   = NULL;
+    PDM_g_num_t *lvtx_ln_to_gn = NULL;
+    PDM_malloc(lvtx_coords  , 3 * pn_vtx[i_part], double     );
+    PDM_malloc(lvtx_ln_to_gn,     pn_vtx[i_part], PDM_g_num_t);
     for(int i_vtx = 0; i_vtx < 3 * pn_vtx[i_part]; ++i_vtx) {
       lvtx_coords[i_vtx] = pvtx_coord[i_part][i_vtx];
     }
@@ -948,18 +951,19 @@ _compute_part_mesh_nodal_1d
   /*
    * Rebuild the volumic part from cell
    */
-  PDM_g_num_t **pedge_ln_to_gn;
-  PDM_malloc(pedge_ln_to_gn, n_part ,PDM_g_num_t *);
-  int *pn_edge;
-  PDM_malloc(pn_edge, n_part ,int          );
+  int          *pn_edge        = NULL;
+  PDM_g_num_t **pedge_ln_to_gn = NULL;
+  PDM_malloc(pn_edge       , n_part, int          );
+  PDM_malloc(pedge_ln_to_gn, n_part, PDM_g_num_t *);
 
-  PDM_g_num_t **pvtx_ln_to_gn;
-  PDM_malloc(pvtx_ln_to_gn, n_part ,PDM_g_num_t *);
-  int *pn_vtx;
-  PDM_malloc(pn_vtx, n_part ,int          );
-  double **pvtx_coord;
-  PDM_malloc(pvtx_coord, n_part ,double      *);
-  for(int i_part = 0; i_part < n_part; ++i_part){
+  int          *pn_vtx        = NULL;
+  PDM_g_num_t **pvtx_ln_to_gn = NULL;
+  double      **pvtx_coord    = NULL;
+  PDM_malloc(pvtx_ln_to_gn, n_part, PDM_g_num_t *);
+  PDM_malloc(pn_vtx       , n_part, int          );
+  PDM_malloc(pvtx_coord   , n_part, double      *);
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
     pn_edge[i_part] = PDM_part_mesh_n_entity_get(pm->pmesh, i_part, PDM_MESH_ENTITY_EDGE);
     pn_vtx [i_part] = PDM_part_mesh_n_entity_get(pm->pmesh, i_part, PDM_MESH_ENTITY_VTX);
 
@@ -1047,10 +1051,10 @@ _compute_part_mesh_nodal_1d
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
     // Copy coordinates because ownership between part_mesh and part_mesh_nodal is complicated
-    double *lvtx_coords;
-    PDM_malloc(lvtx_coords,3 * pn_vtx[i_part] ,double     );
-    PDM_g_num_t *lvtx_ln_to_gn;
-    PDM_malloc(lvtx_ln_to_gn,    pn_vtx[i_part] ,PDM_g_num_t);
+    double      *lvtx_coords   = NULL;
+    PDM_g_num_t *lvtx_ln_to_gn = NULL;
+    PDM_malloc(lvtx_coords  , 3 * pn_vtx[i_part], double     );
+    PDM_malloc(lvtx_ln_to_gn,     pn_vtx[i_part], PDM_g_num_t);
     for(int i_vtx = 0; i_vtx < 3 * pn_vtx[i_part]; ++i_vtx) {
       lvtx_coords[i_vtx] = pvtx_coord[i_part][i_vtx];
     }
@@ -1339,7 +1343,7 @@ _warm_up_for_split
     if(darc_to_elmt_tmp == NULL) {
 
       assert(delmt_to_arc_idx == NULL);
-      PDM_malloc(delmt_to_arc_idx,(dn_node+1) ,int);
+      PDM_malloc(delmt_to_arc_idx, dn_node+1, int);
       for(int i = 0; i < dn_node+1; ++i) {
         delmt_to_arc_idx[i] = 2*i;
       }
@@ -1548,8 +1552,8 @@ const double            *part_fraction,
                      &dual_graph);
 
   int dn_node = distrib_node[i_rank+1] - distrib_node[i_rank];
-  int *_node_part;
-  PDM_malloc(_node_part,dn_node ,int);
+  int *_node_part = NULL;
+  PDM_malloc(_node_part, dn_node, int);
 
   // Compute total number of partitions for this domain
   int tn_part;
@@ -1560,10 +1564,10 @@ const double            *part_fraction,
   double *part_fractions = NULL;
   if (part_size_method == PDM_PART_SIZE_HETEROGENEOUS){
     int *n_part_per_rank;
-    PDM_malloc(n_part_per_rank, n_rank ,int   );
+    PDM_malloc(n_part_per_rank, n_rank, int);
     int *displ;
-    PDM_malloc(displ, n_rank ,int   );
-    PDM_malloc(part_fractions,tn_part ,double);
+    PDM_malloc(displ         , n_rank , int);
+    PDM_malloc(part_fractions, tn_part, double);
     for (int i =0; i < n_rank; i++){
       n_part_per_rank[i] = distrib_partition[i+1] - distrib_partition[i];
       displ[i] = distrib_partition[i];
@@ -1728,7 +1732,7 @@ _deduce_part_face_connectivity
     int *_dedge_vtx_idx = NULL;
     if(dedge_vtx_idx == NULL)  {
       int dn_edge = edge_distrib[i_rank+1] - edge_distrib[i_rank];
-      PDM_malloc(_dedge_vtx_idx, (dn_edge+1) ,int);
+      PDM_malloc(_dedge_vtx_idx, dn_edge+1, int);
       for(int i_edge = 0; i_edge < dn_edge+1; ++i_edge) {
         _dedge_vtx_idx[i_edge] = 2*i_edge;
       }
@@ -1944,7 +1948,7 @@ _deduce_part_connectivity_1d
   int *_dedge_vtx_idx = NULL;
   if(dedge_vtx_idx == NULL)  {
     int dn_edge = edge_distrib[i_rank+1] - edge_distrib[i_rank];
-    PDM_malloc(_dedge_vtx_idx, (dn_edge+1) ,int);
+    PDM_malloc(_dedge_vtx_idx, dn_edge+1, int);
     for(int i_edge = 0; i_edge < dn_edge+1; ++i_edge) {
       _dedge_vtx_idx[i_edge] = 2*i_edge;
     }
@@ -2893,10 +2897,10 @@ PDM_multipart_create
 )
 {
   PDM_multipart_t *multipart;
-  PDM_malloc(multipart,1,PDM_multipart_t);
+  PDM_malloc(multipart, 1, PDM_multipart_t);
 
   multipart->n_domain = n_domain;
-  PDM_malloc(multipart->n_part, multipart->n_domain ,int);
+  PDM_malloc(multipart->n_part, multipart->n_domain, int);
 
   for (int i = 0; i < multipart->n_domain; ++i) {
     multipart->n_part[i] = n_part[i];
@@ -2909,10 +2913,10 @@ PDM_multipart_create
   multipart->comm             = comm;
   multipart->owner            = owner;
 
-  PDM_malloc(multipart->dmeshes,multipart->n_domain ,PDM_dmesh_t                *);
-  PDM_malloc(multipart->dmeshes_nodal,multipart->n_domain ,PDM_dmesh_nodal_t          *);
-  PDM_malloc(multipart->dmn_to_dm,multipart->n_domain ,PDM_dmesh_nodal_to_dmesh_t *);
-  PDM_malloc(multipart->is_owner_dmeshes,multipart->n_domain ,PDM_bool_t                  );
+  PDM_malloc(multipart->dmeshes         , multipart->n_domain, PDM_dmesh_t                *);
+  PDM_malloc(multipart->dmeshes_nodal   , multipart->n_domain, PDM_dmesh_nodal_t          *);
+  PDM_malloc(multipart->dmn_to_dm       , multipart->n_domain, PDM_dmesh_nodal_to_dmesh_t *);
+  PDM_malloc(multipart->is_owner_dmeshes, multipart->n_domain, PDM_bool_t                  );
 
   for (int i_dom = 0; i_dom < multipart->n_domain; ++i_dom) {
     multipart->dmeshes_nodal   [i_dom] = NULL;
@@ -2921,7 +2925,7 @@ PDM_multipart_create
     multipart->is_owner_dmeshes[i_dom] = PDM_FALSE;
   }
 
-  PDM_malloc(multipart->pmeshes,multipart->n_domain ,_part_mesh_t);
+  PDM_malloc(multipart->pmeshes, multipart->n_domain, _part_mesh_t);
 
   int _renum_cell_method = PDM_part_renum_method_cell_idx_get("PDM_PART_RENUM_CELL_NONE");
   int _renum_face_method = PDM_part_renum_method_face_idx_get("PDM_PART_RENUM_FACE_NONE");
@@ -2937,10 +2941,10 @@ PDM_multipart_create
       multipart->pmeshes[i_dom].renum_method_properties[i] = NULL;
     }
 
-    multipart->pmeshes[i_dom].pmesh     = PDM_part_mesh_create(n_part[i_dom], comm);
-    PDM_malloc(multipart->pmeshes[i_dom].vtx_ghost_information,n_part[i_dom] ,int *);
-    PDM_malloc(multipart->pmeshes[i_dom].hyperplane_color,n_part[i_dom] ,int *);
-    PDM_malloc(multipart->pmeshes[i_dom].thread_color,n_part[i_dom] ,int *);
+    multipart->pmeshes[i_dom].pmesh = PDM_part_mesh_create(n_part[i_dom], comm);
+    PDM_malloc(multipart->pmeshes[i_dom].vtx_ghost_information, n_part[i_dom], int *);
+    PDM_malloc(multipart->pmeshes[i_dom].hyperplane_color     , n_part[i_dom], int *);
+    PDM_malloc(multipart->pmeshes[i_dom].thread_color         , n_part[i_dom], int *);
     for(int i_part = 0; i_part < n_part[i_dom]; ++i_part) {
       multipart->pmeshes[i_dom].vtx_ghost_information[i_part] = NULL;
       multipart->pmeshes[i_dom].hyperplane_color     [i_part] = NULL;
@@ -3783,7 +3787,7 @@ const int                       i_part,
                                                 connect);
 
         // same index as face_edge, do we need a copy?
-        PDM_malloc(*connect_idx,(pn_entity + 1),int);
+        PDM_malloc(*connect_idx, pn_entity + 1, int);
         memcpy(*connect_idx, face_edge_idx, sizeof(int) * (pn_entity + 1));
       }
     }
@@ -4233,7 +4237,7 @@ PDM_multipart_stat_get
   _part_mesh_t _pmeshes = multipart->pmeshes[i_domain];
 
   int *dpart_proc;
-  PDM_malloc(dpart_proc,(n_rank + 1) ,int);
+  PDM_malloc(dpart_proc, n_rank + 1, int);
   PDM_MPI_Allgather((void *) &multipart->n_part[i_domain],
                     1,
                     PDM_MPI_INT,
@@ -4248,14 +4252,14 @@ PDM_multipart_stat_get
   }
 
   int *n_loc;
-  PDM_malloc(n_loc,multipart->n_part[i_domain]  ,int);
   int *n_tot;
-  PDM_malloc(n_tot,dpart_proc[n_rank]          ,int);
+  PDM_malloc(n_loc, multipart->n_part[i_domain], int);
+  PDM_malloc(n_tot, dpart_proc[n_rank]         , int);
 
   int *s_loc;
-  PDM_malloc(s_loc,multipart->n_part[i_domain]  ,int);
   int *s_tot;
-  PDM_malloc(s_tot,dpart_proc[n_rank]          ,int);
+  PDM_malloc(s_loc, multipart->n_part[i_domain], int);
+  PDM_malloc(s_tot, dpart_proc[n_rank]         , int);
 
   for (int i = 0; i < multipart->n_part[i_domain]; i++) {
     n_loc[i] = 0;
@@ -4288,7 +4292,7 @@ PDM_multipart_stat_get
   }
 
   int *n_part_proc;
-  PDM_malloc(n_part_proc,(n_rank) ,int);
+  PDM_malloc(n_part_proc, n_rank, int);
 
   for (int i = 0; i < n_rank; i++) {
     n_part_proc[i] = dpart_proc[i+1] - dpart_proc[i];

@@ -341,14 +341,14 @@ _compute_uvw
 
   /* Get number of nodes */
   n_node = PDM_Mesh_nodal_n_vertices_element (elt_type, order);
-  double *weight;
-  PDM_malloc(weight,n_node,double);
-  double *dweight_du;
-  PDM_malloc(dweight_du,n_node,double);
-  double *dweight_dv;
-  PDM_malloc(dweight_dv,n_node,double);
-  double *dweight_dw;
-  PDM_malloc(dweight_dw,n_node,double);
+  double *weight     = NULL;
+  double *dweight_du = NULL;
+  double *dweight_dv = NULL;
+  double *dweight_dw = NULL;
+  PDM_malloc(weight    , n_node, double);
+  PDM_malloc(dweight_du, n_node, double);
+  PDM_malloc(dweight_dv, n_node, double);
+  PDM_malloc(dweight_dw, n_node, double);
 
   double *dw[3] = {dweight_du, dweight_dv, dweight_dw};
 
@@ -363,7 +363,7 @@ _compute_uvw
 
   double _uvw[12];
   double *_weight;
-  PDM_malloc(_weight,n_node * 4,double);
+  PDM_malloc(_weight, n_node * 4, double);
 
   for (iter = 0; iter < max_iter; iter++) {
 
@@ -716,7 +716,7 @@ int main(int argc, char *argv[])
 
   int ielt = 0;
   double *node_coord;
-  PDM_malloc(node_coord,n_node * 3,double);
+  PDM_malloc(node_coord, n_node * 3, double);
   for (int i = 0; i < n_node; i++) {
     int ivtx = (int) (dconnec[n_node*ielt + i] - 1);
 
@@ -742,10 +742,10 @@ int main(int argc, char *argv[])
 
 
   int n_pts = (int) gn_pts;
-  double *pts_uvw_init;
-  PDM_malloc(pts_uvw_init,n_pts * elt_dim,double);
-  double *pts_coord;
-  PDM_malloc(pts_coord,n_pts * 3,double);
+  double *pts_uvw_init = NULL;
+  double *pts_coord    = NULL;
+  PDM_malloc(pts_uvw_init, n_pts * elt_dim, double);
+  PDM_malloc(pts_coord   , n_pts * 3      , double);
   for (int i = 0; i < n_pts; i++) {
     // pts_coord[i] = 0.3 + 0.4*((double) rand() / (double) RAND_MAX);
     while (1) {
@@ -758,8 +758,8 @@ int main(int argc, char *argv[])
     }
   }
 
-  double *pts_weight;
-  PDM_malloc(pts_weight,n_pts * n_node,double);
+  double *pts_weight = NULL;
+  PDM_malloc(pts_weight, n_pts * n_node, double);
   PDM_ho_basis(t_elt,
                order,
                n_node,
@@ -780,13 +780,11 @@ int main(int argc, char *argv[])
     }
   }
 
-
-
   /* HO location */
-  double *proj_coord;
-  PDM_malloc(proj_coord,n_pts * 3,double);
-  double *pts_uvw;
-  PDM_malloc(pts_uvw,n_pts * elt_dim,double);
+  double *proj_coord = NULL;
+  double *pts_uvw    = NULL;
+  PDM_malloc(proj_coord, n_pts * 3      , double);
+  PDM_malloc(pts_uvw   , n_pts * elt_dim, double);
   for (int i = 0; i < n_pts; i++) {
     int stat = 0;
 
@@ -821,8 +819,8 @@ int main(int argc, char *argv[])
 
 
 
-  double *node_uvw;
-  PDM_malloc(node_uvw,n_node * elt_dim,double);
+  double *node_uvw = NULL;
+  PDM_malloc(node_uvw, n_node * elt_dim, double);
   PDM_ho_location_uvw_nodes(t_elt,
                             order,
                             0., 1.,
@@ -831,8 +829,8 @@ int main(int argc, char *argv[])
                             node_uvw);
 
 
-  double *node_field;
-  PDM_malloc(node_field,n_node,double);
+  double *node_field = NULL;
+  PDM_malloc(node_field, n_node, double);
   for (int i = 0; i < n_node; i++) {
     // node_field[i] = _eval_field(node_uvw[3*i  ],
     //                             node_uvw[3*i+1],
@@ -844,10 +842,10 @@ int main(int argc, char *argv[])
                                 order);
   }
 
-  double *interp_field;
-  PDM_malloc(interp_field,n_pts,double);
-  double *proj_field;
-  PDM_malloc(proj_field,n_pts,double);
+  double *interp_field = NULL;
+  double *proj_field   = NULL;
+  PDM_malloc(interp_field, n_pts, double);
+  PDM_malloc(proj_field  , n_pts, double);
   double field_max = 0.;
   double err_max   = 0.;
   for (int i = 0; i < n_pts; i++) {
@@ -894,9 +892,8 @@ int main(int argc, char *argv[])
 
   printf("err_max = %e, relative = %e\n", err_max, err_max/field_max);
 
-
-  int *connec;
-  PDM_malloc(connec,n_node,int);
+  int *connec = NULL;
+  PDM_malloc(connec, n_node, int);
   for (int i = 0; i < n_node; i++) {
     connec[i] = i + 1;
   }

@@ -259,7 +259,7 @@ int main(int argc, char *argv[])
   PDM_g_num_t *distrib_cell = PDM_compute_entity_distribution(comm, dn_cell);
   int n_cell_extract = dn_cell/2;
   PDM_g_num_t *selected_cell_gnum;
-  PDM_malloc(selected_cell_gnum,n_cell_extract ,PDM_g_num_t);
+  PDM_malloc(selected_cell_gnum, n_cell_extract, PDM_g_num_t);
 
   for(int i = 0; i < n_cell_extract; ++i) {
     unsigned int seed = (unsigned int) (distrib_cell[i_rank] + i);
@@ -321,7 +321,7 @@ int main(int argc, char *argv[])
   PDM_g_num_t *distrib_face_extract = PDM_compute_entity_distribution(comm, dn_extract_face);
 
   PDM_g_num_t *extract_face_ln_to_gn;
-  PDM_malloc(extract_face_ln_to_gn,dn_extract_face ,PDM_g_num_t);
+  PDM_malloc(extract_face_ln_to_gn, dn_extract_face, PDM_g_num_t);
   for(int i = 0; i < dn_extract_face; ++i) {
     extract_face_ln_to_gn[i] = distrib_face_extract[i_rank] + i + 1;
   }

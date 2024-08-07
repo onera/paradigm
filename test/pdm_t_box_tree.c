@@ -153,10 +153,10 @@ _generate_cartesian_cloud
 )
 {
   PDM_g_num_t n_pts = n_vtx_x * n_vtx_y * n_vtx_z;
-  double *pt_coord;
-  PDM_malloc(pt_coord, 3 * n_pts ,double);
-  PDM_g_num_t *pt_gnum;
-  PDM_malloc(pt_gnum,     n_pts ,PDM_g_num_t);
+  double      *pt_coord = NULL;
+  PDM_g_num_t *pt_gnum  = NULL;
+  PDM_malloc(pt_coord, 3 * n_pts, double     );
+  PDM_malloc(pt_gnum ,     n_pts, PDM_g_num_t);
 
   double step_x = length / (double) (n_vtx_x - 1);
   double step_y = length / (double) (n_vtx_y - 1);
@@ -199,10 +199,10 @@ _generate_cartesian_boxes
   PDM_g_num_t n_box = (n_vtx_x - 1) * ( n_vtx_y - 1) * ( n_vtx_z - 1);
   // PDM_g_num_t n_box = (n_vtx_x) * ( n_vtx_y) * ( n_vtx_z);
   *n_box_out = n_box;
-  double *box_coord;
-  PDM_malloc(box_coord, 6 * n_box ,double);
-  PDM_g_num_t *box_gnum;
-  PDM_malloc(box_gnum,     n_box ,PDM_g_num_t);
+  double      *box_coord = NULL;
+  PDM_g_num_t *box_gnum  = NULL;
+  PDM_malloc(box_coord, 6 * n_box, double     );
+  PDM_malloc(box_gnum ,     n_box, PDM_g_num_t);
 
   double step_x = length / (double) (n_vtx_x - 1);
   double step_y = length / (double) (n_vtx_y - 1);

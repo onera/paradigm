@@ -171,10 +171,10 @@ _gen_mesh
 {
   const int randomize = 0;
 
-  PDM_malloc(*pn_elt,n_part,int          );
-  PDM_malloc(*pelt_ln_to_gn,n_part,PDM_g_num_t *);
-  PDM_malloc(*pn_vtx,n_part,int          );
-  PDM_malloc(*pvtx_coord,n_part,double      *);
+  PDM_malloc(*pn_elt       , n_part, int          );
+  PDM_malloc(*pelt_ln_to_gn, n_part, PDM_g_num_t *);
+  PDM_malloc(*pn_vtx       , n_part, int          );
+  PDM_malloc(*pvtx_coord   , n_part, double      *);
 
   int n_domain = 1;
   int n_part_domains = n_part;
@@ -287,19 +287,18 @@ _gen_mesh
 
 
     /* Get parts */
-    int **pcell_face_idx;
-    PDM_malloc(pcell_face_idx,n_part,int         *);
-    int **pcell_face;
-    PDM_malloc(pcell_face,n_part,int         *);
-    int **pface_vtx_idx;
-    PDM_malloc(pface_vtx_idx,n_part,int         *);
-    int **pface_vtx;
-    PDM_malloc(pface_vtx,n_part,int         *);
-    PDM_g_num_t **pface_ln_to_gn;
-    PDM_malloc(pface_ln_to_gn,n_part,PDM_g_num_t *);
-
-    int *pn_face;
-    PDM_malloc(pn_face,n_part,int);
+    int         **pcell_face_idx = NULL;
+    int         **pcell_face     = NULL;
+    int         **pface_vtx_idx  = NULL;
+    int         **pface_vtx      = NULL;
+    PDM_g_num_t **pface_ln_to_gn = NULL;
+    int          *pn_face        = NULL;
+    PDM_malloc(pcell_face_idx, n_part, int         *);
+    PDM_malloc(pcell_face    , n_part, int         *);
+    PDM_malloc(pface_vtx_idx , n_part, int         *);
+    PDM_malloc(pface_vtx     , n_part, int         *);
+    PDM_malloc(pface_ln_to_gn, n_part, PDM_g_num_t *);
+    PDM_malloc(pn_face       , n_part, int          );
 
     for (int ipart = 0; ipart < n_part; ipart++) {
 
@@ -422,7 +421,7 @@ _gen_mesh
     int n_bound = n_edge_group;
 
     int *dedge_bnd_idx;
-    PDM_malloc(dedge_bnd_idx,(n_bound + 1) ,int);
+    PDM_malloc(dedge_bnd_idx, n_bound + 1, int);
     dedge_bnd_idx[0] = 0;
 
     // First pass to count and allocate
@@ -437,7 +436,7 @@ _gen_mesh
 
     // Second pass to copy
     PDM_g_num_t *dedge_bnd;
-    PDM_malloc(dedge_bnd,dedge_bnd_idx[n_bound] ,PDM_g_num_t);
+    PDM_malloc(dedge_bnd, dedge_bnd_idx[n_bound], PDM_g_num_t);
 
     i_bnd = 0;
     for (int igroup = 0; igroup < n_edge_group; igroup++) {
@@ -494,16 +493,16 @@ _gen_mesh
     PDM_free(dedge_group     );
 
     /* Get parts */
-    int *pn_edge;
-    PDM_malloc(pn_edge,n_part,int  );
-    int **pface_edge_idx;
-    PDM_malloc(pface_edge_idx,n_part,int *);
-    int **pface_edge;
-    PDM_malloc(pface_edge,n_part,int *);
-    int **pedge_vtx_idx;
-    PDM_malloc(pedge_vtx_idx,n_part,int *);
-    int **pedge_vtx;
-    PDM_malloc(pedge_vtx,n_part,int *);
+    int  *pn_edge        = NULL;
+    int **pface_edge_idx = NULL;
+    int **pface_edge     = NULL;
+    int **pedge_vtx_idx  = NULL;
+    int **pedge_vtx      = NULL;
+    PDM_malloc(pn_edge       , n_part, int  );
+    PDM_malloc(pface_edge_idx, n_part, int *);
+    PDM_malloc(pface_edge    , n_part, int *);
+    PDM_malloc(pedge_vtx_idx , n_part, int *);
+    PDM_malloc(pedge_vtx     , n_part, int *);
 
     for (int ipart = 0; ipart < n_part; ipart++) {
 
@@ -635,7 +634,7 @@ _gen_mesh
     PDM_multipart_compute(mpart);
 
     PDM_g_num_t **pvtx_ln_to_gn;
-    PDM_malloc(pvtx_ln_to_gn,n_part,PDM_g_num_t *);
+    PDM_malloc(pvtx_ln_to_gn, n_part, PDM_g_num_t *);
     for (int ipart = 0; ipart < n_part; ipart++) {
       PDM_g_num_t *_elt_ln_to_gn;
       (*pn_elt)[ipart] = PDM_multipart_part_ln_to_gn_get(mpart,
@@ -720,13 +719,13 @@ _mesh_from_file
   PDM_multipart_dmesh_nodal_set(mpart, 0, dmn);
   PDM_multipart_compute(mpart);
 
-  PDM_malloc(*pn_elt,n_part,int          );
-  PDM_malloc(*pelt_ln_to_gn,n_part,PDM_g_num_t *);
-  PDM_malloc(*pn_vtx,n_part,int          );
-  PDM_malloc(*pvtx_coord,n_part,double      *);
+  PDM_malloc(*pn_elt       , n_part, int          );
+  PDM_malloc(*pelt_ln_to_gn, n_part, PDM_g_num_t *);
+  PDM_malloc(*pn_vtx       , n_part, int          );
+  PDM_malloc(*pvtx_coord   , n_part, double      *);
 
   PDM_g_num_t **pvtx_ln_to_gn;
-  PDM_malloc(pvtx_ln_to_gn,n_part,PDM_g_num_t *);
+  PDM_malloc(pvtx_ln_to_gn, n_part, PDM_g_num_t *);
   for (int ipart = 0; ipart < n_part; ipart++) {
     PDM_g_num_t *_elt_ln_to_gn;
     (*pn_elt)[ipart] = PDM_multipart_part_ln_to_gn_get(mpart,
@@ -735,7 +734,7 @@ _mesh_from_file
                                                        PDM_MESH_ENTITY_CELL,
                                                        &_elt_ln_to_gn,
                                                        PDM_OWNERSHIP_USER);
-    PDM_malloc((*pelt_ln_to_gn)[ipart],(*pn_elt)[ipart],PDM_g_num_t);
+    PDM_malloc((*pelt_ln_to_gn)[ipart], (*pn_elt)[ipart], PDM_g_num_t);
     memcpy((*pelt_ln_to_gn)[ipart], _elt_ln_to_gn, sizeof(PDM_g_num_t) * (*pn_elt)[ipart]);
 
     (*pn_vtx)[ipart] = PDM_multipart_part_ln_to_gn_get(mpart,
@@ -751,7 +750,7 @@ _mesh_from_file
                                      ipart,
                                      &_vtx_coord,
                                      PDM_OWNERSHIP_USER);
-    PDM_malloc((*pvtx_coord)[ipart],(*pn_vtx)[ipart] * 3,double);
+    PDM_malloc((*pvtx_coord)[ipart], (*pn_vtx)[ipart] * 3, double);
     memcpy((*pvtx_coord)[ipart], _vtx_coord, sizeof(double) * (*pn_vtx)[ipart] * 3);
   }
 
@@ -781,8 +780,8 @@ _compute_cell_centers
  double                      ***pts_coord
  )
 {
-  PDM_malloc(*pn_pts,n_part,int     );
-  PDM_malloc(*pts_coord,n_part,double *);
+  PDM_malloc(*pn_pts   , n_part, int     );
+  PDM_malloc(*pts_coord, n_part, double *);
 
   int  n_section   = PDM_part_mesh_nodal_elmts_n_section_get  (pmne);
   int *sections_id = PDM_part_mesh_nodal_elmts_sections_id_get(pmne);
@@ -800,7 +799,7 @@ _compute_cell_centers
     }
 
     (*pn_pts)   [ipart] = pn_elt;
-    PDM_malloc((*pts_coord)[ipart],pn_elt * 3,double);
+    PDM_malloc((*pts_coord)[ipart], pn_elt * 3, double);
 
     for (int isection = 0; isection < n_section; isection++) {
 
@@ -1065,7 +1064,7 @@ int main(int argc, char *argv[])
 
 
         PDM_g_num_t *gnum;
-        PDM_malloc(gnum,_n_elt,PDM_g_num_t);
+        PDM_malloc(gnum, _n_elt, PDM_g_num_t);
         for (int i = 0; i < _n_elt; i++) {
           int icell = i;
           if (parent_num != NULL) {
@@ -1178,7 +1177,7 @@ int main(int argc, char *argv[])
                         &pts_coord);
 
   int **pts_idx;
-  PDM_malloc(pts_idx,n_part,int *);
+  PDM_malloc(pts_idx, n_part, int *);
   for (int ipart = 0; ipart < n_part; ipart++) {
     pts_idx[ipart] = PDM_array_new_idx_from_const_stride_int(1,
                                                              pn_pts[ipart]);
