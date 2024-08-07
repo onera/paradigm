@@ -1729,9 +1729,6 @@ _dist_cloud_surf_compute_optim
     PDM_part_mesh_nodal_t       *extract_pmn  = NULL;
     PDM_part_mesh_nodal_elmts_t *extract_pmne = NULL;
     if (pmne != NULL) {
-      // PDM_extract_part_part_mesh_nodal_get(extrp,
-      //                                      &extract_pmne,
-      //                                      PDM_OWNERSHIP_USER);
       PDM_extract_part_part_mesh_nodal_get2(extrp,
                                             &extract_pmn,
                                             PDM_OWNERSHIP_KEEP);
@@ -1739,14 +1736,6 @@ _dist_cloud_surf_compute_optim
                                                                    geom_kind);
     }
 
-    // int pextract_n_vtx = PDM_extract_part_n_entity_get(extrp,
-    //                                                    0,
-    //                                                    PDM_MESH_ENTITY_VTX);
-    // double *pextract_vtx_coord = NULL;
-    // PDM_extract_part_vtx_coord_get(extrp,
-    //                                0,
-    //                                &pextract_vtx_coord,
-    //                                PDM_OWNERSHIP_KEEP);
     int     pextract_n_vtx     = PDM_part_mesh_nodal_n_vtx_get    (extract_pmn, 0);
     double *pextract_vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(extract_pmn, 0);
 
@@ -1958,8 +1947,6 @@ _dist_cloud_surf_compute_optim
         }
 
       }
-
-      // PDM_part_mesh_nodal_elmts_free(extract_pmne);
 
     }
     else {

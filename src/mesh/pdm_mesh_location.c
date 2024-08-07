@@ -3143,10 +3143,6 @@ PDM_mesh_location_compute
       log_trace("Yeah :D\n");
     }
 
-    // PDM_part_mesh_nodal_elmts_t *extract_pmne = NULL;
-    // PDM_extract_part_part_mesh_nodal_get(extrp,
-    //                                      &extract_pmne,
-    //                                      PDM_OWNERSHIP_KEEP);
     PDM_part_mesh_nodal_t *extract_pmn = NULL;
     PDM_extract_part_part_mesh_nodal_get2(extrp,
                                           &extract_pmn,
@@ -3160,27 +3156,8 @@ PDM_mesh_location_compute
                                       &ptp_elt,
                                       PDM_OWNERSHIP_USER);
 
-    // int     pextract_n_elt     = 0;
-    int     pextract_n_vtx     = 0;
-    double *pextract_vtx_coord = NULL;
-
-    // pextract_n_elt = PDM_extract_part_n_entity_get(extrp,
-    //                                                0,
-    //                                                entity_type);
-    // assert(pextract_n_elt == dn_elt2);
-
-    // pextract_n_vtx = PDM_extract_part_n_entity_get(extrp,
-    //                                                0,
-    //                                                PDM_MESH_ENTITY_VTX);
-
-    // PDM_extract_part_vtx_coord_get(extrp,
-    //                                0,
-    //                                &pextract_vtx_coord,
-    //                                PDM_OWNERSHIP_KEEP);
-
-    pextract_n_vtx     = PDM_part_mesh_nodal_n_vtx_get    (extract_pmn, 0);
-    pextract_vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(extract_pmn, 0);
-    log_trace("extracted vtx2: %p\n", (void *) pextract_vtx_coord);
+    int     pextract_n_vtx     = PDM_part_mesh_nodal_n_vtx_get    (extract_pmn, 0);
+    double *pextract_vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(extract_pmn, 0);
 
     if (dbg_enabled && delt_g_num_geom2 != NULL) {
       _dump_pmne(ml->comm,
@@ -3242,7 +3219,6 @@ PDM_mesh_location_compute
     PDM_free(pelt_pts_weight2    );
     PDM_free(pelt_pts_uvw2       );
 
-    // PDM_part_mesh_nodal_elmts_free(extract_pmne);
     PDM_extract_part_free(extrp);
     PDM_free(delt_init_location2);
 

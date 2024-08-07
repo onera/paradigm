@@ -2404,24 +2404,6 @@ _mesh_intersection_vol_vol
 
     if (mi->mesh[i] == NULL) {
       /* From part mesh nodal */
-      // PDM_part_mesh_nodal_elmts_t *extract_pmne = NULL;
-      // PDM_extract_part_part_mesh_nodal_get(mi->extrp_mesh[i],
-      //                                      &extract_pmne,
-      //                                      PDM_OWNERSHIP_USER);
-
-      // PDM_part_mesh_nodal_t *extract_pmn = PDM_part_mesh_nodal_create(mi->dim_mesh[i],
-      //                                                                 1,
-      //                                                                 mi->comm);
-
-      // PDM_part_mesh_nodal_coord_set(extract_pmn,
-      //                               0,
-      //                               n_vtx       [i],
-      //                               vtx_coord   [i],
-      //                               vtx_ln_to_gn[i],
-      //                               PDM_OWNERSHIP_USER);
-
-      // PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(extract_pmn,
-      //                                               extract_pmne);
       PDM_part_mesh_nodal_t *extract_pmn = NULL;
       PDM_extract_part_part_mesh_nodal_get2(mi->extrp_mesh[i],
                                             &extract_pmn,
@@ -5732,11 +5714,11 @@ PDM_mesh_intersection_compute
     PDM_free(redistribute_box_a_to_box_b_idx);
     PDM_free(redistribute_box_a_to_box_b    );
 
-    for (int imesh = 0; imesh < 2; imesh++) {
-      if (mi->mesh_nodal[imesh] == NULL && mi->mesh[imesh] == NULL) {
-        PDM_part_mesh_nodal_elmts_free(mi->extrp_mesh[imesh]->pmne);
-      }
-    }
+    // for (int imesh = 0; imesh < 2; imesh++) {
+    //   if (mi->mesh_nodal[imesh] == NULL && mi->mesh[imesh] == NULL) {
+    //     PDM_part_mesh_nodal_elmts_free(mi->extrp_mesh[imesh]->pmne);
+    //   }
+    // }
 
     PDM_extract_part_free(extrp_mesh_a);
     PDM_extract_part_free(extrp_mesh_b);
