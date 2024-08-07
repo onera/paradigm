@@ -169,9 +169,9 @@ _adaptative_tree2
   int    *weight_pts = NULL;
   int    *weight_box = NULL;
   double *box_center = NULL;
-  PDM_malloc(weight_pts,    n_pts, int   );
-  PDM_malloc(weight_box,    n_box, int   );
-  PDM_malloc(box_center,3 * n_box, double);
+  PDM_malloc(weight_pts,     n_pts, int   );
+  PDM_malloc(weight_box,     n_box, int   );
+  PDM_malloc(box_center, 3 * n_box, double);
   for(int i = 0; i < n_pts; ++i) {
     weight_pts[i] = 1;
   }
