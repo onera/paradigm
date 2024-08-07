@@ -566,7 +566,7 @@ PDM_generate_mesh_sphere_simplified
                                           edge_vtx,
                                           elt_vtx);
 
-  PDM_malloc(*elt_vtx_idx, ((*n_elt)+1), int);
+  PDM_malloc(*elt_vtx_idx, *n_elt + 1, int);
   (*elt_vtx_idx)[0] = 0;
   for (int i = 0; i < (*n_elt); i++) {
     (*elt_vtx_idx)[i+1] = (*elt_vtx_idx)[i] + 3; // because PDM_MESH_NODAL_TRIA3
@@ -1241,17 +1241,17 @@ PDM_generate_mesh_sphere_ngon
                         &mpart);
   PDM_DMesh_nodal_free(dmn);
 
-  PDM_malloc(*pn_vtx          , n_part, int          );
-  PDM_malloc(*pn_edge         , n_part, int          );
-  PDM_malloc(*pn_face         , n_part, int          );
-  PDM_malloc(*pvtx_coord      , n_part, double      *);
-  PDM_malloc(*pedge_vtx       , n_part, int         *);
-  PDM_malloc(*pface_edge_idx  , n_part, int         *);
-  PDM_malloc(*pface_edge      , n_part, int         *);
-  PDM_malloc(*pface_vtx       , n_part, int         *);
-  PDM_malloc(*pvtx_ln_to_gn   , n_part, PDM_g_num_t *);
-  PDM_malloc(*pedge_ln_to_gn  , n_part, PDM_g_num_t *);
-  PDM_malloc(*pface_ln_to_gn  , n_part, PDM_g_num_t *);
+  PDM_malloc(*pn_vtx        , n_part, int          );
+  PDM_malloc(*pn_edge       , n_part, int          );
+  PDM_malloc(*pn_face       , n_part, int          );
+  PDM_malloc(*pvtx_coord    , n_part, double      *);
+  PDM_malloc(*pedge_vtx     , n_part, int         *);
+  PDM_malloc(*pface_edge_idx, n_part, int         *);
+  PDM_malloc(*pface_edge    , n_part, int         *);
+  PDM_malloc(*pface_vtx     , n_part, int         *);
+  PDM_malloc(*pvtx_ln_to_gn , n_part, PDM_g_num_t *);
+  PDM_malloc(*pedge_ln_to_gn, n_part, PDM_g_num_t *);
+  PDM_malloc(*pface_ln_to_gn, n_part, PDM_g_num_t *);
 
   for (int ipart = 0; ipart < n_part; ipart++) {
     (*pn_vtx)[ipart] = PDM_multipart_part_ln_to_gn_get(mpart,
@@ -1545,29 +1545,29 @@ PDM_generate_mesh_parallelepiped_ngon
 
   PDM_DMesh_nodal_free(dmn);
 
-  PDM_malloc(*pn_vtx                ,n_part, int          );
-  PDM_malloc(*pn_edge               ,n_part, int          );
-  PDM_malloc(*pn_face               ,n_part, int          );
-  PDM_malloc(*pn_cell               ,n_part, int          );
-  PDM_malloc(*pvtx_coord            ,n_part, double      *);
-  PDM_malloc(*pedge_vtx             ,n_part, int         *);
-  PDM_malloc(*pface_edge_idx        ,n_part, int         *);
-  PDM_malloc(*pface_edge            ,n_part, int         *);
-  PDM_malloc(*pface_vtx             ,n_part, int         *);
-  PDM_malloc(*pcell_face_idx        ,n_part, int         *);
-  PDM_malloc(*pcell_face            ,n_part, int         *);
-  PDM_malloc(*pvtx_ln_to_gn         ,n_part, PDM_g_num_t *);
-  PDM_malloc(*pedge_ln_to_gn        ,n_part, PDM_g_num_t *);
-  PDM_malloc(*pface_ln_to_gn        ,n_part, PDM_g_num_t *);
-  PDM_malloc(*pcell_ln_to_gn        ,n_part, PDM_g_num_t *);
-  PDM_malloc(*pn_surface            ,n_part, int          );
-  PDM_malloc(*psurface_face_idx     ,n_part, int         *);
-  PDM_malloc(*psurface_face         ,n_part, int         *);
-  PDM_malloc(*psurface_face_ln_to_gn,n_part, PDM_g_num_t *);
-  PDM_malloc(*pn_ridge              ,n_part, int          );
-  PDM_malloc(*pridge_edge_idx       ,n_part, int         *);
-  PDM_malloc(*pridge_edge           ,n_part, int         *);
-  PDM_malloc(*pridge_edge_ln_to_gn  ,n_part, PDM_g_num_t *);
+  PDM_malloc(*pn_vtx                , n_part, int          );
+  PDM_malloc(*pn_edge               , n_part, int          );
+  PDM_malloc(*pn_face               , n_part, int          );
+  PDM_malloc(*pn_cell               , n_part, int          );
+  PDM_malloc(*pvtx_coord            , n_part, double      *);
+  PDM_malloc(*pedge_vtx             , n_part, int         *);
+  PDM_malloc(*pface_edge_idx        , n_part, int         *);
+  PDM_malloc(*pface_edge            , n_part, int         *);
+  PDM_malloc(*pface_vtx             , n_part, int         *);
+  PDM_malloc(*pcell_face_idx        , n_part, int         *);
+  PDM_malloc(*pcell_face            , n_part, int         *);
+  PDM_malloc(*pvtx_ln_to_gn         , n_part, PDM_g_num_t *);
+  PDM_malloc(*pedge_ln_to_gn        , n_part, PDM_g_num_t *);
+  PDM_malloc(*pface_ln_to_gn        , n_part, PDM_g_num_t *);
+  PDM_malloc(*pcell_ln_to_gn        , n_part, PDM_g_num_t *);
+  PDM_malloc(*pn_surface            , n_part, int          );
+  PDM_malloc(*psurface_face_idx     , n_part, int         *);
+  PDM_malloc(*psurface_face         , n_part, int         *);
+  PDM_malloc(*psurface_face_ln_to_gn, n_part, PDM_g_num_t *);
+  PDM_malloc(*pn_ridge              , n_part, int          );
+  PDM_malloc(*pridge_edge_idx       , n_part, int         *);
+  PDM_malloc(*pridge_edge           , n_part, int         *);
+  PDM_malloc(*pridge_edge_ln_to_gn  , n_part, PDM_g_num_t *);
 
   for (int ipart = 0; ipart < n_part; ipart++) {
     (*pn_vtx)[ipart] = PDM_multipart_part_ln_to_gn_get(mpart,
