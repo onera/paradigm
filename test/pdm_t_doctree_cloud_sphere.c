@@ -334,15 +334,15 @@ _adaptative_tree2
     /*
      * Build tree
      */
-    PDM_g_num_t *coarse_pts_box_gnum         = NULL;
-    int         *init_location_coase_pts_box = NULL;
-    PDM_malloc(coarse_pts_box_gnum        ,    g_extract_boxes_idx[n_neighbor_current], PDM_g_num_t);
-    PDM_malloc(init_location_coase_pts_box,3 * g_extract_boxes_idx[n_neighbor_current], int        );
+    PDM_g_num_t *coarse_pts_box_gnum          = NULL;
+    int         *init_location_coarse_pts_box = NULL;
+    PDM_malloc(coarse_pts_box_gnum         ,     g_extract_boxes_idx[n_neighbor_current], PDM_g_num_t);
+    PDM_malloc(init_location_coarse_pts_box, 3 * g_extract_boxes_idx[n_neighbor_current], int        );
     for(int i = 0; i < g_extract_boxes_idx[n_neighbor_current]; ++i) {
       coarse_pts_box_gnum[i] = g_coarse_pts_box_id[i]+1;
-      init_location_coase_pts_box[3*i  ] = 0;
-      init_location_coase_pts_box[3*i+1] = 0;
-      init_location_coase_pts_box[3*i+2] = i;
+      init_location_coarse_pts_box[3*i  ] = 0;
+      init_location_coarse_pts_box[3*i+1] = 0;
+      init_location_coarse_pts_box[3*i+2] = i;
     }
     PDM_free(g_coarse_pts_box_id);
 
@@ -356,7 +356,7 @@ _adaptative_tree2
                                                             g_coarse_pts_box_extents,
                                                             1,
                                                             &g_extract_boxes_idx[n_neighbor_current],
-                                                            init_location_coase_pts_box,
+                                                            init_location_coarse_pts_box,
                                                             comm_alone);
 
     int   max_boxes_leaf_coarse = 1;   // Max number of boxes in a leaf for coarse coarse BBTree
@@ -373,7 +373,7 @@ _adaptative_tree2
     // const int         *bt_box_pts_origin = PDM_box_set_origin_get(coarse_pts_box_set);
 
     PDM_free(coarse_pts_box_gnum);
-    PDM_free(init_location_coase_pts_box);
+    PDM_free(init_location_coarse_pts_box);
 
     if(1 == 1) {
       char filename[999];
