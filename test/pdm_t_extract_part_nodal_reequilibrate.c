@@ -476,7 +476,7 @@ int main
   if (visu) {
     PDM_part_mesh_nodal_dump_vtk(pmn,
                                  geom_kind,
-                                 "extract_part_nodal_reequilibrate_pmn");
+                                 "init_pmn");
   }
 
 
@@ -490,7 +490,8 @@ int main
                                                       PDM_OWNERSHIP_KEEP,
                                                       comm);
 
-  PDM_extract_part_part_nodal_set(extrp, pmne);
+  // PDM_extract_part_part_nodal_set(extrp, pmne);
+  PDM_extract_part_part_nodal_set2(extrp, pmn);
 
 
 
@@ -669,45 +670,55 @@ int main
 
 
   if (visu) {
-    PDM_part_mesh_nodal_elmts_t *extract_pmne = NULL;
-    PDM_extract_part_part_mesh_nodal_get(extrp,
-                                         &extract_pmne,
-                                         PDM_OWNERSHIP_USER);
+    // PDM_part_mesh_nodal_elmts_t *extract_pmne = NULL;
+    // PDM_extract_part_part_mesh_nodal_get(extrp,
+    //                                      &extract_pmne,
+    //                                      PDM_OWNERSHIP_USER);
 
 
-    PDM_part_mesh_nodal_t *extract_pmn = PDM_part_mesh_nodal_create(mesh_dimension,
-                                                                    n_part_out,
-                                                                    comm);
+    // PDM_part_mesh_nodal_t *extract_pmn = PDM_part_mesh_nodal_create(mesh_dimension,
+    //                                                                 n_part_out,
+    //                                                                 comm);
 
-    PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(extract_pmn,
-                                                  extract_pmne);
+    // PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(extract_pmn,
+    //                                               extract_pmne);
 
-    for (int i_part = 0; i_part < n_part_out; i_part++) {
-      double *vtx_coord = NULL;
-      int n_vtx = PDM_extract_part_vtx_coord_get(extrp,
-                                                 i_part,
-                                                 &vtx_coord,
-                                                 PDM_OWNERSHIP_KEEP);
+    // for (int i_part = 0; i_part < n_part_out; i_part++) {
+    //   double *vtx_coord = NULL;
+    //   int n_vtx = PDM_extract_part_vtx_coord_get(extrp,
+    //                                              i_part,
+    //                                              &vtx_coord,
+    //                                              PDM_OWNERSHIP_KEEP);
 
-      PDM_g_num_t *vtx_ln_to_gn = NULL;
-      // PDM_extract_part_parent_ln_to_gn_get
-      PDM_extract_part_ln_to_gn_get(extrp,
-                                    i_part,
-                                    PDM_MESH_ENTITY_VTX,
-                                    &vtx_ln_to_gn,
-                                    PDM_OWNERSHIP_KEEP);
+    //   PDM_g_num_t *vtx_ln_to_gn = NULL;
+    //   // PDM_extract_part_parent_ln_to_gn_get
+    //   PDM_extract_part_ln_to_gn_get(extrp,
+    //                                 i_part,
+    //                                 PDM_MESH_ENTITY_VTX,
+    //                                 &vtx_ln_to_gn,
+    //                                 PDM_OWNERSHIP_KEEP);
+    //   log_trace("vtx_ln_to_gn : %p\n", (void *) vtx_ln_to_gn);
 
-      PDM_part_mesh_nodal_coord_set(extract_pmn,
-                                    i_part,
-                                    n_vtx,
-                                    vtx_coord,
-                                    vtx_ln_to_gn,
-                                    PDM_OWNERSHIP_USER);
+    //   PDM_part_mesh_nodal_coord_set(extract_pmn,
+    //                                 i_part,
+    //                                 n_vtx,
+    //                                 vtx_coord,
+    //                                 vtx_ln_to_gn,
+    //                                 PDM_OWNERSHIP_USER);
+    // }
+
+    PDM_part_mesh_nodal_t *extract_pmn = NULL;
+    PDM_extract_part_part_mesh_nodal_get2(extrp,
+                                          &extract_pmn,
+                                          PDM_OWNERSHIP_USER);
+
+    for (PDM_geometry_kind_t geom_kind_child = geom_kind; geom_kind_child < PDM_GEOMETRY_KIND_CORNER; geom_kind_child++) {
+      char name[999];
+      sprintf(name, "extract_pmn_%d", geom_kind_child);
+      PDM_part_mesh_nodal_dump_vtk(extract_pmn,
+                                   geom_kind_child,
+                                   name);
     }
-
-    PDM_part_mesh_nodal_dump_vtk(extract_pmn,
-                                 geom_kind,
-                                 "extract_part_nodal_reequilibrate_extract_pmn");
 
     PDM_part_mesh_nodal_free(extract_pmn);
   }
