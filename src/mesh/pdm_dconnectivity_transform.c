@@ -118,12 +118,12 @@ _deduce_combine_connectivity_impl
   int**         pentity1_entity3_n;
   PDM_g_num_t** pentity1_entity3;
   PDM_block_to_part_exch(btp,
-                          sizeof(PDM_g_num_t),
-                          PDM_STRIDE_VAR_INTERLACED,
-                          dentity2_entity3_n,
-             (void *  )   dentity2_entity3,
-             (int  ***)  &pentity1_entity3_n,
-             (void ***)  &pentity1_entity3);
+                         sizeof(PDM_g_num_t),
+                         PDM_STRIDE_VAR_INTERLACED,
+                         dentity2_entity3_n,
+            (void *  )   dentity2_entity3,
+            (int  ***)  &pentity1_entity3_n,
+            (void ***)  &pentity1_entity3);
   PDM_free(dentity2_entity3_n);
 
   if(is_signed) {
@@ -253,7 +253,7 @@ PDM_deduce_combine_connectivity
       //   _dentity1_entity3[idx] = _dentity1_entity3[idx] * sgn;
       //   dentity1_entity3_n[i_entity1]      += pentity1_entity3_n[idx++];
       // } else {
-        dentity1_entity3_n[i_entity1]      += pentity1_entity3_n[idx++];
+      dentity1_entity3_n[i_entity1] += pentity1_entity3_n[idx++];
       // }
     }
   }
@@ -461,13 +461,13 @@ PDM_dconnectivity_transpose
   int save_entity_distrib = 0;
   if(entity2_distrib != NULL && entity2_distrib[0] != -1) {
     ptb = PDM_part_to_block_create_from_distrib(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-                                    PDM_PART_TO_BLOCK_POST_MERGE,
-                                    1.,
-                                    &ln_to_gn,
-                                    entity2_distrib,
-                         (int *)    &dentity1_entity2_idx[dn_entity1],
-                                     1,
-                                     comm);
+                                                PDM_PART_TO_BLOCK_POST_MERGE,
+                                                1.,
+                                                &ln_to_gn,
+                                                entity2_distrib,
+                                        (int *) &dentity1_entity2_idx[dn_entity1],
+                                                1,
+                                                comm);
   } else {
     save_entity_distrib = 1;
     ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
@@ -475,9 +475,9 @@ PDM_dconnectivity_transpose
                                    1.,
                                    &ln_to_gn,
                                    NULL,
-                         (int *)   &dentity1_entity2_idx[dn_entity1],
-                                    1,
-                                    comm);
+                           (int *) &dentity1_entity2_idx[dn_entity1],
+                                   1,
+                                   comm);
   }
 
   int* send_stri = PDM_array_const_int(dentity1_entity2_idx[dn_entity1], 1);
@@ -485,23 +485,23 @@ PDM_dconnectivity_transpose
   int         *dentity2_entity1_n = NULL;
   PDM_g_num_t *recv_data          = NULL;
 
-  int blk_size = PDM_part_to_block_exch (ptb,
-                                         sizeof(PDM_g_num_t),
-                                         PDM_STRIDE_VAR_INTERLACED,
-                                         1,
-                                         &send_stri,
-                               (void **) &gnum,
-                                         &dentity2_entity1_n,
-                               (void **) &recv_data);
+  int blk_size = PDM_part_to_block_exch(ptb,
+                                        sizeof(PDM_g_num_t),
+                                        PDM_STRIDE_VAR_INTERLACED,
+                                        1,
+                                        &send_stri,
+                              (void **) &gnum,
+                                        &dentity2_entity1_n,
+                              (void **) &recv_data);
   PDM_UNUSED(blk_size);
 
   int dn_entity2_recv = PDM_part_to_block_n_elt_block_get(ptb);
 
   if(entity2_distrib != NULL && save_entity_distrib != 1) {
     PDM_g_num_t *distrib2_idx_full =
-      PDM_part_to_block_adapt_partial_block_to_block (ptb,
-                                                      &dentity2_entity1_n,
-                                                      entity2_distrib[n_rank]);
+    PDM_part_to_block_adapt_partial_block_to_block(ptb,
+                                                   &dentity2_entity1_n,
+                                                   entity2_distrib[n_rank]);
     dn_entity2_recv = distrib2_idx_full[i_rank+1] - distrib2_idx_full[i_rank];
     PDM_free(distrib2_idx_full);
   }
@@ -601,7 +601,7 @@ void PDM_dfacecell_to_dcellface
   
   PDM_dconnectivity_transpose(comm,
                               face_distri,
-         (PDM_g_num_t *)      cell_distri,
+              (PDM_g_num_t *) cell_distri,
                               _dface_cell_idx,
                               _dface_cell,
                               1,
@@ -643,7 +643,7 @@ void PDM_dcellface_to_dfacecell
   PDM_g_num_t* _dface_cell     = NULL;
   PDM_dconnectivity_transpose(comm,
                               cell_distri,
-         (PDM_g_num_t *)      face_distri,
+              (PDM_g_num_t *) face_distri,
                               dcell_face_idx,
                               dcell_face,
                               1,
@@ -724,24 +724,24 @@ PDM_dorder_reverse
    * In order to revert the conncectivty we use the global numbering property
    */
   PDM_part_to_block_t *ptb = PDM_part_to_block_create_from_distrib(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-                                                       PDM_PART_TO_BLOCK_POST_CLEANUP,
-                                                       1.,
-                                      (PDM_g_num_t **) &dentity1_entity2,
-                                                       entity_distrib,
-                                            (int *)    &dn_entity1,
-                                                       1,
-                                                       comm);
+                                                                   PDM_PART_TO_BLOCK_POST_CLEANUP,
+                                                                   1.,
+                                                  (PDM_g_num_t **) &dentity1_entity2,
+                                                                   entity_distrib,
+                                                           (int *) &dn_entity1,
+                                                                   1,
+                                                                   comm);
 
-  PDM_g_num_t *recv_data          = NULL;
+  PDM_g_num_t *recv_data = NULL;
 
-  PDM_part_to_block_exch (ptb,
-                          sizeof(PDM_g_num_t),
-                          PDM_STRIDE_CST_INTERLACED,
-                          1,
-                          NULL,
-                (void **) &gnum,
-                           NULL,
-                 (void **) &recv_data);
+  PDM_part_to_block_exch(ptb,
+                         sizeof(PDM_g_num_t),
+                         PDM_STRIDE_CST_INTERLACED,
+                         1,
+                         NULL,
+               (void **) &gnum,
+                         NULL,
+               (void **) &recv_data);
   PDM_free(gnum);
 
   *dentity2_entity1 = recv_data;
@@ -768,13 +768,13 @@ PDM_dgroup_entity_transpose
 
   //printf(" dgroup_entity_idx[%i] = %i \n", n_group, dgroup_entity_idx[n_group]);
   PDM_part_to_block_t *ptb = PDM_part_to_block_create_from_distrib (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-                                                        PDM_PART_TO_BLOCK_POST_MERGE,
-                                                        1.,
-                                                        &dgroup_entity,
-                                                        distrib_entity,
-                                                        &dgroup_entity_idx[n_group],
-                                                        1,
-                                                        comm);
+                                                                    PDM_PART_TO_BLOCK_POST_MERGE,
+                                                                    1.,
+                                                                    &dgroup_entity,
+                                                                    distrib_entity,
+                                                                    &dgroup_entity_idx[n_group],
+                                                                    1,
+                                                                    comm);
 
 
   int *pgroup_id_n = NULL;
@@ -795,14 +795,14 @@ PDM_dgroup_entity_transpose
 
   int *tmp_dentity_group_n = NULL;
   int *tmp_dentity_group   = NULL;
-  int s_block = PDM_part_to_block_exch (ptb,
-                                        sizeof(int),
-                                        PDM_STRIDE_VAR_INTERLACED,
-                                        1,
-                                        &pgroup_id_n,
-                              (void **) &pgroup_id,
-                                        &tmp_dentity_group_n,
-                              (void **) &tmp_dentity_group);
+  int s_block = PDM_part_to_block_exch(ptb,
+                                       sizeof(int),
+                                       PDM_STRIDE_VAR_INTERLACED,
+                                       1,
+                                       &pgroup_id_n,
+                             (void **) &pgroup_id,
+                                       &tmp_dentity_group_n,
+                             (void **) &tmp_dentity_group);
   PDM_free(pgroup_id_n);
   PDM_free(pgroup_id);
 
@@ -1028,15 +1028,15 @@ PDM_dconnectivity_to_extract_dconnectivity_bis
   PDM_gen_gnum_t* gen_gnum_entity1 = PDM_gnum_create(3, 1, PDM_FALSE, 1e-3, comm, PDM_OWNERSHIP_USER);
 
 
-  PDM_gnum_set_from_parents (gen_gnum_entity1,
-                             0,
-                             n_selected_entity1,
-                             select_entity1);
+  PDM_gnum_set_from_parents(gen_gnum_entity1,
+                            0,
+                            n_selected_entity1,
+                            select_entity1);
 
-  PDM_gnum_compute (gen_gnum_entity1);
+  PDM_gnum_compute(gen_gnum_entity1);
 
 
-  PDM_g_num_t* extract_entity1_ln_to_gn = PDM_gnum_get (gen_gnum_entity1, 0);
+  PDM_g_num_t* extract_entity1_ln_to_gn = PDM_gnum_get(gen_gnum_entity1, 0);
 
   if(0 == 1) {
     PDM_log_trace_array_long(select_entity1          , n_selected_entity1, "select_entity1:: ");
