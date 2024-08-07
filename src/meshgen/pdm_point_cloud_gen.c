@@ -124,7 +124,7 @@ PDM_point_cloud_gen_random
     double _char_length = 1e-6 * PDM_MAX(length[0], PDM_MAX(length[1], length[2]));
 
     double *char_length;
-    PDM_malloc(char_length, (*ln_pts), double);
+    PDM_malloc(char_length, *ln_pts, double);
 
     for (int i = 0; i < *ln_pts; i++) {
       char_length[i] = _char_length;
@@ -143,7 +143,7 @@ PDM_point_cloud_gen_random
   }
 
   else {
-    PDM_malloc(*g_num, (*ln_pts), PDM_g_num_t);
+    PDM_malloc(*g_num, *ln_pts, PDM_g_num_t);
     for (int i = 0; i < *ln_pts; i++) {
       (*g_num)[i] = distrib_pts[i_rank] + i + 1;
     }
@@ -265,7 +265,7 @@ PDM_point_cloud_gen_cartesian
   double      *_pts_coord    = NULL;
   PDM_g_num_t *_pts_ln_to_gn = NULL;
   PDM_malloc(_pts_coord   , (*n_pts) * 3, double     );
-  PDM_malloc(_pts_ln_to_gn, (*n_pts)    , PDM_g_num_t);
+  PDM_malloc(_pts_ln_to_gn,  *n_pts     , PDM_g_num_t);
 
   double step_x = (x_max - x_min) / (double) (nx - 1);
   double step_y = (y_max - y_min) / (double) (ny - 1);
