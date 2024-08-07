@@ -337,7 +337,7 @@ int main(int argc, char *argv[])
 
   PDM_printf("[%i]   - TEMPS DANS PART_CUBE  : %12.5e\n", i_rank,  t_elapsed);
 
-  PDM_g_num_t **cell_vtx_gnum;
+  PDM_g_num_t **cell_vtx_gnum = NULL;
   PDM_malloc(cell_vtx_gnum, n_part, PDM_g_num_t *);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
@@ -589,9 +589,9 @@ int main(int argc, char *argv[])
       for (int j = cell_face_idx[i]; j < cell_face_idx[i+1]; j++) {
         int face = cell_face[j] - 1;
         for (int k = face_vtx_idx[face]; k < face_vtx_idx[face+1]; k++) {
-          int iVtx = face_vtx[k] - 1;
+          int i_vtx = face_vtx[k] - 1;
           for (int l = 0; l < 3; l++) {
-            local_field[i_part][3*n_cell_vtx + l] = vtx[3*iVtx+l];
+            local_field          [i_part][3*n_cell_vtx + l] = vtx[3*i_vtx+l];
             global_mean_field_ptr[i_part][3*n_cell_vtx + l] = 0;
           }
           local_weight[i_part][n_cell_vtx] = 1.;

@@ -61,13 +61,13 @@ _usage(int exit_code)
  *
  * \brief  Read arguments from the command line
  *
- * \param [in]      argc     Number of arguments
- * \param [in]      argv     Arguments
+ * \param [in]      argc        Number of arguments
+ * \param [in]      argv        Arguments
  * \param [inout]   n_face_seg  Number of vertices on the cube side
- * \param [inout]   length   Cube length
- * \param [inout]   nClosest Number of closest points
- * \param [inout]   n_target     Number of Target points
- * \param [inout]   n_part   Number of partitions par process
+ * \param [inout]   length      Cube length
+ * \param [inout]   n_closest    Number of closest points
+ * \param [inout]   n_target    Number of Target points
+ * \param [inout]   n_part      Number of partitions par process
  *
  */
 
@@ -76,7 +76,7 @@ _read_args(int            argc,
            char         **argv,
            PDM_g_num_t   *n_face_seg,
            double        *length,
-           int           *nClosest,
+           int           *n_closest,
            PDM_g_num_t   *n_target,
            int           *n_part)
 {
@@ -111,7 +111,7 @@ _read_args(int            argc,
         _usage(EXIT_FAILURE);
       }
       else {
-        *nClosest = atoi(argv[i]);
+        *n_closest = atoi(argv[i]);
       }
     }
     else if (strcmp(argv[i], "-t") == 0) {
@@ -160,7 +160,7 @@ _gen_cube_cell_centers
   PDM_MPI_Comm_size(comm, &n_rank);
   PDM_MPI_Comm_rank(comm, &i_rank);
 
-  PDM_g_num_t *distrib_cell;
+  PDM_g_num_t *distrib_cell = NULL;
   PDM_malloc(distrib_cell, n_rank + 1, PDM_g_num_t);
 
   PDM_g_num_t n_cell      = n_face_seg * n_face_seg * n_face_seg;
@@ -168,11 +168,11 @@ _gen_cube_cell_centers
 
   // Define distribution
   distrib_cell[0] = 0;
-  PDM_g_num_t step_cell = n_cell / n_rank;
+  PDM_g_num_t step_cell      = n_cell / n_rank;
   PDM_g_num_t remainder_cell = n_cell % n_rank;
 
   for (int i = 1; i < n_rank + 1; i++) {
-    distrib_cell[i]  = step_cell;
+    distrib_cell[i] = step_cell;
     const int i1 = i - 1;
     if (i1 < remainder_cell)
       distrib_cell[i] += 1;

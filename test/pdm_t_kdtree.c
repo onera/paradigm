@@ -70,7 +70,7 @@ int exit_code
  *
  * \param [in]    argc   Number of arguments
  * \param [in]    argv   Arguments
- * \param [inout] n_pts   Number of points
+ * \param [inout] n_pts  Number of points
  * \param [inout] ls     Low scalability
  * \param [inout] length Length of domains
  *
@@ -166,7 +166,7 @@ char *argv[]
   int n_rank;
   PDM_MPI_Comm_size (PDM_MPI_COMM_WORLD, &n_rank);
 
-  PDM_g_num_t n_pts   = 10;
+  PDM_g_num_t n_pts  = 10;
   double      radius = 10.;
   int         local  = 0;
   int         rand   = 0;

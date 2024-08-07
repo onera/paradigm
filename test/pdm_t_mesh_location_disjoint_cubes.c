@@ -352,8 +352,8 @@ _cube_mesh2
                                        NULL,
                                        "PDM_PART_RENUM_FACE_NONE");
 
-  PDM_malloc(*pface_vtx_idx, n_part,int *);
-  PDM_malloc(*pface_vtx    , n_part,int *);
+  PDM_malloc(*pface_vtx_idx, n_part, int *);
+  PDM_malloc(*pface_vtx    , n_part, int *);
 
   if (elt_type < PDM_MESH_NODAL_POLY_3D) {
     PDM_dcube_nodal_t* dcube = PDM_dcube_nodal_gen_create (comm,
@@ -957,7 +957,7 @@ _cube_mesh2
     PDM_malloc((*pvtx_coord)[i_part], 3 * (n_vtx + n_ext_vtx), double);
     memcpy((*pvtx_coord)[i_part], vtx, sizeof(double) * 3 * n_vtx);
 
-    PDM_malloc((*pvtx_ln_to_gn)[i_part], (n_vtx + n_ext_vtx), PDM_g_num_t);
+    PDM_malloc((*pvtx_ln_to_gn)[i_part], n_vtx + n_ext_vtx, PDM_g_num_t);
     memcpy((*pvtx_ln_to_gn)[i_part], vtx_ln_to_gn, sizeof(PDM_g_num_t) * n_vtx);
 
 
@@ -988,7 +988,7 @@ _cube_mesh2
     // memcpy((*pface_vtx)[i_part], face_vtx, sizeof(int) * face_vtx_idx[n_face]);
 
 
-    PDM_malloc((*pface_ln_to_gn)[i_part], (n_face + n_ext_face), PDM_g_num_t);
+    PDM_malloc((*pface_ln_to_gn)[i_part], n_face + n_ext_face, PDM_g_num_t);
     memcpy((*pface_ln_to_gn)[i_part], face_ln_to_gn, sizeof(PDM_g_num_t) * n_face);
 
 

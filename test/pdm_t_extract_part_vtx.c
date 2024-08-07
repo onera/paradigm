@@ -364,7 +364,7 @@ int main(int argc, char *argv[])
     pface_vtx_idx[i_part] = face_vtx_idx;
     pvtx_coord   [i_part] = vtx;
 
-    PDM_malloc(selected_l_num[i_part], n_vtx, int        );
+    PDM_malloc(selected_l_num[i_part], n_vtx, int);
 
     /*
      * Sub-part

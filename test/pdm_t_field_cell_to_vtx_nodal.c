@@ -481,10 +481,9 @@ int main
 
   int n_domain = n_dom_i * n_dom_j * n_dom_k;
 
-  // PDM_dcube_nodal_t **dcube;
-  // PDM_malloc(dcube,n_domain,PDM_dcube_nodal_t *);
-  PDM_dmesh_nodal_t **dmn;
+  PDM_dmesh_nodal_t **dmn = NULL;
   PDM_malloc(dmn, n_domain, PDM_dmesh_nodal_t *);
+
   PDM_dcube_nodal_t      **dcube     = NULL;
   PDM_domain_interface_t  *dom_intrf = NULL;
 

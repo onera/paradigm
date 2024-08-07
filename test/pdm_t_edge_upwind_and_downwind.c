@@ -720,8 +720,8 @@ int main(int argc, char *argv[])
               _face_vtx[_face_vtx_idx[_n_face+1]++] = face_vtx[idx_vtx];
             }
 
-            _face_edge[_n_face]   = iedge;
-            _face_updown[_n_face] = -1;
+            _face_edge    [_n_face] = iedge;
+            _face_updown  [_n_face] = -1;
             _face_ln_to_gn[_n_face] = edge_ln_to_gn[iedge];//face_ln_to_gn[face_id];
             memcpy(_updown_pts + 3*_n_face, downwind_point_out + 3*iedge, sizeof(double)*3);
             _n_face++;
