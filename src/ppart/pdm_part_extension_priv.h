@@ -49,6 +49,7 @@ struct _pdm_part_extension_t {
   int            *n_part;
   int            *n_part_idx;
   int            *n_part_g_idx;
+  int            *lpart_to_dom;
 
   _part_t  **parts;
   PDM_part_domain_interface_t  *pdi;

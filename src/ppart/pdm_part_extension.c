@@ -705,19 +705,20 @@ _offset_parts_by_domain
                                 part_ext->shift_by_domain_vtx,
                                 sens);
 
-  PDM_offset_ln_to_gn_by_domain(part_ext->n_domain,
-                                part_ext->n_part,
-                                pn_edge_group,
-                                edge_group_ln_to_gn,
-                                part_ext->shift_by_domain_edge_group,
-                                sens);
+  // > Group gnum is only exchanged so shift seems to be unnecessary
+  // PDM_offset_ln_to_gn_by_domain(part_ext->n_domain,
+  //                               part_ext->n_part,
+  //                               pn_edge_group,
+  //                               edge_group_ln_to_gn,
+  //                               part_ext->shift_by_domain_edge_group,
+  //                               sens);
 
-  PDM_offset_ln_to_gn_by_domain(part_ext->n_domain,
-                                part_ext->n_part,
-                                pn_face_group,
-                                face_group_ln_to_gn,
-                                part_ext->shift_by_domain_face_group,
-                                sens);
+  // PDM_offset_ln_to_gn_by_domain(part_ext->n_domain,
+  //                               part_ext->n_part,
+  //                               pn_face_group,
+  //                               face_group_ln_to_gn,
+  //                               part_ext->shift_by_domain_face_group,
+  //                               sens);
 
   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
     PDM_free(pn_cell      [i_domain]);
@@ -1150,6 +1151,7 @@ _build_part_extension_graph_to_old
   PDM_g_num_t          **new_entity_gnum,
   int                  **new_entity_ancstr_strd,
   PDM_g_num_t          **new_entity_ancstr,
+  PDM_g_num_t           *shift_entity,
   // int                  **new_entity_path_itrf_strd,
   // int                  **new_entity_path_itrf,
   PDM_g_num_t         ***out_pentity_to_entity_ancstr,
@@ -1183,12 +1185,13 @@ _build_part_extension_graph_to_old
 
     int i_read_ancstr = 0;
     for (int i_entity=0; i_entity<new_n_entity[i_part]; ++i_entity) {
+      int shift = shift_entity[part_ext->lpart_to_dom[i_part]];
       if (l_entity_ancstr_strd[i_part][i_entity]==0) {
-        l_entity_ancstr     [i_part][i_entity] = new_entity_gnum[i_part][i_entity];
+        l_entity_ancstr     [i_part][i_entity] = new_entity_gnum[i_part][i_entity]-shift;
         l_entity_ancstr_strd[i_part][i_entity] = 1;
       }
       else {
-        l_entity_ancstr[i_part][i_entity] = new_entity_ancstr[i_part][i_read_ancstr++];
+        l_entity_ancstr[i_part][i_entity] = new_entity_ancstr[i_part][i_read_ancstr++]-shift;
       }
     }
     l_entity_ancstr_idx[i_part] = PDM_array_new_idx_from_sizes_int(l_entity_ancstr_strd[i_part], new_n_entity[i_part]);
@@ -2559,12 +2562,6 @@ _part_extension_3d
 
 
       // > Transform group into tag
-      /**
-       * Warning n_domain not implemented yet
-       * May be necessary to shift groud_id over all domain
-       * as well as groud_gnum
-       */
-      assert(part_ext->n_domain==1);
 
       int          _n_group           = part_ext->parts[i_domain][i_part].n_face_group;
       int         *_group_entity_idx  = part_ext->parts[i_domain][i_part].face_bound_idx;
@@ -4131,6 +4128,7 @@ _part_extension_3d
                                      pcell_ancstr,
                                      // pcell_path_itrf_strd,
                                      // pcell_path_itrf,
+                                     part_ext->shift_by_domain_cell,
                                     &part_ext->border_cell_ln_to_gn_ancstr,
                                     &part_ext->cell_cell_extended2,
                                      NULL,
@@ -4151,6 +4149,7 @@ _part_extension_3d
                                      pface_ancstr,
                                      // pface_path_itrf_strd,
                                      // pface_path_itrf,
+                                     part_ext->shift_by_domain_face,
                                     &part_ext->border_face_ln_to_gn_ancstr,
                                     &part_ext->face_face_extended,
                                     &part_ext->border_face_group_idx,
@@ -4172,6 +4171,7 @@ _part_extension_3d
                                        pedge_ancstr,
                                        // pedge_path_itrf_strd,
                                        // pedge_path_itrf,
+                                       part_ext->shift_by_domain_edge,
                                       &part_ext->border_edge_ln_to_gn_ancstr,
                                       &part_ext->edge_edge_extended,
                                        NULL,
@@ -4193,6 +4193,7 @@ _part_extension_3d
                                      pvtx_ancstr,
                                      // pvtx_path_itrf_strd,
                                      // pvtx_path_itrf,
+                                     part_ext->shift_by_domain_vtx,
                                     &part_ext->border_vtx_ln_to_gn_ancstr,
                                     &part_ext->vtx_vtx_extended,
                                      NULL,
@@ -4543,12 +4544,6 @@ _part_extension_2d
       // > Transform group into tag
       if (part_ext->have_edge) {
         
-        /**
-         * Warning n_domain not implemented yet
-         * May be necessary to shift groud_id over all domain
-         * as well as groud_gnum
-         */
-        assert(part_ext->n_domain==1);
 
         int          _n_group           = part_ext->parts[i_domain][i_part].n_edge_group;
         int         *_group_entity_idx  = part_ext->parts[i_domain][i_part].edge_bound_idx;
@@ -5817,6 +5812,7 @@ _part_extension_2d
                                      pface_ancstr,
                                      // pface_path_itrf_strd,
                                      // pface_path_itrf,
+                                     part_ext->shift_by_domain_face,
                                     &part_ext->border_face_ln_to_gn_ancstr,
                                     &part_ext->face_face_extended,
                                      NULL,
@@ -5838,6 +5834,7 @@ _part_extension_2d
                                        pedge_ancstr,
                                        // pedge_path_itrf_strd,
                                        // pedge_path_itrf,
+                                       part_ext->shift_by_domain_edge,
                                       &part_ext->border_edge_ln_to_gn_ancstr,
                                       &part_ext->edge_edge_extended,
                                       &part_ext->border_edge_group_idx,
@@ -5859,6 +5856,7 @@ _part_extension_2d
                                      pvtx_ancstr,
                                      // pvtx_path_itrf_strd,
                                      // pvtx_path_itrf,
+                                     part_ext->shift_by_domain_vtx,
                                     &part_ext->border_vtx_ln_to_gn_ancstr,
                                     &part_ext->vtx_vtx_extended,
                                      NULL,
@@ -6199,6 +6197,16 @@ PDM_part_extension_compute2
     }
   }
 
+  part_ext->lpart_to_dom = NULL;
+  PDM_malloc(part_ext->lpart_to_dom, part_ext->ln_part_tot, int);
+  int l_part = 0;
+  for(int i_dom = 0; i_dom < part_ext->n_domain; ++i_dom) {
+    for(int i_part = 0; i_part < part_ext->n_part[i_dom]; ++i_part) {
+      part_ext->lpart_to_dom[l_part] = i_dom;
+      l_part += 1;
+    }
+  }
+
   _compute_offset(part_ext);
 
   /*
@@ -6324,12 +6332,18 @@ PDM_part_extension_free
         PDM_free(part_ext->cur_sens_edge[i_part+shift_part]);
         PDM_free(part_ext->cur_sens_vtx [i_part+shift_part]);
 
-        PDM_free(part_ext->face_face_extended_idx[i_part+shift_part]);
-        PDM_free(part_ext->face_face_extended    [i_part+shift_part]);
-        PDM_free(part_ext->edge_edge_extended_idx[i_part+shift_part]);
-        PDM_free(part_ext->edge_edge_extended    [i_part+shift_part]);
-        PDM_free(part_ext->vtx_vtx_extended_idx  [i_part+shift_part]);
-        PDM_free(part_ext->vtx_vtx_extended      [i_part+shift_part]);
+        if (part_ext->face_face_extended_idx!=NULL) {
+          PDM_free(part_ext->face_face_extended_idx[i_part+shift_part]);
+          PDM_free(part_ext->face_face_extended    [i_part+shift_part]);
+        }
+        if (part_ext->edge_edge_extended_idx!=NULL) {
+          PDM_free(part_ext->edge_edge_extended_idx[i_part+shift_part]);
+          PDM_free(part_ext->edge_edge_extended    [i_part+shift_part]);
+        }
+        if (part_ext->vtx_vtx_extended_idx!=NULL) {
+          PDM_free(part_ext->vtx_vtx_extended_idx  [i_part+shift_part]);
+          PDM_free(part_ext->vtx_vtx_extended      [i_part+shift_part]);
+        }
 
         if(part_ext->owner_vtx_part_bound == 1) {
           PDM_free(part_ext->parts[i_domain][i_part].vtx_part_bound_proc_idx);
@@ -6580,6 +6594,9 @@ PDM_part_extension_free
     PDM_free(part_ext->border_vtx_ln_to_gn);
     PDM_free(part_ext->border_vtx_ln_to_gn_ancstr);
     PDM_free(part_ext->border_vtx);
+
+    PDM_free(part_ext->lpart_to_dom);
+
 
   }
 
