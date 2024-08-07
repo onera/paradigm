@@ -39,41 +39,42 @@ extern "C" {
  *============================================================================*/
 
 static char *
-_fortran_to_c_string (
-  const char *application_name_f,
-  const int l_application_name_f
+_fortran_to_c_string
+(
+  const char *f_string,
+  const int l_f_string
 )
 {
-  char *application_name_c;
+  char *c_string;
   int imin = 0;
   int imax = 0;
 
-  while (imin < l_application_name_f && application_name_f[imin] == ' ') {
+  while (imin < l_f_string && f_string[imin] == ' ') {
     imin++;
   }
-  while (imax < l_application_name_f && application_name_f[l_application_name_f - imax - 1] == ' ') {
+  while (imax < l_f_string && f_string[l_f_string - imax - 1] == ' ') {
     imax++;
   }
 
-  imax = l_application_name_f - imax - 1;
+  imax = l_f_string - imax - 1;
 
   assert(imax >= imin);
 
-  if ((imax == l_application_name_f) || (imin == l_application_name_f)) {
-    PDM_malloc(application_name_c, 1, char);
-    application_name_c[0] = '\0';
+  if ((imax == l_f_string) || (imin == l_f_string)) {
+    PDM_malloc(c_string, 1, char);
+    c_string[0] = '\0';
   }
   else {
     int size = imax - imin + 2;
-    PDM_malloc(application_name_c, size, char);
+    PDM_malloc(c_string, size, char);
     int index = 0;
     for (int k = imin ; k <= imax ; k++) {
-      application_name_c[index++] = application_name_f[k];
+      c_string[index++] = f_string[k];
     }
-    application_name_c[index] = '\0';
+    c_string[index] = '\0';
   }
 
-  return application_name_c;
+  return c_string;
 }
 
 /**
