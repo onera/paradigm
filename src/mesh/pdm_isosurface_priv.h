@@ -237,8 +237,8 @@ struct _pdm_isosurface_t {
   int             **iso_n_vtx;
   double         ***iso_vtx_coord;
   PDM_g_num_t    ***iso_vtx_gnum;
-  int            ***iso_vtx_lparent_idx;
-  int            ***iso_vtx_lparent;
+  int            ***iso_vtx_parent_idx;
+  int            ***iso_vtx_parent_lnum;
   PDM_g_num_t    ***iso_vtx_parent_gnum;
   double         ***iso_vtx_parent_weight;
   int            ***isovalue_vtx_idx;
@@ -247,8 +247,8 @@ struct _pdm_isosurface_t {
   int            **iso_n_edge;
   int           ***iso_edge_vtx;
   PDM_g_num_t   ***iso_edge_gnum;
-  int           ***iso_edge_lparent_idx;
-  int           ***iso_edge_lparent;
+  int           ***iso_edge_parent_idx;
+  int           ***iso_edge_parent_lnum;
   PDM_g_num_t   ***iso_edge_parent_gnum;
   int             *iso_n_edge_group;
   int           ***iso_edge_group_idx;
@@ -264,8 +264,8 @@ struct _pdm_isosurface_t {
   int           ***iso_face_vtx_idx;
   int           ***iso_face_vtx;
   PDM_g_num_t   ***iso_face_gnum;
-  int           ***iso_face_lparent_idx;
-  int           ***iso_face_lparent;
+  int           ***iso_face_parent_idx;
+  int           ***iso_face_parent_lnum;
   PDM_g_num_t   ***iso_face_parent_gnum;
   int           ***isovalue_face_idx;
 
@@ -283,9 +283,38 @@ struct _pdm_isosurface_t {
   PDM_ownership_t  **iso_owner_vtx_parent_weight;
   PDM_ownership_t ***iso_owner_gnum;
   PDM_ownership_t ***iso_owner_connec;
-  PDM_ownership_t ***iso_owner_lparent;
+  PDM_ownership_t ***iso_owner_parent_lnum;
   PDM_ownership_t  **iso_owner_edge_bnd;
   PDM_ownership_t  **iso_owner_ptp;
+
+
+  // =========================
+  // > Distributed output data
+  int             *iso_dn_vtx;
+  double         **iso_dvtx_coord;
+  int            **iso_dvtx_parent_idx;
+  PDM_g_num_t    **iso_dvtx_parent_gnum;
+  double         **iso_dvtx_parent_weight;
+
+  int             *iso_dn_edge;
+  PDM_g_num_t    **iso_dedge_vtx;
+  int            **iso_dedge_parent_idx;
+  PDM_g_num_t    **iso_dedge_parent_gnum;
+  int            **iso_dedge_group_idx;
+  PDM_g_num_t    **iso_dedge_group_gnum;
+
+  int             *iso_dn_face;
+  int            **iso_dface_vtx_idx;
+  PDM_g_num_t    **iso_dface_vtx;
+  int            **iso_dface_parent_idx;
+  PDM_g_num_t    **iso_dface_parent_gnum;
+
+  // > Owners
+  PDM_ownership_t  *iso_owner_dvtx_coord;
+  PDM_ownership_t  *iso_owner_dvtx_parent_weight;
+  PDM_ownership_t **iso_owner_dconnec;
+  PDM_ownership_t **iso_owner_dparent;
+  PDM_ownership_t  *iso_owner_dedge_bnd;
 
 
   // ===============

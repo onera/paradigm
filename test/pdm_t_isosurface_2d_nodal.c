@@ -470,10 +470,10 @@ int main(int argc, char *argv[])
   if (field!=NULL) {
     for (int i_part=0; i_part<n_part; ++i_part) {
       if (field[i_part]!=NULL) {
-        free(field[i_part]);
+        PDM_free(field[i_part]);
       }
     }
-    free(field);
+    PDM_free(field);
   }
 
 

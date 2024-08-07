@@ -646,30 +646,30 @@ int main(int argc, char *argv[])
   if (iso_field!=NULL) {
     for (int i_part=0; i_part<n_part; ++i_part) {
       if (iso_field[i_part]!=NULL) {
-        free(iso_field[i_part]);
+        PDM_free(iso_field[i_part]);
       }
     }
-    free(iso_field);
+    PDM_free(iso_field);
   }
   if (itp_field!=NULL) {
     for (int i_part=0; i_part<n_part; ++i_part) {
       if (itp_field[i_part]!=NULL) {
-        free(itp_field[i_part]);
+        PDM_free(itp_field[i_part]);
       }
     }
-    free(itp_field);
+    PDM_free(itp_field);
   }
   for (int id_iso=0; id_iso<n_iso; ++id_iso) {
     if (iso_itp_field[id_iso]!=NULL) {
       for (int i_part=0; i_part<n_part; ++i_part) {
         if (iso_itp_field[id_iso][i_part]!=NULL) {
-          free(iso_itp_field[id_iso][i_part]);
+          PDM_free(iso_itp_field[id_iso][i_part]);
         }
       }
-      free(iso_itp_field[id_iso]);
+      PDM_free(iso_itp_field[id_iso]);
     }
   }
-  free(iso_itp_field);
+  PDM_free(iso_itp_field);
 
 
   PDM_MPI_Finalize();

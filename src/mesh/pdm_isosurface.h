@@ -827,13 +827,49 @@ PDM_isosurface_dconnectivity_get
 
 /**
  *
- * \brief TODO
+ * \brief Get iso-surface entities parent gnum for a given iso-value
+ *
+ * \param [in]  isos          \ref PDM_isosurface_t instance
+ * \param [in]  id_isosurface Iso-surface identifier
+ * \param [in]  entity_type   Entity type
+ * \param [out] dparent_idx   Parent index
+ * \param [out] dparent       Parent gnum
+ * \param [in]  ownership     Ownership
+ *
+ * \return Number of leading entities
  *
  */
+
 int
-PDM_isosurface_dvtx_parent_gnum_get
+PDM_isosurface_parent_gnum_get
 (
-  PDM_isosurface_t         *isos
+  PDM_isosurface_t     *isos,
+  int                   id_iso,
+  PDM_mesh_entities_t   entity_type,
+  int                 **parent_idx,
+  PDM_g_num_t         **parent_gnum,
+  PDM_ownership_t       ownership
+);
+
+
+/**
+ *
+ * \brief Get iso-surface parent weight for iso vertices for a given iso-value
+ *
+ * \param [in]  isos                \ref PDM_isosurface_t instance
+ * \param [in]  id_isosurface       Iso-surface identifier
+ * \param [out] dvtx_parent_weight  Parent weight
+ * \param [in]  ownership           Ownership
+ *
+ */
+
+void
+PDM_isosurface_dvtx_parent_weight_get
+(
+  PDM_isosurface_t     *isos,
+  int                   id_iso,
+  double              **dvtx_parent_weight,
+  PDM_ownership_t       ownership
 );
 
 /**
@@ -882,12 +918,11 @@ PDM_isosurface_dvtx_coord_get
  * \param [in]  isos               \ref PDM_isosurface_t instance
  * \param [in]  id_isosurface      Iso-surface identifier
  * \param [in]  entity_type        Entity type
- * \param [out] n_group            Number of groups
  * \param [out] dgroup_entity_idx  Index for group→entity connectivity (size = \p n_group + 1)
  * \param [out] dgroup_entity      Group→entity connectivity (group-specific global ids, size = \p group_entity_idx[\p n_group])
  * \param [in]  ownership          Ownership
  *
- * \return  Local number of block-distributed entities
+ * \return Number of groups
  *
  */
 
@@ -897,13 +932,11 @@ PDM_isosurface_dgroup_get
   PDM_isosurface_t     *isos,
   int                   id_isosurface,
   PDM_mesh_entities_t   entity_type,
-  int                  *n_group,
   int                 **dgroup_entity_idx,
   PDM_g_num_t         **dgroup_entity,
   PDM_ownership_t       ownership
 );
 
-// Sorties en dmesh_nodal ?
 
 /**
  * \brief Get isovalue

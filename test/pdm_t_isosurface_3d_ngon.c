@@ -336,6 +336,8 @@ _gen_mesh
                                          0,
                                          out_dmesh);
 
+      PDM_dmesh_compute_distributions(*out_dmesh);
+
       PDM_dmesh_nodal_to_dmesh_free(dmn_to_dm);
     }
     PDM_DMesh_nodal_free(dmn); // ownership issues on vertices if keep dmesh
@@ -738,7 +740,9 @@ int main
             &dmesh);
 
 
-  // Compute scalar field
+  /**
+   * Compute scalar field
+   */
   double **piso_field = NULL;
   double  *diso_field = NULL;
   if (n_part > 0) {
@@ -769,7 +773,9 @@ int main
   }
 
 
-  // Create Isosurface instance
+  /**
+   * Create Isosurface instance
+   */
   PDM_isosurface_t *isos = PDM_isosurface_create(comm, 3);
 
   if (n_part > 0) {
@@ -1214,10 +1220,105 @@ int main
         }
       }
       else {
-        // Block-distributed
-        // TODO
-      }
+        // > Vertices
+        double *dvtx_coords = NULL;
+        PDM_g_num_t dn_vtx = PDM_isosurface_dvtx_coord_get(isos, i_iso, &dvtx_coords, PDM_OWNERSHIP_KEEP);
+        if (1) {
+          log_trace("dn_vtx = "PDM_FMT_G_NUM"\n", dn_vtx);
+          PDM_log_trace_array_double(dvtx_coords, 3*dn_vtx, "dvtx_coords ::");
+        }
 
+        // > Edges
+        int         *dedge_vtx_idx = NULL;
+        PDM_g_num_t *dedge_vtx     = NULL;
+        PDM_g_num_t dn_edge = PDM_isosurface_dconnectivity_get(isos, i_iso, 
+                                                               PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                                              &dedge_vtx_idx,
+                                                              &dedge_vtx,
+                                                               PDM_OWNERSHIP_KEEP);
+        if (1) {
+          log_trace("dn_edge = "PDM_FMT_G_NUM"\n", dn_edge);
+          PDM_log_trace_array_long(dedge_vtx, 2*dn_edge, "dedge_vtx ::");
+        }
+
+        // > Faces
+        int         *dface_vtx_idx = NULL;
+        PDM_g_num_t *dface_vtx     = NULL;
+        PDM_g_num_t dn_face = PDM_isosurface_dconnectivity_get(isos, i_iso, 
+                                                               PDM_CONNECTIVITY_TYPE_FACE_VTX,
+                                                              &dface_vtx_idx,
+                                                              &dface_vtx,
+                                                               PDM_OWNERSHIP_KEEP);
+        if (1) {
+          log_trace("dn_face = "PDM_FMT_G_NUM"\n", dn_face);
+          int size_face_vtx = dface_vtx_idx[dn_face];
+          PDM_log_trace_array_int (dface_vtx_idx, dn_face      , "dface_vtx_idx ::");
+          PDM_log_trace_array_long(dface_vtx    , size_face_vtx, "dface_vtx     ::");
+        }
+
+        // > Groups
+        int         *dedge_group_idx = NULL;
+        PDM_g_num_t *dedge_group     = NULL;
+        int n_group = PDM_isosurface_dgroup_get(isos, i_iso, 
+                                                PDM_MESH_ENTITY_EDGE,
+                                               &dedge_group_idx,
+                                               &dedge_group,
+                                                PDM_OWNERSHIP_KEEP);
+        if (1) {
+          log_trace("n_group = %d\n", n_group);
+          int size_edge_group = dedge_group_idx[n_group];
+          PDM_log_trace_array_int (dedge_group_idx, n_group        , "dedge_group_idx ::");
+          PDM_log_trace_array_long(dedge_group    , size_edge_group, "dedge_group ::");
+        }
+
+        /**
+         * Prepare dmesh_nodal for ouput
+         */
+        PDM_dmesh_nodal_t *iso_dmn = PDM_DMesh_nodal_create(comm,
+                                                            2,
+                                                            dn_vtx,
+                                                            0,
+                                                            dn_face,
+                                                            dn_edge);
+
+        PDM_DMesh_nodal_coord_set(iso_dmn, dn_vtx, dvtx_coords, PDM_OWNERSHIP_USER);
+
+        int edge_section = PDM_DMesh_nodal_section_add(iso_dmn,
+                                                       PDM_GEOMETRY_KIND_RIDGE,
+                                                       PDM_MESH_NODAL_BAR2);
+        PDM_DMesh_nodal_section_std_set(iso_dmn,
+                                        PDM_GEOMETRY_KIND_RIDGE,
+                                        edge_section,
+                                        dn_edge,
+                                        dedge_vtx,
+                                        PDM_OWNERSHIP_USER);
+
+        int face_section = PDM_DMesh_nodal_section_add(iso_dmn,
+                                                       PDM_GEOMETRY_KIND_SURFACIC,
+                                                       PDM_MESH_NODAL_POLY_2D);
+
+        PDM_DMesh_nodal_section_poly2d_set(iso_dmn,
+                                           PDM_GEOMETRY_KIND_SURFACIC,
+                                           face_section,
+                                           dn_face,
+                                           dface_vtx_idx,
+                                           dface_vtx,
+                                           PDM_OWNERSHIP_USER);
+
+        PDM_DMesh_nodal_section_group_elmt_set(iso_dmn,
+                                               PDM_GEOMETRY_KIND_RIDGE,
+                                               n_group,
+                                               dedge_group_idx,
+                                               dedge_group,
+                                               PDM_OWNERSHIP_USER);
+
+        sprintf(out_name, "isosurface_3d_ngon_iso_edge_%d.vtk", i_iso);
+        PDM_dmesh_nodal_dump_vtk(iso_dmn, PDM_GEOMETRY_KIND_RIDGE, out_name);
+        sprintf(out_name, "isosurface_3d_ngon_iso_%d.vtk", i_iso);
+        PDM_dmesh_nodal_dump_vtk(iso_dmn, PDM_GEOMETRY_KIND_SURFACIC, out_name);
+
+        PDM_DMesh_nodal_free(iso_dmn);
+      }
 
     }
   }

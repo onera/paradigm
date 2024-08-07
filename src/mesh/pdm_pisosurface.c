@@ -515,24 +515,24 @@ PDM_isosurface_local_parent_get
     PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: extract_kind is not PDM_EXTRACT_PART_KIND_LOCAL.\n");
   }
 
-  if (isos->iso_owner_lparent[id_isosurface]!=NULL) {
+  if (isos->iso_owner_parent_lnum[id_isosurface]!=NULL) {
     int n_entity = 0;
-    isos->iso_owner_lparent[id_isosurface][i_part][entity_type] = ownership;
+    isos->iso_owner_parent_lnum[id_isosurface][i_part][entity_type] = ownership;
     
     if (entity_type==PDM_MESH_ENTITY_VTX) {
       n_entity = isos->iso_n_vtx[id_isosurface][i_part];
-      *entity_parent_idx = isos->iso_vtx_lparent_idx[id_isosurface][i_part];
-      *entity_parent     = isos->iso_vtx_lparent    [id_isosurface][i_part];
+      *entity_parent_idx = isos->iso_vtx_parent_idx [id_isosurface][i_part];
+      *entity_parent     = isos->iso_vtx_parent_lnum[id_isosurface][i_part];
     }
     else if (entity_type==PDM_MESH_ENTITY_EDGE) {
       n_entity = isos->iso_n_edge[id_isosurface][i_part];
-      *entity_parent_idx = isos->iso_edge_lparent_idx[id_isosurface][i_part];
-      *entity_parent     = isos->iso_edge_lparent    [id_isosurface][i_part];
+      *entity_parent_idx = isos->iso_edge_parent_idx [id_isosurface][i_part];
+      *entity_parent     = isos->iso_edge_parent_lnum[id_isosurface][i_part];
     }
     else if (entity_type==PDM_MESH_ENTITY_FACE) {
       n_entity = isos->iso_n_face   [id_isosurface][i_part];
-      *entity_parent_idx = isos->iso_face_lparent_idx[id_isosurface][i_part];
-      *entity_parent     = isos->iso_face_lparent    [id_isosurface][i_part];
+      *entity_parent_idx = isos->iso_face_parent_idx [id_isosurface][i_part];
+      *entity_parent     = isos->iso_face_parent_lnum[id_isosurface][i_part];
     }
     else {
       PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: has no mesh entity of type %d.\n", entity_type);
@@ -549,11 +549,11 @@ PDM_isosurface_local_parent_get
 int
 PDM_isosurface_vtx_parent_weight_get
 (
- PDM_isosurface_t  *isos,
- int                id_isosurface,
- int                i_part,
- double           **vtx_parent_weight,
- PDM_ownership_t    ownership
+  PDM_isosurface_t  *isos,
+  int                id_isosurface,
+  int                i_part,
+  double           **vtx_parent_weight,
+  PDM_ownership_t    ownership
 )
 {
   _check_is_not_dist(isos);
