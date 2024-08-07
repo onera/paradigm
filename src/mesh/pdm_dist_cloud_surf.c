@@ -1729,9 +1729,9 @@ _dist_cloud_surf_compute_optim
     PDM_part_mesh_nodal_t       *extract_pmn  = NULL;
     PDM_part_mesh_nodal_elmts_t *extract_pmne = NULL;
     if (pmne != NULL) {
-      PDM_extract_part_part_mesh_nodal_get2(extrp,
-                                            &extract_pmn,
-                                            PDM_OWNERSHIP_KEEP);
+      PDM_extract_part_part_mesh_nodal_get(extrp,
+                                           &extract_pmn,
+                                           PDM_OWNERSHIP_KEEP);
       extract_pmne = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(extract_pmn,
                                                                    geom_kind);
     }

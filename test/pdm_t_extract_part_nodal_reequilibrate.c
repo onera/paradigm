@@ -708,9 +708,9 @@ int main
     // }
 
     PDM_part_mesh_nodal_t *extract_pmn = NULL;
-    PDM_extract_part_part_mesh_nodal_get2(extrp,
-                                          &extract_pmn,
-                                          PDM_OWNERSHIP_USER);
+    PDM_extract_part_part_mesh_nodal_get(extrp,
+                                         &extract_pmn,
+                                         PDM_OWNERSHIP_USER);
 
     for (PDM_geometry_kind_t geom_kind_child = geom_kind; geom_kind_child < PDM_GEOMETRY_KIND_CORNER; geom_kind_child++) {
       char name[999];

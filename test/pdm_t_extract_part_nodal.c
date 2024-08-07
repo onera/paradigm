@@ -555,9 +555,9 @@ int main(int argc, char *argv[])
   PDM_gnum_location_free(gnum_loc);
 
   PDM_part_mesh_nodal_t *extract_pmn = NULL;
-  PDM_extract_part_part_mesh_nodal_get2(extrp,
-                                        &extract_pmn,
-                                        PDM_OWNERSHIP_KEEP);
+  PDM_extract_part_part_mesh_nodal_get(extrp,
+                                       &extract_pmn,
+                                       PDM_OWNERSHIP_KEEP);
 
 
   /*

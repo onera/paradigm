@@ -415,20 +415,12 @@ PDM_extract_part_vtx_coord_get
  * \brief Retreive the partitionned mesh
  *
  * \param [in]  extrp             Pointer to \ref PDM_extract_part_t object
- * \param [out] extract_pmne      Partitionned mesh nodal, describe by elements (see \ref PDM_part_mesh_nodal_elmts_t )
+ * \param [out] extract_pmn       Partitionned mesh nodal, describe by elements (see \ref PDM_part_mesh_nodal_t )
  * \param [in]  ownership         Who is responsible to free retreived data ?
  *
  */
 void
 PDM_extract_part_part_mesh_nodal_get
-(
-  PDM_extract_part_t           *extrp,
-  PDM_part_mesh_nodal_elmts_t **extract_pmne,
-  PDM_ownership_t               ownership
-);
-
-void
-PDM_extract_part_part_mesh_nodal_get2
 (
   PDM_extract_part_t     *extrp,
   PDM_part_mesh_nodal_t **extract_pmn,

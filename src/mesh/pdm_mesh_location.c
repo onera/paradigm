@@ -3144,9 +3144,9 @@ PDM_mesh_location_compute
     }
 
     PDM_part_mesh_nodal_t *extract_pmn = NULL;
-    PDM_extract_part_part_mesh_nodal_get2(extrp,
-                                          &extract_pmn,
-                                          PDM_OWNERSHIP_KEEP);
+    PDM_extract_part_part_mesh_nodal_get(extrp,
+                                         &extract_pmn,
+                                         PDM_OWNERSHIP_KEEP);
     PDM_part_mesh_nodal_elmts_t *extract_pmne = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(extract_pmn,
                                                                                               geom_kind);
 

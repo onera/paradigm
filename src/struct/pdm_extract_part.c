@@ -6919,51 +6919,6 @@ PDM_extract_part_vtx_coord_get
 void
 PDM_extract_part_part_mesh_nodal_get
 (
-  PDM_extract_part_t           *extrp,
-  PDM_part_mesh_nodal_elmts_t **extract_pmne,
-  PDM_ownership_t               ownership
-)
-{
-  // *extract_pmne = extrp->extract_pmne;
-
-  // if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
-  //   extrp->is_owner_extract_pmne = PDM_FALSE;
-  // } else {
-  //   extrp->is_owner_extract_pmne = PDM_TRUE;
-  // }
-  PDM_geometry_kind_t geom_kind = PDM_GEOMETRY_KIND_MAX;
-  switch (extrp->dim) {
-    case 3: {
-      geom_kind = PDM_GEOMETRY_KIND_VOLUMIC;
-      break;
-    }
-    case 2: {
-      geom_kind = PDM_GEOMETRY_KIND_SURFACIC;
-      break;
-    }
-    case 1: {
-      geom_kind = PDM_GEOMETRY_KIND_RIDGE;
-      break;
-    }
-    default: {
-      PDM_error(__FILE__, __LINE__, 0, "Invalid mesh dimension %d\n", extrp->dim);
-    }
-  }
-
-  *extract_pmne = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(extrp->extract_pmn,
-                                                                geom_kind);
-
-
-  if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
-    extrp->is_owner_extract_pmn = PDM_FALSE;
-  } else {
-    extrp->is_owner_extract_pmn = PDM_TRUE;
-  }
-}
-
-void
-PDM_extract_part_part_mesh_nodal_get2
-(
   PDM_extract_part_t     *extrp,
   PDM_part_mesh_nodal_t **extract_pmn,
   PDM_ownership_t         ownership
