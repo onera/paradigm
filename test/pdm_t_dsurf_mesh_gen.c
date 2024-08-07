@@ -98,8 +98,8 @@ _read_args
  int           *post,
  int           *method,
  int           *have_random,
- int           *randomTimeInit,
- int           *randomMeshAInit,
+ int           *random_time_init,
+ int           *random_mesh_a_init,
  int           *n_proc_data
 )
 {
@@ -150,19 +150,19 @@ _read_args
         *n_partA = atoi (argv[i]);
       }
     }
-    else if (strcmp (argv[i], "-randomMeshAInit") == 0) {
+    else if (strcmp (argv[i], "-random_mesh_a_init") == 0) {
       i++;
       if (i >= argc)
         _usage (EXIT_FAILURE);
       else {
-        *randomMeshAInit = atoi (argv[i]);
+        *random_mesh_a_init = atoi (argv[i]);
       }
     }
     else if (strcmp (argv[i], "-no_random") == 0) {
       *have_random = 0;
     }
     else if (strcmp (argv[i], "-random_time_init") == 0) {
-      *randomTimeInit = 1;
+      *random_time_init = 1;
     }
     else if (strcmp (argv[i], "-post") == 0) {
       *post = 1;
@@ -686,7 +686,7 @@ _create_split_mesh
       int _n_face = 0;
       int _s_face_edge = 0;
       (*n_face)[ipart] = _n_face;
-      PDM_malloc((*face_vtx_idx)[ipart],(_n_face + 1), int);
+      PDM_malloc((*face_vtx_idx)[ipart], _n_face + 1, int);
       (*face_vtx_idx) [ipart][0] = 0;
       PDM_malloc((*face_vtx     )[ipart], _s_face_edge, int);
       PDM_malloc((*face_ln_to_gn)[ipart], _n_face     , PDM_g_num_t);
@@ -800,12 +800,12 @@ _export_ini_mesh
                        (void *) n_part_procs, 1, PDM_MPI_INT,
                        PDM_MPI_COMM_WORLD);
 
-    int *debPartProcs;
-    PDM_malloc(debPartProcs, n_rank + 1, int);
+    int *deb_part_procs;
+    PDM_malloc(deb_part_procs, n_rank + 1, int);
 
-    debPartProcs[0] = 0;
+    deb_part_procs[0] = 0;
     for (int i = 0; i < n_rank; i++) {
-      debPartProcs[i+1] = debPartProcs[i] + n_part_procs[i];
+      deb_part_procs[i+1] = deb_part_procs[i] + n_part_procs[i];
     }
 
     PDM_free(n_part_procs);
@@ -878,7 +878,7 @@ _export_ini_mesh
       nsom_part[ipart] = n_vtx[ipart];
 
       for (int i = 0; i < n_face[ipart]; i++) {
-        val_num_part[ipart][i] = ipart + 1 + debPartProcs[i_rank];
+        val_num_part[ipart][i] = ipart + 1 + deb_part_procs[i_rank];
       }
 
       for (int i = 0; i < n_vtx[ipart]; i++) {
@@ -945,7 +945,7 @@ _export_ini_mesh
                           id_geom);
     PDM_writer_free (id_cs);
 
-    PDM_free(debPartProcs);
+    PDM_free(deb_part_procs);
 
 }
 
@@ -978,9 +978,9 @@ char *argv[]
   int              post    = 0;
   PDM_part_split_t method  = PDM_PART_SPLIT_HILBERT;
   int              have_random = 1;
-  int              randomTimeInit = 0;
+  int              random_time_init = 0;
 
-  int              randomMeshAInit = -1;
+  int              random_mesh_a_init = -1;
 
   int              n_proc_data = -1;
 
@@ -1001,8 +1001,8 @@ char *argv[]
               &post,
               (int *) &method,
               &have_random,
-              &randomTimeInit,
-              &randomMeshAInit,
+              &random_time_init,
+              &random_mesh_a_init,
               &n_proc_data
               );
 
@@ -1019,7 +1019,7 @@ char *argv[]
     PDM_printf ("  - post : %d\n", post);
     PDM_printf ("  - method : %d\n", method);
     PDM_printf ("  - have_random : %d\n", have_random);
-    PDM_printf ("  - randomTimeInit : %d\n", randomTimeInit);
+    PDM_printf ("  - random_time_init : %d\n", random_time_init);
   }
 
   /*
@@ -1100,12 +1100,12 @@ char *argv[]
   ymin = yminA;
   n_part = n_partA;
 
-  if (randomTimeInit) {
+  if (random_time_init) {
     initRandom =  time( NULL );
   }
 
-  if (randomMeshAInit != -1) {
-    initRandom = randomMeshAInit;
+  if (random_mesh_a_init != -1) {
+    initRandom = random_mesh_a_init;
   }
 
   _create_split_mesh (activeRankMesh,

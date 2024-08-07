@@ -659,20 +659,20 @@ int main(int argc, char *argv[])
         double      *_face_edge     = NULL;
         double      *_face_updown   = NULL;
         PDM_g_num_t *_face_ln_to_gn = NULL;
-        PDM_malloc(_face_vtx_idx , (2*n_edge + 1)          , int);
-        PDM_malloc(_face_vtx     , 2 * face_vtx_idx[n_face], int);
-        PDM_malloc(_face_edge    , 2 * n_edge              , double);
-        PDM_malloc(_face_updown  , 2 * n_edge              , double);
+        PDM_malloc(_face_vtx_idx , 2 * n_edge + 1          , int        );
+        PDM_malloc(_face_vtx     , 2 * face_vtx_idx[n_face], int        );
+        PDM_malloc(_face_edge    , 2 * n_edge              , double     );
+        PDM_malloc(_face_updown  , 2 * n_edge              , double     );
         PDM_malloc(_face_ln_to_gn, 2 * n_edge              , PDM_g_num_t);
         _face_vtx_idx[0] = 0;
 
         int _n_cellface        = 0;
-        int _s_cellface        = 6*2*n_edge;
+        int _s_cellface        = 6 * 2 * n_edge;
         int _s_cellface_vtx    = _s_cellface * 8;
         int *_cellface_vtx_idx = NULL;
         int *_cellface_vtx     = NULL;
-        PDM_malloc(_cellface_vtx_idx, (_s_cellface + 1), int);
-        PDM_malloc(_cellface_vtx    , _s_cellface_vtx  , int);
+        PDM_malloc(_cellface_vtx_idx, _s_cellface + 1, int);
+        PDM_malloc(_cellface_vtx    , _s_cellface_vtx, int);
         _cellface_vtx_idx[0] = 0;
 
         double      *_cellface_updown   = NULL;
@@ -681,7 +681,7 @@ int main(int argc, char *argv[])
         PDM_malloc(_cellface_ln_to_gn, _s_cellface, PDM_g_num_t);
 
         double *_updown_pts;
-        PDM_malloc(_updown_pts, 2*n_edge*3, double);
+        PDM_malloc(_updown_pts, 2 * n_edge * 3, double);
         for (int iedge = 0; iedge < n_edge; iedge++) {
 
           if (upwind_face_out[iedge] >= 0) {

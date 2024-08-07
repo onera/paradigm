@@ -425,12 +425,12 @@ _adaptative_tree2
     double      *extract_box_center              = NULL;
     int         *extract_box_to_coarse_box_pts_n = NULL;
     int         *extract_box_to_coarse_box_pts   = NULL;
-    PDM_malloc(extract_box_gnum               ,     n_extract                      ,PDM_g_num_t);
-    PDM_malloc(weight                         ,     n_extract                      ,double     );
-    PDM_malloc(extract_box_extents            , 6 * n_extract                      ,double     );
-    PDM_malloc(extract_box_center             , 3 * n_extract                      ,double     );
-    PDM_malloc(extract_box_to_coarse_box_pts_n, 6 * n_extract                      ,int        );
-    PDM_malloc(extract_box_to_coarse_box_pts  , n_extract_box_to_coarse_box_pts_tot,int        );
+    PDM_malloc(extract_box_gnum               ,     n_extract                      , PDM_g_num_t);
+    PDM_malloc(weight                         ,     n_extract                      , double     );
+    PDM_malloc(extract_box_extents            , 6 * n_extract                      , double     );
+    PDM_malloc(extract_box_center             , 3 * n_extract                      , double     );
+    PDM_malloc(extract_box_to_coarse_box_pts_n, 6 * n_extract                      , int        );
+    PDM_malloc(extract_box_to_coarse_box_pts  , n_extract_box_to_coarse_box_pts_tot, int        );
 
     int idx_write = 0;
     n_extract = 0;
@@ -1662,8 +1662,8 @@ _adaptative_tree4
     log_trace("node_id = %i -> %i / %i \n", node_id, n_pts_in_leaf, n_box_in_leaf);
   }
 
-  double *node_extents;
-  PDM_malloc(node_extents,6 * n_extract, double);
+  double *node_extents = NULL;
+  PDM_malloc(node_extents, 6 * n_extract, double);
   PDM_box_tree_extract_node_extents(coarse_bt_shared, n_extract, extract_leaf_id, node_extents, 0);
 
   log_trace("n_extract = %i \n", n_extract);
