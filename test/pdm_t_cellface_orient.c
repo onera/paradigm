@@ -356,8 +356,8 @@ int main(int argc, char *argv[])
   PDM_malloc(n_part_procs,n_rank,int);
 
   PDM_MPI_Allgather((void *) &n_part,      1, PDM_MPI_INT,
-                (void *) n_part_procs, 1, PDM_MPI_INT,
-                PDM_MPI_COMM_WORLD);
+                    (void *) n_part_procs, 1, PDM_MPI_INT,
+                    PDM_MPI_COMM_WORLD);
 
   int *deb_part_procs = NULL;
   PDM_malloc(deb_part_procs, n_rank + 1, int);

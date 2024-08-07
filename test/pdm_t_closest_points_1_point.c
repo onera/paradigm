@@ -157,7 +157,7 @@ _random_pts
     rand();
   }
 
-  PDM_malloc(*pts_g_num, (*n_pts), PDM_g_num_t);
+  PDM_malloc(*pts_g_num, *n_pts, PDM_g_num_t);
   for (int i = 0; i < *n_pts; i++) {
     (*pts_g_num)[i] = distrib_pts[i_rank] + i + 1;
   }

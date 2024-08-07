@@ -611,7 +611,7 @@ _calcul_numabs_face_poly3d
   int n_elt_recv = (recv_buff_idx[n_procs-1] + recv_buff_n[n_procs-1]) / n_octet_exch;
 
   PDM_g_num_t *face_abs = NULL;
-  PDM_malloc(face_abs, (d_elt_proc[i_proc+1] - d_elt_proc[i_proc] + 1), PDM_g_num_t);
+  PDM_malloc(face_abs, d_elt_proc[i_proc+1] - d_elt_proc[i_proc] + 1, PDM_g_num_t);
   PDM_g_num_t n_face_proc = 0;
 
   face_abs[0] = 0;

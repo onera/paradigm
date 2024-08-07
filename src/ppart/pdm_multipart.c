@@ -1732,7 +1732,7 @@ _deduce_part_face_connectivity
     int *_dedge_vtx_idx = NULL;
     if(dedge_vtx_idx == NULL)  {
       int dn_edge = edge_distrib[i_rank+1] - edge_distrib[i_rank];
-      PDM_malloc(_dedge_vtx_idx, dn_edge+1 ,int);
+      PDM_malloc(_dedge_vtx_idx, dn_edge+1, int);
       for(int i_edge = 0; i_edge < dn_edge+1; ++i_edge) {
         _dedge_vtx_idx[i_edge] = 2*i_edge;
       }

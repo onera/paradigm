@@ -398,7 +398,7 @@ const int                   append
 
   /* Initialize base name and partial file names */
 
-  PDM_malloc(this_case->name, (strlen(name) + 1), char);
+  PDM_malloc(this_case->name, strlen(name) + 1, char);
   strcpy(this_case->name, name);
   name_len = strlen(name);
 
@@ -415,7 +415,7 @@ const int                   append
 
   this_case->dir_name_length = (int) prefix_len;
 
-  PDM_malloc(this_case->case_file_name, (prefix_len + name_len + 6), char);
+  PDM_malloc(this_case->case_file_name, prefix_len + name_len + 6, char);
   if (dir_prefix != NULL) {
     strcpy(this_case->case_file_name, dir_prefix);
     strcat(this_case->case_file_name, "/");

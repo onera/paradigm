@@ -642,7 +642,7 @@ _parse_options
 
   strcpy(_options_str, options_str);
   str2 = _options_str;
-  PDM_malloc(*options, (*n_options), PDM_writer_option_t);
+  PDM_malloc(*options, *n_options, PDM_writer_option_t);
   PDM_writer_option_t *_curr = *options;
 
   do {
@@ -2190,8 +2190,8 @@ PDM_writer_name_map_add
 
   _pdm_writer_name_map_tab_add(cs->name_map_tab, name_map);
 
-  PDM_malloc(name_map->public_name ,(strlen(public_name ) + 1), char);
-  PDM_malloc(name_map->private_name,(strlen(private_name) + 1), char);
+  PDM_malloc(name_map->public_name , strlen(public_name ) + 1, char);
+  PDM_malloc(name_map->private_name, strlen(private_name) + 1, char);
 
   strcpy(name_map->public_name, public_name);
   strcpy(name_map->private_name, private_name);
@@ -2241,7 +2241,7 @@ PDM_writer_cst_global_var_create
   PDM_writer_cst_global_var_t *var;
   PDM_malloc(var, 1, PDM_writer_cst_global_var_t);
 
-  PDM_malloc(var->nom_var, (1 + strlen (nom_var)), char);
+  PDM_malloc(var->nom_var, 1 + strlen (nom_var), char);
   strcpy (var->nom_var, nom_var);
 
   var->_val = val_var;  
@@ -2344,7 +2344,7 @@ PDM_writer_var_create
   _var_init (var);
 
   size_t l_nom_var = strlen(nom_var);
-  PDM_malloc(var->nom_var, (l_nom_var + 1), char);
+  PDM_malloc(var->nom_var, l_nom_var + 1, char);
   strcpy(var->nom_var, nom_var);   /* Nom de la variable */
 
   var->st_dep_tps = st_dep_tps;    /* Variable en temps */
@@ -2711,7 +2711,7 @@ PDM_writer_fmt_add
   PDM_malloc(fmt_ptr, 1, PDM_writer_fmt_t);
   fmt_tab[n_fmt_tab++] = fmt_ptr;
 
-  PDM_malloc(fmt_ptr->name, (strlen(name) + 1), char);
+  PDM_malloc(fmt_ptr->name, strlen(name) + 1, char);
   strcpy (fmt_ptr->name, name);
 
   fmt_ptr->create_fct      = create_fct;

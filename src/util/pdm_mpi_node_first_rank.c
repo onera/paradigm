@@ -146,7 +146,7 @@ PDM_MPI_Comm comm
   int n_send = (int) hostname_length;
 
   PDM_MPI_Allreduce((void *) &hostname_length, (void *) &n_send, 1,
-                PDM_MPI_INT, PDM_MPI_MAX, node_comm);
+                    PDM_MPI_INT, PDM_MPI_MAX, node_comm);
 
   n_send += 1; /* \0 */
 
@@ -181,7 +181,7 @@ PDM_MPI_Comm comm
   int is_same_node_max;
 
   PDM_MPI_Allreduce((void *) &is_same_node, (void *) &is_same_node_max, 1,
-                PDM_MPI_INT, PDM_MPI_MAX, node_comm);
+                    PDM_MPI_INT, PDM_MPI_MAX, node_comm);
 
   if (is_same_node_max == 1) {
 
@@ -253,7 +253,7 @@ PDM_MPI_Comm comm
 
 
     PDM_MPI_Allreduce((void *) &master_node_rank, (void *) &nb_io_rank, 1,
-                  PDM_MPI_INT, PDM_MPI_SUM, comm);
+                      PDM_MPI_INT, PDM_MPI_SUM, comm);
 
     int comm_size;
     PDM_MPI_Comm_size(comm, &comm_size);
