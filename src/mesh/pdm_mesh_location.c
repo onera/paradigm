@@ -3143,10 +3143,16 @@ PDM_mesh_location_compute
       log_trace("Yeah :D\n");
     }
 
-    PDM_part_mesh_nodal_elmts_t *extract_pmne = NULL;
-    PDM_extract_part_part_mesh_nodal_get(extrp,
-                                         &extract_pmne,
-                                         PDM_OWNERSHIP_USER);
+    // PDM_part_mesh_nodal_elmts_t *extract_pmne = NULL;
+    // PDM_extract_part_part_mesh_nodal_get(extrp,
+    //                                      &extract_pmne,
+    //                                      PDM_OWNERSHIP_KEEP);
+    PDM_part_mesh_nodal_t *extract_pmn = NULL;
+    PDM_extract_part_part_mesh_nodal_get2(extrp,
+                                          &extract_pmn,
+                                          PDM_OWNERSHIP_KEEP);
+    PDM_part_mesh_nodal_elmts_t *extract_pmne = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(extract_pmn,
+                                                                                              geom_kind);
 
     PDM_part_to_part_t *ptp_elt = NULL;
     PDM_extract_part_part_to_part_get(extrp,
@@ -3154,23 +3160,27 @@ PDM_mesh_location_compute
                                       &ptp_elt,
                                       PDM_OWNERSHIP_USER);
 
-    int          pextract_n_elt        = 0;
-    int          pextract_n_vtx        = 0;
-    double      *pextract_vtx_coord    = NULL;
+    // int     pextract_n_elt     = 0;
+    int     pextract_n_vtx     = 0;
+    double *pextract_vtx_coord = NULL;
 
-    pextract_n_elt = PDM_extract_part_n_entity_get(extrp,
-                                                   0,
-                                                   entity_type);
-    assert(pextract_n_elt == dn_elt2);
+    // pextract_n_elt = PDM_extract_part_n_entity_get(extrp,
+    //                                                0,
+    //                                                entity_type);
+    // assert(pextract_n_elt == dn_elt2);
 
-    pextract_n_vtx = PDM_extract_part_n_entity_get(extrp,
-                                                   0,
-                                                   PDM_MESH_ENTITY_VTX);
+    // pextract_n_vtx = PDM_extract_part_n_entity_get(extrp,
+    //                                                0,
+    //                                                PDM_MESH_ENTITY_VTX);
 
-    PDM_extract_part_vtx_coord_get(extrp,
-                                   0,
-                                   &pextract_vtx_coord,
-                                   PDM_OWNERSHIP_KEEP);
+    // PDM_extract_part_vtx_coord_get(extrp,
+    //                                0,
+    //                                &pextract_vtx_coord,
+    //                                PDM_OWNERSHIP_KEEP);
+
+    pextract_n_vtx     = PDM_part_mesh_nodal_n_vtx_get    (extract_pmn, 0);
+    pextract_vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(extract_pmn, 0);
+    log_trace("extracted vtx2: %p\n", (void *) pextract_vtx_coord);
 
     if (dbg_enabled && delt_g_num_geom2 != NULL) {
       _dump_pmne(ml->comm,
@@ -3210,16 +3220,16 @@ PDM_mesh_location_compute
     double **pelt_pts_uvw2        = NULL;
 
     PDM_point_location_nodal(extract_pmne,
-                              1,
-            (const double **) &pextract_vtx_coord,
-            (const int    **) &delt_pts_idx2,
-            (const double **) &delt_pts_coord2,
-                              newton_tolerance,
-                              &pelt_pts_distance2,
-                              &pelt_pts_proj_coord2,
-                              &pelt_pts_weight_idx2,
-                              &pelt_pts_weight2,
-                              &pelt_pts_uvw2);
+                             1,
+           (const double **) &pextract_vtx_coord,
+           (const int    **) &delt_pts_idx2,
+           (const double **) &delt_pts_coord2,
+                             newton_tolerance,
+                             &pelt_pts_distance2,
+                             &pelt_pts_proj_coord2,
+                             &pelt_pts_weight_idx2,
+                             &pelt_pts_weight2,
+                             &pelt_pts_uvw2);
 
     double *delt_pts_distance2   = pelt_pts_distance2  [0];
     double *delt_pts_proj_coord2 = pelt_pts_proj_coord2[0];
@@ -3232,7 +3242,7 @@ PDM_mesh_location_compute
     PDM_free(pelt_pts_weight2    );
     PDM_free(pelt_pts_uvw2       );
 
-    PDM_part_mesh_nodal_elmts_free(extract_pmne);
+    // PDM_part_mesh_nodal_elmts_free(extract_pmne);
     PDM_extract_part_free(extrp);
     PDM_free(delt_init_location2);
 

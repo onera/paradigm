@@ -2404,24 +2404,31 @@ _mesh_intersection_vol_vol
 
     if (mi->mesh[i] == NULL) {
       /* From part mesh nodal */
-      PDM_part_mesh_nodal_elmts_t *extract_pmne = NULL;
-      PDM_extract_part_part_mesh_nodal_get(mi->extrp_mesh[i],
-                                           &extract_pmne,
-                                           PDM_OWNERSHIP_USER);
+      // PDM_part_mesh_nodal_elmts_t *extract_pmne = NULL;
+      // PDM_extract_part_part_mesh_nodal_get(mi->extrp_mesh[i],
+      //                                      &extract_pmne,
+      //                                      PDM_OWNERSHIP_USER);
 
-      PDM_part_mesh_nodal_t *extract_pmn = PDM_part_mesh_nodal_create(mi->dim_mesh[i],
-                                                                      1,
-                                                                      mi->comm);
+      // PDM_part_mesh_nodal_t *extract_pmn = PDM_part_mesh_nodal_create(mi->dim_mesh[i],
+      //                                                                 1,
+      //                                                                 mi->comm);
 
-      PDM_part_mesh_nodal_coord_set(extract_pmn,
-                                    0,
-                                    n_vtx       [i],
-                                    vtx_coord   [i],
-                                    vtx_ln_to_gn[i],
-                                    PDM_OWNERSHIP_USER);
+      // PDM_part_mesh_nodal_coord_set(extract_pmn,
+      //                               0,
+      //                               n_vtx       [i],
+      //                               vtx_coord   [i],
+      //                               vtx_ln_to_gn[i],
+      //                               PDM_OWNERSHIP_USER);
 
-      PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(extract_pmn,
-                                                    extract_pmne);
+      // PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(extract_pmn,
+      //                                               extract_pmne);
+      PDM_part_mesh_nodal_t *extract_pmn = NULL;
+      PDM_extract_part_part_mesh_nodal_get2(mi->extrp_mesh[i],
+                                            &extract_pmn,
+                                            PDM_OWNERSHIP_USER);
+      PDM_part_mesh_nodal_elmts_t *extract_pmne = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(extract_pmn,
+                                                                                                PDM_GEOMETRY_KIND_VOLUMIC);
+
 
       // Convert part_mesh_nodal to part_mesh
       if (dbg_enabled) {

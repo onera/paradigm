@@ -1726,21 +1726,30 @@ _dist_cloud_surf_compute_optim
       PDM_free(part_elt_extents);
     }
 
+    PDM_part_mesh_nodal_t       *extract_pmn  = NULL;
     PDM_part_mesh_nodal_elmts_t *extract_pmne = NULL;
     if (pmne != NULL) {
-      PDM_extract_part_part_mesh_nodal_get(extrp,
-                                           &extract_pmne,
-                                           PDM_OWNERSHIP_USER);
+      // PDM_extract_part_part_mesh_nodal_get(extrp,
+      //                                      &extract_pmne,
+      //                                      PDM_OWNERSHIP_USER);
+      PDM_extract_part_part_mesh_nodal_get2(extrp,
+                                            &extract_pmn,
+                                            PDM_OWNERSHIP_KEEP);
+      extract_pmne = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(extract_pmn,
+                                                                   geom_kind);
     }
 
-    int pextract_n_vtx = PDM_extract_part_n_entity_get(extrp,
-                                                       0,
-                                                       PDM_MESH_ENTITY_VTX);
-    double *pextract_vtx_coord = NULL;
-    PDM_extract_part_vtx_coord_get(extrp,
-                                   0,
-                                   &pextract_vtx_coord,
-                                   PDM_OWNERSHIP_KEEP);
+    // int pextract_n_vtx = PDM_extract_part_n_entity_get(extrp,
+    //                                                    0,
+    //                                                    PDM_MESH_ENTITY_VTX);
+    // double *pextract_vtx_coord = NULL;
+    // PDM_extract_part_vtx_coord_get(extrp,
+    //                                0,
+    //                                &pextract_vtx_coord,
+    //                                PDM_OWNERSHIP_KEEP);
+    int     pextract_n_vtx     = PDM_part_mesh_nodal_n_vtx_get    (extract_pmn, 0);
+    double *pextract_vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(extract_pmn, 0);
+
 
     PDM_Mesh_nodal_elt_t *elt_type  = NULL;
     int                  *elt_order = NULL;
@@ -1950,7 +1959,7 @@ _dist_cloud_surf_compute_optim
 
       }
 
-      PDM_part_mesh_nodal_elmts_free(extract_pmne);
+      // PDM_part_mesh_nodal_elmts_free(extract_pmne);
 
     }
     else {
