@@ -585,8 +585,8 @@ int main(int argc, char *argv[])
 
   for (int i_part = 0; i_part < n_part; i_part++) {
     PDM_free(cell_face_n[i_part]);
-    PDM_free(face_vtx_n[i_part]);
-    PDM_free(val_coo_x[i_part]);
+    PDM_free(face_vtx_n [i_part]);
+    PDM_free(val_coo_x  [i_part]);
     PDM_free(val_coo_xyz[i_part]);
   }
   PDM_free(val_coo_x);

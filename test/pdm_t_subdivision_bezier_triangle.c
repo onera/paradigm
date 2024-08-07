@@ -123,8 +123,8 @@ _tri_mesh
   *n_node = (n+1) * (n+2) / 2;
   *n_tria = n*n;
 
-  PDM_malloc(*node_uv  ,(*n_node) * 2, double);
-  PDM_malloc(*tria_node,(*n_tria) * 3, int   );
+  PDM_malloc(*node_uv  , (*n_node) * 2, double);
+  PDM_malloc(*tria_node, (*n_tria) * 3, int   );
 
   double step = 1. / (double) n;
 

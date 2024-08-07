@@ -781,16 +781,16 @@ int main(int argc, char *argv[])
   int          **pface_vtx_idx  = NULL;
   int          **pface_vtx      = NULL;
   double       **pvtx_coord     = NULL;
-  PDM_malloc(pn_elt       , n_part_mesh, int          );
-  PDM_malloc(pn_face      , n_part_mesh, int          );
-  PDM_malloc(pn_vtx       , n_part_mesh, int          );
-  PDM_malloc(pelt_ln_to_gn, n_part_mesh, PDM_g_num_t *);
-  PDM_malloc(pvtx_ln_to_gn, n_part_mesh, PDM_g_num_t *);
-  PDM_malloc(pcell_face_idx, n_part_mesh, int        *);
-  PDM_malloc(pcell_face    , n_part_mesh, int        *);
-  PDM_malloc(pface_vtx_idx , n_part_mesh, int        *);
-  PDM_malloc(pface_vtx     , n_part_mesh, int        *);
-  PDM_malloc(pvtx_coord    , n_part_mesh, double     *);
+  PDM_malloc(pn_elt        , n_part_mesh, int          );
+  PDM_malloc(pn_face       , n_part_mesh, int          );
+  PDM_malloc(pn_vtx        , n_part_mesh, int          );
+  PDM_malloc(pelt_ln_to_gn , n_part_mesh, PDM_g_num_t *);
+  PDM_malloc(pvtx_ln_to_gn , n_part_mesh, PDM_g_num_t *);
+  PDM_malloc(pcell_face_idx, n_part_mesh, int         *);
+  PDM_malloc(pcell_face    , n_part_mesh, int         *);
+  PDM_malloc(pface_vtx_idx , n_part_mesh, int         *);
+  PDM_malloc(pface_vtx     , n_part_mesh, int         *);
+  PDM_malloc(pvtx_coord    , n_part_mesh, double      *);
 
   int use_edge = 0;
   for (int ipart = 0; ipart < n_part_mesh; ipart++) {

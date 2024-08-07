@@ -259,7 +259,7 @@ int main(int argc, char *argv[])
     // First pass to count and allocate
     int i_bnd = 1;
     int i_jn  = 1;
-    dface_bnd_idx [i_domain][0]  = 0;
+    dface_bnd_idx [i_domain][0] = 0;
     dface_join_idx[i_domain][0] = 0;
     for (int igroup = 0; igroup < n_face_group[i_domain]; igroup++)
     {

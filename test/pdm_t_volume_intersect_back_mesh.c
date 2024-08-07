@@ -1000,7 +1000,7 @@ int main(int argc, char *argv[])
 
   int d_n_cavity = p_vol_n_edge;
   PDM_g_num_t *distrib_cavity;
-  PDM_malloc(distrib_cavity, d_n_cavity + 1 ,PDM_g_num_t);
+  PDM_malloc(distrib_cavity, d_n_cavity + 1, PDM_g_num_t);
   PDM_distrib_compute(d_n_cavity,
                       distrib_cavity,
                       -1,

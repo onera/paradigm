@@ -175,12 +175,12 @@ int main(int argc, char *argv[])
   int           dn_face;
   int           dn_vtx;
   int           n_face_group;
-  PDM_g_num_t  *dface_cell = NULL;
-  int          *dface_vtx_idx = NULL;
-  PDM_g_num_t  *dface_vtx = NULL;
-  double       *dvtx_coord = NULL;
+  PDM_g_num_t  *dface_cell      = NULL;
+  int          *dface_vtx_idx   = NULL;
+  PDM_g_num_t  *dface_vtx       = NULL;
+  double       *dvtx_coord      = NULL;
   int          *dface_group_idx = NULL;
-  PDM_g_num_t  *dface_group = NULL;
+  PDM_g_num_t  *dface_group     = NULL;
   int           dface_vtxL;
   int           dface_groupL;
 
@@ -366,14 +366,14 @@ int main(int argc, char *argv[])
   PDM_malloc(nsom_part   , n_part, int         );
 
   int *n_part_procs;
-  PDM_malloc(n_part_procs,n_rank,int);
+  PDM_malloc(n_part_procs,n_rank, int);
 
   PDM_MPI_Allgather((void *) &n_part,     1, PDM_MPI_INT,
                     (void *) n_part_procs, 1, PDM_MPI_INT,
                     PDM_MPI_COMM_WORLD);
 
   int *debPartProcs;
-  PDM_malloc(debPartProcs,(n_rank + 1),int);
+  PDM_malloc(debPartProcs, n_rank + 1, int);
 
   debPartProcs[0] = 0;
   for (int i = 0; i < n_rank; i++) {
@@ -622,7 +622,7 @@ int main(int argc, char *argv[])
   for (int i_part = 0; i_part < n_part; i_part++) {
     //   PDM_free(cell_face_n[i_part]);
     //free(face_vtx_n[i_part]);
-    PDM_free(val_coo_x[i_part]);
+    PDM_free(val_coo_x  [i_part]);
     PDM_free(val_coo_xyz[i_part]);
   }
   PDM_free(val_coo_x);

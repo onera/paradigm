@@ -549,7 +549,7 @@ int main(int argc, char *argv[])
       face_center[3*i_face+2] = face_center[3*i_face+2] / n_vtx_on_face;
     }
 
-    PDM_malloc(selected_face_l_num[i_part], n_cell, int        );
+    PDM_malloc(selected_face_l_num[i_part], n_cell, int);
 
     /*
      * Sub-part

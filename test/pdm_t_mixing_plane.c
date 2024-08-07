@@ -611,7 +611,7 @@ _mixing_plane
 
   int max_face_band_n = 3;
   _ll_node_t *nodes;
-  PDM_malloc(nodes, (3+4*(max_face_band_n-1)), _ll_node_t);
+  PDM_malloc(nodes, 3+4*(max_face_band_n-1), _ll_node_t);
 
   /* Intial nodes : triangle vertices */
   nodes[0].u = 0.;

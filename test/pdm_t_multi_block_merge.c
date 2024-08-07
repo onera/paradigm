@@ -196,7 +196,7 @@ int main(int argc, char *argv[])
   int         **dface_vtx_idx   = NULL;
   PDM_g_num_t **dface_vtx       = NULL;
   PDM_malloc(n_group_elt    , n_block, int          );
-  PDM_malloc(dgroup_elmt_idx, n_block, int*         );
+  PDM_malloc(dgroup_elmt_idx, n_block, int         *);
   PDM_malloc(dgroup_elmt    , n_block, PDM_g_num_t *);
   PDM_malloc(dn_vtx         , n_block, int          );
   PDM_malloc(dn_face        , n_block, int          );
@@ -383,9 +383,9 @@ int main(int argc, char *argv[])
   int         *dmerge_elmt_idx      = NULL;
   int         *dmerge_elmt_block_id = NULL;
   PDM_g_num_t *dmerge_elmt_g_num    = NULL;
-  PDM_malloc(dmerge_elmt_idx     , 1 , int        );
-  PDM_malloc(dmerge_elmt_block_id, 0 , int        );
-  PDM_malloc(dmerge_elmt_g_num   , 0 , PDM_g_num_t);
+  PDM_malloc(dmerge_elmt_idx     , 1, int        );
+  PDM_malloc(dmerge_elmt_block_id, 0, int        );
+  PDM_malloc(dmerge_elmt_g_num   , 0, PDM_g_num_t);
   dmerge_elmt_idx[0] = 0;
 
   PDM_multi_block_merge_t* mbm_elmt = PDM_multi_block_merge_create(block_elmt_distrib_idx,

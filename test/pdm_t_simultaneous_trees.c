@@ -487,8 +487,8 @@ main
   // Plus simple dans l'autre sens nan ?
   int *pts_box_idx = NULL;
   int *pts_box     = NULL;
-  PDM_malloc(pts_box_idx,    n_pts + 1, int);
-  PDM_malloc(pts_box    ,8 * n_pts + 1, int);
+  PDM_malloc(pts_box_idx,     n_pts + 1, int);
+  PDM_malloc(pts_box    , 8 * n_pts + 1, int);
   for(int i = 0; i < n_pts+1; ++i)  {
     pts_box_idx[i] = 0;
   }

@@ -642,7 +642,7 @@ _separate_groups
 
 
   int *ridge_dn_edge = NULL;
-  PDM_malloc(ridge_dn_edge, (*n_ridge), int);
+  PDM_malloc( ridge_dn_edge     , (*n_ridge), int          );
   PDM_malloc(*ridge_distrib_edge, (*n_ridge), PDM_g_num_t *);
   for (int iridge = 0; iridge < *n_ridge; iridge++) {
     ridge_dn_edge[iridge] = dridge_edge_idx[iridge+1] - dridge_edge_idx[iridge];
