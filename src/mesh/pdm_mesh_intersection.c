@@ -766,10 +766,10 @@ _select_elements_by_global_bbox
   double      **extract_box_extents        = NULL;
   int         **extract_elmt_init_location = NULL;
   PDM_g_num_t **extract_elmt_ln_to_gn      = NULL;
-  PDM_malloc(n_extract_elmt            , n_part ,int          );
-  PDM_malloc(extract_box_extents       , n_part ,double      *);
-  PDM_malloc(extract_elmt_init_location, n_part ,int         *);
-  PDM_malloc(extract_elmt_ln_to_gn     , n_part ,PDM_g_num_t *);
+  PDM_malloc(n_extract_elmt            , n_part, int          );
+  PDM_malloc(extract_box_extents       , n_part, double      *);
+  PDM_malloc(extract_elmt_init_location, n_part, int         *);
+  PDM_malloc(extract_elmt_ln_to_gn     , n_part, PDM_g_num_t *);
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
 
