@@ -490,8 +490,7 @@ int main
                                                       PDM_OWNERSHIP_KEEP,
                                                       comm);
 
-  // PDM_extract_part_part_nodal_set(extrp, pmne);
-  PDM_extract_part_part_nodal_set2(extrp, pmn);
+  PDM_extract_part_part_nodal_set(extrp, pmn);
 
 
 

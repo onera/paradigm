@@ -3332,22 +3332,26 @@ _extract_part_and_reequilibrate_nodal_from_target
   PDM_extract_part_t        *extrp
 )
 {
-  int                *pn_entity              = NULL;
-  PDM_mesh_entities_t entity_type            = PDM_MESH_ENTITY_MAX;
-  int               **entity_target_location = NULL;
-  PDM_g_num_t       **entity_g_num           = NULL;
+  int                  *pn_entity              = NULL;
+  PDM_mesh_entities_t   entity_type            = PDM_MESH_ENTITY_MAX;
+  int                 **entity_target_location = NULL;
+  PDM_g_num_t         **entity_g_num           = NULL;
+  PDM_geometry_kind_t   geom_kind              = PDM_GEOMETRY_KIND_MAX;
   if(extrp->dim == 3) {
     pn_entity    = extrp->n_cell;
-    entity_type  = PDM_MESH_ENTITY_CELL;
     entity_g_num = extrp->cell_ln_to_gn;
+    entity_type  = PDM_MESH_ENTITY_CELL;
+    geom_kind    = PDM_GEOMETRY_KIND_VOLUMIC;
   } else if (extrp->dim == 2){
     pn_entity    = extrp->n_face;
-    entity_type  = PDM_MESH_ENTITY_FACE;
     entity_g_num = extrp->face_ln_to_gn;
+    entity_type  = PDM_MESH_ENTITY_FACE;
+    geom_kind    = PDM_GEOMETRY_KIND_SURFACIC;
   } else if (extrp->dim == 1){
     pn_entity    = extrp->n_edge;
-    entity_type  = PDM_MESH_ENTITY_EDGE;
     entity_g_num = extrp->edge_ln_to_gn;
+    entity_type  = PDM_MESH_ENTITY_EDGE;
+    geom_kind    = PDM_GEOMETRY_KIND_RIDGE;
   } else {
     PDM_error(__FILE__, __LINE__, 0,"_extract_part_and_reequilibrate_nodal_from_target : wrong entity \n");
   }
@@ -3406,6 +3410,8 @@ _extract_part_and_reequilibrate_nodal_from_target
   }
 
   // Target : reference des cellules
+  extrp->pmne = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(extrp->pmn,
+                                                              geom_kind);
   assert(extrp->pmne != NULL);
 
   int **part2_cell_to_part1_cell_idx;
@@ -6505,27 +6511,14 @@ PDM_extract_part_part_group_set
 
 /**
  *
- * \brief Set PDM_part_mesh_nodal_elmts_t
+ * \brief Set PDM_part_mesh_nodal_t
  *
  * \param [in]   extrp            PDM_extract_part_t structure
- * \param [in]   pmne             PDM_part_mesh_nodal_elmts_t corresponding of dimenstion
+ * \param [in]   pmn              PDM_part_mesh_nodal_t corresponding of dimenstion
  *
  */
 void
 PDM_extract_part_part_nodal_set
-(
-  PDM_extract_part_t          *extrp,
-  PDM_part_mesh_nodal_elmts_t *pmne
-)
-{
-  assert(extrp->dim == pmne->mesh_dimension);
-  extrp->is_nodal = 1;
-  extrp->pmne     = pmne;
-}
-
-
-void
-PDM_extract_part_part_nodal_set2
 (
   PDM_extract_part_t    *extrp,
   PDM_part_mesh_nodal_t *pmn

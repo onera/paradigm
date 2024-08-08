@@ -1872,6 +1872,33 @@ PDM_mesh_location_compute
                                                         &pmne);
 
 
+  PDM_part_mesh_nodal_t *_pmn = PDM_part_mesh_nodal_create(mesh_dimension,
+                                                           n_part,
+                                                           ml->comm);
+
+  PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(_pmn,
+                                                pmne);
+
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    int n_vtx = 0;
+    const double      *vtx_coord    = NULL;
+    const PDM_g_num_t *vtx_ln_to_gn = NULL;
+
+    if (ml->mesh_nodal != NULL) {
+      n_vtx        = PDM_part_mesh_nodal_n_vtx_get    (ml->mesh_nodal, i_part);
+      vtx_coord    = PDM_part_mesh_nodal_vtx_coord_get(ml->mesh_nodal, i_part);
+      vtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(ml->mesh_nodal, i_part);
+    }
+
+    PDM_part_mesh_nodal_coord_set(_pmn,
+                                  i_part,
+                                  n_vtx,
+                                  vtx_coord,
+                                  vtx_ln_to_gn,
+                                  PDM_OWNERSHIP_USER);
+  }
+
+
 
   /* Build the bounding boxes of all mesh elements
     (concatenate sections for each part) */
@@ -2894,11 +2921,11 @@ PDM_mesh_location_compute
                                                    dpts_g_num_geom,
                                                    dpts_coord,
                                                    dn_elt1,
-                                                     delmt_g_num_geom, // Attention faire une distribution part_to_bloc_geom dans le cas octree
-                                                     &box_pts_idx,
-                                                     &box_pts_g_num,
-                                                     &box_pts_coord,
-                                                     0);
+                                                   delmt_g_num_geom, // Attention faire une distribution part_to_bloc_geom dans le cas octree
+                                                   &box_pts_idx,
+                                                   &box_pts_g_num,
+                                                   &box_pts_coord,
+                                                   0);
           }
 
           PDM_dbbtree_free(dbbt);
@@ -3039,9 +3066,6 @@ PDM_mesh_location_compute
     if (dbg_enabled) {
       log_trace(">> PDM_extract_part_create n_part %d\n", n_part);
     }
-    // TODO: proper get
-    // int mesh_dimension = pmne->mesh_dimension;
-
 
     PDM_extract_part_t *extrp = PDM_extract_part_create(mesh_dimension,
                                                         n_part,
@@ -3052,7 +3076,7 @@ PDM_mesh_location_compute
                                                         PDM_OWNERSHIP_KEEP,
                                                         ml->comm);
 
-    PDM_extract_part_part_nodal_set(extrp, pmne);
+    PDM_extract_part_part_nodal_set(extrp, _pmn);
 
     /* Set vtx_coord */
     for (int ipart = 0; ipart < n_part; ipart++) {
@@ -4120,6 +4144,21 @@ PDM_mesh_location_compute
 
 
   } /* End of loop on point clouds */
+
+  if (_pmn != NULL) {
+    // do better?
+    for (int i_part = 0; i_part < n_part; i_part++) {
+      PDM_free(_pmn->vtx[i_part]);
+    }
+    PDM_free(_pmn->vtx         );
+    PDM_free(_pmn->n_vol       );
+    PDM_free(_pmn->n_surf      );
+    PDM_free(_pmn->n_ridge     );
+    PDM_free(_pmn->n_corner    );
+    PDM_free(_pmn->section_kind);
+    PDM_free(_pmn->section_id  );
+    PDM_free(_pmn              );
+  }
 
 
   if (ml->method == PDM_MESH_LOCATION_LOCATE_ALL_TGT) {

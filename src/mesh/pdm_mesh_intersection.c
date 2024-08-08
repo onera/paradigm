@@ -1496,10 +1496,17 @@ _create_extract_part_nodal
   // printf("n_elt_mesh = %i  \n", n_elt_mesh);
 
 
-  int *init_location_elt_mesh = (int  *) PDM_box_set_origin_get(boxes_meshes);
+  int *init_location_elt_mesh = (int *) PDM_box_set_origin_get(boxes_meshes);
 
 
-  PDM_extract_part_part_nodal_set(extrp_mesh, pmne);
+  PDM_part_mesh_nodal_t *_pmn = PDM_part_mesh_nodal_create(dim_mesh,
+                                                           n_part,
+                                                           mi->comm);
+
+  PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(_pmn,
+                                                pmne);
+
+  // PDM_extract_part_part_nodal_set(extrp_mesh, pmne);
 
   /* Set vtx coordinates */
   for (int i_part = 0; i_part < n_part; ++i_part) {
@@ -1566,7 +1573,17 @@ _create_extract_part_nodal
                               edge_ln_to_gn,
                               vtx_ln_to_gn,
                               vtx_coord);
+
+
+    PDM_part_mesh_nodal_coord_set(_pmn,
+                                  i_part,
+                                  n_vtx,
+                                  vtx_coord,
+                                  vtx_ln_to_gn,
+                                  PDM_OWNERSHIP_USER);
   }
+
+  PDM_extract_part_part_nodal_set(extrp_mesh, _pmn);
 
   /*  Setup target frame */
   PDM_extract_part_target_set(extrp_mesh, 0, n_elt_mesh, target_g_num, init_location_elt_mesh);
@@ -1576,6 +1593,21 @@ _create_extract_part_nodal
   // PDM_extract_part_target_set(extrp_mesh, 0, n_elt_mesh, target_g_num, init_location_elt_mesh);
 
   PDM_extract_part_compute(extrp_mesh);
+
+  if (_pmn != NULL) {
+    // do better?
+    for (int i_part = 0; i_part < n_part; i_part++) {
+      PDM_free(_pmn->vtx[i_part]);
+    }
+    PDM_free(_pmn->vtx         );
+    PDM_free(_pmn->n_vol       );
+    PDM_free(_pmn->n_surf      );
+    PDM_free(_pmn->n_ridge     );
+    PDM_free(_pmn->n_corner    );
+    PDM_free(_pmn->section_kind);
+    PDM_free(_pmn->section_id  );
+    PDM_free(_pmn              );
+  }
 
   return extrp_mesh;
 }

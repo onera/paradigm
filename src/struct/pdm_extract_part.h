@@ -235,21 +235,14 @@ PDM_extract_part_part_group_set
 
 /**
  *
- * \brief Set PDM_part_mesh_nodal_elmts_t
+ * \brief Set PDM_part_mesh_nodal_t
  *
  * \param [in]   extrp            PDM_extract_part_t structure
- * \param [in]   pmne             PDM_part_mesh_nodal_elmts_t corresponding of dimenstion
+ * \param [in]   pmn              PDM_part_mesh_nodal_t corresponding of dimenstion
  *
  */
 void
 PDM_extract_part_part_nodal_set
-(
-  PDM_extract_part_t          *extrp,
-  PDM_part_mesh_nodal_elmts_t *pmne
-);
-
-void
-PDM_extract_part_part_nodal_set2
 (
   PDM_extract_part_t    *extrp,
   PDM_part_mesh_nodal_t *pmn

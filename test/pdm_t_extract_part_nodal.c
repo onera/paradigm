@@ -323,14 +323,14 @@ int main(int argc, char *argv[])
                                                 i_part,
                                                 PDM_MESH_ENTITY_VTX,
                                                 &vtx_ln_to_gn,
-                                                PDM_OWNERSHIP_KEEP);
+                                                PDM_OWNERSHIP_USER);
 
     double *vtx = NULL;
     PDM_multipart_part_vtx_coord_get(mpart,
                                      i_domain,
                                      i_part,
                                      &vtx,
-                                     PDM_OWNERSHIP_KEEP);
+                                     PDM_OWNERSHIP_USER);
 
     pn_cell       [i_part] = n_cell;
     pcell_ln_to_gn[i_part] = cell_ln_to_gn;
@@ -495,6 +495,23 @@ int main(int argc, char *argv[])
                                                                                    pcell_ln_to_gn,
                                                                                    NULL);
 
+
+  PDM_part_mesh_nodal_t *pmn = PDM_part_mesh_nodal_create(3,
+                                                          n_part,
+                                                          comm);
+
+  PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn,
+                                                pmne_vol);
+
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    PDM_part_mesh_nodal_coord_set(pmn,
+                                  i_part,
+                                  pn_vtx[i_part],
+                                  pvtx_coord[i_part],
+                                  pvtx_ln_to_gn[i_part],
+                                  PDM_OWNERSHIP_KEEP);
+  }
+
   /*
    * Extract
    */
@@ -508,7 +525,7 @@ int main(int argc, char *argv[])
                                                       PDM_OWNERSHIP_KEEP,
                                                       comm);
 
-  PDM_extract_part_part_nodal_set(extrp, pmne_vol);
+  PDM_extract_part_part_nodal_set(extrp, pmn);
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
 
@@ -574,7 +591,7 @@ int main(int argc, char *argv[])
 
   PDM_extract_part_free(extrp);
 
-  PDM_part_mesh_nodal_elmts_free(pmne_vol);
+  PDM_part_mesh_nodal_free(pmn);
 
   for (int i_part = 0; i_part < n_part; i_part++){
     PDM_free(cell_center   [i_part]);
