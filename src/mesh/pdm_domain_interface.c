@@ -5484,7 +5484,7 @@ PDM_domain_interface_make_flat_view2
 )
 {
   int debug = 0;
-  log_trace("TODO : check sign and sens in PDM_domain_interface_make_flat_view2 \n");
+  // log_trace("TODO : check sign and sens in PDM_domain_interface_make_flat_view2 \n");
 
   int          *interface_dn  = NULL;
   PDM_g_num_t **interface_ids = NULL;
