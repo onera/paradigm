@@ -4490,6 +4490,15 @@ _part_extension_2d
   int lpart = 0;
   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
     for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
+
+      // Init at null to avoid wrong free
+      pface_edge_idx[lpart] = NULL;
+      pface_edge    [lpart] = NULL;
+      pface_vtx_idx [lpart] = NULL;
+      pface_vtx     [lpart] = NULL;
+      pedge_vtx_idx [lpart] = NULL;
+      pedge_vtx     [lpart] = NULL;
+
       pn_vtx        [lpart] = part_ext->parts[i_domain][i_part].n_vtx;
       pn_init_vtx   [lpart] = part_ext->parts[i_domain][i_part].n_vtx;
       if(part_ext->have_edge == 1) {
@@ -4906,7 +4915,7 @@ _part_extension_2d
     prev_dface_itrf_gnum_and_itrf_strid = next_dface_itrf_gnum_and_itrf_strid;
     prev_dface_itrf_gnum_and_itrf_data  = next_dface_itrf_gnum_and_itrf_data;
 
-    if(part_ext->have_edge == 1) {
+    if(part_ext->have_edge == 1 && pface_vtx != NULL ) {
       for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
         PDM_free(pface_vtx[i_part]);
       }
