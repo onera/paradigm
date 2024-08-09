@@ -94,13 +94,13 @@ PDM_Handles_create
 )
 {
   PDM_Handles_t *new_handle;
-  PDM_malloc(new_handle,1,PDM_Handles_t);
+  PDM_malloc(new_handle, 1, PDM_Handles_t);
 
   new_handle->s_array   = init_size;
   new_handle->n_handles = 0;
-  PDM_malloc(new_handle->array,init_size,const void*);
-  PDM_malloc(new_handle->idx,init_size,int  );
-  PDM_malloc(new_handle->idx_inv,init_size,int  );
+  PDM_malloc(new_handle->array  , init_size, const void*);
+  PDM_malloc(new_handle->idx    , init_size,       int  );
+  PDM_malloc(new_handle->idx_inv, init_size,       int  );
 
   for (int i = 0; i < new_handle->s_array; i++) {
     new_handle->array[i]   = NULL;

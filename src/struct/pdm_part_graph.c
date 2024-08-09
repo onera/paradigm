@@ -156,7 +156,7 @@ PDM_part_graph_split
 
         double *tpwgts = NULL;
         if (flag_weights != 0) {
-          PDM_malloc(tpwgts,ncon * n_part ,double);
+          PDM_malloc(tpwgts, ncon * n_part, double);
           for (int i = 0; i < ncon * n_part; i++){
             tpwgts[i] = (double) (1./n_part);
           }
@@ -164,7 +164,7 @@ PDM_part_graph_split
 
         double *ubvec = NULL;
         if (flag_weights != 0) {
-          PDM_malloc(ubvec,ncon ,double);
+          PDM_malloc(ubvec, ncon, double);
           for (int i = 0; i < ncon; i++) {
             ubvec[i] = 1.05;
           }
@@ -293,32 +293,32 @@ PDM_part_graph_split
         // To see with eric ...
         // abort();
         /* Allocation */
-        double *cellCenter;
-        PDM_malloc(cellCenter,part_ini->n_cell * 3 ,double );
+        double *cell_center;
+        PDM_malloc(cell_center, part_ini->n_cell * 3, double );
 
         PDM_hilbert_code_t *hilbert_codes;
-        PDM_malloc(hilbert_codes,part_ini->n_cell ,PDM_hilbert_code_t);
+        PDM_malloc(hilbert_codes, part_ini->n_cell, PDM_hilbert_code_t);
 
         /** Barycentre computation **/
 
         /* Allocate */
-        double *cellPond;
-        PDM_malloc(cellPond,part_ini->n_cell ,double);
+        double *cell_pond = NULL;
+        PDM_malloc(cell_pond, part_ini->n_cell, double);
 
-        /* Nulliffy cellCenterArray */
-        for(int iCell = 0; iCell < part_ini->n_cell; iCell++) {
-          cellCenter[3*iCell  ] = 0.;
-          cellCenter[3*iCell+1] = 0.;
-          cellCenter[3*iCell+2] = 0.;
-          cellPond[iCell]     = 0.;
+        /* Nulliffy cell_centerArray */
+        for(int i_cell = 0; i_cell < part_ini->n_cell; i_cell++) {
+          cell_center[3*i_cell  ] = 0.;
+          cell_center[3*i_cell+1] = 0.;
+          cell_center[3*i_cell+2] = 0.;
+          cell_pond[i_cell]     = 0.;
         }
 
         /* Compute */
-        for(int iCell = 0; iCell < part_ini->n_cell; iCell++) {
+        for(int i_cell = 0; i_cell < part_ini->n_cell; i_cell++) {
 
           /* Cellule composé de n_face */
-          int aFac = part_ini->cell_face_idx[iCell];
-          int nFac = part_ini->cell_face_idx[iCell+1] - aFac;
+          int aFac = part_ini->cell_face_idx[i_cell];
+          int nFac = part_ini->cell_face_idx[i_cell+1] - aFac;
 
           for(int iFac = 0; iFac < nFac; iFac++) {
 
@@ -334,20 +334,20 @@ PDM_part_graph_split
               int lVtx = part_ini->face_vtx[aVtx + iVtx] - 1;
 
               /* Add to current cell and stack weight */
-              cellCenter[3*iCell  ] += part_ini->vtx[3*lVtx  ];
-              cellCenter[3*iCell+1] += part_ini->vtx[3*lVtx+1];
-              cellCenter[3*iCell+2] += part_ini->vtx[3*lVtx+2];
+              cell_center[3*i_cell  ] += part_ini->vtx[3*lVtx  ];
+              cell_center[3*i_cell+1] += part_ini->vtx[3*lVtx+1];
+              cell_center[3*i_cell+2] += part_ini->vtx[3*lVtx+2];
 
-              cellPond[iCell] += 1.;
+              cell_pond[i_cell] += 1.;
             }
           }
         }
 
-        /* Nulliffy cellCenterArray */
-        for(int iCell = 0; iCell < part_ini->n_cell; iCell++) {
-          cellCenter[3*iCell  ] = cellCenter[3*iCell  ]/cellPond[iCell];
-          cellCenter[3*iCell+1] = cellCenter[3*iCell+1]/cellPond[iCell];
-          cellCenter[3*iCell+2] = cellCenter[3*iCell+2]/cellPond[iCell];
+        /* Nulliffy cell_centerArray */
+        for(int i_cell = 0; i_cell < part_ini->n_cell; i_cell++) {
+          cell_center[3*i_cell  ] = cell_center[3*i_cell  ]/cell_pond[i_cell];
+          cell_center[3*i_cell+1] = cell_center[3*i_cell+1]/cell_pond[i_cell];
+          cell_center[3*i_cell+2] = cell_center[3*i_cell+2]/cell_pond[i_cell];
         }
 
 
@@ -355,28 +355,28 @@ PDM_part_graph_split
 
         /** Get EXTENTS LOCAL **/
 
-        PDM_hilbert_get_coord_extents_seq(3, part_ini->n_cell, cellCenter, extents);
+        PDM_hilbert_get_coord_extents_seq(3, part_ini->n_cell, cell_center, extents);
 
         /** Hilbert Coordinates Computation **/
 
-        PDM_hilbert_encode_coords(3, PDM_HILBERT_CS, extents, part_ini->n_cell, cellCenter, hilbert_codes);
+        PDM_hilbert_encode_coords(3, PDM_HILBERT_CS, extents, part_ini->n_cell, cell_center, hilbert_codes);
 
         /** CHECK H_CODES **/
 
-        PDM_free(cellCenter);
-        PDM_free(cellPond);
+        PDM_free(cell_center);
+        PDM_free(cell_pond);
 
-        int *newToOldOrder;
-        PDM_malloc(newToOldOrder,part_ini->n_cell ,int);
+        int *new_to_old_order;
+        PDM_malloc(new_to_old_order, part_ini->n_cell, int);
         for(int i = 0; i < part_ini->n_cell; ++i) {
-          newToOldOrder [i] = i;
+          new_to_old_order [i] = i;
         }
 
         PDM_sort_double (hilbert_codes, *cell_part, part_ini->n_cell);
 
         /* Free */
         PDM_free(hilbert_codes);
-        PDM_free(newToOldOrder);
+        PDM_free(new_to_old_order);
 
         break;
       }
@@ -415,7 +415,7 @@ PDM_part_graph_compute_from_face_cell
   int *cell_cell = PDM_array_const_int(part_ini->cell_face_idx[part_ini->n_cell], -1);
 
   int *cell_cell_idx;
-  PDM_malloc(cell_cell_idx,(part_ini->n_cell + 1) ,int);
+  PDM_malloc(cell_cell_idx, part_ini->n_cell + 1, int);
   for(int i = 0; i < part_ini->n_cell + 1; i++) {
     cell_cell_idx[i] = part_ini->cell_face_idx[i];
   }
@@ -460,7 +460,7 @@ PDM_part_graph_compute_from_face_cell
   //    PDM_printf("(*cell_cell_idxCompressed)[part_ini->n_cell] : %d \n", (*cell_cell_idxCompressed)[part_ini->n_cell]);
   //
   assert( (*cell_cellCompressed) == NULL);
-  PDM_malloc(*cell_cellCompressed,(*cell_cell_idxCompressed)[part_ini->n_cell] ,int);
+  PDM_malloc(*cell_cellCompressed, (*cell_cell_idxCompressed)[part_ini->n_cell], int);
 
   int cpt_cell_cellCompressed = 0;
   for(int i = 0; i < part_ini->cell_face_idx[part_ini->n_cell]; i++) {
@@ -598,7 +598,7 @@ PDM_part_graph_split_bis
 
       double *tpwgts = NULL;
       if (flag_weights != 0) {
-        PDM_malloc(tpwgts,ncon * n_part ,double);
+        PDM_malloc(tpwgts, ncon * n_part, double);
         for (int i = 0; i < ncon * n_part; i++){
           tpwgts[i] = (double) (1./n_part);
         }
@@ -606,7 +606,7 @@ PDM_part_graph_split_bis
 
       double *ubvec = NULL;
       if (flag_weights != 0) {
-        PDM_malloc(ubvec,ncon ,double);
+        PDM_malloc(ubvec, ncon, double);
         for (int i = 0; i < ncon; i++) {
           ubvec[i] = 1.05;
         }

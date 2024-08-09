@@ -97,18 +97,18 @@ PDM_block_to_block_create
    * Define requested data for each process
    */
 
-  PDM_malloc(btb->block_distrib_ini_idx,(n_rank + 1),PDM_g_num_t);
+  PDM_malloc(btb->block_distrib_ini_idx, n_rank + 1, PDM_g_num_t);
   for (int i = 0; i < n_rank + 1; i++) {
     btb->block_distrib_ini_idx[i] = block_distrib_ini_idx[i];
   }
 
-  PDM_malloc(btb->block_distrib_end_idx,(n_rank + 1),PDM_g_num_t);
+  PDM_malloc(btb->block_distrib_end_idx, n_rank + 1, PDM_g_num_t);
   for (int i = 0; i < n_rank + 1; i++) {
     btb->block_distrib_end_idx[i] = block_distrib_end_idx[i];
   }
 
-  PDM_malloc(btb->n_send_buffer,(unsigned int) n_rank ,int);
-  PDM_malloc(btb->n_recv_buffer,(unsigned int) n_rank ,int);
+  PDM_malloc(btb->n_send_buffer, n_rank, int);
+  PDM_malloc(btb->n_recv_buffer, n_rank, int);
   for (int i = 0; i < n_rank; ++i) {
     btb->n_send_buffer[i] = _overlap_size(block_distrib_ini_idx[i_rank], block_distrib_ini_idx[i_rank+1],
                                           block_distrib_end_idx[i], block_distrib_end_idx[i+1]);
@@ -155,10 +155,10 @@ PDM_block_to_block_exch
 
   int *n_send_buffer = NULL;
   int *n_recv_buffer = NULL;
-  int *i_send_buffer;
-  PDM_malloc(i_send_buffer,_btb->n_rank,int);
-  int *i_recv_buffer;
-  PDM_malloc(i_recv_buffer,_btb->n_rank,int);
+  int *i_send_buffer = NULL;
+  int *i_recv_buffer = NULL;
+  PDM_malloc(i_send_buffer, _btb->n_rank, int);
+  PDM_malloc(i_recv_buffer, _btb->n_rank, int);
 
   int s_data_tot    = s_data;
 
@@ -180,8 +180,8 @@ PDM_block_to_block_exch
                       _btb->comm);
 
     // Re count n_send / n_recv knowing stride data
-    PDM_malloc(n_send_buffer,_btb->n_rank,int);
-    PDM_malloc(n_recv_buffer,_btb->n_rank,int);
+    PDM_malloc(n_send_buffer, _btb->n_rank, int);
+    PDM_malloc(n_recv_buffer, _btb->n_rank, int);
     int idx_send = 0;
     int idx_recv = 0;
     for (int i = 0; i < _btb->n_rank; ++i) {
@@ -206,8 +206,8 @@ PDM_block_to_block_exch
   int s_recv_buffer = i_recv_buffer[_btb->n_rank-1] + n_recv_buffer[_btb->n_rank-1];
 
   size_t tot_size = ((size_t) s_data_tot ) * ((size_t) s_recv_buffer);
-  unsigned char *recv_buffer;
- PDM_malloc(recv_buffer,tot_size,unsigned char);
+  unsigned char *recv_buffer = NULL;
+  PDM_malloc(recv_buffer, tot_size, unsigned char);
 
 
   PDM_MPI_Datatype mpi_type;
@@ -262,10 +262,10 @@ PDM_block_to_block_exch_with_mpi_type
 
   int *n_send_buffer = NULL;
   int *n_recv_buffer = NULL;
-  int *i_send_buffer;
-  PDM_malloc(i_send_buffer,_btb->n_rank,int);
-  int *i_recv_buffer;
-  PDM_malloc(i_recv_buffer,_btb->n_rank,int);
+  int *i_send_buffer = NULL;
+  int *i_recv_buffer = NULL;
+  PDM_malloc(i_send_buffer, _btb->n_rank, int);
+  PDM_malloc(i_recv_buffer, _btb->n_rank, int);
 
 
   if (t_stride == PDM_STRIDE_VAR_INTERLACED) {
@@ -286,8 +286,8 @@ PDM_block_to_block_exch_with_mpi_type
                       _btb->comm);
 
     // Re count n_send / n_recv knowing stride data
-    PDM_malloc(n_send_buffer,_btb->n_rank,int);
-    PDM_malloc(n_recv_buffer,_btb->n_rank,int);
+    PDM_malloc(n_send_buffer, _btb->n_rank, int);
+    PDM_malloc(n_recv_buffer, _btb->n_rank, int);
     int idx_send = 0;
     int idx_recv = 0;
     for (int i = 0; i < _btb->n_rank; ++i) {
