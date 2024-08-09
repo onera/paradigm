@@ -120,8 +120,8 @@ _define_rank_distrib(const int             sampling_factor,
   const int  n_samples       = sampling_factor * n_ranks;
 
   /* Initialization */
-  double *l_distrib;
-  PDM_malloc(l_distrib,n_samples ,double);
+  double *l_distrib = NULL;
+  PDM_malloc(l_distrib, n_samples, double);
 
   for (id = 0; id < n_samples; id++) {
     l_distrib[id] = 0;
@@ -171,7 +171,7 @@ _define_rank_distrib(const int             sampling_factor,
 
     len = strlen("DistribOutput_l.dat")+1+2;
     char *rfilename;
-    PDM_malloc(rfilename,len ,char);
+    PDM_malloc(rfilename, len, char);
     sprintf(rfilename, "DistribOutput_l%02d.dat", loop_id1);
 
     loop_id1++;
@@ -255,7 +255,7 @@ _update_sampling(int            sampling_factor,
 
   /* Compute new_sampling */
 
-  PDM_malloc(new_sampling,(n_samples + 1),PDM_g_num_t);
+  PDM_malloc(new_sampling, n_samples + 1, PDM_g_num_t);
 
   new_sampling[0] = _sampling[0];
 
@@ -341,7 +341,7 @@ PDM_distrib_compute
   /* Compute distribution for element */
 
   // PDM_g_num_t *elt_distrib;
-  // PDM_malloc(elt_distrib,(n_rank+1) ,PDM_g_num_t);
+  // PDM_malloc(elt_distrib, n_rank+1, PDM_g_num_t);
   PDM_g_num_t  _dnelt      = (PDM_g_num_t) dnelt;
 
   PDM_MPI_Allgather((void *) &_dnelt,
@@ -388,7 +388,7 @@ PDM_compute_entity_distribution
   PDM_MPI_Comm_size(comm, &n_rank);
 
   PDM_g_num_t *dentity_proc;
-  PDM_malloc(dentity_proc, (n_rank+1) ,PDM_g_num_t);
+  PDM_malloc(dentity_proc, n_rank+1, PDM_g_num_t);
 
   /*
    * Exchange
@@ -465,8 +465,8 @@ PDM_compute_uniform_entity_distribution
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
-  PDM_g_num_t *dentity_proc;
-  PDM_malloc(dentity_proc, (n_rank+1) ,PDM_g_num_t);
+  PDM_g_num_t *dentity_proc = NULL;
+  PDM_malloc(dentity_proc, n_rank + 1, PDM_g_num_t);
 
   PDM_g_num_t step      = n_g_entity/n_rank;
   PDM_g_num_t remainder = n_g_entity%n_rank;
@@ -624,8 +624,8 @@ PDM_GCC_SUPPRESS_WARNING_POP
   PDM_g_num_t _n_sample_data = _id_max_max / n_samples;
   PDM_g_num_t _samplerest    = _id_max_max % n_samples;
 
-  PDM_g_num_t *sampling;
-  PDM_malloc(sampling,(n_samples + 1),PDM_g_num_t);
+  PDM_g_num_t *sampling = NULL;
+  PDM_malloc(sampling, n_samples + 1, PDM_g_num_t);
   sampling[0] = 0;
   int k = 0;
   for (int i = 0; i < n_samples; i++) {
@@ -639,10 +639,10 @@ PDM_GCC_SUPPRESS_WARNING_POP
 
   /* Define the distribution associated to the current sampling array */
 
-  double *distrib;
-  PDM_malloc(distrib,n_samples,double);
-  double *cfreq;
-  PDM_malloc(cfreq,(n_samples + 1),double);
+  double *distrib = NULL;
+  double *cfreq   = NULL;
+  PDM_malloc(distrib, n_samples    , double);
+  PDM_malloc(cfreq  , n_samples + 1, double);
 
   _define_rank_distrib(sampling_factor,
                        n_part,
@@ -661,8 +661,8 @@ PDM_GCC_SUPPRESS_WARNING_POP
   double fit = _evaluate_distribution(n_active_ranks, distrib, optim);
   double best_fit = fit;
 
-  PDM_g_num_t *best_sampling;
-  PDM_malloc(best_sampling,(n_samples + 1),PDM_g_num_t);
+  PDM_g_num_t *best_sampling = NULL;
+  PDM_malloc(best_sampling, n_samples + 1, PDM_g_num_t);
 
   for (int i = 0; i < (n_samples + 1); i++) {
     best_sampling[i] = sampling[i];
@@ -710,7 +710,7 @@ PDM_GCC_SUPPRESS_WARNING_POP
   sampling = best_sampling;
 
   PDM_g_num_t *_rank_index;
-  PDM_malloc(_rank_index,(n_active_ranks + 1),PDM_g_num_t);
+  PDM_malloc(_rank_index, n_active_ranks + 1, PDM_g_num_t);
   for (int i = 0; i < n_active_ranks + 1; i++) {
     int id = i * sampling_factor;
     _rank_index[i] = sampling[id];
