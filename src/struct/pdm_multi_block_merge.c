@@ -388,7 +388,7 @@ static void _dist_data_update
   //Should we realloc ?
 
   PDM_g_num_t *_data_realloc = NULL;
-  PDM_realloc( _data_realloc , _data , w_idx,PDM_g_num_t);
+  PDM_realloc(_data, _data_realloc, w_idx, PDM_g_num_t);
   *data = _data_realloc;
 
   PDM_free(recv_stride);
