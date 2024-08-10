@@ -1734,20 +1734,20 @@ PDM_part_domain_interface_view_by_part
     n_part_loc_all_domain += pdi->n_part[i_dom];
   }
 
-  int *pn_entity_num;
-  PDM_malloc(pn_entity_num, n_part_loc_all_domain ,int  );
-  int **pentity_num;
-  PDM_malloc(pentity_num, n_part_loc_all_domain ,int *);
-  int **pentity_opp_location_idx;
-  PDM_malloc(pentity_opp_location_idx, n_part_loc_all_domain ,int *);
-  int **pentity_opp_location;
-  PDM_malloc(pentity_opp_location, n_part_loc_all_domain ,int *);
-  int **pentity_opp_interface_idx;
-  PDM_malloc(pentity_opp_interface_idx, n_part_loc_all_domain ,int *);
-  int **pentity_opp_interface;
-  PDM_malloc(pentity_opp_interface, n_part_loc_all_domain ,int *);
-  int **pentity_opp_sens;
-  PDM_malloc(pentity_opp_sens, n_part_loc_all_domain ,int *);
+  int  *pn_entity_num              = NULL;
+  int **pentity_num                = NULL;
+  int **pentity_opp_location_idx   = NULL;
+  int **pentity_opp_location       = NULL;
+  int **pentity_opp_interface_idx  = NULL;
+  int **pentity_opp_interface      = NULL;
+  int **pentity_opp_sens           = NULL;
+  PDM_malloc(pn_entity_num            , n_part_loc_all_domain, int  );
+  PDM_malloc(pentity_num              , n_part_loc_all_domain, int *);
+  PDM_malloc(pentity_opp_location_idx , n_part_loc_all_domain, int *);
+  PDM_malloc(pentity_opp_location     , n_part_loc_all_domain, int *);
+  PDM_malloc(pentity_opp_interface_idx, n_part_loc_all_domain, int *);
+  PDM_malloc(pentity_opp_interface    , n_part_loc_all_domain, int *);
+  PDM_malloc(pentity_opp_sens         , n_part_loc_all_domain, int *);
 
 
   int s_part = 0;
@@ -1927,16 +1927,16 @@ PDM_part_domain_interface_view_by_part
    * Exchange to have all opposit gnum
    */
 
-  int **part1_to_part2_idx;
-  PDM_malloc(part1_to_part2_idx,n_part_loc_all_domain ,int         *);
-  int **part1_to_part2_triplet_idx;
-  PDM_malloc(part1_to_part2_triplet_idx,n_part_loc_all_domain ,int *);
-  int **part1_to_part2_triplet;
-  PDM_malloc(part1_to_part2_triplet,n_part_loc_all_domain ,int         *);
-  int **part1_to_part2_interface;
-  PDM_malloc(part1_to_part2_interface,n_part_loc_all_domain ,int         *);
-  PDM_g_num_t **part1_to_part2_gnum;
-  PDM_malloc(part1_to_part2_gnum,n_part_loc_all_domain ,PDM_g_num_t *);
+  int         **part1_to_part2_idx         = NULL;
+  int         **part1_to_part2_triplet_idx = NULL;
+  int         **part1_to_part2_triplet     = NULL;
+  int         **part1_to_part2_interface   = NULL;
+  PDM_g_num_t **part1_to_part2_gnum        = NULL;
+  PDM_malloc(part1_to_part2_idx,         n_part_loc_all_domain, int         *);
+  // PDM_malloc(part1_to_part2_triplet_idx, n_part_loc_all_domain, int         *);
+  PDM_malloc(part1_to_part2_triplet,     n_part_loc_all_domain, int         *);
+  PDM_malloc(part1_to_part2_interface,   n_part_loc_all_domain, int         *);
+  PDM_malloc(part1_to_part2_gnum,        n_part_loc_all_domain, PDM_g_num_t *);
 
   int li_part = 0;
   for(int i_dom = 0; i_dom < pdi->n_domain; ++i_dom) {
@@ -2238,6 +2238,8 @@ PDM_part_domain_interface_to_domain_interface
   int                          ***is_entity1_on_itrf_out
 )
 {
+  int debug = 0;
+
   int i_rank;
   PDM_MPI_Comm_rank(dom_intrf->comm, &i_rank);
 
@@ -2272,11 +2274,14 @@ PDM_part_domain_interface_to_domain_interface
   /*
    * Re-Create a domain interface
    */
-  PDM_domain_interface_t* ditrf = PDM_domain_interface_create(n_interface,
-                                                              dom_intrf->n_domain,
-                                                              PDM_DOMAIN_INTERFACE_MULT_YES,
-                                                              PDM_OWNERSHIP_KEEP,
-                                                              dom_intrf->comm);
+  PDM_domain_interface_t* ditrf = *ditrf_out;
+  if(ditrf == NULL) {
+    ditrf = PDM_domain_interface_create(n_interface,
+                                        dom_intrf->n_domain,
+                                        PDM_DOMAIN_INTERFACE_MULT_YES,
+                                        PDM_OWNERSHIP_KEEP,
+                                        dom_intrf->comm);
+  }
 
 
   /*
@@ -2319,7 +2324,8 @@ PDM_part_domain_interface_to_domain_interface
                                       &pinterface_ids_idx,
                                       &pinterface_dom);
 
-        if(0 == 1) {
+        if(debug == 1) {
+          PDM_log_trace_array_long(pinterface_ln_to_gn,   ln_interface, "pinterface_ln_to_gn ::");
           PDM_log_trace_array_int (pinterface_sgn     ,   ln_interface, "pinterface_sgn      ::");
           PDM_log_trace_array_int (pinterface_sens    ,   ln_interface, "pinterface_sens     ::");
           PDM_log_trace_array_int (pinterface_dom     , 2*ln_interface, "pinterface_dom      ::");
@@ -2662,6 +2668,8 @@ PDM_part_domain_interface_add
  int                            connectivity_is_signed
 )
 {
+  int debug = 0;
+
   // log_trace("PDM_part_domain_interface_to_domain_interface %i to %i \n", interface_kind1, interface_kind2);
   int i_rank;
   PDM_MPI_Comm_rank(dom_intrf->comm, &i_rank);
@@ -2769,7 +2777,7 @@ PDM_part_domain_interface_add
       /*
        * Realloc
        */
-      if(0 == 1) {
+      if(debug == 1) {
         PDM_log_trace_connectivity_long(_filter_entity2_entity1_idx, _filter_entity2_entity1, n_filter_entity2[i_part], "_filter_entity2_entity1 ::");
       }
 
@@ -2819,7 +2827,7 @@ PDM_part_domain_interface_add
     dn_entity2[i_dom]                  = PDM_part_to_block_n_elt_block_get  (ptb);
     dfilter_entity2_entity1_idx[i_dom] = PDM_array_new_idx_from_sizes_int(dfilter_entity2_entity1_n, dn_entity2[i_dom] );
 
-    if(0 == 1) {
+    if(debug == 1) {
       PDM_log_trace_connectivity_long(dfilter_entity2_entity1_idx[i_dom], dfilter_entity2_entity1[i_dom], dn_entity2[i_dom] , "dfilter_entity2_entity1 ::");
     }
 
@@ -2896,7 +2904,7 @@ PDM_part_domain_interface_add
                                                  kind2_dinterface_ids,
                                                  kind2_dinterface_dom);
 
-  if(0 == 1) {
+  if(debug == 1) {
     for(int i = 0; i < ditrf->n_interface; ++i) {
       PDM_log_trace_array_long((*kind2_dinterface_ids)[i], 2 *  (*kind2_interface_dn)[i], "kind2_dinterface_ids ::");
     }

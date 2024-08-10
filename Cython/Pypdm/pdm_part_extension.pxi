@@ -16,6 +16,7 @@ cdef extern from "pdm_part_extension.h":
                                                   PDM_ownership_t    owner)
 
   void PDM_part_extension_compute(PDM_part_extension_t *part_ext)
+  void PDM_part_extension_compute2(PDM_part_extension_t *part_ext, int dim)
 
   void PDM_part_extension_set_part(PDM_part_extension_t *part_ext,
                                    int                   i_domain,
@@ -446,6 +447,13 @@ cdef class PartExtension:
     """
     PDM_part_extension_compute(self._part_ext)
 
+  # ------------------------------------------------------------------
+  def compute2(self, dim):
+    """
+    compute()
+    Compute extended partitions
+    """
+    PDM_part_extension_compute2(self._part_ext, dim)
 
   # ------------------------------------------------------------------
   def part_domain_interface_shared_set(self, PartDomainInterface pdi):

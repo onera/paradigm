@@ -228,7 +228,23 @@ PDM_domain_interface_make_flat_view
   PDM_bound_type_t         interface_kind,
   PDM_g_num_t             *shift_by_domain,
   PDM_part_to_block_t   ***ptb_interface_out,
-  PDM_g_num_t           ***entity_opp_gnum_out
+  PDM_g_num_t           ***entity_opp_gnum_out,
+  int                   ***entity_opp_sens_out
+);
+
+
+
+void
+PDM_domain_interface_make_flat_view2
+(
+  PDM_domain_interface_t  *dom_intrf,
+  PDM_bound_type_t         interface_kind,
+  PDM_g_num_t             *shift_by_domain,
+  int                     *dentity2_itrf_n_blk,
+  PDM_g_num_t            **dentity2_itrf_blk_gnum,
+  int                    **dentity2_itrf_gnum_and_itrf_strid,
+  PDM_g_num_t            **dentity2_itrf_gnum_and_itrf_data,
+  int                    **dentity2_itrf_gnum_and_itrf_sens
 );
 
 #ifdef __cplusplus

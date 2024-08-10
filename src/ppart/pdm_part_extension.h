@@ -95,6 +95,22 @@ PDM_part_extension_compute
 
 /**
  *
+ * \brief Compute extended partitions
+ *
+ * \param [in]   part_ext          \p PDM_part_extension_t structure instance
+ * \param [in]   dim               Dimension of the problem
+ *
+ */
+void
+PDM_part_extension_compute2
+(
+        PDM_part_extension_t *part_ext,
+  const int                   dim
+);
+
+
+/**
+ *
  * \brief Set data to perform the partitioned mesh extension
  *
  * \warning Deprecated: use the individual setters instead
@@ -218,9 +234,18 @@ PDM_part_extension_free
  * \return Number of leading entities
  *
  */
-
 int
 PDM_part_extension_connectivity_get
+(
+ PDM_part_extension_t     *part_ext,
+ int                       i_domain,
+ int                       i_part,
+ PDM_connectivity_type_t   connectivity_type,
+ int                     **connect_idx,
+ int                     **connect
+);
+int
+PDM_part_extension_connectivity_get2
 (
  PDM_part_extension_t     *part_ext,
  int                       i_domain,
@@ -244,7 +269,6 @@ PDM_part_extension_connectivity_get
  * \return  Number of entities
  *
  */
-
 int
 PDM_part_extension_ln_to_gn_get
 (
@@ -254,6 +278,16 @@ PDM_part_extension_ln_to_gn_get
  PDM_mesh_entities_t       mesh_entity,
  PDM_g_num_t             **ln_to_gn
 );
+int
+PDM_part_extension_ln_to_gn_get2
+(
+ PDM_part_extension_t     *part_ext,
+ int                       i_domain,
+ int                       i_part,
+ PDM_mesh_entities_t       mesh_entity,
+ PDM_g_num_t             **ln_to_gn
+);
+
 
 /**
  *
@@ -272,12 +306,60 @@ PDM_part_extension_ln_to_gn_get
 int
 PDM_part_extension_interface_get
 (
- PDM_part_extension_t     *part_ext,
- int                       i_domain,
- int                       i_part,
- PDM_mesh_entities_t       mesh_entity,
- int                     **interface_no
+  PDM_part_extension_t     *part_ext,
+  int                       i_domain,
+  int                       i_part,
+  PDM_mesh_entities_t       mesh_entity,
+  int                     **interface_no
 );
+
+/**
+ *
+ * \brief Get graph between part entities and new entities
+ *
+ * \param [in]  part_ext               \p PDM_part_extension_t structure instance
+ * \param [in]  i_domain               Domain identifier
+ * \param [in]  i_part                 Partition identifier
+ * \param [in]  mesh_entity            Type of mesh entity
+ * \param [out] pentity_to_entity_idx  Graph triplet index
+ * \param [out] pentity_to_entity      Graph triplet
+ *
+ */
+void
+PDM_part_extension_graph_get
+(
+  PDM_part_extension_t     *part_ext,
+  int                       i_domain,
+  int                       i_part,
+  PDM_mesh_entities_t       mesh_entity,
+  // int                     **pentity_to_entity_idx,
+  int                     **pentity_to_entity
+);
+
+
+/**
+ *
+ * \brief Get interface path for new entities on partition
+ *
+ * \param [in]  part_ext            \p PDM_part_extension_t structure instance
+ * \param [in]  i_domain            Domain identifier
+ * \param [in]  i_part              Partition identifier
+ * \param [in]  mesh_entity         Type of mesh entity
+ * \param [out] path_interface_idx  Interface path index
+ * \param [out] path_interface      Interface path
+ *
+ */
+void
+PDM_part_extension_path_interface_get
+(
+  PDM_part_extension_t     *part_ext,
+  int                       i_domain,
+  int                       i_part,
+  PDM_mesh_entities_t       mesh_entity,
+  int                     **path_itrf_idx,
+  int                     **path_itrf
+);
+
 
 /**
  *
@@ -320,7 +402,6 @@ PDM_part_extension_group_get
  * \return  Number of extended vertices
  *
  */
-
 int
 PDM_part_extension_vtx_coord_get
 (
@@ -329,6 +410,15 @@ PDM_part_extension_vtx_coord_get
  int                       i_part,
  double                  **vtx_coord
 );
+int
+PDM_part_extension_vtx_coord_get2
+(
+ PDM_part_extension_t     *part_ext,
+ int                       i_domain,
+ int                       i_part,
+ double                  **vtx_coord
+);
+
 
 /**
  *

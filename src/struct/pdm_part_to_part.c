@@ -3172,17 +3172,19 @@ PDM_part_to_part_create
 
 /**
  *
- * \brief Create a partitions to partitions redistribution
+ * \brief Create a Partition-to-Partition redistribution from location triplets
  *
- * \param [in]   gnum_elt1                   Element global number (size : \ref n_part1)
- * \param [in]   n_elt1                      Local number of elements (size : \ref n_part1)
- * \param [in]   n_part1                     Number of partition
- * \param [in]   n_elt2                      Local number of elements (size : \ref n_part2)
- * \param [in]   n_part2                     Number of partition
- * \param [in]   part1_to_part2_idx          Index of data to send to gnum2 from gnum1
- *                                           (for each part size : \ref n_elt1+1)
- * \param [in]   part1_to_part2_triplet_idx  (for each part size : \ref part1_to_part2_idx[\ref n_elt] + 1)
- * \param [in]   part1_to_part2_triplet      Data to send to (irank2, ipart2, ielt2) from gnum1
+ * \param [in]   gnum_elt1                   Element global numbers in Part1 (size : \p n_part1)
+ * \param [in]   n_elt1                      Local number of elements in Part1 (size : \p n_part1)
+ * \param [in]   n_part1                     Number of partitions in Part1
+ * \param [in]   n_elt2                      Local number of elements in Part2 (size : \p n_part2)
+ * \param [in]   n_part2                     Number of partitions in Part2
+ * \param [in]   part1_to_part2_idx          Index for Part1→Part2 mapping <br>
+ *                                           (for each part, size : \p n_elt1 + 1)
+ * \param [in]   part1_to_part2_triplet_idx  Index for multiple locations in Part2 <br>
+ *                                           (for each part, size : \p part1_to_part2_idx[\p n_elt1] + 1)
+ * \param [in]   part1_to_part2_triplet      Part1→Part2 mapping (location triplets: (*irank2*, *ipart2*, *ielt2*)) <br>
+ *                                           (for each part, size : \p part1_to_part2_triplet_idx[\p part1_to_part2_idx[\p n_elt1]] + 1)
  * \param [in]   comm                        MPI communicator
  *
  * \return   Initialized \ref PDM_part_to_part instance
