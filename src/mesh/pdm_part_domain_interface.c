@@ -2605,10 +2605,23 @@ PDM_part_domain_interface_to_domain_interface
           sens2 = dentity1_sens[idx_read+1];
 
         }
-        // dinterface_ids[i_interface][2*i  ] =         gnum1;
-        // dinterface_ids[i_interface][2*i+1] = sens1 * gnum2;
-        dinterface_ids[i_interface][2*i  ] = sens1 * gnum1;
+
+        /**
+         * For pair entities, multiple case can happen
+         *   - entities        have same sens (possible with edge for example)
+         *   - entities do not have same sens (normally true for faces)
+         *      in this case multiple possibility can happen 
+         *        - sens1 =  1 ; sens2 = -1 (typically information coming from pdm)
+         *        - sens1 = -1 ; sens2 = -1 (if user do not have information of which entity
+         *                                   is with the good sens, but knows that pair have
+         *                                   opposite sens)
+         * In both cases, we set first entity with + sens
+         * and if they have opposite sens, we set the sens 2 to -1.
+         */
+        dinterface_ids[i_interface][2*i  ] =         gnum1;
         dinterface_ids[i_interface][2*i+1] = sens2 * gnum2;
+        // dinterface_ids[i_interface][2*i  ] = sens1 * gnum1;
+        // dinterface_ids[i_interface][2*i+1] = sens2 * gnum2;
         // dinterface_ids[i_interface][2*i+1] = gnum2;
 
         dinterface_dom[i_interface][2*i  ] = dom1;

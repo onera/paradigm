@@ -49,6 +49,7 @@ struct _pdm_part_extension_t {
   int            *n_part;
   int            *n_part_idx;
   int            *n_part_g_idx;
+  int            *lpart_to_dom;
 
   _part_t  **parts;
   PDM_part_domain_interface_t  *pdi;
@@ -137,39 +138,50 @@ struct _pdm_part_extension_t {
   /* Results */
   int          *n_cell_border;
   PDM_g_num_t **border_cell_ln_to_gn;
+  PDM_g_num_t **border_cell_ln_to_gn_ancstr;
   int         **border_cell_face_idx;
   int         **border_cell_face;
 
   int          *n_face_border;
   PDM_g_num_t **border_face_ln_to_gn;
+  PDM_g_num_t **border_face_ln_to_gn_ancstr;
   int         **border_face_edge_idx;
   int         **border_face_edge;
   int         **border_face_vtx_idx;
   int         **border_face_vtx;
+  int         **border_face_group_idx;
+  int         **border_face_group;
+  PDM_g_num_t **border_face_group_ln_to_gn;
 
   int          *n_edge_border;
   PDM_g_num_t **border_edge_ln_to_gn;
+  PDM_g_num_t **border_edge_ln_to_gn_ancstr;
   int         **border_edge_vtx_idx;
   int         **border_edge_vtx;
+  int         **border_edge_group_idx;
+  int         **border_edge_group;
+  PDM_g_num_t **border_edge_group_ln_to_gn;
 
   int          *n_vtx_border;
   PDM_g_num_t **border_vtx_ln_to_gn;
+  PDM_g_num_t **border_vtx_ln_to_gn_ancstr;
   double      **border_vtx;
   
-
-  // int  *n_face_group;
-  int **border_face_group_idx;
-  int **border_face_group;
-
-
-  PDM_g_num_t **border_face_group_ln_to_gn;
-
+  /* Ownership */
+  PDM_ownership_t ***ownership_border_ln_to_gn;
+  PDM_ownership_t ***ownership_border_ln_to_gn_ancstr;
+  PDM_ownership_t ***ownership_border_connectivity;
+  PDM_ownership_t  **ownership_border_vtx_coord;
+  PDM_ownership_t ***ownership_border_group;
+  PDM_ownership_t ***ownership_border_graph;
+  PDM_ownership_t ***ownership_border_path_itrf;
 
   /* Shift by domain for all entities */
   PDM_g_num_t *shift_by_domain_cell;
   PDM_g_num_t *shift_by_domain_face;
   PDM_g_num_t *shift_by_domain_edge;
   PDM_g_num_t *shift_by_domain_vtx;
+  PDM_g_num_t *shift_by_domain_edge_group;
   PDM_g_num_t *shift_by_domain_face_group;
 
   /* Composed interface */
