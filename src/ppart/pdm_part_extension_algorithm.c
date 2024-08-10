@@ -1730,7 +1730,7 @@ _enrich_block_interface
 )
 {
   int debug      = 0;
-  int debug_loop = 0;
+  // int debug_loop = 0;
 
   if (debug==1) {
     log_trace("\n");

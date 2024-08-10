@@ -512,6 +512,54 @@ const size_t           stride,
 
 
 int
+PDM_order_inplace_unique_int
+(
+const int              n_entity,
+const size_t           stride,
+      int             *array,
+      int             *order
+)
+{
+  if(n_entity == 0) {
+    return 0;
+  }
+
+  PDM_order_lnum_s(array, stride, order, n_entity);
+
+  /* Apply sort */
+  PDM_order_array (n_entity, stride * sizeof(int), order, array);
+
+  int *last_value;
+  PDM_malloc(last_value, stride, int);
+
+  int new_size  = 1;
+  int idx_write = 1;
+  for(int j = 0; j < (int) stride; ++j) {
+    last_value[j] = array[j];
+  }
+
+  // PDM_log_trace_array_int(array, n_entity * stride, "array :: ");
+
+  for(int i = 1; i < n_entity; i++){
+    int is_same = _lexicographic_equal_int(last_value, &array[stride*i], stride);
+    if(is_same == 0){ // N'est pas le meme
+      for(int j = 0; j < (int) stride; ++j) {
+        last_value[j] = array[stride*i+j];
+        array[stride*idx_write+j] = last_value[j];
+      }
+      new_size++;
+      idx_write++;
+    }
+  }
+
+  PDM_free(last_value);
+
+  return new_size;
+}
+
+
+
+int
 PDM_order_binary_search_int
 (
  const int         elt   [],
@@ -520,6 +568,10 @@ PDM_order_binary_search_int
  const size_t      nb_ent
 )
 {
+  if(nb_ent == 0) {
+    return -1;
+  }
+
   int left  = 0;
   int right = nb_ent - 1;
   int ind   = (left + right) / 2;
