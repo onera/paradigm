@@ -435,7 +435,7 @@ const size_t           stride,
   PDM_order_array (n_entity, stride * sizeof(PDM_g_num_t), order, array);
 
   PDM_g_num_t *last_value;
-  PDM_malloc(last_value,stride ,PDM_g_num_t);
+  PDM_malloc(last_value, stride ,PDM_g_num_t);
 
   int new_size  = 1;
   int idx_write = 1;
@@ -482,7 +482,7 @@ const size_t           stride,
   PDM_order_array (n_entity, stride * sizeof(PDM_g_num_t), order, array);
 
   PDM_g_num_t *last_value;
-  PDM_malloc(last_value,stride ,PDM_g_num_t);
+  PDM_malloc(last_value, stride, PDM_g_num_t);
 
   int new_size  = 1;
   int idx_write = 1;

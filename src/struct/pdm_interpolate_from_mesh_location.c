@@ -72,7 +72,7 @@ PDM_interpolate_from_mesh_location_create
 )
 {
   PDM_interpolate_from_mesh_location_t *interp_from_ml;
-  PDM_malloc(interp_from_ml,1,PDM_interpolate_from_mesh_location_t);
+  PDM_malloc(interp_from_ml, 1, PDM_interpolate_from_mesh_location_t);
 
   interp_from_ml->comm = comm;
 
@@ -81,8 +81,8 @@ PDM_interpolate_from_mesh_location_create
 
   interp_from_ml->n_cloud_target     = n_cloud_target;
 
-  PDM_malloc(interp_from_ml->point_clouds,interp_from_ml->n_cloud_target ,_point_cloud_t      );
-  PDM_malloc(interp_from_ml->points_in_elements,interp_from_ml->n_cloud_target ,_points_in_element_t);
+  PDM_malloc(interp_from_ml->point_clouds      , interp_from_ml->n_cloud_target, _point_cloud_t      );
+  PDM_malloc(interp_from_ml->points_in_elements, interp_from_ml->n_cloud_target, _points_in_element_t);
 
   PDM_UNUSED(interp_kind);
 
@@ -183,16 +183,16 @@ PDM_interpolate_from_mesh_location_exch
   /*
    * For now only first order with
    */
-  double **cloud_data_in_current_src;
-  PDM_malloc(cloud_data_in_current_src, interp_from_ml->n_part_src ,double *);
-  int **cloud_data_in_current_src_n;
-  PDM_malloc(cloud_data_in_current_src_n, interp_from_ml->n_part_src ,int    *);
+  double **cloud_data_in_current_src   = NULL;
+  int    **cloud_data_in_current_src_n = NULL;
+  PDM_malloc(cloud_data_in_current_src  , interp_from_ml->n_part_src, double *);
+  PDM_malloc(cloud_data_in_current_src_n, interp_from_ml->n_part_src, int    *);
   assert(_points_in_elements->n_part == interp_from_ml->n_part_src );
 
   _point_cloud_t *pcloud = interp_from_ml->point_clouds + i_point_cloud;
 
-  int *n_point_tot;
-  PDM_malloc(n_point_tot, interp_from_ml->n_part_src ,int);
+  int *n_point_tot = NULL;
+  PDM_malloc(n_point_tot, interp_from_ml->n_part_src, int);
 
   for(int i_part = 0; i_part < interp_from_ml->n_part_src; ++i_part){
 
@@ -207,8 +207,8 @@ PDM_interpolate_from_mesh_location_exch
     //printf("n_point_tot[%i] = %i \n", i_part, n_point_tot[i_part]);
     // printf("pcloud->n_points[%i] = %i \n", i_part, pcloud->n_points[i_part]);
 
-    PDM_malloc(cloud_data_in_current_src  [i_part], _elt_pts_inside_idx[n_elmt] ,double);
-    PDM_malloc(cloud_data_in_current_src_n[i_part], _elt_pts_inside_idx[n_elmt] ,int   );
+    PDM_malloc(cloud_data_in_current_src  [i_part], _elt_pts_inside_idx[n_elmt], double);
+    PDM_malloc(cloud_data_in_current_src_n[i_part], _elt_pts_inside_idx[n_elmt], int   );
 
     for(int i_cell = 0; i_cell < n_cell; ++i_cell) {
       for (int i_point = _elt_pts_inside_idx[i_cell]; i_point < _elt_pts_inside_idx[i_cell+1]; i_point++) {
@@ -338,16 +338,16 @@ PDM_interpolate_from_mesh_location_exch_inplace
   /*
    * For now only first order with
    */
-  double **cloud_data_in_current_src;
-  PDM_malloc(cloud_data_in_current_src, interp_from_ml->n_part_src ,double *);
-  int **cloud_data_in_current_src_n;
-  PDM_malloc(cloud_data_in_current_src_n, interp_from_ml->n_part_src ,int    *);
+  double **cloud_data_in_current_src   = NULL;
+  int    **cloud_data_in_current_src_n = NULL;
+  PDM_malloc(cloud_data_in_current_src  , interp_from_ml->n_part_src, double *);
+  PDM_malloc(cloud_data_in_current_src_n, interp_from_ml->n_part_src, int    *);
   assert(_points_in_elements->n_part == interp_from_ml->n_part_src );
 
   _point_cloud_t *pcloud = interp_from_ml->point_clouds + i_point_cloud;
 
-  int *n_point_tot;
-  PDM_malloc(n_point_tot, interp_from_ml->n_part_src ,int);
+  int *n_point_tot = NULL;
+  PDM_malloc(n_point_tot, interp_from_ml->n_part_src, int);
 
   for(int i_part = 0; i_part < interp_from_ml->n_part_src; ++i_part){
 
@@ -358,8 +358,8 @@ PDM_interpolate_from_mesh_location_exch_inplace
 
     // printf("n_point_tot[%i] = %i \n", i_part, n_point_tot[i_part]);
 
-    PDM_malloc(cloud_data_in_current_src  [i_part], _elt_pts_inside_idx[n_elmt] ,double);
-    PDM_malloc(cloud_data_in_current_src_n[i_part], _elt_pts_inside_idx[n_elmt] ,int   );
+    PDM_malloc(cloud_data_in_current_src  [i_part], _elt_pts_inside_idx[n_elmt], double);
+    PDM_malloc(cloud_data_in_current_src_n[i_part], _elt_pts_inside_idx[n_elmt], int   );
 
     for(int i_cell = 0; i_cell < n_elmt; ++i_cell) {
       for (int i_point = _elt_pts_inside_idx[i_cell]; i_point < _elt_pts_inside_idx[i_cell+1]; i_point++) {
@@ -539,29 +539,29 @@ PDM_interpolate_from_mesh_location_mesh_global_data_set
     _points_in_element_t *_points_in_elements = interp_from_ml->points_in_elements + icloud;
 
     _points_in_elements->n_part           = n_part;
-    PDM_malloc(_points_in_elements->n_elts, interp_from_ml->n_part_src ,int          );
-    PDM_malloc(_points_in_elements->pts_inside_idx, interp_from_ml->n_part_src ,int         *);
-    PDM_malloc(_points_in_elements->gnum, interp_from_ml->n_part_src ,PDM_g_num_t *);
-    PDM_malloc(_points_in_elements->uvw, interp_from_ml->n_part_src ,double      *);
-    PDM_malloc(_points_in_elements->coords, interp_from_ml->n_part_src ,double      *);
-    PDM_malloc(_points_in_elements->projected_coords, interp_from_ml->n_part_src ,double      *);
-    PDM_malloc(_points_in_elements->weights_idx, interp_from_ml->n_part_src ,int         *);
-    PDM_malloc(_points_in_elements->weights, interp_from_ml->n_part_src ,double      *);
-    PDM_malloc(_points_in_elements->dist2, interp_from_ml->n_part_src ,double      *);
+    PDM_malloc(_points_in_elements->n_elts          , interp_from_ml->n_part_src, int          );
+    PDM_malloc(_points_in_elements->pts_inside_idx  , interp_from_ml->n_part_src, int         *);
+    PDM_malloc(_points_in_elements->gnum            , interp_from_ml->n_part_src, PDM_g_num_t *);
+    PDM_malloc(_points_in_elements->uvw             , interp_from_ml->n_part_src, double      *);
+    PDM_malloc(_points_in_elements->coords          , interp_from_ml->n_part_src, double      *);
+    PDM_malloc(_points_in_elements->projected_coords, interp_from_ml->n_part_src, double      *);
+    PDM_malloc(_points_in_elements->weights_idx     , interp_from_ml->n_part_src, int         *);
+    PDM_malloc(_points_in_elements->weights         , interp_from_ml->n_part_src, double      *);
+    PDM_malloc(_points_in_elements->dist2           , interp_from_ml->n_part_src, double      *);
 
   }
 
-  PDM_malloc(interp_from_ml->n_cell,n_part ,int     );
-  PDM_malloc(interp_from_ml->cell_face_idx,n_part ,int    *);
-  PDM_malloc(interp_from_ml->cell_face,n_part ,int    *);
-  PDM_malloc(interp_from_ml->cell_ln_to_gn,n_part , PDM_g_num_t *);
-  PDM_malloc(interp_from_ml->n_face,n_part ,int     );
-  PDM_malloc(interp_from_ml->face_vtx_idx,n_part ,int    *);
-  PDM_malloc(interp_from_ml->face_vtx,n_part ,int    *);
-  PDM_malloc(interp_from_ml->face_ln_to_gn,n_part , PDM_g_num_t *);
-  PDM_malloc(interp_from_ml->n_vtx,n_part ,int     );
-  PDM_malloc(interp_from_ml->coords,n_part ,double *);
-  PDM_malloc(interp_from_ml->vtx_ln_to_gn,n_part , PDM_g_num_t *);
+  PDM_malloc(interp_from_ml->n_cell       , n_part , int          );
+  PDM_malloc(interp_from_ml->cell_face_idx, n_part , int         *);
+  PDM_malloc(interp_from_ml->cell_face    , n_part , int         *);
+  PDM_malloc(interp_from_ml->cell_ln_to_gn, n_part , PDM_g_num_t *);
+  PDM_malloc(interp_from_ml->n_face       , n_part , int          );
+  PDM_malloc(interp_from_ml->face_vtx_idx , n_part , int         *);
+  PDM_malloc(interp_from_ml->face_vtx     , n_part , int         *);
+  PDM_malloc(interp_from_ml->face_ln_to_gn, n_part , PDM_g_num_t *);
+  PDM_malloc(interp_from_ml->n_vtx        , n_part , int          );
+  PDM_malloc(interp_from_ml->coords       , n_part , double      *);
+  PDM_malloc(interp_from_ml->vtx_ln_to_gn , n_part , PDM_g_num_t *);
 
 }
 
@@ -578,9 +578,9 @@ PDM_interpolate_from_mesh_location_n_part_cloud_set
   _point_cloud_t *pcloud = interp_from_ml->point_clouds + i_point_cloud;
 
   pcloud->n_part   = n_part;
-  PDM_malloc(pcloud->n_points, n_part ,int          );
-  PDM_malloc(pcloud->coords, n_part ,double *     );
-  PDM_malloc(pcloud->gnum, n_part ,PDM_g_num_t *);
+  PDM_malloc(pcloud->n_points, n_part, int          );
+  PDM_malloc(pcloud->coords  , n_part, double *     );
+  PDM_malloc(pcloud->gnum    , n_part, PDM_g_num_t *);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
     pcloud->n_points[i_part] = -1;

@@ -83,7 +83,7 @@ void                     *keyMax
 )
 {
   _hash_tab_t *ht;
-  PDM_malloc(ht,1,_hash_tab_t);
+  PDM_malloc(ht, 1, _hash_tab_t);
   const int nDataDefault = 0;
 
   ht->tKey = tKey;
@@ -100,16 +100,16 @@ void                     *keyMax
   }
 
   ht->l_key_info = PDM_MAX (ht->keyMax/10, 2);
-  PDM_malloc(ht->key_info,ht->l_key_info,PDM_g_num_t);
+  PDM_malloc(ht->key_info, ht->l_key_info, PDM_g_num_t);
   ht->n_key_info = 0;
 
-  PDM_malloc(ht->data,ht->keyMax,void **);
-  PDM_malloc(ht->nDataKey,ht->keyMax,int);
-  PDM_malloc(ht->mDataKey,ht->keyMax,int);
+  PDM_malloc(ht->data    , ht->keyMax, void **);
+  PDM_malloc(ht->nDataKey, ht->keyMax, int    );
+  PDM_malloc(ht->mDataKey, ht->keyMax, int    );
   for (int i = 0; i < ht->keyMax; i++) {
     ht->nDataKey[i] = 0;
     ht->mDataKey[i] = nDataDefault;
-    PDM_malloc(ht->data[i],nDataDefault,void *);
+    PDM_malloc(ht->data[i], nDataDefault, void *);
     for (int j = 0; j < nDataDefault; j++) {
       ht->data[i][j] = NULL;
     }
@@ -156,13 +156,13 @@ void           *data
 
   if (_ht->nDataKey[_key] >= _ht->mDataKey[_key]) {
     _ht->mDataKey[_key] += PDM_MAX (1, _ht->mDataKey[_key]);
-    PDM_realloc(_ht->data[_key] ,_ht->data[_key] ,                                                _ht->mDataKey[_key],void *);
+    PDM_realloc(_ht->data[_key], _ht->data[_key], _ht->mDataKey[_key], void *);
   }
 
   if (_ht->nDataKey[_key] == 0) {
     if (_ht->n_key_info >= _ht->l_key_info) {
       _ht->l_key_info += PDM_MAX (1, _ht->l_key_info/3);
-      PDM_realloc(_ht->key_info ,_ht->key_info ,  _ht->l_key_info,PDM_g_num_t);
+      PDM_realloc(_ht->key_info, _ht->key_info, _ht->l_key_info, PDM_g_num_t);
     }
     _ht->key_info[_ht->n_key_info] = _key;
     _ht->n_key_info += 1;
