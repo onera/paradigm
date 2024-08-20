@@ -466,7 +466,7 @@ _get_extracted
       }
     }
 
-    PDM_log_trace_array_int(extract_lnum[i_part], n_extract[i_part], "extract_lnum : ");
+    // PDM_log_trace_array_int(extract_lnum[i_part], n_extract[i_part], "extract_lnum : ");
   }
 
   *out_n_extract    = n_extract;
@@ -538,9 +538,16 @@ int main
   }
 
   if (visu) {
-    PDM_part_mesh_nodal_dump_vtk(pmn,
-                                 geom_kind,
-                                 "init_pmn");
+    // PDM_part_mesh_nodal_dump_vtk(pmn,
+    //                              geom_kind,
+    //                              "init_pmn");
+    for (PDM_geometry_kind_t geom_kind_child = geom_kind; geom_kind_child < PDM_GEOMETRY_KIND_CORNER; geom_kind_child++) {
+      char name[999];
+      sprintf(name, "init_pmn_%d", geom_kind_child);
+      PDM_part_mesh_nodal_dump_vtk(pmn,
+                                   geom_kind_child,
+                                   name);
+    }
   }
 
 

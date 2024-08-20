@@ -2132,9 +2132,7 @@ PDM_part_mesh_nodal_elmts_free
 )
 {
   if (pmne != NULL) {
-    if(pmne->n_elmts != NULL) {
-      PDM_free(pmne->n_elmts);
-    }
+    PDM_free(pmne->n_elmts);
 
     /* free standard blocks */
     if (pmne->sections_std != NULL) {
@@ -2160,9 +2158,7 @@ PDM_part_mesh_nodal_elmts_free
       PDM_free(pmne->sections_poly3d);
     }
 
-    if(pmne->sections_id != NULL) {
-      PDM_free(pmne->sections_id);
-    }
+    PDM_free(pmne->sections_id);
 
     if (pmne->numabs != NULL) {
       if(pmne->ownership_numabs == PDM_OWNERSHIP_KEEP) {
@@ -2175,14 +2171,13 @@ PDM_part_mesh_nodal_elmts_free
 
     if (pmne->num_elmt_parent_to_local != NULL) {
       for (int i_part = 0; i_part < pmne->n_part; i_part++) {
-        if (pmne->num_elmt_parent_to_local[i_part] != NULL)
-          PDM_free(pmne->num_elmt_parent_to_local[i_part]);
+        PDM_free(pmne->num_elmt_parent_to_local[i_part]);
       }
       PDM_free(pmne->num_elmt_parent_to_local);
       pmne->num_elmt_parent_to_local = NULL;
     }
 
-    if(pmne->n_group_elmt  != NULL) {
+    if (pmne->n_group_elmt != NULL) {
 
       if(pmne->ownership_group == PDM_OWNERSHIP_KEEP) {
 
@@ -2192,36 +2187,17 @@ PDM_part_mesh_nodal_elmts_free
             PDM_free(pmne->group_elmt    [i_part][i_group]);
             PDM_free(pmne->group_ln_to_gn[i_part][i_group]);
           }
-
-          if(pmne->n_group_elmt  [i_part] != NULL) {
-            PDM_free(pmne->n_group_elmt  [i_part]);
-          }
-
-          if(pmne->group_elmt  [i_part] != NULL) {
-            PDM_free(pmne->group_elmt    [i_part]);
-          }
-
-          if(pmne->group_ln_to_gn[i_part] != NULL) {
-            PDM_free(pmne->group_ln_to_gn[i_part]);
-          }
-        }
-
-        if(pmne->n_group_elmt  != NULL) {
-          PDM_free(pmne->n_group_elmt  );
-        }
-
-        if(pmne->group_elmt != NULL) {
-          PDM_free(pmne->group_elmt    );
-        }
-        if(pmne->group_ln_to_gn != NULL) {
-          PDM_free(pmne->group_ln_to_gn);
+          PDM_free(pmne->n_group_elmt  [i_part]);
+          PDM_free(pmne->group_elmt    [i_part]);
+          PDM_free(pmne->group_ln_to_gn[i_part]);
         }
       }
+      PDM_free(pmne->n_group_elmt  );
+      PDM_free(pmne->group_elmt    );
+      PDM_free(pmne->group_ln_to_gn);
     }
   }
-
   PDM_free(pmne);
-  pmne = NULL;
 }
 
 
@@ -6581,7 +6557,9 @@ PDM_part_mesh_nodal_elmts_group_get
   *group_elmt     = pmne->group_elmt    [i_part][i_group];
   *group_ln_to_gn = pmne->group_ln_to_gn[i_part][i_group];
 
-  pmne->ownership_group = ownership_group;
+  if (ownership_group != PDM_OWNERSHIP_BAD_VALUE) {
+    pmne->ownership_group = ownership_group;
+  }
 }
 
 int
