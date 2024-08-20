@@ -580,12 +580,15 @@ int main(int argc, char *argv[])
   /*
    * Export vtk en légende
    */
-  if(post){
+  if (post) {
 
     PDM_part_mesh_nodal_dump_vtk(extract_pmn,
                                  PDM_GEOMETRY_KIND_VOLUMIC,
                                  "extract_part_nodal");
     // TODO: dump lower dimensions as well?
+    // PDM_part_mesh_nodal_dump_vtk(extract_pmn,
+    //                              PDM_GEOMETRY_KIND_SURFACIC,
+    //                              "extract_part_nodal_surf");
 
   }
 
