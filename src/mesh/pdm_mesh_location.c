@@ -3078,64 +3078,6 @@ PDM_mesh_location_compute
 
     PDM_extract_part_part_nodal_set(extrp, _pmn);
 
-    /* Set vtx_coord */
-    for (int ipart = 0; ipart < n_part; ipart++) {
-      const double *pvtx_coord = PDM_part_mesh_nodal_vtx_coord_get(ml->mesh_nodal,
-                                                                   ipart);
-
-      const int pn_vtx = PDM_part_mesh_nodal_n_vtx_get(ml->mesh_nodal,
-                                                       ipart);
-      PDM_g_num_t *pvtx_ln_to_gn = (PDM_g_num_t *) PDM_part_mesh_nodal_vtx_g_num_get(ml->mesh_nodal,
-                                                                                     ipart);
-
-
-      int n_cell = 0;
-      int n_face = 0;
-      int n_edge = 0;
-      PDM_g_num_t *cell_g_num = NULL;
-      PDM_g_num_t *face_g_num = NULL;
-      PDM_g_num_t *edge_g_num = NULL;
-      switch (mesh_dimension) {
-        case 3: {
-          n_cell = pn_elt[ipart];
-          cell_g_num = elt_g_num[ipart];
-          break;
-        }
-        case 2: {
-          n_face = pn_elt[ipart];
-          face_g_num = elt_g_num[ipart];
-          break;
-        }
-        case 1: {
-          n_edge = pn_elt[ipart];
-          edge_g_num = elt_g_num[ipart];
-          break;
-        }
-        default:
-        PDM_error(__FILE__, __LINE__, 0, "incorrect mesh_dimension %d\n", mesh_dimension);
-      }
-
-      PDM_extract_part_part_set(extrp,
-                                ipart,
-                                n_cell,
-                                n_face,
-                                n_edge,
-                                pn_vtx,
-                                NULL, // pcell_face_idx[ipart],
-                                NULL, // pcell_face[ipart],
-                                NULL, // pface_edge_idx[ipart],
-                                NULL, // pface_edge[ipart],
-                                NULL, // pedge_vtx[ipart],
-                                NULL, // pface_vtx_idx[ipart],
-                                NULL, // pface_vtx[ipart],
-                                cell_g_num,
-                                face_g_num,
-                                edge_g_num,
-                                pvtx_ln_to_gn,
-                     (double *) pvtx_coord);
-    }
-
-
     PDM_mesh_entities_t entity_type = PDM_MESH_ENTITY_CELL;
     switch (mesh_dimension) {
       case 3: {

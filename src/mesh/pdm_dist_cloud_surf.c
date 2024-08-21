@@ -1653,65 +1653,6 @@ _dist_cloud_surf_compute_optim
       }
 
       PDM_extract_part_part_nodal_set(extrp, _pmn);
-
-      for (int i_part = 0; i_part < n_part_mesh; i_part++) {
-
-        int n_vtx = 0;
-        const double      *vtx_coord    = NULL;
-        const PDM_g_num_t *vtx_ln_to_gn = NULL;
-
-        if (mesh_nodal != NULL) {
-          n_vtx        = PDM_part_mesh_nodal_n_vtx_get    (mesh_nodal, i_part);
-          vtx_coord    = PDM_part_mesh_nodal_vtx_coord_get(mesh_nodal, i_part);
-          vtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(mesh_nodal, i_part);
-        }
-
-        int n_cell = 0;
-        int n_face = 0;
-        int n_edge = 0;
-        PDM_g_num_t *cell_ln_to_gn = NULL;
-        PDM_g_num_t *face_ln_to_gn = NULL;
-        PDM_g_num_t *edge_ln_to_gn = NULL;
-        switch (geom_kind) {
-          case PDM_GEOMETRY_KIND_VOLUMIC: {
-            n_cell = part_n_elt[i_part];
-            cell_ln_to_gn = part_elt_g_num[i_part];
-            break;
-          }
-          case PDM_GEOMETRY_KIND_SURFACIC: {
-            n_face = part_n_elt[i_part];
-            face_ln_to_gn = part_elt_g_num[i_part];
-            break;
-          }
-          case PDM_GEOMETRY_KIND_RIDGE: {
-            n_edge = part_n_elt[i_part];
-            edge_ln_to_gn = part_elt_g_num[i_part];
-            break;
-          }
-          default:
-            PDM_error(__FILE__, __LINE__, 0, "incorrect geom_kind %d\n", (int) geom_kind);
-        }
-
-        PDM_extract_part_part_set(extrp,
-                                  i_part,
-                                  n_cell,
-                                  n_face,
-                                  n_edge,
-                                  n_vtx,
-                                  NULL,
-                                  NULL,
-                                  NULL,
-                                  NULL,
-                                  NULL,
-                                  NULL,
-                                  NULL,
-                                  cell_ln_to_gn,
-                                  face_ln_to_gn,
-                                  edge_ln_to_gn,
-                  (PDM_g_num_t *) vtx_ln_to_gn,
-                  (double      *) vtx_coord);
-
-      }
     }
     else {
       /* Set vtx_coord */

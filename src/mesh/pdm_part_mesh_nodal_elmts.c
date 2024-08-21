@@ -74,29 +74,23 @@ _block_std_free_partial
       for (int i = 0; i < _block_std->n_part; i++) {
         if (_block_std->_connec[i] != NULL)
           PDM_free(_block_std->_connec[i]);
-        _block_std->_connec[i] = NULL;
       }
     }
     PDM_free(_block_std->_connec);
-    _block_std->_connec = NULL;
   }
 
   if (_block_std->_numabs != NULL) {
 
     if (_block_std->numabs_owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_std->n_part; i++) {
-        if (_block_std->_numabs[i] != NULL)
-          PDM_free(_block_std->_numabs[i]);
-        _block_std->_numabs[i] = NULL;
+        PDM_free(_block_std->_numabs[i]);
       }
     }
     PDM_free(_block_std->_numabs);
-    _block_std->_numabs = NULL;
   }
 
   if (_block_std->ho_ordering != NULL) {
     PDM_free(_block_std->ho_ordering);
-    _block_std->ho_ordering = NULL;
   }
 
 }
@@ -116,62 +110,46 @@ _block_std_free
 
   _block_std_free_partial(_block_std);
 
-  if (_block_std->n_elt != NULL) {
-    PDM_free(_block_std->n_elt);
-    _block_std->n_elt = NULL;
-  }
+  PDM_free(_block_std->n_elt);
 
   if (_block_std->numabs_int != NULL) {
     if (_block_std->numabs_int_owner == PDM_OWNERSHIP_KEEP) {
       for (int j = 0; j < _block_std->n_part; j++) {
-        if (_block_std->numabs_int[j] != NULL) {
-          PDM_free(_block_std->numabs_int[j]);
-        }
+        PDM_free(_block_std->numabs_int[j]);
       }
       PDM_free(_block_std->numabs_int);
-      _block_std->numabs_int = NULL;
     }
   }
 
   if (_block_std->cell_centers != NULL) {
     if (_block_std->cell_centers_owner == PDM_OWNERSHIP_KEEP) {
       for (int j = 0; j < _block_std->n_part; j++) {
-        if (_block_std->cell_centers[j] != NULL) {
-          PDM_free(_block_std->cell_centers[j]);
-        }
+        PDM_free(_block_std->cell_centers[j]);
       }
       PDM_free(_block_std->cell_centers);
-      _block_std->cell_centers = NULL;
     }
   }
 
   if (_block_std->cell_centers_to_compute != NULL) {
     PDM_free(_block_std->cell_centers_to_compute);
-    _block_std->cell_centers_to_compute = NULL;
   }
 
   if (_block_std->_parent_num != NULL) {
     if (_block_std->parent_num_owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_std->n_part; i++) {
-        if (_block_std->_parent_num[i] != NULL)
-          PDM_free(_block_std->_parent_num[i]);
-        _block_std->_parent_num[i] = NULL;
+        PDM_free(_block_std->_parent_num[i]);
       }
     }
     PDM_free(_block_std->_parent_num);
-    _block_std->_parent_num = NULL;
   }
 
   if (_block_std->_parent_entity_g_num != NULL) {
     if (_block_std->parent_num_owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_std->n_part; i++) {
-        if (_block_std->_parent_entity_g_num[i] != NULL)
-          PDM_free(_block_std->_parent_entity_g_num[i]);
-        _block_std->_parent_entity_g_num[i] = NULL;
+        PDM_free(_block_std->_parent_entity_g_num[i]);
       }
     }
     PDM_free(_block_std->_parent_entity_g_num);
-    _block_std->_parent_entity_g_num = NULL;
   }
 
   PDM_free(_block_std);
@@ -197,37 +175,28 @@ _block_poly2d_free_partial
   if (_block_poly2d->_connec_idx != NULL) {
     if (_block_poly2d->elt_vtx_owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_poly2d->n_part; i++) {
-        if (_block_poly2d->_connec_idx[i] != NULL)
-          PDM_free(_block_poly2d->_connec_idx[i]);
-        _block_poly2d->_connec_idx[i] = NULL;
+        PDM_free(_block_poly2d->_connec_idx[i]);
       }
     }
     PDM_free(_block_poly2d->_connec_idx);
-    _block_poly2d->_connec_idx = NULL;
   }
 
   if (_block_poly2d->_connec != NULL) {
     if (_block_poly2d->elt_vtx_owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_poly2d->n_part; i++) {
-        if (_block_poly2d->_connec[i] != NULL)
-          PDM_free(_block_poly2d->_connec[i]);
-        _block_poly2d->_connec[i] = NULL;
+        PDM_free(_block_poly2d->_connec[i]);
       }
     }
     PDM_free(_block_poly2d->_connec);
-    _block_poly2d->_connec = NULL;
   }
 
   if (_block_poly2d->_numabs != NULL) {
     if (_block_poly2d->numabs_owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_poly2d->n_part; i++) {
-        if (_block_poly2d->_numabs[i] != NULL)
-          PDM_free(_block_poly2d->_numabs[i]);
-        _block_poly2d->_numabs[i] = NULL;
+        PDM_free(_block_poly2d->_numabs[i]);
       }
     }
     PDM_free(_block_poly2d->_numabs);
-    _block_poly2d->_numabs = NULL;
   }
 
 }
@@ -252,10 +221,7 @@ _block_poly2d_free
 {
   _block_poly2d_free_partial(_block_poly2d);
 
-  if (_block_poly2d->n_elt != NULL) {
-    PDM_free(_block_poly2d->n_elt);
-    _block_poly2d->n_elt = NULL;
-  }
+  PDM_free(_block_poly2d->n_elt);
 
   if (_block_poly2d->numabs_int != NULL) {
     if (_block_poly2d->numabs_int_owner == PDM_OWNERSHIP_KEEP) {
@@ -267,36 +233,28 @@ _block_poly2d_free
       }
     }
     PDM_free(_block_poly2d->numabs_int);
-    _block_poly2d->numabs_int = NULL;
   }
 
   if (_block_poly2d->cell_centers != NULL) {
     if (_block_poly2d->cell_centers_owner == PDM_OWNERSHIP_KEEP) {
       for (int j = 0; j < _block_poly2d->n_part; j++) {
-        if (_block_poly2d->cell_centers[j] != NULL) {
-          PDM_free(_block_poly2d->cell_centers[j]);
-        }
+        PDM_free(_block_poly2d->cell_centers[j]);
       }
     }
     PDM_free(_block_poly2d->cell_centers);
-    _block_poly2d->cell_centers = NULL;
   }
 
   if (_block_poly2d->cell_centers_to_compute != NULL) {
     PDM_free(_block_poly2d->cell_centers_to_compute);
-    _block_poly2d->cell_centers_to_compute = NULL;
   }
 
   if (_block_poly2d->_parent_num != NULL) {
     if (_block_poly2d->parent_num_owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_poly2d->n_part; i++) {
-        if (_block_poly2d->_parent_num[i] != NULL)
-          PDM_free(_block_poly2d->_parent_num[i]);
-        _block_poly2d->_parent_num[i] = NULL;
+        PDM_free(_block_poly2d->_parent_num[i]);
       }
     }
     PDM_free(_block_poly2d->_parent_num);
-    _block_poly2d->_parent_num = NULL;
   }
 
   PDM_free(_block_poly2d);
@@ -324,97 +282,73 @@ _block_poly3d_free_partial
   if (_block_poly3d->_facvtx_idx != NULL) {
     if (_block_poly3d->owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_poly3d->n_part; i++) {
-        if (_block_poly3d->_facvtx_idx[i] != NULL)
-          PDM_free(_block_poly3d->_facvtx_idx[i]);
-        _block_poly3d->_facvtx_idx[i] = NULL;
+        PDM_free(_block_poly3d->_facvtx_idx[i]);
       }
     }
     PDM_free(_block_poly3d->_facvtx_idx);
-    _block_poly3d->_facvtx_idx = NULL;
   }
 
   if (_block_poly3d->_facvtx != NULL) {
     if (_block_poly3d->owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_poly3d->n_part; i++) {
-        if (_block_poly3d->_facvtx[i] != NULL)
-          PDM_free(_block_poly3d->_facvtx[i]);
-        _block_poly3d->_facvtx[i] = NULL;
+        PDM_free(_block_poly3d->_facvtx[i]);
       }
     }
     PDM_free(_block_poly3d->_facvtx);
-    _block_poly3d->_facvtx = NULL;
   }
 
   if (_block_poly3d->_cellfac_idx != NULL) {
     if (_block_poly3d->owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_poly3d->n_part; i++) {
-        if (_block_poly3d->_cellfac_idx[i] != NULL)
-          PDM_free(_block_poly3d->_cellfac_idx[i]);
-        _block_poly3d->_cellfac_idx[i] = NULL;
+        PDM_free(_block_poly3d->_cellfac_idx[i]);
       }
     }
     PDM_free(_block_poly3d->_cellfac_idx);
-    _block_poly3d->_cellfac_idx = NULL;
   }
 
   if (_block_poly3d->_cellfac != NULL) {
     if (_block_poly3d->owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_poly3d->n_part; i++) {
-        if (_block_poly3d->_cellfac[i] != NULL)
-          PDM_free(_block_poly3d->_cellfac[i]);
-        _block_poly3d->_cellfac[i] = NULL;
+        PDM_free(_block_poly3d->_cellfac[i]);
       }
     }
     PDM_free(_block_poly3d->_cellfac);
-    _block_poly3d->_cellfac = NULL;
   }
 
   if (_block_poly3d->_cellvtx_idx != NULL) {
     if (_block_poly3d->elt_vtx_owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_poly3d->n_part; i++) {
-        if (_block_poly3d->_cellvtx_idx[i] != NULL)
-          PDM_free(_block_poly3d->_cellvtx_idx[i]);
-        _block_poly3d->_cellvtx_idx[i] = NULL;
+        PDM_free(_block_poly3d->_cellvtx_idx[i]);
       }
     }
     PDM_free(_block_poly3d->_cellvtx_idx);
-    _block_poly3d->_cellvtx_idx = NULL;
   }
 
   if (_block_poly3d->_cellvtx != NULL) {
     if (_block_poly3d->elt_vtx_owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_poly3d->n_part; i++) {
-        if (_block_poly3d->_cellvtx[i] != NULL)
-          PDM_free(_block_poly3d->_cellvtx[i]);
-        _block_poly3d->_cellvtx[i] = NULL;
+        PDM_free(_block_poly3d->_cellvtx[i]);
       }
     }
     PDM_free(_block_poly3d->_cellvtx);
-    _block_poly3d->_cellvtx = NULL;
   }
 
   if (_block_poly3d->_numabs != NULL) {
     if (_block_poly3d->numabs_owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_poly3d->n_part; i++) {
-        if (_block_poly3d->_numabs[i] != NULL)
-          PDM_free(_block_poly3d->_numabs[i]);
-        _block_poly3d->_numabs[i] = NULL;
+        PDM_free(_block_poly3d->_numabs[i]);
       }
     }
     PDM_free(_block_poly3d->_numabs);
-    _block_poly3d->_numabs = NULL;
   }
 
   if (_block_poly3d->_face_ln_to_gn != NULL) {
     if (_block_poly3d->owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_poly3d->n_part; i++) {
-        if (_block_poly3d->_face_ln_to_gn[i] != NULL)
-          PDM_free(_block_poly3d->_face_ln_to_gn[i]);
-        _block_poly3d->_face_ln_to_gn[i] = NULL;
+        PDM_free(_block_poly3d->_face_ln_to_gn[i]);
       }
     }
     PDM_free(_block_poly3d->_face_ln_to_gn);
-    _block_poly3d->_face_ln_to_gn = NULL;
   }
 }
 
@@ -438,67 +372,46 @@ _block_poly3d_free
 {
   _block_poly3d_free_partial(_block_poly3d);
 
-  if (_block_poly3d->n_elt != NULL) {
-    PDM_free(_block_poly3d->n_elt);
-    _block_poly3d->n_elt = NULL;
-  }
+  PDM_free(_block_poly3d->n_elt);
 
-  if (_block_poly3d->n_face!= NULL) {
-    PDM_free(_block_poly3d->n_face);
-    _block_poly3d->n_face= NULL;
-  }
+  PDM_free(_block_poly3d->n_face);
 
   if (_block_poly3d->numabs_int != NULL) {
     if (_block_poly3d->numabs_int_owner == PDM_OWNERSHIP_KEEP) {
       for (int j = 0; j < _block_poly3d->n_part; j++) {
-        if (_block_poly3d->numabs_int[j] != NULL) {
-          PDM_free(_block_poly3d->numabs_int[j]);
-        }
+        PDM_free(_block_poly3d->numabs_int[j]);
       }
     }
     PDM_free(_block_poly3d->numabs_int);
-    _block_poly3d->numabs_int = NULL;
   }
 
   if (_block_poly3d->cell_centers != NULL) {
     if (_block_poly3d->cell_centers_owner == PDM_OWNERSHIP_KEEP) {
       for (int j = 0; j < _block_poly3d->n_part; j++) {
-        if (_block_poly3d->cell_centers[j] != NULL) {
-          PDM_free(_block_poly3d->cell_centers[j]);
-        }
+        PDM_free(_block_poly3d->cell_centers[j]);
       }
     }
     PDM_free(_block_poly3d->cell_centers);
-    _block_poly3d->cell_centers = NULL;
   }
 
-  if (_block_poly3d->cell_centers_to_compute != NULL) {
-    PDM_free(_block_poly3d->cell_centers_to_compute);
-    _block_poly3d->cell_centers_to_compute = NULL;
-  }
+  PDM_free(_block_poly3d->cell_centers_to_compute);
 
   if (_block_poly3d->_parent_num != NULL) {
     if (_block_poly3d->parent_num_owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_poly3d->n_part; i++) {
-        if (_block_poly3d->_parent_num[i] != NULL)
-          PDM_free(_block_poly3d->_parent_num[i]);
-        _block_poly3d->_parent_num[i] = NULL;
+        PDM_free(_block_poly3d->_parent_num[i]);
       }
     }
     PDM_free(_block_poly3d->_parent_num);
-    _block_poly3d->_parent_num = NULL;
   }
 
   if (_block_poly3d->_parent_entity_g_num != NULL) {
     if (_block_poly3d->parent_num_owner == PDM_OWNERSHIP_KEEP) {
       for (int i = 0; i < _block_poly3d->n_part; i++) {
-        if (_block_poly3d->_parent_entity_g_num[i] != NULL)
-          PDM_free(_block_poly3d->_parent_entity_g_num[i]);
-        _block_poly3d->_parent_entity_g_num[i] = NULL;
+        PDM_free(_block_poly3d->_parent_entity_g_num[i]);
       }
     }
     PDM_free(_block_poly3d->_parent_entity_g_num);
-    _block_poly3d->_parent_entity_g_num = NULL;
   }
 
   PDM_free(_block_poly3d);

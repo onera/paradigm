@@ -578,87 +578,7 @@ int main
 
   PDM_extract_part_part_nodal_set(extrp, pmn);
 
-  // PDM_extract_part_part_set ?
-  int  n_section   = PDM_part_mesh_nodal_elmts_n_section_get  (pmne);
-  int *sections_id = PDM_part_mesh_nodal_elmts_sections_id_get(pmne);
-
-  PDM_g_num_t **elt_ln_to_gn = NULL;
-  PDM_malloc(elt_ln_to_gn, n_part_in, PDM_g_num_t *);
-
   for (int i_part = 0; i_part < n_part_in; i_part++) {
-
-    int          n_vtx        = PDM_part_mesh_nodal_n_vtx_get    (pmn, i_part);
-    double      *vtx_coord    = PDM_part_mesh_nodal_vtx_coord_get(pmn, i_part);
-    PDM_g_num_t *vtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(pmn, i_part);
-
-    int n_elt_tot = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, i_part);
-    PDM_malloc(elt_ln_to_gn[i_part], n_elt_tot, PDM_g_num_t);
-
-    int i_cell = -1;
-    for (int i_section = 0; i_section < n_section; i_section++) {
-      int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne, sections_id[i_section], i_part);
-
-      int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(pmne,
-                                                                 sections_id[i_section],
-                                                                 i_part,
-                                                                 PDM_OWNERSHIP_KEEP);
-
-      PDM_g_num_t *ln_to_gn = PDM_part_mesh_nodal_elmts_g_num_get(pmne,
-                                                                  sections_id[i_section],
-                                                                  i_part,
-                                                                  PDM_OWNERSHIP_KEEP);
-
-      for (int i_elt = 0; i_elt < n_elt; i_elt++) {
-        if (parent_num == NULL) {
-          i_cell++;
-        }
-        else {
-          i_cell = parent_num[i_elt];
-        }
-
-        elt_ln_to_gn[i_part][i_cell] = ln_to_gn[i_elt];
-      }
-    }
-
-    int          n_cell        = 0;
-    int          n_face        = 0;
-    int          n_edge        = 0;
-    PDM_g_num_t *cell_ln_to_gn = NULL;
-    PDM_g_num_t *face_ln_to_gn = NULL;
-    PDM_g_num_t *edge_ln_to_gn = NULL;
-    if (mesh_dimension == 3) {
-      n_cell        = n_elt_tot;
-      cell_ln_to_gn = elt_ln_to_gn[i_part];
-    }
-    else if (mesh_dimension == 2) {
-      n_face        = n_elt_tot;
-      face_ln_to_gn = elt_ln_to_gn[i_part];
-    }
-    else if (mesh_dimension == 1) {
-      n_edge        = n_elt_tot;
-      edge_ln_to_gn = elt_ln_to_gn[i_part];
-    }
-
-    PDM_extract_part_part_set(extrp,
-                              i_part,
-                              n_cell,
-                              n_face,
-                              n_edge,
-                              n_vtx,
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL,
-                              cell_ln_to_gn,
-                              face_ln_to_gn,
-                              edge_ln_to_gn,
-                              vtx_ln_to_gn,
-                              vtx_coord);
-
-
     PDM_extract_part_target_set(extrp,
                                 i_part,
                                 n_target   [i_part],
@@ -691,9 +611,7 @@ int main
   /* Free memory */
   for (int i_part = 0; i_part < n_part_in; i_part++) {
     PDM_free(target_gnum [i_part]);
-    PDM_free(elt_ln_to_gn[i_part]);
   }
-  PDM_free(elt_ln_to_gn);
   PDM_free(target_gnum);
   PDM_free(n_target   );
 

@@ -1533,48 +1533,6 @@ _create_extract_part_nodal
     }
 
 
-    int n_cell = 0;
-    int n_face = 0;
-    int n_edge = 0;
-    PDM_g_num_t *cell_ln_to_gn = NULL;
-    PDM_g_num_t *face_ln_to_gn = NULL;
-    PDM_g_num_t *edge_ln_to_gn = NULL;
-
-    switch (dim_mesh) {
-    case 1:
-      n_edge = part_n_elt;
-      break;
-    case 2:
-      n_face = part_n_elt;
-      break;
-    case 3:
-      n_cell = part_n_elt;
-      break;
-    default:
-      PDM_error(__FILE__, __LINE__, 0, "invalid dimension %d\n", dim_mesh);
-    }
-
-
-    PDM_extract_part_part_set(extrp_mesh,
-                              i_part,
-                              n_cell,
-                              n_face,
-                              n_edge,
-                              n_vtx,
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL,
-                              cell_ln_to_gn,
-                              face_ln_to_gn,
-                              edge_ln_to_gn,
-                              vtx_ln_to_gn,
-                              vtx_coord);
-
-
     PDM_part_mesh_nodal_coord_set(_pmn,
                                   i_part,
                                   n_vtx,
@@ -1587,10 +1545,6 @@ _create_extract_part_nodal
 
   /*  Setup target frame */
   PDM_extract_part_target_set(extrp_mesh, 0, n_elt_mesh, target_g_num, init_location_elt_mesh);
-  // PDM_g_num_t *target_g_num;
-  // PDM_malloc(target_g_num,n_elt_mesh,PDM_g_num_t);
-  // memcpy(target_g_num, gnum_elt_mesh, sizeof(PDM_g_num_t) * n_elt_mesh);
-  // PDM_extract_part_target_set(extrp_mesh, 0, n_elt_mesh, target_g_num, init_location_elt_mesh);
 
   PDM_extract_part_compute(extrp_mesh);
 

@@ -1138,173 +1138,13 @@ PDM_part_mesh_nodal_dump_vtk
     /* Export group also */
     int n_group = pmne->n_group;
     int n_elt_tot = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, i_part);
-    // int    *group_id  = PDM_array_const_int   (n_elt_tot, -1);
     double *elt_group = PDM_array_const_double(n_elt_tot, -1);
     for(int i_group = 0; i_group < n_group; ++i_group) {
-      log_trace("i_group %d\n", i_group);
-      PDM_log_trace_array_int(pmne->group_elmt[i_part][i_group], pmne->n_group_elmt[i_part][i_group], "group_elmt : ");
       for(int i = 0; i < pmne->n_group_elmt[i_part][i_group]; ++i) {
         int i_elt = pmne->group_elmt[i_part][i_group][i]-1;
-        // group_id [i_elt] = i_group;
         elt_group[i_elt] = i_group;
       }
     }
-
-
-    // printf("pn_vtx = %i\n", pn_vtx);
-    // int shift = 0;
-    // for(int i_section = 0; i_section < n_section; ++i_section) {
-
-    //   int id_section = section_id  [i_section];
-    //   int                  n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne, id_section, i_part);
-    //   PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get (pmne, id_section);
-
-    //   char filename[999];
-    //   sprintf(filename, "%s_section_%2.2d_%2.2d_%2.2d.vtk", filename_patter, i_section, i_part, i_rank);
-
-    //   if (t_elt == PDM_MESH_NODAL_POLY_2D) {
-    //     int *connec_idx = NULL;
-    //     int *connec     = NULL;
-    //     PDM_part_mesh_nodal_elmts_section_poly2d_get(pmne,
-    //                                                section_id[i_section],
-    //                                                i_part,
-    //                                                &connec_idx,
-    //                                                &connec,
-    //                                                PDM_OWNERSHIP_BAD_VALUE);
-
-
-    //     PDM_g_num_t *pelmt_ln_to_gn = PDM_part_mesh_nodal_elmts_g_num_get(pmne,
-    //                                                                       section_id[i_section],
-    //                                                                       i_part,
-    //                                                                       PDM_OWNERSHIP_BAD_VALUE);
-
-    //     PDM_vtk_write_polydata(filename,
-    //                            pn_vtx,
-    //                            pvtx_coord,
-    //                            pvtx_ln_to_gn,
-    //                            n_elt,
-    //                            connec_idx,
-    //                            connec,
-    //                            pelmt_ln_to_gn,
-    //                            NULL);
-    //   }
-
-    //   else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
-    //     // printf("PDM_part_mesh_nodal_dump_vtk : poly3D not yet supported\n");
-    //     int          n_face;
-    //     PDM_g_num_t *face_ln_to_gn;
-    //     int         *face_vtx_idx;
-    //     int         *face_vtx;
-    //     PDM_g_num_t *numabs;
-    //     int         *cell_face_idx;
-    //     int         *cell_face;
-    //     int         *parent_num;
-    //     PDM_g_num_t *parent_entity_g_num;
-    //     PDM_part_mesh_nodal_elmts_section_poly3d_get(pmne,
-    //                                                  id_section,
-    //                                                  i_part,
-    //                                                  &n_face,
-    //                                                  &face_ln_to_gn,
-    //                                                  &face_vtx_idx,
-    //                                                  &face_vtx,
-    //                                                  &numabs,
-    //                                                  &cell_face_idx,
-    //                                                  &cell_face,
-    //                                                  &parent_num,
-    //                                                  &parent_entity_g_num,
-    //                                                  PDM_OWNERSHIP_BAD_VALUE);
-
-    //     PDM_vtk_write_polydata(filename,
-    //                            pn_vtx,
-    //                            pvtx_coord,
-    //                            pvtx_ln_to_gn,
-    //                            n_face,
-    //                            face_vtx_idx,
-    //                            face_vtx,
-    //                            face_ln_to_gn,
-    //                            NULL);
-    //   }
-
-    //   else {
-    //     int is_ho = PDM_Mesh_nodal_elmt_is_ho(t_elt);
-    //     if(is_ho) {
-    //       int order;
-    //       const char  *ho_ordering     = NULL;
-    //       int         *pcell_vtx       = NULL;
-    //       PDM_g_num_t *pelmt_ln_to_gn  = NULL;
-    //       int         *parent_num      = NULL;
-    //       PDM_g_num_t *parent_elmt_num = NULL;
-    //       PDM_part_mesh_nodal_elmts_section_std_ho_get(pmne,
-    //                                                    section_id[i_section],
-    //                                                    i_part,
-    //                                                    &pcell_vtx,
-    //                                                    &pelmt_ln_to_gn,
-    //                                                    &parent_num,
-    //                                                    &parent_elmt_num,
-    //                                                    &order,
-    //                               (const char **)      &ho_ordering,
-    //                                                    PDM_OWNERSHIP_BAD_VALUE);
-
-    //       int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get (t_elt, order);
-    //       int *pcell_vtx_out;
-    //       PDM_malloc(pcell_vtx_out,n_vtx_per_elmt * n_elt ,int);
-    //       for(int i = 0; i < n_vtx_per_elmt * n_elt; ++i) {
-    //         pcell_vtx_out[i] = pcell_vtx[i];
-    //       }
-
-    //       PDM_Mesh_nodal_reorder_elt_vtx(t_elt,
-    //                                      order,
-    //                                      ho_ordering,
-    //                                      "PDM_HO_ORDERING_VTK",
-    //                                      n_elt,
-    //                                      pcell_vtx,
-    //                                      pcell_vtx_out);
-
-    //       PDM_vtk_write_std_elements_ho(filename,
-    //                                     order,
-    //                                     pn_vtx,
-    //                                     pvtx_coord,
-    //                                     pvtx_ln_to_gn,
-    //                                     t_elt,
-    //                                     n_elt,
-    //                                     pcell_vtx_out,
-    //                                     pelmt_ln_to_gn,
-    //                                     0,
-    //                                     NULL,
-    //                                     NULL);
-    //       PDM_free(pcell_vtx_out);
-    //     } else {
-
-    //       const char  *field_name[] = {"groud_id"};
-    //       int *section_group_id = &group_id[shift];
-    //       int         *pcell_vtx       = NULL;
-    //       PDM_g_num_t *pelmt_ln_to_gn  = NULL;
-    //       int         *parent_num      = NULL;
-    //       PDM_g_num_t *parent_elmt_num = NULL;
-    //       PDM_part_mesh_nodal_elmts_section_std_get(pmne,
-    //                                                 section_id[i_section],
-    //                                                 i_part,
-    //                                                 &pcell_vtx,
-    //                                                 &pelmt_ln_to_gn,
-    //                                                 &parent_num,
-    //                                                 &parent_elmt_num,
-    //                                                 PDM_OWNERSHIP_BAD_VALUE);
-
-    //       PDM_vtk_write_std_elements(filename,
-    //                                  pn_vtx,
-    //                                  pvtx_coord,
-    //                                  pvtx_ln_to_gn,
-    //                                  t_elt,
-    //                                  n_elt,
-    //                                  pcell_vtx,
-    //                                  pelmt_ln_to_gn,
-    //                                  1,
-    //                                  field_name,
-    //                   (const int **) &section_group_id);
-    //     }
-    //   }
-    //   shift += n_elt;
-    // }
 
     int *elt_vtx_idx = NULL;
     int *elt_vtx     = NULL;
@@ -1363,8 +1203,6 @@ PDM_part_mesh_nodal_dump_vtk
     PDM_free(elt_section);
     PDM_free(elt_vtx_idx);
     PDM_free(elt_vtx    );
-
-    // PDM_free(group_id);
   }
 }
 
