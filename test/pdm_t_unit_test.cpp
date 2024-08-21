@@ -29,7 +29,7 @@ int main(int argc, char** argv) {
 
   int test_result = ctx.run();
 
-  MPI_Finalize();
+   doctest::mpi_finalize();
 
   return test_result;
 }
