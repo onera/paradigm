@@ -668,8 +668,8 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
     for(int i_section = 0; i_section < n_section; ++i_section){
       int n_elmt_in_section = pelmt_by_section_n[i_section];
       for(int i_elmt = 0; i_elmt < n_elmt_in_section; ++i_elmt) {
-        //int i_parent = parent_num[i_section][i_elmt];
-        section_elmts_ln_to_gn[i_part][idx_elmt++] = elmt_ln_to_gn[i_part][i_elmt];
+        int i_parent = parent_num[i_section][i_elmt];
+        section_elmts_ln_to_gn[i_part][idx_elmt++] = elmt_ln_to_gn[i_part][i_parent];
       }
     }
     assert(idx_elmt == pn_elmt[i_part]);
@@ -683,14 +683,14 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
       PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(pmne, id_section);
       if (t_elt == PDM_MESH_NODAL_POLY_2D) {
         PDM_part_mesh_nodal_elmts_section_poly2d_set(pmne,
-                                                   id_section,
-                                                   i_part,
-                                                   n_elmt_in_section,
-                                                   connec_idx[i_section],
-                                                   connec    [i_section],
-                                                   numabs    [i_section],
-                                                   parent_num[i_section],
-                                                   PDM_OWNERSHIP_KEEP);
+                                                     id_section,
+                                                     i_part,
+                                                     n_elmt_in_section,
+                                                     connec_idx[i_section],
+                                                     connec    [i_section],
+                                                     numabs    [i_section],
+                                                     parent_num[i_section],
+                                                     PDM_OWNERSHIP_KEEP);
       }
       else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
         abort();
