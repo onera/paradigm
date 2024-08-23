@@ -251,18 +251,19 @@ const double           zero_z,
             _dface_cell[2*cpt + 0] = j * n_face_seg + i + 1;
             _dface_cell[2*cpt + 1] = 0;
 
+          } else if (k == n_face_seg) {
+
             _dface_vtx[cpt * 4    ] = k * n_vtx_seg * n_vtx_seg + (    j * n_vtx_seg + i + 2);
             _dface_vtx[cpt * 4 + 1] = k * n_vtx_seg * n_vtx_seg + ((j+1) * n_vtx_seg + i + 2);
             _dface_vtx[cpt * 4 + 2] = k * n_vtx_seg * n_vtx_seg + ((j+1) * n_vtx_seg + i + 1);
             _dface_vtx[cpt * 4 + 3] = k * n_vtx_seg * n_vtx_seg + (    j * n_vtx_seg + i + 1);
 
-          } else if (k == n_face_seg) {
             _dface_cell[2*cpt + 0] = (k-1) * n_face_seg * n_face_seg + j * n_face_seg + i + 1;
             _dface_cell[2*cpt + 1] = 0;
 
           } else {
-            _dface_cell[2*cpt + 0] = (k-1) * n_face_seg * n_face_seg + j * n_face_seg + i + 1;
-            _dface_cell[2*cpt + 1] =     k * n_face_seg * n_face_seg + j * n_face_seg + i + 1;
+            _dface_cell[2*cpt + 0] =     k * n_face_seg * n_face_seg + j * n_face_seg + i + 1;
+            _dface_cell[2*cpt + 1] = (k-1) * n_face_seg * n_face_seg + j * n_face_seg + i + 1;
           }
           cpt += 1;
           if (cpt == dcube->dn_face)
@@ -307,18 +308,19 @@ const double           zero_z,
             _dface_cell[2*cpt + 0] = k * n_face_seg * n_face_seg + j * n_face_seg + i + 1;
             _dface_cell[2*cpt + 1] = 0;
 
+          } else if (i == n_face_seg) {
+
             _dface_vtx[cpt * 4    ] =     k * n_vtx_seg * n_vtx_seg +     j * n_vtx_seg + i + 1;
             _dface_vtx[cpt * 4 + 1] =     k * n_vtx_seg * n_vtx_seg + (j+1) * n_vtx_seg + i + 1;
             _dface_vtx[cpt * 4 + 2] = (k+1) * n_vtx_seg * n_vtx_seg + (j+1) * n_vtx_seg + i + 1;
             _dface_vtx[cpt * 4 + 3] = (k+1) * n_vtx_seg * n_vtx_seg +     j * n_vtx_seg + i + 1;
 
-          } else if (i == n_face_seg) {
             _dface_cell[2*cpt + 0] = k * n_face_seg * n_face_seg + j * n_face_seg + i;
             _dface_cell[2*cpt + 1] = 0;
 
           } else {
-            _dface_cell[2*cpt + 0] = k * n_face_seg * n_face_seg + j * n_face_seg + i ;
-            _dface_cell[2*cpt + 1] = k * n_face_seg * n_face_seg + j * n_face_seg + i + 1;
+            _dface_cell[2*cpt + 0] = k * n_face_seg * n_face_seg + j * n_face_seg + i + 1;
+            _dface_cell[2*cpt + 1] = k * n_face_seg * n_face_seg + j * n_face_seg + i ;
           }
           cpt += 1;
           if (cpt == dcube->dn_face)
@@ -363,18 +365,19 @@ const double           zero_z,
             _dface_cell[2*cpt + 0] = k * n_face_seg * n_face_seg + j * n_face_seg + i + 1;
             _dface_cell[2*cpt + 1] = 0;
 
+          } else if (j == n_face_seg) {
+
             _dface_vtx[cpt * 4    ] = (k+1) * n_vtx_seg * n_vtx_seg + j * n_vtx_seg + i + 1    ;
             _dface_vtx[cpt * 4 + 1] = (k+1) * n_vtx_seg * n_vtx_seg + j * n_vtx_seg + i + 1 + 1;
             _dface_vtx[cpt * 4 + 2] =     k * n_vtx_seg * n_vtx_seg + j * n_vtx_seg + i + 1 + 1;
             _dface_vtx[cpt * 4 + 3] =     k * n_vtx_seg * n_vtx_seg + j * n_vtx_seg + i + 1    ;
 
-          } else if (j == n_face_seg) {
             _dface_cell[2*cpt + 0] =  k * n_face_seg * n_face_seg + (j-1) * n_face_seg + i + 1;
             _dface_cell[2*cpt + 1] = 0;
 
           } else {
-            _dface_cell[2*cpt + 0] = k * n_face_seg * n_face_seg + (j-1) * n_face_seg + i + 1;
-            _dface_cell[2*cpt + 1] = k * n_face_seg * n_face_seg +     j * n_face_seg + i + 1;
+            _dface_cell[2*cpt + 0] = k * n_face_seg * n_face_seg +     j * n_face_seg + i + 1;
+            _dface_cell[2*cpt + 1] = k * n_face_seg * n_face_seg + (j-1) * n_face_seg + i + 1;
           }
           cpt += 1;
           if (cpt == dcube->dn_face)
