@@ -578,7 +578,7 @@ int main
 
   PDM_extract_part_part_nodal_set(extrp, pmn);
 
-  for (int i_part = 0; i_part < n_part_in; i_part++) {
+  for (int i_part = 0; i_part < n_part_out; i_part++) {
     PDM_extract_part_target_set(extrp,
                                 i_part,
                                 n_target   [i_part],
@@ -609,7 +609,7 @@ int main
 
 
   /* Free memory */
-  for (int i_part = 0; i_part < n_part_in; i_part++) {
+  for (int i_part = 0; i_part < n_part_out; i_part++) {
     PDM_free(target_gnum [i_part]);
   }
   PDM_free(target_gnum);

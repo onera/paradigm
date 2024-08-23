@@ -587,7 +587,7 @@ int main
     PDM_part_mesh_nodal_t *extract_pmn = NULL;
     PDM_extract_part_part_mesh_nodal_get(extrp,
                                          &extract_pmn,
-                                         PDM_OWNERSHIP_USER);
+                                         PDM_OWNERSHIP_KEEP);
 
     for (PDM_geometry_kind_t geom_kind_child = geom_kind; geom_kind_child < PDM_GEOMETRY_KIND_CORNER; geom_kind_child++) {
       char name[999];
@@ -596,8 +596,6 @@ int main
                                    geom_kind_child,
                                    name);
     }
-
-    PDM_part_mesh_nodal_free(extract_pmn);
   }
 
 
