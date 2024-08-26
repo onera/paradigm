@@ -455,7 +455,7 @@ _get_targets
 
   int n_target_tot = distrib[i_rank+1] - distrib[i_rank];
 
-  log_trace("n_target_tot = %d\n", n_target_tot);
+  // log_trace("n_target_tot = %d\n", n_target_tot);
 
   int div = n_target_tot / n_part_out;
   int rem = n_target_tot % n_part_out;
@@ -472,7 +472,7 @@ _get_targets
       idx++;
     }
 
-    PDM_log_trace_array_long((*target_gnum)[i_part], (*n_target)[i_part], "target_gnum : ");
+    // PDM_log_trace_array_long((*target_gnum)[i_part], (*n_target)[i_part], "target_gnum : ");
   }
 
   PDM_free(distrib);
