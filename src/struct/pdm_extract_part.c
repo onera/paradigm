@@ -5966,9 +5966,6 @@ _extract_part_nodal
                             &request_entity_init_location);
 
 
-    // PDM_g_num_t **_target_parent_ln_to_gn = NULL;
-    // int         **pinit_location          = NULL;
-
     if (extrp->split_dual_method == PDM_SPLIT_DUAL_WITH_HILBERT) {
       /* Split blocks into parts of equal weight */
       PDM_g_num_t **pequi_gnum;
@@ -6845,27 +6842,27 @@ PDM_extract_part_compute
 {
   if (extrp->is_nodal) {
     /* Nodal */
-    int is_owner_pmn = 0;
+    // int is_owner_pmn = 0;
 
-    if (extrp->pmn == NULL) {
-      // Create pmn
-      is_owner_pmn = 1;
-      extrp->pmn = PDM_part_mesh_nodal_create(extrp->pmne->mesh_dimension,
-                                              extrp->pmne->n_part,
-                                              extrp->comm);
+    // if (extrp->pmn == NULL) { // this should not be necessary now
+    //   // Create pmn
+    //   is_owner_pmn = 1;
+    //   extrp->pmn = PDM_part_mesh_nodal_create(extrp->pmne->mesh_dimension,
+    //                                           extrp->pmne->n_part,
+    //                                           extrp->comm);
 
-      PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(extrp->pmn,
-                                                    extrp->pmne);
+    //   PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(extrp->pmn,
+    //                                                 extrp->pmne);
 
-      for (int i_part = 0; i_part < extrp->n_part_in; i_part++) {
-        PDM_part_mesh_nodal_coord_set(extrp->pmn,
-                                      i_part,
-                                      extrp->n_vtx       [i_part],
-                                      extrp->pvtx_coord  [i_part],
-                                      extrp->vtx_ln_to_gn[i_part],
-                                      PDM_OWNERSHIP_KEEP);
-      }
-    }
+    //   for (int i_part = 0; i_part < extrp->n_part_in; i_part++) {
+    //     PDM_part_mesh_nodal_coord_set(extrp->pmn,
+    //                                   i_part,
+    //                                   extrp->n_vtx       [i_part],
+    //                                   extrp->pvtx_coord  [i_part],
+    //                                   extrp->vtx_ln_to_gn[i_part],
+    //                                   PDM_OWNERSHIP_KEEP);
+    //   }
+    // }
 
     if (extrp->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL) {
       // LOCAL
@@ -6880,20 +6877,20 @@ PDM_extract_part_compute
       _compute_child_gnums_nodal(extrp);
     }
 
-    if (is_owner_pmn) {
-      // do better?
-      for (int i_part = 0; i_part < extrp->pmn->n_part; i_part++) {
-        PDM_free(extrp->pmn->vtx[i_part]);
-      }
-      PDM_free(extrp->pmn->vtx         );
-      PDM_free(extrp->pmn->n_vol       );
-      PDM_free(extrp->pmn->n_surf      );
-      PDM_free(extrp->pmn->n_ridge     );
-      PDM_free(extrp->pmn->n_corner    );
-      PDM_free(extrp->pmn->section_kind);
-      PDM_free(extrp->pmn->section_id  );
-      PDM_free(extrp->pmn              );
-    }
+    // if (is_owner_pmn) {
+    //   // do better?
+    //   for (int i_part = 0; i_part < extrp->pmn->n_part; i_part++) {
+    //     PDM_free(extrp->pmn->vtx[i_part]);
+    //   }
+    //   PDM_free(extrp->pmn->vtx         );
+    //   PDM_free(extrp->pmn->n_vol       );
+    //   PDM_free(extrp->pmn->n_surf      );
+    //   PDM_free(extrp->pmn->n_ridge     );
+    //   PDM_free(extrp->pmn->n_corner    );
+    //   PDM_free(extrp->pmn->section_kind);
+    //   PDM_free(extrp->pmn->section_id  );
+    //   PDM_free(extrp->pmn              );
+    // }
   }
 
   else {
@@ -6917,29 +6914,6 @@ PDM_extract_part_compute
       }
     }
   }
-
-  // if(extrp->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL) {
-  //   if(extrp->is_nodal) {
-  //     _extract_part_nodal(extrp);
-  //   } else {
-  //     _extract_part(extrp);
-  //   }
-  // } else if (extrp->extract_kind == PDM_EXTRACT_PART_KIND_REEQUILIBRATE) {
-  //   if(extrp->is_nodal) {
-  //     // _extract_part_and_reequilibrate_nodal(extrp);
-  //     // _extract_part_and_reequilibrate_nodal2(extrp);
-  //     _extract_part_nodal2(extrp);
-  //   } else {
-  //     _extract_part_and_reequilibrate(extrp);
-  //   }
-  // } else if (extrp->extract_kind == PDM_EXTRACT_PART_KIND_FROM_TARGET) {
-  //   if(extrp->is_nodal) {
-  //     // _extract_part_and_reequilibrate_nodal_from_target(extrp);
-  //     _extract_part_nodal2(extrp);
-  //   } else {
-  //     _extract_part_and_reequilibrate_from_target(extrp);
-  //   }
-  // }
 }
 
 
@@ -7070,8 +7044,6 @@ PDM_extract_part_part_nodal_set
   assert(extrp->dim == pmn->mesh_dimension);
   extrp->is_nodal = 1;
   extrp->pmn      = pmn;
-
-  // set extrp->cell/face/edge/vtx_ln_to_gn and co?
 }
 
 /**
@@ -7519,10 +7491,10 @@ PDM_extract_part_free
   PDM_free(extrp->target_gnum    );
   PDM_free(extrp->target_location);
 
-  PDM_free(extrp->cell_ln_to_gn );
-  PDM_free(extrp->face_ln_to_gn );
-  PDM_free(extrp->edge_ln_to_gn );
-  PDM_free(extrp->vtx_ln_to_gn  );
+  PDM_free(extrp->cell_ln_to_gn);
+  PDM_free(extrp->face_ln_to_gn);
+  PDM_free(extrp->edge_ln_to_gn);
+  PDM_free(extrp->vtx_ln_to_gn );
 
   PDM_free(extrp->pvtx_coord);
 
@@ -7560,27 +7532,15 @@ PDM_extract_part_partial_free
     if(extrp->is_owner_connectivity[i] == PDM_TRUE) {
       if(extrp->pextract_connectivity[i] != NULL) {
         for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
-          if(extrp->pextract_connectivity[i][i_part] != NULL) {
-            PDM_free(extrp->pextract_connectivity[i][i_part]);
-          }
+          PDM_free(extrp->pextract_connectivity[i][i_part]);
           if(extrp->pextract_connectivity_idx[i] != NULL) {
-            if(extrp->pextract_connectivity_idx[i][i_part] != NULL) {
-              PDM_free(extrp->pextract_connectivity_idx[i][i_part]);
-            }
+            PDM_free(extrp->pextract_connectivity_idx[i][i_part]);
           }
         }
       }
     }
-
-    if(extrp->pextract_connectivity[i] != NULL) {
-      PDM_free(extrp->pextract_connectivity[i]);
-      extrp->pextract_connectivity[i] = NULL;
-    }
-
-    if(extrp->pextract_connectivity_idx[i] != NULL) {
-      PDM_free(extrp->pextract_connectivity_idx[i]);
-      extrp->pextract_connectivity_idx[i] = NULL;
-    }
+    PDM_free(extrp->pextract_connectivity    [i]);
+    PDM_free(extrp->pextract_connectivity_idx[i]);
   }
 
   /* Free ln_to_gn */
@@ -7588,13 +7548,10 @@ PDM_extract_part_partial_free
     if(extrp->pextract_entity_ln_to_gn[i] != NULL) {
       if(extrp->is_owner_ln_to_gn[i] == PDM_TRUE) {
         for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
-          if(extrp->pextract_entity_ln_to_gn[i][i_part] != NULL) {
-            PDM_free(extrp->pextract_entity_ln_to_gn[i][i_part]);
-          }
+          PDM_free(extrp->pextract_entity_ln_to_gn[i][i_part]);
         }
       }
       PDM_free(extrp->pextract_entity_ln_to_gn[i]);
-      extrp->pextract_entity_ln_to_gn[i] = NULL;
     }
   }
 
@@ -7603,13 +7560,10 @@ PDM_extract_part_partial_free
     if(extrp->pextract_entity_color[i] != NULL) {
       if(extrp->is_owner_color[i] == PDM_TRUE) {
         for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
-          if(extrp->pextract_entity_color[i][i_part] != NULL) {
-            PDM_free(extrp->pextract_entity_color[i][i_part]);
-          }
+          PDM_free(extrp->pextract_entity_color[i][i_part]);
         }
       }
       PDM_free(extrp->pextract_entity_color[i]);
-      extrp->pextract_entity_color[i] = NULL;
     }
   }
 
@@ -7622,26 +7576,20 @@ PDM_extract_part_partial_free
       if(extrp->pextract_entity_parent_ln_to_gn[i] != NULL) {
         if(extrp->is_owner_parent_ln_to_gn[i] == PDM_TRUE) {
           for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
-            if(extrp->pextract_entity_parent_ln_to_gn[i][i_part] != NULL) {
-              PDM_free(extrp->pextract_entity_parent_ln_to_gn[i][i_part]);
-            }
+            PDM_free(extrp->pextract_entity_parent_ln_to_gn[i][i_part]);
           }
         }
         PDM_free(extrp->pextract_entity_parent_ln_to_gn[i]);
-        extrp->pextract_entity_parent_ln_to_gn[i] = NULL;
       }
     }
     else {
       if(extrp->pextract_entity_parent_ln_to_gn[i] != NULL) {
         if(extrp->is_owner_parent_ln_to_gn[i] == PDM_TRUE) {
           for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
-            if(extrp->pextract_entity_parent_ln_to_gn[i][i_part] != NULL) {
-              PDM_free(extrp->pextract_entity_parent_ln_to_gn[i][i_part]);
-            }
+            PDM_free(extrp->pextract_entity_parent_ln_to_gn[i][i_part]);
           }
         }
         PDM_free(extrp->pextract_entity_parent_ln_to_gn[i]);
-        extrp->pextract_entity_parent_ln_to_gn[i] = NULL;
       }
     }
   }
@@ -7651,28 +7599,21 @@ PDM_extract_part_partial_free
     if(extrp->pextract_entity_parent_lnum[i] != NULL) {
       if(extrp->is_owner_parent_lnum[i] == PDM_TRUE) {
         for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
-          if(extrp->pextract_entity_parent_lnum[i][i_part] != NULL) {
-            PDM_free(extrp->pextract_entity_parent_lnum[i][i_part]);
-          }
+          PDM_free(extrp->pextract_entity_parent_lnum[i][i_part]);
         }
       }
       PDM_free(extrp->pextract_entity_parent_lnum[i]);
-      extrp->pextract_entity_parent_lnum[i] = NULL;
     }
   }
 
   if(extrp->is_owner_vtx_coord == PDM_TRUE) {
     if(extrp->pextract_vtx_coord != NULL){
       for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
-        if(extrp->pextract_vtx_coord[i_part] != NULL){
-          PDM_free(extrp->pextract_vtx_coord[i_part]);
-        }
+        PDM_free(extrp->pextract_vtx_coord[i_part]);
       }
     }
   }
-  if(extrp->pextract_vtx_coord != NULL){
-    PDM_free(extrp->pextract_vtx_coord);
-  }
+  PDM_free(extrp->pextract_vtx_coord);
 
   for(int i = 0; i < PDM_MESH_ENTITY_MAX; ++i) {
     PDM_free(extrp->pextract_n_entity[i]);
@@ -7694,7 +7635,6 @@ PDM_extract_part_partial_free
       if (!extrp->is_nodal) {
         for(int i_group = 0; i_group < extrp->n_group[i]; ++i_group) {
           /* Free array */
-          // if(extrp->is_owner_extract_group[i][i_group] == PDM_TRUE) {
           if(extrp->group_array_ownership[i][i_group] == PDM_OWNERSHIP_KEEP) {
             for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
               PDM_free(extrp->pextract_group_entity                [i][i_group][i_part]);

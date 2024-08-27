@@ -637,8 +637,6 @@ _generate_part_entitiy_connectivity
    */
   PDM_g_num_t *send_elmt_cell_entity;
   PDM_g_num_t *elmt_cell_entity;
-  // PDM_malloc(send_elmt_cell_entity, elmt_cell_entity_idx[n_elmt_vol_tot], PDM_g_num_t);
-  // PDM_malloc(elmt_cell_entity,      elmt_cell_entity_idx[n_elmt_vol_tot], PDM_g_num_t);
   PDM_malloc(send_elmt_cell_entity, send_idx[n_rank],     PDM_g_num_t);
   PDM_malloc(elmt_cell_entity,      n_entity_elt_vol_tot, PDM_g_num_t);
 

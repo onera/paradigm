@@ -1506,8 +1506,6 @@ _create_extract_part_nodal
   PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(_pmn,
                                                 pmne);
 
-  // PDM_extract_part_part_nodal_set(extrp_mesh, pmne);
-
   /* Set vtx coordinates */
   for (int i_part = 0; i_part < n_part; ++i_part) {
     int n_vtx = 0;
@@ -1632,11 +1630,6 @@ _get_extracted_mesh_vol
                                           PDM_OWNERSHIP_KEEP);
 
   *cell_ln_to_gn = extrp->target_gnum[0];
-  // PDM_extract_part_parent_ln_to_gn_get(extrp,
-  //                                      0,
-  //                                      PDM_MESH_ENTITY_CELL,
-  //                                      cell_ln_to_gn,
-  //                                      PDM_OWNERSHIP_KEEP);
 
   PDM_extract_part_parent_ln_to_gn_get(extrp,
                                        0,
@@ -5548,12 +5541,6 @@ PDM_mesh_intersection_compute
   /*
    * Extract part
    */
-  // PDM_extract_part_t* extrp_mesh_a = _create_extract_part(mi->mesh[0],
-  //                                                         mi->dim_mesh[0],
-  //                                                         boxes_mesh[0]);
-  // PDM_extract_part_t* extrp_mesh_b = _create_extract_part(mi->mesh[1],
-  //                                                         mi->dim_mesh[1],
-  //                                                         boxes_mesh[1]);
   for (int imesh = 0; imesh < 2; imesh++) {
     if (mi->mesh_nodal[imesh] == NULL && mi->mesh[imesh] != NULL) {
       mi->extrp_mesh[imesh] = _create_extract_part(mi->mesh[imesh],
@@ -5571,8 +5558,6 @@ PDM_mesh_intersection_compute
   PDM_extract_part_t* extrp_mesh_b = mi->extrp_mesh[1];
 
   PDM_dbbtree_free (dbbtree_mesh_a);
-  // PDM_box_set_destroy (&boxes_mesh[0]);
-  // PDM_box_set_destroy (&boxes_mesh[1]);
 
   /*
    * Geometry begins here ...
@@ -5672,12 +5657,6 @@ PDM_mesh_intersection_compute
 
     PDM_free(redistribute_box_a_to_box_b_idx);
     PDM_free(redistribute_box_a_to_box_b    );
-
-    // for (int imesh = 0; imesh < 2; imesh++) {
-    //   if (mi->mesh_nodal[imesh] == NULL && mi->mesh[imesh] == NULL) {
-    //     PDM_part_mesh_nodal_elmts_free(mi->extrp_mesh[imesh]->pmne);
-    //   }
-    // }
 
     PDM_extract_part_free(extrp_mesh_a);
     PDM_extract_part_free(extrp_mesh_b);
