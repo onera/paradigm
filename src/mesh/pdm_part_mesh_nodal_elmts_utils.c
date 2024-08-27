@@ -251,12 +251,9 @@ _generate_entity_connectivity
   int         *parent_decompose_entity2_vtx_idx,
   int         *parent_decompose_entity2_vtx,
   int         *parent_decompose_parent_entity2,
-  // int         *parent_decompose_parent_entity2_position,
   int          n_child_decompose_entity2,
   int         *child_decompose_entity2_vtx_idx,
   int         *child_decompose_entity2_vtx,
-  // int         *child_decompose_parent_entity2,
-  // int         *child_decompose_parent_entity2_position,
   int        **out_child_to_parent_idx,
   int        **out_child_to_parent,
   int          pn_entity1,
@@ -653,14 +650,6 @@ PDM_part_mesh_nodal_elmts_sections_decompose_faces
                                                                                i_part,
                                                                                PDM_OWNERSHIP_BAD_VALUE);
 
-
-    // Not necessary (redundant)
-    // int n_cell = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, i_part);
-    // for (int i_cell = 0; i_cell < n_cell; i_cell++) {
-    //   elmt_cell_face_idx[idx_cell+1] = elmt_cell_face_idx[idx_cell] + local_elmt_face_idx[i_part][i_cell+1] - local_elmt_face_idx[i_part][i_cell];
-    //   idx_cell++;
-    // }
-
     for (int i_face = 0; i_face < local_n_decompose_elmt_face[i_part]; i_face++) {
       elmt_face_vtx_idx[idx_face+1] = elmt_face_vtx_idx[idx_face];
       for (int idx_vtx = local_elmt_face_vtx_idx[i_part][i_face]; idx_vtx < local_elmt_face_vtx_idx[i_part][i_face+1]; idx_vtx++) {
@@ -729,14 +718,6 @@ PDM_part_mesh_nodal_elmts_sections_decompose_edges
     PDM_g_num_t *cell_ln_to_gn = PDM_part_mesh_nodal_elmts_g_num_get_from_part(pmne,
                                                                                i_part,
                                                                                PDM_OWNERSHIP_BAD_VALUE);
-
-
-    // Not necessary (redundant)
-    // int n_cell = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, i_part);
-    // for (int i_cell = 0; i_cell < n_cell; i_cell++) {
-    //   elmt_cell_edge_idx[idx_cell+1] = elmt_cell_edge_idx[idx_cell] + local_elmt_edge_idx[i_part][i_cell+1] - local_elmt_edge_idx[i_part][i_cell];
-    //   idx_cell++;
-    // }
 
     for (int i_edge = 0; i_edge < local_n_decompose_elmt_edge[i_part]; i_edge++) {
       elmt_edge_vtx_idx[idx_edge+1] = elmt_edge_vtx_idx[idx_edge];
@@ -1933,12 +1914,9 @@ PDM_part_mesh_nodal_elmts_compute_child_entities
                                   decompose_parent_entity_vtx_idx      [i_part],
                                   decompose_parent_entity_vtx          [i_part],
                                   decompose_parent_parent_elmt         [i_part],
-                                  // decompose_parent_parent_elmt_position[i_part],
                                   n_decompose_child_entity             [i_part],
                                   decompose_child_entity_vtx_idx       [i_part],
                                   decompose_child_entity_vtx           [i_part],
-                                  // decompose_child_parent_elmt          [i_part],
-                                  // decompose_child_parent_elmt_position [i_part],
                                   &child_to_parent_idx                 [i_part],
                                   &child_to_parent                     [i_part],
                                   pn_parent,
