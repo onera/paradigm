@@ -43,6 +43,16 @@ bind (c, name='PDM_part_extension_compute')
 
 end subroutine PDM_part_extension_compute
 
+subroutine PDM_part_extension_compute2 (part_ext, dim) &
+bind (c, name='PDM_part_extension_compute2')
+  use iso_c_binding
+  implicit none
+
+  type(c_ptr),    value :: part_ext ! Part Extension instance
+  integer(c_int), value :: dim      ! Dimension
+
+end subroutine PDM_part_extension_compute2
+
 ! Free a part extension structure
 
 subroutine PDM_part_extension_free (part_ext) &
@@ -388,123 +398,123 @@ subroutine PDM_part_extension_set_part (part_ext,                 &
   c_cell_face_idx = C_NULL_PTR
   if (associated(cell_face_idx)) then
     c_cell_face_idx = c_loc(cell_face_idx)
-  endif 
-    
+  endif
+
   c_cell_face = C_NULL_PTR
   if (associated(cell_face)) then
     c_cell_face = c_loc(cell_face)
-  endif 
-    
+  endif
+
   c_face_cell = C_NULL_PTR
   if (associated(face_cell)) then
     c_face_cell = c_loc(face_cell)
-  endif 
-    
+  endif
+
   c_face_edge_idx = C_NULL_PTR
   if (associated(face_edge_idx)) then
     c_face_edge_idx = c_loc(face_edge_idx)
-  endif 
-    
+  endif
+
   c_face_edge = C_NULL_PTR
   if (associated(face_edge)) then
     c_face_edge = c_loc(face_edge)
-  endif 
-    
+  endif
+
   c_face_vtx_idx = C_NULL_PTR
   if (associated(face_vtx_idx)) then
     c_face_vtx_idx = c_loc(face_vtx_idx)
-  endif 
-    
+  endif
+
   c_face_vtx = C_NULL_PTR
   if (associated(face_vtx)) then
     c_face_vtx = c_loc(face_vtx)
-  endif 
-    
+  endif
+
   c_edge_vtx = C_NULL_PTR
   if (associated(edge_vtx)) then
     c_edge_vtx = c_loc(edge_vtx)
-  endif 
-    
+  endif
+
   c_face_bound_idx = C_NULL_PTR
   if (associated(face_bound_idx)) then
     c_face_bound_idx = c_loc(face_bound_idx)
-  endif 
-    
+  endif
+
   c_face_bound = C_NULL_PTR
   if (associated(face_bound)) then
     c_face_bound = c_loc(face_bound)
-  endif 
-    
+  endif
+
   c_face_join_idx = C_NULL_PTR
   if (associated(face_join_idx)) then
     c_face_join_idx = c_loc(face_join_idx)
-  endif 
-    
+  endif
+
   c_face_join = C_NULL_PTR
   if (associated(face_join)) then
     c_face_join = c_loc(face_join)
-  endif 
-    
+  endif
+
   c_face_part_bound_proc_idx = C_NULL_PTR
   if (associated(face_part_bound_proc_idx)) then
     c_face_part_bound_proc_idx = c_loc(face_part_bound_proc_idx)
-  endif 
-    
+  endif
+
   c_face_part_bound_part_idx = C_NULL_PTR
   if (associated(face_part_bound_part_idx)) then
     c_face_part_bound_part_idx = c_loc(face_part_bound_part_idx)
-  endif 
-    
+  endif
+
   c_face_part_bound = C_NULL_PTR
   if (associated(face_part_bound)) then
     c_face_part_bound = c_loc(face_part_bound)
-  endif 
-    
+  endif
+
   c_vtx_part_bound_proc_idx = C_NULL_PTR
   if (associated(vtx_part_bound_proc_idx)) then
     c_vtx_part_bound_proc_idx = c_loc(vtx_part_bound_proc_idx)
-  endif 
-    
+  endif
+
   c_vtx_part_bound_part_idx = C_NULL_PTR
   if (associated(vtx_part_bound_part_idx)) then
     c_vtx_part_bound_part_idx = c_loc(vtx_part_bound_part_idx)
-  endif 
-    
+  endif
+
   c_vtx_part_bound = C_NULL_PTR
   if (associated(vtx_part_bound)) then
     c_vtx_part_bound = c_loc(vtx_part_bound)
-  endif 
-    
+  endif
+
   c_cell_ln_to_gn = C_NULL_PTR
   if (associated(cell_ln_to_gn)) then
     c_cell_ln_to_gn = c_loc(cell_ln_to_gn)
-  endif 
-    
+  endif
+
   c_face_ln_to_gn = C_NULL_PTR
   if (associated(face_ln_to_gn)) then
     c_face_ln_to_gn = c_loc(face_ln_to_gn)
-  endif 
-    
+  endif
+
   c_edge_ln_to_gn = C_NULL_PTR
   if (associated(edge_ln_to_gn)) then
     c_edge_ln_to_gn = c_loc(edge_ln_to_gn)
-  endif 
-    
+  endif
+
   c_vtx_ln_to_gn = C_NULL_PTR
   if (associated(vtx_ln_to_gn)) then
     c_vtx_ln_to_gn = c_loc(vtx_ln_to_gn)
-  endif 
-    
+  endif
+
   c_face_group_ln_to_gn = C_NULL_PTR
   if (associated(face_group_ln_to_gn)) then
     c_face_group_ln_to_gn = c_loc(face_group_ln_to_gn)
-  endif 
-    
+  endif
+
   c_vtx_coord = C_NULL_PTR
   if (associated(vtx_coord)) then
     c_vtx_coord = c_loc(vtx_coord)
-  endif 
-    
+  endif
+
 
   call PDM_part_extension_set_part_c (part_ext,                        &
                                       i_domain,                        &
@@ -683,9 +693,9 @@ subroutine PDM_part_extension_group_get (part_ext,         &
   integer(pdm_l_num_s), pointer :: group_entity(:)          ! Group->entity connectivity (1-based local ids, size = ``group_entity_idx(n_group)``)
   integer(pdm_g_num_s), pointer :: group_entity_ln_to_gn(:) ! Group->entity connectivity (group-specific global ids, size = ``group_entity_idx(n_group)``)
 
-  type(c_ptr)                   :: c_group_entity          
-  type(c_ptr)                   :: c_group_entity_idx      
-  type(c_ptr)                   :: c_group_entity_ln_to_gn 
+  type(c_ptr)                   :: c_group_entity
+  type(c_ptr)                   :: c_group_entity_idx
+  type(c_ptr)                   :: c_group_entity_ln_to_gn
 
   interface
     function PDM_part_extension_group_get_c (part_ext,              &
@@ -785,6 +795,270 @@ subroutine PDM_part_extension_vtx_coord_get (part_ext,    &
                    [3,n_vtx])
 
 end subroutine PDM_part_extension_vtx_coord_get
+
+
+subroutine PDM_part_extension_connectivity_get2 (part_ext,          &
+                                                i_domain,          &
+                                                i_part,            &
+                                                connectivity_type, &
+                                                n_elt,             &
+                                                connect_idx,       &
+                                                connect,           &
+                                                ownership)
+  ! Get extended connectivity
+  use iso_c_binding
+  implicit none
+
+  type(c_ptr), value            :: part_ext          ! Part Extension instance
+  integer, intent(in)           :: i_domain          ! Id of current domain
+  integer, intent(in)           :: i_part            ! Id of current partition
+  integer, intent(in)           :: connectivity_type ! Type of mesh entity
+  integer, intent(out)          :: n_elt             ! Number of elements
+  integer(pdm_l_num_s), pointer :: connect_idx(:)    ! Index for entity->group graph (size = ``n_elt`` + 1)
+  integer(pdm_l_num_s), pointer :: connect(:)        ! Entity->group graph (size = ``connect_idx(n_elt)``)
+  integer, intent(in)           :: ownership         ! Ownership
+
+  type(c_ptr)                   :: c_connect
+  type(c_ptr)                   :: c_connect_idx
+
+  interface
+    function PDM_part_extension_connectivity_get2_c (part_ext,          &
+                                                    i_domain,          &
+                                                    i_part,            &
+                                                    connectivity_type, &
+                                                    connect_idx,       &
+                                                    connect,           &
+                                                    ownership)         &
+    result (n_elt)                                                     &
+    bind (c, name='PDM_part_extension_connectivity_get2')
+      use iso_c_binding
+      implicit none
+
+      type(c_ptr),    value :: part_ext
+      integer(c_int), value :: i_domain
+      integer(c_int), value :: i_part
+      integer(c_int), value :: connectivity_type
+      type(c_ptr)           :: connect_idx
+      type(c_ptr)           :: connect
+      integer(c_int), value :: ownership
+      integer(c_int)        :: n_elt
+
+    end function PDM_part_extension_connectivity_get2_c
+  end interface
+
+  c_connect     = C_NULL_PTR
+  c_connect_idx = C_NULL_PTR
+  n_elt =  PDM_part_extension_connectivity_get2_c (part_ext,          &
+                                                  i_domain,          &
+                                                  i_part,            &
+                                                  connectivity_type, &
+                                                  c_connect_idx,     &
+                                                  c_connect,         &
+                                                  ownership)
+
+  call c_f_pointer(c_connect_idx, &
+                   connect_idx,   &
+                   [n_elt+1])
+
+  call c_f_pointer(c_connect, &
+                   connect,   &
+                   [connect_idx(n_elt + 1)])
+
+end subroutine PDM_part_extension_connectivity_get2
+
+
+subroutine PDM_part_extension_ln_to_gn_get2 (part_ext,    &
+                                            i_domain,    &
+                                            i_part,      &
+                                            mesh_entity, &
+                                            n_elt,       &
+                                            ln_to_gn,    &
+                                            ownership)
+  ! Get global ids of extended entities
+  use iso_c_binding
+  implicit none
+
+  type(c_ptr), value            :: part_ext    ! Part Extension instance
+  integer, intent(in)           :: i_domain    ! Id of current domain
+  integer, intent(in)           :: i_part      ! Id of current partition
+  integer, intent(in)           :: mesh_entity ! Type of mesh entity
+  integer, intent(out)          :: n_elt       ! Number of elements
+  integer(pdm_g_num_s), pointer :: ln_to_gn(:) ! Global ids (size = ``n_elt``)
+  integer, intent(in)           :: ownership   ! Ownership
+
+  type(c_ptr)                   :: c_ln_to_gn
+
+  interface
+    function PDM_part_extension_ln_to_gn_get2_c (part_ext,    &
+                                                i_domain,    &
+                                                i_part,      &
+                                                mesh_entity, &
+                                                ln_to_gn,    &
+                                                ownership)   &
+    result (n_elt)                                           &
+    bind (c, name='PDM_part_extension_ln_to_gn_get2')
+      use iso_c_binding
+      implicit none
+
+      type(c_ptr),    value :: part_ext
+      integer(c_int), value :: i_domain
+      integer(c_int), value :: i_part
+      integer(c_int), value :: mesh_entity
+      type(c_ptr)           :: ln_to_gn
+      integer(c_int), value :: ownership
+      integer(c_int)        :: n_elt
+
+    end function PDM_part_extension_ln_to_gn_get2_c
+  end interface
+
+  c_ln_to_gn = C_NULL_PTR
+  n_elt =  PDM_part_extension_ln_to_gn_get2_c (part_ext,    &
+                                              i_domain,    &
+                                              i_part,      &
+                                              mesh_entity, &
+                                              c_ln_to_gn,  &
+                                              ownership)
+
+  call c_f_pointer(c_ln_to_gn, &
+                   ln_to_gn,   &
+                   [n_elt])
+
+end subroutine PDM_part_extension_ln_to_gn_get2
+
+
+subroutine PDM_part_extension_group_get2 (part_ext,              &
+                                         i_domain,              &
+                                         i_part,                &
+                                         mesh_entity,           &
+                                         n_group,               &
+                                         group_entity_idx,      &
+                                         group_entity,          &
+                                         group_entity_ln_to_gn, &
+                                         ownership)
+  ! Get groups for extended entities with given type
+  use iso_c_binding
+  implicit none
+
+  type(c_ptr), value            :: part_ext                 ! Part Extension instance
+  integer, intent(in)           :: i_domain                 ! Id of current domain
+  integer, intent(in)           :: i_part                   ! Id of current partition
+  integer, intent(in)           :: mesh_entity              ! Type of mesh entity
+  integer, intent(out)          :: n_group                  ! Number of groups
+  integer(pdm_l_num_s), pointer :: group_entity_idx(:)      ! Index for group->entity connectivity (size = ``n_group``)
+  integer(pdm_l_num_s), pointer :: group_entity(:)          ! Group->entity connectivity (1-based local ids, size = ``group_entity_idx(n_group)``)
+  integer(pdm_g_num_s), pointer :: group_entity_ln_to_gn(:) ! Group->entity connectivity (group-specific global ids, size = ``group_entity_idx(n_group)``)
+  integer, intent(in)           :: ownership                ! Ownership
+
+  type(c_ptr)                   :: c_group_entity
+  type(c_ptr)                   :: c_group_entity_idx
+  type(c_ptr)                   :: c_group_entity_ln_to_gn
+
+  interface
+    function PDM_part_extension_group_get2_c (part_ext,              &
+                                             i_domain,              &
+                                             i_part,                &
+                                             entity_type,           &
+                                             group_entity_idx,      &
+                                             group_entity,          &
+                                             group_entity_ln_to_gn, &
+                                             ownership)             &
+    result (n_group)                                                &
+    bind (c, name='PDM_part_extension_group_get2')
+      use iso_c_binding
+      implicit none
+
+      type(c_ptr),    value :: part_ext
+      integer(c_int), value :: i_domain
+      integer(c_int), value :: i_part
+      integer(c_int), value :: entity_type
+      type(c_ptr)           :: group_entity_idx
+      type(c_ptr)           :: group_entity
+      type(c_ptr)           :: group_entity_ln_to_gn
+      integer(c_int), value :: ownership
+      integer(c_int)        :: n_group
+
+    end function PDM_part_extension_group_get2_c
+  end interface
+
+  c_group_entity          = C_NULL_PTR
+  c_group_entity_idx      = C_NULL_PTR
+  c_group_entity_ln_to_gn = C_NULL_PTR
+  n_group =  PDM_part_extension_group_get2_c (part_ext,                &
+                                             i_domain,                &
+                                             i_part,                  &
+                                             mesh_entity,             &
+                                             c_group_entity_idx,      &
+                                             c_group_entity,          &
+                                             c_group_entity_ln_to_gn, &
+                                             ownership)
+
+  call c_f_pointer(c_group_entity_idx, &
+                   group_entity_idx,   &
+                   [n_group+1])
+
+  call c_f_pointer(c_group_entity, &
+                   group_entity,   &
+                   [group_entity_idx(n_group + 1)])
+
+  call c_f_pointer(c_group_entity_ln_to_gn, &
+                   group_entity_ln_to_gn,   &
+                   [group_entity_idx(n_group + 1)])
+
+end subroutine PDM_part_extension_group_get2
+
+
+subroutine PDM_part_extension_vtx_coord_get2 (part_ext,    &
+                                             i_domain,    &
+                                             i_part,      &
+                                             n_vtx,       &
+                                             vtx_coord,   &
+                                             ownership)
+  ! Get coordinates of extended vertices
+  use iso_c_binding
+  implicit none
+
+  type(c_ptr), value        :: part_ext        ! Part Extension instance
+  integer, intent(in)       :: i_domain        ! Id of current domain
+  integer, intent(in)       :: i_part          ! Id of current partition
+  integer, intent(out)      :: n_vtx           ! Number of vertices
+  double precision, pointer :: vtx_coord(:,:)  ! Vertex coordinates (shape = [3, ``n_vtx``])
+  integer, intent(in)       :: ownership       ! Ownership
+
+  type(c_ptr)               :: c_vtx_coord
+
+  interface
+    function PDM_part_extension_vtx_coord_get2_c (part_ext,    &
+                                                 i_domain,    &
+                                                 i_part,      &
+                                                 vtx_coord,   &
+                                                 ownership)   &
+    result (n_vtx)                                            &
+    bind (c, name='PDM_part_extension_vtx_coord_get2')
+      use iso_c_binding
+      implicit none
+
+      type(c_ptr),    value :: part_ext
+      integer(c_int), value :: i_domain
+      integer(c_int), value :: i_part
+      type(c_ptr)           :: vtx_coord
+      integer(c_int), value :: ownership
+      integer(c_int)        :: n_vtx
+
+    end function PDM_part_extension_vtx_coord_get2_c
+  end interface
+
+  c_vtx_coord = C_NULL_PTR
+  n_vtx =  PDM_part_extension_vtx_coord_get2_c (part_ext,    &
+                                               i_domain,    &
+                                               i_part,      &
+                                               c_vtx_coord, &
+                                               ownership)
+
+  call c_f_pointer(c_vtx_coord, &
+                   vtx_coord,   &
+                   [3,n_vtx])
+
+end subroutine PDM_part_extension_vtx_coord_get2
 
 
 !>
