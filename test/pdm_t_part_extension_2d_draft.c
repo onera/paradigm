@@ -690,7 +690,9 @@ int main
   }
 
   /* Set interface */
-  PDM_part_extension_part_domain_interface_shared_set(part_ext, pdi);
+  if (n_dom_i>1 && n_dom_j>1) {
+    PDM_part_extension_part_domain_interface_shared_set(part_ext, pdi);
+  }
 
 
   PDM_part_extension_compute2(part_ext, 2);

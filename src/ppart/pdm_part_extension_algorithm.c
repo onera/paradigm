@@ -3197,7 +3197,11 @@ PDM_part_extension_build_entity1_graph
   int                           *n_part,
   int                          **pn_entity1_in,
   PDM_g_num_t                 ***pentity1_ln_to_gn_in,
+  int                         ***pentity1_bnd_proc_idx_in,
+  int                         ***pentity1_bnd_part_idx_in,
+  int                         ***pentity1_bnd_in,
   int                         ***pentity1_hint_in,
+  int                            user_defined_bnd_graph,
   int                         ***pentity1_extented_to_pentity1_idx_out,
   int                         ***pentity1_extented_to_pentity1_triplet_out,
   int                         ***pentity1_extented_to_pentity1_interface_out,
@@ -3265,6 +3269,11 @@ PDM_part_extension_build_entity1_graph
   PDM_malloc(part1_to_part2_triplet  , n_part_tot, int *);
   PDM_malloc(part1_to_part2_interface, n_part_tot, int *);
 
+  int dom_itrf_defined = 1;
+  if (pn_entity1_num==NULL) { // if pdi==NULL
+    dom_itrf_defined = 0;
+  }
+
   int i_rank;
   int n_rank;
   PDM_MPI_Comm_rank(comm, &i_rank);
@@ -3272,22 +3281,24 @@ PDM_part_extension_build_entity1_graph
 
   PDM_g_num_t *part_distribution = PDM_compute_entity_distribution(comm, n_part_tot);
 
-  int **ppart_entity1_proc_idx = NULL;
-  int **ppart_entity1_part_idx = NULL;
-  int **ppart_entity1          = NULL; // (i_entity1, i_proc, i_part, i_entity1_opp)
-  PDM_part_generate_entity_graph_comm(comm,
-                                      part_distribution,
-                                      NULL,
-                                      n_part_tot,
-                                      pn_entity1,
-               (const PDM_g_num_t **) pentity1_ln_to_gn,
-               (const int         **) pentity1_hint,
-                                      &ppart_entity1_proc_idx,
-                                      &ppart_entity1_part_idx,
-                                      &ppart_entity1,
-                                      NULL);
+  int **ppart_entity1_proc_idx = *pentity1_bnd_proc_idx_in;
+  int **ppart_entity1_part_idx = *pentity1_bnd_part_idx_in;
+  int **ppart_entity1          = *pentity1_bnd_in;
+  if (user_defined_bnd_graph==0) {
+    PDM_part_generate_entity_graph_comm(comm,
+                                        part_distribution,
+                                        NULL,
+                                        n_part_tot,
+                                        pn_entity1,
+                 (const PDM_g_num_t **) pentity1_ln_to_gn,
+                 (const int         **) pentity1_hint,
+                                        &ppart_entity1_proc_idx,
+                                        &ppart_entity1_part_idx,
+                                        &ppart_entity1,
+                                        NULL);
 
-  PDM_free(part_distribution);
+    PDM_free(part_distribution);
+  }
 
   int* n_part_g = NULL;
   PDM_malloc(n_part_g, n_domain, int);
@@ -3328,11 +3339,13 @@ PDM_part_extension_build_entity1_graph
         part1_to_part2_n[i_entity] += 1;
       }
 
-      /* From interface */
-      for(int idx_entity = 0; idx_entity < pn_entity1_num[li_part]; ++idx_entity) {
-        int i_entity = pentity1_num[li_part][idx_entity];
-        int n_opp = pentity1_opp_location_idx[li_part][idx_entity+1] - pentity1_opp_location_idx[li_part][idx_entity];
-        part1_to_part2_n[i_entity] += n_opp;
+      /* From domain interface */
+      if (dom_itrf_defined==1) {
+        for(int idx_entity = 0; idx_entity < pn_entity1_num[li_part]; ++idx_entity) {
+          int i_entity = pentity1_num[li_part][idx_entity];
+          int n_opp = pentity1_opp_location_idx[li_part][idx_entity+1] - pentity1_opp_location_idx[li_part][idx_entity];
+          part1_to_part2_n[i_entity] += n_opp;
+        }
       }
 
 
@@ -3364,20 +3377,22 @@ PDM_part_extension_build_entity1_graph
         // part1_to_part2_triplet[li_part][idx_entity+1] = part1_to_part2_triplet[li_part][idx_entity] + 3;
       }
 
-      /* From interface */
-      for(int idx_entity = 0; idx_entity < pn_entity1_num[li_part]; ++idx_entity) {
-        int i_entity = pentity1_num[li_part][idx_entity];
-        for(int idx_opp = pentity1_opp_location_idx[li_part][idx_entity  ];
-                idx_opp < pentity1_opp_location_idx[li_part][idx_entity+1]; ++idx_opp) {
+      /* From domain interface */
+      if (dom_itrf_defined==1) {
+        for(int idx_entity = 0; idx_entity < pn_entity1_num[li_part]; ++idx_entity) {
+          int i_entity = pentity1_num[li_part][idx_entity];
+          for(int idx_opp = pentity1_opp_location_idx[li_part][idx_entity  ];
+                  idx_opp < pentity1_opp_location_idx[li_part][idx_entity+1]; ++idx_opp) {
 
-          int idx_write = part1_to_part2_idx[li_part][i_entity] + 3 * part1_to_part2_n[i_entity];
-          part1_to_part2_triplet  [li_part][idx_write  ] = pentity1_opp_location [li_part][3*idx_opp  ];
-          part1_to_part2_triplet  [li_part][idx_write+1] = pentity1_opp_location [li_part][3*idx_opp+1];
-          part1_to_part2_triplet  [li_part][idx_write+2] = pentity1_opp_location [li_part][3*idx_opp+2];
+            int idx_write = part1_to_part2_idx[li_part][i_entity] + 3 * part1_to_part2_n[i_entity];
+            part1_to_part2_triplet  [li_part][idx_write  ] = pentity1_opp_location [li_part][3*idx_opp  ];
+            part1_to_part2_triplet  [li_part][idx_write+1] = pentity1_opp_location [li_part][3*idx_opp+1];
+            part1_to_part2_triplet  [li_part][idx_write+2] = pentity1_opp_location [li_part][3*idx_opp+2];
 
-          // Il faudra le faire en stride variable si periodicité composé
-          idx_write = part1_to_part2_idx[li_part][i_entity]/3 + part1_to_part2_n[i_entity]++;
-          part1_to_part2_interface[li_part][idx_write  ] = pentity1_opp_interface[li_part][  idx_opp  ];
+            // Il faudra le faire en stride variable si periodicité composé
+            idx_write = part1_to_part2_idx[li_part][i_entity]/3 + part1_to_part2_n[i_entity]++;
+            part1_to_part2_interface[li_part][idx_write  ] = pentity1_opp_interface[li_part][  idx_opp  ];
+          }
         }
       }
 
@@ -3403,24 +3418,28 @@ PDM_part_extension_build_entity1_graph
   }
 
   for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
-    PDM_free(pentity1_num             [i_part]);
-    PDM_free(pentity1_opp_location_idx[i_part]);
-    PDM_free(pentity1_opp_location    [i_part]);
-    PDM_free(pentity1_opp_interface   [i_part]);
-    PDM_free(pentity1_opp_sens        [i_part]);
-    PDM_free(pentity1_opp_gnum        [i_part]);
+    if (dom_itrf_defined==1) {
+      PDM_free(pentity1_num             [i_part]);
+      PDM_free(pentity1_opp_location_idx[i_part]);
+      PDM_free(pentity1_opp_location    [i_part]);
+      PDM_free(pentity1_opp_interface   [i_part]);
+      PDM_free(pentity1_opp_sens        [i_part]);
+      PDM_free(pentity1_opp_gnum        [i_part]);
+    }
     PDM_free(ppart_entity1            [i_part]);
     PDM_free(ppart_entity1_proc_idx   [i_part]);
     PDM_free(ppart_entity1_part_idx   [i_part]);
   }
-  PDM_free(pn_entity1_num            );
-  PDM_free(pentity1_num              );
-  PDM_free(pentity1_opp_location_idx );
-  PDM_free(pentity1_opp_location     );
-  PDM_free(pentity1_opp_interface_idx);
-  PDM_free(pentity1_opp_interface    );
-  PDM_free(pentity1_opp_sens         );
-  PDM_free(pentity1_opp_gnum         );
+  if (dom_itrf_defined==1) {
+    PDM_free(pn_entity1_num            );
+    PDM_free(pentity1_num              );
+    PDM_free(pentity1_opp_location_idx );
+    PDM_free(pentity1_opp_location     );
+    PDM_free(pentity1_opp_interface_idx);
+    PDM_free(pentity1_opp_interface    );
+    PDM_free(pentity1_opp_sens         );
+    PDM_free(pentity1_opp_gnum         );
+  }
   PDM_free(ppart_entity1             );
   PDM_free(ppart_entity1_proc_idx    );
   PDM_free(ppart_entity1_part_idx    );

@@ -1725,6 +1725,9 @@ PDM_part_domain_interface_view_by_part
   PDM_g_num_t                 ***pentity_opp_gnum_out
 )
 {
+  if (pdi==NULL) {
+    return;
+  }
 
   int i_rank;
   PDM_MPI_Comm_rank(pdi->comm, &i_rank);
