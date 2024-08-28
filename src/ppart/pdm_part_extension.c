@@ -759,22 +759,6 @@ _compute_other_part_domain_interface
  PDM_part_extension_t *part_ext
 )
 {
-  if(part_ext->pdi == NULL) {
-    return;
-  }
-
-
-  int is_describe_vtx  = PDM_part_domain_interface_exist_get(part_ext->pdi, PDM_BOUND_TYPE_VTX );
-  int is_describe_edge = PDM_part_domain_interface_exist_get(part_ext->pdi, PDM_BOUND_TYPE_EDGE);
-  int is_describe_face = PDM_part_domain_interface_exist_get(part_ext->pdi, PDM_BOUND_TYPE_FACE);
-
-  int is_describe_vtx_l  = is_describe_vtx;
-  int is_describe_edge_l = is_describe_edge;
-  int is_describe_face_l = is_describe_face;
-  PDM_MPI_Allreduce(&is_describe_vtx_l , &is_describe_vtx , 1, PDM_MPI_INT, PDM_MPI_MAX, part_ext->comm);
-  PDM_MPI_Allreduce(&is_describe_edge_l, &is_describe_edge, 1, PDM_MPI_INT, PDM_MPI_MAX, part_ext->comm);
-  PDM_MPI_Allreduce(&is_describe_face_l, &is_describe_face, 1, PDM_MPI_INT, PDM_MPI_MAX, part_ext->comm);
-
   int have_edge = 0;
   int have_face = 0;
 
@@ -792,6 +776,22 @@ _compute_other_part_domain_interface
   }
   part_ext->have_edge = have_edge;
   part_ext->have_face = have_face;
+
+  if(part_ext->pdi == NULL) {
+    return;
+  }
+
+  int is_describe_vtx  = PDM_part_domain_interface_exist_get(part_ext->pdi, PDM_BOUND_TYPE_VTX );
+  int is_describe_edge = PDM_part_domain_interface_exist_get(part_ext->pdi, PDM_BOUND_TYPE_EDGE);
+  int is_describe_face = PDM_part_domain_interface_exist_get(part_ext->pdi, PDM_BOUND_TYPE_FACE);
+
+  int is_describe_vtx_l  = is_describe_vtx;
+  int is_describe_edge_l = is_describe_edge;
+  int is_describe_face_l = is_describe_face;
+  PDM_MPI_Allreduce(&is_describe_vtx_l , &is_describe_vtx , 1, PDM_MPI_INT, PDM_MPI_MAX, part_ext->comm);
+  PDM_MPI_Allreduce(&is_describe_edge_l, &is_describe_edge, 1, PDM_MPI_INT, PDM_MPI_MAX, part_ext->comm);
+  PDM_MPI_Allreduce(&is_describe_face_l, &is_describe_face, 1, PDM_MPI_INT, PDM_MPI_MAX, part_ext->comm);
+
 
   // En gros noeud centré avec toutes les connectivités
   if(is_describe_vtx == 1 &&
@@ -2024,8 +2024,11 @@ _build_bound_graph
   } else if(part_ext->extend_type == PDM_EXTEND_FROM_EDGE) {
     bound_type = PDM_BOUND_TYPE_EDGE;
     for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
-      PDM_malloc(pn_entity1       [i_domain], part_ext->n_domain, int          );
-      PDM_malloc(pentity1_ln_to_gn[i_domain], part_ext->n_domain, PDM_g_num_t *);
+      PDM_malloc(pn_entity1           [i_domain], part_ext->n_domain, int          );
+      PDM_malloc(pentity1_ln_to_gn    [i_domain], part_ext->n_domain, PDM_g_num_t *);
+      PDM_malloc(pentity1_bnd_proc_idx[i_domain], part_ext->n_domain, int         *);
+      PDM_malloc(pentity1_bnd_part_idx[i_domain], part_ext->n_domain, int         *);
+      PDM_malloc(pentity1_bnd         [i_domain], part_ext->n_domain, int         *);
       for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
         pn_entity1           [i_domain][i_part] = part_ext->parts[i_domain][i_part].n_edge;
         pentity1_ln_to_gn    [i_domain][i_part] = part_ext->parts[i_domain][i_part].edge_ln_to_gn;
@@ -2037,8 +2040,11 @@ _build_bound_graph
   } else if(part_ext->extend_type == PDM_EXTEND_FROM_FACE) {
     bound_type = PDM_BOUND_TYPE_FACE;
     for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
-      PDM_malloc(pn_entity1       [i_domain], part_ext->n_domain, int          );
-      PDM_malloc(pentity1_ln_to_gn[i_domain], part_ext->n_domain, PDM_g_num_t *);
+      PDM_malloc(pn_entity1           [i_domain], part_ext->n_domain, int          );
+      PDM_malloc(pentity1_ln_to_gn    [i_domain], part_ext->n_domain, PDM_g_num_t *);
+      PDM_malloc(pentity1_bnd_proc_idx[i_domain], part_ext->n_domain, int         *);
+      PDM_malloc(pentity1_bnd_part_idx[i_domain], part_ext->n_domain, int         *);
+      PDM_malloc(pentity1_bnd         [i_domain], part_ext->n_domain, int         *);
       for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
         pn_entity1           [i_domain][i_part] = part_ext->parts[i_domain][i_part].n_face;
         pentity1_ln_to_gn    [i_domain][i_part] = part_ext->parts[i_domain][i_part].face_ln_to_gn;
@@ -2859,14 +2865,14 @@ _part_extension_3d
     if (part_ext->extend_type==PDM_EXTEND_FROM_VTX) {
       if(part_ext->have_edge == 1) {
         for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
-          PDM_compute_face_vtx_from_face_and_edge(pn_face[i_part],
+          PDM_compute_face_vtx_from_face_and_edge(pn_face       [i_part],
                                                   pface_edge_idx[i_part],
-                                                  pface_edge[i_part],
-                                                  pedge_vtx[i_part],
-                                                 &pface_vtx[i_part]);
+                                                  pface_edge    [i_part],
+                                                  pedge_vtx     [i_part],
+                                                 &pface_vtx     [i_part]);
           pface_vtx_idx[i_part] = pface_edge_idx[i_part];
 
-          PDM_combine_connectivity(pn_cell[i_part],
+          PDM_combine_connectivity(pn_cell       [i_part],
                                    pcell_face_idx[i_part],
                                    pcell_face    [i_part],
                                    pface_vtx_idx [i_part],
@@ -2879,7 +2885,7 @@ _part_extension_3d
       }
       else {
         for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
-          PDM_combine_connectivity(pn_cell[i_part],
+          PDM_combine_connectivity(pn_cell       [i_part],
                                    pcell_face_idx[i_part],
                                    pcell_face    [i_part],
                                    pface_vtx_idx [i_part],

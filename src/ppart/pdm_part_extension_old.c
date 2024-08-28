@@ -6023,6 +6023,9 @@ PDM_part_extension_create
   part_ext->extend_type = extend_type;
   part_ext->depth       = depth;
 
+  part_ext->have_edge = 0;
+  part_ext->have_face = 0;
+
   part_ext->owner_vtx_part_bound = 0;
   part_ext->user_defined_bnd_graph = 0;
 
