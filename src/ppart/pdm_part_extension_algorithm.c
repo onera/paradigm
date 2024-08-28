@@ -3426,9 +3426,14 @@ PDM_part_extension_build_entity1_graph
       PDM_free(pentity1_opp_sens        [i_part]);
       PDM_free(pentity1_opp_gnum        [i_part]);
     }
-    PDM_free(ppart_entity1            [i_part]);
-    PDM_free(ppart_entity1_proc_idx   [i_part]);
-    PDM_free(ppart_entity1_part_idx   [i_part]);
+    else if (dom_itrf_defined==0) {
+      PDM_free(ppart_entity1            [i_part]);
+      PDM_free(ppart_entity1_proc_idx   [i_part]);
+      PDM_free(ppart_entity1_part_idx   [i_part]);
+    }
+    else {
+      PDM_error(__FILE__, __LINE__, 0, "Invalid dom_itrf_defined value (%d) \n", dom_itrf_defined);
+    }
   }
   if (dom_itrf_defined==1) {
     PDM_free(pn_entity1_num            );
@@ -3440,9 +3445,14 @@ PDM_part_extension_build_entity1_graph
     PDM_free(pentity1_opp_sens         );
     PDM_free(pentity1_opp_gnum         );
   }
-  PDM_free(ppart_entity1             );
-  PDM_free(ppart_entity1_proc_idx    );
-  PDM_free(ppart_entity1_part_idx    );
+  else if (dom_itrf_defined==0) {
+    PDM_free(ppart_entity1             );
+    PDM_free(ppart_entity1_proc_idx    );
+    PDM_free(ppart_entity1_part_idx    );
+  }
+  else {
+    PDM_error(__FILE__, __LINE__, 0, "Invalid dom_itrf_defined value (%d) \n", dom_itrf_defined);
+  }
 
 
 }
