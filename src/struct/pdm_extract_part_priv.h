@@ -98,6 +98,8 @@ struct _pdm_extract_part_t
   int               ***group_entity         [PDM_BOUND_TYPE_MAX];
   PDM_g_num_t       ***group_entity_ln_to_gn[PDM_BOUND_TYPE_MAX];
 
+  int                  have_connectivity[PDM_CONNECTIVITY_TYPE_MAX];
+
 
   /* If partition is described by elements */
   int is_nodal;
