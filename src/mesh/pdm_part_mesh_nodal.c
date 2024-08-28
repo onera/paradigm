@@ -67,18 +67,16 @@ _vtx_free
 {
   if (vtx != NULL) {
     if (vtx->parent != NULL) {
-      _vtx_free (vtx->parent);
+      _vtx_free(vtx->parent);
       vtx->parent = NULL;
     }
 
     if (vtx->_coords != NULL && vtx->owner == PDM_OWNERSHIP_KEEP) {
       PDM_free(vtx->_coords);
-      vtx->_coords = NULL;
     }
 
     if (vtx->_numabs != NULL && vtx->owner == PDM_OWNERSHIP_KEEP) {
       PDM_free(vtx->_numabs);
-      vtx->_numabs = NULL;
     }
   }
 }
@@ -1090,7 +1088,6 @@ PDM_part_mesh_nodal_free
     }
 
     PDM_free(pmn->vtx);
-    pmn->vtx = NULL;
   }
 
   PDM_free(pmn->n_vol   );
@@ -1098,12 +1095,8 @@ PDM_part_mesh_nodal_free
   PDM_free(pmn->n_ridge );
   PDM_free(pmn->n_corner);
 
-  if (pmn->section_kind != NULL) {
-    PDM_free(pmn->section_kind);
-  }
-  if (pmn->section_id != NULL) {
-    PDM_free(pmn->section_id);
-  }
+  PDM_free(pmn->section_kind);
+  PDM_free(pmn->section_id);
 
   PDM_free(pmn);
 }

@@ -901,9 +901,6 @@ _extract_gnum_and_compute_child
   for(int i_part = 0; i_part < n_part; ++i_part) {
     PDM_malloc(entity_extract_g_num[i_part], n_extract[i_part], PDM_g_num_t);
     for(int i_entity = 0; i_entity < n_extract[i_part]; ++i_entity) {
-      // log_trace("extract_lnum[i_part][%d] = %d\n",
-      //           i_entity,
-      //           extract_lnum[i_part][i_entity]);
       int lnum = extract_lnum[i_part][i_entity]-1;
       entity_extract_g_num[i_part][i_entity] = entity_g_num[i_part][lnum];
     }
@@ -950,24 +947,7 @@ _prepare_graph
     int mesh_dimension = PDM_part_mesh_nodal_mesh_dimension_get(extrp->pmn);
     assert(mesh_dimension == extrp->dim);
 
-    PDM_geometry_kind_t geom_kind_parent = PDM_GEOMETRY_KIND_MAX;
-    switch (mesh_dimension) {
-      case 3: {
-        geom_kind_parent = PDM_GEOMETRY_KIND_VOLUMIC;
-        break;
-      }
-      case 2: {
-        geom_kind_parent = PDM_GEOMETRY_KIND_SURFACIC;
-        break;
-      }
-      case 1: {
-        geom_kind_parent = PDM_GEOMETRY_KIND_RIDGE;
-        break;
-      }
-      default: {
-        PDM_error(__FILE__, __LINE__, 0, "Invalid mesh dimension %d\n", mesh_dimension);
-      }
-    }
+    PDM_geometry_kind_t geom_kind_parent = PDM_part_mesh_nodal_principal_geom_kind_get(extrp->pmn);
     PDM_part_mesh_nodal_elmts_t *pmne = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(extrp->pmn,
                                                                                       geom_kind_parent);
 
@@ -1273,7 +1253,7 @@ _compute_dual_graph
 
 static
 void
-extract_entity1_entity2_new
+_extract_entity1_entity2_new
 (
 int            n_part,
 int           *n_entity2,
@@ -1345,7 +1325,7 @@ int         ***old_to_new_entity2_no
 
 static
 void
-extract_and_local_renum_entity1_entity2
+_extract_and_local_renum_entity1_entity2
 (
 PDM_MPI_Comm           comm,
 int                    compute_child_gnum,
@@ -1371,17 +1351,17 @@ int                 ***extract_entity2_lnum
   /*
    *  Compute extract_entity2_lnum and extract_entity2_g_num
    */
-  extract_entity1_entity2_new(n_part,
-                              n_entity2,
-                              n_extract_entity1,
-                              extract_entity1_lnum,
-                              entity1_entity2_idx,
-                              entity1_entity2,
-                              entity2_ln_to_gn,
-                              n_extract_entity2,
-                              extract_entity2_lnum,
-                              &_extract_parent_entity2_ln_to_gn,
-                              &old_to_new_entity2_no);
+  _extract_entity1_entity2_new(n_part,
+                               n_entity2,
+                               n_extract_entity1,
+                               extract_entity1_lnum,
+                               entity1_entity2_idx,
+                               entity1_entity2,
+                               entity2_ln_to_gn,
+                               n_extract_entity2,
+                               extract_entity2_lnum,
+                               &_extract_parent_entity2_ln_to_gn,
+                               &old_to_new_entity2_no);
 
 
   int *_n_extract_entity2 = *n_extract_entity2;
@@ -2906,41 +2886,41 @@ _extract_part
   int from_face_vtx  = extrp->have_connectivity[PDM_CONNECTIVITY_TYPE_FACE_VTX ];
 
   if (extrp->dim == 3) {
-    extract_and_local_renum_entity1_entity2(extrp->comm,
-                                            extrp->compute_child_gnum,
-                                            extrp->n_part_in,
-                                            extrp->n_cell,
-                                            extrp->n_face,
-                                            extrp->n_extract,
-                                            extrp->extract_lnum,
-                                            extrp->pcell_face_idx,
-                                            extrp->pcell_face,
-                                            extrp->face_ln_to_gn,
-                                            &extrp->pextract_n_entity              [PDM_MESH_ENTITY_FACE],
-                                            &extrp->pextract_connectivity_idx      [PDM_CONNECTIVITY_TYPE_CELL_FACE],
-                                            &extrp->pextract_connectivity          [PDM_CONNECTIVITY_TYPE_CELL_FACE],
-                                            &extrp->pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_FACE],
-                                            &extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_FACE],
-                                            &extrp->pextract_entity_parent_lnum    [PDM_MESH_ENTITY_FACE]);
+    _extract_and_local_renum_entity1_entity2(extrp->comm,
+                                             extrp->compute_child_gnum,
+                                             extrp->n_part_in,
+                                             extrp->n_cell,
+                                             extrp->n_face,
+                                             extrp->n_extract,
+                                             extrp->extract_lnum,
+                                             extrp->pcell_face_idx,
+                                             extrp->pcell_face,
+                                             extrp->face_ln_to_gn,
+                                             &extrp->pextract_n_entity              [PDM_MESH_ENTITY_FACE],
+                                             &extrp->pextract_connectivity_idx      [PDM_CONNECTIVITY_TYPE_CELL_FACE],
+                                             &extrp->pextract_connectivity          [PDM_CONNECTIVITY_TYPE_CELL_FACE],
+                                             &extrp->pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_FACE],
+                                             &extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_FACE],
+                                             &extrp->pextract_entity_parent_lnum    [PDM_MESH_ENTITY_FACE]);
 
     if(from_face_edge == 1) {
 
-      extract_and_local_renum_entity1_entity2(extrp->comm,
-                                              extrp->compute_child_gnum,
-                                              extrp->n_part_in,
-                                              extrp->n_face,
-                                              extrp->n_edge,
-                                              extrp->pextract_n_entity               [PDM_MESH_ENTITY_FACE],
-                                              extrp->pextract_entity_parent_lnum     [PDM_MESH_ENTITY_FACE],
-                                              extrp->pface_edge_idx,
-                                              extrp->pface_edge,
-                                              extrp->edge_ln_to_gn,
-                                              &extrp->pextract_n_entity              [PDM_MESH_ENTITY_EDGE],
-                                              &extrp->pextract_connectivity_idx      [PDM_CONNECTIVITY_TYPE_FACE_EDGE],
-                                              &extrp->pextract_connectivity          [PDM_CONNECTIVITY_TYPE_FACE_EDGE],
-                                              &extrp->pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_EDGE],
-                                              &extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_EDGE],
-                                              &extrp->pextract_entity_parent_lnum    [PDM_MESH_ENTITY_EDGE]);
+      _extract_and_local_renum_entity1_entity2(extrp->comm,
+                                               extrp->compute_child_gnum,
+                                               extrp->n_part_in,
+                                               extrp->n_face,
+                                               extrp->n_edge,
+                                               extrp->pextract_n_entity               [PDM_MESH_ENTITY_FACE],
+                                               extrp->pextract_entity_parent_lnum     [PDM_MESH_ENTITY_FACE],
+                                               extrp->pface_edge_idx,
+                                               extrp->pface_edge,
+                                               extrp->edge_ln_to_gn,
+                                               &extrp->pextract_n_entity              [PDM_MESH_ENTITY_EDGE],
+                                               &extrp->pextract_connectivity_idx      [PDM_CONNECTIVITY_TYPE_FACE_EDGE],
+                                               &extrp->pextract_connectivity          [PDM_CONNECTIVITY_TYPE_FACE_EDGE],
+                                               &extrp->pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_EDGE],
+                                               &extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_EDGE],
+                                               &extrp->pextract_entity_parent_lnum    [PDM_MESH_ENTITY_EDGE]);
 
       int **pedge_vtx_idx;
       PDM_malloc(pedge_vtx_idx, extrp->n_part_in, int *);
@@ -2952,22 +2932,22 @@ _extract_part
         }
       }
 
-      extract_and_local_renum_entity1_entity2(extrp->comm,
-                                              extrp->compute_child_gnum,
-                                              extrp->n_part_in,
-                                              extrp->n_edge,
-                                              extrp->n_vtx,
-                                              extrp->pextract_n_entity               [PDM_MESH_ENTITY_EDGE],
-                                              extrp->pextract_entity_parent_lnum     [PDM_MESH_ENTITY_EDGE],
-                                              pedge_vtx_idx,
-                                              extrp->pedge_vtx,
-                                              extrp->vtx_ln_to_gn,
-                                              &extrp->pextract_n_entity              [PDM_MESH_ENTITY_VTX],
-                                              &extrp->pextract_connectivity_idx      [PDM_CONNECTIVITY_TYPE_EDGE_VTX],
-                                              &extrp->pextract_connectivity          [PDM_CONNECTIVITY_TYPE_EDGE_VTX],
-                                              &extrp->pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_VTX],
-                                              &extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VTX],
-                                              &extrp->pextract_entity_parent_lnum    [PDM_MESH_ENTITY_VTX]);
+      _extract_and_local_renum_entity1_entity2(extrp->comm,
+                                               extrp->compute_child_gnum,
+                                               extrp->n_part_in,
+                                               extrp->n_edge,
+                                               extrp->n_vtx,
+                                               extrp->pextract_n_entity               [PDM_MESH_ENTITY_EDGE],
+                                               extrp->pextract_entity_parent_lnum     [PDM_MESH_ENTITY_EDGE],
+                                               pedge_vtx_idx,
+                                               extrp->pedge_vtx,
+                                               extrp->vtx_ln_to_gn,
+                                               &extrp->pextract_n_entity              [PDM_MESH_ENTITY_VTX],
+                                               &extrp->pextract_connectivity_idx      [PDM_CONNECTIVITY_TYPE_EDGE_VTX],
+                                               &extrp->pextract_connectivity          [PDM_CONNECTIVITY_TYPE_EDGE_VTX],
+                                               &extrp->pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_VTX],
+                                               &extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VTX],
+                                               &extrp->pextract_entity_parent_lnum    [PDM_MESH_ENTITY_VTX]);
 
       for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
         PDM_free(pedge_vtx_idx[i_part]);
@@ -2976,43 +2956,43 @@ _extract_part
 
     } else if(from_face_vtx == 1){
 
-      extract_and_local_renum_entity1_entity2(extrp->comm,
-                                              extrp->compute_child_gnum,
-                                              extrp->n_part_in,
-                                              extrp->n_face,
-                                              extrp->n_vtx,
-                                              extrp->pextract_n_entity               [PDM_MESH_ENTITY_FACE],
-                                              extrp->pextract_entity_parent_lnum     [PDM_MESH_ENTITY_FACE],
-                                              extrp->pface_vtx_idx,
-                                              extrp->pface_vtx,
-                                              extrp->vtx_ln_to_gn,
-                                              &extrp->pextract_n_entity              [PDM_MESH_ENTITY_VTX],
-                                              &extrp->pextract_connectivity_idx      [PDM_CONNECTIVITY_TYPE_FACE_VTX],
-                                              &extrp->pextract_connectivity          [PDM_CONNECTIVITY_TYPE_FACE_VTX],
-                                              &extrp->pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_VTX],
-                                              &extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VTX],
-                                              &extrp->pextract_entity_parent_lnum    [PDM_MESH_ENTITY_VTX]);
+      _extract_and_local_renum_entity1_entity2(extrp->comm,
+                                               extrp->compute_child_gnum,
+                                               extrp->n_part_in,
+                                               extrp->n_face,
+                                               extrp->n_vtx,
+                                               extrp->pextract_n_entity               [PDM_MESH_ENTITY_FACE],
+                                               extrp->pextract_entity_parent_lnum     [PDM_MESH_ENTITY_FACE],
+                                               extrp->pface_vtx_idx,
+                                               extrp->pface_vtx,
+                                               extrp->vtx_ln_to_gn,
+                                               &extrp->pextract_n_entity              [PDM_MESH_ENTITY_VTX],
+                                               &extrp->pextract_connectivity_idx      [PDM_CONNECTIVITY_TYPE_FACE_VTX],
+                                               &extrp->pextract_connectivity          [PDM_CONNECTIVITY_TYPE_FACE_VTX],
+                                               &extrp->pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_VTX],
+                                               &extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VTX],
+                                               &extrp->pextract_entity_parent_lnum    [PDM_MESH_ENTITY_VTX]);
     }
   }
   else if (extrp->dim == 2) {
 
     if(from_face_edge == 1) {
-      extract_and_local_renum_entity1_entity2(extrp->comm,
-                                              extrp->compute_child_gnum,
-                                              extrp->n_part_in,
-                                              extrp->n_face,
-                                              extrp->n_edge,
-                                              extrp->n_extract,
-                                              extrp->extract_lnum,
-                                              extrp->pface_edge_idx,
-                                              extrp->pface_edge,
-                                              extrp->edge_ln_to_gn,
-                                              &extrp->pextract_n_entity              [PDM_MESH_ENTITY_EDGE],
-                                              &extrp->pextract_connectivity_idx      [PDM_CONNECTIVITY_TYPE_FACE_EDGE],
-                                              &extrp->pextract_connectivity          [PDM_CONNECTIVITY_TYPE_FACE_EDGE],
-                                              &extrp->pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_EDGE],
-                                              &extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_EDGE],
-                                              &extrp->pextract_entity_parent_lnum    [PDM_MESH_ENTITY_EDGE]);
+      _extract_and_local_renum_entity1_entity2(extrp->comm,
+                                               extrp->compute_child_gnum,
+                                               extrp->n_part_in,
+                                               extrp->n_face,
+                                               extrp->n_edge,
+                                               extrp->n_extract,
+                                               extrp->extract_lnum,
+                                               extrp->pface_edge_idx,
+                                               extrp->pface_edge,
+                                               extrp->edge_ln_to_gn,
+                                               &extrp->pextract_n_entity              [PDM_MESH_ENTITY_EDGE],
+                                               &extrp->pextract_connectivity_idx      [PDM_CONNECTIVITY_TYPE_FACE_EDGE],
+                                               &extrp->pextract_connectivity          [PDM_CONNECTIVITY_TYPE_FACE_EDGE],
+                                               &extrp->pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_EDGE],
+                                               &extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_EDGE],
+                                               &extrp->pextract_entity_parent_lnum    [PDM_MESH_ENTITY_EDGE]);
       int **pedge_vtx_idx;
       PDM_malloc(pedge_vtx_idx, extrp->n_part_in, int *);
       for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
@@ -3023,22 +3003,22 @@ _extract_part
         }
       }
 
-      extract_and_local_renum_entity1_entity2(extrp->comm,
-                                              extrp->compute_child_gnum,
-                                              extrp->n_part_in,
-                                              extrp->n_edge,
-                                              extrp->n_vtx,
-                                              extrp->pextract_n_entity               [PDM_MESH_ENTITY_EDGE],
-                                              extrp->pextract_entity_parent_lnum     [PDM_MESH_ENTITY_EDGE],
-                                              pedge_vtx_idx,
-                                              extrp->pedge_vtx,
-                                              extrp->vtx_ln_to_gn,
-                                              &extrp->pextract_n_entity              [PDM_MESH_ENTITY_VTX],
-                                              &extrp->pextract_connectivity_idx      [PDM_CONNECTIVITY_TYPE_EDGE_VTX],
-                                              &extrp->pextract_connectivity          [PDM_CONNECTIVITY_TYPE_EDGE_VTX],
-                                              &extrp->pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_VTX],
-                                              &extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VTX],
-                                              &extrp->pextract_entity_parent_lnum    [PDM_MESH_ENTITY_VTX]);
+      _extract_and_local_renum_entity1_entity2(extrp->comm,
+                                               extrp->compute_child_gnum,
+                                               extrp->n_part_in,
+                                               extrp->n_edge,
+                                               extrp->n_vtx,
+                                               extrp->pextract_n_entity               [PDM_MESH_ENTITY_EDGE],
+                                               extrp->pextract_entity_parent_lnum     [PDM_MESH_ENTITY_EDGE],
+                                               pedge_vtx_idx,
+                                               extrp->pedge_vtx,
+                                               extrp->vtx_ln_to_gn,
+                                               &extrp->pextract_n_entity              [PDM_MESH_ENTITY_VTX],
+                                               &extrp->pextract_connectivity_idx      [PDM_CONNECTIVITY_TYPE_EDGE_VTX],
+                                               &extrp->pextract_connectivity          [PDM_CONNECTIVITY_TYPE_EDGE_VTX],
+                                               &extrp->pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_VTX],
+                                               &extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VTX],
+                                               &extrp->pextract_entity_parent_lnum    [PDM_MESH_ENTITY_VTX]);
 
       for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
         PDM_free(pedge_vtx_idx   [i_part]);
@@ -3046,22 +3026,22 @@ _extract_part
       PDM_free(pedge_vtx_idx      );
 
     } else if(from_face_vtx == 1) {
-      extract_and_local_renum_entity1_entity2(extrp->comm,
-                                              extrp->compute_child_gnum,
-                                              extrp->n_part_in,
-                                              extrp->n_face,
-                                              extrp->n_vtx,
-                                              extrp->n_extract,
-                                              extrp->extract_lnum,
-                                              extrp->pface_vtx_idx,
-                                              extrp->pface_vtx,
-                                              extrp->vtx_ln_to_gn,
-                                              &extrp->pextract_n_entity              [PDM_MESH_ENTITY_VTX],
-                                              &extrp->pextract_connectivity_idx      [PDM_CONNECTIVITY_TYPE_FACE_VTX],
-                                              &extrp->pextract_connectivity          [PDM_CONNECTIVITY_TYPE_FACE_VTX],
-                                              &extrp->pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_VTX],
-                                              &extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VTX],
-                                              &extrp->pextract_entity_parent_lnum    [PDM_MESH_ENTITY_VTX]);
+      _extract_and_local_renum_entity1_entity2(extrp->comm,
+                                               extrp->compute_child_gnum,
+                                               extrp->n_part_in,
+                                               extrp->n_face,
+                                               extrp->n_vtx,
+                                               extrp->n_extract,
+                                               extrp->extract_lnum,
+                                               extrp->pface_vtx_idx,
+                                               extrp->pface_vtx,
+                                               extrp->vtx_ln_to_gn,
+                                               &extrp->pextract_n_entity              [PDM_MESH_ENTITY_VTX],
+                                               &extrp->pextract_connectivity_idx      [PDM_CONNECTIVITY_TYPE_FACE_VTX],
+                                               &extrp->pextract_connectivity          [PDM_CONNECTIVITY_TYPE_FACE_VTX],
+                                               &extrp->pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_VTX],
+                                               &extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VTX],
+                                               &extrp->pextract_entity_parent_lnum    [PDM_MESH_ENTITY_VTX]);
     }
   }
   else if (extrp->dim == 1) {
@@ -3070,22 +3050,22 @@ _extract_part
     for (int i = 0; i < extrp->n_part_in; i++) {
       pedge_vtx_idx[i] = PDM_array_new_idx_from_const_stride_int(2, extrp->n_edge[i]);
     }
-    extract_and_local_renum_entity1_entity2(extrp->comm,
-                                            extrp->compute_child_gnum,
-                                            extrp->n_part_in,
-                                            extrp->n_edge,
-                                            extrp->n_vtx,
-                                            extrp->n_extract,
-                                            extrp->extract_lnum,
-                                            pedge_vtx_idx,
-                                            extrp->pedge_vtx,
-                                            extrp->vtx_ln_to_gn,
-                                            &extrp->pextract_n_entity              [PDM_MESH_ENTITY_VTX],
-                                            &extrp->pextract_connectivity_idx      [PDM_CONNECTIVITY_TYPE_EDGE_VTX],
-                                            &extrp->pextract_connectivity          [PDM_CONNECTIVITY_TYPE_EDGE_VTX],
-                                            &extrp->pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_VTX],
-                                            &extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VTX],
-                                            &extrp->pextract_entity_parent_lnum    [PDM_MESH_ENTITY_VTX]);
+    _extract_and_local_renum_entity1_entity2(extrp->comm,
+                                             extrp->compute_child_gnum,
+                                             extrp->n_part_in,
+                                             extrp->n_edge,
+                                             extrp->n_vtx,
+                                             extrp->n_extract,
+                                             extrp->extract_lnum,
+                                             pedge_vtx_idx,
+                                             extrp->pedge_vtx,
+                                             extrp->vtx_ln_to_gn,
+                                             &extrp->pextract_n_entity              [PDM_MESH_ENTITY_VTX],
+                                             &extrp->pextract_connectivity_idx      [PDM_CONNECTIVITY_TYPE_EDGE_VTX],
+                                             &extrp->pextract_connectivity          [PDM_CONNECTIVITY_TYPE_EDGE_VTX],
+                                             &extrp->pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_VTX],
+                                             &extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VTX],
+                                             &extrp->pextract_entity_parent_lnum    [PDM_MESH_ENTITY_VTX]);
     for (int i = 0; i < extrp->n_part_in; i++) {
       PDM_free(pedge_vtx_idx[i]);
     }
@@ -3103,22 +3083,22 @@ _extract_part
 
     int **pextract_connectivity_idx = NULL;
     int **pextract_connectivity     = NULL;
-    extract_and_local_renum_entity1_entity2(extrp->comm,
-                                            extrp->compute_child_gnum,
-                                            extrp->n_part_in,
-                                            extrp->n_vtx,
-                                            extrp->n_vtx,
-                                            extrp->n_extract,
-                                            extrp->extract_lnum,
-                                            pvtx_vtx_idx,
-                                            pvtx_vtx,
-                                            extrp->vtx_ln_to_gn,
-                                            &extrp->pextract_n_entity              [PDM_MESH_ENTITY_VTX],
-                                            &pextract_connectivity_idx,// &extrp->pextract_connectivity_idx      [PDM_CONNECTIVITY_TYPE_EDGE_VTX],
-                                            &pextract_connectivity,// &extrp->pextract_connectivity          [PDM_CONNECTIVITY_TYPE_EDGE_VTX],
-                                            &extrp->pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_VTX],
-                                            &extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VTX],
-                                            &extrp->pextract_entity_parent_lnum    [PDM_MESH_ENTITY_VTX]);
+    _extract_and_local_renum_entity1_entity2(extrp->comm,
+                                             extrp->compute_child_gnum,
+                                             extrp->n_part_in,
+                                             extrp->n_vtx,
+                                             extrp->n_vtx,
+                                             extrp->n_extract,
+                                             extrp->extract_lnum,
+                                             pvtx_vtx_idx,
+                                             pvtx_vtx,
+                                             extrp->vtx_ln_to_gn,
+                                             &extrp->pextract_n_entity              [PDM_MESH_ENTITY_VTX],
+                                             &pextract_connectivity_idx,// &extrp->pextract_connectivity_idx      [PDM_CONNECTIVITY_TYPE_EDGE_VTX],
+                                             &pextract_connectivity,// &extrp->pextract_connectivity          [PDM_CONNECTIVITY_TYPE_EDGE_VTX],
+                                             &extrp->pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_VTX],
+                                             &extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VTX],
+                                             &extrp->pextract_entity_parent_lnum    [PDM_MESH_ENTITY_VTX]);
     for (int i = 0; i < extrp->n_part_in; i++) {
       PDM_free(pvtx_vtx_idx[i]);
       PDM_free(pextract_connectivity_idx[i]);
@@ -4582,26 +4562,7 @@ _compute_child_gnums_nodal
   PDM_g_num_t **parent_g_num = NULL;
   PDM_malloc(parent_g_num, n_part, PDM_g_num_t *);
 
-  int mesh_dimension = extrp->dim;
-
-  PDM_geometry_kind_t geom_kind_parent = PDM_GEOMETRY_KIND_MAX;
-  switch (mesh_dimension) {
-    case 3: {
-      geom_kind_parent = PDM_GEOMETRY_KIND_VOLUMIC;
-      break;
-    }
-    case 2: {
-      geom_kind_parent = PDM_GEOMETRY_KIND_SURFACIC;
-      break;
-    }
-    case 1: {
-      geom_kind_parent = PDM_GEOMETRY_KIND_RIDGE;
-      break;
-    }
-    default: {
-      PDM_error(__FILE__, __LINE__, 0, "Invalid mesh dimension %d\n", mesh_dimension);
-    }
-  }
+  PDM_geometry_kind_t geom_kind_parent = PDM_part_mesh_nodal_principal_geom_kind_get(extrp->extract_pmn);
 
   for (PDM_geometry_kind_t geom_kind = geom_kind_parent; geom_kind < PDM_GEOMETRY_KIND_MAX; geom_kind++) {
 
@@ -5516,24 +5477,7 @@ _extract_part_nodal_local
                                                   extrp->n_part_out,
                                                   extrp->comm);
 
-  PDM_geometry_kind_t geom_kind_parent = PDM_GEOMETRY_KIND_MAX;
-  switch (mesh_dimension) {
-    case 3: {
-      geom_kind_parent = PDM_GEOMETRY_KIND_VOLUMIC;
-      break;
-    }
-    case 2: {
-      geom_kind_parent = PDM_GEOMETRY_KIND_SURFACIC;
-      break;
-    }
-    case 1: {
-      geom_kind_parent = PDM_GEOMETRY_KIND_RIDGE;
-      break;
-    }
-    default: {
-      PDM_error(__FILE__, __LINE__, 0, "Invalid mesh dimension %d\n", mesh_dimension);
-    }
-  }
+  PDM_geometry_kind_t geom_kind_parent = PDM_part_mesh_nodal_principal_geom_kind_get(extrp->pmn);
 
 
   PDM_part_mesh_nodal_elmts_t *pmne_parent = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(extrp->pmn,
@@ -5792,8 +5736,7 @@ _extract_part_nodal
 
         int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne_parent, sections_id[i_section], i_part);
 
-        // Compute centers if not already done (could be done more cleanly?)
-
+        // Compute centers if not already done
         const double *elt_center = PDM_part_mesh_nodal_elmts_elt_center_get(pmne_parent,
                                                                             sections_id[i_section],
                                                                             i_part,
@@ -5870,7 +5813,7 @@ _extract_part_nodal
     PDM_g_num_t *dequi_g_num = PDM_part_to_block_block_gnum_get(ptb_equi);
 
     /*
-     * Deduce a target gnum from graph librarie or directly with hilbert
+     * Deduce a target gnum from graph librarie or directly with Hilbert
      */
 
     int **extract_init_location = NULL;
@@ -7681,7 +7624,7 @@ PDM_extract_part_group_get
   *pextract_group_entity                 = extrp->pextract_group_entity                [bound_type][i_group][i_part];
   *pextract_group_entity_ln_to_gn        = extrp->pextract_group_entity_ln_to_gn       [bound_type][i_group][i_part];
   *pextract_group_entity_parent_ln_to_gn = extrp->pextract_group_entity_parent_ln_to_gn[bound_type][i_group][i_part];
-  extrp->group_array_ownership   [bound_type][i_group] = ownership;
+  extrp->group_array_ownership[bound_type][i_group] = ownership;
 
 }
 
@@ -7710,11 +7653,14 @@ PDM_extract_part_renum_method_set
   int method_renum_id = -1;
   if(mesh_entity == PDM_MESH_ENTITY_CELL) {
     method_renum_id = PDM_part_renum_method_cell_idx_get(renum_entity_method);
-  } else if(mesh_entity == PDM_MESH_ENTITY_FACE) {
+  }
+  else if(mesh_entity == PDM_MESH_ENTITY_FACE) {
     method_renum_id = PDM_part_renum_method_face_idx_get(renum_entity_method);
-  } else if(mesh_entity == PDM_MESH_ENTITY_EDGE) {
+  }
+  else if(mesh_entity == PDM_MESH_ENTITY_EDGE) {
     method_renum_id = PDM_part_renum_method_edge_idx_get(renum_entity_method);
-  } else if(mesh_entity == PDM_MESH_ENTITY_VTX) {
+  }
+  else if(mesh_entity == PDM_MESH_ENTITY_VTX) {
     method_renum_id = PDM_part_renum_method_vtx_idx_get (renum_entity_method);
   }
 

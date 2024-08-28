@@ -2087,7 +2087,6 @@ PDM_part_mesh_nodal_elmts_free
         PDM_free(pmne->num_elmt_parent_to_local[i_part]);
       }
       PDM_free(pmne->num_elmt_parent_to_local);
-      pmne->num_elmt_parent_to_local = NULL;
     }
 
     if (pmne->n_group_elmt != NULL) {
