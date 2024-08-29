@@ -361,41 +361,87 @@ program testf
                                               cell_face,     &
                                               cell_ln_to_gn)
 
+    ! > Set coordinates
+    call PDM_part_extension_vtx_coord_set(part_ext,&
+                                          0,       &
+                                          i_part-1,&
+                                          vtx)
+    ! > Set connectivity
+    call PDM_part_extension_connectivity_set(part_ext,                       &
+                                             0,                              &
+                                             i_part-1,                       &
+                                             PDM_CONNECTIVITY_TYPE_CELL_FACE,&
+                                             cell_face_idx,                  &
+                                             cell_face)
 
+    ! call PDM_part_extension_connectivity_set(part_ext,                       &
+    !                                          0,                              &
+    !                                          i_part-1,                       &
+    !                                          PDM_CONNECTIVITY_TYPE_FACE_EDGE,&
+    !                                          face_edge_idx,                  &
+    !                                          face_edge)
 
-    call PDM_part_extension_set_part (part_ext,                 &
-                                      0,                        &
-                                      i_part-1,                 &
-                                      n_cell,                   &
-                                      n_face,                   &
-                                      n_face_part_bound,        &
-                                      n_face_group,             &
-                                      n_edge,                   &
-                                      n_vtx,                    &
-                                      cell_face_idx,            &
-                                      cell_face,                &
-                                      face_cell,                &
-                                      face_edge_idx,            &
-                                      face_edge,                &
-                                      face_vtx_idx,             &
-                                      face_vtx,                 &
-                                      edge_vtx,                 &
-                                      face_group_idx,           &
-                                      face_group,               &
-                                      face_join_idx,            &
-                                      face_join,                &
-                                      face_part_bound_proc_idx, &
-                                      face_part_bound_part_idx, &
-                                      face_part_bound,          &
-                                      vtx_part_bound_proc_idx,  &
-                                      vtx_part_bound_part_idx,  &
-                                      vtx_part_bound,           &
-                                      cell_ln_to_gn,            &
-                                      face_ln_to_gn,            &
-                                      edge_ln_to_gn,            &
-                                      vtx_ln_to_gn,             &
-                                      face_group_ln_to_gn,      &
-                                      vtx)
+    ! call PDM_part_extension_connectivity_set(part_ext,                      &
+    !                                          0,                             &
+    !                                          i_part-1,                      &
+    !                                          PDM_CONNECTIVITY_TYPE_EDGE_VTX,&
+    !                                          null(),                        &
+    !                                          edge_vtx)
+
+    call PDM_part_extension_connectivity_set(part_ext,                      &
+                                             0,                             &
+                                             i_part-1,                      &
+                                             PDM_CONNECTIVITY_TYPE_FACE_VTX,&
+                                             face_vtx_idx,                  &
+                                             face_vtx)
+
+    ! > Set ln_to_gn
+    call PDM_part_extension_ln_to_gn_set(part_ext,            &
+                                         0,                   &
+                                         i_part-1,            &
+                                         PDM_MESH_ENTITY_CELL,&
+                                         n_cell,              &
+                                         cell_ln_to_gn)
+
+    call PDM_part_extension_ln_to_gn_set(part_ext,            &
+                                         0,                   &
+                                         i_part-1,            &
+                                         PDM_MESH_ENTITY_FACE,&
+                                         n_face,              &
+                                         face_ln_to_gn)
+
+    ! call PDM_part_extension_ln_to_gn_set(part_ext,            &
+    !                                      0,                   &
+    !                                      i_part-1,            &
+    !                                      PDM_MESH_ENTITY_EDGE,&
+    !                                      n_edge,              &
+    !                                      edge_ln_to_gn)
+
+    call PDM_part_extension_ln_to_gn_set(part_ext,           &
+                                         0,                  &
+                                         i_part-1,           &
+                                         PDM_MESH_ENTITY_VTX,&
+                                         n_vtx,              &
+                                         vtx_ln_to_gn)
+
+    ! > Set groups
+    call PDM_part_extension_group_set(part_ext,            &
+                                      0,                   &
+                                      i_part-1,            &
+                                      PDM_MESH_ENTITY_FACE,&
+                                      n_face_group,        &
+                                      face_group_idx,      &
+                                      face_group,          &
+                                      face_group_ln_to_gn)
+
+    ! > Set groups
+    call PDM_part_extension_part_bound_graph_set(part_ext,                &
+                                                 0,                       &
+                                                 i_part-1,                &
+                                                 PDM_MESH_ENTITY_FACE,    &
+                                                 face_part_bound_proc_idx,&
+                                                 face_part_bound_part_idx,&
+                                                 face_part_bound)
   end do
 
   call PDM_writer_geom_write (cs,      &
@@ -546,39 +592,88 @@ program testf
     face_part_bound_proc_idx => null()
     face_part_bound_part_idx => null()
     face_part_bound => null()
-    call PDM_part_extension_set_part (part_ext,                 &
-                                      0,                        &
-                                      i_part-1,                 &
-                                      n_cell,                   &
-                                      n_face,                   &
-                                      n_face_part_bound,        &
-                                      n_face_group,             &
-                                      n_edge,                   &
-                                      n_vtx,                    &
-                                      cell_face_idx,            &
-                                      cell_face,                &
-                                      face_cell,                &
-                                      face_edge_idx,            &
-                                      face_edge,                &
-                                      face_vtx_idx,             &
-                                      face_vtx,                 &
-                                      edge_vtx,                 &
-                                      face_group_idx,           &
-                                      face_group,               &
-                                      face_join_idx,            &
-                                      face_join,                &
-                                      face_part_bound_proc_idx, &
-                                      face_part_bound_part_idx, &
-                                      face_part_bound,          &
-                                      vtx_part_bound_proc_idx,  &
-                                      vtx_part_bound_part_idx,  &
-                                      vtx_part_bound,           &
-                                      cell_ln_to_gn,            &
-                                      face_ln_to_gn,            &
-                                      edge_ln_to_gn,            &
-                                      vtx_ln_to_gn,             &
-                                      face_group_ln_to_gn,      &
-                                      vtx)
+    
+    ! > Set coordinates
+    call PDM_part_extension_vtx_coord_set(part_ext,&
+                                          0,       &
+                                          i_part-1,&
+                                          vtx)
+    ! > Set connectivity
+    call PDM_part_extension_connectivity_set(part_ext,                       &
+                                             0,                              &
+                                             i_part-1,                       &
+                                             PDM_CONNECTIVITY_TYPE_CELL_FACE,&
+                                             cell_face_idx,                  &
+                                             cell_face)
+
+    ! call PDM_part_extension_connectivity_set(part_ext,                       &
+    !                                          0,                              &
+    !                                          i_part-1,                       &
+    !                                          PDM_CONNECTIVITY_TYPE_FACE_EDGE,&
+    !                                          face_edge_idx,                  &
+    !                                          face_edge)
+
+    ! call PDM_part_extension_connectivity_set(part_ext,                      &
+    !                                          0,                             &
+    !                                          i_part-1,                      &
+    !                                          PDM_CONNECTIVITY_TYPE_EDGE_VTX,&
+    !                                          null(),                        &
+    !                                          edge_vtx)
+
+    call PDM_part_extension_connectivity_set(part_ext,                      &
+                                             0,                             &
+                                             i_part-1,                      &
+                                             PDM_CONNECTIVITY_TYPE_FACE_VTX,&
+                                             face_vtx_idx,                  &
+                                             face_vtx)
+
+    ! > Set ln_to_gn
+    call PDM_part_extension_ln_to_gn_set(part_ext,            &
+                                         0,                   &
+                                         i_part-1,            &
+                                         PDM_MESH_ENTITY_CELL,&
+                                         n_cell,              &
+                                         cell_ln_to_gn)
+
+    call PDM_part_extension_ln_to_gn_set(part_ext,            &
+                                         0,                   &
+                                         i_part-1,            &
+                                         PDM_MESH_ENTITY_FACE,&
+                                         n_face,              &
+                                         face_ln_to_gn)
+
+    ! call PDM_part_extension_ln_to_gn_set(part_ext,            &
+    !                                      0,                   &
+    !                                      i_part-1,            &
+    !                                      PDM_MESH_ENTITY_EDGE,&
+    !                                      n_edge,              &
+    !                                      edge_ln_to_gn)
+
+    call PDM_part_extension_ln_to_gn_set(part_ext,           &
+                                         0,                  &
+                                         i_part-1,           &
+                                         PDM_MESH_ENTITY_VTX,&
+                                         n_vtx,              &
+                                         vtx_ln_to_gn)
+
+    ! > Set groups
+    call PDM_part_extension_group_set(part_ext,            &
+                                      0,                   &
+                                      i_part-1,            &
+                                      PDM_MESH_ENTITY_FACE,&
+                                      n_face_group,        &
+                                      face_group_idx,      &
+                                      face_group,          &
+                                      face_group_ln_to_gn)
+
+    ! > Set groups
+    call PDM_part_extension_part_bound_graph_set(part_ext,                &
+                                                 0,                       &
+                                                 i_part-1,                &
+                                                 PDM_MESH_ENTITY_FACE,    &
+                                                 face_part_bound_proc_idx,&
+                                                 face_part_bound_part_idx,&
+                                                 face_part_bound)
   end do
 
   !  Compute partition extension
