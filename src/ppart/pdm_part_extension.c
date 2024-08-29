@@ -2032,9 +2032,9 @@ _build_bound_graph
       for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
         pn_entity1           [i_domain][i_part] = part_ext->parts[i_domain][i_part].n_edge;
         pentity1_ln_to_gn    [i_domain][i_part] = part_ext->parts[i_domain][i_part].edge_ln_to_gn;
-        pentity1_bnd_proc_idx[i_domain][i_part] = NULL;
-        pentity1_bnd_part_idx[i_domain][i_part] = NULL;
-        pentity1_bnd         [i_domain][i_part] = NULL;
+        pentity1_bnd_proc_idx[i_domain][i_part] = part_ext->parts[i_domain][i_part].edge_part_bound_proc_idx;
+        pentity1_bnd_part_idx[i_domain][i_part] = part_ext->parts[i_domain][i_part].edge_part_bound_part_idx;
+        pentity1_bnd         [i_domain][i_part] = part_ext->parts[i_domain][i_part].edge_part_bound;
       }
     }
   } else if(part_ext->extend_type == PDM_EXTEND_FROM_FACE) {
@@ -6248,6 +6248,10 @@ PDM_part_extension_compute2
   const int                   dim
 )
 {
+  if (part_ext->set_part_used==1) {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_part_extension_set_part is invalid with PDM_part_extension_compute2\n");
+  }
+
   // TODO : mv dim in create but break API
   part_ext->dim          = dim;
   part_ext->compute_kind = 1;
@@ -7990,7 +7994,17 @@ PDM_part_extension_part_bound_graph_set
       part_ext->parts[i_domain][i_part].vtx_part_bound_proc_idx  = part_bound_proc_idx;
       part_ext->parts[i_domain][i_part].vtx_part_bound_part_idx  = part_bound_part_idx;
       part_ext->parts[i_domain][i_part].vtx_part_bound           = part_bound;
-      if (part_bound_proc_idx!=NULL) {
+      if (part_bound_proc_idx!=NULL && part_ext->extend_type==PDM_EXTEND_FROM_VTX) {
+        part_ext->user_defined_bnd_graph = 1;
+      }
+      break;
+    }
+
+    case PDM_MESH_ENTITY_EDGE: {
+      part_ext->parts[i_domain][i_part].edge_part_bound_proc_idx = part_bound_proc_idx;
+      part_ext->parts[i_domain][i_part].edge_part_bound_part_idx = part_bound_part_idx;
+      part_ext->parts[i_domain][i_part].edge_part_bound          = part_bound;
+      if (part_bound_proc_idx!=NULL && part_ext->extend_type==PDM_EXTEND_FROM_EDGE) {
         part_ext->user_defined_bnd_graph = 1;
       }
       break;
@@ -8000,7 +8014,7 @@ PDM_part_extension_part_bound_graph_set
       part_ext->parts[i_domain][i_part].face_part_bound_proc_idx = part_bound_proc_idx;
       part_ext->parts[i_domain][i_part].face_part_bound_part_idx = part_bound_part_idx;
       part_ext->parts[i_domain][i_part].face_part_bound          = part_bound;
-      if (part_bound_proc_idx!=NULL) {
+      if (part_bound_proc_idx!=NULL && part_ext->extend_type==PDM_EXTEND_FROM_FACE) {
         part_ext->user_defined_bnd_graph = 1;
       }
       break;
