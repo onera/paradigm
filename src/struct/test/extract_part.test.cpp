@@ -2012,8 +2012,10 @@ def write_subcase(dico):
   if dico["extract_kind"] == "LOCAL":
     dico["n_part_out"] = dico["n_part_in"]
 
-  subcase = "%s, n_part_in %d, n_part_out %d, %s" % \
-  (dico["extract_kind"], dico["n_part_in"], dico["n_part_out"], dico["elt_type"])
+
+  subcase = "%s, n_part_in %d, n_part_out %d, %s%s" % \
+  (dico["extract_kind"], dico["n_part_in"], dico["n_part_out"], dico["elt_type"],
+   ", empty extraction" if dico["empty_extraction"] else "")
 
   if dico["extract_kind"] != "LOCAL":
     subcase += ", %s" % dico["part_method"]
@@ -2024,12 +2026,13 @@ def write_subcase(dico):
 
   s += '    if (i_rank == 0) printf("%s\\n");\n' % subcase
 
-  s += '    extract_kind = PDM_EXTRACT_PART_KIND_%s;\n' % dico["extract_kind"]
-  s += '    n_part_in    = %d;\n' % dico["n_part_in"]
-  s += '    n_part_out   = %d;\n' % dico["n_part_out"]
-  s += '    elt_type     = PDM_MESH_NODAL_%s;\n' % dico["elt_type"]
+  s += '    extract_kind     = PDM_EXTRACT_PART_KIND_%s;\n' % dico["extract_kind"]
+  s += '    n_part_in        = %d;\n' % dico["n_part_in"]
+  s += '    n_part_out       = %d;\n' % dico["n_part_out"]
+  s += '    elt_type         = PDM_MESH_NODAL_%s;\n' % dico["elt_type"]
+  s += '    empty_extraction = %d;\n' % dico["empty_extraction"]
   if dico["extract_kind"] != "LOCAL":
-    s += '    part_method  = PDM_SPLIT_DUAL_WITH_%s;\n' % dico["part_method"]
+    s += '    part_method      = PDM_SPLIT_DUAL_WITH_%s;\n' % dico["part_method"]
   s += '  }\n'
 
   global n_subcase

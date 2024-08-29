@@ -590,12 +590,167 @@ int main
   PDM_extract_part_compute(extrp);
 
 
-  if (visu) {
-    PDM_part_mesh_nodal_t *extract_pmn = NULL;
-    PDM_extract_part_part_mesh_nodal_get(extrp,
-                                         &extract_pmn,
-                                         PDM_OWNERSHIP_KEEP);
+  PDM_part_mesh_nodal_t *extract_pmn = NULL;
+  PDM_extract_part_part_mesh_nodal_get(extrp,
+                                       &extract_pmn,
+                                       PDM_OWNERSHIP_KEEP);
 
+
+  /* Check ptp */
+  for (PDM_geometry_kind_t geom_kind_child = geom_kind; geom_kind_child < PDM_GEOMETRY_KIND_CORNER; geom_kind_child++) {
+
+    PDM_part_mesh_nodal_elmts_t *pmne_child = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(pmn,
+                                                                                            geom_kind_child);
+    if (pmne_child == NULL) {
+      continue;
+    }
+
+    PDM_part_mesh_nodal_elmts_t *extract_pmne_child = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(extract_pmn,
+                                                                                                    geom_kind_child);
+
+    if (visu) {
+      log_trace("geom_kind %d\n", geom_kind);
+    }
+
+    PDM_mesh_entities_t entity_type = PDM_MESH_ENTITY_MAX;
+    PDM_bound_type_t    bound_type  = PDM_BOUND_TYPE_MAX;
+    switch (geom_kind_child) {
+      case PDM_GEOMETRY_KIND_RIDGE: {
+        entity_type = PDM_MESH_ENTITY_EDGE;
+        bound_type  = PDM_BOUND_TYPE_EDGE;
+        break;
+      }
+      case PDM_GEOMETRY_KIND_SURFACIC: {
+        entity_type = PDM_MESH_ENTITY_FACE;
+        bound_type  = PDM_BOUND_TYPE_FACE;
+        break;
+      }
+      default: {
+        continue;
+      }
+    }
+
+
+    PDM_part_to_part_t *ptp = NULL;
+    PDM_extract_part_part_to_part_get(extrp,
+                                      entity_type,
+                                      &ptp,
+                                      PDM_OWNERSHIP_KEEP);
+
+    // Dummy exchange to check ptp
+    PDM_g_num_t **send_buffer = NULL;
+    PDM_malloc(send_buffer, n_part_in, PDM_g_num_t *);
+    for (int i_part = 0; i_part < n_part_in; i_part++) {
+      int n_elt_tot = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne_child, i_part);
+      PDM_malloc(send_buffer[i_part], n_elt_tot, PDM_g_num_t);
+      for (int i = 0; i < n_elt_tot; i++) {
+        send_buffer[i_part][i] = i;
+      }
+    }
+
+    PDM_g_num_t **recv_buffer = NULL;
+    int request = -1;
+    PDM_part_to_part_reverse_iexch(ptp,
+                                   PDM_MPI_COMM_KIND_P2P,
+                                   PDM_STRIDE_CST_INTERLACED,
+                                   PDM_PART_TO_PART_DATA_DEF_ORDER_PART2,
+                                   1,
+                                   sizeof(PDM_g_num_t),
+                                   NULL,
+                 (const void  **)  send_buffer,
+                                   NULL,
+                       (void ***)  &recv_buffer,
+                                   &request);
+
+    PDM_part_to_part_reverse_iexch_wait(ptp, request);
+    for (int i_part = 0; i_part < n_part_in; i_part++) {
+      PDM_free(send_buffer[i_part]);
+    }
+    PDM_free(send_buffer);
+
+    for (int i_part = 0; i_part < n_part_out; i_part++) {
+      PDM_free(recv_buffer[i_part]);
+    }
+    PDM_free(recv_buffer);
+
+
+
+    // Grouds
+    int n_group = PDM_part_mesh_nodal_elmts_n_group_get(pmne_child);
+
+    if (n_group == 0) continue;
+
+    for (int i_group = 0; i_group < n_group; i_group++) {
+      if (visu) {
+        log_trace("  i_group %d\n", i_group);
+      }
+      PDM_part_to_part_t *ptp_group = NULL;
+      PDM_extract_part_part_to_part_group_get(extrp,
+                                              bound_type,
+                                              i_group,
+                                              &ptp_group,
+                                              PDM_OWNERSHIP_KEEP);
+
+      send_buffer = NULL;
+      PDM_malloc(send_buffer, n_part_in, PDM_g_num_t *);
+      for (int i_part = 0; i_part < n_part_in; i_part++) {
+        int  n_group_elmt = 0;
+        int *group_elmt   = NULL;
+        PDM_part_mesh_nodal_elmts_group_get(pmne_child,
+                                            i_part,
+                                            i_group,
+                                            &n_group_elmt,
+                                            &group_elmt,
+                                            &send_buffer[i_part],
+                                            PDM_OWNERSHIP_KEEP);
+      }
+
+
+      recv_buffer = NULL;
+      request = -1;
+      PDM_part_to_part_reverse_iexch(ptp_group,
+                                     PDM_MPI_COMM_KIND_P2P,
+                                     PDM_STRIDE_CST_INTERLACED,
+                                     PDM_PART_TO_PART_DATA_DEF_ORDER_PART2,
+                                     1,
+                                     sizeof(PDM_g_num_t),
+                                     NULL,
+                   (const void  **)  send_buffer,
+                                     NULL,
+                         (void ***)  &recv_buffer,
+                                     &request);
+
+      PDM_part_to_part_reverse_iexch_wait(ptp_group, request);
+      PDM_free(send_buffer);
+
+
+      for (int i_part = 0; i_part < n_part_out; i_part++) {
+        if (visu) {
+          log_trace("    i_part %d\n", i_part);
+        }
+        int          n_group_elmt   = 0;
+        int         *group_elmt     = NULL;
+        PDM_g_num_t *group_ln_to_gn = NULL;
+        PDM_part_mesh_nodal_elmts_group_get(extract_pmne_child,
+                                            i_part,
+                                            i_group,
+                                            &n_group_elmt,
+                                            &group_elmt,
+                                            &group_ln_to_gn,
+                                            PDM_OWNERSHIP_KEEP);
+
+        if (visu) {
+          PDM_log_trace_array_long(recv_buffer[i_part], n_group_elmt, "      recv_buffer : ");
+        }
+        PDM_free(recv_buffer[i_part]);
+      }
+      PDM_free(recv_buffer);
+    }
+
+  }
+
+
+  if (visu) {
     for (PDM_geometry_kind_t geom_kind_child = geom_kind; geom_kind_child < PDM_GEOMETRY_KIND_CORNER; geom_kind_child++) {
       char name[999];
       sprintf(name, "extract_pmn_%d", geom_kind_child);
