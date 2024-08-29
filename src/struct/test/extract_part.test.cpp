@@ -274,6 +274,8 @@ _get_extracted
       n_extract   [i_part] = 0;
       extract_lnum[i_part] = NULL;
     }
+    *out_n_extract    = n_extract;
+    *out_extract_lnum = extract_lnum;
     return;
   }
 
@@ -356,8 +358,8 @@ _get_targets
 
   if (empty_extraction) {
     for (int i_part = 0; i_part < n_part_out; i_part++) {
-      n_target   [i_part] = 0;
-      target_gnum[i_part] = NULL;
+      (*n_target   )[i_part] = 0;
+      (*target_gnum)[i_part] = NULL;
     }
     return;
   }
@@ -484,1244 +486,1401 @@ MPI_TEST_CASE("[pdm_extract_part] - 2p - nodal", 2) {
   /* Define subcases */
   SUBCASE("LOCAL, n_part_in 1, n_part_out 1, POLY_2D") {
     if (i_rank == 0) printf("LOCAL, n_part_in 1, n_part_out 1, POLY_2D\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_LOCAL;
-    n_part_in    = 1;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
+    extract_kind     = PDM_EXTRACT_PART_KIND_LOCAL;
+    n_part_in        = 1;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 0;
   }
-  SUBCASE("LOCAL, n_part_in 1, n_part_out 1, POLY_2D") {
-    if (i_rank == 0) printf("LOCAL, n_part_in 1, n_part_out 1, POLY_2D\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_LOCAL;
-    n_part_in    = 1;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
-  }
-  SUBCASE("LOCAL, n_part_in 2, n_part_out 2, POLY_2D") {
-    if (i_rank == 0) printf("LOCAL, n_part_in 2, n_part_out 2, POLY_2D\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_LOCAL;
-    n_part_in    = 2;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
+  SUBCASE("LOCAL, n_part_in 1, n_part_out 1, POLY_2D, empty extraction") {
+    if (i_rank == 0) printf("LOCAL, n_part_in 1, n_part_out 1, POLY_2D, empty extraction\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_LOCAL;
+    n_part_in        = 1;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 1;
   }
   SUBCASE("LOCAL, n_part_in 2, n_part_out 2, POLY_2D") {
     if (i_rank == 0) printf("LOCAL, n_part_in 2, n_part_out 2, POLY_2D\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_LOCAL;
-    n_part_in    = 2;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
+    extract_kind     = PDM_EXTRACT_PART_KIND_LOCAL;
+    n_part_in        = 2;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 0;
+  }
+  SUBCASE("LOCAL, n_part_in 2, n_part_out 2, POLY_2D, empty extraction") {
+    if (i_rank == 0) printf("LOCAL, n_part_in 2, n_part_out 2, POLY_2D, empty extraction\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_LOCAL;
+    n_part_in        = 2;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 1;
   }
   SUBCASE("LOCAL, n_part_in 1, n_part_out 1, PRISM6") {
     if (i_rank == 0) printf("LOCAL, n_part_in 1, n_part_out 1, PRISM6\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_LOCAL;
-    n_part_in    = 1;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
+    extract_kind     = PDM_EXTRACT_PART_KIND_LOCAL;
+    n_part_in        = 1;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 0;
   }
-  SUBCASE("LOCAL, n_part_in 1, n_part_out 1, PRISM6") {
-    if (i_rank == 0) printf("LOCAL, n_part_in 1, n_part_out 1, PRISM6\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_LOCAL;
-    n_part_in    = 1;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
-  }
-  SUBCASE("LOCAL, n_part_in 2, n_part_out 2, PRISM6") {
-    if (i_rank == 0) printf("LOCAL, n_part_in 2, n_part_out 2, PRISM6\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_LOCAL;
-    n_part_in    = 2;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
+  SUBCASE("LOCAL, n_part_in 1, n_part_out 1, PRISM6, empty extraction") {
+    if (i_rank == 0) printf("LOCAL, n_part_in 1, n_part_out 1, PRISM6, empty extraction\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_LOCAL;
+    n_part_in        = 1;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 1;
   }
   SUBCASE("LOCAL, n_part_in 2, n_part_out 2, PRISM6") {
     if (i_rank == 0) printf("LOCAL, n_part_in 2, n_part_out 2, PRISM6\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_LOCAL;
-    n_part_in    = 2;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
+    extract_kind     = PDM_EXTRACT_PART_KIND_LOCAL;
+    n_part_in        = 2;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 0;
+  }
+  SUBCASE("LOCAL, n_part_in 2, n_part_out 2, PRISM6, empty extraction") {
+    if (i_rank == 0) printf("LOCAL, n_part_in 2, n_part_out 2, PRISM6, empty extraction\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_LOCAL;
+    n_part_in        = 2;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 1;
   }
   SUBCASE("LOCAL, n_part_in 1, n_part_out 1, POLY_3D") {
     if (i_rank == 0) printf("LOCAL, n_part_in 1, n_part_out 1, POLY_3D\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_LOCAL;
-    n_part_in    = 1;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
+    extract_kind     = PDM_EXTRACT_PART_KIND_LOCAL;
+    n_part_in        = 1;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 0;
   }
-  SUBCASE("LOCAL, n_part_in 1, n_part_out 1, POLY_3D") {
-    if (i_rank == 0) printf("LOCAL, n_part_in 1, n_part_out 1, POLY_3D\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_LOCAL;
-    n_part_in    = 1;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
-  }
-  SUBCASE("LOCAL, n_part_in 2, n_part_out 2, POLY_3D") {
-    if (i_rank == 0) printf("LOCAL, n_part_in 2, n_part_out 2, POLY_3D\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_LOCAL;
-    n_part_in    = 2;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
+  SUBCASE("LOCAL, n_part_in 1, n_part_out 1, POLY_3D, empty extraction") {
+    if (i_rank == 0) printf("LOCAL, n_part_in 1, n_part_out 1, POLY_3D, empty extraction\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_LOCAL;
+    n_part_in        = 1;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 1;
   }
   SUBCASE("LOCAL, n_part_in 2, n_part_out 2, POLY_3D") {
     if (i_rank == 0) printf("LOCAL, n_part_in 2, n_part_out 2, POLY_3D\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_LOCAL;
-    n_part_in    = 2;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
+    extract_kind     = PDM_EXTRACT_PART_KIND_LOCAL;
+    n_part_in        = 2;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 0;
+  }
+  SUBCASE("LOCAL, n_part_in 2, n_part_out 2, POLY_3D, empty extraction") {
+    if (i_rank == 0) printf("LOCAL, n_part_in 2, n_part_out 2, POLY_3D, empty extraction\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_LOCAL;
+    n_part_in        = 2;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 1;
   }
   SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 1, POLY_2D, HILBERT") {
     if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 1, POLY_2D, HILBERT\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 1;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
-    part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 1;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_HILBERT;
   }
-  SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 1, POLY_2D, HILBERT") {
-    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 1, POLY_2D, HILBERT\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 1;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
-    part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
-  }
-  SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 2, POLY_2D, HILBERT") {
-    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 2, POLY_2D, HILBERT\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 1;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
-    part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
+  SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 1, POLY_2D, empty extraction, HILBERT") {
+    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 1, POLY_2D, empty extraction, HILBERT\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 1;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_HILBERT;
   }
   SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 2, POLY_2D, HILBERT") {
     if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 2, POLY_2D, HILBERT\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 1;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
-    part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 1;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_HILBERT;
+  }
+  SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 2, POLY_2D, empty extraction, HILBERT") {
+    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 2, POLY_2D, empty extraction, HILBERT\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 1;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_HILBERT;
   }
   SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 1, POLY_2D, HILBERT") {
     if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 1, POLY_2D, HILBERT\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 2;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
-    part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 2;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_HILBERT;
   }
-  SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 1, POLY_2D, HILBERT") {
-    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 1, POLY_2D, HILBERT\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 2;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
-    part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
-  }
-  SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 2, POLY_2D, HILBERT") {
-    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 2, POLY_2D, HILBERT\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 2;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
-    part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
+  SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 1, POLY_2D, empty extraction, HILBERT") {
+    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 1, POLY_2D, empty extraction, HILBERT\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 2;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_HILBERT;
   }
   SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 2, POLY_2D, HILBERT") {
     if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 2, POLY_2D, HILBERT\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 2;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
-    part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 2;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_HILBERT;
+  }
+  SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 2, POLY_2D, empty extraction, HILBERT") {
+    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 2, POLY_2D, empty extraction, HILBERT\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 2;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_HILBERT;
   }
   SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 1, PRISM6, HILBERT") {
     if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 1, PRISM6, HILBERT\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 1;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
-    part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 1;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_HILBERT;
   }
-  SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 1, PRISM6, HILBERT") {
-    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 1, PRISM6, HILBERT\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 1;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
-    part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
-  }
-  SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 2, PRISM6, HILBERT") {
-    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 2, PRISM6, HILBERT\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 1;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
-    part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
+  SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 1, PRISM6, empty extraction, HILBERT") {
+    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 1, PRISM6, empty extraction, HILBERT\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 1;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_HILBERT;
   }
   SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 2, PRISM6, HILBERT") {
     if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 2, PRISM6, HILBERT\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 1;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
-    part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 1;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_HILBERT;
+  }
+  SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 2, PRISM6, empty extraction, HILBERT") {
+    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 2, PRISM6, empty extraction, HILBERT\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 1;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_HILBERT;
   }
   SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 1, PRISM6, HILBERT") {
     if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 1, PRISM6, HILBERT\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 2;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
-    part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 2;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_HILBERT;
   }
-  SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 1, PRISM6, HILBERT") {
-    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 1, PRISM6, HILBERT\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 2;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
-    part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
-  }
-  SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 2, PRISM6, HILBERT") {
-    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 2, PRISM6, HILBERT\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 2;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
-    part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
+  SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 1, PRISM6, empty extraction, HILBERT") {
+    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 1, PRISM6, empty extraction, HILBERT\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 2;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_HILBERT;
   }
   SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 2, PRISM6, HILBERT") {
     if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 2, PRISM6, HILBERT\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 2;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
-    part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 2;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_HILBERT;
+  }
+  SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 2, PRISM6, empty extraction, HILBERT") {
+    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 2, PRISM6, empty extraction, HILBERT\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 2;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_HILBERT;
   }
   SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 1, POLY_3D, HILBERT") {
     if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 1, POLY_3D, HILBERT\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 1;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
-    part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 1;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_HILBERT;
   }
-  SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 1, POLY_3D, HILBERT") {
-    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 1, POLY_3D, HILBERT\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 1;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
-    part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
-  }
-  SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 2, POLY_3D, HILBERT") {
-    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 2, POLY_3D, HILBERT\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 1;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
-    part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
+  SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 1, POLY_3D, empty extraction, HILBERT") {
+    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 1, POLY_3D, empty extraction, HILBERT\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 1;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_HILBERT;
   }
   SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 2, POLY_3D, HILBERT") {
     if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 2, POLY_3D, HILBERT\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 1;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
-    part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 1;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_HILBERT;
+  }
+  SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 2, POLY_3D, empty extraction, HILBERT") {
+    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 2, POLY_3D, empty extraction, HILBERT\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 1;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_HILBERT;
   }
   SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 1, POLY_3D, HILBERT") {
     if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 1, POLY_3D, HILBERT\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 2;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
-    part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 2;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_HILBERT;
   }
-  SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 1, POLY_3D, HILBERT") {
-    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 1, POLY_3D, HILBERT\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 2;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
-    part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
-  }
-  SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 2, POLY_3D, HILBERT") {
-    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 2, POLY_3D, HILBERT\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 2;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
-    part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
+  SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 1, POLY_3D, empty extraction, HILBERT") {
+    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 1, POLY_3D, empty extraction, HILBERT\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 2;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_HILBERT;
   }
   SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 2, POLY_3D, HILBERT") {
     if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 2, POLY_3D, HILBERT\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 2;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
-    part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 2;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_HILBERT;
+  }
+  SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 2, POLY_3D, empty extraction, HILBERT") {
+    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 2, POLY_3D, empty extraction, HILBERT\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 2;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_HILBERT;
   }
   SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 1, POLY_2D, HILBERT") {
     if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 1, POLY_2D, HILBERT\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 1;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
-    part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 1;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_HILBERT;
   }
-  SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 1, POLY_2D, HILBERT") {
-    if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 1, POLY_2D, HILBERT\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 1;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
-    part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
-  }
-  SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 2, POLY_2D, HILBERT") {
-    if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 2, POLY_2D, HILBERT\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 1;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
-    part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
+  SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 1, POLY_2D, empty extraction, HILBERT") {
+    if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 1, POLY_2D, empty extraction, HILBERT\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 1;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_HILBERT;
   }
   SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 2, POLY_2D, HILBERT") {
     if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 2, POLY_2D, HILBERT\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 1;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
-    part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 1;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_HILBERT;
+  }
+  SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 2, POLY_2D, empty extraction, HILBERT") {
+    if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 2, POLY_2D, empty extraction, HILBERT\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 1;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_HILBERT;
   }
   SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 1, POLY_2D, HILBERT") {
     if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 1, POLY_2D, HILBERT\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 2;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
-    part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 2;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_HILBERT;
   }
-  SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 1, POLY_2D, HILBERT") {
-    if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 1, POLY_2D, HILBERT\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 2;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
-    part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
-  }
-  SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 2, POLY_2D, HILBERT") {
-    if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 2, POLY_2D, HILBERT\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 2;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
-    part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
+  SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 1, POLY_2D, empty extraction, HILBERT") {
+    if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 1, POLY_2D, empty extraction, HILBERT\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 2;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_HILBERT;
   }
   SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 2, POLY_2D, HILBERT") {
     if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 2, POLY_2D, HILBERT\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 2;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
-    part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 2;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_HILBERT;
+  }
+  SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 2, POLY_2D, empty extraction, HILBERT") {
+    if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 2, POLY_2D, empty extraction, HILBERT\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 2;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_HILBERT;
   }
   SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 1, PRISM6, HILBERT") {
     if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 1, PRISM6, HILBERT\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 1;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
-    part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 1;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_HILBERT;
   }
-  SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 1, PRISM6, HILBERT") {
-    if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 1, PRISM6, HILBERT\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 1;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
-    part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
-  }
-  SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 2, PRISM6, HILBERT") {
-    if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 2, PRISM6, HILBERT\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 1;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
-    part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
+  SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 1, PRISM6, empty extraction, HILBERT") {
+    if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 1, PRISM6, empty extraction, HILBERT\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 1;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_HILBERT;
   }
   SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 2, PRISM6, HILBERT") {
     if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 2, PRISM6, HILBERT\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 1;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
-    part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 1;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_HILBERT;
+  }
+  SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 2, PRISM6, empty extraction, HILBERT") {
+    if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 2, PRISM6, empty extraction, HILBERT\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 1;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_HILBERT;
   }
   SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 1, PRISM6, HILBERT") {
     if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 1, PRISM6, HILBERT\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 2;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
-    part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 2;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_HILBERT;
   }
-  SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 1, PRISM6, HILBERT") {
-    if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 1, PRISM6, HILBERT\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 2;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
-    part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
-  }
-  SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 2, PRISM6, HILBERT") {
-    if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 2, PRISM6, HILBERT\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 2;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
-    part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
+  SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 1, PRISM6, empty extraction, HILBERT") {
+    if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 1, PRISM6, empty extraction, HILBERT\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 2;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_HILBERT;
   }
   SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 2, PRISM6, HILBERT") {
     if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 2, PRISM6, HILBERT\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 2;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
-    part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 2;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_HILBERT;
+  }
+  SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 2, PRISM6, empty extraction, HILBERT") {
+    if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 2, PRISM6, empty extraction, HILBERT\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 2;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_HILBERT;
   }
   SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 1, POLY_3D, HILBERT") {
     if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 1, POLY_3D, HILBERT\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 1;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
-    part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 1;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_HILBERT;
   }
-  SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 1, POLY_3D, HILBERT") {
-    if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 1, POLY_3D, HILBERT\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 1;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
-    part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
-  }
-  SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 2, POLY_3D, HILBERT") {
-    if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 2, POLY_3D, HILBERT\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 1;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
-    part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
+  SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 1, POLY_3D, empty extraction, HILBERT") {
+    if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 1, POLY_3D, empty extraction, HILBERT\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 1;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_HILBERT;
   }
   SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 2, POLY_3D, HILBERT") {
     if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 2, POLY_3D, HILBERT\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 1;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
-    part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 1;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_HILBERT;
+  }
+  SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 2, POLY_3D, empty extraction, HILBERT") {
+    if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 2, POLY_3D, empty extraction, HILBERT\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 1;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_HILBERT;
   }
   SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 1, POLY_3D, HILBERT") {
     if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 1, POLY_3D, HILBERT\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 2;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
-    part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 2;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_HILBERT;
   }
-  SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 1, POLY_3D, HILBERT") {
-    if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 1, POLY_3D, HILBERT\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 2;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
-    part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
-  }
-  SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 2, POLY_3D, HILBERT") {
-    if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 2, POLY_3D, HILBERT\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 2;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
-    part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
+  SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 1, POLY_3D, empty extraction, HILBERT") {
+    if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 1, POLY_3D, empty extraction, HILBERT\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 2;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_HILBERT;
   }
   SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 2, POLY_3D, HILBERT") {
     if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 2, POLY_3D, HILBERT\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 2;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
-    part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 2;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_HILBERT;
+  }
+  SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 2, POLY_3D, empty extraction, HILBERT") {
+    if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 2, POLY_3D, empty extraction, HILBERT\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 2;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_HILBERT;
   }
 #ifdef PDM_HAVE_PARMETIS
   SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 1, POLY_2D, PARMETIS") {
     if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 1, POLY_2D, PARMETIS\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 1;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 1;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_PARMETIS;
   }
-  SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 1, POLY_2D, PARMETIS") {
-    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 1, POLY_2D, PARMETIS\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 1;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
-  }
-  SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 2, POLY_2D, PARMETIS") {
-    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 2, POLY_2D, PARMETIS\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 1;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
+  SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 1, POLY_2D, empty extraction, PARMETIS") {
+    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 1, POLY_2D, empty extraction, PARMETIS\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 1;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_PARMETIS;
   }
   SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 2, POLY_2D, PARMETIS") {
     if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 2, POLY_2D, PARMETIS\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 1;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 1;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_PARMETIS;
+  }
+  SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 2, POLY_2D, empty extraction, PARMETIS") {
+    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 2, POLY_2D, empty extraction, PARMETIS\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 1;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_PARMETIS;
   }
   SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 1, POLY_2D, PARMETIS") {
     if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 1, POLY_2D, PARMETIS\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 2;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 2;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_PARMETIS;
   }
-  SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 1, POLY_2D, PARMETIS") {
-    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 1, POLY_2D, PARMETIS\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 2;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
-  }
-  SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 2, POLY_2D, PARMETIS") {
-    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 2, POLY_2D, PARMETIS\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 2;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
+  SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 1, POLY_2D, empty extraction, PARMETIS") {
+    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 1, POLY_2D, empty extraction, PARMETIS\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 2;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_PARMETIS;
   }
   SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 2, POLY_2D, PARMETIS") {
     if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 2, POLY_2D, PARMETIS\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 2;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 2;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_PARMETIS;
+  }
+  SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 2, POLY_2D, empty extraction, PARMETIS") {
+    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 2, POLY_2D, empty extraction, PARMETIS\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 2;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_PARMETIS;
   }
   SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 1, PRISM6, PARMETIS") {
     if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 1, PRISM6, PARMETIS\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 1;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
-    part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 1;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_PARMETIS;
   }
-  SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 1, PRISM6, PARMETIS") {
-    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 1, PRISM6, PARMETIS\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 1;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
-    part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
-  }
-  SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 2, PRISM6, PARMETIS") {
-    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 2, PRISM6, PARMETIS\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 1;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
-    part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
+  SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 1, PRISM6, empty extraction, PARMETIS") {
+    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 1, PRISM6, empty extraction, PARMETIS\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 1;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_PARMETIS;
   }
   SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 2, PRISM6, PARMETIS") {
     if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 2, PRISM6, PARMETIS\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 1;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
-    part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 1;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_PARMETIS;
+  }
+  SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 2, PRISM6, empty extraction, PARMETIS") {
+    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 2, PRISM6, empty extraction, PARMETIS\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 1;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_PARMETIS;
   }
   SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 1, PRISM6, PARMETIS") {
     if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 1, PRISM6, PARMETIS\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 2;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
-    part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 2;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_PARMETIS;
   }
-  SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 1, PRISM6, PARMETIS") {
-    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 1, PRISM6, PARMETIS\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 2;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
-    part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
-  }
-  SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 2, PRISM6, PARMETIS") {
-    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 2, PRISM6, PARMETIS\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 2;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
-    part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
+  SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 1, PRISM6, empty extraction, PARMETIS") {
+    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 1, PRISM6, empty extraction, PARMETIS\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 2;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_PARMETIS;
   }
   SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 2, PRISM6, PARMETIS") {
     if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 2, PRISM6, PARMETIS\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 2;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
-    part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 2;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_PARMETIS;
+  }
+  SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 2, PRISM6, empty extraction, PARMETIS") {
+    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 2, PRISM6, empty extraction, PARMETIS\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 2;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_PARMETIS;
   }
   SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 1, POLY_3D, PARMETIS") {
     if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 1, POLY_3D, PARMETIS\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 1;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 1;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_PARMETIS;
   }
-  SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 1, POLY_3D, PARMETIS") {
-    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 1, POLY_3D, PARMETIS\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 1;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
-  }
-  SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 2, POLY_3D, PARMETIS") {
-    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 2, POLY_3D, PARMETIS\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 1;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
+  SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 1, POLY_3D, empty extraction, PARMETIS") {
+    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 1, POLY_3D, empty extraction, PARMETIS\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 1;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_PARMETIS;
   }
   SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 2, POLY_3D, PARMETIS") {
     if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 2, POLY_3D, PARMETIS\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 1;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 1;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_PARMETIS;
+  }
+  SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 2, POLY_3D, empty extraction, PARMETIS") {
+    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 2, POLY_3D, empty extraction, PARMETIS\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 1;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_PARMETIS;
   }
   SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 1, POLY_3D, PARMETIS") {
     if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 1, POLY_3D, PARMETIS\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 2;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 2;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_PARMETIS;
   }
-  SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 1, POLY_3D, PARMETIS") {
-    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 1, POLY_3D, PARMETIS\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 2;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
-  }
-  SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 2, POLY_3D, PARMETIS") {
-    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 2, POLY_3D, PARMETIS\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 2;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
+  SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 1, POLY_3D, empty extraction, PARMETIS") {
+    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 1, POLY_3D, empty extraction, PARMETIS\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 2;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_PARMETIS;
   }
   SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 2, POLY_3D, PARMETIS") {
     if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 2, POLY_3D, PARMETIS\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 2;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 2;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_PARMETIS;
+  }
+  SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 2, POLY_3D, empty extraction, PARMETIS") {
+    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 2, POLY_3D, empty extraction, PARMETIS\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 2;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_PARMETIS;
   }
   SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 1, POLY_2D, PARMETIS") {
     if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 1, POLY_2D, PARMETIS\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 1;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 1;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_PARMETIS;
   }
-  SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 1, POLY_2D, PARMETIS") {
-    if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 1, POLY_2D, PARMETIS\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 1;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
-  }
-  SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 2, POLY_2D, PARMETIS") {
-    if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 2, POLY_2D, PARMETIS\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 1;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
+  SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 1, POLY_2D, empty extraction, PARMETIS") {
+    if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 1, POLY_2D, empty extraction, PARMETIS\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 1;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_PARMETIS;
   }
   SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 2, POLY_2D, PARMETIS") {
     if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 2, POLY_2D, PARMETIS\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 1;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 1;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_PARMETIS;
+  }
+  SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 2, POLY_2D, empty extraction, PARMETIS") {
+    if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 2, POLY_2D, empty extraction, PARMETIS\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 1;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_PARMETIS;
   }
   SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 1, POLY_2D, PARMETIS") {
     if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 1, POLY_2D, PARMETIS\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 2;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 2;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_PARMETIS;
   }
-  SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 1, POLY_2D, PARMETIS") {
-    if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 1, POLY_2D, PARMETIS\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 2;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
-  }
-  SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 2, POLY_2D, PARMETIS") {
-    if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 2, POLY_2D, PARMETIS\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 2;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
+  SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 1, POLY_2D, empty extraction, PARMETIS") {
+    if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 1, POLY_2D, empty extraction, PARMETIS\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 2;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_PARMETIS;
   }
   SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 2, POLY_2D, PARMETIS") {
     if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 2, POLY_2D, PARMETIS\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 2;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 2;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_PARMETIS;
+  }
+  SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 2, POLY_2D, empty extraction, PARMETIS") {
+    if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 2, POLY_2D, empty extraction, PARMETIS\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 2;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_PARMETIS;
   }
   SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 1, PRISM6, PARMETIS") {
     if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 1, PRISM6, PARMETIS\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 1;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
-    part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 1;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_PARMETIS;
   }
-  SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 1, PRISM6, PARMETIS") {
-    if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 1, PRISM6, PARMETIS\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 1;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
-    part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
-  }
-  SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 2, PRISM6, PARMETIS") {
-    if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 2, PRISM6, PARMETIS\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 1;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
-    part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
+  SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 1, PRISM6, empty extraction, PARMETIS") {
+    if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 1, PRISM6, empty extraction, PARMETIS\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 1;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_PARMETIS;
   }
   SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 2, PRISM6, PARMETIS") {
     if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 2, PRISM6, PARMETIS\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 1;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
-    part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 1;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_PARMETIS;
+  }
+  SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 2, PRISM6, empty extraction, PARMETIS") {
+    if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 2, PRISM6, empty extraction, PARMETIS\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 1;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_PARMETIS;
   }
   SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 1, PRISM6, PARMETIS") {
     if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 1, PRISM6, PARMETIS\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 2;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
-    part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 2;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_PARMETIS;
   }
-  SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 1, PRISM6, PARMETIS") {
-    if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 1, PRISM6, PARMETIS\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 2;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
-    part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
-  }
-  SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 2, PRISM6, PARMETIS") {
-    if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 2, PRISM6, PARMETIS\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 2;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
-    part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
+  SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 1, PRISM6, empty extraction, PARMETIS") {
+    if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 1, PRISM6, empty extraction, PARMETIS\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 2;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_PARMETIS;
   }
   SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 2, PRISM6, PARMETIS") {
     if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 2, PRISM6, PARMETIS\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 2;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
-    part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 2;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_PARMETIS;
+  }
+  SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 2, PRISM6, empty extraction, PARMETIS") {
+    if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 2, PRISM6, empty extraction, PARMETIS\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 2;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_PARMETIS;
   }
   SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 1, POLY_3D, PARMETIS") {
     if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 1, POLY_3D, PARMETIS\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 1;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 1;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_PARMETIS;
   }
-  SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 1, POLY_3D, PARMETIS") {
-    if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 1, POLY_3D, PARMETIS\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 1;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
-  }
-  SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 2, POLY_3D, PARMETIS") {
-    if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 2, POLY_3D, PARMETIS\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 1;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
+  SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 1, POLY_3D, empty extraction, PARMETIS") {
+    if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 1, POLY_3D, empty extraction, PARMETIS\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 1;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_PARMETIS;
   }
   SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 2, POLY_3D, PARMETIS") {
     if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 2, POLY_3D, PARMETIS\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 1;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 1;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_PARMETIS;
+  }
+  SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 2, POLY_3D, empty extraction, PARMETIS") {
+    if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 2, POLY_3D, empty extraction, PARMETIS\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 1;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_PARMETIS;
   }
   SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 1, POLY_3D, PARMETIS") {
     if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 1, POLY_3D, PARMETIS\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 2;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 2;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_PARMETIS;
   }
-  SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 1, POLY_3D, PARMETIS") {
-    if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 1, POLY_3D, PARMETIS\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 2;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
-  }
-  SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 2, POLY_3D, PARMETIS") {
-    if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 2, POLY_3D, PARMETIS\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 2;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
+  SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 1, POLY_3D, empty extraction, PARMETIS") {
+    if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 1, POLY_3D, empty extraction, PARMETIS\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 2;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_PARMETIS;
   }
   SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 2, POLY_3D, PARMETIS") {
     if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 2, POLY_3D, PARMETIS\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 2;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 2;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_PARMETIS;
+  }
+  SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 2, POLY_3D, empty extraction, PARMETIS") {
+    if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 2, POLY_3D, empty extraction, PARMETIS\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 2;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_PARMETIS;
   }
 #endif
 #ifdef PDM_HAVE_PTSCOTCH
   SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 1, POLY_2D, PTSCOTCH") {
     if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 1, POLY_2D, PTSCOTCH\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 1;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 1;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
   }
-  SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 1, POLY_2D, PTSCOTCH") {
-    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 1, POLY_2D, PTSCOTCH\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 1;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
-  }
-  SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 2, POLY_2D, PTSCOTCH") {
-    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 2, POLY_2D, PTSCOTCH\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 1;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+  SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 1, POLY_2D, empty extraction, PTSCOTCH") {
+    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 1, POLY_2D, empty extraction, PTSCOTCH\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 1;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
   }
   SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 2, POLY_2D, PTSCOTCH") {
     if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 2, POLY_2D, PTSCOTCH\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 1;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 1;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+  }
+  SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 2, POLY_2D, empty extraction, PTSCOTCH") {
+    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 2, POLY_2D, empty extraction, PTSCOTCH\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 1;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
   }
   SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 1, POLY_2D, PTSCOTCH") {
     if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 1, POLY_2D, PTSCOTCH\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 2;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 2;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
   }
-  SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 1, POLY_2D, PTSCOTCH") {
-    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 1, POLY_2D, PTSCOTCH\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 2;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
-  }
-  SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 2, POLY_2D, PTSCOTCH") {
-    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 2, POLY_2D, PTSCOTCH\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 2;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+  SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 1, POLY_2D, empty extraction, PTSCOTCH") {
+    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 1, POLY_2D, empty extraction, PTSCOTCH\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 2;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
   }
   SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 2, POLY_2D, PTSCOTCH") {
     if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 2, POLY_2D, PTSCOTCH\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 2;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 2;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+  }
+  SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 2, POLY_2D, empty extraction, PTSCOTCH") {
+    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 2, POLY_2D, empty extraction, PTSCOTCH\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 2;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
   }
   SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 1, PRISM6, PTSCOTCH") {
     if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 1, PRISM6, PTSCOTCH\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 1;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
-    part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 1;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
   }
-  SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 1, PRISM6, PTSCOTCH") {
-    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 1, PRISM6, PTSCOTCH\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 1;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
-    part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
-  }
-  SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 2, PRISM6, PTSCOTCH") {
-    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 2, PRISM6, PTSCOTCH\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 1;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
-    part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+  SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 1, PRISM6, empty extraction, PTSCOTCH") {
+    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 1, PRISM6, empty extraction, PTSCOTCH\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 1;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
   }
   SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 2, PRISM6, PTSCOTCH") {
     if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 2, PRISM6, PTSCOTCH\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 1;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
-    part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 1;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+  }
+  SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 2, PRISM6, empty extraction, PTSCOTCH") {
+    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 2, PRISM6, empty extraction, PTSCOTCH\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 1;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
   }
   SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 1, PRISM6, PTSCOTCH") {
     if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 1, PRISM6, PTSCOTCH\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 2;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
-    part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 2;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
   }
-  SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 1, PRISM6, PTSCOTCH") {
-    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 1, PRISM6, PTSCOTCH\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 2;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
-    part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
-  }
-  SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 2, PRISM6, PTSCOTCH") {
-    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 2, PRISM6, PTSCOTCH\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 2;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
-    part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+  SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 1, PRISM6, empty extraction, PTSCOTCH") {
+    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 1, PRISM6, empty extraction, PTSCOTCH\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 2;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
   }
   SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 2, PRISM6, PTSCOTCH") {
     if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 2, PRISM6, PTSCOTCH\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 2;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
-    part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 2;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+  }
+  SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 2, PRISM6, empty extraction, PTSCOTCH") {
+    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 2, PRISM6, empty extraction, PTSCOTCH\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 2;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
   }
   SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 1, POLY_3D, PTSCOTCH") {
     if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 1, POLY_3D, PTSCOTCH\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 1;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 1;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
   }
-  SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 1, POLY_3D, PTSCOTCH") {
-    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 1, POLY_3D, PTSCOTCH\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 1;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
-  }
-  SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 2, POLY_3D, PTSCOTCH") {
-    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 2, POLY_3D, PTSCOTCH\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 1;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+  SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 1, POLY_3D, empty extraction, PTSCOTCH") {
+    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 1, POLY_3D, empty extraction, PTSCOTCH\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 1;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
   }
   SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 2, POLY_3D, PTSCOTCH") {
     if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 2, POLY_3D, PTSCOTCH\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 1;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 1;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+  }
+  SUBCASE("REEQUILIBRATE, n_part_in 1, n_part_out 2, POLY_3D, empty extraction, PTSCOTCH") {
+    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 1, n_part_out 2, POLY_3D, empty extraction, PTSCOTCH\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 1;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
   }
   SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 1, POLY_3D, PTSCOTCH") {
     if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 1, POLY_3D, PTSCOTCH\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 2;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 2;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
   }
-  SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 1, POLY_3D, PTSCOTCH") {
-    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 1, POLY_3D, PTSCOTCH\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 2;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
-  }
-  SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 2, POLY_3D, PTSCOTCH") {
-    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 2, POLY_3D, PTSCOTCH\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 2;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+  SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 1, POLY_3D, empty extraction, PTSCOTCH") {
+    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 1, POLY_3D, empty extraction, PTSCOTCH\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 2;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
   }
   SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 2, POLY_3D, PTSCOTCH") {
     if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 2, POLY_3D, PTSCOTCH\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    n_part_in    = 2;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 2;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+  }
+  SUBCASE("REEQUILIBRATE, n_part_in 2, n_part_out 2, POLY_3D, empty extraction, PTSCOTCH") {
+    if (i_rank == 0) printf("REEQUILIBRATE, n_part_in 2, n_part_out 2, POLY_3D, empty extraction, PTSCOTCH\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    n_part_in        = 2;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
   }
   SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 1, POLY_2D, PTSCOTCH") {
     if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 1, POLY_2D, PTSCOTCH\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 1;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 1;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
   }
-  SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 1, POLY_2D, PTSCOTCH") {
-    if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 1, POLY_2D, PTSCOTCH\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 1;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
-  }
-  SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 2, POLY_2D, PTSCOTCH") {
-    if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 2, POLY_2D, PTSCOTCH\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 1;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+  SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 1, POLY_2D, empty extraction, PTSCOTCH") {
+    if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 1, POLY_2D, empty extraction, PTSCOTCH\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 1;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
   }
   SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 2, POLY_2D, PTSCOTCH") {
     if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 2, POLY_2D, PTSCOTCH\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 1;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 1;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+  }
+  SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 2, POLY_2D, empty extraction, PTSCOTCH") {
+    if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 2, POLY_2D, empty extraction, PTSCOTCH\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 1;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
   }
   SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 1, POLY_2D, PTSCOTCH") {
     if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 1, POLY_2D, PTSCOTCH\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 2;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 2;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
   }
-  SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 1, POLY_2D, PTSCOTCH") {
-    if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 1, POLY_2D, PTSCOTCH\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 2;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
-  }
-  SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 2, POLY_2D, PTSCOTCH") {
-    if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 2, POLY_2D, PTSCOTCH\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 2;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+  SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 1, POLY_2D, empty extraction, PTSCOTCH") {
+    if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 1, POLY_2D, empty extraction, PTSCOTCH\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 2;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
   }
   SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 2, POLY_2D, PTSCOTCH") {
     if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 2, POLY_2D, PTSCOTCH\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 2;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_2D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 2;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+  }
+  SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 2, POLY_2D, empty extraction, PTSCOTCH") {
+    if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 2, POLY_2D, empty extraction, PTSCOTCH\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 2;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_2D;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
   }
   SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 1, PRISM6, PTSCOTCH") {
     if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 1, PRISM6, PTSCOTCH\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 1;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
-    part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 1;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
   }
-  SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 1, PRISM6, PTSCOTCH") {
-    if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 1, PRISM6, PTSCOTCH\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 1;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
-    part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
-  }
-  SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 2, PRISM6, PTSCOTCH") {
-    if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 2, PRISM6, PTSCOTCH\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 1;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
-    part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+  SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 1, PRISM6, empty extraction, PTSCOTCH") {
+    if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 1, PRISM6, empty extraction, PTSCOTCH\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 1;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
   }
   SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 2, PRISM6, PTSCOTCH") {
     if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 2, PRISM6, PTSCOTCH\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 1;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
-    part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 1;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+  }
+  SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 2, PRISM6, empty extraction, PTSCOTCH") {
+    if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 2, PRISM6, empty extraction, PTSCOTCH\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 1;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
   }
   SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 1, PRISM6, PTSCOTCH") {
     if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 1, PRISM6, PTSCOTCH\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 2;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
-    part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 2;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
   }
-  SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 1, PRISM6, PTSCOTCH") {
-    if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 1, PRISM6, PTSCOTCH\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 2;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
-    part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
-  }
-  SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 2, PRISM6, PTSCOTCH") {
-    if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 2, PRISM6, PTSCOTCH\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 2;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
-    part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+  SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 1, PRISM6, empty extraction, PTSCOTCH") {
+    if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 1, PRISM6, empty extraction, PTSCOTCH\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 2;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
   }
   SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 2, PRISM6, PTSCOTCH") {
     if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 2, PRISM6, PTSCOTCH\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 2;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_PRISM6;
-    part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 2;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+  }
+  SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 2, PRISM6, empty extraction, PTSCOTCH") {
+    if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 2, PRISM6, empty extraction, PTSCOTCH\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 2;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_PRISM6;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
   }
   SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 1, POLY_3D, PTSCOTCH") {
     if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 1, POLY_3D, PTSCOTCH\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 1;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 1;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
   }
-  SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 1, POLY_3D, PTSCOTCH") {
-    if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 1, POLY_3D, PTSCOTCH\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 1;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
-  }
-  SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 2, POLY_3D, PTSCOTCH") {
-    if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 2, POLY_3D, PTSCOTCH\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 1;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+  SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 1, POLY_3D, empty extraction, PTSCOTCH") {
+    if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 1, POLY_3D, empty extraction, PTSCOTCH\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 1;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
   }
   SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 2, POLY_3D, PTSCOTCH") {
     if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 2, POLY_3D, PTSCOTCH\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 1;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 1;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+  }
+  SUBCASE("FROM_TARGET, n_part_in 1, n_part_out 2, POLY_3D, empty extraction, PTSCOTCH") {
+    if (i_rank == 0) printf("FROM_TARGET, n_part_in 1, n_part_out 2, POLY_3D, empty extraction, PTSCOTCH\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 1;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
   }
   SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 1, POLY_3D, PTSCOTCH") {
     if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 1, POLY_3D, PTSCOTCH\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 2;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 2;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
   }
-  SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 1, POLY_3D, PTSCOTCH") {
-    if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 1, POLY_3D, PTSCOTCH\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 2;
-    n_part_out   = 1;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
-  }
-  SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 2, POLY_3D, PTSCOTCH") {
-    if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 2, POLY_3D, PTSCOTCH\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 2;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+  SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 1, POLY_3D, empty extraction, PTSCOTCH") {
+    if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 1, POLY_3D, empty extraction, PTSCOTCH\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 2;
+    n_part_out       = 1;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
   }
   SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 2, POLY_3D, PTSCOTCH") {
     if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 2, POLY_3D, PTSCOTCH\n");
-    extract_kind = PDM_EXTRACT_PART_KIND_FROM_TARGET;
-    n_part_in    = 2;
-    n_part_out   = 2;
-    elt_type     = PDM_MESH_NODAL_POLY_3D;
-    part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 2;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 0;
+    part_method      = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+  }
+  SUBCASE("FROM_TARGET, n_part_in 2, n_part_out 2, POLY_3D, empty extraction, PTSCOTCH") {
+    if (i_rank == 0) printf("FROM_TARGET, n_part_in 2, n_part_out 2, POLY_3D, empty extraction, PTSCOTCH\n");
+    extract_kind     = PDM_EXTRACT_PART_KIND_FROM_TARGET;
+    n_part_in        = 2;
+    n_part_out       = 2;
+    elt_type         = PDM_MESH_NODAL_POLY_3D;
+    empty_extraction = 1;
+    part_method      = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
   }
 #endif
+
 
 
 
