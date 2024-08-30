@@ -2077,7 +2077,7 @@ _build_bound_graph
                                          pentity1_bnd_part_idx,
                                          pentity1_bnd,
                                          NULL,
-                                         part_ext->user_defined_bnd_graph,
+                                         part_ext->user_defined_bound_graph,
                                          &pentity_bound_to_pentity_bound_idx,
                                          &pentity_bound_to_pentity_bound_triplet,
                                          &pentity_bound_to_pentity_bound_interface,
@@ -7995,7 +7995,7 @@ PDM_part_extension_part_bound_graph_set
       part_ext->parts[i_domain][i_part].vtx_part_bound_part_idx  = part_bound_part_idx;
       part_ext->parts[i_domain][i_part].vtx_part_bound           = part_bound;
       if (part_bound_proc_idx!=NULL && part_ext->extend_type==PDM_EXTEND_FROM_VTX) {
-        part_ext->user_defined_bnd_graph = 1;
+        part_ext->user_defined_bound_graph = 1;
       }
       break;
     }
@@ -8005,7 +8005,7 @@ PDM_part_extension_part_bound_graph_set
       part_ext->parts[i_domain][i_part].edge_part_bound_part_idx = part_bound_part_idx;
       part_ext->parts[i_domain][i_part].edge_part_bound          = part_bound;
       if (part_bound_proc_idx!=NULL && part_ext->extend_type==PDM_EXTEND_FROM_EDGE) {
-        part_ext->user_defined_bnd_graph = 1;
+        part_ext->user_defined_bound_graph = 1;
       }
       break;
     }
@@ -8015,7 +8015,7 @@ PDM_part_extension_part_bound_graph_set
       part_ext->parts[i_domain][i_part].face_part_bound_part_idx = part_bound_part_idx;
       part_ext->parts[i_domain][i_part].face_part_bound          = part_bound;
       if (part_bound_proc_idx!=NULL && part_ext->extend_type==PDM_EXTEND_FROM_FACE) {
-        part_ext->user_defined_bnd_graph = 1;
+        part_ext->user_defined_bound_graph = 1;
       }
       break;
     }
