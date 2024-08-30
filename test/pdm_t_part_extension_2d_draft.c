@@ -690,7 +690,8 @@ int main
   }
 
   /* Set interface */
-  if (n_dom_i>1 && n_dom_j>1) {
+  if (n_dom_i>1 || n_dom_j>1 ||
+      periodic_i==1 || periodic_j==1) {
     PDM_part_extension_part_domain_interface_shared_set(part_ext, pdi);
   }
 
