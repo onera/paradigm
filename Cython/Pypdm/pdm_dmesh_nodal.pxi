@@ -39,6 +39,7 @@ cdef extern from "pdm_dmesh_nodal.h":
 
     PDM_Mesh_nodal_elt_t PDM_DMesh_nodal_section_type_get(PDM_dmesh_nodal_t* dmn, PDM_geometry_kind_t geom_kind, int id_section)
 
+    double*              PDM_DMesh_nodal_coord_get(PDM_dmesh_nodal_t* dmn, PDM_ownership_t owner)
     double*              PDM_DMesh_nodal_vtx_get(PDM_dmesh_nodal_t* dmn)
     PDM_g_num_t*         PDM_DMesh_nodal_section_distri_std_get(PDM_dmesh_nodal_t *dmesh_nodal,
                                                                                    PDM_geometry_kind_t  geom_kind,
@@ -388,7 +389,7 @@ def dmesh_nodal_get_vtx(DMeshNodal pydmn, MPI.Comm    comm):
   PDM_DMesh_nodal_update_ownership(pydmn.dmn, PDM_OWNERSHIP_USER)
   vtx_distrib = PDM_dmesh_nodal_vtx_distrib_copy_get(pydmn.dmn)
   n_vtx = PDM_DMesh_nodal_n_vtx_get(pydmn.dmn);
-  vtx_coord = PDM_DMesh_nodal_vtx_get(pydmn.dmn)
+  vtx_coord = PDM_DMesh_nodal_coord_get(pydmn.dmn, PDM_OWNERSHIP_KEEP)
   vtx_tag = PDM_DMesh_nodal_vtx_tag_get(pydmn.dmn)
 
   return {"np_vtx"         : create_numpy_d(vtx_coord,   3*n_vtx,           False),

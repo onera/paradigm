@@ -3759,8 +3759,10 @@ PDM_isosurface_marching_algo
       isos->iso_owner_parent_lnum[id_iso][i_part][PDM_MESH_ENTITY_FACE          ] = PDM_OWNERSHIP_KEEP;
     }
     isos->iso_owner_connec       [id_iso][i_part][PDM_CONNECTIVITY_TYPE_FACE_VTX] = PDM_OWNERSHIP_KEEP;
-   
-    isos->iso_owner_edge_bnd[id_iso][i_part] = PDM_OWNERSHIP_KEEP;
+    
+    if (isos->mesh_dimension==3) {
+      isos->iso_owner_edge_bnd[id_iso][i_part] = PDM_OWNERSHIP_KEEP;
+    }
   }
 
 }
@@ -3848,10 +3850,12 @@ PDM_isosurface_ngon_algo
   PDM_extract_part_t *extrp = isos->extrp[id_iso];
   assert(extrp != NULL);
 
-  int n_surface = isos->n_group_face[0];
-
   int *iso_edge_group_n = NULL;
-  PDM_malloc(iso_edge_group_n, n_surface, int);
+  int  n_surface        = 0;
+  if (isos->mesh_dimension==3) {
+    n_surface = isos->n_group_face[0];
+    PDM_malloc(iso_edge_group_n, n_surface, int);
+  }
 
   t_start = PDM_MPI_Wtime();
 
@@ -4422,7 +4426,9 @@ PDM_isosurface_ngon_algo
     }
     isos->iso_owner_connec       [id_iso][i_part][PDM_CONNECTIVITY_TYPE_FACE_VTX] = PDM_OWNERSHIP_KEEP;
 
-    isos->iso_owner_edge_bnd     [id_iso][i_part] = PDM_OWNERSHIP_KEEP;
+    if (isos->mesh_dimension==3){
+      isos->iso_owner_edge_bnd[id_iso][i_part] = PDM_OWNERSHIP_KEEP;
+    }
   }
 }
 

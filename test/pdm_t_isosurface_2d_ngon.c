@@ -92,6 +92,8 @@ _gen_mesh
                                          out_dmesh);
 
       PDM_dmesh_nodal_to_dmesh_free(dmn_to_dm);
+      double *vtx_coord = PDM_DMesh_nodal_coord_get(dmn, PDM_OWNERSHIP_USER); // ugly but saving lives
+      PDM_dmesh_vtx_coord_set(*out_dmesh, vtx_coord, PDM_OWNERSHIP_KEEP);
     }
 
     PDM_DMesh_nodal_free(dmn);
@@ -131,16 +133,20 @@ _gen_mesh
                                                dmn);
 
       PDM_dmesh_nodal_to_dmesh_compute(dmn_to_dm,
-                                       PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE, // not sure...
-                                       PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_FACE); // not sure...
+                                       PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_EDGE,
+                                       PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_EDGE);
 
       PDM_dmesh_nodal_to_dmesh_get_dmesh(dmn_to_dm,
                                          0,
                                          out_dmesh);
 
+      PDM_dmesh_compute_distributions(*out_dmesh);
+
       PDM_dmesh_nodal_to_dmesh_free(dmn_to_dm);
+      double *vtx_coord = PDM_DMesh_nodal_coord_get(dmn, PDM_OWNERSHIP_USER); // ugly but saving lives
+      PDM_dmesh_vtx_coord_set(*out_dmesh, vtx_coord, PDM_OWNERSHIP_KEEP);
     }
-    PDM_DMesh_nodal_free(dmn); // ownership issues on vertices if keep dmesh
+    PDM_DMesh_nodal_free(dmn);
     PDM_dcube_nodal_gen_free(dcube);
   }
 
@@ -808,6 +814,7 @@ int main
   }
   else {
     PDM_free(diso_field);
+    PDM_dmesh_free(dmesh);
   }
 
 

@@ -94,6 +94,8 @@ _gen_mesh
                                          out_dmesh);
 
       PDM_dmesh_nodal_to_dmesh_free(dmn_to_dm);
+      double *vtx_coord = PDM_DMesh_nodal_coord_get(dmn, PDM_OWNERSHIP_USER); // ugly but saving lives
+      PDM_dmesh_vtx_coord_set(*out_dmesh, vtx_coord, PDM_OWNERSHIP_KEEP);
     }
 
     PDM_DMesh_nodal_free(dmn);
@@ -339,8 +341,10 @@ _gen_mesh
       PDM_dmesh_compute_distributions(*out_dmesh);
 
       PDM_dmesh_nodal_to_dmesh_free(dmn_to_dm);
+      double *vtx_coord = PDM_DMesh_nodal_coord_get(dmn, PDM_OWNERSHIP_USER); // ugly but saving lives
+      PDM_dmesh_vtx_coord_set(*out_dmesh, vtx_coord, PDM_OWNERSHIP_KEEP);
     }
-    PDM_DMesh_nodal_free(dmn); // ownership issues on vertices if keep dmesh
+    PDM_DMesh_nodal_free(dmn);
     PDM_dcube_nodal_gen_free(dcube);
   }
 
@@ -1274,12 +1278,15 @@ int main
         /**
          * Prepare dmesh_nodal for ouput
          */
+        PDM_g_num_t  n_entity[3] = {dn_vtx, dn_edge, dn_face};
+        PDM_g_num_t gn_entity[3];
+        PDM_MPI_Allreduce(n_entity, gn_entity, 3, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, comm);
         PDM_dmesh_nodal_t *iso_dmn = PDM_DMesh_nodal_create(comm,
                                                             2,
-                                                            dn_vtx,
+                                                            gn_entity[0],
                                                             0,
-                                                            dn_face,
-                                                            dn_edge);
+                                                            gn_entity[2],
+                                                            gn_entity[1]);
 
         PDM_DMesh_nodal_coord_set(iso_dmn, dn_vtx, dvtx_coords, PDM_OWNERSHIP_USER);
 
@@ -1342,6 +1349,7 @@ int main
   }
   else {
     PDM_free(diso_field);
+    PDM_dmesh_free(dmesh);
   }
 
 

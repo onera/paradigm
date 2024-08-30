@@ -76,12 +76,14 @@ PDM_DMesh_nodal_free
  PDM_dmesh_nodal_t* dmesh_nodal
 );
 
+
 /**
- * \brief Define partition vertices
+ * \brief Define block vertices
  *
- * \param [in]  hdl       Distributed nodal mesh handle
- * \param [in]  n_vtx     Number of vertices
- * \param [in]  coords    Interlaced coordinates (size = 3 * \ref n_vtx)
+ * \param [in]  dmesh_nodal   Distributed nodal mesh handle
+ * \param [in]  n_vtx         Number of vertices
+ * \param [in]  coords        Interlaced coordinates (size = 3 * \ref n_vtx)
+ * \param [in]  owner         Ownership
  *
  */
 
@@ -136,7 +138,7 @@ PDM_DMesh_nodal_section_g_dims_get
 /**
  * \brief  Return vertices distribution
  *
- * \param [in]  hdl  Distributed nodal mesh handle
+ * \param [in]  dmesh_nodal   Distributed nodal mesh handle
  *
  * \return  A array of size \ref n_procs + 1
  *
@@ -147,7 +149,6 @@ PDM_DMesh_nodal_distrib_vtx_get
 (
 PDM_dmesh_nodal_t *dmesh_nodal
 );
-
 
 /**
  * \brief  Return section distribution
@@ -185,7 +186,7 @@ PDM_DMesh_nodal_n_vtx_get
 
 
 /**
- * \brief  Return coordinates of vertices
+ * \brief  Return coordinates of vertices (deprecated)
  *
  * \param [in]  hdl       Distributed nodal mesh handle
  *
@@ -197,6 +198,23 @@ double *
 PDM_DMesh_nodal_vtx_get
 (
   PDM_dmesh_nodal_t *dmesh_nodal
+);
+
+
+/**
+ * \brief  Return vertices distribution
+ *
+ * \param [in]  dmesh_nodal   Distributed nodal mesh handle
+ * \param [in]  owner         Ownership
+ *
+ * \return  Coordinates of vertices
+ *
+ */
+double *
+PDM_DMesh_nodal_coord_get
+(
+  PDM_dmesh_nodal_t  *dmesh_nodal,
+  PDM_ownership_t     owner
 );
 
 

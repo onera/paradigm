@@ -265,15 +265,6 @@ PDM_DMesh_nodal_free
 }
 
 
-/**
- * \brief Define partition vertices
- *
- * \param [in]  hdl       Distributed nodal mesh handle
- * \param [in]  n_vtx     Number of vertices
- * \param [in]  coords    Interlaced coordinates (size = 3 * \ref n_vtx)
- *
- */
-
 void
 PDM_DMesh_nodal_coord_set
 (
@@ -402,6 +393,26 @@ PDM_DMesh_nodal_n_vtx_get
 }
 
 
+double *
+PDM_DMesh_nodal_coord_get
+(
+  PDM_dmesh_nodal_t  *dmesh_nodal,
+  PDM_ownership_t     owner
+)
+{
+
+  if (dmesh_nodal == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+  }
+
+  PDM_DMesh_nodal_vtx_t *vtx = dmesh_nodal->vtx;
+  if (owner!=PDM_OWNERSHIP_BAD_VALUE) {
+    vtx->owner = owner;
+  }
+
+  return vtx->_coords;
+}
+
 /**
  * \brief  Return coordinates of vertices
  *
@@ -414,17 +425,12 @@ PDM_DMesh_nodal_n_vtx_get
 double *
 PDM_DMesh_nodal_vtx_get
 (
-PDM_dmesh_nodal_t  *dmesh_nodal
+  PDM_dmesh_nodal_t  *dmesh_nodal
 )
 {
+  printf("PDM_DMesh_nodal_vtx_get is now deprecated, use PDM_DMesh_nodal_coord_get instead.\n");
 
-  if (dmesh_nodal == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
-  }
-
-  PDM_DMesh_nodal_vtx_t *vtx = dmesh_nodal->vtx;
-
-  return vtx->_coords;
+  return PDM_DMesh_nodal_coord_get(dmesh_nodal, PDM_OWNERSHIP_KEEP);
 }
 
 /**

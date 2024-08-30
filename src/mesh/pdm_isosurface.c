@@ -193,7 +193,7 @@ _do_we_have_edges
 
   if (isos->is_dist_or_part == 0) {
     // Block-distributed
-    i_have_edges    = (isos->distrib_edge != NULL) && (isos->dface_edge_idx != NULL) && (isos->dface_edge != NULL) && (isos->dedge_vtx != NULL);
+    i_have_edges    = (isos->distrib_edge  != NULL) && (isos->dface_edge_idx != NULL) && (isos->dface_edge != NULL) && (isos->dedge_vtx != NULL);
     i_have_face_vtx = (isos->dface_vtx_idx != NULL) && (isos->dface_vtx != NULL);
   }
   else {
@@ -369,18 +369,20 @@ _dist_to_part
                 (void ***) &isos->vtx_coord);
 
     // Surfaces
-    const PDM_g_num_t *pface_ln_to_gn[1] = {face_ln_to_gn};
-    PDM_part_distgroup_to_partgroup(isos->comm,
-                                    isos->distrib_face,
-                                    isos->n_dgroup_face,
-                                    isos->dgroup_face_idx,
-                                    isos->dgroup_face,
-                                    isos->n_part,
-                                    &n_face,
-                                    pface_ln_to_gn,
-                                    &isos->group_face_idx,
-                                    &isos->group_face,
-                                    &isos->group_face_gnum);
+    if (isos->mesh_dimension==3) {
+      const PDM_g_num_t *pface_ln_to_gn[1] = {face_ln_to_gn};
+      PDM_part_distgroup_to_partgroup(isos->comm,
+                                      isos->distrib_face,
+                                      isos->n_dgroup_face,
+                                      isos->dgroup_face_idx,
+                                      isos->dgroup_face,
+                                      isos->n_part,
+                                      &n_face,
+                                      pface_ln_to_gn,
+                                      &isos->group_face_idx,
+                                      &isos->group_face,
+                                      &isos->group_face_gnum);
+    }
 
     /* Store in struct */
     isos->btp_vtx = btp_vtx; // useful to keep for transferring discrete fields
@@ -726,6 +728,7 @@ _extract
     assert(isos->dist_to_part_computed);
     isos->extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
     isos->part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
+    isos->iso_n_part   = 1;
   }
 
 
@@ -999,8 +1002,9 @@ _extract
       PDM_realloc(extract_lnum[i_part], extract_lnum[i_part], n_extract[i_part], int);
     }
 
-
-    PDM_extract_part_n_group_set(extrp, PDM_BOUND_TYPE_FACE, isos->n_group_face[0]);
+    if (isos->mesh_dimension==3) {
+      PDM_extract_part_n_group_set(extrp, PDM_BOUND_TYPE_FACE, isos->n_group_face[0]);
+    }
 
     for (int i_part = 0; i_part < isos->n_part; i_part++) {
       PDM_extract_part_part_set(extrp,
@@ -1027,14 +1031,16 @@ _extract
                                          n_extract   [i_part],
                                          extract_lnum[i_part]);
 
-      for (int i_group = 0; i_group < isos->n_group_face[0]; i_group++) {
-        PDM_extract_part_part_group_set(extrp,
-                                        i_part,
-                                        i_group,
-                                        PDM_BOUND_TYPE_FACE,
-                                        isos->group_face_idx[i_part][i_group+1] - isos->group_face_idx[i_part][i_group],
-                                        isos->group_face[i_part]      + isos->group_face_idx[i_part][i_group],
-                                        isos->group_face_gnum[i_part] + isos->group_face_idx[i_part][i_group]);
+      if (isos->mesh_dimension==3) {
+        for (int i_group = 0; i_group < isos->n_group_face[0]; i_group++) {
+          PDM_extract_part_part_group_set(extrp,
+                                          i_part,
+                                          i_group,
+                                          PDM_BOUND_TYPE_FACE,
+                                          isos->group_face_idx[i_part][i_group+1] - isos->group_face_idx[i_part][i_group],
+                                          isos->group_face[i_part]      + isos->group_face_idx[i_part][i_group],
+                                          isos->group_face_gnum[i_part] + isos->group_face_idx[i_part][i_group]);
+        }
       }
     }
 
@@ -1577,8 +1583,9 @@ _part_to_dist
 
 
   /** Edge groups */
-  _part_to_dist_edge_group(isos, id_iso);
-  isos->iso_owner_dedge_bnd[id_iso] = PDM_OWNERSHIP_KEEP;
+  if (isos->mesh_dimension==3) {
+    _part_to_dist_edge_group(isos, id_iso);
+  }
 
 
   /** Faces */
@@ -1682,9 +1689,12 @@ _free_iso_edge
         PDM_free(isos->iso_edge_parent_idx [id_iso][i_part]);
         PDM_free(isos->iso_edge_parent_gnum[id_iso][i_part]);
       }
-      PDM_free(isos->iso_edge_group_idx  [id_iso][i_part]);
-      PDM_free(isos->iso_edge_group_lnum [id_iso][i_part]);
-      PDM_free(isos->iso_edge_group_gnum [id_iso][i_part]);
+
+      if (isos->mesh_dimension==3) {
+        PDM_free(isos->iso_edge_group_idx  [id_iso][i_part]);
+        PDM_free(isos->iso_edge_group_lnum [id_iso][i_part]);
+        PDM_free(isos->iso_edge_group_gnum [id_iso][i_part]);
+      }
       PDM_free(isos->isovalue_edge_idx   [id_iso][i_part]);
     }
   }
@@ -1799,6 +1809,35 @@ _free_field
     }
     PDM_free(isos->extract_field[id_iso]);
   }
+
+
+}
+
+
+static void
+_reset_owner
+(
+  PDM_isosurface_t *isos,
+  int               id_iso
+)
+{
+  for (int i_entity=0; i_entity<PDM_MESH_ENTITY_MAX; ++i_entity) {
+    isos->iso_owner_ptp[id_iso][i_entity] = PDM_OWNERSHIP_BAD_VALUE;
+  }
+  for (int i_part=0; i_part<isos->n_part; ++i_part) {
+    isos->iso_owner_vtx_coord             [id_iso][i_part] = PDM_OWNERSHIP_BAD_VALUE;
+    isos->iso_owner_vtx_parent_weight     [id_iso][i_part] = PDM_OWNERSHIP_BAD_VALUE;
+    isos->iso_owner_edge_bnd              [id_iso][i_part] = PDM_OWNERSHIP_BAD_VALUE;
+
+    for (int i_entity=0; i_entity<PDM_MESH_ENTITY_MAX; ++i_entity) {
+      isos->iso_owner_gnum       [id_iso][i_part][i_entity] = PDM_OWNERSHIP_BAD_VALUE;
+      isos->iso_owner_parent_lnum[id_iso][i_part][i_entity] = PDM_OWNERSHIP_BAD_VALUE;
+    }
+    for (int i_connec=0; i_connec<PDM_CONNECTIVITY_TYPE_MAX; ++i_connec) {
+      isos->iso_owner_connec     [id_iso][i_part][i_connec] = PDM_OWNERSHIP_BAD_VALUE;
+    }
+  }
+
 }
 
 
@@ -1824,10 +1863,8 @@ _free_owner
   PDM_free(isos->iso_owner_connec     [id_iso]);
   PDM_free(isos->iso_owner_parent_lnum[id_iso]);
   PDM_free(isos->iso_owner_edge_bnd   [id_iso]);
+  PDM_free(isos->iso_owner_ptp        [id_iso]);
 
-  // > Distributed
-  PDM_free(isos->iso_owner_dconnec           [id_iso]);
-  PDM_free(isos->iso_owner_dparent           [id_iso]);
 }
 
 
@@ -1856,16 +1893,20 @@ _isosurface_reset
 {
   // > Distributed
   if (isos->is_dist_or_part==0) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_reset not implemented for dist_entry\n");
-    _free_field(isos, id_isosurface, 0);
+    _free_iso_vtx (isos, id_isosurface);
+    _free_iso_edge(isos, id_isosurface);
+    _free_iso_face(isos, id_isosurface);
+    _reset_owner  (isos, id_isosurface);
+    _free_field   (isos, id_isosurface, 0);
   }
   // > Partitioned
   else if (isos->is_dist_or_part==1) {
     _free_iso_vtx (isos, id_isosurface);
     _free_iso_edge(isos, id_isosurface);
     _free_iso_face(isos, id_isosurface);
-    _free_owner(isos, id_isosurface);
-    _free_field(isos, id_isosurface, 1);
+    _free_owner   (isos, id_isosurface);
+    _reset_owner  (isos, id_isosurface);
+    _free_field   (isos, id_isosurface, 1);
   }
   else {
     PDM_error(__FILE__, __LINE__, 0, "Isosurface is_dist_or_part = %d is invalid.\n", isos->is_dist_or_part);
@@ -2042,6 +2083,7 @@ PDM_isosurface_create
 {
   PDM_isosurface_t *isos = NULL;
   PDM_malloc(isos, 1, PDM_isosurface_t);
+  memset(isos, 0, sizeof(PDM_isosurface_t));
 
   // > Save communicator
   isos->comm = comm;
@@ -2057,183 +2099,9 @@ PDM_isosurface_create
   // // > Isosurface mesh information
   // isos->iso_elt_type = elt_type; 
   isos->extract_kind = PDM_EXTRACT_PART_KIND_LOCAL; 
-  isos->extrp        = NULL;
-
-  // > Link with entry mesh
-  isos->compute_ptp = NULL;
-
-  // > Isosurfaces informations
-  isos->n_isosurface = 0;
-  isos->n_isovalues     = NULL;
-  isos->  isovalues     = NULL;
-  isos->kind            = NULL;
-  isos->field_function  = NULL;
-  isos->eq_coeffs       = NULL;
-  isos->use_gradient    = NULL;
-  isos->iso_func        = NULL;
-
-  // > Distributed entry data
-  isos->dist_to_part_computed = 0;
-  isos->btp_vtx      = NULL;
-  isos->dmesh        = NULL;
-  isos->dmesh_nodal  = NULL;
-
-  isos->distrib_cell = NULL;
-  isos->distrib_face = NULL;
-  isos->distrib_edge = NULL;
-  isos->distrib_vtx  = NULL;
-
-  isos->dvtx_coord     = NULL;
-  isos->dcell_face_idx = NULL;
-  isos->dcell_face     = NULL;
-  isos->dface_edge_idx = NULL;
-  isos->dface_edge     = NULL;
-  isos->dface_vtx_idx  = NULL;
-  isos->dface_vtx      = NULL;
-  isos->dedge_vtx      = NULL;
-
-  isos->dgroup_face_idx = NULL;
-  isos->dgroup_face     = NULL;
-  // isos->dgroup_edge_idx = NULL;
-  // isos->dgroup_edge     = NULL;
-  // isos->dgroup_vtx_idx  = NULL;
-  // isos->dgroup_vtx      = NULL;
-
-  isos->dfield    = NULL;
-  isos->dgradient = NULL;
-
-  // > Partitioned entry data
-  isos->pmesh       = NULL;
-  isos->pmesh_nodal = NULL;
-
-  isos->n_part = -1;
-  isos->n_cell = NULL;
-  isos->n_face = NULL;
-  isos->n_edge = NULL;
-  isos->n_vtx  = NULL;
-
-  isos->cell_gnum = NULL;
-  isos->face_gnum = NULL;
-  isos->edge_gnum = NULL;
-  isos-> vtx_gnum = NULL;
-
-  isos->vtx_coord     = NULL;
-  isos->cell_face_idx = NULL;
-  isos->cell_face     = NULL;
-  isos->face_edge_idx = NULL;
-  isos->face_edge     = NULL;
-  isos->face_vtx_idx  = NULL;
-  isos->face_vtx      = NULL;
-  isos->edge_vtx      = NULL;
-
-  isos->n_group_face    = NULL;
-  isos->group_face_idx  = NULL;
-  isos->group_face      = NULL;
-  isos->group_face_gnum = NULL;
-  // isos->n_group_edge   = NULL;
-  // isos->group_edge_idx = NULL;
-  // isos->group_edge     = NULL;
-  // isos->n_group_vtx    = NULL;
-  // isos->group_vtx_idx  = NULL;
-  // isos->group_vtx      = NULL;
-  
-  isos->extract_n_vtx     = NULL;
-  isos->extract_vtx_coord = NULL;
-  isos->extract_vtx_gnum  = NULL;
-  isos->extract_vtx_lnum  = NULL;
-
-  isos->extract_n_tri       = NULL;
-  isos->extract_tri_vtx     = NULL;
-  isos->extract_tri_gnum    = NULL;
-  isos->extract_tri_lnum    = NULL;
-  isos->extract_tri_n_group = NULL;
-  isos->extract_tri_tag     = NULL;
-  
-  isos->extract_n_tetra    = NULL;
-  isos->extract_tetra_vtx  = NULL;
-  isos->extract_tetra_gnum = NULL;
-  isos->extract_tetra_lnum = NULL;
+  isos->n_part = 1;
 
   isos->we_have_edges = -1;
-
-  isos->field    = NULL;
-  isos->gradient = NULL;
-
-  isos->extract_field = NULL;
-
-
-  // > Partitioned output data
-  isos->iso_n_vtx             = NULL;
-  isos->iso_vtx_coord         = NULL;
-  isos->iso_vtx_gnum          = NULL;
-  isos->iso_vtx_parent_idx    = NULL;
-  isos->iso_vtx_parent_lnum   = NULL;
-  isos->iso_vtx_parent_gnum   = NULL;
-  isos->iso_vtx_parent_weight = NULL;
-  isos->isovalue_vtx_idx      = NULL;
-
-  isos->iso_n_edge            = NULL;
-  isos->iso_edge_vtx          = NULL;
-  isos->iso_edge_gnum         = NULL;
-  isos->iso_edge_parent_idx   = NULL;
-  isos->iso_edge_parent_lnum  = NULL;
-  isos->iso_edge_parent_gnum  = NULL;
-  isos->iso_n_edge_group      = NULL;
-  isos->iso_edge_group_idx    = NULL;
-  isos->iso_edge_group_lnum   = NULL;
-  isos->iso_edge_group_gnum   = NULL;
-  isos->isovalue_edge_idx     = NULL;
-
-  isos->iso_n_face            = NULL;
-  isos->iso_face_vtx_idx      = NULL;
-  isos->iso_face_vtx          = NULL;
-  isos->iso_face_gnum         = NULL;
-  isos->iso_face_parent_idx   = NULL;
-  isos->iso_face_parent_lnum  = NULL;
-  isos->iso_face_parent_gnum  = NULL;
-  isos->isovalue_face_idx     = NULL;
-
-  // > Part_to_part between iso entities and entry mesh entites
-  isos->iso_ptp_vtx  = NULL;
-  isos->iso_ptp_edge = NULL;
-  isos->iso_ptp_face = NULL;
-
-  // > Partitionned owners
-  isos->iso_owner_vtx_coord         = NULL;
-  isos->iso_owner_vtx_parent_weight = NULL;
-  isos->iso_owner_gnum              = NULL;
-  isos->iso_owner_connec            = NULL;
-  isos->iso_owner_parent_lnum       = NULL;
-  isos->iso_owner_edge_bnd          = NULL;
-  isos->iso_owner_ptp               = NULL;
-
-
-  // > Distributed output data
-  isos->iso_dn_vtx             = NULL;
-  isos->iso_dvtx_coord         = NULL;
-  isos->iso_dvtx_parent_idx    = NULL;
-  isos->iso_dvtx_parent_gnum   = NULL;
-  isos->iso_dvtx_parent_weight = NULL;
-
-  isos->iso_dn_edge            = NULL;
-  isos->iso_dedge_vtx          = NULL;
-  isos->iso_dedge_parent_idx   = NULL;
-  isos->iso_dedge_parent_gnum  = NULL;
-  isos->iso_dedge_group_idx    = NULL;
-  isos->iso_dedge_group_gnum   = NULL;
-
-  isos->iso_dn_face            = NULL;
-  isos->iso_dface_vtx_idx      = NULL;
-  isos->iso_dface_vtx          = NULL;
-  isos->iso_dface_parent_idx   = NULL;
-  isos->iso_dface_parent_gnum  = NULL;
-
-  // > Distributed owners
-  isos->iso_owner_dvtx_coord         = NULL;
-  isos->iso_owner_dvtx_parent_weight = NULL;
-  isos->iso_owner_dconnec            = NULL;
-  isos->iso_owner_dparent            = NULL;
-  isos->iso_owner_dedge_bnd          = NULL;
 
   return isos;
 }
@@ -2467,9 +2335,10 @@ PDM_isosurface_add
   isos->iso_owner_dconnec[id_isosurface][PDM_CONNECTIVITY_TYPE_EDGE_VTX] = PDM_OWNERSHIP_BAD_VALUE;
   isos->iso_owner_dconnec[id_isosurface][PDM_CONNECTIVITY_TYPE_FACE_VTX] = PDM_OWNERSHIP_BAD_VALUE;
 
-  PDM_malloc(isos->iso_owner_dparent[id_isosurface], PDM_MESH_ENTITY_MAX      , PDM_ownership_t);
-  isos->iso_owner_dparent[id_isosurface][PDM_MESH_ENTITY_EDGE          ] = PDM_OWNERSHIP_BAD_VALUE;
-  isos->iso_owner_dparent[id_isosurface][PDM_MESH_ENTITY_FACE          ] = PDM_OWNERSHIP_BAD_VALUE;
+  PDM_malloc(isos->iso_owner_dparent[id_isosurface], PDM_MESH_ENTITY_MAX, PDM_ownership_t);
+  isos->iso_owner_dparent[id_isosurface][PDM_MESH_ENTITY_VTX ] = PDM_OWNERSHIP_BAD_VALUE;
+  isos->iso_owner_dparent[id_isosurface][PDM_MESH_ENTITY_EDGE] = PDM_OWNERSHIP_BAD_VALUE;
+  isos->iso_owner_dparent[id_isosurface][PDM_MESH_ENTITY_FACE] = PDM_OWNERSHIP_BAD_VALUE;
 
 
   isos->kind       [id_isosurface] = kind;
@@ -2637,9 +2506,11 @@ PDM_isosurface_free
     PDM_free(isos->face_gnum      [0]);
     PDM_free(isos->edge_gnum      [0]);
     PDM_free(isos->vtx_gnum       [0]);
-    PDM_free(isos->group_face_idx [0]);
-    PDM_free(isos->group_face     [0]);
-    PDM_free(isos->group_face_gnum[0]);
+    if (isos->mesh_dimension==3) {
+      PDM_free(isos->group_face_idx [0]);
+      PDM_free(isos->group_face     [0]);
+      PDM_free(isos->group_face_gnum[0]);
+    }
   }
   PDM_free(isos->n_cell);
   PDM_free(isos->n_face);
@@ -2710,6 +2581,7 @@ PDM_isosurface_free
     _free_iso_vtx (isos, id_iso);
     _free_iso_edge(isos, id_iso);
     _free_iso_face(isos, id_iso);
+    _free_owner   (isos, id_iso);
     PDM_extract_part_free(isos->extrp[id_iso]);
   }
   PDM_free(isos->extract_field);
@@ -2800,6 +2672,10 @@ PDM_isosurface_free
   PDM_free(isos->iso_owner_edge_bnd);
   PDM_free(isos->iso_owner_ptp);
 
+  for (int id_iso=0; id_iso<isos->n_isosurface; ++id_iso) {
+    PDM_free(isos->iso_owner_dconnec    [id_iso]);
+    PDM_free(isos->iso_owner_dparent    [id_iso]);
+  }
   PDM_free(isos->iso_owner_dvtx_coord);
   PDM_free(isos->iso_owner_dvtx_parent_weight);
   PDM_free(isos->iso_owner_dconnec);
