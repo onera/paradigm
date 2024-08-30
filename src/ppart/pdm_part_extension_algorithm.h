@@ -119,7 +119,7 @@ PDM_part_extension_build_entity1_graph
   int                         ***pentity1_bnd_part_idx_in,
   int                         ***pentity1_bnd_in,
   int                         ***pentity1_hint_in,
-  int                            user_defined_bnd_graph,
+  int                            user_defined_bound_graph,
   int                         ***pentity1_extented_to_pentity1_idx_out,
   int                         ***pentity1_extented_to_pentity1_triplet_out,
   int                         ***pentity1_extented_to_pentity1_interface_out,

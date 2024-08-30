@@ -3201,7 +3201,7 @@ PDM_part_extension_build_entity1_graph
   int                         ***pentity1_bnd_part_idx_in,
   int                         ***pentity1_bnd_in,
   int                         ***pentity1_hint_in,
-  int                            user_defined_bnd_graph,
+  int                            user_defined_bound_graph,
   int                         ***pentity1_extented_to_pentity1_idx_out,
   int                         ***pentity1_extented_to_pentity1_triplet_out,
   int                         ***pentity1_extented_to_pentity1_interface_out,
@@ -3282,7 +3282,7 @@ PDM_part_extension_build_entity1_graph
   int **ppart_entity1_proc_idx = *pentity1_bnd_proc_idx_in;
   int **ppart_entity1_part_idx = *pentity1_bnd_part_idx_in;
   int **ppart_entity1          = *pentity1_bnd_in;
-  if (user_defined_bnd_graph==0) {
+  if (user_defined_bound_graph==0) {
     PDM_g_num_t *part_distribution = PDM_compute_entity_distribution(comm, n_part_tot);
 
     PDM_part_generate_entity_graph_comm(comm,
@@ -3426,7 +3426,7 @@ PDM_part_extension_build_entity1_graph
       PDM_free(pentity1_opp_sens        [i_part]);
       PDM_free(pentity1_opp_gnum        [i_part]);
     }
-    if (user_defined_bnd_graph==0) {
+    if (user_defined_bound_graph==0) {
       PDM_free(ppart_entity1            [i_part]);
       PDM_free(ppart_entity1_proc_idx   [i_part]);
       PDM_free(ppart_entity1_part_idx   [i_part]);
@@ -3442,7 +3442,7 @@ PDM_part_extension_build_entity1_graph
     PDM_free(pentity1_opp_sens         );
     PDM_free(pentity1_opp_gnum         );
   }
-  if (user_defined_bnd_graph==0) {
+  if (user_defined_bound_graph==0) {
     PDM_free(ppart_entity1             );
     PDM_free(ppart_entity1_proc_idx    );
     PDM_free(ppart_entity1_part_idx    );
