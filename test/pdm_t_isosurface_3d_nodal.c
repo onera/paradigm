@@ -402,7 +402,7 @@ int main(int argc, char *argv[])
   int                  order      = 1;
   PDM_Mesh_nodal_elt_t elt_type   = PDM_MESH_NODAL_TETRA4;
   int                  dist_entry = 0;
-  int                  local      = 0;
+  int                  local      = 1;
   int                  visu       = 0;
   
   _read_args(argc,

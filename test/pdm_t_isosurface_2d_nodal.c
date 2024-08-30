@@ -246,8 +246,8 @@ int main(int argc, char *argv[])
   /*
    *  Read args
    */
-  PDM_g_num_t          n_vtx_x    = 10;
-  PDM_g_num_t          n_vtx_y    = 10;
+  PDM_g_num_t          n_vtx_x    = 5;
+  PDM_g_num_t          n_vtx_y    = 5;
   double               length     = 1.;
   int                  n_part     = 1;
   int                  order      = 1;

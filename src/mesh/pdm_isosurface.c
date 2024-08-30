@@ -369,7 +369,7 @@ _dist_to_part
                 (void ***) &isos->vtx_coord);
 
     // Surfaces
-    if (isos->mesh_dimension==3) {
+    if (isos->entry_mesh_dim==3) {
       const PDM_g_num_t *pface_ln_to_gn[1] = {face_ln_to_gn};
       PDM_part_distgroup_to_partgroup(isos->comm,
                                       isos->distrib_face,
@@ -1002,7 +1002,7 @@ _extract
       PDM_realloc(extract_lnum[i_part], extract_lnum[i_part], n_extract[i_part], int);
     }
 
-    if (isos->mesh_dimension==3) {
+    if (isos->entry_mesh_dim==3) {
       PDM_extract_part_n_group_set(extrp, PDM_BOUND_TYPE_FACE, isos->n_group_face[0]);
     }
 
@@ -1031,7 +1031,7 @@ _extract
                                          n_extract   [i_part],
                                          extract_lnum[i_part]);
 
-      if (isos->mesh_dimension==3) {
+      if (isos->entry_mesh_dim==3) {
         for (int i_group = 0; i_group < isos->n_group_face[0]; i_group++) {
           PDM_extract_part_part_group_set(extrp,
                                           i_part,
@@ -1583,7 +1583,7 @@ _part_to_dist
 
 
   /** Edge groups */
-  if (isos->mesh_dimension==3) {
+  if (isos->entry_mesh_dim==3) {
     _part_to_dist_edge_group(isos, id_iso);
   }
 
@@ -1690,7 +1690,8 @@ _free_iso_edge
         PDM_free(isos->iso_edge_parent_gnum[id_iso][i_part]);
       }
 
-      if (isos->mesh_dimension==3) {
+      if (isos->entry_mesh_dim==3 &&
+          isos->iso_owner_edge_bnd[id_iso][i_part]==PDM_OWNERSHIP_KEEP) {
         PDM_free(isos->iso_edge_group_idx  [id_iso][i_part]);
         PDM_free(isos->iso_edge_group_lnum [id_iso][i_part]);
         PDM_free(isos->iso_edge_group_gnum [id_iso][i_part]);
@@ -1815,27 +1816,21 @@ _free_field
 
 
 static void
-_reset_owner
+_reset_downer
 (
   PDM_isosurface_t *isos,
   int               id_iso
 )
 {
-  for (int i_entity=0; i_entity<PDM_MESH_ENTITY_MAX; ++i_entity) {
-    isos->iso_owner_ptp[id_iso][i_entity] = PDM_OWNERSHIP_BAD_VALUE;
-  }
-  for (int i_part=0; i_part<isos->n_part; ++i_part) {
-    isos->iso_owner_vtx_coord             [id_iso][i_part] = PDM_OWNERSHIP_BAD_VALUE;
-    isos->iso_owner_vtx_parent_weight     [id_iso][i_part] = PDM_OWNERSHIP_BAD_VALUE;
-    isos->iso_owner_edge_bnd              [id_iso][i_part] = PDM_OWNERSHIP_BAD_VALUE;
+  isos->iso_owner_dvtx_coord        [id_iso] = PDM_OWNERSHIP_BAD_VALUE;
+  isos->iso_owner_dvtx_parent_weight[id_iso] = PDM_OWNERSHIP_BAD_VALUE;
+  isos->iso_owner_dedge_bnd         [id_iso] = PDM_OWNERSHIP_BAD_VALUE;
 
-    for (int i_entity=0; i_entity<PDM_MESH_ENTITY_MAX; ++i_entity) {
-      isos->iso_owner_gnum       [id_iso][i_part][i_entity] = PDM_OWNERSHIP_BAD_VALUE;
-      isos->iso_owner_parent_lnum[id_iso][i_part][i_entity] = PDM_OWNERSHIP_BAD_VALUE;
-    }
-    for (int i_connec=0; i_connec<PDM_CONNECTIVITY_TYPE_MAX; ++i_connec) {
-      isos->iso_owner_connec     [id_iso][i_part][i_connec] = PDM_OWNERSHIP_BAD_VALUE;
-    }
+  for (int i_entity=0; i_entity<PDM_MESH_ENTITY_MAX; ++i_entity) {
+    isos->iso_owner_dparent[id_iso][i_entity] = PDM_OWNERSHIP_BAD_VALUE;
+  }
+  for (int i_connec=0; i_connec<PDM_CONNECTIVITY_TYPE_MAX; ++i_connec) {
+    isos->iso_owner_dconnec[id_iso][i_connec] = PDM_OWNERSHIP_BAD_VALUE;
   }
 
 }
@@ -1878,7 +1873,9 @@ _free_nodal_extract_parts
     PDM_free(isos->extract_vtx_lnum  [i_part]);
     PDM_free(isos->extract_tri_lnum  [i_part]);
     PDM_free(isos->extract_tri_tag   [i_part]);
-    PDM_free(isos->extract_tetra_lnum[i_part]);
+    if (isos->entry_mesh_dim==3) {
+      PDM_free(isos->extract_tetra_lnum[i_part]);
+    }
   }
 }
 
@@ -1896,7 +1893,7 @@ _isosurface_reset
     _free_iso_vtx (isos, id_isosurface);
     _free_iso_edge(isos, id_isosurface);
     _free_iso_face(isos, id_isosurface);
-    _reset_owner  (isos, id_isosurface);
+    _reset_downer (isos, id_isosurface);
     _free_field   (isos, id_isosurface, 0);
   }
   // > Partitioned
@@ -1905,7 +1902,6 @@ _isosurface_reset
     _free_iso_edge(isos, id_isosurface);
     _free_iso_face(isos, id_isosurface);
     _free_owner   (isos, id_isosurface);
-    _reset_owner  (isos, id_isosurface);
     _free_field   (isos, id_isosurface, 1);
   }
   else {
@@ -2189,6 +2185,7 @@ PDM_isosurface_add
       PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: Impossible to defined manually field without setting mesh first.\n", isos->entry_mesh_type);
     }
     PDM_malloc(isos->field[id_isosurface], n_part, double *);
+    memset(isos->field[id_isosurface], 0, n_part*sizeof(double *));
   }
 
   PDM_realloc(isos->n_isovalues , isos->n_isovalues , isos->n_isosurface, int     );
@@ -2506,7 +2503,7 @@ PDM_isosurface_free
     PDM_free(isos->face_gnum      [0]);
     PDM_free(isos->edge_gnum      [0]);
     PDM_free(isos->vtx_gnum       [0]);
-    if (isos->mesh_dimension==3) {
+    if (isos->entry_mesh_dim==3) {
       PDM_free(isos->group_face_idx [0]);
       PDM_free(isos->group_face     [0]);
       PDM_free(isos->group_face_gnum[0]);

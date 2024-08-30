@@ -85,7 +85,6 @@ struct _pdm_isosurface_t {
   double ISOSURFACE_EPS;
 
   // > Isosurface type
-  int                     mesh_dimension;
   PDM_iso_surface_kind_t *kind;
 
   // > Isovalues
