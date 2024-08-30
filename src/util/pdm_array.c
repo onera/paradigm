@@ -140,9 +140,12 @@ int* PDM_array_new_arange_int(const int start, const int end, const int step) {
   PDM_malloc(array, size, int);
   for (int i = 0; i < size; ++i) {
     array[i] = start+i*step;
-    
+  }
+  return array;
+}
+
 int* PDM_array_new_range_with_step_int(const int size, const int step) {
-  int* array = NULL;;
+  int* array = NULL;
   PDM_malloc(array, size, int);
   for (int i = 0; i < size; ++i) {
     array[i] = i*step;
