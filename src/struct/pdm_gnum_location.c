@@ -100,18 +100,18 @@ PDM_gnum_location_create
 {
 
   PDM_gnum_location_t *gnum_loc;
-  PDM_malloc(gnum_loc,1,PDM_gnum_location_t);
+  PDM_malloc(gnum_loc, 1, PDM_gnum_location_t);
 
   gnum_loc->n_part_in  = n_part_in;
   gnum_loc->n_part_out = n_part_out;
 
-  PDM_malloc(gnum_loc->n_elts_in,n_part_in,int          );
-  PDM_malloc(gnum_loc->g_nums_in,n_part_in,const PDM_g_num_t *);
+  PDM_malloc(gnum_loc->n_elts_in, n_part_in,       int          );
+  PDM_malloc(gnum_loc->g_nums_in, n_part_in, const PDM_g_num_t *);
   for (int i = 0; i < n_part_in; i++) {
     gnum_loc->g_nums_in[i] = NULL;
   }
-  PDM_malloc(gnum_loc->n_elts_out,n_part_out,int          );
-  PDM_malloc(gnum_loc->g_nums_out,n_part_out,const PDM_g_num_t *);
+  PDM_malloc(gnum_loc->n_elts_out, n_part_out,       int          );
+  PDM_malloc(gnum_loc->g_nums_out, n_part_out, const PDM_g_num_t *);
   for (int i = 0; i < n_part_out; i++) {
     gnum_loc->g_nums_out[i] = NULL;
   }
@@ -215,14 +215,14 @@ PDM_gnum_location_compute
   const PDM_stride_t t_stride = PDM_STRIDE_VAR_INTERLACED;
   const int cst_stride = 3;
 
-  int **part_stride;
-  PDM_malloc(part_stride,gnum_loc->n_part_in,int *);
-  int **part_data;
-  PDM_malloc(part_data,gnum_loc->n_part_in,int *);
+  int **part_stride = NULL;
+  int **part_data   = NULL;
+  PDM_malloc(part_stride, gnum_loc->n_part_in, int *);
+  PDM_malloc(part_data  , gnum_loc->n_part_in, int *);
 
   for (int i = 0; i < gnum_loc->n_part_in; i++) {
-    PDM_malloc(part_stride[i],gnum_loc->n_elts_in[i],int);
-    PDM_malloc(part_data[i],3 * gnum_loc->n_elts_in[i],int);
+    PDM_malloc(part_stride[i],     gnum_loc->n_elts_in[i], int);
+    PDM_malloc(part_data  [i], 3 * gnum_loc->n_elts_in[i], int);
     for (int j = 0; j < gnum_loc->n_elts_in[i]; j++) {
       part_stride[i][j]   = 3;
       part_data[i][3*j]   = rank;
@@ -256,11 +256,11 @@ PDM_gnum_location_compute
   //                          &request_id);
 
   for (int i = 0; i < gnum_loc->n_part_in; i++) {
-   PDM_free(part_stride[i]);
-   PDM_free(part_data[i]);
+    PDM_free(part_stride[i]);
+    PDM_free(part_data[i]);
   }
- PDM_free(part_data);
- PDM_free(part_stride);
+  PDM_free(part_data);
+  PDM_free(part_stride);
 
 
   PDM_g_num_t* block_g_num = PDM_part_to_block_block_gnum_get (ptb);
@@ -282,23 +282,23 @@ PDM_gnum_location_compute
                           &part_stride,
                (void ***) &gnum_loc->location);
 
-  PDM_malloc(gnum_loc->location_idx,gnum_loc->n_part_out,int *);
+  PDM_malloc(gnum_loc->location_idx, gnum_loc->n_part_out, int *);
   for (int i = 0; i < gnum_loc->n_part_out; i++) {
-    PDM_malloc(gnum_loc->location_idx[i],(gnum_loc->n_elts_out[i] + 1),int);
+    PDM_malloc(gnum_loc->location_idx[i], gnum_loc->n_elts_out[i] + 1, int);
     gnum_loc->location_idx[i][0] = 0;
     for (int j = 0; j < gnum_loc->n_elts_out[i]; j++) {
       gnum_loc->location_idx[i][j+1] = gnum_loc->location_idx[i][j] + part_stride[i][j];
     }
   }
- PDM_free(block_stride);
- PDM_free(block_data);
+  PDM_free(block_stride);
+  PDM_free(block_data);
   //PDM_free(block_distrib_index_correct);
 
   for (int i = 0; i < gnum_loc->n_part_out; i++) {
-   PDM_free(part_stride[i]);
+    PDM_free(part_stride[i]);
   }
 
- PDM_free(part_stride);
+  PDM_free(part_stride);
 
   PDM_part_to_block_free (ptb);
   PDM_block_to_part_free (btp);
@@ -354,29 +354,29 @@ PDM_gnum_location_free
 )
 {
 
- PDM_free(gnum_loc->n_elts_in);
- PDM_free(gnum_loc->g_nums_in);
+  PDM_free(gnum_loc->n_elts_in);
+  PDM_free(gnum_loc->g_nums_in);
 
- PDM_free(gnum_loc->n_elts_out);
- PDM_free(gnum_loc->g_nums_out);
+  PDM_free(gnum_loc->n_elts_out);
+  PDM_free(gnum_loc->g_nums_out);
 
   if(( gnum_loc->owner == PDM_OWNERSHIP_KEEP ) ||
      ( gnum_loc->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !gnum_loc->tag_results_get)) {
     for (int i = 0; i < gnum_loc->n_part_out; i++) {
-     PDM_free(gnum_loc->location_idx[i]);
+      PDM_free(gnum_loc->location_idx[i]);
     }
     //PDM_free(gnum_loc->location_idx);
 
     for (int i = 0; i < gnum_loc->n_part_out; i++) {
-     PDM_free(gnum_loc->location[i]);
+      PDM_free(gnum_loc->location[i]);
     }
     //PDM_free(gnum_loc->location);
   }
 
- PDM_free(gnum_loc->location_idx);
- PDM_free(gnum_loc->location);
+  PDM_free(gnum_loc->location_idx);
+  PDM_free(gnum_loc->location);
 
- PDM_free(gnum_loc);
+  PDM_free(gnum_loc);
 
 }
 

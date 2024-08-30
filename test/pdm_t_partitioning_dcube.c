@@ -12,7 +12,6 @@
 #include "pdm_config.h"
 #include "pdm_mpi.h"
 #include "pdm_partitioning_algorithm.h"
-#include "pdm_dmesh_partitioning.h"
 #include "pdm_para_graph_dual.h"
 #include "pdm_dmesh_nodal_to_dmesh.h"
 #include "pdm_dmesh_nodal_elements_utils.h"
@@ -198,8 +197,8 @@ compute_dual_mesh_metrics
 
   for (int i_part = 0; i_part < n_part; i_part++){
 
-    center_cell PDM_malloc([i_part], 3 * pn_cell[i_part]  ,double);
-    center_face PDM_malloc([i_part], 3 * pn_faces[i_part] ,double);
+    PDM_malloc(center_cell [i_part], 3 * pn_cell[i_part]  ,double);
+    PDM_malloc(center_face [i_part], 3 * pn_faces[i_part] ,double);
     PDM_malloc(surface_face[i_part], 3 * pn_faces[i_part] ,double);
 
     PDM_malloc(ponderate_face_vtx[i_part], pface_vtx_idx[i_part][pn_faces[i_part]] ,double);
@@ -334,7 +333,7 @@ compute_dual_mesh_metrics
       printf(" center_cell[%i] = %12.5e %12.5e %12.5e (%i) \n", icell, center_cell[i_part][3*icell  ], center_cell[i_part][3*icell+1], center_cell[i_part][3*icell+2], count_cell[icell]);
     }
 
-   PDM_free(count_cell);
+    PDM_free(count_cell);
   }
 
   /*
@@ -350,7 +349,7 @@ compute_dual_mesh_metrics
     double *_pvtx_coord = pvtx_coord[i_part];
 
     PDM_malloc(edge_surf[i_part], 3 * pn_edge[i_part] , double);
-    dual_vol PDM_malloc([i_part],     pn_vtx [i_part] , double);
+    PDM_malloc(dual_vol [i_part],     pn_vtx [i_part] , double);
     double *_edge_surf = edge_surf[i_part];
     double *_dual_vol  = dual_vol[i_part];
 
@@ -545,20 +544,20 @@ compute_dual_mesh_metrics
       printf(" flux_bal[%i] = %12.5e %12.5e %12.5e -->  %12.5e \n", ivtx, flux_bal[3*ivtx  ], flux_bal[3*ivtx+1], flux_bal[3*ivtx+2], surf_bal_norm);
     }
 
-   PDM_free(flux_bal);
+    PDM_free(flux_bal);
 
   }
 
   for (int i_part=0; i_part < n_part; i_part++){
-   PDM_free(center_cell[i_part]);
-   PDM_free(center_face[i_part]);
-   PDM_free(surface_face[i_part]);
-   PDM_free(ponderate_face_vtx[i_part]);
+    PDM_free(center_cell[i_part]);
+    PDM_free(center_face[i_part]);
+    PDM_free(surface_face[i_part]);
+    PDM_free(ponderate_face_vtx[i_part]);
   }
- PDM_free(center_cell);
- PDM_free(center_face);
- PDM_free(surface_face);
- PDM_free(ponderate_face_vtx);
+  PDM_free(center_cell);
+  PDM_free(center_face);
+  PDM_free(surface_face);
+  PDM_free(ponderate_face_vtx);
 
   *pedge_surf = edge_surf;
   *pdual_vol  = dual_vol;
@@ -730,7 +729,7 @@ int main(int argc, char *argv[])
                               NULL,
                               tmp_parent_elmt_pos);
   assert(n_edge_current == n_edge_elt_tot);
- PDM_free(tmp_parent_elmt_pos);
+  PDM_free(tmp_parent_elmt_pos);
 
   int  dn_edge = -1;
   PDM_g_num_t  *dedge_distrib;
@@ -829,8 +828,8 @@ int main(int argc, char *argv[])
       }
     }
 
-   PDM_free(dual_graph_idx);
-   PDM_free(dual_graph);
+    PDM_free(dual_graph_idx);
+    PDM_free(dual_graph);
     dual_graph_idx = NULL;
     dual_graph = NULL;
 
@@ -921,7 +920,7 @@ int main(int argc, char *argv[])
     printf("\n");
   }
   if (part_frac != NULL){
-   PDM_free(part_frac);
+    PDM_free(part_frac);
   }
 
   /*
@@ -1112,11 +1111,11 @@ int main(int argc, char *argv[])
                             (PDM_g_num_t ***) &pvtx_ln_to_gn2,
                             (int         ***) &pedge_vtx_idx,
                             (int         ***) &pedge_vtx);
- PDM_free(pn_vtx2);
+  PDM_free(pn_vtx2);
   for(int i_part = 0; i_part < n_res_part; ++i_part) {
-   PDM_free(pvtx_ln_to_gn2[i_part]);
+    PDM_free(pvtx_ln_to_gn2[i_part]);
   }
- PDM_free(pvtx_ln_to_gn2);
+  PDM_free(pvtx_ln_to_gn2);
 
   int** pedge_face_idx;
   int** pedge_face;
@@ -1192,19 +1191,19 @@ int main(int argc, char *argv[])
                            &dual_vol);
 
   for (int i_part=0; i_part < n_res_part; i_part++){
-   PDM_free(pedge_face_idx[i_part]);
-   PDM_free(pedge_face[i_part]);
-   PDM_free(pedge_vtx_idx[i_part]);
-   PDM_free(pedge_vtx[i_part]);
-   PDM_free(edge_surf[i_part]);
-   PDM_free(dual_vol[i_part]);
+    PDM_free(pedge_face_idx[i_part]);
+    PDM_free(pedge_face[i_part]);
+    PDM_free(pedge_vtx_idx[i_part]);
+    PDM_free(pedge_vtx[i_part]);
+    PDM_free(edge_surf[i_part]);
+    PDM_free(dual_vol[i_part]);
   }
- PDM_free(pedge_face_idx);
- PDM_free(pedge_face);
- PDM_free(pedge_vtx_idx);
- PDM_free(pedge_vtx);
- PDM_free(edge_surf);
- PDM_free(dual_vol);
+  PDM_free(pedge_face_idx);
+  PDM_free(pedge_face);
+  PDM_free(pedge_vtx_idx);
+  PDM_free(pedge_vtx);
+  PDM_free(edge_surf);
+  PDM_free(dual_vol);
 
   /*
    * Graph communication build
@@ -1237,9 +1236,9 @@ int main(int argc, char *argv[])
                            (int ***) &pface_bound,
                                       NULL);
   for (int i_part = 0; i_part < n_res_part; i_part++){
-   PDM_free(face_is_bnd[i_part]);
+    PDM_free(face_is_bnd[i_part]);
   }
- PDM_free(face_is_bnd);
+  PDM_free(face_is_bnd);
 
 
   // Attention on veut garder l'orientation donc il y a un signe dans le face_cell / cell_face
@@ -1248,70 +1247,70 @@ int main(int argc, char *argv[])
   /*
    * Free
    */
- PDM_free(dual_graph_idx);
- PDM_free(dual_graph);
- PDM_free(cell_part);
- PDM_free(dcell_face);
- PDM_free(dcell_face_idx);
- PDM_free(dcell_weight);
- PDM_free(cell_distribution);
- PDM_free(face_distribution);
- PDM_free(part_distribution);
- PDM_free(vtx_distribution);
+  PDM_free(dual_graph_idx);
+  PDM_free(dual_graph);
+  PDM_free(cell_part);
+  PDM_free(dcell_face);
+  PDM_free(dcell_face_idx);
+  PDM_free(dcell_weight);
+  PDM_free(cell_distribution);
+  PDM_free(face_distribution);
+  PDM_free(part_distribution);
+  PDM_free(vtx_distribution);
   for(int i_part = 0; i_part < n_res_part; ++i_part){
-   PDM_free(pface_ln_to_gn[i_part]);
-   PDM_free(pcell_ln_to_gn[i_part]);
+    PDM_free(pface_ln_to_gn[i_part]);
+    PDM_free(pcell_ln_to_gn[i_part]);
     //PDM_free(pcell_ln_to_gn_extented[i_part]);
-   PDM_free(pvtx_ln_to_gn[i_part]);
-   PDM_free(pcell_face[i_part]);
-   PDM_free(pcell_face_idx[i_part]);
-   PDM_free(pface_vtx_idx[i_part]);
-   PDM_free(pface_vtx[i_part]);
-   PDM_free(pface_group_ln_to_gn[i_part]);
-   PDM_free(pface_group[i_part]);
-   PDM_free(pface_group_idx[i_part]);
-   PDM_free(pproc_face_bound_idx[i_part]);
-   PDM_free(ppart_face_bound_idx[i_part]);
-   PDM_free(pface_bound[i_part]);
-   PDM_free(pface_cell[i_part]);
-   PDM_free(pvtx_coord[i_part]);
-   PDM_free(pface_edge_idx[i_part]);
-   PDM_free(pface_edge[i_part]);
-   PDM_free(pedge_ln_to_gn[i_part]);
+    PDM_free(pvtx_ln_to_gn[i_part]);
+    PDM_free(pcell_face[i_part]);
+    PDM_free(pcell_face_idx[i_part]);
+    PDM_free(pface_vtx_idx[i_part]);
+    PDM_free(pface_vtx[i_part]);
+    PDM_free(pface_group_ln_to_gn[i_part]);
+    PDM_free(pface_group[i_part]);
+    PDM_free(pface_group_idx[i_part]);
+    PDM_free(pproc_face_bound_idx[i_part]);
+    PDM_free(ppart_face_bound_idx[i_part]);
+    PDM_free(pface_bound[i_part]);
+    PDM_free(pface_cell[i_part]);
+    PDM_free(pvtx_coord[i_part]);
+    PDM_free(pface_edge_idx[i_part]);
+    PDM_free(pface_edge[i_part]);
+    PDM_free(pedge_ln_to_gn[i_part]);
   }
- PDM_free(pface_edge_idx);
- PDM_free(pface_edge);
- PDM_free(pn_edge);
- PDM_free(pedge_ln_to_gn);
- PDM_free(pcell_face);
- PDM_free(pcell_face_idx);
- PDM_free(pvtx_ln_to_gn);
- PDM_free(pface_vtx_idx);
- PDM_free(pface_vtx);
- PDM_free(pcell_ln_to_gn);
+  PDM_free(pface_edge_idx);
+  PDM_free(pface_edge);
+  PDM_free(pn_edge);
+  PDM_free(pedge_ln_to_gn);
+  PDM_free(pcell_face);
+  PDM_free(pcell_face_idx);
+  PDM_free(pvtx_ln_to_gn);
+  PDM_free(pface_vtx_idx);
+  PDM_free(pface_vtx);
+  PDM_free(pcell_ln_to_gn);
   //PDM_free(pcell_ln_to_gn_extented);
- PDM_free(pproc_face_bound_idx);
- PDM_free(ppart_face_bound_idx);
- PDM_free(pface_bound);
- PDM_free(pface_ln_to_gn);
- PDM_free(pn_cell);
+  PDM_free(pproc_face_bound_idx);
+  PDM_free(ppart_face_bound_idx);
+  PDM_free(pface_bound);
+  PDM_free(pface_ln_to_gn);
+  PDM_free(pn_cell);
   //PDM_free(pn_cell_extented);
- PDM_free(pn_faces);
- PDM_free(pn_vtx);
- PDM_free(pface_group_ln_to_gn);
- PDM_free(pface_group);
- PDM_free(pface_group_idx);
- PDM_free(pface_cell);
- PDM_free(pvtx_coord);
+  PDM_free(pn_faces);
+  PDM_free(pn_vtx);
+  PDM_free(pface_group_ln_to_gn);
+  PDM_free(pface_group);
+  PDM_free(pface_group_idx);
+  PDM_free(pface_cell);
+  PDM_free(pvtx_coord);
 
- PDM_free(dedge_distrib);
- PDM_free(dedge_vtx_idx);
- PDM_free(dedge_vtx);
- PDM_free(dedge_face_idx);
- PDM_free(dedge_face);
+  PDM_free(dedge_distrib);
+  PDM_free(dedge_vtx_idx);
+  PDM_free(dedge_vtx);
+  PDM_free(dedge_face_idx);
+  PDM_free(dedge_face);
 
- PDM_free(dface_edge_idx);
- PDM_free(dface_edge);
+  PDM_free(dface_edge_idx);
+  PDM_free(dface_edge);
 
 
   PDM_dcube_gen_free(dcube);

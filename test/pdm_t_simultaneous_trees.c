@@ -262,7 +262,7 @@ main
 
   /* Build "point-box"_tree */
   double *blk_box_center;
-  PDM_malloc(blk_box_center,3 * n_box,double);
+  PDM_malloc(blk_box_center, 3 * n_box, double);
   for (int i = 0; i < n_box; i++) {
     for (int j = 0; j < 3; j++) {
       blk_box_center[3*i+j] = 0.5*(box_extents[6*i+j] + box_extents[6*i+j+3]);
@@ -294,10 +294,10 @@ main
     t1 = PDM_MPI_Wtime();
     int dim = 3;
     double extents[2*dim]; /** DIM x 2**/
-    PDM_hilbert_code_t *hilbert_box_codes;
-    PDM_malloc(hilbert_box_codes,n_box ,PDM_hilbert_code_t);
-    int *box_order;
-    PDM_malloc(box_order,n_box ,int);
+    PDM_hilbert_code_t *hilbert_box_codes = NULL;
+    int                *box_order         = NULL;
+    PDM_malloc(hilbert_box_codes, n_box, PDM_hilbert_code_t);
+    PDM_malloc(box_order        , n_box, int               );
     PDM_hilbert_get_coord_extents_par(dim, n_pts, pts_coord, extents, comm);
     // PDM_hilbert_get_coord_extents_par(dim, n_box, blk_box_center, extents, comm);
     PDM_hilbert_encode_coords(dim, PDM_HILBERT_CS, extents, n_box, blk_box_center, hilbert_box_codes);
@@ -310,15 +310,15 @@ main
     }
 
     t2 = PDM_MPI_Wtime();
-   PDM_free(hilbert_box_codes);
-   PDM_free(box_order);
+    PDM_free(hilbert_box_codes);
+    PDM_free(box_order);
 
     printf("Hilbert box times : %12.5e \n", t2 - t1);
 
-    PDM_hilbert_code_t *hilbert_codes;
-    PDM_malloc(hilbert_codes,n_pts ,PDM_hilbert_code_t);
-    int *order;
-    PDM_malloc(order,n_pts ,int);
+    PDM_hilbert_code_t *hilbert_codes = NULL;
+    int                *order         = NULL;
+    PDM_malloc(hilbert_codes, n_pts, PDM_hilbert_code_t);
+    PDM_malloc(order        , n_pts, int               );
     PDM_hilbert_get_coord_extents_par(dim, n_pts, pts_coord, extents, comm);
     PDM_hilbert_encode_coords(dim, PDM_HILBERT_CS, extents, n_pts, pts_coord, hilbert_codes);
     PDM_hilbert_local_order(n_pts, hilbert_codes, order);
@@ -326,8 +326,8 @@ main
     PDM_order_array(n_pts,     sizeof(PDM_g_num_t), order, pts_g_num);
     t2 = PDM_MPI_Wtime();
     printf("Hilbert times : %12.5e \n", t2 - t1);
-   PDM_free(hilbert_codes);
-   PDM_free(order);
+    PDM_free(hilbert_codes);
+    PDM_free(order);
 
     for(int i = 0; i < n_pts; ++i) {
       pts_g_num[i] = i + 1;
@@ -336,15 +336,15 @@ main
     t1 = PDM_MPI_Wtime();
     int n_part = n_pts/24;
     PDM_hilbert_code_t *rank_index;
-    PDM_malloc(rank_index,(n_part+1) ,PDM_hilbert_code_t);
+    PDM_malloc(rank_index, n_part+1, PDM_hilbert_code_t);
 
-    double *expli_box_extents;
-    PDM_malloc(expli_box_extents,3 * 8 * n_box ,double);
-    PDM_hilbert_code_t *expli_box_codes;
-    PDM_malloc(expli_box_codes, 8 * n_box ,PDM_hilbert_code_t);
+    double             *expli_box_extents = NULL;
+    PDM_hilbert_code_t *expli_box_codes   = NULL;
+    PDM_malloc(expli_box_extents, 3 * 8 * n_box, double            );
+    PDM_malloc(expli_box_codes  ,     8 * n_box, PDM_hilbert_code_t);
 
     double *weight;
-    PDM_malloc(weight,8 * n_box ,double);
+    PDM_malloc(weight, 8 * n_box, double);
 
     for(int i = 0; i < 8 * n_box; ++i) {
       weight   [i] = 1.;
@@ -414,11 +414,11 @@ main
     printf("PDM_hilbert_build_rank_index : %12.5e \n", t2 - t1);
     // PDM_log_trace_array_double(rank_index, n_part, "rank_index :: ");
 
-   PDM_free(rank_index);
-   PDM_free(expli_box_codes);
-   PDM_free(expli_box_extents);
-   PDM_free(blk_box_center);
-   PDM_free(weight);
+    PDM_free(rank_index);
+    PDM_free(expli_box_codes);
+    PDM_free(expli_box_extents);
+    PDM_free(blk_box_center);
+    PDM_free(weight);
   }
 
 
@@ -446,7 +446,7 @@ main
   // PDM_log_trace_connectivity_int(ptree->leaf_box_idx, ptree->leaf_box_ids, ptree->n_leaf, "leaf_box :");
 
   // int *box_pts_idx;
-  // PDM_malloc(box_pts_idx,(n_box + 1),int);
+  // PDM_malloc(box_pts_idx, n_box + 1,int);
   // box_pts_idx[0] = 0;
   // int s_box_pts = 4*n_box;
   // int *box_pts;
@@ -485,10 +485,10 @@ main
 
   // Tentative Bruno
   // Plus simple dans l'autre sens nan ?
-  int *pts_box_idx;
-  PDM_malloc(pts_box_idx,(n_pts + 1),int);
-  int *pts_box;
-  PDM_malloc(pts_box,(8 * n_pts + 1),int);
+  int *pts_box_idx = NULL;
+  int *pts_box     = NULL;
+  PDM_malloc(pts_box_idx,     n_pts + 1, int);
+  PDM_malloc(pts_box    , 8 * n_pts + 1, int);
   for(int i = 0; i < n_pts+1; ++i)  {
     pts_box_idx[i] = 0;
   }
@@ -524,10 +524,10 @@ main
   // Revert
   // int *box_pts_idx = NULL;
   // int *box_pts     = NULL;
-  int *box_pts_idx;
-  PDM_malloc(box_pts_idx,(n_box + 1),int);
-  int *box_pts_n;
-  PDM_malloc(box_pts_n,(n_box + 1),int);
+  int *box_pts_idx = NULL;
+  int *box_pts_n   = NULL;
+  PDM_malloc(box_pts_idx, n_box + 1, int);
+  PDM_malloc(box_pts_n  , n_box + 1, int);
   for(int i = 0; i < n_box; ++i)  {
     box_pts_n[i] = 0;
   }
@@ -544,7 +544,7 @@ main
   // PDM_log_trace_array_int(box_pts_idx, n_box, "box_pts_idx : ");
   // Fill
   int *box_pts;
-  PDM_malloc(box_pts,(box_pts_idx[n_box]),int);
+  PDM_malloc(box_pts, box_pts_idx[n_box], int);
   for(int ipt = 0; ipt < n_pts; ++ipt) {
     for(int idx_box = pts_box_idx[ipt]; idx_box < pts_box_idx[ipt+1]; ++idx_box) {
       int box_id = pts_box[idx_box];
@@ -553,9 +553,9 @@ main
       box_pts[idx_write] = ptree->new_to_old[ipt];
     }
   }
- PDM_free(pts_box_idx);
- PDM_free(pts_box    );
- PDM_free(box_pts_n    );
+  PDM_free(pts_box_idx);
+  PDM_free(pts_box    );
+  PDM_free(box_pts_n    );
 
   t3 = PDM_MPI_Wtime();
   printf("new : build %12.5es, sollicitate %12.5es, total %12.5es\n", t2-t1, t3-t2, t3-t1);
@@ -609,10 +609,10 @@ main
 
     printf("n_err = %d\n", n_err);
   }
- PDM_free(box_pts_idx2);
- PDM_free(box_pts2);
- PDM_free(box_pts_idx);
- PDM_free(box_pts);
+  PDM_free(box_pts_idx2);
+  PDM_free(box_pts2);
+  PDM_free(box_pts_idx);
+  PDM_free(box_pts);
 
   PDM_point_tree_seq_free(ptree);
   PDM_point_tree_seq_free(ptree2);
@@ -641,10 +641,10 @@ main
                         box_g_num);
   }
 
- PDM_free(pts_coord);
- PDM_free(pts_g_num);
- PDM_free(box_extents);
- PDM_free(box_g_num);
+  PDM_free(pts_coord);
+  PDM_free(pts_g_num);
+  PDM_free(box_extents);
+  PDM_free(box_g_num);
 
 
   PDM_MPI_Finalize ();

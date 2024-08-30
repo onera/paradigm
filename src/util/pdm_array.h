@@ -25,8 +25,14 @@ extern "C" {
 
 /* Utils functions creating new arrays */
 
+// Array copy
+int*         PDM_array_copy_int (const int         *array, const int size);
+PDM_g_num_t* PDM_array_copy_gnum(const PDM_g_num_t *array, const int size);
+
 // Create an array and fill it with 0
-int* PDM_array_zeros_int(const int size);
+int*    	 	PDM_array_zeros_int   (const int size);
+PDM_g_num_t*    PDM_array_zeros_gnum  (const int size);
+double* 		PDM_array_zeros_double(const int size);
 
 // Create an array and fill it with given value
 int*         PDM_array_const_int (const int size, const int         value);
@@ -35,11 +41,15 @@ double*      PDM_array_const_double(const int size, const double value);
 
 // Create a range array
 int* PDM_array_new_range_int(const int size);
+int* PDM_array_new_range_with_step_int(const int size, const int step);
 
 // Create an index array from a size array
 int*         PDM_array_new_idx_from_sizes_int (const int *size_array, const int size);
 PDM_g_num_t* PDM_array_new_idx_from_sizes_gnum(const int *size_array, const int size);
 int*         PDM_array_new_idx_from_const_stride_int(const int stride, const int size);
+
+// Create a size array from an index array
+int* PDM_array_new_size_from_idx_int(const int *idx_array, const int size);
 
 /* Utils functions compararing arrays */
 

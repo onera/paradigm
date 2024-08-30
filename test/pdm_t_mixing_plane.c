@@ -531,7 +531,7 @@ _get_polygon
 
   int connec_idx[2] = {0, _n_vtx};
   int *connec;
-  PDM_malloc(connec,_n_vtx,int);
+  PDM_malloc(connec, _n_vtx, int);
   for (int i = 0; i < _n_vtx; i++) {
     connec[i] = i+1;
   }
@@ -554,7 +554,7 @@ _get_polygon
                                     2,
                                     field_name,
                                     field_value);
- PDM_free(connec);
+  PDM_free(connec);
 }
 
 
@@ -584,7 +584,7 @@ _mixing_plane
 
   double *dbg_coord = NULL;
   if (visu) {
-    PDM_malloc(dbg_coord,120,double); // size?
+    PDM_malloc(dbg_coord, 120, double); // size?
   }
 
   /* Prepare for triangulation */
@@ -603,16 +603,15 @@ _mixing_plane
     tri_state = PDM_triangulate_state_create(max_face_vtx_n);
   }
 
-  PDM_malloc(tri_vtx,(max_face_vtx_n - 2) * 3,int);
+  PDM_malloc(tri_vtx, (max_face_vtx_n - 2) * 3, int);
 
-
-  PDM_malloc(*face_band_idx,n_part,int    *);
-  PDM_malloc(*face_band,n_part,int    *);
-  PDM_malloc(*face_band_area,n_part,double *);
+  PDM_malloc(*face_band_idx , n_part, int    *);
+  PDM_malloc(*face_band     , n_part, int    *);
+  PDM_malloc(*face_band_area, n_part, double *);
 
   int max_face_band_n = 3;
   _ll_node_t *nodes;
-  PDM_malloc(nodes,(3+4*(max_face_band_n-1)),_ll_node_t);
+  PDM_malloc(nodes, 3+4*(max_face_band_n-1), _ll_node_t);
 
   /* Intial nodes : triangle vertices */
   nodes[0].u = 0.;
@@ -647,9 +646,9 @@ _mixing_plane
     }
 
     int s_face_band = 4*n_face[ipart];
-    PDM_malloc((*face_band_idx )[ipart],(n_face[ipart] + 1),int);
-    PDM_malloc((*face_band     )[ipart],s_face_band,int   );
-    PDM_malloc((*face_band_area)[ipart],s_face_band,double);
+    PDM_malloc((*face_band_idx )[ipart], n_face[ipart] + 1, int   );
+    PDM_malloc((*face_band     )[ipart], s_face_band      , int   );
+    PDM_malloc((*face_band_area)[ipart], s_face_band      , double);
 
     int    *_face_band_idx  = (*face_band_idx )[ipart];
     int    *_face_band      = (*face_band     )[ipart];
@@ -926,11 +925,11 @@ _mixing_plane
   if (tri_state != NULL) {
     PDM_triangulate_state_destroy(tri_state);
   }
- PDM_free(tri_vtx);
- PDM_free(nodes);
+  PDM_free(tri_vtx);
+  PDM_free(nodes);
 
   if (visu) {
-   PDM_free(dbg_coord);
+    PDM_free(dbg_coord);
   }
 }
 PDM_GCC_SUPPRESS_WARNING_POP
@@ -999,8 +998,8 @@ char *argv[]
                  &mpart);
 
   /* Define bands */
-  double *levels;
-  PDM_malloc(levels,(n_band + 1),double);
+  double *levels = NULL;
+  PDM_malloc(levels, n_band + 1, double);
   _define_levels(n_band+1,
                  0,     //val_min,
                  length,//val_max,
@@ -1014,22 +1013,22 @@ char *argv[]
 
 
   /* Mixing plane */
-  int *n_vtx;
-  PDM_malloc(n_vtx,n_part,int          );
-  double **vtx_coord;
-  PDM_malloc(vtx_coord,n_part,double      *);
-  double **vtx_field;
-  PDM_malloc(vtx_field,n_part,double      *);
-  int *n_face;
-  PDM_malloc(n_face,n_part,int          );
-  int **face_vtx_idx;
-  PDM_malloc(face_vtx_idx,n_part,int         *);
-  int **face_vtx;
-  PDM_malloc(face_vtx,n_part,int         *);
-  PDM_g_num_t **vtx_ln_to_gn;
-  PDM_malloc(vtx_ln_to_gn,n_part,PDM_g_num_t *);
-  PDM_g_num_t **face_ln_to_gn;
-  PDM_malloc(face_ln_to_gn,n_part,PDM_g_num_t *);
+  int          *n_face        = NULL;
+  int          *n_vtx         = NULL;
+  double      **vtx_coord     = NULL;
+  double      **vtx_field     = NULL;
+  int         **face_vtx_idx  = NULL;
+  int         **face_vtx      = NULL;
+  PDM_g_num_t **vtx_ln_to_gn  = NULL;
+  PDM_g_num_t **face_ln_to_gn = NULL;
+  PDM_malloc(n_vtx        , n_part, int          );
+  PDM_malloc(vtx_coord    , n_part, double      *);
+  PDM_malloc(vtx_field    , n_part, double      *);
+  PDM_malloc(n_face       , n_part, int          );
+  PDM_malloc(face_vtx_idx , n_part, int         *);
+  PDM_malloc(face_vtx     , n_part, int         *);
+  PDM_malloc(vtx_ln_to_gn , n_part, PDM_g_num_t *);
+  PDM_malloc(face_ln_to_gn, n_part, PDM_g_num_t *);
   for (int ipart = 0; ipart < n_part; ipart++) {
     int *face_edge_idx;
     int *face_edge;
@@ -1065,7 +1064,7 @@ char *argv[]
                                                     PDM_OWNERSHIP_KEEP);
 
 
-    PDM_malloc(vtx_field[ipart],n_vtx[ipart],double);
+    PDM_malloc(vtx_field[ipart], n_vtx[ipart], double);
     for (int i = 0; i < n_vtx[ipart]; i++) {
       vtx_field[ipart][i] = _eval_field(vtx_coord[ipart][3*i  ],
                                         vtx_coord[ipart][3*i+1],
@@ -1107,15 +1106,11 @@ char *argv[]
                 &face_band,
                 &face_band_area);
 
-
-
-
-  double *local_band_area;
-  PDM_malloc(local_band_area,n_band,double);
+  double *local_band_area = NULL;
+  PDM_malloc(local_band_area, n_band, double);
   for (int band_id = 0; band_id < n_band; band_id++) {
     local_band_area[band_id] = 0;
   }
-
 
   for (int ipart = 0; ipart < n_part; ipart++) {
     for (int face_id = 0; face_id < n_face[ipart]; face_id++) {
@@ -1127,11 +1122,11 @@ char *argv[]
   }
 
 
-  double *global_band_area;
-  PDM_malloc(global_band_area,n_band,double);
+  double *global_band_area = NULL;
+  PDM_malloc(global_band_area, n_band, double);
   PDM_MPI_Allreduce(local_band_area, global_band_area, n_band,
                     PDM_MPI_DOUBLE, PDM_MPI_SUM, comm);
- PDM_free(local_band_area);
+  PDM_free(local_band_area);
 
   for (int band_id = 0; band_id < n_band; band_id++) {
     double hi = PDM_MIN(levels[band_id+1], length);
@@ -1145,32 +1140,32 @@ char *argv[]
                 err, err/exact_area);
     }
   }
- PDM_free(global_band_area);
+  PDM_free(global_band_area);
 
   /* Free memory */
- PDM_free(levels);
+  PDM_free(levels);
   PDM_multipart_free(mpart);
 
   for (int ipart = 0; ipart < n_part; ipart++) {
-   PDM_free(face_band_idx [ipart]);
-   PDM_free(face_band     [ipart]);
-   PDM_free(face_band_area[ipart]);
+    PDM_free(face_band_idx [ipart]);
+    PDM_free(face_band     [ipart]);
+    PDM_free(face_band_area[ipart]);
 
-   PDM_free(vtx_field[ipart]);
-   PDM_free(face_vtx [ipart]);
+    PDM_free(vtx_field[ipart]);
+    PDM_free(face_vtx [ipart]);
   }
- PDM_free(face_band_idx );
- PDM_free(face_band     );
- PDM_free(face_band_area);
+  PDM_free(face_band_idx );
+  PDM_free(face_band     );
+  PDM_free(face_band_area);
 
- PDM_free(n_vtx);
- PDM_free(vtx_coord);
- PDM_free(vtx_field);
- PDM_free(n_face);
- PDM_free(face_vtx_idx);
- PDM_free(face_vtx);
- PDM_free(vtx_ln_to_gn);
- PDM_free(face_ln_to_gn);
+  PDM_free(n_vtx);
+  PDM_free(vtx_coord);
+  PDM_free(vtx_field);
+  PDM_free(n_face);
+  PDM_free(face_vtx_idx);
+  PDM_free(face_vtx);
+  PDM_free(vtx_ln_to_gn);
+  PDM_free(face_ln_to_gn);
 
   PDM_MPI_Barrier(comm);
 

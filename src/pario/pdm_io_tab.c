@@ -208,7 +208,7 @@ static void _def_var
   /* Au premier appel : création du tableau lié à la variable CEDRE num_var_cedre */
 
   if (tab == NULL) {
-    PDM_malloc(PDM_io_tabs[_num_var_cedre],1,PDM_io_array_t);
+    PDM_malloc(PDM_io_tabs[_num_var_cedre], 1, PDM_io_array_t);
     tab = PDM_io_tabs[_num_var_cedre];
     tab->taille_donnee = taille_donnee;
     tab->t_n_composantes = t_n_composantes;
@@ -251,7 +251,7 @@ void PDM_io_array_write_beg
 {
   if (PDM_io_tabs == NULL) {
     _num_var_cedre_max = num_var_cedre_max;
-    PDM_malloc(PDM_io_tabs,_num_var_cedre_max ,PDM_io_array_t *);
+    PDM_malloc(PDM_io_tabs, _num_var_cedre_max, PDM_io_array_t *);
 
     for (int i = 0; i < _num_var_cedre_max; i++)
       PDM_io_tabs[i] = NULL;
@@ -512,7 +512,7 @@ void PDM_io_array_write_end
               }
             }
 
-           PDM_free(partition);
+            PDM_free(partition);
 
           }
 
@@ -586,26 +586,26 @@ void PDM_io_array_write_end
                                     (const void *) donnees_ecrit);
       }
       if (_n_partition_local == 1)
-       PDM_free(partitions[0]);
+        PDM_free(partitions[0]);
 
-     PDM_free(tab->partitions_locales);
-     PDM_free(tab);
+      PDM_free(tab->partitions_locales);
+      PDM_free(tab);
     }
   }
 
   /* Libération mémoire de la structure  */
 
- PDM_free(PDM_io_tabs);
+  PDM_free(PDM_io_tabs);
   PDM_io_tabs = NULL;
 
   /* Libération mémoire des tableaux de concatenation  */
 
   if (n_composantes_concatene != NULL)
-   PDM_free(n_composantes_concatene);
+    PDM_free(n_composantes_concatene);
   if (indirection_concatene != NULL)
-   PDM_free(indirection_concatene);
+    PDM_free(indirection_concatene);
   if (donnees_concatene != NULL)
-   PDM_free(donnees_concatene);
+    PDM_free(donnees_concatene);
 
 }
 
@@ -973,7 +973,7 @@ void PDM_io_array_read_end
               }
             }
 
-           PDM_free(partition);
+            PDM_free(partition);
 
           }
         }
@@ -982,27 +982,27 @@ void PDM_io_array_read_end
       /* Libération mémoire du tableau  */
 
       if (_n_partition_local == 1)
-       PDM_free(partitions[0]);
+        PDM_free(partitions[0]);
 
-     PDM_free(tab->partitions_locales);
-     PDM_free(tab);
+      PDM_free(tab->partitions_locales);
+      PDM_free(tab);
 
     }
   }
 
   /* Libération mémoire de la structure  */
 
- PDM_free(PDM_io_tabs);
+  PDM_free(PDM_io_tabs);
   PDM_io_tabs = NULL;
 
   /* Libération mémoire des tableaux de concatenation  */
 
   if (n_composantes_concatene != NULL)
-   PDM_free(n_composantes_concatene);
+    PDM_free(n_composantes_concatene);
   if (indirection_concatene != NULL)
-   PDM_free(indirection_concatene);
+    PDM_free(indirection_concatene);
   if (donnees_concatene != NULL)
-   PDM_free(donnees_concatene);
+    PDM_free(donnees_concatene);
 
 }
 

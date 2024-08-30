@@ -139,7 +139,7 @@ _make_absolute_entity_numbering
 
   /** Compute the distribution of elements amont proc **/
   PDM_g_num_t *entity_distrib;
-  PDM_malloc(entity_distrib,(n_rank+1) ,PDM_g_num_t);
+  PDM_malloc(entity_distrib, n_rank+1, PDM_g_num_t);
   PDM_g_num_t _dn_face = (PDM_g_num_t) dn_entity;
   PDM_MPI_Allgather((void *) &_dn_face,
                     1,
@@ -204,7 +204,7 @@ PDM_g_num_t  **dmissing_child_parent_g_num
    * Get the max number of vertex of entitys
    */
   int *blk_entity_vtx_idx;
-  PDM_malloc(blk_entity_vtx_idx, (blk_entity_vtx_n_size+1) ,int        );
+  PDM_malloc(blk_entity_vtx_idx, blk_entity_vtx_n_size+1, int);
   int n_max_entity_per_key = 0;
   int n_tot_entity_per_key = 0;
   int n_child_approx = 0;
@@ -237,29 +237,29 @@ PDM_g_num_t  **dmissing_child_parent_g_num
    *           - Multiple entitys
    *           - Same entity, we remove and replace by the first
    */
-  PDM_g_num_t *loc_entity_vtx_1;
-  PDM_malloc(loc_entity_vtx_1,  n_max_vtx               ,PDM_g_num_t);
-  PDM_g_num_t *loc_entity_vtx_2;
-  PDM_malloc(loc_entity_vtx_2,  n_max_vtx               ,PDM_g_num_t);
-  int *already_treat;
-  PDM_malloc(already_treat,  n_max_entity_per_key    ,int        );
-  int *same_entity_idx;
-  PDM_malloc(same_entity_idx, (n_max_entity_per_key+1) ,int        );
-  int *sens_entity;
-  PDM_malloc(sens_entity,  n_max_entity_per_key    ,int        );
-  PDM_g_num_t *tmp_parent;
-  PDM_malloc(tmp_parent,n_max_entity_per_key      ,PDM_g_num_t);
-  int *order;
-  PDM_malloc(order,n_max_entity_per_key      ,int        );
+  PDM_g_num_t *loc_entity_vtx_1 = NULL;
+  PDM_g_num_t *loc_entity_vtx_2 = NULL;
+  int         *already_treat    = NULL;
+  int         *same_entity_idx  = NULL;
+  int         *sens_entity      = NULL;
+  PDM_g_num_t *tmp_parent       = NULL;
+  int         *order            = NULL;
+  PDM_malloc(loc_entity_vtx_1, n_max_vtx               ,PDM_g_num_t);
+  PDM_malloc(loc_entity_vtx_2, n_max_vtx               ,PDM_g_num_t);
+  PDM_malloc(already_treat   , n_max_entity_per_key    ,int        );
+  PDM_malloc(same_entity_idx , (n_max_entity_per_key+1),int        );
+  PDM_malloc(sens_entity     ,  n_max_entity_per_key   ,int        );
+  PDM_malloc(tmp_parent      , n_max_entity_per_key    ,PDM_g_num_t);
+  PDM_malloc(order           , n_max_entity_per_key    ,int        );
 
   /*
    * Allocate Memory - entity_vtx - entity_elmt
    */
-  PDM_malloc(*dentity_vtx,blk_tot_entity_vtx_size  ,PDM_g_num_t);
-  PDM_malloc(*dentity_vtx_idx,(blk_entity_vtx_n_size+1 ),int        );
-  PDM_malloc(*dentity_elmt,n_tot_entity_per_key     ,PDM_g_num_t);
-  PDM_malloc(*dentity_elmt_idx,(blk_entity_elmt_size+1)  ,int);
-  PDM_malloc(*dentity_parent_element_position,n_tot_entity_per_key     ,int);
+  PDM_malloc(*dentity_vtx                    , blk_tot_entity_vtx_size  , PDM_g_num_t);
+  PDM_malloc(*dentity_vtx_idx                , blk_entity_vtx_n_size + 1, int        );
+  PDM_malloc(*dentity_elmt                   , n_tot_entity_per_key     , PDM_g_num_t);
+  PDM_malloc(*dentity_elmt_idx               , blk_entity_elmt_size + 1 , int        );
+  PDM_malloc(*dentity_parent_element_position, n_tot_entity_per_key     , int        );
 
   PDM_g_num_t *_dentity_vtx                     = *dentity_vtx;
   int         *_dentity_vtx_idx                 = *dentity_vtx_idx;
@@ -271,23 +271,24 @@ PDM_g_num_t  **dmissing_child_parent_g_num
   // printf("n_tot_entity_per_key::%i\n", n_tot_entity_per_key);
   // printf("n_child_approx::%i\n", n_child_approx);
 
-  PDM_g_num_t *_tmp_parent_gnum;
-  PDM_malloc(_tmp_parent_gnum,n_child_approx           ,PDM_g_num_t);
-  PDM_g_num_t *_tmp_parent_ln_to_gn;
-  PDM_malloc(_tmp_parent_ln_to_gn,n_child_approx           ,PDM_g_num_t);
-  int *_tmp_parent_sign;
-  PDM_malloc(_tmp_parent_sign,n_child_approx           ,int        );
-  PDM_g_num_t *_tmp_missing_parent_gnum;
-  PDM_malloc(_tmp_missing_parent_gnum,n_child_approx           ,PDM_g_num_t);
-  PDM_g_num_t *_tmp_missing_ln_to_gn;
-  PDM_malloc(_tmp_missing_ln_to_gn,n_child_approx           ,PDM_g_num_t);
+  PDM_g_num_t *_tmp_parent_gnum         = NULL;
+  PDM_g_num_t *_tmp_parent_ln_to_gn     = NULL;
+  int         *_tmp_parent_sign         = NULL;
+  PDM_g_num_t *_tmp_missing_parent_gnum = NULL;
+  PDM_g_num_t *_tmp_missing_ln_to_gn    = NULL;
+
+  PDM_malloc(_tmp_parent_gnum        , n_child_approx, PDM_g_num_t);
+  PDM_malloc(_tmp_parent_ln_to_gn    , n_child_approx, PDM_g_num_t);
+  PDM_malloc(_tmp_parent_sign        , n_child_approx, int        );
+  PDM_malloc(_tmp_missing_parent_gnum, n_child_approx, PDM_g_num_t);
+  PDM_malloc(_tmp_missing_ln_to_gn   , n_child_approx, PDM_g_num_t);
 
   /*
    * Init global numbering
    */
   int i_abs_missing = 0;
-  int i_abs_child = 0;
-  int i_abs_entity = 0;
+  int i_abs_child   = 0;
+  int i_abs_entity  = 0;
   _dentity_vtx_idx[0] = 0;
 
   int idx = 0;
@@ -503,21 +504,21 @@ PDM_g_num_t  **dmissing_child_parent_g_num
   /*
    * Free all unused structure
    */
- PDM_free(loc_entity_vtx_1);
- PDM_free(loc_entity_vtx_2);
- PDM_free(blk_entity_vtx_idx);
- PDM_free(already_treat);
- PDM_free(same_entity_idx);
- PDM_free(sens_entity);
- PDM_free(blk_tot_entity_vtx);
- PDM_free(blk_n_entity_per_key);
- PDM_free(blk_entity_vtx_n);
- PDM_free(blk_elmt_entity_elmt);
- PDM_free(blk_parent_elmt_position);
- PDM_free(blk_part_id);
+  PDM_free(loc_entity_vtx_1);
+  PDM_free(loc_entity_vtx_2);
+  PDM_free(blk_entity_vtx_idx);
+  PDM_free(already_treat);
+  PDM_free(same_entity_idx);
+  PDM_free(sens_entity);
+  PDM_free(blk_tot_entity_vtx);
+  PDM_free(blk_n_entity_per_key);
+  PDM_free(blk_entity_vtx_n);
+  PDM_free(blk_elmt_entity_elmt);
+  PDM_free(blk_parent_elmt_position);
+  PDM_free(blk_part_id);
 
- PDM_free(tmp_parent);
- PDM_free(order);
+  PDM_free(tmp_parent);
+  PDM_free(order);
 
   /*
    * Fill up structure
@@ -574,7 +575,7 @@ PDM_g_num_t  **dmissing_child_parent_g_num
     * Exchange in origin absolute numbering
     */
     double *weights;
-    PDM_malloc(weights,i_abs_child ,double);
+    PDM_malloc(weights, i_abs_child, double);
     for(int i = 0; i < i_abs_child; ++i) {
       weights[i] = 1.;
     }
@@ -587,7 +588,7 @@ PDM_g_num_t  **dmissing_child_parent_g_num
                                                         &i_abs_child,
                                                         1,
                                                         comm);
-   PDM_free(weights);
+    PDM_free(weights);
     //PDM_g_num_t* distrib = PDM_part_to_block_distrib_index_get(ptb);
     //printf(" A GERE BLOCK PARTIEL INSIDE _generate_entitiy_connectivity in pdm_dmesh_nodal_to_dmesh.c \n");
 
@@ -595,7 +596,7 @@ PDM_g_num_t  **dmissing_child_parent_g_num
     PDM_MPI_Comm_size(comm, &n_rank);
 
     int *stride_one;
-    PDM_malloc(stride_one, i_abs_child ,int);
+    PDM_malloc(stride_one, i_abs_child, int);
     for(int i = 0; i < i_abs_child; ++i) {
       stride_one[i] = 1;
     }
@@ -612,7 +613,7 @@ PDM_g_num_t  **dmissing_child_parent_g_num
     PDM_UNUSED(s_block_data);
     // PDM_log_trace_array_long(*dparent_gnum, s_block_data, "dparent_gnum : ");
 
-   PDM_free(blk_strid);
+    PDM_free(blk_strid);
     s_block_data = PDM_part_to_block_exch(ptb,
                                           sizeof(int),
                                           PDM_STRIDE_VAR_INTERLACED,
@@ -635,8 +636,8 @@ PDM_g_num_t  **dmissing_child_parent_g_num
 
 
     PDM_part_to_block_free(ptb);
-   PDM_free(stride_one);
-   PDM_free(blk_strid);
+    PDM_free(stride_one);
+    PDM_free(blk_strid);
   } else {
     dparent_gnum = NULL;
     dparent_sign = NULL;
@@ -644,9 +645,9 @@ PDM_g_num_t  **dmissing_child_parent_g_num
     int dn_elmt_child    = 0;
     *delmt_child_distrib = PDM_compute_entity_distribution (comm, dn_elmt_child);
   }
- PDM_free(_tmp_parent_ln_to_gn);
- PDM_free(_tmp_parent_sign);
- PDM_free(_tmp_parent_gnum);
+  PDM_free(_tmp_parent_ln_to_gn);
+  PDM_free(_tmp_parent_sign);
+  PDM_free(_tmp_parent_gnum);
 
   if (i_abs_missing_max > 0) {
 
@@ -666,7 +667,7 @@ PDM_g_num_t  **dmissing_child_parent_g_num
                                                         comm);
 
     int *stride_one;
-    PDM_malloc(stride_one, i_abs_missing ,int);
+    PDM_malloc(stride_one, i_abs_missing, int);
     for(int i = 0; i < i_abs_missing; ++i) {
       stride_one[i] = 1;
     }
@@ -687,20 +688,20 @@ PDM_g_num_t  **dmissing_child_parent_g_num
     // PDM_log_trace_array_long(*dmissing_child_parent_g_num, s_block_data, "dmissing_child_parent_g_num : ");
 
     /*PDM_g_num_t *_distrib_missing_child = PDM_part_to_block_distrib_index_get (ptb);
-    PDM_malloc(*distrib_missing_child,(n_rank + 1),PDM_g_num_t);
+    PDM_malloc(*distrib_missing_child, n_rank + 1, PDM_g_num_t);
     memcpy (*distrib_missing_child, _distrib_missing_child, sizeof(PDM_g_num_t) * (n_rank + 1));*/
     *distrib_missing_child = PDM_compute_entity_distribution (comm, dn_missing_ridge);
 
     PDM_part_to_block_free(ptb);
-   PDM_free(stride_one);
-   PDM_free(blk_strid);
+    PDM_free(stride_one);
+    PDM_free(blk_strid);
   } else {
     dmissing_child_parent_g_num = NULL;
     int dn_missing_ridge   = 0;
     *distrib_missing_child = PDM_compute_entity_distribution (comm, dn_missing_ridge);
   }
- PDM_free(_tmp_missing_ln_to_gn);
- PDM_free(_tmp_missing_parent_gnum);
+  PDM_free(_tmp_missing_ln_to_gn);
+  PDM_free(_tmp_missing_parent_gnum);
 
   if( 0 == 1 ){
     PDM_g_num_t* _dparent_gnum = *dparent_gnum;
@@ -749,29 +750,30 @@ PDM_g_num_t  **dmissing_child_parent_g_num
 
   PDM_gen_gnum_t* gnum_gen = PDM_gnum_create(3, n_part, PDM_FALSE, 1.e-6, comm, PDM_OWNERSHIP_USER);
 
-  PDM_g_num_t **ln_to_gn;
-  PDM_malloc(ln_to_gn, n_part ,PDM_g_num_t *);
-  int **part_id;
-  PDM_malloc(part_id, n_part ,int         *);
-  double **weight;
-  PDM_malloc(weight, n_part ,double      *);
-  int **stride_one;
-  PDM_malloc(stride_one, n_part ,int         *);
-  int **delmt_entity_vtx_n;
-  PDM_malloc(delmt_entity_vtx_n, n_part ,int         *);
+  PDM_g_num_t **ln_to_gn           = NULL;
+  int         **part_id            = NULL;
+  double      **weight             = NULL;
+  int         **stride_one         = NULL;
+  int         **delmt_entity_vtx_n = NULL;
+  PDM_malloc(ln_to_gn          , n_part, PDM_g_num_t *);
+  PDM_malloc(part_id           , n_part, int         *);
+  PDM_malloc(weight            , n_part, double      *);
+  PDM_malloc(stride_one        , n_part, int         *);
+  PDM_malloc(delmt_entity_vtx_n, n_part, int         *);
+
   PDM_g_num_t key_mod = 4 * n_vtx_abs;
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    PDM_malloc(ln_to_gn[i_part], n_entity_elt_tot[i_part] ,PDM_g_num_t);
-    part_id PDM_malloc([i_part], n_entity_elt_tot[i_part] ,int        );
+    PDM_malloc(ln_to_gn[i_part], n_entity_elt_tot[i_part], PDM_g_num_t);
+    PDM_malloc(part_id [i_part], n_entity_elt_tot[i_part], int        );
     _compute_keys(n_entity_elt_tot[i_part],
                   delmt_entity_vtx_idx[i_part],
                   delmt_entity_vtx[i_part],
                   ln_to_gn[i_part],
                   key_mod);
 
-    weight            PDM_malloc([i_part], n_entity_elt_tot[i_part] ,double);
-    PDM_malloc(delmt_entity_vtx_n[i_part], n_entity_elt_tot[i_part] ,int   );
-    stride_one        PDM_malloc([i_part], n_entity_elt_tot[i_part] ,int   );
+    PDM_malloc(weight            [i_part], n_entity_elt_tot[i_part], double);
+    PDM_malloc(delmt_entity_vtx_n[i_part], n_entity_elt_tot[i_part], int   );
+    PDM_malloc(stride_one        [i_part], n_entity_elt_tot[i_part], int   );
 
     for(int i = 0; i < n_entity_elt_tot[i_part]; ++i) {
       part_id           [i_part][i] = i_part;
@@ -779,7 +781,7 @@ PDM_g_num_t  **dmissing_child_parent_g_num
       stride_one        [i_part][i] = 1.;
       delmt_entity_vtx_n[i_part][i] = delmt_entity_vtx_idx[i_part][i+1] - delmt_entity_vtx_idx[i_part][i];
     }
-   PDM_free(delmt_entity_vtx_idx[i_part]);
+    PDM_free(delmt_entity_vtx_idx[i_part]);
 
     PDM_gnum_set_from_parents(gnum_gen, i_part, n_entity_elt_tot[i_part], ln_to_gn[i_part]);
   }
@@ -790,7 +792,7 @@ PDM_g_num_t  **dmissing_child_parent_g_num
   PDM_gnum_compute(gnum_gen);
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
-   PDM_free(ln_to_gn[i_part]);
+    PDM_free(ln_to_gn[i_part]);
     ln_to_gn[i_part] = PDM_gnum_get(gnum_gen, i_part);
     //PDM_free(PDM_gnum_get(gnum_gen, i_part));
   }
@@ -808,11 +810,11 @@ PDM_g_num_t  **dmissing_child_parent_g_num
                                                       n_part,
                                                       comm);
   for(int i_part = 0; i_part < n_part; ++i_part) {
-   PDM_free(ln_to_gn[i_part]);
-   PDM_free(weight  [i_part]);
+    PDM_free(ln_to_gn[i_part]);
+    PDM_free(weight  [i_part]);
   }
- PDM_free(ln_to_gn);
- PDM_free(weight);
+  PDM_free(ln_to_gn);
+  PDM_free(weight);
 
   /*
    * Exchange data
@@ -853,10 +855,10 @@ PDM_g_num_t  **dmissing_child_parent_g_num
                                         (void **) &blk_entity_vtx_n);
 
     for(int i_part = 0; i_part < n_part; ++i_part) {
-     PDM_free(delmt_entity_vtx  [i_part]);
-     PDM_free(delmt_entity_vtx_n[i_part]);
+      PDM_free(delmt_entity_vtx  [i_part]);
+      PDM_free(delmt_entity_vtx_n[i_part]);
     }
-   PDM_free(delmt_entity_vtx_n);
+    PDM_free(delmt_entity_vtx_n);
 
     blk_entity_elmt_size = PDM_part_to_block_exch(ptb,
                                                   sizeof(PDM_g_num_t),
@@ -867,7 +869,7 @@ PDM_g_num_t  **dmissing_child_parent_g_num
                                                  &blk_elmt_entity_elmt_stri,
                                        (void **) &blk_elmt_entity_elmt);
 
-   PDM_free(blk_elmt_entity_elmt_stri); // Same as blk_n_entity_per_key
+    PDM_free(blk_elmt_entity_elmt_stri); // Same as blk_n_entity_per_key
     PDM_part_to_block_exch(        ptb,
                            sizeof(int),
                            PDM_STRIDE_VAR_INTERLACED,
@@ -877,7 +879,7 @@ PDM_g_num_t  **dmissing_child_parent_g_num
                           &blk_elmt_entity_elmt_stri,
                 (void **) &blk_parent_elmt_position);
 
-   PDM_free(blk_elmt_entity_elmt_stri); // Same as blk_n_entity_per_key
+    PDM_free(blk_elmt_entity_elmt_stri); // Same as blk_n_entity_per_key
     PDM_part_to_block_exch(        ptb,
                            sizeof(int),
                            PDM_STRIDE_VAR_INTERLACED,
@@ -888,13 +890,13 @@ PDM_g_num_t  **dmissing_child_parent_g_num
                 (void **) &blk_part_id);
 
     for(int i_part = 0; i_part < n_part; ++i_part) {
-     PDM_free(stride_one           [i_part]);
-     PDM_free(part_id              [i_part]);
-     PDM_free(delmt_entity         [i_part]);
-     PDM_free(dparent_elmt_position[i_part]);
+      PDM_free(stride_one           [i_part]);
+      PDM_free(part_id              [i_part]);
+      PDM_free(delmt_entity         [i_part]);
+      PDM_free(dparent_elmt_position[i_part]);
     }
-   PDM_free(stride_one);
-   PDM_free(part_id);
+    PDM_free(stride_one);
+    PDM_free(part_id);
 
   } else {
 
@@ -973,28 +975,28 @@ PDM_g_num_t  **dmissing_child_parent_g_num
     blk_entity_elmt_size   = PDM_part_to_block_iexch_wait(ptb, request_entity_elmt_size);
 
     PDM_part_to_block_iexch_wait(ptb, request_parent_elmt_position);
-   PDM_free(tmp1_blk_elmt_entity_elmt_stri);
+    PDM_free(tmp1_blk_elmt_entity_elmt_stri);
 
     PDM_part_to_block_iexch_wait(ptb, request_part_id);
-   PDM_free(tmp2_blk_elmt_entity_elmt_stri);
+    PDM_free(tmp2_blk_elmt_entity_elmt_stri);
 
     blk_tot_entity_vtx_size = PDM_part_to_block_iexch_wait(ptb, request_entity_vtx);
     blk_entity_vtx_n_size   = PDM_part_to_block_iexch_wait(ptb, request_entity_vtx_n);
 
     for(int i_part = 0; i_part < n_part; ++i_part) {
-     PDM_free(delmt_entity_vtx  [i_part]);
-     PDM_free(delmt_entity_vtx_n[i_part]);
+      PDM_free(delmt_entity_vtx  [i_part]);
+      PDM_free(delmt_entity_vtx_n[i_part]);
     }
-   PDM_free(delmt_entity_vtx_n);
+    PDM_free(delmt_entity_vtx_n);
 
     for(int i_part = 0; i_part < n_part; ++i_part) {
-     PDM_free(stride_one           [i_part]);
-     PDM_free(part_id              [i_part]);
-     PDM_free(delmt_entity         [i_part]);
-     PDM_free(dparent_elmt_position[i_part]);
+      PDM_free(stride_one           [i_part]);
+      PDM_free(part_id              [i_part]);
+      PDM_free(delmt_entity         [i_part]);
+      PDM_free(dparent_elmt_position[i_part]);
     }
-   PDM_free(stride_one);
-   PDM_free(part_id);
+    PDM_free(stride_one);
+    PDM_free(part_id);
 
     // dt = PDM_MPI_Wtime() - t1;
     // log_trace("PDM_dmesh_nodal_to_dmesh wait dt = %12.5e \n", dt);
@@ -1018,8 +1020,8 @@ PDM_g_num_t  **dmissing_child_parent_g_num
   }
 
   PDM_part_to_block_free(ptb);
- PDM_free(blk_elmt_entity_elmt_stri); // Same as blk_n_entity_per_key
- PDM_free(blk_tot_entity_vtx_n);
+  PDM_free(blk_elmt_entity_elmt_stri); // Same as blk_n_entity_per_key
+  PDM_free(blk_tot_entity_vtx_n);
 
   _generate_entitiy_connectivity(comm,
                                  blk_tot_entity_vtx,
@@ -1078,14 +1080,14 @@ _generate_faces_from_dmesh_nodal
   /*
    * Decompose surface
    */
-  PDM_g_num_t *delmt_vol_face;
-  PDM_malloc(delmt_vol_face,  n_face_elt_vol_tot     ,PDM_g_num_t);
-  int *dparent_elmt_vol_pos;
-  PDM_malloc(dparent_elmt_vol_pos,  n_face_elt_vol_tot     ,int        );
-  int *delmt_vol_face_vtx_idx;
-  PDM_malloc(delmt_vol_face_vtx_idx, (n_face_elt_vol_tot +1) ,int        );
-  PDM_g_num_t *delmt_vol_face_vtx;
-  PDM_malloc(delmt_vol_face_vtx,  n_sum_vtx_vol_face_tot ,PDM_g_num_t);
+  PDM_g_num_t *delmt_vol_face         = NULL;
+  int         *dparent_elmt_vol_pos   = NULL;
+  int         *delmt_vol_face_vtx_idx = NULL;
+  PDM_g_num_t *delmt_vol_face_vtx     = NULL;
+  PDM_malloc(delmt_vol_face        , n_face_elt_vol_tot     , PDM_g_num_t);
+  PDM_malloc(dparent_elmt_vol_pos  , n_face_elt_vol_tot     , int        );
+  PDM_malloc(delmt_vol_face_vtx_idx, n_face_elt_vol_tot +1  , int        );
+  PDM_malloc(delmt_vol_face_vtx    , n_sum_vtx_vol_face_tot , PDM_g_num_t);
 
   delmt_vol_face_vtx_idx[0] = 0;
   PDM_sections_decompose_faces(dmesh_nodal->volumic,
@@ -1098,14 +1100,14 @@ _generate_faces_from_dmesh_nodal
   /*
    * Decompose surf
    */
-  PDM_g_num_t *delmt_surf_face;
-  PDM_malloc(delmt_surf_face,  n_face_elt_surf_tot     ,PDM_g_num_t);
-  int *dparent_elmt_surf_pos;
-  PDM_malloc(dparent_elmt_surf_pos,  n_face_elt_surf_tot     ,int        );
-  int *delmt_surf_face_vtx_idx;
-  PDM_malloc(delmt_surf_face_vtx_idx, (n_face_elt_surf_tot +1) ,int        );
-  PDM_g_num_t *delmt_surf_face_vtx;
-  PDM_malloc(delmt_surf_face_vtx,  n_sum_vtx_surf_face_tot ,PDM_g_num_t);
+  PDM_g_num_t *delmt_surf_face         = NULL;
+  int         *dparent_elmt_surf_pos   = NULL;
+  int         *delmt_surf_face_vtx_idx = NULL;
+  PDM_g_num_t *delmt_surf_face_vtx     = NULL;
+  PDM_malloc(delmt_surf_face        , n_face_elt_surf_tot     , PDM_g_num_t);
+  PDM_malloc(dparent_elmt_surf_pos  , n_face_elt_surf_tot     , int        );
+  PDM_malloc(delmt_surf_face_vtx_idx, n_face_elt_surf_tot +1  , int        );
+  PDM_malloc(delmt_surf_face_vtx    , n_sum_vtx_surf_face_tot , PDM_g_num_t);
 
   delmt_surf_face_vtx_idx[0] = 0;
   PDM_sections_decompose_faces(dmesh_nodal->surfacic,
@@ -1147,18 +1149,18 @@ _generate_faces_from_dmesh_nodal
    */
   int n_part = 2;
   int *n_face_elt_tot;
-  PDM_malloc(n_face_elt_tot, n_part ,int);
+  PDM_malloc(n_face_elt_tot, n_part, int);
   n_face_elt_tot[0] = n_face_elt_vol_tot;
   n_face_elt_tot[1] = n_face_elt_surf_tot;
 
-  PDM_g_num_t **delmt_face;
-  PDM_malloc(delmt_face, n_part ,PDM_g_num_t *);
-  int **dparent_elmt_pos;
-  PDM_malloc(dparent_elmt_pos, n_part ,int         *);
-  int **delmt_face_vtx_idx;
-  PDM_malloc(delmt_face_vtx_idx, n_part ,int         *);
-  PDM_g_num_t **delmt_face_vtx;
-  PDM_malloc(delmt_face_vtx, n_part ,PDM_g_num_t *);
+  PDM_g_num_t **delmt_face         = NULL;
+  int         **dparent_elmt_pos   = NULL;
+  int         **delmt_face_vtx_idx = NULL;
+  PDM_g_num_t **delmt_face_vtx     = NULL;
+  PDM_malloc(delmt_face        , n_part, PDM_g_num_t *);
+  PDM_malloc(dparent_elmt_pos  , n_part, int         *);
+  PDM_malloc(delmt_face_vtx_idx, n_part, int         *);
+  PDM_malloc(delmt_face_vtx    , n_part, PDM_g_num_t *);
 
   delmt_face        [0] = delmt_vol_face        ;
   dparent_elmt_pos  [0] = dparent_elmt_vol_pos  ;
@@ -1180,16 +1182,16 @@ _generate_faces_from_dmesh_nodal
   int n_section_child = dmesh_nodal->surfacic->n_section;
   PDM_g_num_t n_g_child = dmesh_nodal->surfacic->section_distribution[n_section_child];
   if(dmesh_nodal->surfacic->dparent_idx != NULL) {
-   PDM_free(dmesh_nodal->surfacic->dparent_idx);
+    PDM_free(dmesh_nodal->surfacic->dparent_idx);
   }
   if(dmesh_nodal->surfacic->dparent_gnum != NULL) {
-   PDM_free(dmesh_nodal->surfacic->dparent_gnum);
+    PDM_free(dmesh_nodal->surfacic->dparent_gnum);
   }
   if(dmesh_nodal->surfacic->dparent_sign != NULL) {
-   PDM_free(dmesh_nodal->surfacic->dparent_sign);
+    PDM_free(dmesh_nodal->surfacic->dparent_sign);
   }
   if(dmesh_nodal->surfacic->delmt_child_distrib != NULL) {
-   PDM_free(dmesh_nodal->surfacic->delmt_child_distrib);
+    PDM_free(dmesh_nodal->surfacic->delmt_child_distrib);
   }
   PDM_generate_entitiy_connectivity(dmesh_nodal->comm,
                                     dmesh_nodal->n_vtx_abs,
@@ -1213,11 +1215,11 @@ _generate_faces_from_dmesh_nodal
                                     &dmesh_nodal->surfacic->delmt_child_distrib,
                                     &link->distrib_missing_surface,
                                     &link->dmissing_surface_parent_g_num);
- PDM_free(n_face_elt_tot    );
- PDM_free(delmt_face        );
- PDM_free(dparent_elmt_pos  );
- PDM_free(delmt_face_vtx_idx);
- PDM_free(delmt_face_vtx    );
+  PDM_free(n_face_elt_tot    );
+  PDM_free(delmt_face        );
+  PDM_free(dparent_elmt_pos  );
+  PDM_free(delmt_face_vtx_idx);
+  PDM_free(delmt_face_vtx    );
 
 
   PDM_g_num_t *_dface_vtx          = dm->dconnectivity    [PDM_CONNECTIVITY_TYPE_FACE_VTX];
@@ -1230,10 +1232,10 @@ _generate_faces_from_dmesh_nodal
   if (link->distrib_missing_surface[dmesh_nodal->n_rank] == 0 && post_treat_result == 1) {
 
     // Post_treat
-    PDM_g_num_t *dface_cell;
-    PDM_malloc(dface_cell, 2 * dm->dn_face ,PDM_g_num_t);
-    int *dflip_face;
-    PDM_malloc(dflip_face,     dm->dn_face ,int        );
+    PDM_g_num_t *dface_cell = NULL;
+    int         *dflip_face = NULL;
+    PDM_malloc(dface_cell, 2 * dm->dn_face, PDM_g_num_t);
+    PDM_malloc(dflip_face,     dm->dn_face, int        );
     for(int i_face = 0; i_face < dm->dn_face; ++i_face) {
       dflip_face[i_face] = 1;
 
@@ -1293,13 +1295,13 @@ _generate_faces_from_dmesh_nodal
     for(int i = 0; i < dn_surfacic; ++i) {
       dmesh_nodal->surfacic->dparent_sign[i] *= pface_flip[i];
     }
-   PDM_free(pface_flip);
-   PDM_free(tmp_pface_flip);
-   PDM_free(dflip_face);
+    PDM_free(pface_flip);
+    PDM_free(tmp_pface_flip);
+    PDM_free(dflip_face);
     PDM_block_to_part_free(btp);
 
-   PDM_free(_dface_cell_tmp);
-   PDM_free(_dface_cell_idx_tmp);
+    PDM_free(_dface_cell_tmp);
+    PDM_free(_dface_cell_idx_tmp);
     _dface_cell_tmp     = NULL;
     _dface_cell_idx_tmp = NULL;
 
@@ -1335,7 +1337,7 @@ _generate_faces_from_dmesh_nodal
 
   int is_signed = 1;
   assert(dm->cell_distrib == NULL);
-  PDM_malloc(dm->cell_distrib, (dmesh_nodal->n_rank + 1 ) ,PDM_g_num_t);
+  PDM_malloc(dm->cell_distrib, dmesh_nodal->n_rank + 1, PDM_g_num_t);
   dm->cell_distrib[0] = -1;
   dm->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE] = PDM_TRUE;
   PDM_dconnectivity_transpose(dmesh_nodal->comm,
@@ -1357,8 +1359,8 @@ _generate_faces_from_dmesh_nodal
   }
 
   if (link->distrib_missing_surface[dmesh_nodal->n_rank] == 0 && post_treat_result == 1) {
-   PDM_free(_dface_cell_idx_tmp);
-   PDM_free(_dface_cell_tmp);
+    PDM_free(_dface_cell_idx_tmp);
+    PDM_free(_dface_cell_tmp);
   }
 
   int compute_edge_from_faces = 1;
@@ -1366,14 +1368,14 @@ _generate_faces_from_dmesh_nodal
     // Count the number of edges
     int n_edge_face_tot = _dface_vtx_idx[dm->dn_face];
 
-    int *dface_edge_vtx_idx;
-    PDM_malloc(dface_edge_vtx_idx, ( n_edge_face_tot + 1) ,int        );
-    PDM_g_num_t *dface_edge;
-    PDM_malloc(dface_edge,     n_edge_face_tot    ,PDM_g_num_t);
-    PDM_g_num_t *dface_edge_vtx;
-    PDM_malloc(dface_edge_vtx, 2 * n_edge_face_tot    ,PDM_g_num_t);
-    int *dparent_dface_edge_pos;
-    PDM_malloc(dparent_dface_edge_pos,     n_edge_face_tot    ,int        );
+    int         *dface_edge_vtx_idx     = NULL;
+    PDM_g_num_t *dface_edge             = NULL;
+    PDM_g_num_t *dface_edge_vtx         = NULL;
+    int         *dparent_dface_edge_pos = NULL;
+    PDM_malloc(dface_edge_vtx_idx    ,     n_edge_face_tot + 1, int        );
+    PDM_malloc(dface_edge            ,     n_edge_face_tot    , PDM_g_num_t);
+    PDM_malloc(dface_edge_vtx        , 2 * n_edge_face_tot    , PDM_g_num_t);
+    PDM_malloc(dparent_dface_edge_pos,     n_edge_face_tot    , int        );
     int idx = 0;
     int i_edge = 0;
     dface_edge_vtx_idx[0] = 0;
@@ -1406,14 +1408,14 @@ _generate_faces_from_dmesh_nodal
     /*
      * Decompose ridge
      */
-    PDM_g_num_t *delmt_ridge_edge;
-    PDM_malloc(delmt_ridge_edge,  n_edge_elt_ridge_tot     ,PDM_g_num_t);
-    int *dparent_elmt_ridge_pos;
-    PDM_malloc(dparent_elmt_ridge_pos,  n_edge_elt_ridge_tot     ,int        );
-    int *delmt_ridge_edge_vtx_idx;
-    PDM_malloc(delmt_ridge_edge_vtx_idx, (n_edge_elt_ridge_tot +1) ,int        );
-    PDM_g_num_t *delmt_ridge_edge_vtx;
-    PDM_malloc(delmt_ridge_edge_vtx,  n_sum_vtx_ridge_edge_tot ,PDM_g_num_t);
+    PDM_g_num_t *delmt_ridge_edge         = NULL;
+    int         *dparent_elmt_ridge_pos   = NULL;
+    int         *delmt_ridge_edge_vtx_idx = NULL;
+    PDM_g_num_t *delmt_ridge_edge_vtx     = NULL;
+    PDM_malloc(delmt_ridge_edge        , n_edge_elt_ridge_tot    , PDM_g_num_t);
+    PDM_malloc(dparent_elmt_ridge_pos  , n_edge_elt_ridge_tot    , int        );
+    PDM_malloc(delmt_ridge_edge_vtx_idx, n_edge_elt_ridge_tot +1 , int        );
+    PDM_malloc(delmt_ridge_edge_vtx    , n_sum_vtx_ridge_edge_tot, PDM_g_num_t);
 
     if(dmesh_nodal->ridge != NULL) {
       delmt_ridge_edge_vtx_idx[0] = 0;
@@ -1435,18 +1437,18 @@ _generate_faces_from_dmesh_nodal
 
     int n_part_edge = 2;
     int *n_edge_elt_tot;
-    PDM_malloc(n_edge_elt_tot, n_part_edge ,int);
+    PDM_malloc(n_edge_elt_tot, n_part_edge, int);
     n_edge_elt_tot[0] = n_edge_face_tot;
     n_edge_elt_tot[1] = n_edge_elt_ridge_tot;
 
-    PDM_g_num_t **delmt_edge;
-    PDM_malloc(delmt_edge, n_part_edge ,PDM_g_num_t *);
-    int **dparent_face_pos;
-    PDM_malloc(dparent_face_pos, n_part_edge ,int         *);
-    int **delmt_edge_vtx_idx;
-    PDM_malloc(delmt_edge_vtx_idx, n_part_edge ,int         *);
-    PDM_g_num_t **delmt_edge_vtx;
-    PDM_malloc(delmt_edge_vtx, n_part_edge ,PDM_g_num_t *);
+    PDM_g_num_t **delmt_edge         = NULL;
+    int         **dparent_face_pos   = NULL;
+    int         **delmt_edge_vtx_idx = NULL;
+    PDM_g_num_t **delmt_edge_vtx     = NULL;
+    PDM_malloc(delmt_edge        , n_part_edge, PDM_g_num_t *);
+    PDM_malloc(dparent_face_pos  , n_part_edge, int         *);
+    PDM_malloc(delmt_edge_vtx_idx, n_part_edge, int         *);
+    PDM_malloc(delmt_edge_vtx    , n_part_edge, PDM_g_num_t *);
 
     delmt_edge        [0] = dface_edge;
     dparent_face_pos  [0] = dparent_dface_edge_pos;
@@ -1465,16 +1467,16 @@ _generate_faces_from_dmesh_nodal
       n_g_child_ridge       = dmesh_nodal->ridge->section_distribution[n_section_child_ridge];
 
       if(dmesh_nodal->ridge->dparent_idx != NULL) {
-       PDM_free(dmesh_nodal->ridge->dparent_idx);
+        PDM_free(dmesh_nodal->ridge->dparent_idx);
       }
       if(dmesh_nodal->ridge->dparent_gnum != NULL) {
-       PDM_free(dmesh_nodal->ridge->dparent_gnum);
+        PDM_free(dmesh_nodal->ridge->dparent_gnum);
       }
       if(dmesh_nodal->ridge->dparent_sign != NULL) {
-       PDM_free(dmesh_nodal->ridge->dparent_sign);
+        PDM_free(dmesh_nodal->ridge->dparent_sign);
       }
       if(dmesh_nodal->ridge->delmt_child_distrib != NULL) {
-       PDM_free(dmesh_nodal->ridge->delmt_child_distrib);
+        PDM_free(dmesh_nodal->ridge->delmt_child_distrib);
       }
 
       PDM_generate_entitiy_connectivity(dmesh_nodal->comm,
@@ -1529,16 +1531,16 @@ _generate_faces_from_dmesh_nodal
                                         &link->dmissing_ridge_parent_g_num);
       dm->n_g_edge = dm->edge_distrib[dmesh_nodal->n_rank];
 
-     PDM_free(dparent_idx);
-     PDM_free(dparent_gnum);
-     PDM_free(dparent_sign);
-     PDM_free(delmt_child_distrib);
+      PDM_free(dparent_idx);
+      PDM_free(dparent_gnum);
+      PDM_free(dparent_sign);
+      PDM_free(delmt_child_distrib);
     }
-   PDM_free(n_edge_elt_tot    );
-   PDM_free(delmt_edge        );
-   PDM_free(dparent_face_pos  );
-   PDM_free(delmt_edge_vtx_idx);
-   PDM_free(delmt_edge_vtx    );
+    PDM_free(n_edge_elt_tot    );
+    PDM_free(delmt_edge        );
+    PDM_free(dparent_face_pos  );
+    PDM_free(delmt_edge_vtx_idx);
+    PDM_free(delmt_edge_vtx    );
 
     dm->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX ] = PDM_TRUE;
     dm->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_FACE] = PDM_TRUE;
@@ -1602,14 +1604,14 @@ _generate_edges_from_dmesh_nodal
   /*
    * Decompose surface
    */
-  PDM_g_num_t *delmt_surf_edge;
-  PDM_malloc(delmt_surf_edge,  n_edge_elt_surf_tot     ,PDM_g_num_t);
-  int *dparent_elmt_surf_pos;
-  PDM_malloc(dparent_elmt_surf_pos,  n_edge_elt_surf_tot     ,int        );
-  int *delmt_surf_edge_vtx_idx;
-  PDM_malloc(delmt_surf_edge_vtx_idx, (n_edge_elt_surf_tot +1) ,int        );
-  PDM_g_num_t *delmt_surf_edge_vtx;
-  PDM_malloc(delmt_surf_edge_vtx,  n_sum_vtx_surf_edge_tot ,PDM_g_num_t);
+  PDM_g_num_t *delmt_surf_edge         = NULL;
+  int         *dparent_elmt_surf_pos   = NULL;
+  int         *delmt_surf_edge_vtx_idx = NULL;
+  PDM_g_num_t *delmt_surf_edge_vtx     = NULL;
+  PDM_malloc(delmt_surf_edge        , n_edge_elt_surf_tot    , PDM_g_num_t);
+  PDM_malloc(dparent_elmt_surf_pos  , n_edge_elt_surf_tot    , int        );
+  PDM_malloc(delmt_surf_edge_vtx_idx, n_edge_elt_surf_tot +1 , int        );
+  PDM_malloc(delmt_surf_edge_vtx    , n_sum_vtx_surf_edge_tot, PDM_g_num_t);
 
 
   delmt_surf_edge_vtx_idx[0] = 0;
@@ -1627,14 +1629,14 @@ _generate_edges_from_dmesh_nodal
   /*
    * Decompose ridge
    */
-  PDM_g_num_t *delmt_ridge_edge;
-  PDM_malloc(delmt_ridge_edge,  n_edge_elt_ridge_tot     ,PDM_g_num_t);
-  int *dparent_elmt_ridge_pos;
-  PDM_malloc(dparent_elmt_ridge_pos,  n_edge_elt_ridge_tot     ,int        );
-  int *delmt_ridge_edge_vtx_idx;
-  PDM_malloc(delmt_ridge_edge_vtx_idx, (n_edge_elt_ridge_tot +1) ,int        );
-  PDM_g_num_t *delmt_ridge_edge_vtx;
-  PDM_malloc(delmt_ridge_edge_vtx,  n_sum_vtx_ridge_edge_tot ,PDM_g_num_t);
+  PDM_g_num_t *delmt_ridge_edge         = NULL;
+  int         *dparent_elmt_ridge_pos   = NULL;
+  int         *delmt_ridge_edge_vtx_idx = NULL;
+  PDM_g_num_t *delmt_ridge_edge_vtx     = NULL;
+  PDM_malloc(delmt_ridge_edge        ,  n_edge_elt_ridge_tot    , PDM_g_num_t);
+  PDM_malloc(dparent_elmt_ridge_pos  ,  n_edge_elt_ridge_tot    , int        );
+  PDM_malloc(delmt_ridge_edge_vtx_idx,  n_edge_elt_ridge_tot +1 , int        );
+  PDM_malloc(delmt_ridge_edge_vtx    ,  n_sum_vtx_ridge_edge_tot, PDM_g_num_t);
 
   delmt_ridge_edge_vtx_idx[0] = 0;
   PDM_sections_decompose_edges(dmesh_nodal->ridge,
@@ -1668,18 +1670,18 @@ _generate_edges_from_dmesh_nodal
    */
   int n_part = 2;
   int *n_edge_elt_tot;
-  PDM_malloc(n_edge_elt_tot, n_part ,int);
+  PDM_malloc(n_edge_elt_tot, n_part, int);
   n_edge_elt_tot[0] = n_edge_elt_surf_tot;
   n_edge_elt_tot[1] = n_edge_elt_ridge_tot;
 
-  PDM_g_num_t **delmt_edge;
-  PDM_malloc(delmt_edge, n_part ,PDM_g_num_t *);
-  int **dparent_elmt_pos;
-  PDM_malloc(dparent_elmt_pos, n_part ,int         *);
-  int **delmt_edge_vtx_idx;
-  PDM_malloc(delmt_edge_vtx_idx, n_part ,int         *);
-  PDM_g_num_t **delmt_edge_vtx;
-  PDM_malloc(delmt_edge_vtx, n_part ,PDM_g_num_t *);
+  PDM_g_num_t **delmt_edge         = NULL;
+  int         **dparent_elmt_pos   = NULL;
+  int         **delmt_edge_vtx_idx = NULL;
+  PDM_g_num_t **delmt_edge_vtx     = NULL;
+  PDM_malloc(delmt_edge        , n_part, PDM_g_num_t *);
+  PDM_malloc(dparent_elmt_pos  , n_part, int         *);
+  PDM_malloc(delmt_edge_vtx_idx, n_part, int         *);
+  PDM_malloc(delmt_edge_vtx    , n_part, PDM_g_num_t *);
 
   delmt_edge        [0] = delmt_surf_edge        ;
   dparent_elmt_pos  [0] = dparent_elmt_surf_pos  ;
@@ -1693,16 +1695,16 @@ _generate_edges_from_dmesh_nodal
 
 
   if(dmesh_nodal->ridge->dparent_idx != NULL) {
-   PDM_free(dmesh_nodal->ridge->dparent_idx);
+    PDM_free(dmesh_nodal->ridge->dparent_idx);
   }
   if(dmesh_nodal->ridge->dparent_gnum != NULL) {
-   PDM_free(dmesh_nodal->ridge->dparent_gnum);
+    PDM_free(dmesh_nodal->ridge->dparent_gnum);
   }
   if(dmesh_nodal->ridge->dparent_sign != NULL) {
-   PDM_free(dmesh_nodal->ridge->dparent_sign);
+    PDM_free(dmesh_nodal->ridge->dparent_sign);
   }
   if(dmesh_nodal->ridge->delmt_child_distrib != NULL) {
-   PDM_free(dmesh_nodal->ridge->delmt_child_distrib);
+    PDM_free(dmesh_nodal->ridge->delmt_child_distrib);
   }
 
   /* Memory is deallocated inside */
@@ -1740,11 +1742,11 @@ _generate_edges_from_dmesh_nodal
   //                                  dmesh_nodal->ridge->dparent_gnum,
   //                                  dn_ridge,
   //                                  "dmesh_nodal->ridge->dparent_gnum :");
- PDM_free(n_edge_elt_tot    );
- PDM_free(delmt_edge        );
- PDM_free(dparent_elmt_pos  );
- PDM_free(delmt_edge_vtx_idx);
- PDM_free(delmt_edge_vtx    );
+  PDM_free(n_edge_elt_tot    );
+  PDM_free(delmt_edge        );
+  PDM_free(dparent_elmt_pos  );
+  PDM_free(delmt_edge_vtx_idx);
+  PDM_free(delmt_edge_vtx    );
 
   PDM_g_num_t *_dedge_vtx          = dm->dconnectivity    [PDM_CONNECTIVITY_TYPE_EDGE_VTX];
   int         *_dedge_vtx_idx      = dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_VTX];
@@ -1765,10 +1767,10 @@ _generate_edges_from_dmesh_nodal
     //                                  "_dedge_face_tmp :");
 
     /* All children have a parent */
-    PDM_g_num_t *dedge_face;
-    PDM_malloc(dedge_face, 2 * dm->dn_edge ,PDM_g_num_t);
-    int *dflip_edge;
-    PDM_malloc(dflip_edge,     dm->dn_edge ,int        );
+    PDM_g_num_t *dedge_face = NULL;
+    int         *dflip_edge = NULL;
+    PDM_malloc(dedge_face, 2 * dm->dn_edge, PDM_g_num_t);
+    PDM_malloc(dflip_edge,     dm->dn_edge, int        );
     for(int i_edge = 0; i_edge < dm->dn_edge; ++i_edge) {
       dflip_edge[i_edge] = 1;
       int beg = _dedge_face_idx_tmp[i_edge];
@@ -1824,14 +1826,14 @@ _generate_edges_from_dmesh_nodal
       dmesh_nodal->ridge->dparent_sign[i] *= pedge_flip[i];
     }
 
-   PDM_free(pedge_flip);
-   PDM_free(tmp_pedge_flip);
-   PDM_free(dflip_edge);
+    PDM_free(pedge_flip);
+    PDM_free(tmp_pedge_flip);
+    PDM_free(dflip_edge);
     PDM_block_to_part_free(btp);
 
 
-   PDM_free(_dedge_face_tmp);
-   PDM_free(_dedge_face_idx_tmp);
+    PDM_free(_dedge_face_tmp);
+    PDM_free(_dedge_face_idx_tmp);
     _dedge_face_tmp     = NULL;
     _dedge_face_idx_tmp = NULL;
     dm->dconnectivity    [PDM_CONNECTIVITY_TYPE_EDGE_FACE] = dedge_face;
@@ -1866,7 +1868,7 @@ _generate_edges_from_dmesh_nodal
 
   int is_signed = 1;
   assert(dm->face_distrib == NULL);
-  PDM_malloc(dm->face_distrib, (dmesh_nodal->n_rank + 1 ) ,PDM_g_num_t);
+  PDM_malloc(dm->face_distrib, dmesh_nodal->n_rank + 1, PDM_g_num_t);
   dm->face_distrib[0] = -1;
   dm->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] = PDM_TRUE;
   PDM_dconnectivity_transpose(dmesh_nodal->comm,
@@ -1892,8 +1894,8 @@ _generate_edges_from_dmesh_nodal
   }
 
   if (link->distrib_missing_ridge[dmesh_nodal->n_rank] == 0 && post_treat_result == 1) {
-   PDM_free(_dedge_face_tmp);
-   PDM_free(_dedge_face_idx_tmp);
+    PDM_free(_dedge_face_tmp);
+    PDM_free(_dedge_face_idx_tmp);
   }
 }
 
@@ -1918,14 +1920,14 @@ _generate_vtx_from_dmesh_nodal
   /*
    * Decompose ridge
    */
-  PDM_g_num_t *delmt_ridge_edge;
-  PDM_malloc(delmt_ridge_edge,  n_edge_elt_ridge_tot     ,PDM_g_num_t);
-  int *dparent_elmt_ridge_pos;
-  PDM_malloc(dparent_elmt_ridge_pos,  n_edge_elt_ridge_tot     ,int        );
-  int *delmt_ridge_edge_vtx_idx;
-  PDM_malloc(delmt_ridge_edge_vtx_idx, (n_edge_elt_ridge_tot +1) ,int        );
-  PDM_g_num_t *delmt_ridge_edge_vtx;
-  PDM_malloc(delmt_ridge_edge_vtx,  n_sum_vtx_ridge_edge_tot ,PDM_g_num_t);
+  PDM_g_num_t *delmt_ridge_edge         = NULL;
+  int         *dparent_elmt_ridge_pos   = NULL;
+  int         *delmt_ridge_edge_vtx_idx = NULL;
+  PDM_g_num_t *delmt_ridge_edge_vtx     = NULL;
+  PDM_malloc(delmt_ridge_edge        ,  n_edge_elt_ridge_tot    , PDM_g_num_t);
+  PDM_malloc(dparent_elmt_ridge_pos  ,  n_edge_elt_ridge_tot    , int        );
+  PDM_malloc(delmt_ridge_edge_vtx_idx,  n_edge_elt_ridge_tot +1 , int        );
+  PDM_malloc(delmt_ridge_edge_vtx    ,  n_sum_vtx_ridge_edge_tot, PDM_g_num_t);
 
   delmt_ridge_edge_vtx_idx[0] = 0;
   PDM_sections_decompose_edges(dmesh_nodal->ridge,
@@ -1935,9 +1937,9 @@ _generate_vtx_from_dmesh_nodal
                                NULL, NULL,
                                dparent_elmt_ridge_pos);
 
- PDM_free(dparent_elmt_ridge_pos);
- PDM_free(delmt_ridge_edge);
- PDM_free(delmt_ridge_edge_vtx_idx);
+  PDM_free(dparent_elmt_ridge_pos);
+  PDM_free(delmt_ridge_edge);
+  PDM_free(delmt_ridge_edge_vtx_idx);
 
   /*
    *  Create empty dmesh
@@ -1996,7 +1998,7 @@ _translate_element_group_to_entity
 
   int dn_entity = (int) (entity_distrib[i_rank+1] - entity_distrib[i_rank]);
   int *block_stride;
-  PDM_malloc(block_stride,dn_entity,int);
+  PDM_malloc(block_stride, dn_entity, int);
   for (int i = 0; i < dn_entity; i++) {
     block_stride[i] = dchild_elt_parent_idx[i+1] - dchild_elt_parent_idx[i];
   }
@@ -2009,13 +2011,13 @@ _translate_element_group_to_entity
              (void *  )   dchild_elt_parent,
                           &part_stride,
              (void ***)  &part_group_data);
- PDM_free(part_stride[0]);
- PDM_free(part_stride);
- PDM_free(block_stride);
+  PDM_free(part_stride[0]);
+  PDM_free(part_stride);
+  PDM_free(block_stride);
 
   PDM_g_num_t* _part_group_data = part_group_data[0];
 
-  PDM_malloc(*dentity_bound_idx, (n_group_elmt+1) ,int);
+  PDM_malloc(*dentity_bound_idx, n_group_elmt+1, int);
   int* _dentity_bound_idx = *dentity_bound_idx;
 
   for(int i_group = 0; i_group < n_group_elmt+1; ++i_group) {
@@ -2023,7 +2025,7 @@ _translate_element_group_to_entity
   }
 
   *dentity_bound = _part_group_data;
- PDM_free(part_group_data);
+  PDM_free(part_group_data);
 
   if(0 == 1) {
     PDM_log_trace_array_int (_dentity_bound_idx, n_group_elmt+1                  , "_dentity_bound_idx:: ");
@@ -2144,12 +2146,12 @@ _translate_element_group_to_vtx
                 (void ***) &tmp_dcorner_elt);
 
     PDM_g_num_t *dcorner_elt = tmp_dcorner_elt[0];
-   PDM_free(tmp_dcorner_elt);
+    PDM_free(tmp_dcorner_elt);
 
     PDM_block_to_part_free(btp);
 
     int *dcorner_elt_idx;
-    PDM_malloc(dcorner_elt_idx,(dmesh_nodal->corner->n_group_elmt+1),int);
+    PDM_malloc(dcorner_elt_idx, dmesh_nodal->corner->n_group_elmt+1, int);
     memcpy(dcorner_elt_idx,
            dmesh_nodal->corner->dgroup_elmt_idx,
            sizeof(int) * (dmesh_nodal->corner->n_group_elmt+1));
@@ -2190,13 +2192,13 @@ _set_mesh_dimension_groups
 
   if (elmt->n_group_elmt > 0) {
     int *dgroup_elt_idx;
-    PDM_malloc(dgroup_elt_idx,(elmt->n_group_elmt+1),int);
+    PDM_malloc(dgroup_elt_idx, elmt->n_group_elmt+1, int);
     memcpy(dgroup_elt_idx,
            elmt->dgroup_elmt_idx,
            sizeof(int) * (elmt->n_group_elmt+1));
 
     PDM_g_num_t *dgroup_elt;
-    PDM_malloc(dgroup_elt,dgroup_elt_idx[elmt->n_group_elmt],PDM_g_num_t);
+    PDM_malloc(dgroup_elt, dgroup_elt_idx[elmt->n_group_elmt], PDM_g_num_t);
     memcpy(dgroup_elt,
            elmt->dgroup_elmt,
            sizeof(PDM_g_num_t) * dgroup_elt_idx[elmt->n_group_elmt]);
@@ -2217,7 +2219,7 @@ _link_dmesh_nodal_to_dmesh_init
 )
 {
   _pdm_link_dmesh_nodal_to_dmesh_t *link;
-  PDM_malloc(link,1,_pdm_link_dmesh_nodal_to_dmesh_t);
+  PDM_malloc(link, 1, _pdm_link_dmesh_nodal_to_dmesh_t);
 
   link->dmesh_nodal       = NULL;
   link->dmesh             = NULL;
@@ -2269,71 +2271,71 @@ _link_dmesh_nodal_to_dmesh_free
   }
 
   if(link->elmt_distrib != NULL) {
-   PDM_free(link->elmt_distrib);
+    PDM_free(link->elmt_distrib);
     link->elmt_distrib = NULL;
   }
 
   if(link->_delmt_face != NULL) {
-   PDM_free(link->_delmt_face);
+    PDM_free(link->_delmt_face);
     link->_delmt_face = NULL;
   }
 
   if(link->_delmt_face_idx != NULL) {
-   PDM_free(link->_delmt_face_idx);
+    PDM_free(link->_delmt_face_idx);
     link->_delmt_face_idx = NULL;
   }
 
   if(link->_dface_elmt != NULL) {
-   PDM_free(link->_dface_elmt);
+    PDM_free(link->_dface_elmt);
     link->_dface_elmt = NULL;
   }
 
   if(link->_dface_elmt_idx != NULL) {
-   PDM_free(link->_dface_elmt_idx);
+    PDM_free(link->_dface_elmt_idx);
     link->_dface_elmt_idx = NULL;
   }
 
   if(link->_dface_parent_element_position != NULL) {
-   PDM_free(link->_dface_parent_element_position);
+    PDM_free(link->_dface_parent_element_position);
     link->_dface_parent_element_position = NULL;
   }
 
   if(link->_dedge_elmt != NULL) {
-   PDM_free(link->_dedge_elmt);
+    PDM_free(link->_dedge_elmt);
     link->_dedge_elmt = NULL;
   }
 
   if(link->_dedge_elmt_idx != NULL) {
-   PDM_free(link->_dedge_elmt_idx);
+    PDM_free(link->_dedge_elmt_idx);
     link->_dedge_elmt_idx = NULL;
   }
 
   if(link->_dedge_parent_element_position != NULL) {
-   PDM_free(link->_dedge_parent_element_position);
+    PDM_free(link->_dedge_parent_element_position);
     link->_dedge_parent_element_position = NULL;
   }
 
   if (link->distrib_missing_ridge != NULL) {
-   PDM_free(link->distrib_missing_ridge);
+    PDM_free(link->distrib_missing_ridge);
     link->distrib_missing_ridge = NULL;
   }
 
   if (link->dmissing_ridge_parent_g_num != NULL) {
-   PDM_free(link->dmissing_ridge_parent_g_num);
+    PDM_free(link->dmissing_ridge_parent_g_num);
     link->dmissing_ridge_parent_g_num = NULL;
   }
 
   if (link->distrib_missing_surface != NULL) {
-   PDM_free(link->distrib_missing_surface);
+    PDM_free(link->distrib_missing_surface);
     link->distrib_missing_surface = NULL;
   }
 
   if (link->dmissing_surface_parent_g_num != NULL) {
-   PDM_free(link->dmissing_surface_parent_g_num);
+    PDM_free(link->dmissing_surface_parent_g_num);
     link->dmissing_surface_parent_g_num = NULL;
   }
 
- PDM_free(link);
+  PDM_free(link);
 
 }
 
@@ -2350,13 +2352,13 @@ const PDM_ownership_t owner
 )
 {
   PDM_dmesh_nodal_to_dmesh_t *dmesh_nodal_to_dm;
-  PDM_malloc(dmesh_nodal_to_dm,1,PDM_dmesh_nodal_to_dmesh_t);
+  PDM_malloc(dmesh_nodal_to_dm, 1, PDM_dmesh_nodal_to_dmesh_t);
 
   dmesh_nodal_to_dm->comm              = comm;
   dmesh_nodal_to_dm->owner             = owner;
   dmesh_nodal_to_dm->results_is_getted = PDM_FALSE;
   dmesh_nodal_to_dm->n_mesh            = n_mesh;
-  PDM_malloc(dmesh_nodal_to_dm->link, n_mesh ,_pdm_link_dmesh_nodal_to_dmesh_t*);
+  PDM_malloc(dmesh_nodal_to_dm->link, n_mesh, _pdm_link_dmesh_nodal_to_dmesh_t*);
   for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
     dmesh_nodal_to_dm->link[i_mesh] = _link_dmesh_nodal_to_dmesh_init(owner);
   }
@@ -2425,9 +2427,9 @@ PDM_dmesh_nodal_to_dmesh_free
     }
   }
 
- PDM_free(dmesh_nodal_to_dm->link);
+  PDM_free(dmesh_nodal_to_dm->link);
 
- PDM_free(dmesh_nodal_to_dm);
+  PDM_free(dmesh_nodal_to_dm);
 
 }
 
@@ -2534,7 +2536,7 @@ PDM_g_num_t  **dentity_elmt
    * We are now all information flatten - we only need to compute hash_keys for each entitys
    */
   PDM_g_num_t *ln_to_gn;
-  PDM_malloc(ln_to_gn, n_entity_elt_tot ,PDM_g_num_t);
+  PDM_malloc(ln_to_gn, n_entity_elt_tot, PDM_g_num_t);
   PDM_g_num_t key_mod = 4 * n_vtx_abs;
 
   // Option des clés
@@ -2554,15 +2556,15 @@ PDM_g_num_t  **dentity_elmt
   /*
    * Prepare exchange by computing stride
    */
-  int *delmt_entity_vtx_n;
-  PDM_malloc(delmt_entity_vtx_n, n_entity_elt_tot ,int        );
-  int *stride_one;
-  PDM_malloc(stride_one, n_entity_elt_tot ,int        );
+  int *delmt_entity_vtx_n = NULL;
+  int *stride_one         = NULL;
+  PDM_malloc(delmt_entity_vtx_n, n_entity_elt_tot, int        );
+  PDM_malloc(stride_one        , n_entity_elt_tot, int        );
   for(int i_entity = 0; i_entity < n_entity_elt_tot; ++i_entity) {
     delmt_entity_vtx_n[i_entity] = delmt_entity_vtx_idx[i_entity+1] - delmt_entity_vtx_idx[i_entity];
     stride_one[i_entity]       = 1;
   }
- PDM_free(delmt_entity_vtx_idx);
+  PDM_free(delmt_entity_vtx_idx);
 
   // PDM_log_trace_array_int(delmt_entity_vtx_n  , n_entity_elt_tot , "delmt_entity_vtx_n:: ");
 
@@ -2572,8 +2574,8 @@ PDM_g_num_t  **dentity_elmt
   /*
    * Setup part_to_block to filter all keys
    */
-  double *weight;
-  PDM_malloc(weight, n_entity_elt_tot ,double);
+  double *weight = NULL;
+  PDM_malloc(weight, n_entity_elt_tot, double);
   for(int i = 0; i < n_entity_elt_tot; ++i) {
     weight[i] = 1.;
   }
@@ -2586,7 +2588,7 @@ PDM_g_num_t  **dentity_elmt
                                                       &n_entity_elt_tot,
                                                       1,
                                                       comm);
- PDM_free(weight);
+  PDM_free(weight);
   /*
    * Exchange data
    */
@@ -2612,7 +2614,7 @@ PDM_g_num_t  **dentity_elmt
                                                   (void **) &delmt_entity_vtx_n,
                                                             &blk_n_entity_per_key,
                                                   (void **) &blk_entity_vtx_n);
- PDM_free(delmt_entity_vtx_n);
+  PDM_free(delmt_entity_vtx_n);
 
   int*         blk_elmt_entity_elmt_stri = NULL;
   PDM_g_num_t* blk_elmt_entity_elmt      = NULL;
@@ -2641,15 +2643,15 @@ PDM_g_num_t  **dentity_elmt
   }
 
   PDM_part_to_block_free(ptb);
- PDM_free(stride_one);
- PDM_free(blk_elmt_entity_elmt_stri); // Same as blk_n_entity_per_key
- PDM_free(blk_tot_entity_vtx_n);
+  PDM_free(stride_one);
+  PDM_free(blk_elmt_entity_elmt_stri); // Same as blk_n_entity_per_key
+  PDM_free(blk_tot_entity_vtx_n);
 
   /*
    * Get the max number of vertex of entitys
    */
-  int *blk_entity_vtx_idx;
-  PDM_malloc(blk_entity_vtx_idx, (blk_entity_vtx_n_size+1) ,int        );
+  int *blk_entity_vtx_idx = NULL;
+  PDM_malloc(blk_entity_vtx_idx, blk_entity_vtx_n_size+1, int);
   int n_max_entity_per_key = 0;
   int n_tot_entity_per_key = 0;
   for(int i_entity = 0; i_entity < blk_size; ++i_entity) {
@@ -2674,28 +2676,28 @@ PDM_g_num_t  **dentity_elmt
    *           - Multiple entitys
    *           - Same entity, we remove and replace by the first
    */
-  PDM_g_num_t *loc_entity_vtx_1;
-  PDM_malloc(loc_entity_vtx_1,  n_max_vtx               ,PDM_g_num_t);
-  PDM_g_num_t *loc_entity_vtx_2;
-  PDM_malloc(loc_entity_vtx_2,  n_max_vtx               ,PDM_g_num_t);
-  int *already_treat;
-  PDM_malloc(already_treat,  n_max_entity_per_key    ,int        );
-  int *same_entity_idx;
-  PDM_malloc(same_entity_idx, (n_max_entity_per_key+1) ,int        );
-  int *sens_entity;
-  PDM_malloc(sens_entity,  n_max_entity_per_key    ,int        );
-  PDM_g_num_t *tmp_parent;
-  PDM_malloc(tmp_parent,n_max_entity_per_key      ,PDM_g_num_t);
-  int *order;
-  PDM_malloc(order,n_max_entity_per_key      ,int        );
+  PDM_g_num_t *loc_entity_vtx_1 = NULL;
+  PDM_g_num_t *loc_entity_vtx_2 = NULL;
+  int         *already_treat    = NULL;
+  int         *same_entity_idx  = NULL;
+  int         *sens_entity      = NULL;
+  PDM_g_num_t *tmp_parent       = NULL;
+  int         *order            = NULL;
+  PDM_malloc(loc_entity_vtx_1, n_max_vtx             , PDM_g_num_t);
+  PDM_malloc(loc_entity_vtx_2, n_max_vtx             , PDM_g_num_t);
+  PDM_malloc(already_treat   , n_max_entity_per_key  , int        );
+  PDM_malloc(same_entity_idx , n_max_entity_per_key+1, int        );
+  PDM_malloc(sens_entity     , n_max_entity_per_key  , int        );
+  PDM_malloc(tmp_parent      , n_max_entity_per_key  , PDM_g_num_t);
+  PDM_malloc(order           , n_max_entity_per_key  , int        );
 
   /*
    * Allocate Memory - entity_vtx - entity_elmt
    */
-  PDM_malloc(*dentity_vtx,blk_tot_entity_vtx_size  ,PDM_g_num_t);
-  PDM_malloc(*dentity_vtx_idx,(blk_entity_vtx_n_size+1 ),int        );
-  PDM_malloc(*dentity_elmt,n_tot_entity_per_key ,PDM_g_num_t);
-  PDM_malloc(*dentity_elmt_idx,(blk_entity_elmt_size+1)  ,int);
+  PDM_malloc(*dentity_vtx     , blk_tot_entity_vtx_size, PDM_g_num_t);
+  PDM_malloc(*dentity_vtx_idx , blk_entity_vtx_n_size+1, int        );
+  PDM_malloc(*dentity_elmt    , n_tot_entity_per_key   , PDM_g_num_t);
+  PDM_malloc(*dentity_elmt_idx, blk_entity_elmt_size+1 , int        );
 
   PDM_g_num_t *_dentity_vtx      = *dentity_vtx;
   int         *_dentity_vtx_idx  = *dentity_vtx_idx;
@@ -2889,21 +2891,21 @@ PDM_g_num_t  **dentity_elmt
   /*
    * Free all unused structure
    */
- PDM_free(loc_entity_vtx_1);
- PDM_free(loc_entity_vtx_2);
- PDM_free(blk_entity_vtx_idx);
- PDM_free(already_treat);
- PDM_free(same_entity_idx);
- PDM_free(sens_entity);
- PDM_free(delmt_entity);
- PDM_free(delmt_entity_vtx);
- PDM_free(ln_to_gn);
- PDM_free(blk_tot_entity_vtx);
- PDM_free(blk_n_entity_per_key);
- PDM_free(blk_entity_vtx_n);
- PDM_free(blk_elmt_entity_elmt);
- PDM_free(tmp_parent);
- PDM_free(order);
+  PDM_free(loc_entity_vtx_1);
+  PDM_free(loc_entity_vtx_2);
+  PDM_free(blk_entity_vtx_idx);
+  PDM_free(already_treat);
+  PDM_free(same_entity_idx);
+  PDM_free(sens_entity);
+  PDM_free(delmt_entity);
+  PDM_free(delmt_entity_vtx);
+  PDM_free(ln_to_gn);
+  PDM_free(blk_tot_entity_vtx);
+  PDM_free(blk_n_entity_per_key);
+  PDM_free(blk_entity_vtx_n);
+  PDM_free(blk_elmt_entity_elmt);
+  PDM_free(tmp_parent);
+  PDM_free(order);
 
   if( 0 == 1 ){
     printf("i_abs_entity::%i \n", i_abs_entity+1);

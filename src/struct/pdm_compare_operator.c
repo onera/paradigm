@@ -73,10 +73,10 @@ const void* b,
   char* arr_i = (char *) &us->arr[us->idx[i]*sizeof(char)];
   char* arr_j = (char *) &us->arr[us->idx[j]*sizeof(char)];
 
-  char *carr_i;
-  PDM_malloc(carr_i,(ni+1),char);
-  char *carr_j;
-  PDM_malloc(carr_j,(nj+1),char);
+  char *carr_i = NULL;
+  char *carr_j = NULL;
+  PDM_malloc(carr_i, ni + 1, char);
+  PDM_malloc(carr_j, nj + 1, char);
   for(int k = 0; k < ni; ++k){
     carr_i[k] = (char)arr_i[k];
   }
@@ -86,8 +86,8 @@ const void* b,
   carr_i[ni] = '\0';
   carr_j[nj] = '\0';
   int i_comp = strcmp(carr_i, carr_j);
- PDM_free(carr_i);
- PDM_free(carr_j);
+  PDM_free(carr_i);
+  PDM_free(carr_j);
   if(i_comp >= 0){
     return 0;
   } else {
@@ -142,9 +142,9 @@ const void* b,
       int* arr_j = (int *) &us->arr[us->idx[j]*sizeof(int)];
 
       /* Dans notre cas on veut sort les entiers avant de les comparers */
-      int *sort_arr_i;
+      int *sort_arr_i = NULL;
+      int *sort_arr_j = NULL;
       PDM_malloc(sort_arr_i, ni ,int);
-      int *sort_arr_j;
       PDM_malloc(sort_arr_j, ni ,int);
 
       for(int k = 0; k < ni; ++k){
@@ -163,17 +163,17 @@ const void* b,
 
       for(int k = 0; k < ni; ++k){
         if(sort_arr_i[k] < sort_arr_j[k]) {
-         PDM_free(sort_arr_i);
-         PDM_free(sort_arr_j);
+          PDM_free(sort_arr_i);
+          PDM_free(sort_arr_j);
           return 1;
         } else if( sort_arr_i[k] > sort_arr_j[k] ) {
-         PDM_free(sort_arr_i);
-         PDM_free(sort_arr_j);
+          PDM_free(sort_arr_i);
+          PDM_free(sort_arr_j);
           return 0;
         }
       }
-     PDM_free(sort_arr_i);
-     PDM_free(sort_arr_j);
+      PDM_free(sort_arr_i);
+      PDM_free(sort_arr_j);
     } else {
       return ni < nj;
     }

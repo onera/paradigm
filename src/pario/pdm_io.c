@@ -47,9 +47,6 @@ extern "C" {
  * Definition des macros locales
  *============================================================================*/
 
-#define PDM_IO_MAX(a,b) ((a) > (b) ? (a) : (b))
-#define PDM_IO_MIN(a,b) ((a) < (b) ? (a) : (b))
-
 /*============================================================================
  * Definition des types locaux
  *============================================================================*/
@@ -188,7 +185,7 @@ PDM_io_file_t  *fichier
                                     pour les acces paralleles */
       fichier->n_rangs_inactifs = 0;
 
-      PDM_malloc(fichier->rangs_actifs,fichier->n_rangs_actifs,int);
+      PDM_malloc(fichier->rangs_actifs, fichier->n_rangs_actifs, int);
       fichier->rangs_inactifs = NULL;
       fichier->rangs_actifs[0] = 0;
     }
@@ -223,7 +220,7 @@ PDM_io_file_t  *fichier
           fichier->rang_actif = 1;
       }
 
-      PDM_malloc(fichier->tag_rangs_actifs,fichier->n_rangs,int);
+      PDM_malloc(fichier->tag_rangs_actifs, fichier->n_rangs, int);
 
       PDM_MPI_Allgather((void *) &fichier->rang_actif, 1, PDM_MPI_INT,
 		    (void *) fichier->tag_rangs_actifs, 1, PDM_MPI_INT,
@@ -240,9 +237,9 @@ PDM_io_file_t  *fichier
 
       if ((tout_rang_actif == 0) && (fichier->prop_noeuds_actifs < 1.)) {
         int n_rang_actif_pondere =  (int) (fichier->n_rangs_actifs * fichier->prop_noeuds_actifs);
-        n_rang_actif_pondere = PDM_IO_MAX(n_rang_actif_pondere, 1);
+        n_rang_actif_pondere = PDM_MAX(n_rang_actif_pondere, 1);
         int pas = fichier->n_rangs_actifs / n_rang_actif_pondere;
-        pas = PDM_IO_MAX(pas, 1);
+        pas = PDM_MAX(pas, 1);
 
         int cpt = 0;
         fichier->n_rangs_actifs = 0;
@@ -269,9 +266,9 @@ PDM_io_file_t  *fichier
 
       /* Determination des rangs actifs */
 
-      PDM_malloc(fichier->rangs_actifs,fichier->n_rangs_actifs,int);
+      PDM_malloc(fichier->rangs_actifs, fichier->n_rangs_actifs, int);
       fichier->n_rangs_inactifs = fichier->n_rangs - fichier->n_rangs_actifs;
-      PDM_malloc(fichier->rangs_inactifs,fichier->n_rangs_inactifs,int);
+      PDM_malloc(fichier->rangs_inactifs, fichier->n_rangs_inactifs, int);
 
       fichier->n_rangs_actifs = 0;
       fichier->n_rangs_inactifs = 0;
@@ -440,12 +437,12 @@ static void _calcul_parametres_distribution_bloc
 
   int irang_max = irang;
 
-  PDM_g_num_t _n_donnees_a_envoyer_proc = PDM_IO_MIN(n_donnees_traitees_rangs[irang_min + 1] + 1 - n_absolue_min, n_donnees);
+  PDM_g_num_t _n_donnees_a_envoyer_proc = PDM_MIN(n_donnees_traitees_rangs[irang_min + 1] + 1 - n_absolue_min, n_donnees);
   n_donnees_a_envoyer[irang_min] = (int) _n_donnees_a_envoyer_proc;
 
   int n_donnees_non_traitees = n_donnees - n_donnees_a_envoyer[irang_min];
   for (int i = irang_min + 1; i < irang_max + 1; i++) {
-    _n_donnees_a_envoyer_proc = PDM_IO_MIN(n_donnees_traitees_rangs[i + 1] - n_donnees_traitees_rangs[i],
+    _n_donnees_a_envoyer_proc = PDM_MIN(n_donnees_traitees_rangs[i + 1] - n_donnees_traitees_rangs[i],
                    n_donnees_non_traitees);
 
     n_donnees_a_envoyer[i] = (int) _n_donnees_a_envoyer_proc;
@@ -470,7 +467,7 @@ static void _calcul_parametres_distribution_bloc
 
     irang_max = irang;
 
-    PDM_g_num_t _n_donnees_a_recevoir = PDM_IO_MIN(n_absolue_bloc_rangs[irang_min+1] - n_absolue_min,
+    PDM_g_num_t _n_donnees_a_recevoir = PDM_MIN(n_absolue_bloc_rangs[irang_min+1] - n_absolue_min,
                    n_absolue_bloc_rangs[irang_min+1] -
                    n_absolue_bloc_rangs[irang_min]);
 
@@ -482,7 +479,7 @@ static void _calcul_parametres_distribution_bloc
      n_donnees_non_traitees = (int) _n_donnees_non_traitees;
 
     for (int i = irang_min + 1; i < irang_max + 1; i++) {
-      _n_donnees_a_recevoir = PDM_IO_MIN(n_absolue_bloc_rangs[i + 1] - n_absolue_bloc_rangs[i],
+      _n_donnees_a_recevoir = PDM_MIN(n_absolue_bloc_rangs[i + 1] - n_absolue_bloc_rangs[i],
                      n_donnees_non_traitees);
       n_donnees_a_recevoir[i] = (int) _n_donnees_a_recevoir;
       n_donnees_non_traitees += - n_donnees_a_recevoir[i];
@@ -490,7 +487,7 @@ static void _calcul_parametres_distribution_bloc
 
   }
 
- PDM_free(n_absolue_bloc_rangs);
+  PDM_free(n_absolue_bloc_rangs);
 
   /* Calcul des index  */
 
@@ -554,7 +551,7 @@ static void _calcul_parametres_distribution_bloc
         n_donnees_a_recevoir[i-1];
     }
 
-   PDM_free(n_composantes_recues);
+    PDM_free(n_composantes_recues);
 
   }
 
@@ -631,7 +628,7 @@ void PDM_io_open
   *ierr = 0;
 
   /* Initialisation de la structure PDM_io_file_t */
-  PDM_malloc(*unite,1,PDM_io_file_t);
+  PDM_malloc(*unite, 1, PDM_io_file_t);
   PDM_io_file_t *nouveau_fichier = *unite;
 
   /* Initialisation des timer */
@@ -708,8 +705,8 @@ void PDM_io_open
     FILE *testf2 = fopen (nouveau_fichier->nom, "r");
     if (testf2 == NULL) {
       *ierr = 1;
-     PDM_free(nouveau_fichier->nom);
-     PDM_free(nouveau_fichier);
+      PDM_free(nouveau_fichier->nom);
+      PDM_free(nouveau_fichier);
       return;
     }
     else {
@@ -770,7 +767,7 @@ void PDM_io_open
         nouveau_fichier->backup = PDM_IO_BACKUP_ON;
         fclose(testf);
         char *fichier_backup;
-        PDM_malloc(fichier_backup,(strlen(nouveau_fichier->nom) + 2),char); /* caratère ~ + \0 */
+        PDM_malloc(fichier_backup, (strlen(nouveau_fichier->nom) + 2), char); /* caratère ~ + \0 */
         strcpy(fichier_backup, nouveau_fichier->nom);
         strcat(fichier_backup, "~");
 
@@ -792,7 +789,7 @@ void PDM_io_open
         else {
           PDM_printf("PDM_io_open : backup du fichier %s avant reecriture\n", nouveau_fichier->nom);
         }
-       PDM_free(fichier_backup);
+        PDM_free(fichier_backup);
       }
     }
   }
@@ -1105,7 +1102,7 @@ void PDM_io_global_write
       unsigned char* _donnees = (unsigned char*) donnees;
       const PDM_g_num_t l_string_donnee = n_donnees * fichier->n_char_fmt + 2;
       char *string_donnee;
-      PDM_malloc(string_donnee,l_string_donnee,char);
+      PDM_malloc(string_donnee, l_string_donnee, char);
 
       for (PDM_g_num_t i = 0; i < l_string_donnee; i++) {
         string_donnee[i] = '\0';
@@ -1192,7 +1189,7 @@ void PDM_io_global_write
         }
       }
 
-     PDM_free(string_donnee);
+      PDM_free(string_donnee);
     }
 
     else {
@@ -1203,7 +1200,7 @@ void PDM_io_global_write
 
           PDM_timer_resume(timer_swap_endian);
 
-          PDM_malloc(_donnees,taille_donnee * n_donnees,unsigned char);
+          PDM_malloc(_donnees, taille_donnee * n_donnees, unsigned char);
 
           PDM_io_swap_endian(taille_donnee,
                              n_donnees,
@@ -1220,7 +1217,7 @@ void PDM_io_global_write
                                                                 (void *) _donnees);
 
         if (_donnees != donnees) {
-         PDM_free(_donnees);
+          PDM_free(_donnees);
         }
 
       	/* Traitement de l'erreur de lecture */
@@ -1259,7 +1256,7 @@ void PDM_io_global_write
 
             PDM_timer_resume(timer_swap_endian);
 
-            PDM_malloc(_donnees,taille_donnee * n_donnees_shortint,unsigned char);
+            PDM_malloc(_donnees, taille_donnee * n_donnees_shortint, unsigned char);
 
             PDM_io_swap_endian(taille_donnee,
                                n_donnees_shortint,
@@ -1276,7 +1273,7 @@ void PDM_io_global_write
                                                             (void *) _donnees);
 
           if (_donnees != donnees) {
-           PDM_free(_donnees);
+            PDM_free(_donnees);
           }
 
 	  /* Traitement de l'erreur de lecture */
@@ -1377,7 +1374,7 @@ void PDM_io_par_interlaced_read
       PDM_g_num_t _id_max = 0;
 
       for (int i = 0; i < n_donnees; i++) {
-        _id_max = PDM_IO_MAX(_id_max, indirection[i]);
+        _id_max = PDM_MAX(_id_max, indirection[i]);
       }
 
       if (t_n_composantes == PDM_STRIDE_VAR_INTERLACED) {
@@ -1431,7 +1428,7 @@ void PDM_io_par_interlaced_read
           }
         }
 
-       PDM_free(index);
+        PDM_free(index);
       }
 
       else if (t_n_composantes == PDM_STRIDE_CST_INTERLACED) {
@@ -1442,7 +1439,7 @@ void PDM_io_par_interlaced_read
         }
       }
 
-     PDM_free(buffer);
+      PDM_free(buffer);
 
       PDM_timer_hang_on(timer_distribution);
     }
@@ -1474,7 +1471,7 @@ void PDM_io_par_interlaced_read
       PDM_g_num_t _id_max_max = 0;
 
       for (int i = 0; i < n_donnees; i++) {
-        _id_max = PDM_IO_MAX(_id_max, indirection[i]);
+        _id_max = PDM_MAX(_id_max, indirection[i]);
       }
 
       PDM_MPI_Allreduce(&_id_max,
@@ -1507,10 +1504,10 @@ void PDM_io_par_interlaced_read
 
       /* Pour chaque donnee le proc ou elle va etre envoyee */
 
-      int *donnees_proc;
-      PDM_malloc(donnees_proc,n_donnees,int);
-      int *indirection_locale;
-      PDM_malloc(indirection_locale,n_donnees,int);
+      int *donnees_proc       = NULL;
+      int *indirection_locale = NULL;
+      PDM_malloc(donnees_proc      , n_donnees, int);
+      PDM_malloc(indirection_locale, n_donnees, int);
 
       /* Calcul du nombre de donnees a envoyer a chaque procesus */
 
@@ -1525,7 +1522,7 @@ void PDM_io_par_interlaced_read
       	if (n_donnees_rang_min > 0) {
           PDM_g_num_t _irang_actif = n_absolu / (PDM_g_num_t) n_donnees_rang_min;
           int __irang_actif = (int) _irang_actif;
-          irang_actif = PDM_IO_MIN(__irang_actif,
+          irang_actif = PDM_MIN(__irang_actif,
 			                             fichier->n_rangs_actifs - 1);
 	      }
 
@@ -1544,9 +1541,9 @@ void PDM_io_par_interlaced_read
                    n_donnees_a_recevoir, 1, PDM_MPI_INT,
                    fichier->comm);
 
-      int *i_donnees_a_envoyer;
-      PDM_malloc(i_donnees_a_envoyer, fichier->n_rangs, int);
-      int *i_donnees_a_recevoir;
+      int *i_donnees_a_envoyer  = NULL;
+      int *i_donnees_a_recevoir = NULL;
+      PDM_malloc(i_donnees_a_envoyer , fichier->n_rangs, int);
       PDM_malloc(i_donnees_a_recevoir, fichier->n_rangs, int);
 
       i_donnees_a_envoyer[0] = 0;
@@ -1590,7 +1587,7 @@ void PDM_io_par_interlaced_read
                     PDM__PDM_MPI_G_NUM,
                     fichier->comm);
 
-     PDM_free(num_absolue_envoyee);
+      PDM_free(num_absolue_envoyee);
 
       /*------------------------------------------------------------
        * Determination de la taille du bloc de chaque rang
@@ -1598,7 +1595,7 @@ void PDM_io_par_interlaced_read
        *------------------------------------------------------------ */
 
       int *n_donnees_blocs;
-      PDM_malloc(n_donnees_blocs,fichier->n_rangs,int);
+      PDM_malloc(n_donnees_blocs, fichier->n_rangs, int);
       int  n_donnees_bloc = 0;
       int *n_composantes_recues = NULL;
 
@@ -1633,7 +1630,7 @@ void PDM_io_par_interlaced_read
                       PDM_MPI_INT,
                       fichier->comm);
 
-       PDM_free(n_composantes_envoyee);
+        PDM_free(n_composantes_envoyee);
 
         /* Determination du debut et de la taille du bloc en octet
            en fonction de la taille du type et du nombre de composantes
@@ -1651,7 +1648,7 @@ void PDM_io_par_interlaced_read
           }
         }
 
-       PDM_free(tag);
+        PDM_free(tag);
 
         PDM_MPI_Allgather(&n_donnees_bloc, 1, PDM_MPI_INT,
                            n_donnees_blocs, 1, PDM_MPI_INT,
@@ -1761,7 +1758,7 @@ void PDM_io_par_interlaced_read
 
             }
 
-           PDM_free(buffer_tmp);
+            PDM_free(buffer_tmp);
           }
 
           else if (fichier->rang_actif == 1) {
@@ -1786,7 +1783,7 @@ void PDM_io_par_interlaced_read
 
       PDM_timer_hang_on(timer_fichier);
 
-     PDM_free(n_donnees_blocs);
+      PDM_free(n_donnees_blocs);
 
       /*------------------------------------
        * Distribution suivant l'indirection
@@ -1843,8 +1840,8 @@ void PDM_io_par_interlaced_read
           }
         }
 
-       PDM_free(buffer);
-       PDM_free(n_composantes_ordonnees);
+        PDM_free(buffer);
+        PDM_free(n_composantes_ordonnees);
 
         /* n_donnees_a_envoyer et n_donnees_a_recevoir sont inverses
            par rapports au premier alltoallv */
@@ -1899,7 +1896,7 @@ void PDM_io_par_interlaced_read
         /* Tri des donnees recues */
 
         int *i_composantes;
-        PDM_malloc(i_composantes,(n_donnees + 1),int);
+        PDM_malloc(i_composantes, n_donnees + 1, int);
         i_composantes[0] = 0;
         for (int i = 1; i < n_donnees + 1; i++) {
           i_composantes[i] = i_composantes[i-1] +
@@ -1966,7 +1963,7 @@ void PDM_io_par_interlaced_read
                       PDM_MPI_BYTE,
                       fichier->comm);
 
-       PDM_free(buffer_ordonne);
+        PDM_free(buffer_ordonne);
 
         /* Tri des donnees recues */
 
@@ -1980,7 +1977,7 @@ void PDM_io_par_interlaced_read
           }
         }
 
-       PDM_free(donnees_tmp);
+        PDM_free(donnees_tmp);
       }
 
       PDM_timer_hang_on(timer_distribution);
@@ -2010,23 +2007,23 @@ void PDM_io_par_interlaced_read
 
       PDM_timer_resume(timer_distribution);
 
-     PDM_free(n_donnees_rangs);       /* n_rangs */
+      PDM_free(n_donnees_rangs);       /* n_rangs */
 
-     PDM_free(n_donnees_a_envoyer);   /* n_rangs */
-     PDM_free(n_donnees_a_recevoir);  /* n_rangs */
-     PDM_free(i_donnees_a_envoyer);   /* n_rangs */
-     PDM_free(i_donnees_a_recevoir);  /* n_rangs */
+      PDM_free(n_donnees_a_envoyer);   /* n_rangs */
+      PDM_free(n_donnees_a_recevoir);  /* n_rangs */
+      PDM_free(i_donnees_a_envoyer);   /* n_rangs */
+      PDM_free(i_donnees_a_recevoir);  /* n_rangs */
 
-     PDM_free(indirection_locale);    /* n_donnees */
+      PDM_free(indirection_locale);    /* n_donnees */
 
-     PDM_free(donnees_proc);          /* n_donnees */
+      PDM_free(donnees_proc);          /* n_donnees */
 
-     PDM_free(num_absolue_recues);    /* n_donnees_buffer */
+      PDM_free(num_absolue_recues);    /* n_donnees_buffer */
 
       /*PDM_free(rangs_actifs);          /\* n_rangs_actifs *\/ */
 
       if (t_n_composantes == PDM_STRIDE_VAR_INTERLACED) {
-       PDM_free(n_composantes_recues);
+        PDM_free(n_composantes_recues);
       }
 
       PDM_timer_hang_on(timer_distribution);
@@ -2210,7 +2207,7 @@ void PDM_io_par_block_read
           debut_bloc_actif += n_donnees_blocs_actifs[i];
         }
 
-       PDM_free(n_donnees_blocs_actifs);
+        PDM_free(n_donnees_blocs_actifs);
 
         if (0 == 1) {
           PDM_printf("distribution lec: %i ", fichier->rang);
@@ -2281,7 +2278,7 @@ void PDM_io_par_block_read
             debut_bloc_actif += n_donnees_blocs_actifs[i];
           }
 
-         PDM_free(n_donnees_blocs_actifs);
+          PDM_free(n_donnees_blocs_actifs);
         }
 
         else {
@@ -2330,7 +2327,7 @@ void PDM_io_par_block_read
 
           int max_n_donnees_blocs_actif = 0;
           for (int i = 0; i < fichier->n_rangs; i++)
-            max_n_donnees_blocs_actif = PDM_IO_MAX(max_n_donnees_blocs_actif,
+            max_n_donnees_blocs_actif = PDM_MAX(max_n_donnees_blocs_actif,
                                                      n_donnees_blocs_actifs[i]);
 
           int etat_lecture = 1;
@@ -2372,7 +2369,7 @@ void PDM_io_par_block_read
 
             }
 
-           PDM_free(buffer_tmp);
+            PDM_free(buffer_tmp);
 
           }
           else if (fichier->rang_actif == 1) {
@@ -2392,7 +2389,7 @@ void PDM_io_par_block_read
             abort();
           }
 
-         PDM_free(n_donnees_blocs_actifs);
+          PDM_free(n_donnees_blocs_actifs);
 
           break;
         }
@@ -2416,16 +2413,16 @@ void PDM_io_par_block_read
                       PDM_MPI_BYTE,
                       fichier->comm);
 
-       PDM_free(n_donnees_a_envoyer);
-       PDM_free(i_donnees_a_envoyer);
+        PDM_free(n_donnees_a_envoyer);
+        PDM_free(i_donnees_a_envoyer);
 
-       PDM_free(n_donnees_a_recevoir);
-       PDM_free(i_donnees_a_recevoir);
+        PDM_free(n_donnees_a_recevoir);
+        PDM_free(i_donnees_a_recevoir);
 
       }
 
       if (donnees != buffer)
-       PDM_free(buffer);
+        PDM_free(buffer);
 
       PDM_timer_hang_on(timer_fichier);
 
@@ -2532,7 +2529,7 @@ void PDM_io_par_interlaced_write
       PDM_g_num_t _id_max = 0;
 
       for (int i = 0; i < n_donnees; i++) {
-        _id_max = PDM_IO_MAX(_id_max, indirection[i]);
+        _id_max = PDM_MAX(_id_max, indirection[i]);
       }
 
       if (t_n_composantes == PDM_STRIDE_VAR_INTERLACED) {
@@ -2567,7 +2564,7 @@ void PDM_io_par_interlaced_write
           }
         }
 
-       PDM_free(index);
+        PDM_free(index);
       }
 
       else if (t_n_composantes == PDM_STRIDE_CST_INTERLACED) {
@@ -2598,7 +2595,7 @@ void PDM_io_par_interlaced_write
         l_string_donnee += 1; /* +1 pour '\0' en fin de chaine */
 
         char *string_donnee;
-        PDM_malloc(string_donnee,l_string_donnee,char);
+        PDM_malloc(string_donnee, l_string_donnee, char);
         for (int i = 0; i < l_string_donnee; i++) {
           string_donnee[i] = '\0';
         }
@@ -2680,10 +2677,10 @@ void PDM_io_par_interlaced_write
           }
         }
 
-       PDM_free(string_donnee);
+        PDM_free(string_donnee);
 
         if (fichier->fmt_t == PDM_IO_FMT_TXT) {
-         PDM_free(n_composante_trie);
+          PDM_free(n_composante_trie);
         }
 
         if (fichier->acces != PDM_IO_KIND_SEQ) {
@@ -2723,7 +2720,7 @@ void PDM_io_par_interlaced_write
       }
 
       PDM_timer_resume(timer_total);
-     PDM_free(buffer);
+      PDM_free(buffer);
 
     }
 
@@ -2750,7 +2747,7 @@ void PDM_io_par_interlaced_write
       PDM_g_num_t _id_max_max = 0;
 
       for (int i = 0; i < n_donnees; i++) {
-        _id_max = PDM_IO_MAX(_id_max, indirection[i]);
+        _id_max = PDM_MAX(_id_max, indirection[i]);
       }
 
       PDM_MPI_Allreduce(&_id_max,
@@ -2777,10 +2774,10 @@ void PDM_io_par_interlaced_write
 
       /* Pour chaque donnee le proc ou elle va etre envoyee */
 
-      int *donnees_proc;
-      PDM_malloc(donnees_proc,n_donnees,int);
-      int *indirection_locale;
-      PDM_malloc(indirection_locale,n_donnees,int);
+      int *donnees_proc       = NULL;
+      int *indirection_locale = NULL;
+      PDM_malloc(donnees_proc      , n_donnees, int);
+      PDM_malloc(indirection_locale, n_donnees, int);
 
       /* Calcul du nombre de donnees a envoyer a chaque procesus */
 
@@ -2793,7 +2790,7 @@ void PDM_io_par_interlaced_write
 
         if (n_donnees_rang_min > 0) {
           PDM_g_num_t step = n_absolu / n_donnees_rang_min;
-          irang_actif = PDM_IO_MIN((int) step,
+          irang_actif = PDM_MIN((int) step,
                                    fichier->n_rangs_actifs - 1) ;
         }
 
@@ -2812,9 +2809,9 @@ void PDM_io_par_interlaced_write
                        n_donnees_a_recevoir, 1, PDM_MPI_INT,
                        fichier->comm);
 
-      int *i_donnees_a_envoyer;
-      PDM_malloc(i_donnees_a_envoyer, fichier->n_rangs, int);
-      int *i_donnees_a_recevoir;
+      int *i_donnees_a_envoyer  = NULL;
+      int *i_donnees_a_recevoir = NULL;
+      PDM_malloc(i_donnees_a_envoyer , fichier->n_rangs, int);
       PDM_malloc(i_donnees_a_recevoir, fichier->n_rangs, int);
 
       i_donnees_a_envoyer[0] = 0;
@@ -2857,10 +2854,10 @@ void PDM_io_par_interlaced_write
                         PDM__PDM_MPI_G_NUM,
                         fichier->comm);
 
-     PDM_free(num_absolue_envoyee);
+      PDM_free(num_absolue_envoyee);
 
       int *n_donnees_blocs;
-      PDM_malloc(n_donnees_blocs,fichier->n_rangs,int);
+      PDM_malloc(n_donnees_blocs, fichier->n_rangs, int);
       int  n_donnees_bloc = 0;
 
       int *n_composantes_recues  = NULL;
@@ -2943,7 +2940,7 @@ void PDM_io_par_interlaced_write
 
         }
 
-       PDM_free(n_composantes_envoyee);
+        PDM_free(n_composantes_envoyee);
 
         /*----------------------------------------------------------
          *  Rangement des donnees pour l'echange croise
@@ -2960,7 +2957,7 @@ void PDM_io_par_interlaced_write
         PDM_malloc(donnees_alltoall, l_donnees_alltoall, unsigned char);
 
         int *idx_init;
-        PDM_malloc(idx_init,(n_donnees+1),int);
+        PDM_malloc(idx_init, n_donnees+1, int);
 
         idx_init[0] = 0;
         for (int i = 1; i < n_donnees + 1; i++)
@@ -3038,8 +3035,8 @@ void PDM_io_par_interlaced_write
 
       }
 
-     PDM_free(donnees_proc);
-     PDM_free(indirection_locale);
+      PDM_free(donnees_proc);
+      PDM_free(indirection_locale);
 
       PDM_MPI_Alltoallv(donnees_alltoall,
                         n_donnees_a_envoyer,
@@ -3051,12 +3048,12 @@ void PDM_io_par_interlaced_write
                         PDM_MPI_BYTE,
                         fichier->comm);
 
-     PDM_free(donnees_alltoall);
-     PDM_free(n_donnees_a_envoyer);
-     PDM_free(i_donnees_a_envoyer);
+      PDM_free(donnees_alltoall);
+      PDM_free(n_donnees_a_envoyer);
+      PDM_free(i_donnees_a_envoyer);
 
-     PDM_free(n_donnees_a_recevoir);
-     PDM_free(i_donnees_a_recevoir);
+      PDM_free(n_donnees_a_recevoir);
+      PDM_free(i_donnees_a_recevoir);
 
 
       /*----------------------------------------------------------
@@ -3076,7 +3073,7 @@ void PDM_io_par_interlaced_write
           PDM_malloc(buffer, max_l_blocs_alltoall, unsigned char);
           if (fichier->fmt_t == PDM_IO_FMT_TXT) {
             l_s_buffer = (max_l_blocs_alltoall / taille_donnee) * (fichier->n_char_fmt + 1) + 1;
-            PDM_malloc(s_buffer,l_s_buffer,char);
+            PDM_malloc(s_buffer, l_s_buffer, char);
             for (size_t i = 0; i < l_s_buffer; i++)
               s_buffer[i] = '\0';
           }
@@ -3085,7 +3082,7 @@ void PDM_io_par_interlaced_write
           PDM_malloc(buffer, l_blocs_alltoall, unsigned char);
           if (fichier->fmt_t == PDM_IO_FMT_TXT) {
             l_s_buffer = (l_blocs_alltoall / taille_donnee) * (fichier->n_char_fmt + 1) + 1;
-            PDM_malloc(s_buffer,l_s_buffer,char);
+            PDM_malloc(s_buffer, l_s_buffer, char);
             for (size_t i = 0; i < l_s_buffer; i++)
               s_buffer[i] = '\0';
           }
@@ -3113,7 +3110,7 @@ void PDM_io_par_interlaced_write
         int *index_buffer = PDM_array_zeros_int(_n_quantites+1);
 
         if (fichier->fmt_t == PDM_IO_FMT_TXT) {
-          PDM_malloc(n_composante_trie,_n_donnees_rang,int);
+          PDM_malloc(n_composante_trie, _n_donnees_rang, int);
         }
 
         for (int i = 0; i < _n_quantites; i++) {
@@ -3180,7 +3177,7 @@ void PDM_io_par_interlaced_write
             s_tmp++;
             n_donnees_bloc += 1;
           }
-         PDM_free(buffer);
+          PDM_free(buffer);
           buffer = (unsigned char *) s_buffer;
         }
 
@@ -3188,9 +3185,9 @@ void PDM_io_par_interlaced_write
                           n_donnees_blocs, 1, PDM_MPI_INT,
                           fichier->comm);
 
-       PDM_free(index_buffer);
-       PDM_free(n_composantes_recues);
-       PDM_free(tag);
+        PDM_free(index_buffer);
+        PDM_free(n_composantes_recues);
+        PDM_free(tag);
       }
 
       else if (t_n_composantes == PDM_STRIDE_CST_INTERLACED) {
@@ -3251,21 +3248,21 @@ void PDM_io_par_interlaced_write
             s_tmp++;
             n_donnees_bloc += 1;
           }
-         PDM_free(buffer);
+          PDM_free(buffer);
           buffer = (unsigned char *) s_buffer;
         }
 
         PDM_MPI_Allgather(&n_donnees_bloc, 1, PDM_MPI_INT,
                           n_donnees_blocs, 1, PDM_MPI_INT,
                           fichier->comm);
-       PDM_free(tag);
+        PDM_free(tag);
       }
 
       if (n_composante_trie != NULL)
-       PDM_free(n_composante_trie);
+        PDM_free(n_composante_trie);
 
-     PDM_free(blocs_alltoall);
-     PDM_free(n_donnees_rangs);
+      PDM_free(blocs_alltoall);
+      PDM_free(n_donnees_rangs);
 
       PDM_timer_hang_on(timer_distribution);
 
@@ -3379,10 +3376,10 @@ void PDM_io_par_interlaced_write
       PDM_timer_resume(timer_distribution);
 
       if (buffer != NULL)
-       PDM_free(buffer);
+        PDM_free(buffer);
 
-     PDM_free(n_donnees_blocs);       /* n_rangs */
-     PDM_free(num_absolue_recues);    /* n_donnees_buffer */
+      PDM_free(n_donnees_blocs);       /* n_rangs */
+      PDM_free(num_absolue_recues);    /* n_donnees_buffer */
 
       PDM_timer_hang_on(timer_distribution);
     }
@@ -3482,7 +3479,7 @@ void PDM_io_par_block_write
                           _donnees);
 
       if (fichier->swap_endian) {
-       PDM_free(_donnees);
+        PDM_free(_donnees);
       }
       PDM_timer_resume(timer_total);
 
@@ -3532,13 +3529,13 @@ void PDM_io_par_block_write
          * Repartition des donnees sur les processus actifs
          *------------------------------------------------------------ */
 
-        int *n_donnees_a_envoyer;
+        int *n_donnees_a_envoyer  = NULL;
+        int *n_donnees_a_recevoir = NULL;
+        int *i_donnees_a_envoyer  = NULL;
+        int *i_donnees_a_recevoir = NULL;
         PDM_malloc(n_donnees_a_envoyer , fichier->n_rangs, int);
-        int *n_donnees_a_recevoir;
         PDM_malloc(n_donnees_a_recevoir, fichier->n_rangs, int);
-        int *i_donnees_a_envoyer;
         PDM_malloc(i_donnees_a_envoyer , fichier->n_rangs, int);
-        int *i_donnees_a_recevoir;
         PDM_malloc(i_donnees_a_recevoir, fichier->n_rangs, int);
 
         _calcul_parametres_distribution_bloc(fichier,
@@ -3575,7 +3572,7 @@ void PDM_io_par_block_write
           debut_bloc_actif += n_donnees_blocs_actifs[i];
         }
 
-       PDM_free(n_donnees_blocs_actifs);
+        PDM_free(n_donnees_blocs_actifs);
 
         /*------------------------------------------------------------
          * Prise en compte de la taille de la donnee
@@ -3626,11 +3623,11 @@ void PDM_io_par_block_write
                       PDM_MPI_BYTE,
                       fichier->comm);
 
-       PDM_free(n_donnees_a_envoyer);
-       PDM_free(i_donnees_a_envoyer);
+        PDM_free(n_donnees_a_envoyer);
+        PDM_free(i_donnees_a_envoyer);
 
-       PDM_free(n_donnees_a_recevoir);
-       PDM_free(i_donnees_a_recevoir);
+        PDM_free(n_donnees_a_recevoir);
+        PDM_free(i_donnees_a_recevoir);
 
       }
 
@@ -3663,7 +3660,7 @@ void PDM_io_par_block_write
             debut_bloc_actif += n_donnees_blocs_actifs[i];
           }
 
-         PDM_free(n_donnees_blocs_actifs);
+          PDM_free(n_donnees_blocs_actifs);
         }
 
         else {
@@ -3674,7 +3671,7 @@ void PDM_io_par_block_write
         }
       }
 
-     PDM_free(n_donnees_traitees_rangs);
+      PDM_free(n_donnees_traitees_rangs);
 
       PDM_timer_hang_on(timer_distribution);
 
@@ -3699,7 +3696,7 @@ void PDM_io_par_block_write
             PDM_timer_resume(timer_swap_endian);
 
             if (buffer == donnees) {
-              PDM_malloc(_buffer,taille_donnee * n_donnees_bloc_actif,unsigned char);
+              PDM_malloc(_buffer, taille_donnee * n_donnees_bloc_actif, unsigned char);
             }
 
             PDM_io_swap_endian(taille_donnee,
@@ -3717,7 +3714,7 @@ void PDM_io_par_block_write
                                           _buffer,
                                           debut_bloc_actif);
           if (buffer != _buffer) {
-           PDM_free(_buffer);
+            PDM_free(_buffer);
           }
 
         }
@@ -3737,7 +3734,7 @@ void PDM_io_par_block_write
 
           int max_n_donnees_blocs_actif = 0;
           for (int i = 0; i < fichier->n_rangs; i++)
-            max_n_donnees_blocs_actif = PDM_IO_MAX(max_n_donnees_blocs_actif,
+            max_n_donnees_blocs_actif = PDM_MAX(max_n_donnees_blocs_actif,
                                                      n_donnees_blocs_actifs[i]);
 
           int etat_ecriture = 1;
@@ -3773,7 +3770,7 @@ void PDM_io_par_block_write
                                                              n_donnees_blocs_tmp,
                                                              _buffer);
             if (buffer != _buffer) {
-             PDM_free(_buffer);
+              PDM_free(_buffer);
             }
 
             if (buffer == donnees)
@@ -3817,7 +3814,7 @@ void PDM_io_par_block_write
               PDM_timer_resume(timer_swap_endian);
 
               if (buffer == donnees) {
-                PDM_malloc(_buffer,taille_donnee * n_donnees_bloc_actif,unsigned char);
+                PDM_malloc(_buffer, taille_donnee * n_donnees_bloc_actif, unsigned char);
               }
 
               PDM_io_swap_endian(taille_donnee,
@@ -3833,7 +3830,7 @@ void PDM_io_par_block_write
                          PDM_io_tag, fichier->comm);
 
             if (buffer !=_buffer) {
-             PDM_free(_buffer);
+              PDM_free(_buffer);
             }
           }
 
@@ -3845,7 +3842,7 @@ void PDM_io_par_block_write
             abort();
           }
 
-         PDM_free(n_donnees_blocs_actifs);
+          PDM_free(n_donnees_blocs_actifs);
 
           break;
         }
@@ -3863,7 +3860,7 @@ void PDM_io_par_block_write
     }
 
     if (buffer != donnees)
-     PDM_free(buffer);
+      PDM_free(buffer);
 
     PDM_timer_hang_on(timer_total);
   }
@@ -3902,18 +3899,18 @@ void PDM_io_close
 
     if (fichier->PDM_file_seq != NULL)  {
       PDM_file_seq_close(fichier->PDM_file_seq);
-     PDM_free(fichier->PDM_file_seq);
+      PDM_free(fichier->PDM_file_seq);
       fichier->PDM_file_seq = NULL;
     }
 
     if (fichier->PDM_file_par != NULL) {
       PDM_file_par_close(fichier->PDM_file_par);
-     PDM_free(fichier->PDM_file_par);
+      PDM_free(fichier->PDM_file_par);
       fichier->PDM_file_par = NULL;
     }
 
     if (fichier->fmt != NULL) {
-     PDM_free(fichier->fmt);
+      PDM_free(fichier->fmt);
       fichier->fmt = NULL;
     }
 
@@ -3934,7 +3931,7 @@ void PDM_io_close
       if (proc_actif == 1) {
 
         char *fichier_backup;
-        PDM_malloc(fichier_backup,(strlen(fichier->nom) + 2),char); /* caratère ~ + \0 */
+        PDM_malloc(fichier_backup, strlen(fichier->nom) + 2, char); /* caratère ~ + \0 */
         strcpy(fichier_backup, fichier->nom);
         strcat(fichier_backup, "~");
 
@@ -3944,7 +3941,7 @@ void PDM_io_close
           remove(fichier_backup);
         }
 
-       PDM_free(fichier_backup);
+        PDM_free(fichier_backup);
       }
     }
 
@@ -3988,7 +3985,7 @@ void PDM_io_free
 
   if (fichier != NULL) {
 
-   PDM_free(fichier->nom);
+    PDM_free(fichier->nom);
 
     PDM_timer_free(fichier->timer_fichier);
 
@@ -3999,24 +3996,24 @@ void PDM_io_free
     PDM_timer_free(fichier->timer_total);
 
     if (fichier->rangs_actifs != NULL) {
-     PDM_free(fichier->rangs_actifs);
+      PDM_free(fichier->rangs_actifs);
       fichier->rangs_actifs = NULL;
     }
 
     if (fichier->rangs_inactifs != NULL) {
-     PDM_free(fichier->rangs_inactifs);
+      PDM_free(fichier->rangs_inactifs);
       fichier->rangs_inactifs = NULL;
     }
 
     if (fichier->tag_rangs_actifs != NULL) {
-     PDM_free(fichier->tag_rangs_actifs);
+      PDM_free(fichier->tag_rangs_actifs);
       fichier->tag_rangs_actifs = NULL;
     }
 
     if (fichier->scomm != PDM_MPI_COMM_NULL) {
       PDM_MPI_Comm_free (&(fichier->scomm));
     }
-   PDM_free(fichier);
+    PDM_free(fichier);
   }
 
   if (err_code){
@@ -4408,9 +4405,10 @@ void PDM_io_fmt_data_set
 
   if (fichier != NULL) {
     fichier->swap_endian = 0;
-    if (fichier->fmt != NULL)
-     PDM_free(fichier->fmt);
-    PDM_malloc(fichier->fmt,(strlen(fmt) + 1),char);
+    if (fichier->fmt != NULL) {
+      PDM_free(fichier->fmt);
+    }
+    PDM_malloc(fichier->fmt, strlen(fmt) + 1, char);
     strcpy(fichier->fmt, fmt);
     fichier->n_char_fmt = n_char_fmt;
     fichier->data_type  = data_type;
@@ -4440,7 +4438,7 @@ int PDM_io_mkdir
 )
 {
   char *tmp_path;
-  PDM_malloc(tmp_path,(strlen(path) + 1),char);
+  PDM_malloc(tmp_path, strlen(path) + 1, char);
   strcpy(tmp_path, path);
   int idx = 0;
   size_t _l_path = strlen(path);
@@ -4458,7 +4456,7 @@ int PDM_io_mkdir
       tmp_path[idx] = '\0';
       err = _mkdir(tmp_path);
       if (err != 0) {
-       PDM_free(tmp_path);
+        PDM_free(tmp_path);
         return 0;
       }
       tmp_path[idx] = '/';
@@ -4469,7 +4467,7 @@ int PDM_io_mkdir
     }
     idx += 1;
   }
- PDM_free(tmp_path);
+  PDM_free(tmp_path);
   return err;
 }
 
@@ -4545,7 +4543,7 @@ PDM_io_n_data_get
        *----------------------------------------------------------*/
 
       PDM_g_num_t *n_donnees_rangs;
-      PDM_malloc(n_donnees_rangs,(fichier->n_rangs + 1),PDM_g_num_t);
+      PDM_malloc(n_donnees_rangs, fichier->n_rangs + 1, PDM_g_num_t);
 
       int  n_donnees_rang_min = 0;
       int  n_donnees_rang_max = 0;
@@ -4554,7 +4552,7 @@ PDM_io_n_data_get
       PDM_g_num_t _id_max_max = 0;
 
       for (int i = 0; i < n_donnees; i++) {
-        _id_max = PDM_IO_MAX(_id_max, indirection[i]);
+        _id_max = PDM_MAX(_id_max, indirection[i]);
       }
 
       PDM_MPI_Allreduce(&_id_max,
@@ -4579,14 +4577,14 @@ PDM_io_n_data_get
 
         int *n_donnees_a_envoyer = PDM_array_zeros_int(fichier->n_rangs);
         int *n_donnees_a_recevoir;
-        PDM_malloc(n_donnees_a_recevoir,fichier->n_rangs,int);
+        PDM_malloc(n_donnees_a_recevoir, fichier->n_rangs, int);
 
         /* Pour chaque donnee le proc ou elle va etre envoyee */
 
-        int *donnees_proc;
-        PDM_malloc(donnees_proc,n_donnees,int);
-        int *indirection_locale;
-        PDM_malloc(indirection_locale,n_donnees,int);
+        int *donnees_proc       = NULL;
+        int *indirection_locale = NULL;
+        PDM_malloc(donnees_proc      , n_donnees, int);
+        PDM_malloc(indirection_locale, n_donnees, int);
 
         /* Calcul du nombre de donnees a envoyer a chaque procesus */
 
@@ -4598,7 +4596,7 @@ PDM_io_n_data_get
           int irang_actif = fichier->n_rangs_actifs - 1;
 
           if (n_donnees_rang_min > 0) {
-            irang_actif = PDM_IO_MIN((int) (n_absolu /
+            irang_actif = PDM_MIN((int) (n_absolu /
                                               (PDM_g_num_t) n_donnees_rang_min),
                                        fichier->n_rangs_actifs - 1) ;
           }
@@ -4618,9 +4616,9 @@ PDM_io_n_data_get
                      n_donnees_a_recevoir, 1, PDM_MPI_INT,
                      fichier->comm);
 
-        int *i_donnees_a_envoyer;
-        PDM_malloc(i_donnees_a_envoyer, fichier->n_rangs, int);
-        int *i_donnees_a_recevoir;
+        int *i_donnees_a_envoyer  = NULL;
+        int *i_donnees_a_recevoir = NULL;
+        PDM_malloc(i_donnees_a_envoyer , fichier->n_rangs, int);
         PDM_malloc(i_donnees_a_recevoir, fichier->n_rangs, int);
 
         i_donnees_a_envoyer[0] = 0;
@@ -4663,7 +4661,7 @@ PDM_io_n_data_get
                       PDM_MPI_LONG,
                       fichier->comm);
 
-       PDM_free(num_absolue_envoyee);
+        PDM_free(num_absolue_envoyee);
 
         int *n_composantes_recues  = NULL;
         int *n_composantes_envoyee = NULL;
@@ -4692,7 +4690,7 @@ PDM_io_n_data_get
           n_donnees_a_envoyer[iproc] += 1;
         }
 
-        PDM_malloc(n_composantes_recues,l_data_recv,int);
+        PDM_malloc(n_composantes_recues, l_data_recv, int);
 
         PDM_MPI_Alltoallv(n_composantes_envoyee,
                       n_donnees_a_envoyer,
@@ -4704,7 +4702,7 @@ PDM_io_n_data_get
                       PDM_MPI_INT,
                       fichier->comm);
 
-       PDM_free(n_composantes_envoyee);
+        PDM_free(n_composantes_envoyee);
 
         /*----------------------------------------------------------
          *  Rangement des donnees pour l'echange croise
@@ -4725,19 +4723,19 @@ PDM_io_n_data_get
                       PDM_MPI_LONG, PDM_MPI_SUM, fichier->comm);
 
 
-       PDM_free(donnees_proc);
-       PDM_free(indirection_locale);
+        PDM_free(donnees_proc);
+        PDM_free(indirection_locale);
 
-       PDM_free(donnees_alltoall);
-       PDM_free(n_donnees_a_envoyer);
-       PDM_free(i_donnees_a_envoyer);
+        PDM_free(donnees_alltoall);
+        PDM_free(n_donnees_a_envoyer);
+        PDM_free(i_donnees_a_envoyer);
 
-       PDM_free(n_donnees_a_recevoir);
-       PDM_free(i_donnees_a_recevoir);
+        PDM_free(n_donnees_a_recevoir);
+        PDM_free(i_donnees_a_recevoir);
 
-       PDM_free(n_comp_bloc);
-       PDM_free(num_absolue_recues);
-       PDM_free(n_composantes_recues);
+        PDM_free(n_comp_bloc);
+        PDM_free(num_absolue_recues);
+        PDM_free(n_composantes_recues);
 
       }
 
@@ -4752,7 +4750,7 @@ PDM_io_n_data_get
 
       PDM_timer_hang_on(timer_distribution);
 
-     PDM_free(n_donnees_rangs);
+      PDM_free(n_donnees_rangs);
 
     }
 

@@ -216,14 +216,14 @@ _compute_dual_closed
  double      *coords
 )
 {
-  double *edge_center;
-  PDM_malloc(edge_center,3 * n_edge ,double);
-  double *face_center;
-  PDM_malloc(face_center,3 * n_face ,double);
-  double *cell_center;
-  PDM_malloc(cell_center,3 * n_cell ,double);
-  double *edge_surf;
-  PDM_malloc(edge_surf,3 * n_edge ,double);
+  double *edge_center = NULL;
+  double *face_center = NULL;
+  double *cell_center = NULL;
+  double *edge_surf   = NULL;
+  PDM_malloc(edge_center, 3 * n_edge, double);
+  PDM_malloc(face_center, 3 * n_face, double);
+  PDM_malloc(cell_center, 3 * n_cell, double);
+  PDM_malloc(edge_surf  , 3 * n_edge, double);
 
   for(int i_edge = 0; i_edge < n_edge; ++i_edge) {
     int i_vtx1 = edge_vtx[2*i_edge  ]-1;
@@ -347,7 +347,7 @@ _compute_dual_closed
   PDM_log_trace_array_int (edge_vtx     , 2* n_edge            , "edge_vtx ::");
 
   double *vtx_dual_surf;
-  PDM_malloc(vtx_dual_surf,3 * n_vtx,double);
+  PDM_malloc(vtx_dual_surf, 3 * n_vtx, double);
   for (int i = 0; i < 3*n_vtx; i++) {
     vtx_dual_surf[i] = 0.;
   }
@@ -371,13 +371,13 @@ _compute_dual_closed
       printf("vtx %d: (%f %f %f)   mag = %g\n", i_vtx, coords[3*i_vtx], coords[3*i_vtx+1], coords[3*i_vtx+2], mag);
     }
   }
- PDM_free(vtx_dual_surf);
+  PDM_free(vtx_dual_surf);
 
 
- PDM_free(edge_surf);
- PDM_free(face_center);
- PDM_free(cell_center);
- PDM_free(edge_center);
+  PDM_free(edge_surf);
+  PDM_free(face_center);
+  PDM_free(cell_center);
+  PDM_free(edge_center);
 }
 
 
@@ -506,14 +506,14 @@ int main(int argc, char *argv[])
    * Generate edge numbering
    */
   int n_edge_elt_tot = dface_vtx_idx[dn_face];
-  PDM_g_num_t *tmp_dface_edge;
-  PDM_malloc(tmp_dface_edge,     n_edge_elt_tot    ,PDM_g_num_t);
-  int *tmp_parent_elmt_pos;
-  PDM_malloc(tmp_parent_elmt_pos,     n_edge_elt_tot    ,int        );
-  int *tmp_dface_edge_vtx_idx;
-  PDM_malloc(tmp_dface_edge_vtx_idx, ( n_edge_elt_tot + 1) ,int        );
-  PDM_g_num_t *tmp_dface_edge_vtx;
-  PDM_malloc(tmp_dface_edge_vtx, 2 * n_edge_elt_tot    ,PDM_g_num_t);
+  PDM_g_num_t *tmp_dface_edge         = NULL;
+  int         *tmp_parent_elmt_pos    = NULL;
+  int         *tmp_dface_edge_vtx_idx = NULL;
+  PDM_g_num_t *tmp_dface_edge_vtx     = NULL;
+  PDM_malloc(tmp_dface_edge        ,     n_edge_elt_tot    , PDM_g_num_t);
+  PDM_malloc(tmp_parent_elmt_pos   ,     n_edge_elt_tot    , int        );
+  PDM_malloc(tmp_dface_edge_vtx_idx,     n_edge_elt_tot + 1, int        );
+  PDM_malloc(tmp_dface_edge_vtx    , 2 * n_edge_elt_tot    , PDM_g_num_t);
 
   int n_elmt_current = 0;
   int n_edge_current = 0;
@@ -532,7 +532,7 @@ int main(int argc, char *argv[])
                               NULL,
                               tmp_parent_elmt_pos);
   assert(n_edge_current == n_edge_elt_tot);
- PDM_free(tmp_parent_elmt_pos);
+  PDM_free(tmp_parent_elmt_pos);
 
   int  dn_edge = -1;
   PDM_g_num_t  *dedge_distrib;

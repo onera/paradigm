@@ -107,11 +107,11 @@ PDM_dmesh_create
 )
 {
   PDM_dmesh_t *dmesh;
-  PDM_malloc(dmesh,1,PDM_dmesh_t);
+  PDM_malloc(dmesh, 1, PDM_dmesh_t);
 
   dmesh->comm              = comm;
   dmesh->owner             = owner;
-  PDM_malloc(dmesh->results_is_getted, PDM_CONNECTIVITY_TYPE_MAX ,PDM_bool_t);
+  PDM_malloc(dmesh->results_is_getted, PDM_CONNECTIVITY_TYPE_MAX, PDM_bool_t);
 
   dmesh->dn_cell           = dn_cell;
   dmesh->dn_face           = dn_face;
@@ -141,9 +141,9 @@ PDM_dmesh_create
   dmesh->_dvtx_coord       = NULL;
   dmesh->is_owner_vtx_coord  = PDM_TRUE;
 
-  PDM_malloc(dmesh->dconnectivity, PDM_CONNECTIVITY_TYPE_MAX ,PDM_g_num_t *);
-  PDM_malloc(dmesh->dconnectivity_idx, PDM_CONNECTIVITY_TYPE_MAX ,int         *);
-  PDM_malloc(dmesh->is_owner_connectivity, PDM_CONNECTIVITY_TYPE_MAX ,PDM_bool_t   );
+  PDM_malloc(dmesh->dconnectivity        , PDM_CONNECTIVITY_TYPE_MAX, PDM_g_num_t *);
+  PDM_malloc(dmesh->dconnectivity_idx    , PDM_CONNECTIVITY_TYPE_MAX, int         *);
+  PDM_malloc(dmesh->is_owner_connectivity, PDM_CONNECTIVITY_TYPE_MAX, PDM_bool_t   );
 
   for(int i = 0; i < PDM_CONNECTIVITY_TYPE_MAX; ++i) {
     dmesh->is_owner_connectivity[i] = PDM_FALSE;
@@ -151,9 +151,9 @@ PDM_dmesh_create
     dmesh->dconnectivity_idx    [i] = NULL;
   }
 
-  PDM_malloc(dmesh->dbound, PDM_BOUND_TYPE_MAX ,PDM_g_num_t *);
-  PDM_malloc(dmesh->dbound_idx, PDM_BOUND_TYPE_MAX ,int         *);
-  PDM_malloc(dmesh->is_owner_bound, PDM_BOUND_TYPE_MAX ,PDM_bool_t   );
+  PDM_malloc(dmesh->dbound        , PDM_BOUND_TYPE_MAX, PDM_g_num_t *);
+  PDM_malloc(dmesh->dbound_idx    , PDM_BOUND_TYPE_MAX, int         *);
+  PDM_malloc(dmesh->is_owner_bound, PDM_BOUND_TYPE_MAX, PDM_bool_t   );
 
   for(int i = 0; i < PDM_BOUND_TYPE_MAX; ++i ) {
     dmesh->n_group_bnd[i] = 0;
@@ -506,7 +506,7 @@ PDM_dmesh_free
 
   if(dmesh->is_owner_vtx_coord ==  PDM_TRUE) {
     if(dmesh->_dvtx_coord != NULL) {
-     PDM_free(dmesh->_dvtx_coord);
+      PDM_free(dmesh->_dvtx_coord);
     }
   }
   dmesh->_dvtx_coord       = NULL;
@@ -522,10 +522,10 @@ PDM_dmesh_free
       if(dmesh->is_owner_connectivity[i] == PDM_TRUE) {
 
         if(dmesh->dconnectivity[i] != NULL){
-         PDM_free(dmesh->dconnectivity[i]);
+          PDM_free(dmesh->dconnectivity[i]);
         }
         if(dmesh->dconnectivity_idx[i] != NULL){
-         PDM_free(dmesh->dconnectivity_idx[i]);
+          PDM_free(dmesh->dconnectivity_idx[i]);
         }
         dmesh->dconnectivity    [i] = NULL;
         dmesh->dconnectivity_idx[i] = NULL;
@@ -539,10 +539,10 @@ PDM_dmesh_free
 
         //printf(" dmesh_free :: %i \n", i);
         if(dmesh->dbound[i] != NULL) {
-         PDM_free(dmesh->dbound[i]);
+          PDM_free(dmesh->dbound[i]);
         }
         if(dmesh->dbound_idx[i] != NULL){
-         PDM_free(dmesh->dbound_idx[i]);
+          PDM_free(dmesh->dbound_idx[i]);
         }
         dmesh->dbound    [i] = NULL;
         dmesh->dbound_idx[i] = NULL;
@@ -551,37 +551,37 @@ PDM_dmesh_free
     }
   }
 
- PDM_free(dmesh->results_is_getted    );
- PDM_free(dmesh->dconnectivity        );
- PDM_free(dmesh->dconnectivity_idx    );
- PDM_free(dmesh->is_owner_connectivity);
+  PDM_free(dmesh->results_is_getted    );
+  PDM_free(dmesh->dconnectivity        );
+  PDM_free(dmesh->dconnectivity_idx    );
+  PDM_free(dmesh->is_owner_connectivity);
 
- PDM_free(dmesh->dbound        );
- PDM_free(dmesh->dbound_idx    );
- PDM_free(dmesh->is_owner_bound);
+  PDM_free(dmesh->dbound        );
+  PDM_free(dmesh->dbound_idx    );
+  PDM_free(dmesh->is_owner_bound);
 
   /* This result is never getted so we can free them */
   if(dmesh->cell_distrib != NULL) {
-   PDM_free(dmesh->cell_distrib);
+    PDM_free(dmesh->cell_distrib);
     dmesh->cell_distrib = NULL;
   }
 
   if(dmesh->face_distrib != NULL) {
-   PDM_free(dmesh->face_distrib);
+    PDM_free(dmesh->face_distrib);
     dmesh->face_distrib = NULL;
   }
 
   if(dmesh->edge_distrib != NULL) {
-   PDM_free(dmesh->edge_distrib);
+    PDM_free(dmesh->edge_distrib);
     dmesh->edge_distrib = NULL;
   }
 
   if(dmesh->vtx_distrib != NULL) {
-   PDM_free(dmesh->vtx_distrib);
+    PDM_free(dmesh->vtx_distrib);
     dmesh->vtx_distrib = NULL;
   }
 
- PDM_free(dmesh);
+  PDM_free(dmesh);
 }
 
 
@@ -716,14 +716,14 @@ PDM_dmesh_find_topological_ridges
   int dn_face_extract = distrib_extract_face[i_rank+1] - distrib_extract_face[i_rank];
 
   int n_edge_elt_tot = dextract_face_vtx_idx[dn_face_extract];
-  PDM_g_num_t *tmp_dface_edge;
-  PDM_malloc(tmp_dface_edge,     n_edge_elt_tot    ,PDM_g_num_t);
-  int *tmp_parent_elmt_pos;
-  PDM_malloc(tmp_parent_elmt_pos,     n_edge_elt_tot    ,int        );
-  int *tmp_dface_edge_vtx_idx;
-  PDM_malloc(tmp_dface_edge_vtx_idx, ( n_edge_elt_tot + 1) ,int        );
-  PDM_g_num_t *tmp_dface_edge_vtx;
-  PDM_malloc(tmp_dface_edge_vtx, 2 * n_edge_elt_tot    ,PDM_g_num_t);
+  PDM_g_num_t *tmp_dface_edge         = NULL;
+  int         *tmp_parent_elmt_pos    = NULL;
+  int         *tmp_dface_edge_vtx_idx = NULL;
+  PDM_g_num_t *tmp_dface_edge_vtx     = NULL;
+  PDM_malloc(tmp_dface_edge        ,     n_edge_elt_tot    , PDM_g_num_t);
+  PDM_malloc(tmp_parent_elmt_pos   ,     n_edge_elt_tot    , int        );
+  PDM_malloc(tmp_dface_edge_vtx_idx,     n_edge_elt_tot + 1, int        );
+  PDM_malloc(tmp_dface_edge_vtx    , 2 * n_edge_elt_tot    , PDM_g_num_t);
 
   int n_elmt_current = 0;
   int n_edge_current = 0;
@@ -742,7 +742,7 @@ PDM_dmesh_find_topological_ridges
                               NULL,
                               tmp_parent_elmt_pos);
   assert(n_edge_current == n_edge_elt_tot);
- PDM_free(tmp_parent_elmt_pos);
+  PDM_free(tmp_parent_elmt_pos);
 
   int dn_edge = 0;
   PDM_g_num_t  *edge_distrib   = NULL;
@@ -763,9 +763,9 @@ PDM_dmesh_find_topological_ridges
                                         &dedge_face_idx,
                                         &dedge_face);
 
- PDM_free(dparent_face         );
- PDM_free(dextract_face_vtx_idx);
- PDM_free(dextract_face_vtx    );
+  PDM_free(dparent_face         );
+  PDM_free(dextract_face_vtx_idx);
+  PDM_free(dextract_face_vtx    );
 
   if(0 == 1) {
     PDM_log_trace_array_long(edge_distrib, n_rank+1               , "edge_distrib::");
@@ -784,10 +784,10 @@ PDM_dmesh_find_topological_ridges
                                                                    1,
                                                                    comm);
 
-  int *pface_group;
-  PDM_malloc(pface_group,dgroup_face_idx[n_group_face] ,int);
-  int *pface_group_n;
-  PDM_malloc(pface_group_n,dgroup_face_idx[n_group_face] ,int);
+  int *pface_group   = NULL;
+  int *pface_group_n = NULL;
+  PDM_malloc(pface_group  , dgroup_face_idx[n_group_face], int);
+  PDM_malloc(pface_group_n, dgroup_face_idx[n_group_face], int);
   for(int i_group = 0; i_group < n_group_face; ++i_group) {
     for(int idx_face = dgroup_face_idx[i_group]; idx_face < dgroup_face_idx[i_group+1]; ++idx_face) {
       pface_group  [idx_face] = (i_group+1);
@@ -811,8 +811,8 @@ PDM_dmesh_find_topological_ridges
                         &tmp_dface_group_n,
              (void **)  &dface_group);
 
- PDM_free(pface_group_n);
- PDM_free(pface_group);
+  PDM_free(pface_group_n);
+  PDM_free(pface_group);
 
   int n_elt_face = PDM_part_to_block_n_elt_block_get(ptb);
   PDM_g_num_t* blk_gnum_face = PDM_part_to_block_block_gnum_get(ptb);
@@ -823,7 +823,7 @@ PDM_dmesh_find_topological_ridges
     int i = (int) (blk_gnum_face[i1] - distrib_face[i_rank] - 1);
     dface_group_n[i] = tmp_dface_group_n[i1];
   }
- PDM_free(tmp_dface_group_n);
+  PDM_free(tmp_dface_group_n);
 
   PDM_part_to_block_free(ptb);
 
@@ -841,12 +841,12 @@ PDM_dmesh_find_topological_ridges
              (void ***)  &tmp_dextract_face_group);
   int *dextract_face_group_n = tmp_dextract_face_group_n[0];
   int *dextract_face_group   = tmp_dextract_face_group  [0];
- PDM_free(tmp_dextract_face_group_n);
- PDM_free(tmp_dextract_face_group  );
+  PDM_free(tmp_dextract_face_group_n);
+  PDM_free(tmp_dextract_face_group  );
 
- PDM_free(dface_group_n);
- PDM_free(dface_group);
- PDM_free(dextract_face_group_n);
+  PDM_free(dface_group_n);
+  PDM_free(dface_group);
+  PDM_free(dextract_face_group_n);
   PDM_block_to_part_free(btp_face_to_extract_face);
 
   /* Go back to edge */
@@ -867,11 +867,11 @@ PDM_dmesh_find_topological_ridges
                          NULL,
              (void ***) &dedge_face_group_tmp);
   int *dedge_face_group = dedge_face_group_tmp[0];
- PDM_free(dedge_face_group_tmp);
- PDM_free(dextract_face_group);
+  PDM_free(dedge_face_group_tmp);
+  PDM_free(dextract_face_group);
   PDM_block_to_part_free(btp);
 
- PDM_free(distrib_extract_face );
+  PDM_free(distrib_extract_face );
 
   /*
    * Prepare gnum
@@ -890,24 +890,24 @@ PDM_dmesh_find_topological_ridges
   }
 
   PDM_g_num_t *edge_group   = NULL;
-  int *pridge_edge;
-  PDM_malloc(pridge_edge, dn_edge       ,int        );
+  int         *pridge_edge  = NULL;
+  PDM_malloc(pridge_edge, dn_edge, int);
 
   /* For each ridge keep the link with the face group associated */
-  int *pridge_face_group_idx;
-  PDM_malloc(pridge_face_group_idx, (dn_edge+1)            ,int        );
-  int *pridge_face_group;
-  PDM_malloc(pridge_face_group, n_max_nuplet * dn_edge ,int        );
+  int *pridge_face_group_idx = NULL;
+  int *pridge_face_group     = NULL;
+  PDM_malloc(pridge_face_group_idx, dn_edge+1             , int);
+  PDM_malloc(pridge_face_group    , n_max_nuplet * dn_edge, int);
 
   int          dn_ridge     = 0;
 
   PDM_gnum_set_parents_nuplet(gen_gnum, n_max_nuplet);
 
-  PDM_g_num_t *edge_doublet;
-  PDM_malloc(edge_doublet, n_max_nuplet * dn_edge ,PDM_g_num_t);
+  PDM_g_num_t *edge_doublet = NULL;
+  PDM_malloc(edge_doublet, n_max_nuplet * dn_edge, PDM_g_num_t);
 
-  int *group_list;
-  PDM_malloc(group_list,n_max_nuplet ,int);
+  int *group_list = NULL;
+  PDM_malloc(group_list, n_max_nuplet, int);
   int idx_write = 0;
   pridge_face_group_idx[0] = 0;
   for(int i = 0; i < dn_edge; ++i) {
@@ -963,8 +963,8 @@ PDM_dmesh_find_topological_ridges
     // }
 
   }
- PDM_free(dedge_face_group);
- PDM_free(group_list);
+  PDM_free(dedge_face_group);
+  PDM_free(group_list);
 
   PDM_realloc(pridge_face_group_idx ,pridge_face_group_idx ,                    (dn_ridge+1) ,int);
   PDM_realloc(pridge_face_group     ,pridge_face_group     , pridge_face_group_idx[dn_ridge] ,int);
@@ -986,25 +986,25 @@ PDM_dmesh_find_topological_ridges
   int n_group_ridge = 0;
   PDM_MPI_Allreduce(&_n_group_ridge, &n_group_ridge, 1, PDM_MPI_INT, PDM_MPI_MAX, comm);
 
- PDM_free(edge_doublet);
+  PDM_free(edge_doublet);
   /*
    * Hook edge
    */
-  PDM_g_num_t *dridge_vtx;
-  PDM_malloc(dridge_vtx,2 * dn_ridge ,PDM_g_num_t);
+  PDM_g_num_t *dridge_vtx = NULL;
+  PDM_malloc(dridge_vtx, 2 * dn_ridge, PDM_g_num_t);
   for(int i = 0; i < dn_ridge; ++i) {
     int i_edge = pridge_edge[i];
     dridge_vtx[2*i  ] = dedge_vtx[2*i_edge  ];
     dridge_vtx[2*i+1] = dedge_vtx[2*i_edge+1];
   }
- PDM_free(pridge_edge);
+  PDM_free(pridge_edge);
   // PDM_log_trace_array_long(dridge_vtx, 2 * dn_ridge, "dridge_vtx ::");
 
   /*
    * Re-création des groupes
    */
-  int *dgroup_edge_n;
-  PDM_malloc(dgroup_edge_n,n_group_ridge ,int);
+  int *dgroup_edge_n = NULL;
+  PDM_malloc(dgroup_edge_n, n_group_ridge, int);
 
   for(int i = 0; i < n_group_ridge; ++i) {
     dgroup_edge_n[i] = 0;
@@ -1019,7 +1019,7 @@ PDM_dmesh_find_topological_ridges
   }
 
   int *dgroup_edge_idx;
-  PDM_malloc(dgroup_edge_idx,(n_group_ridge+1) ,int);
+  PDM_malloc(dgroup_edge_idx, n_group_ridge + 1, int);
   dgroup_edge_idx[0] = 0;
   for(int i = 0; i < n_group_ridge; ++i) {
     dgroup_edge_idx[i+1] = dgroup_edge_idx[i] + dgroup_edge_n[i];
@@ -1027,7 +1027,7 @@ PDM_dmesh_find_topological_ridges
   }
 
   PDM_g_num_t *dgroup_edge;
-  PDM_malloc(dgroup_edge,dgroup_edge_idx[n_group_ridge] ,PDM_g_num_t);
+  PDM_malloc(dgroup_edge, dgroup_edge_idx[n_group_ridge], PDM_g_num_t);
 
   PDM_g_num_t* distrib_ridge = PDM_compute_entity_distribution(comm, dn_ridge);
 
@@ -1042,7 +1042,7 @@ PDM_dmesh_find_topological_ridges
     PDM_log_trace_connectivity_long(dgroup_edge_idx, dgroup_edge, n_group_ridge, "dgroup_edge :: ");
   }
 
- PDM_free(edge_group);
+  PDM_free(edge_group);
   PDM_gnum_free(gen_gnum);
 
   /*
@@ -1064,12 +1064,12 @@ PDM_dmesh_find_topological_ridges
                          NULL,
              (void ***) &tmp_dridge_vtx_parent);
   PDM_g_num_t *dridge_vtx_parent = tmp_dridge_vtx_parent[0];
- PDM_free(tmp_dridge_vtx_parent);
+  PDM_free(tmp_dridge_vtx_parent);
 
 
- PDM_free(dparent_vtx);
- PDM_free(distrib_extract_vtx);
- PDM_free(dridge_vtx);
+  PDM_free(dparent_vtx);
+  PDM_free(distrib_extract_vtx);
+  PDM_free(dridge_vtx);
 
   PDM_block_to_part_free(btp_vtx);
 
@@ -1087,12 +1087,12 @@ PDM_dmesh_find_topological_ridges
   /*
    * Free
    */
- PDM_free(dgroup_edge_n );
- PDM_free(edge_distrib  );
- PDM_free(dedge_vtx_idx );
- PDM_free(dedge_vtx     );
- PDM_free(dedge_face_idx);
- PDM_free(dedge_face    );
+  PDM_free(dgroup_edge_n );
+  PDM_free(edge_distrib  );
+  PDM_free(dedge_vtx_idx );
+  PDM_free(dedge_vtx     );
+  PDM_free(dedge_face_idx);
+  PDM_free(dedge_face    );
 
 }
 

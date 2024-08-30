@@ -235,10 +235,10 @@ int main
     }
 
     // free
-   PDM_free(elt_ln_to_gn);
-   PDM_free(elt_vtx_idx);
-   PDM_free(elt_vtx);
-   PDM_free(coords);
+    PDM_free(elt_ln_to_gn);
+    PDM_free(elt_vtx_idx);
+    PDM_free(elt_vtx);
+    PDM_free(coords);
     PDM_part_mesh_nodal_free(pmn);
   }
 
@@ -661,37 +661,37 @@ int main
                     NULL); // vtx_field_values
 
     // free fusion
-   PDM_free(total_cell_color);
-   PDM_free(total_cell_ln_to_gn);
-   PDM_free(total_cell_face_idx);
-   PDM_free(total_cell_face);
-   PDM_free(total_face_ln_to_gn);
+    PDM_free(total_cell_color);
+    PDM_free(total_cell_ln_to_gn);
+    PDM_free(total_cell_face_idx);
+    PDM_free(total_cell_face);
+    PDM_free(total_face_ln_to_gn);
     //PDM_free(total_face_edge_idx);
     //PDM_free(total_face_edge);
     //PDM_free(total_edge_ln_to_gn);
     //PDM_free(total_edge_vtx);
-   PDM_free(total_vtx_ln_to_gn);
-   PDM_free(total_coords);
-   PDM_free(total_face_vtx_idx);
-   PDM_free(total_face_vtx);
+    PDM_free(total_vtx_ln_to_gn);
+    PDM_free(total_coords);
+    PDM_free(total_face_vtx_idx);
+    PDM_free(total_face_vtx);
 
     // step 5 : free
     PDM_part_extension_free(part_ext);
 
     // free
-   PDM_free(vtx_ln_to_gn);
-   PDM_free(coords);
+    PDM_free(vtx_ln_to_gn);
+    PDM_free(coords);
     //PDM_free(edge_ln_to_gn);
     //PDM_free(edge_vtx_idx);
     //PDM_free(edge_vtx);
-   PDM_free(face_ln_to_gn);
+    PDM_free(face_ln_to_gn);
     //PDM_free(face_edge_idx);
     //PDM_free(face_edge);
-   PDM_free(face_vtx_idx);
-   PDM_free(face_vtx);
-   PDM_free(cell_ln_to_gn);
-   PDM_free(cell_face_idx);
-   PDM_free(cell_face);
+    PDM_free(face_vtx_idx);
+    PDM_free(face_vtx);
+    PDM_free(cell_ln_to_gn);
+    PDM_free(cell_face_idx);
+    PDM_free(cell_face);
   }
 
   // free

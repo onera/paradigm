@@ -348,13 +348,13 @@ PDM_mean_values_polygon_2d
   const double eps2 = eps * eps;
 
   double *s;
-  PDM_malloc(s,n_vtx * 2,double);
   double *r;
-  PDM_malloc(r,n_vtx,double);
   double *A;
-  PDM_malloc(A,n_vtx,double);
   double *D;
-  PDM_malloc(D,n_vtx,double);
+  PDM_malloc(s, 2 * n_vtx, double);
+  PDM_malloc(r,     n_vtx, double);
+  PDM_malloc(A,     n_vtx, double);
+  PDM_malloc(D,     n_vtx, double);
 
   /* Loop on points */
   for (ipt = 0; ipt < n_pts; ipt++) {
@@ -507,10 +507,10 @@ PDM_mean_values_polygon_2d
     }
   }
 
- PDM_free(s);
- PDM_free(r);
- PDM_free(A);
- PDM_free(D);
+  PDM_free(s);
+  PDM_free(r);
+  PDM_free(A);
+  PDM_free(D);
 }
 
 
@@ -547,10 +547,10 @@ PDM_mean_values_polygon_3d
   }
 
 
-  double *vtx_uv;
-  PDM_malloc(vtx_uv,n_vtx * 2,double);
-  double *pts_uv;
-  PDM_malloc(pts_uv,n_pts * 2,double);
+  double *vtx_uv = NULL;
+  double *pts_uv = NULL;
+  PDM_malloc(vtx_uv, 2 * n_vtx, double);
+  PDM_malloc(pts_uv, 2 * n_pts, double);
 
   // PDM_polygon_3d_to_2d (n_vtx,
   //                       vtx_coord,
@@ -575,8 +575,8 @@ PDM_mean_values_polygon_3d
                               pts_uv,
                               mean_value_coord);
 
- PDM_free(vtx_uv);
- PDM_free(pts_uv);
+  PDM_free(vtx_uv);
+  PDM_free(pts_uv);
 }
 
 
@@ -626,10 +626,10 @@ PDM_mean_values_polyhedron
   }
 
   // create local array for storing point-to-vertex vectors and distances
-  double *inv_dist;
-  PDM_malloc(inv_dist,n_vtx,double);
-  double *u;
-  PDM_malloc(u,n_vtx * 3,double);
+  double *inv_dist = NULL;
+  double *u        = NULL;
+  PDM_malloc(inv_dist,     n_vtx, double);
+  PDM_malloc(u       , 3 * n_vtx, double);
 
   for (i = 0; i < n_vtx; i++) {
     // point-to-vertex vector
@@ -644,8 +644,8 @@ PDM_mean_values_polyhedron
     // handle special case when the point is really close to a vertex
     if (l2 < eps2) {
       weights[i] = 1.0;
-     PDM_free(inv_dist);
-     PDM_free(u);
+      PDM_free(inv_dist);
+      PDM_free(u);
       return;
     }
 
@@ -659,10 +659,10 @@ PDM_mean_values_polyhedron
 
 
   // Now loop over all triangle to compute weights
-  double *tan_half_alpha;
-  PDM_malloc(tan_half_alpha,n_vtx,double);
-  double *theta;
-  PDM_malloc(theta,n_vtx,double);
+  double *tan_half_alpha = NULL;
+  double *theta          = NULL;
+  PDM_malloc(tan_half_alpha, n_vtx, double);
+  PDM_malloc(theta         , n_vtx, double);
 
   for (int iface = 0; iface < n_face; iface++) {
     int n_vtx_face = face_vtx_idx[iface+1] - face_vtx_idx[iface];
@@ -830,10 +830,10 @@ PDM_mean_values_polyhedron
         }
       }
 
-     PDM_free(inv_dist);
-     PDM_free(u);
-     PDM_free(tan_half_alpha);
-     PDM_free(theta);
+      PDM_free(inv_dist);
+      PDM_free(u);
+      PDM_free(tan_half_alpha);
+      PDM_free(theta);
       return;
     }
 
@@ -865,10 +865,10 @@ PDM_mean_values_polyhedron
     }
   }
 
- PDM_free(inv_dist);
- PDM_free(u);
- PDM_free(tan_half_alpha);
- PDM_free(theta);
+  PDM_free(inv_dist);
+  PDM_free(u);
+  PDM_free(tan_half_alpha);
+  PDM_free(theta);
 }
 
 
@@ -894,9 +894,9 @@ PDM_mean_values_polygon
   const double eps2 = eps * eps;
 
   double *dist;
-  PDM_malloc(dist,n_vtx,double);
   double *u;
-  PDM_malloc(u,n_vtx * 3,double);
+  PDM_malloc(dist,     n_vtx, double);
+  PDM_malloc(u   , 3 * n_vtx, double);
   double barycenter[3] = {0., 0., 0.};
   for (i = 0; i < n_vtx; i++) {
     // point-to-vertex vector
@@ -923,8 +923,8 @@ PDM_mean_values_polygon
       }
 
       weights[i] = 1.0;
-     PDM_free(dist);
-     PDM_free(u);
+      PDM_free(dist);
+      PDM_free(u);
       return;
     }
 
@@ -943,7 +943,7 @@ PDM_mean_values_polygon
   double poly_normal[3] = {0., 0., 0.};
   double tmp[3];
   double *normal;
-  PDM_malloc(normal,3 * n_vtx,double);
+  PDM_malloc(normal, 3 * n_vtx, double);
   for (i = 0; i < n_vtx; i++) {
     ip = (i+1)%n_vtx;
 
@@ -975,7 +975,7 @@ PDM_mean_values_polygon
   //printf("%f %f %f\n", poly_normal[0], poly_normal[1], poly_normal[2]);
 
   double *tan_half_theta;
-  PDM_malloc(tan_half_theta,n_vtx,double);
+  PDM_malloc(tan_half_theta, n_vtx, double);
   double l2;
   for (i = 0; i < n_vtx; i++) {
     const double *ui  = u + 3*i;
@@ -993,9 +993,9 @@ PDM_mean_values_polygon
 
       weights[i] = dist[ip] / (dist[i] + dist[ip]);
       weights[ip] = dist[i] / (dist[i] + dist[ip]);
-     PDM_free(dist);
-     PDM_free(u);
-     PDM_free(normal);
+      PDM_free(dist);
+      PDM_free(u);
+      PDM_free(normal);
       return;
 
     } else {
@@ -1005,7 +1005,7 @@ PDM_mean_values_polygon
       }
     }
   }
- PDM_free(normal);
+  PDM_free(normal);
 
   double sum_w = 0.0;
   for (i = 0; i < n_vtx; i++) {
@@ -1020,9 +1020,9 @@ PDM_mean_values_polygon
     }
   }
 
- PDM_free(dist);
- PDM_free(u);
- PDM_free(tan_half_theta);
+  PDM_free(dist);
+  PDM_free(u);
+  PDM_free(tan_half_theta);
 }
 
 void
@@ -1048,10 +1048,10 @@ PDM_mean_value_coordinates_polyhedron
   const double eps = 1.e-9;
   const double eps2 = eps * eps;
 
-  double *u;
-  PDM_malloc(u,n_vtx * 3,double);
-  double *d;
-  PDM_malloc(d,n_vtx,double);
+  double *u = NULL;
+  double *d = NULL;
+  PDM_malloc(u, 3 * n_vtx, double);
+  PDM_malloc(d,     n_vtx, double);
 
   for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
     mean_value_coord[ivtx] = 0.;
@@ -1071,8 +1071,8 @@ PDM_mean_value_coordinates_polyhedron
     if (uu < eps2) {
       mean_value_coord[ivtx] = 1.;
 
-     PDM_free(u);
-     PDM_free(d);
+      PDM_free(u);
+      PDM_free(d);
       return;
     }
 
@@ -1103,7 +1103,7 @@ PDM_mean_value_coordinates_polyhedron
   PDM_l_num_t n_tri;
   PDM_l_num_t _tri_vtx[3];
   PDM_l_num_t *tri_vtx;
-  PDM_malloc(tri_vtx,(n_vtx_face_max - 2)*3,PDM_l_num_t);
+  PDM_malloc(tri_vtx, (n_vtx_face_max - 2)*3, PDM_l_num_t);
   PDM_triangulate_state_t *state = PDM_triangulate_state_create (n_vtx_face_max);
 
   for (int iface = 0; iface < n_face; iface++) {
@@ -1202,10 +1202,10 @@ PDM_mean_value_coordinates_polyhedron
         /* Polygonal face */
         else {
           n_vtx_face = face_vtx_idx[iface+1] - face_vtx_idx[iface];
-          double *face_coord;
-          PDM_malloc(face_coord,n_vtx_face * 3,double);
-          double *mean_value_coord_face;
-          PDM_malloc(mean_value_coord_face,n_vtx_face,double);
+          double *face_coord            = NULL;
+          double *mean_value_coord_face = NULL;
+          PDM_malloc(face_coord           , 3 * n_vtx_face, double);
+          PDM_malloc(mean_value_coord_face,     n_vtx_face, double);
 
           for (int j = 0; j < n_vtx_face; j++) {
             int id_vtx = face_vtx[face_vtx_idx[iface] + j] - 1;
@@ -1229,13 +1229,13 @@ PDM_mean_value_coordinates_polyhedron
             mean_value_coord[id_vtx] = mean_value_coord_face[j];
           }
 
-         PDM_free(face_coord);
-         PDM_free(mean_value_coord_face);
+          PDM_free(face_coord);
+          PDM_free(mean_value_coord_face);
         }
 
-       PDM_free(u);
-       PDM_free(d);
-       PDM_free(tri_vtx);
+        PDM_free(u);
+        PDM_free(d);
+        PDM_free(tri_vtx);
 
         if (dbg_enabled) {
           printf("point located on face %d (PDM_PI - h = %g)\n", iface, PDM_PI - h);
@@ -1298,9 +1298,9 @@ PDM_mean_value_coordinates_polyhedron
     }
   }
 
- PDM_free(u);
- PDM_free(d);
- PDM_free(tri_vtx);
+  PDM_free(u);
+  PDM_free(d);
+  PDM_free(tri_vtx);
 }
 
 

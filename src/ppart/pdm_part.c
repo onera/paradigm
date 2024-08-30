@@ -249,11 +249,11 @@ _dual_graph_from_face_cell
    * Free
    */
 
- PDM_free(cell_to_send_idx);
- PDM_free(cell_to_send_n);
- PDM_free(cell_to_send);
- PDM_free(cell_to_recv_idx);
- PDM_free(cell_to_recv_n);
+  PDM_free(cell_to_send_idx);
+  PDM_free(cell_to_send_n);
+  PDM_free(cell_to_send);
+  PDM_free(cell_to_recv_idx);
+  PDM_free(cell_to_recv_n);
 
   cell_to_send_idx  = NULL;
   cell_to_send_n    = NULL;
@@ -385,10 +385,10 @@ _dual_graph_from_face_cell
     }
   }
 
- PDM_free(cell_to_recv);
- PDM_free(n_neighbour);
+  PDM_free(cell_to_recv);
+  PDM_free(n_neighbour);
   if (!have_dcell_face) {
-   PDM_free(dcell_face_n);
+    PDM_free(dcell_face_n);
   }
 }
 
@@ -582,7 +582,7 @@ _dual_graph_from_cell_face
     cell_to_send[n_data*i + 1] = gcell2;
   }
 
- PDM_free(face_to_recv);
+  PDM_free(face_to_recv);
 
   PDM_MPI_Alltoallv(cell_to_send,
                     cell_to_send_n,
@@ -662,13 +662,13 @@ _dual_graph_from_cell_face
 
   /* Verifier tous les tableaux ..... */
 
- PDM_free(cell_to_recv);
- PDM_free(cell_to_recv_idx);
- PDM_free(cell_to_recv_n);
- PDM_free(cell_to_send);
- PDM_free(cell_to_send_idx);
- PDM_free(cell_to_send_n);
- PDM_free(n_neighbour);
+  PDM_free(cell_to_recv);
+  PDM_free(cell_to_recv_idx);
+  PDM_free(cell_to_recv_n);
+  PDM_free(cell_to_send);
+  PDM_free(cell_to_send_idx);
+  PDM_free(cell_to_send_n);
+  PDM_free(n_neighbour);
 }
 
 
@@ -749,9 +749,9 @@ _split
                                 &edgecut,
                                 cell_part,
                                 ppart->comm);
-     PDM_free(ubvec);
-     PDM_free(tpwgts);
-     PDM_free(_dcell_proc);
+      PDM_free(ubvec);
+      PDM_free(tpwgts);
+      PDM_free(_dcell_proc);
 
 #else
       if(i_rank == 0) {
@@ -945,11 +945,11 @@ _distrib_cell
 
   int lface_to_recv = face_to_recv_idx[n_rank];
 
- PDM_free(face_to_send);
- PDM_free(face_to_send_n);
- PDM_free(face_to_send_idx);
- PDM_free(face_to_recv_n);
- PDM_free(face_to_recv_idx);
+  PDM_free(face_to_send);
+  PDM_free(face_to_send_n);
+  PDM_free(face_to_send_idx);
+  PDM_free(face_to_recv_n);
+  PDM_free(face_to_recv_idx);
 
   /* Complete partitions */
   for (int i = 0; i < ppart->n_part; i++) {
@@ -1022,7 +1022,7 @@ _distrib_cell
     mesh_part->n_cell += 1;
   }
 
- PDM_free(face_to_recv);
+  PDM_free(face_to_recv);
 
   /* Face local numbering */
 
@@ -1120,7 +1120,7 @@ _distrib_cell
 
     /* Free */
 
-   PDM_free(initial_idx);
+    PDM_free(initial_idx);
     mesh_part->gcell_face = NULL;
   }
 
@@ -1222,7 +1222,7 @@ _distrib_face
               ppart->comm);
 
     if (face_to_send != NULL)
-     PDM_free(face_to_send);
+      PDM_free(face_to_send);
 
     /*
      *  Processes exchange information about requested faces
@@ -1282,7 +1282,7 @@ _distrib_face
       }
     }
 
-   PDM_free(requested_face);
+    PDM_free(requested_face);
 
     PDM_g_num_t  *rface_info    = NULL;
     int          *rface_info_n   = requested_face_n;
@@ -1298,7 +1298,7 @@ _distrib_face
               sizeof(PDM_g_num_t),
               ppart->comm);
 
-   PDM_free(sface_info);
+    PDM_free(sface_info);
     sface_info = NULL;
 
     if (i_part < ppart->n_part) {
@@ -1337,7 +1337,7 @@ _distrib_face
       }
 
       if (rface_info != NULL)
-       PDM_free(rface_info);
+        PDM_free(rface_info);
       rface_info = NULL;
 
       /* Vertex local numbering vtx_ln_to_gn */
@@ -1392,7 +1392,7 @@ _distrib_face
 
       /* Free */
 
-     PDM_free(initial_idx);
+      PDM_free(initial_idx);
       mesh_part->gface_vtx = NULL;
 
       if (1 == 0) {
@@ -1413,19 +1413,19 @@ _distrib_face
     }
 
     if (rface_info != NULL)
-     PDM_free(rface_info);
+      PDM_free(rface_info);
     rface_info = NULL;
 
     if (all_to_all_n_to_ln != NULL)
-     PDM_free(all_to_all_n_to_ln);
+      PDM_free(all_to_all_n_to_ln);
 
   } /* For i_part */
 
 
- PDM_free(face_to_send_n);
- PDM_free(face_to_send_idx);
- PDM_free(requested_face_n);
- PDM_free(requested_face_idx);
+  PDM_free(face_to_send_n);
+  PDM_free(face_to_send_idx);
+  PDM_free(requested_face_n);
+  PDM_free(requested_face_idx);
 
 }
 
@@ -1525,7 +1525,7 @@ _distrib_vtx
               ppart->comm);
 
     if (vtx_to_send != NULL)
-     PDM_free(vtx_to_send);
+      PDM_free(vtx_to_send);
 
     /*
      *  Processes exchange information about requested vtxs
@@ -1578,7 +1578,7 @@ _distrib_vtx
       }
     }
 
-   PDM_free(requested_vtx);
+    PDM_free(requested_vtx);
 
     unsigned char *rvtx_info     = NULL;
     int           *rvtx_info_n   = requested_vtx_n;
@@ -1595,7 +1595,7 @@ _distrib_vtx
               ppart->comm);
 
     if (svtx_info != NULL)
-     PDM_free(svtx_info);
+      PDM_free(svtx_info);
 
     if (i_part < ppart->n_part) {
 
@@ -1636,18 +1636,18 @@ _distrib_vtx
     } /* if i_part */
 
     if (all_to_all_n_to_ln != NULL)
-     PDM_free(all_to_all_n_to_ln);
+      PDM_free(all_to_all_n_to_ln);
 
     if (rvtx_info != NULL)
-     PDM_free(rvtx_info);
+      PDM_free(rvtx_info);
     rvtx_info = NULL;
 
   } /* For i_part */
 
- PDM_free(vtx_to_send_n);
- PDM_free(vtx_to_send_idx);
- PDM_free(requested_vtx_n);
- PDM_free(requested_vtx_idx);
+  PDM_free(vtx_to_send_n);
+  PDM_free(vtx_to_send_idx);
+  PDM_free(requested_vtx_n);
+  PDM_free(requested_vtx_idx);
 
 }
 
@@ -1799,7 +1799,7 @@ _search_part_bound_face
               sizeof(PDM_g_num_t),
               ppart->comm);
 
-   PDM_free(face_to_send);
+    PDM_free(face_to_send);
     int n_face = requested_face_idx[n_rank]/n_data;
 
 
@@ -1822,7 +1822,7 @@ _search_part_bound_face
 
     }
 
-   PDM_free(requested_face);
+    PDM_free(requested_face);
 
   } /* mn_part */
 
@@ -1893,7 +1893,7 @@ _search_part_bound_face
             sizeof(PDM_MPI_INT),
             ppart->comm);
 
- PDM_free(face_to_sendInt);
+  PDM_free(face_to_sendInt);
 
   /* Complete face_part_bound */
 
@@ -2046,11 +2046,11 @@ _search_part_bound_face
     }
 
     if (sizeof(PDM_g_num_t) != sizeof(int)) {
-     PDM_free(work_array2);
+      PDM_free(work_array2);
     }
-   PDM_free(work_array);
-   PDM_free(ind);
-   PDM_free(copy_face_part_bound);
+    PDM_free(work_array);
+    PDM_free(ind);
+    PDM_free(copy_face_part_bound);
 
   }
 
@@ -2071,14 +2071,14 @@ _search_part_bound_face
     }
   }
 
- PDM_free(requested_face_int);
- PDM_free(ppart->dpart_bound);
+  PDM_free(requested_face_int);
+  PDM_free(ppart->dpart_bound);
   ppart->dpart_bound = NULL;
- PDM_free(face_to_send_idx);
- PDM_free(face_to_send_n);
+  PDM_free(face_to_send_idx);
+  PDM_free(face_to_send_n);
 
- PDM_free(requested_face_n);
- PDM_free(requested_face_idx);
+  PDM_free(requested_face_n);
+  PDM_free(requested_face_idx);
 
 }
 
@@ -2186,7 +2186,7 @@ _distrib_face_groups
               sizeof(PDM_g_num_t),
               ppart->comm);
 
-   PDM_free(face_to_send);
+    PDM_free(face_to_send);
     face_to_send = NULL;
 
     int idx = 0;
@@ -2251,7 +2251,7 @@ _distrib_face_groups
       }
 
       if (requested_face != NULL)
-       PDM_free(requested_face);
+        PDM_free(requested_face);
       requested_face    = NULL;
 
       PDM_g_num_t *requested_face2 = NULL;
@@ -2267,7 +2267,7 @@ _distrib_face_groups
                 ppart->comm);
 
       if (face_to_send != NULL)
-       PDM_free(face_to_send);
+        PDM_free(face_to_send);
 
       /*
        *  Processes exchange information about requested faces
@@ -2309,7 +2309,7 @@ _distrib_face_groups
         }
       }
 
-     PDM_free(requested_face2);
+      PDM_free(requested_face2);
 
       PDM_g_num_t *rface_info      = NULL;
       int          *rface_info_n   = requested_face_n;
@@ -2325,7 +2325,7 @@ _distrib_face_groups
                 sizeof(PDM_g_num_t),
                 ppart->comm);
 
-     PDM_free(sface_info);
+      PDM_free(sface_info);
       sface_info = NULL;
 
       if (i_part < ppart->n_part) {
@@ -2362,10 +2362,10 @@ _distrib_face_groups
       }
 
       if (rface_info != NULL)
-       PDM_free(rface_info);
+        PDM_free(rface_info);
 
       if (all_to_all_n_to_ln != NULL)
-       PDM_free(all_to_all_n_to_ln);
+        PDM_free(all_to_all_n_to_ln);
 
     }  /* For i_part */
 
@@ -2392,12 +2392,12 @@ _distrib_face_groups
     }
   }
 
- PDM_free(face_to_send_n);
- PDM_free(face_to_send_idx);
- PDM_free(requested_face_n);
- PDM_free(requested_face_idx);
- PDM_free(dface_group_proc);
- PDM_free(dface_group);
+  PDM_free(face_to_send_n);
+  PDM_free(face_to_send_idx);
+  PDM_free(requested_face_n);
+  PDM_free(requested_face_idx);
+  PDM_free(dface_group_proc);
+  PDM_free(dface_group);
 }
 
 /**
@@ -2415,190 +2415,190 @@ _part_free
 )
 {
   if (part->cell_face_idx != NULL)
-   PDM_free(part->cell_face_idx);
+    PDM_free(part->cell_face_idx);
   part->cell_face_idx = NULL;
 
   if (part->gcell_face != NULL)
-   PDM_free(part->gcell_face);
+    PDM_free(part->gcell_face);
   part->gcell_face = NULL;
 
   if (part->cell_face != NULL)
-   PDM_free(part->cell_face);
+    PDM_free(part->cell_face);
   part->cell_face = NULL;
 
   if (part->cell_ln_to_gn != NULL)
-   PDM_free(part->cell_ln_to_gn);
+    PDM_free(part->cell_ln_to_gn);
   part->cell_ln_to_gn = NULL;
 
   if (part->cell_tag != NULL)
-   PDM_free(part->cell_tag);
+    PDM_free(part->cell_tag);
   part->cell_tag = NULL;
 
   if (part->face_cell != NULL)
-   PDM_free(part->face_cell);
+    PDM_free(part->face_cell);
   part->face_cell = NULL;
 
   if (part->face_vtx_idx != NULL)
-   PDM_free(part->face_vtx_idx);
+    PDM_free(part->face_vtx_idx);
   part->face_vtx_idx = NULL;
 
   if (part->gface_vtx != NULL)
-   PDM_free(part->gface_vtx);
+    PDM_free(part->gface_vtx);
   part->gface_vtx = NULL;
 
   if (part->face_vtx != NULL)
-   PDM_free(part->face_vtx);
+    PDM_free(part->face_vtx);
   part->face_vtx = NULL;
 
   if (part->face_ln_to_gn != NULL)
-   PDM_free(part->face_ln_to_gn);
+    PDM_free(part->face_ln_to_gn);
   part->face_ln_to_gn = NULL;
 
   if (part->face_tag != NULL)
-   PDM_free(part->face_tag);
+    PDM_free(part->face_tag);
   part->face_tag = NULL;
 
   if (part->edge_ln_to_gn != NULL)
-   PDM_free(part->edge_ln_to_gn);
+    PDM_free(part->edge_ln_to_gn);
   part->edge_ln_to_gn = NULL;
 
   if (part->edge_tag != NULL)
-   PDM_free(part->edge_tag);
+    PDM_free(part->edge_tag);
   part->edge_tag = NULL;
 
 
   if (part->edge_face_idx != NULL)
-   PDM_free(part->edge_face_idx);
+    PDM_free(part->edge_face_idx);
   part->edge_face_idx = NULL;
 
   if (part->edge_face != NULL)
-   PDM_free(part->edge_face);
+    PDM_free(part->edge_face);
   part->edge_face = NULL;
 
   if (part->face_edge_idx != NULL)
-   PDM_free(part->face_edge_idx);
+    PDM_free(part->face_edge_idx);
   part->face_edge_idx = NULL;
 
   if (part->face_edge != NULL)
-   PDM_free(part->face_edge);
+    PDM_free(part->face_edge);
   part->face_edge = NULL;
 
   if (part->edge_vtx != NULL)
-   PDM_free(part->edge_vtx);
+    PDM_free(part->edge_vtx);
   part->edge_vtx = NULL;
 
   if (part->face_part_bound_proc_idx != NULL)
-   PDM_free(part->face_part_bound_proc_idx);
+    PDM_free(part->face_part_bound_proc_idx);
   part->face_part_bound_proc_idx = NULL;
 
   if (part->face_part_bound_part_idx != NULL)
-   PDM_free(part->face_part_bound_part_idx);
+    PDM_free(part->face_part_bound_part_idx);
   part->face_part_bound_part_idx = NULL;
 
   if (part->face_part_bound != NULL)
-   PDM_free(part->face_part_bound);
+    PDM_free(part->face_part_bound);
   part->face_part_bound = NULL;
 
   if (part->face_group_idx != NULL)
-   PDM_free(part->face_group_idx);
+    PDM_free(part->face_group_idx);
   part->face_group_idx = NULL;
 
   if (part->face_group != NULL)
-   PDM_free(part->face_group);
+    PDM_free(part->face_group);
   part->face_group = NULL;
 
   if (part->face_group_ln_to_gn != NULL)
-   PDM_free(part->face_group_ln_to_gn);
+    PDM_free(part->face_group_ln_to_gn);
   part->face_group_ln_to_gn = NULL;
 
   if (part->vtx != NULL)
-   PDM_free(part->vtx);
+    PDM_free(part->vtx);
   part->vtx = NULL;
 
   if (part->vtx_ln_to_gn != NULL)
-   PDM_free(part->vtx_ln_to_gn);
+    PDM_free(part->vtx_ln_to_gn);
   part->vtx_ln_to_gn = NULL;
 
   if (part->vtx_tag != NULL)
-   PDM_free(part->vtx_tag);
+    PDM_free(part->vtx_tag);
   part->vtx_tag = NULL;
 
   if (part->cell_color != NULL)
-   PDM_free(part->cell_color);
+    PDM_free(part->cell_color);
   part->cell_color = NULL;
 
   if (part->face_color != NULL)
-   PDM_free(part->face_color);
+    PDM_free(part->face_color);
   part->face_color = NULL;
 
   if (part->edge_color != NULL)
-   PDM_free(part->edge_color);
+    PDM_free(part->edge_color);
   part->edge_color = NULL;
 
   if (part->vtx_color != NULL)
-   PDM_free(part->vtx_color);
+    PDM_free(part->vtx_color);
   part->vtx_color = NULL;
 
   if (part->thread_color != NULL)
-   PDM_free(part->thread_color);
+    PDM_free(part->thread_color);
   part->thread_color = NULL;
 
   if (part->hyperplane_color != NULL)
-   PDM_free(part->hyperplane_color);
+    PDM_free(part->hyperplane_color);
   part->hyperplane_color = NULL;
 
   if (part->new_to_old_order_cell != NULL)
-   PDM_free(part->new_to_old_order_cell);
+    PDM_free(part->new_to_old_order_cell);
   part->new_to_old_order_cell = NULL;
 
   if (part->new_to_old_order_face != NULL)
-   PDM_free(part->new_to_old_order_face);
+    PDM_free(part->new_to_old_order_face);
   part->new_to_old_order_face = NULL;
 
   if (part->new_to_old_order_edge != NULL)
-   PDM_free(part->new_to_old_order_edge);
+    PDM_free(part->new_to_old_order_edge);
   part->new_to_old_order_edge = NULL;
 
   if (part->new_to_old_order_vtx != NULL)
-   PDM_free(part->new_to_old_order_vtx);
+    PDM_free(part->new_to_old_order_vtx);
   part->new_to_old_order_vtx = NULL;
 
   if(part->subpartlayout != NULL){
     if(part->subpartlayout->cell_tile_idx!= NULL)
-     PDM_free(part->subpartlayout->cell_tile_idx);
+      PDM_free(part->subpartlayout->cell_tile_idx);
     if(part->subpartlayout->face_tile_idx!= NULL)
-     PDM_free(part->subpartlayout->face_tile_idx);
+      PDM_free(part->subpartlayout->face_tile_idx);
     if(part->subpartlayout->face_bnd_tile_idx!= NULL)
-     PDM_free(part->subpartlayout->face_bnd_tile_idx);
+      PDM_free(part->subpartlayout->face_bnd_tile_idx);
     if(part->subpartlayout->mask_tile_idx!= NULL)
-     PDM_free(part->subpartlayout->mask_tile_idx);
+      PDM_free(part->subpartlayout->mask_tile_idx);
     if(part->subpartlayout->cell_vect_tile_idx!= NULL)
-     PDM_free(part->subpartlayout->cell_vect_tile_idx);
+      PDM_free(part->subpartlayout->cell_vect_tile_idx);
     if(part->subpartlayout->mask_tile_n!= NULL)
-     PDM_free(part->subpartlayout->mask_tile_n);
+      PDM_free(part->subpartlayout->mask_tile_n);
     if(part->subpartlayout->cell_vect_tile_n!= NULL)
-     PDM_free(part->subpartlayout->cell_vect_tile_n);
+      PDM_free(part->subpartlayout->cell_vect_tile_n);
     if(part->subpartlayout->mask_tile!= NULL)
-     PDM_free(part->subpartlayout->mask_tile);
-   PDM_free(part->subpartlayout);
+      PDM_free(part->subpartlayout->mask_tile);
+    PDM_free(part->subpartlayout);
   }
 
- PDM_free(part->n_elt);
+  PDM_free(part->n_elt);
   part->n_elt = NULL;
   for (int i=0; i<part->n_section; ++i) {
-   PDM_free(part->elt_vtx_idx[i]);
-   PDM_free(part->elt_vtx[i]);
-   PDM_free(part->elt_section_ln_to_gn[i]);
+    PDM_free(part->elt_vtx_idx[i]);
+    PDM_free(part->elt_vtx[i]);
+    PDM_free(part->elt_section_ln_to_gn[i]);
   }
- PDM_free(part->elt_vtx_idx);
- PDM_free(part->elt_vtx);
- PDM_free(part->elt_section_ln_to_gn);
+  PDM_free(part->elt_vtx_idx);
+  PDM_free(part->elt_vtx);
+  PDM_free(part->elt_section_ln_to_gn);
   part->elt_vtx_idx          = NULL;
   part->elt_vtx              = NULL;
   part->elt_section_ln_to_gn = NULL;
   part->n_section            = 0;
 
- PDM_free(part);
+  PDM_free(part);
 }
 
 /**
@@ -2616,47 +2616,47 @@ _part_partial_free
 )
 {
   if (part->cell_face_idx != NULL)
-   PDM_free(part->cell_face_idx);
+    PDM_free(part->cell_face_idx);
   part->cell_face_idx = NULL;
 
   if (part->gcell_face != NULL)
-   PDM_free(part->gcell_face);
+    PDM_free(part->gcell_face);
   part->gcell_face = NULL;
 
   if (part->cell_face != NULL)
-   PDM_free(part->cell_face);
+    PDM_free(part->cell_face);
   part->cell_face = NULL;
 
   if (part->face_cell != NULL)
-   PDM_free(part->face_cell);
+    PDM_free(part->face_cell);
   part->face_cell = NULL;
 
   if (part->face_vtx_idx != NULL)
-   PDM_free(part->face_vtx_idx);
+    PDM_free(part->face_vtx_idx);
   part->face_vtx_idx = NULL;
 
   if (part->gface_vtx != NULL)
-   PDM_free(part->gface_vtx);
+    PDM_free(part->gface_vtx);
   part->gface_vtx = NULL;
 
   if (part->face_vtx != NULL)
-   PDM_free(part->face_vtx);
+    PDM_free(part->face_vtx);
   part->face_vtx = NULL;
 
   if (part->vtx != NULL)
-   PDM_free(part->vtx);
+    PDM_free(part->vtx);
   part->vtx = NULL;
 
   if (part->new_to_old_order_cell != NULL)
-   PDM_free(part->new_to_old_order_cell);
+    PDM_free(part->new_to_old_order_cell);
   part->new_to_old_order_cell = NULL;
 
   if (part->new_to_old_order_face != NULL)
-   PDM_free(part->new_to_old_order_face);
+    PDM_free(part->new_to_old_order_face);
   part->new_to_old_order_face = NULL;
 
   if (part->new_to_old_order_vtx != NULL)
-   PDM_free(part->new_to_old_order_vtx);
+    PDM_free(part->new_to_old_order_vtx);
   part->new_to_old_order_vtx = NULL;
 }
 
@@ -3105,7 +3105,7 @@ PDM_part_create
       _ppart->dface_proc[i] = (PDM_g_num_t) dn_face_proc[i-1] + _ppart->dface_proc[i-1];
     }
 
-   PDM_free(dn_face_proc);
+    PDM_free(dn_face_proc);
 
     /* Vertex definitions */
 
@@ -3128,7 +3128,7 @@ PDM_part_create
       _ppart->dvtx_proc[i] = dn_vtx_proc[i-1] + _ppart->dvtx_proc[i-1];
     }
 
-   PDM_free(dn_vtx_proc);
+    PDM_free(dn_vtx_proc);
 
     /* Boundaries definitions */
 
@@ -3274,7 +3274,7 @@ PDM_part_create
                   cell_part);
 
     if (have_dcell_part == 0) {
-     PDM_free(cell_part);
+      PDM_free(cell_part);
       cell_part = NULL;
     }
 
@@ -3343,27 +3343,27 @@ PDM_part_create
     }
 
     if (_ppart->dcell_face_idx != NULL)
-     PDM_free(_ppart->dcell_face_idx);
+      PDM_free(_ppart->dcell_face_idx);
     _ppart->dcell_face_idx = NULL;
 
     if (_ppart->dcell_face != NULL)
-     PDM_free(_ppart->dcell_face);
+      PDM_free(_ppart->dcell_face);
     _ppart->dcell_face = NULL;
 
     if (_ppart->dcell_proc != NULL)
-     PDM_free(_ppart->dcell_proc);
+      PDM_free(_ppart->dcell_proc);
     _ppart->dcell_proc = NULL;
 
     if (_ppart->dface_proc != NULL)
-     PDM_free(_ppart->dface_proc);
+      PDM_free(_ppart->dface_proc);
     _ppart->dface_proc = NULL;
 
     if (_ppart->dface_cell != NULL)
-     PDM_free(_ppart->dface_cell);
+      PDM_free(_ppart->dface_cell);
     _ppart->dface_cell = NULL;
 
     if (_ppart->dvtx_proc != NULL)
-     PDM_free(_ppart->dvtx_proc);
+      PDM_free(_ppart->dvtx_proc);
     _ppart->dvtx_proc = NULL;
 
     // if (_ppart->dpart_proc != NULL)
@@ -3371,19 +3371,19 @@ PDM_part_create
     // _ppart->dpart_proc = NULL;
 
     if (_ppart->gpart_to_lproc_part != NULL)
-     PDM_free(_ppart->gpart_to_lproc_part);
+      PDM_free(_ppart->gpart_to_lproc_part);
     _ppart->gpart_to_lproc_part = NULL;
 
     if (_ppart->dpart_bound != NULL)
-     PDM_free(_ppart->dpart_bound);
+      PDM_free(_ppart->dpart_bound);
     _ppart->dpart_bound = NULL;
 
     if (_ppart->ddual_graph_idx != NULL)
-     PDM_free(_ppart->ddual_graph_idx);
+      PDM_free(_ppart->ddual_graph_idx);
     _ppart->ddual_graph_idx = NULL;
 
     if (_ppart->ddual_graph != NULL)
-     PDM_free(_ppart->ddual_graph);
+      PDM_free(_ppart->ddual_graph);
     _ppart->ddual_graph = NULL;
 
   }
@@ -3682,47 +3682,47 @@ PDM_part_free
   } else {
 
     if (_ppart->dcell_face_idx != NULL)
-     PDM_free(_ppart->dcell_face_idx);
+      PDM_free(_ppart->dcell_face_idx);
     _ppart->dcell_face_idx = NULL;
 
     if (_ppart->dcell_face != NULL)
-     PDM_free(_ppart->dcell_face);
+      PDM_free(_ppart->dcell_face);
     _ppart->dcell_face = NULL;
 
     if (_ppart->dcell_proc != NULL)
-     PDM_free(_ppart->dcell_proc);
+      PDM_free(_ppart->dcell_proc);
     _ppart->dcell_proc = NULL;
 
     if (_ppart->dface_proc != NULL)
-     PDM_free(_ppart->dface_proc);
+      PDM_free(_ppart->dface_proc);
     _ppart->dface_proc = NULL;
 
     if (_ppart->dface_cell != NULL)
-     PDM_free(_ppart->dface_cell);
+      PDM_free(_ppart->dface_cell);
     _ppart->dface_cell = NULL;
 
     if (_ppart->dvtx_proc != NULL)
-     PDM_free(_ppart->dvtx_proc);
+      PDM_free(_ppart->dvtx_proc);
     _ppart->dvtx_proc = NULL;
 
     if (_ppart->dpart_proc != NULL)
-     PDM_free(_ppart->dpart_proc);
+      PDM_free(_ppart->dpart_proc);
     _ppart->dpart_proc = NULL;
 
     if (_ppart->gpart_to_lproc_part != NULL)
-     PDM_free(_ppart->gpart_to_lproc_part);
+      PDM_free(_ppart->gpart_to_lproc_part);
     _ppart->gpart_to_lproc_part = NULL;
 
     if (_ppart->dpart_bound != NULL)
-     PDM_free(_ppart->dpart_bound);
+      PDM_free(_ppart->dpart_bound);
     _ppart->dpart_bound = NULL;
 
     if (_ppart->ddual_graph_idx != NULL)
-     PDM_free(_ppart->ddual_graph_idx);
+      PDM_free(_ppart->ddual_graph_idx);
     _ppart->ddual_graph_idx = NULL;
 
     if (_ppart->ddual_graph != NULL)
-     PDM_free(_ppart->ddual_graph);
+      PDM_free(_ppart->ddual_graph);
     _ppart->ddual_graph = NULL;
 
     for (int i = 0; i < _ppart->n_part; i++) {
@@ -3734,12 +3734,12 @@ PDM_part_free
     _ppart->timer = NULL;
 
     if (_ppart->mesh_parts != NULL)
-     PDM_free(_ppart->mesh_parts);
+      PDM_free(_ppart->mesh_parts);
     _ppart->mesh_parts = NULL;
 
   }
 
- PDM_free(_ppart);
+  PDM_free(_ppart);
 
 }
 
@@ -3948,11 +3948,11 @@ int         *bound_part_faces_sum
     *bound_part_faces_median = (int) ((s_tot[mid-1] + s_tot[mid])/2.);
   }
 
- PDM_free(n_tot);
- PDM_free(s_tot);
- PDM_free(n_loc);
- PDM_free(s_loc);
- PDM_free(n_partProc);
+  PDM_free(n_tot);
+  PDM_free(s_tot);
+  PDM_free(n_loc);
+  PDM_free(s_loc);
+  PDM_free(n_partProc);
 }
 
 
@@ -3975,27 +3975,27 @@ PDM_part_partial_free
   PDM_MPI_Barrier(_ppart->comm);
 
   if (_ppart->dcell_proc != NULL)
-   PDM_free(_ppart->dcell_proc);
+    PDM_free(_ppart->dcell_proc);
   _ppart->dcell_proc = NULL;
 
   if (_ppart->dface_proc != NULL)
-   PDM_free(_ppart->dface_proc);
+    PDM_free(_ppart->dface_proc);
   _ppart->dface_proc = NULL;
 
   if (_ppart->dvtx_proc != NULL)
-   PDM_free(_ppart->dvtx_proc);
+    PDM_free(_ppart->dvtx_proc);
   _ppart->dvtx_proc = NULL;
 
   if (_ppart->dpart_proc != NULL)
-   PDM_free(_ppart->dpart_proc);
+    PDM_free(_ppart->dpart_proc);
   _ppart->dpart_proc = NULL;
 
   if (_ppart->ddual_graph_idx != NULL)
-   PDM_free(_ppart->ddual_graph_idx);
+    PDM_free(_ppart->ddual_graph_idx);
   _ppart->ddual_graph_idx = NULL;
 
   if (_ppart->ddual_graph != NULL)
-   PDM_free(_ppart->ddual_graph);
+    PDM_free(_ppart->ddual_graph);
   _ppart->ddual_graph = NULL;
 
   // printf("PDM_part_partial_free f2 \n");

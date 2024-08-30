@@ -1735,7 +1735,7 @@ _extract_part_nodal
                                            NULL,//ho_ordering,
                                            PDM_OWNERSHIP_KEEP);
 
-     PDM_free(idx_selected_section[i_part][i_section]);
+      PDM_free(idx_selected_section[i_part][i_section]);
 
     }
 
@@ -4401,7 +4401,7 @@ _extract_part_and_reequilibrate_from_target
     PDM_free(part2_edge_to_part1_edge_idx);
   }
   if(part2_vtx_to_part1_vtx_idx != NULL) {
-   PDM_free(part2_vtx_to_part1_vtx_idx);
+    PDM_free(part2_vtx_to_part1_vtx_idx);
   }
 
   /*

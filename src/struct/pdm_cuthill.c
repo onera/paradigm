@@ -485,8 +485,8 @@ int node_num
   }
 
   /** Allocate memory for the degree array. **/
-  int *deg;
-  PDM_malloc(deg,node_num,int); // deg = new int[node_num];
+  int *deg = NULL;
+  PDM_malloc(deg, node_num, int); // deg = new int[node_num];
 
   /** Find the degrees of the nodes in the component specified by MASK and ROOT. **/
 
@@ -510,7 +510,7 @@ int node_num
 
   if ( *iccsze == 1 )
   {
-   PDM_free(deg);// delete [] deg;
+    PDM_free(deg);// delete [] deg;
     return;
   }
   /*   Carry out the reordering.
@@ -595,7 +595,7 @@ int node_num
   _i4vec_reverse ( *iccsze, perm );
 
   /**  Free memory. **/
- PDM_free(deg);// delete [] deg;
+  PDM_free(deg);// delete [] deg;
 
 
   return;
@@ -629,7 +629,7 @@ int perm[]
   int root;
 
   int *level_row;
-  PDM_malloc(level_row,(node_num + 1),int); //level_row = new int[node_num+1];
+  PDM_malloc(level_row, node_num + 1, int); //level_row = new int[node_num+1];
   int *mask       = PDM_array_const_int(node_num, 1); //mask = new int[node_num];
 
   num = 1;
@@ -661,15 +661,15 @@ int perm[]
        */
       if ( node_num < num )
       {
-       PDM_free(level_row); //delete [] level_row;
-       PDM_free(mask);      //delete [] mask;
+        PDM_free(level_row); //delete [] level_row;
+        PDM_free(mask);      //delete [] mask;
         return;
       }
     }
   }
 
- PDM_free(level_row); //delete [] level_row;
- PDM_free(mask);      //delete [] mask;
+  PDM_free(level_row); //delete [] level_row;
+  PDM_free(mask);      //delete [] mask;
 
   return;
 }
@@ -697,10 +697,10 @@ PDM_cuthill_checkbandwidth
 {
 
   /** Do a copy since graph seems to be modified (?) **/
-  int *dual_graph_idx_tmp;
-  PDM_malloc(dual_graph_idx_tmp,(n_elm + 1) ,int);
-  int *dual_graph_tmp;
-  PDM_malloc(dual_graph_tmp,dual_graph_idx[n_elm] ,int);
+  int *dual_graph_idx_tmp = NULL;
+  int *dual_graph_tmp     = NULL;
+  PDM_malloc(dual_graph_idx_tmp, n_elm + 1            , int);
+  PDM_malloc(dual_graph_tmp    , dual_graph_idx[n_elm], int);
 
   /** Offset Graph and Arr **/
   for (int i = 0; i < n_elm; i++){
@@ -713,8 +713,8 @@ PDM_cuthill_checkbandwidth
 
   int dualBandWidth = _adj_bandwidth(dual_graph_idx_tmp[n_elm], dual_graph_idx_tmp, dual_graph_tmp);
 
- PDM_free(dual_graph_idx_tmp);
- PDM_free(dual_graph_tmp);
+  PDM_free(dual_graph_idx_tmp);
+  PDM_free(dual_graph_tmp);
   return dualBandWidth;
 }
 
@@ -740,10 +740,10 @@ PDM_cuthill_generate
 {
 
   /** Do a copy since graph seems to be modified (?) **/
-  int *dual_graph_idx_tmp;
-  PDM_malloc(dual_graph_idx_tmp,(n_elm + 1) ,int);
-  int *dual_graph_tmp;
-  PDM_malloc(dual_graph_tmp,dual_graph_idx[n_elm] ,int);
+  int *dual_graph_idx_tmp = NULL;
+  int *dual_graph_tmp     = NULL;
+  PDM_malloc(dual_graph_idx_tmp, n_elm + 1           , int);
+  PDM_malloc(dual_graph_tmp    ,dual_graph_idx[n_elm], int);
 
   /** Offset Graph and Arr **/
   for (int i = 0; i < n_elm; i++){
@@ -772,8 +772,8 @@ PDM_cuthill_generate
     PDM_printf("\n");
   }
   /** Free **/
- PDM_free(dual_graph_idx_tmp);
- PDM_free(dual_graph_tmp);
+  PDM_free(dual_graph_idx_tmp);
+  PDM_free(dual_graph_tmp);
 }
 
 #ifdef  __cplusplus

@@ -197,18 +197,18 @@ int main(int argc, char *argv[])
 
     PDM_writer_step_beg(id_cs, 0.);
 
-    int **face_vtx_n;
-    PDM_malloc(face_vtx_n,n_part,int *);
-    int **cell_face_n;
-    PDM_malloc(cell_face_n,n_part,int *);
+    int **face_vtx_n  = NULL;
+    int **cell_face_n = NULL;
+    PDM_malloc(face_vtx_n , n_part, int *);
+    PDM_malloc(cell_face_n, n_part, int *);
 
-    int **pface_vtx_idx;
-    PDM_malloc(pface_vtx_idx,n_part,int *);
-    int **pface_vtx;
-    PDM_malloc(pface_vtx,n_part,int *);
+    int **pface_vtx_idx = NULL;
+    int **pface_vtx     = NULL;
+    PDM_malloc(pface_vtx_idx, n_part, int *);
+    PDM_malloc(pface_vtx    , n_part, int *);
 
-    PDM_real_t **val_num_part;
-    PDM_malloc(val_num_part,n_part,PDM_real_t *);
+    PDM_real_t **val_num_part = NULL;
+    PDM_malloc(val_num_part, n_part, PDM_real_t *);
 
     int use_edge = 0;
 
@@ -301,8 +301,8 @@ int main(int argc, char *argv[])
                                       &vtx_ln_to_gn,
                                       PDM_OWNERSHIP_KEEP);
 
-      face_vtx_n PDM_malloc([i_part],n_face,int);
-      PDM_malloc(cell_face_n[i_part],n_cell,int);
+      PDM_malloc(face_vtx_n [i_part], n_face, int);
+      PDM_malloc(cell_face_n[i_part], n_cell, int);
 
       for (int i = 0; i < n_cell; i++) {
         cell_face_n[i_part][i] = cell_face_idx[i+1] - cell_face_idx[i];
@@ -333,7 +333,7 @@ int main(int argc, char *argv[])
                                            cell_face,
                                            cell_ln_to_gn);
 
-      PDM_malloc(val_num_part[i_part],n_cell,PDM_real_t);
+      PDM_malloc(val_num_part[i_part], n_cell, PDM_real_t);
       for (int i = 0; i < n_cell; i++) {
         val_num_part[i_part][i] = n_part*i_rank + i_part;
       }
@@ -357,18 +357,18 @@ int main(int argc, char *argv[])
     PDM_writer_step_end(id_cs);
 
     for (int i = 0; i < n_part; i++) {
-     PDM_free(face_vtx_n[i]);
-     PDM_free(cell_face_n[i]);
+      PDM_free(face_vtx_n[i]);
+      PDM_free(cell_face_n[i]);
       if (use_edge) {
-       PDM_free(pface_vtx[i]);
+        PDM_free(pface_vtx[i]);
       }
-     PDM_free(val_num_part[i]);
+      PDM_free(val_num_part[i]);
     }
-   PDM_free(face_vtx_n);
-   PDM_free(cell_face_n);
-   PDM_free(pface_vtx_idx);
-   PDM_free(pface_vtx);
-   PDM_free(val_num_part);
+    PDM_free(face_vtx_n);
+    PDM_free(cell_face_n);
+    PDM_free(pface_vtx_idx);
+    PDM_free(pface_vtx);
+    PDM_free(val_num_part);
 
     PDM_writer_free(id_cs);
   }

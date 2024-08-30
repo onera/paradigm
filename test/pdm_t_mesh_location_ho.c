@@ -537,7 +537,7 @@ int main(int argc, char *argv[])
                                        order,
                                        PDM_Mesh_nodal_n_vtx_elt_get(type, order),
                                        ijk);
-     PDM_free(ijk);
+      PDM_free(ijk);
     }
   }
 
@@ -674,13 +674,13 @@ int main(int argc, char *argv[])
   /*
    *  Check interpolation
    */
-  double **src_field;
-  PDM_malloc(src_field,n_part,double *);
+  double **src_field = NULL;
+  PDM_malloc(src_field, n_part, double *);
   for (int ipart = 0; ipart < n_part; ipart++) {
     int n_vtx = PDM_part_mesh_nodal_n_vtx_get(src_pmn, ipart);
     double *vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(src_pmn, ipart);
 
-    PDM_malloc(src_field[ipart],n_vtx,double);
+    PDM_malloc(src_field[ipart], n_vtx, double);
     for (int i = 0; i < n_vtx; i++) {
       src_field[ipart][i] = _eval_field(vtx_coord[3*i  ],
                                         vtx_coord[3*i+1],
@@ -689,8 +689,8 @@ int main(int argc, char *argv[])
     }
   }
 
-  double **send_field;
-  PDM_malloc(send_field,n_part,double *);
+  double **send_field = NULL;
+  PDM_malloc(send_field, n_part, double *);
   for (int ipart = 0; ipart < n_part; ipart++) {
     int         *elt_pts_idx        = NULL;
     PDM_g_num_t *elt_pts_gnum       = NULL;
@@ -723,7 +723,7 @@ int main(int argc, char *argv[])
                                                 PDM_GEOMETRY_KIND_VOLUMIC,
                                                 ipart);
 
-    PDM_malloc(send_field[ipart],elt_pts_idx[n_elt],double);
+    PDM_malloc(send_field[ipart], elt_pts_idx[n_elt], double);
     for (int ielt = 0; ielt < n_elt; ielt++) {
       int *cv = cell_vtx + cell_vtx_idx[ielt];
 
@@ -764,10 +764,10 @@ int main(int argc, char *argv[])
   PDM_part_to_part_iexch_wait(ptp, request);
   PDM_part_to_part_free(ptp);
 
-  double *tgt_field_interp;
-  PDM_malloc(tgt_field_interp,n_pts,double);
-  double *tgt_field_exact;
-  PDM_malloc(tgt_field_exact,n_pts,double);
+  double *tgt_field_interp = NULL;
+  double *tgt_field_exact  = NULL;
+  PDM_malloc(tgt_field_interp, n_pts, double);
+  PDM_malloc(tgt_field_exact , n_pts, double);
   for (int i = 0; i < n_pts; i++) {
     tgt_field_interp[i] = 123456789;
     tgt_field_exact[i] = _eval_field(pts_coord[3*i  ],
@@ -814,8 +814,8 @@ int main(int argc, char *argv[])
 
     err_max = PDM_MAX(err_max, err);
   }
- PDM_free(recv_field[0]);
- PDM_free(recv_field);
+  PDM_free(recv_field[0]);
+  PDM_free(recv_field);
 
 
   PDM_g_num_t g_n_wrong = 0;
@@ -872,8 +872,8 @@ int main(int argc, char *argv[])
                                              &ho_ordering,
                                              PDM_OWNERSHIP_KEEP);
 
-      int *pcell_vtx_out;
-      PDM_malloc(pcell_vtx_out,n_vtx_per_elmt * n_elt ,int);
+      int *pcell_vtx_out = NULL;
+      PDM_malloc(pcell_vtx_out, n_vtx_per_elmt * n_elt, int);
       for(int i = 0; i < n_vtx_per_elmt * n_elt; ++i) {
         pcell_vtx_out[i] = connec[i];
       }
@@ -904,7 +904,7 @@ int main(int argc, char *argv[])
                                                    1,
                                                    field_name,
                                                    field_value);
-     PDM_free(pcell_vtx_out);
+      PDM_free(pcell_vtx_out);
     }
   }
 
@@ -912,18 +912,18 @@ int main(int argc, char *argv[])
   PDM_mesh_location_free(mesh_loc);
   PDM_part_mesh_nodal_free(src_pmn);
   PDM_multipart_free(src_mpart);
- PDM_free(pts_coord);
- PDM_free(pts_ln_to_gn);
+  PDM_free(pts_coord);
+  PDM_free(pts_ln_to_gn);
 
- PDM_free(tgt_field_interp);
- PDM_free(tgt_field_exact);
+  PDM_free(tgt_field_interp);
+  PDM_free(tgt_field_exact);
 
   for (int i = 0; i < n_part; i++) {
-   PDM_free(send_field[i]);
-   PDM_free(src_field [i]);
+    PDM_free(send_field[i]);
+    PDM_free(src_field [i]);
   }
- PDM_free(send_field);
- PDM_free(src_field );
+  PDM_free(send_field);
+  PDM_free(src_field );
 
   PDM_MPI_Finalize();
 

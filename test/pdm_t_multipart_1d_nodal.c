@@ -139,8 +139,8 @@ _generate_lines
   int dn_vtx  = (int) (distrib_vtx [i_rank+1] - distrib_vtx [i_rank]);
   int dn_edge = (int) (distrib_edge[i_rank+1] - distrib_edge[i_rank]);
 
-  double *dvtx_coord;
-  PDM_malloc(dvtx_coord,dn_vtx * 3,double);
+  double *dvtx_coord = NULL;
+  PDM_malloc(dvtx_coord, dn_vtx * 3, double);
 
   double step_x = length / (double) (n_g_pts - 1);
 
@@ -156,8 +156,8 @@ _generate_lines
   }
 
 
-  PDM_g_num_t *dedge_vtx;
-  PDM_malloc(dedge_vtx, 2 * dn_edge ,PDM_g_num_t);
+  PDM_g_num_t *dedge_vtx = NULL;
+  PDM_malloc(dedge_vtx, 2 * dn_edge, PDM_g_num_t);
 
   for (int i_edge = 0; i_edge < dn_edge; ++i_edge) {
 
@@ -331,10 +331,10 @@ char *argv[]
   PDM_multipart_free(mpart);
   PDM_DMesh_nodal_free(dmn);
 
- PDM_free(dvtx_coord);
- PDM_free(distrib_vtx);
- PDM_free(distrib_edge);
- PDM_free(dedge_vtx);
+  PDM_free(dvtx_coord);
+  PDM_free(distrib_vtx);
+  PDM_free(distrib_edge);
+  PDM_free(dedge_vtx);
 
   if (i_rank == 0) {
     PDM_printf ("-- End\n");

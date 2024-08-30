@@ -232,15 +232,14 @@ _gen_mesh
   PDM_Mesh_nodal_elt_t elt_type = PDM_MESH_NODAL_HEXA8;
   int elt_vtx_n = PDM_Mesh_nodal_n_vtx_elt_get(elt_type, 1);
 
-  PDM_malloc(*n_vtx,n_part,int          );
-  PDM_malloc(*vtx_coord,n_part,double      *);
-  PDM_malloc(*vtx_g_num,n_part,PDM_g_num_t *);
+  PDM_malloc(*n_vtx    , n_part, int          );
+  PDM_malloc(*vtx_coord, n_part, double      *);
+  PDM_malloc(*vtx_g_num, n_part, PDM_g_num_t *);
 
-
-  PDM_malloc(*n_cell,n_block,int          *);
-  PDM_malloc(*cell_vtx,n_block,int         **);
-  PDM_malloc(*cell_g_num,n_block,PDM_g_num_t **);
-  PDM_malloc(*cell_parent_num,n_block,int         **);
+  PDM_malloc(*n_cell         , n_block, int          *);
+  PDM_malloc(*cell_vtx       , n_block, int         **);
+  PDM_malloc(*cell_g_num     , n_block, PDM_g_num_t **);
+  PDM_malloc(*cell_parent_num, n_block, int         **);
 
   if (active_rank) {
     PDM_part_mesh_nodal_t *pmn = PDM_generate_mesh_parallelepiped(comm,
@@ -262,9 +261,9 @@ _gen_mesh
 
     for (int iblock = 0; iblock < n_block; iblock++) {
       (*n_cell)         [iblock] = PDM_array_zeros_int(n_part);
-      PDM_malloc((*cell_vtx)       [iblock],n_part,int         *);
-      PDM_malloc((*cell_g_num)     [iblock],n_part,PDM_g_num_t *);
-      PDM_malloc((*cell_parent_num)[iblock],n_part,int         *);
+      PDM_malloc((*cell_vtx       )[iblock], n_part, int         *);
+      PDM_malloc((*cell_g_num     )[iblock], n_part, PDM_g_num_t *);
+      PDM_malloc((*cell_parent_num)[iblock], n_part, int         *);
     }
 
     for (int ipart = 0; ipart < n_part; ipart++) {
@@ -295,18 +294,18 @@ _gen_mesh
 
       int idx = 0;
       for (int iblock = 0; iblock < n_block; iblock++) {
-        PDM_malloc((*cell_vtx)[iblock][ipart],elt_vtx_n * (*n_cell)[iblock][ipart],int);
+        PDM_malloc((*cell_vtx)[iblock][ipart], elt_vtx_n * (*n_cell)[iblock][ipart], int);
 
         memcpy((*cell_vtx)[iblock][ipart],
                connec + elt_vtx_n * idx,
                sizeof(int) * elt_vtx_n * (*n_cell)[iblock][ipart]);
 
-        PDM_malloc((*cell_g_num)[iblock][ipart],(*n_cell)[iblock][ipart],PDM_g_num_t);
+        PDM_malloc((*cell_g_num)[iblock][ipart], (*n_cell)[iblock][ipart], PDM_g_num_t);
         memcpy((*cell_g_num)[iblock][ipart],
                numabs + idx,
                sizeof(PDM_g_num_t) * (*n_cell)[iblock][ipart]);
 
-        PDM_malloc((*cell_parent_num)[iblock][ipart],(*n_cell)[iblock][ipart],int);
+        PDM_malloc((*cell_parent_num)[iblock][ipart], (*n_cell)[iblock][ipart], int);
         for (int i = 0; i < (*n_cell)[iblock][ipart]; i++) {
           (*cell_parent_num)[iblock][ipart][i] = idx + i;
         }
@@ -318,12 +317,12 @@ _gen_mesh
       double      *_vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmn, ipart);
       PDM_g_num_t *_vtx_g_num = PDM_part_mesh_nodal_vtx_g_num_get(pmn, ipart);
 
-      PDM_malloc((*vtx_coord)[ipart],(*n_vtx)[ipart] * 3,double);
+      PDM_malloc((*vtx_coord)[ipart], (*n_vtx)[ipart] * 3, double);
       memcpy((*vtx_coord)[ipart],
              _vtx_coord,
              sizeof(double) * (*n_vtx)[ipart] * 3);
 
-      PDM_malloc((*vtx_g_num)[ipart],(*n_vtx)[ipart],PDM_g_num_t);
+      PDM_malloc((*vtx_g_num)[ipart], (*n_vtx)[ipart], PDM_g_num_t);
       memcpy((*vtx_g_num)[ipart],
              _vtx_g_num,
              sizeof(PDM_g_num_t) * (*n_vtx)[ipart]);
@@ -336,21 +335,21 @@ _gen_mesh
 
     for (int iblock = 0; iblock < n_block; iblock++) {
       (*n_cell)         [iblock] = PDM_array_zeros_int(n_part);
-      PDM_malloc((*cell_vtx)       [iblock],n_part,int         *);
-      PDM_malloc((*cell_g_num)     [iblock],n_part,PDM_g_num_t *);
-      PDM_malloc((*cell_parent_num)[iblock],n_part,int         *);
+      PDM_malloc((*cell_vtx       )[iblock], n_part, int         *);
+      PDM_malloc((*cell_g_num     )[iblock], n_part, PDM_g_num_t *);
+      PDM_malloc((*cell_parent_num)[iblock], n_part, int         *);
     }
 
     for (int ipart = 0; ipart < n_part; ipart++) {
       for (int iblock = 0; iblock < n_block; iblock++) {
-        PDM_malloc((*cell_vtx)       [iblock][ipart],elt_vtx_n * (*n_cell)[iblock][ipart],int);
-        PDM_malloc((*cell_g_num)     [iblock][ipart],elt_vtx_n,PDM_g_num_t);
-        PDM_malloc((*cell_parent_num)[iblock][ipart],elt_vtx_n,int);
+        PDM_malloc((*cell_vtx       )[iblock][ipart], elt_vtx_n * (*n_cell)[iblock][ipart], int        );
+        PDM_malloc((*cell_g_num     )[iblock][ipart], elt_vtx_n                           , PDM_g_num_t);
+        PDM_malloc((*cell_parent_num)[iblock][ipart], elt_vtx_n                           , int        );
       }
 
       (*n_vtx)    [ipart] = 0;
-      PDM_malloc((*vtx_coord)[ipart],(*n_vtx)[ipart] * 3,double);
-      PDM_malloc((*vtx_g_num)[ipart],(*n_vtx)[ipart],PDM_g_num_t);
+      PDM_malloc((*vtx_coord)[ipart], (*n_vtx)[ipart] * 3, double     );
+      PDM_malloc((*vtx_g_num)[ipart], (*n_vtx)[ipart]    , PDM_g_num_t);
     }
 
   }
@@ -461,19 +460,19 @@ _gen_pmn
                                                  vtx_g_num);
 
   for (int i_section = 0; i_section < n_section; i_section++) {
-   PDM_free(n_cell         [i_section]);
-   PDM_free(cell_vtx       [i_section]);
-   PDM_free(cell_g_num     [i_section]);
-   PDM_free(cell_parent_num[i_section]);
+    PDM_free(n_cell         [i_section]);
+    PDM_free(cell_vtx       [i_section]);
+    PDM_free(cell_g_num     [i_section]);
+    PDM_free(cell_parent_num[i_section]);
   }
 
- PDM_free(n_cell         );
- PDM_free(cell_vtx       );
- PDM_free(cell_g_num     );
- PDM_free(cell_parent_num);
- PDM_free(n_vtx          );
- PDM_free(vtx_coord      );
- PDM_free(vtx_g_num      );
+  PDM_free(n_cell         );
+  PDM_free(cell_vtx       );
+  PDM_free(cell_g_num     );
+  PDM_free(cell_parent_num);
+  PDM_free(n_vtx          );
+  PDM_free(vtx_coord      );
+  PDM_free(vtx_g_num      );
 
   return pmn;
 }
@@ -633,7 +632,7 @@ int main(int argc, char *argv[])
                                      PDM_OWNERSHIP_KEEP);
 
   double **send_field;
-  PDM_malloc(send_field,n_part,double *);
+  PDM_malloc(send_field, n_part, double *);
   for (int i_part = 0; i_part < n_part; i_part++) {
 
     double *vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(src_pmn, i_part);
@@ -689,7 +688,7 @@ int main(int argc, char *argv[])
     }
 
 
-    PDM_malloc(send_field[i_part],elt_pts_idx[n_cell],double);
+    PDM_malloc(send_field[i_part], elt_pts_idx[n_cell], double);
     for (int icell = 0; icell < n_cell; icell++) {
 
       int *cv = cell_vtx + cell_vtx_idx[icell];
@@ -730,9 +729,9 @@ int main(int argc, char *argv[])
   PDM_part_to_part_iexch_wait(ptp, request);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
-   PDM_free(send_field[i_part]);
+    PDM_free(send_field[i_part]);
   }
- PDM_free(send_field);
+  PDM_free(send_field);
 
 
   double lmax_err = 0.;
@@ -784,14 +783,14 @@ int main(int argc, char *argv[])
       int n_tgt = PDM_part_mesh_nodal_n_vtx_get(tgt_pmn, i_part);
       char filename[999];
 
-      double *exact;
-      PDM_malloc(exact,n_tgt,double);
-      double *interp;
-      PDM_malloc(interp,n_tgt,double);
-      double *location;
-      PDM_malloc(location,n_tgt,double);
-      double *proj;
-      PDM_malloc(proj,n_tgt * 3,double);
+      double *exact    = NULL;
+      double *interp   = NULL;
+      double *location = NULL;
+      double *proj     = NULL;
+      PDM_malloc(exact   , n_tgt    , double);
+      PDM_malloc(interp  , n_tgt    , double);
+      PDM_malloc(location, n_tgt    , double);
+      PDM_malloc(proj    , n_tgt * 3, double);
       for (int i = 0; i < n_tgt; i++) {
         exact   [i] = tgt_coord[3*i] + tgt_coord[3*i+1] + tgt_coord[3*i+2];
         interp  [i] = -1;
@@ -833,15 +832,15 @@ int main(int argc, char *argv[])
                                         3,
                                         field_name,
                                         field_value);
-     PDM_free(exact);
-     PDM_free(interp);
-     PDM_free(location);
-     PDM_free(proj);
+      PDM_free(exact);
+      PDM_free(interp);
+      PDM_free(location);
+      PDM_free(proj);
     }
 
-   PDM_free(recv_field[i_part]);
+    PDM_free(recv_field[i_part]);
   }
- PDM_free(recv_field);
+  PDM_free(recv_field);
 
   double gmax_err;
   PDM_MPI_Allreduce(&lmax_err, &gmax_err, 1, PDM_MPI_DOUBLE,

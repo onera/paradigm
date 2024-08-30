@@ -149,13 +149,13 @@ _gen_circle
   *base_n_edge = (int) n;
   *base_n_vtx  = (int) n;
 
-  PDM_malloc(*base_edge_vtx,2 * (*base_n_edge),int);
+  PDM_malloc(*base_edge_vtx, 2 * (*base_n_edge), int);
   for (int iedge = 0; iedge < *base_n_edge; iedge++) {
     (*base_edge_vtx)[2*iedge  ] = iedge       + 1;
     (*base_edge_vtx)[2*iedge+1] = (iedge+1)%n + 1;
   }
 
-  PDM_malloc(*base_vtx_coord,3 * (*base_n_vtx),double);
+  PDM_malloc(*base_vtx_coord, 3 * (*base_n_vtx), double);
   double step = 2*PDM_PI / (double) n;
   for (int ivtx = 0; ivtx < *base_n_vtx; ivtx++) {
     double t = ivtx*step;
@@ -186,13 +186,13 @@ _gen_naca_00xx
   *base_n_edge = (int) n;
   *base_n_vtx  = (int) n;
 
-  PDM_malloc(*base_edge_vtx,2 * (*base_n_edge),int);
+  PDM_malloc(*base_edge_vtx, 2 * (*base_n_edge), int);
   for (int iedge = 0; iedge < *base_n_edge; iedge++) {
     (*base_edge_vtx)[2*iedge  ] = iedge       + 1;
     (*base_edge_vtx)[2*iedge+1] = (iedge+1)%n + 1;
   }
 
-  PDM_malloc(*base_vtx_coord,3 * (*base_n_vtx),double);
+  PDM_malloc(*base_vtx_coord, 3 * (*base_n_vtx), double);
   // double step = 2*PDM_PI / (double) (n+1);
   PDM_g_num_t half = n / 2;
   double step = 2*PDM_PI / (double) n;
@@ -268,13 +268,13 @@ _set_dmesh_nodal
                                         PDM_OWNERSHIP_KEEP);
 
   int n_group = 1;
-  int *dgroup_elt_idx;
-  PDM_malloc(dgroup_elt_idx,(n_group + 1),int);
+  int *dgroup_elt_idx = NULL;
+  PDM_malloc(dgroup_elt_idx, n_group + 1, int);
   dgroup_elt_idx[0] = 0;
   dgroup_elt_idx[1] = dn_face;
 
-  PDM_g_num_t *dgroup_elt;
-  PDM_malloc(dgroup_elt,dgroup_elt_idx[n_group],PDM_g_num_t);
+  PDM_g_num_t *dgroup_elt = NULL;
+  PDM_malloc(dgroup_elt, dgroup_elt_idx[n_group], PDM_g_num_t);
   for (int i = 0; i < dn_face; i++) {
     dgroup_elt[i] = distrib_face[i_rank] + i + 1;
   }
@@ -325,7 +325,7 @@ const PDM_Mesh_nodal_elt_t   elt_type,
   /* Compute vertex normals */
   double *base_vtx_normal[2] = {NULL, NULL};
   for (int iline = 0; iline < 2; iline++) {
-    PDM_malloc(base_vtx_normal[iline],base_n_vtx * 3,double);
+    PDM_malloc(base_vtx_normal[iline], base_n_vtx * 3, double);
 
     for (int i = 0; i < base_n_vtx * 3; i++) {
       base_vtx_normal[iline][i] = 0.;
@@ -391,7 +391,7 @@ const PDM_Mesh_nodal_elt_t   elt_type,
 
   int dn_vtx = (int) ((*distrib_vtx)[i_rank+1] - (*distrib_vtx)[i_rank]);
 
-  PDM_malloc(*dvtx_coord,dn_vtx * 3,double);
+  PDM_malloc(*dvtx_coord, dn_vtx * 3, double);
 
   for (int ivtx = 0; ivtx < dn_vtx; ivtx++) {
 
@@ -421,8 +421,8 @@ const PDM_Mesh_nodal_elt_t   elt_type,
     }
 
   } // End of loop on vertices
- PDM_free(base_vtx_normal[0]);
- PDM_free(base_vtx_normal[1]);
+  PDM_free(base_vtx_normal[0]);
+  PDM_free(base_vtx_normal[1]);
 
 
 
@@ -444,7 +444,7 @@ const PDM_Mesh_nodal_elt_t   elt_type,
 
   int s_face_vtx = face_vtx_n * dn_face;
 
-  PDM_malloc(*dface_vtx,s_face_vtx,PDM_g_num_t);
+  PDM_malloc(*dface_vtx, s_face_vtx, PDM_g_num_t);
 
   int layer_face_n = base_n_edge;
   if (elt_type == PDM_MESH_NODAL_TRIA3) {
@@ -570,7 +570,7 @@ main
                  &base_edge_vtx,
                  &base_n_vtx,
                  &base_vtx_coord1);
- PDM_free(base_edge_vtx);
+  PDM_free(base_edge_vtx);
 
   double *base_vtx_coord2 = NULL;
   _gen_circle(n,
@@ -627,9 +627,9 @@ main
                           &distrib_vtx,
                           &dvtx_coord);
 
- PDM_free(base_edge_vtx);
- PDM_free(base_vtx_coord1);
- PDM_free(base_vtx_coord2);
+  PDM_free(base_edge_vtx);
+  PDM_free(base_vtx_coord1);
+  PDM_free(base_vtx_coord2);
 
 
 
@@ -653,9 +653,9 @@ main
   }
   PDM_DMesh_nodal_free(dmn);
 
- PDM_free(distrib_face );
- PDM_free(dface_vtx_idx);
- PDM_free(distrib_vtx  );
+  PDM_free(distrib_face );
+  PDM_free(dface_vtx_idx);
+  PDM_free(distrib_vtx  );
 
   PDM_MPI_Finalize();
 

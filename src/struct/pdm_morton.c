@@ -673,7 +673,7 @@ _define_rank_distrib(int                      dim,
   /* Define the global distribution */
   PDM_MPI_Allreduce(l_distrib, g_distrib, n_samples, PDM_MPI_DOUBLE, PDM_MPI_SUM, comm);
 
- PDM_free(l_distrib);
+  PDM_free(l_distrib);
 
   /* Define the cumulative frequency related to g_distribution */
 
@@ -825,7 +825,7 @@ _update_sampling(int      dim,
 
   new_sampling[n_samples] = 1.0;
 
- PDM_free(_sampling);
+  PDM_free(_sampling);
 
   /* Return pointers */
 
@@ -967,9 +967,9 @@ _bucket_sampling(int                      dim,
 
   /* Free memory */
 
- PDM_free(cfreq);
- PDM_free(distrib);
- PDM_free(_sampling);
+  PDM_free(cfreq);
+  PDM_free(distrib);
+  PDM_free(_sampling);
 
   *sampling = best_sampling;
 
@@ -2039,8 +2039,8 @@ PDM_morton_ordered_build_rank_index
               send_data[4*i+3]);
               }*/
 
- PDM_free(quantiles);
- PDM_free(_weight);
+  PDM_free(quantiles);
+  PDM_free(_weight);
 
   PDM_MPI_Alltoallv(send_data, send_count, send_idx, PDM_MPI_UNSIGNED,
                     recv_data, recv_count, recv_idx, PDM_MPI_UNSIGNED,
@@ -2056,11 +2056,11 @@ PDM_morton_ordered_build_rank_index
               recv_data[4*i+3]);
               }*/
 
- PDM_free(send_data);
- PDM_free(send_count);
- PDM_free(send_idx);
- PDM_free(recv_count);
- PDM_free(recv_idx);
+  PDM_free(send_data);
+  PDM_free(send_count);
+  PDM_free(send_idx);
+  PDM_free(recv_count);
+  PDM_free(recv_idx);
 
   PDM_morton_code_t min_code;
   min_code.L = 31u;
@@ -2111,7 +2111,7 @@ PDM_morton_ordered_build_rank_index
             send_min_code[2],
             send_min_code[3]);*/
 
- PDM_free(recv_data);
+  PDM_free(recv_data);
 
   PDM_morton_int_t *buff_min_codes;
   PDM_malloc(buff_min_codes,4 * comm_size,PDM_morton_int_t);
@@ -2175,8 +2175,8 @@ PDM_morton_ordered_build_rank_index
     assert(_a_ge_b(rank_index[i+1], rank_index[i]));
   }
 
- PDM_free(buff_min_codes);
- PDM_free(n_nodes);
+  PDM_free(buff_min_codes);
+  PDM_free(n_nodes);
 
 }
 
@@ -2261,7 +2261,7 @@ PDM_morton_build_rank_index(int                     dim,
 
   /* Free memory */
 
- PDM_free(sampling);
+  PDM_free(sampling);
 
   return best_fit;
 }

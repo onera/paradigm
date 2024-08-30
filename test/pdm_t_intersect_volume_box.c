@@ -329,11 +329,11 @@ PDM_g_num_t **box_ln_to_gn
   for (PDM_g_num_t i = 0; i < 6*distrib_box[i_rank]; i++) {
     rand();
   }
- PDM_free(distrib_box);
+  PDM_free(distrib_box);
 
   double *box_centers;
-  PDM_malloc(box_centers,n_box * 3,double);
-  PDM_malloc(*box_extents,n_box * 6,double);
+  PDM_malloc( box_centers, n_box * 3, double);
+  PDM_malloc(*box_extents, n_box * 6, double);
   double *_box_extents = *box_extents;
   for (int i = 0; i < n_box; i++) {
     for (int j = 0; j < 3; j++) {
@@ -365,7 +365,7 @@ PDM_g_num_t **box_ln_to_gn
   *box_ln_to_gn = PDM_gnum_get (gen_gnum, 0);
 
   PDM_gnum_free (gen_gnum);
- PDM_free(box_centers);
+  PDM_free(box_centers);
 
   return n_box;
 }
@@ -500,7 +500,7 @@ int main(int argc, char *argv[])
 
   const char *filename1 = "box.vtk";
   PDM_g_num_t *box_g_num;
-  PDM_malloc(box_g_num,1,PDM_g_num_t);
+  PDM_malloc(box_g_num, 1, PDM_g_num_t);
   box_g_num[0] = 1;
 
   if (visu) {
@@ -512,7 +512,7 @@ int main(int argc, char *argv[])
 
   const char *filename2 = "line.vtk";
   double *coord;
-  PDM_malloc(coord,6,double);
+  PDM_malloc(coord, 6, double);
   coord[0] = edge[3];
   coord[1] = edge[4];
   coord[2] = edge[5];
@@ -520,7 +520,7 @@ int main(int argc, char *argv[])
   coord[4] = direction_pt[1];
   coord[5] = direction_pt[2];
   PDM_g_num_t *line_g_num;
-  PDM_malloc(line_g_num,1,PDM_g_num_t);
+  PDM_malloc(line_g_num, 1, PDM_g_num_t);
   line_g_num[0] = 1;
 
   if(visu) {
@@ -532,12 +532,12 @@ int main(int argc, char *argv[])
   }
 
   const char *filename3 = "planes.vtk";
-  double *vtx_coord;
-  PDM_malloc(vtx_coord,30,double);
-  PDM_g_num_t *vtx_g_num;
-  PDM_malloc(vtx_g_num,10,PDM_g_num_t);
-  int *face_vtx;
-  PDM_malloc(face_vtx,12,int);
+  double      *vtx_coord = NULL;
+  PDM_g_num_t *vtx_g_num = NULL;
+  int         *face_vtx  = NULL;
+  PDM_malloc(vtx_coord, 30, double     );
+  PDM_malloc(vtx_g_num, 10, PDM_g_num_t);
+  PDM_malloc(face_vtx , 12, int        );
 
   // A
   vtx_coord[0] = edge[0];
@@ -712,15 +712,14 @@ int main(int argc, char *argv[])
   double n_plane[18];
   double pt_plane_box[18];
 
-  double *box_intersects_box;
-  PDM_malloc(box_intersects_box,n_box,double);
+  double *box_intersects_box = NULL;
+  PDM_malloc(box_intersects_box, n_box, double);
 
   //int  *box_tag[n_box_plane];
-  double **box_tag;
-  PDM_malloc(box_tag,n_box_plane,double *);
-  //char *box_tag_names[n_box_plane];
-  char **box_tag_names;
-  PDM_malloc(box_tag_names,n_box_plane,char *);
+  double **box_tag       = NULL;
+  char   **box_tag_names = NULL;
+  PDM_malloc(box_tag      , n_box_plane, double *);
+  PDM_malloc(box_tag_names, n_box_plane, char   *);
 
   int check2;
 
@@ -742,11 +741,11 @@ int main(int argc, char *argv[])
       box_intersects_box[j] = (double) check;
     }
 
-    PDM_malloc(box_tag[i],n_box,double);
+    PDM_malloc(box_tag[i], n_box, double);
     memcpy(box_tag[i], box_intersects_box, sizeof(double) * n_box);
     char tmp[90];
     sprintf(tmp, "intersects_box_%d", i);
-    PDM_malloc(box_tag_names[i],90,char);
+    PDM_malloc(box_tag_names[i], 90, char);
     strcpy(box_tag_names[i], tmp);
 
 
@@ -772,22 +771,22 @@ int main(int argc, char *argv[])
   }
 
   for (int i = 0; i < n_box; i++) {
-   PDM_free(box_tag[i]);
-   PDM_free(box_tag_names[i]);
+    PDM_free(box_tag[i]);
+    PDM_free(box_tag_names[i]);
   }
- PDM_free(coord);
- PDM_free(box_tag);
- PDM_free(box_tag_names);
- PDM_free(box_extents);
- PDM_free(box_ln_to_gn);
- PDM_free(box_extents_plane);
- PDM_free(box_ln_to_gn_plane);
- PDM_free(box_intersects_box);
- PDM_free(vtx_coord);
- PDM_free(vtx_g_num);
- PDM_free(face_vtx);
- PDM_free(line_g_num);
- PDM_free(box_g_num);
+  PDM_free(coord);
+  PDM_free(box_tag);
+  PDM_free(box_tag_names);
+  PDM_free(box_extents);
+  PDM_free(box_ln_to_gn);
+  PDM_free(box_extents_plane);
+  PDM_free(box_ln_to_gn_plane);
+  PDM_free(box_intersects_box);
+  PDM_free(vtx_coord);
+  PDM_free(vtx_g_num);
+  PDM_free(face_vtx);
+  PDM_free(line_g_num);
+  PDM_free(box_g_num);
   PDM_MPI_Finalize ();
 
 }

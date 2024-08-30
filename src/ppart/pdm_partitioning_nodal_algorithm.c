@@ -188,7 +188,7 @@ _delmt_vtx_to_pelmt_vtx
                                                                    n_part,
                                                                    dmne->comm);
 
- PDM_free(block_elmts_disbrib_idx);
+  PDM_free(block_elmts_disbrib_idx);
 
   /*
    * Exchange connectivity
@@ -207,9 +207,9 @@ _delmt_vtx_to_pelmt_vtx
   PDM_malloc(pelmts_stride_idx, n_part ,int *);
   for(int i_part = 0; i_part < n_part; ++i_part) {
     pelmts_stride_idx[i_part] = PDM_array_new_idx_from_sizes_int(pelmts_stride[i_part], pn_elmt[i_part]);
-   PDM_free(pelmts_stride[i_part]);
+    PDM_free(pelmts_stride[i_part]);
   }
- PDM_free(pelmts_stride);
+  PDM_free(pelmts_stride);
   /*
    * Exchange type of elements
    */
@@ -225,14 +225,14 @@ _delmt_vtx_to_pelmt_vtx
 
 
   for (int i_section = 0; i_section < n_section; i_section++) {
-   PDM_free(block_elmts_n_vtx[i_section]);
-   PDM_free(block_elmts_types[i_section]);
-   PDM_free(stride_one[i_section]);
+    PDM_free(block_elmts_n_vtx[i_section]);
+    PDM_free(block_elmts_types[i_section]);
+    PDM_free(stride_one[i_section]);
   }
- PDM_free(block_elmts_n_vtx);
- PDM_free(block_elmts_types);
- PDM_free(block_elmts_connec);
- PDM_free(stride_one);
+  PDM_free(block_elmts_n_vtx);
+  PDM_free(block_elmts_types);
+  PDM_free(block_elmts_connec);
+  PDM_free(stride_one);
 
   /* Set output */
   *pelmt_strid_idx_out = pelmts_stride_idx;
@@ -401,7 +401,7 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
                                                                    n_part,
                                                                    dmne->comm);
 
- PDM_free(block_elmts_disbrib_idx);
+  PDM_free(block_elmts_disbrib_idx);
 
   /*
    * Exchange connectivity
@@ -437,14 +437,14 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
 
 
   for (int i_section = 0; i_section < n_section; i_section++) {
-   PDM_free(block_elmts_n_vtx[i_section]);
-   PDM_free(block_elmts_types[i_section]);
-   PDM_free(stride_one[i_section]);
+    PDM_free(block_elmts_n_vtx[i_section]);
+    PDM_free(block_elmts_types[i_section]);
+    PDM_free(stride_one[i_section]);
   }
- PDM_free(block_elmts_n_vtx);
- PDM_free(block_elmts_types);
- PDM_free(block_elmts_connec);
- PDM_free(stride_one);
+  PDM_free(block_elmts_n_vtx);
+  PDM_free(block_elmts_types);
+  PDM_free(block_elmts_connec);
+  PDM_free(stride_one);
 
   PDM_multi_block_to_part_free(mbtp);
 
@@ -509,7 +509,7 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
   PDM_malloc(vtx_order, n_part ,int         *);
   for(int i_part = 0; i_part < n_part; ++i_part) {
     PDM_malloc(sorted_vtx_ln_to_gn[i_part],pn_vtx[i_part] ,PDM_g_num_t);
-    vtx_order          PDM_malloc([i_part],pn_vtx[i_part] ,int        );
+    PDM_malloc(vtx_order          [i_part],pn_vtx[i_part] ,int        );
 
     for(int i = 0; i < pn_vtx[i_part]; ++i) {
       sorted_vtx_ln_to_gn[i_part][i] = vtx_ln_to_gn[i_part][i];
@@ -563,13 +563,13 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
       PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(pmne, id_section);
 
       // int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get (t_elt, order);
-      // connec    PDM_malloc([i_section], n_elmt_in_section * n_vtx_per_elmt ,int        );
+      // PDM_malloc(connec    [i_section], n_elmt_in_section * n_vtx_per_elmt ,int        );
       if (t_elt == PDM_MESH_NODAL_POLY_2D) {
         PDM_malloc(connec_idx[i_section],(n_elmt_in_section + 1),int);
         connec_idx[i_section][0] = 0;
         pelmt_by_section_n[i_section] = 0;
       }
-      numabs    PDM_malloc([i_section], n_elmt_in_section                  ,PDM_g_num_t);
+      PDM_malloc(numabs    [i_section], n_elmt_in_section                  ,PDM_g_num_t);
       PDM_malloc(parent_num[i_section], n_elmt_in_section                  ,int        );
 
       if(pparent_entitity_ln_to_gn != NULL) {
@@ -766,45 +766,45 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
                                             group_ln_to_gn);
       }
 
-     PDM_free(pgroup_idx     [i_part]);
-     PDM_free(pgroup         [i_part]);
-     PDM_free(pgroup_ln_to_gn[i_part]);
+      PDM_free(pgroup_idx     [i_part]);
+      PDM_free(pgroup         [i_part]);
+      PDM_free(pgroup_ln_to_gn[i_part]);
 
     }
 
-   PDM_free(pgroup_idx);
-   PDM_free(pgroup);
-   PDM_free(pgroup_ln_to_gn);
+    PDM_free(pgroup_idx);
+    PDM_free(pgroup);
+    PDM_free(pgroup_ln_to_gn);
 
   }
 
 
- PDM_free(pelmt_by_section_n       );
- PDM_free(connec                   );
- PDM_free(connec_idx               );
- PDM_free(parent_num               );
- PDM_free(numabs                   );
- PDM_free(sparent_entitity_ln_to_gn);
+  PDM_free(pelmt_by_section_n       );
+  PDM_free(connec                   );
+  PDM_free(connec_idx               );
+  PDM_free(parent_num               );
+  PDM_free(numabs                   );
+  PDM_free(sparent_entitity_ln_to_gn);
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
-   PDM_free(pelmts_connec         [i_part]);
-   PDM_free(pelmts_stride         [i_part]);
-   PDM_free(pelmts_types          [i_part]);
-   PDM_free(pelmts_stride_idx     [i_part]);
-   PDM_free(sorted_vtx_ln_to_gn   [i_part]);
-   PDM_free(vtx_order             [i_part]);
-   PDM_free(section_elmts_ln_to_gn[i_part]);
+    PDM_free(pelmts_connec         [i_part]);
+    PDM_free(pelmts_stride         [i_part]);
+    PDM_free(pelmts_types          [i_part]);
+    PDM_free(pelmts_stride_idx     [i_part]);
+    PDM_free(sorted_vtx_ln_to_gn   [i_part]);
+    PDM_free(vtx_order             [i_part]);
+    PDM_free(section_elmts_ln_to_gn[i_part]);
   }
- PDM_free(sorted_vtx_ln_to_gn);
- PDM_free(vtx_order);
- PDM_free(pelmts_connec);
- PDM_free(pelmts_stride);
- PDM_free(pelmts_types );
- PDM_free(pid_section  );
- PDM_free(section_order);
- PDM_free(section_ho_ordering);
- PDM_free(pelmts_stride_idx);
- PDM_free(section_elmts_ln_to_gn);
+  PDM_free(sorted_vtx_ln_to_gn);
+  PDM_free(vtx_order);
+  PDM_free(pelmts_connec);
+  PDM_free(pelmts_stride);
+  PDM_free(pelmts_types );
+  PDM_free(pid_section  );
+  PDM_free(section_order);
+  PDM_free(section_ho_ordering);
+  PDM_free(pelmts_stride_idx);
+  PDM_free(section_elmts_ln_to_gn);
 
   return pmne;
 }
@@ -869,11 +869,11 @@ PDM_reverse_dparent_gnum
                       comm,
                       &distrib);
   for (int i_part = 0; i_part < n_part+1; ++i_part) {
-   PDM_free(weights_both[i_part]);
+    PDM_free(weights_both[i_part]);
   }
- PDM_free(weights_both);
- PDM_free(lngn_both);
- PDM_free(n_elts_both);
+  PDM_free(weights_both);
+  PDM_free(lngn_both);
+  PDM_free(n_elts_both);
 
   PDM_part_to_block_t* ptb = PDM_part_to_block_create_from_distrib(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                                    PDM_PART_TO_BLOCK_POST_MERGE,
@@ -916,7 +916,7 @@ PDM_reverse_dparent_gnum
                 (void **)  &dparent_sign,
                            &blk_dparent_sign_n,
                 (void **)  &blk_dparent_sign);
-   PDM_free(blk_dparent_sign_n);
+    PDM_free(blk_dparent_sign_n);
   }
 
   // PDM_g_num_t n_g_parent = parent_distrib[n_rank]+1;
@@ -925,8 +925,8 @@ PDM_reverse_dparent_gnum
   int dn_parent                 = PDM_part_to_block_n_elt_block_get(ptb);
   PDM_g_num_t* blk_dparent_gnum = PDM_part_to_block_block_gnum_get(ptb);
 
- PDM_free(pblk_child_n   );
- PDM_free(pblk_child_gnum);
+  PDM_free(pblk_child_n   );
+  PDM_free(pblk_child_gnum);
 
   /*
    * At this stage we have in each block of parent the global number of child
@@ -972,9 +972,9 @@ PDM_reverse_dparent_gnum
   int **_tmp_pchild_parent_sign = NULL;
   if(blk_dparent_sign != NULL) {
     for(int i_part = 0; i_part < n_part; ++i_part) {
-     PDM_free(_tmp_pchild_n[i_part]);
+      PDM_free(_tmp_pchild_n[i_part]);
     }
-   PDM_free(_tmp_pchild_n);
+    PDM_free(_tmp_pchild_n);
     PDM_block_to_part_exch(btp,
                             sizeof(int),
                             PDM_STRIDE_VAR_INTERLACED,
@@ -982,14 +982,14 @@ PDM_reverse_dparent_gnum
                             blk_dparent_sign,
                            &_tmp_pchild_n,
                 (void ***) &_tmp_pchild_parent_sign);
-   PDM_free(blk_dparent_sign);
+    PDM_free(blk_dparent_sign);
   }
 
   PDM_block_to_part_free(btp);
   PDM_part_to_block_free(ptb);
- PDM_free(distrib);
- PDM_free(blk_child_n);
- PDM_free(blk_child_gnum);
+  PDM_free(distrib);
+  PDM_free(blk_child_n);
+  PDM_free(blk_child_gnum);
   //PDM_free(block_distrib_tmp_idx);
 
   /*
@@ -1050,25 +1050,25 @@ PDM_reverse_dparent_gnum
         int sgn = _tmp_pchild_parent_sign[i_part][idx_order];
         _pchild_parent_sign[i_part][i] = sgn;
       }
-     PDM_free(_tmp_pchild_parent_sign[i_part]);
+      PDM_free(_tmp_pchild_parent_sign[i_part]);
     }
-   PDM_free(_tmp_pchild_parent_gnum[i_part]);
-   PDM_free(_tmp_pelmt_to_entity);
+    PDM_free(_tmp_pchild_parent_gnum[i_part]);
+    PDM_free(_tmp_pelmt_to_entity);
 
-   PDM_free(unique_order);
-   PDM_free(_pchild_n[i_part]);
-   PDM_free(_tmp_pchild_n[i_part]);
+    PDM_free(unique_order);
+    PDM_free(_pchild_n[i_part]);
+    PDM_free(_tmp_pchild_n[i_part]);
   }
- PDM_free(_pchild_n);
- PDM_free(_tmp_pchild_n);
- PDM_free(_tmp_pchild_parent_gnum);
+  PDM_free(_pchild_n);
+  PDM_free(_tmp_pchild_n);
+  PDM_free(_tmp_pchild_parent_gnum);
 
   *pelmt_to_entity   = _pelmt_to_entity;
   *pchild_gnum        = _pchild_gnum;
   *pchild_parent_gnum = _pchild_parent_gnum;
   if(dparent_sign != NULL) {
     *pchild_parent_sign = _pchild_parent_sign;
-   PDM_free(_tmp_pchild_parent_sign);
+    PDM_free(_tmp_pchild_parent_sign);
   }
 }
 
@@ -1126,11 +1126,11 @@ PDM_generate_ho_vtx_ln_to_gn
                             &pelmt_volumic_type);
     for(int i_part = 0; i_part < n_part; ++i_part) {
       s_connec_volumic[i_part] = pelmt_volumic_strid_idx[i_part][pn_cell[i_part]];
-     PDM_free(pelmt_volumic_strid_idx[i_part]);
-     PDM_free(pelmt_volumic_type     [i_part]);
+      PDM_free(pelmt_volumic_strid_idx[i_part]);
+      PDM_free(pelmt_volumic_type     [i_part]);
     }
-   PDM_free(pelmt_volumic_strid_idx);
-   PDM_free(pelmt_volumic_type);
+    PDM_free(pelmt_volumic_strid_idx);
+    PDM_free(pelmt_volumic_type);
   }
 
   // if(dmn->surfacic != NULL) {
@@ -1166,18 +1166,18 @@ PDM_generate_ho_vtx_ln_to_gn
                               &pelmt_surfacic_type);
       for(int i_part = 0; i_part < n_part; ++i_part) {
         s_connec_surfacic[i_part] = pelmt_surfacic_strid_idx[i_part][pn_surf[i_part]];
-       PDM_free(pelmt_surfacic_strid_idx[i_part]);
-       PDM_free(pelmt_surfacic_type     [i_part]);
-       PDM_free(psurf_gnum              [i_part]);
-       PDM_free(psurf_to_face_g_num     [i_part]);
-       PDM_free(psurf_to_entity         [i_part]);
+        PDM_free(pelmt_surfacic_strid_idx[i_part]);
+        PDM_free(pelmt_surfacic_type     [i_part]);
+        PDM_free(psurf_gnum              [i_part]);
+        PDM_free(psurf_to_face_g_num     [i_part]);
+        PDM_free(psurf_to_entity         [i_part]);
       }
-     PDM_free(psurf_to_entity);
-     PDM_free(pelmt_surfacic_strid_idx);
-     PDM_free(pelmt_surfacic_type);
-     PDM_free(psurf_gnum);
-     PDM_free(psurf_to_face_g_num);
-     PDM_free(pn_surf);
+      PDM_free(psurf_to_entity);
+      PDM_free(pelmt_surfacic_strid_idx);
+      PDM_free(pelmt_surfacic_type);
+      PDM_free(psurf_gnum);
+      PDM_free(psurf_to_face_g_num);
+      PDM_free(pn_surf);
     }
     else {
       int                  **pelmt_surfacic_strid_idx = NULL;
@@ -1191,11 +1191,11 @@ PDM_generate_ho_vtx_ln_to_gn
                               &pelmt_surfacic_type);
       for(int i_part = 0; i_part < n_part; ++i_part) {
         s_connec_surfacic[i_part] = pelmt_surfacic_strid_idx[i_part][pn_face[i_part]];
-       PDM_free(pelmt_surfacic_strid_idx[i_part]);
-       PDM_free(pelmt_surfacic_type     [i_part]);
+        PDM_free(pelmt_surfacic_strid_idx[i_part]);
+        PDM_free(pelmt_surfacic_type     [i_part]);
       }
-     PDM_free(pelmt_surfacic_strid_idx);
-     PDM_free(pelmt_surfacic_type);
+      PDM_free(pelmt_surfacic_strid_idx);
+      PDM_free(pelmt_surfacic_type);
     }
   }
 
@@ -1232,18 +1232,18 @@ PDM_generate_ho_vtx_ln_to_gn
                               &pelmt_ridge_type);
       for(int i_part = 0; i_part < n_part; ++i_part) {
         s_connec_ridge[i_part] = pelmt_ridge_strid_idx[i_part][pn_ridge[i_part]];
-       PDM_free(pelmt_ridge_strid_idx[i_part]);
-       PDM_free(pelmt_ridge_type     [i_part]);
-       PDM_free(pridge_gnum          [i_part]);
-       PDM_free(pridge_to_edge_g_num [i_part]);
-       PDM_free(pridge_to_entity     [i_part]);
+        PDM_free(pelmt_ridge_strid_idx[i_part]);
+        PDM_free(pelmt_ridge_type     [i_part]);
+        PDM_free(pridge_gnum          [i_part]);
+        PDM_free(pridge_to_edge_g_num [i_part]);
+        PDM_free(pridge_to_entity     [i_part]);
       }
-     PDM_free(pelmt_ridge_strid_idx);
-     PDM_free(pelmt_ridge_type);
-     PDM_free(pridge_gnum);
-     PDM_free(pridge_to_edge_g_num);
-     PDM_free(pridge_to_entity);
-     PDM_free(pn_ridge);
+      PDM_free(pelmt_ridge_strid_idx);
+      PDM_free(pelmt_ridge_type);
+      PDM_free(pridge_gnum);
+      PDM_free(pridge_to_edge_g_num);
+      PDM_free(pridge_to_entity);
+      PDM_free(pn_ridge);
     }
     else {
       int                  **pelmt_ridge_strid_idx = NULL;
@@ -1257,12 +1257,12 @@ PDM_generate_ho_vtx_ln_to_gn
                               &pelmt_ridge_type);
       for(int i_part = 0; i_part < n_part; ++i_part) {
         s_connec_ridge[i_part] = pelmt_ridge_strid_idx[i_part][pn_edge[i_part]];
-       PDM_free(pelmt_ridge_strid_idx[i_part]);
-       PDM_free(pelmt_ridge_type     [i_part]);
+        PDM_free(pelmt_ridge_strid_idx[i_part]);
+        PDM_free(pelmt_ridge_type     [i_part]);
       }
-     PDM_free(pelmt_ridge_strid_idx);
-     PDM_free(pelmt_ridge_type);
-     PDM_free(pridge_gnum);
+      PDM_free(pelmt_ridge_strid_idx);
+      PDM_free(pelmt_ridge_type);
+      PDM_free(pridge_gnum);
     }
   }
 
@@ -1327,8 +1327,8 @@ PDM_generate_ho_vtx_ln_to_gn
 
     nall_vtx[i_part] = idx_write;
 
-   PDM_free(sorted_vtx_ln_to_gn);
-   PDM_free(concat_connec);
+    PDM_free(sorted_vtx_ln_to_gn);
+    PDM_free(concat_connec);
 
     if(0 == 1) {
       PDM_log_trace_array_long(all_vtx_ln_to_gn[i_part], nall_vtx[i_part], "all_vtx_ln_to_gn ::");
@@ -1337,32 +1337,32 @@ PDM_generate_ho_vtx_ln_to_gn
 
   }
 
- PDM_free(s_connec_volumic    );
- PDM_free(s_connec_surfacic   );
- PDM_free(s_connec_ridge      );
+  PDM_free(s_connec_volumic    );
+  PDM_free(s_connec_surfacic   );
+  PDM_free(s_connec_ridge      );
   if(pelmt_volumic_connec != NULL){
     for(int i_part = 0; i_part < n_part; ++i_part) {
       if (pelmt_volumic_connec [i_part] != NULL) {
-       PDM_free(pelmt_volumic_connec [i_part]);
+        PDM_free(pelmt_volumic_connec [i_part]);
       }
     }
-   PDM_free(pelmt_volumic_connec);
+    PDM_free(pelmt_volumic_connec);
   }
   if(pelmt_surfacic_connec != NULL){
     for(int i_part = 0; i_part < n_part; ++i_part) {
       if (pelmt_surfacic_connec[i_part] != NULL) {
-       PDM_free(pelmt_surfacic_connec[i_part]);
+        PDM_free(pelmt_surfacic_connec[i_part]);
       }
     }
-   PDM_free(pelmt_surfacic_connec);
+    PDM_free(pelmt_surfacic_connec);
   }
   if(pelmt_ridge_connec != NULL){
     for(int i_part = 0; i_part < n_part; ++i_part) {
       if (pelmt_ridge_connec   [i_part] != NULL) {
-       PDM_free(pelmt_ridge_connec   [i_part]);
+        PDM_free(pelmt_ridge_connec   [i_part]);
       }
     }
-   PDM_free(pelmt_ridge_connec);
+    PDM_free(pelmt_ridge_connec);
   }
 
 
@@ -1464,7 +1464,7 @@ PDM_dmesh_nodal_elmts_to_extract_dmesh_nodal_elmts
                                                         1,
                                                         dmne->comm);
 
-   PDM_free(weight);
+    PDM_free(weight);
 
     const PDM_g_num_t* distrib_section = PDM_DMesh_nodal_elmts_distrib_section_get(dmne, id_section);
 
@@ -1559,7 +1559,7 @@ PDM_dmesh_nodal_elmts_to_extract_dmesh_nodal_elmts
                            NULL,
                (void ***) &tmp_dextract_block_elmts_gnum);
     dextract_block_elmts_gnum[i_section] = tmp_dextract_block_elmts_gnum[0];
-   PDM_free(tmp_dextract_block_elmts_gnum);
+    PDM_free(tmp_dextract_block_elmts_gnum);
 
     PDM_block_to_part_free(btp);
 
@@ -1583,9 +1583,9 @@ PDM_dmesh_nodal_elmts_to_extract_dmesh_nodal_elmts
     for(int i = 0; i < dn_extract_elmt[i_section]; ++i) {
       lextract_parent_elt_gnum[idx_write++] = extract_gnum_elmt[i_section][i];
     }
-   PDM_free(extract_gnum_elmt[i_section]);
+    PDM_free(extract_gnum_elmt[i_section]);
   }
- PDM_free(extract_gnum_elmt);
+  PDM_free(extract_gnum_elmt);
 
   /* Generate child gnum */
   PDM_gnum_compute (gen_gnum);
@@ -1696,14 +1696,14 @@ PDM_dmesh_nodal_elmts_to_extract_dmesh_nodal_elmts
   PDM_part_to_block_free(ptb_vtx);
 
   for(int i = 0; i < n_section; ++i) {
-   PDM_free(dextract_block_elmts_gnum[i]);
+    PDM_free(dextract_block_elmts_gnum[i]);
   }
 
- PDM_free(delmt_sorted_by_section);
- PDM_free(dn_elmt_by_section_idx);
- PDM_free(dn_elmt_by_section_n);
- PDM_free(dextract_block_elmts_gnum);
- PDM_free(dn_extract_elmt);
+  PDM_free(delmt_sorted_by_section);
+  PDM_free(dn_elmt_by_section_idx);
+  PDM_free(dn_elmt_by_section_n);
+  PDM_free(dextract_block_elmts_gnum);
+  PDM_free(dn_extract_elmt);
 
   return extract_dmne;
 }

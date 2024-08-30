@@ -83,7 +83,7 @@ PDM_compress_connectivity
   int need_shift = 0;
 
   int *entity1_entity2_n;
-  PDM_malloc(entity1_entity2_n, n_entity1 ,int);
+  PDM_malloc(entity1_entity2_n, n_entity1, int);
   for(int i = 0; i < n_entity1; ++i) {
     entity1_entity2_n[i] = entity1_entity2_idx[i+1] - entity1_entity2_idx[i];
   }
@@ -117,7 +117,7 @@ PDM_compress_connectivity
     // printf("idx_comp : %d | idx_block : %d \n", idx_comp, idx_block);
   }
 
- PDM_free(entity1_entity2_n);
+  PDM_free(entity1_entity2_n);
 
 }
 
@@ -149,7 +149,7 @@ PDM_combine_connectivity
 )
 {
   int *_entity1_entity3_idx;
-  PDM_malloc(_entity1_entity3_idx, (n_entity1 + 1) ,int);
+  PDM_malloc(_entity1_entity3_idx, n_entity1 + 1, int);
   _entity1_entity3_idx[0] = 0;
   for(int i_entity1 = 0; i_entity1 < n_entity1; ++i_entity1) {
     _entity1_entity3_idx[i_entity1+1] = _entity1_entity3_idx[i_entity1];
@@ -161,7 +161,7 @@ PDM_combine_connectivity
 
   // printf("_entity1_entity3_idx[%i] = %i \n", n_entity1, _entity1_entity3_idx[n_entity1]);
   int *_entity1_entity3;
-  PDM_malloc(_entity1_entity3, _entity1_entity3_idx[n_entity1] ,int);
+  PDM_malloc(_entity1_entity3, _entity1_entity3_idx[n_entity1], int);
 
   int idx = 0;
   for(int i_entity1 = 0; i_entity1 < n_entity1; ++i_entity1) {
@@ -209,7 +209,7 @@ const int   n_entity2,
 )
 {
   int *_entity2_entity1_idx;
-  PDM_malloc(_entity2_entity1_idx, (n_entity2 + 1) ,int);
+  PDM_malloc(_entity2_entity1_idx, n_entity2 + 1, int);
   int* entity2_entity1_n    = PDM_array_zeros_int(n_entity2);
 
 
@@ -224,7 +224,7 @@ const int   n_entity2,
   PDM_array_reset_int(entity2_entity1_n, n_entity2, 0);
 
   int *_entity2_entity1;
-  PDM_malloc(_entity2_entity1, _entity2_entity1_idx[n_entity2] ,int);
+  PDM_malloc(_entity2_entity1, _entity2_entity1_idx[n_entity2], int);
 
   for(int i_entity1 = 0; i_entity1 < n_entity1; ++i_entity1) {
     for(int idx_1 = entity1_entity2_idx[i_entity1]; idx_1 < entity1_entity2_idx[i_entity1+1]; ++idx_1 ) {
@@ -240,7 +240,7 @@ const int   n_entity2,
   // PDM_log_trace_array_int(_entity2_entity1   , _entity2_entity1_idx[n_entity2]  , "_entity2_entity1::");
   // PDM_log_trace_connectivity_int(_entity2_entity1_idx, _entity2_entity1   , n_entity2  , "_entity2_entity1::");
 
- PDM_free(entity2_entity1_n);
+  PDM_free(entity2_entity1_n);
 
   *entity2_entity1_idx = _entity2_entity1_idx;
   *entity2_entity1     = _entity2_entity1;
@@ -273,8 +273,8 @@ const int   *n_entity2,
       int ***entity2_entity1
 )
 {
-  PDM_malloc(*entity2_entity1_idx, n_part ,int *);
-  PDM_malloc(*entity2_entity1, n_part ,int *);
+  PDM_malloc(*entity2_entity1_idx, n_part, int *);
+  PDM_malloc(*entity2_entity1    , n_part, int *);
 
   int** _entity2_entity1_idx = *entity2_entity1_idx;
   int** _entity2_entity1     = *entity2_entity1;
@@ -325,8 +325,8 @@ PDM_part_combine_connectivity
  int       ***entity1_entity3
 )
 {
-  PDM_malloc(*entity1_entity3_idx, n_part ,int *);
-  PDM_malloc(*entity1_entity3, n_part ,int *);
+  PDM_malloc(*entity1_entity3_idx, n_part, int *);
+  PDM_malloc(*entity1_entity3    , n_part, int *);
 
   int** _entity1_entity3_idx = *entity1_entity3_idx;
   int** _entity1_entity3     = *entity1_entity3;
@@ -412,16 +412,16 @@ const int   *n_entity1,
 )
 {
 
-  PDM_malloc(*entity1_entity2_idx, n_part ,int *);
-  PDM_malloc(*entity1_entity2, n_part ,int *);
+  PDM_malloc(*entity1_entity2_idx, n_part, int *);
+  PDM_malloc(*entity1_entity2    , n_part, int *);
 
   int** _entity1_entity2_idx = *entity1_entity2_idx;
   int** _entity1_entity2     = *entity1_entity2;
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
 
-    PDM_malloc(_entity1_entity2_idx[i_part], (    n_entity1[i_part] + 1) ,int);
-    _entity1_entity2    PDM_malloc([i_part], (2 * n_entity1[i_part]    ) ,int);
+    PDM_malloc(_entity1_entity2_idx[i_part],     n_entity1[i_part] + 1, int);
+    PDM_malloc(_entity1_entity2    [i_part], 2 * n_entity1[i_part]    , int);
 
     int idx = 0;
     _entity1_entity2_idx[i_part][0] = 0;
@@ -441,26 +441,7 @@ const int   *n_entity1,
     }
 
     PDM_realloc(_entity1_entity2    [i_part] ,_entity1_entity2    [i_part] , idx ,int);
-
-
   }
-  // int *face_cell_idx;
- // PDM_malloc(face_cell_idx, (pn_faces[0] + 1 ) ,int);
-  // int *face_cell;
- // PDM_malloc(face_cell, (2 * pn_faces[0] ) ,int);
-  // int idx = 0;
-  // face_cell_idx[0] = 0;
-  // for(int i_face = 0; i_face < pn_faces[0]; ++i_face) {
-  //   face_cell_idx[i_face+1] = face_cell_idx[i_face];
-  //   if(pface_cell[0][2*i_face + 1 ] == 0) {
-  //     face_cell_idx[i_face+1]++;
-  //     face_cell[idx++] = pface_cell[0][2*i_face];
-  //   } else {
-  //     face_cell_idx[i_face+1] += 2;
-  //     face_cell[idx++] = pface_cell[0][2*i_face  ];
-  //     face_cell[idx++] = pface_cell[0][2*i_face+1];
-  //   }
-  // }
 
 }
 
@@ -496,7 +477,7 @@ PDM_compute_dface_vtx_from_edges_distrib
 
   int dn_face = distrib_face[i_rank+1] - distrib_face[i_rank];
   PDM_g_num_t *face_ln_to_gn;
-  PDM_malloc(face_ln_to_gn,dn_face ,PDM_g_num_t);
+  PDM_malloc(face_ln_to_gn, dn_face, PDM_g_num_t);
   for(int i_face = 0; i_face < dn_face; ++i_face) {
     face_ln_to_gn[i_face] = distrib_face[i_rank] + i_face + 1;
   }
@@ -515,11 +496,11 @@ PDM_compute_dface_vtx_from_edges_distrib
                                                            &pedge_ln_to_gn,
                                                            &pface_edge_idx,
                                                            &pface_edge);
- PDM_free(face_ln_to_gn );
+  PDM_free(face_ln_to_gn );
 
   int dn_edge = distrib_edge[i_rank+1] - distrib_edge[i_rank];
   int *dedge_vtx_idx;
-  PDM_malloc(dedge_vtx_idx,(dn_edge+1) ,int);
+  PDM_malloc(dedge_vtx_idx, dn_edge + 1, int);
   for(int i_edge = 0; i_edge < dn_edge+1; ++i_edge) {
     dedge_vtx_idx[i_edge] = 2 * i_edge;
   }
@@ -539,8 +520,8 @@ PDM_compute_dface_vtx_from_edges_distrib
                                                            &pedge_vtx_idx,
                                                            &pedge_vtx);
 
- PDM_free(pedge_ln_to_gn);
- PDM_free(dedge_vtx_idx );
+  PDM_free(pedge_ln_to_gn);
+  PDM_free(dedge_vtx_idx );
   int         *pface_vtx     = NULL;
   PDM_compute_face_vtx_from_face_and_edge(dn_face,
                                           pface_edge_idx,
@@ -548,20 +529,20 @@ PDM_compute_dface_vtx_from_edges_distrib
                                           pedge_vtx,
                                           &pface_vtx);
 
- PDM_free(pface_edge_idx);
- PDM_free(pface_edge    );
- PDM_free(pedge_vtx_idx );
- PDM_free(pedge_vtx     );
+  PDM_free(pface_edge_idx);
+  PDM_free(pface_edge    );
+  PDM_free(pedge_vtx_idx );
+  PDM_free(pedge_vtx     );
 
   PDM_g_num_t *_dface_vtx;
-  PDM_malloc(_dface_vtx,dface_edge_idx[dn_face] ,PDM_g_num_t);
+  PDM_malloc(_dface_vtx, dface_edge_idx[dn_face], PDM_g_num_t);
   for(int idx_face = 0; idx_face < dface_edge_idx[dn_face]; ++idx_face) {
     int i_vtx = pface_vtx[idx_face]-1;
     _dface_vtx[idx_face] = pvtx_ln_to_gn[i_vtx];
   }
 
- PDM_free(pvtx_ln_to_gn);
- PDM_free(pface_vtx);
+  PDM_free(pvtx_ln_to_gn);
+  PDM_free(pface_vtx);
 
   *dface_vtx = _dface_vtx;
 }
@@ -602,8 +583,8 @@ PDM_compute_dface_vtx_from_edges
                                            dedge_vtx,
                                            dface_vtx);
 
-PDM_free(distrib_face);
-PDM_free(distrib_edge);
+  PDM_free(distrib_face);
+  PDM_free(distrib_edge);
 
 }
 
@@ -633,7 +614,7 @@ PDM_compute_face_vtx_from_face_and_edge
   if (n_face == 0) {
     return;
   }
-  PDM_malloc(*face_vtx,face_edge_idx[n_face],int);
+  PDM_malloc(*face_vtx, face_edge_idx[n_face], int);
 
   int n_edge = 0;
   for (int i = 0; i < face_edge_idx[n_face]; i++) {
@@ -708,7 +689,7 @@ PDM_compute_face_vtx_from_face_and_edge
       edge_tag[iedge] = 0;
     }
   }
- PDM_free(edge_tag);
+  PDM_free(edge_tag);
 }
 
 
@@ -735,7 +716,7 @@ PDM_compute_face_vtx_from_face_and_edge_unsigned
 {
   int dbg = 0;
 
-  PDM_malloc(*face_vtx,face_edge_idx[n_face],int);
+  PDM_malloc(*face_vtx, face_edge_idx[n_face], int);
 
   int n_edge = 0;
   for (int i = 0; i < face_edge_idx[n_face]; i++) {
@@ -802,5 +783,5 @@ PDM_compute_face_vtx_from_face_and_edge_unsigned
       edge_tag[iedge] = 0;
     }
   }
- PDM_free(edge_tag);
+  PDM_free(edge_tag);
 }

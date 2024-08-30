@@ -91,8 +91,8 @@ PDM_dcompute_cell_center
 
   int dn_face = (int) (distrib_face[i_rank+1] - distrib_face[i_rank]);
 
-  PDM_g_num_t *dface_ln_to_gn;
-  PDM_malloc(dface_ln_to_gn,dn_face,PDM_g_num_t);
+  PDM_g_num_t *dface_ln_to_gn = NULL;
+  PDM_malloc(dface_ln_to_gn, dn_face, PDM_g_num_t);
   for (int i = 0; i < dn_face; i++) {
     dface_ln_to_gn[i] = distrib_face[i_rank] + i + 1;
   }
@@ -111,7 +111,7 @@ PDM_dcompute_cell_center
                                                            &pvtx_ln_to_gn,
                                                            &pface_vtx_idx,
                                                            &pface_vtx);
- PDM_free(dface_ln_to_gn);
+  PDM_free(dface_ln_to_gn);
 
   /*PDM_log_trace_connectivity_long(dface_vtx_idx, dface_vtx, dn_face, "dface_vtx : ");
   PDM_log_trace_connectivity_int (pface_vtx_idx, pface_vtx, dn_face, "pface_vtx : ");
@@ -128,13 +128,13 @@ PDM_dcompute_cell_center
                                         (const PDM_g_num_t **) &pvtx_ln_to_gn,
                                         &tmp_pvtx_coord);
   double *pvtx_coord = tmp_pvtx_coord[0];
- PDM_free(tmp_pvtx_coord);
- PDM_free(pvtx_ln_to_gn);
+  PDM_free(tmp_pvtx_coord);
+  PDM_free(pvtx_ln_to_gn);
 
 
   /* Compute face centers */
-  double *dface_center;
-  PDM_malloc(dface_center,dn_face * 3,double);
+  double *dface_center = NULL;
+  PDM_malloc(dface_center, dn_face * 3, double);
   for (int i = 0; i < dn_face; i++) {
     for (int k = 0; k < 3; k++) {
       dface_center[3*i + k] = 0.;
@@ -153,9 +153,9 @@ PDM_dcompute_cell_center
       dface_center[3*i + k] *= normalization;
     }
   }
- PDM_free(pvtx_coord);
- PDM_free(pface_vtx_idx);
- PDM_free(pface_vtx);
+  PDM_free(pvtx_coord);
+  PDM_free(pface_vtx_idx);
+  PDM_free(pface_vtx);
 
   /* Compute cell centers */
   PDM_compute_center_from_descending_connectivity (dcell_face_idx,
@@ -165,7 +165,7 @@ PDM_dcompute_cell_center
                                                    cell_center,
                                                    dface_center,
                                                    comm);
- PDM_free(dface_center);
+  PDM_free(dface_center);
 }
 /*=============================================================================
  * Public function definitions
@@ -189,8 +189,8 @@ PDM_part_entity_geom
   const int dim = 3;
 
   /** TRAITEMENT HILBERT FVM **/
-  PDM_hilbert_code_t *hilbert_codes;
-  PDM_malloc(hilbert_codes,dn_entity ,PDM_hilbert_code_t);
+  PDM_hilbert_code_t *hilbert_codes = NULL;
+  PDM_malloc(hilbert_codes, dn_entity, PDM_hilbert_code_t);
 
   /** Initialisation **/
 
@@ -208,10 +208,10 @@ PDM_part_entity_geom
   int n_total_part;
   PDM_MPI_Allreduce ((void *) &n_part, &n_total_part, 1, PDM_MPI_INT, PDM_MPI_SUM, comm);
   PDM_hilbert_code_t *hilbert_codes_idx;
-  PDM_malloc(hilbert_codes_idx,(n_total_part+1) ,PDM_hilbert_code_t);
+  PDM_malloc(hilbert_codes_idx, n_total_part+1, PDM_hilbert_code_t);
 
-  double *weight;
-  PDM_malloc(weight,dn_entity ,double);
+  double *weight = NULL;
+  PDM_malloc(weight, dn_entity, double);
   if (dentity_weight != NULL) {
     for(int i = 0; i < dn_entity; ++i) {
       weight [i] = dentity_weight [i];
@@ -232,7 +232,7 @@ PDM_part_entity_geom
                                 hilbert_codes_idx,
                                 comm);
 
- PDM_free(weight);
+  PDM_free(weight);
 
   /** Remplissage de cell_parts -> en fct des codes Hilbert **/
 
@@ -244,8 +244,8 @@ PDM_part_entity_geom
 
   }
 
- PDM_free(hilbert_codes_idx);
- PDM_free(hilbert_codes);
+  PDM_free(hilbert_codes_idx);
+  PDM_free(hilbert_codes);
 }
 
 /**
@@ -297,7 +297,7 @@ PDM_part_geom
    * cell center computation
    */
   double *barycenter_coords;
-  PDM_malloc(barycenter_coords,dn_cell * 3 ,double );
+  PDM_malloc(barycenter_coords, dn_cell * 3, double );
   PDM_dcompute_cell_center (comm,
                             dn_cell,
                             dcell_face_idx,
@@ -311,7 +311,7 @@ PDM_part_geom
 
   double *dcell_weight_d = NULL;
   if(dcell_weight != NULL) {
-    PDM_malloc(dcell_weight_d,dn_cell ,double);
+    PDM_malloc(dcell_weight_d, dn_cell, double);
     for(int i = 0; i < dn_cell; ++i) {
       dcell_weight_d[i] = dcell_weight[i];
     }
@@ -326,10 +326,10 @@ PDM_part_geom
                        dcell_part);
 
   if(dcell_weight != NULL) {
-   PDM_free(dcell_weight_d);
+    PDM_free(dcell_weight_d);
   }
 
- PDM_free(barycenter_coords);
+  PDM_free(barycenter_coords);
 }
 
 
@@ -373,7 +373,7 @@ PDM_part_geom_1d
   int *dedge_vtx_idx = PDM_array_new_idx_from_const_stride_int(2, dn_edge);
 
   double *dedge_center;
-  PDM_malloc(dedge_center,dn_edge * 3,double);
+  PDM_malloc(dedge_center, dn_edge * 3, double);
   PDM_compute_center_from_descending_connectivity(dedge_vtx_idx,
                                                   dedge_vtx,
                                                   dn_edge,
@@ -390,9 +390,9 @@ PDM_part_geom_1d
                        dedge_weight,
                        dedge_part);
 
- PDM_free(distrib_vtx);
- PDM_free(dedge_center);
- PDM_free(dedge_vtx_idx);
+  PDM_free(distrib_vtx);
+  PDM_free(dedge_center);
+  PDM_free(dedge_vtx_idx);
 }
 
 void
@@ -417,7 +417,7 @@ PDM_part_geom_2d
 
   PDM_g_num_t *distrib_vtx = PDM_compute_entity_distribution(comm, dn_vtx);
   double *dface_center;
-  PDM_malloc(dface_center,dn_face * 3,double);
+  PDM_malloc(dface_center, dn_face * 3, double);
 
   if(dface_vtx_idx != NULL) {
     PDM_compute_center_from_descending_connectivity(dface_vtx_idx,
@@ -433,7 +433,7 @@ PDM_part_geom_2d
     int *dedge_vtx_idx = PDM_array_new_idx_from_const_stride_int(2, dn_edge);
 
     double *dedge_center;
-    PDM_malloc(dedge_center,dn_edge * 3,double);
+    PDM_malloc(dedge_center, dn_edge * 3, double);
 
     PDM_compute_center_from_descending_connectivity(dedge_vtx_idx,
                                                     dedge_vtx,
@@ -453,9 +453,9 @@ PDM_part_geom_2d
                                                     comm);
 
 
-   PDM_free(dedge_vtx_idx);
-   PDM_free(dedge_center);
-   PDM_free(distrib_edge);
+    PDM_free(dedge_vtx_idx);
+    PDM_free(dedge_center);
+    PDM_free(distrib_edge);
   }
 
   PDM_part_entity_geom(method,
@@ -466,8 +466,8 @@ PDM_part_geom_2d
                        dface_weight,
                        dface_part);
 
- PDM_free(distrib_vtx);
- PDM_free(dface_center);
+  PDM_free(distrib_vtx);
+  PDM_free(dface_center);
 }
 
 
@@ -492,7 +492,7 @@ PDM_dreorder_from_coords
   int dn_vtx = distrib_vtx[i_rank+1] - distrib_vtx[i_rank];
 
   PDM_hilbert_code_t *hilbert_codes;
-  PDM_malloc(hilbert_codes,dn_vtx ,PDM_hilbert_code_t);
+  PDM_malloc(hilbert_codes, dn_vtx, PDM_hilbert_code_t);
 
   /** Initialisation **/
   double extents[2*dim]; /** DIM x 2**/
@@ -503,24 +503,8 @@ PDM_dreorder_from_coords
   /** Hilbert Coordinates Computation **/
   PDM_hilbert_encode_coords(dim, PDM_HILBERT_CS, extents, dn_vtx, dcoords, hilbert_codes);
 
-  // PDM_hilbert_code_t *tmp_hilbert_codes;
- // PDM_malloc(tmp_hilbert_codes,dn_vtx ,PDM_hilbert_code_t);
-  // for (int i = 0; i < dn_vtx; ++i) {
-  //   tmp_hilbert_codes [i] = hilbert_codes [i];
-  // }
-
-  ///** Calcul des index des codes Hilbert **/
-  // int *hilbert_order;
- // PDM_malloc(hilbert_order,dn_vtx ,int);
-  // for (int i = 0; i < dn_vtx; ++i) {
-  //   hilbert_order [i] = i;
-  // }
-  // assert (sizeof(double) == sizeof(PDM_hilbert_code_t));
-  // PDM_sort_double (tmp_hilbert_codes, NULL, dn_vtx);
-  //PDM_free(tmp_hilbert_codes);
-
   PDM_hilbert_code_t *hilbert_codes_idx;
-  PDM_malloc(hilbert_codes_idx,(n_rank+1) ,PDM_hilbert_code_t);
+  PDM_malloc(hilbert_codes_idx, n_rank+1, PDM_hilbert_code_t);
 
   double *weight = PDM_array_const_double(dn_vtx, 1.);
   PDM_hilbert_build_rank_index (dim,
@@ -531,7 +515,7 @@ PDM_dreorder_from_coords
                                 NULL, // No need order
                                 hilbert_codes_idx,
                                 comm);
- PDM_free(weight);
+  PDM_free(weight);
 
   /** Remplissage de cell_parts -> en fct des codes Hilbert **/
   for(int i = 0; i < dn_vtx; ++i) {
@@ -544,8 +528,8 @@ PDM_dreorder_from_coords
   // part_to_block avec ln_to_gn 1 2 3 4 .... pdm_assembly_partition
   // Puis on échange les hilbert_codes, qu'on retrie localement
 
-  PDM_g_num_t *distrib_rank;
-  PDM_malloc(distrib_rank, (n_rank+1) ,PDM_g_num_t);
+  PDM_g_num_t *distrib_rank = NULL;
+  PDM_malloc(distrib_rank, n_rank+1, PDM_g_num_t);
   for(int i = 0; i < n_rank+1; ++i) {
     distrib_rank[i] = i;
   }
@@ -562,7 +546,7 @@ PDM_dreorder_from_coords
                              &dn_vtx,
                              1,
                              comm);
- PDM_free(distrib_rank);
+  PDM_free(distrib_rank);
 
   const int n_vtx_block = PDM_part_to_block_n_elt_block_get (ptb);
 
@@ -593,29 +577,29 @@ PDM_dreorder_from_coords
                           NULL,
                 (void **) &blk_ln_to_gn);
 
- PDM_free(hilbert_codes_idx);
- PDM_free(hilbert_codes);
+  PDM_free(hilbert_codes_idx);
+  PDM_free(hilbert_codes);
   PDM_part_to_block_free(ptb);
 
   /* Reorder locally */
   assert (sizeof(double) == sizeof(PDM_hilbert_code_t));
-  int *hilbert_order;
-  PDM_malloc(hilbert_order, n_vtx_block ,int);
+  int *hilbert_order = NULL;
+  PDM_malloc(hilbert_order, n_vtx_block, int);
   for (int i = 0; i < n_vtx_block; ++i) {
     hilbert_order [i] = i;
   }
   PDM_sort_double (blk_hilbert_codes, hilbert_order, n_vtx_block);
- PDM_free(blk_hilbert_codes);
+  PDM_free(blk_hilbert_codes);
 
 
   /* Apply order to blk_ln_to_gn */
-  PDM_g_num_t *sorted_blk_ln_to_gn;
-  PDM_malloc(sorted_blk_ln_to_gn, n_vtx_block ,PDM_g_num_t);
+  PDM_g_num_t *sorted_blk_ln_to_gn = NULL;
+  PDM_malloc(sorted_blk_ln_to_gn, n_vtx_block, PDM_g_num_t);
   for(int i = 0; i < n_vtx_block; ++i) {
     sorted_blk_ln_to_gn[i] = blk_ln_to_gn[hilbert_order[i]];
   }
- PDM_free(blk_ln_to_gn);
- PDM_free(hilbert_order);
+  PDM_free(blk_ln_to_gn);
+  PDM_free(hilbert_order);
 
   PDM_g_num_t* distrib_blk_vtx = PDM_compute_entity_distribution(comm, n_vtx_block);
   PDM_block_to_part_t* btp = PDM_block_to_part_create(distrib_blk_vtx,
@@ -633,8 +617,8 @@ PDM_dreorder_from_coords
                          NULL,
               (void **) &ln_to_gn);
   PDM_block_to_part_free(btp);
- PDM_free(sorted_blk_ln_to_gn);
- PDM_free(distrib_blk_vtx);
+  PDM_free(sorted_blk_ln_to_gn);
+  PDM_free(distrib_blk_vtx);
 }
 
 
@@ -655,18 +639,16 @@ PDM_dreorder_from_length
 
   int dn_length = distrib_in[i_rank+1] - distrib_in[i_rank];
 
-  // PDM_hilbert_code_t *hilbert_codes;
- // PDM_malloc(hilbert_codes,dn_length ,PDM_hilbert_code_t);
-  PDM_hilbert_code_t *tmp_hilbert_codes;
-  PDM_malloc(tmp_hilbert_codes,dn_length ,PDM_hilbert_code_t);
+  PDM_hilbert_code_t *tmp_hilbert_codes = NULL;
+  PDM_malloc(tmp_hilbert_codes, dn_length, PDM_hilbert_code_t);
 
   for (int i = 0; i < dn_length; ++i) {
     tmp_hilbert_codes [i] = length [i];
   }
 
   ///** Calcul des index des codes Hilbert **/
-  int *hilbert_order;
-  PDM_malloc(hilbert_order,dn_length ,int);
+  int *hilbert_order = NULL;
+  PDM_malloc(hilbert_order, dn_length, int);
 
   for (int i = 0; i < dn_length; ++i) {
     hilbert_order [i] = i;
@@ -675,10 +657,10 @@ PDM_dreorder_from_length
   assert (sizeof(double) == sizeof(PDM_hilbert_code_t));
   PDM_sort_double (tmp_hilbert_codes, hilbert_order, dn_length);
 
- PDM_free(tmp_hilbert_codes);
+  PDM_free(tmp_hilbert_codes);
 
-  PDM_hilbert_code_t *hilbert_codes_idx;
-  PDM_malloc(hilbert_codes_idx,(n_rank+1) ,PDM_hilbert_code_t);
+  PDM_hilbert_code_t *hilbert_codes_idx = NULL;
+  PDM_malloc(hilbert_codes_idx, n_rank+1, PDM_hilbert_code_t);
 
   double *weight = PDM_array_const_double(dn_length, 1.);
   PDM_hilbert_build_rank_index (dim,
@@ -691,7 +673,7 @@ PDM_dreorder_from_length
                                 comm);
 
 
- PDM_free(weight);
+  PDM_free(weight);
 
   /** Remplissage de cell_parts -> en fct des codes Hilbert **/
   for(int i = 0; i < dn_length; ++i) {
@@ -704,8 +686,8 @@ PDM_dreorder_from_length
   // part_to_block avec ln_to_gn 1 2 3 4 .... pdm_assembly_partition
   // Puis on échange les hilbert_codes, qu'on retrie localement
 
-  PDM_g_num_t *distrib_rank;
-  PDM_malloc(distrib_rank, (n_rank+1) ,PDM_g_num_t);
+  PDM_g_num_t *distrib_rank = NULL;
+  PDM_malloc(distrib_rank, n_rank+1, PDM_g_num_t);
   for(int i = 0; i < n_rank+1; ++i) {
     distrib_rank[i] = i;
   }
@@ -722,7 +704,7 @@ PDM_dreorder_from_length
                              &dn_length,
                              1,
                              comm);
- PDM_free(distrib_rank);
+  PDM_free(distrib_rank);
 
   const int n_vtx_block = PDM_part_to_block_n_elt_block_get (ptb);
 
@@ -753,7 +735,7 @@ PDM_dreorder_from_length
                           NULL,
                 (void **) &blk_ln_to_gn);
 
- PDM_free(hilbert_codes_idx);
+  PDM_free(hilbert_codes_idx);
   PDM_part_to_block_free(ptb);
 
   /* Reorder locally */
@@ -764,17 +746,17 @@ PDM_dreorder_from_length
   }
   PDM_sort_double (blk_hilbert_codes, hilbert_order, n_vtx_block);
   //PDM_log_trace_array_double(blk_hilbert_codes, n_vtx_block, "tmp_edge_length : ");
- PDM_free(blk_hilbert_codes);
+  PDM_free(blk_hilbert_codes);
 
 
   /* Apply order to blk_ln_to_gn */
-  PDM_g_num_t *sorted_blk_ln_to_gn;
-  PDM_malloc(sorted_blk_ln_to_gn, n_vtx_block ,PDM_g_num_t);
+  PDM_g_num_t *sorted_blk_ln_to_gn = NULL;
+  PDM_malloc(sorted_blk_ln_to_gn, n_vtx_block, PDM_g_num_t);
   for(int i = 0; i < n_vtx_block; ++i) {
     sorted_blk_ln_to_gn[i] = blk_ln_to_gn[hilbert_order[i]];
   }
- PDM_free(blk_ln_to_gn);
- PDM_free(hilbert_order);
+  PDM_free(blk_ln_to_gn);
+  PDM_free(hilbert_order);
 
   PDM_g_num_t* distrib_blk_vtx = PDM_compute_entity_distribution(comm, n_vtx_block);
   PDM_block_to_part_t* btp = PDM_block_to_part_create(distrib_blk_vtx,
@@ -792,8 +774,8 @@ PDM_dreorder_from_length
                          NULL,
               (void **) &ln_to_gn);
   PDM_block_to_part_free(btp);
- PDM_free(sorted_blk_ln_to_gn);
- PDM_free(distrib_blk_vtx);
+  PDM_free(sorted_blk_ln_to_gn);
+  PDM_free(distrib_blk_vtx);
 }
 
 

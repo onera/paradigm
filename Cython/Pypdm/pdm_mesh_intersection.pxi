@@ -163,6 +163,13 @@ cdef class MeshIntersection:
         elif(self._dim_mesh_b == 1):
           self._n_entity_b[i_part] = n_edge
 
+      cdef int* cell_face_idx_data = np_to_int_pointer(cell_face_idx)
+      cdef int* cell_face_data     = np_to_int_pointer(cell_face    )
+      cdef int* face_edge_idx_data = np_to_int_pointer(face_edge_idx)
+      cdef int* face_edge_data     = np_to_int_pointer(face_edge    )
+      cdef int* edge_vtx_data      = np_to_int_pointer(edge_vtx     )
+      cdef int* face_vtx_idx_data  = np_to_int_pointer(face_vtx_idx )
+      cdef int* face_vtx_data      = np_to_int_pointer(face_vtx     )
       PDM_mesh_intersection_part_set(self._mi,
                     <PDM_ol_mesh_t>  i_mesh,
                                      i_part,
@@ -170,13 +177,13 @@ cdef class MeshIntersection:
                                      n_face,
                                      n_edge,
                                      n_vtx,
-                    <int         *>  cell_face_idx.data,
-                    <int         *>  cell_face    .data,
-                    <int         *>  face_edge_idx.data,
-                    <int         *>  face_edge    .data,
-                    <int         *>  edge_vtx     .data,
-                    <int         *>  face_vtx_idx .data,
-                    <int         *>  face_vtx     .data,
+                    <int         *>  cell_face_idx_data,
+                    <int         *>  cell_face_data    ,
+                    <int         *>  face_edge_idx_data,
+                    <int         *>  face_edge_data    ,
+                    <int         *>  edge_vtx_data     ,
+                    <int         *>  face_vtx_idx_data ,
+                    <int         *>  face_vtx_data     ,
                     <PDM_g_num_t *>  cell_ln_to_gn.data,
                     <PDM_g_num_t *>  face_ln_to_gn.data,
                     <PDM_g_num_t *>  edge_ln_to_gn.data,

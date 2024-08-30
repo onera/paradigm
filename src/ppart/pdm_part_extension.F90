@@ -34,24 +34,6 @@ interface
 
 ! Compute a part extension structure
 
-subroutine PDM_part_extension_compute_test (part_ext) &
-bind (c, name='PDM_part_extension_compute_test')
-  use iso_c_binding
-  implicit none
-
-  type(c_ptr), value :: part_ext
-
-end subroutine PDM_part_extension_compute_test
-
-
-!>
-!!
-!! \brief Compute a part extension structure
-!!
-!! \param [in]   part_ext          PDM_part_extension_t
-!!
-!!
-
 subroutine PDM_part_extension_compute (part_ext) &
 bind (c, name='PDM_part_extension_compute')
   use iso_c_binding
@@ -61,35 +43,7 @@ bind (c, name='PDM_part_extension_compute')
 
 end subroutine PDM_part_extension_compute
 
-
-
-
-!>
-!!
-!! \brief Free a part extension structure
-!!
-!! \param [in]   part_ext          PDM_part_extension_t
-!!
-!!
-
-subroutine PDM_part_extension_free_test (part_ext) &
-bind (c, name='PDM_part_extension_free_test')
-  use iso_c_binding
-  implicit none
-
-  type(c_ptr), value :: part_ext
-
-end subroutine PDM_part_extension_free_test
-
-
-
-!>
-!!
-!! \brief Free a part extension structure
-!!
-!! \param [in]   part_ext          PDM_part_extension_t
-!!
-!!
+! Free a part extension structure
 
 subroutine PDM_part_extension_free (part_ext) &
 bind (c, name='PDM_part_extension_free')
@@ -434,123 +388,123 @@ subroutine PDM_part_extension_set_part (part_ext,                 &
   c_cell_face_idx = C_NULL_PTR
   if (associated(cell_face_idx)) then
     c_cell_face_idx = c_loc(cell_face_idx)
-  endif
-
+  endif 
+    
   c_cell_face = C_NULL_PTR
   if (associated(cell_face)) then
     c_cell_face = c_loc(cell_face)
-  endif
-
+  endif 
+    
   c_face_cell = C_NULL_PTR
   if (associated(face_cell)) then
     c_face_cell = c_loc(face_cell)
-  endif
-
+  endif 
+    
   c_face_edge_idx = C_NULL_PTR
   if (associated(face_edge_idx)) then
     c_face_edge_idx = c_loc(face_edge_idx)
-  endif
-
+  endif 
+    
   c_face_edge = C_NULL_PTR
   if (associated(face_edge)) then
     c_face_edge = c_loc(face_edge)
-  endif
-
+  endif 
+    
   c_face_vtx_idx = C_NULL_PTR
   if (associated(face_vtx_idx)) then
     c_face_vtx_idx = c_loc(face_vtx_idx)
-  endif
-
+  endif 
+    
   c_face_vtx = C_NULL_PTR
   if (associated(face_vtx)) then
     c_face_vtx = c_loc(face_vtx)
-  endif
-
+  endif 
+    
   c_edge_vtx = C_NULL_PTR
   if (associated(edge_vtx)) then
     c_edge_vtx = c_loc(edge_vtx)
-  endif
-
+  endif 
+    
   c_face_bound_idx = C_NULL_PTR
   if (associated(face_bound_idx)) then
     c_face_bound_idx = c_loc(face_bound_idx)
-  endif
-
+  endif 
+    
   c_face_bound = C_NULL_PTR
   if (associated(face_bound)) then
     c_face_bound = c_loc(face_bound)
-  endif
-
+  endif 
+    
   c_face_join_idx = C_NULL_PTR
   if (associated(face_join_idx)) then
     c_face_join_idx = c_loc(face_join_idx)
-  endif
-
+  endif 
+    
   c_face_join = C_NULL_PTR
   if (associated(face_join)) then
     c_face_join = c_loc(face_join)
-  endif
-
+  endif 
+    
   c_face_part_bound_proc_idx = C_NULL_PTR
   if (associated(face_part_bound_proc_idx)) then
     c_face_part_bound_proc_idx = c_loc(face_part_bound_proc_idx)
-  endif
-
+  endif 
+    
   c_face_part_bound_part_idx = C_NULL_PTR
   if (associated(face_part_bound_part_idx)) then
     c_face_part_bound_part_idx = c_loc(face_part_bound_part_idx)
-  endif
-
+  endif 
+    
   c_face_part_bound = C_NULL_PTR
   if (associated(face_part_bound)) then
     c_face_part_bound = c_loc(face_part_bound)
-  endif
-
+  endif 
+    
   c_vtx_part_bound_proc_idx = C_NULL_PTR
   if (associated(vtx_part_bound_proc_idx)) then
     c_vtx_part_bound_proc_idx = c_loc(vtx_part_bound_proc_idx)
-  endif
-
+  endif 
+    
   c_vtx_part_bound_part_idx = C_NULL_PTR
   if (associated(vtx_part_bound_part_idx)) then
     c_vtx_part_bound_part_idx = c_loc(vtx_part_bound_part_idx)
-  endif
-
+  endif 
+    
   c_vtx_part_bound = C_NULL_PTR
   if (associated(vtx_part_bound)) then
     c_vtx_part_bound = c_loc(vtx_part_bound)
-  endif
-
+  endif 
+    
   c_cell_ln_to_gn = C_NULL_PTR
   if (associated(cell_ln_to_gn)) then
     c_cell_ln_to_gn = c_loc(cell_ln_to_gn)
-  endif
-
+  endif 
+    
   c_face_ln_to_gn = C_NULL_PTR
   if (associated(face_ln_to_gn)) then
     c_face_ln_to_gn = c_loc(face_ln_to_gn)
-  endif
-
+  endif 
+    
   c_edge_ln_to_gn = C_NULL_PTR
   if (associated(edge_ln_to_gn)) then
     c_edge_ln_to_gn = c_loc(edge_ln_to_gn)
-  endif
-
+  endif 
+    
   c_vtx_ln_to_gn = C_NULL_PTR
   if (associated(vtx_ln_to_gn)) then
     c_vtx_ln_to_gn = c_loc(vtx_ln_to_gn)
-  endif
-
+  endif 
+    
   c_face_group_ln_to_gn = C_NULL_PTR
   if (associated(face_group_ln_to_gn)) then
     c_face_group_ln_to_gn = c_loc(face_group_ln_to_gn)
-  endif
-
+  endif 
+    
   c_vtx_coord = C_NULL_PTR
   if (associated(vtx_coord)) then
     c_vtx_coord = c_loc(vtx_coord)
-  endif
-
+  endif 
+    
 
   call PDM_part_extension_set_part_c (part_ext,                        &
                                       i_domain,                        &
@@ -729,9 +683,9 @@ subroutine PDM_part_extension_group_get (part_ext,         &
   integer(pdm_l_num_s), pointer :: group_entity(:)          ! Group->entity connectivity (1-based local ids, size = ``group_entity_idx(n_group)``)
   integer(pdm_g_num_s), pointer :: group_entity_ln_to_gn(:) ! Group->entity connectivity (group-specific global ids, size = ``group_entity_idx(n_group)``)
 
-  type(c_ptr)                   :: c_group_entity
-  type(c_ptr)                   :: c_group_entity_idx
-  type(c_ptr)                   :: c_group_entity_ln_to_gn
+  type(c_ptr)                   :: c_group_entity          
+  type(c_ptr)                   :: c_group_entity_idx      
+  type(c_ptr)                   :: c_group_entity_ln_to_gn 
 
   interface
     function PDM_part_extension_group_get_c (part_ext,              &

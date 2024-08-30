@@ -151,7 +151,7 @@ int main(int argc, char *argv[])
                                      order,
                                      PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_BARHO, order),
                                      ijk);
-   PDM_free(ijk);
+    PDM_free(ijk);
   }
 
 
@@ -159,14 +159,14 @@ int main(int argc, char *argv[])
    *  Build a Bezier P^order curve
    */
   int *elt_node;
-  PDM_malloc(elt_node,n_node,int);
+  PDM_malloc(elt_node, n_node, int);
   for (int i = 0; i < n_node; i++) {
     elt_node[i] = i + 1;
   }
 
   double step = 1. / (double) order;
   double *node_coord;
-  PDM_malloc(node_coord,n_node * 3,double);
+  PDM_malloc(node_coord, n_node * 3, double);
   for (int i = 0; i <= order; i++) {
     node_coord[3*i  ] = i*step + noise * (2*(double) rand() / (double) RAND_MAX - 1);
     node_coord[3*i+1] =          noise * (2*(double) rand() / (double) RAND_MAX - 1);
@@ -182,7 +182,7 @@ int main(int argc, char *argv[])
   double p[3];
   double *sub_node_coord[2] = {NULL};
   for (int i = 0; i < 2; i++) {
-    PDM_malloc(sub_node_coord[i],n_node * 3,double);
+    PDM_malloc(sub_node_coord[i], n_node * 3, double);
   }
 
   PDM_ho_bezier_de_casteljau_curve(3,
@@ -197,7 +197,7 @@ int main(int argc, char *argv[])
   // check weights
   if (order <= 3) {
     double *weight;
-    PDM_malloc(weight,n_node,double);
+    PDM_malloc(weight, n_node, double);
     PDM_ho_bezier_basis(PDM_MESH_NODAL_BARHO_BEZIER,
                         order,
                         1,
@@ -206,7 +206,7 @@ int main(int argc, char *argv[])
 
 
     double *weight2;
-    PDM_malloc(weight2,n_node,double);
+    PDM_malloc(weight2, n_node, double);
     PDM_ho_bezier_de_casteljau_curve(n_node,
                                      order,
                                      t,
@@ -222,8 +222,8 @@ int main(int argc, char *argv[])
     }
 
     printf("max_diff = %e\n", max_diff);
-   PDM_free(weight);
-   PDM_free(weight2);
+    PDM_free(weight);
+    PDM_free(weight2);
   }
 
 
@@ -231,7 +231,7 @@ int main(int argc, char *argv[])
    *  Derivative
    */
   double *deriv_node_coord;
-  PDM_malloc(deriv_node_coord,order * 3,double);
+  PDM_malloc(deriv_node_coord, order * 3, double);
   PDM_ho_bezier_curve_derivative(3,
                                  order,
                                  node_coord,
@@ -307,12 +307,12 @@ int main(int argc, char *argv[])
   /*
    *  Free memory
    */
- PDM_free(node_coord);
+  PDM_free(node_coord);
   for (int i = 0; i < 2; i++) {
-   PDM_free(sub_node_coord[i]);
+    PDM_free(sub_node_coord[i]);
   }
- PDM_free(deriv_node_coord);
- PDM_free(elt_node);
+  PDM_free(deriv_node_coord);
+  PDM_free(elt_node);
 
   PDM_MPI_Finalize();
 

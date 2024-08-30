@@ -72,7 +72,7 @@ int exit_code
  *
  * \param [in]    argc   Number of arguments
  * \param [in]    argv   Arguments
- * \param [inout] nPts   Number of points
+ * \param [inout] n_pts   Number of points
  * \param [inout] ls     Low scalability
  * \param [inout] length Length of domains
  *
@@ -83,7 +83,7 @@ _read_args
 (
  int            argc,
  char         **argv,
- PDM_g_num_t   *nPts,
+ PDM_g_num_t   *n_pts,
  double        *length,
  int           *local,
  int           *rand,
@@ -105,8 +105,8 @@ _read_args
         _usage(EXIT_FAILURE);
       }
       else {
-        long _nPts = atol(argv[i]);
-        *nPts = (PDM_g_num_t) _nPts;
+        long _n_pts = atol(argv[i]);
+        *n_pts = (PDM_g_num_t) _n_pts;
       }
     }
 
@@ -170,7 +170,7 @@ char *argv[]
   int n_rank;
   PDM_MPI_Comm_size (PDM_MPI_COMM_WORLD, &n_rank);
 
-  PDM_g_num_t nPts      = 10;
+  PDM_g_num_t n_pts     = 10;
   double      length    = 10.;
   int         local     = 0;
   int         randomize = 0;
@@ -178,7 +178,7 @@ char *argv[]
 
   _read_args(argc,
              argv,
-             &nPts,
+             &n_pts,
              &length,
              &local,
              &randomize,
@@ -202,7 +202,7 @@ char *argv[]
     PDM_point_cloud_gen_random (comm,
                                 0, // seed
                                 0, // geometric_g_num
-                                nPts,
+                                n_pts,
                                 -length, -length, -length,
                                 length, length, length,
                                 &n_src,
@@ -222,10 +222,10 @@ char *argv[]
     n_src = (int) (distrib[i_rank+1] - distrib[i_rank]);
     double *dvtx_coord = PDM_DMesh_nodal_vtx_get(dmn);
 
-    PDM_malloc(src_coord,n_src * 3,double);
+    PDM_malloc(src_coord, n_src * 3, double);
     memcpy(src_coord, dvtx_coord, sizeof(double) * n_src * 3);
 
-    PDM_malloc(src_g_num,n_src,PDM_g_num_t);
+    PDM_malloc(src_g_num, n_src, PDM_g_num_t);
     for (int i = 0; i < n_src; i++) {
       src_g_num[i] = distrib[i_rank] + i + 1;
     }
@@ -257,7 +257,7 @@ char *argv[]
   PDM_point_cloud_gen_random (comm,
                               123456789, // seed
                               0,         // geometric_g_num
-                              nPts,
+                              n_pts,
                               -length, -length, -length,
                               length, length, length,
                               &n_tgt,
@@ -270,8 +270,8 @@ char *argv[]
   //   }
   // }
 
-  double *ball_radius2;
-  PDM_malloc(ball_radius2,n_tgt,double);
+  double *ball_radius2 = NULL;
+  PDM_malloc(ball_radius2, n_tgt, double);
   for (int i = 0; i < n_tgt; i++) {
     double r = 0.8*length;
     ball_radius2[i] = r*r;
@@ -320,9 +320,9 @@ char *argv[]
   //               pts_inside_ball_dist2[j], ball_radius2[i]);
   //   }
   // }
- PDM_free(pts_inside_ball_idx);
- PDM_free(pts_inside_ball_l_num);
- PDM_free(pts_inside_ball_dist2);
+  PDM_free(pts_inside_ball_idx);
+  PDM_free(pts_inside_ball_l_num);
+  PDM_free(pts_inside_ball_dist2);
 
 
 
@@ -374,20 +374,20 @@ char *argv[]
   //   }
   // }
   if (1) {
-    int *closest_kdtree_pt_id;
-    PDM_malloc(closest_kdtree_pt_id,n_tgt,int   );
-    double *closest_kdtree_pt_dist2;
-    PDM_malloc(closest_kdtree_pt_dist2,n_tgt,double);
+    int    *closest_kdtree_pt_id    = NULL;
+    double *closest_kdtree_pt_dist2 = NULL;
+    PDM_malloc(closest_kdtree_pt_id   , n_tgt, int   );
+    PDM_malloc(closest_kdtree_pt_dist2, n_tgt, double);
     PDM_kdtree_seq_closest_point(kdt,
                                  n_tgt,
                                  tgt_coord,
                                  closest_kdtree_pt_id,
                                  closest_kdtree_pt_dist2);
 
-    int *closest_octree_pt_id;
-    PDM_malloc(closest_octree_pt_id,n_tgt * 2,int);
-    double *closest_octree_pt_dist2;
-    PDM_malloc(closest_octree_pt_dist2,n_tgt,double);
+    int    *closest_octree_pt_id    = NULL;
+    double *closest_octree_pt_dist2 = NULL;
+    PDM_malloc(closest_octree_pt_id   , n_tgt * 2, int   );
+    PDM_malloc(closest_octree_pt_dist2, n_tgt    , double);
     PDM_octree_seq_closest_point(oct,
                                  n_tgt,
                                  tgt_coord,
@@ -403,32 +403,28 @@ char *argv[]
     //             closest_octree_pt_id[2*i], closest_octree_pt_id[2*i+1], closest_octree_pt_dist2[i]);
     // }
 
-   PDM_free(closest_kdtree_pt_id);
-   PDM_free(closest_kdtree_pt_dist2);
-   PDM_free(closest_octree_pt_id);
-   PDM_free(closest_octree_pt_dist2);
+    PDM_free(closest_kdtree_pt_id);
+    PDM_free(closest_kdtree_pt_dist2);
+    PDM_free(closest_octree_pt_id);
+    PDM_free(closest_octree_pt_dist2);
   }
-
-
-
 
   /* Free */
   PDM_kdtree_seq_free(kdt);
   PDM_octree_seq_free(oct);
- PDM_free(src_coord);
- PDM_free(src_g_num);
- PDM_free(tgt_coord);
- PDM_free(tgt_g_num);
- PDM_free(ball_radius2);
- PDM_free(pts_inside_ball_idx);
- PDM_free(pts_inside_ball_l_num);
- PDM_free(pts_inside_ball_dist2);
+  PDM_free(src_coord);
+  PDM_free(src_g_num);
+  PDM_free(tgt_coord);
+  PDM_free(tgt_g_num);
+  PDM_free(ball_radius2);
+  PDM_free(pts_inside_ball_idx);
+  PDM_free(pts_inside_ball_l_num);
+  PDM_free(pts_inside_ball_dist2);
 
   if (i_rank == 0) {
     PDM_printf ("-- End\n");
     fflush(stdout);
   }
-
 
   PDM_MPI_Barrier (PDM_MPI_COMM_WORLD);
 

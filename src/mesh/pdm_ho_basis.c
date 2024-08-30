@@ -334,17 +334,17 @@ _basis_tria_pn
   else {
 
     double *u;
-    PDM_malloc(u,n_pts,double);
     double *v;
-    PDM_malloc(v,n_pts,double);
     double *w;
-    PDM_malloc(w,n_pts,double);
     double *fu;
-    PDM_malloc(fu,n_pts,double);
     double *fv;
-    PDM_malloc(fv,n_pts,double);
     double *fw;
-    PDM_malloc(fw,n_pts,double);
+    PDM_malloc(u , n_pts, double);
+    PDM_malloc(v , n_pts, double);
+    PDM_malloc(w , n_pts, double);
+    PDM_malloc(fu, n_pts, double);
+    PDM_malloc(fv, n_pts, double);
+    PDM_malloc(fw, n_pts, double);
 
     for (int i = 0; i < n_pts; i++) {
       u[i] = uv[2*i];
@@ -368,12 +368,12 @@ _basis_tria_pn
       }
     }
 
-   PDM_free(u);
-   PDM_free(v);
-   PDM_free(w);
-   PDM_free(fu);
-   PDM_free(fv);
-   PDM_free(fw);
+    PDM_free(u);
+    PDM_free(v);
+    PDM_free(w);
+    PDM_free(fu);
+    PDM_free(fv);
+    PDM_free(fw);
 
   }
 }
@@ -427,7 +427,7 @@ _set_L2_basis_equi
   const int n_mod = order + 1;
 
   double *xi;
-  PDM_malloc(xi,n_mod,double);
+  PDM_malloc(xi, n_mod, double);
 
   _u_nodes_edges (order, xi);
 
@@ -450,7 +450,7 @@ _set_L2_basis_equi
     }
   }
 
- PDM_free(xi);
+  PDM_free(xi);
 }
 
 
@@ -565,9 +565,9 @@ _basis_quad_qn
     const int n_nodes = n_mod * n_mod;
 
     double *u;
-    PDM_malloc(u,n_pts,double);
     double *v;
-    PDM_malloc(v,n_pts,double);
+    PDM_malloc(u, n_pts, double);
+    PDM_malloc(v, n_pts, double);
 
     for (int i = 0; i < n_pts; i++) {
       u[i] = 2 * uv[2*i]   - 1;
@@ -575,9 +575,9 @@ _basis_quad_qn
     }
 
     double *lagrangeL2_u;
-    PDM_malloc(lagrangeL2_u,n_mod * n_pts,double);
     double *lagrangeL2_v;
-    PDM_malloc(lagrangeL2_v,n_mod * n_pts,double);
+    PDM_malloc(lagrangeL2_u, n_mod * n_pts, double);
+    PDM_malloc(lagrangeL2_v, n_mod * n_pts, double);
 
     _set_L2_basis_equi (order, n_pts, u, lagrangeL2_u);
     _set_L2_basis_equi (order, n_pts, v, lagrangeL2_v);
@@ -594,10 +594,10 @@ _basis_quad_qn
       }
     }
 
-   PDM_free(lagrangeL2_u);
-   PDM_free(lagrangeL2_v);
-   PDM_free(u);
-   PDM_free(v);
+    PDM_free(lagrangeL2_u);
+    PDM_free(lagrangeL2_v);
+    PDM_free(u);
+    PDM_free(v);
   }
 }
 
@@ -676,21 +676,21 @@ _basis_tetra_pn
   else {
 
     double *u;
-    PDM_malloc(u,n_pts,double);
     double *v;
-    PDM_malloc(v,n_pts,double);
     double *w;
-    PDM_malloc(w,n_pts,double);
     double *t;
-    PDM_malloc(t,n_pts,double);
     double *fu;
-    PDM_malloc(fu,n_pts,double);
     double *fv;
-    PDM_malloc(fv,n_pts,double);
     double *fw;
-    PDM_malloc(fw,n_pts,double);
     double *ft;
-    PDM_malloc(ft,n_pts,double);
+    PDM_malloc(u , n_pts, double);
+    PDM_malloc(v , n_pts, double);
+    PDM_malloc(w , n_pts, double);
+    PDM_malloc(t , n_pts, double);
+    PDM_malloc(fu, n_pts, double);
+    PDM_malloc(fv, n_pts, double);
+    PDM_malloc(fw, n_pts, double);
+    PDM_malloc(ft, n_pts, double);
 
     for (int i = 0; i < n_pts; i++) {
       u[i] = uvw[3*i];
@@ -717,14 +717,14 @@ _basis_tetra_pn
         }
       }
     }
-   PDM_free(u);
-   PDM_free(v);
-   PDM_free(w);
-   PDM_free(t);
-   PDM_free(fu);
-   PDM_free(fv);
-   PDM_free(fw);
-   PDM_free(ft);
+    PDM_free(u);
+    PDM_free(v);
+    PDM_free(w);
+    PDM_free(t);
+    PDM_free(fu);
+    PDM_free(fv);
+    PDM_free(fw);
+    PDM_free(ft);
   }
 
 }
@@ -960,19 +960,19 @@ _basis_prism_pn
     int nMod = order + 1;
 
     double *u;
-    PDM_malloc(u,n_pts,double);
     double *v;
-    PDM_malloc(v,n_pts,double);
     double *w;
-    PDM_malloc(w,n_pts,double);
     double *t;
-    PDM_malloc(t,n_pts,double);
     double *fu;
-    PDM_malloc(fu,n_pts,double);
     double *fv;
-    PDM_malloc(fv,n_pts,double);
     double *ft;
-    PDM_malloc(ft,n_pts,double);
+    PDM_malloc(u , n_pts, double);
+    PDM_malloc(v , n_pts, double);
+    PDM_malloc(w , n_pts, double);
+    PDM_malloc(t , n_pts, double);
+    PDM_malloc(fu, n_pts, double);
+    PDM_malloc(fv, n_pts, double);
+    PDM_malloc(ft, n_pts, double);
 
     for (int i = 0; i < n_pts; i++) {
       u[i] = uvw[3*i];
@@ -982,7 +982,7 @@ _basis_prism_pn
     }
 
     double *lagrangeL2_w;
-    PDM_malloc(lagrangeL2_w,nMod * n_pts,double);
+    PDM_malloc(lagrangeL2_w, nMod * n_pts, double);
 
     _set_L2_basis_equi (order, n_pts, w, lagrangeL2_w);
 
@@ -1004,14 +1004,14 @@ _basis_prism_pn
         }
       }
     }
-   PDM_free(u);
-   PDM_free(v);
-   PDM_free(w);
-   PDM_free(t);
-   PDM_free(fu);
-   PDM_free(fv);
-   PDM_free(ft);
-   PDM_free(lagrangeL2_w);
+    PDM_free(u);
+    PDM_free(v);
+    PDM_free(w);
+    PDM_free(t);
+    PDM_free(fu);
+    PDM_free(fv);
+    PDM_free(ft);
+    PDM_free(lagrangeL2_w);
   }
 }
 
@@ -1162,11 +1162,11 @@ _basis_hexa_pn
     int nMod = order + 1;
 
     double *u;
-    PDM_malloc(u,n_pts,double);
     double *v;
-    PDM_malloc(v,n_pts,double);
     double *w;
-    PDM_malloc(w,n_pts,double);
+    PDM_malloc(u, n_pts, double);
+    PDM_malloc(v, n_pts, double);
+    PDM_malloc(w, n_pts, double);
 
     for (int i = 0; i < n_pts; i++) {
       u[i] = 0.;
@@ -1178,11 +1178,11 @@ _basis_hexa_pn
     }
 
     double *lagrangeL2_u;
-    PDM_malloc(lagrangeL2_u,nMod * n_pts,double);
     double *lagrangeL2_v;
-    PDM_malloc(lagrangeL2_v,nMod * n_pts,double);
     double *lagrangeL2_w;
-    PDM_malloc(lagrangeL2_w,nMod * n_pts,double);
+    PDM_malloc(lagrangeL2_u, nMod * n_pts, double);
+    PDM_malloc(lagrangeL2_v, nMod * n_pts, double);
+    PDM_malloc(lagrangeL2_w, nMod * n_pts, double);
 
     _set_L2_basis_equi (order, n_pts, u, lagrangeL2_u);
     _set_L2_basis_equi (order, n_pts, v, lagrangeL2_v);
@@ -1202,12 +1202,12 @@ _basis_hexa_pn
         }
       }
     }
-   PDM_free(u);
-   PDM_free(v);
-   PDM_free(w);
-   PDM_free(lagrangeL2_u);
-   PDM_free(lagrangeL2_v);
-   PDM_free(lagrangeL2_w);
+    PDM_free(u);
+    PDM_free(v);
+    PDM_free(w);
+    PDM_free(lagrangeL2_u);
+    PDM_free(lagrangeL2_v);
+    PDM_free(lagrangeL2_w);
   }
 }
 
