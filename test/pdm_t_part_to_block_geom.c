@@ -311,7 +311,7 @@ main
                               debug_gnum,
                               NULL);
 
-   PDM_free(debug_gnum);
+    PDM_free(debug_gnum);
   }
 
   /*
@@ -341,16 +341,16 @@ main
       first = hilbert_codes[i];
     }
     // PDM_log_trace_array_double(hilbert_codes, n_parent, "hilbert_codes ::");
-   PDM_free(hilbert_codes);
+    PDM_free(hilbert_codes);
   }
   PDM_part_to_block_free(ptb);
 
   /* Free */
- PDM_free(blk_src_coord);
- PDM_free(blk_check_gnum);
- PDM_free(weight);
- PDM_free(src_coord);
- PDM_free(src_g_num);
+  PDM_free(blk_src_coord);
+  PDM_free(blk_check_gnum);
+  PDM_free(weight);
+  PDM_free(src_coord);
+  PDM_free(src_g_num);
 
   PDM_MPI_Barrier (PDM_MPI_COMM_WORLD);
   if (i_rank == 0) {

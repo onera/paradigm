@@ -72,13 +72,6 @@ idx2ij
  int       *j
  )
 {
-  // int _j = 0;
-  // for (_j = 0; _j <= n; _j++) {
-  //   if (idx >= ij2idx(0, _j, n) && idx < ij2idx(0, _j+1, n)) {
-  //     break;
-  //   }
-  // }
-
   int b = -(2*n + 3);
   int d = b*b - 8*idx;
   int _j = (int) (0.5 * (-b - sqrt(d)));
@@ -134,13 +127,13 @@ _set_dmesh_nodal
                                         PDM_OWNERSHIP_KEEP);
 
   int n_group = 1;
-  int *dgroup_elt_idx;
-  PDM_malloc(dgroup_elt_idx,(n_group + 1),int);
+  int *dgroup_elt_idx = NULL;
+  PDM_malloc(dgroup_elt_idx, n_group + 1, int);
   dgroup_elt_idx[0] = 0;
   dgroup_elt_idx[1] = dn_face;
 
-  PDM_g_num_t *dgroup_elt;
-  PDM_malloc(dgroup_elt,dgroup_elt_idx[n_group],PDM_g_num_t);
+  PDM_g_num_t *dgroup_elt = NULL;
+  PDM_malloc(dgroup_elt, dgroup_elt_idx[n_group], PDM_g_num_t);
   for (int i = 0; i < dn_face; i++) {
     dgroup_elt[i] = distrib_face[i_rank] + i + 1;
   }
@@ -215,7 +208,7 @@ PDM_sphere_surf_gen
 
   int dn_vtx = (int) (_distrib_vtx[i_rank+1] - _distrib_vtx[i_rank]);
   double *_dvtx_coord;
-  PDM_malloc(_dvtx_coord,dn_vtx * 3,double);
+  PDM_malloc(_dvtx_coord, dn_vtx * 3, double);
 
   for (int i = 0; i < dn_vtx; i++) {
 
@@ -258,10 +251,10 @@ PDM_sphere_surf_gen
   PDM_g_num_t *_distrib_face = PDM_compute_uniform_entity_distribution(comm, gn_face);
 
   int           dn_face       = (int) (_distrib_face[i_rank+1] - _distrib_face[i_rank]);
-  int *_dface_vtx_idx;
-  PDM_malloc(_dface_vtx_idx,(dn_face + 1),int);
-  PDM_g_num_t *_dface_vtx;
-  PDM_malloc(_dface_vtx,dn_face * 3,PDM_g_num_t);
+  int         *_dface_vtx_idx = NULL;
+  PDM_g_num_t *_dface_vtx     = NULL;
+  PDM_malloc(_dface_vtx_idx, dn_face + 1, int        );
+  PDM_malloc(_dface_vtx    , dn_face * 3, PDM_g_num_t);
 
   _dface_vtx_idx[0] = 0;
   for (int i = 0; i < dn_face; i++) {
@@ -388,9 +381,9 @@ PDM_sphere_surf_gen_nodal
                            distrib_vtx,
                            distrib_face);
 
- PDM_free(distrib_vtx);
- PDM_free(distrib_face);
- PDM_free(dface_vtx_idx);
+  PDM_free(distrib_vtx);
+  PDM_free(distrib_face);
+  PDM_free(dface_vtx_idx);
 }
 
 
@@ -548,8 +541,8 @@ PDM_sphere_surf_icosphere_gen
   int dn_vtx  = (int) ((*distrib_vtx)[i_rank+1]  - (*distrib_vtx)[i_rank]);
   int dn_face = (int) ((*distrib_face)[i_rank+1] - (*distrib_face)[i_rank]);
 
-  PDM_malloc(*dvtx_coord,dn_vtx  * 3,double);
-  PDM_malloc(*dface_vtx,dn_face * 3,PDM_g_num_t);
+  PDM_malloc(*dvtx_coord, dn_vtx  * 3, double     );
+  PDM_malloc(*dface_vtx , dn_face * 3, PDM_g_num_t);
   *dface_vtx_idx = PDM_array_new_idx_from_const_stride_int(3, dn_face);
 
   PDM_g_num_t idx_edge = n_base_vtx;
@@ -850,9 +843,9 @@ PDM_sphere_surf_icosphere_gen_nodal
                            distrib_vtx,
                            distrib_face);
 
- PDM_free(distrib_vtx);
- PDM_free(distrib_face);
- PDM_free(dface_vtx_idx);
+  PDM_free(distrib_vtx);
+  PDM_free(distrib_face);
+  PDM_free(dface_vtx_idx);
 }
 
 
@@ -911,13 +904,13 @@ PDM_sphere_surf_icosphere_gen_part
   PDM_multipart_compute(mpart);
 
 
-  PDM_malloc(*pn_vtx,n_part,int          );
-  PDM_malloc(*pvtx_coord,n_part,double      *);
-  PDM_malloc(*pvtx_ln_to_gn,n_part,PDM_g_num_t *);
-  PDM_malloc(*pn_face,n_part,int          );
-  PDM_malloc(*pface_vtx_idx,n_part,int         *);
-  PDM_malloc(*pface_vtx,n_part,int         *);
-  PDM_malloc(*pface_ln_to_gn,n_part,PDM_g_num_t *);
+  PDM_malloc(*pn_vtx        , n_part, int          );
+  PDM_malloc(*pvtx_coord    , n_part, double      *);
+  PDM_malloc(*pvtx_ln_to_gn , n_part, PDM_g_num_t *);
+  PDM_malloc(*pn_face       , n_part, int          );
+  PDM_malloc(*pface_vtx_idx , n_part, int         *);
+  PDM_malloc(*pface_vtx     , n_part, int         *);
+  PDM_malloc(*pface_ln_to_gn, n_part, PDM_g_num_t *);
 
   for (int ipart = 0; ipart < n_part; ipart++) {
 
@@ -930,9 +923,6 @@ PDM_sphere_surf_icosphere_gen_part
                                                        &_vtx_ln_to_gn,
                                                        PDM_OWNERSHIP_USER);
     (*pvtx_ln_to_gn)[ipart] = _vtx_ln_to_gn;
-    // ( *pvtx_ln_to_gn)[ipart];
- // PDM_malloc(pvtx_ln_to_gn)[ipart],(*pn_vtx)[ipart],PDM_g_num_t);
-    // memcpy((*pvtx_ln_to_gn)[ipart], _vtx_ln_to_gn, sizeof(PDM_g_num_t) * (*pn_vtx)[ipart]);
 
     double *_vtx_coord;
     PDM_multipart_part_vtx_coord_get(mpart,
@@ -941,9 +931,6 @@ PDM_sphere_surf_icosphere_gen_part
                                      &_vtx_coord,
                                      PDM_OWNERSHIP_USER);
     (*pvtx_coord)[ipart] = _vtx_coord;
-    // ( *pvtx_coord)[ipart];
- // PDM_malloc(pvtx_coord)[ipart],(*pn_vtx)[ipart] * 3,double);
-    // memcpy((*pvtx_coord)[ipart], _vtx_coord, sizeof(double) * (*pn_vtx)[ipart] * 3);
 
     /* Faces */
     PDM_g_num_t *_face_ln_to_gn;
@@ -954,9 +941,6 @@ PDM_sphere_surf_icosphere_gen_part
                                                        &_face_ln_to_gn,
                                                        PDM_OWNERSHIP_USER);
     (*pface_ln_to_gn)[ipart] = _face_ln_to_gn;
-    // ( *pface_ln_to_gn)[ipart];
- // PDM_malloc(pface_ln_to_gn)[ipart],(*pn_face)[ipart],PDM_g_num_t);
-    // memcpy((*pface_ln_to_gn)[ipart], _face_ln_to_gn, sizeof(PDM_g_num_t) * (*pn_face)[ipart]);
 
     int *_face_vtx;
     int *_face_vtx_idx;
@@ -970,14 +954,7 @@ PDM_sphere_surf_icosphere_gen_part
 
     if (_face_vtx != NULL) {
       (*pface_vtx_idx)[ipart] = _face_vtx_idx;
-      // ( *pface_vtx_idx)[ipart];
- // PDM_malloc(pface_vtx_idx)[ipart],((*pn_face)[ipart]+1),int);
-      // memcpy((*pface_vtx_idx)[ipart], _face_vtx_idx, sizeof(int) * ((*pn_face)[ipart]+1));
-
-      (*pface_vtx)[ipart] = _face_vtx;
-      // ( *pface_vtx)[ipart];
- // PDM_malloc(pface_vtx)[ipart],_face_vtx_idx[(*pn_face)[ipart]],int);
-      // memcpy((*pface_vtx)[ipart], _face_vtx, sizeof(int) * _face_vtx_idx[(*pn_face)[ipart]]);
+      (*pface_vtx    )[ipart] = _face_vtx;
     }
 
     else {
@@ -1000,10 +977,6 @@ PDM_sphere_surf_icosphere_gen_part
                                           &_edge_vtx_idx,
                                           &_edge_vtx,
                                           PDM_OWNERSHIP_KEEP);
-
-      // ( *pface_vtx_idx)[ipart];
- // PDM_malloc(pface_vtx_idx)[ipart],((*pn_face)[ipart]+1),int);
-      // memcpy((*pface_vtx_idx)[ipart], _face_edge_idx, sizeof(int) * ((*pn_face)[ipart]+1));
       (*pface_vtx_idx)[ipart] = _face_edge_idx;
 
       PDM_compute_face_vtx_from_face_and_edge((*pn_face)[ipart],
@@ -1011,7 +984,7 @@ PDM_sphere_surf_icosphere_gen_part
                                               _face_edge,
                                               _edge_vtx,
                                               &(*pface_vtx)[ipart]);
-     PDM_free(_face_edge);
+      PDM_free(_face_edge);
     }
   }
 

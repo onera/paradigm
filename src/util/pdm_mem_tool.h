@@ -15,6 +15,12 @@
 #include "pdm.h"
 #include "pdm_mpi.h"
 
+#ifdef __cplusplus
+extern "C" {
+#if 0
+} /* Fake brace to force back Emacs auto-indentation back to column 0 */
+#endif
+#endif /* __cplusplus */
 
 /*----------------------------------------------------------------------------
  *  Macro definition
@@ -482,5 +488,8 @@ void PDM_FREE
  void **ptr
 );
 
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /*__PDM_MEM_TOOL_H__*/

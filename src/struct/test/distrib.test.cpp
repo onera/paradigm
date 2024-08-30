@@ -3,6 +3,7 @@
 #include "pdm.h"
 #include "pdm_doctest.h"
 #include "pdm_distrib.h"
+#include "pdm_priv.h"
 
 MPI_TEST_CASE("[pdm_distrib] - 1p - PDM_distrib_compute",1) {
 
@@ -13,7 +14,8 @@ MPI_TEST_CASE("[pdm_distrib] - 1p - PDM_distrib_compute",1) {
   PDM_MPI_Comm_rank(pdm_comm, &i_rank);
   PDM_MPI_Comm_size(pdm_comm, &n_rank);
 
-  PDM_g_num_t* distrib = (PDM_g_num_t *) malloc( (n_rank+1) * sizeof(PDM_g_num_t));
+  PDM_g_num_t* distrib;
+  PDM_malloc(distrib, n_rank+1, PDM_g_num_t);
 
   int dnelmt = 10;
 
@@ -34,7 +36,7 @@ MPI_TEST_CASE("[pdm_distrib] - 1p - PDM_distrib_compute",1) {
     MPI_CHECK_EQ_C_ARRAY(0, distrib, distrib_expected.data(), n_rank+1);
   }
 
-  free(distrib);
+  PDM_free(distrib);
 }
 
 
@@ -47,7 +49,8 @@ MPI_TEST_CASE("[pdm_distrib] - 2p - PDM_distrib_compute",2) {
   PDM_MPI_Comm_rank(pdm_comm, &i_rank);
   PDM_MPI_Comm_size(pdm_comm, &n_rank);
 
-  PDM_g_num_t* distrib = (PDM_g_num_t *) malloc( (n_rank+1) * sizeof(PDM_g_num_t));
+  PDM_g_num_t* distrib;
+  PDM_malloc(distrib, n_rank+1, PDM_g_num_t);
 
   int dnelmt = -1;
   if(i_rank == 0) { dnelmt = 10;}
@@ -70,7 +73,7 @@ MPI_TEST_CASE("[pdm_distrib] - 2p - PDM_distrib_compute",2) {
     CHECK_EQ_C_ARRAY(distrib, distrib_expected.data(), n_rank+1);
   }
 
-  free(distrib);
+  PDM_free(distrib);
 }
 
 
@@ -90,7 +93,7 @@ MPI_TEST_CASE("[pdm_distrib] - 1p - PDM_compute_entity_distribution",1) {
   std::vector<PDM_g_num_t> distrib_expected = { 0, 10};
   MPI_CHECK_EQ_C_ARRAY(0, distrib, distrib_expected.data(), n_rank+1);
 
-  free(distrib);
+  PDM_free(distrib);
 
 }
 
@@ -112,7 +115,7 @@ MPI_TEST_CASE("[pdm_distrib] - 2p - PDM_compute_entity_distribution",2) {
   std::vector<PDM_g_num_t> distrib_expected = { 0, 10, 15};
   CHECK_EQ_C_ARRAY(distrib, distrib_expected.data(), n_rank+1);
 
-  free(distrib);
+  PDM_free(distrib);
 
 }
 
@@ -136,7 +139,7 @@ MPI_TEST_CASE("[pdm_distrib] - 1p - PDM_compute_uniform_entity_distribution",1) 
   std::vector<PDM_g_num_t> distrib_expected = { 0, 9};
   MPI_CHECK_EQ_C_ARRAY(0, distrib, distrib_expected.data(), n_rank+1);
 
-  free(distrib);
+  PDM_free(distrib);
 }
 
 MPI_TEST_CASE("[pdm_distrib] - 2p - PDM_compute_uniform_entity_distribution",2) {
@@ -159,6 +162,6 @@ MPI_TEST_CASE("[pdm_distrib] - 2p - PDM_compute_uniform_entity_distribution",2) 
   std::vector<PDM_g_num_t> distrib_expected = { 0, 5, 9};
   CHECK_EQ_C_ARRAY(distrib, distrib_expected.data(), n_rank+1);
 
-  free(distrib);
+  PDM_free(distrib);
 
 }

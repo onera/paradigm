@@ -309,7 +309,7 @@ main
                           PDM_BOX_TREE_ASYNC_LEVEL);
   t2 = PDM_MPI_Wtime();
   t_build_btree = t2 - t1;
- PDM_free(init_location_box);
+  PDM_free(init_location_box);
 
 
   /* Sollicitations */
@@ -328,8 +328,8 @@ main
     t2 = PDM_MPI_Wtime();
     t_sollicitation[iptree] = t2 - t1;
 
-   PDM_free(box_pts_idx);
-   PDM_free(box_pts);
+    PDM_free(box_pts_idx);
+    PDM_free(box_pts);
   }
 
 
@@ -343,8 +343,8 @@ main
                                            &box_pts);
     t2 = PDM_MPI_Wtime();
     t_sollicitation[2+iptree] = t2 - t1;
-   PDM_free(box_pts_idx);
-   PDM_free(box_pts);
+    PDM_free(box_pts_idx);
+    PDM_free(box_pts);
   }
 
 
@@ -360,9 +360,9 @@ main
   t2 = PDM_MPI_Wtime();
   t_sollicitation[4] = t2 - t1;
 
- PDM_free(box_pts_idx);
- PDM_free(box_pts_g_num);
- PDM_free(box_pts_coord);
+  PDM_free(box_pts_idx);
+  PDM_free(box_pts_g_num);
+  PDM_free(box_pts_coord);
 
 
   printf(PDM_FMT_G_NUM" %12.5e %12.5e %12.5e %12.5e %12.5e %12.5e %12.5e %12.5e\n",
@@ -383,11 +383,11 @@ main
   PDM_box_tree_destroy(&btree);
   PDM_box_set_destroy (&box_set);
 
- PDM_free(pts_coord);
- PDM_free(pts_g_num);
+  PDM_free(pts_coord);
+  PDM_free(pts_g_num);
 
- PDM_free(box_extents);
- PDM_free(box_g_num);
+  PDM_free(box_extents);
+  PDM_free(box_g_num);
 
 
   PDM_MPI_Finalize ();

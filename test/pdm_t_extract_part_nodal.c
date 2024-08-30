@@ -417,7 +417,7 @@ int main(int argc, char *argv[])
       cell_center[i_part][3*i_cell+2] = cell_center[i_part][3*i_cell+2] / n_face_on_cell;
     }
 
-   PDM_free(face_center);
+    PDM_free(face_center);
 
     PDM_malloc(selected_l_num[i_part],  n_cell          ,int        );
 
@@ -647,42 +647,42 @@ int main(int argc, char *argv[])
     }
   }
 
- PDM_free(pn_extract_cell);
- PDM_free(pn_extract_vtx);
- PDM_free(pextract_vtx          );
- PDM_free(pextract_cell_ln_to_gn);
- PDM_free(pextract_vtx_ln_to_gn );
+  PDM_free(pn_extract_cell);
+  PDM_free(pn_extract_vtx);
+  PDM_free(pextract_vtx          );
+  PDM_free(pextract_cell_ln_to_gn);
+  PDM_free(pextract_vtx_ln_to_gn );
 
   PDM_extract_part_free(extrp);
 
   PDM_part_mesh_nodal_elmts_free(pmne_vol);
 
   for (int i_part = 0; i_part < n_part_domains; i_part++){
-   PDM_free(cell_center       [i_part]);
-   PDM_free(selected_l_num    [i_part]);
-   PDM_free(target_g_num      [i_part]);
+    PDM_free(cell_center       [i_part]);
+    PDM_free(selected_l_num    [i_part]);
+    PDM_free(target_g_num      [i_part]);
   }
- PDM_free(cell_center);
- PDM_free(selected_l_num);
- PDM_free(target_g_num);
- PDM_free(pn_target_cell);
- PDM_free(pn_cell);
- PDM_free(pn_face);
- PDM_free(pn_edge);
- PDM_free(pn_vtx);
- PDM_free(pn_select_cell);
- PDM_free(distrib_cell);
+  PDM_free(cell_center);
+  PDM_free(selected_l_num);
+  PDM_free(target_g_num);
+  PDM_free(pn_target_cell);
+  PDM_free(pn_cell);
+  PDM_free(pn_face);
+  PDM_free(pn_edge);
+  PDM_free(pn_vtx);
+  PDM_free(pn_select_cell);
+  PDM_free(distrib_cell);
 
- PDM_free(pcell_ln_to_gn);
- PDM_free(pface_ln_to_gn);
- PDM_free(pedge_ln_to_gn);
- PDM_free(pvtx_ln_to_gn );
- PDM_free(pcell_face    );
- PDM_free(pcell_face_idx);
- PDM_free(pface_edge    );
- PDM_free(pface_edge_idx);
- PDM_free(pedge_vtx     );
- PDM_free(pvtx_coord    );
+  PDM_free(pcell_ln_to_gn);
+  PDM_free(pface_ln_to_gn);
+  PDM_free(pedge_ln_to_gn);
+  PDM_free(pvtx_ln_to_gn );
+  PDM_free(pcell_face    );
+  PDM_free(pcell_face_idx);
+  PDM_free(pface_edge    );
+  PDM_free(pface_edge_idx);
+  PDM_free(pedge_vtx     );
+  PDM_free(pvtx_coord    );
 
   PDM_multipart_free(mpart);
   PDM_dcube_nodal_gen_free(dcube);

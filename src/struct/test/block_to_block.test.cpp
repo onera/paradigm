@@ -2,6 +2,7 @@
 #include "pdm.h"
 #include "pdm_doctest.h"
 #include "pdm_block_to_block.h"
+#include "pdm_priv.h"
 
 
 
@@ -33,7 +34,7 @@ MPI_TEST_CASE("[pdm_block_to_block] - 1p - block_to_block",1) {
     int blk_data_end_expected[7] = {5, 8, 11, 0, 3, 1, 9};
     MPI_CHECK_EQ_C_ARRAY(0, blk_data_end, blk_data_end_expected, block_distrib_ini_idx[1]);
 
-    free(blk_data_end);
+    PDM_free(blk_data_end);
 
   }
 
@@ -57,7 +58,7 @@ MPI_TEST_CASE("[pdm_block_to_block] - 1p - block_to_block",1) {
     int blk_data_end_expected[14] = {5, 50, 8, 80, 11, 110, 0, 00, 3, 30, 1, 10, 9, 90};
     MPI_CHECK_EQ_C_ARRAY(0, blk_data_end, blk_data_end_expected, 2 * block_distrib_ini_idx[1]);
 
-    free(blk_data_end);
+    PDM_free(blk_data_end);
     PDM_MPI_Type_free(&mpi_double_int_type);
   }
 
@@ -84,7 +85,7 @@ MPI_TEST_CASE("[pdm_block_to_block] - 1p - block_to_block",1) {
     MPI_CHECK_EQ_C_ARRAY(0, blk_data_end, blk_data_end_expected, block_distrib_ini_idx[1]);
 
 
-    free(blk_data_end);
+    PDM_free(blk_data_end);
 
   }
 
@@ -113,7 +114,7 @@ MPI_TEST_CASE("[pdm_block_to_block] - 1p - block_to_block",1) {
     int blk_data_end_expected[14] = {5, 50, 8, 80, 11, 110, 0, 00, 3, 30, 1, 10, 9, 90};
     MPI_CHECK_EQ_C_ARRAY(0, blk_data_end, blk_data_end_expected, 2 * block_distrib_ini_idx[1]);
 
-    free(blk_data_end);
+    PDM_free(blk_data_end);
     PDM_MPI_Type_free(&mpi_double_int_type);
   }
 
@@ -158,7 +159,7 @@ MPI_TEST_CASE("[pdm_block_to_block] - 2p - block_to_block",2) {
     MPI_CHECK_EQ_C_ARRAY(0, blk_data_end, blk_data_end_expected_p0, 4);
     MPI_CHECK_EQ_C_ARRAY(1, blk_data_end, blk_data_end_expected_p1, 3);
 
-    free(blk_data_end);
+    PDM_free(blk_data_end);
 
   }
 
@@ -193,7 +194,7 @@ MPI_TEST_CASE("[pdm_block_to_block] - 2p - block_to_block",2) {
     MPI_CHECK_EQ_C_ARRAY(0, blk_data_end, blk_data_end_expected_p0, 2 * 4);
     MPI_CHECK_EQ_C_ARRAY(1, blk_data_end, blk_data_end_expected_p1, 2 * 3);
 
-    free(blk_data_end);
+    PDM_free(blk_data_end);
     PDM_MPI_Type_free(&mpi_double_int_type);
   }
 
@@ -237,7 +238,7 @@ MPI_TEST_CASE("[pdm_block_to_block] - 2p - block_to_block",2) {
     MPI_CHECK_EQ_C_ARRAY(1, blk_data_end, blk_data_end_expected_p1, 2);
 
 
-    free(blk_data_end);
+    PDM_free(blk_data_end);
 
   }
 
@@ -283,7 +284,7 @@ MPI_TEST_CASE("[pdm_block_to_block] - 2p - block_to_block",2) {
     MPI_CHECK_EQ_C_ARRAY(0, blk_data_end, blk_data_end_expected_p0, 2 * 5);
     MPI_CHECK_EQ_C_ARRAY(1, blk_data_end, blk_data_end_expected_p1, 2 * 2);
 
-    free(blk_data_end);
+    PDM_free(blk_data_end);
     PDM_MPI_Type_free(&mpi_double_int_type);
   }
 

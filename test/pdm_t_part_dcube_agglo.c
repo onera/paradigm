@@ -181,7 +181,7 @@ int main(int argc, char *argv[])
   PDM_malloc(buffer,8+1,int);
   sprintf(buffer, "%d", use_multipart);
   setenv("PDM_USE_MULTIPART", buffer, 1);
- PDM_free(buffer);
+  PDM_free(buffer);
 
   // debug
   int dbg_part_dcube = 0;
@@ -725,7 +725,7 @@ int main(int argc, char *argv[])
       PDM_printf("       * total              : %i\n", bound_part_faces_sum);
     }
   }
- PDM_free(dcell_part);
+  PDM_free(dcell_part);
   PDM_part_free(ppart);
 
   PDM_dcube_gen_free(dcube);

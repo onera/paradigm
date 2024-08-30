@@ -152,7 +152,7 @@ writer_wrapper
   // elt based field
   int *id_var_elt_field = NULL;
   if (n_elt_field > 0) {
-    PDM_malloc(id_var_elt_field,n_elt_field,int);
+    PDM_malloc(id_var_elt_field, n_elt_field, int);
 
     for (int i = 0; i < n_elt_field; i++) {
       id_var_elt_field[i] = PDM_writer_var_create(wrt,
@@ -166,7 +166,7 @@ writer_wrapper
   // node based field
   int *id_var_vtx_field = NULL;
   if (n_vtx_field > 0) {
-    PDM_malloc(id_var_vtx_field,n_vtx_field,int);
+    PDM_malloc(id_var_vtx_field, n_vtx_field, int);
 
     for (int i = 0; i < n_vtx_field; i++) {
       id_var_vtx_field[i] = PDM_writer_var_create(wrt,
@@ -231,10 +231,10 @@ writer_wrapper
   PDM_writer_geom_write(wrt, id_geom);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
-    PDM_real_t *val_part;
-    PDM_malloc(val_part,n_elt[i_part],PDM_real_t);
-    PDM_real_t *val_gnum;
-    PDM_malloc(val_gnum,n_elt[i_part],PDM_real_t);
+    PDM_real_t *val_part = NULL;
+    PDM_real_t *val_gnum = NULL;
+    PDM_malloc(val_part, n_elt[i_part], PDM_real_t);
+    PDM_malloc(val_gnum, n_elt[i_part], PDM_real_t);
 
     for (int i_face = 0; i_face < n_elt[i_part]; i_face++) {
       val_part[i_face] = i_rank*n_part + i_part;
@@ -246,14 +246,14 @@ writer_wrapper
                        id_geom,
                        i_part,
                        val_part);
-   PDM_free(val_part);
+    PDM_free(val_part);
 
     PDM_writer_var_set(wrt,
                        id_var_elt_gnum,
                        id_geom,
                        i_part,
                        val_gnum);
-   PDM_free(val_gnum);
+    PDM_free(val_gnum);
   }
 
 
@@ -263,8 +263,8 @@ writer_wrapper
   // elt based field
   if (n_elt_field > 0) {
     for (int i_part = 0; i_part < n_part; i_part++) {
-      PDM_real_t *val;
-      PDM_malloc(val,n_elt[i_part],PDM_real_t);
+      PDM_real_t *val = NULL;
+      PDM_malloc(val, n_elt[i_part], PDM_real_t);
 
       for (int i_field = 0; i_field < n_elt_field; i_field++) {
         for (int i_elt = 0; i_elt < n_elt[i_part]; i_elt++) {
@@ -277,7 +277,7 @@ writer_wrapper
                            i_part,
                            val);
       }
-     PDM_free(val);
+      PDM_free(val);
     }
 
     for (int i_field = 0; i_field < n_elt_field; i_field++) {
@@ -288,8 +288,8 @@ writer_wrapper
   // vtx based field
   if (n_vtx_field > 0) {
     for (int i_part = 0; i_part < n_part; i_part++) {
-      PDM_real_t *val;
-      PDM_malloc(val,n_vtx[i_part],PDM_real_t);
+      PDM_real_t *val = NULL;
+      PDM_malloc(val, n_vtx[i_part], PDM_real_t);
 
       for (int i_field = 0; i_field < n_vtx_field; i_field++) {
         for (int i_vtx = 0; i_vtx < n_vtx[i_part]; i_vtx++) {
@@ -302,7 +302,7 @@ writer_wrapper
                            i_part,
                            val);
       }
-     PDM_free(val);
+      PDM_free(val);
     }
 
     for (int i_field = 0; i_field < n_vtx_field; i_field++) {
@@ -313,11 +313,11 @@ writer_wrapper
   PDM_writer_step_end(wrt);
 
   if (n_elt_field > 0) {
-   PDM_free(id_var_elt_field);
+    PDM_free(id_var_elt_field);
   }
 
   if (n_vtx_field > 0) {
-   PDM_free(id_var_vtx_field);
+    PDM_free(id_var_vtx_field);
   }
 
   PDM_writer_free(wrt);
@@ -341,12 +341,12 @@ _pdm_writer_geom_tab_create
  )
 {
   _PDM_writer_geom_tab_t *geom_tab;
-  PDM_malloc(geom_tab,1,_PDM_writer_geom_tab_t);
+  PDM_malloc(geom_tab, 1, _PDM_writer_geom_tab_t);
 
   geom_tab->n_geom = 0;
   geom_tab->s_geom = size;
 
-  PDM_malloc(geom_tab->geom,geom_tab->s_geom,PDM_writer_geom_t *);
+  PDM_malloc(geom_tab->geom, geom_tab->s_geom, PDM_writer_geom_t *);
   for (int i = 0; i < geom_tab->s_geom; i++) {
     geom_tab->geom[i] = NULL;
   }
@@ -409,12 +409,12 @@ _pdm_writer_var_tab_create
  )
 {
   _PDM_writer_var_tab_t *var_tab;
-  PDM_malloc(var_tab,1,_PDM_writer_var_tab_t);
+  PDM_malloc(var_tab, 1, _PDM_writer_var_tab_t);
 
   var_tab->n_var = 0;
   var_tab->s_var = size;
 
-  PDM_malloc(var_tab->var,var_tab->s_var,PDM_writer_var_t *);
+  PDM_malloc(var_tab->var, var_tab->s_var, PDM_writer_var_t *);
   for (int i = 0; i < var_tab->s_var; i++) {
     var_tab->var[i] = NULL;
   }
@@ -477,12 +477,12 @@ _pdm_writer_name_map_tab_create
  )
 {
   _PDM_writer_name_map_tab_t *name_map_tab;
-  PDM_malloc(name_map_tab,1,_PDM_writer_name_map_tab_t);
+  PDM_malloc(name_map_tab, 1, _PDM_writer_name_map_tab_t);
 
   name_map_tab->n_name_map = 0;
   name_map_tab->s_name_map = size;
 
-  PDM_malloc(name_map_tab->name_map,name_map_tab->s_name_map,PDM_writer_name_map_t *);
+  PDM_malloc(name_map_tab->name_map, name_map_tab->s_name_map, PDM_writer_name_map_t *);
   for (int i = 0; i < name_map_tab->s_name_map; i++) {
     name_map_tab->name_map[i] = NULL;
   }
@@ -557,11 +557,11 @@ const PDM_MPI_Comm  comm
   geom->pdm_mpi_comm   = comm;
 
   geom->s_section = 10;
-  PDM_malloc(geom->section_owner,geom->s_section,PDM_ownership_t);
+  PDM_malloc(geom->section_owner, geom->s_section, PDM_ownership_t);
 
   geom->n_part = n_part;
-  PDM_malloc(geom->_face_vtx_idx,n_part,int *);
-  PDM_malloc(geom->_cell_face_idx,n_part,int *);
+  PDM_malloc(geom->_face_vtx_idx , n_part, int *);
+  PDM_malloc(geom->_cell_face_idx, n_part, int *);
   for (int i = 0; i < n_part; i++) {
     geom->_face_vtx_idx [i] = NULL;
     geom->_cell_face_idx[i] = NULL;
@@ -619,7 +619,7 @@ _parse_options
   }
 
   char *_options_str;
-  PDM_malloc(_options_str,(strlen(options_str) + 1),char);
+  PDM_malloc(_options_str, (strlen(options_str) + 1), char);
   strcpy(_options_str, options_str);
 
   *n_options = 0;
@@ -642,7 +642,7 @@ _parse_options
 
   strcpy(_options_str, options_str);
   str2 = _options_str;
-  PDM_malloc(*options,(*n_options),PDM_writer_option_t);
+  PDM_malloc(*options, *n_options, PDM_writer_option_t);
   PDM_writer_option_t *_curr = *options;
 
   do {
@@ -659,7 +659,7 @@ _parse_options
   } while (pch != NULL);
 
 
- PDM_free(_options_str);
+  PDM_free(_options_str);
 }
 
 /**
@@ -677,13 +677,13 @@ _load_intern_fmt (void)
 
   s_fmt_tab = 2 * n_intern_fmt;
   n_fmt_tab = 0;
-  PDM_malloc(fmt_tab,s_fmt_tab,PDM_writer_fmt_t *);
+  PDM_malloc(fmt_tab, s_fmt_tab, PDM_writer_fmt_t *);
 
   /* Ensight */
 
   PDM_writer_fmt_t *fmt;
-  PDM_malloc(fmt,1,PDM_writer_fmt_t);
-  PDM_malloc(fmt->name,8,char);
+  PDM_malloc(fmt      , 1, PDM_writer_fmt_t);
+  PDM_malloc(fmt->name, 8, char            );
   strcpy (fmt->name, "Ensight");
   fmt->create_fct       = PDM_writer_ensight_create;
   fmt->free_fct         = PDM_writer_ensight_free;
@@ -779,7 +779,7 @@ const char                   *options
   /* Allocation de la structure PDM_writer_t */
 
   PDM_writer_t *cs;
-  PDM_malloc(cs,1,PDM_writer_t);
+  PDM_malloc(cs, 1, PDM_writer_t);
 
 
   /* Initialisation de la structure PDM_writer_t */
@@ -790,7 +790,7 @@ const char                   *options
   cs->st_reprise  = st_reprise; /* Reprise d'une sortie existante */
 
   size_t l_rep_sortie = strlen(rep_sortie);
-  PDM_malloc(cs->rep_sortie,(l_rep_sortie + 1),char);
+  PDM_malloc(cs->rep_sortie, l_rep_sortie + 1, char);
   strcpy(cs->rep_sortie, rep_sortie);  /* Nom du repertoire de sortie */
   // Gestion des options
 
@@ -805,7 +805,7 @@ const char                   *options
   cs->cst_global_var_tab.s_var = 0;
 
   size_t l_nom_sortie = strlen(nom_sortie);
-  PDM_malloc(cs->nom_sortie,(l_nom_sortie + 1),char);
+  PDM_malloc(cs->nom_sortie, l_nom_sortie + 1, char);
   strcpy(cs->nom_sortie, nom_sortie);  /* Nom de la sortie */
 
   cs->pdm_mpi_comm    = pdm_mpi_comm;  /* Communicateur MPI */
@@ -861,8 +861,8 @@ PDM_writer_free
 
   /* Liberation des differents elements de la structure */
 
- PDM_free(cs->rep_sortie);
- PDM_free(cs->nom_sortie);
+  PDM_free(cs->rep_sortie);
+  PDM_free(cs->nom_sortie);
 
   /* Liberation des variables */
 
@@ -874,11 +874,11 @@ PDM_writer_free
         }
       }
 
-     PDM_free(cs->var_tab->var);
+      PDM_free(cs->var_tab->var);
       cs->var_tab->var = NULL;
     }
 
-   PDM_free(cs->var_tab);
+    PDM_free(cs->var_tab);
     cs->var_tab = NULL;
   }
 
@@ -886,15 +886,15 @@ PDM_writer_free
     for (int i = 0; i < cs->cst_global_var_tab.s_var; i++) {
       if (cs->cst_global_var_tab.var[i] != NULL) {
         if (cs->cst_global_var_tab.var[i]->nom_var != NULL) {
-         PDM_free(cs->cst_global_var_tab.var[i]->nom_var);
+          PDM_free(cs->cst_global_var_tab.var[i]->nom_var);
           cs->cst_global_var_tab.var[i]->nom_var = NULL;
         } 
-       PDM_free(cs->cst_global_var_tab.var[i]);
+        PDM_free(cs->cst_global_var_tab.var[i]);
         cs->cst_global_var_tab.var[i] = NULL;
       }
     }
 
-   PDM_free(cs->cst_global_var_tab.var);
+    PDM_free(cs->cst_global_var_tab.var);
     cs->cst_global_var_tab.var = NULL;
   }
 
@@ -902,13 +902,13 @@ PDM_writer_free
   if (cs->options != NULL) {
     for (int i = 0; i < cs->n_options; i++) {
       if ((cs->options[i]).nom != NULL) {
-       PDM_free((cs->options[i]).nom);
+        PDM_free((cs->options[i]).nom);
       }
       if ((cs->options[i]).val != NULL) {
-       PDM_free((cs->options[i]).val);
+        PDM_free((cs->options[i]).val);
       }
     }
-   PDM_free(cs->options);
+    PDM_free(cs->options);
   }
 
 
@@ -922,11 +922,11 @@ PDM_writer_free
         }
       }
 
-     PDM_free(cs->geom_tab->geom);
+      PDM_free(cs->geom_tab->geom);
       cs->geom_tab->geom = NULL;
     }
 
-   PDM_free(cs->geom_tab);
+    PDM_free(cs->geom_tab);
     cs->geom_tab = NULL;
   }
 
@@ -934,22 +934,22 @@ PDM_writer_free
     if (cs->name_map_tab->name_map != NULL) {
       for (int i = 0; i < cs->name_map_tab->n_name_map; i++) {
         if (cs->name_map_tab->name_map[i] != NULL) {
-         PDM_free(cs->name_map_tab->name_map[i]->public_name);
-         PDM_free(cs->name_map_tab->name_map[i]->private_name);
+          PDM_free(cs->name_map_tab->name_map[i]->public_name);
+          PDM_free(cs->name_map_tab->name_map[i]->private_name);
         }
       }
 
-     PDM_free(cs->name_map_tab->name_map);
+      PDM_free(cs->name_map_tab->name_map);
       cs->name_map_tab->name_map = NULL;
     }
 
-   PDM_free(cs->name_map_tab);
+    PDM_free(cs->name_map_tab);
     cs->name_map_tab = NULL;
   }
 
   /* Liberation de la structure */
 
- PDM_free(cs);
+  PDM_free(cs);
   cs = NULL;
 }
 
@@ -1086,7 +1086,7 @@ PDM_writer_geom_create
   /* Allocation de la structure PDM_writer_geom_t */
 
   PDM_writer_geom_t *geom;
-  PDM_malloc(geom,1,PDM_writer_geom_t);
+  PDM_malloc(geom, 1, PDM_writer_geom_t);
 
   int id_geom = _pdm_writer_geom_tab_add(cs->geom_tab, geom);
 
@@ -1098,7 +1098,7 @@ PDM_writer_geom_create
   geom->_cs = cs;
   geom->pdm_mpi_comm = cs->pdm_mpi_comm;
   size_t l_nom_geom = strlen(nom_geom);
-  PDM_malloc(geom->nom_geom,(l_nom_geom + 1),char);
+  PDM_malloc(geom->nom_geom, l_nom_geom + 1, char);
   strcpy(geom->nom_geom, nom_geom);  /* Nom de la geometrie */
 
   /* Appel de la fonction complementaire propre au format */
@@ -1136,7 +1136,7 @@ PDM_writer_geom_create_from_mesh_nodal
   /* Allocation de la structure PDM_writer_geom_t */
 
   PDM_writer_geom_t *geom;
-  PDM_malloc(geom,1,PDM_writer_geom_t);
+  PDM_malloc(geom, 1, PDM_writer_geom_t);
 
   int id_geom = _pdm_writer_geom_tab_add(cs->geom_tab, geom);
 
@@ -1151,7 +1151,7 @@ PDM_writer_geom_create_from_mesh_nodal
   geom->_cs = cs;
   geom->pdm_mpi_comm = cs->pdm_mpi_comm;
   size_t l_nom_geom = strlen(nom_geom);
-  PDM_malloc(geom->nom_geom,(l_nom_geom + 1),char);
+  PDM_malloc(geom->nom_geom, l_nom_geom + 1, char);
   strcpy(geom->nom_geom, nom_geom);  /* Nom de la geometrie */
 
   /* Appel de la fonction complementaire propre au format */
@@ -1163,7 +1163,7 @@ PDM_writer_geom_create_from_mesh_nodal
   }
 
   geom->s_section = 10;
-  PDM_malloc(geom->section_owner,geom->s_section,PDM_ownership_t);
+  PDM_malloc(geom->section_owner, geom->s_section, PDM_ownership_t);
 
   geom->n_part = PDM_part_mesh_nodal_n_part_get(mesh);
   geom->_face_vtx_idx  = NULL;
@@ -1234,10 +1234,10 @@ PDM_writer_geom_set_from_mesh_nodal
 
   geom->s_section = 10;
   if (geom->section_owner != NULL) {
-   PDM_free(geom->section_owner);
+    PDM_free(geom->section_owner);
     geom->section_owner = NULL;
   }
-  PDM_malloc(geom->section_owner,geom->s_section,PDM_ownership_t);
+  PDM_malloc(geom->section_owner, geom->s_section, PDM_ownership_t);
 
   geom->n_part = PDM_part_mesh_nodal_n_part_get(mesh);
   geom->_face_vtx_idx  = NULL;
@@ -1767,14 +1767,14 @@ PDM_writer_geom_cell3d_cellface_add
 
   if (face_som_nb != NULL) {
     if (geom->_face_vtx_idx[id_part] != NULL) {
-     PDM_free(geom->_face_vtx_idx[id_part]);
+      PDM_free(geom->_face_vtx_idx[id_part]);
       geom->_face_vtx_idx[id_part] = NULL;
     }
     geom->_face_vtx_idx[id_part] = _face_som_idx;
   }
   if (cell_face_nb != NULL) {
     if (geom->_cell_face_idx[id_part] != NULL) {
-     PDM_free(geom->_cell_face_idx[id_part]);
+      PDM_free(geom->_cell_face_idx[id_part]);
       geom->_cell_face_idx[id_part] = NULL;
     }
     geom->_cell_face_idx[id_part] = _cell_face_idx;
@@ -1965,7 +1965,7 @@ PDM_writer_geom_faces_facesom_add
                                         numabs,
                                         PDM_OWNERSHIP_KEEP);
   if (face_som_nb != NULL) {
-   PDM_free(_face_som_idx);
+    PDM_free(_face_som_idx);
   }
 }
 
@@ -2071,7 +2071,7 @@ PDM_writer_geom_free
       geom->mesh_nodal = NULL;      
     }
     if (geom->nom_geom != NULL) {
-     PDM_free(geom->nom_geom);
+      PDM_free(geom->nom_geom);
       geom->nom_geom = NULL;
     }
 
@@ -2086,28 +2086,28 @@ PDM_writer_geom_free
     }
 
     if (geom->section_owner != NULL) {
-     PDM_free(geom->section_owner);
+      PDM_free(geom->section_owner);
     }
 
     if (geom->_face_vtx_idx != NULL) {
       for (int i = 0; i < geom->n_part; i++) {
         if (geom->_face_vtx_idx[i] != NULL) {
-         PDM_free(geom->_face_vtx_idx[i]);
+          PDM_free(geom->_face_vtx_idx[i]);
         }
       }
-     PDM_free(geom->_face_vtx_idx);
+      PDM_free(geom->_face_vtx_idx);
     }
 
     if (geom->_cell_face_idx != NULL) {
       for (int i = 0; i < geom->n_part; i++) {
         if (geom->_cell_face_idx[i] != NULL) {
-         PDM_free(geom->_cell_face_idx[i]);
+          PDM_free(geom->_cell_face_idx[i]);
         }
       }
-     PDM_free(geom->_cell_face_idx);
+      PDM_free(geom->_cell_face_idx);
     }
 
-   PDM_free(geom);
+    PDM_free(geom);
     cs->geom_tab->geom[id_geom] = NULL;
   }
 }
@@ -2186,13 +2186,12 @@ PDM_writer_name_map_add
 
 
   PDM_writer_name_map_t *name_map;
-  PDM_malloc(name_map,1,PDM_writer_name_map_t);
+  PDM_malloc(name_map, 1, PDM_writer_name_map_t);
 
   _pdm_writer_name_map_tab_add(cs->name_map_tab, name_map);
 
-
-  PDM_malloc(name_map->public_name,(strlen(public_name) + 1) ,char);
-  PDM_malloc(name_map->private_name,(strlen(private_name) + 1) ,char);
+  PDM_malloc(name_map->public_name , strlen(public_name ) + 1, char);
+  PDM_malloc(name_map->private_name, strlen(private_name) + 1, char);
 
   strcpy(name_map->public_name, public_name);
   strcpy(name_map->private_name, private_name);
@@ -2231,7 +2230,7 @@ PDM_writer_cst_global_var_create
     cs->cst_global_var_tab.n_var = 0;
     cs->cst_global_var_tab.s_var = 4;
 
-    PDM_malloc(cs->cst_global_var_tab.var,cs->cst_global_var_tab.s_var,PDM_writer_cst_global_var_t *);
+    PDM_malloc(cs->cst_global_var_tab.var, cs->cst_global_var_tab.s_var, PDM_writer_cst_global_var_t *);
     for (int i = 0; i < cs->cst_global_var_tab.s_var; i++) {
       cs->cst_global_var_tab.var[i] = NULL;
     }
@@ -2240,9 +2239,9 @@ PDM_writer_cst_global_var_create
   /* Allocation de la structure PDM_writer_var_t */
 
   PDM_writer_cst_global_var_t *var;
-  PDM_malloc(var,1,PDM_writer_cst_global_var_t);
+  PDM_malloc(var, 1, PDM_writer_cst_global_var_t);
 
-  PDM_malloc(var->nom_var,(1 + strlen (nom_var)),char);
+  PDM_malloc(var->nom_var, 1 + strlen (nom_var), char);
   strcpy (var->nom_var, nom_var);
 
   var->_val = val_var;  
@@ -2337,7 +2336,7 @@ PDM_writer_var_create
   /* Allocation de la structure PDM_writer_var_t */
 
   PDM_writer_var_t *var;
-  PDM_malloc(var,1,PDM_writer_var_t);
+  PDM_malloc(var, 1, PDM_writer_var_t);
   int id_var = _pdm_writer_var_tab_add(cs->var_tab, var);
 
   /* Initialisation de la structure PDM_writer_var_t */
@@ -2345,7 +2344,7 @@ PDM_writer_var_create
   _var_init (var);
 
   size_t l_nom_var = strlen(nom_var);
-  PDM_malloc(var->nom_var,(l_nom_var + 1),char);
+  PDM_malloc(var->nom_var, l_nom_var + 1, char);
   strcpy(var->nom_var, nom_var);   /* Nom de la variable */
 
   var->st_dep_tps = st_dep_tps;    /* Variable en temps */
@@ -2471,7 +2470,7 @@ PDM_writer_var_set
   const int n_ind = cs->geom_tab->n_geom;
 
   if (var->_val == NULL) {
-    PDM_malloc(var->_val,n_ind,double **);
+    PDM_malloc(var->_val, n_ind, double **);
     for (int i = 0; i < n_ind; i++) {
       var->_val[i] = NULL;
     }
@@ -2485,7 +2484,7 @@ PDM_writer_var_set
   int n_part = geom->n_part;
 
   if (var->_val[id_geom] == NULL) {
-    PDM_malloc(var->_val[id_geom],n_part,double *);
+    PDM_malloc(var->_val[id_geom], n_part, double *);
     for (int i = 0; i < n_part; i++)
       var->_val[id_geom][i] = NULL;
   }
@@ -2509,7 +2508,7 @@ PDM_writer_var_set
   int n_som = PDM_part_mesh_nodal_n_vtx_get(geom->mesh_nodal, id_part);
 
   if (var->loc == PDM_WRITER_VAR_ELEMENTS) {
-    PDM_malloc(val_geom[id_part],var->dim * n_cell,double);
+    PDM_malloc(val_geom[id_part], var->dim * n_cell, double);
     if (num_cell_parent_to_local != NULL) {
       for (int i = 0; i < n_cell; i++) {
         for (int j = 0; j < (int) var->dim; j++)
@@ -2524,7 +2523,7 @@ PDM_writer_var_set
     }
   }
   else {
-    PDM_malloc(val_geom[id_part],var->dim * n_som,double);
+    PDM_malloc(val_geom[id_part], var->dim * n_som, double);
     for (int i = 0; i < n_som * (int) var->dim; i++) {
       val_geom[id_part][i] = val[i];
     }
@@ -2580,7 +2579,7 @@ PDM_writer_var_data_free
         if ((geom != NULL) && (var->_val[idx] != NULL)) {
           for (int j = 0; j < n_part; j++) {
             if (var->_val[idx][j] != NULL)
-             PDM_free(var->_val[idx][j]);
+              PDM_free(var->_val[idx][j]);
             var->_val[idx][j] = NULL;
           }
         }
@@ -2625,7 +2624,7 @@ PDM_writer_var_free
 
     if (var != NULL) {
 
-     PDM_free(var->nom_var);
+      PDM_free(var->nom_var);
 
       const int n_ind = cs->geom_tab->n_geom;
 
@@ -2633,11 +2632,11 @@ PDM_writer_var_free
         for (int i = 0; i < n_ind; i++) {
           int idx = i;
           if (var->_val[idx] != NULL)
-           PDM_free(var->_val[idx]);
+            PDM_free(var->_val[idx]);
           var->_val[idx] = NULL;
         }
 
-       PDM_free(var->_val);
+        PDM_free(var->_val);
         var->_val = NULL;
       }
 
@@ -2649,7 +2648,7 @@ PDM_writer_var_free
         (fmt_ptr->var_free_fct) (var);
       }
 
-     PDM_free(var);
+      PDM_free(var);
       cs->var_tab->var[id_var] = NULL;
 
     }
@@ -2709,10 +2708,10 @@ PDM_writer_fmt_add
   }
 
   PDM_writer_fmt_t *fmt_ptr;
-  PDM_malloc(fmt_ptr,1,PDM_writer_fmt_t);
+  PDM_malloc(fmt_ptr, 1, PDM_writer_fmt_t);
   fmt_tab[n_fmt_tab++] = fmt_ptr;
 
-  PDM_malloc(fmt_ptr->name,(strlen(name) + 1),char);
+  PDM_malloc(fmt_ptr->name, strlen(name) + 1, char);
   strcpy (fmt_ptr->name, name);
 
   fmt_ptr->create_fct      = create_fct;
@@ -2744,15 +2743,15 @@ PDM_writer_fmt_free
 
     for (int i = 0; i < n_fmt_tab; i++) {
       if (fmt_tab[i] != NULL) {
-       PDM_free(fmt_tab[i]->name);
-       PDM_free(fmt_tab[i]);
+        PDM_free(fmt_tab[i]->name);
+        PDM_free(fmt_tab[i]);
         fmt_tab[i] = NULL;
       }
     }
 
     n_fmt_tab = 0;
 
-   PDM_free(fmt_tab);
+    PDM_free(fmt_tab);
     fmt_tab = NULL;
 
   }

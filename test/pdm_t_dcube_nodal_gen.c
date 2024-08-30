@@ -241,10 +241,10 @@ _dmesh_nodal_dump_vtk
     PDM_g_num_t          *dconnec            = PDM_DMesh_nodal_section_std_get    (dmn, geom_kind, id_section);
     PDM_Mesh_nodal_elt_t  t_elt              = PDM_DMesh_nodal_section_type_get   (dmn, geom_kind, id_section);
 
-    int *dconnec_idx;
-    PDM_malloc(dconnec_idx, (n_elt+1) ,int        );
-    PDM_g_num_t *delmt_ln_to_gn;
-    PDM_malloc(delmt_ln_to_gn, (n_elt  ) ,PDM_g_num_t);
+    int         *dconnec_idx    = NULL;
+    PDM_g_num_t *delmt_ln_to_gn = NULL;
+    PDM_malloc(dconnec_idx   , n_elt+1, int        );
+    PDM_malloc(delmt_ln_to_gn, n_elt  , PDM_g_num_t);
 
     int strid = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
     dconnec_idx[0] = 0;
@@ -311,19 +311,19 @@ _dmesh_nodal_dump_vtk
       int *pelt_group_idx = tmp_elt_group_idx[0];
       int *pelt_group     = tmp_elt_group    [0];
       PDM_log_trace_connectivity_int(pelt_group_idx, pelt_group, n_elt, "pelt_group : ");
-     PDM_free(tmp_elt_group_idx);
-     PDM_free(tmp_elt_group);
+      PDM_free(tmp_elt_group_idx);
+      PDM_free(tmp_elt_group);
       PDM_log_trace_array_long(delmt_ln_to_gn, n_elt, "  delmt_ln_to_gn (shifted) : ");
 
       n_field = 1;
-      PDM_malloc(field,n_field,double *);
-      PDM_malloc(field[0],n_elt,double);
+      PDM_malloc(field   , n_field, double *);
+      PDM_malloc(field[0], n_elt  , double  );
       for (int i = 0; i < n_elt; i++) {
         assert (pelt_group_idx[i+1] == pelt_group_idx[i] + 1);
         field[0][i] = (double) pelt_group[i];
       }
-     PDM_free(pelt_group);
-     PDM_free(pelt_group_idx);
+      PDM_free(pelt_group);
+      PDM_free(pelt_group_idx);
     }
 
     /*
@@ -357,28 +357,28 @@ _dmesh_nodal_dump_vtk
                                     (const char   **) &field_name,
                                     (const double **) field);
     }
-   PDM_free(tmp_pvtx_coord);
-   PDM_free(pvtx_ln_to_gn);
-   PDM_free(pcell_vtx_idx);
-   PDM_free(pcell_vtx);
+    PDM_free(tmp_pvtx_coord);
+    PDM_free(pvtx_ln_to_gn);
+    PDM_free(pcell_vtx_idx);
+    PDM_free(pcell_vtx);
 
-   PDM_free(dconnec_idx);
-   PDM_free(delmt_ln_to_gn);
+    PDM_free(dconnec_idx);
+    PDM_free(delmt_ln_to_gn);
 
-   PDM_free(pvtx_coord_out);
+    PDM_free(pvtx_coord_out);
 
     shift += delmt_distribution[n_rank];
 
     if (dmne != NULL) {
-     PDM_free(field[0]);
-     PDM_free(field);
+      PDM_free(field[0]);
+      PDM_free(field);
     }
   }
 
   if (dmne != NULL) {
-   PDM_free(delt_group_idx);
-   PDM_free(delt_group);
-   PDM_free(distrib_elt);
+    PDM_free(delt_group_idx);
+    PDM_free(delt_group);
+    PDM_free(distrib_elt);
   }
 }
 
@@ -425,10 +425,10 @@ _bezier_bounding_boxes
         t_elt != PDM_MESH_NODAL_HEXA8     &&
         t_elt != PDM_MESH_NODAL_HEXAHO) continue;
 
-    int *dconnec_idx;
-    PDM_malloc(dconnec_idx, (n_elt+1) ,int        );
-    PDM_g_num_t *delmt_ln_to_gn;
-    PDM_malloc(delmt_ln_to_gn, (n_elt  ) ,PDM_g_num_t);
+    int         *dconnec_idx    = NULL;
+    PDM_g_num_t *delmt_ln_to_gn = NULL;
+    PDM_malloc(dconnec_idx   , n_elt+1, int        );
+    PDM_malloc(delmt_ln_to_gn, n_elt  , PDM_g_num_t);
 
     int strid = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
     dconnec_idx[0] = 0;
@@ -476,23 +476,23 @@ _bezier_bounding_boxes
     double* pvtx_coord_out = tmp_pvtx_coord[0];
 
     int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
-    double *lagrange_coord;
-    PDM_malloc(lagrange_coord,n_nodes * 3,double);
-    double *bezier_coord;
-    PDM_malloc(bezier_coord,n_nodes * 3,double);
-    double *elt_coord;
-    PDM_malloc(elt_coord,n_elt * n_nodes * 3,double);
-    int *elt_vtx;
-    PDM_malloc(elt_vtx,n_elt * n_nodes,int);
+    double *lagrange_coord = NULL;
+    double *bezier_coord   = NULL;
+    double *elt_coord      = NULL;
+    int    *elt_vtx        = NULL;
+    PDM_malloc(lagrange_coord, n_nodes * 3        , double);
+    PDM_malloc(bezier_coord  , n_nodes * 3        , double);
+    PDM_malloc(elt_coord     , n_elt * n_nodes * 3, double);
+    PDM_malloc(elt_vtx       , n_elt * n_nodes    , int   );
 
     double *matrix = NULL;
     if (order > 3) {
       int n_nodes_quad = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_QUADHO, order);
-      PDM_malloc(matrix,n_nodes_quad * n_nodes_quad,double);
+      PDM_malloc(matrix, n_nodes_quad * n_nodes_quad, double);
     }
 
     double *extents;
-    PDM_malloc(extents,n_elt * 6,double);
+    PDM_malloc(extents, n_elt * 6, double);
     int idx2 = 0;
     for (int i = 0; i < n_elt; i++) {
       double *_min = extents + 6*i;
@@ -551,7 +551,7 @@ _bezier_bounding_boxes
     }
 
     if (matrix != NULL) {
-     PDM_free(matrix);
+      PDM_free(matrix);
     }
 
     /*
@@ -582,27 +582,27 @@ _bezier_bounding_boxes
     //                           elt_coord,
     //                           NULL,
     //                           NULL);
-   PDM_free(elt_vtx);
-   PDM_free(elt_coord);
+    PDM_free(elt_vtx);
+    PDM_free(elt_coord);
 
     sprintf(filename, "%s_boxes_section_%2.2d_%2.2d.vtk", filename_patter, i_section, i_rank);
     PDM_vtk_write_boxes(filename,
                         n_elt,
                         extents,
                         delmt_ln_to_gn);
-   PDM_free(extents);
-   PDM_free(bezier_coord);
-   PDM_free(lagrange_coord);
+    PDM_free(extents);
+    PDM_free(bezier_coord);
+    PDM_free(lagrange_coord);
 
-   PDM_free(tmp_pvtx_coord);
-   PDM_free(pvtx_ln_to_gn);
-   PDM_free(pcell_vtx_idx);
-   PDM_free(pcell_vtx);
+    PDM_free(tmp_pvtx_coord);
+    PDM_free(pvtx_ln_to_gn);
+    PDM_free(pcell_vtx_idx);
+    PDM_free(pcell_vtx);
 
-   PDM_free(dconnec_idx);
-   PDM_free(delmt_ln_to_gn);
+    PDM_free(dconnec_idx);
+    PDM_free(delmt_ln_to_gn);
 
-   PDM_free(pvtx_coord_out);
+    PDM_free(pvtx_coord_out);
 
     shift += delmt_distribution[n_rank];
   }
@@ -768,7 +768,7 @@ int main(int argc, char *argv[])
                                        order,
                                        PDM_Mesh_nodal_n_vtx_elt_get(type, order),
                                        ijk);
-     PDM_free(ijk);
+      PDM_free(ijk);
     }
   }
 

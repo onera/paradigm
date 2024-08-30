@@ -461,15 +461,15 @@ _calcul_numabs_face_poly3d
 
   /* Allocation des tableaux pour echanges MPI */
 
-  int *send_buff_n;
-  PDM_malloc(send_buff_n,n_procs,int);
-  int *send_buff_idx;
-  PDM_malloc(send_buff_idx,n_procs,int);
+  int *send_buff_n   = NULL;
+  int *send_buff_idx = NULL;
+  PDM_malloc(send_buff_n  , n_procs, int);
+  PDM_malloc(send_buff_idx, n_procs, int);
 
-  int *recv_buff_n;
-  PDM_malloc(recv_buff_n,n_procs,int);
-  int *recv_buff_idx;
-  PDM_malloc(recv_buff_idx,n_procs,int);
+  int *recv_buff_n   = NULL;
+  int *recv_buff_idx = NULL;
+  PDM_malloc(recv_buff_n  , n_procs, int);
+  PDM_malloc(recv_buff_idx, n_procs, int);
 
   /* Calcul du nombre total d'elements du bloc */
 
@@ -540,9 +540,9 @@ _calcul_numabs_face_poly3d
     recv_buff_n[j]   = recv_buff_n[j]   * n_octet_exch;
   }
 
-  unsigned char *send_buff_data;
+  unsigned char *send_buff_data = NULL;
   PDM_malloc(send_buff_data, n_elt_loc_total * n_octet_exch, unsigned char);
-  unsigned char *recv_buff_data;
+  unsigned char *recv_buff_data = NULL;
   PDM_malloc(recv_buff_data, (recv_buff_idx[n_procs - 1] + recv_buff_n[n_procs - 1]) * n_octet_exch, unsigned char);
 
   PDM_array_reset_int(send_buff_n, n_procs, 0);
@@ -610,8 +610,8 @@ _calcul_numabs_face_poly3d
 
   int n_elt_recv = (recv_buff_idx[n_procs-1] + recv_buff_n[n_procs-1]) / n_octet_exch;
 
-  PDM_g_num_t *face_abs;
-  PDM_malloc(face_abs,(d_elt_proc[i_proc+1] - d_elt_proc[i_proc] + 1),PDM_g_num_t);
+  PDM_g_num_t *face_abs = NULL;
+  PDM_malloc(face_abs, d_elt_proc[i_proc+1] - d_elt_proc[i_proc] + 1, PDM_g_num_t);
   PDM_g_num_t n_face_proc = 0;
 
   face_abs[0] = 0;
@@ -629,8 +629,8 @@ _calcul_numabs_face_poly3d
 
   /* Echange de la somme des faces des polyèdres stockes sur chaque processus  */
 
-  PDM_g_num_t *n_face_procs;
-  PDM_malloc(n_face_procs,(n_procs+1),PDM_g_num_t);
+  PDM_g_num_t *n_face_procs = NULL;
+  PDM_malloc(n_face_procs, n_procs+1, PDM_g_num_t);
 
   PDM_MPI_Allgather((void *) &n_face_proc,
                 1,
@@ -656,7 +656,7 @@ _calcul_numabs_face_poly3d
     face_abs[i] += n_face_procs[i_proc];
   }
 
- PDM_free(n_face_procs);
+  PDM_free(n_face_procs);
 
   /* Retour à l'envoyeur de la numérotation absolue */
 
@@ -675,7 +675,7 @@ _calcul_numabs_face_poly3d
     current_octet += n_octet_exch;
   }
 
- PDM_free(face_abs);
+  PDM_free(face_abs);
 
   PDM_MPI_Alltoallv((void *) recv_buff_data,
                     recv_buff_n,
@@ -716,13 +716,13 @@ _calcul_numabs_face_poly3d
 
   /* Liberation memoire */
 
- PDM_free(send_buff_n);
- PDM_free(send_buff_idx);
- PDM_free(send_buff_data);
- PDM_free(recv_buff_n);
- PDM_free(recv_buff_idx);
- PDM_free(recv_buff_data);
- PDM_free(d_elt_proc);
+  PDM_free(send_buff_n);
+  PDM_free(send_buff_idx);
+  PDM_free(send_buff_data);
+  PDM_free(recv_buff_n);
+  PDM_free(recv_buff_idx);
+  PDM_free(recv_buff_data);
+  PDM_free(d_elt_proc);
 
 }
 
@@ -834,7 +834,7 @@ PDM_writer_t *cs
 )
 {
 
-  PDM_malloc(cs->sortie_fmt,1,PDM_writer_ensight_t);
+  PDM_malloc(cs->sortie_fmt, 1, PDM_writer_ensight_t);
 
   PDM_writer_ensight_t *_PDM_writer_ensight = (PDM_writer_ensight_t *) cs->sortie_fmt;
   _PDM_writer_ensight->f_unit_geom = NULL;
@@ -877,7 +877,7 @@ PDM_writer_t *cs
   _geom_close(cs);
   PDM_writer_ensight_t *PDM_writer_ensight = (PDM_writer_ensight_t *) cs->sortie_fmt;
   PDM_writer_ensight_case_lib(PDM_writer_ensight->ensight_case);
- PDM_free(cs->sortie_fmt);
+  PDM_free(cs->sortie_fmt);
 }
 
 /*----------------------------------------------------------------------------
@@ -940,7 +940,7 @@ PDM_writer_ensight_geom_create
 PDM_writer_geom_t *geom
 )
 {
-  PDM_malloc(geom->geom_fmt,1,PDM_writer_geom_ensight_t);
+  PDM_malloc(geom->geom_fmt, 1, PDM_writer_geom_ensight_t);
   PDM_writer_geom_ensight_t *_geom_ensight = (PDM_writer_geom_ensight_t *) geom->geom_fmt;
   _geom_ensight->num_part = geom->_cs->geom_tab->n_geom;
 }
@@ -961,7 +961,7 @@ PDM_writer_ensight_var_create
  PDM_writer_var_t *var
 )
 {
-  PDM_malloc(var->var_fmt,1,PDM_writer_var_ensight_t);
+  PDM_malloc(var->var_fmt, 1, PDM_writer_var_ensight_t);
   PDM_writer_var_ensight_t *_var_ensight = (PDM_writer_var_ensight_t *) var->var_fmt;
   _var_ensight->f_unit = NULL;
 
@@ -1068,9 +1068,9 @@ PDM_writer_ensight_geom_write
 
   _ecr_string(_cs, f_unit_geom, "coordinates");
 
-  float *coord_tmp;
-  PDM_malloc(coord_tmp,n_som_proc ,float);
-  PDM_g_num_t *numabs_tmp;
+  float       *coord_tmp  = NULL;
+  PDM_g_num_t *numabs_tmp = NULL;
+  PDM_malloc(coord_tmp , n_som_proc, float      );
   PDM_malloc(numabs_tmp, n_som_proc, PDM_g_num_t);
   PDM_writer_status_t s_ecr_n_val;
   for (int idim = 0; idim < 3; idim++) {
@@ -1106,8 +1106,8 @@ PDM_writer_ensight_geom_write
                          coord_tmp);
   }
 
- PDM_free(coord_tmp);
- PDM_free(numabs_tmp);
+  PDM_free(coord_tmp);
+  PDM_free(numabs_tmp);
 
   /* Ecriture des blocs standard */
   const int n_blocks   = PDM_part_mesh_nodal_n_section_get  (geom->mesh_nodal);
@@ -1192,9 +1192,9 @@ PDM_writer_ensight_geom_write
 
       /* Copie de la connectivité en numérotation absolue */
 
-      PDM_malloc(numabs_tmp,n_elt_proc ,PDM_g_num_t);
+      PDM_malloc(numabs_tmp, n_elt_proc, PDM_g_num_t);
       int32_t *connec_tmp;
-      PDM_malloc(connec_tmp,n_elt_proc * n_comp ,int32_t);
+      PDM_malloc(connec_tmp, n_elt_proc * n_comp, int32_t);
 
       n_elt_proc = 0;
       for (int i = 0; i < n_part; i++) {
@@ -1241,8 +1241,8 @@ PDM_writer_ensight_geom_write
                          numabs_tmp,
                          connec_tmp);
 
-     PDM_free(numabs_tmp);
-     PDM_free(connec_tmp);
+      PDM_free(numabs_tmp);
+      PDM_free(connec_tmp);
 
     }
 
@@ -1293,11 +1293,11 @@ PDM_writer_ensight_geom_write
 
       /* Copie de la connectivité en numérotation absolue */
 
-      PDM_malloc(numabs_tmp,n_elt_proc ,PDM_g_num_t);
-      int32_t *connec_tmp;
-      PDM_malloc(connec_tmp,l_connec ,int32_t);
-      int32_t *n_comp_tmp;
-      PDM_malloc(n_comp_tmp,n_elt_proc ,int32_t);
+      PDM_malloc(numabs_tmp, n_elt_proc, PDM_g_num_t);
+      int32_t *connec_tmp = NULL;
+      int32_t *n_comp_tmp = NULL;
+      PDM_malloc(connec_tmp, l_connec  , int32_t);
+      PDM_malloc(n_comp_tmp, n_elt_proc, int32_t);
 
       n_elt_proc = 0;
       l_connec = 0;
@@ -1368,9 +1368,9 @@ PDM_writer_ensight_geom_write
                          numabs_tmp,
                          connec_tmp);
 
-     PDM_free(numabs_tmp);
-     PDM_free(connec_tmp);
-     PDM_free(n_comp_tmp);
+      PDM_free(numabs_tmp);
+      PDM_free(connec_tmp);
+      PDM_free(n_comp_tmp);
 
     }
 
@@ -1435,10 +1435,10 @@ PDM_writer_ensight_geom_write
 
       /* Allocation du buffer int_32 au plus grand tableau à écrire (connectivité) */
 
-      int32_t *buff_int32;
-      PDM_malloc(buff_int32,l_connec,int32_t);
+      int32_t     *buff_int32;
       PDM_g_num_t *numabs;
-      PDM_malloc(numabs,n_face_proc,PDM_g_num_t);
+      PDM_malloc(buff_int32, l_connec   , int32_t    );
+      PDM_malloc(numabs    , n_face_proc, PDM_g_num_t);
       int n_comp_cste = 1;
 
       /* Ecriture du nombre de faces de chaque cellule */
@@ -1550,9 +1550,9 @@ PDM_writer_ensight_geom_write
       }
 
       for (int i = 0; i < n_part; i++) {
-       PDM_free(numabs_face[i]);
+        PDM_free(numabs_face[i]);
       }
-     PDM_free(numabs_face);
+      PDM_free(numabs_face);
 
       _ecr_entrelace_int(_cs,
                          PDM_WRITER_OFF,
@@ -1566,7 +1566,7 @@ PDM_writer_ensight_geom_write
       /* Copie de la connectivité des faces en numérotation absolue */
 
       PDM_l_num_t *n_comp_tmp;
-      PDM_malloc(n_comp_tmp,n_face_proc,PDM_l_num_t);
+      PDM_malloc(n_comp_tmp, n_face_proc, PDM_l_num_t);
       for (int i = 0; i < n_face_proc; i++) {
         n_comp_tmp[i] = (PDM_l_num_t) buff_int32[i];
       }
@@ -1625,9 +1625,9 @@ PDM_writer_ensight_geom_write
 
       /* Libération mémoire */
 
-     PDM_free(numabs);
-     PDM_free(buff_int32);
-     PDM_free(n_comp_tmp);
+      PDM_free(numabs);
+      PDM_free(buff_int32);
+      PDM_free(n_comp_tmp);
 
     }
 
@@ -1662,7 +1662,7 @@ PDM_writer_ensight_geom_free
 )
 {
   if (geom->geom_fmt != NULL)
-   PDM_free(geom->geom_fmt);
+    PDM_free(geom->geom_fmt);
 }
 
 
@@ -1790,10 +1790,10 @@ PDM_writer_ensight_var_write
           n_som_proc += n_vertices;
         }
 
-        float *buff;
-        PDM_malloc(buff,n_som_proc,float);
-        PDM_g_num_t *numabs;
-        PDM_malloc(numabs,n_som_proc,PDM_g_num_t);
+        float       *buff   = NULL;
+        PDM_g_num_t *numabs = NULL;
+        PDM_malloc(buff  , n_som_proc, float      );
+        PDM_malloc(numabs, n_som_proc, PDM_g_num_t);
 
         n_som_proc = 0;
         for (int i = 0; i < n_part; i++) {
@@ -1833,8 +1833,8 @@ PDM_writer_ensight_var_write
 
         }
 
-       PDM_free(buff);
-       PDM_free(numabs);
+        PDM_free(buff);
+        PDM_free(numabs);
 
       }
 
@@ -1859,10 +1859,10 @@ PDM_writer_ensight_var_write
           n_elt_max_bloc = _max_int(n_elt_max_bloc, n_elt_bloc);
         }
 
-        float *buff;
-        PDM_malloc(buff,n_elt_max_bloc,float);
-        PDM_g_num_t *numabs;
-        PDM_malloc(numabs,n_elt_max_bloc,PDM_g_num_t);
+        float       *buff   = NULL;
+        PDM_g_num_t *numabs = NULL;
+        PDM_malloc(buff  , n_elt_max_bloc, float      );
+        PDM_malloc(numabs, n_elt_max_bloc, PDM_g_num_t);
 
         /* Boucle sur les blocs standard */
 
@@ -1935,9 +1935,9 @@ PDM_writer_ensight_var_write
 
         /* Libération */
 
-       PDM_free(ideb);
-       PDM_free(buff);
-       PDM_free(numabs);
+        PDM_free(ideb);
+        PDM_free(buff);
+        PDM_free(numabs);
 
       }
 
@@ -1989,7 +1989,7 @@ PDM_writer_ensight_var_free
                 &rank);
   _var_close((PDM_writer_var_ensight_t *) var->var_fmt, rank);
   if (var->var_fmt != NULL)
-   PDM_free(var->var_fmt);
+    PDM_free(var->var_fmt);
 }
 
 #ifdef __cplusplus

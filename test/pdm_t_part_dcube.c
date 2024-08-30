@@ -297,8 +297,8 @@ int main(int argc, char *argv[])
                              &dcell_face_idx,
                              &dcell_face,
                              comm);
- PDM_free(cell_distri);
- PDM_free(face_distri);
+  PDM_free(cell_distri);
+  PDM_free(face_distri);
 
   /*
    *  Create mesh partitions
@@ -342,8 +342,8 @@ int main(int argc, char *argv[])
                                       dface_group);
 
 
- PDM_free(dcell_face_idx);
- PDM_free(dcell_face    );
+  PDM_free(dcell_face_idx);
+  PDM_free(dcell_face    );
 
   if (time_and_stat && !use_multipart) {
 
@@ -577,7 +577,7 @@ int main(int argc, char *argv[])
       PDM_printf("       * total              : %i\n", bound_part_faces_sum);
     }
   }
- PDM_free(dcell_part);
+  PDM_free(dcell_part);
   PDM_part_free(ppart);
 
   PDM_dcube_gen_free(dcube);

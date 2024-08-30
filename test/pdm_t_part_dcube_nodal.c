@@ -290,7 +290,7 @@ int main(int argc, char *argv[])
   PDM_multipart_dmesh_nodal_set(mpart, 0, dmn);
   PDM_multipart_compute(mpart);
 
- PDM_free(n_part_domains);
+  PDM_free(n_part_domains);
 
   PDM_part_mesh_nodal_t* pmsh_nodal = NULL;
   PDM_multipart_get_part_mesh_nodal(mpart, 0, &pmsh_nodal, PDM_OWNERSHIP_KEEP); // Ownership keep is mandatory in C

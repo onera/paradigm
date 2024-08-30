@@ -301,7 +301,7 @@ main
     n_box = (int) (distrib[i_rank+1] - distrib[i_rank]);
     double *dvtx_coord = PDM_DMesh_nodal_vtx_get(dmn);
 
-    PDM_malloc(box_extents,n_box * 6,double);
+    PDM_malloc(box_extents, n_box * 6, double);
     for (int i = 0; i < n_box; i++) {
 
       double *e = box_extents + 6*i;
@@ -321,7 +321,7 @@ main
 
     }
 
-    PDM_malloc(box_g_num,n_box,PDM_g_num_t);
+    PDM_malloc(box_g_num, n_box, PDM_g_num_t);
     for (int i = 0; i < n_box; i++) {
       box_g_num[i] = distrib[i_rank] + i + 1;
     }
@@ -356,26 +356,26 @@ main
 
       // Random permutation
       if (permutation) {
-        double *_box_extents;
-        PDM_malloc(_box_extents,n_box * 6,double);
-        int *rand_val;
-        PDM_malloc(rand_val,n_box,int);
-        int *order;
-        PDM_malloc(order,n_box,int);
+        double *_box_extents = NULL;
+        int    *rand_val     = NULL;
+        int    *order        = NULL;
+        PDM_malloc(_box_extents, n_box * 6, double);
+        PDM_malloc(rand_val    , n_box    , int   );
+        PDM_malloc(order       , n_box    , int   );
         for (int i = 0; i < n_box; i++) {
           order[i]    = i;
           rand_val[i] = rand();
         }
 
         PDM_sort_int(rand_val, order, n_box);
-       PDM_free(rand_val);
+        PDM_free(rand_val);
 
         for (int i = 0; i < n_box; i++) {
           memcpy(_box_extents + 6*i, box_extents + 6*order[i], sizeof(double) * 6);
           box_g_num[order[i]] = i+1;
         }
-       PDM_free(order);
-       PDM_free(box_extents);
+        PDM_free(order);
+        PDM_free(box_extents);
         box_extents = _box_extents;
       }
 
@@ -452,26 +452,26 @@ main
 
     // Random permutation
     if (permutation) {
-      double *_pts_coord;
-      PDM_malloc(_pts_coord,n_pts * 3,double);
-      int *rand_val;
-      PDM_malloc(rand_val,n_pts,int);
-      int *order;
-      PDM_malloc(order,n_pts,int);
+      double *_pts_coord = NULL;
+      int    *rand_val   = NULL;
+      int    *order      = NULL;
+      PDM_malloc(_pts_coord, n_pts * 3, double);
+      PDM_malloc(rand_val  , n_pts    , int   );
+      PDM_malloc(order     , n_pts    , int   );
       for (int i = 0; i < n_pts; i++) {
         order[i]    = i;
         rand_val[i] = rand();
       }
 
       PDM_sort_int(rand_val, order, n_pts);
-     PDM_free(rand_val);
+      PDM_free(rand_val);
 
       for (int i = 0; i < n_pts; i++) {
         memcpy(_pts_coord + 3*i, pts_coord + 3*order[i], sizeof(double) * 3);
         pts_g_num[order[i]] = i+1;
       }
-     PDM_free(order);
-     PDM_free(pts_coord);
+      PDM_free(order);
+      PDM_free(pts_coord);
       pts_coord = _pts_coord;
     }
 
@@ -524,21 +524,8 @@ main
                               NULL);
   }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
   int *init_location_box;
-  PDM_malloc(init_location_box,3 * n_box ,int);
+  PDM_malloc(init_location_box, 3 * n_box, int);
   for(int i = 0; i < n_box; ++i) {
     init_location_box[3*i  ] = i_rank;
     init_location_box[3*i+1] = 0; // i_part
@@ -571,7 +558,7 @@ main
   t2 = PDM_MPI_Wtime();
   double t_box_tree = t2 - t1;
   printf("PDM_box_tree_set_boxes          : %12.5es\n", t2 - t1);
- PDM_free(init_location_box);
+  PDM_free(init_location_box);
 
 
   if (visu) {
@@ -607,7 +594,7 @@ main
 
   if (visu) {
     PDM_g_num_t *box_pts_g_num;
-    PDM_malloc(box_pts_g_num,box_pts_idx[n_box],PDM_g_num_t);
+    PDM_malloc(box_pts_g_num, box_pts_idx[n_box], PDM_g_num_t);
     for (int i = 0; i < box_pts_idx[n_box]; i++) {
       box_pts_g_num[i] = pts_g_num[box_pts[i]];
     }
@@ -616,7 +603,7 @@ main
     //                                 box_pts_g_num,
     //                                 n_box,
     //                                 "box_pts  : ");
-   PDM_free(box_pts_g_num);
+    PDM_free(box_pts_g_num);
   }
 
 
@@ -648,18 +635,12 @@ main
     //                                 n_box,
     //                                 "box_pts2 : ");
   }
- PDM_free(box_pts_idx2);
- PDM_free(box_pts_g_num2);
- PDM_free(box_pts_coord2);
-
-
-
-
-
-
+  PDM_free(box_pts_idx2);
+  PDM_free(box_pts_g_num2);
+  PDM_free(box_pts_coord2);
 
   double *box_center;
-  PDM_malloc(box_center,3 * n_box,double);
+  PDM_malloc(box_center, 3 * n_box, double);
   for (int i = 0; i < n_box; i++) {
     for (int j = 0; j < 3; j++) {
       box_center[3*i+j] = 0.5*(box_extents[6*i+j] + box_extents[6*i+j+3]);
@@ -749,7 +730,7 @@ main
   printf("Total old          : %12.5es\n", t_box_tree + t_old);
   printf("Total intersection2: %12.5es\n", t_point_tree + t_point_box_tree + t_intersection2);
 
- PDM_free(box_center);
+  PDM_free(box_center);
   PDM_point_tree_seq_free(pbtree);
 
 
@@ -769,10 +750,10 @@ main
 
     printf("n_err = %d\n", n_err);
   }
- PDM_free(box_pts_idx3);
- PDM_free(box_pts3);
- PDM_free(box_pts_idx);
- PDM_free(box_pts);
+  PDM_free(box_pts_idx3);
+  PDM_free(box_pts3);
+  PDM_free(box_pts_idx);
+  PDM_free(box_pts);
 
 
   /* Free */
@@ -780,11 +761,11 @@ main
   PDM_box_tree_destroy(&btree);
   PDM_box_set_destroy (&box_set);
 
- PDM_free(pts_coord);
- PDM_free(pts_g_num);
+  PDM_free(pts_coord);
+  PDM_free(pts_g_num);
 
- PDM_free(box_extents);
- PDM_free(box_g_num);
+  PDM_free(box_extents);
+  PDM_free(box_g_num);
   PDM_MPI_Finalize ();
 
   return 0;

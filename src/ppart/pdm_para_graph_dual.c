@@ -441,8 +441,8 @@ const int              compute_dnode_to_arc,
     }
   }
 
- PDM_free(recv_strid);
- PDM_free(recv_node_node);
+  PDM_free(recv_strid);
+  PDM_free(recv_node_node);
 
   /*
    * Each block can have multiple same cell, we need to compress them
@@ -455,7 +455,7 @@ const int              compute_dnode_to_arc,
                                             node_node_n,
                                             _dual_graph);
 
- PDM_free(node_node_n);
+  PDM_free(node_node_n);
 
   /*
    * Realloc
@@ -502,7 +502,7 @@ const int              compute_dnode_to_arc,
                                                         req_id_node_arc,
                                                        &recv_node2arc_strid,
                                              (void **) &recv_node2arc);
-   PDM_free(recv_node2arc_strid); // Always 1
+    PDM_free(recv_node2arc_strid); // Always 1
 
     /*
      * Post treatment
@@ -537,7 +537,7 @@ const int              compute_dnode_to_arc,
       _dnode_to_arc[_dnode_to_arc_idx[ielmt] + node_to_arc_n[ielmt]++] = recv_node2arc[i_recv];
     }
 
-   PDM_free(recv_node2arc);
+    PDM_free(recv_node2arc);
 
     if( 0 == 1 ){
       printf("n_node_block:: %d \n", n_node_block);
@@ -556,7 +556,7 @@ const int              compute_dnode_to_arc,
     // for(int i_node = 0; i_node < n_node_block; ++i_node){
     //   _dnode_to_arc_idx[i_node+1] = _dnode_to_arc_idx[i_node] + node_to_arc_n[i_node];
     // }
-   PDM_free(node_to_arc_n);
+    PDM_free(node_to_arc_n);
 
   }
 
@@ -565,12 +565,12 @@ const int              compute_dnode_to_arc,
   /*
    * Exchange is done we can free direclty memory
    */
- PDM_free(dnode_ln_to_gn);
- PDM_free(arc_strid);
- PDM_free(node_strid);
- PDM_free(dopposite_node);
+  PDM_free(dnode_ln_to_gn);
+  PDM_free(arc_strid);
+  PDM_free(node_strid);
+  PDM_free(dopposite_node);
   if(compute_dnode_to_arc){
-   PDM_free(darc_g);
+    PDM_free(darc_g);
   }
 
   PDM_part_to_block_free (ptb_dual);
@@ -654,7 +654,7 @@ const PDM_g_num_t     *dnode_arc,
                              comm);
 
   int* send_stride = PDM_array_const_int(dnode_arc_idx[dn_node], 1);
- PDM_free(arc_ln_to_gn);
+  PDM_free(arc_ln_to_gn);
 
   int        *recv_stride = NULL;
   PDM_g_num_t  *recv_data = NULL;
@@ -716,10 +716,10 @@ const PDM_g_num_t     *dnode_arc,
   }
 
   PDM_part_to_block_free(ptb);
- PDM_free(node_g);
- PDM_free(send_stride);
- PDM_free(recv_stride);
- PDM_free(recv_data);
+  PDM_free(node_g);
+  PDM_free(send_stride);
+  PDM_free(recv_stride);
+  PDM_free(recv_data);
 
   /*
    * Now we have a arc_to_node connectivity, we can call graph_dual_from_arc2node
@@ -733,7 +733,7 @@ const PDM_g_num_t     *dnode_arc,
                                     0,
                                     NULL,
                                     NULL);
- PDM_free(darc_to_node);
+  PDM_free(darc_to_node);
 }
 
 /**
@@ -840,10 +840,10 @@ const PDM_g_num_t   *dface_vtx,
                                        dual_graph_idx,
                                        dual_graph);
 
- PDM_free(dcell_vtx);
- PDM_free(dcell_vtx_idx);
- PDM_free(dvtx_cell_idx);
- PDM_free(dvtx_cell);
+  PDM_free(dcell_vtx);
+  PDM_free(dcell_vtx_idx);
+  PDM_free(dvtx_cell_idx);
+  PDM_free(dvtx_cell);
 
 
   // Realloc
@@ -1014,8 +1014,8 @@ const PDM_MPI_Comm      comm
                                   comm);
         // printf("PDM_ParMETIS_dpart %d | %d  END\n", n_part, dn_elmt);
 
-       PDM_free(ubvec);
-       PDM_free(tpwgts);
+        PDM_free(ubvec);
+        PDM_free(tpwgts);
       #endif
         break;
     }

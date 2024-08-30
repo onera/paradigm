@@ -127,12 +127,12 @@ _read_distributed_stl
     }
 
 
-    PDM_malloc(face_normal,3 * n_face    ,double);
-    PDM_malloc(vtx_coord,3 * n_vtx     ,double);
-    PDM_malloc(face_vtx_idx, (n_face + 1) ,int   );
-    PDM_malloc(face_vtx_n, (n_face + 1) ,int   );
-    PDM_malloc(face_vtx,3 * n_face    ,int   );
-    PDM_malloc(face_vtx_coord,9 * n_face    ,double);
+    PDM_malloc(face_normal   , 3 * n_face   , double);
+    PDM_malloc(vtx_coord     , 3 * n_vtx    , double);
+    PDM_malloc(face_vtx_idx  ,  (n_face + 1), int   );
+    PDM_malloc(face_vtx_n    ,  (n_face + 1), int   );
+    PDM_malloc(face_vtx      , 3 * n_face   , int   );
+    PDM_malloc(face_vtx_coord, 9 * n_face   , double);
 
 
     fseek(f, 0, SEEK_SET);
@@ -260,7 +260,7 @@ _read_distributed_stl
   *distrib_face = _distrib_face;
 
   int *tmp_dface_vtx_idx;
-  PDM_malloc(tmp_dface_vtx_idx, (dn_face_end + 1) ,int);
+  PDM_malloc(tmp_dface_vtx_idx, dn_face_end + 1, int);
   tmp_dface_vtx_idx[0] = 0;
   for(int i = 0; i < dn_face_end; ++i) {
     tmp_dface_vtx_idx[i+1] = tmp_dface_vtx_idx[i] + tmp_dface_vtx_n[i];
@@ -274,7 +274,7 @@ _read_distributed_stl
   PDM_gen_gnum_t* gen_gnum = PDM_gnum_create(3, 1, PDM_TRUE, 1.e-6, comm, PDM_OWNERSHIP_USER);
 
   double *char_length;
-  PDM_malloc(char_length, tmp_dface_vtx_idx[dn_face_end] ,double);
+  PDM_malloc(char_length, tmp_dface_vtx_idx[dn_face_end], double);
 
   for (int i = 0; i < tmp_dface_vtx_idx[dn_face_end]; ++i) {
     char_length[i] = HUGE_VAL;//1.e-6;
@@ -323,7 +323,7 @@ _read_distributed_stl
                            char_length);
 
   PDM_gnum_compute(gen_gnum);
- PDM_free(char_length);
+  PDM_free(char_length);
 
   PDM_g_num_t* _dface_vtx = PDM_gnum_get(gen_gnum, 0);
   PDM_gnum_free(gen_gnum);
@@ -360,7 +360,7 @@ _read_distributed_stl
                          NULL,
                 (void**) &_dvtx_coord);
 
- PDM_free(dface_vtx_coord);
+  PDM_free(dface_vtx_coord);
 
   if (debug) {
     char outfilename[999];
@@ -374,7 +374,7 @@ _read_distributed_stl
   }
 
   PDM_g_num_t *_tmp_distrib_vtx;
-  PDM_malloc(_tmp_distrib_vtx, (n_rank+1) ,PDM_g_num_t);
+  PDM_malloc(_tmp_distrib_vtx, n_rank+1, PDM_g_num_t);
   for(int i = 0; i < n_rank+1; ++i) {
     _tmp_distrib_vtx[i] = _distrib_vtx[i];
   }
@@ -391,22 +391,22 @@ _read_distributed_stl
   //PDM_free(_dvtx_coord);
   //PDM_free(_dface_vtx);
 
- PDM_free(tmp_dface_vtx_idx);
+  PDM_free(tmp_dface_vtx_idx);
   //PDM_free(tmp_dface_vtx);
 
- PDM_free(tmp_dface_vtx_n  );
+  PDM_free(tmp_dface_vtx_n  );
   //PDM_free(tmp_dvtx_coord  );
 
- PDM_free(init_distrib_vtx );
- PDM_free(init_distrib_face);
+  PDM_free(init_distrib_vtx );
+  PDM_free(init_distrib_face);
 
   if(i_rank == 0) {
-   PDM_free(face_normal  );
-   PDM_free(vtx_coord    );
-   PDM_free(face_vtx_idx );
-   PDM_free(face_vtx     );
-   PDM_free(face_vtx_n   );
-   PDM_free(face_vtx_coord);
+    PDM_free(face_normal  );
+    PDM_free(vtx_coord    );
+    PDM_free(face_vtx_idx );
+    PDM_free(face_vtx     );
+    PDM_free(face_vtx_n   );
+    PDM_free(face_vtx_coord);
   }
 }
 
@@ -506,7 +506,7 @@ PDM_reader_stl_dmesh_nodal
   /* Split mesh */
   /* !!! We assume we only have triangles */
   if (dface_vtx_idx != NULL){
-   PDM_free(dface_vtx_idx);
+    PDM_free(dface_vtx_idx);
   }
 
   PDM_dmesh_nodal_t *dmn = _create_dmesh_nodal(comm,
@@ -514,8 +514,8 @@ PDM_reader_stl_dmesh_nodal
                                                distrib_face,
                                                dvtx_coord,
                                                dface_vtx);
- PDM_free(distrib_vtx);
- PDM_free(distrib_face);
+  PDM_free(distrib_vtx);
+  PDM_free(distrib_face);
 
   return dmn;
 }

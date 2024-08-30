@@ -214,11 +214,11 @@ PDM_g_num_t    **dedge_group
   /* Nombre de limites */
 
   *n_edge_group = 4;
-  PDM_malloc(*dedge_group_idx,(*n_edge_group + 1),int);
+  PDM_malloc(*dedge_group_idx, *n_edge_group + 1, int);
   (*dedge_group_idx)[0] = 0;
 
   PDM_g_num_t *dn_edgeLim13Rank;
-  PDM_malloc(dn_edgeLim13Rank,(n_rank+1),PDM_g_num_t);
+  PDM_malloc(dn_edgeLim13Rank, n_rank+1, PDM_g_num_t);
   dn_edgeLim13Rank[0] = 0;
   for (int i = 0; i < n_rank; i++)
     dn_edgeLim13Rank[i+1] = (PDM_g_num_t) (nx1 - 1) / n_rank;
@@ -240,7 +240,7 @@ PDM_g_num_t    **dedge_group
   }
 
   PDM_g_num_t *dn_edgeLim24Rank;
-  PDM_malloc(dn_edgeLim24Rank,(n_rank+1),PDM_g_num_t);
+  PDM_malloc(dn_edgeLim24Rank, n_rank+1, PDM_g_num_t);
   dn_edgeLim24Rank[0] = 0;
   for (int i = 0; i < n_rank; i++)
     dn_edgeLim24Rank[i+1] = (PDM_g_num_t) (ny1 - 1) / n_rank;
@@ -260,7 +260,7 @@ PDM_g_num_t    **dedge_group
     dn_edgeLim24Rank[i+1] = dn_edgeLim24Rank[i+1] + dn_edgeLim24Rank[i];
   }
 
-  PDM_malloc(*dedge_group,(2*dn_edgeLim13 + 2*dn_edgeLim24),PDM_g_num_t);
+  PDM_malloc(*dedge_group, 2*dn_edgeLim13 + 2*dn_edgeLim24, PDM_g_num_t);
 
   (*dedge_group_idx)[1] = (int) dn_edgeLim13;
   (*dedge_group_idx)[2] = (int) dn_edgeLim24;
@@ -275,7 +275,7 @@ PDM_g_num_t    **dedge_group
   /* ------------------------ */
 
   PDM_g_num_t *dn_vtx_rank;
-  PDM_malloc(dn_vtx_rank,(n_rank+1),PDM_g_num_t);
+  PDM_malloc(dn_vtx_rank, n_rank+1, PDM_g_num_t);
 
   dn_vtx_rank[0] = 0;
   for (int i = 0; i < n_rank; i++)
@@ -296,7 +296,7 @@ PDM_g_num_t    **dedge_group
     dn_vtx_rank[i+1] = dn_vtx_rank[i+1] + dn_vtx_rank[i];
   }
 
-  PDM_malloc(*dvtx_coord,3 * (*dn_vtx),double);
+  PDM_malloc(*dvtx_coord, 3 * (*dn_vtx), double);
 
   /* Construction des elements et des aretes */
   /* --------------------------------------- */
@@ -336,10 +336,10 @@ PDM_g_num_t    **dedge_group
 
   /* Allocation des elts */
 
-  PDM_g_num_t *dn_face_rank;
-  PDM_malloc(dn_face_rank,(n_rank+1),PDM_g_num_t);
-  PDM_g_num_t *dn_edge_rank;
-  PDM_malloc(dn_edge_rank,(n_rank+1),PDM_g_num_t);
+  PDM_g_num_t *dn_face_rank = NULL;
+  PDM_g_num_t *dn_edge_rank = NULL;
+  PDM_malloc(dn_face_rank, n_rank+1, PDM_g_num_t);
+  PDM_malloc(dn_edge_rank, n_rank+1, PDM_g_num_t);
 
   dn_face_rank[0] = 0;
   for (int i = 0; i < n_rank; i++)
@@ -373,21 +373,26 @@ PDM_g_num_t    **dedge_group
     dn_edge_rank[i+1] = dn_edge_rank[i+1] + dn_edge_rank[i];
   }
 
-  PDM_malloc(*dface_vtx_idx,((*dn_face)+1),int);
-  PDM_malloc(*dface_vtx,8 * (*dn_face),PDM_g_num_t);
-  PDM_malloc(*dface_edge,8 * (*dn_face),PDM_g_num_t);
-  PDM_malloc(*dedge_vtx,2 * (*dn_edge),PDM_g_num_t);
-  PDM_malloc(*dedge_face,2 * (*dn_edge),PDM_g_num_t);
-  for (int i=0; i<(*dn_face)+1; i++)
-    (*dface_vtx_idx)[i]=-1;
-  for (int i=0; i<(8 * (*dn_face)); i++)
-    (*dface_vtx)[i]=-1;
-  for (int i=0; i<(8 * (*dn_face)); i++)
-    (*dface_edge)[i]=-1;
-  for (int i=0; i<(2 * (*dn_edge)); i++)
-    (*dedge_vtx)[i]=-1;
-  for (int i=0; i<(2 * (*dn_edge)); i++)
-    (*dedge_face)[i]=-1;
+  PDM_malloc(*dface_vtx_idx,     (*dn_face+1), int        );
+  PDM_malloc(*dface_vtx    , 8 * (*dn_face)  , PDM_g_num_t);
+  PDM_malloc(*dface_edge   , 8 * (*dn_face)  , PDM_g_num_t);
+  PDM_malloc(*dedge_vtx    , 2 * (*dn_edge)  , PDM_g_num_t);
+  PDM_malloc(*dedge_face   , 2 * (*dn_edge)  , PDM_g_num_t);
+  for (int i = 0; i < (*dn_face)+1; i++){
+    (*dface_vtx_idx)[i] = -1;
+  }
+  for (int i = 0; i < (8 * (*dn_face)); i++){
+    (*dface_vtx)[i] = -1;
+  }
+  for (int i = 0; i < (8 * (*dn_face)); i++){
+    (*dface_edge)[i] = -1;
+  }
+  for (int i = 0; i < (2 * (*dn_edge)); i++){
+    (*dedge_vtx)[i] = -1;
+  }
+  for (int i = 0; i < (2 * (*dn_edge)); i++){
+    (*dedge_face)[i] = -1;
+  }
 
   /* Calcul des entites */
   /* ------------------ */
@@ -1056,11 +1061,11 @@ PDM_g_num_t    **dedge_group
   }
 
 
- PDM_free(dn_edgeLim13Rank);
- PDM_free(dn_edgeLim24Rank);
- PDM_free(dn_vtx_rank);
- PDM_free(dn_face_rank);
- PDM_free(dn_edge_rank);
+  PDM_free(dn_edgeLim13Rank);
+  PDM_free(dn_edgeLim24Rank);
+  PDM_free(dn_vtx_rank);
+  PDM_free(dn_face_rank);
+  PDM_free(dn_edge_rank);
 }
 
 

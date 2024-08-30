@@ -88,7 +88,7 @@ PDM_compute_offset_ln_to_gn_by_domain
   PDM_MPI_Allreduce(shift_by_domain_loc, &shift_by_domain[1], n_domain, PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, comm);
   PDM_array_accumulate_gnum(shift_by_domain, n_domain+1);
 
- PDM_free(shift_by_domain_loc);
+  PDM_free(shift_by_domain_loc);
 
   return shift_by_domain;
 }

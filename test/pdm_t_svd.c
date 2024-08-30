@@ -143,7 +143,7 @@ _rand_array
 )
 {
   double *a;
-  PDM_malloc(a,siz,double);
+  PDM_malloc(a, siz, double);
 
   for (int i = 0; i < siz; i++) {
     a[i] = (double) rand() / (double) RAND_MAX;
@@ -193,12 +193,12 @@ int main
   double *b = _rand_array(n_row * stride);
 
   double *_a;
-  PDM_malloc(_a,n_row * n_col,double);
+  PDM_malloc(_a, n_row * n_col, double);
   memcpy(_a, a, sizeof(double) * n_row * n_col);
 
 
   double *x;
-  PDM_malloc(x,n_col * stride,double);
+  PDM_malloc(x, n_col * stride, double);
 
 
   int stat = PDM_linear_algebra_linsolve_svd(n_row,
@@ -225,10 +225,10 @@ int main
     printf("\n");
   }
 
- PDM_free(a);
- PDM_free(b);
- PDM_free(x);
- PDM_free(_a);
+  PDM_free(a);
+  PDM_free(b);
+  PDM_free(x);
+  PDM_free(_a);
 
   PDM_MPI_Finalize();
 

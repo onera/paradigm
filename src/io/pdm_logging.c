@@ -175,65 +175,6 @@ void log_log(int level, const char *file, int line, const char *fmt, ...) {
   unlock();
 }
 
-// void log_log(int level, const char *file, int line, const char *fmt, ...) {
-//   if (level < L.level) {
-//     return;
-//   }
-
-//   if(logging_file == NULL){
-//     char filename[50];
-//     int i_rank;
-//     PDM_MPI_Comm_rank (PDM_MPI_COMM_WORLD, &i_rank);
-//     sprintf(filename, "paradigm_%d.log", i_rank);
-//     logging_file = fopen(filename, "w");
-//     atexit(free_logging_file);
-//   }
-
-//   /* Acquire lock */
-//   lock();
-
-//   /* Get current time */
-//   time_t t = time(NULL);
-//   struct tm *lt = localtime(&t);
-
-//   /* Log to stderr */
-//   if (!L.quiet) {
-//     va_list args;
-//     char buf[16];
-//     buf[strftime(buf, sizeof(buf), "%H:%M:%S", lt)] = '\0';
-// #ifdef LOG_USE_COLOR
-//     fprintf(
-//       stderr, "%s %s%-5s\x1b[0m \x1b[90m%s:%d:\x1b[0m ",
-//       buf, level_colors[level], level_names[level], file, line);
-// #else
-//     fprintf(stderr, "%s %-5s %s:%d: ", buf, level_names[level], file, line);
-// #endif
-//     va_start(args, fmt);
-//     vfprintf(stderr, fmt, args);
-//     va_end(args);
-//     fprintf(stderr, "\n");
-//     fflush(stderr);
-//   }
-
-//   /* Log to file */
-//   if (L.fp) {
-//     va_list args;
-//     // char buf[32];
-//     // buf[strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", lt)] = '\0';
-//     // fprintf(L.fp, "%s %-5s %s:%d: ", buf, level_names[level], file, line);
-//     va_start(args, fmt);
-//     vfprintf(L.fp, fmt, args);
-//     va_end(args);
-//     // fprintf(L.fp, "\n");
-//     fflush(L.fp);
-//   }
-
-//   /* Release lock */
-//   unlock();
-// }
-
-
-
 void
 PDM_log_trace_array_int
 (

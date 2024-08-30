@@ -333,10 +333,10 @@ int main(int argc, char *argv[])
     uvw[i] = 0.5 + 1.0*(2*((double) rand() / (double) RAND_MAX) - 1);
   }
 
-  double *pts_coord;
-  PDM_malloc(pts_coord,3 * n_pts,double);
-  double *weight;
-  PDM_malloc(weight,n_node,double);
+  double *pts_coord = NULL;
+  double *weight    = NULL;
+  PDM_malloc(pts_coord, 3 * n_pts , double);
+  PDM_malloc(weight   ,     n_node, double);
   PDM_ho_basis(t_elt,
                order,
                n_node,
@@ -355,12 +355,12 @@ int main(int argc, char *argv[])
   }
 
   const double tolerance = 1e-6;
-  double *work_array;
-  PDM_malloc(work_array,n_node * 4,double);
+  double *work_array = NULL;
+  double *proj_coord = NULL;
+  PDM_malloc(work_array, n_node * 4, double);
+  PDM_malloc(proj_coord, n_pts  * 3, double);
   double uvw2[3];
   double dist2 = 0;
-  double *proj_coord;
-  PDM_malloc(proj_coord,n_pts * 3,double);
   int converged;
   dist2 = PDM_ho_location_newton(t_elt,
                                  order,
@@ -373,12 +373,12 @@ int main(int argc, char *argv[])
                                  &converged,
                                  work_array);
   printf("converged? %d\n", converged);
- PDM_free(work_array);
+  PDM_free(work_array);
 
 
   double uvw3[3];
-  double *proj_coord3;
-  PDM_malloc(proj_coord3,n_pts * 3,double);
+  double *proj_coord3 = NULL;
+  PDM_malloc(proj_coord3, n_pts * 3, double);
   double dist3 = PDM_ho_location(t_elt,
                                  order,
                                  n_node,
@@ -405,14 +405,10 @@ int main(int argc, char *argv[])
   }
   printf("\n");
 
-
-
-
-
   printf("dist_newton = %e, dist_subdiv = %e, delta = %e, relatif = %e\n",
          sqrt(dist2), sqrt(dist3), sqrt(dist2) - sqrt(dist3), (sqrt(dist2) - sqrt(dist3))/sqrt(dist2));
 
- PDM_free(weight);
+  PDM_free(weight);
 
 
   if (visu) {
@@ -452,8 +448,8 @@ int main(int argc, char *argv[])
                                NULL,
                                NULL);
 
-    int *connec;
-    PDM_malloc(connec,n_node,int);
+    int *connec = NULL;
+    PDM_malloc(connec, n_node, int);
 
     int *ijk_to_user = PDM_ho_ordering_ijk_to_user_get("PDM_HO_ORDERING_VTK",
                                                        t_elt,
@@ -476,16 +472,16 @@ int main(int argc, char *argv[])
                                   NULL,
                                   NULL);
 
-   PDM_free(connec);
+    PDM_free(connec);
   }
 
   PDM_MPI_Finalize();
 
 
- PDM_free(parent_node_coord);
- PDM_free(pts_coord);
- PDM_free(proj_coord);
- PDM_free(proj_coord3);
+  PDM_free(parent_node_coord);
+  PDM_free(pts_coord);
+  PDM_free(proj_coord);
+  PDM_free(proj_coord3);
 
   return 0;
 }

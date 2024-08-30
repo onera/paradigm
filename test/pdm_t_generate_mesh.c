@@ -261,9 +261,9 @@ int main(int argc, char *argv[])
   }
 
   // free
- PDM_free(coords     );
- PDM_free(elt_vtx_idx);
- PDM_free(elt_vtx    );
+  PDM_free(coords     );
+  PDM_free(elt_vtx_idx);
+  PDM_free(elt_vtx    );
 
   // Generate rectangle mesh
   pmn = PDM_generate_mesh_rectangle(comm,
@@ -313,9 +313,9 @@ int main(int argc, char *argv[])
   }
 
   // free
- PDM_free(coords     );
- PDM_free(elt_vtx_idx);
- PDM_free(elt_vtx    );
+  PDM_free(coords     );
+  PDM_free(elt_vtx_idx);
+  PDM_free(elt_vtx    );
 
   // Generate parallelepiped mesh
   pmn = PDM_generate_mesh_parallelepiped(comm,
@@ -418,9 +418,9 @@ int main(int argc, char *argv[])
   }
 
   // free
- PDM_free(coords     );
- PDM_free(elt_vtx_idx);
- PDM_free(elt_vtx    );
+  PDM_free(coords     );
+  PDM_free(elt_vtx_idx);
+  PDM_free(elt_vtx    );
 
   // free
   PDM_part_mesh_nodal_free(pmn);

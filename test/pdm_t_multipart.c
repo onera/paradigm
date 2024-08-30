@@ -152,45 +152,45 @@ int main(int argc, char *argv[])
   PDM_MPI_Comm_size(comm, &n_rank);
 
   /* Alloc for distributed mesh */
-  int *dn_cell;
-  PDM_malloc(dn_cell,n_domain ,int);
-  int *dn_face;
-  PDM_malloc(dn_face,n_domain ,int);
-  int *dn_vtx;
-  PDM_malloc(dn_vtx,n_domain ,int);
-  int *n_face_group;
-  PDM_malloc(n_face_group,n_domain ,int);
-  int *dface_vtx_s;
-  PDM_malloc(dface_vtx_s,n_domain ,int);
-  int *dface_group_s;
-  PDM_malloc(dface_group_s,n_domain ,int);
+  int *dn_cell       = NULL;
+  int *dn_face       = NULL;
+  int *dn_vtx        = NULL;
+  int *n_face_group  = NULL;
+  int *dface_vtx_s   = NULL;
+  int *dface_group_s = NULL;
+  PDM_malloc(dn_cell      , n_domain, int);
+  PDM_malloc(dn_face      , n_domain, int);
+  PDM_malloc(dn_vtx       , n_domain, int);
+  PDM_malloc(n_face_group , n_domain, int);
+  PDM_malloc(dface_vtx_s  , n_domain, int);
+  PDM_malloc(dface_group_s, n_domain, int);
 
-  PDM_g_num_t **dface_cell;
-  PDM_malloc(dface_cell,n_domain ,PDM_g_num_t*);
-  int **dface_vtx_idx;
-  PDM_malloc(dface_vtx_idx,n_domain ,int*);
-  PDM_g_num_t **dface_vtx;
-  PDM_malloc(dface_vtx,n_domain ,PDM_g_num_t*);
-  double **dvtx_coord;
-  PDM_malloc(dvtx_coord,n_domain ,double*);
-  int **dface_group_idx;
-  PDM_malloc(dface_group_idx,n_domain ,int*);
-  PDM_g_num_t **dface_group;
-  PDM_malloc(dface_group,n_domain ,PDM_g_num_t*);
-  int **dface_bnd_idx;
-  PDM_malloc(dface_bnd_idx,n_domain ,int*);
-  PDM_g_num_t **dface_bnd;
-  PDM_malloc(dface_bnd,n_domain ,PDM_g_num_t*);
-  int **dface_join_idx;
-  PDM_malloc(dface_join_idx,n_domain ,int*);
-  PDM_g_num_t **dface_join;
-  PDM_malloc(dface_join,n_domain ,PDM_g_num_t*);
-  int **djoins_ids;
-  PDM_malloc(djoins_ids,n_domain ,int*);
+  PDM_g_num_t **dface_cell      = NULL;
+  int         **dface_vtx_idx   = NULL;
+  PDM_g_num_t **dface_vtx       = NULL;
+  double      **dvtx_coord      = NULL;
+  int         **dface_group_idx = NULL;
+  PDM_g_num_t **dface_group     = NULL;
+  int         **dface_bnd_idx   = NULL;
+  PDM_g_num_t **dface_bnd       = NULL;
+  int         **dface_join_idx  = NULL;
+  PDM_g_num_t **dface_join      = NULL;
+  int         **djoins_ids      = NULL;
+  PDM_malloc(dface_cell     , n_domain, PDM_g_num_t *);
+  PDM_malloc(dface_vtx_idx  , n_domain, int         *);
+  PDM_malloc(dface_vtx      , n_domain, PDM_g_num_t *);
+  PDM_malloc(dvtx_coord     , n_domain, double      *);
+  PDM_malloc(dface_group_idx, n_domain, int         *);
+  PDM_malloc(dface_group    , n_domain, PDM_g_num_t *);
+  PDM_malloc(dface_bnd_idx  , n_domain, int         *);
+  PDM_malloc(dface_bnd      , n_domain, PDM_g_num_t *);
+  PDM_malloc(dface_join_idx , n_domain, int         *);
+  PDM_malloc(dface_join     , n_domain, PDM_g_num_t *);
+  PDM_malloc(djoins_ids     , n_domain, int         *);
 
   /* Initialize multipart */
   int *n_part_domains;
-  PDM_malloc(n_part_domains,n_domain ,int);
+  PDM_malloc(n_part_domains, n_domain, int);
   for (int i_domain = 0; i_domain < n_domain; i_domain++){
     n_part_domains[i_domain] = n_part;
   }
@@ -202,10 +202,10 @@ int main(int argc, char *argv[])
     PDM_multipart_set_reordering_options(mpart,  1, "PDM_PART_RENUM_CELL_NONE", NULL, "PDM_PART_RENUM_FACE_NONE");
 
   /* Generate mesh */
-  PDM_dcube_t **dcube;
-  PDM_malloc(dcube,n_domain ,PDM_dcube_t *);
-  PDM_dmesh_t **dmesh;
-  PDM_malloc(dmesh,n_domain ,PDM_dmesh_t *);
+  PDM_dcube_t **dcube = NULL;
+  PDM_dmesh_t **dmesh = NULL;
+  PDM_malloc(dcube, n_domain, PDM_dcube_t *);
+  PDM_malloc(dmesh, n_domain, PDM_dmesh_t *);
   for (int i_domain = 0; i_domain < n_domain; i_domain++)
   {
     // Create a cube for this domain
@@ -243,7 +243,7 @@ int main(int argc, char *argv[])
     // Join numbering (left to right, increasing i_domain)
     printf("n_jn = %i \n", n_jn);
     if(n_jn > 0 ) {
-      PDM_malloc(djoins_ids[i_domain],n_jn ,int);
+      PDM_malloc(djoins_ids[i_domain], n_jn, int);
       if (i_domain == 0)
         djoins_ids[i_domain][0] = 0;
       else if (i_domain == n_domain-1)
@@ -254,12 +254,12 @@ int main(int argc, char *argv[])
       }
     }
 
-    PDM_malloc(dface_bnd_idx[i_domain],(n_bnd+1) ,int);
-    PDM_malloc(dface_join_idx[i_domain],(n_jn +1) ,int);
+    PDM_malloc(dface_bnd_idx [i_domain], n_bnd+1, int);
+    PDM_malloc(dface_join_idx[i_domain], n_jn +1, int);
     // First pass to count and allocate
     int i_bnd = 1;
     int i_jn  = 1;
-    dface_bnd_idx[i_domain][0]  = 0;
+    dface_bnd_idx [i_domain][0] = 0;
     dface_join_idx[i_domain][0] = 0;
     for (int igroup = 0; igroup < n_face_group[i_domain]; igroup++)
     {
@@ -279,8 +279,8 @@ int main(int argc, char *argv[])
     }
 
     // Second pass to copy
-    dface_bnd PDM_malloc([i_domain],dface_bnd_idx [i_domain][n_bnd] ,PDM_g_num_t);
-    PDM_malloc(dface_join[i_domain],dface_join_idx[i_domain][n_jn ] ,PDM_g_num_t);
+    PDM_malloc(dface_bnd [i_domain], dface_bnd_idx [i_domain][n_bnd], PDM_g_num_t);
+    PDM_malloc(dface_join[i_domain], dface_join_idx[i_domain][n_jn ], PDM_g_num_t);
     i_bnd = 0;
     i_jn  = 0;
     for (int igroup = 0; igroup < n_face_group[i_domain]; igroup++) {
@@ -341,7 +341,7 @@ int main(int argc, char *argv[])
   /* Connection between domains */
   // int n_total_joins = 2*(n_domain-1);
   // int *join_to_opposite;
-  // PDM_malloc(join_to_opposite,n_total_joins,int);
+  // PDM_malloc(join_to_opposite, n_total_joins, int);
   // for (int ijoin = 0; ijoin < n_total_joins; ijoin++){
   //   if (ijoin % 2 == 0)
   //     join_to_opposite[ijoin] = ijoin + 1;
@@ -361,7 +361,7 @@ int main(int argc, char *argv[])
   {
     /* Prepare writer */
     int *geom_ids;
-    PDM_malloc(geom_ids,n_domain ,int);
+    PDM_malloc(geom_ids, n_domain, int);
     PDM_writer_t *id_cs = PDM_writer_create("Ensight",
                                             PDM_WRITER_FMT_ASCII,
                                             PDM_WRITER_TOPO_CST,
@@ -397,16 +397,16 @@ int main(int argc, char *argv[])
       tn_part_proc += n_part_domains[i_domain];
 
     /* Get results */
-    int **pface_vtx_n;
-    PDM_malloc(pface_vtx_n,tn_part_proc ,int *);
-    int **pcell_face_n;
-    PDM_malloc(pcell_face_n,tn_part_proc ,int *);
-    int *pn_cell;
-    PDM_malloc(pn_cell,tn_part_proc ,int  );
-    int *pn_vtx;
-    PDM_malloc(pn_vtx,tn_part_proc ,int  );
-    int **comm_visu;
-    PDM_malloc(comm_visu,tn_part_proc ,int *);
+    int **pface_vtx_n  = NULL;
+    int **pcell_face_n = NULL;
+    int  *pn_cell      = NULL;
+    int  *pn_vtx       = NULL;
+    int **comm_visu    = NULL;
+    PDM_malloc(pface_vtx_n , tn_part_proc, int *);
+    PDM_malloc(pcell_face_n, tn_part_proc, int *);
+    PDM_malloc(pn_cell     , tn_part_proc, int  );
+    PDM_malloc(pn_vtx      , tn_part_proc, int  );
+    PDM_malloc(comm_visu   , tn_part_proc, int *);
 
     int ipartdomain = 0;
     /* Write geometry */
@@ -543,7 +543,7 @@ int main(int argc, char *argv[])
                                          PDM_OWNERSHIP_KEEP);
 
         // Store opposite proc & part for rendering
-        PDM_malloc(comm_visu[ipartdomain],2*n_vtx ,int);
+        PDM_malloc(comm_visu[ipartdomain], 2*n_vtx, int);
         for (int i=0; i < 2*n_vtx; i++)  {
           comm_visu[ipartdomain][i] = -1;
         }
@@ -570,8 +570,8 @@ int main(int argc, char *argv[])
           }
         }
 
-        PDM_malloc(pface_vtx_n[ipartdomain],n_face,int);
-        PDM_malloc(pcell_face_n[ipartdomain],n_cell,int);
+        PDM_malloc(pface_vtx_n [ipartdomain], n_face, int);
+        PDM_malloc(pcell_face_n[ipartdomain], n_cell, int);
         for (int i = 0; i < n_cell; i++)
           pcell_face_n[ipartdomain][i] = cell_face_idx[i+1] - cell_face_idx[i];
         for (int i = 0; i < n_face; i++)
@@ -611,18 +611,18 @@ int main(int argc, char *argv[])
     ipartdomain = 0;
     for (int i_domain = 0; i_domain < n_domain; i_domain++){
       for (int i_part = 0; i_part < n_part_domains[i_domain]; i_part++){
-        PDM_real_t *val_cell_id;
-        PDM_malloc(val_cell_id,pn_cell[ipartdomain],PDM_real_t);
-        PDM_real_t *val_gpart_id;
-        PDM_malloc(val_gpart_id,pn_cell[ipartdomain],PDM_real_t);
-        PDM_real_t *val_lpart_id;
-        PDM_malloc(val_lpart_id,pn_cell[ipartdomain],PDM_real_t);
-        PDM_real_t *val_proc_id;
-        PDM_malloc(val_proc_id,pn_cell[ipartdomain],PDM_real_t);
-        PDM_real_t *val_opp_proc_id;
-        PDM_malloc(val_opp_proc_id,pn_vtx [ipartdomain],PDM_real_t);
-        PDM_real_t *val_opp_part_id;
-        PDM_malloc(val_opp_part_id,pn_vtx [ipartdomain],PDM_real_t);
+        PDM_real_t *val_cell_id     = NULL;
+        PDM_real_t *val_gpart_id    = NULL;
+        PDM_real_t *val_lpart_id    = NULL;
+        PDM_real_t *val_proc_id     = NULL;
+        PDM_real_t *val_opp_proc_id = NULL;
+        PDM_real_t *val_opp_part_id = NULL;
+        PDM_malloc(val_cell_id    , pn_cell[ipartdomain], PDM_real_t);
+        PDM_malloc(val_gpart_id   , pn_cell[ipartdomain], PDM_real_t);
+        PDM_malloc(val_lpart_id   , pn_cell[ipartdomain], PDM_real_t);
+        PDM_malloc(val_proc_id    , pn_cell[ipartdomain], PDM_real_t);
+        PDM_malloc(val_opp_proc_id, pn_vtx [ipartdomain], PDM_real_t);
+        PDM_malloc(val_opp_part_id, pn_vtx [ipartdomain], PDM_real_t);
         for (int i=0; i < pn_cell[ipartdomain]; i++) {
           val_cell_id[i] = i;
           val_gpart_id[i] = (PDM_real_t) (partdomainshift[i_rank] + ipartdomain);
@@ -640,17 +640,17 @@ int main(int argc, char *argv[])
         PDM_writer_var_set(id_cs, id_var_opp_proc_id, geom_ids[i_domain], i_part, val_opp_proc_id);
         PDM_writer_var_set(id_cs, id_var_opp_part_id, geom_ids[i_domain], i_part, val_opp_part_id);
 
-       PDM_free(val_cell_id    );
-       PDM_free(val_gpart_id   );
-       PDM_free(val_lpart_id   );
-       PDM_free(val_proc_id    );
-       PDM_free(val_opp_proc_id);
-       PDM_free(val_opp_part_id);
+        PDM_free(val_cell_id    );
+        PDM_free(val_gpart_id   );
+        PDM_free(val_lpart_id   );
+        PDM_free(val_proc_id    );
+        PDM_free(val_opp_proc_id);
+        PDM_free(val_opp_part_id);
 
         ipartdomain++;
       }
     }
-   PDM_free(partdomainshift);
+    PDM_free(partdomainshift);
 
     if (i_rank==0) PDM_printf("Write variables\n");
     PDM_writer_var_write(id_cs, id_var_cell_id    );
@@ -672,56 +672,56 @@ int main(int argc, char *argv[])
       PDM_writer_geom_data_free(id_cs, geom_ids[i_domain]);
       PDM_writer_geom_free(id_cs, geom_ids[i_domain]);
     }
-   PDM_free(geom_ids);
+    PDM_free(geom_ids);
     PDM_writer_free(id_cs);
     for (int i_part = 0; i_part < tn_part_proc; i_part++){
-     PDM_free(comm_visu[i_part]);
-     PDM_free(pface_vtx_n[i_part]);
-     PDM_free(pcell_face_n[i_part]);
+      PDM_free(comm_visu[i_part]);
+      PDM_free(pface_vtx_n[i_part]);
+      PDM_free(pcell_face_n[i_part]);
     }
-   PDM_free(comm_visu);
-   PDM_free(pface_vtx_n);
-   PDM_free(pcell_face_n);
-   PDM_free(pn_cell);
-   PDM_free(pn_vtx);
+    PDM_free(comm_visu);
+    PDM_free(pface_vtx_n);
+    PDM_free(pcell_face_n);
+    PDM_free(pn_cell);
+    PDM_free(pn_vtx);
     if (i_rank==0) PDM_printf("Post treatment completed\n");
   }
 
   /* Free memory */
   for (int i_domain = 0; i_domain < n_domain; i_domain++) {
-   PDM_free(dface_bnd_idx[i_domain]);
-   PDM_free(dface_bnd[i_domain]);
-   PDM_free(dface_join_idx[i_domain]);
-   PDM_free(dface_join[i_domain]);
+    PDM_free(dface_bnd_idx[i_domain]);
+    PDM_free(dface_bnd[i_domain]);
+    PDM_free(dface_join_idx[i_domain]);
+    PDM_free(dface_join[i_domain]);
     if(n_domain > 1) {
-     PDM_free(djoins_ids[i_domain]);
+      PDM_free(djoins_ids[i_domain]);
     }
     PDM_dmesh_free(dmesh[i_domain]);
     PDM_dcube_gen_free(dcube[i_domain]);
   }
- PDM_free(dcube);
- PDM_free(dn_cell);
- PDM_free(dn_face);
- PDM_free(dn_vtx);
- PDM_free(n_face_group);
- PDM_free(dface_group_s);
- PDM_free(dface_vtx_s);
- PDM_free(dface_cell);
- PDM_free(dface_vtx_idx);
- PDM_free(dface_vtx);
- PDM_free(dvtx_coord);
- PDM_free(dface_group_idx);
- PDM_free(dface_group);
- PDM_free(dface_bnd_idx);
- PDM_free(dface_bnd);
- PDM_free(dface_join_idx);
- PDM_free(dface_join);
- PDM_free(djoins_ids);
+  PDM_free(dcube);
+  PDM_free(dn_cell);
+  PDM_free(dn_face);
+  PDM_free(dn_vtx);
+  PDM_free(n_face_group);
+  PDM_free(dface_group_s);
+  PDM_free(dface_vtx_s);
+  PDM_free(dface_cell);
+  PDM_free(dface_vtx_idx);
+  PDM_free(dface_vtx);
+  PDM_free(dvtx_coord);
+  PDM_free(dface_group_idx);
+  PDM_free(dface_group);
+  PDM_free(dface_bnd_idx);
+  PDM_free(dface_bnd);
+  PDM_free(dface_join_idx);
+  PDM_free(dface_join);
+  PDM_free(djoins_ids);
   //PDM_free(join_to_opposite);
 
   PDM_multipart_free(mpart);
- PDM_free(dmesh);
- PDM_free(n_part_domains);
+  PDM_free(dmesh);
+  PDM_free(n_part_domains);
 
   if (i_rank==0) PDM_printf("pdm_t_multipart run finalized\n");
   PDM_MPI_Finalize();

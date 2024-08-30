@@ -148,6 +148,27 @@ const size_t           stride,
       int             *order
 );
 
+
+/**
+ *
+ * \brief Unique array lexicographicaly
+ *
+ * \param [in]     n_entity Array to sort
+ * \param [in]     stride   stride of array (number of values to compare)
+ * \param [in,out] array    number array of entity numbers (size : n_entity)
+ * \param [in,out] order    pre-allocated ordering table   (size : n_entity)
+ * \return Number of unique
+ */
+int
+PDM_order_inplace_unique_int
+(
+const int              n_entity,
+const size_t           stride,
+      int             *array,
+      int             *order
+);
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

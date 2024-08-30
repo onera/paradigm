@@ -91,7 +91,7 @@ int    *part
 
   idx_t _ncon = *ncon;
 
-  int nEdge = xadj[_n_vtxs];
+  int n_edge = xadj[_n_vtxs];
 
   idx_t _n_parts = *n_parts;
 
@@ -115,7 +115,7 @@ int    *part
 
     if(tpwgts != NULL){
 
-      PDM_malloc(__tpwgts,_ncon * _n_parts,real_t);
+      PDM_malloc(__tpwgts, _ncon * _n_parts, real_t);
       _tpwgts  = __tpwgts;
 
       for (int i = 0; i < _ncon * _n_parts; i++) {
@@ -124,7 +124,7 @@ int    *part
     } /* End if tpwgts */
 
     if(ubvec != NULL){
-      PDM_malloc(__ubvec,_ncon,real_t);
+      PDM_malloc(__ubvec, _ncon, real_t);
       _ubvec  = __ubvec;
 
       for (int i = 0; i < _ncon; i++) {
@@ -157,8 +157,8 @@ int    *part
   }
 
   else {
-    PDM_malloc(__xadj,(_n_vtxs + 1),idx_t);
-    PDM_malloc(__adjncy,nEdge,idx_t);
+    PDM_malloc(__xadj  , _n_vtxs + 1, idx_t);
+    PDM_malloc(__adjncy, n_edge     , idx_t);
     _xadj    = __xadj;
     _adjncy  = __adjncy;
 
@@ -166,12 +166,12 @@ int    *part
       __xadj[i] = xadj[i];
     }
 
-    for (int i = 0; i < nEdge; i++) {
+    for (int i = 0; i < n_edge; i++) {
       __adjncy[i] =  adjncy[i];
     }
 
     if (vwgt != NULL) {
-      PDM_malloc(__vwgt,_n_vtxs,idx_t);
+      PDM_malloc(__vwgt, _n_vtxs, idx_t);
       for (int i = 0; i < _n_vtxs; i++) {
         __vwgt[i] = vwgt[i];
       }
@@ -181,8 +181,8 @@ int    *part
     }
 
     if (adjwgt != NULL) {
-      PDM_malloc(__adjwgt,nEdge,idx_t);
-      for (int i = 0; i < nEdge; i++) {
+      PDM_malloc(__adjwgt, n_edge, idx_t);
+      for (int i = 0; i < n_edge; i++) {
         __adjwgt[i] = adjwgt[i];
       }
     }
@@ -190,7 +190,7 @@ int    *part
       __adjwgt = NULL;
     }
 
-    PDM_malloc(__part,_n_vtxs,idx_t);
+    PDM_malloc(__part, _n_vtxs, idx_t);
 
     _vwgt   = __vwgt;
     _adjwgt = __adjwgt;
@@ -219,31 +219,31 @@ int    *part
   }
 
   if (__xadj != NULL) {
-   PDM_free(__xadj);
+    PDM_free(__xadj);
   }
 
   if (__adjncy != NULL) {
-   PDM_free(__adjncy);
+    PDM_free(__adjncy);
   }
 
   if (__part != NULL) {
-   PDM_free(__part);
+    PDM_free(__part);
   }
 
   if (__vwgt != NULL) {
-   PDM_free(__vwgt);
+    PDM_free(__vwgt);
   }
 
   if (__adjwgt != NULL) {
-   PDM_free(__adjwgt);
+    PDM_free(__adjwgt);
   }
 
   if (__tpwgts != NULL) {
-   PDM_free(__tpwgts);
+    PDM_free(__tpwgts);
   }
 
   if (__ubvec != NULL) {
-   PDM_free(__ubvec);
+    PDM_free(__ubvec);
   }
 
   return rval;
@@ -285,7 +285,7 @@ int    *part
 
   idx_t _ncon = *ncon;
 
-  int nEdge = xadj[_n_vtxs];
+  int n_edge = xadj[_n_vtxs];
 
   idx_t _n_parts = *n_parts;
 
@@ -310,7 +310,7 @@ int    *part
 
     if(tpwgts != NULL){
 
-      PDM_malloc(__tpwgts,_ncon * _n_parts,real_t);
+      PDM_malloc(__tpwgts, _ncon * _n_parts, real_t);
       _tpwgts  = __tpwgts;
 
       for (int i = 0; i < _ncon * _n_parts; i++) {
@@ -319,7 +319,7 @@ int    *part
     } /* End if tpwgts */
 
     if(ubvec != NULL){
-      PDM_malloc(__ubvec,_ncon,real_t);
+      PDM_malloc(__ubvec, _ncon, real_t);
       _ubvec  = __ubvec;
 
       for (int i = 0; i < _ncon; i++) {
@@ -331,11 +331,11 @@ int    *part
 
   idx_t *_vsize = NULL;
 
-  idx_t *__xadj, *_xadj;
+  idx_t *__xadj  , *_xadj;
   idx_t *__adjncy, *_adjncy;
-  idx_t *__vwgt, *_vwgt;
+  idx_t *__vwgt  , *_vwgt;
   idx_t *__adjwgt, *_adjwgt;
-  idx_t *__part, *_part;
+  idx_t *__part  , *_part;
 
   if (sizeof(int) == sizeof(idx_t)) {
     _vwgt     = (idx_t *) vwgt;
@@ -352,8 +352,8 @@ int    *part
   }
 
   else {
-    PDM_malloc(__xadj,(_n_vtxs + 1),idx_t);
-    PDM_malloc(__adjncy,nEdge,idx_t);
+    PDM_malloc(__xadj  , _n_vtxs + 1, idx_t);
+    PDM_malloc(__adjncy, n_edge     , idx_t);
     _xadj    = __xadj;
     _adjncy  = __adjncy;
 
@@ -361,12 +361,12 @@ int    *part
       __xadj[i] = xadj[i];
     }
 
-    for (int i = 0; i < nEdge; i++) {
+    for (int i = 0; i < n_edge; i++) {
       __adjncy[i] =  adjncy[i];
     }
 
     if (vwgt != NULL) {
-      PDM_malloc(__vwgt,_n_vtxs,idx_t);
+      PDM_malloc(__vwgt, _n_vtxs, idx_t);
       for (int i = 0; i < _n_vtxs; i++) {
         __vwgt[i] = vwgt[i];
       }
@@ -376,8 +376,8 @@ int    *part
     }
 
     if (adjwgt != NULL) {
-      PDM_malloc(__adjwgt,nEdge,idx_t);
-      for (int i = 0; i < nEdge; i++) {
+      PDM_malloc(__adjwgt, n_edge, idx_t);
+      for (int i = 0; i < n_edge; i++) {
         __adjwgt[i] = adjwgt[i];
       }
     }
@@ -385,7 +385,7 @@ int    *part
       __adjwgt = NULL;
     }
 
-    PDM_malloc(__part,_n_vtxs,idx_t);
+    PDM_malloc(__part, _n_vtxs, idx_t);
 
     _vwgt   = __vwgt;
     _adjwgt = __adjwgt;
@@ -414,31 +414,31 @@ int    *part
   }
 
   if (__xadj != NULL) {
-   PDM_free(__xadj);
+    PDM_free(__xadj);
   }
 
   if (__adjncy != NULL) {
-   PDM_free(__adjncy);
+    PDM_free(__adjncy);
   }
 
   if (__part != NULL) {
-   PDM_free(__part);
+    PDM_free(__part);
   }
 
   if (__vwgt != NULL) {
-   PDM_free(__vwgt);
+    PDM_free(__vwgt);
   }
 
   if (__adjwgt != NULL) {
-   PDM_free(__adjwgt);
+    PDM_free(__adjwgt);
   }
 
   if (__tpwgts != NULL) {
-   PDM_free(__tpwgts);
+    PDM_free(__tpwgts);
   }
 
   if (__ubvec != NULL) {
-   PDM_free(__ubvec);
+    PDM_free(__ubvec);
   }
 
   return rval;
@@ -452,14 +452,14 @@ int    *part
 void
 PDM_SCOTCH_part
 (
-const int n_cell,
-int *dualGraphIdx,
-int *dualGraph,
-int *cell_weight,
-int *edgeWeight,
-int check,
-const int n_part,
-int *part
+const int  n_cell,
+      int *dual_graph_idx,
+      int *dual_graph_,
+      int *cell_weight,
+      int *edge_weight,
+      int  check,
+const int  n_part,
+      int *part
 )
 {
 
@@ -480,18 +480,18 @@ int *part
   SCOTCH_Num *_vendtab, *__vendtab;
   SCOTCH_Num *_velotab, *__velotab;
   SCOTCH_Num *_vlbltab = NULL;
-  SCOTCH_Num _edgenbr = (SCOTCH_Num) dualGraphIdx[n_cell];
-  SCOTCH_Num _edgesiz = (SCOTCH_Num) dualGraphIdx[n_cell];
+  SCOTCH_Num _edgenbr = (SCOTCH_Num) dual_graph_idx[n_cell];
+  SCOTCH_Num _edgesiz = (SCOTCH_Num) dual_graph_idx[n_cell];
   SCOTCH_Num *_edgetab, *__edgetab;
   SCOTCH_Num *_edlotab, *__edlotab;
   SCOTCH_Num *_part, *__part;
 
   if (sizeof(int) == sizeof(SCOTCH_Num)) {
-    _verttab = (SCOTCH_Num *) dualGraphIdx;
-    _vendtab = (SCOTCH_Num *) dualGraphIdx + 1;
-    _edgetab = (SCOTCH_Num *) dualGraph;
+    _verttab = (SCOTCH_Num *) dual_graph_idx;
+    _vendtab = (SCOTCH_Num *) dual_graph_idx + 1;
+    _edgetab = (SCOTCH_Num *) dual_graph_;
     _velotab = (SCOTCH_Num *) cell_weight;
-    _edlotab = (SCOTCH_Num *) edgeWeight;
+    _edlotab = (SCOTCH_Num *) edge_weight;
     _part = (SCOTCH_Num *) part;
 
     __verttab = NULL;
@@ -503,33 +503,33 @@ int *part
   }
 
   else {
-    PDM_malloc(__verttab,(_vertnbr + 1),SCOTCH_Num);
+    PDM_malloc(__verttab, _vertnbr + 1, SCOTCH_Num);
     __vendtab = __verttab + 1;
-    PDM_malloc(__edgetab,_edgesiz,SCOTCH_Num);
-    PDM_malloc(__part,_vertnbr,SCOTCH_Num);
+    PDM_malloc(__edgetab, _edgesiz, SCOTCH_Num);
+    PDM_malloc(__part   , _vertnbr, SCOTCH_Num);
 
     for (int i = 0; i < _vertnbr + 1; i++) {
-      __verttab[i] = dualGraphIdx[i];
+      __verttab[i] = dual_graph_idx[i];
     }
 
     for (int i = 0; i < _edgesiz; i++) {
-      __edgetab[i] = dualGraph[i];
+      __edgetab[i] = dual_graph_[i];
     }
 
     __velotab = NULL;
     __edlotab = NULL;
 
     if (cell_weight != NULL) {
-      PDM_malloc(__velotab,_vertnbr,SCOTCH_Num);
+      PDM_malloc(__velotab, _vertnbr, SCOTCH_Num);
       for (int i = 0; i < _vertnbr; i++) {
         __velotab[i] = cell_weight[i];
       }
     }
 
-    if (edgeWeight != NULL) {
-      PDM_malloc(__edlotab,_edgesiz,SCOTCH_Num);
+    if (edge_weight != NULL) {
+      PDM_malloc(__edlotab, _edgesiz, SCOTCH_Num);
       for (int i = 0; i < _edgesiz; i++) {
-        __edlotab[i] = edgeWeight[i];
+        __edlotab[i] = edge_weight[i];
       }
     }
 
@@ -591,23 +591,23 @@ int *part
   SCOTCH_graphExit (&grafptr);
 
   if (__verttab != NULL) {
-   PDM_free(__verttab);
+    PDM_free(__verttab);
   }
 
   if (__edgetab != NULL) {
-   PDM_free(__edgetab);
+    PDM_free(__edgetab);
   }
 
   if (__velotab != NULL) {
-   PDM_free(__velotab);
+    PDM_free(__velotab);
   }
 
   if (__part != NULL) {
-   PDM_free(__part);
+    PDM_free(__part);
   }
 
   if (__edlotab != NULL) {
-   PDM_free(__edlotab);
+    PDM_free(__edlotab);
   }
 
 }

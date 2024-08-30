@@ -50,7 +50,7 @@ char *argv[]
   int n_part = 2;
 
   int *n_elt;
-  PDM_malloc(n_elt,n_part,int);
+  PDM_malloc(n_elt, n_part, int);
   if (i_rank == 0) {
     n_elt[0] = 2;
     n_elt[1] = 2;
@@ -59,13 +59,13 @@ char *argv[]
     n_elt[1] = 3;
   }
 
-  int **neighbor_idx;
-  PDM_malloc(neighbor_idx,n_part,int *);
-  int **neighbor_desc;
-  PDM_malloc(neighbor_desc,n_part,int *);
+  int **neighbor_idx  = NULL;
+  int **neighbor_desc = NULL;
+  PDM_malloc(neighbor_idx , n_part, int *);
+  PDM_malloc(neighbor_desc, n_part, int *);
 
   for (int i = 0; i < n_part; i++) {
-    PDM_malloc(neighbor_idx[i],(n_elt[i] + 1),int);
+    PDM_malloc(neighbor_idx[i], n_elt[i] + 1, int);
     neighbor_idx[i][0] = 0;
   }
 
@@ -73,7 +73,7 @@ char *argv[]
     neighbor_idx[0][1] = 2;
     neighbor_idx[0][2] = 3;
 
-    PDM_malloc(neighbor_desc[0],neighbor_idx[0][n_elt[0]] * 3,int);
+    PDM_malloc(neighbor_desc[0], neighbor_idx[0][n_elt[0]] * 3, int);
 
     neighbor_desc[0][3*0+0] = 0;
     neighbor_desc[0][3*0+1] = 1;
@@ -91,7 +91,7 @@ char *argv[]
     neighbor_idx[1][1] = 2;
     neighbor_idx[1][2] = 3;
 
-    PDM_malloc(neighbor_desc[1],neighbor_idx[1][n_elt[1]] * 3,int);
+    PDM_malloc(neighbor_desc[1], neighbor_idx[1][n_elt[1]] * 3, int);
 
     neighbor_desc[1][3*0+0] = 0;
     neighbor_desc[1][3*0+1] = 0;
@@ -110,7 +110,7 @@ char *argv[]
     neighbor_idx[0][2] = 2;
     neighbor_idx[0][3] = 3;
 
-    PDM_malloc(neighbor_desc[0],neighbor_idx[0][n_elt[0]] * 3,int);
+    PDM_malloc(neighbor_desc[0], neighbor_idx[0][n_elt[0]] * 3, int);
 
     neighbor_desc[0][3*0+0] = 1;
     neighbor_desc[0][3*0+1] = 1;
@@ -129,7 +129,7 @@ char *argv[]
     neighbor_idx[1][2] = 2;
     neighbor_idx[1][3] = 3;
 
-    PDM_malloc(neighbor_desc[1],neighbor_idx[1][n_elt[1]] * 3,int);
+    PDM_malloc(neighbor_desc[1], neighbor_idx[1][n_elt[1]] * 3, int);
 
     neighbor_desc[1][3*0+0] = 0;
     neighbor_desc[1][3*0+1] = 0;
@@ -165,9 +165,9 @@ char *argv[]
 
   /* Exchange */
   int **send_n;
-  PDM_malloc(send_n,n_part,int *);
+  PDM_malloc(send_n, n_part, int *);
   for (int i = 0; i < n_part; i++) {
-    PDM_malloc(send_n[i],n_elt[i],int);
+    PDM_malloc(send_n[i], n_elt[i], int);
     for (int j = 0; j < n_elt[i]; j++) {
       send_n[i][j] = 1;//neighbor_idx[i][j+1] - neighbor_idx[i][j];
     }
@@ -199,11 +199,11 @@ char *argv[]
   // }
 
   int **send_i;
-  PDM_malloc(send_i,n_part,int *);
+  PDM_malloc(send_i, n_part, int *);
   for (int i = 0; i < n_part; i++) {
     int i_part = i_rank*n_part + i;
     // PDM_malloc(send_i[i],n_elt[i],int);
-    PDM_malloc(send_i[i],neighbor_idx[i][n_elt[i]],int);
+    PDM_malloc(send_i[i], neighbor_idx[i][n_elt[i]], int);
     for (int j = 0; j < n_elt[i]; j++) {
       // log_trace("part %d (%d), elt %d : %d\n", i, i_part, j, shift[i_part] + j);
       send_i[i][j] = shift[i_part] + j;
@@ -266,22 +266,22 @@ char *argv[]
 
   /* Free memory */
   for (int i = 0; i < n_part; i++) {
-   PDM_free(neighbor_idx [i]);
-   PDM_free(neighbor_desc[i]);
+    PDM_free(neighbor_idx [i]);
+    PDM_free(neighbor_desc[i]);
 
-   PDM_free(send_n[i]);
-   PDM_free(send_i[i]);
-   PDM_free(recv_n[i]);
-   PDM_free(recv_i[i]);
+    PDM_free(send_n[i]);
+    PDM_free(send_i[i]);
+    PDM_free(recv_n[i]);
+    PDM_free(recv_i[i]);
     //PDM_free(recv_desc[i]);
   }
- PDM_free(neighbor_idx );
- PDM_free(neighbor_desc);
- PDM_free(send_n);
- PDM_free(send_i);
- PDM_free(recv_n);
- PDM_free(recv_i);
- PDM_free(n_elt);
+  PDM_free(neighbor_idx );
+  PDM_free(neighbor_desc);
+  PDM_free(send_n);
+  PDM_free(send_i);
+  PDM_free(recv_n);
+  PDM_free(recv_i);
+  PDM_free(n_elt);
   //PDM_free(recv_desc);
 
   PDM_distant_neighbor_free(dngb);

@@ -208,7 +208,7 @@ int main(int argc, char *argv[])
 
 
   PDM_g_num_t *pfield_post = tmp_pfield_post[0];
- PDM_free(tmp_pfield_post);
+  PDM_free(tmp_pfield_post);
 
   if(0 == 1) {
     PDM_log_trace_array_long(pfield_post, 2 * pn_elmt, "pfield_post : ");
@@ -223,7 +223,7 @@ int main(int argc, char *argv[])
   }
 
 
- PDM_free(pfield_post);
+  PDM_free(pfield_post);
 
 
   /*
@@ -245,8 +245,8 @@ int main(int argc, char *argv[])
 
   pfield_post = tmp_pfield_post[0];
   int *pfield_post_strid = tmp_pfield_post_strid[0];
- PDM_free(tmp_pfield_post);
- PDM_free(tmp_pfield_post_strid);
+  PDM_free(tmp_pfield_post);
+  PDM_free(tmp_pfield_post_strid);
 
   /*
    * Check
@@ -255,8 +255,8 @@ int main(int argc, char *argv[])
     assert(pfield_post      [2*i] == pln_to_to_gn[i]);
     assert(pfield_post_strid[i] == 2);
   }
- PDM_free(pfield_post);
- PDM_free(pfield_post_strid);
+  PDM_free(pfield_post);
+  PDM_free(pfield_post_strid);
 
 
   /*
@@ -306,8 +306,8 @@ int main(int argc, char *argv[])
 
   pfield_post       = tmp_pfield_post[0];
   pfield_post_strid = tmp_pfield_post_strid[0];
- PDM_free(tmp_pfield_post);
- PDM_free(tmp_pfield_post_strid);
+  PDM_free(tmp_pfield_post);
+  PDM_free(tmp_pfield_post_strid);
 
   if(1 == 1) {
     int s_data = 0;
@@ -321,20 +321,20 @@ int main(int argc, char *argv[])
   }
 
 
- PDM_free(pfield_post);
- PDM_free(pfield_post_strid);
+  PDM_free(pfield_post);
+  PDM_free(pfield_post_strid);
 
 
- PDM_free(dfield_post);
+  PDM_free(dfield_post);
 
   PDM_part_to_block_free(ptb);
 
- PDM_free(pln_to_to_gn);
- PDM_free(distrib_init_elmt);
- PDM_free(pfield);
- PDM_free(dfield_strid);
- PDM_free(dfield);
- PDM_free(pstrid);
+  PDM_free(pln_to_to_gn);
+  PDM_free(distrib_init_elmt);
+  PDM_free(pfield);
+  PDM_free(dfield_strid);
+  PDM_free(dfield);
+  PDM_free(pstrid);
 
   PDM_MPI_Finalize ();
   return 0;

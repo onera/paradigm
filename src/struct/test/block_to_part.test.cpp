@@ -2,6 +2,7 @@
 #include "pdm.h"
 #include "pdm_doctest.h"
 #include "pdm_block_to_part.h"
+#include "pdm_priv.h"
 
 
 
@@ -19,8 +20,10 @@ MPI_TEST_CASE("[pdm_block_to_part] - 1p - block_to_part",1) {
     PDM_g_num_t ln_to_gn_p0[n_elmts_part_0] = {1, 2, 4, 3, 5, 6};
 
     // Convenient array
-    int*          n_elmts  = (int         * ) malloc( n_part * sizeof(int          ));
-    PDM_g_num_t** ln_to_gn = (PDM_g_num_t **) malloc( n_part * sizeof(PDM_g_num_t *));
+    int*          n_elmts;
+    PDM_malloc(n_elmts, n_part, int);
+    PDM_g_num_t** ln_to_gn;
+    PDM_malloc(ln_to_gn, n_part, PDM_g_num_t *);
     ln_to_gn[0] = ln_to_gn_p0;
     n_elmts[0]  = n_elmts_part_0;
 
@@ -32,9 +35,10 @@ MPI_TEST_CASE("[pdm_block_to_part] - 1p - block_to_part",1) {
                                                         pdm_comm);
 
     // Allocate the partition array
-    PDM_g_num_t** parray = (PDM_g_num_t **) malloc( n_part * sizeof(PDM_g_num_t *));
+    PDM_g_num_t** parray;
+    PDM_malloc(parray, n_part, PDM_g_num_t *);
     for(int i_part = 0; i_part < n_part; i_part++){
-      parray[i_part] = (PDM_g_num_t *) malloc( n_elmts[i_part] * sizeof(PDM_g_num_t));
+      PDM_malloc(parray[i_part], n_elmts[i_part], PDM_g_num_t);
     }
 
     // Exchange
@@ -53,11 +57,11 @@ MPI_TEST_CASE("[pdm_block_to_part] - 1p - block_to_part",1) {
 
     // Free
     for(int i_part = 0; i_part < n_part; i_part++){
-      free(parray[i_part]);
+      PDM_free(parray[i_part]);
     }
-    free(parray);
-    free(ln_to_gn);
-    free(n_elmts);
+    PDM_free(parray);
+    PDM_free(ln_to_gn);
+    PDM_free(n_elmts);
     PDM_block_to_part_free(btp);
 
   }
@@ -71,8 +75,10 @@ MPI_TEST_CASE("[pdm_block_to_part] - 1p - block_to_part",1) {
     PDM_g_num_t ln_to_gn_p1[n_elmts_part_1] = {3, 5, 6};
 
     // Convenient array
-    int*          n_elmts  = (int         * ) malloc( n_part * sizeof(int          ));
-    PDM_g_num_t** ln_to_gn = (PDM_g_num_t **) malloc( n_part * sizeof(PDM_g_num_t *));
+    int*          n_elmts;
+    PDM_malloc(n_elmts, n_part, int);
+    PDM_g_num_t** ln_to_gn;
+    PDM_malloc(ln_to_gn, n_part, PDM_g_num_t *);
     ln_to_gn[0] = ln_to_gn_p0;
     ln_to_gn[1] = ln_to_gn_p1;
     n_elmts[0]  = n_elmts_part_0;
@@ -86,9 +92,10 @@ MPI_TEST_CASE("[pdm_block_to_part] - 1p - block_to_part",1) {
                                                         pdm_comm);
 
     // Allocate the partition array
-    PDM_g_num_t** parray = (PDM_g_num_t **) malloc( n_part * sizeof(PDM_g_num_t *));
+    PDM_g_num_t** parray;
+    PDM_malloc(parray, n_part, PDM_g_num_t *);
     for(int i_part = 0; i_part < n_part; i_part++){
-      parray[i_part] = (PDM_g_num_t *) malloc( n_elmts[i_part] * sizeof(PDM_g_num_t));
+      PDM_malloc(parray[i_part], n_elmts[i_part], PDM_g_num_t);
     }
 
     // Exchange
@@ -108,11 +115,11 @@ MPI_TEST_CASE("[pdm_block_to_part] - 1p - block_to_part",1) {
 
     // Free
     for(int i_part = 0; i_part < n_part; i_part++){
-      free(parray[i_part]);
+      PDM_free(parray[i_part]);
     }
-    free(parray);
-    free(ln_to_gn);
-    free(n_elmts);
+    PDM_free(parray);
+    PDM_free(ln_to_gn);
+    PDM_free(n_elmts);
     PDM_block_to_part_free(btp);
   }
 
@@ -137,8 +144,10 @@ MPI_TEST_CASE("[pdm_block_to_part] - 2p - block_to_part",2) {
   PDM_g_num_t ln_to_gn_p1[n_elmts_part_1] = {3, 5, 6};
 
   // Convenient array
-  int*          n_elmts  = (int         * ) malloc( n_part * sizeof(int          ));
-  PDM_g_num_t** ln_to_gn = (PDM_g_num_t **) malloc( n_part * sizeof(PDM_g_num_t *));
+  int*          n_elmts;
+  PDM_malloc(n_elmts, n_part, int);
+  PDM_g_num_t** ln_to_gn;
+  PDM_malloc(ln_to_gn, n_part, PDM_g_num_t *);
   PDM_g_num_t* darray = NULL;
   if(test_rank == 0){
     n_elmts [0] = n_elmts_part_0;
@@ -158,9 +167,10 @@ MPI_TEST_CASE("[pdm_block_to_part] - 2p - block_to_part",2) {
                                                       pdm_comm);
 
   // Allocate the partition array
-  PDM_g_num_t** parray = (PDM_g_num_t **) malloc( n_part * sizeof(PDM_g_num_t *));
+  PDM_g_num_t** parray;
+  PDM_malloc(parray, n_part, PDM_g_num_t *);
   for(int i_part = 0; i_part < n_part; i_part++){
-    parray[i_part] = (PDM_g_num_t *) malloc( n_elmts[i_part] * sizeof(PDM_g_num_t));
+    PDM_malloc(parray[i_part], n_elmts[i_part], PDM_g_num_t);
   }
 
   // Exchange
@@ -180,11 +190,11 @@ MPI_TEST_CASE("[pdm_block_to_part] - 2p - block_to_part",2) {
 
   // Free
   for(int i_part = 0; i_part < n_part; i_part++){
-    free(parray[i_part]);
+    PDM_free(parray[i_part]);
   }
-  free(parray);
-  free(ln_to_gn);
-  free(n_elmts);
+  PDM_free(parray);
+  PDM_free(ln_to_gn);
+  PDM_free(n_elmts);
   PDM_block_to_part_free(btp);
 
 }

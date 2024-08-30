@@ -159,7 +159,7 @@ _export_vtk_2d
                            NULL);
 
 
-   PDM_free(face_vtx);
+    PDM_free(face_vtx);
   }
 }
 
@@ -174,29 +174,28 @@ _export_vtk_3d
 
   PDM_MPI_Comm_rank(extrp->comm, &i_rank);
 
-  int *pn_extract_cell;
-  PDM_malloc(pn_extract_cell,extrp->n_part_out ,int          );
-  int *pn_extract_face;
-  PDM_malloc(pn_extract_face,extrp->n_part_out ,int          );
-  int *pn_extract_vtx;
-  PDM_malloc(pn_extract_vtx,extrp->n_part_out ,int          );
-  int **pextract_cell_face;
-  PDM_malloc(pextract_cell_face,extrp->n_part_out ,int         *);
-  int **pextract_cell_face_idx;
-  PDM_malloc(pextract_cell_face_idx,extrp->n_part_out ,int         *);
-  int **pextract_face_vtx;
-  PDM_malloc(pextract_face_vtx,extrp->n_part_out ,int         *);
-  int **pextract_face_vtx_idx;
-  PDM_malloc(pextract_face_vtx_idx,extrp->n_part_out ,int         *);
-  double **pextract_vtx;
-  PDM_malloc(pextract_vtx,extrp->n_part_out ,double      *);
-  PDM_g_num_t **pextract_cell_ln_to_gn;
-  PDM_malloc(pextract_cell_ln_to_gn,extrp->n_part_out ,PDM_g_num_t *);
-  PDM_g_num_t **pextract_face_ln_to_gn;
-  PDM_malloc(pextract_face_ln_to_gn,extrp->n_part_out ,PDM_g_num_t *);
-  PDM_g_num_t **pextract_vtx_ln_to_gn;
-  PDM_malloc(pextract_vtx_ln_to_gn,extrp->n_part_out ,PDM_g_num_t *);
-
+  int          *pn_extract_cell        = NULL;
+  int          *pn_extract_face        = NULL;
+  int          *pn_extract_vtx         = NULL;
+  int         **pextract_cell_face     = NULL;
+  int         **pextract_cell_face_idx = NULL;
+  int         **pextract_face_vtx      = NULL;
+  int         **pextract_face_vtx_idx  = NULL;
+  double      **pextract_vtx           = NULL;
+  PDM_g_num_t **pextract_cell_ln_to_gn = NULL;
+  PDM_g_num_t **pextract_face_ln_to_gn = NULL;
+  PDM_g_num_t **pextract_vtx_ln_to_gn  = NULL;
+  PDM_malloc(pn_extract_cell       , extrp->n_part_out, int          );
+  PDM_malloc(pn_extract_face       , extrp->n_part_out, int          );
+  PDM_malloc(pn_extract_vtx        , extrp->n_part_out, int          );
+  PDM_malloc(pextract_cell_face    , extrp->n_part_out, int         *);
+  PDM_malloc(pextract_cell_face_idx, extrp->n_part_out, int         *);
+  PDM_malloc(pextract_face_vtx     , extrp->n_part_out, int         *);
+  PDM_malloc(pextract_face_vtx_idx , extrp->n_part_out, int         *);
+  PDM_malloc(pextract_vtx          , extrp->n_part_out, double      *);
+  PDM_malloc(pextract_cell_ln_to_gn, extrp->n_part_out, PDM_g_num_t *);
+  PDM_malloc(pextract_face_ln_to_gn, extrp->n_part_out, PDM_g_num_t *);
+  PDM_malloc(pextract_vtx_ln_to_gn , extrp->n_part_out, PDM_g_num_t *);
 
   for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
 
@@ -248,7 +247,7 @@ _export_vtk_3d
                                         PDM_OWNERSHIP_KEEP);
       PDM_compute_face_vtx_from_face_and_edge(pn_extract_face[i_part], face_edge_idx, face_edge, edge_vtx, &pextract_face_vtx[i_part]);
 
-      PDM_malloc(pextract_face_vtx_idx[i_part],(pn_extract_face[i_part]+1) ,int);
+      PDM_malloc(pextract_face_vtx_idx[i_part], pn_extract_face[i_part]+1, int);
       for(int i = 0; i < pn_extract_face[i_part]+1; ++i) {
         pextract_face_vtx_idx[i_part][i] = face_edge_idx[i];
       }
@@ -293,8 +292,8 @@ _export_vtk_3d
                            NULL);
 
     if (owner == PDM_OWNERSHIP_KEEP) {
-     PDM_free(pextract_face_vtx    [i_part]);
-     PDM_free(pextract_face_vtx_idx[i_part]);
+      PDM_free(pextract_face_vtx    [i_part]);
+      PDM_free(pextract_face_vtx_idx[i_part]);
     }
 
   }
@@ -316,17 +315,17 @@ _export_vtk_3d
 
 
 
- PDM_free(pn_extract_cell       );
- PDM_free(pn_extract_face       );
- PDM_free(pn_extract_vtx        );
- PDM_free(pextract_cell_face    );
- PDM_free(pextract_cell_face_idx);
- PDM_free(pextract_face_vtx     );
- PDM_free(pextract_face_vtx_idx );
- PDM_free(pextract_vtx          );
- PDM_free(pextract_cell_ln_to_gn);
- PDM_free(pextract_face_ln_to_gn);
- PDM_free(pextract_vtx_ln_to_gn );
+  PDM_free(pn_extract_cell       );
+  PDM_free(pn_extract_face       );
+  PDM_free(pn_extract_vtx        );
+  PDM_free(pextract_cell_face    );
+  PDM_free(pextract_cell_face_idx);
+  PDM_free(pextract_face_vtx     );
+  PDM_free(pextract_face_vtx_idx );
+  PDM_free(pextract_vtx          );
+  PDM_free(pextract_cell_ln_to_gn);
+  PDM_free(pextract_face_ln_to_gn);
+  PDM_free(pextract_vtx_ln_to_gn );
 }
 
 static
@@ -515,7 +514,7 @@ _compute_mesh_nodal_extents
   int *sections_id = PDM_part_mesh_nodal_sections_id_in_geom_kind_get(mesh_nodal, geom_kind);
 
   double **extents;
-  PDM_malloc(extents,n_part ,double *);
+  PDM_malloc(extents, n_part, double *);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
 
@@ -536,10 +535,10 @@ _compute_mesh_nodal_extents
       max_n_elt = PDM_MAX(max_n_elt, n_elt);
     }
 
-    double *_extents;
-    PDM_malloc(_extents,max_n_elt * 6,double);
+    double *_extents = NULL;
+    PDM_malloc(_extents, max_n_elt * 6, double);
 
-    PDM_malloc(extents[i_part],part_n_elt * 6,double);
+    PDM_malloc(extents[i_part], part_n_elt * 6, double);
 
     int idx = 0;
     for (int isection = 0; isection < n_section; isection++) {
@@ -576,7 +575,7 @@ _compute_mesh_nodal_extents
         memcpy(extents[i_part] + 6*idx, _extents + 6*i, sizeof(double)*6);
       }
     }
-   PDM_free(_extents);
+    PDM_free(_extents);
 
     for (int i = 0; i < part_n_elt; i++) {
       for (int k = 0; k < 3; k++) {
@@ -604,7 +603,7 @@ _compute_part_mesh_extents
 {
   int n_part = mesh->n_part;
   double **extents;
-  PDM_malloc(extents,n_part ,double *);
+  PDM_malloc(extents, n_part, double *);
   if(dim_mesh == 3) {
     for(int i_part = 0; i_part < n_part; ++i_part) {
 
@@ -623,7 +622,7 @@ _compute_part_mesh_extents
 
       int *_face_vtx     = face_vtx;
       int *_face_vtx_idx = face_vtx_idx;
-      PDM_malloc(extents[i_part],6 * n_cell ,double);
+      PDM_malloc(extents[i_part], 6 * n_cell, double);
       if (face_vtx == NULL) {
         int    *face_edge_idx  = NULL;
         int    *face_edge      = NULL;
@@ -659,7 +658,7 @@ _compute_part_mesh_extents
                           extents[i_part],
                           global_extents);
       if (face_vtx == NULL) {
-       PDM_free(_face_vtx);
+        PDM_free(_face_vtx);
       }
     }
   } else if(dim_mesh == 2) {
@@ -680,7 +679,7 @@ _compute_part_mesh_extents
 
 
       PDM_part_mesh_vtx_coord_get(mesh, i_part, &vtx_coord, PDM_OWNERSHIP_BAD_VALUE); // Il faudrait un unchanged
-      PDM_malloc(extents[i_part],6 * n_face ,double);
+      PDM_malloc(extents[i_part], 6 * n_face, double);
 
       if(face_vtx != NULL) {
         _compute_extents_2d_from_face_vtx(n_face,
@@ -697,7 +696,7 @@ _compute_part_mesh_extents
         assert(edge_vtx_idx == NULL);
         int n_edge = PDM_part_mesh_n_entity_get(mesh, i_part, PDM_MESH_ENTITY_EDGE);
 
-        PDM_malloc(edge_vtx_idx,(n_edge+1) ,int);
+        PDM_malloc(edge_vtx_idx, n_edge+1, int);
         for(int i_edge = 0; i_edge < n_edge+1; ++i_edge){
           edge_vtx_idx[i_edge] = 2 * i_edge;
         }
@@ -710,7 +709,7 @@ _compute_part_mesh_extents
                             tolerance,
                             extents[i_part],
                             global_extents);
-       PDM_free(edge_vtx_idx);
+        PDM_free(edge_vtx_idx);
       }
     }
 
@@ -721,12 +720,12 @@ _compute_part_mesh_extents
     for(int i_part = 0; i_part < n_part; ++i_part) {
       int n_edge = PDM_part_mesh_n_entity_get(mesh, i_part, PDM_MESH_ENTITY_EDGE);
 
-      PDM_malloc(extents[i_part],6 * n_edge ,double);
+      PDM_malloc(extents[i_part], 6 * n_edge, double);
       PDM_part_mesh_vtx_coord_get(mesh, i_part, &vtx_coord, PDM_OWNERSHIP_BAD_VALUE); // Il faudrait un unchanged
 
       PDM_part_mesh_connectivity_get(mesh, i_part, PDM_CONNECTIVITY_TYPE_EDGE_VTX  , &edge_vtx, &edge_vtx_idx, PDM_OWNERSHIP_BAD_VALUE);
       assert(edge_vtx_idx == NULL);
-      PDM_malloc(edge_vtx_idx,(n_edge+1) ,int);
+      PDM_malloc(edge_vtx_idx, n_edge+1, int);
       for(int i_edge = 0; i_edge < n_edge+1; ++i_edge){
         edge_vtx_idx[i_edge] = 2 * i_edge;
       }
@@ -739,7 +738,7 @@ _compute_part_mesh_extents
                                         extents[i_part],
                                         global_extents);
 
-     PDM_free(edge_vtx_idx);
+      PDM_free(edge_vtx_idx);
     }
   }
   *extents_out = extents;
@@ -763,14 +762,14 @@ _select_elements_by_global_bbox
   int i_rank;
   PDM_MPI_Comm_rank(mesh->comm, &i_rank);
 
-  int *n_extract_elmt;
-  PDM_malloc(n_extract_elmt,n_part ,int         );
-  double **extract_box_extents;
-  PDM_malloc(extract_box_extents,n_part ,double      *);
-  int **extract_elmt_init_location;
-  PDM_malloc(extract_elmt_init_location,n_part ,int         *);
-  PDM_g_num_t **extract_elmt_ln_to_gn;
-  PDM_malloc(extract_elmt_ln_to_gn,n_part ,PDM_g_num_t *);
+  int          *n_extract_elmt             = NULL;
+  double      **extract_box_extents        = NULL;
+  int         **extract_elmt_init_location = NULL;
+  PDM_g_num_t **extract_elmt_ln_to_gn      = NULL;
+  PDM_malloc(n_extract_elmt            , n_part, int          );
+  PDM_malloc(extract_box_extents       , n_part, double      *);
+  PDM_malloc(extract_elmt_init_location, n_part, int         *);
+  PDM_malloc(extract_elmt_ln_to_gn     , n_part, PDM_g_num_t *);
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
 
@@ -795,9 +794,9 @@ _select_elements_by_global_bbox
     //                     NULL);
 
     n_extract_elmt[i_part] = 0;
-    extract_box_extents       PDM_malloc([i_part],6 * n_entity ,double     );
-    PDM_malloc(extract_elmt_init_location[i_part],3 * n_entity ,int        );
-    extract_elmt_ln_to_gn     PDM_malloc([i_part],    n_entity ,PDM_g_num_t);
+    PDM_malloc(extract_box_extents       [i_part], 6 * n_entity, double     );
+    PDM_malloc(extract_elmt_init_location[i_part], 3 * n_entity, int        );
+    PDM_malloc(extract_elmt_ln_to_gn     [i_part],     n_entity, PDM_g_num_t);
 
     double *_box_extents = box_extents[i_part];
 
@@ -828,9 +827,9 @@ _select_elements_by_global_bbox
         n_extract_elmt[i_part]++;
       }
     }
-    PDM_realloc(extract_box_extents       [i_part] ,extract_box_extents       [i_part] , 6 * n_entity ,double     );
-    PDM_realloc(extract_elmt_init_location[i_part] ,extract_elmt_init_location[i_part] , 3 * n_entity ,int        );
-    PDM_realloc(extract_elmt_ln_to_gn     [i_part] ,extract_elmt_ln_to_gn     [i_part] ,     n_entity ,PDM_g_num_t);
+    PDM_realloc(extract_box_extents       [i_part], extract_box_extents       [i_part], 6 * n_entity, double     );
+    PDM_realloc(extract_elmt_init_location[i_part], extract_elmt_init_location[i_part], 3 * n_entity, int        );
+    PDM_realloc(extract_elmt_ln_to_gn     [i_part], extract_elmt_ln_to_gn     [i_part],     n_entity, PDM_g_num_t);
 
   }
 
@@ -883,14 +882,14 @@ _select_elements_by_global_bbox_nodal
 
   int *sections_id = PDM_part_mesh_nodal_sections_id_in_geom_kind_get(mesh_nodal, geom_kind);
 
-  int *n_extract_elmt;
-  PDM_malloc(n_extract_elmt,n_part ,int         );
-  double **extract_box_extents;
-  PDM_malloc(extract_box_extents,n_part ,double      *);
-  int **extract_elmt_init_location;
-  PDM_malloc(extract_elmt_init_location,n_part ,int         *);
-  PDM_g_num_t **extract_elmt_ln_to_gn;
-  PDM_malloc(extract_elmt_ln_to_gn,n_part ,PDM_g_num_t *);
+  int          *n_extract_elmt             = NULL;
+  double      **extract_box_extents        = NULL;
+  int         **extract_elmt_init_location = NULL;
+  PDM_g_num_t **extract_elmt_ln_to_gn      = NULL;
+  PDM_malloc(n_extract_elmt            , n_part, int          );
+  PDM_malloc(extract_box_extents       , n_part, double      *);
+  PDM_malloc(extract_elmt_init_location, n_part, int         *);
+  PDM_malloc(extract_elmt_ln_to_gn     , n_part, PDM_g_num_t *);
 
 
   for (int i_part = 0; i_part < n_part; i_part++) {
@@ -911,9 +910,9 @@ _select_elements_by_global_bbox_nodal
     }
 
     n_extract_elmt[i_part] = 0;
-    extract_box_extents       PDM_malloc([i_part],6 * n_entity ,double     );
-    PDM_malloc(extract_elmt_init_location[i_part],3 * n_entity ,int        );
-    extract_elmt_ln_to_gn     PDM_malloc([i_part],    n_entity ,PDM_g_num_t);
+    PDM_malloc(extract_box_extents       [i_part], 6 * n_entity, double     );
+    PDM_malloc(extract_elmt_init_location[i_part], 3 * n_entity, int        );
+    PDM_malloc(extract_elmt_ln_to_gn     [i_part],     n_entity, PDM_g_num_t);
 
     double *_box_extents = box_extents[i_part];
 
@@ -1019,10 +1018,8 @@ _redistrib_boxes
    *   - Ponderate work
    *   - Extract only cell with job
    */
-  double *weight;
-  PDM_malloc(weight, n_elt_mesh_a ,double);
-  // PDM_g_num_t *extract_mesh_a_g_num;
- // PDM_malloc(extract_mesh_a_g_num, n_elt_mesh_a ,PDM_g_num_t);
+  double *weight = NULL;
+  PDM_malloc(weight, n_elt_mesh_a, double);
   for (int i = 0; i < n_elt_mesh_a; i++) {
     weight[i] = box_a_to_box_b_idx[i+1] - box_a_to_box_b_idx[i];
   }
@@ -1038,12 +1035,12 @@ _redistrib_boxes
                                                               comm);
 
   int n_elt_block_a = PDM_part_to_block_n_elt_block_get (ptb_boxes_a);
- PDM_free(weight);
+  PDM_free(weight);
 
   PDM_g_num_t *block_gnum_a = PDM_part_to_block_block_gnum_get (ptb_boxes_a);
 
   int *part_stride_a;
-  PDM_malloc(part_stride_a,n_elt_mesh_a,int);
+  PDM_malloc(part_stride_a, n_elt_mesh_a, int);
 
   for (int i = 0; i < n_elt_mesh_a; i++) {
     part_stride_a[i] = box_a_to_box_b_idx[i+1] - box_a_to_box_b_idx[i];
@@ -1070,7 +1067,7 @@ _redistrib_boxes
                (void **) &box_a_to_box_b_g_num,
                          &block_a_boxes_b_stride,
                (void **) &block_a_boxes_b_gnum_data);
- PDM_free(box_a_to_box_b_g_num);
+  PDM_free(box_a_to_box_b_g_num);
 
 
   // if (1) {
@@ -1159,10 +1156,10 @@ _redistrib_boxes
                                                         comm);
 
 
-  int *count_elts_a;
-  PDM_malloc(count_elts_a,n_rank,int);
-  int *count_elts_b;
-  PDM_malloc(count_elts_b,n_rank,int);
+  int *count_elts_a = NULL;
+  int *count_elts_b = NULL;
+  PDM_malloc(count_elts_a, n_rank, int);
+  PDM_malloc(count_elts_b, n_rank, int);
 
   for (int i = 0; i < n_rank + 1; i++) {
     distrib_a->index[i] = 0;
@@ -1188,8 +1185,8 @@ _redistrib_boxes
     distrib_b->index[i+1] += distrib_b->index[i];
   }
 
-  PDM_malloc(distrib_a->list,distrib_a->index[n_rank],int);
-  PDM_malloc(distrib_b->list,distrib_b->index[n_rank],int);
+  PDM_malloc(distrib_a->list, distrib_a->index[n_rank], int);
+  PDM_malloc(distrib_b->list, distrib_b->index[n_rank], int);
 
   for (int i = 0; i < n_elt_mesh_a; i++) {
     if(part_stride_a[i] > 0 ) { // To see with Eric and Bastien --> I use it to extract only the intersect part
@@ -1206,9 +1203,9 @@ _redistrib_boxes
   }
 
 
- PDM_free(part_stride_a);
- PDM_free(count_elts_a);
- PDM_free(count_elts_b);
+  PDM_free(part_stride_a);
+  PDM_free(count_elts_a);
+  PDM_free(count_elts_b);
 
   PDM_box_distrib_clean (distrib_a);
   PDM_box_distrib_clean (distrib_b);
@@ -1249,8 +1246,8 @@ _redistrib_boxes
                          block_a_boxes_b_gnum_data,
                          &tmp_redistribute_box_a_to_box_b_n,
            (void ***)    &tmp_redistribute_box_a_to_box_b_g_num);
- PDM_free(block_a_boxes_b_stride);
- PDM_free(block_a_boxes_b_gnum_data);
+  PDM_free(block_a_boxes_b_stride);
+  PDM_free(block_a_boxes_b_gnum_data);
 
   // if (1) {
   //   int idx = 0;
@@ -1268,18 +1265,18 @@ _redistrib_boxes
 
   int         *redistribute_box_a_to_box_b_n     = tmp_redistribute_box_a_to_box_b_n    [0];
   PDM_g_num_t *redistribute_box_a_to_box_b_g_num = tmp_redistribute_box_a_to_box_b_g_num[0];
- PDM_free(tmp_redistribute_box_a_to_box_b_n    );
- PDM_free(tmp_redistribute_box_a_to_box_b_g_num);
+  PDM_free(tmp_redistribute_box_a_to_box_b_n    );
+  PDM_free(tmp_redistribute_box_a_to_box_b_g_num);
 
 
   /*
    * Translate in frame of B
    */
 
-  int *order;
-  PDM_malloc(order,n_elt_mesh_b ,int        );
-  PDM_g_num_t *gnum_elt_mesh_b_cp;
-  PDM_malloc(gnum_elt_mesh_b_cp,n_elt_mesh_b ,PDM_g_num_t);
+  int         *order              = NULL;
+  PDM_g_num_t *gnum_elt_mesh_b_cp = NULL;
+  PDM_malloc(order             , n_elt_mesh_b, int        );
+  PDM_malloc(gnum_elt_mesh_b_cp, n_elt_mesh_b, PDM_g_num_t);
   for(int i = 0; i < n_elt_mesh_b; ++i ) {
     order             [i] = i;
     gnum_elt_mesh_b_cp[i] = gnum_elt_mesh_b[i];
@@ -1288,8 +1285,8 @@ _redistrib_boxes
   PDM_sort_long(gnum_elt_mesh_b_cp, order, n_elt_mesh_b);
 
 
-  int *_redistribute_box_a_to_box_b_idx;
-  PDM_malloc(_redistribute_box_a_to_box_b_idx,(n_elt_mesh_a+1) ,int);
+  int *_redistribute_box_a_to_box_b_idx = NULL;
+  PDM_malloc(_redistribute_box_a_to_box_b_idx, n_elt_mesh_a+1, int);
   _redistribute_box_a_to_box_b_idx[0] = 0;
   int n_tot_connect = 0;
   for(int i = 0; i < n_elt_mesh_a; ++i) {
@@ -1297,8 +1294,8 @@ _redistrib_boxes
     _redistribute_box_a_to_box_b_idx[i+1] = _redistribute_box_a_to_box_b_idx[i] + redistribute_box_a_to_box_b_n[i];
   }
 
-  int *_redistribute_box_a_to_box_b;
-  PDM_malloc(_redistribute_box_a_to_box_b, n_tot_connect ,int);
+  int *_redistribute_box_a_to_box_b = NULL;
+  PDM_malloc(_redistribute_box_a_to_box_b, n_tot_connect, int);
 
   for(int i = 0; i < n_tot_connect; ++i) {
     int pos = PDM_binary_search_long(redistribute_box_a_to_box_b_g_num[i], gnum_elt_mesh_b_cp, n_elt_mesh_b);
@@ -1308,10 +1305,10 @@ _redistrib_boxes
   *redistribute_box_a_to_box_b_idx = _redistribute_box_a_to_box_b_idx;
   *redistribute_box_a_to_box_b     = _redistribute_box_a_to_box_b;
 
- PDM_free(order);
- PDM_free(gnum_elt_mesh_b_cp);
- PDM_free(redistribute_box_a_to_box_b_n    );
- PDM_free(redistribute_box_a_to_box_b_g_num);
+  PDM_free(order);
+  PDM_free(gnum_elt_mesh_b_cp);
+  PDM_free(redistribute_box_a_to_box_b_n    );
+  PDM_free(redistribute_box_a_to_box_b_g_num);
 }
 
 
@@ -1340,7 +1337,7 @@ _create_extract_part
 
   PDM_g_num_t *target_g_num = gnum_elt_mesh;
   if (intersect_kind == PDM_MESH_INTERSECTION_KIND_PREPROCESS) { 
-    PDM_malloc(target_g_num,n_elt_mesh,PDM_g_num_t);
+    PDM_malloc(target_g_num, n_elt_mesh, PDM_g_num_t);
     memcpy(target_g_num, gnum_elt_mesh, sizeof(PDM_g_num_t) * n_elt_mesh);
     PDM_extract_part_target_gnum_keep_ownnership(extrp_mesh);
   }
@@ -1491,7 +1488,7 @@ _create_extract_part_nodal
 
   PDM_g_num_t *target_g_num = gnum_elt_mesh;
   if (mi->intersect_kind == PDM_MESH_INTERSECTION_KIND_PREPROCESS) { 
-    PDM_malloc(target_g_num,n_elt_mesh,PDM_g_num_t);
+    PDM_malloc(target_g_num, n_elt_mesh, PDM_g_num_t);
     memcpy(target_g_num, gnum_elt_mesh, sizeof(PDM_g_num_t) * n_elt_mesh);
     PDM_extract_part_target_gnum_keep_ownnership(extrp_mesh);
   }
@@ -1747,19 +1744,6 @@ _export_ensight3d
 
   PDM_writer_step_beg(wrt, 0.);
 
-  // int *cell_face_n;
- // PDM_malloc(cell_face_n,n_cell,int);
-  // for (int i = 0; i < n_cell; i++) {
-  //   cell_face_n[i] = cell_face_idx[i+1] - cell_face_idx[i];
-  // }
-
-  // int *face_vtx_n;
- // PDM_malloc(face_vtx_n,n_face,int);
-  // for (int i = 0; i < n_face; i++) {
-  //   face_vtx_n[i] = face_vtx_idx[i+1] - face_vtx_idx[i];
-  // }
-
-
   PDM_writer_geom_coord_set(wrt,
                             id_geom,
                             0,
@@ -1785,16 +1769,16 @@ _export_ensight3d
                         id_geom);
 
   PDM_real_t *val_rank;
-  PDM_malloc(val_rank,n_cell,PDM_real_t);
   PDM_real_t *val_gnum;
-  PDM_malloc(val_gnum,n_cell,PDM_real_t);
   PDM_real_t *val_vol;
-  PDM_malloc(val_vol,n_cell,PDM_real_t);
+  PDM_malloc(val_rank, n_cell, PDM_real_t);
+  PDM_malloc(val_gnum, n_cell, PDM_real_t);
+  PDM_malloc(val_vol , n_cell, PDM_real_t);
 
-  double *volume;
-  PDM_malloc(volume,n_cell,double);
-  double *center;
-  PDM_malloc(center,n_cell * 3,double);
+  double *volume = NULL;
+  double *center = NULL;
+  PDM_malloc(volume,     n_cell, double);
+  PDM_malloc(center, 3 * n_cell, double);
   PDM_geom_elem_polyhedra_properties_triangulated(1,
                                                   n_cell,
                                                   n_face,
@@ -1814,8 +1798,8 @@ _export_ensight3d
     val_gnum[i] = (PDM_real_t) cell_ln_to_gn[i];
     val_vol [i] = (PDM_real_t) volume[i];
   }
- PDM_free(volume);
- PDM_free(center);
+  PDM_free(volume);
+  PDM_free(center);
 
   PDM_writer_var_set(wrt,
                      id_var_rank,
@@ -1855,9 +1839,9 @@ _export_ensight3d
 
   PDM_writer_free(wrt);
 
- PDM_free(val_rank);
- PDM_free(val_gnum);
- PDM_free(val_vol );
+  PDM_free(val_rank);
+  PDM_free(val_gnum);
+  PDM_free(val_vol );
   //PDM_free(cell_face_n);
   //PDM_free(face_vtx_n);
 
@@ -1930,16 +1914,16 @@ _build_ptp
   int idx_write = 0;
   int s_elt_a_elt_b_init_loc = elt_a_elt_b_idx[n_elt_a] * 2;
   int idx_write_init_loc = 0;
-  int *elt_a_elt_b_n;
-  PDM_malloc(elt_a_elt_b_n,n_elt_a,int        );
-  PDM_g_num_t *elt_a_elt_b_g_num;
-  PDM_malloc(elt_a_elt_b_g_num,elt_a_elt_b_idx[n_elt_a],PDM_g_num_t);
-  int *elt_a_elt_b_init_loc_n;
-  PDM_malloc(elt_a_elt_b_init_loc_n,elt_a_elt_b_idx[n_elt_a],int        );
-  int *elt_a_elt_b_init_loc;
-  PDM_malloc(elt_a_elt_b_init_loc,s_elt_a_elt_b_init_loc * 3,int);
-  int *elt_a_elt_b_init_loc_stride;
-  PDM_malloc(elt_a_elt_b_init_loc_stride,n_elt_a,int);
+  int         *elt_a_elt_b_n               = NULL;
+  PDM_g_num_t *elt_a_elt_b_g_num           = NULL;
+  int         *elt_a_elt_b_init_loc_n      = NULL;
+  int         *elt_a_elt_b_init_loc        = NULL;
+  int         *elt_a_elt_b_init_loc_stride = NULL;
+  PDM_malloc(elt_a_elt_b_n              ,     n_elt_a                 , int        );
+  PDM_malloc(elt_a_elt_b_g_num          ,     elt_a_elt_b_idx[n_elt_a], PDM_g_num_t);
+  PDM_malloc(elt_a_elt_b_init_loc_n     ,     elt_a_elt_b_idx[n_elt_a], int        );
+  PDM_malloc(elt_a_elt_b_init_loc       , 3 * s_elt_a_elt_b_init_loc  , int        );
+  PDM_malloc(elt_a_elt_b_init_loc_stride,     n_elt_a                 , int        );
 
   for (int elt_a_id = 0; elt_a_id < n_elt_a; elt_a_id++) {
     int n = elt_a_elt_b_idx[elt_a_id+1] - idx_read;
@@ -1974,20 +1958,13 @@ _build_ptp
     idx_read += n;
   }
   if (idx_write < idx_read) {
-//      PDM_realloc(// elt_a_elt_b        ,// elt_a_elt_b        , idx_write,int   );
-    PDM_realloc(elt_a_elt_b_g_num      ,elt_a_elt_b_g_num      , idx_write,PDM_g_num_t);
-//    PDM_realloc(// elt_a_elt_b_volume     ,// elt_a_elt_b_volume     , idx_write,double     );
-    PDM_realloc(elt_a_elt_b_init_loc_n ,elt_a_elt_b_init_loc_n , idx_write,int        );
-    PDM_realloc(elt_a_elt_b_init_loc   ,elt_a_elt_b_init_loc   , idx_write_init_loc * 3,int        );
+    PDM_realloc(elt_a_elt_b_g_num     , elt_a_elt_b_g_num     ,     idx_write         , PDM_g_num_t);
+    PDM_realloc(elt_a_elt_b_init_loc_n, elt_a_elt_b_init_loc_n,     idx_write         , int        );
+    PDM_realloc(elt_a_elt_b_init_loc  , elt_a_elt_b_init_loc  , 3 * idx_write_init_loc, int        );
   }
   //PDM_free(elt_b_init_loc);
- PDM_free(elt_b_init_loc_n);
- PDM_free(elt_b_init_loc_idx);
-
-
-  // dbg prints?
-
-
+  PDM_free(elt_b_init_loc_n);
+  PDM_free(elt_b_init_loc_idx);
 
   /* Exchange from extracted A to user A */
   PDM_part_to_part_t *ptp_a = NULL;
@@ -2013,7 +1990,7 @@ _build_ptp
                          &request_g_num);
 
   PDM_part_to_part_iexch_wait(ptp_a, request_g_num);
- PDM_free(elt_a_elt_b_g_num);
+  PDM_free(elt_a_elt_b_g_num);
 
 
   mi->elt_a_elt_b_volume = NULL;
@@ -2063,10 +2040,10 @@ _build_ptp
   PDM_part_to_part_iexch_wait(ptp_a, request_volume);
   PDM_part_to_part_iexch_wait(ptp_a, request_init_loc_n);
   PDM_part_to_part_iexch_wait(ptp_a, request_init_loc);
- PDM_free(elt_a_elt_b_init_loc_stride);
- PDM_free(elt_a_elt_b_init_loc);
- PDM_free(elt_a_elt_b_init_loc_n);
- PDM_free(elt_a_elt_b_n);
+  PDM_free(elt_a_elt_b_init_loc_stride);
+  PDM_free(elt_a_elt_b_init_loc);
+  PDM_free(elt_a_elt_b_init_loc_n);
+  PDM_free(elt_a_elt_b_n);
 
 
   int  *n_ref_a = NULL;
@@ -2075,17 +2052,17 @@ _build_ptp
                                  &n_ref_a,
                                  &ref_a);
 
-  int *user_n_elt_a;
-  PDM_malloc(user_n_elt_a,mi->n_part_mesh[0],int          );
-  PDM_g_num_t **user_elt_ln_to_gn_a;
-  PDM_malloc(user_elt_ln_to_gn_a,mi->n_part_mesh[0],PDM_g_num_t *);
-  PDM_malloc(mi->elt_a_elt_b_idx,mi->n_part_mesh[0],int         *);
-  int **user_elt_a_b_init_loc_idx;
-  PDM_malloc(user_elt_a_b_init_loc_idx,mi->n_part_mesh[0],int         *);// size = user_a_b_idx[user_n_elt_a]+1
+  int          *user_n_elt_a              = NULL;
+  PDM_g_num_t **user_elt_ln_to_gn_a       = NULL;
+  int         **user_elt_a_b_init_loc_idx = NULL;
+  PDM_malloc(user_n_elt_a             , mi->n_part_mesh[0], int          );
+  PDM_malloc(user_elt_ln_to_gn_a      , mi->n_part_mesh[0], PDM_g_num_t *);
+  PDM_malloc(mi->elt_a_elt_b_idx      , mi->n_part_mesh[0], int         *);
+  PDM_malloc(user_elt_a_b_init_loc_idx, mi->n_part_mesh[0], int         *);// size = user_a_b_idx[user_n_elt_a]+1
   // int **user_a_b_init_loc;
   // PDM_malloc(user_a_b_init_loc,mi->n_part_mesh[0]);// size = user_a_b_init_loc_idx[user_a_b_idx[user_n_elt_a]] (*3?,int         *)
   for (int ipart = 0; ipart < mi->n_part_mesh[0]; ipart++) {
-   PDM_free(user_elt_a_b_init_loc_stride[ipart]);
+    PDM_free(user_elt_a_b_init_loc_stride[ipart]);
     if (mi->mesh_nodal[0] == NULL && mi->mesh[0] != NULL) {
       user_n_elt_a[ipart] = PDM_part_mesh_n_entity_get(mi->mesh[0],
                                                        ipart,
@@ -2128,7 +2105,7 @@ _build_ptp
                                                                      ipart);
       }
 
-      PDM_malloc(user_elt_ln_to_gn_a[ipart],user_n_elt_a[ipart],PDM_g_num_t);
+      PDM_malloc(user_elt_ln_to_gn_a[ipart], user_n_elt_a[ipart], PDM_g_num_t);
       for (int isection = 0; isection < n_section; isection++) {
         int id_section_in_geom_kind = sections_id[isection];
         int id_section = PDM_part_mesh_nodal_section_id_from_geom_kind_get(mi->mesh_nodal[0],
@@ -2169,7 +2146,7 @@ _build_ptp
       int elt_a_id = ref_a[ipart][i] - 1;
       mi->elt_a_elt_b_idx[ipart][elt_a_id+1] = user_elt_a_b_n[ipart][i];
     }
-   PDM_free(user_elt_a_b_n[ipart]);
+    PDM_free(user_elt_a_b_n[ipart]);
 
     for (int i = 0; i < user_n_elt_a[ipart]; i++) {
       mi->elt_a_elt_b_idx[ipart][i+1] += mi->elt_a_elt_b_idx[ipart][i];
@@ -2177,7 +2154,7 @@ _build_ptp
 
     int n = mi->elt_a_elt_b_idx[ipart][user_n_elt_a[ipart]];
 
-    PDM_malloc(user_elt_a_b_init_loc_idx[ipart],(n + 1),int);
+    PDM_malloc(user_elt_a_b_init_loc_idx[ipart], n + 1, int);
     user_elt_a_b_init_loc_idx[ipart][0] = 0;
     int max_init_loc_n = 0;
     for (int i = 0; i < n; i++) {
@@ -2188,24 +2165,24 @@ _build_ptp
 
     /* Lexicographic sort on init loc triplets */
     int *order;
-    PDM_malloc(order,max_init_loc_n,int);
+    PDM_malloc(order, max_init_loc_n, int);
     for (int i = 0; i < n; i++) {
       PDM_order_lnum_s(user_elt_a_b_init_loc[ipart] + user_elt_a_b_init_loc_idx[ipart][i],
                        3,
                        order,
                        user_elt_a_b_init_loc_n[ipart][i]);
     }
-   PDM_free(order);
+    PDM_free(order);
 
-   PDM_free(user_elt_a_b_init_loc_n[ipart]);
+    PDM_free(user_elt_a_b_init_loc_n[ipart]);
   }
- PDM_free(user_elt_a_b_n);
- PDM_free(user_elt_a_b_init_loc_n);
- PDM_free(user_elt_a_b_init_loc_stride);
+  PDM_free(user_elt_a_b_n);
+  PDM_free(user_elt_a_b_init_loc_n);
+  PDM_free(user_elt_a_b_init_loc_stride);
 
 
   int *user_n_elt_b;
-  PDM_malloc(user_n_elt_b,mi->n_part_mesh[1],int);
+  PDM_malloc(user_n_elt_b, mi->n_part_mesh[1], int);
   for (int ipart = 0; ipart < mi->n_part_mesh[1]; ipart++) {
     if (mi->mesh_nodal[1] == NULL && mi->mesh[1] != NULL) {
       user_n_elt_b[ipart] = PDM_part_mesh_n_entity_get(mi->mesh[1],
@@ -2260,15 +2237,15 @@ _build_ptp
                                                       (const int         **) user_elt_a_b_init_loc,     // size = user_a_b_init_loc_idx[user_a_b_idx[user_n_elt_a]] (*3?)
                                                                              mi->comm);
   for (int ipart = 0; ipart < mi->n_part_mesh[0]; ipart++) {
-   PDM_free(user_elt_a_b_init_loc_idx[ipart]);
-   PDM_free(user_elt_a_b_init_loc    [ipart]);
+    PDM_free(user_elt_a_b_init_loc_idx[ipart]);
+    PDM_free(user_elt_a_b_init_loc    [ipart]);
     if (mi->mesh_nodal[0] != NULL) {
-     PDM_free(user_elt_ln_to_gn_a[ipart]);
+      PDM_free(user_elt_ln_to_gn_a[ipart]);
     }
   }
- PDM_free(user_elt_a_b_init_loc_idx);
- PDM_free(user_elt_a_b_init_loc    );
- PDM_free(user_elt_ln_to_gn_a);
+  PDM_free(user_elt_a_b_init_loc_idx);
+  PDM_free(user_elt_a_b_init_loc    );
+  PDM_free(user_elt_ln_to_gn_a);
 
   /* Reverse weights */
   if (1) {
@@ -2288,17 +2265,9 @@ _build_ptp
     PDM_part_to_part_iexch_wait(mi->ptp, request_volume);
   }
 
- PDM_free(user_n_elt_a);
- PDM_free(user_n_elt_b);
+  PDM_free(user_n_elt_a);
+  PDM_free(user_n_elt_b);
 }
-
-
-
-
-
-
-
-
 
 
 static void
@@ -2505,17 +2474,17 @@ _mesh_intersection_vol_vol
                                                          &parent_entity_g_num,
                                                          PDM_OWNERSHIP_KEEP);
             int *__face_vtx_idx;
-            PDM_malloc(__face_vtx_idx,(_cell_face_idx[n_elt] + 1),int);
+            PDM_malloc(__face_vtx_idx, _cell_face_idx[n_elt] + 1, int);
             __face_vtx_idx[0] = 0;
             for (int k = 0; k < _cell_face_idx[n_elt]; k++) {
               int face_id = PDM_ABS(_cell_face[k]) - 1;
               __face_vtx_idx[k+1] = __face_vtx_idx[k] + _face_vtx_idx[face_id+1] - _face_vtx_idx[face_id];
             }
 
-            PDM_g_num_t *__face_cell_ln_to_gn;
-            PDM_malloc(__face_cell_ln_to_gn,_cell_face_idx[n_elt],PDM_g_num_t);
-            int *__face_vtx;
-            PDM_malloc(__face_vtx,__face_vtx_idx[_cell_face_idx[n_elt]],int);
+            PDM_g_num_t *__face_cell_ln_to_gn = NULL;
+            int         *__face_vtx           = NULL;
+            PDM_malloc(__face_cell_ln_to_gn, _cell_face_idx[n_elt]                , PDM_g_num_t);
+            PDM_malloc(__face_vtx          , __face_vtx_idx[_cell_face_idx[n_elt]], int        );
             int idx = 0;
             for (int k = 0; k < n_elt; k++) {
               for (int iface = _cell_face_idx[k]; iface < _cell_face_idx[k+1]; iface++) {
@@ -2543,9 +2512,9 @@ _mesh_intersection_vol_vol
                                    __face_vtx,
                                    __face_cell_ln_to_gn,
                                    NULL);
-           PDM_free(__face_vtx);
-           PDM_free(__face_vtx_idx);
-           PDM_free(__face_cell_ln_to_gn);
+            PDM_free(__face_vtx);
+            PDM_free(__face_vtx_idx);
+            PDM_free(__face_cell_ln_to_gn);
 
           }
           else {
@@ -2690,8 +2659,8 @@ _mesh_intersection_vol_vol
   }
   s_triaA_vtxA = 3*(s_triaA_vtxA - 2);
 
-  int *faceB_triaB_idx;
-  PDM_malloc(faceB_triaB_idx,(n_face[1] + 1),int);
+  int *faceB_triaB_idx = NULL;
+  PDM_malloc(faceB_triaB_idx, n_face[1] + 1, int);
   faceB_triaB_idx[0] = 0;
   for (int i = 0; i < n_face[1]; i++) {
     int face_vtx_n = face_vtx_idx[1][i+1] - face_vtx_idx[1][i];
@@ -2703,10 +2672,10 @@ _mesh_intersection_vol_vol
   PDM_triangulate_state_t *tri_state = PDM_triangulate_state_create(max_face_vtx_n);
 
 
-  int *triaB_vtxB;
-  PDM_malloc(triaB_vtxB,faceB_triaB_idx[n_face[1]] * 3,int);
-  int *triaA_vtxA;
-  PDM_malloc(triaA_vtxA,s_triaA_vtxA,int);
+  int *triaB_vtxB = NULL;
+  int *triaA_vtxA = NULL;
+  PDM_malloc(triaB_vtxB, faceB_triaB_idx[n_face[1]] * 3, int);
+  PDM_malloc(triaA_vtxA, s_triaA_vtxA                  , int);
 
   for (int faceB_id = 0; faceB_id < n_face[1]; faceB_id++) {
 
@@ -2747,10 +2716,10 @@ _mesh_intersection_vol_vol
 
 
 
-  double *cellA_volume;
-  PDM_malloc(cellA_volume,n_cell[0],double);
-  double *cellA_center;
-  PDM_malloc(cellA_center,n_cell[0] * 3,double);
+  double *cellA_volume = NULL;
+  double *cellA_center = NULL;
+  PDM_malloc(cellA_volume, n_cell[0]    , double);
+  PDM_malloc(cellA_center, n_cell[0] * 3, double);
   PDM_geom_elem_polyhedra_properties_triangulated(1,
                                                   n_cell       [0],
                                                   n_face       [0],
@@ -2778,7 +2747,7 @@ _mesh_intersection_vol_vol
   }
 
   double *a_to_b_volume;
-  PDM_malloc(a_to_b_volume,a_to_b_idx[n_cell[0]],double);
+  PDM_malloc(a_to_b_volume, a_to_b_idx[n_cell[0]], double);
 
   double tetraA_coord[12];
   double triaB_coord[9];
@@ -3039,10 +3008,10 @@ _mesh_intersection_vol_vol
                                                                       &local_n_vtxB,
                                                                       &local_face_vtxB,
                                                                       &vtk_n_faceB);
-               PDM_free(local_vtx_coordA);
-               PDM_free(local_face_vtxA);
-               PDM_free(local_vtx_coordB);
-               PDM_free(local_face_vtxB);
+                PDM_free(local_vtx_coordA);
+                PDM_free(local_face_vtxA);
+                PDM_free(local_vtx_coordB);
+                PDM_free(local_face_vtxB);
               }
               else if (method == 1) {
                 volume = PDM_mesh_intersection_vol_vol_atomic_compute2(triaB_coord);
@@ -3090,9 +3059,9 @@ _mesh_intersection_vol_vol
 
   } // End of loop on cells A
 
- PDM_free(faceB_triaB_idx);
- PDM_free(triaB_vtxB);
- PDM_free(triaA_vtxA);
+  PDM_free(faceB_triaB_idx);
+  PDM_free(triaB_vtxB);
+  PDM_free(triaA_vtxA);
   PDM_triangulate_state_destroy(tri_state);
 
   if (dbg_enabled) {
@@ -3151,12 +3120,12 @@ _mesh_intersection_vol_vol
     mi->global_vol_A   = g_total_volume_A;
   }
 
- PDM_free(cellA_center);
- PDM_free(cellA_volume);
+  PDM_free(cellA_center);
+  PDM_free(cellA_volume);
 
   for (int i = 0; i < 2; i++) {
     if (is_owner_face_vtx[i]) {
-     PDM_free(face_vtx[i]);
+      PDM_free(face_vtx[i]);
     }
 
     if (extract_part_mesh[i] != NULL) {
@@ -3169,7 +3138,7 @@ _mesh_intersection_vol_vol
              a_to_b,
              a_to_b_volume);
 
- PDM_free(a_to_b_volume);
+  PDM_free(a_to_b_volume);
 }
 
 static
@@ -3337,9 +3306,9 @@ _mesh_intersection_vol_line
    * Compute face normal onces
    */
   double *face_normal;
-  PDM_malloc(face_normal,3 * n_faceA ,double);
   double *face_center;
-  PDM_malloc(face_center,3 * n_faceA ,double);
+  PDM_malloc(face_normal, 3 * n_faceA, double);
+  PDM_malloc(face_center, 3 * n_faceA, double);
 
   PDM_geom_elem_polygon_properties(n_faceA,
                                    faceA_vtxA_idx,
@@ -3361,19 +3330,19 @@ _mesh_intersection_vol_line
   for(int i_cell = 0; i_cell < n_cellA; ++i_cell) {
     n_cell_face_max = PDM_MAX(n_cell_face_max, cellA_faceA_idx[i_cell+1] - cellA_faceA_idx[i_cell]);
   }
-  double *poly_coord;
-  PDM_malloc(poly_coord,3 * n_face_vtx_max  ,double);
-  double *intersection_coord;
-  PDM_malloc(intersection_coord,3 * n_cell_face_max ,double);
-  int *intersection_stat;
-  PDM_malloc(intersection_stat,    n_cell_face_max ,int   );
+  double *poly_coord         = NULL;
+  double *intersection_coord = NULL;
+  int    *intersection_stat  = NULL;
+  PDM_malloc(poly_coord        ,3 * n_face_vtx_max , double);
+  PDM_malloc(intersection_coord,3 * n_cell_face_max, double);
+  PDM_malloc(intersection_stat ,    n_cell_face_max, int   );
 
-  int *cellA_lineB_post_idx;
-  PDM_malloc(cellA_lineB_post_idx,(n_cellA+1)              ,int);
-  int *cellA_lineB_post_n;
-  PDM_malloc(cellA_lineB_post_n,(n_cellA)                ,int);
-  int *cellA_lineB_post;
-  PDM_malloc(cellA_lineB_post,cellA_lineB_idx[n_cellA] ,int);
+  int *cellA_lineB_post_idx = NULL;
+  int *cellA_lineB_post_n   = NULL;
+  int *cellA_lineB_post     = NULL;
+  PDM_malloc(cellA_lineB_post_idx, n_cellA+1               , int);
+  PDM_malloc(cellA_lineB_post_n  , n_cellA                 , int);
+  PDM_malloc(cellA_lineB_post    , cellA_lineB_idx[n_cellA], int);
 
   /*
    * For each cells we sseek intersection of lines with one faces
@@ -3450,13 +3419,13 @@ _mesh_intersection_vol_line
 
 
   if (owner_face_vtxA == PDM_OWNERSHIP_USER) {
-   PDM_free(faceA_vtxA);
+    PDM_free(faceA_vtxA);
   }
- PDM_free(poly_coord);
- PDM_free(face_normal);
- PDM_free(face_center);
- PDM_free(intersection_coord);
- PDM_free(intersection_stat);
+  PDM_free(poly_coord);
+  PDM_free(face_normal);
+  PDM_free(face_center);
+  PDM_free(intersection_coord);
+  PDM_free(intersection_stat);
 
   /*
    * Creation du part_to_part
@@ -3465,10 +3434,10 @@ _mesh_intersection_vol_line
   PDM_g_num_t *elt_b_ln_to_gn = extrp_mesh_b->target_gnum[0];
   int         *elt_b_init_loc = extrp_mesh_b->target_location[0];
 
-  int *elt_a_elt_b_init_loc;
-  PDM_malloc(elt_a_elt_b_init_loc,3 * cellA_lineB_post_idx[n_cellA] ,int        );
-  PDM_g_num_t *cellA_lineB_post_g_num;
-  PDM_malloc(cellA_lineB_post_g_num,    cellA_lineB_post_idx[n_cellA] ,PDM_g_num_t);
+  int         *elt_a_elt_b_init_loc   = NULL;
+  PDM_g_num_t *cellA_lineB_post_g_num = NULL;
+  PDM_malloc(elt_a_elt_b_init_loc  ,3 * cellA_lineB_post_idx[n_cellA], int        );
+  PDM_malloc(cellA_lineB_post_g_num,    cellA_lineB_post_idx[n_cellA], PDM_g_num_t);
   // int *elt_a_elt_b_init_loc_n;
  // PDM_malloc(elt_a_elt_b_init_loc_n,    cellA_lineB_post_idx[n_cellA] ,int        );
 
@@ -3532,8 +3501,8 @@ _mesh_intersection_vol_line
                          &request_init_loc);
   PDM_part_to_part_iexch_wait(ptp_a, request_init_loc);
 
- PDM_free(elt_a_elt_b_init_loc);
- PDM_free(cellA_lineB_post_g_num);
+  PDM_free(elt_a_elt_b_init_loc);
+  PDM_free(cellA_lineB_post_g_num);
 
   int  *n_ref_a = NULL;
   int **ref_a   = NULL;
@@ -3541,13 +3510,13 @@ _mesh_intersection_vol_line
                                  &n_ref_a,
                                  &ref_a);
 
-  int *user_n_elt_a;
-  PDM_malloc(user_n_elt_a,mi->n_part_mesh[0] ,int          );
-  int **user_elt_a_b_init_loc_idx;
-  PDM_malloc(user_elt_a_b_init_loc_idx,mi->n_part_mesh[0] ,int         *);
-  PDM_g_num_t **user_elt_ln_to_gn_a;
-  PDM_malloc(user_elt_ln_to_gn_a,mi->n_part_mesh[0] ,PDM_g_num_t *);
-  PDM_malloc(mi->elt_a_elt_b_idx,mi->n_part_mesh[0] ,int         *);
+  int          *user_n_elt_a              = NULL;
+  int         **user_elt_a_b_init_loc_idx = NULL;
+  PDM_g_num_t **user_elt_ln_to_gn_a       = NULL;
+  PDM_malloc(user_n_elt_a             , mi->n_part_mesh[0], int          );
+  PDM_malloc(user_elt_a_b_init_loc_idx, mi->n_part_mesh[0], int         *);
+  PDM_malloc(user_elt_ln_to_gn_a      , mi->n_part_mesh[0], PDM_g_num_t *);
+  PDM_malloc(mi->elt_a_elt_b_idx      , mi->n_part_mesh[0], int         *);
 
   /*
    * TODO : merge with init_location
@@ -3570,14 +3539,14 @@ _mesh_intersection_vol_line
       int elt_a_id = ref_a[i_part][i] - 1;
       mi->elt_a_elt_b_idx[i_part][elt_a_id+1] = user_elt_a_b_n[i_part][i];
     }
-   PDM_free(user_elt_a_b_n[i_part]);
+    PDM_free(user_elt_a_b_n[i_part]);
 
     for (int i = 0; i < user_n_elt_a[i_part]; i++) {
       mi->elt_a_elt_b_idx[i_part][i+1] += mi->elt_a_elt_b_idx[i_part][i];
     }
 
     int n_elt_a_elt_b = mi->elt_a_elt_b_idx[i_part][user_n_elt_a[i_part]];
-    PDM_malloc(user_elt_a_b_init_loc_idx[i_part],(n_elt_a_elt_b+1) ,int);
+    PDM_malloc(user_elt_a_b_init_loc_idx[i_part], n_elt_a_elt_b+1, int);
     for(int i = 0; i < n_elt_a_elt_b+1; ++i) {
       user_elt_a_b_init_loc_idx[i_part][i] = 3*i;
     }
@@ -3588,10 +3557,10 @@ _mesh_intersection_vol_line
 
     //PDM_free(user_elt_a_b_idx);
   }
- PDM_free(user_elt_a_b_n);
+  PDM_free(user_elt_a_b_n);
 
   int *user_n_elt_b;
-  PDM_malloc(user_n_elt_b,mi->n_part_mesh[1] ,int);
+  PDM_malloc(user_n_elt_b, mi->n_part_mesh[1], int);
   for (int i_part = 0; i_part < mi->n_part_mesh[1]; i_part++) {
     if (mi->mesh_nodal[1] == NULL && mi->mesh[1] != NULL) {
       user_n_elt_b[i_part] = PDM_part_mesh_n_entity_get(mi->mesh[1],
@@ -3617,21 +3586,21 @@ _mesh_intersection_vol_line
                                                                              mi->comm);
 
   for (int ipart = 0; ipart < mi->n_part_mesh[0]; ipart++) {
-   PDM_free(user_elt_a_b_init_loc_idx[ipart]);
-   PDM_free(user_elt_a_b_init_loc    [ipart]);
+    PDM_free(user_elt_a_b_init_loc_idx[ipart]);
+    PDM_free(user_elt_a_b_init_loc    [ipart]);
     if (mi->mesh_nodal[0] != NULL) {
-     PDM_free(user_elt_ln_to_gn_a[ipart]);
+      PDM_free(user_elt_ln_to_gn_a[ipart]);
     }
   }
- PDM_free(user_elt_a_b_init_loc_idx);
- PDM_free(user_elt_a_b_init_loc    );
- PDM_free(user_elt_ln_to_gn_a);
- PDM_free(user_n_elt_a);
- PDM_free(user_n_elt_b);
+  PDM_free(user_elt_a_b_init_loc_idx);
+  PDM_free(user_elt_a_b_init_loc    );
+  PDM_free(user_elt_ln_to_gn_a);
+  PDM_free(user_n_elt_a);
+  PDM_free(user_n_elt_b);
 
- PDM_free(cellA_lineB_post);
- PDM_free(cellA_lineB_post_idx);
- PDM_free(cellA_lineB_post_n);
+  PDM_free(cellA_lineB_post);
+  PDM_free(cellA_lineB_post_idx);
+  PDM_free(cellA_lineB_post_n);
 
 }
 
@@ -3978,19 +3947,19 @@ _mesh_intersection_surf_line
   } _crossing_t;
 
 
-  double *edgeA_inter_t;
-  PDM_malloc(edgeA_inter_t,edgeA_inter_idx[n_edgeA],double);
-  int *edgeA_inter_edgeB;
-  PDM_malloc(edgeA_inter_edgeB,edgeA_inter_idx[n_edgeA],int   );
-  double *edgeB_inter_t;
-  PDM_malloc(edgeB_inter_t,edgeB_inter_idx[n_edgeB],double);
-  int *edgeB_inter_edgeA;
-  PDM_malloc(edgeB_inter_edgeA,edgeB_inter_idx[n_edgeB],int   );
+  double *edgeA_inter_t     = NULL;
+  int    *edgeA_inter_edgeB = NULL;
+  double *edgeB_inter_t     = NULL;
+  int    *edgeB_inter_edgeA = NULL;
+  PDM_malloc(edgeA_inter_t    , edgeA_inter_idx[n_edgeA], double);
+  PDM_malloc(edgeA_inter_edgeB, edgeA_inter_idx[n_edgeA], int   );
+  PDM_malloc(edgeB_inter_t    , edgeB_inter_idx[n_edgeB], double);
+  PDM_malloc(edgeB_inter_edgeA, edgeB_inter_idx[n_edgeB], int   );
 
-  _crossing_t *edgeA_inter_crossing;
-  PDM_malloc(edgeA_inter_crossing,edgeA_inter_idx[n_edgeA], _crossing_t);
-  _crossing_t *edgeB_inter_crossing;
-  PDM_malloc(edgeB_inter_crossing,edgeB_inter_idx[n_edgeB], _crossing_t);
+  _crossing_t *edgeA_inter_crossing = NULL;
+  _crossing_t *edgeB_inter_crossing = NULL;
+  PDM_malloc(edgeA_inter_crossing, edgeA_inter_idx[n_edgeA], _crossing_t);
+  PDM_malloc(edgeB_inter_crossing, edgeB_inter_idx[n_edgeB], _crossing_t);
 
   for (int faceA_id = 0; faceA_id < n_faceA; faceA_id++) {
 
@@ -4074,20 +4043,20 @@ _mesh_intersection_surf_line
 
   /* Sort intersection points along each edge */
   int *order;
-  PDM_malloc(order,max_n,int);
+  PDM_malloc(order, max_n, int);
 
   int s_subedgeA = n_edgeA + edgeA_inter_idx[n_edgeA];
-  int *subedgeA_parent;
-  PDM_malloc(subedgeA_parent,s_subedgeA,int   );
-  double *subedgeA_center;
-  PDM_malloc(subedgeA_center,s_subedgeA * 3,double);
-  double *subedgeA_vector;
-  PDM_malloc(subedgeA_vector,s_subedgeA * 3,double);
+  int    *subedgeA_parent = NULL;
+  double *subedgeA_center = NULL;
+  double *subedgeA_vector = NULL;
+  PDM_malloc(subedgeA_parent, s_subedgeA    , int   );
+  PDM_malloc(subedgeA_center, s_subedgeA * 3, double);
+  PDM_malloc(subedgeA_vector, s_subedgeA * 3, double);
 
 
   double *dbg_subedgeA_coord = NULL;
   if (dbg_enabled) {
-    PDM_malloc(dbg_subedgeA_coord,s_subedgeA * 6,double);
+    PDM_malloc(dbg_subedgeA_coord, s_subedgeA * 6, double);
   }
 
 
@@ -4205,7 +4174,7 @@ _mesh_intersection_surf_line
                                          NULL,
                                          NULL);
 
-   PDM_free(dbg_subedgeA_coord);
+    PDM_free(dbg_subedgeA_coord);
   }
 
   if (dbg_enabled) {
@@ -4215,19 +4184,18 @@ _mesh_intersection_surf_line
 
 
   int s_subedgeB = n_edgeB + edgeB_inter_idx[n_edgeB];
-  int *subedgeB_parent;
-  PDM_malloc(subedgeB_parent,s_subedgeB,int   );
-  int *subedgeB_faceA;
-  PDM_malloc(subedgeB_faceA,s_subedgeB,int   );
-  double *subedgeB_center;
-  PDM_malloc(subedgeB_center,s_subedgeB * 3,double);
-  double *subedgeB_vector;
-  PDM_malloc(subedgeB_vector,s_subedgeB * 3,double);
-
+  int    *subedgeB_parent = NULL;
+  int    *subedgeB_faceA  = NULL;
+  double *subedgeB_center = NULL;
+  double *subedgeB_vector = NULL;
+  PDM_malloc(subedgeB_parent, s_subedgeB    , int   );
+  PDM_malloc(subedgeB_faceA , s_subedgeB    , int   );
+  PDM_malloc(subedgeB_center, s_subedgeB * 3, double);
+  PDM_malloc(subedgeB_vector, s_subedgeB * 3, double);
 
   double *dbg_subedgeB_coord = NULL;
   if (dbg_enabled) {
-    PDM_malloc(dbg_subedgeB_coord,s_subedgeB * 6,double);
+    PDM_malloc(dbg_subedgeB_coord, s_subedgeB * 6, double);
   }
 
 
@@ -4335,13 +4303,13 @@ _mesh_intersection_surf_line
       }
     }
   }
- PDM_free(order);
+  PDM_free(order);
 
- PDM_free(edgeA_inter_n);
- PDM_free(edgeA_inter_idx);
- PDM_free(edgeA_inter_t);
- PDM_free(edgeA_inter_edgeB);
- PDM_free(edgeA_inter_crossing);
+  PDM_free(edgeA_inter_n);
+  PDM_free(edgeA_inter_idx);
+  PDM_free(edgeA_inter_t);
+  PDM_free(edgeA_inter_edgeB);
+  PDM_free(edgeA_inter_crossing);
 
 
   /* Deal with 'undef' edges B */
@@ -4372,8 +4340,8 @@ _mesh_intersection_surf_line
     }
 
 
-    double *faceA_coord;
-    PDM_malloc(faceA_coord,max_face_vtx_n * 3,double);
+    double *faceA_coord = NULL;
+    PDM_malloc(faceA_coord, max_face_vtx_n * 3, double);
 
     for (int faceA_id = 0; faceA_id < n_faceA; faceA_id++) {
 
@@ -4437,16 +4405,16 @@ _mesh_intersection_surf_line
 
     }
 
-   PDM_free(edgeB_faceA);
-   PDM_free(faceA_vtxA);
-   PDM_free(faceA_coord);
+    PDM_free(edgeB_faceA);
+    PDM_free(faceA_vtxA);
+    PDM_free(faceA_coord);
   }
 
- PDM_free(edgeB_inter_n);
- PDM_free(edgeB_inter_idx);
- PDM_free(edgeB_inter_t);
- PDM_free(edgeB_inter_edgeA);
- PDM_free(edgeB_inter_crossing);
+  PDM_free(edgeB_inter_n);
+  PDM_free(edgeB_inter_idx);
+  PDM_free(edgeB_inter_t);
+  PDM_free(edgeB_inter_edgeA);
+  PDM_free(edgeB_inter_crossing);
 
 
 
@@ -4478,7 +4446,7 @@ _mesh_intersection_surf_line
                                          NULL,
                                          NULL);
 
-   PDM_free(dbg_subedgeB_coord);
+    PDM_free(dbg_subedgeB_coord);
   }
 
 
@@ -4489,7 +4457,7 @@ _mesh_intersection_surf_line
   if (dbg_enabled) {
     /* Check surface bilan */
     double *faceA_bilan;
-    PDM_malloc(faceA_bilan,n_faceA * 3,double);
+    PDM_malloc(faceA_bilan, n_faceA * 3, double);
     for (int i = 0; i < 3*n_faceA; i++) {
       faceA_bilan[i] = 0;
     }
@@ -4525,24 +4493,24 @@ _mesh_intersection_surf_line
       log_trace("faceA %d : bilan = %e\n", i, mag);
     }
 
-   PDM_free(faceA_bilan);
+    PDM_free(faceA_bilan);
   }
 
 
- PDM_free(edgeA_faceA);
+  PDM_free(edgeA_faceA);
 
 
 
 
   /* Results, do not free */
- PDM_free(subedgeA_parent);
- PDM_free(subedgeA_center);
- PDM_free(subedgeA_vector);
+  PDM_free(subedgeA_parent);
+  PDM_free(subedgeA_center);
+  PDM_free(subedgeA_vector);
 
- PDM_free(subedgeB_parent);
- PDM_free(subedgeB_faceA );
- PDM_free(subedgeB_center);
- PDM_free(subedgeB_vector);
+  PDM_free(subedgeB_parent);
+  PDM_free(subedgeB_faceA );
+  PDM_free(subedgeB_center);
+  PDM_free(subedgeB_vector);
 
 
 }
@@ -4614,7 +4582,7 @@ _mesh_intersection_surf_surf
       //                                                          0);
       // }
 
-      PDM_malloc(face_vtx_idx[i],(n_face[i] + 1),int);
+      PDM_malloc(face_vtx_idx[i], n_face[i] + 1, int);
       face_vtx_idx[i][0] = 0;
 
       for (int isection = 0; isection < n_section; isection++) {
@@ -4696,7 +4664,7 @@ _mesh_intersection_surf_surf
       }
 
       /* Fill face_vtx */
-      PDM_malloc(face_vtx[i],face_vtx_idx[i][n_face[i]],int);
+      PDM_malloc(face_vtx[i], face_vtx_idx[i][n_face[i]], int);
       for (int isection = 0; isection < n_section; isection++) {
         int id_section = sections_id[isection];
 
@@ -4828,19 +4796,19 @@ _mesh_intersection_surf_surf
                              NULL);
 
       if (face_vtx[i] == NULL) {
-       PDM_free(_face_vtx);
+        PDM_free(_face_vtx);
       }
     }
   }
 
 
-  double *a_to_b_volume;
-  PDM_malloc(a_to_b_volume,a_to_b_idx[n_face[0]],double);
+  double *a_to_b_volume = NULL;
+  PDM_malloc(a_to_b_volume, a_to_b_idx[n_face[0]], double);
 
 
   /* Compute face normals of B */
-  double *faceB_normals;
-  PDM_malloc(faceB_normals,n_face[1] * 3,double);
+  double *faceB_normals = NULL;
+  PDM_malloc(faceB_normals, n_face[1] * 3, double);
   for (int faceB_id = 0; faceB_id < n_face[1]; faceB_id++) {
     double faceB_center[3];
     if (face_vtx[1] == NULL) {
@@ -5220,11 +5188,11 @@ _mesh_intersection_surf_surf
               PDM_ABS(g_total_area_AB - exact)/exact);
 
   }
- PDM_free(faceB_normals);
+  PDM_free(faceB_normals);
   for (int i = 0; i < 2; i++) {
     if (mi->mesh[i] == NULL) {
-     PDM_free(face_vtx_idx[i]);
-     PDM_free(face_vtx    [i]);
+      PDM_free(face_vtx_idx[i]);
+      PDM_free(face_vtx    [i]);
     }
   }
 
@@ -5234,7 +5202,7 @@ _mesh_intersection_surf_surf
              a_to_b,
              a_to_b_volume);
 
- PDM_free(a_to_b_volume);
+  PDM_free(a_to_b_volume);
 }
 
 
@@ -5254,7 +5222,7 @@ PDM_mesh_intersection_create
 )
 {
   PDM_mesh_intersection_t *mi;
-  PDM_malloc(mi,1,PDM_mesh_intersection_t);
+  PDM_malloc(mi, 1, PDM_mesh_intersection_t);
 
   mi->comm = comm;
   mi->intersect_kind = intersection_kind;
@@ -5322,7 +5290,7 @@ PDM_mesh_intersection_n_part_set
 
   mi->mesh[i_mesh] = PDM_part_mesh_create(n_part, mi->comm);
 
-  PDM_malloc(mi->elt_volume[i_mesh],mi->n_part_mesh[i_mesh],double *);
+  PDM_malloc(mi->elt_volume[i_mesh], mi->n_part_mesh[i_mesh], double *);
   for (int i = 0; i < mi->n_part_mesh[i_mesh]; i++) {
     mi->elt_volume[i_mesh][i] = NULL;
   }
@@ -5368,9 +5336,9 @@ PDM_mesh_intersection_compute
                                   &extents_mesh[imesh]);
     }
     else {
-      PDM_malloc(extents_mesh[imesh],mi->n_part_mesh[imesh],double *);
+      PDM_malloc(extents_mesh[imesh], mi->n_part_mesh[imesh], double *);
       for (int i = 0; i < mi->n_part_mesh[imesh]; i++) {
-        PDM_malloc(extents_mesh[imesh][i],0,double);
+        PDM_malloc(extents_mesh[imesh][i], 0, double);
       }
     }
   }
@@ -5457,15 +5425,15 @@ PDM_mesh_intersection_compute
                                             &extract_elmt_ln_to_gn[imesh]);
     }
     else {
-      n_extract_elmt            PDM_malloc([imesh],n_part[imesh],int          );
-      extract_box_extents       PDM_malloc([imesh],n_part[imesh],double      *);
-      PDM_malloc(extract_elmt_init_location[imesh],n_part[imesh],int         *);
-      extract_elmt_ln_to_gn     PDM_malloc([imesh],n_part[imesh],PDM_g_num_t *);
+      PDM_malloc(n_extract_elmt            [imesh], n_part[imesh], int          );
+      PDM_malloc(extract_box_extents       [imesh], n_part[imesh], double      *);
+      PDM_malloc(extract_elmt_init_location[imesh], n_part[imesh], int         *);
+      PDM_malloc(extract_elmt_ln_to_gn     [imesh], n_part[imesh], PDM_g_num_t *);
       for (int ipart = 0; ipart < n_part[imesh]; ipart++) {
         n_extract_elmt[imesh][ipart] = 0;
-        extract_box_extents       PDM_malloc([imesh][ipart],0,double     );
-        PDM_malloc(extract_elmt_init_location[imesh][ipart],0,int        );
-        extract_elmt_ln_to_gn     PDM_malloc([imesh][ipart],0,PDM_g_num_t);
+        PDM_malloc(extract_box_extents       [imesh][ipart], 0, double     );
+        PDM_malloc(extract_elmt_init_location[imesh][ipart], 0, int        );
+        PDM_malloc(extract_elmt_ln_to_gn     [imesh][ipart], 0, PDM_g_num_t);
       }
     }
 
@@ -5489,13 +5457,13 @@ PDM_mesh_intersection_compute
   }
 
   for(int i_part = 0; i_part < n_part[0]; ++i_part) {
-   PDM_free(extents_mesh[0][i_part]);
+    PDM_free(extents_mesh[0][i_part]);
   }
   for(int i_part = 0; i_part < n_part[1]; ++i_part) {
-   PDM_free(extents_mesh[1][i_part]);
+    PDM_free(extents_mesh[1][i_part]);
   }
- PDM_free(extents_mesh[0]);
- PDM_free(extents_mesh[1]);
+  PDM_free(extents_mesh[0]);
+  PDM_free(extents_mesh[1]);
 
   // Check for zero extracted boxes
   for (int imesh = 0; imesh < 2; imesh++) {
@@ -5511,14 +5479,14 @@ PDM_mesh_intersection_compute
       for (int i = 0; i < 2; i++) {
         mi->extrp_mesh[i] = NULL;
         for (int i_part = 0; i_part < n_part[i]; i_part++) {
-         PDM_free(extract_elmt_init_location[i][i_part]);
-         PDM_free(extract_box_extents       [i][i_part]);
-         PDM_free(extract_elmt_ln_to_gn     [i][i_part]);
+          PDM_free(extract_elmt_init_location[i][i_part]);
+          PDM_free(extract_box_extents       [i][i_part]);
+          PDM_free(extract_elmt_ln_to_gn     [i][i_part]);
         }
-       PDM_free(n_extract_elmt            [i]);
-       PDM_free(extract_elmt_init_location[i]);
-       PDM_free(extract_box_extents       [i]);
-       PDM_free(extract_elmt_ln_to_gn     [i]);
+        PDM_free(n_extract_elmt            [i]);
+        PDM_free(extract_elmt_init_location[i]);
+        PDM_free(extract_box_extents       [i]);
+        PDM_free(extract_elmt_ln_to_gn     [i]);
       }
       mi->box_a_box_b_idx = NULL;
       mi->box_a_box_b     = NULL;
@@ -5554,14 +5522,14 @@ PDM_mesh_intersection_compute
   /* Free extraction */
   for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
     for(int i_part = 0; i_part < n_part[i_mesh]; ++i_part) {
-     PDM_free(extract_elmt_init_location[i_mesh][i_part]);
-     PDM_free(extract_box_extents       [i_mesh][i_part]);
-     PDM_free(extract_elmt_ln_to_gn     [i_mesh][i_part]);
+      PDM_free(extract_elmt_init_location[i_mesh][i_part]);
+      PDM_free(extract_box_extents       [i_mesh][i_part]);
+      PDM_free(extract_elmt_ln_to_gn     [i_mesh][i_part]);
     }
-   PDM_free(n_extract_elmt            [i_mesh]);
-   PDM_free(extract_elmt_init_location[i_mesh]);
-   PDM_free(extract_box_extents       [i_mesh]);
-   PDM_free(extract_elmt_ln_to_gn     [i_mesh]);
+    PDM_free(n_extract_elmt            [i_mesh]);
+    PDM_free(extract_elmt_init_location[i_mesh]);
+    PDM_free(extract_box_extents       [i_mesh]);
+    PDM_free(extract_elmt_ln_to_gn     [i_mesh]);
   }
 
   // Check for zero candidates
@@ -5577,8 +5545,8 @@ PDM_mesh_intersection_compute
       PDM_box_set_destroy(&boxes_mesh[imesh]);
     }
 
-   PDM_free(box_a_to_box_b_idx);
-   PDM_free(box_a_to_box_b);
+    PDM_free(box_a_to_box_b_idx);
+    PDM_free(box_a_to_box_b);
     PDM_dbbtree_free(dbbtree_mesh_a);
 
     mi->box_a_box_b_idx = NULL;
@@ -5600,8 +5568,8 @@ PDM_mesh_intersection_compute
                    &redistribute_box_a_to_box_b_idx,
                    &redistribute_box_a_to_box_b);
   
- PDM_free(box_a_to_box_b_idx);
- PDM_free(box_a_to_box_b);
+  PDM_free(box_a_to_box_b_idx);
+  PDM_free(box_a_to_box_b);
 
 
   /*
@@ -5754,8 +5722,8 @@ PDM_mesh_intersection_compute
     PDM_box_set_destroy (&boxes_mesh[0]);
     PDM_box_set_destroy (&boxes_mesh[1]);
 
-   PDM_free(redistribute_box_a_to_box_b_idx);
-   PDM_free(redistribute_box_a_to_box_b    );
+    PDM_free(redistribute_box_a_to_box_b_idx);
+    PDM_free(redistribute_box_a_to_box_b    );
 
     for (int imesh = 0; imesh < 2; imesh++) {
       if (mi->mesh_nodal[imesh] == NULL && mi->mesh[imesh] == NULL) {
@@ -5794,7 +5762,7 @@ PDM_mesh_intersection_mesh_nodal_set
 
   mi->n_part_mesh[i_mesh] = PDM_part_mesh_nodal_n_part_get(mesh);
 
-  PDM_malloc(mi->elt_volume[i_mesh],mi->n_part_mesh[i_mesh],double *);
+  PDM_malloc(mi->elt_volume[i_mesh], mi->n_part_mesh[i_mesh], double *);
   for (int i = 0; i < mi->n_part_mesh[i_mesh]; i++) {
     mi->elt_volume[i_mesh][i] = NULL;
   }
@@ -5900,11 +5868,11 @@ PDM_mesh_intersection_free
         (mi->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !mi->tag_elt_a_elt_b_get)) {
       for (int ipart = 0; ipart < mi->n_part_mesh[0]; ipart++) {
         if (mi->elt_a_elt_b_idx[ipart] != NULL) {
-         PDM_free(mi->elt_a_elt_b_idx[ipart]);
+          PDM_free(mi->elt_a_elt_b_idx[ipart]);
         }
       }
     }
-   PDM_free(mi->elt_a_elt_b_idx);
+    PDM_free(mi->elt_a_elt_b_idx);
   }
 
   if (mi->elt_a_elt_b != NULL) {
@@ -5912,17 +5880,17 @@ PDM_mesh_intersection_free
         (mi->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !mi->tag_elt_a_elt_b_get)) {
       for (int ipart = 0; ipart < mi->n_part_mesh[0]; ipart++) {
         if (mi->elt_a_elt_b[ipart] != NULL) {
-         PDM_free(mi->elt_a_elt_b[ipart]);
+          PDM_free(mi->elt_a_elt_b[ipart]);
         }
       }
   }
-   PDM_free(mi->elt_a_elt_b);
+    PDM_free(mi->elt_a_elt_b);
   }
 
   if (mi->box_a_box_b != NULL) {
     if ((mi->owner == PDM_OWNERSHIP_KEEP ) ||
         (mi->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !mi->tag_box_a_box_b_get)) {
-     PDM_free(mi->box_a_box_b);
+      PDM_free(mi->box_a_box_b);
       mi->box_a_box_b = NULL;
     }
   }
@@ -5930,7 +5898,7 @@ PDM_mesh_intersection_free
   if (mi->box_a_box_b_idx != NULL) {
     if ((mi->owner == PDM_OWNERSHIP_KEEP ) ||
         (mi->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !mi->tag_box_a_box_b_get)) {
-     PDM_free(mi->box_a_box_b_idx);
+      PDM_free(mi->box_a_box_b_idx);
       mi->box_a_box_b = NULL;
     }
   }
@@ -5950,11 +5918,11 @@ PDM_mesh_intersection_free
         (mi->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !mi->tag_elt_a_elt_b_get)) {
       for (int ipart = 0; ipart < mi->n_part_mesh[0]; ipart++) {
         if (mi->elt_a_elt_b_volume[ipart] != NULL) {
-         PDM_free(mi->elt_a_elt_b_volume[ipart]);
+          PDM_free(mi->elt_a_elt_b_volume[ipart]);
         }
       }
     }
-   PDM_free(mi->elt_a_elt_b_volume);
+    PDM_free(mi->elt_a_elt_b_volume);
   }
 
   if (mi->elt_b_elt_a_volume != NULL) {
@@ -5962,11 +5930,11 @@ PDM_mesh_intersection_free
         (mi->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !mi->tag_elt_b_elt_a_get)) {
       for (int ipart = 0; ipart < mi->n_part_mesh[1]; ipart++) {
         if (mi->elt_b_elt_a_volume[ipart] != NULL) {
-         PDM_free(mi->elt_b_elt_a_volume[ipart]);
+          PDM_free(mi->elt_b_elt_a_volume[ipart]);
         }
       }
     }
-   PDM_free(mi->elt_b_elt_a_volume);
+    PDM_free(mi->elt_b_elt_a_volume);
   }
 
   for (int imesh = 0; imesh < 2; imesh++) {
@@ -5975,15 +5943,15 @@ PDM_mesh_intersection_free
           (mi->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !mi->tag_elt_volume_get[imesh])) {
         for (int ipart = 0; ipart < mi->n_part_mesh[imesh]; ipart++) {
           if (mi->elt_volume[imesh][ipart] != NULL) {
-           PDM_free(mi->elt_volume[imesh][ipart]);
+            PDM_free(mi->elt_volume[imesh][ipart]);
           }
         }
       }
-     PDM_free(mi->elt_volume[imesh]);
+      PDM_free(mi->elt_volume[imesh]);
     }
   }
 
- PDM_free(mi);
+  PDM_free(mi);
 }
 
 /**
@@ -6113,7 +6081,7 @@ PDM_mesh_intersection_elt_volume_get
 
       switch (mi->dim_mesh[imesh]) {
       case 1: {
-       PDM_malloc(mi->elt_volume[imesh][ipart],n_edge,double);
+       PDM_malloc(mi->elt_volume[imesh][ipart], n_edge, double);
        double *center;
        PDM_malloc(center,n_face * 3,double);
        PDM_geom_elem_edges_properties(n_edge,
@@ -6127,9 +6095,9 @@ PDM_mesh_intersection_elt_volume_get
         break;
       }
       case 2: {
-        PDM_malloc(mi->elt_volume[imesh][ipart],n_face * 3,double);
+        PDM_malloc(mi->elt_volume[imesh][ipart], n_face * 3, double);
         double *center;
-        PDM_malloc(center,n_face * 3,double);
+        PDM_malloc(center, n_face * 3, double);
         PDM_geom_elem_polygon_properties(n_face,
                                          face_vtx_idx,
                                          _face_vtx,
@@ -6138,7 +6106,7 @@ PDM_mesh_intersection_elt_volume_get
                                          center,
                                          NULL,
                                          NULL);
-       PDM_free(center);
+        PDM_free(center);
         for (int i = 0; i < n_face; i++) {
           mi->elt_volume[imesh][ipart][i] = PDM_MODULE(mi->elt_volume[imesh][ipart] + 3*i);
         }
@@ -6161,9 +6129,9 @@ PDM_mesh_intersection_elt_volume_get
 
 
 
-        PDM_malloc(mi->elt_volume[imesh][ipart],n_cell,double);
+        PDM_malloc(mi->elt_volume[imesh][ipart], n_cell, double);
         double *center;
-        PDM_malloc(center,n_cell * 3,double);
+        PDM_malloc(center, n_cell * 3, double);
         PDM_geom_elem_polyhedra_properties_triangulated(1,
                                                         n_cell,
                                                         n_face,
@@ -6177,7 +6145,7 @@ PDM_mesh_intersection_elt_volume_get
                                                         center,
                                                         NULL,
                                                         NULL);
-       PDM_free(center);
+        PDM_free(center);
         break;
       }
       default:
@@ -6187,7 +6155,7 @@ PDM_mesh_intersection_elt_volume_get
 
 
       if (mi->dim_mesh[imesh] > 1 && face_vtx == NULL) {
-       PDM_free(_face_vtx);
+        PDM_free(_face_vtx);
       }
     }
     else if (mi->mesh_nodal[imesh] != NULL) {

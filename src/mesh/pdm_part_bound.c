@@ -85,7 +85,7 @@ const PDM_g_num_t            *localOfferLnToGn
   _part_bound->nElt = nElt;
   _part_bound->nEltPartBound = nEltPartBound;
   _part_bound->lComm = lComm;
-  PDM_malloc(_part_bound->eltPartBoundIdx,(nEltPartBound + 1),int);
+  PDM_malloc(_part_bound->eltPartBoundIdx, nEltPartBound + 1, int);
   _part_bound->eltPartBound = NULL;
   _part_bound->cplx = cplx;
   _part_bound->eltPartBoundIdx[0] = 0;
@@ -94,17 +94,17 @@ const PDM_g_num_t            *localOfferLnToGn
   _part_bound->localOfferLnToGn = localOfferLnToGn;
 
   if (cplx == PDM_PART_BOUND_SIMPLE) {
-    PDM_malloc(_part_bound->nConnectedElt,1,int);
-    PDM_malloc(_part_bound->connectedEltIdx,(nEltPartBound + 1),int);
+    PDM_malloc(_part_bound->nConnectedElt  , 1                , int);
+    PDM_malloc(_part_bound->connectedEltIdx, nEltPartBound + 1, int);
     _part_bound->nConnectedElt[0] = *nConnectedElt;
     PDM_malloc(_part_bound->eltPartBound, (nDataEltPartBoundIni + nDataEltPartBoundElt * (*nConnectedElt)) * _part_bound->nEltPartBound, int);
     _part_bound->connectedEltIdx[0] = 0;
 
-    PDM_malloc(_part_bound->nOfferElt,1,int);
-    PDM_malloc(_part_bound->offerEltIdx,(nEltPartBound + 1),int);
+    PDM_malloc(_part_bound->nOfferElt  , 1                , int);
+    PDM_malloc(_part_bound->offerEltIdx, nEltPartBound + 1, int);
     _part_bound->nOfferElt[0] = *nOfferElt;
     _part_bound->offerEltIdx[0] = 0;
-    PDM_malloc(_part_bound->offerElt, nEltPartBound * (*nOfferElt), int);
+    PDM_malloc(_part_bound->offerElt   , nEltPartBound * (*nOfferElt), int);
     PDM_malloc(_part_bound->offerLnToGn, nEltPartBound * (*nOfferElt), PDM_g_num_t);
 
     for (int i = 0; i < nEltPartBound; i++) {
@@ -117,13 +117,13 @@ const PDM_g_num_t            *localOfferLnToGn
     }
   }
   else {
-    PDM_malloc(_part_bound->nConnectedElt,nEltPartBound,int);
-    PDM_malloc(_part_bound->connectedEltIdx,(nEltPartBound + 1),int);
+    PDM_malloc(_part_bound->nConnectedElt  , nEltPartBound    , int);
+    PDM_malloc(_part_bound->connectedEltIdx, nEltPartBound + 1, int);
     _part_bound->connectedEltIdx[0] = 0;
     memcpy(_part_bound->nConnectedElt, nConnectedElt, sizeof(int)*nEltPartBound);
 
-    PDM_malloc(_part_bound->nOfferElt,nEltPartBound,int);
-    PDM_malloc(_part_bound->offerEltIdx,(nEltPartBound + 1),int);
+    PDM_malloc(_part_bound->nOfferElt  , nEltPartBound    , int);
+    PDM_malloc(_part_bound->offerEltIdx, nEltPartBound + 1, int);
     _part_bound->offerEltIdx[0] = 0;
     memcpy(_part_bound->nOfferElt, nOfferElt, sizeof(int)*nEltPartBound);
 
@@ -135,7 +135,7 @@ const PDM_g_num_t            *localOfferLnToGn
       tConnectedElt += nConnectedElt[i];
     }
 
-    PDM_malloc(_part_bound->offerElt, _part_bound->offerEltIdx[nEltPartBound], int);
+    PDM_malloc(_part_bound->offerElt   , _part_bound->offerEltIdx[nEltPartBound], int);
     PDM_malloc(_part_bound->offerLnToGn, _part_bound->offerEltIdx[nEltPartBound], PDM_g_num_t);
 
     PDM_malloc(_part_bound->eltPartBound, (nDataEltPartBoundIni * _part_bound->nEltPartBound + nDataEltPartBoundElt * tConnectedElt), int);
@@ -147,7 +147,7 @@ const PDM_g_num_t            *localOfferLnToGn
     }
   }
 
-  PDM_malloc(_part_bound->localElt2BoundElt,nElt,int);
+  PDM_malloc(_part_bound->localElt2BoundElt, nElt, int);
 
   return part_bound;
 }
@@ -633,25 +633,25 @@ PDM_part_bound_t *part_bound
   _part_bound_t *_part_bound = (_part_bound_t *) part_bound;
  if (_part_bound != NULL) {
     if (_part_bound->eltPartBoundIdx != NULL)
-     PDM_free(_part_bound->eltPartBoundIdx);
+      PDM_free(_part_bound->eltPartBoundIdx);
     if (_part_bound->eltPartBound != NULL)
-     PDM_free(_part_bound->eltPartBound);
+      PDM_free(_part_bound->eltPartBound);
     if (_part_bound->connectedEltIdx != NULL)
-     PDM_free(_part_bound->connectedEltIdx);
+      PDM_free(_part_bound->connectedEltIdx);
     if (_part_bound->nConnectedElt != NULL)
-     PDM_free(_part_bound->nConnectedElt);
+      PDM_free(_part_bound->nConnectedElt);
     if (_part_bound->localElt2BoundElt != NULL)
-     PDM_free(_part_bound->localElt2BoundElt);
+      PDM_free(_part_bound->localElt2BoundElt);
     if (_part_bound->nOfferElt != NULL)
-     PDM_free(_part_bound->nOfferElt);
+      PDM_free(_part_bound->nOfferElt);
     if (_part_bound->offerEltIdx != NULL)
-     PDM_free(_part_bound->offerEltIdx);
+      PDM_free(_part_bound->offerEltIdx);
     if (_part_bound->offerElt != NULL)
-     PDM_free(_part_bound->offerElt);
+      PDM_free(_part_bound->offerElt);
     if (_part_bound->offerLnToGn != NULL)
-     PDM_free(_part_bound->offerLnToGn);
+      PDM_free(_part_bound->offerLnToGn);
 
-   PDM_free(_part_bound);
+    PDM_free(_part_bound);
   }
   return NULL;
 }
