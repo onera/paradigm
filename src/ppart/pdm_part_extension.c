@@ -2844,9 +2844,8 @@ _part_extension_3d
 
     int i_rank;
     PDM_MPI_Comm_rank(part_ext->comm, &i_rank);
-    if (i_rank==0) printf("Computing DEPTH %d (step = %i) \n", i_depth, step);
-
     if(debug == 1) {
+      if (i_rank==0) printf("Computing DEPTH %d (step = %i) \n", i_depth, step);
       log_trace("\n\n\n >> DEPTH %d step = %i\n", i_depth, step);
     }
     double t_start = PDM_MPI_Wtime();
@@ -4795,9 +4794,9 @@ _part_extension_2d
 
     int i_rank;
     PDM_MPI_Comm_rank(part_ext->comm, &i_rank);
-    if (i_rank==0) printf("Computing DEPTH %d (step = %i) \n", i_depth, step);
 
     if (debug==1) {
+      if (i_rank==0) printf("Computing DEPTH %d (step = %i) \n", i_depth, step);
       log_trace("\n\n\n >> DEPTH %d step = %i\n", i_depth, step);
     }
     double t_start = PDM_MPI_Wtime();
