@@ -269,6 +269,17 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
  PDM_g_num_t                 **pparent_entitity_ln_to_gn
 )
 {
+  /**
+   * 'pelmt_to_entity' represents the link between elements of current dimension (all sections)
+   * and the entities in the whole mesh (e.g. ridge to edge)
+   *
+   * To rebuild the element mesh, we keep the link between element_in_section to element ('parent_num').
+   *
+   * For instance, if we consider a surface with n_surf_face = n_quad QUAD4 + n_tria TRIA3 in a volume mesh with n_face (internal and external) faces :
+   * - 'pelmt_to_entity' designates the link between the external faces and the volume faces (size = n_surf_face)
+   * - 'parent_num' designates, for each surface section, the external face id (respective sizes : n_quad and n_tria)
+   */
+
   PDM_UNUSED(pelmt_to_entity);
 
   int n_section = dmne->n_section;
@@ -530,13 +541,13 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
   int         **parent_num;
   PDM_g_num_t **sparent_entitity_ln_to_gn;
   PDM_g_num_t **section_elmts_ln_to_gn;
-  PDM_malloc(pelmt_by_section_n,        n_section, int          );
-  PDM_malloc(connec,                    n_section, int         *);
-  PDM_malloc(connec_idx,                n_section, int         *);
-  PDM_malloc(numabs,                    n_section, PDM_g_num_t *);
-  PDM_malloc(parent_num,                n_section, int         *);
+  PDM_malloc(pelmt_by_section_n       , n_section, int          );
+  PDM_malloc(connec                   , n_section, int         *);
+  PDM_malloc(connec_idx               , n_section, int         *);
+  PDM_malloc(numabs                   , n_section, PDM_g_num_t *);
+  PDM_malloc(parent_num               , n_section, int         *);
   PDM_malloc(sparent_entitity_ln_to_gn, n_section, PDM_g_num_t *);
-  PDM_malloc(section_elmts_ln_to_gn,    n_part   , PDM_g_num_t *);
+  PDM_malloc(section_elmts_ln_to_gn   , n_part   , PDM_g_num_t *);
 
   for(int i_section = 0; i_section < n_section; ++i_section){
     sparent_entitity_ln_to_gn[i_section] = NULL;
@@ -567,8 +578,8 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
       // PDM_malloc(connec    [i_section], n_elmt_in_section * n_vtx_per_elmt ,int        );
       if (t_elt == PDM_MESH_NODAL_POLY_2D) {
         PDM_malloc(connec_idx[i_section], n_elmt_in_section + 1, int);
-        connec_idx[i_section][0] = 0;
-        pelmt_by_section_n[i_section] = 0;
+        connec_idx        [i_section][0] = 0;
+        pelmt_by_section_n[i_section]    = 0;
       }
       PDM_malloc(numabs    [i_section], n_elmt_in_section, PDM_g_num_t);
       PDM_malloc(parent_num[i_section], n_elmt_in_section, int        );
@@ -649,7 +660,6 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
         PDM_g_num_t vtx_g_num = pelmts_connec[i_part][idx_read_connec+i_vtx];
         int vtx_l_num = PDM_binary_search_long(vtx_g_num, sorted_vtx_ln_to_gn[i_part], pn_vtx[i_part]);
         assert(vtx_l_num != -1);
-        // connec[i_section][n_vtx_per_elmt*idx_write + i_vtx] = vtx_order[i_part][vtx_l_num]+1;
         connec[i_section][idx_write_connec + i_vtx] = vtx_order[i_part][vtx_l_num]+1;
       }
 
