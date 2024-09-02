@@ -372,13 +372,14 @@ cdef class PartExtension:
       connect           (np.ndarray[np.int32_t])  : Connectivity
     """
     cdef int *connect_idx_data = np_to_int_pointer(connect_idx)
+    cdef int *connect_data     = np_to_int_pointer(connect)
 
     PDM_part_extension_connectivity_set(self._part_ext,
                                         i_domain,
                                         i_part,
                                         connectivity_type,
                                         connect_idx_data,
-                                <int *> connect.data)
+                                <int *> connect_data)
 
   # ------------------------------------------------------------------
   def ln_to_gn_set(self,
@@ -397,12 +398,17 @@ cdef class PartExtension:
       entity_type (PDM_mesh_entities_t)        : Type of mesh entity
       ln_to_gn    (np.ndarray[npy_pdm_gnum_t]) : Global ids
     """
+    cdef int          n_entity      = 0;
+    cdef PDM_g_num_t *ln_to_gn_data = np_to_gnum_pointer(ln_to_gn);
+    if ln_to_gn is not None:
+      n_entity = ln_to_gn.size
+
     PDM_part_extension_ln_to_gn_set(self._part_ext,
                                     i_domain,
                                     i_part,
                                     entity_type,
-                                    ln_to_gn.size,
-                    <PDM_g_num_t *> ln_to_gn.data)
+                                    n_entity,
+                    <PDM_g_num_t *> ln_to_gn_data)
 
   # ------------------------------------------------------------------
   def vtx_coord_set(self,
@@ -419,10 +425,12 @@ cdef class PartExtension:
       i_part      (int)                     : Partition identifier
       vtx_coord   (np.ndarray[np.double_t]) : Vertex coordinates (size = 3 * *n_vtx*)
     """
+    cdef double *vtx_coord_data = np_to_double_pointer(vtx_coord);
+
     PDM_part_extension_vtx_coord_set(self._part_ext,
                                      i_domain,
                                      i_part,
-                          <double *> vtx_coord.data)
+                          <double *> vtx_coord_data)
 
   # ------------------------------------------------------------------
   def part_bound_graph_set(self,
@@ -445,13 +453,17 @@ cdef class PartExtension:
       part_bound_part_idx (np.ndarray[np.int32_t]) : Partitioning boundary entities index from partition (size = *n_total_part* + 1)
       part_bound          (np.ndarray[np.int32_t]) : Partitioning boundary entities (size = 4 * ``part_bound_proc_idx`` [ *n_rank* ])
     """
+    cdef int *part_bound_proc_idx_data = np_to_int_pointer(part_bound_proc_idx)
+    cdef int *part_bound_part_idx_data = np_to_int_pointer(part_bound_part_idx)
+    cdef int *part_bound_data          = np_to_int_pointer(part_bound)
+
     PDM_part_extension_part_bound_graph_set(self._part_ext,
                                             i_domain,
                                             i_part,
                                             entity_type,
-                                    <int *> part_bound_proc_idx.data,
-                                    <int *> part_bound_part_idx.data,
-                                    <int *> part_bound.data)
+                                    <int *> part_bound_proc_idx_data,
+                                    <int *> part_bound_part_idx_data,
+                                    <int *> part_bound_data)
 
   # ------------------------------------------------------------------
   def group_set(self,
@@ -474,15 +486,21 @@ cdef class PartExtension:
       group_entity          (np.ndarray[np.int32_t])     : Group->entity connectivity (1-based local ids)
       group_entity_ln_to_gn (np.ndarray[npy_pdm_gnum_t]) : Group->entity connectivity (bound-specific global ids)
     """
-    cdef int n_group = group_entity_idx.size - 1
+    cdef int          n_group = 0
+    cdef int         *group_entity_idx_data      = np_to_int_pointer (group_entity_idx)
+    cdef int         *group_entity_data          = np_to_int_pointer (group_entity)
+    cdef PDM_g_num_t *group_entity_ln_to_gn_data = np_to_gnum_pointer(group_entity_ln_to_gn)
+    if group_entity_idx is not None:
+      n_group = group_entity_idx.size - 1
+
     PDM_part_extension_group_set(self._part_ext,
                                  i_domain,
                                  i_part,
                                  entity_type,
                                  n_group,
-                 <int         *> group_entity_idx.data,
-                 <int         *> group_entity.data,
-                 <PDM_g_num_t *> group_entity_ln_to_gn.data)
+                 <int         *> group_entity_idx_data,
+                 <int         *> group_entity_data,
+                 <PDM_g_num_t *> group_entity_ln_to_gn_data)
 
   # ------------------------------------------------------------------
   def compute(self):
