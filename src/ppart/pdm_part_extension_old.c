@@ -6023,12 +6023,17 @@ PDM_part_extension_create
   part_ext->extend_type = extend_type;
   part_ext->depth       = depth;
 
+  part_ext->have_edge = 0;
+  part_ext->have_face = 0;
+
   part_ext->owner_vtx_part_bound = 0;
+  part_ext->user_defined_bound_graph = 0;
 
   PDM_malloc(part_ext->n_part_idx  , n_domain + 1, int      );
   PDM_malloc(part_ext->n_part_g_idx, n_domain + 1, int      );
   PDM_malloc(part_ext->parts       , n_domain    , _part_t *);
 
+  part_ext->set_part_used = 0;
   part_ext->compute_kind  = 0;
 
 
@@ -6300,6 +6305,8 @@ PDM_part_extension_set_part
   double               *vtx_coord
 )
 {
+  part_ext->set_part_used = 1;
+
   if (edge_vtx != NULL) {
     part_ext->has_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX] = PDM_TRUE;
   }
@@ -6347,10 +6354,16 @@ PDM_part_extension_set_part
   part_ext->parts[i_domain][i_part].face_part_bound_proc_idx = face_part_bound_proc_idx;
   part_ext->parts[i_domain][i_part].face_part_bound_part_idx = face_part_bound_part_idx;
   part_ext->parts[i_domain][i_part].face_part_bound          = face_part_bound;
+  if (face_part_bound_proc_idx!=NULL && part_ext->extend_type==PDM_EXTEND_FROM_FACE) {
+    part_ext->user_defined_bound_graph = 1;
+  }
 
   part_ext->parts[i_domain][i_part].vtx_part_bound_proc_idx = vtx_part_bound_proc_idx;
   part_ext->parts[i_domain][i_part].vtx_part_bound_part_idx = vtx_part_bound_part_idx;
   part_ext->parts[i_domain][i_part].vtx_part_bound          = vtx_part_bound;
+  if (vtx_part_bound_proc_idx!=NULL && part_ext->extend_type==PDM_EXTEND_FROM_VTX) {
+    part_ext->user_defined_bound_graph = 1;
+  }
 
   part_ext->parts[i_domain][i_part].face_bound_idx      = face_bound_idx;
   part_ext->parts[i_domain][i_part].face_bound          = face_bound;
