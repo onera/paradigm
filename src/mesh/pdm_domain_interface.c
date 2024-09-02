@@ -1926,7 +1926,7 @@ static void _domain_interface_face_to_vertex
   int idx = 0;
   int *dedge_gnum_n = PDM_array_zeros_int(dn_edge);
   if(dn_internal_edge > 0) {
-    for (int i = 0; i < dedge_gnum[idx]; i++) {
+    for (int i = 0; i < dn_edge; i++) {
       if (i + dedge_distrib[i_rank] + 1 == dedge_gnum[idx]) {
         dedge_gnum_n[i] = 1;
         idx++;
