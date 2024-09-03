@@ -1189,15 +1189,14 @@ int main
           int         *group_edge_idx      = NULL;
           int         *group_edge          = NULL;
           PDM_g_num_t *group_edge_ln_to_gn = NULL;
-          PDM_isosurface_group_get(isos,
-                                   i_iso,
-                                   i_part,
-                                   PDM_MESH_ENTITY_EDGE,
-                                   &n_group,
-                                   &group_edge_idx,
-                                   &group_edge,
-                                   &group_edge_ln_to_gn,
-                                   PDM_OWNERSHIP_KEEP);
+          n_group = PDM_isosurface_group_get(isos,
+                                             i_iso,
+                                             i_part,
+                                             PDM_MESH_ENTITY_EDGE,
+                                             &group_edge_idx,
+                                             &group_edge,
+                                             &group_edge_ln_to_gn,
+                                             PDM_OWNERSHIP_KEEP);
           for (int i_group = 0; i_group < n_group; i_group++) {
             for (int i = group_edge_idx[i_group]; i < group_edge_idx[i_group+1]; i++) {
               iso_edge_group[group_edge[i]-1] = i_group + 1;

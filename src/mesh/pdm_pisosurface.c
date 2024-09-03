@@ -684,7 +684,6 @@ PDM_isosurface_group_get
   int                   id_isosurface,
   int                   i_part,
   PDM_mesh_entities_t   entity_type,
-  int                  *n_group,
   int                 **group_entity_idx,
   int                 **group_entity,
   PDM_g_num_t         **group_entity_gnum,
@@ -692,10 +691,12 @@ PDM_isosurface_group_get
 )
 {
   _check_is_not_dist(isos);
+  
+  int n_group = 0;
 
   if (entity_type==PDM_MESH_ENTITY_EDGE) {
     isos->iso_owner_edge_bnd[id_isosurface][i_part] = ownership;
-    *n_group           = isos->iso_n_edge_group   [id_isosurface];
+     n_group           = isos->iso_n_edge_group   [id_isosurface];
     *group_entity_idx  = isos->iso_edge_group_idx [id_isosurface][i_part];
     *group_entity      = isos->iso_edge_group_lnum[id_isosurface][i_part];
     *group_entity_gnum = isos->iso_edge_group_gnum[id_isosurface][i_part];
@@ -704,7 +705,7 @@ PDM_isosurface_group_get
     PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: has no bounds for entity %d.\n",entity_type);
   }
 
-  return 0;
+  return n_group;
 }
 
 

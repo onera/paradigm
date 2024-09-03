@@ -26,6 +26,7 @@
 #include "pdm.h"
 #include "pdm_mpi.h"
 #include "pdm_error.h"
+#include "pdm_distrib.h"
 #include "pdm_mesh_nodal.h"
 #include "pdm_isosurface.h"
 #include "pdm_isosurface_priv.h"
@@ -481,6 +482,36 @@ PDM_isosurface_dvtx_coord_get
 }
 
 
+void
+PDM_isosurface_distrib_get
+(
+  PDM_isosurface_t     *isos,
+  int                   id_iso,
+  PDM_mesh_entities_t   entity_type,
+  PDM_g_num_t         **distribution
+)
+{
+  _check_is_not_part(isos);
+
+  PDM_g_num_t *_distribution = NULL;
+
+  if      (entity_type==PDM_MESH_ENTITY_VTX) {
+    _distribution = PDM_compute_entity_distribution(isos->comm, isos->iso_dn_vtx[id_iso]);
+  }
+  else if (entity_type==PDM_MESH_ENTITY_EDGE) {
+    _distribution = PDM_compute_entity_distribution(isos->comm, isos->iso_dn_edge[id_iso]);
+  }
+  else if (entity_type==PDM_MESH_ENTITY_FACE) {
+    _distribution = PDM_compute_entity_distribution(isos->comm, isos->iso_dn_face[id_iso]);
+  }
+  else {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_distrib_get: Invalid entity_type (%d).\n", entity_type);
+  }
+
+  *distribution = _distribution;
+}
+
+
 int
 PDM_isosurface_dgroup_get
 (
@@ -504,7 +535,7 @@ PDM_isosurface_dgroup_get
       *dgroup_entity     = isos->iso_dedge_group_gnum[id_iso];
     }
     else {
-      PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: has no parent for entity_type %d.\n", entity_type);
+      PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: has no group for entity_type %d.\n", entity_type);
     }
 
     return n_group;

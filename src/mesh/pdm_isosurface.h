@@ -769,13 +769,12 @@ PDM_isosurface_ln_to_gn_get
  * \param [in]  id_isosurface          Iso-surface identifier
  * \param [in]  i_part                 Partition identifier
  * \param [in]  entity_type            Entity type
- * \param [out] n_group                Number of groups
  * \param [out] group_entity_idx       Index for group→entity connectivity (size = \p n_group + 1)
  * \param [out] group_entity           Group→entity connectivity (1-based local ids, size = \p group_entity_idx[\p n_group])
  * \param [out] group_entity_ln_to_gn  Group→entity connectivity (group-specific global ids, size = \p group_entity_idx[\p n_group])
  * \param [in]  ownership              Ownership
  *
- * \return  Number of entities
+ * \return Number of groups
  *
  */
 
@@ -786,7 +785,6 @@ PDM_isosurface_group_get
   int                   id_isosurface,
   int                   i_part,
   PDM_mesh_entities_t   entity_type,
-  int                  *n_group,
   int                 **group_entity_idx,
   int                 **group_entity,
   PDM_g_num_t         **group_entity_ln_to_gn,
@@ -906,6 +904,29 @@ PDM_isosurface_dvtx_coord_get
   int                id_isosurface,
   double           **dvtx_coord,
   PDM_ownership_t    ownership
+);
+
+
+/**
+ *
+ * \brief Get block distribution
+ *
+ * \param [in]  isos          \ref PDM_isosurface_t instance
+ * \param [in]  id_isosurface Iso-surface identifier
+ * \param [in]  entity_type   Entity type
+ * \param [out] distribution  Entity distribution
+ *
+ * \return Number of groups
+ *
+ */
+
+void
+PDM_isosurface_distrib_get
+(
+  PDM_isosurface_t     *isos,
+  int                   id_isosurface,
+  PDM_mesh_entities_t   entity_type,
+  PDM_g_num_t         **distribution
 );
 
 
@@ -1100,7 +1121,6 @@ PDM_isosurface_free
  * ==========
  * Algorithms
  */
-
 
 void
 PDM_isosurface_marching_algo

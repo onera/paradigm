@@ -164,14 +164,14 @@ _output_iso_result
     PDM_isosurface_ln_to_gn_get(isos, id_iso, i_part, PDM_MESH_ENTITY_EDGE,
                                &iso_edge_gnum,
                                 PDM_OWNERSHIP_KEEP);
-    PDM_isosurface_group_get(isos, id_iso, i_part, PDM_MESH_ENTITY_EDGE,
-                            &iso_edge_n_group, &iso_edge_group_idx, &iso_edge_group_lnum, &iso_edge_group_gnum,
-                             PDM_OWNERSHIP_KEEP);
+    iso_edge_n_group = PDM_isosurface_group_get(isos, id_iso, i_part, PDM_MESH_ENTITY_EDGE,
+                                               &iso_edge_group_idx, &iso_edge_group_lnum, &iso_edge_group_gnum,
+                                                PDM_OWNERSHIP_KEEP);
     // > Convert group into tag
-    int         *iso_edge_tag1      = PDM_array_zeros_int (iso_n_edge);
-    int         *iso_edge_tag2      = PDM_array_zeros_int (iso_n_edge);
-    PDM_g_num_t *iso_edge_tag1_gnum = PDM_array_zeros_gnum(iso_n_edge);
-    PDM_g_num_t *iso_edge_tag2_gnum = PDM_array_zeros_gnum(iso_n_edge);
+    int *iso_edge_tag1      = PDM_array_zeros_int(iso_n_edge);
+    int *iso_edge_tag2      = PDM_array_zeros_int(iso_n_edge);
+    int *iso_edge_tag1_gnum = PDM_array_zeros_int(iso_n_edge);
+    int *iso_edge_tag2_gnum = PDM_array_zeros_int(iso_n_edge);
     for (int i_group=0; i_group<iso_edge_n_group; ++i_group) {
       int i_beg_group = iso_edge_group_idx[i_group  ];
       int i_end_group = iso_edge_group_idx[i_group+1];
@@ -180,10 +180,10 @@ _output_iso_result
         PDM_g_num_t edge_gnum = iso_edge_group_gnum[i_read];
         if (iso_edge_tag1[edge_lnum-1]==0) {
           iso_edge_tag1     [edge_lnum-1] = i_group+1;
-          iso_edge_tag1_gnum[edge_lnum-1] = edge_gnum;
+          iso_edge_tag1_gnum[edge_lnum-1] = (int) edge_gnum;
         }
         iso_edge_tag2     [edge_lnum-1] = i_group+1;
-        iso_edge_tag2_gnum[edge_lnum-1] = edge_gnum;
+        iso_edge_tag2_gnum[edge_lnum-1] = (int) edge_gnum;
       }
     }
 
