@@ -767,6 +767,10 @@ _extract
       PDM_malloc(isos->extract_tetra_vtx , isos->n_part, int         *);
       PDM_malloc(isos->extract_tetra_gnum, isos->n_part, PDM_g_num_t *);
       PDM_malloc(isos->extract_tetra_lnum, isos->n_part, int         *);
+      memset(isos->extract_n_tetra   , 0, isos->n_part*sizeof(int          ));
+      memset(isos->extract_tetra_vtx , 0, isos->n_part*sizeof(int         *));
+      memset(isos->extract_tetra_gnum, 0, isos->n_part*sizeof(PDM_g_num_t *));
+      memset(isos->extract_tetra_lnum, 0, isos->n_part*sizeof(int         *));
     }
 
     int n_section = PDM_part_mesh_nodal_n_section_get(isos->pmesh_nodal);
@@ -1755,7 +1759,9 @@ _free_iso_face
         PDM_free(isos->iso_face_parent_idx [id_iso][i_part]);
         PDM_free(isos->iso_face_parent_gnum[id_iso][i_part]);
       }
-      PDM_free(isos->isovalue_face_idx   [id_iso][i_part]);
+      if (isos->entry_mesh_dim==3) {
+        PDM_free(isos->isovalue_face_idx   [id_iso][i_part]);
+      }
     }
   }
 

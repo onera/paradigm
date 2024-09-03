@@ -567,6 +567,10 @@ _build_active_edges
     int  n_elt  = sections_n_elt  [i_section];
     int *connec = sections_elt_vtx[i_section];
 
+    if (connec == NULL) {
+      // Skip empty sections
+      continue;
+    }
 
     // Increment key occurrences
     int n_pair    = PDM_n_nedge_elt_per_elmt(t_elt);
@@ -3097,20 +3101,22 @@ PDM_isosurface_marching_algo
   // > Allocate face edges
   // TODO: transformer en part_mesh_nodal (tetra sera que TRI et QUAD)
   //       quid des autres elements que les TETRA ? POLY_2D ? (MR gitlab)
-  int          *iso_n_face           = PDM_array_zeros_int(n_part);
+  int          *iso_n_face           = NULL;
   int         **iso_face_vtx_idx     = NULL;
   int         **iso_face_vtx         = NULL;
   PDM_g_num_t **iso_face_parent_gnum = NULL;
   int         **iso_face_parent_idx  = NULL;
   int         **iso_face_parent      = NULL;
   int         **isovalue_face_idx    = NULL;
-  PDM_malloc(iso_face_vtx_idx    , n_part, int         *);
-  PDM_malloc(iso_face_vtx        , n_part, int         *);
-  PDM_malloc(iso_face_parent_gnum, n_part, PDM_g_num_t *);
-  PDM_malloc(iso_face_parent_idx , n_part, int         *);
-  PDM_malloc(iso_face_parent     , n_part, int         *);
-  PDM_malloc(isovalue_face_idx   , n_part, int         *);
-
+  if (isos->entry_mesh_dim==3) {
+    iso_n_face = PDM_array_zeros_int(n_part);
+    PDM_malloc(iso_face_vtx_idx    , n_part, int         *);
+    PDM_malloc(iso_face_vtx        , n_part, int         *);
+    PDM_malloc(iso_face_parent_gnum, n_part, PDM_g_num_t *);
+    PDM_malloc(iso_face_parent_idx , n_part, int         *);
+    PDM_malloc(iso_face_parent     , n_part, int         *);
+    PDM_malloc(isovalue_face_idx   , n_part, int         *);
+  }
 
 
   for (int i_part = 0; i_part < n_part; i_part++) {
@@ -3304,14 +3310,15 @@ PDM_isosurface_marching_algo
     isovalue_edge_idx    [i_part][0] = 0;
 
     // > Allocate face
-    iso_face_vtx_idx    [i_part] = NULL;
-    iso_face_vtx        [i_part] = NULL;
-    iso_face_parent_idx [i_part] = NULL;
-    iso_face_parent     [i_part] = NULL;
-    iso_face_parent_gnum[i_part] = NULL;
-    PDM_malloc(isovalue_face_idx[i_part], n_isovalues + 1, int);
-    isovalue_face_idx   [i_part][0] = 0;
-
+    if (isos->entry_mesh_dim==3) {
+      iso_face_vtx_idx    [i_part] = NULL;
+      iso_face_vtx        [i_part] = NULL;
+      iso_face_parent_idx [i_part] = NULL;
+      iso_face_parent     [i_part] = NULL;
+      iso_face_parent_gnum[i_part] = NULL;
+      PDM_malloc(isovalue_face_idx[i_part], n_isovalues + 1, int);
+      isovalue_face_idx   [i_part][0] = 0;
+    }
 
     /*
      * Build isosurface mesh
@@ -3399,16 +3406,28 @@ PDM_isosurface_marching_algo
       PDM_free(_vtx_to_iso_vtx);
 
       isovalue_edge_idx[i_part][i_isovalue+1] = iso_n_edge[i_part];
-      isovalue_face_idx[i_part][i_isovalue+1] = iso_n_face[i_part];
+      if (isos->entry_mesh_dim==3) {
+        isovalue_face_idx[i_part][i_isovalue+1] = iso_n_face[i_part];
+      }
       
       t_end = PDM_MPI_Wtime();
-      printf("   isovalue %2d : %.3fs  (%6d vertices, %6d edges, %6d faces)\n",
-             i_isovalue,
-             t_end - t_start,
-             iso_n_vtx[i_part],
-             isovalue_edge_idx[i_part][i_isovalue+1] - isovalue_edge_idx[i_part][i_isovalue],
-             isovalue_face_idx[i_part][i_isovalue+1] - isovalue_face_idx[i_part][i_isovalue]);
-      fflush(stdout);
+      if (isos->entry_mesh_dim==2) {
+        printf("   isovalue %2d : %.3fs  (%6d vertices, %6d edges)\n",
+               i_isovalue,
+               t_end - t_start,
+               iso_n_vtx[i_part],
+               isovalue_edge_idx[i_part][i_isovalue+1] - isovalue_edge_idx[i_part][i_isovalue]);
+        fflush(stdout);
+      }
+      else if (isos->entry_mesh_dim==3) {
+        printf("   isovalue %2d : %.3fs  (%6d vertices, %6d edges, %6d faces)\n",
+               i_isovalue,
+               t_end - t_start,
+               iso_n_vtx[i_part],
+               isovalue_edge_idx[i_part][i_isovalue+1] - isovalue_edge_idx[i_part][i_isovalue],
+               isovalue_face_idx[i_part][i_isovalue+1] - isovalue_face_idx[i_part][i_isovalue]);
+        fflush(stdout);
+      }
 
     } // End of loop on isovalues
 
@@ -3563,30 +3582,33 @@ PDM_isosurface_marching_algo
    * Build vertices/edges/faces gnum
    */
   PDM_g_num_t **iso_vtx_gnum  = NULL;
-  PDM_g_num_t **iso_edge_gnum = NULL;
-  PDM_g_num_t **iso_face_gnum = NULL;
   PDM_malloc(iso_vtx_gnum , n_part, PDM_g_num_t *);
-  PDM_malloc(iso_edge_gnum, n_part, PDM_g_num_t *);
-  PDM_malloc(iso_face_gnum, n_part, PDM_g_num_t *);
   _generate_gnum_from_parents(isos->comm,
                               isos->n_part,
                               iso_n_vtx,
                               iso_vtx_parent_gnum,
                               3,
                               iso_vtx_gnum);
+
+  PDM_g_num_t **iso_edge_gnum = NULL;
+  PDM_malloc(iso_edge_gnum, n_part, PDM_g_num_t *);
   _generate_gnum_from_parents(isos->comm,
                               isos->n_part,
                               iso_n_edge,
                               iso_edge_parent_gnum,
                               2,
                               iso_edge_gnum);
-  _generate_gnum_from_parents(isos->comm,
-                              isos->n_part,
-                              iso_n_face,
-                              iso_face_parent_gnum,
-                              3,
-                              iso_face_gnum);
-  
+
+  PDM_g_num_t **iso_face_gnum = NULL;
+  if (isos->entry_mesh_dim==3) {
+    PDM_malloc(iso_face_gnum, n_part, PDM_g_num_t *);
+    _generate_gnum_from_parents(isos->comm,
+                                isos->n_part,
+                                iso_n_face,
+                                iso_face_parent_gnum,
+                                3,
+                                iso_face_gnum);
+  }
 
   /**
    * Now we have generated iso gnums, we can use these array to store parent_gnum
@@ -3617,23 +3639,27 @@ PDM_isosurface_marching_algo
       
 
       // > Faces
-      i_write = 0;
-      for (int i_face = 0; i_face < iso_n_face[i_part]; i_face++) {
-        int i_beg_parent = iso_face_parent_idx[i_part][i_face  ];
-        int i_end_parent = iso_face_parent_idx[i_part][i_face+1];
-        for (int i_parent=i_beg_parent; i_parent<i_end_parent; ++i_parent) {
-          int tetra_lnum = iso_face_parent[i_part][i_parent];
-          iso_face_parent_gnum[i_part][i_write++] = isos->extract_tetra_gnum[i_part][tetra_lnum-1];
+      if (isos->entry_mesh_dim==3) {
+        i_write = 0;
+        for (int i_face = 0; i_face < iso_n_face[i_part]; i_face++) {
+          int i_beg_parent = iso_face_parent_idx[i_part][i_face  ];
+          int i_end_parent = iso_face_parent_idx[i_part][i_face+1];
+          for (int i_parent=i_beg_parent; i_parent<i_end_parent; ++i_parent) {
+            int tetra_lnum = iso_face_parent[i_part][i_parent];
+            iso_face_parent_gnum[i_part][i_write++] = isos->extract_tetra_gnum[i_part][tetra_lnum-1];
+          }
         }
+        PDM_realloc(iso_face_parent_gnum[i_part], iso_face_parent_gnum[i_part], i_write, PDM_g_num_t);
       }
-      PDM_realloc(iso_face_parent_gnum[i_part], iso_face_parent_gnum[i_part], i_write, PDM_g_num_t);
     }
   }
   else {
     for (int i_part = 0; i_part < isos->n_part; i_part++) {
       PDM_free(iso_vtx_parent_gnum [i_part]);
       PDM_free(iso_edge_parent_gnum[i_part]);
-      PDM_free(iso_face_parent_gnum[i_part]);
+      if (isos->entry_mesh_dim==3) {
+        PDM_free(iso_face_parent_gnum[i_part]);
+      }
     }
     PDM_free(iso_vtx_parent_gnum );
     PDM_free(iso_edge_parent_gnum);
@@ -3723,18 +3749,20 @@ PDM_isosurface_marching_algo
   isos->iso_edge_group_gnum   [id_iso] = iso_edge_group_gnum;
   isos->isovalue_edge_idx     [id_iso] = isovalue_edge_idx;
   
-  isos->iso_n_face            [id_iso] = iso_n_face;
-  isos->iso_face_vtx_idx      [id_iso] = iso_face_vtx_idx;
-  isos->iso_face_vtx          [id_iso] = iso_face_vtx;
-  isos->iso_face_gnum         [id_iso] = iso_face_gnum;
-  isos->iso_face_parent_idx   [id_iso] = iso_face_parent_idx;
-  if (isos->extract_kind==PDM_EXTRACT_PART_KIND_REEQUILIBRATE) {
-    isos->iso_face_parent_gnum[id_iso] = iso_face_parent_gnum;
+  if (isos->entry_mesh_dim==3) {
+    isos->iso_n_face            [id_iso] = iso_n_face;
+    isos->iso_face_vtx_idx      [id_iso] = iso_face_vtx_idx;
+    isos->iso_face_vtx          [id_iso] = iso_face_vtx;
+    isos->iso_face_gnum         [id_iso] = iso_face_gnum;
+    isos->iso_face_parent_idx   [id_iso] = iso_face_parent_idx;
+    if (isos->extract_kind==PDM_EXTRACT_PART_KIND_REEQUILIBRATE) {
+      isos->iso_face_parent_gnum[id_iso] = iso_face_parent_gnum;
+    }
+    else {
+      isos->iso_face_parent_lnum[id_iso] = iso_face_parent;
+    }
+    isos->isovalue_face_idx     [id_iso] = isovalue_face_idx;
   }
-  else {
-    isos->iso_face_parent_lnum[id_iso] = iso_face_parent;
-  }
-  isos->isovalue_face_idx     [id_iso] = isovalue_face_idx;
 
   PDM_malloc(isos->iso_owner_vtx_coord        [id_iso], n_part, PDM_ownership_t  );
   PDM_malloc(isos->iso_owner_vtx_parent_weight[id_iso], n_part, PDM_ownership_t  );
@@ -3769,12 +3797,14 @@ PDM_isosurface_marching_algo
     }
     isos->iso_owner_connec       [id_iso][i_part][PDM_CONNECTIVITY_TYPE_EDGE_VTX] = PDM_OWNERSHIP_KEEP;
 
-    isos->iso_owner_gnum         [id_iso][i_part][PDM_MESH_ENTITY_FACE          ] = PDM_OWNERSHIP_KEEP;
-    if (isos->extract_kind==PDM_EXTRACT_PART_KIND_LOCAL) {
-      isos->iso_owner_parent_lnum[id_iso][i_part][PDM_MESH_ENTITY_FACE          ] = PDM_OWNERSHIP_KEEP;
+    if (isos->entry_mesh_dim==3) {
+      isos->iso_owner_gnum         [id_iso][i_part][PDM_MESH_ENTITY_FACE          ] = PDM_OWNERSHIP_KEEP;
+      if (isos->extract_kind==PDM_EXTRACT_PART_KIND_LOCAL) {
+        isos->iso_owner_parent_lnum[id_iso][i_part][PDM_MESH_ENTITY_FACE          ] = PDM_OWNERSHIP_KEEP;
+      }
+      isos->iso_owner_connec       [id_iso][i_part][PDM_CONNECTIVITY_TYPE_FACE_VTX] = PDM_OWNERSHIP_KEEP;
     }
-    isos->iso_owner_connec       [id_iso][i_part][PDM_CONNECTIVITY_TYPE_FACE_VTX] = PDM_OWNERSHIP_KEEP;
-    
+
     if (isos->entry_mesh_dim==3) {
       isos->iso_owner_edge_bnd[id_iso][i_part] = PDM_OWNERSHIP_KEEP;
     }
