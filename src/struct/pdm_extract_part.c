@@ -4833,6 +4833,9 @@ _extract_part_nodal_local_vtx
   PDM_malloc(pextract_vtx_coord, n_part, double      *);
   PDM_malloc(pextract_vtx_g_num, n_part, PDM_g_num_t *);
 
+  PDM_malloc(extrp->pextract_n_entity          [PDM_MESH_ENTITY_VTX], n_part, int  );
+  PDM_malloc(extrp->pextract_entity_parent_lnum[PDM_MESH_ENTITY_VTX], n_part, int *);
+
   for (int i_part = 0; i_part < n_part; i_part++) {
     int n_vtx = PDM_part_mesh_nodal_n_vtx_get(extrp->pmn, i_part);
 
@@ -4846,6 +4849,8 @@ _extract_part_nodal_local_vtx
     PDM_g_num_t *extract_vtx_g_num = NULL;
     PDM_malloc(extract_vtx_coord, n_vtx * 3, double     );
     PDM_malloc(extract_vtx_g_num, n_vtx    , PDM_g_num_t);
+
+    PDM_malloc(extrp->pextract_entity_parent_lnum[PDM_MESH_ENTITY_VTX][i_part], n_vtx, int);
 
     int idx_read = -1;
     for (int i_section = 0; i_section < n_section; i_section++) {
@@ -4884,6 +4889,8 @@ _extract_part_nodal_local_vtx
             for (int i = connec_idx[i_elt]; i < connec_idx[i_elt+1]; i++) {
               int i_vtx = connec[i] - 1;
               if (vtx_old_to_new[i_part][i_vtx] < 0) {
+                extrp->pextract_entity_parent_lnum[PDM_MESH_ENTITY_VTX][i_part][extract_n_vtx] = i_vtx;
+
                 memcpy(&extract_vtx_coord[3*extract_n_vtx], &vtx_coord[3*i_vtx], sizeof(double) * 3);
                 extract_vtx_g_num[extract_n_vtx] = vtx_g_num[i_vtx];
                 vtx_old_to_new[i_part][i_vtx] = ++extract_n_vtx;
@@ -4988,6 +4995,10 @@ _extract_part_nodal_local_vtx
     PDM_realloc(extract_vtx_coord, pextract_vtx_coord[i_part], extract_n_vtx * 3, double     );
     PDM_realloc(extract_vtx_g_num, pextract_vtx_g_num[i_part], extract_n_vtx    , PDM_g_num_t);
 
+    extrp->pextract_n_entity[PDM_MESH_ENTITY_VTX][i_part] = extract_n_vtx;
+    PDM_realloc(extrp->pextract_entity_parent_lnum[PDM_MESH_ENTITY_VTX][i_part],
+                extrp->pextract_entity_parent_lnum[PDM_MESH_ENTITY_VTX][i_part], extract_n_vtx, int);
+
   } // End loop on parts
 
   /* Compute child vtx gnum if requested */
@@ -5050,17 +5061,21 @@ _extract_part_nodal_local_pmne
   }
 
   int mesh_dimension = -1;
+  PDM_mesh_entities_t entity_type = PDM_MESH_ENTITY_MAX;
   switch (geom_kind) {
     case PDM_GEOMETRY_KIND_RIDGE: {
       mesh_dimension = 1;
+      entity_type    = PDM_MESH_ENTITY_EDGE;
       break;
     }
     case PDM_GEOMETRY_KIND_SURFACIC: {
       mesh_dimension = 2;
+      entity_type    = PDM_MESH_ENTITY_FACE;
       break;
     }
     case PDM_GEOMETRY_KIND_VOLUMIC: {
       mesh_dimension = 3;
+      entity_type    = PDM_MESH_ENTITY_CELL;
       break;
     }
     default: {
@@ -5099,8 +5114,24 @@ _extract_part_nodal_local_pmne
     extract_sections_id[i_section] = PDM_part_mesh_nodal_elmts_add(extract_pmne, t_elt);
   }
 
+  PDM_malloc(extrp->pextract_n_entity          [entity_type], n_part, int  );
+  PDM_malloc(extrp->pextract_entity_parent_lnum[entity_type], n_part, int *);
+
   /* Fill extracted sections */
   for (int i_part = 0; i_part < n_part; i_part++) {
+
+    int n_elt_tot = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, i_part);
+
+    extrp->pextract_n_entity[entity_type][i_part] = 0;
+    PDM_malloc(extrp->pextract_entity_parent_lnum[entity_type][i_part], n_elt_tot, int);
+
+    for (int i = 0; i < n_elt_tot; i++) {
+      if (is_selected[i_part][i] >= 0) {
+        extrp->pextract_entity_parent_lnum[entity_type][i_part][is_selected[i_part][i]] = i;
+        extrp->pextract_n_entity[entity_type][i_part]++;
+      }
+    }
+
 
     int idx_read = -1;
     int part_n_extracted = 0;
