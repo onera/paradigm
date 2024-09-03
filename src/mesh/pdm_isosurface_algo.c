@@ -2631,6 +2631,10 @@ _isosurface_ngon_single_part
 )
 {
   int dbg = 0;
+  int is_3d = 0;
+  if (n_cell != 0) {
+    is_3d = 1;
+  }
 
   /* Count isosurface vertices */
   int iso_n_vtx = 0;
@@ -2666,12 +2670,14 @@ _isosurface_ngon_single_part
     *out_iso_vtx_parent_edge   = iso_vtx_parent_edge;
     *out_iso_vtx_parent_weight = iso_vtx_parent_weight;
 
-    *out_iso_n_face          = 0;
-    *out_iso_face_parent_idx = PDM_array_zeros_int(1);
-    PDM_malloc(*out_iso_face_parent, 0, int);
-    *out_iso_face_vtx_idx    = PDM_array_zeros_int(1);
-    PDM_malloc(*out_iso_face_vtx, 0, int);
-    *out_isovalue_face_idx   = PDM_array_zeros_int(n_isovalues + 1);
+    if (is_3d) {
+      *out_iso_n_face          = 0;
+      *out_iso_face_parent_idx = PDM_array_zeros_int(1);
+      PDM_malloc(*out_iso_face_parent, 0, int);
+      *out_iso_face_vtx_idx    = PDM_array_zeros_int(1);
+      PDM_malloc(*out_iso_face_vtx, 0, int);
+      *out_isovalue_face_idx   = PDM_array_zeros_int(n_isovalues + 1);
+    }
 
     if (face_tag != NULL) {
       *out_iso_n_edge          = 0;
@@ -2728,8 +2734,10 @@ _isosurface_ngon_single_part
   iso_face_vtx_idx   [0]   = 0;
 
   int *isovalue_face_idx = NULL;
-  PDM_malloc(isovalue_face_idx, n_isovalues + 1, int);
-  isovalue_face_idx[0] = 0;
+  if (is_3d) {
+    PDM_malloc(isovalue_face_idx, n_isovalues + 1, int);
+    isovalue_face_idx[0] = 0;
+  }
 
   int iso_n_face = 0;
 
@@ -2945,7 +2953,9 @@ _isosurface_ngon_single_part
     } // End of loop on cells
 
     isovalue_vtx_idx [i_isovalue+1] = iso_n_vtx;
-    isovalue_face_idx[i_isovalue+1] = iso_n_face;
+    if (is_3d) {
+      isovalue_face_idx[i_isovalue+1] = iso_n_face;
+    }
     if (face_tag != NULL) {
       isovalue_edge_idx[i_isovalue+1] = iso_n_edge;
     }
