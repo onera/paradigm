@@ -6445,12 +6445,15 @@ PDM_part_mesh_nodal_elmts_group_set
  const int                           i_group,
        int                           n_group_elmt,
        int                          *group_elmt,
-       PDM_g_num_t                  *group_ln_to_gn
+       PDM_g_num_t                  *group_ln_to_gn,
+       PDM_ownership_t               ownership_group
 )
 {
   pmne->n_group_elmt  [i_part][i_group] = n_group_elmt;
   pmne->group_elmt    [i_part][i_group] = group_elmt;
   pmne->group_ln_to_gn[i_part][i_group] = group_ln_to_gn;
+
+  pmne->ownership_group = ownership_group;
 }
 
 void

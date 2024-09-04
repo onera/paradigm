@@ -769,7 +769,8 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
                                             i_group,
                                             n_group_elmt,
                                             group_elmt,
-                                            group_ln_to_gn);
+                                            group_ln_to_gn,
+                                            PDM_OWNERSHIP_KEEP);
       }
 
       PDM_free(pgroup_idx     [i_part]);

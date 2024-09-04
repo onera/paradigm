@@ -1437,7 +1437,8 @@ _extract_part_and_reequilibrate_nodal_groups
                                           i_group,
                                           extract_group_elt_n   [i_part][i_group],
                                           extract_group_elt     [i_part][i_group],
-                                          extract_group_elt_gnum[i_part][i_group]);
+                                          extract_group_elt_gnum[i_part][i_group],
+                                          PDM_OWNERSHIP_KEEP);
     }
     PDM_free(extract_group_elt[i_part]);
   }
@@ -5194,7 +5195,8 @@ _extract_part_nodal_local_pmne
                                           i_group,
                                           extract_n_group_elmt,
                                           extract_group_elmt,
-                                          extract_group_g_num);
+                                          extract_group_g_num,
+                                          PDM_OWNERSHIP_KEEP);
     } // End loop on groups
   } // End loop on parts
   PDM_free(extract_sections_id);
@@ -6008,7 +6010,6 @@ _extract_part_nodal
         }
 
 
-        // jpp du nodal -_-
         int i_child = -1;
         PDM_array_reset_int(extract_parent_to_child_n[i_part], n_extract_parent, 0);
 
