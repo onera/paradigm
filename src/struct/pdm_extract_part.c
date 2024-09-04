@@ -238,288 +238,6 @@ _part_free
   PDM_free(part);
 }
 
-static
-void
-_edge_center_2d
-(
-  int       n_part_in,
-  int      *n_extract,
-  int     **extract_lnum,
-  int     **pedge_vtx,
-  double  **pvtx_coord,
-  double ***edge_center
-)
-{
-  for(int i_part = 0; i_part < n_part_in; ++i_part) {
-    assert(pedge_vtx [i_part] != NULL);
-    assert(pvtx_coord[i_part] != NULL);
-  }
-
-  double* *entity_center;
-  PDM_malloc(entity_center, n_part_in, double * );
-  for(int i_part = 0; i_part < n_part_in; ++i_part) {
-    PDM_malloc(entity_center[i_part], 3 * n_extract[i_part], double);
-
-    double *_pvtx_coord = pvtx_coord[i_part];
-    int    *_pedge_vtx  = pedge_vtx [i_part];
-
-    for(int idx_edge = 0; idx_edge < n_extract[i_part]; ++idx_edge) {
-      int i_edge = extract_lnum[i_part][idx_edge]-1;
-      int i_vtx1 = _pedge_vtx[2*i_edge  ]-1;
-      int i_vtx2 = _pedge_vtx[2*i_edge+1]-1;
-      entity_center[i_part][3*idx_edge  ] = 0.5 * (_pvtx_coord[3*i_vtx1  ] + _pvtx_coord[3*i_vtx2  ]);
-      entity_center[i_part][3*idx_edge+1] = 0.5 * (_pvtx_coord[3*i_vtx1+1] + _pvtx_coord[3*i_vtx2+1]);
-      entity_center[i_part][3*idx_edge+2] = 0.5 * (_pvtx_coord[3*i_vtx1+2] + _pvtx_coord[3*i_vtx2+2]);
-    }
-  }
-  *edge_center = entity_center;
-}
-
-
-static
-void
-_face_center_2d
-(
-  int       n_part_in,
-  int      *n_extract,
-  int     **extract_lnum,
-  int     **pface_edge_idx,
-  int     **pface_edge,
-  int     **pedge_vtx,
-  double  **pvtx_coord,
-  double ***face_center
-)
-{
-  for(int i_part = 0; i_part < n_part_in; ++i_part) {
-    assert(pface_edge    [i_part] != NULL);
-    assert(pface_edge_idx[i_part] != NULL);
-    assert(pedge_vtx     [i_part] != NULL);
-    assert(pvtx_coord    [i_part] != NULL);
-  }
-
-  double* *entity_center;
-  PDM_malloc(entity_center, n_part_in, double * );
-  for(int i_part = 0; i_part < n_part_in; ++i_part) {
-    PDM_malloc(entity_center[i_part], 3 * n_extract[i_part], double);
-
-    int    *_pface_edge     = pface_edge    [i_part];
-    int    *_pface_edge_idx = pface_edge_idx[i_part];
-    int    *_pedge_vtx      = pedge_vtx     [i_part];
-    double *_pvtx_coord     = pvtx_coord    [i_part];
-
-    for(int idx_face = 0; idx_face < n_extract[i_part]; ++idx_face) {
-
-      int i_face = extract_lnum[i_part][idx_face]-1;
-      entity_center[i_part][3*idx_face  ] = 0.;
-      entity_center[i_part][3*idx_face+1] = 0.;
-      entity_center[i_part][3*idx_face+2] = 0.;
-
-      double inv = 1./((double) _pface_edge_idx[i_face+1] - _pface_edge_idx[i_face]);
-
-      for(int idx_edge = _pface_edge_idx[i_face]; idx_edge < _pface_edge_idx[i_face+1]; ++idx_edge) {
-        int i_edge = PDM_ABS(_pface_edge[idx_edge])-1;
-        int i_vtx1 = _pedge_vtx[2*i_edge  ] - 1;
-        int i_vtx2 = _pedge_vtx[2*i_edge+1] - 1;
-
-        entity_center[i_part][3*idx_face  ] += 0.5 * (_pvtx_coord[3*i_vtx1  ] + _pvtx_coord[3*i_vtx2  ]);
-        entity_center[i_part][3*idx_face+1] += 0.5 * (_pvtx_coord[3*i_vtx1+1] + _pvtx_coord[3*i_vtx2+1]);
-        entity_center[i_part][3*idx_face+2] += 0.5 * (_pvtx_coord[3*i_vtx1+2] + _pvtx_coord[3*i_vtx2+2]);
-
-      }
-      entity_center[i_part][3*idx_face  ] = entity_center[i_part][3*idx_face  ] * inv;
-      entity_center[i_part][3*idx_face+1] = entity_center[i_part][3*idx_face+1] * inv;
-      entity_center[i_part][3*idx_face+2] = entity_center[i_part][3*idx_face+2] * inv;
-    }
-  }
-
-  *face_center = entity_center;
-}
-
-static
-void
-_face_center_2d_from_vtx
-(
-  int       n_part_in,
-  int      *n_extract,
-  int     **extract_lnum,
-  int     **pface_vtx_idx,
-  int     **pface_vtx,
-  double  **pvtx_coord,
-  double ***face_center
-)
-{
-  for(int i_part = 0; i_part < n_part_in; ++i_part) {
-    assert(pface_vtx    [i_part] != NULL);
-    assert(pface_vtx_idx[i_part] != NULL);
-    assert(pvtx_coord   [i_part] != NULL);
-  }
-
-  double* *entity_center;
-  PDM_malloc(entity_center, n_part_in, double * );
-  for(int i_part = 0; i_part < n_part_in; ++i_part) {
-    PDM_malloc(entity_center[i_part], 3 * n_extract[i_part], double);
-
-    int    *_pface_vtx     = pface_vtx    [i_part];
-    int    *_pface_vtx_idx = pface_vtx_idx[i_part];
-    double *_pvtx_coord    = pvtx_coord   [i_part];
-
-    for(int idx_face = 0; idx_face < n_extract[i_part]; ++idx_face) {
-
-      int i_face = extract_lnum[i_part][idx_face]-1;
-      entity_center[i_part][3*idx_face  ] = 0.;
-      entity_center[i_part][3*idx_face+1] = 0.;
-      entity_center[i_part][3*idx_face+2] = 0.;
-
-      double inv = 1./((double) _pface_vtx_idx[i_face+1] - _pface_vtx_idx[i_face]);
-
-      for(int idx_vtx = _pface_vtx_idx[i_face]; idx_vtx < _pface_vtx_idx[i_face+1]; ++idx_vtx) {
-        int i_vtx = _pface_vtx[idx_vtx] - 1;
-
-        entity_center[i_part][3*idx_face  ] += _pvtx_coord[3*i_vtx  ];
-        entity_center[i_part][3*idx_face+1] += _pvtx_coord[3*i_vtx+1];
-        entity_center[i_part][3*idx_face+2] += _pvtx_coord[3*i_vtx+2];
-
-      }
-      entity_center[i_part][3*idx_face  ] = entity_center[i_part][3*idx_face  ] * inv;
-      entity_center[i_part][3*idx_face+1] = entity_center[i_part][3*idx_face+1] * inv;
-      entity_center[i_part][3*idx_face+2] = entity_center[i_part][3*idx_face+2] * inv;
-    }
-  }
-
-  *face_center = entity_center;
-}
-
-
-static
-void
-_cell_center_3d
-(
-  int       have_connectivity[],
-  int       n_part_in,
-  int      *n_extract,
-  int     **extract_lnum,
-  int     **pcell_face_idx,
-  int     **pcell_face,
-  int     **pface_edge_idx,
-  int     **pface_edge,
-  int     **pface_vtx_idx,
-  int     **pface_vtx,
-  int     **pedge_vtx,
-  double  **pvtx_coord,
-  double ***cell_center
-)
-{
-  int from_edge = have_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE];
-  int from_face = have_connectivity[PDM_CONNECTIVITY_TYPE_FACE_VTX ];
-
-  double* *entity_center;
-  PDM_malloc(entity_center, n_part_in, double *);
-
-  if(from_face == 1) {
-    for(int i_part = 0; i_part < n_part_in; ++i_part) {
-      PDM_malloc(entity_center[i_part], 3 * n_extract[i_part], double);
-
-      int    *_pcell_face     = pcell_face    [i_part];
-      int    *_pcell_face_idx = pcell_face_idx[i_part];
-      int    *_pface_vtx      = pface_vtx     [i_part];
-      int    *_pface_vtx_idx  = pface_vtx_idx [i_part];
-      double *_pvtx_coord     = pvtx_coord    [i_part];
-
-      // PDM_log_trace_array_int(extract_lnum[i_part], n_extract[i_part], "extract_lnum ::");
-      for(int idx_cell = 0; idx_cell < n_extract[i_part]; ++idx_cell) {
-        int i_cell = extract_lnum[i_part][idx_cell]-1;
-
-        entity_center[i_part][3*idx_cell  ] = 0.;
-        entity_center[i_part][3*idx_cell+1] = 0.;
-        entity_center[i_part][3*idx_cell+2] = 0.;
-
-        double inv = 1./((double)  _pcell_face_idx[idx_cell+1] - _pcell_face_idx[idx_cell]);
-
-        for(int idx_face = _pcell_face_idx[i_cell]; idx_face < _pcell_face_idx[i_cell+1]; ++idx_face) {
-          int i_face = PDM_ABS(_pcell_face[idx_face])-1;
-
-          double fcx = 0;
-          double fcy = 0;
-          double fcz = 0;
-          double inv2 = 1./((double) _pface_vtx_idx[i_face+1] - _pface_vtx_idx[i_face]);
-
-          for(int idx_vtx = _pface_vtx_idx[i_face]; idx_vtx < _pface_vtx_idx[i_face+1]; ++idx_vtx) {
-            int i_vtx = _pface_vtx[idx_vtx]-1;
-            fcx += _pvtx_coord[3*i_vtx  ];
-            fcy += _pvtx_coord[3*i_vtx+1];
-            fcz += _pvtx_coord[3*i_vtx+2];
-          }
-          fcx = fcx * inv2;
-          fcy = fcy * inv2;
-          fcz = fcz * inv2;
-
-          entity_center[i_part][3*idx_cell  ] += fcx;
-          entity_center[i_part][3*idx_cell+1] += fcy;
-          entity_center[i_part][3*idx_cell+2] += fcz;
-        }
-
-        entity_center[i_part][3*idx_cell  ] = entity_center[i_part][3*idx_cell  ] * inv;
-        entity_center[i_part][3*idx_cell+1] = entity_center[i_part][3*idx_cell+1] * inv;
-        entity_center[i_part][3*idx_cell+2] = entity_center[i_part][3*idx_cell+2] * inv;
-      } /* End cell */
-    }
-  }
-
-  else if( from_edge == 1) {
-    for(int i_part = 0; i_part < n_part_in; ++i_part) {
-      PDM_malloc(entity_center[i_part], 3 * n_extract[i_part], double);
-
-      int    *_pcell_face     = pcell_face    [i_part];
-      int    *_pcell_face_idx = pcell_face_idx[i_part];
-      int    *_pface_edge     = pface_edge    [i_part];
-      int    *_pface_edge_idx = pface_edge_idx[i_part];
-      int    *_pedge_vtx      = pedge_vtx     [i_part];
-      double *_pvtx_coord     = pvtx_coord    [i_part];
-
-      for(int idx_cell = 0; idx_cell < n_extract[i_part]; ++idx_cell) {
-        int i_cell = extract_lnum[i_part][idx_cell]-1;
-
-        entity_center[i_part][3*idx_cell  ] = 0.;
-        entity_center[i_part][3*idx_cell+1] = 0.;
-        entity_center[i_part][3*idx_cell+2] = 0.;
-
-        double inv = 1./((double)  _pcell_face_idx[idx_cell+1] - _pcell_face_idx[idx_cell]);
-
-        double fcx = 0;
-        double fcy = 0;
-        double fcz = 0;
-        for(int idx_face = _pcell_face_idx[i_cell]; idx_face < _pcell_face_idx[i_cell+1]; ++idx_face) {
-          int i_face = PDM_ABS(_pcell_face[idx_face])-1;
-
-          double inv2 = 1./((double)  _pface_edge_idx[i_face+1] - _pface_edge_idx[i_face]);
-
-          for(int idx_edge = _pface_edge_idx[i_face]; idx_edge < _pface_edge_idx[i_face+1]; ++idx_edge) {
-            int i_edge = PDM_ABS(_pface_edge[idx_edge])-1;
-            int i_vtx1 = _pedge_vtx[2*i_edge  ] - 1;
-            int i_vtx2 = _pedge_vtx[2*i_edge+1] - 1;
-            fcx += 0.5 * (_pvtx_coord[3*i_vtx1  ] + _pvtx_coord[3*i_vtx2  ]);
-            fcy += 0.5 * (_pvtx_coord[3*i_vtx1+1] + _pvtx_coord[3*i_vtx2+1]);
-            fcz += 0.5 * (_pvtx_coord[3*i_vtx1+2] + _pvtx_coord[3*i_vtx2+2]);
-          }
-          fcx = fcx * inv2;
-          fcy = fcy * inv2;
-          fcz = fcz * inv2;
-
-          entity_center[i_part][3*idx_cell  ] += fcx;
-          entity_center[i_part][3*idx_cell+1] += fcy;
-          entity_center[i_part][3*idx_cell+2] += fcz;
-        }
-
-        entity_center[i_part][3*idx_cell  ] = entity_center[i_part][3*idx_cell  ] * inv;
-        entity_center[i_part][3*idx_cell+1] = entity_center[i_part][3*idx_cell+1] * inv;
-        entity_center[i_part][3*idx_cell+2] = entity_center[i_part][3*idx_cell+2] * inv;
-      } /* End cell */
-    }
-  }
-
-  *cell_center = entity_center;
-}
-
 
 static
 void
@@ -4204,47 +3922,46 @@ _extract_part_and_reequilibrate
   }
   else {
     if(extrp->dim == 3) {
-      _cell_center_3d(extrp->have_connectivity,
-                      extrp->n_part_in,
-                      extrp->n_extract,
-                      extrp->extract_lnum,
-                      extrp->pcell_face_idx,
-                      extrp->pcell_face,
-                      extrp->pface_edge_idx,
-                      extrp->pface_edge,
-                      extrp->pface_vtx_idx,
-                      extrp->pface_vtx,
-                      extrp->pedge_vtx,
-                      extrp->pvtx_coord,
-                      &entity_center);
+      PDM_part_geom_cell_center(extrp->n_part_in,
+                                extrp->n_extract,
+                                extrp->extract_lnum,
+                                extrp->pcell_face_idx,
+                                extrp->pcell_face,
+                                extrp->pface_edge_idx,
+                                extrp->pface_edge,
+                                extrp->pface_vtx_idx,
+                                extrp->pface_vtx,
+                                extrp->pedge_vtx,
+                                extrp->pvtx_coord,
+                                &entity_center);
     } else if(extrp->dim == 2) {
       // Compute entity_center with face_edge + edge_vtx
       if (from_face_edge) {
-        _face_center_2d(extrp->n_part_in,
-                        extrp->n_extract,
-                        extrp->extract_lnum,
-                        extrp->pface_edge_idx,
-                        extrp->pface_edge,
-                        extrp->pedge_vtx,
-                        extrp->pvtx_coord,
-                        &entity_center);
+        PDM_part_geom_face_center_from_edge(extrp->n_part_in,
+                                            extrp->n_extract,
+                                            extrp->extract_lnum,
+                                            extrp->pface_edge_idx,
+                                            extrp->pface_edge,
+                                            extrp->pedge_vtx,
+                                            extrp->pvtx_coord,
+                                            &entity_center);
       }
       else {
-       _face_center_2d_from_vtx(extrp->n_part_in,
-                                extrp->n_extract,
-                                extrp->extract_lnum,
-                                extrp->pface_vtx_idx,
-                                extrp->pface_vtx,
-                                extrp->pvtx_coord,
-                                &entity_center);
+       PDM_part_geom_face_center_from_vtx(extrp->n_part_in,
+                                          extrp->n_extract,
+                                          extrp->extract_lnum,
+                                          extrp->pface_vtx_idx,
+                                          extrp->pface_vtx,
+                                          extrp->pvtx_coord,
+                                          &entity_center);
       }
     } else if (extrp->dim == 1) {
-      _edge_center_2d(extrp->n_part_in,
-                      extrp->n_extract,
-                      extrp->extract_lnum,
-                      extrp->pedge_vtx,
-                      extrp->pvtx_coord,
-                      &entity_center);
+      PDM_part_geom_edge_center(extrp->n_part_in,
+                                extrp->n_extract,
+                                extrp->extract_lnum,
+                                extrp->pedge_vtx,
+                                extrp->pvtx_coord,
+                                &entity_center);
 
     } else {
       PDM_malloc(entity_center, extrp->n_part_in, double * );
@@ -5566,16 +5283,16 @@ _extract_part_nodal_local
       int **entity_to_vtx        = NULL;
       int **parent_to_entity_idx = NULL;
       int **parent_to_entity     = NULL;
-      PDM_part_mesh_nodal_elmts_compute_child_entities(pmne_parent,
-                                                       pmne,
-                                                       PDM_TRUE,
-                                                       &child_to_parent_idx,
-                                                       &child_to_parent,
-                                                       &n_entity,
-                                                       &entity_to_vtx_idx,
-                                                       &entity_to_vtx,
-                                                       &parent_to_entity_idx,
-                                                       &parent_to_entity);
+      PDM_part_mesh_nodal_elmts_compute_child_parent(pmne_parent,
+                                                     pmne,
+                                                     PDM_FALSE,
+                                                     &child_to_parent_idx,
+                                                     &child_to_parent,
+                                                     &n_entity,
+                                                     &entity_to_vtx_idx,
+                                                     &entity_to_vtx,
+                                                     &parent_to_entity_idx,
+                                                     &parent_to_entity);
 
       for (int i_part = 0; i_part < extrp->n_part_in; i_part++) {
 
@@ -6216,16 +5933,16 @@ _extract_part_nodal
       int **entity_to_vtx        = NULL;
       int **parent_to_entity_idx = NULL;
       int **parent_to_entity     = NULL;
-      PDM_part_mesh_nodal_elmts_compute_child_entities(pmne_parent,
-                                                       pmne_child,
-                                                       PDM_TRUE,
-                                                       &child_to_parent_idx,
-                                                       &child_to_parent,
-                                                       &n_entity,
-                                                       &entity_to_vtx_idx,
-                                                       &entity_to_vtx,
-                                                       &parent_to_entity_idx,
-                                                       &parent_to_entity);
+      PDM_part_mesh_nodal_elmts_compute_child_parent(pmne_parent,
+                                                     pmne_child,
+                                                     PDM_FALSE,
+                                                     &child_to_parent_idx,
+                                                     &child_to_parent,
+                                                     &n_entity,
+                                                     &entity_to_vtx_idx,
+                                                     &entity_to_vtx,
+                                                     &parent_to_entity_idx,
+                                                     &parent_to_entity);
 
 
       for (int i_part = 0; i_part < extrp->n_part_in; i_part++) {
@@ -6725,6 +6442,15 @@ PDM_extract_part_compute
      *  Nodal
      */
 
+    if (extrp->have_user_entity_center) {
+      int i_rank;
+      PDM_MPI_Comm_rank(extrp->comm, &i_rank);
+      if (i_rank == 0) {
+        printf("Warning : PDM_extract_part_entity_center_set is ignored when using a nodal mesh\n");
+        fflush(stdout);
+      }
+    }
+
     if (extrp->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL) {
       // LOCAL
       _extract_part_nodal_local(extrp);
@@ -7006,7 +6732,7 @@ PDM_extract_part_target_gnum_keep_ownnership
 
 /**
  *
- * \brief Set entity center (ussefull for equilibrate / hilbert ordering )
+ * \brief Set entity center (useful for equilibrate / hilbert ordering)
  *
  * \param [in]   extrp            PDM_extract_part_t structure
  * \param [in]   i_part           part identifier

@@ -262,7 +262,7 @@ _generate_entity_connectivity
   int         *out_pn_entity2,
   int         *pentity2_vtx_idx,
   int         *pentity2_vtx,
-  PDM_bool_t   only_child_link
+  PDM_bool_t   compute_parent_child
 )
 {
   /* Hash table from key = sum of vtx */
@@ -328,7 +328,7 @@ _generate_entity_connectivity
   }
 
   int *pentity1_entity2_n = NULL;
-  if (only_child_link == PDM_FALSE) {
+  if (compute_parent_child == PDM_FALSE) {
     pentity1_entity2_n = PDM_array_zeros_int(pn_entity1);
   }
 
@@ -417,7 +417,7 @@ _generate_entity_connectivity
     /* Normalement on a trouvé mais on check quand même :p */
     assert(idx_next_same_entity > 1);
 
-    if (only_child_link == PDM_FALSE) {
+    if (compute_parent_child == PDM_FALSE) {
       /* Generate new entity2 and append in connectivity entity2_vtx*/
       pentity2_vtx_idx[pn_entity2+1] = pentity2_vtx_idx[pn_entity2];
       for (int idx_vtx = 0; idx_vtx < n_vtx_child; ++idx_vtx) {
@@ -451,7 +451,7 @@ _generate_entity_connectivity
   *out_child_to_parent_idx = child_to_parent_idx;
   *out_child_to_parent     = child_to_parent;
 
-  if (only_child_link == PDM_TRUE) {
+  if (compute_parent_child == PDM_TRUE) {
     *out_pn_entity2 = 0;
     PDM_free(key_conflict_idx);
     PDM_free(key_to_conflict );
@@ -533,7 +533,7 @@ _generate_entity_connectivity
     }
   }
 
-  if (only_child_link == PDM_FALSE) {
+  if (compute_parent_child == PDM_FALSE) {
     PDM_free(pentity1_entity2_n);
   }
 
@@ -1798,19 +1798,19 @@ PDM_part_mesh_nodal_elmts_sections_local_decompose_faces
 
 
 void
-PDM_part_mesh_nodal_elmts_compute_child_entities
+PDM_part_mesh_nodal_elmts_compute_child_parent
 (
- PDM_part_mesh_nodal_elmts_t   *pmne_parent,
- PDM_part_mesh_nodal_elmts_t   *pmne_child,
- PDM_bool_t                     only_child_link,
- int                         ***out_child_to_parent_idx,
- int                         ***out_child_to_parent,
- int                          **out_n_entity,
- int                         ***out_entity_to_vtx_idx,
- int                         ***out_entity_to_vtx,
- int                         ***out_parent_to_entity_idx,
- int                         ***out_parent_to_entity
- )
+  PDM_part_mesh_nodal_elmts_t   *pmne_parent,
+  PDM_part_mesh_nodal_elmts_t   *pmne_child,
+  PDM_bool_t                     compute_parent_child,
+  int                         ***out_child_to_parent_idx,
+  int                         ***out_child_to_parent,
+  int                          **out_n_entity,
+  int                         ***out_entity_to_vtx_idx,
+  int                         ***out_entity_to_vtx,
+  int                         ***out_parent_to_entity_idx,
+  int                         ***out_parent_to_entity
+)
 {
   int dim_parent = pmne_parent->mesh_dimension;
   int dim_child  = pmne_child ->mesh_dimension;
@@ -1888,7 +1888,7 @@ PDM_part_mesh_nodal_elmts_compute_child_entities
   int **child_to_parent         = NULL;
 
 
-  if (only_child_link == PDM_FALSE) {
+  if (compute_parent_child == PDM_TRUE) {
     PDM_malloc(decompose_parent_entity, n_part, int *);
   }
   PDM_malloc(pn_entity          , n_part, int  );
@@ -1902,7 +1902,7 @@ PDM_part_mesh_nodal_elmts_compute_child_entities
     int pn_parent = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne_parent, i_part);
 
     int *_decompose_parent_entity = NULL;
-    if (only_child_link == PDM_FALSE) {
+    if (compute_parent_child == PDM_TRUE) {
       PDM_malloc(decompose_parent_entity[i_part], decompose_parent_entity_idx[i_part][pn_parent], int);
       _decompose_parent_entity = decompose_parent_entity[i_part];
     }
@@ -1910,22 +1910,22 @@ PDM_part_mesh_nodal_elmts_compute_child_entities
     PDM_malloc(pentity_vtx    [i_part], decompose_parent_entity_vtx_idx[i_part][n_decompose_parent_entity[i_part]], int);
 
     pentity_vtx_idx[i_part][0] = 0;
-    _generate_entity_connectivity(n_decompose_parent_entity            [i_part],
-                                  decompose_parent_entity_vtx_idx      [i_part],
-                                  decompose_parent_entity_vtx          [i_part],
-                                  decompose_parent_parent_elmt         [i_part],
-                                  n_decompose_child_entity             [i_part],
-                                  decompose_child_entity_vtx_idx       [i_part],
-                                  decompose_child_entity_vtx           [i_part],
-                                  &child_to_parent_idx                 [i_part],
-                                  &child_to_parent                     [i_part],
+    _generate_entity_connectivity(n_decompose_parent_entity      [i_part],
+                                  decompose_parent_entity_vtx_idx[i_part],
+                                  decompose_parent_entity_vtx    [i_part],
+                                  decompose_parent_parent_elmt   [i_part],
+                                  n_decompose_child_entity       [i_part],
+                                  decompose_child_entity_vtx_idx [i_part],
+                                  decompose_child_entity_vtx     [i_part],
+                                 &child_to_parent_idx            [i_part],
+                                 &child_to_parent                [i_part],
                                   pn_parent,
-                                  decompose_parent_entity_idx          [i_part],
+                                  decompose_parent_entity_idx    [i_part],
                                   _decompose_parent_entity,
-                                  &pn_entity                           [i_part],
-                                  pentity_vtx_idx                      [i_part],
-                                  pentity_vtx                          [i_part],
-                                  only_child_link);
+                                 &pn_entity                      [i_part],
+                                  pentity_vtx_idx                [i_part],
+                                  pentity_vtx                    [i_part],
+                                  compute_parent_child);
 
     PDM_free(decompose_parent_entity_vtx_idx      [i_part]);
     PDM_free(decompose_parent_entity_vtx          [i_part]);
@@ -1937,7 +1937,7 @@ PDM_part_mesh_nodal_elmts_compute_child_entities
     PDM_free(decompose_child_parent_elmt          [i_part]); // if needed, pass as [out] arguments
     PDM_free(decompose_child_parent_elmt_position [i_part]); // if needed, pass as [out] arguments
 
-    if (only_child_link) {
+    if (compute_parent_child == PDM_FALSE) {
       PDM_free(pentity_vtx_idx            [i_part]);
       PDM_free(pentity_vtx                [i_part]);
       PDM_free(decompose_parent_entity_idx[i_part]);
@@ -1960,7 +1960,7 @@ PDM_part_mesh_nodal_elmts_compute_child_entities
   PDM_free(decompose_child_parent_elmt          );
   PDM_free(decompose_child_parent_elmt_position );
 
-  if (only_child_link) {
+  if (compute_parent_child == PDM_FALSE) {
     PDM_free(pn_entity                  );
     PDM_free(pentity_vtx_idx            );
     PDM_free(pentity_vtx                );
