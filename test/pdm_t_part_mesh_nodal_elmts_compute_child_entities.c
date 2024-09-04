@@ -416,28 +416,28 @@ int main(int argc, char *argv[])
   for (int i_part = 0; i_part < n_part; i_part++) {
     PDM_free(ridge_edge_face_idx[i_part]);
     PDM_free(ridge_edge_face    [i_part]);
-    PDM_free(surf_edge_vtx_idx  [i_part]);
-    PDM_free(surf_edge_vtx      [i_part]);
-    PDM_free(surf_face_edge_idx [i_part]);
     if (compute_parent_child) {
+      PDM_free(surf_edge_vtx_idx  [i_part]);
+      PDM_free(surf_edge_vtx      [i_part]);
+      PDM_free(surf_face_edge_idx [i_part]);
       PDM_free(surf_face_edge[i_part]);
     }
     if (mesh_dimension == 3) {
       PDM_free(surf_face_cell_idx[i_part]);
       PDM_free(surf_face_cell    [i_part]);
-      PDM_free(face_vtx_idx      [i_part]);
-      PDM_free(face_vtx          [i_part]);
-      PDM_free(cell_face_idx     [i_part]);
       if (compute_parent_child) {
+        PDM_free(face_vtx_idx      [i_part]);
+        PDM_free(face_vtx          [i_part]);
+        PDM_free(cell_face_idx     [i_part]);
         PDM_free(cell_face[i_part]);
       }
 
       PDM_free(ridge_edge_cell_idx[i_part]);
       PDM_free(ridge_edge_cell    [i_part]);
-      PDM_free(vol_edge_vtx_idx   [i_part]);
-      PDM_free(vol_edge_vtx       [i_part]);
-      PDM_free(cell_vol_edge_idx  [i_part]);
       if (compute_parent_child) {
+        PDM_free(vol_edge_vtx_idx   [i_part]);
+        PDM_free(vol_edge_vtx       [i_part]);
+        PDM_free(cell_vol_edge_idx  [i_part]);
         PDM_free(cell_vol_edge[i_part]);
       }
     }

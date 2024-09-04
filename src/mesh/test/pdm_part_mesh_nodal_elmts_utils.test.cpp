@@ -62,7 +62,7 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal_elmts_utils] - part_mesh_nodal_elmts_compute
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
 
   PDM_Mesh_nodal_elt_t elt_type             = PDM_MESH_NODAL_N_ELEMENT_TYPES;
-  PDM_bool_t           compute_parent_child = PDM_FALSE;
+  PDM_bool_t           compute_parent_child = PDM_TRUE;
 
   int expected_n_entity[PDM_GEOMETRY_KIND_MAX];
   PDM_array_reset_int(expected_n_entity, PDM_GEOMETRY_KIND_MAX, 0);
@@ -80,7 +80,7 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal_elmts_utils] - part_mesh_nodal_elmts_compute
     expected_child_to_parent    [PDM_GEOMETRY_KIND_RIDGE] = {1, 3, 5, 14, 16, 18, 1, 7, 13, 6, 12, 18};
     SUBCASE("TRIA3, compute_parent_child = 1") {
       printf("TRIA3, compute_parent_child = 1\n");
-      compute_parent_child = PDM_FALSE;
+      compute_parent_child = PDM_TRUE;
       expected_n_entity[PDM_GEOMETRY_KIND_RIDGE] = 33;
       expected_entity_to_vtx_idx   [PDM_GEOMETRY_KIND_RIDGE] = {0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60, 62, 64, 66};
       expected_entity_to_vtx       [PDM_GEOMETRY_KIND_RIDGE] = {1, 2, 2, 3, 3, 4, 14, 13, 15, 14, 16, 15, 5, 1, 9, 5, 13, 9, 4, 8, 8, 12, 12, 16, 2, 5, 2, 6, 6, 3, 7, 3, 7, 4, 5, 6, 7, 6, 8, 7, 6, 9, 10, 6, 7, 10, 11, 7, 11, 8, 9, 10, 11, 10, 12, 11, 13, 10, 10, 14, 11, 14, 15, 11, 15, 12};
@@ -90,7 +90,7 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal_elmts_utils] - part_mesh_nodal_elmts_compute
     };
     SUBCASE("TRIA3, compute_parent_child = 0") {
       printf("TRIA3, compute_parent_child = 0\n");
-      compute_parent_child = PDM_TRUE;
+      compute_parent_child = PDM_FALSE;
     };
   }
 
@@ -100,7 +100,7 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal_elmts_utils] - part_mesh_nodal_elmts_compute
     expected_child_to_parent    [PDM_GEOMETRY_KIND_RIDGE] = {1, 2, 3, 7, 8, 9, 1, 4, 7, 3, 6, 9};
     SUBCASE("QUAD4, compute_parent_child = 1") {
       printf("QUAD4, compute_parent_child = 1\n");
-      compute_parent_child = PDM_FALSE;
+      compute_parent_child = PDM_TRUE;
       expected_n_entity[PDM_GEOMETRY_KIND_RIDGE] = 24;
       expected_entity_to_vtx_idx   [PDM_GEOMETRY_KIND_RIDGE] = {0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48};
       expected_entity_to_vtx       [PDM_GEOMETRY_KIND_RIDGE] = {1, 2, 2, 3, 3, 4, 14, 13, 15, 14, 16, 15, 5, 1, 9, 5, 13, 9, 4, 8, 8, 12, 12, 16, 2, 6, 3, 7, 6, 5, 7, 6, 8, 7, 10, 6, 11, 7, 10, 9, 11, 10, 11, 12, 10, 14, 15, 11};
@@ -109,7 +109,7 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal_elmts_utils] - part_mesh_nodal_elmts_compute
     };
     SUBCASE("QUAD4, compute_parent_child = 0") {
       printf("QUAD4, compute_parent_child = 0\n");
-      compute_parent_child = PDM_TRUE;
+      compute_parent_child = PDM_FALSE;
     };
   }
 
@@ -119,7 +119,7 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal_elmts_utils] - part_mesh_nodal_elmts_compute
     expected_child_to_parent    [PDM_GEOMETRY_KIND_RIDGE] = {9, 17, 1, 18, 2, 19, 10, 11, 23, 3, 24, 4, 25, 12, 9, 17, 5, 20, 6, 23, 11, 10, 19, 7, 22, 8, 25, 12};
     SUBCASE("POLY_2D, compute_parent_child = 1") {
       printf("POLY_2D, compute_parent_child = 1\n");
-      compute_parent_child = PDM_FALSE;
+      compute_parent_child = PDM_TRUE;
       expected_n_entity[PDM_GEOMETRY_KIND_RIDGE] = 76;
       expected_entity_to_vtx_idx   [PDM_GEOMETRY_KIND_RIDGE] = {0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60, 62, 64, 66, 68, 70, 72, 74, 76, 78, 80, 82, 84, 86, 88, 90, 92, 94, 96, 98, 100, 102, 104, 106, 108, 110, 112, 114, 116, 118, 120, 122, 124, 126, 128, 130, 132, 134, 136, 138, 140, 142, 144, 146, 148, 150, 152};
       expected_entity_to_vtx       [PDM_GEOMETRY_KIND_RIDGE] = {49, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 50, 43, 51, 44, 43, 45, 44, 46, 45, 47, 46, 48, 47, 52, 48, 7, 49, 11, 7, 21, 11, 25, 21, 35, 25, 39, 35, 51, 39, 50, 10, 10, 14, 14, 24, 24, 28, 28, 38, 38, 42, 42, 52, 7, 1, 8, 2, 3, 8, 4, 9, 9, 5, 10, 6, 12, 8, 13, 9, 15, 11, 12, 16, 12, 17, 15, 16, 13, 18, 19, 13, 14, 20, 17, 18, 21, 15, 16, 22, 20, 19, 17, 22, 18, 23, 23, 19, 24, 20, 26, 22, 27, 23, 29, 25, 26, 30, 31, 26, 30, 29, 27, 32, 27, 33, 28, 34, 32, 31, 29, 35, 36, 30, 36, 31, 33, 34, 37, 32, 37, 33, 38, 34, 40, 36, 37, 41, 39, 43, 40, 44, 40, 45, 41, 46, 47, 41, 48, 42};
@@ -128,7 +128,7 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal_elmts_utils] - part_mesh_nodal_elmts_compute
     };
     SUBCASE("POLY_2D, compute_parent_child = 0") {
       printf("POLY_2D, compute_parent_child = 0\n");
-      compute_parent_child = PDM_TRUE;
+      compute_parent_child = PDM_FALSE;
     };
   }
 
@@ -140,7 +140,7 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal_elmts_utils] - part_mesh_nodal_elmts_compute
     expected_child_to_parent    [PDM_GEOMETRY_KIND_RIDGE   ] = {1, 6, 11, 34, 38, 44, 1, 18, 31, 14, 26, 44, 92, 99, 102, 123, 127, 133, 93, 109, 123, 102, 117, 132, 1, 49, 91, 12, 56, 102, 33, 78, 123, 44, 87, 134};
     SUBCASE("TETRA4, compute_parent_child = 1") {
       printf("TETRA4, compute_parent_child = 1\n");
-      compute_parent_child = PDM_FALSE;
+      compute_parent_child = PDM_TRUE;
       expected_n_entity[PDM_GEOMETRY_KIND_SURFACIC] = 324;
       expected_n_entity[PDM_GEOMETRY_KIND_RIDGE   ] = 252;
       expected_entity_to_vtx_idx   [PDM_GEOMETRY_KIND_SURFACIC] = {0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45, 48, 51, 54, 57, 60, 63, 66, 69, 72, 75, 78, 81, 84, 87, 90, 93, 96, 99, 102, 105, 108, 111, 114, 117, 120, 123, 126, 129, 132, 135, 138, 141, 144, 147, 150, 153, 156, 159, 162, 165, 168, 171, 174, 177, 180, 183, 186, 189, 192, 195, 198, 201, 204, 207, 210, 213, 216, 219, 222, 225, 228, 231, 234, 237, 240, 243, 246, 249, 252, 255, 258, 261, 264, 267, 270, 273, 276, 279, 282, 285, 288, 291, 294, 297, 300, 303, 306, 309, 312, 315, 318, 321, 324, 327, 330, 333, 336, 339, 342, 345, 348, 351, 354, 357, 360, 363, 366, 369, 372, 375, 378, 381, 384, 387, 390, 393, 396, 399, 402, 405, 408, 411, 414, 417, 420, 423, 426, 429, 432, 435, 438, 441, 444, 447, 450, 453, 456, 459, 462, 465, 468, 471, 474, 477, 480, 483, 486, 489, 492, 495, 498, 501, 504, 507, 510, 513, 516, 519, 522, 525, 528, 531, 534, 537, 540, 543, 546, 549, 552, 555, 558, 561, 564, 567, 570, 573, 576, 579, 582, 585, 588, 591, 594, 597, 600, 603, 606, 609, 612, 615, 618, 621, 624, 627, 630, 633, 636, 639, 642, 645, 648, 651, 654, 657, 660, 663, 666, 669, 672, 675, 678, 681, 684, 687, 690, 693, 696, 699, 702, 705, 708, 711, 714, 717, 720, 723, 726, 729, 732, 735, 738, 741, 744, 747, 750, 753, 756, 759, 762, 765, 768, 771, 774, 777, 780, 783, 786, 789, 792, 795, 798, 801, 804, 807, 810, 813, 816, 819, 822, 825, 828, 831, 834, 837, 840, 843, 846, 849, 852, 855, 858, 861, 864, 867, 870, 873, 876, 879, 882, 885, 888, 891, 894, 897, 900, 903, 906, 909, 912, 915, 918, 921, 924, 927, 930, 933, 936, 939, 942, 945, 948, 951, 954, 957, 960, 963, 966, 969, 972};
@@ -154,7 +154,7 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal_elmts_utils] - part_mesh_nodal_elmts_compute
     };
     SUBCASE("TETRA4, compute_parent_child = 0") {
       printf("TETRA4, compute_parent_child = 0\n");
-      compute_parent_child = PDM_TRUE;
+      compute_parent_child = PDM_FALSE;
     };
   }
 
@@ -166,7 +166,7 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal_elmts_utils] - part_mesh_nodal_elmts_compute
     expected_child_to_parent    [PDM_GEOMETRY_KIND_RIDGE   ] = {2, 4, 8, 21, 24, 27, 3, 10, 21, 8, 17, 26, 55, 59, 61, 73, 75, 78, 77, 81, 79, 55, 66, 73, 61, 62, 72, 71, 79, 80, 1, 29, 55, 8, 34, 62, 21, 48, 75, 27, 26, 54, 52, 80, 81};
     SUBCASE("PYRAMID5, compute_parent_child = 1") {
       printf("PYRAMID5, compute_parent_child = 1\n");
-      compute_parent_child = PDM_FALSE;
+      compute_parent_child = PDM_TRUE;
       expected_n_entity[PDM_GEOMETRY_KIND_SURFACIC] = 243;
       expected_n_entity[PDM_GEOMETRY_KIND_RIDGE   ] = 225;
       expected_entity_to_vtx_idx   [PDM_GEOMETRY_KIND_SURFACIC] = {0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45, 48, 51, 54, 57, 60, 63, 66, 69, 72, 75, 78, 81, 84, 87, 90, 93, 96, 99, 102, 105, 108, 111, 114, 117, 120, 123, 126, 129, 132, 135, 138, 141, 144, 147, 150, 153, 156, 159, 162, 166, 170, 174, 178, 182, 186, 190, 194, 198, 202, 206, 210, 214, 218, 222, 226, 230, 234, 238, 242, 246, 250, 254, 258, 262, 266, 270, 273, 276, 279, 282, 285, 288, 291, 294, 297, 300, 303, 306, 309, 312, 315, 318, 322, 325, 328, 331, 334, 338, 341, 344, 347, 350, 353, 357, 360, 363, 366, 369, 373, 376, 379, 383, 386, 389, 392, 395, 398, 401, 404, 407, 410, 413, 416, 419, 423, 426, 430, 433, 437, 440, 443, 447, 450, 453, 456, 459, 462, 465, 468, 472, 475, 478, 481, 484, 487, 491, 494, 497, 500, 503, 506, 509, 513, 516, 519, 522, 525, 528, 531, 534, 537, 540, 543, 547, 550, 553, 556, 560, 564, 567, 570, 573, 576, 580, 584, 587, 590, 593, 596, 600, 603, 606, 609, 612, 616, 619, 622, 626, 629, 632, 635, 638, 641, 644, 647, 650, 653, 656, 659, 662, 665, 668, 671, 674, 677, 680, 683, 687, 690, 693, 696, 699, 702, 705, 708, 711, 714, 717, 720, 723, 726, 729, 732, 735, 738, 741, 744, 747, 750, 753, 756, 759, 763, 767, 771, 775, 779, 783};
@@ -180,7 +180,7 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal_elmts_utils] - part_mesh_nodal_elmts_compute
     };
     SUBCASE("PYRAMID5, compute_parent_child = 0") {
       printf("PYRAMID5, compute_parent_child = 0\n");
-      compute_parent_child = PDM_TRUE;
+      compute_parent_child = PDM_FALSE;
     };
   }
 
@@ -192,7 +192,7 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal_elmts_utils] - part_mesh_nodal_elmts_compute
     expected_child_to_parent    [PDM_GEOMETRY_KIND_RIDGE   ] = {1, 3, 5, 14, 16, 18, 1, 7, 13, 6, 12, 18, 37, 39, 41, 50, 52, 54, 37, 43, 49, 42, 48, 54, 1, 19, 37, 5, 6, 24, 23, 42, 41, 14, 13, 31, 32, 50, 49, 18, 36, 54};
     SUBCASE("PRISM6, compute_parent_child = 1") {
       printf("PRISM6, compute_parent_child = 1\n");
-      compute_parent_child = PDM_FALSE;
+      compute_parent_child = PDM_TRUE;
       expected_n_entity[PDM_GEOMETRY_KIND_SURFACIC] = 171;
       expected_n_entity[PDM_GEOMETRY_KIND_RIDGE   ] = 180;
       expected_entity_to_vtx_idx   [PDM_GEOMETRY_KIND_SURFACIC] = {0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45, 48, 51, 54, 57, 60, 63, 66, 69, 72, 75, 78, 81, 84, 87, 90, 93, 96, 99, 102, 105, 108, 112, 116, 120, 124, 128, 132, 136, 140, 144, 148, 152, 156, 160, 164, 168, 172, 176, 180, 184, 188, 192, 196, 200, 204, 208, 212, 216, 220, 224, 228, 232, 236, 240, 244, 248, 252, 256, 260, 264, 268, 272, 276, 279, 283, 286, 289, 293, 296, 300, 304, 307, 311, 314, 317, 321, 325, 329, 332, 335, 338, 342, 345, 349, 353, 356, 359, 363, 367, 370, 374, 377, 380, 384, 387, 390, 393, 396, 399, 403, 406, 409, 413, 417, 420, 424, 427, 431, 435, 438, 441, 444, 448, 451, 455, 459, 462, 465, 469, 473, 476, 480, 483, 487, 490, 494, 497, 501, 504, 508, 512, 516, 520, 524, 528, 532, 536, 540, 544, 548, 552, 556, 560, 564, 568, 572, 576, 580, 584, 588, 592, 596, 600, 604, 608, 612};
@@ -206,7 +206,7 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal_elmts_utils] - part_mesh_nodal_elmts_compute
     };
     SUBCASE("PRISM6, compute_parent_child = 0") {
       printf("PRISM6, compute_parent_child = 0\n");
-      compute_parent_child = PDM_TRUE;
+      compute_parent_child = PDM_FALSE;
     };
   }
 
@@ -218,7 +218,7 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal_elmts_utils] - part_mesh_nodal_elmts_compute
     expected_child_to_parent    [PDM_GEOMETRY_KIND_RIDGE   ] = {1, 2, 3, 7, 8, 9, 1, 4, 7, 3, 6, 9, 19, 20, 21, 25, 26, 27, 19, 22, 25, 21, 24, 27, 1, 10, 19, 3, 12, 21, 7, 16, 25, 9, 18, 27};
     SUBCASE("HEXA8, compute_parent_child = 1") {
       printf("HEXA8, compute_parent_child = 1\n");
-      compute_parent_child = PDM_FALSE;
+      compute_parent_child = PDM_TRUE;
       expected_n_entity[PDM_GEOMETRY_KIND_SURFACIC] = 108;
       expected_n_entity[PDM_GEOMETRY_KIND_RIDGE   ] = 144;
       expected_entity_to_vtx_idx   [PDM_GEOMETRY_KIND_SURFACIC] = {0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64, 68, 72, 76, 80, 84, 88, 92, 96, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 144, 148, 152, 156, 160, 164, 168, 172, 176, 180, 184, 188, 192, 196, 200, 204, 208, 212, 216, 220, 224, 228, 232, 236, 240, 244, 248, 252, 256, 260, 264, 268, 272, 276, 280, 284, 288, 292, 296, 300, 304, 308, 312, 316, 320, 324, 328, 332, 336, 340, 344, 348, 352, 356, 360, 364, 368, 372, 376, 380, 384, 388, 392, 396, 400, 404, 408, 412, 416, 420, 424, 428, 432};
@@ -232,7 +232,7 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal_elmts_utils] - part_mesh_nodal_elmts_compute
     };
     SUBCASE("HEXA8, compute_parent_child = 0") {
       printf("HEXA8, compute_parent_child = 0\n");
-      compute_parent_child = PDM_TRUE;
+      compute_parent_child = PDM_FALSE;
     };
   }
 
@@ -275,15 +275,15 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal_elmts_utils] - part_mesh_nodal_elmts_compute
     int **parent_to_entity     = NULL;
 
     PDM_part_mesh_nodal_elmts_compute_child_parent(pmne_parent,
-                                                     pmne_child,
-                                                     compute_parent_child,
-                                                     &child_to_parent_idx,
-                                                     &child_to_parent,
-                                                     &n_entity,
-                                                     &entity_to_vtx_idx,
-                                                     &entity_to_vtx,
-                                                     &parent_to_entity_idx,
-                                                     &parent_to_entity);
+                                                   pmne_child,
+                                                   compute_parent_child,
+                                                   &child_to_parent_idx,
+                                                   &child_to_parent,
+                                                   &n_entity,
+                                                   &entity_to_vtx_idx,
+                                                   &entity_to_vtx,
+                                                   &parent_to_entity_idx,
+                                                   &parent_to_entity);
 
     int n_child = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne_child, 0);
 

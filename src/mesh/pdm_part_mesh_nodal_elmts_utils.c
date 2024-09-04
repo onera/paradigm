@@ -328,7 +328,7 @@ _generate_entity_connectivity
   }
 
   int *pentity1_entity2_n = NULL;
-  if (compute_parent_child == PDM_FALSE) {
+  if (compute_parent_child == PDM_TRUE) {
     pentity1_entity2_n = PDM_array_zeros_int(pn_entity1);
   }
 
@@ -417,7 +417,7 @@ _generate_entity_connectivity
     /* Normalement on a trouvé mais on check quand même :p */
     assert(idx_next_same_entity > 1);
 
-    if (compute_parent_child == PDM_FALSE) {
+    if (compute_parent_child == PDM_TRUE) {
       /* Generate new entity2 and append in connectivity entity2_vtx*/
       pentity2_vtx_idx[pn_entity2+1] = pentity2_vtx_idx[pn_entity2];
       for (int idx_vtx = 0; idx_vtx < n_vtx_child; ++idx_vtx) {
@@ -451,7 +451,7 @@ _generate_entity_connectivity
   *out_child_to_parent_idx = child_to_parent_idx;
   *out_child_to_parent     = child_to_parent;
 
-  if (compute_parent_child == PDM_TRUE) {
+  if (compute_parent_child == PDM_FALSE) {
     *out_pn_entity2 = 0;
     PDM_free(key_conflict_idx);
     PDM_free(key_to_conflict );
@@ -533,7 +533,7 @@ _generate_entity_connectivity
     }
   }
 
-  if (compute_parent_child == PDM_FALSE) {
+  if (compute_parent_child == PDM_TRUE) {
     PDM_free(pentity1_entity2_n);
   }
 
