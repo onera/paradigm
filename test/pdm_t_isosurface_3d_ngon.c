@@ -1144,7 +1144,8 @@ int main
                                                                     i_iso,
                                                                     i_part,
                                                                     PDM_MESH_ENTITY_FACE,
-                                                                    &isovalue_face_idx);
+                                                                    &isovalue_face_idx,
+                                                                    PDM_OWNERSHIP_KEEP);
 
           int *iso_face_isovalue = NULL;
           PDM_malloc(iso_face_isovalue, iso_n_face, int);
@@ -1172,7 +1173,8 @@ int main
                                                                 i_iso,
                                                                 i_part,
                                                                 PDM_MESH_ENTITY_EDGE,
-                                                                &isovalue_edge_idx);
+                                                                &isovalue_edge_idx,
+                                                                PDM_OWNERSHIP_KEEP);
 
           int *iso_edge_isovalue = NULL;
           int *iso_edge_group    = NULL;

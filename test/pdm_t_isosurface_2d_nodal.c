@@ -458,6 +458,7 @@ int main(int argc, char *argv[])
   /*
    *  Free objects
    */
+  log_trace("FREEEEEEEEEEE\n");
   PDM_isosurface_free(isos);
   if (dist_entry==1) {
     PDM_dcube_nodal_gen_free(dcube_nodal);

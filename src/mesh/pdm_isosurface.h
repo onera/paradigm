@@ -967,6 +967,7 @@ PDM_isosurface_dgroup_get
  * \param [in]  i_part               Partition identifier
  * \param [in]  entity_type          Entity type
  * \param [in]  isovalue_entity_idx  Index for isovalue→entity connectivity (size = \p n_isovalue + 1)
+ * \param [in]  ownership            Ownership
  *
  * \return Number of isovalues
  *
@@ -981,7 +982,8 @@ PDM_isosurface_isovalue_entity_idx_get
   int                   id_isosurface,
   int                   i_part,
   PDM_mesh_entities_t   entity_type,
-  int                 **isovalue_entity_idx
+  int                 **isovalue_entity_idx,
+  PDM_ownership_t       ownership
 );
 
 

@@ -232,42 +232,30 @@ struct _pdm_isosurface_t {
   int iso_mesh_dimension;
   int iso_n_part;
 
+  // > Isosurface entities
+  int            **iso_n_entity          [PDM_MESH_ENTITY_MAX];
+  PDM_g_num_t   ***iso_entity_gnum       [PDM_MESH_ENTITY_MAX];
+  int           ***iso_entity_parent_idx [PDM_MESH_ENTITY_MAX];
+  int           ***iso_entity_parent_lnum[PDM_MESH_ENTITY_MAX];
+  PDM_g_num_t   ***iso_entity_parent_gnum[PDM_MESH_ENTITY_MAX];
+  int           ***isovalue_entity_idx   [PDM_MESH_ENTITY_MAX];
+  int           ***iso_connec_idx        [PDM_CONNECTIVITY_TYPE_MAX];
+  int           ***iso_connec            [PDM_CONNECTIVITY_TYPE_MAX];
+
   // > Vertices
-  int             **iso_n_vtx;
   double         ***iso_vtx_coord;
-  PDM_g_num_t    ***iso_vtx_gnum;
-  int            ***iso_vtx_parent_idx;
-  int            ***iso_vtx_parent_lnum;
-  PDM_g_num_t    ***iso_vtx_parent_gnum;
   double         ***iso_vtx_parent_weight;
-  int            ***isovalue_vtx_idx;
 
   // > Edges
-  int            **iso_n_edge;
-  int           ***iso_edge_vtx;
-  PDM_g_num_t   ***iso_edge_gnum;
-  int           ***iso_edge_parent_idx;
-  int           ***iso_edge_parent_lnum;
-  PDM_g_num_t   ***iso_edge_parent_gnum;
   int             *iso_n_edge_group;
   int           ***iso_edge_group_idx;
   int           ***iso_edge_group_lnum;
   PDM_g_num_t   ***iso_edge_group_gnum;
-  int           ***isovalue_edge_idx;
 
   // PDM_g_num_t    **distrib_iso_edge;
   // PDM_g_num_t    **diso_edge_vtx;
 
   // > Faces
-  int            **iso_n_face;
-  int           ***iso_face_vtx_idx;
-  int           ***iso_face_vtx;
-  PDM_g_num_t   ***iso_face_gnum;
-  int           ***iso_face_parent_idx;
-  int           ***iso_face_parent_lnum;
-  PDM_g_num_t   ***iso_face_parent_gnum;
-  int           ***isovalue_face_idx;
-
   // PDM_g_num_t    **distrib_iso_face;
   // int            **diso_face_vtx_idx;
   // PDM_g_num_t    **diso_face_vtx;
@@ -319,7 +307,7 @@ struct _pdm_isosurface_t {
   // ===============
   // > Internal data
 
-
+  PDM_bool_t *is_computed;
 
 
   // ========
