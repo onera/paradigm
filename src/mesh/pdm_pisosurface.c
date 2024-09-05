@@ -736,23 +736,18 @@ PDM_isosurface_part_to_part_get
 {
   _check_is_not_dist(isos);
   
+  if (entity_type != PDM_MESH_ENTITY_VTX  &&
+      entity_type != PDM_MESH_ENTITY_EDGE &&
+      entity_type != PDM_MESH_ENTITY_FACE) {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: has no mesh entity of type %d.\n", entity_type);
+  }
+
   if (isos->compute_ptp[id_isosurface][entity_type]!=1) {
     PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: part_to_part for entity %d of isosurface %d is not computed.\n", entity_type, id_isosurface);
   }
   isos->iso_owner_ptp[id_isosurface][entity_type] = ownership;
 
-  if (entity_type==PDM_MESH_ENTITY_VTX) {
-    *ptp = isos->iso_ptp_vtx[id_isosurface];
-  }
-  else if (entity_type==PDM_MESH_ENTITY_EDGE) {
-    *ptp = isos->iso_ptp_edge[id_isosurface];
-  }
-  else if (entity_type==PDM_MESH_ENTITY_FACE) {
-    *ptp = isos->iso_ptp_face[id_isosurface];
-  }
-  else {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: has no cell entity.\n");
-  }
+  *ptp = isos->iso_ptp[entity_type][id_isosurface];
 
 }
 

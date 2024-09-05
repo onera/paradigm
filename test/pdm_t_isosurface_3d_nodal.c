@@ -416,6 +416,10 @@ int main(int argc, char *argv[])
              &local,
              &visu);
 
+  if (n_part <= 0) {
+    dist_entry = 1;
+  }
+
 
   /*
    *  Generate mesh

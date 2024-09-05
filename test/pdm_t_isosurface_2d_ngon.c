@@ -569,7 +569,7 @@ int main
   }
 
 
-    /* Set mesh */
+  /* Set mesh */
   if (n_part > 0) {
     // Partitioned
     if (use_part_mesh) {
@@ -735,6 +735,8 @@ int main
                                    &dface_vtx,
                                    &dface_vtx_idx,
                                    PDM_OWNERSHIP_KEEP);
+        assert(dface_vtx != NULL);
+
         PDM_isosurface_dconnectivity_set(isos,
                                          PDM_CONNECTIVITY_TYPE_FACE_VTX,
                                          dface_vtx_idx,

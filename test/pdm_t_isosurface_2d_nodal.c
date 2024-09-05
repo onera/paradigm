@@ -264,6 +264,10 @@ int main(int argc, char *argv[])
              &dist_entry,
              &visu);
 
+  if (n_part <= 0) {
+    dist_entry = 1;
+  }
+
 
   /*
    *  Generate mesh
@@ -458,7 +462,6 @@ int main(int argc, char *argv[])
   /*
    *  Free objects
    */
-  log_trace("FREEEEEEEEEEE\n");
   PDM_isosurface_free(isos);
   if (dist_entry==1) {
     PDM_dcube_nodal_gen_free(dcube_nodal);

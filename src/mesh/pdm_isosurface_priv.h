@@ -141,14 +141,6 @@ struct _pdm_isosurface_t {
   int         *dgroup_face_idx;
   PDM_g_num_t *dgroup_face;
 
-  // int          n_dgroup_edge;
-  // int         *dgroup_edge_idx;
-  // PDM_g_num_t *dgroup_edge;
-  
-  // int          n_dgroup_vtx;
-  // int         *dgroup_vtx_idx;
-  // PDM_g_num_t *dgroup_vtx;
-
   // > Field
   double **dfield;
   double **dgradient;
@@ -204,21 +196,12 @@ struct _pdm_isosurface_t {
   int         **extract_tetra_vtx;
   PDM_g_num_t **extract_tetra_gnum; // from initial mesh
   int         **extract_tetra_lnum; // from initial mesh
-  // int         **tri_tag;
 
   // > Boundaries
   int          *n_group_face;
   int         **group_face_idx;
   int         **group_face;
   PDM_g_num_t **group_face_gnum;
-
-  // int  *n_group_edge;
-  // int **group_edge_idx;
-  // int **group_edge;
-  
-  // int  *n_group_vtx;
-  // int **group_vtx_idx;
-  // int **group_vtx;
 
   // > Field
   double ***field;
@@ -252,18 +235,8 @@ struct _pdm_isosurface_t {
   int           ***iso_edge_group_lnum;
   PDM_g_num_t   ***iso_edge_group_gnum;
 
-  // PDM_g_num_t    **distrib_iso_edge;
-  // PDM_g_num_t    **diso_edge_vtx;
-
-  // > Faces
-  // PDM_g_num_t    **distrib_iso_face;
-  // int            **diso_face_vtx_idx;
-  // PDM_g_num_t    **diso_face_vtx;
-
   // > Part_to_part between iso entities and entry mesh entities
-  PDM_part_to_part_t **iso_ptp_vtx;
-  PDM_part_to_part_t **iso_ptp_edge;
-  PDM_part_to_part_t **iso_ptp_face;
+  PDM_part_to_part_t **iso_ptp[PDM_MESH_ENTITY_MAX];
 
   // > Owners
   PDM_ownership_t  **iso_owner_vtx_coord;
@@ -277,24 +250,20 @@ struct _pdm_isosurface_t {
 
   // =========================
   // > Distributed output data
-  int             *iso_dn_vtx;
+
+  int            *iso_dn_entity          [PDM_MESH_ENTITY_MAX];
+  int           **iso_dentity_parent_idx [PDM_MESH_ENTITY_MAX];
+  PDM_g_num_t   **iso_dentity_parent_gnum[PDM_MESH_ENTITY_MAX];
+  int           **iso_dconnec_idx        [PDM_CONNECTIVITY_TYPE_MAX];
+  PDM_g_num_t   **iso_dconnec            [PDM_CONNECTIVITY_TYPE_MAX];
+
+  // > Vertices
   double         **iso_dvtx_coord;
-  int            **iso_dvtx_parent_idx;
-  PDM_g_num_t    **iso_dvtx_parent_gnum;
   double         **iso_dvtx_parent_weight;
 
-  int             *iso_dn_edge;
-  PDM_g_num_t    **iso_dedge_vtx;
-  int            **iso_dedge_parent_idx;
-  PDM_g_num_t    **iso_dedge_parent_gnum;
+  // > Edges
   int            **iso_dedge_group_idx;
   PDM_g_num_t    **iso_dedge_group_gnum;
-
-  int             *iso_dn_face;
-  int            **iso_dface_vtx_idx;
-  PDM_g_num_t    **iso_dface_vtx;
-  int            **iso_dface_parent_idx;
-  PDM_g_num_t    **iso_dface_parent_gnum;
 
   // > Owners
   PDM_ownership_t  *iso_owner_dvtx_coord;

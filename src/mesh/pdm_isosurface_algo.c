@@ -2594,6 +2594,7 @@ _trace_isopolygon_in_cell
 static void
 _isosurface_ngon_single_part
 (
+  int          mesh_dimension,
   int          n_isovalues,
   double      *isovalues,
   double       tol,
@@ -2631,10 +2632,7 @@ _isosurface_ngon_single_part
 )
 {
   int dbg = 0;
-  int is_3d = 0;
-  if (n_cell != 0) {
-    is_3d = 1;
-  }
+  int is_3d = (mesh_dimension == 3);
 
   /* Count isosurface vertices */
   int iso_n_vtx = 0;
@@ -4165,7 +4163,8 @@ PDM_isosurface_ngon_algo
       }
     }
 
-    _isosurface_ngon_single_part(isos->n_isovalues[id_iso],
+    _isosurface_ngon_single_part(isos->entry_mesh_dim,
+                                 isos->n_isovalues[id_iso],
                                  isos->isovalues  [id_iso],
                                  isos->ISOSURFACE_EPS,
                                  n_cell,
