@@ -65,6 +65,17 @@ extern "C" {
  * Private function definitions
  *============================================================================*/
 
+static int
+_iso_surface_kind_n_coeff[PDM_ISO_SURFACE_KIND_MAX] = {
+   0, //PDM_ISO_SURFACE_KIND_FIELD
+   4, //PDM_ISO_SURFACE_KIND_PLANE
+   4, //PDM_ISO_SURFACE_KIND_SPHERE
+   6, //PDM_ISO_SURFACE_KIND_ELLIPSE
+  10, //PDM_ISO_SURFACE_KIND_QUADRIC
+   0, //PDM_ISO_SURFACE_KIND_HEART
+   0  //PDM_ISO_SURFACE_KIND_FUNCTION
+};
+
 static
 inline
 double
@@ -2015,7 +2026,7 @@ PDM_isosurface_set_tolerance
   double            tolerance
 )
 {
-  assert(tolerance>0.);
+  assert(tolerance >= 0.);
   isos->ISOSURFACE_EPS = tolerance;
 }
 
@@ -2153,7 +2164,9 @@ PDM_isosurface_add
   // > Part_to_part between iso entities and entry mesh entites
   PDM_realloc(isos->iso_ptp[PDM_MESH_ENTITY_VTX ], isos->iso_ptp[PDM_MESH_ENTITY_VTX ], isos->n_isosurface, PDM_part_to_part_t *);
   PDM_realloc(isos->iso_ptp[PDM_MESH_ENTITY_EDGE], isos->iso_ptp[PDM_MESH_ENTITY_EDGE], isos->n_isosurface, PDM_part_to_part_t *);
-  PDM_realloc(isos->iso_ptp[PDM_MESH_ENTITY_FACE], isos->iso_ptp[PDM_MESH_ENTITY_FACE], isos->n_isosurface, PDM_part_to_part_t *);
+  if (isos->entry_mesh_dim == 3) {
+    PDM_realloc(isos->iso_ptp[PDM_MESH_ENTITY_FACE], isos->iso_ptp[PDM_MESH_ENTITY_FACE], isos->n_isosurface, PDM_part_to_part_t *);
+  }
 
   // > Partitioned owners
   PDM_realloc(isos->iso_owner_vtx_coord        , isos->iso_owner_vtx_coord        , isos->n_isosurface, PDM_ownership_t  *);
@@ -2220,9 +2233,9 @@ PDM_isosurface_add
   isos->iso_owner_dconnec[id_isosurface][PDM_CONNECTIVITY_TYPE_FACE_VTX] = PDM_OWNERSHIP_BAD_VALUE;
 
   PDM_malloc(isos->iso_owner_dparent[id_isosurface], PDM_MESH_ENTITY_MAX, PDM_ownership_t);
-  isos->iso_owner_dparent[id_isosurface][PDM_MESH_ENTITY_VTX ] = PDM_OWNERSHIP_BAD_VALUE;
-  isos->iso_owner_dparent[id_isosurface][PDM_MESH_ENTITY_EDGE] = PDM_OWNERSHIP_BAD_VALUE;
-  isos->iso_owner_dparent[id_isosurface][PDM_MESH_ENTITY_FACE] = PDM_OWNERSHIP_BAD_VALUE;
+  for (int i = 0; i < PDM_MESH_ENTITY_MAX; i++) {
+    isos->iso_owner_dparent[id_isosurface][i] = PDM_OWNERSHIP_BAD_VALUE;
+  }
 
 
   isos->kind       [id_isosurface] = kind;
@@ -2232,31 +2245,8 @@ PDM_isosurface_add
     isos->isovalues[id_isosurface][i] = isovalues[i];
   }
 
-  if (kind==PDM_ISO_SURFACE_KIND_FIELD) {
-    isos->eq_coeffs[id_isosurface] = NULL;
-  }
-  else if (kind==PDM_ISO_SURFACE_KIND_PLANE) {
-    int n_coeff = 4;
-    PDM_malloc(isos->eq_coeffs[id_isosurface], n_coeff, double);
-  }
-  else if (kind==PDM_ISO_SURFACE_KIND_SPHERE) {
-    int n_coeff = 4;
-    PDM_malloc(isos->eq_coeffs[id_isosurface], n_coeff, double);
-  }
-  else if (kind==PDM_ISO_SURFACE_KIND_ELLIPSE) {
-    int n_coeff = 6;
-    PDM_malloc(isos->eq_coeffs[id_isosurface], n_coeff, double);
-  }
-  else if (kind==PDM_ISO_SURFACE_KIND_QUADRIC) {
-    int n_coeff = 10;
-    PDM_malloc(isos->eq_coeffs[id_isosurface], n_coeff, double);
-  }
-  else if (kind==PDM_ISO_SURFACE_KIND_HEART) {
-    isos->eq_coeffs[id_isosurface] = NULL;
-  }
-  else if (kind==PDM_ISO_SURFACE_KIND_FUNCTION) {
-    isos->eq_coeffs[id_isosurface] = NULL;
-  }
+  int n_coeff = _iso_surface_kind_n_coeff[kind];
+  PDM_malloc(isos->eq_coeffs[id_isosurface], n_coeff, double);
 
   return id_isosurface;
 }
@@ -2271,36 +2261,13 @@ PDM_isosurface_equation_set
  int               use_gradient
 )
 {
-  if        (isos->kind[id_isosurface]==PDM_ISO_SURFACE_KIND_PLANE) {
-    int n_coeff = 4;
-    for (int i_coeff=0; i_coeff<n_coeff; ++i_coeff) {
-      isos->eq_coeffs[id_isosurface][i_coeff] = coeff[i_coeff];
-    }
-  }
-  else if (isos->kind[id_isosurface]==PDM_ISO_SURFACE_KIND_SPHERE) {
-    int n_coeff = 4;
-    for (int i_coeff=0; i_coeff<n_coeff; ++i_coeff) {
-      isos->eq_coeffs[id_isosurface][i_coeff] = coeff[i_coeff];
-    }
-  }
-  else if (isos->kind[id_isosurface]==PDM_ISO_SURFACE_KIND_ELLIPSE) {
-    int n_coeff = 6;
-    for (int i_coeff=0; i_coeff<n_coeff; ++i_coeff) {
-      isos->eq_coeffs[id_isosurface][i_coeff] = coeff[i_coeff];
-    }
-  }
-  else if (isos->kind[id_isosurface]==PDM_ISO_SURFACE_KIND_QUADRIC) {
-    int n_coeff = 10;
-    for (int i_coeff=0; i_coeff<n_coeff; ++i_coeff) {
-      isos->eq_coeffs[id_isosurface][i_coeff] = coeff[i_coeff];
-    }
-  }
-  else {
-    PDM_error(__FILE__, __LINE__, 0, "Isosurface n°%d doesn't support PDM_isosurface_equation_set method cause its kind is %d.\n", id_isosurface, isos->kind[id_isosurface]);
+  int n_coeff = _iso_surface_kind_n_coeff[isos->kind[id_isosurface]];
+
+  for (int i_coeff=0; i_coeff<n_coeff; ++i_coeff) {
+    isos->eq_coeffs[id_isosurface][i_coeff] = coeff[i_coeff];
   }
 
   isos->use_gradient[id_isosurface] = use_gradient;
-
 }
 
 
@@ -2439,9 +2406,7 @@ PDM_isosurface_free
   for (int id_iso=0; id_iso<isos->n_isosurface; ++id_iso) {
     if (isos->n_isovalues[id_iso]>0) {
       PDM_free(isos->isovalues[id_iso]);
-      if (isos->kind[id_iso]!=PDM_ISO_SURFACE_KIND_FIELD) {
-        PDM_free(isos->eq_coeffs[id_iso]);
-      }
+      PDM_free(isos->eq_coeffs[id_iso]);
     }
   }
 
@@ -2533,10 +2498,7 @@ PDM_isosurface_free
 
   PDM_free(isos->iso_dedge_group_idx);
   PDM_free(isos->iso_dedge_group_gnum);
-  // PDM_free(isos->iso_dconnec[PDM_CONNECTIVITY_TYPE_EDGE_VTX]);
 
-  // PDM_free(isos->iso_dconnec    [PDM_CONNECTIVITY_TYPE_FACE_VTX]);
-  // PDM_free(isos->iso_dconnec_idx[PDM_CONNECTIVITY_TYPE_FACE_VTX]);
 
   for (int id_iso=0; id_iso<isos->n_isosurface; ++id_iso) {
     _free_owner(isos, id_iso);
