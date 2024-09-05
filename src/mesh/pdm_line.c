@@ -452,6 +452,56 @@ PDM_line_intersection_2d
 }
 
 
+PDM_line_intersect_t
+PDM_ray_segment_intersection_2d
+(
+ const double a1[2],
+ const double a2[2],
+ const double b1[2],
+ const double b2[2],
+ double *u,
+ double *v
+)
+{
+  const double tol_uv = _eps;
+
+  double mat[2][2];
+  double sol[2];
+
+  for (int i = 0; i < 2; i++) {
+    mat[i][0] = a2[i] - a1[i];
+    mat[i][1] = b1[i] - b2[i];
+
+    sol[i] = b1[i] - a1[i];
+  }
+
+  int stat = _solve_2x2 (mat, sol);
+
+  if (stat == PDM_FALSE) {
+    *u = DBL_MAX;
+    *v = DBL_MAX;
+
+    double p = (b1[0] - a1[0]) * (b2[1] - a2[1]) - (b1[1] - a1[1]) * (b2[0] - a2[0]);
+    if (p > _eps) {
+      return PDM_LINE_INTERSECT_NO;
+    } else {
+      return PDM_LINE_INTERSECT_ON_LINE;
+    }
+
+  } else {
+
+    *u = sol[0]; // Position du point d'intersection sur la demi-droite
+    *v = sol[1]; // Position du point d'intersection sur le segment
+
+    // Vérification si l'intersection se trouve sur la demi-droite ET sur le segment
+    if (*u >= 0 && *v >= 0 && *v <= 1) {
+      return PDM_LINE_INTERSECT_YES; // Intersection valide sur la demi-droite et le segment
+    } else {
+      return PDM_LINE_INTERSECT_NO; // L'intersection est en dehors de la demi-droite ou du segment
+    }
+
+  }
+}
 
 
 

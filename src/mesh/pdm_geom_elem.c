@@ -45,6 +45,7 @@
 #include "pdm_logging.h"
 #include "pdm_array.h"
 #include "pdm_order.h"
+#include "pdm_line.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -3003,11 +3004,11 @@ PDM_geom_elem_edge_upwind_and_downwind_2d
         }
 
         /* ------------------- */
-        for (int idx_face = face_edge_idx[face_id]; idx_face < face_edge_idx[face_id+1]; idx_face++) {
+        for (int idx_face2 = face_edge_idx[face_id]; idx_face2 < face_edge_idx[face_id+1]; idx_face2++) {
 
-          int edge_id = PDM_ABS(face_edge[idx_face]) - 1;
+          int edge_id = PDM_ABS(face_edge[idx_face2]) - 1;
 
-          // printf("\t  idx_face = %i / edge_id = %i (face_id = %i) -> n_visited_edge = %i / has_face_edge = %i\n", idx_face, edge_id, face_id, n_visited_edge, has_face_edge);
+          // printf("\t  idx_face2 = %i / edge_id = %i (face_id = %i) -> n_visited_edge = %i / has_face_edge = %i\n", idx_face2, edge_id, face_id, n_visited_edge, has_face_edge);
 
           if (has_face_edge == 1) {
             is_visited_edge[edge_id] = 1;
