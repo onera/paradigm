@@ -125,13 +125,14 @@ _usage(int exit_code)
   PDM_printf
     ("\n"
      "  Usage: \n\n"
-     "  -nx      <level>  Number of vertices on the cube side (x direction).\n\n"
-     "  -ny      <level>  Number of vertices on the cube side (y direction).\n\n"
-     "  -l       <level>  Cube length.\n\n"
-     "  -n_part  <level>  Number of partitions (if partitioned entry).\n\n"
-     "  -is_dist          Is entry distributed ou partitioned.\n\n"
-     "  -visu             Activate output.\n\n"
-     "  -h                This message.\n\n");
+     "  -nx       <n>  Number of vertices on the cube side (x direction).\n\n"
+     "  -ny       <n>  Number of vertices on the cube side (y direction).\n\n"
+     "  -l        <n>  Cube length.\n\n"
+     "  -elt_type <t>  Surface element type (only for automatically generated mesh).\n\n"
+     "  -n_part   <n>  Number of partitions (if partitioned entry).\n\n"
+     "  -is_dist       Is entry distributed ou partitioned.\n\n"
+     "  -visu          Activate output.\n\n"
+     "  -h             This message.\n\n");
 
   exit(exit_code);
 }
@@ -145,7 +146,8 @@ _usage(int exit_code)
  * \param [in]      argv       Arguments
  * \param [inout]   n_vtx_x    Number of vertices on the cube x side
  * \param [inout]   n_vtx_y    Number of vertices on the cube y side
- * \param [inout]   length     Cube length
+ * \param [inout]   length     Square length
+ * \param [inout]   elt_type   Element type
  * \param [inout]   n_part     Number of partitions par process
  * \param [inout]   dist_entry Is entry distributed or partitioned (resp 1, 0)
  * \param [inout]   visu       Ensight outputs status
@@ -157,6 +159,7 @@ _read_args(int                     argc,
            PDM_g_num_t           *n_vtx_x,
            PDM_g_num_t           *n_vtx_y,
            double                *length,
+           PDM_Mesh_nodal_elt_t  *elt_type,
            int                   *n_part,
            int                   *dist_entry,
            int                   *visu)
@@ -195,14 +198,15 @@ _read_args(int                     argc,
       else
         *length = atof(argv[i]);
     }
-    // else if (strcmp(argv[i], "-t") == 0) {
-    //   i++;
-    //   if (i >= argc)
-    //     _usage(EXIT_FAILURE);
-    //   else {
-    //     *t_elt = (PDM_Mesh_nodal_elt_t) atoi(argv[i]);
-    //   }
-    // }
+    else if (strcmp(argv[i], "-elt_type") == 0) {
+      i++;
+      if (i >= argc) {
+        _usage(EXIT_FAILURE);
+      }
+      else {
+        *elt_type = (PDM_Mesh_nodal_elt_t) atoi(argv[i]);
+      }
+    }
     else if (strcmp(argv[i], "-n_part") == 0) {
       i++;
       if (i >= argc)
@@ -260,6 +264,7 @@ int main(int argc, char *argv[])
              &n_vtx_x,
              &n_vtx_y,
              &length,
+             &elt_type,
              &n_part,
              &dist_entry,
              &visu);
@@ -276,6 +281,7 @@ int main(int argc, char *argv[])
   PDM_dmesh_nodal_t     *dmn         = NULL;
   PDM_part_mesh_nodal_t *pmn         = NULL;
   if (dist_entry==1) {
+    // Block-distributed
     dcube_nodal = PDM_dcube_nodal_gen_create(comm,
                                              n_vtx_x,
                                              n_vtx_y,
@@ -290,7 +296,9 @@ int main(int argc, char *argv[])
     PDM_dcube_nodal_gen_build(dcube_nodal);
 
     dmn = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube_nodal);
-  } else if (dist_entry==0) {
+  }
+  else if (dist_entry==0) {
+    // Partitioned
     pmn  = PDM_generate_mesh_rectangle(comm,
                                        elt_type,
                                        order,
@@ -372,6 +380,15 @@ int main(int argc, char *argv[])
                                 1,
                                 field_isovalues);
   if (dist_entry==1) {
+    int     dn_vtx     = PDM_DMesh_nodal_n_vtx_get(dmn);
+    double *dvtx_coord = PDM_DMesh_nodal_vtx_get  (dmn);
+    PDM_malloc(dfield, dn_vtx, double);
+    for (int i_vtx=0; i_vtx<dn_vtx; ++i_vtx) {
+      _eval_mandelbrot(dvtx_coord[3*i_vtx  ],
+                       dvtx_coord[3*i_vtx+1],
+                       dvtx_coord[3*i_vtx+2],
+                       &dfield[i_vtx]);
+    }
     PDM_isosurface_dfield_set(isos,
                               iso3,
                               dfield);
@@ -404,8 +421,8 @@ int main(int argc, char *argv[])
    *  Compute isosurfaces
    */
   PDM_isosurface_compute(isos, iso1);
-  PDM_isosurface_reset(isos, iso1);
-  PDM_isosurface_reset(isos, iso2);
+  PDM_isosurface_reset  (isos, iso1);
+  PDM_isosurface_reset  (isos, iso2);
   PDM_isosurface_compute(isos, iso2);
   PDM_isosurface_compute(isos, iso3);
 
@@ -415,7 +432,8 @@ int main(int argc, char *argv[])
    */
   if (visu==1) {
     if (dist_entry==1) {
-      PDM_error(__FILE__, __LINE__, 0, "PDM_t_isosurface_2d_nodal:: Not implmented\n");
+      PDM_free(dfield);
+      // PDM_error(__FILE__, __LINE__, 0, "PDM_t_isosurface_2d_nodal:: Not implmented\n");
     }
     else if (dist_entry==0) {
       // > iso line output

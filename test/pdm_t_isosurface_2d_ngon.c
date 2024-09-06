@@ -570,6 +570,9 @@ int main
 
 
   /* Set mesh */
+  int         *dface_vtx_idx = NULL;
+  PDM_g_num_t *dface_vtx     = NULL;
+  int own_dface_vtx = 0;
   if (n_part > 0) {
     // Partitioned
     if (use_part_mesh) {
@@ -701,26 +704,25 @@ int main
         PDM_isosurface_distrib_set(isos,  i_entity,  distrib);
       }
 
+      int         *dface_edge_idx = NULL;
+      PDM_g_num_t *dface_edge     = NULL;
+      PDM_dmesh_connectivity_get(dmesh,
+                                 PDM_CONNECTIVITY_TYPE_FACE_EDGE,
+                                 &dface_edge,
+                                 &dface_edge_idx,
+                                 PDM_OWNERSHIP_KEEP);
+      int         *dedge_vtx_idx = NULL;
+      PDM_g_num_t *dedge_vtx     = NULL;
+      PDM_dmesh_connectivity_get(dmesh,
+                                 PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                 &dedge_vtx,
+                                 &dedge_vtx_idx,
+                                 PDM_OWNERSHIP_KEEP);
       if (generate_edges) {
-        int         *dface_edge_idx = NULL;
-        PDM_g_num_t *dface_edge     = NULL;
-        PDM_dmesh_connectivity_get(dmesh,
-                                   PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                   &dface_edge,
-                                   &dface_edge_idx,
-                                   PDM_OWNERSHIP_KEEP);
         PDM_isosurface_dconnectivity_set(isos,
                                          PDM_CONNECTIVITY_TYPE_FACE_EDGE,
                                          dface_edge_idx,
                                          dface_edge);
-
-        int         *dedge_vtx_idx = NULL;
-        PDM_g_num_t *dedge_vtx     = NULL;
-        PDM_dmesh_connectivity_get(dmesh,
-                                   PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                   &dedge_vtx,
-                                   &dedge_vtx_idx,
-                                   PDM_OWNERSHIP_KEEP);
 
         PDM_isosurface_dconnectivity_set(isos,
                                          PDM_CONNECTIVITY_TYPE_EDGE_VTX,
@@ -728,14 +730,27 @@ int main
                                          dedge_vtx);
       }
       else {
-        int         *dface_vtx_idx = NULL;
-        PDM_g_num_t *dface_vtx     = NULL;
         PDM_dmesh_connectivity_get(dmesh,
                                    PDM_CONNECTIVITY_TYPE_FACE_VTX,
                                    &dface_vtx,
                                    &dface_vtx_idx,
                                    PDM_OWNERSHIP_KEEP);
-        assert(dface_vtx != NULL);
+
+        if (dface_vtx == NULL) {
+          own_dface_vtx = 1;
+          PDM_g_num_t *distrib_face = NULL;
+          PDM_g_num_t *distrib_edge = NULL;
+          PDM_dmesh_distrib_get(dmesh, PDM_MESH_ENTITY_FACE, &distrib_face);
+          PDM_dmesh_distrib_get(dmesh, PDM_MESH_ENTITY_EDGE, &distrib_edge);
+          PDM_dconnectivity_dface_vtx_from_face_and_edge(comm,
+                                                         distrib_face,
+                                                         distrib_edge,
+                                                         dface_edge_idx,
+                                                         dface_edge,
+                                                         dedge_vtx,
+                                                         &dface_vtx);
+          dface_vtx_idx = dface_edge_idx;
+        }
 
         PDM_isosurface_dconnectivity_set(isos,
                                          PDM_CONNECTIVITY_TYPE_FACE_VTX,
@@ -815,6 +830,9 @@ int main
     PDM_free(piso_field);
   }
   else {
+    if (own_dface_vtx) {
+      PDM_free(dface_vtx);
+    }
     PDM_free(diso_field);
     PDM_dmesh_free(dmesh);
   }

@@ -3166,6 +3166,31 @@ PDM_isosurface_marching_algo
     int                 *sections_elt_tag [2] = {isos->extract_tri_tag   [i_part],
                                                  NULL};
 
+    if (debug_visu) {
+      char name[999];
+      const char   *section_name[] = {"tria", "tetra"};
+      const char   *field_name  [] = {"field"};
+      const double *field_value [] = {vtx_field[i_part]};
+      for (int i_section = 0; i_section < 2; i_section++) {
+        sprintf(name, "extract_%s_%d.vtk", section_name[i_section], i_rank*n_part + i_part);
+        PDM_vtk_write_std_elements_ho_with_vtx_field(name,
+                                                     1,
+                                                     n_vtx,
+                                                     vtx_coord,
+                                                     vtx_gnum,
+                                                     sections_elt_t[i_section],
+                                                     sections_n_elt[i_section],
+                                                     sections_elt_vtx[i_section],
+                                                     NULL,
+                                                     0,
+                                                     NULL,
+                                                     NULL,
+                                                     1,
+                                                     field_name,
+                                                     field_value);
+      }
+    }
+
     t_start = PDM_MPI_Wtime();
     _build_active_edges(n_section,
                         sections_elt_t,
@@ -3565,10 +3590,10 @@ PDM_isosurface_marching_algo
 
     // > Free temp arrays
     for (int i_section = 0; i_section < n_section; i_section++) {
-      PDM_free(elt_edge   [i_section]);
-      if (isos->entry_mesh_dim==3) {
-        PDM_free(elt_face [i_section]);
-      }
+      PDM_free(elt_edge[i_section]);
+    }
+    if (isos->entry_mesh_dim==3) {
+      PDM_free(elt_face);
     }
 
     PDM_free(elt_edge);
@@ -3579,7 +3604,6 @@ PDM_isosurface_marching_algo
     PDM_free(edge_parent);
     PDM_free(iso_edge_bnd_tag_idx);
     PDM_free(iso_edge_bnd_tag);
-    PDM_free(elt_face);
     PDM_free(face_vtx_idx);
     PDM_free(face_vtx);
     PDM_free(face_parent_idx);
@@ -3794,7 +3818,7 @@ PDM_isosurface_marching_algo
       isos->iso_owner_parent_lnum[id_iso][i_part][i_entity] = PDM_OWNERSHIP_BAD_VALUE;
     }
     for (int i_connec=0; i_connec<PDM_CONNECTIVITY_TYPE_MAX; ++i_connec) {
-      isos->iso_owner_connec [id_iso][i_part][i_connec] = PDM_OWNERSHIP_BAD_VALUE;
+      isos->iso_owner_connec     [id_iso][i_part][i_connec] = PDM_OWNERSHIP_BAD_VALUE;
     }
 
     isos->iso_owner_gnum         [id_iso][i_part][PDM_MESH_ENTITY_VTX           ] = PDM_OWNERSHIP_KEEP;
