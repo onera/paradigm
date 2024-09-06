@@ -3856,6 +3856,14 @@ PDM_isosurface_ngon_algo
   int                      id_iso
 )
 {
+  /**
+   * TODO (à discuter avec mon rayon de soleil):
+   *   - faire un pmesh extrait (cohérent avec le cas ngonized) (plutôt que de taper dans extrp)
+   *   - isoler et factoriser tronc commun 2d/3d
+   *   - gérer 2d:
+   *     - trianguler faces (besoin de face_vtx, garder les edges ou juste les actives?)
+   *     - factoriser avec contouring_triangles
+   */
   // int debug      = 1;
   // int debug_visu = 1;
   double t_start, t_end;
@@ -3968,14 +3976,12 @@ PDM_isosurface_ngon_algo
       pn_vtx [i_part] = PDM_extract_part_n_entity_get(extrp,
                                                       i_part,
                                                       PDM_MESH_ENTITY_VTX);
-      // log_trace("n_face = %d, n_vtx = %d\n", pn_face[i_part], pn_vtx[i_part]);
       PDM_extract_part_connectivity_get(extrp,
                                         i_part,
                                         PDM_CONNECTIVITY_TYPE_FACE_VTX,
                                         &pface_vtx    [i_part],
                                         &pface_vtx_idx[i_part],
                                         PDM_OWNERSHIP_BAD_VALUE);
-      // PDM_log_trace_array_int(pface_vtx[i_part], pface_vtx_idx[i_part][pn_face[i_part]], "face_vtx : ");
 
       PDM_extract_part_parent_ln_to_gn_get(extrp,
                                            i_part,

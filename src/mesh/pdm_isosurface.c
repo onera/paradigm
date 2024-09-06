@@ -294,6 +294,7 @@ _dist_to_part
 
     PDM_multipart_free(mpart);
 
+    // (Re)create block_to_part for transferring vtx data from block to part (TODO: extract from multipart?)
     int          n_vtx        = PDM_part_mesh_nodal_n_vtx_get    (isos->pmesh_nodal, 0);
     PDM_g_num_t *vtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(isos->pmesh_nodal, 0);
 
@@ -306,7 +307,7 @@ _dist_to_part
                                                             1,
                                                             isos->comm);
 
-    isos->btp_vtx = btp_vtx; // useful to keep for transferring discrete fields
+    isos->btp_vtx = btp_vtx;
   }
 
   else {
