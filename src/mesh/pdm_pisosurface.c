@@ -531,6 +531,7 @@ PDM_isosurface_vtx_parent_weight_get
   PDM_isosurface_t  *isos,
   int                id_isosurface,
   int                i_part,
+  int              **vtx_parent_idx,
   double           **vtx_parent_weight,
   PDM_ownership_t    ownership
 )
@@ -544,6 +545,7 @@ PDM_isosurface_vtx_parent_weight_get
     isos->iso_owner_vtx_parent_weight[id_isosurface][i_part] = ownership;
   }
 
+  *vtx_parent_idx    = isos->iso_entity_parent_idx[PDM_MESH_ENTITY_VTX][id_isosurface][i_part]; // TODO : séparer ownership de parent_idx et parent_lnum/gnum?
   *vtx_parent_weight = isos->iso_vtx_parent_weight[id_isosurface][i_part];
 
   return isos->iso_n_entity[PDM_MESH_ENTITY_VTX][id_isosurface][i_part];

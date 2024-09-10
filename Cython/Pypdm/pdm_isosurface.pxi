@@ -198,6 +198,7 @@ cdef extern from "pdm_isosurface.h":
   int PDM_isosurface_vtx_parent_weight_get(PDM_isosurface_t  *isos,
                                            int                id_isosurface,
                                            int                i_part,
+                                           int              **vtx_parent_idx,
                                            double           **vtx_parent_weight,
                                            PDM_ownership_t    ownership);
 

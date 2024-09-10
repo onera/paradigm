@@ -1032,6 +1032,7 @@ PDM_isosurface_local_parent_get
  * \param [in]  isos               \ref PDM_isosurface_t instance
  * \param [in]  id_isosurface      Iso-surface identifier
  * \param [in]  i_part             Partition identifier
+ * \param [out] vtx_parent_idx     Index for interpolation weights
  * \param [out] vtx_parent_weight  Interpolation weights
  * \param [in]  ownership          Ownership
  *
@@ -1040,7 +1041,7 @@ PDM_isosurface_local_parent_get
  *
  * \warning Rajouter \p vtx_weight_idx en sortie pour éviter l'appel à PDM_part_to_part_gnum1_come_from_get? (attention copie ou alias)
  *
- * \return  Number of vertices
+ * \return  Number of iso-surface vertices
  *
  */
 
@@ -1050,6 +1051,7 @@ PDM_isosurface_vtx_parent_weight_get
   PDM_isosurface_t  *isos,
   int                id_isosurface,
   int                i_part,
+  int              **vtx_parent_idx,
   double           **vtx_parent_weight,
   PDM_ownership_t    ownership
 );

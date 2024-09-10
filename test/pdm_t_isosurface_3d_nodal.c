@@ -616,7 +616,7 @@ int main(int argc, char *argv[])
           int iso_n_vtx = PDM_isosurface_local_parent_get(isos, i_iso, i_part, PDM_MESH_ENTITY_VTX, 
                                                          &vtx_parent_idx, &vtx_parent_lnum,
                                                           PDM_OWNERSHIP_KEEP);
-          PDM_isosurface_vtx_parent_weight_get(isos, i_iso, i_part, &vtx_parent_wght, PDM_OWNERSHIP_KEEP);
+          PDM_isosurface_vtx_parent_weight_get(isos, i_iso, i_part, &vtx_parent_idx, &vtx_parent_wght, PDM_OWNERSHIP_KEEP);
           
           iso_itp_field[i_iso][i_part] = PDM_array_zeros_double(iso_n_vtx);
           for (int i_iso_vtx=0; i_iso_vtx<iso_n_vtx; ++i_iso_vtx) {
