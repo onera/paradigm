@@ -66,16 +66,25 @@ extern "C" {
  * Private function definitions
  *============================================================================*/
 
-static int
-_iso_surface_kind_n_coeff[PDM_ISO_SURFACE_KIND_MAX] = {
-   0, // PDM_ISO_SURFACE_KIND_FIELD
-   4, // PDM_ISO_SURFACE_KIND_PLANE
-   4, // PDM_ISO_SURFACE_KIND_SPHERE
-   6, // PDM_ISO_SURFACE_KIND_ELLIPSE
-  10, // PDM_ISO_SURFACE_KIND_QUADRIC
-   0, // PDM_ISO_SURFACE_KIND_HEART
-   0  // PDM_ISO_SURFACE_KIND_FUNCTION
-};
+static inline int
+_iso_surface_kind_n_coeff
+(
+  PDM_iso_surface_kind_t kind
+)
+{
+  switch (kind) {
+    case PDM_ISO_SURFACE_KIND_PLANE:
+      return 4;
+    case PDM_ISO_SURFACE_KIND_SPHERE:
+      return 4;
+    case PDM_ISO_SURFACE_KIND_ELLIPSE:
+      return 6;
+    case PDM_ISO_SURFACE_KIND_QUADRIC:
+      return 10;
+    default:
+      return 0;
+  }
+}
 
 static
 inline
@@ -2493,7 +2502,7 @@ PDM_isosurface_add
     isos->isovalues[id_isosurface][i] = isovalues[i];
   }
 
-  int n_coeff = _iso_surface_kind_n_coeff[kind];
+  int n_coeff = _iso_surface_kind_n_coeff(kind);
   PDM_malloc(isos->eq_coeffs[id_isosurface], n_coeff, double);
 
   return id_isosurface;
@@ -2511,7 +2520,7 @@ PDM_isosurface_equation_set
 {
   PDM_ISOSURFACE_CHECK_ID(isos, id_isosurface);
 
-  int n_coeff = _iso_surface_kind_n_coeff[isos->kind[id_isosurface]];
+  int n_coeff = _iso_surface_kind_n_coeff(isos->kind[id_isosurface]);
 
   for (int i_coeff=0; i_coeff<n_coeff; ++i_coeff) {
     isos->eq_coeffs[id_isosurface][i_coeff] = coeff[i_coeff];
