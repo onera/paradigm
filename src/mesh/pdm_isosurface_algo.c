@@ -3799,50 +3799,28 @@ PDM_isosurface_marching_algo
     isos->iso_connec    [PDM_CONNECTIVITY_TYPE_FACE_VTX][id_iso] = iso_face_vtx;
   }
 
-  PDM_malloc(isos->iso_owner_vtx_coord        [id_iso], n_part, PDM_ownership_t  );
-  PDM_malloc(isos->iso_owner_vtx_parent_weight[id_iso], n_part, PDM_ownership_t  );
-  PDM_malloc(isos->iso_owner_gnum             [id_iso], n_part, PDM_ownership_t *);
-  PDM_malloc(isos->iso_owner_connec           [id_iso], n_part, PDM_ownership_t *);
-  PDM_malloc(isos->iso_owner_parent_lnum      [id_iso], n_part, PDM_ownership_t *);
-  PDM_malloc(isos->iso_owner_edge_bnd         [id_iso], n_part, PDM_ownership_t  );
-  for (int i_part=0; i_part<n_part; ++i_part) {
-    isos->iso_owner_vtx_coord         [id_iso][i_part] = PDM_OWNERSHIP_KEEP;
-    isos->iso_owner_vtx_parent_weight [id_iso][i_part] = PDM_OWNERSHIP_KEEP;
 
-    // > Allocate at max and set to bad_value
-    PDM_malloc(isos->iso_owner_gnum       [id_iso][i_part], PDM_MESH_ENTITY_MAX      , PDM_ownership_t);
-    PDM_malloc(isos->iso_owner_parent_lnum[id_iso][i_part], PDM_MESH_ENTITY_MAX      , PDM_ownership_t);
-    PDM_malloc(isos->iso_owner_connec     [id_iso][i_part], PDM_CONNECTIVITY_TYPE_MAX, PDM_ownership_t);
+  PDM_malloc(isos->iso_owner_vtx_coord        [id_iso], isos->n_part, PDM_ownership_t);
+  PDM_malloc(isos->iso_owner_vtx_parent_weight[id_iso], isos->n_part, PDM_ownership_t);
+  PDM_malloc(isos->iso_owner_edge_bnd         [id_iso], isos->n_part, PDM_ownership_t);
+  for (int i_entity=0; i_entity<PDM_MESH_ENTITY_MAX; ++i_entity) {
+    PDM_malloc(isos->iso_owner_gnum       [i_entity][id_iso], isos->n_part, PDM_ownership_t);
+    PDM_malloc(isos->iso_owner_parent_lnum[i_entity][id_iso], isos->n_part, PDM_ownership_t);
+  }
+  PDM_malloc(isos->iso_owner_connec[PDM_CONNECTIVITY_TYPE_EDGE_VTX][id_iso], isos->n_part, PDM_ownership_t);
+  PDM_malloc(isos->iso_owner_connec[PDM_CONNECTIVITY_TYPE_FACE_VTX][id_iso], isos->n_part, PDM_ownership_t);
+
+  for (int i_part=0; i_part<isos->n_part; ++i_part) {
+    isos->iso_owner_vtx_coord        [id_iso][i_part] = PDM_OWNERSHIP_KEEP;
+    isos->iso_owner_vtx_parent_weight[id_iso][i_part] = PDM_OWNERSHIP_KEEP;
+    isos->iso_owner_edge_bnd         [id_iso][i_part] = PDM_OWNERSHIP_KEEP;
     for (int i_entity=0; i_entity<PDM_MESH_ENTITY_MAX; ++i_entity) {
-      isos->iso_owner_gnum       [id_iso][i_part][i_entity] = PDM_OWNERSHIP_BAD_VALUE;
-      isos->iso_owner_parent_lnum[id_iso][i_part][i_entity] = PDM_OWNERSHIP_BAD_VALUE;
-    }
-    for (int i_connec=0; i_connec<PDM_CONNECTIVITY_TYPE_MAX; ++i_connec) {
-      isos->iso_owner_connec     [id_iso][i_part][i_connec] = PDM_OWNERSHIP_BAD_VALUE;
+      isos->iso_owner_gnum       [i_entity][id_iso][i_part] = PDM_OWNERSHIP_KEEP;
+      isos->iso_owner_parent_lnum[i_entity][id_iso][i_part] = PDM_OWNERSHIP_KEEP;
     }
 
-    isos->iso_owner_gnum         [id_iso][i_part][PDM_MESH_ENTITY_VTX           ] = PDM_OWNERSHIP_KEEP;
-    if (isos->extract_kind==PDM_EXTRACT_PART_KIND_LOCAL) {
-      isos->iso_owner_parent_lnum[id_iso][i_part][PDM_MESH_ENTITY_VTX           ] = PDM_OWNERSHIP_KEEP;
-    }
-
-    isos->iso_owner_gnum         [id_iso][i_part][PDM_MESH_ENTITY_EDGE          ] = PDM_OWNERSHIP_KEEP;
-    if (isos->extract_kind==PDM_EXTRACT_PART_KIND_LOCAL) {
-      isos->iso_owner_parent_lnum[id_iso][i_part][PDM_MESH_ENTITY_EDGE          ] = PDM_OWNERSHIP_KEEP;
-    }
-    isos->iso_owner_connec       [id_iso][i_part][PDM_CONNECTIVITY_TYPE_EDGE_VTX] = PDM_OWNERSHIP_KEEP;
-
-    if (isos->entry_mesh_dim==3) {
-      isos->iso_owner_gnum         [id_iso][i_part][PDM_MESH_ENTITY_FACE          ] = PDM_OWNERSHIP_KEEP;
-      if (isos->extract_kind==PDM_EXTRACT_PART_KIND_LOCAL) {
-        isos->iso_owner_parent_lnum[id_iso][i_part][PDM_MESH_ENTITY_FACE          ] = PDM_OWNERSHIP_KEEP;
-      }
-      isos->iso_owner_connec       [id_iso][i_part][PDM_CONNECTIVITY_TYPE_FACE_VTX] = PDM_OWNERSHIP_KEEP;
-    }
-
-    if (isos->entry_mesh_dim==3) {
-      isos->iso_owner_edge_bnd[id_iso][i_part] = PDM_OWNERSHIP_KEEP;
-    }
+    isos->iso_owner_connec[PDM_CONNECTIVITY_TYPE_EDGE_VTX][id_iso][i_part] = PDM_OWNERSHIP_KEEP;
+    isos->iso_owner_connec[PDM_CONNECTIVITY_TYPE_FACE_VTX][id_iso][i_part] = PDM_OWNERSHIP_KEEP;
   }
 
 }
@@ -4492,48 +4470,33 @@ PDM_isosurface_ngon_algo
     isos->iso_connec    [PDM_CONNECTIVITY_TYPE_FACE_VTX][id_iso] = iso_face_vtx;
   }
 
-  PDM_malloc(isos->iso_owner_vtx_coord        [id_iso], isos->n_part, PDM_ownership_t  );
-  PDM_malloc(isos->iso_owner_vtx_parent_weight[id_iso], isos->n_part, PDM_ownership_t  );
-  PDM_malloc(isos->iso_owner_gnum             [id_iso], isos->n_part, PDM_ownership_t *);
-  PDM_malloc(isos->iso_owner_connec           [id_iso], isos->n_part, PDM_ownership_t *);
-  PDM_malloc(isos->iso_owner_parent_lnum      [id_iso], isos->n_part, PDM_ownership_t *);
-  PDM_malloc(isos->iso_owner_edge_bnd         [id_iso], isos->n_part, PDM_ownership_t  );
-  for (int i_part=0; i_part<isos->n_part; ++i_part) {
-    isos->iso_owner_vtx_coord         [id_iso][i_part] = PDM_OWNERSHIP_KEEP;
-    isos->iso_owner_vtx_parent_weight [id_iso][i_part] = PDM_OWNERSHIP_KEEP;
 
-    // > Allocate at max and set to bad_value
-    PDM_malloc(isos->iso_owner_gnum       [id_iso][i_part], PDM_MESH_ENTITY_MAX      , PDM_ownership_t);
-    PDM_malloc(isos->iso_owner_parent_lnum[id_iso][i_part], PDM_MESH_ENTITY_MAX      , PDM_ownership_t);
-    PDM_malloc(isos->iso_owner_connec     [id_iso][i_part], PDM_CONNECTIVITY_TYPE_MAX, PDM_ownership_t);
-    for (int i_entity=0; i_entity<PDM_MESH_ENTITY_MAX; ++i_entity) {
-      isos->iso_owner_gnum       [id_iso][i_part][i_entity] = PDM_OWNERSHIP_BAD_VALUE;
-      isos->iso_owner_parent_lnum[id_iso][i_part][i_entity] = PDM_OWNERSHIP_BAD_VALUE;
-    }
-    for (int i_connec=0; i_connec<PDM_CONNECTIVITY_TYPE_MAX; ++i_connec) {
-      isos->iso_owner_connec [id_iso][i_part][i_connec] = PDM_OWNERSHIP_BAD_VALUE;
-    }
-
-    isos->iso_owner_gnum         [id_iso][i_part][PDM_MESH_ENTITY_VTX           ] = PDM_OWNERSHIP_KEEP;
-    if (isos->extract_kind==PDM_EXTRACT_PART_KIND_LOCAL) {
-      isos->iso_owner_parent_lnum[id_iso][i_part][PDM_MESH_ENTITY_VTX           ] = PDM_OWNERSHIP_KEEP;
-    }
-    isos->iso_owner_gnum         [id_iso][i_part][PDM_MESH_ENTITY_EDGE          ] = PDM_OWNERSHIP_KEEP;
-    if (isos->extract_kind==PDM_EXTRACT_PART_KIND_LOCAL) {
-      isos->iso_owner_parent_lnum[id_iso][i_part][PDM_MESH_ENTITY_EDGE          ] = PDM_OWNERSHIP_KEEP;
-    }
-    isos->iso_owner_connec       [id_iso][i_part][PDM_CONNECTIVITY_TYPE_EDGE_VTX] = PDM_OWNERSHIP_KEEP;
-
-    isos->iso_owner_gnum         [id_iso][i_part][PDM_MESH_ENTITY_FACE          ] = PDM_OWNERSHIP_KEEP;
-    if (isos->extract_kind==PDM_EXTRACT_PART_KIND_LOCAL) {
-      isos->iso_owner_parent_lnum[id_iso][i_part][PDM_MESH_ENTITY_FACE          ] = PDM_OWNERSHIP_KEEP;
-    }
-    isos->iso_owner_connec       [id_iso][i_part][PDM_CONNECTIVITY_TYPE_FACE_VTX] = PDM_OWNERSHIP_KEEP;
-
-    if (isos->entry_mesh_dim==3){
-      isos->iso_owner_edge_bnd[id_iso][i_part] = PDM_OWNERSHIP_KEEP;
-    }
+  PDM_malloc(isos->iso_owner_vtx_coord        [id_iso], isos->n_part, PDM_ownership_t);
+  PDM_malloc(isos->iso_owner_vtx_parent_weight[id_iso], isos->n_part, PDM_ownership_t);
+  PDM_malloc(isos->iso_owner_edge_bnd         [id_iso], isos->n_part, PDM_ownership_t);
+  for (int i_entity=0; i_entity<PDM_MESH_ENTITY_MAX; ++i_entity) {
+    PDM_malloc(isos->iso_owner_gnum               [i_entity][id_iso], isos->n_part, PDM_ownership_t);
+    PDM_malloc(isos->iso_owner_parent_lnum        [i_entity][id_iso], isos->n_part, PDM_ownership_t);
+    PDM_malloc(isos->iso_owner_isovalue_entity_idx[i_entity][id_iso], isos->n_part, PDM_ownership_t);
   }
+  PDM_malloc(isos->iso_owner_connec[PDM_CONNECTIVITY_TYPE_EDGE_VTX][id_iso], isos->n_part, PDM_ownership_t);
+  PDM_malloc(isos->iso_owner_connec[PDM_CONNECTIVITY_TYPE_FACE_VTX][id_iso], isos->n_part, PDM_ownership_t);
+
+  for (int i_part=0; i_part<isos->n_part; ++i_part) {
+    isos->iso_owner_vtx_coord        [id_iso][i_part] = PDM_OWNERSHIP_KEEP;
+    isos->iso_owner_vtx_parent_weight[id_iso][i_part] = PDM_OWNERSHIP_KEEP;
+    isos->iso_owner_edge_bnd         [id_iso][i_part] = PDM_OWNERSHIP_KEEP;
+    for (int i_entity=0; i_entity<PDM_MESH_ENTITY_MAX; ++i_entity) {
+      isos->iso_owner_gnum               [i_entity][id_iso][i_part] = PDM_OWNERSHIP_KEEP;
+      isos->iso_owner_parent_lnum        [i_entity][id_iso][i_part] = PDM_OWNERSHIP_KEEP;
+      isos->iso_owner_isovalue_entity_idx[i_entity][id_iso][i_part] = PDM_OWNERSHIP_KEEP;
+    }
+
+    isos->iso_owner_connec[PDM_CONNECTIVITY_TYPE_EDGE_VTX][id_iso][i_part] = PDM_OWNERSHIP_KEEP;
+    isos->iso_owner_connec[PDM_CONNECTIVITY_TYPE_FACE_VTX][id_iso][i_part] = PDM_OWNERSHIP_KEEP;
+  }
+
+
 }
 
 

@@ -50,6 +50,23 @@ extern "C" {
  * Macro definitions
  *============================================================================*/
 
+#define PDM_ISOSURFACE_CHECK_ID(isos, id_isosurface) \
+  if ((id_isosurface) >= (isos)->n_isosurface) { \
+    PDM_error(__FILE__, __LINE__, 0, "Invalid id_isosurface %d (n_isosurface = %d).\n", (id_isosurface), (isos)->n_isosurface); \
+  }
+
+#define PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_isosurface) \
+  if ((isos)->is_computed[(id_isosurface)] == PDM_FALSE) { \
+    PDM_error(__FILE__, __LINE__, 0, "Isosurface with id %d was not computed.\n", (id_isosurface)); \
+  }
+
+#define PDM_ISOSURFACE_CHECK_ENTITY_TYPE(entity_type) \
+  if ((entity_type) != PDM_MESH_ENTITY_VTX  && \
+      (entity_type) != PDM_MESH_ENTITY_EDGE && \
+      (entity_type) != PDM_MESH_ENTITY_FACE) { \
+    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: has no mesh entity of type %d.\n", (entity_type)); \
+  }
+
 /*============================================================================
  * Type definitions
  *============================================================================*/
@@ -105,7 +122,7 @@ struct _pdm_isosurface_t {
   PDM_split_dual_t          part_method;
 
   // > Link with entry mesh
-  int **compute_ptp;
+  PDM_bool_t *compute_ptp[PDM_MESH_ENTITY_MAX];
   
   // ========================
   // > Distributed entry data
@@ -239,13 +256,14 @@ struct _pdm_isosurface_t {
   PDM_part_to_part_t **iso_ptp[PDM_MESH_ENTITY_MAX];
 
   // > Owners
-  PDM_ownership_t  **iso_owner_vtx_coord;
-  PDM_ownership_t  **iso_owner_vtx_parent_weight;
-  PDM_ownership_t ***iso_owner_gnum;
-  PDM_ownership_t ***iso_owner_connec;
-  PDM_ownership_t ***iso_owner_parent_lnum;
-  PDM_ownership_t  **iso_owner_edge_bnd;
-  PDM_ownership_t  **iso_owner_ptp;
+  PDM_ownership_t **iso_owner_vtx_coord;
+  PDM_ownership_t **iso_owner_vtx_parent_weight;
+  PDM_ownership_t **iso_owner_edge_bnd;
+  PDM_ownership_t **iso_owner_gnum               [PDM_MESH_ENTITY_MAX];
+  PDM_ownership_t **iso_owner_parent_lnum        [PDM_MESH_ENTITY_MAX];
+  PDM_ownership_t **iso_owner_isovalue_entity_idx[PDM_MESH_ENTITY_MAX];
+  PDM_ownership_t  *iso_owner_ptp                [PDM_MESH_ENTITY_MAX];
+  PDM_ownership_t **iso_owner_connec             [PDM_CONNECTIVITY_TYPE_MAX];
 
 
   // =========================
@@ -268,8 +286,8 @@ struct _pdm_isosurface_t {
   // > Owners
   PDM_ownership_t  *iso_owner_dvtx_coord;
   PDM_ownership_t  *iso_owner_dvtx_parent_weight;
-  PDM_ownership_t **iso_owner_dconnec;
-  PDM_ownership_t **iso_owner_dparent;
+  PDM_ownership_t  *iso_owner_dconnec[PDM_CONNECTIVITY_TYPE_MAX];
+  PDM_ownership_t  *iso_owner_dparent[PDM_MESH_ENTITY_MAX];
   PDM_ownership_t  *iso_owner_dedge_bnd;
 
 

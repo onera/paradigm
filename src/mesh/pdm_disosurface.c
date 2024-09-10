@@ -317,6 +317,8 @@ PDM_isosurface_dfield_set
 {
   _check_is_not_part(isos);
 
+  PDM_ISOSURFACE_CHECK_ID(isos, id_isosurface);
+
   isos->dfield[id_isosurface] = dfield;
 }
 
@@ -330,6 +332,8 @@ PDM_isosurface_dgradient_set
 )
 {
   _check_is_not_part(isos);
+
+  PDM_ISOSURFACE_CHECK_ID(isos, id_isosurface);
  
   isos->dgradient[id_isosurface] = dgradient;
 }
@@ -347,30 +351,29 @@ PDM_isosurface_dconnectivity_get
 {
   _check_is_not_part(isos);
 
-  if (isos->iso_owner_dconnec[id_iso]!=NULL) {
-    int n_entity = 0;
-    isos->iso_owner_dconnec[id_iso][connectivity_type] = ownership;
+  PDM_ISOSURFACE_CHECK_ID      (isos, id_iso);
+  PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_iso);
 
-    if (connectivity_type==PDM_CONNECTIVITY_TYPE_EDGE_VTX) {
-      n_entity      = isos->iso_dn_entity[PDM_MESH_ENTITY_EDGE][id_iso];
-      *dconnect_idx = NULL;
-      *dconnect     = isos->iso_dconnec[connectivity_type][id_iso];
-    }
-    else if (connectivity_type==PDM_CONNECTIVITY_TYPE_FACE_VTX) {
-      n_entity      = isos->iso_dn_entity[PDM_MESH_ENTITY_FACE][id_iso];
-      *dconnect_idx = isos->iso_dconnec_idx[connectivity_type][id_iso];
-      *dconnect     = isos->iso_dconnec    [connectivity_type][id_iso];
-    }
-    else {
-      PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: has no connectivity of type %d.\n", connectivity_type);
-    }
+  int n_entity = 0;
+  if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
+    isos->iso_owner_dconnec[connectivity_type][id_iso] = ownership;
+  }
 
-    return n_entity;
+  if (connectivity_type==PDM_CONNECTIVITY_TYPE_EDGE_VTX) {
+    n_entity      = isos->iso_dn_entity[PDM_MESH_ENTITY_EDGE][id_iso];
+    *dconnect_idx = NULL;
+    *dconnect     = isos->iso_dconnec[connectivity_type][id_iso];
+  }
+  else if (connectivity_type==PDM_CONNECTIVITY_TYPE_FACE_VTX) {
+    n_entity      = isos->iso_dn_entity[PDM_MESH_ENTITY_FACE][id_iso];
+    *dconnect_idx = isos->iso_dconnec_idx[connectivity_type][id_iso];
+    *dconnect     = isos->iso_dconnec    [connectivity_type][id_iso];
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_connectivity_get: Isosurface with id %d seems not computed.\n", id_iso);
-    return 0;
+    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: has no connectivity of type %d.\n", connectivity_type);
   }
+
+  return n_entity;
 
   return 0;
 }
@@ -389,28 +392,22 @@ PDM_isosurface_parent_gnum_get
 {
   _check_is_not_part(isos);
 
-  if (entity_type != PDM_MESH_ENTITY_VTX  &&
-      entity_type != PDM_MESH_ENTITY_EDGE &&
-      entity_type != PDM_MESH_ENTITY_FACE) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: has no mesh entity of type %d.\n", entity_type);
+  PDM_ISOSURFACE_CHECK_ID      (isos, id_iso);
+  PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_iso);
+
+  PDM_ISOSURFACE_CHECK_ENTITY_TYPE(entity_type);
+
+
+  int n_entity = 0;
+  if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
+    isos->iso_owner_dparent[entity_type][id_iso] = ownership;
   }
 
-  if (isos->iso_owner_dparent[id_iso]!=NULL) {
-    int n_entity = 0;
-    isos->iso_owner_dparent[id_iso][entity_type] = ownership;
+  n_entity      = isos->iso_dn_entity          [entity_type][id_iso];
+  *dparent_idx  = isos->iso_dentity_parent_idx [entity_type][id_iso];
+  *dparent_gnum = isos->iso_dentity_parent_gnum[entity_type][id_iso];
 
-    n_entity      = isos->iso_dn_entity          [entity_type][id_iso];
-    *dparent_idx  = isos->iso_dentity_parent_idx [entity_type][id_iso];
-    *dparent_gnum = isos->iso_dentity_parent_gnum[entity_type][id_iso];
-
-    return n_entity;
-  }
-  else {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_parent_gnum_get: Isosurface with id %d seems not computed.\n", id_iso);
-    return 0;
-  }
-
-  return 0;
+  return n_entity;
 }
 
 
@@ -425,15 +422,14 @@ PDM_isosurface_dvtx_parent_weight_get
 {
   _check_is_not_part(isos);
 
-  if (isos->iso_owner_dvtx_parent_weight[id_iso]!=PDM_OWNERSHIP_BAD_VALUE) {
+  PDM_ISOSURFACE_CHECK_ID      (isos, id_iso);
+  PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_iso);
+
+  if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
     isos->iso_owner_dvtx_parent_weight[id_iso] = ownership;
-    *dvtx_parent_weight = isos->iso_dvtx_parent_weight[id_iso];
-    return;
   }
-  else {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_vtx_parent_weight_get: Isosurface with id %d seems not computed.\n", id_iso);
-    return;
-  }
+
+  *dvtx_parent_weight = isos->iso_dvtx_parent_weight[id_iso];
 }
 
 
@@ -460,16 +456,16 @@ PDM_isosurface_dvtx_coord_get
 {
   _check_is_not_part(isos);
 
-  if (isos->iso_owner_dvtx_coord[id_iso]!=PDM_OWNERSHIP_BAD_VALUE) {
-    isos->iso_owner_dvtx_coord[id_iso] = ownership;
-    *dvtx_coord = isos->iso_dvtx_coord[id_iso];
+  PDM_ISOSURFACE_CHECK_ID      (isos, id_iso);
+  PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_iso);
 
-    return isos->iso_dn_entity[PDM_MESH_ENTITY_VTX][id_iso];
+  if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
+    isos->iso_owner_dvtx_coord[id_iso] = ownership;
   }
-  else {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_vtx_coord_get: Isosurface with id %d seems not computed.\n", id_iso);
-    return 0;
-  }
+
+  *dvtx_coord = isos->iso_dvtx_coord[id_iso];
+
+  return isos->iso_dn_entity[PDM_MESH_ENTITY_VTX][id_iso];
 }
 
 
@@ -484,11 +480,10 @@ PDM_isosurface_distrib_get
 {
   _check_is_not_part(isos);
 
-  if (entity_type != PDM_MESH_ENTITY_VTX  &&
-      entity_type != PDM_MESH_ENTITY_EDGE &&
-      entity_type != PDM_MESH_ENTITY_FACE) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: has no mesh entity of type %d.\n", entity_type);
-  }
+  PDM_ISOSURFACE_CHECK_ID      (isos, id_iso);
+  PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_iso);
+
+  PDM_ISOSURFACE_CHECK_ENTITY_TYPE(entity_type);
 
   *distribution = PDM_compute_entity_distribution(isos->comm, isos->iso_dn_entity[entity_type][id_iso]);
 }
@@ -507,27 +502,26 @@ PDM_isosurface_dgroup_get
 {
   _check_is_not_part(isos);
 
-  if (isos->iso_owner_dedge_bnd[id_iso]!=PDM_OWNERSHIP_BAD_VALUE) {
-    int n_group = 0;
-    isos->iso_owner_dedge_bnd[id_iso] = ownership;
+  PDM_ISOSURFACE_CHECK_ID      (isos, id_iso);
+  PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_iso);
 
-    if (entity_type==PDM_MESH_ENTITY_EDGE) {
-      n_group            = isos->iso_n_edge_group    [id_iso];
-      *dgroup_entity_idx = isos->iso_dedge_group_idx [id_iso];
-      *dgroup_entity     = isos->iso_dedge_group_gnum[id_iso];
-    }
-    else {
-      PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: has no group for entity_type %d.\n", entity_type);
+  int n_group = 0;
+
+  if (entity_type==PDM_MESH_ENTITY_EDGE) {
+
+    if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
+      isos->iso_owner_dedge_bnd[id_iso] = ownership;
     }
 
-    return n_group;
+    n_group            = isos->iso_n_edge_group    [id_iso];
+    *dgroup_entity_idx = isos->iso_dedge_group_idx [id_iso];
+    *dgroup_entity     = isos->iso_dedge_group_gnum[id_iso];
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_dgroup_get: Isosurface with id %d seems not to have edge bnd.\n", id_iso);
-    return 0;
+    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: has no group for entity_type %d.\n", entity_type);
   }
 
-  return 0;
+  return n_group;
 }
 
 

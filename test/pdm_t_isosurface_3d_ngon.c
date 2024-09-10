@@ -1068,10 +1068,10 @@ int main
   /*
    *  Compute isosurface
    */
-  // PDM_isosurface_compute(isos, iso1);
-  // PDM_isosurface_reset  (isos, iso1);
-  // PDM_isosurface_compute(isos, iso1);
-  // PDM_isosurface_compute(isos, iso2);
+  PDM_isosurface_compute(isos, iso1);
+  PDM_isosurface_reset  (isos, iso1);
+  PDM_isosurface_compute(isos, iso1);
+  PDM_isosurface_compute(isos, iso2);
   PDM_isosurface_compute(isos, -1);
   // PDM_isosurface_reset  (isos, -1);
   // PDM_isosurface_compute(isos, -1);
