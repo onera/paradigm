@@ -733,7 +733,7 @@ PDM_isosurface_part_to_part_get
   
   PDM_ISOSURFACE_CHECK_ENTITY_TYPE(entity_type);
 
-  if (isos->compute_ptp[id_isosurface][entity_type]!=1) {
+  if (isos->compute_ptp[entity_type][id_isosurface] == PDM_FALSE) {
     PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: part_to_part for entity %d of isosurface %d is not computed.\n", entity_type, id_isosurface);
   }
 
