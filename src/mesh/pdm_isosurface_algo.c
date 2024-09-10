@@ -3804,8 +3804,9 @@ PDM_isosurface_marching_algo
   PDM_malloc(isos->iso_owner_vtx_parent_weight[id_iso], isos->n_part, PDM_ownership_t);
   PDM_malloc(isos->iso_owner_edge_bnd         [id_iso], isos->n_part, PDM_ownership_t);
   for (int i_entity=0; i_entity<PDM_MESH_ENTITY_MAX; ++i_entity) {
-    PDM_malloc(isos->iso_owner_gnum       [i_entity][id_iso], isos->n_part, PDM_ownership_t);
-    PDM_malloc(isos->iso_owner_parent_lnum[i_entity][id_iso], isos->n_part, PDM_ownership_t);
+    PDM_malloc(isos->iso_owner_gnum               [i_entity][id_iso], isos->n_part, PDM_ownership_t);
+    PDM_malloc(isos->iso_owner_parent_lnum        [i_entity][id_iso], isos->n_part, PDM_ownership_t);
+    PDM_malloc(isos->iso_owner_isovalue_entity_idx[i_entity][id_iso], isos->n_part, PDM_ownership_t);
   }
   PDM_malloc(isos->iso_owner_connec[PDM_CONNECTIVITY_TYPE_EDGE_VTX][id_iso], isos->n_part, PDM_ownership_t);
   PDM_malloc(isos->iso_owner_connec[PDM_CONNECTIVITY_TYPE_FACE_VTX][id_iso], isos->n_part, PDM_ownership_t);
@@ -3815,8 +3816,9 @@ PDM_isosurface_marching_algo
     isos->iso_owner_vtx_parent_weight[id_iso][i_part] = PDM_OWNERSHIP_KEEP;
     isos->iso_owner_edge_bnd         [id_iso][i_part] = PDM_OWNERSHIP_KEEP;
     for (int i_entity=0; i_entity<PDM_MESH_ENTITY_MAX; ++i_entity) {
-      isos->iso_owner_gnum       [i_entity][id_iso][i_part] = PDM_OWNERSHIP_KEEP;
-      isos->iso_owner_parent_lnum[i_entity][id_iso][i_part] = PDM_OWNERSHIP_KEEP;
+      isos->iso_owner_gnum               [i_entity][id_iso][i_part] = PDM_OWNERSHIP_KEEP;
+      isos->iso_owner_parent_lnum        [i_entity][id_iso][i_part] = PDM_OWNERSHIP_KEEP;
+      isos->iso_owner_isovalue_entity_idx[i_entity][id_iso][i_part] = PDM_OWNERSHIP_KEEP;
     }
 
     isos->iso_owner_connec[PDM_CONNECTIVITY_TYPE_EDGE_VTX][id_iso][i_part] = PDM_OWNERSHIP_KEEP;
