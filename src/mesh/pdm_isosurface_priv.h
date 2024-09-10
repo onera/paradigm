@@ -261,6 +261,7 @@ struct _pdm_isosurface_t {
   PDM_ownership_t **iso_owner_edge_bnd;
   PDM_ownership_t **iso_owner_gnum               [PDM_MESH_ENTITY_MAX];
   PDM_ownership_t **iso_owner_parent_lnum        [PDM_MESH_ENTITY_MAX];
+  PDM_ownership_t **iso_owner_parent_idx         [PDM_MESH_ENTITY_MAX];
   PDM_ownership_t **iso_owner_isovalue_entity_idx[PDM_MESH_ENTITY_MAX];
   PDM_ownership_t  *iso_owner_ptp                [PDM_MESH_ENTITY_MAX];
   PDM_ownership_t **iso_owner_connec             [PDM_CONNECTIVITY_TYPE_MAX];

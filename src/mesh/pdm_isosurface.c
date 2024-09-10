@@ -2003,6 +2003,7 @@ _free_owner
   for (int i_entity=0; i_entity<PDM_MESH_ENTITY_MAX; ++i_entity) {
     PDM_free(isos->iso_owner_gnum               [i_entity][id_iso]);
     PDM_free(isos->iso_owner_parent_lnum        [i_entity][id_iso]);
+    PDM_free(isos->iso_owner_parent_idx         [i_entity][id_iso]);
     PDM_free(isos->iso_owner_isovalue_entity_idx[i_entity][id_iso]);
   }
   PDM_free(isos->iso_owner_connec[PDM_CONNECTIVITY_TYPE_EDGE_VTX][id_iso]);
@@ -2379,11 +2380,13 @@ PDM_isosurface_add
   for (int i_entity = 0; i_entity < PDM_MESH_ENTITY_MAX; i_entity++) {
     PDM_realloc(isos->iso_owner_gnum               [i_entity], isos->iso_owner_gnum               [i_entity], isos->n_isosurface, PDM_ownership_t *);
     PDM_realloc(isos->iso_owner_parent_lnum        [i_entity], isos->iso_owner_parent_lnum        [i_entity], isos->n_isosurface, PDM_ownership_t *);
+    PDM_realloc(isos->iso_owner_parent_idx         [i_entity], isos->iso_owner_parent_idx         [i_entity], isos->n_isosurface, PDM_ownership_t *);
     PDM_realloc(isos->iso_owner_isovalue_entity_idx[i_entity], isos->iso_owner_isovalue_entity_idx[i_entity], isos->n_isosurface, PDM_ownership_t *);
     PDM_realloc(isos->iso_owner_ptp                [i_entity], isos->iso_owner_ptp                [i_entity], isos->n_isosurface, PDM_ownership_t);
 
     isos->iso_owner_gnum               [i_entity][id_isosurface] = NULL;
     isos->iso_owner_parent_lnum        [i_entity][id_isosurface] = NULL;
+    isos->iso_owner_parent_idx         [i_entity][id_isosurface] = NULL;
     isos->iso_owner_isovalue_entity_idx[i_entity][id_isosurface] = NULL;
     isos->iso_owner_ptp                [i_entity][id_isosurface] = PDM_OWNERSHIP_BAD_VALUE;
   }
@@ -2687,6 +2690,7 @@ PDM_isosurface_free
 
     PDM_free(isos->iso_owner_gnum               [i_entity]);
     PDM_free(isos->iso_owner_parent_lnum        [i_entity]);
+    PDM_free(isos->iso_owner_parent_idx         [i_entity]);
     PDM_free(isos->iso_owner_isovalue_entity_idx[i_entity]);
 
     PDM_free(isos->compute_ptp  [i_entity]);
