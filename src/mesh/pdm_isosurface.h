@@ -856,6 +856,7 @@ PDM_isosurface_parent_gnum_get
  *
  * \param [in]  isos                \ref PDM_isosurface_t instance
  * \param [in]  id_isosurface       Iso-surface identifier
+ * \param [out] dvtx_parent_idx     Index for parent weights
  * \param [out] dvtx_parent_weight  Parent weight
  * \param [in]  ownership           Ownership
  *
@@ -866,6 +867,7 @@ PDM_isosurface_dvtx_parent_weight_get
 (
   PDM_isosurface_t     *isos,
   int                   id_iso,
+  int                 **dvtx_parent_idx,
   double              **dvtx_parent_weight,
   PDM_ownership_t       ownership
 );

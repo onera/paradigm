@@ -400,7 +400,8 @@ PDM_isosurface_parent_gnum_get
 
   int n_entity = 0;
   if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
-    isos->iso_owner_dparent[entity_type][id_iso] = ownership;
+    isos->iso_owner_dparent_idx[entity_type][id_iso] = ownership;
+    isos->iso_owner_dparent    [entity_type][id_iso] = ownership;
   }
 
   n_entity      = isos->iso_dn_entity          [entity_type][id_iso];
@@ -416,6 +417,7 @@ PDM_isosurface_dvtx_parent_weight_get
 (
   PDM_isosurface_t     *isos,
   int                   id_iso,
+  int                 **dvtx_parent_idx,
   double              **dvtx_parent_weight,
   PDM_ownership_t       ownership
 )
@@ -426,10 +428,12 @@ PDM_isosurface_dvtx_parent_weight_get
   PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_iso);
 
   if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
-    isos->iso_owner_dvtx_parent_weight[id_iso] = ownership;
+    isos->iso_owner_dparent_idx[PDM_MESH_ENTITY_VTX][id_iso] = ownership;
+    isos->iso_owner_dvtx_parent_weight              [id_iso] = ownership;
   }
 
-  *dvtx_parent_weight = isos->iso_dvtx_parent_weight[id_iso];
+  *dvtx_parent_idx    = isos->iso_dentity_parent_idx[PDM_MESH_ENTITY_VTX][id_iso];
+  *dvtx_parent_weight = isos->iso_dvtx_parent_weight                     [id_iso];
 }
 
 

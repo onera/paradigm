@@ -287,8 +287,9 @@ struct _pdm_isosurface_t {
   // > Owners
   PDM_ownership_t  *iso_owner_dvtx_coord;
   PDM_ownership_t  *iso_owner_dvtx_parent_weight;
-  PDM_ownership_t  *iso_owner_dconnec[PDM_CONNECTIVITY_TYPE_MAX];
-  PDM_ownership_t  *iso_owner_dparent[PDM_MESH_ENTITY_MAX];
+  PDM_ownership_t  *iso_owner_dconnec    [PDM_CONNECTIVITY_TYPE_MAX];
+  PDM_ownership_t  *iso_owner_dparent_idx[PDM_MESH_ENTITY_MAX];
+  PDM_ownership_t  *iso_owner_dparent    [PDM_MESH_ENTITY_MAX];
   PDM_ownership_t  *iso_owner_dedge_bnd;
 
 
