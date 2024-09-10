@@ -1670,48 +1670,6 @@ _part_to_dist
 }
 
 
-static void
-_get_gnums_from_pmne
-(
-  PDM_part_mesh_nodal_elmts_t *pmne,
-  int                          i_part,
-  PDM_g_num_t                 *gnum
-)
-{
-  int  n_section   = PDM_part_mesh_nodal_elmts_n_section_get  (pmne);
-  int *sections_id = PDM_part_mesh_nodal_elmts_sections_id_get(pmne);
-
-  int idx = 0;
-  for (int i_section = 0; i_section < n_section; i_section++) {
-
-    int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne,
-                                                            sections_id[i_section],
-                                                            i_part);
-
-    int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(pmne,
-                                                               sections_id[i_section],
-                                                               i_part,
-                                                               PDM_OWNERSHIP_BAD_VALUE);
-
-    PDM_g_num_t *elt_gnum = PDM_part_mesh_nodal_elmts_g_num_get(pmne,
-                                                                sections_id[i_section],
-                                                                i_part,
-                                                                PDM_OWNERSHIP_BAD_VALUE);
-
-    for (int i = 0; i < n_elt; i++) {
-      if (parent_num == NULL) {
-        idx++;
-      }
-      else {
-        idx = parent_num[i];
-      }
-
-      gnum[idx] = elt_gnum[i];
-    }
-  }
-}
-
-
 /* Build part_to_part to link isosurface entities with their 'parent' source entities in user frame */
 static void
 _build_ptp
@@ -1721,14 +1679,6 @@ _build_ptp
   PDM_mesh_entities_t  entity_type
 )
 {
-  /**
-   * TODO:
-   * - retrieve the init location of extracted parents to build ptp from triplets
-   *   and compose child -> extracted_parent -> init_parent
-   *   => we already used {extracted_parent -> init_parent} in extract_part, is there a way
-   *      to get it again without having to rely on a ptp_reverse_issend?
-   */
-
   if (isos->compute_ptp[entity_type][id_iso] == PDM_FALSE) {
     return;
   }
@@ -1747,58 +1697,49 @@ _build_ptp
   PDM_g_num_t **entity_gnum        = isos->iso_entity_gnum       [entity_type][id_iso];
   int         **entity_parent_idx  = isos->iso_entity_parent_idx [entity_type][id_iso];
   int         **entity_parent_lnum = isos->iso_entity_parent_lnum[entity_type][id_iso];
-  PDM_g_num_t **entity_parent_gnum = isos->iso_entity_parent_gnum[entity_type][id_iso];
   int          *n_parent           = NULL;
-  PDM_g_num_t **parent_gnum        = NULL;
 
   if (_is_nodal(isos)) {
-    PDM_malloc(n_parent,    isos->n_part, int          );
-    PDM_malloc(parent_gnum, isos->n_part, PDM_g_num_t *);
+    PDM_malloc(n_parent, isos->n_part, int);
   }
 
+  PDM_mesh_entities_t parent_entity_type = PDM_MESH_ENTITY_MAX;
   switch (entity_type) {
     case PDM_MESH_ENTITY_VTX: {
+      parent_entity_type = PDM_MESH_ENTITY_VTX;
       if (_is_nodal(isos)) {
         for (int i_part = 0; i_part < isos->n_part; i_part++) {
-          n_parent   [i_part] = PDM_part_mesh_nodal_n_vtx_get    (isos->pmesh_nodal, i_part);
-          parent_gnum[i_part] = PDM_part_mesh_nodal_vtx_g_num_get(isos->pmesh_nodal, i_part);
+          n_parent[i_part] = PDM_part_mesh_nodal_n_vtx_get(isos->pmesh_nodal, i_part);
         }
       }
       else {
-        n_parent    = isos->n_vtx;
-        parent_gnum = isos->vtx_gnum;
+        n_parent = isos->n_vtx;
       }
       break;
     }
 
     case PDM_MESH_ENTITY_EDGE: {
+      parent_entity_type = PDM_MESH_ENTITY_FACE;
       if (_is_nodal(isos)) {
-        PDM_part_mesh_nodal_elmts_t *pmne = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(isos->pmesh_nodal, PDM_GEOMETRY_KIND_SURFACIC);
         for (int i_part = 0; i_part < isos->n_part; i_part++) {
           n_parent[i_part] = PDM_part_mesh_nodal_n_elmts_get(isos->pmesh_nodal, PDM_GEOMETRY_KIND_SURFACIC, i_part);
-          PDM_malloc(parent_gnum[i_part], n_parent[i_part], PDM_g_num_t);
-          _get_gnums_from_pmne(pmne, i_part, parent_gnum[i_part]);
         }
       }
       else {
-        n_parent    = isos->n_face;
-        parent_gnum = isos->face_gnum;
+        n_parent = isos->n_face;
       }
       break;
     }
 
     case PDM_MESH_ENTITY_FACE: {
+      parent_entity_type = PDM_MESH_ENTITY_CELL;
       if (_is_nodal(isos)) {
-        PDM_part_mesh_nodal_elmts_t *pmne = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(isos->pmesh_nodal, PDM_GEOMETRY_KIND_VOLUMIC);
         for (int i_part = 0; i_part < isos->n_part; i_part++) {
           n_parent[i_part] = PDM_part_mesh_nodal_n_elmts_get(isos->pmesh_nodal, PDM_GEOMETRY_KIND_VOLUMIC, i_part);
-          PDM_malloc(parent_gnum[i_part], n_parent[i_part], PDM_g_num_t);
-          _get_gnums_from_pmne(pmne, i_part, parent_gnum[i_part]);
         }
       }
       else {
-        n_parent    = isos->n_cell;
-        parent_gnum = isos->cell_gnum;
+        n_parent = isos->n_cell;
       }
       break;
     }
@@ -1808,42 +1749,55 @@ _build_ptp
     }
   }
 
-  PDM_part_to_part_t *ptp = NULL;
 
-  // ptp = PDM_part_to_part_create_from_num2_triplet((const PDM_g_num_t **) extrp->target_gnum,
-  //                                                 (const int         * ) extrp->n_target,
-  //                                                                        isos->iso_n_part,
-  //                                                 (const int         * ) n_parent,
-  //                                                                        isos->n_part,
-  //                                                 (const int         **) entity_parent_idx,
-  //                                                                        NULL,
-  //                                                 (const int         **) entity_parent_init_location,
-  //                                                                        extrp->comm);
+  /* Get init location of extracted parent entities */
+  int **entity_parent_triplet_idx   = NULL;
+  int **entity_parent_init_location = NULL;
+  PDM_malloc(entity_parent_triplet_idx,   isos->iso_n_part, int *);
+  PDM_malloc(entity_parent_init_location, isos->iso_n_part, int *);
+  for (int i_part = 0; i_part < isos->iso_n_part; i_part++) {
 
-  // log_trace("id_iso = %d, entity_type %d\n", id_iso, entity_type);
-  // for (int i_part = 0; i_part < isos->iso_n_part; i_part++) {
-  //   for (int i = 0; i < n_entity[i_part]; i++) {
-  //     log_trace(PDM_FMT_G_NUM" : ", entity_gnum[i_part][i]);
-  //     PDM_log_trace_array_long(entity_parent_gnum[i_part] + entity_parent_idx[i_part][i],
-  //                              entity_parent_idx[i_part][i+1] - entity_parent_idx[i_part][i],
-  //                              "");
-  //   }
-  // }
+    int *parent_init_location = NULL;
+    PDM_extract_part_init_location_get(isos->extrp[id_iso],
+                                       i_part,
+                                       parent_entity_type,
+                                       &parent_init_location,
+                                       PDM_OWNERSHIP_BAD_VALUE);
+
+    entity_parent_triplet_idx[i_part] = PDM_array_new_idx_from_const_stride_int(3, entity_parent_idx[i_part][n_entity[i_part]]);
+    PDM_malloc(entity_parent_init_location[i_part], entity_parent_idx[i_part][n_entity[i_part]] * 3, int);
+
+    for (int i_entity = 0; i_entity < n_entity[i_part]; i_entity++) {
+
+      for (int i = entity_parent_idx[i_part][i_entity]; i < entity_parent_idx[i_part][i_entity+1]; i++) {
+        int i_parent = entity_parent_lnum[i_part][i] - 1;
+        for (int j = 0; j < 3; j++) {
+          entity_parent_init_location[i_part][3*i+j] = parent_init_location[3*i_parent+j];
+        }
+      }
+
+    }
+  }
 
 
-  ptp = PDM_part_to_part_create((const PDM_g_num_t **) entity_gnum,
-                                (const int         * ) n_entity,
-                                                       isos->iso_n_part,
-                                (const PDM_g_num_t **) parent_gnum,
-                                (const int         * ) n_parent,
-                                                       isos->n_part,
-                                (const int         **) entity_parent_idx,
-                                (const PDM_g_num_t **) entity_parent_gnum,
-                                                       isos->comm);
+  /* Create ptp from isosurface entities to source entities */
+  isos->iso_ptp[entity_type][id_iso] = PDM_part_to_part_create_from_num2_triplet((const PDM_g_num_t **) entity_gnum,
+                                                                                 (const int         * ) n_entity,
+                                                                                                        isos->iso_n_part,
+                                                                                 (const int         * ) n_parent,
+                                                                                                        isos->n_part,
+                                                                                 (const int         **) entity_parent_idx,
+                                                                                 (const int         **) entity_parent_triplet_idx,
+                                                                                 (const int         **) entity_parent_init_location,
+                                                                                                        isos->comm);
+  for (int i_part = 0; i_part < isos->iso_n_part; i_part++) {
+    PDM_free(entity_parent_triplet_idx  [i_part]);
+    PDM_free(entity_parent_init_location[i_part]);
+  }
+  PDM_free(entity_parent_triplet_idx  );
+  PDM_free(entity_parent_init_location);
 
   isos->iso_owner_ptp[entity_type][id_iso] = PDM_OWNERSHIP_KEEP;
-  isos->iso_ptp[entity_type][id_iso] = ptp;
-
 
   if (_is_nodal(isos)) {
     PDM_free(n_parent); // no worries, it is deep-copied in part_to_part creation
@@ -1948,15 +1902,11 @@ _free_iso_entity
     if (isos->iso_owner_gnum[entity_type][id_iso][i_part] == PDM_OWNERSHIP_KEEP) {
       PDM_free(isos->iso_entity_gnum[entity_type][id_iso][i_part]);
     }
-    if (isos->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL &&
-        isos->iso_owner_parent_lnum[entity_type][id_iso][i_part] == PDM_OWNERSHIP_KEEP) {
-      PDM_free(isos->iso_entity_parent_idx [entity_type][id_iso][i_part]);
-      PDM_free(isos->iso_entity_parent_lnum[entity_type][id_iso][i_part]);
-    }
     if (isos->extract_kind==PDM_EXTRACT_PART_KIND_REEQUILIBRATE) {
-      PDM_free(isos->iso_entity_parent_idx [entity_type][id_iso][i_part]);
       PDM_free(isos->iso_entity_parent_gnum[entity_type][id_iso][i_part]);
     }
+    PDM_free(isos->iso_entity_parent_idx [entity_type][id_iso][i_part]);
+    PDM_free(isos->iso_entity_parent_lnum[entity_type][id_iso][i_part]);
 
     if (isos->iso_owner_isovalue_entity_idx[entity_type][id_iso][i_part] == PDM_OWNERSHIP_KEEP) {
       PDM_free(isos->isovalue_entity_idx[entity_type][id_iso][i_part]);
