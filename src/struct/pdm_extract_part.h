@@ -383,6 +383,25 @@ PDM_extract_part_parent_lnum_get
  PDM_ownership_t            ownership
 );
 
+/**
+ *
+ * \brief Return size of entity_type on current partition ( n_entity )
+ * \param [in]  extrp                  Pointer to \ref PDM_extract_part_t object
+ * \param [in]  i_part                 Id of part
+ * \param [in]  entity_type            Entity kind \ref PDM_mesh_entities_t)
+ * \param [out] init_location          Initial location (rank, part, local ID) of extracted entities (size = n_entity * 3)
+ * \param [in]  ownership              Ownership for entity_ln_to_gn ( \ref PDM_ownership_t )
+ */
+int
+PDM_extract_part_init_location_get
+(
+ PDM_extract_part_t        *extrp,
+ int                        i_part_out,
+ PDM_mesh_entities_t        entity_type,
+ int                      **init_location,
+ PDM_ownership_t            ownership
+);
+
 
 /**
  *

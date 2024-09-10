@@ -4405,32 +4405,18 @@ _extract_part_and_reequilibrate_from_target
   }
 
   /*
-   *
+   * Store init location and take ownership
    */
-  if(extrp->dim != 0 && pextract_vtx_to_vtx_location != NULL) {
-    for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
-      PDM_free(pextract_vtx_to_vtx_location[i_part]);
-    }
-    PDM_free(pextract_vtx_to_vtx_location);
+  if (extrp->dim != 0) {
+    extrp->pextract_entity_init_location[PDM_MESH_ENTITY_VTX] = pextract_vtx_to_vtx_location;
+    extrp->is_owner_init_location       [PDM_MESH_ENTITY_VTX] = PDM_TRUE;
   }
 
-  if(pextract_face_to_face_location != NULL) {
-    for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
-      if(pextract_face_to_face_location[i_part] != NULL) {
-        PDM_free(pextract_face_to_face_location[i_part]);
-      }
-    }
-    PDM_free(pextract_face_to_face_location);
-  }
+  extrp->pextract_entity_init_location[PDM_MESH_ENTITY_FACE] = pextract_face_to_face_location;
+  extrp->is_owner_init_location       [PDM_MESH_ENTITY_FACE] = PDM_TRUE;
 
-  if(pextract_edge_to_edge_location != NULL) {
-    for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
-      if(pextract_edge_to_edge_location[i_part] != NULL) {
-        PDM_free(pextract_edge_to_edge_location[i_part]);
-      }
-    }
-    PDM_free(pextract_edge_to_edge_location);
-  }
+  extrp->pextract_entity_init_location[PDM_MESH_ENTITY_EDGE] = pextract_edge_to_edge_location;
+  extrp->is_owner_init_location       [PDM_MESH_ENTITY_EDGE] = PDM_TRUE;
 
   /*
    * Manage group if any
@@ -4663,10 +4649,13 @@ _extract_part_and_reequilibrate
     extrp->target_location[i_part0] = dequi_init_location;
     _extract_part_and_reequilibrate_from_target(extrp);
 
+    PDM_malloc(extrp->pextract_entity_init_location[entity_type], extrp->n_part_out, int *);
+    extrp->pextract_entity_init_location[entity_type][i_part0] = dequi_init_location;
+    extrp->is_owner_init_location       [entity_type] = PDM_TRUE;
+
     extrp->n_target       [i_part0] = 0;
     extrp->target_gnum    [i_part0] = NULL;
     extrp->target_location[i_part0] = NULL;
-    PDM_free(dequi_init_location);
 
     PDM_part_to_block_free(ptb_equi);
 
@@ -4978,11 +4967,13 @@ PDM_extract_part_create
     extrp->is_owner_parent_ln_to_gn       [i] = PDM_TRUE;
     extrp->is_owner_parent_lnum           [i] = PDM_TRUE;
     extrp->is_owner_color                 [i] = PDM_TRUE;
+    extrp->is_owner_init_location         [i] = PDM_FALSE;
     extrp->pextract_entity_color          [i] = NULL;
     extrp->pextract_entity_order          [i] = NULL;
     extrp->pextract_entity_ln_to_gn       [i] = NULL;
     extrp->pextract_entity_parent_ln_to_gn[i] = NULL;
     extrp->pextract_entity_parent_lnum    [i] = NULL;
+    extrp->pextract_entity_init_location  [i] = NULL;
     extrp->ptp_entity                     [i] = NULL;
     extrp->ptp_ownership                  [i] = PDM_OWNERSHIP_KEEP;
   }
@@ -5498,6 +5489,27 @@ PDM_extract_part_parent_lnum_get
 }
 
 
+int
+PDM_extract_part_init_location_get
+(
+ PDM_extract_part_t        *extrp,
+ int                        i_part_out,
+ PDM_mesh_entities_t        entity_type,
+ int                      **init_location,
+ PDM_ownership_t            ownership
+)
+{
+  *init_location = extrp->pextract_entity_init_location[entity_type][i_part_out];
+  if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
+    extrp->is_owner_init_location[entity_type] = PDM_FALSE;
+  } else {
+    extrp->is_owner_init_location[entity_type] = PDM_TRUE;
+  }
+
+  return extrp->pextract_n_entity[entity_type][i_part_out];
+}
+
+
 /**
  *
  * \brief Get the vertex coordinates on current i_part partition and return number of vertices
@@ -5735,7 +5747,7 @@ PDM_extract_part_partial_free
     }
   }
 
-  /* Free parent_ln_to_gn */
+  /* Free parent_lnum */
   for(int i = 0; i < PDM_MESH_ENTITY_MAX; ++i) {
     if(extrp->pextract_entity_parent_lnum[i] != NULL) {
       if(extrp->is_owner_parent_lnum[i] == PDM_TRUE) {
@@ -5750,6 +5762,7 @@ PDM_extract_part_partial_free
     }
   }
 
+  /* Free vtx_coord */
   if(extrp->is_owner_vtx_coord == PDM_TRUE) {
     if(extrp->pextract_vtx_coord != NULL){
       for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
@@ -5762,6 +5775,21 @@ PDM_extract_part_partial_free
   if(extrp->pextract_vtx_coord != NULL){
     PDM_free(extrp->pextract_vtx_coord);
   }
+
+
+  /* Free init_location */
+  for(int i = 0; i < PDM_MESH_ENTITY_MAX; ++i) {
+    if(extrp->pextract_entity_init_location[i] != NULL) {
+      if(extrp->is_owner_init_location[i] == PDM_TRUE) {
+        for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
+          PDM_free(extrp->pextract_entity_init_location[i][i_part]);
+        }
+      }
+      PDM_free(extrp->pextract_entity_init_location[i]);
+    }
+  }
+
+
 
   for(int i = 0; i < PDM_MESH_ENTITY_MAX; ++i) {
     PDM_free(extrp->pextract_n_entity[i]);
@@ -5840,7 +5868,9 @@ PDM_extract_part_part_to_part_get
 {
   *ptp = extrp->ptp_entity[entity_type];
 
-  extrp->ptp_ownership[entity_type] = ownership;
+  if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
+    extrp->ptp_ownership[entity_type] = ownership;
+  }
 }
 
 
