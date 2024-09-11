@@ -444,6 +444,12 @@ cdef int* list_to_int_pointer(list data):
   for i,d in enumerate(data):
     array[i] = <int> d
   return array
+  
+cdef double* list_to_double_pointer(list data):
+  cdef double* array = <double *> malloc(len(data) * sizeof(double))
+  for i,d in enumerate(data):
+    array[i] = <double> d
+  return array
 
 cdef PDM_g_num_t* np_to_gnum_pointer(NPY.ndarray[npy_pdm_gnum_t] array):
   cdef PDM_g_num_t* ptr = NULL
@@ -608,6 +614,7 @@ include "pdm_geom.pxi"
 # PDM_iso_surface :
 # --------------------
 @COMMENT_NOT_PDMA@include "pdm_iso_surface.pxi"
+include "pdm_isosurface.pxi"
 
 # PDM_mesh_metric :
 # --------------------

@@ -212,7 +212,7 @@ _do_we_have_edges
   int i_have_edges    = 0;
   int i_have_face_vtx = 0;
 
-  if (isos->is_dist_or_part == 0) {
+  if (isos->entry_is_part == 0) {
     // Block-distributed
     i_have_edges    = (isos->distrib_edge  != NULL) && (isos->dface_edge_idx != NULL) && (isos->dface_edge != NULL) && (isos->dedge_vtx != NULL);
     i_have_face_vtx = (isos->dface_vtx_idx != NULL) && (isos->dface_vtx != NULL);
@@ -269,7 +269,7 @@ _dist_to_part
 
   isos->dist_to_part_computed = 1;
 
-  if (isos->is_dist_or_part != 0) {
+  if (isos->entry_is_part != 0) {
     PDM_error(__FILE__, __LINE__, 0, "Expected block-distributed but got partitioned\n");
   }
 
@@ -490,6 +490,10 @@ _compute_iso_field
 {
 
   if (isos->kind[id_isosurface] == PDM_ISO_SURFACE_KIND_FIELD) {
+    if (isos->field[id_isosurface]==NULL) {
+      PDM_error(__FILE__, __LINE__, 0, "Field seems not to be defined for iso with id %d\n", id_isosurface);
+    }
+
     if (use_extract) {
       if (!_is_nodal(isos)) {
         if (isos->extract_kind == PDM_EXTRACT_PART_KIND_REEQUILIBRATE) {
@@ -518,7 +522,7 @@ _compute_iso_field
         else if (isos->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL) {
           PDM_malloc(isos->extract_field[id_isosurface], isos->n_part, double *);
 
-          for (int i_part = 0; i_part < isos->iso_n_part; i_part++) {
+          for (int i_part = 0; i_part < isos->n_part; i_part++) {
             int *parent = NULL;
             int n_vtx = PDM_extract_part_parent_lnum_get(isos->extrp[id_isosurface],
                                                          i_part,
@@ -539,7 +543,7 @@ _compute_iso_field
       else {
         // > For now nodal has not extract part so we fake it
         PDM_malloc(isos->extract_field[id_isosurface], isos->n_part, double *);
-        for (int i_part = 0; i_part < isos->iso_n_part; i_part++) {
+        for (int i_part = 0; i_part < isos->n_part; i_part++) {
           PDM_malloc(isos->extract_field[id_isosurface][i_part], isos->extract_n_vtx[i_part], double);
           for (int i = 0; i < isos->extract_n_vtx[i_part]; i++) {
             isos->extract_field[id_isosurface][i_part][i] = isos->field[id_isosurface][i_part][i];
@@ -550,7 +554,7 @@ _compute_iso_field
 
     }
     else {
-      if (isos->is_dist_or_part == 0) {
+      if (isos->entry_is_part == 0) {
         // Transfer discrete field from block to part
         assert(isos->btp_vtx != NULL);
         assert(isos->dfield[id_isosurface] != NULL);
@@ -568,8 +572,13 @@ _compute_iso_field
 
     return;
   }
+  else {
+    if (isos->field[id_isosurface]==NULL) {
+      PDM_malloc(isos->field[id_isosurface], isos->n_part, double *);
+    }
+  }
 
-  if (isos->is_dist_or_part == 0) {
+  if (isos->entry_is_part == 0) {
     // Block-distributed
     if (isos->field[id_isosurface] == NULL) {
       PDM_malloc(isos->field[id_isosurface], isos->n_part, double *);
@@ -779,12 +788,12 @@ _extract
  int               id_isosurface
 )
 {
-  if (isos->is_dist_or_part == 0) {
+  if (isos->entry_is_part == 0) {
     // Block-distributed
     assert(isos->dist_to_part_computed);
     isos->extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
     isos->part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
-    isos->iso_n_part   = 1;
+    isos->n_part       = 1;
   }
 
 
@@ -1219,7 +1228,7 @@ _part_to_dist_vtx
                                                           isos->iso_entity_gnum[PDM_MESH_ENTITY_VTX][id_iso],
                                                           NULL,
                                                           isos->iso_n_entity[PDM_MESH_ENTITY_VTX][id_iso],
-                                                          isos->iso_n_part, // will fail if n_part>1 because of extract_part ?
+                                                          isos->n_part,
                                                           isos->comm);
   // > Get vtx coords
   double *dvtx_coord = NULL;
@@ -1235,8 +1244,8 @@ _part_to_dist_vtx
 
   // > Get vtx parent
   int **pvtx_parent_strd = NULL;
-  PDM_malloc(pvtx_parent_strd, isos->iso_n_part, int *);
-  for (int i_part=0; i_part<isos->iso_n_part; ++i_part) {
+  PDM_malloc(pvtx_parent_strd, isos->n_part, int *);
+  for (int i_part=0; i_part<isos->n_part; ++i_part) {
     pvtx_parent_strd[i_part] = PDM_array_new_size_from_idx_int(isos->iso_entity_parent_idx[PDM_MESH_ENTITY_VTX][id_iso][i_part], isos->iso_n_entity[PDM_MESH_ENTITY_VTX][id_iso][i_part]);
   }
 
@@ -1266,7 +1275,7 @@ _part_to_dist_vtx
   int dn_vtx = PDM_part_to_block_n_elt_block_get(ptb_vtx);
   // PDM_log_trace_array_int(dvtx_parent_strd, dn_vtx, "dvtx_parent_strd");
   int *dvtx_parent_idx = PDM_array_new_idx_from_sizes_int(dvtx_parent_strd, dn_vtx);
-  for (int i_part=0; i_part<isos->iso_n_part; ++i_part) {
+  for (int i_part=0; i_part<isos->n_part; ++i_part) {
     PDM_free(pvtx_parent_strd[i_part]);
   }
   PDM_free(pvtx_parent_strd);
@@ -1344,7 +1353,7 @@ _part_to_dist_edge_group
                                                               _group_gnum,
                                                               NULL,
                                                               n_elt_group,
-                                                              isos->iso_n_part, // will fail if n_part>1 because of extract_part ?
+                                                              isos->n_part,
                                                               isos->comm);
 
     int dn_elt_group = PDM_part_to_block_n_elt_block_get(ptb_group);
@@ -1430,7 +1439,7 @@ _part_to_dist_elt
                                                           elt_gnum,
                                                           NULL,
                                                           n_elt,
-                                                          isos->iso_n_part, // will fail if n_part>1 because of extract_part ?
+                                                          isos->n_part,
                                                           isos->comm);
 
   /**
@@ -1439,7 +1448,7 @@ _part_to_dist_elt
   int  dn_elt           = PDM_part_to_block_n_elt_block_get(ptb_elt);
   int *block_gnum_count = PDM_part_to_block_block_gnum_count_get(ptb_elt);
   if (debug==1) {
-    for (int i_part=0; i_part<isos->iso_n_part; ++i_part) {
+    for (int i_part=0; i_part<isos->n_part; ++i_part) {
       PDM_log_trace_array_long(elt_gnum[i_part], n_elt[i_part], "elt_gnum ::");
     }
 
@@ -1456,10 +1465,10 @@ _part_to_dist_elt
   // > Translate connectivity into gid
   int         **_elt_vtx_strd = NULL;
   PDM_g_num_t **_elt_vtx      = NULL;
-  PDM_malloc(_elt_vtx_strd, isos->iso_n_part, int         *);
-  PDM_malloc(_elt_vtx     , isos->iso_n_part, PDM_g_num_t *);
+  PDM_malloc(_elt_vtx_strd, isos->n_part, int         *);
+  PDM_malloc(_elt_vtx     , isos->n_part, PDM_g_num_t *);
 
-  for (int i_part=0; i_part<isos->iso_n_part; ++i_part) {
+  for (int i_part=0; i_part<isos->n_part; ++i_part) {
     int size_elt_vtx = 0;
     if (elt_vtx_idx!=NULL) { // Face
       size_elt_vtx = elt_vtx_idx[i_part][n_elt[i_part]];
@@ -1502,7 +1511,7 @@ _part_to_dist_elt
   }
   *out_delt_vtx = delt_vtx;
 
-  for (int i_part=0; i_part<isos->iso_n_part; ++i_part) {
+  for (int i_part=0; i_part<isos->n_part; ++i_part) {
     PDM_free(_elt_vtx_strd[i_part]);
     PDM_free(_elt_vtx     [i_part]);
   }
@@ -1517,8 +1526,8 @@ _part_to_dist_elt
 
   // > Prepare stride
   int **_elt_parent_strd = NULL;
-  PDM_malloc(_elt_parent_strd, isos->iso_n_part, int         *);
-  for (int i_part=0; i_part<isos->iso_n_part; ++i_part) {
+  PDM_malloc(_elt_parent_strd, isos->n_part, int         *);
+  for (int i_part=0; i_part<isos->n_part; ++i_part) {
     _elt_parent_strd[i_part] = PDM_array_new_size_from_idx_int(elt_parent_idx[i_part], n_elt[i_part]);
   }
 
@@ -1544,7 +1553,7 @@ _part_to_dist_elt
     PDM_log_trace_array_long(delt_parent_gnum, rcvd_size, "delt_parent_gnum :: ");
   }
 
-  for (int i_part=0; i_part<isos->iso_n_part; ++i_part) {
+  for (int i_part=0; i_part<isos->n_part; ++i_part) {
     PDM_free(_elt_parent_strd[i_part]);
   }
   PDM_free(_elt_parent_strd);
@@ -1947,9 +1956,9 @@ _free_field
 )
 {
   if (isos->field[id_iso]!=NULL) {
-    for (int i_part=0; i_part<isos->iso_n_part; ++i_part) {
+    for (int i_part=0; i_part<isos->n_part; ++i_part) {
       if (isos->kind[id_iso]!=PDM_ISO_SURFACE_KIND_FIELD ||
-          isos->is_dist_or_part==0) {
+          isos->entry_is_part==0) {
         PDM_free(isos->field[id_iso][i_part]);
       }
     }
@@ -1959,7 +1968,7 @@ _free_field
   }
 
   if (isos->extract_field[id_iso] != NULL) {
-    for (int i_part = 0; i_part < isos->iso_n_part; i_part++) {
+    for (int i_part = 0; i_part < isos->n_part; i_part++) {
       PDM_free(isos->extract_field[id_iso][i_part]);
     }
     PDM_free(isos->extract_field[id_iso]);
@@ -2091,7 +2100,7 @@ _isosurface_compute
   /* Check if edges were provided by the user */
   _do_we_have_edges(isos);
 
-  if (isos->is_dist_or_part == 0) {
+  if (isos->entry_is_part == 0) {
     /* Implicit partitioning */
     _dist_to_part(isos);
   }
@@ -2121,7 +2130,7 @@ _isosurface_compute
                              id_isosurface);
   }
 
-  if (isos->is_dist_or_part == 0) {
+  if (isos->entry_is_part == 0) {
     /* Block-distribute the isosurface */
     _part_to_dist(isos, id_isosurface);
   }
@@ -2209,7 +2218,7 @@ PDM_isosurface_create
   isos->ISOSURFACE_EPS = 0.;
 
   // > Entry mesh information
-  isos->is_dist_or_part = -1; 
+  isos->entry_is_part = -1; 
   isos->entry_mesh_type =  0; 
   isos->entry_mesh_dim  =  mesh_dimension;
 
@@ -2289,28 +2298,6 @@ PDM_isosurface_add
 
   PDM_realloc(isos->extract_field, isos->extract_field, isos->n_isosurface, double **);
   isos->extract_field[id_isosurface] = NULL;
-
-  if (isos->is_dist_or_part == 1) {
-    // Partitioned
-    int n_part = 0;
-    if (isos->entry_mesh_type==-1) {
-      n_part = isos->n_part;
-      if (n_part==-1) {
-        PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: entry_mesh_type = %d but n_part isn't defined.\n", isos->entry_mesh_type);
-      }
-    }
-    else if (isos->entry_mesh_type==-2) {
-      n_part = PDM_part_mesh_n_part_get(isos->pmesh);
-    }
-    else if (isos->entry_mesh_type==-3) {
-      n_part = PDM_part_mesh_nodal_n_part_get(isos->pmesh_nodal);
-    }
-    else {
-      PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: Impossible to defined manually field without setting mesh first.\n", isos->entry_mesh_type);
-    }
-    PDM_malloc(isos->field[id_isosurface], n_part, double *);
-    memset(isos->field[id_isosurface], 0, n_part*sizeof(double *));
-  }
 
   PDM_realloc(isos->n_isovalues , isos->n_isovalues , isos->n_isosurface, int     );
   PDM_realloc(isos->isovalues   , isos->isovalues   , isos->n_isosurface, double *);
@@ -2566,7 +2553,7 @@ PDM_isosurface_free
   PDM_isosurface_t  *isos
 )
 {
-  if (isos->is_dist_or_part == 0) {
+  if (isos->entry_is_part == 0) {
     // Block-distributed
     PDM_block_to_part_free(isos->btp_vtx);
 

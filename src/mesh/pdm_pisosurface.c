@@ -60,10 +60,10 @@ _check_is_not_dist
  PDM_isosurface_t *isos
 )
 {
-  if (isos->is_dist_or_part==-1) {
-    isos->is_dist_or_part=1;
+  if (isos->entry_is_part==-1) {
+    isos->entry_is_part=1;
   }
-  else if (isos->is_dist_or_part==0) {
+  else if (isos->entry_is_part==0) {
     PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t already set as distributed.\n");
   }
 }
@@ -84,9 +84,7 @@ PDM_isosurface_n_part_set
   _check_is_not_dist(isos);
   _check_entry_mesh_coherence(isos, -1);
 
-  isos->n_part     = n_part;
-  isos->iso_n_part = n_part;
-
+  isos->n_part = n_part;
   isos->n_cell = PDM_array_const_int(n_part, -1);
   isos->n_face = PDM_array_const_int(n_part, -1);
   isos->n_edge = PDM_array_const_int(n_part, -1);
@@ -277,8 +275,6 @@ PDM_isosurface_part_mesh_set
    */
 
   isos->pmesh = pmesh;
-  // isos->n_part     = PDM_part_mesh_n_part_get(pmesh);
-  // isos->iso_n_part = PDM_part_mesh_n_part_get(pmesh);
 
   /* Unpack part_mesh */
   isos->entry_mesh_type = -1; // héhé
@@ -392,8 +388,7 @@ PDM_isosurface_mesh_nodal_set
    */
 
   isos->pmesh_nodal = pmn;
-  isos->n_part     = PDM_part_mesh_nodal_n_part_get(pmn);
-  isos->iso_n_part = PDM_part_mesh_nodal_n_part_get(pmn);
+  isos->n_part      = PDM_part_mesh_nodal_n_part_get(pmn);
 }
 
 
@@ -426,27 +421,18 @@ PDM_isosurface_field_set
   PDM_ISOSURFACE_CHECK_ID(isos, id_isosurface);
 
   // > Check i_part is valid
-  int n_part = 0;
-  if (isos->entry_mesh_type==-1) {
-    n_part = isos->n_part;
-    if (n_part==-1) {
-      PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: entry_mesh_type = %d but n_part isn't defined.\n", isos->entry_mesh_type);
-    }
-  }
-  else if (isos->entry_mesh_type==-2) {
-    n_part = PDM_part_mesh_n_part_get(isos->pmesh);
-  }
-  else if (isos->entry_mesh_type==-3) {
-    n_part = PDM_part_mesh_nodal_n_part_get(isos->pmesh_nodal);
-  }
-  else {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: Impossible to defined manually field without setting mesh first.\n", isos->entry_mesh_type);
+  int n_part = isos->n_part;
+  if (n_part==-1) {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: mesh seems not to be defined.\n", isos->entry_mesh_type);
   }
 
   if (i_part>=n_part) {
     PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: trying to defined field for i_part >= n_part (%d >= %d).\n", i_part, n_part);
   }
  
+  if (isos->field[id_isosurface]==NULL) {
+    PDM_malloc(isos->field[id_isosurface], isos->n_part, double *);
+  }
   isos->field[id_isosurface][i_part] = field;
 }
 

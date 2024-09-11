@@ -84,7 +84,7 @@ struct _pdm_isosurface_t {
 
   // > Isosurface switch
   // TODO: is entry_mesh_type sign necessary ???
-  int is_dist_or_part; // -1: undef, 0: dist, 1: part
+  int entry_is_part; // -1: invalid, 0: dist, 1: part
   int entry_mesh_type; //  0: undef, 1: dist_alamano, 2: dmesh, 3: dmesh_nodal, -1: part_alamano, -2: pmesh, -3: pmesh_nodal
 
   // > Mesh information
@@ -230,7 +230,6 @@ struct _pdm_isosurface_t {
   // > Partitioned output data
 
   int iso_mesh_dimension;
-  int iso_n_part;
 
   // > Isosurface entities
   int            **iso_n_entity          [PDM_MESH_ENTITY_MAX];
