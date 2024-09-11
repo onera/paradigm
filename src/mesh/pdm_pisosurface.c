@@ -84,9 +84,7 @@ PDM_isosurface_n_part_set
   _check_is_not_dist(isos);
   _check_entry_mesh_coherence(isos, -1);
 
-  isos->n_part     = n_part;
-  isos->iso_n_part = n_part;
-
+  isos->n_part = n_part;
   isos->n_cell = PDM_array_const_int(n_part, -1);
   isos->n_face = PDM_array_const_int(n_part, -1);
   isos->n_edge = PDM_array_const_int(n_part, -1);
@@ -277,8 +275,6 @@ PDM_isosurface_part_mesh_set
    */
 
   isos->pmesh = pmesh;
-  // isos->n_part     = PDM_part_mesh_n_part_get(pmesh);
-  // isos->iso_n_part = PDM_part_mesh_n_part_get(pmesh);
 
   /* Unpack part_mesh */
   isos->entry_mesh_type = -1; // héhé
@@ -392,8 +388,7 @@ PDM_isosurface_mesh_nodal_set
    */
 
   isos->pmesh_nodal = pmn;
-  isos->n_part     = PDM_part_mesh_nodal_n_part_get(pmn);
-  isos->iso_n_part = PDM_part_mesh_nodal_n_part_get(pmn);
+  isos->n_part      = PDM_part_mesh_nodal_n_part_get(pmn);
 }
 
 

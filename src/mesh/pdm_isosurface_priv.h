@@ -230,7 +230,6 @@ struct _pdm_isosurface_t {
   // > Partitioned output data
 
   int iso_mesh_dimension;
-  int iso_n_part;
 
   // > Vertices
   int             **iso_n_vtx;

@@ -3692,7 +3692,7 @@ PDM_isosurface_marching_algo
    *
    * TODO:
    */
-  isos->iso_n_part = n_part;
+  isos->n_part = n_part;
 
   isos->iso_n_vtx            [id_iso] = iso_n_vtx;
   isos->iso_vtx_coord        [id_iso] = iso_vtx_coord;
@@ -3888,14 +3888,14 @@ PDM_isosurface_ngon_algo
   PDM_g_num_t **pedge_ln_to_gn = NULL;
 
   if (!isos->we_have_edges) {
-    PDM_malloc(pn_face       , isos->iso_n_part, int          );
-    PDM_malloc(pn_vtx        , isos->iso_n_part, int          );
-    PDM_malloc(pface_vtx_idx , isos->iso_n_part, int         *);
-    PDM_malloc(pface_vtx     , isos->iso_n_part, int         *);
-    PDM_malloc(pface_ln_to_gn, isos->iso_n_part, PDM_g_num_t *);
-    PDM_malloc(pvtx_ln_to_gn , isos->iso_n_part, PDM_g_num_t *);
+    PDM_malloc(pn_face       , isos->n_part, int          );
+    PDM_malloc(pn_vtx        , isos->n_part, int          );
+    PDM_malloc(pface_vtx_idx , isos->n_part, int         *);
+    PDM_malloc(pface_vtx     , isos->n_part, int         *);
+    PDM_malloc(pface_ln_to_gn, isos->n_part, PDM_g_num_t *);
+    PDM_malloc(pvtx_ln_to_gn , isos->n_part, PDM_g_num_t *);
 
-    for (int i_part = 0; i_part < isos->iso_n_part; i_part++) {
+    for (int i_part = 0; i_part < isos->n_part; i_part++) {
       pn_face[i_part] = PDM_extract_part_n_entity_get(extrp,
                                                       i_part,
                                                       PDM_MESH_ENTITY_FACE);
@@ -3926,7 +3926,7 @@ PDM_isosurface_ngon_algo
     }
 
     PDM_compute_face_edge_from_face_vtx(isos->comm,
-                                        isos->iso_n_part,
+                                        isos->n_part,
                                         pn_face,
                                         pn_vtx,
                                         pface_vtx_idx,
@@ -3938,7 +3938,7 @@ PDM_isosurface_ngon_algo
                                         &pn_edge,
                                         &pedge_vtx,
                                         &pedge_ln_to_gn);
-    for (int i_part = 0; i_part < isos->iso_n_part; i_part++) {
+    for (int i_part = 0; i_part < isos->n_part; i_part++) {
       PDM_free(pedge_ln_to_gn[i_part]);
     }
     PDM_free(pn_face       );
@@ -3951,7 +3951,7 @@ PDM_isosurface_ngon_algo
   }
 
   /* Build isosurface */
-  for (int i_part = 0; i_part < isos->iso_n_part; i_part++) {
+  for (int i_part = 0; i_part < isos->n_part; i_part++) {
 
     int n_cell = 0;
     int n_face = 0;
@@ -4362,8 +4362,6 @@ PDM_isosurface_ngon_algo
   /*
    * Store isosurface in struct
    */
-  isos->iso_n_part = isos->n_part;
-
   isos->iso_n_vtx            [id_iso] = iso_n_vtx;
   isos->iso_vtx_coord        [id_iso] = iso_vtx_coord;
   isos->iso_vtx_gnum         [id_iso] = iso_vtx_gnum;
