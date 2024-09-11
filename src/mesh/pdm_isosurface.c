@@ -434,6 +434,10 @@ _compute_iso_field
 {
 
   if (isos->kind[id_isosurface] == PDM_ISO_SURFACE_KIND_FIELD) {
+    if (isos->field[id_isosurface]==NULL) {
+      PDM_error(__FILE__, __LINE__, 0, "Field seems not to be defined for iso with id %d\n", id_isosurface);
+    }
+
     if (use_extract) {
       if (!_is_nodal(isos)) {
         if (isos->extract_kind == PDM_EXTRACT_PART_KIND_REEQUILIBRATE) {
@@ -511,6 +515,11 @@ _compute_iso_field
     }
 
     return;
+  }
+  else {
+    if (isos->field[id_isosurface]==NULL) {
+      PDM_malloc(isos->field[id_isosurface], isos->n_part, double *);
+    }
   }
 
   if (isos->entry_is_part == 0) {
@@ -2165,28 +2174,6 @@ PDM_isosurface_add
 
   PDM_realloc(isos->extract_field, isos->extract_field, isos->n_isosurface, double **);
   isos->extract_field[id_isosurface] = NULL;
-
-  if (isos->is_dist_or_part == 1) {
-    // Partitioned
-    int n_part = 0;
-    if (isos->entry_mesh_type==-1) {
-      n_part = isos->n_part;
-      if (n_part==-1) {
-        PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: entry_mesh_type = %d but n_part isn't defined.\n", isos->entry_mesh_type);
-      }
-    }
-    else if (isos->entry_mesh_type==-2) {
-      n_part = PDM_part_mesh_n_part_get(isos->pmesh);
-    }
-    else if (isos->entry_mesh_type==-3) {
-      n_part = PDM_part_mesh_nodal_n_part_get(isos->pmesh_nodal);
-    }
-    else {
-      PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: Impossible to defined manually field without setting mesh first.\n", isos->entry_mesh_type);
-    }
-    PDM_malloc(isos->field[id_isosurface], n_part, double *);
-    memset(isos->field[id_isosurface], 0, n_part*sizeof(double *));
-  }
 
   PDM_realloc(isos->n_isovalues , isos->n_isovalues , isos->n_isosurface, int     );
   PDM_realloc(isos->isovalues   , isos->isovalues   , isos->n_isosurface, double *);
