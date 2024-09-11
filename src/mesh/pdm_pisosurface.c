@@ -60,10 +60,10 @@ _check_is_not_dist
  PDM_isosurface_t *isos
 )
 {
-  if (isos->is_dist_or_part==-1) {
-    isos->is_dist_or_part=1;
+  if (isos->entry_is_part==-1) {
+    isos->entry_is_part=1;
   }
-  else if (isos->is_dist_or_part==0) {
+  else if (isos->entry_is_part==0) {
     PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t already set as distributed.\n");
   }
 }

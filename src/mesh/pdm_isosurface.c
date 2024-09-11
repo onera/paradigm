@@ -191,7 +191,7 @@ _do_we_have_edges
   int i_have_edges    = 0;
   int i_have_face_vtx = 0;
 
-  if (isos->is_dist_or_part == 0) {
+  if (isos->entry_is_part == 0) {
     // Block-distributed
     i_have_edges    = (isos->distrib_edge  != NULL) && (isos->dface_edge_idx != NULL) && (isos->dface_edge != NULL) && (isos->dedge_vtx != NULL);
     i_have_face_vtx = (isos->dface_vtx_idx != NULL) && (isos->dface_vtx != NULL);
@@ -248,7 +248,7 @@ _dist_to_part
 
   isos->dist_to_part_computed = 1;
 
-  if (isos->is_dist_or_part != 0) {
+  if (isos->entry_is_part != 0) {
     PDM_error(__FILE__, __LINE__, 0, "Expected block-distributed but got partitioned\n");
   }
 
@@ -494,7 +494,7 @@ _compute_iso_field
 
     }
     else {
-      if (isos->is_dist_or_part == 0) {
+      if (isos->entry_is_part == 0) {
         // Transfer discrete field from block to part
         assert(isos->btp_vtx != NULL);
         assert(isos->dfield[id_isosurface] != NULL);
@@ -513,7 +513,7 @@ _compute_iso_field
     return;
   }
 
-  if (isos->is_dist_or_part == 0) {
+  if (isos->entry_is_part == 0) {
     // Block-distributed
     if (isos->field[id_isosurface] == NULL) {
       PDM_malloc(isos->field[id_isosurface], isos->n_part, double *);
@@ -723,7 +723,7 @@ _extract
  int               id_isosurface
 )
 {
-  if (isos->is_dist_or_part == 0) {
+  if (isos->entry_is_part == 0) {
     // Block-distributed
     assert(isos->dist_to_part_computed);
     isos->extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
@@ -1795,7 +1795,7 @@ _free_field
   if (isos->field[id_iso]!=NULL) {
     for (int i_part=0; i_part<isos->iso_n_part; ++i_part) {
       if (isos->kind[id_iso]!=PDM_ISO_SURFACE_KIND_FIELD ||
-          isos->is_dist_or_part==0) {
+          isos->entry_is_part==0) {
         PDM_free(isos->field[id_iso][i_part]);
       }
     }
@@ -1889,7 +1889,7 @@ _isosurface_reset
 )
 {
   // > Distributed
-  if (isos->is_dist_or_part==0) {
+  if (isos->entry_is_part==0) {
     _free_iso_vtx (isos, id_isosurface);
     _free_iso_edge(isos, id_isosurface);
     _free_iso_face(isos, id_isosurface);
@@ -1897,7 +1897,7 @@ _isosurface_reset
     _free_field   (isos, id_isosurface, 0);
   }
   // > Partitioned
-  else if (isos->is_dist_or_part==1) {
+  else if (isos->entry_is_part==1) {
     _free_iso_vtx (isos, id_isosurface);
     _free_iso_edge(isos, id_isosurface);
     _free_iso_face(isos, id_isosurface);
@@ -1905,7 +1905,7 @@ _isosurface_reset
     _free_field   (isos, id_isosurface, 1);
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0, "Isosurface is_dist_or_part = %d is invalid.\n", isos->is_dist_or_part);
+    PDM_error(__FILE__, __LINE__, 0, "Isosurface entry_is_part = %d is invalid.\n", isos->entry_is_part);
   }
 
   PDM_extract_part_free(isos->extrp[id_isosurface]);
@@ -1929,7 +1929,7 @@ _isosurface_compute
   /* Check if edges were provided by the user */
   _do_we_have_edges(isos);
 
-  if (isos->is_dist_or_part == 0) {
+  if (isos->entry_is_part == 0) {
     /* Implicit partitioning */
     _dist_to_part(isos);
   }
@@ -1959,9 +1959,9 @@ _isosurface_compute
                              id_isosurface);
   }
 
-  // if (isos->is_dist_or_part==0) { // Distributed entry
+  // if (isos->entry_is_part==0) { // Distributed entry
   //   if (isos->entry_mesh_type<0) {
-  //     PDM_error(__FILE__, __LINE__, 0, "Isosurface is_dist_or_part = %d incoherent with isos->entry_mesh_type = %d < 0.\n", isos->is_dist_or_part, isos->entry_mesh_type);
+  //     PDM_error(__FILE__, __LINE__, 0, "Isosurface entry_is_part = %d incoherent with isos->entry_mesh_type = %d < 0.\n", isos->entry_is_part, isos->entry_mesh_type);
   //   } else if (isos->entry_mesh_type==1) { // Dist mesh alamano
 
   //   } else if (isos->entry_mesh_type==2) { // Dist mesh
@@ -1971,9 +1971,9 @@ _isosurface_compute
   //   } else {
   //     PDM_error(__FILE__, __LINE__, 0, "Isosurface isos->entry_mesh_type = %d is invalid for distributed entry.\n", isos->entry_mesh_type);
   //   }
-  // } else if (isos->is_dist_or_part==1) { // Partitioned entry
+  // } else if (isos->entry_is_part==1) { // Partitioned entry
   //   if (isos->entry_mesh_type>0) {
-  //     PDM_error(__FILE__, __LINE__, 0, "Isosurface is_dist_or_part = %d incoherent with isos->entry_mesh_type = %d > 0.\n", isos->is_dist_or_part, isos->entry_mesh_type);
+  //     PDM_error(__FILE__, __LINE__, 0, "Isosurface entry_is_part = %d incoherent with isos->entry_mesh_type = %d > 0.\n", isos->entry_is_part, isos->entry_mesh_type);
   //   }
   //   else if (isos->entry_mesh_type == -1 ||
   //            isos->entry_mesh_type == -2) {
@@ -2008,10 +2008,10 @@ _isosurface_compute
   //     PDM_error(__FILE__, __LINE__, 0, "Isosurface isos->entry_mesh_type = %d is invalid for partitioned entry.\n", isos->entry_mesh_type);
   //   }
   // } else {
-  //   PDM_error(__FILE__, __LINE__, 0, "Isosurface is_dist_or_part = %d is invalid.\n", isos->is_dist_or_part);
+  //   PDM_error(__FILE__, __LINE__, 0, "Isosurface entry_is_part = %d is invalid.\n", isos->entry_is_part);
   // }
 
-  if (isos->is_dist_or_part == 0) {
+  if (isos->entry_is_part == 0) {
     /* Block-distribute the isosurface */
     _part_to_dist(isos, id_isosurface);
   }
@@ -2088,7 +2088,7 @@ PDM_isosurface_create
   isos->ISOSURFACE_EPS = 0.;
 
   // > Entry mesh information
-  isos->is_dist_or_part = -1; 
+  isos->entry_is_part = -1; 
   isos->entry_mesh_type =  0; 
   isos->entry_mesh_dim  =  mesh_dimension;
 
@@ -2487,7 +2487,7 @@ PDM_isosurface_free
   PDM_isosurface_t  *isos
 )
 {
-  if (isos->is_dist_or_part == 0) {
+  if (isos->entry_is_part == 0) {
     // Block-distributed
     PDM_block_to_part_free(isos->btp_vtx);
 
