@@ -412,7 +412,7 @@ PDM_isosurface_parent_gnum_get
 }
 
 
-void
+int
 PDM_isosurface_dvtx_parent_weight_get
 (
   PDM_isosurface_t     *isos,
@@ -434,6 +434,8 @@ PDM_isosurface_dvtx_parent_weight_get
 
   *dvtx_parent_idx    = isos->iso_dentity_parent_idx[PDM_MESH_ENTITY_VTX][id_iso];
   *dvtx_parent_weight = isos->iso_dvtx_parent_weight                     [id_iso];
+
+  return isos->iso_dn_entity[PDM_MESH_ENTITY_VTX][id_iso];
 }
 
 

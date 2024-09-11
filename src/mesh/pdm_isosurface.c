@@ -1699,7 +1699,7 @@ _build_ptp
     return;
   }
 
-  assert(isos->is_dist_or_part == 1);
+  assert(isos->entry_is_part == 1);
   assert(isos->extract_kind != PDM_EXTRACT_PART_KIND_LOCAL);
 
   PDM_extract_part_t *extrp = isos->extrp[id_iso];
@@ -1765,9 +1765,9 @@ _build_ptp
   /* Get init location of extracted parent entities */
   int **entity_parent_triplet_idx   = NULL;
   int **entity_parent_init_location = NULL;
-  PDM_malloc(entity_parent_triplet_idx,   isos->iso_n_part, int *);
-  PDM_malloc(entity_parent_init_location, isos->iso_n_part, int *);
-  for (int i_part = 0; i_part < isos->iso_n_part; i_part++) {
+  PDM_malloc(entity_parent_triplet_idx,   isos->n_part, int *);
+  PDM_malloc(entity_parent_init_location, isos->n_part, int *);
+  for (int i_part = 0; i_part < isos->n_part; i_part++) {
 
     int *parent_init_location = NULL;
     PDM_extract_part_init_location_get(isos->extrp[id_iso],
@@ -1795,14 +1795,14 @@ _build_ptp
   /* Create ptp from isosurface entities to source entities */
   isos->iso_ptp[entity_type][id_iso] = PDM_part_to_part_create_from_num2_triplet((const PDM_g_num_t **) entity_gnum,
                                                                                  (const int         * ) n_entity,
-                                                                                                        isos->iso_n_part,
+                                                                                                        isos->n_part,
                                                                                  (const int         * ) n_parent,
                                                                                                         isos->n_part,
                                                                                  (const int         **) entity_parent_idx,
                                                                                  (const int         **) entity_parent_triplet_idx,
                                                                                  (const int         **) entity_parent_init_location,
                                                                                                         isos->comm);
-  for (int i_part = 0; i_part < isos->iso_n_part; i_part++) {
+  for (int i_part = 0; i_part < isos->n_part; i_part++) {
     PDM_free(entity_parent_triplet_idx  [i_part]);
     PDM_free(entity_parent_init_location[i_part]);
   }
@@ -1832,7 +1832,7 @@ _free_iso_entity
   /* Vertices */
   if (entity_type == PDM_MESH_ENTITY_VTX) {
     /* Partitioned */
-    for (int i_part = 0; i_part < isos->iso_n_part; i_part++) {
+    for (int i_part = 0; i_part < isos->n_part; i_part++) {
       if (isos->iso_owner_vtx_coord[id_iso][i_part] == PDM_OWNERSHIP_KEEP) {
         PDM_free(isos->iso_vtx_coord[id_iso][i_part]);
       }
@@ -1855,7 +1855,7 @@ _free_iso_entity
   /* Edges */
   else if (entity_type == PDM_MESH_ENTITY_EDGE) {
     /* Partitioned */
-    for (int i_part = 0; i_part < isos->iso_n_part; i_part++) {
+    for (int i_part = 0; i_part < isos->n_part; i_part++) {
       if (isos->entry_mesh_dim == 3 &&
           isos->iso_owner_edge_bnd[id_iso][i_part] == PDM_OWNERSHIP_KEEP) {
         PDM_free(isos->iso_edge_group_idx [id_iso][i_part]);
@@ -1887,7 +1887,7 @@ _free_iso_entity
   /* Faces */
   else if (entity_type == PDM_MESH_ENTITY_FACE) {
     /* Partitioned */
-    for (int i_part = 0; i_part < isos->iso_n_part; i_part++) {
+    for (int i_part = 0; i_part < isos->n_part; i_part++) {
       if (isos->iso_owner_connec[PDM_CONNECTIVITY_TYPE_FACE_VTX][id_iso][i_part] == PDM_OWNERSHIP_KEEP) {
         PDM_free(isos->iso_connec_idx[PDM_CONNECTIVITY_TYPE_FACE_VTX][id_iso][i_part]);
         PDM_free(isos->iso_connec    [PDM_CONNECTIVITY_TYPE_FACE_VTX][id_iso][i_part]);
@@ -1910,7 +1910,7 @@ _free_iso_entity
   /* Generic for all entities */
 
   /*   Partitioned */
-  for (int i_part = 0; i_part < isos->iso_n_part; i_part++) {
+  for (int i_part = 0; i_part < isos->n_part; i_part++) {
     if (isos->iso_owner_gnum[entity_type][id_iso][i_part] == PDM_OWNERSHIP_KEEP) {
       PDM_free(isos->iso_entity_gnum[entity_type][id_iso][i_part]);
     }
@@ -2058,9 +2058,9 @@ _isosurface_reset
   _free_iso_entity(isos, PDM_MESH_ENTITY_VTX,  id_isosurface);
   _free_iso_entity(isos, PDM_MESH_ENTITY_EDGE, id_isosurface);
   _free_iso_entity(isos, PDM_MESH_ENTITY_FACE, id_isosurface);
-  _free_field     (isos, id_isosurface, isos->is_dist_or_part);
+  _free_field     (isos, id_isosurface, isos->entry_is_part);
   // > Distributed
-  if (isos->is_dist_or_part==0) {
+  if (isos->entry_is_part==0) {
     _reset_downer(isos, id_isosurface);
   }
   _free_owner(isos, id_isosurface);

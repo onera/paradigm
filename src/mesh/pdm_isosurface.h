@@ -860,9 +860,11 @@ PDM_isosurface_parent_gnum_get
  * \param [out] dvtx_parent_weight  Parent weight
  * \param [in]  ownership           Ownership
  *
+ * \return  Number of iso-surface vertices
+ *
  */
 
-void
+int
 PDM_isosurface_dvtx_parent_weight_get
 (
   PDM_isosurface_t     *isos,

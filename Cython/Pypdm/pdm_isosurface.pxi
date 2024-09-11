@@ -159,10 +159,11 @@ cdef extern from "pdm_isosurface.h":
                                      PDM_g_num_t         **parent_gnum,
                                      PDM_ownership_t       ownership);
 
-  void PDM_isosurface_dvtx_parent_weight_get(PDM_isosurface_t     *isos,
-                                             int                   id_iso,
-                                             double              **dvtx_parent_weight,
-                                             PDM_ownership_t       ownership);
+  int PDM_isosurface_dvtx_parent_weight_get(PDM_isosurface_t     *isos,
+                                            int                   id_iso,
+                                            int                 **dvtx_parent_idx,
+                                            double              **dvtx_parent_weight,
+                                            PDM_ownership_t       ownership);
 
   int PDM_isosurface_dvtx_protocol_get(PDM_isosurface_t *isos);
 
@@ -820,20 +821,15 @@ cdef class Isosurface:
     """
     cdef int     n_vtx             = 0;
     cdef int    *vtx_parent_idx    = NULL;
-    cdef int    *vtx_parent_lnum   = NULL;
     cdef double *vtx_parent_weight = NULL;
 
-    n_vtx = PDM_isosurface_local_parent_get(self._isos, id_iso, i_part,
-                                            PDM_MESH_ENTITY_VTX, 
-                                           &vtx_parent_idx,
-                                           &vtx_parent_lnum,
-                                            PDM_OWNERSHIP_USER)
-    PDM_isosurface_vtx_parent_weight_get(self._isos, id_iso, i_part,
-                                        &vtx_parent_weight,
-                                         PDM_OWNERSHIP_USER)
+    n_vtx = PDM_isosurface_vtx_parent_weight_get(self._isos, id_iso, i_part,
+                                                &vtx_parent_idx,
+                                                &vtx_parent_weight,
+                                                 PDM_OWNERSHIP_USER)
 
-    vtx_parent_lnum_size = vtx_parent_idx[n_vtx]
-    np_vtx_parent_weight = create_numpy_d(vtx_parent_weight, vtx_parent_lnum_size, flag_owndata=True)
+    vtx_parent_weight_size = vtx_parent_idx[n_vtx]
+    np_vtx_parent_weight = create_numpy_d(vtx_parent_weight, vtx_parent_weight_size, flag_owndata=True)
 
     return np_vtx_parent_weight
 
@@ -964,22 +960,17 @@ cdef class Isosurface:
     Returns:
       vtx_parent_weight (`np.ndarray[np.double_t]`) : Vertices parent weight
     """
-    cdef int          n_vtx             = 0;
-    cdef int         *vtx_parent_idx    = NULL;
-    cdef PDM_g_num_t *vtx_parent_gnum   = NULL;
-    cdef double      *vtx_parent_weight = NULL;
+    cdef int     n_vtx             = 0;
+    cdef int    *vtx_parent_idx    = NULL;
+    cdef double *vtx_parent_weight = NULL;
 
-    n_vtx = PDM_isosurface_parent_gnum_get(self._isos, id_iso,
-                                           PDM_MESH_ENTITY_VTX, 
-                                          &vtx_parent_idx,
-                                          &vtx_parent_gnum,
-                                           PDM_OWNERSHIP_USER)
-    PDM_isosurface_dvtx_parent_weight_get(self._isos, id_iso,
-                                         &vtx_parent_weight,
-                                          PDM_OWNERSHIP_USER)
+    n_vtx = PDM_isosurface_dvtx_parent_weight_get(self._isos, id_iso,
+                                                 &vtx_parent_idx,
+                                                 &vtx_parent_weight,
+                                                  PDM_OWNERSHIP_USER)
 
-    vtx_parent_gnum_size = vtx_parent_idx[n_vtx]
-    np_vtx_parent_weight = create_numpy_d(vtx_parent_weight, vtx_parent_gnum_size, flag_owndata=True)
+    vtx_parent_weight_size = vtx_parent_idx[n_vtx]
+    np_vtx_parent_weight = create_numpy_d(vtx_parent_weight, vtx_parent_weight_size, flag_owndata=True)
 
     return np_vtx_parent_weight
 
