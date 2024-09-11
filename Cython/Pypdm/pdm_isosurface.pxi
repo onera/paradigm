@@ -477,6 +477,7 @@ cdef class Isosurface:
       extract_kind (PDM_extract_part_kind_t) : PDM_extract_part_kind_t
       part_method  (PDM_split_dual_t       ) : PDM_split_dual_t       
     """
+    PDM_isosurface_redistribution_set(self._isos, extract_kind, part_method)
 
   def field_set(self,                             id_iso,
                                                   i_part,
