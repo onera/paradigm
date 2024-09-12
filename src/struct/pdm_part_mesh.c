@@ -119,17 +119,9 @@ _build_extract_part_bound
   int **group_entity_idx = pmesh->pconcat_bound_idx[bound_type];
   int **group_entity     = pmesh->pconcat_bound    [bound_type];
 
-  //int **selected_l_num;
-  // PDM_malloc(*selected_l_num,pmesh->n_part,int         *);
-  // PDM_g_num_t **selected_g_num;
-  // PDM_malloc(*selected_g_num,pmesh->n_part,PDM_g_num_t *);
-  // int **selected_loc;
-  // PDM_malloc(*selected_loc,pmesh->n_part,int         *);
-
   *extrp = PDM_extract_part_create(dim,
                                    pmesh->n_part,
                                    pmesh->n_part,
-                                   // PDM_EXTRACT_PART_KIND_FROM_TARGET,
                                    PDM_EXTRACT_PART_KIND_LOCAL,
                                    PDM_SPLIT_DUAL_WITH_HILBERT, // unused
                                    PDM_TRUE,
@@ -139,35 +131,10 @@ _build_extract_part_bound
   /* Set parts */
   for (int i_part = 0; i_part < pmesh->n_part; i_part++) {
 
-    // PDM_malloc(selected_l_num[i_part],group_entity_idx[i_part][n_group],int        );
-    // PDM_malloc(selected_g_num[i_part],group_entity_idx[i_part][n_group],PDM_g_num_t);
-    // PDM_malloc(selected_loc  [i_part],group_entity_idx[i_part][n_group] * 3,int);
-    //for (int i = 0; i < group_entity_idx[i_part][n_group]; i++) {
-      //selected_l_num[i_part][i] = group_entity[i_part][i] - 1;
-      // selected_g_num[i_part][i] = pmesh->pentity_ln_to_gn[entity_type][i_part][group_entity[i_part][i] - 1];
-      // selected_loc  [i_part][3*i  ] = i_rank;
-      // selected_loc  [i_part][3*i+1] = i_part;
-      // selected_loc  [i_part][3*i+2] = group_entity[i_part][i] - 1;
-    //}
-
-    // PDM_log_trace_array_int(selected_l_num[i_part],
-    //                         group_entity_idx[i_part][n_group],
-    //                         "selected_l_num : ");
-
-
     PDM_extract_part_selected_lnum_set(*extrp,
                                        i_part,
                                        group_entity_idx[i_part][n_group],
                                        group_entity[i_part]);
-
-    // PDM_log_trace_array_long(selected_g_num[i_part],
-    //                          group_entity_idx[i_part][n_group],
-    //                          "selected_g_num       : ");
-    // PDM_extract_part_target_set(*extrp,
-    //                             i,
-    //                             group_entity_idx[i_part][n_group],
-    //                             selected_g_num[i_part],
-    //                             selected_loc  [i_part]);
 
     int n_cell                 = 0;
     int n_face                 = 0;
@@ -239,15 +206,6 @@ _build_extract_part_bound
   }
 
   PDM_extract_part_compute(*extrp);
-
-  //for (int i = 0; i < pmesh->n_part; i++) {
-    //free(selected_l_num[i]);
-    //PDM_free(selected_g_num[i]);
-    //PDM_free(selected_loc  [i]);
-  //}
-  //free(selected_l_num);
-  //PDM_free(selected_g_num);
-  //PDM_free(selected_loc  );
 }
 
 /*=============================================================================
@@ -284,16 +242,16 @@ PDM_part_mesh_create
   PDM_MPI_Allreduce(&pmesh->n_part, &tn_part, 1, PDM_MPI_INT, PDM_MPI_SUM, comm);
   pmesh->tn_part = tn_part;
 
-  PDM_malloc(pmesh->pconnectivity, PDM_CONNECTIVITY_TYPE_MAX ,int         **);
-  PDM_malloc(pmesh->pconnectivity_idx, PDM_CONNECTIVITY_TYPE_MAX ,int         **);
-  PDM_malloc(pmesh->pentity_ln_to_gn, PDM_MESH_ENTITY_MAX       ,PDM_g_num_t **);
-  PDM_malloc(pmesh->pentity_color, PDM_MESH_ENTITY_MAX       ,int         **);
+  PDM_malloc(pmesh->pconnectivity,     PDM_CONNECTIVITY_TYPE_MAX, int         **);
+  PDM_malloc(pmesh->pconnectivity_idx, PDM_CONNECTIVITY_TYPE_MAX, int         **);
+  PDM_malloc(pmesh->pentity_ln_to_gn,  PDM_MESH_ENTITY_MAX      , PDM_g_num_t **);
+  PDM_malloc(pmesh->pentity_color,     PDM_MESH_ENTITY_MAX      , int         **);
+  PDM_malloc(pmesh->pn_entity,         PDM_MESH_ENTITY_MAX      , int          *);
 
-  PDM_malloc(pmesh->pn_entity, PDM_MESH_ENTITY_MAX       ,int          *);
 
-  PDM_malloc(pmesh->is_owner_connectivity, PDM_CONNECTIVITY_TYPE_MAX ,PDM_bool_t   );
-  PDM_malloc(pmesh->is_owner_ln_to_gn, PDM_MESH_ENTITY_MAX       ,PDM_bool_t   );
-  PDM_malloc(pmesh->is_owner_color, PDM_MESH_ENTITY_MAX       ,PDM_bool_t   );
+  PDM_malloc(pmesh->is_owner_connectivity, PDM_CONNECTIVITY_TYPE_MAX, PDM_bool_t);
+  PDM_malloc(pmesh->is_owner_ln_to_gn,     PDM_MESH_ENTITY_MAX      , PDM_bool_t);
+  PDM_malloc(pmesh->is_owner_color,        PDM_MESH_ENTITY_MAX      , PDM_bool_t);
 
   for(int i = 0; i < PDM_CONNECTIVITY_TYPE_MAX; ++i) {
     pmesh->is_owner_connectivity[i] = PDM_FALSE;
@@ -309,40 +267,40 @@ PDM_part_mesh_create
     pmesh->pn_entity        [i] = NULL;
   }
 
-  PDM_malloc(pmesh->pn_bound, PDM_BOUND_TYPE_MAX ,int          **);
-  PDM_malloc(pmesh->pbound, PDM_BOUND_TYPE_MAX ,int         ***);
-  PDM_malloc(pmesh->pbound_ln_to_gn, PDM_BOUND_TYPE_MAX ,PDM_g_num_t ***);
-  PDM_malloc(pmesh->is_owner_bound, PDM_BOUND_TYPE_MAX ,PDM_bool_t     );
+  PDM_malloc(pmesh->pn_bound,        PDM_BOUND_TYPE_MAX, int          **);
+  PDM_malloc(pmesh->pbound,          PDM_BOUND_TYPE_MAX, int         ***);
+  PDM_malloc(pmesh->pbound_ln_to_gn, PDM_BOUND_TYPE_MAX, PDM_g_num_t ***);
+  PDM_malloc(pmesh->is_owner_bound,  PDM_BOUND_TYPE_MAX, PDM_bool_t     );
 
   for(int i = 0; i < PDM_BOUND_TYPE_MAX; ++i ) {
     pmesh->n_group_bnd[i] = 0;
   }
 
   for(int i = 0; i < PDM_BOUND_TYPE_MAX; ++i) {
-    pmesh->is_owner_bound         [i] = PDM_FALSE;
+    pmesh->is_owner_bound[i] = PDM_FALSE;
 
-    PDM_malloc(pmesh->pn_bound       [i], pmesh->n_part ,int          *);
-    PDM_malloc(pmesh->pbound         [i], pmesh->n_part ,int         **);
-    PDM_malloc(pmesh->pbound_ln_to_gn[i], pmesh->n_part ,PDM_g_num_t **);
+    PDM_malloc(pmesh->pn_bound       [i], pmesh->n_part, int          *);
+    PDM_malloc(pmesh->pbound         [i], pmesh->n_part, int         **);
+    PDM_malloc(pmesh->pbound_ln_to_gn[i], pmesh->n_part, PDM_g_num_t **);
     for(int i_part = 0; i_part < n_part; ++i_part) {
-      pmesh->pn_bound               [i][i_part] = NULL;
-      pmesh->pbound                 [i][i_part] = NULL;
-      pmesh->pbound_ln_to_gn        [i][i_part] = NULL;
+      pmesh->pn_bound       [i][i_part] = NULL;
+      pmesh->pbound         [i][i_part] = NULL;
+      pmesh->pbound_ln_to_gn[i][i_part] = NULL;
     }
   }
 
-  PDM_malloc(pmesh->pconcat_bound_idx, PDM_BOUND_TYPE_MAX ,int         **);
-  PDM_malloc(pmesh->pconcat_bound, PDM_BOUND_TYPE_MAX ,int         **);
-  PDM_malloc(pmesh->pconcat_bound_ln_to_gn, PDM_BOUND_TYPE_MAX ,PDM_g_num_t **);
-  PDM_malloc(pmesh->is_owner_concat_bound, PDM_BOUND_TYPE_MAX ,PDM_bool_t    );
-  PDM_malloc(pmesh->is_compute_concat_bound, PDM_BOUND_TYPE_MAX ,PDM_bool_t    );
+  PDM_malloc(pmesh->pconcat_bound_idx,       PDM_BOUND_TYPE_MAX, int         **);
+  PDM_malloc(pmesh->pconcat_bound,           PDM_BOUND_TYPE_MAX, int         **);
+  PDM_malloc(pmesh->pconcat_bound_ln_to_gn,  PDM_BOUND_TYPE_MAX, PDM_g_num_t **);
+  PDM_malloc(pmesh->is_owner_concat_bound,   PDM_BOUND_TYPE_MAX, PDM_bool_t    );
+  PDM_malloc(pmesh->is_compute_concat_bound, PDM_BOUND_TYPE_MAX, PDM_bool_t    );
   for(int i = 0; i < PDM_BOUND_TYPE_MAX; ++i) {
-    pmesh->is_owner_concat_bound         [i] = PDM_FALSE;
-    pmesh->is_compute_concat_bound       [i] = PDM_FALSE;
+    pmesh->is_owner_concat_bound  [i] = PDM_FALSE;
+    pmesh->is_compute_concat_bound[i] = PDM_FALSE;
 
-    PDM_malloc(pmesh->pconcat_bound_idx     [i], pmesh->n_part ,int         *);
-    PDM_malloc(pmesh->pconcat_bound         [i], pmesh->n_part ,int         *);
-    PDM_malloc(pmesh->pconcat_bound_ln_to_gn[i], pmesh->n_part ,PDM_g_num_t *);
+    PDM_malloc(pmesh->pconcat_bound_idx     [i], pmesh->n_part, int         *);
+    PDM_malloc(pmesh->pconcat_bound         [i], pmesh->n_part, int         *);
+    PDM_malloc(pmesh->pconcat_bound_ln_to_gn[i], pmesh->n_part, PDM_g_num_t *);
     for(int i_part = 0; i_part < n_part; ++i_part) {
       pmesh->pconcat_bound_idx     [i][i_part] = NULL;
       pmesh->pconcat_bound         [i][i_part] = NULL;
@@ -351,16 +309,16 @@ PDM_part_mesh_create
   }
 
 
-  PDM_malloc(pmesh->vtx_coords,pmesh->n_part , double *);
+  PDM_malloc(pmesh->vtx_coords, pmesh->n_part, double *);
   for(int i_part = 0; i_part < n_part; ++i_part) {
     pmesh->vtx_coords[i_part] = NULL;
   }
   pmesh->is_owner_vtx_coord = PDM_FALSE;
 
-  PDM_malloc(pmesh->ppart_bound_proc_idx, PDM_BOUND_TYPE_MAX ,int         **);
-  PDM_malloc(pmesh->ppart_bound_part_idx, PDM_BOUND_TYPE_MAX ,int         **);
-  PDM_malloc(pmesh->ppart_bound, PDM_BOUND_TYPE_MAX ,int         **);
-  PDM_malloc(pmesh->is_owner_part_bound, PDM_BOUND_TYPE_MAX ,PDM_bool_t    );
+  PDM_malloc(pmesh->ppart_bound_proc_idx, PDM_BOUND_TYPE_MAX, int         **);
+  PDM_malloc(pmesh->ppart_bound_part_idx, PDM_BOUND_TYPE_MAX, int         **);
+  PDM_malloc(pmesh->ppart_bound,          PDM_BOUND_TYPE_MAX, int         **);
+  PDM_malloc(pmesh->is_owner_part_bound,  PDM_BOUND_TYPE_MAX, PDM_bool_t    );
 
   for(int i = 0; i < PDM_BOUND_TYPE_MAX; ++i) {
     pmesh->is_owner_part_bound [i] = PDM_FALSE;
@@ -383,7 +341,7 @@ PDM_part_mesh_n_entity_set
 )
 {
   if(pmesh->pn_entity[entity_type] == NULL) {
-    PDM_malloc(pmesh->pn_entity[entity_type],pmesh->n_part ,int);
+    PDM_malloc(pmesh->pn_entity[entity_type], pmesh->n_part, int);
     for(int i = 0; i < pmesh->n_part; ++i) {
       pmesh->pn_entity[entity_type][i] = 0;
     }
@@ -419,13 +377,13 @@ PDM_part_mesh_entity_ln_to_gn_set
  PDM_ownership_t           ownership
 )
 {
-  if(pmesh->pentity_ln_to_gn [entity_type] == NULL) {
-    PDM_malloc(pmesh->pentity_ln_to_gn [entity_type],pmesh->n_part ,PDM_g_num_t *);
+  if(pmesh->pentity_ln_to_gn[entity_type] == NULL) {
+    PDM_malloc(pmesh->pentity_ln_to_gn[entity_type], pmesh->n_part, PDM_g_num_t *);
     for(int i = 0; i < pmesh->n_part; ++i) {
       pmesh->pentity_ln_to_gn [entity_type][i] = NULL;
     }
   }
-  pmesh->pentity_ln_to_gn [entity_type][i_part] = pentity_ln_to_gn;
+  pmesh->pentity_ln_to_gn[entity_type][i_part] = pentity_ln_to_gn;
   if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
     pmesh->is_owner_ln_to_gn[entity_type] = PDM_FALSE;
   } else {
@@ -467,13 +425,13 @@ PDM_part_mesh_entity_color_set
  PDM_ownership_t           ownership
 )
 {
-  if(pmesh->pentity_color [entity_type] == NULL) {
-    PDM_malloc(pmesh->pentity_color [entity_type],pmesh->n_part ,int *);
+  if(pmesh->pentity_color[entity_type] == NULL) {
+    PDM_malloc(pmesh->pentity_color [entity_type], pmesh->n_part, int *);
     for(int i = 0; i < pmesh->n_part; ++i) {
-      pmesh->pentity_color [entity_type][i] = NULL;
+      pmesh->pentity_color[entity_type][i] = NULL;
     }
   }
-  pmesh->pentity_color [entity_type][i_part] = pentity_color;
+  pmesh->pentity_color[entity_type][i_part] = pentity_color;
   if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
     pmesh->is_owner_color[entity_type] = PDM_FALSE;
   } else {
@@ -517,15 +475,15 @@ PDM_part_mesh_connectivity_set
 )
 {
   if(pmesh->pconnectivity [connectivity_type] == NULL) {
-    PDM_malloc(pmesh->pconnectivity    [connectivity_type],pmesh->n_part ,int *);
-    PDM_malloc(pmesh->pconnectivity_idx[connectivity_type],pmesh->n_part ,int *);
+    PDM_malloc(pmesh->pconnectivity    [connectivity_type], pmesh->n_part, int *);
+    PDM_malloc(pmesh->pconnectivity_idx[connectivity_type], pmesh->n_part, int *);
     for(int i = 0; i < pmesh->n_part; ++i) {
       pmesh->pconnectivity    [connectivity_type][i] = NULL;
       pmesh->pconnectivity_idx[connectivity_type][i] = NULL;
     }
   }
-  pmesh->pconnectivity        [connectivity_type][i_part] = connect;
-  pmesh->pconnectivity_idx    [connectivity_type][i_part] = connect_idx;
+  pmesh->pconnectivity    [connectivity_type][i_part] = connect;
+  pmesh->pconnectivity_idx[connectivity_type][i_part] = connect_idx;
 
   if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
     pmesh->is_owner_connectivity[connectivity_type] = PDM_FALSE;
@@ -583,7 +541,7 @@ PDM_part_mesh_connectivity_get
  PDM_ownership_t           ownership
 )
 {
-  if(pmesh->pconnectivity    [connectivity_type] != NULL && pmesh->pconnectivity    [connectivity_type][i_part] != NULL) {
+  if(pmesh->pconnectivity[connectivity_type] != NULL && pmesh->pconnectivity[connectivity_type][i_part] != NULL) {
     *connect     = pmesh->pconnectivity    [connectivity_type][i_part];
     *connect_idx = pmesh->pconnectivity_idx[connectivity_type][i_part];
   } else {
@@ -611,9 +569,9 @@ PDM_part_mesh_n_bound_set
   pmesh->n_group_bnd[bound_type] = n_bound;
 
   for(int i_part = 0; i_part < pmesh->n_part; ++i_part) {
-    PDM_malloc(pmesh->pn_bound       [bound_type][i_part], n_bound ,int          );
-    PDM_malloc(pmesh->pbound         [bound_type][i_part], n_bound ,int         *);
-    PDM_malloc(pmesh->pbound_ln_to_gn[bound_type][i_part], n_bound ,PDM_g_num_t *);
+    PDM_malloc(pmesh->pn_bound       [bound_type][i_part], n_bound, int          );
+    PDM_malloc(pmesh->pbound         [bound_type][i_part], n_bound, int         *);
+    PDM_malloc(pmesh->pbound_ln_to_gn[bound_type][i_part], n_bound, PDM_g_num_t *);
     for(int i_group = 0; i_group < n_bound; ++i_group) {
       pmesh->pn_bound       [bound_type][i_part][i_group] = 0;
       pmesh->pbound         [bound_type][i_part][i_group] = NULL;
@@ -746,7 +704,7 @@ PDM_part_mesh_bound_concat_compute
   if(pmesh->is_compute_concat_bound[bound_type] == PDM_FALSE) {
     int n_group = pmesh->n_group_bnd[bound_type];
     assert(pmesh->pconcat_bound_idx[bound_type][i_part] == NULL);
-    PDM_malloc(pmesh->pconcat_bound_idx[bound_type][i_part], (n_group+1) ,int);
+    PDM_malloc(pmesh->pconcat_bound_idx[bound_type][i_part], n_group+1, int);
     int *_pconcat_bound_idx = pmesh->pconcat_bound_idx[bound_type][i_part];
 
     _pconcat_bound_idx[0] = 0;
@@ -754,8 +712,8 @@ PDM_part_mesh_bound_concat_compute
       _pconcat_bound_idx[i_group+1] = _pconcat_bound_idx[i_group] + pmesh->pn_bound[bound_type][i_part][i_group];
     }
 
-    PDM_malloc(pmesh->pconcat_bound         [bound_type][i_part],_pconcat_bound_idx[n_group] ,int        );
-    PDM_malloc(pmesh->pconcat_bound_ln_to_gn[bound_type][i_part],_pconcat_bound_idx[n_group] ,PDM_g_num_t);
+    PDM_malloc(pmesh->pconcat_bound         [bound_type][i_part], _pconcat_bound_idx[n_group], int        );
+    PDM_malloc(pmesh->pconcat_bound_ln_to_gn[bound_type][i_part], _pconcat_bound_idx[n_group], PDM_g_num_t);
     int         *_pconcat_bound          = pmesh->pconcat_bound         [bound_type][i_part];
     PDM_g_num_t *_pconcat_bound_ln_to_gn = pmesh->pconcat_bound_ln_to_gn[bound_type][i_part];
 
@@ -809,9 +767,9 @@ PDM_part_mesh_part_graph_comm_set
 {
   if(pmesh->ppart_bound[bound_type] == NULL) {
 
-    PDM_malloc(pmesh->ppart_bound_proc_idx[bound_type], pmesh->n_part , int *);
-    PDM_malloc(pmesh->ppart_bound_part_idx[bound_type], pmesh->n_part , int *);
-    PDM_malloc(pmesh->ppart_bound[bound_type], pmesh->n_part , int *);
+    PDM_malloc(pmesh->ppart_bound_proc_idx[bound_type], pmesh->n_part, int *);
+    PDM_malloc(pmesh->ppart_bound_part_idx[bound_type], pmesh->n_part, int *);
+    PDM_malloc(pmesh->ppart_bound[bound_type], pmesh->n_part, int *);
     for(int j = 0; j < pmesh->n_part; ++j) {
       pmesh->ppart_bound_proc_idx[bound_type][j] = NULL;
       pmesh->ppart_bound_part_idx[bound_type][j] = NULL;
@@ -879,16 +837,8 @@ PDM_part_mesh_free
           }
         }
       }
-
-      if(pmesh->pconnectivity[i] != NULL) {
-        PDM_free(pmesh->pconnectivity[i]);
-        pmesh->pconnectivity[i] = NULL;
-      }
-
-      if(pmesh->pconnectivity_idx[i] != NULL) {
-        PDM_free(pmesh->pconnectivity_idx[i]);
-        pmesh->pconnectivity_idx[i] = NULL;
-      }
+      PDM_free(pmesh->pconnectivity    [i]);
+      PDM_free(pmesh->pconnectivity_idx[i]);
     }
 
     /* Free ln_to_gn */
@@ -900,11 +850,7 @@ PDM_part_mesh_free
           }
         }
       }
-
-      if(pmesh->pentity_ln_to_gn[i] != NULL) {
-        PDM_free(pmesh->pentity_ln_to_gn[i]);
-        pmesh->pentity_ln_to_gn[i] = NULL;
-      }
+      PDM_free(pmesh->pentity_ln_to_gn[i]);
     }
 
     /* Free ln_to_gn */
@@ -916,18 +862,13 @@ PDM_part_mesh_free
           }
         }
       }
-
-      if(pmesh->pentity_color[i] != NULL) {
-        PDM_free(pmesh->pentity_color[i]);
-        pmesh->pentity_color[i] = NULL;
-      }
+      PDM_free(pmesh->pentity_color[i]);
     }
 
     /* Free vtx__coord */
     if(pmesh->is_owner_vtx_coord == PDM_TRUE) {
       for(int i_part = 0; i_part < pmesh->n_part; ++i_part) {
         PDM_free(pmesh->vtx_coords[i_part]);
-        pmesh->vtx_coords[i_part] = NULL;
       }
     }
     PDM_free(pmesh->vtx_coords);
@@ -937,40 +878,17 @@ PDM_part_mesh_free
       if(pmesh->is_owner_bound[i] == PDM_TRUE) {
         for(int i_part = 0; i_part < pmesh->n_part; ++i_part) {
           for(int i_group = 0; i_group < pmesh->n_group_bnd[i]; ++i_group) {
-            if(pmesh->pbound[i][i_part][i_group] != NULL) {
-              PDM_free(pmesh->pbound[i][i_part][i_group]);
-            }
-            if(pmesh->pbound_ln_to_gn[i][i_part][i_group] != NULL) {
-              PDM_free(pmesh->pbound_ln_to_gn[i][i_part][i_group]);
-            }
+            PDM_free(pmesh->pbound         [i][i_part][i_group]);
+            PDM_free(pmesh->pbound_ln_to_gn[i][i_part][i_group]);
           }
-
-          if(pmesh->pn_bound[i][i_part] != NULL) {
-            PDM_free(pmesh->pn_bound[i][i_part]);
-          }
-          if(pmesh->pbound[i][i_part] != NULL) {
-            PDM_free(pmesh->pbound[i][i_part]);
-          }
-          if(pmesh->pbound_ln_to_gn[i][i_part] != NULL) {
-            PDM_free(pmesh->pbound_ln_to_gn[i][i_part]);
-          }
+          PDM_free(pmesh->pn_bound       [i][i_part]);
+          PDM_free(pmesh->pbound         [i][i_part]);
+          PDM_free(pmesh->pbound_ln_to_gn[i][i_part]);
         }
       }
-
-      if(pmesh->pn_bound[i] != NULL) {
-        PDM_free(pmesh->pn_bound[i]);
-        pmesh->pn_bound[i] = NULL;
-      }
-
-      if(pmesh->pbound[i] != NULL) {
-        PDM_free(pmesh->pbound[i]);
-        pmesh->pbound[i] = NULL;
-      }
-
-      if(pmesh->pbound_ln_to_gn[i] != NULL) {
-        PDM_free(pmesh->pbound_ln_to_gn[i]);
-        pmesh->pbound_ln_to_gn[i] = NULL;
-      }
+      PDM_free(pmesh->pn_bound       [i]);
+      PDM_free(pmesh->pbound         [i]);
+      PDM_free(pmesh->pbound_ln_to_gn[i]);
     }
 
 
@@ -978,32 +896,14 @@ PDM_part_mesh_free
     for(int i = 0; i < PDM_BOUND_TYPE_MAX; ++i) {
       if(pmesh->is_owner_concat_bound[i] == PDM_TRUE) {
         for(int i_part = 0; i_part < pmesh->n_part; ++i_part) {
-          if(pmesh->pconcat_bound_idx[i][i_part] != NULL) {
-            PDM_free(pmesh->pconcat_bound_idx[i][i_part]);
-          }
-          if(pmesh->pconcat_bound[i][i_part] != NULL) {
-            PDM_free(pmesh->pconcat_bound[i][i_part]);
-          }
-          if(pmesh->pconcat_bound_ln_to_gn[i][i_part] != NULL) {
-            PDM_free(pmesh->pconcat_bound_ln_to_gn[i][i_part]);
-          }
+          PDM_free(pmesh->pconcat_bound_idx     [i][i_part]);
+          PDM_free(pmesh->pconcat_bound         [i][i_part]);
+          PDM_free(pmesh->pconcat_bound_ln_to_gn[i][i_part]);
         }
       }
-
-      if(pmesh->pconcat_bound_idx[i] != NULL) {
-        PDM_free(pmesh->pconcat_bound_idx[i]);
-        pmesh->pconcat_bound_idx[i] = NULL;
-      }
-
-      if(pmesh->pconcat_bound[i] != NULL) {
-        PDM_free(pmesh->pconcat_bound[i]);
-        pmesh->pconcat_bound[i] = NULL;
-      }
-
-      if(pmesh->pconcat_bound_ln_to_gn[i] != NULL) {
-        PDM_free(pmesh->pconcat_bound_ln_to_gn[i]);
-        pmesh->pconcat_bound_ln_to_gn[i] = NULL;
-      }
+      PDM_free(pmesh->pconcat_bound_idx[i]);
+      PDM_free(pmesh->pconcat_bound[i]);
+      PDM_free(pmesh->pconcat_bound_ln_to_gn[i]);
     }
 
     /* Free group */
@@ -1021,28 +921,14 @@ PDM_part_mesh_free
           }
         }
       }
-
-      if(pmesh->ppart_bound_proc_idx[i] != NULL) {
-        PDM_free(pmesh->ppart_bound_proc_idx[i]);
-        pmesh->ppart_bound_proc_idx[i] = NULL;
-      }
-
-      if(pmesh->ppart_bound_part_idx[i] != NULL) {
-        PDM_free(pmesh->ppart_bound_part_idx[i]);
-        pmesh->ppart_bound_part_idx[i] = NULL;
-      }
-
-      if(pmesh->ppart_bound[i] != NULL) {
-        PDM_free(pmesh->ppart_bound[i]);
-        pmesh->ppart_bound[i] = NULL;
-      }
+      PDM_free(pmesh->ppart_bound_proc_idx[i]);
+      PDM_free(pmesh->ppart_bound_part_idx[i]);
+      PDM_free(pmesh->ppart_bound         [i]);
     }
 
 
     for(int i = 0; i < PDM_MESH_ENTITY_MAX; ++i) {
-      if(pmesh->pn_entity[i] !=NULL){
-        PDM_free(pmesh->pn_entity[i]);
-      }
+      PDM_free(pmesh->pn_entity[i]);
     }
 
     PDM_free(pmesh->pn_entity);
@@ -1071,7 +957,6 @@ PDM_part_mesh_free
     PDM_free(pmesh->is_owner_part_bound );
 
     PDM_free(pmesh);
-    pmesh = NULL;
   }
 }
 
@@ -1463,11 +1348,11 @@ PDM_part_mesh_dump_ensight
 
   /* Set variables */
   PDM_real_t **val_num_part;
-  PDM_malloc(val_num_part,pmesh->n_part,PDM_real_t *);
   PDM_real_t **val_bound_id;
-  PDM_malloc(val_bound_id,pmesh->n_part,PDM_real_t *);
   PDM_real_t **val_bound_type;
-  PDM_malloc(val_bound_type,pmesh->n_part,PDM_real_t *);
+  PDM_malloc(val_num_part,   pmesh->n_part, PDM_real_t *);
+  PDM_malloc(val_bound_id,   pmesh->n_part, PDM_real_t *);
+  PDM_malloc(val_bound_type, pmesh->n_part, PDM_real_t *);
   for (int i_part = 0; i_part < pmesh->n_part; i_part++) {
     int n_entity = 0;
     if (mesh_dimension == 2) {
@@ -1477,9 +1362,9 @@ PDM_part_mesh_dump_ensight
       n_entity = pmesh->pn_entity[PDM_MESH_ENTITY_CELL][i_part];
     }
 
-    PDM_malloc(val_num_part  [i_part],n_entity,PDM_real_t);
-    PDM_malloc(val_bound_id  [i_part],n_entity,PDM_real_t);
-    PDM_malloc(val_bound_type[i_part],n_entity,PDM_real_t);
+    PDM_malloc(val_num_part  [i_part], n_entity, PDM_real_t);
+    PDM_malloc(val_bound_id  [i_part], n_entity, PDM_real_t);
+    PDM_malloc(val_bound_type[i_part], n_entity, PDM_real_t);
     for (int i = 0; i < n_entity; i++) {
       val_num_part  [i_part][i] = i_rank * pmesh->n_part + i_part; // !! works only if each rank has the same nb of partitions
       val_bound_id  [i_part][i] = 0;
@@ -1529,8 +1414,8 @@ PDM_part_mesh_dump_ensight
                                                    PDM_MESH_ENTITY_VTX);
         }
 
-        PDM_malloc(val_num_part  [i_part],n_entity,PDM_real_t);
-        PDM_malloc(val_bound_type[i_part],n_entity,PDM_real_t);
+        PDM_malloc(val_num_part  [i_part], n_entity, PDM_real_t);
+        PDM_malloc(val_bound_type[i_part], n_entity, PDM_real_t);
         for (int k = 0; k < n_entity; k++) {
           val_num_part  [i_part][k] = i_rank * pmesh->n_part + i_part; // !! works only if each rank has the same nb of partitions
           val_bound_type[i_part][k] = bound_type;
@@ -1539,7 +1424,7 @@ PDM_part_mesh_dump_ensight
         PDM_malloc(val_bound_id[i_part],n_entity,PDM_real_t);
         for (int bound_id = 0; bound_id < pmesh->n_group_bnd[bound_type]; bound_id++) {
           for (int k = pmesh->pconcat_bound_idx[bound_type][i_part][bound_id]; k < pmesh->pconcat_bound_idx[bound_type][i_part][bound_id+1]; k++) {
-            val_bound_id[i_part][k] = bound_id+1; // !! assume reequilibrate 'local' yields same order as selected_l_num
+            val_bound_id[i_part][k] = bound_id+1;
           }
         }
 
@@ -1584,9 +1469,7 @@ PDM_part_mesh_dump_ensight
 
 
   for (int i = 0; i < PDM_BOUND_TYPE_MAX; i++) {
-    if (extrp[i] != NULL) {
-      PDM_extract_part_free(extrp[i]);
-    }
+    PDM_extract_part_free(extrp[i]);
   }
 
   if (mesh_dimension == 3 && !has_face_vtx) {
