@@ -507,6 +507,19 @@ _compute_itp_field
 }
 
 
+static void
+_analytic_field_function
+(
+ const double  x,
+ const double  y,
+ const double  z,
+ double       *value
+)
+{
+  *value = cos(5*x)*cos(6*y)*cos(7*z);
+}
+
+
 /**
  *
  * \brief  Usage
@@ -1055,7 +1068,18 @@ int main
                                 n_isovalues,
                                 isovalues);
 
-  int n_iso = iso2 + 1;
+  // Analytic field isosurface
+  double iso3_isovalue = 0.3;
+  int iso3 = PDM_isosurface_add(isos,
+                                PDM_ISO_SURFACE_KIND_FUNCTION,
+                                1,
+                                &iso3_isovalue);
+
+  PDM_isosurface_field_function_set(isos,
+                                    iso3,
+                                    &_analytic_field_function);
+
+  int n_iso = iso3 + 1;
 
   if (n_part > 0) {
     // Partitioned
