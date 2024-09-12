@@ -263,14 +263,9 @@ PDM_part_mesh_create
   for(int i = 0; i < PDM_BOUND_TYPE_MAX; ++i) {
     pmesh->is_owner_bound[i] = PDM_FALSE;
 
-    PDM_malloc(pmesh->pn_bound       [i], pmesh->n_part, int          *);
-    PDM_malloc(pmesh->pbound         [i], pmesh->n_part, int         **);
-    PDM_malloc(pmesh->pbound_ln_to_gn[i], pmesh->n_part, PDM_g_num_t **);
-    for(int i_part = 0; i_part < n_part; ++i_part) {
-      pmesh->pn_bound       [i][i_part] = NULL;
-      pmesh->pbound         [i][i_part] = NULL;
-      pmesh->pbound_ln_to_gn[i][i_part] = NULL;
-    }
+    pmesh->pn_bound       [i] = NULL;
+    pmesh->pbound         [i] = NULL;
+    pmesh->pbound_ln_to_gn[i] = NULL;
   }
 
   for(int i = 0; i < PDM_BOUND_TYPE_MAX; ++i) {
@@ -542,14 +537,19 @@ PDM_part_mesh_n_bound_set
   assert(pmesh->n_group_bnd[bound_type] == 0);
   pmesh->n_group_bnd[bound_type] = n_bound;
 
-  for(int i_part = 0; i_part < pmesh->n_part; ++i_part) {
-    PDM_malloc(pmesh->pn_bound       [bound_type][i_part], n_bound, int          );
-    PDM_malloc(pmesh->pbound         [bound_type][i_part], n_bound, int         *);
-    PDM_malloc(pmesh->pbound_ln_to_gn[bound_type][i_part], n_bound, PDM_g_num_t *);
-    for(int i_group = 0; i_group < n_bound; ++i_group) {
-      pmesh->pn_bound       [bound_type][i_part][i_group] = 0;
-      pmesh->pbound         [bound_type][i_part][i_group] = NULL;
-      pmesh->pbound_ln_to_gn[bound_type][i_part][i_group] = NULL;
+  PDM_malloc(pmesh->pn_bound       [bound_type], n_bound, int          *);
+  PDM_malloc(pmesh->pbound         [bound_type], n_bound, int         **);
+  PDM_malloc(pmesh->pbound_ln_to_gn[bound_type], n_bound, PDM_g_num_t **);
+
+  for (int i_group = 0; i_group < n_bound; i_group++) {
+    PDM_malloc(pmesh->pn_bound       [bound_type][i_group], pmesh->n_part, int          );
+    PDM_malloc(pmesh->pbound         [bound_type][i_group], pmesh->n_part, int         *);
+    PDM_malloc(pmesh->pbound_ln_to_gn[bound_type][i_group], pmesh->n_part, PDM_g_num_t *);
+
+    for(int i_part = 0; i_part < pmesh->n_part; ++i_part) {
+      pmesh->pn_bound       [bound_type][i_group][i_part] = 0;
+      pmesh->pbound         [bound_type][i_group][i_part] = NULL;
+      pmesh->pbound_ln_to_gn[bound_type][i_group][i_part] = NULL;
     }
   }
 }
@@ -595,9 +595,9 @@ PDM_part_mesh_bound_set
  PDM_ownership_t           ownership
 )
 {
-  pmesh->pn_bound       [bound_type][i_part][i_group] = pn_bound;
-  pmesh->pbound         [bound_type][i_part][i_group] = pbound;
-  pmesh->pbound_ln_to_gn[bound_type][i_part][i_group] = pbound_ln_to_gn;
+  pmesh->pn_bound       [bound_type][i_group][i_part] = pn_bound;
+  pmesh->pbound         [bound_type][i_group][i_part] = pbound;
+  pmesh->pbound_ln_to_gn[bound_type][i_group][i_part] = pbound_ln_to_gn;
 
   if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
     pmesh->is_owner_bound[bound_type] = PDM_FALSE;
@@ -621,9 +621,9 @@ PDM_part_mesh_bound_get
 )
 {
   if(pmesh->pbound[bound_type] != NULL) {
-    *pn_bound        = pmesh->pn_bound       [bound_type][i_part][i_group];
-    *pbound          = pmesh->pbound         [bound_type][i_part][i_group];
-    *pbound_ln_to_gn = pmesh->pbound_ln_to_gn[bound_type][i_part][i_group];
+    *pn_bound        = pmesh->pn_bound       [bound_type][i_group][i_part];
+    *pbound          = pmesh->pbound         [bound_type][i_group][i_part];
+    *pbound_ln_to_gn = pmesh->pbound_ln_to_gn[bound_type][i_group][i_part];
   } else {
     *pn_bound        = 0;
     *pbound          = NULL;
@@ -683,7 +683,7 @@ PDM_part_mesh_bound_concat_compute
 
     _pconcat_bound_idx[0] = 0;
     for(int i_group = 0; i_group < n_group; ++i_group) {
-      _pconcat_bound_idx[i_group+1] = _pconcat_bound_idx[i_group] + pmesh->pn_bound[bound_type][i_part][i_group];
+      _pconcat_bound_idx[i_group+1] = _pconcat_bound_idx[i_group] + pmesh->pn_bound[bound_type][i_group][i_part];
     }
 
     PDM_malloc(pmesh->pconcat_bound         [bound_type][i_part], _pconcat_bound_idx[n_group], int        );
@@ -693,9 +693,9 @@ PDM_part_mesh_bound_concat_compute
 
     for(int i_group = 0; i_group < n_group; ++i_group) {
       int idx_write = _pconcat_bound_idx[i_group];
-      for(int i = 0; i < pmesh->pn_bound[bound_type][i_part][i_group]; ++i) {
-        _pconcat_bound         [idx_write+i] = pmesh->pbound         [bound_type][i_part][i_group][i];
-        _pconcat_bound_ln_to_gn[idx_write+i] = pmesh->pbound_ln_to_gn[bound_type][i_part][i_group][i];
+      for(int i = 0; i < pmesh->pn_bound[bound_type][i_group][i_part]; ++i) {
+        _pconcat_bound         [idx_write+i] = pmesh->pbound         [bound_type][i_group][i_part][i];
+        _pconcat_bound_ln_to_gn[idx_write+i] = pmesh->pbound_ln_to_gn[bound_type][i_group][i_part][i];
       }
     }
     pmesh->is_compute_concat_bound[bound_type] = PDM_TRUE;
@@ -849,16 +849,19 @@ PDM_part_mesh_free
 
     /* Free group */
     for(int i = 0; i < PDM_BOUND_TYPE_MAX; ++i) {
-      if(pmesh->is_owner_bound[i] == PDM_TRUE) {
+      if (pmesh->pn_bound[i] == NULL) {
+        continue;
+      }
+      for(int i_group = 0; i_group < pmesh->n_group_bnd[i]; ++i_group) {
         for(int i_part = 0; i_part < pmesh->n_part; ++i_part) {
-          for(int i_group = 0; i_group < pmesh->n_group_bnd[i]; ++i_group) {
-            PDM_free(pmesh->pbound         [i][i_part][i_group]);
-            PDM_free(pmesh->pbound_ln_to_gn[i][i_part][i_group]);
+          if(pmesh->is_owner_bound[i] == PDM_TRUE) {
+            PDM_free(pmesh->pbound         [i][i_group][i_part]);
+            PDM_free(pmesh->pbound_ln_to_gn[i][i_group][i_part]);
           }
-          PDM_free(pmesh->pn_bound       [i][i_part]);
-          PDM_free(pmesh->pbound         [i][i_part]);
-          PDM_free(pmesh->pbound_ln_to_gn[i][i_part]);
         }
+        PDM_free(pmesh->pn_bound       [i][i_group]);
+        PDM_free(pmesh->pbound         [i][i_group]);
+        PDM_free(pmesh->pbound_ln_to_gn[i][i_group]);
       }
       PDM_free(pmesh->pn_bound       [i]);
       PDM_free(pmesh->pbound         [i]);
@@ -875,8 +878,8 @@ PDM_part_mesh_free
           PDM_free(pmesh->pconcat_bound_ln_to_gn[i][i_part]);
         }
       }
-      PDM_free(pmesh->pconcat_bound_idx[i]);
-      PDM_free(pmesh->pconcat_bound[i]);
+      PDM_free(pmesh->pconcat_bound_idx     [i]);
+      PDM_free(pmesh->pconcat_bound         [i]);
       PDM_free(pmesh->pconcat_bound_ln_to_gn[i]);
     }
 
