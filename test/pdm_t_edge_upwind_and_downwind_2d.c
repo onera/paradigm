@@ -432,7 +432,7 @@ int main(int argc, char *argv[])
                                   pts_intersect,
                                   NULL,
                                   NULL);
-
+        PDM_free(pts_intersect);
 
 
       }
