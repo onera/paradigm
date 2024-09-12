@@ -50,6 +50,14 @@ extern "C" {
  * Macro definitions
  *============================================================================*/
 
+#define PDM_ISOSURFACE_CHECK_ENTRY_MESH_COHERENCE(isos, entry_type) \
+  if ((isos)->entry_mesh_type==0) { \
+    (isos)->entry_mesh_type=(entry_type); \
+  } \
+  else if ((isos)->entry_mesh_type!=(entry_type)) { \
+    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t:entry_mesh_type already set to %d.\n", (isos)->entry_mesh_type); \
+  }
+
 #define PDM_ISOSURFACE_CHECK_ID(isos, id_isosurface) \
   if ((id_isosurface) >= (isos)->n_isosurface) { \
     PDM_error(__FILE__, __LINE__, 0, "Invalid id_isosurface %d (n_isosurface = %d).\n", (id_isosurface), (isos)->n_isosurface); \

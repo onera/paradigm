@@ -42,6 +42,17 @@ extern "C" {
 #endif /* __cplusplus */
 
 /*=============================================================================
+ * Macro definitions
+ *============================================================================*/
+
+#define CHECK_IS_NOT_DIST(isos) \
+  if ((isos)->entry_is_part==-1) { \
+    (isos)->entry_is_part=1; \
+  } \
+  else if ((isos)->entry_is_part==0) { \
+    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t already set as distributed.\n"); \
+  }
+/*=============================================================================
  * Local structure definitions
  *============================================================================*/
 
@@ -52,22 +63,6 @@ extern "C" {
 /*=============================================================================
  * Private function definitions
  *============================================================================*/
-
-
-static void
-_check_is_not_dist
-(
- PDM_isosurface_t *isos
-)
-{
-  if (isos->entry_is_part==-1) {
-    isos->entry_is_part=1;
-  }
-  else if (isos->entry_is_part==0) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t already set as distributed.\n");
-  }
-}
-
 
 /*=============================================================================
  * Public function definitions
@@ -81,8 +76,8 @@ PDM_isosurface_n_part_set
  int               n_part
 )
 {
-  _check_is_not_dist(isos);
-  _check_entry_mesh_coherence(isos, -1);
+  CHECK_IS_NOT_DIST(isos);
+  PDM_ISOSURFACE_CHECK_ENTRY_MESH_COHERENCE(isos, -1);
 
   isos->n_part = n_part;
   isos->n_cell = PDM_array_const_int(n_part, -1);
@@ -143,8 +138,8 @@ PDM_isosurface_connectivity_set
    * TODO: transform connectivity as pmesh or not ? 
    */
 
-  _check_is_not_dist(isos);
-  _check_entry_mesh_coherence(isos, -1);
+  CHECK_IS_NOT_DIST(isos);
+  PDM_ISOSURFACE_CHECK_ENTRY_MESH_COHERENCE(isos, -1);
 
   switch (connectivity_type) {
     case PDM_CONNECTIVITY_TYPE_CELL_FACE:
@@ -177,8 +172,8 @@ PDM_isosurface_vtx_coord_set
  double           *vtx_coord
 )
 {
-  _check_is_not_dist(isos);
-  _check_entry_mesh_coherence(isos, -1);
+  CHECK_IS_NOT_DIST(isos);
+  PDM_ISOSURFACE_CHECK_ENTRY_MESH_COHERENCE(isos, -1);
   
   isos->vtx_coord[i_part] = vtx_coord;
 }
@@ -194,8 +189,8 @@ PDM_isosurface_ln_to_gn_set
  PDM_g_num_t         *ln_to_gn
 )
 {
-  _check_is_not_dist(isos);
-  _check_entry_mesh_coherence(isos, -1);
+  CHECK_IS_NOT_DIST(isos);
+  PDM_ISOSURFACE_CHECK_ENTRY_MESH_COHERENCE(isos, -1);
   
   switch (entity_type) {
     case PDM_MESH_ENTITY_CELL:
@@ -233,8 +228,8 @@ PDM_isosurface_group_set
  PDM_g_num_t         *group_entity_ln_to_gn
 )
 {
-  _check_is_not_dist(isos);
-  _check_entry_mesh_coherence(isos, -1);
+  CHECK_IS_NOT_DIST(isos);
+  PDM_ISOSURFACE_CHECK_ENTRY_MESH_COHERENCE(isos, -1);
 
   switch (entity_type) {
     case PDM_MESH_ENTITY_FACE:
@@ -267,8 +262,8 @@ PDM_isosurface_part_mesh_set
  PDM_part_mesh_t  *pmesh
 )
 {
-  _check_is_not_dist(isos);
-  _check_entry_mesh_coherence(isos, -2);
+  CHECK_IS_NOT_DIST(isos);
+  PDM_ISOSURFACE_CHECK_ENTRY_MESH_COHERENCE(isos, -2);
   
   /**
    * TODO: add check on entry pmesh to be sure that all required data are in. 
@@ -380,8 +375,8 @@ PDM_isosurface_mesh_nodal_set
  PDM_part_mesh_nodal_t *pmn
 )
 {
-  _check_is_not_dist(isos);
-  _check_entry_mesh_coherence(isos, -3);
+  CHECK_IS_NOT_DIST(isos);
+  PDM_ISOSURFACE_CHECK_ENTRY_MESH_COHERENCE(isos, -3);
   
   /**
    * TODO: add check on entry pmesh_nodal to be sure that all required data are in. 
@@ -400,7 +395,7 @@ PDM_isosurface_redistribution_set
  PDM_split_dual_t         part_method
 )
 {
-  _check_is_not_dist(isos);
+  CHECK_IS_NOT_DIST(isos);
  
   isos->extract_kind = extract_kind;
   isos->part_method  = part_method;
@@ -416,7 +411,7 @@ PDM_isosurface_field_set
  double           *field
 )
 {
-  _check_is_not_dist(isos);
+  CHECK_IS_NOT_DIST(isos);
   
   PDM_ISOSURFACE_CHECK_ID(isos, id_isosurface);
 
@@ -446,7 +441,7 @@ PDM_isosurface_gradient_set
  double           *gradient
 )
 {
-  _check_is_not_dist(isos);
+  CHECK_IS_NOT_DIST(isos);
   
   PDM_ISOSURFACE_CHECK_ID(isos, id_isosurface);
 
@@ -489,7 +484,7 @@ PDM_isosurface_local_parent_get
 )
 {
   // TODO: how to do in parallel for iso entities on entities between partition
-  _check_is_not_dist(isos);
+  CHECK_IS_NOT_DIST(isos);
 
   PDM_ISOSURFACE_CHECK_ID      (isos, id_isosurface);
   PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_isosurface);
@@ -523,7 +518,7 @@ PDM_isosurface_vtx_parent_weight_get
   PDM_ownership_t    ownership
 )
 {
-  _check_is_not_dist(isos);
+  CHECK_IS_NOT_DIST(isos);
 
   PDM_ISOSURFACE_CHECK_ID      (isos, id_isosurface);
   PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_isosurface);
@@ -552,7 +547,7 @@ PDM_isosurface_connectivity_get
  PDM_ownership_t           ownership
 )
 {
-  _check_is_not_dist(isos);
+  CHECK_IS_NOT_DIST(isos);
 
   PDM_ISOSURFACE_CHECK_ID      (isos, id_isosurface);
   PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_isosurface);
@@ -595,7 +590,7 @@ PDM_isosurface_vtx_coord_get
  PDM_ownership_t    ownership
 )
 {
-  _check_is_not_dist(isos);
+  CHECK_IS_NOT_DIST(isos);
 
   PDM_ISOSURFACE_CHECK_ID      (isos, id_isosurface);
   PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_isosurface);
@@ -621,7 +616,7 @@ PDM_isosurface_ln_to_gn_get
  PDM_ownership_t       ownership
 )
 {
-  _check_is_not_dist(isos);
+  CHECK_IS_NOT_DIST(isos);
 
   PDM_ISOSURFACE_CHECK_ID      (isos, id_isosurface);
   PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_isosurface);
@@ -651,7 +646,7 @@ PDM_isosurface_group_get
   PDM_ownership_t       ownership
 )
 {
-  _check_is_not_dist(isos);
+  CHECK_IS_NOT_DIST(isos);
 
   PDM_ISOSURFACE_CHECK_ID      (isos, id_isosurface);
   PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_isosurface);
@@ -690,7 +685,7 @@ PDM_isosurface_enable_part_to_part
    *  - unify_parent_info : allow demanding user to ask to get all parent over all procs (not urgent)
    *      - build additional ptp to get info
    */
-  _check_is_not_dist(isos);
+  CHECK_IS_NOT_DIST(isos);
   PDM_ISOSURFACE_CHECK_ID(isos, id_isosurface);
 
   if (unify_parent_info!=0) {
@@ -716,7 +711,7 @@ PDM_isosurface_part_to_part_get
  PDM_ownership_t       ownership
 )
 {
-  _check_is_not_dist(isos);
+  CHECK_IS_NOT_DIST(isos);
 
   PDM_ISOSURFACE_CHECK_ID      (isos, id_isosurface);
   PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_isosurface);
@@ -746,7 +741,7 @@ PDM_isosurface_isovalue_entity_idx_get
  PDM_ownership_t       ownership
  )
 {
-  _check_is_not_dist(isos);
+  CHECK_IS_NOT_DIST(isos);
   PDM_ISOSURFACE_CHECK_ID      (isos, id_isosurface);
   PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_isosurface);
 
@@ -761,6 +756,7 @@ PDM_isosurface_isovalue_entity_idx_get
   return isos->n_isovalues[id_isosurface];
 }
 
+#undef CHECK_IS_NOT_DIST
 
 #ifdef  __cplusplus
 }

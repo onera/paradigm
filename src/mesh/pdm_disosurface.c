@@ -41,6 +41,18 @@ extern "C" {
 #endif /* __cplusplus */
 
 /*=============================================================================
+ * Macro definitions
+ *============================================================================*/
+
+#define CHECK_IS_NOT_PART(isos) \
+  if ((isos)->entry_is_part==-1) { \
+    (isos)->entry_is_part=0; \
+  } \
+  else if ((isos)->entry_is_part==1) { \
+    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t already set as partitioned.\n"); \
+  }
+
+/*=============================================================================
  * Local structure definitions
  *============================================================================*/
 
@@ -51,21 +63,6 @@ extern "C" {
 /*=============================================================================
  * Private function definitions
  *============================================================================*/
-
-
-static void
-_check_is_not_part
-(
- PDM_isosurface_t *isos
-)
-{
-  if (isos->entry_is_part==-1) {
-    isos->entry_is_part=0;
-  }
-  else if (isos->entry_is_part==1) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t already set as partitioned.\n");
-  }
-}
 
 
 /*=============================================================================
@@ -86,8 +83,8 @@ PDM_isosurface_dconnectivity_set
    * TODO: transform connectivity as dmesh or not ? 
    */
 
-  _check_is_not_part(isos);
-  _check_entry_mesh_coherence(isos, 1);
+  CHECK_IS_NOT_PART(isos);
+  PDM_ISOSURFACE_CHECK_ENTRY_MESH_COHERENCE(isos, 1);
 
   switch (connectivity_type) {
     case PDM_CONNECTIVITY_TYPE_CELL_FACE:
@@ -119,8 +116,8 @@ PDM_isosurface_dvtx_coord_set
  double           *dvtx_coord
 )
 {
-  _check_is_not_part(isos);
-  _check_entry_mesh_coherence(isos, 1);
+  CHECK_IS_NOT_PART(isos);
+  PDM_ISOSURFACE_CHECK_ENTRY_MESH_COHERENCE(isos, 1);
   
   isos->dvtx_coord = dvtx_coord;
 }
@@ -134,8 +131,8 @@ PDM_isosurface_distrib_set
  PDM_g_num_t         *distrib
 )
 {
-  _check_is_not_part(isos);
-  _check_entry_mesh_coherence(isos, 1);
+  CHECK_IS_NOT_PART(isos);
+  PDM_ISOSURFACE_CHECK_ENTRY_MESH_COHERENCE(isos, 1);
 
   switch (entity_type) {
     case PDM_MESH_ENTITY_CELL:
@@ -167,8 +164,8 @@ PDM_isosurface_dgroup_set
  PDM_g_num_t         *dgroup_entity
 )
 {
-  _check_is_not_part(isos);
-  _check_entry_mesh_coherence(isos, 1);
+  CHECK_IS_NOT_PART(isos);
+  PDM_ISOSURFACE_CHECK_ENTRY_MESH_COHERENCE(isos, 1);
   
   switch (entity_type) {
     case PDM_MESH_ENTITY_FACE:
@@ -200,8 +197,8 @@ PDM_isosurface_dmesh_set
  PDM_dmesh_t      *dmesh
 )
 {
-  _check_is_not_part(isos);
-  _check_entry_mesh_coherence(isos, 2);
+  CHECK_IS_NOT_PART(isos);
+  PDM_ISOSURFACE_CHECK_ENTRY_MESH_COHERENCE(isos, 2);
  
   /**
    * TODO: add check on entry dmesh to be sure that all required data are in. 
@@ -296,8 +293,8 @@ PDM_isosurface_dmesh_nodal_set
  PDM_dmesh_nodal_t *dmn
 )
 {
-  _check_is_not_part(isos);
-  _check_entry_mesh_coherence(isos, 3);
+  CHECK_IS_NOT_PART(isos);
+  PDM_ISOSURFACE_CHECK_ENTRY_MESH_COHERENCE(isos, 3);
   
   /**
    * TODO: add check on entry dmesh_nodal to be sure that all required data are in. 
@@ -315,7 +312,7 @@ PDM_isosurface_dfield_set
  double           *dfield
 )
 {
-  _check_is_not_part(isos);
+  CHECK_IS_NOT_PART(isos);
 
   PDM_ISOSURFACE_CHECK_ID(isos, id_isosurface);
 
@@ -331,7 +328,7 @@ PDM_isosurface_dgradient_set
  double           *dgradient
 )
 {
-  _check_is_not_part(isos);
+  CHECK_IS_NOT_PART(isos);
 
   PDM_ISOSURFACE_CHECK_ID(isos, id_isosurface);
  
@@ -349,7 +346,7 @@ PDM_isosurface_dconnectivity_get
   PDM_ownership_t           ownership
 )
 {
-  _check_is_not_part(isos);
+  CHECK_IS_NOT_PART(isos);
 
   PDM_ISOSURFACE_CHECK_ID      (isos, id_iso);
   PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_iso);
@@ -390,7 +387,7 @@ PDM_isosurface_parent_gnum_get
   PDM_ownership_t       ownership
 )
 {
-  _check_is_not_part(isos);
+  CHECK_IS_NOT_PART(isos);
 
   PDM_ISOSURFACE_CHECK_ID      (isos, id_iso);
   PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_iso);
@@ -422,7 +419,7 @@ PDM_isosurface_dvtx_parent_weight_get
   PDM_ownership_t       ownership
 )
 {
-  _check_is_not_part(isos);
+  CHECK_IS_NOT_PART(isos);
 
   PDM_ISOSURFACE_CHECK_ID      (isos, id_iso);
   PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_iso);
@@ -460,7 +457,7 @@ PDM_isosurface_dvtx_coord_get
   PDM_ownership_t    ownership
 )
 {
-  _check_is_not_part(isos);
+  CHECK_IS_NOT_PART(isos);
 
   PDM_ISOSURFACE_CHECK_ID      (isos, id_iso);
   PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_iso);
@@ -484,7 +481,7 @@ PDM_isosurface_distrib_get
   PDM_g_num_t         **distribution
 )
 {
-  _check_is_not_part(isos);
+  CHECK_IS_NOT_PART(isos);
 
   PDM_ISOSURFACE_CHECK_ID      (isos, id_iso);
   PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_iso);
@@ -506,7 +503,7 @@ PDM_isosurface_dgroup_get
   PDM_ownership_t       ownership
 )
 {
-  _check_is_not_part(isos);
+  CHECK_IS_NOT_PART(isos);
 
   PDM_ISOSURFACE_CHECK_ID      (isos, id_iso);
   PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_iso);
@@ -529,6 +526,9 @@ PDM_isosurface_dgroup_get
 
   return n_group;
 }
+
+
+#undef CHECK_IS_NOT_PART
 
 
 #ifdef  __cplusplus
