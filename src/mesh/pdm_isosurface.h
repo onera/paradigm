@@ -81,17 +81,6 @@ typedef _pdm_isosurface_field_function_t PDM_isosurface_field_function_t;
  * Public function prototypes
  *============================================================================*/
 
-/**
- * TODO: comment la rendre privée ?
- */
-void
-_check_entry_mesh_coherence
-(
- PDM_isosurface_t *isos,
- int               entry_mesh_type
-);
-
-
 
 /**
  * \brief Create a \ref PDM_isosurface_t instance

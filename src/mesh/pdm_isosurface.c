@@ -2183,22 +2183,6 @@ _assert_isovalues_not_to_close
  *============================================================================*/
 
 
-void
-_check_entry_mesh_coherence
-(
- PDM_isosurface_t *isos,
- int               entry_mesh_type
-)
-{
-  if (isos->entry_mesh_type==0) {
-    isos->entry_mesh_type=entry_mesh_type;
-  }
-  else if (isos->entry_mesh_type!=entry_mesh_type) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t:entry_mesh_type already set to %d.\n", isos->entry_mesh_type);
-  }
-}
-
-
 PDM_isosurface_t *
 PDM_isosurface_create
 (
