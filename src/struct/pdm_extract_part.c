@@ -481,10 +481,12 @@ _extract_part_group
   assert(extrp->pextract_group_entity_ln_to_gn       [bound_type] == NULL);
   assert(extrp->pextract_group_entity_parent_ln_to_gn[bound_type] == NULL);
   assert(extrp->group_array_ownership                [bound_type] == NULL);
+  assert(extrp->group_parent_ownership               [bound_type] == NULL);
 
   PDM_malloc(extrp->ptp_group_entity      [bound_type], n_group, PDM_part_to_part_t *);
   PDM_malloc(extrp->ptp_group_ownership   [bound_type], n_group, PDM_ownership_t     );
   PDM_malloc(extrp->group_array_ownership [bound_type], n_group, PDM_ownership_t     );
+  PDM_malloc(extrp->group_parent_ownership[bound_type], n_group, PDM_ownership_t     );
 
   /* Create all ptp */
   for(int i_group = 0; i_group < n_group; ++i_group) {
@@ -549,6 +551,7 @@ _extract_part_group
 
     extrp->ptp_group_ownership   [bound_type][i_group] = PDM_OWNERSHIP_KEEP;
     extrp->group_array_ownership [bound_type][i_group] = PDM_OWNERSHIP_KEEP;
+    extrp->group_parent_ownership[bound_type][i_group] = PDM_OWNERSHIP_KEEP;
     extrp->ptp_group_entity      [bound_type][i_group] = ptp_group;
   }
 
@@ -2896,6 +2899,7 @@ _extract_part
     PDM_malloc(extrp->pextract_group_entity_ln_to_gn       [i_bound], extrp->n_group[i_bound], PDM_g_num_t     **);
     PDM_malloc(extrp->pextract_group_entity_parent_ln_to_gn[i_bound], extrp->n_group[i_bound], PDM_g_num_t     **);
     PDM_malloc(extrp->group_array_ownership                [i_bound], extrp->n_group[i_bound], PDM_ownership_t   );
+    PDM_malloc(extrp->group_parent_ownership               [i_bound], extrp->n_group[i_bound], PDM_ownership_t   );
 
     for (int i_group = 0; i_group < extrp->n_group[i_bound]; i_group++) {
 
@@ -2904,7 +2908,8 @@ _extract_part
       PDM_malloc(extrp->pextract_group_entity_ln_to_gn       [i_bound][i_group], extrp->n_part_in, PDM_g_num_t *);
       PDM_malloc(extrp->pextract_group_entity_parent_ln_to_gn[i_bound][i_group], extrp->n_part_in, PDM_g_num_t *);
 
-      extrp->group_array_ownership[i_bound][i_group] = PDM_OWNERSHIP_KEEP;
+      extrp->group_array_ownership [i_bound][i_group] = PDM_OWNERSHIP_KEEP;
+      extrp->group_parent_ownership[i_bound][i_group] = PDM_OWNERSHIP_KEEP;
 
       for (int i_part = 0; i_part < extrp->n_part_in; i_part++) {
 
@@ -6560,6 +6565,7 @@ PDM_extract_part_create
     extrp->ptp_group_entity                     [i] = NULL;
     extrp->ptp_group_ownership                  [i] = NULL;
     extrp->group_array_ownership                [i] = NULL;
+    extrp->group_parent_ownership               [i] = NULL;
     extrp->pn_extract_group_entity              [i] = NULL;
     extrp->pextract_group_entity                [i] = NULL;
     extrp->pextract_group_entity_ln_to_gn       [i] = NULL;
@@ -7396,6 +7402,10 @@ PDM_extract_part_partial_free
           for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
             PDM_free(extrp->pextract_group_entity                [i][i_group][i_part]);
             PDM_free(extrp->pextract_group_entity_ln_to_gn       [i][i_group][i_part]);
+          }
+        }
+        if(extrp->group_parent_ownership[i][i_group] == PDM_OWNERSHIP_KEEP) {
+          for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
             PDM_free(extrp->pextract_group_entity_parent_ln_to_gn[i][i_group][i_part]);
           }
         }
@@ -7413,6 +7423,7 @@ PDM_extract_part_partial_free
     PDM_free(extrp->ptp_group_entity      [i]);
     PDM_free(extrp->ptp_group_ownership   [i]);
     PDM_free(extrp->group_array_ownership [i]);
+    PDM_free(extrp->group_parent_ownership[i]);
   }
 
   if(extrp->is_owner_extract_pmne == PDM_TRUE && extrp->extract_pmne != NULL) {
@@ -7526,7 +7537,8 @@ PDM_extract_part_group_get
   *pextract_group_entity_parent_ln_to_gn = extrp->pextract_group_entity_parent_ln_to_gn[bound_type][i_group][i_part];
 
   if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
-    extrp->group_array_ownership[bound_type][i_group] = ownership;
+    extrp->group_array_ownership [bound_type][i_group] = ownership;
+    extrp->group_parent_ownership[bound_type][i_group] = ownership;
   }
 
 }
@@ -7573,6 +7585,124 @@ PDM_extract_part_renum_method_set
 
   extrp->renum_method           [mesh_entity] = method_renum_id;
   extrp->renum_method_properties[mesh_entity] = renum_entity_properties;
+}
+
+
+void
+PDM_extract_part_extract_part_mesh_get
+(
+ PDM_extract_part_t  *extrp,
+ PDM_part_mesh_t    **pmesh,
+ PDM_bool_t           pmesh_takes_ownership
+)
+{
+  *pmesh = PDM_part_mesh_create(extrp->n_part_out, extrp->comm);
+
+  PDM_ownership_t ownership_pmesh = PDM_OWNERSHIP_USER;
+  if (pmesh_takes_ownership == PDM_TRUE) {
+    ownership_pmesh = PDM_OWNERSHIP_KEEP;
+  }
+
+  // Number of groups
+  for (PDM_bound_type_t bound_type = 0; bound_type < PDM_BOUND_TYPE_MAX; bound_type++) {
+    PDM_part_mesh_n_bound_set(*pmesh, bound_type, extrp->n_group[bound_type]);
+  }
+
+
+
+  for (int i_part = 0; i_part < extrp->n_part_out; i_part++) {
+
+    /* Mesh entities */
+    // Vertex coordinates
+    if (extrp->pextract_vtx_coord != NULL) {
+      if (pmesh_takes_ownership == PDM_TRUE) {
+        extrp->is_owner_vtx_coord = PDM_FALSE;
+      }
+
+      PDM_part_mesh_vtx_coord_set(*pmesh,
+                                  i_part,
+                                  extrp->pextract_vtx_coord[i_part],
+                                  ownership_pmesh);
+    }
+
+    for (PDM_mesh_entities_t entity_type = 0; entity_type < PDM_MESH_ENTITY_MAX; entity_type++) {
+
+      // Number of entities
+      if (extrp->pextract_n_entity[entity_type] != NULL) {
+        PDM_part_mesh_n_entity_set(*pmesh,
+                                   i_part,
+                                   entity_type,
+                                   extrp->pextract_n_entity[entity_type][i_part]);
+      }
+
+      // Global IDs
+      if (extrp->pextract_entity_ln_to_gn[entity_type] != NULL) {
+        if (pmesh_takes_ownership == PDM_TRUE) {
+          extrp->is_owner_ln_to_gn[entity_type] = PDM_FALSE;
+        }
+        PDM_part_mesh_entity_ln_to_gn_set(*pmesh,
+                                          i_part,
+                                          entity_type,
+                                          extrp->pextract_entity_ln_to_gn[entity_type][i_part],
+                                          ownership_pmesh);
+      }
+
+      // Color
+      if (extrp->pextract_entity_color[entity_type] != NULL) {
+        if (pmesh_takes_ownership == PDM_TRUE) {
+          extrp->is_owner_color[entity_type] = PDM_FALSE;
+        }
+        PDM_part_mesh_entity_color_set(*pmesh,
+                                       i_part,
+                                       entity_type,
+                                       extrp->pextract_entity_color[entity_type][i_part],
+                                       ownership_pmesh);
+      }
+
+    } // End loop on entity_type
+
+
+    /* Connectivities */
+    for (PDM_connectivity_type_t connectivity_type = 0; connectivity_type < PDM_CONNECTIVITY_TYPE_MAX; connectivity_type++) {
+
+      if (extrp->pextract_connectivity[connectivity_type] != NULL) {
+        if (pmesh_takes_ownership == PDM_TRUE) {
+          extrp->is_owner_connectivity[connectivity_type] = PDM_FALSE;
+        }
+        PDM_part_mesh_connectivity_set(*pmesh,
+                                       i_part,
+                                       connectivity_type,
+                                       extrp->pextract_connectivity    [connectivity_type][i_part],
+                                       extrp->pextract_connectivity_idx[connectivity_type][i_part],
+                                       ownership_pmesh);
+      }
+
+    } // End loop on connectivity_type
+
+
+    /* Groups */
+    for (PDM_bound_type_t bound_type = 0; bound_type < PDM_BOUND_TYPE_MAX; bound_type++) {
+
+      if (extrp->pn_extract_group_entity[bound_type] != NULL) {
+        for (int i_group = 0; i_group < extrp->n_group[bound_type]; i_group++) {
+          if (pmesh_takes_ownership == PDM_TRUE) {
+            extrp->group_array_ownership[bound_type][i_group] = PDM_OWNERSHIP_USER;
+          }
+          PDM_part_mesh_bound_set(*pmesh,
+                                  i_part,
+                                  i_group,
+                                  bound_type,
+                                  extrp->pn_extract_group_entity       [bound_type][i_group][i_part],
+                                  extrp->pextract_group_entity         [bound_type][i_group][i_part],
+                                  extrp->pextract_group_entity_ln_to_gn[bound_type][i_group][i_part],
+                                  ownership_pmesh);
+        }
+      }
+
+    } // End loop on bound_type
+
+
+  } // End loop on parts
 }
 
 

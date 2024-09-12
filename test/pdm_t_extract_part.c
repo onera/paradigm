@@ -33,6 +33,7 @@
 #include "pdm_part_geom.h"
 #include "pdm_logging.h"
 #include "pdm_priv.h"
+#include "pdm_part_mesh.h"
 
 /*============================================================================
  * Type definitions
@@ -820,6 +821,22 @@ int main(int argc, char *argv[])
   PDM_free(pextract_face_ln_to_gn);
   PDM_free(pextract_vtx_ln_to_gn );
 
+  // Test output as part_mesh
+  PDM_part_mesh_t *pmesh = NULL;
+  PDM_bool_t pmesh_takes_ownership = PDM_FALSE;
+  PDM_extract_part_extract_part_mesh_get(extrp,
+                                         &pmesh,
+                                         pmesh_takes_ownership);
+
+  PDM_part_mesh_free(pmesh);
+
+  pmesh_takes_ownership = PDM_TRUE;
+  PDM_extract_part_extract_part_mesh_get(extrp,
+                                         &pmesh,
+                                         pmesh_takes_ownership);
+
+  PDM_part_mesh_free(pmesh);
+
   PDM_extract_part_free(extrp);
 
 
@@ -836,9 +853,9 @@ int main(int argc, char *argv[])
   PDM_free(pn_vtx);
   PDM_free(pn_select_cell);
 
-  PDM_free(pcell_ln_to_gn  );
-  PDM_free(pface_ln_to_gn  );
-  PDM_free(pvtx_ln_to_gn  );
+  PDM_free(pcell_ln_to_gn);
+  PDM_free(pface_ln_to_gn);
+  PDM_free(pvtx_ln_to_gn );
   PDM_free(pcell_face    );
   PDM_free(pcell_face_idx);
   PDM_free(pface_vtx     );

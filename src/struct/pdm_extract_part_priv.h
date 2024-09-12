@@ -161,6 +161,7 @@ struct _pdm_extract_part_t
   PDM_g_num_t        ***pextract_group_entity_ln_to_gn       [PDM_BOUND_TYPE_MAX];
   PDM_g_num_t        ***pextract_group_entity_parent_ln_to_gn[PDM_BOUND_TYPE_MAX];
   PDM_ownership_t      *group_array_ownership                [PDM_BOUND_TYPE_MAX];
+  PDM_ownership_t      *group_parent_ownership               [PDM_BOUND_TYPE_MAX];
 
 };
 

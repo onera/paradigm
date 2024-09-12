@@ -34,6 +34,7 @@
 #include "pdm_part_to_part.h"
 #include "pdm_part_mesh_nodal_elmts.h"
 #include "pdm_part_mesh_nodal.h"
+#include "pdm_part_mesh.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -541,6 +542,23 @@ PDM_extract_part_renum_method_set
  const int           *renum_entity_properties
 );
 
+
+/**
+ *
+ * \brief Get the extracted mesh as a \ref PDM_part_mesh_t instance
+ *
+ * \param [in]   extrp                   Pointer to \ref PDM_extract_part_t object
+ * \param [out]  pmesh                   Pointer to \ref PDM_part_mesh_t object
+ * \param [in]   pmesh_takes_ownership   Whether ownerhip is transferred to \p pmesh
+ *
+ */
+void
+PDM_extract_part_extract_part_mesh_get
+(
+ PDM_extract_part_t  *extrp,
+ PDM_part_mesh_t    **pmesh,
+ PDM_bool_t           pmesh_takes_ownership
+);
 
 
 /*----------------------------------------------------------------------------*/
