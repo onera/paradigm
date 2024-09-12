@@ -242,17 +242,6 @@ PDM_part_mesh_create
   PDM_MPI_Allreduce(&pmesh->n_part, &tn_part, 1, PDM_MPI_INT, PDM_MPI_SUM, comm);
   pmesh->tn_part = tn_part;
 
-  PDM_malloc(pmesh->pconnectivity,     PDM_CONNECTIVITY_TYPE_MAX, int         **);
-  PDM_malloc(pmesh->pconnectivity_idx, PDM_CONNECTIVITY_TYPE_MAX, int         **);
-  PDM_malloc(pmesh->pentity_ln_to_gn,  PDM_MESH_ENTITY_MAX      , PDM_g_num_t **);
-  PDM_malloc(pmesh->pentity_color,     PDM_MESH_ENTITY_MAX      , int         **);
-  PDM_malloc(pmesh->pn_entity,         PDM_MESH_ENTITY_MAX      , int          *);
-
-
-  PDM_malloc(pmesh->is_owner_connectivity, PDM_CONNECTIVITY_TYPE_MAX, PDM_bool_t);
-  PDM_malloc(pmesh->is_owner_ln_to_gn,     PDM_MESH_ENTITY_MAX      , PDM_bool_t);
-  PDM_malloc(pmesh->is_owner_color,        PDM_MESH_ENTITY_MAX      , PDM_bool_t);
-
   for(int i = 0; i < PDM_CONNECTIVITY_TYPE_MAX; ++i) {
     pmesh->is_owner_connectivity[i] = PDM_FALSE;
     pmesh->pconnectivity        [i] = NULL;
@@ -267,12 +256,7 @@ PDM_part_mesh_create
     pmesh->pn_entity        [i] = NULL;
   }
 
-  PDM_malloc(pmesh->pn_bound,        PDM_BOUND_TYPE_MAX, int          **);
-  PDM_malloc(pmesh->pbound,          PDM_BOUND_TYPE_MAX, int         ***);
-  PDM_malloc(pmesh->pbound_ln_to_gn, PDM_BOUND_TYPE_MAX, PDM_g_num_t ***);
-  PDM_malloc(pmesh->is_owner_bound,  PDM_BOUND_TYPE_MAX, PDM_bool_t     );
-
-  for(int i = 0; i < PDM_BOUND_TYPE_MAX; ++i ) {
+  for(int i = 0; i < PDM_BOUND_TYPE_MAX; ++i) {
     pmesh->n_group_bnd[i] = 0;
   }
 
@@ -289,11 +273,6 @@ PDM_part_mesh_create
     }
   }
 
-  PDM_malloc(pmesh->pconcat_bound_idx,       PDM_BOUND_TYPE_MAX, int         **);
-  PDM_malloc(pmesh->pconcat_bound,           PDM_BOUND_TYPE_MAX, int         **);
-  PDM_malloc(pmesh->pconcat_bound_ln_to_gn,  PDM_BOUND_TYPE_MAX, PDM_g_num_t **);
-  PDM_malloc(pmesh->is_owner_concat_bound,   PDM_BOUND_TYPE_MAX, PDM_bool_t    );
-  PDM_malloc(pmesh->is_compute_concat_bound, PDM_BOUND_TYPE_MAX, PDM_bool_t    );
   for(int i = 0; i < PDM_BOUND_TYPE_MAX; ++i) {
     pmesh->is_owner_concat_bound  [i] = PDM_FALSE;
     pmesh->is_compute_concat_bound[i] = PDM_FALSE;
@@ -314,11 +293,6 @@ PDM_part_mesh_create
     pmesh->vtx_coords[i_part] = NULL;
   }
   pmesh->is_owner_vtx_coord = PDM_FALSE;
-
-  PDM_malloc(pmesh->ppart_bound_proc_idx, PDM_BOUND_TYPE_MAX, int         **);
-  PDM_malloc(pmesh->ppart_bound_part_idx, PDM_BOUND_TYPE_MAX, int         **);
-  PDM_malloc(pmesh->ppart_bound,          PDM_BOUND_TYPE_MAX, int         **);
-  PDM_malloc(pmesh->is_owner_part_bound,  PDM_BOUND_TYPE_MAX, PDM_bool_t    );
 
   for(int i = 0; i < PDM_BOUND_TYPE_MAX; ++i) {
     pmesh->is_owner_part_bound [i] = PDM_FALSE;
@@ -930,31 +904,6 @@ PDM_part_mesh_free
     for(int i = 0; i < PDM_MESH_ENTITY_MAX; ++i) {
       PDM_free(pmesh->pn_entity[i]);
     }
-
-    PDM_free(pmesh->pn_entity);
-    PDM_free(pmesh->pconnectivity);
-    PDM_free(pmesh->pconnectivity_idx);
-    PDM_free(pmesh->pentity_ln_to_gn);
-    PDM_free(pmesh->pentity_color);
-    PDM_free(pmesh->is_owner_connectivity);
-    PDM_free(pmesh->is_owner_ln_to_gn    );
-    PDM_free(pmesh->is_owner_color       );
-
-    PDM_free(pmesh->pn_bound       );
-    PDM_free(pmesh->pbound         );
-    PDM_free(pmesh->pbound_ln_to_gn);
-    PDM_free(pmesh->is_owner_bound );
-
-    PDM_free(pmesh->pconcat_bound         );
-    PDM_free(pmesh->pconcat_bound_ln_to_gn);
-    PDM_free(pmesh->pconcat_bound_idx);
-    PDM_free(pmesh->is_owner_concat_bound);
-    PDM_free(pmesh->is_compute_concat_bound);
-
-    PDM_free(pmesh->ppart_bound_proc_idx);
-    PDM_free(pmesh->ppart_bound_part_idx);
-    PDM_free(pmesh->ppart_bound         );
-    PDM_free(pmesh->is_owner_part_bound );
 
     PDM_free(pmesh);
   }
