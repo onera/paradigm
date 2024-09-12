@@ -3060,13 +3060,19 @@ PDM_geom_elem_edge_upwind_and_downwind_2d
           double v = 0.;
 
           /* On intersecte la demi-droite orienté avec le segment */
-          PDM_line_intersect_t stat = PDM_ray_segment_intersection_2d(a1, a2, b1, b2, &u, &v);
+          double intersection_coord[3];
+          PDM_line_intersect_t stat = PDM_ray_segment_intersection_2d(a1,
+                                                                      a2,
+                                                                      b1,
+                                                                      b2,
+                                                                      &u,
+                                                                      &v,
+                                                                      intersection_coord);
 
           // printf("DBG : i_edge = %i / idx_vtx = %i / stat = %i with edge_id = %i / face_id = %i \n", iedge, idx_vtx, (int)stat, edge_id, face_id);
           // printf("DBG : (%i/%i) - a1 = (%12.5e/%12.5e) / a2 = (%12.5e/%12.5e) \n", ivtx1, ivtx2, a1[0], a1[1], a2[0], a2[1]);
           // printf("DBG : (%i/%i) - b1 = (%12.5e/%12.5e) / b2 = (%12.5e/%12.5e) \n", t_vtx1, t_vtx2, b1[0], b1[1], b2[0], b2[1]);
 
-          double intersection_coord[3];
           if (stat == PDM_LINE_INTERSECT_YES) {
 
             found[idx_vtx] = 1;

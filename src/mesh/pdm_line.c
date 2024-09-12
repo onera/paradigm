@@ -459,8 +459,9 @@ PDM_ray_segment_intersection_2d
  const double a2[2],
  const double b1[2],
  const double b2[2],
- double *u,
- double *v
+       double *u,
+       double *v,
+       double *intersection_coord
 )
 {
   const double tol_uv = _eps;
@@ -500,7 +501,10 @@ PDM_ray_segment_intersection_2d
 
     // Vérification de la validité de l'intersection
     if (*u >= 0 && *v >= 0 && *v <= 1) {
-        return PDM_LINE_INTERSECT_YES; // Intersection valide
+      for (int i = 0; i < 2; i++) {
+        intersection_coord[i] = a1[i] + (*u) * (a2[i] - a1[i]); // Calcul basé sur la demi-droite
+      }
+      return PDM_LINE_INTERSECT_YES; // Intersection valide
     } else {
         return PDM_LINE_INTERSECT_NO; // L'intersection est en dehors du segment ou de la demi-droite
     }
