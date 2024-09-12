@@ -1102,21 +1102,23 @@ int main
   /*
    *  Compute isosurface
    */
-  for (int i_iso = 0; i_iso < n_iso; i_iso++) {
-    PDM_isosurface_enable_part_to_part(isos,
-                                       i_iso,
-                                       PDM_MESH_ENTITY_VTX,
-                                       0);
+  if (n_part > 0) {
+    for (int i_iso = 0; i_iso < n_iso; i_iso++) {
+      PDM_isosurface_enable_part_to_part(isos,
+                                         i_iso,
+                                         PDM_MESH_ENTITY_VTX,
+                                         0);
 
-    PDM_isosurface_enable_part_to_part(isos,
-                                       i_iso,
-                                       PDM_MESH_ENTITY_EDGE,
-                                       0);
+      PDM_isosurface_enable_part_to_part(isos,
+                                         i_iso,
+                                         PDM_MESH_ENTITY_EDGE,
+                                         0);
 
-    PDM_isosurface_enable_part_to_part(isos,
-                                       i_iso,
-                                       PDM_MESH_ENTITY_FACE,
-                                       0);
+      PDM_isosurface_enable_part_to_part(isos,
+                                         i_iso,
+                                         PDM_MESH_ENTITY_FACE,
+                                         0);
+    }
   }
 
   PDM_isosurface_compute(isos, iso1);

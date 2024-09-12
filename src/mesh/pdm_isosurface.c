@@ -267,6 +267,17 @@ _dist_to_part
     return;
   }
 
+  // We only need to build the block-to-part instance if there is at least
+  // one isosurface from discrete field
+  PDM_bool_t build_btp_vtx = PDM_FALSE;
+  for (int i_iso = 0; isos->n_isosurface; i_iso++) {
+    if (isos->kind[i_iso] == PDM_ISO_SURFACE_KIND_FIELD) {
+      build_btp_vtx = PDM_TRUE;
+      break;
+    }
+  }
+
+
   isos->dist_to_part_computed = 1;
 
   if (isos->entry_is_part != 0) {
@@ -304,19 +315,21 @@ _dist_to_part
     PDM_multipart_free(mpart);
 
     // (Re)create block_to_part for transferring vtx data from block to part (TODO: extract from multipart?)
-    int          n_vtx        = PDM_part_mesh_nodal_n_vtx_get    (isos->pmesh_nodal, 0);
-    PDM_g_num_t *vtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(isos->pmesh_nodal, 0);
+    if (build_btp_vtx) {
+      int          n_vtx        = PDM_part_mesh_nodal_n_vtx_get    (isos->pmesh_nodal, 0);
+      PDM_g_num_t *vtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(isos->pmesh_nodal, 0);
 
-    const PDM_g_num_t *distrib_vtx      = PDM_DMesh_nodal_distrib_vtx_get(isos->dmesh_nodal);
-    const PDM_g_num_t *pvtx_ln_to_gn[1] = {vtx_ln_to_gn};
+      const PDM_g_num_t *distrib_vtx      = PDM_DMesh_nodal_distrib_vtx_get(isos->dmesh_nodal);
+      const PDM_g_num_t *pvtx_ln_to_gn[1] = {vtx_ln_to_gn};
 
-    PDM_block_to_part_t *btp_vtx = PDM_block_to_part_create(distrib_vtx,
-                                                            pvtx_ln_to_gn,
-                                                            &n_vtx,
-                                                            1,
-                                                            isos->comm);
+      PDM_block_to_part_t *btp_vtx = PDM_block_to_part_create(distrib_vtx,
+                                                              pvtx_ln_to_gn,
+                                                              &n_vtx,
+                                                              1,
+                                                              isos->comm);
 
-    isos->btp_vtx = btp_vtx;
+      isos->btp_vtx = btp_vtx;
+    }
   }
 
   else {
@@ -440,8 +453,13 @@ _dist_to_part
                                       &isos->group_face_gnum);
     }
 
-    /* Store in struct */
-    isos->btp_vtx = btp_vtx; // useful to keep for transferring discrete fields
+    if (build_btp_vtx) {
+      /* Store in struct */
+      isos->btp_vtx = btp_vtx; // useful to keep for transferring discrete fields
+    }
+    else {
+      PDM_block_to_part_free(btp_vtx);
+    }
 
     PDM_malloc(isos->n_cell       , 1, int          );
     PDM_malloc(isos->n_face       , 1, int          );
@@ -490,8 +508,16 @@ _compute_iso_field
 {
 
   if (isos->kind[id_isosurface] == PDM_ISO_SURFACE_KIND_FIELD) {
-    if (isos->field[id_isosurface]==NULL) {
-      PDM_error(__FILE__, __LINE__, 0, "Field seems not to be defined for iso with id %d\n", id_isosurface);
+    if (isos->entry_is_part == 1) {
+      if (isos->field[id_isosurface]==NULL) {
+        PDM_error(__FILE__, __LINE__, 0, "Field seems not to be defined for iso with id %d\n", id_isosurface);
+      }
+    }
+    else {
+      assert(isos->entry_is_part == 0);
+      if (isos->dfield[id_isosurface]==NULL) {
+        PDM_error(__FILE__, __LINE__, 0, "Field seems not to be defined for iso with id %d\n", id_isosurface);
+      }
     }
 
     if (use_extract) {
