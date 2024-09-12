@@ -481,12 +481,10 @@ _extract_part_group
   assert(extrp->pextract_group_entity_ln_to_gn       [bound_type] == NULL);
   assert(extrp->pextract_group_entity_parent_ln_to_gn[bound_type] == NULL);
   assert(extrp->group_array_ownership                [bound_type] == NULL);
-  assert(extrp->is_owner_extract_group               [bound_type] == NULL);
 
   PDM_malloc(extrp->ptp_group_entity      [bound_type], n_group, PDM_part_to_part_t *);
   PDM_malloc(extrp->ptp_group_ownership   [bound_type], n_group, PDM_ownership_t     );
   PDM_malloc(extrp->group_array_ownership [bound_type], n_group, PDM_ownership_t     );
-  PDM_malloc(extrp->is_owner_extract_group[bound_type], n_group, PDM_bool_t          );
 
   /* Create all ptp */
   for(int i_group = 0; i_group < n_group; ++i_group) {
@@ -551,7 +549,6 @@ _extract_part_group
 
     extrp->ptp_group_ownership   [bound_type][i_group] = PDM_OWNERSHIP_KEEP;
     extrp->group_array_ownership [bound_type][i_group] = PDM_OWNERSHIP_KEEP;
-    extrp->is_owner_extract_group[bound_type][i_group] = PDM_TRUE;
     extrp->ptp_group_entity      [bound_type][i_group] = ptp_group;
   }
 
@@ -6533,12 +6530,7 @@ PDM_extract_part_create
     extrp->master_entity = PDM_MESH_ENTITY_VTX;
   }
 
-  PDM_malloc(extrp->is_owner_connectivity,    PDM_CONNECTIVITY_TYPE_MAX, PDM_bool_t);
-  PDM_malloc(extrp->is_owner_ln_to_gn,        PDM_MESH_ENTITY_MAX      , PDM_bool_t);
-  PDM_malloc(extrp->is_owner_color,           PDM_MESH_ENTITY_MAX      , PDM_bool_t);
-  PDM_malloc(extrp->is_owner_parent_ln_to_gn, PDM_MESH_ENTITY_MAX      , PDM_bool_t);
-  PDM_malloc(extrp->is_owner_parent_lnum,     PDM_MESH_ENTITY_MAX      , PDM_bool_t);
-  extrp->is_owner_vtx_coord       = PDM_TRUE;
+  extrp->is_owner_vtx_coord = PDM_TRUE;
 
   for(int i = 0; i < PDM_CONNECTIVITY_TYPE_MAX; ++i) {
     extrp->is_owner_connectivity    [i] = PDM_TRUE;
@@ -6572,7 +6564,6 @@ PDM_extract_part_create
     extrp->pextract_group_entity                [i] = NULL;
     extrp->pextract_group_entity_ln_to_gn       [i] = NULL;
     extrp->pextract_group_entity_parent_ln_to_gn[i] = NULL;
-    extrp->is_owner_extract_group               [i] = NULL;
   }
 
   return extrp;
@@ -7274,12 +7265,6 @@ PDM_extract_part_free
    */
   PDM_extract_part_partial_free(extrp);
 
-  PDM_free(extrp->is_owner_connectivity   );
-  PDM_free(extrp->is_owner_ln_to_gn       );
-  PDM_free(extrp->is_owner_color          );
-  PDM_free(extrp->is_owner_parent_ln_to_gn);
-  PDM_free(extrp->is_owner_parent_lnum);
-
   PDM_free(extrp);
 }
 
@@ -7425,7 +7410,6 @@ PDM_extract_part_partial_free
     PDM_free(extrp->pextract_group_entity_ln_to_gn       [i]);
     PDM_free(extrp->pextract_group_entity_parent_ln_to_gn[i]);
 
-    PDM_free(extrp->is_owner_extract_group[i]);
     PDM_free(extrp->ptp_group_entity      [i]);
     PDM_free(extrp->ptp_group_ownership   [i]);
     PDM_free(extrp->group_array_ownership [i]);

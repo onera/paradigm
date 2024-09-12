@@ -122,10 +122,10 @@ struct _pdm_extract_part_t
   /* Extracted part */
   double             **pextract_vtx_coord;
 
-  PDM_bool_t         *is_owner_connectivity;
-  PDM_bool_t         *is_owner_ln_to_gn;
-  PDM_bool_t         *is_owner_parent_ln_to_gn;
-  PDM_bool_t         *is_owner_parent_lnum;
+  PDM_bool_t          is_owner_connectivity   [PDM_CONNECTIVITY_TYPE_MAX];
+  PDM_bool_t          is_owner_ln_to_gn       [PDM_MESH_ENTITY_MAX];
+  PDM_bool_t          is_owner_parent_ln_to_gn[PDM_MESH_ENTITY_MAX];
+  PDM_bool_t          is_owner_parent_lnum    [PDM_MESH_ENTITY_MAX];
   PDM_bool_t          is_owner_vtx_coord;
 
   /* Only for mapping and clear API */
@@ -137,7 +137,7 @@ struct _pdm_extract_part_t
   int               **pextract_entity_parent_lnum    [PDM_MESH_ENTITY_MAX];
 
   // For renumbering
-  PDM_bool_t         *is_owner_color;
+  PDM_bool_t          is_owner_color                 [PDM_MESH_ENTITY_MAX];
   int               **pextract_entity_color          [PDM_MESH_ENTITY_MAX];
   int               **pextract_entity_order          [PDM_MESH_ENTITY_MAX];
 
@@ -161,8 +161,6 @@ struct _pdm_extract_part_t
   PDM_g_num_t        ***pextract_group_entity_ln_to_gn       [PDM_BOUND_TYPE_MAX];
   PDM_g_num_t        ***pextract_group_entity_parent_ln_to_gn[PDM_BOUND_TYPE_MAX];
   PDM_ownership_t      *group_array_ownership                [PDM_BOUND_TYPE_MAX];
-
-  PDM_bool_t           *is_owner_extract_group               [PDM_BOUND_TYPE_MAX];
 
 };
 
