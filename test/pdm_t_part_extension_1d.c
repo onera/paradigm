@@ -314,7 +314,7 @@ _part_extension
                                                                   comm);
 
 
-  if(1 == 1) {
+  if(0 == 1) {
     for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
       int n_triplet = pedge_extented_to_pedge_idx[i_part][ pn_edge_extented[i_part]];
       PDM_log_trace_array_long(pedge_extented_ln_to_gn          [i_part], pn_edge_extented[i_part]  , "pedge_extented_ln_to_gn : ");
@@ -461,7 +461,7 @@ _part_extension
   /*
    * Export vtk
    */
-  if(1 == 1) {
+  if(0 == 1) {
 
     for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
 

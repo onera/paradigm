@@ -65,7 +65,7 @@ _hexa_ngon_to_nodal
  int **cell_vtx
  )
 {
-  int debug = 1;
+  int debug = 0;
 
   PDM_malloc(*cell_vtx, n_cell * 8, int);
 
