@@ -2940,12 +2940,14 @@ _recurse_and_filter
       }
     }
 
-    PDM_log_trace_array_int (_bentity1_entity2_n              , pn_entity1[i_part]    , "_bentity1_entity2_n           ::");
-    PDM_log_trace_array_int (_bentity1_entity2_interface_tot_n, pn_entity1[i_part]    , "_bentity1_entity2_n           ::");
-    PDM_log_trace_array_long(_bentity1_entity2_gnum           , n_entity1_entity2     , "_bentity1_entity2_gnum        ::");
-    PDM_log_trace_array_int (_bentity1_entity2_triplet        , 3 * n_entity1_entity2 , "_bentity1_entity2_gnum        ::");
-    PDM_log_trace_array_int (_bentity1_entity2_interface_n    , n_entity1_entity2     , "_bentity1_entity2_interface_n ::");
-    PDM_log_trace_array_int (_bentity1_entity2_interface      , n_entity1_entity2_itrf, "_bentity1_entity2_interface   ::");
+    if(0 == 1) {
+      PDM_log_trace_array_int (_bentity1_entity2_n              , pn_entity1[i_part]    , "_bentity1_entity2_n           ::");
+      PDM_log_trace_array_int (_bentity1_entity2_interface_tot_n, pn_entity1[i_part]    , "_bentity1_entity2_n           ::");
+      PDM_log_trace_array_long(_bentity1_entity2_gnum           , n_entity1_entity2     , "_bentity1_entity2_gnum        ::");
+      PDM_log_trace_array_int (_bentity1_entity2_triplet        , 3 * n_entity1_entity2 , "_bentity1_entity2_gnum        ::");
+      PDM_log_trace_array_int (_bentity1_entity2_interface_n    , n_entity1_entity2     , "_bentity1_entity2_interface_n ::");
+      PDM_log_trace_array_int (_bentity1_entity2_interface      , n_entity1_entity2_itrf, "_bentity1_entity2_interface   ::");
+    }
   }
 
   /*
@@ -2989,7 +2991,7 @@ _recurse_and_filter
 
   for(int i_step = 0; i_step < 2; ++i_step)  {
 
-    log_trace("------- STEP %i ------- \n", i_step);
+    // log_trace("------- STEP %i ------- \n", i_step);
     /*
      * Il faudrait refaire l'échange qu'on fait en gnum_come_from avec ce layout pour l'appeler en part2
      * On doit avoir le même resultats
@@ -3001,10 +3003,10 @@ _recurse_and_filter
     int         **pnext_bentity1_entity2_interface_tot_n = NULL;
     int         **pnext_bentity1_entity2_interface       = NULL;
 
-    for(int i_part = 0; i_part < n_part_tot; ++i_part) {
-      PDM_log_trace_array_int (bentity1_entity2_n              [i_part], pn_entity1[i_part]    , "bentity1_entity2_n               ::");
-      PDM_log_trace_array_int (bentity1_entity2_interface_tot_n[i_part], pn_entity1[i_part]    , "bentity1_entity2_interface_tot_n ::");
-    }
+    // for(int i_part = 0; i_part < n_part_tot; ++i_part) {
+    //   PDM_log_trace_array_int (bentity1_entity2_n              [i_part], pn_entity1[i_part]    , "bentity1_entity2_n               ::");
+    //   PDM_log_trace_array_int (bentity1_entity2_interface_tot_n[i_part], pn_entity1[i_part]    , "bentity1_entity2_interface_tot_n ::");
+    // }
     exchange_and_concat_part_graph(ptp,
                                    n_part_tot,
                                    pn_entity1,
@@ -3109,14 +3111,15 @@ _recurse_and_filter
       pnext_bentity1_entity2_interface_tot_n[i_part] = NULL;
       pnext_bentity1_entity2_interface      [i_part] = NULL;
 
-
-      _dump_graph_info(pn_entity1[i_part],
-                       prev_concat_bentity1_entity2_n              [i_part],
-                       prev_concat_bentity1_entity2_gnum           [i_part],
-                       prev_concat_bentity1_entity2_triplet        [i_part],
-                       prev_concat_bentity1_entity2_interface_n    [i_part],
-                       prev_concat_bentity1_entity2_interface_tot_n[i_part],
-                       prev_concat_bentity1_entity2_interface      [i_part]);
+      if(1 == 0) {
+        _dump_graph_info(pn_entity1[i_part],
+                         prev_concat_bentity1_entity2_n              [i_part],
+                         prev_concat_bentity1_entity2_gnum           [i_part],
+                         prev_concat_bentity1_entity2_triplet        [i_part],
+                         prev_concat_bentity1_entity2_interface_n    [i_part],
+                         prev_concat_bentity1_entity2_interface_tot_n[i_part],
+                         prev_concat_bentity1_entity2_interface      [i_part]);
+      }
 
     }
 
@@ -4634,7 +4637,7 @@ PDM_part_extension_interface_by_entity1_to_interface_by_entity2
       }
     }
 
-    PDM_log_trace_array_long(_gnum1_com_from_gnum_send, n_send_part2, "_gnum1_com_from_gnum_send ::");
+    // PDM_log_trace_array_long(_gnum1_com_from_gnum_send, n_send_part2, "_gnum1_com_from_gnum_send ::");
 
 
   }
@@ -4677,7 +4680,7 @@ PDM_part_extension_interface_by_entity1_to_interface_by_entity2
   }
 
 
-  if(1 == 1) { // Usefull to know how many data is transfer
+  if(0 == 1) { // Usefull to know how many data is transfer
     for(int i_part = 0; i_part < n_part_tot; ++i_part) {
 
       int n_triplet = part1_to_part2_idx[i_part][pn_entity1[i_part]];
@@ -6126,7 +6129,7 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
   PDM_MPI_Comm                    comm
 )
 {
-  log_trace("---  PDM_part_extension_pconnectivity_to_extented_pconnectivity --- \n");
+  // log_trace("---  PDM_part_extension_pconnectivity_to_extented_pconnectivity --- \n");
 
   // Maybe supoose on entry already concat domain in part and juste give shift ?
   PDM_UNUSED(pdi);
@@ -6625,7 +6628,7 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
     PDM_free(order);
 
 
-    PDM_log_trace_array_long(pentity2_ext_opp_gnum_and_itrf[i_part], 2 * pn_entity2_ext_opp_gnum_and_itrf[i_part], "pentity2_opp_gnum_and_itrf ::");
+    // PDM_log_trace_array_long(pentity2_ext_opp_gnum_and_itrf[i_part], 2 * pn_entity2_ext_opp_gnum_and_itrf[i_part], "pentity2_opp_gnum_and_itrf ::");
 
   }
 
@@ -6806,9 +6809,9 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
       }
     }
 
-    PDM_log_trace_array_long(pentity2_extented_ln_to_gn_by_interface[i_part],
-                             2 * pn_entity2_extented_by_interface[i_part],
-                             "pentity2_extented_ln_to_gn_by_interface ::");
+    // PDM_log_trace_array_long(pentity2_extented_ln_to_gn_by_interface[i_part],
+    //                          2 * pn_entity2_extented_by_interface[i_part],
+    //                          "pentity2_extented_ln_to_gn_by_interface ::");
 
     PDM_gnum_set_from_parents(gen_gnum_entity2,
                               i_part,
@@ -6873,9 +6876,7 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
       extented_from_itrf_entity2_order[i_entity2] = -1;
     }
 
-    printf("pn_entity2_extented_by_interface[i_part] = %i \n", pn_entity2_extented_by_interface[i_part]);
-
-
+    // printf("pn_entity2_extented_by_interface[i_part] = %i \n", pn_entity2_extented_by_interface[i_part]);
     /* Sort unique the new gnum to unify */
     PDM_g_num_t *extented_from_part_entity2_ln_to_gn_sorted = NULL;
     PDM_malloc(extented_from_part_entity2_ln_to_gn_sorted, pn_entity2_extented_by_partition[i_part], PDM_g_num_t);
@@ -6896,11 +6897,11 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
       extented_from_part_entity2_order[i_entity2] = -1;
     }
 
-    printf("pn_entity2_extented_by_partition[i_part] = %i \n", pn_entity2_extented_by_partition[i_part]);
-
-
-    PDM_log_trace_array_long(extented_from_part_entity2_ln_to_gn_sorted, pn_entity2_extented_by_partition[i_part], "extented_from_part_entity2_ln_to_gn_sorted ::");
-    PDM_log_trace_array_long(extented_from_itrf_entity2_ln_to_gn_sorted, pn_entity2_extented_by_interface[i_part], "extented_from_itrf_entity2_ln_to_gn_sorted ::");
+    if(1 == 0) {
+      printf("pn_entity2_extented_by_partition[i_part] = %i \n", pn_entity2_extented_by_partition[i_part]);
+      PDM_log_trace_array_long(extented_from_part_entity2_ln_to_gn_sorted, pn_entity2_extented_by_partition[i_part], "extented_from_part_entity2_ln_to_gn_sorted ::");
+      PDM_log_trace_array_long(extented_from_itrf_entity2_ln_to_gn_sorted, pn_entity2_extented_by_interface[i_part], "extented_from_itrf_entity2_ln_to_gn_sorted ::");
+    }
 
 
 
@@ -6908,7 +6909,7 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
     int pn_entity2_extented_by_interface2 = 0; // To read in extented_from_itrf_entity2_ln_to_gn
     for(int i_ref = 0; i_ref < n_part1_to_part2; ++i_ref) {
 
-      log_trace("_pextract_entity1_interface[i_ref] = %i \n", _pextract_entity1_interface[i_ref] );
+      // log_trace("_pextract_entity1_interface[i_ref] = %i \n", _pextract_entity1_interface[i_ref] );
 
       /*
        * First case :
@@ -6951,7 +6952,7 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
             // _pextract_entity1_entity2[idx_entity1] = ( shift + extented_from_itrf_entity2_order[pos_new] + 1); // ATTENTION SIGN
             _pextract_entity1_entity2[idx_entity1] = ( shift + pos_new + 1); // ATTENTION SIGN
 
-            log_trace("\t Translate cas 1 : %i  ---> (idx_entity1 = %i) --> %i \n", entity2_g_num, idx_entity1, _pextract_entity1_entity2[idx_entity1]);
+            // log_trace("\t Translate cas 1 : %i  ---> (idx_entity1 = %i) --> %i \n", entity2_g_num, idx_entity1, _pextract_entity1_entity2[idx_entity1]);
 
           } else {
             /*
@@ -6978,7 +6979,7 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
             int orig_pos = _entity2_order[pos_int];
             _pextract_entity1_entity2[idx_entity1] = ( orig_pos + 1);
 
-            log_trace("\t Translate cas 3 : %i  ---> (idx_entity1 = %i) --> %i \n", entity2_g_num, idx_entity1, _pextract_entity1_entity2[idx_entity1]);
+            // log_trace("\t Translate cas 3 : %i  ---> (idx_entity1 = %i) --> %i \n", entity2_g_num, idx_entity1, _pextract_entity1_entity2[idx_entity1]);
 
           } else {                              // Not in current partition
             int pos_ext = PDM_binary_search_long(entity2_g_num,
@@ -7000,7 +7001,7 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
             // _pextract_entity1_entity2[idx_entity1] = ( pn_entity2[i_part] + extented_from_part_entity2_order[pos_ext] + 1);
             _pextract_entity1_entity2[idx_entity1] = ( pn_entity2[i_part] + pos_ext + 1);
 
-            log_trace("\t Translate cas 4 : %i  ---> (idx_entity1 = %i) --> %i \n", entity2_g_num, idx_entity1, _pextract_entity1_entity2[idx_entity1]);
+            // log_trace("\t Translate cas 4 : %i  ---> (idx_entity1 = %i) --> %i \n", entity2_g_num, idx_entity1, _pextract_entity1_entity2[idx_entity1]);
 
           }
         }
@@ -7009,7 +7010,7 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
 
     // assert(pn_entity2_extented_by_interface2 == pn_entity2_extented_by_interface[i_part]);
 
-    if(1 == 1) {
+    if(0 == 1) {
       PDM_log_trace_connectivity_int(_pextract_entity1_entity2_idx,
                                      _pextract_entity1_entity2,
                                      n_part1_to_part2,
@@ -7069,7 +7070,7 @@ PDM_part_extension_pconnectivity_to_extented_pconnectivity
       pentity2_extented_to_entity2_idx[i_part][i_entity2] = 3 * i_entity2;
     }
 
-    if(1 == 1) {
+    if(0 == 1) {
       PDM_log_trace_array_int (pentity2_extented_to_entity2_idx[i_part],     pn_entity2_extented[i_part]+1, "pentity2_extented_to_entity2_idx ::" );
       PDM_log_trace_array_int (pentity2_extented_triplet       [i_part], 3 * pn_entity2_extented[i_part]  , "pentity2_extented_triplet    ::" );
       PDM_log_trace_array_int (pentity2_extented_interface     [i_part],     pn_entity2_extented[i_part]  , "pentity2_extented_interface  ::" );
