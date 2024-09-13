@@ -19,7 +19,6 @@
 #include "pdm_part_mesh_nodal.h"
 #include "pdm_part_mesh_nodal_priv.h"
 #include "pdm_part_mesh_nodal_elmts_utils.h"
-#include "pdm_dmesh_nodal_elements_utils.h"
 #include "pdm_printf.h"
 #include "pdm_logging.h"
 #include "pdm_error.h"

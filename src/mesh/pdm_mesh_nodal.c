@@ -34,9 +34,6 @@ extern "C" {
 #endif
 #endif /* __cplusplus */
 
-/*============================================================================
- * Fortran function header
- *============================================================================*/
 
 /*============================================================================
  * Local macro definitions
@@ -57,6 +54,138 @@ extern "C" {
 /*============================================================================
  * Private function definitions
  *============================================================================*/
+
+/* Tables for decomposing standard elments in edges and faces */
+// https://cgns.github.io/CGNS_docs_current/sids/conv.html
+
+static const int bar_edge_vtx[] = {
+  0, 1
+};
+
+static const int tria_edge_vtx[] = {
+  0, 1,
+  1, 2,
+  2, 0
+};
+
+static const int quad_edge_vtx[] = {
+  0, 1,
+  1, 2,
+  2, 3,
+  3, 0
+};
+
+static const int tetra_edge_vtx[] = {
+  0, 1,
+  1, 2,
+  2, 0,
+  0, 3,
+  1, 3,
+  2, 3
+};
+
+static const int pyramid_edge_vtx[] = {
+  0, 1,
+  1, 2,
+  2, 3,
+  3, 0,
+  0, 4,
+  1, 4,
+  2, 4,
+  3, 4
+};
+
+static const int prism_edge_vtx[] = {
+  0, 1,
+  1, 2,
+  2, 0,
+  0, 3,
+  1, 4,
+  2, 5,
+  3, 4,
+  4, 5,
+  5, 3
+};
+
+static const int hexa_edge_vtx[] = {
+  0, 1,
+  1, 2,
+  2, 3,
+  3, 0,
+  0, 4,
+  1, 5,
+  2, 6,
+  3, 7,
+  4, 5,
+  5, 6,
+  6, 7,
+  7, 4
+};
+
+
+static const int tria_face_vtx_idx[] = {
+  0, 3
+};
+
+static const int tria_face_vtx[] = {
+  0, 1, 2
+};
+
+static const int quad_face_vtx_idx[] = {
+  0, 4
+};
+
+static const int quad_face_vtx[] = {
+  0, 1, 2, 3
+};
+
+static const int tetra_face_vtx_idx[] = {
+  0, 3, 6, 9, 12
+};
+
+static const int tetra_face_vtx[] = {
+  0, 2, 1,
+  0, 1, 3,
+  0, 3, 2,
+  1, 2, 3
+};
+
+static const int pyramid_face_vtx_idx[] = {
+  0, 4, 7, 10, 13, 16
+};
+
+static const int pyramid_face_vtx[] = {
+  3, 2, 1, 0,
+  4, 0, 1,
+  4, 1, 2,
+  4, 2, 3,
+  4, 3, 0
+};
+
+static const int prism_face_vtx_idx[] = {
+  0, 3, 6, 10, 14, 18
+};
+
+static const int prism_face_vtx[] = {
+  2, 1, 0,
+  4, 5, 3,
+  5, 4, 1, 2,
+  4, 3, 0, 1,
+  3, 5, 2, 0
+};
+
+static const int hexa_face_vtx_idx[] = {
+  0, 4, 8, 12, 16, 20, 24
+};
+
+static const int hexa_face_vtx[] = {
+  3, 2, 1, 0,
+  6, 7, 4, 5,
+  4, 7, 3, 0,
+  7, 6, 2, 3,
+  2, 6, 5, 1,
+  1, 5, 4, 0
+};
 
 
 static
@@ -6936,6 +7065,324 @@ PDM_Mesh_nodal_geom_kind_from_elt_type
   }
 
   return PDM_GEOMETRY_KIND_MAX;
+}
+
+
+
+/**
+ * \brief Return for standard elements the number of face that build this element
+ *
+ */
+int
+PDM_n_face_elt_per_elmt
+(
+  PDM_Mesh_nodal_elt_t t_elt
+)
+{
+  int n_face_elt = -1;
+  switch (t_elt) {
+   case PDM_MESH_NODAL_TRIA3:
+   case PDM_MESH_NODAL_TRIAHO:
+   case PDM_MESH_NODAL_TRIAHO_BEZIER:
+     n_face_elt = 1;
+     break;
+   case PDM_MESH_NODAL_QUAD4:
+   case PDM_MESH_NODAL_QUADHO:
+     n_face_elt = 1;
+     break;
+   case PDM_MESH_NODAL_TETRA4:
+   case PDM_MESH_NODAL_TETRAHO:
+     n_face_elt = 4;
+     break;
+   case PDM_MESH_NODAL_PYRAMID5:
+   case PDM_MESH_NODAL_PYRAMIDHO:
+     n_face_elt = 5;
+     break;
+   case PDM_MESH_NODAL_PRISM6:
+   case PDM_MESH_NODAL_PRISMHO:
+     n_face_elt = 5;
+     break;
+   case PDM_MESH_NODAL_HEXA8:
+   case PDM_MESH_NODAL_HEXAHO:
+     n_face_elt = 6;
+     break;
+   default:
+     n_face_elt = -1;
+     PDM_error(__FILE__, __LINE__, 0, "Error PDM_n_face_elt_per_elmt : Element type is supported\n");
+  }
+  return n_face_elt;
+}
+
+
+int
+PDM_face_vtx_per_elmt
+(
+  PDM_Mesh_nodal_elt_t   t_elt,
+  const int            **face_vtx_idx,
+  const int            **face_vtx
+)
+{
+  switch (t_elt) {
+    case PDM_MESH_NODAL_POINT:
+    case PDM_MESH_NODAL_BAR2:
+    case PDM_MESH_NODAL_BARHO:
+    case PDM_MESH_NODAL_BARHO_BEZIER: {
+      *face_vtx_idx = NULL;
+      *face_vtx     = NULL;
+      break;
+    }
+    case PDM_MESH_NODAL_TRIA3:
+    case PDM_MESH_NODAL_TRIAHO:
+    case PDM_MESH_NODAL_TRIAHO_BEZIER: {
+      *face_vtx_idx = tria_face_vtx_idx;
+      *face_vtx     = tria_face_vtx;
+      break;
+    }
+    case PDM_MESH_NODAL_QUAD4:
+    case PDM_MESH_NODAL_QUADHO: {
+      *face_vtx_idx = quad_face_vtx_idx;
+      *face_vtx     = quad_face_vtx;
+      break;
+    }
+    case PDM_MESH_NODAL_TETRA4:
+    case PDM_MESH_NODAL_TETRAHO: {
+      *face_vtx_idx = tetra_face_vtx_idx;
+      *face_vtx     = tetra_face_vtx;
+      break;
+    }
+    case PDM_MESH_NODAL_PYRAMID5:
+    case PDM_MESH_NODAL_PYRAMIDHO: {
+      *face_vtx_idx = pyramid_face_vtx_idx;
+      *face_vtx     = pyramid_face_vtx;
+      break;
+    }
+    case PDM_MESH_NODAL_PRISM6:
+    case PDM_MESH_NODAL_PRISMHO: {
+      *face_vtx_idx = prism_face_vtx_idx;
+      *face_vtx     = prism_face_vtx;
+      break;
+    }
+    case PDM_MESH_NODAL_HEXA8:
+    case PDM_MESH_NODAL_HEXAHO: {
+      *face_vtx_idx = hexa_face_vtx_idx;
+      *face_vtx     = hexa_face_vtx;
+      break;
+    }
+    default : {
+      PDM_error(__FILE__, __LINE__, 0, "PDM_face_vtx_per_elmt : Invalid t_elt %d\n", t_elt);
+    }
+  }
+
+  return PDM_n_face_elt_per_elmt(t_elt);
+}
+
+
+/**
+ * \brief Return for standard elements the number of edge that build this element
+ *
+ */
+int
+PDM_n_edge_elt_per_elmt
+(
+  PDM_Mesh_nodal_elt_t t_elt
+)
+{
+  int n_nedge_elt = -1;
+  switch (t_elt) {
+   case PDM_MESH_NODAL_POINT:
+     n_nedge_elt = 0;
+     break;
+   case PDM_MESH_NODAL_BAR2:
+   case PDM_MESH_NODAL_BARHO:
+   case PDM_MESH_NODAL_BARHO_BEZIER:
+     n_nedge_elt = 1;
+     break;
+   case PDM_MESH_NODAL_TRIA3:
+   case PDM_MESH_NODAL_TRIAHO:
+   case PDM_MESH_NODAL_TRIAHO_BEZIER:
+     n_nedge_elt = 3;
+     break;
+   case PDM_MESH_NODAL_QUAD4:
+   case PDM_MESH_NODAL_QUADHO:
+     n_nedge_elt = 4;
+     break;
+   case PDM_MESH_NODAL_TETRA4:
+   case PDM_MESH_NODAL_TETRAHO:
+     n_nedge_elt = 6;
+     break;
+   case PDM_MESH_NODAL_PYRAMID5:
+   case PDM_MESH_NODAL_PYRAMIDHO:
+     n_nedge_elt = 8;
+     break;
+   case PDM_MESH_NODAL_PRISM6:
+   case PDM_MESH_NODAL_PRISMHO:
+     n_nedge_elt = 9;
+     break;
+   case PDM_MESH_NODAL_HEXA8:
+   case PDM_MESH_NODAL_HEXAHO:
+     n_nedge_elt = 12;
+     break;
+   default:
+     n_nedge_elt = -1;
+     PDM_error(__FILE__, __LINE__, 0, "Error PDM_n_edge_elt_per_elmt : Element type is not supported\n");
+  }
+  return n_nedge_elt;
+}
+
+int
+PDM_edge_vtx_per_elmt
+(
+  PDM_Mesh_nodal_elt_t   t_elt,
+  const int            **edge_vtx
+)
+{
+  switch (t_elt) {
+    case PDM_MESH_NODAL_POINT: {
+      *edge_vtx = NULL;
+      break;
+    }
+    case PDM_MESH_NODAL_BAR2:
+    case PDM_MESH_NODAL_BARHO:
+    case PDM_MESH_NODAL_BARHO_BEZIER: {
+      *edge_vtx = bar_edge_vtx;
+      break;
+    }
+    case PDM_MESH_NODAL_TRIA3:
+    case PDM_MESH_NODAL_TRIAHO:
+    case PDM_MESH_NODAL_TRIAHO_BEZIER: {
+      *edge_vtx = tria_edge_vtx;
+      break;
+    }
+    case PDM_MESH_NODAL_QUAD4:
+    case PDM_MESH_NODAL_QUADHO: {
+      *edge_vtx = quad_edge_vtx;
+      break;
+    }
+    case PDM_MESH_NODAL_TETRA4:
+    case PDM_MESH_NODAL_TETRAHO: {
+      *edge_vtx = tetra_edge_vtx;
+      break;
+    }
+    case PDM_MESH_NODAL_PYRAMID5:
+    case PDM_MESH_NODAL_PYRAMIDHO: {
+      *edge_vtx = pyramid_edge_vtx;
+      break;
+    }
+    case PDM_MESH_NODAL_PRISM6:
+    case PDM_MESH_NODAL_PRISMHO: {
+      *edge_vtx = prism_edge_vtx;
+      break;
+    }
+    case PDM_MESH_NODAL_HEXA8:
+    case PDM_MESH_NODAL_HEXAHO: {
+      *edge_vtx = hexa_edge_vtx;
+      break;
+    }
+    default : {
+      PDM_error(__FILE__, __LINE__, 0, "PDM_edge_vtx_per_elmt : Invalid t_elt %d\n", t_elt);
+    }
+  }
+
+  return PDM_n_edge_elt_per_elmt(t_elt);
+}
+
+
+
+/**
+ * \brief Return for standard elements the total number of face vtx connectivity that build this element
+ *
+ */
+int
+PDM_n_sum_vtx_face_per_elmt
+(
+  PDM_Mesh_nodal_elt_t t_elt
+)
+{
+  int n_sum_vtx_face = -1;
+  switch (t_elt) {
+   case PDM_MESH_NODAL_TRIA3:
+   case PDM_MESH_NODAL_TRIAHO:
+   case PDM_MESH_NODAL_TRIAHO_BEZIER:
+     n_sum_vtx_face = 3;
+     break;
+   case PDM_MESH_NODAL_QUAD4:
+   case PDM_MESH_NODAL_QUADHO:
+     n_sum_vtx_face = 4;
+     break;
+   case PDM_MESH_NODAL_TETRA4:
+   case PDM_MESH_NODAL_TETRAHO:
+     n_sum_vtx_face = 12;
+     break;
+   case PDM_MESH_NODAL_PYRAMID5:
+   case PDM_MESH_NODAL_PYRAMIDHO:
+     n_sum_vtx_face = 16;
+     break;
+   case PDM_MESH_NODAL_PRISM6:
+   case PDM_MESH_NODAL_PRISMHO:
+     n_sum_vtx_face = 18;
+     break;
+   case PDM_MESH_NODAL_HEXA8:
+   case PDM_MESH_NODAL_HEXAHO:
+     n_sum_vtx_face = 24;
+     break;
+   default:
+     n_sum_vtx_face = -1;
+     PDM_error(__FILE__, __LINE__, 0, "Error PDM_n_sum_vtx_face_per_elmt : Element type is not supported\n");
+  }
+  return n_sum_vtx_face;
+}
+
+
+/**
+ * \brief Return for standard elements the total number of edge vtx connectivity that build this element
+ *
+ */
+int
+PDM_n_sum_vtx_edge_per_elmt
+(
+  PDM_Mesh_nodal_elt_t t_elt
+)
+{
+  int n_sum_vtx_edge = -1;
+  switch (t_elt) {
+   case PDM_MESH_NODAL_POINT:
+     n_sum_vtx_edge = 0;
+     break;
+   case PDM_MESH_NODAL_BAR2:
+   case PDM_MESH_NODAL_BARHO:
+   case PDM_MESH_NODAL_BARHO_BEZIER:
+     n_sum_vtx_edge = 2;
+     break;
+   case PDM_MESH_NODAL_TRIA3:
+   case PDM_MESH_NODAL_TRIAHO:
+   case PDM_MESH_NODAL_TRIAHO_BEZIER:
+     n_sum_vtx_edge = 6;
+     break;
+   case PDM_MESH_NODAL_QUAD4:
+   case PDM_MESH_NODAL_QUADHO:
+     n_sum_vtx_edge = 8;
+     break;
+   case PDM_MESH_NODAL_TETRA4:
+   case PDM_MESH_NODAL_TETRAHO:
+     n_sum_vtx_edge = 12;
+     break;
+   case PDM_MESH_NODAL_PYRAMID5:
+   case PDM_MESH_NODAL_PYRAMIDHO:
+     n_sum_vtx_edge = 16;
+     break;
+   case PDM_MESH_NODAL_PRISM6:
+   case PDM_MESH_NODAL_PRISMHO:
+     n_sum_vtx_edge = 18;
+     break;
+   case PDM_MESH_NODAL_HEXA8:
+   case PDM_MESH_NODAL_HEXAHO:
+     n_sum_vtx_edge = 24;
+     break;
+   default:
+     n_sum_vtx_edge = -1;
+     PDM_error(__FILE__, __LINE__, 0, "Error PDM_n_sum_vtx_edge_per_elmt : Element type is supported\n");
+  }
+  return n_sum_vtx_edge;
 }
 
 
