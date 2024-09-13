@@ -824,14 +824,14 @@ int main(int argc, char *argv[])
   // Test output as part_mesh
   PDM_part_mesh_t *pmesh = NULL;
   PDM_bool_t pmesh_takes_ownership = PDM_FALSE;
-  PDM_extract_part_extract_part_mesh_get(extrp,
-                                         &pmesh,
-                                         pmesh_takes_ownership);
+  PDM_extract_part_part_mesh_get(extrp,
+                                 &pmesh,
+                                 pmesh_takes_ownership);
 
   PDM_part_mesh_free(pmesh);
 
   pmesh_takes_ownership = PDM_TRUE;
-  PDM_extract_part_extract_part_mesh_get(extrp,
+  PDM_extract_part_part_mesh_get(extrp,
                                          &pmesh,
                                          pmesh_takes_ownership);
 

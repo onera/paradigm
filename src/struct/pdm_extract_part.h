@@ -553,7 +553,7 @@ PDM_extract_part_renum_method_set
  *
  */
 void
-PDM_extract_part_extract_part_mesh_get
+PDM_extract_part_part_mesh_get
 (
  PDM_extract_part_t  *extrp,
  PDM_part_mesh_t    **pmesh,
