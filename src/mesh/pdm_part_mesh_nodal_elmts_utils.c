@@ -63,163 +63,6 @@ extern "C" {
  *============================================================================*/
 
 
-/* Tables for decomposing standard elments in edges and faces */
-// https://cgns.github.io/CGNS_docs_current/sids/conv.html
-
-static const int std_elt_n_edge[] = {
-   0, // PDM_MESH_NODAL_POINT
-   1, // PDM_MESH_NODAL_BAR2
-   3, // PDM_MESH_NODAL_TRIA3
-   4, // PDM_MESH_NODAL_QUAD4
-  -1, // PDM_MESH_NODAL_POLY_2D
-   6, // PDM_MESH_NODAL_TETRA4
-   8, // PDM_MESH_NODAL_PYRAMID5
-   9, // PDM_MESH_NODAL_PRISM6
-  12, // PDM_MESH_NODAL_HEXA8
-  -1, // PDM_MESH_NODAL_POLY_3D
-   2, // PDM_MESH_NODAL_BARHO
-   3, // PDM_MESH_NODAL_TRIAHO
-   4, // PDM_MESH_NODAL_QUADHO
-   6, // PDM_MESH_NODAL_TETRAHO
-   8, // PDM_MESH_NODAL_PYRAMIDHO
-   9, // PDM_MESH_NODAL_PRISMHO
-  12, // PDM_MESH_NODAL_HEXAHO
-   1, // PDM_MESH_NODAL_BARHO_BEZIER
-   3  // PDM_MESH_NODAL_TRIAHO_BEZIER
-};
-
-static const int bar_edge_vtx[] = {
-  0, 1
-};
-
-static const int tria_edge_vtx[] = {
-  0, 1,
-  1, 2,
-  2, 0
-};
-
-static const int quad_edge_vtx[] = {
-  0, 1,
-  1, 2,
-  2, 3,
-  3, 0
-};
-
-static const int tetra_edge_vtx[] = {
-  0, 1,
-  1, 2,
-  2, 0,
-  0, 3,
-  1, 3,
-  2, 3
-};
-
-static const int pyramid_edge_vtx[] = {
-  0, 1,
-  1, 2,
-  2, 3,
-  3, 0,
-  0, 4,
-  1, 4,
-  2, 4,
-  3, 4
-};
-
-static const int prism_edge_vtx[] = {
-  0, 1,
-  1, 2,
-  2, 0,
-  0, 3,
-  1, 4,
-  2, 5,
-  3, 4,
-  4, 5,
-  5, 3
-};
-
-static const int hexa_edge_vtx[] = {
-  0, 1,
-  1, 2,
-  2, 3,
-  3, 0,
-  0, 4,
-  1, 5,
-  2, 6,
-  3, 7,
-  4, 5,
-  5, 6,
-  6, 7,
-  7, 4
-};
-
-
-
-static const int tria_face_vtx_idx[] = {
-  0, 3
-};
-
-static const int tria_face_vtx[] = {
-  0, 1, 2
-};
-
-static const int quad_face_vtx_idx[] = {
-  0, 4
-};
-
-static const int quad_face_vtx[] = {
-  0, 1, 2, 3
-};
-
-static const int tetra_face_vtx_idx[] = {
-  0, 3, 6, 9, 12
-};
-
-static const int tetra_face_vtx[] = {
-  0, 2, 1,
-  0, 1, 3,
-  0, 3, 2,
-  1, 2, 3
-};
-
-static const int pyramid_face_vtx_idx[] = {
-  0, 4, 7, 10, 13, 16
-};
-
-static const int pyramid_face_vtx[] = {
-  3, 2, 1, 0,
-  4, 0, 1,
-  4, 1, 2,
-  4, 2, 3,
-  4, 3, 0
-};
-
-static const int prism_face_vtx_idx[] = {
-  0, 3, 6, 10, 14, 18
-};
-
-static const int prism_face_vtx[] = {
-  2, 1, 0,
-  4, 5, 3,
-  5, 4, 1, 2,
-  4, 3, 0, 1,
-  3, 5, 2, 0
-};
-
-static const int hexa_face_vtx_idx[] = {
-  0, 4, 8, 12, 16, 20, 24
-};
-
-static const int hexa_face_vtx[] = {
-  3, 2, 1, 0,
-  6, 7, 4, 5,
-  4, 7, 3, 0,
-  7, 6, 2, 3,
-  2, 6, 5, 1,
-  1, 5, 4, 0
-};
-
-
-
 static
 void
 _compute_keys
@@ -1000,7 +843,7 @@ PDM_part_mesh_nodal_elmts_decompose_edges_get_size
 
     for (int i_section = 0; i_section < pmne->n_section_std; i_section++) {
 
-      int n_edge_elt     = PDM_n_nedge_elt_per_elmt   (pmne->sections_std[i_section]->t_elt);
+      int n_edge_elt     = PDM_n_edge_elt_per_elmt    (pmne->sections_std[i_section]->t_elt);
       int n_sum_vtx_edge = PDM_n_sum_vtx_edge_per_elmt(pmne->sections_std[i_section]->t_elt);
 
       *n_elt_tot          += pmne->sections_std[i_section]->n_elt[i_part];
@@ -1062,57 +905,16 @@ PDM_part_mesh_nodal_std_decompose_local_edges
     _parent_node = parent_node;
   }
 
-  int n_edge_elt     = std_elt_n_edge[t_elt];
+  const int *elt_edge_vtx = NULL;
+  int n_edge_elt = PDM_edge_vtx_per_elmt(t_elt,
+                                         &elt_edge_vtx);
+
+  if (n_edge_elt <= 0 || elt_edge_vtx == NULL) {
+    return;
+  }
+
   int n_sum_vtx_edge = n_edge_elt * 2;
   int n_vtx_elt      = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
-
-
-  const int *elt_edge_vtx = NULL;
-  switch (t_elt) {
-    case PDM_MESH_NODAL_POINT: {
-      return;
-    }
-    case PDM_MESH_NODAL_BAR2:
-    case PDM_MESH_NODAL_BARHO:
-    case PDM_MESH_NODAL_BARHO_BEZIER: {
-      elt_edge_vtx = bar_edge_vtx;
-      break;
-    }
-    case PDM_MESH_NODAL_TRIA3:
-    case PDM_MESH_NODAL_TRIAHO:
-    case PDM_MESH_NODAL_TRIAHO_BEZIER: {
-      elt_edge_vtx = tria_edge_vtx;
-      break;
-    }
-    case PDM_MESH_NODAL_QUAD4:
-    case PDM_MESH_NODAL_QUADHO: {
-      elt_edge_vtx = quad_edge_vtx;
-      break;
-    }
-    case PDM_MESH_NODAL_TETRA4:
-    case PDM_MESH_NODAL_TETRAHO: {
-      elt_edge_vtx = tetra_edge_vtx;
-      break;
-    }
-    case PDM_MESH_NODAL_PYRAMID5:
-    case PDM_MESH_NODAL_PYRAMIDHO: {
-      elt_edge_vtx = pyramid_edge_vtx;
-      break;
-    }
-    case PDM_MESH_NODAL_PRISM6:
-    case PDM_MESH_NODAL_PRISMHO: {
-      elt_edge_vtx = prism_edge_vtx;
-      break;
-    }
-    case PDM_MESH_NODAL_HEXA8:
-    case PDM_MESH_NODAL_HEXAHO: {
-      elt_edge_vtx = hexa_edge_vtx;
-      break;
-    }
-    default : {
-      PDM_error(__FILE__, __LINE__, 0, "Invalid t_elt %d\n", t_elt);
-    }
-  }
 
 
   int _n_edge_current = *n_edge_current;
@@ -1268,7 +1070,7 @@ PDM_part_mesh_nodal_elmts_sections_local_decompose_edges
     /* Count to evaluate size of elmt_edge_vtx and elmt_edge_vtx */
     for (int i_section = 0; i_section < pmne->n_section_std; i_section++) {
       int n_elt_section = pmne->sections_std[i_section]->n_elt[i_part];
-      n_elmt_edge     += n_elt_section * PDM_n_nedge_elt_per_elmt   (pmne->sections_std[i_section]->t_elt);
+      n_elmt_edge     += n_elt_section * PDM_n_edge_elt_per_elmt    (pmne->sections_std[i_section]->t_elt);
       n_elmt_edge_vtx += n_elt_section * PDM_n_sum_vtx_edge_per_elmt(pmne->sections_std[i_section]->t_elt);
     }
 
@@ -1442,73 +1244,18 @@ PDM_part_mesh_nodal_std_decompose_local_faces
     _parent_node = parent_node;
   }
 
-  int n_face_elt     = 0;
-  int n_sum_vtx_face = 0;
-  int n_vtx_elt      = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
-
   const int *elt_face_vtx_idx = NULL;
   const int *elt_face_vtx     = NULL;
+  int n_face_elt = PDM_face_vtx_per_elmt(t_elt,
+                                         &elt_face_vtx_idx,
+                                         &elt_face_vtx);
 
-  switch (t_elt) {
-    case PDM_MESH_NODAL_POINT:
-    case PDM_MESH_NODAL_BAR2:
-    case PDM_MESH_NODAL_BARHO:
-    case PDM_MESH_NODAL_BARHO_BEZIER: {
-      return;
-    }
-    case PDM_MESH_NODAL_TRIA3:
-    case PDM_MESH_NODAL_TRIAHO:
-    case PDM_MESH_NODAL_TRIAHO_BEZIER: {
-      n_face_elt       = 1;
-      n_sum_vtx_face   = 3;
-      elt_face_vtx_idx = tria_face_vtx_idx;
-      elt_face_vtx     = tria_face_vtx    ;
-      break;
-    }
-    case PDM_MESH_NODAL_QUAD4:
-    case PDM_MESH_NODAL_QUADHO: {
-      n_face_elt       = 1;
-      n_sum_vtx_face   = 4;
-      elt_face_vtx_idx = quad_face_vtx_idx;
-      elt_face_vtx     = quad_face_vtx    ;
-      break;
-    }
-    case PDM_MESH_NODAL_TETRA4:
-    case PDM_MESH_NODAL_TETRAHO: {
-      n_face_elt       = 4;
-      n_sum_vtx_face   = 4*3;
-      elt_face_vtx_idx = tetra_face_vtx_idx;
-      elt_face_vtx     = tetra_face_vtx    ;
-      break;
-    }
-    case PDM_MESH_NODAL_PYRAMID5:
-    case PDM_MESH_NODAL_PYRAMIDHO: {
-      n_face_elt       = 5;
-      n_sum_vtx_face   = 4*3 + 4;
-      elt_face_vtx_idx = pyramid_face_vtx_idx;
-      elt_face_vtx     = pyramid_face_vtx    ;
-      break;
-    }
-    case PDM_MESH_NODAL_PRISM6:
-    case PDM_MESH_NODAL_PRISMHO: {
-      n_face_elt       = 5;
-      n_sum_vtx_face   = 2*3 + 3*4;
-      elt_face_vtx_idx = prism_face_vtx_idx;
-      elt_face_vtx     = prism_face_vtx    ;
-      break;
-    }
-    case PDM_MESH_NODAL_HEXA8:
-    case PDM_MESH_NODAL_HEXAHO: {
-      n_face_elt       = 6;
-      n_sum_vtx_face   = 6*4;
-      elt_face_vtx_idx = hexa_face_vtx_idx;
-      elt_face_vtx     = hexa_face_vtx    ;
-      break;
-    }
-    default : {
-      PDM_error(__FILE__, __LINE__, 0, "Invalid t_elt %d\n", t_elt);
-    }
+  if (n_face_elt <= 0 || elt_face_vtx == NULL) {
+    return;
   }
+
+  int n_sum_vtx_face = elt_face_vtx_idx[n_face_elt];
+  int n_vtx_elt      = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
 
 
   int _n_face_current = *n_face_current;

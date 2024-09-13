@@ -28,10 +28,6 @@ extern "C" {
 #endif /* __cplusplus */
 
 /*============================================================================
- * Fortran function header
- *============================================================================*/
-
-/*============================================================================
  * Local macro definitions
  *============================================================================*/
 
@@ -46,6 +42,138 @@ extern "C" {
 /*============================================================================
  * Private function definitions
  *============================================================================*/
+
+/* Tables for decomposing standard elments in edges and faces */
+// https://cgns.github.io/CGNS_docs_current/sids/conv.html
+
+static const int bar_edge_vtx[] = {
+  0, 1
+};
+
+static const int tria_edge_vtx[] = {
+  0, 1,
+  1, 2,
+  2, 0
+};
+
+static const int quad_edge_vtx[] = {
+  0, 1,
+  1, 2,
+  2, 3,
+  3, 0
+};
+
+static const int tetra_edge_vtx[] = {
+  0, 1,
+  1, 2,
+  2, 0,
+  0, 3,
+  1, 3,
+  2, 3
+};
+
+static const int pyramid_edge_vtx[] = {
+  0, 1,
+  1, 2,
+  2, 3,
+  3, 0,
+  0, 4,
+  1, 4,
+  2, 4,
+  3, 4
+};
+
+static const int prism_edge_vtx[] = {
+  0, 1,
+  1, 2,
+  2, 0,
+  0, 3,
+  1, 4,
+  2, 5,
+  3, 4,
+  4, 5,
+  5, 3
+};
+
+static const int hexa_edge_vtx[] = {
+  0, 1,
+  1, 2,
+  2, 3,
+  3, 0,
+  0, 4,
+  1, 5,
+  2, 6,
+  3, 7,
+  4, 5,
+  5, 6,
+  6, 7,
+  7, 4
+};
+
+
+static const int tria_face_vtx_idx[] = {
+  0, 3
+};
+
+static const int tria_face_vtx[] = {
+  0, 1, 2
+};
+
+static const int quad_face_vtx_idx[] = {
+  0, 4
+};
+
+static const int quad_face_vtx[] = {
+  0, 1, 2, 3
+};
+
+static const int tetra_face_vtx_idx[] = {
+  0, 3, 6, 9, 12
+};
+
+static const int tetra_face_vtx[] = {
+  0, 2, 1,
+  0, 1, 3,
+  0, 3, 2,
+  1, 2, 3
+};
+
+static const int pyramid_face_vtx_idx[] = {
+  0, 4, 7, 10, 13, 16
+};
+
+static const int pyramid_face_vtx[] = {
+  3, 2, 1, 0,
+  4, 0, 1,
+  4, 1, 2,
+  4, 2, 3,
+  4, 3, 0
+};
+
+static const int prism_face_vtx_idx[] = {
+  0, 3, 6, 10, 14, 18
+};
+
+static const int prism_face_vtx[] = {
+  2, 1, 0,
+  4, 5, 3,
+  5, 4, 1, 2,
+  4, 3, 0, 1,
+  3, 5, 2, 0
+};
+
+static const int hexa_face_vtx_idx[] = {
+  0, 4, 8, 12, 16, 20, 24
+};
+
+static const int hexa_face_vtx[] = {
+  3, 2, 1, 0,
+  6, 7, 4, 5,
+  4, 7, 3, 0,
+  7, 6, 2, 3,
+  2, 6, 5, 1,
+  1, 5, 4, 0
+};
 
 /*=============================================================================
  * Public function definitions
@@ -95,12 +223,76 @@ PDM_n_face_elt_per_elmt
   return n_face_elt;
 }
 
+
+int
+PDM_face_vtx_per_elmt
+(
+  PDM_Mesh_nodal_elt_t   t_elt,
+  const int            **face_vtx_idx,
+  const int            **face_vtx
+)
+{
+  switch (t_elt) {
+    case PDM_MESH_NODAL_POINT:
+    case PDM_MESH_NODAL_BAR2:
+    case PDM_MESH_NODAL_BARHO:
+    case PDM_MESH_NODAL_BARHO_BEZIER: {
+      *face_vtx_idx = NULL;
+      *face_vtx     = NULL;
+      break;
+    }
+    case PDM_MESH_NODAL_TRIA3:
+    case PDM_MESH_NODAL_TRIAHO:
+    case PDM_MESH_NODAL_TRIAHO_BEZIER: {
+      *face_vtx_idx = tria_face_vtx_idx;
+      *face_vtx     = tria_face_vtx;
+      break;
+    }
+    case PDM_MESH_NODAL_QUAD4:
+    case PDM_MESH_NODAL_QUADHO: {
+      *face_vtx_idx = quad_face_vtx_idx;
+      *face_vtx     = quad_face_vtx;
+      break;
+    }
+    case PDM_MESH_NODAL_TETRA4:
+    case PDM_MESH_NODAL_TETRAHO: {
+      *face_vtx_idx = tetra_face_vtx_idx;
+      *face_vtx     = tetra_face_vtx;
+      break;
+    }
+    case PDM_MESH_NODAL_PYRAMID5:
+    case PDM_MESH_NODAL_PYRAMIDHO: {
+      *face_vtx_idx = pyramid_face_vtx_idx;
+      *face_vtx     = pyramid_face_vtx;
+      break;
+    }
+    case PDM_MESH_NODAL_PRISM6:
+    case PDM_MESH_NODAL_PRISMHO: {
+      *face_vtx_idx = prism_face_vtx_idx;
+      *face_vtx     = prism_face_vtx;
+      break;
+    }
+    case PDM_MESH_NODAL_HEXA8:
+    case PDM_MESH_NODAL_HEXAHO: {
+      *face_vtx_idx = hexa_face_vtx_idx;
+      *face_vtx     = hexa_face_vtx;
+      break;
+    }
+    default : {
+      PDM_error(__FILE__, __LINE__, 0, "PDM_face_vtx_per_elmt : Invalid t_elt %d\n", t_elt);
+    }
+  }
+
+  return PDM_n_face_elt_per_elmt(t_elt);
+}
+
+
 /**
  * \brief Return for standard elements the number of edge that build this element
  *
  */
 int
-PDM_n_nedge_elt_per_elmt
+PDM_n_edge_elt_per_elmt
 (
   PDM_Mesh_nodal_elt_t t_elt
 )
@@ -142,10 +334,69 @@ PDM_n_nedge_elt_per_elmt
      break;
    default:
      n_nedge_elt = -1;
-     PDM_error(__FILE__, __LINE__, 0, "Error PDM_n_nedge_elt_per_elmt : Element type is not supported\n");
+     PDM_error(__FILE__, __LINE__, 0, "Error PDM_n_edge_elt_per_elmt : Element type is not supported\n");
   }
   return n_nedge_elt;
 }
+
+int
+PDM_edge_vtx_per_elmt
+(
+  PDM_Mesh_nodal_elt_t   t_elt,
+  const int            **edge_vtx
+)
+{
+  switch (t_elt) {
+    case PDM_MESH_NODAL_POINT: {
+      *edge_vtx = NULL;
+      break;
+    }
+    case PDM_MESH_NODAL_BAR2:
+    case PDM_MESH_NODAL_BARHO:
+    case PDM_MESH_NODAL_BARHO_BEZIER: {
+      *edge_vtx = bar_edge_vtx;
+      break;
+    }
+    case PDM_MESH_NODAL_TRIA3:
+    case PDM_MESH_NODAL_TRIAHO:
+    case PDM_MESH_NODAL_TRIAHO_BEZIER: {
+      *edge_vtx = tria_edge_vtx;
+      break;
+    }
+    case PDM_MESH_NODAL_QUAD4:
+    case PDM_MESH_NODAL_QUADHO: {
+      *edge_vtx = quad_edge_vtx;
+      break;
+    }
+    case PDM_MESH_NODAL_TETRA4:
+    case PDM_MESH_NODAL_TETRAHO: {
+      *edge_vtx = tetra_edge_vtx;
+      break;
+    }
+    case PDM_MESH_NODAL_PYRAMID5:
+    case PDM_MESH_NODAL_PYRAMIDHO: {
+      *edge_vtx = pyramid_edge_vtx;
+      break;
+    }
+    case PDM_MESH_NODAL_PRISM6:
+    case PDM_MESH_NODAL_PRISMHO: {
+      *edge_vtx = prism_edge_vtx;
+      break;
+    }
+    case PDM_MESH_NODAL_HEXA8:
+    case PDM_MESH_NODAL_HEXAHO: {
+      *edge_vtx = hexa_edge_vtx;
+      break;
+    }
+    default : {
+      PDM_error(__FILE__, __LINE__, 0, "PDM_edge_vtx_per_elmt : Invalid t_elt %d\n", t_elt);
+    }
+  }
+
+  return PDM_n_edge_elt_per_elmt(t_elt);
+}
+
+
 
 /**
  * \brief Return for standard elements the total number of face vtx connectivity that build this element
@@ -244,116 +495,10 @@ PDM_n_sum_vtx_edge_per_elmt
   return n_sum_vtx_edge;
 }
 
-/**
- *
- * \brief PDM_section_size_elt_faces_get
- *
- * \param [in]     mesh               Current mesh
- * \param [in]     id_section         Section identifier
- * \param [inout]  elt_face_vtx_idx   Index of element faces connectivity (preallocated)
- * \param [inout]  elt_face_vtx       Element faces connectivity (preallocated)
- *
- */
-int
-PDM_section_size_elt_faces_get2
-(
-  PDM_dmesh_nodal_elmts_t *dmn_elts,
-  int                     *s_elt_face_vtx_idx,
-  int                     *s_elt_face_vtx,
-  int                     *s_elt_face_cell
-)
-{
-
-  // You should do it for each level of the mesh !!!!
-  // abort();
-  // printf("PDM_section_size_elt_faces_get WARNING NOT WORKING \n");
-
-  int _s_elt_face_vtx_idx = 0;
-  int _s_elt_face_vtx     = 0;
-
-  for (int i = 0; i < dmn_elts->n_section_std; i++) {
-    int n_face_elt     = PDM_n_face_elt_per_elmt    (dmn_elts->sections_std[i]->t_elt);
-    int n_sum_vtx_face = PDM_n_sum_vtx_face_per_elmt(dmn_elts->sections_std[i]->t_elt);
-
-    _s_elt_face_vtx_idx += dmn_elts->sections_std[i]->n_elt * n_face_elt;
-    _s_elt_face_vtx     += dmn_elts->sections_std[i]->n_elt * n_sum_vtx_face;
-  }
-
-  for (int i = 0; i < dmn_elts->n_section_poly3d; i++) {
-    int _n_face = dmn_elts->sections_poly3d[i]->n_face;
-    _s_elt_face_vtx_idx += _n_face;
-    _s_elt_face_vtx     += dmn_elts->sections_poly3d[i]->_face_vtx[dmn_elts->sections_poly3d[i]->_face_vtx_idx[_n_face]];
-  }
-
-  for (int i = 0; i < dmn_elts->n_section_poly2d; i++) {
-    _s_elt_face_vtx_idx +=     dmn_elts->sections_poly2d[i]->_connec_idx[dmn_elts->sections_poly2d[i]->n_elt];
-    _s_elt_face_vtx     += 2 * dmn_elts->sections_poly2d[i]->_connec_idx[dmn_elts->sections_poly2d[i]->n_elt];
-  }
-
-  *s_elt_face_cell    = _s_elt_face_vtx_idx;
-  *s_elt_face_vtx_idx = _s_elt_face_vtx_idx + 1;
-  *s_elt_face_vtx     = _s_elt_face_vtx     + 1;
-
-  return *s_elt_face_vtx - 1;
-}
-
-
-/**
- *
- * \brief PDM_section_size_elt_edges_get
- *
- * \param [in]     mesh               Current mesh
- * \param [in]     id_section         Section identifier
- * \param [inout]  elt_edge_vtx_idx   Index of element faces connectivity (preallocated)
- * \param [inout]  elt_edge_vtx       Element faces connectivity (preallocated)
- *
- */
-int
-PDM_section_size_elt_edges_get2
-(
-  PDM_dmesh_nodal_elmts_t *dmn_elts,
-  int                     *s_elt_edge_vtx_idx,
-  int                     *s_elt_edge_vtx,
-  int                     *s_elt_edge_cell
-)
-{
-  // printf("PDM_section_size_elt_edges_get WARNING NOT WORKING \n");
-
-  int _s_elt_edge_vtx_idx = 0;
-  int _s_elt_edge_vtx     = 0;
-
-  for (int i = 0; i < dmn_elts->n_section_std; i++) {
-    int n_edge_elt     = PDM_n_nedge_elt_per_elmt   (dmn_elts->sections_std[i]->t_elt);
-    int n_sum_vtx_edge = PDM_n_sum_vtx_edge_per_elmt(dmn_elts->sections_std[i]->t_elt);
-
-    _s_elt_edge_vtx_idx += dmn_elts->sections_std[i]->n_elt * n_edge_elt;
-    _s_elt_edge_vtx     += dmn_elts->sections_std[i]->n_elt * n_sum_vtx_edge;
-  }
-
-  assert(dmn_elts->n_section_poly3d == 0); // Not implemented to test
-  for (int i = 0; i < dmn_elts->n_section_poly3d; i++) {
-    int _n_face = dmn_elts->sections_poly3d[i]->n_face;
-    _s_elt_edge_vtx_idx +=     dmn_elts->sections_poly3d[i]->_face_vtx_idx[_n_face];
-    _s_elt_edge_vtx     += 2 * dmn_elts->sections_poly3d[i]->_face_vtx_idx[_n_face];
-  }
-
-  assert(dmn_elts->n_section_poly2d == 0); // Not implemented
-  for (int i = 0; i < dmn_elts->n_section_poly2d; i++) {
-    _s_elt_edge_vtx_idx +=     dmn_elts->sections_poly2d[i]->_connec_idx[dmn_elts->sections_poly2d[i]->n_elt];
-    _s_elt_edge_vtx     += 2 * dmn_elts->sections_poly2d[i]->_connec_idx[dmn_elts->sections_poly2d[i]->n_elt];
-  }
-
-  *s_elt_edge_cell    = _s_elt_edge_vtx_idx;
-  *s_elt_edge_vtx_idx = _s_elt_edge_vtx_idx + 1;
-  *s_elt_edge_vtx     = _s_elt_edge_vtx     + 1;
-
-  return *s_elt_edge_vtx - 1;
-}
-
 
 /**
 *
-* \brief Decompose quad cell_vtx connectivity to a flatten view of edges
+* \brief Decompose standard elements to a flatten view of faces
 */
 void
 PDM_std_decomposes_faces
@@ -375,126 +520,65 @@ PDM_std_decomposes_faces
        int                  *parent_elmt_position
 )
 {
-  switch (t_elt) {
-   case PDM_MESH_NODAL_POINT:
-     abort();
-     break;
-   case PDM_MESH_NODAL_BAR2:
-   case PDM_MESH_NODAL_BARHO:
-   case PDM_MESH_NODAL_BARHO_BEZIER:
-     abort();
-     break;
-   case PDM_MESH_NODAL_TRIA3:
-   case PDM_MESH_NODAL_TRIAHO:
-    case PDM_MESH_NODAL_TRIAHO_BEZIER:
-     PDM_tri_decomposes_faces(n_elt,
-                              order,
-                              parent_node,
-                              n_elt_current,
-                              n_dface_current,
-                              beg_gnum_elt_current,
-                              beg_gnum_face_current,
-                              connectivity_elmt_vtx,
-                              elmt_face_vtx_idx,
-                              elmt_face_vtx,
-                              elmt_face_cell,
-                              elmt_cell_face_idx,
-                              elmt_cell_face,
-                              parent_elmt_position);
-     break;
-   case PDM_MESH_NODAL_QUAD4:
-   case PDM_MESH_NODAL_QUADHO:
-     PDM_quad_decomposes_faces(n_elt,
-                               order,
-                               parent_node,
-                               n_elt_current,
-                               n_dface_current,
-                               beg_gnum_elt_current,
-                               beg_gnum_face_current,
-                               connectivity_elmt_vtx,
-                               elmt_face_vtx_idx,
-                               elmt_face_vtx,
-                               elmt_face_cell,
-                               elmt_cell_face_idx,
-                               elmt_cell_face,
-                               parent_elmt_position);
-     break;
-   case PDM_MESH_NODAL_TETRA4:
-   case PDM_MESH_NODAL_TETRAHO:
-     PDM_tetra_decomposes_faces(n_elt,
-                                order,
-                                parent_node,
-                                n_elt_current,
-                                n_dface_current,
-                                beg_gnum_elt_current,
-                                beg_gnum_face_current,
-                                connectivity_elmt_vtx,
-                                elmt_face_vtx_idx,
-                                elmt_face_vtx,
-                                elmt_face_cell,
-                                elmt_cell_face_idx,
-                                elmt_cell_face,
-                                parent_elmt_position);
-     break;
-   case PDM_MESH_NODAL_PYRAMID5:
-   case PDM_MESH_NODAL_PYRAMIDHO:
-     PDM_pyra_decomposes_faces(n_elt,
-                               order,
-                               parent_node,
-                               n_elt_current,
-                               n_dface_current,
-                               beg_gnum_elt_current,
-                               beg_gnum_face_current,
-                               connectivity_elmt_vtx,
-                               elmt_face_vtx_idx,
-                               elmt_face_vtx,
-                               elmt_face_cell,
-                               elmt_cell_face_idx,
-                               elmt_cell_face,
-                               parent_elmt_position);
-     break;
-   case PDM_MESH_NODAL_PRISM6:
-   case PDM_MESH_NODAL_PRISMHO:
-     PDM_prism_decomposes_faces(n_elt,
-                                order,
-                                parent_node,
-                                n_elt_current,
-                                n_dface_current,
-                                beg_gnum_elt_current,
-                                beg_gnum_face_current,
-                                connectivity_elmt_vtx,
-                                elmt_face_vtx_idx,
-                                elmt_face_vtx,
-                                elmt_face_cell,
-                                elmt_cell_face_idx,
-                                elmt_cell_face,
-                                parent_elmt_position);
-     break;
-   case PDM_MESH_NODAL_HEXA8:
-   case PDM_MESH_NODAL_HEXAHO:
-     PDM_hexa_decomposes_faces(n_elt,
-                               order,
-                               parent_node,
-                               n_elt_current,
-                               n_dface_current,
-                               beg_gnum_elt_current,
-                               beg_gnum_face_current,
-                               connectivity_elmt_vtx,
-                               elmt_face_vtx_idx,
-                               elmt_face_vtx,
-                               elmt_face_cell,
-                               elmt_cell_face_idx,
-                               elmt_cell_face,
-                               parent_elmt_position);
-     break;
-   default:
-     PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_faces : Element type is supported\n");
+  PDM_UNUSED(beg_gnum_face_current);
+  PDM_UNUSED(elmt_cell_face_idx);
+  PDM_UNUSED(elmt_cell_face);
+
+  int parent_node_std[8] = {0, 1, 2, 3, 4, 5, 6, 7};
+
+  int *_parent_node;
+  if (parent_node == NULL) {
+    _parent_node = parent_node_std;
+  } else {
+    _parent_node = parent_node;
   }
+
+  const int *elt_face_vtx_idx = NULL;
+  const int *elt_face_vtx     = NULL;
+  int n_face_elt = PDM_face_vtx_per_elmt(t_elt,
+                                         &elt_face_vtx_idx,
+                                         &elt_face_vtx);
+
+  if (n_face_elt <= 0 || elt_face_vtx == NULL) {
+    return;
+  }
+
+  int n_sum_vtx_face = elt_face_vtx_idx[n_face_elt];
+  int n_vtx_elt      = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
+
+  int          _n_face_current            = *n_dface_current;
+  int         *_current_elmt_face_vtx_idx = elmt_face_vtx_idx    + _n_face_current;
+  PDM_g_num_t *_current_elmt_face_vtx     = elmt_face_vtx        + elmt_face_vtx_idx[_n_face_current];
+  PDM_g_num_t *_current_elmt_face_cell    = elmt_face_cell       + _n_face_current;
+  int         *_parent_elmt_position      = parent_elmt_position + _n_face_current;
+
+  /*
+   * For each element we flaten all connectivities in one array
+   */
+  for (int i_elt = 0; i_elt < n_elt; i_elt++) {
+
+    for (int i_face = 0; i_face < n_face_elt; i_face++) {
+
+      _current_elmt_face_vtx_idx[i_elt * n_face_elt + i_face + 1] = _current_elmt_face_vtx_idx[i_elt * n_face_elt + i_face] + elt_face_vtx_idx[i_face+1] - elt_face_vtx_idx[i_face];
+      _current_elmt_face_cell   [i_elt * n_face_elt + i_face    ] =  beg_gnum_elt_current + i_elt + 1;
+      _parent_elmt_position     [i_elt * n_face_elt + i_face    ] =  i_face;
+
+      for (int i = elt_face_vtx_idx[i_face]; i < elt_face_vtx_idx[i_face+1]; i++) {
+        int i_vtx = elt_face_vtx[i];
+        _current_elmt_face_vtx[n_sum_vtx_face*i_elt + i] = connectivity_elmt_vtx[n_vtx_elt * i_elt + _parent_node[i_vtx]];
+      }
+
+    }
+
+  }
+
+  *n_elt_current   += n_elt;
+  *n_dface_current += n_elt * n_face_elt;
 }
 
 /**
 *
-* \brief Decompose quad cell_vtx connectivity to a flatten view of edges
+* \brief Decompose standard elements to a flatten view of edges
 */
 void
 PDM_std_decomposes_edges
@@ -516,504 +600,64 @@ PDM_std_decomposes_edges
        int                  *parent_elmt_position
 )
 {
-
-  switch (t_elt) {
-   case PDM_MESH_NODAL_POINT:
-     abort();
-     break;
-   case PDM_MESH_NODAL_BAR2:
-   case PDM_MESH_NODAL_BARHO:
-   case PDM_MESH_NODAL_BARHO_BEZIER:
-     PDM_bar_decomposes_edges(n_elt,
-                              order,
-                              parent_node,
-                              n_elt_current,
-                              n_dedge_current,
-                              beg_gnum_elt_current,
-                              beg_gnum_edge_current,
-                              connectivity_elmt_vtx,
-                              elmt_edge_vtx_idx,
-                              elmt_edge_vtx,
-                              elmt_edge_cell,
-                              elmt_cell_edge_idx,
-                              elmt_cell_edge,
-                              parent_elmt_position);
-     break;
-   case PDM_MESH_NODAL_TRIA3:
-   case PDM_MESH_NODAL_TRIAHO:
-   case PDM_MESH_NODAL_TRIAHO_BEZIER:
-     PDM_tri_decomposes_edges(n_elt,
-                              order,
-                              parent_node,
-                              n_elt_current,
-                              n_dedge_current,
-                              beg_gnum_elt_current,
-                              beg_gnum_edge_current,
-                              connectivity_elmt_vtx,
-                              elmt_edge_vtx_idx,
-                              elmt_edge_vtx,
-                              elmt_edge_cell,
-                              elmt_cell_edge_idx,
-                              elmt_cell_edge,
-                              parent_elmt_position);
-     break;
-   case PDM_MESH_NODAL_QUAD4:
-   case PDM_MESH_NODAL_QUADHO:
-     PDM_quad_decomposes_edges(n_elt,
-                               order,
-                               parent_node,
-                               n_elt_current,
-                               n_dedge_current,
-                               beg_gnum_elt_current,
-                               beg_gnum_edge_current,
-                               connectivity_elmt_vtx,
-                               elmt_edge_vtx_idx,
-                               elmt_edge_vtx,
-                               elmt_edge_cell,
-                               elmt_cell_edge_idx,
-                               elmt_cell_edge,
-                               parent_elmt_position);
-     break;
-   case PDM_MESH_NODAL_TETRA4:
-   case PDM_MESH_NODAL_TETRAHO:
-     PDM_tetra_decomposes_edges(n_elt,
-                                order,
-                                parent_node,
-                                n_elt_current,
-                                n_dedge_current,
-                                beg_gnum_elt_current,
-                                beg_gnum_edge_current,
-                                connectivity_elmt_vtx,
-                                elmt_edge_vtx_idx,
-                                elmt_edge_vtx,
-                                elmt_edge_cell,
-                                elmt_cell_edge_idx,
-                                elmt_cell_edge,
-                                parent_elmt_position);
-     break;
-   case PDM_MESH_NODAL_PYRAMID5:
-   case PDM_MESH_NODAL_PYRAMIDHO:
-     PDM_pyra_decomposes_edges(n_elt,
-                               order,
-                               parent_node,
-                               n_elt_current,
-                               n_dedge_current,
-                               beg_gnum_elt_current,
-                               beg_gnum_edge_current,
-                               connectivity_elmt_vtx,
-                               elmt_edge_vtx_idx,
-                               elmt_edge_vtx,
-                               elmt_edge_cell,
-                               elmt_cell_edge_idx,
-                               elmt_cell_edge,
-                               parent_elmt_position);
-     break;
-   case PDM_MESH_NODAL_PRISM6:
-   case PDM_MESH_NODAL_PRISMHO:
-     PDM_prism_decomposes_edges(n_elt,
-                                order,
-                                parent_node,
-                                n_elt_current,
-                                n_dedge_current,
-                                beg_gnum_elt_current,
-                                beg_gnum_edge_current,
-                                connectivity_elmt_vtx,
-                                elmt_edge_vtx_idx,
-                                elmt_edge_vtx,
-                                elmt_edge_cell,
-                                elmt_cell_edge_idx,
-                                elmt_cell_edge,
-                                parent_elmt_position);
-     break;
-   case PDM_MESH_NODAL_HEXA8:
-   case PDM_MESH_NODAL_HEXAHO:
-     PDM_hexa_decomposes_edges(n_elt,
-                               order,
-                               parent_node,
-                               n_elt_current,
-                               n_dedge_current,
-                               beg_gnum_elt_current,
-                               beg_gnum_edge_current,
-                               connectivity_elmt_vtx,
-                               elmt_edge_vtx_idx,
-                               elmt_edge_vtx,
-                               elmt_edge_cell,
-                               elmt_cell_edge_idx,
-                               elmt_cell_edge,
-                               parent_elmt_position);
-     break;
-   default:
-     PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is supported\n");
-  }
-}
-
-
-
-
-/**
-*
-* \brief Decompose quad cell_vtx connectivity to a flatten view of edges
-*/
-void
-PDM_bar_decomposes_edges
-(
-       int          n_elt,
-       int          order,
-       int         *parent_node,
-       int         *n_elt_current,
-       int         *n_edge_current,
-       PDM_g_num_t  beg_gnum_elt_current,
-       PDM_g_num_t  beg_gnum_face_current,
- const PDM_g_num_t *connectivity_elmt_vtx,
-       int         *elmt_edge_vtx_idx,
-       PDM_g_num_t *elmt_edge_vtx,
-       PDM_g_num_t *elmt_edge_cell,
-       int         *elmt_cell_edge_idx,
-       PDM_g_num_t *elmt_cell_edge,
-       int         *parent_elmt_position
-)
-{
+  PDM_UNUSED(beg_gnum_edge_current);
   PDM_UNUSED(elmt_cell_edge_idx);
   PDM_UNUSED(elmt_cell_edge);
-  PDM_UNUSED(beg_gnum_face_current);
 
-  const int n_edge_elt        = 1;
-  const int n_sum_vtx_edge    = 2;
-  int n_sum_vtx_elt           = 2;
-  if(order > 1) {
-    n_sum_vtx_elt     = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_BARHO, order);
-  }
+  int parent_node_std[8] = {0, 1, 2, 3, 4, 5, 6, 7};
 
-  int __parent_node[2] = {0, 1};
   int *_parent_node;
   if (parent_node == NULL) {
-    _parent_node = __parent_node;
+    _parent_node = parent_node_std;
   } else {
     _parent_node = parent_node;
   }
 
-  int _n_edge_current = *n_edge_current;
-  int         *_current_elmt_edge_vtx_idx = elmt_edge_vtx_idx + _n_edge_current;
-  PDM_g_num_t *_current_elmt_edge_vtx     = elmt_edge_vtx + elmt_edge_vtx_idx[_n_edge_current];
-  PDM_g_num_t *_current_elmt_edge_cell    = elmt_edge_cell + _n_edge_current;
+  const int *elt_edge_vtx = NULL;
+  int n_edge_elt = PDM_edge_vtx_per_elmt(t_elt,
+                                         &elt_edge_vtx);
+
+  if (n_edge_elt <= 0 || elt_edge_vtx == NULL) {
+    return;
+  }
+
+  int n_sum_vtx_edge = n_edge_elt * 2;
+  int n_vtx_elt      = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
+
+  int          _n_edge_current            = *n_dedge_current;
+  int         *_current_elmt_edge_vtx_idx = elmt_edge_vtx_idx    + _n_edge_current;
+  PDM_g_num_t *_current_elmt_edge_vtx     = elmt_edge_vtx        + elmt_edge_vtx_idx[_n_edge_current];
+  PDM_g_num_t *_current_elmt_edge_cell    = elmt_edge_cell       + _n_edge_current;
   int         *_parent_elmt_position      = parent_elmt_position + _n_edge_current;
 
   /*
    * For each element we flaten all connectivities in one array
    */
-  for (int ielt = 0; ielt < n_elt; ielt++) {
+  for (int i_elt = 0; i_elt < n_elt; i_elt++) {
 
     for (int i_edge = 0; i_edge < n_edge_elt; i_edge++) {
-      _current_elmt_edge_vtx_idx[ielt * n_edge_elt + i_edge + 1] = _current_elmt_edge_vtx_idx[ielt * n_edge_elt + i_edge] + 2;
-      _current_elmt_edge_cell   [ielt * n_edge_elt + i_edge    ] =  beg_gnum_elt_current + ielt + 1;
-      _parent_elmt_position     [ielt * n_edge_elt + i_edge    ] =  i_edge;
-    }
 
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 0]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]];
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 1]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]];
+      _current_elmt_edge_vtx_idx[i_elt * n_edge_elt + i_edge + 1] = _current_elmt_edge_vtx_idx[i_elt * n_edge_elt + i_edge] + 2;
+      _current_elmt_edge_cell   [i_elt * n_edge_elt + i_edge    ] =  beg_gnum_elt_current + i_elt + 1;
+      _parent_elmt_position     [i_elt * n_edge_elt + i_edge    ] =  i_edge;
+
+      for (int i = 2*i_edge; i < 2*(i_edge+1); i++) {
+        int i_vtx = elt_edge_vtx[i];
+        _current_elmt_edge_vtx[n_sum_vtx_edge*i_elt + i] = connectivity_elmt_vtx[n_vtx_elt * i_elt + _parent_node[i_vtx]];
+      }
+
+    }
 
   }
 
-  *n_elt_current  += n_elt;
-  *n_edge_current += n_elt * n_edge_elt;
-
+  *n_elt_current   += n_elt;
+  *n_dedge_current += n_elt * n_edge_elt;
 }
+
 
 /**
 *
-* \brief Decompose quad cell_vtx connectivity to a flatten view of edges
-*/
-void
-PDM_tri_decomposes_edges
-(
-       int          n_elt,
-       int          order,
-       int         *parent_node,
-       int         *n_elt_current,
-       int         *n_edge_current,
-       PDM_g_num_t  beg_gnum_elt_current,
-       PDM_g_num_t  beg_gnum_face_current,
- const PDM_g_num_t *connectivity_elmt_vtx,
-       int         *elmt_edge_vtx_idx,
-       PDM_g_num_t *elmt_edge_vtx,
-       PDM_g_num_t *elmt_edge_cell,
-       int         *elmt_cell_edge_idx,
-       PDM_g_num_t *elmt_cell_edge,
-       int         *parent_elmt_position
-)
-{
-  PDM_UNUSED(elmt_cell_edge_idx);
-  PDM_UNUSED(elmt_cell_edge);
-  PDM_UNUSED(beg_gnum_face_current);
-
-  const int n_edge_elt        = 3;
-  const int n_sum_vtx_edge    = 6;
-  int n_sum_vtx_elt           = 3;
-
-  if(order > 1) {
-    n_sum_vtx_elt     = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_TRIAHO, order);
-  }
-
-  int __parent_node[3] = {0, 1, 2};
-  int *_parent_node;
-  if (parent_node == NULL) {
-    _parent_node = __parent_node;
-  } else {
-    _parent_node = parent_node;
-  }
-
-  int _n_edge_current = *n_edge_current;
-  int         *_current_elmt_edge_vtx_idx = elmt_edge_vtx_idx + _n_edge_current;
-  PDM_g_num_t *_current_elmt_edge_vtx     = elmt_edge_vtx + elmt_edge_vtx_idx[_n_edge_current];
-  PDM_g_num_t *_current_elmt_edge_cell    = elmt_edge_cell + _n_edge_current;
-  int         *_parent_elmt_position      = parent_elmt_position + _n_edge_current;
-
-  /*
-   * For each element we flaten all connectivities in one array
-   */
-  for (int ielt = 0; ielt < n_elt; ielt++) {
-
-    for (int i_edge = 0; i_edge < n_edge_elt; i_edge++) {
-      _current_elmt_edge_vtx_idx[ielt * n_edge_elt + i_edge + 1] = _current_elmt_edge_vtx_idx[ielt * n_edge_elt + i_edge] + 2;
-      _current_elmt_edge_cell   [ielt * n_edge_elt + i_edge    ] =  beg_gnum_elt_current + ielt + 1;
-      _parent_elmt_position     [ielt * n_edge_elt + i_edge    ] =  i_edge;
-    }
-
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 0]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]];
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 1]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]];
-
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 2]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]];
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 3]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]];
-
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 4]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]];
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 5]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]];
-
-  }
-
-  *n_elt_current  += n_elt;
-  *n_edge_current += n_elt * n_edge_elt;
-
-}
-
-/**
-*
-* \brief Decompose quad cell_vtx connectivity to a flatten view of edges
-*/
-void
-PDM_quad_decomposes_edges
-(
-       int          n_elt,
-       int          order,
-       int         *parent_node,
-       int         *n_elt_current,
-       int         *n_edge_current,
-       PDM_g_num_t  beg_gnum_elt_current,
-       PDM_g_num_t  beg_gnum_face_current,
- const PDM_g_num_t *connectivity_elmt_vtx,
-       int         *elmt_edge_vtx_idx,
-       PDM_g_num_t *elmt_edge_vtx,
-       PDM_g_num_t *elmt_edge_cell,
-       int         *elmt_cell_edge_idx,
-       PDM_g_num_t *elmt_cell_edge,
-       int         *parent_elmt_position
-)
-{
-  PDM_UNUSED(elmt_cell_edge_idx);
-  PDM_UNUSED(elmt_cell_edge);
-  PDM_UNUSED(beg_gnum_face_current);
-
-  const int n_edge_elt        = 4;
-  const int n_sum_vtx_edge    = 8;
-  int n_sum_vtx_elt           = 4;
-  if(order > 1) {
-    n_sum_vtx_elt     = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_QUADHO, order);
-  }
-
-  int __parent_node[4] = {0, 1, 2, 3};
-  int *_parent_node;
-  if (parent_node == NULL) {
-    _parent_node = __parent_node;
-  } else {
-    _parent_node = parent_node;
-  }
-
-  int _n_edge_current = *n_edge_current;
-  int         *_current_elmt_edge_vtx_idx = elmt_edge_vtx_idx + _n_edge_current;
-  PDM_g_num_t *_current_elmt_edge_vtx     = elmt_edge_vtx + elmt_edge_vtx_idx[_n_edge_current];
-  PDM_g_num_t *_current_elmt_edge_cell    = elmt_edge_cell + _n_edge_current;
-  int         *_parent_elmt_position      = parent_elmt_position + _n_edge_current;
-
-  /*
-   * For each element we flaten all connectivities in one array
-   */
-  for (int ielt = 0; ielt < n_elt; ielt++) {
-
-    for (int i_edge = 0; i_edge < n_edge_elt; i_edge++) {
-      _current_elmt_edge_vtx_idx[ielt * n_edge_elt + i_edge + 1] = _current_elmt_edge_vtx_idx[ielt * n_edge_elt + i_edge] + 2;
-      _current_elmt_edge_cell   [ielt * n_edge_elt + i_edge    ] =  beg_gnum_elt_current + ielt + 1;
-      _parent_elmt_position     [ielt * n_edge_elt + i_edge    ] =  i_edge;
-    }
-
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 0]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]];
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 1]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]];
-
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 2]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]];
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 3]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]];
-
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 4]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]];
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 5]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]];
-
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 6]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]];
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 7]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]];
-  }
-
-  *n_elt_current  += n_elt;
-  *n_edge_current += n_elt * n_edge_elt;
-
-}
-
-/**
-*
-* \brief Decompose quad cell_vtx connectivity to a flatten view of edges
-*/
-void
-PDM_tri_decomposes_faces
-(
-       int          n_elt,
-       int          order,
-       int         *parent_node,
-       int         *n_elt_current,
-       int         *n_face_current,
-       PDM_g_num_t  beg_gnum_elt_current,
-       PDM_g_num_t  beg_gnum_face_current,
- const PDM_g_num_t *connectivity_elmt_vtx,
-       int         *elmt_face_vtx_idx,
-       PDM_g_num_t *elmt_face_vtx,
-       PDM_g_num_t *elmt_face_cell,
-       int         *elmt_cell_face_idx,
-       PDM_g_num_t *elmt_cell_face,
-       int         *parent_elmt_position
-)
-{
-  PDM_UNUSED(elmt_cell_face_idx);
-  PDM_UNUSED(elmt_cell_face);
-  PDM_UNUSED(beg_gnum_face_current);
-
-  const int n_face_elt        = 1;
-  const int n_sum_vtx_face    = 3;
-  int n_sum_vtx_elt           = 3;
-  if(order > 1) {
-    n_sum_vtx_elt     = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_TRIAHO, order);
-  }
-
-  int __parent_node[3] = {0, 1, 2};
-  int *_parent_node;
-  if (parent_node == NULL) {
-    _parent_node = __parent_node;
-  } else {
-    _parent_node = parent_node;
-  }
-
-  int _n_face_current = *n_face_current;
-  int         *_current_elmt_face_vtx_idx = elmt_face_vtx_idx + _n_face_current;
-  PDM_g_num_t *_current_elmt_face_vtx     = elmt_face_vtx + elmt_face_vtx_idx[_n_face_current];
-  PDM_g_num_t *_current_elmt_face_cell    = elmt_face_cell + _n_face_current;
-  int         *_parent_elmt_position      = parent_elmt_position + _n_face_current;
-
-  /*
-   * For each element we flaten all connectivities in one array
-   */
-  for (int ielt = 0; ielt < n_elt; ielt++) {
-
-    for (int i_face = 0; i_face < n_face_elt; i_face++) {
-      _current_elmt_face_vtx_idx[ielt * n_face_elt + i_face + 1] = _current_elmt_face_vtx_idx[ielt * n_face_elt + i_face] + 3;
-      _current_elmt_face_cell   [ielt * n_face_elt + i_face    ] = beg_gnum_elt_current + ielt + 1;
-      _parent_elmt_position     [ielt * n_face_elt + i_face    ] =  i_face;
-    }
-
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 0]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 1]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 2]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]];
-
-  }
-
-  *n_elt_current  += n_elt;
-  *n_face_current += n_elt * n_face_elt;
-}
-
-/**
-*
-* \brief Decompose quad cell_vtx connectivity to a flatten view of edges
-*/
-void
-PDM_quad_decomposes_faces
-(
-       int          n_elt,
-       int          order,
-       int         *parent_node,
-       int         *n_elt_current,
-       int         *n_face_current,
-       PDM_g_num_t  beg_gnum_elt_current,
-       PDM_g_num_t  beg_gnum_face_current,
- const PDM_g_num_t *connectivity_elmt_vtx,
-       int         *elmt_face_vtx_idx,
-       PDM_g_num_t *elmt_face_vtx,
-       PDM_g_num_t *elmt_face_cell,
-       int         *elmt_cell_face_idx,
-       PDM_g_num_t *elmt_cell_face,
-       int         *parent_elmt_position
-)
-{
-  PDM_UNUSED(elmt_cell_face_idx);
-  PDM_UNUSED(elmt_cell_face);
-  PDM_UNUSED(beg_gnum_face_current);
-
-  const int n_face_elt        = 1;
-  const int n_sum_vtx_face    = 4;
-  int n_sum_vtx_elt           = 4;
-  if(order > 1) {
-    n_sum_vtx_elt     = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_QUADHO, order);
-  }
-
-  int __parent_node[4] = {0, 1, 2, 3};
-  int *_parent_node;
-  if (parent_node == NULL) {
-    _parent_node = __parent_node;
-  } else {
-    _parent_node = parent_node;
-  }
-
-  int _n_face_current = *n_face_current;
-  int         *_current_elmt_face_vtx_idx = elmt_face_vtx_idx + _n_face_current;
-  PDM_g_num_t *_current_elmt_face_vtx     = elmt_face_vtx + elmt_face_vtx_idx[_n_face_current];
-  PDM_g_num_t *_current_elmt_face_cell    = elmt_face_cell + _n_face_current;
-  int         *_parent_elmt_position      = parent_elmt_position + _n_face_current;
-
-  /*
-   * For each element we flaten all connectivities in one array
-   */
-  for (int ielt = 0; ielt < n_elt; ielt++) {
-
-    for (int i_face = 0; i_face < n_face_elt; i_face++) {
-      _current_elmt_face_vtx_idx[ielt * n_face_elt + i_face + 1] = _current_elmt_face_vtx_idx[ielt * n_face_elt + i_face] + 4;
-      _current_elmt_face_cell   [ielt * n_face_elt + i_face    ] = beg_gnum_elt_current + ielt + 1;
-      _parent_elmt_position     [ielt * n_face_elt + i_face    ] =  i_face;
-    }
-
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 0]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 1]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 2]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 3]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]];
-
-  }
-
-  *n_elt_current  += n_elt;
-  *n_face_current += n_elt * n_face_elt;
-}
-
-/**
-*
-* \brief Decompose quad cell_vtx connectivity to a flatten view of edges
+* \brief Decompose polygons to a flatten view of edges
 */
 void
 PDM_poly2d_decomposes_faces
@@ -1037,10 +681,10 @@ PDM_poly2d_decomposes_faces
   PDM_UNUSED(elmt_cell_face);
   PDM_UNUSED(beg_gnum_face_current);
 
-  int _n_face_current = *n_face_current;
-  int         *_current_elmt_face_vtx_idx = elmt_face_vtx_idx + _n_face_current;
-  PDM_g_num_t *_current_elmt_face_vtx     = elmt_face_vtx + elmt_face_vtx_idx[_n_face_current];
-  PDM_g_num_t *_current_elmt_face_cell    = elmt_face_cell + _n_face_current;
+  int          _n_face_current            = *n_face_current;
+  int         *_current_elmt_face_vtx_idx = elmt_face_vtx_idx    + _n_face_current;
+  PDM_g_num_t *_current_elmt_face_vtx     = elmt_face_vtx        + elmt_face_vtx_idx[_n_face_current];
+  PDM_g_num_t *_current_elmt_face_cell    = elmt_face_cell       + _n_face_current;
   int         *_parent_elmt_position      = parent_elmt_position + _n_face_current;
 
   /*
@@ -1064,7 +708,7 @@ PDM_poly2d_decomposes_faces
 
 /**
 *
-* \brief Decompose quad cell_vtx connectivity to a flatten view of edges
+* \brief Decompose polygons to a flatten view of edges
 */
 void
 PDM_poly2d_decomposes_edges
@@ -1088,10 +732,10 @@ PDM_poly2d_decomposes_edges
   PDM_UNUSED(elmt_cell_edge);
   PDM_UNUSED(beg_gnum_edge_current);
 
-  int _n_edge_current = *n_edge_current;
-  int         *_current_elmt_edge_vtx_idx = elmt_edge_vtx_idx + _n_edge_current;
-  PDM_g_num_t *_current_elmt_edge_vtx     = elmt_edge_vtx + elmt_edge_vtx_idx[_n_edge_current];
-  PDM_g_num_t *_current_elmt_edge_cell    = elmt_edge_cell + _n_edge_current;
+  int          _n_edge_current            = *n_edge_current;
+  int         *_current_elmt_edge_vtx_idx = elmt_edge_vtx_idx    + _n_edge_current;
+  PDM_g_num_t *_current_elmt_edge_vtx     = elmt_edge_vtx        + elmt_edge_vtx_idx[_n_edge_current];
+  PDM_g_num_t *_current_elmt_edge_cell    = elmt_edge_cell       + _n_edge_current;
   int         *_parent_elmt_position      = parent_elmt_position + _n_edge_current;
   /*
    * For each element we flaten all connectivities in one array
@@ -1115,14 +759,14 @@ PDM_poly2d_decomposes_edges
     }
   }
 
-  *n_elt_current  += n_elt;
+  *n_elt_current += n_elt;
 }
 
 
 
 /**
 *
-* \brief Decompose quad cell_vtx connectivity to a flatten view of edges
+* \brief Decompose polyhedra to a flatten view of edges
 */
 void
 PDM_poly3d_decomposes_faces
@@ -1156,12 +800,12 @@ PDM_poly3d_decomposes_faces
   PDM_UNUSED(elmt_cell_face);
   PDM_UNUSED(parent_elmt_position);
 
-  abort();
+  PDM_error(__FILE__, __LINE__, 0, "PDM_poly3d_decomposes_faces : Not yet implemented\n");
 }
 
 /**
 *
-* \brief Decompose quad cell_vtx connectivity to a flatten view of edges
+* \brief Decompose polyhedra to a flatten view of edges
 */
 void
 PDM_poly3d_decomposes_edges
@@ -1194,802 +838,10 @@ PDM_poly3d_decomposes_edges
   PDM_UNUSED(elmt_cell_edge_idx);
   PDM_UNUSED(elmt_cell_edge);
   PDM_UNUSED(parent_elmt_position);
-  abort();
-}
-
-/**
-*
-* \brief Decompose tetra cell_vtx connectivity to a flatten view of faces
-*/
-void
-PDM_tetra_decomposes_faces
-(
-       int          n_elt,
-       int          order,
-       int         *parent_node,
-       int         *n_elt_current,
-       int         *n_face_current,
-       PDM_g_num_t  beg_gnum_elt_current,
-       PDM_g_num_t  beg_gnum_face_current,
- const PDM_g_num_t *connectivity_elmt_vtx,
-       int         *elmt_face_vtx_idx,
-       PDM_g_num_t *elmt_face_vtx,
-       PDM_g_num_t *elmt_face_cell,
-       int         *elmt_cell_face_idx,
-       PDM_g_num_t *elmt_cell_face,
-       int         *parent_elmt_position
-)
-{
-  PDM_UNUSED(elmt_cell_face_idx);
-  PDM_UNUSED(elmt_cell_face);
-  PDM_UNUSED(beg_gnum_elt_current);
-  PDM_UNUSED(beg_gnum_face_current);
-
-  const int n_face_elt        = 4;
-  const int n_sum_vtx_face    = 12;
-  int n_sum_vtx_elt           = 4;
-
-  if(order > 1) {
-    n_sum_vtx_elt     = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_TETRAHO, order);
-  }
-
-  int __parent_node[4] = {0, 1, 2, 3};
-  int *_parent_node;
-  if (parent_node == NULL) {
-    _parent_node = __parent_node;
-  } else {
-    _parent_node = parent_node;
-  }
-
-  int _n_face_current = *n_face_current;
-  int         *_current_elmt_face_vtx_idx = elmt_face_vtx_idx + _n_face_current;
-  PDM_g_num_t *_current_elmt_face_vtx     = elmt_face_vtx + elmt_face_vtx_idx[_n_face_current];
-  PDM_g_num_t *_current_elmt_face_cell    = elmt_face_cell + _n_face_current;
-  int         *_parent_elmt_position      = parent_elmt_position + _n_face_current;
-
-  /*
-   * For each element we flaten all connectivities in one array
-   */
-  for (int ielt = 0; ielt < n_elt; ielt++) {
-
-    for (int i_face = 0; i_face < n_face_elt; i_face++) {
-      _current_elmt_face_vtx_idx[ielt * n_face_elt + i_face + 1] = _current_elmt_face_vtx_idx[ielt * n_face_elt + i_face] + 3;
-      _current_elmt_face_cell   [ielt * n_face_elt + i_face    ] = beg_gnum_elt_current + ielt + 1;
-      _parent_elmt_position     [ielt * n_face_elt + i_face    ] =  i_face;
-    }
-
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 0]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 1]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 2]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]];
-
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 3]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 4]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 5]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]];
-
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 6]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 7]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 8]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]];
-
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 9]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 10] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 11] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]];
-
-  }
-
-  *n_elt_current  += n_elt;
-  *n_face_current += n_elt * n_face_elt;
-
-}
-
-/**
-*
-* \brief Decompose tetra cell_vtx connectivity to a flatten view of faces
-*/
-void
-PDM_tetra_decomposes_edges
-(
-       int          n_elt,
-       int          order,
-       int         *parent_node,
-       int         *n_elt_current,
-       int         *n_edge_current,
-       PDM_g_num_t  beg_gnum_elt_current,
-       PDM_g_num_t  beg_gnum_edge_current,
- const PDM_g_num_t *connectivity_elmt_vtx,
-       int         *elmt_edge_vtx_idx,
-       PDM_g_num_t *elmt_edge_vtx,
-       PDM_g_num_t *elmt_edge_cell,
-       int         *elmt_cell_edge_idx,
-       PDM_g_num_t *elmt_cell_edge,
-       int         *parent_elmt_position
-)
-{
-  PDM_UNUSED(elmt_cell_edge_idx);
-  PDM_UNUSED(elmt_cell_edge);
-  PDM_UNUSED(beg_gnum_elt_current);
-  PDM_UNUSED(beg_gnum_edge_current);
-
-  const int n_edge_elt        = 6;
-  const int n_sum_vtx_edge    = 12;
-  int n_sum_vtx_elt     = 4;
-  if(order > 1) {
-    n_sum_vtx_elt     = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_TETRAHO, order);
-  }
-
-  int __parent_node[4] = {0, 1, 2, 3};
-  int *_parent_node;
-  if (parent_node == NULL) {
-    _parent_node = __parent_node;
-  } else {
-    _parent_node = parent_node;
-  }
-
-  int _n_edge_current = *n_edge_current;
-  int         *_current_elmt_edge_vtx_idx = elmt_edge_vtx_idx + _n_edge_current;
-  PDM_g_num_t *_current_elmt_edge_vtx     = elmt_edge_vtx + elmt_edge_vtx_idx[_n_edge_current];
-  PDM_g_num_t *_current_elmt_edge_cell    = elmt_edge_cell + _n_edge_current;
-  int         *_parent_elmt_position      = parent_elmt_position + _n_edge_current;
-
-  /*
-   * For each element we flaten all connectivities in one array
-   */
-  for (int ielt = 0; ielt < n_elt; ielt++) {
-
-    for (int i_edge = 0; i_edge < n_edge_elt; i_edge++) {
-      _current_elmt_edge_vtx_idx[ielt * n_edge_elt + i_edge + 1] = _current_elmt_edge_vtx_idx[ielt * n_edge_elt + i_edge] + 2;
-      _current_elmt_edge_cell   [ielt * n_edge_elt + i_edge    ] = beg_gnum_elt_current + ielt + 1;
-      _parent_elmt_position     [ielt * n_edge_elt + i_edge    ] = i_edge;
-    }
-
-    // E1 = N1 N2
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 0]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]];
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 1]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]];
-
-    // E2 = N2 N3
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 2]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]];
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 3]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]];
-
-    // E3 = N3 N1
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 4]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]];
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 5]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]];
-
-    // E4 = N1 N4
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 6]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]];
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 7]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]];
-
-    // E5 = N2 N4
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 8]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]];
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 9]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]];
-
-    // E6 = N3 N4
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 10]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]];
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 11]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]];
-
-  }
-
-  *n_elt_current  += n_elt;
-  *n_edge_current += n_elt * n_edge_elt;
-
-}
-
-/**
-*
-* \brief Decompose pyra cell_vtx connectivity to a flatten view of faces
-*/
-void
-PDM_pyra_decomposes_faces
-(
-       int          n_elt,
-       int          order,
-       int         *parent_node,
-       int         *n_elt_current,
-       int         *n_face_current,
-       PDM_g_num_t  beg_gnum_elt_current,
-       PDM_g_num_t  beg_gnum_face_current,
- const PDM_g_num_t *connectivity_elmt_vtx,
-       int         *elmt_face_vtx_idx,
-       PDM_g_num_t *elmt_face_vtx,
-       PDM_g_num_t *elmt_face_cell,
-       int         *elmt_cell_face_idx,
-       PDM_g_num_t *elmt_cell_face,
-       int         *parent_elmt_position
-)
-{
-  PDM_UNUSED(elmt_cell_face_idx);
-  PDM_UNUSED(elmt_cell_face);
-  PDM_UNUSED(beg_gnum_elt_current);
-  PDM_UNUSED(beg_gnum_face_current);
-
-  const int n_face_elt     = 5;
-  const int n_sum_vtx_face = 1*4 + 4*3;
-  int n_sum_vtx_elt        = 5;
-  if(order > 1) {
-    n_sum_vtx_elt     = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_PYRAMIDHO, order);
-  }
-
-  int __parent_node[5] = {0, 1, 2, 3, 4};
-  int *_parent_node;
-  if (parent_node == NULL) {
-    _parent_node = __parent_node;
-  } else {
-    _parent_node = parent_node;
-  }
-
-  int _n_face_current = *n_face_current;
-  int         *_current_elmt_face_vtx_idx = elmt_face_vtx_idx + _n_face_current;
-  PDM_g_num_t *_current_elmt_face_vtx     = elmt_face_vtx + elmt_face_vtx_idx[_n_face_current];
-  PDM_g_num_t *_current_elmt_face_cell    = elmt_face_cell + _n_face_current;
-  int         *_parent_elmt_position      = parent_elmt_position + _n_face_current;
-
-  /*
-   * For each element we flaten all connectivities in one array
-   */
-  for (int ielt = 0; ielt < n_elt; ielt++) {
-
-    for (int i_face = 0; i_face < n_face_elt; i_face++) {
-      // _current_elmt_face_cell[ielt * n_face_elt + i_face    ] = *n_elt_current + ielt + 1;
-      _current_elmt_face_cell[ielt * n_face_elt + i_face    ] = beg_gnum_elt_current + ielt + 1;
-      _parent_elmt_position  [ielt * n_face_elt + i_face    ] =  i_face;
-    }
-
-    _current_elmt_face_vtx_idx[ielt * n_face_elt + 1]  = _current_elmt_face_vtx_idx[ielt * n_face_elt    ] + 4;
-    _current_elmt_face_vtx_idx[ielt * n_face_elt + 2]  = _current_elmt_face_vtx_idx[ielt * n_face_elt + 1] + 3;
-    _current_elmt_face_vtx_idx[ielt * n_face_elt + 3]  = _current_elmt_face_vtx_idx[ielt * n_face_elt + 2] + 3;
-    _current_elmt_face_vtx_idx[ielt * n_face_elt + 4]  = _current_elmt_face_vtx_idx[ielt * n_face_elt + 3] + 3;
-    _current_elmt_face_vtx_idx[ielt * n_face_elt + 5]  = _current_elmt_face_vtx_idx[ielt * n_face_elt + 4] + 3;
-
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 0]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 1]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 2]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 3]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]];
-
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 4]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 5]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 6]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]];
-
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 7]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 8]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 9]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]];
-
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 10] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 11] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 12] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]];
-
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 13] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 14] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 15] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]];
-  }
-
-  *n_elt_current  += n_elt;
-  *n_face_current += n_elt * n_face_elt;
-
+  PDM_error(__FILE__, __LINE__, 0, "PDM_poly3d_decomposes_edges : Not yet implemented\n");
 }
 
 
-/**
-*
-* \brief Decompose pyra cell_vtx connectivity to a flatten view of faces
-*/
-void
-PDM_pyra_decomposes_edges
-(
-       int          n_elt,
-       int          order,
-       int         *parent_node,
-       int         *n_elt_current,
-       int         *n_edge_current,
-       PDM_g_num_t  beg_gnum_elt_current,
-       PDM_g_num_t  beg_gnum_edge_current,
- const PDM_g_num_t *connectivity_elmt_vtx,
-       int         *elmt_edge_vtx_idx,
-       PDM_g_num_t *elmt_edge_vtx,
-       PDM_g_num_t *elmt_edge_cell,
-       int         *elmt_cell_edge_idx,
-       PDM_g_num_t *elmt_cell_edge,
-       int         *parent_elmt_position
-)
-{
-  PDM_UNUSED(elmt_cell_edge_idx);
-  PDM_UNUSED(elmt_cell_edge);
-  PDM_UNUSED(beg_gnum_elt_current);
-  PDM_UNUSED(beg_gnum_edge_current);
-
-  const int n_edge_elt     = 8;
-  const int n_sum_vtx_edge = 16;
-  int n_sum_vtx_elt        = 5;
-  if(order > 1) {
-    n_sum_vtx_elt     = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_PYRAMIDHO, order);
-  }
-
-  int __parent_node[5] = {0, 1, 2, 3, 4};
-  int *_parent_node;
-  if (parent_node == NULL) {
-    _parent_node = __parent_node;
-  } else {
-    _parent_node = parent_node;
-  }
-
-  int _n_edge_current = *n_edge_current;
-  int         *_current_elmt_edge_vtx_idx = elmt_edge_vtx_idx + _n_edge_current;
-  PDM_g_num_t *_current_elmt_edge_vtx     = elmt_edge_vtx + elmt_edge_vtx_idx[_n_edge_current];
-  PDM_g_num_t *_current_elmt_edge_cell    = elmt_edge_cell + _n_edge_current;
-  int         *_parent_elmt_position      = parent_elmt_position + _n_edge_current;
-
-  /*
-   * For each element we flaten all connectivities in one array
-   */
-  for (int ielt = 0; ielt < n_elt; ielt++) {
-
-    for (int i_edge = 0; i_edge < n_edge_elt; i_edge++) {
-      _current_elmt_edge_vtx_idx[ielt * n_edge_elt + i_edge + 1] = _current_elmt_edge_vtx_idx[ielt * n_edge_elt + i_edge] + 2;
-      _current_elmt_edge_cell   [ielt * n_edge_elt + i_edge    ] = beg_gnum_elt_current + ielt + 1;
-      _parent_elmt_position     [ielt * n_edge_elt + i_edge    ] = i_edge;
-    }
-
-    // E1 = N1 N2
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 0]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]];
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 1]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]];
-
-    // E2 = N2 N3
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 2]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]];
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 3]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]];
-
-    // E3 = N3 N4
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 4]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]];
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 5]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]];
-
-    // E4 = N4 N1
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 6]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]];
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 7]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]];
-
-    // E5 = N1 N5
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 8]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]];
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 9]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]];
-
-    // E6 = N2 N5
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 10] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]];
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 11] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]];
-
-    // E7 = N3 N5
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 12] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]];
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 13] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]];
-
-    // E8 = N4 N5
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 14] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]];
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 15] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]];
-
-  }
-
-  *n_elt_current  += n_elt;
-  *n_edge_current += n_elt * n_edge_elt;
-
-}
-
-/**
-*
-* \brief Decompose tetra cell_vtx connectivity to a flatten view of faces
-*/
-void
-PDM_prism_decomposes_faces
-(
-       int          n_elt,
-       int          order,
-       int         *parent_node,
-       int         *n_elt_current,
-       int         *n_face_current,
-       PDM_g_num_t  beg_gnum_elt_current,
-       PDM_g_num_t  beg_gnum_face_current,
- const PDM_g_num_t *connectivity_elmt_vtx,
-       int         *elmt_face_vtx_idx,
-       PDM_g_num_t *elmt_face_vtx,
-       PDM_g_num_t *elmt_face_cell,
-       int         *elmt_cell_face_idx,
-       PDM_g_num_t *elmt_cell_face,
-       int         *parent_elmt_position
-)
-{
-  PDM_UNUSED(elmt_cell_face_idx);
-  PDM_UNUSED(elmt_cell_face);
-  PDM_UNUSED(beg_gnum_elt_current);
-  PDM_UNUSED(beg_gnum_face_current);
-
-  const int n_face_elt     = 5;
-  const int n_sum_vtx_face = 3*4 + 2*3;
-  int n_sum_vtx_elt        = 6;
-  if(order > 1) {
-    n_sum_vtx_elt     = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_PRISMHO, order);
-  }
-
-  int __parent_node[6] = {0, 1, 2, 3, 4, 5};
-  int *_parent_node;
-  if (parent_node == NULL) {
-    _parent_node = __parent_node;
-  } else {
-    _parent_node = parent_node;
-  }
-
-  int _n_face_current = *n_face_current;
-  int         *_current_elmt_face_vtx_idx = elmt_face_vtx_idx + _n_face_current;
-  PDM_g_num_t *_current_elmt_face_vtx     = elmt_face_vtx + elmt_face_vtx_idx[_n_face_current];
-  PDM_g_num_t *_current_elmt_face_cell    = elmt_face_cell + _n_face_current;
-  int         *_parent_elmt_position      = parent_elmt_position + _n_face_current;
-
-  /*
-   * For each element we flaten all connectivities in one array
-   */
-  for (int ielt = 0; ielt < n_elt; ielt++) {
-
-    for (int i_face = 0; i_face < n_face_elt; i_face++) {
-      // _current_elmt_face_cell[ielt * n_face_elt + i_face    ] = *n_elt_current + ielt + 1;
-      _current_elmt_face_cell[ielt * n_face_elt + i_face    ] = beg_gnum_elt_current + ielt + 1;
-      _parent_elmt_position  [ielt * n_face_elt + i_face    ] = i_face;
-    }
-
-    // elmt_cell_face_idx[ielt + ]
-    // for (int i_face = 0; i_face < n_face_elt; i_face++) {
-    //   _current_elmt_face_cell[ielt * n_face_elt + i_face    ] = *n_elt_current + ielt + 1;
-    // }
-
-    _current_elmt_face_vtx_idx[ielt * n_face_elt + 1]  = _current_elmt_face_vtx_idx[ielt * n_face_elt    ] + 3;
-    _current_elmt_face_vtx_idx[ielt * n_face_elt + 2]  = _current_elmt_face_vtx_idx[ielt * n_face_elt + 1] + 3;
-    _current_elmt_face_vtx_idx[ielt * n_face_elt + 3]  = _current_elmt_face_vtx_idx[ielt * n_face_elt + 2] + 4;
-    _current_elmt_face_vtx_idx[ielt * n_face_elt + 4]  = _current_elmt_face_vtx_idx[ielt * n_face_elt + 3] + 4;
-    _current_elmt_face_vtx_idx[ielt * n_face_elt + 5]  = _current_elmt_face_vtx_idx[ielt * n_face_elt + 4] + 4;
-
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 0]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 1]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 2]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]];
-
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 3]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 4]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[5]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 5]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]];
-
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 6]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[5]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 7]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 8]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 9]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]];
-
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 10] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 11] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 12] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 13] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]];
-
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 14] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 15] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[5]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 16] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 17] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]];
-
-  }
-
-  *n_elt_current  += n_elt;
-  *n_face_current += n_elt * n_face_elt;
-
-}
-
-
-
-
-/**
-*
-* \brief Decompose tetra cell_vtx connectivity to a flatten view of faces
-*/
-void
-PDM_prism_decomposes_edges
-(
-       int          n_elt,
-       int          order,
-       int         *parent_node,
-       int         *n_elt_current,
-       int         *n_edge_current,
-       PDM_g_num_t  beg_gnum_elt_current,
-       PDM_g_num_t  beg_gnum_edge_current,
- const PDM_g_num_t *connectivity_elmt_vtx,
-       int         *elmt_edge_vtx_idx,
-       PDM_g_num_t *elmt_edge_vtx,
-       PDM_g_num_t *elmt_edge_cell,
-       int         *elmt_cell_edge_idx,
-       PDM_g_num_t *elmt_cell_edge,
-       int         *parent_elmt_position
-)
-{
-  PDM_UNUSED(elmt_cell_edge_idx);
-  PDM_UNUSED(elmt_cell_edge);
-  PDM_UNUSED(beg_gnum_elt_current);
-  PDM_UNUSED(beg_gnum_edge_current);
-
-  const int n_edge_elt     = 9;
-  const int n_sum_vtx_edge = 18;
-  int n_sum_vtx_elt        = 6;
-  if(order > 1) {
-    n_sum_vtx_elt     = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_PRISMHO, order);
-  }
-
-  int __parent_node[6] = {0, 1, 2, 3, 4, 5};
-  int *_parent_node;
-  if (parent_node == NULL) {
-    _parent_node = __parent_node;
-  } else {
-    _parent_node = parent_node;
-  }
-
-  int _n_edge_current = *n_edge_current;
-  int         *_current_elmt_edge_vtx_idx = elmt_edge_vtx_idx + _n_edge_current;
-  PDM_g_num_t *_current_elmt_edge_vtx     = elmt_edge_vtx + elmt_edge_vtx_idx[_n_edge_current];
-  PDM_g_num_t *_current_elmt_edge_cell    = elmt_edge_cell + _n_edge_current;
-  int         *_parent_elmt_position      = parent_elmt_position + _n_edge_current;
-
-  /*
-   * For each element we flaten all connectivities in one array
-   */
-  for (int ielt = 0; ielt < n_elt; ielt++) {
-
-    for (int i_edge = 0; i_edge < n_edge_elt; i_edge++) {
-      _current_elmt_edge_vtx_idx[ielt * n_edge_elt + 1     ] = _current_elmt_edge_vtx_idx[ielt * n_edge_elt    ] + 2;
-      _current_elmt_edge_cell   [ielt * n_edge_elt + i_edge] = beg_gnum_elt_current + ielt + 1;
-      _parent_elmt_position     [ielt * n_edge_elt + i_edge] = i_edge;
-    }
-
-    // E1 = N1 N2
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 0]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]];
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 1]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]];
-
-    // E2 = N2 N3
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 2]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]];
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 3]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]];
-
-    // E3 = N3 N1
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 4]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]];
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 5]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]];
-
-    // E4 = N1 N4
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 6]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]];
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 7]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]];
-
-    // E5 = N2 N5
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 8]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]];
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 9]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]];
-
-    // E6 = N3 N6
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 10] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]];
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 11] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[5]];
-
-    // E7 = N4 N5
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 12] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]];
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 13] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]];
-
-    // E8 = N5 N6
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 14] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]];
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 15] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[5]];
-
-    // E9 = N6 N4
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 16] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[5]];
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 17] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]];
-
-  }
-
-  *n_elt_current  += n_elt;
-  *n_edge_current += n_elt * n_edge_elt;
-
-}
-
-/**
-*
-* \brief Decompose hexa cell_vtx connectivity to a flatten view of faces
-*/
-void
-PDM_hexa_decomposes_faces
-(
-       int          n_elt,
-       int          order,
-       int         *parent_node,
-       int         *n_elt_current,
-       int         *n_face_current,
-       PDM_g_num_t  beg_gnum_elt_current,
-       PDM_g_num_t  beg_gnum_face_current,
- const PDM_g_num_t *connectivity_elmt_vtx,
-       int         *elmt_face_vtx_idx,
-       PDM_g_num_t *elmt_face_vtx,
-       PDM_g_num_t *elmt_face_cell,
-       int         *elmt_cell_face_idx,
-       PDM_g_num_t *elmt_cell_face,
-       int         *parent_elmt_position
-)
-{
-  PDM_UNUSED(elmt_cell_face_idx);
-  PDM_UNUSED(elmt_cell_face);
-  PDM_UNUSED(beg_gnum_elt_current);
-  PDM_UNUSED(beg_gnum_face_current);
-
-  const int n_face_elt     = 6;
-  const int n_sum_vtx_face = 24;
-  int n_sum_vtx_elt        = 8;
-  if(order > 1) {
-    n_sum_vtx_elt     = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_HEXAHO, order);
-  }
-
-  int __parent_node[8] = {0, 1, 2, 3, 4, 5, 6, 7};
-  int *_parent_node;
-  if (parent_node == NULL) {
-    _parent_node = __parent_node;
-  } else {
-    _parent_node = parent_node;
-  }
-
-  int _n_face_current = *n_face_current;
-  int         *_current_elmt_face_vtx_idx = elmt_face_vtx_idx + _n_face_current;
-  PDM_g_num_t *_current_elmt_face_vtx     = elmt_face_vtx + elmt_face_vtx_idx[_n_face_current];
-  PDM_g_num_t *_current_elmt_face_cell    = elmt_face_cell + _n_face_current;
-  int         *_parent_elmt_position      = parent_elmt_position + _n_face_current;
-
-
-  // printf("_n_face_current:: %i\n", _n_face_current);
-  // printf("elt_face_vtx_idx[%i]:: %i \n", _n_face_current, elmt_face_vtx_idx[_n_face_current]);
-  /*
-   * For each element we flaten all connectivities in one array
-   */
-  for (int ielt = 0; ielt < n_elt; ielt++) {
-
-    /* Store the face_cell */
-    for (int i_face = 0; i_face < n_face_elt; i_face++) {
-      _current_elmt_face_vtx_idx[ielt * n_face_elt + i_face + 1] = _current_elmt_face_vtx_idx[ielt * n_face_elt + i_face] + 4;
-      _current_elmt_face_cell   [ielt * n_face_elt + i_face    ] = beg_gnum_elt_current + ielt + 1;
-      _parent_elmt_position     [ielt * n_face_elt + i_face    ] = i_face;
-    }
-
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 0]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 1]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 2]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 3]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]];
-
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 4]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[6]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 5]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[7]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 6]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 7]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[5]];
-
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 8]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 9]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[7]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 10] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 11] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]];
-
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 12] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[7]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 13] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[6]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 14] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 15] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]];
-
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 16] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 17] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[6]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 18] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[5]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 19] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]];
-
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 20] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 21] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[5]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 22] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 23] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]];
-
-  }
-
- *n_elt_current  += n_elt;
- *n_face_current += n_elt * n_face_elt;
-
-}
-
-
-/**
-*
-* \brief Decompose hexa cell_vtx connectivity to a flatten view of faces
-*/
-void
-PDM_hexa_decomposes_edges
-(
-       int          n_elt,
-       int          order,
-       int         *parent_node,
-       int         *n_elt_current,
-       int         *n_edge_current,
-       PDM_g_num_t  beg_gnum_elt_current,
-       PDM_g_num_t  beg_gnum_edge_current,
- const PDM_g_num_t *connectivity_elmt_vtx,
-       int         *elmt_edge_vtx_idx,
-       PDM_g_num_t *elmt_edge_vtx,
-       PDM_g_num_t *elmt_edge_cell,
-       int         *elmt_cell_edge_idx,
-       PDM_g_num_t *elmt_cell_edge,
-       int         *parent_elmt_position
-)
-{
-  PDM_UNUSED(elmt_cell_edge_idx);
-  PDM_UNUSED(elmt_cell_edge);
-  PDM_UNUSED(beg_gnum_elt_current);
-  PDM_UNUSED(beg_gnum_edge_current);
-
-  const int n_edge_elt     = 12;
-  const int n_sum_vtx_edge = 24; // 2 vtx * 12 edge
-  int n_sum_vtx_elt        = 8;
-  if(order > 1) {
-    n_sum_vtx_elt     = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_HEXAHO, order);
-  }
-
-  int __parent_node[8] = {0, 1, 2, 3, 4, 5, 6, 7};
-  int *_parent_node;
-  if (parent_node == NULL) {
-    _parent_node = __parent_node;
-  } else {
-    _parent_node = parent_node;
-  }
-
-  int _n_edge_current = *n_edge_current;
-  int         *_current_elmt_edge_vtx_idx = elmt_edge_vtx_idx + _n_edge_current;
-  PDM_g_num_t *_current_elmt_edge_vtx     = elmt_edge_vtx + elmt_edge_vtx_idx[_n_edge_current];
-  PDM_g_num_t *_current_elmt_edge_cell    = elmt_edge_cell + _n_edge_current;
-  int         *_parent_elmt_position      = parent_elmt_position + _n_edge_current;
-
-
-  /*
-   * For each element we flaten all connectivities in one array
-   */
-  for (int ielt = 0; ielt < n_elt; ielt++) {
-
-    /* Store the edge_cell */
-    for (int i_edge = 0; i_edge < n_edge_elt; i_edge++) {
-      _current_elmt_edge_vtx_idx[ielt * n_edge_elt + i_edge + 1] = _current_elmt_edge_vtx_idx[ielt * n_edge_elt + i_edge] + 2;
-      _current_elmt_edge_cell   [ielt * n_edge_elt + i_edge    ] = beg_gnum_elt_current + ielt + 1;
-      _parent_elmt_position     [ielt * n_edge_elt + i_edge    ] = i_edge;
-    }
-
-    // E1 = N1 N2
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 0]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]];
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 1]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]];
-
-    // E2 = N2 N3
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 2]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]];
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 3]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]];
-
-    // E3 = N3 N4
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 4]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]];
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 5]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]];
-
-    // E4 = N4 N1
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 6]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]];
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 7]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]];
-
-    // E5 = N1 N5
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 8]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[0]];
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 9]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]];
-
-    // E6 = N2 N6
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 10]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[1]];
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 11]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[5]];
-
-    // E7 = N3 N7
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 12]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[2]];
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 13]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[6]];
-
-    // E8 = N4 N8
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 14]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[3]];
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 15]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[7]];
-
-    // E9 = N5 N6
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 16]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]];
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 17]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[5]];
-
-    // E10 = N6 N7
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 18]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[5]];
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 19]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[6]];
-
-    // E11 = N7 N8
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 20]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[6]];
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 21]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[7]];
-
-    // E12 = N8 N5
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 22]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[7]];
-    _current_elmt_edge_vtx[n_sum_vtx_edge * ielt + 23]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + _parent_node[4]];
-
-  }
-
- *n_elt_current  += n_elt;
- *n_edge_current += n_elt * n_edge_elt;
-
-}
 
 /**
 *
@@ -2043,101 +895,73 @@ PDM_sections_decompose_faces
     PDM_g_num_t beg_face_gnum = 0; // Useless in this context
 
     PDM_Mesh_nodal_elt_t t_elt = PDM_DMesh_nodal_elmts_section_type_get(dmn_elts, id_section);
+    int n_elt                  = PDM_DMesh_nodal_elmts_section_n_elt_get(dmn_elts, id_section);
 
-    switch (t_elt) {
-      case PDM_MESH_NODAL_POINT:
-      case PDM_MESH_NODAL_BAR2:
-      case PDM_MESH_NODAL_TRIA3:
-      case PDM_MESH_NODAL_QUAD4:
-      case PDM_MESH_NODAL_TETRA4:
-      case PDM_MESH_NODAL_PYRAMID5:
-      case PDM_MESH_NODAL_PRISM6:
-      case PDM_MESH_NODAL_HEXA8:
-      {
-        int n_elt           = PDM_DMesh_nodal_elmts_section_n_elt_get(dmn_elts, id_section);
-        PDM_g_num_t* connec = PDM_DMesh_nodal_elmts_section_std_get(dmn_elts, id_section);
-        // PDM_std_decomposes_faces(t_elt,
-        //                          n_elt,
-        //                          &n_elt_current,
-        //                          &n_dface_current,
-        //                          beg_elmt_gnum,
-        //                          beg_face_gnum,
-        //                          connec,
-        //                          elmt_face_vtx_idx,
-        //                          elmt_face_vtx,
-        //                          elmt_face_cell,
-        //                          elmt_cell_face_idx,
-        //                          elmt_cell_face,
-        //                          parent_elmt_position);
-        PDM_std_decomposes_faces(t_elt,
-                                 1,
-                                 NULL,
-                                 n_elt,
-                                 &n_elt_current,
-                                 &n_dface_current,
-                                 beg_elmt_gnum,
-                                 beg_face_gnum,
-                                 connec,
-                                 elmt_face_vtx_idx,
-                                 elmt_face_vtx,
-                                 elmt_face_cell,
-                                 elmt_cell_face_idx,
-                                 elmt_cell_face,
-                                 parent_elmt_position);
-        break;
-      }
-      case PDM_MESH_NODAL_BARHO:
-      case PDM_MESH_NODAL_BARHO_BEZIER:
-      case PDM_MESH_NODAL_TRIAHO:
-      case PDM_MESH_NODAL_TRIAHO_BEZIER:
-      case PDM_MESH_NODAL_QUADHO:
-      case PDM_MESH_NODAL_TETRAHO:
-      case PDM_MESH_NODAL_PYRAMIDHO:
-      case PDM_MESH_NODAL_PRISMHO:
-      case PDM_MESH_NODAL_HEXAHO:
-      {
-        int n_elt           = PDM_DMesh_nodal_elmts_section_n_elt_get(dmn_elts, id_section);
-        PDM_g_num_t* connec = PDM_DMesh_nodal_elmts_section_std_get(dmn_elts, id_section);
 
-        int order      = dmn_elts->sections_std[i_section]->order;
+    if (t_elt == PDM_MESH_NODAL_POLY_2D) {
+      /* Polygons */
+      int         *connec_idx = NULL;
+      PDM_g_num_t *connec     = NULL;
+      PDM_DMesh_nodal_elmts_section_poly2d_get(dmn_elts,
+                                               id_section,
+                                               &connec_idx,
+                                               &connec);
+
+      PDM_poly2d_decomposes_faces(n_elt,
+                                  &n_elt_current,
+                                  &n_dface_current,
+                                  beg_elmt_gnum,
+                                  beg_face_gnum,
+                                  connec,
+                                  connec_idx,
+                                  elmt_face_vtx_idx,
+                                  elmt_face_vtx,
+                                  elmt_face_cell,
+                                  elmt_cell_face_idx,
+                                  elmt_cell_face,
+                                  parent_elmt_position);
+    }
+
+    else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
+      /* Polyhedra */
+      PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_faces : POLY_3D not yet supported\n");
+    }
+
+    else {
+      /* Standard elements */
+      int order = dmn_elts->sections_std[i_section]->order;
+      int *_parent_node = NULL;
+
+      PDM_g_num_t *connec = PDM_DMesh_nodal_elmts_section_std_get(dmn_elts, id_section);
+
+      if (PDM_Mesh_nodal_elmt_is_ho(t_elt)) {
         const char* ho_ordering = dmn_elts->sections_std[i_section]->ho_ordering;
-        // int *parent_node = NULL;
         PDM_Mesh_nodal_ho_parent_node(t_elt,
                                       order,
                                       ho_ordering,
                                       parent_node);
-
-        PDM_std_decomposes_faces(t_elt,
-                                 order,
-                                 parent_node,
-                                 n_elt,
-                                 &n_elt_current,
-                                 &n_dface_current,
-                                 beg_elmt_gnum,
-                                 beg_face_gnum,
-                                 connec,
-                                 elmt_face_vtx_idx,
-                                 elmt_face_vtx,
-                                 elmt_face_cell,
-                                 elmt_cell_face_idx,
-                                 elmt_cell_face,
-                                 parent_elmt_position);
-        break;
+        _parent_node = parent_node;
       }
-      case PDM_MESH_NODAL_POLY_2D:
-      {
-        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_faces : Element type is supported\n");
-        break;
+      else {
+        order = 1;
       }
 
-      case PDM_MESH_NODAL_POLY_3D:
-      {
-        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_faces : Element type is supported\n");
-        break;
-      }
+      PDM_std_decomposes_faces(t_elt,
+                               order,
+                               _parent_node,
+                               n_elt,
+                               &n_elt_current,
+                               &n_dface_current,
+                               beg_elmt_gnum,
+                               beg_face_gnum,
+                               connec,
+                               elmt_face_vtx_idx,
+                               elmt_face_vtx,
+                               elmt_face_cell,
+                               elmt_cell_face_idx,
+                               elmt_cell_face,
+                               parent_elmt_position);
 
-      default:
-        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_faces : Element type is supported\n");
     }
   }
 }
@@ -2195,105 +1019,70 @@ PDM_sections_decompose_edges
     PDM_Mesh_nodal_elt_t t_elt = PDM_DMesh_nodal_elmts_section_type_get(dmn_elts, id_section);
     int n_elt                  = PDM_DMesh_nodal_elmts_section_n_elt_get(dmn_elts, id_section);
 
-    switch (t_elt) {
-      case PDM_MESH_NODAL_POINT:
-      case PDM_MESH_NODAL_BAR2:
-      case PDM_MESH_NODAL_TRIA3:
-      case PDM_MESH_NODAL_QUAD4:
-      case PDM_MESH_NODAL_TETRA4:
-      case PDM_MESH_NODAL_PYRAMID5:
-      case PDM_MESH_NODAL_PRISM6:
-      case PDM_MESH_NODAL_HEXA8:
-      {
-        PDM_g_num_t* connec = PDM_DMesh_nodal_elmts_section_std_get(dmn_elts, id_section);
-        PDM_std_decomposes_edges(t_elt,
-                                 1,
-                                 NULL,
-                                 n_elt,
-                                 &n_elt_current,
-                                 &n_dedge_current,
-                                 beg_elmt_gnum,
-                                 beg_edge_gnum,
-                                 connec,
-                                 elmt_edge_vtx_idx,
-                                 elmt_edge_vtx,
-                                 elmt_edge_cell,
-                                 elmt_cell_edge_idx,
-                                 elmt_cell_edge,
-                                 parent_elmt_position);
-        break;
-      }
+    if (t_elt == PDM_MESH_NODAL_POLY_2D) {
+      /* Polygons */
+      int         *connec_idx = NULL;
+      PDM_g_num_t *connec     = NULL;
+      PDM_DMesh_nodal_elmts_section_poly2d_get(dmn_elts,
+                                               id_section,
+                                               &connec_idx,
+                                               &connec);
 
-      case PDM_MESH_NODAL_BARHO:
-      case PDM_MESH_NODAL_BARHO_BEZIER:
-      case PDM_MESH_NODAL_TRIAHO:
-      case PDM_MESH_NODAL_TRIAHO_BEZIER:
-      case PDM_MESH_NODAL_QUADHO:
-      case PDM_MESH_NODAL_TETRAHO:
-      case PDM_MESH_NODAL_PYRAMIDHO:
-      case PDM_MESH_NODAL_PRISMHO:
-      case PDM_MESH_NODAL_HEXAHO:
-      {
-        PDM_g_num_t* connec = PDM_DMesh_nodal_elmts_section_std_get(dmn_elts, id_section);
+      PDM_poly2d_decomposes_edges(n_elt,
+                                  &n_elt_current,
+                                  &n_dedge_current,
+                                  beg_elmt_gnum,
+                                  beg_edge_gnum,
+                                  connec,
+                                  connec_idx,
+                                  elmt_edge_vtx_idx,
+                                  elmt_edge_vtx,
+                                  elmt_edge_cell,
+                                  elmt_cell_edge_idx,
+                                  elmt_cell_edge,
+                                  parent_elmt_position);
+    }
 
-        int order      = dmn_elts->sections_std[i_section]->order;
+    else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
+      /* Polyhedra */
+      PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : POLY_3D not yet supported\n");
+    }
+
+    else {
+      /* Standard elements */
+      int order = dmn_elts->sections_std[i_section]->order;
+      int *_parent_node = NULL;
+
+      PDM_g_num_t *connec = PDM_DMesh_nodal_elmts_section_std_get(dmn_elts, id_section);
+
+      if (PDM_Mesh_nodal_elmt_is_ho(t_elt)) {
         const char* ho_ordering = dmn_elts->sections_std[i_section]->ho_ordering;
-        // int *parent_node = NULL;
         PDM_Mesh_nodal_ho_parent_node(t_elt,
                                       order,
                                       ho_ordering,
                                       parent_node);
-
-        PDM_std_decomposes_edges(t_elt,
-                                 order,
-                                 parent_node,
-                                 n_elt,
-                                 &n_elt_current,
-                                 &n_dedge_current,
-                                 beg_elmt_gnum,
-                                 beg_edge_gnum,
-                                 connec,
-                                 elmt_edge_vtx_idx,
-                                 elmt_edge_vtx,
-                                 elmt_edge_cell,
-                                 elmt_cell_edge_idx,
-                                 elmt_cell_edge,
-                                 parent_elmt_position);
-        break;
+        _parent_node = parent_node;
       }
-      case PDM_MESH_NODAL_POLY_2D:
-      {
-        int         *connec_idx = NULL;
-        PDM_g_num_t *connec     = NULL;
-        PDM_DMesh_nodal_elmts_section_poly2d_get(dmn_elts,
-                                                 id_section,
-                                                 &connec_idx,
-                                                 &connec);
-
-        PDM_poly2d_decomposes_edges(n_elt,
-                                    &n_elt_current,
-                                    &n_dedge_current,
-                                    beg_elmt_gnum,
-                                    beg_edge_gnum,
-                                    connec,
-                                    connec_idx,
-                                    elmt_edge_vtx_idx,
-                                    elmt_edge_vtx,
-                                    elmt_edge_cell,
-                                    elmt_cell_edge_idx,
-                                    elmt_cell_edge,
-                                    parent_elmt_position);
-        break;
+      else {
+        order = 1;
       }
 
-      case PDM_MESH_NODAL_POLY_3D:
-      {
-        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is supported\n");
-        break;
-      }
+      PDM_std_decomposes_edges(t_elt,
+                               order,
+                               _parent_node,
+                               n_elt,
+                               &n_elt_current,
+                               &n_dedge_current,
+                               beg_elmt_gnum,
+                               beg_edge_gnum,
+                               connec,
+                               elmt_edge_vtx_idx,
+                               elmt_edge_vtx,
+                               elmt_edge_cell,
+                               elmt_cell_edge_idx,
+                               elmt_cell_edge,
+                               parent_elmt_position);
 
-      default:
-        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is supported\n");
     }
   }
 }
