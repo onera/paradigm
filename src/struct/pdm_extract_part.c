@@ -7636,7 +7636,8 @@ PDM_extract_part_extract_part_mesh_get
       }
 
       // Global IDs
-      if (extrp->pextract_entity_ln_to_gn[entity_type] != NULL) {
+      if (extrp->compute_child_gnum &&
+          extrp->pextract_entity_ln_to_gn[entity_type] != NULL) {
         if (pmesh_takes_ownership == PDM_TRUE) {
           extrp->is_owner_ln_to_gn[entity_type] = PDM_FALSE;
         }
@@ -7644,6 +7645,16 @@ PDM_extract_part_extract_part_mesh_get
                                           i_part,
                                           entity_type,
                                           extrp->pextract_entity_ln_to_gn[entity_type][i_part],
+                                          ownership_pmesh);
+      }
+      else if (extrp->pextract_entity_parent_ln_to_gn[entity_type] != NULL) {
+        if (pmesh_takes_ownership == PDM_TRUE) {
+          extrp->is_owner_parent_ln_to_gn[entity_type] = PDM_FALSE;
+        }
+        PDM_part_mesh_entity_ln_to_gn_set(*pmesh,
+                                          i_part,
+                                          entity_type,
+                                          extrp->pextract_entity_parent_ln_to_gn[entity_type][i_part],
                                           ownership_pmesh);
       }
 
