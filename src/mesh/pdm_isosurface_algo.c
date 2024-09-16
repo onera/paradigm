@@ -573,7 +573,7 @@ _build_active_edges
     }
 
     // Increment key occurrences
-    int n_pair    = PDM_n_nedge_elt_per_elmt(t_elt);
+    int n_pair    = PDM_n_edge_elt_per_elmt(t_elt);
     int elt_n_vtx = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, 1);
 
     for (int i_elt = 0; i_elt < n_elt; i_elt++) {
@@ -644,7 +644,7 @@ _build_active_edges
     int  n_elt  = sections_n_elt  [i_section];
     int *connec = sections_elt_vtx[i_section];
 
-    int n_pair    = PDM_n_nedge_elt_per_elmt(t_elt);
+    int n_pair    = PDM_n_edge_elt_per_elmt(t_elt);
     int elt_n_vtx = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, 1);
 
     elt_edge[i_section] = PDM_array_zeros_int(n_pair*n_elt);
@@ -769,7 +769,7 @@ _build_active_edges
     // Get section information : number of elts and elt->vtx connectivity
     int n_elt = sections_n_elt[i_section];
 
-    int n_pair = PDM_n_nedge_elt_per_elmt(t_elt);
+    int n_pair = PDM_n_edge_elt_per_elmt(t_elt);
     int has_bnd = sections_elt_tag[i_section]!=NULL;
 
     for (int i_elt = 0; i_elt < n_elt; i_elt++) {

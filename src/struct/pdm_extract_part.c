@@ -1317,6 +1317,7 @@ _extract_part_and_reequilibrate_nodal_groups
 
   PDM_part_to_part_reverse_iexch_wait(ptp, request);
 
+  // TODO: Maybe we can skip this exchange, since we store pextract_entity_init_location...
   int **extract_elt_group_init_loc = NULL;
   request = -1;
   PDM_part_to_part_reverse_iexch(ptp,
@@ -3469,18 +3470,18 @@ _extract_part_and_reequilibrate_from_target
   if(extrp->dim == 3) {
     pn_entity    = extrp->n_cell;
     entity_g_num = extrp->cell_ln_to_gn;
-    entity_type = PDM_MESH_ENTITY_CELL;
+    entity_type  = PDM_MESH_ENTITY_CELL;
   } else if (extrp->dim == 2){
     pn_entity    = extrp->n_face;
     entity_g_num = extrp->face_ln_to_gn;
-    entity_type = PDM_MESH_ENTITY_FACE;
+    entity_type  = PDM_MESH_ENTITY_FACE;
   } else if(extrp->dim == 1){
     pn_entity    = extrp->n_edge;
     entity_g_num = extrp->edge_ln_to_gn;
-    entity_type = PDM_MESH_ENTITY_EDGE;
+    entity_type  = PDM_MESH_ENTITY_EDGE;
   } else {
     entity_g_num = extrp->vtx_ln_to_gn;
-    entity_type = PDM_MESH_ENTITY_VTX;
+    entity_type  = PDM_MESH_ENTITY_VTX;
   }
 
   /* Not very bright... let the user be in charge of keeping track of the target g_num instead? */
@@ -3685,13 +3686,6 @@ _extract_part_and_reequilibrate_from_target
                                                         extrp->comm);
   }
 
-
-  if(have_init_location == 0) {
-    for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
-      PDM_free(entity_target_location[i_part]);
-    }
-    PDM_free(entity_target_location);
-  }
 
   /*
    * Vtx only
@@ -3913,66 +3907,58 @@ _extract_part_and_reequilibrate_from_target
   /* Free all data that keep link between two partition */
   if(part2_cell_to_part1_cell_idx != NULL) {
     for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
-      if(part2_cell_to_part1_cell_idx[i_part] != NULL) {
-        PDM_free(part2_cell_to_part1_cell_idx[i_part]);
-        part2_cell_to_part1_cell_idx[i_part] = NULL;
-      }
+      PDM_free(part2_cell_to_part1_cell_idx[i_part]);
     }
   }
 
   if(part2_face_to_part1_face_idx != NULL) {
     for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
-      if(part2_face_to_part1_face_idx[i_part] != NULL) {
-        PDM_free(part2_face_to_part1_face_idx[i_part]);
-        part2_face_to_part1_face_idx[i_part] = NULL;
-      }
+      PDM_free(part2_face_to_part1_face_idx[i_part]);
     }
   }
 
   if(part2_edge_to_part1_edge_idx != NULL) {
     for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
-      if(part2_edge_to_part1_edge_idx[i_part] != NULL) {
-        PDM_free(part2_edge_to_part1_edge_idx[i_part]);
-        part2_edge_to_part1_edge_idx[i_part] = NULL;
-      }
+      PDM_free(part2_edge_to_part1_edge_idx[i_part]);
     }
   }
 
   if(part2_vtx_to_part1_vtx_idx != NULL) {
     for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
-      if(part2_vtx_to_part1_vtx_idx[i_part] != NULL) {
-        PDM_free(part2_vtx_to_part1_vtx_idx[i_part]);
-        part2_vtx_to_part1_vtx_idx[i_part] = NULL;
-      }
+      PDM_free(part2_vtx_to_part1_vtx_idx[i_part]);
     }
   }
-
-  if(part2_cell_to_part1_cell_idx != NULL) {
-    PDM_free(part2_cell_to_part1_cell_idx);
-  }
-  if(part2_face_to_part1_face_idx != NULL) {
-    PDM_free(part2_face_to_part1_face_idx);
-  }
-  if(part2_edge_to_part1_edge_idx != NULL) {
-    PDM_free(part2_edge_to_part1_edge_idx);
-  }
-  if(part2_vtx_to_part1_vtx_idx != NULL) {
-    PDM_free(part2_vtx_to_part1_vtx_idx);
-  }
+  PDM_free(part2_cell_to_part1_cell_idx);
+  PDM_free(part2_face_to_part1_face_idx);
+  PDM_free(part2_edge_to_part1_edge_idx);
+  PDM_free(part2_vtx_to_part1_vtx_idx);
 
   /*
    * Store init location and take ownership
    */
-  if (extrp->dim != 0) {
+  PDM_malloc(extrp->pextract_entity_init_location[entity_type], extrp->n_part_out, int *);
+  for (int i_part = 0; i_part < extrp->n_part_out; i_part++) {
+    extrp->pextract_entity_init_location[entity_type][i_part] = entity_target_location[i_part];
+  }
+
+  if (extrp->extract_kind == PDM_EXTRACT_PART_KIND_REEQUILIBRATE || have_init_location == 0) {
+    extrp->is_owner_init_location[entity_type] = PDM_TRUE;
+  }
+
+  if (extrp->dim > 0) {
     extrp->pextract_entity_init_location[PDM_MESH_ENTITY_VTX] = pextract_vtx_to_vtx_location;
     extrp->is_owner_init_location       [PDM_MESH_ENTITY_VTX] = PDM_TRUE;
   }
 
-  extrp->pextract_entity_init_location[PDM_MESH_ENTITY_FACE] = pextract_face_to_face_location;
-  extrp->is_owner_init_location       [PDM_MESH_ENTITY_FACE] = PDM_TRUE;
+  if (extrp->dim > 1) {
+    extrp->pextract_entity_init_location[PDM_MESH_ENTITY_EDGE] = pextract_edge_to_edge_location;
+    extrp->is_owner_init_location       [PDM_MESH_ENTITY_EDGE] = PDM_TRUE;
+  }
 
-  extrp->pextract_entity_init_location[PDM_MESH_ENTITY_EDGE] = pextract_edge_to_edge_location;
-  extrp->is_owner_init_location       [PDM_MESH_ENTITY_EDGE] = PDM_TRUE;
+  if (extrp->dim > 2) {
+    extrp->pextract_entity_init_location[PDM_MESH_ENTITY_FACE] = pextract_face_to_face_location;
+    extrp->is_owner_init_location       [PDM_MESH_ENTITY_FACE] = PDM_TRUE;
+  }
 
   /*
    * Manage group if any
@@ -4236,12 +4222,11 @@ _extract_part_and_reequilibrate
         extrp->target_location[i_part][i] = dequi_init_location[idx++];
       }
     }
+    PDM_free(dequi_init_location);
 
     _extract_part_and_reequilibrate_from_target(extrp);
 
-    PDM_malloc(extrp->pextract_entity_init_location[entity_type], extrp->n_part_out, int *);
     for (int i_part = 0; i_part < extrp->n_part_out; i_part++) {
-      extrp->pextract_entity_init_location[entity_type][i_part] = extrp->target_location[i_part];
       extrp->n_target       [i_part] = 0;
       extrp->target_gnum    [i_part] = NULL;
       extrp->target_location[i_part] = NULL;
@@ -4380,9 +4365,6 @@ _extract_part_and_reequilibrate
     }
   }
 
-  for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
-    PDM_free(pinit_location[i_part]);
-  }
   PDM_free(pinit_location);
 }
 
@@ -5769,6 +5751,13 @@ _warmup_extract_part_nodal_greatest_dimension
     PDM_free(part2_cell_to_part1_cell_idx);
 
 
+    PDM_malloc(extrp->pextract_entity_init_location[parent_entity_type], extrp->n_part_out, int *);
+    for (int i_part = 0; i_part < extrp->n_part_out; i_part++) {
+      extrp->pextract_entity_init_location[parent_entity_type][i_part] = extrp->target_location[i_part];
+    }
+    extrp->is_owner_init_location[parent_entity_type] = PDM_TRUE;
+
+
 
   } // End if REEQUILIBRATE
 
@@ -5842,10 +5831,17 @@ _warmup_extract_part_nodal_greatest_dimension
     }
     PDM_free(part2_cell_to_part1_cell_idx);
 
-    if (!have_init_location) {
-      for (int i_part = 0; i_part < extrp->n_part_out; i_part++) {
-        PDM_free(entity_target_location[i_part]);
-      }
+
+    PDM_malloc(extrp->pextract_entity_init_location[parent_entity_type], extrp->n_part_out, int *);
+    for (int i_part = 0; i_part < extrp->n_part_out; i_part++) {
+      extrp->pextract_entity_init_location[parent_entity_type][i_part] = entity_target_location[i_part];
+    }
+
+    if (have_init_location) {
+      extrp->is_owner_init_location[parent_entity_type] = PDM_FALSE;
+    }
+    else {
+      extrp->is_owner_init_location[parent_entity_type] = PDM_TRUE;
       PDM_free(entity_target_location);
     }
 
@@ -6031,8 +6027,8 @@ _extract_part_nodal
 
       if (extrp->extract_kind == PDM_EXTRACT_PART_KIND_REEQUILIBRATE) {
         for (int i_part = 0; i_part < extrp->n_part_out; i_part++) {
-          PDM_free(extrp->target_gnum    [i_part]);
-          PDM_free(extrp->target_location[i_part]);
+          PDM_free(extrp->target_gnum[i_part]);
+          extrp->target_location[i_part] = NULL;
         }
       }
 
@@ -6321,12 +6317,11 @@ _extract_part_nodal
       PDM_free(child_to_parent_idx);
       PDM_free(child_to_parent    );
       PDM_free(is_selected[geom_kind_child]);
+      PDM_free(n_target);
 
-      for (int i_part = 0; i_part < extrp->n_part_out; i_part++) {
-        PDM_free(target_location[i_part]);
-      }
-      PDM_free(n_target       );
-      PDM_free(target_location);
+      extrp->is_owner_init_location       [child_entity_type] = PDM_TRUE;
+      extrp->pextract_entity_init_location[child_entity_type] = target_location;
+
     } // End lower dimension
 
 
@@ -7388,7 +7383,6 @@ PDM_extract_part_partial_free
   }
   PDM_free(extrp->pextract_vtx_coord);
 
-
   /* Free init_location */
   for(int i = 0; i < PDM_MESH_ENTITY_MAX; ++i) {
     if(extrp->pextract_entity_init_location[i] != NULL) {
@@ -7400,8 +7394,6 @@ PDM_extract_part_partial_free
       PDM_free(extrp->pextract_entity_init_location[i]);
     }
   }
-
-
 
   for(int i = 0; i < PDM_MESH_ENTITY_MAX; ++i) {
     PDM_free(extrp->pextract_n_entity[i]);
