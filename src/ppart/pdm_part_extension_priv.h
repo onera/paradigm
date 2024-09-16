@@ -55,6 +55,9 @@ struct _pdm_part_extension_t {
   PDM_part_domain_interface_t  *pdi;
   int                           n_interface;
 
+  int set_part_used;
+  int user_defined_bound_graph;
+
   PDM_bool_t has_connectivity[PDM_CONNECTIVITY_TYPE_MAX];
 
   /* Store for each depth / each domain / each part */

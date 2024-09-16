@@ -1256,6 +1256,81 @@ PDM_Mesh_nodal_geom_kind_from_elt_type
  PDM_Mesh_nodal_elt_t t_elt
  );
 
+
+/**
+ * \brief Return for standard elements the number of face that build this element
+ *
+ */
+int
+PDM_n_face_elt_per_elmt
+(
+  PDM_Mesh_nodal_elt_t t_elt
+);
+
+/**
+ * \brief Return face->vtx connectivity of a standard elements decomposed into faces
+ *
+ * \param [in]  t_elt         Standard element type
+ * \param [out] face_vtx_idx  Index for face->vertex connectivity
+ * \param [out] face_vtx_idx  Face->vertex connectivity
+ *
+ * \return Number of faces per element
+ */
+int
+PDM_face_vtx_per_elmt
+(
+  PDM_Mesh_nodal_elt_t   t_elt,
+  const int            **face_vtx_idx,
+  const int            **face_vtx
+);
+
+/**
+ * \brief Return for standard elements the number of edge that build this element
+ *
+ */
+int
+PDM_n_edge_elt_per_elmt
+(
+  PDM_Mesh_nodal_elt_t t_elt
+);
+
+/**
+ * \brief Return edge->vtx connectivity of a standard elements decomposed into edges
+ *
+ * \param [in]  t_elt         Standard element type
+ * \param [out] edge_vtx_idx  Edge->vertex connectivity
+ *
+ * \return Number of edges per element
+ */
+int
+PDM_edge_vtx_per_elmt
+(
+  PDM_Mesh_nodal_elt_t   t_elt,
+  const int            **edge_vtx
+);
+
+/**
+ * \brief Return for standard elements the total number of face vtx connectivity that build this element
+ *
+ */
+int
+PDM_n_sum_vtx_face_per_elmt
+(
+  PDM_Mesh_nodal_elt_t t_elt
+);
+
+
+/**
+ * \brief Return for standard elements the total number of edge vtx connectivity that build this element
+ *
+ */
+int
+PDM_n_sum_vtx_edge_per_elmt
+(
+  PDM_Mesh_nodal_elt_t t_elt
+);
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

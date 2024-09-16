@@ -204,6 +204,9 @@ static int _vtk_elt_type
     case PDM_MESH_NODAL_QUAD4:
       vtk_elt_type = 9;
       break;
+    case PDM_MESH_NODAL_POLY_2D:
+      vtk_elt_type = 7;
+      break;
     case PDM_MESH_NODAL_TETRA4:
       vtk_elt_type = 10;
       break;
@@ -3265,4 +3268,121 @@ PDM_vtk_read_to_dmesh_nodal
 
 
   return dmn;
+}
+
+
+
+
+
+void
+PDM_vtk_write_unstructured_grid
+(
+ const char                 *filename,
+ const int                   n_vtx,
+ const double                vtx_coord[],
+ const PDM_g_num_t           vtx_g_num[],
+ const int                   n_elt,
+ const PDM_Mesh_nodal_elt_t  elt_type[],
+ const int                   elt_vtx_idx[],
+ const int                   elt_vtx[],
+ const PDM_g_num_t           elt_g_num[],
+ const int                   n_elt_field,
+ const char                 *elt_field_name[],
+ const double               *elt_field[],
+ const int                   n_vtx_field,
+ const char                 *vtx_field_name[],
+ const double               *vtx_field[]
+ )
+{
+  FILE *f = fopen(filename, "w");
+
+  fprintf(f, "# vtk DataFile Version 2.0\n");
+  fprintf(f, "mesh\n");
+  fprintf(f, "ASCII\n");
+  fprintf(f, "DATASET UNSTRUCTURED_GRID\n");
+
+  fprintf(f, "POINTS %d double\n", n_vtx);
+  for (int i = 0; i < n_vtx; i++) {
+    for (int j = 0; j < 3; j++) {
+      fprintf(f, "%.20lf ", vtx_coord[3*i+j]);
+    }
+    fprintf(f, "\n");
+  }
+
+  fprintf(f, "CELLS %d %d\n", n_elt, n_elt + elt_vtx_idx[n_elt]);
+  for (int i_elt = 0; i_elt < n_elt; i_elt++) {
+    fprintf(f, "%d\n", elt_vtx_idx[i_elt+1] - elt_vtx_idx[i_elt]);
+    for (int i = elt_vtx_idx[i_elt]; i < elt_vtx_idx[i_elt+1]; i++) {
+      fprintf(f, "%d ", elt_vtx[i] - 1);
+    }
+    fprintf(f, "\n");
+  }
+
+  fprintf(f, "CELL_TYPES %d\n", n_elt);
+  for (int i_elt = 0; i_elt < n_elt; i_elt++) {
+    int vtk_elt_type = _vtk_elt_type(elt_type[i_elt], 1);
+    fprintf(f, "%d\n", vtk_elt_type);
+  }
+
+
+  if (vtx_g_num != NULL) {
+    fprintf(f, "POINT_DATA %d\n", n_vtx);
+    fprintf(f, "SCALARS vtx_gnum long 1\n");
+    fprintf(f, "LOOKUP_TABLE default\n");
+    for (int i = 0; i < n_vtx; i++) {
+      fprintf(f, PDM_FMT_G_NUM"\n", vtx_g_num[i]);
+    }
+  }
+
+  if (n_vtx_field > 0) {
+    assert (vtx_field != NULL);
+
+    if (vtx_g_num == NULL) {
+      fprintf(f, "POINT_DATA %d\n", n_vtx);
+    }
+
+    fprintf(f, "FIELD vtx_field %d\n", n_vtx_field);
+    for (int i = 0; i < n_vtx_field; i++) {
+      // assert (vtx_field[i] != NULL);
+      assert (vtx_field_name[i] != NULL);
+
+      fprintf(f, "%s 1 %d double\n", vtx_field_name[i], n_vtx);
+      for (int j = 0; j < n_vtx; j++) {
+        fprintf(f, "%lf ", vtx_field[i][j]);
+      }
+      fprintf(f, "\n");
+    }
+  }
+
+
+  if (elt_g_num != NULL) {
+    fprintf(f, "CELL_DATA %d\n", n_elt);
+    fprintf(f, "SCALARS elt_gnum long 1\n");
+    fprintf(f, "LOOKUP_TABLE default\n");
+    for (int i = 0; i < n_elt; i++) {
+      fprintf(f, PDM_FMT_G_NUM"\n", elt_g_num[i]);
+     }
+  }
+
+  if (n_elt_field > 0) {
+    assert (elt_field != NULL);
+
+    if (elt_g_num == NULL) {
+      fprintf(f, "CELL_DATA %d\n", n_elt);
+    }
+
+    fprintf(f, "FIELD elt_field %d\n", n_elt_field);
+    for (int i = 0; i < n_elt_field; i++) {
+      // assert (elt_field[i] != NULL);
+      assert (elt_field_name[i] != NULL);
+
+      fprintf(f, "%s 1 %d double\n", elt_field_name[i], n_elt);
+      for (int j = 0; j < n_elt; j++) {
+        fprintf(f, "%lf ", elt_field[i][j]);
+      }
+      fprintf(f, "\n");
+    }
+  }
+
+  fclose(f);
 }

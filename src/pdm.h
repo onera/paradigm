@@ -403,6 +403,26 @@ PDM_connectivity_type_to_entity_type
 );
 
 /**
+ * \brief Helper to get entity type according to a bound
+ *
+ */
+PDM_mesh_entities_t
+PDM_bound_type_to_entity_type
+(
+ PDM_bound_type_t   bound_type
+);
+
+/**
+ * \brief Helper to get entity type according to a geometry kind
+ *
+ */
+PDM_mesh_entities_t
+PDM_geometry_kind_to_entity_type
+(
+ PDM_geometry_kind_t   geom_kind
+);
+
+/**
  * \brief Finalize PDM
  *
  * This function frees all allocated global variables

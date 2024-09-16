@@ -56,7 +56,7 @@ _usage(int exit_code)
      "  -n_part <level>  Number of partitions par process.\n\n"
      "  -post            Ensight outputs (only if n_part == 1). \n\n"
      "  -parmetis        Call ParMETIS.\n\n"
-     "  -pt-scocth       Call PT-Scotch.\n\n"
+     "  -pt-scotch       Call PT-Scotch.\n\n"
      "  -t               Element type.\n\n"
      "  -h               This message.\n\n");
 

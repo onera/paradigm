@@ -12,6 +12,7 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
+#include "pdm_error.h"
 #include "pdm_part.h"
 #include "pdm_part_renum.h"
 #include "pdm_part_coarse_mesh.h"
@@ -86,6 +87,66 @@ PDM_connectivity_type_to_entity_type
     mesh_entity = PDM_MESH_ENTITY_VTX;
   }
   return mesh_entity;
+}
+
+
+PDM_mesh_entities_t
+PDM_bound_type_to_entity_type
+(
+ PDM_bound_type_t   bound_type
+)
+{
+  switch (bound_type) {
+
+    case PDM_BOUND_TYPE_CELL: {
+      return PDM_MESH_ENTITY_CELL;
+    }
+    case PDM_BOUND_TYPE_FACE: {
+      return PDM_MESH_ENTITY_FACE;
+    }
+    case PDM_BOUND_TYPE_EDGE: {
+      return PDM_MESH_ENTITY_EDGE;
+    }
+    case PDM_BOUND_TYPE_VTX: {
+      return PDM_MESH_ENTITY_VTX;
+    }
+    default: {
+      PDM_error(__FILE__, __LINE__, 0, "Invalid bound_type %d\n", bound_type);
+    }
+
+  }
+
+  return PDM_MESH_ENTITY_MAX;
+}
+
+
+PDM_mesh_entities_t
+PDM_geometry_kind_to_entity_type
+(
+ PDM_geometry_kind_t   geom_kind
+)
+{
+  switch (geom_kind) {
+
+    case PDM_GEOMETRY_KIND_VOLUMIC: {
+      return PDM_MESH_ENTITY_CELL;
+    }
+    case PDM_GEOMETRY_KIND_SURFACIC: {
+      return PDM_MESH_ENTITY_FACE;
+    }
+    case PDM_GEOMETRY_KIND_RIDGE: {
+      return PDM_MESH_ENTITY_EDGE;
+    }
+    case PDM_GEOMETRY_KIND_CORNER: {
+      return PDM_MESH_ENTITY_VTX;
+    }
+    default: {
+      PDM_error(__FILE__, __LINE__, 0, "Invalid geom_kind %d\n", geom_kind);
+    }
+
+  }
+
+  return PDM_MESH_ENTITY_MAX;
 }
 
 

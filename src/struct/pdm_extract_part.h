@@ -33,6 +33,8 @@
 #include "pdm_mpi.h"
 #include "pdm_part_to_part.h"
 #include "pdm_part_mesh_nodal_elmts.h"
+#include "pdm_part_mesh_nodal.h"
+#include "pdm_part_mesh.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -234,17 +236,17 @@ PDM_extract_part_part_group_set
 
 /**
  *
- * \brief Set PDM_part_mesh_nodal_elmts_t
+ * \brief Set PDM_part_mesh_nodal_t
  *
  * \param [in]   extrp            PDM_extract_part_t structure
- * \param [in]   pmne             PDM_part_mesh_nodal_elmts_t corresponding of dimenstion
+ * \param [in]   pmn              PDM_part_mesh_nodal_t corresponding of dimenstion
  *
  */
 void
 PDM_extract_part_part_nodal_set
 (
-  PDM_extract_part_t          *extrp,
-  PDM_part_mesh_nodal_elmts_t *pmne
+  PDM_extract_part_t    *extrp,
+  PDM_part_mesh_nodal_t *pmn
 );
 
 /**
@@ -426,16 +428,16 @@ PDM_extract_part_vtx_coord_get
  * \brief Retreive the partitionned mesh
  *
  * \param [in]  extrp             Pointer to \ref PDM_extract_part_t object
- * \param [out] extract_pmne      Partitionned mesh nodal, describe by elements (see \ref PDM_part_mesh_nodal_elmts_t )
+ * \param [out] extract_pmn       Partitionned mesh nodal, describe by elements (see \ref PDM_part_mesh_nodal_t )
  * \param [in]  ownership         Who is responsible to free retreived data ?
  *
  */
 void
 PDM_extract_part_part_mesh_nodal_get
 (
-  PDM_extract_part_t           *extrp,
-  PDM_part_mesh_nodal_elmts_t **extract_pmne,
-  PDM_ownership_t               ownership
+  PDM_extract_part_t     *extrp,
+  PDM_part_mesh_nodal_t **extract_pmn,
+  PDM_ownership_t         ownership
 );
 
 
@@ -559,6 +561,23 @@ PDM_extract_part_renum_method_set
  const int           *renum_entity_properties
 );
 
+
+/**
+ *
+ * \brief Get the extracted mesh as a \ref PDM_part_mesh_t instance
+ *
+ * \param [in]   extrp                   Pointer to \ref PDM_extract_part_t object
+ * \param [out]  pmesh                   Pointer to \ref PDM_part_mesh_t object
+ * \param [in]   pmesh_takes_ownership   Whether ownerhip is transferred to \p pmesh
+ *
+ */
+void
+PDM_extract_part_part_mesh_get
+(
+ PDM_extract_part_t  *extrp,
+ PDM_part_mesh_t    **pmesh,
+ PDM_bool_t           pmesh_takes_ownership
+);
 
 
 /*----------------------------------------------------------------------------*/

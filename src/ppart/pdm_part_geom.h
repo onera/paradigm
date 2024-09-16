@@ -199,6 +199,119 @@ PDM_dreorder_from_length
  PDM_MPI_Comm     comm
 );
 
+
+/**
+ * \brief Compute edge centers
+ *
+ * \note If \p selected_lnum is NULL, all edges are selected
+ *
+ * \param [in]   n_part         Number of partitions
+ * \param [in]   n_selected     Number of selected edges (size = \p n_part)
+ * \param [in]   selected_lnum  Local IDs of selected edges (optional, size = \p n_part or NULL)
+ * \param [in]   pedge_vtx      Edge->Vertex connectivity (size = \p n_part, for each part, size = 2 * \p n_selected)
+ * \param [in]   pvtx_coord     Vertex coordinates (size = \p n_part)
+ * \param [out]  edge_center    Edge centers (size = \p n_part, for each part, size = 3 * \p n_selected)
+ */
+void
+PDM_part_geom_edge_center
+(
+  int       n_part,
+  int      *n_selected,
+  int     **selected_lnum,
+  int     **pedge_vtx,
+  double  **pvtx_coord,
+  double ***edge_center
+);
+
+/**
+ * \brief Compute face centers from face->edge and edge->vtx connectivities
+ *
+ * \note If \p selected_lnum is NULL, all faces are selected
+ *
+ * \param [in]   n_part          Number of partitions
+ * \param [in]   n_selected      Number of selected faces (size = \p n_part)
+ * \param [in]   selected_lnum   Local IDs of selected faces (optional, size = \p n_part or NULL)
+ * \param [in]   pface_edge_idx  Index for Face->Edge connectivity (size = \p n_part, for each part, size = \p n_selected + 1)
+ * \param [in]   pface_edge      Face->Edge connectivity (size = \p n_part, for each part, size = \p pface_edge_idx[\p n_selected])
+ * \param [in]   pedge_vtx       Edge->Vertex connectivity (size = \p n_part)
+ * \param [in]   pvtx_coord      Vertex coordinates (size = \p n_part)
+ * \param [out]  face_center     Face centers (size = \p n_part, for each part, size = 3 * \p n_selected)
+ */
+void
+PDM_part_geom_face_center_from_edge
+(
+  int       n_part,
+  int      *n_selected,
+  int     **selected_lnum,
+  int     **pface_edge_idx,
+  int     **pface_edge,
+  int     **pedge_vtx,
+  double  **pvtx_coord,
+  double ***face_center
+);
+
+/**
+ * \brief Compute face centers from face->vtx connectivity
+ *
+ * \note If \p selected_lnum is NULL, all faces are selected
+ *
+ * \param [in]   n_part          Number of partitions
+ * \param [in]   n_selected      Number of selected faces (size = \p n_part)
+ * \param [in]   selected_lnum   Local IDs of selected faces (optional, size = \p n_part or NULL)
+ * \param [in]   pface_vtx_idx   Index for Face->Vertex connectivity (size = \p n_part, for each part, size = \p n_selected + 1)
+ * \param [in]   pface_vtx       Face->Vertex connectivity (size = \p n_part, for each part, size = \p pface_vtx_idx[\p n_selected])
+ * \param [in]   pvtx_coord      Vertex coordinates (size = \p n_part)
+ * \param [out]  face_center     Face centers (size = \p n_part, for each part, size = 3 * \p n_selected)
+ */
+void
+PDM_part_geom_face_center_from_vtx
+(
+  int       n_part,
+  int      *n_selected,
+  int     **selected_lnum,
+  int     **pface_vtx_idx,
+  int     **pface_vtx,
+  double  **pvtx_coord,
+  double ***face_center
+);
+
+/**
+ * \brief Compute cell centers
+ *
+ * \note If \p selected_lnum is NULL, all cells are selected
+ *
+ * \warning Either {\p pface_edge_idx, \p pface_edge, \p pedge_vtx} or {\p pface_vtx_idx, \p pface_vtx} must be provided
+ *
+ * \param [in]   n_part          Number of partitions
+ * \param [in]   n_selected      Number of selected cells (size = \p n_part)
+ * \param [in]   selected_lnum   Local IDs of selected cells (optional, size = \p n_part or NULL)
+ * \param [in]   pcell_face_idx  Index for Cell->Face connectivity (size = \p n_part, for each part, size = \p n_selected + 1)
+ * \param [in]   pcell_face      Cell->Face connectivity (size = \p n_part, for each part, size = \p pcell_face_idx[\p n_selected])
+ * \param [in]   pface_edge_idx  Index for Face->Edge connectivity (optional)
+ * \param [in]   pface_edge      Face->Edge connectivity (optional)
+ * \param [in]   pface_vtx_idx   Index for Face->Vertex connectivity (optional)
+ * \param [in]   pface_vtx       Face->Vertex connectivity (optional)
+ * \param [in]   pedge_vtx       Edge->Vertex connectivity (optional)
+ * \param [in]   pvtx_coord      Vertex coordinates (size = \p n_part)
+ * \param [out]  cell_center     Cell centers (size = \p n_part, for each part, size = 3 * \p n_selected)
+ */
+void
+PDM_part_geom_cell_center
+(
+  int       n_part,
+  int      *n_selected,
+  int     **selected_lnum,
+  int     **pcell_face_idx,
+  int     **pcell_face,
+  int     **pface_edge_idx,
+  int     **pface_edge,
+  int     **pface_vtx_idx,
+  int     **pface_vtx,
+  int     **pedge_vtx,
+  double  **pvtx_coord,
+  double ***cell_center
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

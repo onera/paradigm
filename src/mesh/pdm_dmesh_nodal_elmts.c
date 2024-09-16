@@ -1074,7 +1074,7 @@ int                     *n_sum_vtx_edge_tot
 
   for (int i_section = 0; i_section < dmn_elts->n_section_std; i_section++) {
 
-    int n_edge_elt     = PDM_n_nedge_elt_per_elmt   (dmn_elts->sections_std[i_section]->t_elt);
+    int n_edge_elt     = PDM_n_edge_elt_per_elmt   (dmn_elts->sections_std[i_section]->t_elt);
     int n_sum_vtx_edge = PDM_n_sum_vtx_edge_per_elmt(dmn_elts->sections_std[i_section]->t_elt);
 
     *n_edge_elt_tot     += dmn_elts->sections_std[i_section]->n_elt*n_edge_elt;

@@ -65,7 +65,7 @@ _hexa_ngon_to_nodal
  int **cell_vtx
  )
 {
-  int debug = 1;
+  int debug = 0;
 
   PDM_malloc(*cell_vtx, n_cell * 8, int);
 
@@ -759,22 +759,6 @@ _compute_other_part_domain_interface
  PDM_part_extension_t *part_ext
 )
 {
-  if(part_ext->pdi == NULL) {
-    return;
-  }
-
-
-  int is_describe_vtx  = PDM_part_domain_interface_exist_get(part_ext->pdi, PDM_BOUND_TYPE_VTX );
-  int is_describe_edge = PDM_part_domain_interface_exist_get(part_ext->pdi, PDM_BOUND_TYPE_EDGE);
-  int is_describe_face = PDM_part_domain_interface_exist_get(part_ext->pdi, PDM_BOUND_TYPE_FACE);
-
-  int is_describe_vtx_l  = is_describe_vtx;
-  int is_describe_edge_l = is_describe_edge;
-  int is_describe_face_l = is_describe_face;
-  PDM_MPI_Allreduce(&is_describe_vtx_l , &is_describe_vtx , 1, PDM_MPI_INT, PDM_MPI_MAX, part_ext->comm);
-  PDM_MPI_Allreduce(&is_describe_edge_l, &is_describe_edge, 1, PDM_MPI_INT, PDM_MPI_MAX, part_ext->comm);
-  PDM_MPI_Allreduce(&is_describe_face_l, &is_describe_face, 1, PDM_MPI_INT, PDM_MPI_MAX, part_ext->comm);
-
   int have_edge = 0;
   int have_face = 0;
 
@@ -792,6 +776,22 @@ _compute_other_part_domain_interface
   }
   part_ext->have_edge = have_edge;
   part_ext->have_face = have_face;
+
+  if(part_ext->pdi == NULL) {
+    return;
+  }
+
+  int is_describe_vtx  = PDM_part_domain_interface_exist_get(part_ext->pdi, PDM_BOUND_TYPE_VTX );
+  int is_describe_edge = PDM_part_domain_interface_exist_get(part_ext->pdi, PDM_BOUND_TYPE_EDGE);
+  int is_describe_face = PDM_part_domain_interface_exist_get(part_ext->pdi, PDM_BOUND_TYPE_FACE);
+
+  int is_describe_vtx_l  = is_describe_vtx;
+  int is_describe_edge_l = is_describe_edge;
+  int is_describe_face_l = is_describe_face;
+  PDM_MPI_Allreduce(&is_describe_vtx_l , &is_describe_vtx , 1, PDM_MPI_INT, PDM_MPI_MAX, part_ext->comm);
+  PDM_MPI_Allreduce(&is_describe_edge_l, &is_describe_edge, 1, PDM_MPI_INT, PDM_MPI_MAX, part_ext->comm);
+  PDM_MPI_Allreduce(&is_describe_face_l, &is_describe_face, 1, PDM_MPI_INT, PDM_MPI_MAX, part_ext->comm);
+
 
   // En gros noeud centré avec toutes les connectivités
   if(is_describe_vtx == 1 &&
@@ -1710,6 +1710,7 @@ _setup_domain_interface_in_block_frame
 {
   int debug = 0;
 
+  part_ext->dom_itrf = NULL;
   if(part_ext->pdi == NULL) {
     return;
   }
@@ -1766,7 +1767,6 @@ _setup_domain_interface_in_block_frame
   }
 
 
-  part_ext->dom_itrf = NULL;
   if(is_describe_face) {
     int **is_face_on_itrf = NULL;
     PDM_part_domain_interface_to_domain_interface(part_ext->pdi,
@@ -1994,39 +1994,63 @@ _build_bound_graph
    */
   int debug = 0;
 
-  int          **pn_entity1        = NULL;
-  PDM_g_num_t ***pentity1_ln_to_gn = NULL;
-  PDM_malloc(pn_entity1       , part_ext->n_domain, int          *);
-  PDM_malloc(pentity1_ln_to_gn, part_ext->n_domain, PDM_g_num_t **);
+  int          **pn_entity1            = NULL;
+  PDM_g_num_t ***pentity1_ln_to_gn     = NULL;
+  int         ***pentity1_bnd_proc_idx = NULL;
+  int         ***pentity1_bnd_part_idx = NULL;
+  int         ***pentity1_bnd          = NULL;
+  PDM_malloc(pn_entity1           , part_ext->n_domain, int          *);
+  PDM_malloc(pentity1_ln_to_gn    , part_ext->n_domain, PDM_g_num_t **);
+  PDM_malloc(pentity1_bnd_proc_idx, part_ext->n_domain, int         **);
+  PDM_malloc(pentity1_bnd_part_idx, part_ext->n_domain, int         **);
+  PDM_malloc(pentity1_bnd         , part_ext->n_domain, int         **);
   PDM_bound_type_t bound_type = PDM_BOUND_TYPE_MAX;
   if(part_ext->extend_type == PDM_EXTEND_FROM_VTX) {
     bound_type = PDM_BOUND_TYPE_VTX;
     for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
-      PDM_malloc(pn_entity1       [i_domain], part_ext->n_domain, int          );
-      PDM_malloc(pentity1_ln_to_gn[i_domain], part_ext->n_domain, PDM_g_num_t *);
+      PDM_malloc(pn_entity1           [i_domain], part_ext->n_domain, int          );
+      PDM_malloc(pentity1_ln_to_gn    [i_domain], part_ext->n_domain, PDM_g_num_t *);
+      PDM_malloc(pentity1_bnd_proc_idx[i_domain], part_ext->n_domain, int         *);
+      PDM_malloc(pentity1_bnd_part_idx[i_domain], part_ext->n_domain, int         *);
+      PDM_malloc(pentity1_bnd         [i_domain], part_ext->n_domain, int         *);
       for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
-        pn_entity1       [i_domain][i_part] = part_ext->parts[i_domain][i_part].n_vtx;
-        pentity1_ln_to_gn[i_domain][i_part] = part_ext->parts[i_domain][i_part].vtx_ln_to_gn;
+        pn_entity1           [i_domain][i_part] = part_ext->parts[i_domain][i_part].n_vtx;
+        pentity1_ln_to_gn    [i_domain][i_part] = part_ext->parts[i_domain][i_part].vtx_ln_to_gn;
+        pentity1_bnd_proc_idx[i_domain][i_part] = part_ext->parts[i_domain][i_part].vtx_part_bound_proc_idx;
+        pentity1_bnd_part_idx[i_domain][i_part] = part_ext->parts[i_domain][i_part].vtx_part_bound_part_idx;
+        pentity1_bnd         [i_domain][i_part] = part_ext->parts[i_domain][i_part].vtx_part_bound;
       }
     }
   } else if(part_ext->extend_type == PDM_EXTEND_FROM_EDGE) {
     bound_type = PDM_BOUND_TYPE_EDGE;
     for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
-      PDM_malloc(pn_entity1       [i_domain], part_ext->n_domain, int          );
-      PDM_malloc(pentity1_ln_to_gn[i_domain], part_ext->n_domain, PDM_g_num_t *);
+      PDM_malloc(pn_entity1           [i_domain], part_ext->n_domain, int          );
+      PDM_malloc(pentity1_ln_to_gn    [i_domain], part_ext->n_domain, PDM_g_num_t *);
+      PDM_malloc(pentity1_bnd_proc_idx[i_domain], part_ext->n_domain, int         *);
+      PDM_malloc(pentity1_bnd_part_idx[i_domain], part_ext->n_domain, int         *);
+      PDM_malloc(pentity1_bnd         [i_domain], part_ext->n_domain, int         *);
       for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
-        pn_entity1       [i_domain][i_part] = part_ext->parts[i_domain][i_part].n_edge;
-        pentity1_ln_to_gn[i_domain][i_part] = part_ext->parts[i_domain][i_part].edge_ln_to_gn;
+        pn_entity1           [i_domain][i_part] = part_ext->parts[i_domain][i_part].n_edge;
+        pentity1_ln_to_gn    [i_domain][i_part] = part_ext->parts[i_domain][i_part].edge_ln_to_gn;
+        pentity1_bnd_proc_idx[i_domain][i_part] = part_ext->parts[i_domain][i_part].edge_part_bound_proc_idx;
+        pentity1_bnd_part_idx[i_domain][i_part] = part_ext->parts[i_domain][i_part].edge_part_bound_part_idx;
+        pentity1_bnd         [i_domain][i_part] = part_ext->parts[i_domain][i_part].edge_part_bound;
       }
     }
   } else if(part_ext->extend_type == PDM_EXTEND_FROM_FACE) {
     bound_type = PDM_BOUND_TYPE_FACE;
     for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
-      PDM_malloc(pn_entity1       [i_domain], part_ext->n_domain, int          );
-      PDM_malloc(pentity1_ln_to_gn[i_domain], part_ext->n_domain, PDM_g_num_t *);
+      PDM_malloc(pn_entity1           [i_domain], part_ext->n_domain, int          );
+      PDM_malloc(pentity1_ln_to_gn    [i_domain], part_ext->n_domain, PDM_g_num_t *);
+      PDM_malloc(pentity1_bnd_proc_idx[i_domain], part_ext->n_domain, int         *);
+      PDM_malloc(pentity1_bnd_part_idx[i_domain], part_ext->n_domain, int         *);
+      PDM_malloc(pentity1_bnd         [i_domain], part_ext->n_domain, int         *);
       for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
-        pn_entity1       [i_domain][i_part] = part_ext->parts[i_domain][i_part].n_face;
-        pentity1_ln_to_gn[i_domain][i_part] = part_ext->parts[i_domain][i_part].face_ln_to_gn;
+        pn_entity1           [i_domain][i_part] = part_ext->parts[i_domain][i_part].n_face;
+        pentity1_ln_to_gn    [i_domain][i_part] = part_ext->parts[i_domain][i_part].face_ln_to_gn;
+        pentity1_bnd_proc_idx[i_domain][i_part] = part_ext->parts[i_domain][i_part].face_part_bound_proc_idx;
+        pentity1_bnd_part_idx[i_domain][i_part] = part_ext->parts[i_domain][i_part].face_part_bound_part_idx;
+        pentity1_bnd         [i_domain][i_part] = part_ext->parts[i_domain][i_part].face_part_bound;
       }
     }
   }
@@ -2049,7 +2073,11 @@ _build_bound_graph
                                          part_ext->n_part,
                                          pn_entity1,
                                          pentity1_ln_to_gn,
+                                         pentity1_bnd_proc_idx,
+                                         pentity1_bnd_part_idx,
+                                         pentity1_bnd,
                                          NULL,
+                                         part_ext->user_defined_bound_graph,
                                          &pentity_bound_to_pentity_bound_idx,
                                          &pentity_bound_to_pentity_bound_triplet,
                                          &pentity_bound_to_pentity_bound_interface,
@@ -2068,11 +2096,17 @@ _build_bound_graph
   }
 
   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
-    PDM_free(pn_entity1       [i_domain]);
-    PDM_free(pentity1_ln_to_gn[i_domain]);
+    PDM_free(pn_entity1           [i_domain]);
+    PDM_free(pentity1_ln_to_gn    [i_domain]);
+    PDM_free(pentity1_bnd_proc_idx[i_domain]);
+    PDM_free(pentity1_bnd_part_idx[i_domain]);
+    PDM_free(pentity1_bnd         [i_domain]);
   }
   PDM_free(pn_entity1);
   PDM_free(pentity1_ln_to_gn);
+  PDM_free(pentity1_bnd_proc_idx);
+  PDM_free(pentity1_bnd_part_idx);
+  PDM_free(pentity1_bnd);
 
   part_ext->pinit_entity_bound_to_pentity_bound_idx       = pentity_bound_to_pentity_bound_idx;
   part_ext->pinit_entity_bound_to_pentity_bound_triplet   = pentity_bound_to_pentity_bound_triplet;
@@ -2424,24 +2458,24 @@ _part_extension_3d
   int *pn_init_edge = NULL;
   int *pn_init_face = NULL;
   int *pn_init_cell = NULL;
-  PDM_malloc(pn_vtx      , part_ext->n_domain, int );
-  PDM_malloc(pn_edge     , part_ext->n_domain, int );
-  PDM_malloc(pn_face     , part_ext->n_domain, int );
-  PDM_malloc(pn_cell     , part_ext->n_domain, int );
-  PDM_malloc(pn_init_vtx , part_ext->n_domain, int );
-  PDM_malloc(pn_init_edge, part_ext->n_domain, int );
-  PDM_malloc(pn_init_face, part_ext->n_domain, int );
-  PDM_malloc(pn_init_cell, part_ext->n_domain, int );
+  PDM_malloc(pn_vtx      , part_ext->ln_part_tot, int );
+  PDM_malloc(pn_edge     , part_ext->ln_part_tot, int );
+  PDM_malloc(pn_face     , part_ext->ln_part_tot, int );
+  PDM_malloc(pn_cell     , part_ext->ln_part_tot, int );
+  PDM_malloc(pn_init_vtx , part_ext->ln_part_tot, int );
+  PDM_malloc(pn_init_edge, part_ext->ln_part_tot, int );
+  PDM_malloc(pn_init_face, part_ext->ln_part_tot, int );
+  PDM_malloc(pn_init_cell, part_ext->ln_part_tot, int );
 
   /* ln_to_gn */
   PDM_g_num_t **pvtx_ln_to_gn  = NULL;
   PDM_g_num_t **pedge_ln_to_gn = NULL;
   PDM_g_num_t **pface_ln_to_gn = NULL;
   PDM_g_num_t **pcell_ln_to_gn = NULL;
-  PDM_malloc(pvtx_ln_to_gn , part_ext->n_domain, PDM_g_num_t *);
-  PDM_malloc(pedge_ln_to_gn, part_ext->n_domain, PDM_g_num_t *);
-  PDM_malloc(pface_ln_to_gn, part_ext->n_domain, PDM_g_num_t *);
-  PDM_malloc(pcell_ln_to_gn, part_ext->n_domain, PDM_g_num_t *);
+  PDM_malloc(pvtx_ln_to_gn , part_ext->ln_part_tot, PDM_g_num_t *);
+  PDM_malloc(pedge_ln_to_gn, part_ext->ln_part_tot, PDM_g_num_t *);
+  PDM_malloc(pface_ln_to_gn, part_ext->ln_part_tot, PDM_g_num_t *);
+  PDM_malloc(pcell_ln_to_gn, part_ext->ln_part_tot, PDM_g_num_t *);
 
   /* Connectivity */
   int **pcell_face_idx = NULL;
@@ -2454,31 +2488,31 @@ _part_extension_3d
   int **pface_vtx      = NULL;
   int **pedge_vtx_idx  = NULL;
   int **pedge_vtx      = NULL;
-  PDM_malloc(pcell_face_idx, part_ext->n_domain, int *);
-  PDM_malloc(pcell_face    , part_ext->n_domain, int *);
-  PDM_malloc(pcell_vtx_idx , part_ext->n_domain, int *);
-  PDM_malloc(pcell_vtx     , part_ext->n_domain, int *);
-  PDM_malloc(pface_edge_idx, part_ext->n_domain, int *);
-  PDM_malloc(pface_edge    , part_ext->n_domain, int *);
-  PDM_malloc(pface_vtx_idx , part_ext->n_domain, int *);
-  PDM_malloc(pface_vtx     , part_ext->n_domain, int *);
-  PDM_malloc(pedge_vtx_idx , part_ext->n_domain, int *);
-  PDM_malloc(pedge_vtx     , part_ext->n_domain, int *);
+  PDM_malloc(pcell_face_idx, part_ext->ln_part_tot, int *);
+  PDM_malloc(pcell_face    , part_ext->ln_part_tot, int *);
+  PDM_malloc(pcell_vtx_idx , part_ext->ln_part_tot, int *);
+  PDM_malloc(pcell_vtx     , part_ext->ln_part_tot, int *);
+  PDM_malloc(pface_edge_idx, part_ext->ln_part_tot, int *);
+  PDM_malloc(pface_edge    , part_ext->ln_part_tot, int *);
+  PDM_malloc(pface_vtx_idx , part_ext->ln_part_tot, int *);
+  PDM_malloc(pface_vtx     , part_ext->ln_part_tot, int *);
+  PDM_malloc(pedge_vtx_idx , part_ext->ln_part_tot, int *);
+  PDM_malloc(pedge_vtx     , part_ext->ln_part_tot, int *);
 
   /* Groups */
   int          *pn_face_group    = NULL;
   int         **pface_group_tag  = NULL;
   PDM_g_num_t **pface_group_gnum = NULL;
-  PDM_malloc(pn_face_group   , part_ext->n_domain, int          );
-  PDM_malloc(pface_group_tag , part_ext->n_domain, int         *);
-  PDM_malloc(pface_group_gnum, part_ext->n_domain, PDM_g_num_t *);
+  PDM_malloc(pn_face_group   , part_ext->ln_part_tot, int          );
+  PDM_malloc(pface_group_tag , part_ext->ln_part_tot, int         *);
+  PDM_malloc(pface_group_gnum, part_ext->ln_part_tot, PDM_g_num_t *);
 
   /* Coordinates */
   double **pvtx_coords = NULL;
-  PDM_malloc(pvtx_coords, part_ext->n_domain, double *);
+  PDM_malloc(pvtx_coords, part_ext->ln_part_tot, double *);
 
   int **pcell_alrdy_sent = NULL;
-  PDM_malloc(pcell_alrdy_sent, part_ext->n_domain, int *);
+  PDM_malloc(pcell_alrdy_sent, part_ext->ln_part_tot, int *);
 
   int lpart = 0;
   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
@@ -2810,9 +2844,8 @@ _part_extension_3d
 
     int i_rank;
     PDM_MPI_Comm_rank(part_ext->comm, &i_rank);
-    if (i_rank==0) printf("Computing DEPTH %d (step = %i) \n", i_depth, step);
-
     if(debug == 1) {
+      if (i_rank==0) printf("Computing DEPTH %d (step = %i) \n", i_depth, step);
       log_trace("\n\n\n >> DEPTH %d step = %i\n", i_depth, step);
     }
     double t_start = PDM_MPI_Wtime();
@@ -2831,14 +2864,14 @@ _part_extension_3d
     if (part_ext->extend_type==PDM_EXTEND_FROM_VTX) {
       if(part_ext->have_edge == 1) {
         for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
-          PDM_compute_face_vtx_from_face_and_edge(pn_face[i_part],
+          PDM_compute_face_vtx_from_face_and_edge(pn_face       [i_part],
                                                   pface_edge_idx[i_part],
-                                                  pface_edge[i_part],
-                                                  pedge_vtx[i_part],
-                                                 &pface_vtx[i_part]);
+                                                  pface_edge    [i_part],
+                                                  pedge_vtx     [i_part],
+                                                 &pface_vtx     [i_part]);
           pface_vtx_idx[i_part] = pface_edge_idx[i_part];
 
-          PDM_combine_connectivity(pn_cell[i_part],
+          PDM_combine_connectivity(pn_cell       [i_part],
                                    pcell_face_idx[i_part],
                                    pcell_face    [i_part],
                                    pface_vtx_idx [i_part],
@@ -2851,7 +2884,7 @@ _part_extension_3d
       }
       else {
         for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
-          PDM_combine_connectivity(pn_cell[i_part],
+          PDM_combine_connectivity(pn_cell       [i_part],
                                    pcell_face_idx[i_part],
                                    pcell_face    [i_part],
                                    pface_vtx_idx [i_part],
@@ -4442,20 +4475,20 @@ _part_extension_2d
   int *pn_init_vtx  = NULL;
   int *pn_init_edge = NULL;
   int *pn_init_face = NULL;
-  PDM_malloc(pn_vtx      , part_ext->n_domain, int );
-  PDM_malloc(pn_edge     , part_ext->n_domain, int );
-  PDM_malloc(pn_face     , part_ext->n_domain, int );
-  PDM_malloc(pn_init_vtx , part_ext->n_domain, int );
-  PDM_malloc(pn_init_edge, part_ext->n_domain, int );
-  PDM_malloc(pn_init_face, part_ext->n_domain, int );
+  PDM_malloc(pn_vtx      , part_ext->ln_part_tot, int );
+  PDM_malloc(pn_edge     , part_ext->ln_part_tot, int );
+  PDM_malloc(pn_face     , part_ext->ln_part_tot, int );
+  PDM_malloc(pn_init_vtx , part_ext->ln_part_tot, int );
+  PDM_malloc(pn_init_edge, part_ext->ln_part_tot, int );
+  PDM_malloc(pn_init_face, part_ext->ln_part_tot, int );
 
   /* ln_to_gn */
   PDM_g_num_t **pvtx_ln_to_gn  = NULL;
   PDM_g_num_t **pedge_ln_to_gn = NULL;
   PDM_g_num_t **pface_ln_to_gn = NULL;
-  PDM_malloc(pvtx_ln_to_gn , part_ext->n_domain, PDM_g_num_t *);
-  PDM_malloc(pedge_ln_to_gn, part_ext->n_domain, PDM_g_num_t *);
-  PDM_malloc(pface_ln_to_gn, part_ext->n_domain, PDM_g_num_t *);
+  PDM_malloc(pvtx_ln_to_gn , part_ext->ln_part_tot, PDM_g_num_t *);
+  PDM_malloc(pedge_ln_to_gn, part_ext->ln_part_tot, PDM_g_num_t *);
+  PDM_malloc(pface_ln_to_gn, part_ext->ln_part_tot, PDM_g_num_t *);
 
   /* Connectivity */
   int **pface_edge_idx = NULL;
@@ -4464,28 +4497,28 @@ _part_extension_2d
   int **pface_vtx      = NULL;
   int **pedge_vtx_idx  = NULL;
   int **pedge_vtx      = NULL;
-  PDM_malloc(pface_edge_idx, part_ext->n_domain, int *);
-  PDM_malloc(pface_edge    , part_ext->n_domain, int *);
-  PDM_malloc(pface_vtx_idx , part_ext->n_domain, int *);
-  PDM_malloc(pface_vtx     , part_ext->n_domain, int *);
-  PDM_malloc(pedge_vtx_idx , part_ext->n_domain, int *);
-  PDM_malloc(pedge_vtx     , part_ext->n_domain, int *);
+  PDM_malloc(pface_edge_idx, part_ext->ln_part_tot, int *);
+  PDM_malloc(pface_edge    , part_ext->ln_part_tot, int *);
+  PDM_malloc(pface_vtx_idx , part_ext->ln_part_tot, int *);
+  PDM_malloc(pface_vtx     , part_ext->ln_part_tot, int *);
+  PDM_malloc(pedge_vtx_idx , part_ext->ln_part_tot, int *);
+  PDM_malloc(pedge_vtx     , part_ext->ln_part_tot, int *);
 
   /* Groups */
   int          *pn_edge_group    = NULL;
   int         **pedge_group_tag  = NULL;
   PDM_g_num_t **pedge_group_gnum = NULL;
-  PDM_malloc(pn_edge_group   , part_ext->n_domain, int          );
-  PDM_malloc(pedge_group_tag , part_ext->n_domain, int         *);
-  PDM_malloc(pedge_group_gnum, part_ext->n_domain, PDM_g_num_t *);
+  PDM_malloc(pn_edge_group   , part_ext->ln_part_tot, int          );
+  PDM_malloc(pedge_group_tag , part_ext->ln_part_tot, int         *);
+  PDM_malloc(pedge_group_gnum, part_ext->ln_part_tot, PDM_g_num_t *);
 
 
   /* Coordinates */
   double **pvtx_coords = NULL;
-  PDM_malloc(pvtx_coords, part_ext->n_domain, double *);
+  PDM_malloc(pvtx_coords, part_ext->ln_part_tot, double *);
 
   int **pface_alrdy_sent = NULL;
-  PDM_malloc(pface_alrdy_sent, part_ext->n_domain, int *);
+  PDM_malloc(pface_alrdy_sent, part_ext->ln_part_tot, int *);
 
   int lpart = 0;
   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
@@ -4761,9 +4794,9 @@ _part_extension_2d
 
     int i_rank;
     PDM_MPI_Comm_rank(part_ext->comm, &i_rank);
-    if (i_rank==0) printf("Computing DEPTH %d (step = %i) \n", i_depth, step);
 
     if (debug==1) {
+      if (i_rank==0) printf("Computing DEPTH %d (step = %i) \n", i_depth, step);
       log_trace("\n\n\n >> DEPTH %d step = %i\n", i_depth, step);
     }
     double t_start = PDM_MPI_Wtime();
@@ -6057,24 +6090,24 @@ _part_extension_1d
   /* Size */
   int *pn_vtx  = NULL;
   int *pn_edge = NULL;
-  PDM_malloc(pn_vtx      , part_ext->n_domain, int );
-  PDM_malloc(pn_edge     , part_ext->n_domain, int );
+  PDM_malloc(pn_vtx , part_ext->ln_part_tot, int );
+  PDM_malloc(pn_edge, part_ext->ln_part_tot, int );
 
   /* ln_to_gn */
   PDM_g_num_t **pvtx_ln_to_gn  = NULL;
   PDM_g_num_t **pedge_ln_to_gn = NULL;
-  PDM_malloc(pvtx_ln_to_gn , part_ext->n_domain, PDM_g_num_t *);
-  PDM_malloc(pedge_ln_to_gn, part_ext->n_domain, PDM_g_num_t *);
+  PDM_malloc(pvtx_ln_to_gn , part_ext->ln_part_tot, PDM_g_num_t *);
+  PDM_malloc(pedge_ln_to_gn, part_ext->ln_part_tot, PDM_g_num_t *);
 
   /* Connectivity */
   int **pedge_vtx_idx  = NULL;
   int **pedge_vtx      = NULL;
-  PDM_malloc(pedge_vtx_idx , part_ext->n_domain, int *);
-  PDM_malloc(pedge_vtx     , part_ext->n_domain, int *);
+  PDM_malloc(pedge_vtx_idx, part_ext->ln_part_tot, int *);
+  PDM_malloc(pedge_vtx    , part_ext->ln_part_tot, int *);
 
   /* Coordinates */
   double **pvtx_coords = NULL;
-  PDM_malloc(pvtx_coords, part_ext->n_domain, double *);
+  PDM_malloc(pvtx_coords, part_ext->ln_part_tot, double *);
 
   int lpart = 0;
   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
@@ -6214,6 +6247,10 @@ PDM_part_extension_compute2
   const int                   dim
 )
 {
+  if (part_ext->set_part_used==1) {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_part_extension_set_part is invalid with PDM_part_extension_compute2\n");
+  }
+
   // TODO : mv dim in create but break API
   part_ext->dim          = dim;
   part_ext->compute_kind = 1;
@@ -7956,6 +7993,19 @@ PDM_part_extension_part_bound_graph_set
       part_ext->parts[i_domain][i_part].vtx_part_bound_proc_idx  = part_bound_proc_idx;
       part_ext->parts[i_domain][i_part].vtx_part_bound_part_idx  = part_bound_part_idx;
       part_ext->parts[i_domain][i_part].vtx_part_bound           = part_bound;
+      if (part_bound_proc_idx!=NULL && part_ext->extend_type==PDM_EXTEND_FROM_VTX) {
+        part_ext->user_defined_bound_graph = 1;
+      }
+      break;
+    }
+
+    case PDM_MESH_ENTITY_EDGE: {
+      part_ext->parts[i_domain][i_part].edge_part_bound_proc_idx = part_bound_proc_idx;
+      part_ext->parts[i_domain][i_part].edge_part_bound_part_idx = part_bound_part_idx;
+      part_ext->parts[i_domain][i_part].edge_part_bound          = part_bound;
+      if (part_bound_proc_idx!=NULL && part_ext->extend_type==PDM_EXTEND_FROM_EDGE) {
+        part_ext->user_defined_bound_graph = 1;
+      }
       break;
     }
 
@@ -7963,6 +8013,9 @@ PDM_part_extension_part_bound_graph_set
       part_ext->parts[i_domain][i_part].face_part_bound_proc_idx = part_bound_proc_idx;
       part_ext->parts[i_domain][i_part].face_part_bound_part_idx = part_bound_part_idx;
       part_ext->parts[i_domain][i_part].face_part_bound          = part_bound;
+      if (part_bound_proc_idx!=NULL && part_ext->extend_type==PDM_EXTEND_FROM_FACE) {
+        part_ext->user_defined_bound_graph = 1;
+      }
       break;
     }
 

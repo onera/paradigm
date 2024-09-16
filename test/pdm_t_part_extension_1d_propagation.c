@@ -1002,7 +1002,7 @@ _part_extension_one_depth
                                                  prev_edge_ln_to_gn_and_interface[i_part],
                                                  2,
                                                  n_part1_to_part2_edge);
-          log_trace(" ooooooo : %i \n", pos);
+          // log_trace(" ooooooo : %i \n", pos);
           if(pos == -1) {
             pn_edge_only_by_interface[i_part] += 1; // pextract_edge_n[i_part][i];
           }

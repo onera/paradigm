@@ -98,6 +98,7 @@ if (PDM_ENABLE_STATIC)
   set_target_properties(pdm_mpi_static PROPERTIES OUTPUT_NAME "pdm_mpi")
   set_target_properties(pdm_mpi_static PROPERTIES VERSION ${PDM_VERSION})
   target_link_libraries(pdm_mpi_static ${LINK_LIBRARIES} pdm_io_static)
+  target_link_libraries(pdm_mpi_static ${LINK_LIBRARIES} pdm_static)
   set_target_properties(pdm_mpi_static PROPERTIES
                             PUBLIC_HEADER "${LIST_HEADER}")
 
