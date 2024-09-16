@@ -7425,8 +7425,8 @@ PDM_extract_part_partial_free
         /* Free array */
         if(extrp->group_array_ownership[i][i_group] == PDM_OWNERSHIP_KEEP) {
           for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
-            PDM_free(extrp->pextract_group_entity                [i][i_group][i_part]);
-            PDM_free(extrp->pextract_group_entity_ln_to_gn       [i][i_group][i_part]);
+            PDM_free(extrp->pextract_group_entity         [i][i_group][i_part]);
+            PDM_free(extrp->pextract_group_entity_ln_to_gn[i][i_group][i_part]);
           }
         }
         if(extrp->group_parent_ownership[i][i_group] == PDM_OWNERSHIP_KEEP) {

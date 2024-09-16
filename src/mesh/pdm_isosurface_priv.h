@@ -170,8 +170,10 @@ struct _pdm_isosurface_t {
   double **dfield;
   double **dgradient;
 
+  // > Extracted mesh
   double ***extract_field;
   PDM_part_mesh_nodal_t *extract_pmesh_nodal;
+  PDM_part_mesh_t       *extract_pmesh;
 
   // ========================
   // > Partitioned entry data

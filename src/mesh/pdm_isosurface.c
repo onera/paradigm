@@ -1278,6 +1278,11 @@ _extract
     }
     PDM_free(n_extract   );
     PDM_free(extract_lnum);
+
+    // Retrieve extracted mesh and store it as a PDM_part_mesh_t instance
+    PDM_extract_part_part_mesh_get(extrp,
+                                   &isos->extract_pmesh,
+                                   PDM_FALSE);
   } // End Ngon
 }
 
