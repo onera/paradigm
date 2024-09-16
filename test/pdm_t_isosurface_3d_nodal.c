@@ -262,7 +262,7 @@ _usage(int exit_code)
      "  -elt_type <t>  Volume element type (only for automatically generated mesh).\n\n"
      "  -n_part   <n>  Number of partitions (if partitioned entry).\n\n"
      "  -is_dist       Is entry distributed ou partitioned.\n\n"
-     "  -local         Activate isosurface redistribution.\n\n"
+     "  -local         Deactivate isosurface redistribution.\n\n"
      "  -visu          Activate output.\n\n"
      "  -h             This message.\n\n");
 
@@ -283,6 +283,7 @@ _usage(int exit_code)
  * \param [inout]   elt_type   Element type
  * \param [inout]   n_part     Number of partitions par process
  * \param [inout]   dist_entry Is entry distributed or partitioned (resp 1, 0)
+ * \param [inout]   local      Deactivate isosurface redistribution
  * \param [inout]   visu       Ensight outputs status
  *
  */
@@ -406,7 +407,7 @@ int main(int argc, char *argv[])
   int                  order      = 1;
   PDM_Mesh_nodal_elt_t elt_type   = PDM_MESH_NODAL_TETRA4;
   int                  dist_entry = 0;
-  int                  local      = 1;
+  int                  local      = 0;
   int                  visu       = 0;
   
   _read_args(argc,
@@ -584,13 +585,21 @@ int main(int argc, char *argv[])
   /*
    *  Compute isosurface
    */
+
+  int n_iso = iso2+1;
+  for (int i_iso = 0; i_iso < n_iso; i_iso++) {
+    PDM_isosurface_enable_part_to_part(isos,
+                                       i_iso,
+                                       PDM_MESH_ENTITY_VTX,
+                                       0);
+  }
+
   PDM_isosurface_compute(isos, iso1);
   PDM_isosurface_reset(isos, iso1);
   double plane_isovalues2[2] = {-0.30,0.30};
   PDM_isosurface_set_isovalues(isos, iso1, 2, plane_isovalues2);
   PDM_isosurface_compute(isos, iso1);
   PDM_isosurface_compute(isos, iso2);
-  int n_iso = iso2+1;
 
 
   /*
@@ -606,6 +615,7 @@ int main(int argc, char *argv[])
   }
   else if (dist_entry==0) {
     if (local==1) {
+      // Local
       for (int i_iso=0; i_iso<n_iso; ++i_iso) {
         PDM_malloc(iso_itp_field[i_iso], n_part, double *);
         for (int i_part=0; i_part<n_part; ++i_part) {
@@ -632,7 +642,57 @@ int main(int argc, char *argv[])
       }
     }
     else {
-      PDM_error(__FILE__, __LINE__, 0, "Part entry with local=0 not implemented\n");
+      // Reequilibrate
+      for (int i_iso=0; i_iso<n_iso; ++i_iso) {
+        PDM_malloc(iso_itp_field[i_iso], n_part, double *);
+
+        PDM_part_to_part_t *ptp_vtx = NULL;
+        PDM_isosurface_part_to_part_get(isos,
+                                        i_iso,
+                                        PDM_MESH_ENTITY_VTX,
+                                        &ptp_vtx,
+                                        PDM_OWNERSHIP_KEEP);
+
+        double **recv_vtx_field = NULL;
+        int request_vtx = -1;
+        PDM_part_to_part_reverse_iexch(ptp_vtx,
+                                       PDM_MPI_COMM_KIND_P2P,
+                                       PDM_STRIDE_CST_INTERLACED,
+                                       PDM_PART_TO_PART_DATA_DEF_ORDER_PART2,
+                                       1,
+                                       sizeof(double),
+                                       NULL,
+                      (const void  **) itp_field,
+                                       NULL,
+                      (      void ***) &recv_vtx_field,
+                                       &request_vtx);
+
+        PDM_part_to_part_reverse_iexch_wait(ptp_vtx, request_vtx);
+
+        for (int i_part = 0; i_part < n_part; i_part++) {
+          int    *iso_vtx_parent_idx;
+          double *iso_vtx_parent_weight;
+          int iso_n_vtx = PDM_isosurface_vtx_parent_weight_get(isos,
+                                                               i_iso,
+                                                               i_part,
+                                                               &iso_vtx_parent_idx,
+                                                               &iso_vtx_parent_weight,
+                                                               PDM_OWNERSHIP_KEEP);
+
+          PDM_malloc(iso_itp_field[i_iso][i_part], iso_n_vtx, double);
+          for (int i_vtx = 0; i_vtx < iso_n_vtx; i_vtx++) {
+            iso_itp_field[i_iso][i_part][i_vtx] = 0.;
+            for (int i = iso_vtx_parent_idx[i_vtx]; i < iso_vtx_parent_idx[i_vtx+1]; i++) {
+              iso_itp_field[i_iso][i_part][i_vtx] += iso_vtx_parent_weight[i] * recv_vtx_field[i_part][i];
+            }
+          }
+
+          PDM_free(recv_vtx_field[i_part]);
+        } // End loop on parts
+        PDM_free(recv_vtx_field);
+      }
+
+      // PDM_error(__FILE__, __LINE__, 0, "Part entry with local=0 not implemented\n");
     }
   }
   else {
@@ -649,8 +709,9 @@ int main(int argc, char *argv[])
     }
     else if (dist_entry==0) {
       // > iso line output
-      _output_iso_result(isos, iso1, n_part, iso_itp_field, comm);
-      _output_iso_result(isos, iso2, n_part, iso_itp_field, comm);
+      for (int i_iso = 0; i_iso < n_iso; i_iso++) {
+        _output_iso_result(isos, i_iso, n_part, iso_itp_field, comm);
+      }
     }
   }
 

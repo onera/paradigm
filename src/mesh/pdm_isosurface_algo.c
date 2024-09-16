@@ -20,9 +20,6 @@
 #include "pdm_array.h"
 #include "pdm_gnum.h"
 #include "pdm_mesh_nodal.h"
-#include "pdm_dmesh.h"
-#include "pdm_dmesh_nodal.h"
-#include "pdm_dmesh_nodal_elements_utils.h"
 #include "pdm_part_mesh.h"
 #include "pdm_part_mesh_nodal.h"
 #include "pdm_part_to_part.h"
@@ -58,22 +55,10 @@ extern "C" {
  * Private function definitions
  *============================================================================*/
 
-
-static const int bar_pairs[] = {
-  0, 1
-};
-
 static const int tria_pairs[] = {
   1, 2,
   2, 0,
   0, 1
-};
-
-static const int quad_pairs[] = {
-  0, 1,
-  1, 2,
-  2, 3,
-  3, 0
 };
 
 static const int tetra_pairs[] = {
@@ -85,141 +70,10 @@ static const int tetra_pairs[] = {
   2, 3
 };
 
-static const int pyramid_pairs[] = {
-  0, 1,
-  1, 2,
-  2, 3,
-  3, 0,
-  0, 4,
-  1, 4,
-  2, 4,
-  3, 4
+static const int *simplex_pairs[] = {
+  tria_pairs,
+  tetra_pairs
 };
-
-static const int prism_pairs[] = {
-  1, 2,
-  2, 0,
-  0, 1,
-  4, 5,
-  5, 3,
-  3, 4,
-  0, 3,
-  1, 4,
-  2, 5
-};
-
-static const int hexa_pairs[] = {
-  0, 1,
-  1, 2,
-  2, 3,
-  3, 0,
-  4, 5,
-  5, 6,
-  6, 7,
-  7, 4,
-  0, 4,
-  1, 5,
-  2, 6,
-  3, 7
-};
-
-static const int *elt_pairs[] = {
-  NULL,          // PDM_MESH_NODAL_POINT
-  bar_pairs,     // PDM_MESH_NODAL_BAR2
-  tria_pairs,    // PDM_MESH_NODAL_TRIA3
-  quad_pairs,    // PDM_MESH_NODAL_QUAD4
-  NULL,          // PDM_MESH_NODAL_POLY_2D
-  tetra_pairs,   // PDM_MESH_NODAL_TETRA4
-  pyramid_pairs, // PDM_MESH_NODAL_PYRAMID5
-  prism_pairs,   // PDM_MESH_NODAL_PRISM6
-  hexa_pairs     // PDM_MESH_NODAL_HEXA8
-};
-
-
-static const int tetra_face_vtx_idx[] = {
-  0, 3, 6, 9, 12
-};
-
-static const int tetra_face_vtx[] = {
-  1, 2, 3,
-  0, 3, 2,
-  0, 1, 3,
-  0, 2, 1
-};
-
-static const int pyramid_face_vtx_idx[] = {
-  0, 3, 6, 9, 12, 16
-};
-
-static const int pyramid_face_vtx[] = {
-  0, 1, 4,
-  1, 2, 4,
-  2, 3, 4,
-  3, 0, 4,
-  0, 3, 2, 1
-};
-
-static const int prism_face_vtx_idx[] = {
-  0, 3, 6, 10, 14, 18
-};
-
-static const int prism_face_vtx[] = {
-  0, 2, 1,
-  3, 4, 5,
-  0, 1, 4, 3,
-  1, 2, 5, 4,
-  2, 0, 3, 5
-};
-
-static const int hexa_face_vtx_idx[] = {
-  0, 4, 8, 12, 16, 20, 24
-};
-
-static const int hexa_face_vtx[] = {
-  0, 4, 7, 3,
-  1, 2, 6, 5,
-  2, 3, 7, 6,
-  0, 1, 5, 4,
-  0, 3, 2, 1,
-  4, 5, 6, 7
-};
-
-static const int elt_n_face[] = {
-  0, // PDM_MESH_NODAL_POINT
-  0, // PDM_MESH_NODAL_BAR2
-  0, // PDM_MESH_NODAL_TRIA3
-  0, // PDM_MESH_NODAL_QUAD4
-  0, // PDM_MESH_NODAL_POLY_2D
-  4, // PDM_MESH_NODAL_TETRA4
-  5, // PDM_MESH_NODAL_PYRAMID5
-  5, // PDM_MESH_NODAL_PRISM6
-  6  // PDM_MESH_NODAL_HEXA8
-};
-
-static const int *elt_face_vtx_idx[] = {
-  NULL,                 // PDM_MESH_NODAL_POINT
-  NULL,                 // PDM_MESH_NODAL_BAR2
-  NULL,                 // PDM_MESH_NODAL_TRIA3
-  NULL,                 // PDM_MESH_NODAL_QUAD4
-  NULL,                 // PDM_MESH_NODAL_POLY_2D
-  tetra_face_vtx_idx,   // PDM_MESH_NODAL_TETRA4
-  pyramid_face_vtx_idx, // PDM_MESH_NODAL_PYRAMID5
-  prism_face_vtx_idx,   // PDM_MESH_NODAL_PRISM6
-  hexa_face_vtx_idx     // PDM_MESH_NODAL_HEXA8
-};
-
-static const int *elt_face_vtx[] = {
-  NULL,             // PDM_MESH_NODAL_POINT
-  NULL,             // PDM_MESH_NODAL_BAR2
-  NULL,             // PDM_MESH_NODAL_TRIA3
-  NULL,             // PDM_MESH_NODAL_QUAD4
-  NULL,             // PDM_MESH_NODAL_POLY_2D
-  tetra_face_vtx,   // PDM_MESH_NODAL_TETRA4
-  pyramid_face_vtx, // PDM_MESH_NODAL_PYRAMID5
-  prism_face_vtx,   // PDM_MESH_NODAL_PRISM6
-  hexa_face_vtx     // PDM_MESH_NODAL_HEXA8
-};
-
 
 /* From split operator  >>> */
 static int _pattern_permutation_2d[8] = {
@@ -557,11 +411,8 @@ _build_active_edges
     PDM_Mesh_nodal_elt_t t_elt = sections_elt_t[i_section];
 
     // Get table of vertex pairs for current element type
-    const int *pairs = elt_pairs[t_elt];
-    if (pairs == NULL) {
-      // Skip irrelevant sections
-      continue;
-    }
+    const int *pairs = simplex_pairs[i_section];
+    int n_pair = PDM_n_edge_elt_per_elmt(t_elt);
 
     // Get section information : number of elts and elt->vtx connectivity
     int  n_elt  = sections_n_elt  [i_section];
@@ -573,7 +424,6 @@ _build_active_edges
     }
 
     // Increment key occurrences
-    int n_pair    = PDM_n_edge_elt_per_elmt(t_elt);
     int elt_n_vtx = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, 1);
 
     for (int i_elt = 0; i_elt < n_elt; i_elt++) {
@@ -634,17 +484,13 @@ _build_active_edges
     PDM_Mesh_nodal_elt_t t_elt = sections_elt_t[i_section];
 
     // Get table of vertex pairs for current element type
-    const int *pairs = elt_pairs[t_elt];
-    if (pairs == NULL) {
-      // Skip irrelevant sections
-      continue;
-    }
+    const int *pairs = simplex_pairs[i_section];
+    int n_pair = PDM_n_edge_elt_per_elmt(t_elt);
 
     // Get section information : number of elts and elt->vtx connectivity
     int  n_elt  = sections_n_elt  [i_section];
     int *connec = sections_elt_vtx[i_section];
 
-    int n_pair    = PDM_n_edge_elt_per_elmt(t_elt);
     int elt_n_vtx = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, 1);
 
     elt_edge[i_section] = PDM_array_zeros_int(n_pair*n_elt);
@@ -760,16 +606,11 @@ _build_active_edges
     PDM_Mesh_nodal_elt_t t_elt = sections_elt_t[i_section];
 
     // Get table of vertex pairs for current element type
-    const int *pairs = elt_pairs[t_elt];
-    if (pairs == NULL) {
-      // Skip irrelevant sections
-      continue;
-    }
+    int n_pair = PDM_n_edge_elt_per_elmt(t_elt);
 
     // Get section information : number of elts and elt->vtx connectivity
     int n_elt = sections_n_elt[i_section];
 
-    int n_pair = PDM_n_edge_elt_per_elmt(t_elt);
     int has_bnd = sections_elt_tag[i_section]!=NULL;
 
     for (int i_elt = 0; i_elt < n_elt; i_elt++) {
@@ -880,10 +721,12 @@ _build_active_faces
    */
 
   // Get table of faces for current element type
-  int        _n_face             = elt_n_face                  [PDM_MESH_NODAL_TETRA4];
-  const int *_tetra_face_vtx_idx = elt_face_vtx_idx            [PDM_MESH_NODAL_TETRA4];
-  const int *_tetra_face_vtx     = elt_face_vtx                [PDM_MESH_NODAL_TETRA4];
-  int        elt_n_vtx           = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_TETRA4, 1);
+  const int *_tetra_face_vtx_idx = NULL;
+  const int *_tetra_face_vtx     = NULL;
+  int _n_face = PDM_face_vtx_per_elmt(PDM_MESH_NODAL_TETRA4,
+                                      &_tetra_face_vtx_idx,
+                                      &_tetra_face_vtx);
+  int elt_n_vtx = PDM_Mesh_nodal_n_vtx_elt_get(PDM_MESH_NODAL_TETRA4, 1);
 
   // Increment key occurrences
   for (int i_elt = 0; i_elt < n_tetra; i_elt++) {
@@ -932,10 +775,10 @@ _build_active_faces
 
   if (debug==1) log_trace("n_active_faces = %d\n", key_idx[max_key]);
   if (debug==1) log_trace("face_vtx_size  = %d\n", s_face_vtx);
-  int *_face_vtx_idx      = NULL;
-  int *_face_vtx          = NULL;
-  PDM_malloc(_face_vtx_idx, (key_idx[max_key] + 1), int);
-  PDM_malloc(_face_vtx    , s_face_vtx            , int);
+  int *_face_vtx_idx = NULL;
+  int *_face_vtx     = NULL;
+  PDM_malloc(_face_vtx_idx, key_idx[max_key] + 1, int);
+  PDM_malloc(_face_vtx    , s_face_vtx          , int);
   int *_face_parent_count = PDM_array_zeros_int(key_idx[max_key]);
 
   _face_vtx_idx[0] = 0;
@@ -1040,8 +883,8 @@ _build_active_faces
   PDM_array_reset_int(_face_parent_count, *n_face, 0);
   if (debug==1) {
     log_trace("n_parent_tot = %d\n", n_parent_tot);
-    PDM_log_trace_array_int(_face_parent_count,   key_idx[max_key], "_face_parent_count ::");
-    PDM_log_trace_array_int(_face_parent_idx  , (*n_face)+1       , "_face_parent_idx   ::");
+    PDM_log_trace_array_int(_face_parent_count, key_idx[max_key], "_face_parent_count ::");
+    PDM_log_trace_array_int(_face_parent_idx  , *n_face+1       , "_face_parent_idx   ::");
   }
 
   tetra_n_face_tot = 0;
@@ -1073,7 +916,7 @@ _build_active_faces
   
 
   // > Output
-  int _face_vtx_size = _face_vtx_idx[(*n_face)];
+  int _face_vtx_size = _face_vtx_idx[*n_face];
   *face_parent_idx = _face_parent_idx;
   *face_parent     = _face_parent;
   *elt_face        = _elt_face;
@@ -1130,11 +973,11 @@ _build_iso_vtx
   int         *iso_vtx_parent        = NULL;
   double      *iso_vtx_parent_weight = NULL;
   PDM_g_num_t *iso_vtx_parent_gnum   = NULL;
-  PDM_malloc(iso_vtx_coord        ,  iso_n_vtx * 3                , double     );
-  PDM_malloc(iso_vtx_parent_idx   , (iso_n_vtx + 1)               , int        );
-  PDM_malloc(iso_vtx_parent       , (n_vtx_on_vtx + 2*n_crossings), int        );
-  PDM_malloc(iso_vtx_parent_weight, (n_vtx_on_vtx + 2*n_crossings), double     );
-  PDM_malloc(iso_vtx_parent_gnum  ,  iso_n_vtx * 3                , PDM_g_num_t);
+  PDM_malloc(iso_vtx_coord        , iso_n_vtx * 3               , double     );
+  PDM_malloc(iso_vtx_parent_idx   , iso_n_vtx + 1               , int        );
+  PDM_malloc(iso_vtx_parent       , n_vtx_on_vtx + 2*n_crossings, int        );
+  PDM_malloc(iso_vtx_parent_weight, n_vtx_on_vtx + 2*n_crossings, double     );
+  PDM_malloc(iso_vtx_parent_gnum  , iso_n_vtx * 3               , PDM_g_num_t);
   int *vtx_to_iso_vtx   = PDM_array_zeros_int(n_vtx);
   int *iso_vtx_to_edge  = PDM_array_zeros_int(iso_n_vtx);
   int *isovalue_vtx_idx = PDM_array_zeros_int(n_isovalues+1);
@@ -1166,7 +1009,7 @@ _build_iso_vtx
                vtx_coord     + 3*i_vtx,
                sizeof(double) * 3);
         iso_vtx_parent_idx   [                   iso_n_vtx+1] = iso_vtx_parent_idx[iso_n_vtx] + 1;
-        iso_vtx_parent       [iso_vtx_parent_idx[iso_n_vtx ]] = iso_n_vtx;
+        iso_vtx_parent       [iso_vtx_parent_idx[iso_n_vtx ]] = i_vtx + 1;
         iso_vtx_parent_weight[iso_vtx_parent_idx[iso_n_vtx ]] = 1.;
         iso_vtx_parent_gnum  [                 3*iso_n_vtx  ] = vtx_gnum[i_vtx];
         iso_vtx_parent_gnum  [                 3*iso_n_vtx+1] = 0;
@@ -1854,11 +1697,11 @@ _contouring_tetrahedra
   int         *iso_face_vtx         = NULL;
   int         *iso_face_parent_idx  = NULL;
   int         *iso_face_parent      = NULL;
-  PDM_realloc(*out_iso_face_parent_gnum,iso_face_parent_gnum,  3*iso_n_face,              PDM_g_num_t);
-  PDM_realloc(*out_iso_face_vtx_idx,    iso_face_vtx_idx,        iso_n_face + 1,          int        );
-  PDM_realloc(*out_iso_face_vtx,        iso_face_vtx,            prev_size  + s_face_vtx, int        );
-  PDM_realloc(*out_iso_face_parent_idx, iso_face_parent_idx,     iso_n_face + 1,          int        );
-  PDM_realloc(*out_iso_face_parent    , iso_face_parent    ,     iso_n_face_parent,       int        );
+  PDM_realloc(*out_iso_face_parent_gnum, iso_face_parent_gnum, 3*iso_n_face,              PDM_g_num_t);
+  PDM_realloc(*out_iso_face_vtx_idx,     iso_face_vtx_idx,       iso_n_face + 1,          int        );
+  PDM_realloc(*out_iso_face_vtx,         iso_face_vtx,           prev_size  + s_face_vtx, int        );
+  PDM_realloc(*out_iso_face_parent_idx,  iso_face_parent_idx,    iso_n_face + 1,          int        );
+  PDM_realloc(*out_iso_face_parent    ,  iso_face_parent,        iso_n_face_parent,       int        );
   iso_face_vtx_idx   [0] = 0;
   PDM_array_reset_int(iso_face_def, n_face, 0);
   iso_face_parent_idx[0] = 0.;
@@ -3067,7 +2910,7 @@ PDM_isosurface_marching_algo
   int   n_isovalues = isos->n_isovalues[id_iso];
   double *isovalues = isos->  isovalues[id_iso];
 
-  double **vtx_field = isos->field[id_iso];
+  double **vtx_field = isos->extract_field[id_iso];
 
   // > Mesh information
   int n_part = isos->n_part;
@@ -3178,8 +3021,8 @@ PDM_isosurface_marching_algo
                                                      n_vtx,
                                                      vtx_coord,
                                                      vtx_gnum,
-                                                     sections_elt_t[i_section],
-                                                     sections_n_elt[i_section],
+                                                     sections_elt_t  [i_section],
+                                                     sections_n_elt  [i_section],
                                                      sections_elt_vtx[i_section],
                                                      NULL,
                                                      0,
@@ -3267,14 +3110,21 @@ PDM_isosurface_marching_algo
                    edge_vtx,
                    n_crossings,
                   &vtx_to_iso_vtx,
-                  &(iso_n_vtx[i_part]),
-                  &iso_vtx_coord[i_part],
-                  &iso_vtx_parent_idx[i_part],
-                  &iso_vtx_parent[i_part],
+                  &iso_n_vtx            [i_part],
+                  &iso_vtx_coord        [i_part],
+                  &iso_vtx_parent_idx   [i_part],
+                  &iso_vtx_parent       [i_part],
                   &iso_vtx_parent_weight[i_part],
-                  &iso_vtx_parent_gnum[i_part],
+                  &iso_vtx_parent_gnum  [i_part],
                   &iso_vtx_to_edge,
-                  &isovalue_vtx_idx[i_part]);
+                  &isovalue_vtx_idx     [i_part]);
+
+    if (isos->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL) {
+      // should we do this here??
+      for (int i = 0; i < iso_vtx_parent_idx[i_part][iso_n_vtx[i_part]]; i++) {
+        iso_vtx_parent[i_part][i] = isos->extract_vtx_lnum[i_part][iso_vtx_parent[i_part][i]-1] + 1;
+      }
+    }
 
     t_end = PDM_MPI_Wtime();
 
@@ -3307,8 +3157,8 @@ PDM_isosurface_marching_algo
 
     if (isos->entry_mesh_dim==3) {
       t_start = PDM_MPI_Wtime();
-      _build_active_faces(isos->extract_n_tetra   [i_part],
-                          isos->extract_tetra_vtx [i_part],
+      _build_active_faces(isos->extract_n_tetra  [i_part],
+                          isos->extract_tetra_vtx[i_part],
                           n_isovalues,
                           isovalues,
                           isos->ISOSURFACE_EPS,
@@ -3405,19 +3255,19 @@ PDM_isosurface_marching_algo
                             vtx_field[i_part],
                             _vtx_to_iso_vtx,
                             edge_to_iso_vtx,
-                            &iso_n_edge           [i_part],
-                            &iso_edge_vtx         [i_part],
-                            &iso_edge_parent_gnum [i_part],
+                            &iso_n_edge          [i_part],
+                            &iso_edge_vtx        [i_part],
+                            &iso_edge_parent_gnum[i_part],
                             &iso_n_edge_bnd_tag,
-                            &iso_edge_bnd_tag_idx [i_part],
-                            &iso_edge_bnd_tag     [i_part],
+                            &iso_edge_bnd_tag_idx[i_part],
+                            &iso_edge_bnd_tag    [i_part],
                             &iso_n_edge_parent,
-                            &iso_edge_parent_idx  [i_part],
-                            &iso_edge_parent      [i_part]);
+                            &iso_edge_parent_idx [i_part],
+                            &iso_edge_parent     [i_part]);
       if (isos->entry_mesh_dim==3) {
-        _contouring_tetrahedra(isos->extract_n_tetra     [i_part],
-                               isos->extract_tetra_vtx   [i_part],
-                               isos->extract_tetra_gnum  [i_part],
+        _contouring_tetrahedra(isos->extract_n_tetra   [i_part],
+                               isos->extract_tetra_vtx [i_part],
+                               isos->extract_tetra_gnum[i_part],
                                n_face,
                                face_vtx_idx,
                                face_vtx,
@@ -3706,7 +3556,7 @@ PDM_isosurface_marching_algo
   /*
    * Build edge groups gnum
    */
-  PDM_g_num_t   **iso_edge_group_gnum = NULL;
+  PDM_g_num_t **iso_edge_group_gnum = NULL;
   if (isos->entry_mesh_dim==3) {
     PDM_malloc(iso_edge_group_gnum, n_part, PDM_g_num_t *);
     for (int i_part=0; i_part<n_part; i_part++) {
@@ -3750,10 +3600,8 @@ PDM_isosurface_marching_algo
 
   /*
    * Store isosurface in part_mesh_nodal
-   *
-   * TODO:
    */
-  isos->n_part = n_part;
+  isos->n_part = n_part; // isos->iso_n_part
 
   isos->iso_n_entity         [PDM_MESH_ENTITY_VTX][id_iso] = iso_n_vtx;
   isos->iso_entity_gnum      [PDM_MESH_ENTITY_VTX][id_iso] = iso_vtx_gnum;

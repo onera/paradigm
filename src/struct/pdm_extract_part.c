@@ -2154,9 +2154,6 @@ _extract_part_and_reequilibrate_nodal_from_is_selected
                                                                                extrp->n_part_out,
                                                                                pmne->comm);
 
-  PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(extrp->extract_pmn,
-                                                extract_pmne);
-
   int **target_vtx_to_part1_vtx = NULL;
   if (extract_n_vtx == NULL) {
     assert(extrp->pextract_n_entity[PDM_MESH_ENTITY_VTX] == NULL);
@@ -2488,6 +2485,10 @@ _extract_part_and_reequilibrate_nodal_from_is_selected
   PDM_free(recv_elmt_face_vtx_n  );
 
 
+  PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(extrp->extract_pmn,
+                                                extract_pmne);
+
+
   /* Vertices */
   if (extract_n_vtx == NULL) {
     assert(extrp->ptp_entity[PDM_MESH_ENTITY_VTX] == NULL);
@@ -2532,11 +2533,13 @@ _extract_part_and_reequilibrate_nodal_from_is_selected
     PDM_part_to_part_reverse_iexch_wait(ptp_vtx, exch_request);
 
     for (int i_part = 0; i_part < extrp->n_part_out; i_part++) {
-      PDM_free(target_vtx_to_part1_vtx   [i_part]);
       PDM_free(part2_vtx_to_part1_vtx_idx[i_part]);
     }
-    PDM_free(target_vtx_to_part1_vtx   );
     PDM_free(part2_vtx_to_part1_vtx_idx);
+
+    extrp->pextract_entity_init_location[PDM_MESH_ENTITY_VTX] = target_vtx_to_part1_vtx;
+    extrp->is_owner_init_location       [PDM_MESH_ENTITY_VTX] = PDM_TRUE;
+
   }
 }
 
@@ -4759,6 +4762,8 @@ _extract_part_nodal_local_vtx
               for (int i = face_vtx_idx[i_face]; i < face_vtx_idx[i_face+1]; i++) {
                 int i_vtx = face_vtx[i] - 1;
                 if (vtx_old_to_new[i_part][i_vtx] < 0) {
+                  extrp->pextract_entity_parent_lnum[PDM_MESH_ENTITY_VTX][i_part][extract_n_vtx] = i_vtx;
+
                   memcpy(&extract_vtx_coord[3*extract_n_vtx], &vtx_coord[3*i_vtx], sizeof(double) * 3);
                   extract_vtx_g_num[extract_n_vtx] = vtx_g_num[i_vtx];
                   vtx_old_to_new[i_part][i_vtx] = ++extract_n_vtx;
@@ -4801,6 +4806,8 @@ _extract_part_nodal_local_vtx
             for (int i = 0; i < n_vtx_per_elmt; i++) {
               int i_vtx = connec[n_vtx_per_elmt*i_elt + i] - 1;
               if (vtx_old_to_new[i_part][i_vtx] < 0) {
+                extrp->pextract_entity_parent_lnum[PDM_MESH_ENTITY_VTX][i_part][extract_n_vtx] = i_vtx;
+
                 memcpy(&extract_vtx_coord[3*extract_n_vtx], &vtx_coord[3*i_vtx], sizeof(double) * 3);
                 extract_vtx_g_num[extract_n_vtx] = vtx_g_num[i_vtx];
                 vtx_old_to_new[i_part][i_vtx] = ++extract_n_vtx;

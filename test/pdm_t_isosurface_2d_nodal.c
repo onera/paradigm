@@ -131,6 +131,7 @@ _usage(int exit_code)
      "  -elt_type <t>  Surface element type (only for automatically generated mesh).\n\n"
      "  -n_part   <n>  Number of partitions (if partitioned entry).\n\n"
      "  -is_dist       Is entry distributed ou partitioned.\n\n"
+     "  -local         Deactivate isosurface redistribution.\n\n"
      "  -visu          Activate output.\n\n"
      "  -h             This message.\n\n");
 
@@ -150,6 +151,7 @@ _usage(int exit_code)
  * \param [inout]   elt_type   Element type
  * \param [inout]   n_part     Number of partitions par process
  * \param [inout]   dist_entry Is entry distributed or partitioned (resp 1, 0)
+ * \param [inout]   local      Deactivate isosurface redistribution
  * \param [inout]   visu       Ensight outputs status
  *
  */
@@ -162,6 +164,7 @@ _read_args(int                     argc,
            PDM_Mesh_nodal_elt_t  *elt_type,
            int                   *n_part,
            int                   *dist_entry,
+           int                   *local,
            int                   *visu)
 {
   int i = 1;
@@ -218,6 +221,9 @@ _read_args(int                     argc,
     else if (strcmp(argv[i], "-dist_entry") == 0) {
       *dist_entry = 1;
     }
+    else if (strcmp(argv[i], "-local") == 0) {
+      *local = 1;
+    }
     else if (strcmp(argv[i], "-visu") == 0) {
       *visu = 1;
     }
@@ -257,6 +263,7 @@ int main(int argc, char *argv[])
   int                  order      = 1;
   PDM_Mesh_nodal_elt_t elt_type   = PDM_MESH_NODAL_TRIA3;
   int                  dist_entry = 0;
+  int                  local      = 0;
   int                  visu       = 0;
   
   _read_args(argc,
@@ -267,6 +274,7 @@ int main(int argc, char *argv[])
              &elt_type,
              &n_part,
              &dist_entry,
+             &local,
              &visu);
 
   if (n_part <= 0) {
@@ -337,6 +345,9 @@ int main(int argc, char *argv[])
     PDM_isosurface_dmesh_nodal_set(isos, dmn);
   } else if (dist_entry==0) {
     PDM_isosurface_mesh_nodal_set(isos, pmn);
+    if (local==0) {
+      PDM_isosurface_redistribution_set(isos, PDM_EXTRACT_PART_KIND_REEQUILIBRATE, PDM_SPLIT_DUAL_WITH_HILBERT); // TODO: Test various partitioning ?
+    }
   } else {
     PDM_error(__FILE__, __LINE__, 0, "PDM_t_isosurface_2d_nodal dist_entry must be 0 or 1 (here set to %d)\n", dist_entry);
   }
