@@ -539,6 +539,48 @@ PDM_vtk_read_to_dmesh_nodal
        void         ***elt_field_value
  );
 
+
+/**
+ * \brief Export an unstructured grid to ASCII VTK format
+ *
+ * \param [in]  filename        Output file name
+ * \param [in]  n_vtx           Number of vertices
+ * \param [in]  vtx_coord       Coordinates of the vertices (size = 3 * \ref n_vtx)
+ *                              (x0, y0, z0, x1, ...)
+ * \param [in]  vtx_g_num       Global ids of the vertices (or NULL)
+ * \param [in]  n_elt           Number of elements
+ * \param [in]  elt_type        Type of elements (size = \ref n_elt)
+ * \param [in]  elt_vtx         Element-vertex connectivity (size = \ref n_elt * n_vtx_per_elt)
+ * \param [in]  elt_g_num       Global ids of the elements (or NULL)
+ * \param [in]  n_elt_field     Number of element-based fields
+ * \param [in]  elt_field_name  Name of the element-based fields (or NULL)
+ * \param [in]  elt_field       Values of the element-based fields (or NULL)
+ * \param [in]  n_vtx_field     Number of node-based fields
+ * \param [in]  vtx_field_name  Name of the node-based fields (or NULL)
+ * \param [in]  vtx_field       Values of the node-based fields (or NULL)
+ *
+ */
+
+void
+PDM_vtk_write_unstructured_grid
+(
+ const char                 *filename,
+ const int                   n_vtx,
+ const double                vtx_coord[],
+ const PDM_g_num_t           vtx_g_num[],
+ const int                   n_elt,
+ const PDM_Mesh_nodal_elt_t  elt_type[],
+ const int                   elt_vtx_idx[],
+ const int                   elt_vtx[],
+ const PDM_g_num_t           elt_g_num[],
+ const int                   n_elt_field,
+ const char                 *elt_field_name[],
+ const double               *elt_field[],
+ const int                   n_vtx_field,
+ const char                 *vtx_field_name[],
+ const double               *vtx_field[]
+ );
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

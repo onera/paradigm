@@ -201,9 +201,8 @@ int main(int argc, char *argv[])
    * Partitionnement
    */
   int n_domain = 1;
-  int n_part_domains = n_part;
   PDM_multipart_t *mpart = PDM_multipart_create(n_domain,
-                                                &n_part_domains,
+                                                &n_part,
                                                 PDM_FALSE,
                                                 part_method,
                                                 PDM_PART_SIZE_HOMOGENEOUS,
@@ -233,54 +232,54 @@ int main(int argc, char *argv[])
    */
   int i_domain = 0;
 
-  double **cell_center;
-  PDM_malloc(cell_center, n_part_domains ,double      *);
-  int **selected_l_num;
-  PDM_malloc(selected_l_num, n_part_domains ,int         *);
+  double      **cell_center;
+  int         **selected_l_num;
   PDM_g_num_t **pcell_ln_to_gn;
-  PDM_malloc(pcell_ln_to_gn, n_part_domains ,PDM_g_num_t *);
   PDM_g_num_t **pface_ln_to_gn;
-  PDM_malloc(pface_ln_to_gn, n_part_domains ,PDM_g_num_t *);
   PDM_g_num_t **pedge_ln_to_gn;
-  PDM_malloc(pedge_ln_to_gn, n_part_domains ,PDM_g_num_t *);
   PDM_g_num_t **pvtx_ln_to_gn;
-  PDM_malloc(pvtx_ln_to_gn, n_part_domains ,PDM_g_num_t *);
-  int *pn_cell;
-  PDM_malloc(pn_cell, n_part_domains ,int          );
-  int *pn_face;
-  PDM_malloc(pn_face, n_part_domains ,int          );
-  int *pn_edge;
-  PDM_malloc(pn_edge, n_part_domains ,int          );
-  int *pn_vtx;
-  PDM_malloc(pn_vtx, n_part_domains ,int          );
-  int *pn_select_cell;
-  PDM_malloc(pn_select_cell, n_part_domains ,int          );
+  int          *pn_cell;
+  int          *pn_face;
+  int          *pn_edge;
+  int          *pn_vtx;
+  int          *pn_select_cell;
+  int         **pcell_face;
+  int         **pcell_face_idx;
+  int         **pface_edge;
+  int         **pface_edge_idx;
+  int         **pedge_vtx;
+  double      **pvtx_coord;
   // double **weight;
-  // PDM_malloc(weight, n_part_domains ,double      *);
-  int **pcell_face;
-  PDM_malloc(pcell_face, n_part_domains ,int         *);
-  int **pcell_face_idx;
-  PDM_malloc(pcell_face_idx, n_part_domains ,int         *);
-  int **pface_edge;
-  PDM_malloc(pface_edge, n_part_domains ,int         *);
-  int **pface_edge_idx;
-  PDM_malloc(pface_edge_idx, n_part_domains ,int         *);
-  int **pedge_vtx;
-  PDM_malloc(pedge_vtx, n_part_domains ,int         *);
-  double **pvtx_coord;
-  PDM_malloc(pvtx_coord, n_part_domains ,double      *);
+  // PDM_malloc(weight, n_part ,double      *);
+  PDM_malloc(cell_center,    n_part, double      *);
+  PDM_malloc(selected_l_num, n_part, int         *);
+  PDM_malloc(pcell_ln_to_gn, n_part, PDM_g_num_t *);
+  PDM_malloc(pface_ln_to_gn, n_part, PDM_g_num_t *);
+  PDM_malloc(pedge_ln_to_gn, n_part, PDM_g_num_t *);
+  PDM_malloc(pvtx_ln_to_gn,  n_part, PDM_g_num_t *);
+  PDM_malloc(pn_cell,        n_part, int          );
+  PDM_malloc(pn_face,        n_part, int          );
+  PDM_malloc(pn_edge,        n_part, int          );
+  PDM_malloc(pn_vtx,         n_part, int          );
+  PDM_malloc(pn_select_cell, n_part, int          );
+  PDM_malloc(pcell_face,     n_part, int         *);
+  PDM_malloc(pcell_face_idx, n_part, int         *);
+  PDM_malloc(pface_edge,     n_part, int         *);
+  PDM_malloc(pface_edge_idx, n_part, int         *);
+  PDM_malloc(pedge_vtx,      n_part, int         *);
+  PDM_malloc(pvtx_coord,     n_part, double      *);
 
   PDM_g_num_t **target_g_num;
-  PDM_malloc(target_g_num, n_part_domains ,PDM_g_num_t *);
-  int *pn_target_cell;
-  PDM_malloc(pn_target_cell, n_part_domains ,int          );
+  int          *pn_target_cell;
+  PDM_malloc(target_g_num,   n_part, PDM_g_num_t *);
+  PDM_malloc(pn_target_cell, n_part, int          );
 
   /*
    * Compute gnum location
    */
   PDM_gnum_location_t* gnum_loc = PDM_gnum_location_create(n_part, n_part, comm, PDM_OWNERSHIP_KEEP);
 
-  for (int i_part = 0; i_part < n_part_domains; i_part++){
+  for (int i_part = 0; i_part < n_part; i_part++){
 
     PDM_g_num_t* cell_ln_to_gn = NULL;
     PDM_multipart_part_ln_to_gn_get(mpart,
@@ -324,14 +323,14 @@ int main(int argc, char *argv[])
                                                 i_part,
                                                 PDM_MESH_ENTITY_VTX,
                                                 &vtx_ln_to_gn,
-                                                PDM_OWNERSHIP_KEEP);
+                                                PDM_OWNERSHIP_USER);
 
     double *vtx = NULL;
     PDM_multipart_part_vtx_coord_get(mpart,
                                      i_domain,
                                      i_part,
                                      &vtx,
-                                     PDM_OWNERSHIP_KEEP);
+                                     PDM_OWNERSHIP_USER);
 
     pn_cell       [i_part] = n_cell;
     pcell_ln_to_gn[i_part] = cell_ln_to_gn;
@@ -353,13 +352,13 @@ int main(int argc, char *argv[])
                                                       PDM_OWNERSHIP_KEEP);
     assert(n_face == n_face2);
     int *edge_vtx_idx = NULL;
-    pn_edge       [i_part] = PDM_multipart_part_connectivity_get(mpart,
-                                                                 i_domain,
-                                                                 i_part,
-                                                                 PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                                                 &edge_vtx_idx,
-                                                                 &pedge_vtx    [i_part],
-                                                                 PDM_OWNERSHIP_KEEP);
+    pn_edge[i_part] = PDM_multipart_part_connectivity_get(mpart,
+                                                          i_domain,
+                                                          i_part,
+                                                          PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                                          &edge_vtx_idx,
+                                                          &pedge_vtx    [i_part],
+                                                          PDM_OWNERSHIP_KEEP);
 
     assert(edge_vtx_idx == NULL);
     PDM_multipart_part_ln_to_gn_get(mpart,
@@ -373,7 +372,7 @@ int main(int argc, char *argv[])
      * Compute center-cell and extract cells corresponding to criteria
      */
     double *face_center;
-    PDM_malloc(face_center, 3 * n_face ,double);
+    PDM_malloc(face_center, 3 * n_face, double);
 
     for(int i_face = 0; i_face < n_face; ++i_face) {
       face_center[3*i_face  ] = 0.;
@@ -395,7 +394,7 @@ int main(int argc, char *argv[])
       face_center[3*i_face+2] = face_center[3*i_face+2] / n_vtx_on_face;
     }
 
-    PDM_malloc(cell_center[i_part], 3 * n_cell ,double);
+    PDM_malloc(cell_center[i_part], 3 * n_cell, double);
 
     for(int i_cell = 0; i_cell < n_cell; ++i_cell) {
 
@@ -419,7 +418,7 @@ int main(int argc, char *argv[])
 
     PDM_free(face_center);
 
-    PDM_malloc(selected_l_num[i_part],  n_cell          ,int        );
+    PDM_malloc(selected_l_num[i_part], n_cell, int);
 
     /*
      * Sub-part
@@ -456,7 +455,7 @@ int main(int argc, char *argv[])
 
     /* On prends tout les gnum impaire dans un ordre reverse */
     int n_target_cell = 0;
-    PDM_malloc(target_g_num[i_part],dn_cell ,PDM_g_num_t);
+    PDM_malloc(target_g_num[i_part], dn_cell, PDM_g_num_t);
 
     for(int i = 0; i < dn_cell; ++i ) {
       PDM_g_num_t gnum = distrib_cell[i_rank+1] - i;
@@ -465,11 +464,11 @@ int main(int argc, char *argv[])
       }
     }
 
-    PDM_realloc(target_g_num  [i_part] ,target_g_num  [i_part] , n_target_cell ,PDM_g_num_t);
+    PDM_realloc(target_g_num[i_part], target_g_num[i_part], n_target_cell, PDM_g_num_t);
     pn_target_cell[i_part] = n_target_cell;
 
 
-    PDM_realloc(selected_l_num[i_part] ,selected_l_num[i_part] , n_select_cell ,int        );
+    PDM_realloc(selected_l_num[i_part], selected_l_num[i_part], n_select_cell, int);
     pn_select_cell[i_part] = n_select_cell;
 
     PDM_gnum_location_elements_set(gnum_loc,
@@ -496,6 +495,23 @@ int main(int argc, char *argv[])
                                                                                    pcell_ln_to_gn,
                                                                                    NULL);
 
+
+  PDM_part_mesh_nodal_t *pmn = PDM_part_mesh_nodal_create(3,
+                                                          n_part,
+                                                          comm);
+
+  PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn,
+                                                pmne_vol);
+
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    PDM_part_mesh_nodal_coord_set(pmn,
+                                  i_part,
+                                  pn_vtx[i_part],
+                                  pvtx_coord[i_part],
+                                  pvtx_ln_to_gn[i_part],
+                                  PDM_OWNERSHIP_KEEP);
+  }
+
   /*
    * Extract
    */
@@ -509,7 +525,7 @@ int main(int argc, char *argv[])
                                                       PDM_OWNERSHIP_KEEP,
                                                       comm);
 
-  PDM_extract_part_part_nodal_set(extrp, pmne_vol);
+  PDM_extract_part_part_nodal_set(extrp, pmn);
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
 
@@ -553,125 +569,48 @@ int main(int argc, char *argv[])
 
   PDM_extract_part_compute(extrp);
 
-  int *pn_extract_cell;
-  PDM_malloc(pn_extract_cell,n_part_out ,int          );
-  int *pn_extract_vtx;
-  PDM_malloc(pn_extract_vtx,n_part_out ,int          );
-  double **pextract_vtx;
-  PDM_malloc(pextract_vtx,n_part_out ,double      *);
-  PDM_g_num_t **pextract_cell_ln_to_gn;
-  PDM_malloc(pextract_cell_ln_to_gn,n_part_out ,PDM_g_num_t *);
-  PDM_g_num_t **pextract_vtx_ln_to_gn;
-  PDM_malloc(pextract_vtx_ln_to_gn,n_part_out ,PDM_g_num_t *);
+  PDM_gnum_location_free(gnum_loc);
 
+  PDM_part_mesh_nodal_t *extract_pmn = NULL;
+  PDM_extract_part_part_mesh_nodal_get(extrp,
+                                       &extract_pmn,
+                                       PDM_OWNERSHIP_KEEP);
 
-  for(int i_part = 0; i_part < n_part_out; ++i_part) {
-
-    pn_extract_cell[i_part] = PDM_extract_part_n_entity_get(extrp,
-                                                            i_part,
-                                                            PDM_MESH_ENTITY_CELL);
-
-
-    pn_extract_vtx[i_part] = PDM_extract_part_n_entity_get(extrp,
-                                                           i_part,
-                                                           PDM_MESH_ENTITY_VTX);
-
-    printf("pn_extract_cell[i_part] = %i \n", pn_extract_cell[i_part]);
-    printf("pn_extract_vtx[i_part]  = %i \n", pn_extract_vtx[i_part] );
-    PDM_extract_part_vtx_coord_get(extrp,
-                                   i_part,
-                                   &pextract_vtx[i_part],
-                                   PDM_OWNERSHIP_KEEP);
-
-    PDM_extract_part_ln_to_gn_get(extrp,
-                                  i_part,
-                                  PDM_MESH_ENTITY_CELL,
-                                  &pextract_cell_ln_to_gn[i_part],
-                                  PDM_OWNERSHIP_KEEP);
-
-    pextract_vtx_ln_to_gn[i_part] = NULL;
-    // PDM_extract_part_ln_to_gn_get(extrp,
-    //                               i_part,
-    //                               PDM_MESH_ENTITY_VTX,
-    //                               &pextract_vtx_ln_to_gn[i_part],
-    //                               PDM_OWNERSHIP_KEEP);
-  }
-
-  PDM_part_mesh_nodal_elmts_t* extract_pmne = NULL;
-  PDM_extract_part_part_mesh_nodal_get(extrp, &extract_pmne, PDM_OWNERSHIP_KEEP);
 
   /*
    * Export vtk en légende
    */
+  if (post) {
 
-  PDM_gnum_location_free(gnum_loc);
+    PDM_part_mesh_nodal_dump_vtk(extract_pmn,
+                                 PDM_GEOMETRY_KIND_VOLUMIC,
+                                 "extract_part_nodal");
+    // TODO: dump lower dimensions as well?
+    // PDM_part_mesh_nodal_dump_vtk(extract_pmn,
+    //                              PDM_GEOMETRY_KIND_SURFACIC,
+    //                              "extract_part_nodal_surf");
 
-
-  // PDM_part_mesh_nodal_dump_vtk(extract_pmne, PDM_GEOMETRY_KIND_VOLUMIC, "extract_vol_");
-  if(post){
-
-    // int *extract_sections_id = PDM_part_mesh_nodal_elmts_sections_id_get(extrp->extract_pmne);
-    for(int i_part = 0; i_part < n_part; ++i_part) {
-
-      char filename[999];
-      sprintf(filename, "out_extract_%i_%i.vtk", i_part, i_rank);
-
-      int id_section = 0;
-      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(extract_pmne, id_section);
-      int         *elmt_vtx                 = NULL;
-      int         *parent_num               = NULL;
-      PDM_g_num_t *numabs                   = NULL;
-      PDM_g_num_t *parent_entitity_ln_to_gn = NULL;
-      PDM_part_mesh_nodal_elmts_section_std_get(extract_pmne,
-                                              id_section,
-                                              i_part,
-                                              &elmt_vtx,
-                                              &numabs,
-                                              &parent_num,
-                                              &parent_entitity_ln_to_gn,
-                                              PDM_OWNERSHIP_KEEP);
-
-      PDM_log_trace_array_long(parent_entitity_ln_to_gn, pn_extract_cell[i_part], "parent_entitity_ln_to_gn ::");
-
-      PDM_vtk_write_std_elements(filename,
-                                 pn_extract_vtx[i_part],
-                                 pextract_vtx[i_part],
-                                 pextract_vtx_ln_to_gn[i_part],
-                                 t_elt,
-                                 pn_extract_cell[i_part],
-                                 elmt_vtx,
-                                 parent_entitity_ln_to_gn,
-                                 0,
-                                 NULL,
-                                 NULL);
-    }
   }
-
-  PDM_free(pn_extract_cell);
-  PDM_free(pn_extract_vtx);
-  PDM_free(pextract_vtx          );
-  PDM_free(pextract_cell_ln_to_gn);
-  PDM_free(pextract_vtx_ln_to_gn );
 
   PDM_extract_part_free(extrp);
 
-  PDM_part_mesh_nodal_elmts_free(pmne_vol);
+  PDM_part_mesh_nodal_free(pmn);
 
-  for (int i_part = 0; i_part < n_part_domains; i_part++){
-    PDM_free(cell_center       [i_part]);
-    PDM_free(selected_l_num    [i_part]);
-    PDM_free(target_g_num      [i_part]);
+  for (int i_part = 0; i_part < n_part; i_part++){
+    PDM_free(cell_center   [i_part]);
+    PDM_free(selected_l_num[i_part]);
+    PDM_free(target_g_num  [i_part]);
   }
-  PDM_free(cell_center);
+  PDM_free(cell_center   );
   PDM_free(selected_l_num);
-  PDM_free(target_g_num);
+  PDM_free(target_g_num  );
   PDM_free(pn_target_cell);
-  PDM_free(pn_cell);
-  PDM_free(pn_face);
-  PDM_free(pn_edge);
-  PDM_free(pn_vtx);
+  PDM_free(pn_cell       );
+  PDM_free(pn_face       );
+  PDM_free(pn_edge       );
+  PDM_free(pn_vtx        );
   PDM_free(pn_select_cell);
-  PDM_free(distrib_cell);
+  PDM_free(distrib_cell  );
 
   PDM_free(pcell_ln_to_gn);
   PDM_free(pface_ln_to_gn);

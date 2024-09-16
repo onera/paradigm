@@ -1496,10 +1496,15 @@ _create_extract_part_nodal
   // printf("n_elt_mesh = %i  \n", n_elt_mesh);
 
 
-  int *init_location_elt_mesh = (int  *) PDM_box_set_origin_get(boxes_meshes);
+  int *init_location_elt_mesh = (int *) PDM_box_set_origin_get(boxes_meshes);
 
 
-  PDM_extract_part_part_nodal_set(extrp_mesh, pmne);
+  PDM_part_mesh_nodal_t *_pmn = PDM_part_mesh_nodal_create(dim_mesh,
+                                                           n_part,
+                                                           mi->comm);
+
+  PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(_pmn,
+                                                pmne);
 
   /* Set vtx coordinates */
   for (int i_part = 0; i_part < n_part; ++i_part) {
@@ -1526,56 +1531,35 @@ _create_extract_part_nodal
     }
 
 
-    int n_cell = 0;
-    int n_face = 0;
-    int n_edge = 0;
-    PDM_g_num_t *cell_ln_to_gn = NULL;
-    PDM_g_num_t *face_ln_to_gn = NULL;
-    PDM_g_num_t *edge_ln_to_gn = NULL;
-
-    switch (dim_mesh) {
-    case 1:
-      n_edge = part_n_elt;
-      break;
-    case 2:
-      n_face = part_n_elt;
-      break;
-    case 3:
-      n_cell = part_n_elt;
-      break;
-    default:
-      PDM_error(__FILE__, __LINE__, 0, "invalid dimension %d\n", dim_mesh);
-    }
-
-
-    PDM_extract_part_part_set(extrp_mesh,
-                              i_part,
-                              n_cell,
-                              n_face,
-                              n_edge,
-                              n_vtx,
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL,
-                              cell_ln_to_gn,
-                              face_ln_to_gn,
-                              edge_ln_to_gn,
-                              vtx_ln_to_gn,
-                              vtx_coord);
+    PDM_part_mesh_nodal_coord_set(_pmn,
+                                  i_part,
+                                  n_vtx,
+                                  vtx_coord,
+                                  vtx_ln_to_gn,
+                                  PDM_OWNERSHIP_USER);
   }
+
+  PDM_extract_part_part_nodal_set(extrp_mesh, _pmn);
 
   /*  Setup target frame */
   PDM_extract_part_target_set(extrp_mesh, 0, n_elt_mesh, target_g_num, init_location_elt_mesh);
-  // PDM_g_num_t *target_g_num;
-  // PDM_malloc(target_g_num,n_elt_mesh,PDM_g_num_t);
-  // memcpy(target_g_num, gnum_elt_mesh, sizeof(PDM_g_num_t) * n_elt_mesh);
-  // PDM_extract_part_target_set(extrp_mesh, 0, n_elt_mesh, target_g_num, init_location_elt_mesh);
 
   PDM_extract_part_compute(extrp_mesh);
+
+  if (_pmn != NULL) {
+    // do better?
+    for (int i_part = 0; i_part < n_part; i_part++) {
+      PDM_free(_pmn->vtx[i_part]);
+    }
+    PDM_free(_pmn->vtx         );
+    PDM_free(_pmn->n_vol       );
+    PDM_free(_pmn->n_surf      );
+    PDM_free(_pmn->n_ridge     );
+    PDM_free(_pmn->n_corner    );
+    PDM_free(_pmn->section_kind);
+    PDM_free(_pmn->section_id  );
+    PDM_free(_pmn              );
+  }
 
   return extrp_mesh;
 }
@@ -1646,11 +1630,6 @@ _get_extracted_mesh_vol
                                           PDM_OWNERSHIP_KEEP);
 
   *cell_ln_to_gn = extrp->target_gnum[0];
-  // PDM_extract_part_parent_ln_to_gn_get(extrp,
-  //                                      0,
-  //                                      PDM_MESH_ENTITY_CELL,
-  //                                      cell_ln_to_gn,
-  //                                      PDM_OWNERSHIP_KEEP);
 
   PDM_extract_part_parent_ln_to_gn_get(extrp,
                                        0,
@@ -2404,24 +2383,13 @@ _mesh_intersection_vol_vol
 
     if (mi->mesh[i] == NULL) {
       /* From part mesh nodal */
-      PDM_part_mesh_nodal_elmts_t *extract_pmne = NULL;
+      PDM_part_mesh_nodal_t *extract_pmn = NULL;
       PDM_extract_part_part_mesh_nodal_get(mi->extrp_mesh[i],
-                                           &extract_pmne,
+                                           &extract_pmn,
                                            PDM_OWNERSHIP_USER);
+      PDM_part_mesh_nodal_elmts_t *extract_pmne = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(extract_pmn,
+                                                                                                PDM_GEOMETRY_KIND_VOLUMIC);
 
-      PDM_part_mesh_nodal_t *extract_pmn = PDM_part_mesh_nodal_create(mi->dim_mesh[i],
-                                                                      1,
-                                                                      mi->comm);
-
-      PDM_part_mesh_nodal_coord_set(extract_pmn,
-                                    0,
-                                    n_vtx       [i],
-                                    vtx_coord   [i],
-                                    vtx_ln_to_gn[i],
-                                    PDM_OWNERSHIP_USER);
-
-      PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(extract_pmn,
-                                                    extract_pmne);
 
       // Convert part_mesh_nodal to part_mesh
       if (dbg_enabled) {
@@ -4533,9 +4501,6 @@ _mesh_intersection_surf_surf
 
   int dbg_enabled = 0;
 
-  PDM_part_mesh_nodal_elmts_t *pmne[2] = {NULL, NULL};
-
-
 
   int          n_vtx        [2];
   double      *vtx_coord    [2] = {NULL, NULL};
@@ -4566,11 +4531,12 @@ _mesh_intersection_surf_surf
     }
 
     if (mi->mesh[i] == NULL) {
+      PDM_part_mesh_nodal_t *extract_pmn = NULL;
       PDM_extract_part_part_mesh_nodal_get(mi->extrp_mesh[i],
-                                           &pmne[i],
+                                           &extract_pmn,
                                            PDM_OWNERSHIP_KEEP);
-      PDM_part_mesh_nodal_elmts_t *extract_pmne = pmne[i];
-
+      PDM_part_mesh_nodal_elmts_t *extract_pmne = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(extract_pmn,
+                                                                                                PDM_GEOMETRY_KIND_SURFACIC);
 
       int n_section = PDM_part_mesh_nodal_elmts_n_section_get(extract_pmne);
       int *sections_id = PDM_part_mesh_nodal_elmts_sections_id_get(extract_pmne);
@@ -4589,11 +4555,11 @@ _mesh_intersection_surf_surf
         int id_section = sections_id[isection];
 
         int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(extract_pmne,
-                                                              id_section,
-                                                              0);
+                                                                id_section,
+                                                                0);
 
         PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(extract_pmne,
-                                                                              id_section);
+                                                                                id_section);
 
         assert(PDM_Mesh_nodal_elt_dim_get(t_elt) == 2);
 
@@ -4606,11 +4572,11 @@ _mesh_intersection_surf_surf
           int *connec_idx;
           int *connec;
           PDM_part_mesh_nodal_elmts_section_poly2d_get(extract_pmne,
-                                                     id_section,
-                                                     0,
-                                                     &connec_idx,
-                                                     &connec,
-                                                     PDM_OWNERSHIP_KEEP);
+                                                       id_section,
+                                                       0,
+                                                       &connec_idx,
+                                                       &connec,
+                                                       PDM_OWNERSHIP_KEEP);
 
           for (int ielt = 0; ielt < n_elt; ielt++) {
             int iface = ielt;
@@ -4632,15 +4598,15 @@ _mesh_intersection_surf_surf
           int          order               = 0;
           const char  *ho_ordering         = NULL;
           PDM_part_mesh_nodal_elmts_section_std_ho_get(extract_pmne,
-                                                     id_section,
-                                                     0,
-                                                     &connec,
-                                                     &numabs,
-                                                     &_parent_num,
-                                                     &parent_entity_g_num,
-                                                     &order,
-                                                     &ho_ordering,
-                                                     PDM_OWNERSHIP_KEEP);
+                                                       id_section,
+                                                       0,
+                                                       &connec,
+                                                       &numabs,
+                                                       &_parent_num,
+                                                       &parent_entity_g_num,
+                                                       &order,
+                                                       &ho_ordering,
+                                                       PDM_OWNERSHIP_KEEP);
           assert(order == 1);
 
           int face_vtx_n = PDM_Mesh_nodal_n_vtx_elt_get(t_elt,
@@ -4669,11 +4635,11 @@ _mesh_intersection_surf_surf
         int id_section = sections_id[isection];
 
         int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(extract_pmne,
-                                                              id_section,
-                                                              0);
+                                                                id_section,
+                                                                0);
 
         PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(extract_pmne,
-                                                                              id_section);
+                                                                                id_section);
 
         assert(PDM_Mesh_nodal_elt_dim_get(t_elt) == 2);
 
@@ -4686,11 +4652,11 @@ _mesh_intersection_surf_surf
           int *connec_idx;
           int *connec;
           PDM_part_mesh_nodal_elmts_section_poly2d_get(extract_pmne,
-                                                     id_section,
-                                                     0,
-                                                     &connec_idx,
-                                                     &connec,
-                                                     PDM_OWNERSHIP_KEEP);
+                                                       id_section,
+                                                       0,
+                                                       &connec_idx,
+                                                       &connec,
+                                                       PDM_OWNERSHIP_KEEP);
 
           for (int ielt = 0; ielt < n_elt; ielt++) {
             int iface = ielt;
@@ -4713,15 +4679,15 @@ _mesh_intersection_surf_surf
           int          order               = 0;
           const char  *ho_ordering         = NULL;
           PDM_part_mesh_nodal_elmts_section_std_ho_get(extract_pmne,
-                                                     id_section,
-                                                     0,
-                                                     &connec,
-                                                     &numabs,
-                                                     &_parent_num,
-                                                     &parent_entity_g_num,
-                                                     &order,
-                                                     &ho_ordering,
-                                                     PDM_OWNERSHIP_KEEP);
+                                                       id_section,
+                                                       0,
+                                                       &connec,
+                                                       &numabs,
+                                                       &_parent_num,
+                                                       &parent_entity_g_num,
+                                                       &order,
+                                                       &ho_ordering,
+                                                       PDM_OWNERSHIP_KEEP);
           assert(order == 1);
 
           int face_vtx_n = PDM_Mesh_nodal_n_vtx_elt_get(t_elt,
@@ -5575,12 +5541,6 @@ PDM_mesh_intersection_compute
   /*
    * Extract part
    */
-  // PDM_extract_part_t* extrp_mesh_a = _create_extract_part(mi->mesh[0],
-  //                                                         mi->dim_mesh[0],
-  //                                                         boxes_mesh[0]);
-  // PDM_extract_part_t* extrp_mesh_b = _create_extract_part(mi->mesh[1],
-  //                                                         mi->dim_mesh[1],
-  //                                                         boxes_mesh[1]);
   for (int imesh = 0; imesh < 2; imesh++) {
     if (mi->mesh_nodal[imesh] == NULL && mi->mesh[imesh] != NULL) {
       mi->extrp_mesh[imesh] = _create_extract_part(mi->mesh[imesh],
@@ -5598,11 +5558,9 @@ PDM_mesh_intersection_compute
   PDM_extract_part_t* extrp_mesh_b = mi->extrp_mesh[1];
 
   PDM_dbbtree_free (dbbtree_mesh_a);
-  // PDM_box_set_destroy (&boxes_mesh[0]);
-  // PDM_box_set_destroy (&boxes_mesh[1]);
 
   /*
-   * Geometry begin here ...
+   * Geometry begins here ...
    */
 
   /* Visu */
@@ -5610,60 +5568,35 @@ PDM_mesh_intersection_compute
     for (int imesh = 0; imesh < 2; imesh++) {
       if (mi->mesh_nodal[imesh] != NULL) {
 
-        PDM_part_mesh_nodal_t *extract_pmn = PDM_part_mesh_nodal_create(mi->dim_mesh[imesh],
-                                                                        1,
-                                                                        mi->comm);
-
-        double *_vtx_coord = NULL;
-        int _n_vtx = PDM_extract_part_vtx_coord_get(mi->extrp_mesh[imesh],
-                                                    0,
-                                                    &_vtx_coord,
-                                                    PDM_OWNERSHIP_KEEP);
-        PDM_g_num_t *_vtx_ln_to_gn = NULL;
-        PDM_extract_part_parent_ln_to_gn_get(mi->extrp_mesh[imesh],
-                                             0,
-                                             PDM_MESH_ENTITY_VTX,
-                                             &_vtx_ln_to_gn,
-                                             PDM_OWNERSHIP_KEEP);
-
-        PDM_part_mesh_nodal_coord_set(extract_pmn,
-                                      0,
-                                      _n_vtx,
-                                      _vtx_coord,
-                                      _vtx_ln_to_gn,
-                                      PDM_OWNERSHIP_USER);
-
-        PDM_part_mesh_nodal_elmts_t *extract_pmne = NULL;
+        PDM_part_mesh_nodal_t *extract_pmn = NULL;
         PDM_extract_part_part_mesh_nodal_get(mi->extrp_mesh[imesh],
-                                             &extract_pmne,
-                                             PDM_OWNERSHIP_USER);
-
-        PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(extract_pmn, extract_pmne);
-
-
-        char pattern[99];
-        sprintf(pattern, "extrp_mesh%d", imesh);
+                                             &extract_pmn,
+                                             PDM_OWNERSHIP_KEEP);
 
         PDM_geometry_kind_t geom_kind = PDM_GEOMETRY_KIND_MAX;
         switch (mi->dim_mesh[imesh]) {
-        case 1:
-          geom_kind = PDM_GEOMETRY_KIND_RIDGE;
-          break;
-        case 2:
-          geom_kind = PDM_GEOMETRY_KIND_SURFACIC;
-          break;
-        case 3:
-          geom_kind = PDM_GEOMETRY_KIND_VOLUMIC;
-          break;
-        default:
-          PDM_error(__FILE__, __LINE__, 0, "invalid dimension %d\n", mi->dim_mesh[imesh]);
+          case 3: {
+            geom_kind = PDM_GEOMETRY_KIND_VOLUMIC;
+            break;
+          }
+          case 2: {
+            geom_kind = PDM_GEOMETRY_KIND_SURFACIC;
+            break;
+          }
+          case 1: {
+            geom_kind = PDM_GEOMETRY_KIND_RIDGE;
+            break;
+          }
+          default: {
+            PDM_error(__FILE__, __LINE__, 0, "Invalid mesh dimension %d for mesh %d\n", mi->dim_mesh[imesh], imesh);
+          }
         }
 
+        char prefix[999];
+        sprintf(prefix, "mesh_intersection_extract_%d", imesh);
         PDM_part_mesh_nodal_dump_vtk(extract_pmn,
                                      geom_kind,
-                                     pattern);
-
-        PDM_part_mesh_nodal_free(extract_pmn);
+                                     prefix);
       }
     }
   }
@@ -5724,12 +5657,6 @@ PDM_mesh_intersection_compute
 
     PDM_free(redistribute_box_a_to_box_b_idx);
     PDM_free(redistribute_box_a_to_box_b    );
-
-    for (int imesh = 0; imesh < 2; imesh++) {
-      if (mi->mesh_nodal[imesh] == NULL && mi->mesh[imesh] == NULL) {
-        PDM_part_mesh_nodal_elmts_free(mi->extrp_mesh[imesh]->pmne);
-      }
-    }
 
     PDM_extract_part_free(extrp_mesh_a);
     PDM_extract_part_free(extrp_mesh_b);

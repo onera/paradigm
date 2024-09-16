@@ -779,6 +779,299 @@ PDM_dreorder_from_length
 }
 
 
+void
+PDM_part_geom_edge_center
+(
+  int       n_part,
+  int      *n_selected,
+  int     **selected_lnum,
+  int     **pedge_vtx,
+  double  **pvtx_coord,
+  double ***edge_center
+)
+{
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    assert(pedge_vtx [i_part] != NULL);
+    assert(pvtx_coord[i_part] != NULL);
+  }
+
+  double **entity_center;
+  PDM_malloc(entity_center, n_part, double *);
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    PDM_malloc(entity_center[i_part], 3 * n_selected[i_part], double);
+
+    double *_pvtx_coord = pvtx_coord[i_part];
+    int    *_pedge_vtx  = pedge_vtx [i_part];
+
+    for(int idx_edge = 0; idx_edge < n_selected[i_part]; ++idx_edge) {
+      int i_edge = idx_edge;
+      if (selected_lnum != NULL) {
+        i_edge = selected_lnum[i_part][idx_edge]-1;
+      }
+      int i_vtx1 = _pedge_vtx[2*i_edge  ]-1;
+      int i_vtx2 = _pedge_vtx[2*i_edge+1]-1;
+      entity_center[i_part][3*idx_edge  ] = 0.5 * (_pvtx_coord[3*i_vtx1  ] + _pvtx_coord[3*i_vtx2  ]);
+      entity_center[i_part][3*idx_edge+1] = 0.5 * (_pvtx_coord[3*i_vtx1+1] + _pvtx_coord[3*i_vtx2+1]);
+      entity_center[i_part][3*idx_edge+2] = 0.5 * (_pvtx_coord[3*i_vtx1+2] + _pvtx_coord[3*i_vtx2+2]);
+    }
+  }
+  *edge_center = entity_center;
+}
+
+
+void
+PDM_part_geom_face_center_from_edge
+(
+  int       n_part,
+  int      *n_selected,
+  int     **selected_lnum,
+  int     **pface_edge_idx,
+  int     **pface_edge,
+  int     **pedge_vtx,
+  double  **pvtx_coord,
+  double ***face_center
+)
+{
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    assert(pface_edge    [i_part] != NULL);
+    assert(pface_edge_idx[i_part] != NULL);
+    assert(pedge_vtx     [i_part] != NULL);
+    assert(pvtx_coord    [i_part] != NULL);
+  }
+
+  double **entity_center;
+  PDM_malloc(entity_center, n_part, double * );
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    PDM_malloc(entity_center[i_part], 3 * n_selected[i_part], double);
+
+    int    *_pface_edge     = pface_edge    [i_part];
+    int    *_pface_edge_idx = pface_edge_idx[i_part];
+    int    *_pedge_vtx      = pedge_vtx     [i_part];
+    double *_pvtx_coord     = pvtx_coord    [i_part];
+
+    for(int idx_face = 0; idx_face < n_selected[i_part]; ++idx_face) {
+
+      int i_face = idx_face;
+      if (selected_lnum != NULL) {
+        i_face = selected_lnum[i_part][idx_face]-1;
+      }
+      entity_center[i_part][3*idx_face  ] = 0.;
+      entity_center[i_part][3*idx_face+1] = 0.;
+      entity_center[i_part][3*idx_face+2] = 0.;
+
+      double inv = 1./((double) _pface_edge_idx[i_face+1] - _pface_edge_idx[i_face]);
+
+      for(int idx_edge = _pface_edge_idx[i_face]; idx_edge < _pface_edge_idx[i_face+1]; ++idx_edge) {
+        int i_edge = PDM_ABS(_pface_edge[idx_edge])-1;
+        int i_vtx1 = _pedge_vtx[2*i_edge  ] - 1;
+        int i_vtx2 = _pedge_vtx[2*i_edge+1] - 1;
+
+        entity_center[i_part][3*idx_face  ] += 0.5 * (_pvtx_coord[3*i_vtx1  ] + _pvtx_coord[3*i_vtx2  ]);
+        entity_center[i_part][3*idx_face+1] += 0.5 * (_pvtx_coord[3*i_vtx1+1] + _pvtx_coord[3*i_vtx2+1]);
+        entity_center[i_part][3*idx_face+2] += 0.5 * (_pvtx_coord[3*i_vtx1+2] + _pvtx_coord[3*i_vtx2+2]);
+
+      }
+      entity_center[i_part][3*idx_face  ] = entity_center[i_part][3*idx_face  ] * inv;
+      entity_center[i_part][3*idx_face+1] = entity_center[i_part][3*idx_face+1] * inv;
+      entity_center[i_part][3*idx_face+2] = entity_center[i_part][3*idx_face+2] * inv;
+    }
+  }
+
+  *face_center = entity_center;
+}
+
+
+void
+PDM_part_geom_face_center_from_vtx
+(
+  int       n_part,
+  int      *n_selected,
+  int     **selected_lnum,
+  int     **pface_vtx_idx,
+  int     **pface_vtx,
+  double  **pvtx_coord,
+  double ***face_center
+)
+{
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    assert(pface_vtx    [i_part] != NULL);
+    assert(pface_vtx_idx[i_part] != NULL);
+    assert(pvtx_coord   [i_part] != NULL);
+  }
+
+  double **entity_center;
+  PDM_malloc(entity_center, n_part, double * );
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    PDM_malloc(entity_center[i_part], 3 * n_selected[i_part], double);
+
+    int    *_pface_vtx     = pface_vtx    [i_part];
+    int    *_pface_vtx_idx = pface_vtx_idx[i_part];
+    double *_pvtx_coord    = pvtx_coord   [i_part];
+
+    for(int idx_face = 0; idx_face < n_selected[i_part]; ++idx_face) {
+
+      int i_face = idx_face;
+      if (selected_lnum != NULL) {
+        i_face = selected_lnum[i_part][idx_face]-1;
+      }
+      entity_center[i_part][3*idx_face  ] = 0.;
+      entity_center[i_part][3*idx_face+1] = 0.;
+      entity_center[i_part][3*idx_face+2] = 0.;
+
+      double inv = 1./((double) _pface_vtx_idx[i_face+1] - _pface_vtx_idx[i_face]);
+
+      for(int idx_vtx = _pface_vtx_idx[i_face]; idx_vtx < _pface_vtx_idx[i_face+1]; ++idx_vtx) {
+        int i_vtx = _pface_vtx[idx_vtx] - 1;
+
+        entity_center[i_part][3*idx_face  ] += _pvtx_coord[3*i_vtx  ];
+        entity_center[i_part][3*idx_face+1] += _pvtx_coord[3*i_vtx+1];
+        entity_center[i_part][3*idx_face+2] += _pvtx_coord[3*i_vtx+2];
+
+      }
+      entity_center[i_part][3*idx_face  ] = entity_center[i_part][3*idx_face  ] * inv;
+      entity_center[i_part][3*idx_face+1] = entity_center[i_part][3*idx_face+1] * inv;
+      entity_center[i_part][3*idx_face+2] = entity_center[i_part][3*idx_face+2] * inv;
+    }
+  }
+
+  *face_center = entity_center;
+}
+
+
+void
+PDM_part_geom_cell_center
+(
+  int       n_part,
+  int      *n_selected,
+  int     **selected_lnum,
+  int     **pcell_face_idx,
+  int     **pcell_face,
+  int     **pface_edge_idx,
+  int     **pface_edge,
+  int     **pface_vtx_idx,
+  int     **pface_vtx,
+  int     **pedge_vtx,
+  double  **pvtx_coord,
+  double ***cell_center
+)
+{
+  int from_edge = (pface_edge != NULL);
+  int from_face = (pface_vtx  != NULL);
+
+  double **entity_center;
+  PDM_malloc(entity_center, n_part, double *);
+
+  if(from_face == 1) {
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      PDM_malloc(entity_center[i_part], 3 * n_selected[i_part], double);
+
+      int    *_pcell_face     = pcell_face    [i_part];
+      int    *_pcell_face_idx = pcell_face_idx[i_part];
+      int    *_pface_vtx      = pface_vtx     [i_part];
+      int    *_pface_vtx_idx  = pface_vtx_idx [i_part];
+      double *_pvtx_coord     = pvtx_coord    [i_part];
+
+      // PDM_log_trace_array_int(selected_lnum[i_part], n_selected[i_part], "selected_lnum ::");
+      for(int idx_cell = 0; idx_cell < n_selected[i_part]; ++idx_cell) {
+        int i_cell = idx_cell;
+        if (selected_lnum != NULL) {
+          i_cell = selected_lnum[i_part][idx_cell]-1;
+        }
+        entity_center[i_part][3*idx_cell  ] = 0.;
+        entity_center[i_part][3*idx_cell+1] = 0.;
+        entity_center[i_part][3*idx_cell+2] = 0.;
+
+        double inv = 1./((double) _pcell_face_idx[idx_cell+1] - _pcell_face_idx[idx_cell]);
+
+        for(int idx_face = _pcell_face_idx[i_cell]; idx_face < _pcell_face_idx[i_cell+1]; ++idx_face) {
+          int i_face = PDM_ABS(_pcell_face[idx_face])-1;
+
+          double fcx = 0;
+          double fcy = 0;
+          double fcz = 0;
+          double inv2 = 1./((double) _pface_vtx_idx[i_face+1] - _pface_vtx_idx[i_face]);
+
+          for(int idx_vtx = _pface_vtx_idx[i_face]; idx_vtx < _pface_vtx_idx[i_face+1]; ++idx_vtx) {
+            int i_vtx = _pface_vtx[idx_vtx]-1;
+            fcx += _pvtx_coord[3*i_vtx  ];
+            fcy += _pvtx_coord[3*i_vtx+1];
+            fcz += _pvtx_coord[3*i_vtx+2];
+          }
+          fcx = fcx * inv2;
+          fcy = fcy * inv2;
+          fcz = fcz * inv2;
+
+          entity_center[i_part][3*idx_cell  ] += fcx;
+          entity_center[i_part][3*idx_cell+1] += fcy;
+          entity_center[i_part][3*idx_cell+2] += fcz;
+        }
+
+        entity_center[i_part][3*idx_cell  ] = entity_center[i_part][3*idx_cell  ] * inv;
+        entity_center[i_part][3*idx_cell+1] = entity_center[i_part][3*idx_cell+1] * inv;
+        entity_center[i_part][3*idx_cell+2] = entity_center[i_part][3*idx_cell+2] * inv;
+      } /* End cell */
+    }
+  }
+
+  else if( from_edge == 1) {
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      PDM_malloc(entity_center[i_part], 3 * n_selected[i_part], double);
+
+      int    *_pcell_face     = pcell_face    [i_part];
+      int    *_pcell_face_idx = pcell_face_idx[i_part];
+      int    *_pface_edge     = pface_edge    [i_part];
+      int    *_pface_edge_idx = pface_edge_idx[i_part];
+      int    *_pedge_vtx      = pedge_vtx     [i_part];
+      double *_pvtx_coord     = pvtx_coord    [i_part];
+
+      for(int idx_cell = 0; idx_cell < n_selected[i_part]; ++idx_cell) {
+        int i_cell = idx_cell;
+        if (selected_lnum != NULL) {
+          i_cell = selected_lnum[i_part][idx_cell]-1;
+        }
+
+        entity_center[i_part][3*idx_cell  ] = 0.;
+        entity_center[i_part][3*idx_cell+1] = 0.;
+        entity_center[i_part][3*idx_cell+2] = 0.;
+
+        double inv = 1./((double)  _pcell_face_idx[idx_cell+1] - _pcell_face_idx[idx_cell]);
+
+        double fcx = 0;
+        double fcy = 0;
+        double fcz = 0;
+        for(int idx_face = _pcell_face_idx[i_cell]; idx_face < _pcell_face_idx[i_cell+1]; ++idx_face) {
+          int i_face = PDM_ABS(_pcell_face[idx_face])-1;
+
+          double inv2 = 1./((double)  _pface_edge_idx[i_face+1] - _pface_edge_idx[i_face]);
+
+          for(int idx_edge = _pface_edge_idx[i_face]; idx_edge < _pface_edge_idx[i_face+1]; ++idx_edge) {
+            int i_edge = PDM_ABS(_pface_edge[idx_edge])-1;
+            int i_vtx1 = _pedge_vtx[2*i_edge  ] - 1;
+            int i_vtx2 = _pedge_vtx[2*i_edge+1] - 1;
+            fcx += 0.5 * (_pvtx_coord[3*i_vtx1  ] + _pvtx_coord[3*i_vtx2  ]);
+            fcy += 0.5 * (_pvtx_coord[3*i_vtx1+1] + _pvtx_coord[3*i_vtx2+1]);
+            fcz += 0.5 * (_pvtx_coord[3*i_vtx1+2] + _pvtx_coord[3*i_vtx2+2]);
+          }
+          fcx = fcx * inv2;
+          fcy = fcy * inv2;
+          fcz = fcz * inv2;
+
+          entity_center[i_part][3*idx_cell  ] += fcx;
+          entity_center[i_part][3*idx_cell+1] += fcy;
+          entity_center[i_part][3*idx_cell+2] += fcz;
+        }
+
+        entity_center[i_part][3*idx_cell  ] = entity_center[i_part][3*idx_cell  ] * inv;
+        entity_center[i_part][3*idx_cell+1] = entity_center[i_part][3*idx_cell+1] * inv;
+        entity_center[i_part][3*idx_cell+2] = entity_center[i_part][3*idx_cell+2] * inv;
+      } /* End cell */
+    }
+  }
+
+  *cell_center = entity_center;
+}
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

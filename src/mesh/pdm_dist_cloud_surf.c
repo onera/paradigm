@@ -1599,11 +1599,41 @@ _dist_cloud_surf_compute_optim
                                                         PDM_FALSE,                         // compute_child_gnum
                                                         PDM_OWNERSHIP_KEEP,
                                                         dist->comm);
+
+    PDM_part_mesh_nodal_t *_pmn = NULL;
     if (pmne != NULL) {
-      PDM_extract_part_part_nodal_set(extrp, pmne);
+
+      int mesh_dimension = -1;
+      switch (geom_kind) {
+        case PDM_GEOMETRY_KIND_VOLUMIC: {
+          mesh_dimension = 3;
+          break;
+        }
+        case PDM_GEOMETRY_KIND_SURFACIC: {
+          mesh_dimension = 2;
+          break;
+        }
+        case PDM_GEOMETRY_KIND_RIDGE: {
+          mesh_dimension = 1;
+          break;
+        }
+        case PDM_GEOMETRY_KIND_CORNER: {
+          mesh_dimension = 0;
+          break;
+        }
+        default : {
+          PDM_error(__FILE__, __LINE__, 0, "Invalid geom_kind %d\n", geom_kind);
+        }
+      }
+
+      _pmn = PDM_part_mesh_nodal_create(mesh_dimension,
+                                        n_part_mesh,
+                                        dist->comm);
+
+      PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(_pmn,
+                                                    pmne);
 
       for (int i_part = 0; i_part < n_part_mesh; i_part++) {
-
         int n_vtx = 0;
         const double      *vtx_coord    = NULL;
         const PDM_g_num_t *vtx_ln_to_gn = NULL;
@@ -1614,52 +1644,15 @@ _dist_cloud_surf_compute_optim
           vtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(mesh_nodal, i_part);
         }
 
-        int n_cell = 0;
-        int n_face = 0;
-        int n_edge = 0;
-        PDM_g_num_t *cell_ln_to_gn = NULL;
-        PDM_g_num_t *face_ln_to_gn = NULL;
-        PDM_g_num_t *edge_ln_to_gn = NULL;
-        switch (geom_kind) {
-          case PDM_GEOMETRY_KIND_VOLUMIC: {
-            n_cell = part_n_elt[i_part];
-            cell_ln_to_gn = part_elt_g_num[i_part];
-            break;
-          }
-          case PDM_GEOMETRY_KIND_SURFACIC: {
-            n_face = part_n_elt[i_part];
-            face_ln_to_gn = part_elt_g_num[i_part];
-            break;
-          }
-          case PDM_GEOMETRY_KIND_RIDGE: {
-            n_edge = part_n_elt[i_part];
-            edge_ln_to_gn = part_elt_g_num[i_part];
-            break;
-          }
-          default:
-            PDM_error(__FILE__, __LINE__, 0, "incorrect geom_kind %d\n", (int) geom_kind);
-        }
-
-        PDM_extract_part_part_set(extrp,
-                                  i_part,
-                                  n_cell,
-                                  n_face,
-                                  n_edge,
-                                  n_vtx,
-                                  NULL,
-                                  NULL,
-                                  NULL,
-                                  NULL,
-                                  NULL,
-                                  NULL,
-                                  NULL,
-                                  cell_ln_to_gn,
-                                  face_ln_to_gn,
-                                  edge_ln_to_gn,
-                  (PDM_g_num_t *) vtx_ln_to_gn,
-                  (double      *) vtx_coord);
-
+        PDM_part_mesh_nodal_coord_set(_pmn,
+                                      i_part,
+                                      n_vtx,
+                                      vtx_coord,
+                                      vtx_ln_to_gn,
+                                      PDM_OWNERSHIP_USER);
       }
+
+      PDM_extract_part_part_nodal_set(extrp, _pmn);
     }
     else {
       /* Set vtx_coord */
@@ -1726,21 +1719,19 @@ _dist_cloud_surf_compute_optim
       PDM_free(part_elt_extents);
     }
 
+    PDM_part_mesh_nodal_t       *extract_pmn  = NULL;
     PDM_part_mesh_nodal_elmts_t *extract_pmne = NULL;
     if (pmne != NULL) {
       PDM_extract_part_part_mesh_nodal_get(extrp,
-                                           &extract_pmne,
-                                           PDM_OWNERSHIP_USER);
+                                           &extract_pmn,
+                                           PDM_OWNERSHIP_KEEP);
+      extract_pmne = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(extract_pmn,
+                                                                   geom_kind);
     }
 
-    int pextract_n_vtx = PDM_extract_part_n_entity_get(extrp,
-                                                       0,
-                                                       PDM_MESH_ENTITY_VTX);
-    double *pextract_vtx_coord = NULL;
-    PDM_extract_part_vtx_coord_get(extrp,
-                                   0,
-                                   &pextract_vtx_coord,
-                                   PDM_OWNERSHIP_KEEP);
+    int     pextract_n_vtx     = PDM_part_mesh_nodal_n_vtx_get    (extract_pmn, 0);
+    double *pextract_vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(extract_pmn, 0);
+
 
     PDM_Mesh_nodal_elt_t *elt_type  = NULL;
     int                  *elt_order = NULL;
@@ -1949,8 +1940,6 @@ _dist_cloud_surf_compute_optim
         }
 
       }
-
-      PDM_part_mesh_nodal_elmts_free(extract_pmne);
 
     }
     else {
@@ -2282,6 +2271,21 @@ _dist_cloud_surf_compute_optim
 
 
     PDM_extract_part_free(extrp);
+
+    if (_pmn != NULL) {
+      // do better?
+      for (int i_part = 0; i_part < n_part_mesh; i_part++) {
+        PDM_free(_pmn->vtx[i_part]);
+      }
+      PDM_free(_pmn->vtx         );
+      PDM_free(_pmn->n_vol       );
+      PDM_free(_pmn->n_surf      );
+      PDM_free(_pmn->n_ridge     );
+      PDM_free(_pmn->n_corner    );
+      PDM_free(_pmn->section_kind);
+      PDM_free(_pmn->section_id  );
+      PDM_free(_pmn              );
+    }
 
     PDM_free(box_gnum         );
     PDM_free(dbox_pts_idx     );

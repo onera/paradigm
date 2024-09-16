@@ -90,7 +90,7 @@ _make_absolute_entity_numbering
 
   /** Compute the distribution of elements amont proc **/
   PDM_g_num_t *entity_distrib;
-  PDM_malloc(entity_distrib,(n_rank+1) ,PDM_g_num_t);
+  PDM_malloc(entity_distrib, n_rank+1, PDM_g_num_t);
   PDM_g_num_t _dn_face = (PDM_g_num_t) dn_entity;
   PDM_MPI_Allgather((void *) &_dn_face,
                     1,
@@ -135,13 +135,16 @@ _generate_part_entitiy_connectivity
   PDM_MPI_Comm_size (comm, &n_rank);
   PDM_MPI_Comm_rank (comm, &i_rank);
 
+  PDM_UNUSED(n_elmt_vol_tot);
+  PDM_UNUSED(elmt_cell_entity_idx);
+
   /*
    * Generate key
    */
   PDM_g_num_t *key_ln_to_gn;
-  PDM_malloc(key_ln_to_gn,n_entity_elt_vol_tot ,PDM_g_num_t);
-  double *key_weight;
-  PDM_malloc(key_weight,n_entity_elt_vol_tot ,double     );
+  double      *key_weight;
+  PDM_malloc(key_ln_to_gn, n_entity_elt_vol_tot, PDM_g_num_t);
+  PDM_malloc(key_weight,   n_entity_elt_vol_tot, double     );
   PDM_g_num_t key_mod = 4 * max_vtx_gnum;
   for(int i_entity = 0; i_entity < n_entity_elt_vol_tot; ++i_entity) {
     PDM_g_num_t key = 0;
@@ -178,15 +181,15 @@ _generate_part_entitiy_connectivity
    * Prepare send
    */
   int *send_n;
-  PDM_malloc(send_n, n_rank              ,int);
   int *send_idx;
-  PDM_malloc(send_idx,(n_rank+1)           ,int);
   int *recv_n;
-  PDM_malloc(recv_n, n_rank              ,int);
   int *recv_idx;
-  PDM_malloc(recv_idx,(n_rank+1)           ,int);
   int *dest_rank;
-  PDM_malloc(dest_rank,n_entity_elt_vol_tot   ,int);
+  PDM_malloc(send_n,    n_rank,               int);
+  PDM_malloc(send_idx,  n_rank+1,             int);
+  PDM_malloc(recv_n,    n_rank,               int);
+  PDM_malloc(recv_idx,  n_rank+1,             int);
+  PDM_malloc(dest_rank, n_entity_elt_vol_tot, int);
   for(int i = 0; i < n_rank; ++i) {
     send_n[i] = 0;
   }
@@ -194,6 +197,9 @@ _generate_part_entitiy_connectivity
   for(int i_entity = 0; i_entity < n_entity_elt_vol_tot; ++i_entity) {
     PDM_g_num_t key = key_ln_to_gn[i_entity];
     int t_rank = PDM_binary_search_gap_long(key-1, distrib_key, n_rank+1);
+    if (t_rank < 0) {
+      PDM_error(__FILE__, __LINE__, 0, "Could not find key "PDM_FMT_G_NUM" in distribution\n", key-1);
+    }
     dest_rank[i_entity] = t_rank;
     send_n[t_rank]++;
   }
@@ -202,33 +208,33 @@ _generate_part_entitiy_connectivity
                    recv_n, 1, PDM_MPI_INT, comm);
 
   int *send_s_entity_vtx_n;
-  PDM_malloc(send_s_entity_vtx_n, n_rank    ,int);
   int *recv_s_entity_vtx_n;
-  PDM_malloc(recv_s_entity_vtx_n, n_rank    ,int);
   int *send_s_entity_vtx_idx;
-  PDM_malloc(send_s_entity_vtx_idx,(n_rank+1) ,int);
   int *recv_s_entity_vtx_idx;
-  PDM_malloc(recv_s_entity_vtx_idx,(n_rank+1) ,int);
+  PDM_malloc(send_s_entity_vtx_n,   n_rank,   int);
+  PDM_malloc(recv_s_entity_vtx_n,   n_rank,   int);
+  PDM_malloc(send_s_entity_vtx_idx, n_rank+1, int);
+  PDM_malloc(recv_s_entity_vtx_idx, n_rank+1, int);
   send_idx[0] = 0;
   recv_idx[0] = 0;
   for(int i = 0; i < n_rank; ++i) {
-    send_idx         [i+1] = send_idx[i] + send_n[i];
-    recv_idx         [i+1] = recv_idx[i] + recv_n[i];
-    send_n           [i] = 0;
-    send_s_entity_vtx_n[i] = 0;
+    send_idx           [i+1] = send_idx[i] + send_n[i];
+    recv_idx           [i+1] = recv_idx[i] + recv_n[i];
+    send_n             [i  ] = 0;
+    send_s_entity_vtx_n[i  ] = 0;
   }
 
   /*
    * Prepare send
    */
-  int *send_entity_vtx_n;
-  PDM_malloc(send_entity_vtx_n, n_entity_elt_vol_tot ,int        );
+  int         *send_entity_vtx_n;
   PDM_g_num_t *send_entity_key;
-  PDM_malloc(send_entity_key, n_entity_elt_vol_tot ,PDM_g_num_t);
   PDM_g_num_t *send_elmt_entity_cell;
-  PDM_malloc(send_elmt_entity_cell, n_entity_elt_vol_tot ,PDM_g_num_t);
   PDM_g_num_t *send_elmt_entity_kind;
-  PDM_malloc(send_elmt_entity_kind, n_entity_elt_vol_tot ,PDM_g_num_t);
+  PDM_malloc(send_entity_vtx_n,     n_entity_elt_vol_tot, int        );
+  PDM_malloc(send_entity_key,       n_entity_elt_vol_tot, PDM_g_num_t);
+  PDM_malloc(send_elmt_entity_cell, n_entity_elt_vol_tot, PDM_g_num_t);
+  PDM_malloc(send_elmt_entity_kind, n_entity_elt_vol_tot, PDM_g_num_t);
   for(int i_entity = 0; i_entity < n_entity_elt_vol_tot; ++i_entity) {
     int t_rank = dest_rank[i_entity];
     int idx_write = send_idx[t_rank] + send_n[t_rank]++;
@@ -244,14 +250,14 @@ _generate_part_entitiy_connectivity
   PDM_free(elmt_entity_cell);
   PDM_free(elmt_entity_kind);
 
-  int *recv_entity_vtx_n;
-  PDM_malloc(recv_entity_vtx_n,recv_idx[n_rank] ,int        );
+  int         *recv_entity_vtx_n;
   PDM_g_num_t *recv_entity_key;
-  PDM_malloc(recv_entity_key,recv_idx[n_rank] ,PDM_g_num_t);
   PDM_g_num_t *recv_elmt_entity_cell;
-  PDM_malloc(recv_elmt_entity_cell,recv_idx[n_rank] ,PDM_g_num_t);
   PDM_g_num_t *recv_elmt_entity_kind;
-  PDM_malloc(recv_elmt_entity_kind,recv_idx[n_rank] ,PDM_g_num_t);
+  PDM_malloc(recv_entity_vtx_n,     recv_idx[n_rank], int        );
+  PDM_malloc(recv_entity_key,       recv_idx[n_rank], PDM_g_num_t);
+  PDM_malloc(recv_elmt_entity_cell, recv_idx[n_rank], PDM_g_num_t);
+  PDM_malloc(recv_elmt_entity_kind, recv_idx[n_rank], PDM_g_num_t);
 
   PDM_MPI_Alltoallv(send_entity_vtx_n,
                     send_n,
@@ -315,9 +321,9 @@ _generate_part_entitiy_connectivity
    * Exchange of connectivity
    */
   PDM_g_num_t *send_entity_vtx;
-  PDM_malloc(send_entity_vtx,send_s_entity_vtx_idx[n_rank] ,PDM_g_num_t);
   PDM_g_num_t *recv_entity_vtx;
-  PDM_malloc(recv_entity_vtx,recv_s_entity_vtx_idx[n_rank] ,PDM_g_num_t);
+  PDM_malloc(send_entity_vtx, send_s_entity_vtx_idx[n_rank], PDM_g_num_t);
+  PDM_malloc(recv_entity_vtx, recv_s_entity_vtx_idx[n_rank], PDM_g_num_t);
   for(int i_entity = 0; i_entity < n_entity_elt_vol_tot; ++i_entity) {
     int t_rank = dest_rank[i_entity];
     int idx_write = send_s_entity_vtx_idx[t_rank];
@@ -338,13 +344,13 @@ _generate_part_entitiy_connectivity
                     comm);
 
   if(0 == 1) {
-    PDM_log_trace_array_int (recv_entity_vtx_n, recv_idx[n_rank]           , "recv_entity_vtx_n ::");
-    PDM_log_trace_array_long(recv_entity_key  , recv_idx[n_rank]           , "recv_entity_key   ::");
+    PDM_log_trace_array_int (recv_entity_vtx_n, recv_idx[n_rank]             , "recv_entity_vtx_n ::");
+    PDM_log_trace_array_long(recv_entity_key  , recv_idx[n_rank]             , "recv_entity_key   ::");
     PDM_log_trace_array_long(recv_entity_vtx  , recv_s_entity_vtx_idx[n_rank], "recv_entity_vtx   ::");
   }
 
   int *recv_entity_vtx_idx;
-  PDM_malloc(recv_entity_vtx_idx,(recv_idx[n_rank]+1) ,int);
+  PDM_malloc(recv_entity_vtx_idx, recv_idx[n_rank]+1, int);
   recv_entity_vtx_idx[0] = 0;
   int n_max_vtx = 0;
   for(int i = 0; i < recv_idx[n_rank]; ++i) {
@@ -357,14 +363,14 @@ _generate_part_entitiy_connectivity
    */
   int n_recv_key = recv_idx[n_rank];
   int *order;
-  PDM_malloc(order,n_recv_key ,int);
+  PDM_malloc(order, n_recv_key, int);
   PDM_order_gnum_s(recv_entity_key, 1, order, n_recv_key);
 
   int n_conflit_to_solve = 0;
   PDM_g_num_t last_gnum = -1;
 
   int *key_conflict_idx;
-  PDM_malloc(key_conflict_idx,(n_recv_key+1) ,int);
+  PDM_malloc(key_conflict_idx, n_recv_key+1, int);
   key_conflict_idx[0] = 0;
   for(int i = 0; i < n_recv_key; ++i) {
     if(recv_entity_key[order[i]] != last_gnum){
@@ -406,27 +412,27 @@ _generate_part_entitiy_connectivity
 
 
   PDM_g_num_t *loc_entity_vtx_1;
-  PDM_malloc(loc_entity_vtx_1,  n_max_vtx               ,PDM_g_num_t);
   PDM_g_num_t *loc_entity_vtx_2;
-  PDM_malloc(loc_entity_vtx_2,  n_max_vtx               ,PDM_g_num_t);
-  int *already_treat;
-  PDM_malloc(already_treat,  n_max_entity_per_key    ,int        );
-  int *same_entity_idx;
-  PDM_malloc(same_entity_idx, (n_max_entity_per_key+1) ,int        );
-  int *sens_entity;
-  PDM_malloc(sens_entity,  n_max_entity_per_key    ,int        );
+  int         *already_treat;
+  int         *same_entity_idx;
+  int         *sens_entity;
   PDM_g_num_t *tmp_parent;
-  PDM_malloc(tmp_parent,3 * n_max_entity_per_key  ,PDM_g_num_t);
-  int *order_parent;
-  PDM_malloc(order_parent,n_max_entity_per_key      ,int        );
+  int         *order_parent;
+  PDM_malloc(loc_entity_vtx_1, n_max_vtx             , PDM_g_num_t);
+  PDM_malloc(loc_entity_vtx_2, n_max_vtx             , PDM_g_num_t);
+  PDM_malloc(already_treat,    n_max_entity_per_key  , int        );
+  PDM_malloc(same_entity_idx,  n_max_entity_per_key+1, int        );
+  PDM_malloc(sens_entity,      n_max_entity_per_key  , int        );
+  PDM_malloc(tmp_parent,       n_max_entity_per_key*3, PDM_g_num_t);
+  PDM_malloc(order_parent,     n_max_entity_per_key  , int        );
 
   /* Resulting array */
-  int *dentity_vtx_idx;
-  PDM_malloc(dentity_vtx_idx,(n_recv_key+1)                ,int        );
+  int         *dentity_vtx_idx;
   PDM_g_num_t *dentity_vtx;
-  PDM_malloc(dentity_vtx,recv_s_entity_vtx_idx[n_rank] ,PDM_g_num_t);
   PDM_g_num_t *recv_elmts_entity;
-  PDM_malloc(recv_elmts_entity, recv_idx[n_rank]             ,PDM_g_num_t);
+  PDM_malloc(dentity_vtx_idx,   n_recv_key+1                 , int        );
+  PDM_malloc(dentity_vtx,       recv_s_entity_vtx_idx[n_rank], PDM_g_num_t);
+  PDM_malloc(recv_elmts_entity, recv_idx[n_rank]             , PDM_g_num_t);
 
   for(int i = 0; i < recv_idx[n_rank] ; ++i) {
     recv_elmts_entity[i] = 0;
@@ -451,9 +457,9 @@ _generate_part_entitiy_connectivity
       //     min_1 = recv_entity_vtx[beg_entity_vtx+k];
       //   };
       // }
-      tmp_parent   [3*j  ] = recv_elmt_entity_kind[i_conflict];
-      tmp_parent   [3*j+1] = recv_elmt_entity_cell[i_conflict];
-      tmp_parent   [3*j+2] = recv_entity_vtx      [beg_entity_vtx];
+      tmp_parent[3*j  ] = recv_elmt_entity_kind[i_conflict];
+      tmp_parent[3*j+1] = recv_elmt_entity_cell[i_conflict];
+      tmp_parent[3*j+2] = recv_entity_vtx      [beg_entity_vtx];
 
     }
 
@@ -630,9 +636,9 @@ _generate_part_entitiy_connectivity
    * Reconstruction du entity_ln_to_gn + cell_entity local
    */
   PDM_g_num_t *send_elmt_cell_entity;
-  PDM_malloc(send_elmt_cell_entity, elmt_cell_entity_idx[n_elmt_vol_tot] ,PDM_g_num_t);
   PDM_g_num_t *elmt_cell_entity;
-  PDM_malloc(elmt_cell_entity, elmt_cell_entity_idx[n_elmt_vol_tot] ,PDM_g_num_t);
+  PDM_malloc(send_elmt_cell_entity, send_idx[n_rank],     PDM_g_num_t);
+  PDM_malloc(elmt_cell_entity,      n_entity_elt_vol_tot, PDM_g_num_t);
 
   PDM_MPI_Alltoallv(recv_elmts_entity,
                     recv_n,
@@ -656,13 +662,13 @@ _generate_part_entitiy_connectivity
   PDM_free(send_elmt_cell_entity);
 
   PDM_free(recv_elmts_entity);
-  PDM_free(loc_entity_vtx_1);
-  PDM_free(loc_entity_vtx_2);
-  PDM_free(already_treat   );
-  PDM_free(same_entity_idx );
-  PDM_free(sens_entity     );
-  PDM_free(tmp_parent      );
-  PDM_free(order_parent    );
+  PDM_free(loc_entity_vtx_1 );
+  PDM_free(loc_entity_vtx_2 );
+  PDM_free(already_treat    );
+  PDM_free(same_entity_idx  );
+  PDM_free(sens_entity      );
+  PDM_free(tmp_parent       );
+  PDM_free(order_parent     );
 
   PDM_free(key_conflict_idx);
   PDM_free(order);
@@ -684,10 +690,10 @@ _generate_part_entitiy_connectivity
   PDM_free(send_s_entity_vtx_idx);
   PDM_free(recv_s_entity_vtx_idx);
 
-  PDM_free(distrib_key);
-  PDM_free(elmt_entity_vtx_idx     );
-  PDM_free(elmt_entity_vtx         );
-  PDM_free(parent_elmt_position  );
+  PDM_free(distrib_key         );
+  PDM_free(elmt_entity_vtx_idx );
+  PDM_free(elmt_entity_vtx     );
+  PDM_free(parent_elmt_position);
 
 
   *dentity_vtx_out      = dentity_vtx;
@@ -716,9 +722,9 @@ _generate_faces_from_part_mesh_nodal
   int  n_elmt_surf_tot         = 0;
   int  n_face_elt_surf_tot     = 0;
   int  n_sum_vtx_surf_face_tot = 0;
-  int *elmt_face_vtx_idx = NULL;
-  // PDM_malloc(elmt_face_vtx_idx,(n_face_elt_tot+1) ,int        );
+  int *elmt_face_vtx_idx  = NULL;
   int *elmt_cell_face_idx = NULL;
+  // PDM_malloc(elmt_face_vtx_idx,(n_face_elt_tot+1) ,int        );
   // PDM_malloc(elmt_cell_face_idx,(n_elmt_tot+1)     ,int        );
 
   int *surf_elmt_face_vtx_idx  = NULL;
@@ -751,7 +757,7 @@ _generate_faces_from_part_mesh_nodal
 
 
   PDM_g_num_t **vtx_ln_to_gn;
-  PDM_malloc(vtx_ln_to_gn,1,PDM_g_num_t *);
+  PDM_malloc(vtx_ln_to_gn, 1, PDM_g_num_t *);
   PDM_g_num_t _max_vtx_gnum = -1;
   for(int i_part = 0; i_part < pmn->n_part; ++i_part) {
     vtx_ln_to_gn[i_part] = PDM_part_mesh_nodal_vtx_g_num_get(pmn, i_part);
@@ -771,15 +777,15 @@ _generate_faces_from_part_mesh_nodal
   // int *elmt_face_vtx_idx;
   // PDM_malloc(elmt_face_vtx_idx,(n_face_elt_tot+1) ,int        );
   PDM_g_num_t *elmt_face_vtx;
-  PDM_malloc(elmt_face_vtx,n_sum_vtx_face_tot ,PDM_g_num_t);
+  PDM_malloc(elmt_face_vtx, n_sum_vtx_face_tot, PDM_g_num_t);
   // int *elmt_cell_face_idx;
   // PDM_malloc(elmt_cell_face_idx,(n_elmt_tot+1)     ,int        );
-  int *parent_elmt_position;
-  PDM_malloc(parent_elmt_position,n_face_elt_tot     ,int        );
-  int *elmt_face_kind;
-  PDM_malloc(elmt_face_kind,n_face_elt_tot     ,int        );
+  int         *parent_elmt_position;
+  int         *elmt_face_kind;
   PDM_g_num_t *elmt_face_cell;
-  PDM_malloc(elmt_face_cell,n_face_elt_tot     ,PDM_g_num_t);
+  PDM_malloc(parent_elmt_position, n_face_elt_tot, int        );
+  PDM_malloc(elmt_face_kind,       n_face_elt_tot, int        );
+  PDM_malloc(elmt_face_cell,       n_face_elt_tot, PDM_g_num_t);
 
   if(0 == 1) {
     printf("n_face_elt_vol_tot     : %i\n", n_face_elt_vol_tot    );
@@ -802,42 +808,6 @@ _generate_faces_from_part_mesh_nodal
                                                      parent_elmt_position);
 
 
-  if (0) {
-    // PDM_log_trace_connectivity_long(elmt_face_vtx_idx,
-    //                                 elmt_face_vtx,
-    //                                 n_face_elt_tot,
-    //                                 "elmt_face_vtx : ");
-
-    int *_elmt_face_vtx;
-    PDM_malloc(_elmt_face_vtx,n_sum_vtx_face_tot,int);
-    int n_vtx = PDM_part_mesh_nodal_n_vtx_get(pmn, 0);
-    for (int i = 0; i < n_sum_vtx_face_tot; i++) {
-      int j = PDM_binary_search_long(elmt_face_vtx[i],
-                                     vtx_ln_to_gn[0],
-                                     n_vtx);
-      assert(j >= 0);
-      _elmt_face_vtx[i] = j+1;
-    }
-
-    double *coord = PDM_part_mesh_nodal_vtx_coord_get(pmn, 0);
-
-    char filename[999];
-    sprintf(filename, "dbg_decomp_faces_%d.vtk", i_rank);
-    PDM_vtk_write_polydata(filename,
-                           n_vtx,
-                           coord,
-                           vtx_ln_to_gn[0],
-                           n_face_elt_tot,
-                           elmt_face_vtx_idx,
-                           _elmt_face_vtx,
-                           elmt_face_cell,
-                           NULL);
-
-
-    PDM_free(_elmt_face_vtx);
-  }
-
-
   for(int i = 0; i < n_face_elt_vol_tot; ++i) {
     elmt_face_kind[i] = 0;
   }
@@ -850,8 +820,8 @@ _generate_faces_from_part_mesh_nodal
     int         *surf_elmt_face_kind       = &elmt_face_kind      [n_face_elt_vol_tot];
     PDM_g_num_t *surf_elmt_face_cell       = &elmt_face_cell      [n_face_elt_vol_tot];
 
-    PDM_realloc(elmt_face_vtx_idx  ,elmt_face_vtx_idx  ,  (n_face_elt_tot+1) ,int);
-    PDM_realloc(elmt_cell_face_idx ,elmt_cell_face_idx , (n_elmt_tot+1)     ,int);
+    PDM_realloc(elmt_face_vtx_idx , elmt_face_vtx_idx , n_face_elt_tot+1, int);
+    PDM_realloc(elmt_cell_face_idx, elmt_cell_face_idx, n_elmt_tot+1    , int);
     // int *surf_elmt_face_vtx_idx;
     // PDM_malloc(surf_elmt_face_vtx_idx,(n_face_elt_surf_tot+1) ,int        );
     // surf_elmt_face_vtx_idx[0] = 0;
@@ -919,22 +889,22 @@ _generate_faces_from_part_mesh_nodal
   int idx_read_elmt   = 0;
 
   PDM_g_num_t **face_ln_to_gn;
-  PDM_malloc(face_ln_to_gn,pmn->n_part ,PDM_g_num_t *);
-  int **cell_face;
-  PDM_malloc(cell_face,pmn->n_part ,int         *);
-  int *pn_face;
-  PDM_malloc(pn_face,pmn->n_part ,int          );
+  int         **cell_face;
+  int          *pn_face;
+  PDM_malloc(face_ln_to_gn, pmn->n_part, PDM_g_num_t *);
+  PDM_malloc(cell_face,     pmn->n_part, int         *);
+  PDM_malloc(pn_face,       pmn->n_part, int          );
 
   for(int i_part = 0; i_part < pmn->n_part; ++i_part) {
     int n_elmts = PDM_part_mesh_nodal_n_elmts_get(pmn, PDM_GEOMETRY_KIND_VOLUMIC, i_part);
 
     int pn_cell_face_idx = elmt_cell_face_idx[idx_read_elmt+n_elmts] - elmt_cell_face_idx[idx_read_elmt];
-    PDM_malloc(face_ln_to_gn[i_part],pn_cell_face_idx ,PDM_g_num_t);
     int *unique_order;
-    PDM_malloc(unique_order,pn_cell_face_idx ,int        );
+    PDM_malloc(face_ln_to_gn[i_part], pn_cell_face_idx, PDM_g_num_t);
+    PDM_malloc(unique_order,          pn_cell_face_idx, int        );
 
     int *pcell_face_idx;
-    PDM_malloc(pcell_face_idx,(n_elmts+1) ,int);
+    PDM_malloc(pcell_face_idx, n_elmts+1 ,int);
     pcell_face_idx[0] = 0;
     for(int i = 0; i < n_elmts; ++i) {
       pcell_face_idx[i+1] = pcell_face_idx[i] + elmt_cell_face_idx[idx_read_elmt+i+1] - elmt_cell_face_idx[idx_read_elmt+i];
@@ -948,12 +918,12 @@ _generate_faces_from_part_mesh_nodal
       face_ln_to_gn[i_part][i] = PDM_ABS(_elmt_cell_face[i]);
     }
 
-    pn_face      [i_part] = PDM_inplace_unique_long2(face_ln_to_gn[i_part], unique_order, 0, pn_cell_face_idx-1);
-    PDM_realloc(face_ln_to_gn[i_part] ,face_ln_to_gn[i_part] , pn_face[i_part] ,PDM_g_num_t);
+    pn_face[i_part] = PDM_inplace_unique_long2(face_ln_to_gn[i_part], unique_order, 0, pn_cell_face_idx-1);
+    PDM_realloc(face_ln_to_gn[i_part], face_ln_to_gn[i_part], pn_face[i_part], PDM_g_num_t);
 
     // PDM_log_trace_array_long(face_ln_to_gn[i_part], pn_face[i_part], "face_ln_to_gn ::");
 
-    PDM_malloc(cell_face[i_part],pn_cell_face_idx ,int);
+    PDM_malloc(cell_face[i_part], pn_cell_face_idx, int);
     for(int idx = 0; idx < pn_cell_face_idx; ++idx) {
       int g_sgn  = PDM_SIGN(_elmt_cell_face[idx]);
       int l_elmt = unique_order[idx];
@@ -992,7 +962,7 @@ _generate_faces_from_part_mesh_nodal
    * Post-treat surface
    */
   int **cell_face_bnd;
-  PDM_malloc(cell_face_bnd,pmn->n_part ,int         *);
+  PDM_malloc(cell_face_bnd, pmn->n_part, int *);
   if(have_surface == 1) {
     int n_group = PDM_part_mesh_nodal_n_group_get(pmn, PDM_GEOMETRY_KIND_SURFACIC);
     PDM_part_mesh_n_bound_set(pm, PDM_BOUND_TYPE_FACE, n_group);
@@ -1003,7 +973,7 @@ _generate_faces_from_part_mesh_nodal
       int pn_cell_face_bnd_idx = elmt_cell_face_idx[idx_read_elmt+n_elmts] - elmt_cell_face_idx[idx_read_elmt];
       PDM_g_num_t *_elmt_cell_face_bnd = &elmt_cell_face[shift_cell_face];
 
-      PDM_malloc(cell_face_bnd[i_part],pn_cell_face_bnd_idx ,int);
+      PDM_malloc(cell_face_bnd[i_part], pn_cell_face_bnd_idx, int);
 
       for(int idx = 0; idx < pn_cell_face_bnd_idx; ++idx) {
         PDM_g_num_t g_num  = PDM_ABS (_elmt_cell_face_bnd[idx]);
@@ -1032,10 +1002,10 @@ _generate_faces_from_part_mesh_nodal
                                       &group_elmt_face_ln_to_gn,
                                       PDM_OWNERSHIP_KEEP);
 
-        int *group_face;
-        PDM_malloc(group_face,n_face_group ,int        );
+        int         *group_face;
         PDM_g_num_t *group_face_ln_to_gn;
-        PDM_malloc(group_face_ln_to_gn,n_face_group ,PDM_g_num_t);
+        PDM_malloc(group_face,          n_face_group, int        );
+        PDM_malloc(group_face_ln_to_gn, n_face_group, PDM_g_num_t);
 
         for(int idx_face = 0; idx_face < n_face_group; ++idx_face) {
           int i_elmt_face = group_elmt_face[idx_face]-1;
@@ -1065,7 +1035,7 @@ _generate_faces_from_part_mesh_nodal
                                                       pmn->comm);
   int dn_entity = entity_distrib[i_rank+1] - entity_distrib[i_rank];
   int *dentity_vtx_n;
-  PDM_malloc(dentity_vtx_n,dn_entity ,int);
+  PDM_malloc(dentity_vtx_n, dn_entity, int);
   for(int i_entity = 0; i_entity < dn_entity; ++i_entity) {
     dentity_vtx_n[i_entity] = dentity_vtx_idx[i_entity+1] - dentity_vtx_idx[i_entity];
   }
@@ -1083,26 +1053,26 @@ _generate_faces_from_part_mesh_nodal
   PDM_free(dentity_vtx_n);
 
   int **pface_vtx_idx;
-  PDM_malloc(pface_vtx_idx,pmn->n_part ,int *);
   int **pface_vtx;
-  PDM_malloc(pface_vtx,pmn->n_part ,int *);
+  PDM_malloc(pface_vtx_idx, pmn->n_part, int *);
+  PDM_malloc(pface_vtx,     pmn->n_part, int *);
   for(int i_part = 0; i_part < pmn->n_part; ++i_part) {
 
-    PDM_malloc(pface_vtx_idx[i_part],(pn_face[i_part] + 1) ,int);
+    PDM_malloc(pface_vtx_idx[i_part], pn_face[i_part] + 1, int);
     pface_vtx_idx[i_part][0] = 0;
     for(int i_entity = 0; i_entity < pn_face[i_part]; ++i_entity) {
       pface_vtx_idx[i_part][i_entity+1] = pface_vtx_idx[i_part][i_entity] + pface_vtx_n[i_part][i_entity];
     }
-    PDM_malloc(pface_vtx[i_part],pface_vtx_idx[i_part][pn_face[i_part]] ,int);
+    PDM_malloc(pface_vtx[i_part], pface_vtx_idx[i_part][pn_face[i_part]], int);
 
     /*
      * Translate local
      */
     int n_vtx = PDM_part_mesh_nodal_n_vtx_get(pmn, i_part);
     PDM_g_num_t *tmp_vtx_ln_to_gn;
-    PDM_malloc(tmp_vtx_ln_to_gn,n_vtx ,PDM_g_num_t);
     int *order_vtx;
-    PDM_malloc(order_vtx,n_vtx ,int);
+    PDM_malloc(tmp_vtx_ln_to_gn, n_vtx, PDM_g_num_t);
+    PDM_malloc(order_vtx,        n_vtx, int        );
     for(int i_vtx = 0; i_vtx < n_vtx; ++i_vtx) {
       tmp_vtx_ln_to_gn[i_vtx] = vtx_ln_to_gn[i_part][i_vtx];
       order_vtx       [i_vtx] = i_vtx;
@@ -1221,7 +1191,7 @@ _generate_edges_from_part_mesh_nodal
   int n_sum_vtx_edge_tot = n_sum_vtx_vol_edge_tot + have_ridge * n_sum_vtx_surf_edge_tot;
 
   PDM_g_num_t **vtx_ln_to_gn;
-  PDM_malloc(vtx_ln_to_gn,1,PDM_g_num_t *);
+  PDM_malloc(vtx_ln_to_gn, 1, PDM_g_num_t *);
   PDM_g_num_t _max_vtx_gnum = -1;
   for(int i_part = 0; i_part < pmn->n_part; ++i_part) {
     vtx_ln_to_gn[i_part] = PDM_part_mesh_nodal_vtx_g_num_get(pmn, i_part);
@@ -1233,18 +1203,18 @@ _generate_edges_from_part_mesh_nodal
   PDM_g_num_t max_vtx_gnum = 0;
   PDM_MPI_Allreduce(&_max_vtx_gnum, &max_vtx_gnum, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, pmn->comm);
 
-  int *elmt_edge_vtx_idx;
-  PDM_malloc(elmt_edge_vtx_idx,(n_edge_elt_tot+1) ,int        );
+  int         *elmt_edge_vtx_idx;
   PDM_g_num_t *elmt_edge_vtx;
-  PDM_malloc(elmt_edge_vtx,n_sum_vtx_edge_tot ,PDM_g_num_t);
-  int *elmt_cell_edge_idx;
-  PDM_malloc(elmt_cell_edge_idx,(n_elmt_tot+1)     ,int        );
-  int *parent_elmt_position;
-  PDM_malloc(parent_elmt_position,n_edge_elt_tot     ,int        );
-  int *elmt_edge_kind;
-  PDM_malloc(elmt_edge_kind,n_edge_elt_tot     ,int        );
+  int         *elmt_cell_edge_idx;
+  int         *parent_elmt_position;
+  int         *elmt_edge_kind;
   PDM_g_num_t *elmt_edge_cell;
-  PDM_malloc(elmt_edge_cell,n_edge_elt_tot     ,PDM_g_num_t);
+  PDM_malloc(elmt_edge_vtx_idx,    n_edge_elt_tot+1  , int        );
+  PDM_malloc(elmt_edge_vtx,        n_sum_vtx_edge_tot, PDM_g_num_t);
+  PDM_malloc(elmt_cell_edge_idx,   n_elmt_tot+1      , int        );
+  PDM_malloc(parent_elmt_position, n_edge_elt_tot    , int        );
+  PDM_malloc(elmt_edge_kind,       n_edge_elt_tot    , int        );
+  PDM_malloc(elmt_edge_cell,       n_edge_elt_tot    , PDM_g_num_t);
 
   if(0 == 1) {
     printf("n_edge_elt_vol_tot     : %i\n", n_edge_elt_vol_tot    );
@@ -1278,7 +1248,7 @@ _generate_edges_from_part_mesh_nodal
     PDM_g_num_t *ridge_elmt_edge_cell       = &elmt_edge_cell      [n_edge_elt_vol_tot];
 
     int *ridge_elmt_edge_vtx_idx;
-    PDM_malloc(ridge_elmt_edge_vtx_idx,(n_edge_elt_surf_tot+1) ,int        );
+    PDM_malloc(ridge_elmt_edge_vtx_idx, n_edge_elt_surf_tot+1, int);
     ridge_elmt_edge_vtx_idx[0] = 0;
     PDM_part_mesh_nodal_elmts_sections_decompose_edges(pmn->ridge,
                                                        vtx_ln_to_gn,
@@ -1328,22 +1298,22 @@ _generate_edges_from_part_mesh_nodal
   int idx_read_elmt   = 0;
 
   PDM_g_num_t **edge_ln_to_gn;
-  PDM_malloc(edge_ln_to_gn,pmn->n_part ,PDM_g_num_t *);
-  int **cell_edge;
-  PDM_malloc(cell_edge,pmn->n_part ,int         *);
-  int *pn_edge;
-  PDM_malloc(pn_edge,pmn->n_part ,int          );
+  int         **cell_edge;
+  int          *pn_edge;
+  PDM_malloc(edge_ln_to_gn, pmn->n_part, PDM_g_num_t *);
+  PDM_malloc(cell_edge,     pmn->n_part, int         *);
+  PDM_malloc(pn_edge,       pmn->n_part, int          );
 
   for(int i_part = 0; i_part < pmn->n_part; ++i_part) {
     int n_elmts = PDM_part_mesh_nodal_n_elmts_get(pmn, PDM_GEOMETRY_KIND_SURFACIC, i_part);
 
     int pn_cell_edge_idx = elmt_cell_edge_idx[idx_read_elmt+n_elmts] - elmt_cell_edge_idx[idx_read_elmt];
-    PDM_malloc(edge_ln_to_gn[i_part],pn_cell_edge_idx ,PDM_g_num_t);
     int *unique_order;
-    PDM_malloc(unique_order,pn_cell_edge_idx ,int        );
+    PDM_malloc(edge_ln_to_gn[i_part], pn_cell_edge_idx, PDM_g_num_t);
+    PDM_malloc(unique_order,          pn_cell_edge_idx, int        );
 
     int *pcell_edge_idx;
-    PDM_malloc(pcell_edge_idx,(n_elmts+1) ,int);
+    PDM_malloc(pcell_edge_idx, n_elmts+1 ,int);
     pcell_edge_idx[0] = 0;
     for(int i = 0; i < n_elmts; ++i) {
       pcell_edge_idx[i+1] = pcell_edge_idx[i] + elmt_cell_edge_idx[idx_read_elmt+i+1] - elmt_cell_edge_idx[idx_read_elmt+i];
@@ -1355,11 +1325,11 @@ _generate_edges_from_part_mesh_nodal
     }
 
     pn_edge[i_part] = PDM_inplace_unique_long2(edge_ln_to_gn[i_part], unique_order, 0, pn_cell_edge_idx-1);
-    PDM_realloc(edge_ln_to_gn[i_part] ,edge_ln_to_gn[i_part] , pn_edge[i_part] ,PDM_g_num_t);
+    PDM_realloc(edge_ln_to_gn[i_part], edge_ln_to_gn[i_part], pn_edge[i_part], PDM_g_num_t);
 
     // PDM_log_trace_array_long(edge_ln_to_gn[i_part], pn_edge[i_part], "edge_ln_to_gn ::");
 
-    PDM_malloc(cell_edge[i_part],pn_cell_edge_idx ,int);
+    PDM_malloc(cell_edge[i_part], pn_cell_edge_idx, int);
     for(int idx = 0; idx < pn_cell_edge_idx; ++idx) {
       int g_sgn  = PDM_SIGN(_elmt_cell_edge[idx]);
       int l_elmt = unique_order[idx];
@@ -1397,7 +1367,7 @@ _generate_edges_from_part_mesh_nodal
    * Post-treat surface
    */
   int **cell_edge_bnd;
-  PDM_malloc(cell_edge_bnd,pmn->n_part ,int         *);
+  PDM_malloc(cell_edge_bnd, pmn->n_part, int *);
   if(have_ridge == 1) {
     int n_group = PDM_part_mesh_nodal_n_group_get(pmn, PDM_GEOMETRY_KIND_RIDGE);
     PDM_part_mesh_n_bound_set(pm, PDM_BOUND_TYPE_EDGE, n_group);
@@ -1408,7 +1378,7 @@ _generate_edges_from_part_mesh_nodal
       int pn_cell_edge_bnd_idx = elmt_cell_edge_idx[idx_read_elmt+n_elmts] - elmt_cell_edge_idx[idx_read_elmt];
       PDM_g_num_t *_elmt_cell_edge_bnd = &elmt_cell_edge[shift_cell_edge];
 
-      PDM_malloc(cell_edge_bnd[i_part],pn_cell_edge_bnd_idx ,int);
+      PDM_malloc(cell_edge_bnd[i_part], pn_cell_edge_bnd_idx, int);
 
       for(int idx = 0; idx < pn_cell_edge_bnd_idx; ++idx) {
         PDM_g_num_t g_num = PDM_ABS (_elmt_cell_edge_bnd[idx]);
@@ -1437,10 +1407,10 @@ _generate_edges_from_part_mesh_nodal
                                       &group_elmt_edge_ln_to_gn,
                                       PDM_OWNERSHIP_KEEP);
 
-        int *group_edge;
-        PDM_malloc(group_edge,n_edge_group ,int        );
+        int         *group_edge;
         PDM_g_num_t *group_edge_ln_to_gn;
-        PDM_malloc(group_edge_ln_to_gn,n_edge_group ,PDM_g_num_t);
+        PDM_malloc(group_edge,          n_edge_group, int        );
+        PDM_malloc(group_edge_ln_to_gn, n_edge_group, PDM_g_num_t);
 
         for(int idx_edge = 0; idx_edge < n_edge_group; ++idx_edge) {
           int i_elmt_edge = group_elmt_edge[idx_edge]-1;
@@ -1472,7 +1442,7 @@ _generate_edges_from_part_mesh_nodal
                                                       pmn->comm);
   int dn_entity = entity_distrib[i_rank+1] - entity_distrib[i_rank];
   int *dentity_vtx_n;
-  PDM_malloc(dentity_vtx_n,dn_entity ,int);
+  PDM_malloc(dentity_vtx_n, dn_entity, int);
   for(int i_entity = 0; i_entity < dn_entity; ++i_entity) {
     dentity_vtx_n[i_entity] = dentity_vtx_idx[i_entity+1] - dentity_vtx_idx[i_entity];
   }
@@ -1490,26 +1460,26 @@ _generate_edges_from_part_mesh_nodal
   PDM_free(dentity_vtx_n);
 
   int **pedge_vtx_idx;
-  PDM_malloc(pedge_vtx_idx,pmn->n_part ,int *);
   int **pedge_vtx;
-  PDM_malloc(pedge_vtx,pmn->n_part ,int *);
+  PDM_malloc(pedge_vtx_idx, pmn->n_part, int *);
+  PDM_malloc(pedge_vtx,     pmn->n_part, int *);
   for(int i_part = 0; i_part < pmn->n_part; ++i_part) {
 
-    PDM_malloc(pedge_vtx_idx[i_part],(pn_edge[i_part] + 1) ,int);
+    PDM_malloc(pedge_vtx_idx[i_part], pn_edge[i_part] + 1, int);
     pedge_vtx_idx[i_part][0] = 0;
     for(int i_entity = 0; i_entity < pn_edge[i_part]; ++i_entity) {
       pedge_vtx_idx[i_part][i_entity+1] = pedge_vtx_idx[i_part][i_entity] + pedge_vtx_n[i_part][i_entity];
     }
-    PDM_malloc(pedge_vtx[i_part],pedge_vtx_idx[i_part][pn_edge[i_part]] ,int);
+    PDM_malloc(pedge_vtx[i_part], pedge_vtx_idx[i_part][pn_edge[i_part]], int);
 
     /*
      * Translate local
      */
     int n_vtx = PDM_part_mesh_nodal_n_vtx_get(pmn, i_part);
     PDM_g_num_t *tmp_vtx_ln_to_gn;
-    PDM_malloc(tmp_vtx_ln_to_gn,n_vtx ,PDM_g_num_t);
-    int *order_vtx;
-    PDM_malloc(order_vtx,n_vtx ,int);
+    int         *order_vtx;
+    PDM_malloc(tmp_vtx_ln_to_gn, n_vtx, PDM_g_num_t);
+    PDM_malloc(order_vtx,        n_vtx, int        );
     for(int i_vtx = 0; i_vtx < n_vtx; ++i_vtx) {
       tmp_vtx_ln_to_gn[i_vtx] = vtx_ln_to_gn[i_part][i_vtx];
       order_vtx       [i_vtx] = i_vtx;
