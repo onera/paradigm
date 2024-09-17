@@ -1173,7 +1173,7 @@ PDM_morton_encode(int               dim,
   morton_code.X[2] = 0;
 
   for (i = 0; i < dim; i++)
-    morton_code.X[i] = (PDM_morton_int_t) PDM_MIN(floor(coords[i]*refinement), refinement - 1);
+    morton_code.X[i] = (PDM_morton_int_t) PDM_MIN(PDM_MAX(0, floor(coords[i]*refinement)), refinement - 1);
 
   return morton_code;
 }
