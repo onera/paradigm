@@ -2153,9 +2153,6 @@ _extract_part_and_reequilibrate_nodal_from_is_selected
                                                                                extrp->n_part_out,
                                                                                pmne->comm);
 
-  PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(extrp->extract_pmn,
-                                                extract_pmne);
-
   int **target_vtx_to_part1_vtx = NULL;
   if (extract_n_vtx == NULL) {
     assert(extrp->pextract_n_entity[PDM_MESH_ENTITY_VTX] == NULL);
@@ -2485,6 +2482,10 @@ _extract_part_and_reequilibrate_nodal_from_is_selected
   PDM_free(recv_elmt_face_n      );
   PDM_free(recv_elmt_face        );
   PDM_free(recv_elmt_face_vtx_n  );
+
+
+  PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(extrp->extract_pmn,
+                                                extract_pmne);
 
 
   /* Vertices */
@@ -3469,18 +3470,18 @@ _extract_part_and_reequilibrate_from_target
   if(extrp->dim == 3) {
     pn_entity    = extrp->n_cell;
     entity_g_num = extrp->cell_ln_to_gn;
-    entity_type = PDM_MESH_ENTITY_CELL;
+    entity_type  = PDM_MESH_ENTITY_CELL;
   } else if (extrp->dim == 2){
     pn_entity    = extrp->n_face;
     entity_g_num = extrp->face_ln_to_gn;
-    entity_type = PDM_MESH_ENTITY_FACE;
+    entity_type  = PDM_MESH_ENTITY_FACE;
   } else if(extrp->dim == 1){
     pn_entity    = extrp->n_edge;
     entity_g_num = extrp->edge_ln_to_gn;
-    entity_type = PDM_MESH_ENTITY_EDGE;
+    entity_type  = PDM_MESH_ENTITY_EDGE;
   } else {
     entity_g_num = extrp->vtx_ln_to_gn;
-    entity_type = PDM_MESH_ENTITY_VTX;
+    entity_type  = PDM_MESH_ENTITY_VTX;
   }
 
   /* Not very bright... let the user be in charge of keeping track of the target g_num instead? */
@@ -3913,52 +3914,31 @@ _extract_part_and_reequilibrate_from_target
   /* Free all data that keep link between two partition */
   if(part2_cell_to_part1_cell_idx != NULL) {
     for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
-      if(part2_cell_to_part1_cell_idx[i_part] != NULL) {
-        PDM_free(part2_cell_to_part1_cell_idx[i_part]);
-        part2_cell_to_part1_cell_idx[i_part] = NULL;
-      }
+      PDM_free(part2_cell_to_part1_cell_idx[i_part]);
     }
   }
 
   if(part2_face_to_part1_face_idx != NULL) {
     for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
-      if(part2_face_to_part1_face_idx[i_part] != NULL) {
-        PDM_free(part2_face_to_part1_face_idx[i_part]);
-        part2_face_to_part1_face_idx[i_part] = NULL;
-      }
+      PDM_free(part2_face_to_part1_face_idx[i_part]);
     }
   }
 
   if(part2_edge_to_part1_edge_idx != NULL) {
     for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
-      if(part2_edge_to_part1_edge_idx[i_part] != NULL) {
-        PDM_free(part2_edge_to_part1_edge_idx[i_part]);
-        part2_edge_to_part1_edge_idx[i_part] = NULL;
-      }
+      PDM_free(part2_edge_to_part1_edge_idx[i_part]);
     }
   }
 
   if(part2_vtx_to_part1_vtx_idx != NULL) {
     for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
-      if(part2_vtx_to_part1_vtx_idx[i_part] != NULL) {
-        PDM_free(part2_vtx_to_part1_vtx_idx[i_part]);
-        part2_vtx_to_part1_vtx_idx[i_part] = NULL;
-      }
+      PDM_free(part2_vtx_to_part1_vtx_idx[i_part]);
     }
   }
-
-  if(part2_cell_to_part1_cell_idx != NULL) {
-    PDM_free(part2_cell_to_part1_cell_idx);
-  }
-  if(part2_face_to_part1_face_idx != NULL) {
-    PDM_free(part2_face_to_part1_face_idx);
-  }
-  if(part2_edge_to_part1_edge_idx != NULL) {
-    PDM_free(part2_edge_to_part1_edge_idx);
-  }
-  if(part2_vtx_to_part1_vtx_idx != NULL) {
-    PDM_free(part2_vtx_to_part1_vtx_idx);
-  }
+  PDM_free(part2_cell_to_part1_cell_idx);
+  PDM_free(part2_face_to_part1_face_idx);
+  PDM_free(part2_edge_to_part1_edge_idx);
+  PDM_free(part2_vtx_to_part1_vtx_idx);
 
   /*
    *
@@ -4790,6 +4770,8 @@ _extract_part_nodal_local_vtx
               for (int i = face_vtx_idx[i_face]; i < face_vtx_idx[i_face+1]; i++) {
                 int i_vtx = face_vtx[i] - 1;
                 if (vtx_old_to_new[i_part][i_vtx] < 0) {
+                  extrp->pextract_entity_parent_lnum[PDM_MESH_ENTITY_VTX][i_part][extract_n_vtx] = i_vtx;
+
                   memcpy(&extract_vtx_coord[3*extract_n_vtx], &vtx_coord[3*i_vtx], sizeof(double) * 3);
                   extract_vtx_g_num[extract_n_vtx] = vtx_g_num[i_vtx];
                   vtx_old_to_new[i_part][i_vtx] = ++extract_n_vtx;
@@ -4832,6 +4814,8 @@ _extract_part_nodal_local_vtx
             for (int i = 0; i < n_vtx_per_elmt; i++) {
               int i_vtx = connec[n_vtx_per_elmt*i_elt + i] - 1;
               if (vtx_old_to_new[i_part][i_vtx] < 0) {
+                extrp->pextract_entity_parent_lnum[PDM_MESH_ENTITY_VTX][i_part][extract_n_vtx] = i_vtx;
+
                 memcpy(&extract_vtx_coord[3*extract_n_vtx], &vtx_coord[3*i_vtx], sizeof(double) * 3);
                 extract_vtx_g_num[extract_n_vtx] = vtx_g_num[i_vtx];
                 vtx_old_to_new[i_part][i_vtx] = ++extract_n_vtx;
@@ -7356,7 +7340,7 @@ PDM_extract_part_partial_free
     }
   }
 
-  /* Free parent_ln_to_gn */
+  /* Free parent_lnum */
   for(int i = 0; i < PDM_MESH_ENTITY_MAX; ++i) {
     if(extrp->pextract_entity_parent_lnum[i] != NULL) {
       if(extrp->is_owner_parent_lnum[i] == PDM_TRUE) {
@@ -7368,6 +7352,7 @@ PDM_extract_part_partial_free
     }
   }
 
+  /* Free vtx_coord */
   if(extrp->is_owner_vtx_coord == PDM_TRUE) {
     if(extrp->pextract_vtx_coord != NULL){
       for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
@@ -7400,8 +7385,8 @@ PDM_extract_part_partial_free
         /* Free array */
         if(extrp->group_array_ownership[i][i_group] == PDM_OWNERSHIP_KEEP) {
           for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
-            PDM_free(extrp->pextract_group_entity                [i][i_group][i_part]);
-            PDM_free(extrp->pextract_group_entity_ln_to_gn       [i][i_group][i_part]);
+            PDM_free(extrp->pextract_group_entity         [i][i_group][i_part]);
+            PDM_free(extrp->pextract_group_entity_ln_to_gn[i][i_group][i_part]);
           }
         }
         if(extrp->group_parent_ownership[i][i_group] == PDM_OWNERSHIP_KEEP) {
