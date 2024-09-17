@@ -326,7 +326,7 @@ module PDM_part_mesh_nodal
       end if
 
       c_parent_num = C_NULL_PTR
-      if (associated(connec)) then
+      if (associated(parent_num)) then
         c_parent_num = c_loc(parent_num)
       end if
 
