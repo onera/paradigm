@@ -1858,6 +1858,16 @@ const int                     id_part
   return PDM_part_mesh_nodal_elmts_num_elmt_parent_to_local_get(pmne, id_part);
 }
 
+int *
+PDM_part_mesh_nodal_section_entity_to_elt_get(
+      PDM_part_mesh_nodal_t *pmn,
+const int                     i_section,
+const int                     id_part,
+      PDM_ownership_t         ownership)
+{
+  return NULL;
+}
+
 void
 PDM_part_mesh_nodal_group_get
 (
