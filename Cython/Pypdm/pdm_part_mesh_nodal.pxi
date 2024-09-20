@@ -203,7 +203,7 @@ def part_mesh_nodal_get_sections(PMeshNodal pypmn, PDM_geometry_kind_t geom_kind
   cdef int                   n_elmt_in_section
   cdef int                  *section_id
   cdef int                  *parent_num
-  cdef int                  *entity2elt
+  cdef int                  *elt2entity
   cdef int                  *connec
   cdef PDM_g_num_t          *numabs
   cdef PDM_g_num_t          *parent_entity_g_num

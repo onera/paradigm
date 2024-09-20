@@ -1878,8 +1878,8 @@ const int                    id_part,
   assert(pmne != NULL);
 
   return PDM_part_mesh_nodal_elmts_section_elt_to_entity_get(pmne,
-                                                             id_part,
                                                              id_section,
+                                                             id_part,
                                                              ownership);
 }
 
