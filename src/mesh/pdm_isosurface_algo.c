@@ -245,89 +245,6 @@ _is_at_any_level
 }
 
 
-static inline int
-_cross_0_level
-(
-  const double v0,
-  const double v1,
-  const double tol
-)
-{
-  return (PDM_ABS(v0) > tol) && (PDM_ABS(v1) > tol) && (v0*v1 < 0);
-}
-
-
-static inline int
-_cross_any_level
-(
-  const double v0,
-  const double v1,
-  const int    n_isovalues,
-  const double isovalues[],
-  const double tol
-)
-{
-  int n_crossings = 0;
-  for (int i = 0; i < n_isovalues; i++) {
-    n_crossings += _cross_0_level(v0 - isovalues[i], v1 - isovalues[i], tol);
-  }
-
-  return n_crossings;
-}
-
-
-static inline int
-_sign
-(
-  const double v,
-  const double tol
-)
-{
-  // if (v < -tol) {
-  //   return -1;
-  // }
-  // else if (v > tol) {
-  //   return 1;
-  // }
-  // else {
-  //   return 0;
-  // }
-  return (v > tol);
-}
-
-
-static inline int
-_cross_0_level_ngon
-(
-  const double v0,
-  const double v1,
-  const double tol
-)
-{
-  return _sign(v0, tol) != _sign(v1, tol);
-}
-
-
-static inline int
-_cross_any_level_ngon
-(
-  const double v0,
-  const double v1,
-  const int    n_isovalues,
-  const double isovalues[],
-  const double tol
-)
-{
-  int n_crossings = 0;
-  for (int i = 0; i < n_isovalues; i++) {
-    n_crossings += _cross_0_level_ngon(v0 - isovalues[i], v1 - isovalues[i], tol);
-  }
-
-  return n_crossings;
-}
-
-
-
 
 
 /*
@@ -432,11 +349,11 @@ _build_active_edges
         int i_vtx0 = _connec[pairs[2*i_pair  ]];
         int i_vtx1 = _connec[pairs[2*i_pair+1]];
 
-        if (_cross_any_level(vtx_field[i_vtx0-1],
-                             vtx_field[i_vtx1-1],
-                             n_isovalues,
-                             isovalues,
-                             tol)) {
+        if (_isosurface_cross_any_level(vtx_field[i_vtx0-1],
+                                        vtx_field[i_vtx1-1],
+                                        n_isovalues,
+                                        isovalues,
+                                        tol)) {
           // This is an active edge
           int key = (i_vtx0 + i_vtx1 - 2) % max_key;
           key_count[key]++;
@@ -510,11 +427,11 @@ _build_active_edges
         int edge_id = 0;
         int key = (i_vtx0 + i_vtx1 - 2) % max_key;
 
-        int _n_crossings = _cross_any_level(vtx_field[i_vtx0-1],
-                                            vtx_field[i_vtx1-1],
-                                            n_isovalues,
-                                            isovalues,
-                                            tol);
+        int _n_crossings = _isosurface_cross_any_level(vtx_field[i_vtx0-1],
+                                                       vtx_field[i_vtx1-1],
+                                                       n_isovalues,
+                                                       isovalues,
+                                                       tol);
         
         /* Look for possible collision */
         for (int i = 0; i < key_count[key]; i++) {
@@ -1026,7 +943,7 @@ _build_iso_vtx
       double val0 = vtx_field[i_vtx0] - isovalue;
       double val1 = vtx_field[i_vtx1] - isovalue;
 
-      if (_cross_0_level(val0, val1, tol)) {
+      if (_isosurface_cross_0_level(val0, val1, tol)) {
         double t = val0 / (val0 - val1);
         for (int i = 0; i < 3; i++) {
           iso_vtx_coord[3*iso_n_vtx+i] = (1-t)*vtx_coord[3*i_vtx0+i] + t*vtx_coord[3*i_vtx1+i];
@@ -2483,11 +2400,11 @@ _isosurface_ngon_single_part
     int i_vtx0 = edge_vtx[2*i_edge  ] - 1;
     int i_vtx1 = edge_vtx[2*i_edge+1] - 1;
 
-    iso_n_vtx += _cross_any_level_ngon(vtx_field[i_vtx0],
-                                       vtx_field[i_vtx1],
-                                       n_isovalues,
-                                       isovalues,
-                                       tol);
+    iso_n_vtx += _isosurface_cross_any_level_ngon(vtx_field[i_vtx0],
+                                                  vtx_field[i_vtx1],
+                                                  n_isovalues,
+                                                  isovalues,
+                                                  tol);
   }
 
   double *iso_vtx_coord         = NULL;
@@ -2629,7 +2546,7 @@ _isosurface_ngon_single_part
       double val0 = vtx_field[i_vtx0] - isovalues[i_isovalue];
       double val1 = vtx_field[i_vtx1] - isovalues[i_isovalue];
 
-      if (_cross_0_level_ngon(val0, val1, tol)) {
+      if (_isosurface_cross_0_level_ngon(val0, val1, tol)) {
 
         isovalue_n_active_edge++;
 

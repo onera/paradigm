@@ -195,6 +195,11 @@ _is_nodal
   return PDM_ABS(isos->entry_mesh_type) == 3;
 }
 
+
+/**
+ * \brief Check if edges were provided (once for all isosurfaces)
+ *
+ */
 static void
 _do_we_have_edges
 (
@@ -202,10 +207,12 @@ _do_we_have_edges
 )
 {
   if (isos->we_have_edges >= 0) {
+    // We have already determined if we had edges
     return;
   }
 
   if (_is_nodal(isos)) {
+    // Irrelevant for nodal mesh
     return;
   }
 
@@ -256,7 +263,6 @@ _do_we_have_edges
  * \brief Perform implicit partitioning (once for all isosurfaces)
  *
  */
-
 static void
 _dist_to_part
 (
@@ -264,6 +270,7 @@ _dist_to_part
  )
 {
   if (isos->dist_to_part_computed) {
+    // We have already switched to paritioned view
     return;
   }
 
@@ -711,42 +718,20 @@ _compute_iso_field
 }
 
 
-
-// --->> migrer dans priv?
-static inline int
-_sign
-(
-  const double v, 
-  const double tol
-)
-{
-  // if (v < -tol) {
-  //   return -1;
-  // }
-  // else if (v > tol) {
-  //   return 1;
-  // }
-  // else {
-  //   return 0;
-  // }
-  return (v > tol);
-}
-
-
-static inline int
-_cross_0_level_ngon
+int
+_isosurface_cross_0_level
 (
   const double v0,
   const double v1,
   const double tol
 )
 {
-  return _sign(v0, tol) != _sign(v1, tol);
+  return (PDM_ABS(v0) > tol) && (PDM_ABS(v1) > tol) && (v0*v1 < 0);
 }
 
 
-static inline int
-_cross_any_level_ngon
+int
+_isosurface_cross_any_level
 (
   const double v0,
   const double v1,
@@ -757,12 +742,54 @@ _cross_any_level_ngon
 {
   int n_crossings = 0;
   for (int i = 0; i < n_isovalues; i++) {
-    n_crossings += _cross_0_level_ngon(v0 - isovalues[i], v1 - isovalues[i], tol);
+    n_crossings += _isosurface_cross_0_level(v0 - isovalues[i], v1 - isovalues[i], tol);
   }
 
   return n_crossings;
 }
-// <<---
+
+
+static inline int
+_sign
+(
+  const double v, 
+  const double tol
+)
+{
+  return (v > tol);
+}
+
+
+int
+_isosurface_cross_0_level_ngon
+(
+  const double v0,
+  const double v1,
+  const double tol
+)
+{
+  return _sign(v0, tol) != _sign(v1, tol);
+}
+
+
+int
+_isosurface_cross_any_level_ngon
+(
+  const double v0,
+  const double v1,
+  const int    n_isovalues,
+  const double isovalues[],
+  const double tol
+)
+{
+  int n_crossings = 0;
+  for (int i = 0; i < n_isovalues; i++) {
+    n_crossings += _isosurface_cross_0_level_ngon(v0 - isovalues[i], v1 - isovalues[i], tol);
+  }
+
+  return n_crossings;
+}
+
 
 
 
@@ -890,7 +917,7 @@ _extract
 
               double val0 = isos->field[id_isosurface][i_part][i_vtx0];
               double val1 = isos->field[id_isosurface][i_part][i_vtx1];
-              if (_cross_any_level_ngon(val0, val1, isos->n_isovalues[id_isosurface], isos->isovalues[id_isosurface], isos->ISOSURFACE_EPS)) {
+              if (_isosurface_cross_any_level(val0, val1, isos->n_isovalues[id_isosurface], isos->isovalues[id_isosurface], isos->ISOSURFACE_EPS)) {
                 is_selected = 1;
                 break;
               }
@@ -947,7 +974,7 @@ _extract
                 int i_vtx1 = fv[(i+1)%face_vtx_n] - 1;
                 double val0 = isos->field[id_isosurface][i_part][i_vtx0];
                 double val1 = isos->field[id_isosurface][i_part][i_vtx1];
-                if (_cross_any_level_ngon(val0, val1, isos->n_isovalues[id_isosurface], isos->isovalues[id_isosurface], isos->ISOSURFACE_EPS)) {
+                if (_isosurface_cross_any_level(val0, val1, isos->n_isovalues[id_isosurface], isos->isovalues[id_isosurface], isos->ISOSURFACE_EPS)) {
                   is_selected = 1;
                   break;
                 }
@@ -1006,7 +1033,7 @@ _extract
 
               double val0 = isos->field[id_isosurface][i_part][i_vtx0];
               double val1 = isos->field[id_isosurface][i_part][i_vtx1];
-              if (_cross_any_level_ngon(val0, val1, isos->n_isovalues[id_isosurface], isos->isovalues[id_isosurface], isos->ISOSURFACE_EPS)) {
+              if (_isosurface_cross_any_level(val0, val1, isos->n_isovalues[id_isosurface], isos->isovalues[id_isosurface], isos->ISOSURFACE_EPS)) {
                 is_selected = 1;
                 break;
               }
@@ -1118,7 +1145,7 @@ _extract
               int i_vtx1 = pedge_vtx[i_part][2*i_edge+1] - 1;
               double val0 = isos->field[id_isosurface][i_part][i_vtx0];
               double val1 = isos->field[id_isosurface][i_part][i_vtx1];
-              if (_cross_any_level_ngon(val0, val1, isos->n_isovalues[id_isosurface], isos->isovalues[id_isosurface], isos->ISOSURFACE_EPS)) {
+              if (_isosurface_cross_any_level_ngon(val0, val1, isos->n_isovalues[id_isosurface], isos->isovalues[id_isosurface], isos->ISOSURFACE_EPS)) {
                 is_selected = 1;
                 break;
               }
@@ -1143,7 +1170,7 @@ _extract
               int i_vtx1 = fv[(i+1)%face_vtx_n] - 1;
               double val0 = isos->field[id_isosurface][i_part][i_vtx0];
               double val1 = isos->field[id_isosurface][i_part][i_vtx1];
-              if (_cross_any_level_ngon(val0, val1, isos->n_isovalues[id_isosurface], isos->isovalues[id_isosurface], isos->ISOSURFACE_EPS)) {
+              if (_isosurface_cross_any_level_ngon(val0, val1, isos->n_isovalues[id_isosurface], isos->isovalues[id_isosurface], isos->ISOSURFACE_EPS)) {
                 is_selected = 1;
                 break;
               }
@@ -1177,7 +1204,7 @@ _extract
                 int i_vtx1 = fv[(i+1)%face_vtx_n] - 1;
                 double val0 = isos->field[id_isosurface][i_part][i_vtx0];
                 double val1 = isos->field[id_isosurface][i_part][i_vtx1];
-                if (_cross_any_level_ngon(val0, val1, isos->n_isovalues[id_isosurface], isos->isovalues[id_isosurface], isos->ISOSURFACE_EPS)) {
+                if (_isosurface_cross_any_level_ngon(val0, val1, isos->n_isovalues[id_isosurface], isos->isovalues[id_isosurface], isos->ISOSURFACE_EPS)) {
                   is_selected = 1;
                   break;
                 }
@@ -1207,7 +1234,7 @@ _extract
                 int i_vtx1 = pedge_vtx[i_part][2*i_edge+1] - 1;
                 double val0 = isos->field[id_isosurface][i_part][i_vtx0];
                 double val1 = isos->field[id_isosurface][i_part][i_vtx1];
-                if (_cross_any_level_ngon(val0, val1, isos->n_isovalues[id_isosurface], isos->isovalues[id_isosurface], isos->ISOSURFACE_EPS)) {
+                if (_isosurface_cross_any_level_ngon(val0, val1, isos->n_isovalues[id_isosurface], isos->isovalues[id_isosurface], isos->ISOSURFACE_EPS)) {
                   is_selected = 1;
                   break;
                 }

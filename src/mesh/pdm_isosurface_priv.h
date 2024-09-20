@@ -324,6 +324,41 @@ struct _pdm_isosurface_t {
  *============================================================================*/
 
 
+int
+_isosurface_cross_0_level_ngon
+(
+  const double v0,
+  const double v1,
+  const double tol
+);
+
+int
+_isosurface_cross_any_level_ngon
+(
+  const double v0,
+  const double v1,
+  const int    n_isovalues,
+  const double isovalues[],
+  const double tol
+);
+
+int
+_isosurface_cross_0_level
+(
+  const double v0,
+  const double v1,
+  const double tol
+);
+
+int
+_isosurface_cross_any_level
+(
+  const double v0,
+  const double v1,
+  const int    n_isovalues,
+  const double isovalues[],
+  const double tol
+);
 
 #ifdef  __cplusplus
 }
