@@ -1430,11 +1430,10 @@ _ngonize
     // We have elements other than simplices, we need to ngonize
     isos->we_have_edges   = 1; // sure about this hack?
     isos->entry_mesh_type = 1 * PDM_SIGN(isos->entry_mesh_type); // we are in fact ngon from now on
-    PDM_part_mesh_t *pmesh = PDM_part_mesh_nodal_to_part_mesh(extract_pmn,
-                                                              PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_EDGE,
-                                                              PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_FACE);
-    // TODO: unpack pmesh either into isos->extrp[id_iso] or into isos directly
     PDM_error(__FILE__, __LINE__, 0, "Work left to do\n");
+    isos->extract_pmesh = PDM_part_mesh_nodal_to_part_mesh(extract_pmn,
+                                                           PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE,
+                                                           PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_FACE);
   }
 
 }

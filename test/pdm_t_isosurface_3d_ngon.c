@@ -837,6 +837,16 @@ int main
                                             &cell_face,
                                             PDM_OWNERSHIP_KEEP);
 
+        int *face_vtx_idx = NULL;
+        int *face_vtx     = NULL;
+        PDM_multipart_part_connectivity_get(mpart,
+                                            0,
+                                            i_part,
+                                            PDM_CONNECTIVITY_TYPE_FACE_VTX,
+                                            &face_vtx_idx,
+                                            &face_vtx,
+                                            PDM_OWNERSHIP_KEEP);
+
         int *face_edge_idx = NULL;
         int *face_edge     = NULL;
         PDM_multipart_part_connectivity_get(mpart,
@@ -862,6 +872,12 @@ int main
                                         PDM_CONNECTIVITY_TYPE_CELL_FACE,
                                         cell_face_idx,
                                         cell_face);
+
+        PDM_isosurface_connectivity_set(isos,
+                                        i_part,
+                                        PDM_CONNECTIVITY_TYPE_FACE_VTX,
+                                        face_vtx_idx,
+                                        face_vtx);
 
         PDM_isosurface_connectivity_set(isos,
                                         i_part,
