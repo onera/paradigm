@@ -93,6 +93,15 @@ _block_std_free_partial
     PDM_free(_block_std->ho_ordering);
   }
 
+  if (_block_std->_elt_to_entity != NULL) {
+    if (_block_std->elt_to_entity_owner == PDM_OWNERSHIP_KEEP) {
+      for (int i = 0; i < _block_std->n_part; i++) {
+        PDM_free(_block_std->_elt_to_entity[i]);
+      }
+    }
+    PDM_free(_block_std->_elt_to_entity);
+  }
+
 }
 
 
@@ -197,6 +206,15 @@ _block_poly2d_free_partial
       }
     }
     PDM_free(_block_poly2d->_numabs);
+  }
+
+  if (_block_poly2d->_elt_to_entity != NULL) {
+    if (_block_poly2d->elt_to_entity_owner == PDM_OWNERSHIP_KEEP) {
+      for (int i = 0; i < _block_poly2d->n_part; i++) {
+        PDM_free(_block_poly2d->_elt_to_entity[i]);
+      }
+    }
+    PDM_free(_block_poly2d->_elt_to_entity);
   }
 
 }
@@ -350,6 +368,16 @@ _block_poly3d_free_partial
     }
     PDM_free(_block_poly3d->_face_ln_to_gn);
   }
+
+  if (_block_poly3d->_elt_to_entity != NULL) {
+    if (_block_poly3d->elt_to_entity_owner == PDM_OWNERSHIP_KEEP) {
+      for (int i = 0; i < _block_poly3d->n_part; i++) {
+        PDM_free(_block_poly3d->_elt_to_entity[i]);
+      }
+    }
+    PDM_free(_block_poly3d->_elt_to_entity);
+  }
+
 }
 
 
@@ -1200,32 +1228,35 @@ const PDM_Mesh_nodal_elt_t         t_elt
       id_section = pmne->n_section_std-1;
 
       /* Intialisation du bloc */
-      PDM_malloc(pmne->sections_std[id_section],1,PDM_Mesh_nodal_block_std_t);
-      pmne->sections_std[id_section]->t_elt        = t_elt;
-      pmne->sections_std[id_section]->n_part       = pmne->n_part;
+      PDM_malloc(pmne->sections_std[id_section], 1, PDM_Mesh_nodal_block_std_t);
+      pmne->sections_std[id_section]->t_elt  = t_elt;
+      pmne->sections_std[id_section]->n_part = pmne->n_part;
 
       /* Ownership */
-      pmne->sections_std[id_section]->owner              = PDM_OWNERSHIP_KEEP;
-      pmne->sections_std[id_section]->cell_centers_owner = PDM_OWNERSHIP_KEEP;
-      pmne->sections_std[id_section]->numabs_int_owner   = PDM_OWNERSHIP_KEEP;
-      pmne->sections_std[id_section]->numabs_owner       = PDM_OWNERSHIP_KEEP;
-      pmne->sections_std[id_section]->parent_num_owner   = PDM_OWNERSHIP_KEEP;
+      pmne->sections_std[id_section]->owner               = PDM_OWNERSHIP_KEEP;
+      pmne->sections_std[id_section]->cell_centers_owner  = PDM_OWNERSHIP_KEEP;
+      pmne->sections_std[id_section]->numabs_int_owner    = PDM_OWNERSHIP_KEEP;
+      pmne->sections_std[id_section]->numabs_owner        = PDM_OWNERSHIP_KEEP;
+      pmne->sections_std[id_section]->parent_num_owner    = PDM_OWNERSHIP_KEEP;
+      pmne->sections_std[id_section]->elt_to_entity_owner = PDM_OWNERSHIP_KEEP;
 
-      PDM_malloc(pmne->sections_std[id_section]->n_elt,pmne->sections_std[id_section]->n_part,int  );
-      PDM_malloc(pmne->sections_std[id_section]->_connec,pmne->sections_std[id_section]->n_part,int *);
-      PDM_malloc(pmne->sections_std[id_section]->_numabs,pmne->sections_std[id_section]->n_part,PDM_g_num_t *);
-      pmne->sections_std[id_section]->numabs_int            = NULL;
-      pmne->sections_std[id_section]->_parent_num           = NULL;
-      pmne->sections_std[id_section]->_parent_entity_g_num  = NULL;
-      pmne->sections_std[id_section]->cell_centers          = NULL;
+      PDM_malloc(pmne->sections_std[id_section]->n_elt,   pmne->sections_std[id_section]->n_part, int          );
+      PDM_malloc(pmne->sections_std[id_section]->_connec, pmne->sections_std[id_section]->n_part, int         *);
+      PDM_malloc(pmne->sections_std[id_section]->_numabs, pmne->sections_std[id_section]->n_part, PDM_g_num_t *);
+      pmne->sections_std[id_section]->numabs_int              = NULL;
+      pmne->sections_std[id_section]->_parent_num             = NULL;
+      pmne->sections_std[id_section]->_parent_entity_g_num    = NULL;
+      pmne->sections_std[id_section]->cell_centers            = NULL;
       pmne->sections_std[id_section]->cell_centers_to_compute = NULL;
-      pmne->sections_std[id_section]->order                 = 1;
-      pmne->sections_std[id_section]->ho_ordering           = NULL;
+      pmne->sections_std[id_section]->order                   = 1;
+      pmne->sections_std[id_section]->ho_ordering             = NULL;
+      pmne->sections_std[id_section]->_elt_to_entity          = NULL;
+
 
       for (int i = 0; i < pmne->sections_std[id_section]->n_part; i++) {
-        pmne->sections_std[id_section]->n_elt    [i] = 0;
-        pmne->sections_std[id_section]->_connec  [i] = NULL;
-        pmne->sections_std[id_section]->_numabs  [i] = NULL;
+        pmne->sections_std[id_section]->n_elt  [i] = 0;
+        pmne->sections_std[id_section]->_connec[i] = NULL;
+        pmne->sections_std[id_section]->_numabs[i] = NULL;
       }
 
       id_section += PDM_BLOCK_ID_BLOCK_STD;
@@ -1252,23 +1283,25 @@ const PDM_Mesh_nodal_elt_t         t_elt
       PDM_malloc(pmne->sections_poly2d[id_section],1,PDM_Mesh_nodal_block_poly2d_t);
 
       /* Ownership */
-      pmne->sections_poly2d[id_section]->owner              = PDM_OWNERSHIP_KEEP;
-      pmne->sections_poly2d[id_section]->cell_centers_owner = PDM_OWNERSHIP_KEEP;
-      pmne->sections_poly2d[id_section]->elt_vtx_owner      = PDM_OWNERSHIP_KEEP;
-      pmne->sections_poly2d[id_section]->numabs_int_owner   = PDM_OWNERSHIP_KEEP;
-      pmne->sections_poly2d[id_section]->numabs_owner       = PDM_OWNERSHIP_KEEP;
-      pmne->sections_poly2d[id_section]->parent_num_owner   = PDM_OWNERSHIP_KEEP;
+      pmne->sections_poly2d[id_section]->owner               = PDM_OWNERSHIP_KEEP;
+      pmne->sections_poly2d[id_section]->cell_centers_owner  = PDM_OWNERSHIP_KEEP;
+      pmne->sections_poly2d[id_section]->elt_vtx_owner       = PDM_OWNERSHIP_KEEP;
+      pmne->sections_poly2d[id_section]->numabs_int_owner    = PDM_OWNERSHIP_KEEP;
+      pmne->sections_poly2d[id_section]->numabs_owner        = PDM_OWNERSHIP_KEEP;
+      pmne->sections_poly2d[id_section]->parent_num_owner    = PDM_OWNERSHIP_KEEP;
+      pmne->sections_poly2d[id_section]->elt_to_entity_owner = PDM_OWNERSHIP_KEEP;
 
-      pmne->sections_poly2d[id_section]->n_part                = pmne->n_part;
-      PDM_malloc(pmne->sections_poly2d[id_section]->n_elt,pmne->sections_poly2d[id_section]->n_part,int  );
-      PDM_malloc(pmne->sections_poly2d[id_section]->_connec_idx,pmne->sections_poly2d[id_section]->n_part,int *);
-      PDM_malloc(pmne->sections_poly2d[id_section]->_connec,pmne->sections_poly2d[id_section]->n_part,int *);
-      PDM_malloc(pmne->sections_poly2d[id_section]->_numabs,pmne->sections_poly2d[id_section]->n_part,PDM_g_num_t *);
-      pmne->sections_poly2d[id_section]->numabs_int            = NULL;
-      pmne->sections_poly2d[id_section]->cell_centers          = NULL;
+      pmne->sections_poly2d[id_section]->n_part = pmne->n_part;
+      PDM_malloc(pmne->sections_poly2d[id_section]->n_elt,       pmne->sections_poly2d[id_section]->n_part, int          );
+      PDM_malloc(pmne->sections_poly2d[id_section]->_connec_idx, pmne->sections_poly2d[id_section]->n_part, int         *);
+      PDM_malloc(pmne->sections_poly2d[id_section]->_connec,     pmne->sections_poly2d[id_section]->n_part, int         *);
+      PDM_malloc(pmne->sections_poly2d[id_section]->_numabs,     pmne->sections_poly2d[id_section]->n_part, PDM_g_num_t *);
+      pmne->sections_poly2d[id_section]->numabs_int              = NULL;
+      pmne->sections_poly2d[id_section]->cell_centers            = NULL;
       pmne->sections_poly2d[id_section]->cell_centers_to_compute = NULL;
-      pmne->sections_poly2d[id_section]->_parent_num           = NULL;
-      pmne->sections_poly2d[id_section]->_parent_entity_g_num  = NULL;
+      pmne->sections_poly2d[id_section]->_parent_num             = NULL;
+      pmne->sections_poly2d[id_section]->_parent_entity_g_num    = NULL;
+      pmne->sections_poly2d[id_section]->_elt_to_entity          = NULL;
 
       for (int i = 0; i < pmne->sections_poly2d[id_section]->n_part; i++) {
         pmne->sections_poly2d[id_section]->n_elt      [i] = 0;
@@ -1300,28 +1333,30 @@ const PDM_Mesh_nodal_elt_t         t_elt
       pmne->sections_poly3d[id_section]->n_part       = pmne->n_part;
 
       /* Ownership */
-      pmne->sections_poly3d[id_section]->owner              = PDM_OWNERSHIP_KEEP;
-      pmne->sections_poly3d[id_section]->cell_centers_owner = PDM_OWNERSHIP_KEEP;
-      pmne->sections_poly3d[id_section]->elt_vtx_owner      = PDM_OWNERSHIP_KEEP;
-      pmne->sections_poly3d[id_section]->numabs_int_owner   = PDM_OWNERSHIP_KEEP;
-      pmne->sections_poly3d[id_section]->numabs_owner       = PDM_OWNERSHIP_KEEP;
-      pmne->sections_poly3d[id_section]->parent_num_owner   = PDM_OWNERSHIP_KEEP;
+      pmne->sections_poly3d[id_section]->owner               = PDM_OWNERSHIP_KEEP;
+      pmne->sections_poly3d[id_section]->cell_centers_owner  = PDM_OWNERSHIP_KEEP;
+      pmne->sections_poly3d[id_section]->elt_vtx_owner       = PDM_OWNERSHIP_KEEP;
+      pmne->sections_poly3d[id_section]->numabs_int_owner    = PDM_OWNERSHIP_KEEP;
+      pmne->sections_poly3d[id_section]->numabs_owner        = PDM_OWNERSHIP_KEEP;
+      pmne->sections_poly3d[id_section]->parent_num_owner    = PDM_OWNERSHIP_KEEP;
+      pmne->sections_poly3d[id_section]->elt_to_entity_owner = PDM_OWNERSHIP_KEEP;
 
-      PDM_malloc(pmne->sections_poly3d[id_section]->n_elt,pmne->sections_poly3d[id_section]->n_part,int          );
-      PDM_malloc(pmne->sections_poly3d[id_section]->n_face,pmne->sections_poly3d[id_section]->n_part,int          );
-      PDM_malloc(pmne->sections_poly3d[id_section]->_facvtx_idx,pmne->sections_poly3d[id_section]->n_part,int         *);
-      PDM_malloc(pmne->sections_poly3d[id_section]->_facvtx,pmne->sections_poly3d[id_section]->n_part,int         *);
-      PDM_malloc(pmne->sections_poly3d[id_section]->_face_ln_to_gn,pmne->sections_poly3d[id_section]->n_part,PDM_g_num_t *);
-      PDM_malloc(pmne->sections_poly3d[id_section]->_cellfac_idx,pmne->sections_poly3d[id_section]->n_part,int         *);
-      PDM_malloc(pmne->sections_poly3d[id_section]->_cellfac,pmne->sections_poly3d[id_section]->n_part,int         *);
-      PDM_malloc(pmne->sections_poly3d[id_section]->_cellvtx_idx,pmne->sections_poly3d[id_section]->n_part,int         *);
-      PDM_malloc(pmne->sections_poly3d[id_section]->_cellvtx,pmne->sections_poly3d[id_section]->n_part,int         *);
-      PDM_malloc(pmne->sections_poly3d[id_section]->_numabs,pmne->sections_poly3d[id_section]->n_part,PDM_g_num_t *);
-      pmne->sections_poly3d[id_section]->numabs_int           = NULL;
-      pmne->sections_poly3d[id_section]->cell_centers         = NULL;
+      PDM_malloc(pmne->sections_poly3d[id_section]->n_elt,          pmne->sections_poly3d[id_section]->n_part, int          );
+      PDM_malloc(pmne->sections_poly3d[id_section]->n_face,         pmne->sections_poly3d[id_section]->n_part, int          );
+      PDM_malloc(pmne->sections_poly3d[id_section]->_facvtx_idx,    pmne->sections_poly3d[id_section]->n_part, int         *);
+      PDM_malloc(pmne->sections_poly3d[id_section]->_facvtx,        pmne->sections_poly3d[id_section]->n_part, int         *);
+      PDM_malloc(pmne->sections_poly3d[id_section]->_face_ln_to_gn, pmne->sections_poly3d[id_section]->n_part, PDM_g_num_t *);
+      PDM_malloc(pmne->sections_poly3d[id_section]->_cellfac_idx,   pmne->sections_poly3d[id_section]->n_part, int         *);
+      PDM_malloc(pmne->sections_poly3d[id_section]->_cellfac,       pmne->sections_poly3d[id_section]->n_part, int         *);
+      PDM_malloc(pmne->sections_poly3d[id_section]->_cellvtx_idx,   pmne->sections_poly3d[id_section]->n_part, int         *);
+      PDM_malloc(pmne->sections_poly3d[id_section]->_cellvtx,       pmne->sections_poly3d[id_section]->n_part, int         *);
+      PDM_malloc(pmne->sections_poly3d[id_section]->_numabs,        pmne->sections_poly3d[id_section]->n_part, PDM_g_num_t *);
+      pmne->sections_poly3d[id_section]->numabs_int              = NULL;
+      pmne->sections_poly3d[id_section]->cell_centers            = NULL;
       pmne->sections_poly3d[id_section]->cell_centers_to_compute = NULL;
-      pmne->sections_poly3d[id_section]->_parent_num          = NULL;
-      pmne->sections_poly3d[id_section]->_parent_entity_g_num = NULL;
+      pmne->sections_poly3d[id_section]->_parent_num             = NULL;
+      pmne->sections_poly3d[id_section]->_parent_entity_g_num    = NULL;
+      pmne->sections_poly3d[id_section]->_elt_to_entity          = NULL;
 
       for (int i = 0; i < pmne->sections_poly3d[id_section]->n_part; i++) {
         pmne->sections_poly3d[id_section]->n_elt         [i] = 0;
@@ -6718,4 +6753,132 @@ PDM_part_mesh_nodal_elmts_cell_vtx_connect_get
   }
 
   return n_cell;
+}
+
+
+void
+PDM_part_mesh_nodal_elmts_section_elt_to_entity_set
+(
+      PDM_part_mesh_nodal_elmts_t *pmne,
+const int                          id_section,
+const int                          id_part,
+      int                         *elt_to_entity,
+      PDM_ownership_t              ownership
+)
+{
+  if (pmne == NULL) {
+    PDM_error(__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+  }
+
+  if (id_section < PDM_BLOCK_ID_BLOCK_POLY2D) {
+
+    PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[id_section];
+    if (block == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad block identifier\n");
+    }
+
+    if (block->_elt_to_entity == NULL) {
+      PDM_malloc(block->_elt_to_entity, pmne->n_part, int *);
+    }
+    block->_elt_to_entity[id_part] = elt_to_entity;
+
+    block->elt_to_entity_owner = ownership;
+  }
+
+  else if (id_section < PDM_BLOCK_ID_BLOCK_POLY3D) {
+
+    PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[id_section - PDM_BLOCK_ID_BLOCK_POLY2D];
+    if (block == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad block identifier\n");
+    }
+
+    if (block->_elt_to_entity == NULL) {
+      PDM_malloc(block->_elt_to_entity, pmne->n_part, int *);
+    }
+    block->_elt_to_entity[id_part] = elt_to_entity;
+
+    block->elt_to_entity_owner = ownership;
+  }
+
+  else {
+
+    PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[id_section - PDM_BLOCK_ID_BLOCK_POLY3D];
+    if (block == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad block identifier\n");
+    }
+
+    if (block->_elt_to_entity == NULL) {
+      PDM_malloc(block->_elt_to_entity, pmne->n_part, int *);
+    }
+    block->_elt_to_entity[id_part] = elt_to_entity;
+
+    block->elt_to_entity_owner = ownership;
+  }
+}
+
+
+int *
+PDM_part_mesh_nodal_elmts_section_elt_to_entity_get
+(
+      PDM_part_mesh_nodal_elmts_t *pmne,
+const int                          id_section,
+const int                          id_part,
+      PDM_ownership_t              ownership
+)
+{
+  if (pmne == NULL) {
+    PDM_error(__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+  }
+
+  int *elt_to_entity = NULL;
+
+  if (id_section < PDM_BLOCK_ID_BLOCK_POLY2D) {
+
+    PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[id_section];
+    if (block == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad block identifier\n");
+    }
+
+    if (block->_elt_to_entity != NULL) {
+      elt_to_entity = block->_elt_to_entity[id_part];
+    }
+
+    if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
+      block->elt_to_entity_owner = ownership;
+    }
+  }
+
+  else if (id_section < PDM_BLOCK_ID_BLOCK_POLY3D) {
+
+    PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[id_section - PDM_BLOCK_ID_BLOCK_POLY2D];
+    if (block == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad block identifier\n");
+    }
+
+    if (block->_elt_to_entity != NULL) {
+      elt_to_entity = block->_elt_to_entity[id_part];
+    }
+
+    if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
+      block->elt_to_entity_owner = ownership;
+    }
+  }
+
+  else {
+
+    PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[id_section - PDM_BLOCK_ID_BLOCK_POLY3D];
+    if (block == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad block identifier\n");
+    }
+
+    if (block->_elt_to_entity != NULL) {
+      elt_to_entity = block->_elt_to_entity[id_part];
+    }
+
+    if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
+      block->elt_to_entity_owner = ownership;
+    }
+  }
+
+  return elt_to_entity;
 }

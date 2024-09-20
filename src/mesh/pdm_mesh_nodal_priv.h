@@ -67,6 +67,7 @@ typedef struct PDM_Mesh_nodal_block_std_t {
   PDM_g_num_t              **_parent_entity_g_num; /*!< Global numbering of entity (cell/face/edge/vtx) */
   double                   **cell_centers;         /*!< Cell center coordinates */
   int                       *cell_centers_to_compute;
+  int                      **_elt_to_entity;       /*!< Injective link with "ngon" entities or NULL */
 
   /* Ownerships */
   PDM_ownership_t         owner;
@@ -74,6 +75,7 @@ typedef struct PDM_Mesh_nodal_block_std_t {
   PDM_ownership_t         numabs_int_owner;     /*!< Owner of internal absolute number into a block */
   PDM_ownership_t         numabs_owner;         /*!< Owner of the absolute number into a block */
   PDM_ownership_t         parent_num_owner;     /*!< Owner of the parent absolute number into a block */
+  PDM_ownership_t         elt_to_entity_owner;  /*!< Owner of the elt_to_entity array */
 
   int                     order;                /*!< Element order */
   char                   *ho_ordering;          /*!< HO node ordering */
@@ -101,6 +103,7 @@ typedef struct PDM_Mesh_nodal_block_poly2d_t {
   PDM_g_num_t            **_parent_entity_g_num; /*!< Global numbering of entity (cell/face/edge/vtx) */
   double                 **cell_centers;         /*!< Cell center coordinates */
   int                     *cell_centers_to_compute;
+  int                    **_elt_to_entity;       /*!< Injective link with "ngon" entities or NULL */
 
   /* Ownerships */
   PDM_ownership_t         owner;
@@ -109,6 +112,7 @@ typedef struct PDM_Mesh_nodal_block_poly2d_t {
   PDM_ownership_t         numabs_int_owner;     /*!< Owner of internal absolute number into a block */
   PDM_ownership_t         numabs_owner;         /*!< Owner of the absolute number into a block */
   PDM_ownership_t         parent_num_owner;     /*!< Owner of the parent absolute number into a block */
+  PDM_ownership_t         elt_to_entity_owner;  /*!< Owner of the elt_to_entity array */
 
 } PDM_Mesh_nodal_block_poly2d_t;
 
@@ -146,6 +150,7 @@ typedef struct PDM_Mesh_nodal_block_poly3d_t{
   PDM_g_num_t           **_parent_entity_g_num; /*!< Global numbering of entity (cell/face/edge/vtx) */
   double                **cell_centers;         /*!< Cell center coordinates */
   int                    *cell_centers_to_compute;
+  int                   **_elt_to_entity;       /*!< Injective link with "ngon" entities or NULL */
 
   /* Ownerships */
   PDM_ownership_t         owner;
@@ -154,6 +159,7 @@ typedef struct PDM_Mesh_nodal_block_poly3d_t{
   PDM_ownership_t         numabs_int_owner;     /*!< Owner of internal absolute number into a block */
   PDM_ownership_t         numabs_owner;         /*!< Owner of the absolute number into a block */
   PDM_ownership_t         parent_num_owner;     /*!< Owner of the parent absolute number into a block */
+  PDM_ownership_t         elt_to_entity_owner;  /*!< Owner of the elt_to_entity array */
 
 } PDM_Mesh_nodal_block_poly3d_t;
 

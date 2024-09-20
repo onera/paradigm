@@ -957,8 +957,9 @@ PDM_part_mesh_nodal_num_elmt_parent_to_local_get
 const int                     id_part
 );
 
+
 /**
- * \brief Return entity to element indirection for std sections
+ * \brief Return element to entity indirection for a section
  *
  * \param [in]  pmn                     Pointer to \ref PDM_part_mesh_nodal_t object
  * \param [in]  i_section               Section identifier
@@ -967,11 +968,12 @@ const int                     id_part
  *
  */
 int *
-PDM_part_mesh_nodal_section_entity_to_elt_get(
+PDM_part_mesh_nodal_section_elt_to_entity_get
+(
       PDM_part_mesh_nodal_t *pmn,
-const int                     i_section,
-const int                     id_part,
-      PDM_ownership_t         ownership
+const int                    i_section,
+const int                    id_part,
+      PDM_ownership_t        ownership
 );
 
 
