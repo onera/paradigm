@@ -86,6 +86,8 @@ _iso_surface_kind_n_coeff
   }
 }
 
+
+
 static
 inline
 double
@@ -2410,30 +2412,6 @@ _isosurface_compute
 }
 
 
-static
-void
-_assert_isovalues_not_to_close
-(
-  PDM_isosurface_t *isos,
-  int               id_isosurface,
-  int               n_isovalues,
-  double           *isovalues
-)
-{
-  // > Check that difference between isovalues>ISOSURFACE_EPS
-  for (int i_iso=0; i_iso<n_isovalues; ++i_iso) {
-    for (int j_iso=i_iso+1; j_iso<n_isovalues; ++j_iso) {
-      if (PDM_ABS(isovalues[i_iso]-isovalues[j_iso])<=isos->ISOSURFACE_EPS) {
-        PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: isovalue %d = %f too close from isovalue %d = %f (%.2e<=%.2e) for isosurface with id %d.\n",
-                                                        i_iso, isovalues[i_iso],
-                                                        j_iso, isovalues[j_iso],
-                                                        PDM_ABS(isovalues[i_iso]-isovalues[j_iso]), isos->ISOSURFACE_EPS,
-                                                        id_isosurface);
-      }
-    }
-  }
-}
-
 /*=============================================================================
  * Public function prototypes
  *============================================================================*/
@@ -2481,10 +2459,14 @@ PDM_isosurface_set_tolerance
 )
 {
   if (tolerance < 0.) {
-    PDM_error(__FILE__, __LINE__, 0, "Invalid tolerance : %f (must be >= 0\n", tolerance);
+    PDM_error(__FILE__, __LINE__, 0, "Invalid tolerance : %f (must be >= 0)\n", tolerance);
   }
 
   isos->ISOSURFACE_EPS = tolerance;
+
+  for (int id_isosurface = 0; id_isosurface < isos->n_isosurface; id_isosurface++) {
+    PDM_ISOSURFACE_CHECK_ISOVALUES_NOT_TOO_CLOSE(isos, id_isosurface);
+  }
 }
 
 
@@ -2499,13 +2481,13 @@ PDM_isosurface_set_isovalues
 {
   PDM_ISOSURFACE_CHECK_ID(isos, id_isosurface);
   
-  _assert_isovalues_not_to_close(isos, id_isosurface, n_isovalues, isovalues);
-
   isos->n_isovalues[id_isosurface] = n_isovalues;
   PDM_realloc(isos->isovalues[id_isosurface], isos->isovalues[id_isosurface], n_isovalues, double);
   for (int i=0; i<n_isovalues; ++i) {
     isos->isovalues[id_isosurface][i] = isovalues[i];
   }
+
+  PDM_ISOSURFACE_CHECK_ISOVALUES_NOT_TOO_CLOSE(isos, id_isosurface);
 }
 
 
@@ -2524,14 +2506,27 @@ PDM_isosurface_add
   PDM_realloc(isos->is_computed, isos->is_computed, isos->n_isosurface, PDM_bool_t);
   isos->is_computed[id_isosurface] = PDM_FALSE;
   
-  _assert_isovalues_not_to_close(isos, id_isosurface, n_isovalues, isovalues);
+  PDM_realloc(isos->n_isovalues, isos->n_isovalues, isos->n_isosurface, int     );
+  PDM_realloc(isos->isovalues  , isos->isovalues  , isos->n_isosurface, double *);
+
+  isos->n_isovalues[id_isosurface] = n_isovalues;
+  PDM_malloc(isos->isovalues[id_isosurface], n_isovalues, double);
+  for (int i=0; i<n_isovalues; ++i) {
+    isos->isovalues[id_isosurface][i] = isovalues[i];
+  }
+
+  PDM_ISOSURFACE_CHECK_ISOVALUES_NOT_TOO_CLOSE(isos, id_isosurface);
 
   PDM_realloc(isos->kind          , isos->kind          , isos->n_isosurface, PDM_iso_surface_kind_t          );
   PDM_realloc(isos->eq_coeffs     , isos->eq_coeffs     , isos->n_isosurface, double                         *);
   PDM_realloc(isos->field_function, isos->field_function, isos->n_isosurface, PDM_isosurface_field_function_t );
+  PDM_realloc(isos->use_gradient,   isos->use_gradient,   isos->n_isosurface, int                             );
+  isos->kind[id_isosurface] = kind;
+
+  int n_coeff = _iso_surface_kind_n_coeff(kind);
+  PDM_malloc(isos->eq_coeffs[id_isosurface], n_coeff, double);
   
-  PDM_realloc(isos->field_function, isos->field_function, isos->n_isosurface, PDM_isosurface_field_function_t);
-  
+
   PDM_realloc(isos->dfield, isos->dfield, isos->n_isosurface, double  *);
   PDM_realloc(isos->field , isos->field , isos->n_isosurface, double **);
   isos->field[id_isosurface] = NULL;
@@ -2539,13 +2534,9 @@ PDM_isosurface_add
   PDM_realloc(isos->extract_field, isos->extract_field, isos->n_isosurface, double **);
   isos->extract_field[id_isosurface] = NULL;
 
-  PDM_realloc(isos->n_isovalues , isos->n_isovalues , isos->n_isosurface, int     );
-  PDM_realloc(isos->isovalues   , isos->isovalues   , isos->n_isosurface, double *);
-  PDM_realloc(isos->use_gradient, isos->use_gradient, isos->n_isosurface, int     );
 
   PDM_realloc(isos->extrp, isos->extrp, isos->n_isosurface, PDM_extract_part_t *);
   isos->extrp[id_isosurface] = NULL;
-
 
 
   for (int i = 0; i < PDM_MESH_ENTITY_MAX; i++) {
@@ -2683,15 +2674,6 @@ PDM_isosurface_add
   }
 
 
-  isos->kind       [id_isosurface] = kind;
-  isos->n_isovalues[id_isosurface] = n_isovalues;
-  PDM_malloc(isos->isovalues[id_isosurface], n_isovalues, double);
-  for (int i=0; i<n_isovalues; ++i) {
-    isos->isovalues[id_isosurface][i] = isovalues[i];
-  }
-
-  int n_coeff = _iso_surface_kind_n_coeff(kind);
-  PDM_malloc(isos->eq_coeffs[id_isosurface], n_coeff, double);
 
   return id_isosurface;
 }

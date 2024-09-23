@@ -75,6 +75,22 @@ extern "C" {
     PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: has no mesh entity of type %d.\n", (entity_type)); \
   }
 
+#define PDM_ISOSURFACE_CHECK_ISOVALUES_NOT_TOO_CLOSE(isos, id_isosurface)          \
+  for (int i_iso=0; i_iso<(isos)->n_isovalues[(id_isosurface)]; ++i_iso) {         \
+    for (int j_iso=i_iso+1; j_iso<(isos)->n_isovalues[(id_isosurface)]; ++j_iso) { \
+      double delta = PDM_ABS((isos)->isovalues[i_iso]-(isos)->isovalues[j_iso]);   \
+      if (delta <= (isos)->ISOSURFACE_EPS) {                                       \
+        PDM_error(__FILE__, __LINE__, 0,                                           \
+                  "PDM_isosurface_t: isovalue %d = %f too close from"              \
+                  "isovalue %d = %f (%.2e<=%.2e) for isosurface with id %d.\n",    \
+                  i_iso, (isos)->isovalues[i_iso],                                 \
+                  j_iso, (isos)->isovalues[j_iso],                                 \
+                  delta, (isos)->ISOSURFACE_EPS,                                   \
+                  id_isosurface);                                                  \
+      }                                                                            \
+    }                                                                              \
+  }
+
 /*============================================================================
  * Type definitions
  *============================================================================*/
