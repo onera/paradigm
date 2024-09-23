@@ -75,25 +75,42 @@ extern "C" {
     PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: has no mesh entity of type %d.\n", (entity_type)); \
   }
 
-#define PDM_ISOSURFACE_CHECK_ISOVALUES_NOT_TOO_CLOSE(isos, id_isosurface)          \
-  for (int i_iso=0; i_iso<(isos)->n_isovalues[(id_isosurface)]; ++i_iso) {         \
-    for (int j_iso=i_iso+1; j_iso<(isos)->n_isovalues[(id_isosurface)]; ++j_iso) { \
-      double delta = PDM_ABS((isos)->isovalues[i_iso]-(isos)->isovalues[j_iso]);   \
-      if (delta <= (isos)->ISOSURFACE_EPS) {                                       \
-        PDM_error(__FILE__, __LINE__, 0,                                           \
-                  "PDM_isosurface_t: isovalue %d = %f too close from"              \
-                  "isovalue %d = %f (%.2e<=%.2e) for isosurface with id %d.\n",    \
-                  i_iso, (isos)->isovalues[i_iso],                                 \
-                  j_iso, (isos)->isovalues[j_iso],                                 \
-                  delta, (isos)->ISOSURFACE_EPS,                                   \
-                  id_isosurface);                                                  \
-      }                                                                            \
-    }                                                                              \
+#define PDM_ISOSURFACE_CHECK_ISOVALUES_NOT_TOO_CLOSE(isos, id_isosurface)                                          \
+  for (int i_iso=0; i_iso<(isos)->n_isovalues[(id_isosurface)]; ++i_iso) {                                         \
+    for (int j_iso=i_iso+1; j_iso<(isos)->n_isovalues[(id_isosurface)]; ++j_iso) {                                 \
+      double delta = PDM_ABS((isos)->isovalues[(id_isosurface)][i_iso]-(isos)->isovalues[(id_isosurface)][j_iso]); \
+      if (delta <= (isos)->ISOSURFACE_EPS) {                                                                       \
+        PDM_error(__FILE__, __LINE__, 0,                                                                           \
+                  "PDM_isosurface_t: isovalue %d = %f too close from"                                              \
+                  "isovalue %d = %f (%.2e<=%.2e) for isosurface with id %d.\n",                                    \
+                  i_iso, (isos)->isovalues[(id_isosurface)][i_iso],                                                \
+                  j_iso, (isos)->isovalues[(id_isosurface)][j_iso],                                                \
+                  delta, (isos)->ISOSURFACE_EPS,                                                                   \
+                  id_isosurface);                                                                                  \
+      }                                                                                                            \
+    }                                                                                                              \
   }
 
 /*============================================================================
  * Type definitions
  *============================================================================*/
+
+
+typedef enum {
+
+  ISO_DIST_TO_PART,
+  ISO_COMPUTE_INIT_FIELD,
+  ISO_EXTRACT,
+  ISO_COMPUTE_EXTRACT_FIELD,
+  ISO_NGONIZE,
+  ISO_CONTOURING,
+  ISO_PART_TO_DIST,
+  ISO_BUILD_EXCH_PROTOCOL,
+  ISO_TIMER_TOTAL,
+  ISO_TIMER_N_STEPS
+
+} _isosurface_timer_step_t;
+
 
 
 struct _pdm_isosurface_t {
@@ -326,7 +343,12 @@ struct _pdm_isosurface_t {
 
   // ========
   // > Timers
-  double                  timer1, timer2; // donner des noms de ce qu'on mesure
+  double t_start[ISO_TIMER_N_STEPS];
+  double t_end  [ISO_TIMER_N_STEPS];
+
+  double times_current[ISO_TIMER_N_STEPS];
+  double times_cumul  [ISO_TIMER_N_STEPS];
+
 
 };
 

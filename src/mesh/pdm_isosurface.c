@@ -66,6 +66,74 @@ extern "C" {
  * Private function definitions
  *============================================================================*/
 
+static const char *_isosurface_timer_step_name[ISO_TIMER_N_STEPS] = {
+  "dist to part ", // ISO_DIST_TO_PART
+  "initial field", // ISO_COMPUTE_INIT_FIELD
+  "extraction   ", // ISO_EXTRACT
+  "extract field", // ISO_COMPUTE_EXTRACT_FIELD
+  "ngonize      ", // ISO_NGONIZE
+  "contouring   ", // ISO_CONTOURING
+  "part to dist ", // ISO_PART_TO_DIST
+  "exch protocol", // ISO_BUILD_EXCH_PROTOCOL
+  "total        "  // ISO_TIMER_TOTAL
+};
+
+
+static void
+_timer_start
+(
+  PDM_isosurface_t         *isos,
+  _isosurface_timer_step_t  step
+)
+{
+  PDM_MPI_Barrier(isos->comm); // keep?
+  isos->t_start[step] = PDM_MPI_Wtime();
+}
+
+
+static void
+_timer_end
+(
+  PDM_isosurface_t         *isos,
+  _isosurface_timer_step_t  step
+)
+{
+  isos->t_end[step] = PDM_MPI_Wtime();
+
+  double delta_t = isos->t_end[step] - isos->t_start[step];
+
+  isos->times_current[step]  = delta_t;
+  isos->times_cumul  [step] += delta_t;
+}
+
+
+static void
+_dump_delta_time
+(
+       PDM_MPI_Comm  comm,
+       double        delta,
+ const char         *prefix
+)
+{
+  int i_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+
+  double delta_min;
+  PDM_MPI_Allreduce(&delta, &delta_min, 1, PDM_MPI_DOUBLE, PDM_MPI_MIN, comm);
+
+  double delta_max;
+  PDM_MPI_Allreduce(&delta, &delta_max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
+
+  if (i_rank == 0) {
+    printf("PDM_isosurface timer : %s (min/max in seconds) : %8.2e / %8.2e\n",
+           prefix,
+           delta_min, delta_max);
+  }
+}
+
+
+
+
 static inline int
 _iso_surface_kind_n_coeff
 (
@@ -2354,6 +2422,8 @@ _isosurface_compute
     _isosurface_reset(isos, id_isosurface);
   }
 
+  _timer_start(isos, ISO_TIMER_TOTAL);
+
   assert(isos->is_computed[id_isosurface] == PDM_FALSE);
 
   /* Check if edges were provided by the user */
@@ -2361,24 +2431,35 @@ _isosurface_compute
 
   if (isos->entry_is_part == 0) {
     /* Implicit partitioning */
+    _timer_start(isos, ISO_DIST_TO_PART);
     _dist_to_part(isos);
+    _timer_end(isos, ISO_DIST_TO_PART);
   }
 
   /* Evaluate field */
+  _timer_start(isos, ISO_COMPUTE_INIT_FIELD);
   _compute_iso_field(isos, id_isosurface, 0);
+  _timer_end(isos, ISO_COMPUTE_INIT_FIELD);
 
   /* Extract elements of interest */
+  _timer_start(isos, ISO_EXTRACT);
   _extract(isos, id_isosurface);
+  _timer_end(isos, ISO_EXTRACT);
 
   /* Evaluate field on extracted mesh */
+  _timer_start(isos, ISO_COMPUTE_EXTRACT_FIELD);
   _compute_iso_field(isos, id_isosurface, 1); // hide in '_extract'?
+  _timer_end(isos, ISO_COMPUTE_EXTRACT_FIELD);
 
   /* If nodal with sections other than TRIA3 and TETRA4, fall back to ngon */
   if (_is_nodal(isos)) {
+    _timer_start(isos, ISO_NGONIZE);
     _ngonize(isos, id_isosurface);
+    _timer_end(isos, ISO_NGONIZE);
   }
 
   /* Build isosurface mesh */
+  _timer_start(isos, ISO_CONTOURING);
   if (_is_nodal(isos)) {
     PDM_isosurface_marching_algo(isos,
                                  id_isosurface);
@@ -2387,13 +2468,17 @@ _isosurface_compute
     PDM_isosurface_ngon_algo(isos,
                              id_isosurface);
   }
+  _timer_end(isos, ISO_CONTOURING);
 
   if (isos->entry_is_part == 0) {
     /* Block-distribute the isosurface */
+    _timer_start(isos, ISO_PART_TO_DIST);
     _part_to_dist(isos, id_isosurface);
+    _timer_end(isos, ISO_PART_TO_DIST);
   }
   else {
     // Partitioned
+    _timer_start(isos, ISO_BUILD_EXCH_PROTOCOL);
     if (isos->extract_kind != PDM_EXTRACT_PART_KIND_LOCAL) {
       for (int i_entity = 0; i_entity < PDM_MESH_ENTITY_MAX; i_entity++) {
         _build_ptp(isos,
@@ -2401,6 +2486,7 @@ _isosurface_compute
                    i_entity);
       }
     }
+    _timer_end(isos, ISO_BUILD_EXCH_PROTOCOL);
   }
 
   // > Free mesh extraction arrays for nodal
@@ -2409,6 +2495,8 @@ _isosurface_compute
   }
 
   isos->is_computed[id_isosurface] = PDM_TRUE;
+
+  _timer_end(isos, ISO_TIMER_TOTAL);
 }
 
 
@@ -2440,12 +2528,16 @@ PDM_isosurface_create
   isos->entry_mesh_type = 0;
   isos->entry_mesh_dim  = mesh_dimension;
 
-  // // > Isosurface mesh information
+  // > Isosurface mesh information
   // isos->iso_elt_type = elt_type; 
   isos->extract_kind = PDM_EXTRACT_PART_KIND_LOCAL; 
   isos->n_part = 1;
 
   isos->we_have_edges = -1;
+
+  // > Reset timers
+  memset(isos->times_current, 0, ISO_TIMER_N_STEPS*sizeof(double));
+  memset(isos->times_cumul,   0, ISO_TIMER_N_STEPS*sizeof(double));
 
   return isos;
 }
@@ -2765,7 +2857,33 @@ PDM_isosurface_dump_times
  PDM_isosurface_t *isos
 )
 {
-  PDM_UNUSED(isos);
+  /* TODO: choose between current and cumulative elapsed times? */
+  int i_rank;
+  PDM_MPI_Comm_rank(isos->comm, &i_rank);
+
+  for (_isosurface_timer_step_t step = 0; step < ISO_TIMER_N_STEPS; step++) {
+
+    /* Skip irrelevant steps */
+    if (isos->entry_is_part != 0) {
+      // Partitioned
+      if (step == ISO_DIST_TO_PART ||
+          step == ISO_PART_TO_DIST) {
+        continue;
+      }
+    }
+
+    if (!_is_nodal(isos)) {
+      if (step == ISO_NGONIZE) {
+        continue;
+      }
+    }
+
+    /* Compute min/max and print */
+    _dump_delta_time(isos->comm,
+                     isos->times_cumul[step],
+                     _isosurface_timer_step_name[step]);
+  }
+
 }
 
 
