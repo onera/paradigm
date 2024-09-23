@@ -235,7 +235,6 @@ def part_mesh_nodal_get_sections(PMeshNodal pypmn, PDM_geometry_kind_t geom_kind
 
     np_connec     = create_numpy_i(connec,     n_elmt_in_section*n_vtx_per_elmt)
     np_parent_num = create_numpy_i(parent_num, n_elmt_in_section)
-    # TODO remove if when implem is done
     np_elt_entity = None
     if elt2entity != NULL:
       np_elt_entity = create_numpy_i(elt2entity, n_elmt_in_section)
