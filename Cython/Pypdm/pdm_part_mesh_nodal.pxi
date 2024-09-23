@@ -73,6 +73,11 @@ cdef extern from "pdm_part_mesh_nodal.h":
                                              PDM_g_num_t           **parent_entity_g_num,
                                              PDM_ownership_t         ownership)
 
+    int* PDM_part_mesh_nodal_section_elt_to_entity_get(PDM_part_mesh_nodal_t *pmn,
+                                                       const int              i_section,
+                                                       const int              id_part,
+                                                       PDM_ownership_t        ownership)
+
     int PDM_part_mesh_nodal_section_id_from_geom_kind_get(PDM_part_mesh_nodal_t  *pmn,
                                                           const PDM_geometry_kind_t     geom_kind,
                                                           const int                     id_section_in_geom_kind)
@@ -198,6 +203,7 @@ def part_mesh_nodal_get_sections(PMeshNodal pypmn, PDM_geometry_kind_t geom_kind
   cdef int                   n_elmt_in_section
   cdef int                  *section_id
   cdef int                  *parent_num
+  cdef int                  *elt2entity
   cdef int                  *connec
   cdef PDM_g_num_t          *numabs
   cdef PDM_g_num_t          *parent_entity_g_num
@@ -223,12 +229,17 @@ def part_mesh_nodal_get_sections(PMeshNodal pypmn, PDM_geometry_kind_t geom_kind
     n_elmt_in_section = PDM_part_mesh_nodal_section_n_elt_get(pypmn.pmn, id_section, i_part)
 
     PDM_part_mesh_nodal_section_std_get(pypmn.pmn, id_section, i_part, &connec, &numabs, &parent_num, &parent_entity_g_num, PDM_OWNERSHIP_USER)
+    elt2entity = PDM_part_mesh_nodal_section_elt_to_entity_get(pypmn.pmn, id_section, i_part, PDM_OWNERSHIP_USER)
 
     n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element(t_elmt, 1)
 
     np_connec     = create_numpy_i(connec,     n_elmt_in_section*n_vtx_per_elmt)
     np_parent_num = create_numpy_i(parent_num, n_elmt_in_section)
-    np_numabs     = create_numpy_g(numabs,     n_elmt_in_section)
+    # TODO remove if when implem is done
+    np_elt_entity = None
+    if elt2entity != NULL:
+      np_elt_entity = create_numpy_i(elt2entity, n_elmt_in_section)
+    np_numabs = create_numpy_g(numabs, n_elmt_in_section)
 
     np_parent_entity_g_num = None
     if(parent_entity_g_num != NULL):
@@ -237,6 +248,7 @@ def part_mesh_nodal_get_sections(PMeshNodal pypmn, PDM_geometry_kind_t geom_kind
     sections.append({"pdm_type"               : t_elmt,
                      "np_connec"              : np_connec,
                      "np_parent_num"          : np_parent_num,
+                     "np_element_to_entity"   : np_elt_entity,
                      "np_numabs"              : np_numabs,
                      "np_parent_entity_g_num" : np_parent_entity_g_num})
 

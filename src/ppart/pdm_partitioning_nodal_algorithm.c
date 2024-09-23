@@ -539,6 +539,7 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
   int         **connec_idx;
   PDM_g_num_t **numabs;
   int         **parent_num;
+  int         **elt_to_entity;
   PDM_g_num_t **sparent_entitity_ln_to_gn;
   PDM_g_num_t **section_elmts_ln_to_gn;
   PDM_malloc(pelmt_by_section_n       , n_section, int          );
@@ -546,6 +547,7 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
   PDM_malloc(connec_idx               , n_section, int         *);
   PDM_malloc(numabs                   , n_section, PDM_g_num_t *);
   PDM_malloc(parent_num               , n_section, int         *);
+  PDM_malloc(elt_to_entity            , n_section, int         *);
   PDM_malloc(sparent_entitity_ln_to_gn, n_section, PDM_g_num_t *);
   PDM_malloc(section_elmts_ln_to_gn   , n_part   , PDM_g_num_t *);
 
@@ -583,6 +585,10 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
       }
       PDM_malloc(numabs    [i_section], n_elmt_in_section, PDM_g_num_t);
       PDM_malloc(parent_num[i_section], n_elmt_in_section, int        );
+
+      if (pelmt_to_entity != NULL) {
+        PDM_malloc(elt_to_entity[i_section], n_elmt_in_section, int);
+      }
 
       if(pparent_entitity_ln_to_gn != NULL) {
         PDM_malloc(sparent_entitity_ln_to_gn[i_section], n_elmt_in_section, PDM_g_num_t);
@@ -666,6 +672,10 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
       numabs    [i_section][idx_write] = g_num+1;
       parent_num[i_section][idx_write] = i_elmt;
 
+      if(pelmt_to_entity != NULL) {
+        elt_to_entity[i_section][idx_write] = pelmt_to_entity[i_part][i_elmt];
+      }
+
       if(pparent_entitity_ln_to_gn != NULL) {
         sparent_entitity_ln_to_gn[i_section][idx_write] = pparent_entitity_ln_to_gn[i_part][i_elmt];
       }
@@ -724,6 +734,16 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
       numabs                   [i_section] = NULL;
       parent_num               [i_section] = NULL;
       sparent_entitity_ln_to_gn[i_section] = NULL;
+
+
+      if (pelmt_to_entity != NULL) {
+        // Store elt->entity indirection
+        PDM_part_mesh_nodal_elmts_section_elt_to_entity_set(pmne,
+                                                            id_section,
+                                                            i_part,
+                                                            elt_to_entity[i_section],
+                                                            PDM_OWNERSHIP_KEEP);
+      }
     }
   }
 
@@ -790,6 +810,7 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
   PDM_free(connec                   );
   PDM_free(connec_idx               );
   PDM_free(parent_num               );
+  PDM_free(elt_to_entity            );
   PDM_free(numabs                   );
   PDM_free(sparent_entitity_ln_to_gn);
 

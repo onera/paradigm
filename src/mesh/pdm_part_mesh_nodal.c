@@ -1858,6 +1858,31 @@ const int                     id_part
   return PDM_part_mesh_nodal_elmts_num_elmt_parent_to_local_get(pmne, id_part);
 }
 
+int *
+PDM_part_mesh_nodal_section_elt_to_entity_get
+(
+      PDM_part_mesh_nodal_t *pmn,
+const int                    i_section,
+const int                    id_part,
+      PDM_ownership_t        ownership
+)
+{
+  PDM_geometry_kind_t geom_kind;
+  int                 id_section;
+  PDM_part_mesh_nodal_section_id_and_geom_kind_get(pmn,
+                                                   i_section,
+                                                   &geom_kind,
+                                                   &id_section);
+
+  PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
+  assert(pmne != NULL);
+
+  return PDM_part_mesh_nodal_elmts_section_elt_to_entity_get(pmne,
+                                                             id_section,
+                                                             id_part,
+                                                             ownership);
+}
+
 void
 PDM_part_mesh_nodal_group_get
 (
