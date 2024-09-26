@@ -1145,6 +1145,8 @@ int main
   // PDM_isosurface_reset  (isos, -1);
   // PDM_isosurface_compute(isos, -1);
 
+  PDM_isosurface_dump_times(isos);
+
 
   /*
    *  Interpolate field
@@ -1212,6 +1214,39 @@ int main
             }
           }
         } // End loop on parts
+
+        PDM_malloc(iso_parent_cell[i_iso], n_part, double *);
+        PDM_malloc(iso_parent_face[i_iso], n_part, double *);
+        for (int i_part = 0; i_part < n_part; i_part++) {
+          int *parent_idx;
+          int *parent;
+          int iso_n_face = PDM_isosurface_local_parent_get(isos,
+                                                           i_iso,
+                                                           i_part,
+                                                           PDM_MESH_ENTITY_FACE,
+                                                           &parent_idx,
+                                                           &parent,
+                                                           PDM_OWNERSHIP_KEEP);
+
+          PDM_malloc(iso_parent_cell[i_iso][i_part], iso_n_face, double);
+          for (int i = 0; i < iso_n_face; i++) {
+            iso_parent_cell[i_iso][i_part][i] = parent[parent_idx[i]];
+          }
+
+          int iso_n_edge = PDM_isosurface_local_parent_get(isos,
+                                                           i_iso,
+                                                           i_part,
+                                                           PDM_MESH_ENTITY_EDGE,
+                                                           &parent_idx,
+                                                           &parent,
+                                                           PDM_OWNERSHIP_KEEP);
+
+          PDM_malloc(iso_parent_face[i_iso][i_part], iso_n_edge, double);
+          for (int i = 0; i < iso_n_edge; i++) {
+            iso_parent_face[i_iso][i_part][i] = parent[parent_idx[i]];
+          }
+        }
+
       } // End if LOCAL
 
       else {
