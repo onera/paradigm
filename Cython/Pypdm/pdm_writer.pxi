@@ -551,6 +551,18 @@ cdef class Writer:
       PDM_writer_geom_data_free(self._wt, id_geom)
 
 
+  def geom_data_reset(self, int id_geom):
+      """
+      geom_data_reset(id_geom)
+      Reset data describing the current geometry.
+
+      Parameters:
+        id_geom (int) : Geometry identifier
+      """
+
+      PDM_writer_geom_data_reset(self._wt, id_geom)
+
+
   def geom_free(self, int id_geom):
       """
       geom_free(id_geom)
