@@ -2909,8 +2909,13 @@ _extract_part
 
       PDM_malloc(extrp->pn_extract_group_entity              [i_bound][i_group], extrp->n_part_in, int          );
       PDM_malloc(extrp->pextract_group_entity                [i_bound][i_group], extrp->n_part_in, int         *);
-      PDM_malloc(extrp->pextract_group_entity_ln_to_gn       [i_bound][i_group], extrp->n_part_in, PDM_g_num_t *);
       PDM_malloc(extrp->pextract_group_entity_parent_ln_to_gn[i_bound][i_group], extrp->n_part_in, PDM_g_num_t *);
+      if (extrp->compute_child_gnum) {
+        PDM_malloc(extrp->pextract_group_entity_ln_to_gn[i_bound][i_group], extrp->n_part_in, PDM_g_num_t *);
+      }
+      else {
+        extrp->pextract_group_entity_ln_to_gn[i_bound][i_group] = NULL;
+      }
 
       extrp->group_array_ownership [i_bound][i_group] = PDM_OWNERSHIP_KEEP;
       extrp->group_parent_ownership[i_bound][i_group] = PDM_OWNERSHIP_KEEP;
@@ -2985,36 +2990,6 @@ _extract_part
       PDM_free(old_to_new[i_entity_type]);
     }
   }
-
-  /*
-  * Extract face groups for test
-  */
-  /*if (extrp->n_group[PDM_BOUND_TYPE_FACE] > 0){
-    int **part2_face_to_part1_face_idx;
-    PDM_malloc(part2_face_to_part1_face_idx, extrp->n_part_out ,int * );
-
-    for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
-      int n_face = extrp->pextract_n_entity[PDM_MESH_ENTITY_FACE][i_part];
-      part2_face_to_part1_face_idx[i_part] = PDM_array_new_idx_from_const_stride_int(1, n_face);;
-    }
-
-    PDM_part_to_part_t *ptp_fac = PDM_part_to_part_create((const PDM_g_num_t **) extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_FACE],
-                                                          (const int          *) extrp->pextract_n_entity              [PDM_MESH_ENTITY_FACE],
-                                                          extrp->n_part_out,
-                                                          (const PDM_g_num_t **) extrp->face_ln_to_gn,
-                                                          extrp->n_face,
-                                                          extrp->n_part_in,
-                                                          (const int **) part2_face_to_part1_face_idx,
-                                                          (const PDM_g_num_t **) extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_FACE],
-                                                          extrp->comm);
-    extrp->ptp_entity[PDM_MESH_ENTITY_FACE] = ptp_fac;
-    PDM_free(part2_face_to_part1_face_idx);
-
-    for(int i_kind = 0; i_kind < PDM_BOUND_TYPE_MAX; ++i_kind) {
-      _extract_part_group(extrp,
-      (PDM_bound_type_t) i_kind);
-    }
-  }*/
 
 }
 
@@ -7425,8 +7400,10 @@ PDM_extract_part_partial_free
         /* Free array */
         if(extrp->group_array_ownership[i][i_group] == PDM_OWNERSHIP_KEEP) {
           for(int i_part = 0; i_part < extrp->n_part_out; ++i_part) {
-            PDM_free(extrp->pextract_group_entity         [i][i_group][i_part]);
-            PDM_free(extrp->pextract_group_entity_ln_to_gn[i][i_group][i_part]);
+            PDM_free(extrp->pextract_group_entity[i][i_group][i_part]);
+            if (extrp->pextract_group_entity_ln_to_gn[i][i_group] != NULL) {
+              PDM_free(extrp->pextract_group_entity_ln_to_gn[i][i_group][i_part]);
+            }
           }
         }
         if(extrp->group_parent_ownership[i][i_group] == PDM_OWNERSHIP_KEEP) {
@@ -7724,13 +7701,19 @@ PDM_extract_part_part_mesh_get
           if (pmesh_takes_ownership == PDM_TRUE) {
             extrp->group_array_ownership[bound_type][i_group] = PDM_OWNERSHIP_USER;
           }
+
+          PDM_g_num_t *group_entity_ln_to_gn = NULL;
+          if (extrp->pextract_group_entity_ln_to_gn[bound_type][i_group] != NULL) {
+            group_entity_ln_to_gn = extrp->pextract_group_entity_ln_to_gn[bound_type][i_group][i_part];
+          }
+
           PDM_part_mesh_bound_set(*pmesh,
                                   i_part,
                                   i_group,
                                   bound_type,
-                                  extrp->pn_extract_group_entity       [bound_type][i_group][i_part],
-                                  extrp->pextract_group_entity         [bound_type][i_group][i_part],
-                                  extrp->pextract_group_entity_ln_to_gn[bound_type][i_group][i_part],
+                                  extrp->pn_extract_group_entity[bound_type][i_group][i_part],
+                                  extrp->pextract_group_entity  [bound_type][i_group][i_part],
+                                  group_entity_ln_to_gn,
                                   ownership_pmesh);
         }
       }
