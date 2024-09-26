@@ -211,6 +211,8 @@ cdef extern from "pdm_isosurface.h":
                                        PDM_part_to_part_t  **ptp,
                                        PDM_ownership_t       ownership);
 
+  void PDM_isosurface_dump_times(PDM_isosurface_t *isos);
+
   void PDM_isosurface_free(PDM_isosurface_t  *isos);
 
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -226,6 +228,17 @@ cdef class Isosurface:
   # cdef list keep_alive
   
   cdef dict ptp_entity
+
+  PLANE   = _PDM_ISO_SURFACE_KIND_PLANE
+  SPHERE  = _PDM_ISO_SURFACE_KIND_SPHERE
+  FIELD   = _PDM_ISO_SURFACE_KIND_FIELD
+  ELLIPSE = _PDM_ISO_SURFACE_KIND_ELLIPSE
+  QUADRIC = _PDM_ISO_SURFACE_KIND_QUADRIC
+  HEART   = _PDM_ISO_SURFACE_KIND_HEART
+
+  LOCAL         = _PDM_EXTRACT_PART_KIND_LOCAL
+  REEQUILIBRATE = _PDM_EXTRACT_PART_KIND_REEQUILIBRATE
+  FROM_TARGET   = _PDM_EXTRACT_PART_KIND_FROM_TARGET
 
   # ************************************************************************
 
@@ -280,6 +293,8 @@ cdef class Isosurface:
 
     id_iso = PDM_isosurface_add(self._isos, kind, n_isovalues, isovalues_data)
 
+    free(isovalues_data) # deep-copied in isos
+
     return id_iso
 
   def isovalues_set(self, id_iso,
@@ -298,6 +313,8 @@ cdef class Isosurface:
 
     PDM_isosurface_set_isovalues(self._isos, id_iso, n_isovalues, isovalues_data)
 
+    free(isovalues_data) # deep-copied in isos
+
   def equation_set(self, id_iso,
                    list coefficients):
     """
@@ -311,10 +328,9 @@ cdef class Isosurface:
     """
     cdef double *coeff_data = list_to_double_pointer(coefficients)
 
-    PDM_isosurface_equation_set(self._isos,
-                                id_iso,
-                                coeff_data,
-                                0);
+    PDM_isosurface_equation_set(self._isos, id_iso, coeff_data, 0)
+
+    free(coeff_data) # deep-copied in isos
 
   def field_function_set(self):
     """
@@ -403,20 +419,19 @@ cdef class Isosurface:
 
   def ln_to_gn_set(self,                            i_part,
                                                     entity_type,
-                                                    n_entity,
       NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] ln_to_gn):
     """
-    ln_to_gn_set(i_part, entity_type, n_entity, ln_to_gn)
+    ln_to_gn_set(i_part, entity_type, ln_to_gn)
 
     Set global numbering.
 
     Parameters:
       i_part      (int)                        : Partition id
       entity_type (PDM_entity_type_t)          : Entity type
-      n_entity    (int)                        : Number of entities
       ln_to_gn    (np.ndarray[npy_pdm_gnum_t]) : Global ids
     """
     # self.keep_alive.append(ln_to_gn)
+    cdef int n_entity = ln_to_gn.size
 
     cdef PDM_g_num_t *ln_to_gn_data = np_to_gnum_pointer(ln_to_gn)
 
@@ -654,9 +669,9 @@ cdef class Isosurface:
       connectivity_idx (`np.ndarray[np.int32_t]`) : Connectivity index
       connectivity     (`np.ndarray[np.int32_t]`) : Connectivity
     """
-    cdef int  n_entity         = 0;
-    cdef int *connectivity_idx = NULL;
-    cdef int *connectivity     = NULL;
+    cdef int  n_entity         = 0
+    cdef int *connectivity_idx = NULL
+    cdef int *connectivity     = NULL
     n_entity = PDM_isosurface_connectivity_get(self._isos, id_iso, i_part,
                                                connectivity_type, 
                                               &connectivity_idx,
@@ -685,8 +700,8 @@ cdef class Isosurface:
     Returns:
       coordinates (`np.ndarray[np.double_t]`) : Coordinates
     """
-    cdef int     n_vtx       = 0;
-    cdef double *coordinates = NULL;
+    cdef int     n_vtx       = 0
+    cdef double *coordinates = NULL
     n_vtx = PDM_isosurface_vtx_coord_get(self._isos, id_iso, i_part,
                                         &coordinates, PDM_OWNERSHIP_USER)
 
@@ -708,8 +723,8 @@ cdef class Isosurface:
     Returns:
       ln_to_gn (`np.ndarray[npy_pdm_gnum_t]`) : Global ids
     """
-    cdef int          n_entity = 0;
-    cdef PDM_g_num_t *ln_to_gn = NULL;
+    cdef int          n_entity = 0
+    cdef PDM_g_num_t *ln_to_gn = NULL
     n_entity = PDM_isosurface_ln_to_gn_get(self._isos, id_iso, i_part,
                                            entity_type, 
                                           &ln_to_gn,
@@ -736,10 +751,10 @@ cdef class Isosurface:
       group_entity     (`np.ndarray[np.int32_t]`)     : Group entities
       group_ln_to_gn   (`np.ndarray[npy_pdm_gnum_t]`) : Group entities global ids
     """
-    cdef int          n_group          = 0;
-    cdef int         *group_entity_idx = NULL;
-    cdef int         *group_entity     = NULL;
-    cdef PDM_g_num_t *group_ln_to_gn   = NULL;
+    cdef int          n_group          = 0
+    cdef int         *group_entity_idx = NULL
+    cdef int         *group_entity     = NULL
+    cdef PDM_g_num_t *group_ln_to_gn   = NULL
     n_group = PDM_isosurface_group_get(self._isos, id_iso, i_part,
                                            entity_type, 
                                           &group_entity_idx,
@@ -773,7 +788,7 @@ cdef class Isosurface:
       PDM_isosurface_part_to_part_get(self._isos, id_iso, entity_type,
                                      &ptp,
                                       PDM_OWNERSHIP_USER)
-      py_caps_ptp = PyCapsule_New(ptp, NULL, NULL);
+      py_caps_ptp = PyCapsule_New(ptp, NULL, NULL)
       self.ptp_entity[entity_type] = PartToPartCapsule(py_caps_ptp, self.py_comm)
       return self.ptp_entity[entity_type]
 
@@ -792,9 +807,9 @@ cdef class Isosurface:
       parent_idx  (`np.ndarray[np.int32_t]`)     : Parent index
       parent_lnum (`np.ndarray[npy_pdm_gnum_t]`) : Parent entities local ids
     """
-    cdef int  n_entity    = 0;
-    cdef int *parent_idx  = NULL;
-    cdef int *parent_lnum = NULL;
+    cdef int  n_entity    = 0
+    cdef int *parent_idx  = NULL
+    cdef int *parent_lnum = NULL
     n_entity = PDM_isosurface_local_parent_get(self._isos, id_iso, i_part,
                                                entity_type, 
                                               &parent_idx,
@@ -819,9 +834,9 @@ cdef class Isosurface:
     Returns:
       vtx_parent_weight (`np.ndarray[np.double_t]`) : Vertices parent weight
     """
-    cdef int     n_vtx             = 0;
-    cdef int    *vtx_parent_idx    = NULL;
-    cdef double *vtx_parent_weight = NULL;
+    cdef int     n_vtx             = 0
+    cdef int    *vtx_parent_idx    = NULL
+    cdef double *vtx_parent_weight = NULL
 
     n_vtx = PDM_isosurface_vtx_parent_weight_get(self._isos, id_iso, i_part,
                                                 &vtx_parent_idx,
@@ -849,9 +864,9 @@ cdef class Isosurface:
       connectivity_idx (`np.ndarray[np.int32_t]`)        : Distributed connectivity index
       connectivity     (`np.ndarray[np.npy_pdm_gnum_t]`) : Distributed connectivity
     """
-    cdef int          dn_entity         = 0;
-    cdef int         *dconnectivity_idx = NULL;
-    cdef PDM_g_num_t *dconnectivity     = NULL;
+    cdef int          dn_entity         = 0
+    cdef int         *dconnectivity_idx = NULL
+    cdef PDM_g_num_t *dconnectivity     = NULL
     dn_entity = PDM_isosurface_dconnectivity_get(self._isos, id_iso,
                                                  connectivity_type, 
                                                 &dconnectivity_idx,
@@ -876,8 +891,8 @@ cdef class Isosurface:
     Returns:
       coordinates (`np.ndarray[np.double_t]`) : Distributed coordinates
     """
-    cdef int     dn_vtx       = 0;
-    cdef double *dcoordinates = NULL;
+    cdef int     dn_vtx       = 0
+    cdef double *dcoordinates = NULL
     dn_vtx = PDM_isosurface_dvtx_coord_get(self._isos, id_iso,
                                           &dcoordinates, PDM_OWNERSHIP_USER)
 
@@ -906,9 +921,9 @@ cdef class Isosurface:
       group_entity_idx (`np.ndarray[np.int32_t]`)     : Group index
       group_entity     (`np.ndarray[npy_pdm_gnum_t]`) : Group entities global ids
     """
-    cdef int          n_group           = 0;
-    cdef int         *dgroup_entity_idx = NULL;
-    cdef PDM_g_num_t *dgroup_entity     = NULL;
+    cdef int          n_group           = 0
+    cdef int         *dgroup_entity_idx = NULL
+    cdef PDM_g_num_t *dgroup_entity     = NULL
     n_group = PDM_isosurface_dgroup_get(self._isos, id_iso,
                                         entity_type, 
                                        &dgroup_entity_idx,
@@ -934,9 +949,9 @@ cdef class Isosurface:
       parent_idx  (`np.ndarray[np.int32_t]`)     : Parent index
       parent_gnum (`np.ndarray[npy_pdm_gnum_t]`) : Parent entities global ids
     """
-    cdef int          n_entity    = 0;
-    cdef int         *parent_idx  = NULL;
-    cdef PDM_g_num_t *parent_gnum = NULL;
+    cdef int          n_entity    = 0
+    cdef int         *parent_idx  = NULL
+    cdef PDM_g_num_t *parent_gnum = NULL
     n_entity = PDM_isosurface_parent_gnum_get(self._isos, id_iso,
                                               entity_type, 
                                              &parent_idx,
@@ -960,9 +975,9 @@ cdef class Isosurface:
     Returns:
       vtx_parent_weight (`np.ndarray[np.double_t]`) : Vertices parent weight
     """
-    cdef int     n_vtx             = 0;
-    cdef int    *vtx_parent_idx    = NULL;
-    cdef double *vtx_parent_weight = NULL;
+    cdef int     n_vtx             = 0
+    cdef int    *vtx_parent_idx    = NULL
+    cdef double *vtx_parent_weight = NULL
 
     n_vtx = PDM_isosurface_dvtx_parent_weight_get(self._isos, id_iso,
                                                  &vtx_parent_idx,
@@ -974,6 +989,11 @@ cdef class Isosurface:
 
     return np_vtx_parent_weight
 
+  def dump_times(self):
+    """
+    Dump elapsed and CPU times
+    """
+    PDM_isosurface_dump_times(self._isos)
 
   def __dealloc__(self):
     """

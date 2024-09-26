@@ -665,7 +665,7 @@ PDM_isosurface_dump_times
 
 /**
  *
- * \brief Get iso-surface mesh connectivity for a given iso-value
+ * \brief Get iso-surface mesh connectivity
  *
  * \param [in]  isos               \ref PDM_isosurface_t instance
  * \param [in]  id_isosurface      Iso-surface identifier
@@ -787,7 +787,7 @@ PDM_isosurface_group_get
 
 /**
  *
- * \brief Get iso-surface block-distributed mesh connectivity for a given iso-value
+ * \brief Get iso-surface block-distributed mesh connectivity
  *
  * \param [in]  isos               \ref PDM_isosurface_t instance
  * \param [in]  id_isosurface      Iso-surface identifier
@@ -814,7 +814,7 @@ PDM_isosurface_dconnectivity_get
 
 /**
  *
- * \brief Get iso-surface entities parent gnum for a given iso-value
+ * \brief Get iso-surface entities parent gnum
  *
  * \param [in]  isos          \ref PDM_isosurface_t instance
  * \param [in]  id_isosurface Iso-surface identifier
@@ -841,7 +841,7 @@ PDM_isosurface_parent_gnum_get
 
 /**
  *
- * \brief Get iso-surface parent weight for iso vertices for a given iso-value
+ * \brief Get iso-surface parent weight for iso vertices
  *
  * \param [in]  isos                \ref PDM_isosurface_t instance
  * \param [in]  id_isosurface       Iso-surface identifier
@@ -1031,8 +1031,6 @@ PDM_isosurface_local_parent_get
  *
  * \warning These weights are only computed if the construction
  * of the vertex Part-to-Part has been enabled (see \ref PDM_isosurface_enable_part_to_part).
- *
- * \warning Rajouter \p vtx_weight_idx en sortie pour éviter l'appel à PDM_part_to_part_gnum1_come_from_get? (attention copie ou alias)
  *
  * \return  Number of iso-surface vertices
  *

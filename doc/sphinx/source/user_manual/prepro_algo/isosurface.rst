@@ -47,12 +47,16 @@ Iso-surface settings
 
 .. doxygenfunction:: PDM_isosurface_add
 
+.. doxygenfunction:: PDM_isosurface_set_isovalues
+
 .. doxygenenum:: PDM_iso_surface_kind_t
 
 .. doxygenfunction:: PDM_isosurface_equation_set
 .. doxygenfunction:: PDM_isosurface_field_function_set
 
 .. doxygentypedef:: PDM_isosurface_field_function_t
+
+.. doxygenfunction:: PDM_isosurface_set_tolerance
 
 .. .. todo::
 
@@ -84,8 +88,6 @@ Outputs
 
 ..    - sortie en part_mesh_nodal/dmesh_nodal?
 
-.. doxygenfunction:: PDM_isosurface_local_parent_get
-.. doxygenfunction:: PDM_isosurface_vtx_parent_weight_get
 
 Partitioned
 ~~~~~~~~~~~
@@ -94,19 +96,26 @@ Partitioned
 .. doxygenfunction:: PDM_isosurface_vtx_coord_get
 .. doxygenfunction:: PDM_isosurface_ln_to_gn_get
 .. doxygenfunction:: PDM_isosurface_group_get
+.. doxygenfunction:: PDM_isosurface_local_parent_get
+.. doxygenfunction:: PDM_isosurface_parent_gnum_get
+.. doxygenfunction:: PDM_isosurface_vtx_parent_weight_get
+.. doxygenfunction:: PDM_isosurface_isovalue_entity_idx_get
 
 Block-distributed
 ~~~~~~~~~~~~~~~~~
 
+.. doxygenfunction:: PDM_isosurface_distrib_get
 .. doxygenfunction:: PDM_isosurface_dconnectivity_get
 .. doxygenfunction:: PDM_isosurface_dvtx_coord_get
 .. doxygenfunction:: PDM_isosurface_dgroup_get
+.. doxygenfunction:: PDM_isosurface_dvtx_parent_weight_get
 
 Communication graphs
 ~~~~~~~~~~~~~~~~~~~~
 
 .. doxygenfunction:: PDM_isosurface_enable_part_to_part
 .. doxygenfunction:: PDM_isosurface_part_to_part_get
+.. doxygenfunction:: PDM_isosurface_dvtx_protocol_get
 
 
 Finalization

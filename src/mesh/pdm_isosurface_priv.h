@@ -398,6 +398,21 @@ _isosurface_cross_any_level
   const double tol
 );
 
+void
+isosurface_timer_start
+(
+  PDM_isosurface_t         *isos,
+  _isosurface_timer_step_t  step
+);
+
+
+void
+isosurface_timer_end
+(
+  PDM_isosurface_t         *isos,
+  _isosurface_timer_step_t  step
+);
+
 #ifdef  __cplusplus
 }
 #endif

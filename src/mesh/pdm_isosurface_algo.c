@@ -3606,7 +3606,7 @@ PDM_isosurface_ngon_algo
    *     - factoriser avec contouring_triangles
    */
   // int debug      = 1;
-  // int debug_visu = 1;
+  int debug_visu = 0;
   double t_start, t_end;
 
   int i_rank;
@@ -3738,7 +3738,6 @@ PDM_isosurface_ngon_algo
                                         PDM_MESH_ENTITY_VTX,
                                         &pvtx_ln_to_gn[i_part],
                                         PDM_OWNERSHIP_BAD_VALUE);
-      PDM_log_trace_array_long(pvtx_ln_to_gn[i_part], pn_vtx[i_part], "vtx_ln_to_gn : ");
     }
 
     PDM_compute_face_edge_from_face_vtx(isos->comm,
@@ -3898,7 +3897,7 @@ PDM_isosurface_ngon_algo
     }
     int *iso_vtx_parent_edge = NULL;
 
-    if (1) {
+    if (debug_visu) {
       int *face_vtx = NULL;
       if (isos->we_have_edges) {
         PDM_compute_face_vtx_from_face_and_edge(n_face,
