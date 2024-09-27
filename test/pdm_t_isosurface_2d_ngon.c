@@ -21,6 +21,7 @@
 #include "pdm_multipart.h"
 #include "pdm_multipart_priv.h"
 #include "pdm_partitioning_algorithm.h"
+#include "pdm_dconnectivity_transform.h"
 
 /*============================================================================
  * Type definitions

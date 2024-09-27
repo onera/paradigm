@@ -745,7 +745,7 @@ _compute_iso_field
 
   else {
     // Built-in field function
-    double (*field_function) (const double, const double, const double, double *);
+    double (*field_function) (const double, const double, const double, double *) = NULL;
 
     switch (isos->kind[id_isosurface]) {
       case PDM_ISO_SURFACE_KIND_PLANE: {
@@ -2431,35 +2431,35 @@ _isosurface_compute
 
   if (isos->entry_is_part == 0) {
     /* Implicit partitioning */
-    isosurface_timer_start(isos, ISO_DIST_TO_PART);
+    isosurface_timer_start(isos, ISO_TIMER_DIST_TO_PART);
     _dist_to_part(isos);
-    isosurface_timer_end(isos, ISO_DIST_TO_PART);
+    isosurface_timer_end(isos, ISO_TIMER_DIST_TO_PART);
   }
 
   /* Evaluate field */
-  isosurface_timer_start(isos, ISO_COMPUTE_INIT_FIELD);
+  isosurface_timer_start(isos, ISO_TIMER_COMPUTE_INIT_FIELD);
   _compute_iso_field(isos, id_isosurface, 0);
-  isosurface_timer_end(isos, ISO_COMPUTE_INIT_FIELD);
+  isosurface_timer_end(isos, ISO_TIMER_COMPUTE_INIT_FIELD);
 
   /* Extract elements of interest */
-  isosurface_timer_start(isos, ISO_EXTRACT);
+  isosurface_timer_start(isos, ISO_TIMER_EXTRACT);
   _extract(isos, id_isosurface);
-  isosurface_timer_end(isos, ISO_EXTRACT);
+  isosurface_timer_end(isos, ISO_TIMER_EXTRACT);
 
   /* Evaluate field on extracted mesh */
-  isosurface_timer_start(isos, ISO_COMPUTE_EXTRACT_FIELD);
+  isosurface_timer_start(isos, ISO_TIMER_COMPUTE_EXTRACT_FIELD);
   _compute_iso_field(isos, id_isosurface, 1); // hide in '_extract'?
-  isosurface_timer_end(isos, ISO_COMPUTE_EXTRACT_FIELD);
+  isosurface_timer_end(isos, ISO_TIMER_COMPUTE_EXTRACT_FIELD);
 
   /* If nodal with sections other than TRIA3 and TETRA4, fall back to ngon */
   if (_is_nodal(isos)) {
-    isosurface_timer_start(isos, ISO_NGONIZE);
+    isosurface_timer_start(isos, ISO_TIMER_NGONIZE);
     _ngonize(isos, id_isosurface);
-    isosurface_timer_end(isos, ISO_NGONIZE);
+    isosurface_timer_end(isos, ISO_TIMER_NGONIZE);
   }
 
   /* Build isosurface mesh */
-  isosurface_timer_start(isos, ISO_CONTOURING);
+  isosurface_timer_start(isos, ISO_TIMER_CONTOURING);
   if (_is_nodal(isos)) {
     PDM_isosurface_marching_algo(isos,
                                  id_isosurface);
@@ -2468,17 +2468,17 @@ _isosurface_compute
     PDM_isosurface_ngon_algo(isos,
                              id_isosurface);
   }
-  isosurface_timer_end(isos, ISO_CONTOURING);
+  isosurface_timer_end(isos, ISO_TIMER_CONTOURING);
 
   if (isos->entry_is_part == 0) {
     /* Block-distribute the isosurface */
-    isosurface_timer_start(isos, ISO_PART_TO_DIST);
+    isosurface_timer_start(isos, ISO_TIMER_PART_TO_DIST);
     _part_to_dist(isos, id_isosurface);
-    isosurface_timer_end(isos, ISO_PART_TO_DIST);
+    isosurface_timer_end(isos, ISO_TIMER_PART_TO_DIST);
   }
   else {
     // Partitioned
-    isosurface_timer_start(isos, ISO_BUILD_EXCH_PROTOCOL);
+    isosurface_timer_start(isos, ISO_TIMER_BUILD_EXCH_PROTOCOL);
     if (isos->extract_kind != PDM_EXTRACT_PART_KIND_LOCAL) {
       for (int i_entity = 0; i_entity < PDM_MESH_ENTITY_MAX; i_entity++) {
         _build_ptp(isos,
@@ -2486,7 +2486,7 @@ _isosurface_compute
                    i_entity);
       }
     }
-    isosurface_timer_end(isos, ISO_BUILD_EXCH_PROTOCOL);
+    isosurface_timer_end(isos, ISO_TIMER_BUILD_EXCH_PROTOCOL);
   }
 
   // > Free mesh extraction arrays for nodal
@@ -2866,15 +2866,15 @@ PDM_isosurface_dump_times
     /* Skip irrelevant steps */
     if (isos->entry_is_part != 0) {
       // Partitioned
-      if (step == ISO_DIST_TO_PART ||
-          step == ISO_PART_TO_DIST) {
+      if (step == ISO_TIMER_DIST_TO_PART ||
+          step == ISO_TIMER_PART_TO_DIST) {
         continue;
       }
     }
 
     if (!_is_nodal(isos)) {
       // Ngon
-      if (step == ISO_NGONIZE) {
+      if (step == ISO_TIMER_NGONIZE) {
         continue;
       }
     }
