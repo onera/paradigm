@@ -58,13 +58,14 @@ extern "C" {
     PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t:entry_mesh_type already set to %d.\n", (isos)->entry_mesh_type); \
   }
 
-#define PDM_ISOSURFACE_CHECK_ID(isos, id_isosurface) \
-  if ((id_isosurface) >= (isos)->n_isosurface) { \
-    PDM_error(__FILE__, __LINE__, 0, "Invalid id_isosurface %d (n_isosurface = %d).\n", (id_isosurface), (isos)->n_isosurface); \
+#define PDM_ISOSURFACE_CHECK_ID(isos, id_isosurface)                                    \
+  if ((id_isosurface) >= (isos)->n_isosurface) {                                        \
+    PDM_error(__FILE__, __LINE__, 0, "Invalid id_isosurface %d (n_isosurface = %d).\n", \
+              (id_isosurface), (isos)->n_isosurface);                                   \
   }
 
-#define PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_isosurface) \
-  if ((isos)->is_computed[(id_isosurface)] == PDM_FALSE) { \
+#define PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_isosurface)                                          \
+  if ((isos)->isosurfaces[(id_isosurface)].is_computed == PDM_FALSE) {                              \
     PDM_error(__FILE__, __LINE__, 0, "Isosurface with id %d was not computed.\n", (id_isosurface)); \
   }
 
@@ -75,20 +76,21 @@ extern "C" {
     PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: has no mesh entity of type %d.\n", (entity_type)); \
   }
 
-#define PDM_ISOSURFACE_CHECK_ISOVALUES_NOT_TOO_CLOSE(isos, id_isosurface)                                          \
-  for (int i_iso=0; i_iso<(isos)->n_isovalues[(id_isosurface)]; ++i_iso) {                                         \
-    for (int j_iso=i_iso+1; j_iso<(isos)->n_isovalues[(id_isosurface)]; ++j_iso) {                                 \
-      double delta = PDM_ABS((isos)->isovalues[(id_isosurface)][i_iso]-(isos)->isovalues[(id_isosurface)][j_iso]); \
-      if (delta <= (isos)->ISOSURFACE_EPS) {                                                                       \
-        PDM_error(__FILE__, __LINE__, 0,                                                                           \
-                  "PDM_isosurface_t: isovalue %d = %f too close from"                                              \
-                  "isovalue %d = %f (%.2e<=%.2e) for isosurface with id %d.\n",                                    \
-                  i_iso, (isos)->isovalues[(id_isosurface)][i_iso],                                                \
-                  j_iso, (isos)->isovalues[(id_isosurface)][j_iso],                                                \
-                  delta, (isos)->ISOSURFACE_EPS,                                                                   \
-                  id_isosurface);                                                                                  \
-      }                                                                                                            \
-    }                                                                                                              \
+#define PDM_ISOSURFACE_CHECK_ISOVALUES_NOT_TOO_CLOSE(isos, id_isosurface)                      \
+  for (int i_iso=0; i_iso<(isos)->isosurfaces[(id_isosurface)].n_isovalues; ++i_iso) {         \
+    for (int j_iso=i_iso+1; j_iso<(isos)->isosurfaces[(id_isosurface)].n_isovalues; ++j_iso) { \
+      double delta = PDM_ABS((isos)->isosurfaces[(id_isosurface)].isovalues[i_iso] -           \
+                             (isos)->isosurfaces[(id_isosurface)].isovalues[j_iso]);           \
+      if (delta <= (isos)->ISOSURFACE_EPS) {                                                   \
+        PDM_error(__FILE__, __LINE__, 0,                                                       \
+                  "PDM_isosurface_t: isovalue %d = %f too close from"                          \
+                  "isovalue %d = %f (%.2e<=%.2e) for isosurface with id %d.\n",                \
+                  i_iso, (isos)->isosurfaces[(id_isosurface)].isovalues[i_iso],                \
+                  j_iso, (isos)->isosurfaces[(id_isosurface)].isovalues[j_iso],                \
+                  delta, (isos)->ISOSURFACE_EPS,                                               \
+                  id_isosurface);                                                              \
+      }                                                                                        \
+    }                                                                                          \
   }
 
 /*============================================================================
@@ -110,6 +112,112 @@ typedef enum {
   ISO_TIMER_N_STEPS
 
 } _isosurface_timer_step_t;
+
+
+typedef struct _isosurface_t { // Better name?
+
+  // > Isosurface type
+  PDM_iso_surface_kind_t kind;
+
+  // > Isovalues
+  int     n_isovalues;
+  double *isovalues;
+
+  // > Equation args
+  PDM_isosurface_field_function_t  field_function;
+  double                          *eq_coeffs;
+  int                              use_gradient;
+
+  // > Field function
+  _pdm_isosurface_field_function_t iso_func;
+
+
+  // ========================
+  // > Partitioned entry data
+  // > Field
+  double **field;
+  double **gradient;
+
+  // ========================
+  // > Distributed entry data
+  // > Field
+  double *dfield;
+  double *dgradient;
+
+
+  // =========================
+  // > Partitioned output data
+
+  int iso_mesh_dimension; // redundant with isos->entry_mesh_dim - 1 ?
+
+  // > Isosurface entities
+  int            *iso_n_entity          [PDM_MESH_ENTITY_MAX];
+  PDM_g_num_t   **iso_entity_gnum       [PDM_MESH_ENTITY_MAX];
+  int           **iso_entity_parent_idx [PDM_MESH_ENTITY_MAX];
+  int           **iso_entity_parent_lnum[PDM_MESH_ENTITY_MAX];
+  PDM_g_num_t   **iso_entity_parent_gnum[PDM_MESH_ENTITY_MAX];
+  int           **isovalue_entity_idx   [PDM_MESH_ENTITY_MAX];
+  int           **iso_connec_idx        [PDM_CONNECTIVITY_TYPE_MAX];
+  int           **iso_connec            [PDM_CONNECTIVITY_TYPE_MAX];
+
+  // > Vertices
+  double        **iso_vtx_coord;
+  double        **iso_vtx_parent_weight;
+
+  // > Edges
+  int             iso_n_edge_group;
+  int           **iso_edge_group_idx;
+  int           **iso_edge_group_lnum;
+  PDM_g_num_t   **iso_edge_group_gnum;
+
+  // > Part_to_part between iso entities and entry mesh entities
+  PDM_part_to_part_t *iso_ptp    [PDM_MESH_ENTITY_MAX];
+  PDM_bool_t          compute_ptp[PDM_MESH_ENTITY_MAX];
+
+  // > Owners
+  PDM_ownership_t *iso_owner_vtx_coord;
+  PDM_ownership_t *iso_owner_vtx_parent_weight;
+  PDM_ownership_t *iso_owner_edge_bnd;
+  PDM_ownership_t *iso_owner_gnum               [PDM_MESH_ENTITY_MAX];
+  PDM_ownership_t *iso_owner_parent_lnum        [PDM_MESH_ENTITY_MAX];
+  PDM_ownership_t *iso_owner_parent_idx         [PDM_MESH_ENTITY_MAX];
+  PDM_ownership_t *iso_owner_isovalue_entity_idx[PDM_MESH_ENTITY_MAX];
+  PDM_ownership_t  iso_owner_ptp                [PDM_MESH_ENTITY_MAX];
+  PDM_ownership_t *iso_owner_connec             [PDM_CONNECTIVITY_TYPE_MAX];
+
+
+  // =========================
+  // > Distributed output data
+
+  int             iso_dn_entity          [PDM_MESH_ENTITY_MAX];
+  int            *iso_dentity_parent_idx [PDM_MESH_ENTITY_MAX];
+  PDM_g_num_t    *iso_dentity_parent_gnum[PDM_MESH_ENTITY_MAX];
+  int            *iso_dconnec_idx        [PDM_CONNECTIVITY_TYPE_MAX];
+  PDM_g_num_t    *iso_dconnec            [PDM_CONNECTIVITY_TYPE_MAX];
+
+  // > Vertices
+  double         *iso_dvtx_coord;
+  double         *iso_dvtx_parent_weight;
+
+  // > Edges
+  int            *iso_dedge_group_idx;
+  PDM_g_num_t    *iso_dedge_group_gnum;
+
+  // > Owners
+  PDM_ownership_t iso_owner_dvtx_coord;
+  PDM_ownership_t iso_owner_dvtx_parent_weight;
+  PDM_ownership_t iso_owner_dconnec    [PDM_CONNECTIVITY_TYPE_MAX];
+  PDM_ownership_t iso_owner_dparent_idx[PDM_MESH_ENTITY_MAX];
+  PDM_ownership_t iso_owner_dparent    [PDM_MESH_ENTITY_MAX];
+  PDM_ownership_t iso_owner_dedge_bnd;
+
+
+  // ===============
+  // > Internal data
+
+  PDM_bool_t is_computed;
+
+} _isosurface_t;
 
 
 
@@ -138,33 +246,16 @@ struct _pdm_isosurface_t {
 
   // > Isosurfaces
   int n_isosurface;
+  _isosurface_t *isosurfaces;
 
   // > Isosurface tolerance
   double ISOSURFACE_EPS;
 
-  // > Isosurface type
-  PDM_iso_surface_kind_t *kind;
-
-  // > Isovalues
-  int     *n_isovalues;
-  double **isovalues;
-
-  // > Equation args
-  PDM_isosurface_field_function_t *field_function;
-  double                         **eq_coeffs;
-  int                             *use_gradient;
-
-  // > Function args
-  _pdm_isosurface_field_function_t *iso_func;
-
   // > Redistribution
-  PDM_extract_part_t      **extrp;
-  PDM_extract_part_kind_t   extract_kind;
-  PDM_split_dual_t          part_method;
+  PDM_extract_part_t      *extrp;
+  PDM_extract_part_kind_t  extract_kind;
+  PDM_split_dual_t         part_method;
 
-  // > Link with entry mesh
-  PDM_bool_t *compute_ptp[PDM_MESH_ENTITY_MAX];
-  
   // ========================
   // > Distributed entry data
   int dist_to_part_computed;
@@ -194,19 +285,15 @@ struct _pdm_isosurface_t {
 
   int we_have_edges;
 
-  // > Boundaries
+  // > Groups
   int          n_dgroup_face;
   int         *dgroup_face_idx;
   PDM_g_num_t *dgroup_face;
 
-  // > Field
-  double **dfield;
-  double **dgradient;
-
   // > Extracted mesh
-  double ***extract_field;
-  PDM_part_mesh_nodal_t *extract_pmesh_nodal;
-  PDM_part_mesh_t       *extract_pmesh;
+  double                **extract_field;
+  PDM_part_mesh_nodal_t  *extract_pmesh_nodal;
+  PDM_part_mesh_t        *extract_pmesh;
 
   // ========================
   // > Partitioned entry data
@@ -257,89 +344,11 @@ struct _pdm_isosurface_t {
   PDM_g_num_t **extract_tetra_gnum; // from initial mesh
   int         **extract_tetra_lnum; // from initial mesh
 
-  // > Boundaries
+  // > Groups
   int          *n_group_face;
   int         **group_face_idx;
   int         **group_face;
   PDM_g_num_t **group_face_gnum;
-
-  // > Field
-  double ***field;
-  double ***gradient;
-
-
-
-  // =========================
-  // > Partitioned output data
-
-  int iso_mesh_dimension;
-
-  // > Isosurface entities
-  int            **iso_n_entity          [PDM_MESH_ENTITY_MAX];
-  PDM_g_num_t   ***iso_entity_gnum       [PDM_MESH_ENTITY_MAX];
-  int           ***iso_entity_parent_idx [PDM_MESH_ENTITY_MAX];
-  int           ***iso_entity_parent_lnum[PDM_MESH_ENTITY_MAX];
-  PDM_g_num_t   ***iso_entity_parent_gnum[PDM_MESH_ENTITY_MAX];
-  int           ***isovalue_entity_idx   [PDM_MESH_ENTITY_MAX];
-  int           ***iso_connec_idx        [PDM_CONNECTIVITY_TYPE_MAX];
-  int           ***iso_connec            [PDM_CONNECTIVITY_TYPE_MAX];
-
-  // > Vertices
-  double         ***iso_vtx_coord;
-  double         ***iso_vtx_parent_weight;
-
-  // > Edges
-  int             *iso_n_edge_group;
-  int           ***iso_edge_group_idx;
-  int           ***iso_edge_group_lnum;
-  PDM_g_num_t   ***iso_edge_group_gnum;
-
-  // > Part_to_part between iso entities and entry mesh entities
-  PDM_part_to_part_t **iso_ptp[PDM_MESH_ENTITY_MAX];
-
-  // > Owners
-  PDM_ownership_t **iso_owner_vtx_coord;
-  PDM_ownership_t **iso_owner_vtx_parent_weight;
-  PDM_ownership_t **iso_owner_edge_bnd;
-  PDM_ownership_t **iso_owner_gnum               [PDM_MESH_ENTITY_MAX];
-  PDM_ownership_t **iso_owner_parent_lnum        [PDM_MESH_ENTITY_MAX];
-  PDM_ownership_t **iso_owner_parent_idx         [PDM_MESH_ENTITY_MAX];
-  PDM_ownership_t **iso_owner_isovalue_entity_idx[PDM_MESH_ENTITY_MAX];
-  PDM_ownership_t  *iso_owner_ptp                [PDM_MESH_ENTITY_MAX];
-  PDM_ownership_t **iso_owner_connec             [PDM_CONNECTIVITY_TYPE_MAX];
-
-
-  // =========================
-  // > Distributed output data
-
-  int            *iso_dn_entity          [PDM_MESH_ENTITY_MAX];
-  int           **iso_dentity_parent_idx [PDM_MESH_ENTITY_MAX];
-  PDM_g_num_t   **iso_dentity_parent_gnum[PDM_MESH_ENTITY_MAX];
-  int           **iso_dconnec_idx        [PDM_CONNECTIVITY_TYPE_MAX];
-  PDM_g_num_t   **iso_dconnec            [PDM_CONNECTIVITY_TYPE_MAX];
-
-  // > Vertices
-  double         **iso_dvtx_coord;
-  double         **iso_dvtx_parent_weight;
-
-  // > Edges
-  int            **iso_dedge_group_idx;
-  PDM_g_num_t    **iso_dedge_group_gnum;
-
-  // > Owners
-  PDM_ownership_t  *iso_owner_dvtx_coord;
-  PDM_ownership_t  *iso_owner_dvtx_parent_weight;
-  PDM_ownership_t  *iso_owner_dconnec    [PDM_CONNECTIVITY_TYPE_MAX];
-  PDM_ownership_t  *iso_owner_dparent_idx[PDM_MESH_ENTITY_MAX];
-  PDM_ownership_t  *iso_owner_dparent    [PDM_MESH_ENTITY_MAX];
-  PDM_ownership_t  *iso_owner_dedge_bnd;
-
-
-  // ===============
-  // > Internal data
-
-  PDM_bool_t *is_computed;
-
 
   // ========
   // > Timers
