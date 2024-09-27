@@ -3,6 +3,12 @@ cdef extern from "pdm_isosurface.h":
   ctypedef struct PDM_isosurface_t:
       pass
 
+  ctypedef double (*PDM_isosurface_field_function_python_t)(void   *python_object,
+                                                            int     id_iso,
+                                                            double  x,
+                                                            double  y,
+                                                            double  z);
+
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
   # > Wrapping of function
   PDM_isosurface_t *PDM_isosurface_create(PDM_MPI_Comm comm,
@@ -83,6 +89,12 @@ cdef extern from "pdm_isosurface.h":
                                    double           *coeff,
                                    int               use_gradient);
 
+  void isosurface_field_function_set_python(PDM_isosurface_t                       *isos,
+                                            int                                     id_isosurface,
+                                            PDM_isosurface_field_function_python_t  func);
+
+  void isosurface_python_object_set(PDM_isosurface_t *isos,
+                                    void             *python_object);
 
   void PDM_isosurface_field_set(PDM_isosurface_t *isos,
                                 int               id_isosurface,
@@ -217,6 +229,22 @@ cdef extern from "pdm_isosurface.h":
 
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
+#-------------------------------------------------------------------
+# CALLBACK
+cdef double callback(void   *_isos,
+                     int     id_iso,
+                     double  x,
+                     double  y,
+                     double  z):
+
+  cdef Isosurface isos = <Isosurface> _isos
+
+  assert(id_iso in isos.user_defined_field_function)
+
+  cdef double value = isos.user_defined_field_function[id_iso](x, y, z)
+
+  return value
+
 # ------------------------------------------------------------------
 cdef class Isosurface:
   """
@@ -226,8 +254,8 @@ cdef class Isosurface:
   cdef PDM_isosurface_t *_isos
 
   # cdef list keep_alive
-  
   cdef dict ptp_entity
+  cdef dict user_defined_field_function
 
   FIELD    = _PDM_ISO_SURFACE_KIND_FIELD
   PLANE    = _PDM_ISO_SURFACE_KIND_PLANE
@@ -263,6 +291,11 @@ cdef class Isosurface:
 
     self._isos = PDM_isosurface_create(pdm_comm,
                                        mesh_dim)
+
+    self.user_defined_field_function = dict()
+
+    isosurface_python_object_set(self._isos,
+                        <void *> self)
 
   def tolerance_set(self, tolerance):
     """
@@ -333,11 +366,21 @@ cdef class Isosurface:
 
     free(coeff_data) # deep-copied in isos
 
-  def field_function_set(self):
+  def field_function_set(self, id_iso, fct):
     """
-    Not implemented.
+    field_function_set(id_iso, fct)
+
+    Set source field function
+
+    Parameters:
+      id_iso (int) : Isosurface id
+      fct          : Field function
     """
-    raise NotImplementedError()
+    self.user_defined_field_function[id_iso] = fct
+
+    isosurface_field_function_set_python(self._isos,
+                                         id_iso,
+                                         callback)
 
   def compute(self, id_iso):
     """

@@ -734,12 +734,28 @@ _compute_iso_field
   /* Fill */
   if (_iso->kind == PDM_ISO_SURFACE_KIND_FUNCTION) {
     // User-provided field function
-    for (int i_part = 0; i_part < isos->n_part; i_part++) {
-      for (int i_vtx = 0; i_vtx < n_vtx[i_part]; i_vtx++) {
-        _iso->field_function(vtx_coord[i_part][3*i_vtx  ],
-                             vtx_coord[i_part][3*i_vtx+1],
-                             vtx_coord[i_part][3*i_vtx+2],
-                             &field   [i_part][  i_vtx  ]);
+    if (_iso->field_function_python != NULL) {
+      // Python
+      for (int i_part = 0; i_part < isos->n_part; i_part++) {
+        for (int i_vtx = 0; i_vtx < n_vtx[i_part]; i_vtx++) {
+          field[i_part][i_vtx] = _iso->field_function_python(isos->python_object,
+                                                             id_isosurface,
+                                                             vtx_coord[i_part][3*i_vtx  ],
+                                                             vtx_coord[i_part][3*i_vtx+1],
+                                                             vtx_coord[i_part][3*i_vtx+2]);
+        }
+      }
+    }
+    else {
+      // C
+      assert(_iso->field_function != NULL);
+      for (int i_part = 0; i_part < isos->n_part; i_part++) {
+        for (int i_vtx = 0; i_vtx < n_vtx[i_part]; i_vtx++) {
+          _iso->field_function(vtx_coord[i_part][3*i_vtx  ],
+                               vtx_coord[i_part][3*i_vtx+1],
+                               vtx_coord[i_part][3*i_vtx+2],
+                               &field   [i_part][  i_vtx  ]);
+        }
       }
     }
   }
@@ -770,7 +786,6 @@ _compute_iso_field
         break;
       }
       default: {
-        // PDM_error(__FILE__, __LINE__, 0, "Invalid isosurface type %d for id_isosurface %d.\n", isos->kind[id_isosurface], id_isosurface);
         PDM_error(__FILE__, __LINE__, 0, "Invalid isosurface type %d for id_isosurface %d.\n", _iso->kind, id_isosurface);
       }
     }
@@ -824,7 +839,7 @@ _isosurface_cross_any_level
 static inline int
 _sign
 (
-  const double v, 
+  const double v,
   const double tol
 )
 {
@@ -1570,7 +1585,7 @@ _part_to_dist_vtx
               (void **)  _iso->iso_vtx_coord,
                          NULL,
               (void **) &dvtx_coord);
-  
+
 
   // > Get vtx parent
   int **pvtx_parent_strd = NULL;
@@ -1694,7 +1709,7 @@ _part_to_dist_edge_group
                 _iso_dedge_group_gnum,
                 _iso_dedge_group_idx[i_group+1],
                 PDM_g_num_t);
-    
+
     PDM_g_num_t *rvcd_gnum = NULL;
     PDM_part_to_block_exch(ptb_group,
                            sizeof(PDM_g_num_t),
@@ -1715,13 +1730,13 @@ _part_to_dist_edge_group
   PDM_free(n_elt_group);
   PDM_free(_elt_group_gnum);
   PDM_free(    _group_gnum);
-  
+
 
   /**
    * Set result
    */
   PDM_free(_group_gnum);
-    
+
 
   if (debug==1) {
     int size_group_gnum = _iso_dedge_group_idx[_iso->iso_n_edge_group];
@@ -1914,7 +1929,7 @@ _part_to_dist_elt
       PDM_error(__FILE__, __LINE__, 0, "Not implemented yet.\n");
       // // > Go through each received data
       // for (int i_src=0; i_src<n_src; ++i_src) {
-        
+
       //   // > Copy first connectivity received
       //   if (i_src==0) {
       //     for (int i_strd=0; i_strd<_delt_vtx_strd[i_read]; ++i_strd)
@@ -2254,9 +2269,12 @@ _free_iso_entity
     if (isos->extract_kind==PDM_EXTRACT_PART_KIND_REEQUILIBRATE) {
       PDM_free(_iso->iso_entity_parent_gnum[entity_type][i_part]);
     }
-    PDM_free(_iso->iso_entity_parent_idx [entity_type][i_part]);
-    PDM_free(_iso->iso_entity_parent_lnum[entity_type][i_part]);
-
+    if (_iso->iso_owner_parent_idx[entity_type][i_part] == PDM_OWNERSHIP_KEEP) {
+      PDM_free(_iso->iso_entity_parent_idx [entity_type][i_part]);
+    }
+    if (_iso->iso_owner_parent_lnum[entity_type][i_part] == PDM_OWNERSHIP_KEEP) {
+      PDM_free(_iso->iso_entity_parent_lnum[entity_type][i_part]);
+    }
     if (_iso->iso_owner_isovalue_entity_idx[entity_type][i_part] == PDM_OWNERSHIP_KEEP) {
       PDM_free(_iso->isovalue_entity_idx[entity_type][i_part]);
     }
@@ -2544,8 +2562,8 @@ PDM_isosurface_create
   isos->entry_mesh_dim  = mesh_dimension;
 
   // > Isosurface mesh information
-  // isos->iso_elt_type = elt_type; 
-  isos->extract_kind = PDM_EXTRACT_PART_KIND_LOCAL; 
+  // isos->iso_elt_type = elt_type;
+  isos->extract_kind = PDM_EXTRACT_PART_KIND_LOCAL;
   isos->n_part = 1;
 
   isos->we_have_edges = -1;
@@ -2686,6 +2704,36 @@ PDM_isosurface_field_function_set
     PDM_error(__FILE__, __LINE__, 0, "Isosurface n°%d doesn't support PDM_isosurface_field_function_set method cause its kind is %d.\n", id_isosurface, _iso->kind);
   }
 
+}
+
+
+void
+isosurface_field_function_set_python
+(
+  PDM_isosurface_t                       *isos,
+  int                                     id_isosurface,
+  PDM_isosurface_field_function_python_t  func
+)
+{
+  PDM_ISOSURFACE_CHECK_ID(isos, id_isosurface);
+  _isosurface_t *_iso = &isos->isosurfaces[id_isosurface];
+
+  if (_iso->kind == PDM_ISO_SURFACE_KIND_FUNCTION) {
+    _iso->field_function_python = func;
+  }
+  else {
+    PDM_error(__FILE__, __LINE__, 0, "Isosurface n°%d doesn't support PDM_isosurface_field_function_set method cause its kind is %d.\n", id_isosurface, _iso->kind);
+  }
+}
+
+void
+isosurface_python_object_set
+(
+  PDM_isosurface_t *isos,
+  void             *python_object
+)
+{
+  isos->python_object = python_object;
 }
 
 

@@ -114,6 +114,16 @@ typedef enum {
 } _isosurface_timer_step_t;
 
 
+typedef double (*PDM_isosurface_field_function_python_t)
+(
+  void   *python_object,
+  int     id_iso,
+  double  x,
+  double  y,
+  double  z
+);
+
+
 typedef struct _isosurface_t { // Better name?
 
   // > Isosurface type
@@ -124,12 +134,11 @@ typedef struct _isosurface_t { // Better name?
   double *isovalues;
 
   // > Equation args
-  PDM_isosurface_field_function_t  field_function;
   double                          *eq_coeffs;
   int                              use_gradient;
 
   // > Field function
-  _pdm_isosurface_field_function_t iso_func;
+  PDM_isosurface_field_function_t  field_function;
 
 
   // ========================
@@ -216,6 +225,10 @@ typedef struct _isosurface_t { // Better name?
   // > Internal data
 
   PDM_bool_t is_computed;
+
+  // =================
+  // > Python wrapping
+  PDM_isosurface_field_function_python_t field_function_python;
 
 } _isosurface_t;
 
@@ -358,6 +371,9 @@ struct _pdm_isosurface_t {
   double times_current[ISO_TIMER_N_STEPS];
   double times_cumul  [ISO_TIMER_N_STEPS];
 
+  // =================
+  // > Python wrapping
+  void *python_object;
 
 };
 
@@ -421,6 +437,24 @@ isosurface_timer_end
   PDM_isosurface_t         *isos,
   _isosurface_timer_step_t  step
 );
+
+
+/* Python wrapping */
+void
+isosurface_field_function_set_python
+(
+  PDM_isosurface_t                       *isos,
+  int                                     id_isosurface,
+  PDM_isosurface_field_function_python_t  func
+);
+
+void
+isosurface_python_object_set
+(
+  PDM_isosurface_t *isos,
+  void             *python_object
+);
+
 
 #ifdef  __cplusplus
 }
