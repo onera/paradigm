@@ -38,6 +38,7 @@
 #include "pdm_vtk.h"
 #include "pdm_part_mesh.h"
 #include "pdm_part_mesh_nodal.h"
+#include "pdm_part_mesh_nodal_priv.h"
 #include "pdm_part_mesh_nodal_elmts.h"
 #include "pdm_part_mesh_nodal_elmts_utils.h"
 
@@ -92,7 +93,7 @@ PDM_part_mesh_nodal_to_part_mesh_create
   PDM_bool_t             keep_link_elmt_to_entity
 )
 {
-  if (pmesh_nodal != NULL) {
+  if (pmesh_nodal == NULL) {
     PDM_error(__FILE__, __LINE__, 0, "Invalid PDM_part_mesh_nodal_t instance\n");
   }
 
@@ -111,7 +112,7 @@ PDM_part_mesh_nodal_to_part_mesh_create
 
 
 void
-PDM_part_mesh_nodal_to_part_mesh_enable_connectivity
+PDM_part_mesh_nodal_to_part_mesh_connectivity_enable
 (
   PDM_part_mesh_nodal_to_part_mesh_t *pmn_to_pm,
   PDM_connectivity_type_t             connectivity_type
@@ -125,7 +126,7 @@ PDM_part_mesh_nodal_to_part_mesh_enable_connectivity
 
 
 void
-PDM_part_mesh_nodal_to_part_mesh_enable_g_nums
+PDM_part_mesh_nodal_to_part_mesh_g_nums_enable
 (
   PDM_part_mesh_nodal_to_part_mesh_t *pmn_to_pm,
   PDM_mesh_entities_t                 entity_type
@@ -138,7 +139,7 @@ PDM_part_mesh_nodal_to_part_mesh_enable_g_nums
 
 
 void
-PDM_part_mesh_nodal_to_part_mesh_enable_groups
+PDM_part_mesh_nodal_to_part_mesh_groups_enable
 (
   PDM_part_mesh_nodal_to_part_mesh_t *pmn_to_pm,
   PDM_bound_type_t                    bound_type
@@ -151,7 +152,7 @@ PDM_part_mesh_nodal_to_part_mesh_enable_groups
 
 
 void
-PDM_part_mesh_nodal_to_part_mesh_enable_part_comm_graph
+PDM_part_mesh_nodal_to_part_mesh_part_comm_graph_enable
 (
   PDM_part_mesh_nodal_to_part_mesh_t *pmn_to_pm,
   PDM_bound_type_t                    bound_type
@@ -175,7 +176,20 @@ PDM_part_mesh_nodal_to_part_mesh_compute
     PDM_error(__FILE__, __LINE__, 0, "PDM_part_mesh_nodal_to_part_mesh already computed\n");
   }
 
-  PDM_error(__FILE__, __LINE__, 0, "Not implemented yet ¯\\_(ツ)_/¯\n");
+  PDM_part_mesh_nodal_t *pmn = pmn_to_pm->pmesh_nodal;
+  if (pmn == NULL) {
+    PDM_error(__FILE__, __LINE__, 0, "Invalid PDM_part_mesh_nodal_t instance\n");
+  }
+
+  int          n_part = pmn->n_part;
+  PDM_MPI_Comm comm   = pmn->comm;
+
+  PDM_part_mesh_t *pmesh = PDM_part_mesh_create(n_part, comm);
+
+  pmn_to_pm->pmesh = pmesh;
+
+  // TODO...
+  // PDM_error(__FILE__, __LINE__, 0, "Not implemented yet ¯\\_(ツ)_/¯\n");
 }
 
 

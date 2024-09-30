@@ -83,7 +83,7 @@ PDM_part_mesh_nodal_to_part_mesh_create
  *
  */
 void
-PDM_part_mesh_nodal_to_part_mesh_enable_connectivity
+PDM_part_mesh_nodal_to_part_mesh_connectivity_enable
 (
   PDM_part_mesh_nodal_to_part_mesh_t *pmn_to_pm,
   PDM_connectivity_type_t             connectivity_type
@@ -98,7 +98,7 @@ PDM_part_mesh_nodal_to_part_mesh_enable_connectivity
  *
  */
 void
-PDM_part_mesh_nodal_to_part_mesh_enable_g_nums
+PDM_part_mesh_nodal_to_part_mesh_g_nums_enable
 (
   PDM_part_mesh_nodal_to_part_mesh_t *pmn_to_pm,
   PDM_mesh_entities_t                 entity_type
@@ -113,7 +113,7 @@ PDM_part_mesh_nodal_to_part_mesh_enable_g_nums
  *
  */
 void
-PDM_part_mesh_nodal_to_part_mesh_enable_groups
+PDM_part_mesh_nodal_to_part_mesh_groups_enable
 (
   PDM_part_mesh_nodal_to_part_mesh_t *pmn_to_pm,
   PDM_bound_type_t                    bound_type
@@ -128,7 +128,7 @@ PDM_part_mesh_nodal_to_part_mesh_enable_groups
  *
  */
 void
-PDM_part_mesh_nodal_to_part_mesh_enable_part_comm_graph
+PDM_part_mesh_nodal_to_part_mesh_part_comm_graph_enable
 (
   PDM_part_mesh_nodal_to_part_mesh_t *pmn_to_pm,
   PDM_bound_type_t                    bound_type
