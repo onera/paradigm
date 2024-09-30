@@ -60,12 +60,12 @@ typedef struct _pdm_part_mesh_nodal_to_part_mesh_t PDM_part_mesh_nodal_to_part_m
  *============================================================================*/
 
 /**
- * \brief
+ * \brief Create a structure for generating a \ref PDM_part_mesh_t instance from a \ref PDM_part_mesh_nodal_t instance
  *
  * \param [in] pmesh_nodal               Pointer to \ref PDM_part_mesh_nodal_t instance
  * \param [in] keep_link_elmt_to_entity  Preserve link element (Part Mesh Nodal) -> entity (Part Mesh)
  *
- * \return Pointer to new \ref PDM_part_mesh_nodal_to_part_mesh_t instance
+ * \return Pointer to a new \ref PDM_part_mesh_nodal_to_part_mesh_t instance
  */
 PDM_part_mesh_nodal_to_part_mesh_t *
 PDM_part_mesh_nodal_to_part_mesh_create
@@ -75,6 +75,13 @@ PDM_part_mesh_nodal_to_part_mesh_create
 );
 
 
+/**
+ * \brief Enable the construction of a specific connectivity
+ *
+ * \param [in] pmn_to_pm          Pointer to \ref PDM_part_mesh_nodal_to_part_mesh_t instance
+ * \param [in] connectivity_type  Connectivity to enable
+ *
+ */
 void
 PDM_part_mesh_nodal_to_part_mesh_enable_connectivity
 (
@@ -83,6 +90,13 @@ PDM_part_mesh_nodal_to_part_mesh_enable_connectivity
 );
 
 
+/**
+ * \brief Enable the generation of global IDs for a specific entity type
+ *
+ * \param [in] pmn_to_pm    Pointer to \ref PDM_part_mesh_nodal_to_part_mesh_t instance
+ * \param [in] entity_type  Entity type
+ *
+ */
 void
 PDM_part_mesh_nodal_to_part_mesh_enable_g_nums
 (
@@ -91,6 +105,13 @@ PDM_part_mesh_nodal_to_part_mesh_enable_g_nums
 );
 
 
+/**
+ * \brief Enable the transfer of groups a specific bound type
+ *
+ * \param [in] pmn_to_pm   Pointer to \ref PDM_part_mesh_nodal_to_part_mesh_t instance
+ * \param [in] bound_type  Bound type
+ *
+ */
 void
 PDM_part_mesh_nodal_to_part_mesh_enable_groups
 (
@@ -99,6 +120,13 @@ PDM_part_mesh_nodal_to_part_mesh_enable_groups
 );
 
 
+/**
+ * \brief Enable the construction of inter-partition communication graph for a specific bound type
+ *
+ * \param [in] pmn_to_pm   Pointer to \ref PDM_part_mesh_nodal_to_part_mesh_t instance
+ * \param [in] bound_type  Bound type
+ *
+ */
 void
 PDM_part_mesh_nodal_to_part_mesh_enable_part_comm_graph
 (
@@ -107,6 +135,12 @@ PDM_part_mesh_nodal_to_part_mesh_enable_part_comm_graph
 );
 
 
+/**
+ * \brief Generate the Part Mesh
+ *
+ * \param [in] pmn_to_pm  Pointer to \ref PDM_part_mesh_nodal_to_part_mesh_t instance
+ *
+ */
 void
 PDM_part_mesh_nodal_to_part_mesh_compute
 (
@@ -114,6 +148,14 @@ PDM_part_mesh_nodal_to_part_mesh_compute
 );
 
 
+/**
+ * \brief Get the constructed \ref PDM_part_mesh_t instance
+ *
+ * \param [in]  pmn_to_pm  Pointer to \ref PDM_part_mesh_nodal_to_part_mesh_t instance
+ * \param [out] pmesh      Pointer to \ref PDM_part_mesh_t instance
+ * \param [in]  ownership  Ownership for \p pmesh
+ *
+ */
 void
 PDM_part_mesh_nodal_to_part_mesh_part_mesh_get
 (
@@ -123,6 +165,12 @@ PDM_part_mesh_nodal_to_part_mesh_part_mesh_get
 );
 
 
+/**
+ * \brief Free a \ref PDM_part_mesh_nodal_to_part_mesh_t instance
+ *
+ * \param [inout] pmn_to_pm  Pointer to \ref PDM_part_mesh_nodal_to_part_mesh_t instance
+ *
+ */
 void
 PDM_part_mesh_nodal_to_part_mesh_free
 (

@@ -92,12 +92,17 @@ PDM_part_mesh_nodal_to_part_mesh_create
   PDM_bool_t             keep_link_elmt_to_entity
 )
 {
+  if (pmesh_nodal != NULL) {
+    PDM_error(__FILE__, __LINE__, 0, "Invalid PDM_part_mesh_nodal_t instance\n");
+  }
+
   PDM_part_mesh_nodal_to_part_mesh_t *pmn_to_pm = NULL;
 
   PDM_malloc(pmn_to_pm, 1, PDM_part_mesh_nodal_to_part_mesh_t);
 
   memset(pmn_to_pm, 0, sizeof(PDM_part_mesh_nodal_to_part_mesh_t));
 
+  pmn_to_pm->pmesh_nodal              = pmesh_nodal;
   pmn_to_pm->keep_link_elmt_to_entity = keep_link_elmt_to_entity;
   pmn_to_pm->owner_pmesh              = PDM_OWNERSHIP_BAD_VALUE;
 
@@ -165,6 +170,10 @@ PDM_part_mesh_nodal_to_part_mesh_compute
 )
 {
   CHECK_PMN_TO_PM(pmn_to_pm);
+
+  if (pmn_to_pm->pmesh != NULL) {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_part_mesh_nodal_to_part_mesh already computed\n");
+  }
 
   PDM_error(__FILE__, __LINE__, 0, "Not implemented yet ¯\\_(ツ)_/¯\n");
 }
