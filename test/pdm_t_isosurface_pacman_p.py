@@ -8,7 +8,11 @@ def sdf_sphere(x, y, z, cx, cy, cz, r):
   """
   return np.sqrt((x - cx)**2 + (y - cy)**2 + (z - cz)**2) - r
 
-def sdf_pacman(coord, time):
+def my_sdf(x, y, z):
+  import numpy as np
+  return x + 0.15*np.cos(3*y) # wiggly x-slice
+
+def sdf_pacman(coord, t):
   """
   Pacman signed distance function
   """
@@ -16,12 +20,12 @@ def sdf_pacman(coord, time):
   y = coord[1::3]
   z = coord[2::3]
 
-  t = np.mod(time, 5.)
+  tmod = np.mod(t, 5.)
 
   # head and eyes
-  head = sdf_sphere(x, y-t, z,  0   , 0   , 0   , 0.48)
-  leye = sdf_sphere(x, y-t, z, -0.18, 0.32, 0.18, 0.11)
-  reye = sdf_sphere(x, y-t, z,  0.18, 0.32, 0.18, 0.11)
+  head = sdf_sphere(x, y-tmod, z,  0   , 0   , 0   , 0.48)
+  leye = sdf_sphere(x, y-tmod, z, -0.18, 0.32, 0.18, 0.11)
+  reye = sdf_sphere(x, y-tmod, z,  0.18, 0.32, 0.18, 0.11)
 
   # mouth
   yi =  0.258
@@ -30,7 +34,7 @@ def sdf_pacman(coord, time):
   gamma = 2.03173778224
   delta = 0.5
 
-  T = 0.1 + 0.45*(np.cos(np.pi*(2.*t+1.)) + 1.)
+  T = 0.1 + 0.45*(np.cos(np.pi*(2.*tmod+1.)) + 1.)
   A1 = np.cos(gamma + delta*T)
   B1 = -np.sin(gamma + delta*T)
   C1 = -(A1*yi + B1*zi)
@@ -39,8 +43,8 @@ def sdf_pacman(coord, time):
   B2 =  np.sin(gamma - T)
   C2 = -(A2*yi + B2*zi)
 
-  fm1 = A1*(y-t) + B1*z + C1
-  fm2 = A2*(y-t) + B2*z + C2
+  fm1 = A1*(y-tmod) + B1*z + C1
+  fm2 = A2*(y-tmod) + B2*z + C2
   mouth = np.maximum(fm1, fm2)
 
   # subtract mouth wedge from head
@@ -55,9 +59,9 @@ def sdf_pacman(coord, time):
   zgum = zi
   iy   = np.array(y + 0.5).astype(int)
 
-  # rgum1 = np.maximum(0, np.minimum(0.125*(t - iy - 2.), rgum)) # gums reappear after a delay
+  # rgum1 = np.maximum(0, np.minimum(0.125*(tmod - iy - 2.), rgum)) # gums reappear after a delay
   rgum1 = np.zeros(iy.shape)
-  rgum1[np.where(iy > t - 1.1*rgum)] = rgum
+  rgum1[np.where(iy > tmod - 1.1*rgum)] = rgum
 
   gum = sdf_sphere(x, y-iy, z, 0, 0, zgum, rgum1)
 
@@ -112,9 +116,14 @@ def run(n_vtx_seg, elt_type, n_step, visu, local, part_method):
 
   id_iso_field = isos.add(PDM.Isosurface.FIELD, [0.])
 
+  id_iso_func = isos.add(PDM.Isosurface.FUNCTION, [0.])
+  isos.field_function_set(id_iso_func, my_sdf)
+
   if not local:
     isos.redistribution_set(PDM.Isosurface.REEQUILIBRATE,
                             part_method)
+
+    isos.enable_part_to_part(id_iso_func, PDM._PDM_MESH_ENTITY_VTX)
 
   # Set mesh
   isos.n_part_set(n_part)
@@ -171,6 +180,66 @@ def run(n_vtx_seg, elt_type, n_step, visu, local, part_method):
 
     id_geom = writer.geom_create("pacman_surf", n_part)
 
+    writer_slice = PDM.Writer("Ensight",
+                              PDM._PDM_WRITER_FMT_BIN,
+                              PDM._PDM_WRITER_TOPO_CST,
+                              PDM._PDM_WRITER_OFF,
+                              "isosurface_pacman_p",
+                              "slice",
+                              comm,
+                              PDM._PDM_IO_KIND_MPI_SIMPLE,
+                              1.,
+                              "")
+
+    id_geom_slice = writer_slice.geom_create("pacman_slice", n_part)
+
+    id_var = writer_slice.var_create(PDM._PDM_WRITER_ON,
+                                     PDM._PDM_WRITER_VAR_SCALAR,
+                                     PDM._PDM_WRITER_VAR_VERTICES,
+                                     "pacman_field")
+
+  # Compute slice
+  isos.compute(id_iso_func)
+
+  pparent_idx = []
+  pparent     = []
+  pweight     = []
+  for i_part in range(n_part):
+    vtx_parent_idx, vtx_parent_weight = isos.vtx_parent_weight_get(id_iso_func, i_part)
+    pparent_idx.append(vtx_parent_idx)
+    pweight    .append(vtx_parent_weight)
+
+  if local:
+    for i_part in range(n_part):
+      _, parent_lnum = isos.parent_lnum_get(id_iso_func, i_part, PDM._PDM_MESH_ENTITY_VTX)
+      pparent.append(parent_lnum)
+  else:
+    ptp_vtx = isos.part_to_part_get(id_iso_func, PDM._PDM_MESH_ENTITY_VTX)
+
+  if visu:
+    writer_slice.step_beg(0.)
+    piso_vtx_ln_to_gn = []
+    for i_part in range(n_part):
+      iso_vtx_coord    = isos.coordinates_get(id_iso_func, i_part)
+      iso_vtx_ln_to_gn = isos.ln_to_gn_get(id_iso_func, i_part, PDM._PDM_MESH_ENTITY_VTX)
+      piso_vtx_ln_to_gn.append(iso_vtx_ln_to_gn) # keep reference for IO
+
+      iso_face_vtx_idx, iso_face_vtx = isos.connectivity_get(id_iso_func, i_part, PDM._PDM_CONNECTIVITY_TYPE_FACE_VTX)
+      iso_face_ln_to_gn = isos.ln_to_gn_get(id_iso_func, i_part, PDM._PDM_MESH_ENTITY_FACE)
+
+      writer_slice.geom_coord_set(id_geom_slice,
+                                  i_part,
+                                  iso_vtx_coord,
+                                  iso_vtx_ln_to_gn)
+
+      writer_slice.geom_faces_facevtx_add(id_geom_slice,
+                                          i_part,
+                                          iso_face_vtx_idx,
+                                          iso_face_vtx,
+                                          iso_face_ln_to_gn)
+
+    writer_slice.geom_write(id_geom_slice)
+
   # Time loop
   comm.Barrier()
   t_start = time.time()
@@ -187,6 +256,43 @@ def run(n_vtx_seg, elt_type, n_step, visu, local, part_method):
       field = sdf_pacman(mesh["pvtx_coord"][i_part], t)
       pfield.append(field)
       isos.field_set(id_iso_field, i_part, field)
+
+    # Interpolate on slice
+    pitp_field = []
+    if local:
+      for i_part in range(n_part):
+        iso_n_vtx = len(pparent_idx[i_part]) - 1
+        itp_field = np.zeros(iso_n_vtx, dtype=np.double)
+        for i in range(iso_n_vtx):
+          for j in range(pparent_idx[i_part][i], pparent_idx[i_part][i+1]):
+            i_parent = pparent[i_part][j]
+            itp_field[i] += pweight[i_part][j] * pfield[i_part][i_parent]
+        pitp_field.append(itp_field)
+    else:
+      request = ptp_vtx.reverse_iexch(PDM._PDM_MPI_COMM_KIND_P2P,
+                                      PDM._PDM_PART_TO_PART_DATA_DEF_ORDER_PART2,
+                                      pfield)
+      _, recv_field = ptp_vtx.reverse_wait(request)
+
+      for i_part in range(n_part):
+        iso_n_vtx = len(pparent_idx[i_part]) - 1
+        itp_field = np.zeros(iso_n_vtx, dtype=np.double)
+        for i in range(iso_n_vtx):
+          for j in range(pparent_idx[i_part][i], pparent_idx[i_part][i+1]):
+            itp_field[i] += pweight[i_part][j] * recv_field[i_part][j]
+        pitp_field.append(itp_field)
+
+    if visu:
+      if i_step > 0:
+        writer_slice.step_beg(t)
+      for i_part in range(n_part):
+        writer_slice.var_set(id_var,
+                             id_geom_slice,
+                             i_part,
+                             pitp_field[i_part])
+      writer_slice.var_write(id_var)
+      writer_slice.var_data_free(id_var)
+      writer_slice.step_end()
 
     # Compute isosurface
     isos.compute(id_iso_field)
@@ -216,7 +322,7 @@ def run(n_vtx_seg, elt_type, n_step, visu, local, part_method):
       writer.geom_data_reset(id_geom)
       writer.step_end()
 
-    isos.reset(id_iso_field)
+    isos.reset(-1)
 
     t += 0.05
 
