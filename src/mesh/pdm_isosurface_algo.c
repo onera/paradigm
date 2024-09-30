@@ -3692,7 +3692,7 @@ PDM_isosurface_ngon_algo
   int *iso_edge_group_n = NULL;
   int  n_surface        = 0;
   if (isos->entry_mesh_dim==3) {
-    n_surface = isos->n_group_face[0];
+    n_surface = isos->n_group_face;
     PDM_malloc(iso_edge_group_n, n_surface, int);
   }
 

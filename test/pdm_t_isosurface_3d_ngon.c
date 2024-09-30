@@ -974,10 +974,13 @@ int main
                                 &surface_face_ln_to_gn,
                                 PDM_OWNERSHIP_KEEP);
 
+        PDM_isosurface_n_group_set(isos,
+                                   PDM_MESH_ENTITY_FACE,
+                                   n_surface);
+
         PDM_isosurface_group_set(isos,
                                  i_part,
                                  PDM_MESH_ENTITY_FACE,
-                                 n_surface,
                                  surface_face_idx,
                                  surface_face,
                                  surface_face_ln_to_gn);
@@ -1057,9 +1060,13 @@ int main
                                           &dsurface_face,
                                           &dsurface_face_idx,
                                           PDM_OWNERSHIP_KEEP);
+
+      PDM_isosurface_n_group_set(isos,
+                                 PDM_MESH_ENTITY_FACE,
+                                 n_surface);
+
       PDM_isosurface_dgroup_set(isos,
                                 PDM_MESH_ENTITY_FACE,
-                                n_surface,
                                 dsurface_face_idx,
                                 dsurface_face);
     }

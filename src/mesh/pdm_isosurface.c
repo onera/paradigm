@@ -519,7 +519,7 @@ _dist_to_part
       const PDM_g_num_t *pface_ln_to_gn[1] = {face_ln_to_gn};
       PDM_part_distgroup_to_partgroup(isos->comm,
                                       isos->distrib_face,
-                                      isos->n_dgroup_face,
+                                      isos->n_group_face,
                                       isos->dgroup_face_idx,
                                       isos->dgroup_face,
                                       isos->n_part,
@@ -553,7 +553,6 @@ _dist_to_part
     PDM_malloc(isos->face_vtx_idx , 1, int         *);
     PDM_malloc(isos->face_vtx     , 1, int         *);
     PDM_malloc(isos->edge_vtx     , 1, int         *);
-    PDM_malloc(isos->n_group_face , 1, int          );
 
     isos->n_cell       [0] = n_cell;
     isos->n_face       [0] = n_face;
@@ -570,7 +569,6 @@ _dist_to_part
     isos->face_vtx_idx [0] = face_vtx_idx;
     isos->face_vtx     [0] = face_vtx;
     isos->edge_vtx     [0] = edge_vtx;
-    isos->n_group_face [0] = isos->n_dgroup_face;
   }
 }
 
@@ -1346,7 +1344,7 @@ _extract
     }
 
     if (isos->entry_mesh_dim==3) {
-      PDM_extract_part_n_group_set(extrp, PDM_BOUND_TYPE_FACE, isos->n_group_face[0]);
+      PDM_extract_part_n_group_set(extrp, PDM_BOUND_TYPE_FACE, isos->n_group_face);
     }
 
     for (int i_part = 0; i_part < isos->n_part; i_part++) {
@@ -1375,7 +1373,7 @@ _extract
                                          extract_lnum[i_part]);
 
       if (isos->entry_mesh_dim==3) {
-        for (int i_group = 0; i_group < isos->n_group_face[0]; i_group++) {
+        for (int i_group = 0; i_group < isos->n_group_face; i_group++) {
           PDM_extract_part_part_group_set(extrp,
                                           i_part,
                                           i_group,
@@ -2577,6 +2575,31 @@ PDM_isosurface_create
 
 
 void
+PDM_isosurface_n_group_set
+(
+  PDM_isosurface_t    *isos,
+  PDM_mesh_entities_t  entity_type,
+  int                  n_group
+)
+{
+  switch (entity_type) {
+    case PDM_MESH_ENTITY_FACE:
+      isos->n_group_face = n_group;
+      break;
+    // case PDM_MESH_ENTITY_EDGE:
+    //   isos->n_group_edge = n_group;
+    //   break;
+    // case PDM_MESH_ENTITY_VTX:
+    //   isos->n_group_vtx  = n_group;
+    //   break;
+    default:
+      PDM_error(__FILE__, __LINE__, 0, "invalid entity_type (%d) for isosurface boundary.\n", entity_type);
+      break;
+  }
+}
+
+
+void
 PDM_isosurface_set_tolerance
 (
   PDM_isosurface_t *isos,
@@ -2862,7 +2885,6 @@ PDM_isosurface_free
   PDM_free(isos->face_gnum);
   PDM_free(isos->edge_gnum);
   PDM_free(isos->vtx_gnum);
-  PDM_free(isos->n_group_face);
   PDM_free(isos->group_face_idx);
   PDM_free(isos->group_face);
   PDM_free(isos->group_face_gnum);

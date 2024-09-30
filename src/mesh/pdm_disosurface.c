@@ -159,7 +159,6 @@ PDM_isosurface_dgroup_set
 (
  PDM_isosurface_t    *isos,
  PDM_mesh_entities_t  entity_type,
- int                  n_group,
  int                 *dgroup_entity_idx,
  PDM_g_num_t         *dgroup_entity
 )
@@ -169,19 +168,16 @@ PDM_isosurface_dgroup_set
   
   switch (entity_type) {
     case PDM_MESH_ENTITY_FACE:
-      isos->n_dgroup_face     = n_group;
-      isos->  dgroup_face_idx = dgroup_entity_idx;
-      isos->  dgroup_face     = dgroup_entity;
+      isos->dgroup_face_idx = dgroup_entity_idx;
+      isos->dgroup_face     = dgroup_entity;
       break;
     // case PDM_MESH_ENTITY_EDGE:
-    //   isos->n_dgroup_edge     = n_group;
-    //   isos->  dgroup_edge_idx = dgroup_entity_idx;
-    //   isos->  dgroup_edge     = dgroup_entity;
+    //   isos->dgroup_edge_idx = dgroup_entity_idx;
+    //   isos->dgroup_edge     = dgroup_entity;
     //   break;
     // case PDM_MESH_ENTITY_VTX:
-    //   isos->n_dgroup_vtx      = n_group;
-    //   isos->  dgroup_vtx_idx  = dgroup_entity_idx;
-    //   isos->  dgroup_vtx      = dgroup_entity;
+    //   isos->dgroup_vtx_idx  = dgroup_entity_idx;
+    //   isos->dgroup_vtx      = dgroup_entity;
     //   break;
     default:
       PDM_error(__FILE__, __LINE__, 0, "invalid entity_type (%d) for isosurface boundary.\n", entity_type);
@@ -279,9 +275,13 @@ PDM_isosurface_dmesh_set
                                       &dsurface_face,
                                       &dsurface_face_idx,
                                       PDM_OWNERSHIP_BAD_VALUE);
+
+  PDM_isosurface_n_group_set(isos,
+                             PDM_MESH_ENTITY_FACE,
+                             n_surface);
+
   PDM_isosurface_dgroup_set(isos,
                             PDM_MESH_ENTITY_FACE,
-                            n_surface,
                             dsurface_face_idx,
                             dsurface_face);
 }

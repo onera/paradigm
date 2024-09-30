@@ -214,12 +214,30 @@ PDM_isosurface_ln_to_gn_set
 
 /**
  *
+ * \brief Set number of groups
+ *
+ * \param [in]  isos                   \ref PDM_isosurface_t instance
+ * \param [in]  entity_type            Type of mesh entity
+ * \param [in]  n_group                Number of groups
+ *
+ */
+
+void
+PDM_isosurface_n_group_set
+(
+  PDM_isosurface_t    *isos,
+  PDM_mesh_entities_t  entity_type,
+  int                  n_group
+);
+
+
+/**
+ *
  * \brief Set group description
  *
  * \param [in]  isos                   \ref PDM_isosurface_t instance
  * \param [in]  i_part                 Partition identifier
  * \param [in]  entity_type            Type of mesh entity
- * \param [in]  n_group                Number of groups
  * \param [in]  group_entity_idx       Index for group→entity connectivity (size = \p n_group + 1)
  * \param [in]  group_entity           Group→entity connectivity (1-based local ids, size = \p group_entity_idx[\p n_group])
  * \param [in]  group_entity_ln_to_gn  Group→entity connectivity (group-specific global ids, size = \p group_entity_idx[\p n_group])
@@ -232,7 +250,6 @@ PDM_isosurface_group_set
   PDM_isosurface_t    *isos,
   int                  i_part,
   PDM_mesh_entities_t  entity_type,
-  int                  n_group,
   int                 *group_entity_idx,
   int                 *group_entity,
   PDM_g_num_t         *group_entity_ln_to_gn
@@ -343,7 +360,6 @@ PDM_isosurface_distrib_set
  *
  * \param [in]  isos                   \ref PDM_isosurface_t instance
  * \param [in]  entity_type            Type of mesh entity
- * \param [in]  n_group                Number of groups
  * \param [in]  dgroup_entity_idx      Index for group→entity connectivity (size = \p n_group + 1)
  * \param [in]  dgroup_entity          Group→entity connectivity (1-based global ids, size = \p dgroup_entity_idx[\p n_group])
  *
@@ -354,7 +370,6 @@ PDM_isosurface_dgroup_set
 (
   PDM_isosurface_t    *isos,
   PDM_mesh_entities_t  entity_type,
-  int                  n_group,
   int                 *dgroup_entity_idx,
   PDM_g_num_t         *dgroup_entity
 );

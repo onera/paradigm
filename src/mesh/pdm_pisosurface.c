@@ -98,7 +98,6 @@ PDM_isosurface_n_part_set
   PDM_malloc(isos->edge_gnum    , n_part, PDM_g_num_t *);
   PDM_malloc(isos->vtx_gnum     , n_part, PDM_g_num_t *);
 
-  PDM_malloc(isos->n_group_face   , n_part, int          );
   PDM_malloc(isos->group_face_idx , n_part, int         *);
   PDM_malloc(isos->group_face     , n_part, int         *);
   PDM_malloc(isos->group_face_gnum, n_part, PDM_g_num_t *);
@@ -117,7 +116,6 @@ PDM_isosurface_n_part_set
     isos->edge_gnum    [i_part] = NULL;
     isos->vtx_gnum     [i_part] = NULL;
 
-    isos->n_group_face   [i_part] = 0;
     isos->group_face_idx [i_part] = NULL;
     isos->group_face     [i_part] = NULL;
     isos->group_face_gnum[i_part] = NULL;
@@ -222,7 +220,6 @@ PDM_isosurface_group_set
  PDM_isosurface_t    *isos,
  int                  i_part,
  PDM_mesh_entities_t  entity_type,
- int                  n_group,
  int                 *group_entity_idx,
  int                 *group_entity,
  PDM_g_num_t         *group_entity_ln_to_gn
@@ -233,20 +230,17 @@ PDM_isosurface_group_set
 
   switch (entity_type) {
     case PDM_MESH_ENTITY_FACE:
-      isos->n_group_face     [i_part] = n_group;
-      isos->  group_face_idx [i_part] = group_entity_idx;
-      isos->  group_face     [i_part] = group_entity;
-      isos->  group_face_gnum[i_part] = group_entity_ln_to_gn;
+      isos->group_face_idx [i_part] = group_entity_idx;
+      isos->group_face     [i_part] = group_entity;
+      isos->group_face_gnum[i_part] = group_entity_ln_to_gn;
       break;
     // case PDM_MESH_ENTITY_EDGE:
-    //   isos->n_group_edge    [i_part] = n_group;
-    //   isos->  group_edge_idx[i_part] = group_entity_idx;
-    //   isos->  group_edge    [i_part] = group_entity;
+    //   isos->group_edge_idx[i_part] = group_entity_idx;
+    //   isos->group_edge    [i_part] = group_entity;
     //   break;
     // case PDM_MESH_ENTITY_VTX:
-    //   isos->n_group_vtx    [i_part]  = n_group;
-    //   isos->  group_vtx_idx[i_part]  = group_entity_idx;
-    //   isos->  group_vtx    [i_part]  = group_entity;
+    //   isos->group_vtx_idx[i_part]  = group_entity_idx;
+    //   isos->group_vtx    [i_part]  = group_entity;
     //   break;
     default:
       PDM_error(__FILE__, __LINE__, 0, "invalid entity_type (%d) for isosurface boundary.\n", entity_type);
@@ -274,6 +268,8 @@ PDM_isosurface_part_mesh_set
   /* Unpack part_mesh */
   isos->entry_mesh_type = -1; // héhé
   PDM_isosurface_n_part_set(isos, PDM_part_mesh_n_part_get(pmesh));
+
+  isos->n_group_face = PDM_part_mesh_n_bound_get(pmesh, PDM_BOUND_TYPE_FACE);
 
   for (int i_part = 0; i_part < isos->n_part; i_part++) {
     // Number of entities
@@ -355,8 +351,6 @@ PDM_isosurface_part_mesh_set
                                       PDM_OWNERSHIP_BAD_VALUE);
 
     // Surfaces
-    isos->n_group_face[i_part] = PDM_part_mesh_n_bound_get(pmesh, PDM_BOUND_TYPE_FACE);
-
     PDM_part_mesh_bound_concat_get(isos->pmesh,
                                    i_part,
                                    PDM_BOUND_TYPE_FACE,

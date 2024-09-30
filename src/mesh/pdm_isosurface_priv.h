@@ -299,7 +299,6 @@ struct _pdm_isosurface_t {
   int we_have_edges;
 
   // > Groups
-  int          n_dgroup_face;
   int         *dgroup_face_idx;
   PDM_g_num_t *dgroup_face;
 
@@ -358,7 +357,7 @@ struct _pdm_isosurface_t {
   int         **extract_tetra_lnum; // from initial mesh
 
   // > Groups
-  int          *n_group_face;
+  int           n_group_face;
   int         **group_face_idx;
   int         **group_face;
   PDM_g_num_t **group_face_gnum;

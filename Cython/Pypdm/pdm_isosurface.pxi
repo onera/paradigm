@@ -36,10 +36,13 @@ cdef extern from "pdm_isosurface.h":
                                    int                  n_entity,
                                    PDM_g_num_t         *ln_to_gn);
 
+  void PDM_isosurface_n_group_set(PDM_isosurface_t    *isos,
+                                  PDM_mesh_entities_t  entity_type,
+                                  int                  n_group);
+
   void PDM_isosurface_group_set(PDM_isosurface_t    *isos,
                                 int                  i_part,
                                 PDM_mesh_entities_t  entity_type,
-                                int                  n_group,
                                 int                 *group_entity_idx,
                                 int                 *group_entity,
                                 PDM_g_num_t         *group_entity_ln_to_gn);
@@ -64,7 +67,6 @@ cdef extern from "pdm_isosurface.h":
 
   void PDM_isosurface_dgroup_set(PDM_isosurface_t    *isos,
                                  PDM_mesh_entities_t  entity_type,
-                                 int                  n_group,
                                  int                 *dgroup_entity_idx,
                                  PDM_g_num_t         *dgroup_entity);
 
@@ -471,7 +473,7 @@ cdef class Isosurface:
 
     Parameters:
       i_part      (int)                        : Partition id
-      entity_type (PDM_entity_type_t)          : Entity type
+      entity_type (PDM_mesh_entities_t)        : Entity type
       ln_to_gn    (np.ndarray[npy_pdm_gnum_t]) : Global ids
     """
     # self.keep_alive.append(ln_to_gn)
@@ -485,20 +487,18 @@ cdef class Isosurface:
 
   def group_set(self,                               i_part,
                                                     entity_type,
-                                                    n_group,
       NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] group_entity_idx,
       NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] group_entity,
       NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] group_ln_to_gn):
     """
     group_set(i_part, entity_type,
-              n_group, group_entity_idx, group_entity, group_ln_to_gn)
+              group_entity_idx, group_entity, group_ln_to_gn)
 
     Set partition groups.
 
     Parameters:
       i_part           (int)                        : Partition id
-      entity_type      (PDM_entity_type_t)          : Entity type
-      n_entity         (int)                        : Number of entities
+      entity_type      (PDM_mesh_entities_t)        : Entity type
       group_entity_idx (np.ndarray[np.int_t])       : Groups index
       group_entity     (np.ndarray[np.int_t])       : Group entities
       group_ln_to_gn   (np.ndarray[npy_pdm_gnum_t]) : Group entities global ids
@@ -511,9 +511,14 @@ cdef class Isosurface:
     cdef int         *group_entity_data     = np_to_int_pointer (group_entity)
     cdef PDM_g_num_t *group_ln_to_gn_data   = np_to_gnum_pointer(group_ln_to_gn)
 
+    cdef int n_group = group_entity_idx.size - 1
+
+    PDM_isosurface_n_group_set(self._isos,
+                               entity_type,
+                               n_group)
+
     PDM_isosurface_group_set(self._isos, i_part,
                              entity_type,
-                             n_group,
                              group_entity_idx_data,
                              group_entity_data,
                              group_ln_to_gn_data)
@@ -630,25 +635,29 @@ cdef class Isosurface:
     PDM_isosurface_distrib_set(self._isos, entity_type, distrib_data)
 
   def dgroup_set(self,                              entity_type,
-                                                    n_group,
       NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] group_entity_idx,
       NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] group_entity):
     """
-    dgroup_set(entity_type, n_group, group_entity_idx, group_entity)
+    dgroup_set(entity_type, group_entity_idx, group_entity)
 
     Set distributed groups.
 
     Parameters:
-      entity_type      (PDM_entity_type_t)          : Entity type
-      n_entity         (int)                        : Number of groups
+      entity_type      (PDM_mesh_entities_t)        : Entity type
       group_entity_idx (np.ndarray[np.int_t])       : Groups index
       group_entity     (np.ndarray[npy_pdm_gnum_t]) : Distributed group entities global ids
     """
     cdef int         *group_entity_idx_data = np_to_int_pointer (group_entity_idx)
     cdef PDM_g_num_t *group_entity_data     = np_to_gnum_pointer(group_entity)
 
+    cdef int n_group = group_entity_idx.size - 1
+
+    PDM_isosurface_n_group_set(self._isos,
+                               entity_type,
+                               n_group)
+
     PDM_isosurface_dgroup_set(self._isos, entity_type,
-                              n_group, group_entity_idx_data, group_entity_data)
+                              group_entity_idx_data, group_entity_data)
 
   def dmesh_set(self, DMesh dmesh):
     """
@@ -762,7 +771,7 @@ cdef class Isosurface:
     Parameters:
       id_iso      (int)               : Isosurface id
       i_part      (int)               : Partition id
-      entity_type (PDM_entity_type_t) : Entity type
+      entity_type (PDM_mesh_entities_t) Entity type
 
     Returns:
       ln_to_gn (`np.ndarray[npy_pdm_gnum_t]`) : Global ids
@@ -787,7 +796,7 @@ cdef class Isosurface:
     Parameters:
       id_iso      (int)               : Isosurface id
       i_part      (int)               : Partition id
-      entity_type (PDM_entity_type_t) : Entity type
+      entity_type (PDM_mesh_entities_t) Entity type
 
     Returns:
       n_group          (int)                          : Number of groups
@@ -820,7 +829,7 @@ cdef class Isosurface:
 
     Parameters:
       id_iso      (int)               : Isosurface id
-      entity_type (PDM_entity_type_t) : Entity type
+      entity_type (PDM_mesh_entities_t) Entity type
 
     Returns:
       PDM_part_to_part (PDM_part_to_part) : PDM_part_to_part
@@ -845,7 +854,7 @@ cdef class Isosurface:
     Parameters:
       id_iso      (int)               : Isosurface id
       i_part      (int)               : Partition id
-      entity_type (PDM_entity_type_t) : Entity type
+      entity_type (PDM_mesh_entities_t) Entity type
 
     Returns:
       parent_idx  (`np.ndarray[np.int32_t]`)     : Parent index
@@ -958,7 +967,7 @@ cdef class Isosurface:
 
     Parameters:
       id_iso      (int)               : Isosurface id
-      entity_type (PDM_entity_type_t) : Entity type
+      entity_type (PDM_mesh_entities_t) Entity type
 
     Returns:
       n_group          (int)                          : Number of groups
@@ -987,7 +996,7 @@ cdef class Isosurface:
 
     Parameters:
       id_iso      (int)               : Isosurface id
-      entity_type (PDM_entity_type_t) : Entity type
+      entity_type (PDM_mesh_entities_t) Entity type
 
     Returns:
       parent_idx  (`np.ndarray[np.int32_t]`)     : Parent index
