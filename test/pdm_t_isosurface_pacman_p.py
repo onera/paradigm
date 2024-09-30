@@ -151,7 +151,6 @@ def run(n_vtx_seg, elt_type, n_step, visu, local, part_method):
     # Groups
     isos.group_set(i_part,
                    PDM._PDM_MESH_ENTITY_FACE,
-                   mesh["pn_surface"            ][i_part],
                    mesh["psurface_face_idx"     ][i_part],
                    mesh["psurface_face"         ][i_part],
                    mesh["psurface_face_ln_to_gn"][i_part])

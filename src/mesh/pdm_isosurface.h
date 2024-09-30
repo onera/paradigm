@@ -154,6 +154,7 @@ PDM_isosurface_n_part_set
  * \param [in]  isos               \ref PDM_isosurface_t instance
  * \param [in]  i_part             Partition identifier
  * \param [in]  connectivity_type  Type of connectivity
+ * \param [in]  n_entity           Local number of leading entities
  * \param [in]  connect_idx        Index for connectivity (can be \p NULL for \p PDM_CONNECTIVITY_TYPE_EDGE_VTX)
  * \param [in]  connect            Connectivity (1-based)
  *
@@ -165,6 +166,7 @@ PDM_isosurface_connectivity_set
   PDM_isosurface_t        *isos,
   int                      i_part,
   PDM_connectivity_type_t  connectivity_type,
+  int                      n_entity,
   int                     *connect_idx,
   int                     *connect
 );
@@ -176,7 +178,8 @@ PDM_isosurface_connectivity_set
  *
  * \param [in]  isos       \ref PDM_isosurface_t instance
  * \param [in]  i_part     Partition identifier
- * \param [in]  vtx_coord  Vertex coordinates (size = 3 * *n_vtx*)
+ * \param [in]  n_vtx      Local number of vertices
+ * \param [in]  vtx_coord  Vertex coordinates (size = 3 * \p n_vtx)
  *
  */
 
@@ -185,6 +188,7 @@ PDM_isosurface_vtx_coord_set
 (
   PDM_isosurface_t *isos,
   int               i_part,
+  int               n_vtx,
   double           *vtx_coord
 );
 
@@ -196,8 +200,7 @@ PDM_isosurface_vtx_coord_set
  * \param [in]  isos         \ref PDM_isosurface_t instance
  * \param [in]  i_part       Partition identifier
  * \param [in]  entity_type  Type of mesh entity
- * \param [in]  n_entity     Local number of entities
- * \param [in]  ln_to_gn     Global ids (size = \p n_entity)
+ * \param [in]  ln_to_gn     Global ids
  *
  */
 
@@ -207,7 +210,6 @@ PDM_isosurface_ln_to_gn_set
   PDM_isosurface_t    *isos,
   int                  i_part,
   PDM_mesh_entities_t  entity_type,
-  int                  n_entity,
   PDM_g_num_t         *ln_to_gn
 );
 

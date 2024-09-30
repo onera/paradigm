@@ -79,7 +79,6 @@ def run(visu):
   # Groups
   isos.group_set(0,
                  PDM._PDM_MESH_ENTITY_FACE,
-                 mesh["pn_surface"            ][0],
                  mesh["psurface_face_idx"     ][0],
                  mesh["psurface_face"         ][0],
                  mesh["psurface_face_ln_to_gn"][0])

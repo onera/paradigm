@@ -128,31 +128,32 @@ PDM_isosurface_connectivity_set
  PDM_isosurface_t        *isos,
  int                      i_part,
  PDM_connectivity_type_t  connectivity_type,
+ int                      n_entity,
  int                     *connect_idx,
  int                     *connect
 )
 {
-  /*
-   * TODO: transform connectivity as pmesh or not ? 
-   */
-
   CHECK_IS_NOT_DIST(isos);
   PDM_ISOSURFACE_CHECK_ENTRY_MESH_COHERENCE(isos, -1);
 
   switch (connectivity_type) {
     case PDM_CONNECTIVITY_TYPE_CELL_FACE:
+      isos->n_cell       [i_part] = n_entity;
       isos->cell_face    [i_part] = connect;
       isos->cell_face_idx[i_part] = connect_idx;
       break;
     case PDM_CONNECTIVITY_TYPE_FACE_EDGE:
+      isos->n_face       [i_part] = n_entity;
       isos->face_edge    [i_part] = connect;
       isos->face_edge_idx[i_part] = connect_idx;
       break;
     case PDM_CONNECTIVITY_TYPE_FACE_VTX:
+      isos->n_face       [i_part] = n_entity;
       isos->face_vtx     [i_part] = connect;
       isos->face_vtx_idx [i_part] = connect_idx;
       break;
     case PDM_CONNECTIVITY_TYPE_EDGE_VTX:
+      isos->n_edge       [i_part] = n_entity;
       isos->edge_vtx     [i_part] = connect;
       break;
     default:
@@ -167,12 +168,14 @@ PDM_isosurface_vtx_coord_set
 (
  PDM_isosurface_t *isos,
  int               i_part,
+ int               n_vtx,
  double           *vtx_coord
 )
 {
   CHECK_IS_NOT_DIST(isos);
   PDM_ISOSURFACE_CHECK_ENTRY_MESH_COHERENCE(isos, -1);
   
+  isos->n_vtx    [i_part] = n_vtx;
   isos->vtx_coord[i_part] = vtx_coord;
 }
 
@@ -183,7 +186,6 @@ PDM_isosurface_ln_to_gn_set
  PDM_isosurface_t    *isos,
  int                  i_part,
  PDM_mesh_entities_t  entity_type,
- int                  n_entity,
  PDM_g_num_t         *ln_to_gn
 )
 {
@@ -192,19 +194,15 @@ PDM_isosurface_ln_to_gn_set
   
   switch (entity_type) {
     case PDM_MESH_ENTITY_CELL:
-      isos->n_cell   [i_part] = n_entity;
       isos->cell_gnum[i_part] = ln_to_gn;
       break;
     case PDM_MESH_ENTITY_FACE:
-      isos->n_face   [i_part] = n_entity;
       isos->face_gnum[i_part] = ln_to_gn;
       break;
     case PDM_MESH_ENTITY_EDGE:
-      isos->n_edge   [i_part] = n_entity;
       isos->edge_gnum[i_part] = ln_to_gn;
       break;
     case PDM_MESH_ENTITY_VTX:
-      isos->n_vtx   [i_part]  = n_entity;
       isos->vtx_gnum[i_part]  = ln_to_gn;
       break;
     default:

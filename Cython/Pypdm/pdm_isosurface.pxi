@@ -23,17 +23,18 @@ cdef extern from "pdm_isosurface.h":
   void PDM_isosurface_connectivity_set(PDM_isosurface_t        *isos,
                                        int                      i_part,
                                        PDM_connectivity_type_t  connectivity_type,
+                                       int                      n_entity,
                                        int                     *connect_idx,
                                        int                     *connect);
 
   void PDM_isosurface_vtx_coord_set(PDM_isosurface_t *isos,
                                     int               i_part,
+                                    int               n_vtx,
                                     double           *vtx_coord);
 
   void PDM_isosurface_ln_to_gn_set(PDM_isosurface_t    *isos,
                                    int                  i_part,
                                    PDM_mesh_entities_t  entity_type,
-                                   int                  n_entity,
                                    PDM_g_num_t         *ln_to_gn);
 
   void PDM_isosurface_n_group_set(PDM_isosurface_t    *isos,
@@ -438,11 +439,18 @@ cdef class Isosurface:
     # self.keep_alive.append(connectivity_idx)
     # self.keep_alive.append(connectivity)
 
+    cdef int n_entity = 0
+    if connectivity_type == _PDM_CONNECTIVITY_TYPE_EDGE_VTX:
+      n_entity = connectivity.size // 2
+    else:
+      n_entity = connectivity_idx.size - 1
+
     cdef int *connect_idx_data = np_to_int_pointer(connectivity_idx)
     cdef int *connect_data     = np_to_int_pointer(connectivity)
 
     PDM_isosurface_connectivity_set(self._isos, i_part,
                                     connectivity_type, 
+                                    n_entity,
                                     connect_idx_data,
                                     connect_data)
 
@@ -459,9 +467,10 @@ cdef class Isosurface:
     """
     # self.keep_alive.append(coordinates)
 
+    cdef int     n_vtx      = coordinates.size // 3
     cdef double *coord_data = np_to_double_pointer(coordinates)
 
-    PDM_isosurface_vtx_coord_set(self._isos, i_part, coord_data)
+    PDM_isosurface_vtx_coord_set(self._isos, i_part, n_vtx, coord_data)
 
   def ln_to_gn_set(self,                            i_part,
                                                     entity_type,
@@ -477,13 +486,11 @@ cdef class Isosurface:
       ln_to_gn    (np.ndarray[npy_pdm_gnum_t]) : Global ids
     """
     # self.keep_alive.append(ln_to_gn)
-    cdef int n_entity = ln_to_gn.size
-
     cdef PDM_g_num_t *ln_to_gn_data = np_to_gnum_pointer(ln_to_gn)
 
     PDM_isosurface_ln_to_gn_set(self._isos, i_part,
                                 entity_type, 
-                                n_entity, ln_to_gn_data)
+                                ln_to_gn_data)
 
   def group_set(self,                               i_part,
                                                     entity_type,
