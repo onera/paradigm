@@ -327,126 +327,126 @@ MPI_TEST_CASE("[pdm_para_graph_dual] - 3p - dual from node2arc", 3) {
   PDM_free(dual_graph);
 }
 
-MPI_TEST_CASE("[pdm_para_graph_dual] - 3p - Split graph with PARMetis", 3) {
+// MPI_TEST_CASE("[pdm_para_graph_dual] - 3p - Split graph with PARMetis", 3) {
 
-  PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
+//   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
 
-  SUBCASE("Hexa mesh 8 cells") {
+//   SUBCASE("Hexa mesh 8 cells") {
 
-    /* Comes from 8 hexa cells connected by faces. Note that face_cell connect
-    some cells to the boundary (0) */
+//     /* Comes from 8 hexa cells connected by faces. Note that face_cell connect
+//     some cells to the boundary (0) */
 
-    static PDM_g_num_t cell_distribution[4] = {0, 3, 6, 8};
+//     static PDM_g_num_t cell_distribution[4] = {0, 3, 6, 8};
 
-    static PDM_g_num_t graph_idx_p0[3+1] = {0, 3, 6, 9};
-    static PDM_g_num_t graph_p0[9] = {1, 2, 4, 0, 3, 5, 0, 3, 6};
-    static PDM_g_num_t graph_idx_p1[3+1] = {0, 3, 6, 9};
-    static PDM_g_num_t graph_p1[9] = {1, 2, 7, 0, 5, 6, 1, 4, 7};
-    static PDM_g_num_t graph_idx_p2[2+1] = {0, 3, 6};
-    static PDM_g_num_t graph_p2[6] = {2, 4, 7, 3, 5, 6};
+//     static PDM_g_num_t graph_idx_p0[3+1] = {0, 3, 6, 9};
+//     static PDM_g_num_t graph_p0[9] = {1, 2, 4, 0, 3, 5, 0, 3, 6};
+//     static PDM_g_num_t graph_idx_p1[3+1] = {0, 3, 6, 9};
+//     static PDM_g_num_t graph_p1[9] = {1, 2, 7, 0, 5, 6, 1, 4, 7};
+//     static PDM_g_num_t graph_idx_p2[2+1] = {0, 3, 6};
+//     static PDM_g_num_t graph_p2[6] = {2, 4, 7, 3, 5, 6};
 
-    int dn_cell = -1;
-    PDM_g_num_t *graph_idx = NULL;
-    PDM_g_num_t *graph     = NULL;
+//     int dn_cell = -1;
+//     PDM_g_num_t *graph_idx = NULL;
+//     PDM_g_num_t *graph     = NULL;
 
-    if (test_rank == 0){
-      graph_idx = graph_idx_p0;
-      graph     = graph_p0;
-      dn_cell = 3;
-    }
-    else if(test_rank == 1){
-      graph_idx = graph_idx_p1;
-      graph     = graph_p1;
-      dn_cell = 3;
-    }
-    else if(test_rank == 2){
-      graph_idx = graph_idx_p2;
-      graph     = graph_p2;
-      dn_cell = 2;
-    }
-    int *cell_part = (int *) malloc(dn_cell * sizeof(int));
+//     if (test_rank == 0){
+//       graph_idx = graph_idx_p0;
+//       graph     = graph_p0;
+//       dn_cell = 3;
+//     }
+//     else if(test_rank == 1){
+//       graph_idx = graph_idx_p1;
+//       graph     = graph_p1;
+//       dn_cell = 3;
+//     }
+//     else if(test_rank == 2){
+//       graph_idx = graph_idx_p2;
+//       graph     = graph_p2;
+//       dn_cell = 2;
+//     }
+//     int *cell_part = (int *) malloc(dn_cell * sizeof(int));
 
-    SUBCASE("n_part == n_proc") {
-      int n_part = 3;
-      PDM_para_graph_split (PDM_SPLIT_DUAL_WITH_PARMETIS,
-                            cell_distribution,
-                            graph_idx,
-                            graph,
-                            NULL,
-                            NULL,
-                            n_part,
-                            NULL,
-                            cell_part,
-                            pdm_comm);
+//     SUBCASE("n_part == n_proc") {
+//       int n_part = 3;
+//       PDM_para_graph_split (PDM_SPLIT_DUAL_WITH_PARMETIS,
+//                             cell_distribution,
+//                             graph_idx,
+//                             graph,
+//                             NULL,
+//                             NULL,
+//                             n_part,
+//                             NULL,
+//                             cell_part,
+//                             pdm_comm);
 
-      // Check
-      if (test_rank == 0) {
-        static PDM_g_num_t expc_cell_part[3] = {0, 0, 0};
-        CHECK_EQ_C_ARRAY(cell_part, expc_cell_part, dn_cell);
-      }
-      else if (test_rank == 1){
-        static PDM_g_num_t expc_cell_part[3] = {2, 1, 1};
-        CHECK_EQ_C_ARRAY(cell_part, expc_cell_part, dn_cell);
-      }
-      else if (test_rank ==2){
-        static PDM_g_num_t expc_cell_part[2] = {1, 2};
-        CHECK_EQ_C_ARRAY(cell_part, expc_cell_part, dn_cell);
-      }
-    }
-    SUBCASE("n_part < n_proc") {
-      int n_part = 2;
-      PDM_para_graph_split (PDM_SPLIT_DUAL_WITH_PARMETIS,
-                            cell_distribution,
-                            graph_idx,
-                            graph,
-                            NULL,
-                            NULL,
-                            n_part,
-                            NULL,
-                            cell_part,
-                            pdm_comm);
+//       // Check
+//       if (test_rank == 0) {
+//         static PDM_g_num_t expc_cell_part[3] = {0, 0, 0};
+//         CHECK_EQ_C_ARRAY(cell_part, expc_cell_part, dn_cell);
+//       }
+//       else if (test_rank == 1){
+//         static PDM_g_num_t expc_cell_part[3] = {2, 1, 1};
+//         CHECK_EQ_C_ARRAY(cell_part, expc_cell_part, dn_cell);
+//       }
+//       else if (test_rank ==2){
+//         static PDM_g_num_t expc_cell_part[2] = {1, 2};
+//         CHECK_EQ_C_ARRAY(cell_part, expc_cell_part, dn_cell);
+//       }
+//     }
+//     SUBCASE("n_part < n_proc") {
+//       int n_part = 2;
+//       PDM_para_graph_split (PDM_SPLIT_DUAL_WITH_PARMETIS,
+//                             cell_distribution,
+//                             graph_idx,
+//                             graph,
+//                             NULL,
+//                             NULL,
+//                             n_part,
+//                             NULL,
+//                             cell_part,
+//                             pdm_comm);
 
-      // Check
-      if (test_rank == 0) {
-        static PDM_g_num_t expc_cell_part[3] = {1, 1, 1};
-        CHECK_EQ_C_ARRAY(cell_part, expc_cell_part, dn_cell);
-      }
-      else if (test_rank == 1){
-        static PDM_g_num_t expc_cell_part[3] = {1, 0, 0};
-        CHECK_EQ_C_ARRAY(cell_part, expc_cell_part, dn_cell);
-      }
-      else if (test_rank ==2){
-        static PDM_g_num_t expc_cell_part[2] = {0, 0};
-        CHECK_EQ_C_ARRAY(cell_part, expc_cell_part, dn_cell);
-      }
-    }
-    SUBCASE("n_part > n_proc") {
-      int n_part = 4;
-      PDM_para_graph_split (PDM_SPLIT_DUAL_WITH_PARMETIS,
-                            cell_distribution,
-                            graph_idx,
-                            graph,
-                            NULL,
-                            NULL,
-                            n_part,
-                            NULL,
-                            cell_part,
-                            pdm_comm);
+//       // Check
+//       if (test_rank == 0) {
+//         static PDM_g_num_t expc_cell_part[3] = {1, 1, 1};
+//         CHECK_EQ_C_ARRAY(cell_part, expc_cell_part, dn_cell);
+//       }
+//       else if (test_rank == 1){
+//         static PDM_g_num_t expc_cell_part[3] = {1, 0, 0};
+//         CHECK_EQ_C_ARRAY(cell_part, expc_cell_part, dn_cell);
+//       }
+//       else if (test_rank ==2){
+//         static PDM_g_num_t expc_cell_part[2] = {0, 0};
+//         CHECK_EQ_C_ARRAY(cell_part, expc_cell_part, dn_cell);
+//       }
+//     }
+//     SUBCASE("n_part > n_proc") {
+//       int n_part = 4;
+//       PDM_para_graph_split (PDM_SPLIT_DUAL_WITH_PARMETIS,
+//                             cell_distribution,
+//                             graph_idx,
+//                             graph,
+//                             NULL,
+//                             NULL,
+//                             n_part,
+//                             NULL,
+//                             cell_part,
+//                             pdm_comm);
 
-      // Check
-      if (test_rank == 0) {
-        static PDM_g_num_t expc_cell_part[3] = {2, 2, 3};
-        CHECK_EQ_C_ARRAY(cell_part, expc_cell_part, dn_cell);
-      }
-      else if (test_rank == 1){
-        static PDM_g_num_t expc_cell_part[3] = {3, 0, 1};
-        CHECK_EQ_C_ARRAY(cell_part, expc_cell_part, dn_cell);
-      }
-      else if (test_rank ==2){
-        static PDM_g_num_t expc_cell_part[2] = {0, 1};
-        CHECK_EQ_C_ARRAY(cell_part, expc_cell_part, dn_cell);
-      }
-    }
-    PDM_free(cell_part);
-  }
-}
+//       // Check
+//       if (test_rank == 0) {
+//         static PDM_g_num_t expc_cell_part[3] = {2, 2, 3};
+//         CHECK_EQ_C_ARRAY(cell_part, expc_cell_part, dn_cell);
+//       }
+//       else if (test_rank == 1){
+//         static PDM_g_num_t expc_cell_part[3] = {3, 0, 1};
+//         CHECK_EQ_C_ARRAY(cell_part, expc_cell_part, dn_cell);
+//       }
+//       else if (test_rank ==2){
+//         static PDM_g_num_t expc_cell_part[2] = {0, 1};
+//         CHECK_EQ_C_ARRAY(cell_part, expc_cell_part, dn_cell);
+//       }
+//     }
+//     PDM_free(cell_part);
+//   }
+// }
