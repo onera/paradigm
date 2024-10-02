@@ -10,13 +10,12 @@ variables:
 #  CI_BUILDS_DIR: $WORKDIR/.jacamar-ci/builds
   CUSTOM_CI_BUILDS_DIR: $WORKDIR/test # inactif car option non activee dans la configuration du runner
   GIT_STRATEGY: none # don't do anything by default
-  # SCHEDULER_PARAMETERS:  "--qos=co_inter_std  --cpus-per-task=24  --ntasks=24 --time=00:01:00 "
-  SCHEDULER_PARAMETERS:  "--qos=co_inter_bigmem  --ntasks=40 --time=01:00:00 --exclusive"
-  #SCHEDULER_PARAMETERS:  "-M rhel8 --qos=el8_gbe --ntasks=24 --time=10:00:00"
+  # SCHEDULER_PARAMETERS:  "--qos=co_inter_bigmem  --ntasks=40 --time=01:00:00 --exclusive" # spiro
+  # SCHEDULER_PARAMETERS:  "--ntasks=1 --nodes=1-1 --time=00:30:00"                         # juno
   # CI_DEBUG_TRACE: "true" #Uncomment to debug CI
 default:
   tags: #All jobs uses jamacar-slurm executor
-    - slurm
+    - juno-shell
   id_tokens:
     CI_JOB_JWT:
       aud: https://gitlab.onera.net
@@ -86,15 +85,15 @@ build:
             - "ON"  
           BUILD_TYPE: 
             - "Sanitize"
-        - COMPILER: "gcc@10"
-          GNUM64: 
-            - "ON"
+        - COMPILER: "intel-llvm@2022"
+          GNUM64:
+            - "OFF"
           MPI_LIB: 
             - "intel-oneapi"
           PDMA:
             - "ON"  
           BUILD_TYPE: 
-            - "Sanitize"
+            - "Release"
         - COMPILER: "intel@2022"
           GNUM64: 
             - "ON"
@@ -110,22 +109,26 @@ build:
   before_script:
     - module purge
     - echo "compilo = $COMPILER"
-    - source /scratchm/sonics/dist/source.sh --env sonics_dev --compiler $COMPILER --mpi $MPI_LIB && module load py-gcovr-4.2-gcc-8.3.1-6lqfk6f py-breathe-4.21.0-gcc-8.3.1-t576gc7 doxygen-1.9.3-gcc-8.3.1-4qcntlg texlive/2021 && python3 -m pip install sphinx-fortran sphinxcontrib-tikz jupytext
+    # - source /tmp_user/juno/sonics/dist/source_juno_all.sh --compiler $COMPILER --mpi $MPI_LIB && module load py-gcovr-4.2-gcc-8.3.1-6lqfk6f py-breathe-4.21.0-gcc-8.3.1-t576gc7 doxygen-1.9.3-gcc-8.3.1-4qcntlg texlive/2021 && python3 -m pip install sphinx-fortran sphinxcontrib-tikz jupytext
+    - source /tmp_user/juno/sonics/dist/source_juno_all.sh --compiler=$COMPILER --mpi=$MPI_LIB
   script:
     - echo "Runner directory is $PWD; move to working directory $CUSTOM_CI_DIR"
     - cd $CUSTOM_CI_DIR
     - mkdir -p build$MATRIX_KEY && cd build$MATRIX_KEY
+    - echo ${COMPILER}
+    - echo ${MPI_LIB}
     - if [[ "${COMPILER}" == "gcc@12" && "${MPI_LIB}" == "intel-oneapi" ]]; then
-    -   cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DPDM_ENABLE_Fortran_MPI_MODULE=OFF -DPDM_ENABLE_PYTHON_BINDINGS=ON -DPDM_ENABLE_STATIC=OFF -DPDM_ENABLE_SHARED=ON -DPDM_ENABLE_Fortran=ON -DPDM_ENABLE_EXTENSION_PDMA=ON -DPDM_ENABLE_LONG_G_NUM=${GNUM64} -DMPIEXEC_EXECUTABLE=/opt/tools/intel/oneapi/mpi/2021.6.0/bin/mpirun ../
+    -   cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DPDM_ENABLE_Fortran_MPI_MODULE=OFF -DPDM_ENABLE_PYTHON_BINDINGS=ON -DPDM_ENABLE_STATIC=OFF -DPDM_ENABLE_SHARED=ON -DPDM_ENABLE_Fortran=ON -DPDM_ENABLE_EXTENSION_PDMA=ON -DPDM_ENABLE_LONG_G_NUM=${GNUM64} -DPDM_ENABLE_UNIT_TEST=ON ../
     - elif [[ "${COMPILER}" == "gcc@12" && "${MPI_LIB}" == "openmpi" ]]; then
-    -   cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DPDM_ENABLE_Fortran_MPI_MODULE=OFF -DPDM_ENABLE_PYTHON_BINDINGS=OFF -DPDM_ENABLE_STATIC=OFF -DPDM_ENABLE_SHARED=ON -DPDM_ENABLE_Fortran=OFF -DPDM_ENABLE_EXTENSION_PDMA=ON -DPDM_ENABLE_LONG_G_NUM=${GNUM64} -DPDM_ENABLE_OPENMP=OFF -DMPIEXEC_EXECUTABLE=/opt/tools/openmpi/4.1.1-gnu831-hpc-cuda112/bin/mpirun ../
+    -   cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DPDM_ENABLE_Fortran_MPI_MODULE=OFF -DPDM_ENABLE_PYTHON_BINDINGS=OFF -DPDM_ENABLE_STATIC=OFF -DPDM_ENABLE_SHARED=ON -DPDM_ENABLE_Fortran=OFF -DPDM_ENABLE_EXTENSION_PDMA=ON -DPDM_ENABLE_LONG_G_NUM=${GNUM64} -DPDM_ENABLE_UNIT_TEST=ON  -DPDM_ENABLE_OPENMP=OFF -DMPIEXEC_EXECUTABLE=/opt/tools/openmpi/4.1.1-gnu831-hpc-cuda112/bin/mpirun ../
     - elif [ "${COMPILER}" == "intel@2022" ]; then
-    -   cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DPDM_ENABLE_PYTHON_BINDINGS=ON -DPDM_ENABLE_STATIC=OFF -DPDM_ENABLE_SHARED=ON -DPDM_ENABLE_Fortran=ON -DPDM_ENABLE_EXTENSION_PDMA=${PDMA} -DPDM_ENABLE_LONG_G_NUM=${GNUM64} -DPDM_ENABLE_DOC=ON -DMPIEXEC_EXECUTABLE=/opt/tools/intel/oneapi/mpi/2021.6.0/bin/mpirun ../
+    -   cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DPDM_ENABLE_PYTHON_BINDINGS=ON -DPDM_ENABLE_STATIC=OFF -DPDM_ENABLE_SHARED=ON -DPDM_ENABLE_Fortran=ON -DPDM_ENABLE_EXTENSION_PDMA=${PDMA} -DPDM_ENABLE_LONG_G_NUM=${GNUM64} -DPDM_ENABLE_DOC=ON -DPDM_ENABLE_UNIT_TEST=ON  ../
+    - elif [ "${COMPILER}" == "intel-llvm@2022" ]; then
+    -   cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DPDM_ENABLE_PYTHON_BINDINGS=OFF -DPDM_ENABLE_STATIC=OFF -DPDM_ENABLE_UNIT_TEST=ON -DPDM_ENABLE_SHARED=ON -DPDM_ENABLE_Fortran=ON -DPDM_ENABLE_EXTENSION_PDMA=${PDMA} -DPDM_ENABLE_LONG_G_NUM=${GNUM64} ../
     - else
-    -   cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DPDM_ENABLE_PYTHON_BINDINGS=ON -DPDM_ENABLE_STATIC=OFF -DPDM_ENABLE_SHARED=ON -DPDM_ENABLE_Fortran=ON -DPDM_ENABLE_EXTENSION_PDMA=${PDMA} -DPDM_ENABLE_LONG_G_NUM=${GNUM64} -DMPIEXEC_EXECUTABLE=/opt/tools/intel/oneapi/mpi/2021.6.0/bin/mpirun ../
+    -   cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DPDM_ENABLE_PYTHON_BINDINGS=ON -DPDM_ENABLE_STATIC=OFF -DPDM_ENABLE_SHARED=ON -DPDM_ENABLE_UNIT_TEST=ON -DPDM_ENABLE_Fortran=ON -DPDM_ENABLE_EXTENSION_PDMA=${PDMA} -DPDM_ENABLE_LONG_G_NUM=${GNUM64} ../
     - fi
     - make -j
-#          -DPDM_ENABLE_Fortran_MPI_MODULE=OFF \
 
 unit_test:
   parallel:
@@ -175,15 +178,15 @@ unit_test:
             - "ON"  
           BUILD_TYPE: 
             - "Sanitize"
-        - COMPILER: "gcc@10"
-          GNUM64: 
-            - "ON"
-          MPI_LIB: 
+        - COMPILER: "intel-llvm@2022"
+          GNUM64:
+            - "OFF"
+          MPI_LIB:
             - "intel-oneapi"
           PDMA:
-            - "ON"  
-          BUILD_TYPE: 
-            - "Sanitize"
+            - "ON"
+          BUILD_TYPE:
+            - "Release"
         - COMPILER: "intel@2022"
           GNUM64: 
             - "ON"
@@ -199,13 +202,15 @@ unit_test:
   stage: test
   before_script:
     - module purge
-    - source /scratchm/sonics/dist/source.sh --env sonics_dev --compiler $COMPILER --mpi $MPI_LIB && module load py-gcovr-4.2-gcc-8.3.1-6lqfk6f
+    # - source /tmp_user/juno/sonics/dist/source_juno_all.sh --compiler $COMPILER --mpi $MPI_LIB && module load py-gcovr-4.2-gcc-8.3.1-6lqfk6f
+    - source /tmp_user/juno/sonics/dist/source_juno_all.sh --compiler=$COMPILER --mpi=$MPI_LIB
   script:
     - echo "Runner directory is $PWD; move to working directory $CUSTOM_CI_DIR"
     - export SLURM_EXACT=1
     - export I_MPI_PMI_LIBRARY=/usr/lib64/libpmi.so 
     - cd $CUSTOM_CI_DIR/build$MATRIX_KEY
-    - ./pdm_run -srun
+    # - ./pdm_run -srun # Pour l'instant ne marche pas avec openmpi
+    - ./pdm_run
     - if [ "${BUILD_TYPE}" == "Coverage" ]; then
     -   cd $CUSTOM_CI_DIR/build$MATRIX_KEY/src/CMakeFiles/pdm.dir
     -   for d in */ ; do cd $d && gcov -b -l -p -c *.gcno && cd .. ; done
@@ -265,7 +270,7 @@ unit_test:
 pages:
   stage: deploy
   rules:
-    - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == "dev_formation" || $CI_COMMIT_TAG != null
+    - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_TAG != null
   before_script:
     - ''
   script:
