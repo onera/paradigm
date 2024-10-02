@@ -3151,7 +3151,8 @@ _mesh_intersection_vol_surf
     _export_vtk_2d("extrp_mesh_b", extrp_mesh_b);
   }
 
-  PDM_error(__FILE__, __LINE__, 0, "_mesh_intersection_vol_surf : Not yet implemented\n");
+  // TODO...
+  // PDM_error(__FILE__, __LINE__, 0, "_mesh_intersection_vol_surf : Not yet implemented\n");
 }
 
 static PDM_polygon_status_t
