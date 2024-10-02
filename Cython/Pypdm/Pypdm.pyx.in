@@ -490,7 +490,7 @@ cdef double** np_list_to_double_pointers(list datas):
     array[i] = <double *> numpy_double.data
   return array
 
-cdef void dealloc_array_capsule(object capsule):
+cdef void dealloc_array_capsule(object capsule) noexcept:
     data = PyCapsule_GetPointer(capsule, NULL)
     PyTraceMalloc_Untrack(py_mem_domain, <uintptr_t> data)
     free(data)
