@@ -2358,20 +2358,14 @@ _mesh_intersection_vol_vol
 
   /* Get extract volume meshes */
   for (int i = 0; i < 2; i++) {
-    // n_vtx[i] = PDM_extract_part_n_entity_get(mi->extrp_mesh[i],
-    //                                          0,
-    //                                          PDM_MESH_ENTITY_VTX);
+    n_vtx[i] = PDM_extract_part_n_entity_get(mi->extrp_mesh[i],
+                                             0,
+                                             PDM_MESH_ENTITY_VTX);
 
-    // PDM_extract_part_parent_ln_to_gn_get(mi->extrp_mesh[i],
-    //                                      0,
-    //                                      PDM_MESH_ENTITY_VTX,
-    //                                      &vtx_ln_to_gn[i],
-    //                                      PDM_OWNERSHIP_KEEP);
-
-    // PDM_extract_part_vtx_coord_get(mi->extrp_mesh[i],
-    //                                0,
-    //                                &vtx_coord[i],
-    //                                PDM_OWNERSHIP_KEEP);
+    PDM_extract_part_vtx_coord_get(mi->extrp_mesh[i],
+                                   0,
+                                   &vtx_coord[i],
+                                   PDM_OWNERSHIP_KEEP);
 
     n_cell[i] = mi->extrp_mesh[i]->n_target[0];
     cell_ln_to_gn[i] = mi->extrp_mesh[i]->target_gnum[0];
@@ -2516,11 +2510,8 @@ _mesh_intersection_vol_vol
                                                               PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_NONE);
 
       // Transfer vtx from extract_pmn to extract_pmesh -->>
-      vtx_ln_to_gn[i] = NULL;
-
       // We are forced to copy the extracted vertices since pmn does not allow to edit ownership upon get
-      n_vtx[i] = PDM_part_mesh_nodal_n_vtx_get(extract_pmn, 0);
-      double *_vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(extract_pmn, 0);
+      double *_vtx_coord = vtx_coord[i];
       PDM_malloc(vtx_coord[i], n_vtx[i] * 3, double);
       memcpy(vtx_coord[i], _vtx_coord, sizeof(double) * n_vtx[i] * 3);
 
@@ -2557,20 +2548,11 @@ _mesh_intersection_vol_vol
     }
     else {
       /* From part mesh */
-      n_vtx[i] = PDM_extract_part_n_entity_get(mi->extrp_mesh[i],
-                                               0,
-                                               PDM_MESH_ENTITY_VTX);
-
       PDM_extract_part_parent_ln_to_gn_get(mi->extrp_mesh[i],
                                            0,
                                            PDM_MESH_ENTITY_VTX,
-                                           &vtx_ln_to_gn[i],
+                                           &vtx_ln_to_gn[i], // --> only for debug
                                            PDM_OWNERSHIP_KEEP);
-
-      PDM_extract_part_vtx_coord_get(mi->extrp_mesh[i],
-                                     0,
-                                     &vtx_coord[i],
-                                     PDM_OWNERSHIP_KEEP);
 
 
       PDM_extract_part_connectivity_get(mi->extrp_mesh[i],
@@ -3169,6 +3151,7 @@ _mesh_intersection_vol_surf
     _export_vtk_2d("extrp_mesh_b", extrp_mesh_b);
   }
 
+  PDM_error(__FILE__, __LINE__, 0, "_mesh_intersection_vol_surf : Not yet implemented\n");
 }
 
 static PDM_polygon_status_t
