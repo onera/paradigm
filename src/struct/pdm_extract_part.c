@@ -6880,7 +6880,12 @@ PDM_extract_part_n_entity_get
 )
 {
   if (extrp->is_nodal) {
-    PDM_error(__FILE__, __LINE__, 0, "Use part_mesh_nodal accessors instead\n");
+    if (entity_type == PDM_MESH_ENTITY_VTX) {
+      return PDM_part_mesh_nodal_n_vtx_get(extrp->extract_pmn, i_part_out);
+    }
+    else {
+      PDM_error(__FILE__, __LINE__, 0, "Use part_mesh_nodal accessors instead\n");
+    }
   }
 
   if(extrp->pextract_n_entity[entity_type] != NULL) {
@@ -6966,7 +6971,16 @@ PDM_extract_part_ln_to_gn_get
 )
 {
   if (extrp->is_nodal) {
-    PDM_error(__FILE__, __LINE__, 0, "Use part_mesh_nodal accessors instead\n");
+    if (entity_type == PDM_MESH_ENTITY_VTX) {
+      // TODO: edit ownership in pmn
+      assert(ownership != PDM_OWNERSHIP_USER);
+      *pentity_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(extrp->extract_pmn, i_part_out);
+
+      return PDM_part_mesh_nodal_n_vtx_get(extrp->extract_pmn, i_part_out);
+    }
+    else {
+      PDM_error(__FILE__, __LINE__, 0, "Use part_mesh_nodal accessors instead\n");
+    }
   }
 
   if(extrp->pextract_n_entity[entity_type] != NULL) {
@@ -7128,7 +7142,11 @@ PDM_extract_part_vtx_coord_get
 )
 {
   if (extrp->is_nodal) {
-    PDM_error(__FILE__, __LINE__, 0, "Use part_mesh_nodal accessors instead\n");
+    // TODO: edit ownership in pmn
+    assert(ownership != PDM_OWNERSHIP_USER);
+    *pvtx_coord = PDM_part_mesh_nodal_vtx_coord_get(extrp->extract_pmn, i_part_out);
+
+    return PDM_part_mesh_nodal_n_vtx_get(extrp->extract_pmn, i_part_out);
   }
 
   if(extrp->pextract_vtx_coord != NULL){
