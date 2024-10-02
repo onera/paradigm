@@ -761,11 +761,11 @@ _part_extension_one_depth
 
   PDM_part_to_part_free(ptp_edge);
 
-  for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
-
-    int n_part1_to_part2 = pedge_extented_to_pedge_idx[i_part][pn_edge[i_part]]/3;
-    // PDM_log_trace_array_long(pextented_edge_gnum[i_part], n_part1_to_part2, "pextented_edge_gnum ::");
-  }
+  //for(int i_part = 0; i_part < ln_part_tot; ++i_part) {
+  //
+  //  int n_part1_to_part2 = pedge_extented_to_pedge_idx[i_part][pn_edge[i_part]]/3;
+  //  PDM_log_trace_array_long(pextented_edge_gnum[i_part], n_part1_to_part2, "pextented_edge_gnum ::");
+  //}
 
   /*
    * Prepare previous gnum that alreay computed

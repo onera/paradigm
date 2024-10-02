@@ -363,6 +363,7 @@ int main(int argc, char *argv[])
     }
 
     if (mesh_dimension == 3) {
+      PDM_writer_elt_geom_t cell_type = (PDM_writer_elt_geom_t) -1;
       writer_wrapper(comm,
                      "pmesh_nodal_to_pmesh_3d",
                      "3d",
@@ -374,7 +375,7 @@ int main(int argc, char *argv[])
                      face_vtx_idx,
                      face_vtx,
                      pcell_ln_to_gn,
-                     -1,
+                     cell_type,
                      n_face,
                      cell_face_idx,
                      cell_face,
