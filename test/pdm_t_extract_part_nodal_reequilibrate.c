@@ -441,7 +441,7 @@ int main
   int                   visu        = 0;
   PDM_g_num_t           n_vtx_seg   = 10;
 
-  int compute_child_gnum = 1;
+  PDM_bool_t compute_child_gnum = PDM_TRUE;
 
   _read_args(argc,
              argv,
