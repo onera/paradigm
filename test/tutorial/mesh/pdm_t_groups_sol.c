@@ -291,7 +291,7 @@ _generate_mesh
   PDM_dmesh_nodal_elmts_t *dmne = dmn->volumic;
   int id_section = dmne->sections_id[0];
 
-  PDM_g_num_t *dcell_vtx = PDM_DMesh_nodal_elmts_section_std_get(dmne, id_section);
+  PDM_g_num_t *dcell_vtx = PDM_DMesh_nodal_elmts_section_std_get(dmne, id_section, PDM_OWNERSHIP_BAD_VALUE);
 
   int cell_vtx_n = PDM_Mesh_nodal_n_vtx_elt_get(elt_type, 1);
   PDM_malloc(*cell_vtx,dn_cell * cell_vtx_n,int);

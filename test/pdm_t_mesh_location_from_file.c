@@ -507,7 +507,7 @@ void _get_vtx_connectivity(
     );
 
     vtx_connect_table[elt_type] = PDM_DMesh_nodal_section_std_get(
-      dmn, PDM_GEOMETRY_KIND_VOLUMIC, section_vol_ids[i_section]
+      dmn, PDM_GEOMETRY_KIND_VOLUMIC, section_vol_ids[i_section], PDM_OWNERSHIP_BAD_VALUE
     );
 
     // -------- We assume vertex are always set to 0
@@ -533,7 +533,7 @@ void _get_vtx_connectivity(
     );
 
     vtx_connect_table[elt_type] = PDM_DMesh_nodal_section_std_get(
-      dmn, PDM_GEOMETRY_KIND_SURFACIC, section_surf_ids[i_section]
+      dmn, PDM_GEOMETRY_KIND_SURFACIC, section_surf_ids[i_section], PDM_OWNERSHIP_BAD_VALUE
     );
 
     // -------- Set all surfacic tag to 2
@@ -558,7 +558,7 @@ void _get_vtx_connectivity(
     );
 
     vtx_connect_table[elt_type] = PDM_DMesh_nodal_section_std_get(
-      dmn, PDM_GEOMETRY_KIND_RIDGE, section_edge_ids[i_section]
+      dmn, PDM_GEOMETRY_KIND_RIDGE, section_edge_ids[i_section], PDM_OWNERSHIP_BAD_VALUE
     );
 
     // -------- Set all edges tag to 3

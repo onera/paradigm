@@ -130,7 +130,7 @@ _delmt_vtx_to_pelmt_vtx
           block_elmts_n_vtx[i_section][i] = n_vtx_per_elmt;
           block_elmts_types[i_section][i] = t_elt;
         }
-        block_elmts_connec[i_section] = PDM_DMesh_nodal_elmts_section_std_get(dmne, id_section);
+        block_elmts_connec[i_section] = PDM_DMesh_nodal_elmts_section_std_get(dmne, id_section, PDM_OWNERSHIP_BAD_VALUE);
 
         break;
       }
@@ -331,7 +331,7 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
           block_elmts_n_vtx[i_section][i] = n_vtx_per_elmt;
           block_elmts_types[i_section][i] = t_elt;
         }
-        block_elmts_connec[i_section] = PDM_DMesh_nodal_elmts_section_std_get(dmne, id_section);
+        block_elmts_connec[i_section] = PDM_DMesh_nodal_elmts_section_std_get(dmne, id_section, PDM_OWNERSHIP_BAD_VALUE);
 
         break;
       }
@@ -1537,7 +1537,7 @@ PDM_dmesh_nodal_elmts_to_extract_dmesh_nodal_elmts
       {
         // int n_elt          = PDM_DMesh_nodal_elmts_section_n_elt_get(dmne, id_section);
         n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get (t_elt, 1);
-        block_elmts_connec = PDM_DMesh_nodal_elmts_section_std_get(dmne, id_section);
+        block_elmts_connec = PDM_DMesh_nodal_elmts_section_std_get(dmne, id_section, PDM_OWNERSHIP_BAD_VALUE);
         break;
       }
 

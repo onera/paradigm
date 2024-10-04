@@ -708,7 +708,7 @@ int main(int argc, char *argv[])
   int id_section = sections_id[0];
   // const PDM_g_num_t    *delmt_distribution = PDM_DMesh_nodal_distrib_section_get(dmn, geom_kind, id_section);
   // int                   n_elt              = PDM_DMesh_nodal_section_n_elt_get  (dmn, geom_kind, id_section);
-  PDM_g_num_t          *dconnec            = PDM_DMesh_nodal_section_std_get    (dmn, geom_kind, id_section);
+  PDM_g_num_t          *dconnec            = PDM_DMesh_nodal_section_std_get    (dmn, geom_kind, id_section, PDM_OWNERSHIP_BAD_VALUE);
   assert(PDM_DMesh_nodal_section_type_get(dmn, geom_kind, id_section) == t_elt);
 
 

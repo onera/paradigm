@@ -655,14 +655,14 @@ PDM_DMesh_nodal_update_ownership
 )
 {
   dmesh_nodal->vtx->owner = owner;
-  if (dmesh_nodal->volumic != NULL)
-    PDM_DMesh_nodal_elmts_update_ownership(dmesh_nodal->volumic, owner);
-  if (dmesh_nodal->surfacic != NULL)
-    PDM_DMesh_nodal_elmts_update_ownership(dmesh_nodal->surfacic, owner);
-  if (dmesh_nodal->ridge != NULL)
-    PDM_DMesh_nodal_elmts_update_ownership(dmesh_nodal->ridge, owner);
-  if (dmesh_nodal->corner != NULL)
-    PDM_DMesh_nodal_elmts_update_ownership(dmesh_nodal->corner, owner);
+  // if (dmesh_nodal->volumic != NULL)
+  //   PDM_DMesh_nodal_elmts_update_ownership(dmesh_nodal->volumic, owner);
+  // if (dmesh_nodal->surfacic != NULL)
+  //   PDM_DMesh_nodal_elmts_update_ownership(dmesh_nodal->surfacic, owner);
+  // if (dmesh_nodal->ridge != NULL)
+  //   PDM_DMesh_nodal_elmts_update_ownership(dmesh_nodal->ridge, owner);
+  // if (dmesh_nodal->corner != NULL)
+  //   PDM_DMesh_nodal_elmts_update_ownership(dmesh_nodal->corner, owner);
 }
 
 
@@ -705,14 +705,20 @@ PDM_DMesh_nodal_section_group_elmt_get
  PDM_geometry_kind_t  geom_kind,
  int                 *n_group_elmt,
  int                 **dgroup_elmt_idx,
- PDM_g_num_t         **dgroup_elmt
+ PDM_g_num_t         **dgroup_elmt,
+ PDM_ownership_t       owner
 )
 {
   PDM_dmesh_nodal_elmts_t* dmne = _get_from_geometry_kind(dmesh_nodal, geom_kind);
   assert(dmne != NULL);
-  *n_group_elmt    = dmne->n_group_elmt;
-  *dgroup_elmt_idx = dmne->dgroup_elmt_idx;
-  *dgroup_elmt     = dmne->dgroup_elmt;
+  // *n_group_elmt    = dmne->n_group_elmt;
+  // *dgroup_elmt_idx = dmne->dgroup_elmt_idx;
+  // *dgroup_elmt     = dmne->dgroup_elmt;
+  PDM_DMesh_nodal_elmts_group_get(dmne,
+                                  n_group_elmt,
+                                  dgroup_elmt_idx,
+                                  dgroup_elmt,
+                                  owner);
 }
 
 /**
@@ -729,12 +735,13 @@ PDM_DMesh_nodal_section_std_get
 (
       PDM_dmesh_nodal_t   *dmesh_nodal,
       PDM_geometry_kind_t  geom_kind,
-const int                  id_section
+const int                  id_section,
+      PDM_ownership_t      owner
 )
 {
   PDM_dmesh_nodal_elmts_t* dmne = _get_from_geometry_kind(dmesh_nodal, geom_kind);
   assert(dmne != NULL);
-  return PDM_DMesh_nodal_elmts_section_std_get(dmne, id_section);
+  return PDM_DMesh_nodal_elmts_section_std_get(dmne, id_section, owner);
 }
 
 PDM_g_num_t *
@@ -767,7 +774,8 @@ PDM_g_num_t *
 PDM_DMesh_nodal_elmts_section_std_get
 (
       PDM_dmesh_nodal_elmts_t *dmn_elts,
-const int                      id_section
+const int                      id_section,
+      PDM_ownership_t          owner
 )
 {
   if (dmn_elts == NULL) {
@@ -780,6 +788,10 @@ const int                      id_section
 
   if (section == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad standard section identifier\n");
+  }
+
+  if(owner != PDM_OWNERSHIP_BAD_VALUE) {
+    section->owner = owner;
   }
 
   return section->_connec;
@@ -1248,7 +1260,7 @@ PDM_dmesh_nodal_transfer_to_new_dmesh_nodal
 
     int id_section = dmne_in->sections_id[i];
     int                   n_elt     = PDM_DMesh_nodal_elmts_section_n_elt_get(dmne_in, id_section);
-    PDM_g_num_t          *delmt_vtx = PDM_DMesh_nodal_elmts_section_std_get  (dmne_in, id_section);
+    PDM_g_num_t          *delmt_vtx = PDM_DMesh_nodal_elmts_section_std_get  (dmne_in, id_section, PDM_OWNERSHIP_BAD_VALUE);
     PDM_Mesh_nodal_elt_t  t_elt     = PDM_DMesh_nodal_elmts_section_type_get (dmne_in, id_section);
     int n_vtx_per_elmt              = PDM_Mesh_nodal_n_vtx_elt_get           (t_elt    , 1);
 
@@ -1312,7 +1324,7 @@ PDM_dmesh_nodal_transfer_to_new_dmesh_nodal_gen
 
     int id_section = dmne_in->sections_id[i_section];
     int                   n_elt     = PDM_DMesh_nodal_elmts_section_n_elt_get(dmne_in, id_section);
-    PDM_g_num_t          *delmt_vtx = PDM_DMesh_nodal_elmts_section_std_get  (dmne_in, id_section);
+    PDM_g_num_t          *delmt_vtx = PDM_DMesh_nodal_elmts_section_std_get  (dmne_in, id_section, PDM_OWNERSHIP_BAD_VALUE);
     PDM_Mesh_nodal_elt_t  t_elt     = PDM_DMesh_nodal_elmts_section_type_get (dmne_in, id_section);
     int n_vtx_per_elmt              = PDM_Mesh_nodal_n_vtx_elt_get           (t_elt    , 1);
 
@@ -1739,7 +1751,8 @@ PDM_dmesh_nodal_find_topological_ridge
                                          PDM_GEOMETRY_KIND_SURFACIC,
                                          &n_group_face,
                                          &dgroup_face_idx,
-                                         &dgroup_face);
+                                         &dgroup_face,
+                                         PDM_OWNERSHIP_BAD_VALUE);
 
   // PDM_log_trace_connectivity_long(dgroup_face_idx, dgroup_face, n_group_face, "dgroup_face ::");
 
@@ -2062,7 +2075,7 @@ PDM_dmesh_nodal_revert_orientation
     PDM_Mesh_nodal_elt_t t_elt = PDM_DMesh_nodal_elmts_section_type_get(dmne, id_section);
     int n_elt                  = PDM_DMesh_nodal_elmts_section_n_elt_get(dmne, id_section);
     int n_vtx_per_elmt         = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, 1);
-    PDM_g_num_t       *dconnec = PDM_DMesh_nodal_elmts_section_std_get(dmne, id_section);
+    PDM_g_num_t       *dconnec = PDM_DMesh_nodal_elmts_section_std_get(dmne, id_section, PDM_OWNERSHIP_BAD_VALUE);
 
     PDM_g_num_t *tmp = NULL;
     PDM_malloc(tmp, n_vtx_per_elmt, PDM_g_num_t);

@@ -414,7 +414,7 @@ _create_dparent_num_corner
     assert(t_elt == PDM_MESH_NODAL_POINT);
 
     int n_elt           = PDM_DMesh_nodal_elmts_section_n_elt_get(dmn_elts, id_section);
-    PDM_g_num_t* connec = PDM_DMesh_nodal_elmts_section_std_get(dmn_elts, id_section);
+    PDM_g_num_t* connec = PDM_DMesh_nodal_elmts_section_std_get(dmn_elts, id_section, PDM_OWNERSHIP_BAD_VALUE);
 
     dn_corner[i_section] = n_elt;
     PDM_malloc(corner_ln_to_gn[i_section], n_elt, PDM_g_num_t);

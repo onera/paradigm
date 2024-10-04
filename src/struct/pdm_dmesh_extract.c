@@ -210,7 +210,8 @@ _rebuild_group_nodal
                                          geom_kind,
                                          &n_group_entity,
                                          &dbound_entity_idx,
-                                         &dbound_entity);
+                                         &dbound_entity,
+                                         PDM_OWNERSHIP_BAD_VALUE);
 
   if(n_group_entity == 0) {
     return;

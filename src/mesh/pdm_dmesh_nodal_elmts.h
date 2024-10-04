@@ -106,7 +106,8 @@ PDM_DMesh_nodal_elmts_group_get
  PDM_dmesh_nodal_elmts_t  *dmn_elts,
  int                      *n_group_elmt,
  int                     **dgroup_elmt_idx,
- PDM_g_num_t             **dgroup_elmt
+ PDM_g_num_t             **dgroup_elmt,
+ PDM_ownership_t           owner
 );
 
 void
@@ -141,7 +142,8 @@ PDM_g_num_t *
 PDM_DMesh_nodal_elmts_section_std_get
 (
       PDM_dmesh_nodal_elmts_t *dmn_elts,
-const int                      id_section
+const int                      id_section,
+      PDM_ownership_t          owner
 );
 
 PDM_g_num_t *

@@ -375,12 +375,16 @@ PDM_DMesh_nodal_elmts_group_get
  PDM_dmesh_nodal_elmts_t  *dmn_elts,
  int                      *n_group_elmt,
  int                     **dgroup_elmt_idx,
- PDM_g_num_t             **dgroup_elmt
+ PDM_g_num_t             **dgroup_elmt,
+ PDM_ownership_t           owner
 )
 {
   *n_group_elmt    = dmn_elts->n_group_elmt;
   *dgroup_elmt_idx = dmn_elts->dgroup_elmt_idx;
   *dgroup_elmt     = dmn_elts->dgroup_elmt;
+  if(owner != PDM_OWNERSHIP_BAD_VALUE) {
+    dmn_elts->dgroup_elmt_owner = owner;
+  }
 }
 
 
@@ -639,7 +643,7 @@ PDM_DMesh_nodal_elmts_update_ownership
   for(int i_section = 0; i_section < dmn_elts->n_section_poly3d; ++i_section) {
     dmn_elts->sections_poly3d[i_section]->owner = owner;
   }
-  dmn_elts->dgroup_elmt_owner = owner;
+  // dmn_elts->dgroup_elmt_owner = owner;
 }
 
 
