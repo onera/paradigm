@@ -96,7 +96,7 @@ _dist_cloud_surf_compute
 )
 {
   const int n_point_cloud      = dist->n_point_cloud;
-  PDM_Mesh_nodal_t *mesh_nodal = NULL;//dist->mesh_nodal;
+  PDM_part_mesh_nodal_t *mesh_nodal = NULL;//dist->mesh_nodal;
   PDM_surf_mesh_t  *surf_mesh  = dist->_surf_mesh;
   PDM_MPI_Comm comm            = dist->comm;
 
@@ -145,7 +145,7 @@ _dist_cloud_surf_compute
 
   int n_part_mesh = 0;
   if (mesh_nodal != NULL) {
-    n_part_mesh = PDM_Mesh_nodal_n_part_get (mesh_nodal);
+    n_part_mesh = PDM_part_mesh_nodal_n_part_get (mesh_nodal);
   }
   else if (surf_mesh != NULL) {
     n_part_mesh = PDM_surf_mesh_n_part_get (surf_mesh);
@@ -182,9 +182,9 @@ _dist_cloud_surf_compute
     const PDM_g_num_t *vertices_gnum = NULL;
 
     if (mesh_nodal != NULL) {
-      n_vertices      = PDM_Mesh_nodal_n_vertices_get (mesh_nodal, i_part);
-      vertices_coords = PDM_Mesh_nodal_vertices_get   (mesh_nodal, i_part);
-      vertices_gnum   = PDM_Mesh_nodal_vertices_g_num_get (mesh_nodal, i_part);
+      n_vertices      = PDM_part_mesh_nodal_n_vtx_get    (mesh_nodal, i_part);
+      vertices_coords = PDM_part_mesh_nodal_vtx_coord_get(mesh_nodal, i_part);
+      vertices_gnum   = PDM_part_mesh_nodal_vtx_g_num_get(mesh_nodal, i_part);
     } else if (surf_mesh != NULL) {
       n_vertices      = PDM_surf_mesh_part_n_vtx_get(surf_mesh, i_part);
       vertices_coords = PDM_surf_mesh_part_vtx_get  (surf_mesh, i_part);
