@@ -456,7 +456,8 @@ PDM_sections_decompose_faces
       PDM_DMesh_nodal_elmts_section_poly2d_get(dmn_elts,
                                                id_section,
                                                &connec_idx,
-                                               &connec);
+                                               &connec,
+                                               PDM_OWNERSHIP_BAD_VALUE);
 
       PDM_poly2d_decomposes_faces(n_elt,
                                   &n_elt_current,
@@ -577,7 +578,8 @@ PDM_sections_decompose_edges
       PDM_DMesh_nodal_elmts_section_poly2d_get(dmn_elts,
                                                id_section,
                                                &connec_idx,
-                                               &connec);
+                                               &connec,
+                                               PDM_OWNERSHIP_BAD_VALUE);
 
       PDM_poly2d_decomposes_edges(n_elt,
                                   &n_elt_current,

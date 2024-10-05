@@ -149,7 +149,8 @@ _delmt_vtx_to_pelmt_vtx
         block_elmts_connec[i_section] = PDM_DMesh_nodal_elmts_section_std_ho_get(dmne,
                                                                                  id_section,
                                                                                  &order,
-                                                                                 &ho_ordering);
+                                                                                 &ho_ordering,
+                                                                                 PDM_OWNERSHIP_BAD_VALUE);
 
         int n_elt           = PDM_DMesh_nodal_elmts_section_n_elt_get(dmne, id_section);
         PDM_malloc(block_elmts_n_vtx[i_section], n_elt, int                 );
@@ -350,7 +351,8 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
         block_elmts_connec[i_section] = PDM_DMesh_nodal_elmts_section_std_ho_get(dmne,
                                                                                  id_section,
                                                                                  &order,
-                                                                                 &ho_ordering);
+                                                                                 &ho_ordering,
+                                                                                 PDM_OWNERSHIP_BAD_VALUE);
 
         section_order      [i_section] = order;
         section_ho_ordering[i_section] = ho_ordering;
@@ -377,7 +379,8 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
         PDM_DMesh_nodal_elmts_section_poly2d_get(dmne,
                                                  id_section,
                                                  &connec_idx,
-                                                 &connec);
+                                                 &connec,
+                                                 PDM_OWNERSHIP_BAD_VALUE);
 
         PDM_malloc(block_elmts_n_vtx[i_section], n_elt, int                 );
         PDM_malloc(block_elmts_types[i_section], n_elt, PDM_Mesh_nodal_elt_t);
@@ -1556,7 +1559,8 @@ PDM_dmesh_nodal_elmts_to_extract_dmesh_nodal_elmts
         block_elmts_connec = PDM_DMesh_nodal_elmts_section_std_ho_get(dmne,
                                                                       id_section,
                                                                       &order,
-                                                                      &ho_ordering);
+                                                                      &ho_ordering,
+                                                                      PDM_OWNERSHIP_BAD_VALUE);
 
         n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get (t_elt, order);
         break;
@@ -1661,7 +1665,8 @@ PDM_dmesh_nodal_elmts_to_extract_dmesh_nodal_elmts
         PDM_g_num_t* lblock_elmts_connec = PDM_DMesh_nodal_elmts_section_std_ho_get(dmne,
                                                                       id_section,
                                                                       &order,
-                                                                      &ho_ordering);
+                                                                      &ho_ordering,
+                                                                      PDM_OWNERSHIP_BAD_VALUE);
         PDM_UNUSED(lblock_elmts_connec);
         n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get (t_elt, order);
 

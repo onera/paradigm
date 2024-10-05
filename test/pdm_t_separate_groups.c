@@ -617,7 +617,7 @@ _separate_groups
   const PDM_g_num_t *_distrib_vtx = PDM_DMesh_nodal_distrib_vtx_get(dmn);
 
   int dn_vtx = (int) (_distrib_vtx[i_rank+1] - _distrib_vtx[i_rank]);
-  double *_dvtx_coord = PDM_DMesh_nodal_vtx_get(dmn);
+  double *_dvtx_coord = PDM_DMesh_nodal_vtx_get(dmn, PDM_OWNERSHIP_BAD_VALUE);
 
   if (ownership == PDM_OWNERSHIP_USER) {
     PDM_malloc(*dvtx_coord, dn_vtx * 3, double);

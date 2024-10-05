@@ -205,7 +205,7 @@ int                        **cell_vtx
 
 
   PDM_g_num_t *distrib_vtx = PDM_dmesh_nodal_vtx_distrib_get(dmn);
-  dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn);
+  dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn, PDM_OWNERSHIP_BAD_VALUE);
   dn_vtx = distrib_vtx[i_rank+1] - distrib_vtx[i_rank];
 
 

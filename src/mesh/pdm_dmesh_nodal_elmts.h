@@ -152,7 +152,8 @@ PDM_DMesh_nodal_elmts_section_std_ho_get
       PDM_dmesh_nodal_elmts_t  *dmn_elts,
 const int                       id_section,
       int                      *order,
-const char                    **ho_ordering
+const char                    **ho_ordering,
+      PDM_ownership_t           owner
 );
 
 int
@@ -190,7 +191,8 @@ PDM_DMesh_nodal_elmts_section_poly2d_get
       PDM_dmesh_nodal_elmts_t  *dmn_elts,
 const int                       id_section,
       PDM_l_num_t             **connec_idx,
-      PDM_g_num_t             **connec
+      PDM_g_num_t             **connec,
+      PDM_ownership_t           owner
 );
 
 /**
@@ -242,7 +244,8 @@ const int                       id_section,
       PDM_l_num_t             **facvtx_idx,
       PDM_g_num_t             **facvtx,
       PDM_l_num_t             **cellfac_idx,
-      PDM_g_num_t             **cellfac
+      PDM_g_num_t             **cellfac,
+      PDM_ownership_t           owner
 );
 
 void

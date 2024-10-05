@@ -414,7 +414,8 @@ PDM_DMesh_nodal_n_vtx_get
 double *
 PDM_DMesh_nodal_vtx_get
 (
-PDM_dmesh_nodal_t  *dmesh_nodal
+ PDM_dmesh_nodal_t  *dmesh_nodal,
+ PDM_ownership_t     owner
 )
 {
 
@@ -423,6 +424,10 @@ PDM_dmesh_nodal_t  *dmesh_nodal
   }
 
   PDM_DMesh_nodal_vtx_t *vtx = dmesh_nodal->vtx;
+
+  if(owner != PDM_OWNERSHIP_BAD_VALUE) {
+    vtx->owner = owner;
+  }
 
   return vtx->_coords;
 }
@@ -648,25 +653,6 @@ const PDM_Mesh_nodal_elt_t  t_elt
 }
 
 void
-PDM_DMesh_nodal_update_ownership
-(
- PDM_dmesh_nodal_t   *dmesh_nodal,
- PDM_ownership_t      owner
-)
-{
-  dmesh_nodal->vtx->owner = owner;
-  // if (dmesh_nodal->volumic != NULL)
-  //   PDM_DMesh_nodal_elmts_update_ownership(dmesh_nodal->volumic, owner);
-  // if (dmesh_nodal->surfacic != NULL)
-  //   PDM_DMesh_nodal_elmts_update_ownership(dmesh_nodal->surfacic, owner);
-  // if (dmesh_nodal->ridge != NULL)
-  //   PDM_DMesh_nodal_elmts_update_ownership(dmesh_nodal->ridge, owner);
-  // if (dmesh_nodal->corner != NULL)
-  //   PDM_DMesh_nodal_elmts_update_ownership(dmesh_nodal->corner, owner);
-}
-
-
-void
 PDM_DMesh_nodal_section_std_set
 (
       PDM_dmesh_nodal_t   *dmesh_nodal,
@@ -751,50 +737,16 @@ PDM_DMesh_nodal_section_std_ho_get
       PDM_geometry_kind_t  geom_kind,
 const int                  id_section,
       int                 *order,
-const char               **ho_ordering
+const char               **ho_ordering,
+      PDM_ownership_t      owner
 )
 {
   PDM_dmesh_nodal_elmts_t* dmne = _get_from_geometry_kind(dmesh_nodal, geom_kind);
   assert(dmne != NULL);
 
-  PDM_g_num_t *delt_vtx = PDM_DMesh_nodal_elmts_section_std_ho_get(dmne, id_section, order, ho_ordering);
+  PDM_g_num_t *delt_vtx = PDM_DMesh_nodal_elmts_section_std_ho_get(dmne, id_section, order, ho_ordering, owner);
 
   return delt_vtx;
-}
-/**
- * \brief Return standard section description
- * \param [in]  hdl            Distributed nodal mesh handle
- * \param [in]  id_section       Block identifier
- *
- * \return  connect           Connectivity
- *
- */
-
-PDM_g_num_t *
-PDM_DMesh_nodal_elmts_section_std_get
-(
-      PDM_dmesh_nodal_elmts_t *dmn_elts,
-const int                      id_section,
-      PDM_ownership_t          owner
-)
-{
-  if (dmn_elts == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
-  }
-
-  int _id_section = id_section - PDM_BLOCK_ID_BLOCK_STD;
-
-  PDM_DMesh_nodal_section_std_t *section = dmn_elts->sections_std[_id_section];
-
-  if (section == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad standard section identifier\n");
-  }
-
-  if(owner != PDM_OWNERSHIP_BAD_VALUE) {
-    section->owner = owner;
-  }
-
-  return section->_connec;
 }
 
 
@@ -804,7 +756,8 @@ PDM_DMesh_nodal_elmts_section_std_ho_get
       PDM_dmesh_nodal_elmts_t  *dmn_elts,
 const int                       id_section,
       int                      *order,
-const char                    **ho_ordering
+const char                    **ho_ordering,
+      PDM_ownership_t           owner
 )
 {
   if (dmn_elts == NULL) {
@@ -820,6 +773,10 @@ const char                    **ho_ordering
 
   if (section == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad standard section identifier\n");
+  }
+
+  if(owner != PDM_OWNERSHIP_BAD_VALUE) {
+    section->owner = owner;
   }
 
   return section->_connec;
@@ -955,12 +912,13 @@ PDM_DMesh_nodal_section_poly2d_get
       PDM_geometry_kind_t  geom_kind,
 const int                  id_section,
       PDM_l_num_t        **connec_idx,
-      PDM_g_num_t        **connec
+      PDM_g_num_t        **connec,
+      PDM_ownership_t      owner
 )
 {
   PDM_dmesh_nodal_elmts_t* dmne = _get_from_geometry_kind(dmesh_nodal, geom_kind);
   assert(dmne != NULL);
-  PDM_DMesh_nodal_elmts_section_poly2d_get(dmne, id_section, connec_idx, connec);
+  PDM_DMesh_nodal_elmts_section_poly2d_get(dmne, id_section, connec_idx, connec, owner);
 }
 
 
@@ -1024,14 +982,15 @@ const int                   id_section,
       PDM_l_num_t         **facvtx_idx,
       PDM_g_num_t         **facvtx,
       PDM_l_num_t         **cellfac_idx,
-      PDM_g_num_t         **cellfac
+      PDM_g_num_t         **cellfac,
+      PDM_ownership_t       owner
 )
 {
   if (dmesh_nodal == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
   }
   PDM_dmesh_nodal_elmts_t* dmne = _get_from_geometry_kind(dmesh_nodal, geom_kind);
-  PDM_DMesh_nodal_elmts_section_poly3d_get(dmne, id_section, n_face, facvtx_idx, facvtx, cellfac_idx, cellfac);
+  PDM_DMesh_nodal_elmts_section_poly3d_get(dmne, id_section, n_face, facvtx_idx, facvtx, cellfac_idx, cellfac, owner);
 }
 
 
@@ -1438,11 +1397,11 @@ PDM_dmesh_nodal_dump_vtk
                                          geom_kind,
                                          id_section,
                                          &dconnec_idx,
-                                         &dconnec);
-    }
-    else {
+                                         &dconnec,
+                                         PDM_OWNERSHIP_BAD_VALUE);
+    } else {
       assert(t_elt != PDM_MESH_NODAL_POLY_3D);
-      dconnec     = PDM_DMesh_nodal_section_std_ho_get (dmn, geom_kind, id_section, &order, &ho_ordering);
+      dconnec     = PDM_DMesh_nodal_section_std_ho_get (dmn, geom_kind, id_section, &order, &ho_ordering, PDM_OWNERSHIP_BAD_VALUE);
       int strid   = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
       dconnec_idx = PDM_array_new_idx_from_const_stride_int(strid, n_elt);
     }
@@ -1472,7 +1431,7 @@ PDM_dmesh_nodal_dump_vtk
      * Coordinates
      */
     PDM_g_num_t *vtx_distrib = PDM_dmesh_nodal_vtx_distrib_get(dmn);
-    double      *dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn);
+    double      *dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn, PDM_OWNERSHIP_BAD_VALUE);
     // int          dn_vtx   = PDM_DMesh_nodal_n_vtx_get(dln->dmesh_nodal_in);
     // assert(dn_vtx == (vtx_distrib[i_rank+1]-vtx_distrib[i_rank]));
     double** tmp_pvtx_coord = NULL;
@@ -1965,7 +1924,7 @@ PDM_dmesh_nodal_find_topological_ridge
    */
   if(1 == 0) {
 
-    double* dvtx_coord = PDM_DMesh_nodal_vtx_get(dmesh_nodal);
+    double* dvtx_coord = PDM_DMesh_nodal_vtx_get(dmesh_nodal, PDM_OWNERSHIP_BAD_VALUE);
     const PDM_g_num_t* vtx_distrib = PDM_DMesh_nodal_distrib_vtx_get(dmesh_nodal);
 
     PDM_g_num_t *pridge_ln_to_gn = NULL;

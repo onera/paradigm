@@ -216,7 +216,7 @@ char *argv[]
     const PDM_g_num_t *distrib = PDM_DMesh_nodal_distrib_vtx_get(dmn);
 
     n_src = (int) (distrib[i_rank+1] - distrib[i_rank]);
-    double *dvtx_coord = PDM_DMesh_nodal_vtx_get(dmn);
+    double *dvtx_coord = PDM_DMesh_nodal_vtx_get(dmn, PDM_OWNERSHIP_BAD_VALUE);
 
     PDM_malloc(src_coord, n_src * 3, double);
     memcpy(src_coord, dvtx_coord, sizeof(double) * n_src * 3);

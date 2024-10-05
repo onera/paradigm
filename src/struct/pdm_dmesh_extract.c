@@ -819,7 +819,7 @@ _dmesh_extract_nodal
                          3 * sizeof(double),
                          PDM_STRIDE_CST_INTERLACED,
                          &stride_one,
-             (void *  )  PDM_DMesh_nodal_vtx_get(dme->dmesh_nodal),
+             (void *  )  PDM_DMesh_nodal_vtx_get(dme->dmesh_nodal, PDM_OWNERSHIP_BAD_VALUE),
                          NULL,
              (void ***)  &tmp_dvtx_coord);
 

@@ -704,6 +704,41 @@ const int                n_elt,
   }
 }
 
+/**
+ * \brief Return standard section description
+ * \param [in]  hdl         Distributed nodal mesh handle
+ * \param [in]  id_section  Block identifier
+ *
+ * \return  connect         Connectivity
+ *
+ */
+PDM_g_num_t *
+PDM_DMesh_nodal_elmts_section_std_get
+(
+      PDM_dmesh_nodal_elmts_t *dmn_elts,
+const int                      id_section,
+      PDM_ownership_t          owner
+)
+{
+  if (dmn_elts == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+  }
+
+  int _id_section = id_section - PDM_BLOCK_ID_BLOCK_STD;
+
+  PDM_DMesh_nodal_section_std_t *section = dmn_elts->sections_std[_id_section];
+
+  if (section == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad standard section identifier\n");
+  }
+
+  if(owner != PDM_OWNERSHIP_BAD_VALUE) {
+    section->owner = owner;
+  }
+
+  return section->_connec;
+}
+
 
 /**
  * \brief Define a polygon section
@@ -778,7 +813,8 @@ PDM_DMesh_nodal_elmts_section_poly2d_get
       PDM_dmesh_nodal_elmts_t  *dmn_elts,
 const int                       id_section,
       PDM_l_num_t             **connec_idx,
-      PDM_g_num_t             **connec
+      PDM_g_num_t             **connec,
+      PDM_ownership_t           owner
 )
 {
   int _id_section = id_section - PDM_BLOCK_ID_BLOCK_POLY2D;
@@ -790,6 +826,10 @@ const int                       id_section,
 
   *connec_idx = section->_connec_idx;
   *connec     = section->_connec;
+
+  if(owner != PDM_OWNERSHIP_BAD_VALUE) {
+    section->owner = owner;
+  }
 }
 
 
@@ -959,7 +999,8 @@ const int                       id_section,
       PDM_l_num_t             **facvtx_idx,
       PDM_g_num_t             **facvtx,
       PDM_l_num_t             **cellfac_idx,
-      PDM_g_num_t             **cellfac
+      PDM_g_num_t             **cellfac,
+      PDM_ownership_t           owner
 )
 {
   int _id_section = id_section - PDM_BLOCK_ID_BLOCK_POLY3D;
@@ -975,6 +1016,10 @@ const int                       id_section,
   *facvtx      = section->_face_vtx;
   *cellfac_idx = section->_cell_face_idx;
   *cellfac     = section->_cell_face;
+
+  if(owner != PDM_OWNERSHIP_BAD_VALUE) {
+    section->owner = owner;
+  }
 
 }
 

@@ -199,7 +199,7 @@ _generate_volume_mesh
     double angle = pi/5.;
     PDM_g_num_t* distrib_vtx = PDM_dmesh_nodal_vtx_distrib_get(dmn);
     int dn_vtx = distrib_vtx[i_rank+1] - distrib_vtx[i_rank];
-    double* vtx_coord = PDM_DMesh_nodal_vtx_get(dmn);
+    double* vtx_coord = PDM_DMesh_nodal_vtx_get(dmn, PDM_OWNERSHIP_BAD_VALUE);
     for(int i_vtx = 0; i_vtx < dn_vtx; ++i_vtx) {
       _rotate_coord(angle, &vtx_coord[3*i_vtx]);
     }
