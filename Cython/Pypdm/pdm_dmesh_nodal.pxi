@@ -31,7 +31,7 @@ cdef extern from "pdm_dmesh_nodal.h":
     # PDM_g_num_t *PDM_DMesh_nodal_distrib_section_get(PDM_dmesh_nodal_t* dmn, int id_section)
 
     int                  PDM_DMesh_nodal_n_vtx_get(PDM_dmesh_nodal_t* dmn)
-    int*                 PDM_DMesh_nodal_vtx_tag_get(PDM_dmesh_nodal_t* dmn)
+    int*                 PDM_DMesh_nodal_vtx_tag_get(PDM_dmesh_nodal_t* dmn, PDM_ownership_t      owner)
 
     int*                 PDM_DMesh_nodal_sections_id_get(PDM_dmesh_nodal_t* dmn, PDM_geometry_kind_t geom_kind)
 
@@ -109,7 +109,8 @@ cdef class DistributedMeshNodal:
     # ************************************************************************
     # > Class attributes
     cdef PDM_dmesh_nodal_t *dmn
-    keep_alive = list()
+    cdef public:
+      object keep_alive
     # cdef int idmesh
     cdef int n_rank
     # ************************************************************************
@@ -130,6 +131,8 @@ cdef class DistributedMeshNodal:
         # # > Numpy array
         # cdef NPY.ndarray[npy_pdm_gnum_t, ndim=1, mode='fortran'] partLNToGN
         # ************************************************************************
+
+        self.keep_alive = []
 
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
         self.n_rank = comm.Get_size()
@@ -293,6 +296,13 @@ cdef class DistributedMeshNodalCapsule:
     return dmesh_nodal_get_vtx(self, comm)
 
   # ------------------------------------------------------------------------
+  def dmesh_nodal_get_vtx_tag(self, MPI.Comm comm):
+    """
+    """
+    return dmesh_nodal_get_vtx_tag(self, comm)
+
+
+  # ------------------------------------------------------------------------
   def dmesh_nodal_get_group(self, PDM_geometry_kind_t geom_kind):
     """
     """
@@ -370,11 +380,25 @@ def dmesh_nodal_get_vtx(DMeshNodal pydmn, MPI.Comm    comm):
   vtx_distrib = PDM_dmesh_nodal_vtx_distrib_copy_get(pydmn.dmn)
   n_vtx = PDM_DMesh_nodal_n_vtx_get(pydmn.dmn);
   vtx_coord = PDM_DMesh_nodal_vtx_get(pydmn.dmn, PDM_OWNERSHIP_USER)
-  vtx_tag = PDM_DMesh_nodal_vtx_tag_get(pydmn.dmn)
+  # vtx_tag = PDM_DMesh_nodal_vtx_tag_get(pydmn.dmn)
 
   return {"np_vtx"         : create_numpy_d(vtx_coord,   3*n_vtx,           True),
-          "np_vtx_distrib" : create_numpy_g(vtx_distrib, comm.Get_size()+1, True ),
-          "np_vtx_tag"     : create_numpy_i(vtx_tag,     n_vtx,             False)}
+          "np_vtx_distrib" : create_numpy_g(vtx_distrib, comm.Get_size()+1, True)}
+          # "np_vtx_tag"     : create_numpy_i(vtx_tag,     n_vtx,             False)}
+
+def dmesh_nodal_get_vtx_tag(DMeshNodal pydmn, MPI.Comm    comm):
+  """
+  """
+  # ************************************************************************
+  # > Declaration
+  cdef double               *vtx_coord
+  cdef int                  *vtx_tag
+  cdef NPY.npy_intp          dim
+  # ************************************************************************
+  n_vtx = PDM_DMesh_nodal_n_vtx_get(pydmn.dmn);
+  vtx_tag = PDM_DMesh_nodal_vtx_tag_get(pydmn.dmn, PDM_OWNERSHIP_USER)
+
+  return {"np_vtx_tag"     : create_numpy_i(vtx_tag,     n_vtx,             True)}
 
 def dmesh_nodal_get_sections(DMeshNodal          pydmn,
                              PDM_geometry_kind_t geom_kind,

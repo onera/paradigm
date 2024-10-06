@@ -572,7 +572,7 @@ void _get_vtx_connectivity(
 
   // ---- Get vertex element
   n_elt_table[PDM_MESH_NODAL_POINT] = PDM_DMesh_nodal_n_vtx_get(dmn);
-  tag_table[PDM_MESH_NODAL_POINT]   = PDM_DMesh_nodal_vtx_tag_get(dmn);
+  tag_table[PDM_MESH_NODAL_POINT]   = PDM_DMesh_nodal_vtx_tag_get(dmn, PDM_OWNERSHIP_BAD_VALUE);
   *vtx_coords                       = PDM_DMesh_nodal_vtx_get(dmn, PDM_OWNERSHIP_BAD_VALUE);
 }
 

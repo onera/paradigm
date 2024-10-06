@@ -80,6 +80,8 @@ cdef class MeshCellToNode:
     cdef int*                    pn_elt
     cdef MPI.Comm                py_comm
     cdef object                  pdi
+    cdef public:
+      object keep_alive
     # ************************************************************************
 
     # ------------------------------------------------------------------------
@@ -92,6 +94,7 @@ cdef class MeshCellToNode:
         """
         Constructor of PartToBlock object
         """
+        self.keep_alive = []
         cdef MPI.MPI_Comm c_comm = comm.ob_mpi
         self.mi = PDM_field_cell_to_vtx_create(n_domain,
                                         <int*> n_part.data,

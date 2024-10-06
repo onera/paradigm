@@ -98,16 +98,19 @@ _vtx_free
         vtx->_coords = NULL;
       }
 
-      if(vtx->dvtx_tag != NULL) {
-        PDM_free(vtx->dvtx_tag);
-        vtx->dvtx_tag = NULL;
-      }
-
       if(vtx->dvtx_parent_g_num != NULL) {
         PDM_free(vtx->dvtx_parent_g_num);
         vtx->dvtx_parent_g_num = NULL;
       }
     }
+
+    if(vtx->owner_tag == PDM_OWNERSHIP_KEEP) {
+      if(vtx->dvtx_tag != NULL) {
+        PDM_free(vtx->dvtx_tag);
+        vtx->dvtx_tag = NULL;
+      }
+    }
+
     PDM_free(vtx);
   }
   return NULL;
@@ -322,7 +325,8 @@ void
 PDM_DMesh_nodal_vtx_tag_set
 (
  PDM_dmesh_nodal_t *dmesh_nodal,
- int               *dvtx_tag
+ int               *dvtx_tag,
+ PDM_ownership_t    owner
 )
 {
   if (dmesh_nodal == NULL) {
@@ -334,6 +338,7 @@ PDM_DMesh_nodal_vtx_tag_set
   if (vtx->dvtx_tag != NULL) {
     PDM_error(__FILE__, __LINE__, 0, "dvtx_tag are already defined\n");
   }
+  vtx->owner_tag   = owner;
 
   vtx->dvtx_tag = dvtx_tag;
 }
@@ -433,7 +438,7 @@ PDM_DMesh_nodal_vtx_get
 }
 
 /**
- * \brief  Return coordinates of vertices
+ * \brief  Return tag of vertices
  *
  * \param [in]  hdl       Distributed nodal mesh handle
  *
@@ -444,7 +449,8 @@ PDM_DMesh_nodal_vtx_get
 int*
 PDM_DMesh_nodal_vtx_tag_get
 (
-PDM_dmesh_nodal_t  *dmesh_nodal
+ PDM_dmesh_nodal_t  *dmesh_nodal,
+ PDM_ownership_t     owner
 )
 {
 
@@ -453,6 +459,10 @@ PDM_dmesh_nodal_t  *dmesh_nodal
   }
 
   PDM_DMesh_nodal_vtx_t *vtx = dmesh_nodal->vtx;
+
+  if(owner != PDM_OWNERSHIP_BAD_VALUE) {
+    vtx->owner_tag = owner;
+  }
 
   return vtx->dvtx_tag;
 }

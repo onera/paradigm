@@ -98,7 +98,8 @@ void
 PDM_DMesh_nodal_vtx_tag_set
 (
  PDM_dmesh_nodal_t *dmesh_nodal,
- int               *dvtx_tag
+ int               *dvtx_tag,
+ PDM_ownership_t    owner
 );
 
 void
@@ -111,7 +112,8 @@ PDM_DMesh_nodal_vtx_parent_gnum_set
 int*
 PDM_DMesh_nodal_vtx_tag_get
 (
-PDM_dmesh_nodal_t  *dmesh_nodal
+ PDM_dmesh_nodal_t  *dmesh_nodal,
+ PDM_ownership_t     owner
 );
 
 
