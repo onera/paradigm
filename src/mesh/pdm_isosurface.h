@@ -87,12 +87,6 @@ typedef _pdm_isosurface_field_function_t PDM_isosurface_field_function_t;
  *
  * \param [in]  comm            PDM MPI communicator
  * \param [in]  mesh_dimension  Dimension of source mesh (2 or 3)
- * \param [in]  elt_type        Desired element type for iso-surface mesh
- *
- * \note Admissible values for \p elt_type are:
- *   - \ref PDM_MESH_NODAL_TRIA3
- *   - \ref PDM_MESH_NODAL_POLY_2D
- *
  *
  * \return Pointer to a new \ref PDM_isosurface_t instance
  *
@@ -103,7 +97,6 @@ PDM_isosurface_create
 (
   PDM_MPI_Comm             comm,
   int                      mesh_dimension
-  // PDM_Mesh_nodal_elt_t     elt_type // TODO: Why this arg ? depends of entry
 );
 
 

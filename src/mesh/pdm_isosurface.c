@@ -2541,7 +2541,6 @@ PDM_isosurface_create
 (
  PDM_MPI_Comm             comm,
  int                      mesh_dimension
- // PDM_Mesh_nodal_elt_t     elt_type
 )
 {
   PDM_isosurface_t *isos = NULL;
