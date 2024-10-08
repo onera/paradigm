@@ -593,6 +593,50 @@ PDM_geom_elem_edge_upwind_and_downwind
 );
 
 
+/**
+ *  \brief Compute downwind and upwind element of all edges (or -1 if not found )
+ *
+ *  @param [in]  i_plane              Cartesian plane (XY : 0, YZ : 1, ZX : 2)
+ *  @param [in]  face_ln_to_gn        Face global IDs (optional, used to guarantee deterministic results)
+ *  @param [in]  face_center          Face centers (optional, used to guarantee deterministic results)
+ *  @param [in]  face_edge_idx        Index for face-edge connectivity
+ *  @param [in]  face_edge            Face-edge connectivity
+ *  @param [in]  n_edge               Number of edges
+ *  @param [in]  edge_vtx             Edge-vertex connectivity
+ *  @param [in]  vtx_face_idx         Index for vertex-face connectivity
+ *  @param [in]  vtx_face             Vertex-face connectivity
+ *  @param [in]  vtx_coord            Vertex coordinates (size = 3*n_vtx)
+ *  @param [out] upwind_face_out      Face number corresponding of upwind face   (or -1) (size =     \p n_edge)
+ *  @param [out] downwind_face_out    Face number corresponding of downwind face (or -1) (size =     \p n_edge)
+ *  @param [out] upwind_edge_out      Edge number corresponding of upwind edge   (or -1) (size =     \p n_edge)
+ *  @param [out] downwind_edge_out    Edge number corresponding of downwind edge (or -1) (size =     \p n_edge)
+ *  @param [out] upwind_point_out     Coordinates of upwind point                        (size = 3 * \p n_edge)
+ *  @param [out] downwind_point_out   Coordinates of downwind point                      (size = 3 * \p n_edge)
+ *
+ */
+void
+PDM_geom_elem_edge_upwind_and_downwind_2d
+(
+ int          i_plane,
+ PDM_g_num_t *face_ln_to_gn,
+ double      *face_center,
+ int         *face_edge_idx,
+ int         *face_edge,
+ int          n_edge,
+ int         *edge_vtx,
+ int         *vtx_face_idx,
+ int         *vtx_face,
+ double      *vtx_coord,
+ int        **upwind_face_out,
+ int        **downwind_face_out,
+ int        **upwind_edge_out,
+ int        **downwind_edge_out,
+ double     **upwind_point_out,
+ double     **downwind_point_out
+);
+
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
