@@ -148,9 +148,39 @@ PDM_line_intersection_2d
  const double a2[2],
  const double b1[2],
  const double b2[2],
- double *u,
- double *v
- );
+       double *u,
+       double *v
+);
+
+/**
+ * @brief Determines the intersection between a half-line and a line segment in 2D.
+ *
+ * This function calculates the intersection between a half-line defined by points
+ * \p a1 and \p a2, and a line segment defined by points \p b1 and \p b2.
+ * It returns an indicator of the intersection type and, if an intersection is found,
+ * the parameters \p u and \p v describe the position of the intersection point on the half-line
+ * and the segment respectively.
+ *
+ * @param[in]  a1                 Coordinates of the first point defining the half-line (origin).
+ * @param[in]  a2                 Coordinates of the second point defining the half-line (direction).
+ * @param[in]  b1                 Coordinates of the first point defining the line segment.
+ * @param[in]  b2                 Coordinates of the second point defining the line segment.
+ * @param[out] u                  Position of the intersection point on the half-line (parameter of the half-line).
+ * @param[out] v                  Position of the intersection point on the line segment (parameter of the segment).
+ * @param[out] intersection_coord Coordinates of intersection point if any
+ */
+PDM_line_intersect_t
+PDM_ray_segment_intersection_2d
+(
+ const double  a1[2],
+ const double  a2[2],
+ const double  b1[2],
+ const double  b2[2],
+       double *u,
+       double *v,
+       double *intersection_coord
+);
+
 
 double
 PDM_line_distance_2d
