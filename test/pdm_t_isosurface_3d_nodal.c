@@ -555,8 +555,7 @@ int main(int argc, char *argv[])
                                 plane_isovalues);
   PDM_isosurface_equation_set(isos,
                               iso1,
-                              plane_equation,
-                              0);
+                              plane_equation);
 
   // > User field isosurface
 

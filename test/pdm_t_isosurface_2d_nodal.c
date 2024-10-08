@@ -366,8 +366,7 @@ int main(int argc, char *argv[])
                                 plane_isovalues);
   PDM_isosurface_equation_set(isos,
                               iso1,
-                              plane_equation,
-                              0);
+                              plane_equation);
 
   // > Sphere isosurface
   double sphere_equation [4] = {0.5,0.5,0.5,0.5};
@@ -378,8 +377,7 @@ int main(int argc, char *argv[])
                                 sphere_isovalues);
   PDM_isosurface_equation_set(isos,
                               iso2,
-                              sphere_equation,
-                              0);
+                              sphere_equation);
 
   // > User field isosurface
   double  *dfield = NULL;

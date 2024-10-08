@@ -466,7 +466,6 @@ PDM_isosurface_set_isovalues
  * \param [in]  isos           \ref PDM_isosurface_t instance
  * \param [in]  id_isosurface  Iso-surface identifier
  * \param [in]  coeff          Equation coefficients
- * \param [in]  use_gradient   1 to use gradient for finer isosurface (Dual Contouring method), 0 otherwise
  *
  * - \ref PDM_ISO_SURFACE_KIND_PLANE (3 coefficients):
  *   \f$\phi(x,y,z) = \texttt{coeff[0]} \cdot x + \texttt{coeff[1]} \cdot y + \texttt{coeff[2]} \cdot z\f$
@@ -490,8 +489,7 @@ PDM_isosurface_equation_set
 (
   PDM_isosurface_t *isos,
   int               id_isosurface,
-  double           *coeff,
-  int               use_gradient
+  double           *coeff
 );
 
 

@@ -2688,8 +2688,7 @@ PDM_isosurface_equation_set
 (
  PDM_isosurface_t *isos,
  int               id_isosurface,
- double           *coeff,
- int               use_gradient
+ double           *coeff
 )
 {
   PDM_ISOSURFACE_CHECK_ID(isos, id_isosurface);
@@ -2704,8 +2703,6 @@ PDM_isosurface_equation_set
   for (int i_coeff=0; i_coeff<n_coeff; ++i_coeff) {
     _iso->eq_coeffs[i_coeff] = coeff[i_coeff];
   }
-
-  _iso->use_gradient = use_gradient;
 }
 
 

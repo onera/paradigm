@@ -1083,8 +1083,7 @@ int main
 
   PDM_isosurface_equation_set(isos,
                               iso1,
-                              plane_equation,
-                              0);
+                              plane_equation);
 
   // Scalar field isosurface
   int iso2 = PDM_isosurface_add(isos,

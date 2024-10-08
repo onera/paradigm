@@ -89,8 +89,7 @@ cdef extern from "pdm_isosurface.h":
 
   void PDM_isosurface_equation_set(PDM_isosurface_t *isos,
                                    int               id_isosurface,
-                                   double           *coeff,
-                                   int               use_gradient);
+                                   double           *coeff);
 
   void isosurface_field_function_set_python(PDM_isosurface_t                       *isos,
                                             int                                     id_isosurface,
@@ -375,7 +374,7 @@ cdef class Isosurface:
     """
     cdef double *coeff_data = list_to_double_pointer(coefficients)
 
-    PDM_isosurface_equation_set(self._isos, id_iso, coeff_data, 0)
+    PDM_isosurface_equation_set(self._isos, id_iso, coeff_data)
 
     free(coeff_data) # deep-copied in isos
 

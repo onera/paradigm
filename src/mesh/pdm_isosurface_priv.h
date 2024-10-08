@@ -135,7 +135,6 @@ typedef struct _isosurface_t { // Better name?
 
   // > Equation args
   double                          *eq_coeffs;
-  int                              use_gradient;
 
   // > Field function
   PDM_isosurface_field_function_t  field_function;
