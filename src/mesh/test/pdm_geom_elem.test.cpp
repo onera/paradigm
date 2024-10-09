@@ -69,6 +69,7 @@ MPI_TEST_CASE("PDM_geom_elem_edge_upwind_and_downwind_2d", 1) {
   double *downwind_point_out = NULL;
   PDM_geom_elem_edge_upwind_and_downwind_2d(i_plane,
                                             face_ln_to_gn.data(),
+                                            NULL,
                                             face_edge_idx.data(),
                                             face_edge.data(),
                                             n_edge,
