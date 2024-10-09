@@ -2264,7 +2264,7 @@ _free_iso_entity
     if (_iso->iso_owner_gnum[entity_type][i_part] == PDM_OWNERSHIP_KEEP) {
       PDM_free(_iso->iso_entity_gnum[entity_type][i_part]);
     }
-    if (isos->extract_kind==PDM_EXTRACT_PART_KIND_REEQUILIBRATE) {
+    if (isos->entry_is_part == 0) {
       PDM_free(_iso->iso_entity_parent_gnum[entity_type][i_part]);
     }
     if (_iso->iso_owner_parent_idx[entity_type][i_part] == PDM_OWNERSHIP_KEEP) {

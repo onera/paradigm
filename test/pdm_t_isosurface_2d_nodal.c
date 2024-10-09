@@ -441,7 +441,6 @@ int main(int argc, char *argv[])
    */
   if (visu==1) {
     if (dist_entry==1) {
-      PDM_free(dfield);
       // PDM_error(__FILE__, __LINE__, 0, "PDM_t_isosurface_2d_nodal:: Not implmented\n");
     }
     else if (dist_entry==0) {
@@ -506,6 +505,8 @@ int main(int argc, char *argv[])
     }
     PDM_free(field);
   }
+
+  PDM_free(dfield);
 
 
   PDM_MPI_Finalize();

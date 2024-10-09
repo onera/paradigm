@@ -3416,7 +3416,7 @@ PDM_isosurface_marching_algo
   /**
    * Now we have generated iso gnums, we can use these array to store parent_gnum
    */
-  if (isos->extract_kind==PDM_EXTRACT_PART_KIND_REEQUILIBRATE) {
+  if (isos->entry_is_part == 0) {
     for (int i_part = 0; i_part < isos->n_part; i_part++) {
       // > Vertices
       int i_write = 0;
@@ -4091,7 +4091,7 @@ PDM_isosurface_ngon_algo
   /*
    * For vertices, parent gnum can be oversized for gnum computation, so we need to remove gaps
    */
-  if (isos->extract_kind==PDM_EXTRACT_PART_KIND_REEQUILIBRATE) {
+  if (isos->entry_is_part == 0) {
     for (int i_part = 0; i_part < isos->n_part; i_part++) {
       int i_write = 0;
       for (int i = 0; i < iso_n_vtx[i_part]; i++) {
