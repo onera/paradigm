@@ -366,6 +366,7 @@ int main
                                     PDM_OWNERSHIP_KEEP);
     }
 
+    PDM_writer_elt_geom_t cell_type = (PDM_writer_elt_geom_t) -1;
     writer_wrapper(comm,
                    "extract_part_reequilibrate",
                    "extracted_mesh",
@@ -377,7 +378,7 @@ int main
                    extract_face_vtx_idx,
                    extract_face_vtx,
                    extract_cell_ln_to_gn,
-                   -1,
+                   cell_type,
                    extract_n_face,
                    extract_cell_face_idx,
                    extract_cell_face,

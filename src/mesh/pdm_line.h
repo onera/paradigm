@@ -181,6 +181,7 @@ PDM_ray_segment_intersection_2d
        double *intersection_coord
 );
 
+
 double
 PDM_line_distance_2d
 (

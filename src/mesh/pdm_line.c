@@ -4,6 +4,7 @@
 
 #include <limits.h>
 #include <float.h>
+#include <string.h>
 
 
 /*----------------------------------------------------------------------------
@@ -455,62 +456,98 @@ PDM_line_intersection_2d
 PDM_line_intersect_t
 PDM_ray_segment_intersection_2d
 (
- const double a1[2],
- const double a2[2],
- const double b1[2],
- const double b2[2],
+ const double  a1[2],
+ const double  a2[2],
+ const double  b1[2],
+ const double  b2[2],
        double *u,
        double *v,
        double *intersection_coord
 )
 {
-  const double tol_uv = _eps;
-
   double mat[2][2];
   double sol[2];
 
   for (int i = 0; i < 2; i++) {
-    mat[i][0] = a2[i] - a1[i]; // vecteur demi-droite
-    mat[i][1] = b1[i] - b2[i]; // vecteur segment
-    sol[i] = b1[i] - a1[i];
+    mat[i][0] = a2[i] - a1[i]; // ray direction
+    mat[i][1] = b1[i] - b2[i]; // segment direction
+    sol[i]    = b1[i] - a1[i]; // rhs
   }
 
-  int stat = _solve_2x2(mat, sol);
+  int has_solution = _solve_2x2(mat, sol);
 
-  if (stat == PDM_FALSE) {
-    *u = DBL_MAX;
-    *v = DBL_MAX;
+  if (has_solution == PDM_FALSE) {
+    // Ray and segment are parallel
 
-    // Détection de colinéarité
-    double p = (b1[0] - a1[0]) * (b2[1] - a2[1]) - (b1[1] - a1[1]) * (b2[0] - a2[0]);
+    // Compute distance between b1 and line a1a2
+    // TODO: use exact predicate instead? PDM_predicate_orient2d(a1, a2, b1)
+    double d = PDM_ABS( (b1[0] - a1[0])*(a2[1] - a1[1]) - (b1[1] - a1[1])*(a2[0] - a1[0]) );
 
-    if (fabs(p) > tol_uv) {
-      return PDM_LINE_INTERSECT_NO; // Les segments ne sont pas colinéaires
-    } else {
-      // Vérification du chevauchement des segments colinéaires
-      if ((a1[0] < b2[0] && a2[0] > b1[0]) || (a1[0] > b2[0] && a2[0] < b1[0])) {
-        return PDM_LINE_INTERSECT_ON_LINE; // Les segments se chevauchent
-      } else {
-        return PDM_LINE_INTERSECT_NO; // Les segments sont colinéaires mais ne se chevauchent pas
-      }
+    if (d > _eps) {
+      // No intersection since ray and segment are parallel but not collinear
+      return PDM_LINE_INTERSECT_NO;
     }
-  } else {
-    // Calcul de l'intersection
-    *u = sol[0]; // Position sur la demi-droite
-    *v = sol[1]; // Position sur le segment
 
-    // Vérification de la validité de l'intersection
+    else {
+      // Ray and segment are collinear
+      double u1 = (b1[0] - a1[0])*(a2[0] - a1[0]) + (b1[1] - a1[1])*(a2[1] - a1[1]);
+      double u2 = (b2[0] - a1[0])*(a2[0] - a1[0]) + (b2[1] - a1[1])*(a2[1] - a1[1]);
+
+      if (u1 < 0 && u2 < 0) {
+        // Segment lies entirely on the negative side of the ray => no intersection
+        return PDM_LINE_INTERSECT_NO;
+      }
+
+      if (u1 >= 0 && u2 >= 0) {
+        // Segment lies entirely on the positive side of the ray
+        // => intersection is at the segment endpoint closest from the ray origin
+        double aa = (a2[0] - a1[0])*(a2[0] - a1[0]) + (a2[1] - a1[1])*(a2[1] - a1[1]);
+        if (aa > 0) {
+          if (u1 <= u2) {
+            // b1 is closer from a1
+            *u = u1/aa;
+            *v = 0;
+            memcpy(intersection_coord, b1, sizeof(double) * 2);
+          }
+          else {
+            // b2 is closer from a1
+            *u = u2/aa;
+            *v = 1;
+            memcpy(intersection_coord, b2, sizeof(double) * 2);
+          }
+        }
+        else {
+          // Degenerate ray (single point)
+          return PDM_LINE_INTERSECT_UNDEF;
+        }
+      }
+      else {
+        // Segment contains the ray origin
+        *u = 0;
+        *v = u1/(u1 - u2);
+        memcpy(intersection_coord, a1, sizeof(double) * 2);
+      }
+      return PDM_LINE_INTERSECT_ON_LINE;
+    }
+  }
+
+  else {
+    // Ray and segment are not parallel, check if the intersection is acceptable
+    *u = sol[0]; // Position on ray
+    *v = sol[1]; // Position on segment
+
     if (*u >= 0 && *v >= 0 && *v <= 1) {
       for (int i = 0; i < 2; i++) {
-        intersection_coord[i] = a1[i] + (*u) * (a2[i] - a1[i]); // Calcul basé sur la demi-droite
+        intersection_coord[i] = a1[i] + (*u) * (a2[i] - a1[i]);
       }
-      return PDM_LINE_INTERSECT_YES; // Intersection valide
-    } else {
-        return PDM_LINE_INTERSECT_NO; // L'intersection est en dehors du segment ou de la demi-droite
+      return PDM_LINE_INTERSECT_YES; // Valid intersection
+    }
+    else {
+      return PDM_LINE_INTERSECT_NO; // The intersection is outside the ray or segment
     }
   }
-}
 
+}
 
 
 double

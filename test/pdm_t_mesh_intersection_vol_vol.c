@@ -1106,10 +1106,24 @@ main
                                             tetraisation_pt_type,
                                             tetraisation_pt_coord);
 
+  // Measure first clock at the same time
+  PDM_MPI_Barrier(comm);
+  double t1 = PDM_MPI_Wtime();
+
   // compute
   PDM_mesh_intersection_compute(mi);
 
+  // Measure end clock
+  double t2 = PDM_MPI_Wtime();
+  double time = t2 - t1;
 
+  // Compute average accross MPI ranks
+  PDM_MPI_Barrier(comm);
+  double g_time = 0.0;
+  PDM_MPI_Allreduce(&time, &g_time, 1, PDM_MPI_DOUBLE, PDM_MPI_SUM, comm);
+  g_time /= n_rank;
+
+  if (i_rank == 0) PDM_printf("total_intersection_time %12.5e\n", g_time);
 
   PDM_part_to_part_t *ptp = NULL;
   PDM_mesh_intersection_part_to_part_get(mi,

@@ -2917,7 +2917,7 @@ _create
     for (int j = ptp->default_i_recv_buffer[i]; j < ptp->default_i_recv_buffer[i+1]; j++) {
       //int recv_ipart1 = int_r_buff[4 * j + 0];
       //int recv_ielt1  = int_r_buff[4 * j + 1];
-      int recv_gnum1  = gnum_r_buff[j];
+      PDM_g_num_t recv_gnum1  = gnum_r_buff[j];
       int recv_ipart2 = int_r_buff[4 * j + 2];
       int recv_ielt2  = int_r_buff[4 * j + 3];
       int iref = ielt_to_ref[recv_ipart2][recv_ielt2];

@@ -132,6 +132,30 @@ const double plane[9],
       double ip[3]
 );
 
+/**
+ * \brief Identify in which cartesian plane a point cloud is aligned with.
+ *
+ * \param [in] comm       MPI communicator
+ * \param [in] n_part     Number of partitions
+ * \param [in] n_pts      Number of points (size = \p n_part)
+ * \param [in] coord      Point coordinates (size = \p n_part, for each part = \p n_pts)
+ * \param [in] tolerance  Tolerance for alignment
+ *
+ * \return  0 if plane XY,
+ *          1 if plane YZ,
+ *          2 if plane ZX,
+ *         -1 is not a cartesian plane
+ */
+int
+PDM_plane_get_cartesian_plane
+(
+  PDM_MPI_Comm   comm,
+  int            n_part,
+  int           *n_pts,
+  double       **coord,
+  double         tolerance
+);
+
 
 #ifdef __cplusplus
 }

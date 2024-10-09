@@ -1,5 +1,6 @@
 #include "doctest/extensions/doctest_mpi.h"
 #include "pdm.h"
+#include "pdm_priv.h"
 #include "pdm_doctest.h"
 #include "pdm_geom_elem.h"
 #include "pdm_logging.h"
@@ -7,13 +8,12 @@
 
 
 
-MPI_TEST_CASE("PDM_geom_elem_edge_upwind_and_downwind_2d ",1) {
+MPI_TEST_CASE("PDM_geom_elem_edge_upwind_and_downwind_2d", 1) {
 
   std::vector<PDM_g_num_t> face_ln_to_gn = {1, 2, 3, 4, 5, 6, 7, 8};
   std::vector<int        > face_edge_idx = {0,3,6,9,12,15,18,21,24};
   std::vector<int        > face_edge     = {1,2,4,-4,5,7,-5,3,6,-6,8,9,-7,10,11,-11,12,14,-12,-9,13,-13,15,16};
 
-  std::vector<int        > edge_vtx_idx  = {0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32};
   std::vector<int        > edge_vtx      = {1,2,4,1,2,3,2,4,2,5,3,5,5,4,3,6,6,5,7,4,5,7,5,8,6,8,8,7,6,9,9,8};
   std::vector<int        > vtx_face_idx  = {0,1,4,6,9,15,18,20,23,24};
   std::vector<int        > vtx_face      = {1,1,2,3,3,4,1,2,5,2,3,4,5,6,7,4,7,8,5,6,6,7,8,8};
@@ -27,8 +27,39 @@ MPI_TEST_CASE("PDM_geom_elem_edge_upwind_and_downwind_2d ",1) {
                                             5.4522297251747132e-01,1.0416195068003700e+00,0.0000000000000000e+00,
                                             1.0135711727959902e+00,1.0217296929432682e+00,0.0000000000000000e+00};
 
-  int n_face = face_ln_to_gn.size();
-  int n_edge = edge_vtx_idx.size()-1;
+  int n_vtx = vtx_face_idx.size()-1;
+
+  int i_plane;
+  SUBCASE("XY") {
+    i_plane = 0;
+  }
+
+  SUBCASE("YZ") {
+    i_plane = 1;
+    for (int i = 0; i < n_vtx; i++) {
+      double x = vtx_coords[3*i  ];
+      double y = vtx_coords[3*i+1];
+      double z = vtx_coords[3*i+2];
+      vtx_coords[3*i  ] = z;
+      vtx_coords[3*i+1] = x;
+      vtx_coords[3*i+2] = y;
+    }
+  }
+
+  SUBCASE("ZX") {
+    i_plane = 2;
+    for (int i = 0; i < n_vtx; i++) {
+      double x = vtx_coords[3*i  ];
+      double y = vtx_coords[3*i+1];
+      double z = vtx_coords[3*i+2];
+      vtx_coords[3*i  ] = y;
+      vtx_coords[3*i+1] = z;
+      vtx_coords[3*i+2] = x;
+    }
+  }
+
+
+  int n_edge = edge_vtx.size()/2;
 
   int    *upwind_face_out    = NULL;
   int    *downwind_face_out  = NULL;
@@ -36,12 +67,11 @@ MPI_TEST_CASE("PDM_geom_elem_edge_upwind_and_downwind_2d ",1) {
   int    *downwind_edge_out  = NULL;
   double *upwind_point_out   = NULL;
   double *downwind_point_out = NULL;
-  PDM_geom_elem_edge_upwind_and_downwind_2d(n_face,
-                                            n_edge,
+  PDM_geom_elem_edge_upwind_and_downwind_2d(i_plane,
                                             face_ln_to_gn.data(),
                                             face_edge_idx.data(),
                                             face_edge.data(),
-                                            edge_vtx_idx.data(),
+                                            n_edge,
                                             edge_vtx.data(),
                                             vtx_face_idx.data(),
                                             vtx_face.data(),
@@ -64,11 +94,11 @@ MPI_TEST_CASE("PDM_geom_elem_edge_upwind_and_downwind_2d ",1) {
   CHECK_EQ_C_ARRAY(upwind_edge_out  , upwind_edge_out_expected  , n_edge);
   CHECK_EQ_C_ARRAY(downwind_edge_out, downwind_edge_out_expected, n_edge);
 
-  free(upwind_face_out   );
-  free(downwind_face_out );
-  free(upwind_edge_out   );
-  free(downwind_edge_out );
-  free(upwind_point_out  );
-  free(downwind_point_out);
+  PDM_free(upwind_face_out   );
+  PDM_free(downwind_face_out );
+  PDM_free(upwind_edge_out   );
+  PDM_free(downwind_edge_out );
+  PDM_free(upwind_point_out  );
+  PDM_free(downwind_point_out);
 
 }

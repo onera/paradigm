@@ -305,7 +305,7 @@ int main(int argc, char *argv[])
       /*
        *  Compute additionnal connectivity
        */
-      edge_vtx_idx = PDM_malloc(edge_vtx_idx, n_edge + 1, int);
+      PDM_malloc(edge_vtx_idx, n_edge + 1, int);
       for(int i_edge = 0; i_edge < n_edge+1; ++i_edge) {
         edge_vtx_idx[i_edge] = 2 * i_edge;
       }
@@ -351,22 +351,20 @@ int main(int argc, char *argv[])
 
       // Use to build unit test
       if(0 == 1) {
-        PDM_log_trace_array_long  (face_ln_to_gn, n_face               , "face_ln_to_gn ::");
         PDM_log_trace_array_int   (face_edge_idx, n_face+1             , "face_edge_idx ::");
         PDM_log_trace_array_int   (face_edge    , face_edge_idx[n_face], "face_edge     ::");
-        PDM_log_trace_array_int   (edge_vtx_idx, n_edge+1              , "edge_vtx_idx  ::");
         PDM_log_trace_array_int   (edge_vtx    , edge_vtx_idx[n_edge]  , "edge_vtx      ::");
         PDM_log_trace_array_int   (vtx_face_idx, n_vtx+1               , "vtx_face_idx  ::");
         PDM_log_trace_array_int   (vtx_face    , vtx_face_idx[n_vtx]   , "vtx_face      ::");
         PDM_log_trace_array_double(vtx         , 3 * n_vtx             , "vtx_coords    :: ");
       }
 
-      PDM_geom_elem_edge_upwind_and_downwind_2d(n_face,
-                                                n_edge,
+      PDM_geom_elem_edge_upwind_and_downwind_2d(0, // XY-plane
                                                 face_ln_to_gn,
+                                                NULL,
                                                 face_edge_idx,
                                                 face_edge,
-                                                edge_vtx_idx,
+                                                n_edge,
                                                 edge_vtx,
                                                 vtx_face_idx,
                                                 vtx_face,
@@ -411,18 +409,18 @@ int main(int argc, char *argv[])
         // Prepare dump points
         int n_pts = 0;
         double *pts_intersect = NULL;
-        PDM_malloc(pts_intersect, 3 * n_edge, double);
+        PDM_malloc(pts_intersect, 3 * n_edge * 2, double);
         for(int i_edge = 0; i_edge < n_edge; ++i_edge) {
           if(upwind_edge_out[i_edge] != -1) {
             pts_intersect[3*n_pts  ] = upwind_point_out[3*i_edge  ];
             pts_intersect[3*n_pts+1] = upwind_point_out[3*i_edge+1];
-            pts_intersect[3*n_pts+2] = 0.; // upwind_point_out[3*i_edge+2];
+            pts_intersect[3*n_pts+2] = upwind_point_out[3*i_edge+2];
             n_pts++;
           }
           if(downwind_edge_out[i_edge] != -1) {
             pts_intersect[3*n_pts  ] = downwind_point_out[3*i_edge  ];
             pts_intersect[3*n_pts+1] = downwind_point_out[3*i_edge+1];
-            pts_intersect[3*n_pts+2] = 0.; //downwind_point_out[3*i_edge+2];
+            pts_intersect[3*n_pts+2] = downwind_point_out[3*i_edge+2];
             n_pts++;
           }
         }

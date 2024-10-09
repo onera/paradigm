@@ -199,7 +199,6 @@ test_c_create (pdm_t_intersect_volume_box 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_linear_programming_box_box 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_box_tree_intersect_volume_box 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_dbbtree_intersect_volume_box 1 PDM_LIST_TEST PDM_LIST_NRANK)
-test_c_create (pdm_t_volume_intersect_back_mesh 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_mesh_extract 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_connect_domain 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_part_to_block_geom 1 PDM_LIST_TEST PDM_LIST_NRANK)
@@ -216,15 +215,10 @@ test_c_create (pdm_t_part_extension_3d_draft 2 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_closest_points_1_point 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_dist_ridge 1  PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_box_tree 1  PDM_LIST_TEST PDM_LIST_NRANK)
-# test_c_create (pdm_t_multi_block_merge 1  PDM_LIST_TEST PDM_LIST_NRANK)
+test_c_create (pdm_t_multi_block_merge 1  PDM_LIST_TEST PDM_LIST_NRANK)
 
 test_c_create (pdm_t_ho_ordering 1  PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_mpi_shared_allgather 1 PDM_LIST_TEST PDM_LIST_NRANK)
-
-#TODO: Not fully implemented
-#test_c_create (pdm_t_win_shared 1 PDM_LIST_TEST PDM_LIST_NRANK)
-
-#test_c_create (test_mpi_morton 2 PDM_LIST_TEST PDM_LIST_NRANK)
 
 test_c_create (pdm_t_point_in_polygon 1  PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_line_intersection 1  PDM_LIST_TEST PDM_LIST_NRANK)
@@ -244,10 +238,6 @@ test_c_create (pdm_t_sphere_vol_gen 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_separate_groups 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_fetch_back_mesh 1 PDM_LIST_TEST PDM_LIST_NRANK)
 
-test_c_create (pdm_t_tree_intersection 1 PDM_LIST_TEST PDM_LIST_NRANK)
-test_c_create (pdm_t_tree_intersection_perf 1 PDM_LIST_TEST PDM_LIST_NRANK)
-
-test_c_create (pdm_t_simultaneous_trees 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_point_location_nodal 1  PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_projection_point_cloud_surf 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_reader_gamma 1 PDM_LIST_TEST PDM_LIST_NRANK)
@@ -271,6 +261,7 @@ test_c_create (pdm_t_mesh_intersection_surf_surf_atomic 1 PDM_LIST_TEST PDM_LIST
 test_c_create (pdm_t_newton_ho 1  PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_svd 1  PDM_LIST_TEST PDM_LIST_NRANK)
 
+test_c_create (pdm_t_mesh_reorient_geom 3 PDM_LIST_TEST PDM_LIST_NRANK)
 
 if (PDM_ENABLE_PYTHON_BINDINGS)
    test_python_create (pdm_t_part_to_part_p 2 PDM_LIST_TEST PDM_LIST_NRANK)
@@ -285,6 +276,8 @@ if (PDM_ENABLE_PYTHON_BINDINGS)
    add_dependencies (pdm_t_block_to_part_p Pypdm)
    test_python_create (pdm_t_part_to_block_p 3 PDM_LIST_TEST PDM_LIST_NRANK)
    add_dependencies (pdm_t_part_to_block_p Pypdm)
+   test_python_create (pdm_t_mesh_reorient_geom_p 3 PDM_LIST_TEST PDM_LIST_NRANK)
+   add_dependencies (pdm_t_mesh_reorient_geom_p Pypdm)
 endif()
 
 if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)

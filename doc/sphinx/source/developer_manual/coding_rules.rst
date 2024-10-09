@@ -27,6 +27,7 @@ Indentation
 -----------
 
 C, Fortran and Python sources use 2 **spaces** for indentation.
+Try avoiding trailing blank spaces (most IDEs can handle this automatically).
 
 
 Naming

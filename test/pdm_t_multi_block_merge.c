@@ -185,7 +185,9 @@ int main(int argc, char *argv[])
 
   PDM_dmesh_nodal_t*  dmn2 = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube2);
 
-  PDM_dmesh_nodal_dump_vtk(dmn2, PDM_GEOMETRY_KIND_VOLUMIC, "out_volumic_dcube2_");
+  if(1 == 0) {
+    PDM_dmesh_nodal_dump_vtk(dmn2, PDM_GEOMETRY_KIND_VOLUMIC, "out_volumic_dcube2_");
+  }
 
   // Get interface data
   int          *n_group_elt     = NULL;
@@ -243,9 +245,11 @@ int main(int argc, char *argv[])
   int         *graph_vtx_dom = NULL;
   int graph_vtx_dn = PDM_domain_interface_get_as_graph(dom_intrf, PDM_BOUND_TYPE_VTX,
       &graph_vtx_idx, &graph_vtx_ids, &graph_vtx_dom);
-  PDM_log_trace_array_int(graph_vtx_idx, graph_vtx_dn+1, "vtx graph idx");
-  PDM_log_trace_array_long(graph_vtx_ids, graph_vtx_idx[graph_vtx_dn], "vtx graph gnums");
-  PDM_log_trace_array_int(graph_vtx_dom, graph_vtx_idx[graph_vtx_dn], "vtx graph dom");
+  if(1 == 0) {
+    PDM_log_trace_array_int(graph_vtx_idx , graph_vtx_dn+1             , "vtx graph idx"  );
+    PDM_log_trace_array_long(graph_vtx_ids, graph_vtx_idx[graph_vtx_dn], "vtx graph gnums");
+    PDM_log_trace_array_int(graph_vtx_dom , graph_vtx_idx[graph_vtx_dn], "vtx graph dom"  );
+  }
 
 
   PDM_domain_interface_free(dom_intrf);
@@ -281,7 +285,6 @@ int main(int argc, char *argv[])
   PDM_malloc(selected_g_num, n_block, PDM_g_num_t *);
   for(int i_block = 0; i_block < n_block ; ++i_block) {
     PDM_malloc(selected_g_num[i_block], n_selected[i_block], PDM_g_num_t);
-    PDM_log_trace_array_long(block_distrib_idx[i_block], n_rank+1, "block_distrib_idx ::");
     for(int i = 0; i < n_selected[i_block]; ++i) {
       selected_g_num[i_block][i] = block_distrib_idx[i_block][i_rank] + i + 1;
     }
@@ -314,7 +317,7 @@ int main(int argc, char *argv[])
   double *dmerge_vtx_coord = NULL;
   PDM_multi_block_merge_exch(mbm,
                              3 * sizeof(double),
-                             PDM_STRIDE_CST,
+                             PDM_STRIDE_CST_INTERLACED,
                              stride_one,
                  (void * )   dvtx_coord,
                              NULL,
@@ -326,7 +329,7 @@ int main(int argc, char *argv[])
   //
   // PDM_multi_block_merge_exch(mbm_elt,
   //                            3 * sizeof(double),
-  //                            PDM_STRIDE_CST,
+  //                            PDM_STRIDE_CST_INTERLACED,
   //                            stride_one,
   //                (void * )   dcell_vtx,
   //                            NULL,
@@ -417,7 +420,7 @@ int main(int argc, char *argv[])
 
   PDM_multi_block_merge_exch_and_update(mbm_elmt,
                                         mbm,
-                                        PDM_STRIDE_CST,
+                                        PDM_STRIDE_CST_INTERLACED,
                                         stride_cst_ptr,
                                         block_elmt_vtx,
                                (int **) NULL,
@@ -438,7 +441,7 @@ int main(int argc, char *argv[])
   assert(dn_merge_vtx  == distrib_merge_vtx [i_rank+1] - distrib_merge_vtx [i_rank]);
   assert(dn_merge_elmt == distrib_merge_elmt[i_rank+1] - distrib_merge_elmt[i_rank]);
 
-  printf("dn_merge_elmt = %i \n", dn_merge_elmt);
+  // printf("dn_merge_elmt = %i \n", dn_merge_elmt);
 
   PDM_g_num_t *merge_elmt_ln_to_gn = NULL;
   int         *dconnec_idx         = NULL;
@@ -451,8 +454,9 @@ int main(int argc, char *argv[])
     dconnec_idx[i+1] = dconnec_idx[i] + 8; // Because HEXA
   }
 
-  PDM_log_trace_connectivity_long(dconnec_idx, dmerge_elmt_vtx, dn_merge_elmt, "dmerge_elmt_vtx :: ");
-
+  if(1 == 0) {
+    PDM_log_trace_connectivity_long(dconnec_idx, dmerge_elmt_vtx, dn_merge_elmt, "dmerge_elmt_vtx :: ");
+  }
 
   PDM_g_num_t *pvtx_ln_to_gn;
   int         *pcell_vtx_idx;
@@ -480,33 +484,38 @@ int main(int argc, char *argv[])
   double* pvtx_coord_out = tmp_pvtx_coord[0];
   PDM_free(tmp_pvtx_coord);
 
+  if(1 == 0) {
 
-  char filename_elmt[999];
-  sprintf(filename_elmt, "merge_mesh_%2.2d.vtk", i_rank);
-  PDM_vtk_write_std_elements(filename_elmt,
-                             pn_vtx,
-                             pvtx_coord_out,
-                             pvtx_ln_to_gn,
-                             PDM_MESH_NODAL_HEXA8,
-                             dn_merge_elmt,
-                             pcell_vtx,
-                             merge_elmt_ln_to_gn,
-                             0,
-                             NULL,
-                             NULL);
+    char filename_elmt[999];
+    sprintf(filename_elmt, "merge_mesh_%2.2d.vtk", i_rank);
+    PDM_vtk_write_std_elements(filename_elmt,
+                               pn_vtx,
+                               pvtx_coord_out,
+                               pvtx_ln_to_gn,
+                               PDM_MESH_NODAL_HEXA8,
+                               dn_merge_elmt,
+                               pcell_vtx,
+                               merge_elmt_ln_to_gn,
+                               0,
+                               NULL,
+                               NULL);
+  }
 
   PDM_g_num_t *merge_vtx_ln_to_gn = NULL;
   PDM_malloc(merge_vtx_ln_to_gn, dn_merge_vtx, PDM_g_num_t);
   for(int i = 0; i < dn_merge_vtx; ++i) {
     merge_vtx_ln_to_gn[i] = distrib_merge_vtx[i_rank] + i + 1;
   }
-  char filename[999];
-  sprintf(filename, "debug_dvtx_coord_merge_%2.2d.vtk", i_rank);
-  PDM_vtk_write_point_cloud(filename,
-                            dn_merge_vtx,
-                            dmerge_vtx_coord,
-                            merge_vtx_ln_to_gn,
-                            NULL);
+
+  if(1 == 0) {
+    char filename[999];
+    sprintf(filename, "debug_dvtx_coord_merge_%2.2d.vtk", i_rank);
+    PDM_vtk_write_point_cloud(filename,
+                              dn_merge_vtx,
+                              dmerge_vtx_coord,
+                              merge_vtx_ln_to_gn,
+                              NULL);
+  }
 
   PDM_free(dmerge_vtx_coord);
   PDM_free(merge_vtx_ln_to_gn);
