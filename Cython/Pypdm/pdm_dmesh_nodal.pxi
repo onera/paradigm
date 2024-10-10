@@ -372,32 +372,37 @@ def dmesh_nodal_get_vtx(DMeshNodal pydmn, MPI.Comm    comm):
   # ************************************************************************
   # > Declaration
   cdef double               *vtx_coord
-  cdef int                  *vtx_tag
-  cdef NPY.npy_intp          dim
   # ************************************************************************
 
-  vtx_distrib = PDM_dmesh_nodal_vtx_distrib_copy_get(pydmn.dmn)
   n_vtx = PDM_DMesh_nodal_n_vtx_get(pydmn.dmn);
   vtx_coord = PDM_DMesh_nodal_vtx_get(pydmn.dmn, PDM_OWNERSHIP_USER)
   # vtx_tag = PDM_DMesh_nodal_vtx_tag_get(pydmn.dmn)
 
-  return {"np_vtx"         : create_numpy_d(vtx_coord,   3*n_vtx,           True),
-          "np_vtx_distrib" : create_numpy_g(vtx_distrib, comm.Get_size()+1, True)}
-          # "np_vtx_tag"     : create_numpy_i(vtx_tag,     n_vtx,             False)}
+  return {"np_vtx"         : create_numpy_d(vtx_coord,   3*n_vtx)}
+
+def dmesh_nodal_get_distrib_vtx(DMeshNodal pydmn, MPI.Comm    comm):
+  """
+  """
+  # ************************************************************************
+  # > Declaration
+  cdef int                  *vtx_tag
+  # ************************************************************************
+
+  vtx_distrib = PDM_dmesh_nodal_vtx_distrib_copy_get(pydmn.dmn)
+
+  return {"np_vtx_distrib" : create_numpy_g(vtx_distrib, comm.Get_size()+1)}
 
 def dmesh_nodal_get_vtx_tag(DMeshNodal pydmn, MPI.Comm    comm):
   """
   """
   # ************************************************************************
   # > Declaration
-  cdef double               *vtx_coord
   cdef int                  *vtx_tag
-  cdef NPY.npy_intp          dim
   # ************************************************************************
   n_vtx = PDM_DMesh_nodal_n_vtx_get(pydmn.dmn);
   vtx_tag = PDM_DMesh_nodal_vtx_tag_get(pydmn.dmn, PDM_OWNERSHIP_USER)
 
-  return {"np_vtx_tag"     : create_numpy_i(vtx_tag,     n_vtx,             True)}
+  return {"np_vtx_tag"     : create_numpy_i(vtx_tag,     n_vtx)}
 
 def dmesh_nodal_get_sections(DMeshNodal          pydmn,
                              PDM_geometry_kind_t geom_kind,
