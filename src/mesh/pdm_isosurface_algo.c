@@ -2967,13 +2967,6 @@ PDM_isosurface_marching_algo
                         elt_edge,
                        &n_crossings);
     // TODO: merge iso_edge_parent with parallel
-
-    if (isos->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL) {
-      for (int i = 0; i < iso_edge_parent_idx[i_part][iso_n_edge[i_part]]; i++) {
-        iso_edge_parent[i_part][i] = isos->extract_tri_lnum[i_part][iso_edge_parent[i_part][i]-1] + 1;
-      }
-    }
-
     t_end = PDM_MPI_Wtime();
 
     if (debug==1) {
@@ -3091,13 +3084,6 @@ PDM_isosurface_marching_algo
                           &face_parent,
                           &elt_face);
 
-      if (isos->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL) {
-        for (int i = 0; i < iso_face_parent_idx[i_part][iso_n_face[i_part]]; i++) {
-          iso_face_parent[i_part][i] = isos->extract_tetra_lnum[i_part][iso_face_parent[i_part][i]-1] + 1;
-        }
-      }
-
-
       t_end = PDM_MPI_Wtime();
       if (debug==1) {
         log_trace("\n");
@@ -3191,6 +3177,13 @@ PDM_isosurface_marching_algo
                             &iso_n_edge_parent,
                             &iso_edge_parent_idx [i_part],
                             &iso_edge_parent     [i_part]);
+
+      if (isos->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL) {
+        for (int i = 0; i < iso_edge_parent_idx[i_part][iso_n_edge[i_part]]; i++) {
+          iso_edge_parent[i_part][i] = isos->extract_tri_lnum[i_part][iso_edge_parent[i_part][i]-1] + 1;
+        }
+      }
+
       if (isos->entry_mesh_dim==3) {
         _contouring_tetrahedra(isos->extract_n_tetra   [i_part],
                                isos->extract_tetra_vtx [i_part],
@@ -3213,6 +3206,12 @@ PDM_isosurface_marching_algo
                                &iso_n_face_parent,
                                &iso_face_parent_idx [i_part],
                                &iso_face_parent     [i_part]);
+
+        if (isos->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL) {
+          for (int i = 0; i < iso_face_parent_idx[i_part][iso_n_face[i_part]]; i++) {
+            iso_face_parent[i_part][i] = isos->extract_tetra_lnum[i_part][iso_face_parent[i_part][i]-1] + 1;
+          }
+        }
       }
       
       PDM_free(edge_to_iso_vtx);

@@ -53,7 +53,13 @@ extern "C" {
     PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t already set as distributed.\n"); \
   }
 
-#define CHECK_I_PART(isos, i_part) \
+#define CHECK_I_PART_SET(isos, i_part) \
+  if (i_part >= (isos)->n_part) { \
+    PDM_error(__FILE__, __LINE__, 0, "Invalid i_part (%d / %d).\n", \
+              i_part, (isos)->n_part); \
+  }
+
+#define CHECK_I_PART_GET(isos, i_part) \
   if (i_part >= (isos)->iso_n_part) { \
     PDM_error(__FILE__, __LINE__, 0, "Invalid i_part (%d / %d).\n", \
               i_part, (isos)->iso_n_part); \
@@ -126,10 +132,6 @@ PDM_isosurface_n_part_set
     isos->group_face     [i_part] = NULL;
     isos->group_face_gnum[i_part] = NULL;
   }
-
-  if (isos->iso_n_part == 0) {
-    isos->iso_n_part = n_part;
-  }
 }
 
 void
@@ -145,6 +147,7 @@ PDM_isosurface_connectivity_set
 {
   CHECK_IS_NOT_DIST(isos);
   PDM_ISOSURFACE_CHECK_ENTRY_MESH_COHERENCE(isos, -1);
+  CHECK_I_PART_SET(isos, i_part);
 
   switch (connectivity_type) {
     case PDM_CONNECTIVITY_TYPE_CELL_FACE:
@@ -184,6 +187,7 @@ PDM_isosurface_vtx_coord_set
 {
   CHECK_IS_NOT_DIST(isos);
   PDM_ISOSURFACE_CHECK_ENTRY_MESH_COHERENCE(isos, -1);
+  CHECK_I_PART_SET(isos, i_part);
   
   isos->n_vtx    [i_part] = n_vtx;
   isos->vtx_coord[i_part] = vtx_coord;
@@ -201,6 +205,7 @@ PDM_isosurface_ln_to_gn_set
 {
   CHECK_IS_NOT_DIST(isos);
   PDM_ISOSURFACE_CHECK_ENTRY_MESH_COHERENCE(isos, -1);
+  CHECK_I_PART_SET(isos, i_part);
   
   switch (entity_type) {
     case PDM_MESH_ENTITY_CELL:
@@ -235,6 +240,7 @@ PDM_isosurface_group_set
 {
   CHECK_IS_NOT_DIST(isos);
   PDM_ISOSURFACE_CHECK_ENTRY_MESH_COHERENCE(isos, -1);
+  CHECK_I_PART_SET(isos, i_part);
 
   switch (entity_type) {
     case PDM_MESH_ENTITY_FACE:
@@ -276,9 +282,6 @@ PDM_isosurface_part_mesh_set
   /* Unpack part_mesh */
   isos->entry_mesh_type = -1; // héhé
   PDM_isosurface_n_part_set(isos, PDM_part_mesh_n_part_get(pmesh));
-  if (isos->iso_n_part == 0) {
-    isos->iso_n_part = isos->n_part;
-  }
 
   isos->n_group_face = PDM_part_mesh_n_bound_get(pmesh, PDM_BOUND_TYPE_FACE);
 
@@ -389,9 +392,6 @@ PDM_isosurface_mesh_nodal_set
 
   isos->pmesh_nodal = pmn;
   isos->n_part      = PDM_part_mesh_nodal_n_part_get(pmn);
-  if (isos->iso_n_part == 0) {
-    isos->iso_n_part = isos->n_part;
-  }
 }
 
 
@@ -420,7 +420,8 @@ PDM_isosurface_field_set
 )
 {
   CHECK_IS_NOT_DIST(isos);
-  
+  CHECK_I_PART_SET(isos, i_part);
+
   PDM_ISOSURFACE_CHECK_ID(isos, id_isosurface);
 
   // > Check i_part is valid
@@ -451,6 +452,7 @@ PDM_isosurface_gradient_set
 )
 {
   CHECK_IS_NOT_DIST(isos);
+  CHECK_I_PART_SET(isos, i_part);
   
   PDM_ISOSURFACE_CHECK_ID(isos, id_isosurface);
 
@@ -502,7 +504,7 @@ PDM_isosurface_local_parent_get
   PDM_ISOSURFACE_CHECK_ID      (isos, id_isosurface);
   PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_isosurface);
 
-  CHECK_I_PART(isos, i_part);
+  CHECK_I_PART_GET(isos, i_part);
 
   PDM_ISOSURFACE_CHECK_ENTITY_TYPE(entity_type);
 
@@ -540,7 +542,7 @@ PDM_isosurface_vtx_parent_weight_get
   PDM_ISOSURFACE_CHECK_ID      (isos, id_isosurface);
   PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_isosurface);
 
-  CHECK_I_PART(isos, i_part);
+  CHECK_I_PART_GET(isos, i_part);
 
   _isosurface_t *_iso = &isos->isosurfaces[id_isosurface];
 
@@ -573,7 +575,7 @@ PDM_isosurface_connectivity_get
   PDM_ISOSURFACE_CHECK_ID      (isos, id_isosurface);
   PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_isosurface);
 
-  CHECK_I_PART(isos, i_part);
+  CHECK_I_PART_GET(isos, i_part);
 
   if (connectivity_type != PDM_CONNECTIVITY_TYPE_EDGE_VTX &&
       connectivity_type != PDM_CONNECTIVITY_TYPE_FACE_VTX) {
@@ -620,7 +622,7 @@ PDM_isosurface_vtx_coord_get
   PDM_ISOSURFACE_CHECK_ID      (isos, id_isosurface);
   PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_isosurface);
 
-  CHECK_I_PART(isos, i_part);
+  CHECK_I_PART_GET(isos, i_part);
 
   _isosurface_t *_iso = &isos->isosurfaces[id_isosurface];
 
@@ -650,7 +652,7 @@ PDM_isosurface_ln_to_gn_get
   PDM_ISOSURFACE_CHECK_ID      (isos, id_isosurface);
   PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_isosurface);
 
-  CHECK_I_PART(isos, i_part);
+  CHECK_I_PART_GET(isos, i_part);
 
   PDM_ISOSURFACE_CHECK_ENTITY_TYPE(entity_type);
 
@@ -684,7 +686,7 @@ PDM_isosurface_group_get
   PDM_ISOSURFACE_CHECK_ID      (isos, id_isosurface);
   PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_isosurface);
 
-  CHECK_I_PART(isos, i_part);
+  CHECK_I_PART_GET(isos, i_part);
 
   _isosurface_t *_iso = &isos->isosurfaces[id_isosurface];
   
@@ -784,7 +786,7 @@ PDM_isosurface_isovalue_entity_idx_get
   CHECK_IS_NOT_DIST(isos);
   PDM_ISOSURFACE_CHECK_ID      (isos, id_isosurface);
   PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_isosurface);
-  CHECK_I_PART(isos, i_part);
+  CHECK_I_PART_GET(isos, i_part);
 
   PDM_ISOSURFACE_CHECK_ENTITY_TYPE(entity_type);
 

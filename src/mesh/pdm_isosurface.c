@@ -2959,10 +2959,21 @@ PDM_isosurface_compute
  int               id_isosurface
 )
 {
-  if (isos->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL && isos->iso_n_part != isos->n_part) {
-    PDM_error(__FILE__, __LINE__, 0,
-              "In PDM_EXTRACT_PART_KIND_LOCAL mode n_part_out (%d) must be equal to n_part_in (%d)\n",
-              isos->iso_n_part, isos->n_part);
+  if (isos->iso_n_part == 0) {
+    if (isos->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL) {
+      isos->iso_n_part = isos->n_part;
+    }
+    else { // REEQUILIBRATE
+      isos->iso_n_part = 1;
+    }
+  }
+  else {
+    if (isos->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL &&
+        isos->iso_n_part   != isos->n_part) {
+      PDM_error(__FILE__, __LINE__, 0,
+                "In PDM_EXTRACT_PART_KIND_LOCAL mode n_part_out (%d) must be equal to n_part_in (%d)\n",
+                isos->iso_n_part, isos->n_part);
+    }
   }
 
   if (id_isosurface < 0) { // Compute all isosurfaces
