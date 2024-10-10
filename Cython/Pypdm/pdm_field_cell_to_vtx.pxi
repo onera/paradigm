@@ -80,8 +80,7 @@ cdef class MeshCellToNode:
     cdef int*                    pn_elt
     cdef MPI.Comm                py_comm
     cdef object                  pdi
-    cdef public:
-      object keep_alive
+    cdef object                  keep_alive
     # ************************************************************************
 
     # ------------------------------------------------------------------------

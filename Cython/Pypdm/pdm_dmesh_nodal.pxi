@@ -109,8 +109,7 @@ cdef class DistributedMeshNodal:
     # ************************************************************************
     # > Class attributes
     cdef PDM_dmesh_nodal_t *dmn
-    cdef public:
-      object keep_alive
+    cdef object keep_alive
     # cdef int idmesh
     cdef int n_rank
     # ************************************************************************

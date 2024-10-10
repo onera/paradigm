@@ -59,8 +59,7 @@ cdef class DMeshNodalToDMesh:
   # ************************************************************************
   # > Class attributes
   cdef PDM_dmesh_nodal_to_dmesh_t* dmn_to_dm
-  cdef public:
-    object keep_alive
+  cdef object keep_alive
   # ************************************************************************
   # ------------------------------------------------------------------------
   def __cinit__(self, n_mesh,
