@@ -52,6 +52,12 @@ extern "C" {
   else if ((isos)->entry_is_part==0) { \
     PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t already set as distributed.\n"); \
   }
+
+#define CHECK_I_PART(isos, i_part) \
+  if (i_part >= (isos)->iso_n_part) { \
+    PDM_error(__FILE__, __LINE__, 0, "Invalid i_part (%d / %d).\n", \
+              i_part, (isos)->iso_n_part); \
+  }
 /*=============================================================================
  * Local structure definitions
  *============================================================================*/
@@ -119,6 +125,10 @@ PDM_isosurface_n_part_set
     isos->group_face_idx [i_part] = NULL;
     isos->group_face     [i_part] = NULL;
     isos->group_face_gnum[i_part] = NULL;
+  }
+
+  if (isos->iso_n_part == 0) {
+    isos->iso_n_part = n_part;
   }
 }
 
@@ -266,6 +276,9 @@ PDM_isosurface_part_mesh_set
   /* Unpack part_mesh */
   isos->entry_mesh_type = -1; // héhé
   PDM_isosurface_n_part_set(isos, PDM_part_mesh_n_part_get(pmesh));
+  if (isos->iso_n_part == 0) {
+    isos->iso_n_part = isos->n_part;
+  }
 
   isos->n_group_face = PDM_part_mesh_n_bound_get(pmesh, PDM_BOUND_TYPE_FACE);
 
@@ -376,6 +389,9 @@ PDM_isosurface_mesh_nodal_set
 
   isos->pmesh_nodal = pmn;
   isos->n_part      = PDM_part_mesh_nodal_n_part_get(pmn);
+  if (isos->iso_n_part == 0) {
+    isos->iso_n_part = isos->n_part;
+  }
 }
 
 
@@ -486,6 +502,8 @@ PDM_isosurface_local_parent_get
   PDM_ISOSURFACE_CHECK_ID      (isos, id_isosurface);
   PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_isosurface);
 
+  CHECK_I_PART(isos, i_part);
+
   PDM_ISOSURFACE_CHECK_ENTITY_TYPE(entity_type);
 
   if (isos->extract_kind!=PDM_EXTRACT_PART_KIND_LOCAL) {
@@ -522,6 +540,8 @@ PDM_isosurface_vtx_parent_weight_get
   PDM_ISOSURFACE_CHECK_ID      (isos, id_isosurface);
   PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_isosurface);
 
+  CHECK_I_PART(isos, i_part);
+
   _isosurface_t *_iso = &isos->isosurfaces[id_isosurface];
 
   if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
@@ -552,6 +572,8 @@ PDM_isosurface_connectivity_get
 
   PDM_ISOSURFACE_CHECK_ID      (isos, id_isosurface);
   PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_isosurface);
+
+  CHECK_I_PART(isos, i_part);
 
   if (connectivity_type != PDM_CONNECTIVITY_TYPE_EDGE_VTX &&
       connectivity_type != PDM_CONNECTIVITY_TYPE_FACE_VTX) {
@@ -598,6 +620,8 @@ PDM_isosurface_vtx_coord_get
   PDM_ISOSURFACE_CHECK_ID      (isos, id_isosurface);
   PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_isosurface);
 
+  CHECK_I_PART(isos, i_part);
+
   _isosurface_t *_iso = &isos->isosurfaces[id_isosurface];
 
   if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
@@ -625,6 +649,8 @@ PDM_isosurface_ln_to_gn_get
 
   PDM_ISOSURFACE_CHECK_ID      (isos, id_isosurface);
   PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_isosurface);
+
+  CHECK_I_PART(isos, i_part);
 
   PDM_ISOSURFACE_CHECK_ENTITY_TYPE(entity_type);
 
@@ -657,6 +683,8 @@ PDM_isosurface_group_get
 
   PDM_ISOSURFACE_CHECK_ID      (isos, id_isosurface);
   PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_isosurface);
+
+  CHECK_I_PART(isos, i_part);
 
   _isosurface_t *_iso = &isos->isosurfaces[id_isosurface];
   
@@ -756,6 +784,7 @@ PDM_isosurface_isovalue_entity_idx_get
   CHECK_IS_NOT_DIST(isos);
   PDM_ISOSURFACE_CHECK_ID      (isos, id_isosurface);
   PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_isosurface);
+  CHECK_I_PART(isos, i_part);
 
   PDM_ISOSURFACE_CHECK_ENTITY_TYPE(entity_type);
 
@@ -768,6 +797,19 @@ PDM_isosurface_isovalue_entity_idx_get
   *isovalue_entity_idx = _iso->isovalue_entity_idx[entity_type][i_part];
 
   return _iso->n_isovalues;
+}
+
+
+void
+PDM_isosurface_n_part_out_set
+(
+ PDM_isosurface_t *isos,
+ int               n_part_out
+)
+{
+  CHECK_IS_NOT_DIST(isos);
+
+  isos->iso_n_part = n_part_out;
 }
 
 #undef CHECK_IS_NOT_DIST

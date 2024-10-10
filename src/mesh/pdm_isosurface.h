@@ -626,6 +626,26 @@ PDM_isosurface_reset
 );
 
 
+/**
+ * \brief Set the number of partitions in the isosurface mesh
+ *
+ * \param [in]  isos        \ref PDM_isosurface_t instance
+ * \param [in]  n_part_out  Number of partitions
+ *
+ * \warning This function must be called prior to \ref PDM_isosurface_compute.
+ *
+ * \note In \ref PDM_EXTRACT_PART_KIND_LOCAL mode, \p n_part_out must be equal to the number of partitions in the source mesh.
+ *       (This is the case by default, if this function is not called)
+ */
+
+void
+PDM_isosurface_n_part_out_set
+(
+  PDM_isosurface_t *isos,
+  int               n_part_out
+);
+
+
 /* --- Compute --- */
 
 /**

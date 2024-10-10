@@ -134,10 +134,10 @@ typedef struct _isosurface_t { // Better name?
   double *isovalues;
 
   // > Equation args
-  double                          *eq_coeffs;
+  double *eq_coeffs;
 
   // > Field function
-  PDM_isosurface_field_function_t  field_function;
+  PDM_isosurface_field_function_t field_function;
 
 
   // ========================
@@ -323,6 +323,8 @@ struct _pdm_isosurface_t {
   PDM_g_num_t **face_gnum;
   PDM_g_num_t **edge_gnum;
   PDM_g_num_t ** vtx_gnum;
+
+  int iso_n_part;
 
   // > Vertices
   double **vtx_coord;

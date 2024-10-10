@@ -366,7 +366,8 @@ _dist_to_part
   int i_rank;
   PDM_MPI_Comm_rank(isos->comm, &i_rank);
 
-  isos->n_part = 1;
+  isos->n_part     = 1;
+  isos->iso_n_part = 1;
 
   if (_is_nodal(isos)) {
     // Nodal
@@ -585,6 +586,11 @@ _compute_iso_field
 {
   _isosurface_t *_iso = &isos->isosurfaces[id_isosurface];
 
+  int n_part = isos->n_part;
+  if (use_extract) {
+    n_part = isos->iso_n_part;
+  }
+
   if (_iso->kind == PDM_ISO_SURFACE_KIND_FIELD) {
     if (isos->entry_is_part == 1) {
       if (_iso->field==NULL) {
@@ -601,8 +607,8 @@ _compute_iso_field
     if (use_extract) {
 
       if (isos->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL) {
-        PDM_malloc(isos->extract_field, isos->n_part, double *); // iso_n_part
-        for (int i_part = 0; i_part < isos->n_part; i_part++) { // iso_n_part
+        PDM_malloc(isos->extract_field, n_part, double *);
+        for (int i_part = 0; i_part < n_part; i_part++) {
           int *parent_entity_lnum = NULL;
           int n_extract_vtx = PDM_extract_part_parent_lnum_get(isos->extrp,
                                                                i_part,
@@ -672,8 +678,8 @@ _compute_iso_field
 
   if (!use_extract) {
     if (_iso->field==NULL) {
-      PDM_malloc(_iso->field, isos->n_part, double *);
-      for (int i = 0; i < isos->n_part; i++) {
+      PDM_malloc(_iso->field, n_part, double *);
+      for (int i = 0; i < n_part; i++) {
         _iso->field[i] = NULL;
       }
     }
@@ -687,16 +693,16 @@ _compute_iso_field
   double **field     = NULL;
   int     *n_vtx     = NULL;
   double **vtx_coord = NULL;
-  PDM_malloc(n_vtx    , isos->n_part, int     );
-  PDM_malloc(vtx_coord, isos->n_part, double *);
+  PDM_malloc(n_vtx    , n_part, int     );
+  PDM_malloc(vtx_coord, n_part, double *);
 
   if (use_extract) {
     // We work on extracted mesh
     if (isos->extract_field == NULL) {
-      PDM_malloc(isos->extract_field, isos->n_part, double *);
+      PDM_malloc(isos->extract_field, n_part, double *);
     }
     field = isos->extract_field;
-    for (int i_part = 0; i_part < isos->n_part; i_part++) {
+    for (int i_part = 0; i_part < n_part; i_part++) {
       if (_is_nodal(isos)) {
         n_vtx    [i_part] = PDM_part_mesh_nodal_n_vtx_get    (isos->extract_pmesh_nodal, i_part);
         vtx_coord[i_part] = PDM_part_mesh_nodal_vtx_coord_get(isos->extract_pmesh_nodal, i_part);
@@ -714,20 +720,20 @@ _compute_iso_field
     // We work on initial mesh (before extraction)
     field = _iso->field;
     if (_is_nodal(isos)) {
-      for (int i_part = 0; i_part < isos->n_part; i_part++) {
+      for (int i_part = 0; i_part < n_part; i_part++) {
         n_vtx    [i_part] = PDM_part_mesh_nodal_n_vtx_get    (isos->pmesh_nodal, i_part);
         vtx_coord[i_part] = PDM_part_mesh_nodal_vtx_coord_get(isos->pmesh_nodal, i_part);
       }
     }
     else {
-      for (int i_part = 0; i_part < isos->n_part; i_part++) {
+      for (int i_part = 0; i_part < n_part; i_part++) {
         n_vtx    [i_part] = isos->n_vtx    [i_part];
         vtx_coord[i_part] = isos->vtx_coord[i_part];
       }
     }
   }
 
-  for (int i_part = 0; i_part < isos->n_part; i_part++) {
+  for (int i_part = 0; i_part < n_part; i_part++) {
     PDM_malloc(field[i_part], n_vtx[i_part], double);
   }
 
@@ -736,7 +742,7 @@ _compute_iso_field
     // User-provided field function
     if (_iso->field_function_python != NULL) {
       // Python
-      for (int i_part = 0; i_part < isos->n_part; i_part++) {
+      for (int i_part = 0; i_part < n_part; i_part++) {
         for (int i_vtx = 0; i_vtx < n_vtx[i_part]; i_vtx++) {
           field[i_part][i_vtx] = _iso->field_function_python(isos->python_object,
                                                              id_isosurface,
@@ -749,7 +755,7 @@ _compute_iso_field
     else {
       // C
       assert(_iso->field_function != NULL);
-      for (int i_part = 0; i_part < isos->n_part; i_part++) {
+      for (int i_part = 0; i_part < n_part; i_part++) {
         for (int i_vtx = 0; i_vtx < n_vtx[i_part]; i_vtx++) {
           _iso->field_function(vtx_coord[i_part][3*i_vtx  ],
                                vtx_coord[i_part][3*i_vtx+1],
@@ -790,7 +796,7 @@ _compute_iso_field
       }
     }
 
-    for (int i_part = 0; i_part < isos->n_part; i_part++) {
+    for (int i_part = 0; i_part < n_part; i_part++) {
       for (int i_vtx = 0; i_vtx < n_vtx[i_part]; i_vtx++) {
         field[i_part][i_vtx] = field_function(vtx_coord[i_part][3*i_vtx  ],
                                               vtx_coord[i_part][3*i_vtx+1],
@@ -936,7 +942,6 @@ _extract
     assert(isos->dist_to_part_computed);
     isos->extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
     isos->part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
-    isos->n_part       = 1;
   }
 
 
@@ -944,7 +949,7 @@ _extract
     // Nodal
     PDM_extract_part_t *extrp = PDM_extract_part_create(isos->entry_mesh_dim,
                                                         isos->n_part,
-                                                        isos->n_part, // iso_n_part
+                                                        isos->iso_n_part,
                                                         isos->extract_kind,
                                                         isos->part_method,
                                                         PDM_FALSE,
@@ -1166,10 +1171,10 @@ _extract
   }
 
   else {
-   // Ngon
+    // Ngon
     PDM_extract_part_t *extrp = PDM_extract_part_create(isos->entry_mesh_dim,
                                                         isos->n_part,
-                                                        isos->n_part,
+                                                        isos->iso_n_part,
                                                         isos->extract_kind,
                                                         isos->part_method,
                                                         PDM_FALSE,
@@ -1443,25 +1448,25 @@ _ngonize
 
   if (all_simplices) {
     if (isos->extract_n_vtx==NULL) {
-      PDM_malloc(isos->extract_n_vtx    , isos->n_part, int          ); // iso_n_part
-      PDM_malloc(isos->extract_vtx_coord, isos->n_part, double      *); // iso_n_part
-      PDM_malloc(isos->extract_vtx_gnum , isos->n_part, PDM_g_num_t *); // iso_n_part
-      PDM_malloc(isos->extract_vtx_lnum , isos->n_part, int         *); // iso_n_part
+      PDM_malloc(isos->extract_n_vtx    , isos->iso_n_part, int          );
+      PDM_malloc(isos->extract_vtx_coord, isos->iso_n_part, double      *);
+      PDM_malloc(isos->extract_vtx_gnum , isos->iso_n_part, PDM_g_num_t *);
+      PDM_malloc(isos->extract_vtx_lnum , isos->iso_n_part, int         *);
 
-      PDM_malloc(isos->extract_n_tri      , isos->n_part, int          ); // iso_n_part
-      PDM_malloc(isos->extract_tri_vtx    , isos->n_part, int         *); // iso_n_part
-      PDM_malloc(isos->extract_tri_gnum   , isos->n_part, PDM_g_num_t *); // iso_n_part
-      PDM_malloc(isos->extract_tri_lnum   , isos->n_part, int         *); // iso_n_part
-      PDM_malloc(isos->extract_tri_n_group, isos->n_part, int          ); // iso_n_part
-      PDM_malloc(isos->extract_tri_tag    , isos->n_part, int         *); // iso_n_part
+      PDM_malloc(isos->extract_n_tri      , isos->iso_n_part, int          );
+      PDM_malloc(isos->extract_tri_vtx    , isos->iso_n_part, int         *);
+      PDM_malloc(isos->extract_tri_gnum   , isos->iso_n_part, PDM_g_num_t *);
+      PDM_malloc(isos->extract_tri_lnum   , isos->iso_n_part, int         *);
+      PDM_malloc(isos->extract_tri_n_group, isos->iso_n_part, int          );
+      PDM_malloc(isos->extract_tri_tag    , isos->iso_n_part, int         *);
 
-      PDM_malloc(isos->extract_n_tetra   , isos->n_part, int          ); // iso_n_part
-      PDM_malloc(isos->extract_tetra_vtx , isos->n_part, int         *); // iso_n_part
-      PDM_malloc(isos->extract_tetra_gnum, isos->n_part, PDM_g_num_t *); // iso_n_part
-      PDM_malloc(isos->extract_tetra_lnum, isos->n_part, int         *); // iso_n_part
+      PDM_malloc(isos->extract_n_tetra   , isos->iso_n_part, int          );
+      PDM_malloc(isos->extract_tetra_vtx , isos->iso_n_part, int         *);
+      PDM_malloc(isos->extract_tetra_gnum, isos->iso_n_part, PDM_g_num_t *);
+      PDM_malloc(isos->extract_tetra_lnum, isos->iso_n_part, int         *);
     }
 
-    for (int i_part = 0; i_part < isos->n_part; i_part++) { // iso_n_part
+    for (int i_part = 0; i_part < isos->iso_n_part; i_part++) {
 
       isos->extract_n_vtx    [i_part] = PDM_part_mesh_nodal_n_vtx_get    (extract_pmn, i_part);
       isos->extract_vtx_coord[i_part] = PDM_part_mesh_nodal_vtx_coord_get(extract_pmn, i_part);
@@ -1563,25 +1568,25 @@ _triangulate
   assert(isos->extrp != NULL);
 
   if (isos->extract_n_vtx==NULL) {
-    PDM_malloc(isos->extract_n_vtx    , isos->n_part, int          ); // iso_n_part
-    PDM_malloc(isos->extract_vtx_coord, isos->n_part, double      *); // iso_n_part
-    PDM_malloc(isos->extract_vtx_gnum , isos->n_part, PDM_g_num_t *); // iso_n_part
-    PDM_malloc(isos->extract_vtx_lnum , isos->n_part, int         *); // iso_n_part
+    PDM_malloc(isos->extract_n_vtx    , isos->iso_n_part, int          );
+    PDM_malloc(isos->extract_vtx_coord, isos->iso_n_part, double      *);
+    PDM_malloc(isos->extract_vtx_gnum , isos->iso_n_part, PDM_g_num_t *);
+    PDM_malloc(isos->extract_vtx_lnum , isos->iso_n_part, int         *);
 
-    PDM_malloc(isos->extract_n_tri      , isos->n_part, int          ); // iso_n_part
-    PDM_malloc(isos->extract_tri_vtx    , isos->n_part, int         *); // iso_n_part
-    PDM_malloc(isos->extract_tri_gnum   , isos->n_part, PDM_g_num_t *); // iso_n_part
-    PDM_malloc(isos->extract_tri_lnum   , isos->n_part, int         *); // iso_n_part
-    PDM_malloc(isos->extract_tri_n_group, isos->n_part, int          ); // iso_n_part
-    PDM_malloc(isos->extract_tri_tag    , isos->n_part, int         *); // iso_n_part
+    PDM_malloc(isos->extract_n_tri      , isos->iso_n_part, int          );
+    PDM_malloc(isos->extract_tri_vtx    , isos->iso_n_part, int         *);
+    PDM_malloc(isos->extract_tri_gnum   , isos->iso_n_part, PDM_g_num_t *);
+    PDM_malloc(isos->extract_tri_lnum   , isos->iso_n_part, int         *);
+    PDM_malloc(isos->extract_tri_n_group, isos->iso_n_part, int          );
+    PDM_malloc(isos->extract_tri_tag    , isos->iso_n_part, int         *);
 
-    PDM_malloc(isos->extract_n_tetra   , isos->n_part, int          ); // iso_n_part
-    PDM_malloc(isos->extract_tetra_vtx , isos->n_part, int         *); // iso_n_part
-    PDM_malloc(isos->extract_tetra_gnum, isos->n_part, PDM_g_num_t *); // iso_n_part
-    PDM_malloc(isos->extract_tetra_lnum, isos->n_part, int         *); // iso_n_part
+    PDM_malloc(isos->extract_n_tetra   , isos->iso_n_part, int          );
+    PDM_malloc(isos->extract_tetra_vtx , isos->iso_n_part, int         *);
+    PDM_malloc(isos->extract_tetra_gnum, isos->iso_n_part, PDM_g_num_t *);
+    PDM_malloc(isos->extract_tetra_lnum, isos->iso_n_part, int         *);
   }
 
-  for (int i_part = 0; i_part < isos->n_part; i_part++) {
+  for (int i_part = 0; i_part < isos->iso_n_part; i_part++) {
 
     isos->extract_n_tetra   [i_part] = 0;
     isos->extract_tetra_vtx [i_part] = NULL;
@@ -1667,7 +1672,6 @@ _triangulate
     }
 
 
-    // TODO: grouds!!
     int *face_tag = PDM_array_zeros_int(n_face);
 
     int          n_group_face;
@@ -1732,7 +1736,7 @@ _part_to_dist_vtx
                                                           _iso->iso_entity_gnum[PDM_MESH_ENTITY_VTX],
                                                           NULL,
                                                           _iso->iso_n_entity[PDM_MESH_ENTITY_VTX],
-                                                          isos->n_part,
+                                                          isos->iso_n_part,
                                                           isos->comm);
   // > Get vtx coords
   double *dvtx_coord = NULL;
@@ -1748,8 +1752,8 @@ _part_to_dist_vtx
 
   // > Get vtx parent
   int **pvtx_parent_strd = NULL;
-  PDM_malloc(pvtx_parent_strd, isos->n_part, int *);
-  for (int i_part=0; i_part<isos->n_part; ++i_part) {
+  PDM_malloc(pvtx_parent_strd, isos->iso_n_part, int *);
+  for (int i_part=0; i_part<isos->iso_n_part; ++i_part) {
     pvtx_parent_strd[i_part] = PDM_array_new_size_from_idx_int(_iso->iso_entity_parent_idx[PDM_MESH_ENTITY_VTX][i_part], _iso->iso_n_entity[PDM_MESH_ENTITY_VTX][i_part]);
   }
 
@@ -1778,7 +1782,7 @@ _part_to_dist_vtx
 
   int dn_vtx = PDM_part_to_block_n_elt_block_get(ptb_vtx);
   int *dvtx_parent_idx = PDM_array_new_idx_from_sizes_int(dvtx_parent_strd, dn_vtx);
-  for (int i_part=0; i_part<isos->n_part; ++i_part) {
+  for (int i_part=0; i_part<isos->iso_n_part; ++i_part) {
     PDM_free(pvtx_parent_strd[i_part]);
   }
   PDM_free(pvtx_parent_strd);
@@ -1826,14 +1830,14 @@ _part_to_dist_edge_group
   int          *n_elt_group     = NULL;
   PDM_g_num_t **    _group_gnum = NULL;
   PDM_g_num_t **_elt_group_gnum = NULL;
-  PDM_malloc(n_elt_group    , isos->n_part, int          );
-  PDM_malloc(_elt_group_gnum, isos->n_part, PDM_g_num_t *);
-  PDM_malloc(    _group_gnum, isos->n_part, PDM_g_num_t *);
+  PDM_malloc(n_elt_group    , isos->iso_n_part, int          );
+  PDM_malloc(_elt_group_gnum, isos->iso_n_part, PDM_g_num_t *);
+  PDM_malloc(    _group_gnum, isos->iso_n_part, PDM_g_num_t *);
 
   for (int i_group=0; i_group<_iso->iso_n_edge_group; ++i_group) {
 
     // > Prepare ptb
-    for (int i_part=0; i_part<isos->n_part; ++i_part) {
+    for (int i_part=0; i_part<isos->iso_n_part; ++i_part) {
       int i_beg_group = _iso->iso_edge_group_idx[i_part][i_group  ];
       int i_end_group = _iso->iso_edge_group_idx[i_part][i_group+1];
       n_elt_group[i_part] = i_end_group-i_beg_group;
@@ -1858,7 +1862,7 @@ _part_to_dist_edge_group
                                                               _group_gnum,
                                                               NULL,
                                                               n_elt_group,
-                                                              isos->n_part,
+                                                              isos->iso_n_part,
                                                               isos->comm);
 
     int dn_elt_group = PDM_part_to_block_n_elt_block_get(ptb_group);
@@ -1882,7 +1886,7 @@ _part_to_dist_edge_group
 
     PDM_part_to_block_free(ptb_group);
     PDM_free(rvcd_gnum);
-    for (int i_part=0; i_part<isos->n_part; ++i_part) {
+    for (int i_part=0; i_part<isos->iso_n_part; ++i_part) {
       PDM_free(_elt_group_gnum[i_part]);
     }
   } // End loop on groups
@@ -1945,7 +1949,7 @@ _part_to_dist_elt
                                                           elt_gnum,
                                                           NULL,
                                                           n_elt,
-                                                          isos->n_part,
+                                                          isos->iso_n_part,
                                                           isos->comm);
 
   /**
@@ -1954,7 +1958,7 @@ _part_to_dist_elt
   int  dn_elt           = PDM_part_to_block_n_elt_block_get     (ptb_elt);
   int *block_gnum_count = PDM_part_to_block_block_gnum_count_get(ptb_elt);
   if (debug==1) {
-    for (int i_part=0; i_part<isos->n_part; ++i_part) {
+    for (int i_part=0; i_part<isos->iso_n_part; ++i_part) {
       PDM_log_trace_array_long(elt_gnum[i_part], n_elt[i_part], "elt_gnum ::");
     }
 
@@ -1971,10 +1975,10 @@ _part_to_dist_elt
   // > Translate connectivity into gid
   int         **_elt_vtx_strd = NULL;
   PDM_g_num_t **_elt_vtx      = NULL;
-  PDM_malloc(_elt_vtx_strd, isos->n_part, int         *);
-  PDM_malloc(_elt_vtx     , isos->n_part, PDM_g_num_t *);
+  PDM_malloc(_elt_vtx_strd, isos->iso_n_part, int         *);
+  PDM_malloc(_elt_vtx     , isos->iso_n_part, PDM_g_num_t *);
 
-  for (int i_part=0; i_part<isos->n_part; ++i_part) {
+  for (int i_part=0; i_part<isos->iso_n_part; ++i_part) {
     int size_elt_vtx = 0;
     if (elt_vtx_idx!=NULL) { // Face
       size_elt_vtx = elt_vtx_idx[i_part][n_elt[i_part]];
@@ -2017,7 +2021,7 @@ _part_to_dist_elt
   }
   *out_delt_vtx = delt_vtx;
 
-  for (int i_part=0; i_part<isos->n_part; ++i_part) {
+  for (int i_part=0; i_part<isos->iso_n_part; ++i_part) {
     PDM_free(_elt_vtx_strd[i_part]);
     PDM_free(_elt_vtx     [i_part]);
   }
@@ -2032,8 +2036,8 @@ _part_to_dist_elt
 
   // > Prepare stride
   int **_elt_parent_strd = NULL;
-  PDM_malloc(_elt_parent_strd, isos->n_part, int *);
-  for (int i_part=0; i_part<isos->n_part; ++i_part) {
+  PDM_malloc(_elt_parent_strd, isos->iso_n_part, int *);
+  for (int i_part=0; i_part<isos->iso_n_part; ++i_part) {
     _elt_parent_strd[i_part] = PDM_array_new_size_from_idx_int(elt_parent_idx[i_part], n_elt[i_part]);
   }
 
@@ -2059,7 +2063,7 @@ _part_to_dist_elt
     PDM_log_trace_array_long(delt_parent_gnum, rcvd_size, "delt_parent_gnum :: ");
   }
 
-  for (int i_part=0; i_part<isos->n_part; ++i_part) {
+  for (int i_part=0; i_part<isos->iso_n_part; ++i_part) {
     PDM_free(_elt_parent_strd[i_part]);
   }
   PDM_free(_elt_parent_strd);
@@ -2274,9 +2278,9 @@ _build_ptp
   /* Get init location of extracted parent entities */
   int **entity_parent_triplet_idx   = NULL;
   int **entity_parent_init_location = NULL;
-  PDM_malloc(entity_parent_triplet_idx,   isos->n_part, int *);
-  PDM_malloc(entity_parent_init_location, isos->n_part, int *);
-  for (int i_part = 0; i_part < isos->n_part; i_part++) {
+  PDM_malloc(entity_parent_triplet_idx,   isos->iso_n_part, int *);
+  PDM_malloc(entity_parent_init_location, isos->iso_n_part, int *);
+  for (int i_part = 0; i_part < isos->iso_n_part; i_part++) {
 
     int *parent_init_location = NULL;
     PDM_extract_part_init_location_get(isos->extrp,
@@ -2304,14 +2308,14 @@ _build_ptp
   /* Create ptp from isosurface entities to source entities */
   _iso->iso_ptp[entity_type] = PDM_part_to_part_create_from_num2_triplet((const PDM_g_num_t **) entity_gnum,
                                                                          (const int         * ) n_entity,
-                                                                                                isos->n_part,
+                                                                                                isos->iso_n_part,
                                                                          (const int         * ) n_parent,
                                                                                                 isos->n_part,
                                                                          (const int         **) entity_parent_idx,
                                                                          (const int         **) entity_parent_triplet_idx,
                                                                          (const int         **) entity_parent_init_location,
                                                                                                 isos->comm);
-  for (int i_part = 0; i_part < isos->n_part; i_part++) {
+  for (int i_part = 0; i_part < isos->iso_n_part; i_part++) {
     PDM_free(entity_parent_triplet_idx  [i_part]);
     PDM_free(entity_parent_init_location[i_part]);
   }
@@ -2343,7 +2347,7 @@ _free_iso_entity
   /* Vertices */
   if (entity_type == PDM_MESH_ENTITY_VTX) {
     /* Partitioned */
-    for (int i_part = 0; i_part < isos->n_part; i_part++) {
+    for (int i_part = 0; i_part < isos->iso_n_part; i_part++) {
       if (_iso->iso_owner_vtx_coord[i_part] == PDM_OWNERSHIP_KEEP) {
         PDM_free(_iso->iso_vtx_coord[i_part]);
       }
@@ -2366,7 +2370,7 @@ _free_iso_entity
   /* Edges */
   else if (entity_type == PDM_MESH_ENTITY_EDGE) {
     /* Partitioned */
-    for (int i_part = 0; i_part < isos->n_part; i_part++) {
+    for (int i_part = 0; i_part < isos->iso_n_part; i_part++) {
       if (_iso->iso_owner_edge_bnd[i_part] == PDM_OWNERSHIP_KEEP) {
         PDM_free(_iso->iso_edge_group_idx [i_part]);
         PDM_free(_iso->iso_edge_group_lnum[i_part]);
@@ -2397,7 +2401,7 @@ _free_iso_entity
   /* Faces */
   else if (entity_type == PDM_MESH_ENTITY_FACE) {
     /* Partitioned */
-    for (int i_part = 0; i_part < isos->n_part; i_part++) {
+    for (int i_part = 0; i_part < isos->iso_n_part; i_part++) {
       if (_iso->iso_owner_connec[PDM_CONNECTIVITY_TYPE_FACE_VTX][i_part] == PDM_OWNERSHIP_KEEP) {
         PDM_free(_iso->iso_connec_idx[PDM_CONNECTIVITY_TYPE_FACE_VTX][i_part]);
         PDM_free(_iso->iso_connec    [PDM_CONNECTIVITY_TYPE_FACE_VTX][i_part]);
@@ -2420,7 +2424,7 @@ _free_iso_entity
   /* Generic for all entities */
 
   /*   Partitioned */
-  for (int i_part = 0; i_part < isos->n_part; i_part++) {
+  for (int i_part = 0; i_part < isos->iso_n_part; i_part++) {
     if (_iso->iso_owner_gnum[entity_type][i_part] == PDM_OWNERSHIP_KEEP) {
       PDM_free(_iso->iso_entity_gnum[entity_type][i_part]);
     }
@@ -2540,7 +2544,7 @@ _free_nodal_extract_parts
   PDM_isosurface_t *isos
 )
 {
-  for (int i_part=0; i_part<isos->n_part; ++i_part) {
+  for (int i_part=0; i_part<isos->iso_n_part; ++i_part) {
     PDM_free(isos->extract_tri_tag[i_part]);
     if (isos->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL) {
       PDM_free(isos->extract_vtx_lnum[i_part]);
@@ -2694,7 +2698,7 @@ _isosurface_compute
   _iso->is_computed = PDM_TRUE;
 
   PDM_extract_part_free(isos->extrp);
-  for (int i_part = 0; i_part < isos->n_part; i_part++) {
+  for (int i_part = 0; i_part < isos->iso_n_part; i_part++) {
     PDM_free(isos->extract_field[i_part]);
   }
   PDM_free(isos->extract_field);
@@ -2955,6 +2959,12 @@ PDM_isosurface_compute
  int               id_isosurface
 )
 {
+  if (isos->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL && isos->iso_n_part != isos->n_part) {
+    PDM_error(__FILE__, __LINE__, 0,
+              "In PDM_EXTRACT_PART_KIND_LOCAL mode n_part_out (%d) must be equal to n_part_in (%d)\n",
+              isos->iso_n_part, isos->n_part);
+  }
+
   if (id_isosurface < 0) { // Compute all isosurfaces
     for (int i = 0; i < isos->n_isosurface; i++) {
       _isosurface_compute(isos, i);
