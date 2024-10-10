@@ -97,7 +97,9 @@ _vtx_free
         PDM_free(vtx->_coords);
         vtx->_coords = NULL;
       }
+    }
 
+    if(vtx->owner_parent == PDM_OWNERSHIP_KEEP) {
       if(vtx->dvtx_parent_g_num != NULL) {
         PDM_free(vtx->dvtx_parent_g_num);
         vtx->dvtx_parent_g_num = NULL;
@@ -184,6 +186,10 @@ const PDM_MPI_Comm        comm,
   dmesh_nodal->vtx->n_vtx               = 0;
   dmesh_nodal->vtx->dvtx_tag            = NULL;
   dmesh_nodal->vtx->dvtx_parent_g_num   = NULL;
+
+  dmesh_nodal->vtx->owner            = PDM_OWNERSHIP_BAD_VALUE;
+  dmesh_nodal->vtx->owner_tag        = PDM_OWNERSHIP_BAD_VALUE;
+  dmesh_nodal->vtx->owner_parent     = PDM_OWNERSHIP_BAD_VALUE;
 
   dmesh_nodal->volumic  = PDM_DMesh_nodal_elmts_create(dmesh_nodal->comm, 3, dmesh_nodal->n_cell_abs);
   dmesh_nodal->surfacic = PDM_DMesh_nodal_elmts_create(dmesh_nodal->comm, 2, dmesh_nodal->n_face_abs);
@@ -347,7 +353,8 @@ void
 PDM_DMesh_nodal_vtx_parent_gnum_set
 (
  PDM_dmesh_nodal_t *dmesh_nodal,
- PDM_g_num_t       *dvtx_parent_g_num
+ PDM_g_num_t       *dvtx_parent_g_num,
+ PDM_ownership_t    owner
 )
 {
   if (dmesh_nodal == NULL) {
@@ -359,6 +366,8 @@ PDM_DMesh_nodal_vtx_parent_gnum_set
   if (vtx->dvtx_parent_g_num != NULL) {
     PDM_error(__FILE__, __LINE__, 0, "dvtx_tag are already defined\n");
   }
+
+  vtx->owner_parent   = owner;
 
   vtx->dvtx_parent_g_num = dvtx_parent_g_num;
 }
@@ -480,7 +489,8 @@ PDM_DMesh_nodal_vtx_tag_get
 PDM_g_num_t *
 PDM_DMesh_nodal_vtx_parent_gnum_get
 (
-PDM_dmesh_nodal_t  *dmesh_nodal
+PDM_dmesh_nodal_t  *dmesh_nodal,
+ PDM_ownership_t    owner
 )
 {
 
@@ -489,6 +499,10 @@ PDM_dmesh_nodal_t  *dmesh_nodal
   }
 
   PDM_DMesh_nodal_vtx_t *vtx = dmesh_nodal->vtx;
+
+  if(owner != PDM_OWNERSHIP_BAD_VALUE) {
+    vtx->owner_parent = owner;
+  }
 
   return vtx->dvtx_parent_g_num;
 }

@@ -50,6 +50,7 @@ struct PDM_DMesh_nodal_vtx_t {
 
   PDM_ownership_t   owner;
   PDM_ownership_t   owner_tag;
+  PDM_ownership_t   owner_parent;
 };
 
 /**

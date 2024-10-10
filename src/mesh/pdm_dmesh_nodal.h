@@ -57,7 +57,6 @@ typedef struct _pdm_dmesh_nodal_t      PDM_dmesh_nodal_t;
  * \return       New mesh nodal handle
  *
  */
-
 PDM_dmesh_nodal_t*
 PDM_DMesh_nodal_create
 (
@@ -68,7 +67,6 @@ const PDM_MPI_Comm comm,
       PDM_g_num_t  n_face,
       PDM_g_num_t  n_edge
 );
-
 
 void
 PDM_DMesh_nodal_free
@@ -84,7 +82,6 @@ PDM_DMesh_nodal_free
  * \param [in]  coords    Interlaced coordinates (size = 3 * \ref n_vtx)
  *
  */
-
 void
 PDM_DMesh_nodal_coord_set
 (
@@ -102,11 +99,13 @@ PDM_DMesh_nodal_vtx_tag_set
  PDM_ownership_t    owner
 );
 
+
 void
 PDM_DMesh_nodal_vtx_parent_gnum_set
 (
  PDM_dmesh_nodal_t *dmesh_nodal,
- PDM_g_num_t       *dvtx_parent_g_num
+ PDM_g_num_t       *dvtx_parent_g_num,
+ PDM_ownership_t    owner
 );
 
 int*
@@ -120,7 +119,8 @@ PDM_DMesh_nodal_vtx_tag_get
 PDM_g_num_t *
 PDM_DMesh_nodal_vtx_parent_gnum_get
 (
-PDM_dmesh_nodal_t  *dmesh_nodal
+ PDM_dmesh_nodal_t  *dmesh_nodal,
+ PDM_ownership_t    owner
 );
 
 
