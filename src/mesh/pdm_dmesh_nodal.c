@@ -92,7 +92,7 @@ _vtx_free
       vtx->distrib = NULL;
     }
 
-    if(vtx->owner == PDM_OWNERSHIP_KEEP) {
+    if(vtx->owner_coords == PDM_OWNERSHIP_KEEP) {
       if(vtx->_coords != NULL) {
         PDM_free(vtx->_coords);
         vtx->_coords = NULL;
@@ -187,7 +187,7 @@ const PDM_MPI_Comm        comm,
   dmesh_nodal->vtx->dvtx_tag            = NULL;
   dmesh_nodal->vtx->dvtx_parent_g_num   = NULL;
 
-  dmesh_nodal->vtx->owner            = PDM_OWNERSHIP_BAD_VALUE;
+  dmesh_nodal->vtx->owner_coords     = PDM_OWNERSHIP_BAD_VALUE;
   dmesh_nodal->vtx->owner_tag        = PDM_OWNERSHIP_BAD_VALUE;
   dmesh_nodal->vtx->owner_parent     = PDM_OWNERSHIP_BAD_VALUE;
 
@@ -305,9 +305,9 @@ PDM_DMesh_nodal_coord_set
 
   /* Mapping memoire */
 
-  vtx->n_vtx   = n_vtx;
-  vtx->_coords = coords;
-  vtx->owner   = owner;
+  vtx->n_vtx        = n_vtx;
+  vtx->_coords      = coords;
+  vtx->owner_coords = owner;
 
   PDM_malloc(vtx->distrib, dmesh_nodal->n_rank + 1, PDM_g_num_t);
 
@@ -440,7 +440,7 @@ PDM_DMesh_nodal_vtx_get
   PDM_DMesh_nodal_vtx_t *vtx = dmesh_nodal->vtx;
 
   if(owner != PDM_OWNERSHIP_BAD_VALUE) {
-    vtx->owner = owner;
+    vtx->owner_coords = owner;
   }
 
   return vtx->_coords;
