@@ -45,6 +45,8 @@ Iso-surface settings
 
 .. doxygenfunction:: PDM_isosurface_redistribution_set
 
+.. doxygenfunction:: PDM_isosurface_n_part_out_set
+
 .. doxygenfunction:: PDM_isosurface_add
 
 .. doxygenfunction:: PDM_isosurface_set_isovalues
