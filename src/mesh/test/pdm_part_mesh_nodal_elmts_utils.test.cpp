@@ -276,6 +276,7 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal_elmts_utils] - part_mesh_nodal_elmts_compute
 
     PDM_part_mesh_nodal_elmts_compute_child_parent(pmne_parent,
                                                    pmne_child,
+                                                   PDM_MESH_ENTITY_MAX, // unused here
                                                    compute_parent_child,
                                                    &child_to_parent_idx,
                                                    &child_to_parent,
