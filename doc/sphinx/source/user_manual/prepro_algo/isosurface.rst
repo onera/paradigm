@@ -60,21 +60,16 @@ Iso-surface settings
 
 .. doxygenfunction:: PDM_isosurface_set_tolerance
 
-.. .. todo::
-
-..   - PDM_isosurface_field_gradient_function_set?
 
 Partitioned discrete field
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. doxygenfunction:: PDM_isosurface_field_set
-.. doxygenfunction:: PDM_isosurface_gradient_set
 
 Block-distributed discrete field
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. doxygenfunction:: PDM_isosurface_dfield_set
-.. doxygenfunction:: PDM_isosurface_dgradient_set
 
 Iso-surface computation
 """""""""""""""""""""""

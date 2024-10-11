@@ -442,50 +442,6 @@ PDM_isosurface_field_set
 }
 
 
-void
-PDM_isosurface_gradient_set
-(
- PDM_isosurface_t *isos,
- int               id_isosurface,
- int               i_part,
- double           *gradient
-)
-{
-  CHECK_IS_NOT_DIST(isos);
-  CHECK_I_PART_SET(isos, i_part);
-  
-  PDM_ISOSURFACE_CHECK_ID(isos, id_isosurface);
-
-  // > Check i_part is valid
-  int n_part = 0;
-  if (isos->entry_mesh_type==-1) {
-    n_part = isos->n_part;
-    if (n_part==-1) {
-      PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: entry_mesh_type = %d but n_part isn't defined.\n", isos->entry_mesh_type);
-    }
-  }
-  else if (isos->entry_mesh_type==-2) {
-    n_part = PDM_part_mesh_n_part_get(isos->pmesh);
-  }
-  else if (isos->entry_mesh_type==-3) {
-    n_part = PDM_part_mesh_nodal_n_part_get(isos->pmesh_nodal);
-  }
-  else {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: Impossible to defined manually gradient field without setting mesh first.\n", isos->entry_mesh_type);
-  }
-
-  if (i_part>=n_part) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: trying to defined gradient field for i_part >= n_part (%d >= %d).\n", i_part, n_part);
-  }
-
-  _isosurface_t *_iso = &isos->isosurfaces[id_isosurface];
-  if (_iso->gradient==NULL) {
-    PDM_malloc(_iso->gradient, isos->n_part, double *);
-  }
-  _iso->gradient[i_part] = gradient;
-}
-
-
 int
 PDM_isosurface_local_parent_get
 (

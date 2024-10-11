@@ -321,22 +321,6 @@ PDM_isosurface_dfield_set
 }
 
 
-void
-PDM_isosurface_dgradient_set
-(
- PDM_isosurface_t *isos,
- int               id_isosurface,
- double           *dgradient
-)
-{
-  CHECK_IS_NOT_PART(isos);
-
-  PDM_ISOSURFACE_CHECK_ID(isos, id_isosurface);
- 
-  _isosurface_t *_iso = &isos->isosurfaces[id_isosurface];
-  _iso->dgradient = dgradient;
-}
-
 int
 PDM_isosurface_dconnectivity_get
 (

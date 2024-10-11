@@ -103,18 +103,9 @@ cdef extern from "pdm_isosurface.h":
                                 int               i_part,
                                 double           *field);
 
-  void PDM_isosurface_gradient_set(PDM_isosurface_t *isos,
-                                   int               id_isosurface,
-                                   int               i_part,
-                                   double           *gradient);
-
   void PDM_isosurface_dfield_set(PDM_isosurface_t *isos,
                                  int               id_isosurface,
                                  double           *dfield);
-
-  void PDM_isosurface_dgradient_set(PDM_isosurface_t *isos,
-                                    int               id_isosurface,
-                                    double           *dgradient);
 
 
   void PDM_isosurface_redistribution_set(PDM_isosurface_t        *isos,
@@ -613,15 +604,6 @@ cdef class Isosurface:
 
     PDM_isosurface_field_set(self._isos, id_iso, i_part, field_data)
 
-  def gradient_set(self,                          id_iso,
-                                                  i_part,
-      NPY.ndarray[NPY.double_t, mode='c', ndim=1] gradient):
-    """
-    Not implemented.
-    """
-    raise NotImplementedError()
-
-
   # > Distributed setter API
   def dconnectivity_set(self,                       connectivity_type,
       NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] connectivity_idx,
@@ -733,13 +715,6 @@ cdef class Isosurface:
     cdef double *field_data = np_to_double_pointer(field)
 
     PDM_isosurface_dfield_set(self._isos, i_part, field_data)
-
-  def dgradient_set(self,                          id_iso,
-      NPY.ndarray[NPY.double_t, mode='c', ndim=1] gradient):
-    """
-    Not implemented.
-    """
-    raise NotImplementedError()
 
 
   # > Partitioned getter API

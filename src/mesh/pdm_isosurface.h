@@ -494,8 +494,6 @@ PDM_isosurface_equation_set
  * \param [in]  id_isosurface  Iso-surface identifier
  * \param [in]  func           Function pointer
  *
- * \warning ajouter PDM_isosurface_gradient_function_set ?
- *          ou bien inclure calcul (optionnel) du gradient dans 'func' (permet de factoriser des calculs)
  */
 
 void
@@ -530,27 +528,6 @@ PDM_isosurface_field_set
 
 /**
  *
- * \brief Set gradient values
- *
- * \param [in]  isos           \ref PDM_isosurface_t instance
- * \param [in]  id_isosurface  Iso-surface identifier
- * \param [in]  i_part         Partition identifier
- * \param [in]  gradient       Gradient values (size = 3 * *n_vtx*)
- *
- */
-
-void
-PDM_isosurface_gradient_set
-(
-  PDM_isosurface_t *isos,
-  int               id_isosurface,
-  int               i_part,
-  double           *gradient
-);
-
-
-/**
- *
  * \brief Set block-distributed field values
  *
  * \param [in]  isos           \ref PDM_isosurface_t instance
@@ -565,25 +542,6 @@ PDM_isosurface_dfield_set
   PDM_isosurface_t *isos,
   int               id_isosurface,
   double           *dfield
-);
-
-
-/**
- *
- * \brief Set block-distributed gradient values
- *
- * \param [in]  isos           \ref PDM_isosurface_t instance
- * \param [in]  id_isosurface  Iso-surface identifier
- * \param [in]  dgradient      Gradient values (size = 3 * *dn_vtx*)
- *
- */
-
-void
-PDM_isosurface_dgradient_set
-(
-  PDM_isosurface_t *isos,
-  int               id_isosurface,
-  double           *dgradient
 );
 
 
