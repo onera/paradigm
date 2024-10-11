@@ -1,7 +1,7 @@
 # cython: c_string_type=str, c_string_encoding=ascii
 cdef extern from "pdm_mesh_nodal.h":
-  int PDM_Mesh_nodal_n_vertices_element(PDM_Mesh_nodal_elt_t type,
-                                        int            order)
+  int PDM_Mesh_nodal_n_vtx_elt_get(PDM_Mesh_nodal_elt_t type,
+                                   int                  order)
 
 cdef extern from "pdm_dmesh_nodal.h":
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -415,7 +415,7 @@ def dmesh_nodal_get_sections(DMeshNodal          pydmn,
 
     # > Build numpy capsule
     dn_elmt = np_distrib[comm.Get_rank()+1] - np_distrib[comm.Get_rank()]
-    n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element(t_elmt, 1)
+    n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get(t_elmt, 1)
     np_connec = create_numpy_g(connect, n_vtx_per_elmt*dn_elmt)
 
     sections.append({"pdm_type"   : t_elmt,
@@ -483,7 +483,7 @@ def get_n_vtx_from_element(PDM_Mesh_nodal_elt_t type,
                            int                  order=1):
     """
     """
-    return PDM_Mesh_nodal_n_vertices_element(type, order)
+    return PDM_Mesh_nodal_n_vtx_elt_get(type, order)
 
 
 # ------------------------------------------------------------------------

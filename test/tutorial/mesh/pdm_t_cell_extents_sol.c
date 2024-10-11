@@ -232,7 +232,7 @@ int                        **cell_vtx
 
   PDM_g_num_t *dcell_vtx = PDM_DMesh_nodal_elmts_section_std_get(dmne, id_section);
 
-  int cell_vtx_n = PDM_Mesh_nodal_n_vertices_element(elt_type, 1);
+  int cell_vtx_n = PDM_Mesh_nodal_n_vtx_elt_get(elt_type, 1);
   PDM_malloc(*cell_vtx,dn_cell * cell_vtx_n,int);
   for (int i = 0; i < dn_cell * cell_vtx_n; i++) {
     (*cell_vtx)[i] = (int) dcell_vtx[i];

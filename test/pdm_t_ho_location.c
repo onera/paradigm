@@ -340,7 +340,7 @@ _compute_uvw
 
 
   /* Get number of nodes */
-  n_node = PDM_Mesh_nodal_n_vertices_element (elt_type, order);
+  n_node = PDM_Mesh_nodal_n_vtx_elt_get (elt_type, order);
   double *weight     = NULL;
   double *dweight_du = NULL;
   double *dweight_dv = NULL;
@@ -712,7 +712,7 @@ int main(int argc, char *argv[])
   assert(PDM_DMesh_nodal_section_type_get(dmn, geom_kind, id_section) == t_elt);
 
 
-  int n_node = PDM_Mesh_nodal_n_vertices_element(t_elt, order);
+  int n_node = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
 
   int ielt = 0;
   double *node_coord;

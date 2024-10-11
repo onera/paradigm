@@ -1335,7 +1335,7 @@ _rebuild_dmesh_nodal_by_kind_3d
   section_cell_vtx_idx[0] = 0;
   section_cell_idx    [0] = 0;
   for(int i_section = 0; i_section < PDM_MESH_NODAL_N_ELEMENT_TYPES; ++i_section) {
-    int n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element((PDM_Mesh_nodal_elt_t) i_section, 1);
+    int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get((PDM_Mesh_nodal_elt_t) i_section, 1);
     section_cell_vtx_idx[i_section+1] = section_cell_vtx_idx[i_section] + n_vtx_per_elmt * section_n[i_section];
     section_cell_idx    [i_section+1] = section_cell_idx    [i_section] + section_n[i_section];
     section_cell_vtx_n  [i_section] = 0;
@@ -1358,7 +1358,7 @@ _rebuild_dmesh_nodal_by_kind_3d
                                                    pface_vtx,
                                                    cell_som_tria,
                                                    cell_som_quad);
-    int n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element((PDM_Mesh_nodal_elt_t) cell_type, 1);
+    int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get((PDM_Mesh_nodal_elt_t) cell_type, 1);
 
     switch(cell_type) {
       case PDM_MESH_NODAL_TETRA4 :
@@ -1665,7 +1665,7 @@ _rebuild_dmesh_nodal_3d
       ln_to_gn[i] = distrib_cell[i_rank] + local_post_section_idx[i_section] + i + 1;
     }
 
-    int n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element((PDM_Mesh_nodal_elt_t) post_section_kind[i_section], 1);
+    int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get((PDM_Mesh_nodal_elt_t) post_section_kind[i_section], 1);
 
     int *pcell_vtx;
     PDM_malloc(pcell_vtx,nl_elmt * n_vtx_per_elmt ,int);
@@ -1889,7 +1889,7 @@ _rebuild_dmesh_nodal_3d
 
     // PDM_log_trace_array_long(ln_to_gn, nl_elmt, "face_bnd_ln_to_gn ::");
 
-    int n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element((PDM_Mesh_nodal_elt_t) post_section_face_bnd_kind[i_section], 1);
+    int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get((PDM_Mesh_nodal_elt_t) post_section_face_bnd_kind[i_section], 1);
     int n_cell_vtx_tot = nl_elmt * n_vtx_per_elmt;
     PDM_g_num_t *face_vtx_gnum;
     PDM_malloc(face_vtx_gnum,n_cell_vtx_tot ,PDM_g_num_t);
