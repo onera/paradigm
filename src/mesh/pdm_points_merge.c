@@ -477,7 +477,8 @@ PDM_points_merge_free
 {
 
   if(( pm->owner == PDM_OWNERSHIP_KEEP ) ||
-     ( pm->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !pm->results_is_getted)){
+     ( pm->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !pm->results_is_getted) ||
+     ( pm->owner == PDM_OWNERSHIP_USER                 && !pm->results_is_getted)){
     for (int i = 0; i < pm->n_point_clouds; i++) {
       if (pm->candidates_idx[i] != NULL) {
         PDM_free(pm->candidates_idx[i]);
@@ -1075,10 +1076,12 @@ PDM_points_merge_make_interface
   PDM_malloc(candidates_desc, pm->n_point_clouds, int *);
 
   for(int i_cloud = 0; i_cloud < pm->n_point_clouds; ++i_cloud) {
-    PDM_points_merge_candidates_get(pm,
-                                    i_cloud,
-                                    &candidates_idx [i_cloud],
-                                    &candidates_desc[i_cloud]); // (i_proc, i_cloud, i_point)
+    candidates_idx [i_cloud] = pm->candidates_idx [i_cloud];
+    candidates_desc[i_cloud] = pm->candidates_desc[i_cloud];
+    // PDM_points_merge_candidates_get(pm,
+    //                                 i_cloud,
+    //                                 &candidates_idx [i_cloud],
+    //                                 &candidates_desc[i_cloud]); // (i_proc, i_cloud, i_point)
   }
 
   // Create a gnum view of points

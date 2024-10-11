@@ -246,7 +246,7 @@ int                        **cell_vtx
 
 
   PDM_g_num_t *distrib_vtx = PDM_dmesh_nodal_vtx_distrib_get(dmn);
-  dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn);
+  dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn, PDM_OWNERSHIP_BAD_VALUE);
   dn_vtx = distrib_vtx[i_rank+1] - distrib_vtx[i_rank];
 
   *n_vtx = dn_vtx;
@@ -258,7 +258,7 @@ int                        **cell_vtx
   PDM_dmesh_nodal_elmts_t *dmne = dmn->volumic;
   int id_section = dmne->sections_id[0];
 
-  PDM_g_num_t *dcell_vtx = PDM_DMesh_nodal_elmts_section_std_get(dmne, id_section);
+  PDM_g_num_t *dcell_vtx = PDM_DMesh_nodal_elmts_section_std_get(dmne, id_section, PDM_OWNERSHIP_BAD_VALUE);
 
   int cell_vtx_n = PDM_Mesh_nodal_n_vtx_elt_get(elt_type, 1);
   PDM_malloc(*cell_vtx,dn_cell * cell_vtx_n,int);

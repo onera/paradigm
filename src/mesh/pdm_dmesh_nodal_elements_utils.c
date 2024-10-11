@@ -456,7 +456,8 @@ PDM_sections_decompose_faces
       PDM_DMesh_nodal_elmts_section_poly2d_get(dmn_elts,
                                                id_section,
                                                &connec_idx,
-                                               &connec);
+                                               &connec,
+                                               PDM_OWNERSHIP_BAD_VALUE);
 
       PDM_poly2d_decomposes_faces(n_elt,
                                   &n_elt_current,
@@ -483,7 +484,7 @@ PDM_sections_decompose_faces
       int order = dmn_elts->sections_std[i_section]->order;
       int *_parent_node = NULL;
 
-      PDM_g_num_t *connec = PDM_DMesh_nodal_elmts_section_std_get(dmn_elts, id_section);
+      PDM_g_num_t *connec = PDM_DMesh_nodal_elmts_section_std_get(dmn_elts, id_section, PDM_OWNERSHIP_BAD_VALUE);
 
       if (PDM_Mesh_nodal_elmt_is_ho(t_elt)) {
         const char* ho_ordering = dmn_elts->sections_std[i_section]->ho_ordering;
@@ -577,7 +578,8 @@ PDM_sections_decompose_edges
       PDM_DMesh_nodal_elmts_section_poly2d_get(dmn_elts,
                                                id_section,
                                                &connec_idx,
-                                               &connec);
+                                               &connec,
+                                               PDM_OWNERSHIP_BAD_VALUE);
 
       PDM_poly2d_decomposes_edges(n_elt,
                                   &n_elt_current,
@@ -604,7 +606,7 @@ PDM_sections_decompose_edges
       int order = dmn_elts->sections_std[i_section]->order;
       int *_parent_node = NULL;
 
-      PDM_g_num_t *connec = PDM_DMesh_nodal_elmts_section_std_get(dmn_elts, id_section);
+      PDM_g_num_t *connec = PDM_DMesh_nodal_elmts_section_std_get(dmn_elts, id_section, PDM_OWNERSHIP_BAD_VALUE);
 
       if (PDM_Mesh_nodal_elmt_is_ho(t_elt)) {
         const char* ho_ordering = dmn_elts->sections_std[i_section]->ho_ordering;

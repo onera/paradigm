@@ -57,7 +57,6 @@ typedef struct _pdm_dmesh_nodal_t      PDM_dmesh_nodal_t;
  * \return       New mesh nodal handle
  *
  */
-
 PDM_dmesh_nodal_t*
 PDM_DMesh_nodal_create
 (
@@ -68,7 +67,6 @@ const PDM_MPI_Comm comm,
       PDM_g_num_t  n_face,
       PDM_g_num_t  n_edge
 );
-
 
 void
 PDM_DMesh_nodal_free
@@ -84,7 +82,6 @@ PDM_DMesh_nodal_free
  * \param [in]  coords    Interlaced coordinates (size = 3 * \ref n_vtx)
  *
  */
-
 void
 PDM_DMesh_nodal_coord_set
 (
@@ -98,27 +95,32 @@ void
 PDM_DMesh_nodal_vtx_tag_set
 (
  PDM_dmesh_nodal_t *dmesh_nodal,
- int               *dvtx_tag
+ int               *dvtx_tag,
+ PDM_ownership_t    owner
 );
+
 
 void
 PDM_DMesh_nodal_vtx_parent_gnum_set
 (
  PDM_dmesh_nodal_t *dmesh_nodal,
- PDM_g_num_t       *dvtx_parent_g_num
+ PDM_g_num_t       *dvtx_parent_g_num,
+ PDM_ownership_t    owner
 );
 
 int*
 PDM_DMesh_nodal_vtx_tag_get
 (
-PDM_dmesh_nodal_t  *dmesh_nodal
+ PDM_dmesh_nodal_t  *dmesh_nodal,
+ PDM_ownership_t     owner
 );
 
 
 PDM_g_num_t *
 PDM_DMesh_nodal_vtx_parent_gnum_get
 (
-PDM_dmesh_nodal_t  *dmesh_nodal
+ PDM_dmesh_nodal_t  *dmesh_nodal,
+ PDM_ownership_t    owner
 );
 
 
@@ -196,7 +198,8 @@ PDM_DMesh_nodal_n_vtx_get
 double *
 PDM_DMesh_nodal_vtx_get
 (
-  PDM_dmesh_nodal_t *dmesh_nodal
+ PDM_dmesh_nodal_t  *dmesh_nodal,
+ PDM_ownership_t     owner
 );
 
 
@@ -305,12 +308,12 @@ PDM_DMesh_nodal_section_add
 const PDM_Mesh_nodal_elt_t  t_elt
 );
 
-void
-PDM_DMesh_nodal_update_ownership
-(
- PDM_dmesh_nodal_t   *dmesh_nodal,
- PDM_ownership_t      owner
-);
+// void
+// PDM_DMesh_nodal_update_ownership
+// (
+//  PDM_dmesh_nodal_t   *dmesh_nodal,
+//  PDM_ownership_t      owner
+// );
 
 
 /**
@@ -420,7 +423,8 @@ PDM_DMesh_nodal_section_group_elmt_get
  PDM_geometry_kind_t  geom_kind,
  int                 *n_group_elmt,
  int                 **dgroup_elmt_idx,
- PDM_g_num_t         **dgroup_elmt
+ PDM_g_num_t         **dgroup_elmt,
+ PDM_ownership_t       owner
 );
 
 
@@ -507,7 +511,8 @@ PDM_DMesh_nodal_section_std_get
 (
       PDM_dmesh_nodal_t   *dmesh_nodal,
       PDM_geometry_kind_t  geom_kind,
-const int                  id_section
+const int                  id_section,
+      PDM_ownership_t      owner
 );
 
 PDM_g_num_t *
@@ -517,7 +522,8 @@ PDM_DMesh_nodal_section_std_ho_get
       PDM_geometry_kind_t  geom_kind,
 const int                  id_section,
       int                 *order,
-const char               **ho_ordering
+const char               **ho_ordering,
+      PDM_ownership_t      owner
 );
 
 
@@ -577,11 +583,12 @@ const PDM_l_num_t          n_elt,
 void
 PDM_DMesh_nodal_section_poly2d_get
 (
-      PDM_dmesh_nodal_t   *dmesh_nodal,
-      PDM_geometry_kind_t  geom_kind,
-const int                  id_section,
-      PDM_l_num_t        **connec_idx,
-      PDM_g_num_t        **connec
+      PDM_dmesh_nodal_t    *dmesh_nodal,
+      PDM_geometry_kind_t   geom_kind,
+const int                   id_section,
+      PDM_l_num_t         **connec_idx,
+      PDM_g_num_t         **connec,
+      PDM_ownership_t       owner
 );
 
 
@@ -638,7 +645,8 @@ const int                   id_section,
       PDM_l_num_t         **facvtx_idx,
       PDM_g_num_t         **facvtx,
       PDM_l_num_t         **cellfac_idx,
-      PDM_g_num_t         **cellfac
+      PDM_g_num_t         **cellfac,
+      PDM_ownership_t       owner
 );
 
 

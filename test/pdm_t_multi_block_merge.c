@@ -208,15 +208,19 @@ int main(int argc, char *argv[])
 
   PDM_dmesh_nodal_t* dmn[] = {dmn1, dmn2};
   for (int i_block = 0; i_block < n_block; i_block++) {
-    PDM_DMesh_nodal_section_group_elmt_get(dmn[i_block], PDM_GEOMETRY_KIND_SURFACIC,
-        &n_group_elt[i_block], &dgroup_elmt_idx[i_block], &dgroup_elmt[i_block]);
+    PDM_DMesh_nodal_section_group_elmt_get(dmn[i_block],
+                                           PDM_GEOMETRY_KIND_SURFACIC,
+                                           &n_group_elt    [i_block],
+                                           &dgroup_elmt_idx[i_block],
+                                           &dgroup_elmt    [i_block],
+                                           PDM_OWNERSHIP_BAD_VALUE);
 
     dn_vtx[i_block]  = PDM_DMesh_nodal_n_vtx_get(dmn[i_block]);
     dn_face[i_block] = PDM_DMesh_nodal_section_n_elt_get(dmn[i_block], PDM_GEOMETRY_KIND_SURFACIC, 0);
     PDM_malloc(dface_vtx_idx[i_block], dn_face[i_block]+1, int);
     for (int i = 0; i < dn_face[i_block]+1; i++)
       dface_vtx_idx[i_block][i] = 4*i;
-    dface_vtx[i_block] = PDM_DMesh_nodal_section_std_get(dmn[i_block], PDM_GEOMETRY_KIND_SURFACIC, 0);
+    dface_vtx[i_block] = PDM_DMesh_nodal_section_std_get(dmn[i_block], PDM_GEOMETRY_KIND_SURFACIC, 0, PDM_OWNERSHIP_BAD_VALUE);
 
   }
   // LAZY SETUP : we assume that we have only 2 blocks of same size to have same distribution :)
@@ -305,8 +309,8 @@ int main(int argc, char *argv[])
 
   double* *dvtx_coord;
   PDM_malloc(dvtx_coord, n_block, double *);
-  dvtx_coord[0] = PDM_DMesh_nodal_vtx_get(dmn1);
-  dvtx_coord[1] = PDM_DMesh_nodal_vtx_get(dmn2);
+  dvtx_coord[0] = PDM_DMesh_nodal_vtx_get(dmn1, PDM_OWNERSHIP_BAD_VALUE);
+  dvtx_coord[1] = PDM_DMesh_nodal_vtx_get(dmn2, PDM_OWNERSHIP_BAD_VALUE);
 
   int* *stride_one;
   PDM_malloc(stride_one, n_block, int *);
@@ -406,8 +410,8 @@ int main(int argc, char *argv[])
    */
   PDM_g_num_t* *block_elmt_vtx = NULL;
   PDM_malloc(block_elmt_vtx, n_block, PDM_g_num_t *);
-  block_elmt_vtx[0] = PDM_DMesh_nodal_section_std_get(dmn1, PDM_GEOMETRY_KIND_VOLUMIC, 0);
-  block_elmt_vtx[1] = PDM_DMesh_nodal_section_std_get(dmn2, PDM_GEOMETRY_KIND_VOLUMIC, 0);
+  block_elmt_vtx[0] = PDM_DMesh_nodal_section_std_get(dmn1, PDM_GEOMETRY_KIND_VOLUMIC, 0, PDM_OWNERSHIP_BAD_VALUE);
+  block_elmt_vtx[1] = PDM_DMesh_nodal_section_std_get(dmn2, PDM_GEOMETRY_KIND_VOLUMIC, 0, PDM_OWNERSHIP_BAD_VALUE);
   int strid_cst = 8; // Because HEXA
 
   int          *dmerge_elmt_vtx_stride = NULL;

@@ -1958,7 +1958,7 @@ _p2p_stride_var_reverse_iexch
 
 
 
-  unsigned char* *_part1_data = NULL;
+  unsigned char **_part1_data = NULL;
   PDM_malloc(_part1_data, ptp->n_part1, unsigned char *);
   for(int i = 0; i < ptp->n_part1; ++i) {
     int size = 0;
