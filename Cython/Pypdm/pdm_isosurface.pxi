@@ -125,6 +125,9 @@ cdef extern from "pdm_isosurface.h":
   void PDM_isosurface_reset(PDM_isosurface_t *isos,
                             int               id_isosurface);
 
+  void PDM_isosurface_n_part_out_set(PDM_isosurface_t *isos,
+                                     int               n_part_out);
+
 
   void PDM_isosurface_compute(PDM_isosurface_t *isos,
                               int               id_isosurface);
@@ -423,12 +426,29 @@ cdef class Isosurface:
     """
     n_part(n_part)
 
-    Set entry mesh number or partitions.
+    Set entry mesh number of partitions.
 
     Parameters:
       n_part (int) : Number of partitions
     """
     PDM_isosurface_n_part_set(self._isos, n_part)
+
+  def n_part_out_set(self, n_part_out):
+    """
+    n_part_out(n_part)
+
+    Set the number of partitions in the isosurface mesh (Optional).
+
+    .. warning:: This function must be called prior to :py:func:`compute`
+
+    .. note:: By default, the number of partitions in the isosurface mesh is set to
+                - 1 in `REEQUILIBRATE` mode
+                - the number of partitions in the source mesh in `LOCAL mode` (mandatory)
+
+    Parameters:
+      n_part_out (int) : Number of partitions
+    """
+    PDM_isosurface_n_part_out_set(self._isos, n_part_out)
 
   def connectivity_set(self,                     i_part,
                                                  connectivity_type,
