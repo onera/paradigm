@@ -23,6 +23,7 @@ module pdm_dmesh_nodal
 
   use pdm
   use iso_c_binding
+  use pdm_mesh_nodal
 
   implicit none
 
@@ -689,16 +690,19 @@ module pdm_dmesh_nodal
     integer(PDM_g_num_s), pointer :: connec(:)
 
     integer(c_int) :: c_n_elt
-    integer(c_int) :: c_n_elt_size
+    integer(c_int) :: c_elt_type
+    integer(c_int) :: c_n_vtx_elt
     type(c_ptr)    :: c_connec
 
     c_n_elt = PDM_DMesh_nodal_section_n_elt_get(dmn,       &
                                                 geom_kind, &
                                                 id_section)
 
-    c_n_elt_size = PDM_DMesh_nodal_section_elt_type_get(dmn,       &
-                                                        geom_kind, &
-                                                        id_section)
+    c_elt_type = PDM_DMesh_nodal_section_elt_type_get(dmn,       &
+                                                      geom_kind, &
+                                                      id_section)
+
+    c_n_vtx_elt = PDM_Mesh_nodal_n_vtx_elt_get_cf(c_elt_type, 1)
 
     c_connec = PDM_DMesh_nodal_section_std_get_cf(dmn,        &
                                                   geom_kind,  &
@@ -707,7 +711,7 @@ module pdm_dmesh_nodal
 
     call c_f_pointer(c_connec, &
                      connec,   &
-                     [c_n_elt_size*c_n_elt])
+                     [c_n_vtx_elt*c_n_elt])
 
   end subroutine PDM_DMesh_nodal_section_std_get_
 
