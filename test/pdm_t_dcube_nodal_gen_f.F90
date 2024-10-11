@@ -49,13 +49,15 @@ program testf
   type(c_ptr)                           :: dmn
   type(c_ptr)                           :: mpart
 
-  integer                               :: dn_face_group = 0
+  integer                               :: n_face_group = 0
   integer                               :: dn_cell
+  integer                               :: dn_face
   integer                               :: dn_vtx
   integer                               :: n_domains
   integer (kind = PDM_l_num_s), pointer :: n_part_domains(:)
 
   integer (kind = pdm_g_num_s), pointer :: dcell_vtx(:)       => null()
+  integer (kind = pdm_g_num_s), pointer :: dface_vtx(:)       => null()
   double precision,             pointer :: dvtx_coord(:,:)    => null()
   integer (kind = pdm_l_num_s), pointer :: dface_group_idx(:) => null()
   integer (kind = pdm_g_num_s), pointer :: dface_group(:)     => null()
@@ -94,17 +96,17 @@ program testf
   call mpi_comm_size(comm, n_rank, code)
 
   order = 1
-  call pdm_dcube_nodal_gen_create (dcube,                 &
-                                   comm,                  &
-                                   n_vtx_seg,             &
-                                   n_vtx_seg,             &
-                                   n_vtx_seg,             &
-                                   length,                &
-                                   zero_x,                &
-                                   zero_y,                &
-                                   zero_z,                &
-                                   PDM_MESH_NODAL_PRISM6, &
-                                   order,                 &
+  call pdm_dcube_nodal_gen_create (dcube,                &
+                                   comm,                 &
+                                   n_vtx_seg,            &
+                                   n_vtx_seg,            &
+                                   n_vtx_seg,            &
+                                   length,               &
+                                   zero_x,               &
+                                   zero_y,               &
+                                   zero_z,               &
+                                   PDM_MESH_NODAL_HEXA8, &
+                                   order,                &
                                    PDM_OWNERSHIP_KEEP)
 
   call pdm_dcube_nodal_gen_build (dcube, &
@@ -142,9 +144,26 @@ program testf
                                         dcell_vtx,                 &
                                         PDM_OWNERSHIP_KEEP)
 
+  n_section = pdm_dmesh_nodal_n_section_get (dmn, &
+                                             PDM_GEOMETRY_KIND_SURFACIC)
+
+  call pdm_dmesh_nodal_sections_id_get (dmn,                        &
+                                        PDM_GEOMETRY_KIND_SURFACIC, &
+                                        id_sections)
+
+  dn_face = pdm_dmesh_nodal_section_n_elt_get (dmn,                        &
+                                               PDM_GEOMETRY_KIND_SURFACIC, &
+                                               id_sections(1))
+
+  call pdm_dmesh_nodal_section_std_get (dmn,                        &
+                                        PDM_GEOMETRY_KIND_SURFACIC, &
+                                        id_sections(1),             &
+                                        dface_vtx,                  &
+                                        PDM_OWNERSHIP_KEEP)
+
   call pdm_dmesh_nodal_section_group_elmt_get (dmn,                        &
                                                PDM_GEOMETRY_KIND_SURFACIC, &
-                                               dn_face_group,              &
+                                               n_face_group,               &
                                                dface_group_idx,            &
                                                dface_group,                &
                                                PDM_OWNERSHIP_KEEP)
@@ -164,7 +183,7 @@ program testf
 
   call pdm_dmesh_nodal_section_add (dmn,                       &
                                     PDM_GEOMETRY_KIND_VOLUMIC, &
-                                    PDM_MESH_NODAL_PRISM6,     &
+                                    PDM_MESH_NODAL_HEXA8,      &
                                     id_section)
 
   call pdm_dmesh_nodal_section_std_set (dmn,                       &
@@ -174,12 +193,24 @@ program testf
                                         dcell_vtx,                 &
                                         PDM_OWNERSHIP_USER)
 
-  !call pdm_dmesh_nodal_section_group_elmt_set (dmn,                        &
-  !                                             PDM_GEOMETRY_KIND_SURFACIC, &
-  !                                             dn_face_group,              &
-  !                                             dface_group_idx,            &
-  !                                             dface_group,                &
-  !                                             PDM_OWNERSHIP_USER)
+  call pdm_dmesh_nodal_section_add (dmn,                        &
+                                    PDM_GEOMETRY_KIND_SURFACIC, &
+                                    PDM_MESH_NODAL_QUAD4,       &
+                                    id_section)
+
+  call pdm_dmesh_nodal_section_std_set (dmn,                        &
+                                        PDM_GEOMETRY_KIND_SURFACIC, &
+                                        id_section,                 &
+                                        dn_face,                    &
+                                        dface_vtx,                  &
+                                        PDM_OWNERSHIP_USER)
+
+  call pdm_dmesh_nodal_section_group_elmt_set (dmn,                        &
+                                               PDM_GEOMETRY_KIND_SURFACIC, &
+                                               n_face_group,               &
+                                               dface_group_idx,            &
+                                               dface_group,                &
+                                               PDM_OWNERSHIP_USER)
 
   call pdm_dmesh_nodal_generate_distribution (dmn)
 
