@@ -140,25 +140,6 @@ PDM_Mesh_nodal_elmt_is_ho
 );
 
 
-/**
- * \brief Returns the number of vertices in an element
- *
- * \param [in]  elt_type   Element type
- * \param [in]  order      Element order
- *
- * \return      Number of vertices in element
- *
- */
-// A REMPLACER PAR PDM_Mesh_nodal_n_vtx_elt_get?
-
-int
-PDM_Mesh_nodal_n_vertices_element
-(
- const PDM_Mesh_nodal_elt_t elt_type,
- const int                  order
-);
-
-
 void
 PDM_Mesh_nodal_ho_parent_node
 (

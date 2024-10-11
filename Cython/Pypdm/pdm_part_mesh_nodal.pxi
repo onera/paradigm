@@ -231,7 +231,7 @@ def part_mesh_nodal_get_sections(PMeshNodal pypmn, PDM_geometry_kind_t geom_kind
     PDM_part_mesh_nodal_section_std_get(pypmn.pmn, id_section, i_part, &connec, &numabs, &parent_num, &parent_entity_g_num, PDM_OWNERSHIP_USER)
     elt2entity = PDM_part_mesh_nodal_section_elt_to_entity_get(pypmn.pmn, id_section, i_part, PDM_OWNERSHIP_USER)
 
-    n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element(t_elmt, 1)
+    n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get(t_elmt, 1)
 
     np_connec     = create_numpy_i(connec,     n_elmt_in_section*n_vtx_per_elmt)
     np_parent_num = create_numpy_i(parent_num, n_elmt_in_section)

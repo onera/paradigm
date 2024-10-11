@@ -89,7 +89,7 @@ MPI_TEST_CASE("[dcube_nodal_gen] - 1p - hexahedron",1) {
 
     int dn_elmt = distrib[i_rank+1] - distrib[i_rank];
 
-    int n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element(t_elmt, 1);
+    int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get(t_elmt, 1);
 
     /* Keep it to make easyly ref */
     // PDM_log_trace_array_long(distrib, n_rank+1                 , "distrib:: ");
@@ -116,7 +116,7 @@ MPI_TEST_CASE("[dcube_nodal_gen] - 1p - hexahedron",1) {
 
     int dn_elmt = distrib[i_rank+1] - distrib[i_rank];
 
-    int n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element(t_elmt, 1);
+    int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get(t_elmt, 1);
 
     /* Keep it to make easyly ref */
     // PDM_log_trace_array_long(distrib, n_rank+1                 , "distrib:: ");
@@ -210,7 +210,7 @@ MPI_TEST_CASE("[dcube_nodal_gen] - 1p - prism",1) {
 
     int dn_elmt = distrib[i_rank+1] - distrib[i_rank];
 
-    int n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element(t_elmt, 1);
+    int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get(t_elmt, 1);
 
     /* Keep it to make easyly ref */
     // PDM_log_trace_array_long(distrib, n_rank+1                 , "distrib:: ");
@@ -237,7 +237,7 @@ MPI_TEST_CASE("[dcube_nodal_gen] - 1p - prism",1) {
 
     int dn_elmt = distrib[i_rank+1] - distrib[i_rank];
 
-    int n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element(t_elmt, 1);
+    int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get(t_elmt, 1);
 
     /* Keep it to make easyly ref */
     // PDM_log_trace_array_long(distrib, n_rank+1                 , "distrib:: ");
@@ -334,7 +334,7 @@ MPI_TEST_CASE("[dcube_nodal_gen] - 1p - Tetrahedron ",1) {
 
     int dn_elmt = distrib[i_rank+1] - distrib[i_rank];
 
-    int n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element(t_elmt, 1);
+    int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get(t_elmt, 1);
 
     /* Keep it to make easyly ref */
     // PDM_log_trace_array_long(distrib, n_rank+1                 , "distrib:: ");
@@ -361,7 +361,7 @@ MPI_TEST_CASE("[dcube_nodal_gen] - 1p - Tetrahedron ",1) {
 
     int dn_elmt = distrib[i_rank+1] - distrib[i_rank];
 
-    int n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element(t_elmt, 1);
+    int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get(t_elmt, 1);
 
     /* Keep it to make easyly ref */
     // PDM_log_trace_array_long(distrib, n_rank+1                 , "distrib:: ");
@@ -458,7 +458,7 @@ MPI_TEST_CASE("[dcube_nodal_gen] - 1p - quad ",1) {
 
     int dn_elmt = distrib[i_rank+1] - distrib[i_rank];
 
-    int n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element(t_elmt, 1);
+    int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get(t_elmt, 1);
 
     /* Keep it to make easyly ref */
     // PDM_log_trace_array_long(distrib, n_rank+1                 , "distrib:: ");
@@ -485,7 +485,7 @@ MPI_TEST_CASE("[dcube_nodal_gen] - 1p - quad ",1) {
 
     int dn_elmt = distrib[i_rank+1] - distrib[i_rank];
 
-    int n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element(t_elmt, 1);
+    int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get(t_elmt, 1);
 
     /* Keep it to make easyly ref */
     // PDM_log_trace_array_long(distrib, n_rank+1                 , "distrib:: ");
@@ -580,7 +580,7 @@ MPI_TEST_CASE("[dcube_nodal_gen] - 1p - Triangle",1) {
 
     int dn_elmt = distrib[i_rank+1] - distrib[i_rank];
 
-    int n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element(t_elmt, 1);
+    int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get(t_elmt, 1);
 
     /* Keep it to make easyly ref */
     // PDM_log_trace_array_long(distrib, n_rank+1                 , "distrib:: ");
@@ -607,7 +607,7 @@ MPI_TEST_CASE("[dcube_nodal_gen] - 1p - Triangle",1) {
 
     int dn_elmt = distrib[i_rank+1] - distrib[i_rank];
 
-    int n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element(t_elmt, 1);
+    int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get(t_elmt, 1);
 
     /* Keep it to make easyly ref */
     // PDM_log_trace_array_long(distrib, n_rank+1                 , "distrib:: ");
