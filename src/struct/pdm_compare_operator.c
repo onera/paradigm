@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -196,6 +197,21 @@ PDM_compare_unsigned_ordered_nuplets_int
   if (size1 != size2) {
     return 0;
   }
+
+  if (size1 == 2) {
+    // Handle pairs separately
+    if (nuplet2[0] == nuplet1[0] && nuplet2[1] == nuplet1[1]) {
+      return 1;
+    }
+    else if (nuplet2[0] == nuplet1[1] && nuplet2[1] == nuplet1[0]) {
+      return -1;
+    }
+    else {
+      return 0;
+    }
+  }
+
+  assert(size1 >= 3);
 
   for (int i = 0; i < size1; i++) {
     if (nuplet2[i] == nuplet1[0]) { // we found a common element ("pivot")
