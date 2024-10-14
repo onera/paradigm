@@ -408,6 +408,16 @@ PDM_bound_type_to_entity_type
 );
 
 /**
+ * \brief Helper to get bound type according to an entity
+ *
+ */
+PDM_bound_type_t
+PDM_entity_type_to_bound_type
+(
+ PDM_mesh_entities_t  entity_type
+);
+
+/**
  * \brief Helper to get entity type according to a geometry kind
  *
  */

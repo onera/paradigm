@@ -274,6 +274,8 @@ int main(int argc, char *argv[])
 
     PDM_part_mesh_nodal_to_part_mesh_connectivity_enable(pmn_to_pm,
                                                          PDM_CONNECTIVITY_TYPE_EDGE_VTX);
+    // PDM_part_mesh_nodal_to_part_mesh_connectivity_enable(pmn_to_pm,
+    //                                                      PDM_CONNECTIVITY_TYPE_FACE_VTX);
 
     PDM_part_mesh_nodal_to_part_mesh_g_nums_enable(pmn_to_pm,
                                                    PDM_MESH_ENTITY_CELL);
@@ -289,6 +291,9 @@ int main(int argc, char *argv[])
 
     PDM_part_mesh_nodal_to_part_mesh_groups_enable(pmn_to_pm,
                                                    PDM_BOUND_TYPE_FACE);
+
+    PDM_part_mesh_nodal_to_part_mesh_groups_enable(pmn_to_pm,
+                                                   PDM_BOUND_TYPE_EDGE);
 
     PDM_part_mesh_nodal_to_part_mesh_compute(pmn_to_pm);
 
@@ -356,7 +361,7 @@ int main(int argc, char *argv[])
         }
 
         int *face_flags;
-        PDM_malloc(face_flags,pn_face ,int);
+        PDM_malloc(face_flags, pn_face, int);
         for(int i_face = 0; i_face < pn_face; ++i_face) {
           face_flags[i_face] = -1;
         }
@@ -386,9 +391,9 @@ int main(int argc, char *argv[])
                                n_vtx,
                                vtx_coord,
                                vtx_ln_to_gn,
-                               pn_face      ,
+                               pn_face,
                                face_vtx_idx,
-                               face_vtx    ,
+                               face_vtx,
                                face_ln_to_gn,
                                face_flags);
 
@@ -400,7 +405,9 @@ int main(int argc, char *argv[])
         }
       }
 
-    } else {
+    }
+
+    else {
 
       int n_edge_group = PDM_part_mesh_n_bound_get(pm, PDM_BOUND_TYPE_EDGE);
       for(int i_part = 0; i_part < n_part; ++i_part) {
@@ -424,9 +431,9 @@ int main(int argc, char *argv[])
                                        &edge_vtx,
                                        &edge_vtx_idx,
                                        PDM_OWNERSHIP_KEEP);
-        assert(edge_vtx_idx == NULL);
+        // assert(edge_vtx_idx == NULL);
         int *edge_flags;
-        PDM_malloc(edge_flags,pn_edge ,int);
+        PDM_malloc(edge_flags, pn_edge, int);
         for(int i_edge = 0; i_edge < pn_edge; ++i_edge) {
           edge_flags[i_edge] = -1;
         }

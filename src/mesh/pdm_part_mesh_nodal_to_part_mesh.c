@@ -168,6 +168,7 @@ _check_inputs
  *   - number of entities
  *   - global IDs (if requested)
  *   - entity_to_vtx connectivity (if requested)
+ *   - link pmesh_nodal->pmesh (TODO)
  */
 static void
 _transfer_highest_dimension_entities
@@ -255,9 +256,6 @@ _transfer_highest_dimension_entities
 
     /* Entity->Vtx connectivity */
     if (pmn_to_pm->build_connectivity[connectivity_type] == PDM_TRUE) {
-
-      pmn_to_pm->connectivity_done[connectivity_type] = PDM_TRUE;
-
       int *entity_to_vtx_idx = NULL;
       int *entity_to_vtx     = NULL;
       PDM_part_mesh_nodal_elmts_cell_vtx_connect_get(pmne,
@@ -275,6 +273,9 @@ _transfer_highest_dimension_entities
 
   } // End loop on parts
 
+  if (pmn_to_pm->build_connectivity[connectivity_type] == PDM_TRUE) {
+    pmn_to_pm->connectivity_done[connectivity_type] = PDM_TRUE;
+  }
 
   if (pmn_to_pm->compute_g_nums[entity_type] == PDM_TRUE) {
     pmn_to_pm->g_nums_done[entity_type] = PDM_TRUE;
@@ -529,7 +530,7 @@ _generate_gnum
 
   // Get entity->vtx connectivity
   PDM_bool_t owner_entity_vtx_idx = PDM_FALSE;
-  int max_n_vtx = 0;
+  int max_n_vtx = 2;
   for (int i_part = 0; i_part < n_part; i_part ++) {
     n_entity[i_part] = PDM_part_mesh_n_entity_get(pmesh,
                                                   i_part,
@@ -542,11 +543,7 @@ _generate_gnum
                                    &entity_to_vtx_idx[i_part],
                                    PDM_OWNERSHIP_BAD_VALUE);
     if (entity_to_vtx_idx[i_part] == NULL) {
-      if (entity_type == PDM_MESH_ENTITY_EDGE) {
-        owner_entity_vtx_idx = PDM_TRUE;
-        entity_to_vtx_idx[i_part] = PDM_array_new_idx_from_const_stride_int(2, n_entity[i_part]);
-      }
-      else {
+      if (entity_type != PDM_MESH_ENTITY_EDGE) {
         PDM_error(__FILE__, __LINE__, 0,
                   "We are supposed to have connectivity type %d, "
                   "yet n_entity = %d, entity_to_vtx_idx: %p, entity_to_vtx: %p (entity = %s)\n",
@@ -554,10 +551,11 @@ _generate_gnum
                   _entity_name[entity_type]);
       }
     }
-
-    for (int i_entity = 0; i_entity < n_entity[i_part]; i_entity++) {
-      int n_vtx = entity_to_vtx_idx[i_part][i_entity+1] - entity_to_vtx_idx[i_part][i_entity];
-      max_n_vtx = PDM_MAX(max_n_vtx, n_vtx);
+    else {
+      for (int i_entity = 0; i_entity < n_entity[i_part]; i_entity++) {
+        int n_vtx = entity_to_vtx_idx[i_part][i_entity+1] - entity_to_vtx_idx[i_part][i_entity];
+        max_n_vtx = PDM_MAX(max_n_vtx, n_vtx);
+      }
     }
   }
 
@@ -596,59 +594,92 @@ _generate_gnum
                                    PDM_OWNERSHIP_BAD_VALUE);
 
     // Reorder each entity's vertices
-    for (int i_entity = 0; i_entity < n_entity[i_part]; i_entity++) {
+    if (entity_type == PDM_MESH_ENTITY_EDGE) {
 
-      int n_vtx = entity_to_vtx_idx[i_part][i_entity+1] - entity_to_vtx_idx[i_part][i_entity];
+      for (int i_entity = 0; i_entity < n_entity[i_part]; i_entity++) {
+        int         *ev = &entity_to_vtx     [i_part][2 * i_entity];
+        PDM_g_num_t *ep = &entity_parent_gnum[i_part][2 * i_entity];
 
-      int         *ev = &entity_to_vtx     [i_part][entity_to_vtx_idx[i_part][i_entity]];
-      PDM_g_num_t *ep = &entity_parent_gnum[i_part][max_n_vtx * i_entity];
+        int i_vtx0 = ev[0] - 1;
+        int i_vtx1 = ev[1] - 1;
 
-      // pick 1st vtx (lowest global ID)
-      PDM_g_num_t min_vtx;
+        PDM_g_num_t g_vtx0 = vtx_ln_to_gn[i_vtx0];
+        PDM_g_num_t g_vtx1 = vtx_ln_to_gn[i_vtx1];
+
+        if (g_vtx0 < g_vtx1) {
+          orientation[i_entity] = 1;
+          ep[0] = g_vtx0;
+          ep[1] = g_vtx1;
+        }
+        else {
+          orientation[i_entity] = -1;
+          ev[0] = i_vtx1 + 1;
+          ev[1] = i_vtx0 + 1;
+          ep[0] = g_vtx1;
+          ep[1] = g_vtx0;
+        }
+
+      } // End loop on edges
+
+    }
+
+    else {
+      assert(entity_type == PDM_MESH_ENTITY_FACE);
+      for (int i_entity = 0; i_entity < n_entity[i_part]; i_entity++) {
+
+        int n_vtx = entity_to_vtx_idx[i_part][i_entity+1] - entity_to_vtx_idx[i_part][i_entity];
+
+        int         *ev = &entity_to_vtx     [i_part][entity_to_vtx_idx[i_part][i_entity]];
+        PDM_g_num_t *ep = &entity_parent_gnum[i_part][max_n_vtx * i_entity];
+
+        // pick 1st vtx (lowest global ID)
+        PDM_g_num_t min_vtx;
 #ifdef PDM_LONG_G_NUM
-      min_vtx = LONG_MAX;
+        min_vtx = LONG_MAX;
 #else
-      min_vtx = INT_MAX;
+        min_vtx = INT_MAX;
 #endif
-      int start = 0;
-      for (int i = 0; i < n_vtx; i++) {
-        int i_vtx = ev[i] - 1;
-        if (vtx_ln_to_gn[i_vtx] < min_vtx) {
-          start   = i;
-          min_vtx = vtx_ln_to_gn[i_vtx];
-        }
-      }
-
-      memcpy(tmp_entity_to_vtx,
-             &entity_to_vtx[i_part][entity_to_vtx_idx[i_part][i_entity]],
-             sizeof(int) * n_vtx);
-
-      // pick 2nd vtx (neighbor of 1st vtx with lowest global ID)
-      int i_prev = ev[(start + n_vtx - 1)%n_vtx] - 1;
-      int i_next = ev[(start + 1)        %n_vtx] - 1;
-
-      if (vtx_ln_to_gn[i_next] < vtx_ln_to_gn[i_prev]) {
-        orientation[i_entity] = 1;
+        int start = 0;
         for (int i = 0; i < n_vtx; i++) {
-          ev[i] = tmp_entity_to_vtx[(start+i)%n_vtx];
+          int i_vtx = ev[i] - 1;
+          if (vtx_ln_to_gn[i_vtx] < min_vtx) {
+            start   = i;
+            min_vtx = vtx_ln_to_gn[i_vtx];
+          }
         }
-      }
-      else {
-        orientation[i_entity] = -1;
+
+        memcpy(tmp_entity_to_vtx,
+               &entity_to_vtx[i_part][entity_to_vtx_idx[i_part][i_entity]],
+               sizeof(int) * n_vtx);
+
+        // pick 2nd vtx (neighbor of 1st vtx with lowest global ID)
+        int i_prev = ev[(start + n_vtx - 1)%n_vtx] - 1;
+        int i_next = ev[(start + 1)        %n_vtx] - 1;
+
+        // reorder vertices of current entity
+        if (vtx_ln_to_gn[i_next] < vtx_ln_to_gn[i_prev]) {
+          orientation[i_entity] = 1;
+          for (int i = 0; i < n_vtx; i++) {
+            ev[i] = tmp_entity_to_vtx[(start+i)%n_vtx];
+          }
+        }
+        else {
+          orientation[i_entity] = -1;
+          for (int i = 0; i < n_vtx; i++) {
+            ev[i] = tmp_entity_to_vtx[(start+n_vtx-i)%n_vtx];
+          }
+        }
+
+        // Store nuplet of vertex global IDs in new order
         for (int i = 0; i < n_vtx; i++) {
-          ev[i] = tmp_entity_to_vtx[(start+n_vtx-i)%n_vtx];
+          ep[i] = vtx_ln_to_gn[ev[i] - 1];
         }
-      }
+        for (int i = n_vtx; i < max_n_vtx; i++) {
+          ep[i] = 0; // ¯\_(ツ)_/¯
+        }
 
-      // Store nuplet of vertex global IDs in new order
-      for (int i = 0; i < n_vtx; i++) {
-        ep[i] = vtx_ln_to_gn[ev[i] - 1];
-      }
-      for (int i = n_vtx; i < max_n_vtx; i++) {
-        ep[i] = 0; // ¯\_(ツ)_/¯
-      }
-
-    } // End loop on entities
+      } // End loop on entities
+    }
 
     // Update downward connectivity
     if (pmn_to_pm->build_connectivity[connectivity_type_down] == PDM_TRUE) {
@@ -717,6 +748,73 @@ _generate_gnum
 
 
 /**
+ * \brief Transfer groups
+ */
+static void
+_transfer_groups
+(
+  PDM_part_mesh_nodal_to_part_mesh_t *pmn_to_pm,
+  PDM_bound_type_t                    bound_type
+)
+{
+  PDM_part_mesh_nodal_t *pmesh_nodal = pmn_to_pm->pmesh_nodal;
+  PDM_part_mesh_t       *pmesh       = pmn_to_pm->pmesh;
+
+  int n_part = pmn_to_pm->n_part;
+
+  // Get geometry kind
+  PDM_mesh_entities_t entity_type = PDM_bound_type_to_entity_type(bound_type);
+
+  PDM_geometry_kind_t geom_kind = PDM_entity_type_to_geometry_kind(entity_type);
+
+  // Number of groups
+  int n_group = PDM_part_mesh_nodal_n_group_get(pmesh_nodal, geom_kind);
+
+  PDM_part_mesh_n_bound_set(pmesh, bound_type, n_group);
+
+  // Group->entity
+  for (int i_group = 0; i_group < n_group; i_group++) {
+    for (int i_part = 0; i_part < n_part; i_part++) {
+
+      int          n_group_elmt   = 0;
+      int         *group_elmt     = NULL;
+      PDM_g_num_t *group_ln_to_gn = NULL;
+      PDM_part_mesh_nodal_group_get(pmesh_nodal,
+                                    geom_kind,
+                                    i_part,
+                                    i_group,
+                                    &n_group_elmt,
+                                    &group_elmt,
+                                    &group_ln_to_gn,
+                                    PDM_OWNERSHIP_BAD_VALUE);
+
+      // Make deep copy
+      // OK since pmne decomposition preserves local numbering of bound entities
+      int         *copy_group_elmt     = NULL;
+      PDM_g_num_t *copy_group_ln_to_gn = NULL;
+      PDM_malloc(copy_group_elmt, n_group_elmt, int);
+      memcpy(copy_group_elmt, group_elmt, sizeof(int) * n_group_elmt);
+      if (pmn_to_pm->compute_g_nums[entity_type] == PDM_TRUE) {
+        PDM_malloc(copy_group_ln_to_gn, n_group_elmt, PDM_g_num_t);
+        memcpy(copy_group_ln_to_gn, group_ln_to_gn, sizeof(PDM_g_num_t) * n_group_elmt);
+      }
+
+      PDM_part_mesh_bound_set(pmesh,
+                              i_part,
+                              i_group,
+                              bound_type,
+                              n_group_elmt,
+                              copy_group_elmt,
+                              copy_group_ln_to_gn,
+                              PDM_OWNERSHIP_KEEP);
+    }
+  }
+
+  pmn_to_pm->groups_done[bound_type] = PDM_TRUE;
+}
+
+
+/**
  * \brief Generate intermediate entities
  *   - requested downward connectivities
  *   - global IDs (if requested)
@@ -751,12 +849,12 @@ _generate_entities
       _generate_gnum(pmn_to_pm, entity_type2);
     }
 
-    // TODO: Grouds!
-    // PDM_bound_type_t bound_type = PDM_entity_type_to_bound_type(entity_type2);
-    // if (pmn_to_pm->transfer_groups[bound_type] == PDM_TRUE &&
-    //     pmn_to_pm->groups_done    [bound_type] == PDM_FALSE) {
-    //   _transfer_groups(pmn_to_pm, bound_type);
-    // }
+    // Groups
+    PDM_bound_type_t bound_type = PDM_entity_type_to_bound_type(entity_type2);
+    if (pmn_to_pm->transfer_groups[bound_type] == PDM_TRUE &&
+        pmn_to_pm->groups_done    [bound_type] == PDM_FALSE) {
+      _transfer_groups(pmn_to_pm, bound_type);
+    }
   }
 }
 

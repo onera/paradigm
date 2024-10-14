@@ -120,6 +120,36 @@ PDM_bound_type_to_entity_type
 }
 
 
+PDM_bound_type_t
+PDM_entity_type_to_bound_type
+(
+ PDM_mesh_entities_t  entity_type
+)
+{
+  switch (entity_type) {
+
+    case PDM_MESH_ENTITY_CELL: {
+      return PDM_BOUND_TYPE_CELL;
+    }
+    case PDM_MESH_ENTITY_FACE: {
+      return PDM_BOUND_TYPE_FACE;
+    }
+    case PDM_MESH_ENTITY_EDGE: {
+      return PDM_BOUND_TYPE_EDGE;
+    }
+    case PDM_MESH_ENTITY_VTX: {
+      return PDM_BOUND_TYPE_VTX;
+    }
+    default: {
+      PDM_error(__FILE__, __LINE__, 0, "Invalid entity_type %d\n", entity_type);
+    }
+
+  }
+
+  return PDM_BOUND_TYPE_MAX;
+}
+
+
 PDM_mesh_entities_t
 PDM_geometry_kind_to_entity_type
 (
