@@ -64,14 +64,25 @@ typedef struct _pdm_part_mesh_nodal_to_part_mesh_t PDM_part_mesh_nodal_to_part_m
  *
  * \param [in] pmesh_nodal               Pointer to \ref PDM_part_mesh_nodal_t instance
  * \param [in] keep_link_elmt_to_entity  Preserve link element (Part Mesh Nodal) -> entity (Part Mesh)
+ * \param [in] vtx_ownership_pmesh       Part Mesh's ownership for vertices
  *
- * \return Pointer to a new \ref PDM_part_mesh_nodal_to_part_mesh_t instance
+ * \return Pointer to a new \ref PDM_part_mesh_nodal_to_part_mesh_t instance.
+ *
+ * \note The vertices are identical in both data structures. In order to avoid ownership conflicts, the vertices are treated as follows :
+ *   - If \p pmn is PDM_OWNERSHIP_KEEP :
+ *     - if \p vtx_ownership_pmesh is PDM_OWNERSHIP_KEEP : the vertices are deep-copied (each struct holds its own memory)
+ *     - if \p vtx_ownership_pmesh is PDM_OWNERSHIP_USER : only the Part Mesh Nodal owns the vertices
+ *   - If \p pmn is PDM_OWNERSHIP_USER :
+ *     - if \p vtx_ownership_pmesh is PDM_OWNERSHIP_KEEP : only the Part Mesh owns the vertices
+ *     - if \p vtx_ownership_pmesh is PDM_OWNERSHIP_USER : neither the Part Mesh Nodal nor the Part Mesh own the vertices
+ *
  */
 PDM_part_mesh_nodal_to_part_mesh_t *
 PDM_part_mesh_nodal_to_part_mesh_create
 (
   PDM_part_mesh_nodal_t *pmesh_nodal,
-  PDM_bool_t             keep_link_elmt_to_entity
+  PDM_bool_t             keep_link_elmt_to_entity,
+  PDM_ownership_t        vtx_ownership_pmesh
 );
 
 
