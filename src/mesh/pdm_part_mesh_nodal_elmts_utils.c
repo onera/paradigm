@@ -987,12 +987,13 @@ PDM_part_mesh_nodal_poly2d_decompose_local_edges
   int *_parent_elmt               = parent_elmt          + _n_edge_current;
   int *_elmt_cell_edge_idx        = elmt_cell_edge_idx   + _n_elt_current;
 
+  int idx = 0;
   if (parent_num != NULL) {
     for (int i_elt = 0; i_elt < n_elt; i_elt++) {
       int i_parent = parent_num[i_elt] + 1;
       int n_edge_elt = connectivity_elmt_vtx_idx[i_elt+1] - connectivity_elmt_vtx_idx[i_elt];
       for (int i_edge = 0; i_edge < n_edge_elt; i_edge++) {
-        _parent_elmt[i_elt * n_edge_elt + i_edge] = i_parent;
+        _parent_elmt[idx++] = i_parent;
       }
     }
   }
@@ -1001,12 +1002,12 @@ PDM_part_mesh_nodal_poly2d_decompose_local_edges
       int i_parent = _n_elt_current + i_elt + 1;
       int n_edge_elt = connectivity_elmt_vtx_idx[i_elt+1] - connectivity_elmt_vtx_idx[i_elt];
       for (int i_edge = 0; i_edge < n_edge_elt; i_edge++) {
-        _parent_elmt[i_elt * n_edge_elt + i_edge] = i_parent;
+        _parent_elmt[idx++] = i_parent;
       }
     }
   }
 
-  int idx = 0;
+  idx = 0;
   for (int ielt = 0; ielt < n_elt; ielt++) {
     // Reminder for poly2d -> Number of vertex = Number of edge
     int n_edge_elt = connectivity_elmt_vtx_idx[ielt+1] - connectivity_elmt_vtx_idx[ielt];
