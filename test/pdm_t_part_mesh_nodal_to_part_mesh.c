@@ -150,21 +150,21 @@ int main(int argc, char *argv[])
    *  Set default values
    */
 
-  PDM_g_num_t        n_vtx_seg = 10;
-  double             length    = 1.;
-  int                n_part    = 1;
-  int                post      = 0;
-  int                old_algo  = 0;
+  PDM_g_num_t        n_vtx_seg  = 10;
+  double             length     = 1.;
+  int                n_part     = 1;
+  int                post       = 0;
+  int                old_algo   = 0;
 #ifdef PDM_HAVE_PARMETIS
   PDM_split_dual_t part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
 #else
 #ifdef PDM_HAVE_PTSCOTCH
   PDM_split_dual_t part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
 #else
-  PDM_split_dual_t part_method   = PDM_SPLIT_DUAL_WITH_HILBERT;
+  PDM_split_dual_t part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
 #endif
 #endif
-  PDM_Mesh_nodal_elt_t elt_type  = PDM_MESH_NODAL_HEXA8;
+  PDM_Mesh_nodal_elt_t elt_type = PDM_MESH_NODAL_HEXA8;
 
   /*
    *  Read args
@@ -264,19 +264,25 @@ int main(int argc, char *argv[])
   else {
 
     PDM_part_mesh_nodal_to_part_mesh_t *pmn_to_pm = PDM_part_mesh_nodal_to_part_mesh_create(pmesh_nodal,
-                                                                                            PDM_TRUE);
-
+                                                                                            PDM_TRUE,
+                                                                                            PDM_OWNERSHIP_USER);
     PDM_part_mesh_nodal_to_part_mesh_connectivity_enable(pmn_to_pm,
                                                          PDM_CONNECTIVITY_TYPE_CELL_FACE);
 
     PDM_part_mesh_nodal_to_part_mesh_connectivity_enable(pmn_to_pm,
-                                                         PDM_CONNECTIVITY_TYPE_FACE_VTX);
+                                                         PDM_CONNECTIVITY_TYPE_FACE_EDGE);
+
+    PDM_part_mesh_nodal_to_part_mesh_connectivity_enable(pmn_to_pm,
+                                                         PDM_CONNECTIVITY_TYPE_EDGE_VTX);
 
     PDM_part_mesh_nodal_to_part_mesh_g_nums_enable(pmn_to_pm,
                                                    PDM_MESH_ENTITY_CELL);
 
     PDM_part_mesh_nodal_to_part_mesh_g_nums_enable(pmn_to_pm,
                                                    PDM_MESH_ENTITY_FACE);
+
+    PDM_part_mesh_nodal_to_part_mesh_g_nums_enable(pmn_to_pm,
+                                                   PDM_MESH_ENTITY_EDGE);
 
     PDM_part_mesh_nodal_to_part_mesh_g_nums_enable(pmn_to_pm,
                                                    PDM_MESH_ENTITY_VTX);
@@ -320,6 +326,35 @@ int main(int argc, char *argv[])
                                        &face_vtx_idx,
                                        PDM_OWNERSHIP_KEEP);
 
+        int owner_face_vtx = 0;
+
+        if (face_vtx == NULL) {
+          owner_face_vtx = 1;
+
+          int *face_edge;
+          PDM_part_mesh_connectivity_get(pm,
+                                         i_part,
+                                         PDM_CONNECTIVITY_TYPE_FACE_EDGE,
+                                         &face_edge,
+                                         &face_vtx_idx,
+                                         PDM_OWNERSHIP_KEEP);
+
+          int *edge_vtx_idx;
+          int *edge_vtx;
+          PDM_part_mesh_connectivity_get(pm,
+                                         i_part,
+                                         PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                         &edge_vtx,
+                                         &edge_vtx_idx,
+                                         PDM_OWNERSHIP_KEEP);
+
+          PDM_compute_face_vtx_from_face_and_edge(pn_face,
+                                                  face_vtx_idx,
+                                                  face_edge,
+                                                  edge_vtx,
+                                                  &face_vtx);
+        }
+
         int *face_flags;
         PDM_malloc(face_flags,pn_face ,int);
         for(int i_face = 0; i_face < pn_face; ++i_face) {
@@ -358,6 +393,11 @@ int main(int argc, char *argv[])
                                face_flags);
 
         PDM_free(face_flags);
+
+
+        if (owner_face_vtx) {
+          PDM_free(face_vtx);
+        }
       }
 
     } else {
