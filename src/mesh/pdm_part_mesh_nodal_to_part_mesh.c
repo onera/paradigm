@@ -597,8 +597,8 @@ _generate_gnum
     if (entity_type == PDM_MESH_ENTITY_EDGE) {
 
       for (int i_entity = 0; i_entity < n_entity[i_part]; i_entity++) {
-        int         *ev = &entity_to_vtx     [i_part][2 * i_entity];
-        PDM_g_num_t *ep = &entity_parent_gnum[i_part][2 * i_entity];
+        int         *ev = &entity_to_vtx     [i_part][2*i_entity];
+        PDM_g_num_t *ep = &entity_parent_gnum[i_part][2*i_entity];
 
         int i_vtx0 = ev[0] - 1;
         int i_vtx1 = ev[1] - 1;
@@ -621,9 +621,9 @@ _generate_gnum
 
       } // End loop on edges
 
-    }
+    } // End if edges
 
-    else {
+    else { // Faces
       assert(entity_type == PDM_MESH_ENTITY_FACE);
       for (int i_entity = 0; i_entity < n_entity[i_part]; i_entity++) {
 
@@ -679,7 +679,7 @@ _generate_gnum
         }
 
       } // End loop on entities
-    }
+    } // End if faces
 
     // Update downward connectivity
     if (pmn_to_pm->build_connectivity[connectivity_type_down] == PDM_TRUE) {
@@ -818,7 +818,8 @@ _transfer_groups
  * \brief Generate intermediate entities
  *   - requested downward connectivities
  *   - global IDs (if requested)
- *   - groups (if requested) (TODO)
+ *   - groups (if requested)
+ *   - link elmt->entity (if requested)
  *   - inter-partition communication graph (if requested) (TODO)
  */
 static void
@@ -828,7 +829,7 @@ _generate_entities
 )
 {
   /**
-   * /!\ comment gérer le cas cell->face, cell->edge, face->edge, edge->vtx ??
+   * /!\ comment gérer le cas cell->face, (cell->edge,) face->edge, edge->vtx ??
    */
 
   for (PDM_connectivity_type_t connectivity_type = 0; connectivity_type < PDM_CONNECTIVITY_TYPE_MAX; connectivity_type++) {
@@ -837,7 +838,7 @@ _generate_entities
       continue;
     }
 
-    // Connectivity
+    // Connectivity and keep link elt->entity
     _generate_downward_connectivity(pmn_to_pm, connectivity_type);
 
     // Global IDs of lower-dimension entity
@@ -858,6 +859,85 @@ _generate_entities
   }
 }
 
+
+/**
+ * \brief Store link elt->entity in pmesh_nodal struct
+ *        By construction, it is identical to parent_num (if it exists).
+ */
+static void
+_store_link_pmn_to_pm
+(
+  PDM_part_mesh_nodal_to_part_mesh_t *pmn_to_pm
+)
+{
+  if (pmn_to_pm->keep_link_elmt_to_entity == PDM_FALSE) {
+    return;
+  }
+
+  PDM_part_mesh_nodal_t *pmesh_nodal = pmn_to_pm->pmesh_nodal;
+  int n_part = pmn_to_pm->n_part;
+
+  // Get highest-dimension geometry_kind and part_mesh_nodal_elmts
+  PDM_geometry_kind_t geom_kind_main = PDM_part_mesh_nodal_principal_geom_kind_get(pmesh_nodal);
+
+  for (PDM_geometry_kind_t geom_kind = geom_kind_main; geom_kind < PDM_GEOMETRY_KIND_CORNER; geom_kind++) {
+
+    PDM_part_mesh_nodal_elmts_t *pmne = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(pmesh_nodal,
+                                                                                      geom_kind);
+    if (pmne == NULL) {
+      continue;
+    }
+
+    int  n_section   = PDM_part_mesh_nodal_elmts_n_section_get  (pmne);
+    int *sections_id = PDM_part_mesh_nodal_elmts_sections_id_get(pmne);
+
+    for (int i_part = 0; i_part < n_part; i_part++) {
+
+      int i_parent = -1;
+
+      for (int i_section = 0; i_section < n_section; i_section++) {
+
+        int *elt_to_entity = NULL;
+        elt_to_entity = PDM_part_mesh_nodal_elmts_section_elt_to_entity_get(pmne,
+                                                                            sections_id[i_section],
+                                                                            i_part,
+                                                                            PDM_OWNERSHIP_BAD_VALUE);
+        if (elt_to_entity != NULL) {
+          printf("Warning : elt_to_entity already exists => What should we do??? (keep untouched for now)\n");
+          fflush(stdout);
+          continue;
+        }
+
+        int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne, sections_id[i_section], i_part);
+
+        int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(pmne,
+                                                                   sections_id[i_section],
+                                                                   i_part,
+                                                                   PDM_OWNERSHIP_BAD_VALUE);
+
+        PDM_malloc(elt_to_entity, n_elt, int);
+
+        if (parent_num != NULL) {
+          memcpy(elt_to_entity, parent_num, sizeof(int) * n_elt);
+        }
+        else {
+          for (int i_elt = 0; i_elt < n_elt; i_elt++) {
+            elt_to_entity[i_elt] = ++i_parent;
+          }
+        }
+
+        PDM_part_mesh_nodal_elmts_section_elt_to_entity_set(pmne,
+                                                            sections_id[i_section],
+                                                            i_part,
+                                                            elt_to_entity,
+                                                            PDM_OWNERSHIP_KEEP);
+
+      } // End loop on sections
+
+    } // End loop on parts
+
+  } // End loop on geom_kind
+}
 
 /**
  * \brief Get rid of unrequested data
@@ -1016,6 +1096,9 @@ PDM_part_mesh_nodal_to_part_mesh_compute
 
   /* Connectivities and lower-dimension entities */
   _generate_entities(pmn_to_pm);
+
+  /* Store link pmesh_nodal -> pmesh */
+  _store_link_pmn_to_pm(pmn_to_pm);
 
   /* Get rid of temporary connectivities */
   _clean_up(pmn_to_pm);

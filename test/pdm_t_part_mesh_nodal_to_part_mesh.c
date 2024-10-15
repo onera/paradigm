@@ -266,20 +266,27 @@ int main(int argc, char *argv[])
     PDM_part_mesh_nodal_to_part_mesh_t *pmn_to_pm = PDM_part_mesh_nodal_to_part_mesh_create(pmesh_nodal,
                                                                                             PDM_TRUE,
                                                                                             PDM_OWNERSHIP_USER);
-    PDM_part_mesh_nodal_to_part_mesh_connectivity_enable(pmn_to_pm,
-                                                         PDM_CONNECTIVITY_TYPE_CELL_FACE);
+    // Connectivities
+    if (dim == 3) {
+      PDM_part_mesh_nodal_to_part_mesh_connectivity_enable(pmn_to_pm,
+                                                           PDM_CONNECTIVITY_TYPE_CELL_FACE);
+    }
 
     PDM_part_mesh_nodal_to_part_mesh_connectivity_enable(pmn_to_pm,
                                                          PDM_CONNECTIVITY_TYPE_FACE_EDGE);
 
     PDM_part_mesh_nodal_to_part_mesh_connectivity_enable(pmn_to_pm,
                                                          PDM_CONNECTIVITY_TYPE_EDGE_VTX);
-    // PDM_part_mesh_nodal_to_part_mesh_connectivity_enable(pmn_to_pm,
-    //                                                      PDM_CONNECTIVITY_TYPE_FACE_VTX);
 
-    PDM_part_mesh_nodal_to_part_mesh_g_nums_enable(pmn_to_pm,
-                                                   PDM_MESH_ENTITY_CELL);
+    PDM_part_mesh_nodal_to_part_mesh_connectivity_enable(pmn_to_pm,
+                                                         PDM_CONNECTIVITY_TYPE_FACE_VTX);
 
+    if (dim == 3) {
+      PDM_part_mesh_nodal_to_part_mesh_g_nums_enable(pmn_to_pm,
+                                                     PDM_MESH_ENTITY_CELL);
+    }
+
+    // Global IDs
     PDM_part_mesh_nodal_to_part_mesh_g_nums_enable(pmn_to_pm,
                                                    PDM_MESH_ENTITY_FACE);
 
@@ -289,11 +296,13 @@ int main(int argc, char *argv[])
     PDM_part_mesh_nodal_to_part_mesh_g_nums_enable(pmn_to_pm,
                                                    PDM_MESH_ENTITY_VTX);
 
+    // Groups
     PDM_part_mesh_nodal_to_part_mesh_groups_enable(pmn_to_pm,
                                                    PDM_BOUND_TYPE_FACE);
 
     PDM_part_mesh_nodal_to_part_mesh_groups_enable(pmn_to_pm,
                                                    PDM_BOUND_TYPE_EDGE);
+
 
     PDM_part_mesh_nodal_to_part_mesh_compute(pmn_to_pm);
 
