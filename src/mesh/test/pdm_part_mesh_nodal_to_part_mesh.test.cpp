@@ -84,19 +84,19 @@ MPI_TEST_CASE("pdm_part_mesh_nodal_to_part_mesh", 1) {
 
 
   /* Subcases */
-  SUBCASE("TRIA3, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE") {
+  SUBCASE("TRIA3, FACE_EDGE, EDGE_VTX, FACE, EDGE, VTX") {
     elt_type = PDM_MESH_NODAL_TRIA3;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX ] = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_FACE]            = PDM_TRUE;
-    enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_EDGE]            = PDM_TRUE;
-    SUBCASE("TRIA3, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE, keep_link = 0") {
-      printf("TRIA3, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE, keep_link = 0\n");
+    enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
+    SUBCASE("TRIA3, FACE_EDGE, EDGE_VTX, FACE, EDGE, VTX, keep_link = 0") {
+      printf("TRIA3, FACE_EDGE, EDGE_VTX, FACE, EDGE, VTX, keep_link = 0\n");
       keep_link_elmt_to_entity = PDM_FALSE;
     };
-    SUBCASE("TRIA3, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE, keep_link = 1") {
-      printf("TRIA3, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE, keep_link = 1\n");
+    SUBCASE("TRIA3, FACE_EDGE, EDGE_VTX, FACE, EDGE, VTX, keep_link = 1") {
+      printf("TRIA3, FACE_EDGE, EDGE_VTX, FACE, EDGE, VTX, keep_link = 1\n");
       keep_link_elmt_to_entity = PDM_TRUE;
     };
   }
@@ -117,18 +117,18 @@ MPI_TEST_CASE("pdm_part_mesh_nodal_to_part_mesh", 1) {
     };
   }
 
-  SUBCASE("TRIA3, FACE_EDGE, EDGE_VTX, VTX, EDGE") {
+  SUBCASE("TRIA3, FACE_EDGE, EDGE_VTX, EDGE, VTX") {
     elt_type = PDM_MESH_NODAL_TRIA3;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX ] = PDM_TRUE;
-    enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_EDGE]            = PDM_TRUE;
-    SUBCASE("TRIA3, FACE_EDGE, EDGE_VTX, VTX, EDGE, keep_link = 0") {
-      printf("TRIA3, FACE_EDGE, EDGE_VTX, VTX, EDGE, keep_link = 0\n");
+    enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
+    SUBCASE("TRIA3, FACE_EDGE, EDGE_VTX, EDGE, VTX, keep_link = 0") {
+      printf("TRIA3, FACE_EDGE, EDGE_VTX, EDGE, VTX, keep_link = 0\n");
       keep_link_elmt_to_entity = PDM_FALSE;
     };
-    SUBCASE("TRIA3, FACE_EDGE, EDGE_VTX, VTX, EDGE, keep_link = 1") {
-      printf("TRIA3, FACE_EDGE, EDGE_VTX, VTX, EDGE, keep_link = 1\n");
+    SUBCASE("TRIA3, FACE_EDGE, EDGE_VTX, EDGE, VTX, keep_link = 1") {
+      printf("TRIA3, FACE_EDGE, EDGE_VTX, EDGE, VTX, keep_link = 1\n");
       keep_link_elmt_to_entity = PDM_TRUE;
     };
   }
@@ -204,19 +204,19 @@ MPI_TEST_CASE("pdm_part_mesh_nodal_to_part_mesh", 1) {
     };
   }
 
-  SUBCASE("QUAD4, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE") {
+  SUBCASE("QUAD4, FACE_EDGE, EDGE_VTX, FACE, EDGE, VTX") {
     elt_type = PDM_MESH_NODAL_QUAD4;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX ] = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_FACE]            = PDM_TRUE;
-    enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_EDGE]            = PDM_TRUE;
-    SUBCASE("QUAD4, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE, keep_link = 0") {
-      printf("QUAD4, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE, keep_link = 0\n");
+    enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
+    SUBCASE("QUAD4, FACE_EDGE, EDGE_VTX, FACE, EDGE, VTX, keep_link = 0") {
+      printf("QUAD4, FACE_EDGE, EDGE_VTX, FACE, EDGE, VTX, keep_link = 0\n");
       keep_link_elmt_to_entity = PDM_FALSE;
     };
-    SUBCASE("QUAD4, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE, keep_link = 1") {
-      printf("QUAD4, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE, keep_link = 1\n");
+    SUBCASE("QUAD4, FACE_EDGE, EDGE_VTX, FACE, EDGE, VTX, keep_link = 1") {
+      printf("QUAD4, FACE_EDGE, EDGE_VTX, FACE, EDGE, VTX, keep_link = 1\n");
       keep_link_elmt_to_entity = PDM_TRUE;
     };
   }
@@ -237,18 +237,18 @@ MPI_TEST_CASE("pdm_part_mesh_nodal_to_part_mesh", 1) {
     };
   }
 
-  SUBCASE("QUAD4, FACE_EDGE, EDGE_VTX, VTX, EDGE") {
+  SUBCASE("QUAD4, FACE_EDGE, EDGE_VTX, EDGE, VTX") {
     elt_type = PDM_MESH_NODAL_QUAD4;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX ] = PDM_TRUE;
-    enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_EDGE]            = PDM_TRUE;
-    SUBCASE("QUAD4, FACE_EDGE, EDGE_VTX, VTX, EDGE, keep_link = 0") {
-      printf("QUAD4, FACE_EDGE, EDGE_VTX, VTX, EDGE, keep_link = 0\n");
+    enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
+    SUBCASE("QUAD4, FACE_EDGE, EDGE_VTX, EDGE, VTX, keep_link = 0") {
+      printf("QUAD4, FACE_EDGE, EDGE_VTX, EDGE, VTX, keep_link = 0\n");
       keep_link_elmt_to_entity = PDM_FALSE;
     };
-    SUBCASE("QUAD4, FACE_EDGE, EDGE_VTX, VTX, EDGE, keep_link = 1") {
-      printf("QUAD4, FACE_EDGE, EDGE_VTX, VTX, EDGE, keep_link = 1\n");
+    SUBCASE("QUAD4, FACE_EDGE, EDGE_VTX, EDGE, VTX, keep_link = 1") {
+      printf("QUAD4, FACE_EDGE, EDGE_VTX, EDGE, VTX, keep_link = 1\n");
       keep_link_elmt_to_entity = PDM_TRUE;
     };
   }
@@ -324,19 +324,19 @@ MPI_TEST_CASE("pdm_part_mesh_nodal_to_part_mesh", 1) {
     };
   }
 
-  SUBCASE("POLY_2D, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE") {
+  SUBCASE("POLY_2D, FACE_EDGE, EDGE_VTX, FACE, EDGE, VTX") {
     elt_type = PDM_MESH_NODAL_POLY_2D;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX ] = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_FACE]            = PDM_TRUE;
-    enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_EDGE]            = PDM_TRUE;
-    SUBCASE("POLY_2D, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE, keep_link = 0") {
-      printf("POLY_2D, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE, keep_link = 0\n");
+    enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
+    SUBCASE("POLY_2D, FACE_EDGE, EDGE_VTX, FACE, EDGE, VTX, keep_link = 0") {
+      printf("POLY_2D, FACE_EDGE, EDGE_VTX, FACE, EDGE, VTX, keep_link = 0\n");
       keep_link_elmt_to_entity = PDM_FALSE;
     };
-    SUBCASE("POLY_2D, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE, keep_link = 1") {
-      printf("POLY_2D, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE, keep_link = 1\n");
+    SUBCASE("POLY_2D, FACE_EDGE, EDGE_VTX, FACE, EDGE, VTX, keep_link = 1") {
+      printf("POLY_2D, FACE_EDGE, EDGE_VTX, FACE, EDGE, VTX, keep_link = 1\n");
       keep_link_elmt_to_entity = PDM_TRUE;
     };
   }
@@ -357,18 +357,18 @@ MPI_TEST_CASE("pdm_part_mesh_nodal_to_part_mesh", 1) {
     };
   }
 
-  SUBCASE("POLY_2D, FACE_EDGE, EDGE_VTX, VTX, EDGE") {
+  SUBCASE("POLY_2D, FACE_EDGE, EDGE_VTX, EDGE, VTX") {
     elt_type = PDM_MESH_NODAL_POLY_2D;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX ] = PDM_TRUE;
-    enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_EDGE]            = PDM_TRUE;
-    SUBCASE("POLY_2D, FACE_EDGE, EDGE_VTX, VTX, EDGE, keep_link = 0") {
-      printf("POLY_2D, FACE_EDGE, EDGE_VTX, VTX, EDGE, keep_link = 0\n");
+    enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
+    SUBCASE("POLY_2D, FACE_EDGE, EDGE_VTX, EDGE, VTX, keep_link = 0") {
+      printf("POLY_2D, FACE_EDGE, EDGE_VTX, EDGE, VTX, keep_link = 0\n");
       keep_link_elmt_to_entity = PDM_FALSE;
     };
-    SUBCASE("POLY_2D, FACE_EDGE, EDGE_VTX, VTX, EDGE, keep_link = 1") {
-      printf("POLY_2D, FACE_EDGE, EDGE_VTX, VTX, EDGE, keep_link = 1\n");
+    SUBCASE("POLY_2D, FACE_EDGE, EDGE_VTX, EDGE, VTX, keep_link = 1") {
+      printf("POLY_2D, FACE_EDGE, EDGE_VTX, EDGE, VTX, keep_link = 1\n");
       keep_link_elmt_to_entity = PDM_TRUE;
     };
   }
@@ -444,57 +444,57 @@ MPI_TEST_CASE("pdm_part_mesh_nodal_to_part_mesh", 1) {
     };
   }
 
-  SUBCASE("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE, CELL") {
+  SUBCASE("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, CELL, EDGE, VTX") {
     elt_type = PDM_MESH_NODAL_TETRA4;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX ] = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_FACE]            = PDM_TRUE;
-    enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
-    enable_gnum        [PDM_MESH_ENTITY_EDGE]            = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_CELL]            = PDM_TRUE;
-    SUBCASE("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE, CELL, keep_link = 0") {
-      printf("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE, CELL, keep_link = 0\n");
+    enable_gnum        [PDM_MESH_ENTITY_EDGE]            = PDM_TRUE;
+    enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
+    SUBCASE("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, CELL, EDGE, VTX, keep_link = 0") {
+      printf("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, CELL, EDGE, VTX, keep_link = 0\n");
       keep_link_elmt_to_entity = PDM_FALSE;
     };
-    SUBCASE("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE, CELL, keep_link = 1") {
-      printf("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE, CELL, keep_link = 1\n");
+    SUBCASE("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, CELL, EDGE, VTX, keep_link = 1") {
+      printf("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, CELL, EDGE, VTX, keep_link = 1\n");
       keep_link_elmt_to_entity = PDM_TRUE;
     };
   }
 
-  SUBCASE("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE") {
+  SUBCASE("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, CELL, VTX") {
     elt_type = PDM_MESH_NODAL_TETRA4;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX ] = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_FACE]            = PDM_TRUE;
+    enable_gnum        [PDM_MESH_ENTITY_CELL]            = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
-    enable_gnum        [PDM_MESH_ENTITY_EDGE]            = PDM_TRUE;
-    SUBCASE("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE, keep_link = 0") {
-      printf("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE, keep_link = 0\n");
+    SUBCASE("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, CELL, VTX, keep_link = 0") {
+      printf("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, CELL, VTX, keep_link = 0\n");
       keep_link_elmt_to_entity = PDM_FALSE;
     };
-    SUBCASE("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE, keep_link = 1") {
-      printf("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE, keep_link = 1\n");
+    SUBCASE("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, CELL, VTX, keep_link = 1") {
+      printf("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, CELL, VTX, keep_link = 1\n");
       keep_link_elmt_to_entity = PDM_TRUE;
     };
   }
 
-  SUBCASE("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, CELL") {
+  SUBCASE("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, EDGE, VTX") {
     elt_type = PDM_MESH_NODAL_TETRA4;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX ] = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_FACE]            = PDM_TRUE;
+    enable_gnum        [PDM_MESH_ENTITY_EDGE]            = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
-    enable_gnum        [PDM_MESH_ENTITY_CELL]            = PDM_TRUE;
-    SUBCASE("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, CELL, keep_link = 0") {
-      printf("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, CELL, keep_link = 0\n");
+    SUBCASE("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, EDGE, VTX, keep_link = 0") {
+      printf("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, EDGE, VTX, keep_link = 0\n");
       keep_link_elmt_to_entity = PDM_FALSE;
     };
-    SUBCASE("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, CELL, keep_link = 1") {
-      printf("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, CELL, keep_link = 1\n");
+    SUBCASE("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, EDGE, VTX, keep_link = 1") {
+      printf("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, EDGE, VTX, keep_link = 1\n");
       keep_link_elmt_to_entity = PDM_TRUE;
     };
   }
@@ -516,54 +516,54 @@ MPI_TEST_CASE("pdm_part_mesh_nodal_to_part_mesh", 1) {
     };
   }
 
-  SUBCASE("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, EDGE, CELL") {
+  SUBCASE("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, CELL, EDGE, VTX") {
     elt_type = PDM_MESH_NODAL_TETRA4;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX ] = PDM_TRUE;
-    enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
-    enable_gnum        [PDM_MESH_ENTITY_EDGE]            = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_CELL]            = PDM_TRUE;
-    SUBCASE("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, EDGE, CELL, keep_link = 0") {
-      printf("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, EDGE, CELL, keep_link = 0\n");
+    enable_gnum        [PDM_MESH_ENTITY_EDGE]            = PDM_TRUE;
+    enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
+    SUBCASE("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, CELL, EDGE, VTX, keep_link = 0") {
+      printf("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, CELL, EDGE, VTX, keep_link = 0\n");
       keep_link_elmt_to_entity = PDM_FALSE;
     };
-    SUBCASE("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, EDGE, CELL, keep_link = 1") {
-      printf("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, EDGE, CELL, keep_link = 1\n");
+    SUBCASE("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, CELL, EDGE, VTX, keep_link = 1") {
+      printf("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, CELL, EDGE, VTX, keep_link = 1\n");
       keep_link_elmt_to_entity = PDM_TRUE;
     };
   }
 
-  SUBCASE("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, EDGE") {
+  SUBCASE("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, CELL, VTX") {
     elt_type = PDM_MESH_NODAL_TETRA4;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX ] = PDM_TRUE;
+    enable_gnum        [PDM_MESH_ENTITY_CELL]            = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
-    enable_gnum        [PDM_MESH_ENTITY_EDGE]            = PDM_TRUE;
-    SUBCASE("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, EDGE, keep_link = 0") {
-      printf("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, EDGE, keep_link = 0\n");
+    SUBCASE("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, CELL, VTX, keep_link = 0") {
+      printf("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, CELL, VTX, keep_link = 0\n");
       keep_link_elmt_to_entity = PDM_FALSE;
     };
-    SUBCASE("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, EDGE, keep_link = 1") {
-      printf("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, EDGE, keep_link = 1\n");
+    SUBCASE("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, CELL, VTX, keep_link = 1") {
+      printf("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, CELL, VTX, keep_link = 1\n");
       keep_link_elmt_to_entity = PDM_TRUE;
     };
   }
 
-  SUBCASE("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, CELL") {
+  SUBCASE("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, EDGE, VTX") {
     elt_type = PDM_MESH_NODAL_TETRA4;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX ] = PDM_TRUE;
+    enable_gnum        [PDM_MESH_ENTITY_EDGE]            = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
-    enable_gnum        [PDM_MESH_ENTITY_CELL]            = PDM_TRUE;
-    SUBCASE("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, CELL, keep_link = 0") {
-      printf("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, CELL, keep_link = 0\n");
+    SUBCASE("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, EDGE, VTX, keep_link = 0") {
+      printf("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, EDGE, VTX, keep_link = 0\n");
       keep_link_elmt_to_entity = PDM_FALSE;
     };
-    SUBCASE("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, CELL, keep_link = 1") {
-      printf("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, CELL, keep_link = 1\n");
+    SUBCASE("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, EDGE, VTX, keep_link = 1") {
+      printf("TETRA4, CELL_FACE, FACE_EDGE, EDGE_VTX, EDGE, VTX, keep_link = 1\n");
       keep_link_elmt_to_entity = PDM_TRUE;
     };
   }
@@ -599,19 +599,19 @@ MPI_TEST_CASE("pdm_part_mesh_nodal_to_part_mesh", 1) {
     };
   }
 
-  SUBCASE("TETRA4, CELL_FACE, FACE_VTX, FACE, VTX, CELL") {
+  SUBCASE("TETRA4, CELL_FACE, FACE_VTX, FACE, CELL, VTX") {
     elt_type = PDM_MESH_NODAL_TETRA4;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_FACE_VTX ] = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_FACE]            = PDM_TRUE;
-    enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_CELL]            = PDM_TRUE;
-    SUBCASE("TETRA4, CELL_FACE, FACE_VTX, FACE, VTX, CELL, keep_link = 0") {
-      printf("TETRA4, CELL_FACE, FACE_VTX, FACE, VTX, CELL, keep_link = 0\n");
+    enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
+    SUBCASE("TETRA4, CELL_FACE, FACE_VTX, FACE, CELL, VTX, keep_link = 0") {
+      printf("TETRA4, CELL_FACE, FACE_VTX, FACE, CELL, VTX, keep_link = 0\n");
       keep_link_elmt_to_entity = PDM_FALSE;
     };
-    SUBCASE("TETRA4, CELL_FACE, FACE_VTX, FACE, VTX, CELL, keep_link = 1") {
-      printf("TETRA4, CELL_FACE, FACE_VTX, FACE, VTX, CELL, keep_link = 1\n");
+    SUBCASE("TETRA4, CELL_FACE, FACE_VTX, FACE, CELL, VTX, keep_link = 1") {
+      printf("TETRA4, CELL_FACE, FACE_VTX, FACE, CELL, VTX, keep_link = 1\n");
       keep_link_elmt_to_entity = PDM_TRUE;
     };
   }
@@ -632,18 +632,18 @@ MPI_TEST_CASE("pdm_part_mesh_nodal_to_part_mesh", 1) {
     };
   }
 
-  SUBCASE("TETRA4, CELL_FACE, FACE_VTX, VTX, CELL") {
+  SUBCASE("TETRA4, CELL_FACE, FACE_VTX, CELL, VTX") {
     elt_type = PDM_MESH_NODAL_TETRA4;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_FACE_VTX ] = PDM_TRUE;
-    enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_CELL]            = PDM_TRUE;
-    SUBCASE("TETRA4, CELL_FACE, FACE_VTX, VTX, CELL, keep_link = 0") {
-      printf("TETRA4, CELL_FACE, FACE_VTX, VTX, CELL, keep_link = 0\n");
+    enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
+    SUBCASE("TETRA4, CELL_FACE, FACE_VTX, CELL, VTX, keep_link = 0") {
+      printf("TETRA4, CELL_FACE, FACE_VTX, CELL, VTX, keep_link = 0\n");
       keep_link_elmt_to_entity = PDM_FALSE;
     };
-    SUBCASE("TETRA4, CELL_FACE, FACE_VTX, VTX, CELL, keep_link = 1") {
-      printf("TETRA4, CELL_FACE, FACE_VTX, VTX, CELL, keep_link = 1\n");
+    SUBCASE("TETRA4, CELL_FACE, FACE_VTX, CELL, VTX, keep_link = 1") {
+      printf("TETRA4, CELL_FACE, FACE_VTX, CELL, VTX, keep_link = 1\n");
       keep_link_elmt_to_entity = PDM_TRUE;
     };
   }
@@ -677,57 +677,57 @@ MPI_TEST_CASE("pdm_part_mesh_nodal_to_part_mesh", 1) {
     };
   }
 
-  SUBCASE("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE, CELL") {
+  SUBCASE("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, CELL, EDGE, VTX") {
     elt_type = PDM_MESH_NODAL_PYRAMID5;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX ] = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_FACE]            = PDM_TRUE;
-    enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
-    enable_gnum        [PDM_MESH_ENTITY_EDGE]            = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_CELL]            = PDM_TRUE;
-    SUBCASE("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE, CELL, keep_link = 0") {
-      printf("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE, CELL, keep_link = 0\n");
+    enable_gnum        [PDM_MESH_ENTITY_EDGE]            = PDM_TRUE;
+    enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
+    SUBCASE("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, CELL, EDGE, VTX, keep_link = 0") {
+      printf("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, CELL, EDGE, VTX, keep_link = 0\n");
       keep_link_elmt_to_entity = PDM_FALSE;
     };
-    SUBCASE("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE, CELL, keep_link = 1") {
-      printf("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE, CELL, keep_link = 1\n");
+    SUBCASE("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, CELL, EDGE, VTX, keep_link = 1") {
+      printf("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, CELL, EDGE, VTX, keep_link = 1\n");
       keep_link_elmt_to_entity = PDM_TRUE;
     };
   }
 
-  SUBCASE("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE") {
+  SUBCASE("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, CELL, VTX") {
     elt_type = PDM_MESH_NODAL_PYRAMID5;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX ] = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_FACE]            = PDM_TRUE;
+    enable_gnum        [PDM_MESH_ENTITY_CELL]            = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
-    enable_gnum        [PDM_MESH_ENTITY_EDGE]            = PDM_TRUE;
-    SUBCASE("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE, keep_link = 0") {
-      printf("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE, keep_link = 0\n");
+    SUBCASE("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, CELL, VTX, keep_link = 0") {
+      printf("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, CELL, VTX, keep_link = 0\n");
       keep_link_elmt_to_entity = PDM_FALSE;
     };
-    SUBCASE("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE, keep_link = 1") {
-      printf("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE, keep_link = 1\n");
+    SUBCASE("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, CELL, VTX, keep_link = 1") {
+      printf("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, CELL, VTX, keep_link = 1\n");
       keep_link_elmt_to_entity = PDM_TRUE;
     };
   }
 
-  SUBCASE("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, CELL") {
+  SUBCASE("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, EDGE, VTX") {
     elt_type = PDM_MESH_NODAL_PYRAMID5;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX ] = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_FACE]            = PDM_TRUE;
+    enable_gnum        [PDM_MESH_ENTITY_EDGE]            = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
-    enable_gnum        [PDM_MESH_ENTITY_CELL]            = PDM_TRUE;
-    SUBCASE("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, CELL, keep_link = 0") {
-      printf("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, CELL, keep_link = 0\n");
+    SUBCASE("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, EDGE, VTX, keep_link = 0") {
+      printf("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, EDGE, VTX, keep_link = 0\n");
       keep_link_elmt_to_entity = PDM_FALSE;
     };
-    SUBCASE("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, CELL, keep_link = 1") {
-      printf("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, CELL, keep_link = 1\n");
+    SUBCASE("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, EDGE, VTX, keep_link = 1") {
+      printf("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, EDGE, VTX, keep_link = 1\n");
       keep_link_elmt_to_entity = PDM_TRUE;
     };
   }
@@ -749,54 +749,54 @@ MPI_TEST_CASE("pdm_part_mesh_nodal_to_part_mesh", 1) {
     };
   }
 
-  SUBCASE("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, EDGE, CELL") {
+  SUBCASE("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, CELL, EDGE, VTX") {
     elt_type = PDM_MESH_NODAL_PYRAMID5;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX ] = PDM_TRUE;
-    enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
-    enable_gnum        [PDM_MESH_ENTITY_EDGE]            = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_CELL]            = PDM_TRUE;
-    SUBCASE("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, EDGE, CELL, keep_link = 0") {
-      printf("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, EDGE, CELL, keep_link = 0\n");
+    enable_gnum        [PDM_MESH_ENTITY_EDGE]            = PDM_TRUE;
+    enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
+    SUBCASE("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, CELL, EDGE, VTX, keep_link = 0") {
+      printf("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, CELL, EDGE, VTX, keep_link = 0\n");
       keep_link_elmt_to_entity = PDM_FALSE;
     };
-    SUBCASE("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, EDGE, CELL, keep_link = 1") {
-      printf("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, EDGE, CELL, keep_link = 1\n");
+    SUBCASE("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, CELL, EDGE, VTX, keep_link = 1") {
+      printf("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, CELL, EDGE, VTX, keep_link = 1\n");
       keep_link_elmt_to_entity = PDM_TRUE;
     };
   }
 
-  SUBCASE("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, EDGE") {
+  SUBCASE("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, CELL, VTX") {
     elt_type = PDM_MESH_NODAL_PYRAMID5;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX ] = PDM_TRUE;
+    enable_gnum        [PDM_MESH_ENTITY_CELL]            = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
-    enable_gnum        [PDM_MESH_ENTITY_EDGE]            = PDM_TRUE;
-    SUBCASE("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, EDGE, keep_link = 0") {
-      printf("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, EDGE, keep_link = 0\n");
+    SUBCASE("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, CELL, VTX, keep_link = 0") {
+      printf("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, CELL, VTX, keep_link = 0\n");
       keep_link_elmt_to_entity = PDM_FALSE;
     };
-    SUBCASE("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, EDGE, keep_link = 1") {
-      printf("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, EDGE, keep_link = 1\n");
+    SUBCASE("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, CELL, VTX, keep_link = 1") {
+      printf("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, CELL, VTX, keep_link = 1\n");
       keep_link_elmt_to_entity = PDM_TRUE;
     };
   }
 
-  SUBCASE("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, CELL") {
+  SUBCASE("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, EDGE, VTX") {
     elt_type = PDM_MESH_NODAL_PYRAMID5;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX ] = PDM_TRUE;
+    enable_gnum        [PDM_MESH_ENTITY_EDGE]            = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
-    enable_gnum        [PDM_MESH_ENTITY_CELL]            = PDM_TRUE;
-    SUBCASE("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, CELL, keep_link = 0") {
-      printf("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, CELL, keep_link = 0\n");
+    SUBCASE("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, EDGE, VTX, keep_link = 0") {
+      printf("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, EDGE, VTX, keep_link = 0\n");
       keep_link_elmt_to_entity = PDM_FALSE;
     };
-    SUBCASE("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, CELL, keep_link = 1") {
-      printf("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, CELL, keep_link = 1\n");
+    SUBCASE("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, EDGE, VTX, keep_link = 1") {
+      printf("PYRAMID5, CELL_FACE, FACE_EDGE, EDGE_VTX, EDGE, VTX, keep_link = 1\n");
       keep_link_elmt_to_entity = PDM_TRUE;
     };
   }
@@ -832,19 +832,19 @@ MPI_TEST_CASE("pdm_part_mesh_nodal_to_part_mesh", 1) {
     };
   }
 
-  SUBCASE("PYRAMID5, CELL_FACE, FACE_VTX, FACE, VTX, CELL") {
+  SUBCASE("PYRAMID5, CELL_FACE, FACE_VTX, FACE, CELL, VTX") {
     elt_type = PDM_MESH_NODAL_PYRAMID5;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_FACE_VTX ] = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_FACE]            = PDM_TRUE;
-    enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_CELL]            = PDM_TRUE;
-    SUBCASE("PYRAMID5, CELL_FACE, FACE_VTX, FACE, VTX, CELL, keep_link = 0") {
-      printf("PYRAMID5, CELL_FACE, FACE_VTX, FACE, VTX, CELL, keep_link = 0\n");
+    enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
+    SUBCASE("PYRAMID5, CELL_FACE, FACE_VTX, FACE, CELL, VTX, keep_link = 0") {
+      printf("PYRAMID5, CELL_FACE, FACE_VTX, FACE, CELL, VTX, keep_link = 0\n");
       keep_link_elmt_to_entity = PDM_FALSE;
     };
-    SUBCASE("PYRAMID5, CELL_FACE, FACE_VTX, FACE, VTX, CELL, keep_link = 1") {
-      printf("PYRAMID5, CELL_FACE, FACE_VTX, FACE, VTX, CELL, keep_link = 1\n");
+    SUBCASE("PYRAMID5, CELL_FACE, FACE_VTX, FACE, CELL, VTX, keep_link = 1") {
+      printf("PYRAMID5, CELL_FACE, FACE_VTX, FACE, CELL, VTX, keep_link = 1\n");
       keep_link_elmt_to_entity = PDM_TRUE;
     };
   }
@@ -865,18 +865,18 @@ MPI_TEST_CASE("pdm_part_mesh_nodal_to_part_mesh", 1) {
     };
   }
 
-  SUBCASE("PYRAMID5, CELL_FACE, FACE_VTX, VTX, CELL") {
+  SUBCASE("PYRAMID5, CELL_FACE, FACE_VTX, CELL, VTX") {
     elt_type = PDM_MESH_NODAL_PYRAMID5;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_FACE_VTX ] = PDM_TRUE;
-    enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_CELL]            = PDM_TRUE;
-    SUBCASE("PYRAMID5, CELL_FACE, FACE_VTX, VTX, CELL, keep_link = 0") {
-      printf("PYRAMID5, CELL_FACE, FACE_VTX, VTX, CELL, keep_link = 0\n");
+    enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
+    SUBCASE("PYRAMID5, CELL_FACE, FACE_VTX, CELL, VTX, keep_link = 0") {
+      printf("PYRAMID5, CELL_FACE, FACE_VTX, CELL, VTX, keep_link = 0\n");
       keep_link_elmt_to_entity = PDM_FALSE;
     };
-    SUBCASE("PYRAMID5, CELL_FACE, FACE_VTX, VTX, CELL, keep_link = 1") {
-      printf("PYRAMID5, CELL_FACE, FACE_VTX, VTX, CELL, keep_link = 1\n");
+    SUBCASE("PYRAMID5, CELL_FACE, FACE_VTX, CELL, VTX, keep_link = 1") {
+      printf("PYRAMID5, CELL_FACE, FACE_VTX, CELL, VTX, keep_link = 1\n");
       keep_link_elmt_to_entity = PDM_TRUE;
     };
   }
@@ -910,57 +910,57 @@ MPI_TEST_CASE("pdm_part_mesh_nodal_to_part_mesh", 1) {
     };
   }
 
-  SUBCASE("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE, CELL") {
+  SUBCASE("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, CELL, EDGE, VTX") {
     elt_type = PDM_MESH_NODAL_PRISM6;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX ] = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_FACE]            = PDM_TRUE;
-    enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
-    enable_gnum        [PDM_MESH_ENTITY_EDGE]            = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_CELL]            = PDM_TRUE;
-    SUBCASE("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE, CELL, keep_link = 0") {
-      printf("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE, CELL, keep_link = 0\n");
+    enable_gnum        [PDM_MESH_ENTITY_EDGE]            = PDM_TRUE;
+    enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
+    SUBCASE("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, CELL, EDGE, VTX, keep_link = 0") {
+      printf("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, CELL, EDGE, VTX, keep_link = 0\n");
       keep_link_elmt_to_entity = PDM_FALSE;
     };
-    SUBCASE("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE, CELL, keep_link = 1") {
-      printf("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE, CELL, keep_link = 1\n");
+    SUBCASE("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, CELL, EDGE, VTX, keep_link = 1") {
+      printf("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, CELL, EDGE, VTX, keep_link = 1\n");
       keep_link_elmt_to_entity = PDM_TRUE;
     };
   }
 
-  SUBCASE("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE") {
+  SUBCASE("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, CELL, VTX") {
     elt_type = PDM_MESH_NODAL_PRISM6;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX ] = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_FACE]            = PDM_TRUE;
+    enable_gnum        [PDM_MESH_ENTITY_CELL]            = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
-    enable_gnum        [PDM_MESH_ENTITY_EDGE]            = PDM_TRUE;
-    SUBCASE("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE, keep_link = 0") {
-      printf("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE, keep_link = 0\n");
+    SUBCASE("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, CELL, VTX, keep_link = 0") {
+      printf("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, CELL, VTX, keep_link = 0\n");
       keep_link_elmt_to_entity = PDM_FALSE;
     };
-    SUBCASE("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE, keep_link = 1") {
-      printf("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE, keep_link = 1\n");
+    SUBCASE("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, CELL, VTX, keep_link = 1") {
+      printf("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, CELL, VTX, keep_link = 1\n");
       keep_link_elmt_to_entity = PDM_TRUE;
     };
   }
 
-  SUBCASE("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, CELL") {
+  SUBCASE("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, EDGE, VTX") {
     elt_type = PDM_MESH_NODAL_PRISM6;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX ] = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_FACE]            = PDM_TRUE;
+    enable_gnum        [PDM_MESH_ENTITY_EDGE]            = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
-    enable_gnum        [PDM_MESH_ENTITY_CELL]            = PDM_TRUE;
-    SUBCASE("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, CELL, keep_link = 0") {
-      printf("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, CELL, keep_link = 0\n");
+    SUBCASE("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, EDGE, VTX, keep_link = 0") {
+      printf("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, EDGE, VTX, keep_link = 0\n");
       keep_link_elmt_to_entity = PDM_FALSE;
     };
-    SUBCASE("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, CELL, keep_link = 1") {
-      printf("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, CELL, keep_link = 1\n");
+    SUBCASE("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, EDGE, VTX, keep_link = 1") {
+      printf("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, EDGE, VTX, keep_link = 1\n");
       keep_link_elmt_to_entity = PDM_TRUE;
     };
   }
@@ -982,54 +982,54 @@ MPI_TEST_CASE("pdm_part_mesh_nodal_to_part_mesh", 1) {
     };
   }
 
-  SUBCASE("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, EDGE, CELL") {
+  SUBCASE("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, CELL, EDGE, VTX") {
     elt_type = PDM_MESH_NODAL_PRISM6;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX ] = PDM_TRUE;
-    enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
-    enable_gnum        [PDM_MESH_ENTITY_EDGE]            = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_CELL]            = PDM_TRUE;
-    SUBCASE("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, EDGE, CELL, keep_link = 0") {
-      printf("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, EDGE, CELL, keep_link = 0\n");
+    enable_gnum        [PDM_MESH_ENTITY_EDGE]            = PDM_TRUE;
+    enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
+    SUBCASE("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, CELL, EDGE, VTX, keep_link = 0") {
+      printf("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, CELL, EDGE, VTX, keep_link = 0\n");
       keep_link_elmt_to_entity = PDM_FALSE;
     };
-    SUBCASE("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, EDGE, CELL, keep_link = 1") {
-      printf("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, EDGE, CELL, keep_link = 1\n");
+    SUBCASE("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, CELL, EDGE, VTX, keep_link = 1") {
+      printf("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, CELL, EDGE, VTX, keep_link = 1\n");
       keep_link_elmt_to_entity = PDM_TRUE;
     };
   }
 
-  SUBCASE("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, EDGE") {
+  SUBCASE("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, CELL, VTX") {
     elt_type = PDM_MESH_NODAL_PRISM6;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX ] = PDM_TRUE;
+    enable_gnum        [PDM_MESH_ENTITY_CELL]            = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
-    enable_gnum        [PDM_MESH_ENTITY_EDGE]            = PDM_TRUE;
-    SUBCASE("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, EDGE, keep_link = 0") {
-      printf("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, EDGE, keep_link = 0\n");
+    SUBCASE("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, CELL, VTX, keep_link = 0") {
+      printf("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, CELL, VTX, keep_link = 0\n");
       keep_link_elmt_to_entity = PDM_FALSE;
     };
-    SUBCASE("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, EDGE, keep_link = 1") {
-      printf("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, EDGE, keep_link = 1\n");
+    SUBCASE("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, CELL, VTX, keep_link = 1") {
+      printf("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, CELL, VTX, keep_link = 1\n");
       keep_link_elmt_to_entity = PDM_TRUE;
     };
   }
 
-  SUBCASE("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, CELL") {
+  SUBCASE("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, EDGE, VTX") {
     elt_type = PDM_MESH_NODAL_PRISM6;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX ] = PDM_TRUE;
+    enable_gnum        [PDM_MESH_ENTITY_EDGE]            = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
-    enable_gnum        [PDM_MESH_ENTITY_CELL]            = PDM_TRUE;
-    SUBCASE("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, CELL, keep_link = 0") {
-      printf("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, CELL, keep_link = 0\n");
+    SUBCASE("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, EDGE, VTX, keep_link = 0") {
+      printf("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, EDGE, VTX, keep_link = 0\n");
       keep_link_elmt_to_entity = PDM_FALSE;
     };
-    SUBCASE("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, CELL, keep_link = 1") {
-      printf("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, CELL, keep_link = 1\n");
+    SUBCASE("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, EDGE, VTX, keep_link = 1") {
+      printf("PRISM6, CELL_FACE, FACE_EDGE, EDGE_VTX, EDGE, VTX, keep_link = 1\n");
       keep_link_elmt_to_entity = PDM_TRUE;
     };
   }
@@ -1065,19 +1065,19 @@ MPI_TEST_CASE("pdm_part_mesh_nodal_to_part_mesh", 1) {
     };
   }
 
-  SUBCASE("PRISM6, CELL_FACE, FACE_VTX, FACE, VTX, CELL") {
+  SUBCASE("PRISM6, CELL_FACE, FACE_VTX, FACE, CELL, VTX") {
     elt_type = PDM_MESH_NODAL_PRISM6;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_FACE_VTX ] = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_FACE]            = PDM_TRUE;
-    enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_CELL]            = PDM_TRUE;
-    SUBCASE("PRISM6, CELL_FACE, FACE_VTX, FACE, VTX, CELL, keep_link = 0") {
-      printf("PRISM6, CELL_FACE, FACE_VTX, FACE, VTX, CELL, keep_link = 0\n");
+    enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
+    SUBCASE("PRISM6, CELL_FACE, FACE_VTX, FACE, CELL, VTX, keep_link = 0") {
+      printf("PRISM6, CELL_FACE, FACE_VTX, FACE, CELL, VTX, keep_link = 0\n");
       keep_link_elmt_to_entity = PDM_FALSE;
     };
-    SUBCASE("PRISM6, CELL_FACE, FACE_VTX, FACE, VTX, CELL, keep_link = 1") {
-      printf("PRISM6, CELL_FACE, FACE_VTX, FACE, VTX, CELL, keep_link = 1\n");
+    SUBCASE("PRISM6, CELL_FACE, FACE_VTX, FACE, CELL, VTX, keep_link = 1") {
+      printf("PRISM6, CELL_FACE, FACE_VTX, FACE, CELL, VTX, keep_link = 1\n");
       keep_link_elmt_to_entity = PDM_TRUE;
     };
   }
@@ -1098,18 +1098,18 @@ MPI_TEST_CASE("pdm_part_mesh_nodal_to_part_mesh", 1) {
     };
   }
 
-  SUBCASE("PRISM6, CELL_FACE, FACE_VTX, VTX, CELL") {
+  SUBCASE("PRISM6, CELL_FACE, FACE_VTX, CELL, VTX") {
     elt_type = PDM_MESH_NODAL_PRISM6;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_FACE_VTX ] = PDM_TRUE;
-    enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_CELL]            = PDM_TRUE;
-    SUBCASE("PRISM6, CELL_FACE, FACE_VTX, VTX, CELL, keep_link = 0") {
-      printf("PRISM6, CELL_FACE, FACE_VTX, VTX, CELL, keep_link = 0\n");
+    enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
+    SUBCASE("PRISM6, CELL_FACE, FACE_VTX, CELL, VTX, keep_link = 0") {
+      printf("PRISM6, CELL_FACE, FACE_VTX, CELL, VTX, keep_link = 0\n");
       keep_link_elmt_to_entity = PDM_FALSE;
     };
-    SUBCASE("PRISM6, CELL_FACE, FACE_VTX, VTX, CELL, keep_link = 1") {
-      printf("PRISM6, CELL_FACE, FACE_VTX, VTX, CELL, keep_link = 1\n");
+    SUBCASE("PRISM6, CELL_FACE, FACE_VTX, CELL, VTX, keep_link = 1") {
+      printf("PRISM6, CELL_FACE, FACE_VTX, CELL, VTX, keep_link = 1\n");
       keep_link_elmt_to_entity = PDM_TRUE;
     };
   }
@@ -1143,57 +1143,57 @@ MPI_TEST_CASE("pdm_part_mesh_nodal_to_part_mesh", 1) {
     };
   }
 
-  SUBCASE("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE, CELL") {
+  SUBCASE("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, CELL, EDGE, VTX") {
     elt_type = PDM_MESH_NODAL_HEXA8;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX ] = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_FACE]            = PDM_TRUE;
-    enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
-    enable_gnum        [PDM_MESH_ENTITY_EDGE]            = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_CELL]            = PDM_TRUE;
-    SUBCASE("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE, CELL, keep_link = 0") {
-      printf("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE, CELL, keep_link = 0\n");
+    enable_gnum        [PDM_MESH_ENTITY_EDGE]            = PDM_TRUE;
+    enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
+    SUBCASE("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, CELL, EDGE, VTX, keep_link = 0") {
+      printf("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, CELL, EDGE, VTX, keep_link = 0\n");
       keep_link_elmt_to_entity = PDM_FALSE;
     };
-    SUBCASE("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE, CELL, keep_link = 1") {
-      printf("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE, CELL, keep_link = 1\n");
+    SUBCASE("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, CELL, EDGE, VTX, keep_link = 1") {
+      printf("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, CELL, EDGE, VTX, keep_link = 1\n");
       keep_link_elmt_to_entity = PDM_TRUE;
     };
   }
 
-  SUBCASE("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE") {
+  SUBCASE("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, CELL, VTX") {
     elt_type = PDM_MESH_NODAL_HEXA8;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX ] = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_FACE]            = PDM_TRUE;
+    enable_gnum        [PDM_MESH_ENTITY_CELL]            = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
-    enable_gnum        [PDM_MESH_ENTITY_EDGE]            = PDM_TRUE;
-    SUBCASE("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE, keep_link = 0") {
-      printf("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE, keep_link = 0\n");
+    SUBCASE("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, CELL, VTX, keep_link = 0") {
+      printf("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, CELL, VTX, keep_link = 0\n");
       keep_link_elmt_to_entity = PDM_FALSE;
     };
-    SUBCASE("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE, keep_link = 1") {
-      printf("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, EDGE, keep_link = 1\n");
+    SUBCASE("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, CELL, VTX, keep_link = 1") {
+      printf("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, CELL, VTX, keep_link = 1\n");
       keep_link_elmt_to_entity = PDM_TRUE;
     };
   }
 
-  SUBCASE("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, CELL") {
+  SUBCASE("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, EDGE, VTX") {
     elt_type = PDM_MESH_NODAL_HEXA8;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX ] = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_FACE]            = PDM_TRUE;
+    enable_gnum        [PDM_MESH_ENTITY_EDGE]            = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
-    enable_gnum        [PDM_MESH_ENTITY_CELL]            = PDM_TRUE;
-    SUBCASE("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, CELL, keep_link = 0") {
-      printf("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, CELL, keep_link = 0\n");
+    SUBCASE("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, EDGE, VTX, keep_link = 0") {
+      printf("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, EDGE, VTX, keep_link = 0\n");
       keep_link_elmt_to_entity = PDM_FALSE;
     };
-    SUBCASE("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, CELL, keep_link = 1") {
-      printf("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, VTX, CELL, keep_link = 1\n");
+    SUBCASE("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, EDGE, VTX, keep_link = 1") {
+      printf("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, FACE, EDGE, VTX, keep_link = 1\n");
       keep_link_elmt_to_entity = PDM_TRUE;
     };
   }
@@ -1215,54 +1215,54 @@ MPI_TEST_CASE("pdm_part_mesh_nodal_to_part_mesh", 1) {
     };
   }
 
-  SUBCASE("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, EDGE, CELL") {
+  SUBCASE("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, CELL, EDGE, VTX") {
     elt_type = PDM_MESH_NODAL_HEXA8;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX ] = PDM_TRUE;
-    enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
-    enable_gnum        [PDM_MESH_ENTITY_EDGE]            = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_CELL]            = PDM_TRUE;
-    SUBCASE("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, EDGE, CELL, keep_link = 0") {
-      printf("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, EDGE, CELL, keep_link = 0\n");
+    enable_gnum        [PDM_MESH_ENTITY_EDGE]            = PDM_TRUE;
+    enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
+    SUBCASE("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, CELL, EDGE, VTX, keep_link = 0") {
+      printf("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, CELL, EDGE, VTX, keep_link = 0\n");
       keep_link_elmt_to_entity = PDM_FALSE;
     };
-    SUBCASE("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, EDGE, CELL, keep_link = 1") {
-      printf("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, EDGE, CELL, keep_link = 1\n");
+    SUBCASE("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, CELL, EDGE, VTX, keep_link = 1") {
+      printf("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, CELL, EDGE, VTX, keep_link = 1\n");
       keep_link_elmt_to_entity = PDM_TRUE;
     };
   }
 
-  SUBCASE("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, EDGE") {
+  SUBCASE("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, CELL, VTX") {
     elt_type = PDM_MESH_NODAL_HEXA8;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX ] = PDM_TRUE;
+    enable_gnum        [PDM_MESH_ENTITY_CELL]            = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
-    enable_gnum        [PDM_MESH_ENTITY_EDGE]            = PDM_TRUE;
-    SUBCASE("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, EDGE, keep_link = 0") {
-      printf("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, EDGE, keep_link = 0\n");
+    SUBCASE("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, CELL, VTX, keep_link = 0") {
+      printf("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, CELL, VTX, keep_link = 0\n");
       keep_link_elmt_to_entity = PDM_FALSE;
     };
-    SUBCASE("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, EDGE, keep_link = 1") {
-      printf("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, EDGE, keep_link = 1\n");
+    SUBCASE("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, CELL, VTX, keep_link = 1") {
+      printf("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, CELL, VTX, keep_link = 1\n");
       keep_link_elmt_to_entity = PDM_TRUE;
     };
   }
 
-  SUBCASE("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, CELL") {
+  SUBCASE("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, EDGE, VTX") {
     elt_type = PDM_MESH_NODAL_HEXA8;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX ] = PDM_TRUE;
+    enable_gnum        [PDM_MESH_ENTITY_EDGE]            = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
-    enable_gnum        [PDM_MESH_ENTITY_CELL]            = PDM_TRUE;
-    SUBCASE("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, CELL, keep_link = 0") {
-      printf("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, CELL, keep_link = 0\n");
+    SUBCASE("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, EDGE, VTX, keep_link = 0") {
+      printf("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, EDGE, VTX, keep_link = 0\n");
       keep_link_elmt_to_entity = PDM_FALSE;
     };
-    SUBCASE("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, CELL, keep_link = 1") {
-      printf("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, VTX, CELL, keep_link = 1\n");
+    SUBCASE("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, EDGE, VTX, keep_link = 1") {
+      printf("HEXA8, CELL_FACE, FACE_EDGE, EDGE_VTX, EDGE, VTX, keep_link = 1\n");
       keep_link_elmt_to_entity = PDM_TRUE;
     };
   }
@@ -1298,19 +1298,19 @@ MPI_TEST_CASE("pdm_part_mesh_nodal_to_part_mesh", 1) {
     };
   }
 
-  SUBCASE("HEXA8, CELL_FACE, FACE_VTX, FACE, VTX, CELL") {
+  SUBCASE("HEXA8, CELL_FACE, FACE_VTX, FACE, CELL, VTX") {
     elt_type = PDM_MESH_NODAL_HEXA8;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_FACE_VTX ] = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_FACE]            = PDM_TRUE;
-    enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_CELL]            = PDM_TRUE;
-    SUBCASE("HEXA8, CELL_FACE, FACE_VTX, FACE, VTX, CELL, keep_link = 0") {
-      printf("HEXA8, CELL_FACE, FACE_VTX, FACE, VTX, CELL, keep_link = 0\n");
+    enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
+    SUBCASE("HEXA8, CELL_FACE, FACE_VTX, FACE, CELL, VTX, keep_link = 0") {
+      printf("HEXA8, CELL_FACE, FACE_VTX, FACE, CELL, VTX, keep_link = 0\n");
       keep_link_elmt_to_entity = PDM_FALSE;
     };
-    SUBCASE("HEXA8, CELL_FACE, FACE_VTX, FACE, VTX, CELL, keep_link = 1") {
-      printf("HEXA8, CELL_FACE, FACE_VTX, FACE, VTX, CELL, keep_link = 1\n");
+    SUBCASE("HEXA8, CELL_FACE, FACE_VTX, FACE, CELL, VTX, keep_link = 1") {
+      printf("HEXA8, CELL_FACE, FACE_VTX, FACE, CELL, VTX, keep_link = 1\n");
       keep_link_elmt_to_entity = PDM_TRUE;
     };
   }
@@ -1331,18 +1331,18 @@ MPI_TEST_CASE("pdm_part_mesh_nodal_to_part_mesh", 1) {
     };
   }
 
-  SUBCASE("HEXA8, CELL_FACE, FACE_VTX, VTX, CELL") {
+  SUBCASE("HEXA8, CELL_FACE, FACE_VTX, CELL, VTX") {
     elt_type = PDM_MESH_NODAL_HEXA8;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE] = PDM_TRUE;
     enable_connectivity[PDM_CONNECTIVITY_TYPE_FACE_VTX ] = PDM_TRUE;
-    enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
     enable_gnum        [PDM_MESH_ENTITY_CELL]            = PDM_TRUE;
-    SUBCASE("HEXA8, CELL_FACE, FACE_VTX, VTX, CELL, keep_link = 0") {
-      printf("HEXA8, CELL_FACE, FACE_VTX, VTX, CELL, keep_link = 0\n");
+    enable_gnum        [PDM_MESH_ENTITY_VTX ]            = PDM_TRUE;
+    SUBCASE("HEXA8, CELL_FACE, FACE_VTX, CELL, VTX, keep_link = 0") {
+      printf("HEXA8, CELL_FACE, FACE_VTX, CELL, VTX, keep_link = 0\n");
       keep_link_elmt_to_entity = PDM_FALSE;
     };
-    SUBCASE("HEXA8, CELL_FACE, FACE_VTX, VTX, CELL, keep_link = 1") {
-      printf("HEXA8, CELL_FACE, FACE_VTX, VTX, CELL, keep_link = 1\n");
+    SUBCASE("HEXA8, CELL_FACE, FACE_VTX, CELL, VTX, keep_link = 1") {
+      printf("HEXA8, CELL_FACE, FACE_VTX, CELL, VTX, keep_link = 1\n");
       keep_link_elmt_to_entity = PDM_TRUE;
     };
   }
@@ -1451,3 +1451,125 @@ MPI_TEST_CASE("pdm_part_mesh_nodal_to_part_mesh", 1) {
 
   PDM_part_mesh_nodal_free(pmesh_nodal);
 }
+
+
+// The subcases were generated using the following Python code :
+
+/*
+count = 0
+
+dim_elt_types = {
+  2: [
+  "TRIA3",
+  "QUAD4",
+  "POLY_2D"
+  ],
+  3: [
+  "TETRA4",
+  "PYRAMID5",
+  "PRISM6",
+  "HEXA8"
+  ]
+}
+
+dim_entities = {
+  0: "VTX",
+  1: "EDGE",
+  2: "FACE",
+  3: "CELL"
+}
+
+dim_connectivities = {
+  3: [
+    ["CELL_FACE", "FACE_EDGE", "EDGE_VTX"],
+    ["CELL_FACE", "FACE_VTX"]
+  ],
+  2: [
+    ["FACE_EDGE", "EDGE_VTX"],
+    ["FACE_VTX"],
+  ]
+}
+
+
+def partitions(a, current=[], p=[]):
+  if len(a) == 0:
+    p.append(current)
+  else:
+    p = partitions(a[1:], current + [a[0]], p)
+    p = partitions(a[1:], current,          p)
+  return p
+
+pdm_bool = ["PDM_FALSE", "PDM_TRUE"]
+
+
+def gen_subcase(subcase, name=None):
+  global count
+  count += 1
+
+  if name is None:
+    name = str(count)
+
+  s = ''
+  s += '  SUBCASE("%s") {\n' % name
+
+  s += '    elt_type = PDM_MESH_NODAL_%s;\n' % subcase["elt_type"]
+  for c in subcase["connectivity"]:
+    s += '    enable_connectivity[PDM_CONNECTIVITY_TYPE_%s%s] = PDM_TRUE;\n' % (c, (9-len(c))*" ")
+  for e in subcase["gnum"]:
+    s += '    enable_gnum        [PDM_MESH_ENTITY_%s%s]            = PDM_TRUE;\n' % (e, (4-len(e))*" ")
+
+  for keep_link in range(2):
+    _name = '%s, keep_link = %d' % (name, keep_link)
+    s += '    SUBCASE("%s") {\n' % _name
+    s += '      printf("%s\\n");\n' % _name
+    s += '      keep_link_elmt_to_entity = %s;\n' % pdm_bool[keep_link]
+    s += '    };\n'
+
+    count += 1
+
+  s += '  }\n'
+
+  return s
+
+
+
+
+text = ""
+
+n_vtx_seg = 3
+
+for dim in dim_elt_types.keys():
+
+  for elt_type in dim_elt_types[dim]:
+
+    for connectivities in dim_connectivities[dim]:
+
+      # get list of available entities in current scenario (from built connectivities)
+      entities = list(set([e for c in connectivities for e in c.split("_")]))
+
+      # generate partitions of the set of available entities
+      p = partitions(entities, [], [])
+
+      print(entities, p)
+
+      for gnum in p:
+        # eliminate subcases that require gnums for some entities but not for vertices
+        if len(gnum) > 0 and "VTX" not in gnum:
+          continue
+
+        subcase = dict()
+        subcase["elt_type"]     = elt_type
+        subcase["connectivity"] = connectivities
+        subcase["gnum"]         = gnum
+
+        name = ", ".join([elt_type] + connectivities + gnum)
+
+        text += gen_subcase(subcase, name)
+        text += "\n"
+
+
+with open("pmn_to_pm_unit_test_subcases.cpp", "w") as out:
+  out.write(text)
+
+print(f"generated {count} subcases")
+*/

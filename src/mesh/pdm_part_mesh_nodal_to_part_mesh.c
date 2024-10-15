@@ -160,6 +160,13 @@ _check_inputs
                  entity_type);
     }
   }
+
+
+  // TMP: With current implementation, we cannot guarantee the following cases :
+  if (pmn_to_pm->build_connectivity[PDM_CONNECTIVITY_TYPE_CELL_EDGE] == PDM_TRUE &&
+      pmn_to_pm->build_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] == PDM_TRUE) {
+    PDM_error(__FILE__, __LINE__, 0, "cell->edge + face->edge not properly handled yet\n");
+  }
 }
 
 
@@ -449,8 +456,7 @@ _generate_downward_connectivity
   /* Second connectivity type : entity2->vtx (byproduct of decomposition) */
   PDM_connectivity_type_t connectivity_type2 = PDM_entity_pair_to_connectivity_type(entity_type2,
                                                                                     PDM_MESH_ENTITY_VTX);
-  pmn_to_pm->connectivity_done[connectivity_type ] = PDM_TRUE;
-  pmn_to_pm->connectivity_done[connectivity_type2] = PDM_TRUE;
+
 
   for (int i_part = 0; i_part < n_part; i_part++) {
     // Entity1->Entity2
@@ -461,14 +467,14 @@ _generate_downward_connectivity
                                    entity1_to_entity2_idx[i_part],
                                    PDM_OWNERSHIP_KEEP);
 
-    // Entity2
-    PDM_part_mesh_n_entity_set(pmesh,
-                               i_part,
-                               entity_type2,
-                               n_entity2[i_part]);
+    if (pmn_to_pm->connectivity_done[connectivity_type2] == PDM_FALSE) {
+      // Entity2
+      PDM_part_mesh_n_entity_set(pmesh,
+                                 i_part,
+                                 entity_type2,
+                                 n_entity2[i_part]);
 
-    // Entity2->Vtx
-    if (entity_type2 != PDM_MESH_ENTITY_VTX) {
+      // Entity2->Vtx
       PDM_part_mesh_connectivity_set(pmesh,
                                      i_part,
                                      connectivity_type2,
@@ -476,12 +482,19 @@ _generate_downward_connectivity
                                      entity2_to_vtx_idx[i_part],
                                      PDM_OWNERSHIP_KEEP);
     }
+    else {
+      PDM_free(entity2_to_vtx    [i_part]);
+      PDM_free(entity2_to_vtx_idx[i_part]);
+    }
   }
   PDM_free(n_entity2             );
   PDM_free(entity2_to_vtx_idx    );
   PDM_free(entity2_to_vtx        );
   PDM_free(entity1_to_entity2_idx);
   PDM_free(entity1_to_entity2    );
+
+  pmn_to_pm->connectivity_done[connectivity_type ] = PDM_TRUE;
+  pmn_to_pm->connectivity_done[connectivity_type2] = PDM_TRUE;
 
   if (use_fake_pmne) {
     PDM_part_mesh_nodal_elmts_free(pmne1);
@@ -682,7 +695,8 @@ _generate_gnum
     } // End if faces
 
     // Update downward connectivity
-    if (pmn_to_pm->build_connectivity[connectivity_type_down] == PDM_TRUE) {
+    if (pmn_to_pm->build_connectivity[connectivity_type_down] == PDM_TRUE &&
+        pmn_to_pm->connectivity_done [connectivity_type_down] == PDM_TRUE) {
       for (int i_entity2 = 0; i_entity2 < n_entity2; i_entity2++) {
         for (int idx_entity = entity2_to_entity_idx[i_entity2]; idx_entity < entity2_to_entity_idx[i_entity2+1]; idx_entity++) {
           int i_entity = PDM_ABS(entity2_to_entity[idx_entity]) - 1;
@@ -838,7 +852,7 @@ _generate_entities
       continue;
     }
 
-    // Connectivity and keep link elt->entity
+    // Connectivity
     _generate_downward_connectivity(pmn_to_pm, connectivity_type);
 
     // Global IDs of lower-dimension entity
@@ -939,6 +953,7 @@ _store_link_pmn_to_pm
   } // End loop on geom_kind
 }
 
+
 /**
  * \brief Get rid of unrequested data
  */
@@ -953,7 +968,9 @@ _clean_up
   int n_part = pmn_to_pm->n_part;
 
   for (PDM_connectivity_type_t connectivity_type = 0; connectivity_type < PDM_CONNECTIVITY_TYPE_MAX; connectivity_type++) {
-    if (pmn_to_pm->build_connectivity[connectivity_type] == PDM_FALSE) {
+
+    if (pmn_to_pm->build_connectivity[connectivity_type] == PDM_FALSE &&
+        pmn_to_pm->connectivity_done [connectivity_type] == PDM_TRUE) {
 
       for (int i_part = 0; i_part < n_part; i_part++) {
         int *entity1_to_entity2_idx = NULL;
