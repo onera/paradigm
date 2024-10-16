@@ -72,8 +72,8 @@ static const char *_isosurface_timer_step_name[ISO_TIMER_N_STEPS] = {
   "dist to part ", // ISO_DIST_TO_PART
   "initial field", // ISO_COMPUTE_INIT_FIELD
   "extraction   ", // ISO_EXTRACT
-  "extract field", // ISO_COMPUTE_EXTRACT_FIELD
   "ngonize      ", // ISO_NGONIZE
+  "extract field", // ISO_COMPUTE_EXTRACT_FIELD
   "contouring   ", // ISO_CONTOURING
   "part to dist ", // ISO_PART_TO_DIST
   "exch protocol", // ISO_BUILD_EXCH_PROTOCOL
@@ -609,17 +609,14 @@ _compute_iso_field
       if (isos->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL) {
         PDM_malloc(isos->extract_field, n_part, double *);
         for (int i_part = 0; i_part < n_part; i_part++) {
-          int *parent_entity_lnum = NULL;
-          int n_extract_vtx = PDM_extract_part_parent_lnum_get(isos->extrp,
-                                                               i_part,
-                                                               PDM_MESH_ENTITY_VTX,
-                                                              &parent_entity_lnum,
-                                                               PDM_OWNERSHIP_BAD_VALUE);
+          int n_extract_vtx = PDM_extract_part_n_entity_get(isos->extrp,
+                                                            i_part,
+                                                            PDM_MESH_ENTITY_VTX);
 
           PDM_malloc(isos->extract_field[i_part], n_extract_vtx, double);
 
           for (int i = 0; i < n_extract_vtx; i++) {
-            int i_parent = parent_entity_lnum[i];
+            int i_parent = isos->extract_vtx_lnum[i_part][i];
             isos->extract_field[i_part][i] = _iso->field[i_part][i_parent];
           }
         }
@@ -928,8 +925,11 @@ _convert_group_info_to_tag
 }
 
 
+/**
+ * \brief Extract nodal elements of interest
+ */
 static void
-_extract
+_extract_nodal
 (
  PDM_isosurface_t *isos,
  int               id_isosurface
@@ -937,194 +937,126 @@ _extract
 {
   _isosurface_t *_iso = &isos->isosurfaces[id_isosurface];
 
-  if (isos->entry_is_part == 0) {
-    // Block-distributed
-    assert(isos->dist_to_part_computed);
-    isos->extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-    isos->part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
-  }
+  isos->extrp = PDM_extract_part_create(isos->entry_mesh_dim,
+                                        isos->n_part,
+                                        isos->iso_n_part,
+                                        isos->extract_kind,
+                                        isos->part_method,
+                                        PDM_FALSE,
+                                        PDM_OWNERSHIP_KEEP,
+                                        isos->comm);
 
+  PDM_extract_part_part_nodal_set(isos->extrp, isos->pmesh_nodal);
 
-  if (_is_nodal(isos)) {
-    // Nodal
-    PDM_extract_part_t *extrp = PDM_extract_part_create(isos->entry_mesh_dim,
-                                                        isos->n_part,
-                                                        isos->iso_n_part,
-                                                        isos->extract_kind,
-                                                        isos->part_method,
-                                                        PDM_FALSE,
-                                                        PDM_OWNERSHIP_KEEP,
-                                                        isos->comm);
-    isos->extrp = extrp;
+  // Get principal pmne
+  PDM_geometry_kind_t geom_kind = PDM_part_mesh_nodal_principal_geom_kind_get(isos->pmesh_nodal);
 
-    PDM_extract_part_part_nodal_set(isos->extrp, isos->pmesh_nodal);
+  PDM_part_mesh_nodal_elmts_t *pmne = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(isos->pmesh_nodal, geom_kind);
 
-    PDM_geometry_kind_t geom_kind = PDM_part_mesh_nodal_principal_geom_kind_get(isos->pmesh_nodal);
+  int  n_section   = PDM_part_mesh_nodal_elmts_n_section_get  (pmne);
+  int *sections_id = PDM_part_mesh_nodal_elmts_sections_id_get(pmne);
 
-    PDM_part_mesh_nodal_elmts_t *pmne = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(isos->pmesh_nodal, geom_kind);
+  // Select elements of interest, ie. crossing at least one isovalue
+  int  *n_extract    = PDM_array_zeros_int(isos->n_part);
+  int **extract_lnum = NULL;
+  PDM_malloc(extract_lnum, isos->n_part, int *);
 
-    int  n_section   = PDM_part_mesh_nodal_elmts_n_section_get  (pmne);
-    int *sections_id = PDM_part_mesh_nodal_elmts_sections_id_get(pmne);
+  for (int i_part = 0; i_part < isos->n_part; i_part++) {
 
-    int  *n_extract    = PDM_array_zeros_int(isos->n_part);
-    int **extract_lnum = NULL;
-    PDM_malloc(extract_lnum, isos->n_part, int *);
+    int n_elt_tot = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, i_part);
+    PDM_malloc(extract_lnum[i_part], n_elt_tot, int);
 
-    for (int i_part = 0; i_part < isos->n_part; i_part++) {
+    int i_parent = -1;
+    for (int i_section = 0; i_section < n_section; i_section++) {
 
-      int n_elt_tot = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, i_part);
-      PDM_malloc(extract_lnum[i_part], n_elt_tot, int);
+      int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne,
+                                                              sections_id[i_section],
+                                                              i_part);
 
-      int i_parent = -1;
-      for (int i_section = 0; i_section < n_section; i_section++) {
+      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(pmne, sections_id[i_section]);
 
-        int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne,
-                                                                sections_id[i_section],
-                                                                i_part);
+      int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(pmne,
+                                                                 sections_id[i_section],
+                                                                 i_part,
+                                                                 PDM_OWNERSHIP_BAD_VALUE);
 
-        PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(pmne, sections_id[i_section]);
+      if (t_elt == PDM_MESH_NODAL_POLY_2D) {
+        /* Polygons */
+        int *connec_idx = NULL;
+        int *connec     = NULL;
+        PDM_part_mesh_nodal_elmts_section_poly2d_get(pmne,
+                                                     sections_id[i_section],
+                                                     i_part,
+                                                     &connec_idx,
+                                                     &connec,
+                                                     PDM_OWNERSHIP_BAD_VALUE);
 
-        int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(pmne,
-                                                                   sections_id[i_section],
-                                                                   i_part,
-                                                                   PDM_OWNERSHIP_BAD_VALUE);
+        for (int i_elt = 0; i_elt < n_elt; i_elt++) {
 
-        if (t_elt == PDM_MESH_NODAL_POLY_2D) {
-          /* Polygons */
-          int *connec_idx = NULL;
-          int *connec     = NULL;
-          PDM_part_mesh_nodal_elmts_section_poly2d_get(pmne,
-                                                       sections_id[i_section],
-                                                       i_part,
-                                                       &connec_idx,
-                                                       &connec,
-                                                       PDM_OWNERSHIP_BAD_VALUE);
+          int is_selected = 0;
+          int n_vtx_elt = connec_idx[i_elt+1] - connec_idx[i_elt];
+          int *_connec = connec + connec_idx[i_elt];
+          for (int i = 0; i < n_vtx_elt; i++) {
+            int i_vtx0 = _connec[ i             ] - 1;
+            int i_vtx1 = _connec[(i+1)%n_vtx_elt] - 1;
 
-          for (int i_elt = 0; i_elt < n_elt; i_elt++) {
-
-            int is_selected = 0;
-            int n_vtx_elt = connec_idx[i_elt+1] - connec_idx[i_elt];
-            int *_connec = connec + connec_idx[i_elt];
-            for (int i = 0; i < n_vtx_elt; i++) {
-              int i_vtx0 = _connec[ i             ] - 1;
-              int i_vtx1 = _connec[(i+1)%n_vtx_elt] - 1;
-
-              double val0 = _iso->field[i_part][i_vtx0];
-              double val1 = _iso->field[i_part][i_vtx1];
-              if (_isosurface_cross_any_level(val0, val1, _iso->n_isovalues, _iso->isovalues, isos->ISOSURFACE_EPS)) {
-                is_selected = 1;
-                break;
-              }
+            double val0 = _iso->field[i_part][i_vtx0];
+            double val1 = _iso->field[i_part][i_vtx1];
+            if (_isosurface_cross_any_level(val0, val1, _iso->n_isovalues, _iso->isovalues, isos->ISOSURFACE_EPS)) {
+              is_selected = 1;
+              break;
             }
-
-            if (is_selected) {
-              if (parent_num != NULL) {
-                i_parent = parent_num[i_elt];
-              }
-              else {
-                i_parent++;
-              }
-
-              extract_lnum[i_part][n_extract[i_part]++] = i_parent + 1;
-            }
-
-          } // End loop on elements
-
-        }
-
-        else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
-          /* Polyhedra */
-          int          _n_face              = 0;
-          PDM_g_num_t *_face_ln_to_gn       = NULL;
-          int         *face_vtx_idx         = NULL;
-          int         *face_vtx             = NULL;
-          PDM_g_num_t *_cell_ln_to_gn       = NULL;
-          int         *cell_face_idx        = NULL;
-          int         *cell_face            = NULL;
-          int         *_parent_num          = NULL;
-          PDM_g_num_t *_parent_entity_g_num = NULL;
-          PDM_part_mesh_nodal_elmts_section_poly3d_get(pmne,
-                                                       sections_id[i_section],
-                                                       i_part,
-                                                       &_n_face,
-                                                       &_face_ln_to_gn,
-                                                       &face_vtx_idx,
-                                                       &face_vtx,
-                                                       &_cell_ln_to_gn,
-                                                       &cell_face_idx,
-                                                       &cell_face,
-                                                       &_parent_num,
-                                                       &_parent_entity_g_num,
-                                                       PDM_OWNERSHIP_BAD_VALUE);
-
-          for (int i_cell = 0; i_cell < n_elt; i_cell++) {
-            int is_selected = 0;
-            for (int idx_face = cell_face_idx[i_cell]; idx_face < cell_face_idx[i_cell+1]; idx_face++) {
-              int i_face = PDM_ABS(cell_face[idx_face]) - 1;
-              int face_vtx_n = face_vtx_idx[i_face+1] - face_vtx_idx[i_face];
-              int *fv = face_vtx + face_vtx_idx[i_face];
-              for (int i = 0; i < face_vtx_n; i++) {
-                int i_vtx0 = fv[ i              ] - 1;
-                int i_vtx1 = fv[(i+1)%face_vtx_n] - 1;
-                double val0 = _iso->field[i_part][i_vtx0];
-                double val1 = _iso->field[i_part][i_vtx1];
-                if (_isosurface_cross_any_level(val0, val1, _iso->n_isovalues, _iso->isovalues, isos->ISOSURFACE_EPS)) {
-                  is_selected = 1;
-                  break;
-                }
-              }
-
-              if (is_selected) continue;
-
-            } // End of loop on faces of current cell
-
-            if (is_selected) {
-              extract_lnum[i_part][n_extract[i_part]++] = i_cell + 1;
-            }
-          } // End of loop on cells
-
-        }
-
-        else {
-          /* Standard elements */
-          int         *connec              = NULL;
-          PDM_g_num_t *g_num               = NULL;
-          int         *_parent_num         = NULL;
-          PDM_g_num_t *parent_entity_g_num = NULL;
-          int          order               = -1;
-          const char  *ho_ordering         = NULL;
-          PDM_part_mesh_nodal_elmts_section_std_ho_get(pmne,
-                                                       sections_id[i_section],
-                                                       i_part,
-                                                       &connec,
-                                                       &g_num,
-                                                       &_parent_num,
-                                                       &parent_entity_g_num,
-                                                       &order,
-                                                       &ho_ordering,
-                                                       PDM_OWNERSHIP_BAD_VALUE);
-
-          assert(order == 1);
-
-          const int *elt_edge_vtx = NULL;
-          int n_elt_edge = PDM_edge_vtx_per_elmt(t_elt,
-                                                 &elt_edge_vtx);
-          if (elt_edge_vtx == NULL) {
-            // Skip irrelevant sections
-            continue;
           }
 
-          int n_vtx_elt = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
+          if (is_selected) {
+            if (parent_num != NULL) {
+              i_parent = parent_num[i_elt];
+            }
+            else {
+              i_parent++;
+            }
 
-          for (int i_elt = 0; i_elt < n_elt; i_elt++) {
+            extract_lnum[i_part][n_extract[i_part]++] = i_parent + 1;
+          }
 
-            int is_selected = 0;
-            int *_connec = connec + n_vtx_elt*i_elt;
+        } // End loop on elements
 
-            for (int i = 0; i < n_elt_edge; i++) {
-              int i_vtx0 = _connec[elt_edge_vtx[2*i  ]] - 1;
-              int i_vtx1 = _connec[elt_edge_vtx[2*i+1]] - 1;
+      }
 
+      else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
+        /* Polyhedra */
+        int          _n_face              = 0;
+        PDM_g_num_t *_face_ln_to_gn       = NULL;
+        int         *face_vtx_idx         = NULL;
+        int         *face_vtx             = NULL;
+        PDM_g_num_t *_cell_ln_to_gn       = NULL;
+        int         *cell_face_idx        = NULL;
+        int         *cell_face            = NULL;
+        int         *_parent_num          = NULL;
+        PDM_g_num_t *_parent_entity_g_num = NULL;
+        PDM_part_mesh_nodal_elmts_section_poly3d_get(pmne,
+                                                     sections_id[i_section],
+                                                     i_part,
+                                                     &_n_face,
+                                                     &_face_ln_to_gn,
+                                                     &face_vtx_idx,
+                                                     &face_vtx,
+                                                     &_cell_ln_to_gn,
+                                                     &cell_face_idx,
+                                                     &cell_face,
+                                                     &_parent_num,
+                                                     &_parent_entity_g_num,
+                                                     PDM_OWNERSHIP_BAD_VALUE);
+
+        for (int i_cell = 0; i_cell < n_elt; i_cell++) {
+          int is_selected = 0;
+          for (int idx_face = cell_face_idx[i_cell]; idx_face < cell_face_idx[i_cell+1]; idx_face++) {
+            int i_face = PDM_ABS(cell_face[idx_face]) - 1;
+            int face_vtx_n = face_vtx_idx[i_face+1] - face_vtx_idx[i_face];
+            int *fv = face_vtx + face_vtx_idx[i_face];
+            for (int i = 0; i < face_vtx_n; i++) {
+              int i_vtx0 = fv[ i              ] - 1;
+              int i_vtx1 = fv[(i+1)%face_vtx_n] - 1;
               double val0 = _iso->field[i_part][i_vtx0];
               double val1 = _iso->field[i_part][i_vtx1];
               if (_isosurface_cross_any_level(val0, val1, _iso->n_isovalues, _iso->isovalues, isos->ISOSURFACE_EPS)) {
@@ -1133,132 +1065,200 @@ _extract
               }
             }
 
-            if (is_selected) {
-              if (parent_num != NULL) {
-                i_parent = parent_num[i_elt];
-              }
-              else {
-                i_parent++;
-              }
+            if (is_selected) continue;
 
-              extract_lnum[i_part][n_extract[i_part]++] = i_parent + 1;
-            }
+          } // End of loop on faces of current cell
 
-          } // End loop on elements
-        }
+          if (is_selected) {
+            extract_lnum[i_part][n_extract[i_part]++] = i_cell + 1;
+          }
+        } // End of loop on cells
 
-      } // End loop on sections
-
-      PDM_realloc(extract_lnum[i_part], extract_lnum[i_part], n_extract[i_part], int);
-
-      PDM_extract_part_selected_lnum_set(extrp,
-                                         i_part,
-                                         n_extract   [i_part],
-                                         extract_lnum[i_part]);
-
-    } // End loop on parts
-
-    PDM_extract_part_compute(extrp);
-
-    PDM_extract_part_part_mesh_nodal_get(extrp, &isos->extract_pmesh_nodal, PDM_OWNERSHIP_KEEP);
-
-    for (int i_part = 0; i_part < isos->n_part; i_part++) {
-      PDM_free(extract_lnum[i_part]);
-    }
-    PDM_free(n_extract   );
-    PDM_free(extract_lnum);
-
-  }
-
-  else {
-    // Ngon
-    PDM_extract_part_t *extrp = PDM_extract_part_create(isos->entry_mesh_dim,
-                                                        isos->n_part,
-                                                        isos->iso_n_part,
-                                                        isos->extract_kind,
-                                                        isos->part_method,
-                                                        PDM_FALSE,
-                                                        PDM_OWNERSHIP_KEEP,
-                                                        isos->comm);
-    isos->extrp = extrp;
-
-
-    int  *n_extract    = PDM_array_zeros_int(isos->n_part);
-    int **extract_lnum = NULL;
-    PDM_malloc(extract_lnum, isos->n_part, int *);
-
-    int          *pn_cell        = NULL;
-    int          *pn_face        = NULL;
-    int          *pn_edge        = NULL;
-    int          *pn_vtx         = NULL;
-    int         **pcell_face_idx = NULL;
-    int         **pcell_face     = NULL;
-    int         **pface_edge_idx = NULL;
-    int         **pface_edge     = NULL;
-    int         **pface_vtx_idx  = NULL;
-    int         **pface_vtx      = NULL;
-    int         **pedge_vtx      = NULL;
-    double      **pvtx_coord     = NULL;
-    PDM_g_num_t **pcell_ln_to_gn = NULL;
-    PDM_g_num_t **pface_ln_to_gn = NULL;
-    PDM_g_num_t **pedge_ln_to_gn = NULL;
-    PDM_g_num_t **pvtx_ln_to_gn  = NULL;
-
-    pn_cell        = isos->n_cell;
-    pn_face        = isos->n_face;
-    pn_edge        = isos->n_edge;
-    pn_vtx         = isos->n_vtx;
-    pcell_face_idx = isos->cell_face_idx;
-    pcell_face     = isos->cell_face;
-    pface_edge_idx = isos->face_edge_idx;
-    pface_edge     = isos->face_edge;
-    pface_vtx_idx  = isos->face_vtx_idx;
-    pface_vtx      = isos->face_vtx;
-    pedge_vtx      = isos->edge_vtx;
-    pvtx_coord     = isos->vtx_coord;
-    pcell_ln_to_gn = isos->cell_gnum;
-    pface_ln_to_gn = isos->face_gnum;
-    pedge_ln_to_gn = isos->edge_gnum;
-    pvtx_ln_to_gn  = isos->vtx_gnum;
-
-
-    if (isos->entry_mesh_dim == 2) {
-      // 2D
-      for (int i_part = 0; i_part < isos->n_part; i_part++) {
-        PDM_malloc(extract_lnum[i_part], pn_face[i_part], int);
-      }
-
-      if (isos->we_have_edges) {
-        // face->vtx
-        for (int i_part = 0; i_part < isos->n_part; i_part++) {
-          for (int i_face = 0; i_face < pn_face[i_part]; i_face++) {
-            int is_selected = 0;
-            for (int idx_edge = pface_edge_idx[i_part][i_face]; idx_edge < pface_edge_idx[i_part][i_face+1]; idx_edge++) {
-              int i_edge = PDM_ABS(pface_edge[i_part][idx_edge]) - 1;
-              int i_vtx0 = pedge_vtx[i_part][2*i_edge  ] - 1;
-              int i_vtx1 = pedge_vtx[i_part][2*i_edge+1] - 1;
-              double val0 = _iso->field[i_part][i_vtx0];
-              double val1 = _iso->field[i_part][i_vtx1];
-              if (_isosurface_cross_any_level_ngon(val0, val1, _iso->n_isovalues, _iso->isovalues, isos->ISOSURFACE_EPS)) {
-                is_selected = 1;
-                break;
-              }
-            } // End of loop on edges of current face
-
-            if (is_selected) {
-              extract_lnum[i_part][n_extract[i_part]++] = i_face + 1;
-            }
-          } // End of loop on faces
-        } // End of loop on parts
       }
 
       else {
-        // face->edge->vtx
-        for (int i_part = 0; i_part < isos->n_part; i_part++) {
-          for (int i_face = 0; i_face < pn_face[i_part]; i_face++) {
-            int is_selected = 0;
-            int face_vtx_n = pface_vtx_idx[i_part][i_face+1] - pface_vtx_idx[i_part][i_face];
-            int *fv = pface_vtx[i_part] + pface_vtx_idx[i_part][i_face];
+        /* Standard elements */
+        int         *connec              = NULL;
+        PDM_g_num_t *g_num               = NULL;
+        int         *_parent_num         = NULL;
+        PDM_g_num_t *parent_entity_g_num = NULL;
+        int          order               = -1;
+        const char  *ho_ordering         = NULL;
+        PDM_part_mesh_nodal_elmts_section_std_ho_get(pmne,
+                                                     sections_id[i_section],
+                                                     i_part,
+                                                     &connec,
+                                                     &g_num,
+                                                     &_parent_num,
+                                                     &parent_entity_g_num,
+                                                     &order,
+                                                     &ho_ordering,
+                                                     PDM_OWNERSHIP_BAD_VALUE);
+
+        assert(order == 1);
+
+        const int *elt_edge_vtx = NULL;
+        int n_elt_edge = PDM_edge_vtx_per_elmt(t_elt,
+                                               &elt_edge_vtx);
+        if (elt_edge_vtx == NULL) {
+          // Skip irrelevant sections
+          continue;
+        }
+
+        int n_vtx_elt = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
+
+        for (int i_elt = 0; i_elt < n_elt; i_elt++) {
+
+          int is_selected = 0;
+          int *_connec = connec + n_vtx_elt*i_elt;
+
+          for (int i = 0; i < n_elt_edge; i++) {
+            int i_vtx0 = _connec[elt_edge_vtx[2*i  ]] - 1;
+            int i_vtx1 = _connec[elt_edge_vtx[2*i+1]] - 1;
+
+            double val0 = _iso->field[i_part][i_vtx0];
+            double val1 = _iso->field[i_part][i_vtx1];
+            if (_isosurface_cross_any_level(val0, val1, _iso->n_isovalues, _iso->isovalues, isos->ISOSURFACE_EPS)) {
+              is_selected = 1;
+              break;
+            }
+          }
+
+          if (is_selected) {
+            if (parent_num != NULL) {
+              i_parent = parent_num[i_elt];
+            }
+            else {
+              i_parent++;
+            }
+
+            extract_lnum[i_part][n_extract[i_part]++] = i_parent + 1;
+          }
+
+        } // End loop on elements
+      }
+
+    } // End loop on sections
+
+    PDM_realloc(extract_lnum[i_part], extract_lnum[i_part], n_extract[i_part], int);
+
+    PDM_extract_part_selected_lnum_set(isos->extrp,
+                                       i_part,
+                                       n_extract   [i_part],
+                                       extract_lnum[i_part]);
+
+  } // End loop on parts
+
+
+  PDM_extract_part_compute(isos->extrp);
+
+  PDM_extract_part_part_mesh_nodal_get(isos->extrp, &isos->extract_pmesh_nodal, PDM_OWNERSHIP_KEEP);
+
+  for (int i_part = 0; i_part < isos->n_part; i_part++) {
+    PDM_free(extract_lnum[i_part]);
+  }
+  PDM_free(n_extract   );
+  PDM_free(extract_lnum);
+}
+
+
+/**
+ * \brief Extract mesh entities of interest
+ */
+static void
+_extract_ngon
+(
+ PDM_isosurface_t *isos,
+ int               id_isosurface
+)
+{
+  _isosurface_t *_iso = &isos->isosurfaces[id_isosurface];
+
+  isos->extrp = PDM_extract_part_create(isos->entry_mesh_dim,
+                                        isos->n_part,
+                                        isos->iso_n_part,
+                                        isos->extract_kind,
+                                        isos->part_method,
+                                        PDM_FALSE,
+                                        PDM_OWNERSHIP_KEEP,
+                                        isos->comm);
+
+  // Select entities of interest, ie. crossing at least one isovalue
+  int  *n_extract    = PDM_array_zeros_int(isos->n_part);
+  int **extract_lnum = NULL;
+  PDM_malloc(extract_lnum, isos->n_part, int *);
+
+  if (isos->entry_mesh_dim == 2) {
+    // 2D
+    for (int i_part = 0; i_part < isos->n_part; i_part++) {
+      PDM_malloc(extract_lnum[i_part], isos->n_face[i_part], int);
+    }
+
+    if (isos->we_have_edges) {
+      // face->vtx
+      for (int i_part = 0; i_part < isos->n_part; i_part++) {
+        for (int i_face = 0; i_face < isos->n_face[i_part]; i_face++) {
+          int is_selected = 0;
+          for (int idx_edge = isos->face_edge_idx[i_part][i_face]; idx_edge < isos->face_edge_idx[i_part][i_face+1]; idx_edge++) {
+            int i_edge = PDM_ABS(isos->face_edge[i_part][idx_edge]) - 1;
+            int i_vtx0 = isos->edge_vtx[i_part][2*i_edge  ] - 1;
+            int i_vtx1 = isos->edge_vtx[i_part][2*i_edge+1] - 1;
+            double val0 = _iso->field[i_part][i_vtx0];
+            double val1 = _iso->field[i_part][i_vtx1];
+            if (_isosurface_cross_any_level_ngon(val0, val1, _iso->n_isovalues, _iso->isovalues, isos->ISOSURFACE_EPS)) {
+              is_selected = 1;
+              break;
+            }
+          } // End of loop on edges of current face
+
+          if (is_selected) {
+            extract_lnum[i_part][n_extract[i_part]++] = i_face + 1;
+          }
+        } // End of loop on faces
+      } // End of loop on parts
+    }
+
+    else {
+      // face->edge->vtx
+      for (int i_part = 0; i_part < isos->n_part; i_part++) {
+        for (int i_face = 0; i_face < isos->n_face[i_part]; i_face++) {
+          int is_selected = 0;
+          int face_vtx_n = isos->face_vtx_idx[i_part][i_face+1] - isos->face_vtx_idx[i_part][i_face];
+          int *fv = isos->face_vtx[i_part] + isos->face_vtx_idx[i_part][i_face];
+          for (int i = 0; i < face_vtx_n; i++) {
+            int i_vtx0 = fv[ i              ] - 1;
+            int i_vtx1 = fv[(i+1)%face_vtx_n] - 1;
+            double val0 = _iso->field[i_part][i_vtx0];
+            double val1 = _iso->field[i_part][i_vtx1];
+            if (_isosurface_cross_any_level_ngon(val0, val1, _iso->n_isovalues, _iso->isovalues, isos->ISOSURFACE_EPS)) {
+              is_selected = 1;
+              break;
+            }
+          }
+
+          if (is_selected) {
+            extract_lnum[i_part][n_extract[i_part]++] = i_face + 1;
+          }
+        } // End of loop on faces
+      } // End of loop on parts
+    }
+  } // End 2D
+
+  else {
+    // 3D
+    assert(isos->entry_mesh_dim == 3);
+    for (int i_part = 0; i_part < isos->n_part; i_part++) {
+      PDM_malloc(extract_lnum[i_part], isos->n_cell[i_part], int);
+    }
+    if (isos->we_have_edges == 0) {
+      // cell->face->vtx
+      for (int i_part = 0; i_part < isos->n_part; i_part++) {
+        for (int i_cell = 0; i_cell < isos->n_cell[i_part]; i_cell++) {
+          int is_selected = 0;
+          for (int idx_face = isos->cell_face_idx[i_part][i_cell]; idx_face < isos->cell_face_idx[i_part][i_cell+1]; idx_face++) {
+            int i_face = PDM_ABS(isos->cell_face[i_part][idx_face]) - 1;
+            int face_vtx_n = isos->face_vtx_idx[i_part][i_face+1] - isos->face_vtx_idx[i_part][i_face];
+            int *fv = isos->face_vtx[i_part] + isos->face_vtx_idx[i_part][i_face];
             for (int i = 0; i < face_vtx_n; i++) {
               int i_vtx0 = fv[ i              ] - 1;
               int i_vtx1 = fv[(i+1)%face_vtx_n] - 1;
@@ -1270,141 +1270,161 @@ _extract
               }
             }
 
-            if (is_selected) {
-              extract_lnum[i_part][n_extract[i_part]++] = i_face + 1;
-            }
-          } // End of loop on faces
-        } // End of loop on parts
-      }
-    } // End 2D
+            if (is_selected) continue;
+
+          } // End of loop on faces of current cell
+
+          if (is_selected) {
+            extract_lnum[i_part][n_extract[i_part]++] = i_cell + 1;
+          }
+        } // End of loop on cells
+      } // End of loop on parts
+    }
 
     else {
-      // 3D
-      assert(isos->entry_mesh_dim == 3);
+      // cell->face->edge->vtx
       for (int i_part = 0; i_part < isos->n_part; i_part++) {
-        PDM_malloc(extract_lnum[i_part], pn_cell[i_part], int);
-      }
-      if (isos->we_have_edges == 0) {
-        // cell->face->vtx
-        for (int i_part = 0; i_part < isos->n_part; i_part++) {
-          for (int i_cell = 0; i_cell < pn_cell[i_part]; i_cell++) {
-            int is_selected = 0;
-            for (int idx_face = pcell_face_idx[i_part][i_cell]; idx_face < pcell_face_idx[i_part][i_cell+1]; idx_face++) {
-              int i_face = PDM_ABS(pcell_face[i_part][idx_face]) - 1;
-              int face_vtx_n = pface_vtx_idx[i_part][i_face+1] - pface_vtx_idx[i_part][i_face];
-              int *fv = pface_vtx[i_part] + pface_vtx_idx[i_part][i_face];
-              for (int i = 0; i < face_vtx_n; i++) {
-                int i_vtx0 = fv[ i              ] - 1;
-                int i_vtx1 = fv[(i+1)%face_vtx_n] - 1;
-                double val0 = _iso->field[i_part][i_vtx0];
-                double val1 = _iso->field[i_part][i_vtx1];
-                if (_isosurface_cross_any_level_ngon(val0, val1, _iso->n_isovalues, _iso->isovalues, isos->ISOSURFACE_EPS)) {
-                  is_selected = 1;
-                  break;
-                }
+        for (int i_cell = 0; i_cell < isos->n_cell[i_part]; i_cell++) {
+          int is_selected = 0;
+          for (int idx_face = isos->cell_face_idx[i_part][i_cell]; idx_face < isos->cell_face_idx[i_part][i_cell+1]; idx_face++) {
+            int i_face = PDM_ABS(isos->cell_face[i_part][idx_face]) - 1;
+            for (int idx_edge = isos->face_edge_idx[i_part][i_face]; idx_edge < isos->face_edge_idx[i_part][i_face+1]; idx_edge++) {
+              int i_edge = PDM_ABS(isos->face_edge[i_part][idx_edge]) - 1;
+              int i_vtx0 = isos->edge_vtx[i_part][2*i_edge  ] - 1;
+              int i_vtx1 = isos->edge_vtx[i_part][2*i_edge+1] - 1;
+              double val0 = _iso->field[i_part][i_vtx0];
+              double val1 = _iso->field[i_part][i_vtx1];
+              if (_isosurface_cross_any_level_ngon(val0, val1, _iso->n_isovalues, _iso->isovalues, isos->ISOSURFACE_EPS)) {
+                is_selected = 1;
+                break;
               }
+            } // End of loop on edges of current face
 
-              if (is_selected) continue;
+            if (is_selected) continue;
+          } // End of loop on faces of current cell
 
-            } // End of loop on faces of current cell
-
-            if (is_selected) {
-              extract_lnum[i_part][n_extract[i_part]++] = i_cell + 1;
-            }
-          } // End of loop on cells
-        } // End of loop on parts
-      }
-
-      else {
-        // cell->face->edge->vtx
-        for (int i_part = 0; i_part < isos->n_part; i_part++) {
-          for (int i_cell = 0; i_cell < pn_cell[i_part]; i_cell++) {
-            int is_selected = 0;
-            for (int idx_face = pcell_face_idx[i_part][i_cell]; idx_face < pcell_face_idx[i_part][i_cell+1]; idx_face++) {
-              int i_face = PDM_ABS(pcell_face[i_part][idx_face]) - 1;
-              for (int idx_edge = pface_edge_idx[i_part][i_face]; idx_edge < pface_edge_idx[i_part][i_face+1]; idx_edge++) {
-                int i_edge = PDM_ABS(pface_edge[i_part][idx_edge]) - 1;
-                int i_vtx0 = pedge_vtx[i_part][2*i_edge  ] - 1;
-                int i_vtx1 = pedge_vtx[i_part][2*i_edge+1] - 1;
-                double val0 = _iso->field[i_part][i_vtx0];
-                double val1 = _iso->field[i_part][i_vtx1];
-                if (_isosurface_cross_any_level_ngon(val0, val1, _iso->n_isovalues, _iso->isovalues, isos->ISOSURFACE_EPS)) {
-                  is_selected = 1;
-                  break;
-                }
-              } // End of loop on edges of current face
-
-              if (is_selected) continue;
-            } // End of loop on faces of current cell
-
-            if (is_selected) {
-              extract_lnum[i_part][n_extract[i_part]++] = i_cell + 1;
-            }
-          } // End of loop on cells
-        } // End of loop on parts
-      }
-
-    } // End 3D
-
-    for (int i_part = 0; i_part < isos->n_part; i_part++) {
-      PDM_realloc(extract_lnum[i_part], extract_lnum[i_part], n_extract[i_part], int);
+          if (is_selected) {
+            extract_lnum[i_part][n_extract[i_part]++] = i_cell + 1;
+          }
+        } // End of loop on cells
+      } // End of loop on parts
     }
+
+  } // End 3D
+
+  for (int i_part = 0; i_part < isos->n_part; i_part++) {
+    PDM_realloc(extract_lnum[i_part], extract_lnum[i_part], n_extract[i_part], int);
+  }
+
+  if (isos->entry_mesh_dim==3) {
+    PDM_extract_part_n_group_set(isos->extrp, PDM_BOUND_TYPE_FACE, isos->n_group_face);
+  }
+
+  for (int i_part = 0; i_part < isos->n_part; i_part++) {
+    PDM_extract_part_part_set(isos->extrp,
+                              i_part,
+                              isos->n_cell       [i_part],
+                              isos->n_face       [i_part],
+                              isos->n_edge       [i_part],
+                              isos->n_vtx        [i_part],
+                              isos->cell_face_idx[i_part],
+                              isos->cell_face    [i_part],
+                              isos->face_edge_idx[i_part],
+                              isos->face_edge    [i_part],
+                              isos->edge_vtx     [i_part],
+                              isos->face_vtx_idx [i_part],
+                              isos->face_vtx     [i_part],
+                              isos->cell_gnum    [i_part],
+                              isos->face_gnum    [i_part],
+                              isos->edge_gnum    [i_part],
+                              isos->vtx_gnum     [i_part],
+                              isos->vtx_coord    [i_part]);
+
+    PDM_extract_part_selected_lnum_set(isos->extrp,
+                                       i_part,
+                                       n_extract   [i_part],
+                                       extract_lnum[i_part]);
 
     if (isos->entry_mesh_dim==3) {
-      PDM_extract_part_n_group_set(extrp, PDM_BOUND_TYPE_FACE, isos->n_group_face);
-    }
-
-    for (int i_part = 0; i_part < isos->n_part; i_part++) {
-      PDM_extract_part_part_set(extrp,
-                                i_part,
-                                pn_cell       [i_part],
-                                pn_face       [i_part],
-                                pn_edge       [i_part],
-                                pn_vtx        [i_part],
-                                pcell_face_idx[i_part],
-                                pcell_face    [i_part],
-                                pface_edge_idx[i_part],
-                                pface_edge    [i_part],
-                                pedge_vtx     [i_part],
-                                pface_vtx_idx [i_part],
-                                pface_vtx     [i_part],
-                                pcell_ln_to_gn[i_part],
-                                pface_ln_to_gn[i_part],
-                                pedge_ln_to_gn[i_part],
-                                pvtx_ln_to_gn [i_part],
-                                pvtx_coord    [i_part]);
-
-      PDM_extract_part_selected_lnum_set(extrp,
-                                         i_part,
-                                         n_extract   [i_part],
-                                         extract_lnum[i_part]);
-
-      if (isos->entry_mesh_dim==3) {
-        for (int i_group = 0; i_group < isos->n_group_face; i_group++) {
-          PDM_extract_part_part_group_set(extrp,
-                                          i_part,
-                                          i_group,
-                                          PDM_BOUND_TYPE_FACE,
-                                          isos->group_face_idx[i_part][i_group+1] - isos->group_face_idx[i_part][i_group],
-                                          isos->group_face     [i_part] + isos->group_face_idx[i_part][i_group],
-                                          isos->group_face_gnum[i_part] + isos->group_face_idx[i_part][i_group]);
-        }
+      for (int i_group = 0; i_group < isos->n_group_face; i_group++) {
+        PDM_extract_part_part_group_set(isos->extrp,
+                                        i_part,
+                                        i_group,
+                                        PDM_BOUND_TYPE_FACE,
+                                        isos->group_face_idx[i_part][i_group+1] - isos->group_face_idx[i_part][i_group],
+                                        isos->group_face     [i_part] + isos->group_face_idx[i_part][i_group],
+                                        isos->group_face_gnum[i_part] + isos->group_face_idx[i_part][i_group]);
       }
     }
+  }
 
-    PDM_extract_part_compute(extrp);
+  PDM_extract_part_compute(isos->extrp);
 
+  // Retrieve extracted mesh and store it as a PDM_part_mesh_t instance
+  PDM_extract_part_part_mesh_get(isos->extrp,
+                                 &isos->extract_pmesh,
+                                 PDM_FALSE);
+
+  if (isos->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL) {
+    if (isos->entry_mesh_dim==3) {
+      isos->extract_cell_lnum = extract_lnum;
+      PDM_malloc(isos->extract_face_lnum, isos->iso_n_part, int *);
+      for (int i_part = 0; i_part < isos->iso_n_part; i_part++) {
+        PDM_extract_part_parent_lnum_get(isos->extrp,
+                                         i_part,
+                                         PDM_MESH_ENTITY_FACE,
+                                         &isos->extract_face_lnum[i_part],
+                                         PDM_OWNERSHIP_USER);
+      }
+    }
+    else {
+      isos->extract_face_lnum = extract_lnum;
+    }
+  }
+  else {
     for (int i_part = 0; i_part < isos->n_part; i_part++) {
       PDM_free(extract_lnum[i_part]);
     }
-    PDM_free(n_extract   );
     PDM_free(extract_lnum);
+  }
+  PDM_free(n_extract);
+}
 
-    // Retrieve extracted mesh and store it as a PDM_part_mesh_t instance
-    PDM_extract_part_part_mesh_get(extrp,
-                                   &isos->extract_pmesh,
-                                   PDM_FALSE);
-  } // End Ngon
+
+/**
+ * \brief Extract mesh regions that contain the isosurface
+ */
+static void
+_extract
+(
+ PDM_isosurface_t *isos,
+ int               id_isosurface
+)
+{
+  if (isos->entry_is_part == 0) {
+    // Block-distributed
+    assert(isos->dist_to_part_computed);
+    isos->extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+    isos->part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
+  }
+
+  if (_is_nodal(isos)) {
+    _extract_nodal(isos, id_isosurface);
+  }
+  else {
+    _extract_ngon(isos, id_isosurface);
+  }
+
+  if (isos->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL) {
+    PDM_malloc(isos->extract_vtx_lnum, isos->iso_n_part, int *);
+    for (int i_part = 0; i_part < isos->iso_n_part; i_part++) {
+      PDM_extract_part_parent_lnum_get(isos->extrp,
+                                       i_part,
+                                       PDM_MESH_ENTITY_VTX,
+                                       &isos->extract_vtx_lnum[i_part],
+                                       PDM_OWNERSHIP_USER);
+    }
+  }
 }
 
 
@@ -1447,50 +1467,39 @@ _ngonize
   // We assume all ranks have the same sections, so no need for Allreduce
 
   if (all_simplices) {
-    if (isos->extract_n_vtx==NULL) {
-      PDM_malloc(isos->extract_n_vtx    , isos->iso_n_part, int          );
-      PDM_malloc(isos->extract_vtx_coord, isos->iso_n_part, double      *);
-      PDM_malloc(isos->extract_vtx_gnum , isos->iso_n_part, PDM_g_num_t *);
-      PDM_malloc(isos->extract_vtx_lnum , isos->iso_n_part, int         *);
+    PDM_malloc(isos->extract_n_vtx    , isos->iso_n_part, int          );
+    PDM_malloc(isos->extract_vtx_coord, isos->iso_n_part, double      *);
+    PDM_malloc(isos->extract_vtx_gnum , isos->iso_n_part, PDM_g_num_t *);
 
-      PDM_malloc(isos->extract_n_tri      , isos->iso_n_part, int          );
-      PDM_malloc(isos->extract_tri_vtx    , isos->iso_n_part, int         *);
-      PDM_malloc(isos->extract_tri_gnum   , isos->iso_n_part, PDM_g_num_t *);
-      PDM_malloc(isos->extract_tri_lnum   , isos->iso_n_part, int         *);
-      PDM_malloc(isos->extract_tri_n_group, isos->iso_n_part, int          );
-      PDM_malloc(isos->extract_tri_tag    , isos->iso_n_part, int         *);
+    PDM_malloc(isos->extract_n_tri      , isos->iso_n_part, int          );
+    PDM_malloc(isos->extract_tri_vtx    , isos->iso_n_part, int         *);
+    PDM_malloc(isos->extract_tri_gnum   , isos->iso_n_part, PDM_g_num_t *);
+    PDM_malloc(isos->extract_face_lnum  , isos->iso_n_part, int         *);
+    PDM_malloc(isos->extract_tri_n_group, isos->iso_n_part, int          );
+    PDM_malloc(isos->extract_tri_tag    , isos->iso_n_part, int         *);
 
-      PDM_malloc(isos->extract_n_tetra   , isos->iso_n_part, int          );
-      PDM_malloc(isos->extract_tetra_vtx , isos->iso_n_part, int         *);
-      PDM_malloc(isos->extract_tetra_gnum, isos->iso_n_part, PDM_g_num_t *);
-      PDM_malloc(isos->extract_tetra_lnum, isos->iso_n_part, int         *);
-    }
+    PDM_malloc(isos->extract_n_tetra   , isos->iso_n_part, int          );
+    PDM_malloc(isos->extract_tetra_vtx , isos->iso_n_part, int         *);
+    PDM_malloc(isos->extract_tetra_gnum, isos->iso_n_part, PDM_g_num_t *);
+    PDM_malloc(isos->extract_cell_lnum,  isos->iso_n_part, int         *);
 
     for (int i_part = 0; i_part < isos->iso_n_part; i_part++) {
 
       isos->extract_n_vtx    [i_part] = PDM_part_mesh_nodal_n_vtx_get    (extract_pmn, i_part);
       isos->extract_vtx_coord[i_part] = PDM_part_mesh_nodal_vtx_coord_get(extract_pmn, i_part);
       isos->extract_vtx_gnum [i_part] = PDM_part_mesh_nodal_vtx_g_num_get(extract_pmn, i_part);
-      isos->extract_vtx_lnum [i_part] = NULL;
-      if (isos->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL) {
-        PDM_extract_part_parent_lnum_get(isos->extrp,
-                                         i_part,
-                                         PDM_MESH_ENTITY_VTX,
-                                         &isos->extract_vtx_lnum[i_part],
-                                         PDM_OWNERSHIP_USER);
-      }
 
       // We assume there is at most one section of TETRA and TRIA
       isos->extract_n_tri      [i_part] = 0;
       isos->extract_n_tetra    [i_part] = 0;
       isos->extract_tri_vtx    [i_part] = NULL;
       isos->extract_tri_gnum   [i_part] = NULL;
-      isos->extract_tri_lnum   [i_part] = NULL;
+      isos->extract_face_lnum  [i_part] = NULL;
       isos->extract_tri_n_group[i_part] = 0;
       isos->extract_tri_tag    [i_part] = NULL;
       isos->extract_tetra_vtx  [i_part] = NULL;
       isos->extract_tetra_gnum [i_part] = NULL;
-      isos->extract_tetra_lnum [i_part] = NULL;
+      isos->extract_cell_lnum  [i_part] = NULL;
       for (int i_section = 0; i_section < n_section; i_section++) {
         PDM_Mesh_nodal_elt_t elt_type = PDM_part_mesh_nodal_section_elt_type_get(extract_pmn,
                                                                                  i_section);
@@ -1512,15 +1521,15 @@ _ngonize
                                             PDM_OWNERSHIP_BAD_VALUE);
 
         if (elt_type == PDM_MESH_NODAL_TRIA3) {
-          isos->extract_n_tri   [i_part] = n_elt;
-          isos->extract_tri_vtx [i_part] = connec;
-          isos->extract_tri_gnum[i_part] = parent_entity_g_num;
-          isos->extract_tri_lnum[i_part] = parent_num;
+          isos->extract_n_tri    [i_part] = n_elt;
+          isos->extract_tri_vtx  [i_part] = connec;
+          isos->extract_tri_gnum [i_part] = parent_entity_g_num;
+          isos->extract_face_lnum[i_part] = parent_num;
           if (isos->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL) {
             PDM_extract_part_parent_lnum_get(isos->extrp,
                                              i_part,
                                              PDM_MESH_ENTITY_FACE,
-                                             &isos->extract_tri_lnum[i_part],
+                                             &isos->extract_face_lnum[i_part],
                                              PDM_OWNERSHIP_USER);
           }
           isos->extract_tri_n_group[i_part] = _convert_group_info_to_tag(extract_pmn, i_part, n_elt,
@@ -1532,12 +1541,12 @@ _ngonize
           isos->extract_n_tetra   [i_part] = n_elt;
           isos->extract_tetra_vtx [i_part] = connec;
           isos->extract_tetra_gnum[i_part] = parent_entity_g_num;
-          isos->extract_tetra_lnum[i_part] = parent_num;
+          isos->extract_cell_lnum [i_part] = parent_num;
           if (isos->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL) {
             PDM_extract_part_parent_lnum_get(isos->extrp,
                                              i_part,
                                              PDM_MESH_ENTITY_CELL,
-                                             &isos->extract_tetra_lnum[i_part],
+                                             &isos->extract_cell_lnum[i_part],
                                              PDM_OWNERSHIP_USER);
           }
         }
@@ -1567,31 +1576,28 @@ _triangulate
 {
   assert(isos->extrp != NULL);
 
-  if (isos->extract_n_vtx==NULL) {
-    PDM_malloc(isos->extract_n_vtx    , isos->iso_n_part, int          );
-    PDM_malloc(isos->extract_vtx_coord, isos->iso_n_part, double      *);
-    PDM_malloc(isos->extract_vtx_gnum , isos->iso_n_part, PDM_g_num_t *);
-    PDM_malloc(isos->extract_vtx_lnum , isos->iso_n_part, int         *);
+  PDM_malloc(isos->extract_n_vtx    , isos->iso_n_part, int          );
+  PDM_malloc(isos->extract_vtx_coord, isos->iso_n_part, double      *);
+  PDM_malloc(isos->extract_vtx_gnum , isos->iso_n_part, PDM_g_num_t *);
 
-    PDM_malloc(isos->extract_n_tri      , isos->iso_n_part, int          );
-    PDM_malloc(isos->extract_tri_vtx    , isos->iso_n_part, int         *);
-    PDM_malloc(isos->extract_tri_gnum   , isos->iso_n_part, PDM_g_num_t *);
-    PDM_malloc(isos->extract_tri_lnum   , isos->iso_n_part, int         *);
-    PDM_malloc(isos->extract_tri_n_group, isos->iso_n_part, int          );
-    PDM_malloc(isos->extract_tri_tag    , isos->iso_n_part, int         *);
-
-    PDM_malloc(isos->extract_n_tetra   , isos->iso_n_part, int          );
-    PDM_malloc(isos->extract_tetra_vtx , isos->iso_n_part, int         *);
-    PDM_malloc(isos->extract_tetra_gnum, isos->iso_n_part, PDM_g_num_t *);
-    PDM_malloc(isos->extract_tetra_lnum, isos->iso_n_part, int         *);
+  PDM_malloc(isos->extract_n_tri      , isos->iso_n_part, int          );
+  PDM_malloc(isos->extract_tri_vtx    , isos->iso_n_part, int         *);
+  PDM_malloc(isos->extract_tri_gnum   , isos->iso_n_part, PDM_g_num_t *);
+  PDM_malloc(isos->extract_tri_n_group, isos->iso_n_part, int          );
+  PDM_malloc(isos->extract_tri_tag    , isos->iso_n_part, int         *);
+  if (isos->extract_kind != PDM_EXTRACT_PART_KIND_LOCAL) {
+    PDM_malloc(isos->extract_face_lnum, isos->iso_n_part, int         *);
   }
+
+  PDM_malloc(isos->extract_n_tetra   , isos->iso_n_part, int          );
+  PDM_malloc(isos->extract_tetra_vtx , isos->iso_n_part, int         *);
+  PDM_malloc(isos->extract_tetra_gnum, isos->iso_n_part, PDM_g_num_t *);
 
   for (int i_part = 0; i_part < isos->iso_n_part; i_part++) {
 
     isos->extract_n_tetra   [i_part] = 0;
     isos->extract_tetra_vtx [i_part] = NULL;
     isos->extract_tetra_gnum[i_part] = NULL;
-    isos->extract_tetra_lnum[i_part] = NULL;
 
     isos->extract_n_vtx[i_part] = PDM_extract_part_vtx_coord_get(isos->extrp,
                                                                  i_part,
@@ -1602,15 +1608,6 @@ _triangulate
                                          PDM_MESH_ENTITY_VTX,
                                         &isos->extract_vtx_gnum[i_part],
                                          PDM_OWNERSHIP_KEEP);
-
-    isos->extract_vtx_lnum[i_part] = NULL;
-    if (isos->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL) {
-      PDM_extract_part_parent_lnum_get(isos->extrp,
-                                       i_part,
-                                       PDM_MESH_ENTITY_VTX,
-                                       &isos->extract_vtx_lnum[i_part],
-                                       PDM_OWNERSHIP_USER);
-    }
 
     PDM_g_num_t *face_parent_gnum = NULL;
     int n_face = PDM_extract_part_parent_ln_to_gn_get(isos->extrp,
@@ -1697,17 +1694,30 @@ _triangulate
 
     isos->extract_tri_n_group[i_part] = isos->n_group_face;
 
-    PDM_malloc(isos->extract_tri_gnum[i_part], isos->extract_n_tri[i_part], PDM_g_num_t);
-    PDM_malloc(isos->extract_tri_lnum[i_part], isos->extract_n_tri[i_part], int        );
-    PDM_malloc(isos->extract_tri_tag [i_part], isos->extract_n_tri[i_part], int        );
+    int *extract_face_lnum = NULL;
+    if (isos->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL) {
+      extract_face_lnum = isos->extract_face_lnum[i_part];
+    }
+
+    PDM_malloc(isos->extract_tri_gnum [i_part], isos->extract_n_tri[i_part], PDM_g_num_t);
+    PDM_malloc(isos->extract_face_lnum[i_part], isos->extract_n_tri[i_part], int        );
+    PDM_malloc(isos->extract_tri_tag  [i_part], isos->extract_n_tri[i_part], int        );
 
 
     for (int i_face = 0; i_face < n_face; i_face++) {
       for (int i_tri = face_tria_idx[i_face]; i_tri < face_tria_idx[i_face+1]; i_tri++) {
-        isos->extract_tri_gnum[i_part][i_tri] = face_parent_gnum[i_face];
-        isos->extract_tri_lnum[i_part][i_tri] = i_face;
-        isos->extract_tri_tag [i_part][i_tri] = face_tag[i_face];
+        isos->extract_tri_gnum [i_part][i_tri] = face_parent_gnum[i_face];
+        isos->extract_face_lnum[i_part][i_tri] = i_face;
+        isos->extract_tri_tag  [i_part][i_tri] = face_tag[i_face];
       }
+    }
+
+    if (isos->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL) {
+      for (int i_tri = 0; i_tri < isos->extract_n_tri[i_part]; i_tri++) {
+        int i_face = isos->extract_face_lnum[i_part][i_tri];
+        isos->extract_face_lnum[i_part][i_tri] = extract_face_lnum[i_face];
+      }
+      PDM_free(extract_face_lnum);
     }
 
     PDM_free(face_tria_idx);
@@ -2539,29 +2549,56 @@ _free_owner
 
 
 static void
-_free_nodal_extract_parts
+_free_extracted_parts
 (
   PDM_isosurface_t *isos
 )
 {
+  int is_local   = (isos->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL);
+  int is_2d_ngon = (isos->entry_mesh_dim == 2) && !_is_nodal(isos);
+
   for (int i_part=0; i_part<isos->iso_n_part; ++i_part) {
-    PDM_free(isos->extract_tri_tag[i_part]);
-    if (isos->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL) {
-      PDM_free(isos->extract_vtx_lnum[i_part]);
-      if (isos->entry_mesh_dim==3) {
-        PDM_free(isos->extract_tetra_lnum[i_part]);
+    if (is_local) {
+      PDM_free(isos->extract_vtx_lnum [i_part]);
+      if (isos->entry_mesh_dim == 3) {
+        PDM_free(isos->extract_cell_lnum[i_part]);
       }
     }
 
-    if (isos->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL || !_is_nodal(isos)) {
-      PDM_free(isos->extract_tri_lnum[i_part]);
+    if (is_local || is_2d_ngon) {
+      PDM_free(isos->extract_face_lnum[i_part]);
     }
 
-    if (!_is_nodal(isos)) {
+    if (is_2d_ngon) {
       PDM_free(isos->extract_tri_vtx [i_part]);
       PDM_free(isos->extract_tri_gnum[i_part]);
     }
+
+    if (isos->extract_tri_tag != NULL) {
+      PDM_free(isos->extract_tri_tag[i_part]);
+    }
+    if (isos->extract_field != NULL) {
+      PDM_free(isos->extract_field[i_part]);
+    }
   }
+  PDM_free(isos->extract_n_vtx    );
+  PDM_free(isos->extract_vtx_coord);
+  PDM_free(isos->extract_vtx_gnum );
+  PDM_free(isos->extract_vtx_lnum );
+
+  PDM_free(isos->extract_n_tri      );
+  PDM_free(isos->extract_tri_vtx    );
+  PDM_free(isos->extract_tri_gnum   );
+  PDM_free(isos->extract_face_lnum  );
+  PDM_free(isos->extract_tri_n_group);
+  PDM_free(isos->extract_tri_tag    );
+
+  PDM_free(isos->extract_n_tetra   );
+  PDM_free(isos->extract_tetra_vtx );
+  PDM_free(isos->extract_tetra_gnum);
+  PDM_free(isos->extract_cell_lnum );
+
+  PDM_free(isos->extract_field);
 }
 
 
@@ -2643,11 +2680,6 @@ _isosurface_compute
   _extract(isos, id_isosurface);
   isosurface_timer_end(isos, ISO_TIMER_EXTRACT);
 
-  /* Evaluate field on extracted mesh */
-  isosurface_timer_start(isos, ISO_TIMER_COMPUTE_EXTRACT_FIELD);
-  _compute_iso_field(isos, id_isosurface, 1); // hide in '_extract'?
-  isosurface_timer_end(isos, ISO_TIMER_COMPUTE_EXTRACT_FIELD);
-
   /* If nodal with sections other than TRIA3 and TETRA4, fall back to ngon */
   if (_is_nodal(isos)) {
     isosurface_timer_start(isos, ISO_TIMER_NGONIZE);
@@ -2657,6 +2689,11 @@ _isosurface_compute
   else if (isos->entry_mesh_dim == 2) {
     _triangulate(isos);
   }
+
+  /* Evaluate field on extracted mesh */
+  isosurface_timer_start(isos, ISO_TIMER_COMPUTE_EXTRACT_FIELD);
+  _compute_iso_field(isos, id_isosurface, 1);
+  isosurface_timer_end(isos, ISO_TIMER_COMPUTE_EXTRACT_FIELD);
 
   /* Build isosurface mesh */
   isosurface_timer_start(isos, ISO_TIMER_CONTOURING);
@@ -2690,18 +2727,11 @@ _isosurface_compute
     isosurface_timer_end(isos, ISO_TIMER_BUILD_EXCH_PROTOCOL);
   }
 
-  // > Free mesh extraction arrays for nodal
-  if (_is_nodal(isos) || isos->entry_mesh_dim == 2) {
-    _free_nodal_extract_parts(isos);
-  }
+  // > Free mesh extraction arrays
+  _free_extracted_parts(isos);
+  PDM_extract_part_free(isos->extrp);
 
   _iso->is_computed = PDM_TRUE;
-
-  PDM_extract_part_free(isos->extrp);
-  for (int i_part = 0; i_part < isos->iso_n_part; i_part++) {
-    PDM_free(isos->extract_field[i_part]);
-  }
-  PDM_free(isos->extract_field);
 
   isosurface_timer_end(isos, ISO_TIMER_TOTAL);
 }
@@ -3077,24 +3107,6 @@ PDM_isosurface_free
   PDM_free(isos->group_face_idx);
   PDM_free(isos->group_face);
   PDM_free(isos->group_face_gnum);
-
-  // > Free mesh extraction arrays for nodal
-  PDM_free(isos->extract_n_vtx    );
-  PDM_free(isos->extract_vtx_coord);
-  PDM_free(isos->extract_vtx_gnum );
-  PDM_free(isos->extract_vtx_lnum );
-
-  PDM_free(isos->extract_n_tri      );
-  PDM_free(isos->extract_tri_vtx    );
-  PDM_free(isos->extract_tri_gnum   );
-  PDM_free(isos->extract_tri_lnum   );
-  PDM_free(isos->extract_tri_n_group);
-  PDM_free(isos->extract_tri_tag    );
-
-  PDM_free(isos->extract_n_tetra   );
-  PDM_free(isos->extract_tetra_vtx );
-  PDM_free(isos->extract_tetra_gnum);
-  PDM_free(isos->extract_tetra_lnum);
 
   for (int id_iso=0; id_iso<isos->n_isosurface; ++id_iso) {
     _isosurface_t *_iso = &isos->isosurfaces[id_iso];

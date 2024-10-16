@@ -1229,25 +1229,20 @@ _contouring_triangles
             // > Fill parent
             int i_beg_parent = edge_parent_idx[edge_id2  ];
             int i_end_parent = edge_parent_idx[edge_id2+1];
-            int n_edge_parent = i_end_parent - i_beg_parent;
             for (int i_parent=i_beg_parent; i_parent<i_end_parent; ++i_parent) {
               iso_edge_parent[iso_n_edge_parent++] = edge_parent[i_parent];
             }
-            iso_edge_parent_idx[iso_n_edge+1] = iso_edge_parent_idx[iso_n_edge]+n_edge_parent;
+            iso_edge_parent_idx[iso_n_edge+1] = iso_n_edge_parent;
 
             // > Fill bnd tag
             if (elt_tag!=0) {
               int i_beg_bnd_tag = edge_bnd_tag_idx[edge_id2  ];
               int i_end_bnd_tag = edge_bnd_tag_idx[edge_id2+1];
-              int n_edge_bnd_tag = i_end_bnd_tag - i_beg_bnd_tag;
               for (int i_bnd_tag=i_beg_bnd_tag; i_bnd_tag<i_end_bnd_tag; ++i_bnd_tag) {
                 iso_edge_bnd_tag[iso_n_edge_bnd_tag++] = edge_bnd_tag[i_bnd_tag];
               }
-              iso_edge_bnd_tag_idx[iso_n_edge+1] = iso_edge_bnd_tag_idx[iso_n_edge]+n_edge_bnd_tag;
             }
-            else {
-              iso_edge_bnd_tag_idx[iso_n_edge+1] = iso_edge_bnd_tag_idx[iso_n_edge];
-            }
+            iso_edge_bnd_tag_idx[iso_n_edge+1] = iso_n_edge_bnd_tag;
 
             iso_n_edge++;
           }
@@ -1274,25 +1269,20 @@ _contouring_triangles
             // > Fill parent
             int i_beg_parent = edge_parent_idx[edge_id1  ];
             int i_end_parent = edge_parent_idx[edge_id1+1];
-            int n_edge_parent = i_end_parent - i_beg_parent;
             for (int i_parent=i_beg_parent; i_parent<i_end_parent; ++i_parent) {
               iso_edge_parent[iso_n_edge_parent++] = edge_parent[i_parent];
             }
-            iso_edge_parent_idx[iso_n_edge+1] = iso_edge_parent_idx[iso_n_edge]+n_edge_parent;
+            iso_edge_parent_idx[iso_n_edge+1] = iso_n_edge_parent;
 
             // > Fill bnd tag
             if (elt_tag!=0) {
               int i_beg_bnd_tag = edge_bnd_tag_idx[edge_id1  ];
               int i_end_bnd_tag = edge_bnd_tag_idx[edge_id1+1];
-              int n_edge_bnd_tag = i_end_bnd_tag - i_beg_bnd_tag;
               for (int i_bnd_tag=i_beg_bnd_tag; i_bnd_tag<i_end_bnd_tag; ++i_bnd_tag) {
                 iso_edge_bnd_tag[iso_n_edge_bnd_tag++] = edge_bnd_tag[i_bnd_tag];
               }
-              iso_edge_bnd_tag_idx[iso_n_edge+1] = iso_edge_bnd_tag_idx[iso_n_edge]+n_edge_bnd_tag;
             }
-            else {
-              iso_edge_bnd_tag_idx[iso_n_edge+1] = iso_edge_bnd_tag_idx[iso_n_edge];
-            }
+            iso_edge_bnd_tag_idx[iso_n_edge+1] = iso_n_edge_bnd_tag;
 
             iso_n_edge++;
           }
@@ -1319,25 +1309,20 @@ _contouring_triangles
             // > Fill parent
             int i_beg_parent = edge_parent_idx[edge_id0  ];
             int i_end_parent = edge_parent_idx[edge_id0+1];
-            int n_edge_parent = i_end_parent - i_beg_parent;
             for (int i_parent=i_beg_parent; i_parent<i_end_parent; ++i_parent) {
               iso_edge_parent[iso_n_edge_parent++] = edge_parent[i_parent];
             }
-            iso_edge_parent_idx[iso_n_edge+1] = iso_edge_parent_idx[iso_n_edge]+n_edge_parent;
+            iso_edge_parent_idx[iso_n_edge+1] = iso_n_edge_parent;
 
             // > Fill bnd tag
             if (elt_tag!=0) {
               int i_beg_bnd_tag = edge_bnd_tag_idx[edge_id0  ];
               int i_end_bnd_tag = edge_bnd_tag_idx[edge_id0+1];
-              int n_edge_bnd_tag = i_end_bnd_tag - i_beg_bnd_tag;
               for (int i_bnd_tag=i_beg_bnd_tag; i_bnd_tag<i_end_bnd_tag; ++i_bnd_tag) {
                 iso_edge_bnd_tag[iso_n_edge_bnd_tag++] = edge_bnd_tag[i_bnd_tag];
               }
-              iso_edge_bnd_tag_idx[iso_n_edge+1] = iso_edge_bnd_tag_idx[iso_n_edge]+n_edge_bnd_tag;
             }
-            else {
-              iso_edge_bnd_tag_idx[iso_n_edge+1] = iso_edge_bnd_tag_idx[iso_n_edge];
-            }
+            iso_edge_bnd_tag_idx[iso_n_edge+1] = iso_n_edge_bnd_tag;
 
             iso_n_edge++;
 
@@ -1378,16 +1363,13 @@ _contouring_triangles
           iso_edge_parent_gnum[2*iso_n_edge+1] =--elt_n_child[i_elt];
         }
 
-        iso_edge_parent_idx[iso_n_edge+1] = iso_edge_parent_idx[iso_n_edge]+1;
         iso_edge_parent[iso_n_edge_parent++] = i_elt+1;
+        iso_edge_parent_idx[iso_n_edge+1] = iso_n_edge_parent;
 
         if (elt_tag!=0) {
-          iso_edge_bnd_tag_idx[iso_n_edge+1] = iso_edge_bnd_tag_idx[iso_n_edge]+1;
           iso_edge_bnd_tag[iso_n_edge_bnd_tag++] = elt_tag;
         }
-        else {
-          iso_edge_bnd_tag_idx[iso_n_edge+1] = iso_edge_bnd_tag_idx[iso_n_edge];
-        }
+        iso_edge_bnd_tag_idx[iso_n_edge+1] = iso_n_edge_bnd_tag;
 
         iso_n_edge++;
 
@@ -1418,16 +1400,13 @@ _contouring_triangles
           iso_edge_parent_gnum[2*iso_n_edge+1] =--elt_n_child[i_elt];
         }
 
-        iso_edge_parent_idx[iso_n_edge+1] = iso_edge_parent_idx[iso_n_edge]+1;
         iso_edge_parent[iso_n_edge_parent++] = i_elt+1;
+        iso_edge_parent_idx[iso_n_edge+1] = iso_n_edge_parent;
 
         if (elt_tag!=0) {
-          iso_edge_bnd_tag_idx[iso_n_edge+1] = iso_edge_bnd_tag_idx[iso_n_edge]+1;
           iso_edge_bnd_tag[iso_n_edge_bnd_tag++] = elt_tag;
         }
-        else {
-          iso_edge_bnd_tag_idx[iso_n_edge+1] = iso_edge_bnd_tag_idx[iso_n_edge];
-        }
+        iso_edge_bnd_tag_idx[iso_n_edge+1] = iso_n_edge_bnd_tag;
 
         iso_n_edge++;
         
@@ -2809,7 +2788,7 @@ PDM_isosurface_marching_algo
 )
 {
   int debug      = 1;
-  int debug_visu = 1;
+  int debug_visu = 0;
   double t_start, t_end;
 
   if (debug==1) {
@@ -3032,13 +3011,6 @@ PDM_isosurface_marching_algo
                   &iso_vtx_parent_gnum  [i_part],
                   &iso_vtx_to_edge,
                   &isovalue_vtx_idx     [i_part]);
-
-    if (isos->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL) {
-      for (int i = 0; i < iso_vtx_parent_idx[i_part][iso_n_vtx[i_part]]; i++) {
-        iso_vtx_parent[i_part][i] = isos->extract_vtx_lnum[i_part][iso_vtx_parent[i_part][i]-1] + 1;
-      }
-    }
-
     t_end = PDM_MPI_Wtime();
 
     if (debug==1) {
@@ -3178,12 +3150,6 @@ PDM_isosurface_marching_algo
                             &iso_edge_parent_idx [i_part],
                             &iso_edge_parent     [i_part]);
 
-      if (isos->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL) {
-        for (int i = 0; i < iso_edge_parent_idx[i_part][iso_n_edge[i_part]]; i++) {
-          iso_edge_parent[i_part][i] = isos->extract_tri_lnum[i_part][iso_edge_parent[i_part][i]-1] + 1;
-        }
-      }
-
       if (isos->entry_mesh_dim==3) {
         _contouring_tetrahedra(isos->extract_n_tetra   [i_part],
                                isos->extract_tetra_vtx [i_part],
@@ -3206,12 +3172,6 @@ PDM_isosurface_marching_algo
                                &iso_n_face_parent,
                                &iso_face_parent_idx [i_part],
                                &iso_face_parent     [i_part]);
-
-        if (isos->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL) {
-          for (int i = 0; i < iso_face_parent_idx[i_part][iso_n_face[i_part]]; i++) {
-            iso_face_parent[i_part][i] = isos->extract_tetra_lnum[i_part][iso_face_parent[i_part][i]-1] + 1;
-          }
-        }
       }
       
       PDM_free(edge_to_iso_vtx);
@@ -3243,7 +3203,24 @@ PDM_isosurface_marching_algo
 
     } // End of loop on isovalues
 
+    if (isos->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL) {
+      for (int i = 0; i < iso_vtx_parent_idx[i_part][iso_n_vtx[i_part]]; i++) {
+        int i_parent = iso_vtx_parent[i_part][i] - 1;
+        iso_vtx_parent[i_part][i] = isos->extract_vtx_lnum[i_part][i_parent] + 1;
+      }
 
+      for (int i = 0; i < iso_edge_parent_idx[i_part][iso_n_edge[i_part]]; i++) {
+        int i_parent = iso_edge_parent[i_part][i] - 1;
+        iso_edge_parent[i_part][i] = isos->extract_face_lnum[i_part][i_parent] + 1;
+      }
+
+      if (isos->entry_mesh_dim == 3) {
+        for (int i = 0; i < iso_face_parent_idx[i_part][iso_n_face[i_part]]; i++) {
+          int i_parent = iso_face_parent[i_part][i] - 1;
+          iso_face_parent[i_part][i] = isos->extract_cell_lnum[i_part][i_parent] + 1;
+        }
+      }
+    }
 
     /*
      * Convert bnd tag to group
@@ -3710,6 +3687,7 @@ PDM_isosurface_ngon_algo
   PDM_g_num_t **pedge_ln_to_gn = NULL;
 
   if (!isos->we_have_edges) {
+    // TODO: use optimized method since we don't need edge global IDs?
     PDM_malloc(pn_face       , isos->iso_n_part, int          );
     PDM_malloc(pn_vtx        , isos->iso_n_part, int          );
     PDM_malloc(pface_vtx_idx , isos->iso_n_part, int         *);
@@ -4040,6 +4018,24 @@ PDM_isosurface_ngon_algo
         iso_edge_group_n[i_surface]++;
       }
       PDM_free(face_tag);
+    }
+
+    // If local extraction, apply indirection to parent_lnum arrays
+    if (isos->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL) {
+      for (int i = 0; i < iso_vtx_parent_idx[i_part][iso_n_vtx[i_part]]; i++) {
+        int i_parent = iso_vtx_parent[i_part][i] - 1;
+        iso_vtx_parent[i_part][i] = isos->extract_vtx_lnum[i_part][i_parent] + 1;
+      }
+
+      for (int i = 0; i < iso_edge_parent_idx[i_part][iso_n_edge[i_part]]; i++) {
+        int i_parent = iso_edge_parent[i_part][i] - 1;
+        iso_edge_parent[i_part][i] = isos->extract_face_lnum[i_part][i_parent] + 1;
+      }
+
+      for (int i = 0; i < iso_face_parent_idx[i_part][iso_n_face[i_part]]; i++) {
+        int i_parent = iso_face_parent[i_part][i] - 1;
+        iso_face_parent[i_part][i] = isos->extract_cell_lnum[i_part][i_parent] + 1;
+      }
     }
 
     if (!isos->we_have_edges) {

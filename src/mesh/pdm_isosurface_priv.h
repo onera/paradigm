@@ -103,8 +103,8 @@ typedef enum {
   ISO_TIMER_DIST_TO_PART,
   ISO_TIMER_COMPUTE_INIT_FIELD,
   ISO_TIMER_EXTRACT,
-  ISO_TIMER_COMPUTE_EXTRACT_FIELD,
   ISO_TIMER_NGONIZE,
+  ISO_TIMER_COMPUTE_EXTRACT_FIELD,
   ISO_TIMER_CONTOURING,
   ISO_TIMER_PART_TO_DIST,
   ISO_TIMER_BUILD_EXCH_PROTOCOL,
@@ -348,14 +348,14 @@ struct _pdm_isosurface_t {
   int          *extract_n_tri;
   int         **extract_tri_vtx;
   PDM_g_num_t **extract_tri_gnum; // from initial mesh
-  int         **extract_tri_lnum; // from initial mesh
+  int         **extract_face_lnum; // from initial mesh
   int          *extract_tri_n_group; // from initial mesh
   int         **extract_tri_tag; // from initial mesh
 
   int          *extract_n_tetra;
   int         **extract_tetra_vtx;
   PDM_g_num_t **extract_tetra_gnum; // from initial mesh
-  int         **extract_tetra_lnum; // from initial mesh
+  int         **extract_cell_lnum; // from initial mesh
 
   // > Groups
   int           n_group_face;
