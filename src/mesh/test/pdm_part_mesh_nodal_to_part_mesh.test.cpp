@@ -1550,8 +1550,6 @@ for dim in dim_elt_types.keys():
       # generate partitions of the set of available entities
       p = partitions(entities, [], [])
 
-      print(entities, p)
-
       for gnum in p:
         # eliminate subcases that require gnums for some entities but not for vertices
         if len(gnum) > 0 and "VTX" not in gnum:

@@ -1079,6 +1079,8 @@ PDM_part_mesh_nodal_to_part_mesh_part_comm_graph_enable
 {
   CHECK_PMN_TO_PM(pmn_to_pm);
 
+  PDM_error(__FILE__, __LINE__, 0, "Inter-partitions comm graphs are not yet implemented\n");
+
   pmn_to_pm->build_part_comm_graph[bound_type] = PDM_TRUE;
 }
 

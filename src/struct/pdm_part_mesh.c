@@ -988,7 +988,7 @@ PDM_part_mesh_dump_ensight
     id_geom_bound[bound_type] = -1;
     extrp        [bound_type] = NULL;
 
-    log_trace("%d %s\n", pmesh->n_group_bnd[bound_type], bound_type_name[bound_type]);
+    // log_trace("%d %s\n", pmesh->n_group_bnd[bound_type], bound_type_name[bound_type]);
 
     if (export_bounds && pmesh->n_group_bnd[bound_type] > 0) {
       char geom_name[999];

@@ -210,13 +210,13 @@ int main(int argc, char *argv[])
   PDM_dmesh_nodal_t* dmn = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube);
   PDM_dmesh_nodal_generate_distribution(dmn);
 
-  if(post) {
-    if(dim == 3) {
-      PDM_dmesh_nodal_dump_vtk(dmn, PDM_GEOMETRY_KIND_VOLUMIC , "dmn_volumic");
-    }
-    PDM_dmesh_nodal_dump_vtk(dmn, PDM_GEOMETRY_KIND_SURFACIC, "dmn_surfacic");
-    PDM_dmesh_nodal_dump_vtk(dmn, PDM_GEOMETRY_KIND_RIDGE   , "dmn_ridge");
-  }
+  // if(post) {
+  //   if(dim == 3) {
+  //     PDM_dmesh_nodal_dump_vtk(dmn, PDM_GEOMETRY_KIND_VOLUMIC , "dmn_volumic");
+  //   }
+  //   PDM_dmesh_nodal_dump_vtk(dmn, PDM_GEOMETRY_KIND_SURFACIC, "dmn_surfacic");
+  //   PDM_dmesh_nodal_dump_vtk(dmn, PDM_GEOMETRY_KIND_RIDGE   , "dmn_ridge");
+  // }
 
   /*
    * Partitionnement
@@ -241,14 +241,6 @@ int main(int argc, char *argv[])
 
   PDM_part_mesh_nodal_t *pmesh_nodal = NULL;
   PDM_multipart_get_part_mesh_nodal(mpart_id, 0, &pmesh_nodal, PDM_OWNERSHIP_KEEP);
-
-  if(post) {
-    if(dim == 3) {
-      PDM_part_mesh_nodal_dump_vtk(pmesh_nodal, PDM_GEOMETRY_KIND_VOLUMIC , "pmn_volumic");
-    }
-    PDM_part_mesh_nodal_dump_vtk(pmesh_nodal, PDM_GEOMETRY_KIND_SURFACIC, "pmn_surfacic");
-    PDM_part_mesh_nodal_dump_vtk(pmesh_nodal, PDM_GEOMETRY_KIND_RIDGE   , "pmn_ridge");
-  }
 
   PDM_part_mesh_t *pm = NULL;
   if (old_algo) {
@@ -315,7 +307,20 @@ int main(int argc, char *argv[])
 
 
   if(post) {
+    // Part mesh nodal
     if(dim == 3) {
+      PDM_part_mesh_nodal_dump_vtk(pmesh_nodal, PDM_GEOMETRY_KIND_VOLUMIC , "pmn_volumic");
+    }
+    PDM_part_mesh_nodal_dump_vtk(pmesh_nodal, PDM_GEOMETRY_KIND_SURFACIC, "pmn_surfacic");
+    PDM_part_mesh_nodal_dump_vtk(pmesh_nodal, PDM_GEOMETRY_KIND_RIDGE   , "pmn_ridge");
+
+    // Part mesh
+    if(dim == 3) {
+
+      PDM_part_mesh_dump_ensight(pm,
+                                 "pmn_to_pm",
+                                 "pmesh",
+                                 PDM_TRUE);
 
       int n_face_group = PDM_part_mesh_n_bound_get(pm, PDM_BOUND_TYPE_FACE);
       for(int i_part = 0; i_part < n_part; ++i_part) {
