@@ -6892,8 +6892,15 @@ PDM_extract_part_n_entity_get
 )
 {
   if (extrp->is_nodal) {
-    PDM_error(__FILE__, __LINE__, 0, "Use part_mesh_nodal accessors instead\n");
+    if (entity_type == PDM_MESH_ENTITY_VTX) {
+      return PDM_part_mesh_nodal_n_vtx_get(extrp->extract_pmn, i_part_out);
+    }
+    else {
+      PDM_error(__FILE__, __LINE__, 0, "Use part_mesh_nodal accessors instead\n");
+    }
   }
+
+
 
   if(extrp->pextract_n_entity[entity_type] != NULL) {
     return extrp->pextract_n_entity[entity_type][i_part_out];
@@ -7138,7 +7145,37 @@ PDM_extract_part_init_location_get
     extrp->is_owner_init_location[entity_type] = PDM_TRUE;
   }
 
-  return extrp->pextract_n_entity[entity_type][i_part_out];
+  int n_entity = 0;
+  if (extrp->is_nodal) {
+    // Nodal
+    switch (entity_type) {
+      case PDM_MESH_ENTITY_VTX: {
+        n_entity = PDM_part_mesh_nodal_n_vtx_get(extrp->extract_pmn, i_part_out);
+        break;
+      }
+      case PDM_MESH_ENTITY_EDGE: {
+        n_entity = PDM_part_mesh_nodal_n_elmts_get(extrp->extract_pmn, PDM_GEOMETRY_KIND_RIDGE, i_part_out);
+        break;
+      }
+      case PDM_MESH_ENTITY_FACE: {
+        n_entity = PDM_part_mesh_nodal_n_elmts_get(extrp->extract_pmn, PDM_GEOMETRY_KIND_SURFACIC, i_part_out);
+        break;
+      }
+      case PDM_MESH_ENTITY_CELL: {
+        n_entity = PDM_part_mesh_nodal_n_elmts_get(extrp->extract_pmn, PDM_GEOMETRY_KIND_VOLUMIC, i_part_out);
+        break;
+      }
+      default: {
+        PDM_error(__FILE__, __LINE__, 0, "Invalid entity_type %d\n", entity_type);
+      }
+    }
+  }
+  else {
+    // Ngon
+    n_entity = extrp->pextract_n_entity[entity_type][i_part_out];
+  }
+
+  return n_entity;
 }
 
 
