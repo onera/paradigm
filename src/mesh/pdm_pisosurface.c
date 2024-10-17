@@ -666,68 +666,6 @@ PDM_isosurface_group_get
 }
 
 
-void
-PDM_isosurface_enable_part_to_part
-(
-  PDM_isosurface_t     *isos,
-  int                   id_isosurface,
-  PDM_mesh_entities_t   entity_type,
-  int                   unify_parent_info
-)
-{
-  /**
-   * TODO:
-   *  - unify_parent_info : allow demanding user to ask to get all parent over all procs (not urgent)
-   *      - build additional ptp to get info
-   */
-  CHECK_IS_NOT_DIST(isos);
-  PDM_ISOSURFACE_CHECK_ID(isos, id_isosurface);
-
-  if (unify_parent_info!=0) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: unify_parent_info option not implemented yet.\n");
-  }
-
-  if (id_isosurface >= isos->n_isosurface) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_enable_part_to_part : Invalid id_isosurface %d (n_isosurface = %d)\n", id_isosurface, isos->n_isosurface);
-  }
-
-  _isosurface_t *_iso = &isos->isosurfaces[id_isosurface];
-  _iso->compute_ptp[entity_type] = PDM_TRUE;
-}
-
-
-// TODO: changer le nom "source to iso ptp" ?
-void
-PDM_isosurface_part_to_part_get
-(
- PDM_isosurface_t     *isos,
- int                   id_isosurface,
- PDM_mesh_entities_t   entity_type,
- PDM_part_to_part_t  **ptp,
- PDM_ownership_t       ownership
-)
-{
-  CHECK_IS_NOT_DIST(isos);
-
-  PDM_ISOSURFACE_CHECK_ID      (isos, id_isosurface);
-  PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_isosurface);
-  
-  PDM_ISOSURFACE_CHECK_ENTITY_TYPE(entity_type);
-
-  _isosurface_t *_iso = &isos->isosurfaces[id_isosurface];
-
-  if (_iso->compute_ptp[entity_type] == PDM_FALSE) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: part_to_part for entity %d of isosurface %d is not computed.\n", entity_type, id_isosurface);
-  }
-
-  if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
-    _iso->iso_owner_ptp[entity_type] = ownership;
-  }
-
-  *ptp = _iso->iso_ptp[entity_type];
-}
-
-
 int
 PDM_isosurface_isovalue_entity_idx_get
 (

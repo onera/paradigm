@@ -143,6 +143,15 @@ int* PDM_array_new_arange_int(const int start, const int end, const int step) {
   }
   return array;
 }
+PDM_g_num_t* PDM_array_new_arange_gnum(const PDM_g_num_t start, const PDM_g_num_t end, const int step) {
+  int size = (end-start)/step+1;
+  PDM_g_num_t *array;
+  PDM_malloc(array, size, PDM_g_num_t);
+  for (int i = 0; i < size; ++i) {
+    array[i] = start+i*step;
+  }
+  return array;
+}
 
 int* PDM_array_new_range_with_step_int(const int size, const int step) {
   int* array = NULL;

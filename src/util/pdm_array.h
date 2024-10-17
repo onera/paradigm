@@ -41,8 +41,9 @@ double*      PDM_array_const_double(const int size, const double      value);
 
 // Create a range array
 int* PDM_array_new_range_int(const int size);
-int* PDM_array_new_arange_int(const int start, const int end, const int step);
-int* PDM_array_new_range_with_step_int(const int size, const int step);
+int* 		 PDM_array_new_arange_int (const int         start, const int         end, const int step);
+PDM_g_num_t* PDM_array_new_arange_gnum(const PDM_g_num_t start, const PDM_g_num_t end, const int step);
+int* PDM_array_new_range_with_step_int (const int size, const int step);
 
 // Create an index array from a size array
 int*         PDM_array_new_idx_from_sizes_int (const int *size_array, const int size);
