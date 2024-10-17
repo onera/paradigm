@@ -364,6 +364,69 @@ PDM_isosurface_dconnectivity_get
 
 
 int
+PDM_isosurface_disovalue_entity_get
+(
+  PDM_isosurface_t     *isos,
+  int                   id_isosurface,
+  PDM_mesh_entities_t   entity_type,
+  int                 **disovalue_entity_idx,
+  PDM_g_num_t         **disovalue_entity,
+  PDM_ownership_t       ownership
+)
+{
+  CHECK_IS_NOT_PART(isos);
+
+  PDM_ISOSURFACE_CHECK_ID      (isos, id_isosurface);
+  PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_isosurface);
+
+  _isosurface_t *_iso = &isos->isosurfaces[id_isosurface];
+
+  if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
+    _iso->iso_owner_disovalue_entity[entity_type] = ownership;
+  }
+
+  *disovalue_entity_idx = _iso->disovalue_entity_idx[entity_type];
+  *disovalue_entity     = _iso->disovalue_entity    [entity_type];
+
+  return _iso->n_isovalues;
+}
+
+
+int
+PDM_isosurface_parent_gnum_get
+(
+  PDM_isosurface_t     *isos,
+  int                   id_iso,
+  PDM_mesh_entities_t   entity_type,
+  int                 **dparent_idx,
+  PDM_g_num_t         **dparent_gnum,
+  PDM_ownership_t       ownership
+)
+{
+  CHECK_IS_NOT_PART(isos);
+
+  PDM_ISOSURFACE_CHECK_ID      (isos, id_iso);
+  PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_iso);
+
+  PDM_ISOSURFACE_CHECK_ENTITY_TYPE(entity_type);
+
+  _isosurface_t *_iso = &isos->isosurfaces[id_iso];
+
+  int n_entity = 0;
+  if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
+    _iso->iso_owner_dparent_idx[entity_type] = ownership;
+    _iso->iso_owner_dparent    [entity_type] = ownership;
+  }
+
+  n_entity      = _iso->iso_dn_entity          [entity_type];
+  *dparent_idx  = _iso->iso_dentity_parent_idx [entity_type];
+  *dparent_gnum = _iso->iso_dentity_parent_gnum[entity_type];
+
+  return n_entity;
+}
+
+
+int
 PDM_isosurface_dvtx_parent_weight_get
 (
   PDM_isosurface_t     *isos,

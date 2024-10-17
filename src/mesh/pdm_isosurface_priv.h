@@ -203,6 +203,9 @@ typedef struct _isosurface_t { // Better name?
   int            *iso_dconnec_idx        [PDM_CONNECTIVITY_TYPE_MAX];
   PDM_g_num_t    *iso_dconnec            [PDM_CONNECTIVITY_TYPE_MAX];
 
+  int            *disovalue_entity_idx[PDM_MESH_ENTITY_MAX];
+  PDM_g_num_t    *disovalue_entity    [PDM_MESH_ENTITY_MAX];
+
   // > Vertices
   double         *iso_dvtx_coord;
   double         *iso_dvtx_parent_weight;
@@ -218,7 +221,7 @@ typedef struct _isosurface_t { // Better name?
   PDM_ownership_t iso_owner_dparent_idx[PDM_MESH_ENTITY_MAX];
   PDM_ownership_t iso_owner_dparent    [PDM_MESH_ENTITY_MAX];
   PDM_ownership_t iso_owner_dedge_bnd;
-
+  PDM_ownership_t iso_owner_disovalue_entity[PDM_MESH_ENTITY_MAX];
 
   // ===============
   // > Internal data

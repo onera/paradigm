@@ -2406,6 +2406,7 @@ _isosurface_ngon_single_part
     *out_iso_vtx_parent        = iso_vtx_parent;
     *out_iso_vtx_parent_edge   = iso_vtx_parent_edge;
     *out_iso_vtx_parent_weight = iso_vtx_parent_weight;
+    *out_isovalue_vtx_idx      = PDM_array_zeros_int(n_isovalues + 1);
 
     if (is_3d) {
       *out_iso_n_face          = 0;

@@ -951,8 +951,6 @@ PDM_isosurface_dgroup_get
  *
  * \return Number of isovalues
  *
- * \warning comment on fait en block-distribué?
- *
  */
 
 int
@@ -963,6 +961,32 @@ PDM_isosurface_isovalue_entity_idx_get
   int                   i_part,
   PDM_mesh_entities_t   entity_type,
   int                 **isovalue_entity_idx,
+  PDM_ownership_t       ownership
+);
+
+
+/**
+ * \brief Get distributed isovalue→entity
+ *
+ * \param [in]  isos                 \ref PDM_isosurface_t instance
+ * \param [in]  id_isosurface        Iso-surface identifier
+ * \param [in]  entity_type          Entity type
+ * \param [in]  disovalue_entity_idx Index for isovalue→entity connectivity (size = \p n_isovalue + 1)
+ * \param [in]  disovalue_entity     Isovalue→entity connectivity (size = \p n_isovalue + 1)
+ * \param [in]  ownership            Ownership
+ *
+ * \return Number of isovalues
+ *
+ */
+
+int
+PDM_isosurface_disovalue_entity_get
+(
+  PDM_isosurface_t     *isos,
+  int                   id_isosurface,
+  PDM_mesh_entities_t   entity_type,
+  int                 **disovalue_entity_idx,
+  PDM_g_num_t         **disovalue_entity,
   PDM_ownership_t       ownership
 );
 
