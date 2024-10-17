@@ -262,8 +262,8 @@ _heart_field
         // +           1.;
 }
 
-static inline int
-_is_nodal
+int
+isosurface_is_nodal
 (
  PDM_isosurface_t *isos
 )
@@ -287,7 +287,7 @@ _do_we_have_edges
     return;
   }
 
-  if (_is_nodal(isos)) {
+  if (isosurface_is_nodal(isos)) {
     // Irrelevant for nodal mesh
     return;
   }
@@ -373,7 +373,7 @@ _dist_to_part
   isos->n_part     = 1;
   isos->iso_n_part = 1;
 
-  if (_is_nodal(isos)) {
+  if (isosurface_is_nodal(isos)) {
     // Nodal
     assert(isos->pmesh_nodal == NULL);
 
@@ -704,7 +704,7 @@ _compute_iso_field
     }
     field = isos->extract_field;
     for (int i_part = 0; i_part < n_part; i_part++) {
-      if (_is_nodal(isos)) {
+      if (isosurface_is_nodal(isos)) {
         n_vtx    [i_part] = PDM_part_mesh_nodal_n_vtx_get    (isos->extract_pmesh_nodal, i_part);
         vtx_coord[i_part] = PDM_part_mesh_nodal_vtx_coord_get(isos->extract_pmesh_nodal, i_part);
       }
@@ -720,7 +720,7 @@ _compute_iso_field
   else {
     // We work on initial mesh (before extraction)
     field = _iso->field;
-    if (_is_nodal(isos)) {
+    if (isosurface_is_nodal(isos)) {
       for (int i_part = 0; i_part < n_part; i_part++) {
         n_vtx    [i_part] = PDM_part_mesh_nodal_n_vtx_get    (isos->pmesh_nodal, i_part);
         vtx_coord[i_part] = PDM_part_mesh_nodal_vtx_coord_get(isos->pmesh_nodal, i_part);
@@ -1412,7 +1412,7 @@ _extract
     isos->part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
   }
 
-  if (_is_nodal(isos)) {
+  if (isosurface_is_nodal(isos)) {
     _extract_nodal(isos, id_isosurface);
   }
   else {
@@ -2089,7 +2089,7 @@ _part_to_dist_elt
   // int i_write_conn = 0;
   for (int i_elt=0; i_elt<dn_elt; ++i_elt) {
     int n_src = block_gnum_count[i_elt];
-    if (_is_nodal(isos)) {
+    if (isosurface_is_nodal(isos)) {
       assert(n_src==1);
     }
 
@@ -2338,20 +2338,15 @@ _build_ptp_part(
   int         **entity_parent_lnum = _iso->iso_entity_parent_lnum[entity_type];
   int          *n_parent           = NULL;
 
-  if (_is_nodal(isos)) {
+  if (isosurface_is_nodal(isos)) {
     PDM_malloc(n_parent, isos->n_part, int);
-  }
-  else {
-    if (isos->entry_mesh_dim==2) {
-      PDM_error(__FILE__, __LINE__, 0, "Not yet implemented (missing triangulation)\n");
-    }
   }
 
   PDM_mesh_entities_t parent_entity_type = PDM_MESH_ENTITY_MAX;
   switch (entity_type) {
     case PDM_MESH_ENTITY_VTX: {
       parent_entity_type = PDM_MESH_ENTITY_VTX;
-      if (_is_nodal(isos)) {
+      if (isosurface_is_nodal(isos)) {
         for (int i_part = 0; i_part < isos->n_part; i_part++) {
           n_parent[i_part] = PDM_part_mesh_nodal_n_vtx_get(isos->pmesh_nodal, i_part);
         }
@@ -2364,7 +2359,7 @@ _build_ptp_part(
 
     case PDM_MESH_ENTITY_EDGE: {
       parent_entity_type = PDM_MESH_ENTITY_FACE;
-      if (_is_nodal(isos)) {
+      if (isosurface_is_nodal(isos)) {
         for (int i_part = 0; i_part < isos->n_part; i_part++) {
           n_parent[i_part] = PDM_part_mesh_nodal_n_elmts_get(isos->pmesh_nodal, PDM_GEOMETRY_KIND_SURFACIC, i_part);
         }
@@ -2377,7 +2372,7 @@ _build_ptp_part(
 
     case PDM_MESH_ENTITY_FACE: {
       parent_entity_type = PDM_MESH_ENTITY_CELL;
-      if (_is_nodal(isos)) {
+      if (isosurface_is_nodal(isos)) {
         for (int i_part = 0; i_part < isos->n_part; i_part++) {
           n_parent[i_part] = PDM_part_mesh_nodal_n_elmts_get(isos->pmesh_nodal, PDM_GEOMETRY_KIND_VOLUMIC, i_part);
         }
@@ -2443,7 +2438,7 @@ _build_ptp_part(
 
   _iso->iso_owner_ptp[entity_type] = PDM_OWNERSHIP_KEEP;
 
-  if (_is_nodal(isos)) {
+  if (isosurface_is_nodal(isos)) {
     PDM_free(n_parent); // no worries, it is deep-copied in part_to_part creation
   }
 }
@@ -2475,7 +2470,7 @@ _build_ptp_dist
   }
 
   // TODO: find how to manage entry_mesh distributions with isos->dmesh_nodal
-  if (_is_nodal(isos) && (entity_type==PDM_MESH_ENTITY_EDGE || entity_type==PDM_MESH_ENTITY_FACE)) {
+  if (isosurface_is_nodal(isos) && (entity_type==PDM_MESH_ENTITY_EDGE || entity_type==PDM_MESH_ENTITY_FACE)) {
     _iso->iso_ptp[entity_type] = NULL;
     _iso->iso_owner_ptp[entity_type] = PDM_OWNERSHIP_BAD_VALUE;
     return;
@@ -2498,7 +2493,7 @@ _build_ptp_dist
   PDM_g_num_t *parent_distrib = NULL;
   switch (entity_type) {
     case PDM_MESH_ENTITY_VTX: {
-      if (_is_nodal(isos)) {
+      if (isosurface_is_nodal(isos)) {
         parent_distrib = PDM_dmesh_nodal_vtx_distrib_get(isos->dmesh_nodal);
       }
       else {
@@ -2508,7 +2503,7 @@ _build_ptp_dist
     }
 
     case PDM_MESH_ENTITY_EDGE: {
-      if (_is_nodal(isos)) {
+      if (isosurface_is_nodal(isos)) {
         PDM_error(__FILE__, __LINE__, 0, "Not yet implemented\n");
       }
       else {
@@ -2518,7 +2513,7 @@ _build_ptp_dist
     }
 
     case PDM_MESH_ENTITY_FACE: {
-      if (_is_nodal(isos)) {
+      if (isosurface_is_nodal(isos)) {
         PDM_error(__FILE__, __LINE__, 0, "Not yet implemented\n");
       }
       else {
@@ -2797,7 +2792,7 @@ _free_extracted_parts
 )
 {
   int is_local   = (isos->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL);
-  int is_2d_ngon = (isos->entry_mesh_dim == 2) && !_is_nodal(isos);
+  int is_2d_ngon = (isos->entry_mesh_dim == 2) && !isosurface_is_nodal(isos);
 
   for (int i_part=0; i_part<isos->iso_n_part; ++i_part) {
     if (is_local) {
@@ -2922,15 +2917,16 @@ _isosurface_compute
   _extract(isos, id_isosurface);
   isosurface_timer_end(isos, ISO_TIMER_EXTRACT);
 
-  /* If nodal with sections other than TRIA3 and TETRA4, fall back to ngon */
-  if (_is_nodal(isos)) {
-    isosurface_timer_start(isos, ISO_TIMER_NGONIZE);
+  isosurface_timer_start(isos, ISO_TIMER_NGONIZE);
+  if (isosurface_is_nodal(isos)) {
+    /* If nodal with sections other than TRIA3 and TETRA4, fall back to ngon */
     _ngonize(isos);
-    isosurface_timer_end(isos, ISO_TIMER_NGONIZE);
   }
   else if (isos->entry_mesh_dim == 2) {
+    /* If ngon 2d, triangulate polygons and use Marching Triangles contouring algorithm */
     _triangulate(isos);
   }
+  isosurface_timer_end(isos, ISO_TIMER_NGONIZE);
 
   /* Evaluate field on extracted mesh */
   isosurface_timer_start(isos, ISO_TIMER_COMPUTE_EXTRACT_FIELD);
@@ -2939,7 +2935,7 @@ _isosurface_compute
 
   /* Build isosurface mesh */
   isosurface_timer_start(isos, ISO_TIMER_CONTOURING);
-  if (_is_nodal(isos) || isos->entry_mesh_dim == 2) {
+  if (isosurface_is_nodal(isos) || isos->entry_mesh_dim == 2) {
     PDM_isosurface_marching_algo(isos,
                                  id_isosurface);
   }
@@ -2954,7 +2950,7 @@ _isosurface_compute
     /* Block-distribute the isosurface */
     isosurface_timer_start(isos, ISO_TIMER_PART_TO_DIST);
     _part_to_dist(isos, id_isosurface);
-    for (int i_entity = 0; i_entity < PDM_MESH_ENTITY_MAX; i_entity++) {
+    for (int i_entity = PDM_MESH_ENTITY_FACE; i_entity < PDM_MESH_ENTITY_MAX; i_entity++) {
       _build_ptp_dist(isos,
                       id_isosurface,
                       i_entity);
@@ -2965,7 +2961,7 @@ _isosurface_compute
     // Partitioned
     isosurface_timer_start(isos, ISO_TIMER_BUILD_EXCH_PROTOCOL);
     if (isos->extract_kind != PDM_EXTRACT_PART_KIND_LOCAL) {
-      for (int i_entity = 0; i_entity < PDM_MESH_ENTITY_MAX; i_entity++) {
+      for (int i_entity = PDM_MESH_ENTITY_FACE; i_entity < PDM_MESH_ENTITY_MAX; i_entity++) {
         _build_ptp_part(isos,
                         id_isosurface,
                         i_entity);
@@ -3286,7 +3282,7 @@ PDM_isosurface_dump_times
       }
     }
 
-    if (!_is_nodal(isos)) {
+    if (!isosurface_is_nodal(isos)) {
       // Ngon
       if (step == ISO_TIMER_NGONIZE) {
         continue;
@@ -3312,7 +3308,7 @@ PDM_isosurface_free
     // Block-distributed
     PDM_block_to_part_free(isos->btp_vtx);
 
-    if (_is_nodal(isos)) {
+    if (isosurface_is_nodal(isos)) {
       PDM_part_mesh_nodal_free(isos->pmesh_nodal);
     }
     else {

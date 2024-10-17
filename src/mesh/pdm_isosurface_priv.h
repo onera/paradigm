@@ -441,6 +441,12 @@ isosurface_timer_end
   _isosurface_timer_step_t  step
 );
 
+int
+isosurface_is_nodal
+(
+  PDM_isosurface_t *isos
+);
+
 
 /* Python wrapping */
 void
