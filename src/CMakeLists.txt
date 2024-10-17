@@ -15,6 +15,7 @@ file(GLOB_RECURSE SOURCES
      struct/*.[ch]
      struct/*.cxx
      util/*.[ch]
+     test_utils/*.[ch]
      ext_wrapper/*.[ch]
      mpi_wrapper/pdm_mpi_node_first_rank.[hc]
      io/pdm_logging.[hc]
@@ -78,6 +79,7 @@ target_include_directories(pdm
   PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/gpu>
   PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/adapt>
   PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/util>
+  PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/test_utils>
   PUBLIC    $<INSTALL_INTERFACE:include/>
 )
 
@@ -104,6 +106,7 @@ if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
     PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/meshgen>
     PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/struct>
     PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/util>
+    PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/test_utils>
     PUBLIC    $<INSTALL_INTERFACE:include/>
   )
     if (PDM_ENABLE_EXTENSION_PDMA)
@@ -144,7 +147,8 @@ if (PDM_ENABLE_CUDA)
                               PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/mesh
                               PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/meshgen
                               PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/struct
-                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/util)
+                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/util
+                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/test_utils)
 endif ()
 
 # Liste des header
