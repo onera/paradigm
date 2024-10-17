@@ -1407,14 +1407,15 @@ PDM_dmesh_nodal_dump_vtk
   if (dmne != NULL) {
     distrib_elt = PDM_compute_uniform_entity_distribution(dmn->comm,
                                                           dmne->n_g_elmts);
-
-    PDM_dgroup_entity_transpose(dmne->n_group_elmt,
-                                dmne->dgroup_elmt_idx,
-                                dmne->dgroup_elmt,
-                (PDM_g_num_t *) distrib_elt,
-                                &delt_group_idx,
-                                &delt_group,
-                                dmn->comm);
+    if (dmne->n_group_elmt>0) {
+      PDM_dgroup_entity_transpose(dmne->n_group_elmt,
+                                  dmne->dgroup_elmt_idx,
+                                  dmne->dgroup_elmt,
+                  (PDM_g_num_t *) distrib_elt,
+                                  &delt_group_idx,
+                                  &delt_group,
+                                  dmn->comm);
+    }
   }
 
   PDM_g_num_t shift = 0;
@@ -1491,29 +1492,38 @@ PDM_dmesh_nodal_dump_vtk
 
       int **tmp_elt_group_idx = NULL;
       int **tmp_elt_group     = NULL;
-      PDM_part_dentity_group_to_pentity_group(dmn->comm,
-                                              1,
-                                              distrib_elt,
-                                              delt_group_idx,
-                                              delt_group,
-                                              &n_elt,
-                      (const PDM_g_num_t **)  &delmt_ln_to_gn,
-                                              &tmp_elt_group_idx,
-                                              &tmp_elt_group);
-      int *pelt_group_idx = tmp_elt_group_idx[0];
-      int *pelt_group     = tmp_elt_group    [0];
-      PDM_free(tmp_elt_group_idx);
-      PDM_free(tmp_elt_group);
 
-      n_field = 1;
-      PDM_malloc(field   , n_field, double *);
-      PDM_malloc(field[0], n_elt  , double  );
-      for (int i = 0; i < n_elt; i++) {
-        assert (pelt_group_idx[i+1] == pelt_group_idx[i] + 1);
-        field[0][i] = (double) pelt_group[i];
+      if (dmne->n_group_elmt>0) {
+        PDM_part_dentity_group_to_pentity_group(dmn->comm,
+                                                1,
+                                                distrib_elt,
+                                                delt_group_idx,
+                                                delt_group,
+                                                &n_elt,
+                        (const PDM_g_num_t **)  &delmt_ln_to_gn,
+                                                &tmp_elt_group_idx,
+                                                &tmp_elt_group);
+        int *pelt_group_idx = tmp_elt_group_idx[0];
+        int *pelt_group     = tmp_elt_group    [0];
+        PDM_free(tmp_elt_group_idx);
+        PDM_free(tmp_elt_group);
+
+        n_field = 1;
+        PDM_malloc(field   , n_field, double *);
+        PDM_malloc(field[0], n_elt  , double  );
+        for (int i = 0; i < n_elt; i++) {
+          assert (pelt_group_idx[i+1] == pelt_group_idx[i] + 1);
+          field[0][i] = (double) pelt_group[i];
+        }
+        PDM_free(pelt_group);
+        PDM_free(pelt_group_idx);
       }
-      PDM_free(pelt_group);
-      PDM_free(pelt_group_idx);
+      else {
+        n_field = 1;
+        PDM_malloc(field   , n_field, double *);
+        PDM_calloc(field[0], n_elt  , double  );
+      }
+
     }
 
     /*
