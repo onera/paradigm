@@ -273,9 +273,9 @@ cdef class Isosurface:
   def __cinit__(self, int      mesh_dim, 
                       MPI.Comm comm):
     """
-    __init__(mesh_dim, comm)
+    Isosurface(mesh_dim, comm)
 
-    Create the structure.
+    Create the isosurface structure.
 
     Parameters:
       mesh_dim (int)      : Entry mesh dimension
@@ -392,7 +392,7 @@ cdef class Isosurface:
     """
     compute(id_iso)
 
-    Computed aksed isosurface.
+    Computed asked isosurface.
 
     Parameters:
       id_iso (int) : Isosurface id
@@ -700,21 +700,19 @@ cdef class Isosurface:
     PDM_isosurface_dmesh_nodal_set(self._isos, dmesh_nodal.dmn)
 
   def dfield_set(self,                            id_iso,
-                                                  i_part,
       NPY.ndarray[NPY.double_t, mode='c', ndim=1] field):
     """
-    dfield_set(id_iso, i_part, field)
+    dfield_set(id_iso, field)
 
     Set distributed field.
 
     Parameters:
       id_iso      (int)                     : Isosurface id
-      i_part      (int)                     : Partition id
       coordinates (np.ndarray[np.double_t]) : Field
     """
     cdef double *field_data = np_to_double_pointer(field)
 
-    PDM_isosurface_dfield_set(self._isos, i_part, field_data)
+    PDM_isosurface_dfield_set(self._isos, id_iso, field_data)
 
 
   # > Partitioned getter API
