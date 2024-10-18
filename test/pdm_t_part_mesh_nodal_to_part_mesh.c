@@ -77,7 +77,8 @@ _read_args(int                    argc,
            int                   *post,
            PDM_Mesh_nodal_elt_t  *elt_type,
            int                   *part_method,
-           int                   *old_algo)
+           int                   *old_algo,
+           int                   *do_gnums)
 {
   int i = 1;
 
@@ -131,6 +132,9 @@ _read_args(int                    argc,
     else if (strcmp(argv[i], "-old") == 0) {
       *old_algo = 1;
     }
+    else if (strcmp(argv[i], "-do_gnums") == 0) {
+      *do_gnums = 1;
+    }
     else
       _usage(EXIT_FAILURE);
     i++;
@@ -155,6 +159,7 @@ int main(int argc, char *argv[])
   int                n_part     = 1;
   int                post       = 0;
   int                old_algo   = 0;
+  int                do_gnums   = 0;
 #ifdef PDM_HAVE_PARMETIS
   PDM_split_dual_t part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
 #else
@@ -177,7 +182,8 @@ int main(int argc, char *argv[])
              &post,
              &elt_type,
      (int *) &part_method,
-             &old_algo);
+             &old_algo,
+             &do_gnums);
 
   assert(elt_type != PDM_MESH_NODAL_POLY_3D); // TODO: poly_vol_gen en dcube_nodal_gen
 
@@ -242,6 +248,10 @@ int main(int argc, char *argv[])
   PDM_part_mesh_nodal_t *pmesh_nodal = NULL;
   PDM_multipart_get_part_mesh_nodal(mpart_id, 0, &pmesh_nodal, PDM_OWNERSHIP_KEEP);
 
+
+  PDM_MPI_Barrier(comm);
+  double t_start = PDM_MPI_Wtime();
+
   PDM_part_mesh_t *pm = NULL;
   if (old_algo) {
     PDM_dmesh_nodal_to_dmesh_transform_t transform_kind = PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE;
@@ -264,36 +274,38 @@ int main(int argc, char *argv[])
                                                            PDM_CONNECTIVITY_TYPE_CELL_FACE);
     }
 
-    PDM_part_mesh_nodal_to_part_mesh_connectivity_enable(pmn_to_pm,
-                                                         PDM_CONNECTIVITY_TYPE_FACE_EDGE);
+    // PDM_part_mesh_nodal_to_part_mesh_connectivity_enable(pmn_to_pm,
+    //                                                      PDM_CONNECTIVITY_TYPE_FACE_EDGE);
 
-    PDM_part_mesh_nodal_to_part_mesh_connectivity_enable(pmn_to_pm,
-                                                         PDM_CONNECTIVITY_TYPE_EDGE_VTX);
+    // PDM_part_mesh_nodal_to_part_mesh_connectivity_enable(pmn_to_pm,
+    //                                                      PDM_CONNECTIVITY_TYPE_EDGE_VTX);
 
     PDM_part_mesh_nodal_to_part_mesh_connectivity_enable(pmn_to_pm,
                                                          PDM_CONNECTIVITY_TYPE_FACE_VTX);
 
-    if (dim == 3) {
-      PDM_part_mesh_nodal_to_part_mesh_g_nums_enable(pmn_to_pm,
-                                                     PDM_MESH_ENTITY_CELL);
-    }
 
     // Global IDs
-    PDM_part_mesh_nodal_to_part_mesh_g_nums_enable(pmn_to_pm,
-                                                   PDM_MESH_ENTITY_FACE);
+    if (do_gnums) {
+      if (dim == 3) {
+        PDM_part_mesh_nodal_to_part_mesh_g_nums_enable(pmn_to_pm,
+                                                       PDM_MESH_ENTITY_CELL);
+      }
+      PDM_part_mesh_nodal_to_part_mesh_g_nums_enable(pmn_to_pm,
+                                                     PDM_MESH_ENTITY_FACE);
 
-    PDM_part_mesh_nodal_to_part_mesh_g_nums_enable(pmn_to_pm,
-                                                   PDM_MESH_ENTITY_EDGE);
+      // PDM_part_mesh_nodal_to_part_mesh_g_nums_enable(pmn_to_pm,
+      //                                                PDM_MESH_ENTITY_EDGE);
 
-    PDM_part_mesh_nodal_to_part_mesh_g_nums_enable(pmn_to_pm,
-                                                   PDM_MESH_ENTITY_VTX);
+      PDM_part_mesh_nodal_to_part_mesh_g_nums_enable(pmn_to_pm,
+                                                     PDM_MESH_ENTITY_VTX);
+    }
 
     // Groups
     PDM_part_mesh_nodal_to_part_mesh_groups_enable(pmn_to_pm,
                                                    PDM_BOUND_TYPE_FACE);
 
-    PDM_part_mesh_nodal_to_part_mesh_groups_enable(pmn_to_pm,
-                                                   PDM_BOUND_TYPE_EDGE);
+    // PDM_part_mesh_nodal_to_part_mesh_groups_enable(pmn_to_pm,
+    //                                                PDM_BOUND_TYPE_EDGE);
 
 
     PDM_part_mesh_nodal_to_part_mesh_compute(pmn_to_pm);
@@ -305,6 +317,17 @@ int main(int argc, char *argv[])
     PDM_part_mesh_nodal_to_part_mesh_free(pmn_to_pm);
   }
 
+  double t_end = PDM_MPI_Wtime();
+
+  double delta_t = t_end - t_start;
+
+  double min_delta_t, max_delta_t;
+  PDM_MPI_Allreduce(&delta_t, &min_delta_t, 1, PDM_MPI_DOUBLE, PDM_MPI_MIN, comm);
+  PDM_MPI_Allreduce(&delta_t, &max_delta_t, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
+
+  if (i_rank == 0) {
+    printf("min/max elapsed time :  %8.2e / %8.2e\n", min_delta_t, max_delta_t)    ;
+  }
 
   if(post) {
     // Part mesh nodal

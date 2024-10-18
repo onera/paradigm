@@ -62,9 +62,9 @@ typedef struct _pdm_part_mesh_nodal_to_part_mesh_t PDM_part_mesh_nodal_to_part_m
 /**
  * \brief Create a structure for generating a \ref PDM_part_mesh_t instance from a \ref PDM_part_mesh_nodal_t instance
  *
- * \param [in] pmesh_nodal               Pointer to \ref PDM_part_mesh_nodal_t instance
- * \param [in] keep_link_elmt_to_entity  Preserve link element (Part Mesh Nodal) -> entity (Part Mesh)
- * \param [in] vtx_ownership_pmesh       Part Mesh's ownership for vertices
+ * \param [inout] pmesh_nodal               Pointer to \ref PDM_part_mesh_nodal_t instance
+ * \param [in]    keep_link_elmt_to_entity  Preserve link element (Part Mesh Nodal) -> entity (Part Mesh)
+ * \param [in]    vtx_ownership_pmesh       Part Mesh's ownership for vertices
  *
  * \return Pointer to a new \ref PDM_part_mesh_nodal_to_part_mesh_t instance.
  *
@@ -76,6 +76,8 @@ typedef struct _pdm_part_mesh_nodal_to_part_mesh_t PDM_part_mesh_nodal_to_part_m
  *     - if \p vtx_ownership_pmesh is PDM_OWNERSHIP_KEEP : only the Part Mesh owns the vertices
  *     - if \p vtx_ownership_pmesh is PDM_OWNERSHIP_USER : neither the Part Mesh Nodal nor the Part Mesh own the vertices
  *
+ * \note If \p keep_link_elmt_to_entity is set to PDM_TRUE, the link elmt->entity will be stored
+ *       in \p pmesh_nodal and can be retrieved by calling \ref PDM_part_mesh_nodal_elmts_section_elmt_to_entity_get
  */
 PDM_part_mesh_nodal_to_part_mesh_t *
 PDM_part_mesh_nodal_to_part_mesh_create
@@ -107,6 +109,8 @@ PDM_part_mesh_nodal_to_part_mesh_connectivity_enable
  * \param [in] pmn_to_pm    Pointer to \ref PDM_part_mesh_nodal_to_part_mesh_t instance
  * \param [in] entity_type  Entity type
  *
+ * \note Note for developers : if part_comm_graph is provided, how to decide if gnums are
+ *       generated in fast, not-reproducible mode?
  */
 void
 PDM_part_mesh_nodal_to_part_mesh_g_nums_enable
