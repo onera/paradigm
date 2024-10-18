@@ -493,7 +493,7 @@ PDM_isosurface_dvtx_coord_get
 }
 
 
-void
+int
 PDM_isosurface_distrib_get
 (
   PDM_isosurface_t     *isos,
@@ -511,6 +511,10 @@ PDM_isosurface_distrib_get
 
   _isosurface_t *_iso = &isos->isosurfaces[id_iso];
   *distribution = PDM_compute_entity_distribution(isos->comm, _iso->iso_dn_entity[entity_type]);
+
+  int i_rank;
+  PDM_MPI_Comm_rank(isos->comm, &i_rank);
+  return distribution[i_rank+1]-distribution[i_rank];
 }
 
 

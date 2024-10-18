@@ -896,11 +896,11 @@ PDM_isosurface_dvtx_coord_get
  * \param [in]  entity_type   Entity type
  * \param [out] distribution  Entity distribution
  *
- * \return Number of groups
+ * \return Number of entities
  *
  */
 
-void
+int
 PDM_isosurface_distrib_get
 (
   PDM_isosurface_t     *isos,
