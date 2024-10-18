@@ -1165,7 +1165,7 @@ PDM_part_mesh_nodal_dump_vtk
 
       PDM_g_num_t *g_num = PDM_part_mesh_nodal_elmts_g_num_get(pmne, id_section, i_part, PDM_OWNERSHIP_BAD_VALUE);
 
-      int *_elt_to_entity = PDM_part_mesh_nodal_elmts_section_elt_to_entity_get(pmne, id_section, i_part, PDM_OWNERSHIP_BAD_VALUE);
+      int *_elt_to_entity = PDM_part_mesh_nodal_elmts_section_elmt_to_entity_get(pmne, id_section, i_part, PDM_OWNERSHIP_BAD_VALUE);
 
       for (int i_elt = 0; i_elt < n_elt; i_elt++) {
         elt_g_num  [idx] = g_num[i_elt];
@@ -1872,7 +1872,7 @@ const int                     id_part
 }
 
 int *
-PDM_part_mesh_nodal_section_elt_to_entity_get
+PDM_part_mesh_nodal_section_elmt_to_entity_get
 (
       PDM_part_mesh_nodal_t *pmn,
 const int                    i_section,
@@ -1890,10 +1890,10 @@ const int                    id_part,
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
   assert(pmne != NULL);
 
-  return PDM_part_mesh_nodal_elmts_section_elt_to_entity_get(pmne,
-                                                             id_section,
-                                                             id_part,
-                                                             ownership);
+  return PDM_part_mesh_nodal_elmts_section_elmt_to_entity_get(pmne,
+                                                              id_section,
+                                                              id_part,
+                                                              ownership);
 }
 
 void

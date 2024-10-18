@@ -912,10 +912,10 @@ _store_link_pmn_to_pm
       for (int i_section = 0; i_section < n_section; i_section++) {
 
         int *elt_to_entity = NULL;
-        elt_to_entity = PDM_part_mesh_nodal_elmts_section_elt_to_entity_get(pmne,
-                                                                            sections_id[i_section],
-                                                                            i_part,
-                                                                            PDM_OWNERSHIP_BAD_VALUE);
+        elt_to_entity = PDM_part_mesh_nodal_elmts_section_elmt_to_entity_get(pmne,
+                                                                             sections_id[i_section],
+                                                                             i_part,
+                                                                             PDM_OWNERSHIP_BAD_VALUE);
         if (elt_to_entity != NULL) {
           printf("Warning : elt_to_entity already exists => What should we do??? (keep untouched for now)\n");
           fflush(stdout);
