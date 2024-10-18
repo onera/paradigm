@@ -153,6 +153,13 @@ cdef extern from "pdm_isosurface.h":
                                PDM_g_num_t         **group_entity_ln_to_gn,
                                PDM_ownership_t       ownership);
 
+  int PDM_isosurface_isovalue_entity_idx_get(PDM_isosurface_t     *isos,
+                                             int                   id_isosurface,
+                                             int                   i_part,
+                                             PDM_mesh_entities_t   entity_type,
+                                             int                 **isovalue_entity_idx,
+                                             PDM_ownership_t       ownership);
+
   int PDM_isosurface_dconnectivity_get(PDM_isosurface_t         *isos,
                                        int                       id_isosurface,
                                        PDM_connectivity_type_t   connectivity_type,
@@ -182,6 +189,13 @@ cdef extern from "pdm_isosurface.h":
                                 int                 **dgroup_entity_idx,
                                 PDM_g_num_t         **dgroup_entity,
                                 PDM_ownership_t       ownership);
+
+  int PDM_isosurface_disovalue_entity_get(PDM_isosurface_t     *isos,
+                                          int                   id_isosurface,
+                                          PDM_mesh_entities_t   entity_type,
+                                          int                 **disovalue_entity_idx,
+                                          PDM_g_num_t         **disovalue_entity,
+                                          PDM_ownership_t       ownership);
 
   int PDM_isosurface_local_parent_get(PDM_isosurface_t     *isos,
                                       int                   id_isosurface,
@@ -241,6 +255,8 @@ cdef class Isosurface:
 
   # cdef list keep_alive
   cdef MPI.Comm py_comm
+  cdef int      i_rank
+  cdef int      n_rank
   cdef dict ptp_entity
   cdef dict user_defined_field_function
   cdef dict got_vtx_parent_idx
@@ -278,6 +294,8 @@ cdef class Isosurface:
     cdef PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&c_comm)
 
     self.py_comm = comm
+    self.i_rank  = comm.Get_rank()
+    self.n_rank  = comm.Get_size()
 
     self._isos = PDM_isosurface_create(pdm_comm,
                                        mesh_dim)
@@ -924,6 +942,32 @@ cdef class Isosurface:
 
     return np_vtx_parent_idx, np_vtx_parent_weight
 
+  def isovalue_idx_get(self, id_iso, i_part, entity_type):
+    """
+    isovalue_idx_get(id_iso, i_part, entity_type)
+
+    Get isosurface's isovalues index which indicate
+    which entities belongs to which isovalues.
+
+    Parameters:
+      id_iso      (int)                 : Isosurface id
+      i_part      (int)                 : Partition id
+      entity_type (PDM_mesh_entities_t) : Entity type
+
+    Returns:
+      isovalue_idx (`np.ndarray[np.int32_t]`) : Isovalue index
+    """
+    cdef int  n_isovalues  = 0
+    cdef int *isovalue_idx = NULL
+    n_isovalues = PDM_isosurface_isovalue_entity_idx_get(self._isos, id_iso, i_part,
+                                                         entity_type,
+                                                        &isovalue_idx,
+                                                         PDM_OWNERSHIP_USER)
+
+    np_isovalue_idx = create_numpy_i(isovalue_idx, n_isovalues+1, flag_owndata=True)
+
+    return np_isovalue_idx
+
 
   # > Distributed getter API
   def dconnectivity_get(self, id_iso, connectivity_type):
@@ -976,11 +1020,26 @@ cdef class Isosurface:
 
     return np_dcoordinates
 
-  def distrib_get(self, id_iso, entity_type):
+  def distribution_get(self, id_iso, entity_type):
     """
-    Not implemented
+    distribution_get(id_iso, entity_type)
+
+    Get isosurface entity distribution.
+
+    Parameters:
+      id_iso      (int)                 : Isosurface id
+      entity_type (PDM_mesh_entities_t) : Entity type
+
+    Returns:
+      distribution (`np.ndarray[np.npy_pdm_gnum_t]`) : Entity distribution
     """
-    raise NotImplementedError()
+    cdef PDM_g_num_t *distrib = NULL
+    PDM_isosurface_distrib_get(self._isos, id_iso, entity_type,
+                              &distrib)
+
+    np_distrib = create_numpy_g(distrib, self.n_rank, flag_owndata=True)
+
+    return np_distrib
 
   def dgroup_get(self, id_iso, entity_type):
     """
@@ -1035,6 +1094,37 @@ cdef class Isosurface:
     np_vtx_parent_weight = create_numpy_d(vtx_parent_weight, vtx_parent_weight_size, flag_owndata=True)
 
     return np_vtx_parent_weight
+
+  def disovalue_entity_get(self, id_iso, entity_type):
+    """
+    disovalue_entity_get(id_iso, entity_type)
+
+    Get isosurface's isovalue id of entities which indicate
+    which entities belongs to which isovalues.
+
+    Parameters:
+      id_iso      (int)                 : Isosurface id
+      entity_type (PDM_mesh_entities_t) : Entity type
+
+    Returns:
+      disovalue_entity_idx (`np.ndarray[np.int32_t]`)     : Isovalue index
+      disovalue_entity     (`np.ndarray[npy_pdm_gnum_t]`) : Isovalue entities global ids
+    """
+    cdef int          n_isovalues          = 0
+    cdef int         *disovalue_entity_idx = NULL
+    cdef PDM_g_num_t *disovalue_entity     = NULL
+
+    n_isovalues = PDM_isosurface_disovalue_entity_get(self._isos, id_iso, entity_type,
+                                                     &disovalue_entity_idx,
+                                                     &disovalue_entity,
+                                                      PDM_OWNERSHIP_USER)
+
+    disovalue_entity_size   = disovalue_entity_idx[n_isovalues]
+    np_disovalue_entity_idx = create_numpy_i(disovalue_entity_idx, n_isovalues+1        , flag_owndata=True)
+    np_disovalue_entity     = create_numpy_g(disovalue_entity    , disovalue_entity_size, flag_owndata=True)
+
+    return np_disovalue_entity_idx, np_disovalue_entity
+
 
   def dump_times(self):
     """
