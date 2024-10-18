@@ -669,13 +669,13 @@ PDM_isosurface_group_get
 int
 PDM_isosurface_isovalue_entity_idx_get
 (
- PDM_isosurface_t     *isos,
- int                   id_isosurface,
- int                   i_part,
- PDM_mesh_entities_t   entity_type,
- int                 **isovalue_entity_idx,
- PDM_ownership_t       ownership
- )
+  PDM_isosurface_t     *isos,
+  int                   id_isosurface,
+  int                   i_part,
+  PDM_mesh_entities_t   entity_type,
+  int                 **isovalue_entity_idx,
+  PDM_ownership_t       ownership
+)
 {
   CHECK_IS_NOT_DIST(isos);
   PDM_ISOSURFACE_CHECK_ID      (isos, id_isosurface);
@@ -699,8 +699,8 @@ PDM_isosurface_isovalue_entity_idx_get
 void
 PDM_isosurface_n_part_out_set
 (
- PDM_isosurface_t *isos,
- int               n_part_out
+  PDM_isosurface_t *isos,
+  int               n_part_out
 )
 {
   CHECK_IS_NOT_DIST(isos);
