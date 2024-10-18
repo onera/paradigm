@@ -301,8 +301,7 @@ PDM_part_renum_graph
 const int   n_entity1,
       int  *entity1_entity1_idx,
       int  *entity1_entity1,
-const int  *new_to_old_order,
-int         start
+const int  *new_to_old_order
 )
 {
 
@@ -311,27 +310,16 @@ int         start
                                  entity1_entity1_idx,
                                  entity1_entity1);
 
-
   int *old_to_new_order = NULL;
   PDM_malloc(old_to_new_order, n_entity1, int);
   for(int i = 0; i < n_entity1; i++) {
     old_to_new_order[new_to_old_order[i]] = i;
   }
 
-  int *old_array = NULL;
-  PDM_malloc(old_array, entity1_entity1_idx[n_entity1], int);
-
   for (int i = 0; i < entity1_entity1_idx[n_entity1]; ++i) {
-    old_array[i] = entity1_entity1[i];
+    entity1_entity1[i] = old_to_new_order[entity1_entity1[i]];
   }
 
-  for (int i = 0; i < entity1_entity1_idx[n_entity1]; ++i) {
-    int old_idx        = PDM_ABS (old_array[i]);
-    int sign           = PDM_SIGN(old_array[i]);
-    entity1_entity1[i] = sign * (old_to_new_order[old_idx-start] + start);
-  }
-
-  PDM_free(old_array);
   PDM_free(old_to_new_order);
 }
 
