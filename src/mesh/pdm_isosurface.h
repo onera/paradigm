@@ -801,33 +801,6 @@ PDM_isosurface_dconnectivity_get
 
 /**
  *
- * \brief Get iso-surface entities parent gnum
- *
- * \param [in]  isos          \ref PDM_isosurface_t instance
- * \param [in]  id_isosurface Iso-surface identifier
- * \param [in]  entity_type   Entity type
- * \param [out] dparent_idx   Parent index
- * \param [out] dparent       Parent gnum
- * \param [in]  ownership     Ownership
- *
- * \return Number of leading entities
- *
- */
-
-int
-PDM_isosurface_parent_gnum_get
-(
-  PDM_isosurface_t     *isos,
-  int                   id_iso,
-  PDM_mesh_entities_t   entity_type,
-  int                 **parent_idx,
-  PDM_g_num_t         **parent_gnum,
-  PDM_ownership_t       ownership
-);
-
-
-/**
- *
  * \brief Get iso-surface parent weight for iso vertices
  *
  * \param [in]  isos                \ref PDM_isosurface_t instance
@@ -849,19 +822,6 @@ PDM_isosurface_dvtx_parent_weight_get
   double              **dvtx_parent_weight,
   PDM_ownership_t       ownership
 );
-
-/**
- *
- * \brief TODO
- *
- */
-int
-PDM_isosurface_dvtx_protocol_get
-(
-  PDM_isosurface_t         *isos
-);
-
-
 
 
 /**
