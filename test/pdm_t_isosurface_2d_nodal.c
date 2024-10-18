@@ -15,6 +15,8 @@
 #include "pdm_dcube_nodal_gen.h"
 #include "pdm_generate_mesh.h"
 
+#include "pdm_isosurface_test_utils.h"
+
 /*============================================================================
  * Type definitions
  *============================================================================*/
@@ -22,217 +24,6 @@
 /*============================================================================
  * Private function definitions
  *============================================================================*/
-
-
-
-static const int it_max = 40;
-static void
-_eval_mandelbrot
-(
- const double  x,
- const double  y,
- const double  z,
-       double *f
-)
-{
-  PDM_UNUSED(z);
-
-  double _x = x - 0.5;
-  double _y = y;
-
-  double xk = 0;
-  double yk = 0;
-
-  double zxk = 1.;
-  double zyk = 0.;
-  double rk;
-
-  int it;
-  for (it = 0; it < it_max; it++) {
-    double xk_new = xk*xk - yk*yk + _x;
-    double yk_new = 2*xk*yk       + _y;
-    xk = xk_new;
-    yk = yk_new;
-    rk = sqrt(xk*xk + yk*yk);
-
-    double zxk_new = 2*(xk*zxk - yk*zyk) + 1;
-    double zyk_new = 2*(zxk*yk + xk*zyk) + 1;
-
-    zxk = zxk_new;
-    zyk = zyk_new;
-
-    if (rk > 2.) {
-      break;
-    }
-  }
-
-  double mag_dz = sqrt(zxk*zxk + zyk*zyk);
-  *f = rk * log(PDM_MAX(1e-9, rk)) / PDM_MAX(1e-9, mag_dz);
-  // if (it < it_max-1) {
-  //   *f = 1.;
-  // } else {
-  //   *f = -1.;
-  // }
-}
-
-
-
-static void
-_build_pmn_from_iso_result
-(
-  PDM_isosurface_t       *isos,
-  int                     id_isosurface,
-  int                     n_part,
-  PDM_part_mesh_nodal_t **pmn_out,
-  PDM_MPI_Comm            comm
-)
-{
-
-  PDM_part_mesh_nodal_t *pmn = PDM_part_mesh_nodal_create(1, n_part, comm);
-  int i_edge_section = PDM_part_mesh_nodal_section_add(pmn, PDM_MESH_NODAL_BAR2);
-  
-  for (int i_part=0; i_part<n_part; ++i_part) {
-    // > Vertex
-    double      *iso_vtx_coord = NULL;
-    PDM_g_num_t *iso_vtx_gnum  = NULL;
-    int iso_n_vtx = PDM_isosurface_vtx_coord_get(isos, id_isosurface, i_part, &iso_vtx_coord, PDM_OWNERSHIP_KEEP);
-    PDM_isosurface_ln_to_gn_get(isos, id_isosurface, i_part, PDM_MESH_ENTITY_VTX, &iso_vtx_gnum, PDM_OWNERSHIP_KEEP);
-    PDM_part_mesh_nodal_coord_set(pmn, i_part, iso_n_vtx, iso_vtx_coord, iso_vtx_gnum, PDM_OWNERSHIP_USER);
-
-    // > Edge
-    int         *iso_edge_vtx  = NULL;
-    PDM_g_num_t *iso_edge_gnum = NULL;
-    int iso_n_edge = PDM_isosurface_connectivity_get(isos, id_isosurface, i_part, PDM_CONNECTIVITY_TYPE_EDGE_VTX, NULL, &iso_edge_vtx, PDM_OWNERSHIP_KEEP);
-    PDM_isosurface_ln_to_gn_get(isos, id_isosurface, i_part, PDM_MESH_ENTITY_EDGE, &iso_edge_gnum, PDM_OWNERSHIP_KEEP);
-    PDM_part_mesh_nodal_section_std_set(pmn, i_edge_section, i_part, iso_n_edge, iso_edge_vtx, iso_edge_gnum, NULL, NULL, PDM_OWNERSHIP_USER);
-  }
-
-  // TODO: why if KEEP on pmn and USER on iso it double free ?
-
-  // > Return
-  *pmn_out = pmn;
-}
-
-
-/**
- *
- * \brief  Usage
- *
- */
-static void
-_usage(int exit_code)
-{
-  PDM_printf
-    ("\n"
-     "  Usage: \n\n"
-     "  -nx       <n>  Number of vertices on the cube side (x direction).\n\n"
-     "  -ny       <n>  Number of vertices on the cube side (y direction).\n\n"
-     "  -l        <n>  Cube length.\n\n"
-     "  -elt_type <t>  Surface element type (only for automatically generated mesh).\n\n"
-     "  -n_part   <n>  Number of partitions (if partitioned entry).\n\n"
-     "  -is_dist       Is entry distributed ou partitioned.\n\n"
-     "  -local         Deactivate isosurface redistribution.\n\n"
-     "  -visu          Activate output.\n\n"
-     "  -h             This message.\n\n");
-
-  exit(exit_code);
-}
-
-
-/**
- *
- * \brief  Read arguments from the command line
- *
- * \param [in]      argc       Number of arguments
- * \param [in]      argv       Arguments
- * \param [inout]   n_vtx_x    Number of vertices on the cube x side
- * \param [inout]   n_vtx_y    Number of vertices on the cube y side
- * \param [inout]   length     Square length
- * \param [inout]   elt_type   Element type
- * \param [inout]   n_part     Number of partitions par process
- * \param [inout]   dist_entry Is entry distributed or partitioned (resp 1, 0)
- * \param [inout]   local      Deactivate isosurface redistribution
- * \param [inout]   visu       Ensight outputs status
- *
- */
-static void
-_read_args(int                     argc,
-           char                  **argv,
-           PDM_g_num_t           *n_vtx_x,
-           PDM_g_num_t           *n_vtx_y,
-           double                *length,
-           PDM_Mesh_nodal_elt_t  *elt_type,
-           int                   *n_part,
-           int                   *dist_entry,
-           int                   *local,
-           int                   *visu)
-{
-  int i = 1;
-
-  /* Parse and check command line */
-
-  while (i < argc) {
-
-    if (strcmp(argv[i], "-h") == 0)
-      _usage(EXIT_SUCCESS);
-
-    else if (strcmp(argv[i], "-nx") == 0) {
-      i++;
-      if (i >= argc)
-        _usage(EXIT_FAILURE);
-      else {
-        long _n_vtx_x = atol(argv[i]);
-        *n_vtx_x = (PDM_g_num_t) _n_vtx_x;
-      }
-    }
-    else if (strcmp(argv[i], "-ny") == 0) {
-      i++;
-      if (i >= argc)
-        _usage(EXIT_FAILURE);
-      else {
-        long _n_vtx_y = atol(argv[i]);
-        *n_vtx_y = (PDM_g_num_t) _n_vtx_y;
-      }
-    }
-    else if (strcmp(argv[i], "-l") == 0) {
-      i++;
-      if (i >= argc)
-        _usage(EXIT_FAILURE);
-      else
-        *length = atof(argv[i]);
-    }
-    else if (strcmp(argv[i], "-elt_type") == 0) {
-      i++;
-      if (i >= argc) {
-        _usage(EXIT_FAILURE);
-      }
-      else {
-        *elt_type = (PDM_Mesh_nodal_elt_t) atoi(argv[i]);
-      }
-    }
-    else if (strcmp(argv[i], "-n_part") == 0) {
-      i++;
-      if (i >= argc)
-        _usage(EXIT_FAILURE);
-      else {
-        *n_part = atoi(argv[i]);
-      }
-    }
-    else if (strcmp(argv[i], "-dist_entry") == 0) {
-      *dist_entry = 1;
-    }
-    else if (strcmp(argv[i], "-local") == 0) {
-      *local = 1;
-    }
-    else if (strcmp(argv[i], "-visu") == 0) {
-      *visu = 1;
-    }
-    else
-      _usage(EXIT_FAILURE);
-    i++;
-  }
-}
-
 
 /**
  *
@@ -256,30 +47,33 @@ int main(int argc, char *argv[])
   /*
    *  Read args
    */
-  PDM_g_num_t          n_vtx_x    = 5;
-  PDM_g_num_t          n_vtx_y    = 5;
-  double               length     = 1.;
-  int                  n_part     = 1;
-  int                  order      = 1;
-  PDM_Mesh_nodal_elt_t elt_type   = PDM_MESH_NODAL_TRIA3;
-  int                  dist_entry = 0;
-  int                  local      = 0;
-  int                  visu       = 0;
-  
-  _read_args(argc,
-             argv,
-             &n_vtx_x,
-             &n_vtx_y,
-             &length,
-             &elt_type,
-             &n_part,
-             &dist_entry,
-             &local,
-             &visu);
+  char                 *mesh_name      = NULL;
+  char                 *sol_name       = NULL;
+  int                   n_part         = 1;
+  int                   visu           = 0;
+  int                   n_isovalues    = 1;
+  double               *isovalues      = NULL;
+  PDM_Mesh_nodal_elt_t  elt_type       = PDM_MESH_NODAL_TRIA3;
+  PDM_g_num_t           n_vtx_seg      = 10;
+  int                   randomize      = 0;
+  int                   use_part_mesh  = 0;
+  int                   generate_edges = 0;
+  int                   local          = 0;
 
-  if (n_part <= 0) {
-    dist_entry = 1;
-  }
+  PDM_isosurface_test_utils_read_args(argc,
+                                      argv,
+                                     &n_part,
+                                     &mesh_name,
+                                     &sol_name,
+                                     &visu,
+                                     &n_isovalues,
+                                     &isovalues,
+                                     &elt_type,
+                                     &randomize,
+                                     &n_vtx_seg,
+                                     &use_part_mesh,
+                                     &generate_edges,
+                                     &local);
 
 
   /*
@@ -288,51 +82,39 @@ int main(int argc, char *argv[])
   PDM_dcube_nodal_t     *dcube_nodal = NULL;
   PDM_dmesh_nodal_t     *dmn         = NULL;
   PDM_part_mesh_nodal_t *pmn         = NULL;
-  if (dist_entry==1) {
+  if (n_part==0) {
     // Block-distributed
     dcube_nodal = PDM_dcube_nodal_gen_create(comm,
-                                             n_vtx_x,
-                                             n_vtx_y,
+                                             n_vtx_seg,
+                                             n_vtx_seg,
                                              0,
-                                             length,
+                                             1.,
                                              0.,
                                              0.,
                                              0.,
                                              elt_type,
-                                             order,
+                                             1,
                                              PDM_OWNERSHIP_KEEP);
     PDM_dcube_nodal_gen_build(dcube_nodal);
 
     dmn = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube_nodal);
   }
-  else if (dist_entry==0) {
+  else {
     // Partitioned
     pmn  = PDM_generate_mesh_rectangle(comm,
                                        elt_type,
-                                       order,
+                                       1,
                                        NULL,
                                        0.,
                                        0.,
                                        0.,
-                                       length,
-                                       length,
-                                       n_vtx_x,
-                                       n_vtx_y,
+                                       1.,
+                                       1.,
+                                       n_vtx_seg,
+                                       n_vtx_seg,
                                        n_part,
                                        PDM_SPLIT_DUAL_WITH_PARMETIS); // TODO: Allow various partitioning ?
-  } else {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_t_isosurface_2d_nodal dist_entry must be 0 or 1 (here set to %d)\n", dist_entry);
   }
-
-
-  /*
-   *  TODO:
-   *    - extract bc
-   *    - plusieurs isovalues
-   *    - reequilibrate/local
-   *    - test reset (et chp variable ?)
-   */
-
 
 
   /*
@@ -341,15 +123,13 @@ int main(int argc, char *argv[])
   PDM_isosurface_t *isos = PDM_isosurface_create(comm,
                                                  2/*,
                                                  PDM_MESH_NODAL_BAR2*/);
-  if (dist_entry==1) {
+  if (n_part==0) {
     PDM_isosurface_dmesh_nodal_set(isos, dmn);
-  } else if (dist_entry==0) {
+  } else {
     PDM_isosurface_mesh_nodal_set(isos, pmn);
     if (local==0) {
       PDM_isosurface_redistribution_set(isos, PDM_EXTRACT_PART_KIND_REEQUILIBRATE, PDM_SPLIT_DUAL_WITH_HILBERT); // TODO: Test various partitioning ?
     }
-  } else {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_t_isosurface_2d_nodal dist_entry must be 0 or 1 (here set to %d)\n", dist_entry);
   }
 
 
@@ -379,102 +159,148 @@ int main(int argc, char *argv[])
                               iso2,
                               sphere_equation);
 
-  // > User field isosurface
-  double  *dfield = NULL;
-  double **field  = NULL;
+  // > User isosurface field and interpolation field
+  double  *iso_dfield      = NULL;
+  double  *itp_dfield_vtx  = NULL;
+  double  *itp_dfield_face = NULL;
+  double **iso_field       = NULL;
+  double **itp_field_vtx   = NULL;
+  double **itp_field_face  = NULL;
 
   double field_isovalues[1] = {0.};
   int iso3 = PDM_isosurface_add(isos, 
                                 PDM_ISO_SURFACE_KIND_FIELD,
                                 1,
                                 field_isovalues);
-  if (dist_entry==1) {
+  if (n_part==0) {
     int     dn_vtx     = PDM_DMesh_nodal_n_vtx_get(dmn);
-    double *dvtx_coord = PDM_DMesh_nodal_vtx_get  (dmn);
-    PDM_malloc(dfield, dn_vtx, double);
-    for (int i_vtx=0; i_vtx<dn_vtx; ++i_vtx) {
-      _eval_mandelbrot(dvtx_coord[3*i_vtx  ],
-                       dvtx_coord[3*i_vtx+1],
-                       dvtx_coord[3*i_vtx+2],
-                       &dfield[i_vtx]);
+    double *dvtx_coord = PDM_DMesh_nodal_coord_get(dmn, PDM_OWNERSHIP_BAD_VALUE);
+
+    PDM_malloc(iso_dfield     , dn_vtx, double);
+    PDM_malloc(itp_dfield_vtx , dn_vtx, double);
+    PDM_isosurface_test_utils_compute_iso_field(dn_vtx, dvtx_coord, iso_dfield     );
+    PDM_isosurface_test_utils_compute_itp_field(dn_vtx, dvtx_coord, itp_dfield_vtx );
+
+    PDM_g_num_t *face_distri = PDM_DMesh_nodal_section_distri_std_get(dmn, PDM_GEOMETRY_KIND_SURFACIC, 0);
+    int dn_face = face_distri[i_rank+1]-face_distri[i_rank];
+    PDM_malloc(itp_dfield_face, dn_face, double);
+    for (int i_face=0; i_face<dn_face; ++i_face) {
+      itp_dfield_face[i_face] = (double) (face_distri[i_rank]+i_face);
     }
+
     PDM_isosurface_dfield_set(isos,
                               iso3,
-                              dfield);
-  } else if (dist_entry==0) {
-    PDM_malloc(field, n_part, double *);
+                              iso_dfield);
+  } else {
+    PDM_malloc(iso_field     , n_part, double *);
+    PDM_malloc(itp_field_vtx , n_part, double *);
+    PDM_malloc(itp_field_face, n_part, double *);
 
     for (int i_part=0; i_part<n_part; ++i_part) {
       int     n_vtx     = PDM_part_mesh_nodal_n_vtx_get(pmn, i_part);
       double *vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmn, i_part);
-      PDM_malloc(field[i_part], n_vtx, double);
       
-      for (int i_vtx=0; i_vtx<n_vtx; ++i_vtx) {
-        _eval_mandelbrot( vtx_coord[3*i_vtx  ],
-                          vtx_coord[3*i_vtx+1],
-                          vtx_coord[3*i_vtx+2],
-                         &field[i_part][i_vtx]);
+      PDM_malloc(iso_field     [i_part], n_vtx, double);
+      PDM_malloc(itp_field_vtx [i_part], n_vtx, double);
+      PDM_isosurface_test_utils_compute_iso_field(n_vtx, vtx_coord, iso_field     [i_part]);
+      PDM_isosurface_test_utils_compute_itp_field(n_vtx, vtx_coord, itp_field_vtx [i_part]);
+
+      int n_face = PDM_part_mesh_nodal_n_elmts_get(pmn, PDM_GEOMETRY_KIND_SURFACIC, i_part);
+      PDM_g_num_t *face_gnum = PDM_part_mesh_nodal_g_num_get(pmn, 0, i_part, PDM_OWNERSHIP_KEEP);
+      PDM_malloc(itp_field_face[i_part], n_face, double);
+      for (int i_face=0; i_face<n_face; ++i_face) {
+        itp_field_face[i_part][i_face] = (double) face_gnum[i_face];
       }
+
       PDM_isosurface_field_set(isos,
                                iso3,
                                i_part,
-                               field[i_part]);
+                               iso_field[i_part]);
     }
-  }
-  else {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_t_isosurface_2d_nodal dist_entry must be 0 or 1 (here set to %d)\n", dist_entry);
   }
 
 
   /*
    *  Compute isosurfaces
    */
+  int n_iso = iso3+1;
+  for (int i_iso = 0; i_iso < n_iso; i_iso++) {
+    PDM_isosurface_enable_part_to_part(isos,
+                                       i_iso,
+                                       PDM_MESH_ENTITY_VTX,
+                                       0);
+
+    PDM_isosurface_enable_part_to_part(isos,
+                                       i_iso,
+                                       PDM_MESH_ENTITY_EDGE,
+                                       0);
+  }
+
   PDM_isosurface_compute(isos, iso1);
   PDM_isosurface_reset  (isos, iso1);
   PDM_isosurface_reset  (isos, iso2);
+
   PDM_isosurface_compute(isos, iso1);
   PDM_isosurface_compute(isos, iso2);
   PDM_isosurface_compute(isos, iso3);
+
+
+  /*
+   *  Interpolate field
+   */
+  double  **iso_itp_dfield_vtx  = NULL;
+  double  **iso_itp_dfield_edge = NULL;
+  double ***iso_itp_field_vtx   = NULL;
+  double ***iso_itp_field_edge  = NULL;
+  PDM_malloc(iso_itp_dfield_vtx , n_iso, double  *);
+  PDM_malloc(iso_itp_dfield_edge, n_iso, double  *);
+  PDM_malloc(iso_itp_field_vtx  , n_iso, double **);
+  PDM_malloc(iso_itp_field_edge , n_iso, double **);
+  for (int i_iso=0; i_iso<n_iso; ++i_iso) {
+    iso_itp_dfield_vtx [i_iso] = NULL;
+    iso_itp_dfield_edge[i_iso] = NULL;
+    iso_itp_field_vtx  [i_iso] = NULL;
+    iso_itp_field_edge [i_iso] = NULL;
+  } 
+  if (n_part==0) { // Distributed
+    for (int i_iso=0; i_iso<n_iso; ++i_iso) {
+      PDM_isosurface_test_utils_dist_interpolation(isos, i_iso,
+                                                   itp_dfield_vtx ,
+                                                   itp_dfield_face,
+                                                   NULL,
+                                                  &iso_itp_dfield_vtx [i_iso],
+                                                  &iso_itp_dfield_edge[i_iso],
+                                                   NULL);
+    }
+  }
+  else {
+    for (int i_iso=0; i_iso<n_iso; ++i_iso) {
+      PDM_isosurface_test_utils_part_interpolation(isos, i_iso, n_part, local,
+                                                   itp_field_vtx ,
+                                                   itp_field_face,
+                                                   NULL,
+                                                  &iso_itp_field_vtx [i_iso],
+                                                  &iso_itp_field_edge[i_iso],
+                                                   NULL);
+    }
+  }
+
 
   /*
    *  Visu isosurfaces
    */
   if (visu==1) {
-    if (dist_entry==1) {
-      // PDM_error(__FILE__, __LINE__, 0, "PDM_t_isosurface_2d_nodal:: Not implmented\n");
+    if (n_part==0) {
+      for (int i_iso = 0; i_iso < n_iso; i_iso++) {
+        PDM_isosurface_test_utils_dist_vtk(isos, i_iso, comm);
+      }
     }
-    else if (dist_entry==0) {
-      // > iso line output
-      PDM_part_mesh_nodal_t *iso_pmn1 = NULL;
-      _build_pmn_from_iso_result(isos, iso1, n_part, &iso_pmn1, comm);
-
-      PDM_part_mesh_nodal_dump_vtk(iso_pmn1,
-                                   PDM_GEOMETRY_KIND_RIDGE,
-                                   "pmn_iso_line_iso_mesh");
-
-      PDM_part_mesh_nodal_free(iso_pmn1);
-
-
-      // > iso circle output
-      PDM_part_mesh_nodal_t *iso_pmn2 = NULL;
-      _build_pmn_from_iso_result(isos, iso2, n_part, &iso_pmn2, comm);
-
-      PDM_part_mesh_nodal_dump_vtk(iso_pmn2,
-                                   PDM_GEOMETRY_KIND_RIDGE,
-                                   "pmn_iso_circle_mesh");
-
-      PDM_part_mesh_nodal_free(iso_pmn2);
-
-
-      // > iso field output
-      PDM_part_mesh_nodal_t *iso_pmn3 = NULL;
-      _build_pmn_from_iso_result(isos, iso3, n_part, &iso_pmn3, comm);
-
-      PDM_part_mesh_nodal_dump_vtk(iso_pmn3,
-                                   PDM_GEOMETRY_KIND_RIDGE,
-                                   "pmn_iso_field_mesh");
-
-      PDM_part_mesh_nodal_free(iso_pmn3);
+    else {
+      for (int i_iso = 0; i_iso < n_iso; i_iso++) {
+        for (int i_part = 0; i_part < n_part; i_part++) {
+          PDM_isosurface_test_utils_part_vtk(isos, i_iso, i_part, iso_itp_field_vtx, comm);
+        }
+      }
     }
   }
 
@@ -489,25 +315,54 @@ int main(int argc, char *argv[])
    *  Free objects
    */
   PDM_isosurface_free(isos);
-  if (dist_entry==1) {
+  if (n_part==0) {
     PDM_dcube_nodal_gen_free(dcube_nodal);
-  } else if (dist_entry==0) {
-    PDM_part_mesh_nodal_free(pmn);
   } else {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_t_isosurface_2d_nodal dist_entry must be 0 or 1 (here set to %d)\n", dist_entry);
+    PDM_part_mesh_nodal_free(pmn);
   }
 
-  if (field!=NULL) {
+  PDM_free(iso_dfield);
+  PDM_free(itp_dfield_vtx);
+  PDM_free(itp_dfield_face);
+
+  if (iso_field!=NULL) {
     for (int i_part=0; i_part<n_part; ++i_part) {
-      if (field[i_part]!=NULL) {
-        PDM_free(field[i_part]);
+      if (iso_field[i_part]!=NULL) {
+        PDM_free(iso_field[i_part]);
       }
     }
-    PDM_free(field);
+    PDM_free(iso_field);
+  }
+  if (itp_field_vtx!=NULL) {
+    for (int i_part=0; i_part<n_part; ++i_part) {
+      PDM_free(itp_field_vtx [i_part]);
+      PDM_free(itp_field_face[i_part]);
+    }
+    PDM_free(itp_field_vtx );
+    PDM_free(itp_field_face);
   }
 
-  PDM_free(dfield);
+  if (iso_itp_dfield_vtx!=NULL) {
+    for (int i_iso=0; i_iso<n_iso; ++i_iso) {
+      PDM_free(iso_itp_dfield_vtx [i_iso]);
+      PDM_free(iso_itp_dfield_edge[i_iso]);
+    }
+  }
+  PDM_free(iso_itp_dfield_vtx );
+  PDM_free(iso_itp_dfield_edge);
 
+  if (iso_itp_field_vtx!=NULL) {
+    for (int i_iso=0; i_iso<n_iso; ++i_iso) {
+      for (int i_part=0; i_part<n_part; ++i_part) {
+        PDM_free(iso_itp_field_vtx [i_iso][i_part]);
+        PDM_free(iso_itp_field_edge[i_iso][i_part]);
+      }
+      PDM_free(iso_itp_field_vtx [i_iso]);
+      PDM_free(iso_itp_field_edge[i_iso]);
+    }
+  }
+  PDM_free(iso_itp_field_vtx );
+  PDM_free(iso_itp_field_edge);
 
   PDM_MPI_Finalize();
 

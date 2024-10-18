@@ -1080,7 +1080,7 @@ void
 PDM_isosurface_test_utils_dist_interpolation
 (
   PDM_isosurface_t *isos,
-  int               i_iso,
+  int               id_iso,
   double           *itp_dfield_vtx,
   double           *itp_dfield_face,
   double           *itp_dfield_cell,
@@ -1105,16 +1105,16 @@ PDM_isosurface_test_utils_dist_interpolation
   // int         *vtx_dparent_idx  = NULL;
   // PDM_g_num_t *vtx_dparent_gnum = NULL;
   // double      *vtx_dparent_wght = NULL;
-  // iso_dn_vtx = PDM_isosurface_parent_gnum_get(isos, i_iso, PDM_MESH_ENTITY_VTX,
+  // iso_dn_vtx = PDM_isosurface_parent_gnum_get(isos, id_iso, PDM_MESH_ENTITY_VTX,
   //                                            &vtx_dparent_idx, &vtx_dparent_gnum,
   //                                             PDM_OWNERSHIP_KEEP);
-  // iso_dn_vtx = PDM_isosurface_dvtx_parent_weight_get(isos, i_iso,
+  // iso_dn_vtx = PDM_isosurface_dvtx_parent_weight_get(isos, id_iso,
   //                                                   &vtx_dparent_idx, &vtx_dparent_wght,
   //                                                    PDM_OWNERSHIP_KEEP);
 
   // // > Isosurface utils for ptp
   // PDM_g_num_t *iso_vtx_distrib = NULL;
-  // PDM_isosurface_distrib_get(isos, i_iso, PDM_MESH_ENTITY_VTX, &iso_vtx_distrib);
+  // PDM_isosurface_distrib_get(isos, id_iso, PDM_MESH_ENTITY_VTX, &iso_vtx_distrib);
   // PDM_g_num_t *iso_vtx_gnum = PDM_array_new_arange_gnum(iso_vtx_distrib[i_rank]+1, iso_vtx_distrib[i_rank+1]+1, 1);
   // PDM_free(iso_vtx_distrib);
 
@@ -1136,7 +1136,7 @@ PDM_isosurface_test_utils_dist_interpolation
   //                                                       comm);
 
   PDM_part_to_part_t *ptp_vtx = NULL;
-  PDM_isosurface_part_to_part_get(isos, i_iso, PDM_MESH_ENTITY_VTX,
+  PDM_isosurface_part_to_part_get(isos, id_iso, PDM_MESH_ENTITY_VTX,
                                  &ptp_vtx, PDM_OWNERSHIP_BAD_VALUE); 
 
   // > Exchange isofield
@@ -1163,7 +1163,7 @@ PDM_isosurface_test_utils_dist_interpolation
 
   int         *vtx_dparent_idx  = NULL;
   double      *vtx_dparent_wght = NULL;
-  int iso_dn_vtx = PDM_isosurface_dvtx_parent_weight_get(isos, i_iso,
+  int iso_dn_vtx = PDM_isosurface_dvtx_parent_weight_get(isos, id_iso,
                                                         &vtx_dparent_idx, &vtx_dparent_wght,
                                                          PDM_OWNERSHIP_KEEP);
 
@@ -1184,7 +1184,7 @@ void
 PDM_isosurface_test_utils_part_interpolation
 (
   PDM_isosurface_t *isos,
-  int               i_iso,
+  int               id_iso,
   int               n_part,
   int               local,
   double          **itp_field_vtx,
@@ -1219,7 +1219,7 @@ PDM_isosurface_test_utils_part_interpolation
       int    *iso_vtx_parent_idx;
       double *iso_vtx_parent_weight;
       int iso_n_vtx = PDM_isosurface_vtx_parent_weight_get(isos,
-                                                           i_iso,
+                                                           id_iso,
                                                            i_part,
                                                            &iso_vtx_parent_idx,
                                                            &iso_vtx_parent_weight,
@@ -1227,26 +1227,26 @@ PDM_isosurface_test_utils_part_interpolation
 
       int *iso_vtx_parent;
       PDM_isosurface_local_parent_get(isos,
-                                      i_iso,
+                                      id_iso,
                                       i_part,
                                       PDM_MESH_ENTITY_VTX,
                                       &iso_vtx_parent_idx,
                                       &iso_vtx_parent,
                                       PDM_OWNERSHIP_KEEP);
 
-      PDM_malloc(iso_itp_field_vtx[i_iso][i_part], iso_n_vtx, double);
+      PDM_malloc(iso_itp_field_vtx[id_iso][i_part], iso_n_vtx, double);
       for (int i_vtx = 0; i_vtx < iso_n_vtx; i_vtx++) {
-        iso_itp_field_vtx[i_iso][i_part][i_vtx] = 0.;
+        iso_itp_field_vtx[id_iso][i_part][i_vtx] = 0.;
         for (int i = iso_vtx_parent_idx[i_vtx]; i < iso_vtx_parent_idx[i_vtx+1]; i++) {
           int i_parent = iso_vtx_parent[i_vtx] - 1;
-          iso_itp_field_vtx[i_iso][i_part][i_vtx] += iso_vtx_parent_weight[i] * itp_field_vtx[i_part][i_parent];
+          iso_itp_field_vtx[id_iso][i_part][i_vtx] += iso_vtx_parent_weight[i] * itp_field_vtx[i_part][i_parent];
         }
       }
 
       int *parent_idx;
       int *parent;
       int iso_n_edge = PDM_isosurface_local_parent_get(isos,
-                                                       i_iso,
+                                                       id_iso,
                                                        i_part,
                                                        PDM_MESH_ENTITY_EDGE,
                                                        &parent_idx,
@@ -1260,7 +1260,7 @@ PDM_isosurface_test_utils_part_interpolation
 
       if (dim==3) {
         int iso_n_face = PDM_isosurface_local_parent_get(isos,
-                                                         i_iso,
+                                                         id_iso,
                                                          i_part,
                                                          PDM_MESH_ENTITY_FACE,
                                                          &parent_idx,
@@ -1282,7 +1282,7 @@ PDM_isosurface_test_utils_part_interpolation
     // Interpolate a vtx-based field
     PDM_part_to_part_t *ptp_vtx = NULL;
     PDM_isosurface_part_to_part_get(isos,
-                                    i_iso,
+                                    id_iso,
                                     PDM_MESH_ENTITY_VTX,
                                     &ptp_vtx,
                                     PDM_OWNERSHIP_KEEP);
@@ -1307,7 +1307,7 @@ PDM_isosurface_test_utils_part_interpolation
       int    *iso_vtx_parent_idx;
       double *iso_vtx_parent_weight;
       int iso_n_vtx = PDM_isosurface_vtx_parent_weight_get(isos,
-                                                           i_iso,
+                                                           id_iso,
                                                            i_part,
                                                            &iso_vtx_parent_idx,
                                                            &iso_vtx_parent_weight,
@@ -1331,7 +1331,7 @@ PDM_isosurface_test_utils_part_interpolation
     // Exchange parent face gnums just for fun
     PDM_part_to_part_t *ptp_edge = NULL;
     PDM_isosurface_part_to_part_get(isos,
-                                    i_iso,
+                                    id_iso,
                                     PDM_MESH_ENTITY_EDGE,
                                     &ptp_edge,
                                     PDM_OWNERSHIP_KEEP);
@@ -1356,7 +1356,7 @@ PDM_isosurface_test_utils_part_interpolation
     for (int i_part = 0; i_part < n_part; i_part++) {
       PDM_g_num_t *iso_edge_ln_to_gn;
       int iso_n_edge = PDM_isosurface_ln_to_gn_get(isos,
-                                                   i_iso,
+                                                   id_iso,
                                                    i_part,
                                                    PDM_MESH_ENTITY_EDGE,
                                                    &iso_edge_ln_to_gn,
@@ -1375,7 +1375,7 @@ PDM_isosurface_test_utils_part_interpolation
     if (dim==3) {
       PDM_part_to_part_t *ptp_face = NULL;
       PDM_isosurface_part_to_part_get(isos,
-                                      i_iso,
+                                      id_iso,
                                       PDM_MESH_ENTITY_FACE,
                                       &ptp_face,
                                       PDM_OWNERSHIP_KEEP);
@@ -1401,7 +1401,7 @@ PDM_isosurface_test_utils_part_interpolation
       for (int i_part = 0; i_part < n_part; i_part++) {
         PDM_g_num_t *iso_face_ln_to_gn;
         int iso_n_face = PDM_isosurface_ln_to_gn_get(isos,
-                                                     i_iso,
+                                                     id_iso,
                                                      i_part,
                                                      PDM_MESH_ENTITY_FACE,
                                                      &iso_face_ln_to_gn,
@@ -1430,7 +1430,7 @@ void
 PDM_isosurface_test_utils_dist_vtk
 (
   PDM_isosurface_t *isos,
-  int               i_iso,
+  int               id_iso,
   PDM_MPI_Comm      comm
 )
 {
@@ -1441,7 +1441,7 @@ PDM_isosurface_test_utils_dist_vtk
 
   // > Vertices
   double *dvtx_coords = NULL;
-  int     dn_vtx = PDM_isosurface_dvtx_coord_get(isos, i_iso, &dvtx_coords, PDM_OWNERSHIP_KEEP);
+  int     dn_vtx = PDM_isosurface_dvtx_coord_get(isos, id_iso, &dvtx_coords, PDM_OWNERSHIP_KEEP);
   if (1) {
     log_trace("dn_vtx = %d\n", dn_vtx);
     PDM_log_trace_array_double(dvtx_coords, 3*dn_vtx, "dvtx_coords ::");
@@ -1450,7 +1450,7 @@ PDM_isosurface_test_utils_dist_vtk
   // > Edges
   int         *dedge_vtx_idx = NULL;
   PDM_g_num_t *dedge_vtx     = NULL;
-  PDM_g_num_t dn_edge = PDM_isosurface_dconnectivity_get(isos, i_iso, 
+  PDM_g_num_t dn_edge = PDM_isosurface_dconnectivity_get(isos, id_iso, 
                                                          PDM_CONNECTIVITY_TYPE_EDGE_VTX,
                                                         &dedge_vtx_idx,
                                                         &dedge_vtx,
@@ -1465,7 +1465,7 @@ PDM_isosurface_test_utils_dist_vtk
   PDM_g_num_t *dface_vtx     = NULL;
   PDM_g_num_t dn_face        = 0;
   if (dim==3) {
-    dn_face = PDM_isosurface_dconnectivity_get(isos, i_iso, 
+    dn_face = PDM_isosurface_dconnectivity_get(isos, id_iso, 
                                                PDM_CONNECTIVITY_TYPE_FACE_VTX,
                                               &dface_vtx_idx,
                                               &dface_vtx,
@@ -1483,7 +1483,7 @@ PDM_isosurface_test_utils_dist_vtk
   int         *dedge_group_idx = NULL;
   PDM_g_num_t *dedge_group     = NULL;
   if (dim==3) {
-    n_group = PDM_isosurface_dgroup_get(isos, i_iso, 
+    n_group = PDM_isosurface_dgroup_get(isos, id_iso, 
                                         PDM_MESH_ENTITY_EDGE,
                                        &dedge_group_idx,
                                        &dedge_group,
@@ -1544,10 +1544,10 @@ PDM_isosurface_test_utils_dist_vtk
                                            PDM_OWNERSHIP_USER);
   }
 
-  sprintf(out_name, "isosurface_3d_ngon_iso_edge_%d.vtk", i_iso);
+  sprintf(out_name, "isosurface_3d_ngon_iso_edge_%d.vtk", id_iso);
   PDM_dmesh_nodal_dump_vtk(iso_dmn, PDM_GEOMETRY_KIND_RIDGE, out_name);
   if (dim==3) {
-    sprintf(out_name, "isosurface_3d_ngon_iso_%d.vtk", i_iso);
+    sprintf(out_name, "isosurface_3d_ngon_iso_%d.vtk", id_iso);
     PDM_dmesh_nodal_dump_vtk(iso_dmn, PDM_GEOMETRY_KIND_SURFACIC, out_name);
   }
 
@@ -1595,6 +1595,26 @@ PDM_isosurface_test_utils_part_vtk
                                &iso_edge_gnum,
                                 PDM_OWNERSHIP_KEEP);
 
+    int          n_group             = 0;
+    int         *group_edge_idx      = NULL;
+    int         *group_edge          = NULL;
+    PDM_g_num_t *group_edge_ln_to_gn = NULL;
+    double      *fld_group_edge      = NULL;
+    PDM_malloc(fld_group_edge, iso_n_edge, double);
+    n_group = PDM_isosurface_group_get(isos,
+                                       id_iso,
+                                       i_part,
+                                       PDM_MESH_ENTITY_EDGE,
+                                       &group_edge_idx,
+                                       &group_edge,
+                                       &group_edge_ln_to_gn,
+                                       PDM_OWNERSHIP_KEEP);
+    for (int i_group = 0; i_group < n_group; i_group++) {
+      for (int i = group_edge_idx[i_group]; i < group_edge_idx[i_group+1]; i++) {
+        fld_group_edge[group_edge[i]-1] = (double) (i_group + 1);
+      }
+    }
+
     // > Convert group into tag
     int *iso_edge_tag1      = NULL;
     int *iso_edge_tag2      = NULL;
@@ -1630,9 +1650,25 @@ PDM_isosurface_test_utils_part_vtk
     int         *iso_face_vtx_idx  = NULL;
     int         *iso_face_vtx      = NULL;
     PDM_g_num_t *iso_face_gnum     = NULL;
+    double      *iso_face_isovalue = NULL;
     if (dim==3) {
       iso_n_face = PDM_isosurface_connectivity_get(isos, id_iso, i_part, PDM_CONNECTIVITY_TYPE_FACE_VTX, &iso_face_vtx_idx, &iso_face_vtx, PDM_OWNERSHIP_KEEP);
       PDM_isosurface_ln_to_gn_get(isos, id_iso, i_part, PDM_MESH_ENTITY_FACE, &iso_face_gnum, PDM_OWNERSHIP_KEEP);
+
+      int *isovalue_face_idx = NULL;
+      int _n_isovalues = PDM_isosurface_isovalue_entity_idx_get(isos,
+                                                                id_iso,
+                                                                i_part,
+                                                                PDM_MESH_ENTITY_FACE,
+                                                                &isovalue_face_idx,
+                                                                PDM_OWNERSHIP_KEEP);
+
+      PDM_malloc(iso_face_isovalue, iso_n_face, double);
+      for (int i_isovalue = 0; i_isovalue < _n_isovalues; i_isovalue++) {
+        for (int i_face = isovalue_face_idx[i_isovalue]; i_face < isovalue_face_idx[i_isovalue+1]; i_face++) {
+          iso_face_isovalue[i_face] = i_isovalue;
+        }
+      }
     }
 
     /**
@@ -1658,6 +1694,32 @@ PDM_isosurface_test_utils_part_vtk
                                edge_field_name,
                                edge_field_value);
 
+    // > 3D ngon old version
+    // sprintf(out_name, "isosurface_3d_ngon_iso_edge_%d_part_%d.vtk", id_iso, i_rank*n_part + i_part);
+    // const char   *elt_field_name [] = {"i_isovalue", "i_group", "parent_face"};
+    // const double *elt_field_value[] = {iso_edge_isovalue, iso_edge_group, iso_parent_face[id_iso][i_part]};
+
+    // const char   *vtx_field_name [] = {"itp_field"};
+    // const double *vtx_field_value[] = {(const double *) iso_itp_field[id_iso][i_part]};
+
+    // PDM_vtk_write_std_elements_ho_with_vtx_field(out_name,
+    //                                              1,
+    //                                              iso_n_vtx,
+    //                                              iso_vtx_coord,
+    //                                              iso_vtx_ln_to_gn,
+    //                                              PDM_MESH_NODAL_BAR2,
+    //                                              iso_n_edge,
+    //                                              iso_edge_vtx,
+    //                                              iso_edge_ln_to_gn,
+    //                                              3,
+    //                                              elt_field_name,
+    //                                              elt_field_value,
+    //                                              1,
+    //                                              vtx_field_name,
+    //                                              vtx_field_value);
+    // PDM_free(iso_edge_isovalue);
+    // PDM_free(iso_edge_group   );
+
     if (dim==3) {
       sprintf(filename, "iso_face_id_%i_part_%i_rank_%i.vtk", id_iso, i_part, i_rank);
       double *_iso_vtx_field = NULL;
@@ -1677,10 +1739,12 @@ PDM_isosurface_test_utils_part_vtk
                                    "field",
                                    _iso_vtx_field);
 
-      free(iso_edge_tag1);
-      free(iso_edge_tag2);
-      free(iso_edge_tag1_gnum);
-      free(iso_edge_tag2_gnum);
+      PDM_free(iso_edge_tag1);
+      PDM_free(iso_edge_tag2);
+      PDM_free(iso_edge_tag1_gnum);
+      PDM_free(iso_edge_tag2_gnum);
+      PDM_free(iso_face_isovalue);
+      PDM_free(fld_group_edge);
     }
   }
 

@@ -116,7 +116,9 @@ int main
                                     &dmesh);
 
 
-  // Compute scalar field
+  /**
+   * Compute scalar field
+   */
   double  *iso_dfield      = NULL;
   double  *itp_dfield_vtx  = NULL;
   double  *itp_dfield_face = NULL;
@@ -174,7 +176,9 @@ int main
   }
 
 
-  // Create Isosurface instance
+  /**
+   * Create Isosurface instance
+   */
   PDM_isosurface_t *isos = PDM_isosurface_create(comm, 2);
 
   if (n_part > 0) {

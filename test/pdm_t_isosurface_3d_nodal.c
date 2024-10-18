@@ -87,10 +87,14 @@ int main(int argc, char *argv[])
   PDM_dmesh_nodal_t     *dmn         = NULL;
   PDM_part_mesh_nodal_t *pmn         = NULL;
 
-  double  *iso_dfield = NULL;
-  double  *itp_dfield = NULL;
-  double **iso_field  = NULL;
-  double **itp_field  = NULL;
+  double  *iso_dfield      = NULL;
+  double  *itp_dfield_vtx  = NULL;
+  double  *itp_dfield_face = NULL;
+  double  *itp_dfield_cell = NULL;
+  double **iso_field       = NULL;
+  double **itp_field_vtx   = NULL;
+  double **itp_field_face  = NULL;
+  double **itp_field_cell  = NULL;
 
   if (n_part==0) {
     // Block-distributed
@@ -112,10 +116,26 @@ int main(int argc, char *argv[])
     int     dn_vtx     = PDM_DMesh_nodal_n_vtx_get(dmn);
     double *dvtx_coord = PDM_DMesh_nodal_coord_get(dmn, PDM_OWNERSHIP_BAD_VALUE);
 
-    PDM_malloc(iso_dfield, dn_vtx, double);
-    PDM_malloc(itp_dfield, dn_vtx, double);
-    PDM_isosurface_test_utils_compute_iso_field(dn_vtx, dvtx_coord, iso_dfield);
-    PDM_isosurface_test_utils_compute_itp_field(dn_vtx, dvtx_coord, itp_dfield);
+    PDM_malloc(iso_dfield     , dn_vtx, double);
+    PDM_malloc(itp_dfield_vtx , dn_vtx, double);
+    PDM_malloc(itp_dfield_face, dn_vtx, double);
+    PDM_malloc(itp_dfield_cell, dn_vtx, double);
+    PDM_isosurface_test_utils_compute_iso_field(dn_vtx, dvtx_coord, iso_dfield    );
+    PDM_isosurface_test_utils_compute_itp_field(dn_vtx, dvtx_coord, itp_dfield_vtx);
+
+    PDM_g_num_t *face_distri = PDM_DMesh_nodal_section_distri_std_get(dmn, PDM_GEOMETRY_KIND_SURFACIC, 0);
+    int dn_face = face_distri[i_rank+1]-face_distri[i_rank];
+    PDM_malloc(itp_dfield_face, dn_face, double);
+    for (int i_face=0; i_face<dn_face; ++i_face) {
+      itp_dfield_face[i_face] = (double) (face_distri[i_rank]+i_face);
+    }
+
+    PDM_g_num_t *cell_distri = PDM_DMesh_nodal_section_distri_std_get(dmn, PDM_GEOMETRY_KIND_VOLUMIC, 0);
+    int dn_cell = cell_distri[i_rank+1]-cell_distri[i_rank];
+    PDM_malloc(itp_dfield_cell, dn_cell, double);
+    for (int i_cell=0; i_cell<dn_cell; ++i_cell) {
+      itp_dfield_cell[i_cell] = (double) (cell_distri[i_rank]+i_cell);
+    }
 
   }
   else {
@@ -137,17 +157,34 @@ int main(int argc, char *argv[])
                                            PDM_SPLIT_DUAL_WITH_PARMETIS); // TODO: Allow various partitioning ?
     
     // > Fields initialisation
-    PDM_malloc(iso_field, n_part, double *);
-    PDM_malloc(itp_field, n_part, double *);
+    PDM_malloc(iso_field     , n_part, double *);
+    PDM_malloc(itp_field_vtx , n_part, double *);
+    PDM_malloc(itp_field_face, n_part, double *);
+    PDM_malloc(itp_field_cell, n_part, double *);
 
     for (int i_part=0; i_part<n_part; ++i_part) {
       int     n_vtx     = PDM_part_mesh_nodal_n_vtx_get(pmn, i_part);
       double *vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmn, i_part);
 
-      PDM_malloc(iso_field[i_part], n_vtx, double);
-      PDM_malloc(itp_field[i_part], n_vtx, double);
-      PDM_isosurface_test_utils_compute_iso_field(n_vtx, vtx_coord, iso_field[i_part]);
-      PDM_isosurface_test_utils_compute_itp_field(n_vtx, vtx_coord, itp_field[i_part]);
+      PDM_malloc(iso_field     [i_part], n_vtx, double);
+      PDM_malloc(itp_field_vtx [i_part], n_vtx, double);
+      PDM_isosurface_test_utils_compute_iso_field(n_vtx, vtx_coord, iso_field    [i_part]);
+      PDM_isosurface_test_utils_compute_itp_field(n_vtx, vtx_coord, itp_field_vtx[i_part]);
+
+      int n_face = PDM_part_mesh_nodal_n_elmts_get(pmn, PDM_GEOMETRY_KIND_SURFACIC, i_part);
+      PDM_g_num_t *face_gnum = PDM_part_mesh_nodal_g_num_get(pmn, 0, i_part, PDM_OWNERSHIP_KEEP);
+      PDM_malloc(itp_field_face[i_part], n_face, double);
+      for (int i_face=0; i_face<n_face; ++i_face) {
+        itp_field_face[i_part][i_face] = (double) face_gnum[i_face];
+      }
+
+      int n_cell = PDM_part_mesh_nodal_n_elmts_get(pmn, PDM_GEOMETRY_KIND_VOLUMIC, i_part);
+      PDM_g_num_t *cell_gnum = PDM_part_mesh_nodal_g_num_get(pmn, 0, i_part, PDM_OWNERSHIP_KEEP);
+      PDM_malloc(itp_field_cell[i_part], n_cell, double);
+      for (int i_cell=0; i_cell<n_cell; ++i_cell) {
+        itp_field_cell[i_part][i_cell] = (double) cell_gnum[i_cell];
+      }
+
     }
   }
 
@@ -215,15 +252,23 @@ int main(int argc, char *argv[])
   /*
    *  Compute isosurface
    */
+  int n_iso = iso2 + 1;
 
-  int n_iso = iso2+1;
-  if (n_part>0) {
-    for (int i_iso = 0; i_iso < n_iso; i_iso++) {
-      PDM_isosurface_enable_part_to_part(isos,
-                                         i_iso,
-                                         PDM_MESH_ENTITY_VTX,
-                                         0);
-    }
+  for (int i_iso = 0; i_iso < n_iso; i_iso++) {
+    PDM_isosurface_enable_part_to_part(isos,
+                                       i_iso,
+                                       PDM_MESH_ENTITY_VTX,
+                                       0);
+
+    PDM_isosurface_enable_part_to_part(isos,
+                                       i_iso,
+                                       PDM_MESH_ENTITY_EDGE,
+                                       0);
+
+    PDM_isosurface_enable_part_to_part(isos,
+                                       i_iso,
+                                       PDM_MESH_ENTITY_FACE,
+                                       0);
   }
 
   PDM_isosurface_compute(isos, iso1);
@@ -237,107 +282,39 @@ int main(int argc, char *argv[])
   /*
    *  Interpolate field
    */
-  double  **iso_itp_dfield = NULL;
-  double ***iso_itp_field  = NULL;
-  PDM_malloc(iso_itp_dfield, n_iso, double  *);
-  PDM_malloc(iso_itp_field , n_iso, double **);
-  for (int i_iso=0; i_iso<n_iso; ++i_iso) {
-    iso_itp_dfield[i_iso] = NULL;
-    iso_itp_field [i_iso] = NULL;
-  } 
-  if (n_part==0) {
-    for (int i_iso=0; i_iso<n_iso; ++i_iso) {
+  double  **iso_itp_dfield_vtx  = NULL;
+  double  **iso_itp_dfield_edge = NULL;
+  double  **iso_itp_dfield_face = NULL;
+  double ***iso_itp_field_vtx   = NULL;
+  double ***iso_itp_field_edge  = NULL;
+  double ***iso_itp_field_face  = NULL;
 
-      PDM_isosurface_test_utils_dist_interpolation(isos, i_iso,
-                                                       itp_dfield,
-                                                   NULL,
-                                                   NULL,
-                                                  &iso_itp_dfield[i_iso],
-                                                   NULL,
-                                                   NULL);
+  if (n_part > 0) {
+    PDM_malloc(iso_itp_field_vtx  , n_iso, double **);
+    PDM_malloc(iso_itp_field_edge , n_iso, double **);
+    PDM_malloc(iso_itp_field_face , n_iso, double **);
+    for (int i_iso=0; i_iso<n_iso; ++i_iso) {
+      PDM_isosurface_test_utils_part_interpolation(isos, i_iso, n_part, local,
+                                                   itp_field_vtx,
+                                                   itp_field_face,
+                                                   itp_field_cell,
+                                                  &iso_itp_field_vtx [i_iso],
+                                                  &iso_itp_field_edge[i_iso],
+                                                  &iso_itp_field_face[i_iso]);
     }
   }
   else {
-    if (local==1) {
-      // Local
-      for (int i_iso=0; i_iso<n_iso; ++i_iso) {
-        PDM_malloc(iso_itp_field[i_iso], n_part, double *);
-        for (int i_part=0; i_part<n_part; ++i_part) {
-          
-          int    *vtx_parent_idx  = NULL;
-          int    *vtx_parent_lnum = NULL;
-          double *vtx_parent_wght = NULL;
-          int iso_n_vtx = PDM_isosurface_local_parent_get(isos, i_iso, i_part, PDM_MESH_ENTITY_VTX, 
-                                                         &vtx_parent_idx, &vtx_parent_lnum,
-                                                          PDM_OWNERSHIP_KEEP);
-          PDM_isosurface_vtx_parent_weight_get(isos, i_iso, i_part, &vtx_parent_idx, &vtx_parent_wght, PDM_OWNERSHIP_KEEP);
-          
-          iso_itp_field[i_iso][i_part] = PDM_array_zeros_double(iso_n_vtx);
-          for (int i_iso_vtx=0; i_iso_vtx<iso_n_vtx; ++i_iso_vtx) {
-            int i_beg_parent = vtx_parent_idx[i_iso_vtx  ];
-            int i_end_parent = vtx_parent_idx[i_iso_vtx+1];
-            for (int i_parent=i_beg_parent; i_parent<i_end_parent; ++i_parent) {
-              int    parent_lnum = vtx_parent_lnum[i_parent];
-              double parent_wght = vtx_parent_wght[i_parent];
-              iso_itp_field[i_iso][i_part][i_iso_vtx] += itp_field[i_part][parent_lnum-1]*parent_wght;
-            }
-          }
-
-          printf("DO for edge and faces\n");
-        }
-      }
-    }
-    else {
-      // Reequilibrate
-      for (int i_iso=0; i_iso<n_iso; ++i_iso) {
-        PDM_malloc(iso_itp_field[i_iso], n_part, double *);
-
-        PDM_part_to_part_t *ptp_vtx = NULL;
-        PDM_isosurface_part_to_part_get(isos,
-                                        i_iso,
-                                        PDM_MESH_ENTITY_VTX,
-                                        &ptp_vtx,
-                                        PDM_OWNERSHIP_KEEP);
-
-        double **recv_vtx_field = NULL;
-        int request_vtx = -1;
-        PDM_part_to_part_reverse_iexch(ptp_vtx,
-                                       PDM_MPI_COMM_KIND_P2P,
-                                       PDM_STRIDE_CST_INTERLACED,
-                                       PDM_PART_TO_PART_DATA_DEF_ORDER_PART2,
-                                       1,
-                                       sizeof(double),
-                                       NULL,
-                      (const void  **) itp_field,
-                                       NULL,
-                      (      void ***) &recv_vtx_field,
-                                       &request_vtx);
-
-        PDM_part_to_part_reverse_iexch_wait(ptp_vtx, request_vtx);
-
-        for (int i_part = 0; i_part < n_part; i_part++) {
-          int    *iso_vtx_parent_idx;
-          double *iso_vtx_parent_weight;
-          int iso_n_vtx = PDM_isosurface_vtx_parent_weight_get(isos,
-                                                               i_iso,
-                                                               i_part,
-                                                               &iso_vtx_parent_idx,
-                                                               &iso_vtx_parent_weight,
-                                                               PDM_OWNERSHIP_KEEP);
-
-          PDM_calloc(iso_itp_field[i_iso][i_part], iso_n_vtx, double);
-          for (int i_vtx = 0; i_vtx < iso_n_vtx; i_vtx++) {
-            for (int i = iso_vtx_parent_idx[i_vtx]; i < iso_vtx_parent_idx[i_vtx+1]; i++) {
-              iso_itp_field[i_iso][i_part][i_vtx] += iso_vtx_parent_weight[i] * recv_vtx_field[i_part][i];
-            }
-          }
-
-          PDM_free(recv_vtx_field[i_part]);
-        } // End loop on parts
-        PDM_free(recv_vtx_field);
-      }
-
-      // PDM_error(__FILE__, __LINE__, 0, "Part entry with local=0 not implemented\n");
+    PDM_malloc(iso_itp_dfield_vtx , n_iso, double *);
+    PDM_malloc(iso_itp_dfield_edge, n_iso, double *);
+    PDM_malloc(iso_itp_dfield_face, n_iso, double *);
+    for (int i_iso=0; i_iso<n_iso; ++i_iso) {
+      PDM_isosurface_test_utils_dist_interpolation(isos, i_iso,
+                                                   itp_dfield_vtx ,
+                                                   itp_dfield_face,
+                                                   itp_dfield_cell,
+                                                  &iso_itp_dfield_vtx [i_iso],
+                                                  &iso_itp_dfield_edge[i_iso],
+                                                  &iso_itp_dfield_face[i_iso]);
     }
   }
 
@@ -345,65 +322,82 @@ int main(int argc, char *argv[])
   /*
    *  Visu isosurfaces
    */
-  if (visu==1) {
-    if (n_part==0) {
-      for (int i_iso = 0; i_iso < n_iso; i_iso++) {
+  if (visu) {
+
+    for (int i_iso = 0; i_iso < n_iso; i_iso++) {
+
+      if (n_part > 0) {
+        PDM_isosurface_test_utils_part_vtk(isos, i_iso, n_part, iso_itp_field_vtx, comm);
+      }
+      else {
         PDM_isosurface_test_utils_dist_vtk(isos, i_iso, comm);
       }
-    }
-    else {
-      // > iso line output
-      for (int i_iso = 0; i_iso < n_iso; i_iso++) {
-        PDM_isosurface_test_utils_part_vtk(isos, i_iso, n_part, iso_itp_field, comm);
-      }
+
     }
   }
 
 
   /*
-   *  Free objects
+   *  Free memory
    */
   PDM_isosurface_free(isos);
-  if (n_part==0) {
-    PDM_dcube_nodal_gen_free(dcube_nodal);
-    PDM_free(iso_dfield);
-    PDM_free(itp_dfield);
-  } else {
-    PDM_part_mesh_nodal_free(pmn);
-  }
+  PDM_free(isovalues);
 
-  if (iso_field!=NULL) {
-    for (int i_part=0; i_part<n_part; ++i_part) {
-      if (iso_field[i_part]!=NULL) {
-        PDM_free(iso_field[i_part]);
-      }
+  if (n_part > 0) {
+    PDM_part_mesh_nodal_free(pmn);
+
+    for (int i_part = 0; i_part < n_part; i_part++) {
+      PDM_free(iso_field     [i_part]);
+      PDM_free(itp_field_vtx [i_part]);
+      PDM_free(itp_field_face[i_part]);
+      PDM_free(itp_field_cell[i_part]);
     }
     PDM_free(iso_field);
-  }
-  if (itp_field!=NULL) {
-    for (int i_part=0; i_part<n_part; ++i_part) {
-      if (itp_field[i_part]!=NULL) {
-        PDM_free(itp_field[i_part]);
+    PDM_free(itp_field_vtx);
+    PDM_free(itp_field_face);
+    PDM_free(itp_field_cell);
+
+    for (int i_iso = 0; i_iso < n_iso; i_iso++) {
+      for (int i_part = 0; i_part < n_part; i_part++) {
+        PDM_free(iso_itp_field_vtx [i_iso][i_part]);
+        PDM_free(iso_itp_field_edge[i_iso][i_part]);
+        PDM_free(iso_itp_field_face[i_iso][i_part]);
       }
+      PDM_free(iso_itp_field_vtx [i_iso]);
+      PDM_free(iso_itp_field_edge[i_iso]);
+      PDM_free(iso_itp_field_face[i_iso]);
     }
-    PDM_free(itp_field);
+    PDM_free(iso_itp_field_vtx);
+    PDM_free(iso_itp_field_edge);
+    PDM_free(iso_itp_field_face);
   }
-  for (int id_iso=0; id_iso<n_iso; ++id_iso) {
-    PDM_free(iso_itp_dfield[id_iso]);
-    if (iso_itp_field[id_iso]!=NULL) {
-      for (int i_part=0; i_part<n_part; ++i_part) {
-        if (iso_itp_field[id_iso][i_part]!=NULL) {
-          PDM_free(iso_itp_field[id_iso][i_part]);
-        }
-      }
-      PDM_free(iso_itp_field[id_iso]);
+  else {
+    PDM_dcube_nodal_gen_free(dcube_nodal);
+
+    for (int i_iso = 0; i_iso < n_iso; i_iso++) {
+      PDM_free(iso_itp_dfield_vtx [i_iso]);
+      // PDM_free(iso_itp_dfield_edge[i_iso]);
+      // PDM_free(iso_itp_dfield_face[i_iso]);
     }
+    PDM_free(iso_itp_dfield_vtx);
+    PDM_free(iso_itp_dfield_edge);
+    PDM_free(iso_itp_dfield_face);
+
+    PDM_free(iso_dfield);
+    PDM_free(itp_dfield_vtx);
+    PDM_free(itp_dfield_face);
+    PDM_free(itp_dfield_cell);
   }
-  PDM_free(iso_itp_field);
-  PDM_free(iso_itp_dfield);
+
+
+  if (i_rank == 0) {
+    printf("End :D\n");
+    fflush(stdout);
+  }
 
 
   PDM_MPI_Finalize();
 
-  return 0;
+
+  return EXIT_SUCCESS;
 }
