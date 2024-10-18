@@ -50,13 +50,23 @@ extern "C" {
  * Type definitions
  *============================================================================*/
 
+typedef enum {
+
+  PMN_TO_PM_STATE_NOT_REQ      = 0, /*!< Not requested and not done        */
+  PMN_TO_PM_STATE_REQ          = 1, /*!< Requested but not yet done        */
+  PMN_TO_PM_STATE_NOT_REQ_DONE = 2, /*!< Not requested but done (to clean) */
+  PMN_TO_PM_STATE_REQ_DONE     = 3  /*!< Requested and done                */
+
+} _pmn_to_m_state_t;
+
+
 struct _pdm_part_mesh_nodal_to_part_mesh_t
 {
   /* Options */
-  PDM_bool_t             build_connectivity   [PDM_CONNECTIVITY_TYPE_MAX]; /*!< Part Mesh connectivities to build */
-  PDM_bool_t             compute_g_nums       [PDM_MESH_ENTITY_MAX];       /*!< Global IDs to generate */
-  PDM_bool_t             transfer_groups      [PDM_BOUND_TYPE_MAX];        /*!< Groups to transfer */
-  PDM_bool_t             build_part_comm_graph[PDM_BOUND_TYPE_MAX];        /*!< Inter-partition communication graphs to generate */
+  _pmn_to_m_state_t      connectivity_state   [PDM_CONNECTIVITY_TYPE_MAX]; /*!< Part Mesh connectivities to build */
+  _pmn_to_m_state_t      g_num_state          [PDM_MESH_ENTITY_MAX];       /*!< Global IDs to generate */
+  _pmn_to_m_state_t      group_state          [PDM_BOUND_TYPE_MAX];        /*!< Groups to transfer */
+  _pmn_to_m_state_t      part_comm_graph_state[PDM_BOUND_TYPE_MAX];        /*!< Inter-partition communication graphs to generate */
   PDM_bool_t             keep_link_elmt_to_entity;                         /*!< Keep link between nodal elements and their corresponding entities in the Part Mesh */
   PDM_ownership_t        vtx_ownership_pmesh;                              /*!< Part Mesh's ownership for vertices */
 
@@ -71,10 +81,6 @@ struct _pdm_part_mesh_nodal_to_part_mesh_t
   /* Internal */
   PDM_MPI_Comm comm;
   int          n_part;
-  PDM_bool_t   connectivity_done   [PDM_CONNECTIVITY_TYPE_MAX];
-  PDM_bool_t   g_nums_done         [PDM_MESH_ENTITY_MAX];
-  PDM_bool_t   groups_done         [PDM_BOUND_TYPE_MAX];
-  PDM_bool_t   part_comm_graph_done[PDM_BOUND_TYPE_MAX];
 };
 
 #ifdef __cplusplus

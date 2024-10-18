@@ -111,7 +111,7 @@ _check_inputs
 
   /* Switch ON entites involved in requested connectivities */
   for (PDM_connectivity_type_t connectivity_type = 0; connectivity_type < PDM_CONNECTIVITY_TYPE_MAX; connectivity_type++) {
-    if (pmn_to_pm->build_connectivity[connectivity_type] == PDM_TRUE) {
+    if (pmn_to_pm->connectivity_state[connectivity_type] == PMN_TO_PM_STATE_REQ) {
       PDM_mesh_entities_t entity_type1, entity_type2;
       if (PDM_connectivity_type_to_entity_pair(connectivity_type, &entity_type1, &entity_type2) == 0) {
         // continue;
@@ -136,7 +136,7 @@ _check_inputs
 
   /* Check gnums */
   for (PDM_mesh_entities_t entity_type = 0; entity_type < PDM_MESH_ENTITY_MAX; entity_type++) {
-    if (pmn_to_pm->compute_g_nums[entity_type] == PDM_TRUE && build_entity[entity_type] == PDM_FALSE) {
+    if (pmn_to_pm->g_num_state[entity_type] == PMN_TO_PM_STATE_REQ && build_entity[entity_type] == PDM_FALSE) {
       PDM_error(__FILE__, __LINE__, 0,
                 "Gnums requested for entity type %d but this entity is not involved in the requested connectivities\n",
                  entity_type);
@@ -148,13 +148,13 @@ _check_inputs
 
     PDM_mesh_entities_t entity_type = PDM_bound_type_to_entity_type(bound_type);
 
-    if (pmn_to_pm->transfer_groups[bound_type] == PDM_TRUE && build_entity[entity_type] == PDM_FALSE) {
+    if (pmn_to_pm->group_state[bound_type] == PMN_TO_PM_STATE_REQ && build_entity[entity_type] == PDM_FALSE) {
       PDM_error(__FILE__, __LINE__, 0,
                 "Groups requested for entity type %d but this entity is not involved in the requested connectivities\n",
                  entity_type);
     }
 
-    if (pmn_to_pm->build_part_comm_graph[bound_type] == PDM_TRUE && build_entity[entity_type] == PDM_FALSE) {
+    if (pmn_to_pm->part_comm_graph_state[bound_type] == PMN_TO_PM_STATE_REQ && build_entity[entity_type] == PDM_FALSE) {
       PDM_error(__FILE__, __LINE__, 0,
                 "Inter-partition comm graph requested for entity type %d but this entity is not involved in the requested connectivities\n",
                  entity_type);
@@ -163,8 +163,8 @@ _check_inputs
 
 
   // TMP: With current implementation, we cannot guarantee the following cases :
-  if (pmn_to_pm->build_connectivity[PDM_CONNECTIVITY_TYPE_CELL_EDGE] == PDM_TRUE &&
-      pmn_to_pm->build_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] == PDM_TRUE) {
+  if (pmn_to_pm->connectivity_state[PDM_CONNECTIVITY_TYPE_CELL_EDGE] == PMN_TO_PM_STATE_REQ &&
+      pmn_to_pm->connectivity_state[PDM_CONNECTIVITY_TYPE_FACE_EDGE] == PMN_TO_PM_STATE_REQ) {
     PDM_error(__FILE__, __LINE__, 0, "cell->edge + face->edge not properly handled yet\n");
   }
 }
@@ -212,7 +212,7 @@ _transfer_highest_dimension_entities
 
 
     /* Global IDs */
-    if (pmn_to_pm->compute_g_nums[entity_type] == PDM_TRUE) {
+    if (pmn_to_pm->g_num_state[entity_type] == PMN_TO_PM_STATE_REQ) {
 
       PDM_g_num_t *parent_ln_to_gn = NULL;
       PDM_malloc(parent_ln_to_gn, n_elt_tot, PDM_g_num_t);
@@ -262,7 +262,7 @@ _transfer_highest_dimension_entities
 
 
     /* Entity->Vtx connectivity */
-    if (pmn_to_pm->build_connectivity[connectivity_type] == PDM_TRUE) {
+    if (pmn_to_pm->connectivity_state[connectivity_type] == PMN_TO_PM_STATE_REQ) {
       int *entity_to_vtx_idx = NULL;
       int *entity_to_vtx     = NULL;
       PDM_part_mesh_nodal_elmts_cell_vtx_connect_get(pmne,
@@ -280,12 +280,12 @@ _transfer_highest_dimension_entities
 
   } // End loop on parts
 
-  if (pmn_to_pm->build_connectivity[connectivity_type] == PDM_TRUE) {
-    pmn_to_pm->connectivity_done[connectivity_type] = PDM_TRUE;
+  if (pmn_to_pm->connectivity_state[connectivity_type] == PMN_TO_PM_STATE_REQ) {
+    pmn_to_pm->connectivity_state[connectivity_type] = PMN_TO_PM_STATE_REQ_DONE;
   }
 
-  if (pmn_to_pm->compute_g_nums[entity_type] == PDM_TRUE) {
-    pmn_to_pm->g_nums_done[entity_type] = PDM_TRUE;
+  if (pmn_to_pm->g_num_state[entity_type] == PMN_TO_PM_STATE_REQ) {
+    pmn_to_pm->g_num_state[entity_type] = PMN_TO_PM_STATE_REQ_DONE;
   }
 
 }
@@ -321,7 +321,7 @@ _transfer_vtx
       PDM_malloc(vtx_coord, n_vtx * 3, double);
       memcpy(vtx_coord, _vtx_coord, sizeof(double) * n_vtx * 3);
 
-      if (pmn_to_pm->compute_g_nums[PDM_MESH_ENTITY_VTX] == PDM_TRUE) {
+      if (pmn_to_pm->g_num_state[PDM_MESH_ENTITY_VTX] == PMN_TO_PM_STATE_REQ) {
         PDM_malloc(vtx_ln_to_gn, n_vtx, PDM_g_num_t);
         memcpy(vtx_ln_to_gn, _vtx_ln_to_gn, sizeof(PDM_g_num_t) * n_vtx);
       }
@@ -342,7 +342,7 @@ _transfer_vtx
                                 vtx_coord,
                                 pmn_to_pm->vtx_ownership_pmesh);
 
-    if (pmn_to_pm->compute_g_nums[PDM_MESH_ENTITY_VTX] == PDM_TRUE) {
+    if (pmn_to_pm->g_num_state[PDM_MESH_ENTITY_VTX] == PMN_TO_PM_STATE_REQ) {
       PDM_part_mesh_entity_ln_to_gn_set(pmesh,
                                         i_part,
                                         PDM_MESH_ENTITY_VTX,
@@ -352,8 +352,8 @@ _transfer_vtx
 
   } // End loop on parts
 
-  if (pmn_to_pm->compute_g_nums[PDM_MESH_ENTITY_VTX] == PDM_TRUE) {
-    pmn_to_pm->g_nums_done[PDM_MESH_ENTITY_VTX] = PDM_TRUE;
+  if (pmn_to_pm->g_num_state[PDM_MESH_ENTITY_VTX] == PMN_TO_PM_STATE_REQ) {
+    pmn_to_pm->g_num_state[PDM_MESH_ENTITY_VTX] = PMN_TO_PM_STATE_REQ_DONE;
   }
 }
 
@@ -467,7 +467,7 @@ _generate_downward_connectivity
                                    entity1_to_entity2_idx[i_part],
                                    PDM_OWNERSHIP_KEEP);
 
-    if (pmn_to_pm->connectivity_done[connectivity_type2] == PDM_FALSE) {
+    if (pmn_to_pm->connectivity_state[connectivity_type2] < PMN_TO_PM_STATE_REQ_DONE) {
       // Entity2
       PDM_part_mesh_n_entity_set(pmesh,
                                  i_part,
@@ -493,8 +493,14 @@ _generate_downward_connectivity
   PDM_free(entity1_to_entity2_idx);
   PDM_free(entity1_to_entity2    );
 
-  pmn_to_pm->connectivity_done[connectivity_type ] = PDM_TRUE;
-  pmn_to_pm->connectivity_done[connectivity_type2] = PDM_TRUE;
+  pmn_to_pm->connectivity_state[connectivity_type] = PMN_TO_PM_STATE_REQ_DONE;
+
+  if (pmn_to_pm->connectivity_state[connectivity_type2] == PMN_TO_PM_STATE_REQ) {
+    pmn_to_pm->connectivity_state[connectivity_type2] = PMN_TO_PM_STATE_REQ_DONE;
+  }
+  else if (pmn_to_pm->connectivity_state[connectivity_type2] == PMN_TO_PM_STATE_NOT_REQ) {
+    pmn_to_pm->connectivity_state[connectivity_type2] = PMN_TO_PM_STATE_NOT_REQ_DONE;
+  }
 
   if (use_fake_pmne) {
     PDM_part_mesh_nodal_elmts_free(pmne1);
@@ -695,8 +701,7 @@ _generate_gnum
     } // End if faces
 
     // Update downward connectivity
-    if (pmn_to_pm->build_connectivity[connectivity_type_down] == PDM_TRUE &&
-        pmn_to_pm->connectivity_done [connectivity_type_down] == PDM_TRUE) {
+    if (pmn_to_pm->connectivity_state[connectivity_type_down] >= PMN_TO_PM_STATE_REQ_DONE) {
       for (int i_entity2 = 0; i_entity2 < n_entity2; i_entity2++) {
         for (int idx_entity = entity2_to_entity_idx[i_entity2]; idx_entity < entity2_to_entity_idx[i_entity2+1]; idx_entity++) {
           int i_entity = PDM_ABS(entity2_to_entity[idx_entity]) - 1;
@@ -743,7 +748,7 @@ _generate_gnum
                                       PDM_OWNERSHIP_KEEP);
   }
 
-  pmn_to_pm->g_nums_done[entity_type] = PDM_TRUE;
+  pmn_to_pm->g_num_state[entity_type] = PMN_TO_PM_STATE_REQ_DONE;
 
   // Free memory
   PDM_free(entity_parent_gnum);
@@ -808,7 +813,7 @@ _transfer_groups
       PDM_g_num_t *copy_group_ln_to_gn = NULL;
       PDM_malloc(copy_group_elmt, n_group_elmt, int);
       memcpy(copy_group_elmt, group_elmt, sizeof(int) * n_group_elmt);
-      if (pmn_to_pm->compute_g_nums[entity_type] == PDM_TRUE) {
+      if (pmn_to_pm->g_num_state[entity_type] == PMN_TO_PM_STATE_REQ_DONE) {
         PDM_malloc(copy_group_ln_to_gn, n_group_elmt, PDM_g_num_t);
         memcpy(copy_group_ln_to_gn, group_ln_to_gn, sizeof(PDM_g_num_t) * n_group_elmt);
       }
@@ -824,7 +829,7 @@ _transfer_groups
     }
   }
 
-  pmn_to_pm->groups_done[bound_type] = PDM_TRUE;
+  pmn_to_pm->group_state[bound_type] = PMN_TO_PM_STATE_REQ_DONE;
 }
 
 
@@ -847,8 +852,7 @@ _generate_entities
    */
 
   for (PDM_connectivity_type_t connectivity_type = 0; connectivity_type < PDM_CONNECTIVITY_TYPE_MAX; connectivity_type++) {
-    if (pmn_to_pm->build_connectivity[connectivity_type] == PDM_FALSE ||
-        pmn_to_pm->connectivity_done [connectivity_type] == PDM_TRUE) {
+    if (pmn_to_pm->connectivity_state[connectivity_type] != PMN_TO_PM_STATE_REQ) {
       continue;
     }
 
@@ -859,15 +863,13 @@ _generate_entities
     PDM_mesh_entities_t entity_type1, entity_type2;
     PDM_connectivity_type_to_entity_pair(connectivity_type, &entity_type1, &entity_type2);
 
-    if (pmn_to_pm->compute_g_nums[entity_type2] == PDM_TRUE &&
-        pmn_to_pm->g_nums_done   [entity_type2] == PDM_FALSE) {
+    if (pmn_to_pm->g_num_state[entity_type2] == PMN_TO_PM_STATE_REQ) {
       _generate_gnum(pmn_to_pm, entity_type2);
     }
 
     // Groups
     PDM_bound_type_t bound_type = PDM_entity_type_to_bound_type(entity_type2);
-    if (pmn_to_pm->transfer_groups[bound_type] == PDM_TRUE &&
-        pmn_to_pm->groups_done    [bound_type] == PDM_FALSE) {
+    if (pmn_to_pm->group_state[bound_type] == PMN_TO_PM_STATE_REQ) {
       _transfer_groups(pmn_to_pm, bound_type);
     }
   }
@@ -875,7 +877,7 @@ _generate_entities
 
 
 /**
- * \brief Store link elt->entity in pmesh_nodal struct
+ * \brief Store link elmt->entity in pmesh_nodal struct
  *        By construction, it is identical to parent_num (if it exists).
  */
 static void
@@ -884,10 +886,6 @@ _store_link_pmn_to_pm
   PDM_part_mesh_nodal_to_part_mesh_t *pmn_to_pm
 )
 {
-  if (pmn_to_pm->keep_link_elmt_to_entity == PDM_FALSE) {
-    return;
-  }
-
   PDM_part_mesh_nodal_t *pmesh_nodal = pmn_to_pm->pmesh_nodal;
   int n_part = pmn_to_pm->n_part;
 
@@ -969,8 +967,7 @@ _clean_up
 
   for (PDM_connectivity_type_t connectivity_type = 0; connectivity_type < PDM_CONNECTIVITY_TYPE_MAX; connectivity_type++) {
 
-    if (pmn_to_pm->build_connectivity[connectivity_type] == PDM_FALSE &&
-        pmn_to_pm->connectivity_done [connectivity_type] == PDM_TRUE) {
+    if (pmn_to_pm->connectivity_state[connectivity_type] == PMN_TO_PM_STATE_NOT_REQ_DONE) {
 
       for (int i_part = 0; i_part < n_part; i_part++) {
         int *entity1_to_entity2_idx = NULL;
@@ -1040,7 +1037,7 @@ PDM_part_mesh_nodal_to_part_mesh_connectivity_enable
   CHECK_PMN_TO_PM(pmn_to_pm);
   // TODO: throw error/warning if requested connectivity is not handled
 
-  pmn_to_pm->build_connectivity[connectivity_type] = PDM_TRUE;
+  pmn_to_pm->connectivity_state[connectivity_type] = PMN_TO_PM_STATE_REQ;
 }
 
 
@@ -1053,7 +1050,7 @@ PDM_part_mesh_nodal_to_part_mesh_g_nums_enable
 {
   CHECK_PMN_TO_PM(pmn_to_pm);
 
-  pmn_to_pm->compute_g_nums[entity_type] = PDM_TRUE;
+  pmn_to_pm->g_num_state[entity_type] = PMN_TO_PM_STATE_REQ;
 }
 
 
@@ -1066,7 +1063,7 @@ PDM_part_mesh_nodal_to_part_mesh_groups_enable
 {
   CHECK_PMN_TO_PM(pmn_to_pm);
 
-  pmn_to_pm->transfer_groups[bound_type] = PDM_TRUE;
+  pmn_to_pm->group_state[bound_type] = PMN_TO_PM_STATE_REQ;
 }
 
 
@@ -1081,7 +1078,7 @@ PDM_part_mesh_nodal_to_part_mesh_part_comm_graph_enable
 
   PDM_error(__FILE__, __LINE__, 0, "Inter-partitions comm graphs are not yet implemented\n");
 
-  pmn_to_pm->build_part_comm_graph[bound_type] = PDM_TRUE;
+  pmn_to_pm->part_comm_graph_state[bound_type] = PMN_TO_PM_STATE_REQ;
 }
 
 
@@ -1117,7 +1114,9 @@ PDM_part_mesh_nodal_to_part_mesh_compute
   _generate_entities(pmn_to_pm);
 
   /* Store link pmesh_nodal -> pmesh */
-  _store_link_pmn_to_pm(pmn_to_pm);
+  if (pmn_to_pm->keep_link_elmt_to_entity == PDM_TRUE) {
+    _store_link_pmn_to_pm(pmn_to_pm);
+  }
 
   /* Get rid of temporary connectivities */
   _clean_up(pmn_to_pm);
