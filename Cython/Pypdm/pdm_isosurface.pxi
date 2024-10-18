@@ -160,20 +160,11 @@ cdef extern from "pdm_isosurface.h":
                                        PDM_g_num_t             **dconnect,
                                        PDM_ownership_t           ownership);
 
-  int PDM_isosurface_parent_gnum_get(PDM_isosurface_t     *isos,
-                                     int                   id_iso,
-                                     PDM_mesh_entities_t   entity_type,
-                                     int                 **parent_idx,
-                                     PDM_g_num_t         **parent_gnum,
-                                     PDM_ownership_t       ownership);
-
   int PDM_isosurface_dvtx_parent_weight_get(PDM_isosurface_t     *isos,
                                             int                   id_iso,
                                             int                 **dvtx_parent_idx,
                                             double              **dvtx_parent_weight,
                                             PDM_ownership_t       ownership);
-
-  int PDM_isosurface_dvtx_protocol_get(PDM_isosurface_t *isos);
 
   int PDM_isosurface_dvtx_coord_get(PDM_isosurface_t  *isos,
                                     int                id_isosurface,
@@ -183,8 +174,7 @@ cdef extern from "pdm_isosurface.h":
   void PDM_isosurface_distrib_get(PDM_isosurface_t     *isos,
                                   int                   id_isosurface,
                                   PDM_mesh_entities_t   entity_type,
-                                  PDM_g_num_t         **distribution,
-                                  PDM_ownership_t       ownership);
+                                  PDM_g_num_t         **distribution);
 
   int PDM_isosurface_dgroup_get(PDM_isosurface_t     *isos,
                                 int                   id_isosurface,
@@ -778,9 +768,9 @@ cdef class Isosurface:
     Get entity_type isosurface global ids.
 
     Parameters:
-      id_iso      (int)               : Isosurface id
-      i_part      (int)               : Partition id
-      entity_type (PDM_mesh_entities_t) Entity type
+      id_iso      (int)                 : Isosurface id
+      i_part      (int)                 : Partition id
+      entity_type (PDM_mesh_entities_t) : Entity type
 
     Returns:
       ln_to_gn (`np.ndarray[npy_pdm_gnum_t]`) : Global ids
@@ -803,12 +793,11 @@ cdef class Isosurface:
     Get entity_type isosurface groups.
 
     Parameters:
-      id_iso      (int)               : Isosurface id
-      i_part      (int)               : Partition id
-      entity_type (PDM_mesh_entities_t) Entity type
+      id_iso      (int)                 : Isosurface id
+      i_part      (int)                 : Partition id
+      entity_type (PDM_mesh_entities_t) : Entity type
 
     Returns:
-      n_group          (int)                          : Number of groups
       group_entity_idx (`np.ndarray[np.int32_t]`)     : Group index
       group_entity     (`np.ndarray[np.int32_t]`)     : Group entities
       group_ln_to_gn   (`np.ndarray[npy_pdm_gnum_t]`) : Group entities global ids
@@ -828,9 +817,10 @@ cdef class Isosurface:
     np_group_entity     = create_numpy_i(group_entity    , group_entity_size, flag_owndata=True)
     np_group_ln_to_gn   = create_numpy_g(group_ln_to_gn  , group_entity_size, flag_owndata=True)
 
-    return n_group, np_group_entity_idx, np_group_entity, np_group_ln_to_gn
+    return np_group_entity_idx, np_group_entity, np_group_ln_to_gn
 
-  def enable_part_to_part(self, id_iso, entity_type, unify_parent_info=False):
+  def enable_part_to_part(self, id_iso, entity_type,
+                          bint unify_parent_info=False):
     """
     Enable construction of a communication graph between source mesh entities and iso-surface entities.
 
@@ -841,7 +831,7 @@ cdef class Isosurface:
       entity_type       (PDM_entity_type_t) : Entity type
       unify_parent_info (bool)              : Get all parent over all procs (not implemented)
     """
-    PDM_isosurface_enable_part_to_part(self._isos, id_iso, entity_type, (unify_parent_info != 0))
+    PDM_isosurface_enable_part_to_part(self._isos, id_iso, entity_type, unify_parent_info)
 
   def part_to_part_get(self, id_iso, entity_type):
     """
@@ -852,8 +842,8 @@ cdef class Isosurface:
     .. note:: .. warning:: This function must be called prior to :py:func:`compute`
 
     Parameters:
-      id_iso      (int)               : Isosurface id
-      entity_type (PDM_mesh_entities_t) Entity type
+      id_iso      (int)                 : Isosurface id
+      entity_type (PDM_mesh_entities_t) : Entity type
 
     Returns:
       PDM_part_to_part (PDM_part_to_part) : PDM_part_to_part
@@ -876,9 +866,9 @@ cdef class Isosurface:
     Get entity_type isosurface entities parent local ids.
 
     Parameters:
-      id_iso      (int)               : Isosurface id
-      i_part      (int)               : Partition id
-      entity_type (PDM_mesh_entities_t) Entity type
+      id_iso      (int)                 : Isosurface id
+      i_part      (int)                 : Partition id
+      entity_type (PDM_mesh_entities_t) : Entity type
 
     Returns:
       parent_idx  (`np.ndarray[np.int32_t]`)     : Parent index
@@ -999,11 +989,10 @@ cdef class Isosurface:
     Get entity_type isosurface distributed groups.
 
     Parameters:
-      id_iso      (int)               : Isosurface id
-      entity_type (PDM_mesh_entities_t) Entity type
+      id_iso      (int)                 : Isosurface id
+      entity_type (PDM_mesh_entities_t) : Entity type
 
     Returns:
-      n_group          (int)                          : Number of groups
       group_entity_idx (`np.ndarray[np.int32_t]`)     : Group index
       group_entity     (`np.ndarray[npy_pdm_gnum_t]`) : Group entities global ids
     """
@@ -1019,35 +1008,7 @@ cdef class Isosurface:
     np_dgroup_entity_idx = create_numpy_i(dgroup_entity_idx, n_group+1         , flag_owndata=True)
     np_dgroup_entity     = create_numpy_g(dgroup_entity    , dgroup_entity_size, flag_owndata=True)
 
-    return n_group, np_dgroup_entity_idx, np_dgroup_entity
-
-  def parent_gnum_get(self, id_iso, PDM_mesh_entities_t entity_type):
-    """
-    parent_gnum_get(id_iso, entity_type)
-
-    Get entity_type isosurface entities parent global ids.
-
-    Parameters:
-      id_iso      (int)               : Isosurface id
-      entity_type (PDM_mesh_entities_t) Entity type
-
-    Returns:
-      parent_idx  (`np.ndarray[np.int32_t]`)     : Parent index
-      parent_gnum (`np.ndarray[npy_pdm_gnum_t]`) : Parent entities global ids
-    """
-    cdef int          n_entity    = 0
-    cdef int         *parent_idx  = NULL
-    cdef PDM_g_num_t *parent_gnum = NULL
-    n_entity = PDM_isosurface_parent_gnum_get(self._isos, id_iso,
-                                              entity_type, 
-                                             &parent_idx,
-                                             &parent_gnum,
-                                              PDM_OWNERSHIP_USER)
-    parent_gnum_size = parent_idx[n_entity]
-    np_parent_idx    = create_numpy_i(parent_idx , n_entity+1      , flag_owndata=True)
-    np_parent_gnum   = create_numpy_g(parent_gnum, parent_gnum_size, flag_owndata=True)
-
-    return np_parent_idx, np_parent_gnum
+    return np_dgroup_entity_idx, np_dgroup_entity
 
   def dvtx_parent_weight_get(self, id_iso):
     """
