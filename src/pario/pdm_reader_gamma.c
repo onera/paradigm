@@ -93,6 +93,78 @@ static void _shift_groups
 }
 
 
+static void
+_set_groups
+(
+  PDM_dmesh_nodal_elmts_t *dmne,
+  int                      n_types,
+  PDM_g_num_t             *distrib_elt[],
+  int                     *delt_group[]
+)
+{
+  int i_rank;
+  int n_rank;
+  PDM_MPI_Comm_rank(dmne->comm, &i_rank);
+  PDM_MPI_Comm_size(dmne->comm, &n_rank);
+
+  int _n_group = 0;
+
+  // -------- Compute number of groups
+  int dn_elt_tot = 0;
+  for (int i_type = 0; i_type < n_types; i_type++) {
+    int dn_elt = distrib_elt[i_type][i_rank+1] - distrib_elt[i_type][i_rank];
+    dn_elt_tot += dn_elt;
+    for (int i_elt = 0; i_elt < dn_elt; i_elt++) {
+      _n_group = PDM_MAX(_n_group, delt_group[i_type][i_elt]);
+    }
+  }
+
+  int n_group;
+  PDM_MPI_Allreduce(&_n_group, &n_group, 1, PDM_MPI_INT, PDM_MPI_MAX, dmne->comm);
+
+  // -------- Compute elt distribution among groups
+  int *dgroup_elt_n = NULL;
+  PDM_calloc(dgroup_elt_n, n_group, int);
+  for (int i_type = 0; i_type < n_types; i_type++) {
+    int dn_elt = distrib_elt[i_type][i_rank+1] - distrib_elt[i_type][i_rank];
+    for (int i_elt = 0; i_elt < dn_elt; i_elt++) {
+      dgroup_elt_n[delt_group[i_type][i_elt]-1] += 1;
+    }
+  }
+
+  // -------- Compute group elt index
+  int *dgroup_elt_idx = PDM_array_new_idx_from_sizes_int(dgroup_elt_n, n_group);
+  PDM_free(dgroup_elt_n);
+
+  // -------- Compute group elt
+  int         *counters   = NULL;
+  PDM_g_num_t *dgroup_elt = NULL;
+  PDM_calloc(counters,   n_group,    int        );
+  PDM_malloc(dgroup_elt, dn_elt_tot, PDM_g_num_t);
+  PDM_g_num_t shift = 0;
+  for (int i_type = 0; i_type < n_types; i_type++) {
+    int dn_elt = distrib_elt[i_type][i_rank+1] - distrib_elt[i_type][i_rank];
+    for (int i_elt = 0; i_elt < dn_elt; i_elt++) {
+      int grp = delt_group[i_type][i_elt] - 1;
+      int idx = counters[grp] + dgroup_elt_idx[grp];
+
+      dgroup_elt[idx] = i_elt + distrib_elt[i_type][i_rank] + shift + 1;
+
+      counters[grp]++;
+    }
+    shift += distrib_elt[i_type][n_rank];
+  }
+  PDM_free(counters);
+
+  // -------- Set groups
+  PDM_DMesh_nodal_elmts_group_set(dmne,
+                                  n_group,
+                                  dgroup_elt_idx,
+                                  dgroup_elt,
+                                  PDM_OWNERSHIP_KEEP);
+}
+
+
 /*=============================================================================
  * Public function prototypes
  *============================================================================*/
@@ -633,15 +705,15 @@ PDM_reader_gamma_dmesh_nodal
                   (void **) &dpyra_vtx);
   }
 
-  // int *dpyra_group = NULL;
-  // PDM_block_to_block_exch(btb_pyra,
-  //                         sizeof(int),
-  //                         PDM_STRIDE_CST_INTERLACED,
-  //                         1,
-  //                         NULL,
-  //               (void *)  gpyra_group,
-  //                         NULL,
-  //               (void **) &dpyra_group);
+  int *dpyra_group = NULL;
+  PDM_block_to_block_exch(btb_pyra,
+                          sizeof(int),
+                          PDM_STRIDE_CST_INTERLACED,
+                          1,
+                          NULL,
+                (void *)  gpyra_group,
+                          NULL,
+                (void **) &dpyra_group);
 
 
   /* Prisms */
@@ -663,15 +735,15 @@ PDM_reader_gamma_dmesh_nodal
                   (void **) &dprism_vtx);
   }
 
-  // int *dprism_group = NULL;
-  // PDM_block_to_block_exch(btb_prism,
-  //                         sizeof(int),
-  //                         PDM_STRIDE_CST_INTERLACED,
-  //                         1,
-  //                         NULL,
-  //               (void *)  gprism_group,
-  //                         NULL,
-  //               (void **) &dprism_group);
+  int *dprism_group = NULL;
+  PDM_block_to_block_exch(btb_prism,
+                          sizeof(int),
+                          PDM_STRIDE_CST_INTERLACED,
+                          1,
+                          NULL,
+                (void *)  gprism_group,
+                          NULL,
+                (void **) &dprism_group);
 
 
   /* Hexahedra */
@@ -693,15 +765,15 @@ PDM_reader_gamma_dmesh_nodal
                   (void **) &dhexa_vtx);
   }
 
-  // int *dhexa_group = NULL;
-  // PDM_block_to_block_exch(btb_hexa,
-  //                         sizeof(int),
-  //                         PDM_STRIDE_CST_INTERLACED,
-  //                         1,
-  //                         NULL,
-  //               (void *)  ghexa_group,
-  //                         NULL,
-  //               (void **) &dhexa_group);
+  int *dhexa_group = NULL;
+  PDM_block_to_block_exch(btb_hexa,
+                          sizeof(int),
+                          PDM_STRIDE_CST_INTERLACED,
+                          1,
+                          NULL,
+                (void *)  ghexa_group,
+                          NULL,
+                (void **) &dhexa_group);
 
 
   if (gvtx_coord   != NULL)PDM_free(gvtx_coord);
@@ -915,121 +987,26 @@ PDM_reader_gamma_dmesh_nodal
                                   PDM_OWNERSHIP_KEEP);
 
   // ---- Face group
-  // -------- We assume there is only triangle and quadrilaterals
-  int n_group_face;
-  int _n_group_face = 0;
-
-  // -------- Compute number of groups
-  for (int i_tria=0; i_tria<dn_tria; i_tria++) {
-    _n_group_face = PDM_MAX(_n_group_face, dtria_group[i_tria]);
-  }
-
-  for (int i_quad=0; i_quad<dn_quad; i_quad++) {
-    _n_group_face = PDM_MAX(_n_group_face, dquad_group[i_quad]);
-  }
-
-  PDM_MPI_Allreduce(&_n_group_face, &n_group_face, 1, PDM_MPI_INT, PDM_MPI_MAX, comm);
-
-  // -------- Compute global numbers for triangles & quadrilaterals
-  // -------- Compute face distribution among groups
-  PDM_g_num_t *tria_ln_to_gn = NULL;
-  PDM_g_num_t *quad_ln_to_gn = NULL;
-  int         *distrib_group = NULL;
-  PDM_malloc(tria_ln_to_gn, dn_tria     , PDM_g_num_t);
-  PDM_malloc(quad_ln_to_gn, dn_quad     , PDM_g_num_t);
-  PDM_calloc(distrib_group, n_group_face, int);
-
-  for (PDM_g_num_t i_tria=0; i_tria<dn_tria; i_tria++) {
-    tria_ln_to_gn[i_tria] = i_tria + distrib_tria[i_rank] + 1;
-
-    distrib_group[dtria_group[i_tria]-1] += 1;
-  }
-
-  for (PDM_g_num_t i_quad=0; i_quad<dn_quad; i_quad++) {
-    quad_ln_to_gn[i_quad] = gn_tria + distrib_quad[i_rank] + i_quad + 1;
-
-    distrib_group[dquad_group[i_quad]-1] += 1;
-  }
-
-  // -------- Compute group face index
-  int *dgroup_face_idx = NULL;
-  PDM_malloc(dgroup_face_idx, n_group_face+1, int);
-
-  dgroup_face_idx[0] = 0;
-  for (int i_group=1; i_group<=n_group_face; i_group++) {
-    dgroup_face_idx[i_group] = dgroup_face_idx[i_group-1] + distrib_group[i_group-1];
-  }
-
-  // -------- Compute group face
-  int          dn_face     = dn_tria + dn_quad;
-  int         *counters;
-  PDM_calloc(counters, n_group_face, int);
-  PDM_g_num_t *dgroup_face = NULL;
-  PDM_malloc(dgroup_face, dn_face, PDM_g_num_t);
-
-  for (int i_tria=0; i_tria<dn_tria; i_tria++) {
-    int grp = dtria_group[i_tria] - 1;
-    int idx = counters[grp] + dgroup_face_idx[grp];
-
-    dgroup_face[idx] = tria_ln_to_gn[i_tria];
-
-    counters[grp]++;
-  }
-
-  for (int i_quad=0; i_quad<dn_quad; i_quad++) {
-    int grp = dquad_group[i_quad] - 1;
-    int idx = counters[grp] + dgroup_face_idx[grp];
-
-    dgroup_face[idx] = quad_ln_to_gn[i_quad];
-
-    counters[grp]++;
-  }
+  PDM_g_num_t *distrib_elt_surf[2] = {distrib_tria, distrib_quad};
+  int         *delt_group_surf [2] = {dtria_group,  dquad_group};
+  _set_groups(dmn->surfacic,
+              2,
+              distrib_elt_surf,
+              delt_group_surf);
   PDM_free(dtria_group);
   PDM_free(dquad_group);
 
-  // -------- Set groups
-  PDM_DMesh_nodal_elmts_group_set(
-    dmn->surfacic, n_group_face,
-    dgroup_face_idx, dgroup_face,
-    PDM_OWNERSHIP_KEEP
-  );
-
-  PDM_free(distrib_group);
-  PDM_free(tria_ln_to_gn);
-  PDM_free(quad_ln_to_gn);
-  PDM_free(counters);
-
-  /* Tetra groups */
-  int _n_group_tetra = 0;
-  for (int i = 0; i < dn_tetra; i++) {
-    _n_group_tetra = PDM_MAX(_n_group_tetra, dtetra_group[i]);// refs are > 0 (?)
-    dtetra_group[i] -= 1;
-  }
-
-  int n_group_tetra;
-  PDM_MPI_Allreduce(&_n_group_tetra, &n_group_tetra, 1, PDM_MPI_INT, PDM_MPI_MAX, comm);
-
-  int *dtetra_group_idx = PDM_array_new_idx_from_const_stride_int(1, dn_tetra);
-
-  int         *dgroup_tetra_idx = NULL;
-  PDM_g_num_t *dgroup_tetra     = NULL;
-  PDM_dentity_group_transpose(n_group_tetra,
-                              dtetra_group_idx,
-                              dtetra_group,
-                              distrib_tetra,
-                              &dgroup_tetra_idx,
-                              &dgroup_tetra,
-                              dmn->comm);
-  PDM_free(dtetra_group_idx);
+  // ---- Cell group
+  PDM_g_num_t *distrib_elt_vol[4] = {distrib_tetra, distrib_pyra, distrib_prism, distrib_hexa};
+  int         *delt_group_vol [4] = {dtetra_group,  dpyra_group,  dprism_group,  dhexa_group};
+  _set_groups(dmn->volumic,
+              4,
+              distrib_elt_vol,
+              delt_group_vol);
   PDM_free(dtetra_group);
-
-  // PDM_log_trace_array_int(dgroup_face_idx, n_group_face+1, "dgroup_face_idx : ");
-
-  PDM_DMesh_nodal_elmts_group_set(dmn->volumic,
-                                  n_group_tetra,
-                                  dgroup_tetra_idx,
-                                  dgroup_tetra,
-                                  PDM_OWNERSHIP_KEEP);
+  PDM_free(dpyra_group );
+  PDM_free(dprism_group);
+  PDM_free(dhexa_group );
 
   PDM_free(distrib_vtx  );
   PDM_free(distrib_edge );
