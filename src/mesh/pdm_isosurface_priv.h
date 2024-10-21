@@ -164,13 +164,13 @@ typedef struct _isosurface_t { // Better name?
   int           **iso_entity_parent_idx [PDM_MESH_ENTITY_MAX];
   int           **iso_entity_parent_lnum[PDM_MESH_ENTITY_MAX];
   PDM_g_num_t   **iso_entity_parent_gnum[PDM_MESH_ENTITY_MAX];
+  double        **iso_entity_parent_wght[PDM_MESH_ENTITY_MAX];
   int           **isovalue_entity_idx   [PDM_MESH_ENTITY_MAX];
   int           **iso_connec_idx        [PDM_CONNECTIVITY_TYPE_MAX];
   int           **iso_connec            [PDM_CONNECTIVITY_TYPE_MAX];
 
   // > Vertices
   double        **iso_vtx_coord;
-  double        **iso_vtx_parent_weight;
 
   // > Edges
   int             iso_n_edge_group;
@@ -184,11 +184,11 @@ typedef struct _isosurface_t { // Better name?
 
   // > Owners
   PDM_ownership_t *iso_owner_vtx_coord;
-  PDM_ownership_t *iso_owner_vtx_parent_weight;
   PDM_ownership_t *iso_owner_edge_bnd;
   PDM_ownership_t *iso_owner_gnum               [PDM_MESH_ENTITY_MAX];
   PDM_ownership_t *iso_owner_parent_lnum        [PDM_MESH_ENTITY_MAX];
   PDM_ownership_t *iso_owner_parent_idx         [PDM_MESH_ENTITY_MAX];
+  PDM_ownership_t *iso_owner_parent_wght        [PDM_MESH_ENTITY_MAX];
   PDM_ownership_t *iso_owner_isovalue_entity_idx[PDM_MESH_ENTITY_MAX];
   PDM_ownership_t  iso_owner_ptp                [PDM_MESH_ENTITY_MAX];
   PDM_ownership_t *iso_owner_connec             [PDM_CONNECTIVITY_TYPE_MAX];
@@ -200,6 +200,7 @@ typedef struct _isosurface_t { // Better name?
   int             iso_dn_entity          [PDM_MESH_ENTITY_MAX];
   int            *iso_dentity_parent_idx [PDM_MESH_ENTITY_MAX];
   PDM_g_num_t    *iso_dentity_parent_gnum[PDM_MESH_ENTITY_MAX];
+  double         *iso_dentity_parent_wght[PDM_MESH_ENTITY_MAX];
   int            *iso_dconnec_idx        [PDM_CONNECTIVITY_TYPE_MAX];
   PDM_g_num_t    *iso_dconnec            [PDM_CONNECTIVITY_TYPE_MAX];
 
@@ -208,7 +209,6 @@ typedef struct _isosurface_t { // Better name?
 
   // > Vertices
   double         *iso_dvtx_coord;
-  double         *iso_dvtx_parent_weight;
 
   // > Edges
   int            *iso_dedge_group_idx;
@@ -216,10 +216,10 @@ typedef struct _isosurface_t { // Better name?
 
   // > Owners
   PDM_ownership_t iso_owner_dvtx_coord;
-  PDM_ownership_t iso_owner_dvtx_parent_weight;
-  PDM_ownership_t iso_owner_dconnec    [PDM_CONNECTIVITY_TYPE_MAX];
-  PDM_ownership_t iso_owner_dparent_idx[PDM_MESH_ENTITY_MAX];
-  PDM_ownership_t iso_owner_dparent    [PDM_MESH_ENTITY_MAX];
+  PDM_ownership_t iso_owner_dconnec     [PDM_CONNECTIVITY_TYPE_MAX];
+  PDM_ownership_t iso_owner_dparent_idx [PDM_MESH_ENTITY_MAX];
+  PDM_ownership_t iso_owner_dparent     [PDM_MESH_ENTITY_MAX];
+  PDM_ownership_t iso_owner_dparent_wght[PDM_MESH_ENTITY_MAX];
   PDM_ownership_t iso_owner_dedge_bnd;
   PDM_ownership_t iso_owner_disovalue_entity[PDM_MESH_ENTITY_MAX];
 

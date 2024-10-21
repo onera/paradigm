@@ -801,25 +801,27 @@ PDM_isosurface_dconnectivity_get
 
 /**
  *
- * \brief Get iso-surface parent weight for iso vertices
+ * \brief Get iso-surface parent weight for iso entities
  *
- * \param [in]  isos                \ref PDM_isosurface_t instance
- * \param [in]  id_isosurface       Iso-surface identifier
- * \param [out] dvtx_parent_idx     Index for parent weights
- * \param [out] dvtx_parent_weight  Parent weight
- * \param [in]  ownership           Ownership
+ * \param [in]  isos            \ref PDM_isosurface_t instance
+ * \param [in]  id_isosurface   Iso-surface identifier
+ * \param [in]  entity_type     Entity type
+ * \param [out] dparent_idx     Index for parent weights
+ * \param [out] dparent_weight  Parent weight
+ * \param [in]  ownership       Ownership
  *
- * \return  Number of iso-surface vertices
+ * \return  Number of iso-surface entities
  *
  */
 
 int
-PDM_isosurface_dvtx_parent_weight_get
+PDM_isosurface_dparent_weight_get
 (
   PDM_isosurface_t     *isos,
   int                   id_iso,
-  int                 **dvtx_parent_idx,
-  double              **dvtx_parent_weight,
+  PDM_mesh_entities_t   entity_type,
+  int                 **dparent_idx,
+  double              **dparent_weight,
   PDM_ownership_t       ownership
 );
 
@@ -991,31 +993,32 @@ PDM_isosurface_local_parent_get
 
 /**
  *
- * \brief Get interpolation weights of iso-surface vertices
+ * \brief Get interpolation weights of iso-surface entities
  *
- * \param [in]  isos               \ref PDM_isosurface_t instance
- * \param [in]  id_isosurface      Iso-surface identifier
- * \param [in]  i_part             Partition identifier
- * \param [out] vtx_parent_idx     Index for interpolation weights
- * \param [out] vtx_parent_weight  Interpolation weights
- * \param [in]  ownership          Ownership
+ * \param [in]  isos           \ref PDM_isosurface_t instance
+ * \param [in]  id_isosurface  Iso-surface identifier
+ * \param [in]  i_part         Partition identifier
+ * \param [out] parent_idx     Index for interpolation weights
+ * \param [out] parent_weight  Interpolation weights
+ * \param [in]  ownership      Ownership
  *
  * \warning These weights are only computed if the construction
- * of the vertex Part-to-Part has been enabled (see \ref PDM_isosurface_enable_part_to_part).
+ * of the entity Part-to-Part has been enabled (see \ref PDM_isosurface_enable_part_to_part).
  *
- * \return  Number of iso-surface vertices
+ * \return  Number of iso-surface entities
  *
  */
 
 int
-PDM_isosurface_vtx_parent_weight_get
+PDM_isosurface_parent_weight_get
 (
-  PDM_isosurface_t  *isos,
-  int                id_isosurface,
-  int                i_part,
-  int              **vtx_parent_idx,
-  double           **vtx_parent_weight,
-  PDM_ownership_t    ownership
+  PDM_isosurface_t     *isos,
+  int                   id_isosurface,
+  int                   i_part,
+  PDM_mesh_entities_t   entity_type,
+  int                 **parent_idx,
+  double              **parent_weight,
+  PDM_ownership_t       ownership
 );
 
 // Communication graphs

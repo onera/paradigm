@@ -270,7 +270,6 @@ int main(int argc, char *argv[])
     PDM_malloc(iso_itp_dfield_vtx , n_iso, double  *);
     PDM_malloc(iso_itp_dfield_edge, n_iso, double  *);
     for (int i_iso=0; i_iso<n_iso; ++i_iso) {
-      printf("I_ISO = %d\n", i_iso);
       PDM_isosurface_test_utils_dist_interpolation(isos, i_iso,
                                                    itp_dfield_vtx ,
                                                    itp_dfield_face,
@@ -278,7 +277,6 @@ int main(int argc, char *argv[])
                                                   &iso_itp_dfield_vtx [i_iso],
                                                   &iso_itp_dfield_edge[i_iso],
                                                    NULL);
-      printf("iso_itp_dfield_vtx [i_iso] = %p\n", (void *)iso_itp_dfield_vtx [i_iso]);
     }
   }
 

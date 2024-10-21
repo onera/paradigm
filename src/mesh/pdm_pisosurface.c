@@ -483,14 +483,15 @@ PDM_isosurface_local_parent_get
 
 
 int
-PDM_isosurface_vtx_parent_weight_get
+PDM_isosurface_parent_weight_get
 (
-  PDM_isosurface_t  *isos,
-  int                id_isosurface,
-  int                i_part,
-  int              **vtx_parent_idx,
-  double           **vtx_parent_weight,
-  PDM_ownership_t    ownership
+  PDM_isosurface_t     *isos,
+  int                   id_isosurface,
+  int                   i_part,
+  PDM_mesh_entities_t   entity_type,
+  int                 **parent_idx,
+  double              **parent_weight,
+  PDM_ownership_t       ownership
 )
 {
   CHECK_IS_NOT_DIST(isos);
@@ -503,14 +504,14 @@ PDM_isosurface_vtx_parent_weight_get
   _isosurface_t *_iso = &isos->isosurfaces[id_isosurface];
 
   if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
-    _iso->iso_owner_parent_idx[PDM_MESH_ENTITY_VTX][i_part] = ownership;
-    _iso->iso_owner_vtx_parent_weight              [i_part] = ownership;
+    _iso->iso_owner_parent_idx [entity_type][i_part] = ownership;
+    _iso->iso_owner_parent_wght[entity_type][i_part] = ownership;
   }
 
-  *vtx_parent_idx    = _iso->iso_entity_parent_idx[PDM_MESH_ENTITY_VTX][i_part];
-  *vtx_parent_weight = _iso->iso_vtx_parent_weight                     [i_part];
+  *parent_idx    = _iso->iso_entity_parent_idx [entity_type][i_part];
+  *parent_weight = _iso->iso_entity_parent_wght[entity_type][i_part];
 
-  return _iso->iso_n_entity[PDM_MESH_ENTITY_VTX][i_part];
+  return _iso->iso_n_entity[entity_type][i_part];
 }
 
 

@@ -259,7 +259,7 @@ cdef class Isosurface:
   cdef int      n_rank
   cdef dict ptp_entity
   cdef dict user_defined_field_function
-  cdef dict got_vtx_parent_idx
+  cdef list got_parent_idx
 
   FIELD    = _PDM_ISO_SURFACE_KIND_FIELD
   PLANE    = _PDM_ISO_SURFACE_KIND_PLANE
@@ -302,7 +302,7 @@ cdef class Isosurface:
 
     self.ptp_entity                  = dict()
     self.user_defined_field_function = dict()
-    self.got_vtx_parent_idx          = dict()
+    self.got_parent_idx              = [dict(), dict(), dict(), dict()]
 
     isosurface_python_object_set(self._isos,
                         <void *> self)
@@ -341,7 +341,8 @@ cdef class Isosurface:
 
     free(isovalues_data) # deep-copied in isos
 
-    self.got_vtx_parent_idx[id_iso] = False
+    for entity_type in range(_PDM_MESH_ENTITY_MAX):
+      self.got_parent_idx[entity_type][id_iso] = False
 
     return id_iso
 
@@ -901,10 +902,8 @@ cdef class Isosurface:
                                               &parent_lnum,
                                                PDM_OWNERSHIP_USER)
 
-    own_idx = True
-    if entity_type == _PDM_MESH_ENTITY_VTX:
-      own_idx = not self.got_vtx_parent_idx[id_iso]
-    self.got_vtx_parent_idx[id_iso] = True
+    own_idx = not self.got_parent_idx[entity_type][id_iso]
+    self.got_parent_idx[entity_type][id_iso] = True
 
     parent_lnum_size = parent_idx[n_entity]
     np_parent_idx    = create_numpy_i(parent_idx , n_entity+1      , flag_owndata=own_idx)
@@ -912,35 +911,38 @@ cdef class Isosurface:
 
     return np_parent_idx, np_parent_lnum
 
-  def vtx_parent_weight_get(self, id_iso, i_part):
+  def parent_weight_get(self, id_iso, i_part, entity_type):
     """
-    vtx_parent_weight_get(id_iso, i_part)
+    parent_weight_get(id_iso, i_part, entity_type)
 
-    Get isosurface vertices parent weight.
+    Get isosurface entity parent weight.
 
     Parameters:
-      id_iso (int) : Isosurface id
-      i_part (int) : Partition id
+      id_iso      (int)                 : Isosurface id
+      i_part      (int)                 : Partition id
+      entity_type (PDM_mesh_entities_t) : Entity type
 
     Returns:
-      vtx_parent_weight (`np.ndarray[np.double_t]`) : Vertices parent weight
+      parent_idx    (`np.ndarray[np.int32_t]`)  : Entity parent index
+      parent_weight (`np.ndarray[np.double_t]`) : Entity parent weight
     """
-    cdef int     n_vtx             = 0
-    cdef int    *vtx_parent_idx    = NULL
-    cdef double *vtx_parent_weight = NULL
+    cdef int     n_entity      = 0
+    cdef int    *parent_idx    = NULL
+    cdef double *parent_weight = NULL
 
-    n_vtx = PDM_isosurface_vtx_parent_weight_get(self._isos, id_iso, i_part,
-                                                &vtx_parent_idx,
-                                                &vtx_parent_weight,
-                                                 PDM_OWNERSHIP_USER)
+    n_entity = PDM_isosurface_parent_weight_get(self._isos, id_iso, i_part, entity_type,
+                                               &parent_idx,
+                                               &parent_weight,
+                                                PDM_OWNERSHIP_USER)
 
+    own_idx = not self.got_parent_idx[entity_type][id_iso]
+    self.got_parent_idx[entity_type][id_iso] = True
 
-    vtx_parent_weight_size = vtx_parent_idx[n_vtx]
-    np_vtx_parent_idx    = create_numpy_i(vtx_parent_idx,    n_vtx+1,                flag_owndata=not self.got_vtx_parent_idx[id_iso])
-    np_vtx_parent_weight = create_numpy_d(vtx_parent_weight, vtx_parent_weight_size, flag_owndata=True)
-    self.got_vtx_parent_idx[id_iso] = True
+    parent_weight_size = parent_idx[n_entity]
+    np_parent_idx    = create_numpy_i(parent_idx,    n_entity+1,       , flag_owndata=own_idx)
+    np_parent_weight = create_numpy_d(parent_weight, parent_weight_size, flag_owndata=True)
 
-    return np_vtx_parent_idx, np_vtx_parent_weight
+    return np_parent_idx, np_parent_weight
 
   def isovalue_idx_get(self, id_iso, i_part, entity_type):
     """
@@ -1069,31 +1071,33 @@ cdef class Isosurface:
 
     return np_dgroup_entity_idx, np_dgroup_entity
 
-  def dvtx_parent_weight_get(self, id_iso):
+  def dparent_weight_get(self, id_iso, entity_type):
     """
-    dvtx_parent_weight_get(id_iso)
+    dparent_weight_get(id_iso)
 
-    Get isosurface vertices parent weight.
+    Get isosurface entity parent weight.
 
     Parameters:
-      id_iso (int) : Isosurface id
+      id_iso      (int)                 : Isosurface id
+      entity_type (PDM_mesh_entities_t) : Entity type
 
     Returns:
-      vtx_parent_weight (`np.ndarray[np.double_t]`) : Vertices parent weight
+      parent_idx    (`np.ndarray[np.int32_t]`)  : Entity parent index
+      parent_weight (`np.ndarray[np.double_t]`) : Entity parent weights
     """
-    cdef int     n_vtx             = 0
-    cdef int    *vtx_parent_idx    = NULL
-    cdef double *vtx_parent_weight = NULL
+    cdef int     n_entity      = 0
+    cdef int    *parent_idx    = NULL
+    cdef double *parent_weight = NULL
 
-    n_vtx = PDM_isosurface_dvtx_parent_weight_get(self._isos, id_iso,
-                                                 &vtx_parent_idx,
-                                                 &vtx_parent_weight,
-                                                  PDM_OWNERSHIP_USER)
+    n_entity = PDM_isosurface_dvtx_parent_weight_get(self._isos, id_iso,
+                                                    &parent_idx,
+                                                    &parent_weight,
+                                                     PDM_OWNERSHIP_USER)
 
-    vtx_parent_weight_size = vtx_parent_idx[n_vtx]
-    np_vtx_parent_weight = create_numpy_d(vtx_parent_weight, vtx_parent_weight_size, flag_owndata=True)
+    parent_weight_size = parent_idx[n_entity]
+    np_parent_weight = create_numpy_d(parent_weight, parent_weight_size, flag_owndata=True)
 
-    return np_vtx_parent_weight
+    return np_parent_weight
 
   def disovalue_entity_get(self, id_iso, entity_type):
     """
