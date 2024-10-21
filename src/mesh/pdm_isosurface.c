@@ -2477,15 +2477,6 @@ _build_ptp_dist
     return;
   }
 
-  // TODO: find how to manage entry_mesh distributions with isos->dmesh_nodal
-  if (isosurface_is_nodal(isos) && (entity_type==PDM_MESH_ENTITY_EDGE || entity_type==PDM_MESH_ENTITY_FACE)) {
-    _iso->iso_ptp[entity_type] = NULL;
-    _iso->iso_owner_ptp[entity_type] = PDM_OWNERSHIP_BAD_VALUE;
-    return;
-  }
-
-
-  // > Build part_to_part TODO: move in isosurface
   int          iso_n_entity    = _iso->iso_dn_entity          [entity_type];
   int         *iso_parent_idx  = _iso->iso_dentity_parent_idx [entity_type];
   PDM_g_num_t *iso_parent_gnum = _iso->iso_dentity_parent_gnum[entity_type];
@@ -2511,22 +2502,14 @@ _build_ptp_dist
     }
 
     case PDM_MESH_ENTITY_EDGE: {
-      if (isosurface_is_nodal(isos)) {
-        PDM_error(__FILE__, __LINE__, 0, "Not yet implemented\n");
-      }
-      else {
-        parent_distrib = isos->distrib_face;
-      }
+      assert(!isosurface_is_nodal(isos));
+      parent_distrib = isos->distrib_face;
       break;
     }
 
     case PDM_MESH_ENTITY_FACE: {
-      if (isosurface_is_nodal(isos)) {
-        PDM_error(__FILE__, __LINE__, 0, "Not yet implemented\n");
-      }
-      else {
-        parent_distrib = isos->distrib_cell;
-      }
+      assert(!isosurface_is_nodal(isos));
+      parent_distrib = isos->distrib_cell;
       break;
     }
 
@@ -2578,6 +2561,142 @@ _build_ptp_dist
   PDM_free(iso_parent_triplet_idx);
   PDM_free(iso_parent_trplt);
 }
+
+
+/* Build part_to_part (distributed output) to link isosurface entities
+   with their 'parent' source entities in user frame (dmesh_nodal) */
+static void
+_build_ptp_dist_nodal
+(
+  PDM_isosurface_t    *isos,
+  int                  id_iso,
+  PDM_mesh_entities_t  entity_type
+)
+{
+  if (_iso->compute_ptp[entity_type] == PDM_FALSE) {
+    return;
+  }
+
+  if (entity_type == PDM_MESH_ENTITY_VTX) {
+    _build_ptp_dist(isos, id_iso, entity_type);
+    return;
+  }
+
+  int i_rank;
+  int n_rank;
+  PDM_MPI_Comm_rank(isos->comm, &i_rank);
+  PDM_MPI_Comm_size(isos->comm, &n_rank);
+
+  _isosurface_t *_iso = &isos->isosurfaces[id_iso];
+
+  assert(isos->dmesh_nodal != NULL);
+
+  if (entity_type == PDM_MESH_ENTITY_FACE && isos->entry_mesh_dim < 3) {
+    return;
+  }
+
+  int          iso_n_entity    = _iso->iso_dn_entity          [entity_type];
+  int         *iso_parent_idx  = _iso->iso_dentity_parent_idx [entity_type];
+  PDM_g_num_t *iso_parent_gnum = _iso->iso_dentity_parent_gnum[entity_type];
+
+  // > Isosurface utils for ptp
+  PDM_g_num_t *iso_distrib = NULL;
+  iso_distrib = PDM_compute_entity_distribution(isos->comm, iso_n_entity);
+  PDM_g_num_t *iso_gnum = PDM_array_new_arange_gnum(iso_distrib[i_rank]+1, iso_distrib[i_rank+1]+1, 1);
+  PDM_free(iso_distrib);
+
+  PDM_geometry_kind_t geom_kind_parent = PDM_GEOMETRY_KIND_MAX;
+
+  if (entity_type == PDM_MESH_ENTITY_EDGE) {
+    geom_kind_parent = PDM_GEOMETRY_KIND_SURFACIC;
+  }
+  else if (entity_type == PDM_MESH_ENTITY_FACE) {
+    geom_kind_parent = PDM_GEOMETRY_KIND_VOLUMIC;
+  }
+  else {
+    PDM_error(__FILE__, __LINE__, 0, "Invalid entity_type %d\n", entity_type);
+  }
+  int n_section = PDM_DMesh_nodal_n_section_get(isos->dmesh_nodal, geom_kind_parent);
+
+  PDM_g_num_t *shifted_section_distrib = NULL;
+  PDM_malloc(shifted_section_distrib, n_section+1, PDM_g_num_t);
+  shifted_section_distrib[0] = 0;
+
+  // int *sections_id = PDM_DMesh_nodal_sections_id_get(isos->dmesh_nodal, geom_kind);
+  int n_elt2 = 0;
+  for (int i_section = 0; i_section < n_section; i_section++) {
+    const PDM_g_num_t *section_distrib = PDM_DMesh_nodal_distrib_section_get(isos->dmesh_nodal,
+                                                                             geom_kind_parent,
+                                                                             i_section); // section_id[i_section] ?
+
+    shifted_section_distrib[i_section+1] = shifted_section_distrib[i_section] + section_distrib[n_rank];
+
+    n_elt2 += section_distrib[i_rank+1] - section_distrib[i_rank];
+  }
+
+
+  /**
+   * Transform parent_gnum element into triplet
+   */
+
+  // > Multiply by 3 iso_parent_idx because of ptp_from_triplet
+  int *iso_parent_triplet_idx = NULL;
+  PDM_malloc(iso_parent_triplet_idx, iso_n_entity+1, int);
+  for (int i_entity=0; i_entity<iso_n_entity+1; ++i_entity) {
+    iso_parent_triplet_idx[i_entity] = 3*iso_parent_idx[i_entity];
+  }
+
+  // > Build triplet from gnum
+  int  n_parent         = iso_parent_idx[iso_n_entity];
+  int *iso_parent_trplt = NULL;
+  PDM_malloc(iso_parent_trplt, 3*n_parent, int);
+  for (int i_parent=0; i_parent<n_parent; ++i_parent) {
+    // First, get section
+    PDM_g_num_t gnum = iso_parent_gnum[i_parent]-1;
+    int i_section = PDM_binary_search_gap_long(gnum,
+                                               shifted_section_distrib,
+                                               n_section + 1);
+
+    // Second, get proc
+    const PDM_g_num_t *section_distrib = PDM_DMesh_nodal_distrib_section_get(isos->dmesh_nodal,
+                                                                             geom_kind_parent,
+                                                                             i_section); // section_id[i_section] ?
+    gnum -= shifted_section_distrib[i_section];
+    int iproc = PDM_binary_search_gap_long(gnum,
+                                           section_distrib,
+                                           n_rank + 1);
+
+    // Third, get lnum in that section of that proc
+    int lnum = gnum - section_distrib[iproc];
+    for (int j_section = 0; j_section < i_section; j_section++) {
+      const PDM_g_num_t *_section_distrib = PDM_DMesh_nodal_distrib_section_get(isos->dmesh_nodal,
+                                                                                geom_kind_parent,
+                                                                                i_section); // section_id[i_section] ?
+      lnum += _section_distrib[iproc+1] - _section_distrib[iproc];
+    }
+
+    iso_parent_trplt[3*i_parent  ] = iproc;
+    iso_parent_trplt[3*i_parent+1] = 0;
+    iso_parent_trplt[3*i_parent+2] = lnum;
+  }
+  PDM_free(shifted_section_distrib);
+
+  _iso->iso_ptp[entity_type] = PDM_part_to_part_create_from_num2_triplet((const PDM_g_num_t **)&iso_gnum,
+                                                                         (const int         * )&iso_n_entity,
+                                                                                                1,
+                                                                         (const int         * )&n_elt2,
+                                                                                                1,
+                                                                         (const int         **)&iso_parent_triplet_idx,
+                                                                         (const int         **) NULL,
+                                                                         (const int         **)&iso_parent_trplt,
+                                                                                                isos->comm);
+  _iso->iso_owner_ptp[entity_type] = PDM_OWNERSHIP_KEEP;
+
+  PDM_free(iso_gnum);
+  PDM_free(iso_parent_triplet_idx);
+  PDM_free(iso_parent_trplt);
+}
+
 
 
 static void
@@ -2961,9 +3080,16 @@ _isosurface_compute
     isosurface_timer_start(isos, ISO_TIMER_PART_TO_DIST);
     _part_to_dist(isos, id_isosurface);
     for (int i_entity = PDM_MESH_ENTITY_FACE; i_entity < PDM_MESH_ENTITY_MAX; i_entity++) {
-      _build_ptp_dist(isos,
-                      id_isosurface,
-                      i_entity);
+      if (isosurface_is_nodal(isos)) {
+        _build_ptp_dist_nodal(isos,
+                              id_isosurface,
+                              i_entity);
+      }
+      else {
+        _build_ptp_dist(isos,
+                        id_isosurface,
+                        i_entity);
+      }
     }
     isosurface_timer_end(isos, ISO_TIMER_PART_TO_DIST);
   }
