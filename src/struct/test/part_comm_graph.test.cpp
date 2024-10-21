@@ -41,12 +41,12 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2p", 2) {
   int n_entity_bound = vn_entity_bound[i_rank];
   int *entity_bound  = ventity_bound  [i_rank].data();
 
-  PDM_part_comm_graph_t* ptpgc = PDM_part_comm_graph_create(n_part,
+  PDM_part_comm_graph_t* pgc = PDM_part_comm_graph_create(n_part,
                                                             &n_entity_bound,
                                                             &entity_bound,
                                                             pdm_comm);
 
-  const int* lower_bound = PDM_part_comm_graph_owner_get(ptpgc, 0);
+  const int* lower_bound = PDM_part_comm_graph_owner_get(pgc, 0);
 
   // PDM_log_trace_array_int(lower_bound, 3, "lower_bound ::");
 
@@ -62,7 +62,7 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2p", 2) {
   int *send_cst_data = vsend_cst_data[i_rank].data();
 
   int **tmp_recv_cst_data = NULL;
-  PDM_part_comm_graph_exch(ptpgc,
+  PDM_part_comm_graph_exch(pgc,
                            sizeof(int),
                            PDM_STRIDE_CST_INTERLACED,
                            1,
@@ -94,7 +94,7 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2p", 2) {
 
   int **tmp_recv_data = NULL;
   int **tmp_recv_stri = NULL;
-  PDM_part_comm_graph_exch(ptpgc,
+  PDM_part_comm_graph_exch(pgc,
                            sizeof(int),
                            PDM_STRIDE_VAR_INTERLACED,
                            -1,
@@ -133,7 +133,7 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2p", 2) {
   free(recv_stri);
   free(recv_data);
 
-  PDM_part_comm_graph_free(ptpgc);
+  PDM_part_comm_graph_free(pgc);
 }
 
 MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 3p", 3) {
@@ -197,12 +197,12 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 3p", 3) {
   int  n_entity_bound = vn_entity_bound[i_rank];
   int *entity_bound   = ventity_bound  [i_rank].data();
 
-  PDM_part_comm_graph_t* ptpgc = PDM_part_comm_graph_create(n_part,
+  PDM_part_comm_graph_t* pgc = PDM_part_comm_graph_create(n_part,
                                                             &n_entity_bound,
                                                             &entity_bound,
                                                             pdm_comm);
 
-  const int* lower_bound = PDM_part_comm_graph_owner_get(ptpgc, 0);
+  const int* lower_bound = PDM_part_comm_graph_owner_get(pgc, 0);
 
   // PDM_log_trace_array_int(lower_bound, n_entity_bound, "lower_bound ::");
 
@@ -215,7 +215,7 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 3p", 3) {
   MPI_CHECK_EQ_C_ARRAY(2, lower_bound, lower_bound_expected_p2, n_entity_bound);
 
 
-  PDM_part_comm_graph_free(ptpgc);
+  PDM_part_comm_graph_free(pgc);
 
 }
 
@@ -254,12 +254,12 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2p - order ", 2) {
   int *entity_bound  = ventity_bound         [i_rank].data();
 
 
-  PDM_part_comm_graph_t* ptpgc = PDM_part_comm_graph_create(n_part,
+  PDM_part_comm_graph_t* pgc = PDM_part_comm_graph_create(n_part,
                                                             &n_entity_bound,
                                                             &entity_bound,
                                                             pdm_comm);
 
-  const int* lower_bound = PDM_part_comm_graph_owner_get(ptpgc, 0);
+  const int* lower_bound = PDM_part_comm_graph_owner_get(pgc, 0);
 
   // PDM_log_trace_array_int(lower_bound, 3, "lower_bound ::");
 
@@ -278,7 +278,7 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2p - order ", 2) {
 
   // PDM_log_trace_array_int(entity_bound, 4 * n_entity_bound, "entity_bound (Avant) ::");
 
-  PDM_part_comm_graph_reorder(ptpgc,
+  PDM_part_comm_graph_reorder(pgc,
                               &entity_bound,
                               &old_to_new);
 
@@ -290,5 +290,5 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2p - order ", 2) {
   MPI_CHECK_EQ_C_ARRAY(0, entity_bound, entity_bound_reorder_p0, 12);
   MPI_CHECK_EQ_C_ARRAY(1, entity_bound, entity_bound_reorder_p1, 12);
 
-  PDM_part_comm_graph_free(ptpgc);
+  PDM_part_comm_graph_free(pgc);
 }

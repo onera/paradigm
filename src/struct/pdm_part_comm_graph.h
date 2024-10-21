@@ -61,7 +61,7 @@ PDM_part_comm_graph_t*
 PDM_part_comm_graph_create
 (
   int            n_part,
-  int           *pn_entity_graph, // Pas besoin, juste besoin de la taille en fait ?
+  int           *pn_entity_graph,
   int          **pentity_graph,
   PDM_MPI_Comm   comm
 );
