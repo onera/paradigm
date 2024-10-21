@@ -929,16 +929,11 @@ PDM_isosurface_test_utils_dist_interpolation
   double          **iso_itp_dfield_face
 )
 {
-  // TODO: interpolate face and cell fields
-  PDM_UNUSED(itp_dfield_face);
-  PDM_UNUSED(itp_dfield_cell);
-  PDM_UNUSED(iso_itp_dfield_edge);
-  PDM_UNUSED(iso_itp_dfield_face);
+  int dim = isos->entry_mesh_dim;
 
   double *_iso_itp_dfield_vtx  = NULL;
-  // double *_iso_itp_dfield_edge = NULL;
-  // double *_iso_itp_dfield_face = *iso_itp_dfield_face;
-
+  double *_iso_itp_dfield_edge = NULL;
+  double *_iso_itp_dfield_face = NULL;
 
   /**
    * Vertex interpolation
@@ -984,7 +979,106 @@ PDM_isosurface_test_utils_dist_interpolation
 
   PDM_free(recv_vtx_field[0]);
   PDM_free(recv_vtx_field);
-  *iso_itp_dfield_vtx = _iso_itp_dfield_vtx;
+
+  *iso_itp_dfield_vtx  = _iso_itp_dfield_vtx;
+
+
+  /**
+   * Edge interpolation
+   */
+  PDM_part_to_part_t *ptp_edge = NULL;
+  PDM_isosurface_part_to_part_get(isos, id_iso, PDM_MESH_ENTITY_EDGE,
+                                 &ptp_edge, PDM_OWNERSHIP_BAD_VALUE); 
+
+  // > Exchange isofield
+  double **recv_edge_field = NULL;
+  int request_edge = -1;
+  PDM_part_to_part_reverse_iexch(ptp_edge,
+                                 PDM_MPI_COMM_KIND_P2P,
+                                 PDM_STRIDE_CST_INTERLACED,
+                                 PDM_PART_TO_PART_DATA_DEF_ORDER_PART2,
+                                 1,
+                                 sizeof(double),
+                                 NULL,
+                (const void  **)&itp_dfield_face,
+                                 NULL,
+                (      void ***)&recv_edge_field,
+                                &request_edge);
+
+  PDM_part_to_part_reverse_iexch_wait(ptp_edge, request_edge);
+
+  n_ref_lnum2 = NULL;
+    ref_lnum2 = NULL;
+  PDM_part_to_part_ref_lnum2_get(ptp_edge, &n_ref_lnum2, &ref_lnum2);
+  PDM_log_trace_array_int(ref_lnum2[0], n_ref_lnum2[0], "ref_lnum2");
+
+  int         *edge_dparent_idx  = NULL;
+  double      *edge_dparent_wght = NULL;
+  int iso_dn_edge = PDM_isosurface_dparent_weight_get(isos, id_iso, PDM_MESH_ENTITY_EDGE,
+                                                    &edge_dparent_idx, &edge_dparent_wght,
+                                                     PDM_OWNERSHIP_KEEP);
+
+  PDM_calloc(_iso_itp_dfield_edge, iso_dn_edge, double);
+  for (int i_edge = 0; i_edge < iso_dn_edge; i_edge++) {
+    for (int i = edge_dparent_idx[i_edge]; i < edge_dparent_idx[i_edge+1]; i++) {
+      _iso_itp_dfield_edge[i_edge] += edge_dparent_wght[i]*recv_edge_field[0][i];
+    }
+  }
+
+  PDM_free(recv_edge_field[0]);
+  PDM_free(recv_edge_field);
+
+  *iso_itp_dfield_edge = _iso_itp_dfield_edge;
+
+
+  /**
+   * Face interpolation
+   */
+  if (dim==3) {
+    PDM_part_to_part_t *ptp_face = NULL;
+    PDM_isosurface_part_to_part_get(isos, id_iso, PDM_MESH_ENTITY_FACE,
+                                   &ptp_face, PDM_OWNERSHIP_BAD_VALUE); 
+
+    // > Exchange isofield
+    double **recv_face_field = NULL;
+    int request_face = -1;
+    PDM_part_to_part_reverse_iexch(ptp_face,
+                                   PDM_MPI_COMM_KIND_P2P,
+                                   PDM_STRIDE_CST_INTERLACED,
+                                   PDM_PART_TO_PART_DATA_DEF_ORDER_PART2,
+                                   1,
+                                   sizeof(double),
+                                   NULL,
+                  (const void  **)&itp_dfield_face,
+                                   NULL,
+                  (      void ***)&recv_face_field,
+                                  &request_face);
+
+    PDM_part_to_part_reverse_iexch_wait(ptp_face, request_face);
+
+    n_ref_lnum2 = NULL;
+      ref_lnum2 = NULL;
+    PDM_part_to_part_ref_lnum2_get(ptp_face, &n_ref_lnum2, &ref_lnum2);
+    PDM_log_trace_array_int(ref_lnum2[0], n_ref_lnum2[0], "ref_lnum2");
+
+    int         *face_dparent_idx  = NULL;
+    double      *face_dparent_wght = NULL;
+    int iso_dn_face = PDM_isosurface_dparent_weight_get(isos, id_iso, PDM_MESH_ENTITY_FACE,
+                                                      &face_dparent_idx, &face_dparent_wght,
+                                                       PDM_OWNERSHIP_KEEP);
+
+    PDM_calloc(_iso_itp_dfield_face, iso_dn_face, double);
+    for (int i_face = 0; i_face < iso_dn_face; i_face++) {
+      for (int i = face_dparent_idx[i_face]; i < face_dparent_idx[i_face+1]; i++) {
+        _iso_itp_dfield_face[i_face] += face_dparent_wght[i]*recv_face_field[0][i];
+      }
+    }
+
+    PDM_free(recv_face_field[0]);
+    PDM_free(recv_face_field);
+    
+    *iso_itp_dfield_face = _iso_itp_dfield_face;
+  }
 }
 
 
@@ -1347,7 +1441,7 @@ PDM_isosurface_test_utils_dist_vtk
   PDM_MPI_Allreduce(n_entity, gn_entity, 3, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, comm);
   PDM_log_trace_array_long(gn_entity, 3, "gn_entity ::");
   PDM_dmesh_nodal_t *iso_dmn = PDM_DMesh_nodal_create(comm,
-                                                      dim-1,
+                                                      dim,
                                                       gn_entity[0],
                                                       0,
                                                       gn_entity[2],
@@ -1396,7 +1490,7 @@ PDM_isosurface_test_utils_dist_vtk
                                       1,
                                       fld_name_vtx,
                                      &iso_vtx_fld,
-                                      0, //TODO
+                                      1,
                                       fld_name_edge,
                                      &_iso_edge_fld);
   if (dim==3) {
@@ -1407,7 +1501,7 @@ PDM_isosurface_test_utils_dist_vtk
                                         1,
                                         fld_name_vtx,
                                        &iso_vtx_fld,
-                                        0, //TODO
+                                        1,
                                         fld_name_face,
                                        &_iso_face_fld);
   }

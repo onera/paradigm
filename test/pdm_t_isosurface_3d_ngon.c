@@ -669,8 +669,8 @@ int main
   else {
     for (int i_iso = 0; i_iso < n_iso; i_iso++) {
       PDM_free(iso_itp_dfield_vtx [i_iso]);
-      // PDM_free(iso_itp_dfield_edge[i_iso]);
-      // PDM_free(iso_itp_dfield_face[i_iso]);
+      PDM_free(iso_itp_dfield_edge[i_iso]);
+      PDM_free(iso_itp_dfield_face[i_iso]);
     }
     PDM_free(iso_itp_dfield_vtx);
     PDM_free(iso_itp_dfield_edge);
