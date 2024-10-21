@@ -354,6 +354,7 @@ struct _pdm_isosurface_t {
   int         **extract_face_lnum; // from initial mesh
   int          *extract_tri_n_group; // from initial mesh
   int         **extract_tri_tag; // from initial mesh
+  int         **extract_tri_face;
 
   int          *extract_n_tetra;
   int         **extract_tetra_vtx;

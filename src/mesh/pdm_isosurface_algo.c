@@ -1019,6 +1019,7 @@ _contouring_triangles
   int          *elt_vtx,
   PDM_g_num_t  *elt_gnum,
   int          *elt_bnd_tag,
+  int          *elt_face,
   int           n_edge,
   int          *edge_bnd_tag_idx,
   int          *edge_bnd_tag,
@@ -1042,6 +1043,8 @@ _contouring_triangles
 {
   int debug      = 0;
   int debug_loop = 0;
+
+  int ngon_2d = (elt_face != NULL);
 
 
   /* First loop to count */
@@ -1169,11 +1172,23 @@ _contouring_triangles
    * so we need to count them to generate unique gnum...
    */
   int *elt_n_child = NULL;
+  int n_face = n_elt;
+  if (ngon_2d) {
+    n_face = 0;
+    for (int i_elt = 0; i_elt < n_elt; i_elt++) {
+      n_face = PDM_MAX(n_face, elt_face[i_elt]+1);
+    }
+  }
   PDM_calloc(elt_n_child, n_elt, int);
 
 
   /* Second loop to fill */
   for (int i_elt = 0; i_elt < n_elt; i_elt++) {
+
+    int i_face = i_elt;
+    if (ngon_2d) {
+      i_face = elt_face[i_elt];
+    }
 
     int elt_tag = elt_bnd_tag[i_elt];
     if (debug_loop==1) log_trace("\ti_elt = %d\n", i_elt);
@@ -1353,14 +1368,14 @@ _contouring_triangles
           iso_edge_vtx[2*iso_n_edge+1] = vtx_on_edge0;
 
           iso_edge_parent_gnum[2*iso_n_edge  ] =  elt_gnum   [i_elt];
-          iso_edge_parent_gnum[2*iso_n_edge+1] =--elt_n_child[i_elt];
+          iso_edge_parent_gnum[2*iso_n_edge+1] =--elt_n_child[i_face];
         }
         else {
           iso_edge_vtx[2*iso_n_edge  ] = vtx_on_edge0;
           iso_edge_vtx[2*iso_n_edge+1] = vtx_on_vtx0;
 
           iso_edge_parent_gnum[2*iso_n_edge  ] =  elt_gnum   [i_elt];
-          iso_edge_parent_gnum[2*iso_n_edge+1] =--elt_n_child[i_elt];
+          iso_edge_parent_gnum[2*iso_n_edge+1] =--elt_n_child[i_face];
         }
 
         iso_edge_parent[iso_n_edge_parent++] = i_elt+1;
@@ -1390,14 +1405,14 @@ _contouring_triangles
           iso_edge_vtx[2*iso_n_edge+1] = vtx_on_edge0;
 
           iso_edge_parent_gnum[2*iso_n_edge  ] =  elt_gnum   [i_elt];
-          iso_edge_parent_gnum[2*iso_n_edge+1] =--elt_n_child[i_elt];
+          iso_edge_parent_gnum[2*iso_n_edge+1] =--elt_n_child[i_face];
         }
         else {
           iso_edge_vtx[2*iso_n_edge  ] = vtx_on_edge0;
           iso_edge_vtx[2*iso_n_edge+1] = vtx_on_edge1;
 
           iso_edge_parent_gnum[2*iso_n_edge  ] =  elt_gnum   [i_elt];
-          iso_edge_parent_gnum[2*iso_n_edge+1] =--elt_n_child[i_elt];
+          iso_edge_parent_gnum[2*iso_n_edge+1] =--elt_n_child[i_face];
         }
 
         iso_edge_parent[iso_n_edge_parent++] = i_elt+1;
@@ -3126,11 +3141,17 @@ PDM_isosurface_marching_algo
         PDM_log_trace_array_int (_vtx_to_iso_vtx, n_vtx , "_vtx_to_iso_vtx ::");
       }
 
+      int *_extract_tri_face = NULL;
+      if (isos->extract_tri_face != NULL) {
+        _extract_tri_face = isos->extract_tri_face[i_part];
+      }
+
       t_start = PDM_MPI_Wtime();
       _contouring_triangles(isos->extract_n_tri   [i_part],
                             isos->extract_tri_vtx [i_part],
                             isos->extract_tri_gnum[i_part],
                             isos->extract_tri_tag [i_part],
+                            _extract_tri_face,
                             n_edge,
                             edge_bnd_tag_idx,
                             edge_bnd_tag,

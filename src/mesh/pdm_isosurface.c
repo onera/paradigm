@@ -1592,6 +1592,7 @@ _triangulate
   if (isos->extract_kind != PDM_EXTRACT_PART_KIND_LOCAL) {
     PDM_malloc(isos->extract_face_lnum, isos->iso_n_part, int         *);
   }
+  PDM_malloc(isos->extract_tri_face,    isos->iso_n_part, int         *);
 
   PDM_malloc(isos->extract_n_tetra   , isos->iso_n_part, int          );
   PDM_malloc(isos->extract_tetra_vtx , isos->iso_n_part, int         *);
@@ -1706,13 +1707,14 @@ _triangulate
     PDM_malloc(isos->extract_tri_gnum [i_part], isos->extract_n_tri[i_part], PDM_g_num_t);
     PDM_malloc(isos->extract_face_lnum[i_part], isos->extract_n_tri[i_part], int        );
     PDM_malloc(isos->extract_tri_tag  [i_part], isos->extract_n_tri[i_part], int        );
-
+    PDM_malloc(isos->extract_tri_face [i_part], isos->extract_n_tri[i_part], int        );
 
     for (int i_face = 0; i_face < n_face; i_face++) {
       for (int i_tri = face_tria_idx[i_face]; i_tri < face_tria_idx[i_face+1]; i_tri++) {
         isos->extract_tri_gnum [i_part][i_tri] = face_parent_gnum[i_face];
         isos->extract_face_lnum[i_part][i_tri] = i_face;
         isos->extract_tri_tag  [i_part][i_tri] = face_tag[i_face];
+        isos->extract_tri_face [i_part][i_tri] = i_face;
       }
     }
 
@@ -2000,6 +2002,12 @@ _part_to_dist_elt
     for (int i_elt=0; i_elt<size_elt_vtx; ++i_elt) {
       int elt_lnum = elt_vtx[i_part][i_elt];
       _elt_vtx[i_part][i_elt] = _iso->iso_entity_gnum[PDM_MESH_ENTITY_VTX][i_part][elt_lnum-1];
+    }
+    int idx = 0;
+    for (int i_elt=0; i_elt<n_elt[i_part]; ++i_elt) {
+      log_trace("elt "PDM_FMT_G_NUM" : ", elt_gnum[i_part][i_elt]);
+      PDM_log_trace_array_long(_elt_vtx[i_part] + idx, _elt_vtx_strd[i_part][i_elt], "");
+      idx += _elt_vtx_strd[i_part][i_elt];
     }
   }
 
@@ -2809,6 +2817,7 @@ _free_extracted_parts
     if (is_2d_ngon) {
       PDM_free(isos->extract_tri_vtx [i_part]);
       PDM_free(isos->extract_tri_gnum[i_part]);
+      PDM_free(isos->extract_tri_face[i_part]);
     }
 
     if (isos->extract_tri_tag != NULL) {
@@ -2829,6 +2838,7 @@ _free_extracted_parts
   PDM_free(isos->extract_face_lnum  );
   PDM_free(isos->extract_tri_n_group);
   PDM_free(isos->extract_tri_tag    );
+  PDM_free(isos->extract_tri_face   );
 
   PDM_free(isos->extract_n_tetra   );
   PDM_free(isos->extract_tetra_vtx );
