@@ -1374,9 +1374,31 @@ PDM_dmesh_nodal_transfer_to_new_dmesh_nodal_gen
 void
 PDM_dmesh_nodal_dump_vtk
 (
-       PDM_dmesh_nodal_t   *dmn,
-       PDM_geometry_kind_t  geom_kind,
- const char                *filename_patter
+        PDM_dmesh_nodal_t   *dmn,
+        PDM_geometry_kind_t  geom_kind,
+  const char                *filename_patter
+)
+{
+  PDM_dmesh_nodal_dump_vtk_with_field(dmn, geom_kind, filename_patter,
+                                      0, NULL, NULL,
+                                      0, NULL, NULL);
+}
+
+
+
+
+void
+PDM_dmesh_nodal_dump_vtk_with_field
+(
+        PDM_dmesh_nodal_t   *dmn,
+        PDM_geometry_kind_t  geom_kind,
+  const char                *filename_patter,
+  const int                  n_fld_vtx,
+        char               **fld_name_vtx,
+        double             **fld_vtx,
+  const int                  n_fld_elmt,
+        char               **fld_name_elmt,
+        double            ***fld_elmt
 )
 {
   /* TODO: add groups as scalar, elt-based fields */
@@ -1389,7 +1411,6 @@ PDM_dmesh_nodal_dump_vtk
   int* sections_id = PDM_DMesh_nodal_sections_id_get(dmn, geom_kind);
   int n_section    = PDM_DMesh_nodal_n_section_get(dmn, geom_kind);
 
-  const char *field_name = "group";
   int n_field = 0;
   _pdm_dmesh_nodal_elts_t *dmne = NULL;
   int *delt_group_idx = NULL;
@@ -1526,40 +1547,128 @@ PDM_dmesh_nodal_dump_vtk
 
     }
 
+
+    /*
+     * Vertex fields
+     */
+    double      **pfield_vtx_tmp  = NULL;
+    double      **pfield_vtx      = NULL;
+    PDM_malloc(pfield_vtx, n_fld_vtx, double *);
+
+    for (int i_fld=0; i_fld<n_fld_vtx; ++i_fld) {
+      PDM_part_dfield_to_pfield(dmn->comm, 1, sizeof(double),
+                                vtx_distrib,
+        (unsigned char *)       fld_vtx[i_fld],
+                               &pn_vtx,
+        (const PDM_g_num_t **) &pvtx_ln_to_gn,
+        (unsigned char ***)    &pfield_vtx_tmp);
+      pfield_vtx[i_fld] = pfield_vtx_tmp[0];
+      PDM_free(pfield_vtx_tmp);
+    }
+
+
+    /*
+     * Element fields
+     */
+    double      **pfield_elmt_tmp  = NULL;
+    double      **pfield_elmt      = NULL;
+    PDM_malloc(pfield_elmt, n_fld_elmt, double *);
+    for (int i_fld=0; i_fld<n_fld_elmt; ++i_fld) {
+      PDM_part_dfield_to_pfield(dmn->comm, 1, sizeof(double),
+                                distrib_elt,
+        (unsigned char *)       fld_elmt[i_section][i_fld],
+                               &n_elt,
+        (const PDM_g_num_t **) &delmt_ln_to_gn,
+        (unsigned char ***)    &pfield_elmt_tmp);
+      pfield_elmt[i_fld] = pfield_elmt_tmp[0];
+      PDM_free(pfield_elmt_tmp);
+    }
+    if (field != NULL) {
+      PDM_realloc(pfield_elmt, pfield_elmt, n_fld_elmt+1, double *);
+      pfield_elmt[n_fld_elmt] = field[0];
+    }
+
+
     /*
      *  Dump
      */
     char filename[999];
     sprintf(filename, "%s_section_%2.2d_%2.2d.vtk", filename_patter, i_section, i_rank);
     if (t_elt == PDM_MESH_NODAL_POLY_2D) {
-      PDM_vtk_write_polydata(filename,
-                             pn_vtx,
-                             pvtx_coord_out,
-                             pvtx_ln_to_gn,
-                             n_elt,
-                             pcell_vtx_idx,
-                             pcell_vtx,
-                             delmt_ln_to_gn,
-                             NULL);
+      int *elt_type = PDM_array_const_int(n_elt, PDM_MESH_NODAL_POLY_2D);
+
+      char *_fld_name_elmt[n_fld_elmt];
+      for (int i_fld=0; i_fld<n_fld_elmt; ++i_fld) {
+        _fld_name_elmt[i_fld] = fld_name_elmt[i_fld];
+      }
+
+      PDM_vtk_write_unstructured_grid(filename,
+                                      pn_vtx,
+                                      pvtx_coord_out,
+                                      pvtx_ln_to_gn,
+                                      n_elt,
+             (PDM_Mesh_nodal_elt_t *) elt_type,
+                                      pcell_vtx_idx,
+                                      pcell_vtx,
+                                      delmt_ln_to_gn,
+                                      n_fld_elmt,
+              (const char   **)       _fld_name_elmt,
+              (const double **)       pfield_elmt,
+                                      n_fld_vtx,
+              (const char   **)       fld_name_vtx,
+              (const double **)       pfield_vtx);
+
+      PDM_free(elt_type);
     }
     else {
-      PDM_vtk_write_std_elements_ho(filename,
-                                    order,
-                                    pn_vtx,
-                                    pvtx_coord_out,
-                                    pvtx_ln_to_gn,
-                                    t_elt,
-                                    n_elt,
-                                    pcell_vtx,
-                                    delmt_ln_to_gn,
-                                    n_field,
-                  (const char   **) &field_name,
-                  (const double **) field);
+      int _n_fld_elmt = n_fld_elmt;
+      if (field != NULL) {
+        _n_fld_elmt += 1;
+      }
+      char *_fld_name_elmt[_n_fld_elmt];
+
+      for (int i_fld=0; i_fld<n_fld_elmt; ++i_fld) {
+        PDM_malloc(_fld_name_elmt[i_fld], strlen(fld_name_elmt[i_fld]) + 1, char);
+        strcpy(_fld_name_elmt[i_fld], fld_name_elmt[i_fld]);
+      }
+      if (field != NULL) {
+        PDM_malloc(_fld_name_elmt[n_fld_elmt], strlen("group") +1, char);
+        strcpy(_fld_name_elmt[n_fld_elmt], "group");
+      }
+
+      PDM_vtk_write_std_elements_ho_with_vtx_field(filename,
+                                                   order,
+                                                   pn_vtx,
+                                                   pvtx_coord_out,
+                                                   pvtx_ln_to_gn,
+                                                   t_elt,
+                                                   n_elt,
+                                                   pcell_vtx,
+                                                   delmt_ln_to_gn,
+                                                   n_fld_elmt+1,
+                                 (const char   **) &_fld_name_elmt,
+                                 (const double **) pfield_elmt,
+                                                   n_fld_vtx,
+                                 (const char   **) fld_name_vtx,
+                                 (const double **) pfield_vtx);
+      for (int i_fld=0; i_fld<n_fld_elmt+1; ++i_fld) {
+        PDM_free(_fld_name_elmt[i_fld]);
+      }
+      PDM_free(_fld_name_elmt);
+
     }
     PDM_free(tmp_pvtx_coord);
     PDM_free(pvtx_ln_to_gn);
     PDM_free(pcell_vtx_idx);
     PDM_free(pcell_vtx);
+    for (int i_fld=0; i_fld<n_fld_vtx; ++i_fld) {
+      PDM_free(pfield_vtx[i_fld]);
+    }
+    PDM_free(pfield_vtx);
+    for (int i_fld=0; i_fld<n_fld_elmt; ++i_fld) {
+      PDM_free(pfield_elmt[i_fld]);
+    }
+    PDM_free(pfield_elmt);
 
     if (t_elt != PDM_MESH_NODAL_POLY_2D) {
       PDM_free(dconnec_idx);
