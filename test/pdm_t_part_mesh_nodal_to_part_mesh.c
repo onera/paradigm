@@ -24,7 +24,6 @@
 #include "pdm_dmesh.h"
 #include "pdm_logging.h"
 #include "pdm_priv.h"
-#include "pdm_part_mesh_nodal_to_pmesh.h"
 #include "pdm_part_mesh_nodal_to_part_mesh.h"
 #include "pdm_distrib.h"
 
@@ -77,7 +76,6 @@ _read_args(int                    argc,
            int                   *post,
            PDM_Mesh_nodal_elt_t  *elt_type,
            int                   *part_method,
-           int                   *old_algo,
            int                   *do_gnums)
 {
   int i = 1;
@@ -129,9 +127,6 @@ _read_args(int                    argc,
       else
         *elt_type = (PDM_Mesh_nodal_elt_t) atoi(argv[i]);
     }
-    else if (strcmp(argv[i], "-old") == 0) {
-      *old_algo = 1;
-    }
     else if (strcmp(argv[i], "-do_gnums") == 0) {
       *do_gnums = 1;
     }
@@ -158,7 +153,6 @@ int main(int argc, char *argv[])
   double             length     = 1.;
   int                n_part     = 1;
   int                post       = 0;
-  int                old_algo   = 0;
   int                do_gnums   = 0;
 #ifdef PDM_HAVE_PARMETIS
   PDM_split_dual_t part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
@@ -182,7 +176,6 @@ int main(int argc, char *argv[])
              &post,
              &elt_type,
      (int *) &part_method,
-             &old_algo,
              &do_gnums);
 
   assert(elt_type != PDM_MESH_NODAL_POLY_3D); // TODO: poly_vol_gen en dcube_nodal_gen
@@ -253,69 +246,57 @@ int main(int argc, char *argv[])
   double t_start = PDM_MPI_Wtime();
 
   PDM_part_mesh_t *pm = NULL;
-  if (old_algo) {
-    PDM_dmesh_nodal_to_dmesh_transform_t transform_kind = PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE;
-    if(dim == 2) {
-      transform_kind = PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_EDGE;
-    }
-
-    pm = PDM_part_mesh_nodal_to_part_mesh(pmesh_nodal,
-                                          transform_kind,
-                                          PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_FACE);
-  }
-  else {
 
     PDM_part_mesh_nodal_to_part_mesh_t *pmn_to_pm = PDM_part_mesh_nodal_to_part_mesh_create(pmesh_nodal,
                                                                                             PDM_TRUE,
                                                                                             PDM_OWNERSHIP_USER);
-    // Connectivities
-    if (dim == 3) {
-      PDM_part_mesh_nodal_to_part_mesh_connectivity_enable(pmn_to_pm,
-                                                           PDM_CONNECTIVITY_TYPE_CELL_FACE);
-    }
-
-    // PDM_part_mesh_nodal_to_part_mesh_connectivity_enable(pmn_to_pm,
-    //                                                      PDM_CONNECTIVITY_TYPE_FACE_EDGE);
-
-    // PDM_part_mesh_nodal_to_part_mesh_connectivity_enable(pmn_to_pm,
-    //                                                      PDM_CONNECTIVITY_TYPE_EDGE_VTX);
-
+  // Connectivities
+  if (dim == 3) {
     PDM_part_mesh_nodal_to_part_mesh_connectivity_enable(pmn_to_pm,
-                                                         PDM_CONNECTIVITY_TYPE_FACE_VTX);
-
-
-    // Global IDs
-    if (do_gnums) {
-      if (dim == 3) {
-        PDM_part_mesh_nodal_to_part_mesh_g_nums_enable(pmn_to_pm,
-                                                       PDM_MESH_ENTITY_CELL);
-      }
-      PDM_part_mesh_nodal_to_part_mesh_g_nums_enable(pmn_to_pm,
-                                                     PDM_MESH_ENTITY_FACE);
-
-      // PDM_part_mesh_nodal_to_part_mesh_g_nums_enable(pmn_to_pm,
-      //                                                PDM_MESH_ENTITY_EDGE);
-
-      PDM_part_mesh_nodal_to_part_mesh_g_nums_enable(pmn_to_pm,
-                                                     PDM_MESH_ENTITY_VTX);
-    }
-
-    // Groups
-    PDM_part_mesh_nodal_to_part_mesh_groups_enable(pmn_to_pm,
-                                                   PDM_BOUND_TYPE_FACE);
-
-    // PDM_part_mesh_nodal_to_part_mesh_groups_enable(pmn_to_pm,
-    //                                                PDM_BOUND_TYPE_EDGE);
-
-
-    PDM_part_mesh_nodal_to_part_mesh_compute(pmn_to_pm);
-
-    PDM_part_mesh_nodal_to_part_mesh_part_mesh_get(pmn_to_pm,
-                                                   &pm,
-                                                   PDM_OWNERSHIP_USER);
-
-    PDM_part_mesh_nodal_to_part_mesh_free(pmn_to_pm);
+                                                         PDM_CONNECTIVITY_TYPE_CELL_FACE);
   }
+
+  // PDM_part_mesh_nodal_to_part_mesh_connectivity_enable(pmn_to_pm,
+  //                                                      PDM_CONNECTIVITY_TYPE_FACE_EDGE);
+
+  // PDM_part_mesh_nodal_to_part_mesh_connectivity_enable(pmn_to_pm,
+  //                                                      PDM_CONNECTIVITY_TYPE_EDGE_VTX);
+
+  PDM_part_mesh_nodal_to_part_mesh_connectivity_enable(pmn_to_pm,
+                                                       PDM_CONNECTIVITY_TYPE_FACE_VTX);
+
+
+  // Global IDs
+  if (do_gnums) {
+    if (dim == 3) {
+      PDM_part_mesh_nodal_to_part_mesh_g_nums_enable(pmn_to_pm,
+                                                     PDM_MESH_ENTITY_CELL);
+    }
+    PDM_part_mesh_nodal_to_part_mesh_g_nums_enable(pmn_to_pm,
+                                                   PDM_MESH_ENTITY_FACE);
+
+    // PDM_part_mesh_nodal_to_part_mesh_g_nums_enable(pmn_to_pm,
+    //                                                PDM_MESH_ENTITY_EDGE);
+
+    PDM_part_mesh_nodal_to_part_mesh_g_nums_enable(pmn_to_pm,
+                                                   PDM_MESH_ENTITY_VTX);
+  }
+
+  // Groups
+  PDM_part_mesh_nodal_to_part_mesh_groups_enable(pmn_to_pm,
+                                                 PDM_BOUND_TYPE_FACE);
+
+  // PDM_part_mesh_nodal_to_part_mesh_groups_enable(pmn_to_pm,
+  //                                                PDM_BOUND_TYPE_EDGE);
+
+
+  PDM_part_mesh_nodal_to_part_mesh_compute(pmn_to_pm);
+
+  PDM_part_mesh_nodal_to_part_mesh_part_mesh_get(pmn_to_pm,
+                                                 &pm,
+                                                 PDM_OWNERSHIP_USER);
+
+  PDM_part_mesh_nodal_to_part_mesh_free(pmn_to_pm);
 
   double t_end = PDM_MPI_Wtime();
 

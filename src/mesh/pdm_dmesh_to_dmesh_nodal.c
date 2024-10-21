@@ -37,7 +37,6 @@
 #include "pdm_array.h"
 #include "pdm_order.h"
 #include "pdm_partitioning_algorithm.h"
-#include "pdm_part_mesh_nodal_to_pmesh.h"
 #include "pdm_dmesh_to_dmesh_nodal.h"
 #include "pdm_dmesh_to_dmesh_nodal_priv.h"
 #include "pdm_part_connectivity_transform.h"
