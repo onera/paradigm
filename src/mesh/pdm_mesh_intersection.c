@@ -47,7 +47,7 @@
 #include "pdm_part_mesh_nodal.h"
 #include "pdm_part_mesh_nodal_priv.h"
 #include "pdm_dmesh_nodal_to_dmesh.h"
-#include "pdm_part_mesh_nodal_to_pmesh.h"
+#include "pdm_part_mesh_nodal_to_part_mesh.h"
 
 #include "pdm_mesh_intersection_surf_surf_atomic.h"
 #include "pdm_mesh_intersection_vol_vol_atomic.h"
@@ -2505,28 +2505,34 @@ _mesh_intersection_vol_vol
           }
         }
       }
-      extract_part_mesh[i] = PDM_part_mesh_nodal_to_part_mesh(extract_pmn,
-                                                              PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE,
-                                                              PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_NONE);
 
-      // Transfer vtx from extract_pmn to extract_pmesh -->>
-      // We are forced to copy the extracted vertices since pmn does not allow to edit ownership upon get
-      double *_vtx_coord = vtx_coord[i];
-      PDM_malloc(vtx_coord[i], n_vtx[i] * 3, double);
-      memcpy(vtx_coord[i], _vtx_coord, sizeof(double) * n_vtx[i] * 3);
+      PDM_part_mesh_nodal_to_part_mesh_t *pmn_to_pm = PDM_part_mesh_nodal_to_part_mesh_create(extract_pmn,
+                                                                                              PDM_FALSE,
+                                                                                              PDM_OWNERSHIP_KEEP);
 
+      PDM_part_mesh_nodal_to_part_mesh_connectivity_enable(pmn_to_pm,
+                                                           PDM_CONNECTIVITY_TYPE_CELL_FACE);
+
+      PDM_part_mesh_nodal_to_part_mesh_connectivity_enable(pmn_to_pm,
+                                                           PDM_CONNECTIVITY_TYPE_FACE_VTX);
+
+      PDM_part_mesh_nodal_to_part_mesh_compute(pmn_to_pm);
+
+      PDM_part_mesh_nodal_to_part_mesh_part_mesh_get(pmn_to_pm,
+                                                     &extract_part_mesh[i],
+                                                     PDM_OWNERSHIP_USER);
+
+      PDM_part_mesh_nodal_to_part_mesh_free(pmn_to_pm);
       PDM_part_mesh_nodal_free(extract_pmn);
 
-      PDM_part_mesh_n_entity_set(extract_part_mesh[i],
-                                 0,
-                                 PDM_MESH_ENTITY_VTX,
-                                 n_vtx[i]);
+      n_vtx[i] = PDM_part_mesh_n_entity_get(extract_part_mesh[i],
+                                            0,
+                                            PDM_MESH_ENTITY_VTX);
 
-      PDM_part_mesh_vtx_coord_set(extract_part_mesh[i],
+      PDM_part_mesh_vtx_coord_get(extract_part_mesh[i],
                                   0,
-                                  vtx_coord[i],
-                                  PDM_OWNERSHIP_KEEP);
-      // <<--
+                                  &vtx_coord[i],
+                                  PDM_OWNERSHIP_BAD_VALUE);
 
       PDM_part_mesh_connectivity_get(extract_part_mesh[i],
                                      0,

@@ -73,10 +73,10 @@ cdef extern from "pdm_part_mesh_nodal.h":
                                              PDM_g_num_t           **parent_entity_g_num,
                                              PDM_ownership_t         ownership)
 
-    int* PDM_part_mesh_nodal_section_elt_to_entity_get(PDM_part_mesh_nodal_t *pmn,
-                                                       const int              i_section,
-                                                       const int              id_part,
-                                                       PDM_ownership_t        ownership)
+    int* PDM_part_mesh_nodal_section_elmt_to_entity_get(PDM_part_mesh_nodal_t *pmn,
+                                                        const int              i_section,
+                                                        const int              id_part,
+                                                        PDM_ownership_t        ownership)
 
     int PDM_part_mesh_nodal_section_id_from_geom_kind_get(PDM_part_mesh_nodal_t  *pmn,
                                                           const PDM_geometry_kind_t     geom_kind,
@@ -229,7 +229,7 @@ def part_mesh_nodal_get_sections(PMeshNodal pypmn, PDM_geometry_kind_t geom_kind
     n_elmt_in_section = PDM_part_mesh_nodal_section_n_elt_get(pypmn.pmn, id_section, i_part)
 
     PDM_part_mesh_nodal_section_std_get(pypmn.pmn, id_section, i_part, &connec, &numabs, &parent_num, &parent_entity_g_num, PDM_OWNERSHIP_USER)
-    elt2entity = PDM_part_mesh_nodal_section_elt_to_entity_get(pypmn.pmn, id_section, i_part, PDM_OWNERSHIP_USER)
+    elt2entity = PDM_part_mesh_nodal_section_elmt_to_entity_get(pypmn.pmn, id_section, i_part, PDM_OWNERSHIP_USER)
 
     n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get(t_elmt, 1)
 

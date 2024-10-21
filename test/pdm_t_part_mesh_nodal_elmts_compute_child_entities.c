@@ -21,9 +21,9 @@
 #include "pdm_dcube_nodal_gen.h"
 #include "pdm_dmesh_nodal.h"
 #include "pdm_part_mesh_nodal_elmts_utils.h"
-#include "pdm_mem_tool.h"
 #include "pdm_writer_priv.h"
 #include "pdm_vtk.h"
+#include "pdm_array.h"
 
 /**
  *
@@ -41,6 +41,7 @@ _usage(int exit_code)
      "  -n_part               <n>  Number of partitions per MPI rank.\n\n"
      "  -elt_type             <t>  Element type.\n\n"
      "  -compute_parent_child      Compute only ascending link.\n\n"
+     "  -no_child_pmne             Do not use child pmne.\n\n"
      "  -v                         Enable verbose mode.\n\n"
      "  -parmetis                  Call ParMETIS.\n\n"
      "  -pt-scotch                 Call PT-Scotch.\n\n"
@@ -65,6 +66,7 @@ _read_args
  PDM_Mesh_nodal_elt_t  *elt_type,
  PDM_split_dual_t      *part_method,
  PDM_bool_t            *compute_parent_child,
+ PDM_bool_t            *no_child_pmne,
  int                   *verbose
  )
 {
@@ -114,6 +116,9 @@ _read_args
     else if (strcmp(argv[i], "-compute_parent_child") == 0) {
       *compute_parent_child = PDM_TRUE;
     }
+    else if (strcmp(argv[i], "-no_child_pmne") == 0) {
+      *no_child_pmne = PDM_TRUE;
+    }
     else if (strcmp(argv[i], "-v") == 0) {
       *verbose = 1;
     }
@@ -142,6 +147,7 @@ int main(int argc, char *argv[])
   PDM_split_dual_t     split_method         = PDM_SPLIT_DUAL_WITH_HILBERT;
   PDM_bool_t           compute_parent_child = PDM_FALSE;
   int                  verbose              = 0;
+  PDM_bool_t           no_child_pmne        = 0;
 
   _read_args(argc,
              argv,
@@ -150,6 +156,7 @@ int main(int argc, char *argv[])
              &elt_type,
              &split_method,
              &compute_parent_child,
+             &no_child_pmne,
              &verbose);
 
 
@@ -203,19 +210,24 @@ int main(int argc, char *argv[])
   PDM_part_mesh_nodal_elmts_t *pmne_ridge = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(pmn, PDM_GEOMETRY_KIND_RIDGE   );
   PDM_part_mesh_nodal_elmts_t *pmne_surf  = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(pmn, PDM_GEOMETRY_KIND_SURFACIC);
 
+  if (no_child_pmne) {
+    pmne_ridge = NULL;
+  }
+
   /* Compute link Surface <-> Ridge */
-  int **ridge_edge_face_idx = NULL;
-  int **ridge_edge_face     = NULL;
-  int  *n_surf_edge         = NULL;
-  int **surf_edge_vtx_idx   = NULL;
-  int **surf_edge_vtx       = NULL;
-  int **surf_face_edge_idx  = NULL;
-  int **surf_face_edge      = NULL;
+  int **ridge_edge_surf_face_idx = NULL;
+  int **ridge_edge_surf_face     = NULL;
+  int  *n_surf_edge              = NULL;
+  int **surf_edge_vtx_idx        = NULL;
+  int **surf_edge_vtx            = NULL;
+  int **surf_face_edge_idx       = NULL;
+  int **surf_face_edge           = NULL;
   PDM_part_mesh_nodal_elmts_compute_child_parent(pmne_surf,
                                                  pmne_ridge,
+                                                 PDM_MESH_ENTITY_EDGE,
                                                  compute_parent_child,
-                                                 &ridge_edge_face_idx,
-                                                 &ridge_edge_face,
+                                                 &ridge_edge_surf_face_idx,
+                                                 &ridge_edge_surf_face,
                                                  &n_surf_edge,
                                                  &surf_edge_vtx_idx,
                                                  &surf_edge_vtx,
@@ -223,25 +235,49 @@ int main(int argc, char *argv[])
                                                  &surf_face_edge);
 
   if (verbose) {
+    log_trace("\n=== Surface <-> Ridge ====\n");
     for (int i_part = 0; i_part < n_part; i_part++) {
-      log_trace("i_part = %d\n", i_part);
-      int n_ridge_edge = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne_ridge, i_part);
-      log_trace("n_ridge_edge = %d\n", n_ridge_edge);
-      log_trace("n_surf_edge  = %d\n", n_surf_edge[i_part]);
-      PDM_log_trace_connectivity_int(ridge_edge_face_idx[i_part],
-                                     ridge_edge_face    [i_part],
-                                     n_ridge_edge,
-                                     "ridge_edge_surf_face : ");
+      log_trace("-- i_part = %d\n", i_part);
 
-      PDM_log_trace_connectivity_int(surf_edge_vtx_idx[i_part],
-                                     surf_edge_vtx    [i_part],
-                                     n_surf_edge      [i_part],
-                                     "surf_edge_vtx : ");
+      if (!no_child_pmne) {
+
+        // PDM_part_mesh_nodal_dump_vtk(pmn, PDM_GEOMETRY_KIND_RIDGE, "pmn_ridge");
+
+        int n_ridge_edge = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne_ridge, i_part);
+        log_trace("n_ridge_edge = %d\n", n_ridge_edge);
+        PDM_log_trace_connectivity_int(ridge_edge_surf_face_idx[i_part],
+                                       ridge_edge_surf_face    [i_part],
+                                       n_ridge_edge,
+                                       "ridge_edge_surf_face : ");
+
+        int *ridge_edge_vtx_idx;
+        int *ridge_edge_vtx;
+        PDM_part_mesh_nodal_elmts_cell_vtx_connect_get(pmne_ridge,
+                                                       i_part,
+                                                       &ridge_edge_vtx_idx,
+                                                       &ridge_edge_vtx);
+        PDM_log_trace_connectivity_int(ridge_edge_vtx_idx,
+                                       ridge_edge_vtx,
+                                       n_ridge_edge,
+                                       "ridge_edge_vtx : ");
+        free(ridge_edge_vtx_idx);
+        free(ridge_edge_vtx    );
+
+        if (compute_parent_child) {
+          log_trace("n_surf_edge  = %d\n", n_surf_edge[i_part]);
+          PDM_log_trace_connectivity_int(surf_edge_vtx_idx[i_part],
+                                         surf_edge_vtx    [i_part],
+                                         n_surf_edge      [i_part],
+                                         "surf_edge_vtx : ");
+        }
+
+      }
+
 
       if (compute_parent_child) {
         int n_surf_face = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne_surf, i_part);
         PDM_log_trace_connectivity_int(surf_face_edge_idx[i_part],
-                                       surf_face_edge[i_part],
+                                       surf_face_edge    [i_part],
                                        n_surf_face,
                                        "surf_face_edge : ");
       }
@@ -250,11 +286,11 @@ int main(int argc, char *argv[])
 
   int **surf_face_cell_idx = NULL;
   int **surf_face_cell     = NULL;
-  int  *n_face             = NULL;
-  int **face_vtx_idx       = NULL;
-  int **face_vtx           = NULL;
-  int **cell_face_idx      = NULL;
-  int **cell_face          = NULL;
+  int  *n_vol_face         = NULL;
+  int **vol_face_vtx_idx   = NULL;
+  int **vol_face_vtx       = NULL;
+  int **cell_vol_face_idx  = NULL;
+  int **cell_vol_face      = NULL;
 
   int **ridge_edge_cell_idx = NULL;
   int **ridge_edge_cell     = NULL;
@@ -264,24 +300,81 @@ int main(int argc, char *argv[])
   int **cell_vol_edge_idx   = NULL;
   int **cell_vol_edge       = NULL;
 
+
   if (mesh_dimension == 3) {
     PDM_part_mesh_nodal_elmts_t *pmne_vol = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(pmn, PDM_GEOMETRY_KIND_VOLUMIC);
+
+    if (no_child_pmne) {
+      pmne_surf = NULL;
+    }
 
     /* Compute link Volume <-> Surface */
     PDM_part_mesh_nodal_elmts_compute_child_parent(pmne_vol,
                                                    pmne_surf,
+                                                   PDM_MESH_ENTITY_FACE,
                                                    compute_parent_child,
                                                    &surf_face_cell_idx,
                                                    &surf_face_cell,
-                                                   &n_face,
-                                                   &face_vtx_idx,
-                                                   &face_vtx,
-                                                   &cell_face_idx,
-                                                   &cell_face);
+                                                   &n_vol_face,
+                                                   &vol_face_vtx_idx,
+                                                   &vol_face_vtx,
+                                                   &cell_vol_face_idx,
+                                                   &cell_vol_face);
+
+    if (verbose) {
+      log_trace("\n=== Volume <-> Surface ====\n");
+      for (int i_part = 0; i_part < n_part; i_part++) {
+        log_trace("-- i_part = %d\n", i_part);
+
+        if (!no_child_pmne) {
+
+          // PDM_part_mesh_nodal_dump_vtk(pmn, PDM_GEOMETRY_KIND_SURFACIC, "pmn_surf");
+
+          int n_surf_face = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne_surf, i_part);
+          log_trace("n_surf_face = %d\n", n_surf_face);
+          PDM_log_trace_connectivity_int(surf_face_cell_idx[i_part],
+                                         surf_face_cell    [i_part],
+                                         n_surf_face,
+                                         "surf_face_cell : ");
+
+          int *surf_face_vtx_idx;
+          int *surf_face_vtx;
+          PDM_part_mesh_nodal_elmts_cell_vtx_connect_get(pmne_surf,
+                                                         i_part,
+                                                         &surf_face_vtx_idx,
+                                                         &surf_face_vtx);
+          PDM_log_trace_connectivity_int(surf_face_vtx_idx,
+                                         surf_face_vtx,
+                                         n_surf_face,
+                                         "surf_face_vtx : ");
+          free(surf_face_vtx_idx);
+          free(surf_face_vtx    );
+
+          if (compute_parent_child) {
+            log_trace("n_vol_face  = %d\n", n_vol_face[i_part]);
+            PDM_log_trace_connectivity_int(vol_face_vtx_idx[i_part],
+                                           vol_face_vtx    [i_part],
+                                           n_vol_face      [i_part],
+                                           "vol_face_vtx : ");
+          }
+
+        }
+
+
+        if (compute_parent_child) {
+          int n_cell = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne_vol, i_part);
+          PDM_log_trace_connectivity_int(cell_vol_face_idx[i_part],
+                                         cell_vol_face    [i_part],
+                                         n_cell,
+                                         "cell_vol_face : ");
+        }
+      }
+    }
 
     /* Compute link Volume <-> Ridge */
     PDM_part_mesh_nodal_elmts_compute_child_parent(pmne_vol,
                                                    pmne_ridge,
+                                                   PDM_MESH_ENTITY_EDGE,
                                                    compute_parent_child,
                                                    &ridge_edge_cell_idx,
                                                    &ridge_edge_cell,
@@ -290,29 +383,50 @@ int main(int argc, char *argv[])
                                                    &vol_edge_vtx,
                                                    &cell_vol_edge_idx,
                                                    &cell_vol_edge);
-
     if (verbose) {
+      log_trace("\n=== Volume <-> Ridge ====\n");
       for (int i_part = 0; i_part < n_part; i_part++) {
-        log_trace("i_part = %d\n", i_part);
-        int n_ridge_edge = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne_ridge, i_part);
-        log_trace("n_vol_edge       = %d\n", n_vol_edge[i_part]);
-        log_trace("n_ridge_edge = %d\n", n_ridge_edge);
-        PDM_log_trace_connectivity_int(ridge_edge_cell_idx[i_part],
-                                       ridge_edge_cell    [i_part],
-                                       n_ridge_edge,
-                                       "ridge_edge_to_cell : ");
+        log_trace("-- i_part = %d\n", i_part);
 
-        PDM_log_trace_connectivity_int(vol_edge_vtx_idx[i_part],
-                                       vol_edge_vtx    [i_part],
-                                       n_vol_edge      [i_part],
-                                       "vol_edge_vtx : ");
+        if (!no_child_pmne) {
+
+          int n_ridge_edge = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne_ridge, i_part);
+          log_trace("n_ridge_edge = %d\n", n_ridge_edge);
+          PDM_log_trace_connectivity_int(ridge_edge_cell_idx[i_part],
+                                         ridge_edge_cell    [i_part],
+                                         n_ridge_edge,
+                                         "ridge_edge_cell : ");
+
+          int *ridge_edge_vtx_idx;
+          int *ridge_edge_vtx;
+          PDM_part_mesh_nodal_elmts_cell_vtx_connect_get(pmne_ridge,
+                                                         i_part,
+                                                         &ridge_edge_vtx_idx,
+                                                         &ridge_edge_vtx);
+          PDM_log_trace_connectivity_int(ridge_edge_vtx_idx,
+                                         ridge_edge_vtx,
+                                         n_ridge_edge,
+                                         "ridge_edge_vtx : ");
+          free(ridge_edge_vtx_idx);
+          free(ridge_edge_vtx    );
+
+          if (compute_parent_child) {
+            log_trace("n_vol_edge  = %d\n", n_vol_edge[i_part]);
+            PDM_log_trace_connectivity_int(vol_edge_vtx_idx[i_part],
+                                           vol_edge_vtx    [i_part],
+                                           n_vol_edge      [i_part],
+                                           "vol_edge_vtx : ");
+          }
+
+        }
+
 
         if (compute_parent_child) {
           int n_cell = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne_vol, i_part);
           PDM_log_trace_connectivity_int(cell_vol_edge_idx[i_part],
-                                         cell_vol_edge[i_part],
+                                         cell_vol_edge    [i_part],
                                          n_cell,
-                                         "cell_to_edge : ");
+                                         "cell_edge : ");
         }
       }
     }
@@ -372,13 +486,13 @@ int main(int argc, char *argv[])
                      pvtx_coord,
                      pvtx_ln_to_gn,
                      pn_cell,
-                     face_vtx_idx,
-                     face_vtx,
+                     vol_face_vtx_idx,
+                     vol_face_vtx,
                      pcell_ln_to_gn,
                      cell_type,
-                     n_face,
-                     cell_face_idx,
-                     cell_face,
+                     n_vol_face,
+                     cell_vol_face_idx,
+                     cell_vol_face,
                      "Ensight",
                      0,
                      NULL,
@@ -415,50 +529,50 @@ int main(int argc, char *argv[])
    * Free memory
    */
   for (int i_part = 0; i_part < n_part; i_part++) {
-    PDM_free(ridge_edge_face_idx[i_part]);
-    PDM_free(ridge_edge_face    [i_part]);
+    PDM_free(ridge_edge_surf_face_idx[i_part]);
+    PDM_free(ridge_edge_surf_face    [i_part]);
     if (compute_parent_child) {
-      PDM_free(surf_edge_vtx_idx  [i_part]);
-      PDM_free(surf_edge_vtx      [i_part]);
-      PDM_free(surf_face_edge_idx [i_part]);
-      PDM_free(surf_face_edge[i_part]);
+      PDM_free(surf_edge_vtx_idx [i_part]);
+      PDM_free(surf_edge_vtx     [i_part]);
+      PDM_free(surf_face_edge_idx[i_part]);
+      PDM_free(surf_face_edge    [i_part]);
     }
     if (mesh_dimension == 3) {
       PDM_free(surf_face_cell_idx[i_part]);
       PDM_free(surf_face_cell    [i_part]);
       if (compute_parent_child) {
-        PDM_free(face_vtx_idx      [i_part]);
-        PDM_free(face_vtx          [i_part]);
-        PDM_free(cell_face_idx     [i_part]);
-        PDM_free(cell_face[i_part]);
+        PDM_free(vol_face_vtx_idx [i_part]);
+        PDM_free(vol_face_vtx     [i_part]);
+        PDM_free(cell_vol_face_idx[i_part]);
+        PDM_free(cell_vol_face    [i_part]);
       }
 
       PDM_free(ridge_edge_cell_idx[i_part]);
       PDM_free(ridge_edge_cell    [i_part]);
       if (compute_parent_child) {
-        PDM_free(vol_edge_vtx_idx   [i_part]);
-        PDM_free(vol_edge_vtx       [i_part]);
-        PDM_free(cell_vol_edge_idx  [i_part]);
-        PDM_free(cell_vol_edge[i_part]);
+        PDM_free(vol_edge_vtx_idx [i_part]);
+        PDM_free(vol_edge_vtx     [i_part]);
+        PDM_free(cell_vol_edge_idx[i_part]);
+        PDM_free(cell_vol_edge    [i_part]);
       }
     }
   }
-  PDM_free(n_surf_edge        );
-  PDM_free(ridge_edge_face_idx);
-  PDM_free(ridge_edge_face    );
-  PDM_free(surf_edge_vtx_idx  );
-  PDM_free(surf_edge_vtx      );
-  PDM_free(surf_face_edge_idx );
-  PDM_free(surf_face_edge     );
+  PDM_free(n_surf_edge             );
+  PDM_free(ridge_edge_surf_face_idx);
+  PDM_free(ridge_edge_surf_face    );
+  PDM_free(surf_edge_vtx_idx       );
+  PDM_free(surf_edge_vtx           );
+  PDM_free(surf_face_edge_idx      );
+  PDM_free(surf_face_edge          );
 
   if (mesh_dimension == 3) {
-    PDM_free(n_face            );
+    PDM_free(n_vol_face        );
     PDM_free(surf_face_cell_idx);
     PDM_free(surf_face_cell    );
-    PDM_free(face_vtx_idx      );
-    PDM_free(face_vtx          );
-    PDM_free(cell_face_idx     );
-    PDM_free(cell_face         );
+    PDM_free(vol_face_vtx_idx  );
+    PDM_free(vol_face_vtx      );
+    PDM_free(cell_vol_face_idx );
+    PDM_free(cell_vol_face     );
 
     PDM_free(n_vol_edge         );
     PDM_free(ridge_edge_cell_idx);

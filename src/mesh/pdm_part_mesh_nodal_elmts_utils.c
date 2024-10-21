@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
+#include <limits.h>
 
 /*----------------------------------------------------------------------------
  *  Local headers
@@ -986,12 +987,13 @@ PDM_part_mesh_nodal_poly2d_decompose_local_edges
   int *_parent_elmt               = parent_elmt          + _n_edge_current;
   int *_elmt_cell_edge_idx        = elmt_cell_edge_idx   + _n_elt_current;
 
+  int idx = 0;
   if (parent_num != NULL) {
     for (int i_elt = 0; i_elt < n_elt; i_elt++) {
       int i_parent = parent_num[i_elt] + 1;
       int n_edge_elt = connectivity_elmt_vtx_idx[i_elt+1] - connectivity_elmt_vtx_idx[i_elt];
       for (int i_edge = 0; i_edge < n_edge_elt; i_edge++) {
-        _parent_elmt[i_elt * n_edge_elt + i_edge] = i_parent;
+        _parent_elmt[idx++] = i_parent;
       }
     }
   }
@@ -1000,12 +1002,12 @@ PDM_part_mesh_nodal_poly2d_decompose_local_edges
       int i_parent = _n_elt_current + i_elt + 1;
       int n_edge_elt = connectivity_elmt_vtx_idx[i_elt+1] - connectivity_elmt_vtx_idx[i_elt];
       for (int i_edge = 0; i_edge < n_edge_elt; i_edge++) {
-        _parent_elmt[i_elt * n_edge_elt + i_edge] = i_parent;
+        _parent_elmt[idx++] = i_parent;
       }
     }
   }
 
-  int idx = 0;
+  idx = 0;
   for (int ielt = 0; ielt < n_elt; ielt++) {
     // Reminder for poly2d -> Number of vertex = Number of edge
     int n_edge_elt = connectivity_elmt_vtx_idx[ielt+1] - connectivity_elmt_vtx_idx[ielt];
@@ -1041,6 +1043,7 @@ PDM_part_mesh_nodal_elmts_sections_local_decompose_edges
   int                         ***out_parent_elmt_position
 )
 {
+  assert(pmne != NULL);
 
   int  *n_decompose_elmt_edge = NULL;
   int **elmt_edge_idx         = NULL;
@@ -1548,6 +1551,7 @@ PDM_part_mesh_nodal_elmts_compute_child_parent
 (
   PDM_part_mesh_nodal_elmts_t   *pmne_parent,
   PDM_part_mesh_nodal_elmts_t   *pmne_child,
+  PDM_mesh_entities_t            child_entity_type,
   PDM_bool_t                     compute_parent_child,
   int                         ***out_child_to_parent_idx,
   int                         ***out_child_to_parent,
@@ -1558,19 +1562,43 @@ PDM_part_mesh_nodal_elmts_compute_child_parent
   int                         ***out_parent_to_entity
 )
 {
+  assert(pmne_parent != NULL);
+
   int dim_parent = pmne_parent->mesh_dimension;
-  int dim_child  = pmne_child ->mesh_dimension;
+  int dim_child  = INT_MAX;
+
+  if (pmne_child == NULL) {
+    switch (child_entity_type) {
+      case PDM_MESH_ENTITY_EDGE: {
+        dim_child = 1;
+        break;
+      }
+      case PDM_MESH_ENTITY_FACE: {
+        dim_child = 2;
+        break;
+      }
+      default : {
+        PDM_error(__FILE__, __LINE__, 0, "Invalid child_entity_type %d\n", child_entity_type);
+      }
+    }
+  }
+  else {
+    dim_child = pmne_child->mesh_dimension;
+  }
 
   if (dim_parent <= dim_child) {
     PDM_error(__FILE__, __LINE__, 0, "Parent dimension must be greater than child dimension\n");
   }
 
   int n_part = pmne_parent->n_part;
-  if (pmne_child->n_part != n_part) {
-    PDM_error(__FILE__, __LINE__, 0, "Parent and child pmne must have same n_part\n");
+  if (pmne_child != NULL) {
+    if (pmne_child->n_part != n_part) {
+      PDM_error(__FILE__, __LINE__, 0, "Parent and child pmne must have same n_part\n");
+    }
   }
 
 
+  /* Local decomposition */
   int  *n_decompose_parent_entity             = NULL;
   int **decompose_parent_entity_idx           = NULL; // Size = n_elemt+1
   int **decompose_parent_entity_vtx_idx       = NULL; // Size = n_decompose_parent_entity_vtx+1
@@ -1607,6 +1635,7 @@ PDM_part_mesh_nodal_elmts_compute_child_parent
     }
   }
 
+
   _decompose(pmne_parent,
              &n_decompose_parent_entity,
              &decompose_parent_entity_idx,
@@ -1615,14 +1644,32 @@ PDM_part_mesh_nodal_elmts_compute_child_parent
              &decompose_parent_parent_elmt,
              &decompose_parent_parent_elmt_position);
 
-  _decompose(pmne_child,
-             &n_decompose_child_entity,
-             &decompose_child_entity_idx,
-             &decompose_child_entity_vtx_idx,
-             &decompose_child_entity_vtx,
-             &decompose_child_parent_elmt,
-             &decompose_child_parent_elmt_position);
+  if (pmne_child == NULL) {
+    PDM_malloc(n_decompose_child_entity,             n_part, int  );
+    PDM_malloc(decompose_child_entity_idx,           n_part, int *);
+    PDM_malloc(decompose_child_entity_vtx_idx,       n_part, int *);
+    PDM_malloc(decompose_child_entity_vtx,           n_part, int *);
+    PDM_malloc(decompose_child_parent_elmt,          n_part, int *);
+    PDM_malloc(decompose_child_parent_elmt_position, n_part, int *);
 
+    for (int i_part = 0; i_part < n_part; i_part++) {
+      n_decompose_child_entity            [i_part] = 0;
+      decompose_child_entity_idx          [i_part] = PDM_array_zeros_int(1);
+      decompose_child_entity_vtx_idx      [i_part] = PDM_array_zeros_int(1);
+      decompose_child_entity_vtx          [i_part] = NULL;
+      decompose_child_parent_elmt         [i_part] = NULL;
+      decompose_child_parent_elmt_position[i_part] = NULL;
+    }
+  }
+  else {
+    _decompose(pmne_child,
+               &n_decompose_child_entity,
+               &decompose_child_entity_idx,
+               &decompose_child_entity_vtx_idx,
+               &decompose_child_entity_vtx,
+               &decompose_child_parent_elmt,
+               &decompose_child_parent_elmt_position);
+  }
 
 
 
@@ -1632,7 +1679,6 @@ PDM_part_mesh_nodal_elmts_compute_child_parent
   int **pentity_vtx             = NULL;
   int **child_to_parent_idx     = NULL;
   int **child_to_parent         = NULL;
-
 
   if (compute_parent_child == PDM_TRUE) {
     PDM_malloc(decompose_parent_entity, n_part, int *);
@@ -1693,7 +1739,6 @@ PDM_part_mesh_nodal_elmts_compute_child_parent
       PDM_realloc(pentity_vtx    [i_part], pentity_vtx    [i_part], pentity_vtx_idx[i_part][pn_entity[i_part]], int);
     }
   }
-
   PDM_free(n_decompose_parent_entity            );
   PDM_free(decompose_parent_entity_vtx_idx      );
   PDM_free(decompose_parent_entity_vtx          );

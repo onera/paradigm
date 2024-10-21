@@ -120,6 +120,36 @@ PDM_bound_type_to_entity_type
 }
 
 
+PDM_bound_type_t
+PDM_entity_type_to_bound_type
+(
+ PDM_mesh_entities_t  entity_type
+)
+{
+  switch (entity_type) {
+
+    case PDM_MESH_ENTITY_CELL: {
+      return PDM_BOUND_TYPE_CELL;
+    }
+    case PDM_MESH_ENTITY_FACE: {
+      return PDM_BOUND_TYPE_FACE;
+    }
+    case PDM_MESH_ENTITY_EDGE: {
+      return PDM_BOUND_TYPE_EDGE;
+    }
+    case PDM_MESH_ENTITY_VTX: {
+      return PDM_BOUND_TYPE_VTX;
+    }
+    default: {
+      PDM_error(__FILE__, __LINE__, 0, "Invalid entity_type %d\n", entity_type);
+    }
+
+  }
+
+  return PDM_BOUND_TYPE_MAX;
+}
+
+
 PDM_mesh_entities_t
 PDM_geometry_kind_to_entity_type
 (
@@ -147,6 +177,190 @@ PDM_geometry_kind_to_entity_type
   }
 
   return PDM_MESH_ENTITY_MAX;
+}
+
+
+PDM_geometry_kind_t
+PDM_entity_type_to_geometry_kind
+(
+ PDM_mesh_entities_t   entity_type
+)
+{
+  switch (entity_type) {
+
+    case PDM_MESH_ENTITY_CELL: {
+      return PDM_GEOMETRY_KIND_VOLUMIC;
+    }
+    case PDM_MESH_ENTITY_FACE: {
+      return PDM_GEOMETRY_KIND_SURFACIC;
+    }
+    case PDM_MESH_ENTITY_EDGE: {
+      return PDM_GEOMETRY_KIND_RIDGE;
+    }
+    case PDM_MESH_ENTITY_VTX: {
+      return PDM_GEOMETRY_KIND_CORNER;
+    }
+    default: {
+      PDM_error(__FILE__, __LINE__, 0, "Invalid entity_type %d\n", entity_type);
+    }
+
+  }
+
+  return PDM_GEOMETRY_KIND_MAX;
+}
+
+
+PDM_connectivity_type_t
+PDM_entity_pair_to_connectivity_type
+(
+  PDM_mesh_entities_t entity_type1,
+  PDM_mesh_entities_t entity_type2
+)
+{
+  if (entity_type1 == PDM_MESH_ENTITY_CELL) {
+    switch (entity_type2) {
+      case PDM_MESH_ENTITY_CELL: return PDM_CONNECTIVITY_TYPE_CELL_CELL;
+      case PDM_MESH_ENTITY_FACE: return PDM_CONNECTIVITY_TYPE_CELL_FACE;
+      case PDM_MESH_ENTITY_EDGE: return PDM_CONNECTIVITY_TYPE_CELL_EDGE;
+      case PDM_MESH_ENTITY_VTX : return PDM_CONNECTIVITY_TYPE_CELL_VTX;
+      default: PDM_error(__FILE__, __LINE__, 0, "Invalid entity pair %d %d\n", entity_type1, entity_type2);
+    }
+  }
+  else if (entity_type1 == PDM_MESH_ENTITY_FACE) {
+    switch (entity_type2) {
+      case PDM_MESH_ENTITY_CELL: return PDM_CONNECTIVITY_TYPE_FACE_CELL;
+      case PDM_MESH_ENTITY_FACE: return PDM_CONNECTIVITY_TYPE_FACE_FACE;
+      case PDM_MESH_ENTITY_EDGE: return PDM_CONNECTIVITY_TYPE_FACE_EDGE;
+      case PDM_MESH_ENTITY_VTX : return PDM_CONNECTIVITY_TYPE_FACE_VTX;
+      default: PDM_error(__FILE__, __LINE__, 0, "Invalid entity pair %d %d\n", entity_type1, entity_type2);
+    }
+  }
+  else if (entity_type1 == PDM_MESH_ENTITY_EDGE) {
+    switch (entity_type2) {
+      case PDM_MESH_ENTITY_CELL: return PDM_CONNECTIVITY_TYPE_EDGE_CELL;
+      case PDM_MESH_ENTITY_FACE: return PDM_CONNECTIVITY_TYPE_EDGE_FACE;
+      case PDM_MESH_ENTITY_EDGE: return PDM_CONNECTIVITY_TYPE_EDGE_EDGE;
+      case PDM_MESH_ENTITY_VTX : return PDM_CONNECTIVITY_TYPE_EDGE_VTX;
+      default: PDM_error(__FILE__, __LINE__, 0, "Invalid entity pair %d %d\n", entity_type1, entity_type2);
+    }
+  }
+  else if (entity_type1 == PDM_MESH_ENTITY_VTX) {
+    switch (entity_type2) {
+      case PDM_MESH_ENTITY_CELL: return PDM_CONNECTIVITY_TYPE_VTX_CELL;
+      case PDM_MESH_ENTITY_FACE: return PDM_CONNECTIVITY_TYPE_VTX_FACE;
+      case PDM_MESH_ENTITY_EDGE: return PDM_CONNECTIVITY_TYPE_VTX_EDGE;
+      case PDM_MESH_ENTITY_VTX : return PDM_CONNECTIVITY_TYPE_VTX_VTX;
+      default: PDM_error(__FILE__, __LINE__, 0, "Invalid entity pair %d %d\n", entity_type1, entity_type2);
+    }
+  }
+  else {
+    PDM_error(__FILE__, __LINE__, 0, "Invalid entity pair %d %d\n", entity_type1, entity_type2);
+  }
+
+  return PDM_CONNECTIVITY_TYPE_MAX;
+}
+
+
+int
+PDM_connectivity_type_to_entity_pair
+(
+  PDM_connectivity_type_t  connectivity_type,
+  PDM_mesh_entities_t     *entity_type1,
+  PDM_mesh_entities_t     *entity_type2
+)
+{
+  switch (connectivity_type) {
+    case PDM_CONNECTIVITY_TYPE_CELL_CELL: {
+      *entity_type1 = PDM_MESH_ENTITY_CELL;
+      *entity_type2 = PDM_MESH_ENTITY_CELL;
+      break;
+    }
+    case PDM_CONNECTIVITY_TYPE_CELL_FACE: {
+      *entity_type1 = PDM_MESH_ENTITY_CELL;
+      *entity_type2 = PDM_MESH_ENTITY_FACE;
+      break;
+    }
+    case PDM_CONNECTIVITY_TYPE_CELL_EDGE: {
+      *entity_type1 = PDM_MESH_ENTITY_CELL;
+      *entity_type2 = PDM_MESH_ENTITY_EDGE;
+      break;
+    }
+    case PDM_CONNECTIVITY_TYPE_CELL_VTX: {
+      *entity_type1 = PDM_MESH_ENTITY_CELL;
+      *entity_type2 = PDM_MESH_ENTITY_VTX;
+      break;
+    }
+
+    case PDM_CONNECTIVITY_TYPE_FACE_CELL: {
+      *entity_type1 = PDM_MESH_ENTITY_FACE;
+      *entity_type2 = PDM_MESH_ENTITY_CELL;
+      break;
+    }
+    case PDM_CONNECTIVITY_TYPE_FACE_FACE: {
+      *entity_type1 = PDM_MESH_ENTITY_FACE;
+      *entity_type2 = PDM_MESH_ENTITY_FACE;
+      break;
+    }
+    case PDM_CONNECTIVITY_TYPE_FACE_EDGE: {
+      *entity_type1 = PDM_MESH_ENTITY_FACE;
+      *entity_type2 = PDM_MESH_ENTITY_EDGE;
+      break;
+    }
+    case PDM_CONNECTIVITY_TYPE_FACE_VTX: {
+      *entity_type1 = PDM_MESH_ENTITY_FACE;
+      *entity_type2 = PDM_MESH_ENTITY_VTX;
+      break;
+    }
+
+    case PDM_CONNECTIVITY_TYPE_EDGE_CELL: {
+      *entity_type1 = PDM_MESH_ENTITY_EDGE;
+      *entity_type2 = PDM_MESH_ENTITY_CELL;
+      break;
+    }
+    case PDM_CONNECTIVITY_TYPE_EDGE_FACE: {
+      *entity_type1 = PDM_MESH_ENTITY_EDGE;
+      *entity_type2 = PDM_MESH_ENTITY_FACE;
+      break;
+    }
+    case PDM_CONNECTIVITY_TYPE_EDGE_EDGE: {
+      *entity_type1 = PDM_MESH_ENTITY_EDGE;
+      *entity_type2 = PDM_MESH_ENTITY_EDGE;
+      break;
+    }
+    case PDM_CONNECTIVITY_TYPE_EDGE_VTX: {
+      *entity_type1 = PDM_MESH_ENTITY_EDGE;
+      *entity_type2 = PDM_MESH_ENTITY_VTX;
+      break;
+    }
+
+    case PDM_CONNECTIVITY_TYPE_VTX_CELL: {
+      *entity_type1 = PDM_MESH_ENTITY_VTX;
+      *entity_type2 = PDM_MESH_ENTITY_CELL;
+      break;
+    }
+    case PDM_CONNECTIVITY_TYPE_VTX_FACE: {
+      *entity_type1 = PDM_MESH_ENTITY_VTX;
+      *entity_type2 = PDM_MESH_ENTITY_FACE;
+      break;
+    }
+    case PDM_CONNECTIVITY_TYPE_VTX_EDGE: {
+      *entity_type1 = PDM_MESH_ENTITY_VTX;
+      *entity_type2 = PDM_MESH_ENTITY_EDGE;
+      break;
+    }
+    case PDM_CONNECTIVITY_TYPE_VTX_VTX: {
+      *entity_type1 = PDM_MESH_ENTITY_VTX;
+      *entity_type2 = PDM_MESH_ENTITY_VTX;
+      break;
+    }
+
+    default : {
+      PDM_error(__FILE__, __LINE__, 0, "Invalid connectivity type %d\n", connectivity_type);
+      // return 0;
+    }
+  }
+
+  return 1;
 }
 
 

@@ -1149,9 +1149,13 @@ PDM_part_mesh_nodal_dump_vtk
     PDM_g_num_t          *elt_g_num   = NULL;
     PDM_Mesh_nodal_elt_t *elt_type    = NULL;
     double               *elt_section = NULL;
+    double               *elt_entity  = NULL;
     PDM_malloc(elt_g_num,   n_elt_tot, PDM_g_num_t         );
     PDM_malloc(elt_type,    n_elt_tot, PDM_Mesh_nodal_elt_t);
     PDM_malloc(elt_section, n_elt_tot, double              );
+    PDM_malloc(elt_entity,  n_elt_tot, double              );
+
+    int n_field = 3;
 
     int idx = 0;
     for (int i_section = 0; i_section < n_section; ++i_section) {
@@ -1161,16 +1165,28 @@ PDM_part_mesh_nodal_dump_vtk
 
       PDM_g_num_t *g_num = PDM_part_mesh_nodal_elmts_g_num_get(pmne, id_section, i_part, PDM_OWNERSHIP_BAD_VALUE);
 
+      int *_elt_to_entity = PDM_part_mesh_nodal_elmts_section_elmt_to_entity_get(pmne, id_section, i_part, PDM_OWNERSHIP_BAD_VALUE);
+
       for (int i_elt = 0; i_elt < n_elt; i_elt++) {
-        elt_g_num  [idx] = g_num[i_elt];
+        if (g_num != NULL) {
+          elt_g_num  [idx] = g_num[i_elt];
+        } else {
+          elt_g_num  [idx] = -1;
+        }
         elt_type   [idx] = t_elt;
         elt_section[idx] = i_section;
+        if (_elt_to_entity != NULL) {
+          elt_entity[idx] = _elt_to_entity[i_elt];
+        }
+        else {
+          n_field = 2;
+        }
         idx++;
       }
     }
 
-    const char   *field_name[] = {"groud_id", "section_id"};
-    const double *field_val [] = {elt_group, elt_section};
+    const char   *field_name[] = {"groud_id", "section_id", "elt_to_entity"};
+    const double *field_val [] = {elt_group, elt_section, elt_entity};
 
     char filename[999];
     sprintf(filename, "%s_%d_%d.vtk", filename_patter, i_part, i_rank);
@@ -1183,7 +1199,7 @@ PDM_part_mesh_nodal_dump_vtk
                                     elt_vtx_idx,
                                     elt_vtx,
                                     elt_g_num,
-                                    2,
+                                    n_field,
                                     field_name,
                                     field_val,
                                     0,
@@ -1194,6 +1210,7 @@ PDM_part_mesh_nodal_dump_vtk
     PDM_free(elt_g_num  );
     PDM_free(elt_type   );
     PDM_free(elt_section);
+    PDM_free(elt_entity );
     PDM_free(elt_vtx_idx);
     PDM_free(elt_vtx    );
   }
@@ -1859,7 +1876,7 @@ const int                     id_part
 }
 
 int *
-PDM_part_mesh_nodal_section_elt_to_entity_get
+PDM_part_mesh_nodal_section_elmt_to_entity_get
 (
       PDM_part_mesh_nodal_t *pmn,
 const int                    i_section,
@@ -1877,10 +1894,10 @@ const int                    id_part,
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
   assert(pmne != NULL);
 
-  return PDM_part_mesh_nodal_elmts_section_elt_to_entity_get(pmne,
-                                                             id_section,
-                                                             id_part,
-                                                             ownership);
+  return PDM_part_mesh_nodal_elmts_section_elmt_to_entity_get(pmne,
+                                                              id_section,
+                                                              id_part,
+                                                              ownership);
 }
 
 void
