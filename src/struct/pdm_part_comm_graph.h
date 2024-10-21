@@ -71,7 +71,7 @@ PDM_part_comm_graph_create
 /**
  *
  * \brief Exchange data between graph comm with synchronous blocking exchange
- * \param [in]   ptpgc               \ref PDM_part_comm_graph_t structure
+ * \param [in]   pcg                 \ref PDM_part_comm_graph_t structure
  * \param [in]   s_data              Data size
  * \param [in]   t_stride            Kind of stride (see \ref PDM_stride_t )
  * \param [in]   cst_stride          Constant stride
@@ -84,7 +84,7 @@ PDM_part_comm_graph_create
 void
 PDM_part_comm_graph_exch
 (
- PDM_part_comm_graph_t   *ptpgc,
+ PDM_part_comm_graph_t   *pcg,
  size_t                   s_data,
  PDM_stride_t             t_stride,
  int                      cst_stride,
@@ -98,7 +98,7 @@ PDM_part_comm_graph_exch
 /**
  *
  * \brief Get the owner array compute inside the structure, usefull to manage reduction of array for exemple
- * \param [in]   ptpgc         \ref PDM_part_comm_graph_t structure
+ * \param [in]   pcg           \ref PDM_part_comm_graph_t structure
  * \param [in]   i_part        Id of current partition
  *
  * \return   Array of size pentity_graph[i_part] that contains 0 if not owner and 1 if owner. Ownership is determine by the lowest rank that hold the entity
@@ -106,7 +106,7 @@ PDM_part_comm_graph_exch
 const int*
 PDM_part_comm_graph_owner_get
 (
- PDM_part_comm_graph_t *ptpgc,
+ PDM_part_comm_graph_t *pcg,
  int                    i_part
 );
 
@@ -116,14 +116,14 @@ PDM_part_comm_graph_owner_get
  * \brief Reorder internaly all graph comm with the table old_to_new.
  *        This method is usefull when who want to change the local order of entity and update exchange protocol
  *        This method change the internal data for futur exchange and update with the new value of pentity_graph and old_to_new
- * \param [in]   ptpgc          \ref PDM_part_comm_graph_t structure
+ * \param [in]   pcg            \ref PDM_part_comm_graph_t structure
  * \param [in]   pentity_graph  Graph comm identifier (size = 4* pn_entity_graph[i_part]) :
- * \param [in]   old_to_new     Permutation id old to new
+ * \param [in]   old_to_new     Permutation id old to new (0-based)
  */
 void
 PDM_part_comm_graph_reorder
 (
-  PDM_part_comm_graph_t  *ptpgc,
+  PDM_part_comm_graph_t  *pcg,
   int                   **pentity_graph,
   int                   **old_to_new
 );
@@ -133,20 +133,20 @@ PDM_part_comm_graph_reorder
  *
  * \brief Free \ref PDM_part_comm_graph_t structure
  *
- * \param ptpgc               \ref PDM_part_comm_graph_t structure
+ * \param pcg               \ref PDM_part_comm_graph_t structure
  *
  */
 void
 PDM_part_comm_graph_free
 (
- PDM_part_comm_graph_t* ptpgc
+ PDM_part_comm_graph_t* pcg
 );
 
 
 void
 PDM_part_comm_graph_entity1_to_entity2
 (
-  PDM_part_comm_graph_t  *ptpgc_entity1,
+  PDM_part_comm_graph_t  *pcg_entity1,
   int                    *pn_entity1,
   int                    *pn_entity2,
   int                   **entity2_entity1_idx,

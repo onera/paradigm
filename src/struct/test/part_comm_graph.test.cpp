@@ -42,9 +42,9 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2p", 2) {
   int *entity_bound  = ventity_bound  [i_rank].data();
 
   PDM_part_comm_graph_t* ptpgc = PDM_part_comm_graph_create(n_part,
-                                                                            &n_entity_bound,
-                                                                            &entity_bound,
-                                                                            pdm_comm);
+                                                            &n_entity_bound,
+                                                            &entity_bound,
+                                                            pdm_comm);
 
   const int* lower_bound = PDM_part_comm_graph_owner_get(ptpgc, 0);
 
@@ -63,27 +63,15 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2p", 2) {
 
   int **tmp_recv_cst_data = NULL;
   PDM_part_comm_graph_exch(ptpgc,
-                                   sizeof(int),
-                                   PDM_STRIDE_CST_INTERLACED,
-                                   1,
-                                   NULL,
-                    (void **)      &send_cst_data,
-                                   NULL,
-                   (void ***)      &tmp_recv_cst_data);
+                           sizeof(int),
+                           PDM_STRIDE_CST_INTERLACED,
+                           1,
+                           NULL,
+            (void **)      &send_cst_data,
+                           NULL,
+           (void ***)      &tmp_recv_cst_data);
   int *recv_cst_data = tmp_recv_cst_data[0];
   free(tmp_recv_cst_data);
-
-  // std::vector<int> part1_flags(n_elt1);
-  // int **tmp_recv_cst_data = NULL;
-  // PDM_part_comm_graph_exch(ptpgc,
-  //                                  sizeof(int),
-  //                                  PDM_STRIDE_CST_INTERLACED,
-  //                                  PDM_PART_TO_PART_DATA_DEF_ORDER_PART,
-  //                                  1,
-  //                   (void **)      &part1_flags,
-  //                  (void ***)      &part1_flags);
-  // int *recv_cst_data = tmp_recv_cst_data[0];
-  // free(tmp_recv_cst_data);
 
   if(0 == 1) {
     PDM_log_trace_array_int(recv_cst_data, n_entity_bound, "recv_cst_data ::");
@@ -107,13 +95,13 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2p", 2) {
   int **tmp_recv_data = NULL;
   int **tmp_recv_stri = NULL;
   PDM_part_comm_graph_exch(ptpgc,
-                                   sizeof(int),
-                                   PDM_STRIDE_VAR_INTERLACED,
-                                   -1,
-                                   &send_strid,
-                    (void **)      &send_data,
-                                   &tmp_recv_stri,
-                   (void ***)      &tmp_recv_data);
+                           sizeof(int),
+                           PDM_STRIDE_VAR_INTERLACED,
+                           -1,
+                           &send_strid,
+            (void **)      &send_data,
+                           &tmp_recv_stri,
+           (void ***)      &tmp_recv_data);
   int *recv_stri = tmp_recv_stri[0];
   int *recv_data = tmp_recv_data[0];
   free(tmp_recv_data);
@@ -145,16 +133,8 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2p", 2) {
   free(recv_stri);
   free(recv_data);
 
-  // ---------------------------------------------------------------------------
-  // Exchange cst raw
-
-
-
-
   PDM_part_comm_graph_free(ptpgc);
 }
-
-
 
 MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 3p", 3) {
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
@@ -218,9 +198,9 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 3p", 3) {
   int *entity_bound   = ventity_bound  [i_rank].data();
 
   PDM_part_comm_graph_t* ptpgc = PDM_part_comm_graph_create(n_part,
-                                                                            &n_entity_bound,
-                                                                            &entity_bound,
-                                                                            pdm_comm);
+                                                            &n_entity_bound,
+                                                            &entity_bound,
+                                                            pdm_comm);
 
   const int* lower_bound = PDM_part_comm_graph_owner_get(ptpgc, 0);
 
@@ -238,9 +218,6 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 3p", 3) {
   PDM_part_comm_graph_free(ptpgc);
 
 }
-
-
-
 
 MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2p - order ", 2) {
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
@@ -278,9 +255,9 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2p - order ", 2) {
 
 
   PDM_part_comm_graph_t* ptpgc = PDM_part_comm_graph_create(n_part,
-                                                                            &n_entity_bound,
-                                                                            &entity_bound,
-                                                                            pdm_comm);
+                                                            &n_entity_bound,
+                                                            &entity_bound,
+                                                            pdm_comm);
 
   const int* lower_bound = PDM_part_comm_graph_owner_get(ptpgc, 0);
 
@@ -302,8 +279,8 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2p - order ", 2) {
   // PDM_log_trace_array_int(entity_bound, 4 * n_entity_bound, "entity_bound (Avant) ::");
 
   PDM_part_comm_graph_reorder(ptpgc,
-                                      &entity_bound,
-                                      &old_to_new);
+                              &entity_bound,
+                              &old_to_new);
 
   // PDM_log_trace_array_int(entity_bound, 4 * n_entity_bound, "entity_bound ::");
 

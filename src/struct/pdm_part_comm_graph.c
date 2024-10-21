@@ -60,7 +60,7 @@ static
 void
 _prepare_send_strid_cst
 (
- PDM_part_comm_graph_t   *ptpgc,
+ PDM_part_comm_graph_t   *pcg,
  size_t                   s_data,
  int                      cst_stride,
  void                   **send_entity_data,
@@ -69,21 +69,21 @@ _prepare_send_strid_cst
 {
 
   int n_rank;
-  PDM_MPI_Comm_size(ptpgc->comm, &n_rank);
+  PDM_MPI_Comm_size(pcg->comm, &n_rank);
 
   int s_data_tot = s_data * cst_stride;
 
-  int send_buff_size = s_data * cst_stride * ptpgc->send_idx[n_rank];
+  int send_buff_size = s_data * cst_stride * pcg->send_idx[n_rank];
   unsigned char *_send_buffer = NULL;
   PDM_malloc(_send_buffer, send_buff_size, unsigned char);
 
   unsigned char **_send_entity_data = (unsigned char **) send_entity_data;
 
-  for(int i_part = 0; i_part < ptpgc->n_part; ++i_part) {
-    for(int i = 0; i < ptpgc->n_entity_graph[i_part]; ++i) {
+  for(int i_part = 0; i_part < pcg->n_part; ++i_part) {
+    for(int i = 0; i < pcg->n_entity_graph[i_part]; ++i) {
       for(int k = 0; k < s_data_tot; ++k) {
         int idx_read  = i * s_data_tot + k;
-        int idx_write = ptpgc->part_to_send_buffer[i_part][i] * s_data * cst_stride + k;
+        int idx_write = pcg->part_to_send_buffer[i_part][i] * s_data * cst_stride + k;
         _send_buffer[idx_write] = _send_entity_data[i_part][idx_read];
       }
     }
@@ -96,7 +96,7 @@ static
 void
 _post_recv_strid_cst
 (
- PDM_part_comm_graph_t   *ptpgc,
+ PDM_part_comm_graph_t   *pcg,
  size_t                   s_data,
  int                      cst_stride,
  unsigned char           *recv_buffer,
@@ -106,14 +106,14 @@ _post_recv_strid_cst
   int s_data_tot = s_data * cst_stride;
 
   unsigned char **_recv_entity_data = NULL;
-  PDM_malloc(_recv_entity_data, ptpgc->n_part, unsigned char *);
+  PDM_malloc(_recv_entity_data, pcg->n_part, unsigned char *);
   *recv_entity_data = (void **) _recv_entity_data;
-  for(int i_part = 0; i_part < ptpgc->n_part; ++i_part) {
-    _recv_entity_data[i_part] = malloc(ptpgc->n_entity_graph[i_part] * s_data_tot * sizeof(unsigned char));
-    for(int i = 0; i < ptpgc->n_entity_graph[i_part]; ++i) {
+  for(int i_part = 0; i_part < pcg->n_part; ++i_part) {
+    _recv_entity_data[i_part] = malloc(pcg->n_entity_graph[i_part] * s_data_tot * sizeof(unsigned char));
+    for(int i = 0; i < pcg->n_entity_graph[i_part]; ++i) {
       for(int k = 0; k < s_data_tot; ++k) {
         int idx_write = i * s_data_tot + k;
-        int idx_read  = ptpgc->part_to_recv_buffer[i_part][i] * s_data * cst_stride + k;
+        int idx_read  = pcg->part_to_recv_buffer[i_part][i] * s_data * cst_stride + k;
         _recv_entity_data[i_part][idx_write] = recv_buffer[idx_read];
       }
     }
@@ -135,29 +135,29 @@ PDM_part_comm_graph_create
   PDM_MPI_Comm   comm
 )
 {
-  PDM_part_comm_graph_t *ptpgc = NULL;
-  PDM_malloc(ptpgc, 1 ,PDM_part_comm_graph_t);
+  PDM_part_comm_graph_t *pcg = NULL;
+  PDM_malloc(pcg, 1 ,PDM_part_comm_graph_t);
 
-  ptpgc->comm   = comm;
-  ptpgc->n_part = n_part;
+  pcg->comm   = comm;
+  pcg->n_part = n_part;
 
-  ptpgc->n_active_rank_send = 0;
-  ptpgc->n_active_rank_recv = 0;
+  pcg->n_active_rank_send = 0;
+  pcg->n_active_rank_recv = 0;
 
   int n_rank;
   int i_rank;
   PDM_MPI_Comm_size(comm, &n_rank);
   PDM_MPI_Comm_rank(comm, &i_rank);
 
-  ptpgc->pentity_graph = pentity_graph;
+  pcg->pentity_graph = pentity_graph;
 
   int n_g_part = 0;
   PDM_MPI_Allreduce(&n_part, &n_g_part, 1, PDM_MPI_INT, PDM_MPI_SUM, comm);
-  ptpgc->n_g_part = n_g_part;
+  pcg->n_g_part = n_g_part;
 
-  PDM_malloc(ptpgc->part_to_send_buffer, n_part, int *);
-  PDM_malloc(ptpgc->part_to_recv_buffer, n_part, int *);
-  PDM_malloc(ptpgc->n_entity_graph     , n_part, int  );
+  PDM_malloc(pcg->part_to_send_buffer, n_part, int *);
+  PDM_malloc(pcg->part_to_recv_buffer, n_part, int *);
+  PDM_malloc(pcg->n_entity_graph     , n_part, int  );
 
   PDM_MPI_Datatype mpi_doublet_type;
   PDM_MPI_Type_create_contiguous(2, PDM_MPI_INT, &mpi_doublet_type);
@@ -168,7 +168,7 @@ PDM_part_comm_graph_create
   PDM_malloc(recv_n, n_rank, int);
   for (int i_part = 0; i_part < n_part; i_part++) {
     int n_entity_graph = pn_entity_graph[i_part];
-    ptpgc->n_entity_graph[i_part] = n_entity_graph;
+    pcg->n_entity_graph[i_part] = n_entity_graph;
 
     for(int idx_entity = 0; idx_entity < n_entity_graph; ++idx_entity) {
       int t_rank = pentity_graph[i_part][4*idx_entity+1];
@@ -182,7 +182,7 @@ PDM_part_comm_graph_create
   for(int i = 0; i < n_rank; ++i) {
     send_idx[i+1] = send_idx[i] + send_n[i];
     if(send_n[i] > 0) {
-      ptpgc->n_active_rank_send++;
+      pcg->n_active_rank_send++;
     }
     send_n[i] = 0;
   }
@@ -192,7 +192,7 @@ PDM_part_comm_graph_create
   for (int i_part = 0; i_part < n_part; i_part++) {
     int n_entity_graph = pn_entity_graph[i_part];
 
-    PDM_malloc(ptpgc->part_to_send_buffer[i_part], n_entity_graph, int);
+    PDM_malloc(pcg->part_to_send_buffer[i_part], n_entity_graph, int);
 
     for(int idx_entity = 0; idx_entity < n_entity_graph; ++idx_entity) {
       int t_rank = pentity_graph[i_part][4*idx_entity+1];
@@ -200,7 +200,7 @@ PDM_part_comm_graph_create
       send_doublet[2*idx_write  ] = pentity_graph[i_part][4*idx_entity+2]-1;
       send_doublet[2*idx_write+1] = pentity_graph[i_part][4*idx_entity+3]-1;
 
-      ptpgc->part_to_send_buffer[i_part][idx_entity] = idx_write;
+      pcg->part_to_send_buffer[i_part][idx_entity] = idx_write;
     }
   }
 
@@ -213,7 +213,7 @@ PDM_part_comm_graph_create
   for(int i = 0; i < n_rank; ++i) {
     recv_idx[i+1] = recv_idx[i] + recv_n[i];
     if(recv_n[i] > 0) {
-      ptpgc->n_active_rank_recv++;
+      pcg->n_active_rank_recv++;
     }
   }
 
@@ -243,7 +243,7 @@ PDM_part_comm_graph_create
 
   for (int i_part = 0; i_part < n_part; i_part++) {
     int n_entity_graph = pn_entity_graph[i_part];
-    PDM_malloc(ptpgc->part_to_recv_buffer[i_part], n_entity_graph, int);
+    PDM_malloc(pcg->part_to_recv_buffer[i_part], n_entity_graph, int);
 
     PDM_malloc(pentity_indices      [i_part], 2 * n_entity_graph, int);
     PDM_malloc(pentity_indices_order[i_part],     n_entity_graph, int);
@@ -278,7 +278,7 @@ PDM_part_comm_graph_create
       int pos = PDM_order_binary_search_int(to_find, pentity_indices[lpart], 2, n_entity_graph);
       // log_trace("Try to find = (%i/%i) --> %i \n", t_rank, lentity, pos);
 
-      ptpgc->part_to_recv_buffer[lpart][pentity_indices_order[lpart][pos]] = j;
+      pcg->part_to_recv_buffer[lpart][pentity_indices_order[lpart][pos]] = j;
 
     }
   }
@@ -286,8 +286,8 @@ PDM_part_comm_graph_create
   if(0 == 1) {
     for(int i_part = 0; i_part < n_part; ++i_part) {
       int n_entity_graph = pn_entity_graph[i_part];
-      PDM_log_trace_array_int(ptpgc->part_to_send_buffer[i_part], n_entity_graph, "ptpgc->part_to_send_buffer ::");
-      PDM_log_trace_array_int(ptpgc->part_to_recv_buffer[i_part], n_entity_graph, "ptpgc->part_to_recv_buffer ::");
+      PDM_log_trace_array_int(pcg->part_to_send_buffer[i_part], n_entity_graph, "pcg->part_to_send_buffer ::");
+      PDM_log_trace_array_int(pcg->part_to_recv_buffer[i_part], n_entity_graph, "pcg->part_to_recv_buffer ::");
     }
   }
 
@@ -303,42 +303,42 @@ PDM_part_comm_graph_create
   PDM_free(recv_doublet);
   PDM_MPI_Type_free(&mpi_doublet_type);
 
-  ptpgc->send_idx = send_idx;
-  ptpgc->recv_idx = recv_idx;
-  ptpgc->send_n   = send_n;
-  ptpgc->recv_n   = recv_n;
+  pcg->send_idx = send_idx;
+  pcg->recv_idx = recv_idx;
+  pcg->send_n   = send_n;
+  pcg->recv_n   = recv_n;
 
   /* Compute p2p array */
-  PDM_malloc(ptpgc->active_rank_send, ptpgc->n_active_rank_send, int);
-  PDM_malloc(ptpgc->active_rank_recv, ptpgc->n_active_rank_recv, int);
+  PDM_malloc(pcg->active_rank_send, pcg->n_active_rank_send, int);
+  PDM_malloc(pcg->active_rank_recv, pcg->n_active_rank_recv, int);
 
-  ptpgc->n_active_rank_send = 0;
-  ptpgc->n_active_rank_recv = 0;
+  pcg->n_active_rank_send = 0;
+  pcg->n_active_rank_recv = 0;
 
   for(int i = 0; i < n_rank; ++i) {
     if(send_n[i] > 0) {
-      ptpgc->active_rank_send[ptpgc->n_active_rank_send++] = i;
+      pcg->active_rank_send[pcg->n_active_rank_send++] = i;
     }
     if(recv_n[i] > 0) {
-      ptpgc->active_rank_recv[ptpgc->n_active_rank_recv++] = i;
+      pcg->active_rank_recv[pcg->n_active_rank_recv++] = i;
     }
   }
 
   /*
    * Compute owner
    */
-  ptpgc->bound_owner = NULL;
-  PDM_malloc(ptpgc->bound_owner, n_part, int *);
+  pcg->bound_owner = NULL;
+  PDM_malloc(pcg->bound_owner, n_part, int *);
   for(int i_part = 0; i_part < n_part; ++i_part) {
     int n_entity_graph = pn_entity_graph[i_part];
 
-    PDM_malloc(ptpgc->bound_owner[i_part], n_entity_graph, int);
+    PDM_malloc(pcg->bound_owner[i_part], n_entity_graph, int);
     int *lbound_entity       = NULL;
     PDM_malloc(lbound_entity, n_entity_graph, int);
 
     for(int idx_entity = 0; idx_entity < n_entity_graph; ++idx_entity) {
       lbound_entity      [idx_entity] = pentity_graph[i_part][4*idx_entity];
-      ptpgc->bound_owner[i_part][idx_entity] = -1;
+      pcg->bound_owner[i_part][idx_entity] = -1;
     }
 
     int n_unique = PDM_inplace_unique(lbound_entity, 0, n_entity_graph-1);
@@ -350,7 +350,7 @@ PDM_part_comm_graph_create
       int t_part   = pentity_graph[i_part][4*idx_entity+2]-1;
       int pos = PDM_binary_search_int(l_entity, lbound_entity, n_unique);
 
-      ptpgc->bound_owner[i_part][idx_entity] = pos; // Stockage temporaire
+      pcg->bound_owner[i_part][idx_entity] = pos; // Stockage temporaire
 
       if(lowner[pos] != 0) {
         if(i_rank < t_rank || (i_rank == t_rank && i_part < t_part)) {
@@ -363,21 +363,21 @@ PDM_part_comm_graph_create
 
     /* Last loop to fill */
     for(int idx_entity = 0; idx_entity < n_entity_graph; ++idx_entity) {
-      int pos = ptpgc->bound_owner[i_part][idx_entity];
-      ptpgc->bound_owner[i_part][idx_entity] = lowner[pos];
+      int pos = pcg->bound_owner[i_part][idx_entity];
+      pcg->bound_owner[i_part][idx_entity] = lowner[pos];
     }
 
     PDM_free(lowner);
     PDM_free(lbound_entity);
   }
 
-  return ptpgc;
+  return pcg;
 }
 
 void
 PDM_part_comm_graph_exch
 (
- PDM_part_comm_graph_t   *ptpgc,
+ PDM_part_comm_graph_t   *pcg,
  size_t                   s_data,
  PDM_stride_t             t_stride,
  int                      cst_stride,
@@ -397,33 +397,33 @@ PDM_part_comm_graph_exch
   PDM_MPI_Type_commit(&mpi_type);
 
   int n_rank;
-  PDM_MPI_Comm_size(ptpgc->comm, &n_rank);
+  PDM_MPI_Comm_size(pcg->comm, &n_rank);
 
   if(t_stride == PDM_STRIDE_CST_INTERLACED) {
 
     unsigned char *send_buffer = NULL;
-    _prepare_send_strid_cst(ptpgc,
+    _prepare_send_strid_cst(pcg,
                             s_data,
                             cst_stride,
                             send_entity_data,
                             &send_buffer);
 
-    int recv_buff_size = s_data * cst_stride * ptpgc->recv_idx[n_rank];
+    int recv_buff_size = s_data * cst_stride * pcg->recv_idx[n_rank];
     unsigned char *recv_buffer = NULL;
     PDM_malloc(recv_buffer, recv_buff_size, unsigned char);
     PDM_MPI_Alltoallv(send_buffer,
-                      ptpgc->send_n,
-                      ptpgc->send_idx,
+                      pcg->send_n,
+                      pcg->send_idx,
                       mpi_type,
                       recv_buffer,
-                      ptpgc->recv_n,
-                      ptpgc->recv_idx,
+                      pcg->recv_n,
+                      pcg->recv_idx,
                       mpi_type,
-                      ptpgc->comm);
+                      pcg->comm);
     PDM_free(send_buffer);
 
     /* Post-traitement */
-    _post_recv_strid_cst(ptpgc,
+    _post_recv_strid_cst(pcg,
                          s_data,
                          cst_stride,
                          recv_buffer,
@@ -435,42 +435,42 @@ PDM_part_comm_graph_exch
 
     /* Exchange stride */
     int  *send_stride = NULL;
-    PDM_malloc(send_stride, ptpgc->send_idx[n_rank], int);
-    for(int i_part = 0; i_part < ptpgc->n_part; ++i_part) {
-      for(int i = 0; i < ptpgc->n_entity_graph[i_part]; ++i) {
-        int idx_write = ptpgc->part_to_send_buffer[i_part][i];
+    PDM_malloc(send_stride, pcg->send_idx[n_rank], int);
+    for(int i_part = 0; i_part < pcg->n_part; ++i_part) {
+      for(int i = 0; i < pcg->n_entity_graph[i_part]; ++i) {
+        int idx_write = pcg->part_to_send_buffer[i_part][i];
         send_stride[idx_write] = send_entity_stride[i_part][i];
       }
     }
 
     int *recv_stride = NULL;
-    PDM_malloc(recv_stride, ptpgc->recv_idx[n_rank], int);
+    PDM_malloc(recv_stride, pcg->recv_idx[n_rank], int);
     PDM_MPI_Alltoallv(send_stride,
-                      ptpgc->send_n,
-                      ptpgc->send_idx,
+                      pcg->send_n,
+                      pcg->send_idx,
                       PDM_MPI_INT,
                       recv_stride,
-                      ptpgc->recv_n,
-                      ptpgc->recv_idx,
+                      pcg->recv_n,
+                      pcg->recv_idx,
                       PDM_MPI_INT,
-                      ptpgc->comm);
+                      pcg->comm);
 
-    // PDM_log_trace_array_int(send_stride, ptpgc->send_idx[n_rank], "send_stride ::");
-    // PDM_log_trace_array_int(recv_stride, ptpgc->recv_idx[n_rank], "recv_stride ::");
+    // PDM_log_trace_array_int(send_stride, pcg->send_idx[n_rank], "send_stride ::");
+    // PDM_log_trace_array_int(recv_stride, pcg->recv_idx[n_rank], "recv_stride ::");
 
 
     /* Exchange data */
     int *send_stride_idx = NULL;
-    PDM_malloc(send_stride_idx, ptpgc->send_idx[n_rank]+1, int);
+    PDM_malloc(send_stride_idx, pcg->send_idx[n_rank]+1, int);
     send_stride_idx[0] = 0;
-    for(int i = 0; i < ptpgc->send_idx[n_rank]; ++i) {
+    for(int i = 0; i < pcg->send_idx[n_rank]; ++i) {
       send_stride_idx[i+1] = send_stride_idx[i] + send_stride[i];
     }
 
     int *recv_stride_idx = NULL;
-    PDM_malloc(recv_stride_idx, ptpgc->recv_idx[n_rank]+1, int);
+    PDM_malloc(recv_stride_idx, pcg->recv_idx[n_rank]+1, int);
     recv_stride_idx[0] = 0;
-    for(int i = 0; i < ptpgc->recv_idx[n_rank]; ++i) {
+    for(int i = 0; i < pcg->recv_idx[n_rank]; ++i) {
       recv_stride_idx[i+1] = recv_stride_idx[i] + recv_stride[i];
     }
 
@@ -480,7 +480,7 @@ PDM_part_comm_graph_exch
     send_data_idx[0] = 0;
     for(int i = 0; i < n_rank; ++i) {
       send_data_idx[i+1] = send_data_idx[i];
-      for(int j = ptpgc->send_idx[i]; j < ptpgc->send_idx[i+1]; ++j) {
+      for(int j = pcg->send_idx[i]; j < pcg->send_idx[i+1]; ++j) {
         send_data_idx[i+1] += send_stride[j];
         send_data_n  [i  ] += send_stride[j];
         // send_stride[j] = 0;
@@ -493,7 +493,7 @@ PDM_part_comm_graph_exch
     recv_data_idx[0] = 0;
     for(int i = 0; i < n_rank; ++i) {
       recv_data_idx[i+1] = recv_data_idx[i];
-      for(int j = ptpgc->recv_idx[i]; j < ptpgc->recv_idx[i+1]; ++j) {
+      for(int j = pcg->recv_idx[i]; j < pcg->recv_idx[i+1]; ++j) {
         recv_data_idx[i+1] += recv_stride[j];
         recv_data_n  [i  ] += recv_stride[j];
       }
@@ -501,18 +501,18 @@ PDM_part_comm_graph_exch
 
     // PDM_log_trace_array_int(send_data_idx, n_rank+1, "send_data_idx ::");
     // PDM_log_trace_array_int(recv_data_idx, n_rank+1, "recv_data_idx ::");
-    // PDM_log_trace_array_int(send_stride_idx, ptpgc->send_idx[n_rank]+1, "send_stride_idx ::");
-    // PDM_log_trace_array_int(recv_stride_idx, ptpgc->recv_idx[n_rank]+1, "recv_stride_idx ::");
+    // PDM_log_trace_array_int(send_stride_idx, pcg->send_idx[n_rank]+1, "send_stride_idx ::");
+    // PDM_log_trace_array_int(recv_stride_idx, pcg->recv_idx[n_rank]+1, "recv_stride_idx ::");
 
     int send_buff_size = send_data_idx[n_rank] * s_data_tot;
     unsigned char  *send_buffer       = malloc(send_buff_size * sizeof(unsigned char));
     unsigned char **_send_entity_data = (unsigned char **) send_entity_data;
 
-    for(int i_part = 0; i_part < ptpgc->n_part; ++i_part) {
+    for(int i_part = 0; i_part < pcg->n_part; ++i_part) {
       int idx_read = 0;
-      for(int i = 0; i < ptpgc->n_entity_graph[i_part]; ++i) {
+      for(int i = 0; i < pcg->n_entity_graph[i_part]; ++i) {
         for(int j = 0; j < send_entity_stride[i_part][i]; ++j) {
-          int idx_buffer = ptpgc->part_to_send_buffer[i_part][i];
+          int idx_buffer = pcg->part_to_send_buffer[i_part][i];
           for(int k = 0; k < s_data_tot; ++k) {
             int idx_write  = (send_stride_idx[idx_buffer] + j) * s_data_tot + k;
             send_buffer[idx_write] = _send_entity_data[i_part][(idx_read+j)*s_data_tot + k];
@@ -529,7 +529,7 @@ PDM_part_comm_graph_exch
 
     // log_trace("send_buff_size : %i \n", send_buff_size);
     // log_trace("recv_buff_size : %i \n", recv_buff_size);
-    // PDM_log_trace_array_int(recv_data_idx, ptpgc->recv_idx[n_rank], "recv_data_idx ::");
+    // PDM_log_trace_array_int(recv_data_idx, pcg->recv_idx[n_rank], "recv_data_idx ::");
     PDM_MPI_Alltoallv(send_buffer,
                       send_data_n,
                       send_data_idx,
@@ -538,7 +538,7 @@ PDM_part_comm_graph_exch
                       recv_data_n,
                       recv_data_idx,
                       mpi_type,
-                      ptpgc->comm);
+                      pcg->comm);
     PDM_free(send_buffer);
 
     /* Panic verbose */
@@ -548,32 +548,32 @@ PDM_part_comm_graph_exch
     /* Post-traitement stride */
     int           **_recv_entity_stride = NULL;
     unsigned char **_recv_entity_data   = NULL;
-    PDM_malloc(_recv_entity_stride, ptpgc->n_part, int           *);
-    PDM_malloc(_recv_entity_data  , ptpgc->n_part, unsigned char *);
+    PDM_malloc(_recv_entity_stride, pcg->n_part, int           *);
+    PDM_malloc(_recv_entity_data  , pcg->n_part, unsigned char *);
     *recv_entity_stride =           _recv_entity_stride;
     *recv_entity_data   = (void **) _recv_entity_data;
 
-    for(int i_part = 0; i_part < ptpgc->n_part; ++i_part) {
-      _recv_entity_stride[i_part] = malloc(ptpgc->n_entity_graph[i_part] * sizeof(int));
+    for(int i_part = 0; i_part < pcg->n_part; ++i_part) {
+      _recv_entity_stride[i_part] = malloc(pcg->n_entity_graph[i_part] * sizeof(int));
       int recv_buff_size_part = 0;
-      for(int i = 0; i < ptpgc->n_entity_graph[i_part]; ++i) {
-        int idx_read  = ptpgc->part_to_recv_buffer[i_part][i];
+      for(int i = 0; i < pcg->n_entity_graph[i_part]; ++i) {
+        int idx_read  = pcg->part_to_recv_buffer[i_part][i];
         _recv_entity_stride[i_part][i] = recv_stride[idx_read];
         recv_buff_size_part += recv_stride[idx_read];
       }
 
       PDM_malloc(_recv_entity_data[i_part], recv_buff_size_part * s_data_tot, unsigned char);
 
-      // PDM_log_trace_array_int(_recv_entity_stride[i_part], ptpgc->n_entity_graph[i_part], "_recv_entity_stride :");
+      // PDM_log_trace_array_int(_recv_entity_stride[i_part], pcg->n_entity_graph[i_part], "_recv_entity_stride :");
     }
 
     /*
      * Post-treatment buffer
      */
-    for(int i_part = 0; i_part < ptpgc->n_part; ++i_part) {
+    for(int i_part = 0; i_part < pcg->n_part; ++i_part) {
       int idx_write = 0;
-      for(int i = 0; i < ptpgc->n_entity_graph[i_part]; ++i) {
-        int idx_buffer = ptpgc->part_to_recv_buffer[i_part][i];
+      for(int i = 0; i < pcg->n_entity_graph[i_part]; ++i) {
+        int idx_buffer = pcg->part_to_recv_buffer[i_part][i];
         for(int j = 0; j < _recv_entity_stride[i_part][i]; ++j) {
           for(int k = 0; k < s_data_tot; ++k) {
             int idx_read  = (recv_stride_idx[idx_buffer] + j) * s_data_tot + k;
@@ -606,17 +606,17 @@ PDM_part_comm_graph_exch
 const int*
 PDM_part_comm_graph_owner_get
 (
- PDM_part_comm_graph_t *ptpgc,
+ PDM_part_comm_graph_t *pcg,
  int                    i_part
 )
 {
-  return ptpgc->bound_owner[i_part];
+  return pcg->bound_owner[i_part];
 }
 
 void
 PDM_part_comm_graph_reorder
 (
-  PDM_part_comm_graph_t  *ptpgc,
+  PDM_part_comm_graph_t  *pcg,
   int                   **pentity_graph,
   int                   **old_to_new
 )
@@ -624,17 +624,17 @@ PDM_part_comm_graph_reorder
 
   /* Prepare exchange */
   int **send_new_id = NULL;
-  PDM_malloc(send_new_id, ptpgc->n_part, int         *);
-  for(int i_part = 0; i_part < ptpgc->n_part; ++i_part) {
-    PDM_malloc(send_new_id[i_part], ptpgc->n_entity_graph[i_part], int        );
-    for(int i = 0; i < ptpgc->n_entity_graph[i_part]; ++i) {
+  PDM_malloc(send_new_id, pcg->n_part, int         *);
+  for(int i_part = 0; i_part < pcg->n_part; ++i_part) {
+    PDM_malloc(send_new_id[i_part], pcg->n_entity_graph[i_part], int        );
+    for(int i = 0; i < pcg->n_entity_graph[i_part]; ++i) {
       int i_entity = pentity_graph[i_part][4*i  ]-1;
       send_new_id[i_part][i] = old_to_new[i_part][i_entity];
     }
   }
 
   int **recv_new_id = NULL;
-  PDM_part_comm_graph_exch(ptpgc,
+  PDM_part_comm_graph_exch(pcg,
                                    sizeof(int),
                                    PDM_STRIDE_CST_INTERLACED,
                                    1,
@@ -643,22 +643,22 @@ PDM_part_comm_graph_reorder
                                    NULL,
                       (void ***)   &recv_new_id);
 
-  for(int i_part = 0; i_part < ptpgc->n_part; ++i_part) {
+  for(int i_part = 0; i_part < pcg->n_part; ++i_part) {
     PDM_free(send_new_id[i_part]);
   }
   PDM_free(send_new_id);
 
   /* Actualisation current and opposite */
 
-  for(int i_part = 0; i_part < ptpgc->n_part; ++i_part) {
-    for(int i = 0; i < ptpgc->n_entity_graph[i_part]; ++i) {
+  for(int i_part = 0; i_part < pcg->n_part; ++i_part) {
+    for(int i = 0; i < pcg->n_entity_graph[i_part]; ++i) {
       int i_entity = pentity_graph[i_part][4*i  ]-1;
       pentity_graph[i_part][4*i  ] = old_to_new[i_part][i_entity]+1; // On suppose que old_to_new commence a 0
       pentity_graph[i_part][4*i+3] = recv_new_id[i_part][i]+1; // On suppose que old_to_new commence a 0
     }
   }
 
-  for(int i_part = 0; i_part < ptpgc->n_part; ++i_part) {
+  for(int i_part = 0; i_part < pcg->n_part; ++i_part) {
     PDM_free(recv_new_id[i_part]);
   }
   PDM_free(recv_new_id);
@@ -667,28 +667,28 @@ PDM_part_comm_graph_reorder
 void
 PDM_part_comm_graph_free
 (
- PDM_part_comm_graph_t* ptpgc
+ PDM_part_comm_graph_t* pcg
 )
 {
 
-  for(int i_part = 0; i_part < ptpgc->n_part; ++i_part) {
-    PDM_free(ptpgc->part_to_send_buffer[i_part]);
-    PDM_free(ptpgc->part_to_recv_buffer[i_part]);
-    PDM_free(ptpgc->bound_owner        [i_part]);
+  for(int i_part = 0; i_part < pcg->n_part; ++i_part) {
+    PDM_free(pcg->part_to_send_buffer[i_part]);
+    PDM_free(pcg->part_to_recv_buffer[i_part]);
+    PDM_free(pcg->bound_owner        [i_part]);
   }
-  PDM_free(ptpgc->part_to_send_buffer);
-  PDM_free(ptpgc->part_to_recv_buffer);
-  PDM_free(ptpgc->n_entity_graph);
-  PDM_free(ptpgc->bound_owner);
+  PDM_free(pcg->part_to_send_buffer);
+  PDM_free(pcg->part_to_recv_buffer);
+  PDM_free(pcg->n_entity_graph);
+  PDM_free(pcg->bound_owner);
 
-  PDM_free(ptpgc->send_idx);
-  PDM_free(ptpgc->recv_idx);
-  PDM_free(ptpgc->send_n);
-  PDM_free(ptpgc->recv_n);
-  PDM_free(ptpgc->active_rank_send);
-  PDM_free(ptpgc->active_rank_recv);
+  PDM_free(pcg->send_idx);
+  PDM_free(pcg->recv_idx);
+  PDM_free(pcg->send_n);
+  PDM_free(pcg->recv_n);
+  PDM_free(pcg->active_rank_send);
+  PDM_free(pcg->active_rank_recv);
 
-  PDM_free(ptpgc);
+  PDM_free(pcg);
 }
 
 
