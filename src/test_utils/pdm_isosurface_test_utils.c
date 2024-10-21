@@ -1100,41 +1100,6 @@ PDM_isosurface_test_utils_dist_interpolation
   // double *_iso_itp_dfield_face = *iso_itp_dfield_face;
 
 
-  // // > Build part_to_part TODO: move in isosurface
-  // int          iso_dn_vtx           = 0;
-  // int         *vtx_dparent_idx  = NULL;
-  // PDM_g_num_t *vtx_dparent_gnum = NULL;
-  // double      *vtx_dparent_wght = NULL;
-  // iso_dn_vtx = PDM_isosurface_parent_gnum_get(isos, id_iso, PDM_MESH_ENTITY_VTX,
-  //                                            &vtx_dparent_idx, &vtx_dparent_gnum,
-  //                                             PDM_OWNERSHIP_KEEP);
-  // iso_dn_vtx = PDM_isosurface_dvtx_parent_weight_get(isos, id_iso,
-  //                                                   &vtx_dparent_idx, &vtx_dparent_wght,
-  //                                                    PDM_OWNERSHIP_KEEP);
-
-  // // > Isosurface utils for ptp
-  // PDM_g_num_t *iso_vtx_distrib = NULL;
-  // PDM_isosurface_distrib_get(isos, id_iso, PDM_MESH_ENTITY_VTX, &iso_vtx_distrib);
-  // PDM_g_num_t *iso_vtx_gnum = PDM_array_new_arange_gnum(iso_vtx_distrib[i_rank]+1, iso_vtx_distrib[i_rank+1]+1, 1);
-  // PDM_free(iso_vtx_distrib);
-
-  // // > Entry mesh utils for ptp
-  // PDM_g_num_t *vtx_distrib = PDM_dmesh_nodal_vtx_distrib_get(dmn);
-  // int          dn_vtx      = PDM_DMesh_nodal_n_vtx_get(dmn);
-  // PDM_log_trace_array_long(vtx_distrib, n_rank+1, "vtx_distrib :: ");
-  // PDM_g_num_t *vtx_gnum    = PDM_array_new_arange_gnum(vtx_distrib[i_rank]+1, vtx_distrib[i_rank+1], 1);
-
-  // // > Create part_to_part
-  // PDM_part_to_part_create((const PDM_g_num_t **) &iso_vtx_gnum,
-  //                                                       (const int          *) &iso_dn_vtx,
-  //                                                                               1, 
-  //                                                       (const PDM_g_num_t **) &vtx_gnum,
-  //                                                       (const int          *) &dn_vtx,
-  //                                                                              1,
-  //                                                       (const int         **) &vtx_dparent_idx,
-  //                                                       (const PDM_g_num_t **) &vtx_dparent_gnum,
-  //                                                       comm);
-
   PDM_part_to_part_t *ptp_vtx = NULL;
   PDM_isosurface_part_to_part_get(isos, id_iso, PDM_MESH_ENTITY_VTX,
                                  &ptp_vtx, PDM_OWNERSHIP_BAD_VALUE); 
@@ -1431,6 +1396,9 @@ PDM_isosurface_test_utils_dist_vtk
 (
   PDM_isosurface_t *isos,
   int               id_iso,
+  double           *iso_vtx_fld,
+  double           *iso_edge_fld,
+  double           *iso_face_fld,
   PDM_MPI_Comm      comm
 )
 {
@@ -1544,11 +1512,30 @@ PDM_isosurface_test_utils_dist_vtk
                                            PDM_OWNERSHIP_USER);
   }
 
-  sprintf(out_name, "isosurface_3d_ngon_iso_edge_%d.vtk", id_iso);
+  sprintf(out_name, "iso_edge_id_%d.vtk", id_iso);
   PDM_dmesh_nodal_dump_vtk(iso_dmn, PDM_GEOMETRY_KIND_RIDGE, out_name);
+
+  const char *fld_name_vtx[]  = {"itp_vtx_fld"};
+  const char *fld_name_edge[] = {"itp_edge_fld"};
+  double **_iso_edge_fld = &iso_edge_fld;
+  PDM_dmesh_nodal_dump_vtk_with_field(iso_dmn, PDM_GEOMETRY_KIND_RIDGE, out_name,
+                                      1,
+                                      fld_name_vtx,
+                                     &iso_vtx_fld,
+                                      0, //TODO
+                                      fld_name_edge,
+                                     &_iso_edge_fld);
   if (dim==3) {
-    sprintf(out_name, "isosurface_3d_ngon_iso_%d.vtk", id_iso);
-    PDM_dmesh_nodal_dump_vtk(iso_dmn, PDM_GEOMETRY_KIND_SURFACIC, out_name);
+    const char *fld_name_face[] = {"itp_face_fld"};
+    double **_iso_face_fld = &iso_face_fld;
+    sprintf(out_name, "iso_face_id_%d.vtk", id_iso);
+    PDM_dmesh_nodal_dump_vtk_with_field(iso_dmn, PDM_GEOMETRY_KIND_SURFACIC, out_name,
+                                        1,
+                                        fld_name_vtx,
+                                       &iso_vtx_fld,
+                                        0, //TODO
+                                        fld_name_face,
+                                       &_iso_face_fld);
   }
 
   PDM_DMesh_nodal_free(iso_dmn);
@@ -1561,7 +1548,9 @@ PDM_isosurface_test_utils_part_vtk
   PDM_isosurface_t   *isos,
   int                 id_iso,
   int                 n_part,
-  double           ***iso_vtx_field,
+  double           **iso_vtx_fld,
+  double           **iso_edge_fld,
+  double           **iso_face_fld,
   PDM_MPI_Comm        comm
 )
 {
@@ -1580,6 +1569,20 @@ PDM_isosurface_test_utils_part_vtk
     PDM_g_num_t *iso_vtx_gnum  = NULL;
     int iso_n_vtx = PDM_isosurface_vtx_coord_get(isos, id_iso, i_part, &iso_vtx_coord, PDM_OWNERSHIP_KEEP);
     PDM_isosurface_ln_to_gn_get(isos, id_iso, i_part, PDM_MESH_ENTITY_VTX, &iso_vtx_gnum, PDM_OWNERSHIP_KEEP);
+
+    // > Compute isovalue tag
+    int    *vtx_isovalue_idx = NULL;
+    double *vtx_isovalue_tag = NULL;
+    int _n_isovalues = PDM_isosurface_isovalue_entity_idx_get(isos, id_iso, i_part, PDM_MESH_ENTITY_VTX,
+                                                             &vtx_isovalue_idx, PDM_OWNERSHIP_KEEP);
+    PDM_malloc(vtx_isovalue_tag, iso_n_vtx, double);
+    for (int i_isovalue=0; i_isovalue<_n_isovalues; ++i_isovalue) {
+      for (int i_entity=vtx_isovalue_idx[i_isovalue  ];
+               i_entity<vtx_isovalue_idx[i_isovalue+1]; ++i_entity) {
+        vtx_isovalue_tag[i_entity] = (double) (i_isovalue+1);
+      }
+    }
+
 
     // > Edge
     int         *iso_edge_vtx  = NULL;
@@ -1616,31 +1619,37 @@ PDM_isosurface_test_utils_part_vtk
     }
 
     // > Convert group into tag
-    int *iso_edge_tag1      = NULL;
-    int *iso_edge_tag2      = NULL;
-    int *iso_edge_tag1_gnum = NULL;
-    int *iso_edge_tag2_gnum = NULL;
+    double *iso_edge_tag1      = NULL;
+    double *iso_edge_tag2      = NULL;
+    PDM_calloc(iso_edge_tag1     , iso_n_edge, double);
+    PDM_calloc(iso_edge_tag2     , iso_n_edge, double);
     if (dim==3) {
       iso_edge_n_group = PDM_isosurface_group_get(isos, id_iso, i_part, PDM_MESH_ENTITY_EDGE,
                                                  &iso_edge_group_idx, &iso_edge_group_lnum, &iso_edge_group_gnum,
                                                   PDM_OWNERSHIP_KEEP);
-      PDM_calloc(iso_edge_tag1     , iso_n_edge, int);
-      PDM_calloc(iso_edge_tag2     , iso_n_edge, int);
-      PDM_calloc(iso_edge_tag1_gnum, iso_n_edge, int);
-      PDM_calloc(iso_edge_tag2_gnum, iso_n_edge, int);
       for (int i_group=0; i_group<iso_edge_n_group; ++i_group) {
         int i_beg_group = iso_edge_group_idx[i_group  ];
         int i_end_group = iso_edge_group_idx[i_group+1];
         for (int i_read=i_beg_group; i_read<i_end_group; ++i_read) {
           int         edge_lnum = iso_edge_group_lnum[i_read];
-          PDM_g_num_t edge_gnum = iso_edge_group_gnum[i_read];
-          if (iso_edge_tag1[edge_lnum-1]==0) {
-            iso_edge_tag1     [edge_lnum-1] = i_group+1;
-            iso_edge_tag1_gnum[edge_lnum-1] = (int) edge_gnum;
+          if (iso_edge_tag1[edge_lnum-1]<1.e-9) {
+            iso_edge_tag1     [edge_lnum-1] = (double) (i_group+1);
           }
-          iso_edge_tag2     [edge_lnum-1] = i_group+1;
-          iso_edge_tag2_gnum[edge_lnum-1] = (int) edge_gnum;
+          iso_edge_tag2     [edge_lnum-1] = (double) (i_group+1);
         }
+      }
+    }
+
+    // > Compute isovalue tag
+    int    *edge_isovalue_idx = NULL;
+    double *edge_isovalue_tag = NULL;
+    _n_isovalues = PDM_isosurface_isovalue_entity_idx_get(isos, id_iso, i_part, PDM_MESH_ENTITY_EDGE,
+                                                         &edge_isovalue_idx, PDM_OWNERSHIP_KEEP);
+    PDM_malloc(edge_isovalue_tag, iso_n_edge, double);
+    for (int i_isovalue=0; i_isovalue<_n_isovalues; ++i_isovalue) {
+      for (int i_entity=edge_isovalue_idx[i_isovalue  ];
+               i_entity<edge_isovalue_idx[i_isovalue+1]; ++i_entity) {
+        edge_isovalue_tag[i_entity] = (double) (i_isovalue+1);
       }
     }
 
@@ -1650,23 +1659,23 @@ PDM_isosurface_test_utils_part_vtk
     int         *iso_face_vtx_idx  = NULL;
     int         *iso_face_vtx      = NULL;
     PDM_g_num_t *iso_face_gnum     = NULL;
-    double      *iso_face_isovalue = NULL;
+    double      *face_isovalue_tag = NULL;
     if (dim==3) {
       iso_n_face = PDM_isosurface_connectivity_get(isos, id_iso, i_part, PDM_CONNECTIVITY_TYPE_FACE_VTX, &iso_face_vtx_idx, &iso_face_vtx, PDM_OWNERSHIP_KEEP);
       PDM_isosurface_ln_to_gn_get(isos, id_iso, i_part, PDM_MESH_ENTITY_FACE, &iso_face_gnum, PDM_OWNERSHIP_KEEP);
 
       int *isovalue_face_idx = NULL;
-      int _n_isovalues = PDM_isosurface_isovalue_entity_idx_get(isos,
-                                                                id_iso,
-                                                                i_part,
-                                                                PDM_MESH_ENTITY_FACE,
-                                                                &isovalue_face_idx,
-                                                                PDM_OWNERSHIP_KEEP);
+      _n_isovalues = PDM_isosurface_isovalue_entity_idx_get(isos,
+                                                            id_iso,
+                                                            i_part,
+                                                            PDM_MESH_ENTITY_FACE,
+                                                            &isovalue_face_idx,
+                                                            PDM_OWNERSHIP_KEEP);
 
-      PDM_malloc(iso_face_isovalue, iso_n_face, double);
+      PDM_malloc(face_isovalue_tag, iso_n_face, double);
       for (int i_isovalue = 0; i_isovalue < _n_isovalues; i_isovalue++) {
         for (int i_face = isovalue_face_idx[i_isovalue]; i_face < isovalue_face_idx[i_isovalue+1]; i_face++) {
-          iso_face_isovalue[i_face] = i_isovalue;
+          face_isovalue_tag[i_face] = i_isovalue+1;
         }
       }
     }
@@ -1676,76 +1685,68 @@ PDM_isosurface_test_utils_part_vtk
      */
     char filename[999];
     int n_fld = 0;
-    const char *edge_field_name [] = {"tag1", "tag1_gnum", "tag2", "tag2_gnum"};
-    const int  *edge_field_value[] = {iso_edge_tag1, iso_edge_tag1_gnum, iso_edge_tag2, iso_edge_tag2_gnum};
     if (dim==3) {
       n_fld = 4;
     }
-    sprintf(filename, "iso_edge_id_%i_part_%i_rank_%i.vtk", id_iso, i_part, i_rank);
-    PDM_vtk_write_std_elements(filename,
-                               iso_n_vtx,
-                               iso_vtx_coord,
-                               iso_vtx_gnum,
-                               PDM_MESH_NODAL_BAR2,
-                               iso_n_edge,
-                               iso_edge_vtx,
-                               iso_edge_gnum,
-                               n_fld,
-                               edge_field_name,
-                               edge_field_value);
+
 
     // > 3D ngon old version
-    // sprintf(out_name, "isosurface_3d_ngon_iso_edge_%d_part_%d.vtk", id_iso, i_rank*n_part + i_part);
-    // const char   *elt_field_name [] = {"i_isovalue", "i_group", "parent_face"};
-    // const double *elt_field_value[] = {iso_edge_isovalue, iso_edge_group, iso_parent_face[id_iso][i_part]};
+    sprintf(filename, "iso_edge_id_%i_part_%i_rank_%i.vtk", id_iso, i_part, i_rank);
 
-    // const char   *vtx_field_name [] = {"itp_field"};
-    // const double *vtx_field_value[] = {(const double *) iso_itp_field[id_iso][i_part]};
+    const char   *vtx_field_name [] = {"i_isovalue", "itp_field"};
+    const double *vtx_field_value[] = {vtx_isovalue_tag, (const double *) iso_vtx_fld[i_part]};
 
-    // PDM_vtk_write_std_elements_ho_with_vtx_field(out_name,
-    //                                              1,
-    //                                              iso_n_vtx,
-    //                                              iso_vtx_coord,
-    //                                              iso_vtx_ln_to_gn,
-    //                                              PDM_MESH_NODAL_BAR2,
-    //                                              iso_n_edge,
-    //                                              iso_edge_vtx,
-    //                                              iso_edge_ln_to_gn,
-    //                                              3,
-    //                                              elt_field_name,
-    //                                              elt_field_value,
-    //                                              1,
-    //                                              vtx_field_name,
-    //                                              vtx_field_value);
-    // PDM_free(iso_edge_isovalue);
-    // PDM_free(iso_edge_group   );
+    const char   *edge_field_name [] = {"i_isovalue", "i_group1", "i_group2", "itp_edge_fld"};
+    const double *edge_field_value[] = {edge_isovalue_tag, iso_edge_tag1, iso_edge_tag2, iso_edge_fld[i_part]};
+
+    PDM_vtk_write_std_elements_ho_with_vtx_field(filename,
+                                                 1,
+                                                 iso_n_vtx,
+                                                 iso_vtx_coord,
+                                                 iso_vtx_gnum,
+                                                 PDM_MESH_NODAL_BAR2,
+                                                 iso_n_edge,
+                                                 iso_edge_vtx,
+                                                 iso_edge_gnum,
+                                                 4,
+                                                 edge_field_name,
+                                                 edge_field_value,
+                                                 2,
+                                                 vtx_field_name,
+                                                 vtx_field_value);
 
     if (dim==3) {
       sprintf(filename, "iso_face_id_%i_part_%i_rank_%i.vtk", id_iso, i_part, i_rank);
-      double *_iso_vtx_field = NULL;
-      if (iso_vtx_field[id_iso]!=NULL) {
-        _iso_vtx_field = iso_vtx_field[id_iso][i_part];
-      }
-      PDM_vtk_write_polydata_field(filename,
-                                   iso_n_vtx,
-                                   iso_vtx_coord,
-                                   iso_vtx_gnum,
-                                   iso_n_face,
-                                   iso_face_vtx_idx,
-                                   iso_face_vtx,
-                                   iso_face_gnum,
-                                   NULL,
-                                   NULL,
-                                   "field",
-                                   _iso_vtx_field);
 
-      PDM_free(iso_edge_tag1);
-      PDM_free(iso_edge_tag2);
-      PDM_free(iso_edge_tag1_gnum);
-      PDM_free(iso_edge_tag2_gnum);
-      PDM_free(iso_face_isovalue);
-      PDM_free(fld_group_edge);
+      const char   *face_field_name [] = {"i_isovalue", "itp_field"};
+      const double *face_field_value[] = {face_isovalue_tag, iso_face_fld[i_part]};
+
+      int *elt_type = PDM_array_const_int(iso_n_face, PDM_MESH_NODAL_POLY_2D);
+      PDM_vtk_write_unstructured_grid(filename,
+                                      iso_n_vtx,
+                                      iso_vtx_coord,
+                                      iso_vtx_gnum,
+                                      iso_n_face,
+            (PDM_Mesh_nodal_elt_t *)  elt_type,
+                                      iso_face_vtx_idx,
+                                      iso_face_vtx,
+                                      iso_face_gnum,
+                                      2,
+                                      face_field_name,
+                                      face_field_value,
+                                      2,
+                                      vtx_field_name,
+                                      vtx_field_value);
+      PDM_free(elt_type);
+
     }
+    PDM_free( vtx_isovalue_tag);
+    PDM_free(edge_isovalue_tag);
+    PDM_free(face_isovalue_tag);
+
+    PDM_free(iso_edge_tag1);
+    PDM_free(iso_edge_tag2);
+    PDM_free(fld_group_edge);
   }
 
 }

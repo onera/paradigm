@@ -456,6 +456,7 @@ int main
   double  **iso_itp_dfield_edge = NULL;
   double ***iso_itp_field_vtx   = NULL;
   double ***iso_itp_field_edge  = NULL;
+
   if (n_part > 0) {
     PDM_malloc(iso_itp_field_vtx  , n_iso, double **);
     PDM_malloc(iso_itp_field_edge , n_iso, double **);
@@ -493,12 +494,18 @@ int main
     for (int i_iso = 0; i_iso < n_iso; i_iso++) {
 
       if (n_part > 0) {
-        for (int i_part = 0; i_part < n_part; i_part++) {
-          PDM_isosurface_test_utils_part_vtk(isos, i_iso, i_part, iso_itp_field_vtx, comm);
-        }
+        PDM_isosurface_test_utils_part_vtk(isos, i_iso, n_part,
+                                           iso_itp_field_vtx [i_iso],
+                                           iso_itp_field_edge[i_iso],
+                                           NULL,
+                                           comm);
       }
       else {
-        PDM_isosurface_test_utils_dist_vtk(isos, i_iso, comm);
+        PDM_isosurface_test_utils_dist_vtk(isos, i_iso, 
+                                           iso_itp_dfield_vtx [i_iso],
+                                           iso_itp_dfield_edge[i_iso],
+                                           NULL,
+                                           comm);
       }
 
     }

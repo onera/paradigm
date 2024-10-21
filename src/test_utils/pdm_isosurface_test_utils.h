@@ -190,6 +190,9 @@ PDM_isosurface_test_utils_dist_vtk
 (
   PDM_isosurface_t *isos,
   int               i_iso,
+  double           *iso_vtx_fld,
+  double           *iso_edge_fld,
+  double           *iso_face_fld,
   PDM_MPI_Comm      comm
 );
 
@@ -203,11 +206,13 @@ PDM_isosurface_test_utils_dist_vtk
 void
 PDM_isosurface_test_utils_part_vtk
 (
-  PDM_isosurface_t   *isos,
-  int                 id_iso,
-  int                 n_part,
-  double           ***iso_vtx_field,
-  PDM_MPI_Comm        comm
+  PDM_isosurface_t  *isos,
+  int                id_iso,
+  int                n_part,
+  double           **iso_vtx_fld,
+  double           **iso_edge_fld,
+  double           **iso_face_fld,
+  PDM_MPI_Comm       comm
 );
 
 
