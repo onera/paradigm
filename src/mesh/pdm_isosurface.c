@@ -2573,6 +2573,7 @@ _build_ptp_dist_nodal
   PDM_mesh_entities_t  entity_type
 )
 {
+  _isosurface_t *_iso = &isos->isosurfaces[id_iso];
   if (_iso->compute_ptp[entity_type] == PDM_FALSE) {
     return;
   }
@@ -2587,7 +2588,6 @@ _build_ptp_dist_nodal
   PDM_MPI_Comm_rank(isos->comm, &i_rank);
   PDM_MPI_Comm_size(isos->comm, &n_rank);
 
-  _isosurface_t *_iso = &isos->isosurfaces[id_iso];
 
   assert(isos->dmesh_nodal != NULL);
 
