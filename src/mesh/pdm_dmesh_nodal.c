@@ -1416,12 +1416,14 @@ PDM_dmesh_nodal_dump_vtk_with_field
   int *delt_group_idx = NULL;
   int *delt_group     = NULL;
   double **field = NULL;
-  if (geom_kind == PDM_GEOMETRY_KIND_RIDGE) {
-    dmne = dmn->ridge;
-  } else if (geom_kind == PDM_GEOMETRY_KIND_SURFACIC && dmn->mesh_dimension == 3) {
-    dmne = dmn->surfacic;
-  } else if (geom_kind == PDM_GEOMETRY_KIND_CORNER) {
+  if (geom_kind == PDM_GEOMETRY_KIND_CORNER) {
     dmne = dmn->corner;
+  } else if (geom_kind == PDM_GEOMETRY_KIND_RIDGE) {
+    dmne = dmn->ridge;
+  } else if (geom_kind == PDM_GEOMETRY_KIND_SURFACIC) {
+    dmne = dmn->surfacic;
+  } else {
+    dmne = dmn->volumic;
   }
 
   PDM_g_num_t *distrib_elt = NULL;
@@ -1646,7 +1648,7 @@ PDM_dmesh_nodal_dump_vtk_with_field
                                                    pcell_vtx,
                                                    delmt_ln_to_gn,
                                                    n_fld_elmt+1,
-                                 (const char   **) &_fld_name_elmt,
+                                 (const char   **) _fld_name_elmt,
                                  (const double **) pfield_elmt,
                                                    n_fld_vtx,
                                  (const char   **) fld_name_vtx,

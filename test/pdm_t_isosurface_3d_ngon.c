@@ -16,7 +16,6 @@
 #include "pdm_array.h"
 #include "pdm_reader_gamma.h"
 #include "pdm_dcube_nodal_gen.h"
-#include "pdm_poly_vol_gen.h"
 
 #include "pdm_isosurface.h"
 #include "pdm_multipart.h"

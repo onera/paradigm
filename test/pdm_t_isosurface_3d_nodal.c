@@ -15,7 +15,6 @@
 #include "pdm_array.h"
 
 #include "pdm_isosurface.h"
-#include "pdm_dcube_nodal_gen.h"
 #include "pdm_generate_mesh.h"
 
 #include "pdm_isosurface_test_utils.h"
@@ -60,8 +59,8 @@ int main(int argc, char *argv[])
   PDM_Mesh_nodal_elt_t  elt_type       = PDM_MESH_NODAL_TETRA4;
   PDM_g_num_t           n_vtx_seg      = 10;
   int                   randomize      = 0;
-  int                   use_part_mesh  = 0;
-  int                   generate_edges = 0;
+  int                   use_part_mesh  = 0; // garder?
+  int                   generate_edges = 0; // garder?
   int                   local          = 0;
 
   PDM_isosurface_test_utils_read_args(argc,
@@ -83,9 +82,8 @@ int main(int argc, char *argv[])
   /*
    *  Generate mesh
    */
-  PDM_dcube_nodal_t     *dcube_nodal = NULL;
-  PDM_dmesh_nodal_t     *dmn         = NULL;
-  PDM_part_mesh_nodal_t *pmn         = NULL;
+  PDM_dmesh_nodal_t     *dmn = NULL;
+  PDM_part_mesh_nodal_t *pmn = NULL;
 
   double  *iso_dfield      = NULL;
   double  *itp_dfield_vtx  = NULL;
@@ -96,23 +94,17 @@ int main(int argc, char *argv[])
   double **itp_field_face  = NULL;
   double **itp_field_cell  = NULL;
 
+  PDM_isosurface_test_utils_gen_mesh_nodal(comm,
+                                           mesh_name,
+                                           n_part,
+                                           n_vtx_seg,
+                                           randomize,
+                                           elt_type,
+                                           &pmn,
+                                           &dmn);
+
   if (n_part==0) {
     // Block-distributed
-    dcube_nodal = PDM_dcube_nodal_gen_create(comm,
-                                             n_vtx_seg,
-                                             n_vtx_seg,
-                                             n_vtx_seg,
-                                             1.,
-                                             0.,
-                                             0.,
-                                             0.,
-                                             elt_type,
-                                             1,
-                                             PDM_OWNERSHIP_KEEP);
-    PDM_dcube_nodal_gen_build(dcube_nodal);
-
-    dmn = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube_nodal);
-
     int     dn_vtx     = PDM_DMesh_nodal_n_vtx_get(dmn);
     double *dvtx_coord = PDM_DMesh_nodal_coord_get(dmn, PDM_OWNERSHIP_BAD_VALUE);
 
@@ -138,21 +130,6 @@ int main(int argc, char *argv[])
   }
   else {
     // Partitioned
-    pmn = PDM_generate_mesh_parallelepiped(comm,
-                                           elt_type,
-                                           1,
-                                           NULL,
-                                           -0.5,
-                                           -0.5,
-                                           -0.5,
-                                           1.,
-                                           1.,
-                                           1.,
-                                           n_vtx_seg,
-                                           n_vtx_seg,
-                                           n_vtx_seg,
-                                           n_part,
-                                           PDM_SPLIT_DUAL_WITH_PARMETIS); // TODO: Allow various partitioning ?
     
     // > Fields initialisation
     PDM_malloc(iso_field     , n_part, double *);
@@ -170,14 +147,14 @@ int main(int argc, char *argv[])
       PDM_isosurface_test_utils_compute_itp_field(n_vtx, vtx_coord, itp_field_vtx[i_part]);
 
       int n_face = PDM_part_mesh_nodal_n_elmts_get(pmn, PDM_GEOMETRY_KIND_SURFACIC, i_part);
-      PDM_g_num_t *face_gnum = PDM_part_mesh_nodal_g_num_get(pmn, 0, i_part, PDM_OWNERSHIP_KEEP);
+      PDM_g_num_t *face_gnum = PDM_part_mesh_nodal_g_num_get_from_part(pmn, PDM_GEOMETRY_KIND_SURFACIC, i_part, PDM_OWNERSHIP_KEEP);
       PDM_malloc(itp_field_face[i_part], n_face, double);
       for (int i_face=0; i_face<n_face; ++i_face) {
         itp_field_face[i_part][i_face] = (double) face_gnum[i_face];
       }
 
       int n_cell = PDM_part_mesh_nodal_n_elmts_get(pmn, PDM_GEOMETRY_KIND_VOLUMIC, i_part);
-      PDM_g_num_t *cell_gnum = PDM_part_mesh_nodal_g_num_get(pmn, 0, i_part, PDM_OWNERSHIP_KEEP);
+      PDM_g_num_t *cell_gnum = PDM_part_mesh_nodal_g_num_get_from_part(pmn, PDM_GEOMETRY_KIND_VOLUMIC, i_part, PDM_OWNERSHIP_KEEP);
       PDM_malloc(itp_field_cell[i_part], n_cell, double);
       for (int i_cell=0; i_cell<n_cell; ++i_cell) {
         itp_field_cell[i_part][i_cell] = (double) cell_gnum[i_cell];
@@ -378,7 +355,7 @@ int main(int argc, char *argv[])
     PDM_free(iso_itp_field_face);
   }
   else {
-    PDM_dcube_nodal_gen_free(dcube_nodal);
+    PDM_DMesh_nodal_free(dmn);
 
     for (int i_iso = 0; i_iso < n_iso; i_iso++) {
       PDM_free(iso_itp_dfield_vtx [i_iso]);

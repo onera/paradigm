@@ -28,6 +28,7 @@
 #include "pdm.h"
 #include "pdm_mpi.h"
 #include "pdm_priv.h"
+#include "pdm_error.h"
 
 #include "pdm_logging.h"
 
@@ -36,8 +37,7 @@
 
 #include "pdm_array.h"
 
-// #include "pdm_multipart.h"
-// #include "pdm_multipart_priv.h"
+#include "pdm_multipart.h"
 
 #include "pdm_poly_vol_gen.h"
 #include "pdm_partitioning_algorithm.h"
@@ -849,6 +849,92 @@ PDM_isosurface_test_utils_gen_mesh
                                      surface_face_ln_to_gn,
                                      PDM_OWNERSHIP_USER);
     }
+  }
+}
+
+
+void
+PDM_isosurface_test_utils_gen_mesh_nodal
+(
+  PDM_MPI_Comm            comm,
+  const char             *filename,
+  int                     n_part,
+  PDM_g_num_t             n_vtx_seg,
+  int                     randomize,
+  PDM_Mesh_nodal_elt_t    elt_type,
+  PDM_part_mesh_nodal_t **out_pmn,
+  PDM_dmesh_nodal_t     **out_dmn
+)
+{
+  int dim = PDM_Mesh_nodal_elt_dim_get(elt_type);
+
+  PDM_dmesh_nodal_t *dmn = NULL;
+
+  if (filename != NULL) {
+    dmn = PDM_reader_gamma_dmesh_nodal(comm,
+                                       filename,
+                                       0,
+                                       0);
+  }
+
+  else if (elt_type == PDM_MESH_NODAL_POLY_3D) {
+    PDM_error(__FILE__, __LINE__, 0, "Poly3d not implemented yet\n");
+  }
+
+  else {
+    int n_vtx_seg_k = 1;
+    if (dim==3) {
+      n_vtx_seg_k = n_vtx_seg;
+    }
+    PDM_dcube_nodal_t *dcube = PDM_dcube_nodal_gen_create(comm,
+                                                          n_vtx_seg,
+                                                          n_vtx_seg,
+                                                          n_vtx_seg_k,
+                                                          1,
+                                                          0,
+                                                          0,
+                                                          0,
+                                                          elt_type,
+                                                          1,
+                                                          PDM_OWNERSHIP_USER);
+
+    PDM_dcube_nodal_gen_random_factor_set(dcube, (double) randomize);
+
+    PDM_dcube_nodal_gen_build(dcube);
+
+    dmn = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube);
+
+    PDM_dcube_nodal_gen_free(dcube);
+  }
+
+  assert(dmn != NULL);
+
+  PDM_dmesh_nodal_generate_distribution(dmn);
+
+  if (n_part > 0) {
+    int n_domain = 1;
+    PDM_multipart_t *mpart = PDM_multipart_create(n_domain,
+                                                  &n_part,
+                                                  PDM_FALSE,
+                                                  PDM_SPLIT_DUAL_WITH_HILBERT,
+                                                  PDM_PART_SIZE_HOMOGENEOUS,
+                                                  NULL,
+                                                  comm,
+                                                  PDM_OWNERSHIP_KEEP);
+
+    PDM_multipart_dmesh_nodal_set(mpart, 0, dmn);
+    PDM_multipart_compute(mpart);
+
+    PDM_multipart_get_part_mesh_nodal(mpart,
+                                      0,
+                                      out_pmn,
+                                      PDM_OWNERSHIP_USER);
+
+    PDM_DMesh_nodal_free(dmn);
+    PDM_multipart_free(mpart);
+  }
+  else {
+    *out_dmn = dmn;
   }
 }
 

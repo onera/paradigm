@@ -12,7 +12,6 @@
 #include "pdm_error.h"
 
 #include "pdm_isosurface.h"
-#include "pdm_dcube_nodal_gen.h"
 #include "pdm_generate_mesh.h"
 
 #include "pdm_isosurface_test_utils.h"
@@ -79,50 +78,30 @@ int main(int argc, char *argv[])
   /*
    *  Generate mesh
    */
-  PDM_dcube_nodal_t     *dcube_nodal = NULL;
-  PDM_dmesh_nodal_t     *dmn         = NULL;
-  PDM_part_mesh_nodal_t *pmn         = NULL;
+  PDM_dmesh_nodal_t     *dmn = NULL;
+  PDM_part_mesh_nodal_t *pmn = NULL;
+
+  PDM_isosurface_test_utils_gen_mesh_nodal(comm,
+                                           mesh_name,
+                                           n_part,
+                                           n_vtx_seg,
+                                           randomize,
+                                           elt_type,
+                                           &pmn,
+                                           &dmn);
+
   if (n_part==0) {
     // Block-distributed
-    dcube_nodal = PDM_dcube_nodal_gen_create(comm,
-                                             n_vtx_seg,
-                                             n_vtx_seg,
-                                             0,
-                                             1.,
-                                             0.,
-                                             0.,
-                                             0.,
-                                             elt_type,
-                                             1,
-                                             PDM_OWNERSHIP_KEEP);
-    PDM_dcube_nodal_gen_build(dcube_nodal);
-
-    dmn = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube_nodal);
   }
   else {
     // Partitioned
-    pmn  = PDM_generate_mesh_rectangle(comm,
-                                       elt_type,
-                                       1,
-                                       NULL,
-                                       0.,
-                                       0.,
-                                       0.,
-                                       1.,
-                                       1.,
-                                       n_vtx_seg,
-                                       n_vtx_seg,
-                                       n_part,
-                                       PDM_SPLIT_DUAL_WITH_PARMETIS); // TODO: Allow various partitioning ?
   }
 
 
   /*
    *  Creating isosurface object
    */
-  PDM_isosurface_t *isos = PDM_isosurface_create(comm,
-                                                 2/*,
-                                                 PDM_MESH_NODAL_BAR2*/);
+  PDM_isosurface_t *isos = PDM_isosurface_create(comm, 2);
   if (n_part==0) {
     PDM_isosurface_dmesh_nodal_set(isos, dmn);
   } else {
@@ -318,7 +297,7 @@ int main(int argc, char *argv[])
    */
   PDM_isosurface_free(isos);
   if (n_part==0) {
-    PDM_dcube_nodal_gen_free(dcube_nodal);
+    PDM_DMesh_nodal_free(dmn);
   } else {
     PDM_part_mesh_nodal_free(pmn);
   }

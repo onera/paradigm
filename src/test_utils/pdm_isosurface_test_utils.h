@@ -108,6 +108,26 @@ PDM_isosurface_test_utils_gen_mesh
 
 /**
  *
+ * \brief Mesh generation for nodal cases
+ *
+ */
+
+void
+PDM_isosurface_test_utils_gen_mesh_nodal
+(
+  PDM_MPI_Comm            comm,
+  const char             *filename,
+  int                     n_part,
+  PDM_g_num_t             n_vtx_seg,
+  int                     randomize,
+  PDM_Mesh_nodal_elt_t    elt_type,
+  PDM_part_mesh_nodal_t **out_pmn,
+  PDM_dmesh_nodal_t     **out_dmn
+);
+
+
+/**
+ *
  * \brief Compute iso field from vertex coordinates
  *
  */
