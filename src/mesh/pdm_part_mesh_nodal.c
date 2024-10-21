@@ -1168,7 +1168,11 @@ PDM_part_mesh_nodal_dump_vtk
       int *_elt_to_entity = PDM_part_mesh_nodal_elmts_section_elmt_to_entity_get(pmne, id_section, i_part, PDM_OWNERSHIP_BAD_VALUE);
 
       for (int i_elt = 0; i_elt < n_elt; i_elt++) {
-        elt_g_num  [idx] = g_num[i_elt];
+        if (g_num != NULL) {
+          elt_g_num  [idx] = g_num[i_elt];
+        } else {
+          elt_g_num  [idx] = -1;
+        }
         elt_type   [idx] = t_elt;
         elt_section[idx] = i_section;
         if (_elt_to_entity != NULL) {
