@@ -814,24 +814,22 @@ PDM_isosurface_test_utils_gen_mesh
                                        PDM_OWNERSHIP_USER);
       }
       else {
-        if (dim==3) {
-          int *face_vtx_idx = NULL;
-          int *face_vtx     = NULL;
-          PDM_multipart_part_connectivity_get(*mpart,
-                                              0,
-                                              i_part,
-                                              PDM_CONNECTIVITY_TYPE_FACE_VTX,
-                                              &face_vtx_idx,
-                                              &face_vtx,
-                                              PDM_OWNERSHIP_KEEP);
-          assert(face_vtx != NULL);
-          PDM_part_mesh_connectivity_set(pmesh,
-                                         i_part,
-                                         PDM_CONNECTIVITY_TYPE_FACE_VTX,
-                                         face_vtx,
-                                         face_vtx_idx,
-                                         PDM_OWNERSHIP_USER);
-        }
+        int *face_vtx_idx = NULL;
+        int *face_vtx     = NULL;
+        PDM_multipart_part_connectivity_get(*mpart,
+                                            0,
+                                            i_part,
+                                            PDM_CONNECTIVITY_TYPE_FACE_VTX,
+                                            &face_vtx_idx,
+                                            &face_vtx,
+                                            PDM_OWNERSHIP_KEEP);
+        assert(face_vtx != NULL);
+        PDM_part_mesh_connectivity_set(pmesh,
+                                       i_part,
+                                       PDM_CONNECTIVITY_TYPE_FACE_VTX,
+                                       face_vtx,
+                                       face_vtx_idx,
+                                       PDM_OWNERSHIP_USER);
       }
 
       double *vtx_coord = NULL;
