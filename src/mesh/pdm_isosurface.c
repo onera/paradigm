@@ -620,7 +620,6 @@ _compute_iso_field
           PDM_malloc(isos->extract_field[i_part], n_extract_vtx, double);
 
           for (int i = 0; i < n_extract_vtx; i++) {
-            int i_parent = isos->extract_vtx_lnum[i_part][i];
             int i_parent = isos->extract_vtx_lnum[i_part][i] - 1;
             isos->extract_field[i_part][i] = _iso->field[i_part][i_parent];
           }
@@ -1657,48 +1656,52 @@ _triangulate
                                                                  i_part,
                                                                 &isos->extract_vtx_coord[i_part],
                                                                  PDM_OWNERSHIP_KEEP);
-    PDM_extract_part_parent_ln_to_gn_get(isos->extrp,
-                                         i_part,
-                                         PDM_MESH_ENTITY_VTX,
-                                        &isos->extract_vtx_gnum[i_part],
-                                         PDM_OWNERSHIP_KEEP);
+    PDM_part_mesh_entity_ln_to_gn_get(isos->extract_pmesh,
+                                      i_part,
+                                      PDM_MESH_ENTITY_VTX,
+                                     &isos->extract_vtx_gnum[i_part],
+                                      PDM_OWNERSHIP_USER);
 
     PDM_g_num_t *face_parent_gnum = NULL;
-    int n_face = PDM_extract_part_parent_ln_to_gn_get(isos->extrp,
-                                                      i_part,
-                                                      PDM_MESH_ENTITY_FACE,
-                                                     &face_parent_gnum,
-                                                      PDM_OWNERSHIP_KEEP);
+    int n_face = PDM_part_mesh_n_entity_get(isos->extract_pmesh,
+                                            i_part,
+                                            PDM_MESH_ENTITY_FACE);
+    PDM_part_mesh_entity_ln_to_gn_get(isos->extract_pmesh,
+                                      i_part,
+                                      PDM_MESH_ENTITY_FACE,
+                                     &face_parent_gnum,
+                                      PDM_OWNERSHIP_USER);
+
 
 
     PDM_bool_t owner_face_vtx = PDM_FALSE;
     int *face_vtx_idx = NULL;
     int *face_vtx     = NULL;
-    PDM_extract_part_connectivity_get(isos->extrp,
-                                      i_part,
-                                      PDM_CONNECTIVITY_TYPE_FACE_VTX,
-                                     &face_vtx,
-                                     &face_vtx_idx,
-                                      PDM_OWNERSHIP_KEEP);
+    PDM_part_mesh_connectivity_get(isos->extract_pmesh,
+                                   i_part,
+                                   PDM_CONNECTIVITY_TYPE_FACE_VTX,
+                                  &face_vtx,
+                                  &face_vtx_idx,
+                                   PDM_OWNERSHIP_KEEP);
     if (face_vtx_idx == NULL) {
       owner_face_vtx = PDM_TRUE;
 
       int *face_edge = NULL;
-      PDM_extract_part_connectivity_get(isos->extrp,
-                                        i_part,
-                                        PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                       &face_edge,
-                                       &face_vtx_idx,
-                                        PDM_OWNERSHIP_KEEP);
+      PDM_part_mesh_connectivity_get(isos->extract_pmesh,
+                                     i_part,
+                                     PDM_CONNECTIVITY_TYPE_FACE_EDGE,
+                                    &face_edge,
+                                    &face_vtx_idx,
+                                     PDM_OWNERSHIP_KEEP);
 
       int *edge_vtx_idx = NULL;
       int *edge_vtx     = NULL;
-      PDM_extract_part_connectivity_get(isos->extrp,
-                                        i_part,
-                                        PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                       &edge_vtx,
-                                       &edge_vtx_idx,
-                                        PDM_OWNERSHIP_KEEP);
+      PDM_part_mesh_connectivity_get(isos->extract_pmesh,
+                                     i_part,
+                                     PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                    &edge_vtx,
+                                    &edge_vtx_idx,
+                                     PDM_OWNERSHIP_KEEP);
 
       PDM_compute_face_vtx_from_face_and_edge(n_face,
                                               face_vtx_idx,
@@ -1728,17 +1731,15 @@ _triangulate
     int          n_group_face;
     int         *group_face;
     PDM_g_num_t *group_face_ln_to_gn;
-    PDM_g_num_t *group_face_parent_ln_to_gn;
     for (int i_group=0; i_group<isos->n_group_face; ++i_group) {
-      PDM_extract_part_group_get(isos->extrp,
-                                 PDM_BOUND_TYPE_FACE,
-                                 i_part,
-                                 i_group,
-                                 &n_group_face,
-                                 &group_face,
-                                 &group_face_ln_to_gn,
-                                 &group_face_parent_ln_to_gn,
-                                 PDM_OWNERSHIP_KEEP);
+      PDM_part_mesh_bound_get(isos->extract_pmesh,
+                              i_part,
+                              i_group,
+                              PDM_BOUND_TYPE_FACE,
+                             &n_group_face,
+                             &group_face,
+                             &group_face_ln_to_gn,
+                              PDM_OWNERSHIP_KEEP);
 
       for (int i_elmt=0; i_elmt<n_group_face; ++i_elmt) {
         assert(face_tag[group_face[i_elmt]-1]==0);
@@ -3141,7 +3142,7 @@ _isosurface_compute
     /* If nodal with sections other than TRIA3 and TETRA4, fall back to ngon */
     _ngonize(isos);
   }
-  else if (isos->entry_mesh_dim == 2) {
+  if (!isosurface_is_nodal(isos) && isos->entry_mesh_dim == 2) {
     /* If ngon 2d, triangulate polygons and use Marching Triangles contouring algorithm */
     _triangulate(isos);
   }
