@@ -205,7 +205,7 @@ def run(n_vtx_seg, elt_type, n_step, visu, local, part_method):
   pparent     = []
   pweight     = []
   for i_part in range(n_part):
-    vtx_parent_idx, vtx_parent_weight = isos.vtx_parent_weight_get(id_iso_func, i_part)
+    vtx_parent_idx, vtx_parent_weight = isos.parent_weight_get(id_iso_func, i_part, PDM._PDM_MESH_ENTITY_VTX)
     pparent_idx.append(vtx_parent_idx)
     pweight    .append(vtx_parent_weight)
 
