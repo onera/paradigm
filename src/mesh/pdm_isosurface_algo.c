@@ -279,7 +279,7 @@ _build_active_edges
   int                    *n_crossings
 )
 {
-  int debug = 0;
+  int enable_debug = 0;
 
   *n_crossings = 0;
 
@@ -357,7 +357,7 @@ _build_active_edges
   /**
    * Second loop to fill
    */
-  if (debug==1) log_trace("n_active_edges = %d\n", key_idx[max_key]);
+  if (enable_debug==1) log_trace("n_active_edges = %d\n", key_idx[max_key]);
   int *key_edge  = NULL;
   int *_edge_vtx = NULL;
   PDM_malloc( key_edge, key_idx[max_key]  , int);
@@ -453,7 +453,7 @@ _build_active_edges
         elt_edge[i_section][n_pair*i_elt+i_pair] = edge_id;
       } // End of loop on pairs
     } // End of loop on elements
-    if (debug==1) {
+    if (enable_debug==1) {
       log_trace("i_section = %d\n", i_section);
       log_trace("\t (*n_edge) = %d\n", (*n_edge));
       PDM_log_trace_array_int(elt_edge[i_section], n_pair*n_elt      , "\t elt_edge[i_section] ::");
@@ -481,7 +481,7 @@ _build_active_edges
   PDM_array_reset_int(_edge_count_bnd_tag, *n_edge, 0);
   PDM_array_reset_int(_edge_count_parent , *n_edge, 0);
   
-  if (debug==1) {
+  if (enable_debug==1) {
     log_trace("n_bnd_tag_tot = %d\n", n_bnd_tag_tot);
     PDM_log_trace_array_int(_edge_count_bnd_tag,   key_idx[max_key], "_edge_count_bnd_tag ::");
     log_trace("n_parent_tot = %d\n", n_parent_tot);
@@ -538,7 +538,7 @@ _build_active_edges
       } // End of loop on pairs
     } // End of loop on elements
    
-    if (debug==1) {
+    if (enable_debug==1) {
       PDM_log_trace_array_int(_edge_count_bnd_tag , *n_edge     , "_edge_count_bnd_tag ::");
       PDM_log_trace_array_int(_edge_count_parent  , *n_edge     , "_edge_count_parent  ::");
       PDM_log_trace_array_int(_edge_parent        , n_parent_tot, "_edge_parent        ::");
@@ -592,8 +592,7 @@ _build_active_faces
 {
   // TODO: simplify this routine since we decided that there will be only tetra ??
 
-  int debug      = 0;
-  // int debug_loop = 0;
+  int enable_debug = 0;
 
   // > Prepare edge hash table
   const int max_key = 1024;
@@ -649,7 +648,7 @@ _build_active_faces
       tetra_n_face_tot++;
     } // End of loop on faces
   } // End of loop on elements
-  if (debug==1) log_trace("\tetra_n_face_tot = %d\n", tetra_n_face_tot);
+  if (enable_debug==1) log_trace("\tetra_n_face_tot = %d\n", tetra_n_face_tot);
 
 
   /* Set up index and reset counter */
@@ -662,8 +661,8 @@ _build_active_faces
   int *key_face = NULL;
   PDM_malloc(key_face, key_idx[max_key], int);
 
-  if (debug==1) log_trace("n_active_faces = %d\n", key_idx[max_key]);
-  if (debug==1) log_trace("face_vtx_size  = %d\n", s_face_vtx);
+  if (enable_debug==1) log_trace("n_active_faces = %d\n", key_idx[max_key]);
+  if (enable_debug==1) log_trace("face_vtx_size  = %d\n", s_face_vtx);
   int *_face_vtx_idx = NULL;
   int *_face_vtx     = NULL;
   PDM_malloc(_face_vtx_idx, key_idx[max_key] + 1, int);
@@ -750,12 +749,12 @@ _build_active_faces
 
     } // End of loop on faces
   } // End of loop on elements
-  if (debug==1) {
+  if (enable_debug==1) {
     PDM_log_trace_array_int(_elt_face, tetra_n_face_tot, "elt_face ::");
   }
   PDM_free(key_face);
 
-  if (debug==1) {
+  if (enable_debug==1) {
     int _face_vtx_size = _face_vtx_idx[key_idx[max_key]];
     PDM_log_trace_array_int(_face_parent_count, key_idx[max_key]  , "_face_parent_count ::");
     PDM_log_trace_array_int(_face_vtx_idx     , key_idx[max_key]+1, "_face_vtx_idx      ::");
@@ -770,7 +769,7 @@ _build_active_faces
   int n_parent_tot  = _face_parent_idx[*n_face];
   int *_face_parent = PDM_array_zeros_int(n_parent_tot);
   PDM_array_reset_int(_face_parent_count, *n_face, 0);
-  if (debug==1) {
+  if (enable_debug==1) {
     log_trace("n_parent_tot = %d\n", n_parent_tot);
     PDM_log_trace_array_int(_face_parent_count, key_idx[max_key], "_face_parent_count ::");
     PDM_log_trace_array_int(_face_parent_idx  , *n_face+1       , "_face_parent_idx   ::");
@@ -798,7 +797,7 @@ _build_active_faces
   } // End of loop on elements
 
 
-  if (debug==1) {
+  if (enable_debug==1) {
     PDM_log_trace_array_int(_face_parent_count, *n_face     , "_face_parent_count ::");
     PDM_log_trace_array_int(_face_parent      , n_parent_tot, "_face_parent       ::");
   }
@@ -841,7 +840,7 @@ _build_iso_vtx
         int         **out_isovalue_vtx_idx
 )
 {
-  int debug = 0;
+  int enable_debug = 0;
 
   /**
    * Count number of iso vertices on entry mesh vertices
@@ -956,7 +955,7 @@ _build_iso_vtx
 
   free(edge_n_child);
 
-  if (debug==1) {
+  if (enable_debug==1) {
     int n_parent_tot = iso_vtx_parent_idx[iso_n_vtx];
     log_trace("\n");
     PDM_log_trace_array_int (iso_vtx_parent_idx ,   iso_n_vtx    , "iso_vtx_parent_idx ::");
@@ -1014,8 +1013,8 @@ _contouring_triangles
   int         **out_iso_edge_parent
 )
 {
-  int debug      = 0;
-  int debug_loop = 0;
+  int enable_debug = 0;
+  int debug_loop   = 0;
 
   int ngon_2d = (elt_face != NULL);
 
@@ -1104,9 +1103,9 @@ _contouring_triangles
       }
     }
   } // End of loop on elements
-  if (debug==1) log_trace("iso_n_edge         = %d\n", iso_n_edge);
-  if (debug==1) log_trace("iso_n_edge_bnd_tag = %d\n", iso_n_edge_bnd_tag);
-  if (debug==1) log_trace("iso_n_edge_parent  = %d\n", iso_n_edge_parent);
+  if (enable_debug==1) log_trace("iso_n_edge         = %d\n", iso_n_edge);
+  if (enable_debug==1) log_trace("iso_n_edge_bnd_tag = %d\n", iso_n_edge_bnd_tag);
+  if (enable_debug==1) log_trace("iso_n_edge_parent  = %d\n", iso_n_edge_parent);
 
 
   /* Allocate */
@@ -1134,9 +1133,9 @@ _contouring_triangles
   iso_n_edge_bnd_tag = *out_iso_n_edge_bnd_tag;
   iso_n_edge_parent  = *out_iso_n_edge_parent;
 
-  if (debug==1) log_trace("iso_n_edge         = %d\n", iso_n_edge       );
-  if (debug==1) log_trace("iso_n_edge_bnd_tag = %d\n", iso_n_edge_bnd_tag);
-  if (debug==1) log_trace("iso_n_edge_parent  = %d\n", iso_n_edge_parent);
+  if (enable_debug==1) log_trace("iso_n_edge         = %d\n", iso_n_edge       );
+  if (enable_debug==1) log_trace("iso_n_edge_bnd_tag = %d\n", iso_n_edge_bnd_tag);
+  if (enable_debug==1) log_trace("iso_n_edge_parent  = %d\n", iso_n_edge_parent);
 
 
   /**
@@ -1410,7 +1409,7 @@ _contouring_triangles
   *out_iso_edge_parent_idx  = iso_edge_parent_idx;
   *out_iso_edge_parent      = iso_edge_parent;
 
-  if (debug==1) {
+  if (enable_debug==1) {
     log_trace("\n");
     log_trace("iso_n_edge = %d\n", iso_n_edge);
     PDM_log_trace_array_int(iso_edge_vtx, 2*iso_n_edge, "iso_edge_vtx ::");
@@ -1459,8 +1458,8 @@ _contouring_tetrahedra
   int         **out_iso_face_parent
 )
 {
-  int debug      = 1;
-  int debug_loop = 0;
+  int enable_debug = 0;
+  int debug_loop   = 0;
   // PDM_UNUSED(elt_gnum);
   // PDM_UNUSED(face_vtx_idx);
   // PDM_UNUSED(face_vtx);
@@ -1478,7 +1477,7 @@ _contouring_tetrahedra
   int iso_n_face        = *out_iso_n_face;
   int iso_n_face_parent = 0;
   
-  if (debug) log_trace("iso_n_face = %d\n", iso_n_face);
+  if (enable_debug) log_trace("iso_n_face = %d\n", iso_n_face);
   
   for (int i_elt = 0; i_elt < n_elt; i_elt++) {
     if (debug_loop==1) log_trace("i_elt = %d\n", i_elt);
@@ -1550,8 +1549,8 @@ _contouring_tetrahedra
     }
 
   } // End of loop on elements
-  if (debug==1) log_trace("iso_n_face        = %d\n", iso_n_face);
-  if (debug==1) log_trace("iso_n_face_parent = %d\n", iso_n_face_parent);
+  if (enable_debug==1) log_trace("iso_n_face        = %d\n", iso_n_face);
+  if (enable_debug==1) log_trace("iso_n_face_parent = %d\n", iso_n_face_parent);
 
 
 
@@ -1562,10 +1561,10 @@ _contouring_tetrahedra
   if (*out_iso_face_vtx_idx != NULL) {
     prev_size = (*out_iso_face_vtx_idx)[*out_iso_n_face];
   }
-  if (debug==1) log_trace("\n");
-  if (debug==1) log_trace("iso_n_face        = %d\n", iso_n_face);
-  if (debug==1) log_trace("iso_n_face_parent = %d\n", iso_n_face_parent);
-  if (debug==1) log_trace("s_face_vtx        = %d\n", s_face_vtx);
+  if (enable_debug==1) log_trace("\n");
+  if (enable_debug==1) log_trace("iso_n_face        = %d\n", iso_n_face);
+  if (enable_debug==1) log_trace("iso_n_face_parent = %d\n", iso_n_face_parent);
+  if (enable_debug==1) log_trace("s_face_vtx        = %d\n", s_face_vtx);
 
   PDM_g_num_t *iso_face_parent_gnum = NULL;
   int         *iso_face_vtx_idx     = NULL;
@@ -1829,7 +1828,7 @@ _contouring_tetrahedra
 
   } // End of loop on elements
 
-  if (debug==1) {
+  if (enable_debug==1) {
     log_trace("\n");
     log_trace("iso_n_face   = %d\n", iso_n_face);
     int face_vtx_size = iso_face_vtx_idx[iso_n_face];
@@ -2018,9 +2017,9 @@ _trace_isopolygon_in_cell
  int  *face_edge_idx,
  int  *face_edge,
  int  *edge_vtx,
- double *vtx_coord, // only for debug
- double *vtx_field, // only for debug
- double  isovalue,  // only for debug
+ double *vtx_coord, // only for enable_debug
+ double *vtx_field, // only for enable_debug
+ double  isovalue,  // only for enable_debug
  int  *is_active_face,
  int  *edge_to_iso_vtx,
  int  *i_edge_in_cell,
@@ -2764,11 +2763,11 @@ PDM_isosurface_marching_algo
   int                      id_iso
 )
 {
-  int debug      = 1;
-  int debug_visu = 0;
+  int enable_debug = 0;
+  int debug_visu   = 0;
   double t_start, t_end;
 
-  if (debug==1) {
+  if (enable_debug==1) {
     log_trace("id_iso = %d\n", id_iso);
   }
 
@@ -2925,7 +2924,7 @@ PDM_isosurface_marching_algo
     // TODO: merge iso_edge_parent with parallel
     t_end = PDM_MPI_Wtime();
 
-    if (debug==1) {
+    if (enable_debug==1) {
       log_trace("\n");
       log_trace("Build active edges : %.3fs  (%d edges)\n", t_end - t_start, n_edge);
       int n_bnd_tag_tot = edge_bnd_tag_idx[n_edge];
@@ -2990,7 +2989,7 @@ PDM_isosurface_marching_algo
                   &isovalue_vtx_idx     [i_part]);
     t_end = PDM_MPI_Wtime();
 
-    if (debug==1) {
+    if (enable_debug==1) {
       log_trace("\n");
       log_trace("Build active vertices : %.3fs  (%d vertices)\n", t_end - t_start, iso_n_vtx[i_part]);
       
@@ -3034,7 +3033,7 @@ PDM_isosurface_marching_algo
                           &elt_face);
 
       t_end = PDM_MPI_Wtime();
-      if (debug==1) {
+      if (enable_debug==1) {
         log_trace("\n");
         log_trace("Build active faces : %.3fs  (%d faces)\n", t_end - t_start, n_face);
         int face_vtx_size = face_vtx_idx[n_face];
@@ -3111,7 +3110,7 @@ PDM_isosurface_marching_algo
           _vtx_to_iso_vtx[i_vtx] = 0;
         }
       }
-      if (debug) {
+      if (enable_debug) {
         log_trace("\n");
         log_trace("Building i_isovalue %d\n", i_isovalue);
         PDM_log_trace_array_int (edge_to_iso_vtx, n_edge, "edge_to_iso_vtx ::");
@@ -3180,7 +3179,7 @@ PDM_isosurface_marching_algo
       }
       
       t_end = PDM_MPI_Wtime();
-      if (isos->entry_mesh_dim==2) {
+      if (enable_debug && isos->entry_mesh_dim==2) {
         printf("   isovalue %2d : %.3fs  (%6d vertices, %6d edges)\n",
                i_isovalue,
                t_end - t_start,
@@ -3188,7 +3187,7 @@ PDM_isosurface_marching_algo
                isovalue_edge_idx[i_part][i_isovalue+1] - isovalue_edge_idx[i_part][i_isovalue]);
         fflush(stdout);
       }
-      else if (isos->entry_mesh_dim==3) {
+      else if (enable_debug && isos->entry_mesh_dim==3) {
         printf("   isovalue %2d : %.3fs  (%6d vertices, %6d edges, %6d faces)\n",
                i_isovalue,
                t_end - t_start,
@@ -3230,7 +3229,7 @@ PDM_isosurface_marching_algo
      * Warning edges can be in multiple group
      */
 
-    if (debug) {
+    if (enable_debug) {
       PDM_log_trace_array_int(iso_edge_bnd_tag_idx, iso_n_edge[i_part], "iso_edge_bnd_tag_idx ::");
       PDM_log_trace_array_int(iso_edge_bnd_tag    , iso_edge_bnd_tag_idx[iso_n_edge[i_part]], "iso_edge_bnd_tag ::");
     }
@@ -3251,7 +3250,7 @@ PDM_isosurface_marching_algo
     PDM_free(iso_edge_bnd_tag_idx);
     iso_edge_bnd_tag_idx = PDM_array_new_idx_from_sizes_int(iso_edge_bnd_tag_unique_n, iso_n_edge[i_part]);
     PDM_realloc(iso_edge_bnd_tag, iso_edge_bnd_tag, iso_edge_bnd_tag_idx[iso_n_edge[i_part]], int);
-    if (debug) {
+    if (enable_debug) {
       PDM_log_trace_array_int(iso_edge_bnd_tag_unique_n, iso_n_edge[i_part], "iso_edge_bnd_tag_unique_n ::");
       PDM_log_trace_array_int(iso_edge_bnd_tag_idx     , iso_n_edge[i_part], "iso_edge_bnd_tag_idx ::");
       PDM_log_trace_array_int(iso_edge_bnd_tag         , iso_edge_bnd_tag_idx[iso_n_edge[i_part]], "iso_edge_bnd_tag ::");
@@ -3286,7 +3285,7 @@ PDM_isosurface_marching_algo
     PDM_free(iso_edge_bnd_tag_idx);
     PDM_free(iso_edge_bnd_tag    );
 
-    if (debug) {
+    if (enable_debug) {
       PDM_log_trace_array_int(iso_edge_group_idx [i_part], iso_n_edge_group+1, "iso_edge_group_idx ::");
       PDM_log_trace_array_int(iso_edge_group_lnum[i_part], iso_edge_group_idx[i_part][iso_n_edge_group], "iso_edge_group_lnum ::");
       for (int i_group=0; i_group<iso_n_edge_group; ++i_group) {
@@ -3586,8 +3585,8 @@ PDM_isosurface_ngon_algo
    *     - trianguler faces (besoin de face_vtx, garder les edges ou juste les actives?)
    *     - factoriser avec contouring_triangles
    */
-  // int debug      = 1;
-  int debug_visu = 0;
+  int measure_time = 0;
+  int debug_visu   = 0;
   double t_start, t_end;
 
   int i_rank;
@@ -3674,7 +3673,9 @@ PDM_isosurface_ngon_algo
     PDM_malloc(iso_edge_group_n, n_surface, int);
   }
 
-  t_start = PDM_MPI_Wtime();
+  if (measure_time) {
+    t_start = PDM_MPI_Wtime();
+  }
 
   /* Generate edges if necessary */
   int          *pn_face        = NULL;
@@ -4053,12 +4054,16 @@ PDM_isosurface_ngon_algo
   PDM_free(pedge_vtx     );
   PDM_free(iso_edge_group_n);
 
-  t_end = PDM_MPI_Wtime();
-  log_trace("Contouring ngon : %.3fs \n", t_end - t_start);
+  if (measure_time) {
+    t_end = PDM_MPI_Wtime();
+    log_trace("Contouring ngon : %.3fs \n", t_end - t_start);
+  }
 
   /* Generate global IDs */
-  PDM_MPI_Barrier(isos->comm);
-  t_start = PDM_MPI_Wtime();
+  if (measure_time) {
+    PDM_MPI_Barrier(isos->comm);
+    t_start = PDM_MPI_Wtime();
+  }
 
 
   // TODO: use "fast gnums"?
@@ -4173,8 +4178,10 @@ PDM_isosurface_ngon_algo
     PDM_free(iso_edge_group_parent_gnum);
   }
 
-  t_end = PDM_MPI_Wtime();
-  log_trace("Generate global IDs : %.3fs \n", t_end - t_start);
+  if (measure_time) {
+    t_end = PDM_MPI_Wtime();
+    log_trace("Generate global IDs : %.3fs \n", t_end - t_start);  
+  }
 
 
   /*
