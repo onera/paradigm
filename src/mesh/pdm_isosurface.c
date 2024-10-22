@@ -812,7 +812,7 @@ _compute_iso_field
 }
 
 
-int
+extern inline int
 _isosurface_is_at_0_level(
   const double v,
   const double tol
@@ -822,7 +822,7 @@ _isosurface_is_at_0_level(
 }
 
 
-int
+extern inline int
 _isosurface_cross_0_level
 (
   const double v0,
@@ -834,7 +834,7 @@ _isosurface_cross_0_level
 }
 
 
-int
+extern inline int
 _isosurface_cross_any_level
 (
   const double v0,
@@ -864,7 +864,7 @@ _sign
 }
 
 
-int
+extern inline int
 _isosurface_cross_0_level_ngon
 (
   const double v0,
@@ -876,7 +876,7 @@ _isosurface_cross_0_level_ngon
 }
 
 
-int
+extern inline int
 _isosurface_cross_any_level_ngon
 (
   const double v0,
