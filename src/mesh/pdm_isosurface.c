@@ -39,7 +39,7 @@
 #include "pdm_partitioning_algorithm.h"
 #include "pdm_extract_part.h"
 #include "pdm_vtk.h"
-#include "pdm_part_mesh_nodal_to_pmesh.h"
+#include "pdm_part_mesh_nodal_to_part_mesh.h"
 #include "pdm_part_connectivity_transform.h"
 #include "pdm_triangulate.h"
 
@@ -1580,12 +1580,41 @@ _ngonize
   }
   else {
     // We have elements other than simplices, we need to ngonize
-    isos->we_have_edges   = 1; // sure about this hack?
     isos->entry_mesh_type = 1 * PDM_SIGN(isos->entry_mesh_type); // we are in fact ngon from now on
-    PDM_error(__FILE__, __LINE__, 0, "Work left to do\n");
-    isos->extract_pmesh = PDM_part_mesh_nodal_to_part_mesh(extract_pmn,
-                                                           PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE,
-                                                           PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_FACE);
+
+    PDM_part_mesh_nodal_to_part_mesh_t *pmn_to_pm = PDM_part_mesh_nodal_to_part_mesh_create(extract_pmn,
+                                                                                            PDM_FALSE,
+                                                                                            PDM_OWNERSHIP_USER);
+
+    if (isos->entry_mesh_dim == 3) {
+      isos->we_have_edges = 1;
+      PDM_part_mesh_nodal_to_part_mesh_connectivity_enable(pmn_to_pm, PDM_CONNECTIVITY_TYPE_CELL_FACE);
+
+      PDM_part_mesh_nodal_to_part_mesh_connectivity_enable(pmn_to_pm, PDM_CONNECTIVITY_TYPE_FACE_EDGE);
+
+      PDM_part_mesh_nodal_to_part_mesh_connectivity_enable(pmn_to_pm, PDM_CONNECTIVITY_TYPE_EDGE_VTX);
+
+      PDM_part_mesh_nodal_to_part_mesh_g_nums_enable(pmn_to_pm, PDM_MESH_ENTITY_CELL);
+    }
+    else {
+      isos->we_have_edges = 0;
+      PDM_part_mesh_nodal_to_part_mesh_connectivity_enable(pmn_to_pm, PDM_CONNECTIVITY_TYPE_FACE_VTX);
+    }
+
+    PDM_part_mesh_nodal_to_part_mesh_groups_enable(pmn_to_pm, PDM_BOUND_TYPE_FACE);
+
+    PDM_part_mesh_nodal_to_part_mesh_g_nums_enable(pmn_to_pm, PDM_MESH_ENTITY_FACE); // --> not so sure
+    PDM_part_mesh_nodal_to_part_mesh_g_nums_enable(pmn_to_pm, PDM_MESH_ENTITY_VTX);
+
+    PDM_part_mesh_nodal_to_part_mesh_compute(pmn_to_pm);
+
+    PDM_part_mesh_nodal_to_part_mesh_part_mesh_get(pmn_to_pm,
+                                                   &isos->extract_pmesh,
+                                                   PDM_OWNERSHIP_USER);
+
+
+
+    PDM_part_mesh_nodal_to_part_mesh_free(pmn_to_pm);
   }
 
 }

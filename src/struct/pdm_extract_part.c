@@ -2610,7 +2610,7 @@ _extract_part
   int from_face_vtx  = extrp->have_connectivity[PDM_CONNECTIVITY_TYPE_FACE_VTX ];
 
   int **old_to_new[PDM_MESH_ENTITY_MAX];
-  for (PDM_mesh_entities_t i = 0; i < PDM_MESH_ENTITY_MAX; i++) {
+  for (PDM_mesh_entities_t i = (PDM_mesh_entities_t) 0; i < PDM_MESH_ENTITY_MAX; i++) {
     old_to_new[i] = NULL;
   }
 
@@ -2982,7 +2982,7 @@ _extract_part
   } // End loop on bounds
 
 
-  for (PDM_mesh_entities_t i_entity_type = 0; i_entity_type < PDM_MESH_ENTITY_MAX; i_entity_type++) {
+  for (PDM_mesh_entities_t i_entity_type = (PDM_mesh_entities_t) 0; i_entity_type < PDM_MESH_ENTITY_MAX; i_entity_type++) {
     if (old_to_new[i_entity_type] != NULL) {
       for (int i_part = 0; i_part < extrp->n_part_in; i_part++) {
         PDM_free(old_to_new[i_entity_type][i_part]);
@@ -4738,7 +4738,6 @@ _extract_part_nodal_local_vtx
                 int i_vtx = face_vtx[i] - 1;
                 if (vtx_old_to_new[i_part][i_vtx] < 0) {
                   extrp->pextract_entity_parent_lnum[PDM_MESH_ENTITY_VTX][i_part][extract_n_vtx] = i_vtx + 1;
-
                   memcpy(&extract_vtx_coord[3*extract_n_vtx], &vtx_coord[3*i_vtx], sizeof(double) * 3);
                   extract_vtx_g_num[extract_n_vtx] = vtx_g_num[i_vtx];
                   vtx_old_to_new[i_part][i_vtx] = ++extract_n_vtx;
@@ -4782,7 +4781,6 @@ _extract_part_nodal_local_vtx
               int i_vtx = connec[n_vtx_per_elmt*i_elt + i] - 1;
               if (vtx_old_to_new[i_part][i_vtx] < 0) {
                 extrp->pextract_entity_parent_lnum[PDM_MESH_ENTITY_VTX][i_part][extract_n_vtx] = i_vtx + 1;
-
                 memcpy(&extract_vtx_coord[3*extract_n_vtx], &vtx_coord[3*i_vtx], sizeof(double) * 3);
                 extract_vtx_g_num[extract_n_vtx] = vtx_g_num[i_vtx];
                 vtx_old_to_new[i_part][i_vtx] = ++extract_n_vtx;
@@ -5372,6 +5370,7 @@ _extract_part_nodal_local
       int **parent_to_entity     = NULL;
       PDM_part_mesh_nodal_elmts_compute_child_parent(pmne_parent,
                                                      pmne,
+                                                     PDM_MESH_ENTITY_MAX, // unused here
                                                      PDM_FALSE,
                                                      &child_to_parent_idx,
                                                      &child_to_parent,
@@ -6056,6 +6055,7 @@ _extract_part_nodal
       int **parent_to_entity     = NULL;
       PDM_part_mesh_nodal_elmts_compute_child_parent(pmne_parent,
                                                      pmne_child,
+                                                     PDM_MESH_ENTITY_MAX, // unused here
                                                      PDM_FALSE,
                                                      &child_to_parent_idx,
                                                      &child_to_parent,
@@ -6985,7 +6985,16 @@ PDM_extract_part_ln_to_gn_get
 )
 {
   if (extrp->is_nodal) {
-    PDM_error(__FILE__, __LINE__, 0, "Use part_mesh_nodal accessors instead\n");
+    if (entity_type == PDM_MESH_ENTITY_VTX) {
+      // TODO: edit ownership in pmn
+      assert(ownership != PDM_OWNERSHIP_USER);
+      *pentity_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(extrp->extract_pmn, i_part_out);
+
+      return PDM_part_mesh_nodal_n_vtx_get(extrp->extract_pmn, i_part_out);
+    }
+    else {
+      PDM_error(__FILE__, __LINE__, 0, "Use part_mesh_nodal accessors instead\n");
+    }
   }
 
   if(extrp->pextract_n_entity[entity_type] != NULL) {
@@ -7198,7 +7207,11 @@ PDM_extract_part_vtx_coord_get
 )
 {
   if (extrp->is_nodal) {
-    PDM_error(__FILE__, __LINE__, 0, "Use part_mesh_nodal accessors instead\n");
+    // TODO: edit ownership in pmn
+    assert(ownership != PDM_OWNERSHIP_USER);
+    *pvtx_coord = PDM_part_mesh_nodal_vtx_coord_get(extrp->extract_pmn, i_part_out);
+
+    return PDM_part_mesh_nodal_n_vtx_get(extrp->extract_pmn, i_part_out);
   }
 
   if(extrp->pextract_vtx_coord != NULL){
@@ -7643,7 +7656,7 @@ PDM_extract_part_part_mesh_get
   }
 
   // Number of groups
-  for (PDM_bound_type_t bound_type = 0; bound_type < PDM_BOUND_TYPE_MAX; bound_type++) {
+  for (PDM_bound_type_t bound_type = (PDM_bound_type_t) 0; bound_type < PDM_BOUND_TYPE_MAX; bound_type++) {
     PDM_part_mesh_n_bound_set(*pmesh, bound_type, extrp->n_group[bound_type]);
   }
 
@@ -7664,7 +7677,7 @@ PDM_extract_part_part_mesh_get
                                   ownership_pmesh);
     }
 
-    for (PDM_mesh_entities_t entity_type = 0; entity_type < PDM_MESH_ENTITY_MAX; entity_type++) {
+    for (PDM_mesh_entities_t entity_type = (PDM_mesh_entities_t) 0; entity_type < PDM_MESH_ENTITY_MAX; entity_type++) {
 
       // Number of entities
       if (extrp->pextract_n_entity[entity_type] != NULL) {
@@ -7713,7 +7726,7 @@ PDM_extract_part_part_mesh_get
 
 
     /* Connectivities */
-    for (PDM_connectivity_type_t connectivity_type = 0; connectivity_type < PDM_CONNECTIVITY_TYPE_MAX; connectivity_type++) {
+    for (PDM_connectivity_type_t connectivity_type = (PDM_connectivity_type_t) 0; connectivity_type < PDM_CONNECTIVITY_TYPE_MAX; connectivity_type++) {
 
       if (extrp->pextract_connectivity[connectivity_type] != NULL) {
         if (pmesh_takes_ownership == PDM_TRUE) {
@@ -7731,7 +7744,7 @@ PDM_extract_part_part_mesh_get
 
 
     /* Groups */
-    for (PDM_bound_type_t bound_type = 0; bound_type < PDM_BOUND_TYPE_MAX; bound_type++) {
+  for (PDM_bound_type_t bound_type = (PDM_bound_type_t) 0; bound_type < PDM_BOUND_TYPE_MAX; bound_type++) {
 
       if (extrp->pn_extract_group_entity[bound_type] != NULL) {
         for (int i_group = 0; i_group < extrp->n_group[bound_type]; i_group++) {

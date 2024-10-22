@@ -149,132 +149,6 @@ _read_args(int                    argc,
   }
 }
 
-
-// static void
-// _compute_cell_vtx_hexa
-// (
-//  int  n_cell,
-//  int *cell_face,
-//  int *face_vtx_idx,
-//  int *face_vtx,
-//  int *cell_vtx
-//  )
-// {
-//   int dbg = 0;
-
-
-//   for (int icell = 0; icell < n_cell; icell++) {
-
-//     int *cf = cell_face + 6*icell;
-//     int *cv = cell_vtx  + 8*icell;
-//     for (int i = 0; i < 8; i++) {
-//       cv[i] = 0;
-//     }
-
-//     if (dbg) {
-//       log_trace("\nCell %d\n", icell);
-//       for (int i = 0; i < 6; i++) {
-//         int iface = PDM_ABS(cf[i]) - 1;
-//         int *fv = face_vtx + face_vtx_idx[iface];
-//         log_trace(" Face %6d : %6d %6d %6d %6d\n", cf[i], fv[0], fv[1], fv[2], fv[3]);
-//       }
-//     }
-
-
-//     // first face
-//     int iface = cf[0];
-
-//     if (iface < 0) {
-//       iface = -iface - 1;
-//       int *fv = face_vtx + face_vtx_idx[iface];
-//       assert(face_vtx_idx[iface+1] - face_vtx_idx[iface] == 4);
-//       for (int i = 0; i < 4; i++) {
-//         cv[i] = fv[i];
-//       }
-//     }
-
-//     else {
-//       iface = iface - 1;
-//       int *fv = face_vtx + face_vtx_idx[iface];
-//       assert(face_vtx_idx[iface+1] - face_vtx_idx[iface] == 4);
-//       for (int i = 0; i < 4; i++) {
-//         cv[i] = fv[3-i];
-//       }
-//     }
-
-//     if (dbg) {
-//       log_trace("first 4 vtx : %d %d %d %d\n", cv[0], cv[1], cv[2], cv[3]);
-//     }
-
-//     // opposite face
-//     int count = 0;
-
-//     for (int idx_face = 1; idx_face < 6; idx_face++) {
-//       int jface = PDM_ABS(cf[idx_face]) - 1;
-//       int sgn   = PDM_SIGN(cf[idx_face]);
-
-//       if (dbg) {
-//         log_trace("  face %6d\n", cf[idx_face]);
-//       }
-
-//       int *fv = face_vtx + face_vtx_idx[jface];
-//       assert(face_vtx_idx[jface+1] - face_vtx_idx[jface] == 4);
-
-//       for (int i = 0; i < 4; i++) {
-//         int ivtx1, ivtx2;
-//         if (sgn > 0) {
-//           ivtx1 = fv[i];
-//           ivtx2 = fv[(i+1)%4];
-//         } else {
-//           ivtx2 = fv[i];
-//           ivtx1 = fv[(i+1)%4];
-//         }
-
-//         if (dbg) {
-//           log_trace("    edge %6d %6d\n", ivtx1, ivtx2);
-//         }
-
-//         if (ivtx1 == cv[0] && ivtx2 == cv[1]) {
-//           if (sgn < 0) {
-//             cv[4] = fv[(i+2)%4];
-//             cv[5] = fv[(i+3)%4];
-//           } else {
-//             cv[4] = fv[(i+3)%4];
-//             cv[5] = fv[(i+2)%4];
-//           }
-//           count++;
-//         }
-
-//         else if (ivtx1 == cv[2] && ivtx2 == cv[3]) {
-//           if (sgn < 0) {
-//             cv[6] = fv[(i+2)%4];
-//             cv[7] = fv[(i+3)%4];
-//           } else {
-//             cv[6] = fv[(i+3)%4];
-//             cv[7] = fv[(i+2)%4];
-//           }
-//           count++;
-//         }
-//       }
-
-//       if (count == 2) {
-//         break;
-//       }
-
-//     }
-
-//     if (dbg) {
-//       log_trace("count = %d\n", count);
-//       log_trace("cv = %d %d %d %d %d %d %d %d\n",
-//                 cv[0], cv[1], cv[2], cv[3],
-//                 cv[4], cv[5], cv[6], cv[7]);
-//     }
-//     assert(count == 2);
-//   }
-// }
-
-
-
 /**
  *
  * \brief  Main
@@ -349,7 +223,7 @@ int main(int argc, char *argv[])
 
   if (1) {
     PDM_g_num_t *vtx_distrib = PDM_dmesh_nodal_vtx_distrib_get(dmn);
-    double      *dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn);
+    double      *dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn, PDM_OWNERSHIP_BAD_VALUE);
     int dn_vtx = vtx_distrib[i_rank+1] - vtx_distrib[i_rank];
 
     double noise = 0.2 / (double) (n_vtx_seg - 1);

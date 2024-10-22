@@ -1,7 +1,7 @@
 # cython: c_string_type=str, c_string_encoding=ascii
 cdef extern from "pdm_mesh_nodal.h":
-  int PDM_Mesh_nodal_n_vertices_element(PDM_Mesh_nodal_elt_t type,
-                                        int            order)
+  int PDM_Mesh_nodal_n_vtx_elt_get(PDM_Mesh_nodal_elt_t type,
+                                   int                  order)
 
 cdef extern from "pdm_dmesh_nodal.h":
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -31,7 +31,7 @@ cdef extern from "pdm_dmesh_nodal.h":
     # PDM_g_num_t *PDM_DMesh_nodal_distrib_section_get(PDM_dmesh_nodal_t* dmn, int id_section)
 
     int                  PDM_DMesh_nodal_n_vtx_get(PDM_dmesh_nodal_t* dmn)
-    int*                 PDM_DMesh_nodal_vtx_tag_get(PDM_dmesh_nodal_t* dmn)
+    int*                 PDM_DMesh_nodal_vtx_tag_get(PDM_dmesh_nodal_t* dmn, PDM_ownership_t      owner)
 
     int*                 PDM_DMesh_nodal_sections_id_get(PDM_dmesh_nodal_t* dmn, PDM_geometry_kind_t geom_kind)
 
@@ -39,8 +39,7 @@ cdef extern from "pdm_dmesh_nodal.h":
 
     PDM_Mesh_nodal_elt_t PDM_DMesh_nodal_section_type_get(PDM_dmesh_nodal_t* dmn, PDM_geometry_kind_t geom_kind, int id_section)
 
-    double*              PDM_DMesh_nodal_coord_get(PDM_dmesh_nodal_t* dmn, PDM_ownership_t owner)
-    double*              PDM_DMesh_nodal_vtx_get(PDM_dmesh_nodal_t* dmn)
+    double*              PDM_DMesh_nodal_vtx_get(PDM_dmesh_nodal_t* dmn, PDM_ownership_t owner)
     PDM_g_num_t*         PDM_DMesh_nodal_section_distri_std_get(PDM_dmesh_nodal_t *dmesh_nodal,
                                                                                    PDM_geometry_kind_t  geom_kind,
                                                                                    int                id_section)
@@ -50,7 +49,6 @@ cdef extern from "pdm_dmesh_nodal.h":
     PDM_g_num_t*         PDM_dmesh_nodal_vtx_distrib_copy_get(PDM_dmesh_nodal_t *dmesh_nodal)
     int                  PDM_DMesh_nodal_section_add(PDM_dmesh_nodal_t* dmn, PDM_geometry_kind_t geom_kind, PDM_Mesh_nodal_elt_t t_elt)
 
-    void                 PDM_DMesh_nodal_update_ownership(PDM_dmesh_nodal_t* dmn, PDM_ownership_t owner)
     void                 PDM_DMesh_nodal_section_std_set(PDM_dmesh_nodal_t* dmn,
                                                                             PDM_geometry_kind_t geom_kind,
                                                                             int                 id_section,
@@ -58,7 +56,10 @@ cdef extern from "pdm_dmesh_nodal.h":
                                                                             PDM_g_num_t*        connec,
                                                                             PDM_ownership_t     owner)
 
-    PDM_g_num_t* PDM_DMesh_nodal_section_std_get(PDM_dmesh_nodal_t* dmn, PDM_geometry_kind_t geom_kind, int id_section)
+    PDM_g_num_t* PDM_DMesh_nodal_section_std_get(PDM_dmesh_nodal_t* dmn,
+                                                 PDM_geometry_kind_t geom_kind,
+                                                 int id_section,
+                                                 PDM_ownership_t      owner)
     int PDM_DMesh_nodal_section_n_elt_get(PDM_dmesh_nodal_t* dmn, int id_section)
 
     void PDM_DMesh_nodal_section_poly2d_set(PDM_dmesh_nodal_t   *dmesh_nodal,
@@ -75,10 +76,11 @@ cdef extern from "pdm_dmesh_nodal.h":
                                                 PDM_g_num_t        *dgroup_elmt,
                                                 PDM_ownership_t     owner)
     void PDM_DMesh_nodal_section_group_elmt_get(PDM_dmesh_nodal_t    *dmesh_nodal,
-                                                                   PDM_geometry_kind_t   geom_kind,
-                                                                   int                  *n_group_elmt,
-                                                                   int                 **dgroup_elmt_idx,
-                                                                   PDM_g_num_t         **dgroup_elmt)
+                                                PDM_geometry_kind_t   geom_kind,
+                                                int                  *n_group_elmt,
+                                                int                 **dgroup_elmt_idx,
+                                                PDM_g_num_t         **dgroup_elmt,
+                                                PDM_ownership_t       owner)
 
     void PDM_dmesh_nodal_generate_distribution(PDM_dmesh_nodal_t* dmn)
 
@@ -89,27 +91,6 @@ cdef extern from "pdm_dmesh_nodal.h":
     void PDM_dmesh_nodal_revert_orientation(PDM_dmesh_nodal_t    *dmesh_nodal,
                                             PDM_geometry_kind_t   geom_kind);
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-cdef extern from "pdm_elt_parent_find.h":
-    # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-    # > Wrapping of Ppart Structure
-    void PDM_elt_parent_find_from_distrib(PDM_g_num_t  *elt_distrib,
-                                          int          *elt_def_idx,
-                                          PDM_g_num_t  *elt_def,
-                                          PDM_g_num_t  *elt_to_find_distrib,
-                                          int          *elt_to_find_def_idx,
-                                          PDM_g_num_t  *elt_to_find_def,
-                                          PDM_MPI_Comm  comm,
-                                          PDM_g_num_t  *parent)
-
-    void PDM_elt_parent_find(int           dnelt,
-                             int          *elt_def_idx,
-                             PDM_g_num_t  *elt_def,
-                             int           dnelt_to_find,
-                             int          *elt_to_find_def_idx,
-                             PDM_g_num_t  *elt_to_find_def,
-                             PDM_MPI_Comm  comm,
-                             PDM_g_num_t  *parent)
 
 cdef extern from "pdm_distrib.h":
 
@@ -128,7 +109,7 @@ cdef class DistributedMeshNodal:
     # ************************************************************************
     # > Class attributes
     cdef PDM_dmesh_nodal_t *dmn
-    keep_alive = list()
+    cdef object keep_alive
     # cdef int idmesh
     cdef int n_rank
     # ************************************************************************
@@ -149,6 +130,8 @@ cdef class DistributedMeshNodal:
         # # > Numpy array
         # cdef NPY.ndarray[npy_pdm_gnum_t, ndim=1, mode='fortran'] partLNToGN
         # ************************************************************************
+
+        self.keep_alive = []
 
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
         self.n_rank = comm.Get_size()
@@ -312,6 +295,13 @@ cdef class DistributedMeshNodalCapsule:
     return dmesh_nodal_get_vtx(self, comm)
 
   # ------------------------------------------------------------------------
+  def dmesh_nodal_get_vtx_tag(self, MPI.Comm comm):
+    """
+    """
+    return dmesh_nodal_get_vtx_tag(self, comm)
+
+
+  # ------------------------------------------------------------------------
   def dmesh_nodal_get_group(self, PDM_geometry_kind_t geom_kind):
     """
     """
@@ -382,19 +372,38 @@ def dmesh_nodal_get_vtx(DMeshNodal pydmn, MPI.Comm    comm):
   # ************************************************************************
   # > Declaration
   cdef double               *vtx_coord
-  cdef int                  *vtx_tag
-  cdef NPY.npy_intp          dim
   # ************************************************************************
 
-  PDM_DMesh_nodal_update_ownership(pydmn.dmn, PDM_OWNERSHIP_USER)
-  vtx_distrib = PDM_dmesh_nodal_vtx_distrib_copy_get(pydmn.dmn)
   n_vtx = PDM_DMesh_nodal_n_vtx_get(pydmn.dmn);
-  vtx_coord = PDM_DMesh_nodal_coord_get(pydmn.dmn, PDM_OWNERSHIP_KEEP)
-  vtx_tag = PDM_DMesh_nodal_vtx_tag_get(pydmn.dmn)
+  vtx_coord = PDM_DMesh_nodal_vtx_get(pydmn.dmn, PDM_OWNERSHIP_USER)
+  # vtx_tag = PDM_DMesh_nodal_vtx_tag_get(pydmn.dmn)
 
-  return {"np_vtx"         : create_numpy_d(vtx_coord,   3*n_vtx,           False),
-          "np_vtx_distrib" : create_numpy_g(vtx_distrib, comm.Get_size()+1, False),
-          "np_vtx_tag"     : create_numpy_i(vtx_tag,     n_vtx,             False)}
+  return {"np_vtx"         : create_numpy_d(vtx_coord,   3*n_vtx)}
+
+def dmesh_nodal_get_distrib_vtx(DMeshNodal pydmn, MPI.Comm    comm):
+  """
+  """
+  # ************************************************************************
+  # > Declaration
+  cdef int                  *vtx_tag
+  # ************************************************************************
+
+  vtx_distrib = PDM_dmesh_nodal_vtx_distrib_copy_get(pydmn.dmn)
+
+  return {"np_vtx_distrib" : create_numpy_g(vtx_distrib, comm.Get_size()+1)}
+
+def dmesh_nodal_get_vtx_tag(DMeshNodal pydmn, MPI.Comm    comm):
+  """
+  """
+  # ************************************************************************
+  # > Declaration
+  cdef int                  *vtx_tag
+  # ************************************************************************
+  n_vtx = PDM_DMesh_nodal_n_vtx_get(pydmn.dmn);
+  vtx_coord = PDM_DMesh_nodal_vtx_get(pydmn.dmn, PDM_OWNERSHIP_KEEP)
+  vtx_tag = PDM_DMesh_nodal_vtx_tag_get(pydmn.dmn, PDM_OWNERSHIP_USER)
+
+  return {"np_vtx_tag"     : create_numpy_i(vtx_tag,     n_vtx)}
 
 def dmesh_nodal_get_sections(DMeshNodal          pydmn,
                              PDM_geometry_kind_t geom_kind,
@@ -414,7 +423,6 @@ def dmesh_nodal_get_sections(DMeshNodal          pydmn,
   cdef NPY.npy_intp          dim
   # ************************************************************************
 
-  PDM_DMesh_nodal_update_ownership(pydmn.dmn, PDM_OWNERSHIP_USER)
   n_section  = PDM_DMesh_nodal_n_section_get(pydmn.dmn, geom_kind)
   section_id = PDM_DMesh_nodal_sections_id_get(pydmn.dmn, geom_kind)
 
@@ -429,7 +437,7 @@ def dmesh_nodal_get_sections(DMeshNodal          pydmn,
     assert(t_elmt != PDM_MESH_NODAL_POLY_3D)
 
     section_distrib = PDM_DMesh_nodal_section_distri_std_get(pydmn.dmn, geom_kind, id_section)
-    connect         = PDM_DMesh_nodal_section_std_get(pydmn.dmn, geom_kind, id_section)
+    connect         = PDM_DMesh_nodal_section_std_get(pydmn.dmn, geom_kind, id_section, PDM_OWNERSHIP_USER)
 
     # > Build numpy capsule
     np_distrib_tmp = create_numpy_g(section_distrib, comm.Get_size()+1, flag_owndata=False)
@@ -437,7 +445,7 @@ def dmesh_nodal_get_sections(DMeshNodal          pydmn,
 
     # > Build numpy capsule
     dn_elmt = np_distrib[comm.Get_rank()+1] - np_distrib[comm.Get_rank()]
-    n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element(t_elmt, 1)
+    n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get(t_elmt, 1)
     np_connec = create_numpy_g(connect, n_vtx_per_elmt*dn_elmt)
 
     sections.append({"pdm_type"   : t_elmt,
@@ -461,8 +469,12 @@ def dmesh_nodal_get_group(DMeshNodal pydmn, PDM_geometry_kind_t geom_kind):
   cdef NPY.npy_intp          dim
   # ************************************************************************
 
-  PDM_DMesh_nodal_update_ownership(pydmn.dmn, PDM_OWNERSHIP_USER)
-  PDM_DMesh_nodal_section_group_elmt_get(pydmn.dmn, geom_kind, &n_group, &dgroup_elmt_idx, &dgroup_elmt);
+  PDM_DMesh_nodal_section_group_elmt_get(pydmn.dmn,
+                                         geom_kind,
+                                         &n_group,
+                                         &dgroup_elmt_idx,
+                                         &dgroup_elmt,
+                                         PDM_OWNERSHIP_USER);
 
   if n_group == 0:
     return None
@@ -472,40 +484,6 @@ def dmesh_nodal_get_group(DMeshNodal pydmn, PDM_geometry_kind_t geom_kind):
 
   return {"dgroup_elmt_idx" : np_dgroup_elmt_idx,
           "dgroup_elmt"     : np_dgroup_elmt}
-
-
-# ------------------------------------------------------------------------
-def ElementParentFind(int                                           dnelt,
-                      NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] elt_def_idx,
-                      NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] elt_def,
-                      int                                           dnelt_to_find,
-                      NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] elt_to_find_def_idx,
-                      NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] elt_to_find_def,
-                      MPI.Comm    comm,
-                      NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] parent):
-    """
-    """
-    # ************************************************************************
-    # > Declaration
-    # ************************************************************************
-
-    # ::::::::::::::::::::::::::::::::::::::::::::::::::
-    # > Convert mpi4py -> PDM_MPI
-    cdef MPI.MPI_Comm c_comm = comm.ob_mpi
-    cdef PDM_MPI_Comm PDMC   = PDM_MPI_mpi_2_pdm_mpi_comm(<void *> &c_comm)
-    # ::::::::::::::::::::::::::::::::::::::::::::::::::
-
-    # ::::::::::::::::::::::::::::::::::::::::::::::::::
-    PDM_elt_parent_find(dnelt,
-                        <int *>         elt_def_idx.data,
-                        <PDM_g_num_t *> elt_def.data,
-                        dnelt_to_find,
-                        <int *>         elt_to_find_def_idx.data,
-                        <PDM_g_num_t *> elt_to_find_def.data,
-                        PDMC,
-                        <PDM_g_num_t *> parent.data)
-    # ::::::::::::::::::::::::::::::::::::::::::::::::::
-
 
 # ------------------------------------------------------------------------
 def ComputeDistributionFromDelmt(int         dnelt,
@@ -539,7 +517,7 @@ def get_n_vtx_from_element(PDM_Mesh_nodal_elt_t type,
                            int                  order=1):
     """
     """
-    return PDM_Mesh_nodal_n_vertices_element(type, order)
+    return PDM_Mesh_nodal_n_vtx_elt_get(type, order)
 
 
 # ------------------------------------------------------------------------

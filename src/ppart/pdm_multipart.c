@@ -414,7 +414,7 @@ _create_dparent_num_corner
     assert(t_elt == PDM_MESH_NODAL_POINT);
 
     int n_elt           = PDM_DMesh_nodal_elmts_section_n_elt_get(dmn_elts, id_section);
-    PDM_g_num_t* connec = PDM_DMesh_nodal_elmts_section_std_get(dmn_elts, id_section);
+    PDM_g_num_t* connec = PDM_DMesh_nodal_elmts_section_std_get(dmn_elts, id_section, PDM_OWNERSHIP_BAD_VALUE);
 
     dn_corner[i_section] = n_elt;
     PDM_malloc(corner_ln_to_gn[i_section], n_elt, PDM_g_num_t);
@@ -1235,6 +1235,7 @@ _warm_up_for_split
  PDM_dmesh_t       *dmesh,
  PDM_g_num_t       *distrib_node,
  int                compute_dual,
+ PDM_split_dual_t   split_method,
  PDM_g_num_t      **out_dual_graph_idx,
  PDM_g_num_t      **out_dual_graph
 )
@@ -1275,19 +1276,25 @@ _warm_up_for_split
                                &delmt_to_arc_idx,
                                PDM_OWNERSHIP_BAD_VALUE);
 
-    if(darc_to_elmt_tmp == NULL) {
-      assert(delmt_to_arc_idx != NULL);
-      PDM_dcellface_to_dfacecell(distrib_arc,
-                                 distrib_node,
-                                 delmt_to_arc_idx,
-                                 delmt_to_arc,
-                                 &darc_to_elmt_tmp,
-                                 comm);
+    // If the partionning is done using PT-Scotch or Parmetis,
+    // it is necessary to generate darc_to_elmt(_idx)
+    if(split_method == PDM_SPLIT_DUAL_WITH_PARMETIS ||
+       split_method == PDM_SPLIT_DUAL_WITH_PTSCOTCH) {
 
-      PDM_dmesh_connectivity_set(dmesh, PDM_CONNECTIVITY_TYPE_FACE_CELL,
-                                 darc_to_elmt_tmp,
-                                 darc_to_elmt_idx,
-                                 PDM_OWNERSHIP_KEEP);
+      if(darc_to_elmt_tmp == NULL) {
+        assert(delmt_to_arc_idx != NULL);
+        PDM_dcellface_to_dfacecell(distrib_arc,
+                                   distrib_node,
+                                   delmt_to_arc_idx,
+                                   delmt_to_arc,
+                                   &darc_to_elmt_tmp,
+                                   comm);
+
+        PDM_dmesh_connectivity_set(dmesh, PDM_CONNECTIVITY_TYPE_FACE_CELL,
+                                   darc_to_elmt_tmp,
+                                   darc_to_elmt_idx,
+                                   PDM_OWNERSHIP_KEEP);
+      }
 
     }
   } else if(dmesh->n_g_face != 0) { // Donc 2D
@@ -1306,21 +1313,27 @@ _warm_up_for_split
                                &delmt_to_arc_idx,
                                PDM_OWNERSHIP_BAD_VALUE);
 
-    if(darc_to_elmt_tmp == NULL) {
-      assert(delmt_to_arc_idx != NULL);
-      PDM_dcellface_to_dfacecell(distrib_arc,
-                                 distrib_node,
-                                 delmt_to_arc_idx,
-                                 delmt_to_arc,
-                                 &darc_to_elmt_tmp,
-                                 comm);
+    // If the partionning is done using PT-Scotch or Parmetis,
+    // it is necessary to generate darc_to_elmt(_idx)
+    if(split_method == PDM_SPLIT_DUAL_WITH_PARMETIS ||
+       split_method == PDM_SPLIT_DUAL_WITH_PTSCOTCH) {
 
-      PDM_dmesh_connectivity_set(dmesh, PDM_CONNECTIVITY_TYPE_EDGE_FACE,
-                                 darc_to_elmt_tmp,
-                                 darc_to_elmt_idx,
-                                 PDM_OWNERSHIP_KEEP);
+      if(darc_to_elmt_tmp == NULL) {
+        assert(delmt_to_arc_idx != NULL);
+        PDM_dcellface_to_dfacecell(distrib_arc,
+                                   distrib_node,
+                                   delmt_to_arc_idx,
+                                   delmt_to_arc,
+                                   &darc_to_elmt_tmp,
+                                   comm);
 
-    }
+        PDM_dmesh_connectivity_set(dmesh, PDM_CONNECTIVITY_TYPE_EDGE_FACE,
+                                   darc_to_elmt_tmp,
+                                   darc_to_elmt_idx,
+                                   PDM_OWNERSHIP_KEEP);
+      } // end if darc_to_elmt not inputed
+
+    } // end if PT-Scotch or Parmetis
 
   } else if(dmesh->n_g_edge != 0) { // Donc 1D
 
@@ -1340,35 +1353,39 @@ _warm_up_for_split
                                &delmt_to_arc_idx,
                                PDM_OWNERSHIP_BAD_VALUE);
 
-    if(darc_to_elmt_tmp == NULL) {
+    // If the partionning is done using PT-Scotch or Parmetis,
+    // it is necessary to generate darc_to_elmt(_idx)
+    if(split_method == PDM_SPLIT_DUAL_WITH_PARMETIS ||
+       split_method == PDM_SPLIT_DUAL_WITH_PTSCOTCH) {
 
-      assert(delmt_to_arc_idx == NULL);
-      PDM_malloc(delmt_to_arc_idx, dn_node+1, int);
-      for(int i = 0; i < dn_node+1; ++i) {
-        delmt_to_arc_idx[i] = 2*i;
-      }
+      if(darc_to_elmt_tmp == NULL) {
+        assert(delmt_to_arc_idx == NULL);
+        PDM_malloc(delmt_to_arc_idx, dn_node+1, int);
+        for(int i = 0; i < dn_node+1; ++i) {
+          delmt_to_arc_idx[i] = 2*i;
+        }
+        // PDM_dcellface_to_dfacecell(distrib_arc,
+        //                            distrib_node,
+        //                            delmt_to_arc_idx,
+        //                            delmt_to_arc,
+        //                            &darc_to_elmt_tmp,
+        //                            comm);
+        PDM_dconnectivity_transpose(comm,
+                                    distrib_node,
+                                    distrib_arc,
+                                    delmt_to_arc_idx,
+                                    delmt_to_arc,
+                                    0,
+                                    &darc_to_elmt_idx,
+                                    &darc_to_elmt_tmp);
 
-      // PDM_dcellface_to_dfacecell(distrib_arc,
-      //                            distrib_node,
-      //                            delmt_to_arc_idx,
-      //                            delmt_to_arc,
-      //                            &darc_to_elmt_tmp,
-      //                            comm);
-      PDM_dconnectivity_transpose(comm,
-                                  distrib_node,
-                                  distrib_arc,
-                                  delmt_to_arc_idx,
-                                  delmt_to_arc,
-                                  0,
-                                  &darc_to_elmt_idx,
-                                  &darc_to_elmt_tmp);
+        PDM_dmesh_connectivity_set(dmesh, PDM_CONNECTIVITY_TYPE_VTX_EDGE,
+                                   darc_to_elmt_tmp,
+                                   darc_to_elmt_idx,
+                                   PDM_OWNERSHIP_KEEP);
+      } // end if darc_to_elmt not inputed
+    } // end if PT-Scotch or Parmetis
 
-      PDM_dmesh_connectivity_set(dmesh, PDM_CONNECTIVITY_TYPE_VTX_EDGE,
-                                 darc_to_elmt_tmp,
-                                 darc_to_elmt_idx,
-                                 PDM_OWNERSHIP_KEEP);
-
-    }
 
   } else if(dmesh->n_g_vtx != 0) { // Donc 0D
     return;
@@ -1380,23 +1397,30 @@ _warm_up_for_split
    *  -> 2D : node/elmts = face | arc = edge
    *  -> 1D : node/elmts = edge | arc = vtx
    */
-  if(is1d == 0) {
-    assert(darc_to_elmt_idx == NULL);
-    for (int i = 0; i < dn_arc; i++) {
-      darc_to_elmt_tmp[2*i+1] = -darc_to_elmt_tmp[2*i+1];
-    }
+  // If the partionning is done using PT-Scotch or Parmetis
+  // or only an arc->elt input, then it is necessary
+  // to generate darc_to_elmt_idx
+  if(split_method == PDM_SPLIT_DUAL_WITH_PARMETIS ||
+     split_method == PDM_SPLIT_DUAL_WITH_PTSCOTCH ||
+     delmt_to_arc == NULL) {
 
-    PDM_setup_connectivity_idx(dn_arc,
-                               2,
-                               darc_to_elmt_tmp,
-                               &darc_to_elmt_idx,
-                               &darc_to_elmt);
+    if(is1d == 0) {
+      assert(darc_to_elmt_idx == NULL);
+      for (int i = 0; i < dn_arc; i++) {
+        darc_to_elmt_tmp[2*i+1] = -darc_to_elmt_tmp[2*i+1];
+      }
 
-    /* Reamke same sign */
-    for (int i = 0; i < dn_arc; i++) {
-      darc_to_elmt_tmp[2*i+1] = -darc_to_elmt_tmp[2*i+1];
+      PDM_setup_connectivity_idx(dn_arc,
+                                 2,
+                                 darc_to_elmt_tmp,
+                                 &darc_to_elmt_idx,
+                                 &darc_to_elmt);
+      /* Remake same sign */
+      for (int i = 0; i < dn_arc; i++) {
+        darc_to_elmt_tmp[2*i+1] = -darc_to_elmt_tmp[2*i+1];
+      }
     }
-  }
+  } // end if PT-Scotch or Parmetis or only an arc->elt input
 
   if(0 == 1) {
     PDM_log_trace_connectivity_long(delmt_to_arc_idx, delmt_to_arc, dn_node, "delmt_to_arc : ");
@@ -1498,6 +1522,7 @@ static
 PDM_g_num_t*
 _split_graph
 (
+      PDM_multipart_t   *multipart,
       PDM_MPI_Comm       comm,
       PDM_dmesh_t       *dmesh,
       _part_mesh_t      *pmeshes,
@@ -1541,6 +1566,8 @@ const double            *part_fraction,
      split_method == PDM_SPLIT_DUAL_WITH_IMPLICIT) {
     compute_dual = 0;
   }
+  // Start dualgraph build timer
+  PDM_timer_resume(multipart->timer);
 
   PDM_g_num_t *dual_graph_idx = NULL;
   PDM_g_num_t *dual_graph     = NULL;
@@ -1548,8 +1575,19 @@ const double            *part_fraction,
                      dmesh,
                      distrib_node,
                      compute_dual,
+                     split_method,
                      &dual_graph_idx,
                      &dual_graph);
+
+
+
+  // End dualgraph build timer
+  PDM_timer_hang_on(multipart->timer);
+  multipart->times_elapsed[TIMER_MPART_BUILD] = PDM_timer_elapsed(multipart->timer);
+  multipart->times_cpu    [TIMER_MPART_BUILD] = PDM_timer_cpu(multipart->timer);
+  multipart->times_cpu_u  [TIMER_MPART_BUILD] = PDM_timer_cpu_user(multipart->timer);
+  multipart->times_cpu_s  [TIMER_MPART_BUILD] = PDM_timer_cpu_sys(multipart->timer);
+
 
   int dn_node = distrib_node[i_rank+1] - distrib_node[i_rank];
   int *_node_part = NULL;
@@ -1585,6 +1623,9 @@ const double            *part_fraction,
     PDM_free(displ);
   }
 
+  // Start dualgraph split timer
+  PDM_timer_resume(multipart->timer);
+
   if (split_method == PDM_SPLIT_DUAL_WITH_HILBERT) {
     _split_graph_hilbert(comm,
                          dmesh,
@@ -1607,6 +1648,13 @@ const double            *part_fraction,
                           _node_part,
                           comm);
   }
+  // End dualgraph build timer
+  PDM_timer_hang_on(multipart->timer);
+  multipart->times_elapsed[TIMER_MPART_SPLIT] = PDM_timer_elapsed(multipart->timer)  - multipart->times_elapsed[TIMER_MPART_BUILD];
+  multipart->times_cpu    [TIMER_MPART_SPLIT] = PDM_timer_cpu(multipart->timer)      - multipart->times_cpu    [TIMER_MPART_BUILD];
+  multipart->times_cpu_u  [TIMER_MPART_SPLIT] = PDM_timer_cpu_user(multipart->timer) - multipart->times_cpu_u  [TIMER_MPART_BUILD];
+  multipart->times_cpu_s  [TIMER_MPART_SPLIT] = PDM_timer_cpu_sys(multipart->timer)  - multipart->times_cpu_s  [TIMER_MPART_BUILD];
+
 
   // PDM_log_trace_array_int (_node_part, dn_node, "_node_part :: ");
   if(compute_dual == 1) {
@@ -2339,6 +2387,7 @@ static
 void
 _run_ppart_domain
 (
+PDM_multipart_t   *multipart,
 PDM_dmesh_t       *dmesh,
 PDM_dmesh_nodal_t *dmesh_nodal,
 _part_mesh_t      *pmeshes,
@@ -2391,7 +2440,8 @@ PDM_MPI_Comm       comm
    */
   int *node_part = NULL;
   PDM_g_num_t *distrib_node = PDM_compute_entity_distribution(comm, dn_node);
-  PDM_g_num_t* distrib_partition = _split_graph(comm,
+  PDM_g_num_t* distrib_partition = _split_graph(multipart,
+                                                comm,
                                                 dmesh,
                                                 pmeshes,
                                                 n_part,
@@ -2400,6 +2450,9 @@ PDM_MPI_Comm       comm
                                                 part_fraction,
                                                 distrib_node,
                                                 &node_part);
+
+  // Start construct partionned mesh timer
+  PDM_timer_resume(multipart->timer);
 
   /*
    * Deduce node_ln_to_gn
@@ -2826,6 +2879,13 @@ PDM_MPI_Comm       comm
   PDM_free(pinternal_vtx_bound_part_idx);
   PDM_free(pinternal_vtx_bound);
 
+  // End construct partitionned mesh timer
+  PDM_timer_hang_on(multipart->timer);
+  multipart->times_elapsed[TIMER_MPART_MESH] = PDM_timer_elapsed(multipart->timer)  - multipart->times_elapsed[TIMER_MPART_SPLIT];
+  multipart->times_cpu    [TIMER_MPART_MESH] = PDM_timer_cpu(multipart->timer)      - multipart->times_cpu    [TIMER_MPART_SPLIT];
+  multipart->times_cpu_u  [TIMER_MPART_MESH] = PDM_timer_cpu_user(multipart->timer) - multipart->times_cpu_u  [TIMER_MPART_SPLIT];
+  multipart->times_cpu_s  [TIMER_MPART_MESH] = PDM_timer_cpu_sys(multipart->timer)  - multipart->times_cpu_s  [TIMER_MPART_SPLIT];
+
   if(own_edge_distrib == 1) {
     PDM_free(edge_distrib);
   }
@@ -2953,6 +3013,16 @@ PDM_multipart_create
     multipart->pmeshes[i_dom].is_owner_vtx_ghost_information = PDM_TRUE;
     multipart->pmeshes[i_dom].is_owner_hyperplane_color      = PDM_TRUE;
     multipart->pmeshes[i_dom].is_owner_thread_color          = PDM_TRUE;
+  }
+
+  // Initialise timers
+  multipart->timer     = PDM_timer_create();
+  multipart->timer_all = PDM_timer_create();
+  for (int i = 0; i < NTIMER_MPART; i++) {
+    multipart->times_elapsed[i] = 0.;
+    multipart->times_cpu[i]     = 0.;
+    multipart->times_cpu_u[i]   = 0.;
+    multipart->times_cpu_s[i]   = 0.;
   }
 
   return (PDM_multipart_t *) multipart;
@@ -3239,6 +3309,9 @@ PDM_multipart_compute
   PDM_MPI_Comm_size(multipart->comm, &n_rank);
 
 
+  // Start all timer
+  PDM_timer_resume(multipart->timer_all);
+
   /*
    * Step 1 : Split the graph (If we have a dmesh_nodal and prepare the dmesh before the treatment for faces and elements are the same)
    * Step 2 : Rebuild all connectivity in coherent manner
@@ -3292,7 +3365,7 @@ PDM_multipart_compute
 
         PDM_dmesh_t  *_dmesh = NULL;
         PDM_dmesh_nodal_to_dmesh_get_dmesh(dmn_to_dm, 0, &_dmesh);
-        _run_ppart_domain(_dmesh, dmesh_nodal, pmesh, n_part, split_method, part_size_method, part_fraction, comm);
+        _run_ppart_domain(multipart, _dmesh, dmesh_nodal, pmesh, n_part, split_method, part_size_method, part_fraction, comm);
         multipart->dmeshes  [i_domain] = _dmesh;
         multipart->dmn_to_dm[i_domain] = dmn_to_dm; /* Store it - We need it for PDM_multipart_get_part_mesh_nodal */
         // PDM_dmesh_nodal_to_dmesh_free(dmn_to_dm);
@@ -3316,7 +3389,7 @@ PDM_multipart_compute
         if (0 && i_rank == 0)
           PDM_printf("Running partitioning for block %i...\n", i_domain+1);
         PDM_timer_resume(timer);
-        _run_ppart_domain(_dmeshes, NULL, _pmeshes, n_part, split_method, part_size_method, part_fraction, comm);
+        _run_ppart_domain(multipart, _dmeshes, NULL, _pmeshes, n_part, split_method, part_size_method, part_fraction, comm);
         PDM_timer_hang_on(timer);
         if (0 && i_rank == 0)
           PDM_printf("...completed (elapsed time : %f)\n", PDM_timer_elapsed(timer) - cum_elapsed_time);
@@ -3327,6 +3400,19 @@ PDM_multipart_compute
 
     PDM_free(starting_part_idx);
   }
+
+  // End all timer
+  PDM_timer_hang_on(multipart->timer_all);
+  multipart->times_elapsed[TIMER_MPART_ALL] = PDM_timer_elapsed(multipart->timer_all);
+  multipart->times_cpu    [TIMER_MPART_ALL] = PDM_timer_cpu(multipart->timer_all);
+  multipart->times_cpu_u  [TIMER_MPART_ALL] = PDM_timer_cpu_user(multipart->timer_all);
+  multipart->times_cpu_s  [TIMER_MPART_ALL] = PDM_timer_cpu_sys(multipart->timer_all);
+
+  // Free timer
+  PDM_timer_free(multipart->timer_all);
+  multipart->timer_all = NULL;
+  PDM_timer_free(multipart->timer);
+  multipart->timer = NULL;
 }
 
 /**
@@ -4037,13 +4123,41 @@ PDM_multipart_time_get
  double         **cpu_sys
 )
 {
-  assert(i_domain < multipart->n_domain);
+  if (!(i_domain < multipart->n_domain)) {
+    PDM_error (__FILE__, __LINE__, 0, "PDM_multipart_time_get : Domain identifier %d is not compatible with %d total domains.\n", i_domain, multipart->n_domain);
+  }
 
-  // PDM_printf("PDM_multipart_time_get: Not implemented\n");
-  *elapsed  = NULL;
-  *cpu      = NULL;
-  *cpu_user = NULL;
-  *cpu_sys  = NULL;
+  *elapsed  = multipart->times_elapsed;
+  *cpu      = multipart->times_cpu;
+  *cpu_user = multipart->times_cpu_u;
+  *cpu_sys  = multipart->times_cpu_s;
+
+  int debug = 0;
+  if (debug) {
+
+    int i_rank, n_rank;
+    PDM_MPI_Comm_rank(multipart->comm, &i_rank);
+    PDM_MPI_Comm_size(multipart->comm, &n_rank);
+
+    double g_times_elapsed_min[NTIMER_MPART] = {0., 0., 0., 0.};
+    double g_times_elapsed_max[NTIMER_MPART] = {0., 0., 0., 0.};
+    double g_times_elapsed_mean[NTIMER_MPART] = {0., 0., 0., 0.};
+
+    PDM_MPI_Allreduce(multipart->times_elapsed, g_times_elapsed_min,  4, PDM_MPI_DOUBLE, PDM_MPI_MIN, multipart->comm);
+    PDM_MPI_Allreduce(multipart->times_elapsed, g_times_elapsed_max,  4, PDM_MPI_DOUBLE, PDM_MPI_MAX, multipart->comm);
+    PDM_MPI_Allreduce(multipart->times_elapsed, g_times_elapsed_mean, 4, PDM_MPI_DOUBLE, PDM_MPI_SUM, multipart->comm);
+
+    for (int i = 0; i < NTIMER_MPART; i++) {
+      g_times_elapsed_mean[i] /= n_rank;
+    }
+
+    if (i_rank == 0) {
+      PDM_printf("multipart_total_time %12.5e %12.5e %12.5e\n",       g_times_elapsed_mean[0], g_times_elapsed_min[0], g_times_elapsed_max[0]);
+      PDM_printf("multipart_build_graph_time %12.5e %12.5e %12.5e\n", g_times_elapsed_mean[1], g_times_elapsed_min[1], g_times_elapsed_max[1]);
+      PDM_printf("multipart_split_graph_time %12.5e %12.5e %12.5e\n", g_times_elapsed_mean[2], g_times_elapsed_min[2], g_times_elapsed_max[2]);
+      PDM_printf("multipart_mesh_time %12.5e %12.5e %12.5e\n",        g_times_elapsed_mean[3], g_times_elapsed_min[3], g_times_elapsed_max[3]);
+    }
+  } // end debug
 
 }
 
@@ -4060,6 +4174,16 @@ PDM_multipart_free
  PDM_multipart_t *multipart
 )
 {
+  // Free timer
+  if (multipart->timer_all != NULL) {
+    PDM_timer_free(multipart->timer_all);
+    multipart->timer_all = NULL;
+  }
+  if (multipart->timer != NULL) {
+    PDM_timer_free(multipart->timer);
+    multipart->timer = NULL;
+  }
+
   //PDM_free(multipart->dmeshes_ids);
   for (int i_domain = 0; i_domain < multipart->n_domain; i_domain++) {
     for (int i_part = 0; i_part < multipart->n_part[i_domain]; i_part++) {

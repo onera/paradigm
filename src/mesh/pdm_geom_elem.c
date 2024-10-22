@@ -45,6 +45,7 @@
 #include "pdm_logging.h"
 #include "pdm_array.h"
 #include "pdm_order.h"
+#include "pdm_line.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -2855,6 +2856,197 @@ PDM_geom_elem_edge_upwind_and_downwind
   }
 }
 
+
+void
+PDM_geom_elem_edge_upwind_and_downwind_2d
+(
+ int          i_plane,
+ PDM_g_num_t *face_ln_to_gn,
+ double      *face_center,
+ int         *face_edge_idx,
+ int         *face_edge,
+ int          n_edge,
+ int         *edge_vtx,
+ int         *vtx_face_idx,
+ int         *vtx_face,
+ double      *vtx_coord,
+ int        **upwind_face_out,
+ int        **downwind_face_out,
+ int        **upwind_edge_out,
+ int        **downwind_edge_out,
+ double     **upwind_point_out,
+ double     **downwind_point_out
+)
+{
+  PDM_UNUSED(face_center); // TODO: use to disambiguate if tie (keep element with nearest center)
+
+
+  if (i_plane < 0) {
+    PDM_error(__FILE__, __LINE__, 0, "Invalid cartesian plane %d\n", i_plane);
+  }
+
+  int i_coord0 =  i_plane;
+  int i_coord1 = (i_plane+1)%3;
+  int i_coord2 = (i_plane+2)%3;
+
+  /* Allocate and initialize stuff */
+  PDM_malloc(*upwind_face_out   ,     n_edge, int   );
+  PDM_malloc(*downwind_face_out ,     n_edge, int   );
+  PDM_malloc(*upwind_edge_out   ,     n_edge, int   );
+  PDM_malloc(*downwind_edge_out ,     n_edge, int   );
+  PDM_malloc(*upwind_point_out  , 3 * n_edge, double);
+  PDM_malloc(*downwind_point_out, 3 * n_edge, double);
+
+  int    *upwind_face    = *upwind_face_out;
+  int    *downwind_face  = *downwind_face_out;
+  int    *upwind_edge    = *upwind_edge_out;
+  int    *downwind_edge  = *downwind_edge_out;
+  double *upwind_point   = *upwind_point_out;
+  double *downwind_point = *downwind_point_out;
+
+  for(int i = 0; i < n_edge; ++i) {
+    upwind_face  [i] = -1;
+    downwind_face[i] = -1;
+    upwind_edge  [i] = -1;
+    downwind_edge[i] = -1;
+  }
+
+
+  int max_n_face_per_vtx = 0;
+  for (int idx_vtx = 0; idx_vtx < 2*n_edge; idx_vtx++) {
+    int vtx_id = edge_vtx[idx_vtx] - 1;
+
+    int n_face_per_vtx = vtx_face_idx[vtx_id+1] - vtx_face_idx[vtx_id];
+    max_n_face_per_vtx = PDM_MAX(max_n_face_per_vtx, n_face_per_vtx);
+  }
+
+  int         *order         = NULL;
+  PDM_g_num_t *vtx_face_gnum = NULL;
+  PDM_malloc(order, max_n_face_per_vtx, int);
+  if (face_ln_to_gn != NULL) {
+    PDM_malloc(vtx_face_gnum, max_n_face_per_vtx, PDM_g_num_t);
+  }
+
+
+  double a1[3], a2[3], b1[3], b2[3];
+
+  for (int i_edge = 0; i_edge < n_edge; i_edge++) {
+
+    for (int idx_vtx = 0; idx_vtx < 2; idx_vtx++) {
+      /*
+       * idx_vtx = 0 : we look for downwind point
+       * idx_vtx = 1 : we look for upwind   point
+       */
+      int i_vtx1 = edge_vtx[2*i_edge +  idx_vtx     ] - 1;
+      int i_vtx0 = edge_vtx[2*i_edge + (idx_vtx+1)%2] - 1;
+
+      a1[0] = vtx_coord[3*i_vtx0 + i_coord0];
+      a1[1] = vtx_coord[3*i_vtx0 + i_coord1];
+      a2[0] = vtx_coord[3*i_vtx1 + i_coord0];
+      a2[1] = vtx_coord[3*i_vtx1 + i_coord1];
+
+      double u_min = HUGE_VAL;
+
+      int n_face_per_vtx = vtx_face_idx[i_vtx1+1] - vtx_face_idx[i_vtx1];
+
+      if (face_ln_to_gn != NULL) {
+        int idx_write = 0;
+        for (int idx_face = vtx_face_idx[i_vtx1]; idx_face < vtx_face_idx[i_vtx1+1]; idx_face++) {
+          int face_id = PDM_ABS(vtx_face[idx_face]) - 1;
+
+          // if(face_id >= n_face) {
+          //   continue;
+          // }
+
+          vtx_face_gnum[idx_write++] = face_ln_to_gn[face_id];
+        }
+        PDM_order_gnum_s(vtx_face_gnum, 1, order, n_face_per_vtx);
+      }
+      else {
+        for(int i = 0; i < n_face_per_vtx; ++i) {
+          order[i] = i;
+        }
+      }
+
+      for (int _idx_face = 0; _idx_face < n_face_per_vtx; _idx_face++) {
+
+        int idx_face = vtx_face_idx[i_vtx1] + order[_idx_face];
+
+        int i_face = vtx_face[idx_face] - 1;
+
+        for (int idx_edge = face_edge_idx[i_face]; idx_edge < face_edge_idx[i_face+1]; idx_edge++) {
+
+          int j_edge = PDM_ABS(face_edge[idx_edge]) - 1;
+
+          int j_vtx0, j_vtx1;
+          if (face_edge[idx_edge] < 0) {
+            j_vtx1 = edge_vtx[2*j_edge  ] - 1;
+            j_vtx0 = edge_vtx[2*j_edge+1] - 1;
+          }
+          else {
+            j_vtx0 = edge_vtx[2*j_edge  ] - 1;
+            j_vtx1 = edge_vtx[2*j_edge+1] - 1;
+          }
+
+          if (j_vtx0 == i_vtx0 || j_vtx1 == i_vtx0 ||
+              j_vtx0 == i_vtx1 || j_vtx1 == i_vtx1) {
+            continue;
+          }
+
+          // Check if j_edge intersects the ray
+          double u, v;
+          double intersection_coord[3];
+
+          b1[0] = vtx_coord[3*j_vtx0 + i_coord0];
+          b1[1] = vtx_coord[3*j_vtx0 + i_coord1];
+          b2[0] = vtx_coord[3*j_vtx1 + i_coord0];
+          b2[1] = vtx_coord[3*j_vtx1 + i_coord1];
+
+          PDM_line_intersect_t stat = PDM_ray_segment_intersection_2d(a1,
+                                                                      a2,
+                                                                      b1,
+                                                                      b2,
+                                                                      &u,
+                                                                      &v,
+                                                                      intersection_coord);
+
+          if (stat == PDM_LINE_INTERSECT_YES || stat == PDM_LINE_INTERSECT_ON_LINE) {
+            if (u < u_min) {
+
+              u_min = u;
+
+              intersection_coord[2] = (1-u)*vtx_coord[3*i_vtx0 + i_coord2] + u*vtx_coord[3*i_vtx0 + i_coord2];
+
+              if (idx_vtx == 1) {
+                upwind_face[i_edge] = i_face;
+                upwind_edge[i_edge] = j_edge;
+                upwind_point[3*i_edge+i_coord0] = intersection_coord[0];
+                upwind_point[3*i_edge+i_coord1] = intersection_coord[1];
+                upwind_point[3*i_edge+i_coord2] = intersection_coord[2];
+              }
+              else {
+                downwind_face[i_edge] = i_face;
+                downwind_edge[i_edge] = j_edge;
+                downwind_point[3*i_edge+i_coord0] = intersection_coord[0];
+                downwind_point[3*i_edge+i_coord1] = intersection_coord[1];
+                downwind_point[3*i_edge+i_coord2] = intersection_coord[2];
+              }
+
+            }
+          }
+
+        } // End loop on current face's edges
+
+      } // End loop on faces incident to current vtx
+
+
+    } // End loop on vertices
+
+  } // End loop on edges
+
+  PDM_free(order        );
+  PDM_free(vtx_face_gnum);
+}
 
 
 #ifdef __cplusplus

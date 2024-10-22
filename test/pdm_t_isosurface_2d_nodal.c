@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
 
   if (n_part==0) {
     int     dn_vtx     = PDM_DMesh_nodal_n_vtx_get(dmn);
-    double *dvtx_coord = PDM_DMesh_nodal_coord_get(dmn, PDM_OWNERSHIP_BAD_VALUE);
+    double *dvtx_coord = PDM_DMesh_nodal_vtx_get(dmn, PDM_OWNERSHIP_BAD_VALUE);
 
     PDM_malloc(iso_dfield     , dn_vtx, double);
     PDM_malloc(itp_dfield_vtx , dn_vtx, double);
@@ -160,7 +160,7 @@ int main(int argc, char *argv[])
       PDM_isosurface_test_utils_compute_itp_field(n_vtx, vtx_coord, itp_field_vtx [i_part]);
 
       int n_face = PDM_part_mesh_nodal_n_elmts_get(pmn, PDM_GEOMETRY_KIND_SURFACIC, i_part);
-      PDM_g_num_t *face_gnum = PDM_part_mesh_nodal_g_num_get(pmn, 0, i_part, PDM_OWNERSHIP_KEEP);
+      PDM_g_num_t *face_gnum = PDM_part_mesh_nodal_g_num_get_from_part(pmn, PDM_GEOMETRY_KIND_SURFACIC, i_part, PDM_OWNERSHIP_KEEP);
       PDM_malloc(itp_field_face[i_part], n_face, double);
       for (int i_face=0; i_face<n_face; ++i_face) {
         itp_field_face[i_part][i_face] = (double) face_gnum[i_face];

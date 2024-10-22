@@ -375,12 +375,16 @@ PDM_DMesh_nodal_elmts_group_get
  PDM_dmesh_nodal_elmts_t  *dmn_elts,
  int                      *n_group_elmt,
  int                     **dgroup_elmt_idx,
- PDM_g_num_t             **dgroup_elmt
+ PDM_g_num_t             **dgroup_elmt,
+ PDM_ownership_t           owner
 )
 {
   *n_group_elmt    = dmn_elts->n_group_elmt;
   *dgroup_elmt_idx = dmn_elts->dgroup_elmt_idx;
   *dgroup_elmt     = dmn_elts->dgroup_elmt;
+  if(owner != PDM_OWNERSHIP_BAD_VALUE) {
+    dmn_elts->dgroup_elmt_owner = owner;
+  }
 }
 
 
@@ -639,7 +643,7 @@ PDM_DMesh_nodal_elmts_update_ownership
   for(int i_section = 0; i_section < dmn_elts->n_section_poly3d; ++i_section) {
     dmn_elts->sections_poly3d[i_section]->owner = owner;
   }
-  dmn_elts->dgroup_elmt_owner = owner;
+  // dmn_elts->dgroup_elmt_owner = owner;
 }
 
 
@@ -698,6 +702,41 @@ const int                n_elt,
   for (int i = 1; i < dmn_elts->n_rank + 1; i++) {
     section->distrib[i] +=  section->distrib[i-1];
   }
+}
+
+/**
+ * \brief Return standard section description
+ * \param [in]  hdl         Distributed nodal mesh handle
+ * \param [in]  id_section  Block identifier
+ *
+ * \return  connect         Connectivity
+ *
+ */
+PDM_g_num_t *
+PDM_DMesh_nodal_elmts_section_std_get
+(
+      PDM_dmesh_nodal_elmts_t *dmn_elts,
+const int                      id_section,
+      PDM_ownership_t          owner
+)
+{
+  if (dmn_elts == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+  }
+
+  int _id_section = id_section - PDM_BLOCK_ID_BLOCK_STD;
+
+  PDM_DMesh_nodal_section_std_t *section = dmn_elts->sections_std[_id_section];
+
+  if (section == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad standard section identifier\n");
+  }
+
+  if(owner != PDM_OWNERSHIP_BAD_VALUE) {
+    section->owner = owner;
+  }
+
+  return section->_connec;
 }
 
 
@@ -774,7 +813,8 @@ PDM_DMesh_nodal_elmts_section_poly2d_get
       PDM_dmesh_nodal_elmts_t  *dmn_elts,
 const int                       id_section,
       PDM_l_num_t             **connec_idx,
-      PDM_g_num_t             **connec
+      PDM_g_num_t             **connec,
+      PDM_ownership_t           owner
 )
 {
   int _id_section = id_section - PDM_BLOCK_ID_BLOCK_POLY2D;
@@ -786,6 +826,10 @@ const int                       id_section,
 
   *connec_idx = section->_connec_idx;
   *connec     = section->_connec;
+
+  if(owner != PDM_OWNERSHIP_BAD_VALUE) {
+    section->owner = owner;
+  }
 }
 
 
@@ -955,7 +999,8 @@ const int                       id_section,
       PDM_l_num_t             **facvtx_idx,
       PDM_g_num_t             **facvtx,
       PDM_l_num_t             **cellfac_idx,
-      PDM_g_num_t             **cellfac
+      PDM_g_num_t             **cellfac,
+      PDM_ownership_t           owner
 )
 {
   int _id_section = id_section - PDM_BLOCK_ID_BLOCK_POLY3D;
@@ -971,6 +1016,10 @@ const int                       id_section,
   *facvtx      = section->_face_vtx;
   *cellfac_idx = section->_cell_face_idx;
   *cellfac     = section->_cell_face;
+
+  if(owner != PDM_OWNERSHIP_BAD_VALUE) {
+    section->owner = owner;
+  }
 
 }
 

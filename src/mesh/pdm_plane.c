@@ -10,6 +10,7 @@
 #include "pdm.h"
 #include "pdm_priv.h"
 #include "pdm_plane.h"
+#include "pdm_error.h"
 
 /*=============================================================================
  * Macro definitions
@@ -268,6 +269,58 @@ const double plane[9],
   }
 
 }
+
+
+int
+PDM_plane_get_cartesian_plane
+(
+  PDM_MPI_Comm   comm,
+  int            n_part,
+  int           *n_pts,
+  double       **coord,
+  double         tolerance
+)
+{
+  if (tolerance < 0) {
+    PDM_error(__FILE__, __LINE__, 0, "Invalid tolerance %f (must be >= 0)\n", tolerance);
+  }
+
+  double l_min[3] = { HUGE_VAL,  HUGE_VAL,  HUGE_VAL};
+  double l_max[3] = {-HUGE_VAL, -HUGE_VAL, -HUGE_VAL};
+
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    for (int i = 0; i < n_pts[i_part]; i++) {
+      for (int j = 0; j < 3; j++) {
+        l_min[j] = PDM_MIN(l_min[j], coord[i_part][3*i+j]);
+        l_max[j] = PDM_MAX(l_max[j], coord[i_part][3*i+j]);
+      }
+    }
+  }
+
+  double g_min[3];
+  double g_max[3];
+  PDM_MPI_Allreduce(l_min, g_min, 3, PDM_MPI_DOUBLE, PDM_MPI_MIN, comm);
+  PDM_MPI_Allreduce(l_max, g_max, 3, PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
+
+
+  int    i_plane   = -1;
+  double delta_min = HUGE_VAL;
+  for (int i = 0; i < 3; i++) {
+    double delta = g_max[i] - g_min[i];
+    if (delta < delta_min) {
+      delta_min = delta;
+      i_plane   = i;
+    }
+  }
+
+  if (delta_min <= tolerance) {
+    return (i_plane+1)%3;
+  }
+  else {
+    return -1;
+  }
+}
+
 
 
 #ifdef __cplusplus

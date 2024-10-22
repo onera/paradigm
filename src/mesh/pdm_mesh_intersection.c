@@ -47,7 +47,7 @@
 #include "pdm_part_mesh_nodal.h"
 #include "pdm_part_mesh_nodal_priv.h"
 #include "pdm_dmesh_nodal_to_dmesh.h"
-#include "pdm_part_mesh_nodal_to_pmesh.h"
+#include "pdm_part_mesh_nodal_to_part_mesh.h"
 
 #include "pdm_mesh_intersection_surf_surf_atomic.h"
 #include "pdm_mesh_intersection_vol_vol_atomic.h"
@@ -2362,12 +2362,6 @@ _mesh_intersection_vol_vol
                                              0,
                                              PDM_MESH_ENTITY_VTX);
 
-    PDM_extract_part_parent_ln_to_gn_get(mi->extrp_mesh[i],
-                                         0,
-                                         PDM_MESH_ENTITY_VTX,
-                                         &vtx_ln_to_gn[i],
-                                         PDM_OWNERSHIP_KEEP);
-
     PDM_extract_part_vtx_coord_get(mi->extrp_mesh[i],
                                    0,
                                    &vtx_coord[i],
@@ -2511,12 +2505,34 @@ _mesh_intersection_vol_vol
           }
         }
       }
-      extract_part_mesh[i] = PDM_part_mesh_nodal_to_part_mesh(extract_pmn,
-                                                              PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE,
-                                                              PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_NONE);
 
+      PDM_part_mesh_nodal_to_part_mesh_t *pmn_to_pm = PDM_part_mesh_nodal_to_part_mesh_create(extract_pmn,
+                                                                                              PDM_FALSE,
+                                                                                              PDM_OWNERSHIP_KEEP);
+
+      PDM_part_mesh_nodal_to_part_mesh_connectivity_enable(pmn_to_pm,
+                                                           PDM_CONNECTIVITY_TYPE_CELL_FACE);
+
+      PDM_part_mesh_nodal_to_part_mesh_connectivity_enable(pmn_to_pm,
+                                                           PDM_CONNECTIVITY_TYPE_FACE_VTX);
+
+      PDM_part_mesh_nodal_to_part_mesh_compute(pmn_to_pm);
+
+      PDM_part_mesh_nodal_to_part_mesh_part_mesh_get(pmn_to_pm,
+                                                     &extract_part_mesh[i],
+                                                     PDM_OWNERSHIP_USER);
+
+      PDM_part_mesh_nodal_to_part_mesh_free(pmn_to_pm);
       PDM_part_mesh_nodal_free(extract_pmn);
 
+      n_vtx[i] = PDM_part_mesh_n_entity_get(extract_part_mesh[i],
+                                            0,
+                                            PDM_MESH_ENTITY_VTX);
+
+      PDM_part_mesh_vtx_coord_get(extract_part_mesh[i],
+                                  0,
+                                  &vtx_coord[i],
+                                  PDM_OWNERSHIP_BAD_VALUE);
 
       PDM_part_mesh_connectivity_get(extract_part_mesh[i],
                                      0,
@@ -2538,6 +2554,13 @@ _mesh_intersection_vol_vol
     }
     else {
       /* From part mesh */
+      PDM_extract_part_parent_ln_to_gn_get(mi->extrp_mesh[i],
+                                           0,
+                                           PDM_MESH_ENTITY_VTX,
+                                           &vtx_ln_to_gn[i], // --> only for debug
+                                           PDM_OWNERSHIP_KEEP);
+
+
       PDM_extract_part_connectivity_get(mi->extrp_mesh[i],
                                         0,
                                         PDM_CONNECTIVITY_TYPE_CELL_FACE,
@@ -3134,6 +3157,8 @@ _mesh_intersection_vol_surf
     _export_vtk_2d("extrp_mesh_b", extrp_mesh_b);
   }
 
+  // TODO...
+  // PDM_error(__FILE__, __LINE__, 0, "_mesh_intersection_vol_surf : Not yet implemented\n");
 }
 
 static PDM_polygon_status_t

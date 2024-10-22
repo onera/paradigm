@@ -413,6 +413,16 @@ PDM_bound_type_to_entity_type
 );
 
 /**
+ * \brief Helper to get bound type according to an entity
+ *
+ */
+PDM_bound_type_t
+PDM_entity_type_to_bound_type
+(
+ PDM_mesh_entities_t  entity_type
+);
+
+/**
  * \brief Helper to get entity type according to a geometry kind
  *
  */
@@ -420,6 +430,47 @@ PDM_mesh_entities_t
 PDM_geometry_kind_to_entity_type
 (
  PDM_geometry_kind_t   geom_kind
+);
+
+/**
+ * \brief Helper to get geometry kind according to an entity type
+ *
+ */
+PDM_geometry_kind_t
+PDM_entity_type_to_geometry_kind
+(
+ PDM_mesh_entities_t   entity_type
+);
+
+/**
+ * \brief Convert a pair of entity types to its corresponding connectivity type
+ *
+ * \param [in]  connectivity_type   Connectivity type
+ * \param [out] entity_type1        First entity type
+ * \param [out] entity_type2        Second entity type
+ */
+PDM_connectivity_type_t
+PDM_entity_pair_to_connectivity_type
+(
+  PDM_mesh_entities_t entity_type1,
+  PDM_mesh_entities_t entity_type2
+);
+
+/**
+ * \brief Convert a connectivity type to its corresponding pair of entity types
+ *
+ * \param [in]  connectivity_type   Connectivity type
+ * \param [out] entity_type1        First entity type
+ * \param [out] entity_type2        Second entity type
+ *
+ * \return 1 if is a valid connectivity type, 0 else
+ */
+int
+PDM_connectivity_type_to_entity_pair
+(
+  PDM_connectivity_type_t  connectivity_type,
+  PDM_mesh_entities_t     *entity_type1,
+  PDM_mesh_entities_t     *entity_type2
 );
 
 /**

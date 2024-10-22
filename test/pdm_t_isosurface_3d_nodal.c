@@ -112,7 +112,7 @@ int main(int argc, char *argv[])
   if (n_part==0) {
     // Block-distributed
     int     dn_vtx     = PDM_DMesh_nodal_n_vtx_get(dmn);
-    double *dvtx_coord = PDM_DMesh_nodal_coord_get(dmn, PDM_OWNERSHIP_BAD_VALUE);
+    double *dvtx_coord = PDM_DMesh_nodal_vtx_get(dmn, PDM_OWNERSHIP_BAD_VALUE);
 
     PDM_malloc(iso_dfield     , dn_vtx, double);
     PDM_malloc(itp_dfield_vtx , dn_vtx, double);

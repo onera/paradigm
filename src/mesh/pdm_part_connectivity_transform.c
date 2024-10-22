@@ -662,13 +662,17 @@ PDM_compute_face_vtx_from_face_and_edge
         }
 
         if (edge_vtx[2*iedge] == _face_vtx[i-1]) {
-          assert(_face_edge[j] > 0);
+          if (_face_edge[j] <= 0) {
+            PDM_error(__FILE__, __LINE__, 0, "Incoherence between face->edge and edge->vtx (for face %d, j = %d, got edge %d, but expected > 0)\n", iface, j, _face_edge[j]);
+          }
           _face_vtx[i] = edge_vtx[2*iedge+1];
           edge_tag[iedge] = 1;
           break;
         }
         else if (edge_vtx[2*iedge+1] == _face_vtx[i-1]) {
-          assert(_face_edge[j] < 0);
+          if (_face_edge[j] >= 0) {
+            PDM_error(__FILE__, __LINE__, 0, "Incoherence between face->edge and edge->vtx (for face %d, j = %d, got edge %d, but expected < 0)\n", iface, j, _face_edge[j]);
+          }
           _face_vtx[i] = edge_vtx[2*iedge];
           edge_tag[iedge] = 1;
           break;

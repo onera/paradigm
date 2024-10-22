@@ -507,7 +507,7 @@ void _get_vtx_connectivity(
     );
 
     vtx_connect_table[elt_type] = PDM_DMesh_nodal_section_std_get(
-      dmn, PDM_GEOMETRY_KIND_VOLUMIC, section_vol_ids[i_section]
+      dmn, PDM_GEOMETRY_KIND_VOLUMIC, section_vol_ids[i_section], PDM_OWNERSHIP_BAD_VALUE
     );
 
     // -------- We assume vertex are always set to 0
@@ -533,7 +533,7 @@ void _get_vtx_connectivity(
     );
 
     vtx_connect_table[elt_type] = PDM_DMesh_nodal_section_std_get(
-      dmn, PDM_GEOMETRY_KIND_SURFACIC, section_surf_ids[i_section]
+      dmn, PDM_GEOMETRY_KIND_SURFACIC, section_surf_ids[i_section], PDM_OWNERSHIP_BAD_VALUE
     );
 
     // -------- Set all surfacic tag to 2
@@ -558,7 +558,7 @@ void _get_vtx_connectivity(
     );
 
     vtx_connect_table[elt_type] = PDM_DMesh_nodal_section_std_get(
-      dmn, PDM_GEOMETRY_KIND_RIDGE, section_edge_ids[i_section]
+      dmn, PDM_GEOMETRY_KIND_RIDGE, section_edge_ids[i_section], PDM_OWNERSHIP_BAD_VALUE
     );
 
     // -------- Set all edges tag to 3
@@ -572,8 +572,8 @@ void _get_vtx_connectivity(
 
   // ---- Get vertex element
   n_elt_table[PDM_MESH_NODAL_POINT] = PDM_DMesh_nodal_n_vtx_get(dmn);
-  tag_table[PDM_MESH_NODAL_POINT]   = PDM_DMesh_nodal_vtx_tag_get(dmn);
-  *vtx_coords                       = PDM_DMesh_nodal_vtx_get(dmn);
+  tag_table[PDM_MESH_NODAL_POINT]   = PDM_DMesh_nodal_vtx_tag_get(dmn, PDM_OWNERSHIP_BAD_VALUE);
+  *vtx_coords                       = PDM_DMesh_nodal_vtx_get(dmn, PDM_OWNERSHIP_BAD_VALUE);
 }
 
 // -----------------------------------------------------------------------------
@@ -664,7 +664,7 @@ int main(int argc, char *argv[])
   };
 
   PDM_g_num_t *vtx_distrib = PDM_dmesh_nodal_vtx_distrib_get(dmn);
-  double *dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn);
+  double *dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn, PDM_OWNERSHIP_BAD_VALUE);
   int dn_vtx = vtx_distrib[i_rank+1] - vtx_distrib[i_rank];
 
   for (int i = 0; i < dn_vtx; i++) {

@@ -303,7 +303,7 @@ _generate_mesh_rectangle
 
     int dn_vtx = PDM_DMesh_nodal_n_vtx_get(*dmn);
 
-    double* dvtx_coord = PDM_DMesh_nodal_coord_get(*dmn, PDM_OWNERSHIP_KEEP);
+    double* dvtx_coord = PDM_DMesh_nodal_vtx_get(*dmn, PDM_OWNERSHIP_BAD_VALUE);
 
     double y = 0.;
     for (int i = 0; i < dn_vtx; i++) {
@@ -382,7 +382,7 @@ _generate_mesh_parallelepiped
 
     int dn_vtx = PDM_DMesh_nodal_n_vtx_get(*dmn);
 
-    double* dvtx_coord = PDM_DMesh_nodal_coord_get(*dmn, PDM_OWNERSHIP_KEEP);
+    double* dvtx_coord = PDM_DMesh_nodal_vtx_get(*dmn, PDM_OWNERSHIP_BAD_VALUE);
 
     double y = 0.;
     for (int i = 0; i < dn_vtx; i++) {
@@ -398,7 +398,7 @@ _generate_mesh_parallelepiped
 
     int dn_vtx = PDM_DMesh_nodal_n_vtx_get(*dmn);
 
-    double* dvtx_coord = PDM_DMesh_nodal_coord_get(*dmn, PDM_OWNERSHIP_KEEP);
+    double* dvtx_coord = PDM_DMesh_nodal_vtx_get(*dmn, PDM_OWNERSHIP_BAD_VALUE);
 
     double z = 0.;
     for (int i = 0; i < dn_vtx; i++) {

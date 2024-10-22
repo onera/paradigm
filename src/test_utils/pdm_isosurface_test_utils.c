@@ -475,7 +475,7 @@ PDM_isosurface_test_utils_gen_mesh
                                          out_dmesh);
 
       PDM_dmesh_nodal_to_dmesh_free(dmn_to_dm);
-      double *vtx_coord = PDM_DMesh_nodal_coord_get(dmn, PDM_OWNERSHIP_USER); // ugly but saving lives
+      double *vtx_coord = PDM_DMesh_nodal_vtx_get(dmn, PDM_OWNERSHIP_USER); // ugly but saving lives
       PDM_dmesh_vtx_coord_set(*out_dmesh, vtx_coord, PDM_OWNERSHIP_KEEP);
     }
 
@@ -733,7 +733,7 @@ PDM_isosurface_test_utils_gen_mesh
       PDM_dmesh_compute_distributions(*out_dmesh);
 
       PDM_dmesh_nodal_to_dmesh_free(dmn_to_dm);
-      double *vtx_coord = PDM_DMesh_nodal_coord_get(dmn, PDM_OWNERSHIP_USER); // ugly but saving lives
+      double *vtx_coord = PDM_DMesh_nodal_vtx_get(dmn, PDM_OWNERSHIP_USER); // ugly but saving lives
       PDM_dmesh_vtx_coord_set(*out_dmesh, vtx_coord, PDM_OWNERSHIP_KEEP);
     }
     PDM_DMesh_nodal_free(dmn);

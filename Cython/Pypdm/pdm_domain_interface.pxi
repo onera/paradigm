@@ -196,7 +196,7 @@ def interface_vertex_to_face(int       n_interface,
     # Interfaces data
     cdef int           *_interface_dn_vtx = list_to_int_pointer(interface_dn_vtx)
     cdef PDM_g_num_t **_interface_ids_vtx = np_list_to_gnum_pointers(interface_ids_vtx)
-    cdef int         **_interface_dom_vtx
+    cdef int         **_interface_dom_vtx = NULL
     if multidomain_interface:
       _interface_dom_vtx = np_list_to_int_pointers(interface_dom_vtx)
     else:
@@ -247,8 +247,8 @@ def interface_vertex_to_face(int       n_interface,
     for i in range(n_interface):
       interface_ids_face = create_numpy_g(_interface_ids_face[i], 2*_interface_dn_face[i])
       interface_results = {'interface_dn_face' : _interface_dn_face[i], 'np_interface_ids_face' : interface_ids_face}
+      interface_dom_face = create_numpy_i(_interface_dom_face[i], 2*_interface_dn_face[i])
       if multidomain_interface: #Return domains only if we had complex interfaces
-        interface_dom_face = create_numpy_i(_interface_dom_face[i], 2*_interface_dn_face[i])
         interface_results['np_interface_dom_face'] = interface_dom_face
       face_interface.append(interface_results)
 
@@ -259,6 +259,7 @@ def interface_vertex_to_face(int       n_interface,
     if not multidomain_interface:
       for i in range(n_interface):
         free(_interface_dom_vtx[i])
+      free(_interface_dom_vtx)
 
     free(_interface_dom_face)
     free(_dn_vtx       )

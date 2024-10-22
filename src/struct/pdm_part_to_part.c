@@ -1958,7 +1958,7 @@ _p2p_stride_var_reverse_iexch
 
 
 
-  unsigned char* *_part1_data = NULL;
+  unsigned char **_part1_data = NULL;
   PDM_malloc(_part1_data, ptp->n_part1, unsigned char *);
   for(int i = 0; i < ptp->n_part1; ++i) {
     int size = 0;
@@ -2917,7 +2917,7 @@ _create
     for (int j = ptp->default_i_recv_buffer[i]; j < ptp->default_i_recv_buffer[i+1]; j++) {
       //int recv_ipart1 = int_r_buff[4 * j + 0];
       //int recv_ielt1  = int_r_buff[4 * j + 1];
-      int recv_gnum1  = gnum_r_buff[j];
+      PDM_g_num_t recv_gnum1  = gnum_r_buff[j];
       int recv_ipart2 = int_r_buff[4 * j + 2];
       int recv_ielt2  = int_r_buff[4 * j + 3];
       int iref = ielt_to_ref[recv_ipart2][recv_ielt2];

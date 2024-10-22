@@ -2392,13 +2392,13 @@ _isosurface_ngon_single_part
       *out_isovalue_face_idx   = PDM_array_zeros_int(n_isovalues + 1);
     }
 
-    if (face_tag != NULL) {
+    // if (face_tag != NULL) {
       *out_iso_n_edge          = 0;
       *out_iso_edge_parent_idx = PDM_array_zeros_int(1);
       PDM_malloc(*out_iso_edge_parent, 0, int);
       PDM_malloc(*out_iso_edge_vtx   , 0, int);
       *out_isovalue_edge_idx   = PDM_array_zeros_int(n_isovalues + 1);
-    }
+    // }
 
     return;
   }
@@ -2465,18 +2465,19 @@ _isosurface_ngon_single_part
   int *isovalue_edge_idx = NULL;
 
   int iso_n_edge = 0;
-  if (face_tag != NULL) {
     PDM_malloc(isovalue_edge_idx, n_isovalues + 1, int);
     isovalue_edge_idx[0] = 0;
+  if (face_tag != NULL) {
     for (int i_face = 0; i_face < n_face; i_face++) {
       s_iso_edge += n_isovalues * (face_tag[i_face] > 0);
     }
+  }
     PDM_malloc(iso_edge_vtx       , s_iso_edge * 2, int);
     PDM_malloc(iso_edge_parent_idx, s_iso_edge + 1, int);
     PDM_malloc(iso_edge_parent    , s_iso_edge * 2, int);
 
     iso_edge_parent_idx[0] = 0;
-  }
+  // }
 
   int *vtx_to_iso_vtx = NULL;
   PDM_malloc(vtx_to_iso_vtx, n_vtx, int);
@@ -2592,9 +2593,9 @@ _isosurface_ngon_single_part
     if (isovalue_n_active_edge == 0) {
       isovalue_vtx_idx [i_isovalue+1] = iso_n_vtx;
       isovalue_face_idx[i_isovalue+1] = iso_n_face;
-      if (face_tag != NULL) {
+      // if (face_tag != NULL) {
         isovalue_edge_idx[i_isovalue+1] = iso_n_edge;
-      }
+      // }
       continue;
     }
 
@@ -2671,9 +2672,9 @@ _isosurface_ngon_single_part
     if (is_3d) {
       isovalue_face_idx[i_isovalue+1] = iso_n_face;
     }
-    if (face_tag != NULL) {
+    // if (face_tag != NULL) {
       isovalue_edge_idx[i_isovalue+1] = iso_n_edge;
-    }
+    // }
 
   } // End of loop on isovalues
 
@@ -3670,6 +3671,7 @@ PDM_isosurface_ngon_algo
   int  n_surface        = 0;
   if (isos->entry_mesh_dim==3) {
     n_surface = isos->n_group_face;
+    n_surface = PDM_part_mesh_n_bound_get(pmesh, PDM_BOUND_TYPE_FACE);
     PDM_malloc(iso_edge_group_n, n_surface, int);
   }
 

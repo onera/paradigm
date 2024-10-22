@@ -762,6 +762,46 @@ PDM_part_mesh_nodal_elmts_cell_vtx_connect_get
         int                         **cell_vtx
 );
 
+
+/**
+ * \brief Set element to entity indirection for a section
+ *
+ * \param [in]  pmne                    Pointer to \ref PDM_part_mesh_nodal_elmts_t object
+ * \param [in]  id_section              Section identifier
+ * \param [in]  id_part                 Partition identifier
+ * \param [in]  elt_to_entity           Element to entity indirection
+ * \param [in]  ownership               Data ownership
+ *
+ */
+void
+PDM_part_mesh_nodal_elmts_section_elt_to_entity_set
+(
+      PDM_part_mesh_nodal_elmts_t *pmne,
+const int                          id_section,
+const int                          id_part,
+      int                         *elt_to_entity,
+      PDM_ownership_t              ownership
+);
+
+
+/**
+ * \brief Return element to entity indirection for a section
+ *
+ * \param [in]  pmne                    Pointer to \ref PDM_part_mesh_nodal_elmts_t object
+ * \param [in]  id_section              Section identifier
+ * \param [in]  id_part                 Partition identifier
+ * \param [in]  ownership               Data ownership
+ *
+ */
+int *
+PDM_part_mesh_nodal_elmts_section_elmt_to_entity_get
+(
+      PDM_part_mesh_nodal_elmts_t *pmne,
+const int                          id_section,
+const int                          id_part,
+      PDM_ownership_t              ownership
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

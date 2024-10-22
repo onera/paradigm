@@ -949,7 +949,7 @@ PDM_reader_gamma_dmesh_nodal
 
 
   /* Set vtx tags */
-  PDM_DMesh_nodal_vtx_tag_set(dmn, dvtx_tag);
+  PDM_DMesh_nodal_vtx_tag_set(dmn, dvtx_tag, PDM_OWNERSHIP_KEEP);
 
   /* Edge groups */
   int _n_group_edge = 0;

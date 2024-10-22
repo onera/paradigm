@@ -617,7 +617,7 @@ _separate_groups
   const PDM_g_num_t *_distrib_vtx = PDM_DMesh_nodal_distrib_vtx_get(dmn);
 
   int dn_vtx = (int) (_distrib_vtx[i_rank+1] - _distrib_vtx[i_rank]);
-  double *_dvtx_coord = PDM_DMesh_nodal_vtx_get(dmn);
+  double *_dvtx_coord = PDM_DMesh_nodal_vtx_get(dmn, PDM_OWNERSHIP_BAD_VALUE);
 
   if (ownership == PDM_OWNERSHIP_USER) {
     PDM_malloc(*dvtx_coord, dn_vtx * 3, double);
@@ -638,7 +638,8 @@ _separate_groups
                                          PDM_GEOMETRY_KIND_RIDGE,
                                          n_ridge,
                                          &dridge_edge_idx,
-                                         &dridge_edge);
+                                         &dridge_edge,
+                                         PDM_OWNERSHIP_BAD_VALUE);
 
 
   int *ridge_dn_edge = NULL;
@@ -664,7 +665,7 @@ _separate_groups
 
     int id_section = sections_id[0];
     const PDM_g_num_t    *distrib_edge = PDM_DMesh_nodal_distrib_section_get(dmn, PDM_GEOMETRY_KIND_RIDGE, id_section);
-    PDM_g_num_t          *dedge_vtx    = PDM_DMesh_nodal_section_std_get    (dmn, PDM_GEOMETRY_KIND_RIDGE, id_section);
+    PDM_g_num_t          *dedge_vtx    = PDM_DMesh_nodal_section_std_get    (dmn, PDM_GEOMETRY_KIND_RIDGE, id_section, PDM_OWNERSHIP_BAD_VALUE);
     PDM_Mesh_nodal_elt_t  t_elt        = PDM_DMesh_nodal_section_type_get   (dmn, PDM_GEOMETRY_KIND_RIDGE, id_section);
 
     assert(t_elt == PDM_MESH_NODAL_BAR2 || t_elt == PDM_MESH_NODAL_BARHO);
@@ -700,7 +701,8 @@ _separate_groups
                                          PDM_GEOMETRY_KIND_SURFACIC,
                                          n_surface,
                                          &dsurface_face_idx,
-                                         &dsurface_face);
+                                         &dsurface_face,
+                                         PDM_OWNERSHIP_BAD_VALUE);
 
 
   int *surface_dn_face;
@@ -726,7 +728,7 @@ _separate_groups
 
     int id_section = sections_id[0];
     const PDM_g_num_t    *distrib_face = PDM_DMesh_nodal_distrib_section_get(dmn, PDM_GEOMETRY_KIND_SURFACIC, id_section);
-    PDM_g_num_t          *dface_vtx    = PDM_DMesh_nodal_section_std_get    (dmn, PDM_GEOMETRY_KIND_SURFACIC, id_section);
+    PDM_g_num_t          *dface_vtx    = PDM_DMesh_nodal_section_std_get    (dmn, PDM_GEOMETRY_KIND_SURFACIC, id_section, PDM_OWNERSHIP_BAD_VALUE);
     PDM_Mesh_nodal_elt_t  t_elt        = PDM_DMesh_nodal_section_type_get   (dmn, PDM_GEOMETRY_KIND_SURFACIC, id_section);
 
     assert(t_elt == PDM_MESH_NODAL_TRIA3 || t_elt == PDM_MESH_NODAL_TRIAHO);

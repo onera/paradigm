@@ -396,7 +396,7 @@ _compute_uvw
 
   /* Get number of vertices */
   const int order = 1;
-  n_elt_vertices = PDM_Mesh_nodal_n_vertices_element (elt_type, order);
+  n_elt_vertices = PDM_Mesh_nodal_n_vtx_elt_get (elt_type, order);
 
   assert (elt_type == PDM_MESH_NODAL_QUAD4    ||
           elt_type == PDM_MESH_NODAL_PYRAMID5 ||
@@ -1019,7 +1019,7 @@ _locate_in_cell_3d
   eps_vtx2 *= eps_vtx2;
 
   const int order = 1;
-  const int n_vtx = PDM_Mesh_nodal_n_vertices_element (elt_type, order);
+  const int n_vtx = PDM_Mesh_nodal_n_vtx_elt_get (elt_type, order);
 
   int *pts_out;
   PDM_malloc(pts_out, n_pts, int);

@@ -340,7 +340,7 @@ _compute_uvw
 
 
   /* Get number of nodes */
-  n_node = PDM_Mesh_nodal_n_vertices_element (elt_type, order);
+  n_node = PDM_Mesh_nodal_n_vtx_elt_get (elt_type, order);
   double *weight     = NULL;
   double *dweight_du = NULL;
   double *dweight_dv = NULL;
@@ -654,7 +654,7 @@ int main(int argc, char *argv[])
 
   PDM_g_num_t *vtx_distrib = PDM_dmesh_nodal_vtx_distrib_get(dmn);
   int dn_vtx = vtx_distrib[i_rank+1] - vtx_distrib[i_rank];
-  double *dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn);
+  double *dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn, PDM_OWNERSHIP_BAD_VALUE);
   // double amplitude = 0.1;//0.07;
   // double frequence = 4.;
 
@@ -708,11 +708,11 @@ int main(int argc, char *argv[])
   int id_section = sections_id[0];
   // const PDM_g_num_t    *delmt_distribution = PDM_DMesh_nodal_distrib_section_get(dmn, geom_kind, id_section);
   // int                   n_elt              = PDM_DMesh_nodal_section_n_elt_get  (dmn, geom_kind, id_section);
-  PDM_g_num_t          *dconnec            = PDM_DMesh_nodal_section_std_get    (dmn, geom_kind, id_section);
+  PDM_g_num_t          *dconnec            = PDM_DMesh_nodal_section_std_get    (dmn, geom_kind, id_section, PDM_OWNERSHIP_BAD_VALUE);
   assert(PDM_DMesh_nodal_section_type_get(dmn, geom_kind, id_section) == t_elt);
 
 
-  int n_node = PDM_Mesh_nodal_n_vertices_element(t_elt, order);
+  int n_node = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
 
   int ielt = 0;
   double *node_coord;

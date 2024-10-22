@@ -730,6 +730,8 @@ def reverse_wait(PyPartToPart pyptp, int request_id):
 
       lnp_part_strid.append(np_part1_stride)
       lnp_part_data .append(np_part1_data)
+      free(_part1_data)
+      free(_part1_stride)
 
     else:
       cst_stride = requested[2]
