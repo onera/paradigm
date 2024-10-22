@@ -167,11 +167,12 @@ cdef extern from "pdm_isosurface.h":
                                        PDM_g_num_t             **dconnect,
                                        PDM_ownership_t           ownership);
 
-  int PDM_isosurface_dvtx_parent_weight_get(PDM_isosurface_t     *isos,
-                                            int                   id_iso,
-                                            int                 **dvtx_parent_idx,
-                                            double              **dvtx_parent_weight,
-                                            PDM_ownership_t       ownership);
+  int PDM_isosurface_dparent_weight_get(PDM_isosurface_t     *isos,
+                                        int                   id_iso,
+                                        PDM_mesh_entities_t   entity_type,
+                                        int                 **dvtx_parent_idx,
+                                        double              **dvtx_parent_weight,
+                                        PDM_ownership_t       ownership);
 
   int PDM_isosurface_dvtx_coord_get(PDM_isosurface_t  *isos,
                                     int                id_isosurface,
@@ -205,12 +206,13 @@ cdef extern from "pdm_isosurface.h":
                                       int                 **entity_parent,
                                       PDM_ownership_t       ownership);
 
-  int PDM_isosurface_vtx_parent_weight_get(PDM_isosurface_t  *isos,
-                                           int                id_isosurface,
-                                           int                i_part,
-                                           int              **vtx_parent_idx,
-                                           double           **vtx_parent_weight,
-                                           PDM_ownership_t    ownership);
+  int PDM_isosurface_parent_weight_get(PDM_isosurface_t     *isos,
+                                       int                   id_isosurface,
+                                       int                   i_part,
+                                       PDM_mesh_entities_t   entity_type,
+                                       int                 **parent_idx,
+                                       double              **parent_weight,
+                                       PDM_ownership_t       ownership);
 
   void PDM_isosurface_enable_part_to_part(PDM_isosurface_t     *isos,
                                           int                   id_isosurface,
@@ -1089,10 +1091,10 @@ cdef class Isosurface:
     cdef int    *parent_idx    = NULL
     cdef double *parent_weight = NULL
 
-    n_entity = PDM_isosurface_dvtx_parent_weight_get(self._isos, id_iso,
-                                                    &parent_idx,
-                                                    &parent_weight,
-                                                     PDM_OWNERSHIP_USER)
+    n_entity = PDM_isosurface_dparent_weight_get(self._isos, id_iso, entity_type,
+                                                &parent_idx,
+                                                &parent_weight,
+                                                 PDM_OWNERSHIP_USER)
 
     parent_weight_size = parent_idx[n_entity]
     np_parent_weight = create_numpy_d(parent_weight, parent_weight_size, flag_owndata=True)
