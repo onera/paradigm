@@ -142,17 +142,6 @@ PDM_part_comm_graph_free
  PDM_part_comm_graph_t* pcg
 );
 
-
-void
-PDM_part_comm_graph_entity1_to_entity2
-(
-  PDM_part_comm_graph_t  *pcg_entity1,
-  int                    *pn_entity1,
-  int                    *pn_entity2,
-  int                   **entity2_entity1_idx,
-  int                   **entity2_entity1
-);
-
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
