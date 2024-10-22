@@ -3206,13 +3206,13 @@ PDM_isosurface_marching_algo
     if (isos->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL) {
       for (int i = 0; i < iso_vtx_parent_idx[i_part][iso_n_vtx[i_part]]; i++) {
         int i_parent = iso_vtx_parent[i_part][i] - 1;
-        iso_vtx_parent[i_part][i] = isos->extract_vtx_lnum[i_part][i_parent] + 1;
+        iso_vtx_parent[i_part][i] = isos->extract_vtx_lnum[i_part][i_parent];
       }
 
       if (isos->entry_mesh_dim == 3) {
         for (int i = 0; i < iso_face_parent_idx[i_part][iso_n_face[i_part]]; i++) {
           int i_parent = iso_face_parent[i_part][i] - 1;
-          iso_face_parent[i_part][i] = isos->extract_cell_lnum[i_part][i_parent] + 1;
+          iso_face_parent[i_part][i] = isos->extract_cell_lnum[i_part][i_parent];
         }
       }
     }
@@ -3221,7 +3221,7 @@ PDM_isosurface_marching_algo
     if (isos->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL || from_2d_ngon) {
       for (int i = 0; i < iso_edge_parent_idx[i_part][iso_n_edge[i_part]]; i++) {
         int i_parent = iso_edge_parent[i_part][i] - 1;
-        iso_edge_parent[i_part][i] = isos->extract_face_lnum[i_part][i_parent] + 1;
+        iso_edge_parent[i_part][i] = isos->extract_face_lnum[i_part][i_parent];
       }
     }
 
@@ -4027,17 +4027,17 @@ PDM_isosurface_ngon_algo
     if (isos->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL) {
       for (int i = 0; i < iso_vtx_parent_idx[i_part][iso_n_vtx[i_part]]; i++) {
         int i_parent = iso_vtx_parent[i_part][i] - 1;
-        iso_vtx_parent[i_part][i] = isos->extract_vtx_lnum[i_part][i_parent] + 1;
+        iso_vtx_parent[i_part][i] = isos->extract_vtx_lnum[i_part][i_parent];
       }
 
       for (int i = 0; i < iso_edge_parent_idx[i_part][iso_n_edge[i_part]]; i++) {
         int i_parent = iso_edge_parent[i_part][i] - 1;
-        iso_edge_parent[i_part][i] = isos->extract_face_lnum[i_part][i_parent] + 1;
+        iso_edge_parent[i_part][i] = isos->extract_face_lnum[i_part][i_parent];
       }
 
       for (int i = 0; i < iso_face_parent_idx[i_part][iso_n_face[i_part]]; i++) {
         int i_parent = iso_face_parent[i_part][i] - 1;
-        iso_face_parent[i_part][i] = isos->extract_cell_lnum[i_part][i_parent] + 1;
+        iso_face_parent[i_part][i] = isos->extract_cell_lnum[i_part][i_parent];
       }
     }
 

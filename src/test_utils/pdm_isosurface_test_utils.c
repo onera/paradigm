@@ -1240,7 +1240,7 @@ PDM_isosurface_test_utils_part_interpolation
       for (int i_vtx = 0; i_vtx < iso_n_vtx; i_vtx++) {
         _iso_itp_field_vtx[i_part][i_vtx] = 0.;
         for (int i = iso_vtx_parent_idx[i_vtx]; i < iso_vtx_parent_idx[i_vtx+1]; i++) {
-          int i_parent = iso_vtx_parent[i_vtx];
+          int i_parent = iso_vtx_parent[i] - 1;
           _iso_itp_field_vtx[i_part][i_vtx] += iso_vtx_parent_wght[i] * itp_field_vtx[i_part][i_parent];
         }
       }
@@ -1267,7 +1267,7 @@ PDM_isosurface_test_utils_part_interpolation
       for (int i_edge = 0; i_edge < iso_n_edge; i_edge++) {
         _iso_itp_field_edge[i_part][i_edge] = 0.;
         for (int i = iso_edge_parent_idx[i_edge]; i < iso_edge_parent_idx[i_edge+1]; i++) {
-          int i_parent = iso_edge_parent[i_edge] - 1;
+          int i_parent = iso_edge_parent[i] - 1;
           _iso_itp_field_edge[i_part][i_edge] += iso_edge_parent_wght[i] * itp_field_face[i_part][i_parent];
         }
       }
@@ -1296,7 +1296,7 @@ PDM_isosurface_test_utils_part_interpolation
         for (int i_face = 0; i_face < iso_n_face; i_face++) {
           _iso_itp_field_face[i_part][i_face] = 0.;
           for (int i = iso_face_parent_idx[i_face]; i < iso_face_parent_idx[i_face+1]; i++) {
-            int i_parent = iso_face_parent[i_face] - 1;
+            int i_parent = iso_face_parent[i] - 1;
             _iso_itp_field_face[i_part][i_face] += iso_face_parent_wght[i] * itp_field_cell[i_part][i_parent];
           }
         }

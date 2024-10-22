@@ -1731,7 +1731,7 @@ _triangulate
     for (int i_face = 0; i_face < n_face; i_face++) {
       for (int i_tri = face_tria_idx[i_face]; i_tri < face_tria_idx[i_face+1]; i_tri++) {
         isos->extract_tri_gnum [i_part][i_tri] = face_parent_gnum[i_face];
-        isos->extract_face_lnum[i_part][i_tri] = i_face;
+        isos->extract_face_lnum[i_part][i_tri] = i_face + 1;
         isos->extract_tri_tag  [i_part][i_tri] = face_tag[i_face];
         isos->extract_tri_face [i_part][i_tri] = i_face;
       }
@@ -1739,7 +1739,7 @@ _triangulate
 
     if (isos->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL) {
       for (int i_tri = 0; i_tri < isos->extract_n_tri[i_part]; i_tri++) {
-        int i_face = isos->extract_face_lnum[i_part][i_tri];
+        int i_face = isos->extract_face_lnum[i_part][i_tri] - 1;
         isos->extract_face_lnum[i_part][i_tri] = extract_face_lnum[i_face];
       }
       PDM_free(extract_face_lnum);
@@ -2321,7 +2321,8 @@ _part_to_dist
 
 /* Build part_to_part to link isosurface entities with their 'parent' source entities in user frame */
 static void
-_build_ptp_part(
+_build_ptp_part
+(
   PDM_isosurface_t    *isos,
   int                  id_iso,
   PDM_mesh_entities_t  entity_type
