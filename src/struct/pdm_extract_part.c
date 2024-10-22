@@ -4688,7 +4688,7 @@ _extract_part_nodal_local_vtx
             for (int i = connec_idx[i_elt]; i < connec_idx[i_elt+1]; i++) {
               int i_vtx = connec[i] - 1;
               if (vtx_old_to_new[i_part][i_vtx] < 0) {
-                extrp->pextract_entity_parent_lnum[PDM_MESH_ENTITY_VTX][i_part][extract_n_vtx] = i_vtx;
+                extrp->pextract_entity_parent_lnum[PDM_MESH_ENTITY_VTX][i_part][extract_n_vtx] = i_vtx + 1;
 
                 memcpy(&extract_vtx_coord[3*extract_n_vtx], &vtx_coord[3*i_vtx], sizeof(double) * 3);
                 extract_vtx_g_num[extract_n_vtx] = vtx_g_num[i_vtx];
@@ -4737,7 +4737,7 @@ _extract_part_nodal_local_vtx
               for (int i = face_vtx_idx[i_face]; i < face_vtx_idx[i_face+1]; i++) {
                 int i_vtx = face_vtx[i] - 1;
                 if (vtx_old_to_new[i_part][i_vtx] < 0) {
-                  extrp->pextract_entity_parent_lnum[PDM_MESH_ENTITY_VTX][i_part][extract_n_vtx] = i_vtx;
+                  extrp->pextract_entity_parent_lnum[PDM_MESH_ENTITY_VTX][i_part][extract_n_vtx] = i_vtx + 1;
 
                   memcpy(&extract_vtx_coord[3*extract_n_vtx], &vtx_coord[3*i_vtx], sizeof(double) * 3);
                   extract_vtx_g_num[extract_n_vtx] = vtx_g_num[i_vtx];
@@ -4781,7 +4781,7 @@ _extract_part_nodal_local_vtx
             for (int i = 0; i < n_vtx_per_elmt; i++) {
               int i_vtx = connec[n_vtx_per_elmt*i_elt + i] - 1;
               if (vtx_old_to_new[i_part][i_vtx] < 0) {
-                extrp->pextract_entity_parent_lnum[PDM_MESH_ENTITY_VTX][i_part][extract_n_vtx] = i_vtx;
+                extrp->pextract_entity_parent_lnum[PDM_MESH_ENTITY_VTX][i_part][extract_n_vtx] = i_vtx + 1;
 
                 memcpy(&extract_vtx_coord[3*extract_n_vtx], &vtx_coord[3*i_vtx], sizeof(double) * 3);
                 extract_vtx_g_num[extract_n_vtx] = vtx_g_num[i_vtx];
@@ -4930,7 +4930,7 @@ _extract_part_nodal_local_pmne
 
     for (int i = 0; i < n_elt_tot; i++) {
       if (is_selected[i_part][i] >= 0) {
-        extrp->pextract_entity_parent_lnum[entity_type][i_part][is_selected[i_part][i]] = i;
+        extrp->pextract_entity_parent_lnum[entity_type][i_part][is_selected[i_part][i]] = i + 1;
         extrp->pextract_n_entity[entity_type][i_part]++;
       }
     }
