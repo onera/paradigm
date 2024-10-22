@@ -311,6 +311,8 @@ int main(int argc, char *argv[])
    *  Free objects
    */
   PDM_isosurface_free(isos);
+  PDM_free(isovalues);
+
   if (n_part==0) {
     PDM_DMesh_nodal_free(dmn);
   } else {

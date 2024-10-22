@@ -991,6 +991,7 @@ _contouring_triangles
   int          *elt_vtx,
   PDM_g_num_t  *elt_gnum,
   int          *elt_bnd_tag,
+  int          *elt_n_child,
   int          *elt_face,
   int           n_edge,
   int          *edge_bnd_tag_idx,
@@ -1143,15 +1144,6 @@ _contouring_triangles
    * some entities will have multiple descendent
    * so we need to count them to generate unique gnum...
    */
-  int *elt_n_child = NULL;
-  int n_face = n_elt;
-  if (ngon_2d) {
-    n_face = 0;
-    for (int i_elt = 0; i_elt < n_elt; i_elt++) {
-      n_face = PDM_MAX(n_face, elt_face[i_elt]+1);
-    }
-  }
-  PDM_calloc(elt_n_child, n_elt, int);
 
 
   /* Second loop to fill */
@@ -1435,7 +1427,6 @@ _contouring_triangles
   }
 
   PDM_free(iso_edge_def);
-  PDM_free(elt_n_child);
 }
 
 
@@ -1447,6 +1438,7 @@ _contouring_tetrahedra
   int           n_elt,
   int          *elt_vtx,
   PDM_g_num_t  *elt_gnum,
+  int          *elt_n_child,
   int           n_face,
   int          *face_vtx_idx,
   int          *face_vtx,
@@ -1598,8 +1590,6 @@ _contouring_tetrahedra
    * some entities will have multiple descendent
    * so we need to count them to generate unique gnum...
    */
-  int *elt_n_child = NULL;
-  PDM_calloc(elt_n_child, n_elt, int);
 
 
   /* Second loop to fill */
@@ -1862,7 +1852,6 @@ _contouring_tetrahedra
   *out_iso_face_parent_gnum = iso_face_parent_gnum;
  
   PDM_free(iso_face_def);
-  PDM_free(elt_n_child);
 }
 
 
@@ -3082,6 +3071,23 @@ PDM_isosurface_marching_algo
     /*
      * Build isosurface mesh
      */
+    int *_extract_tri_face = NULL;
+    if (isos->extract_tri_face != NULL) {
+      _extract_tri_face = isos->extract_tri_face[i_part];
+    }
+
+    int *elt_n_child[2] = {NULL, NULL};
+    int s_elt_n_child = isos->extract_n_tri[i_part];
+    if (_extract_tri_face != NULL) {
+      for (int i_tri = 0; i_tri < isos->extract_n_tri[i_part]; i_tri++) {
+        s_elt_n_child = PDM_MAX(n_face, _extract_tri_face[i_tri]+1);
+      }
+    }
+    PDM_calloc(elt_n_child[0], s_elt_n_child, int);
+    if (isos->entry_mesh_dim==3) {
+      PDM_calloc(elt_n_child[1], isos->extract_n_tetra[i_part], int);
+    }
+
     int iso_n_edge_bnd_tag = 0;
     int iso_n_edge_parent  = 0;
     int iso_n_face_parent  = 0;
@@ -3113,16 +3119,12 @@ PDM_isosurface_marching_algo
         PDM_log_trace_array_int (_vtx_to_iso_vtx, n_vtx , "_vtx_to_iso_vtx ::");
       }
 
-      int *_extract_tri_face = NULL;
-      if (isos->extract_tri_face != NULL) {
-        _extract_tri_face = isos->extract_tri_face[i_part];
-      }
-
       t_start = PDM_MPI_Wtime();
       _contouring_triangles(isos->extract_n_tri   [i_part],
                             isos->extract_tri_vtx [i_part],
                             isos->extract_tri_gnum[i_part],
                             isos->extract_tri_tag [i_part],
+                            elt_n_child[0],
                             _extract_tri_face,
                             n_edge,
                             edge_bnd_tag_idx,
@@ -3148,6 +3150,7 @@ PDM_isosurface_marching_algo
         _contouring_tetrahedra(isos->extract_n_tetra   [i_part],
                                isos->extract_tetra_vtx [i_part],
                                isos->extract_tetra_gnum[i_part],
+                               elt_n_child[1],
                                n_face,
                                face_vtx_idx,
                                face_vtx,
@@ -3196,6 +3199,9 @@ PDM_isosurface_marching_algo
       }
 
     } // End of loop on isovalues
+
+    PDM_free(elt_n_child[0]);
+    PDM_free(elt_n_child[1]);
 
     if (isos->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL) {
       for (int i = 0; i < iso_vtx_parent_idx[i_part][iso_n_vtx[i_part]]; i++) {
