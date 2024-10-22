@@ -326,7 +326,7 @@ int main(int argc, char *argv[])
   if (iso_itp_dfield_vtx!=NULL) {
     for (int i_iso=0; i_iso<n_iso; ++i_iso) {
       PDM_free(iso_itp_dfield_vtx [i_iso]);
-      // PDM_free(iso_itp_dfield_edge[i_iso]);
+      PDM_free(iso_itp_dfield_edge[i_iso]);
     }
   }
   PDM_free(iso_itp_dfield_vtx );

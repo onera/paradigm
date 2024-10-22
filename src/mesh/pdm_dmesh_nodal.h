@@ -794,15 +794,15 @@ PDM_dmesh_nodal_dump_vtk
 void
 PDM_dmesh_nodal_dump_vtk_with_field
 (
-       PDM_dmesh_nodal_t   *dmn,
-       PDM_geometry_kind_t  geom_kind,
- const char                *filename_patter,
- const int                  n_fld_vtx,
-       char                *fld_name_vtx[],
-       double             **fld_vtx,
- const int                  n_fld_elmt,
-       char                *fld_name_elmt[],
-       double            ***fld_elmt
+        PDM_dmesh_nodal_t   *dmn,
+        PDM_geometry_kind_t  geom_kind,
+  const char                *filename_patter,
+  const int                  n_fld_vtx,
+  const char                *fld_name_vtx[],
+  const double              *fld_vtx[],
+  const int                  n_fld_elmt,
+  const char                *fld_name_elmt[],
+  const double              *fld_elmt[]
 );
 
 void

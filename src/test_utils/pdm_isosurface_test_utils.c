@@ -1135,7 +1135,7 @@ PDM_isosurface_test_utils_dist_interpolation
                                    1,
                                    sizeof(double),
                                    NULL,
-                  (const void  **)&itp_dfield_face,
+                  (const void  **)&itp_dfield_cell,
                                    NULL,
                   (      void ***)&recv_face_field,
                                   &request_face);
@@ -1450,9 +1450,9 @@ PDM_isosurface_test_utils_dist_vtk
 (
   PDM_isosurface_t *isos,
   int               id_iso,
-  double           *iso_vtx_fld,
-  double           *iso_edge_fld,
-  double           *iso_face_fld,
+  const double     *iso_vtx_fld,
+  const double     *iso_edge_fld,
+  const double     *iso_face_fld,
   PDM_MPI_Comm      comm
 )
 {
@@ -1571,25 +1571,23 @@ PDM_isosurface_test_utils_dist_vtk
 
   const char *fld_name_vtx[]  = {"itp_vtx_fld"};
   const char *fld_name_edge[] = {"itp_edge_fld"};
-  double **_iso_edge_fld = &iso_edge_fld;
   PDM_dmesh_nodal_dump_vtk_with_field(iso_dmn, PDM_GEOMETRY_KIND_RIDGE, out_name,
                                       1,
                                       fld_name_vtx,
-                                     &iso_vtx_fld,
+                                      &iso_vtx_fld,
                                       1,
                                       fld_name_edge,
-                                     &_iso_edge_fld);
+                                      &iso_edge_fld);
   if (dim==3) {
     const char *fld_name_face[] = {"itp_face_fld"};
-    double **_iso_face_fld = &iso_face_fld;
     sprintf(out_name, "iso_face_id_%d.vtk", id_iso);
     PDM_dmesh_nodal_dump_vtk_with_field(iso_dmn, PDM_GEOMETRY_KIND_SURFACIC, out_name,
                                         1,
                                         fld_name_vtx,
-                                       &iso_vtx_fld,
+                                        &iso_vtx_fld,
                                         1,
                                         fld_name_face,
-                                       &_iso_face_fld);
+                                        &iso_face_fld);
   }
 
   PDM_DMesh_nodal_free(iso_dmn);
