@@ -390,6 +390,11 @@ struct _pdm_isosurface_t {
  * Public function prototypes
  *============================================================================*/
 
+int
+_isosurface_is_at_0_level(
+  const double v,
+  const double tol
+);
 
 int
 _isosurface_cross_0_level_ngon

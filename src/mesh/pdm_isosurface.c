@@ -813,6 +813,16 @@ _compute_iso_field
 
 
 int
+_isosurface_is_at_0_level(
+  const double v,
+  const double tol
+)
+{
+  return (PDM_ABS(v) <= tol);
+}
+
+
+int
 _isosurface_cross_0_level
 (
   const double v0,
@@ -1125,6 +1135,15 @@ _extract_nodal
             if (_isosurface_cross_any_level(val0, val1, _iso->n_isovalues, _iso->isovalues, isos->ISOSURFACE_EPS)) {
               is_selected = 1;
               break;
+            }
+            else {
+              for (int i_isovalue = 0; i_isovalue < _iso->n_isovalues; i_isovalue++) {
+                if (_isosurface_is_at_0_level(val0-_iso->isovalues[i_isovalue], isos->ISOSURFACE_EPS) &&
+                    _isosurface_is_at_0_level(val1-_iso->isovalues[i_isovalue], isos->ISOSURFACE_EPS)) {
+                  is_selected = 1;
+                  break;
+                }
+              }
             }
           }
 
@@ -1950,13 +1969,22 @@ _part_to_dist_elt
   double          **out_delt_parent_wght
 )
 {
-  int debug = 0;
+  /**
+   * TODO: if unify_parent
+   * PDM_PART_TO_BLOCK_POST_CLEANUP -> PDM_PART_TO_BLOCK_POST_MERGE
+   * Go through received data :
+   *   - select one connectivity example (should be the same on all procs)
+   *   - unique parents (must have various from procs)
+   * For ngon algo one data should be received for each entity
+   */
+
+  int debug = 1;
 
   _isosurface_t *_iso = &isos->isosurfaces[id_iso];
 
   // > Set elt in block frame
   PDM_part_to_block_t *ptb_elt = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-                                                          PDM_PART_TO_BLOCK_POST_MERGE,
+                                                          PDM_PART_TO_BLOCK_POST_CLEANUP,
                                                           1.,
                                                           elt_gnum,
                                                           NULL,
@@ -2099,53 +2127,6 @@ _part_to_dist_elt
   PDM_free(_elt_parent_strd);
 
 
-  /**
-   * Go through received data :
-   *   - select one connectivity example (should be the same on all procs)
-   *   - unique parents (must have various from procs)
-   * For ngon algo one data should be received for each entity
-   */
-  // int i_read = 0;
-  // int i_read_conn = 0;
-  // int i_write = 0;
-  // int i_write_conn = 0;
-  for (int i_elt=0; i_elt<dn_elt; ++i_elt) {
-    int n_src = block_gnum_count[i_elt];
-    if (isosurface_is_nodal(isos)) {
-      assert(n_src==1);
-    }
-
-    if (n_src==1) {
-      continue;
-    }
-    else {
-      PDM_error(__FILE__, __LINE__, 0, "Not implemented yet.\n");
-      // // > Go through each received data
-      // for (int i_src=0; i_src<n_src; ++i_src) {
-
-      //   // > Copy first connectivity received
-      //   if (i_src==0) {
-      //     for (int i_strd=0; i_strd<_delt_vtx_strd[i_read]; ++i_strd)
-      //       _delt_vtx[i_write_conn] = _delt_vtx[i_read_conn]
-      //       i_write_conn++;
-      //       i_read_conn++;
-      //     }
-      //   }
-      //   else {
-      //     i_read_conn+=_delt_vtx_strd[i_read];
-      //   }
-
-      //   // > Count parent
-
-      //   // > Unique parent
-
-      //   // > Fill with unique parent
-
-      // }
-    }
-
-  }
-  // _delt_vtx_idx = PDM_array_new_idx_from_sizes_int(_delt_vtx_strd, dn_elt);
 
   *out_delt_parent_idx  = PDM_array_new_idx_from_sizes_int(delt_parent_strd, dn_elt);
   *out_delt_parent_gnum = delt_parent_gnum;

@@ -217,34 +217,6 @@ static int _pattern_cell_edge_permutation[64][6] = { // from split_operator
 
 static const double ISOSURFACE_EPS_T = 1e-6; // Epsilon for snapping isovtx to vtx (ngon algo)
 
-static inline int
-_is_at_0_level(
-  const double v,
-  const double tol
-)
-{
-  return (PDM_ABS(v) <= tol);
-}
-
-
-static inline int
-_is_at_any_level
-(
-  const double v,
-  const int    n_isovalues,
-  const double isovalues[],
-  const double tol
-)
-{
-  int n_crossings = 0;
-  for (int i = 0; i < n_isovalues; i++) {
-    n_crossings += _is_at_0_level(v - isovalues[i], tol);
-  }
-
-  return n_crossings;
-}
-
-
 
 
 /*
@@ -360,8 +332,8 @@ _build_active_edges
         }
         else {
           for (int i = 0; i < n_isovalues; i++) {
-            if (_is_at_0_level(vtx_field[i_vtx0-1] - isovalues[i], tol) &&
-                _is_at_0_level(vtx_field[i_vtx1-1] - isovalues[i], tol)) {
+            if (_isosurface_is_at_0_level(vtx_field[i_vtx0-1] - isovalues[i], tol) &&
+                _isosurface_is_at_0_level(vtx_field[i_vtx1-1] - isovalues[i], tol)) {
               // This is an active edge with vertices on entry mesh vertices
               int key = (i_vtx0 + i_vtx1 - 2) % max_key;
               key_count[key]++;
@@ -459,8 +431,8 @@ _build_active_edges
 
         } else {
           for (int i = 0; i < n_isovalues; i++) {
-            if (_is_at_0_level(vtx_field[i_vtx0-1] - isovalues[i], tol) &&
-                _is_at_0_level(vtx_field[i_vtx1-1] - isovalues[i], tol)) {
+            if (_isosurface_is_at_0_level(vtx_field[i_vtx0-1] - isovalues[i], tol) &&
+                _isosurface_is_at_0_level(vtx_field[i_vtx1-1] - isovalues[i], tol)) {
               
               if (edge_id == 0) {
                 _edge_vtx[2*(*n_edge)  ] = i_vtx0;
@@ -653,7 +625,7 @@ _build_active_faces
         int all_zero = 1;
         for (int i = _tetra_face_vtx_idx[i_face]; i < _tetra_face_vtx_idx[i_face+1]; i++) {
           int i_vtx = _connec[_tetra_face_vtx[i]] - 1;
-          if (PDM_ABS(vtx_field[i_vtx] - isovalues[i_isovalue]) > tol) {
+          if (!_isosurface_is_at_0_level(vtx_field[i_vtx] - isovalues[i_isovalue], tol)) {
             all_zero = 0;
             break;
           }
@@ -718,7 +690,7 @@ _build_active_faces
         int all_zero = 1;
         for (int i = _tetra_face_vtx_idx[i_face]; i < _tetra_face_vtx_idx[i_face+1]; i++) {
           int i_vtx = _connec[_tetra_face_vtx[i]] - 1;
-          if (PDM_ABS(vtx_field[i_vtx] - isovalues[i_isovalue]) > tol) {
+          if (!_isosurface_is_at_0_level(vtx_field[i_vtx] - isovalues[i_isovalue], tol)) {
             all_zero = 0;
             break;
           }
@@ -878,7 +850,7 @@ _build_iso_vtx
   int n_vtx_on_vtx = 0;
   for (int i_vtx = 0; i_vtx < n_vtx; i_vtx++) {
     for (int i_isovalue = 0; i_isovalue < n_isovalues; i_isovalue++) {
-      if (_is_at_0_level(vtx_field[i_vtx] - isovalues[i_isovalue], tol)) {
+      if (_isosurface_is_at_0_level(vtx_field[i_vtx] - isovalues[i_isovalue], tol)) {
         n_vtx_on_vtx++;
       }
     }
@@ -920,7 +892,7 @@ _build_iso_vtx
 
     // > Iso vertices on mesh vertices (one array for all isovalue is okay thx to isos->ISOSURFACE_EPS)
     for (int i_vtx = 0; i_vtx < n_vtx; i_vtx++) {
-      if (_is_at_0_level(vtx_field[i_vtx] - isovalue, tol)) {
+      if (_isosurface_is_at_0_level(vtx_field[i_vtx] - isovalue, tol)) {
         vtx_to_iso_vtx[i_vtx] = iso_n_vtx+1;
         memcpy(iso_vtx_coord + 3*iso_n_vtx,
                vtx_coord     + 3*i_vtx,

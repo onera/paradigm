@@ -939,7 +939,7 @@ cdef class Isosurface:
     self.got_parent_idx[entity_type][id_iso] = True
 
     parent_weight_size = parent_idx[n_entity]
-    np_parent_idx    = create_numpy_i(parent_idx,    n_entity+1,       , flag_owndata=own_idx)
+    np_parent_idx    = create_numpy_i(parent_idx,    n_entity+1        , flag_owndata=own_idx)
     np_parent_weight = create_numpy_d(parent_weight, parent_weight_size, flag_owndata=True)
 
     return np_parent_idx, np_parent_weight
