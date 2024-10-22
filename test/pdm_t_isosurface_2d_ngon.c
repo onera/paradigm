@@ -94,7 +94,10 @@ int main
     isovalues[0] = 0.;
   }
 
-  // Generate/read mesh
+
+  /*
+   *  Generate mesh
+   */
   PDM_multipart_t *mpart = NULL;
   PDM_part_mesh_t *pmesh = NULL;
   PDM_dmesh_t     *dmesh = NULL;
@@ -389,9 +392,14 @@ int main
   }
 
 
+
+  /*
+   *  Add isosurface parameters
+   */
+
   // Plane slice
-  double plane_equation [4] = {1.,0.,0.,0.5};
-  double plane_isovalues[3] = {-0.30,0.,0.30};
+  double plane_equation [4] = {1.,-1.,0.,0.};
+  double plane_isovalues[3] = {-0.30,0.,1.};
   int iso1 = PDM_isosurface_add(isos,
                                 PDM_ISO_SURFACE_KIND_PLANE,
                                 3,
@@ -406,24 +414,33 @@ int main
                                 PDM_ISO_SURFACE_KIND_FIELD,
                                 n_isovalues,
                                 isovalues);
-
-  if (n_part > 0) {
-    // Partitioned
+  if (n_part > 0) { // Partitioned
     for (int i_part = 0; i_part < n_part; i_part++) {
-      PDM_isosurface_field_set(isos,
-                               iso2,
-                               i_part,
-                               iso_field[i_part]);
+      PDM_isosurface_field_set(isos, iso2, i_part, iso_field[i_part]);
     }
   }
-  else {
-    // Block-distributed
-    PDM_isosurface_dfield_set(isos,
-                              iso2,
-                              iso_dfield);
+  else { // Block-distributed
+    PDM_isosurface_dfield_set(isos, iso2, iso_dfield);
   }
 
-  int n_iso = iso2 + 1;
+  // Analytic field isosurface
+  double iso3_isovalue = 0.3;
+  int iso3 = PDM_isosurface_add(isos,
+                                PDM_ISO_SURFACE_KIND_FUNCTION,
+                                1,
+                                &iso3_isovalue);
+
+  PDM_isosurface_field_function_set(isos,
+                                    iso3,
+                                    &PDM_isosurface_test_utils_analytic_field_function);
+
+
+
+  /*
+   *  Compute isosurface
+   */
+  int n_iso = iso3 + 1;
+
   for (int i_iso = 0; i_iso < n_iso; i_iso++) {
     PDM_isosurface_enable_part_to_part(isos,
                                        i_iso,
@@ -435,10 +452,6 @@ int main
                                        PDM_MESH_ENTITY_EDGE,
                                        0);
   }
-
-  /*
-   *  Compute isosurface
-   */
   // PDM_isosurface_compute(isos, iso1);
   // PDM_isosurface_reset  (isos, iso1);
   // PDM_isosurface_compute(isos, iso1);

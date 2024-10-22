@@ -74,6 +74,12 @@ int main(int argc, char *argv[])
                                      &generate_edges,
                                      &local);
 
+  if (isovalues == NULL) {
+    n_isovalues = 1;
+    PDM_malloc(isovalues, n_isovalues, double);
+    isovalues[0] = 0.;
+  }
+
 
   /*
    *  Generate mesh
@@ -113,32 +119,9 @@ int main(int argc, char *argv[])
 
 
   /*
-   *  Add isosurface parameters
+   *  Compute isosurface and interpolation field
    */
 
-  // > Plane isosurface
-  double plane_equation [4] = {1.,0.,0.,0.5};
-  double plane_isovalues[3] = {-0.30,0.,0.30};
-  int iso1 = PDM_isosurface_add(isos, 
-                                PDM_ISO_SURFACE_KIND_PLANE,
-                                3,
-                                plane_isovalues);
-  PDM_isosurface_equation_set(isos,
-                              iso1,
-                              plane_equation);
-
-  // > Sphere isosurface
-  double sphere_equation [4] = {0.5,0.5,0.5,0.5};
-  double sphere_isovalues[2] = {0.,0.1};
-  int iso2 = PDM_isosurface_add(isos, 
-                                PDM_ISO_SURFACE_KIND_SPHERE,
-                                2,
-                                sphere_isovalues);
-  PDM_isosurface_equation_set(isos,
-                              iso2,
-                              sphere_equation);
-
-  // > User isosurface field and interpolation field
   double  *iso_dfield      = NULL;
   double  *itp_dfield_vtx  = NULL;
   double  *itp_dfield_face = NULL;
@@ -146,11 +129,6 @@ int main(int argc, char *argv[])
   double **itp_field_vtx   = NULL;
   double **itp_field_face  = NULL;
 
-  double field_isovalues[1] = {0.};
-  int iso3 = PDM_isosurface_add(isos, 
-                                PDM_ISO_SURFACE_KIND_FIELD,
-                                1,
-                                field_isovalues);
   if (n_part==0) {
     int     dn_vtx     = PDM_DMesh_nodal_n_vtx_get(dmn);
     double *dvtx_coord = PDM_DMesh_nodal_coord_get(dmn, PDM_OWNERSHIP_BAD_VALUE);
@@ -167,9 +145,6 @@ int main(int argc, char *argv[])
       itp_dfield_face[i_face] = (double) (face_distri[i_rank]+i_face);
     }
 
-    PDM_isosurface_dfield_set(isos,
-                              iso3,
-                              iso_dfield);
   } else {
     PDM_malloc(iso_field     , n_part, double *);
     PDM_malloc(itp_field_vtx , n_part, double *);
@@ -191,12 +166,52 @@ int main(int argc, char *argv[])
         itp_field_face[i_part][i_face] = (double) face_gnum[i_face];
       }
 
-      PDM_isosurface_field_set(isos,
-                               iso3,
-                               i_part,
-                               iso_field[i_part]);
     }
   }
+
+
+
+  /*
+   *  Add isosurface parameters
+   */
+
+  // Plane slice
+  double plane_equation [4] = {1.,-1.,0.,0.};
+  double plane_isovalues[3] = {-0.30,0.,1.};
+  int iso1 = PDM_isosurface_add(isos,
+                                PDM_ISO_SURFACE_KIND_PLANE,
+                                3,
+                                plane_isovalues);
+
+  PDM_isosurface_equation_set(isos,
+                              iso1,
+                              plane_equation);
+
+  // Scalar field isosurface
+  int iso2 = PDM_isosurface_add(isos,
+                                PDM_ISO_SURFACE_KIND_FIELD,
+                                n_isovalues,
+                                isovalues);
+  if (n_part > 0) { // Partitioned
+    for (int i_part = 0; i_part < n_part; i_part++) {
+      PDM_isosurface_field_set(isos, iso2, i_part, iso_field[i_part]);
+    }
+  }
+  else { // Block-distributed
+    PDM_isosurface_dfield_set(isos, iso2, iso_dfield);
+  }
+
+  // Analytic field isosurface
+  double iso3_isovalue = 0.3;
+  int iso3 = PDM_isosurface_add(isos,
+                                PDM_ISO_SURFACE_KIND_FUNCTION,
+                                1,
+                                &iso3_isovalue);
+
+  PDM_isosurface_field_function_set(isos,
+                                    iso3,
+                                    &PDM_isosurface_test_utils_analytic_field_function);
+
 
 
   /*

@@ -91,6 +91,22 @@ PDM_isosurface_test_utils_read_args
  */
 
 void
+PDM_isosurface_test_utils_analytic_field_function
+(
+ const double  x,
+ const double  y,
+ const double  z,
+ double       *value
+);
+
+
+/**
+ *
+ * \brief Mesh generation for ngon cases
+ *
+ */
+
+void
 PDM_isosurface_test_utils_gen_mesh
 (
   PDM_MPI_Comm          comm,

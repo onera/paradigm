@@ -33,19 +33,6 @@
  *============================================================================*/
 
 
-static void
-_analytic_field_function
-(
- const double  x,
- const double  y,
- const double  z,
- double       *value
-)
-{
-  *value = cos(5*x)*cos(6*y)*cos(7*z);
-}
-
-
 /**
  *
  * \brief  Main
@@ -106,7 +93,10 @@ int main
     isovalues[0] = 0.;
   }
 
-  // Generate/read mesh
+
+  /*
+   *  Generate mesh
+   */
   PDM_multipart_t *mpart = NULL;
   PDM_part_mesh_t *pmesh = NULL;
   PDM_dmesh_t     *dmesh = NULL;
@@ -480,9 +470,15 @@ int main
     }
   }
 
+
+
+  /*
+   *  Add isosurface parameters
+   */
+
   // Plane slice
-  double plane_equation [4] = {1.,0.,0.,0.5};
-  double plane_isovalues[3] = {-0.30,0.,0.30};
+  double plane_equation [4] = {1.,-1.,0.,0.};
+  double plane_isovalues[3] = {-0.30,0.,1.};
   int iso1 = PDM_isosurface_add(isos,
                                 PDM_ISO_SURFACE_KIND_PLANE,
                                 3,
@@ -497,6 +493,14 @@ int main
                                 PDM_ISO_SURFACE_KIND_FIELD,
                                 n_isovalues,
                                 isovalues);
+  if (n_part > 0) { // Partitioned
+    for (int i_part = 0; i_part < n_part; i_part++) {
+      PDM_isosurface_field_set(isos, iso2, i_part, iso_field[i_part]);
+    }
+  }
+  else { // Block-distributed
+    PDM_isosurface_dfield_set(isos, iso2, iso_dfield);
+  }
 
   // Analytic field isosurface
   double iso3_isovalue = 0.3;
@@ -507,24 +511,7 @@ int main
 
   PDM_isosurface_field_function_set(isos,
                                     iso3,
-                                    &_analytic_field_function);
-
-
-  if (n_part > 0) {
-    // Partitioned
-    for (int i_part = 0; i_part < n_part; i_part++) {
-      PDM_isosurface_field_set(isos,
-                               iso2,
-                               i_part,
-                               iso_field[i_part]);
-    }
-  }
-  else {
-    // Block-distributed
-    PDM_isosurface_dfield_set(isos,
-                              iso2,
-                              iso_dfield);
-  }
+                                    &PDM_isosurface_test_utils_analytic_field_function);
 
 
 

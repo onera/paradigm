@@ -398,6 +398,19 @@ PDM_isosurface_test_utils_read_args
 }
 
 
+void
+PDM_isosurface_test_utils_analytic_field_function
+(
+ const double  x,
+ const double  y,
+ const double  z,
+ double       *value
+)
+{
+  *value = cos(5*x)*cos(6*y)*cos(7*z);
+}
+
+
 
 void
 PDM_isosurface_test_utils_gen_mesh
@@ -958,7 +971,7 @@ PDM_isosurface_test_utils_compute_iso_field
     double z = vtx_coord[3*i_vtx+2];
     int    ite = 0;
     if (1) {
-      vtx_field[i_vtx] = _eval_distance(x,y,z,ctr);
+      vtx_field[i_vtx] = _eval_distance(x,y,z,ctr)-0.3;
     }
     else {
       vtx_field[i_vtx] = _eval_julia4d(x,y,z,c2d,ite);
