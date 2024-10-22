@@ -78,6 +78,12 @@ int main(int argc, char *argv[])
                                      &generate_edges,
                                      &local);
 
+  if (isovalues == NULL) {
+    n_isovalues = 1;
+    PDM_malloc(isovalues, n_isovalues, double);
+    isovalues[0] = 0.;
+  }
+
 
   /*
    *  Generate mesh
@@ -165,16 +171,6 @@ int main(int argc, char *argv[])
 
 
   /*
-   *  TODO:
-   *    - extract bc
-   *    - plusieurs isovalues
-   *    - reequilibrate/local
-   *    - test reset (et chp variable ?)
-   */
-
-
-
-  /*
    *  Creating isosurface object
    */
   PDM_isosurface_t *isos = PDM_isosurface_create(comm, 3);
@@ -192,42 +188,49 @@ int main(int argc, char *argv[])
    *  Add isosurface parameters
    */
 
-  // > Plane isosurface
-  double plane_equation [4] = {1.,0.,0.,0.5};
-  double plane_isovalues[3] = {-0.50,0.,0.50};
-  int iso1 = PDM_isosurface_add(isos, 
+  // Plane slice
+  double plane_equation  [4] = {1.,-1.,0.,0.};
+  double plane_isovalues2[2] = {-0.30,0.30};
+  int iso1 = PDM_isosurface_add(isos,
                                 PDM_ISO_SURFACE_KIND_PLANE,
-                                3,
-                                plane_isovalues);
+                                2,
+                                plane_isovalues2);
+
   PDM_isosurface_equation_set(isos,
                               iso1,
                               plane_equation);
 
-  // > User field isosurface
-
-  double field_isovalues[1] = {0.1};
-  int iso2 = PDM_isosurface_add(isos, 
+  // Scalar field isosurface
+  int iso2 = PDM_isosurface_add(isos,
                                 PDM_ISO_SURFACE_KIND_FIELD,
-                                1,
-                                field_isovalues);
-  if (n_part==0) {
-    PDM_isosurface_dfield_set(isos,
-                              iso2,
-                              iso_dfield);
-  }
-  else {
-    for (int i_part=0; i_part<n_part; ++i_part) {
-      PDM_isosurface_field_set(isos,
-                               iso2,
-                               i_part,
-                               iso_field[i_part]);
+                                n_isovalues,
+                                isovalues);
+  if (n_part > 0) { // Partitioned
+    for (int i_part = 0; i_part < n_part; i_part++) {
+      PDM_isosurface_field_set(isos, iso2, i_part, iso_field[i_part]);
     }
   }
+  else { // Block-distributed
+    PDM_isosurface_dfield_set(isos, iso2, iso_dfield);
+  }
+
+  // Analytic field isosurface
+  double iso3_isovalue = 0.3;
+  int iso3 = PDM_isosurface_add(isos,
+                                PDM_ISO_SURFACE_KIND_FUNCTION,
+                                1,
+                                &iso3_isovalue);
+
+  PDM_isosurface_field_function_set(isos,
+                                    iso3,
+                                    &PDM_isosurface_test_utils_analytic_field_function);
+
+
 
   /*
    *  Compute isosurface
    */
-  int n_iso = iso2 + 1;
+  int n_iso = iso3 + 1;
 
   for (int i_iso = 0; i_iso < n_iso; i_iso++) {
     PDM_isosurface_enable_part_to_part(isos,
@@ -248,10 +251,9 @@ int main(int argc, char *argv[])
 
   PDM_isosurface_compute(isos, iso1);
   PDM_isosurface_reset(isos, iso1);
-  double plane_isovalues2[2] = {-0.30,0.30};
-  PDM_isosurface_set_isovalues(isos, iso1, 2, plane_isovalues2);
-  PDM_isosurface_compute(isos, iso1);
-  PDM_isosurface_compute(isos, iso2);
+  double plane_isovalues[3] = {-0.30,0.,1.};
+  PDM_isosurface_set_isovalues(isos, iso1, 3, plane_isovalues);
+  PDM_isosurface_compute(isos, -1);
 
 
   /*
