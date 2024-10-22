@@ -621,6 +621,7 @@ _compute_iso_field
 
           for (int i = 0; i < n_extract_vtx; i++) {
             int i_parent = isos->extract_vtx_lnum[i_part][i];
+            int i_parent = isos->extract_vtx_lnum[i_part][i] - 1;
             isos->extract_field[i_part][i] = _iso->field[i_part][i_parent];
           }
         }
