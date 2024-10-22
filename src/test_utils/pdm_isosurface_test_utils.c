@@ -1059,7 +1059,7 @@ PDM_isosurface_test_utils_dist_interpolation
   int  *n_ref_lnum2 = NULL;
   int **  ref_lnum2 = NULL;
   PDM_part_to_part_ref_lnum2_get(ptp_vtx, &n_ref_lnum2, &ref_lnum2);
-  PDM_log_trace_array_int(ref_lnum2[0], n_ref_lnum2[0], "ref_lnum2");
+  // PDM_log_trace_array_int(ref_lnum2[0], n_ref_lnum2[0], "ref_lnum2");
 
   int         *vtx_dparent_idx  = NULL;
   double      *vtx_dparent_wght = NULL;
@@ -1107,7 +1107,7 @@ PDM_isosurface_test_utils_dist_interpolation
   n_ref_lnum2 = NULL;
     ref_lnum2 = NULL;
   PDM_part_to_part_ref_lnum2_get(ptp_edge, &n_ref_lnum2, &ref_lnum2);
-  PDM_log_trace_array_int(ref_lnum2[0], n_ref_lnum2[0], "ref_lnum2");
+  // PDM_log_trace_array_int(ref_lnum2[0], n_ref_lnum2[0], "ref_lnum2");
 
   int         *edge_dparent_idx  = NULL;
   double      *edge_dparent_wght = NULL;
@@ -1156,7 +1156,7 @@ PDM_isosurface_test_utils_dist_interpolation
     n_ref_lnum2 = NULL;
       ref_lnum2 = NULL;
     PDM_part_to_part_ref_lnum2_get(ptp_face, &n_ref_lnum2, &ref_lnum2);
-    PDM_log_trace_array_int(ref_lnum2[0], n_ref_lnum2[0], "ref_lnum2");
+    // PDM_log_trace_array_int(ref_lnum2[0], n_ref_lnum2[0], "ref_lnum2");
 
     int         *face_dparent_idx  = NULL;
     double      *face_dparent_wght = NULL;
@@ -1467,7 +1467,7 @@ PDM_isosurface_test_utils_dist_vtk
   PDM_MPI_Comm      comm
 )
 {
-  int  debug = 1;
+  int  dbg = 1;
   char out_name[999];
 
   int dim = isos->entry_mesh_dim;
@@ -1475,7 +1475,7 @@ PDM_isosurface_test_utils_dist_vtk
   // > Vertices
   double *dvtx_coords = NULL;
   int     dn_vtx = PDM_isosurface_dvtx_coord_get(isos, id_iso, &dvtx_coords, PDM_OWNERSHIP_KEEP);
-  if (1) {
+  if (dbg) {
     log_trace("dn_vtx = %d\n", dn_vtx);
     PDM_log_trace_array_double(dvtx_coords, 3*dn_vtx, "dvtx_coords ::");
   }
@@ -1488,7 +1488,7 @@ PDM_isosurface_test_utils_dist_vtk
                                                         &dedge_vtx_idx,
                                                         &dedge_vtx,
                                                          PDM_OWNERSHIP_KEEP);
-  if (debug) {
+  if (dbg) {
     log_trace("dn_edge = "PDM_FMT_G_NUM"\n", dn_edge);
     PDM_log_trace_array_long(dedge_vtx, 2*dn_edge, "dedge_vtx ::");
   }
@@ -1503,7 +1503,7 @@ PDM_isosurface_test_utils_dist_vtk
                                               &dface_vtx_idx,
                                               &dface_vtx,
                                                PDM_OWNERSHIP_KEEP);
-    if (debug) {
+    if (dbg) {
       log_trace("dn_face = "PDM_FMT_G_NUM"\n", dn_face);
       int size_face_vtx = dface_vtx_idx[dn_face];
       PDM_log_trace_array_int (dface_vtx_idx, dn_face      , "dface_vtx_idx ::");
@@ -1521,7 +1521,7 @@ PDM_isosurface_test_utils_dist_vtk
                                        &dedge_group_idx,
                                        &dedge_group,
                                         PDM_OWNERSHIP_KEEP);
-    if (debug) {
+    if (dbg) {
       log_trace("n_group = %d\n", n_group);
       int size_edge_group = dedge_group_idx[n_group];
       PDM_log_trace_array_int (dedge_group_idx, n_group        , "dedge_group_idx ::");

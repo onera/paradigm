@@ -910,7 +910,7 @@ _convert_group_info_to_tag
   int                   **elt_bnd_tag_out
 )
 {
-  int debug = 0;
+  int dbg = 0;
 
   *elt_bnd_tag_out = PDM_array_zeros_int(n_elt);
   int *elt_bnd_tag = *elt_bnd_tag_out;
@@ -932,7 +932,7 @@ _convert_group_info_to_tag
       elt_bnd_tag[group_elmt_lnum[i_elmt]-1] = i_group+1;
     }
   }
-  if (debug==1) {
+  if (dbg==1) {
     PDM_log_trace_array_int(elt_bnd_tag, n_elt, "elt_bnd_tag ::");
   }
   return n_group;
@@ -1843,7 +1843,7 @@ _part_to_dist_edge_group
   int               id_iso
 )
 {
-  int debug = 0;
+  int dbg = 0;
 
   _isosurface_t *_iso = &isos->isosurfaces[id_iso];
 
@@ -1930,7 +1930,7 @@ _part_to_dist_edge_group
   PDM_free(_group_gnum);
 
 
-  if (debug==1) {
+  if (dbg==1) {
     int size_group_gnum = _iso_dedge_group_idx[_iso->iso_n_edge_group];
     log_trace("iso_n_edge_group = %d\n", _iso->iso_n_edge_group);
     PDM_log_trace_array_int (_iso_dedge_group_idx , _iso->iso_n_edge_group+1, "iso_dedge_group_idx  ::");
@@ -1978,7 +1978,7 @@ _part_to_dist_elt
    * For ngon algo one data should be received for each entity
    */
 
-  int debug = 1;
+  int dbg = 0;
 
   _isosurface_t *_iso = &isos->isosurfaces[id_iso];
 
@@ -1997,7 +1997,7 @@ _part_to_dist_elt
    */
   int  dn_elt           = PDM_part_to_block_n_elt_block_get     (ptb_elt);
   int *block_gnum_count = PDM_part_to_block_block_gnum_count_get(ptb_elt);
-  if (debug==1) {
+  if (dbg==1) {
     for (int i_part=0; i_part<isos->iso_n_part; ++i_part) {
       PDM_log_trace_array_long(elt_gnum[i_part], n_elt[i_part], "elt_gnum ::");
     }
@@ -2035,8 +2035,8 @@ _part_to_dist_elt
     }
     int idx = 0;
     for (int i_elt=0; i_elt<n_elt[i_part]; ++i_elt) {
-      log_trace("elt "PDM_FMT_G_NUM" : ", elt_gnum[i_part][i_elt]);
-      PDM_log_trace_array_long(_elt_vtx[i_part] + idx, _elt_vtx_strd[i_part][i_elt], "");
+      // log_trace("elt "PDM_FMT_G_NUM" : ", elt_gnum[i_part][i_elt]);
+      // PDM_log_trace_array_long(_elt_vtx[i_part] + idx, _elt_vtx_strd[i_part][i_elt], "");
       idx += _elt_vtx_strd[i_part][i_elt];
     }
   }
@@ -2053,7 +2053,7 @@ _part_to_dist_elt
                                            &delt_vtx_strd,
                                  (void **) &delt_vtx);
 
-  if (debug) {
+  if (dbg) {
     log_trace("s_block_data = %d\n", s_block_data);
     int rcvd_size = 0;
     for (int i_rcvd=0; i_rcvd<dn_elt; ++i_rcvd) {
@@ -2111,7 +2111,7 @@ _part_to_dist_elt
                         &delt_parent_strd,
               (void **) &delt_parent_weight);
 
-  if (debug) {
+  if (dbg) {
     log_trace("s_block_data = %d\n", s_block_data);
     int rcvd_size = 0;
     for (int i_rcvd=0; i_rcvd<dn_elt; ++i_rcvd) {
@@ -3066,9 +3066,9 @@ _isosurface_compute
   int i_rank;
   PDM_MPI_Comm_rank(isos->comm, &i_rank);
 
-  int debug = 0;
+  int dbg = 0;
 
-  if (debug==1) {
+  if (dbg==1) {
     log_trace("PDM_isosurface:: compute isosurface n°%d\n", id_isosurface);
   }
 
