@@ -886,6 +886,12 @@ PDM_isosurface_test_utils_gen_mesh_nodal
                                        filename,
                                        0,
                                        0);
+    if (PDM_dmesh_nodal_total_n_elmt_get(dmn, PDM_GEOMETRY_KIND_VOLUMIC) > 0)  {
+      dim = 3;
+    }
+    else {
+      dim = 2;
+    }
   }
 
   else if (elt_type == PDM_MESH_NODAL_POLY_3D) {
@@ -919,6 +925,11 @@ PDM_isosurface_test_utils_gen_mesh_nodal
   }
 
   assert(dmn != NULL);
+
+  // if (dim == 3) {
+  //   PDM_dmesh_nodal_dump_vtk(dmn, PDM_GEOMETRY_KIND_VOLUMIC, "dmn_vol");
+  // }
+  // PDM_dmesh_nodal_dump_vtk(dmn, PDM_GEOMETRY_KIND_SURFACIC, "dmn_surf");
 
   PDM_dmesh_nodal_generate_distribution(dmn);
 

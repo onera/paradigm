@@ -1580,6 +1580,7 @@ _ngonize
   }
   else {
     // We have elements other than simplices, we need to ngonize
+    PDM_error(__FILE__, __LINE__, 0, "Nodal not implemented yet for elements other than TRIA3 and TETRA4\n");
     isos->entry_mesh_type = 1 * PDM_SIGN(isos->entry_mesh_type); // we are in fact ngon from now on
 
     PDM_part_mesh_nodal_to_part_mesh_t *pmn_to_pm = PDM_part_mesh_nodal_to_part_mesh_create(extract_pmn,
