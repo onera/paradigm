@@ -2414,9 +2414,9 @@ _extract_part_and_reequilibrate_nodal_from_is_selected
                                                      face_ln_to_gn,
                                                      elmt_face_idx_by_section[i_section],
                                                      cell_face,
-                                                     NULL,
+                                                     extract_parent_g_num[i_section],//NULL,
                                                      extract_parent_num  [i_section],
-                                                     extract_parent_g_num[i_section],
+                                                     NULL,//extract_parent_g_num[i_section],
                                                      PDM_OWNERSHIP_KEEP);
       }
 
@@ -2431,9 +2431,9 @@ _extract_part_and_reequilibrate_nodal_from_is_selected
                                                i_part,
                                                n_elmt_by_section[i_section],
                                                elmt_vtx_by_section[i_section],
-                                               NULL,
+                                               extract_parent_g_num[i_section],//NULL,
                                                extract_parent_num  [i_section],
-                                               extract_parent_g_num[i_section],
+                                               NULL,//extract_parent_g_num[i_section],
                                                order,
                                                ho_ordering,
                                                PDM_OWNERSHIP_KEEP);
@@ -2445,9 +2445,9 @@ _extract_part_and_reequilibrate_nodal_from_is_selected
                                             i_part,
                                             n_elmt_by_section[i_section],
                                             elmt_vtx_by_section[i_section],
-                                            NULL,
+                                            extract_parent_g_num[i_section],//NULL,
                                             extract_parent_num  [i_section],
-                                            extract_parent_g_num[i_section],
+                                            NULL,//extract_parent_g_num[i_section],
                                             PDM_OWNERSHIP_KEEP);
         }
       }

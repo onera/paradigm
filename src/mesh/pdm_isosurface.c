@@ -1138,7 +1138,7 @@ _extract_nodal
             }
             else {
               for (int i_isovalue = 0; i_isovalue < _iso->n_isovalues; i_isovalue++) {
-                if (_isosurface_is_at_0_level(val0-_iso->isovalues[i_isovalue], isos->ISOSURFACE_EPS) &&
+                if (_isosurface_is_at_0_level(val0-_iso->isovalues[i_isovalue], isos->ISOSURFACE_EPS) ||
                     _isosurface_is_at_0_level(val1-_iso->isovalues[i_isovalue], isos->ISOSURFACE_EPS)) {
                   is_selected = 1;
                   break;
@@ -1580,7 +1580,7 @@ _ngonize
   }
   else {
     // We have elements other than simplices, we need to ngonize
-    PDM_error(__FILE__, __LINE__, 0, "Nodal not implemented yet for elements other than TRIA3 and TETRA4\n");
+    // PDM_error(__FILE__, __LINE__, 0, "Nodal not implemented yet for elements other than TRIA3 and TETRA4\n");
     isos->entry_mesh_type = 1 * PDM_SIGN(isos->entry_mesh_type); // we are in fact ngon from now on
 
     PDM_part_mesh_nodal_to_part_mesh_t *pmn_to_pm = PDM_part_mesh_nodal_to_part_mesh_create(extract_pmn,
@@ -1604,7 +1604,7 @@ _ngonize
 
     PDM_part_mesh_nodal_to_part_mesh_groups_enable(pmn_to_pm, PDM_BOUND_TYPE_FACE);
 
-    PDM_part_mesh_nodal_to_part_mesh_g_nums_enable(pmn_to_pm, PDM_MESH_ENTITY_FACE); // --> not so sure
+    PDM_part_mesh_nodal_to_part_mesh_g_nums_enable(pmn_to_pm, PDM_MESH_ENTITY_FACE); // can we avoid that in 3D
     PDM_part_mesh_nodal_to_part_mesh_g_nums_enable(pmn_to_pm, PDM_MESH_ENTITY_VTX);
 
     PDM_part_mesh_nodal_to_part_mesh_compute(pmn_to_pm);
@@ -3098,6 +3098,8 @@ _isosurface_compute
   int i_rank;
   PDM_MPI_Comm_rank(isos->comm, &i_rank);
 
+  int init_entry_mesh_type = isos->entry_mesh_type;
+
   int dbg = 0;
 
   if (dbg==1) {
@@ -3166,6 +3168,8 @@ _isosurface_compute
   }
   PDM_part_mesh_free(isos->extract_pmesh);
   isosurface_timer_end(isos, ISO_TIMER_CONTOURING);
+
+  isos->entry_mesh_type = init_entry_mesh_type;
 
   // > Compute isosurface entity weights
   _compute_missing_entity_weights(isos, id_isosurface);
