@@ -187,30 +187,6 @@ static const int hexa_face_vtx[] = {
   1, 5, 4, 0
 };
 
-/**
- *
- * \brief  Cross product
- *
- * \param[in]     a    First vector
- * \param[in]     b    Second vector
- * \param[inout]  c    \ref a X \ref b vector
- *
- */
-
-static inline void
-_p_cross
-(
- const double a[3],
- const double b[3],
- double c[3]
- )
-{
-  c[0] = a[1] * b[2] - b[1] * a[2];
-  c[1] = b[0] * a[2] - a[0] * b[2];
-  c[2] = a[0] * b[1] - b[0] * a[1];
-}
-
-
 static inline int
 ij2idx_tria
 (
