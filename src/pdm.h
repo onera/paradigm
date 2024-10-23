@@ -379,7 +379,8 @@ typedef enum {
 
 typedef enum {
 
-  PDM_CLUSTERING_KIND_OCTREE = 0, /*!< Clustering by parallel octree */
+  PDM_CLUSTERING_KIND_OCTREE                = 0, /*!< Clustering by parallel octree */
+  PDM_CLUSTERING_KIND_OCTREE_WITH_SMOOTHING = 1, /*!< Clustering by parallel octree with smoothing */
 
 } PDM_clustering_kind_t;
 
