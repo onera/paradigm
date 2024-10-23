@@ -1655,7 +1655,7 @@ _triangulate
     isos->extract_n_vtx[i_part] = PDM_extract_part_vtx_coord_get(isos->extrp,
                                                                  i_part,
                                                                 &isos->extract_vtx_coord[i_part],
-                                                                 PDM_OWNERSHIP_KEEP);
+                                                                 PDM_OWNERSHIP_BAD_VALUE);
     PDM_part_mesh_entity_ln_to_gn_get(isos->extract_pmesh,
                                       i_part,
                                       PDM_MESH_ENTITY_VTX,
@@ -1682,7 +1682,7 @@ _triangulate
                                    PDM_CONNECTIVITY_TYPE_FACE_VTX,
                                   &face_vtx,
                                   &face_vtx_idx,
-                                   PDM_OWNERSHIP_KEEP);
+                                   PDM_OWNERSHIP_BAD_VALUE);
     if (face_vtx_idx == NULL) {
       owner_face_vtx = PDM_TRUE;
 
@@ -1692,7 +1692,7 @@ _triangulate
                                      PDM_CONNECTIVITY_TYPE_FACE_EDGE,
                                     &face_edge,
                                     &face_vtx_idx,
-                                     PDM_OWNERSHIP_KEEP);
+                                     PDM_OWNERSHIP_BAD_VALUE);
 
       int *edge_vtx_idx = NULL;
       int *edge_vtx     = NULL;
@@ -1701,7 +1701,7 @@ _triangulate
                                      PDM_CONNECTIVITY_TYPE_EDGE_VTX,
                                     &edge_vtx,
                                     &edge_vtx_idx,
-                                     PDM_OWNERSHIP_KEEP);
+                                     PDM_OWNERSHIP_BAD_VALUE);
 
       PDM_compute_face_vtx_from_face_and_edge(n_face,
                                               face_vtx_idx,
