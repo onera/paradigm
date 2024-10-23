@@ -1177,11 +1177,35 @@ _extract_nodal
 
   PDM_extract_part_part_mesh_nodal_get(isos->extrp, &isos->extract_pmesh_nodal, PDM_OWNERSHIP_KEEP);
 
-  for (int i_part = 0; i_part < isos->n_part; i_part++) {
-    PDM_free(extract_lnum[i_part]);
+  if (isos->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL) {
+    if (isos->entry_mesh_dim==3) {
+      isos->extract_cell_lnum = extract_lnum;
+      PDM_malloc(isos->extract_face_lnum, isos->iso_n_part, int *);
+      for (int i_part = 0; i_part < isos->iso_n_part; i_part++) {
+        PDM_extract_part_parent_lnum_get(isos->extrp,
+                                         i_part,
+                                         PDM_MESH_ENTITY_FACE,
+                                         &isos->extract_face_lnum[i_part],
+                                         PDM_OWNERSHIP_USER);
+      }
+    }
+    else {
+      isos->extract_face_lnum = extract_lnum;
+    }
   }
-  PDM_free(n_extract   );
-  PDM_free(extract_lnum);
+  else {
+    for (int i_part = 0; i_part < isos->n_part; i_part++) {
+      PDM_free(extract_lnum[i_part]);
+    }
+    PDM_free(extract_lnum);
+  }
+  PDM_free(n_extract);
+
+  // for (int i_part = 0; i_part < isos->n_part; i_part++) {
+  //   PDM_free(extract_lnum[i_part]);
+  // }
+  // PDM_free(n_extract   );
+  // PDM_free(extract_lnum);
 }
 
 
