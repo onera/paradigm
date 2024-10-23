@@ -1415,6 +1415,7 @@ PDM_dmesh_nodal_dump_vtk_with_field
                                         &dconnec_idx,
                                         &dconnec,
                                          PDM_OWNERSHIP_BAD_VALUE);
+      s_connec += dconnec_idx[n_elt];
     }
     else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
       PDM_error(__FILE__, __LINE__, 0, "PDM_dmesh_nodal_dump_vtk_with_field : POLY_3D are not supported\n");
@@ -1422,7 +1423,7 @@ PDM_dmesh_nodal_dump_vtk_with_field
     else {
       int order;
       const char *ho_ordering  = NULL;
-      dconnec     = PDM_DMesh_nodal_section_std_ho_get (dmn, geom_kind, id_section, &order, &ho_ordering, PDM_OWNERSHIP_BAD_VALUE);
+      dconnec     = PDM_DMesh_nodal_section_std_ho_get(dmn, geom_kind, id_section, &order, &ho_ordering, PDM_OWNERSHIP_BAD_VALUE);
       int stride  = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
       s_connec += n_elt * stride;
     }
