@@ -2407,7 +2407,7 @@ _extract_part_and_reequilibrate_nodal_from_is_selected
         PDM_g_num_t *copy_parent_gnum = NULL;
         if (!extrp->compute_child_gnum) {
           PDM_malloc(copy_parent_gnum, n_elmt_by_section[i_section], PDM_g_num_t);
-          memcpy(copy_parent_gnum, extract_parent_g_num[i_part], sizeof(PDM_g_num_t) * n_elmt_by_section[i_section]);
+          memcpy(copy_parent_gnum, extract_parent_g_num[i_section], sizeof(PDM_g_num_t) * n_elmt_by_section[i_section]);
         }
 
         PDM_part_mesh_nodal_elmts_section_poly3d_set(extract_pmne,
@@ -2420,7 +2420,7 @@ _extract_part_and_reequilibrate_nodal_from_is_selected
                                                      face_ln_to_gn,
                                                      elmt_face_idx_by_section[i_section],
                                                      cell_face,
-                                                     copy_parent_gnum,//extract_parent_g_num[i_section],//NULL,
+                                                     copy_parent_gnum,
                                                      extract_parent_num  [i_section],
                                                      extract_parent_g_num[i_section],
                                                      PDM_OWNERSHIP_KEEP);
@@ -2431,7 +2431,7 @@ _extract_part_and_reequilibrate_nodal_from_is_selected
         PDM_g_num_t *copy_parent_gnum = NULL;
         if (!extrp->compute_child_gnum) {
           PDM_malloc(copy_parent_gnum, n_elmt_by_section[i_section], PDM_g_num_t);
-          memcpy(copy_parent_gnum, extract_parent_g_num[i_part], sizeof(PDM_g_num_t) * n_elmt_by_section[i_section]);
+          memcpy(copy_parent_gnum, extract_parent_g_num[i_section], sizeof(PDM_g_num_t) * n_elmt_by_section[i_section]);
         }
 
         if (PDM_Mesh_nodal_elmt_is_ho(t_elt)) {
@@ -2443,7 +2443,7 @@ _extract_part_and_reequilibrate_nodal_from_is_selected
                                                i_part,
                                                n_elmt_by_section[i_section],
                                                elmt_vtx_by_section[i_section],
-                                               copy_parent_gnum,//extract_parent_g_num[i_section],//NULL,
+                                               copy_parent_gnum,
                                                extract_parent_num  [i_section],
                                                extract_parent_g_num[i_section],
                                                order,
@@ -2457,7 +2457,7 @@ _extract_part_and_reequilibrate_nodal_from_is_selected
                                             i_part,
                                             n_elmt_by_section[i_section],
                                             elmt_vtx_by_section[i_section],
-                                            copy_parent_gnum,//extract_parent_g_num[i_section],//NULL,
+                                            copy_parent_gnum,
                                             extract_parent_num  [i_section],
                                             extract_parent_g_num[i_section],
                                             PDM_OWNERSHIP_KEEP);
