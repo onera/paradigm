@@ -94,7 +94,6 @@ program testf
   integer                         :: sface_vtx2
   integer                         :: sface_group2
   integer                         :: n_face_group2
-  integer                         :: n_edge = 0
 
   integer(PDM_l_num_s), pointer   :: cell_tag(:)                 => null()
   integer(PDM_l_num_s), pointer   :: cell_face_idx(:)            => null()
@@ -108,22 +107,12 @@ program testf
   integer(PDM_l_num_s), pointer   :: face_part_bound_proc_idx(:) => null()
   integer(PDM_l_num_s), pointer   :: face_part_bound_part_idx(:) => null()
   integer(PDM_l_num_s), pointer   :: face_part_bound(:)          => null()
-  integer(PDM_l_num_s), pointer   :: vtx_part_bound_proc_idx(:)  => null()
-  integer(PDM_l_num_s), pointer   :: vtx_part_bound_part_idx(:)  => null()
-  integer(PDM_l_num_s), pointer   :: vtx_part_bound(:)           => null()
   integer(PDM_l_num_s), pointer   :: vtx_tag(:)                  => null()
   double precision,     pointer   :: vtx(:,:)                    => null()
   integer(PDM_g_num_s), pointer   :: vtx_ln_to_gn(:)             => null()
   integer(PDM_l_num_s), pointer   :: face_group_idx(:)           => null()
   integer(PDM_l_num_s), pointer   :: face_group(:)               => null()
   integer(PDM_g_num_s), pointer   :: face_group_ln_to_gn(:)      => null()
-
-  integer(PDM_g_num_s), pointer   :: edge_ln_to_gn(:)            => null()
-  integer(PDM_l_num_s), pointer   :: edge_vtx(:)                 => null()
-  integer(PDM_l_num_s), pointer   :: face_join_idx(:)            => null()
-  integer(PDM_l_num_s), pointer   :: face_join(:)                => null()
-  integer(PDM_l_num_s), pointer   :: face_edge_idx(:)            => null()
-  integer(PDM_l_num_s), pointer   :: face_edge(:)                => null()
 
   integer(pdm_l_num_s), pointer   :: all_n_part(:) => null()
 
@@ -592,7 +581,7 @@ program testf
     face_part_bound_proc_idx => null()
     face_part_bound_part_idx => null()
     face_part_bound => null()
-    
+
     ! > Set coordinates
     call PDM_part_extension_vtx_coord_set(part_ext,&
                                           0,       &

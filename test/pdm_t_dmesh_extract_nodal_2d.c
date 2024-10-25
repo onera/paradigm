@@ -196,7 +196,8 @@ int main(int argc, char *argv[])
                                          PDM_GEOMETRY_KIND_SURFACIC,
                                          &n_group_face,
                                          &dgroup_face_idx,
-                                         &dgroup_face);
+                                         &dgroup_face,
+                                         PDM_OWNERSHIP_BAD_VALUE);
   int i_group = 3;
   int dn_extract = dgroup_face_idx[i_group+1] - dgroup_face_idx[i_group];
   PDM_g_num_t *selected = &dgroup_face[dgroup_face_idx[i_group]];

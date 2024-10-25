@@ -210,7 +210,8 @@ _rebuild_group_nodal
                                          geom_kind,
                                          &n_group_entity,
                                          &dbound_entity_idx,
-                                         &dbound_entity);
+                                         &dbound_entity,
+                                         PDM_OWNERSHIP_BAD_VALUE);
 
   if(n_group_entity == 0) {
     return;
@@ -818,7 +819,7 @@ _dmesh_extract_nodal
                          3 * sizeof(double),
                          PDM_STRIDE_CST_INTERLACED,
                          &stride_one,
-             (void *  )  PDM_DMesh_nodal_vtx_get(dme->dmesh_nodal),
+             (void *  )  PDM_DMesh_nodal_vtx_get(dme->dmesh_nodal, PDM_OWNERSHIP_BAD_VALUE),
                          NULL,
              (void ***)  &tmp_dvtx_coord);
 

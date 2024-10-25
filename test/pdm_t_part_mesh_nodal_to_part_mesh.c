@@ -19,16 +19,12 @@
 #include "pdm_dcube_nodal_gen.h"
 #include "pdm_multipart.h"
 #include "pdm_printf.h"
-#include "pdm_sort.h"
-#include "pdm_gnum.h"
 #include "pdm_error.h"
-#include "pdm_extract_part.h"
 #include "pdm_vtk.h"
 #include "pdm_dmesh.h"
 #include "pdm_logging.h"
 #include "pdm_priv.h"
-#include "pdm_gnum_location.h"
-#include "pdm_part_mesh_nodal_to_pmesh.h"
+#include "pdm_part_mesh_nodal_to_part_mesh.h"
 #include "pdm_distrib.h"
 
 /*============================================================================
@@ -58,6 +54,7 @@ _usage(int exit_code)
      "  -parmetis        Call ParMETIS.\n\n"
      "  -pt-scotch       Call PT-Scotch.\n\n"
      "  -t               Element type.\n\n"
+     "  -old             Use old algorithm.\n\n"
      "  -h               This message.\n\n");
 
   exit(exit_code);
@@ -68,25 +65,18 @@ _usage(int exit_code)
  *
  * \brief  Read arguments from the command line
  *
- * \param [in]      argc     Number of arguments
- * \param [in]      argv     Arguments
- * \param [inout]   n_vtx_seg  Number of vertices on the cube side
- * \param [inout]   length   Cube length
- * \param [inout]   n_part   Number of partitions par process
- * \param [inout]   post     Ensight outputs status
- * \param [inout]   part_method Partitioner (1 ParMETIS, 2 Pt-Scotch)
- *
  */
 
 static void
 _read_args(int                    argc,
            char                 **argv,
-           PDM_g_num_t          *n_vtx_seg,
+           PDM_g_num_t           *n_vtx_seg,
            double                *length,
            int                   *n_part,
            int                   *post,
            PDM_Mesh_nodal_elt_t  *elt_type,
-           int                   *part_method)
+           int                   *part_method,
+           int                   *do_gnums)
 {
   int i = 1;
 
@@ -137,6 +127,9 @@ _read_args(int                    argc,
       else
         *elt_type = (PDM_Mesh_nodal_elt_t) atoi(argv[i]);
     }
+    else if (strcmp(argv[i], "-do_gnums") == 0) {
+      *do_gnums = 1;
+    }
     else
       _usage(EXIT_FAILURE);
     i++;
@@ -156,20 +149,21 @@ int main(int argc, char *argv[])
    *  Set default values
    */
 
-  PDM_g_num_t        n_vtx_seg = 10;
-  double             length    = 1.;
-  int                n_part    = 1;
-  int                post      = 0;
+  PDM_g_num_t        n_vtx_seg  = 10;
+  double             length     = 1.;
+  int                n_part     = 1;
+  int                post       = 0;
+  int                do_gnums   = 0;
 #ifdef PDM_HAVE_PARMETIS
   PDM_split_dual_t part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
 #else
 #ifdef PDM_HAVE_PTSCOTCH
   PDM_split_dual_t part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
 #else
-  PDM_split_dual_t part_method   = PDM_SPLIT_DUAL_WITH_HILBERT;
+  PDM_split_dual_t part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
 #endif
 #endif
-  PDM_Mesh_nodal_elt_t elt_type  = PDM_MESH_NODAL_HEXA8;
+  PDM_Mesh_nodal_elt_t elt_type = PDM_MESH_NODAL_HEXA8;
 
   /*
    *  Read args
@@ -181,7 +175,8 @@ int main(int argc, char *argv[])
              &n_part,
              &post,
              &elt_type,
-     (int *) &part_method);
+     (int *) &part_method,
+             &do_gnums);
 
   assert(elt_type != PDM_MESH_NODAL_POLY_3D); // TODO: poly_vol_gen en dcube_nodal_gen
 
@@ -214,13 +209,13 @@ int main(int argc, char *argv[])
   PDM_dmesh_nodal_t* dmn = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube);
   PDM_dmesh_nodal_generate_distribution(dmn);
 
-  if(post) {
-    if(dim == 3) {
-      PDM_dmesh_nodal_dump_vtk(dmn, PDM_GEOMETRY_KIND_VOLUMIC , "dmn_volumic");
-    }
-    PDM_dmesh_nodal_dump_vtk(dmn, PDM_GEOMETRY_KIND_SURFACIC, "dmn_surfacic");
-    PDM_dmesh_nodal_dump_vtk(dmn, PDM_GEOMETRY_KIND_RIDGE   , "dmn_ridge");
-  }
+  // if(post) {
+  //   if(dim == 3) {
+  //     PDM_dmesh_nodal_dump_vtk(dmn, PDM_GEOMETRY_KIND_VOLUMIC , "dmn_volumic");
+  //   }
+  //   PDM_dmesh_nodal_dump_vtk(dmn, PDM_GEOMETRY_KIND_SURFACIC, "dmn_surfacic");
+  //   PDM_dmesh_nodal_dump_vtk(dmn, PDM_GEOMETRY_KIND_RIDGE   , "dmn_ridge");
+  // }
 
   /*
    * Partitionnement
@@ -246,25 +241,90 @@ int main(int argc, char *argv[])
   PDM_part_mesh_nodal_t *pmesh_nodal = NULL;
   PDM_multipart_get_part_mesh_nodal(mpart_id, 0, &pmesh_nodal, PDM_OWNERSHIP_KEEP);
 
+
+  PDM_MPI_Barrier(comm);
+  double t_start = PDM_MPI_Wtime();
+
+  PDM_part_mesh_t *pm = NULL;
+
+    PDM_part_mesh_nodal_to_part_mesh_t *pmn_to_pm = PDM_part_mesh_nodal_to_part_mesh_create(pmesh_nodal,
+                                                                                            PDM_TRUE,
+                                                                                            PDM_OWNERSHIP_USER);
+  // Connectivities
+  if (dim == 3) {
+    PDM_part_mesh_nodal_to_part_mesh_connectivity_enable(pmn_to_pm,
+                                                         PDM_CONNECTIVITY_TYPE_CELL_FACE);
+  }
+
+  // PDM_part_mesh_nodal_to_part_mesh_connectivity_enable(pmn_to_pm,
+  //                                                      PDM_CONNECTIVITY_TYPE_FACE_EDGE);
+
+  // PDM_part_mesh_nodal_to_part_mesh_connectivity_enable(pmn_to_pm,
+  //                                                      PDM_CONNECTIVITY_TYPE_EDGE_VTX);
+
+  PDM_part_mesh_nodal_to_part_mesh_connectivity_enable(pmn_to_pm,
+                                                       PDM_CONNECTIVITY_TYPE_FACE_VTX);
+
+
+  // Global IDs
+  if (do_gnums) {
+    if (dim == 3) {
+      PDM_part_mesh_nodal_to_part_mesh_g_nums_enable(pmn_to_pm,
+                                                     PDM_MESH_ENTITY_CELL);
+    }
+    PDM_part_mesh_nodal_to_part_mesh_g_nums_enable(pmn_to_pm,
+                                                   PDM_MESH_ENTITY_FACE);
+
+    // PDM_part_mesh_nodal_to_part_mesh_g_nums_enable(pmn_to_pm,
+    //                                                PDM_MESH_ENTITY_EDGE);
+
+    PDM_part_mesh_nodal_to_part_mesh_g_nums_enable(pmn_to_pm,
+                                                   PDM_MESH_ENTITY_VTX);
+  }
+
+  // Groups
+  PDM_part_mesh_nodal_to_part_mesh_groups_enable(pmn_to_pm,
+                                                 PDM_BOUND_TYPE_FACE);
+
+  // PDM_part_mesh_nodal_to_part_mesh_groups_enable(pmn_to_pm,
+  //                                                PDM_BOUND_TYPE_EDGE);
+
+
+  PDM_part_mesh_nodal_to_part_mesh_compute(pmn_to_pm);
+
+  PDM_part_mesh_nodal_to_part_mesh_part_mesh_get(pmn_to_pm,
+                                                 &pm,
+                                                 PDM_OWNERSHIP_USER);
+
+  PDM_part_mesh_nodal_to_part_mesh_free(pmn_to_pm);
+
+  double t_end = PDM_MPI_Wtime();
+
+  double delta_t = t_end - t_start;
+
+  double min_delta_t, max_delta_t;
+  PDM_MPI_Allreduce(&delta_t, &min_delta_t, 1, PDM_MPI_DOUBLE, PDM_MPI_MIN, comm);
+  PDM_MPI_Allreduce(&delta_t, &max_delta_t, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
+
+  if (i_rank == 0) {
+    printf("min/max elapsed time :  %8.2e / %8.2e\n", min_delta_t, max_delta_t)    ;
+  }
+
   if(post) {
+    // Part mesh nodal
     if(dim == 3) {
       PDM_part_mesh_nodal_dump_vtk(pmesh_nodal, PDM_GEOMETRY_KIND_VOLUMIC , "pmn_volumic");
     }
     PDM_part_mesh_nodal_dump_vtk(pmesh_nodal, PDM_GEOMETRY_KIND_SURFACIC, "pmn_surfacic");
     PDM_part_mesh_nodal_dump_vtk(pmesh_nodal, PDM_GEOMETRY_KIND_RIDGE   , "pmn_ridge");
-  }
 
-  PDM_dmesh_nodal_to_dmesh_transform_t transform_kind = PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE;
-  if(dim == 2) {
-    transform_kind = PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_EDGE;
-  }
-
-  PDM_part_mesh_t* pm = PDM_part_mesh_nodal_to_part_mesh(pmesh_nodal,
-                                                         transform_kind,
-                                                         PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_FACE);
-
-  if(post) {
+    // Part mesh
     if(dim == 3) {
+
+      PDM_part_mesh_dump_ensight(pm,
+                                 "pmn_to_pm",
+                                 "pmesh",
+                                 PDM_TRUE);
 
       int n_face_group = PDM_part_mesh_n_bound_get(pm, PDM_BOUND_TYPE_FACE);
       for(int i_part = 0; i_part < n_part; ++i_part) {
@@ -289,8 +349,37 @@ int main(int argc, char *argv[])
                                        &face_vtx_idx,
                                        PDM_OWNERSHIP_KEEP);
 
+        int owner_face_vtx = 0;
+
+        if (face_vtx == NULL) {
+          owner_face_vtx = 1;
+
+          int *face_edge;
+          PDM_part_mesh_connectivity_get(pm,
+                                         i_part,
+                                         PDM_CONNECTIVITY_TYPE_FACE_EDGE,
+                                         &face_edge,
+                                         &face_vtx_idx,
+                                         PDM_OWNERSHIP_KEEP);
+
+          int *edge_vtx_idx;
+          int *edge_vtx;
+          PDM_part_mesh_connectivity_get(pm,
+                                         i_part,
+                                         PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                         &edge_vtx,
+                                         &edge_vtx_idx,
+                                         PDM_OWNERSHIP_KEEP);
+
+          PDM_compute_face_vtx_from_face_and_edge(pn_face,
+                                                  face_vtx_idx,
+                                                  face_edge,
+                                                  edge_vtx,
+                                                  &face_vtx);
+        }
+
         int *face_flags;
-        PDM_malloc(face_flags,pn_face ,int);
+        PDM_malloc(face_flags, pn_face, int);
         for(int i_face = 0; i_face < pn_face; ++i_face) {
           face_flags[i_face] = -1;
         }
@@ -320,16 +409,23 @@ int main(int argc, char *argv[])
                                n_vtx,
                                vtx_coord,
                                vtx_ln_to_gn,
-                               pn_face      ,
+                               pn_face,
                                face_vtx_idx,
-                               face_vtx    ,
+                               face_vtx,
                                face_ln_to_gn,
                                face_flags);
 
         PDM_free(face_flags);
+
+
+        if (owner_face_vtx) {
+          PDM_free(face_vtx);
+        }
       }
 
-    } else {
+    }
+
+    else {
 
       int n_edge_group = PDM_part_mesh_n_bound_get(pm, PDM_BOUND_TYPE_EDGE);
       for(int i_part = 0; i_part < n_part; ++i_part) {
@@ -353,9 +449,9 @@ int main(int argc, char *argv[])
                                        &edge_vtx,
                                        &edge_vtx_idx,
                                        PDM_OWNERSHIP_KEEP);
-        assert(edge_vtx_idx == NULL);
+        // assert(edge_vtx_idx == NULL);
         int *edge_flags;
-        PDM_malloc(edge_flags,pn_edge ,int);
+        PDM_malloc(edge_flags, pn_edge, int);
         for(int i_edge = 0; i_edge < pn_edge; ++i_edge) {
           edge_flags[i_edge] = -1;
         }

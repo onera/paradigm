@@ -17,6 +17,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <errno.h>
+#include <stdbool.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -1145,7 +1146,7 @@ void PDM_io_global_write
             " Erreur d'ecriture dans le fichier '%s'\n", fichier->rang, fichier->nom);
           abort();
           PDM_file_seq_close(fichier->PDM_file_seq);
-        }  
+        }
         if (fichier->acces != PDM_IO_KIND_SEQ) {
           if ((fichier->acces == PDM_IO_KIND_MPI_SIMPLE) || (fichier->n_rangs_inactifs > 0)) {
             n_donnees_ecrites = (int) n_donnees_ecrites_gnum ;
@@ -1239,7 +1240,7 @@ void PDM_io_global_write
           }
         }
       }
- 
+
       else if (fichier->PDM_file_par != NULL) {
         if (fichier->rang_actif) {
 	  /* Vérification de non dépassement de la taille maximale pour n_donnees */
@@ -4431,43 +4432,49 @@ void PDM_io_fmt_data_set
  * \return 0 if successful, -1 else
  *
  */
-
 int PDM_io_mkdir
 (
  const char* path
 )
 {
-  char *tmp_path;
-  PDM_malloc(tmp_path, strlen(path) + 1, char);
-  strcpy(tmp_path, path);
-  int idx = 0;
-  size_t _l_path = strlen(path);
-  int l_path = (int) _l_path;
+  // ---- NULL pointer security check
   int err = 0;
 
-  if ((l_path > 1) && tmp_path[l_path-1] == '/')
-    tmp_path[l_path - 1] = '\0';
-
-  while(1) {
-    while((tmp_path[idx] != '/') && (tmp_path[idx] != '\0')) {
-      idx += 1;
-    }
-    if (tmp_path[idx] == '/') {
-      tmp_path[idx] = '\0';
-      err = _mkdir(tmp_path);
-      if (err != 0) {
-        PDM_free(tmp_path);
-        return 0;
-      }
-      tmp_path[idx] = '/';
-    }
-    else {
-      err = _mkdir(tmp_path);
-      break;
-    }
-    idx += 1;
+  if (!path) {
+    err = -1;
+    return err;
   }
-  PDM_free(tmp_path);
+
+  // ---- Copy path because of strotk modifying the original path
+  char *path_cpy    = NULL;
+  char *path_buff   = NULL;
+  bool  is_abs_path = ((int) path[0] == '/') ? true : false;
+
+  PDM_malloc(path_cpy, strlen(path) + 1, char);
+  PDM_malloc(path_buff, strlen(path) + 2, char);
+
+  strcpy(path_cpy, path);
+  strcpy(
+    path_buff,
+    (is_abs_path) ? "/"
+                  : ""
+  );
+
+  // ---- Extracting & creating sub folders
+  char *str_token = strtok(path_cpy, "/");
+  while(str_token) {
+    strcat(path_buff, str_token);
+    strcat(path_buff, "/");
+
+    str_token = strtok(NULL, "/");
+
+    err = _mkdir(path_buff); // TODO: Really manage errors
+  }
+
+  // ---- Free memory
+  PDM_free(path_cpy);
+  PDM_free(path_buff);
+
   return err;
 }
 

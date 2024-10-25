@@ -2133,7 +2133,7 @@ PDM_sphere_vol_gen_nodal
   /* Second: "spherify" */
   PDM_g_num_t *distrib_vtx = PDM_dmesh_nodal_vtx_distrib_get(_dmn);
   int dn_vtx = (int) (distrib_vtx[i_rank+1] - distrib_vtx[i_rank]);
-  double *dvtx_coord  = PDM_DMesh_nodal_vtx_get(_dmn);
+  double *dvtx_coord  = PDM_DMesh_nodal_vtx_get(_dmn, PDM_OWNERSHIP_BAD_VALUE);
 
   double center[3] = {center_x, center_y, center_z};
 
@@ -2200,7 +2200,7 @@ PDM_sphere_vol_gen_nodal
     const char *ho_ordering = NULL;
     const PDM_g_num_t    *distrib_elt = PDM_DMesh_nodal_distrib_section_get(_dmn, geom_kind, id_section);
     int                   dn_elt      = PDM_DMesh_nodal_section_n_elt_get  (_dmn, geom_kind, id_section);
-    PDM_g_num_t          *delt_vtx    = PDM_DMesh_nodal_section_std_ho_get (_dmn, geom_kind, id_section, &_order, &ho_ordering);
+    PDM_g_num_t          *delt_vtx    = PDM_DMesh_nodal_section_std_ho_get (_dmn, geom_kind, id_section, &_order, &ho_ordering, PDM_OWNERSHIP_BAD_VALUE);
     PDM_Mesh_nodal_elt_t  elt_type    = PDM_DMesh_nodal_section_type_get   (_dmn, geom_kind, id_section);
 
     int elt_vtx_n = PDM_Mesh_nodal_n_vtx_elt_get(elt_type, order);
@@ -2236,7 +2236,7 @@ PDM_sphere_vol_gen_nodal
     const char *ho_ordering = NULL;
     const PDM_g_num_t    *distrib_elt = PDM_DMesh_nodal_distrib_section_get(_dmn, geom_kind, id_section);
     int                   dn_elt      = PDM_DMesh_nodal_section_n_elt_get  (_dmn, geom_kind, id_section);
-    PDM_g_num_t          *delt_vtx    = PDM_DMesh_nodal_section_std_ho_get (_dmn, geom_kind, id_section, &_order, &ho_ordering);
+    PDM_g_num_t          *delt_vtx    = PDM_DMesh_nodal_section_std_ho_get (_dmn, geom_kind, id_section, &_order, &ho_ordering, PDM_OWNERSHIP_BAD_VALUE);
     PDM_Mesh_nodal_elt_t  elt_type    = PDM_DMesh_nodal_section_type_get   (_dmn, geom_kind, id_section);
 
     int elt_vtx_n = PDM_Mesh_nodal_n_vtx_elt_get(elt_type, order);

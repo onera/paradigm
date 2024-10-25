@@ -6467,6 +6467,7 @@ PDM_part_mesh_nodal_elmts_cell_vtx_connect_get
 
   *cell_vtx_idx = PDM_array_zeros_int(n_cell + 1);
 
+  int shift = 0;
   for (int isection = 0; isection < n_section; isection++) {
 
     int id_section = sections_id[isection];
@@ -6509,15 +6510,12 @@ PDM_part_mesh_nodal_elmts_cell_vtx_connect_get
         for (int i = 0; i < n_elt; i++) {
           (*cell_vtx_idx)[parent_num[i]+1] = connec_idx[i+1] - connec_idx[i];
         }
-      }
-      else {
+      } else {
         for (int i = 0; i < n_elt; i++) {
-          (*cell_vtx_idx)[i+1] = connec_idx[i+1] - connec_idx[i];
+          (*cell_vtx_idx)[shift+i+1] = connec_idx[i+1] - connec_idx[i];
         }
       }
-
-    }
-    else {
+    } else {
 
       PDM_g_num_t *numabs;
       int         *_parent_num;
@@ -6541,14 +6539,13 @@ PDM_part_mesh_nodal_elmts_cell_vtx_connect_get
         for (int i = 0; i < n_elt; i++) {
           (*cell_vtx_idx)[parent_num[i]+1] = n_vtx_elt;
         }
-      }
-      else {
+      } else {
         for (int i = 0; i < n_elt; i++) {
-          (*cell_vtx_idx)[i+1] = n_vtx_elt;
+          (*cell_vtx_idx)[shift+i+1] = n_vtx_elt;
         }
       }
-
     }
+    shift += n_elt;
   }
 
   PDM_array_accumulate_int(*cell_vtx_idx, n_cell+1);
@@ -6556,6 +6553,7 @@ PDM_part_mesh_nodal_elmts_cell_vtx_connect_get
 
   PDM_malloc(*cell_vtx, (*cell_vtx_idx)[n_cell], int);
 
+  shift = 0;
   for (int isection = 0; isection < n_section; isection++) {
 
     int id_section = sections_id[isection];
@@ -6600,11 +6598,10 @@ PDM_part_mesh_nodal_elmts_cell_vtx_connect_get
             (*cell_vtx)[(*cell_vtx_idx)[parent_num[i]] + j] = connec[connec_idx[i] + j];
           }
         }
-      }
-      else {
+      } else {
         for (int i = 0; i < n_elt; i++) {
           for (int j = 0; j < connec_idx[i+1] - connec_idx[i]; j++) {
-            (*cell_vtx)[(*cell_vtx_idx)[i] + j] = connec[connec_idx[i] + j];
+            (*cell_vtx)[(*cell_vtx_idx)[shift+i] + j] = connec[connec_idx[i] + j];
           }
         }
       }
@@ -6636,16 +6633,16 @@ PDM_part_mesh_nodal_elmts_cell_vtx_connect_get
             (*cell_vtx)[(*cell_vtx_idx)[parent_num[i]] + j] = connec[n_vtx_elt*i + j];
           }
         }
-      }
-      else {
+      } else {
         for (int i = 0; i < n_elt; i++) {
           for (int j = 0; j < n_vtx_elt; j++) {
-            (*cell_vtx)[(*cell_vtx_idx)[i] + j] = connec[n_vtx_elt*i + j];
+            (*cell_vtx)[(*cell_vtx_idx)[shift+i] + j] = connec[n_vtx_elt*i + j];
           }
         }
       }
-
     }
+
+    shift += n_elt;
   }
 
   return n_cell;
@@ -6714,7 +6711,7 @@ const int                          id_part,
 
 
 int *
-PDM_part_mesh_nodal_elmts_section_elt_to_entity_get
+PDM_part_mesh_nodal_elmts_section_elmt_to_entity_get
 (
       PDM_part_mesh_nodal_elmts_t *pmne,
 const int                          id_section,

@@ -376,7 +376,7 @@ _gen_mesh
     int order_deformation = PDM_MAX(1, (int) ceil (sqrt(order)));
     const PDM_g_num_t *distrib_vtx = PDM_DMesh_nodal_distrib_vtx_get(dmn);
     int dn_vtx = distrib_vtx[i_rank+1] - distrib_vtx[i_rank];
-    double *dvtx_coord = PDM_DMesh_nodal_vtx_get(dmn);
+    double *dvtx_coord = PDM_DMesh_nodal_vtx_get(dmn, PDM_OWNERSHIP_BAD_VALUE);
     // _rotate(dn_vtx,
     //         dvtx_coord);
     for (int i = 0; i < dn_vtx; i++) {

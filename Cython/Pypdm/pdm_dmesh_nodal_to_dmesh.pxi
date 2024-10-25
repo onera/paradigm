@@ -59,7 +59,7 @@ cdef class DMeshNodalToDMesh:
   # ************************************************************************
   # > Class attributes
   cdef PDM_dmesh_nodal_to_dmesh_t* dmn_to_dm
-  keep_alive = list()
+  cdef object keep_alive
   # ************************************************************************
   # ------------------------------------------------------------------------
   def __cinit__(self, n_mesh,
@@ -71,7 +71,7 @@ cdef class DMeshNodalToDMesh:
     # > Declaration
     cdef MPI.MPI_Comm c_comm = comm.ob_mpi
     # ************************************************************************
-
+    self.keep_alive = []
     self.dmn_to_dm = PDM_dmesh_nodal_to_dmesh_create(n_mesh,
                                                      PDM_MPI_mpi_2_pdm_mpi_comm (<void *> &c_comm),
                                                      PDM_OWNERSHIP_USER) # Python take ownership);

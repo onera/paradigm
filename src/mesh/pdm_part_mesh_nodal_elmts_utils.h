@@ -369,6 +369,7 @@ PDM_part_mesh_nodal_elmts_sections_local_decompose_faces
  *
  * \param [in]  pmne_parent               Pointer to parent \ref PDM_part_mesh_nodal_elmts_t instance
  * \param [in]  pmne_child                Pointer to child \ref PDM_part_mesh_nodal_elmts_t instance
+ * \param [in]  child_entity_type         Child entity type (only used if \p pmne_child is NULL)
  * \param [in]  compute_parent_child      Build only ascending link (child->parent)
  * \param [out] out_child_to_parent_idx   Index for child->parent connectivity (size = n_child+1 (total number of elt in \p pmne_child))
  * \param [out] out_child_to_parent       Child->parent connectivity
@@ -383,6 +384,7 @@ PDM_part_mesh_nodal_elmts_compute_child_parent
 (
   PDM_part_mesh_nodal_elmts_t   *pmne_parent,
   PDM_part_mesh_nodal_elmts_t   *pmne_child,
+  PDM_mesh_entities_t            child_entity_type,
   PDM_bool_t                     compute_parent_child,
   int                         ***out_child_to_parent_idx,
   int                         ***out_child_to_parent,

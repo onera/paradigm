@@ -212,48 +212,6 @@ typedef struct PDM_Mesh_nodal_prepa_blocks_t {
 } PDM_Mesh_nodal_prepa_blocks_t;
 
 
-/**
- * \struct  PDM_Mesh_nodal_geom_prepa_blocks_t
- *
- * \brief   Used to build blocks from cell to face face to edge connectivity
- *
- */
-
-struct _PDM_Mesh_nodal_t {
-
-  int                                  n_part;                  /*!< Number of partitions */
-  PDM_Mesh_nodal_vtx_t               **vtx;                     /*!< Description des sommmets de chaque partition */
-  PDM_l_num_t                         *n_cell;                  /*!< Nombre de blocs d'elements standard */
-
-  int                                  n_block_std;
-  int                                  n_block_poly2d;
-  int                                  n_block_poly3d;
-
-  PDM_Mesh_nodal_block_std_t         **blocks_std;              /*!< Standard blocks */
-  PDM_Mesh_nodal_block_poly2d_t      **blocks_poly2d;           /*!< Polygon blocks */
-  PDM_Mesh_nodal_block_poly3d_t      **blocks_poly3d;           /*!< Polyhedron blocks */
-
-  PDM_MPI_Comm                         pdm_mpi_comm;            /*!< MPI Communicator */
-  PDM_Mesh_nodal_prepa_blocks_t       *prepa_blocks;            /*!< Blocks preparation */
-  PDM_l_num_t                        **num_cell_parent_to_local;/*!< Initial local numbering to local numbering
-                                                                 *   imposed by blocks */
-  int                                 *blocks_id;               /*!< Blocks identifier */
-  int                                  n_blocks;                /*!< Total number of blocks */
-  int                      is_vtx_def_from_parent;              /*<! Are the points defined from parents */
-  PDM_g_num_t                        **numabs;                  /*<! Global numbering per cell per partition */
-
-  PDM_l_num_t **cell_vtx_idx;                                   /*<! Index of cell vertex connectivity */
-  PDM_l_num_t **cell_vtx;                                       /*<! Cell vertex connectivity */
-};
-
-
-// struct _PDM_part_mesh_nodal_t {
-//   // PDM_mesh_nodal_elmts_t     *volumic;
-//   // PDM_mesh_nodal_elmts_t     *surfacic;
-//   // PDM_mesh_nodal_elmts_t     *ridge;
-//   // PDM_mesh_nodal_elmts_t     *corner;
-// };
-
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

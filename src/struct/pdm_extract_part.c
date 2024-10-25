@@ -5375,6 +5375,7 @@ _extract_part_nodal_local
       int **parent_to_entity     = NULL;
       PDM_part_mesh_nodal_elmts_compute_child_parent(pmne_parent,
                                                      pmne,
+                                                     PDM_MESH_ENTITY_MAX, // unused here
                                                      PDM_FALSE,
                                                      &child_to_parent_idx,
                                                      &child_to_parent,
@@ -6045,6 +6046,7 @@ _extract_part_nodal
       int **parent_to_entity     = NULL;
       PDM_part_mesh_nodal_elmts_compute_child_parent(pmne_parent,
                                                      pmne_child,
+                                                     PDM_MESH_ENTITY_MAX, // unused here
                                                      PDM_FALSE,
                                                      &child_to_parent_idx,
                                                      &child_to_parent,

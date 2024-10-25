@@ -178,7 +178,7 @@ int main(int argc, char *argv[])
   PDM_dmesh_nodal_generate_distribution(dmn);
 
   PDM_g_num_t *vtx_distrib = PDM_dmesh_nodal_vtx_distrib_get(dmn);
-  double      *dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn);
+  double      *dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn, PDM_OWNERSHIP_BAD_VALUE);
   int dn_vtx = vtx_distrib[i_rank+1] - vtx_distrib[i_rank];
 
   if(0 == 1) {

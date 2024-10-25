@@ -968,7 +968,7 @@ const int                     id_part
  *
  */
 int *
-PDM_part_mesh_nodal_section_elt_to_entity_get
+PDM_part_mesh_nodal_section_elmt_to_entity_get
 (
       PDM_part_mesh_nodal_t *pmn,
 const int                    i_section,

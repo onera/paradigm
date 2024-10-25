@@ -176,7 +176,7 @@ int main(int argc, char *argv[])
   PDM_dmesh_nodal_generate_distribution(dmn);
 
   PDM_g_num_t *vtx_distrib = PDM_dmesh_nodal_vtx_distrib_get(dmn);
-  double      *dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn);
+  double      *dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn, PDM_OWNERSHIP_BAD_VALUE);
   int dn_vtx = vtx_distrib[i_rank+1] - vtx_distrib[i_rank];
 
   if(0 == 1) {
@@ -272,7 +272,7 @@ int main(int argc, char *argv[])
   PDM_dmesh_distrib_get(dmesh, PDM_MESH_ENTITY_EDGE, &distrib_edge);
   // PDM_dmesh_distrib_get(dmesh, PDM_MESH_ENTITY_VTX, &distrib_vtx );
 
-  double *dvtx_coords = PDM_DMesh_nodal_vtx_get(dmn);
+  double *dvtx_coords = PDM_DMesh_nodal_vtx_get(dmn, PDM_OWNERSHIP_BAD_VALUE);
 
   PDM_dmesh_to_dmesh_nodal_distribution_set(dm_to_dmn,
                                             0,
