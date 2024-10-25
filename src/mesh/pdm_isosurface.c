@@ -1020,6 +1020,18 @@ _extract_nodal
               is_selected = 1;
               break;
             }
+            else {
+              for (int i_isovalue = 0; i_isovalue < _iso->n_isovalues; i_isovalue++) {
+                if (_isosurface_is_at_0_level(val0-_iso->isovalues[i_isovalue], isos->ISOSURFACE_EPS) ||
+                    _isosurface_is_at_0_level(val1-_iso->isovalues[i_isovalue], isos->ISOSURFACE_EPS)) {
+                  is_selected = 1;
+                  break;
+                }
+              }
+              if (is_selected) {
+                break;
+              }
+            }
           }
 
           if (is_selected) {
@@ -1076,6 +1088,18 @@ _extract_nodal
               if (_isosurface_cross_any_level(val0, val1, _iso->n_isovalues, _iso->isovalues, isos->ISOSURFACE_EPS)) {
                 is_selected = 1;
                 break;
+              }
+              else {
+                for (int i_isovalue = 0; i_isovalue < _iso->n_isovalues; i_isovalue++) {
+                  if (_isosurface_is_at_0_level(val0-_iso->isovalues[i_isovalue], isos->ISOSURFACE_EPS) ||
+                      _isosurface_is_at_0_level(val1-_iso->isovalues[i_isovalue], isos->ISOSURFACE_EPS)) {
+                    is_selected = 1;
+                    break;
+                  }
+                }
+                if (is_selected) {
+                  break;
+                }
               }
             }
 
@@ -1143,6 +1167,9 @@ _extract_nodal
                   is_selected = 1;
                   break;
                 }
+              }
+              if (is_selected) {
+                break;
               }
             }
           }
