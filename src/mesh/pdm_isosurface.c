@@ -1450,6 +1450,7 @@ _extract_ngon
   if (isos->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL) {
     if (isos->entry_mesh_dim==3) {
       isos->extract_cell_lnum = extract_lnum;
+      PDM_malloc(isos->extract_face_lnum, isos->iso_n_part, int *);
       for (int i_part = 0; i_part < isos->iso_n_part; i_part++) {
         PDM_extract_part_parent_lnum_get(isos->extrp,
                                          i_part,
@@ -1653,6 +1654,7 @@ _ngonize
   else {
     // We have elements other than simplices, we need to ngonize
     PDM_error(__FILE__, __LINE__, 0, "Nodal not implemented yet for elements other than TRIA3 and TETRA4\n");
+    isos->ngonize = 1; // need to good managing of memory
     isos->entry_mesh_type = 1 * PDM_SIGN(isos->entry_mesh_type); // we are in fact ngon from now on
 
     PDM_part_mesh_nodal_to_part_mesh_t *pmn_to_pm = PDM_part_mesh_nodal_to_part_mesh_create(extract_pmn,
@@ -1731,11 +1733,17 @@ _triangulate
                                                                  i_part,
                                                                 &isos->extract_vtx_coord[i_part],
                                                                  PDM_OWNERSHIP_BAD_VALUE);
+    PDM_ownership_t owner_vtx  = PDM_OWNERSHIP_USER;
+    PDM_ownership_t owner_face = PDM_OWNERSHIP_KEEP;
+    if (!isosurface_is_nodal(isos) && !isos->ngonize) {
+      owner_vtx  = PDM_OWNERSHIP_USER;
+      owner_face = PDM_OWNERSHIP_USER;
+    }
     PDM_part_mesh_entity_ln_to_gn_get(isos->extract_pmesh,
                                       i_part,
                                       PDM_MESH_ENTITY_VTX,
                                      &isos->extract_vtx_gnum[i_part],
-                                      PDM_OWNERSHIP_USER);
+                                      owner_vtx);
 
     PDM_g_num_t *face_parent_gnum = NULL;
     int n_face = PDM_part_mesh_n_entity_get(isos->extract_pmesh,
@@ -1745,7 +1753,7 @@ _triangulate
                                       i_part,
                                       PDM_MESH_ENTITY_FACE,
                                      &face_parent_gnum,
-                                      PDM_OWNERSHIP_KEEP);
+                                      owner_face);
 
 
 
