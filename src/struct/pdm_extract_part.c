@@ -2404,14 +2404,20 @@ _extract_part_and_reequilibrate_nodal_from_is_selected
         PDM_free(elmt_vtx_by_section       [i_section]);
         PDM_free(elmt_vtx_idx_by_section   [i_section]);
 
-        PDM_g_num_t *_gnum        = NULL;
-        PDM_g_num_t *_parent_gnum = NULL;
-        if (extrp->compute_child_gnum) {
-          _parent_gnum = extract_parent_g_num[i_section];
+        // >>>>>>>>>>>>>>> Fix tests until BA comes back :D
+        PDM_g_num_t *copy_parent_gnum = NULL;
+        if (!extrp->compute_child_gnum) {
+          PDM_malloc(copy_parent_gnum, n_elmt_by_section[i_section], PDM_g_num_t);
+          memcpy(copy_parent_gnum, extract_parent_g_num[i_section], sizeof(PDM_g_num_t) * n_elmt_by_section[i_section]);
         }
-        else {
-          _gnum        = extract_parent_g_num[i_section];
-        }
+        // PDM_g_num_t *_gnum        = NULL;
+        // PDM_g_num_t *_parent_gnum = NULL;
+        // if (extrp->compute_child_gnum) {
+        //   _parent_gnum = extract_parent_g_num[i_section];
+        // }
+        // else {
+        //   _gnum        = extract_parent_g_num[i_section];
+        // }
 
         PDM_part_mesh_nodal_elmts_section_poly3d_set(extract_pmne,
                                                      extract_section_id,
@@ -2423,22 +2429,29 @@ _extract_part_and_reequilibrate_nodal_from_is_selected
                                                      face_ln_to_gn,
                                                      elmt_face_idx_by_section[i_section],
                                                      cell_face,
-                                                     _gnum,
+                                                     // _gnum,
+                                                     copy_parent_gnum,
                                                      extract_parent_num[i_section],
-                                                     _parent_gnum,
+                                                     // _parent_gnum,
+                                                     extract_parent_g_num[i_section],
                                                      PDM_OWNERSHIP_KEEP);
       }
 
       else {
         /* Standard elements */
-        PDM_g_num_t *_gnum        = NULL;
-        PDM_g_num_t *_parent_gnum = NULL;
-        if (extrp->compute_child_gnum) {
-          _parent_gnum = extract_parent_g_num[i_section];
+        PDM_g_num_t *copy_parent_gnum = NULL;
+        if (!extrp->compute_child_gnum) {
+          PDM_malloc(copy_parent_gnum, n_elmt_by_section[i_section], PDM_g_num_t);
+          memcpy(copy_parent_gnum, extract_parent_g_num[i_section], sizeof(PDM_g_num_t) * n_elmt_by_section[i_section]);
         }
-        else {
-          _gnum        = extract_parent_g_num[i_section];
-        }
+        // PDM_g_num_t *_gnum        = NULL;
+        // PDM_g_num_t *_parent_gnum = NULL;
+        // if (extrp->compute_child_gnum) {
+        //   _parent_gnum = extract_parent_g_num[i_section];
+        // }
+        // else {
+        //   _gnum        = extract_parent_g_num[i_section];
+        // }
 
         if (PDM_Mesh_nodal_elmt_is_ho(t_elt)) {
           /* High-order */
@@ -2449,9 +2462,11 @@ _extract_part_and_reequilibrate_nodal_from_is_selected
                                                i_part,
                                                n_elmt_by_section[i_section],
                                                elmt_vtx_by_section[i_section],
-                                               _gnum,
-                                               extract_parent_num [i_section],
-                                               _parent_gnum,
+                                               // _gnum,
+                                               copy_parent_gnum,
+                                               extract_parent_num[i_section],
+                                               // _parent_gnum,
+                                               extract_parent_g_num[i_section],
                                                order,
                                                ho_ordering,
                                                PDM_OWNERSHIP_KEEP);
@@ -2463,11 +2478,14 @@ _extract_part_and_reequilibrate_nodal_from_is_selected
                                             i_part,
                                             n_elmt_by_section[i_section],
                                             elmt_vtx_by_section[i_section],
-                                            _gnum,
-                                            extract_parent_num [i_section],
-                                            _parent_gnum,
+                                            // _gnum,
+                                            copy_parent_gnum,
+                                            extract_parent_num[i_section],
+                                            // _parent_gnum,
+                                            extract_parent_g_num[i_section],
                                             PDM_OWNERSHIP_KEEP);
         }
+        // <<<<<<<<<<<<<<< Fix tests until BA comes back :D
       }
 
     } // End loop on sections
