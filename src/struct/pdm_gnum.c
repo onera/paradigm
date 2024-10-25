@@ -1483,6 +1483,7 @@ _gnum_from_parent_compute_nuplet
 
 
   PDM_MPI_Datatype mpi_entity_type;
+  // TODO: check that nuplet is equal on all ranks!
   PDM_MPI_Type_create_contiguous(nuplet, PDM__PDM_MPI_G_NUM, &mpi_entity_type);
   PDM_MPI_Type_commit(&mpi_entity_type);
 

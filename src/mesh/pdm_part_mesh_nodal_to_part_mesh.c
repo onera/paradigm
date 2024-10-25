@@ -581,6 +581,9 @@ _generate_gnum
   int *tmp_entity_to_vtx = NULL;
   PDM_malloc(tmp_entity_to_vtx, max_n_vtx, int);
 
+  int _max_n_vtx = max_n_vtx;
+  PDM_MPI_Allreduce(&_max_n_vtx, &max_n_vtx, 1, PDM_MPI_INT, PDM_MPI_MAX, pmn_to_pm->comm);
+
 
   for (int i_part = 0; i_part < n_part; i_part++) {
 

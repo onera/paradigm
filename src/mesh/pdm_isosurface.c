@@ -960,6 +960,7 @@ _extract_nodal
                                         PDM_OWNERSHIP_KEEP,
                                         isos->comm);
 
+  // TODO: strip pmn of its ridges & corners since we don't care about them?
   PDM_extract_part_part_nodal_set(isos->extrp, isos->pmesh_nodal);
 
   // Get principal pmne
@@ -1199,10 +1200,17 @@ _extract_nodal
 
   } // End loop on parts
 
+  // PDM_part_mesh_nodal_dump_vtk(isos->pmesh_nodal, PDM_GEOMETRY_KIND_VOLUMIC,  "init_vol");
+  // PDM_part_mesh_nodal_dump_vtk(isos->pmesh_nodal, PDM_GEOMETRY_KIND_SURFACIC, "init_surf");
+  // PDM_part_mesh_nodal_dump_vtk(isos->pmesh_nodal, PDM_GEOMETRY_KIND_RIDGE,    "init_ridge");
 
   PDM_extract_part_compute(isos->extrp);
 
   PDM_extract_part_part_mesh_nodal_get(isos->extrp, &isos->extract_pmesh_nodal, PDM_OWNERSHIP_KEEP);
+
+  // PDM_part_mesh_nodal_dump_vtk(isos->extract_pmesh_nodal, PDM_GEOMETRY_KIND_VOLUMIC,  "extract_vol");
+  // PDM_part_mesh_nodal_dump_vtk(isos->extract_pmesh_nodal, PDM_GEOMETRY_KIND_SURFACIC, "extract_surf");
+  // PDM_part_mesh_nodal_dump_vtk(isos->extract_pmesh_nodal, PDM_GEOMETRY_KIND_RIDGE,    "extract_ridge");
 
   if (isos->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL) {
     if (isos->entry_mesh_dim==3) {
@@ -1644,7 +1652,7 @@ _ngonize
   }
   else {
     // We have elements other than simplices, we need to ngonize
-    // PDM_error(__FILE__, __LINE__, 0, "Nodal not implemented yet for elements other than TRIA3 and TETRA4\n");
+    PDM_error(__FILE__, __LINE__, 0, "Nodal not implemented yet for elements other than TRIA3 and TETRA4\n");
     isos->entry_mesh_type = 1 * PDM_SIGN(isos->entry_mesh_type); // we are in fact ngon from now on
 
     PDM_part_mesh_nodal_to_part_mesh_t *pmn_to_pm = PDM_part_mesh_nodal_to_part_mesh_create(extract_pmn,
@@ -1652,12 +1660,14 @@ _ngonize
                                                                                             PDM_OWNERSHIP_USER);
 
     if (isos->entry_mesh_dim == 3) {
-      isos->we_have_edges = 1;
       PDM_part_mesh_nodal_to_part_mesh_connectivity_enable(pmn_to_pm, PDM_CONNECTIVITY_TYPE_CELL_FACE);
 
+      isos->we_have_edges = 1;
       PDM_part_mesh_nodal_to_part_mesh_connectivity_enable(pmn_to_pm, PDM_CONNECTIVITY_TYPE_FACE_EDGE);
-
       PDM_part_mesh_nodal_to_part_mesh_connectivity_enable(pmn_to_pm, PDM_CONNECTIVITY_TYPE_EDGE_VTX);
+
+      // isos->we_have_edges = 0;
+      // PDM_part_mesh_nodal_to_part_mesh_connectivity_enable(pmn_to_pm, PDM_CONNECTIVITY_TYPE_FACE_VTX);
 
       PDM_part_mesh_nodal_to_part_mesh_g_nums_enable(pmn_to_pm, PDM_MESH_ENTITY_CELL);
     }
@@ -3167,6 +3177,7 @@ _isosurface_compute
   PDM_MPI_Comm_rank(isos->comm, &i_rank);
 
   int init_entry_mesh_type = isos->entry_mesh_type;
+  int init_we_have_edges   = isos->we_have_edges;
 
   int dbg = 0;
 
@@ -3238,6 +3249,7 @@ _isosurface_compute
   isosurface_timer_end(isos, ISO_TIMER_CONTOURING);
 
   isos->entry_mesh_type = init_entry_mesh_type;
+  isos->we_have_edges   = init_we_have_edges;
 
   // > Compute isosurface entity weights
   _compute_missing_entity_weights(isos, id_isosurface);
