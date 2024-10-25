@@ -362,7 +362,15 @@ int main(int argc, char *argv[])
   PDM_free(iso_itp_field_vtx );
   PDM_free(iso_itp_field_edge);
 
+
+  if (i_rank == 0) {
+    printf("End :D\n");
+    fflush(stdout);
+  }
+
+
   PDM_MPI_Finalize();
 
-  return 0;
+
+  return EXIT_SUCCESS;
 }

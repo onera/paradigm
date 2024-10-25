@@ -3049,7 +3049,7 @@ _free_extracted_parts
       }
     }
 
-    if (is_local && (is_2d_ngon || (isosurface_is_nodal(isos) && isos->entry_mesh_dim>1))) {
+    if (is_local) {
       PDM_free(isos->extract_face_lnum[i_part]);
     }
     if (!is_local && isos->entry_mesh_dim==2 && !isos->all_simplices) {
