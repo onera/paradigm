@@ -250,6 +250,7 @@ struct _pdm_isosurface_t {
   // TODO: is entry_mesh_type sign necessary ???
   int entry_is_part; // -1: invalid, 0: dist, 1: part
   int entry_mesh_type; //  0: undef, 1: dist_alamano, 2: dmesh, 3: dmesh_nodal, -1: part_alamano, -2: pmesh, -3: pmesh_nodal
+  int all_simplices;
 
   // > Mesh information
   int entry_mesh_dim;

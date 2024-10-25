@@ -1442,7 +1442,6 @@ _extract_ngon
   if (isos->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL) {
     if (isos->entry_mesh_dim==3) {
       isos->extract_cell_lnum = extract_lnum;
-      PDM_malloc(isos->extract_face_lnum, isos->iso_n_part, int *);
       for (int i_part = 0; i_part < isos->iso_n_part; i_part++) {
         PDM_extract_part_parent_lnum_get(isos->extrp,
                                          i_part,
@@ -1523,7 +1522,7 @@ _ngonize
   /* Inspect nodal sections and check wether we only have simplices */
   int n_section = PDM_part_mesh_nodal_n_section_get(extract_pmn);
 
-  int all_simplices = 1;
+  isos->all_simplices = 1;
   for (int i_section = 0; i_section < n_section; i_section++) {
     PDM_Mesh_nodal_elt_t elt_type = PDM_part_mesh_nodal_section_elt_type_get(extract_pmn,
                                                                              i_section);
@@ -1533,14 +1532,28 @@ _ngonize
     }
     if (elt_type != PDM_MESH_NODAL_TRIA3 &&
         elt_type != PDM_MESH_NODAL_TETRA4) {
-      all_simplices = 0;
+      isos->all_simplices = 0;
       break;
     }
   }
 
   // We assume all ranks have the same sections, so no need for Allreduce
 
-  if (all_simplices) {
+  if (isos->all_simplices) {
+    if (isos->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL) {// && isos->entry_mesh_dim==2) {
+      if (isos->entry_mesh_dim==2) {
+        for (int i_part = 0; i_part < isos->n_part; i_part++) {
+          PDM_free(isos->extract_face_lnum[i_part]);
+        }
+      }
+      PDM_free(isos->extract_face_lnum);
+    }
+    if (isos->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL && isos->entry_mesh_dim==3) {
+      for (int i_part = 0; i_part < isos->n_part; i_part++) {
+        PDM_free(isos->extract_cell_lnum[i_part]);
+      }
+      PDM_free(isos->extract_cell_lnum);
+    }
     PDM_malloc(isos->extract_n_vtx    , isos->iso_n_part, int          );
     PDM_malloc(isos->extract_vtx_coord, isos->iso_n_part, double      *);
     PDM_malloc(isos->extract_vtx_gnum , isos->iso_n_part, PDM_g_num_t *);
@@ -1661,7 +1674,7 @@ _ngonize
     PDM_part_mesh_nodal_to_part_mesh_compute(pmn_to_pm);
 
     PDM_part_mesh_nodal_to_part_mesh_part_mesh_get(pmn_to_pm,
-                                                   &isos->extract_pmesh,
+                                                  &isos->extract_pmesh,
                                                    PDM_OWNERSHIP_USER);
 
 
@@ -1722,7 +1735,7 @@ _triangulate
                                       i_part,
                                       PDM_MESH_ENTITY_FACE,
                                      &face_parent_gnum,
-                                      PDM_OWNERSHIP_USER);
+                                      PDM_OWNERSHIP_KEEP);
 
 
 
@@ -3008,7 +3021,7 @@ _free_extracted_parts
 )
 {
   int is_local   = (isos->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL);
-  int is_2d_ngon = (isos->entry_mesh_dim == 2) && !isosurface_is_nodal(isos);
+  int is_2d_ngon = (isos->entry_mesh_dim == 2) && (!isosurface_is_nodal(isos) || isos->all_simplices==0);
 
   for (int i_part=0; i_part<isos->iso_n_part; ++i_part) {
     if (is_local) {
@@ -3018,9 +3031,13 @@ _free_extracted_parts
       }
     }
 
-    if (is_local || is_2d_ngon) {
+    if (is_local && (is_2d_ngon || (isosurface_is_nodal(isos) && isos->entry_mesh_dim>1))) {
       PDM_free(isos->extract_face_lnum[i_part]);
     }
+    if (!is_local && isos->entry_mesh_dim==2 && !isos->all_simplices) {
+      PDM_free(isos->extract_face_lnum[i_part]);
+    }
+
 
     if (is_2d_ngon) {
       PDM_free(isos->extract_tri_vtx [i_part]);
@@ -3299,6 +3316,9 @@ PDM_isosurface_create
   isos->n_part = 1;
 
   isos->we_have_edges = -1;
+
+  isos->all_simplices = 0;
+
 
   // > Reset timers
   memset(isos->times_current, 0, ISO_TIMER_N_STEPS*sizeof(double));
