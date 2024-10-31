@@ -7114,6 +7114,13 @@ PDM_extract_part_parent_lnum_get
  PDM_ownership_t            ownership
 )
 {
+
+  if(extrp->extract_kind != PDM_EXTRACT_PART_KIND_LOCAL) {
+    PDM_error(__FILE__, __LINE__, 0,
+      "PDM_extract_part_parent_lnum_get: invalid extract_kind %d. Should be PDM_EXTRACT_PART_KIND_LOCAL\n",
+      extrp->extract_kind);
+  }
+
   *parent_entity_lnum = extrp->pextract_entity_parent_lnum[entity_type][i_part_out];
   if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
     extrp->is_owner_parent_lnum[entity_type] = PDM_FALSE;
