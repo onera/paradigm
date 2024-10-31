@@ -3393,7 +3393,7 @@ PDM_isosurface_set_tolerance
 
 
 void
-PDM_isosurface_set_isovalues
+PDM_isosurface_isovalues_set
 (
   PDM_isosurface_t *isos,
   int               id_isosurface,
@@ -3436,7 +3436,7 @@ PDM_isosurface_add
   _iso->kind        = kind;
   _iso->is_computed = PDM_FALSE;
 
-  PDM_isosurface_set_isovalues(isos,
+  PDM_isosurface_isovalues_set(isos,
                                id_isosurface,
                                n_isovalues,
                                isovalues);
@@ -3502,11 +3502,11 @@ PDM_isosurface_field_function_set
 
 
 void
-isosurface_field_function_set_python
+isosurface_python_field_function_set
 (
   PDM_isosurface_t                       *isos,
   int                                     id_isosurface,
-  PDM_isosurface_field_function_python_t  func
+  PDM_isosurface_python_field_function_t  func
 )
 {
   PDM_ISOSURFACE_CHECK_ID(isos, id_isosurface);

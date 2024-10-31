@@ -53,6 +53,7 @@ int* PDM_array_copy_int(const int *array, const int size) {
   for (int i = 0; i < size; i++) array_cp[i] = array[i];
   return array_cp;
 }
+
 PDM_g_num_t* PDM_array_copy_gnum(const PDM_g_num_t *array, const int size) {
   assert (size >= 0);
   PDM_g_num_t *array_cp = NULL;
@@ -61,6 +62,7 @@ PDM_g_num_t* PDM_array_copy_gnum(const PDM_g_num_t *array, const int size) {
   for (int i = 0; i < size; i++) array_cp[i] = array[i];
   return array_cp;
 }
+
 
 /*
  * Allocate a new array of size size and fill it with 0
@@ -73,6 +75,7 @@ int* PDM_array_zeros_int(const int size) {
   for (int i = 0; i < size; i++) array[i] = 0;
   return array;
 }
+
 PDM_g_num_t* PDM_array_zeros_gnum(const int size) {
   assert (size >= 0);
   PDM_g_num_t *array = NULL;
@@ -81,6 +84,7 @@ PDM_g_num_t* PDM_array_zeros_gnum(const int size) {
   for (int i = 0; i < size; i++) array[i] = 0;
   return array;
 }
+
 double* PDM_array_zeros_double(const int size) {
   assert (size >= 0);
   double *array = NULL;
@@ -89,6 +93,7 @@ double* PDM_array_zeros_double(const int size) {
   for (int i = 0; i < size; i++) array[i] = 0.;
   return array;
 }
+
 
 /*
  * Allocate a new array of size size and fill it with value
@@ -101,6 +106,7 @@ int* PDM_array_const_int(const int size, const int value) {
   for (int i = 0; i < size; i++) array[i] = value;
   return array;
 }
+
 PDM_g_num_t* PDM_array_const_gnum(const int size, const PDM_g_num_t value) {
   assert (size >= 0);
   PDM_g_num_t *array;
@@ -109,6 +115,7 @@ PDM_g_num_t* PDM_array_const_gnum(const int size, const PDM_g_num_t value) {
   for (int i = 0; i < size; i++) array[i] = value;
   return array;
 }
+
 double* PDM_array_const_double(const int size, const double value) {
   assert (size >= 0);
   double *array;
@@ -143,6 +150,7 @@ int* PDM_array_new_arange_int(const int start, const int end, const int step) {
   }
   return array;
 }
+
 PDM_g_num_t* PDM_array_new_arange_gnum(const PDM_g_num_t start, const PDM_g_num_t end, const int step) {
   int size = (end-start)/step+1;
   PDM_g_num_t *array;
@@ -162,6 +170,7 @@ int* PDM_array_new_range_with_step_int(const int size, const int step) {
   return array;
 }
 
+
 /*
  * Allocate a new index array (size=size+1) and fill it from
  * the size array size_array (which must be of size size)
@@ -173,6 +182,7 @@ int* PDM_array_new_idx_from_sizes_int(const int *size_array, const int size) {
   for (int i = 0; i < size; i++) idx_array[i+1] = idx_array[i] + size_array[i];
   return idx_array;
 }
+
 PDM_g_num_t* PDM_array_new_idx_from_sizes_gnum(const int *size_array, const int size) {
   PDM_g_num_t *idx_array;
   PDM_malloc(idx_array, size+1, PDM_g_num_t);
@@ -214,6 +224,7 @@ int PDM_array_are_equal_int(const int *array1, const int *array2, const int size
   }
   return 1;
 }
+
 int PDM_array_are_equal_gnum(const PDM_g_num_t *array1, const PDM_g_num_t *array2, const int size) {
   for (int i = 0; i < size; i++) {
     if (array1[i] != array2[i])
@@ -231,6 +242,7 @@ int PDM_array_max_int(const int *array, const int size) {
   }
   return max;
 }
+
 int PDM_array_min_int(const int *array, const int size) {
   int min = INT_MAX;
   for (int i = 0; i < size; i++) {
@@ -248,6 +260,7 @@ PDM_g_num_t PDM_array_max_gnum(const PDM_g_num_t *array, const int size) {
   }
   return max;
 }
+
 PDM_g_num_t PDM_array_min_gnum(const PDM_g_num_t *array, const int size) {
   PDM_g_num_t min = PDM_G_NUM_MAX;
   for (int i = 0; i < size; i++) {
@@ -260,16 +273,17 @@ PDM_g_num_t PDM_array_min_gnum(const PDM_g_num_t *array, const int size) {
 
 /* Utils functions modifying arrays*/
 
-
 /*
  * Fill the given array of size size with the value value
 */
 void PDM_array_reset_int(int *array, const int size, const int value) {
     for (int i = 0; i < size; i++) array[i] = value;
 }
+
 void PDM_array_reset_gnum(PDM_g_num_t *array, const int size, const PDM_g_num_t value) {
     for (int i = 0; i < size; i++) array[i] = value;
 }
+
 
 /*
  * Fill the index array idx_array (preallocated at size=size+1) from the size array
@@ -279,10 +293,12 @@ void PDM_array_idx_from_sizes_int(const int *size_array, const int size, int *id
   idx_array[0] = 0;
   for (int i = 0; i < size; i++) idx_array[i+1] = idx_array[i] + size_array[i];
 }
+
 void PDM_array_idx_from_sizes_gnum(const int *size_array, const int size, PDM_g_num_t *idx_array) {
   idx_array[0] = 0;
   for (int i = 0; i < size; i++) idx_array[i+1] = idx_array[i] + size_array[i];
 }
+
 
 /*
  * Accumulate the values of the input array array of size size, ie
@@ -291,6 +307,7 @@ void PDM_array_idx_from_sizes_gnum(const int *size_array, const int size, PDM_g_
 void PDM_array_accumulate_int(int *array, const int size) {
   for (int i = 1; i < size; i++) array[i] = array[i] + array[i-1];
 }
+
 void PDM_array_accumulate_gnum(PDM_g_num_t *array, const int size) {
   for (int i = 1; i < size; i++) array[i] = array[i] + array[i-1];
 }

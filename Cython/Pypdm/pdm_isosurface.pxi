@@ -3,7 +3,7 @@ cdef extern from "pdm_isosurface.h":
   ctypedef struct PDM_isosurface_t:
       pass
 
-  ctypedef double (*PDM_isosurface_field_function_python_t)(void   *python_object,
+  ctypedef double (*PDM_isosurface_python_field_function_t)(void   *python_object,
                                                             int     id_iso,
                                                             double  x,
                                                             double  y,
@@ -51,8 +51,8 @@ cdef extern from "pdm_isosurface.h":
   void PDM_isosurface_part_mesh_set(PDM_isosurface_t *isos,
                                     PDM_part_mesh_t  *pmesh);
 
-  void PDM_isosurface_mesh_nodal_set(PDM_isosurface_t      *isos,
-                                     PDM_part_mesh_nodal_t *pmn);
+  void PDM_isosurface_part_mesh_nodal_set(PDM_isosurface_t      *isos,
+                                          PDM_part_mesh_nodal_t *pmn);
 
   void PDM_isosurface_dconnectivity_set(PDM_isosurface_t        *isos,
                                         PDM_connectivity_type_t  connectivity_type,
@@ -82,7 +82,7 @@ cdef extern from "pdm_isosurface.h":
                          int                     n_isovalues,
                          double                 *isovalues);
 
-  void PDM_isosurface_set_isovalues(PDM_isosurface_t *isos,
+  void PDM_isosurface_isovalues_set(PDM_isosurface_t *isos,
                                     int               id_isosurface,
                                     int               n_isovalues,
                                     double           *isovalues);
@@ -91,7 +91,7 @@ cdef extern from "pdm_isosurface.h":
                                    int               id_isosurface,
                                    double           *coeff);
 
-  void isosurface_field_function_set_python(PDM_isosurface_t                       *isos,
+  void isosurface_python_field_function_set(PDM_isosurface_t                       *isos,
                                             int                                     id_isosurface,
                                             PDM_isosurface_field_function_python_t  func);
 
@@ -362,7 +362,7 @@ cdef class Isosurface:
     cdef int     n_isovalues    = len(isovalues)
     cdef double *isovalues_data = list_to_double_pointer(isovalues)
 
-    PDM_isosurface_set_isovalues(self._isos, id_iso, n_isovalues, isovalues_data)
+    PDM_isosurface_isovalues_set(self._isos, id_iso, n_isovalues, isovalues_data)
 
     free(isovalues_data) # deep-copied in isos
 
@@ -395,7 +395,7 @@ cdef class Isosurface:
     """
     self.user_defined_field_function[id_iso] = fct
 
-    isosurface_field_function_set_python(self._isos,
+    isosurface_python_field_function_set(self._isos,
                                          id_iso,
                                          callback)
 
@@ -582,7 +582,7 @@ cdef class Isosurface:
     Parameters:
       part_mesh_nodal (PDM_part_mesh_nodal) : PDM_part_mesh_nodal
     """
-    PDM_isosurface_mesh_nodal_set(self._isos, part_mesh_nodal.pmn)
+    PDM_isosurface_part_mesh_nodal_set(self._isos, part_mesh_nodal.pmn)
 
   def redistribution_set(self,
                          PDM_extract_part_kind_t extract_kind,
@@ -917,7 +917,7 @@ cdef class Isosurface:
     """
     parent_weight_get(id_iso, i_part, entity_type)
 
-    Get isosurface entity parent weight.
+    Get isosurface entity parent interpolation weight.
 
     Parameters:
       id_iso      (int)                 : Isosurface id
@@ -1077,7 +1077,7 @@ cdef class Isosurface:
     """
     dparent_weight_get(id_iso)
 
-    Get isosurface entity parent weight.
+    Get isosurface entity parent interpolation weight.
 
     Parameters:
       id_iso      (int)                 : Isosurface id

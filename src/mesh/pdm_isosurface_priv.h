@@ -114,7 +114,7 @@ typedef enum {
 } _isosurface_timer_step_t;
 
 
-typedef double (*PDM_isosurface_field_function_python_t)
+typedef double (*PDM_isosurface_python_field_function_t)
 (
   void   *python_object,
   int     id_iso,
@@ -230,7 +230,7 @@ typedef struct _isosurface_t { // Better name?
 
   // =================
   // > Python wrapping
-  PDM_isosurface_field_function_python_t field_function_python;
+  PDM_isosurface_python_field_function_t field_function_python;
 
 } _isosurface_t;
 
@@ -458,11 +458,11 @@ isosurface_is_nodal
 
 /* Python wrapping */
 void
-isosurface_field_function_set_python
+isosurface_python_field_function_set
 (
   PDM_isosurface_t                       *isos,
   int                                     id_isosurface,
-  PDM_isosurface_field_function_python_t  func
+  PDM_isosurface_python_field_function_t  func
 );
 
 void

@@ -177,7 +177,7 @@ int main(int argc, char *argv[])
   if (n_part==0) {
     PDM_isosurface_dmesh_nodal_set(isos, dmn);
   } else {
-    PDM_isosurface_mesh_nodal_set(isos, pmn);
+    PDM_isosurface_part_mesh_nodal_set(isos, pmn);
     if (local==0) {
       PDM_isosurface_redistribution_set(isos, PDM_EXTRACT_PART_KIND_REEQUILIBRATE, PDM_SPLIT_DUAL_WITH_HILBERT); // TODO: Test various partitioning ?
     }
@@ -252,7 +252,7 @@ int main(int argc, char *argv[])
   PDM_isosurface_compute(isos, iso1);
   PDM_isosurface_reset(isos, iso1);
   double plane_isovalues[3] = {-0.30,0.,1.};
-  PDM_isosurface_set_isovalues(isos, iso1, 3, plane_isovalues);
+  PDM_isosurface_isovalues_set(isos, iso1, 3, plane_isovalues);
   PDM_isosurface_compute(isos, -1);
 
 

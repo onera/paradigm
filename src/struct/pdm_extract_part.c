@@ -5848,7 +5848,6 @@ _warmup_extract_part_nodal_greatest_dimension
     }
     PDM_free(part2_cell_to_part1_cell_idx);
 
-
     PDM_malloc(extrp->pextract_entity_init_location[parent_entity_type], extrp->n_part_out, int *);
     for (int i_part = 0; i_part < extrp->n_part_out; i_part++) {
       extrp->pextract_entity_init_location[parent_entity_type][i_part] = entity_target_location[i_part];

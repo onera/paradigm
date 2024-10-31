@@ -774,6 +774,14 @@ PDM_dmesh_nodal_transfer_to_new_dmesh_nodal_gen
  PDM_g_num_t         *blk_parent_to_new_vtx_gnum
 );
 
+/**
+ * \brief  Dump a vtk containing dmesh_nodal elements from asked dimension.
+ *
+ * \param [in]   dmn              PDM_dmesh_nodal_t instance
+ * \param [in]   geom_kind        Dimension to dump
+ * \param [in]   filename_patter  Filename 
+ *
+ */
 void
 PDM_dmesh_nodal_dump_vtk
 (
@@ -782,6 +790,22 @@ PDM_dmesh_nodal_dump_vtk
  const char                *filename_patter
 );
 
+
+/**
+ * \brief  Dump a vtk containing dmesh_nodal elements from asked dimension
+ * with associated given fields.
+ *
+ * \param [in]   dmn              PDM_dmesh_nodal_t instance
+ * \param [in]   geom_kind        Dimension to dump
+ * \param [in]   filename_patter  Filename 
+ * \param [in]   n_fld_vtx        Number of vertex fields
+ * \param [in]   fld_name_vtx     Field names 
+ * \param [in]   fld_vtx          Fields 
+ * \param [in]   n_fld_elmt       Number of elements fields
+ * \param [in]   fld_name_elmt    Field names 
+ * \param [in]   fld_elmt         Fields 
+ *
+ */
 void
 PDM_dmesh_nodal_dump_vtk_with_field
 (

@@ -26,7 +26,7 @@ Partitioned
 
 .. doxygenfunction:: PDM_isosurface_part_mesh_set
 
-.. doxygenfunction:: PDM_isosurface_mesh_nodal_set
+.. doxygenfunction:: PDM_isosurface_part_mesh_nodal_set
 
 Block-distributed
 ~~~~~~~~~~~~~~~~~
@@ -49,7 +49,7 @@ Iso-surface settings
 
 .. doxygenfunction:: PDM_isosurface_add
 
-.. doxygenfunction:: PDM_isosurface_set_isovalues
+.. doxygenfunction:: PDM_isosurface_isovalues_set
 
 .. doxygenenum:: PDM_iso_surface_kind_t
 

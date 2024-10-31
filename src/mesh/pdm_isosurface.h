@@ -281,7 +281,7 @@ PDM_isosurface_part_mesh_set
  */
 
 void
-PDM_isosurface_mesh_nodal_set
+PDM_isosurface_part_mesh_nodal_set
 (
   PDM_isosurface_t      *isos,
   PDM_part_mesh_nodal_t *pmn
@@ -443,7 +443,7 @@ PDM_isosurface_add
  */
 
 void
-PDM_isosurface_set_isovalues
+PDM_isosurface_isovalues_set
 (
   PDM_isosurface_t *isos,
   int               id_isosurface,
@@ -801,7 +801,7 @@ PDM_isosurface_dconnectivity_get
 
 /**
  *
- * \brief Get iso-surface parent weight for iso entities
+ * \brief Get iso-surface parent interpolation weight for iso entities
  *
  * \param [in]  isos            \ref PDM_isosurface_t instance
  * \param [in]  id_isosurface   Iso-surface identifier

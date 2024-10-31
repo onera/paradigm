@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
   if (n_part==0) {
     PDM_isosurface_dmesh_nodal_set(isos, dmn);
   } else {
-    PDM_isosurface_mesh_nodal_set(isos, pmn);
+    PDM_isosurface_part_mesh_nodal_set(isos, pmn);
     if (local==0) {
       PDM_isosurface_redistribution_set(isos, PDM_EXTRACT_PART_KIND_REEQUILIBRATE, PDM_SPLIT_DUAL_WITH_HILBERT); // TODO: Test various partitioning ?
     }
