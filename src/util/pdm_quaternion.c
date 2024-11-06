@@ -272,7 +272,7 @@ PDM_quaternion_slerp_from_two_vectors
   const double vector_1[3],
   const double vector_2[3],
   const double* t,
-  const int n_samples,
+  const int n_samp,
   double* out
 )
 {
@@ -281,7 +281,7 @@ PDM_quaternion_slerp_from_two_vectors
   double axis[3];
   double angle;
   PDM_quaternion_to_axis_angle(&qt,axis,&angle);
-  for (int i = 0; i < n_samples; i++) {
+  for (int i = 0; i < n_samp; i++) {
     PDM_quaternion_from_axis_angle(axis,t[i]*angle,&qt);
     PDM_quaternion_rotate(&qt,vector_1,1,&out[3*i]);
   }
@@ -293,7 +293,7 @@ PDM_quaternion_slerp_from_two_vectors_derivative
   const double vector_1[3],
   const double vector_2[3],
   const double* t,
-  const int n_samples,
+  const int n_samp,
   double* out
 )
 {
@@ -304,7 +304,7 @@ PDM_quaternion_slerp_from_two_vectors_derivative
   double axis_der[3] = {0,0,0};
   double angle;
   PDM_quaternion_to_axis_angle(&qt,axis,&angle);
-  for (int i = 0; i < n_samples; i++) {
+  for (int i = 0; i < n_samp; i++) {
     PDM_quaternion_from_axis_angle(axis,t[i]*angle,&qt);
     PDM_quaternion_from_axis_angle_derivative(axis,t[i]*angle,axis_der,angle,&qt_der);
     PDM_quaternion_rotate_derivative(&qt,&qt_der,vector_1,1,&out[3*i]);
@@ -319,8 +319,8 @@ PDM_quaternion_slerp_from_two_vectors_derivative
 void 
 PDM_quaternion_from_two_vectors
 (
-  const double vector_1[3],
-  const double vector_2[3],
+  const double* vector_1,
+  const double* vector_2,
   PDM_quaternion_t* qt_out
 )
 {
@@ -512,50 +512,77 @@ PDM_quaternion_from_euler_angles
 void
 PDM_quaternion_from_rotation_matrix
 (
-  const double **rotation_matrix,
+  const double *rotation_matrix,
   PDM_quaternion_t* qt_out
 )
 {
-  double tr = rotation_matrix[0][0]+rotation_matrix[1][1]+rotation_matrix[2][2];
+  double tr = rotation_matrix[3*0+0]+rotation_matrix[3*1+1]+rotation_matrix[3*2+2];
   double tmp;
   if (PDM_ABS(tr) > QUATERNION_EPS){
     tmp = sqrt(1+tr)*2.;
     qt_out->w    = .25*tmp;
-    qt_out->v[0] = (rotation_matrix[2][1]-rotation_matrix[1][2])/tmp;
-    qt_out->v[1] = (rotation_matrix[0][2]-rotation_matrix[2][0])/tmp;
-    qt_out->v[2] = (rotation_matrix[1][0]-rotation_matrix[0][1])/tmp;
+    qt_out->v[0] = (rotation_matrix[3*2+1]-rotation_matrix[3*1+2])/tmp;
+    qt_out->v[1] = (rotation_matrix[3*0+2]-rotation_matrix[3*2+0])/tmp;
+    qt_out->v[2] = (rotation_matrix[3*1+0]-rotation_matrix[3*0+1])/tmp;
   }
-  else if ((rotation_matrix[0][0]>rotation_matrix[1][1]) & (rotation_matrix[0][0]>rotation_matrix[2][2])){
-    tmp = sqrt(1+rotation_matrix[0][0]-rotation_matrix[1][1]-rotation_matrix[2][2])*2.;
-    qt_out->w    = (rotation_matrix[2][1]-rotation_matrix[1][2])/tmp;
+  else if ((rotation_matrix[3*0+0]>rotation_matrix[3*1+1]) & (rotation_matrix[3*0+0]>rotation_matrix[3*2+2])){
+    tmp = sqrt(1+rotation_matrix[3*0+0]-rotation_matrix[3*1+1]-rotation_matrix[3*2+2])*2.;
+    qt_out->w    = (rotation_matrix[3*2+1]-rotation_matrix[3*1+2])/tmp;
     qt_out->v[0] = .25*tmp;
-    qt_out->v[1] = (rotation_matrix[1][0]+rotation_matrix[0][1])/tmp;
-    qt_out->v[2] = (rotation_matrix[2][0]+rotation_matrix[0][2])/tmp;
+    qt_out->v[1] = (rotation_matrix[3*1+0]+rotation_matrix[3*0+1])/tmp;
+    qt_out->v[2] = (rotation_matrix[3*2+0]+rotation_matrix[3*0+2])/tmp;
   }
-  else if (rotation_matrix[1][1]>rotation_matrix[2][2]){
-    tmp  = sqrt(1+rotation_matrix[1][1] - rotation_matrix[0][0] - rotation_matrix[2][2]) * 2;
-    qt_out->w    = (rotation_matrix[0][2] - rotation_matrix[2][0]) / tmp;
-    qt_out->v[0] = (rotation_matrix[0][1] + rotation_matrix[1][0]) / tmp; 
+  else if (rotation_matrix[3*1+1]>rotation_matrix[3*2+2]){
+    tmp  = sqrt(1+rotation_matrix[3*1+1] - rotation_matrix[3*0+0] - rotation_matrix[3*2+2]) * 2;
+    qt_out->w    = (rotation_matrix[3*0+2] - rotation_matrix[3*2+0]) / tmp;
+    qt_out->v[0] = (rotation_matrix[3*0+1] + rotation_matrix[3*1+0]) / tmp; 
     qt_out->v[1] = 0.25 * tmp;
-    qt_out->v[2] = (rotation_matrix[1][2] + rotation_matrix[2][1]) / tmp; 
+    qt_out->v[2] = (rotation_matrix[3*1+2] + rotation_matrix[3*2+1]) / tmp; 
   } else { 
-    tmp = sqrt(1.0 + rotation_matrix[2][2] - rotation_matrix[0][0] - rotation_matrix[1][1]) * 2;
-    qt_out->w    = (rotation_matrix[1][0] - rotation_matrix[0][1]) / tmp;
-    qt_out->v[0] = (rotation_matrix[0][2] + rotation_matrix[2][0]) / tmp;
-    qt_out->v[1] = (rotation_matrix[1][2] + rotation_matrix[2][1]) / tmp;
+    tmp = sqrt(1.0 + rotation_matrix[3*2+2] - rotation_matrix[3*0+0] - rotation_matrix[3*1+1]) * 2;
+    qt_out->w    = (rotation_matrix[3*1+0] - rotation_matrix[3*0+1]) / tmp;
+    qt_out->v[0] = (rotation_matrix[3*0+2] + rotation_matrix[3*2+0]) / tmp;
+    qt_out->v[1] = (rotation_matrix[3*1+2] + rotation_matrix[3*2+1]) / tmp;
     qt_out->v[2] = 0.25 * tmp;
   }
-  
 }
 
 void
 PDM_quaternion_from_homogeneous_matrix
 (
-  const double **homogeneous_matrix,
+  const double *homogeneous_matrix,
   PDM_quaternion_t* qt_out
 )
 {
-  PDM_quaternion_from_rotation_matrix(homogeneous_matrix,qt_out);
+  double tr = homogeneous_matrix[4*0+0]+homogeneous_matrix[4*1+1]+homogeneous_matrix[4*2+2];
+  double tmp;
+  if (PDM_ABS(tr) > QUATERNION_EPS){
+    tmp = sqrt(1+tr)*2.;
+    qt_out->w    = .25*tmp;
+    qt_out->v[0] = (homogeneous_matrix[4*2+1]-homogeneous_matrix[4*1+2])/tmp;
+    qt_out->v[1] = (homogeneous_matrix[4*0+2]-homogeneous_matrix[4*2+0])/tmp;
+    qt_out->v[2] = (homogeneous_matrix[4*1+0]-homogeneous_matrix[4*0+1])/tmp;
+  }
+  else if ((homogeneous_matrix[4*0+0]>homogeneous_matrix[4*1+1]) & (homogeneous_matrix[4*0+0]>homogeneous_matrix[4*2+2])){
+    tmp = sqrt(1+homogeneous_matrix[4*0+0]-homogeneous_matrix[4*1+1]-homogeneous_matrix[4*2+2])*2.;
+    qt_out->w    = (homogeneous_matrix[4*2+1]-homogeneous_matrix[4*1+2])/tmp;
+    qt_out->v[0] = .25*tmp;
+    qt_out->v[1] = (homogeneous_matrix[4*1+0]+homogeneous_matrix[4*0+1])/tmp;
+    qt_out->v[2] = (homogeneous_matrix[4*2+0]+homogeneous_matrix[4*0+2])/tmp;
+  }
+  else if (homogeneous_matrix[4*1+1]>homogeneous_matrix[4*2+2]){
+    tmp  = sqrt(1+homogeneous_matrix[4*1+1] - homogeneous_matrix[4*0+0] - homogeneous_matrix[4*2+2]) * 2;
+    qt_out->w    = (homogeneous_matrix[4*0+2] - homogeneous_matrix[4*2+0]) / tmp;
+    qt_out->v[0] = (homogeneous_matrix[4*0+1] + homogeneous_matrix[4*1+0]) / tmp; 
+    qt_out->v[1] = 0.25 * tmp;
+    qt_out->v[2] = (homogeneous_matrix[4*1+2] + homogeneous_matrix[4*2+1]) / tmp; 
+  } else { 
+    tmp = sqrt(1.0 + homogeneous_matrix[4*2+2] - homogeneous_matrix[4*0+0] - homogeneous_matrix[4*1+1]) * 2;
+    qt_out->w    = (homogeneous_matrix[4*1+0] - homogeneous_matrix[4*0+1]) / tmp;
+    qt_out->v[0] = (homogeneous_matrix[4*0+2] + homogeneous_matrix[4*2+0]) / tmp;
+    qt_out->v[1] = (homogeneous_matrix[4*1+2] + homogeneous_matrix[4*2+1]) / tmp;
+    qt_out->v[2] = 0.25 * tmp;
+  }
 }
 
 /*----------------------------------------------------------------------------
@@ -666,38 +693,518 @@ void
 PDM_quaternion_to_rotation_matrix
 (
   const PDM_quaternion_t* qt, 
-  double** rotation_matrix
+  double* rotation_matrix
 )
 {
-  rotation_matrix[0][0] = 1 - 2 * qt->v[1] * qt->v[1] - 2 * qt->v[2] * qt->v[2];
-  rotation_matrix[0][1] =     2 * qt->v[0] * qt->v[1] - 2 * qt->v[2] * qt->w ;
-  rotation_matrix[0][2] =     2 * qt->v[0] * qt->v[2] + 2 * qt->v[1] * qt->w ;
-  rotation_matrix[1][0] =     2 * qt->v[0] * qt->v[1] + 2 * qt->v[2] * qt->w ;
-  rotation_matrix[1][1] = 1 - 2 * qt->v[2] * qt->v[2] - 2 * qt->v[0] * qt->v[0];
-  rotation_matrix[1][2] =     2 * qt->v[1] * qt->v[2] - 2 * qt->v[0] * qt->w ;
-  rotation_matrix[2][0] =     2 * qt->v[0] * qt->v[2] - 2 * qt->v[1] * qt->w ;
-  rotation_matrix[2][1] =     2 * qt->v[1] * qt->v[2] + 2 * qt->v[0] * qt->w ;
-  rotation_matrix[2][2] = 1 - 2 * qt->v[0] * qt->v[0] - 2 * qt->v[1] * qt->v[1];
+  rotation_matrix[3*0+0] = 1 - 2 * qt->v[1] * qt->v[1] - 2 * qt->v[2] * qt->v[2];
+  rotation_matrix[3*0+1] =     2 * qt->v[0] * qt->v[1] - 2 * qt->v[2] * qt->w ;
+  rotation_matrix[3*0+2] =     2 * qt->v[0] * qt->v[2] + 2 * qt->v[1] * qt->w ;
+  rotation_matrix[3*1+0] =     2 * qt->v[0] * qt->v[1] + 2 * qt->v[2] * qt->w ;
+  rotation_matrix[3*1+1] = 1 - 2 * qt->v[2] * qt->v[2] - 2 * qt->v[0] * qt->v[0];
+  rotation_matrix[3*1+2] =     2 * qt->v[1] * qt->v[2] - 2 * qt->v[0] * qt->w ;
+  rotation_matrix[3*2+0] =     2 * qt->v[0] * qt->v[2] - 2 * qt->v[1] * qt->w ;
+  rotation_matrix[3*2+1] =     2 * qt->v[1] * qt->v[2] + 2 * qt->v[0] * qt->w ;
+  rotation_matrix[3*2+2] = 1 - 2 * qt->v[0] * qt->v[0] - 2 * qt->v[1] * qt->v[1];
 }
 
 void
 PDM_quaternion_to_homogeneous_matrix
 (
   const PDM_quaternion_t* qt,
-  double** homogeneous_matrix
+  double* homogeneous_matrix
 )
 {
-  PDM_quaternion_to_rotation_matrix(qt,homogeneous_matrix);
-  homogeneous_matrix[0][3] = 0.;
+  homogeneous_matrix[4*0+0] = 1 - 2 * qt->v[1] * qt->v[1] - 2 * qt->v[2] * qt->v[2];
+  homogeneous_matrix[4*0+1] =     2 * qt->v[0] * qt->v[1] - 2 * qt->v[2] * qt->w ;
+  homogeneous_matrix[4*0+2] =     2 * qt->v[0] * qt->v[2] + 2 * qt->v[1] * qt->w ;
+  homogeneous_matrix[4*0+3] = 0.;
+  homogeneous_matrix[4*1+0] =     2 * qt->v[0] * qt->v[1] + 2 * qt->v[2] * qt->w ;
+  homogeneous_matrix[4*1+1] = 1 - 2 * qt->v[2] * qt->v[2] - 2 * qt->v[0] * qt->v[0];
+  homogeneous_matrix[4*1+2] =     2 * qt->v[1] * qt->v[2] - 2 * qt->v[0] * qt->w ;
+  homogeneous_matrix[4*1+3] = 0.;
+  homogeneous_matrix[4*2+0] =     2 * qt->v[0] * qt->v[2] - 2 * qt->v[1] * qt->w ;
+  homogeneous_matrix[4*2+1] =     2 * qt->v[1] * qt->v[2] + 2 * qt->v[0] * qt->w ;
+  homogeneous_matrix[4*2+2] = 1 - 2 * qt->v[0] * qt->v[0] - 2 * qt->v[1] * qt->v[1];
+  homogeneous_matrix[4*2+3] = 0.;
+  homogeneous_matrix[4*3+0] = 0.;
+  homogeneous_matrix[4*3+1] = 0.;
+  homogeneous_matrix[4*3+2] = 0.;
+  homogeneous_matrix[4*3+3] = 1.;
+}
 
-  homogeneous_matrix[1][3] = 0.;
+/*----------------------------------------------------------------------------
+ *  PDM_quaternion_t INPUT/OUTPUT FUNCTIONS
+ *----------------------------------------------------------------------------*/
 
-  homogeneous_matrix[2][3] = 0.;
+void 
+PDM_quaternion_axis_angle_to_euler_angles
+(
+  const double axis[3],
+  const double angle,
+  const int order[3],
+  const PDM_bool_t intrinsic,
+  double* ang_x,
+  double* ang_y,
+  double* ang_z
+)
+{
+  PDM_quaternion_t qt;
+  PDM_quaternion_from_axis_angle(axis,angle,&qt);
+  PDM_quaternion_to_euler_angles(&qt,order,intrinsic,ang_x,ang_y,ang_z);
+}
 
-  homogeneous_matrix[3][0] = 0.;
-  homogeneous_matrix[3][1] = 0.;
-  homogeneous_matrix[3][2] = 0.;
-  homogeneous_matrix[3][3] = 1.;
+void 
+PDM_quaternion_axis_angle_to_rotation_matrix
+(
+  const double axis[3],
+  const double angle,
+  double *rotation_matrix
+)
+{
+  PDM_quaternion_t qt;
+  PDM_quaternion_from_axis_angle(axis,angle,&qt);
+  PDM_quaternion_to_rotation_matrix(&qt,rotation_matrix);
+}
+
+void 
+PDM_quaternion_axis_angle_to_homogeneous_matrix
+(
+  const double axis[3],
+  const double angle,
+  double *homogeneous_matrix
+)
+{
+  PDM_quaternion_t qt;
+  PDM_quaternion_from_axis_angle(axis,angle,&qt);
+  PDM_quaternion_to_homogeneous_matrix(&qt,homogeneous_matrix);
+}
+
+void
+PDM_quaternion_euler_angles_to_axis_angle
+(
+  const double ang_x,
+  const double ang_y,
+  const double ang_z,
+  const int order[3],
+  PDM_bool_t intrinsic,
+  double axis[3],
+  double* angle
+)
+{
+  PDM_quaternion_t qt;
+  PDM_quaternion_from_euler_angles(ang_x,ang_y,ang_z,order,intrinsic,&qt);
+  PDM_quaternion_to_axis_angle(&qt,axis,angle);
+}
+
+void
+PDM_quaternion_euler_angles_to_euler_angles
+(
+  const double input_ang_x,
+  const double input_ang_y,
+  const double input_ang_z,
+  const int input_order[3],
+  const PDM_bool_t input_intrinsic,
+  const int output_order[3],
+  const PDM_bool_t output_intrinsic,
+  double* output_ang_x,
+  double* output_ang_y,
+  double* output_ang_z
+)
+{
+  PDM_quaternion_t qt;
+  PDM_quaternion_from_euler_angles(input_ang_x,input_ang_y,input_ang_z,input_order,input_intrinsic,&qt);
+  PDM_quaternion_to_euler_angles(&qt,output_order,output_intrinsic,output_ang_x,output_ang_y,output_ang_z);
+}
+
+void
+PDM_quaternion_euler_angles_to_rotation_matrix
+(
+  const double ang_x,
+  const double ang_y,
+  const double ang_z,
+  const int order[3],
+  PDM_bool_t intrinsic,
+  double* rotation_matrix
+)
+{
+  PDM_quaternion_t qt;
+  PDM_quaternion_from_euler_angles(ang_x,ang_y,ang_z,order,intrinsic,&qt);
+  PDM_quaternion_to_rotation_matrix(&qt,rotation_matrix);
+}
+
+void
+PDM_quaternion_euler_angles_to_homogeneous_matrix
+(
+  const double ang_x,
+  const double ang_y,
+  const double ang_z,
+  const int order[3],
+  PDM_bool_t intrinsic,
+  double* homogeneous_matrix
+)
+{
+  PDM_quaternion_t qt;
+  PDM_quaternion_from_euler_angles(ang_x,ang_y,ang_z,order,intrinsic,&qt);
+  PDM_quaternion_to_homogeneous_matrix(&qt,homogeneous_matrix);
+}
+
+
+void 
+PDM_quaternion_rotation_matrix_to_axis_angle
+(
+  const double* rotation_matrix,
+  double axis[3],
+  double* angle
+)
+{
+  PDM_quaternion_t qt;
+  PDM_quaternion_from_rotation_matrix(rotation_matrix,&qt);
+  PDM_quaternion_to_axis_angle(&qt,axis,angle);
+
+}
+
+void 
+PDM_quaternion_rotation_matrix_to_euler_angles
+(
+  const double* rotation_matrix,
+  const int order[3],
+  const PDM_bool_t intrinsic,
+  double* ang_x,
+  double* ang_y,
+  double* ang_z
+)
+{
+  PDM_quaternion_t qt;
+  PDM_quaternion_from_rotation_matrix(rotation_matrix,&qt);
+  PDM_quaternion_to_euler_angles(&qt,order,intrinsic,ang_x,ang_y,ang_z);
+}
+
+void 
+PDM_quaternion_rotation_matrix_to_homogeneous_matrix
+(
+  const double* rotation_matrix,
+  double* homogeneous_matrix
+)
+{
+  for (int i = 0; i < 3; i++){
+    for (int j = 0; j < 3; j++){
+      homogeneous_matrix[4*i+j] = rotation_matrix[3*i+j];
+    }
+  }
+  homogeneous_matrix[4*0+3] = 0.;
+  homogeneous_matrix[4*1+3] = 0.;
+  homogeneous_matrix[4*2+3] = 0.;
+  homogeneous_matrix[4*3+0] = 0.;
+  homogeneous_matrix[4*3+1] = 0.;
+  homogeneous_matrix[4*3+2] = 0.;
+  homogeneous_matrix[4*3+3] = 1.;
+}
+
+void 
+PDM_quaternion_homogeneous_matrix_to_axis_angle
+(
+  const double* homogeneous_matrix,
+  double axis[3],
+  double* angle
+)
+{
+  PDM_quaternion_t qt;
+  PDM_quaternion_from_homogeneous_matrix(homogeneous_matrix,&qt);
+  PDM_quaternion_to_axis_angle(&qt,axis,angle);
+}
+
+void 
+PDM_quaternion_homogeneous_matrix_to_euler_angles
+(
+  const double* homogeneous_matrix,
+  const int order[3],
+  const PDM_bool_t intrinsic,
+  double* ang_x,
+  double* ang_y,
+  double* ang_z
+)
+{
+  PDM_quaternion_t qt;
+  PDM_quaternion_from_homogeneous_matrix(homogeneous_matrix,&qt);
+  PDM_quaternion_to_euler_angles(&qt,order,intrinsic,ang_x,ang_y,ang_z);
+}
+
+void 
+PDM_quaternion_homogeneous_matrix_to_rotation_matrix
+(
+  const double* homogeneous_matrix,
+  double* rotation_matrix
+)
+{
+  for (int i = 0; i < 3; i++){
+    for (int j = 0; j < 3; j++){
+      rotation_matrix[3*i+j] = homogeneous_matrix[4*i+j];
+    }
+  }
+}
+
+void 
+PDM_quaternion_two_vectors_to_axis_angle
+(
+  const double vector_1[3],
+  const double vector_2[3],
+  double axis[3],
+  double* angle
+)
+{
+  PDM_quaternion_t qt;
+  PDM_quaternion_from_two_vectors(vector_1,vector_2,&qt);
+  PDM_quaternion_to_axis_angle(&qt,axis,angle);
+}
+
+void 
+PDM_quaternion_two_vectors_to_euler_angles
+(
+  const double vector_1[3],
+  const double vector_2[3],
+  const int order[3],
+  const PDM_bool_t intrinsic,
+  double* ang_x,
+  double* ang_y,
+  double* ang_z
+)
+{
+  PDM_quaternion_t qt;
+  PDM_quaternion_from_two_vectors(vector_1,vector_2,&qt);
+  PDM_quaternion_to_euler_angles(&qt,order,intrinsic,ang_x,ang_y,ang_z);
+}
+
+void 
+PDM_quaternion_two_vectors_to_rotation_matrix
+(
+  const double vector_1[3],
+  const double vector_2[3],
+  double *rotation_matrix
+)
+{
+  PDM_quaternion_t qt;
+  PDM_quaternion_from_two_vectors(vector_1,vector_2,&qt);
+  PDM_quaternion_to_rotation_matrix(&qt,rotation_matrix);
+}
+
+void 
+PDM_quaternion_two_vectors_to_homogeneous_matrix
+(
+  const double vector_1[3],
+  const double vector_2[3],
+  double *homogeneous_matrix
+)
+{
+  PDM_quaternion_t qt;
+  PDM_quaternion_from_two_vectors(vector_1,vector_2,&qt);
+  PDM_quaternion_to_homogeneous_matrix(&qt,homogeneous_matrix);
+}
+
+/*----------------------------------------------------------------------------
+ *  PDM_quaternion_t COMPOSITE FUNCTIONS
+ *----------------------------------------------------------------------------*/
+
+#if defined(PDM_HAVE_MKL) || defined(PDM_HAVE_LAPACK)
+char BlasNoTrans = 'N';
+char BlasTrans = 'T';
+extern void dgemm_(char  	*TransA,
+                  char  	*TransB,
+                  int   	*M,
+                  int   	*N,
+                  int   	*K,
+                  double * 	alpha,
+                  double *  	A,
+                  int  	*lda,
+                  double *  	B,
+                  int  	*ldb,
+                  double * 	beta,
+                  double *  	C,
+                  int  	*ldc);
+#endif
+
+void 
+PDM_quaternion_identity_to_homogeneous_matrix
+(
+  double* homogeneous_matrix
+)
+{
+  for (int i = 0; i < 4; i++){
+    for (int j = 0; j < 4; j++){
+      if (i==j){
+        homogeneous_matrix[4*i+j] = 1.;
+      }else{
+        homogeneous_matrix[4*i+j] = 0.;
+      }
+    }
+  }
+}
+
+
+void
+PDM_quaternion_multiply_homogeneous_matrices
+(
+  const double A[16],
+  const double B[16],
+  double       C[16]
+)
+{
+#if defined(PDM_HAVE_MKL) || defined(PDM_HAVE_LAPACK)
+  int ldABC = 4;
+  int MNK = 4;
+  double alpha = 1.;
+  double beta = 0.;
+  dgemm_(&BlasNoTrans,&BlasNoTrans,&MNK,&MNK,&MNK,&alpha,A,&ldABC,
+    B,&ldABC,&beta,C,&ldABC);
+#else
+  printf("Error : LAPACK or MKL are mandatory, recompile with them. \n");
+  abort();
+#endif
+}
+
+void 
+PDM_quaternion_apply_rotation_matrix
+(
+  const double rotation_matrix[9],
+  const double* vector,
+  const int n_samp,
+  double* vector_out
+)
+{
+#if defined(PDM_HAVE_MKL) || defined(PDM_HAVE_LAPACK)
+  int ldB = 3;
+  int ldA = n_samp;
+  double alpha = 1.;
+  double beta = 0.;
+  int NK = 3;
+  // dgemm_(&BlasNoTrans,&BlasTrans,&n_samp,&NK,&NK,&alpha,vector,&ldA,
+  //       rotation_matrix,&ldB,&beta,vector_out,&ldA);
+  dgemm_(&BlasNoTrans,&BlasNoTrans,&NK,&n_samp,&NK,&alpha,rotation_matrix,&ldB,
+        vector,&ldB,&beta,vector_out,&ldB);
+#else
+  printf("Error : LAPACK or MKL are mandatory, recompile with them. \n");
+  abort();
+#endif
+}
+
+void
+PDM_quaternion_apply_translation
+(
+  const double translation_vector[3],
+  const double* vector,
+  const int n_samp,
+  double* vector_out
+)
+{
+  for (int i = 0; i < n_samp; i++) {
+    vector_out[3*i+0] = vector[3*i+0] + translation_vector[0];
+    vector_out[3*i+1] = vector[3*i+1] + translation_vector[1];
+    vector_out[3*i+2] = vector[3*i+2] + translation_vector[2];
+  }
+}
+
+void 
+PDM_quaternion_apply_homogeneous_matrix
+(
+  const double homogeneous_matrix[16],
+  const double* vector,
+  const int n_samp,
+  double* vector_out
+)
+{
+  // applying the rotation
+  double rotation_matrix[9] = {
+    homogeneous_matrix[0], homogeneous_matrix[1], homogeneous_matrix[2],
+    homogeneous_matrix[4], homogeneous_matrix[5], homogeneous_matrix[6],
+    homogeneous_matrix[8], homogeneous_matrix[9], homogeneous_matrix[10],
+  };
+  PDM_quaternion_apply_rotation_matrix(rotation_matrix,vector,n_samp,vector_out);
+
+  // applying the translation
+  for (int i = 0; i < n_samp; i++) {
+    vector_out[3*i+0] = homogeneous_matrix[3];
+    vector_out[3*i+1] = homogeneous_matrix[7];
+    vector_out[3*i+2] = homogeneous_matrix[11];
+  }
+}
+
+void
+PDM_quaternion_compose_homogeneous_matrices
+(
+  const double** homogeneous_matrices,
+  const int n_matrices,
+  double output_matrix[16]
+)
+{
+  PDM_quaternion_identity_to_homogeneous_matrix(output_matrix);
+  for (int i = 0; i < n_matrices; i++) {
+    PDM_quaternion_multiply_homogeneous_matrices(homogeneous_matrices[i],output_matrix,output_matrix);
+  }
+}
+
+void
+PDM_quaternion_translation_to_homogeneous_matrix
+(
+  const double translation_vector[3],
+  PDM_bool_t reverse,
+  double homogeneous_matrix[16]
+)
+{
+  PDM_quaternion_identity_to_homogeneous_matrix(homogeneous_matrix);
+  if (reverse){
+    homogeneous_matrix[3]  = -translation_vector[0];
+    homogeneous_matrix[7]  = -translation_vector[1];
+    homogeneous_matrix[11] = -translation_vector[2];
+  }else{
+    homogeneous_matrix[3]  = translation_vector[0];
+    homogeneous_matrix[7]  = translation_vector[1];
+    homogeneous_matrix[11] = translation_vector[2];
+  }
+}
+
+void 
+PDM_quaternion_apply_euler_angles_and_rotation_center
+(
+  const double ang_x,
+  const double ang_y,
+  const double ang_z,
+  const int order[3],
+  PDM_bool_t intrinsic,
+  const double rotation_center[3],
+  PDM_bool_t reverse,
+  const double* vector,
+  const int n_samp,
+  double* vector_out
+)
+{
+  // building the homogeneous matrix corresponding to 
+  double homogeneous_matrix[16];
+  double tmp_matrix[16];
+  // translation of -rotation_center
+  PDM_quaternion_translation_to_homogeneous_matrix(rotation_center,PDM_TRUE,homogeneous_matrix);
+  // rotation
+  PDM_quaternion_euler_angles_to_homogeneous_matrix(ang_x,ang_y,ang_z,order,intrinsic,tmp_matrix);
+  if (reverse){
+    // transposing the rotation matrix
+    double tmp;
+    tmp = tmp_matrix[1];
+    tmp_matrix[1] = tmp_matrix[4];
+    tmp_matrix[4] = tmp;
+    tmp = tmp_matrix[2];
+    tmp_matrix[2] = tmp_matrix[8];
+    tmp_matrix[8] = tmp;
+    tmp = tmp_matrix[6];
+    tmp_matrix[6] = tmp_matrix[9];
+    tmp_matrix[9] = tmp;
+  }
+  PDM_quaternion_multiply_homogeneous_matrices(homogeneous_matrix,tmp_matrix,homogeneous_matrix);
+  
+  // // translation of rotation_center
+  // PDM_quaternion_translation_to_homogeneous_matrix(rotation_center,PDM_FALSE,tmp_matrix);
+  // PDM_quaternion_multiply_homogeneous_matrices(homogeneous_matrix,tmp_matrix,homogeneous_matrix);
+
+  // // applying the homogeneous matrix to the coordinate vector
+  // PDM_quaternion_apply_homogeneous_matrix(homogeneous_matrix,vector,n_samp,vector_out);
+
 }
 
 #ifdef __cplusplus

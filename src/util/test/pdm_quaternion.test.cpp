@@ -7,6 +7,8 @@
 #include "pdm_quaternion_priv.h"
 
 static const double EPS = 8*__DBL_EPSILON__;
+static const double DEG2RAD = M_PI/180.;
+static const double RAD2DEG = 180./M_PI;
 
 MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_create", 1) {
     PDM_quaternion_t* q = PDM_quaternion_create(0.,1.,2.,3.);
@@ -509,12 +511,9 @@ MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_from_rotation_matrix", 1) 
     double ang_x,ang_y,ang_z;
     PDM_bool_t intrinsic = PDM_TRUE;
     int order[3] = {2,1,0};
-    double row1[3];
-    double row2[3];
-    double row3[3];
     double DEG2RAD = M_PI/180.;
-    double* rot_mat[3] = {row1,row2,row3};
-    const double** r_mat = (const double**) rot_mat;
+    double* rot_mat[9];
+    const double* r_mat = (const double*) rot_mat;
     double out_ang_x,out_ang_y,out_ang_z;
 
     for (int k = 0; k<3; k++) {
@@ -632,11 +631,8 @@ MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_to_rotation_matrix", 1) {
     int order[3] = {2,1,0};
     double DEG2RAD = M_PI/180.;
     double ang_x,ang_y,ang_z;
-    double row1[3];
-    double row2[3];
-    double row3[3];
-    double* rot_mat[3] = {row1,row2,row3};
-    const double** r_mat = (const double**) rot_mat;
+    double rot_mat[9];
+    const double* r_mat = (const double*) rot_mat;
 
     for (int k = 0; k<3; k++) {
         ang_z = -10.+k*10.;
@@ -653,4 +649,64 @@ MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_to_rotation_matrix", 1) {
     }
     PDM_quaternion_free(q);
     PDM_quaternion_free(q_out);
+}
+
+
+/*----------------------------------------------------------------------------
+ *  PDM_quaternion_t INPUT/OUTPUT FUNCTIONS
+ *----------------------------------------------------------------------------*/
+
+
+/*----------------------------------------------------------------------------
+ *  PDM_quaternion_t COMPOSITE FUNCTIONS
+ *----------------------------------------------------------------------------*/
+
+MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_multiply_homogeneous_matrices", 1) {
+    double A[16] = {
+         1.,  2.,  3.,  4.,
+         5.,  6.,  7.,  8.,
+         9., 10., 11., 12.,
+        13., 14., 15., 16.
+    };
+    double B[16] = {
+        1.,-5., -9.,-13.,
+        2., 6.,-10.,-14.,
+        3., 7., 11.,-15.,
+        4., 8., 12., 16.
+    };
+    double C[16];
+    double exp_C[16] = {
+         30.,  60.,  52., -22.,
+         70., 124.,  68.,-126.,
+        110., 188.,  84.,-230.,
+        150., 252., 100.,-334.
+    };
+    PDM_quaternion_multiply_homogeneous_matrices(B,A,C);
+    CHECK_EQ_C_ARRAY_FLOAT(C,exp_C,12,EPS);
+}
+
+MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_apply_rotation_matrix", 1) {
+
+    double mat[9];
+    // rotation i->k, k->j, j->i
+    double axis[3] = {1.,1.,1.};
+    double angle = 120.*DEG2RAD;
+    PDM_quaternion_axis_angle_to_rotation_matrix(axis,angle,mat);
+    int n_samp = 4;
+    double vector[12] = {
+        1.,0.,0.,
+        0.,1.,0.,
+        0.,0.,1.,
+        1.,1.,1.
+    };
+    double vector_out[12];
+    double exp_out[12] = {
+        0.,0.,1.,
+        1.,0.,0.,
+        0.,1.,0.,
+        1.,1.,1.
+    };
+
+    PDM_quaternion_apply_rotation_matrix(mat,vector,n_samp,vector_out);
+    CHECK_EQ_C_ARRAY_FLOAT(vector_out,exp_out,12,EPS);
 }

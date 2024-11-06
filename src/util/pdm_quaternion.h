@@ -167,7 +167,7 @@ PDM_quaternion_compose
  * \param [in]   v0       First component of the vector part
  * \param [in]   v1       Second component of the vector part
  * \param [in]   v2       Third component of the vector part
- * \return PDM_True in case of equality, PDM_False otherwise 
+ * \return PDM_TRUE in case of equality, PDM_FALSE otherwise 
  *
  */
 
@@ -188,7 +188,7 @@ PDM_quaternion_equal
  *
  * \param [in]   qt_1     First quaternion
  * \param [in]   qt_2     Second quaternion
- * \return PDM_True in case of equality, PDM_False otherwise 
+ * \return PDM_TRUE in case of equality, PDM_FALSE otherwise 
  *
  */
 
@@ -300,8 +300,8 @@ PDM_quaternion_slerp_from_two_vectors_derivative
 void 
 PDM_quaternion_from_two_vectors
 (
-  const double vector_1[3],
-  const double vector_2[3],
+  const double* vector_1,
+  const double* vector_2,
   PDM_quaternion_t* qt_out
 );
 
@@ -476,7 +476,7 @@ PDM_quaternion_from_z_symmetry
  * Standard practice for aero is:
  * - ang_x = gamma (roll), ang_y = alpha (pitch, aoa), ang_z = beta (yaw)
  * - order = {2,1,0} (Z rotation ,then Y then X)
- * - intrinsic = PDM_True
+ * - intrinsic = PDM_TRUE
  *
  * \param [in]   ang_x       Rotation angle around the x-axis
  * \param [in]   ang_y       Rotation angle around the y-axis
@@ -511,7 +511,7 @@ PDM_quaternion_from_euler_angles
 void
 PDM_quaternion_from_rotation_matrix
 (
-  const double **rotation_matrix,
+  const double* rotation_matrix,
   PDM_quaternion_t* qt_out
 );
 
@@ -527,7 +527,7 @@ PDM_quaternion_from_rotation_matrix
 void
 PDM_quaternion_from_homogeneous_matrix
 (
-  const double **homogeneous_matrix,
+  const double* homogeneous_matrix,
   PDM_quaternion_t* qt_out
 );
 
@@ -541,7 +541,6 @@ PDM_quaternion_from_homogeneous_matrix
  * \param [in]   angle  Rotation angle (in radians)
  *
  */
-
 
 void
 PDM_quaternion_to_axis_angle
@@ -590,7 +589,7 @@ void
 PDM_quaternion_to_rotation_matrix
 (
   const PDM_quaternion_t* qt, 
-  double** rotation_matrix
+  double* rotation_matrix
 );
 
 /**
@@ -601,11 +600,260 @@ PDM_quaternion_to_rotation_matrix
  * \param [in]   homogeneous_matrix   4-by-4 homogeneous rotation matrix
  *
  */
+
 void
 PDM_quaternion_to_homogeneous_matrix
 (
   const PDM_quaternion_t* qt,
-  double** homogeneous_matrix
+  double* homogeneous_matrix
+);
+
+
+/*----------------------------------------------------------------------------
+ *  PDM_quaternion_t INPUT/OUTPUT FUNCTIONS
+ *----------------------------------------------------------------------------*/
+
+void 
+PDM_quaternion_axis_angle_to_euler_angles
+(
+  const double axis[3],
+  const double angle,
+  const int order[3],
+  const PDM_bool_t intrinsic,
+  double* ang_x,
+  double* ang_y,
+  double* ang_z
+);
+
+void 
+PDM_quaternion_axis_angle_to_rotation_matrix
+(
+  const double axis[3],
+  const double angle,
+  double *rotation_matrix
+);
+
+void 
+PDM_quaternion_axis_angle_to_homogeneous_matrix
+(
+  const double axis[3],
+  const double angle,
+  double *homogeneous_matrix
+);
+
+void
+PDM_quaternion_euler_angles_to_axis_angle
+(
+  const double ang_x,
+  const double ang_y,
+  const double ang_z,
+  const int order[3],
+  PDM_bool_t intrinsic,
+  double axis[3],
+  double* angle
+);
+
+void
+PDM_quaternion_euler_angles_to_euler_angles
+(
+  const double input_ang_x,
+  const double input_ang_y,
+  const double input_ang_z,
+  const int input_order[3],
+  const PDM_bool_t input_intrinsic,
+  const int output_order[3],
+  const PDM_bool_t output_intrinsic,
+  double* output_ang_x,
+  double* output_ang_y,
+  double* output_ang_z
+);
+
+void
+PDM_quaternion_euler_angles_to_rotation_matrix
+(
+  const double ang_x,
+  const double ang_y,
+  const double ang_z,
+  const int order[3],
+  PDM_bool_t intrinsic,
+  double* rotation_matrix
+);
+
+void
+PDM_quaternion_euler_angles_to_homogeneous_matrix
+(
+  const double ang_x,
+  const double ang_y,
+  const double ang_z,
+  const int order[3],
+  PDM_bool_t intrinsic,
+  double* homogeneous_matrix
+);
+
+void 
+PDM_quaternion_rotation_matrix_to_axis_angle
+(
+  const double* rotation_matrix,
+  double axis[3],
+  double* angle
+);
+
+void 
+PDM_quaternion_rotation_matrix_to_euler_angles
+(
+  const double* rotation_matrix,
+  const int order[3],
+  const PDM_bool_t intrinsic,
+  double* ang_x,
+  double* ang_y,
+  double* ang_z
+);
+
+void 
+PDM_quaternion_rotation_matrix_to_homogeneous_matrix
+(
+  const double* rotation_matrix,
+  double* homogeneous_matrix
+);
+
+void 
+PDM_quaternion_homogeneous_matrix_to_axis_angle
+(
+  const double* homogeneous_matrix,
+  double axis[3],
+  double* angle
+);
+
+void 
+PDM_quaternion_homogeneous_matrix_to_euler_angles
+(
+  const double* homogeneous_matrix,
+  const int order[3],
+  const PDM_bool_t intrinsic,
+  double* ang_x,
+  double* ang_y,
+  double* ang_z
+);
+
+void 
+PDM_quaternion_homogeneous_matrix_to_rotation_matrix
+(
+  const double* homogeneous_matrix,
+  double* rotation_matrix
+);
+
+void 
+PDM_quaternion_two_vectors_to_axis_angle
+(
+  const double vector_1[3],
+  const double vector_2[3],
+  double axis[3],
+  double* angle
+);
+
+void 
+PDM_quaternion_two_vectors_to_euler_angles
+(
+  const double vector_1[3],
+  const double vector_2[3],
+  const int order[3],
+  const PDM_bool_t intrinsic,
+  double* ang_x,
+  double* ang_y,
+  double* ang_z
+);
+
+void 
+PDM_quaternion_two_vectors_to_rotation_matrix
+(
+  const double vector_1[3],
+  const double vector_2[3],
+  double *rotation_matrix
+);
+
+void 
+PDM_quaternion_two_vectors_to_homogeneous_matrix
+(
+  const double vector_1[3],
+  const double vector_2[3],
+  double *homogeneous_matrix
+);
+
+/*----------------------------------------------------------------------------
+ *  PDM_quaternion_t COMPOSITE FUNCTIONS
+ *----------------------------------------------------------------------------*/
+
+void 
+PDM_quaternion_identity_to_homogeneous_matrix
+(
+  double* homogeneous_matrix
+);
+
+void
+PDM_quaternion_multiply_homogeneous_matrices
+(
+  const double A[16],
+  const double B[16],
+  double       C[16]
+);
+
+void 
+PDM_quaternion_apply_rotation_matrix
+(
+  const double rotation_matrix[9],
+  const double* vector,
+  const int n_samp,
+  double* vector_out
+);
+
+void
+PDM_quaternion_apply_translation
+(
+  const double translation_vector[3],
+  const double* vector,
+  const int n_samp,
+  double* vector_out
+);
+
+
+void 
+PDM_quaternion_apply_homogeneous_matrix
+(
+  const double homogeneous_matrix[16],
+  const double* vector,
+  const int n_samp,
+  double* vector_out
+);
+
+void
+PDM_quaternion_compose_homogeneous_matrices
+(
+  const double** homogeneous_matrices,
+  const int n_matrices,
+  double output_matrix[16]
+);
+
+void
+PDM_quaternion_translation_to_homogeneous_matrix
+(
+  const double translation_vector[3],
+  PDM_bool_t reverse,
+  double homogeneous_matrix[16]
+);
+
+void 
+PDM_quaternion_apply_euler_angles_and_rotation_center
+(
+  const double ang_x,
+  const double ang_y,
+  const double ang_z,
+  const int order[3],
+  PDM_bool_t intrinsic,
+  const double rotation_center[3],
+  PDM_bool_t reverse,
+  const double* vector,
+  const int n_samp,
+  double* vector_out
 );
 
 #ifdef __cplusplus
