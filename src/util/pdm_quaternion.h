@@ -520,7 +520,7 @@ PDM_quaternion_from_rotation_matrix
  * \brief Computes the quaternion corresponding to a rotation matrix in homogeneous coordinates (4-by-4)
  *
  * \param [in]   homogeneous_matrix 4-by-4 homogeneous rotation matrix
- * \param [in]   qt_out          The output quaternion
+ * \param [in]   qt_out             The output quaternion
  *
  */
 
@@ -613,6 +613,21 @@ PDM_quaternion_to_homogeneous_matrix
  *  PDM_quaternion_t INPUT/OUTPUT FUNCTIONS
  *----------------------------------------------------------------------------*/
 
+/**
+ *
+ * \brief Converts a rotation expressed as axis-angle to euler angles
+ *
+ * \param [in]   axis        Rotation axis (3D (unit) vector)
+ * \param [in]   angle       Rotation angle (in radians)
+ * \param [in]   order       Order of rotations to apply 
+ * \param [in]   intrinsic   Axis conventions (https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations)
+ * \param [in]   ang_x       Rotation angle around the x-axis
+ * \param [in]   ang_y       Rotation angle around the y-axis
+ * \param [in]   ang_z       Rotation angle around the z-axis
+ *
+ */
+
+
 void 
 PDM_quaternion_axis_angle_to_euler_angles
 (
@@ -625,6 +640,16 @@ PDM_quaternion_axis_angle_to_euler_angles
   double* ang_z
 );
 
+/**
+ *
+ * \brief Converts a rotation expressed as axis-angle to a 3-by-3 rotation matrix
+ *
+ * \param [in]   axis            Rotation axis (3D (unit) vector)
+ * \param [in]   angle           Rotation angle (in radians)
+ * \param [in]   rotation_matrix 3-by-3 rotation matrix
+ *
+ */
+
 void 
 PDM_quaternion_axis_angle_to_rotation_matrix
 (
@@ -633,6 +658,16 @@ PDM_quaternion_axis_angle_to_rotation_matrix
   double *rotation_matrix
 );
 
+/**
+ *
+ * \brief Converts a rotation expressed as axis-angle to a 4-by-4 homogeneous rotation matrix
+ *
+ * \param [in]   axis               Rotation axis (3D (unit) vector)
+ * \param [in]   angle              Rotation angle (in radians)
+ * \param [in]   homogeneous_matrix 4-by-4 rotation matrix
+ *
+ */
+
 void 
 PDM_quaternion_axis_angle_to_homogeneous_matrix
 (
@@ -640,6 +675,20 @@ PDM_quaternion_axis_angle_to_homogeneous_matrix
   const double angle,
   double *homogeneous_matrix
 );
+
+/**
+ *
+ * \brief Converts a rotation expressed as euler angles to an axis-angle rotation
+ *
+ * \param [in]   ang_x       Rotation angle around the x-axis
+ * \param [in]   ang_y       Rotation angle around the y-axis
+ * \param [in]   ang_z       Rotation angle around the z-axis
+ * \param [in]   order       Order of rotations to apply 
+ * \param [in]   intrinsic   Axis conventions (https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations)
+ * \param [in]   axis        Rotation axis (3D (unit) vector)
+ * \param [in]   angle       Rotation angle (in radians)
+ *
+ */
 
 void
 PDM_quaternion_euler_angles_to_axis_angle
@@ -652,6 +701,23 @@ PDM_quaternion_euler_angles_to_axis_angle
   double axis[3],
   double* angle
 );
+
+/**
+ *
+ * \brief Converts a rotation expressed as euler angles to another euler angles representation
+ *
+ * \param [in]   input_ang_x       Input rotation angle around the x-axis
+ * \param [in]   input_ang_y       Input rotation angle around the y-axis
+ * \param [in]   input_ang_z       Input rotation angle around the z-axis
+ * \param [in]   input_order       Input order of rotations to apply 
+ * \param [in]   input_intrinsic   Input axis conventions (https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations)
+ * \param [in]   output_order      Output order of rotations to apply 
+ * \param [in]   output_intrinsic  Output axis conventions (https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations)
+ * \param [in]   output_ang_x      Output rotation angle around the x-axis
+ * \param [in]   output_ang_y      Output rotation angle around the y-axis
+ * \param [in]   output_ang_z      Output rotation angle around the z-axis
+ *
+ */
 
 void
 PDM_quaternion_euler_angles_to_euler_angles
@@ -668,6 +734,19 @@ PDM_quaternion_euler_angles_to_euler_angles
   double* output_ang_z
 );
 
+/**
+ *
+ * \brief Converts a rotation expressed as euler angles to a 3-by-3 rotation matrix
+ *
+ * \param [in]   ang_x            Rotation angle around the x-axis
+ * \param [in]   ang_y            Rotation angle around the y-axis
+ * \param [in]   ang_z            Rotation angle around the z-axis
+ * \param [in]   order            Order of rotations to apply 
+ * \param [in]   intrinsic        Axis conventions (https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations)
+ * \param [in]   rotation_matrix  3-by-3 rotation matrix
+ *
+ */
+
 void
 PDM_quaternion_euler_angles_to_rotation_matrix
 (
@@ -678,6 +757,19 @@ PDM_quaternion_euler_angles_to_rotation_matrix
   PDM_bool_t intrinsic,
   double* rotation_matrix
 );
+
+/**
+ *
+ * \brief Converts a rotation expressed as euler angles to a 4-by-4 homogeneous rotation matrix
+ *
+ * \param [in]   ang_x              Rotation angle around the x-axis
+ * \param [in]   ang_y              Rotation angle around the y-axis
+ * \param [in]   ang_z              Rotation angle around the z-axis
+ * \param [in]   order              Order of rotations to apply 
+ * \param [in]   intrinsic          Axis conventions (https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations)
+ * \param [in]   homogeneous_matrix 4-by-4 rotation matrix
+ *
+ */
 
 void
 PDM_quaternion_euler_angles_to_homogeneous_matrix
@@ -690,6 +782,16 @@ PDM_quaternion_euler_angles_to_homogeneous_matrix
   double* homogeneous_matrix
 );
 
+/**
+ *
+ * \brief Converts a rotation expressed as a 3-by-3 rotation matrix to an axis-angle representation
+ *
+ * \param [in]   rotation_matrix 3-by-3 rotation matrix
+ * \param [in]   axis            Rotation axis (3D (unit) vector)
+ * \param [in]   angle           Rotation angle (in radians)
+ * 
+ */
+
 void 
 PDM_quaternion_rotation_matrix_to_axis_angle
 (
@@ -697,6 +799,19 @@ PDM_quaternion_rotation_matrix_to_axis_angle
   double axis[3],
   double* angle
 );
+
+/**
+ *
+ * \brief Converts a rotation expressed as a 3-by-3 rotation matrix to euler angles
+ *
+ * \param [in]   rotation_matrix  3-by-3 rotation matrix
+ * \param [in]   order            Order of rotations to apply 
+ * \param [in]   intrinsic        Axis conventions (https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations)
+ * \param [in]   ang_x            Rotation angle around the x-axis
+ * \param [in]   ang_y            Rotation angle around the y-axis
+ * \param [in]   ang_z            Rotation angle around the z-axis
+ * 
+ */
 
 void 
 PDM_quaternion_rotation_matrix_to_euler_angles
@@ -709,12 +824,31 @@ PDM_quaternion_rotation_matrix_to_euler_angles
   double* ang_z
 );
 
+/**
+ *
+ * \brief Converts a rotation expressed as a 3-by-3 rotation matrix to a 4-by-4 homogeneous matrix
+ *
+ * \param [in]   rotation_matrix    3-by-3 rotation matrix
+ * \param [in]   homogeneous_matrix 4-by-4 homogeneous rotation matrix
+ * 
+ */
+
 void 
 PDM_quaternion_rotation_matrix_to_homogeneous_matrix
 (
   const double* rotation_matrix,
   double* homogeneous_matrix
 );
+
+/**
+ *
+ * \brief Converts a rotation expressed as a 4-by-4 homogeneous rotation matrix to an axis-angle representation
+ *
+ * \param [in]   homogeneous_matrix 4-by-4 homogeneous rotation matrix
+ * \param [in]   axis               Rotation axis (3D (unit) vector)
+ * \param [in]   angle              Rotation angle (in radians)
+ * 
+ */
 
 void 
 PDM_quaternion_homogeneous_matrix_to_axis_angle
@@ -723,6 +857,19 @@ PDM_quaternion_homogeneous_matrix_to_axis_angle
   double axis[3],
   double* angle
 );
+
+/**
+ *
+ * \brief Converts a rotation expressed as a 4-by-4 homogeneous rotation matrix to euler angles
+ *
+ * \param [in]   homogeneous_matrix 4-by-4 homogeneous rotation matrix
+ * \param [in]   order              Order of rotations to apply 
+ * \param [in]   intrinsic          Axis conventions (https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations)
+ * \param [in]   ang_x              Rotation angle around the x-axis
+ * \param [in]   ang_y              Rotation angle around the y-axis
+ * \param [in]   ang_z              Rotation angle around the z-axis
+ * 
+ */
 
 void 
 PDM_quaternion_homogeneous_matrix_to_euler_angles
@@ -735,12 +882,32 @@ PDM_quaternion_homogeneous_matrix_to_euler_angles
   double* ang_z
 );
 
+/**
+ *
+ * \brief Converts a rotation expressed as a 4-by-4 homogeneous matrix to a 3-by-3 rotation matrix
+ *
+ * \param [in]   homogeneous_matrix 4-by-4 rotation matrix
+ * \param [in]   rotation_matrix    3-by-3 rotation matrix
+ * 
+ */
+
 void 
 PDM_quaternion_homogeneous_matrix_to_rotation_matrix
 (
   const double* homogeneous_matrix,
   double* rotation_matrix
 );
+
+/**
+ *
+ * \brief Converts a rotation expressed as a rotation from one unit vector to another to an axis-angle representation
+ *
+ * \param [in]   vector_1 First 3D-vector
+ * \param [in]   vector_2 Second 3D-vector
+ * \param [in]   axis     Rotation axis (3D (unit) vector)
+ * \param [in]   angle    Rotation angle (in radians)
+ * 
+ */
 
 void 
 PDM_quaternion_two_vectors_to_axis_angle
@@ -750,6 +917,20 @@ PDM_quaternion_two_vectors_to_axis_angle
   double axis[3],
   double* angle
 );
+
+/**
+ *
+ * \brief Converts a rotation expressed as a rotation from one unit vector to another to euler angles
+ *
+ * \param [in]   vector_1    First 3D-vector
+ * \param [in]   vector_2    Second 3D-vector
+ * \param [in]   order       Order of rotations to apply 
+ * \param [in]   intrinsic   Axis conventions (https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations)
+ * \param [in]   ang_x       Rotation angle around the x-axis
+ * \param [in]   ang_y       Rotation angle around the y-axis
+ * \param [in]   ang_z       Rotation angle around the z-axis
+ * 
+ */
 
 void 
 PDM_quaternion_two_vectors_to_euler_angles
@@ -763,6 +944,16 @@ PDM_quaternion_two_vectors_to_euler_angles
   double* ang_z
 );
 
+/**
+ *
+ * \brief Converts a rotation expressed as a rotation from one unit vector to another to a 3-by-3 rotation matrix
+ *
+ * \param [in]   vector_1         First 3D-vector
+ * \param [in]   vector_2         Second 3D-vector
+ * \param [in]   rotation_matrix  3-by-3 rotation matrix
+ * 
+ */
+
 void 
 PDM_quaternion_two_vectors_to_rotation_matrix
 (
@@ -770,6 +961,16 @@ PDM_quaternion_two_vectors_to_rotation_matrix
   const double vector_2[3],
   double *rotation_matrix
 );
+
+/**
+ *
+ * \brief Converts a rotation expressed as a rotation from one unit vector to another to a 4-by-4 homogeneous rotation matrix
+ *
+ * \param [in]   vector_1           First 3D-vector
+ * \param [in]   vector_2           Second 3D-vector
+ * \param [in]   homogeneous_matrix 4-by-4 homogeneous rotation matrix
+ * 
+ */
 
 void 
 PDM_quaternion_two_vectors_to_homogeneous_matrix
@@ -782,6 +983,14 @@ PDM_quaternion_two_vectors_to_homogeneous_matrix
 /*----------------------------------------------------------------------------
  *  PDM_quaternion_t COMPOSITE FUNCTIONS
  *----------------------------------------------------------------------------*/
+
+/**
+ *
+ * \brief Computes A*B -> C 
+ *
+ * \param [in]   homogeneous_matrix 4-by-4 homogeneous rotation matrix
+ *
+ */
 
 void 
 PDM_quaternion_identity_to_homogeneous_matrix
@@ -830,6 +1039,17 @@ PDM_quaternion_apply_n_by_n_matrix
   double* y_out
 );
 
+/**
+ *
+ * \brief Computes applies a translation to a vector x
+ *
+ * \param [in]   translation_vector 3D-translation vector
+ * \param [in]   vector             n-by-n_samp vector (Row major (C-order) flatten)
+ * \param [in]   n_samp             Number of vector samples
+ * \param [in]   vector_out         n-by-n_samp output vector (Row major (C-order) flatten)
+ *
+ */
+
 void
 PDM_quaternion_apply_translation
 (
@@ -839,6 +1059,16 @@ PDM_quaternion_apply_translation
   double* vector_out
 );
 
+/**
+ *
+ * \brief Applies an homogeneous (4-by-4) matrix to (a) vector(s)
+ *
+ * \param [in]   homogeneous_matrix 4-by-4 homogeneous matrix (Row major (C-order) flatten)
+ * \param [in]   vector             n-by-n_samp vector (Row major (C-order) flatten)
+ * \param [in]   n_samp             Number of vector samples
+ * \param [in]   vector_out         n-by-n_samp output vector (Row major (C-order) flatten)
+ *
+ */
 
 void 
 PDM_quaternion_apply_homogeneous_matrix
@@ -849,6 +1079,18 @@ PDM_quaternion_apply_homogeneous_matrix
   double* vector_out
 );
 
+/**
+ *
+ * \brief Composes (multipies) homogeneous (4-by-4) matrices
+ * 
+ * Computes A_0*A_1*...A_[n-1]
+ *
+ * \param [in]   homogeneous_matrices Array of 4-by-4 homogeneous matrix (Row major (C-order) flatten)
+ * \param [in]   n_matrices           Number of matrices
+ * \param [in]   output_matrix        The resulting 4-by-4 homogeneous matrix
+ *
+ */
+
 void
 PDM_quaternion_compose_homogeneous_matrices
 (
@@ -857,6 +1099,16 @@ PDM_quaternion_compose_homogeneous_matrices
   double output_matrix[16]
 );
 
+/**
+ *
+ * \brief Initializes an homogeneous matrix to represent a translation
+ * 
+ * \param [in]   translation_vector 3D translation vector
+ * \param [in]   reverse            If True, encodes the reverse translation (of -translation_vector)
+ * \param [in]   homogeneous_matrix The resulting 4-by-4 homogeneous matrix
+ *
+ */
+
 void
 PDM_quaternion_translation_to_homogeneous_matrix
 (
@@ -864,6 +1116,23 @@ PDM_quaternion_translation_to_homogeneous_matrix
   PDM_bool_t reverse,
   double homogeneous_matrix[16]
 );
+
+/**
+ *
+ * \brief Applies the rotation corresponding to the euler angles around the provided rotation center to (a) vector(s)
+ * 
+ * \param [in]   ang_x            Rotation angle around the x-axis
+ * \param [in]   ang_y            Rotation angle around the y-axis
+ * \param [in]   ang_z            Rotation angle around the z-axis
+ * \param [in]   order            Order of rotations to apply 
+ * \param [in]   intrinsic        Axis conventions (https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations)
+ * \param [in]   rotation_center  3D rotation center
+ * \param [in]   reverse          If True, encodes the reverse transformation
+ * \param [in]   vector           n-by-n_samp vector (Row major (C-order) flatten)
+ * \param [in]   n_samp           Number of vector samples
+ * \param [in]   vector_out       n-by-n_samp output vector (Row major (C-order) flatten)
+ *
+ */
 
 void 
 PDM_quaternion_apply_euler_angles_and_rotation_center
@@ -880,6 +1149,20 @@ PDM_quaternion_apply_euler_angles_and_rotation_center
   double* vector_out
 );
 
+/**
+ *
+ * \brief Applies the rotation corresponding to the axis and angle around the provided rotation center to (a) vector(s)
+ * 
+ * \param [in]   axis             Rotation axis (3D (unit) vector)
+ * \param [in]   angle            Rotation angle (in radians)
+ * \param [in]   rotation_center  3D rotation center
+ * \param [in]   reverse          If True, encodes the reverse transformation
+ * \param [in]   vector           n-by-n_samp vector (Row major (C-order) flatten)
+ * \param [in]   n_samp           Number of vector samples
+ * \param [in]   vector_out       n-by-n_samp output vector (Row major (C-order) flatten)
+ *
+ */
+
 void
 PDM_quaternion_apply_axis_angle_and_rotation_center
 (
@@ -891,6 +1174,19 @@ PDM_quaternion_apply_axis_angle_and_rotation_center
   const int n_samp,
   double* vector_out
 );
+
+/**
+ *
+ * \brief Applies the rotation corresponding to the 3-by-3 rotation matrix around the provided rotation center to (a) vector(s)
+ * 
+ * \param [in]   rotation_matrix  3-by-3 rotation matrix
+ * \param [in]   rotation_center  3D rotation center
+ * \param [in]   reverse          If True, encodes the reverse transformation
+ * \param [in]   vector           n-by-n_samp vector (Row major (C-order) flatten)
+ * \param [in]   n_samp           Number of vector samples
+ * \param [in]   vector_out       n-by-n_samp output vector (Row major (C-order) flatten)
+ *
+ */
 
 void
 PDM_quaternion_apply_rotation_matrix_and_rotation_center

@@ -285,6 +285,8 @@ if (PDM_ENABLE_PYTHON_BINDINGS)
    add_dependencies (pdm_t_isosurface_user_function_p Pypdm)
    test_python_create (pdm_t_mesh_reorient_geom_p 3 PDM_LIST_TEST PDM_LIST_NRANK)
    add_dependencies (pdm_t_mesh_reorient_geom_p Pypdm)
+   test_python_create (pdm_t_quaternion_p 1 PDM_LIST_TEST PDM_LIST_NRANK)
+   add_dependencies (pdm_t_quaternion_p Pypdm)
 endif()
 
 if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
