@@ -789,21 +789,45 @@ PDM_quaternion_identity_to_homogeneous_matrix
   double* homogeneous_matrix
 );
 
+/**
+ *
+ * \brief Computes A*B -> C 
+ *
+ * \param [in]   A  n-by-n matrix (Row major (C-order) flatten)
+ * \param [in]   B  n-by-n matrix (Row major (C-order) flatten)
+ * \param [in]   n  size of the square matrices
+ * \param [in]   C  n-by-n matrix (Row major (C-order) flatten)
+ *
+ */
+
+
 void
-PDM_quaternion_multiply_homogeneous_matrices
+PDM_quaternion_multiply_n_by_n_matrices
 (
-  const double A[16],
-  const double B[16],
-  double       C[16]
+  const double* A,
+  const double* B,
+  const int     n,
+  double*       C
 );
 
+/**
+ *
+ * \brief Computes A*x -> y 
+ *
+ * \param [in]   A      n-by-n matrix (Row major (C-order) flatten)
+ * \param [in]   x      n-by-n_samp vector (Row major (C-order) flatten)
+ * \param [in]   y_out  n-by-n_samp output vector (Row major (C-order) flatten)
+ *
+ */
+
 void 
-PDM_quaternion_apply_rotation_matrix
+PDM_quaternion_apply_n_by_n_matrix
 (
-  const double rotation_matrix[9],
-  const double* vector,
+  const double* A,
+  const double* x,
+  const int n,
   const int n_samp,
-  double* vector_out
+  double* y_out
 );
 
 void
@@ -848,9 +872,32 @@ PDM_quaternion_apply_euler_angles_and_rotation_center
   const double ang_y,
   const double ang_z,
   const int order[3],
-  PDM_bool_t intrinsic,
+  const PDM_bool_t intrinsic,
   const double rotation_center[3],
-  PDM_bool_t reverse,
+  const PDM_bool_t reverse,
+  const double* vector,
+  const int n_samp,
+  double* vector_out
+);
+
+void
+PDM_quaternion_apply_axis_angle_and_rotation_center
+(
+  const double axis[3],
+  const double angle,
+  const double rotation_center[3],
+  const PDM_bool_t reverse,
+  const double* vector,
+  const int n_samp,
+  double* vector_out
+);
+
+void
+PDM_quaternion_apply_rotation_matrix_and_rotation_center
+(
+  const double rotation_matrix[9],
+  const double rotation_center[3],
+  const PDM_bool_t reverse,
   const double* vector,
   const int n_samp,
   double* vector_out

@@ -512,7 +512,7 @@ PDM_quaternion_from_euler_angles
 void
 PDM_quaternion_from_rotation_matrix
 (
-  const double *rotation_matrix,
+  const double* rotation_matrix,
   PDM_quaternion_t* qt_out
 )
 {
@@ -1005,21 +1005,25 @@ PDM_quaternion_two_vectors_to_homogeneous_matrix
  *----------------------------------------------------------------------------*/
 
 #if defined(PDM_HAVE_MKL) || defined(PDM_HAVE_LAPACK)
-char BlasNoTrans = 'N';
-char BlasTrans = 'T';
-extern void dgemm_(char  	*TransA,
-                  char  	*TransB,
-                  int   	*M,
-                  int   	*N,
-                  int   	*K,
-                  double * 	alpha,
-                  double *  	A,
-                  int  	*lda,
-                  double *  	B,
-                  int  	*ldb,
-                  double * 	beta,
-                  double *  	C,
-                  int  	*ldc);
+const int CblasRowMajor  = 101;
+const int CblasColMajor  = 102;
+const int CblasNoTrans   = 111;
+const int CblasTrans     = 112;
+const int CblasConjTrans = 113;
+extern void cblas_dgemm(const int layout,
+                        const int TransA,
+                        const int TransB,
+                        const int M,
+                        const int N,
+                        const int K,
+                        const double alpha,
+                        const double *A,
+                        const int lda,
+                        const double *B,
+                        const int ldb,
+                        const double beta,
+                        double *C,
+                        const int ldc);
 #endif
 
 void 
@@ -1040,21 +1044,35 @@ PDM_quaternion_identity_to_homogeneous_matrix
 }
 
 
+static void print_matrix(const double* mat,const int n_row,const int n_col) {
+    PDM_printf("#####\n");
+    for (int i=0; i<n_row;i++){
+        PDM_printf("|");
+        for (int j=0; j<n_col;j++){
+            PDM_printf("%5.3f\t",mat[n_col*i+j]);
+        }
+        PDM_printf("|\n");
+    }
+    PDM_printf("#####\n");
+}
+
 void
-PDM_quaternion_multiply_homogeneous_matrices
+PDM_quaternion_multiply_n_by_n_matrices
 (
-  const double A[16],
-  const double B[16],
-  double       C[16]
+  const double* A,
+  const double* B,
+  const int     n,
+  double*       C
 )
 {
 #if defined(PDM_HAVE_MKL) || defined(PDM_HAVE_LAPACK)
-  int ldABC = 4;
-  int MNK = 4;
-  double alpha = 1.;
-  double beta = 0.;
-  dgemm_(&BlasNoTrans,&BlasNoTrans,&MNK,&MNK,&MNK,&alpha,A,&ldABC,
-    B,&ldABC,&beta,C,&ldABC);
+  // double alpha = 1.;
+  // double beta = 0.;
+  // reverting A and B because dgemm_ expects column major (and A,B & C are row major)
+  // dgemm_(&BlasNoTrans,&BlasNoTrans,&n,&n,&n,&alpha,B,&n,
+  //   A,&n,&beta,C,&n);
+  cblas_dgemm(CblasRowMajor,CblasNoTrans,CblasNoTrans,n,n,n,1.,A,n,
+      B,n,0.,C,n);
 #else
   printf("Error : LAPACK or MKL are mandatory, recompile with them. \n");
   abort();
@@ -1062,24 +1080,24 @@ PDM_quaternion_multiply_homogeneous_matrices
 }
 
 void 
-PDM_quaternion_apply_rotation_matrix
+PDM_quaternion_apply_n_by_n_matrix
 (
-  const double rotation_matrix[9],
-  const double* vector,
+  const double* A,
+  const double* x,
+  const int n,
   const int n_samp,
-  double* vector_out
+  double* y_out
 )
 {
 #if defined(PDM_HAVE_MKL) || defined(PDM_HAVE_LAPACK)
-  int ldB = 3;
-  int ldA = n_samp;
-  double alpha = 1.;
-  double beta = 0.;
-  int NK = 3;
-  // dgemm_(&BlasNoTrans,&BlasTrans,&n_samp,&NK,&NK,&alpha,vector,&ldA,
-  //       rotation_matrix,&ldB,&beta,vector_out,&ldA);
-  dgemm_(&BlasNoTrans,&BlasNoTrans,&NK,&n_samp,&NK,&alpha,rotation_matrix,&ldB,
-        vector,&ldB,&beta,vector_out,&ldB);
+  // double alpha = 1.;
+  // double beta = 0.;
+  // transposing the rotation matrix since dgemm_ expects column major (and A is row major)
+  // no need to transpose the vector which is already in a "column major view" here
+  // dgemm_(&BlasTrans,&BlasNoTrans,&n,&n_samp,&n,&alpha,A,&n,
+  //       x,&n,&beta,y_out,&n);
+    cblas_dgemm(CblasRowMajor,CblasNoTrans,CblasTrans,n_samp,n,n,1.,x,n,
+      A,n,0.,y_out,n);
 #else
   printf("Error : LAPACK or MKL are mandatory, recompile with them. \n");
   abort();
@@ -1117,13 +1135,13 @@ PDM_quaternion_apply_homogeneous_matrix
     homogeneous_matrix[4], homogeneous_matrix[5], homogeneous_matrix[6],
     homogeneous_matrix[8], homogeneous_matrix[9], homogeneous_matrix[10],
   };
-  PDM_quaternion_apply_rotation_matrix(rotation_matrix,vector,n_samp,vector_out);
+  PDM_quaternion_apply_n_by_n_matrix(rotation_matrix,vector,3,n_samp,vector_out);
 
   // applying the translation
   for (int i = 0; i < n_samp; i++) {
-    vector_out[3*i+0] = homogeneous_matrix[3];
-    vector_out[3*i+1] = homogeneous_matrix[7];
-    vector_out[3*i+2] = homogeneous_matrix[11];
+    vector_out[3*i+0] += homogeneous_matrix[3];
+    vector_out[3*i+1] += homogeneous_matrix[7];
+    vector_out[3*i+2] += homogeneous_matrix[11];
   }
 }
 
@@ -1137,7 +1155,8 @@ PDM_quaternion_compose_homogeneous_matrices
 {
   PDM_quaternion_identity_to_homogeneous_matrix(output_matrix);
   for (int i = 0; i < n_matrices; i++) {
-    PDM_quaternion_multiply_homogeneous_matrices(homogeneous_matrices[i],output_matrix,output_matrix);
+    PDM_quaternion_multiply_n_by_n_matrices(homogeneous_matrices[i],
+      output_matrix,4,output_matrix);
   }
 }
 
@@ -1161,6 +1180,7 @@ PDM_quaternion_translation_to_homogeneous_matrix
   }
 }
 
+
 void 
 PDM_quaternion_apply_euler_angles_and_rotation_center
 (
@@ -1168,21 +1188,25 @@ PDM_quaternion_apply_euler_angles_and_rotation_center
   const double ang_y,
   const double ang_z,
   const int order[3],
-  PDM_bool_t intrinsic,
+  const PDM_bool_t intrinsic,
   const double rotation_center[3],
-  PDM_bool_t reverse,
+  const PDM_bool_t reverse,
   const double* vector,
   const int n_samp,
   double* vector_out
 )
 {
-  // building the homogeneous matrix corresponding to 
+  // building the homogeneous matrix corresponding to whole transformation:
+  // Trans+.Rot.Trans-
   double homogeneous_matrix[16];
   double tmp_matrix[16];
   // translation of -rotation_center
-  PDM_quaternion_translation_to_homogeneous_matrix(rotation_center,PDM_TRUE,homogeneous_matrix);
+  PDM_quaternion_translation_to_homogeneous_matrix(rotation_center,PDM_TRUE,
+    homogeneous_matrix);
+  
   // rotation
-  PDM_quaternion_euler_angles_to_homogeneous_matrix(ang_x,ang_y,ang_z,order,intrinsic,tmp_matrix);
+  PDM_quaternion_euler_angles_to_homogeneous_matrix(ang_x,ang_y,ang_z,order,
+    intrinsic,tmp_matrix);
   if (reverse){
     // transposing the rotation matrix
     double tmp;
@@ -1196,15 +1220,117 @@ PDM_quaternion_apply_euler_angles_and_rotation_center
     tmp_matrix[6] = tmp_matrix[9];
     tmp_matrix[9] = tmp;
   }
-  PDM_quaternion_multiply_homogeneous_matrices(homogeneous_matrix,tmp_matrix,homogeneous_matrix);
+  PDM_quaternion_multiply_n_by_n_matrices(tmp_matrix,homogeneous_matrix,4,
+    homogeneous_matrix);
   
-  // // translation of rotation_center
-  // PDM_quaternion_translation_to_homogeneous_matrix(rotation_center,PDM_FALSE,tmp_matrix);
-  // PDM_quaternion_multiply_homogeneous_matrices(homogeneous_matrix,tmp_matrix,homogeneous_matrix);
+  // translation of rotation_center
+  PDM_quaternion_translation_to_homogeneous_matrix(rotation_center,PDM_FALSE,
+    tmp_matrix);
+  PDM_quaternion_multiply_n_by_n_matrices(tmp_matrix,homogeneous_matrix,4,
+    homogeneous_matrix);
 
-  // // applying the homogeneous matrix to the coordinate vector
-  // PDM_quaternion_apply_homogeneous_matrix(homogeneous_matrix,vector,n_samp,vector_out);
+  // applying the homogeneous matrix to the coordinate vector
+  PDM_quaternion_apply_homogeneous_matrix(homogeneous_matrix,vector,n_samp,
+    vector_out);
 
+}
+
+void
+PDM_quaternion_apply_axis_angle_and_rotation_center
+(
+  const double axis[3],
+  const double angle,
+  const double rotation_center[3],
+  const PDM_bool_t reverse,
+  const double* vector,
+  const int n_samp,
+  double* vector_out
+)
+{
+  // building the homogeneous matrix corresponding to whole transformation:
+  // Trans+.Rot.Trans-
+  double homogeneous_matrix[16];
+  double tmp_matrix[16];
+  // translation of -rotation_center
+  PDM_quaternion_translation_to_homogeneous_matrix(rotation_center,PDM_TRUE,
+    homogeneous_matrix);
+  
+  // rotation
+  PDM_quaternion_axis_angle_to_homogeneous_matrix(axis,angle,tmp_matrix);
+  if (reverse){
+    // transposing the rotation matrix
+    double tmp;
+    tmp = tmp_matrix[1];
+    tmp_matrix[1] = tmp_matrix[4];
+    tmp_matrix[4] = tmp;
+    tmp = tmp_matrix[2];
+    tmp_matrix[2] = tmp_matrix[8];
+    tmp_matrix[8] = tmp;
+    tmp = tmp_matrix[6];
+    tmp_matrix[6] = tmp_matrix[9];
+    tmp_matrix[9] = tmp;
+  }
+  PDM_quaternion_multiply_n_by_n_matrices(tmp_matrix,homogeneous_matrix,4,
+    homogeneous_matrix);
+  
+  // translation of rotation_center
+  PDM_quaternion_translation_to_homogeneous_matrix(rotation_center,PDM_FALSE,
+    tmp_matrix);
+  PDM_quaternion_multiply_n_by_n_matrices(tmp_matrix,homogeneous_matrix,4,
+    homogeneous_matrix);
+
+  // applying the homogeneous matrix to the coordinate vector
+  PDM_quaternion_apply_homogeneous_matrix(homogeneous_matrix,vector,n_samp,
+    vector_out);
+}
+
+void
+PDM_quaternion_apply_rotation_matrix_and_rotation_center
+(
+  const double rotation_matrix[9],
+  const double rotation_center[3],
+  const PDM_bool_t reverse,
+  const double* vector,
+  const int n_samp,
+  double* vector_out
+)
+{
+  // building the homogeneous matrix corresponding to whole transformation:
+  // Trans+.Rot.Trans-
+  double homogeneous_matrix[16];
+  double tmp_matrix[16];
+  // translation of -rotation_center
+  PDM_quaternion_translation_to_homogeneous_matrix(rotation_center,PDM_TRUE,
+    homogeneous_matrix);
+  
+  // rotation
+  PDM_quaternion_rotation_matrix_to_homogeneous_matrix(rotation_matrix,
+    tmp_matrix);
+  if (reverse){
+    // transposing the rotation matrix
+    double tmp;
+    tmp = tmp_matrix[1];
+    tmp_matrix[1] = tmp_matrix[4];
+    tmp_matrix[4] = tmp;
+    tmp = tmp_matrix[2];
+    tmp_matrix[2] = tmp_matrix[8];
+    tmp_matrix[8] = tmp;
+    tmp = tmp_matrix[6];
+    tmp_matrix[6] = tmp_matrix[9];
+    tmp_matrix[9] = tmp;
+  }
+  PDM_quaternion_multiply_n_by_n_matrices(tmp_matrix,homogeneous_matrix,4,
+    homogeneous_matrix);
+  
+  // translation of rotation_center
+  PDM_quaternion_translation_to_homogeneous_matrix(rotation_center,PDM_FALSE,
+    tmp_matrix);
+  PDM_quaternion_multiply_n_by_n_matrices(tmp_matrix,homogeneous_matrix,4,
+    homogeneous_matrix);
+
+  // applying the homogeneous matrix to the coordinate vector
+  PDM_quaternion_apply_homogeneous_matrix(homogeneous_matrix,vector,n_samp,
+    vector_out);
 }
 
 #ifdef __cplusplus
