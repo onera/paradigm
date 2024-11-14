@@ -707,10 +707,11 @@ PDM_isosurface_n_part_out_set
   CHECK_IS_NOT_DIST(isos);
 
   if (isos->extract_kind==PDM_EXTRACT_PART_KIND_LOCAL) {
-    // PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: isos->extract_kind is set to PDM_EXTRACT_PART_KIND_LOCAL, n_part_out will be equal to n_part_in.\n");
     printf("WARNING: PDM_isosurface_n_part_out_set: isos->extract_kind is set to PDM_EXTRACT_PART_KIND_LOCAL, n_part_out will be equal to n_part_in.\n");
   }
-  isos->iso_n_part = n_part_out;
+  else {
+    isos->iso_n_part = n_part_out;
+  }
 }
 
 #undef CHECK_IS_NOT_DIST
