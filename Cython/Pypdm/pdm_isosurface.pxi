@@ -214,7 +214,7 @@ cdef extern from "pdm_isosurface.h":
                                        double              **parent_weight,
                                        PDM_ownership_t       ownership);
 
-  void PDM_isosurface_enable_part_to_part(PDM_isosurface_t     *isos,
+  void PDM_isosurface_part_to_part_enable(PDM_isosurface_t     *isos,
                                           int                   id_isosurface,
                                           PDM_mesh_entities_t   entity_type,
                                           int                   unify_parent_info);
@@ -840,7 +840,7 @@ cdef class Isosurface:
 
     return np_group_entity_idx, np_group_entity, np_group_ln_to_gn
 
-  def enable_part_to_part(self, id_iso, entity_type,
+  def part_to_part_enable(self, id_iso, entity_type,
                           bint unify_parent_info=False):
     """
     Enable construction of a communication graph between source mesh entities and iso-surface entities.
@@ -852,7 +852,7 @@ cdef class Isosurface:
       entity_type       (PDM_entity_type_t) : Entity type
       unify_parent_info (bool)              : Get all parent over all procs (not implemented)
     """
-    PDM_isosurface_enable_part_to_part(self._isos, id_iso, entity_type, unify_parent_info)
+    PDM_isosurface_part_to_part_enable(self._isos, id_iso, entity_type, unify_parent_info)
 
   def part_to_part_get(self, id_iso, entity_type):
     """

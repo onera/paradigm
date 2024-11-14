@@ -1003,7 +1003,7 @@ PDM_isosurface_local_parent_get
  * \param [in]  ownership      Ownership
  *
  * \warning These weights are only computed if the construction
- * of the entity Part-to-Part has been enabled (see \ref PDM_isosurface_enable_part_to_part).
+ * of the entity Part-to-Part has been enabled (see \ref PDM_isosurface_part_to_part_enable).
  *
  * \return  Number of iso-surface entities
  *
@@ -1036,7 +1036,7 @@ PDM_isosurface_parent_weight_get
  */
 
 void
-PDM_isosurface_enable_part_to_part
+PDM_isosurface_part_to_part_enable
 (
   PDM_isosurface_t     *isos,
   int                   id_isosurface,

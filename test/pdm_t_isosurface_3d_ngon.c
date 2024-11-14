@@ -521,17 +521,17 @@ int main
   int n_iso = iso3 + 1;
 
   for (int i_iso = 0; i_iso < n_iso; i_iso++) {
-    PDM_isosurface_enable_part_to_part(isos,
+    PDM_isosurface_part_to_part_enable(isos,
                                        i_iso,
                                        PDM_MESH_ENTITY_VTX,
                                        0);
 
-    PDM_isosurface_enable_part_to_part(isos,
+    PDM_isosurface_part_to_part_enable(isos,
                                        i_iso,
                                        PDM_MESH_ENTITY_EDGE,
                                        0);
 
-    PDM_isosurface_enable_part_to_part(isos,
+    PDM_isosurface_part_to_part_enable(isos,
                                        i_iso,
                                        PDM_MESH_ENTITY_FACE,
                                        0);

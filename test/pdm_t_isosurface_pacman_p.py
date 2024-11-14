@@ -123,7 +123,7 @@ def run(n_vtx_seg, elt_type, n_step, visu, local, part_method):
     isos.redistribution_set(PDM.Isosurface.REEQUILIBRATE,
                             part_method)
 
-    isos.enable_part_to_part(id_iso_func, PDM._PDM_MESH_ENTITY_VTX)
+    isos.part_to_part_enable(id_iso_func, PDM._PDM_MESH_ENTITY_VTX)
 
   # Set mesh
   isos.n_part_set(n_part)

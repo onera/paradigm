@@ -3700,7 +3700,7 @@ PDM_isosurface_free
 
 
 void
-PDM_isosurface_enable_part_to_part
+PDM_isosurface_part_to_part_enable
 (
   PDM_isosurface_t     *isos,
   int                   id_isosurface,
@@ -3720,7 +3720,7 @@ PDM_isosurface_enable_part_to_part
   }
 
   if (id_isosurface >= isos->n_isosurface) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_enable_part_to_part : Invalid id_isosurface %d (n_isosurface = %d)\n", id_isosurface, isos->n_isosurface);
+    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_part_to_part_enable : Invalid id_isosurface %d (n_isosurface = %d)\n", id_isosurface, isos->n_isosurface);
   }
 
   _isosurface_t *_iso = &isos->isosurfaces[id_isosurface];

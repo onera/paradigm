@@ -110,7 +110,7 @@ Block-distributed
 Communication graphs
 ~~~~~~~~~~~~~~~~~~~~
 
-.. doxygenfunction:: PDM_isosurface_enable_part_to_part
+.. doxygenfunction:: PDM_isosurface_part_to_part_enable
 .. doxygenfunction:: PDM_isosurface_part_to_part_get
 .. doxygenfunction:: PDM_isosurface_dvtx_protocol_get
 
