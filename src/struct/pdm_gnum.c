@@ -2125,10 +2125,7 @@ PDM_gnum_compute
 
     _gnum_from_comm_graph(gen_gnum, build_pcg);
 
-  } else {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_gnum_compute, wrong user information cannot proceed \n");
   }
-
 }
 
 
