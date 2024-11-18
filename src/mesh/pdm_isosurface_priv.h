@@ -279,7 +279,6 @@ struct _pdm_isosurface_t {
   PDM_block_to_part_t *btp_vtx;
 
   // > Mesh structs
-  PDM_dmesh_t       *dmesh;
   PDM_dmesh_nodal_t *dmesh_nodal;
 
   // > Distribution
@@ -315,7 +314,6 @@ struct _pdm_isosurface_t {
   // > Partitioned entry data
 
   // > Mesh structs
-  PDM_part_mesh_t       *pmesh;
   PDM_part_mesh_nodal_t *pmesh_nodal;
 
   // > Partition

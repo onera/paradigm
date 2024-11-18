@@ -3326,6 +3326,10 @@ PDM_isosurface_create
   isos->ISOSURFACE_EPS = 0.;
 
   // > Entry mesh information
+  if (mesh_dimension != 3 &&
+      mesh_dimension != 2) {
+    PDM_error(__FILE__, __LINE__, 0, "Invalid mesh dimension : %d (must be 2 or 3)\n", mesh_dimension);
+  }
   isos->entry_is_part   = -1;
   isos->entry_mesh_type = 0;
   isos->entry_mesh_dim  = mesh_dimension;

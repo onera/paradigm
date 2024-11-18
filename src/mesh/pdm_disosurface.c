@@ -79,10 +79,6 @@ PDM_isosurface_dconnectivity_set
  PDM_g_num_t             *dconnect
 )
 {
-  /*
-   * TODO: transform connectivity as dmesh or not ? 
-   */
-
   CHECK_IS_NOT_PART(isos);
   PDM_ISOSURFACE_CHECK_ENTRY_MESH_COHERENCE(isos, 1);
 
@@ -195,35 +191,54 @@ PDM_isosurface_dmesh_set
 {
   CHECK_IS_NOT_PART(isos);
   PDM_ISOSURFACE_CHECK_ENTRY_MESH_COHERENCE(isos, 2);
- 
-  /**
-   * TODO: add check on entry dmesh to be sure that all required data are in. 
-   */
 
-  isos->dmesh = dmesh;
+  int n_rank;
+  PDM_MPI_Comm_size(isos->comm, &n_rank);
 
   /* Unpack dmesh */
   isos->entry_mesh_type = 1; // héhé
-  for (int i_entity = PDM_MESH_ENTITY_CELL; i_entity < PDM_MESH_ENTITY_MAX; i_entity++) {
+
+  PDM_mesh_entities_t entity_type = PDM_MESH_ENTITY_MAX;
+  if (isos->entry_mesh_dim == 2) {
+    entity_type = PDM_MESH_ENTITY_FACE;
+  }
+  else {
+    entity_type = PDM_MESH_ENTITY_CELL;
+  }
+
+  for (int i_entity = entity_type; i_entity < PDM_MESH_ENTITY_MAX; i_entity++) {
     PDM_g_num_t *distrib = NULL;
     PDM_dmesh_distrib_get     (dmesh, i_entity, &distrib);
     PDM_isosurface_distrib_set(isos,  i_entity,  distrib);
   }
 
   // Cells
-  int         *dcell_face_idx = NULL;
-  PDM_g_num_t *dcell_face     = NULL;
-  PDM_dmesh_connectivity_get(dmesh,
-                             PDM_CONNECTIVITY_TYPE_CELL_FACE,
-                             &dcell_face,
-                             &dcell_face_idx,
-                             PDM_OWNERSHIP_BAD_VALUE);
-  PDM_isosurface_dconnectivity_set(isos,
-                                   PDM_CONNECTIVITY_TYPE_CELL_FACE,
-                                   dcell_face_idx,
-                                   dcell_face);
+  if (isos->entry_mesh_dim == 3) {
+    if (isos->distrib_cell == NULL) {
+      PDM_error(__FILE__, __LINE__, 0, "Error : PDM_isosurface_dmesh_set : distrib_cell is NULL\n");
+    }
+
+    int         *dcell_face_idx = NULL;
+    PDM_g_num_t *dcell_face     = NULL;
+    PDM_dmesh_connectivity_get(dmesh,
+                               PDM_CONNECTIVITY_TYPE_CELL_FACE,
+                               &dcell_face,
+                               &dcell_face_idx,
+                               PDM_OWNERSHIP_BAD_VALUE);
+    if (dcell_face_idx == NULL) {
+      PDM_error(__FILE__, __LINE__, 0, "Error : PDM_isosurface_dmesh_set : dcell_face_idx is NULL\n");
+    }
+    PDM_isosurface_dconnectivity_set(isos,
+                                     PDM_CONNECTIVITY_TYPE_CELL_FACE,
+                                     dcell_face_idx,
+                                     dcell_face);
+  }
 
   // Faces
+  if (isos->distrib_face == NULL) {
+    PDM_error(__FILE__, __LINE__, 0, "Error : PDM_isosurface_dmesh_set : distrib_face is NULL\n");
+  }
+
   int         *dface_edge_idx = NULL;
   PDM_g_num_t *dface_edge     = NULL;
   PDM_dmesh_connectivity_get(dmesh,
@@ -248,6 +263,10 @@ PDM_isosurface_dmesh_set
                                    dface_vtx_idx,
                                    dface_vtx);
 
+  if (dface_edge_idx == NULL && dface_vtx_idx == NULL) {
+    PDM_error(__FILE__, __LINE__, 0, "Error : PDM_isosurface_dmesh_set : dface_edge_idx and dface_vtx_idx are both NULL\n");
+  }
+
   // Edges
   int         *dedge_vtx_idx = NULL;
   PDM_g_num_t *dedge_vtx     = NULL;
@@ -261,10 +280,25 @@ PDM_isosurface_dmesh_set
                                    PDM_CONNECTIVITY_TYPE_EDGE_VTX,
                                    NULL,
                                    dedge_vtx);
+  if (dface_edge_idx != NULL) {
+    if (isos->distrib_edge == NULL) {
+      PDM_error(__FILE__, __LINE__, 0, "Error : PDM_isosurface_dmesh_set : distrib_edge is NULL\n");
+    }
+    if (dedge_vtx == NULL) {
+      PDM_error(__FILE__, __LINE__, 0, "Error : PDM_isosurface_dmesh_set : dedge_vtx is NULL\n");
+    }
+  }
 
   // Vertices
+  if (isos->distrib_vtx == NULL) {
+    PDM_error(__FILE__, __LINE__, 0, "Error : PDM_isosurface_dmesh_set : distrib_vtx is NULL\n");
+  }
+
   double *dvtx_coord = NULL;
   PDM_dmesh_vtx_coord_get(dmesh, &dvtx_coord, PDM_OWNERSHIP_BAD_VALUE);
+  if (dvtx_coord == NULL) {
+    PDM_error(__FILE__, __LINE__, 0, "Error : PDM_isosurface_dmesh_set : dvtx_coord is NULL\n");
+  }
   PDM_isosurface_dvtx_coord_set(isos, dvtx_coord);
 
   // Groups (surfaces)
@@ -275,6 +309,10 @@ PDM_isosurface_dmesh_set
                                       &dsurface_face,
                                       &dsurface_face_idx,
                                       PDM_OWNERSHIP_BAD_VALUE);
+
+  if (dsurface_face_idx == NULL) {
+    PDM_error(__FILE__, __LINE__, 0, "Error : PDM_isosurface_dmesh_set : dsurface_face_idx is NULL\n");
+  }
 
   PDM_isosurface_n_group_set(isos,
                              PDM_MESH_ENTITY_FACE,
@@ -296,10 +334,26 @@ PDM_isosurface_dmesh_nodal_set
   CHECK_IS_NOT_PART(isos);
   PDM_ISOSURFACE_CHECK_ENTRY_MESH_COHERENCE(isos, 3);
   
-  /**
-   * TODO: add check on entry dmesh_nodal to be sure that all required data are in. 
-   */
+  /* Check that entry dmesh_nodal contains all required data */
+  if (dmn == NULL) {
+    PDM_error(__FILE__, __LINE__, 0, "Error : PDM_isosurface_dmesh_nodal_set : dmn is NULL\n");
+  }
 
+  // Sections of highest dimension
+  PDM_geometry_kind_t geom_kind = PDM_GEOMETRY_KIND_MAX;
+  if (isos->entry_mesh_dim == 2) {
+    geom_kind = PDM_GEOMETRY_KIND_SURFACIC;
+  }
+  else {
+    geom_kind = PDM_GEOMETRY_KIND_VOLUMIC;
+  }
+
+  int n_section = PDM_DMesh_nodal_n_section_get(dmn, geom_kind);
+  if (n_section == 0) {
+    PDM_error(__FILE__, __LINE__, 0, "Error : PDM_isosurface_dmesh_nodal_set : dmn does not contain any section of dimension %d\n", isos->entry_mesh_dim);
+  }
+
+  /* Set dmesh_nodal */
   isos->dmesh_nodal = dmn;
 }
 

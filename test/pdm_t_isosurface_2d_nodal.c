@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <assert.h>
 
 #include "pdm.h"
 #include "pdm_priv.h"
@@ -73,6 +74,8 @@ int main(int argc, char *argv[])
                                      &use_part_mesh,
                                      &generate_edges,
                                      &local);
+
+  assert(PDM_Mesh_nodal_elt_dim_get(elt_type) == 2);
 
   if (isovalues == NULL) {
     n_isovalues = 1;
