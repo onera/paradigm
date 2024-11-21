@@ -99,13 +99,6 @@ int main(int argc, char *argv[])
                                            &pmn,
                                            &dmn);
 
-  if (n_part==0) {
-    // Block-distributed
-  }
-  else {
-    // Partitioned
-  }
-
 
   /*
    *  Creating isosurface object

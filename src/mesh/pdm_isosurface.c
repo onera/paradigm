@@ -1200,7 +1200,9 @@ _extract_nodal
 
   } // End loop on parts
 
-  // PDM_part_mesh_nodal_dump_vtk(isos->pmesh_nodal, PDM_GEOMETRY_KIND_VOLUMIC,  "init_vol");
+  // if (isos->entry_mesh_dim == 3) {
+  //   PDM_part_mesh_nodal_dump_vtk(isos->pmesh_nodal, PDM_GEOMETRY_KIND_VOLUMIC,  "init_vol");
+  // }
   // PDM_part_mesh_nodal_dump_vtk(isos->pmesh_nodal, PDM_GEOMETRY_KIND_SURFACIC, "init_surf");
   // PDM_part_mesh_nodal_dump_vtk(isos->pmesh_nodal, PDM_GEOMETRY_KIND_RIDGE,    "init_ridge");
 
@@ -1208,7 +1210,9 @@ _extract_nodal
 
   PDM_extract_part_part_mesh_nodal_get(isos->extrp, &isos->extract_pmesh_nodal, PDM_OWNERSHIP_KEEP);
 
-  // PDM_part_mesh_nodal_dump_vtk(isos->extract_pmesh_nodal, PDM_GEOMETRY_KIND_VOLUMIC,  "extract_vol");
+  // if (isos->entry_mesh_dim == 3) {
+  //   PDM_part_mesh_nodal_dump_vtk(isos->extract_pmesh_nodal, PDM_GEOMETRY_KIND_VOLUMIC,  "extract_vol");
+  // }
   // PDM_part_mesh_nodal_dump_vtk(isos->extract_pmesh_nodal, PDM_GEOMETRY_KIND_SURFACIC, "extract_surf");
   // PDM_part_mesh_nodal_dump_vtk(isos->extract_pmesh_nodal, PDM_GEOMETRY_KIND_RIDGE,    "extract_ridge");
 
@@ -1653,7 +1657,7 @@ _ngonize
   }
   else {
     // We have elements other than simplices, we need to ngonize
-    PDM_error(__FILE__, __LINE__, 0, "Nodal not implemented yet for elements other than TRIA3 and TETRA4\n");
+    // PDM_error(__FILE__, __LINE__, 0, "Nodal not implemented yet for elements other than TRIA3 and TETRA4\n");
     isos->ngonize = 1; // need to good managing of memory
     isos->entry_mesh_type = 1 * PDM_SIGN(isos->entry_mesh_type); // we are in fact ngon from now on
 

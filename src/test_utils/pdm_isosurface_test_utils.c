@@ -1208,10 +1208,6 @@ PDM_isosurface_test_utils_part_interpolation
   int dim = isos->entry_mesh_dim;
 
   // TODO: interpolate face and cell fields
-  PDM_UNUSED(itp_field_face);
-  PDM_UNUSED(itp_field_cell);
-  PDM_UNUSED(iso_itp_field_edge);
-  PDM_UNUSED(iso_itp_field_face);
 
   double **_iso_itp_field_vtx  = NULL;
   double **_iso_itp_field_edge = NULL;
