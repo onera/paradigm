@@ -358,7 +358,7 @@ PDM_isosurface_part_mesh_set
                                         PDM_MESH_ENTITY_CELL,
                                         &isos->cell_gnum[i_part],
                                         PDM_OWNERSHIP_BAD_VALUE);
-      if (isos->n_cell[i_part] > 0 && isos->cell_gnum[i_part]) {
+      if (isos->n_cell[i_part] > 0 && isos->cell_gnum[i_part] == NULL) {
         PDM_error(__FILE__, __LINE__, 0, "Error : PDM_isosurface_part_mesh_set : cell_gnum is NULL for part %d\n", i_part);
       }
     }
@@ -368,7 +368,7 @@ PDM_isosurface_part_mesh_set
                                       PDM_MESH_ENTITY_FACE,
                                       &isos->face_gnum[i_part],
                                       PDM_OWNERSHIP_BAD_VALUE);
-    if (isos->n_face[i_part] > 0 && isos->face_gnum[i_part]) {
+    if (isos->n_face[i_part] > 0 && isos->face_gnum[i_part] == NULL) {
       PDM_error(__FILE__, __LINE__, 0, "Error : PDM_isosurface_part_mesh_set : face_gnum is NULL for part %d\n", i_part);
     }
 
@@ -377,7 +377,7 @@ PDM_isosurface_part_mesh_set
                                       PDM_MESH_ENTITY_EDGE,
                                       &isos->edge_gnum[i_part],
                                       PDM_OWNERSHIP_BAD_VALUE);
-    if (isos->n_edge[i_part] > 0 && isos->edge_gnum[i_part]) {
+    if (isos->n_edge[i_part] > 0 && isos->edge_gnum[i_part] == NULL) {
       PDM_error(__FILE__, __LINE__, 0, "Error : PDM_isosurface_part_mesh_set : edge_gnum is NULL for part %d\n", i_part);
     }
 
@@ -386,7 +386,7 @@ PDM_isosurface_part_mesh_set
                                       PDM_MESH_ENTITY_VTX,
                                       &isos->vtx_gnum[i_part],
                                       PDM_OWNERSHIP_BAD_VALUE);
-    if (isos->n_vtx[i_part] > 0 && isos->vtx_gnum[i_part]) {
+    if (isos->n_vtx[i_part] > 0 && isos->vtx_gnum[i_part] == NULL) {
       PDM_error(__FILE__, __LINE__, 0, "Error : PDM_isosurface_part_mesh_set : vtx_gnum is NULL for part %d\n", i_part);
     }
 

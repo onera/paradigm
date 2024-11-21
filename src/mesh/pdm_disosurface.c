@@ -310,18 +310,20 @@ PDM_isosurface_dmesh_set
                                       &dsurface_face_idx,
                                       PDM_OWNERSHIP_BAD_VALUE);
 
-  if (dsurface_face_idx == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Error : PDM_isosurface_dmesh_set : dsurface_face_idx is NULL\n");
-  }
 
   PDM_isosurface_n_group_set(isos,
                              PDM_MESH_ENTITY_FACE,
                              n_surface);
 
-  PDM_isosurface_dgroup_set(isos,
-                            PDM_MESH_ENTITY_FACE,
-                            dsurface_face_idx,
-                            dsurface_face);
+  if (n_surface != 0) {
+    if (dsurface_face_idx == NULL) {
+      PDM_error(__FILE__, __LINE__, 0, "Error : PDM_isosurface_dmesh_set : dsurface_face_idx is NULL\n");
+    }
+    PDM_isosurface_dgroup_set(isos,
+                              PDM_MESH_ENTITY_FACE,
+                              dsurface_face_idx,
+                              dsurface_face);
+  }
 }
 
 void
