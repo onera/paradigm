@@ -864,7 +864,7 @@ const int                      id_section
     PDM_DMesh_nodal_section_poly3d_t *section = dmn_elts->sections_poly3d[_id_section];
 
     if (section == NULL) {
-      PDM_error (__FILE__, __LINE__, 0, "Bad standard section identifier\n");
+      PDM_error (__FILE__, __LINE__, 0, "Bad polyhedron section identifier\n");
     }
 
     return section->distrib;
@@ -886,11 +886,10 @@ const int                      id_section
   else {
 
     _id_section = id_section - PDM_BLOCK_ID_BLOCK_STD;
-
     PDM_DMesh_nodal_section_std_t *section = dmn_elts->sections_std[_id_section];
 
     if (section == NULL) {
-      PDM_error (__FILE__, __LINE__, 0, "Bad polyhedron section identifier\n");
+      PDM_error (__FILE__, __LINE__, 0, "Bad standard section identifier\n");
     }
 
     return section->distrib;

@@ -798,12 +798,12 @@ PDM_dmesh_nodal_dump_vtk
  * \param [in]   dmn              PDM_dmesh_nodal_t instance
  * \param [in]   geom_kind        Dimension to dump
  * \param [in]   filename_patter  Filename 
- * \param [in]   n_fld_vtx        Number of vertex fields
- * \param [in]   fld_name_vtx     Field names 
- * \param [in]   fld_vtx          Fields 
- * \param [in]   n_fld_elmt       Number of elements fields
- * \param [in]   fld_name_elmt    Field names 
- * \param [in]   fld_elmt         Fields 
+ * \param [in]   n_fld_vtx        Number of vertex-based fields
+ * \param [in]   fld_name_vtx     Vertex-based field names
+ * \param [in]   fld_vtx          Vertex-based fields
+ * \param [in]   n_fld_elmt       Number of elements-based fields
+ * \param [in]   fld_name_elmt    Element-based field names
+ * \param [in]   fld_elmt         Element-based fields
  *
  */
 void
