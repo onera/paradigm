@@ -2472,12 +2472,11 @@ _isosurface_ngon_single_part
       s_iso_edge += n_isovalues * (face_tag[i_face] > 0);
     }
   }
-    PDM_malloc(iso_edge_vtx       , s_iso_edge * 2, int);
-    PDM_malloc(iso_edge_parent_idx, s_iso_edge + 1, int);
-    PDM_malloc(iso_edge_parent    , s_iso_edge * 2, int);
+  PDM_malloc(iso_edge_vtx       , s_iso_edge * 2, int);
+  PDM_malloc(iso_edge_parent_idx, s_iso_edge + 1, int);
+  PDM_malloc(iso_edge_parent    , s_iso_edge * 2, int);
 
-    iso_edge_parent_idx[0] = 0;
-  // }
+  iso_edge_parent_idx[0] = 0;
 
   int *vtx_to_iso_vtx = NULL;
   PDM_malloc(vtx_to_iso_vtx, n_vtx, int);

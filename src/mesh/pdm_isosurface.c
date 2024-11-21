@@ -2739,12 +2739,12 @@ _build_ptp_dist_nodal
   PDM_malloc(shifted_section_distrib, n_section+1, PDM_g_num_t);
   shifted_section_distrib[0] = 0;
 
-  // int *sections_id = PDM_DMesh_nodal_sections_id_get(isos->dmesh_nodal, geom_kind);
+  int *sections_id = PDM_DMesh_nodal_sections_id_get(isos->dmesh_nodal, geom_kind_parent);
   int n_elt2 = 0;
   for (int i_section = 0; i_section < n_section; i_section++) {
     const PDM_g_num_t *section_distrib = PDM_DMesh_nodal_distrib_section_get(isos->dmesh_nodal,
                                                                              geom_kind_parent,
-                                                                             i_section); // section_id[i_section] ?
+                                                                             sections_id[i_section]);
 
     shifted_section_distrib[i_section+1] = shifted_section_distrib[i_section] + section_distrib[n_rank];
 
@@ -2777,7 +2777,7 @@ _build_ptp_dist_nodal
     // Second, get proc
     const PDM_g_num_t *section_distrib = PDM_DMesh_nodal_distrib_section_get(isos->dmesh_nodal,
                                                                              geom_kind_parent,
-                                                                             i_section); // section_id[i_section] ?
+                                                                             sections_id[i_section]);
     gnum -= shifted_section_distrib[i_section];
     int iproc = PDM_binary_search_gap_long(gnum,
                                            section_distrib,
@@ -2788,7 +2788,7 @@ _build_ptp_dist_nodal
     for (int j_section = 0; j_section < i_section; j_section++) {
       const PDM_g_num_t *_section_distrib = PDM_DMesh_nodal_distrib_section_get(isos->dmesh_nodal,
                                                                                 geom_kind_parent,
-                                                                                i_section); // section_id[i_section] ?
+                                                                                sections_id[i_section]);
       lnum += _section_distrib[iproc+1] - _section_distrib[iproc];
     }
 
@@ -2838,7 +2838,7 @@ _free_iso_entity
         PDM_free(_iso->iso_vtx_coord[i_part]);
       }
     }
-    PDM_free(_iso->iso_vtx_coord      );
+    PDM_free(_iso->iso_vtx_coord);
 
     /* Block-distributed */
     if (_iso->iso_owner_dvtx_coord == PDM_OWNERSHIP_KEEP) {
