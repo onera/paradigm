@@ -5608,10 +5608,13 @@ _warmup_extract_part_nodal_greatest_dimension
     PDM_malloc(extract_init_location, extrp->n_part_in, int *);
     for (int i_part = 0; i_part < extrp->n_part_in; i_part++) {
       PDM_malloc(extract_init_location[i_part], extrp->n_extract[i_part] * 3, int);
-      for (int i = 0; i < extrp->n_extract[i_part]; i++) {
-        extract_init_location[i_part][3*i  ] = i_rank;
-        extract_init_location[i_part][3*i+1] = i_part;
-        extract_init_location[i_part][3*i+2] = i;
+      for (int i = 0; i < pn_entity[i_part]; i++) {
+        if (is_selected[i_part][i] >= 0) {
+          int j = is_selected[i_part][i];
+          extract_init_location[i_part][3*j  ] = i_rank;
+          extract_init_location[i_part][3*j+1] = i_part;
+          extract_init_location[i_part][3*j+2] = i;
+        }
       }
     }
 
@@ -5673,6 +5676,18 @@ _warmup_extract_part_nodal_greatest_dimension
         PDM_malloc(extrp->target_location[i_part], pn_equi[i_part] * 3, int);
         for (int i = 0; i < 3*pn_equi[i_part]; i++) {
           extrp->target_location[i_part][i] = dequi_init_location[idx++];
+        }
+
+        if (1) {
+          log_trace("_warmup_extract_part_nodal_greatest_dimension\n");
+          for (int i = 0; i < pn_equi[i_part]; i++) {
+            log_trace("target : i %d, gnum "PDM_FMT_G_NUM", init_loc %d %d %d\n",
+                      i,
+                      extrp->target_gnum[i_part][i],
+                      extrp->target_location[i_part][3*i  ],
+                      extrp->target_location[i_part][3*i+1],
+                      extrp->target_location[i_part][3*i+2]);
+          }
         }
       }
       PDM_free(dequi_init_location);
