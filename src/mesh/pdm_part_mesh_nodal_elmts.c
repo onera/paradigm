@@ -4206,7 +4206,7 @@ const int                           id_part
   }
 
   if (id_part >= pmne->n_part) {
-    PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
+    PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big (%d / %d)\n", id_part, pmne->n_part);
   }
 
   return pmne->n_elmts[id_part];

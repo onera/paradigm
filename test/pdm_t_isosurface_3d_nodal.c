@@ -117,8 +117,8 @@ int main(int argc, char *argv[])
     int     dn_vtx     = PDM_DMesh_nodal_n_vtx_get(dmn);
     double *dvtx_coord = PDM_DMesh_nodal_vtx_get(dmn, PDM_OWNERSHIP_BAD_VALUE);
 
-    PDM_malloc(iso_dfield     , dn_vtx, double);
-    PDM_malloc(itp_dfield_vtx , dn_vtx, double);
+    PDM_malloc(iso_dfield    , dn_vtx, double);
+    PDM_malloc(itp_dfield_vtx, dn_vtx, double);
     PDM_isosurface_test_utils_compute_iso_field(dn_vtx, dvtx_coord, iso_dfield    );
     PDM_isosurface_test_utils_compute_itp_field(dn_vtx, dvtx_coord, itp_dfield_vtx);
 
@@ -126,14 +126,14 @@ int main(int argc, char *argv[])
     int dn_face = face_distri[i_rank+1]-face_distri[i_rank];
     PDM_malloc(itp_dfield_face, dn_face, double);
     for (int i_face=0; i_face<dn_face; ++i_face) {
-      itp_dfield_face[i_face] = (double) (face_distri[i_rank]+i_face);
+      itp_dfield_face[i_face] = (double) (face_distri[i_rank]+i_face+1);
     }
 
     PDM_g_num_t *cell_distri = PDM_DMesh_nodal_section_distri_std_get(dmn, PDM_GEOMETRY_KIND_VOLUMIC, 0);
     int dn_cell = cell_distri[i_rank+1]-cell_distri[i_rank];
     PDM_malloc(itp_dfield_cell, dn_cell, double);
     for (int i_cell=0; i_cell<dn_cell; ++i_cell) {
-      itp_dfield_cell[i_cell] = (double) (cell_distri[i_rank]+i_cell);
+      itp_dfield_cell[i_cell] = (double) (cell_distri[i_rank]+i_cell+1);
     }
 
   }

@@ -5677,18 +5677,6 @@ _warmup_extract_part_nodal_greatest_dimension
         for (int i = 0; i < 3*pn_equi[i_part]; i++) {
           extrp->target_location[i_part][i] = dequi_init_location[idx++];
         }
-
-        if (1) {
-          log_trace("_warmup_extract_part_nodal_greatest_dimension\n");
-          for (int i = 0; i < pn_equi[i_part]; i++) {
-            log_trace("target : i %d, gnum "PDM_FMT_G_NUM", init_loc %d %d %d\n",
-                      i,
-                      extrp->target_gnum[i_part][i],
-                      extrp->target_location[i_part][3*i  ],
-                      extrp->target_location[i_part][3*i+1],
-                      extrp->target_location[i_part][3*i+2]);
-          }
-        }
       }
       PDM_free(dequi_init_location);
       PDM_free(pn_equi);

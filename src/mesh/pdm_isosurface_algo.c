@@ -3361,6 +3361,10 @@ PDM_isosurface_marching_algo
     PDM_free(iso_vtx_to_edge);
   } // End of loop on partitions
 
+  // TODO : in 2d-ngon mode there might me duplicate values in iso_edge_parent
+  // in case an iso-edge lies exactly on an internal edge resulting from triangulation
+  // => remove duplicates? (interpolation should work fine even with duplicates though)
+
 
   /*
    * Build vertices/edges/faces gnum

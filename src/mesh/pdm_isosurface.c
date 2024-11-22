@@ -1679,12 +1679,12 @@ _ngonize
     }
     else {
       isos->we_have_edges = 0;
+      PDM_part_mesh_nodal_to_part_mesh_g_nums_enable(pmn_to_pm, PDM_MESH_ENTITY_FACE);
       PDM_part_mesh_nodal_to_part_mesh_connectivity_enable(pmn_to_pm, PDM_CONNECTIVITY_TYPE_FACE_VTX);
     }
 
     PDM_part_mesh_nodal_to_part_mesh_groups_enable(pmn_to_pm, PDM_BOUND_TYPE_FACE);
 
-    PDM_part_mesh_nodal_to_part_mesh_g_nums_enable(pmn_to_pm, PDM_MESH_ENTITY_FACE); // can we avoid that in 3D
     PDM_part_mesh_nodal_to_part_mesh_g_nums_enable(pmn_to_pm, PDM_MESH_ENTITY_VTX);
 
     PDM_part_mesh_nodal_to_part_mesh_compute(pmn_to_pm);
@@ -1693,6 +1693,87 @@ _ngonize
                                                   &isos->extract_pmesh,
                                                    PDM_OWNERSHIP_USER);
 
+    if (isos->entry_mesh_dim == 3) {
+      // Dirty hack
+      // note: we only need face_gnum if there are surface groups
+      // note2: we only need EXTERNAL face gnums (no copy required, since order is preserved)
+      PDM_part_mesh_nodal_elmts_t *extract_pmne_surf = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(extract_pmn,
+                                                                                                     PDM_GEOMETRY_KIND_SURFACIC);
+      if (extract_pmne_surf != NULL) {
+        int  n_section_surf   = PDM_part_mesh_nodal_elmts_n_section_get  (extract_pmne_surf);
+        int *sections_id_surf = PDM_part_mesh_nodal_elmts_sections_id_get(extract_pmne_surf);
+
+        for (int i_part = 0; i_part < isos->iso_n_part; i_part++) {
+
+          int n_face = PDM_part_mesh_nodal_n_elmts_get(extract_pmn,
+                                                       PDM_GEOMETRY_KIND_SURFACIC,
+                                                       i_part);
+          PDM_g_num_t *face_ln_to_gn = NULL;
+          PDM_malloc(face_ln_to_gn, n_face, PDM_g_num_t);
+
+          int idx = 0;
+          for (int i_section = 0; i_section < n_section_surf; i_section++) {
+
+            int id_section = sections_id_surf[i_section];
+
+            int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(extract_pmne_surf, id_section, i_part);
+
+            PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(extract_pmne_surf, id_section);
+
+            int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(extract_pmne_surf,
+                                                                       id_section,
+                                                                       i_part,
+                                                                       PDM_OWNERSHIP_KEEP);
+
+            PDM_g_num_t *parent_g_num = NULL;
+
+            if (t_elt == PDM_MESH_NODAL_POLY_2D) {
+              // Polygons
+              parent_g_num = PDM_part_mesh_nodal_elmts_g_num_get(extract_pmne_surf,
+                                                                 id_section,
+                                                                 i_part,
+                                                                 PDM_OWNERSHIP_KEEP);
+            }
+            else {
+              // Standard 2d elements (triangles or quads)
+              int         *connec;
+              PDM_g_num_t *numabs;
+              int         *_parent_num;
+              PDM_part_mesh_nodal_elmts_section_std_get(extract_pmne_surf,
+                                                        id_section,
+                                                        i_part,
+                                                        &connec,
+                                                        &numabs,
+                                                        &_parent_num,
+                                                        &parent_g_num,
+                                                        PDM_OWNERSHIP_KEEP);
+            }
+
+            if (parent_g_num == NULL) {
+              PDM_error(__FILE__, __LINE__, 0, "NULL parent_g_num for section %d (id %d)\n", i_section, id_section);
+            }
+
+            if (parent_num == NULL) {
+              for (int i_elt = 0; i_elt < n_elt; i_elt++) {
+                face_ln_to_gn[idx++] = parent_g_num[i_elt];
+              }
+            }
+            else {
+              for (int i_elt = 0; i_elt < n_elt; i_elt++) {
+                idx = parent_num[i_elt];
+                face_ln_to_gn[idx] = parent_g_num[i_elt];
+              }
+            }
+          }
+
+          PDM_part_mesh_entity_ln_to_gn_set(isos->extract_pmesh,
+                                            i_part,
+                                            PDM_MESH_ENTITY_FACE,
+                                            face_ln_to_gn,
+                                            PDM_OWNERSHIP_KEEP);
+        }
+      }
+    }
 
 
     PDM_part_mesh_nodal_to_part_mesh_free(pmn_to_pm);
@@ -2207,7 +2288,7 @@ _part_to_dist_elt
 
   // > Exchange
   int         *delt_parent_strd = NULL;
-  PDM_g_num_t *delt_parent_gnum= NULL;
+  PDM_g_num_t *delt_parent_gnum = NULL;
   s_block_data = PDM_part_to_block_exch(ptb_elt,
                                         sizeof(PDM_g_num_t),
                                         PDM_STRIDE_VAR_INTERLACED,
@@ -2777,6 +2858,11 @@ _build_ptp_dist_nodal
     int i_section = PDM_binary_search_gap_long(gnum,
                                                shifted_section_distrib,
                                                n_section + 1);
+
+    if (i_section < 0) {
+      log_trace("failed to find "PDM_FMT_G_NUM" in ", gnum+1);
+      PDM_log_trace_array_long(shifted_section_distrib, n_section+1, "");
+    }
 
     // Second, get proc
     const PDM_g_num_t *section_distrib = PDM_DMesh_nodal_distrib_section_get(isos->dmesh_nodal,
