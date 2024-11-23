@@ -371,7 +371,7 @@ PDM_part_mesh_reorient_geom
               int n_vtx_on_face = face_vtx_idx[i_part][i_face+1] - face_vtx_idx[i_part][i_face];
               for (int i_vtx = 0; i_vtx < n_vtx_on_face/2; i_vtx++) { // revert face_vtx
                 int j_vtx = face_vtx[i_part][idx_vtx+i_vtx];
-                face_vtx[i_part][idx_vtx+i_vtx                ] =face_vtx[i_part][idx_vtx+n_vtx_on_face-1-i_vtx];
+                face_vtx[i_part][idx_vtx+i_vtx                ] = face_vtx[i_part][idx_vtx+n_vtx_on_face-1-i_vtx];
                 face_vtx[i_part][idx_vtx+n_vtx_on_face-1-i_vtx] = j_vtx;
               }
             }
