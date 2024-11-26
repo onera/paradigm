@@ -3216,11 +3216,15 @@ PDM_isosurface_marching_algo
       }
     }
 
-    int from_2d_ngon = (!isosurface_is_nodal(isos) && isos->entry_mesh_dim == 2);
-    if (isos->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL || from_2d_ngon) {
-      for (int i = 0; i < iso_edge_parent_idx[i_part][iso_n_edge[i_part]]; i++) {
-        int i_parent = iso_edge_parent[i_part][i] - 1;
-        iso_edge_parent[i_part][i] = isos->extract_face_lnum[i_part][i_parent];
+    if (isos->entry_is_part == 1) {
+      // Input mesh is partitioned
+      int from_2d_ngon = (!isosurface_is_nodal(isos) && isos->entry_mesh_dim == 2);
+      if (isos->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL || from_2d_ngon) {
+        // We need to convert triangle lnum to face lnum
+        for (int i = 0; i < iso_edge_parent_idx[i_part][iso_n_edge[i_part]]; i++) {
+          int i_parent = iso_edge_parent[i_part][i] - 1;
+          iso_edge_parent[i_part][i] = isos->extract_face_lnum[i_part][i_parent];
+        }
       }
     }
 

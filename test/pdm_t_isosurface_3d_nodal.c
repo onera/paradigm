@@ -14,6 +14,7 @@
 #include "pdm_vtk.h"
 
 #include "pdm_array.h"
+#include "pdm_distrib.h"
 
 #include "pdm_isosurface.h"
 #include "pdm_generate_mesh.h"
@@ -122,19 +123,37 @@ int main(int argc, char *argv[])
     PDM_isosurface_test_utils_compute_iso_field(dn_vtx, dvtx_coord, iso_dfield    );
     PDM_isosurface_test_utils_compute_itp_field(dn_vtx, dvtx_coord, itp_dfield_vtx);
 
-    PDM_g_num_t *face_distri = PDM_DMesh_nodal_section_distri_std_get(dmn, PDM_GEOMETRY_KIND_SURFACIC, 0);
-    int dn_face = face_distri[i_rank+1]-face_distri[i_rank];
+    int dn_face = 0;
+    int  n_section   = PDM_DMesh_nodal_n_section_get  (dmn, PDM_GEOMETRY_KIND_SURFACIC);
+    int *sections_id = PDM_DMesh_nodal_sections_id_get(dmn, PDM_GEOMETRY_KIND_SURFACIC);
+    for (int i_section = 0; i_section < n_section; i_section++) {
+      int n_elt = PDM_DMesh_nodal_section_n_elt_get(dmn, PDM_GEOMETRY_KIND_SURFACIC, sections_id[i_section]);
+      dn_face += n_elt;
+    }
+
+    PDM_g_num_t *face_distri = PDM_compute_entity_distribution(comm, dn_face);
     PDM_malloc(itp_dfield_face, dn_face, double);
     for (int i_face=0; i_face<dn_face; ++i_face) {
       itp_dfield_face[i_face] = (double) (face_distri[i_rank]+i_face+1);
     }
+    PDM_free(face_distri);
 
-    PDM_g_num_t *cell_distri = PDM_DMesh_nodal_section_distri_std_get(dmn, PDM_GEOMETRY_KIND_VOLUMIC, 0);
-    int dn_cell = cell_distri[i_rank+1]-cell_distri[i_rank];
+
+
+    int dn_cell = 0;
+    n_section   = PDM_DMesh_nodal_n_section_get  (dmn, PDM_GEOMETRY_KIND_VOLUMIC);
+    sections_id = PDM_DMesh_nodal_sections_id_get(dmn, PDM_GEOMETRY_KIND_VOLUMIC);
+    for (int i_section = 0; i_section < n_section; i_section++) {
+      int n_elt = PDM_DMesh_nodal_section_n_elt_get(dmn, PDM_GEOMETRY_KIND_VOLUMIC, sections_id[i_section]);
+      dn_cell += n_elt;
+    }
+
+    PDM_g_num_t *cell_distri = PDM_compute_entity_distribution(comm, dn_cell);
     PDM_malloc(itp_dfield_cell, dn_cell, double);
     for (int i_cell=0; i_cell<dn_cell; ++i_cell) {
       itp_dfield_cell[i_cell] = (double) (cell_distri[i_rank]+i_cell+1);
     }
+    PDM_free(cell_distri);
 
   }
   else {

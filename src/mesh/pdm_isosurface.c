@@ -34,6 +34,7 @@
 
 #include "pdm_array.h"
 #include "pdm_binary_search.h"
+#include "pdm_distrib.h"
 
 #include "pdm_mesh_nodal.h"
 #include "pdm_partitioning_algorithm.h"
@@ -2818,24 +2819,21 @@ _build_ptp_dist_nodal
   else {
     PDM_error(__FILE__, __LINE__, 0, "Invalid entity_type %d\n", entity_type);
   }
-  int n_section = PDM_DMesh_nodal_n_section_get(isos->dmesh_nodal, geom_kind_parent);
-
-  PDM_g_num_t *shifted_section_distrib = NULL;
-  PDM_malloc(shifted_section_distrib, n_section+1, PDM_g_num_t);
-  shifted_section_distrib[0] = 0;
-
+  int  n_section   = PDM_DMesh_nodal_n_section_get  (isos->dmesh_nodal, geom_kind_parent);
   int *sections_id = PDM_DMesh_nodal_sections_id_get(isos->dmesh_nodal, geom_kind_parent);
-  int n_elt2 = 0;
+
+  int *local_section_idx = NULL;
+  PDM_malloc(local_section_idx, n_section+1, int);
+  local_section_idx[0] = 0;
   for (int i_section = 0; i_section < n_section; i_section++) {
-    const PDM_g_num_t *section_distrib = PDM_DMesh_nodal_distrib_section_get(isos->dmesh_nodal,
-                                                                             geom_kind_parent,
-                                                                             sections_id[i_section]);
-
-    shifted_section_distrib[i_section+1] = shifted_section_distrib[i_section] + section_distrib[n_rank];
-
-    n_elt2 += section_distrib[i_rank+1] - section_distrib[i_rank];
+    int n_elt = PDM_DMesh_nodal_section_n_elt_get(isos->dmesh_nodal, geom_kind_parent, sections_id[i_section]);
+    local_section_idx[i_section+1] = local_section_idx[i_section] + n_elt;
   }
 
+  int n_elt2 = local_section_idx[n_section]; // total number of elements on i_rank
+
+  // Compute element distribution (all sections combined)
+  PDM_g_num_t *all_elt_distrib = PDM_compute_entity_distribution(isos->comm, n_elt2);
 
   /**
    * Transform parent_gnum element into triplet
@@ -2853,40 +2851,21 @@ _build_ptp_dist_nodal
   int *iso_parent_trplt = NULL;
   PDM_malloc(iso_parent_trplt, 3*n_parent, int);
   for (int i_parent=0; i_parent<n_parent; ++i_parent) {
-    // First, get section
     PDM_g_num_t gnum = iso_parent_gnum[i_parent]-1;
-    int i_section = PDM_binary_search_gap_long(gnum,
-                                               shifted_section_distrib,
-                                               n_section + 1);
+    // First, get rank
+    int rank = PDM_binary_search_gap_long(gnum,
+                                          all_elt_distrib,
+                                          n_rank + 1);
 
-    if (i_section < 0) {
-      log_trace("failed to find "PDM_FMT_G_NUM" in ", gnum+1);
-      PDM_log_trace_array_long(shifted_section_distrib, n_section+1, "");
-    }
+    // Second, get local ID in that rank
+    int lnum = gnum - all_elt_distrib[rank];
 
-    // Second, get proc
-    const PDM_g_num_t *section_distrib = PDM_DMesh_nodal_distrib_section_get(isos->dmesh_nodal,
-                                                                             geom_kind_parent,
-                                                                             sections_id[i_section]);
-    gnum -= shifted_section_distrib[i_section];
-    int iproc = PDM_binary_search_gap_long(gnum,
-                                           section_distrib,
-                                           n_rank + 1);
-
-    // Third, get lnum in that section of that proc
-    int lnum = gnum - section_distrib[iproc];
-    for (int j_section = 0; j_section < i_section; j_section++) {
-      const PDM_g_num_t *_section_distrib = PDM_DMesh_nodal_distrib_section_get(isos->dmesh_nodal,
-                                                                                geom_kind_parent,
-                                                                                sections_id[i_section]);
-      lnum += _section_distrib[iproc+1] - _section_distrib[iproc];
-    }
-
-    iso_parent_trplt[3*i_parent  ] = iproc;
+    iso_parent_trplt[3*i_parent  ] = rank;
     iso_parent_trplt[3*i_parent+1] = 0;
     iso_parent_trplt[3*i_parent+2] = lnum;
   }
-  PDM_free(shifted_section_distrib);
+  PDM_free(local_section_idx);
+  PDM_free(all_elt_distrib);
 
   _iso->iso_ptp[entity_type] = PDM_part_to_part_create_from_num2_triplet((const PDM_g_num_t **)&iso_gnum,
                                                                          (const int         * )&iso_n_entity,
