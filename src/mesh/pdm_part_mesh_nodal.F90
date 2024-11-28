@@ -25,6 +25,14 @@ module PDM_part_mesh_nodal
 
   implicit none
 
+  interface PDM_part_mesh_nodal_sections_id_in_geom_kind_get ; module procedure &
+  PDM_part_mesh_nodal_sections_id_in_geom_kind_get_
+  end interface
+
+  interface PDM_part_mesh_nodal_section_in_geom_kind_elt_type_get ; module procedure &
+  PDM_part_mesh_nodal_section_in_geom_kind_elt_type_get_
+  end interface
+
   interface PDM_part_mesh_nodal_section_n_elt_get ; module procedure &
   PDM_part_mesh_nodal_section_n_elt_get_
   end interface
@@ -56,6 +64,78 @@ module PDM_part_mesh_nodal
   private :: PDM_part_mesh_nodal_section_elt_type_get_
 
   interface
+
+    !>
+    !! \brief  Return number of sections in a specific geometry kind
+    !!
+    !! \param [in]  pmn        Pointer to \ref PDM_part_mesh_nodal_t object
+    !! \param [in]  geom_kind  Geometry kind (corner, ridge, surface or volume)
+    !!
+    !! \return  Number of sections
+    !!
+    !!
+
+    function PDM_part_mesh_nodal_n_section_in_geom_kind_get(pmn,       &
+                                                            geom_kind) &
+    result(n_section) &
+    bind (c, name='PDM_part_mesh_nodal_n_section_in_geom_kind_get')
+      use iso_c_binding
+      implicit none
+
+      type(c_ptr),    value :: pmn
+      integer(c_int), value :: geom_kind
+      integer(c_int)        :: n_section
+
+    end function PDM_part_mesh_nodal_n_section_in_geom_kind_get
+
+    !>
+    !! \brief  Return ids of sections in a specific geometry kind
+    !!
+    !! \param [in]  pmn        Pointer to \ref PDM_part_mesh_nodal_t object
+    !! \param [in]  geom_kind  Geometry kind (corner, ridge, surface or volume)
+    !!
+    !! \return  Ids of sections
+    !!
+    !!
+
+    function PDM_part_mesh_nodal_sections_id_in_geom_kind_get_cf(pmn,       &
+                                                                 geom_kind) &
+    result(sections_id) &
+    bind (c, name='PDM_part_mesh_nodal_sections_id_in_geom_kind_get')
+      use iso_c_binding
+      implicit none
+
+      type(c_ptr),    value :: pmn
+      integer(c_int), value :: geom_kind
+      type(c_ptr)           :: sections_id
+
+    end function PDM_part_mesh_nodal_sections_id_in_geom_kind_get_cf
+
+    !>
+    !! \brief  Return type of section
+    !!
+    !! \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
+    !! \param [in]  geom_kind    Geometry kind (corner, ridge, surface or volume)
+    !! \param [in]  id_section   Section identifier
+    !!
+    !! \return  Type of section
+    !!
+    !!
+
+    function PDM_part_mesh_nodal_section_in_geom_kind_elt_type_get_cf(pmn,        &
+                                                                      geom_kind,  &
+                                                                      id_section) &
+    result(elt_type) &
+    bind (c, name='PDM_part_mesh_nodal_section_in_geom_kind_elt_type_get')
+      use iso_c_binding
+      implicit none
+
+      type(c_ptr),    value :: pmn
+      integer(c_int), value :: geom_kind
+      integer(c_int), value :: id_section
+      integer(c_int)        :: elt_type
+
+    end function PDM_part_mesh_nodal_section_in_geom_kind_elt_type_get_cf
 
     !>
     !! \brief  Add a new section to the current mesh
@@ -262,7 +342,48 @@ module PDM_part_mesh_nodal
 
   contains
 
+    subroutine PDM_part_mesh_nodal_sections_id_in_geom_kind_get_(pmn,       &
+                                                                 geom_kind, &
+                                                                 sections_id)
+      use iso_c_binding
+      implicit none
 
+      type(c_ptr), value   :: pmn
+      integer, intent(in)  :: geom_kind
+      integer, pointer :: sections_id(:)
+
+      type(c_ptr) :: c_sections_id
+      integer :: n_section
+
+      n_section = PDM_part_mesh_nodal_n_section_in_geom_kind_get(pmn, &
+                                                                 geom_kind)
+
+      c_sections_id = PDM_part_mesh_nodal_sections_id_in_geom_kind_get_cf(pmn, &
+                                                                          geom_kind)
+
+      call c_f_pointer(c_sections_id, &
+                       sections_id,   &
+                       [n_section])
+
+    end subroutine PDM_part_mesh_nodal_sections_id_in_geom_kind_get_
+
+    subroutine PDM_part_mesh_nodal_section_in_geom_kind_elt_type_get_(pmn,        &
+                                                                      geom_kind,  &
+                                                                      id_section, &
+                                                                      elt_type)
+      use iso_c_binding
+      implicit none
+
+      type(c_ptr), value   :: pmn
+      integer, intent(in)  :: geom_kind
+      integer, intent(in)  :: id_section
+      integer              :: elt_type
+
+      elt_type = PDM_part_mesh_nodal_section_in_geom_kind_elt_type_get_cf(pmn,       &
+                                                                          geom_kind, &
+                                                                          id_section)
+
+    end subroutine PDM_part_mesh_nodal_section_in_geom_kind_elt_type_get_
 
     subroutine PDM_part_mesh_nodal_section_n_elt_get_(pmn,       &
                                                       i_section, &
