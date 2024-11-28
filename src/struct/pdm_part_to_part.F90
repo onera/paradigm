@@ -665,8 +665,8 @@ subroutine PDM_part_to_part_reverse_iexch (ptp,              &
                                     n_part1, &
                                     n_part2)
 
-  allocate(length_stride(n_part2))
-  allocate(length_data(n_part2))
+  allocate(length_stride(n_part1))
+  allocate(length_data(n_part1))
 
   if (t_stride .eq. PDM_STRIDE_VAR_INTERLACED) then
     do i = 1, n_part1
