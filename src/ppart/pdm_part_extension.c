@@ -6133,7 +6133,7 @@ _part_extension_1d
         pedge_vtx_idx [lpart][i_edge] = 2 * i_edge;
       }
 
-      for(int idx = 0; idx < pedge_vtx_idx[i_part][pn_edge[lpart]]; ++idx) {
+      for(int idx = 0; idx < pedge_vtx_idx[lpart][pn_edge[lpart]]; ++idx) {
         pedge_vtx [lpart][idx] = part_ext->parts[i_domain][i_part].edge_vtx[idx];
       }
 
