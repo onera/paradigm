@@ -4,7 +4,7 @@ Iso-surfaces
 ============
 
 **pdm_isosurface** provides a distributed and partitioned API for isosurface mesh generation
-from 2D or 3D meshes. Entry mesh can be defined through a **nodal mesh** (volumic and boudaries elements)
+from 2D or 3D meshes. Entry mesh can be defined through a **nodal mesh** (volumic and boundaries elements)
 or a **mesh** (cell, face, (edge) and vertices connectivities description). Depending of entry, algorithm won't be the same.
 
 If entry mesh is a nodal mesh fully composed of tetrahedras and triangles, a edge based variation of
@@ -108,8 +108,7 @@ Partitioned
 .. doxygenfunction:: PDM_isosurface_ln_to_gn_get
 .. doxygenfunction:: PDM_isosurface_group_get
 .. doxygenfunction:: PDM_isosurface_local_parent_get
-.. doxygenfunction:: PDM_isosurface_parent_gnum_get
-.. doxygenfunction:: PDM_isosurface_vtx_parent_weight_get
+.. doxygenfunction:: PDM_isosurface_parent_weight_get
 .. doxygenfunction:: PDM_isosurface_isovalue_entity_idx_get
 
 Block-distributed
@@ -119,14 +118,13 @@ Block-distributed
 .. doxygenfunction:: PDM_isosurface_dconnectivity_get
 .. doxygenfunction:: PDM_isosurface_dvtx_coord_get
 .. doxygenfunction:: PDM_isosurface_dgroup_get
-.. doxygenfunction:: PDM_isosurface_dvtx_parent_weight_get
+.. doxygenfunction:: PDM_isosurface_dparent_weight_get
 
 Communication graphs
 ~~~~~~~~~~~~~~~~~~~~
 
 .. doxygenfunction:: PDM_isosurface_part_to_part_enable
 .. doxygenfunction:: PDM_isosurface_part_to_part_get
-.. doxygenfunction:: PDM_isosurface_dvtx_protocol_get
 
 
 Finalization
@@ -159,14 +157,73 @@ Python API
 
   .. py:class:: Isosurface
 
-  Python structure to perform isosurface and slice construction. Once initialized, all the following
-  methods apply to a :class:`Isosurface` instance.
+    Python structure to perform isosurface and slice construction. Once initialized, all the following
+    methods apply to a :class:`Isosurface` instance.
 
-  .. rubric:: Initialization
+    .. rubric:: Initialization
 
     .. autofunction:: Pypdm.Pypdm.Isosurface.__init__
 
-    .. rubric:: Instance attributes
+    .. rubric:: Isosurface general inputs
+
+    .. automethod:: Pypdm.Pypdm.Isosurface.tolerance_set
+    .. automethod:: Pypdm.Pypdm.Isosurface.add
+    .. automethod:: Pypdm.Pypdm.Isosurface.isovalues_set
+    .. automethod:: Pypdm.Pypdm.Isosurface.equation_set
+    .. automethod:: Pypdm.Pypdm.Isosurface.field_function_set
+    .. automethod:: Pypdm.Pypdm.Isosurface.compute
+    .. automethod:: Pypdm.Pypdm.Isosurface.reset
+    .. automethod:: Pypdm.Pypdm.Isosurface.part_to_part_enable
+
+    .. rubric:: Partitioned source mesh definition
+
+    .. automethod:: Pypdm.Pypdm.Isosurface.mesh_n_part_set
+    .. automethod:: Pypdm.Pypdm.Isosurface.n_part_out_set
+    .. automethod:: Pypdm.Pypdm.Isosurface.connectivity_set
+    .. automethod:: Pypdm.Pypdm.Isosurface.coordinates_set
+    .. automethod:: Pypdm.Pypdm.Isosurface.ln_to_gn_set
+    .. automethod:: Pypdm.Pypdm.Isosurface.group_set
+    .. automethod:: Pypdm.Pypdm.Isosurface.part_mesh_set
+    .. automethod:: Pypdm.Pypdm.Isosurface.part_mesh_nodal_set
+    .. automethod:: Pypdm.Pypdm.Isosurface.redistribution_set
+    .. automethod:: Pypdm.Pypdm.Isosurface.field_set
+
+    .. rubric:: Distributed source mesh definition
+
+    .. automethod:: Pypdm.Pypdm.Isosurface.dconnectivity_set
+    .. automethod:: Pypdm.Pypdm.Isosurface.dcoordinates_set
+    .. automethod:: Pypdm.Pypdm.Isosurface.distribution_set
+    .. automethod:: Pypdm.Pypdm.Isosurface.dgroup_set
+    .. automethod:: Pypdm.Pypdm.Isosurface.dmesh_set
+    .. automethod:: Pypdm.Pypdm.Isosurface.dmesh_nodal_set
+    .. automethod:: Pypdm.Pypdm.Isosurface.dfield_set
+
+    .. rubric:: Partitioned output mesh get
+
+    .. automethod:: Pypdm.Pypdm.Isosurface.connectivity_get
+    .. automethod:: Pypdm.Pypdm.Isosurface.coordinates_get
+    .. automethod:: Pypdm.Pypdm.Isosurface.ln_to_gn_get
+    .. automethod:: Pypdm.Pypdm.Isosurface.group_get
+    .. automethod:: Pypdm.Pypdm.Isosurface.parent_lnum_get
+    .. automethod:: Pypdm.Pypdm.Isosurface.parent_weight_get
+    .. automethod:: Pypdm.Pypdm.Isosurface.isovalue_idx_get
+    .. automethod:: Pypdm.Pypdm.Isosurface.parent_weight_get
+
+    .. rubric:: Distributed output mesh get
+
+    .. automethod:: Pypdm.Pypdm.Isosurface.dconnectivity_get
+    .. automethod:: Pypdm.Pypdm.Isosurface.dcoordinates_get
+    .. automethod:: Pypdm.Pypdm.Isosurface.distribution_get
+    .. automethod:: Pypdm.Pypdm.Isosurface.dgroup_get
+    .. automethod:: Pypdm.Pypdm.Isosurface.dparent_weight_get
+    .. automethod:: Pypdm.Pypdm.Isosurface.disovalue_entity_get
+
+    .. rubric:: General output
+
+    .. automethod:: Pypdm.Pypdm.Isosurface.part_to_part_get
+    .. automethod:: Pypdm.Pypdm.Isosurface.dump_times
+
+
 
 
 .. ifconfig:: enable_python_doc == 'OFF'

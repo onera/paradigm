@@ -278,8 +278,7 @@ cdef class Isosurface:
   # ************************************************************************
 
   # > Common setter API
-  def __cinit__(self, int      mesh_dim, 
-                      MPI.Comm comm):
+  def __init__(self, int mesh_dim, MPI.Comm comm):
     """
     Isosurface(mesh_dim, comm)
 
@@ -311,7 +310,7 @@ cdef class Isosurface:
 
   def tolerance_set(self, tolerance):
     """
-    set_tolerance(tolerance)
+    tolerance_set(tolerance)
 
     Set isosurface tolerance. May improve resulting mesh quality.
 
@@ -437,7 +436,7 @@ cdef class Isosurface:
 
   def n_part_out_set(self, n_part_out):
     """
-    n_part_out(n_part)
+    n_part_out_set(n_part)
 
     Set the number of partitions in the isosurface mesh (Optional).
 
@@ -529,8 +528,7 @@ cdef class Isosurface:
       NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] group_entity,
       NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] group_ln_to_gn):
     """
-    group_set(i_part, entity_type,
-              group_entity_idx, group_entity, group_ln_to_gn)
+    group_set(i_part, entity_type, group_entity_idx, group_entity, group_ln_to_gn)
 
     Set partition groups.
 
@@ -566,6 +564,8 @@ cdef class Isosurface:
     part_mesh_set(part_mesh)
 
     Set PDM_part_mesh.
+
+    .. warning:: Not implemented yet.
 
     Parameters:
       part_mesh (PDM_part_mesh) : PDM_part_mesh
@@ -862,7 +862,7 @@ cdef class Isosurface:
 
     Get entity_type PDM_part_to_part between entry partitioned mesh and isosurface.
 
-    .. note:: .. warning:: This function must be called prior to :py:func:`compute`
+    .. note:: This function must be called prior to :py:func:`compute`
 
     Parameters:
       id_iso      (int)                 : Isosurface id
