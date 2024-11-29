@@ -449,6 +449,10 @@ PDM_isosurface_redistribution_set
  PDM_split_dual_t         part_method
 )
 {
+  /**
+   * When unify_parent_info will be implemented, if LOCAL the parent won't be unified
+   * because it is LOCAL.
+   */
   CHECK_IS_NOT_DIST(isos);
  
   isos->extract_kind = extract_kind;

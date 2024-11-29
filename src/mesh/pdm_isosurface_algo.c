@@ -3591,12 +3591,10 @@ PDM_isosurface_ngon_algo
 )
 {
   /**
-   * TODO (à discuter avec mon rayon de soleil):
-   *   - isoler et factoriser tronc commun 2d/3d
-   *   - gérer 2d:
-   *     - trianguler faces (besoin de face_vtx, garder les edges ou juste les actives?)
-   *     - factoriser avec contouring_triangles
+   * Warning: Due to algorithm itself, it may be unable to generate isosurface mesh elements
+   *   if the wanted isosurface is totally or partially passing on mesh boundary.
    */
+
   int measure_time = 0;
   int debug_visu   = 0;
   double t_start, t_end;

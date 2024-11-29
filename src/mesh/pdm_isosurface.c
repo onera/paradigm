@@ -3889,6 +3889,9 @@ PDM_isosurface_part_to_part_enable
    * TODO:
    *  - unify_parent_info : allow demanding user to ask to get all parent over all procs (not urgent)
    *      - build additional ptp to get info
+   * 
+   * Warning: When unify_parent_info will be implemented, if LOCAL the parent won't be unified
+   *   because it is LOCAL.
    */
   PDM_ISOSURFACE_CHECK_ID(isos, id_isosurface);
 
