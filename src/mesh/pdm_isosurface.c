@@ -48,6 +48,7 @@
 
 #include "pdm_part_to_block.h"
 #include "pdm_multipart.h"
+#include "pdm_part_mesh_nodal_priv.h"
 
 #include "pdm_isosurface.h"
 #include "pdm_isosurface_priv.h"
@@ -74,14 +75,14 @@ extern "C" {
  *============================================================================*/
 
 static const char *_isosurface_timer_step_name[ISO_TIMER_N_STEPS] = {
-  "dist to part ", // ISO_DIST_TO_PART
-  "initial field", // ISO_COMPUTE_INIT_FIELD
-  "extract mesh ", // ISO_EXTRACT
-  "ngonize      ", // ISO_NGONIZE
-  "extract field", // ISO_COMPUTE_EXTRACT_FIELD
-  "contouring   ", // ISO_CONTOURING
-  "part to dist ", // ISO_PART_TO_DIST
-  "exch protocol", // ISO_BUILD_EXCH_PROTOCOL
+  "dist to part ", // ISO_TIMER_DIST_TO_PART
+  "initial field", // ISO_TIMER_COMPUTE_INIT_FIELD
+  "extract mesh ", // ISO_TIMER_EXTRACT
+  "ngonize      ", // ISO_TIMER_NGONIZE
+  "extract field", // ISO_TIMER_COMPUTE_EXTRACT_FIELD
+  "contouring   ", // ISO_TIMER_CONTOURING
+  "part to dist ", // ISO_TIMER_PART_TO_DIST
+  "exch protocol", // ISO_TIMER_BUILD_EXCH_PROTOCOL
   "total        "  // ISO_TIMER_TOTAL
 };
 
@@ -306,6 +307,7 @@ _do_we_have_edges
     for (int i_part = 0; i_part < isos->n_part; i_part++) {
 
       if (isos->n_face[i_part] == 0) {
+        log_trace("I have zeros faces in part %d\n", i_part);
         continue;
       }
 
@@ -328,6 +330,13 @@ _do_we_have_edges
     int we_have_face_vtx;
     PDM_MPI_Allreduce(&i_have_face_vtx, &we_have_face_vtx, 1, PDM_MPI_INT, PDM_MPI_MAX, isos->comm);
     if (!we_have_face_vtx) {
+      int i_rank;
+      PDM_MPI_Comm_rank(isos->comm, &i_rank);
+      if (i_rank == 0) {
+        printf("Aïe aïe aïe\n");
+        fflush(stdout);
+      }
+      PDM_MPI_Barrier(isos->comm);
       PDM_error(__FILE__, __LINE__, 0, "Either face->vtx or {face->edge, edge->vtx} connectivities must be provided\n");
     }
   }
@@ -940,6 +949,45 @@ _convert_group_info_to_tag
 }
 
 
+static void
+_stats_extract_part
+(
+  PDM_MPI_Comm  comm,
+  int           n_part,
+  int          *n_extract
+)
+{
+  int i_rank;
+  int n_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+
+  int n = 0;
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    n += n_extract[i_part];
+  }
+
+  int *all_n = NULL;
+  if (i_rank == 0) {
+    PDM_malloc(all_n, n_rank, int);
+  }
+  PDM_MPI_Gather(&n, 1, PDM_MPI_INT, all_n, 1, PDM_MPI_INT, 0, comm);
+
+
+  if (i_rank == 0) {
+    char name[999];
+    sprintf(name, "stats_extract_part_np%d.txt", n_rank);
+    FILE *f = fopen(name, "w");
+    for (int i = 0; i < n_rank; i++) {
+      fprintf(f, "%d\n", all_n[i]);
+    }
+    fclose(f);
+
+    PDM_free(all_n);
+  }
+}
+
+
 /**
  * \brief Extract nodal elements of interest
  */
@@ -961,13 +1009,42 @@ _extract_nodal
                                         PDM_OWNERSHIP_KEEP,
                                         isos->comm);
 
+  PDM_part_mesh_nodal_t *pmn = isos->pmesh_nodal;
+
   // TODO: strip pmn of its ridges & corners since we don't care about them?
-  PDM_extract_part_part_nodal_set(isos->extrp, isos->pmesh_nodal);
+  int ignore_ridges_and_corners = 1;
+  if (ignore_ridges_and_corners) {
+    pmn = PDM_part_mesh_nodal_create(isos->entry_mesh_dim,
+                                     isos->n_part,
+                                     isos->comm);
+
+    for (int i_part = 0; i_part < isos->n_part; i_part++) {
+      int          n_vtx     = PDM_part_mesh_nodal_n_vtx_get    (isos->pmesh_nodal, i_part);
+      double      *vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(isos->pmesh_nodal, i_part);
+      PDM_g_num_t *vtx_g_num = PDM_part_mesh_nodal_vtx_g_num_get(isos->pmesh_nodal, i_part);
+      PDM_part_mesh_nodal_coord_set(pmn,
+                                    i_part,
+                                    n_vtx,
+                                    vtx_coord,
+                                    vtx_g_num,
+                                    PDM_OWNERSHIP_USER);
+    }
+
+    if (isos->entry_mesh_dim == 3) {
+      PDM_part_mesh_nodal_elmts_t *pmne_vol = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(isos->pmesh_nodal, PDM_GEOMETRY_KIND_VOLUMIC);
+      PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmne_vol);
+    }
+    PDM_part_mesh_nodal_elmts_t *pmne_surf = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(isos->pmesh_nodal, PDM_GEOMETRY_KIND_SURFACIC);
+    PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmne_surf);
+  }
+
+  PDM_extract_part_part_nodal_set(isos->extrp, pmn);
 
   // Get principal pmne
-  PDM_geometry_kind_t geom_kind = PDM_part_mesh_nodal_principal_geom_kind_get(isos->pmesh_nodal);
+  PDM_geometry_kind_t geom_kind = PDM_part_mesh_nodal_principal_geom_kind_get(pmn);
 
-  PDM_part_mesh_nodal_elmts_t *pmne = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(isos->pmesh_nodal, geom_kind);
+  PDM_part_mesh_nodal_elmts_t *pmne = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(pmn,
+                                                                                    geom_kind);
 
   int  n_section   = PDM_part_mesh_nodal_elmts_n_section_get  (pmne);
   int *sections_id = PDM_part_mesh_nodal_elmts_sections_id_get(pmne);
@@ -1201,6 +1278,12 @@ _extract_nodal
 
   } // End loop on parts
 
+  if (1) {
+    _stats_extract_part(isos->comm,
+                        isos->n_part,
+                        n_extract);
+  }
+
   // if (isos->entry_mesh_dim == 3) {
   //   PDM_part_mesh_nodal_dump_vtk(isos->pmesh_nodal, PDM_GEOMETRY_KIND_VOLUMIC,  "init_vol");
   // }
@@ -1240,6 +1323,21 @@ _extract_nodal
     PDM_free(extract_lnum);
   }
   PDM_free(n_extract);
+
+  if (ignore_ridges_and_corners) {
+    for (int i_part = 0; i_part < isos->n_part; i_part++) {
+      PDM_free(pmn->vtx[i_part]);
+    }
+    PDM_free(pmn->vtx);
+    PDM_free(pmn->n_vol   );
+    PDM_free(pmn->n_surf  );
+    PDM_free(pmn->n_ridge );
+    PDM_free(pmn->n_corner);
+    PDM_free(pmn->section_kind);
+    PDM_free(pmn->section_id);
+    PDM_free(pmn);
+    // PDM_part_mesh_nodal_free(pmn);
+  }
 
   // for (int i_part = 0; i_part < isos->n_part; i_part++) {
   //   PDM_free(extract_lnum[i_part]);
@@ -1443,6 +1541,12 @@ _extract_ngon
                                         isos->group_face_gnum[i_part] + isos->group_face_idx[i_part][i_group]);
       }
     }
+  }
+
+  if (1) {
+    _stats_extract_part(isos->comm,
+                        isos->n_part,
+                        n_extract);
   }
 
   PDM_extract_part_compute(isos->extrp);

@@ -252,6 +252,24 @@ PDM_isosurface_test_utils_part_vtk
 );
 
 
+/**
+ *
+ * \brief Get isosurface size (part or dist (n_part <= 0))
+ *
+ */
+
+void
+PDM_isosurface_test_utils_isosurface_size_get
+(
+  PDM_isosurface_t   *isos,
+  int                 id_iso,
+  int                 n_part,
+  PDM_g_num_t        *gn_iso_vtx,
+  PDM_g_num_t        *gn_iso_edge,
+  PDM_g_num_t        *gn_iso_face,
+  PDM_MPI_Comm        comm
+);
+
 #ifdef  __cplusplus
 }
 #endif

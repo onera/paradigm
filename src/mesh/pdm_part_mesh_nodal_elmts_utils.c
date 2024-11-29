@@ -1630,7 +1630,7 @@ PDM_part_mesh_nodal_elmts_compute_child_parent
                       int                         ***,
                       int                         ***,
                       int                         ***,
-                      int                         ***);
+                      int                         ***) = NULL;
 
   switch (dim_child) {
     case 2: {

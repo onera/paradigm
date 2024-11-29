@@ -132,8 +132,12 @@ _eval_julia4d
   const int return_it
 )
 {
-  const int max_iter = 10;//20;
-  double  q[4] = {x, y, z, 0};
+  const int max_iter = 20;
+
+  double transl[3] = {-0.5,-0.5,-0.5};
+  double scale     = 2;
+
+  double  q[4] = {scale*(x+transl[0]), scale*(y+transl[1]), scale*(z+transl[2]), 0};
   double dq[4] = {1, 0, 0, 0};
 
   int stat = _julia_iterations(q, dq, c, max_iter);
@@ -242,6 +246,37 @@ _eval_cos
 {
   PDM_UNUSED(x);
   return cos(5.*(y + z));
+}
+
+
+static PDM_g_num_t
+_gn_entity_compute
+(
+ PDM_isosurface_t    *isos,
+ int                  id_iso,
+ int                  n_part,
+ PDM_mesh_entities_t  entity_type,
+ PDM_MPI_Comm         comm
+)
+{
+  PDM_g_num_t lmax = 0;
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    PDM_g_num_t *ln_to_gn;
+    int n_entity = PDM_isosurface_ln_to_gn_get(isos,
+                                               id_iso,
+                                               i_part,
+                                               entity_type,
+                                              &ln_to_gn,
+                                               PDM_OWNERSHIP_KEEP);
+    for (int i = 0; i < n_entity; i++) {
+      lmax = PDM_MAX(lmax, ln_to_gn[i]);
+    }
+  }
+
+  PDM_g_num_t gmax;
+  PDM_MPI_Allreduce(&lmax, &gmax, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, comm);
+
+  return gmax;
 }
 
 
@@ -980,12 +1015,12 @@ PDM_isosurface_test_utils_compute_iso_field
     double z = vtx_coord[3*i_vtx+2];
     int    ite = 0;
     if (1) {
-      vtx_field[i_vtx] = _eval_distance(x,y,z,ctr)-0.3;
+      vtx_field[i_vtx] = _eval_julia4d(x,y,z,c4d,ite);
     }
     else {
+      vtx_field[i_vtx] = _eval_distance(x,y,z,ctr)-0.3;
       vtx_field[i_vtx] = _eval_julia4d(x,y,z,c2d,ite);
       vtx_field[i_vtx] = _eval_julia4d(x,y,z,c2d,ite);
-      vtx_field[i_vtx] = _eval_julia4d(x,y,z,c4d,ite);
       vtx_field[i_vtx] = _eval_cos(x,y,z);
       vtx_field[i_vtx] = _eval_mandelbrot(x,y,z);
     }
@@ -1817,6 +1852,44 @@ PDM_isosurface_test_utils_part_vtk
 
 }
 
+
+void
+PDM_isosurface_test_utils_isosurface_size_get
+(
+  PDM_isosurface_t   *isos,
+  int                 id_iso,
+  int                 n_part,
+  PDM_g_num_t        *gn_iso_vtx,
+  PDM_g_num_t        *gn_iso_edge,
+  PDM_g_num_t        *gn_iso_face,
+  PDM_MPI_Comm        comm
+)
+{
+  int i_rank;
+  int n_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_rank(comm, &n_rank);
+
+  if (n_part > 0) {
+    *gn_iso_vtx  = _gn_entity_compute(isos, id_iso, n_part, PDM_MESH_ENTITY_VTX,  comm);
+    *gn_iso_edge = _gn_entity_compute(isos, id_iso, n_part, PDM_MESH_ENTITY_EDGE, comm);
+    *gn_iso_face = _gn_entity_compute(isos, id_iso, n_part, PDM_MESH_ENTITY_FACE, comm);
+
+  }
+  else {
+    PDM_g_num_t *distrib = NULL;
+
+    PDM_isosurface_distrib_get(isos, id_iso, PDM_MESH_ENTITY_VTX, &distrib);
+    *gn_iso_vtx = distrib[n_rank];
+
+    PDM_isosurface_distrib_get(isos, id_iso, PDM_MESH_ENTITY_EDGE, &distrib);
+    *gn_iso_edge = distrib[n_rank];
+
+    PDM_isosurface_distrib_get(isos, id_iso, PDM_MESH_ENTITY_FACE, &distrib);
+    *gn_iso_face = distrib[n_rank];
+  }
+
+}
 
 #ifdef  __cplusplus
 }

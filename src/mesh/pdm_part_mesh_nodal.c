@@ -131,15 +131,15 @@ PDM_part_mesh_nodal_create
 )
 {
   PDM_part_mesh_nodal_t *pmn;
-  PDM_malloc(pmn,1,PDM_part_mesh_nodal_t);
+  PDM_malloc(pmn, 1, PDM_part_mesh_nodal_t);
 
   pmn->comm           = comm;
   pmn->mesh_dimension = mesh_dimension;
   pmn->n_part         = n_part;
 
-  PDM_malloc(pmn->vtx,n_part ,PDM_Mesh_nodal_vtx_t *);
+  PDM_malloc(pmn->vtx, n_part, PDM_Mesh_nodal_vtx_t *);
   for (int i = 0; i < n_part; i++) {
-    PDM_malloc(pmn->vtx[i],1,PDM_Mesh_nodal_vtx_t);
+    PDM_malloc(pmn->vtx[i], 1, PDM_Mesh_nodal_vtx_t);
     pmn->vtx[i]->_coords    = NULL;
     pmn->vtx[i]->_numabs    = NULL;
     pmn->vtx[i]->_numparent = NULL;
@@ -161,8 +161,8 @@ PDM_part_mesh_nodal_create
 
   pmn->s_section = 10;
   pmn->n_section = 0;
-  PDM_malloc(pmn->section_kind,pmn->s_section,PDM_geometry_kind_t);
-  PDM_malloc(pmn->section_id,pmn->s_section,int                );
+  PDM_malloc(pmn->section_kind, pmn->s_section, PDM_geometry_kind_t);
+  PDM_malloc(pmn->section_id,   pmn->s_section, int                );
 
   return pmn;
 }

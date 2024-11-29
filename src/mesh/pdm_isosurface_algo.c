@@ -2305,6 +2305,10 @@ _trace_isopolygon_in_cell
 }
 
 
+/**
+ * Implementation of the contouring algotrithm presented in
+ * "A new isosurface extraction method on arbitrary grids", López et al., JCP, (2021)
+ */
 static void
 _isosurface_ngon_single_part
 (

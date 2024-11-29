@@ -64,6 +64,26 @@ extern "C" {
  * Private function definitions
  *============================================================================*/
 
+static void
+_dump_timer_step
+(
+  PDM_MPI_Comm  comm,
+  double        delta_t,
+  const char   *label
+ )
+{
+  double min_delta_t, max_delta_t;
+  PDM_MPI_Allreduce(&delta_t, &min_delta_t, 1, PDM_MPI_DOUBLE, PDM_MPI_MIN, comm);
+  PDM_MPI_Allreduce(&delta_t, &max_delta_t, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
+
+  int i_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  if (i_rank == 0) {
+    printf("EXTRACT_PART %s (min/max) : %12.5e / %12.5e\n", label, min_delta_t, max_delta_t);
+    fflush(stdout);
+  }
+}
+
 /**
  *
  * \brief Translate in _part_t structure (only mapping)
@@ -3990,6 +4010,7 @@ _extract_part_and_reequilibrate
   PDM_extract_part_t *extrp
 )
 {
+  double t_start, t_end;
   int i_rank;
   PDM_MPI_Comm_rank(extrp->comm, &i_rank);
 
@@ -4028,6 +4049,8 @@ _extract_part_and_reequilibrate
   /*
    *  Compute coordinates to setup hilbert ordering (independant of parallelism )
    */
+  PDM_MPI_Barrier(extrp->comm);
+  t_start = PDM_MPI_Wtime();
   double **entity_center = NULL;
   if(extrp->have_user_entity_center == 1) {
     PDM_malloc(entity_center, extrp->n_part_in, double * );
@@ -4142,11 +4165,16 @@ _extract_part_and_reequilibrate
   if (0 == 1) {
     PDM_log_trace_array_long(dequi_g_num, dn_equi, "dequi_g_num        : ");
   }
+  t_end = PDM_MPI_Wtime();
+  _dump_timer_step(extrp->comm, t_end - t_start, "ptb_geom           ");
+
 
   /*
    * Deduce a target gnum from graph librarie or directly with hilbert
    */
   if(extrp->split_dual_method == PDM_SPLIT_DUAL_WITH_HILBERT) {
+    PDM_MPI_Barrier(extrp->comm);
+    t_start = PDM_MPI_Wtime();
     /* Split blocks into parts of equal weight */
     PDM_g_num_t **pequi_gnum;
     int          *pn_equi;
@@ -4238,7 +4266,14 @@ _extract_part_and_reequilibrate
     }
     PDM_free(dequi_init_location);
 
+    t_end = PDM_MPI_Wtime();
+    _dump_timer_step(extrp->comm, t_end - t_start, "prepare_from_tgt   ");
+
+    PDM_MPI_Barrier(extrp->comm);
+    t_start = PDM_MPI_Wtime();
     _extract_part_and_reequilibrate_from_target(extrp);
+    t_end = PDM_MPI_Wtime();
+    _dump_timer_step(extrp->comm, t_end - t_start, "extrp_reeq_from_tgt");
 
     for (int i_part = 0; i_part < extrp->n_part_out; i_part++) {
       extrp->n_target       [i_part] = 0;
@@ -5899,6 +5934,7 @@ _extract_part_nodal
   PDM_extract_part_t *extrp
 )
 {
+  double t_start, t_end;
   int i_rank;
   PDM_MPI_Comm_rank(extrp->comm, &i_rank);
 
@@ -5994,11 +6030,15 @@ _extract_part_nodal
   int **is_selected[PDM_GEOMETRY_KIND_MAX];
 
   /* Determine selected elements of greatest dimension */
+  PDM_MPI_Barrier(extrp->comm);
+  t_start = PDM_MPI_Wtime();
   _warmup_extract_part_nodal_greatest_dimension(extrp,
                                                 geom_kind_parent,
                                                 pn_parent,
                                                 entity_g_num,
                                                &is_selected[geom_kind_parent]);
+  t_end = PDM_MPI_Wtime();
+  _dump_timer_step(extrp->comm, t_end - t_start, "warmup_greatest_dimension");
 
   /* Loop over geometry kinds, starting from greatest dimension */
   PDM_g_num_t **target_gnum = NULL;
@@ -6029,8 +6069,8 @@ _extract_part_nodal
       }
     }
 
-
-
+    PDM_MPI_Barrier(extrp->comm);
+    t_start = PDM_MPI_Wtime();
     if (geom_kind_child == geom_kind_parent) {
       /* Leading dimension */
       pmne_child = pmne_parent;
@@ -6380,6 +6420,11 @@ _extract_part_nodal
       PDM_free(target_gnum);
     }
 
+    t_end = PDM_MPI_Wtime();
+    char label[999];
+    sprintf(label, "extract geom_kind %d      ", geom_kind_child);
+    _dump_timer_step(extrp->comm, t_end - t_start, label);
+
   } // End loop on geometry kinds
 
 
@@ -6654,6 +6699,8 @@ PDM_extract_part_compute
      *  Ngon
      */
 
+    PDM_MPI_Barrier(extrp->comm);
+    double t_start = PDM_MPI_Wtime();
     // Determine which connecitivities were provided by the user
     int l_have_connectivity[PDM_CONNECTIVITY_TYPE_MAX];
     PDM_array_reset_int(l_have_connectivity, PDM_CONNECTIVITY_TYPE_MAX, 0);
@@ -6689,6 +6736,8 @@ PDM_extract_part_compute
 
     PDM_MPI_Allreduce(l_have_connectivity, extrp->have_connectivity,
                       PDM_CONNECTIVITY_TYPE_MAX, PDM_MPI_INT, PDM_MPI_MAX, extrp->comm);
+    double t_end = PDM_MPI_Wtime();
+    _dump_timer_step(extrp->comm, t_end - t_start, "have_connectivities");
 
     // Compute extraction
     switch (extrp->extract_kind) {
