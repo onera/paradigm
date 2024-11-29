@@ -49,19 +49,19 @@ def run(visu):
   isos.n_part_set(1)
 
   # Connectivities
-  isos.connectivity_set(0,
-                        PDM._PDM_CONNECTIVITY_TYPE_CELL_FACE,
-                        mesh["pcell_face_idx"][0],
-                        mesh["pcell_face"    ][0])
+  isos.pconnectivity_set(0,
+                         PDM._PDM_CONNECTIVITY_TYPE_CELL_FACE,
+                         mesh["pcell_face_idx"][0],
+                         mesh["pcell_face"    ][0])
 
-  isos.connectivity_set(0,
-                        PDM._PDM_CONNECTIVITY_TYPE_FACE_VTX,
-                        mesh["pface_edge_idx"][0],
-                        mesh["pface_vtx"     ][0])
+  isos.pconnectivity_set(0,
+                         PDM._PDM_CONNECTIVITY_TYPE_FACE_VTX,
+                         mesh["pface_edge_idx"][0],
+                         mesh["pface_vtx"     ][0])
 
   # Coordinates
-  isos.coordinates_set(0,
-                       mesh["pvtx_coord"][0])
+  isos.pcoordinates_set(0,
+                        mesh["pvtx_coord"][0])
 
   # Global IDs
   isos.ln_to_gn_set(0,
@@ -77,11 +77,11 @@ def run(visu):
                     mesh["pvtx_ln_to_gn"][0])
 
   # Groups
-  isos.group_set(0,
-                 PDM._PDM_MESH_ENTITY_FACE,
-                 mesh["psurface_face_idx"     ][0],
-                 mesh["psurface_face"         ][0],
-                 mesh["psurface_face_ln_to_gn"][0])
+  isos.pgroup_set(0,
+                  PDM._PDM_MESH_ENTITY_FACE,
+                  mesh["psurface_face_idx"     ][0],
+                  mesh["psurface_face"         ][0],
+                  mesh["psurface_face_ln_to_gn"][0])
 
   # Compute isosurface
   isos.compute(id_iso)
@@ -89,10 +89,10 @@ def run(visu):
 
   # Export isosurface
   if visu:
-    iso_vtx_coord    = isos.coordinates_get(id_iso, 0)
+    iso_vtx_coord    = isos.pcoordinates_get(id_iso, 0)
     iso_vtx_ln_to_gn = isos.ln_to_gn_get(id_iso, 0, PDM._PDM_MESH_ENTITY_VTX)
 
-    iso_face_vtx_idx, iso_face_vtx = isos.connectivity_get(id_iso, 0, PDM._PDM_CONNECTIVITY_TYPE_FACE_VTX)
+    iso_face_vtx_idx, iso_face_vtx = isos.pconnectivity_get(id_iso, 0, PDM._PDM_CONNECTIVITY_TYPE_FACE_VTX)
     iso_face_ln_to_gn = isos.ln_to_gn_get(id_iso, 0, PDM._PDM_MESH_ENTITY_FACE)
 
     PDM.writer_wrapper(comm,
