@@ -20,17 +20,17 @@ cdef extern from "pdm_isosurface.h":
   void PDM_isosurface_n_part_set(PDM_isosurface_t *isos,
                                  int               n_part);
 
-  void PDM_isosurface_connectivity_set(PDM_isosurface_t        *isos,
-                                       int                      i_part,
-                                       PDM_connectivity_type_t  connectivity_type,
-                                       int                      n_entity,
-                                       int                     *connect_idx,
-                                       int                     *connect);
+  void PDM_isosurface_pconnectivity_set(PDM_isosurface_t        *isos,
+                                        int                      i_part,
+                                        PDM_connectivity_type_t  connectivity_type,
+                                        int                      n_entity,
+                                        int                     *connect_idx,
+                                        int                     *connect);
 
-  void PDM_isosurface_vtx_coord_set(PDM_isosurface_t *isos,
-                                    int               i_part,
-                                    int               n_vtx,
-                                    double           *vtx_coord);
+  void PDM_isosurface_pvtx_coord_set(PDM_isosurface_t *isos,
+                                     int               i_part,
+                                     int               n_vtx,
+                                     double           *vtx_coord);
 
   void PDM_isosurface_ln_to_gn_set(PDM_isosurface_t    *isos,
                                    int                  i_part,
@@ -41,12 +41,12 @@ cdef extern from "pdm_isosurface.h":
                                   PDM_mesh_entities_t  entity_type,
                                   int                  n_group);
 
-  void PDM_isosurface_group_set(PDM_isosurface_t    *isos,
-                                int                  i_part,
-                                PDM_mesh_entities_t  entity_type,
-                                int                 *group_entity_idx,
-                                int                 *group_entity,
-                                PDM_g_num_t         *group_entity_ln_to_gn);
+  void PDM_isosurface_pgroup_set(PDM_isosurface_t    *isos,
+                                 int                  i_part,
+                                 PDM_mesh_entities_t  entity_type,
+                                 int                 *group_entity_idx,
+                                 int                 *group_entity,
+                                 PDM_g_num_t         *group_entity_ln_to_gn);
 
   void PDM_isosurface_part_mesh_set(PDM_isosurface_t *isos,
                                     PDM_part_mesh_t  *pmesh);
@@ -98,10 +98,10 @@ cdef extern from "pdm_isosurface.h":
   void isosurface_python_object_set(PDM_isosurface_t *isos,
                                     void             *python_object);
 
-  void PDM_isosurface_field_set(PDM_isosurface_t *isos,
-                                int               id_isosurface,
-                                int               i_part,
-                                double           *field);
+  void PDM_isosurface_pfield_set(PDM_isosurface_t *isos,
+                                 int               id_isosurface,
+                                 int               i_part,
+                                 double           *field);
 
   void PDM_isosurface_dfield_set(PDM_isosurface_t *isos,
                                  int               id_isosurface,
@@ -123,19 +123,19 @@ cdef extern from "pdm_isosurface.h":
   void PDM_isosurface_compute(PDM_isosurface_t *isos,
                               int               id_isosurface);
 
-  int PDM_isosurface_connectivity_get(PDM_isosurface_t         *isos,
-                                      int                       id_isosurface,
-                                      int                       i_part,
-                                      PDM_connectivity_type_t   connectivity_type,
-                                      int                     **connect_idx,
-                                      int                     **connect,
-                                      PDM_ownership_t           ownership);
+  int PDM_isosurface_pconnectivity_get(PDM_isosurface_t         *isos,
+                                       int                       id_isosurface,
+                                       int                       i_part,
+                                       PDM_connectivity_type_t   connectivity_type,
+                                       int                     **connect_idx,
+                                       int                     **connect,
+                                       PDM_ownership_t           ownership);
 
-  int PDM_isosurface_vtx_coord_get(PDM_isosurface_t  *isos,
-                                   int                id_isosurface,
-                                   int                i_part,
-                                   double           **vtx_coord,
-                                   PDM_ownership_t    ownership);
+  int PDM_isosurface_pvtx_coord_get(PDM_isosurface_t  *isos,
+                                    int                id_isosurface,
+                                    int                i_part,
+                                    double           **vtx_coord,
+                                    PDM_ownership_t    ownership);
 
   int PDM_isosurface_ln_to_gn_get(PDM_isosurface_t     *isos,
                                   int                   id_isosurface,
@@ -144,21 +144,21 @@ cdef extern from "pdm_isosurface.h":
                                   PDM_g_num_t         **ln_to_gn,
                                   PDM_ownership_t       ownership);
 
-  int PDM_isosurface_group_get(PDM_isosurface_t     *isos,
-                               int                   id_isosurface,
-                               int                   i_part,
-                               PDM_mesh_entities_t   entity_type,
-                               int                 **group_entity_idx,
-                               int                 **group_entity,
-                               PDM_g_num_t         **group_entity_ln_to_gn,
-                               PDM_ownership_t       ownership);
+  int PDM_isosurface_pgroup_get(PDM_isosurface_t     *isos,
+                                int                   id_isosurface,
+                                int                   i_part,
+                                PDM_mesh_entities_t   entity_type,
+                                int                 **group_entity_idx,
+                                int                 **group_entity,
+                                PDM_g_num_t         **group_entity_ln_to_gn,
+                                PDM_ownership_t       ownership);
 
-  int PDM_isosurface_isovalue_entity_idx_get(PDM_isosurface_t     *isos,
-                                             int                   id_isosurface,
-                                             int                   i_part,
-                                             PDM_mesh_entities_t   entity_type,
-                                             int                 **isovalue_entity_idx,
-                                             PDM_ownership_t       ownership);
+  int PDM_isosurface_pisovalue_entity_idx_get(PDM_isosurface_t     *isos,
+                                              int                   id_isosurface,
+                                              int                   i_part,
+                                              PDM_mesh_entities_t   entity_type,
+                                              int                 **isovalue_entity_idx,
+                                              PDM_ownership_t       ownership);
 
   int PDM_isosurface_dconnectivity_get(PDM_isosurface_t         *isos,
                                        int                       id_isosurface,
@@ -198,21 +198,21 @@ cdef extern from "pdm_isosurface.h":
                                           PDM_g_num_t         **disovalue_entity,
                                           PDM_ownership_t       ownership);
 
-  int PDM_isosurface_local_parent_get(PDM_isosurface_t     *isos,
-                                      int                   id_isosurface,
-                                      int                   i_part,
-                                      PDM_mesh_entities_t   entity_type,
-                                      int                 **entity_parent_idx,
-                                      int                 **entity_parent,
-                                      PDM_ownership_t       ownership);
-
-  int PDM_isosurface_parent_weight_get(PDM_isosurface_t     *isos,
+  int PDM_isosurface_plocal_parent_get(PDM_isosurface_t     *isos,
                                        int                   id_isosurface,
                                        int                   i_part,
                                        PDM_mesh_entities_t   entity_type,
-                                       int                 **parent_idx,
-                                       double              **parent_weight,
+                                       int                 **entity_parent_idx,
+                                       int                 **entity_parent,
                                        PDM_ownership_t       ownership);
+
+  int PDM_isosurface_pparent_weight_get(PDM_isosurface_t     *isos,
+                                        int                   id_isosurface,
+                                        int                   i_part,
+                                        PDM_mesh_entities_t   entity_type,
+                                        int                 **parent_idx,
+                                        double              **parent_weight,
+                                        PDM_ownership_t       ownership);
 
   void PDM_isosurface_part_to_part_enable(PDM_isosurface_t     *isos,
                                           int                   id_isosurface,
@@ -453,12 +453,12 @@ cdef class Isosurface:
     """
     PDM_isosurface_n_part_out_set(self._isos, n_part_out)
 
-  def connectivity_set(self,                     i_part,
-                                                 connectivity_type,
-      NPY.ndarray[NPY.int32_t, mode='c', ndim=1] connectivity_idx,
-      NPY.ndarray[NPY.int32_t, mode='c', ndim=1] connectivity):
+  def pconnectivity_set(self,                     i_part,
+                                                  connectivity_type,
+       NPY.ndarray[NPY.int32_t, mode='c', ndim=1] connectivity_idx,
+       NPY.ndarray[NPY.int32_t, mode='c', ndim=1] connectivity):
     """
-    connectivity_set(i_part, connectivity_type, connectivity_idx, connectivity)
+    pconnectivity_set(i_part, connectivity_type, connectivity_idx, connectivity)
 
     Set partition connectivity.
 
@@ -480,16 +480,16 @@ cdef class Isosurface:
     cdef int *connect_idx_data = np_to_int_pointer(connectivity_idx)
     cdef int *connect_data     = np_to_int_pointer(connectivity)
 
-    PDM_isosurface_connectivity_set(self._isos, i_part,
-                                    connectivity_type, 
-                                    n_entity,
-                                    connect_idx_data,
-                                    connect_data)
+    PDM_isosurface_pconnectivity_set(self._isos, i_part,
+                                     connectivity_type, 
+                                     n_entity,
+                                     connect_idx_data,
+                                     connect_data)
 
-  def coordinates_set(self,                       i_part,
-      NPY.ndarray[NPY.double_t, mode='c', ndim=1] coordinates):
+  def pcoordinates_set(self,                       i_part,
+       NPY.ndarray[NPY.double_t, mode='c', ndim=1] coordinates):
     """
-    coordinates_set(i_part, coordinates)
+    pcoordinates_set(i_part, coordinates)
 
     Set partition coordinates.
 
@@ -502,7 +502,7 @@ cdef class Isosurface:
     cdef int     n_vtx      = coordinates.size // 3
     cdef double *coord_data = np_to_double_pointer(coordinates)
 
-    PDM_isosurface_vtx_coord_set(self._isos, i_part, n_vtx, coord_data)
+    PDM_isosurface_pvtx_coord_set(self._isos, i_part, n_vtx, coord_data)
 
   def ln_to_gn_set(self,                            i_part,
                                                     entity_type,
@@ -524,13 +524,13 @@ cdef class Isosurface:
                                 entity_type, 
                                 ln_to_gn_data)
 
-  def group_set(self,                               i_part,
-                                                    entity_type,
-      NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] group_entity_idx,
-      NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] group_entity,
-      NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] group_ln_to_gn):
+  def pgroup_set(self,                               i_part,
+                                                     entity_type,
+       NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] group_entity_idx,
+       NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] group_entity,
+       NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] group_ln_to_gn):
     """
-    group_set(i_part, entity_type, group_entity_idx, group_entity, group_ln_to_gn)
+    pgroup_set(i_part, entity_type, group_entity_idx, group_entity, group_ln_to_gn)
 
     Set partition groups.
 
@@ -555,11 +555,11 @@ cdef class Isosurface:
                                entity_type,
                                n_group)
 
-    PDM_isosurface_group_set(self._isos, i_part,
-                             entity_type,
-                             group_entity_idx_data,
-                             group_entity_data,
-                             group_ln_to_gn_data)
+    PDM_isosurface_pgroup_set(self._isos, i_part,
+                              entity_type,
+                              group_entity_idx_data,
+                              group_entity_data,
+                              group_ln_to_gn_data)
 
   def part_mesh_set(self, part_mesh):
     """
@@ -600,11 +600,11 @@ cdef class Isosurface:
     """
     PDM_isosurface_redistribution_set(self._isos, extract_kind, part_method)
 
-  def field_set(self,                             id_iso,
-                                                  i_part,
-      NPY.ndarray[NPY.double_t, mode='c', ndim=1] field):
+  def pfield_set(self,                             id_iso,
+                                                   i_part,
+       NPY.ndarray[NPY.double_t, mode='c', ndim=1] field):
     """
-    field_set(id_iso, i_part, field)
+    pfield_set(id_iso, i_part, field)
 
     Set partition field.
 
@@ -615,7 +615,7 @@ cdef class Isosurface:
     """
     cdef double *field_data = np_to_double_pointer(field)
 
-    PDM_isosurface_field_set(self._isos, id_iso, i_part, field_data)
+    PDM_isosurface_pfield_set(self._isos, id_iso, i_part, field_data)
 
   # > Distributed setter API
   def dconnectivity_set(self,                       connectivity_type,
@@ -729,9 +729,9 @@ cdef class Isosurface:
 
 
   # > Partitioned getter API
-  def connectivity_get(self, id_iso, i_part, connectivity_type):
+  def pconnectivity_get(self, id_iso, i_part, connectivity_type):
     """
-    connectivity_get(id_iso, i_part, connectivity_type)
+    pconnectivity_get(id_iso, i_part, connectivity_type)
 
     Get isosurface connectivity.
 
@@ -747,11 +747,11 @@ cdef class Isosurface:
     cdef int  n_entity         = 0
     cdef int *connectivity_idx = NULL
     cdef int *connectivity     = NULL
-    n_entity = PDM_isosurface_connectivity_get(self._isos, id_iso, i_part,
-                                               connectivity_type,
-                                              &connectivity_idx,
-                                              &connectivity,
-                                               PDM_OWNERSHIP_USER)
+    n_entity = PDM_isosurface_pconnectivity_get(self._isos, id_iso, i_part,
+                                                connectivity_type,
+                                               &connectivity_idx,
+                                               &connectivity,
+                                                PDM_OWNERSHIP_USER)
     if connectivity_type==PDM_CONNECTIVITY_TYPE_EDGE_VTX:
       connectivity_size = 2*n_entity
     elif connectivity_type==PDM_CONNECTIVITY_TYPE_FACE_VTX:
@@ -764,9 +764,9 @@ cdef class Isosurface:
 
     return np_connectivity_idx, np_connectivity
 
-  def coordinates_get(self, id_iso, i_part):
+  def pcoordinates_get(self, id_iso, i_part):
     """
-    coordinates_get(id_iso, i_part)
+    pcoordinates_get(id_iso, i_part)
 
     Get isosurface coordinates.
 
@@ -779,8 +779,8 @@ cdef class Isosurface:
     """
     cdef int     n_vtx       = 0
     cdef double *coordinates = NULL
-    n_vtx = PDM_isosurface_vtx_coord_get(self._isos, id_iso, i_part,
-                                        &coordinates, PDM_OWNERSHIP_USER)
+    n_vtx = PDM_isosurface_pvtx_coord_get(self._isos, id_iso, i_part,
+                                         &coordinates, PDM_OWNERSHIP_USER)
 
     np_coordinates = create_numpy_d(coordinates, 3*n_vtx, flag_owndata=True)
 
@@ -811,9 +811,9 @@ cdef class Isosurface:
 
     return np_ln_to_gn
 
-  def group_get(self, id_iso, i_part, entity_type):
+  def pgroup_get(self, id_iso, i_part, entity_type):
     """
-    group_get(id_iso, i_part, entity_type)
+    pgroup_get(id_iso, i_part, entity_type)
 
     Get entity_type isosurface groups.
 
@@ -831,12 +831,12 @@ cdef class Isosurface:
     cdef int         *group_entity_idx = NULL
     cdef int         *group_entity     = NULL
     cdef PDM_g_num_t *group_ln_to_gn   = NULL
-    n_group = PDM_isosurface_group_get(self._isos, id_iso, i_part,
-                                           entity_type,
-                                          &group_entity_idx,
-                                          &group_entity,
-                                          &group_ln_to_gn,
-                                           PDM_OWNERSHIP_USER)
+    n_group = PDM_isosurface_pgroup_get(self._isos, id_iso, i_part,
+                                        entity_type,
+                                       &group_entity_idx,
+                                       &group_entity,
+                                       &group_ln_to_gn,
+                                        PDM_OWNERSHIP_USER)
     group_entity_size = group_entity_idx[n_group]
     np_group_entity_idx = create_numpy_i(group_entity_idx, n_group+1        , flag_owndata=True)
     np_group_entity     = create_numpy_i(group_entity    , group_entity_size, flag_owndata=True)
@@ -884,7 +884,7 @@ cdef class Isosurface:
       self.ptp_entity[id_iso][entity_type] = PartToPartCapsule(py_caps_ptp, self.py_comm)
       return self.ptp_entity[id_iso][entity_type]
 
-  def parent_lnum_get(self, id_iso, i_part, entity_type):
+  def pparent_lnum_get(self, id_iso, i_part, entity_type):
     """
     parent_lnum_get(id_iso, i_part, entity_type)
 
@@ -902,11 +902,11 @@ cdef class Isosurface:
     cdef int  n_entity    = 0
     cdef int *parent_idx  = NULL
     cdef int *parent_lnum = NULL
-    n_entity = PDM_isosurface_local_parent_get(self._isos, id_iso, i_part,
-                                               entity_type,
-                                              &parent_idx,
-                                              &parent_lnum,
-                                               PDM_OWNERSHIP_USER)
+    n_entity = PDM_isosurface_plocal_parent_get(self._isos, id_iso, i_part,
+                                                entity_type,
+                                               &parent_idx,
+                                               &parent_lnum,
+                                                PDM_OWNERSHIP_USER)
 
     own_idx = not self.got_parent_idx[entity_type][id_iso]
     self.got_parent_idx[entity_type][id_iso] = True
@@ -917,9 +917,9 @@ cdef class Isosurface:
 
     return np_parent_idx, np_parent_lnum
 
-  def parent_weight_get(self, id_iso, i_part, entity_type):
+  def pparent_weight_get(self, id_iso, i_part, entity_type):
     """
-    parent_weight_get(id_iso, i_part, entity_type)
+    pparent_weight_get(id_iso, i_part, entity_type)
 
     Get isosurface entity parent interpolation weight.
 
@@ -936,10 +936,10 @@ cdef class Isosurface:
     cdef int    *parent_idx    = NULL
     cdef double *parent_weight = NULL
 
-    n_entity = PDM_isosurface_parent_weight_get(self._isos, id_iso, i_part, entity_type,
-                                               &parent_idx,
-                                               &parent_weight,
-                                                PDM_OWNERSHIP_USER)
+    n_entity = PDM_isosurface_pparent_weight_get(self._isos, id_iso, i_part, entity_type,
+                                                &parent_idx,
+                                                &parent_weight,
+                                                 PDM_OWNERSHIP_USER)
 
     own_idx = not self.got_parent_idx[entity_type][id_iso]
     self.got_parent_idx[entity_type][id_iso] = True
@@ -950,9 +950,9 @@ cdef class Isosurface:
 
     return np_parent_idx, np_parent_weight
 
-  def isovalue_idx_get(self, id_iso, i_part, entity_type):
+  def pisovalue_idx_get(self, id_iso, i_part, entity_type):
     """
-    isovalue_idx_get(id_iso, i_part, entity_type)
+    pisovalue_idx_get(id_iso, i_part, entity_type)
 
     Get isosurface's isovalues index which indicate
     which entities belongs to which isovalues.
@@ -967,10 +967,10 @@ cdef class Isosurface:
     """
     cdef int  n_isovalues  = 0
     cdef int *isovalue_idx = NULL
-    n_isovalues = PDM_isosurface_isovalue_entity_idx_get(self._isos, id_iso, i_part,
-                                                         entity_type,
-                                                        &isovalue_idx,
-                                                         PDM_OWNERSHIP_USER)
+    n_isovalues = PDM_isosurface_pisovalue_entity_idx_get(self._isos, id_iso, i_part,
+                                                          entity_type,
+                                                         &isovalue_idx,
+                                                          PDM_OWNERSHIP_USER)
 
     np_isovalue_idx = create_numpy_i(isovalue_idx, n_isovalues+1, flag_owndata=True)
 

@@ -154,7 +154,7 @@ PDM_isosurface_n_part_set
  */
 
 void
-PDM_isosurface_connectivity_set
+PDM_isosurface_pconnectivity_set
 (
   PDM_isosurface_t        *isos,
   int                      i_part,
@@ -177,7 +177,7 @@ PDM_isosurface_connectivity_set
  */
 
 void
-PDM_isosurface_vtx_coord_set
+PDM_isosurface_pvtx_coord_set
 (
   PDM_isosurface_t *isos,
   int               i_part,
@@ -240,7 +240,7 @@ PDM_isosurface_n_group_set
  */
 
 void
-PDM_isosurface_group_set
+PDM_isosurface_pgroup_set
 (
   PDM_isosurface_t    *isos,
   int                  i_part,
@@ -517,7 +517,7 @@ PDM_isosurface_field_function_set
  */
 
 void
-PDM_isosurface_field_set
+PDM_isosurface_pfield_set
 (
   PDM_isosurface_t *isos,
   int               id_isosurface,
@@ -671,7 +671,7 @@ PDM_isosurface_dump_times
 //  EDGE_VTX (iso-line ou bien edges sur des groupes de surface)
 
 int
-PDM_isosurface_connectivity_get
+PDM_isosurface_pconnectivity_get
 (
   PDM_isosurface_t         *isos,
   int                       id_isosurface,
@@ -698,7 +698,7 @@ PDM_isosurface_connectivity_get
  */
 
 int
-PDM_isosurface_vtx_coord_get
+PDM_isosurface_pvtx_coord_get
 (
   PDM_isosurface_t  *isos,
   int                id_isosurface,
@@ -755,7 +755,7 @@ PDM_isosurface_ln_to_gn_get
  */
 
 int
-PDM_isosurface_group_get
+PDM_isosurface_pgroup_get
 (
   PDM_isosurface_t     *isos,
   int                   id_isosurface,
@@ -916,7 +916,7 @@ PDM_isosurface_dgroup_get
  */
 
 int
-PDM_isosurface_isovalue_entity_idx_get
+PDM_isosurface_pisovalue_entity_idx_get
 (
   PDM_isosurface_t     *isos,
   int                   id_isosurface,
@@ -979,7 +979,7 @@ PDM_isosurface_disovalue_entity_get
  */
 
 int
-PDM_isosurface_local_parent_get
+PDM_isosurface_plocal_parent_get
 (
   PDM_isosurface_t     *isos,
   int                   id_isosurface,
@@ -1010,7 +1010,7 @@ PDM_isosurface_local_parent_get
  */
 
 int
-PDM_isosurface_parent_weight_get
+PDM_isosurface_pparent_weight_get
 (
   PDM_isosurface_t     *isos,
   int                   id_isosurface,

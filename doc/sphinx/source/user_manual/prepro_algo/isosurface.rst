@@ -33,10 +33,10 @@ Partitioned
 ~~~~~~~~~~~
 
 .. doxygenfunction:: PDM_isosurface_n_part_set
-.. doxygenfunction:: PDM_isosurface_connectivity_set
-.. doxygenfunction:: PDM_isosurface_vtx_coord_set
+.. doxygenfunction:: PDM_isosurface_pconnectivity_set
+.. doxygenfunction:: PDM_isosurface_pvtx_coord_set
 .. doxygenfunction:: PDM_isosurface_ln_to_gn_set
-.. doxygenfunction:: PDM_isosurface_group_set
+.. doxygenfunction:: PDM_isosurface_pgroup_set
 
 .. doxygenfunction:: PDM_isosurface_part_mesh_set
 
@@ -78,7 +78,7 @@ Iso-surface settings
 Partitioned discrete field
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. doxygenfunction:: PDM_isosurface_field_set
+.. doxygenfunction:: PDM_isosurface_pfield_set
 
 Block-distributed discrete field
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -103,13 +103,13 @@ Outputs
 Partitioned
 ~~~~~~~~~~~
 
-.. doxygenfunction:: PDM_isosurface_connectivity_get
-.. doxygenfunction:: PDM_isosurface_vtx_coord_get
+.. doxygenfunction:: PDM_isosurface_pconnectivity_get
+.. doxygenfunction:: PDM_isosurface_pvtx_coord_get
 .. doxygenfunction:: PDM_isosurface_ln_to_gn_get
-.. doxygenfunction:: PDM_isosurface_group_get
-.. doxygenfunction:: PDM_isosurface_local_parent_get
-.. doxygenfunction:: PDM_isosurface_parent_weight_get
-.. doxygenfunction:: PDM_isosurface_isovalue_entity_idx_get
+.. doxygenfunction:: PDM_isosurface_pgroup_get
+.. doxygenfunction:: PDM_isosurface_plocal_parent_get
+.. doxygenfunction:: PDM_isosurface_pparent_weight_get
+.. doxygenfunction:: PDM_isosurface_pisovalue_entity_idx_get
 
 Block-distributed
 ~~~~~~~~~~~~~~~~~

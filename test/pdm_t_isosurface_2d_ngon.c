@@ -220,12 +220,12 @@ int main
                                                            &face_edge_idx,
                                                            &face_edge,
                                                            PDM_OWNERSHIP_KEEP);
-          PDM_isosurface_connectivity_set(isos,
-                                          i_part,
-                                          PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                          n_face,
-                                          face_edge_idx,
-                                          face_edge);
+          PDM_isosurface_pconnectivity_set(isos,
+                                           i_part,
+                                           PDM_CONNECTIVITY_TYPE_FACE_EDGE,
+                                           n_face,
+                                           face_edge_idx,
+                                           face_edge);
 
           int *edge_vtx_idx = NULL;
           int *edge_vtx     = NULL;
@@ -236,12 +236,12 @@ int main
                                                            &edge_vtx_idx,
                                                            &edge_vtx,
                                                            PDM_OWNERSHIP_KEEP);
-          PDM_isosurface_connectivity_set(isos,
-                                          i_part,
-                                          PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                          n_edge,
-                                          NULL,
-                                          edge_vtx);
+          PDM_isosurface_pconnectivity_set(isos,
+                                           i_part,
+                                           PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                           n_edge,
+                                           NULL,
+                                           edge_vtx);
         }
         else {
           int *face_vtx_idx = NULL;
@@ -254,12 +254,12 @@ int main
                                                            &face_vtx,
                                                            PDM_OWNERSHIP_KEEP);
 
-          PDM_isosurface_connectivity_set(isos,
-                                          i_part,
-                                          PDM_CONNECTIVITY_TYPE_FACE_VTX,
-                                          n_face,
-                                          face_vtx_idx,
-                                          face_vtx);
+          PDM_isosurface_pconnectivity_set(isos,
+                                           i_part,
+                                           PDM_CONNECTIVITY_TYPE_FACE_VTX,
+                                           n_face,
+                                           face_vtx_idx,
+                                           face_vtx);
         }
 
 
@@ -271,10 +271,10 @@ int main
                                                      i_part,
                                                      &vtx_coord,
                                                      PDM_OWNERSHIP_KEEP);
-        PDM_isosurface_vtx_coord_set(isos,
-                                     i_part,
-                                     n_vtx,
-                                     vtx_coord);
+        PDM_isosurface_pvtx_coord_set(isos,
+                                      i_part,
+                                      n_vtx,
+                                      vtx_coord);
 
         // Global IDs
         PDM_g_num_t *face_ln_to_gn = NULL;
@@ -416,7 +416,7 @@ int main
                                 isovalues);
   if (n_part > 0) { // Partitioned
     for (int i_part = 0; i_part < n_part; i_part++) {
-      PDM_isosurface_field_set(isos, iso2, i_part, iso_field[i_part]);
+      PDM_isosurface_pfield_set(isos, iso2, i_part, iso_field[i_part]);
     }
   }
   else { // Block-distributed

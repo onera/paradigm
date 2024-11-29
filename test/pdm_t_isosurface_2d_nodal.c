@@ -199,7 +199,7 @@ int main(int argc, char *argv[])
                                 isovalues);
   if (n_part > 0) { // Partitioned
     for (int i_part = 0; i_part < n_part; i_part++) {
-      PDM_isosurface_field_set(isos, iso2, i_part, iso_field[i_part]);
+      PDM_isosurface_pfield_set(isos, iso2, i_part, iso_field[i_part]);
     }
   }
   else { // Block-distributed

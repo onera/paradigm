@@ -84,8 +84,8 @@ extern "C" {
 void
 PDM_isosurface_n_part_set
 (
- PDM_isosurface_t *isos,
- int               n_part
+  PDM_isosurface_t *isos,
+  int               n_part
 )
 {
   CHECK_IS_NOT_DIST(isos);
@@ -135,14 +135,14 @@ PDM_isosurface_n_part_set
 }
 
 void
-PDM_isosurface_connectivity_set
+PDM_isosurface_pconnectivity_set
 (
- PDM_isosurface_t        *isos,
- int                      i_part,
- PDM_connectivity_type_t  connectivity_type,
- int                      n_entity,
- int                     *connect_idx,
- int                     *connect
+  PDM_isosurface_t        *isos,
+  int                      i_part,
+  PDM_connectivity_type_t  connectivity_type,
+  int                      n_entity,
+  int                     *connect_idx,
+  int                     *connect
 )
 {
   CHECK_IS_NOT_DIST(isos);
@@ -177,12 +177,12 @@ PDM_isosurface_connectivity_set
 
 
 void
-PDM_isosurface_vtx_coord_set
+PDM_isosurface_pvtx_coord_set
 (
- PDM_isosurface_t *isos,
- int               i_part,
- int               n_vtx,
- double           *vtx_coord
+  PDM_isosurface_t *isos,
+  int               i_part,
+  int               n_vtx,
+  double           *vtx_coord
 )
 {
   CHECK_IS_NOT_DIST(isos);
@@ -197,10 +197,10 @@ PDM_isosurface_vtx_coord_set
 void
 PDM_isosurface_ln_to_gn_set
 (
- PDM_isosurface_t    *isos,
- int                  i_part,
- PDM_mesh_entities_t  entity_type,
- PDM_g_num_t         *ln_to_gn
+  PDM_isosurface_t    *isos,
+  int                  i_part,
+  PDM_mesh_entities_t  entity_type,
+  PDM_g_num_t         *ln_to_gn
 )
 {
   CHECK_IS_NOT_DIST(isos);
@@ -228,14 +228,14 @@ PDM_isosurface_ln_to_gn_set
 
 
 void
-PDM_isosurface_group_set
+PDM_isosurface_pgroup_set
 (
- PDM_isosurface_t    *isos,
- int                  i_part,
- PDM_mesh_entities_t  entity_type,
- int                 *group_entity_idx,
- int                 *group_entity,
- PDM_g_num_t         *group_entity_ln_to_gn
+  PDM_isosurface_t    *isos,
+  int                  i_part,
+  PDM_mesh_entities_t  entity_type,
+  int                 *group_entity_idx,
+  int                 *group_entity,
+  PDM_g_num_t         *group_entity_ln_to_gn
 )
 {
   CHECK_IS_NOT_DIST(isos);
@@ -266,8 +266,8 @@ PDM_isosurface_group_set
 void
 PDM_isosurface_part_mesh_set
 (
- PDM_isosurface_t *isos,
- PDM_part_mesh_t  *pmesh
+  PDM_isosurface_t *isos,
+  PDM_part_mesh_t  *pmesh
 )
 {
   CHECK_IS_NOT_DIST(isos);
@@ -410,8 +410,8 @@ PDM_isosurface_part_mesh_set
 void
 PDM_isosurface_part_mesh_nodal_set
 (
- PDM_isosurface_t      *isos,
- PDM_part_mesh_nodal_t *pmn
+  PDM_isosurface_t      *isos,
+  PDM_part_mesh_nodal_t *pmn
 )
 {
   CHECK_IS_NOT_DIST(isos);
@@ -444,9 +444,9 @@ PDM_isosurface_part_mesh_nodal_set
 void
 PDM_isosurface_redistribution_set
 (
- PDM_isosurface_t        *isos,
- PDM_extract_part_kind_t  extract_kind,
- PDM_split_dual_t         part_method
+  PDM_isosurface_t        *isos,
+  PDM_extract_part_kind_t  extract_kind,
+  PDM_split_dual_t         part_method
 )
 {
   /**
@@ -461,12 +461,12 @@ PDM_isosurface_redistribution_set
 
 
 void
-PDM_isosurface_field_set
+PDM_isosurface_pfield_set
 (
- PDM_isosurface_t *isos,
- int               id_isosurface,
- int               i_part,
- double           *field
+  PDM_isosurface_t *isos,
+  int               id_isosurface,
+  int               i_part,
+  double           *field
 )
 {
   CHECK_IS_NOT_DIST(isos);
@@ -493,15 +493,15 @@ PDM_isosurface_field_set
 
 
 int
-PDM_isosurface_local_parent_get
+PDM_isosurface_plocal_parent_get
 (
- PDM_isosurface_t     *isos,
- int                   id_isosurface,
- int                   i_part,
- PDM_mesh_entities_t   entity_type,
- int                 **entity_parent_idx,
- int                 **entity_parent,
- PDM_ownership_t       ownership
+  PDM_isosurface_t     *isos,
+  int                   id_isosurface,
+  int                   i_part,
+  PDM_mesh_entities_t   entity_type,
+  int                 **entity_parent_idx,
+  int                 **entity_parent,
+  PDM_ownership_t       ownership
 )
 {
   // TODO: how to do in parallel for iso entities on entities between partition
@@ -533,7 +533,7 @@ PDM_isosurface_local_parent_get
 
 
 int
-PDM_isosurface_parent_weight_get
+PDM_isosurface_pparent_weight_get
 (
   PDM_isosurface_t     *isos,
   int                   id_isosurface,
@@ -566,15 +566,15 @@ PDM_isosurface_parent_weight_get
 
 
 int
-PDM_isosurface_connectivity_get
+PDM_isosurface_pconnectivity_get
 (
- PDM_isosurface_t         *isos,
- int                       id_isosurface,
- int                       i_part,
- PDM_connectivity_type_t   connectivity_type,
- int                     **connect_idx,
- int                     **connect,
- PDM_ownership_t           ownership
+  PDM_isosurface_t         *isos,
+  int                       id_isosurface,
+  int                       i_part,
+  PDM_connectivity_type_t   connectivity_type,
+  int                     **connect_idx,
+  int                     **connect,
+  PDM_ownership_t           ownership
 )
 {
   CHECK_IS_NOT_DIST(isos);
@@ -615,13 +615,13 @@ PDM_isosurface_connectivity_get
 
 
 int
-PDM_isosurface_vtx_coord_get
+PDM_isosurface_pvtx_coord_get
 (
- PDM_isosurface_t  *isos,
- int                id_isosurface,
- int                i_part,
- double           **vtx_coord,
- PDM_ownership_t    ownership
+  PDM_isosurface_t  *isos,
+  int                id_isosurface,
+  int                i_part,
+  double           **vtx_coord,
+  PDM_ownership_t    ownership
 )
 {
   CHECK_IS_NOT_DIST(isos);
@@ -646,12 +646,12 @@ PDM_isosurface_vtx_coord_get
 int
 PDM_isosurface_ln_to_gn_get
 (
- PDM_isosurface_t     *isos,
- int                   id_isosurface,
- int                   i_part,
- PDM_mesh_entities_t   entity_type,
- PDM_g_num_t         **ln_to_gn,
- PDM_ownership_t       ownership
+  PDM_isosurface_t     *isos,
+  int                   id_isosurface,
+  int                   i_part,
+  PDM_mesh_entities_t   entity_type,
+  PDM_g_num_t         **ln_to_gn,
+  PDM_ownership_t       ownership
 )
 {
   CHECK_IS_NOT_DIST(isos);
@@ -676,7 +676,7 @@ PDM_isosurface_ln_to_gn_get
 
 
 int
-PDM_isosurface_group_get
+PDM_isosurface_pgroup_get
 (
   PDM_isosurface_t     *isos,
   int                   id_isosurface,
@@ -718,7 +718,7 @@ PDM_isosurface_group_get
 
 
 int
-PDM_isosurface_isovalue_entity_idx_get
+PDM_isosurface_pisovalue_entity_idx_get
 (
   PDM_isosurface_t     *isos,
   int                   id_isosurface,

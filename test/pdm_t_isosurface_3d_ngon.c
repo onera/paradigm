@@ -264,33 +264,33 @@ int main
                                                          &edge_vtx,
                                                          PDM_OWNERSHIP_KEEP);
 
-        PDM_isosurface_connectivity_set(isos,
-                                        i_part,
-                                        PDM_CONNECTIVITY_TYPE_CELL_FACE,
-                                        n_cell,
-                                        cell_face_idx,
-                                        cell_face);
+        PDM_isosurface_pconnectivity_set(isos,
+                                         i_part,
+                                         PDM_CONNECTIVITY_TYPE_CELL_FACE,
+                                         n_cell,
+                                         cell_face_idx,
+                                         cell_face);
 
-        PDM_isosurface_connectivity_set(isos,
-                                        i_part,
-                                        PDM_CONNECTIVITY_TYPE_FACE_VTX,
-                                        n_face,
-                                        face_vtx_idx,
-                                        face_vtx);
+        PDM_isosurface_pconnectivity_set(isos,
+                                         i_part,
+                                         PDM_CONNECTIVITY_TYPE_FACE_VTX,
+                                         n_face,
+                                         face_vtx_idx,
+                                         face_vtx);
 
-        PDM_isosurface_connectivity_set(isos,
-                                        i_part,
-                                        PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                        n_face,
-                                        face_edge_idx,
-                                        face_edge);
+        PDM_isosurface_pconnectivity_set(isos,
+                                         i_part,
+                                         PDM_CONNECTIVITY_TYPE_FACE_EDGE,
+                                         n_face,
+                                         face_edge_idx,
+                                         face_edge);
 
-        PDM_isosurface_connectivity_set(isos,
-                                        i_part,
-                                        PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                        n_edge,
-                                        NULL,
-                                        edge_vtx);
+        PDM_isosurface_pconnectivity_set(isos,
+                                         i_part,
+                                         PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                         n_edge,
+                                         NULL,
+                                         edge_vtx);
 
         // Coordinates
         double *vtx_coord = NULL;
@@ -299,10 +299,10 @@ int main
                                                      i_part,
                                                      &vtx_coord,
                                                      PDM_OWNERSHIP_KEEP);
-        PDM_isosurface_vtx_coord_set(isos,
-                                     i_part,
-                                     n_vtx,
-                                     vtx_coord);
+        PDM_isosurface_pvtx_coord_set(isos,
+                                      i_part,
+                                      n_vtx,
+                                      vtx_coord);
 
         // Global IDs
         PDM_g_num_t *cell_ln_to_gn = NULL;
@@ -376,12 +376,12 @@ int main
                                    PDM_MESH_ENTITY_FACE,
                                    n_surface);
 
-        PDM_isosurface_group_set(isos,
-                                 i_part,
-                                 PDM_MESH_ENTITY_FACE,
-                                 surface_face_idx,
-                                 surface_face,
-                                 surface_face_ln_to_gn);
+        PDM_isosurface_pgroup_set(isos,
+                                  i_part,
+                                  PDM_MESH_ENTITY_FACE,
+                                  surface_face_idx,
+                                  surface_face,
+                                  surface_face_ln_to_gn);
       }
     }
   }
@@ -495,7 +495,7 @@ int main
                                 isovalues);
   if (n_part > 0) { // Partitioned
     for (int i_part = 0; i_part < n_part; i_part++) {
-      PDM_isosurface_field_set(isos, iso2, i_part, iso_field[i_part]);
+      PDM_isosurface_pfield_set(isos, iso2, i_part, iso_field[i_part]);
     }
   }
   else { // Block-distributed
