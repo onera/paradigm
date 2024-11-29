@@ -442,9 +442,11 @@ cdef class Isosurface:
 
     .. warning:: This function must be called prior to :py:func:`compute`
 
-    .. note:: By default, the number of partitions in the isosurface mesh is set to
-                - 1 in `REEQUILIBRATE` mode
-                - the number of partitions in the source mesh in `LOCAL mode` (mandatory)
+    .. note::
+      By default, the number of partitions in the isosurface mesh is set to:
+
+        - 1 in `REEQUILIBRATE` mode
+        - the number of partitions in the source mesh in `LOCAL` mode (mandatory)
 
     Parameters:
       n_part_out (int) : Number of partitions
