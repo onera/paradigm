@@ -389,6 +389,130 @@ int main(int argc, char *argv[])
   // }
 
 
+  /*
+   *  Exchange an interlaced, constant-stride field
+   */
+
+  for (int i = 0; i < n_part1; i++) {
+    PDM_free(part1_field[i]);
+  }
+  PDM_free(part1_field);
+
+  PDM_malloc(part1_field,n_part1,PDM_g_num_t *);
+  for (int i = 0; i < n_part1; i++) {
+    int n = n_elt1[i];
+    PDM_malloc(part1_field[i],n * 2,PDM_g_num_t);
+    for (int j = 0; j < n_elt1[i]; j++) {
+      part1_field[i][2*j  ] = gnum_elt1[i][j];
+      part1_field[i][2*j+1] = gnum_elt1[i][j]+1;
+    }
+  }
+
+  PDM_g_num_t **part2_field_p2p = NULL;
+  PDM_part_to_part_iexch (ptp,
+                          PDM_MPI_COMM_KIND_P2P,
+                          PDM_STRIDE_CST_INTERLACED,
+                          PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
+                          2,
+                          sizeof(PDM_g_num_t),
+                          NULL,
+          (const void **) part1_field,
+                          NULL,
+               (void ***) &part2_field_p2p,
+                          &request);
+
+  PDM_part_to_part_iexch_wait (ptp,
+                               request);
+
+  /* Reverse */
+  PDM_g_num_t **part1_field_p2p = NULL;
+  PDM_part_to_part_reverse_iexch (ptp,
+                                  PDM_MPI_COMM_KIND_P2P,
+                                  PDM_STRIDE_CST_INTERLACED,
+                                  PDM_PART_TO_PART_DATA_DEF_ORDER_GNUM1_COME_FROM,
+                                  2,
+                                  sizeof(PDM_g_num_t),
+                                  NULL,
+                  (const void **) part2_field_p2p,
+                                  NULL,
+                       (void ***) &part1_field_p2p,
+                                  &request);
+
+  PDM_part_to_part_reverse_iexch_wait (ptp,
+                                       request);
+
+  PDM_g_num_t **part2_field_coll = NULL;
+  PDM_part_to_part_iexch (ptp,
+                          PDM_MPI_COMM_KIND_COLLECTIVE,
+                          PDM_STRIDE_CST_INTERLACED,
+                          PDM_PART_TO_PART_DATA_DEF_ORDER_PART1,
+                          2,
+                          sizeof(PDM_g_num_t),
+                          NULL,
+          (const void **) part1_field,
+                          NULL,
+               (void ***) &part2_field_coll,
+                          &request);
+
+  PDM_part_to_part_iexch_wait (ptp,
+                               request);
+
+  /* Reverse */
+  PDM_g_num_t **part1_field_coll = NULL;
+  PDM_part_to_part_reverse_iexch (ptp,
+                                  PDM_MPI_COMM_KIND_COLLECTIVE,
+                                  PDM_STRIDE_CST_INTERLACED,
+                                  PDM_PART_TO_PART_DATA_DEF_ORDER_GNUM1_COME_FROM,
+                                  2,
+                                  sizeof(PDM_g_num_t),
+                                  NULL,
+                  (const void **) part2_field_coll,
+                                  NULL,
+                       (void ***) &part1_field_coll,
+                                  &request);
+
+  PDM_part_to_part_reverse_iexch_wait (ptp,
+                                       request);
+
+  for (int i = 0; i < n_part2; i++) {
+    for (int j = 0; j < n_ref_num2[i]; j++) {
+      for (int k = gnum1_come_from_idx[i][j]; k < gnum1_come_from_idx[i][j+1]; k++) {
+        assert(part2_field_p2p[i][2*k  ] == part2_field_coll[i][2*k  ]);
+        assert(part2_field_p2p[i][2*k+1] == part2_field_coll[i][2*k+1]);
+      }
+    }
+  }
+
+  for (int i = 0; i < n_part1; i++) {
+    for (int j = 0; j < n_elt1[i]; j++) {
+      for (int k = part1_to_part2_idx[i][j]; k < part1_to_part2_idx[i][j+1]; k++) {
+        printf("%li %li\n", part1_field_p2p[i][2*k  ], part1_field_coll[i][2*k  ]);
+        assert(part1_field_p2p[i][2*k  ] == part1_field_coll[i][2*k  ]);
+        assert(part1_field_p2p[i][2*k+1] == part1_field_coll[i][2*k+1]);
+      }
+    }
+  }
+
+  for (int i = 0; i < n_part1; i++) {
+    PDM_free(part1_field_p2p[i]);
+  }
+  PDM_free(part1_field_p2p);
+
+  for (int i = 0; i < n_part2; i++) {
+    PDM_free(part2_field_p2p[i]);
+  }
+  PDM_free(part2_field_p2p);
+
+  for (int i = 0; i < n_part1; i++) {
+    PDM_free(part1_field_coll[i]);
+  }
+  PDM_free(part1_field_coll);
+
+  for (int i = 0; i < n_part2; i++) {
+    PDM_free(part2_field_coll[i]);
+  }
+  PDM_free(part2_field_coll);
+
   // log_trace("==== P1 -> P2 ====\n");
   /* 2 consecutive iexch in stride var with same stride */
   for (int ipart = 0; ipart < n_part1; ipart++) {
@@ -558,7 +682,6 @@ int main(int argc, char *argv[])
     PDM_free(part1_data2[i]);
   }
   PDM_free(part1_data2);
-
 
   /*
    *  Free memory
