@@ -130,19 +130,19 @@ def run(n_vtx_seg, elt_type, n_step, visu, local, part_method):
 
   for i_part in range(n_part):
     # Connectivities
-    isos.connectivity_set(i_part,
-                          PDM._PDM_CONNECTIVITY_TYPE_CELL_FACE,
-                          mesh["pcell_face_idx"][i_part],
-                          mesh["pcell_face"    ][i_part])
+    isos.pconnectivity_set(i_part,
+                           PDM._PDM_CONNECTIVITY_TYPE_CELL_FACE,
+                           mesh["pcell_face_idx"][i_part],
+                           mesh["pcell_face"    ][i_part])
 
-    isos.connectivity_set(i_part,
-                          PDM._PDM_CONNECTIVITY_TYPE_FACE_VTX,
-                          mesh["pface_edge_idx"][i_part],
-                          mesh["pface_vtx"     ][i_part])
+    isos.pconnectivity_set(i_part,
+                           PDM._PDM_CONNECTIVITY_TYPE_FACE_VTX,
+                           mesh["pface_edge_idx"][i_part],
+                           mesh["pface_vtx"     ][i_part])
 
     # Coordinates
-    isos.coordinates_set(i_part,
-                         mesh["pvtx_coord"][i_part])
+    isos.pcoordinates_set(i_part,
+                          mesh["pvtx_coord"][i_part])
 
     # Global IDs
     isos.ln_to_gn_set(i_part,
@@ -158,11 +158,11 @@ def run(n_vtx_seg, elt_type, n_step, visu, local, part_method):
                       mesh["pvtx_ln_to_gn"][i_part])
 
     # Groups
-    isos.group_set(i_part,
-                   PDM._PDM_MESH_ENTITY_FACE,
-                   mesh["psurface_face_idx"     ][i_part],
-                   mesh["psurface_face"         ][i_part],
-                   mesh["psurface_face_ln_to_gn"][i_part])
+    isos.pgroup_set(i_part,
+                    PDM._PDM_MESH_ENTITY_FACE,
+                    mesh["psurface_face_idx"     ][i_part],
+                    mesh["psurface_face"         ][i_part],
+                    mesh["psurface_face_ln_to_gn"][i_part])
 
 
   # Prepare writer
@@ -205,13 +205,13 @@ def run(n_vtx_seg, elt_type, n_step, visu, local, part_method):
   pparent     = []
   pweight     = []
   for i_part in range(n_part):
-    vtx_parent_idx, vtx_parent_weight = isos.parent_weight_get(id_iso_func, i_part, PDM._PDM_MESH_ENTITY_VTX)
+    vtx_parent_idx, vtx_parent_weight = isos.pparent_weight_get(id_iso_func, i_part, PDM._PDM_MESH_ENTITY_VTX)
     pparent_idx.append(vtx_parent_idx)
     pweight    .append(vtx_parent_weight)
 
   if local:
     for i_part in range(n_part):
-      _, parent_lnum = isos.parent_lnum_get(id_iso_func, i_part, PDM._PDM_MESH_ENTITY_VTX)
+      _, parent_lnum = isos.pparent_lnum_get(id_iso_func, i_part, PDM._PDM_MESH_ENTITY_VTX)
       pparent.append(parent_lnum)
   else:
     ptp_vtx = isos.part_to_part_get(id_iso_func, PDM._PDM_MESH_ENTITY_VTX)
@@ -220,11 +220,11 @@ def run(n_vtx_seg, elt_type, n_step, visu, local, part_method):
     writer_slice.step_beg(0.)
     piso_vtx_ln_to_gn = []
     for i_part in range(n_part):
-      iso_vtx_coord    = isos.coordinates_get(id_iso_func, i_part)
+      iso_vtx_coord    = isos.pcoordinates_get(id_iso_func, i_part)
       iso_vtx_ln_to_gn = isos.ln_to_gn_get(id_iso_func, i_part, PDM._PDM_MESH_ENTITY_VTX)
       piso_vtx_ln_to_gn.append(iso_vtx_ln_to_gn) # keep reference for IO
 
-      iso_face_vtx_idx, iso_face_vtx = isos.connectivity_get(id_iso_func, i_part, PDM._PDM_CONNECTIVITY_TYPE_FACE_VTX)
+      iso_face_vtx_idx, iso_face_vtx = isos.pconnectivity_get(id_iso_func, i_part, PDM._PDM_CONNECTIVITY_TYPE_FACE_VTX)
       iso_face_ln_to_gn = isos.ln_to_gn_get(id_iso_func, i_part, PDM._PDM_MESH_ENTITY_FACE)
 
       writer_slice.geom_coord_set(id_geom_slice,
@@ -255,7 +255,7 @@ def run(n_vtx_seg, elt_type, n_step, visu, local, part_method):
     for i_part in range(n_part):
       field = sdf_pacman(mesh["pvtx_coord"][i_part], t)
       pfield.append(field)
-      isos.field_set(id_iso_field, i_part, field)
+      isos.pfield_set(id_iso_field, i_part, field)
 
     # Interpolate on slice
     pitp_field = []
@@ -301,10 +301,10 @@ def run(n_vtx_seg, elt_type, n_step, visu, local, part_method):
     if visu:
       writer.step_beg(t)
       for i_part in range(n_part):
-        iso_vtx_coord    = isos.coordinates_get(id_iso_field, i_part)
+        iso_vtx_coord    = isos.pcoordinates_get(id_iso_field, i_part)
         iso_vtx_ln_to_gn = isos.ln_to_gn_get(id_iso_field, i_part, PDM._PDM_MESH_ENTITY_VTX)
 
-        iso_face_vtx_idx, iso_face_vtx = isos.connectivity_get(id_iso_field, i_part, PDM._PDM_CONNECTIVITY_TYPE_FACE_VTX)
+        iso_face_vtx_idx, iso_face_vtx = isos.pconnectivity_get(id_iso_field, i_part, PDM._PDM_CONNECTIVITY_TYPE_FACE_VTX)
         iso_face_ln_to_gn = isos.ln_to_gn_get(id_iso_field, i_part, PDM._PDM_MESH_ENTITY_FACE)
 
         writer.geom_coord_set(id_geom,
