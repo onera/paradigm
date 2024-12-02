@@ -228,7 +228,6 @@ int main(int argc, char *argv[])
   int **surf_edge_vtx            = NULL;
   int **surf_face_edge_idx       = NULL;
   int **surf_face_edge           = NULL;
-  log_trace("surf ridge\n");
   PDM_part_mesh_nodal_elmts_compute_child_parent(pmne_surf,
                                                  pmne_ridge,
                                                  PDM_MESH_ENTITY_EDGE,
@@ -317,7 +316,6 @@ int main(int argc, char *argv[])
     }
 
     /* Compute link Volume <-> Surface */
-    log_trace("vol surf\n");
     PDM_part_mesh_nodal_elmts_compute_child_parent(pmne_vol,
                                                    pmne_surf,
                                                    PDM_MESH_ENTITY_FACE,
@@ -382,7 +380,6 @@ int main(int argc, char *argv[])
     }
 
     /* Compute link Volume <-> Ridge */
-    log_trace("vol ridge\n");
     PDM_part_mesh_nodal_elmts_compute_child_parent(pmne_vol,
                                                    pmne_ridge,
                                                    PDM_MESH_ENTITY_EDGE,
