@@ -476,17 +476,17 @@ int main
    *  Add isosurface parameters
    */
 
-  // // Plane slice
-  // double plane_equation [4] = {1.,-1.,0.,0.};
-  // double plane_isovalues[3] = {-0.30,0.,1.};
-  // int iso1 = PDM_isosurface_add(isos,
-  //                               PDM_ISO_SURFACE_KIND_PLANE,
-  //                               3,
-  //                               plane_isovalues);
+  // Plane slice
+  double plane_equation [4] = {1.,-1.,0.,0.};
+  double plane_isovalues[3] = {-0.30,0.,1.};
+  int iso1 = PDM_isosurface_add(isos,
+                                PDM_ISO_SURFACE_KIND_PLANE,
+                                3,
+                                plane_isovalues);
 
-  // PDM_isosurface_equation_set(isos,
-  //                             iso1,
-  //                             plane_equation);
+  PDM_isosurface_equation_set(isos,
+                              iso1,
+                              plane_equation);
 
   // Scalar field isosurface
   int iso2 = PDM_isosurface_add(isos,
@@ -502,23 +502,23 @@ int main
     PDM_isosurface_dfield_set(isos, iso2, iso_dfield);
   }
 
-  // // Analytic field isosurface
-  // double iso3_isovalue = 0.3;
-  // int iso3 = PDM_isosurface_add(isos,
-  //                               PDM_ISO_SURFACE_KIND_FUNCTION,
-  //                               1,
-  //                               &iso3_isovalue);
+  // Analytic field isosurface
+  double iso3_isovalue = 0.3;
+  int iso3 = PDM_isosurface_add(isos,
+                                PDM_ISO_SURFACE_KIND_FUNCTION,
+                                1,
+                                &iso3_isovalue);
 
-  // PDM_isosurface_field_function_set(isos,
-  //                                   iso3,
-  //                                   &PDM_isosurface_test_utils_analytic_field_function);
+  PDM_isosurface_field_function_set(isos,
+                                    iso3,
+                                    &PDM_isosurface_test_utils_analytic_field_function);
 
 
 
   /*
    *  Compute isosurface
    */
-  int n_iso = 1;//iso3 + 1;
+  int n_iso = iso3 + 1;
 
   for (int i_iso = 0; i_iso < n_iso; i_iso++) {
     PDM_isosurface_part_to_part_enable(isos,
@@ -539,13 +539,13 @@ int main
 
   PDM_MPI_Barrier(comm);
 
-  // PDM_isosurface_compute(isos, iso1);
-  // PDM_isosurface_reset  (isos, iso1);
-  // PDM_isosurface_compute(isos, iso1);
-  // PDM_isosurface_compute(isos, iso2);
+  PDM_isosurface_compute(isos, iso1);
+  PDM_isosurface_reset  (isos, iso1);
+  PDM_isosurface_compute(isos, iso1);
+  PDM_isosurface_compute(isos, iso2);
   PDM_isosurface_compute(isos, -1);
-  // PDM_isosurface_reset  (isos, -1);
-  // PDM_isosurface_compute(isos, -1);
+  PDM_isosurface_reset  (isos, -1);
+  PDM_isosurface_compute(isos, -1);
 
   PDM_isosurface_dump_times(isos);
 

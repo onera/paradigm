@@ -307,7 +307,6 @@ _do_we_have_edges
     for (int i_part = 0; i_part < isos->n_part; i_part++) {
 
       if (isos->n_face[i_part] == 0) {
-        log_trace("I have zeros faces in part %d\n", i_part);
         continue;
       }
 
@@ -330,13 +329,6 @@ _do_we_have_edges
     int we_have_face_vtx;
     PDM_MPI_Allreduce(&i_have_face_vtx, &we_have_face_vtx, 1, PDM_MPI_INT, PDM_MPI_MAX, isos->comm);
     if (!we_have_face_vtx) {
-      int i_rank;
-      PDM_MPI_Comm_rank(isos->comm, &i_rank);
-      if (i_rank == 0) {
-        printf("Aïe aïe aïe\n");
-        fflush(stdout);
-      }
-      PDM_MPI_Barrier(isos->comm);
       PDM_error(__FILE__, __LINE__, 0, "Either face->vtx or {face->edge, edge->vtx} connectivities must be provided\n");
     }
   }
@@ -949,45 +941,6 @@ _convert_group_info_to_tag
 }
 
 
-static void
-_stats_extract_part
-(
-  PDM_MPI_Comm  comm,
-  int           n_part,
-  int          *n_extract
-)
-{
-  int i_rank;
-  int n_rank;
-  PDM_MPI_Comm_rank(comm, &i_rank);
-  PDM_MPI_Comm_size(comm, &n_rank);
-
-  int n = 0;
-  for (int i_part = 0; i_part < n_part; i_part++) {
-    n += n_extract[i_part];
-  }
-
-  int *all_n = NULL;
-  if (i_rank == 0) {
-    PDM_malloc(all_n, n_rank, int);
-  }
-  PDM_MPI_Gather(&n, 1, PDM_MPI_INT, all_n, 1, PDM_MPI_INT, 0, comm);
-
-
-  if (i_rank == 0) {
-    char name[999];
-    sprintf(name, "stats_extract_part_np%d.txt", n_rank);
-    FILE *f = fopen(name, "w");
-    for (int i = 0; i < n_rank; i++) {
-      fprintf(f, "%d\n", all_n[i]);
-    }
-    fclose(f);
-
-    PDM_free(all_n);
-  }
-}
-
-
 /**
  * \brief Extract nodal elements of interest
  */
@@ -1011,8 +964,8 @@ _extract_nodal
 
   PDM_part_mesh_nodal_t *pmn = isos->pmesh_nodal;
 
-  // TODO: strip pmn of its ridges & corners since we don't care about them?
-  int ignore_ridges_and_corners = 1;
+  // Strip pmn of its ridges & corners since we don't care about them
+  const int ignore_ridges_and_corners = 1;
   if (ignore_ridges_and_corners) {
     pmn = PDM_part_mesh_nodal_create(isos->entry_mesh_dim,
                                      isos->n_part,
@@ -1278,12 +1231,6 @@ _extract_nodal
 
   } // End loop on parts
 
-  if (1) {
-    _stats_extract_part(isos->comm,
-                        isos->n_part,
-                        n_extract);
-  }
-
   // if (isos->entry_mesh_dim == 3) {
   //   PDM_part_mesh_nodal_dump_vtk(isos->pmesh_nodal, PDM_GEOMETRY_KIND_VOLUMIC,  "init_vol");
   // }
@@ -1336,14 +1283,7 @@ _extract_nodal
     PDM_free(pmn->section_kind);
     PDM_free(pmn->section_id);
     PDM_free(pmn);
-    // PDM_part_mesh_nodal_free(pmn);
   }
-
-  // for (int i_part = 0; i_part < isos->n_part; i_part++) {
-  //   PDM_free(extract_lnum[i_part]);
-  // }
-  // PDM_free(n_extract   );
-  // PDM_free(extract_lnum);
 }
 
 
@@ -1543,11 +1483,6 @@ _extract_ngon
     }
   }
 
-  if (1) {
-    _stats_extract_part(isos->comm,
-                        isos->n_part,
-                        n_extract);
-  }
 
   PDM_extract_part_compute(isos->extrp);
 
