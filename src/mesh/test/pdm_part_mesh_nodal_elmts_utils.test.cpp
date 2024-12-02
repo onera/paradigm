@@ -260,6 +260,10 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal_elmts_utils] - part_mesh_nodal_elmts_compute
 
   int n_parent = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne_parent, 0);
 
+  int *pn_vtx = NULL;
+  PDM_malloc(pn_vtx, 1, int);
+  pn_vtx[0] = PDM_part_mesh_nodal_n_vtx_get(pmn, 0);
+
 
   for (int geom_kind = (int) geom_kind_parent + 1; geom_kind < (int) PDM_GEOMETRY_KIND_CORNER; geom_kind++) {
 
@@ -278,6 +282,7 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal_elmts_utils] - part_mesh_nodal_elmts_compute
                                                    pmne_child,
                                                    PDM_MESH_ENTITY_MAX, // unused here
                                                    compute_parent_child,
+                                                   pn_vtx,
                                                    &child_to_parent_idx,
                                                    &child_to_parent,
                                                    &n_entity,
@@ -307,6 +312,7 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal_elmts_utils] - part_mesh_nodal_elmts_compute
     }
 
     /* Free memory */
+    PDM_free(pn_vtx);
     PDM_free(child_to_parent_idx[0]);
     PDM_free(child_to_parent    [0]);
     if (compute_parent_child) {

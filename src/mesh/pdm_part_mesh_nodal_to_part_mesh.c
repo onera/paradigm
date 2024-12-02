@@ -437,6 +437,7 @@ _generate_downward_connectivity
                                                  pmne2,
                                                  entity_type2,
                                                  PDM_TRUE,
+                                                 NULL,
                                                  &child_to_parent_idx,
                                                  &child_to_parent,
                                                  &n_entity2,
