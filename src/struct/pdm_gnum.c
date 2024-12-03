@@ -63,6 +63,7 @@
 #include "pdm_logging.h"
 #include "pdm_unique.h"
 #include "pdm_order.h"
+#include "pdm_part_comm_graph_priv.h"
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -1706,6 +1707,177 @@ _gnum_from_parent_compute_nuplet
   PDM_free(distrib);
 }
 
+static
+void
+_gnum_from_comm_graph
+(
+ PDM_gen_gnum_t *gen_gnum,
+ int             build_pcg
+)
+{
+  PDM_part_comm_graph_t *pcg = NULL;
+  if(build_pcg == 1) {
+    pcg = PDM_part_comm_graph_create(gen_gnum->n_part,
+                                     gen_gnum->pn_entity_graph,
+                                     gen_gnum->pentity_graph,
+                                     gen_gnum->comm);
+  } else {
+    pcg = gen_gnum->pcg;
+  }
+
+  for(int i_part = 0; i_part < gen_gnum->n_part; ++i_part) {
+    PDM_malloc(gen_gnum->g_nums[i_part], gen_gnum->n_elts[i_part], PDM_g_num_t);
+    for(int i = 0; i < gen_gnum->n_elts[i_part]; ++i) {
+      gen_gnum->g_nums[i_part][i] = -1;
+    }
+  }
+
+  /* Count interface entity */
+  int *n_l_entity_owner_graph = malloc(gen_gnum->n_part * sizeof(int));
+  int *n_l_entity_ghost_graph = malloc(gen_gnum->n_part * sizeof(int));
+  for(int i_part = 0; i_part < gen_gnum->n_part; ++i_part) {
+
+    const int *lowner = PDM_part_comm_graph_owner_get(pcg, i_part);
+    n_l_entity_owner_graph[i_part] = 0;
+    n_l_entity_ghost_graph[i_part] = 0;
+    int n_entity_graph = pcg->n_entity_graph[i_part];
+    for(int i = 0; i < n_entity_graph; ++i) {
+      int i_entity = pcg->pentity_graph[i_part][4*i  ]-1;
+      if(gen_gnum->g_nums[i_part][i_entity] == -1) {
+        if(lowner[i] == 1) {
+          n_l_entity_owner_graph[i_part]++;
+          gen_gnum->g_nums[i_part][i_entity] = -2;
+        } else {
+          n_l_entity_ghost_graph[i_part]++;
+          gen_gnum->g_nums[i_part][i_entity] = -3;
+        }
+      }
+    }
+  }
+
+  int *n_l_entity_interior = NULL;
+  PDM_malloc(n_l_entity_interior, gen_gnum->n_part, int);
+  for(int i_part = 0; i_part < gen_gnum->n_part; ++i_part) {
+    n_l_entity_interior[i_part] = gen_gnum->n_elts[i_part] - n_l_entity_owner_graph[i_part] - n_l_entity_ghost_graph[i_part];
+  }
+
+  /* Syncho rank */
+  PDM_g_num_t l_shift = 0;
+  for(int i_part = 0; i_part < gen_gnum->n_part; ++i_part) {
+    l_shift += n_l_entity_interior[i_part] + n_l_entity_owner_graph[i_part];
+  }
+
+  PDM_g_num_t g_shift = 0;
+  PDM_MPI_Exscan(&l_shift, &g_shift, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, gen_gnum->comm);
+
+  /* Generation ln_to_gn */
+  PDM_g_num_t l_part_shift = 0;
+  for(int i_part = 0; i_part < gen_gnum->n_part; ++i_part) {
+    int idx_write_interior = 0;
+    int idx_write_graph    = 0;
+    for(int i = 0; i < gen_gnum->n_elts[i_part]; ++i) {
+      if(gen_gnum->g_nums[i_part][i] == -1) { // Interior
+        gen_gnum->g_nums[i_part][i] = g_shift + idx_write_interior + 1;
+        idx_write_interior++;
+      } else if (gen_gnum->g_nums[i_part][i] == -2) {
+        gen_gnum->g_nums[i_part][i] = g_shift + n_l_entity_interior[i_part] + idx_write_graph + 1;
+        idx_write_graph++;
+      }
+    }
+    l_part_shift += n_l_entity_owner_graph[i_part];
+  }
+
+  /* Echange */
+  int         **send_gnum_n = NULL;
+  PDM_g_num_t **send_gnum   = NULL;
+  PDM_malloc(send_gnum_n, gen_gnum->n_part, int         *);
+  PDM_malloc(send_gnum  , gen_gnum->n_part, PDM_g_num_t *);
+  for(int i_part = 0; i_part < gen_gnum->n_part; ++i_part) {
+    int n_entity_graph = pcg->n_entity_graph[i_part];
+    PDM_malloc(send_gnum  [i_part], n_entity_graph, PDM_g_num_t);
+    PDM_malloc(send_gnum_n[i_part], n_entity_graph, int        );
+
+    const int *lowner = PDM_part_comm_graph_owner_get(pcg, i_part);
+
+    int idx_write = 0;
+    for(int i = 0; i < n_entity_graph; ++i) {
+      int i_entity = pcg->pentity_graph[i_part][4*i  ]-1;
+      if(gen_gnum->g_nums[i_part][i_entity] > 0) {
+        if(lowner[i] == 1) {
+          send_gnum_n[i_part][i] = 1;
+          send_gnum  [i_part][idx_write] = gen_gnum->g_nums[i_part][i_entity];
+          idx_write++;
+        } else {
+          send_gnum_n[i_part][i] = 0;
+        }
+      } else {
+        send_gnum_n[i_part][i] = 0;
+      }
+    }
+
+    // PDM_log_trace_array_int (send_gnum_n[i_part], n_entity_graph, "send_gnum_n ::" );
+    // PDM_log_trace_array_long(send_gnum  [i_part], idx_write, "send_gnum ::" );
+  }
+
+  PDM_g_num_t **recv_gnum   = NULL;
+  int         **recv_gnum_n = NULL;
+  PDM_part_comm_graph_exch(pcg,
+                           sizeof(PDM_g_num_t),
+                           PDM_STRIDE_VAR_INTERLACED,
+                           1,
+                           send_gnum_n,
+              (void **)    send_gnum,
+                           &recv_gnum_n,
+              (void ***)   &recv_gnum);
+
+  /*
+   * Copy
+   */
+  for(int i_part = 0; i_part < gen_gnum->n_part; ++i_part) {
+    int n_entity_graph = pcg->n_entity_graph[i_part];
+
+    if(0 == 1) {
+      int n_recv = 0;
+      for(int i = 0; i < n_entity_graph; ++i) {
+        n_recv += recv_gnum_n[i_part][i];
+      }
+      PDM_log_trace_array_long(gen_gnum->g_nums[i_part], gen_gnum->n_elts[i_part], "_pentity_ln_to_gn ::");
+      PDM_log_trace_array_long(recv_gnum       [i_part], n_recv                  , "recv_gnum         ::");
+      PDM_log_trace_array_int (recv_gnum_n     [i_part], n_entity_graph          , "recv_gnum_n       ::");
+    }
+
+    int idx_read = 0;
+    for(int i = 0; i < n_entity_graph; ++i) {
+      int i_entity = pcg->pentity_graph[i_part][4*i  ]-1;
+      if(recv_gnum_n[i_part][i] == 1) {
+        // log_trace("i_entity = %i replace by recv_gnum[%i] = %i (before = %i) \n", i_entity, idx_read, recv_gnum[i_part][idx_read], _pentity_ln_to_gn[i_part][i_entity] );
+        gen_gnum->g_nums[i_part][i_entity] = recv_gnum [i_part][idx_read];
+        idx_read++;
+      }
+    }
+  }
+
+
+  for(int i_part = 0; i_part < gen_gnum->n_part; ++i_part) {
+    PDM_free(send_gnum_n[i_part]);
+    PDM_free(send_gnum  [i_part]);
+    PDM_free(recv_gnum_n[i_part]);
+    PDM_free(recv_gnum  [i_part]);
+  }
+  PDM_free(send_gnum_n);
+  PDM_free(recv_gnum_n);
+  PDM_free(send_gnum);
+  PDM_free(recv_gnum);
+  PDM_free(n_l_entity_interior);
+  PDM_free(n_l_entity_owner_graph);
+  PDM_free(n_l_entity_ghost_graph);
+
+
+  if(build_pcg == 1) {
+    PDM_part_comm_graph_free(pcg);
+  }
+}
+
 /*=============================================================================
  * Public function definitions
  *============================================================================*/
@@ -1757,6 +1929,10 @@ PDM_gnum_create
   for (int i = 0; i < n_part; i++) {
     gen_gnum->g_nums[i] = NULL;
   }
+
+  gen_gnum->pn_entity_graph = NULL;
+  gen_gnum->pentity_graph   = NULL;
+  gen_gnum->pcg             = NULL;
 
   return gen_gnum;
 
@@ -1858,6 +2034,46 @@ PDM_gnum_set_parents_nuplet
   gen_gnum->nuplet = nuplet;
 }
 
+void
+PDM_gnum_set_from_part_comm_graph
+(
+       PDM_gen_gnum_t        *gen_gnum,
+ const int                   *n_elts,
+       PDM_part_comm_graph_t *pcg
+)
+{
+  gen_gnum->pcg            = pcg;
+  for(int i_part = 0; i_part < gen_gnum->n_part; ++i_part) {
+    gen_gnum->n_elts[i_part] = n_elts[i_part];
+  }
+}
+
+void
+PDM_gnum_set_from_entity_graph
+(
+       PDM_gen_gnum_t  *gen_gnum,
+ const int              i_part,
+ const int              n_elts,
+       int              pn_entity_graph,
+       int             *pentity_graph
+)
+{
+
+  if (gen_gnum->pn_entity_graph == NULL) {
+    PDM_malloc(gen_gnum->pn_entity_graph, gen_gnum->n_part, int  );
+    PDM_malloc(gen_gnum->pentity_graph  , gen_gnum->n_part, int *);
+    for (int i = 0; i < gen_gnum->n_part; i++) {
+      gen_gnum->pn_entity_graph[i_part] = 0;
+      gen_gnum->pentity_graph  [i_part] = NULL;
+    }
+  }
+
+  gen_gnum->n_elts         [i_part] = n_elts;
+  gen_gnum->pn_entity_graph[i_part] = pn_entity_graph;
+  gen_gnum->pentity_graph  [i_part] = pentity_graph;
+
+
+}
 
 /**
  *
@@ -1874,30 +2090,48 @@ PDM_gnum_compute
 )
 {
   //Detect if geometric or topologic -- works if a procs holds no partitions
-  int from_coords        = (gen_gnum->coords != NULL);
-  int from_parent        = (gen_gnum->parent != NULL);
-  int from_parent_nuplet = (gen_gnum->nuplet != 0   );
-  int from_coords_g, from_parent_g, from_parent_nuplet_g;
+  int from_coords        = (gen_gnum->coords          != NULL);
+  int from_parent        = (gen_gnum->parent          != NULL);
+  int from_parent_nuplet = (gen_gnum->nuplet          != 0   );
+  int from_graph         = (gen_gnum->pn_entity_graph != NULL &&
+                            gen_gnum->pentity_graph   != NULL);
+  int from_pcg           = (gen_gnum->pcg             != NULL);
+  int from_coords_g, from_parent_g, from_parent_nuplet_g, from_graph_g, from_pcg_g;
   PDM_MPI_Allreduce(&from_coords       , &from_coords_g       , 1, PDM_MPI_INT, PDM_MPI_SUM, gen_gnum->comm);
   PDM_MPI_Allreduce(&from_parent       , &from_parent_g       , 1, PDM_MPI_INT, PDM_MPI_SUM, gen_gnum->comm);
   PDM_MPI_Allreduce(&from_parent_nuplet, &from_parent_nuplet_g, 1, PDM_MPI_INT, PDM_MPI_SUM, gen_gnum->comm);
+  PDM_MPI_Allreduce(&from_graph        , &from_graph_g        , 1, PDM_MPI_INT, PDM_MPI_SUM, gen_gnum->comm);
+  PDM_MPI_Allreduce(&from_pcg          , &from_pcg_g          , 1, PDM_MPI_INT, PDM_MPI_SUM, gen_gnum->comm);
 
   assert (from_coords_g * from_parent_g == 0);
+  assert (from_pcg_g    * from_graph_g  == 0);
 
   if (from_coords_g != 0) {
     _gnum_from_coords_compute (gen_gnum);
-  }
-  else if (from_parent_g != 0 && from_parent_nuplet_g == 0) {
+  } else if (from_parent_g != 0 && from_parent_nuplet_g == 0) {
     _gnum_from_parent_compute (gen_gnum);
-  }
-  else if (from_parent_nuplet_g != 0) {
+  } else if (from_parent_nuplet_g != 0 && // Filière "classique" mais avec optimisation ou nuplet
+             from_graph_g == 0 &&
+             from_pcg_g   == 0) {
     if(gen_gnum->nuplet == 1) { // Cas from parent mais optimiser
       _gnum_from_parent_compute_opt(gen_gnum);
     } else {
       _gnum_from_parent_compute_nuplet(gen_gnum);
     }
-  }
+  } else if (from_graph_g != 0 || from_pcg_g != 0) {
 
+    if (from_parent_nuplet_g != 0) {
+      PDM_error(__FILE__, __LINE__, 0, "PDM_gnum_compute, nuplet with part_graph_comm is not possible \n");
+    }
+
+    int build_pcg = 0;
+    if(from_pcg_g == 0) {
+      build_pcg = 1;
+    }
+
+    _gnum_from_comm_graph(gen_gnum, build_pcg);
+
+  }
 }
 
 
@@ -1952,6 +2186,13 @@ PDM_gen_gnum_t *gen_gnum
 
   if (gen_gnum->parent != NULL) {
     PDM_free(gen_gnum->parent);
+  }
+
+  if (gen_gnum->pn_entity_graph != NULL) {
+    PDM_free(gen_gnum->pn_entity_graph);
+  }
+  if (gen_gnum->pentity_graph != NULL) {
+    PDM_free(gen_gnum->pentity_graph);
   }
 
   if(( gen_gnum->owner == PDM_OWNERSHIP_KEEP ) ||

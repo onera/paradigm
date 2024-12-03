@@ -27,11 +27,6 @@ module pdm_dmesh_nodal
 
   implicit none
 
-  integer(c_int), parameter :: PDM_GEOMETRY_KIND_VOLUMIC  = 0
-  integer(c_int), parameter :: PDM_GEOMETRY_KIND_SURFACIC = 1
-  integer(c_int), parameter :: PDM_GEOMETRY_KIND_RIDGE    = 2
-  integer(c_int), parameter :: PDM_GEOMETRY_KIND_CORNER   = 3
-
   interface PDM_DMesh_nodal_create ; module procedure &
   PDM_DMesh_nodal_create_
   end interface
