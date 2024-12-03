@@ -2147,7 +2147,7 @@ _post_treatment
       }
 
       if (ptb->t_post == PDM_PART_TO_BLOCK_POST_CLEANUP) {
-        PDM_realloc(_block_data ,_block_data , idx2,unsigned char);
+        PDM_realloc(_block_data, _block_data, idx2, unsigned char);
         *block_data = _block_data;
         s_block_data = idx2 / (int) s_data;
       }

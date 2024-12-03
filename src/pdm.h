@@ -6,6 +6,7 @@
 #define __PDM_H__
 
 #include <stdio.h>
+#include <limits.h>
 #include "pdm_config.h"
 #include "pdm_mpi.h"
 
@@ -81,10 +82,12 @@ extern "C" {
 typedef  long PDM_g_num_t;
 #define  PDM__MPI_G_NUM MPI_LONG
 #define  PDM__PDM_MPI_G_NUM PDM_MPI_LONG
+#define  PDM_G_NUM_MAX LONG_MAX
 #else
 typedef int PDM_g_num_t;
 #define  PDM__MPI_G_NUM MPI_INT
 #define  PDM__PDM_MPI_G_NUM PDM_MPI_INT
+#define  PDM_G_NUM_MAX INT_MAX
 #endif
 
 typedef  double PDM_real_t;
@@ -341,17 +344,19 @@ typedef enum {
 
 /**
  * \enum PDM_iso_surface_kind_t
- * \brief Type of iso surface
+ * \brief Type of iso-surface
  *
  */
 typedef enum {
 
-  PDM_ISO_SURFACE_KIND_PLANE   = 0,
-  PDM_ISO_SURFACE_KIND_SPHERE  = 1,
-  PDM_ISO_SURFACE_KIND_FIELD   = 2,
-  PDM_ISO_SURFACE_KIND_ELLIPSE = 3,
-  PDM_ISO_SURFACE_KIND_QUADRIC = 4,
-  PDM_ISO_SURFACE_KIND_HEART   = 5,
+  PDM_ISO_SURFACE_KIND_FIELD    = 0,
+  PDM_ISO_SURFACE_KIND_PLANE    = 1,
+  PDM_ISO_SURFACE_KIND_SPHERE   = 2,
+  PDM_ISO_SURFACE_KIND_ELLIPSE  = 3,
+  PDM_ISO_SURFACE_KIND_QUADRIC  = 4,
+  PDM_ISO_SURFACE_KIND_HEART    = 5,
+  PDM_ISO_SURFACE_KIND_FUNCTION = 6,
+  PDM_ISO_SURFACE_KIND_MAX      = 7
 
 } PDM_iso_surface_kind_t;
 

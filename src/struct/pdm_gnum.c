@@ -1484,6 +1484,12 @@ _gnum_from_parent_compute_nuplet
 
 
   PDM_MPI_Datatype mpi_entity_type;
+  int min_nuplet, max_nuplet;
+  PDM_MPI_Allreduce(&nuplet, &min_nuplet, 1, PDM_MPI_INT, PDM_MPI_MIN, gen_gnum->comm);
+  PDM_MPI_Allreduce(&nuplet, &max_nuplet, 1, PDM_MPI_INT, PDM_MPI_MAX, gen_gnum->comm);
+  if (min_nuplet != nuplet && max_nuplet != nuplet) {
+    PDM_error(__FILE__, __LINE__, 0, "Error : nuplet mismatch (min = %d, max = %d)\n", min_nuplet, max_nuplet);
+  }
   PDM_MPI_Type_create_contiguous(nuplet, PDM__PDM_MPI_G_NUM, &mpi_entity_type);
   PDM_MPI_Type_commit(&mpi_entity_type);
 

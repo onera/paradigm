@@ -376,9 +376,8 @@ def dmesh_nodal_get_vtx(DMeshNodal pydmn, MPI.Comm    comm):
 
   n_vtx = PDM_DMesh_nodal_n_vtx_get(pydmn.dmn);
   vtx_coord = PDM_DMesh_nodal_vtx_get(pydmn.dmn, PDM_OWNERSHIP_USER)
-  # vtx_tag = PDM_DMesh_nodal_vtx_tag_get(pydmn.dmn)
 
-  return {"np_vtx"         : create_numpy_d(vtx_coord,   3*n_vtx)}
+  return {"np_vtx" : create_numpy_d(vtx_coord, 3*n_vtx)}
 
 def dmesh_nodal_get_distrib_vtx(DMeshNodal pydmn, MPI.Comm    comm):
   """

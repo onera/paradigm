@@ -1455,6 +1455,86 @@ PDM_triangulate_hexahedron (int               dim,
 }
 
 
+
+int
+PDM_triangulate_faces
+(
+  int                       n_face,
+  int                      *face_vtx_idx,
+  int                      *face_vtx,
+  double                   *vtx_coord,
+  int                     **face_tria_idx,
+  int                     **tria_vtx,
+  PDM_triangulate_state_t  *tri_state
+)
+{
+  // Count size of tria_vtx
+  int max_face_vtx_n = 0;
+  int s_tria_vtx     = 0;
+  for (int i_face = 0; i_face < n_face; i_face++) {
+    int face_vtx_n = face_vtx_idx[i_face+1] - face_vtx_idx[i_face];
+    max_face_vtx_n = PDM_MAX(max_face_vtx_n, face_vtx_n);
+    s_tria_vtx     += face_vtx_n - 2;
+  }
+
+  // Create a new PDM_triangulate_state_t if necessary
+  PDM_triangulate_state_t *_tri_state = tri_state;
+  if (tri_state == NULL && max_face_vtx_n > 3) {
+    _tri_state = PDM_triangulate_state_create(max_face_vtx_n);
+  }
+
+
+  PDM_malloc(*face_tria_idx, n_face + 1, int);
+  (*face_tria_idx)[0] = 0;
+
+  PDM_malloc(*tria_vtx, 3*s_tria_vtx, int);
+
+  for (int i_face = 0; i_face < n_face; i_face++) {
+    int *_tria_vtx = *tria_vtx + (*face_tria_idx)[i_face] * 3;
+
+    int *_face_vtx = face_vtx + face_vtx_idx[i_face];
+    int face_vtx_n = face_vtx_idx[i_face+1] - face_vtx_idx[i_face];
+
+    int n_tria = 0;
+
+    if (face_vtx_n == 3) {
+      // Triangular face
+      n_tria = 1;
+      memcpy(_tria_vtx, _face_vtx, sizeof(int) * 3);
+    }
+    else if (face_vtx_n == 4) {
+      // Quadrilateral face
+      n_tria = PDM_triangulate_quadrangle(3,
+                                          vtx_coord,
+                                          NULL,
+                                          _face_vtx,
+                                          _tria_vtx);
+    }
+    else {
+      // Polygonal face
+      n_tria = PDM_triangulate_polygon(3,
+                                       face_vtx_n,
+                                       vtx_coord,
+                                       NULL,
+                                       _face_vtx,
+                                       PDM_TRIANGULATE_MESH_DEF,
+                                       _tria_vtx,
+                                       _tri_state);
+    }
+
+    (*face_tria_idx)[i_face+1] = (*face_tria_idx)[i_face] + n_tria;
+  }
+
+
+  if (tri_state == NULL && _tri_state != NULL) {
+    PDM_triangulate_state_destroy(_tri_state);
+  }
+
+  // Return number of triangles
+  return (*face_tria_idx)[n_face];
+}
+
+
 /*----------------------------------------------------------------------------*/
 
 #ifdef __cplusplus

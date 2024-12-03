@@ -261,6 +261,12 @@ test_c_create (pdm_t_mesh_intersection_surf_surf_atomic 1 PDM_LIST_TEST PDM_LIST
 test_c_create (pdm_t_newton_ho 1  PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_svd 1  PDM_LIST_TEST PDM_LIST_NRANK)
 
+test_c_create (pdm_t_isosurface_2d_nodal 1 PDM_LIST_TEST PDM_LIST_NRANK)
+test_c_create (pdm_t_isosurface_3d_nodal 1 PDM_LIST_TEST PDM_LIST_NRANK)
+test_c_create (pdm_t_isosurface_2d_ngon 1 PDM_LIST_TEST PDM_LIST_NRANK)
+test_c_create (pdm_t_isosurface_3d_ngon 1 PDM_LIST_TEST PDM_LIST_NRANK)
+
+test_c_create (pdm_t_triangulate 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_mesh_reorient_geom 3 PDM_LIST_TEST PDM_LIST_NRANK)
 
 if (PDM_ENABLE_PYTHON_BINDINGS)
@@ -276,6 +282,10 @@ if (PDM_ENABLE_PYTHON_BINDINGS)
    add_dependencies (pdm_t_block_to_part_p Pypdm)
    test_python_create (pdm_t_part_to_block_p 3 PDM_LIST_TEST PDM_LIST_NRANK)
    add_dependencies (pdm_t_part_to_block_p Pypdm)
+   test_python_create (pdm_t_isosurface_pacman_p 2 PDM_LIST_TEST PDM_LIST_NRANK)
+   add_dependencies (pdm_t_isosurface_pacman_p Pypdm)
+   test_python_create (pdm_t_isosurface_user_function_p 2 PDM_LIST_TEST PDM_LIST_NRANK)
+   add_dependencies (pdm_t_isosurface_user_function_p Pypdm)
    test_python_create (pdm_t_mesh_reorient_geom_p 3 PDM_LIST_TEST PDM_LIST_NRANK)
    add_dependencies (pdm_t_mesh_reorient_geom_p Pypdm)
 endif()

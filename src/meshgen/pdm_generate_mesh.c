@@ -271,7 +271,7 @@ _generate_mesh_rectangle
   PDM_dcube_nodal_t *dcube = PDM_dcube_nodal_gen_create(comm,
                                                         n_x,
                                                         n_y,
-                                                        0.,
+                                                        0,
                                                         lengthx,
                                                         xmin,
                                                         ymin,

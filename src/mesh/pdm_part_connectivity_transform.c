@@ -612,6 +612,7 @@ PDM_compute_face_vtx_from_face_and_edge
 {
   int dbg = 0;
   if (n_face == 0) {
+    *face_vtx = NULL;
     return;
   }
   PDM_malloc(*face_vtx, face_edge_idx[n_face], int);

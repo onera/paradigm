@@ -30,6 +30,7 @@
 #include "pdm_compare_operator.h"
 #include "pdm_sort.h"
 #include "pdm_binary_search.h"
+#include "pdm_part_renum.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -925,7 +926,7 @@ PDM_part_mesh_nodal_std_decompose_local_edges
   int *_parent_elmt               = parent_elmt          + _n_edge_current;
   int *_elmt_cell_edge_idx        = elmt_cell_edge_idx   + _n_elt_current;
 
-  if (parent_num != NULL) {
+  if (0) {//parent_num != NULL) {
     for (int i_elt = 0; i_elt < n_elt; i_elt++) {
       int i_parent = parent_num[i_elt] + 1;
       for (int i_edge = 0; i_edge < n_edge_elt; i_edge++) {
@@ -988,7 +989,7 @@ PDM_part_mesh_nodal_poly2d_decompose_local_edges
   int *_elmt_cell_edge_idx        = elmt_cell_edge_idx   + _n_elt_current;
 
   int idx = 0;
-  if (parent_num != NULL) {
+  if (0) {//arent_num != NULL) {
     for (int i_elt = 0; i_elt < n_elt; i_elt++) {
       int i_parent = parent_num[i_elt] + 1;
       int n_edge_elt = connectivity_elmt_vtx_idx[i_elt+1] - connectivity_elmt_vtx_idx[i_elt];
@@ -1268,12 +1269,11 @@ PDM_part_mesh_nodal_std_decompose_local_faces
   int *_parent_elmt               = parent_elmt          + _n_face_current;
   int *_elmt_cell_face_idx        = elmt_cell_face_idx   + _n_elt_current;
 
-
-  if (parent_num != NULL) {
+  if (0) {//parent_num != NULL) {
     for (int i_elt = 0; i_elt < n_elt; i_elt++) {
       int i_parent = parent_num[i_elt] + 1;
       for (int i_face = 0; i_face < n_face_elt; i_face++) {
-        _parent_elmt_position[i_elt * n_face_elt + i_face] = i_parent;
+        _parent_elmt[i_elt * n_face_elt + i_face] = i_parent;
       }
     }
   }
@@ -1281,7 +1281,7 @@ PDM_part_mesh_nodal_std_decompose_local_faces
     for (int i_elt = 0; i_elt < n_elt; i_elt++) {
       int i_parent = *n_elt_current + i_elt + 1;
       for (int i_face = 0; i_face < n_face_elt; i_face++) {
-        _parent_elmt_position[i_elt * n_face_elt + i_face] = i_parent;
+        _parent_elmt[i_elt * n_face_elt + i_face] = i_parent;
       }
     }
   }
@@ -1289,7 +1289,6 @@ PDM_part_mesh_nodal_std_decompose_local_faces
   for (int i_elt = 0; i_elt < n_elt; i_elt++) {
     for (int i_face = 0; i_face < n_face_elt; i_face++) {
       _parent_elmt_position[i_elt * n_face_elt + i_face] = i_face;
-      _parent_elmt         [i_elt * n_face_elt + i_face] = i_elt+1;
     }
     _elmt_cell_face_idx[i_elt+1] = _elmt_cell_face_idx[i_elt] + n_face_elt;
 
@@ -1332,7 +1331,7 @@ PDM_part_mesh_nodal_poly2d_decompose_local_faces
   int *_parent_elmt               = parent_elmt          + _n_face_current;
   int *_elmt_cell_face_idx        = elmt_cell_face_idx   + _n_elt_current;
 
-  if (parent_num != NULL) {
+  if (0) {//parent_num != NULL) {
     for (int i_elt = 0; i_elt < n_elt; i_elt++) {
       int i_parent = parent_num[i_elt] + 1;
       _parent_elmt[i_elt] = i_parent;
@@ -1438,6 +1437,8 @@ PDM_part_mesh_nodal_elmts_sections_local_decompose_faces
     elmt_face_idx    [i_part][0] = 0;
     elmt_face_vtx_idx[i_part][0] = 0;
 
+    int have_parent_num = -1;
+
     for (int i_section = 0; i_section < n_section; i_section++) {
       int id_section = section_id[i_section];
       PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(pmne, id_section);
@@ -1448,6 +1449,16 @@ PDM_part_mesh_nodal_elmts_sections_local_decompose_faces
                                                                  id_section,
                                                                  i_part,
                                                                  PDM_OWNERSHIP_BAD_VALUE);
+
+      if (have_parent_num < 0) {
+        have_parent_num = parent_num != NULL;
+      }
+      else {
+        int _have_parent_num = parent_num != NULL;
+        if (_have_parent_num != have_parent_num) {
+          PDM_error(__FILE__, __LINE__, 0, "Either all sections or none must have parent_num != NULL\n");
+        }
+      }
 
       if (t_elt == PDM_MESH_NODAL_POLY_2D) {
         int *elt_vtx_idx = NULL;
@@ -1619,7 +1630,7 @@ PDM_part_mesh_nodal_elmts_compute_child_parent
                       int                         ***,
                       int                         ***,
                       int                         ***,
-                      int                         ***);
+                      int                         ***) = NULL;
 
   switch (dim_child) {
     case 2: {
@@ -1689,6 +1700,9 @@ PDM_part_mesh_nodal_elmts_compute_child_parent
   PDM_malloc(child_to_parent_idx, n_part, int *);
   PDM_malloc(child_to_parent    , n_part, int *);
 
+  int  n_section  = PDM_part_mesh_nodal_elmts_n_section_get  (pmne_parent);
+  int *section_id = PDM_part_mesh_nodal_elmts_sections_id_get(pmne_parent);
+
   for (int i_part = 0; i_part < n_part; i_part++) {
 
     int pn_parent = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne_parent, i_part);
@@ -1718,6 +1732,62 @@ PDM_part_mesh_nodal_elmts_compute_child_parent
                                   pentity_vtx_idx                [i_part],
                                   pentity_vtx                    [i_part],
                                   compute_parent_child);
+
+    int have_parent_num = -1;
+    for (int i_section = 0; i_section < n_section; i_section++) {
+      int id_section = section_id[i_section];
+      int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(pmne_parent,
+                                                                 id_section,
+                                                                 i_part,
+                                                                 PDM_OWNERSHIP_BAD_VALUE);
+      if (have_parent_num < 0) {
+        have_parent_num = parent_num != NULL;
+      }
+      else {
+        int _have_parent_num = parent_num != NULL;
+        if (_have_parent_num != have_parent_num) {
+          PDM_error(__FILE__, __LINE__, 0, "Either all sections or none must have parent_num != NULL\n");
+        }
+      }
+    }
+
+    if (have_parent_num) {
+      int *cat_parent_num = NULL; // Miaou!
+      int *new_to_old     = NULL;
+      PDM_malloc(cat_parent_num, pn_parent, int);
+      PDM_malloc(new_to_old    , pn_parent, int);
+      int idx = 0;
+      for (int i_section = 0; i_section < n_section; i_section++) {
+        int id_section = section_id[i_section];
+        int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne_parent, id_section, i_part);
+        int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(pmne_parent,
+                                                                   id_section,
+                                                                   i_part,
+                                                                   PDM_OWNERSHIP_BAD_VALUE);
+        for (int i_elt = 0; i_elt < n_elt; i_elt++) {
+          cat_parent_num[idx] = parent_num[i_elt];
+          new_to_old[parent_num[i_elt]] = idx;
+          idx++;
+        }
+      }
+
+      // child_to_parent
+      for (int i = 0; i < child_to_parent_idx[i_part][n_decompose_child_entity[i_part]]; i++) {
+        int i_parent = PDM_ABS (child_to_parent[i_part][i]) - 1;
+        int sign     = PDM_SIGN(child_to_parent[i_part][i]);
+        child_to_parent[i_part][i] = sign * (cat_parent_num[i_parent] + 1);
+      }
+
+      if (compute_parent_child == PDM_TRUE) {
+        PDM_part_renum_connectivities(pn_parent,
+                                      new_to_old,
+                                      decompose_parent_entity_idx[i_part],
+                                      decompose_parent_entity    [i_part]);
+      }
+      PDM_free(cat_parent_num);
+      PDM_free(new_to_old    );
+    }
+
 
     PDM_free(decompose_parent_entity_vtx_idx      [i_part]);
     PDM_free(decompose_parent_entity_vtx          [i_part]);

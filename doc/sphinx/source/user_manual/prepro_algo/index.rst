@@ -18,6 +18,11 @@ Pre-/co-/post-processing
     :ref:`Closest points <closest_points>`
       Nearest neighbors search between point clouds
 
+  .. container:: card
+
+    :ref:`Iso-surfaces <isosurface>`
+      Extract slices and iso-surfaces
+
 .. toctree::
   :caption: Pre-/co-/post-processing algorithms
   :maxdepth: 1
@@ -25,6 +30,7 @@ Pre-/co-/post-processing
 
   mesh_location
   closest_points
+  isosurface
 
 |
 

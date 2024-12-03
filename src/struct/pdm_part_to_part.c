@@ -5915,7 +5915,9 @@ PDM_part_to_part_part1_to_part2_single_part_get
 
   *n_elt1             = (int          ) ptp->n_elt1[i_part];
   *part1_to_part2_idx = (int         *) ptp->part1_to_part2_idx[i_part];
-  *part1_to_part2     = (PDM_g_num_t *) ptp->part1_to_part2[i_part];
+  if (ptp->part1_to_part2 != NULL) {
+    *part1_to_part2   = (PDM_g_num_t *) ptp->part1_to_part2[i_part];
+  }
 }
 
 /**
