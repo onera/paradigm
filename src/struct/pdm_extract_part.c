@@ -5352,6 +5352,11 @@ _extract_part_nodal_local
   PDM_part_mesh_nodal_elmts_t *pmne_parent = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(extrp->pmn,
                                                                                            geom_kind_parent);
 
+  int *pn_vtx = NULL;
+  PDM_malloc(pn_vtx, extrp->n_part_in, int);
+  for (int i_part = 0; i_part < extrp->n_part_in; i_part++) {
+    pn_vtx[i_part] = PDM_part_mesh_nodal_n_vtx_get(extrp->pmn, i_part);
+  }
 
   int **is_selected[PDM_GEOMETRY_KIND_MAX];
   int **vtx_old_to_new = NULL;
@@ -5408,6 +5413,7 @@ _extract_part_nodal_local
                                                      pmne,
                                                      PDM_MESH_ENTITY_MAX, // unused here
                                                      PDM_FALSE,
+                                                     pn_vtx,
                                                      &child_to_parent_idx,
                                                      &child_to_parent,
                                                      &n_entity,
@@ -5450,6 +5456,8 @@ _extract_part_nodal_local
       PDM_free(is_selected[geom_kind]);
     }
   }
+
+  PDM_free(pn_vtx);
 
 
   for (int i_part = 0; i_part < extrp->n_part_in; i_part++) {
@@ -6005,7 +6013,15 @@ _extract_part_nodal
   PDM_part_mesh_nodal_elmts_t *pmne_child = NULL;
 
   int *pn_child = NULL;
-  PDM_malloc(pn_child,  extrp->n_part_in, int);
+  PDM_malloc(pn_child, extrp->n_part_in, int);
+
+  int *pn_vtx = NULL;
+  PDM_malloc(pn_vtx, extrp->n_part_in, int);
+  for (int i_part = 0; i_part < extrp->n_part_in; i_part++) {
+    pn_vtx[i_part] = PDM_part_mesh_nodal_n_vtx_get(extrp->pmn, i_part);
+  }
+
+
 
   for (PDM_geometry_kind_t geom_kind_child = geom_kind_parent; geom_kind_child < PDM_GEOMETRY_KIND_MAX; geom_kind_child++) {
 
@@ -6095,6 +6111,7 @@ _extract_part_nodal
                                                      pmne_child,
                                                      PDM_MESH_ENTITY_MAX, // unused here
                                                      PDM_FALSE,
+                                                     pn_vtx,
                                                      &child_to_parent_idx,
                                                      &child_to_parent,
                                                      &n_entity,
@@ -6382,7 +6399,7 @@ _extract_part_nodal
 
   } // End loop on geometry kinds
 
-
+  PDM_free(pn_vtx);
 
   /* Free memory */
   for (int i_part = 0; i_part < extrp->n_part_in; i_part++) {

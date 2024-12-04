@@ -179,10 +179,11 @@ PDM_part_mesh_nodal_poly2d_decomposes_edges
  * \param [in]    n_elt                  Number of elements
  * \param [in]    order                  Element order
  * \param [in]    parent_node            Permutation of principal nodes (for high-order elements)
+ * \param [in]    vtx_tag                Vertex tags (if not NULL, only edges with both vertices tagged > 0 will be generated)
  * \param [inout] n_elt_current          Current position in concatenated sections
  * \param [inout] n_edge_current         Current position in concatenated edges
  * \param [in]    connectivity_elmt_vtx  Element->Vertex connectivity (local IDs)
- * \param [in]    parent_num                 Element parent numbering (or NULL)
+ * \param [in]    parent_num             Element parent numbering (or NULL)
  * \param [inout] elmt_edge_vtx_idx      Index for ElementEdge->Vertex connectivity
  * \param [inout] elmt_edge_vtx          ElementEdge->Vertex connectivity (local IDs)
  * \param [inout] elmt_cell_edge_idx     Index for ElementEdge->Edge connectivity
@@ -197,6 +198,7 @@ PDM_part_mesh_nodal_std_decompose_local_edges
        int                   n_elt,
        int                   order,
        int                  *parent_node,
+       int                  *vtx_tag,
        int                  *n_elt_current,
        int                  *n_edge_current,
  const int                  *connectivity_elmt_vtx,
@@ -213,6 +215,7 @@ PDM_part_mesh_nodal_std_decompose_local_edges
  * \brief Decompose locally a poly2d section into edges (single partition).
  *
  * \param [in]    n_elt                      Number of elements
+ * \param [in]    vtx_tag                    Vertex tags (if not NULL, only edges with both vertices tagged > 0 will be generated)
  * \param [inout] n_elt_current              Current position in concatenated sections
  * \param [inout] n_edge_current             Current position in concatenated edges
  * \param [in]    connectivity_elmt_vtx      Element->Vertex connectivity (local IDs)
@@ -229,6 +232,7 @@ void
 PDM_part_mesh_nodal_poly2d_decompose_local_edges
 (
        int                   n_elt,
+       int                  *vtx_tag,
        int                  *n_elt_current,
        int                  *n_edge_current,
  const int                  *connectivity_elmt_vtx,
@@ -246,6 +250,7 @@ PDM_part_mesh_nodal_poly2d_decompose_local_edges
  * \brief Decompose locally a PartMeshNodalElements into edges.
  *
  * \param [in]  pmne                       Pointer to \ref PDM_part_mesh_nodal_elmts_t instance
+ * \param [in]  vtx_tag                    Vertex tags (if not NULL, only edges with both vertices tagged > 0 will be generated)
  * \param [out] out_n_decompose_elmt_edge  Number of ElementEdges (size = n_part)
  * \param [out] out_elmt_edge_idx          Index for Cell->ElementEdge connectivity (size = n_part)
  * \param [out] out_elmt_edge_vtx_idx      Index for ElementEdge->Vertex connectivity (size = n_part)
@@ -258,6 +263,7 @@ void
 PDM_part_mesh_nodal_elmts_sections_local_decompose_edges
 (
   PDM_part_mesh_nodal_elmts_t   *pmne,
+  int                          **vtx_tag,
   int                          **out_n_decompose_elmt_edge,
   int                         ***out_elmt_edge_idx,
   int                         ***out_elmt_edge_vtx_idx,
@@ -274,6 +280,7 @@ PDM_part_mesh_nodal_elmts_sections_local_decompose_edges
  * \param [in]    n_elt                  Number of elements
  * \param [in]    order                  Element order
  * \param [in]    parent_node            Permutation of principal nodes (for high-order elements)
+ * \param [in]    vtx_tag                Vertex tags (if not NULL, only faces with all vertices tagged > 0 will be generated)
  * \param [inout] n_elt_current          Current position in concatenated sections
  * \param [inout] n_face_current         Current position in concatenated faces
  * \param [in]    connectivity_elmt_vtx  Element->Vertex connectivity (local IDs)
@@ -292,6 +299,7 @@ PDM_part_mesh_nodal_std_decompose_local_faces
        int                   n_elt,
        int                   order,
        int                  *parent_node,
+       int                  *vtx_tag,
        int                  *n_elt_current,
        int                  *n_face_current,
  const int                  *connectivity_elmt_vtx,
@@ -341,6 +349,7 @@ PDM_part_mesh_nodal_poly2d_decompose_local_faces
  * \brief Decompose locally a PartMeshNodalElements into faces.
  *
  * \param [in]  pmne                       Pointer to \ref PDM_part_mesh_nodal_elmts_t instance
+ * \param [in]  vtx_tag                    Vertex tags (if not NULL, only faces with all vertices tagged > 0 will be generated)
  * \param [out] out_n_decompose_elmt_face  Number of ElementFaces (size = n_part)
  * \param [out] out_elmt_face_idx          Index for Cell->ElementFace connectivity (size = n_part)
  * \param [out] out_elmt_face_vtx_idx      Index for ElementFace->Vertex connectivity (size = n_part)
@@ -353,6 +362,7 @@ void
 PDM_part_mesh_nodal_elmts_sections_local_decompose_faces
 (
   PDM_part_mesh_nodal_elmts_t   *pmne,
+  int                          **vtx_tag,
   int                          **out_n_decompose_elmt_face,
   int                         ***out_elmt_face_idx,
   int                         ***out_elmt_face_vtx_idx,
@@ -371,6 +381,7 @@ PDM_part_mesh_nodal_elmts_sections_local_decompose_faces
  * \param [in]  pmne_child                Pointer to child \ref PDM_part_mesh_nodal_elmts_t instance
  * \param [in]  child_entity_type         Child entity type (only used if \p pmne_child is NULL)
  * \param [in]  compute_parent_child      Build only ascending link (child->parent)
+ * \param [in]  pn_vtx                    Number of vertices per partition (or NULL) (used only if \p pmne_child != NULL and \p compute_parent_child == PDM_FALSE)
  * \param [out] out_child_to_parent_idx   Index for child->parent connectivity (size = n_child+1 (total number of elt in \p pmne_child))
  * \param [out] out_child_to_parent       Child->parent connectivity
  * \param [out] out_n_entity              Number of child entities in pmne_parent (if \p compute_parent_child is PDM_TRUE, size = \p n_part)
@@ -386,6 +397,7 @@ PDM_part_mesh_nodal_elmts_compute_child_parent
   PDM_part_mesh_nodal_elmts_t   *pmne_child,
   PDM_mesh_entities_t            child_entity_type,
   PDM_bool_t                     compute_parent_child,
+  int                           *pn_vtx,
   int                         ***out_child_to_parent_idx,
   int                         ***out_child_to_parent,
   int                          **out_n_entity,
