@@ -2563,7 +2563,7 @@ _part_extension_3d
         pcell_face_idx [lpart][i_cell] = part_ext->parts[i_domain][i_part].cell_face_idx[i_cell];
       }
 
-      for(int idx = 0; idx < pcell_face_idx[i_part][pn_cell[lpart]]; ++idx) {
+      for(int idx = 0; idx < pcell_face_idx[lpart][pn_cell[lpart]]; ++idx) {
         pcell_face [lpart][idx] = part_ext->parts[i_domain][i_part].cell_face[idx];
       }
 
@@ -2575,7 +2575,7 @@ _part_extension_3d
           pface_vtx_idx [lpart][i_face] = part_ext->parts[i_domain][i_part].face_vtx_idx[i_face];
         }
 
-        for(int idx = 0; idx < pface_vtx_idx[i_part][pn_face[lpart]]; ++idx) {
+        for(int idx = 0; idx < pface_vtx_idx[lpart][pn_face[lpart]]; ++idx) {
           pface_vtx [lpart][idx] = part_ext->parts[i_domain][i_part].face_vtx[idx];
         }
       }
@@ -2588,7 +2588,7 @@ _part_extension_3d
           pface_edge_idx [lpart][i_face] = part_ext->parts[i_domain][i_part].face_edge_idx[i_face];
         }
 
-        for(int idx = 0; idx < pface_edge_idx[i_part][pn_face[lpart]]; ++idx) {
+        for(int idx = 0; idx < pface_edge_idx[lpart][pn_face[lpart]]; ++idx) {
           pface_edge [lpart][idx] = part_ext->parts[i_domain][i_part].face_edge[idx];
         }
 
@@ -2599,7 +2599,7 @@ _part_extension_3d
           pedge_vtx_idx [lpart][i_edge] = 2 * i_edge;
         }
 
-        for(int idx = 0; idx < pedge_vtx_idx[i_part][pn_edge[lpart]]; ++idx) {
+        for(int idx = 0; idx < pedge_vtx_idx[lpart][pn_edge[lpart]]; ++idx) {
           pedge_vtx [lpart][idx] = part_ext->parts[i_domain][i_part].edge_vtx[idx];
         }
       }
@@ -2635,7 +2635,6 @@ _part_extension_3d
       lpart++;
     }
   }
-
 
   /*
    * On va etendre la partition avec le graphe de base tant que de nouveau elements apparaissent
@@ -4580,7 +4579,7 @@ _part_extension_2d
         for(int i_face = 0; i_face < pn_face[lpart]+1; ++i_face) {
           pface_edge_idx [lpart][i_face] = part_ext->parts[i_domain][i_part].face_edge_idx[i_face];
         }
-        for(int idx = 0; idx < pface_edge_idx[i_part][pn_face[lpart]]; ++idx) {
+        for(int idx = 0; idx < pface_edge_idx[lpart][pn_face[lpart]]; ++idx) {
           pface_edge [lpart][idx] = part_ext->parts[i_domain][i_part].face_edge[idx];
         }
         for(int i_edge = 0; i_edge < pn_edge[lpart]; ++i_edge) {
@@ -4593,7 +4592,7 @@ _part_extension_2d
         for(int i_face = 0; i_face < pn_face[lpart]+1; ++i_face) {
           pface_vtx_idx [lpart][i_face] = part_ext->parts[i_domain][i_part].face_vtx_idx[i_face];
         }
-        for(int idx = 0; idx < pface_vtx_idx[i_part][pn_face[lpart]]; ++idx) {
+        for(int idx = 0; idx < pface_vtx_idx[lpart][pn_face[lpart]]; ++idx) {
           pface_vtx [lpart][idx] = part_ext->parts[i_domain][i_part].face_vtx[idx];
         }
       }
@@ -6134,7 +6133,7 @@ _part_extension_1d
         pedge_vtx_idx [lpart][i_edge] = 2 * i_edge;
       }
 
-      for(int idx = 0; idx < pedge_vtx_idx[i_part][pn_edge[lpart]]; ++idx) {
+      for(int idx = 0; idx < pedge_vtx_idx[lpart][pn_edge[lpart]]; ++idx) {
         pedge_vtx [lpart][idx] = part_ext->parts[i_domain][i_part].edge_vtx[idx];
       }
 
