@@ -1700,7 +1700,6 @@ PDM_part_mesh_nodal_elmts_compute_child_parent
     }
     else {
       if (pn_vtx != NULL) {
-        log_trace("Use vtx_tag\n");
         // Tag vertices incident to child elements
         PDM_malloc(vtx_tag, n_part, int *);
         for (int i_part = 0; i_part < n_part; i_part++) {
