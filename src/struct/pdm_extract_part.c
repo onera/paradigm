@@ -6475,7 +6475,7 @@ PDM_extract_part_create
   extrp->is_nodal              = 0;
 
   extrp->pmn                   = NULL;
-  extrp->owner_extract_pmn     = PDM_OWNERSHIP_BAD_VALUE;
+  extrp->owner_extract_pmn     = PDM_OWNERSHIP_KEEP;
   extrp->extract_pmn           = NULL;
 
   int _renum_cell_method = PDM_part_renum_method_cell_idx_get("PDM_PART_RENUM_CELL_NONE");
@@ -6579,16 +6579,16 @@ PDM_extract_part_create
   extrp->owner_vtx_coord = PDM_OWNERSHIP_BAD_VALUE;
 
   for(int i = 0; i < PDM_CONNECTIVITY_TYPE_MAX; ++i) {
-    extrp->owner_connectivity       [i] = PDM_OWNERSHIP_BAD_VALUE;
+    extrp->owner_connectivity       [i] = PDM_OWNERSHIP_KEEP;
     extrp->pextract_connectivity    [i] = NULL;
     extrp->pextract_connectivity_idx[i] = NULL;
   }
   for(int i = 0; i < PDM_MESH_ENTITY_MAX; ++i) {
-    extrp->owner_ln_to_gn                 [i] = PDM_OWNERSHIP_BAD_VALUE;
-    extrp->owner_parent_ln_to_gn          [i] = PDM_OWNERSHIP_BAD_VALUE;
-    extrp->owner_parent_lnum              [i] = PDM_OWNERSHIP_BAD_VALUE;
-    extrp->owner_color                    [i] = PDM_OWNERSHIP_BAD_VALUE;
-    extrp->owner_init_location            [i] = PDM_OWNERSHIP_BAD_VALUE;
+    extrp->owner_ln_to_gn                 [i] = PDM_OWNERSHIP_KEEP;
+    extrp->owner_parent_ln_to_gn          [i] = PDM_OWNERSHIP_KEEP;
+    extrp->owner_parent_lnum              [i] = PDM_OWNERSHIP_KEEP;
+    extrp->owner_color                    [i] = PDM_OWNERSHIP_KEEP;
+    extrp->owner_init_location            [i] = PDM_OWNERSHIP_KEEP;
     extrp->pextract_entity_color          [i] = NULL;
     extrp->pextract_entity_order          [i] = NULL;
     extrp->pextract_entity_ln_to_gn       [i] = NULL;
