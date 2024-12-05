@@ -552,7 +552,8 @@ int main(int argc, char *argv[])
     PDM_extract_part_selected_lnum_set(extrp,
                                        i_part,
                                        pn_select_cell[i_part],
-                                       selected_l_num[i_part]);
+                                       selected_l_num[i_part],
+                                       PDM_OWNERSHIP_USER);
 
 
     int         *group_face_idx      = NULL;

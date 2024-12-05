@@ -491,7 +491,8 @@ int main(int argc, char *argv[])
     PDM_extract_part_selected_lnum_set(extrp,
                                        i_part,
                                        pn_select_face[i_part],
-                                       selected_face_l_num[i_part]);
+                                       selected_face_l_num[i_part],
+                                       PDM_OWNERSHIP_USER);
 
     // PDM_log_trace_array_int(selected_face_l_num[i_part], pn_select_face[i_part], "selected_face_l_num ::");
 

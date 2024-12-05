@@ -1227,7 +1227,8 @@ _extract_nodal
     PDM_extract_part_selected_lnum_set(isos->extrp,
                                        i_part,
                                        n_extract   [i_part],
-                                       extract_lnum[i_part]);
+                                       extract_lnum[i_part],
+                                       PDM_OWNERSHIP_USER);
 
   } // End loop on parts
 
@@ -1468,7 +1469,8 @@ _extract_ngon
     PDM_extract_part_selected_lnum_set(isos->extrp,
                                        i_part,
                                        n_extract   [i_part],
-                                       extract_lnum[i_part]);
+                                       extract_lnum[i_part],
+                                       PDM_OWNERSHIP_USER);
 
     if (isos->entry_mesh_dim==3) {
       for (int i_group = 0; i_group < isos->n_group_face; i_group++) {

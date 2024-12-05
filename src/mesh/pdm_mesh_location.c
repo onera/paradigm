@@ -3099,7 +3099,8 @@ PDM_mesh_location_compute
                                 0,
                                 dn_elt2,
                                 delt_parent_g_num2,
-                                delt_init_location2);
+                                delt_init_location2,
+                                PDM_OWNERSHIP_USER);
 
     if (dbg_enabled) {
       log_trace(">> PDM_extract_part_compute\n");

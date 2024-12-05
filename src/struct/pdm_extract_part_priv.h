@@ -110,12 +110,14 @@ struct _pdm_extract_part_t
   /* Which cell or face is selected */
   int                 *n_extract;
   int                **extract_lnum;
+  PDM_ownership_t      owner_extract_lnum;
 
   /* Each rank specify the target AND order they want */
   int                  from_target;
   int                 *n_target;
   PDM_g_num_t        **target_gnum;
   PDM_ownership_t      target_ownership;
+  PDM_ownership_t      owner_target_gnum;
   int                **target_location;
   PDM_mesh_entities_t  master_entity;
 
