@@ -6577,6 +6577,7 @@ PDM_extract_part_create
   }
 
   extrp->owner_vtx_coord = PDM_OWNERSHIP_BAD_VALUE;
+  extrp->owner_vtx_coord = PDM_OWNERSHIP_KEEP;
 
   for(int i = 0; i < PDM_CONNECTIVITY_TYPE_MAX; ++i) {
     extrp->owner_connectivity       [i] = PDM_OWNERSHIP_KEEP;
