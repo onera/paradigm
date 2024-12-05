@@ -294,7 +294,7 @@ PDM_extract_part_connectivity_get
  PDM_connectivity_type_t    connectivity_type,
  int                      **connect,
  int                      **connect_idx,
- PDM_ownership_t           ownership
+ PDM_ownership_t            ownership
 );
 
 
