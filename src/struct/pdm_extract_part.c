@@ -6933,23 +6933,6 @@ PDM_extract_part_target_set
 
 /**
  *
- * \brief Keep target_gnum data ownership inside extrp
- *
- * \param [in]   extrp             PDM_extract_part_t
- *
- */
-void
-PDM_extract_part_target_gnum_keep_ownnership
-(
-  PDM_extract_part_t       *extrp
-)
-{
-  extrp->target_ownership = PDM_OWNERSHIP_KEEP;
-}
-
-
-/**
- *
  * \brief Set entity center (useful for equilibrate / hilbert ordering)
  *
  * \param [in]   extrp            PDM_extract_part_t structure
