@@ -103,7 +103,7 @@ struct _pdm_extract_part_t
 
   /* If partition is described by elements */
   int is_nodal;
-  PDM_part_mesh_nodal_elmts_t *pmne;
+  // PDM_part_mesh_nodal_elmts_t *pmne;
   PDM_part_mesh_nodal_t       *pmn;
 
 
@@ -122,12 +122,12 @@ struct _pdm_extract_part_t
   /* Extracted part */
   double             **pextract_vtx_coord;
 
-  PDM_bool_t          is_owner_connectivity   [PDM_CONNECTIVITY_TYPE_MAX];
-  PDM_bool_t          is_owner_ln_to_gn       [PDM_MESH_ENTITY_MAX];
-  PDM_bool_t          is_owner_parent_ln_to_gn[PDM_MESH_ENTITY_MAX];
-  PDM_bool_t          is_owner_parent_lnum    [PDM_MESH_ENTITY_MAX];
-  PDM_bool_t          is_owner_vtx_coord;
-  PDM_bool_t          is_owner_init_location[PDM_MESH_ENTITY_MAX];
+  PDM_ownership_t     owner_connectivity   [PDM_CONNECTIVITY_TYPE_MAX];
+  PDM_ownership_t     owner_ln_to_gn       [PDM_MESH_ENTITY_MAX];
+  PDM_ownership_t     owner_parent_ln_to_gn[PDM_MESH_ENTITY_MAX];
+  PDM_ownership_t     owner_parent_lnum    [PDM_MESH_ENTITY_MAX];
+  PDM_ownership_t     owner_vtx_coord;
+  PDM_ownership_t     owner_init_location  [PDM_MESH_ENTITY_MAX];
 
   /* Only for mapping and clear API */
   int                *pextract_n_entity              [PDM_MESH_ENTITY_MAX];
@@ -139,16 +139,13 @@ struct _pdm_extract_part_t
   int               **pextract_entity_init_location  [PDM_MESH_ENTITY_MAX];
 
   // For renumbering
-  PDM_bool_t          is_owner_color                 [PDM_MESH_ENTITY_MAX];
+  PDM_ownership_t     owner_color                    [PDM_MESH_ENTITY_MAX];
   int               **pextract_entity_color          [PDM_MESH_ENTITY_MAX];
   int               **pextract_entity_order          [PDM_MESH_ENTITY_MAX];
 
   /* If partition is described by elements */
-  PDM_bool_t                   is_owner_extract_pmne;
-  PDM_part_mesh_nodal_elmts_t *extract_pmne;
-
-  PDM_bool_t                   is_owner_extract_pmn;
-  PDM_part_mesh_nodal_t       *extract_pmn;
+  PDM_ownership_t        owner_extract_pmn;
+  PDM_part_mesh_nodal_t *extract_pmn;
 
   /* Part-to-part objects */
   PDM_part_to_part_t *ptp_entity   [PDM_MESH_ENTITY_MAX];
