@@ -6904,7 +6904,7 @@ PDM_extract_part_target_set
 )
 {
   extrp->from_target = 1;
-  if (extrp->extract_kind == PDM_EXTRACT_PART_KIND_FROM_TARGET) {
+  if (extrp->extract_kind != PDM_EXTRACT_PART_KIND_FROM_TARGET) {
     PDM_error(__FILE__, __LINE__, 0, "PDM_extract_part_target_set : extract_kind must be PDM_EXTRACT_PART_KIND_FROM_TARGET\n");
   }
   if (ownership == PDM_OWNERSHIP_BAD_VALUE) {
