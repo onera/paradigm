@@ -134,7 +134,8 @@ _build_extract_part_bound
     PDM_extract_part_selected_lnum_set(*extrp,
                                        i_part,
                                        group_entity_idx[i_part][n_group],
-                                       group_entity[i_part]);
+                                       group_entity[i_part],
+                                       PDM_OWNERSHIP_USER);
 
     int n_cell                 = 0;
     int n_face                 = 0;

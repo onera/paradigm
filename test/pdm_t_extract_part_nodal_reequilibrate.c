@@ -605,7 +605,8 @@ int main
     PDM_extract_part_selected_lnum_set(extrp,
                                        i_part,
                                        n_extract   [i_part],
-                                       extract_lnum[i_part]);
+                                       extract_lnum[i_part],
+                                       PDM_OWNERSHIP_USER);
   }
 
   PDM_extract_part_compute(extrp);

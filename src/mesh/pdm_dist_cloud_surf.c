@@ -1697,7 +1697,8 @@ _dist_cloud_surf_compute_optim
                                 0,
                                 n_extract_boxes,
                                 box_gnum,
-                                box_init_location);
+                                box_init_location,
+                                PDM_OWNERSHIP_USER);
 
     if(0 == 1) {
       PDM_log_trace_array_long(box_gnum, n_extract_boxes, "box_gnum :: ");

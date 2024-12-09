@@ -1938,7 +1938,8 @@ MPI_TEST_CASE("[pdm_extract_part] - 2p - nodal", 2) {
                                   i_part,
                                   n_target   [i_part],
                                   target_gnum[i_part],
-                                  NULL);
+                                  NULL,
+                                  PDM_OWNERSHIP_USER);
     }
   }
   else {
@@ -1954,7 +1955,8 @@ MPI_TEST_CASE("[pdm_extract_part] - 2p - nodal", 2) {
       PDM_extract_part_selected_lnum_set(extrp,
                                          i_part,
                                          n_extract   [i_part],
-                                         extract_lnum[i_part]);
+                                         extract_lnum[i_part],
+                                         PDM_OWNERSHIP_USER);
     }
   }
 

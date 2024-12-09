@@ -164,7 +164,7 @@ int main(int argc, char *argv[])
   /*
    * Define distribution of cell
    */
-  PDM_dmesh_nodal_dump_vtk(dmn1, PDM_GEOMETRY_KIND_VOLUMIC, "out_volumic_dcube1_");
+  // PDM_dmesh_nodal_dump_vtk(dmn1, PDM_GEOMETRY_KIND_VOLUMIC, "out_volumic_dcube1_");
 
   /*
    * Define distibution of vtx

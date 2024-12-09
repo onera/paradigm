@@ -1322,7 +1322,9 @@ _create_extract_part
   PDM_box_set_t                *boxes_meshes
 )
 {
-  PDM_g_num_t *gnum_elt_mesh = (PDM_g_num_t *) PDM_box_set_get_g_num (boxes_meshes);
+  PDM_g_num_t *gnum_elt_mesh     = (PDM_g_num_t *) PDM_box_set_get_g_num (boxes_meshes);
+  int         *init_loc_elt_mesh = (int         *) PDM_box_set_origin_get(boxes_meshes);
+
   int n_elt_mesh = PDM_box_set_get_size (boxes_meshes);
 
   int n_part_out = 1;
@@ -1335,18 +1337,19 @@ _create_extract_part
                                                            PDM_OWNERSHIP_KEEP,
                                                            mesh->comm);
 
-  PDM_g_num_t *target_g_num = gnum_elt_mesh;
-  if (intersect_kind == PDM_MESH_INTERSECTION_KIND_PREPROCESS) { 
-    PDM_malloc(target_g_num, n_elt_mesh, PDM_g_num_t);
-    memcpy(target_g_num, gnum_elt_mesh, sizeof(PDM_g_num_t) * n_elt_mesh);
-    PDM_extract_part_target_gnum_keep_ownnership(extrp_mesh);
+  PDM_g_num_t     *target_g_num     = gnum_elt_mesh;
+  int             *target_init_loc  = init_loc_elt_mesh;
+  PDM_ownership_t  target_ownership = PDM_OWNERSHIP_USER;
+  if (intersect_kind == PDM_MESH_INTERSECTION_KIND_PREPROCESS) {
+    PDM_malloc(target_init_loc, n_elt_mesh*3, int        );
+    PDM_malloc(target_g_num,    n_elt_mesh,   PDM_g_num_t);
+    memcpy(target_init_loc, init_loc_elt_mesh, sizeof(int        ) * n_elt_mesh * 3);
+    memcpy(target_g_num,    gnum_elt_mesh,     sizeof(PDM_g_num_t) * n_elt_mesh);
+    target_ownership = PDM_OWNERSHIP_KEEP;
   }
 
 
   // printf("n_elt_mesh = %i  \n", n_elt_mesh);
-
-
-  int *init_location_elt_mesh = (int  *) PDM_box_set_origin_get(boxes_meshes);
 
 
   for(int i_part = 0; i_part < mesh->n_part; ++i_part) {
@@ -1407,7 +1410,12 @@ _create_extract_part
 
 
   /*  Setup target frame */
-  PDM_extract_part_target_set(extrp_mesh, 0, n_elt_mesh, target_g_num, init_location_elt_mesh);
+  PDM_extract_part_target_set(extrp_mesh,
+                              0,
+                              n_elt_mesh,
+                              target_g_num,
+                              target_init_loc,
+                              target_ownership);
 
   PDM_extract_part_compute(extrp_mesh);
 
@@ -1471,7 +1479,8 @@ _create_extract_part_nodal
                                                         n_part,
                                                         &pmne);
 
-  PDM_g_num_t *gnum_elt_mesh = (PDM_g_num_t *) PDM_box_set_get_g_num (boxes_meshes);
+  PDM_g_num_t *gnum_elt_mesh     = (PDM_g_num_t *) PDM_box_set_get_g_num (boxes_meshes);
+  int         *init_loc_elt_mesh = (int         *) PDM_box_set_origin_get(boxes_meshes);
 
   int n_elt_mesh = PDM_box_set_get_size (boxes_meshes);
 
@@ -1486,17 +1495,18 @@ _create_extract_part_nodal
                                                            PDM_OWNERSHIP_KEEP,
                                                            comm);
 
-  PDM_g_num_t *target_g_num = gnum_elt_mesh;
+  PDM_g_num_t     *target_g_num     = gnum_elt_mesh;
+  int             *target_init_loc  = init_loc_elt_mesh;
+  PDM_ownership_t  target_ownership = PDM_OWNERSHIP_USER;
   if (mi->intersect_kind == PDM_MESH_INTERSECTION_KIND_PREPROCESS) { 
-    PDM_malloc(target_g_num, n_elt_mesh, PDM_g_num_t);
-    memcpy(target_g_num, gnum_elt_mesh, sizeof(PDM_g_num_t) * n_elt_mesh);
-    PDM_extract_part_target_gnum_keep_ownnership(extrp_mesh);
+    PDM_malloc(target_init_loc, n_elt_mesh*3, int        );
+    PDM_malloc(target_g_num,    n_elt_mesh,   PDM_g_num_t);
+    memcpy(target_init_loc, init_loc_elt_mesh, sizeof(int        ) * n_elt_mesh * 3);
+    memcpy(target_g_num,    gnum_elt_mesh,     sizeof(PDM_g_num_t) * n_elt_mesh);
+    target_ownership = PDM_OWNERSHIP_KEEP;
   }
 
   // printf("n_elt_mesh = %i  \n", n_elt_mesh);
-
-
-  int *init_location_elt_mesh = (int *) PDM_box_set_origin_get(boxes_meshes);
 
 
   PDM_part_mesh_nodal_t *_pmn = PDM_part_mesh_nodal_create(dim_mesh,
@@ -1542,7 +1552,12 @@ _create_extract_part_nodal
   PDM_extract_part_part_nodal_set(extrp_mesh, _pmn);
 
   /*  Setup target frame */
-  PDM_extract_part_target_set(extrp_mesh, 0, n_elt_mesh, target_g_num, init_location_elt_mesh);
+  PDM_extract_part_target_set(extrp_mesh,
+                              0,
+                              n_elt_mesh,
+                              target_g_num,
+                              target_init_loc,
+                              target_ownership);
 
   PDM_extract_part_compute(extrp_mesh);
 

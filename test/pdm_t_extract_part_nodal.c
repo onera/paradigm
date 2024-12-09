@@ -561,7 +561,8 @@ int main(int argc, char *argv[])
                                 i_part,
                                 pn_target_cell[i_part],
                                 target_g_num  [i_part],
-                                location);
+                                location,
+                                PDM_OWNERSHIP_USER);
     // PDM_log_trace_array_int(selected_l_num[i_part], pn_select_cell[i_part], "selected_l_num ::");
 
   }

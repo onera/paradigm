@@ -332,7 +332,8 @@ _extract_part_edge_and_set_mesh
     PDM_extract_part_selected_lnum_set(extrp_mesh,
                                        i_part,
                                        edge_group_idx[n_edge_group],
-                                       edge_group);
+                                       edge_group,
+                                       PDM_OWNERSHIP_USER);
 
   }
 

@@ -583,7 +583,8 @@ int main
                                 i_part,
                                 n_target   [i_part],
                                 target_gnum[i_part],
-                                NULL);
+                                NULL,
+                                PDM_OWNERSHIP_USER);
 
   }
 
