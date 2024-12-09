@@ -492,7 +492,7 @@ int main(int argc, char *argv[])
                                        i_part,
                                        pn_select_face[i_part],
                                        selected_face_l_num[i_part],
-                                       PDM_OWNERSHIP_USER);
+                                       PDM_OWNERSHIP_KEEP); // to test ownership is correctly managed
 
     // PDM_log_trace_array_int(selected_face_l_num[i_part], pn_select_face[i_part], "selected_face_l_num ::");
 
@@ -581,7 +581,7 @@ int main(int argc, char *argv[])
   PDM_extract_part_free(extrp);
 
   for (int i_part = 0; i_part < n_part_domains; i_part++){
-    PDM_free(selected_face_l_num[i_part]);
+    // PDM_free(selected_face_l_num[i_part]);
     PDM_free(face_center        [i_part]);
   }
   PDM_free(selected_face_l_num);
