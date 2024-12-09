@@ -688,6 +688,8 @@ static void mat_vec(double A[9],double x[3],double y[3]){
 
 }
 
+#if defined(PDM_HAVE_MKL) || defined(PDM_HAVE_LAPACK)
+
 MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_multiply_n_by_n_matrices", 1) {
     double A[16] = {
          1.,  0.,  2.,  0.,
@@ -865,3 +867,5 @@ MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_apply_axis_angle_and_rotat
         reverse,vector,n_samp,vector_out);
     CHECK_EQ_C_ARRAY_FLOAT(vector_out,expec_vector_out,12,EPS);
 }
+
+#endif
