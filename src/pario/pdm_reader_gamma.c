@@ -447,9 +447,9 @@ PDM_reader_gamma_dmesh_nodal
       // _shift_groups((int) gn_vtx,   gvtx_group); // TODO: when corners
       _shift_groups((int) gn_edge,  gedge_group);
 
-      // >>> TMP fix
       int min_group = INT_MAX;
 
+      // Shift all surfacic groups (Also ensure that tag >= 1)
       for (int i = 0; i < gn_tria; i++) {
         min_group = PDM_MIN(min_group, gtria_group[i]);
       }
@@ -463,10 +463,34 @@ PDM_reader_gamma_dmesh_nodal
       for (int i = 0; i < gn_quad; i++) {
         gquad_group[i] += 1 - min_group;
       }
-      // <<< TMP fix
 
-      // TODO: handle other volume element types (!! shift groups)
-      _shift_groups((int) gn_tetra, gtetra_group);
+      // Shift all volumic groups (Also ensure that tag >= 1)
+      min_group = INT_MAX;
+      for (int i = 0; i < gn_tetra; i++) {
+        min_group = PDM_MIN(min_group, gtetra_group[i]);
+      }
+      for (int i = 0; i < gn_pyra; i++) {
+        min_group = PDM_MIN(min_group, gpyra_group[i]);
+      }
+      for (int i = 0; i < gn_prism; i++) {
+        min_group = PDM_MIN(min_group, gprism_group[i]);
+      }
+      for (int i = 0; i < gn_hexa; i++) {
+        min_group = PDM_MIN(min_group, ghexa_group[i]);
+      }
+
+      for (int i = 0; i < gn_tetra; i++) {
+        gtetra_group[i] += 1 - min_group;
+      }
+      for (int i = 0; i < gn_pyra; i++) {
+        gpyra_group[i] += 1 - min_group;
+      }
+      for (int i = 0; i < gn_prism; i++) {
+        gprism_group[i] += 1 - min_group;
+      }
+      for (int i = 0; i < gn_hexa; i++) {
+        ghexa_group[i] += 1 - min_group;
+      }
     }
 
     if (0) {
@@ -493,7 +517,7 @@ PDM_reader_gamma_dmesh_nodal
 
       log_trace("gn_tetra = "PDM_FMT_G_NUM"\n", gn_tetra);
       for (PDM_g_num_t i = 0; i < gn_tetra; i++) {
-        log_trace("tetra "PDM_FMT_G_NUM" : "PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM", group %d\n",
+        log_trace("tetra "PDM_FMT_G_NUM" : "PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM", group dddd %i\n",
                   i+1, gtetra_vtx[4*i], gtetra_vtx[4*i+1], gtetra_vtx[4*i+2], gtetra_vtx[4*i+3], gtetra_group[i]);
       }
     }
