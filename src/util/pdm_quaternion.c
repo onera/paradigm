@@ -1074,6 +1074,10 @@ PDM_quaternion_multiply_n_by_n_matrices
   cblas_dgemm(CblasRowMajor,CblasNoTrans,CblasNoTrans,n,n,n,1.,A,n,
       B,n,0.,C,n);
 #else
+  PDM_UNUSED(A);
+  PDM_UNUSED(B);
+  PDM_UNUSED(n);
+  PDM_UNUSED(C);
   printf("Error : LAPACK or MKL are mandatory, recompile with them. \n");
   abort();
 #endif
@@ -1082,11 +1086,11 @@ PDM_quaternion_multiply_n_by_n_matrices
 void 
 PDM_quaternion_apply_n_by_n_matrix
 (
-  const double* A,
-  const double* x,
-  const int n,
-  const int n_samp,
-  double* y_out
+  const double *A,
+  const double *x,
+  const int     n,
+  const int     n_samp,
+        double *y_out
 )
 {
 #if defined(PDM_HAVE_MKL) || defined(PDM_HAVE_LAPACK)
@@ -1096,9 +1100,23 @@ PDM_quaternion_apply_n_by_n_matrix
   // no need to transpose the vector which is already in a "column major view" here
   // dgemm_(&BlasTrans,&BlasNoTrans,&n,&n_samp,&n,&alpha,A,&n,
   //       x,&n,&beta,y_out,&n);
-    cblas_dgemm(CblasRowMajor,CblasNoTrans,CblasTrans,n_samp,n,n,1.,x,n,
-      A,n,0.,y_out,n);
+  cblas_dgemm(CblasRowMajor,
+              CblasNoTrans,
+              CblasTrans,
+              n_samp,
+              n,n,
+              1.,
+              x,n,
+              A,
+              n,
+              0.,
+              y_out,n);
 #else
+  PDM_UNUSED(A);
+  PDM_UNUSED(x);
+  PDM_UNUSED(n);
+  PDM_UNUSED(n_samp);
+  PDM_UNUSED(y_out);
   printf("Error : LAPACK or MKL are mandatory, recompile with them. \n");
   abort();
 #endif
