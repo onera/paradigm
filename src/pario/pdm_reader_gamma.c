@@ -517,7 +517,7 @@ PDM_reader_gamma_dmesh_nodal
 
       log_trace("gn_tetra = "PDM_FMT_G_NUM"\n", gn_tetra);
       for (PDM_g_num_t i = 0; i < gn_tetra; i++) {
-        log_trace("tetra "PDM_FMT_G_NUM" : "PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM", group dddd %i\n",
+        log_trace("tetra "PDM_FMT_G_NUM" : "PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM", group %i\n",
                   i+1, gtetra_vtx[4*i], gtetra_vtx[4*i+1], gtetra_vtx[4*i+2], gtetra_vtx[4*i+3], gtetra_group[i]);
       }
     }
