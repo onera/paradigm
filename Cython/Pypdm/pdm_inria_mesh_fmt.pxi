@@ -137,6 +137,6 @@ def read_sol_at_vertices(char *filename):
 
   return {
     "n_vtx"        : n_vtx,
-    "field_stride" : create_numpy_i(field_stride, n_vtx),
+    "field_stride" : create_numpy_i(field_stride, n_field),
     "field_values" : [create_numpy_d(field_values[i], field_stride[i]*n_vtx) for i in range(n_field)]
   }
