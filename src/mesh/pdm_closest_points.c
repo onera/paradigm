@@ -360,6 +360,7 @@ PDM_closest_points_create
   closest->results_is_getted              = PDM_FALSE;
   closest->tgt_in_src_results_is_getted   = PDM_FALSE;
   closest->tgt_in_src_results_is_getted_d = PDM_FALSE;
+  closest->compute_reverse_results        = PDM_TRUE;
 
   closest->n_closest = n_closest;
   closest->src_cloud = NULL;
@@ -686,21 +687,23 @@ PDM_closest_point_t *cls
   PDM_para_octree_free (octree);
   //<--
 
-  _closest_points_reverse_results(cls);
+  if (cls->compute_reverse_results == PDM_TRUE) {
 
+    _closest_points_reverse_results(cls);
 
-  /* Create ptp object */
-  // TO DO: transport triplets to avoid costly gnum_location
-  cls->ptp = PDM_part_to_part_create((const PDM_g_num_t **) cls->src_cloud->gnum,
-                                     (const int          *) cls->src_cloud->n_points,
-                                                            cls->src_cloud->n_part,
-                                     (const PDM_g_num_t **) cls->tgt_cloud->gnum,
-                                     (const int          *) cls->tgt_cloud->n_points,
-                                                            cls->tgt_cloud->n_part,
-                                     (const int         **) cls->src_cloud->tgt_in_src_idx,
-                                     (const PDM_g_num_t **) cls->src_cloud->tgt_in_src,
-                                                            cls->comm);
+    /* Create ptp object */
+    // TO DO: transport triplets to avoid costly gnum_location
+    cls->ptp = PDM_part_to_part_create((const PDM_g_num_t **) cls->src_cloud->gnum,
+                                       (const int          *) cls->src_cloud->n_points,
+                                                              cls->src_cloud->n_part,
+                                       (const PDM_g_num_t **) cls->tgt_cloud->gnum,
+                                       (const int          *) cls->tgt_cloud->n_points,
+                                                              cls->tgt_cloud->n_part,
+                                       (const int         **) cls->src_cloud->tgt_in_src_idx,
+                                       (const PDM_g_num_t **) cls->src_cloud->tgt_in_src,
+                                                              cls->comm);
 
+  }
 
   PDM_timer_hang_on(cls->timer);
 
@@ -765,6 +768,11 @@ PDM_closest_points_tgt_in_src_get
 )
 {
 
+  if (cls->compute_reverse_results == PDM_FALSE) {
+    PDM_error(__FILE__, __LINE__, 0,
+      "PDM_closest_points_tgt_in_src_get error: reverse results not available.\n");
+  }
+
   assert (cls->src_cloud->tgt_in_src_idx != NULL);
   assert (cls->src_cloud->tgt_in_src != NULL);
 
@@ -798,6 +806,11 @@ PDM_closest_points_tgt_in_src_dist_get
        double              **tgt_in_src_dist
 )
 {
+
+  if (cls->compute_reverse_results == PDM_FALSE) {
+    PDM_error(__FILE__, __LINE__, 0,
+      "PDM_closest_points_tgt_in_src_dist_get error: reverse results not available.\n");
+  }
 
   assert (cls->src_cloud->tgt_in_src_idx != NULL);
   assert (cls->src_cloud->tgt_in_src_dist != NULL);
@@ -847,44 +860,53 @@ PDM_closest_point_t  *cls
   PDM_free(cls->tgt_cloud->closest_src_gnum);
   PDM_free(cls->tgt_cloud->closest_src_dist);
 
-  int free_tgt_in_src_gnum = (cls->owner == PDM_OWNERSHIP_KEEP) ||
-     ( cls->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !cls->tgt_in_src_results_is_getted)||
-     ( cls->owner == PDM_OWNERSHIP_USER                 && !cls->tgt_in_src_results_is_getted); // Dernière condition pour le python essentiellement ou si un utilisateur n'a pas besoin de ce résultats
-  int free_tgt_in_src_dist = (cls->owner == PDM_OWNERSHIP_KEEP) ||
-     ( cls->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !cls->tgt_in_src_results_is_getted_d)||
-     ( cls->owner == PDM_OWNERSHIP_USER                 && !cls->tgt_in_src_results_is_getted_d);
+  if (cls->compute_reverse_results == PDM_TRUE) {
 
-  if (free_tgt_in_src_gnum) {
-    if (cls->src_cloud->tgt_in_src != NULL) {
-      for (int j = 0; j < cls->src_cloud->n_part ; j++) {
-        if (cls->src_cloud->tgt_in_src[j] != NULL) {
-          PDM_free(cls->src_cloud->tgt_in_src[j]);
-        }
-      }
-    }
-  }
-  if (free_tgt_in_src_dist) {
-    if (cls->src_cloud->tgt_in_src_dist != NULL) {
-      for (int j = 0; j < cls->src_cloud->n_part ; j++) {
-        if (cls->src_cloud->tgt_in_src_dist[j] != NULL) {
-          PDM_free(cls->src_cloud->tgt_in_src_dist[j]);
-        }
-      }
-    }
-  }
-  if (free_tgt_in_src_gnum && free_tgt_in_src_dist) {
-    if (cls->src_cloud->tgt_in_src_idx != NULL) {
-      for (int j = 0; j < cls->src_cloud->n_part ; j++) {
-        if (cls->src_cloud->tgt_in_src_idx[j] != NULL) {
-          PDM_free(cls->src_cloud->tgt_in_src_idx[j]);
-        }
-      }
-    }
-  }
+    int free_tgt_in_src_gnum = (cls->owner == PDM_OWNERSHIP_KEEP) ||
+      ( cls->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !cls->tgt_in_src_results_is_getted)||
+      ( cls->owner == PDM_OWNERSHIP_USER                 && !cls->tgt_in_src_results_is_getted); // Dernière condition pour le python essentiellement ou si un utilisateur n'a pas besoin de ce résultats
+    int free_tgt_in_src_dist = (cls->owner == PDM_OWNERSHIP_KEEP) ||
+      ( cls->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !cls->tgt_in_src_results_is_getted_d)||
+      ( cls->owner == PDM_OWNERSHIP_USER                 && !cls->tgt_in_src_results_is_getted_d);
 
-  PDM_free(cls->src_cloud->tgt_in_src_idx);
-  PDM_free(cls->src_cloud->tgt_in_src);
-  PDM_free(cls->src_cloud->tgt_in_src_dist);
+    if (free_tgt_in_src_gnum) {
+      if (cls->src_cloud->tgt_in_src != NULL) {
+        for (int j = 0; j < cls->src_cloud->n_part ; j++) {
+          if (cls->src_cloud->tgt_in_src[j] != NULL) {
+            PDM_free(cls->src_cloud->tgt_in_src[j]);
+          }
+        }
+      }
+    }
+    if (free_tgt_in_src_dist) {
+      if (cls->src_cloud->tgt_in_src_dist != NULL) {
+        for (int j = 0; j < cls->src_cloud->n_part ; j++) {
+          if (cls->src_cloud->tgt_in_src_dist[j] != NULL) {
+            PDM_free(cls->src_cloud->tgt_in_src_dist[j]);
+          }
+        }
+      }
+    }
+    if (free_tgt_in_src_gnum && free_tgt_in_src_dist) {
+      if (cls->src_cloud->tgt_in_src_idx != NULL) {
+        for (int j = 0; j < cls->src_cloud->n_part ; j++) {
+          if (cls->src_cloud->tgt_in_src_idx[j] != NULL) {
+            PDM_free(cls->src_cloud->tgt_in_src_idx[j]);
+          }
+        }
+      }
+    }
+
+    PDM_free(cls->src_cloud->tgt_in_src_idx);
+    PDM_free(cls->src_cloud->tgt_in_src);
+    PDM_free(cls->src_cloud->tgt_in_src_dist);
+
+    if (cls->ptp_ownership == PDM_OWNERSHIP_KEEP) {
+      PDM_part_to_part_free(cls->ptp);
+      cls->ptp = NULL;
+    }
+
+  }
 
   if (cls->tgt_cloud->gnum != NULL) {
     PDM_free(cls->tgt_cloud->gnum);
@@ -914,11 +936,6 @@ PDM_closest_point_t  *cls
   }
 
   PDM_timer_free(cls->timer);
-
-  if (cls->ptp_ownership == PDM_OWNERSHIP_KEEP) {
-    PDM_part_to_part_free(cls->ptp);
-    cls->ptp = NULL;
-  }
 
   PDM_free(cls);
 
@@ -1133,8 +1150,32 @@ PDM_closest_points_part_to_part_get
  PDM_ownership_t       ownership
  )
 {
+
+  if (cls->compute_reverse_results == PDM_FALSE) {
+    PDM_error(__FILE__, __LINE__, 0,
+      "PDM_closest_points_part_to_part_get error: reverse results not available.\n");
+  }
+
   *ptp = cls->ptp;
   cls->ptp_ownership = ownership;
+}
+
+
+/**
+ *
+ * \brief Disable reverse results computation
+ *
+ * \param [inout] cls Pointer to \ref PDM_closest_point_t object
+ *
+ */
+
+void
+PDM_closest_points_reverse_results_disable
+(
+ PDM_closest_point_t *cls
+)
+{
+  cls->compute_reverse_results = PDM_FALSE;
 }
 
 #ifdef	__cplusplus
