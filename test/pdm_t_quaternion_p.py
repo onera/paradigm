@@ -400,24 +400,101 @@ class Test_rotation_matrix_to_euler_angles:
 class Test_two_vectors_to_axis_angle:
     @staticmethod
     def test_arguments():
-        pass
+        vectors = [
+            (np.array([1.,0.,0.]),True),
+            (np.array([1.,0.,0.,1.]),False),
+            (np.array([1.,0.]),False),
+            (np.array([[1.,0.]]),False),
+            (np.array([[1.,0.,0.],[2.,0.,0.]]),False),
+        ]
+        for vec1,vec1_valid in vectors:
+            for vec2,vec2_valid in vectors:
+                if vec1_valid and vec2_valid:
+                    out = PDM.two_vectors_to_axis_angle(vec1,vec2)
+                else:
+                    try:
+                        out = PDM.two_vectors_to_axis_angle(vec1,vec2)
+                    except:
+                        pass
+
     @staticmethod
     def test_compute():
-        pass
+        vec1 = np.array([1.,0.,0.])
+        vec2 = np.array([1.,1.,0.])
+        axis,angle = PDM.two_vectors_to_axis_angle(vec1,vec2)
+        print(axis,angle)
+
 class Test_two_vectors_to_euler_angles:
     @staticmethod
     def test_arguments():
-        pass
+        vectors = [
+            (np.array([1.,0.,0.]),True),
+            (np.array([1.,0.,0.,1.]),False),
+            (np.array([1.,0.]),False),
+            (np.array([[1.,0.]]),False),
+            (np.array([[1.,0.,0.],[2.,0.,0.]]),False),
+        ]
+        orders = [
+            (np.array([2,1,0],dtype=np.int32),True),
+            (np.array([1,2,0],dtype=np.int32),True),
+            (np.array([2,0,1],dtype=np.int32),True),
+            (np.array([2,0,1],dtype=np.int64),False),
+            ("toto",False),
+            (np.array(0.14),False),
+            (np.array([0.,1.,0.,0.]),False),
+            (np.array([0,1,2,3]),False),
+            (np.array([1,1,0]),False),
+        ]
+        intrinsic = [
+            (True,True),
+            (False,True),
+            ("toto",False)
+        ]
+        for vec1,vec1_valid in vectors:
+            for vec2,vec2_valid in vectors:
+                for order,order_valid in orders:
+                    for intr,intrinsic_valid in intrinsic:
+                        if vec1_valid and vec2_valid and order_valid and intrinsic_valid:
+                            out = PDM.two_vectors_to_euler_angles(vec1,vec2,order,intr)
+                        else:
+                            try:
+                                out = PDM.two_vectors_to_euler_angles(vec1,vec2,order,intr)
+                            except:
+                                pass
+        
     @staticmethod
     def test_compute():
-        pass
+        vec1 = np.array([1.,0.,0.])
+        vec2 = np.array([1.,1.,0.])
+        out = PDM.two_vectors_to_euler_angles(vec1,vec2)
+        print(out)
+        
 class Test_two_vectors_to_rotation_matrix:
     @staticmethod
     def test_arguments():
-        pass
+        vectors = [
+            (np.array([1.,0.,0.]),True),
+            (np.array([1.,0.,0.,1.]),False),
+            (np.array([1.,0.]),False),
+            (np.array([[1.,0.]]),False),
+            (np.array([[1.,0.,0.],[2.,0.,0.]]),False),
+        ]
+        for vec1,vec1_valid in vectors:
+            for vec2,vec2_valid in vectors:
+                if vec1_valid and vec2_valid:
+                    out = PDM.two_vectors_to_rotation_matrix(vec1,vec2)
+                else:
+                    try:
+                        out = PDM.two_vectors_to_rotation_matrix(vec1,vec2)
+                    except:
+                        pass
+
     @staticmethod
     def test_compute():
-        pass
+        vec1 = np.array([1.,0.,0.])
+        vec2 = np.array([1.,1.,0.])
+        out = PDM.two_vectors_to_rotation_matrix(vec1,vec2)
+        print(out)
 
 Test_axis_angle_to_euler_angles.test_arguments()
 Test_axis_angle_to_euler_angles.test_compute()
@@ -433,12 +510,12 @@ Test_rotation_matrix_to_axis_angle.test_arguments()
 Test_rotation_matrix_to_axis_angle.test_compute()
 Test_rotation_matrix_to_euler_angles.test_arguments()
 Test_rotation_matrix_to_euler_angles.test_compute()
-# Test_two_vectors_to_axis_angle.test_arguments()
-# Test_two_vectors_to_axis_angle.test_compute()
-# Test_two_vectors_to_euler_angles.test_arguments()
-# Test_two_vectors_to_euler_angles.test_compute()
-# Test_two_vectors_to_rotation_matrix.test_arguments()
-# Test_two_vectors_to_rotation_matrix.test_compute()
+Test_two_vectors_to_axis_angle.test_arguments()
+Test_two_vectors_to_axis_angle.test_compute()
+Test_two_vectors_to_euler_angles.test_arguments()
+Test_two_vectors_to_euler_angles.test_compute()
+Test_two_vectors_to_rotation_matrix.test_arguments()
+Test_two_vectors_to_rotation_matrix.test_compute()
 
 #region euler angles -----------------------------------------------------------
 

@@ -289,7 +289,7 @@ PDM_quaternion_slerp_from_two_vectors_derivative
 /**
  *
  * \brief Computes the quaternion corresponding to the rotation from the first 3D unit vector to the second one
- * Formula from https://stackoverflow.com/questions/1171849/finding-PDM_quaternion_t-representing-the-rotation-from-one-vector-to-another
+ * Formula from https://stackoverflow.com/questions/1171849/finding-quaternion-representing-the-rotation-from-one-vector-to-another
  *
  * \param [in]   vector_1            First vector
  * \param [in]   vector_2            Second vector
