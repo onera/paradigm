@@ -19,9 +19,6 @@ extern "C" {
  * Type definitions
  *============================================================================*/
 
-typedef struct _pdm_quaternion_t PDM_quaternion_t;
-
-
 /*=============================================================================
  * Static global variables
  *============================================================================*/
@@ -33,36 +30,33 @@ typedef struct _pdm_quaternion_t PDM_quaternion_t;
 
 /**
  *
- * \brief Creates a quaternion
+ * \brief Sets a quaternion
+ * 
+ * /!\ Quaternions are encoded with the real part (w) FIRST /!\
  *
  * \param [in]   w     Real (scalar) part
  * \param [in]   v1    First component of the imaginary (vectorial) part
  * \param [in]   v2    Second component of the imaginary (vectorial) part
  * \param [in]   v3    Third component of the imaginary (vectorial) part
- * \return The corresponding quaternion
+ * \param [out]  qt    Quaternion
  *
  */
 
-PDM_quaternion_t*
-PDM_quaternion_create
+void
+PDM_quaternion_set
 (
   const double w,
   const double v1,
   const double v2,
-  const double v3
-);
-
-void
-PDM_quaternion_free
-(
-  PDM_quaternion_t* qt
+  const double v3,
+        double qt[4]
 );
 
 /**
  *
  * \brief Sets a quaternion to identity (1.,(0.,0.,0.))
  *
- * \param [in]   qt    Quaternion
+ * \param [out]   qt    Quaternion
  *
  */
 
@@ -70,7 +64,7 @@ PDM_quaternion_free
 void
 PDM_quaternion_set_identity
 (
-  PDM_quaternion_t* qt
+  double qt[4]
 );
 
 /**
@@ -84,7 +78,7 @@ PDM_quaternion_set_identity
 void
 PDM_quaternion_print
 (
-  const PDM_quaternion_t* qt
+  const double qt[4]
 );
 
 /**
@@ -92,15 +86,15 @@ PDM_quaternion_print
  * \brief Computes the conjugate of a quaternion
  *
  * \param [in]   qt        Quaternion
- * \param [in]   qt_out    Conjugate quaternion
+ * \param [out]   qt_out    Conjugate quaternion
  *
  */
 
 void
 PDM_quaternion_conjugate
 (
-  const PDM_quaternion_t* qt,
-  PDM_quaternion_t* qt_out
+  const double qt[4],
+        double qt_out[4]
 );
 
 
@@ -116,7 +110,7 @@ PDM_quaternion_conjugate
 double
 PDM_quaternion_norm
 (
-  const PDM_quaternion_t* qt
+  const double qt[4]
 );
 
 /**
@@ -130,7 +124,7 @@ PDM_quaternion_norm
 void
 PDM_quaternion_normalize
 (
-  PDM_quaternion_t* qt
+  double qt[4]
 );
 
 /**
@@ -145,17 +139,17 @@ PDM_quaternion_normalize
  * /!\ Quaternion multiplication is not commutative !
  *
  * \param [in]   qt_1        First quaternion
- * \param [in]   qt_2        First quaternion
- * \return The result of qt_1*qt_2 
+ * \param [in]   qt_2        Second quaternion
+ * \param [out]  qt_out      Resulting quaternion
  *
  */
 
 void
 PDM_quaternion_compose
 (
-  const PDM_quaternion_t* qt_1,
-  const PDM_quaternion_t* qt_2,
-  PDM_quaternion_t* qt_out
+  const double qt_1[4],
+  const double qt_2[4],
+        double qt_out[4]
 );
 
 /**
@@ -174,7 +168,7 @@ PDM_quaternion_compose
 PDM_bool_t
 PDM_quaternion_equal
 (
-  const PDM_quaternion_t* qt,
+  const double qt[4],
   const double w,
   const double v0,
   const double v1,
@@ -188,6 +182,7 @@ PDM_quaternion_equal
  *
  * \param [in]   qt_1     First quaternion
  * \param [in]   qt_2     Second quaternion
+ * \param [in]   epsilon  L0 tolerance (applied on each component individually)
  * \return PDM_TRUE in case of equality, PDM_FALSE otherwise 
  *
  */
@@ -195,8 +190,8 @@ PDM_quaternion_equal
 PDM_bool_t
 PDM_quaternion_equal_quaternion
 (
-  const PDM_quaternion_t* qt_1,
-  const PDM_quaternion_t* qt_2,
+  const double qt_1[4],
+  const double qt_2[4],
   const double epsilon
 );
 
@@ -207,17 +202,17 @@ PDM_quaternion_equal_quaternion
  * \param [in]   qt           Quaternion
  * \param [in]   vector       The flatten vector array of length 3*n_samp
  * \param [in]   n_samp       The number of vector samples
- * \param [in]   vector_out   The rotated flatten vector array of length 3*n_samp
+ * \param [out]  vector_out   The rotated flatten vector array of length 3*n_samp
  *
  */
 
 void
 PDM_quaternion_rotate
 (
-  const PDM_quaternion_t* qt,
+  const double qt[4],
   const double* vector,
   const int n_samp,
-  double* vector_out
+        double* vector_out
 );
 
 /**
@@ -228,18 +223,18 @@ PDM_quaternion_rotate
  * \param [in]   qt_der              Differential of the quaternion
  * \param [in]   vector              The flatten vector array of length 3*n_samp
  * \param [in]   n_samp              The number of vector samples
- * \param [in]   vector_output_der   The derivative of the rotated flatten vector array of length 3*n_samp wrt to qt_der 
+ * \param [out]  vector_output_der   The derivative of the rotated flatten vector array of length 3*n_samp wrt to qt_der 
  *
  */
 
 void
 PDM_quaternion_rotate_derivative
 (
-  const PDM_quaternion_t* qt,
-  const PDM_quaternion_t* qt_der,
+  const double qt[4],
+  const double qt_der[4],
   const double* vector,
   const int n_samp,
-  double* vector_output_der
+        double* vector_output_der
 );
 
 /**
@@ -250,7 +245,7 @@ PDM_quaternion_rotate_derivative
  * \param [in]   vector_2            Second vector
  * \param [in]   t                   The flatten array of t values of length n_samp (extrapolation is possible)
  * \param [in]   n_samp              The number of samples
- * \param [in]   out                 The result of the slerp of length 3*n_samp
+ * \param [out]  out                 The result of the slerp of length 3*n_samp
  *
  */
 
@@ -261,7 +256,7 @@ PDM_quaternion_slerp_from_two_vectors
   const double vector_2[3],
   const double* t,
   const int n_samp,
-  double* out
+        double* out
 );
 
 /**
@@ -272,7 +267,7 @@ PDM_quaternion_slerp_from_two_vectors
  * \param [in]   vector_2            Second vector
  * \param [in]   t                   The flatten array of t values of length n_samp (extrapolation is possible)
  * \param [in]   n_samp              The number of samples
- * \param [in]   out                 The derivative of the slerp of length 3*n_samp
+ * \param [out]  out                 The derivative of the slerp of length 3*n_samp
  *
  */
 
@@ -283,7 +278,7 @@ PDM_quaternion_slerp_from_two_vectors_derivative
   const double vector_2[3],
   const double* t,
   const int n_samples,
-  double* out
+        double* out
 );
 
 /**
@@ -293,7 +288,7 @@ PDM_quaternion_slerp_from_two_vectors_derivative
  *
  * \param [in]   vector_1            First vector
  * \param [in]   vector_2            Second vector
- * \param [in]   qt_out              The output quaternion
+ * \param [out]  qt_out              The output quaternion
  *
  */
 
@@ -302,7 +297,7 @@ PDM_quaternion_from_two_vectors
 (
   const double* vector_1,
   const double* vector_2,
-  PDM_quaternion_t* qt_out
+        double qt_out[4]
 );
 
 /**
@@ -311,7 +306,7 @@ PDM_quaternion_from_two_vectors
  * Formula from http://www.euclideanspace.com/maths/geometry/rotations/conversions/angleToQuaternion/
  * \param [in]   axis            Rotation axis (3D (unit) vector)
  * \param [in]   angle           Rotation angle (in radians)
- * \param [in]   qt_out          The output quaternion
+ * \param [out]  qt_out          The output quaternion
  *
  */
 
@@ -320,7 +315,7 @@ PDM_quaternion_from_axis_angle
 (
   const double axis[3],
   const double angle,
-  PDM_quaternion_t* qt_out
+        double qt_out[4]
 );
 
 /**
@@ -332,7 +327,7 @@ PDM_quaternion_from_axis_angle
  * \param [in]   angle           Rotation angle (in radians)
  * \param [in]   axis_der        Differential of the rotation axis (3D (unit) vector)
  * \param [in]   angle_der       Differential of the rotation angle (in radians)
- * \param [in]   qt_out          The output quaternion
+ * \param [out]  qt_out          The output quaternion
  *
  */
 
@@ -342,7 +337,7 @@ PDM_quaternion_from_axis_angle_derivative(
   const double angle,
   const double axis_der[3],
   const double angle_der,
-  PDM_quaternion_t* qt_out
+        double qt_out[4]
 );
 
 /**
@@ -351,7 +346,7 @@ PDM_quaternion_from_axis_angle_derivative(
  *
  * \param [in]   angle           Rotation angle (in radians)
  * \param [in]   axis_ind        Index of the axis (0 -> x, 1 -> y, 2 -> z)
- * \param [in]   qt_out          The output quaternion
+ * \param [out]  qt_out          The output quaternion
  *
  */
 
@@ -360,7 +355,7 @@ PDM_quaternion_from_axis_aligned_rotation
 (
   const double angle,
   const int axis_ind,
-  PDM_quaternion_t* qt_out
+        double qt_out[4]
 );
 
 /**
@@ -368,7 +363,7 @@ PDM_quaternion_from_axis_aligned_rotation
  * \brief Computes the quaternion corresponding to a rotation around the x axis
  *
  * \param [in]   angle           Rotation angle (in radians)
- * \param [in]   qt_out          The output quaternion
+ * \param [out]  qt              The output quaternion
  *
  */
 
@@ -376,7 +371,7 @@ void
 PDM_quaternion_from_x_rotation
 (
   const double angle,
-  PDM_quaternion_t* qt
+        double qt[4]
 );
 
 /**
@@ -384,7 +379,7 @@ PDM_quaternion_from_x_rotation
  * \brief Computes the quaternion corresponding to a rotation around the y axis
  *
  * \param [in]   angle           Rotation angle (in radians)
- * \param [in]   qt_out          The output quaternion
+ * \param [out]  qt              The output quaternion
  *
  */
 
@@ -392,7 +387,7 @@ void
 PDM_quaternion_from_y_rotation
 (
   const double angle,
-  PDM_quaternion_t* qt
+        double qt[4]
 );
 
 /**
@@ -400,7 +395,7 @@ PDM_quaternion_from_y_rotation
  * \brief Computes the quaternion corresponding to a rotation around the z axis
  *
  * \param [in]   angle           Rotation angle (in radians)
- * \param [in]   qt_out          The output quaternion
+ * \param [out]   qt              The output quaternion
  *
  */
 
@@ -408,7 +403,7 @@ void
 PDM_quaternion_from_z_rotation
 (
   const double angle,
-  PDM_quaternion_t* qt
+  double qt[4]
 );
 
 /**
@@ -416,7 +411,7 @@ PDM_quaternion_from_z_rotation
  * \brief Computes the quaternion corresponding to an axial symmetry around the x, y or z axis
  *
  * \param [in]   axis_ind        Index of the axis (0 -> x, 1 -> y, 2 -> z)
- * \param [in]   qt_out          The output quaternion
+ * \param [out]   qt              The output quaternion
  *
  */
 
@@ -424,49 +419,49 @@ void
 PDM_quaternion_from_axis_aligned_symmetry
 (
   const int axis_ind,
-  PDM_quaternion_t* qt
+  double qt[4]
 );
 
 /**
  *
  * \brief Computes the quaternion corresponding to an axial symmetry around the x axis
  *
- * \param [in]   qt_out          The output quaternion
+ * \param [out]   qt          The output quaternion
  *
  */
 
 void
 PDM_quaternion_from_x_symmetry
 (
-  PDM_quaternion_t* qt
+  double qt[4]
 );
 
 /**
  *
  * \brief Computes the quaternion corresponding to an axial symmetry around the y axis
  *
- * \param [in]   qt_out          The output quaternion
+ * \param [out]   qt          The output quaternion
  *
  */
 
 void
 PDM_quaternion_from_y_symmetry
 (
-  PDM_quaternion_t* qt
+  double qt[4]
 );
 
 /**
  *
  * \brief Computes the quaternion corresponding to an axial symmetry around the z axis
  *
- * \param [in]   qt_out          The output quaternion
+ * \param [out]   qt          The output quaternion
  *
  */
 
 void
 PDM_quaternion_from_z_symmetry
 (
-  PDM_quaternion_t* qt
+  double qt[4]
 );
 
 /**
@@ -483,7 +478,7 @@ PDM_quaternion_from_z_symmetry
  * \param [in]   ang_z       Rotation angle around the z-axis
  * \param [in]   order       Order of rotations to apply 
  * \param [in]   intrinsic   Axis conventions (https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations)
- * \param [in]   qt          The output quaternion
+ * \param [out]   qt          The output quaternion
  *
  */
 
@@ -495,7 +490,7 @@ PDM_quaternion_from_euler_angles
   const double ang_z,
   const int order[3],
   PDM_bool_t intrinsic,
-  PDM_quaternion_t* qt
+        double qt[4]
 );
 
 /**
@@ -504,7 +499,7 @@ PDM_quaternion_from_euler_angles
  * Formula from http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/index.htm
  *
  * \param [in]   rotation_matrix 3-by-3 rotation matrix
- * \param [in]   qt_out          The output quaternion
+ * \param [out]  qt              The output quaternion
  *
  */
 
@@ -512,7 +507,7 @@ void
 PDM_quaternion_from_rotation_matrix
 (
   const double* rotation_matrix,
-  PDM_quaternion_t* qt_out
+        double qt[4]
 );
 
 /**
@@ -520,7 +515,7 @@ PDM_quaternion_from_rotation_matrix
  * \brief Computes the quaternion corresponding to a rotation matrix in homogeneous coordinates (4-by-4)
  *
  * \param [in]   homogeneous_matrix 4-by-4 homogeneous rotation matrix
- * \param [in]   qt_out             The output quaternion
+ * \param [out]  qt_out             The output quaternion
  *
  */
 
@@ -528,7 +523,7 @@ void
 PDM_quaternion_from_homogeneous_matrix
 (
   const double* homogeneous_matrix,
-  PDM_quaternion_t* qt_out
+        double qt[4]
 );
 
 /**
@@ -537,17 +532,17 @@ PDM_quaternion_from_homogeneous_matrix
  * Formula from http://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToAngle/
  *
  * \param [in]   qt     Quaternion
- * \param [in]   axis   Rotation 3D-axis
- * \param [in]   angle  Rotation angle (in radians)
+ * \param [out]   axis   Rotation 3D-axis
+ * \param [out]   angle  Rotation angle (in radians)
  *
  */
 
 void
 PDM_quaternion_to_axis_angle
 (
-  const PDM_quaternion_t* qt,
-  double  axis[3],
-  double* angle
+  const double  qt[4],
+        double  axis[3],
+        double* angle
 );
 
 /**
@@ -558,21 +553,21 @@ PDM_quaternion_to_axis_angle
  * \param [in]   qt         Quaternion
  * \param [in]   order      Order of rotations
  * \param [in]   intrinsic  Axis conventions (https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations)
- * \param [in]   ang_x      Rotation angle around the x axis (in radians)
- * \param [in]   ang_y      Rotation angle around the y axis (in radians)
- * \param [in]   ang_z      Rotation angle around the z axis (in radians)
+ * \param [out]  ang_x      Rotation angle around the x axis (in radians)
+ * \param [out]  ang_y      Rotation angle around the y axis (in radians)
+ * \param [out]  ang_z      Rotation angle around the z axis (in radians)
  *
  */
 
 void
 PDM_quaternion_to_euler_angles
 (
-  const PDM_quaternion_t* qt,
+  const double qt[4],
   const int order[3],
   const PDM_bool_t intrinsic,
-  double* ang_x,
-  double* ang_y,
-  double* ang_z
+        double* ang_x,
+        double* ang_y,
+        double* ang_z
 );
 
 /**
@@ -581,15 +576,15 @@ PDM_quaternion_to_euler_angles
  * Formula from http://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToMatrix/index.htm
  *
  * \param [in]   qt                Quaternion
- * \param [in]   rotation_matrix   3-by-3 rotation matrix
+ * \param [out]  rotation_matrix   3-by-3 rotation matrix
  *
  */
 
 void
 PDM_quaternion_to_rotation_matrix
 (
-  const PDM_quaternion_t* qt, 
-  double* rotation_matrix
+  const double qt[4],
+        double* rotation_matrix
 );
 
 /**
@@ -597,15 +592,15 @@ PDM_quaternion_to_rotation_matrix
  * \brief Computes the 3-by-3 rotation matrix corresponding to the provided quaternion
  *
  * \param [in]   qt                   Quaternion
- * \param [in]   homogeneous_matrix   4-by-4 homogeneous rotation matrix
+ * \param [out]  homogeneous_matrix   4-by-4 homogeneous rotation matrix
  *
  */
 
 void
 PDM_quaternion_to_homogeneous_matrix
 (
-  const PDM_quaternion_t* qt,
-  double* homogeneous_matrix
+  const double qt[4],
+        double* homogeneous_matrix
 );
 
 
@@ -621,9 +616,9 @@ PDM_quaternion_to_homogeneous_matrix
  * \param [in]   angle       Rotation angle (in radians)
  * \param [in]   order       Order of rotations to apply 
  * \param [in]   intrinsic   Axis conventions (https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations)
- * \param [in]   ang_x       Rotation angle around the x-axis
- * \param [in]   ang_y       Rotation angle around the y-axis
- * \param [in]   ang_z       Rotation angle around the z-axis
+ * \param [out]  ang_x       Rotation angle around the x-axis
+ * \param [out]  ang_y       Rotation angle around the y-axis
+ * \param [out]  ang_z       Rotation angle around the z-axis
  *
  */
 
@@ -635,9 +630,9 @@ PDM_quaternion_axis_angle_to_euler_angles
   const double angle,
   const int order[3],
   const PDM_bool_t intrinsic,
-  double* ang_x,
-  double* ang_y,
-  double* ang_z
+        double* ang_x,
+        double* ang_y,
+        double* ang_z
 );
 
 /**
@@ -646,7 +641,7 @@ PDM_quaternion_axis_angle_to_euler_angles
  *
  * \param [in]   axis            Rotation axis (3D (unit) vector)
  * \param [in]   angle           Rotation angle (in radians)
- * \param [in]   rotation_matrix 3-by-3 rotation matrix
+ * \param [out]  rotation_matrix 3-by-3 rotation matrix
  *
  */
 
@@ -655,7 +650,7 @@ PDM_quaternion_axis_angle_to_rotation_matrix
 (
   const double axis[3],
   const double angle,
-  double *rotation_matrix
+        double *rotation_matrix
 );
 
 /**
@@ -664,7 +659,7 @@ PDM_quaternion_axis_angle_to_rotation_matrix
  *
  * \param [in]   axis               Rotation axis (3D (unit) vector)
  * \param [in]   angle              Rotation angle (in radians)
- * \param [in]   homogeneous_matrix 4-by-4 rotation matrix
+ * \param [out]  homogeneous_matrix 4-by-4 rotation matrix
  *
  */
 
@@ -673,7 +668,7 @@ PDM_quaternion_axis_angle_to_homogeneous_matrix
 (
   const double axis[3],
   const double angle,
-  double *homogeneous_matrix
+        double *homogeneous_matrix
 );
 
 /**
@@ -685,8 +680,8 @@ PDM_quaternion_axis_angle_to_homogeneous_matrix
  * \param [in]   ang_z       Rotation angle around the z-axis
  * \param [in]   order       Order of rotations to apply 
  * \param [in]   intrinsic   Axis conventions (https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations)
- * \param [in]   axis        Rotation axis (3D (unit) vector)
- * \param [in]   angle       Rotation angle (in radians)
+ * \param [out]  axis        Rotation axis (3D (unit) vector)
+ * \param [out]  angle       Rotation angle (in radians)
  *
  */
 
@@ -698,8 +693,8 @@ PDM_quaternion_euler_angles_to_axis_angle
   const double ang_z,
   const int order[3],
   PDM_bool_t intrinsic,
-  double axis[3],
-  double* angle
+        double axis[3],
+        double* angle
 );
 
 /**
@@ -713,9 +708,9 @@ PDM_quaternion_euler_angles_to_axis_angle
  * \param [in]   input_intrinsic   Input axis conventions (https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations)
  * \param [in]   output_order      Output order of rotations to apply 
  * \param [in]   output_intrinsic  Output axis conventions (https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations)
- * \param [in]   output_ang_x      Output rotation angle around the x-axis
- * \param [in]   output_ang_y      Output rotation angle around the y-axis
- * \param [in]   output_ang_z      Output rotation angle around the z-axis
+ * \param [out]  output_ang_x      Output rotation angle around the x-axis
+ * \param [out]  output_ang_y      Output rotation angle around the y-axis
+ * \param [out]  output_ang_z      Output rotation angle around the z-axis
  *
  */
 
@@ -729,9 +724,9 @@ PDM_quaternion_euler_angles_to_euler_angles
   const PDM_bool_t input_intrinsic,
   const int output_order[3],
   const PDM_bool_t output_intrinsic,
-  double* output_ang_x,
-  double* output_ang_y,
-  double* output_ang_z
+        double* output_ang_x,
+        double* output_ang_y,
+        double* output_ang_z
 );
 
 /**
@@ -743,7 +738,7 @@ PDM_quaternion_euler_angles_to_euler_angles
  * \param [in]   ang_z            Rotation angle around the z-axis
  * \param [in]   order            Order of rotations to apply 
  * \param [in]   intrinsic        Axis conventions (https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations)
- * \param [in]   rotation_matrix  3-by-3 rotation matrix
+ * \param [out]  rotation_matrix  3-by-3 rotation matrix
  *
  */
 
@@ -755,7 +750,7 @@ PDM_quaternion_euler_angles_to_rotation_matrix
   const double ang_z,
   const int order[3],
   PDM_bool_t intrinsic,
-  double* rotation_matrix
+        double* rotation_matrix
 );
 
 /**
@@ -767,7 +762,7 @@ PDM_quaternion_euler_angles_to_rotation_matrix
  * \param [in]   ang_z              Rotation angle around the z-axis
  * \param [in]   order              Order of rotations to apply 
  * \param [in]   intrinsic          Axis conventions (https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations)
- * \param [in]   homogeneous_matrix 4-by-4 rotation matrix
+ * \param [out]  homogeneous_matrix 4-by-4 rotation matrix
  *
  */
 
@@ -779,7 +774,7 @@ PDM_quaternion_euler_angles_to_homogeneous_matrix
   const double ang_z,
   const int order[3],
   PDM_bool_t intrinsic,
-  double* homogeneous_matrix
+        double* homogeneous_matrix
 );
 
 /**
@@ -787,8 +782,8 @@ PDM_quaternion_euler_angles_to_homogeneous_matrix
  * \brief Converts a rotation expressed as a 3-by-3 rotation matrix to an axis-angle representation
  *
  * \param [in]   rotation_matrix 3-by-3 rotation matrix
- * \param [in]   axis            Rotation axis (3D (unit) vector)
- * \param [in]   angle           Rotation angle (in radians)
+ * \param [out]  axis            Rotation axis (3D (unit) vector)
+ * \param [out]  angle           Rotation angle (in radians)
  * 
  */
 
@@ -796,8 +791,8 @@ void
 PDM_quaternion_rotation_matrix_to_axis_angle
 (
   const double* rotation_matrix,
-  double axis[3],
-  double* angle
+        double axis[3],
+        double* angle
 );
 
 /**
@@ -807,9 +802,9 @@ PDM_quaternion_rotation_matrix_to_axis_angle
  * \param [in]   rotation_matrix  3-by-3 rotation matrix
  * \param [in]   order            Order of rotations to apply 
  * \param [in]   intrinsic        Axis conventions (https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations)
- * \param [in]   ang_x            Rotation angle around the x-axis
- * \param [in]   ang_y            Rotation angle around the y-axis
- * \param [in]   ang_z            Rotation angle around the z-axis
+ * \param [out]  ang_x            Rotation angle around the x-axis
+ * \param [out]  ang_y            Rotation angle around the y-axis
+ * \param [out]  ang_z            Rotation angle around the z-axis
  * 
  */
 
@@ -819,9 +814,9 @@ PDM_quaternion_rotation_matrix_to_euler_angles
   const double* rotation_matrix,
   const int order[3],
   const PDM_bool_t intrinsic,
-  double* ang_x,
-  double* ang_y,
-  double* ang_z
+        double* ang_x,
+        double* ang_y,
+        double* ang_z
 );
 
 /**
@@ -829,7 +824,7 @@ PDM_quaternion_rotation_matrix_to_euler_angles
  * \brief Converts a rotation expressed as a 3-by-3 rotation matrix to a 4-by-4 homogeneous matrix
  *
  * \param [in]   rotation_matrix    3-by-3 rotation matrix
- * \param [in]   homogeneous_matrix 4-by-4 homogeneous rotation matrix
+ * \param [out]  homogeneous_matrix 4-by-4 homogeneous rotation matrix
  * 
  */
 
@@ -837,7 +832,7 @@ void
 PDM_quaternion_rotation_matrix_to_homogeneous_matrix
 (
   const double* rotation_matrix,
-  double* homogeneous_matrix
+        double* homogeneous_matrix
 );
 
 /**
@@ -845,8 +840,8 @@ PDM_quaternion_rotation_matrix_to_homogeneous_matrix
  * \brief Converts a rotation expressed as a 4-by-4 homogeneous rotation matrix to an axis-angle representation
  *
  * \param [in]   homogeneous_matrix 4-by-4 homogeneous rotation matrix
- * \param [in]   axis               Rotation axis (3D (unit) vector)
- * \param [in]   angle              Rotation angle (in radians)
+ * \param [out]  axis               Rotation axis (3D (unit) vector)
+ * \param [out]  angle              Rotation angle (in radians)
  * 
  */
 
@@ -854,8 +849,8 @@ void
 PDM_quaternion_homogeneous_matrix_to_axis_angle
 (
   const double* homogeneous_matrix,
-  double axis[3],
-  double* angle
+        double axis[3],
+        double* angle
 );
 
 /**
@@ -865,9 +860,9 @@ PDM_quaternion_homogeneous_matrix_to_axis_angle
  * \param [in]   homogeneous_matrix 4-by-4 homogeneous rotation matrix
  * \param [in]   order              Order of rotations to apply 
  * \param [in]   intrinsic          Axis conventions (https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations)
- * \param [in]   ang_x              Rotation angle around the x-axis
- * \param [in]   ang_y              Rotation angle around the y-axis
- * \param [in]   ang_z              Rotation angle around the z-axis
+ * \param [out]  ang_x              Rotation angle around the x-axis
+ * \param [out]  ang_y              Rotation angle around the y-axis
+ * \param [out]  ang_z              Rotation angle around the z-axis
  * 
  */
 
@@ -877,9 +872,9 @@ PDM_quaternion_homogeneous_matrix_to_euler_angles
   const double* homogeneous_matrix,
   const int order[3],
   const PDM_bool_t intrinsic,
-  double* ang_x,
-  double* ang_y,
-  double* ang_z
+        double* ang_x,
+        double* ang_y,
+        double* ang_z
 );
 
 /**
@@ -887,7 +882,7 @@ PDM_quaternion_homogeneous_matrix_to_euler_angles
  * \brief Converts a rotation expressed as a 4-by-4 homogeneous matrix to a 3-by-3 rotation matrix
  *
  * \param [in]   homogeneous_matrix 4-by-4 rotation matrix
- * \param [in]   rotation_matrix    3-by-3 rotation matrix
+ * \param [out]  rotation_matrix    3-by-3 rotation matrix
  * 
  */
 
@@ -895,7 +890,7 @@ void
 PDM_quaternion_homogeneous_matrix_to_rotation_matrix
 (
   const double* homogeneous_matrix,
-  double* rotation_matrix
+        double* rotation_matrix
 );
 
 /**
@@ -904,8 +899,8 @@ PDM_quaternion_homogeneous_matrix_to_rotation_matrix
  *
  * \param [in]   vector_1 First 3D-vector
  * \param [in]   vector_2 Second 3D-vector
- * \param [in]   axis     Rotation axis (3D (unit) vector)
- * \param [in]   angle    Rotation angle (in radians)
+ * \param [out]  axis     Rotation axis (3D (unit) vector)
+ * \param [out]  angle    Rotation angle (in radians)
  * 
  */
 
@@ -914,8 +909,8 @@ PDM_quaternion_two_vectors_to_axis_angle
 (
   const double vector_1[3],
   const double vector_2[3],
-  double axis[3],
-  double* angle
+        double axis[3],
+        double* angle
 );
 
 /**
@@ -926,9 +921,9 @@ PDM_quaternion_two_vectors_to_axis_angle
  * \param [in]   vector_2    Second 3D-vector
  * \param [in]   order       Order of rotations to apply 
  * \param [in]   intrinsic   Axis conventions (https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations)
- * \param [in]   ang_x       Rotation angle around the x-axis
- * \param [in]   ang_y       Rotation angle around the y-axis
- * \param [in]   ang_z       Rotation angle around the z-axis
+ * \param [out]  ang_x       Rotation angle around the x-axis
+ * \param [out]  ang_y       Rotation angle around the y-axis
+ * \param [out]  ang_z       Rotation angle around the z-axis
  * 
  */
 
@@ -939,9 +934,9 @@ PDM_quaternion_two_vectors_to_euler_angles
   const double vector_2[3],
   const int order[3],
   const PDM_bool_t intrinsic,
-  double* ang_x,
-  double* ang_y,
-  double* ang_z
+        double* ang_x,
+        double* ang_y,
+        double* ang_z
 );
 
 /**
@@ -950,7 +945,7 @@ PDM_quaternion_two_vectors_to_euler_angles
  *
  * \param [in]   vector_1         First 3D-vector
  * \param [in]   vector_2         Second 3D-vector
- * \param [in]   rotation_matrix  3-by-3 rotation matrix
+ * \param [out]  rotation_matrix  3-by-3 rotation matrix
  * 
  */
 
@@ -959,7 +954,7 @@ PDM_quaternion_two_vectors_to_rotation_matrix
 (
   const double vector_1[3],
   const double vector_2[3],
-  double *rotation_matrix
+        double *rotation_matrix
 );
 
 /**
@@ -968,7 +963,7 @@ PDM_quaternion_two_vectors_to_rotation_matrix
  *
  * \param [in]   vector_1           First 3D-vector
  * \param [in]   vector_2           Second 3D-vector
- * \param [in]   homogeneous_matrix 4-by-4 homogeneous rotation matrix
+ * \param [out]  homogeneous_matrix 4-by-4 homogeneous rotation matrix
  * 
  */
 
@@ -977,7 +972,7 @@ PDM_quaternion_two_vectors_to_homogeneous_matrix
 (
   const double vector_1[3],
   const double vector_2[3],
-  double *homogeneous_matrix
+        double *homogeneous_matrix
 );
 
 /*----------------------------------------------------------------------------
@@ -988,7 +983,7 @@ PDM_quaternion_two_vectors_to_homogeneous_matrix
  *
  * \brief Computes A*B -> C 
  *
- * \param [in]   homogeneous_matrix 4-by-4 homogeneous rotation matrix
+ * \param [out]   homogeneous_matrix 4-by-4 homogeneous rotation matrix
  *
  */
 
@@ -1005,7 +1000,7 @@ PDM_quaternion_identity_to_homogeneous_matrix
  * \param [in]   A  n-by-n matrix (Row major (C-order) flatten)
  * \param [in]   B  n-by-n matrix (Row major (C-order) flatten)
  * \param [in]   n  size of the square matrices
- * \param [in]   C  n-by-n matrix (Row major (C-order) flatten)
+ * \param [out]  C  n-by-n matrix (Row major (C-order) flatten)
  *
  */
 
@@ -1016,7 +1011,7 @@ PDM_quaternion_multiply_n_by_n_matrices
   const double* A,
   const double* B,
   const int     n,
-  double*       C
+        double*       C
 );
 
 /**
@@ -1025,7 +1020,7 @@ PDM_quaternion_multiply_n_by_n_matrices
  *
  * \param [in]   A      n-by-n matrix (Row major (C-order) flatten)
  * \param [in]   x      n-by-n_samp vector (Row major (C-order) flatten)
- * \param [in]   y_out  n-by-n_samp output vector (Row major (C-order) flatten)
+ * \param [out]  y      n-by-n_samp output vector (Row major (C-order) flatten)
  *
  */
 
@@ -1036,7 +1031,7 @@ PDM_quaternion_apply_n_by_n_matrix
   const double* x,
   const int n,
   const int n_samp,
-  double* y_out
+        double* y
 );
 
 /**
@@ -1046,7 +1041,7 @@ PDM_quaternion_apply_n_by_n_matrix
  * \param [in]   translation_vector 3D-translation vector
  * \param [in]   vector             n-by-n_samp vector (Row major (C-order) flatten)
  * \param [in]   n_samp             Number of vector samples
- * \param [in]   vector_out         n-by-n_samp output vector (Row major (C-order) flatten)
+ * \param [out]  vector_out         n-by-n_samp output vector (Row major (C-order) flatten)
  *
  */
 
@@ -1056,7 +1051,7 @@ PDM_quaternion_apply_translation
   const double translation_vector[3],
   const double* vector,
   const int n_samp,
-  double* vector_out
+        double* vector_out
 );
 
 /**
@@ -1066,7 +1061,7 @@ PDM_quaternion_apply_translation
  * \param [in]   homogeneous_matrix 4-by-4 homogeneous matrix (Row major (C-order) flatten)
  * \param [in]   vector             n-by-n_samp vector (Row major (C-order) flatten)
  * \param [in]   n_samp             Number of vector samples
- * \param [in]   vector_out         n-by-n_samp output vector (Row major (C-order) flatten)
+ * \param [out]  vector_out         n-by-n_samp output vector (Row major (C-order) flatten)
  *
  */
 
@@ -1076,7 +1071,7 @@ PDM_quaternion_apply_homogeneous_matrix
   const double homogeneous_matrix[16],
   const double* vector,
   const int n_samp,
-  double* vector_out
+        double* vector_out
 );
 
 /**
@@ -1087,7 +1082,7 @@ PDM_quaternion_apply_homogeneous_matrix
  *
  * \param [in]   homogeneous_matrices Array of 4-by-4 homogeneous matrix (Row major (C-order) flatten)
  * \param [in]   n_matrices           Number of matrices
- * \param [in]   output_matrix        The resulting 4-by-4 homogeneous matrix
+ * \param [out]  output_matrix        The resulting 4-by-4 homogeneous matrix
  *
  */
 
@@ -1096,7 +1091,7 @@ PDM_quaternion_compose_homogeneous_matrices
 (
   const double** homogeneous_matrices,
   const int n_matrices,
-  double output_matrix[16]
+        double output_matrix[16]
 );
 
 /**
@@ -1105,7 +1100,7 @@ PDM_quaternion_compose_homogeneous_matrices
  * 
  * \param [in]   translation_vector 3D translation vector
  * \param [in]   reverse            If True, encodes the reverse translation (of -translation_vector)
- * \param [in]   homogeneous_matrix The resulting 4-by-4 homogeneous matrix
+ * \param [out]  homogeneous_matrix The resulting 4-by-4 homogeneous matrix
  *
  */
 
@@ -1114,7 +1109,7 @@ PDM_quaternion_translation_to_homogeneous_matrix
 (
   const double translation_vector[3],
   PDM_bool_t reverse,
-  double homogeneous_matrix[16]
+        double homogeneous_matrix[16]
 );
 
 /**
@@ -1130,7 +1125,7 @@ PDM_quaternion_translation_to_homogeneous_matrix
  * \param [in]   reverse          If True, encodes the reverse transformation
  * \param [in]   vector           n-by-n_samp vector (Row major (C-order) flatten)
  * \param [in]   n_samp           Number of vector samples
- * \param [in]   vector_out       n-by-n_samp output vector (Row major (C-order) flatten)
+ * \param [out]   vector_out       n-by-n_samp output vector (Row major (C-order) flatten)
  *
  */
 
@@ -1146,7 +1141,7 @@ PDM_quaternion_apply_euler_angles_and_rotation_center
   const PDM_bool_t reverse,
   const double* vector,
   const int n_samp,
-  double* vector_out
+        double* vector_out
 );
 
 /**
@@ -1159,7 +1154,7 @@ PDM_quaternion_apply_euler_angles_and_rotation_center
  * \param [in]   reverse          If True, encodes the reverse transformation
  * \param [in]   vector           n-by-n_samp vector (Row major (C-order) flatten)
  * \param [in]   n_samp           Number of vector samples
- * \param [in]   vector_out       n-by-n_samp output vector (Row major (C-order) flatten)
+ * \param [out]  vector_out       n-by-n_samp output vector (Row major (C-order) flatten)
  *
  */
 
@@ -1172,7 +1167,7 @@ PDM_quaternion_apply_axis_angle_and_rotation_center
   const PDM_bool_t reverse,
   const double* vector,
   const int n_samp,
-  double* vector_out
+        double* vector_out
 );
 
 /**
@@ -1184,7 +1179,7 @@ PDM_quaternion_apply_axis_angle_and_rotation_center
  * \param [in]   reverse          If True, encodes the reverse transformation
  * \param [in]   vector           n-by-n_samp vector (Row major (C-order) flatten)
  * \param [in]   n_samp           Number of vector samples
- * \param [in]   vector_out       n-by-n_samp output vector (Row major (C-order) flatten)
+ * \param [out]  vector_out       n-by-n_samp output vector (Row major (C-order) flatten)
  *
  */
 
@@ -1196,7 +1191,7 @@ PDM_quaternion_apply_rotation_matrix_and_rotation_center
   const PDM_bool_t reverse,
   const double* vector,
   const int n_samp,
-  double* vector_out
+        double* vector_out
 );
 
 #ifdef __cplusplus
