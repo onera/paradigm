@@ -109,8 +109,6 @@ cdef extern from "pdm_quaternion.h":
                                                         const double  vector_2[3],
                                                               double* homogeneous_matrix)
 
-  void PDM_quaternion_identity_to_homogeneous_matrix(double* homogeneous_matrix)
-
   # (homogeneous) matrix manipulation ---
 
   void PDM_quaternion_multiply_n_by_n_matrices(const double* A,
@@ -332,8 +330,8 @@ def rotation_matrix_to_axis_angle(
   _check_matrix_shape(rotation_matrix,(3,3))
   cdef NPY.ndarray[NPY.double_t, mode='c', ndim=1] axis = NPY.empty((3,),dtype=NPY.double)
   cdef NPY.double_t angle
-  PDM_quaternion_rotation_matrix_to_axis_angle(<double*>rotation_matrix.data,
-                                               <double*>axis.data,
+  PDM_quaternion_rotation_matrix_to_axis_angle(<double*> rotation_matrix.data,
+                                               <double*> axis.data,
                                                &angle)
   return axis,angle
 
@@ -350,15 +348,70 @@ def rotation_matrix_to_euler_angles(
 
   cdef NPY.double_t ang_x,ang_y,ang_z
   cdef int* out_order_data = np_to_int_pointer(order)
-  PDM_quaternion_rotation_matrix_to_euler_angles(<double*>rotation_matrix.data,
+  PDM_quaternion_rotation_matrix_to_euler_angles(<double*> rotation_matrix.data,
                                                  out_order_data,
                                                  <PDM_bool_t> intrinsic,
                                                  &ang_x,
                                                  &ang_y,
                                                  &ang_z)
-
+  return ang_x,ang_y,ang_z
 
 # region 2 unit vectors to other formats ---------------------------------------
+
+def two_vectors_to_axis_angle(
+    NPY.ndarray[NPY.double_t, mode='c', ndim=1] vector_1,
+    NPY.ndarray[NPY.double_t, mode='c', ndim=1] vector_2):
+  """two_vectors_to_axis_angle
+
+  .. todo:: make doc of two_vectors_to_axis_angle
+  """
+  _check_axis_shape(vector_1,"vector_1")
+  _check_axis_shape(vector_2,"vector_2")
+  cdef NPY.ndarray[NPY.double_t, mode='c', ndim=1] axis = NPY.empty((3,),dtype=NPY.double)
+  cdef NPY.double_t angle
+  PDM_quaternion_two_vectors_to_axis_angle(<double*> vector_1.data,
+                                           <double*> vector_2.data,
+                                           <double*> axis.data,
+                                           &angle)
+  return axis,angle
+
+def two_vectors_to_euler_angles(
+    NPY.ndarray[NPY.double_t, mode='c', ndim=1] vector_1,
+    NPY.ndarray[NPY.double_t, mode='c', ndim=1] vector_2,
+    NPY.ndarray[NPY.int32_t, mode='c', ndim=1] order = NPY.array([2,1,0],dtype=NPY.int32),
+    bint intrinsic = True):
+  """two_vectors_to_euler_angles
+
+  .. todo:: make doc of two_vectors_to_euler_angles
+  """
+  _check_axis_shape(vector_1,"vector_1")
+  _check_axis_shape(vector_2,"vector_2")
+  _check_euler_angles_order(order,"order")
+  cdef NPY.double_t ang_x,ang_y,ang_z
+  cdef int* order_data = np_to_int_pointer(order)
+  PDM_quaternion_two_vectors_to_euler_angles(<double*> vector_1.data,
+                                             <double*> vector_2.data,
+                                             order_data,
+                                             <PDM_bool_t> intrinsic,
+                                             &ang_x,
+                                             &ang_y,
+                                             &ang_z)
+  return ang_x,ang_y,ang_z
+
+def two_vectors_to_rotation_matrix(
+    NPY.ndarray[NPY.double_t, mode='c', ndim=1] vector_1,
+    NPY.ndarray[NPY.double_t, mode='c', ndim=1] vector_2):
+  """two_vectors_to_rotation_matrix
+
+  .. todo:: make doc of two_vectors_to_rotation_matrix
+  """
+  _check_axis_shape(vector_1,"vector_1")
+  _check_axis_shape(vector_2,"vector_2")
+  cdef NPY.ndarray[NPY.double_t, mode='c', ndim=2] rotation_matrix = NPY.empty((3,3),dtype=NPY.double)  
+  PDM_quaternion_two_vectors_to_rotation_matrix(<double*> vector_1.data,
+                                                <double*> vector_2.data,
+                                                <double*> rotation_matrix.data)
+  return rotation_matrix  
 
 # region 'Apply' functions -----------------------------------------------------
 

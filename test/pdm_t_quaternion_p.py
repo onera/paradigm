@@ -32,6 +32,9 @@ print(PDM.euler_angles_to_euler_angles.__doc__)
 print(PDM.euler_angles_to_rotation_matrix.__doc__)
 print(PDM.rotation_matrix_to_axis_angle.__doc__)
 print(PDM.rotation_matrix_to_euler_angles.__doc__)
+print(PDM.two_vectors_to_axis_angle.__doc__)
+print(PDM.two_vectors_to_euler_angles.__doc__)
+print(PDM.two_vectors_to_rotation_matrix.__doc__)
 exit()
 # not implemented yet
 # PDM.two_vectors_to_axis_angle

@@ -1026,8 +1026,9 @@ extern void cblas_dgemm(const int layout,
                         const int ldc);
 #endif
 
+static
 void 
-PDM_quaternion_identity_to_homogeneous_matrix
+quaternion_identity_to_homogeneous_matrix
 (
   double* homogeneous_matrix
 )
@@ -1171,7 +1172,7 @@ PDM_quaternion_compose_homogeneous_matrices
   double output_matrix[16]
 )
 {
-  PDM_quaternion_identity_to_homogeneous_matrix(output_matrix);
+  quaternion_identity_to_homogeneous_matrix(output_matrix);
   for (int i = 0; i < n_matrices; i++) {
     PDM_quaternion_multiply_n_by_n_matrices(homogeneous_matrices[i],
       output_matrix,4,output_matrix);
@@ -1186,7 +1187,7 @@ PDM_quaternion_translation_to_homogeneous_matrix
   double homogeneous_matrix[16]
 )
 {
-  PDM_quaternion_identity_to_homogeneous_matrix(homogeneous_matrix);
+  quaternion_identity_to_homogeneous_matrix(homogeneous_matrix);
   if (reverse){
     homogeneous_matrix[3]  = -translation_vector[0];
     homogeneous_matrix[7]  = -translation_vector[1];
