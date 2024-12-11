@@ -196,10 +196,20 @@ def axis_angle_to_euler_angles(
     NPY.double_t angle,
     NPY.ndarray[NPY.int32_t, mode='c', ndim=1] order = NPY.array([2,1,0],dtype=NPY.int32),
     bint intrinsic = True):
-  """axis_angle_to_euler_angles
+  """axis_angle_to_euler_angles(axis,angle,order=(2,1,0),intrinsic=True)
 
-  .. todo:: make doc of axis_angle_to_euler_angles
-  
+  Converts a rotation expressed as axis-angle to euler angles
+
+  Parameters:
+    axis            (np.ndarray[np.double_t]) : Rotation axis (shape = (3,))
+    angles          (double)                  : Rotation angle (in *radians*)
+    order           (np.ndarray[np.int32_t])  : Order of rotations to apply 
+    intrinsic       (bool)                    : Axis conventions (https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations)
+
+  Returns:
+    ang_x           (double)                  : Rotation angle around the x-axis
+    ang_y           (double)                  : Rotation angle around the y-axis
+    ang_z           (double)                  : Rotation angle around the z-axis
   """
   _check_axis_shape(axis)
   cdef NPY.double_t ang_x,ang_y,ang_z
@@ -216,9 +226,16 @@ def axis_angle_to_euler_angles(
 def axis_angle_to_rotation_matrix(
     NPY.ndarray[NPY.double_t, mode='c', ndim=1] axis,
     NPY.double_t angle):
-  """axis_angle_to_rotation_matrix
+  """axis_angle_to_rotation_matrix(axis,angle)
 
-  .. todo:: make doc of axis_angle_to_rotation_matrix
+  Converts a rotation expressed as axis-angle to a 3-by-3 rotation matrix
+
+  Parameters:
+    axis            (np.ndarray[np.double_t]) : Rotation axis (shape = (3,))
+    angles          (double)                  : Rotation angle (in *radians*)
+
+  Returns:
+    rotation_matrix (np.ndarray[np.double_t]) : 3-by-3 rotation matrix (shape = (3,3))
   """
   _check_axis_shape(axis)
   cdef NPY.ndarray[NPY.double_t, mode='c', ndim=2] rotation_matrix = NPY.empty((3,3),dtype=NPY.double)
@@ -235,10 +252,20 @@ def euler_angles_to_axis_angle(
     NPY.double_t ang_z,
     NPY.ndarray[NPY.int32_t, mode='c', ndim=1] order = NPY.array([2,1,0],dtype=NPY.int32),
     bint intrinsic = True):
-  """
-  euler_angles_to_axis_angle
+  """euler_angles_to_axis_angle(ang_x,ang_y,ang_z,order=(2,1,0),intrinsic=True)
 
-  .. todo:: make doc
+  Converts a rotation expressed as euler angles to axis-angle
+
+  Parameters:
+    ang_x           (double)                  : Rotation angle around the x-axis
+    ang_y           (double)                  : Rotation angle around the y-axis
+    ang_z           (double)                  : Rotation angle around the z-axis
+    order           (np.ndarray[np.int32_t])  : Order of rotations to apply 
+    intrinsic       (bool)                    : Axis conventions (https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations)
+
+  Returns:
+    axis            (np.ndarray[np.double_t]) : Rotation axis (shape = (3,))
+    angles          (double)                  : Rotation angle (in *radians*)
   """
   _check_euler_angles_order(order)
   cdef int* order_data = np_to_int_pointer(order)
@@ -261,10 +288,23 @@ def euler_angles_to_euler_angles(
     bint input_intrinsic = True,
     NPY.ndarray[NPY.int32_t, mode='c', ndim=1] output_order = NPY.array([2,1,0],dtype=NPY.int32),
     bint output_intrinsic = True):
-  """
-  euler_angles_to_euler_angles
+  """euler_angles_to_euler_angles(ang_x,ang_y,ang_z,input_order=(2,1,0),input_intrinsic=True,output_order=(2,1,0),output_intrinsic=True)
 
-  .. todo:: make doc
+  Converts a rotation expressed as euler angles to another euler angles expression
+  
+  Parameters:
+    ang_x            (double)                  : Rotation angle around the x-axis
+    ang_y            (double)                  : Rotation angle around the y-axis
+    ang_z            (double)                  : Rotation angle around the z-axis
+    input_order      (np.ndarray[np.int32_t])  : Input order of rotations to apply 
+    input_intrinsic  (bool)                    : Input axis conventions (https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations)
+    output_order     (np.ndarray[np.int32_t])  : Output order of rotations to apply 
+    output_intrinsic (bool)                    : Output axis conventions (https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations)
+
+  Returns:
+    ang_x           (double)                  : Output rotation angle around the x-axis
+    ang_y           (double)                  : Output rotation angle around the y-axis
+    ang_z           (double)                  : Output rotation angle around the z-axis
   """
   _check_euler_angles_order(input_order, "input_order")
   _check_euler_angles_order(output_order,"output_order")
@@ -322,10 +362,16 @@ def euler_angles_to_rotation_matrix(
 
 def rotation_matrix_to_axis_angle(
     NPY.ndarray[NPY.double_t, mode='c', ndim=2] rotation_matrix):
-  """rotation_matrix_to_axis_angle
+  """rotation_matrix_to_axis_angle(rotation_matrix)
 
-  .. todo:: make doc of rotation_matrix_to_axis_angle
+  Converts a rotation expressed as a rotation matrix to axis-angle
+  
+  Parameters:
+    rotation_matrix (np.ndarray[np.double_t]) : Rotation matrix (shape = (3,3)))
 
+  Returns:
+    axis            (np.ndarray[np.double_t]) : Rotation axis (shape = (3,))
+    angles          (double)                  : Rotation angle (in *radians*)
   """
   _check_matrix_shape(rotation_matrix,(3,3))
   cdef NPY.ndarray[NPY.double_t, mode='c', ndim=1] axis = NPY.empty((3,),dtype=NPY.double)
@@ -339,9 +385,19 @@ def rotation_matrix_to_euler_angles(
     NPY.ndarray[NPY.double_t, mode='c', ndim=2] rotation_matrix,
     NPY.ndarray[NPY.int32_t, mode='c', ndim=1] order = NPY.array([2,1,0],dtype=NPY.int32),
     bint intrinsic = True):
-  """rotation_matrix_to_euler_angles
+  """rotation_matrix_to_euler_angles(rotation_matrix,order=(2,1,0),intrinsic=True)
 
-  .. todo:: make doc of rotation_matrix_to_euler_angles
+  Converts a rotation expressed as a rotation matrix to euler angles
+
+  Parameters:
+    rotation_matrix (np.ndarray[np.double_t]) : Rotation matrix (shape = (3,3)))
+    order           (np.ndarray[np.int32_t])  : Order of rotations to apply 
+    intrinsic       (bool)                    : Axis conventions (https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations)    
+  
+  Returns:
+    ang_x           (double)                  : Rotation angle around the x-axis
+    ang_y           (double)                  : Rotation angle around the y-axis
+    ang_z           (double)                  : Rotation angle around the z-axis
   """
   _check_matrix_shape(rotation_matrix,(3,3))
   _check_euler_angles_order(order)
@@ -361,9 +417,17 @@ def rotation_matrix_to_euler_angles(
 def two_vectors_to_axis_angle(
     NPY.ndarray[NPY.double_t, mode='c', ndim=1] vector_1,
     NPY.ndarray[NPY.double_t, mode='c', ndim=1] vector_2):
-  """two_vectors_to_axis_angle
+  """two_vectors_to_axis_angle(vector_1,vector_2)
 
-  .. todo:: make doc of two_vectors_to_axis_angle
+  Converts a rotation from the first vector to the latter to a rotation expressed as axis angle
+
+  Parameters:
+    vector_1        (np.ndarray[np.double_t]) : First vector  (shape = (3,))
+    vector_2        (np.ndarray[np.double_t]) : Second vector (shape = (3,))
+
+  Returns:
+    axis            (np.ndarray[np.double_t]) : Rotation axis (shape = (3,))
+    angles          (double)                  : Rotation angle (in *radians*)
   """
   _check_axis_shape(vector_1,"vector_1")
   _check_axis_shape(vector_2,"vector_2")
@@ -380,9 +444,21 @@ def two_vectors_to_euler_angles(
     NPY.ndarray[NPY.double_t, mode='c', ndim=1] vector_2,
     NPY.ndarray[NPY.int32_t, mode='c', ndim=1] order = NPY.array([2,1,0],dtype=NPY.int32),
     bint intrinsic = True):
-  """two_vectors_to_euler_angles
+  """two_vectors_to_euler_angles(vector_1,vector_2,order=(2,1,0),intrinsic=True)
 
-  .. todo:: make doc of two_vectors_to_euler_angles
+  Converts a rotation from the first vector to the latter to a rotation expressed as euler angles
+
+  Parameters:
+    vector_1        (np.ndarray[np.double_t]) : First vector  (shape = (3,))
+    vector_2        (np.ndarray[np.double_t]) : Second vector (shape = (3,))
+    order           (np.ndarray[np.int32_t])  : Order of rotations to apply 
+    intrinsic       (bool)                    : Axis conventions (https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations)
+
+  Returns:
+    ang_x           (double)                  : Rotation angle around the x-axis
+    ang_y           (double)                  : Rotation angle around the y-axis
+    ang_z           (double)                  : Rotation angle around the z-axis
+
   """
   _check_axis_shape(vector_1,"vector_1")
   _check_axis_shape(vector_2,"vector_2")
@@ -401,9 +477,16 @@ def two_vectors_to_euler_angles(
 def two_vectors_to_rotation_matrix(
     NPY.ndarray[NPY.double_t, mode='c', ndim=1] vector_1,
     NPY.ndarray[NPY.double_t, mode='c', ndim=1] vector_2):
-  """two_vectors_to_rotation_matrix
+  """two_vectors_to_rotation_matrix(vector_1,vector_2)
 
-  .. todo:: make doc of two_vectors_to_rotation_matrix
+  Converts a rotation from the first vector to the latter to a rotation expressed as a 3-by-3 rotation matrix
+  
+  Parameters:
+    vector_1        (np.ndarray[np.double_t]) : First vector  (shape = (3,))
+    vector_2        (np.ndarray[np.double_t]) : Second vector (shape = (3,))
+
+  Returns:
+    rotation_matrix (np.ndarray[np.double_t]) : Rotation matrix (shape = (3,3)))
   """
   _check_axis_shape(vector_1,"vector_1")
   _check_axis_shape(vector_2,"vector_2")

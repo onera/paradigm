@@ -682,10 +682,16 @@ PDM_quaternion_to_euler_angles
     if (angle[1] >  M_PI) angle[1] -= 2*M_PI;
     if (angle[2] < -M_PI) angle[2] += 2*M_PI;
     if (angle[2] >  M_PI) angle[2] -= 2*M_PI;
+    
+    int rev_order[3];
+    rev_order[order[0]] = 0;
+    rev_order[order[1]] = 1;
+    rev_order[order[2]] = 2;
+    
+    (*ang_x) = angle[rev_order[0]];
+    (*ang_y) = angle[rev_order[1]];
+    (*ang_z) = angle[rev_order[2]];
 
-    (*ang_x) = angle[order[0]];
-    (*ang_y) = angle[order[1]];
-    (*ang_z) = angle[order[2]];
 
 }
 
