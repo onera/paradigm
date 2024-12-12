@@ -209,7 +209,7 @@ static int _interface_to_graph
     PDM_log_trace_array_long(max_per_domain, n_domain+1, "max per domain");
   }
   PDM_free(max_per_domain_loc);
-  
+
   // Prepare first PtB with multiple partitions.
   // Use (shifted) ids as gnum and send tuple (shited) id, opp_id
   PDM_g_num_t **interface_ids_shifted = NULL;
@@ -254,7 +254,7 @@ static int _interface_to_graph
       PDM_log_trace_array_long(send_data[itrf], 2*interface_dn[itrf], "  send");
     }
   }
-  
+
   PDM_part_to_block_t *ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                       PDM_PART_TO_BLOCK_POST_MERGE,
                                                       1.,
@@ -327,7 +327,7 @@ static int _interface_to_graph
                                     1,
                                     comm);
 
-    
+
     int *send_stride = NULL;
     PDM_malloc(send_stride, n_connected_l, int);
     int w_idx = 0;
@@ -376,7 +376,7 @@ static int _interface_to_graph
     PDM_free(send_stride);
     PDM_free(send_data2);
     PDM_part_to_block_free(ptb);
-    
+
     // Post treat recv data to remove duplicated per gnum and count size of graph
     int start = 0;
     n_connected_l = 0;
@@ -403,7 +403,7 @@ static int _interface_to_graph
     recv_data = recv_data_next;
     recv_stride = recv_stride_next;
   }
-  
+
   // When iteration are completed, all the connections are known by every id.
   // Last step is to compress the graph and to redistribute it
   // To do that we take for each group of related id the min of it as lngn
@@ -462,13 +462,13 @@ static int _interface_to_graph
     PDM_log_trace_array_int(send_stride_gr, n_keys, "  send stride");
     PDM_log_trace_array_long(send_data_gr, n_connected_l, "  send data");
   }
-  
+
   // Data of previous iteration is not usefull anymore
   PDM_free(gnum);
   PDM_free(distri);
   PDM_free(recv_stride);
   PDM_free(recv_data);
-  
+
   //TODO In fact we just want to do a block to block, but PTB + weights compute distribution for us
   //and we are lazy
   ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
@@ -548,7 +548,7 @@ static int _extract_and_shift_jn_faces
 
   PDM_g_num_t *face_per_block_offset = _per_block_offset(n_domain, dn_face, comm);
   PDM_g_num_t *vtx_per_block_offset  = _per_block_offset(n_domain, dn_vtx,  comm);
-  
+
   int n_face_join = 0; // Each interface comes with a pair of faces
   for (int i_interface = 0; i_interface < n_interface; i_interface++) {
     n_face_join += 2*interfaces_size[i_interface];
@@ -583,7 +583,7 @@ static int _extract_and_shift_jn_faces
     }
   }
   assert (idx == n_face_join);
-  
+
   // Multi gnum is not equilibrated, we have to redistribute it but we want to keep the face/face_opp groups
   PDM_g_num_t *cur_distri   = PDM_compute_entity_distribution(comm, n_face_join/2);
   PDM_g_num_t *ideal_distri = PDM_compute_uniform_entity_distribution(comm, cur_distri[n_rank]);
@@ -616,7 +616,7 @@ static int _extract_and_shift_jn_faces
                           NULL,
               (void **)  dextract_face_dom_id);
 
-  
+
   PDM_block_to_block_free(btb);
   // Update n_face_join before freeing distribution
   n_face_join = 2*(ideal_distri[i_rank+1]-ideal_distri[i_rank]);
@@ -645,7 +645,7 @@ static int _extract_and_shift_jn_faces
                                                                   &n_face_join,
                                                                    1,
                                                                    comm);
-  //Prepare data to send : face -> vtx connectivity 
+  //Prepare data to send : face -> vtx connectivity
   int         **face_vtx_n       = NULL;
   PDM_g_num_t **face_vtx_shifted = NULL;
   PDM_malloc(face_vtx_n      , n_domain, int         *);
@@ -711,7 +711,7 @@ static int _generate_edge_face
 
   int i_rank;
   PDM_MPI_Comm_rank(comm, &i_rank);
-  
+
   // 1. Get the number of unique vertex
   PDM_part_to_block_t *ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                       PDM_PART_TO_BLOCK_POST_MERGE,
@@ -795,7 +795,7 @@ static int _match_internal_edges
   PDM_UNUSED(dedge_face);
   int i_rank;
   PDM_MPI_Comm_rank(comm, &i_rank);
-  
+
   // 0. Count the number of internal edges
   int dn_internal_edge = 0;
   for(int i_edge = 0; i_edge < dn_edge; ++i_edge) {
@@ -887,7 +887,7 @@ static int _match_internal_edges
   for (int k = 0; k < blk_size; k++) {
     gnum_n_occurences_tot += gnum_n_occurences[k];
   }
-  
+
   int         *unused_recv_stride = NULL;
   PDM_g_num_t *blk_edge_g_num     = NULL;
   int exch_size = PDM_part_to_block_exch(ptb,
@@ -898,7 +898,7 @@ static int _match_internal_edges
                            (void **) &data_send_edge_g_num,
                                      &unused_recv_stride,
                            (void **) &blk_edge_g_num);
-  PDM_free(unused_recv_stride); // Same as gnum_n_occurences 
+  PDM_free(unused_recv_stride); // Same as gnum_n_occurences
   assert (exch_size == gnum_n_occurences_tot);
 
   /*
@@ -911,7 +911,7 @@ static int _match_internal_edges
                            (void **) &data_send_sens,
                                      &unused_recv_stride,
                            (void **) &blk_data_sens);
-  PDM_free(unused_recv_stride); // Same as 2*gnum_n_occurences 
+  PDM_free(unused_recv_stride); // Same as 2*gnum_n_occurences
   assert (exch_size == 2*gnum_n_occurences_tot);
   */
 
@@ -938,7 +938,7 @@ static int _match_internal_edges
                           (void **) &data_send_connect,
                                     &unused_recv_stride,
                           (void **) &blk_data_connect);
-  PDM_free(unused_recv_stride); // Same as 4*gnum_n_occurences 
+  PDM_free(unused_recv_stride); // Same as 4*gnum_n_occurences
   assert (exch_size == 4*gnum_n_occurences_tot);
 
   if (0 == 1) {
@@ -1152,7 +1152,7 @@ static void _match_all_edges_from_faces
       PDM_log_trace_array_long(&face_edge[start_idx_opp], face_len, "face_opp_edge_opp");
       PDM_log_trace_array_long(&pedge_vtx[2*start_idx_opp], 2*face_len, "edge vertices opp");
     }
-    
+
     // Search any received edge (we should have at least one, but not necessary the first
     // since we can have aliases edges
     PDM_g_num_t opp_edge_key = 0;
@@ -1378,7 +1378,7 @@ PDM_MPI_Comm   comm
   //Then, for each interface, eliminate pairs of vertices occuring more than once
   //If dom_id & dom_opp_id differs, vtx_id & opp should also differ because of the shift
   for (int i_interface = 0; i_interface < n_interface; i_interface++) {
-    
+
     int n_pairs_u = _unique_pairs(vtx_interface_size[i_interface],
                                   interface_vtx_ids[i_interface],
                                   interface_vtx_dom_ids[i_interface]);
@@ -1459,7 +1459,7 @@ static void _connect_additional_edges
   memcpy(vtx_distri, PDM_part_to_block_distrib_index_get(ptb_vtx), (n_rank+1)*sizeof(PDM_g_num_t));
 
   PDM_g_num_t *vtx_gnum = PDM_part_to_block_block_gnum_get(ptb_vtx);
-  
+
   if (0 == 1) {
     PDM_log_trace_array_long(vtx_gnum, n_vtx_blk, "block gnum");
     PDM_log_trace_array_int(vtx_stride_two, n_vtx_blk, "recv stride 2");
@@ -1542,8 +1542,8 @@ static void _connect_additional_edges
     PDM_log_trace_array_long(keys_ids, n_keys, "key to treat");
     PDM_log_trace_array_int(keys_cnt, n_keys, "n recept");
     PDM_log_trace_array_int(key_recv_stride, n_keys, "key recv stride");
-    PDM_log_trace_array_int(key_recv_face_n, n_key_vtx, "key recv facen"); 
-    //PDM_log_trace_array_long(key_recv_data, n_recv, "key recv data"); 
+    PDM_log_trace_array_int(key_recv_face_n, n_key_vtx, "key recv facen");
+    //PDM_log_trace_array_long(key_recv_data, n_recv, "key recv data");
     PDM_log_trace_array_long(key_vtx_gnum, n_key_vtx, "key recv gnum");
   }
 
@@ -1551,7 +1551,7 @@ static void _connect_additional_edges
   PDM_free(vtx_face_n);
   PDM_free(vtx_stride_two);
   PDM_free(vtx_key);
-  
+
   //3. Match data on key distribution
   PDM_g_num_t *key_vtx_gnum_opp = PDM_array_const_gnum(n_key_vtx, 0);
   int count_idx = 0; //Start of data in key_recv_face_n
@@ -1658,7 +1658,7 @@ static void _connect_additional_edges
                           sizeof(PDM_g_num_t),
                           PDM_STRIDE_VAR_INTERLACED,
                           blk_stride,
-                          matched_gnum_opp, 
+                          matched_gnum_opp,
                          &recv_stride,
               (void ***) &recv_data);
   PDM_free(recv_stride[0]);
@@ -1679,7 +1679,7 @@ static void _connect_additional_edges
       int edge_start     = face_vtx_both_idx[2*i_face];
       int edge_opp_start = face_vtx_both_idx[2*i_face+1];
       int n_vtx_face = face_vtx_both_idx[2*i_face+1] - face_vtx_both_idx[2*i_face];
-      
+
       //Find any opp vtx gnum to have a gnum / gnum opp couple
       PDM_g_num_t opp_vtx_gnum = 0;
       int         opp_vtx_pos  = 0;
@@ -1709,7 +1709,7 @@ static void _connect_additional_edges
         }
       }
       assert (edge_pos >= 0);
-      
+
       //Search opp vtx in edge opp, reverse order
       int opp_pos = -1;
       int opp_sens = 1 - edge_sens;
@@ -1818,7 +1818,7 @@ static void _domain_interface_face_to_vertex
                                    &dedge_face_idx,
                                    &dedge_face,
                                     comm);
-  
+
   if (0 == 1) {
     log_trace("Edges rebuild\n");
     PDM_log_trace_array_long(dedge_distrib, n_rank+1, "dedge_distri ::");
@@ -2004,7 +2004,7 @@ static void _domain_interface_face_to_vertex
   int need_more_edge;
   for (int i_face=0; i_face < n_extr_face; i_face++) {
     if (face_status[i_face] == 0) {
-      need_more_edge_l = 1; 
+      need_more_edge_l = 1;
       break;
     }
   }
@@ -2187,6 +2187,14 @@ const int                         n_domain,
   }
 
   return dom_intrf;
+}
+
+int PDM_domain_interface_n_interface_get
+(
+ PDM_domain_interface_t *dom_intrf
+)
+{
+ return dom_intrf->n_interface;
 }
 
 void PDM_domain_interface_set
