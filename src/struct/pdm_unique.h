@@ -59,6 +59,25 @@ PDM_inplace_unique
 
 /**
  *
+ * \brief Unique in place and return order in unique array
+ *
+ * \param [inout]   a             Array to sort
+ * \param [inout]   unique_order  Unique index in old numbering
+ * \param [in]      l             First element
+ * \param [in]      r             Last  element
+ *
+ */
+int
+PDM_inplace_unique_int_with_order_in_unique
+(
+ int a[],
+ int unique_order[],
+ int l,
+ int r
+);
+
+/**
+ *
  * \brief Unique in place
  *
  * \param [inout]   a     Array to sort

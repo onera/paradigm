@@ -13,6 +13,7 @@
 
 #include "pdm.h"
 #include "pdm_priv.h"
+#include "pdm_error.h"
 #include "pdm_part_geom.h"
 #include "pdm_hilbert.h"
 #include "pdm_sort.h"
@@ -955,8 +956,27 @@ PDM_part_geom_cell_center
   double ***cell_center
 )
 {
-  int from_edge = (pface_edge != NULL);
-  int from_face = (pface_vtx  != NULL);
+  int from_edge = (pface_edge != NULL && pface_edge_idx != NULL);
+  int from_face = (pface_vtx  != NULL && pface_vtx_idx  != NULL);
+
+  for (int i_part = 0; i_part < n_part; ++i_part) {
+    if (n_selected[i_part] > 0) {
+      if (from_edge) {
+        if (pface_edge[i_part] == NULL || pface_edge_idx[i_part] == NULL) {
+          from_edge = 0;
+        }
+      }
+      if (from_face) {
+        if (pface_vtx [i_part] == NULL || pface_vtx_idx [i_part] == NULL) {
+          from_face = 0;
+        }
+      }
+    }
+  }
+
+  if (!from_edge && !from_face) {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_part_geom_cell_center: either face->vtx or face->edge connectivity must be provided\n");
+  }
 
   double **entity_center;
   PDM_malloc(entity_center, n_part, double *);

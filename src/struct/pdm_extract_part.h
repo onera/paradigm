@@ -115,6 +115,7 @@ PDM_extract_part_compute
  * \param [in]   i_part        part identifier
  * \param [in]   n_extract     Number of entity to select
  * \param [in]   extract_lnum  List of id to extract (starting at 1)
+ * \param [in]   ownership     Ownership
  *
  */
 void
@@ -123,7 +124,8 @@ PDM_extract_part_selected_lnum_set
   PDM_extract_part_t       *extrp,
   int                       i_part,
   int                       n_extract,
-  int                      *extract_lnum
+  int                      *extract_lnum,
+  PDM_ownership_t           ownership
 );
 
 /**
@@ -135,6 +137,7 @@ PDM_extract_part_selected_lnum_set
  * \param [in]   n_target          Number of target to select
  * \param [in]   target_gnum       List of global id to extract
  * \param [in]   target_location   Init location (optional NULL pointer accepted and computed internaly)
+ * \param [in]   ownership         Ownership
  *
  */
 void
@@ -144,21 +147,8 @@ PDM_extract_part_target_set
   int                       i_part,
   int                       n_target,
   PDM_g_num_t              *target_gnum,
-  int                      *target_location
-);
-
-
-/**
- *
- * \brief Keep target_gnum data ownership inside extrp
- *
- * \param [in]   extrp             PDM_extract_part_t
- *
- */
-void
-PDM_extract_part_target_gnum_keep_ownnership
-(
-  PDM_extract_part_t       *extrp
+  int                      *target_location,
+  PDM_ownership_t           ownership
 );
 
 
@@ -304,7 +294,7 @@ PDM_extract_part_connectivity_get
  PDM_connectivity_type_t    connectivity_type,
  int                      **connect,
  int                      **connect_idx,
- PDM_ownership_t           ownership
+ PDM_ownership_t            ownership
 );
 
 
@@ -382,6 +372,25 @@ PDM_extract_part_parent_lnum_get
  int                        i_part_out,
  PDM_mesh_entities_t        entity_type,
  int                      **parent_entity_lnum,
+ PDM_ownership_t            ownership
+);
+
+/**
+ *
+ * \brief Return size of entity_type on current partition ( n_entity )
+ * \param [in]  extrp                  Pointer to \ref PDM_extract_part_t object
+ * \param [in]  i_part                 Id of part
+ * \param [in]  entity_type            Entity kind \ref PDM_mesh_entities_t)
+ * \param [out] init_location          Initial location (rank, part, local ID) of extracted entities (size = n_entity * 3)
+ * \param [in]  ownership              Ownership for entity_ln_to_gn ( \ref PDM_ownership_t )
+ */
+int
+PDM_extract_part_init_location_get
+(
+ PDM_extract_part_t        *extrp,
+ int                        i_part_out,
+ PDM_mesh_entities_t        entity_type,
+ int                      **init_location,
  PDM_ownership_t            ownership
 );
 

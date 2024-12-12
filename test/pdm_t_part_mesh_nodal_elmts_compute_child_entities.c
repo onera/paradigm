@@ -207,6 +207,12 @@ int main(int argc, char *argv[])
   PDM_part_mesh_nodal_t *pmn = NULL;
   PDM_multipart_get_part_mesh_nodal(mpart, 0, &pmn, PDM_OWNERSHIP_KEEP);
 
+  int *pn_vtx = NULL;
+  PDM_malloc(pn_vtx, n_part, int);
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    pn_vtx[i_part] = PDM_part_mesh_nodal_n_vtx_get(pmn, i_part);
+  }
+
   PDM_part_mesh_nodal_elmts_t *pmne_ridge = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(pmn, PDM_GEOMETRY_KIND_RIDGE   );
   PDM_part_mesh_nodal_elmts_t *pmne_surf  = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(pmn, PDM_GEOMETRY_KIND_SURFACIC);
 
@@ -226,6 +232,7 @@ int main(int argc, char *argv[])
                                                  pmne_ridge,
                                                  PDM_MESH_ENTITY_EDGE,
                                                  compute_parent_child,
+                                                 pn_vtx,
                                                  &ridge_edge_surf_face_idx,
                                                  &ridge_edge_surf_face,
                                                  &n_surf_edge,
@@ -313,6 +320,7 @@ int main(int argc, char *argv[])
                                                    pmne_surf,
                                                    PDM_MESH_ENTITY_FACE,
                                                    compute_parent_child,
+                                                   pn_vtx,
                                                    &surf_face_cell_idx,
                                                    &surf_face_cell,
                                                    &n_vol_face,
@@ -376,6 +384,7 @@ int main(int argc, char *argv[])
                                                    pmne_ridge,
                                                    PDM_MESH_ENTITY_EDGE,
                                                    compute_parent_child,
+                                                   pn_vtx,
                                                    &ridge_edge_cell_idx,
                                                    &ridge_edge_cell,
                                                    &n_vol_edge,
@@ -437,19 +446,16 @@ int main(int argc, char *argv[])
    * Visu
    */
   if (verbose && compute_parent_child) {
-    int          *pn_vtx         = NULL;
     double      **pvtx_coord     = NULL;
     PDM_g_num_t **pvtx_ln_to_gn  = NULL;
     int          *pn_cell        = NULL;
     PDM_g_num_t **pcell_ln_to_gn = NULL;
-    PDM_malloc(pn_vtx        , n_part, int          );
     PDM_malloc(pvtx_coord    , n_part, double      *);
     PDM_malloc(pvtx_ln_to_gn , n_part, PDM_g_num_t *);
     PDM_malloc(pn_cell       , n_part, int          );
     PDM_malloc(pcell_ln_to_gn, n_part, PDM_g_num_t *);
 
     for (int i_part = 0; i_part < n_part; i_part++) {
-      pn_vtx        [i_part] = PDM_part_mesh_nodal_n_vtx_get    (pmn, i_part);
       pvtx_coord    [i_part] = PDM_part_mesh_nodal_vtx_coord_get(pmn, i_part);
       pvtx_ln_to_gn [i_part] = PDM_part_mesh_nodal_vtx_g_num_get(pmn, i_part);
 
@@ -517,7 +523,6 @@ int main(int argc, char *argv[])
                                    NULL);
       }
     }
-    PDM_free(pn_vtx       );
     PDM_free(pvtx_coord   );
     PDM_free(pvtx_ln_to_gn);
     PDM_free(pn_cell       );
@@ -528,6 +533,8 @@ int main(int argc, char *argv[])
   /*
    * Free memory
    */
+  PDM_free(pn_vtx);
+
   for (int i_part = 0; i_part < n_part; i_part++) {
     PDM_free(ridge_edge_surf_face_idx[i_part]);
     PDM_free(ridge_edge_surf_face    [i_part]);

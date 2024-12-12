@@ -51,8 +51,6 @@ Get outputs
 Finalize
 ~~~~~~~~
 
-.. doxygenfunction:: PDM_mesh_deform_partial_free
-
 .. doxygenfunction:: PDM_mesh_deform_free
 
 Timers
@@ -130,12 +128,6 @@ Fortran API
 
   Finalize
   ~~~~~~~~
-
-  .. f:subroutine:: PDM_mesh_deform_partial_free(def)
-
-    Free PDM_mesh_deform_t instance partially
-
-    :param c_ptr def [inout]: C pointer to PDM_mesh_deform_t instance
 
   .. f:subroutine:: PDM_mesh_deform_free(def)
 

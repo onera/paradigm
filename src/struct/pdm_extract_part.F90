@@ -593,13 +593,14 @@ module pdm_extract_part
   !! \param [in]   i_part        part identifier
   !! \param [in]   n_extract     Number of entity to select
   !! \param [in]   extract_lnum  List of id to extract (starting at 1)
-  !!
+  !! \param [in]   ownership     Ownership
   !!
 
-  subroutine PDM_extract_part_selected_lnum_set (extrp,     &
-                                                 i_part_in, &
-                                                 n_entity,  &
-                                                 extract_lnum)
+  subroutine PDM_extract_part_selected_lnum_set (extrp,        &
+                                                 i_part_in,    &
+                                                 n_entity,     &
+                                                 extract_lnum, &
+                                                 ownership)
 
     use iso_c_binding
     implicit none
@@ -608,6 +609,7 @@ module pdm_extract_part
     integer, intent(in)                  :: i_part_in
     integer, intent(in)                  :: n_entity
     integer(kind = PDM_l_num_s), pointer :: extract_lnum(:)
+    integer, intent(in)                  :: ownership
 
     type(c_ptr)                          :: c_extract_lnum
 
@@ -615,7 +617,8 @@ module pdm_extract_part
       subroutine pdm_extract_part_selected_lnum_set_c (extrp,        &
                                                        i_part_in,    &
                                                        n_entity,     &
-                                                       extract_lnum) &
+                                                       extract_lnum, &
+                                                       ownership)    &
       bind (c, name='PDM_extract_part_selected_lnum_set')
         use iso_c_binding
         implicit none
@@ -624,6 +627,7 @@ module pdm_extract_part
         integer(c_int), value :: i_part_in
         integer(c_int), value :: n_entity
         type(c_ptr),    value :: extract_lnum
+        integer(c_int), value :: ownership
 
       end subroutine pdm_extract_part_selected_lnum_set_c
     end interface
@@ -636,7 +640,8 @@ module pdm_extract_part
     call pdm_extract_part_selected_lnum_set_c (extrp,             &
                                                i_part_in,         &
                                                n_entity,          &
-                                               c_extract_lnum)
+                                               c_extract_lnum,    &
+                                               ownership)
 
   end subroutine PDM_extract_part_selected_lnum_set
 
@@ -649,14 +654,16 @@ module pdm_extract_part
   !! \param [in]   n_target          Number of target to select
   !! \param [in]   target_gnum       List of global id to extract
   !! \param [in]   target_location   Init location (optional NULL pointer accepted and computed internaly)
+  !! \param [in]   ownership         Ownership
   !!
   !!
 
-  subroutine PDM_extract_part_target_set (extrp,       &
-                                          i_part_in,   &
-                                          n_target,    &
-                                          target_gnum, &
-                                          target_location)
+  subroutine PDM_extract_part_target_set (extrp,           &
+                                          i_part_in,       &
+                                          n_target,        &
+                                          target_gnum,     &
+                                          target_location, &
+                                          ownership)
 
     use iso_c_binding
     implicit none
@@ -666,6 +673,7 @@ module pdm_extract_part
     integer, intent(in)                  :: n_target
     integer(kind = PDM_g_num_s), pointer :: target_gnum(:)
     integer(kind = PDM_l_num_s), pointer :: target_location(:)
+    integer, intent(in)                  :: ownership
 
     type(c_ptr)                          :: c_target_gnum
     type(c_ptr)                          :: c_target_location
@@ -675,7 +683,8 @@ module pdm_extract_part
                                                 i_part_in,       &
                                                 n_target,        &
                                                 target_gnum,     &
-                                                target_location) &
+                                                target_location, &
+                                                ownership)       &
       bind (c, name='PDM_extract_part_target_set')
         use iso_c_binding
         implicit none
@@ -685,6 +694,7 @@ module pdm_extract_part
         integer(c_int), value :: n_target
         type(c_ptr),    value :: target_gnum
         type(c_ptr),    value :: target_location
+        integer(c_int), value :: ownership
       end subroutine pdm_extract_part_target_set_c
     end interface
 
@@ -702,7 +712,8 @@ module pdm_extract_part
                                         i_part_in,         &
                                         n_target,          &
                                         c_target_gnum,     &
-                                        c_target_location)
+                                        c_target_location, &
+                                        ownership)
 
   end subroutine PDM_extract_part_target_set
 

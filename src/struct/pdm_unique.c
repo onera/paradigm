@@ -82,6 +82,63 @@ PDM_inplace_unique
   return new_size;
 }
 
+
+
+/**
+ *
+ * \brief Unique in place and return order in unique array
+ *
+ * \param [inout]   a             Array to sort
+ * \param [inout]   unique_order  Unique index in old numbering
+ * \param [in]      l             First element
+ * \param [in]      r             Last  element
+ *
+ */
+int
+PDM_inplace_unique_int_with_order_in_unique
+(
+ int a[],
+ int unique_order[],
+ int l,
+ int r
+)
+{
+  int array_size = r - l + 1;
+  if(array_size == 0) {
+    return array_size;
+  }
+  // printf("PDM_inplace_unique_int_with_order_in_unique::array_size::%d\n", array_size);
+  int* order = NULL;
+  PDM_malloc(order, array_size, int);
+
+  for(int i = 0; i < array_size; ++i){
+    order[i] = i;
+  }
+  PDM_sort_int(&a[l], order, array_size);
+
+  int new_size  = 1;
+  int idx_write = l;
+  int last_value = a[l];
+  int idx_save = l;
+  unique_order[order[0]] = idx_save;
+  a[idx_write++] = last_value;
+  for (int idx = l+1; idx <= r; idx++) {
+    if(last_value != a[idx]){
+      last_value = a[idx];
+      // printf(" order[%d] = %d\n", idx-l, order[idx-l]);
+      idx_save = idx_write;
+      unique_order[order[idx-l]] = idx_save;
+      a[idx_write++] = a[idx];
+      new_size++;
+    }
+    unique_order[order[idx-l]] = idx_save;
+  }
+
+  free(order);
+
+  return new_size;
+}
+
 /**
  *
  * \brief Unique

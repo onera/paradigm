@@ -131,15 +131,15 @@ PDM_part_mesh_nodal_create
 )
 {
   PDM_part_mesh_nodal_t *pmn;
-  PDM_malloc(pmn,1,PDM_part_mesh_nodal_t);
+  PDM_malloc(pmn, 1, PDM_part_mesh_nodal_t);
 
   pmn->comm           = comm;
   pmn->mesh_dimension = mesh_dimension;
   pmn->n_part         = n_part;
 
-  PDM_malloc(pmn->vtx,n_part ,PDM_Mesh_nodal_vtx_t *);
+  PDM_malloc(pmn->vtx, n_part, PDM_Mesh_nodal_vtx_t *);
   for (int i = 0; i < n_part; i++) {
-    PDM_malloc(pmn->vtx[i],1,PDM_Mesh_nodal_vtx_t);
+    PDM_malloc(pmn->vtx[i], 1, PDM_Mesh_nodal_vtx_t);
     pmn->vtx[i]->_coords    = NULL;
     pmn->vtx[i]->_numabs    = NULL;
     pmn->vtx[i]->_numparent = NULL;
@@ -161,8 +161,8 @@ PDM_part_mesh_nodal_create
 
   pmn->s_section = 10;
   pmn->n_section = 0;
-  PDM_malloc(pmn->section_kind,pmn->s_section,PDM_geometry_kind_t);
-  PDM_malloc(pmn->section_id,pmn->s_section,int                );
+  PDM_malloc(pmn->section_kind, pmn->s_section, PDM_geometry_kind_t);
+  PDM_malloc(pmn->section_id,   pmn->s_section, int                );
 
   return pmn;
 }
@@ -1116,7 +1116,7 @@ PDM_part_mesh_nodal_dump_vtk
   int n_part = PDM_part_mesh_nodal_n_part_get(pmn);
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
   if (pmne == NULL) {
-    printf("Warning : NULL pmne\n");
+    printf("Warning : PDM_part_mesh_nodal_dump_vtk : NULL pmne\n");
     return;
   }
   for(int i_part = 0; i_part < n_part; ++i_part) {
@@ -1167,16 +1167,25 @@ PDM_part_mesh_nodal_dump_vtk
 
       int *_elt_to_entity = PDM_part_mesh_nodal_elmts_section_elmt_to_entity_get(pmne, id_section, i_part, PDM_OWNERSHIP_BAD_VALUE);
 
+      int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(pmne, id_section, i_part, PDM_OWNERSHIP_BAD_VALUE);
+
       for (int i_elt = 0; i_elt < n_elt; i_elt++) {
-        if (g_num != NULL) {
-          elt_g_num  [idx] = g_num[i_elt];
-        } else {
-          elt_g_num  [idx] = -1;
+
+        int i_parent = idx;
+        if (parent_num != NULL) {
+          i_parent = parent_num[i_elt];
         }
-        elt_type   [idx] = t_elt;
-        elt_section[idx] = i_section;
+
+        if (g_num != NULL) {
+          elt_g_num[i_parent] = g_num[i_elt];
+        } else {
+          elt_g_num[i_parent] = -1;
+        }
+
+        elt_type   [i_parent] = t_elt;
+        elt_section[i_parent] = i_section;
         if (_elt_to_entity != NULL) {
-          elt_entity[idx] = _elt_to_entity[i_elt];
+          elt_entity[i_parent] = _elt_to_entity[i_elt];
         }
         else {
           n_field = 2;

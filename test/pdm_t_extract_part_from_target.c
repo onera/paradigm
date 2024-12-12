@@ -279,33 +279,33 @@ int main(int argc, char *argv[])
   int i_domain = 0;
 
   PDM_g_num_t **pcell_ln_to_gn;
-  PDM_malloc(pcell_ln_to_gn, n_part_domains ,PDM_g_num_t *);
   PDM_g_num_t **pface_ln_to_gn;
-  PDM_malloc(pface_ln_to_gn, n_part_domains ,PDM_g_num_t *);
   PDM_g_num_t **pvtx_ln_to_gn;
-  PDM_malloc(pvtx_ln_to_gn, n_part_domains ,PDM_g_num_t *);
   int *pn_cell;
-  PDM_malloc(pn_cell, n_part_domains ,int          );
   int *pn_face;
-  PDM_malloc(pn_face, n_part_domains ,int          );
   int *pn_vtx;
-  PDM_malloc(pn_vtx, n_part_domains ,int          );
+  PDM_malloc(pcell_ln_to_gn, n_part_domains, PDM_g_num_t *);
+  PDM_malloc(pface_ln_to_gn, n_part_domains, PDM_g_num_t *);
+  PDM_malloc(pvtx_ln_to_gn,  n_part_domains, PDM_g_num_t *);
+  PDM_malloc(pn_cell,        n_part_domains, int          );
+  PDM_malloc(pn_face,        n_part_domains, int          );
+  PDM_malloc(pn_vtx,         n_part_domains, int          );
 
-  int **pcell_face;
-  PDM_malloc(pcell_face, n_part_domains ,int         *);
-  int **pcell_face_idx;
-  PDM_malloc(pcell_face_idx, n_part_domains ,int         *);
-  int **pface_vtx;
-  PDM_malloc(pface_vtx, n_part_domains ,int         *);
-  int **pface_vtx_idx;
-  PDM_malloc(pface_vtx_idx, n_part_domains ,int         *);
+  int    **pcell_face;
+  int    **pcell_face_idx;
+  int    **pface_vtx;
+  int    **pface_vtx_idx;
   double **pvtx_coord;
-  PDM_malloc(pvtx_coord, n_part_domains ,double      *);
+  PDM_malloc(pcell_face,      n_part_domains, int         *);
+  PDM_malloc(pcell_face_idx,  n_part_domains, int         *);
+  PDM_malloc(pface_vtx,       n_part_domains, int         *);
+  PDM_malloc(pface_vtx_idx,   n_part_domains, int         *);
+  PDM_malloc(pvtx_coord,      n_part_domains, double      *);
 
   PDM_g_num_t **target_g_num;
-  PDM_malloc(target_g_num, n_part_domains ,PDM_g_num_t *);
   int *pn_target_cell;
-  PDM_malloc(pn_target_cell, n_part_domains ,int          );
+  PDM_malloc(target_g_num,   n_part_domains, PDM_g_num_t *);
+  PDM_malloc(pn_target_cell, n_part_domains, int          );
 
   /*
    * Compute gnum location
@@ -390,7 +390,7 @@ int main(int argc, char *argv[])
       }
     }
 
-    PDM_realloc(target_g_num  [i_part] ,target_g_num  [i_part] , n_target_cell ,PDM_g_num_t);
+    PDM_realloc(target_g_num[i_part], target_g_num[i_part], n_target_cell, PDM_g_num_t);
     pn_target_cell[i_part] = n_target_cell;
 
     if(0 == 1) {
@@ -452,7 +452,8 @@ int main(int argc, char *argv[])
                                 i_part,
                                 pn_target_cell[i_part],
                                 target_g_num  [i_part],
-                                location);
+                                location,
+                                PDM_OWNERSHIP_USER);
     // PDM_extract_part_target_set(extrp,
     //                             i_part,
     //                             pn_target_cell[i_part],
@@ -464,20 +465,20 @@ int main(int argc, char *argv[])
 
   PDM_extract_part_compute(extrp);
 
-  int *pn_extract_face;
-  PDM_malloc(pn_extract_face,n_part_out ,int          );
-  int *pn_extract_vtx;
-  PDM_malloc(pn_extract_vtx,n_part_out ,int          );
-  int **pextract_face_vtx;
-  PDM_malloc(pextract_face_vtx,n_part_out ,int         *);
-  int **pextract_face_vtx_idx;
-  PDM_malloc(pextract_face_vtx_idx,n_part_out ,int         *);
-  double **pextract_vtx;
-  PDM_malloc(pextract_vtx,n_part_out ,double      *);
+  int          *pn_extract_face;
+  int          *pn_extract_vtx;
+  int         **pextract_face_vtx;
+  int         **pextract_face_vtx_idx;
+  double      **pextract_vtx;
   PDM_g_num_t **pextract_face_ln_to_gn;
-  PDM_malloc(pextract_face_ln_to_gn,n_part_out ,PDM_g_num_t *);
   PDM_g_num_t **pextract_vtx_ln_to_gn;
-  PDM_malloc(pextract_vtx_ln_to_gn,n_part_out ,PDM_g_num_t *);
+  PDM_malloc(pn_extract_face,        n_part_out, int          );
+  PDM_malloc(pn_extract_vtx,         n_part_out, int          );
+  PDM_malloc(pextract_face_vtx,      n_part_out, int         *);
+  PDM_malloc(pextract_face_vtx_idx,  n_part_out, int         *);
+  PDM_malloc(pextract_vtx,           n_part_out, double      *);
+  PDM_malloc(pextract_face_ln_to_gn, n_part_out, PDM_g_num_t *);
+  PDM_malloc(pextract_vtx_ln_to_gn,  n_part_out, PDM_g_num_t *);
 
 
   for(int i_part = 0; i_part < n_part_out; ++i_part) {
@@ -538,18 +539,18 @@ int main(int argc, char *argv[])
                                     PDM_OWNERSHIP_KEEP);
 
   // 1) Compute field on origin faces
-  int **part1_stride;
-  PDM_malloc(part1_stride,n_part_domains, int *);
+  int    **part1_stride;
   double **pface_field;
-  PDM_malloc(pface_field,n_part_domains,double *);
+  PDM_malloc(part1_stride, n_part_domains, int    *);
+  PDM_malloc(pface_field,  n_part_domains, double *);
   for (int i_part = 0; i_part < n_part_domains; i_part++) {
-    PDM_malloc(pface_field [i_part],pn_face[i_part],double);
+    PDM_malloc(pface_field[i_part], pn_face[i_part], double);
     part1_stride[i_part] = PDM_array_const_int(pn_face[i_part], 1);
 
     double *surface_vector;
-    PDM_malloc(surface_vector,pn_face[i_part] * 3,double);
     double *center;
-    PDM_malloc(center,pn_face[i_part] * 3,double);
+    PDM_malloc(surface_vector, pn_face[i_part] * 3, double);
+    PDM_malloc(center,         pn_face[i_part] * 3, double);
     PDM_geom_elem_polygon_properties(pn_face      [i_part],
                                      pface_vtx_idx[i_part],
                                      pface_vtx    [i_part],
@@ -756,7 +757,7 @@ int main(int argc, char *argv[])
 
 
   for (int i_part = 0; i_part < n_part_domains; i_part++){
-    PDM_free(target_g_num    [i_part]);
+    PDM_free(target_g_num[i_part]);
   }
   PDM_free(pn_target_cell);
   PDM_free(target_g_num);
@@ -764,9 +765,9 @@ int main(int argc, char *argv[])
   PDM_free(pn_face);
   PDM_free(pn_vtx);
 
-  PDM_free(pcell_ln_to_gn  );
-  PDM_free(pface_ln_to_gn  );
-  PDM_free(pvtx_ln_to_gn  );
+  PDM_free(pcell_ln_to_gn);
+  PDM_free(pface_ln_to_gn);
+  PDM_free(pvtx_ln_to_gn );
   PDM_free(pcell_face    );
   PDM_free(pcell_face_idx);
   PDM_free(pface_vtx     );

@@ -74,12 +74,14 @@ PDM_DMesh_nodal_free
  PDM_dmesh_nodal_t* dmesh_nodal
 );
 
+
 /**
- * \brief Define partition vertices
+ * \brief Define block vertices
  *
- * \param [in]  hdl       Distributed nodal mesh handle
- * \param [in]  n_vtx     Number of vertices
- * \param [in]  coords    Interlaced coordinates (size = 3 * \ref n_vtx)
+ * \param [in]  dmesh_nodal   Distributed nodal mesh handle
+ * \param [in]  n_vtx         Number of vertices
+ * \param [in]  coords        Interlaced coordinates (size = 3 * \ref n_vtx)
+ * \param [in]  owner         Ownership
  *
  */
 void
@@ -138,7 +140,7 @@ PDM_DMesh_nodal_section_g_dims_get
 /**
  * \brief  Return vertices distribution
  *
- * \param [in]  hdl  Distributed nodal mesh handle
+ * \param [in]  dmesh_nodal   Distributed nodal mesh handle
  *
  * \return  A array of size \ref n_procs + 1
  *
@@ -149,7 +151,6 @@ PDM_DMesh_nodal_distrib_vtx_get
 (
 PDM_dmesh_nodal_t *dmesh_nodal
 );
-
 
 /**
  * \brief  Return section distribution
@@ -187,7 +188,7 @@ PDM_DMesh_nodal_n_vtx_get
 
 
 /**
- * \brief  Return coordinates of vertices
+ * \brief  Return coordinates of vertices (deprecated)
  *
  * \param [in]  hdl       Distributed nodal mesh handle
  *
@@ -773,12 +774,50 @@ PDM_dmesh_nodal_transfer_to_new_dmesh_nodal_gen
  PDM_g_num_t         *blk_parent_to_new_vtx_gnum
 );
 
+/**
+ * \brief  Dump a vtk containing dmesh_nodal elements from asked dimension.
+ *
+ * \param [in]   dmn              PDM_dmesh_nodal_t instance
+ * \param [in]   geom_kind        Dimension to dump
+ * \param [in]   filename_patter  Filename 
+ *
+ */
 void
 PDM_dmesh_nodal_dump_vtk
 (
        PDM_dmesh_nodal_t   *dmn,
        PDM_geometry_kind_t  geom_kind,
  const char                *filename_patter
+);
+
+
+/**
+ * \brief  Dump a vtk containing dmesh_nodal elements from asked dimension
+ * with associated given fields.
+ *
+ * \param [in]   dmn              PDM_dmesh_nodal_t instance
+ * \param [in]   geom_kind        Dimension to dump
+ * \param [in]   filename_patter  Filename 
+ * \param [in]   n_fld_vtx        Number of vertex-based fields
+ * \param [in]   fld_name_vtx     Vertex-based field names
+ * \param [in]   fld_vtx          Vertex-based fields
+ * \param [in]   n_fld_elmt       Number of elements-based fields
+ * \param [in]   fld_name_elmt    Element-based field names
+ * \param [in]   fld_elmt         Element-based fields
+ *
+ */
+void
+PDM_dmesh_nodal_dump_vtk_with_field
+(
+        PDM_dmesh_nodal_t   *dmn,
+        PDM_geometry_kind_t  geom_kind,
+  const char                *filename_patter,
+  const int                  n_fld_vtx,
+  const char                *fld_name_vtx[],
+  const double              *fld_vtx[],
+  const int                  n_fld_elmt,
+  const char                *fld_name_elmt[],
+  const double              *fld_elmt[]
 );
 
 void

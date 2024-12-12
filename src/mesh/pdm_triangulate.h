@@ -232,6 +232,34 @@ PDM_triangulate_hexahedron (int               dim,
                             const PDM_l_num_t parent_vertex_num[],
                             const PDM_l_num_t hexa_vertices[],
                             PDM_l_num_t       tetrahedron_vertices[]);
+
+
+/**
+ * \brief Triangulate a set of polygonal faces
+ *
+ * \param [in]  n_face         Number of faces
+ * \param [in]  face_vtx_idx   Index for face → vertex connectivity (size = \p n_face + 1)
+ * \param [in]  face_vtx       Face → vertex connectivity (1-based IDs, size = \p face_vtx_idx[\p n_face])
+ * \param [in]  vtx_coord      Vertex coordinates
+ * \param [out] face_tria_idx  Index for face → triangle connectivity (size = \p n_face + 1)
+ * \param [out] tria_vtx       Triangle → vertex connectivity (size = *n_triangle* * 3)
+ * \param [in]  tri_state      Pointer to \ref PDM_triangulate_state_t instance (optional)
+ *
+ * \return Number of triangles
+ */
+
+int
+PDM_triangulate_faces
+(
+  int                       n_face,
+  int                      *face_vtx_idx,
+  int                      *face_vtx,
+  double                   *vtx_coord,
+  int                     **face_tria_idx,
+  int                     **tria_vtx,
+  PDM_triangulate_state_t  *tri_state
+);
+
 /*----------------------------------------------------------------------------*/
 
 #ifdef __cplusplus

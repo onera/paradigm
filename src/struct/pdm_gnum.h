@@ -31,6 +31,7 @@
 
 #include "pdm.h"
 #include "pdm_mpi.h"
+#include "pdm_part_comm_graph.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -150,6 +151,51 @@ PDM_gnum_set_parents_nuplet
        PDM_gen_gnum_t  *gen_gnum,
  const int              nuplet
 );
+
+/**
+ *
+ * \brief Set size of tuple for nuplet
+ *
+ * \param [in]   gen_gnum     Pointer to \ref PDM_gen_gnum_t object
+ * \param [in]   n_elts       Number of elements
+ * \param [in]   pcg          \ref PDM_part_comm_graph_t instance
+ *
+ */
+void
+PDM_gnum_set_from_part_comm_graph
+(
+       PDM_gen_gnum_t        *gen_gnum,
+ const int                   *n_elts,
+       PDM_part_comm_graph_t *pcg
+);
+
+
+/**
+ *
+ * \brief Set size of tuple for nuplet
+ *
+ * \param [in]   gen_gnum         Pointer to \ref PDM_gen_gnum_t object
+ * \param [in]   i_part           Current partition
+ * \param [in]   n_elts           Number of elements
+ * \param [in]   pn_entity_graph  Number of bound (size = n_part)
+ * \param [in]   pentity_graph    Graph comm identifier (size = 4* pn_entity_graph[i_part]) :
+ *                                   For each entity :
+ *                                     - entity local number
+ *                                     - Connected process
+ *                                     - Connected partition on the connected process
+ *                                     - Connected entity local number in the connected partition
+ *
+ */
+void
+PDM_gnum_set_from_entity_graph
+(
+       PDM_gen_gnum_t  *gen_gnum,
+ const int              i_part,
+ const int              n_elts,
+       int              pn_entity_graph,
+       int             *pentity_graph
+);
+
 
 /**
  *

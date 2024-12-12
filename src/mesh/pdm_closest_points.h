@@ -352,6 +352,20 @@ PDM_closest_points_part_to_part_get
  PDM_ownership_t       ownership
  );
 
+/**
+ *
+ * \brief Disable reverse results computation
+ *
+ * \param [inout] cls Pointer to \ref PDM_closest_point_t object
+ *
+ */
+
+void
+PDM_closest_points_reverse_results_disable
+(
+ PDM_closest_point_t *cls
+);
+
 #ifdef	__cplusplus
 }
 #endif

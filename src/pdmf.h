@@ -101,3 +101,8 @@
   integer, parameter :: PDM_SPLIT_DUAL_WITH_PTSCOTCH   = 2
   integer, parameter :: PDM_SPLIT_DUAL_WITH_HILBERT    = 3
   integer, parameter :: PDM_SPLIT_DUAL_WITH_IMPLICIT   = 4
+
+  integer, parameter :: PDM_GEOMETRY_KIND_VOLUMIC  = 0
+  integer, parameter :: PDM_GEOMETRY_KIND_SURFACIC = 1
+  integer, parameter :: PDM_GEOMETRY_KIND_RIDGE    = 2
+  integer, parameter :: PDM_GEOMETRY_KIND_CORNER   = 3

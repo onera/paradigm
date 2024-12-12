@@ -82,7 +82,7 @@ PDM_part_mesh_create
 void
 PDM_part_mesh_free
 (
- PDM_part_mesh_t        *dmesh
+ PDM_part_mesh_t        *pmesh
 );
 
 
