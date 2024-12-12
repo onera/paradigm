@@ -401,9 +401,9 @@ PDM_part_comm_graph_create
   PDM_malloc(pcg->part_to_recv_buffer, n_part, int *);
   PDM_malloc(pcg->n_entity_graph     , n_part, int  );
 
-  PDM_MPI_Datatype mpi_doublet_type;
-  PDM_MPI_Type_create_contiguous(2, PDM_MPI_INT, &mpi_doublet_type);
-  PDM_MPI_Type_commit(&mpi_doublet_type);
+  PDM_MPI_Datatype mpi_triplet_type;
+  PDM_MPI_Type_create_contiguous(3, PDM_MPI_INT, &mpi_triplet_type);
+  PDM_MPI_Type_commit(&mpi_triplet_type);
 
   int *send_n = PDM_array_zeros_int(n_rank);
   int *recv_n = NULL;
@@ -428,8 +428,8 @@ PDM_part_comm_graph_create
     }
     send_n[i] = 0;
   }
-  int *send_doublet = NULL;
-  PDM_malloc(send_doublet, 2 * send_idx[n_rank], int);
+  int *send_triplet = NULL;
+  PDM_malloc(send_triplet, 3 * send_idx[n_rank], int);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
     int n_entity_graph = pn_entity_graph[i_part];
@@ -439,8 +439,9 @@ PDM_part_comm_graph_create
     for(int idx_entity = 0; idx_entity < n_entity_graph; ++idx_entity) {
       int t_rank = pentity_graph[i_part][4*idx_entity+1];
       int idx_write = send_idx[t_rank] + send_n[t_rank]++;
-      send_doublet[2*idx_write  ] = pentity_graph[i_part][4*idx_entity+2]-1;
-      send_doublet[2*idx_write+1] = pentity_graph[i_part][4*idx_entity+3]-1;
+      send_triplet[3*idx_write  ] = pentity_graph[i_part][4*idx_entity+2]-1;
+      send_triplet[3*idx_write+1] = i_part;
+      send_triplet[3*idx_write+2] = pentity_graph[i_part][4*idx_entity+3]-1;
 
       pcg->part_to_send_buffer[i_part][idx_entity] = idx_write;
     }
@@ -459,22 +460,22 @@ PDM_part_comm_graph_create
     }
   }
 
-  int *recv_doublet = NULL;
-  PDM_malloc(recv_doublet, 2 * recv_idx[n_rank], int);
+  int *recv_triplet = NULL;
+  PDM_malloc(recv_triplet, 3 * recv_idx[n_rank], int);
 
   if(0 == 1) {
     PDM_log_trace_array_int(send_idx, n_rank+1, "send_idx ::");
     PDM_log_trace_array_int(recv_idx, n_rank+1, "recv_idx ::");
   }
 
-  PDM_MPI_Alltoallv(send_doublet,
+  PDM_MPI_Alltoallv(send_triplet,
                     send_n,
                     send_idx,
-                    mpi_doublet_type,
-                    recv_doublet,
+                    mpi_triplet_type,
+                    recv_triplet,
                     recv_n,
                     recv_idx,
-                    mpi_doublet_type,
+                    mpi_triplet_type,
                     comm);
 
   /* Maintenant on cherche à retrouver la correspondance */
@@ -487,39 +488,41 @@ PDM_part_comm_graph_create
     int n_entity_graph = pn_entity_graph[i_part];
     PDM_malloc(pcg->part_to_recv_buffer[i_part], n_entity_graph, int);
 
-    PDM_malloc(pentity_indices      [i_part], 2 * n_entity_graph, int);
+    PDM_malloc(pentity_indices      [i_part], 3 * n_entity_graph, int);
     PDM_malloc(pentity_indices_order[i_part],     n_entity_graph, int);
 
     for(int idx_entity = 0; idx_entity < n_entity_graph; ++idx_entity) {
-      pentity_indices[i_part][2*idx_entity  ] = pentity_graph[i_part][4*idx_entity+1];
-      pentity_indices[i_part][2*idx_entity+1] = pentity_graph[i_part][4*idx_entity]-1; // Indices locaux
+      pentity_indices[i_part][3*idx_entity  ] = pentity_graph[i_part][4*idx_entity+1];
+      pentity_indices[i_part][3*idx_entity+1] = pentity_graph[i_part][4*idx_entity+2]-1;
+      pentity_indices[i_part][3*idx_entity+2] = pentity_graph[i_part][4*idx_entity]-1; // Indices locaux
     }
 
     PDM_order_lnum_s(pentity_indices[i_part],
-                     2,
+                     3,
                      pentity_indices_order[i_part],
                      n_entity_graph);
 
     PDM_order_array(n_entity_graph,
-                    2 * sizeof(int),
+                    3 * sizeof(int),
                     pentity_indices_order[i_part],
                     pentity_indices      [i_part]);
-
   }
 
   /* Post buffer */
   for(int t_rank = 0; t_rank < n_rank; ++t_rank) {
     for(int j = recv_idx[t_rank]; j < recv_idx[t_rank+1]; ++j) {
 
-      int lpart   = recv_doublet[2*j  ];
-      int lentity = recv_doublet[2*j+1];
+      int lpart   = recv_triplet[3*j  ];
+      int tpart   = recv_triplet[3*j+1];
+      int lentity = recv_triplet[3*j+2];
       int n_entity_graph = pn_entity_graph[lpart];
 
-      int to_find[2] = {t_rank, lentity};
+      int to_find[3] = {t_rank, tpart, lentity};
 
-      int pos = PDM_order_binary_search_int(to_find, pentity_indices[lpart], 2, n_entity_graph);
-      // log_trace("Try to find = (%i/%i) --> %i \n", t_rank, lentity, pos);
-
+      int pos = PDM_order_binary_search_int(to_find, pentity_indices[lpart], 3, n_entity_graph);
+      // if(pos == -1) {
+      //   log_trace("Try to find fail = (%i/%i/%i) --> %i \n", t_rank, lpart, lentity, pos);
+      // }
       pcg->part_to_recv_buffer[lpart][pentity_indices_order[lpart][pos]] = j;
 
     }
@@ -541,9 +544,9 @@ PDM_part_comm_graph_create
   PDM_free(pentity_indices_order );
 
 
-  PDM_free(send_doublet);
-  PDM_free(recv_doublet);
-  PDM_MPI_Type_free(&mpi_doublet_type);
+  PDM_free(send_triplet);
+  PDM_free(recv_triplet);
+  PDM_MPI_Type_free(&mpi_triplet_type);
 
   pcg->send_idx = send_idx;
   pcg->recv_idx = recv_idx;
