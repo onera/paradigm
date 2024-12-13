@@ -67,18 +67,16 @@ _vtx_free
 {
   if (vtx != NULL) {
     if (vtx->parent != NULL) {
-      _vtx_free (vtx->parent);
+      _vtx_free(vtx->parent);
       vtx->parent = NULL;
     }
 
     if (vtx->_coords != NULL && vtx->owner == PDM_OWNERSHIP_KEEP) {
-      free (vtx->_coords);
-      vtx->_coords = NULL;
+      PDM_free(vtx->_coords);
     }
 
     if (vtx->_numabs != NULL && vtx->owner == PDM_OWNERSHIP_KEEP) {
-      free (vtx->_numabs);
-      vtx->_numabs = NULL;
+      PDM_free(vtx->_numabs);
     }
   }
 }
@@ -132,15 +130,16 @@ PDM_part_mesh_nodal_create
  const PDM_MPI_Comm comm
 )
 {
-  PDM_part_mesh_nodal_t *pmn = (PDM_part_mesh_nodal_t *) malloc (sizeof(PDM_part_mesh_nodal_t));
+  PDM_part_mesh_nodal_t *pmn;
+  PDM_malloc(pmn, 1, PDM_part_mesh_nodal_t);
 
   pmn->comm           = comm;
   pmn->mesh_dimension = mesh_dimension;
   pmn->n_part         = n_part;
 
-  pmn->vtx      = malloc(n_part * sizeof(PDM_Mesh_nodal_vtx_t *));
+  PDM_malloc(pmn->vtx, n_part, PDM_Mesh_nodal_vtx_t *);
   for (int i = 0; i < n_part; i++) {
-    pmn->vtx[i] = malloc(sizeof(PDM_Mesh_nodal_vtx_t));
+    PDM_malloc(pmn->vtx[i], 1, PDM_Mesh_nodal_vtx_t);
     pmn->vtx[i]->_coords    = NULL;
     pmn->vtx[i]->_numabs    = NULL;
     pmn->vtx[i]->_numparent = NULL;
@@ -162,8 +161,8 @@ PDM_part_mesh_nodal_create
 
   pmn->s_section = 10;
   pmn->n_section = 0;
-  pmn->section_kind = malloc(sizeof(PDM_geometry_kind_t) * pmn->s_section);
-  pmn->section_id   = malloc(sizeof(int                ) * pmn->s_section);
+  PDM_malloc(pmn->section_kind, pmn->s_section, PDM_geometry_kind_t);
+  PDM_malloc(pmn->section_id,   pmn->s_section, int                );
 
   return pmn;
 }
@@ -257,7 +256,7 @@ PDM_part_mesh_nodal_coord_from_parent_set
     PDM_error(__FILE__, __LINE__, 0, "Vertices are already defined\n");
   }
 
-  vtx->parent = (PDM_Mesh_nodal_vtx_t *) malloc (sizeof (PDM_Mesh_nodal_vtx_t));
+  PDM_malloc(vtx->parent,1,PDM_Mesh_nodal_vtx_t);
   PDM_Mesh_nodal_vtx_t *_parent = vtx->parent;
   _parent->parent = NULL;
   _parent->n_vtx = n_vtx_parent;
@@ -270,7 +269,7 @@ PDM_part_mesh_nodal_coord_from_parent_set
 
 
   vtx->n_vtx      = n_vtx;
-  vtx->coords     = malloc (sizeof(double) * 3 * n_vtx);
+  PDM_malloc(vtx->coords,3 * n_vtx,double);
   vtx->_coords    = (double *) vtx->coords;
   vtx->_numabs    = (PDM_g_num_t *) numabs;
   vtx->_numparent = (int *) num_parent;
@@ -329,8 +328,8 @@ PDM_part_mesh_nodal_add_part_mesh_nodal_elmts
 
   if (pmn->n_section + n_section >= pmn->s_section) {
     pmn->s_section = PDM_MAX(pmn->s_section, pmn->n_section + n_section);
-    pmn->section_kind = realloc(pmn->section_kind, sizeof(PDM_geometry_kind_t) * pmn->s_section);
-    pmn->section_id   = realloc(pmn->section_id,   sizeof(int                ) * pmn->s_section);
+    PDM_realloc(pmn->section_kind ,pmn->section_kind , pmn->s_section,PDM_geometry_kind_t);
+    PDM_realloc(pmn->section_id   ,pmn->section_id   , pmn->s_section,int                );
   }
 
 
@@ -616,8 +615,8 @@ const PDM_Mesh_nodal_elt_t   t_elt
 
   if (pmn->n_section >= pmn->s_section) {
     pmn->s_section *= 2;
-    pmn->section_kind = realloc(pmn->section_kind, sizeof(PDM_geometry_kind_t) * pmn->s_section);
-    pmn->section_id   = realloc(pmn->section_id,   sizeof(int                ) * pmn->s_section);
+    PDM_realloc(pmn->section_kind ,pmn->section_kind , pmn->s_section,PDM_geometry_kind_t);
+    PDM_realloc(pmn->section_id   ,pmn->section_id   , pmn->s_section,int                );
   }
 
   int _id_section = pmn->n_section++;
@@ -1085,26 +1084,21 @@ PDM_part_mesh_nodal_free
       if(pmn->vtx[i_part]->owner == PDM_OWNERSHIP_KEEP){
         _vtx_free (pmn->vtx[i_part]);
       }
-      free(pmn->vtx[i_part]);
+      PDM_free(pmn->vtx[i_part]);
     }
 
-    free(pmn->vtx);
-    pmn->vtx = NULL;
+    PDM_free(pmn->vtx);
   }
 
-  free(pmn->n_vol   );
-  free(pmn->n_surf  );
-  free(pmn->n_ridge );
-  free(pmn->n_corner);
+  PDM_free(pmn->n_vol   );
+  PDM_free(pmn->n_surf  );
+  PDM_free(pmn->n_ridge );
+  PDM_free(pmn->n_corner);
 
-  if (pmn->section_kind != NULL) {
-    free(pmn->section_kind);
-  }
-  if (pmn->section_id != NULL) {
-    free(pmn->section_id);
-  }
+  PDM_free(pmn->section_kind);
+  PDM_free(pmn->section_id);
 
-  free(pmn);
+  PDM_free(pmn);
 }
 
 
@@ -1121,6 +1115,10 @@ PDM_part_mesh_nodal_dump_vtk
 
   int n_part = PDM_part_mesh_nodal_n_part_get(pmn);
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
+  if (pmne == NULL) {
+    printf("Warning : PDM_part_mesh_nodal_dump_vtk : NULL pmne\n");
+    return;
+  }
   for(int i_part = 0; i_part < n_part; ++i_part) {
 
     int pn_vtx = PDM_part_mesh_nodal_n_vtx_get(pmn, i_part);
@@ -1130,156 +1128,100 @@ PDM_part_mesh_nodal_dump_vtk
     int  n_section  = PDM_part_mesh_nodal_n_section_in_geom_kind_get  (pmn, geom_kind);
     int *section_id = PDM_part_mesh_nodal_sections_id_in_geom_kind_get(pmn, geom_kind);
 
-    // printf("pn_vtx = %i\n", pn_vtx);
+    /* Export group also */
+    int n_group = pmne->n_group;
+    int n_elt_tot = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, i_part);
+    double *elt_group = PDM_array_const_double(n_elt_tot, -1);
+    for(int i_group = 0; i_group < n_group; ++i_group) {
+      for(int i = 0; i < pmne->n_group_elmt[i_part][i_group]; ++i) {
+        int i_elt = pmne->group_elmt[i_part][i_group][i]-1;
+        elt_group[i_elt] = i_group;
+      }
+    }
 
-    for(int i_section = 0; i_section < n_section; ++i_section) {
+    int *elt_vtx_idx = NULL;
+    int *elt_vtx     = NULL;
+    PDM_part_mesh_nodal_elmts_cell_vtx_connect_get(pmne,
+                                                   i_part,
+                                                   &elt_vtx_idx,
+                                                   &elt_vtx);
 
-      int id_section = section_id  [i_section];
+    PDM_g_num_t          *elt_g_num   = NULL;
+    PDM_Mesh_nodal_elt_t *elt_type    = NULL;
+    double               *elt_section = NULL;
+    double               *elt_entity  = NULL;
+    PDM_malloc(elt_g_num,   n_elt_tot, PDM_g_num_t         );
+    PDM_malloc(elt_type,    n_elt_tot, PDM_Mesh_nodal_elt_t);
+    PDM_malloc(elt_section, n_elt_tot, double              );
+    PDM_malloc(elt_entity,  n_elt_tot, double              );
+
+    int n_field = 3;
+
+    int idx = 0;
+    for (int i_section = 0; i_section < n_section; ++i_section) {
+      int id_section = section_id[i_section];
       int                  n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne, id_section, i_part);
       PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get (pmne, id_section);
 
-      char filename[999];
-      sprintf(filename, "%s_section_%2.2d_%2.2d_%2.2d.vtk", filename_patter, i_section, i_part, i_rank);
+      PDM_g_num_t *g_num = PDM_part_mesh_nodal_elmts_g_num_get(pmne, id_section, i_part, PDM_OWNERSHIP_BAD_VALUE);
 
-      if (t_elt == PDM_MESH_NODAL_POLY_2D) {
-        int *connec_idx = NULL;
-        int *connec     = NULL;
-        PDM_part_mesh_nodal_elmts_section_poly2d_get(pmne,
-                                                   section_id[i_section],
-                                                   i_part,
-                                                   &connec_idx,
-                                                   &connec,
-                                                   PDM_OWNERSHIP_BAD_VALUE);
+      int *_elt_to_entity = PDM_part_mesh_nodal_elmts_section_elmt_to_entity_get(pmne, id_section, i_part, PDM_OWNERSHIP_BAD_VALUE);
 
+      int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(pmne, id_section, i_part, PDM_OWNERSHIP_BAD_VALUE);
 
-        PDM_g_num_t *pelmt_ln_to_gn = PDM_part_mesh_nodal_elmts_g_num_get(pmne,
-                                                                          section_id[i_section],
-                                                                          i_part,
-                                                                          PDM_OWNERSHIP_BAD_VALUE);
+      for (int i_elt = 0; i_elt < n_elt; i_elt++) {
 
-        PDM_vtk_write_polydata(filename,
-                               pn_vtx,
-                               pvtx_coord,
-                               pvtx_ln_to_gn,
-                               n_elt,
-                               connec_idx,
-                               connec,
-                               pelmt_ln_to_gn,
-                               NULL);
-      }
-
-      else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
-        // printf("PDM_part_mesh_nodal_dump_vtk : poly3D not yet supported\n");
-        int          n_face;
-        PDM_g_num_t *face_ln_to_gn;
-        int         *face_vtx_idx;
-        int         *face_vtx;
-        PDM_g_num_t *numabs;
-        int         *cell_face_idx;
-        int         *cell_face;
-        int         *parent_num;
-        PDM_g_num_t *parent_entity_g_num;
-        PDM_part_mesh_nodal_elmts_section_poly3d_get(pmne,
-                                                     id_section,
-                                                     i_part,
-                                                     &n_face,
-                                                     &face_ln_to_gn,
-                                                     &face_vtx_idx,
-                                                     &face_vtx,
-                                                     &numabs,
-                                                     &cell_face_idx,
-                                                     &cell_face,
-                                                     &parent_num,
-                                                     &parent_entity_g_num,
-                                                     PDM_OWNERSHIP_BAD_VALUE);
-
-        PDM_vtk_write_polydata(filename,
-                               pn_vtx,
-                               pvtx_coord,
-                               pvtx_ln_to_gn,
-                               n_face,
-                               face_vtx_idx,
-                               face_vtx,
-                               face_ln_to_gn,
-                               NULL);
-      }
-
-      else {
-        int is_ho = PDM_Mesh_nodal_elmt_is_ho(t_elt);
-        if(is_ho) {
-          int order;
-          const char  *ho_ordering     = NULL;
-          int         *pcell_vtx       = NULL;
-          PDM_g_num_t *pelmt_ln_to_gn  = NULL;
-          int         *parent_num      = NULL;
-          PDM_g_num_t *parent_elmt_num = NULL;
-          PDM_part_mesh_nodal_elmts_section_std_ho_get(pmne,
-                                                       section_id[i_section],
-                                                       i_part,
-                                                       &pcell_vtx,
-                                                       &pelmt_ln_to_gn,
-                                                       &parent_num,
-                                                       &parent_elmt_num,
-                                                       &order,
-                                  (const char **)      &ho_ordering,
-                                                       PDM_OWNERSHIP_BAD_VALUE);
-
-          int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get (t_elt, order);
-          int *pcell_vtx_out = malloc(n_vtx_per_elmt * n_elt * sizeof(int));
-          for(int i = 0; i < n_vtx_per_elmt * n_elt; ++i) {
-            pcell_vtx_out[i] = pcell_vtx[i];
-          }
-
-          PDM_Mesh_nodal_reorder_elt_vtx(t_elt,
-                                         order,
-                                         ho_ordering,
-                                         "PDM_HO_ORDERING_VTK",
-                                         n_elt,
-                                         pcell_vtx,
-                                         pcell_vtx_out);
-
-          PDM_vtk_write_std_elements_ho(filename,
-                                        order,
-                                        pn_vtx,
-                                        pvtx_coord,
-                                        pvtx_ln_to_gn,
-                                        t_elt,
-                                        n_elt,
-                                        pcell_vtx_out,
-                                        pelmt_ln_to_gn,
-                                        0,
-                                        NULL,
-                                        NULL);
-          free(pcell_vtx_out);
-        } else {
-
-          int         *pcell_vtx       = NULL;
-          PDM_g_num_t *pelmt_ln_to_gn  = NULL;
-          int         *parent_num      = NULL;
-          PDM_g_num_t *parent_elmt_num = NULL;
-          PDM_part_mesh_nodal_elmts_section_std_get(pmne,
-                                                    section_id[i_section],
-                                                    i_part,
-                                                    &pcell_vtx,
-                                                    &pelmt_ln_to_gn,
-                                                    &parent_num,
-                                                    &parent_elmt_num,
-                                                    PDM_OWNERSHIP_BAD_VALUE);
-
-          PDM_vtk_write_std_elements(filename,
-                                     pn_vtx,
-                                     pvtx_coord,
-                                     pvtx_ln_to_gn,
-                                     t_elt,
-                                     n_elt,
-                                     pcell_vtx,
-                                     pelmt_ln_to_gn,
-                                     0,
-                                     NULL,
-                                     NULL);
+        int i_parent = idx;
+        if (parent_num != NULL) {
+          i_parent = parent_num[i_elt];
         }
+
+        if (g_num != NULL) {
+          elt_g_num[i_parent] = g_num[i_elt];
+        } else {
+          elt_g_num[i_parent] = -1;
+        }
+
+        elt_type   [i_parent] = t_elt;
+        elt_section[i_parent] = i_section;
+        if (_elt_to_entity != NULL) {
+          elt_entity[i_parent] = _elt_to_entity[i_elt];
+        }
+        else {
+          n_field = 2;
+        }
+        idx++;
       }
     }
+
+    const char   *field_name[] = {"groud_id", "section_id", "elt_to_entity"};
+    const double *field_val [] = {elt_group, elt_section, elt_entity};
+
+    char filename[999];
+    sprintf(filename, "%s_%d_%d.vtk", filename_patter, i_part, i_rank);
+    PDM_vtk_write_unstructured_grid(filename,
+                                    pn_vtx,
+                                    pvtx_coord,
+                                    pvtx_ln_to_gn,
+                                    n_elt_tot,
+                                    elt_type,
+                                    elt_vtx_idx,
+                                    elt_vtx,
+                                    elt_g_num,
+                                    n_field,
+                                    field_name,
+                                    field_val,
+                                    0,
+                                    NULL,
+                                    NULL);
+
+    PDM_free(elt_group  );
+    PDM_free(elt_g_num  );
+    PDM_free(elt_type   );
+    PDM_free(elt_section);
+    PDM_free(elt_entity );
+    PDM_free(elt_vtx_idx);
+    PDM_free(elt_vtx    );
   }
 }
 
@@ -1733,7 +1675,7 @@ PDM_part_mesh_nodal_reset
         pmn->vtx[i]->parent = NULL;
       }
       if (pmn->vtx[i]->coords != NULL) {
-        free (pmn->vtx[i]->coords);
+        PDM_free(pmn->vtx[i]->coords);
         pmn->vtx[i]->coords = NULL;
       }
     }
@@ -1942,6 +1884,31 @@ const int                     id_part
   return PDM_part_mesh_nodal_elmts_num_elmt_parent_to_local_get(pmne, id_part);
 }
 
+int *
+PDM_part_mesh_nodal_section_elmt_to_entity_get
+(
+      PDM_part_mesh_nodal_t *pmn,
+const int                    i_section,
+const int                    id_part,
+      PDM_ownership_t        ownership
+)
+{
+  PDM_geometry_kind_t geom_kind;
+  int                 id_section;
+  PDM_part_mesh_nodal_section_id_and_geom_kind_get(pmn,
+                                                   i_section,
+                                                   &geom_kind,
+                                                   &id_section);
+
+  PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
+  assert(pmne != NULL);
+
+  return PDM_part_mesh_nodal_elmts_section_elmt_to_entity_get(pmne,
+                                                              id_section,
+                                                              id_part,
+                                                              ownership);
+}
+
 void
 PDM_part_mesh_nodal_group_get
 (
@@ -2108,8 +2075,8 @@ const PDM_ownership_t         ownership
                                                                       PDM_GEOMETRY_KIND_VOLUMIC);
   if (pmn->n_section + n_section_after - n_section_before >= pmn->s_section) {
     pmn->s_section = PDM_MAX(pmn->s_section, pmn->n_section + n_section_after - n_section_before);
-    pmn->section_kind = realloc(pmn->section_kind, sizeof(PDM_geometry_kind_t) * pmn->s_section);
-    pmn->section_id   = realloc(pmn->section_id,   sizeof(int                ) * pmn->s_section);
+    PDM_realloc(pmn->section_kind ,pmn->section_kind , pmn->s_section,PDM_geometry_kind_t);
+    PDM_realloc(pmn->section_id   ,pmn->section_id   , pmn->s_section,int                );
   }
 
   for (int i = n_section_before; i < n_section_after; i++) {
@@ -2184,8 +2151,8 @@ const PDM_ownership_t         ownership
 
   if (pmn->n_section + n_section_after - n_section_before >= pmn->s_section) {
     pmn->s_section = PDM_MAX(pmn->s_section, pmn->n_section + n_section_after - n_section_before);
-    pmn->section_kind = realloc(pmn->section_kind, sizeof(PDM_geometry_kind_t) * pmn->s_section);
-    pmn->section_id   = realloc(pmn->section_id,   sizeof(int                ) * pmn->s_section);
+    PDM_realloc(pmn->section_kind ,pmn->section_kind , pmn->s_section,PDM_geometry_kind_t);
+    PDM_realloc(pmn->section_id   ,pmn->section_id   , pmn->s_section,int                );
   }
 
   for (int i = n_section_before; i < n_section_after; i++) {
@@ -2250,8 +2217,8 @@ const PDM_ownership_t         ownership
 
   if (pmn->n_section + n_section_after - n_section_before >= pmn->s_section) {
     pmn->s_section = PDM_MAX(pmn->s_section, pmn->n_section + n_section_after - n_section_before);
-    pmn->section_kind = realloc(pmn->section_kind, sizeof(PDM_geometry_kind_t) * pmn->s_section);
-    pmn->section_id   = realloc(pmn->section_id,   sizeof(int                ) * pmn->s_section);
+    PDM_realloc(pmn->section_kind ,pmn->section_kind , pmn->s_section,PDM_geometry_kind_t);
+    PDM_realloc(pmn->section_id   ,pmn->section_id   , pmn->s_section,int                );
   }
 
   for (int i = n_section_before; i < n_section_after; i++) {
@@ -2316,8 +2283,8 @@ const PDM_ownership_t         ownership
 
   if (pmn->n_section + n_section_after - n_section_before >= pmn->s_section) {
     pmn->s_section = PDM_MAX(pmn->s_section, pmn->n_section + n_section_after - n_section_before);
-    pmn->section_kind = realloc(pmn->section_kind, sizeof(PDM_geometry_kind_t) * pmn->s_section);
-    pmn->section_id   = realloc(pmn->section_id,   sizeof(int                ) * pmn->s_section);
+    PDM_realloc(pmn->section_kind ,pmn->section_kind , pmn->s_section,PDM_geometry_kind_t);
+    PDM_realloc(pmn->section_id   ,pmn->section_id   , pmn->s_section,int                );
   }
 
   for (int i = n_section_before; i < n_section_after; i++) {
@@ -2527,197 +2494,10 @@ PDM_part_mesh_nodal_cell_vtx_connect_get
   PDM_part_mesh_nodal_elmts_t *pmne = _get_from_geometry_kind(pmn,
                                                               geom_kind);
 
-  int  n_section   = PDM_part_mesh_nodal_elmts_n_section_get  (pmne);
-  int *sections_id = PDM_part_mesh_nodal_elmts_sections_id_get(pmne);
-
-
-  int n_cell = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne,
-                                                     i_part);
-
-  *cell_vtx_idx = PDM_array_zeros_int(n_cell + 1);
-
-  for (int isection = 0; isection < n_section; isection++) {
-
-    int id_section = sections_id[isection];
-
-    PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(pmne,
-                                                                            id_section);
-
-    int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(pmne,
-                                                               id_section,
-                                                               i_part,
-                                                               PDM_OWNERSHIP_BAD_VALUE);
-
-    int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne,
-                                                            id_section,
-                                                            i_part);
-    int *connec_idx;
-    int *connec;
-
-    if (t_elt == PDM_MESH_NODAL_POLY_2D) {
-      PDM_part_mesh_nodal_elmts_section_poly2d_get(pmne,
-                                                   id_section,
-                                                   i_part,
-                                                   &connec_idx,
-                                                   &connec,
-                                                   PDM_OWNERSHIP_BAD_VALUE);
-    }
-    else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
-      PDM_part_mesh_nodal_elmts_section_poly3d_cell_vtx_connect_get(pmne,
-                                                                    id_section,
-                                                                    i_part,
-                                                                    &connec_idx,
-                                                                    &connec,
-                                                                    PDM_OWNERSHIP_BAD_VALUE);
-    }
-
-    if (t_elt == PDM_MESH_NODAL_POLY_2D ||
-        t_elt == PDM_MESH_NODAL_POLY_3D) {
-
-      if (parent_num != NULL) {
-        for (int i = 0; i < n_elt; i++) {
-          (*cell_vtx_idx)[parent_num[i]+1] = connec_idx[i+1] - connec_idx[i];
-        }
-      }
-      else {
-        for (int i = 0; i < n_elt; i++) {
-          (*cell_vtx_idx)[i+1] = connec_idx[i+1] - connec_idx[i];
-        }
-      }
-
-    }
-    else {
-
-      PDM_g_num_t *numabs;
-      int         *_parent_num;
-      PDM_g_num_t *parent_entity_g_num;
-      int          order;
-      const char  *ho_ordering;
-      PDM_part_mesh_nodal_elmts_section_std_ho_get(pmne,
-                                                   id_section,
-                                                   i_part,
-                                                   &connec,
-                                                   &numabs,
-                                                   &_parent_num,
-                                                   &parent_entity_g_num,
-                                                   &order,
-                                                   &ho_ordering,
-                                                   PDM_OWNERSHIP_BAD_VALUE);
-
-      int n_vtx_elt = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
-
-      if (parent_num != NULL) {
-        for (int i = 0; i < n_elt; i++) {
-          (*cell_vtx_idx)[parent_num[i]+1] = n_vtx_elt;
-        }
-      }
-      else {
-        for (int i = 0; i < n_elt; i++) {
-          (*cell_vtx_idx)[i+1] = n_vtx_elt;
-        }
-      }
-
-    }
-  }
-
-  PDM_array_accumulate_int(*cell_vtx_idx, n_cell+1);
-
-
-  *cell_vtx = malloc(sizeof(int) * (*cell_vtx_idx)[n_cell]);
-
-  for (int isection = 0; isection < n_section; isection++) {
-
-    int id_section = sections_id[isection];
-
-    PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(pmne,
-                                                                            id_section);
-
-    int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(pmne,
-                                                               id_section,
-                                                               i_part,
-                                                               PDM_OWNERSHIP_BAD_VALUE);
-
-    int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne,
-                                                            id_section,
-                                                            i_part);
-    int *connec_idx;
-    int *connec;
-
-    if (t_elt == PDM_MESH_NODAL_POLY_2D) {
-      PDM_part_mesh_nodal_elmts_section_poly2d_get(pmne,
-                                                   id_section,
-                                                   i_part,
-                                                   &connec_idx,
-                                                   &connec,
-                                                   PDM_OWNERSHIP_BAD_VALUE);
-    }
-    else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
-      PDM_part_mesh_nodal_elmts_section_poly3d_cell_vtx_connect_get(pmne,
-                                                                    id_section,
-                                                                    i_part,
-                                                                    &connec_idx,
-                                                                    &connec,
-                                                                    PDM_OWNERSHIP_BAD_VALUE);
-    }
-
-    if (t_elt == PDM_MESH_NODAL_POLY_2D ||
-        t_elt == PDM_MESH_NODAL_POLY_3D) {
-
-      if (parent_num != NULL) {
-        for (int i = 0; i < n_elt; i++) {
-          for (int j = 0; j < connec_idx[i+1] - connec_idx[i]; j++) {
-            (*cell_vtx)[(*cell_vtx_idx)[parent_num[i]] + j] = connec[connec_idx[i] + j];
-          }
-        }
-      }
-      else {
-        for (int i = 0; i < n_elt; i++) {
-          for (int j = 0; j < connec_idx[i+1] - connec_idx[i]; j++) {
-            (*cell_vtx)[(*cell_vtx_idx)[i] + j] = connec[connec_idx[i] + j];
-          }
-        }
-      }
-
-    }
-    else {
-
-      PDM_g_num_t *numabs;
-      int         *_parent_num;
-      PDM_g_num_t *parent_entity_g_num;
-      int          order;
-      const char  *ho_ordering;
-      PDM_part_mesh_nodal_elmts_section_std_ho_get(pmne,
-                                                   id_section,
-                                                   i_part,
-                                                   &connec,
-                                                   &numabs,
-                                                   &_parent_num,
-                                                   &parent_entity_g_num,
-                                                   &order,
-                                                   &ho_ordering,
-                                                   PDM_OWNERSHIP_BAD_VALUE);
-
-      int n_vtx_elt = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
-
-      if (parent_num != NULL) {
-        for (int i = 0; i < n_elt; i++) {
-          for (int j = 0; j < n_vtx_elt; j++) {
-            (*cell_vtx)[(*cell_vtx_idx)[parent_num[i]] + j] = connec[n_vtx_elt*i + j];
-          }
-        }
-      }
-      else {
-        for (int i = 0; i < n_elt; i++) {
-          for (int j = 0; j < n_vtx_elt; j++) {
-            (*cell_vtx)[(*cell_vtx_idx)[i] + j] = connec[n_vtx_elt*i + j];
-          }
-        }
-      }
-
-    }
-  }
-
-  return n_cell;
+  return PDM_part_mesh_nodal_elmts_cell_vtx_connect_get(pmne,
+                                                        i_part,
+                                                        cell_vtx_idx,
+                                                        cell_vtx);
 }
 
 

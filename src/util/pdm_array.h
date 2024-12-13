@@ -25,24 +25,41 @@ extern "C" {
 
 /* Utils functions creating new arrays */
 
+// Array copy
+int*         PDM_array_copy_int (const int         *array, const int size);
+PDM_g_num_t* PDM_array_copy_gnum(const PDM_g_num_t *array, const int size);
+
 // Create an array and fill it with 0
-int* PDM_array_zeros_int(const int size);
+int*         PDM_array_zeros_int   (const int size);
+PDM_g_num_t* PDM_array_zeros_gnum  (const int size);
+double*      PDM_array_zeros_double(const int size);
 
 // Create an array and fill it with given value
-int*         PDM_array_const_int (const int size, const int         value);
-PDM_g_num_t* PDM_array_const_gnum(const int size, const PDM_g_num_t value);
-double*      PDM_array_const_double(const int size, const double value);
+int*         PDM_array_const_int   (const int size, const int         value);
+PDM_g_num_t* PDM_array_const_gnum  (const int size, const PDM_g_num_t value);
+double*      PDM_array_const_double(const int size, const double      value);
 
 // Create a range array
 int* PDM_array_new_range_int(const int size);
+int* 		 PDM_array_new_arange_int (const int         start, const int         end, const int step);
+PDM_g_num_t* PDM_array_new_arange_gnum(const PDM_g_num_t start, const PDM_g_num_t end, const int step);
+int* PDM_array_new_range_with_step_int (const int size, const int step);
 
 // Create an index array from a size array
 int*         PDM_array_new_idx_from_sizes_int (const int *size_array, const int size);
 PDM_g_num_t* PDM_array_new_idx_from_sizes_gnum(const int *size_array, const int size);
 int*         PDM_array_new_idx_from_const_stride_int(const int stride, const int size);
 
-/* Utils functions compararing arrays */
+// Create a size array from an index array
+int* PDM_array_new_size_from_idx_int(const int *idx_array, const int size);
 
+/* Utils functions for reducing arrays */
+int         PDM_array_max_int (const int         *array, const int size);
+int         PDM_array_min_int (const int         *array, const int size);
+PDM_g_num_t PDM_array_max_gnum(const PDM_g_num_t *array, const int size);
+PDM_g_num_t PDM_array_min_gnum(const PDM_g_num_t *array, const int size);
+
+/* Utils functions compararing arrays */
 // Return 1 if the two arrays are equal, 0 otherwise
 int PDM_array_are_equal_int(const int *array1, const int *array2, const int size);
 int PDM_array_are_equal_gnum(const PDM_g_num_t *array1, const PDM_g_num_t *array2, const int size);

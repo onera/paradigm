@@ -14,6 +14,7 @@
 #include "pdm_dmesh_nodal_priv.h"
 #include "pdm_dmesh_nodal_to_dmesh.h"
 #include "pdm_part_priv.h"
+#include "pdm_timer.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -29,6 +30,15 @@ extern "C" {
 /*============================================================================
  * Type
  *============================================================================*/
+
+// Amount of timer steps
+#define NTIMER_MPART 4
+
+// Step detail
+#define TIMER_MPART_ALL   0
+#define TIMER_MPART_BUILD 1
+#define TIMER_MPART_SPLIT 2
+#define TIMER_MPART_MESH  3
 
 
 /**
@@ -89,6 +99,35 @@ struct _pdm_multipart_t {
                                                  //   (size = sum n_part[i]), if heterogeneous
   /* Partitioned meshes */
   _part_mesh_t                *pmeshes;          // Partitioned meshes structures (size=n_domain)
+
+  /* Timers */
+  PDM_timer_t *timer_all;   /*!< Timer */
+  PDM_timer_t *timer;       /*!< Timer */
+
+  double times_elapsed [4]; /*!< Elapsed times :
+                             - Total,
+                             - build dualgraph,
+                             - split graph
+                             - build meshes partition */
+
+  double times_cpu[4];      /*!< CPU times :
+                               - Total,
+                               - build dualgraph,
+                               - split graph
+                               - build meshes partition */
+
+  double times_cpu_u[4];    /*!< User CPU times :
+                               - Total,
+                               - build dualgraph,
+                               - split graph
+                               - build meshes partition */
+
+  double times_cpu_s[4];    /*!< Systeme CPU times :
+                                - Total,
+                                - build dualgraph,
+                                - split graph
+                                - build meshes partition */
+
 
 };
 

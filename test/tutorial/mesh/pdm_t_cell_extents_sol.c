@@ -178,25 +178,25 @@ int                        **cell_vtx
 
 
   *n_cell = dn_cell;
-  *cell_face_idx = malloc(sizeof(int) * (dn_cell + 1));
+  PDM_malloc(*cell_face_idx,(dn_cell + 1),int);
   memcpy(*cell_face_idx, dcell_face_idx, sizeof(int) * (dn_cell + 1));
-  *cell_face = malloc(sizeof(int) * dcell_face_idx[dn_cell]);
+  PDM_malloc(*cell_face,dcell_face_idx[dn_cell],int);
   for (int i = 0; i < dcell_face_idx[dn_cell]; i++) {
     (*cell_face)[i] = (int) dcell_face[i];
   }
 
 
   *n_face = dn_face;
-  *face_edge_idx = malloc(sizeof(int) * (dn_face + 1));
+  PDM_malloc(*face_edge_idx,(dn_face + 1),int);
   memcpy(*face_edge_idx, dface_edge_idx, sizeof(int) * (dn_face + 1));
-  *face_edge = malloc(sizeof(int) * dface_edge_idx[dn_face]);
+  PDM_malloc(*face_edge,dface_edge_idx[dn_face],int);
   for (int i = 0; i < dface_edge_idx[dn_face]; i++) {
     (*face_edge)[i] = (int) dface_edge[i];
   }
 
 
   *n_edge = dn_edge;
-  *edge_vtx = malloc(sizeof(int) * 2*dn_edge);
+  PDM_malloc(*edge_vtx,2*dn_edge,int);
   for (int i = 0; i < 2*dn_edge; i++) {
     (*edge_vtx)[i] = (int) dedge_vtx[i];
   }
@@ -204,7 +204,7 @@ int                        **cell_vtx
 
 
   PDM_g_num_t *distrib_vtx = PDM_dmesh_nodal_vtx_distrib_get(dmn);
-  dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn);
+  dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn, PDM_OWNERSHIP_BAD_VALUE);
   dn_vtx = distrib_vtx[i_rank+1] - distrib_vtx[i_rank];
 
 
@@ -222,7 +222,7 @@ int                        **cell_vtx
   }
 
   *n_vtx = dn_vtx;
-  *vtx_coord = malloc(sizeof(double) * dn_vtx * 3);
+  PDM_malloc(*vtx_coord,dn_vtx * 3,double);
   memcpy(*vtx_coord, dvtx_coord, sizeof(double) * dn_vtx * 3);
 
 
@@ -230,10 +230,10 @@ int                        **cell_vtx
   PDM_dmesh_nodal_elmts_t *dmne = dmn->volumic;
   int id_section = dmne->sections_id[0];
 
-  PDM_g_num_t *dcell_vtx = PDM_DMesh_nodal_elmts_section_std_get(dmne, id_section);
+  PDM_g_num_t *dcell_vtx = PDM_DMesh_nodal_elmts_section_std_get(dmne, id_section, PDM_OWNERSHIP_BAD_VALUE);
 
-  int cell_vtx_n = PDM_Mesh_nodal_n_vertices_element(elt_type, 1);
-  *cell_vtx = malloc(sizeof(int) * dn_cell * cell_vtx_n);
+  int cell_vtx_n = PDM_Mesh_nodal_n_vtx_elt_get(elt_type, 1);
+  PDM_malloc(*cell_vtx,dn_cell * cell_vtx_n,int);
   for (int i = 0; i < dn_cell * cell_vtx_n; i++) {
     (*cell_vtx)[i] = (int) dcell_vtx[i];
   }
@@ -334,7 +334,8 @@ int main(int argc, char *argv[])
    *  (cell_extents = [xmin_i, ymin_i, zmin_i, xmax_i, ymax_i, zmax_i],
    *   whith 0 <= i < n_cell)
    */
-  double *cell_extents = malloc(sizeof(double) * n_cell * 6);
+  double *cell_extents;
+  PDM_malloc(cell_extents,n_cell * 6,double);
   for (int icell = 0; icell < n_cell; icell++) {
 
     double *ce = cell_extents + 6*icell;
@@ -370,10 +371,12 @@ int main(int argc, char *argv[])
    *  (just the average of each cell's vertices,
    *   not the actual center of mass)
    */
-  double *cell_center = malloc(sizeof(double) * n_cell * 3);
+  double *cell_center;
+  PDM_malloc(cell_center,n_cell * 3,double);
 
   int *is_visited_vtx = PDM_array_zeros_int(n_vtx);
-  int *visited_vtx = malloc(sizeof(int) * n_vtx); // could be smaller...
+  int *visited_vtx;
+  PDM_malloc(visited_vtx,n_vtx,int); // could be smaller...
   int n_visited_vtx = 0;
 
   for (int icell = 0; icell < n_cell; icell++) {
@@ -417,8 +420,8 @@ int main(int argc, char *argv[])
     }
 
   } // end of loop on cells
-  free(is_visited_vtx);
-  free(visited_vtx);
+  PDM_free(is_visited_vtx);
+  PDM_free(visited_vtx);
 
 
   /* Visualize cells */
@@ -449,18 +452,18 @@ int main(int argc, char *argv[])
                               NULL);
   }
 
-  free(cell_extents);
-  free(cell_center);
+  PDM_free(cell_extents);
+  PDM_free(cell_center);
 
 
   /* Free memory */
-  free(cell_face_idx);
-  free(cell_face    );
-  free(face_edge_idx);
-  free(face_edge    );
-  free(edge_vtx     );
-  free(vtx_coord    );
-  free(cell_vtx     );
+  PDM_free(cell_face_idx);
+  PDM_free(cell_face    );
+  PDM_free(face_edge_idx);
+  PDM_free(face_edge    );
+  PDM_free(edge_vtx     );
+  PDM_free(vtx_coord    );
+  PDM_free(cell_vtx     );
 
   PDM_MPI_Finalize();
   return 0;

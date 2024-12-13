@@ -145,10 +145,10 @@ _create_split_mesh
   struct timeval t_elaps_debut;
 
   int i_rank;
-  int numProcs;
+  int n_rank;
 
   PDM_MPI_Comm_rank (pdm_mpi_comm, &i_rank);
-  PDM_MPI_Comm_size (pdm_mpi_comm, &numProcs);
+  PDM_MPI_Comm_size (pdm_mpi_comm, &n_rank);
 
   double        xmin = 0.;
   double        xmax = length;
@@ -158,7 +158,7 @@ _create_split_mesh
   PDM_g_num_t  ny = n_vtx_seg;
   int           dn_face;
   int           dn_vtx;
-  int           dNEdge;
+  int           dn_edge;
   int          *dface_vtx_idx;
   PDM_g_num_t  *dface_vtx;
   double       *dvtx_coord;
@@ -201,7 +201,7 @@ _create_split_mesh
                      &dface_vtx_idx,
                      &dface_vtx,
                      &dface_edge,
-                     &dNEdge,
+                     &dn_edge,
                      &dedge_vtx,
                      &dedge_face,
                      n_edge_group,
@@ -263,14 +263,14 @@ _create_split_mesh
     }
 
     PDM_printf ("dedge_vtx : ");
-    for (int i = 0; i < dNEdge; i++) {
+    for (int i = 0; i < dn_edge; i++) {
       PDM_printf (" "PDM_FMT_G_NUM, dedge_vtx[2*i]);
       PDM_printf (" "PDM_FMT_G_NUM, dedge_vtx[2*i+1]);
       PDM_printf ("\n");
     }
 
     PDM_printf ("dedge_face : ");
-    for (int i = 0; i < dNEdge; i++) {
+    for (int i = 0; i < dn_edge; i++) {
       PDM_printf (" "PDM_FMT_G_NUM, dedge_face[2*i]);
       PDM_printf (" "PDM_FMT_G_NUM, dedge_face[2*i+1]);
       PDM_printf ("\n");
@@ -283,12 +283,14 @@ _create_split_mesh
 
   int have_dcell_part = 0;
 
-  int *dcell_part = (int *) malloc (dn_face*sizeof(int));
-  int *dedge_vtxIdx = (int *) malloc ((dNEdge+1)*sizeof(int));
+  int *dcell_part    = NULL;
+  int *dedge_vtx_idx = NULL;
+  PDM_malloc(dcell_part   , dn_face    , int);
+  PDM_malloc(dedge_vtx_idx, dn_edge + 1, int);
 
-  dedge_vtxIdx[0] = 0;
-  for (int i = 0; i < dNEdge; i++) {
-    dedge_vtxIdx[i+1] = 2 + dedge_vtxIdx[i];
+  dedge_vtx_idx[0] = 0;
+  for (int i = 0; i < dn_edge; i++) {
+    dedge_vtx_idx[i+1] = 2 + dedge_vtx_idx[i];
   }
 
   /*
@@ -312,7 +314,7 @@ _create_split_mesh
                                        renum_properties_face,
                                        n_part,
                                        dn_face,
-                                       dNEdge,
+                                       dn_edge,
                                        dn_vtx,
                                        *n_edge_group,
                                        NULL,
@@ -322,7 +324,7 @@ _create_split_mesh
                                        have_dcell_part,
                                        dcell_part,
                                        dedge_face,
-                                       dedge_vtxIdx,
+                                       dedge_vtx_idx,
                                        dedge_vtx,
                                        NULL,
                                        dvtx_coord,
@@ -330,7 +332,7 @@ _create_split_mesh
                                        dedge_group_idx,
                                        dedge_group);
 
-  free (dcell_part);
+  PDM_free(dcell_part);
 
   double  *elapsed = NULL;
   double  *cpu = NULL;
@@ -391,15 +393,15 @@ _create_split_mesh
   /*   PDM_printf ("       * total              : %i\n", bound_part_faces_sum);    */
   /* } */
 
-  free (dvtx_coord);
-  free (dface_vtx_idx);
-  free (dface_vtx);
-  free (dface_edge);
-  free (dedge_vtxIdx);
-  free (dedge_vtx);
-  free (dedge_face);
-  free (dedge_group_idx);
-  free (dedge_group);
+  PDM_free(dvtx_coord);
+  PDM_free(dface_vtx_idx);
+  PDM_free(dface_vtx);
+  PDM_free(dface_edge);
+  PDM_free(dedge_vtx_idx);
+  PDM_free(dedge_vtx);
+  PDM_free(dedge_face);
+  PDM_free(dedge_group_idx);
+  PDM_free(dedge_group);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
 
@@ -459,7 +461,7 @@ char *argv[]
   int           have_random = 0;
 
   int           i_rank;
-  int           numProcs;
+  int           n_rank;
 
   /*
    *  Read args
@@ -471,7 +473,7 @@ char *argv[]
               &length);
 
   PDM_MPI_Comm_rank (PDM_MPI_COMM_WORLD, &i_rank);
-  PDM_MPI_Comm_size (PDM_MPI_COMM_WORLD, &numProcs);
+  PDM_MPI_Comm_size (PDM_MPI_COMM_WORLD, &n_rank);
 
   /*
    *  Create a partitioned mesh
@@ -496,24 +498,6 @@ char *argv[]
                                           &n_g_edge,
                                           &n_total_part,
                                           &n_edge_group);
-
-
-  // PDM_memory_stats_t* ms = PDM_memory_stats_create(3, comm);
-  // PDM_memory_stats_add(ms, 0, "Start  : ");
-
-  // int size = 2000000000;
-  // double* test = malloc(size * sizeof(double));
-  // for(int i = 0; i < size; ++i) {
-  //   test[i] = 1.;
-  // }
-  // PDM_memory_stats_add(ms, 1, "Step 1 : ");
-
-
-  // free(test);
-  // PDM_memory_stats_add(ms, 2, "End    : ");
-
-  // PDM_memory_stats_log(ms);
-  // PDM_memory_stats_free(ms);
 
   PDM_part_free(ppart);
 

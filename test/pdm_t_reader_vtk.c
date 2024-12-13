@@ -212,8 +212,10 @@ int main(int argc, char *argv[])
 
 
   if (n_vtx_field > 0) {
-    int          *pn_vtx        = malloc(sizeof(int        ) * n_part);
-    PDM_g_num_t **pvtx_ln_to_gn = malloc(sizeof(PDM_g_num_t) * n_part);
+    int *pn_vtx;
+    PDM_malloc(pn_vtx,n_part,int        );
+    PDM_g_num_t **pvtx_ln_to_gn;
+    PDM_malloc(pvtx_ln_to_gn,n_part, PDM_g_num_t *);
     for (int i = 0; i < n_part; i++) {
       pn_vtx[i] = PDM_part_mesh_nodal_n_vtx_get(pmn, i);
       pvtx_ln_to_gn[i] = PDM_part_mesh_nodal_vtx_g_num_get(pmn, i);
@@ -227,7 +229,8 @@ int main(int argc, char *argv[])
                                                         n_part,
                                                         comm);
 
-    void ***pvtx_field = malloc(sizeof(void *) * n_vtx_field);
+    void ***pvtx_field;
+    PDM_malloc(pvtx_field,n_vtx_field, void **);
 
     for (int i = 0; i < n_vtx_field; i++) {
 
@@ -248,7 +251,7 @@ int main(int argc, char *argv[])
                   (void ***) &pvtx_field[i]);
 
 
-      free(dvtx_field_value[i]);
+      PDM_free(dvtx_field_value[i]);
     }
     PDM_block_to_part_free(btp);
 
@@ -273,7 +276,8 @@ int main(int argc, char *argv[])
                                                            "reader_vtk",
                                                            pmn);
 
-      int *id_var_vtx = malloc(sizeof(int) * n_vtx_field);
+      int *id_var_vtx;
+      PDM_malloc(id_var_vtx,n_vtx_field,int);
       for (int i = 0; i < n_vtx_field; i++) {
         id_var_vtx[i] = PDM_writer_var_create(wrt,
                                               PDM_WRITER_OFF,
@@ -288,10 +292,11 @@ int main(int argc, char *argv[])
                             id_geom);
 
       for (int i = 0; i < n_vtx_field; i++) {
-        PDM_real_t **val_vtx = malloc(sizeof(PDM_real_t *) * n_part);
+        PDM_real_t **val_vtx;
+        PDM_malloc(val_vtx,n_part,PDM_real_t *);
         for (int j = 0; j < n_part; j++) {
 
-          val_vtx[j] = malloc(sizeof(PDM_real_t) * pn_vtx[j] * vtx_field_stride[i]);
+          PDM_malloc(val_vtx[j],pn_vtx[j] * vtx_field_stride[i],PDM_real_t);
 
           if (vtx_field_type[i] == PDM_DOUBLE) {
             double *pvf = (double *) pvtx_field[i][j];
@@ -319,9 +324,9 @@ int main(int argc, char *argv[])
                             id_var_vtx[i]);
 
         for (int j = 0; j < n_part; j++) {
-          free(val_vtx[j]);
+          PDM_free(val_vtx[j]);
         }
-        free(val_vtx);
+        PDM_free(val_vtx);
       }
 
 
@@ -329,7 +334,7 @@ int main(int argc, char *argv[])
 
       PDM_writer_free(wrt);
 
-      free(id_var_vtx);
+      PDM_free(id_var_vtx);
     }
 
 
@@ -344,7 +349,8 @@ int main(int argc, char *argv[])
 
     //   for (int j = 0; j < n_part; j++) {
 
-    //     double *val = malloc(sizeof(double) * pn_vtx[j]);
+    //     double *val;
+    //     PDM_malloc(val,pn_vtx[j],double);
 
     //     for (int i = 0; i < n_vtx_field; i++) {
     //       for (int k = 0; k < vtx_field_stride[i]; k++) {
@@ -425,27 +431,27 @@ int main(int argc, char *argv[])
     //       }
     //     }
 
-    //     free(val);
+    //    PDM_free(val);
     //   }
     // }
 
 
-    free(pn_vtx);
-    free(pvtx_ln_to_gn);
+    PDM_free(pn_vtx);
+    PDM_free(pvtx_ln_to_gn);
 
     for (int i = 0; i < n_vtx_field; i++) {
       for (int j = 0; j < n_part; j++) {
-        free(pvtx_field[i][j]);
+        PDM_free(pvtx_field[i][j]);
       }
-      free(pvtx_field[i]);
-      free(vtx_field_name  [i]);
+      PDM_free(pvtx_field[i]);
+      PDM_free(vtx_field_name  [i]);
     }
-    free(pvtx_field);
+    PDM_free(pvtx_field);
 
-    free(vtx_field_name  );
-    free(vtx_field_type  );
-    free(vtx_field_stride);
-    free(dvtx_field_value);
+    PDM_free(vtx_field_name  );
+    PDM_free(vtx_field_type  );
+    PDM_free(vtx_field_stride);
+    PDM_free(dvtx_field_value);
   }
 
 

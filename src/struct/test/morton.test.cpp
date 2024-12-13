@@ -7,6 +7,7 @@
 #include "pdm_logging.h"
 #include "pdm_morton.h"
 #include "pdm_part_to_block.h"
+#include "pdm_priv.h"
 
 
 TEST_CASE("[pdm_morton] - PDM_morton_encode") {
@@ -151,8 +152,6 @@ MPI_TEST_CASE("[pdm_morton] - PDM_morton_local_sort", 1) {
                        0.5, 0.25, 1.,
                        0.25, 0.5, 0.,
                        0., 0., 0.   };
-  PDM_morton_int_t level = 12;
-  PDM_UNUSED(level);
 
   int n_pts = 4;
 
@@ -162,7 +161,8 @@ MPI_TEST_CASE("[pdm_morton] - PDM_morton_local_sort", 1) {
   PDM_morton_get_coord_extents(dim, n_pts, coords, extents, pdm_comm);
   PDM_extents_conformize(dim, extents, 1e-3);
 
-  PDM_morton_code_t *morton_codes     = (PDM_morton_code_t *) malloc (n_pts * sizeof(PDM_morton_code_t));
+  PDM_morton_code_t *morton_codes;
+  PDM_malloc(morton_codes, n_pts, PDM_morton_code_t);
 
   const PDM_morton_int_t max_level = PDM_morton_max_level;
   double d[3];
@@ -187,6 +187,6 @@ MPI_TEST_CASE("[pdm_morton] - PDM_morton_local_sort", 1) {
   }
 
 
-  free(morton_codes);
+  PDM_free(morton_codes);
 
 }

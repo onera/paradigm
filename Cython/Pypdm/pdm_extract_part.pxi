@@ -15,13 +15,15 @@ cdef extern from "pdm_extract_part.h":
   void PDM_extract_part_selected_lnum_set(PDM_extract_part_t       *extrp,
                                           int                       i_part,
                                           int                       n_extract,
-                                          int                      *extract_lnum);
+                                          int                      *extract_lnum,
+                                          PDM_ownership_t           ownership);
 
   void PDM_extract_part_target_set(PDM_extract_part_t       *extrp,
                                    int                       i_part,
                                    int                       n_target,
                                    PDM_g_num_t              *target_gnum,
-                                   int                      *target_location);
+                                   int                      *target_location,
+                                   PDM_ownership_t           ownership);
 
   void PDM_extract_part_part_set(PDM_extract_part_t        *extrp,
                                  int                       i_part,
@@ -159,7 +161,8 @@ cdef class ExtractPart:
     PDM_extract_part_selected_lnum_set(self._extrp,
                                        i_part,
                                        n_extract,
-                              <int* >  extract_lnum.data);
+                              <int* >  extract_lnum.data,
+                                       PDM_OWNERSHIP_USER)
 
 
   # ------------------------------------------------------------------
@@ -177,7 +180,8 @@ cdef class ExtractPart:
                                 i_part,
                                 n_target,
                 <PDM_g_num_t *> target_gnum.data,
-                <int         *> target_location.data);
+                <int         *> target_location.data,
+                                PDM_OWNERSHIP_USER)
 
   # ------------------------------------------------------------------
   def part_set(self,

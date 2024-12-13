@@ -234,7 +234,7 @@ elseif (CMAKE_C_COMPILER_ID STREQUAL "AppleClang")
 
 elseif (CMAKE_C_COMPILER_ID STREQUAL "IntelLLVM")
 
-  set (CMAKE_C_FLAGS "-fPIC -std=c99 -fPIC -funsigned-char -Wall -pedantic -Wshadow -Wpointer-arith -Wmissing-prototypes -Wuninitialized -Wunused -Wno-empty-translation-unit -Wno-unused-function")
+  set (CMAKE_C_FLAGS "-fPIC -std=gnu99 -fPIC -funsigned-char -Wall -pedantic -Wshadow -Wpointer-arith -Wmissing-prototypes -Wuninitialized -Wunused -Wno-unused-function")
 
   set (CMAKE_C_FLAGS_RELEASE         "-O3")
   set (CMAKE_C_FLAGS_DEBUG           "-g -O0")
@@ -373,7 +373,7 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
 
   #set (CMAKE_CXX_FLAGS "-std=c++11 -fpic -funsigned-char -Wall -Wcheck -Wshadow -Wpointer-arith -Wuninitialized -Wunused -wd869,3656,177,2196")
-  set (CMAKE_CXX_FLAGS "-std=c++11 -fpic -funsigned-char -Wall -Wcheck -Wshadow -Wpointer-arith -Wuninitialized -Wunused -wd2196")
+  set (CMAKE_CXX_FLAGS "-std=gnu++11 -fpic -funsigned-char -Wall -Wcheck -Wshadow -Wpointer-arith -Wuninitialized -Wunused -wd2196")
 
   set (CMAKE_CXX_FLAGS_RELEASE "-O3")
 
@@ -401,7 +401,7 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
   set (CXX_LIBRARIES_FLAG        )
 
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "IntelLLVM")
-  set (CMAKE_CXX_FLAGS "-fPIC -std=c++11 -Wall -pedantic -Wshadow -Wpointer-arith -Wuninitialized -Wunused -Wempty-translation-unit -Wno-unused-function -Wtautological-constant-compare")
+  set (CMAKE_CXX_FLAGS "-fPIC -std=gnu++11 -Wall -pedantic -Wshadow -Wpointer-arith -Wuninitialized -Wunused -Wempty-translation-unit -Wno-unused-function -Wtautological-constant-compare")
   set (CMAKE_CXX_FLAGS_RELEASE "-O3")
   set (CMAKE_CXX_FLAGS_DEBUG "-g -O0")
   set (CMAKE_CXX_FLAGS_PROFILING       "${CMAKE_CXX_FLAGS_RELEASE} -p")

@@ -512,7 +512,7 @@ static PDM_MPI_Comm _mpi_2_pdm_mpi_comm(MPI_Comm comm)
 
     if (mpi_comm == NULL) {
       l_mpi_comm = 4;
-      mpi_comm = (MPI_Comm **) malloc(sizeof(MPI_Comm *) * l_mpi_comm);
+      PDM_malloc(mpi_comm,l_mpi_comm,MPI_Comm *);
       for (int i = 0; i < l_mpi_comm; i++)
         mpi_comm[i] = NULL;
     }
@@ -520,9 +520,7 @@ static PDM_MPI_Comm _mpi_2_pdm_mpi_comm(MPI_Comm comm)
     if (l_mpi_comm <= n_mpi_comm) {
       int  p_l_mpi_comm = l_mpi_comm;
       l_mpi_comm = 2 * l_mpi_comm;
-      mpi_comm = (MPI_Comm **) realloc((void*) mpi_comm,
-                                       l_mpi_comm *
-                                       sizeof(MPI_Comm *));
+      PDM_realloc(mpi_comm ,mpi_comm ,                                       l_mpi_comm ,MPI_Comm *);
       for (int i = p_l_mpi_comm; i < l_mpi_comm; i++)
         mpi_comm[i] = NULL;
     }
@@ -533,7 +531,7 @@ static PDM_MPI_Comm _mpi_2_pdm_mpi_comm(MPI_Comm comm)
     while (mpi_comm[i] != NULL)
       i++;
 
-    mpi_comm[i] = (MPI_Comm *) malloc(sizeof(MPI_Comm));
+    PDM_malloc(mpi_comm[i],1,MPI_Comm);
     *(mpi_comm[i]) = comm;
     n_mpi_comm += 1;
 
@@ -633,7 +631,7 @@ static MPI_Win _pdm_mpi_2_mpi_win(PDM_MPI_Win pdm_mpi_win)
 
 //     if (mpi_request == NULL) {
 //       l_mpi_request = 4;
-//       mpi_request = (MPI_Request **) malloc(sizeof(MPI_Request *) * l_mpi_request);
+//       PDM_malloc(mpi_request,l_mpi_request,MPI_Request *);
 //       for (int i = 0; i < l_mpi_request; i++)
 //         mpi_request[i] = NULL;
 //     }
@@ -654,7 +652,7 @@ static MPI_Win _pdm_mpi_2_mpi_win(PDM_MPI_Win pdm_mpi_win)
 //     while (mpi_request[i] != NULL)
 //       i++;
 
-//     mpi_request[i] = (MPI_Request *) malloc(sizeof(MPI_Request));
+//     PDM_malloc(mpi_request[i],1,MPI_Request);
 //     *(mpi_request[i]) = request;
 //     n_mpi_request += 1;
 
@@ -688,7 +686,7 @@ static PDM_MPI_Request _mpi_2_pdm_mpi_request_add(MPI_Request request)
 
     if (mpi_request == NULL) {
       l_mpi_request = 4;
-      mpi_request = (MPI_Request **) malloc(sizeof(MPI_Request *) * l_mpi_request);
+      PDM_malloc(mpi_request,l_mpi_request,MPI_Request *);
       for (int i = 0; i < l_mpi_request; i++)
         mpi_request[i] = NULL;
     }
@@ -696,9 +694,7 @@ static PDM_MPI_Request _mpi_2_pdm_mpi_request_add(MPI_Request request)
     if (l_mpi_request <= n_mpi_request) {
       int  p_l_mpi_request = l_mpi_request;
       l_mpi_request = 2 * l_mpi_request;
-      mpi_request = (MPI_Request **) realloc((void*) mpi_request,
-                                             l_mpi_request *
-                                             sizeof(MPI_Request *));
+      PDM_realloc(mpi_request ,mpi_request ,                                             l_mpi_request ,MPI_Request *);
       for (int i = p_l_mpi_request; i < l_mpi_request; i++)
         mpi_request[i] = NULL;
     }
@@ -709,7 +705,7 @@ static PDM_MPI_Request _mpi_2_pdm_mpi_request_add(MPI_Request request)
     while (mpi_request[i] != NULL)
       i++;
 
-    mpi_request[i] = (MPI_Request *) malloc(sizeof(MPI_Request));
+    PDM_malloc(mpi_request[i],1,MPI_Request);
     *(mpi_request[i]) = request;
     n_mpi_request += 1;
 
@@ -742,7 +738,7 @@ static PDM_MPI_Win _mpi_2_pdm_mpi_win_add(MPI_Win win)
 
     if (mpi_win == NULL) {
       l_mpi_win = 4;
-      mpi_win = (MPI_Win **) malloc(sizeof(MPI_Win *) * l_mpi_win);
+      PDM_malloc(mpi_win,l_mpi_win,MPI_Win *);
       for (int i = 0; i < l_mpi_win; i++)
         mpi_win[i] = NULL;
     }
@@ -750,9 +746,7 @@ static PDM_MPI_Win _mpi_2_pdm_mpi_win_add(MPI_Win win)
     if (l_mpi_win <= n_mpi_win) {
       int  p_l_mpi_win = l_mpi_win;
       l_mpi_win = 2 * l_mpi_win;
-      mpi_win = (MPI_Win **) realloc((void*) mpi_win,
-                                             l_mpi_win *
-                                             sizeof(MPI_Win *));
+      PDM_realloc(mpi_win ,mpi_win ,                                             l_mpi_win ,MPI_Win *);
       for (int i = p_l_mpi_win; i < l_mpi_win; i++)
         mpi_win[i] = NULL;
     }
@@ -763,7 +757,7 @@ static PDM_MPI_Win _mpi_2_pdm_mpi_win_add(MPI_Win win)
     while (mpi_win[i] != NULL)
       i++;
 
-    mpi_win[i] = (MPI_Win *) malloc(sizeof(MPI_Win));
+    PDM_malloc(mpi_win[i],1,MPI_Win);
     *(mpi_win[i]) = win;
     n_mpi_win += 1;
 
@@ -895,8 +889,7 @@ static PDM_MPI_Datatype _mpi_2_pdm_mpi_datatype(MPI_Datatype datatype)
 
     if (mpi_datatype == NULL) {
       l_mpi_datatype = 4;
-      mpi_datatype = (MPI_Datatype **)
-        malloc(sizeof(MPI_Datatype *) * l_mpi_datatype);
+      PDM_malloc(mpi_datatype, l_mpi_datatype, MPI_Datatype *);
       for (int i = 0; i < l_mpi_datatype; i++)
         mpi_datatype[i] = NULL;
     }
@@ -904,9 +897,7 @@ static PDM_MPI_Datatype _mpi_2_pdm_mpi_datatype(MPI_Datatype datatype)
     if (l_mpi_datatype <= n_mpi_datatype) {
       int  p_l_mpi_datatype = l_mpi_datatype;
       l_mpi_datatype = 2 * l_mpi_datatype;
-      mpi_datatype = (MPI_Datatype **) realloc((void*) mpi_datatype,
-                                       l_mpi_datatype *
-                                       sizeof(MPI_Datatype *));
+      PDM_realloc(mpi_datatype ,mpi_datatype,l_mpi_datatype ,MPI_Datatype *);
       for (int i = p_l_mpi_datatype; i < l_mpi_datatype; i++)
         mpi_datatype[i] = NULL;
     }
@@ -917,7 +908,7 @@ static PDM_MPI_Datatype _mpi_2_pdm_mpi_datatype(MPI_Datatype datatype)
     while (mpi_datatype[i] != NULL)
       i++;
 
-    mpi_datatype[i] = (MPI_Datatype *) malloc(sizeof(MPI_Datatype));
+    PDM_malloc(mpi_datatype[i],1,MPI_Datatype);
     *(mpi_datatype[i]) = datatype;
     n_mpi_datatype += 1;
 
@@ -940,7 +931,7 @@ static PDM_MPI_File _pdm_mpi_file_create(void)
 
   if (mpi_file == NULL) {
     l_mpi_file = 4;
-      mpi_file = (MPI_File **) malloc(sizeof(MPI_File *) * l_mpi_file);
+      PDM_malloc(mpi_file,l_mpi_file,MPI_File *);
       for (int i = 0; i < l_mpi_file; i++)
         mpi_file[i] = NULL;
   }
@@ -948,9 +939,7 @@ static PDM_MPI_File _pdm_mpi_file_create(void)
   if (l_mpi_file <= n_mpi_file) {
     int  p_l_mpi_file = l_mpi_file;
     l_mpi_file = 2 * l_mpi_file;
-    mpi_file = (MPI_File **) realloc((void*) mpi_file,
-                                     l_mpi_file *
-                                     sizeof(MPI_File *));
+    PDM_realloc(mpi_file ,mpi_file ,                                     l_mpi_file ,MPI_File *);
     for (int i = p_l_mpi_file; i < l_mpi_file; i++)
       mpi_file[i] = NULL;
   }
@@ -961,7 +950,7 @@ static PDM_MPI_File _pdm_mpi_file_create(void)
   while (mpi_file[i] != NULL)
     i++;
 
-  mpi_file[i] = (MPI_File *) malloc(sizeof(MPI_File));
+  PDM_malloc(mpi_file[i],1,MPI_File);
   n_mpi_file += 1;
   return i;
 }
@@ -1024,7 +1013,7 @@ int PDM_MPI_Finalize (void)
         mpi_file[i] = NULL;
       }
     }
-    free(mpi_file);
+    PDM_free(mpi_file);
     l_mpi_file = 0;
     n_mpi_file = 0;
   }
@@ -1032,11 +1021,11 @@ int PDM_MPI_Finalize (void)
     for (int i = 0; i < l_mpi_comm; i++) {
       if (mpi_comm[i] != NULL) {
         MPI_Comm_free(mpi_comm[i]);
-        free (mpi_comm[i]);
+        PDM_free(mpi_comm[i]);
         mpi_comm[i] = NULL;
       }
     }
-    free(mpi_comm);
+    PDM_free(mpi_comm);
     l_mpi_comm = 0;
     n_mpi_comm = 0;
   }
@@ -1048,7 +1037,7 @@ int PDM_MPI_Finalize (void)
         mpi_request[i] = NULL;
       }
     }
-    free(mpi_request);
+    PDM_free(mpi_request);
     l_mpi_request = 0;
     n_mpi_request = 0;
   }
@@ -1060,7 +1049,7 @@ int PDM_MPI_Finalize (void)
         mpi_win[i] = NULL;
       }
     }
-    free(mpi_win);
+    PDM_free(mpi_win);
     l_mpi_win = 0;
     n_mpi_win = 0;
   }
@@ -1072,7 +1061,7 @@ int PDM_MPI_Finalize (void)
         mpi_datatype[i] = NULL;
       }
     }
-    free(mpi_datatype);
+    PDM_free(mpi_datatype);
     l_mpi_datatype = 0;
     n_mpi_datatype = 0;
   }
@@ -1153,9 +1142,12 @@ int PDM_MPI_File_open(PDM_MPI_Comm comm, char *filename, int amode, PDM_MPI_File
 
     MPI_Info_create (&hints_mpi);
 
-    char *cp_hints = malloc (sizeof(char *) * (strlen(hints) + 1));
-    char *name = malloc (sizeof(char *) * (strlen(hints) + 1));
-    char *value = malloc (sizeof(char *) * (strlen(hints) + 1));
+    char *cp_hints;
+    PDM_malloc(cp_hints,(strlen(hints) + 1), char);
+    char *name;
+    PDM_malloc(name,(strlen(hints) + 1), char);
+    char *value;
+    PDM_malloc(value,(strlen(hints) + 1), char);
     strcpy (cp_hints, hints);
 
     char *pch;
@@ -1180,9 +1172,9 @@ int PDM_MPI_File_open(PDM_MPI_Comm comm, char *filename, int amode, PDM_MPI_File
       }
     } while (pch != NULL);
 
-    free (cp_hints);
-    free (name);
-    free (value);
+    PDM_free(cp_hints);
+    PDM_free(name);
+    PDM_free(value);
 
   }
 
@@ -1221,7 +1213,7 @@ int PDM_MPI_File_close(PDM_MPI_File *fh)
 {
   int code =  MPI_File_close(mpi_file[*fh]);
 
-  free(mpi_file[*fh]);
+  PDM_free(mpi_file[*fh]);
 
   mpi_file[*fh] = NULL;
   n_mpi_file -= 1;
@@ -1719,13 +1711,13 @@ int PDM_MPI_Wait(PDM_MPI_Request *request)
   int code = MPI_Wait(&_request, MPI_STATUS_IGNORE);
   assert(code == 0);
 
-  free(mpi_request[*request]);
+  PDM_free(mpi_request[*request]);
   mpi_request[*request] = NULL;
   n_mpi_request += -1;
   *request = PDM_MPI_REQUEST_NULL;
 
   if (n_mpi_request == 0) {
-    free(mpi_request);
+    PDM_free(mpi_request);
     mpi_request = NULL;
 
     l_mpi_request = 0;
@@ -1754,13 +1746,13 @@ int PDM_MPI_Test(PDM_MPI_Request *request, int *flag)
     return code; // Message was not ready
   }
 
-  free(mpi_request[*request]);
+  PDM_free(mpi_request[*request]);
   mpi_request[*request] = NULL;
   n_mpi_request += -1;
   *request = PDM_MPI_REQUEST_NULL;
 
   if (n_mpi_request == 0) {
-    free(mpi_request);
+    PDM_free(mpi_request);
     mpi_request = NULL;
 
     l_mpi_request = 0;
@@ -1782,7 +1774,8 @@ int PDM_MPI_Type_create_hindexed (int count,
                               PDM_MPI_Datatype *newtype)
 {
   MPI_Datatype mpi_newtype;
-  MPI_Aint *_array_of_displacements = malloc (sizeof(MPI_Aint) * count);
+  MPI_Aint *_array_of_displacements;
+  PDM_malloc(_array_of_displacements,count,MPI_Aint);
 
   for (int i = 0; i < count; i++) {
     _array_of_displacements[i] = array_of_displacements[i];
@@ -1795,7 +1788,7 @@ int PDM_MPI_Type_create_hindexed (int count,
                                &mpi_newtype);
 
   *newtype = _mpi_2_pdm_mpi_datatype(mpi_newtype);
-  free (_array_of_displacements);
+  PDM_free(_array_of_displacements);
   return _mpi_2_pdm_mpi_err(code);
 
 }
@@ -1849,7 +1842,7 @@ int PDM_MPI_Type_free(PDM_MPI_Datatype *datatype)
 {
   MPI_Datatype mpi_type = _pdm_mpi_2_mpi_datatype(*datatype);
   int code = MPI_Type_free(&mpi_type);
-  free(mpi_datatype[*datatype]);
+  PDM_free(mpi_datatype[*datatype]);
   mpi_datatype[*datatype] = NULL;
   *datatype = PDM_MPI_DATATYPE_NULL;
   n_mpi_datatype += -1;
@@ -2196,8 +2189,10 @@ int PDM_MPI_Alltoallv_p2p(void *sendbuf, int *sendcounts, int *sdispls, PDM_MPI_
   int size;
   MPI_Comm_size(_pdm_mpi_2_mpi_comm(comm), &size);
 
-  MPI_Request *request_r = malloc(sizeof(MPI_Request) * size);
-  MPI_Request *request_s = malloc(sizeof(MPI_Request) * size);
+  MPI_Request *request_r;
+  PDM_malloc(request_r,size,MPI_Request);
+  MPI_Request *request_s;
+  PDM_malloc(request_s,size,MPI_Request);
 
   int n_request_r = 0;
   int n_request_s = 0; 
@@ -2250,8 +2245,8 @@ int PDM_MPI_Alltoallv_p2p(void *sendbuf, int *sendcounts, int *sdispls, PDM_MPI_
     }
   }
 
-  free (request_r);
-  free (request_s);
+  PDM_free(request_r);
+  PDM_free(request_s);
 
   return _mpi_2_pdm_mpi_err(code);
 
@@ -2267,8 +2262,10 @@ int PDM_MPI_Alltoallv_p2p_l(void *sendbuf, int *sendcounts, size_t *sdispls, PDM
   int size;
   MPI_Comm_size(_pdm_mpi_2_mpi_comm(comm), &size);
 
-  MPI_Request *request_r = malloc(sizeof(MPI_Request) * size);
-  MPI_Request *request_s = malloc(sizeof(MPI_Request) * size);
+  MPI_Request *request_r;
+  PDM_malloc(request_r,size,MPI_Request);
+  MPI_Request *request_s;
+  PDM_malloc(request_s,size,MPI_Request);
 
   int n_request_r = 0;
   int n_request_s = 0; 
@@ -2321,8 +2318,8 @@ int PDM_MPI_Alltoallv_p2p_l(void *sendbuf, int *sendcounts, size_t *sdispls, PDM
     }
   }
 
-  free (request_r);
-  free (request_s);
+  PDM_free(request_r);
+  PDM_free(request_s);
 
   return _mpi_2_pdm_mpi_err(code);
 
@@ -2355,8 +2352,10 @@ int PDM_MPI_Alltoallv_l(void *sendbuf, int *sendcounts, size_t *sdispls,
 
   if (!large) {
 
-    int *_sdispls = malloc(sizeof(int) * size);
-    int *_rdispls = malloc(sizeof(int) * size);
+    int *_sdispls;
+    PDM_malloc(_sdispls,size,int);
+    int *_rdispls;
+    PDM_malloc(_rdispls,size,int);
 
     for (int i = 0; i < size; i++) {
       _sdispls[i] = (int) sdispls[i];
@@ -2373,14 +2372,16 @@ int PDM_MPI_Alltoallv_l(void *sendbuf, int *sendcounts, size_t *sdispls,
                   _pdm_mpi_2_mpi_datatype(recvtype),
                   _pdm_mpi_2_mpi_comm(comm));
 
-    free (_sdispls);
-    free (_rdispls);
+    PDM_free(_sdispls);
+    PDM_free(_rdispls);
   }
 
   else {
 
-    MPI_Request *request_r = malloc(sizeof(MPI_Request) * size);
-    MPI_Request *request_s = malloc(sizeof(MPI_Request) * size);
+    MPI_Request *request_r;
+    PDM_malloc(request_r,size,MPI_Request);
+    MPI_Request *request_s;
+    PDM_malloc(request_s,size,MPI_Request);
 
     int size_sendType;
     MPI_Type_size(_pdm_mpi_2_mpi_datatype(sendtype), &size_sendType);
@@ -2433,8 +2434,8 @@ int PDM_MPI_Alltoallv_l(void *sendbuf, int *sendcounts, size_t *sdispls,
       }
     }
 
-    free (request_r);
-    free (request_s);
+    PDM_free(request_r);
+    PDM_free(request_s);
   }
 
   return _mpi_2_pdm_mpi_err(code);
@@ -2456,8 +2457,8 @@ int PDM_MPI_Ialltoallv_p2p (void *sendbuf, int *sendcounts, int *sdispls, PDM_MP
   int size;
   MPI_Comm_size(_pdm_mpi_2_mpi_comm(comm), &size);
 
-  *request_r = malloc(sizeof(MPI_Request) * size);
-  *request_s = malloc(sizeof(MPI_Request) * size);
+  PDM_malloc(*request_r,size, PDM_MPI_Request);
+  PDM_malloc(*request_s,size, PDM_MPI_Request);
 
   *n_request_r = 0;
   *n_request_s = 0; 
@@ -2509,8 +2510,8 @@ int PDM_MPI_Ialltoallv_p2p_l (void *sendbuf, int *sendcounts, size_t *sdispls, P
   int size;
   MPI_Comm_size(_pdm_mpi_2_mpi_comm(comm), &size);
 
-  *request_r = malloc(sizeof(MPI_Request) * size);
-  *request_s = malloc(sizeof(MPI_Request) * size);
+  PDM_malloc(*request_r,size, PDM_MPI_Request);
+  PDM_malloc(*request_s,size, PDM_MPI_Request);
 
   *n_request_r = 0;
   *n_request_s = 0; 
@@ -2583,8 +2584,8 @@ int PDM_MPI_Ialltoallv_p2p_wait (PDM_MPI_Request **request_s,
     }
   }
 
-  free(*request_r);
-  free(*request_s);
+  PDM_free(*request_r);
+  PDM_free(*request_s);
 
   *request_r = NULL;
   *request_s = NULL;
@@ -2646,7 +2647,8 @@ int PDM_MPI_Get_ialltoallv(PDM_MPI_Win       win_send,
   MPI_Comm_size(_pdm_mpi_2_mpi_comm(comm), &n_rank);
   MPI_Comm_rank(_pdm_mpi_2_mpi_comm(comm), &i_rank);
 
-  int *target_disp = (int *) malloc(n_rank * sizeof(int));
+  int *target_disp;
+  PDM_malloc(target_disp,n_rank ,int);
 
   MPI_Alltoall(sdispls    , 1, MPI_INT,
                target_disp, 1, MPI_INT, _pdm_mpi_2_mpi_comm(comm));
@@ -2699,7 +2701,7 @@ int PDM_MPI_Get_ialltoallv(PDM_MPI_Win       win_send,
   PDM_UNUSED(sendcounts);
   PDM_UNUSED(sendbuf   ); // Implicit in win_send
 
-  free(target_disp);
+  PDM_free(target_disp);
   return _mpi_2_pdm_mpi_err(code);
 }
 
@@ -2736,13 +2738,13 @@ int PDM_MPI_Win_free(PDM_MPI_Win *win)
   MPI_Win _win = _pdm_mpi_2_mpi_win(*win);
   int code = MPI_Win_free(&_win);
 
-  free(mpi_win[*win]);
+  PDM_free(mpi_win[*win]);
   mpi_win[*win] = NULL;
   n_mpi_win += -1;
   *win = PDM_MPI_WIN_NULL;
 
   if (n_mpi_win == 0) {
-    free(mpi_win);
+    PDM_free(mpi_win);
     mpi_win = NULL;
 
     l_mpi_win = 0;
@@ -2821,7 +2823,7 @@ int PDM_MPI_Comm_free(PDM_MPI_Comm *comm)
     MPI_Comm mpi_comm_loc = _pdm_mpi_2_mpi_comm(*comm);
     code = MPI_Comm_free(&mpi_comm_loc);
 
-    free(mpi_comm[*comm]);
+    PDM_free(mpi_comm[*comm]);
     mpi_comm[*comm] = NULL;
     n_mpi_comm += -1;
     return _mpi_2_pdm_mpi_err(code);
@@ -2929,7 +2931,8 @@ PDM_mpi_win_shared_create(PDM_MPI_Aint size,
                           int          disp_unit,
                           PDM_MPI_Comm comm)
 {
-  PDM_mpi_win_shared_t* wins = (PDM_mpi_win_shared_t*) malloc(sizeof(PDM_mpi_win_shared_t));
+  PDM_mpi_win_shared_t *wins;
+  PDM_malloc(wins,1,PDM_mpi_win_shared_t);
 
   int i_rank;
   PDM_MPI_Comm_rank(comm, &i_rank);
@@ -2971,7 +2974,7 @@ void* PDM_mpi_win_shared_get(PDM_mpi_win_shared_t *wins){
 void PDM_mpi_win_shared_free(PDM_mpi_win_shared_t *wins){
   MPI_Win_free(&wins->win);
   wins->ptr = NULL;
-  free(wins);
+  PDM_free(wins);
 }
 
 
@@ -3291,13 +3294,14 @@ PDM_MPI_setup_hybrid_dist_comm_graph
    *  Exchange of the global numbering of rank for each NUMA
    */
   if(comm_master_of_shm != PDM_MPI_COMM_NULL) {
-    int *lnuma_core_gid = malloc(n_rank_in_shm * sizeof(int));
+    int *lnuma_core_gid;
+    PDM_malloc(lnuma_core_gid,n_rank_in_shm ,int);
     for(int i = 0; i < n_rank_in_shm; ++i) {
       lnuma_core_gid[i] = numa_core_gid[numa_by_numa_idx[i_rank_master_of_shm]+i];
     }
     PDM_MPI_Allgatherv(lnuma_core_gid, n_rank_in_shm, PDM_MPI_INT,
                        numa_core_gid , numa_by_numa_n, numa_by_numa_idx, PDM_MPI_INT, comm_master_of_shm);
-    free(lnuma_core_gid);
+    PDM_free(lnuma_core_gid);
   }
   PDM_MPI_Barrier(comm_shared);
   PDM_mpi_win_shared_sync(wnuma_core_gid);
@@ -3305,10 +3309,14 @@ PDM_MPI_setup_hybrid_dist_comm_graph
   /*
    * Computation of degree_in
    */
-  int *send_n   = malloc(  n_rank    * sizeof(int));
-  int *recv_n   = malloc(  n_rank    * sizeof(int));
-  int *send_idx = malloc( (n_rank+1) * sizeof(int));
-  int *recv_idx = malloc( (n_rank+1) * sizeof(int));
+  int *send_n;
+  PDM_malloc(send_n,  n_rank    ,int);
+  int *recv_n;
+  PDM_malloc(recv_n,  n_rank    ,int);
+  int *send_idx;
+  PDM_malloc(send_idx, (n_rank+1) ,int);
+  int *recv_idx;
+  PDM_malloc(recv_idx, (n_rank+1) ,int);
 
   for(int i = 0; i < n_rank; ++i) {
     send_n[i] = 0;
@@ -3325,7 +3333,8 @@ PDM_MPI_setup_hybrid_dist_comm_graph
     }
   }
 
-  int* neighbor_in = malloc( (n_degrees_in ) * sizeof(int));
+  int *neighbor_in;
+  PDM_malloc(neighbor_in, (n_degrees_in ) ,int);
   n_degrees_in = 0;
   for(int i = 0; i < n_rank_master_of_shm; ++i) {
     for(int j = numa_by_numa_idx[i]; j < numa_by_numa_idx[i+1]; ++j) {
@@ -3348,7 +3357,8 @@ PDM_MPI_setup_hybrid_dist_comm_graph
     send_n[i] = 0;
   }
 
-  int *send_cur_i_rank = malloc(send_idx[n_rank] * sizeof(int));
+  int *send_cur_i_rank;
+  PDM_malloc(send_cur_i_rank,send_idx[n_rank] ,int);
 
   for(int i = 0; i < n_degrees_in; ++i) {
     int idx_write = send_idx[neighbor_in[i]] + send_n[neighbor_in[i]]++;
@@ -3363,7 +3373,8 @@ PDM_MPI_setup_hybrid_dist_comm_graph
   for(int i = 0; i < n_rank; ++i) {
     recv_idx[i+1] = recv_idx[i] + recv_n[i];
   }
-  int *recv_opp_i_rank = malloc(recv_idx[n_rank] * sizeof(int));
+  int *recv_opp_i_rank;
+  PDM_malloc(recv_opp_i_rank,recv_idx[n_rank] ,int);
 
   PDM_MPI_Alltoallv(send_cur_i_rank, send_n, send_idx, PDM_MPI_INT,
                     recv_opp_i_rank, recv_n, recv_idx, PDM_MPI_INT, comm);
@@ -3372,11 +3383,11 @@ PDM_MPI_setup_hybrid_dist_comm_graph
   int n_degrees_out = recv_idx[n_rank];
   int *neighbor_out = recv_opp_i_rank; // Already sort normaly
 
-  free(send_n);
-  free(recv_n);
-  free(send_idx);
-  free(recv_idx);
-  free(send_cur_i_rank);
+  PDM_free(send_n);
+  PDM_free(recv_n);
+  PDM_free(send_idx);
+  PDM_free(recv_idx);
+  PDM_free(send_cur_i_rank);
 
 
   PDM_MPI_Comm comm_dist_graph;
@@ -3395,7 +3406,7 @@ PDM_MPI_setup_hybrid_dist_comm_graph
   PDM_mpi_win_shared_free(wnuma_core_gid);
   PDM_mpi_win_shared_free(wnuma_by_numa_idx);
 
-  free(recv_opp_i_rank);
+  PDM_free(recv_opp_i_rank);
 
   *comm_shared_out     = comm_shared;
   *comm_dist_graph_out = comm_dist_graph;
@@ -3465,10 +3476,14 @@ PDM_MPI_setup_dist_graph_from_neighbor_in
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
-  int *send_n   = malloc(  n_rank    * sizeof(int));
-  int *recv_n   = malloc(  n_rank    * sizeof(int));
-  int *send_idx = malloc( (n_rank+1) * sizeof(int));
-  int *recv_idx = malloc( (n_rank+1) * sizeof(int));
+  int *send_n;
+  PDM_malloc(send_n,  n_rank    ,int);
+  int *recv_n;
+  PDM_malloc(recv_n,  n_rank    ,int);
+  int *send_idx;
+  PDM_malloc(send_idx, (n_rank+1) ,int);
+  int *recv_idx;
+  PDM_malloc(recv_idx, (n_rank+1) ,int);
 
   for(int i = 0; i < n_rank; ++i) {
     send_n[i] = 0;
@@ -3488,7 +3503,8 @@ PDM_MPI_setup_dist_graph_from_neighbor_in
     send_n[i] = 0;
   }
 
-  int *send_cur_i_rank = malloc(send_idx[n_rank] * sizeof(int));
+  int *send_cur_i_rank;
+  PDM_malloc(send_cur_i_rank,send_idx[n_rank] ,int);
 
   for(int i = 0; i < n_degree_in; ++i) {
     int idx_write = send_idx[neighbor_in[i]] + send_n[neighbor_in[i]]++;
@@ -3503,7 +3519,8 @@ PDM_MPI_setup_dist_graph_from_neighbor_in
   for(int i = 0; i < n_rank; ++i) {
     recv_idx[i+1] = recv_idx[i] + recv_n[i];
   }
-  int *recv_opp_i_rank = malloc(recv_idx[n_rank] * sizeof(int));
+  int *recv_opp_i_rank;
+  PDM_malloc(recv_opp_i_rank,recv_idx[n_rank] ,int);
 
   PDM_MPI_Alltoallv(send_cur_i_rank, send_n, send_idx, PDM_MPI_INT,
                     recv_opp_i_rank, recv_n, recv_idx, PDM_MPI_INT, comm);
@@ -3512,11 +3529,11 @@ PDM_MPI_setup_dist_graph_from_neighbor_in
   int n_degrees_out = recv_idx[n_rank];
   int *neighbor_out = recv_opp_i_rank; // Already sort normaly
 
-  free(send_n);
-  free(recv_n);
-  free(send_idx);
-  free(recv_idx);
-  free(send_cur_i_rank);
+  PDM_free(send_n);
+  PDM_free(recv_n);
+  PDM_free(send_idx);
+  PDM_free(recv_idx);
+  PDM_free(send_cur_i_rank);
 
   PDM_MPI_Dist_graph_create_adjacent(comm,
                                      n_degree_in,

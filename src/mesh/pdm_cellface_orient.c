@@ -46,7 +46,7 @@ extern "C" {
 enum {false, true};
 
 typedef enum {
-  FACE_Un_procESSED,
+  FACE_UNPROCESSED,
   FACE_IN_STACK,
   FACE_UNCHANGED_CYCLE,
   FACE_CHANGED_CYCLE
@@ -54,7 +54,7 @@ typedef enum {
 
 
 typedef enum {
-  CELL_Un_procESSED,
+  CELL_UNPROCESSED,
   CELL_IN_STACK,
   CELL_COMPLETED
 } _cell_state_t;
@@ -107,10 +107,6 @@ const int     *face_vtx_idx,
 const int     *face_vtx
 )
 {
-
-
-
-
   if (n_cell == 0) {
     return;
   }
@@ -118,32 +114,32 @@ const int     *face_vtx
   PDM_timer_t *t1 = PDM_timer_create();
   PDM_timer_resume(t1);
 
-  int *_faceCell = NULL;
+  int *_face_cell = NULL;
 
   if (face_cell != NULL) {
-    _faceCell = face_cell;
+    _face_cell = face_cell;
   }
   else {
-    _faceCell = PDM_array_zeros_int(2*n_face);
+    _face_cell = PDM_array_zeros_int(2*n_face);
 
     for (int i = 0; i < n_cell; i++) {
       for (int j = cell_face_idx[i]; j < cell_face_idx[i+1]; j++) {
         int face = PDM_ABS (cell_face[j]);
-        int iFace = 2 * (face - 1);
-        if (_faceCell[iFace] == 0) {
-          _faceCell[iFace] = i + 1;
+        int i_face = 2 * (face - 1);
+        if (_face_cell[i_face] == 0) {
+          _face_cell[i_face] = i + 1;
         }
         else {
-          _faceCell[iFace+1] = i + 1;
+          _face_cell[i_face+1] = i + 1;
         }
       }
     }
   }
 
   if (1 == 0) {
-    printf("_faceCell : ");
+    printf("_face_cell : ");
     for (int i = 0; i < n_face; i++) {
-      printf("%d : %d %d\n", i+1, _faceCell[2*i], _faceCell[2*i+1]);
+      printf("%d : %d %d\n", i+1, _face_cell[2*i], _face_cell[2*i+1]);
     }
     printf("\n");
   }
@@ -151,40 +147,43 @@ const int     *face_vtx
   int *orientedface_cell = PDM_array_zeros_int(2*n_face);
 
 
-  int keyMax = 2 * n_vtx;
-  PDM_hash_tab_t *hashOrient = PDM_hash_tab_create (PDM_HASH_TAB_KEY_INT, &keyMax);
+  int key_max = 2 * n_vtx;
+  PDM_hash_tab_t *hash_orient = PDM_hash_tab_create (PDM_HASH_TAB_KEY_INT, &key_max);
 
-  int maxNPolyFace = -1;
-  int maxEdges = -1;
+  int max_n_poly_face = -1;
+  int max_edges = -1;
 
   for (int ipoly = 0; ipoly < n_cell; ipoly++) {
-    const int polyIdx   = cell_face_idx[ipoly];
-    const int nPolyFace = cell_face_idx[ipoly + 1] - polyIdx;
-    maxNPolyFace = PDM_MAX (maxNPolyFace, nPolyFace);
-    int nEdgeCell = 0;
-    for (int i = polyIdx; i < polyIdx + nPolyFace; i++) {
+    const int poly_idx   = cell_face_idx[ipoly];
+    const int npoly_face = cell_face_idx[ipoly + 1] - poly_idx;
+    max_n_poly_face = PDM_MAX (max_n_poly_face, npoly_face);
+    int n_edge_cell = 0;
+    for (int i = poly_idx; i < poly_idx + npoly_face; i++) {
       int face = PDM_ABS(cell_face[i]) - 1;
-      nEdgeCell += face_vtx_idx[face+1] - face_vtx_idx[face];
+      n_edge_cell += face_vtx_idx[face+1] - face_vtx_idx[face];
 
     }
-    maxEdges = PDM_MAX (maxEdges, nEdgeCell);
+    max_edges = PDM_MAX (max_edges, n_edge_cell);
   }
 
-  int *stackFace = (int *) malloc (sizeof(int) * maxNPolyFace);
+  int n_processed_face = 0;
+  int n_stack_cell     = -1;
+  int *stack_face      = NULL;
+  int *stack_cell      = NULL;
+  int *processed_face  = NULL;
+  PDM_malloc(stack_face    , max_n_poly_face, int);
+  PDM_malloc(stack_cell    , n_cell         , int);
+  PDM_malloc(processed_face, max_n_poly_face, int);
 
-  int nStackCell = -1;
-  int *stackCell = (int *) malloc (sizeof(int) * n_cell);
-  int n_processedFace = 0;
-  int *processedFace = (int *) malloc (sizeof(int) * maxNPolyFace);
-  int *tagCell = PDM_array_const_int(n_cell, CELL_Un_procESSED);
-  int *tagFace = PDM_array_const_int(maxNPolyFace, FACE_Un_procESSED);
+  int *tag_cell = PDM_array_const_int(n_cell         , CELL_UNPROCESSED);
+  int *tag_face = PDM_array_const_int(max_n_poly_face, FACE_UNPROCESSED);
 
+  tag_cell[0] = CELL_COMPLETED;
 
-  tagCell[0] = CELL_COMPLETED;
-
-  int nEdges = 0;
-  const int nDataEdge = 3;
-  int *edges = malloc (sizeof(int) * maxEdges * nDataEdge);
+  int n_edges = 0;
+  const int n_data_edge = 3;
+  int *edges = NULL;
+  PDM_malloc(edges, max_edges * n_data_edge, int);
 
  /*
   * Orient the first cell of the first component
@@ -195,19 +194,19 @@ const int     *face_vtx
   *
   */
 
-  int fistCellComp = 0;
+  int first_cell_comp = 0;
 
-  while (fistCellComp != -1) {
+  while (first_cell_comp != -1) {
 
-    int     isOriented = 0;
-    int     nPolyhedra = 1;
+    int     is_oriented = 0;
+    int     n_polyhedra = 1;
     double  volume[3];
     double  center[3];
 
-    int *_cell_face_idx = (int *) cell_face_idx + fistCellComp;
+    int *_cell_face_idx = (int *) cell_face_idx + first_cell_comp;
 
-    PDM_geom_elem_polyhedra_properties (isOriented,
-                                        nPolyhedra,
+    PDM_geom_elem_polyhedra_properties (is_oriented,
+                                        n_polyhedra,
                                         n_face,
                                         face_vtx_idx,
                                         face_vtx,
@@ -231,16 +230,16 @@ const int     *face_vtx
     *
     */
 
-    tagCell[fistCellComp] = CELL_COMPLETED;
+    tag_cell[first_cell_comp] = CELL_COMPLETED;
 
-    for (int i = cell_face_idx[fistCellComp]; i < cell_face_idx[fistCellComp+1]; i++) {
-      int Face = cell_face[i];
+    for (int i = cell_face_idx[first_cell_comp]; i < cell_face_idx[first_cell_comp+1]; i++) {
+      int i_face = cell_face[i];
 
-      if (Face > 0) {
-        orientedface_cell[2 * (Face - 1)] = fistCellComp + 1;
+      if (i_face > 0) {
+        orientedface_cell[2 * (i_face - 1)] = first_cell_comp + 1;
       }
       else {
-        orientedface_cell[2 * (PDM_ABS (Face) - 1) + 1] = fistCellComp + 1;
+        orientedface_cell[2 * (PDM_ABS (i_face) - 1) + 1] = first_cell_comp + 1;
       }
     }
 
@@ -253,31 +252,31 @@ const int     *face_vtx
 
     /* Add neighbours of the first cell in the stack */
 
-    for (int i = cell_face_idx[fistCellComp]; i < cell_face_idx[fistCellComp+1]; i++) {
-      int iFace = 2 * (PDM_ABS (cell_face[i]) - 1);
+    for (int i = cell_face_idx[first_cell_comp]; i < cell_face_idx[first_cell_comp+1]; i++) {
+      int i_face = 2 * (PDM_ABS (cell_face[i]) - 1);
 
-      // if (_faceCell[iFace] == 1) {
-      if (_faceCell[iFace] == fistCellComp+1) {
-        if (_faceCell[iFace + 1] > 0) {
-          int cell = PDM_ABS (_faceCell[iFace + 1]);
-          if (tagCell[cell - 1] == CELL_Un_procESSED) {
-            stackCell[++nStackCell] = cell;
-            tagCell[cell - 1] = CELL_IN_STACK;
+      // if (_face_cell[i_face] == 1) {
+      if (_face_cell[i_face] == first_cell_comp+1) {
+        if (_face_cell[i_face + 1] > 0) {
+          int cell = PDM_ABS (_face_cell[i_face + 1]);
+          if (tag_cell[cell - 1] == CELL_UNPROCESSED) {
+            stack_cell[++n_stack_cell] = cell;
+            tag_cell[cell - 1] = CELL_IN_STACK;
           }
         }
       }
       else {
-        int cell = PDM_ABS (_faceCell[iFace]);
-        if (tagCell[cell - 1] == CELL_Un_procESSED) {
-          stackCell[++nStackCell] = cell;
+        int cell = PDM_ABS (_face_cell[i_face]);
+        if (tag_cell[cell - 1] == CELL_UNPROCESSED) {
+          stack_cell[++n_stack_cell] = cell;
         }
-        tagCell[cell - 1] = CELL_IN_STACK;
+        tag_cell[cell - 1] = CELL_IN_STACK;
       }
     }
 
     /* Orientation process */
 
-    while (nStackCell >= 0) {
+    while (n_stack_cell >= 0) {
       if (1 == 0) {
         printf("orientedface_cell : ");
         for (int i = 0; i < n_face; i++) {
@@ -285,63 +284,63 @@ const int     *face_vtx
         }
         printf("\n");
 
-        printf("\nstackCell : ");
-        for (int i = 0; i < nStackCell; i++) {
-          printf(" %d", stackCell[i]);
+        printf("\n_stack_cell : ");
+        for (int i = 0; i < n_stack_cell; i++) {
+          printf(" %d", stack_cell[i]);
         }
         printf("\n");
       }
 
-      nEdges = 0;
+      n_edges = 0;
 
-      int iCell = stackCell[nStackCell--] - 1;
+      int i_cell = stack_cell[n_stack_cell--] - 1;
 
       if (1 == 0) {
-        printf("iCell : %d\n", iCell);
+        printf("i_cell : %d\n", i_cell);
       }
 
-      if (tagCell[iCell] == CELL_COMPLETED) {
+      if (tag_cell[i_cell] == CELL_COMPLETED) {
         continue;
       }
 
-      const int polyIdx   = cell_face_idx[iCell];
-      const int nPolyFace = cell_face_idx[iCell + 1] - polyIdx;
+      const int poly_idx   = cell_face_idx[i_cell];
+      const int npoly_face = cell_face_idx[i_cell + 1] - poly_idx;
 
       /* Build pseudo edges of the current cell and store them into a hash table */
 
-      n_processedFace = 0;
+      n_processed_face = 0;
 
-      for (int iface = 0; iface < nPolyFace; iface++) {
+      for (int iface = 0; iface < npoly_face; iface++) {
 
-        tagFace[iface] = FACE_Un_procESSED;
+        tag_face[iface] = FACE_UNPROCESSED;
 
-        const int face          = PDM_ABS (cell_face[polyIdx + iface]) - 1;
+        const int face          = PDM_ABS (cell_face[poly_idx + iface]) - 1;
 
         if (orientedface_cell[2*face] != 0) {
-          assert (orientedface_cell[2*face  ] != iCell + 1);
-          assert (orientedface_cell[2*face+1] != iCell + 1);
+          assert (orientedface_cell[2*face  ] != i_cell + 1);
+          assert (orientedface_cell[2*face+1] != i_cell + 1);
           assert (orientedface_cell[2*face+1] == 0        );
-          tagFace[iface] = FACE_CHANGED_CYCLE;
-          orientedface_cell[2*face+1] = iCell + 1;
-          processedFace[n_processedFace++] = iface;
+          tag_face[iface] = FACE_CHANGED_CYCLE;
+          orientedface_cell[2*face+1] = i_cell + 1;
+          processed_face[n_processed_face++] = iface;
         }
         else if (orientedface_cell[2*face + 1] != 0) {
-          assert (orientedface_cell[2*face  ] != iCell + 1);
-          assert (orientedface_cell[2*face+1] != iCell + 1);
+          assert (orientedface_cell[2*face  ] != i_cell + 1);
+          assert (orientedface_cell[2*face+1] != i_cell + 1);
           assert (orientedface_cell[2*face  ] == 0        );
-          tagFace[iface] = FACE_UNCHANGED_CYCLE;
-          orientedface_cell[2*face] = iCell + 1;
-          processedFace[n_processedFace++] = iface;
+          tag_face[iface] = FACE_UNCHANGED_CYCLE;
+          orientedface_cell[2*face] = i_cell + 1;
+          processed_face[n_processed_face++] = iface;
         }
       }
 
-      if (n_processedFace == 0) {
+      if (n_processed_face == 0) {
         PDM_error (__FILE__, __LINE__, 0, "Error reorient : no processed face found\n");
       }
 
-      for (int iface = 0; iface < nPolyFace; iface++) {
+      for (int iface = 0; iface < npoly_face; iface++) {
 
-        const int face          = PDM_ABS (cell_face[polyIdx + iface]) - 1;
+        const int face          = PDM_ABS (cell_face[poly_idx + iface]) - 1;
         const int faceIdx       = face_vtx_idx[face];
         const int n_faceVertices = face_vtx_idx[face+1] - faceIdx;
 
@@ -349,30 +348,30 @@ const int     *face_vtx
           const int vertex = face_vtx[faceIdx + ivert] - 1;
 
           const int inext = (ivert + 1) % n_faceVertices;
-          const int vertexNext = face_vtx[faceIdx + inext] - 1;
-          const int key = vertex + vertexNext;
+          const int vertex_next = face_vtx[faceIdx + inext] - 1;
+          const int key = vertex + vertex_next;
 
-          int *edge = edges + nDataEdge * nEdges;
+          int *edge = edges + n_data_edge * n_edges;
           edge[0] = vertex;
-          edge[1] = vertexNext;
+          edge[1] = vertex_next;
           edge[2] = iface;
 
-          nEdges += 1;
+          n_edges += 1;
 
-          PDM_hash_tab_data_add (hashOrient, (void *) &key, edge);
+          PDM_hash_tab_data_add (hash_orient, (void *) &key, edge);
 
         }
       }
 
       /* FIXME Check edges connexion (ignore edges connected with more 2 faces) */
 
-      int nStackFace = -1;
+      int nStack_face = -1;
 
       /* Look for a neighbour of this face */
 
-      for (int i = 0; i < n_processedFace; i++) {
-        int _currentProcessedFace = processedFace[i];
-        const int face          = PDM_ABS (cell_face[polyIdx + _currentProcessedFace]) - 1;
+      for (int i = 0; i < n_processed_face; i++) {
+        int _current_processed_face = processed_face[i];
+        const int face          = PDM_ABS (cell_face[poly_idx + _current_processed_face]) - 1;
         const int faceIdx       = face_vtx_idx[face];
         const int n_faceVertices = face_vtx_idx[face+1] - faceIdx;
 
@@ -380,24 +379,24 @@ const int     *face_vtx
           const int inext = (ivert + 1) % n_faceVertices;
 
           const int vertex = face_vtx[faceIdx + ivert] - 1;
-          const int vertexNext = face_vtx[faceIdx + inext] - 1;
-          int key = vertex + vertexNext;
+          const int vertex_next = face_vtx[faceIdx + inext] - 1;
+          int key = vertex + vertex_next;
 
-          int nData = PDM_hash_tab_n_data_get (hashOrient, &key);
+          int nData = PDM_hash_tab_n_data_get (hash_orient, &key);
 
-          int **data = (int **) PDM_hash_tab_data_get (hashOrient, &key);
+          int **data = (int **) PDM_hash_tab_data_get (hash_orient, &key);
 
           for (int j = 0; j < nData; j++) {
             if (data[j] != NULL) {
               int *_edge = data[j];
-              int isInverseEdge = (vertex == _edge[1]) && (vertexNext == _edge[0]);
-              int isSameEdge    = (vertex == _edge[0]) && (vertexNext == _edge[1]);
-              int isSameFace    = _currentProcessedFace == _edge[2];
+              int isInverseEdge = (vertex == _edge[1]) && (vertex_next == _edge[0]);
+              int isSameEdge    = (vertex == _edge[0]) && (vertex_next == _edge[1]);
+              int isSameFace    = _current_processed_face == _edge[2];
               if (!isSameFace) {
                 if (isSameEdge || isInverseEdge) {
-                  if (tagFace[ _edge[2]] == FACE_Un_procESSED) {
-                    stackFace[++nStackFace] = _edge[2];
-                    tagFace[ _edge[2]] = FACE_IN_STACK;
+                  if (tag_face[ _edge[2]] == FACE_UNPROCESSED) {
+                    stack_face[++nStack_face] = _edge[2];
+                    tag_face[ _edge[2]] = FACE_IN_STACK;
                   }
                   break;
                 }
@@ -407,23 +406,23 @@ const int     *face_vtx
         }
       }
       if (1 == 0) {
-        printf("\nstackFace : ");
-        for (int i = 0; i < nStackFace+1; i++) {
-          printf(" %d", stackFace[i]);
+        printf("\nstack_face : ");
+        for (int i = 0; i < nStack_face+1; i++) {
+          printf(" %d", stack_face[i]);
         }
         printf("\n");
       }
 
-      while (nStackFace >= 0) {
+      while (nStack_face >= 0) {
 
-        int iFace = stackFace[nStackFace--];
+        int iFace = stack_face[nStack_face--];
 
-        if ((tagFace[iFace] == FACE_UNCHANGED_CYCLE) ||
-            (tagFace[iFace] == FACE_CHANGED_CYCLE)) {
+        if ((tag_face[iFace] == FACE_UNCHANGED_CYCLE) ||
+            (tag_face[iFace] == FACE_CHANGED_CYCLE)) {
           continue;
         }
 
-        const int face          = PDM_ABS (cell_face[polyIdx + iFace]) - 1;
+        const int face          = PDM_ABS (cell_face[poly_idx + iFace]) - 1;
         const int faceIdx       = face_vtx_idx[face];
         const int n_faceVertices = face_vtx_idx[face+1] - faceIdx;
 
@@ -431,17 +430,17 @@ const int     *face_vtx
           const int inext = (ivert + 1) % n_faceVertices;
 
           const int vertex = face_vtx[faceIdx + ivert] - 1;
-          const int vertexNext = face_vtx[faceIdx + inext] - 1;
-          int key = vertex + vertexNext;
+          const int vertex_next = face_vtx[faceIdx + inext] - 1;
+          int key = vertex + vertex_next;
 
-          int nData = PDM_hash_tab_n_data_get (hashOrient, &key);
-          int **data = (int **) PDM_hash_tab_data_get (hashOrient, &key);
+          int nData = PDM_hash_tab_n_data_get (hash_orient, &key);
+          int **data = (int **) PDM_hash_tab_data_get (hash_orient, &key);
 
           int jCurrentEdge = -1;
           for (int j = 0; j < nData; j++) {
             if (data[j] != NULL) {
               int *_edge = data[j];
-              int isSameEdge    = (vertex == _edge[0]) && (vertexNext == _edge[1]);
+              int isSameEdge    = (vertex == _edge[0]) && (vertex_next == _edge[1]);
               int isSameFace    = iFace == _edge[2];
               if (isSameEdge && isSameFace) {
                 jCurrentEdge = j;
@@ -455,8 +454,8 @@ const int     *face_vtx
           for (int j = 0; j < nData; j++) {
             if (data[j] != NULL) {
               int *_edge = data[j];
-              int isInverseEdge = (vertex == _edge[1]) && (vertexNext == _edge[0]);
-              int isSameEdge    = (vertex == _edge[0]) && (vertexNext == _edge[1]);
+              int isInverseEdge = (vertex == _edge[1]) && (vertex_next == _edge[0]);
+              int isSameEdge    = (vertex == _edge[0]) && (vertex_next == _edge[1]);
               int isSameFace    = iFace == _edge[2];
 
               int neighbour = _edge[2];
@@ -464,35 +463,35 @@ const int     *face_vtx
               if (!isSameFace) {
                 if (isSameEdge || isInverseEdge) {
 
-                  if (tagFace[iFace] < FACE_UNCHANGED_CYCLE) {
+                  if (tag_face[iFace] < FACE_UNCHANGED_CYCLE) {
 
-                    if (tagFace[neighbour] >= FACE_UNCHANGED_CYCLE) {
-                      if (tagFace[neighbour] == FACE_UNCHANGED_CYCLE) {
+                    if (tag_face[neighbour] >= FACE_UNCHANGED_CYCLE) {
+                      if (tag_face[neighbour] == FACE_UNCHANGED_CYCLE) {
                         if (isSameEdge) {
-                          tagFace[iFace] = FACE_CHANGED_CYCLE;
-                          orientedface_cell[2*face+1] = iCell+1;
+                          tag_face[iFace] = FACE_CHANGED_CYCLE;
+                          orientedface_cell[2*face+1] = i_cell+1;
                         }
                         else  {
-                          tagFace[iFace] = FACE_UNCHANGED_CYCLE;
-                          orientedface_cell[2*face] = iCell+1;
+                          tag_face[iFace] = FACE_UNCHANGED_CYCLE;
+                          orientedface_cell[2*face] = i_cell+1;
                         }
                       }
                       else {
                         if (isSameEdge) {
-                          tagFace[iFace] = FACE_UNCHANGED_CYCLE;
-                          orientedface_cell[2*face] = iCell+1;
+                          tag_face[iFace] = FACE_UNCHANGED_CYCLE;
+                          orientedface_cell[2*face] = i_cell+1;
                         }
                         else  {
-                          tagFace[iFace] = FACE_CHANGED_CYCLE;
-                          orientedface_cell[2*face+1] = iCell+1;
+                          tag_face[iFace] = FACE_CHANGED_CYCLE;
+                          orientedface_cell[2*face+1] = i_cell+1;
                         }
                       }
                     }
                   }
 
-                  if (tagFace[neighbour] == FACE_Un_procESSED) {
-                    stackFace[++nStackFace] = neighbour;
-                    tagFace[neighbour] = FACE_IN_STACK;
+                  if (tag_face[neighbour] == FACE_UNPROCESSED) {
+                    stack_face[++nStack_face] = neighbour;
+                    tag_face[neighbour] = FACE_IN_STACK;
                   }
 
                   break;
@@ -503,7 +502,7 @@ const int     *face_vtx
           }
         }
 
-        if (tagFace[iFace] == FACE_IN_STACK) {
+        if (tag_face[iFace] == FACE_IN_STACK) {
           // printf(" oooo %i \n", iFace);
           // printf(" oooo %i \n", face);
           PDM_error (__FILE__, __LINE__, 0, "Error reorient : no neighbour processed face found\n");
@@ -512,95 +511,95 @@ const int     *face_vtx
 
       /* Add cell neighbours in the stack */
 
-      for (int iface = 0; iface < nPolyFace; iface++) {
+      for (int iface = 0; iface < npoly_face; iface++) {
 
-        if (!((tagFace[iface] == FACE_UNCHANGED_CYCLE) ||
-              (tagFace[iface] == FACE_CHANGED_CYCLE))) {
+        if (!((tag_face[iface] == FACE_UNCHANGED_CYCLE) ||
+              (tag_face[iface] == FACE_CHANGED_CYCLE))) {
           printf(" oooo %i \n", iface);
           printf(" Link to : %i %i \n", face_cell[2*iface], face_cell[2*iface+1]);
           PDM_error (__FILE__, __LINE__, 0, "Error reorient : a face of polyhedron is not processed\n");
         }
 
-        if (tagFace[iface] == FACE_CHANGED_CYCLE) {
-          cell_face[polyIdx + iface] = -cell_face[polyIdx + iface];
+        if (tag_face[iface] == FACE_CHANGED_CYCLE) {
+          cell_face[poly_idx + iface] = -cell_face[poly_idx + iface];
         }
 
-        tagFace[iface] = FACE_Un_procESSED;
+        tag_face[iface] = FACE_UNPROCESSED;
 
-        const int face          = PDM_ABS (cell_face[polyIdx + iface]) - 1;
+        const int face          = PDM_ABS (cell_face[poly_idx + iface]) - 1;
 
-        int nextCell = -1;
-        if (_faceCell[2 * face] == (iCell + 1)) {
-          if (_faceCell[2 * face + 1] != 0) {
-            nextCell = _faceCell[2 * face + 1] - 1;
+        int next_cell = -1;
+        if (_face_cell[2 * face] == (i_cell + 1)) {
+          if (_face_cell[2 * face + 1] != 0) {
+            next_cell = _face_cell[2 * face + 1] - 1;
           }
         }
         else {
-          nextCell = _faceCell[2 * face] - 1;
+          next_cell = _face_cell[2 * face] - 1;
         }
 
-        if (nextCell != -1) {
-          if (tagCell[nextCell] == CELL_Un_procESSED) {
-            stackCell[++nStackCell] = nextCell + 1;
-            tagCell[nextCell] = CELL_IN_STACK;
+        if (next_cell != -1) {
+          if (tag_cell[next_cell] == CELL_UNPROCESSED) {
+            stack_cell[++n_stack_cell] = next_cell + 1;
+            tag_cell[next_cell] = CELL_IN_STACK;
           }
         }
       }
 
-      PDM_hash_tab_purge(hashOrient, PDM_FALSE);
+      PDM_hash_tab_purge(hash_orient, PDM_FALSE);
 
-      tagCell[iCell] = CELL_COMPLETED;
+      tag_cell[i_cell] = CELL_COMPLETED;
 
     }
 
-    int icheck = fistCellComp;
-    fistCellComp = -1;
+    int icheck = first_cell_comp;
+    first_cell_comp = -1;
     for (int k = icheck; k < n_cell; k++) {
-      if (tagCell[k] == CELL_Un_procESSED) {
-        fistCellComp = k;
+      if (tag_cell[k] == CELL_UNPROCESSED) {
+        first_cell_comp = k;
         break;
       }
     }
   }
 
-  PDM_hash_tab_free(hashOrient);
+  PDM_hash_tab_free(hash_orient);
 
   /* Orient face_cell */
-
   if (face_cell != NULL) {
     for (int i = 0; i < n_cell; i++) {
       for (int j = cell_face_idx[i]; j < cell_face_idx[i+1]; j++) {
         int face = cell_face[j];
-        int iFace = 2 * (PDM_ABS(face) - 1);
-        if (PDM_ABS (face_cell[iFace]) == i+1) {
+        int i_face = 2 * (PDM_ABS(face) - 1);
+        if (PDM_ABS (face_cell[i_face]) == i+1) {
           if (face < 0) {
-            face_cell[iFace] = -(i+1);
+            face_cell[i_face] = -(i+1);
           }
           else {
-            face_cell[iFace] = i+1;
+            face_cell[i_face] = i+1;
           }
         }
         else {
           if (face < 0) {
-            face_cell[iFace+1] = -(i+1);
+            face_cell[i_face+1] = -(i+1);
           }
           else {
-            face_cell[iFace+1] = i+1;
+            face_cell[i_face+1] = i+1;
           }
         }
       }
     }
   }
 
-  free (edges);
-  free (stackFace);
-  free (tagFace);
-  free (stackCell);
-  free (tagCell);
-  free (orientedface_cell);
-  free (processedFace);
+  PDM_free(edges            );
+  PDM_free(stack_face       );
+  PDM_free(tag_face         );
+  PDM_free(stack_cell       );
+  PDM_free(tag_cell         );
+  PDM_free(orientedface_cell);
+  PDM_free(processed_face   );
+
   if (face_cell == NULL) {
-    free (_faceCell);
+    PDM_free(_face_cell);
   }
 
   PDM_timer_hang_on (t1);

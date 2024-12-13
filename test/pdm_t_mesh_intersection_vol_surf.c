@@ -184,7 +184,8 @@ _generate_surface_mesh
 
   int n_domain = 1;
   // int n_part_domains = {n_part};
-  int *n_part_domains = (int *) malloc(sizeof(int) * n_domain);
+  int *n_part_domains;
+  PDM_malloc(n_part_domains, n_domain, int);
   n_part_domains[0] = n_part;
 
   PDM_multipart_t *mpart = PDM_multipart_create(n_domain,
@@ -205,7 +206,7 @@ _generate_surface_mesh
   PDM_multipart_dmesh_nodal_set(mpart, 0, dmn);
   PDM_multipart_compute(mpart);
 
-  free(n_part_domains);
+  PDM_free(n_part_domains);
 
   *_mpart = mpart;
   *_dmn   = dmn;
@@ -256,7 +257,7 @@ _generate_volume_mesh
     double angle = pi/5.;
     PDM_g_num_t* distrib_vtx = PDM_dmesh_nodal_vtx_distrib_get(dmn);
     int dn_vtx = distrib_vtx[i_rank+1] - distrib_vtx[i_rank];
-    double* vtx_coord = PDM_DMesh_nodal_vtx_get(dmn);
+    double* vtx_coord = PDM_DMesh_nodal_vtx_get(dmn, PDM_OWNERSHIP_BAD_VALUE);
     for(int i_vtx = 0; i_vtx < dn_vtx; ++i_vtx) {
       _rotate_coord(angle, &vtx_coord[3*i_vtx]);
     }
@@ -270,7 +271,8 @@ _generate_volume_mesh
 
   int n_domain = 1;
   // int n_part_domains = {n_part};
-  int *n_part_domains = (int *) malloc(sizeof(int) * n_domain);
+  int *n_part_domains;
+  PDM_malloc(n_part_domains, n_domain, int);
   n_part_domains[0] = n_part;
 
   PDM_multipart_t *mpart = PDM_multipart_create(n_domain,
@@ -291,7 +293,7 @@ _generate_volume_mesh
   PDM_multipart_dmesh_nodal_set(mpart, 0, dmn);
   PDM_multipart_compute(mpart);
 
-  free(n_part_domains);
+  PDM_free(n_part_domains);
 
 
   *_mpart = mpart;

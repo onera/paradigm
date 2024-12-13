@@ -139,8 +139,8 @@ char *argv[]
   double** char_lenght = NULL;
   if(n_rank == 1){
     n_cloud = 2;
-    coords      = (double **) malloc( n_cloud * sizeof(double *));
-    char_lenght = (double **) malloc( n_cloud * sizeof(double *));
+    PDM_malloc(coords     , n_cloud, double *);
+    PDM_malloc(char_lenght, n_cloud, double *);
 
     coords     [0] = xyz_j1;
     coords     [1] = xyz_j2;
@@ -149,8 +149,8 @@ char *argv[]
 
   } else if ( n_rank == 2){
     n_cloud = 1;
-    coords      = (double **) malloc( n_cloud * sizeof(double*));
-    char_lenght = (double **) malloc( n_cloud * sizeof(double*));
+    PDM_malloc(coords     , n_cloud, double*);
+    PDM_malloc(char_lenght, n_cloud, double*);
     if(i_rank == 0){
       coords     [0] = xyz_j1;
       char_lenght[0] = cln_j1;
@@ -186,9 +186,12 @@ char *argv[]
   /*
    * Get resulting points_merge
    */
-  int  *n_entity        = (int * ) malloc( n_cloud * sizeof(int ));
-  int **candidates_idx  = (int **) malloc( n_cloud * sizeof(int*));
-  int **candidates_desc = (int **) malloc( n_cloud * sizeof(int*));
+  int  *n_entity        = NULL;
+  int **candidates_idx  = NULL;
+  int **candidates_desc = NULL;
+  PDM_malloc(n_entity       , n_cloud, int );
+  PDM_malloc(candidates_idx , n_cloud, int*);
+  PDM_malloc(candidates_desc, n_cloud, int*);
   for(int i_cloud = 0; i_cloud < n_cloud; i_cloud++){
     int n_cloud_points = -1;
     int n_desc   = -1;
@@ -228,7 +231,8 @@ char *argv[]
   /*
    *  SetUp exchange
    */
-  int** send_entity_data = (int **) malloc( n_cloud * sizeof(int*));
+  int* *send_entity_data = NULL;
+  PDM_malloc(send_entity_data, n_cloud, int*);
   if(n_rank == 1){
     send_entity_data[0] = point_list_j1;
     send_entity_data[1] = point_list_j2;
@@ -257,8 +261,10 @@ char *argv[]
   /*
    * Variable stride test
    */
-  int** send_entity_var_data = (int **) malloc( n_cloud * sizeof(int*));
-  int** send_entity_var_stri = (int **) malloc( n_cloud * sizeof(int*));
+  int* *send_entity_var_data = NULL;
+  int* *send_entity_var_stri = NULL;
+  PDM_malloc(send_entity_var_data, n_cloud, int *);
+  PDM_malloc(send_entity_var_stri, n_cloud, int *);
   if(n_rank == 1){
     send_entity_var_data[0] = point_list_var_j1;
     send_entity_var_stri[0] = point_list_var_stri_j1;
@@ -306,22 +312,22 @@ char *argv[]
    */
   PDM_distant_neighbor_free(dn);
   PDM_points_merge_free(pts_merge);
-  free(coords);
-  free(char_lenght);
-  free(candidates_idx);
-  free(candidates_desc);
-  free(n_entity);
-  free(send_entity_data);
-  free(send_entity_var_data);
-  free(send_entity_var_stri);
+  PDM_free(coords);
+  PDM_free(char_lenght);
+  PDM_free(candidates_idx);
+  PDM_free(candidates_desc);
+  PDM_free(n_entity);
+  PDM_free(send_entity_data);
+  PDM_free(send_entity_var_data);
+  PDM_free(send_entity_var_stri);
   for(int i_cloud = 0; i_cloud < n_cloud; i_cloud++){
-    free(recv_entity_data[i_cloud]);
-    free(recv_entity_var_stri[i_cloud]);
-    free(recv_entity_var_data[i_cloud]);
+    PDM_free(recv_entity_data[i_cloud]);
+    PDM_free(recv_entity_var_stri[i_cloud]);
+    PDM_free(recv_entity_var_data[i_cloud]);
   }
-  free(recv_entity_data);
-  free(recv_entity_var_stri);
-  free(recv_entity_var_data);
+  PDM_free(recv_entity_data);
+  PDM_free(recv_entity_var_stri);
+  PDM_free(recv_entity_var_data);
 
   if (i_rank == 0) {
     PDM_printf ("-- End\n");

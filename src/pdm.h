@@ -6,6 +6,7 @@
 #define __PDM_H__
 
 #include <stdio.h>
+#include <limits.h>
 #include "pdm_config.h"
 #include "pdm_mpi.h"
 
@@ -81,10 +82,12 @@ extern "C" {
 typedef  long PDM_g_num_t;
 #define  PDM__MPI_G_NUM MPI_LONG
 #define  PDM__PDM_MPI_G_NUM PDM_MPI_LONG
+#define  PDM_G_NUM_MAX LONG_MAX
 #else
 typedef int PDM_g_num_t;
 #define  PDM__MPI_G_NUM MPI_INT
 #define  PDM__PDM_MPI_G_NUM PDM_MPI_INT
+#define  PDM_G_NUM_MAX INT_MAX
 #endif
 
 typedef  double PDM_real_t;
@@ -341,17 +344,19 @@ typedef enum {
 
 /**
  * \enum PDM_iso_surface_kind_t
- * \brief Type of iso surface
+ * \brief Type of iso-surface
  *
  */
 typedef enum {
 
-  PDM_ISO_SURFACE_KIND_PLANE   = 0,
-  PDM_ISO_SURFACE_KIND_SPHERE  = 1,
-  PDM_ISO_SURFACE_KIND_FIELD   = 2,
-  PDM_ISO_SURFACE_KIND_ELLIPSE = 3,
-  PDM_ISO_SURFACE_KIND_QUADRIC = 4,
-  PDM_ISO_SURFACE_KIND_HEART   = 5,
+  PDM_ISO_SURFACE_KIND_FIELD    = 0,
+  PDM_ISO_SURFACE_KIND_PLANE    = 1,
+  PDM_ISO_SURFACE_KIND_SPHERE   = 2,
+  PDM_ISO_SURFACE_KIND_ELLIPSE  = 3,
+  PDM_ISO_SURFACE_KIND_QUADRIC  = 4,
+  PDM_ISO_SURFACE_KIND_HEART    = 5,
+  PDM_ISO_SURFACE_KIND_FUNCTION = 6,
+  PDM_ISO_SURFACE_KIND_MAX      = 7
 
 } PDM_iso_surface_kind_t;
 
@@ -379,7 +384,8 @@ typedef enum {
 
 typedef enum {
 
-  PDM_CLUSTERING_KIND_OCTREE = 0, /*!< Clustering by parallel octree */
+  PDM_CLUSTERING_KIND_OCTREE                = 0, /*!< Clustering by parallel octree */
+  PDM_CLUSTERING_KIND_OCTREE_WITH_SMOOTHING = 1, /*!< Clustering by parallel octree with smoothing */
 
 } PDM_clustering_kind_t;
 
@@ -395,6 +401,77 @@ PDM_mesh_entities_t
 PDM_connectivity_type_to_entity_type
 (
  PDM_connectivity_type_t   connectivity_type
+);
+
+/**
+ * \brief Helper to get entity type according to a bound
+ *
+ */
+PDM_mesh_entities_t
+PDM_bound_type_to_entity_type
+(
+ PDM_bound_type_t   bound_type
+);
+
+/**
+ * \brief Helper to get bound type according to an entity
+ *
+ */
+PDM_bound_type_t
+PDM_entity_type_to_bound_type
+(
+ PDM_mesh_entities_t  entity_type
+);
+
+/**
+ * \brief Helper to get entity type according to a geometry kind
+ *
+ */
+PDM_mesh_entities_t
+PDM_geometry_kind_to_entity_type
+(
+ PDM_geometry_kind_t   geom_kind
+);
+
+/**
+ * \brief Helper to get geometry kind according to an entity type
+ *
+ */
+PDM_geometry_kind_t
+PDM_entity_type_to_geometry_kind
+(
+ PDM_mesh_entities_t   entity_type
+);
+
+/**
+ * \brief Convert a pair of entity types to its corresponding connectivity type
+ *
+ * \param [in]  connectivity_type   Connectivity type
+ * \param [out] entity_type1        First entity type
+ * \param [out] entity_type2        Second entity type
+ */
+PDM_connectivity_type_t
+PDM_entity_pair_to_connectivity_type
+(
+  PDM_mesh_entities_t entity_type1,
+  PDM_mesh_entities_t entity_type2
+);
+
+/**
+ * \brief Convert a connectivity type to its corresponding pair of entity types
+ *
+ * \param [in]  connectivity_type   Connectivity type
+ * \param [out] entity_type1        First entity type
+ * \param [out] entity_type2        Second entity type
+ *
+ * \return 1 if is a valid connectivity type, 0 else
+ */
+int
+PDM_connectivity_type_to_entity_pair
+(
+  PDM_connectivity_type_t  connectivity_type,
+  PDM_mesh_entities_t     *entity_type1,
+  PDM_mesh_entities_t     *entity_type2
 );
 
 /**

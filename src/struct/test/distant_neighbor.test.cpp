@@ -5,6 +5,7 @@
 #include "pdm_logging.h"
 #include <iostream>
 #include <vector>
+#include "pdm_priv.h"
 
 
 //  Parenthesis is fields
@@ -71,9 +72,9 @@ MPI_TEST_CASE("[pdm_distant_neighbor] - 1p ",1) {
     CHECK_EQ_C_ARRAY(exch_fields[1], exch_fields_expexted_p2, neighbor_idx_p2[n_entity[1]]); // Part 2
 
     for(int i_part = 0; i_part < n_part; ++i_part) {
-      free(exch_fields[i_part]);
+      PDM_free(exch_fields[i_part]);
     }
-    free(exch_fields);
+    PDM_free(exch_fields);
   }
 
   SUBCASE("variable strid ") {
@@ -129,11 +130,11 @@ MPI_TEST_CASE("[pdm_distant_neighbor] - 1p ",1) {
     CHECK_EQ_C_ARRAY(exch_fields[1], exch_fields_expexted_p2, size_fields[1]); // Part 2
 
     for(int i_part = 0; i_part < n_part; ++i_part) {
-      free(exch_fields_n[i_part]);
-      free(exch_fields[i_part]);
+      PDM_free(exch_fields_n[i_part]);
+      PDM_free(exch_fields[i_part]);
     }
-    free(exch_fields);
-    free(exch_fields_n);
+    PDM_free(exch_fields);
+    PDM_free(exch_fields_n);
 
   }
 
@@ -203,9 +204,9 @@ MPI_TEST_CASE("[pdm_distant_neighbor] - 1p - unsorted input ",1) {
   CHECK_EQ_C_ARRAY(exch_fields[1], exch_fields_expexted_p2, neighbor_idx_p2[n_entity[1]]); // Part 2
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    free(exch_fields[i_part]);
+    PDM_free(exch_fields[i_part]);
   }
-  free(exch_fields);
+  PDM_free(exch_fields);
 
   PDM_distant_neighbor_free(dn);
 
@@ -287,9 +288,9 @@ MPI_TEST_CASE("[pdm_distant_neighbor] - 1p - multiple unsorted ",1) {
   CHECK_EQ_C_ARRAY(exch_fields[1], exch_fields_expexted_p2, neighbor_idx_p2[n_entity[1]]); // Part 2
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    free(exch_fields[i_part]);
+    PDM_free(exch_fields[i_part]);
   }
-  free(exch_fields);
+  PDM_free(exch_fields);
 
   PDM_distant_neighbor_free(dn);
 
@@ -398,11 +399,11 @@ MPI_TEST_CASE("[pdm_distant_neighbor] - 1p - multiple unsorted with 3part ",1) {
   CHECK_EQ_C_ARRAY(exch_fields[2], neighbor_desc_p3, 3 * neighbor_idx_p3[n_entity[2]]); // Part 2
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    free(exch_fields[i_part]);
-    free(exch_stri[i_part]);
+    PDM_free(exch_fields[i_part]);
+    PDM_free(exch_stri[i_part]);
   }
-  free(exch_fields);
-  free(exch_stri);
+  PDM_free(exch_fields);
+  PDM_free(exch_stri);
 
   PDM_distant_neighbor_free(dn);
 

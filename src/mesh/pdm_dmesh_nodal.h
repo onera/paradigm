@@ -57,7 +57,6 @@ typedef struct _pdm_dmesh_nodal_t      PDM_dmesh_nodal_t;
  * \return       New mesh nodal handle
  *
  */
-
 PDM_dmesh_nodal_t*
 PDM_DMesh_nodal_create
 (
@@ -69,22 +68,22 @@ const PDM_MPI_Comm comm,
       PDM_g_num_t  n_edge
 );
 
-
 void
 PDM_DMesh_nodal_free
 (
  PDM_dmesh_nodal_t* dmesh_nodal
 );
 
+
 /**
- * \brief Define partition vertices
+ * \brief Define block vertices
  *
- * \param [in]  hdl       Distributed nodal mesh handle
- * \param [in]  n_vtx     Number of vertices
- * \param [in]  coords    Interlaced coordinates (size = 3 * \ref n_vtx)
+ * \param [in]  dmesh_nodal   Distributed nodal mesh handle
+ * \param [in]  n_vtx         Number of vertices
+ * \param [in]  coords        Interlaced coordinates (size = 3 * \ref n_vtx)
+ * \param [in]  owner         Ownership
  *
  */
-
 void
 PDM_DMesh_nodal_coord_set
 (
@@ -98,27 +97,32 @@ void
 PDM_DMesh_nodal_vtx_tag_set
 (
  PDM_dmesh_nodal_t *dmesh_nodal,
- int               *dvtx_tag
+ int               *dvtx_tag,
+ PDM_ownership_t    owner
 );
+
 
 void
 PDM_DMesh_nodal_vtx_parent_gnum_set
 (
  PDM_dmesh_nodal_t *dmesh_nodal,
- PDM_g_num_t       *dvtx_parent_g_num
+ PDM_g_num_t       *dvtx_parent_g_num,
+ PDM_ownership_t    owner
 );
 
 int*
 PDM_DMesh_nodal_vtx_tag_get
 (
-PDM_dmesh_nodal_t  *dmesh_nodal
+ PDM_dmesh_nodal_t  *dmesh_nodal,
+ PDM_ownership_t     owner
 );
 
 
 PDM_g_num_t *
 PDM_DMesh_nodal_vtx_parent_gnum_get
 (
-PDM_dmesh_nodal_t  *dmesh_nodal
+ PDM_dmesh_nodal_t  *dmesh_nodal,
+ PDM_ownership_t    owner
 );
 
 
@@ -136,7 +140,7 @@ PDM_DMesh_nodal_section_g_dims_get
 /**
  * \brief  Return vertices distribution
  *
- * \param [in]  hdl  Distributed nodal mesh handle
+ * \param [in]  dmesh_nodal   Distributed nodal mesh handle
  *
  * \return  A array of size \ref n_procs + 1
  *
@@ -147,7 +151,6 @@ PDM_DMesh_nodal_distrib_vtx_get
 (
 PDM_dmesh_nodal_t *dmesh_nodal
 );
-
 
 /**
  * \brief  Return section distribution
@@ -185,7 +188,7 @@ PDM_DMesh_nodal_n_vtx_get
 
 
 /**
- * \brief  Return coordinates of vertices
+ * \brief  Return coordinates of vertices (deprecated)
  *
  * \param [in]  hdl       Distributed nodal mesh handle
  *
@@ -196,7 +199,8 @@ PDM_DMesh_nodal_n_vtx_get
 double *
 PDM_DMesh_nodal_vtx_get
 (
-  PDM_dmesh_nodal_t *dmesh_nodal
+ PDM_dmesh_nodal_t  *dmesh_nodal,
+ PDM_ownership_t     owner
 );
 
 
@@ -305,12 +309,12 @@ PDM_DMesh_nodal_section_add
 const PDM_Mesh_nodal_elt_t  t_elt
 );
 
-void
-PDM_DMesh_nodal_update_ownership
-(
- PDM_dmesh_nodal_t   *dmesh_nodal,
- PDM_ownership_t      owner
-);
+// void
+// PDM_DMesh_nodal_update_ownership
+// (
+//  PDM_dmesh_nodal_t   *dmesh_nodal,
+//  PDM_ownership_t      owner
+// );
 
 
 /**
@@ -420,7 +424,8 @@ PDM_DMesh_nodal_section_group_elmt_get
  PDM_geometry_kind_t  geom_kind,
  int                 *n_group_elmt,
  int                 **dgroup_elmt_idx,
- PDM_g_num_t         **dgroup_elmt
+ PDM_g_num_t         **dgroup_elmt,
+ PDM_ownership_t       owner
 );
 
 
@@ -507,7 +512,8 @@ PDM_DMesh_nodal_section_std_get
 (
       PDM_dmesh_nodal_t   *dmesh_nodal,
       PDM_geometry_kind_t  geom_kind,
-const int                  id_section
+const int                  id_section,
+      PDM_ownership_t      owner
 );
 
 PDM_g_num_t *
@@ -517,7 +523,8 @@ PDM_DMesh_nodal_section_std_ho_get
       PDM_geometry_kind_t  geom_kind,
 const int                  id_section,
       int                 *order,
-const char               **ho_ordering
+const char               **ho_ordering,
+      PDM_ownership_t      owner
 );
 
 
@@ -577,11 +584,12 @@ const PDM_l_num_t          n_elt,
 void
 PDM_DMesh_nodal_section_poly2d_get
 (
-      PDM_dmesh_nodal_t   *dmesh_nodal,
-      PDM_geometry_kind_t  geom_kind,
-const int                  id_section,
-      PDM_l_num_t        **connec_idx,
-      PDM_g_num_t        **connec
+      PDM_dmesh_nodal_t    *dmesh_nodal,
+      PDM_geometry_kind_t   geom_kind,
+const int                   id_section,
+      PDM_l_num_t         **connec_idx,
+      PDM_g_num_t         **connec,
+      PDM_ownership_t       owner
 );
 
 
@@ -638,7 +646,8 @@ const int                   id_section,
       PDM_l_num_t         **facvtx_idx,
       PDM_g_num_t         **facvtx,
       PDM_l_num_t         **cellfac_idx,
-      PDM_g_num_t         **cellfac
+      PDM_g_num_t         **cellfac,
+      PDM_ownership_t       owner
 );
 
 
@@ -727,44 +736,6 @@ int               *n_sum_vtx_face_tot
 );
 
 /**
-*
-* \brief Concatenates all element sections blocks
-*
-* \param [in]   dmesh_nodal
-* \param [out]  section_idx        index of element section
-* \param [out]  cat_delt_vtx_idx   index of element
-* \param [out]  cat_delt_vtx       element vtx
-*
- * \return     Number sections
-*/
-int PDM_concat_elt_sections
-(
-  PDM_dmesh_nodal_t  *dmesh_nodal,
-  int               **section_idx,
-  int               **cat_delt_vtx_idx,
-  PDM_g_num_t       **cat_dcell_vtx
-);
-
-/**ss
-*
-* \brief Concatenates 3D element sections blocks
-*
-* \param [in]   dmesh_nodal
-* \param [out]  section_idx        index of element section
-* \param [out]  cat_delt_vtx_idx   index of element
-* \param [out]  cat_delt_vtx       element vtx
-*
- * \return     Number sections
-*/
-int PDM_concat_cell_sections
-(
-  PDM_dmesh_nodal_t  *dmesh_nodal,
-  int               **section_idx,
-  int               **cat_delt_vtx_idx,
-  PDM_g_num_t       **cat_delt_vtx
-);
-
-/**
  * \brief  Compute cell->cell connectivity
  *
  * \param [in]   hdl              Distributed nodal mesh handle
@@ -803,12 +774,50 @@ PDM_dmesh_nodal_transfer_to_new_dmesh_nodal_gen
  PDM_g_num_t         *blk_parent_to_new_vtx_gnum
 );
 
+/**
+ * \brief  Dump a vtk containing dmesh_nodal elements from asked dimension.
+ *
+ * \param [in]   dmn              PDM_dmesh_nodal_t instance
+ * \param [in]   geom_kind        Dimension to dump
+ * \param [in]   filename_patter  Filename 
+ *
+ */
 void
 PDM_dmesh_nodal_dump_vtk
 (
        PDM_dmesh_nodal_t   *dmn,
        PDM_geometry_kind_t  geom_kind,
  const char                *filename_patter
+);
+
+
+/**
+ * \brief  Dump a vtk containing dmesh_nodal elements from asked dimension
+ * with associated given fields.
+ *
+ * \param [in]   dmn              PDM_dmesh_nodal_t instance
+ * \param [in]   geom_kind        Dimension to dump
+ * \param [in]   filename_patter  Filename 
+ * \param [in]   n_fld_vtx        Number of vertex-based fields
+ * \param [in]   fld_name_vtx     Vertex-based field names
+ * \param [in]   fld_vtx          Vertex-based fields
+ * \param [in]   n_fld_elmt       Number of elements-based fields
+ * \param [in]   fld_name_elmt    Element-based field names
+ * \param [in]   fld_elmt         Element-based fields
+ *
+ */
+void
+PDM_dmesh_nodal_dump_vtk_with_field
+(
+        PDM_dmesh_nodal_t   *dmn,
+        PDM_geometry_kind_t  geom_kind,
+  const char                *filename_patter,
+  const int                  n_fld_vtx,
+  const char                *fld_name_vtx[],
+  const double              *fld_vtx[],
+  const int                  n_fld_elmt,
+  const char                *fld_name_elmt[],
+  const double              *fld_elmt[]
 );
 
 void

@@ -252,10 +252,10 @@ char *argv[]
   PDM_multipart_free(mpart);
   PDM_dmesh_free(dm);
 
-  free (dvtx_coord);
-  free (distrib_vtx);
-  free (distrib_edge);
-  free (dedge_vtx);
+  PDM_free(dvtx_coord);
+  PDM_free(distrib_vtx);
+  PDM_free(distrib_edge);
+  PDM_free(dedge_vtx);
 
   if (i_rank == 0) {
     PDM_printf ("-- End\n");

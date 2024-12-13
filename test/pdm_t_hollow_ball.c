@@ -179,8 +179,6 @@ int main(int argc, char *argv[])
              &geometric_ratio,
              &visu);
 
-
-
   /*
    *  Init
    */
@@ -191,8 +189,6 @@ int main(int argc, char *argv[])
   PDM_MPI_Init(&argc, &argv);
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
-
-
 
   /*
    *  Generate distributed Icoball

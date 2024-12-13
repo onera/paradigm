@@ -32,6 +32,8 @@
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
+#include "pdm.h"
+
 /*=============================================================================
  * Macro definitions
  *============================================================================*/
@@ -53,102 +55,102 @@ extern "C" {
 /**
  *  \brief Compute a dynamic geometric epsilon from a characteristic length
  *
- *    @param [in]  characteristicLength  Characteristic length
- *    @param [in]  consEpsilon           Constant part
- *    @return                            Geometric epsilon
+ *    @param [in]  characteristic_length  Characteristic length
+ *    @param [in]  const_epsilon          Constant part
+ *    @return                             Geometric epsilon
  */
 
 double
 PDM_geom_elem_geometric_epsilon
 (
- const double characteristicLength,
- const double constEpsilon
- );
+ const double characteristic_length,
+ const double const_epsilon
+);
 
 /**
  *  \brief Triangle surface vector
  *
- *  @param [in]  nTriangle      Number of triangles
- *  @param [in]  connectivity   Connectivity
- *  @param [in]  coords         Vertice coordinates
- *  @param [out] surface_vector  Surface Vector
- *  @param [out] characteristicLength  Characteristic length (active if != NULL)
- *  @param [out] isDegenerated         Degenerated edge indicator (active if != NULL)
+ *  @param [in]  n_triangle             Number of triangles
+ *  @param [in]  connectivity           Connectivity
+ *  @param [in]  coords                 Vertice coordinates
+ *  @param [out] surface_vector         Surface Vector
+ *  @param [out] characteristic_length  Characteristic length (active if != NULL)
+ *  @param [out] is_degenerated         Degenerated edge indicator (active if != NULL)
  */
 
 void
 PDM_geom_elem_tria_surface_vector
 (
- const int     nTriangle,
+ const int     n_triangle,
  const int    *connectivity,
  const double *coords,
  double       *surface_vector,
- double       *characteristicLength,
- int          *isDegenerated
- );
+ double       *characteristic_length,
+ int          *is_degenerated
+);
 
 /**
  *  \brief Triangle area
  *
- *  @param [in]  nTriangle      Number of triangles
- *  @param [in]  surface_vector         surface_vector vectors
- *  @param [out] area           Area
+ *  @param [in]  n_triangle      Number of triangles
+ *  @param [in]  surface_vector  surface_vector vectors
+ *  @param [out] area            Area
  */
 
 void
 PDM_geom_elem_tria_area
 (
- const int     nTriangle,
+ const int     n_triangle,
  const double *surface_vector,
- double *area
+       double *area
 );
 
 
 /**
  *  \brief Triangle center
  *
- *  @param [in]  nTriangle      Number of triangles
- *  @param [in]  connectivity   Connectivity
- *  @param [in]  coords         Vertice coordinates
- *  @param [out] center         center
+ *  @param [in]  n_triangle    Number of triangles
+ *  @param [in]  connectivity  Connectivity
+ *  @param [in]  coords        Vertice coordinates
+ *  @param [out] center        center
  */
 
 void
 PDM_geom_elem_tria_center
 (
- const int     nTriangle,
+ const int     n_triangle,
  const int    *connectivity,
  const double *coords,
- double *center
- );
+       double *center
+);
 
 
 /**
  *  \brief Tetrahedra oriented volume
  *
- *  @param [in]  nTetrahedra           Number of tetrahedra
- *  @param [in]  connectivity          Connectivity
- *  @param [in]  coords                Vertice coordinates
- *  @param [out] volume                Volume
- *  @param [out] characteristicLength  Characteristic length (active if != NULL)
- *  @param [out] isDegenerated         Degenerated edge indicator (active if != NULL)
+ *  @param [in]  n_tetrahedra           Number of tetrahedra
+ *  @param [in]  connectivity           Connectivity
+ *  @param [in]  coords                 Vertice coordinates
+ *  @param [out] volume                 Volume
+ *  @param [out] characteristic_length  Characteristic length (active if != NULL)
+ *  @param [out] is_degenerated         Degenerated edge indicator (active if != NULL)
  */
 
 void
 PDM_geom_elem_tetra_oriented_volume
 (
- const int     nTetrahedra,
+ const int     n_tetrahedra,
  const int    *connectivity,
  const double *coords,
- double       *volume,
- double       *characteristicLength,
- int         *isDegenerated
- );
+       double *volume,
+       double *characteristic_length,
+       int    *is_degenerated
+);
 
 /**
  *  \brief Tetrahedra center
  *
- *  @param [in]  nTetrahedra    Number of tetrahedra
+ *  @param [in]  n_tetrahedra    Number of tetrahedra
  *  @param [in]  connectivity   Connectivity
  *  @param [in]  coords         Vertice coordinates
  *  @param [out] center         center
@@ -157,89 +159,89 @@ PDM_geom_elem_tetra_oriented_volume
 void
 PDM_geom_elem_tetra_center
 (
- const int     nTetrahedra,
+ const int     n_tetrahedra,
  const int    *connectivity,
  const double *coords,
- double *center
- );
+       double *center
+);
 
 /**
  *  \brief Tetrahedra Faces
  *
- *  @param [in]  nTetrahedra       Number of tetrahedra
+ *  @param [in]  n_tetrahedra       Number of tetrahedra
  *  @param [in]  orientation       Surface vector oriented towards inside cell (0) or outside (1)
  *  @param [in]  connectivity      Connectivity
- *  @param [out] faceConnectivity  Face connectivity
+ *  @param [out] face_connectivity  Face connectivity
  */
 
 void
 PDM_geom_elem_tetra_faces
 (
- const int     nTetrahedra,
+ const int     n_tetrahedra,
  const int     orientation,
  const int    *connectivity,
- int          *faceConnectivityIndex,
- int          *faceConnectivity
+       int    *face_connectivity_idx,
+       int    *face_connectivity
 );
 
 
 /**
  *  \brief HexahedraFaces
  *
- *  @param [in]  nHexahedra        Number of hexahedra
+ *  @param [in]  n_hexahedra        Number of hexahedra
  *  @param [in]  orientation       Surface vector oriented towards inside cell (0) or outside (1)
  *  @param [in]  connectivity      Connectivity
- *  @param [out] faceConnectivity  Face connectivity
+ *  @param [out] face_connectivity  Face connectivity
  */
 
 void
 PDM_geom_elem_hexa_faces
 (
- const int     nHexahedra,
+ const int     n_hexahedra,
  const int     orientation,
  const int    *connectivity,
- int          *faceConnectivityIndex,
- int          *faceConnectivity
- );
+       int    *face_connectivity_idx,
+       int    *face_connectivity
+);
 
 
 /**
  *  \brief Prism Faces
  *
- *  @param [in]  nPrism            Number of Prism
+ *  @param [in]  n_prism            Number of Prism
  *  @param [in]  orientation       Surface vector oriented towards inside cell (0) or outside (1)
  *  @param [in]  connectivity      Connectivity
- *  @param [out] faceConnectivity  Face connectivity
+ *  @param [out] face_connectivity  Face connectivity
  */
 
 void
 PDM_geom_elem_prism_faces
 (
- const int     nPrism,
+ const int     n_prism,
  const int     orientation,
  const int    *connectivity,
- int          *faceConnectivityIndex,
- int          *faceConnectivity
- );
+       int    *face_connectivity_idx,
+       int    *face_connectivity
+);
 
 /**
  *  \brief Pyramid Faces
  *
- *  @param [in]  nPyramid          Number of pyramid
+ *  @param [in]  n_pyramid          Number of pyramid
  *  @param [in]  orientation       Surface vector oriented towards inside cell (0) or outside (1)
  *  @param [in]  connectivity      Connectivity
- *  @param [out] faceConnectivity  Face connectivity
+ *  @param [out] face_connectivity  Face connectivity
  */
 
 void
 PDM_geom_elem_pyramid_faces
 (
- const int   nPyramid,
+ const int   n_pyramid,
  const int   orientation,
  const int  *connectivity,
- int        *faceConnectivityIndex,
- int        *faceConnectivity
- );
+       int  *face_connectivity_idx,
+       int  *face_connectivity
+);
 
 
 /**
@@ -247,12 +249,12 @@ PDM_geom_elem_pyramid_faces
  *
  *  @param [in]  nEdges                Number of edges
  *  @param [in]  connectivity          Connectivity
- *  @param [in]  nVertices             Number of vertices
+ *  @param [in]  n_vertices             Number of vertices
  *  @param [in]  coords                Vertices coordinates
  *  @param [out] length                Length
  *  @param [out] center                Center
- *  @param [out] characteristicLength  Characteristic length (active if != NULL)
- *  @param [out] isDegenerated         Degenerated edge indicator (active if != NULL)
+ *  @param [out] characteristic_length  Characteristic length (active if != NULL)
+ *  @param [out] is_degenerated         Degenerated edge indicator (active if != NULL)
  */
 
 void
@@ -261,50 +263,50 @@ PDM_geom_elem_edges_properties
  const int     nEdges,
  const int    *connectivity,
  const double *coords,
- double       *length,
- double       *center,
- double       *characteristicLength,
- int         *isDegenerated
- );
+       double *length,
+       double *center,
+       double *characteristic_length,
+       int    *is_degenerated
+);
 
 
 /**
  *  \brief Triangle properties
  *
- *  @param [in]  nTriangle             Number of triangles
+ *  @param [in]  n_triangle            Number of triangles
  *  @param [in]  connectivity          Connectivity
- *  @param [in]  nVertices             Number of vertices
+ *  @param [in]  n_vertices            Number of vertices
  *  @param [in]  coords                Vertices coordinates
- *  @param [out] surface_vector         Surface vector
+ *  @param [out] surface_vector        Surface vector
  *  @param [out] center                Center
- *  @param [out] characteristicLength  Characteristic length (active if != NULL)
- *  @param [out] isDegenerated         Degenerated edge indicator (active if != NULL)
+ *  @param [out] characteristic_length  Characteristic length (active if != NULL)
+ *  @param [out] is_degenerated        Degenerated edge indicator (active if != NULL)
  */
 
 void
 PDM_geom_elem_tria_properties
 (
- const int     nTriangle,
+ const int     n_triangle,
  const int    *connectivity,
  const double *coords,
- double       *surface_vector,
- double       *center,
- double       *characteristicLength,
- int         *isDegenerated
- );
+       double *surface_vector,
+       double *center,
+       double *characteristic_length,
+       int    *is_degenerated
+);
 
 
 /**
  * \brief Quadrangle properties
  *
- *  @param [in]  nTriangle             Number of quadrangles
+ *  @param [in]  n_quadrangle             Number of quadrangles
  *  @param [in]  connectivity          Connectivity
- *  @param [in]  nVertices             Number of vertices
+ *  @param [in]  n_vertices             Number of vertices
  *  @param [in]  coords                Vertices coordinates
  *  @param [out] surface_vector         Surface vector
  *  @param [out] center                Center
- *  @param [out] characteristicLength  Characteristic length (active if != NULL)
- *  @param [out] isDegenerated         Degenerated edge indicator (active if != NULL)
+ *  @param [out] characteristic_length  Characteristic length (active if != NULL)
+ *  @param [out] is_degenerated         Degenerated edge indicator (active if != NULL)
  *
  *  @return                     The status of properties computation convergence
  */
@@ -312,13 +314,13 @@ PDM_geom_elem_tria_properties
 int
 PDM_geom_elem_quad_properties
 (
- const int     nQuadrangle,
- const int    *connectivity,
- const double *coords,
- double       *surface_vector,
- double       *center,
- double       *characteristicLength,
- int         *isDegenerated
+ const int     n_quadrangle,
+ const int     *connectivity,
+ const double  *coords,
+       double  *surface_vector,
+       double  *center,
+       double  *characteristic_length,
+       int     *is_degenerated
 );
 
 
@@ -346,22 +348,22 @@ PDM_geom_elem_compute_polygon_barycentric_coordinates
  const int          *connectivityIndex,
  const int          *connectivity,
  const double       *coords,
- int               **barCoordsIndex,
- double            **barCoords
+       int         **barCoordsIndex,
+       double      **barCoords
 );
 
 /**
  *  \brief Polygon properties
  *
- *  @param [in]  nPolygon              Number of polygon
+ *  @param [in]  n_polygon              Number of polygon
  *  @param [in]  connectivityIndex     Connectivity Index
  *  @param [in]  connectivity          Connectivity
- *  @param [in]  nVertices             Number of vertices
+ *  @param [in]  n_vertices             Number of vertices
  *  @param [in]  coords                Vertices coordinates
  *  @param [out] surface_vector         Surface vector
  *  @param [out] center                Center
- *  @param [out] characteristicLength  Characteristic length (active if != NULL)
- *  @param [out] isDegenerated         Degenerated edge indicator (active if != NULL)
+ *  @param [out] characteristic_length  Characteristic length (active if != NULL)
+ *  @param [out] is_degenerated         Degenerated edge indicator (active if != NULL)
  *
  *  @return                        The status of properties computation convergence
  */
@@ -369,139 +371,139 @@ PDM_geom_elem_compute_polygon_barycentric_coordinates
 int
 PDM_geom_elem_polygon_properties
 (
- const int     nPolygon,
- const int    *connectivityIndex,
- const int    *connectivity,
- const double *coords,
- double       *surface_vector,
- double       *center,
- double       *characteristicLength,
- int         *isDegenerated
+ const int      n_polygon,
+ const int     *connectivityIndex,
+ const int     *connectivity,
+ const double  *coords,
+       double  *surface_vector,
+       double  *center,
+       double  *characteristic_length,
+       int     *is_degenerated
 );
 
 
 /**
  *  \brief Tetrahedra properties
  *
- *  @param [in]  nTetrahedra           Number of tetrahedra
+ *  @param [in]  n_tetrahedra           Number of tetrahedra
  *  @param [in]  connectivity          Connectivity
- *  @param [in]  nVertices             Number of vertices
+ *  @param [in]  n_vertices             Number of vertices
  *  @param [in]  coords                Vertices coordinates
  *  @param [out] volume                Volume
  *  @param [out] center                Center
- *  @param [out] characteristicLength  Characteristic length (active if != NULL)
- *  @param [out] isDegenerated         Degenerated edge indicator (active if != NULL)
+ *  @param [out] characteristic_length  Characteristic length (active if != NULL)
+ *  @param [out] is_degenerated         Degenerated edge indicator (active if != NULL)
  */
 
 void
 PDM_geom_elem_tetra_properties
 (
- const int     nTetrahedra,
+ const int     n_tetrahedra,
  const int    *connectivity,
  const double *coords,
- double       *volume,
- double       *center,
- double       *characteristicLength,
- int         *isDegenerated
- );
+       double *volume,
+       double *center,
+       double *characteristic_length,
+       int    *is_degenerated
+);
 
 
 /**
  *  \brief Hexahedra properties
  *
- *  @param [in]  nHexahedra            Number of hexahedra
+ *  @param [in]  n_hexahedra            Number of hexahedra
  *  @param [in]  connectivity          Connectivity
- *  @param [in]  nVertices             Number of vertices
+ *  @param [in]  n_vertices             Number of vertices
  *  @param [in]  coords                Vertices coordinates
  *  @param [out] volume                Volume
  *  @param [out] center                Center
- *  @param [out] characteristicLength  Characteristic length (active if != NULL)
- *  @param [out] isDegenerated         Degenerated edge indicator (active if != NULL)
+ *  @param [out] characteristic_length  Characteristic length (active if != NULL)
+ *  @param [out] is_degenerated         Degenerated edge indicator (active if != NULL)
  */
 
 void
 PDM_geom_elem_hexa_properties
 (
- const int     nHexahedra,
+ const int     n_hexahedra,
  const int    *connectivity,
- const int     nVertices,
+ const int     n_vertices,
  const double *coords,
- double       *volume,
- double       *center,
- double       *characteristicLength,
- int         *isDegenerated
+       double *volume,
+       double *center,
+       double *characteristic_length,
+       int    *is_degenerated
 );
 
 
 /**
  *  \brief Prism properties
  *
- *  @param [in]  nPrism                Number of prism
+ *  @param [in]  n_prism               Number of prism
  *  @param [in]  connectivity          Connectivity
- *  @param [in]  nVertices             Number of vertices
+ *  @param [in]  n_vertices             Number of vertices
  *  @param [in]  coords                Vertices coordinates
  *  @param [out] volume                Volume
  *  @param [out] center                Center
- *  @param [out] characteristicLength  Characteristic length (active if != NULL)
- *  @param [out] isDegenerated         Degenerated edge indicator (active if != NULL)
+ *  @param [out] characteristic_length  Characteristic length (active if != NULL)
+ *  @param [out] is_degenerated        Degenerated edge indicator (active if != NULL)
  */
 
 void
 PDM_geom_elem_prism_properties
 (
- const int     nPrism,
+ const int     n_prism,
  const int    *connectivity,
- const int     nVertices,
+ const int     n_vertices,
  const double *coords,
- double       *volume,
- double       *center,
- double       *characteristicLength,
- int         *isDegenerated
+       double *volume,
+       double *center,
+       double *characteristic_length,
+       int    *is_degenerated
 );
 
 
 /**
  *  \brief Pyramid properties
  *
- *  @param [in]  nPyramid              Number of pyramid
+ *  @param [in]  n_pyramid             Number of pyramid
  *  @param [in]  connectivity          Connectivity
- *  @param [in]  nVertices             Number of vertices
+ *  @param [in]  n_vertices             Number of vertices
  *  @param [in]  coords                Vertices coordinates
  *  @param [out] volume                Volume
  *  @param [out] center                Center
- *  @param [out] characteristicLength  Characteristic length (active if != NULL)
- *  @param [out] isDegenerated         Degenerated edge indicator (active if != NULL)
+ *  @param [out] characteristic_length  Characteristic length (active if != NULL)
+ *  @param [out] is_degenerated        Degenerated edge indicator (active if != NULL)
  */
 
 void
 PDM_geom_elem_pyramid_properties
 (
- const int     nPyramid,
- const int    *connectivity,
- const int     nVertices,
- const double *coords,
- double       *volume,
- double       *center,
- double       *characteristicLength,
- int         *isDegenerated
+ const int      n_pyramid,
+ const int     *connectivity,
+ const int      n_vertices,
+ const double  *coords,
+       double  *volume,
+       double  *center,
+       double  *characteristic_length,
+       int     *is_degenerated
 );
 
 
 /**
  *  \brief Polyhedra properties
  *
- *  @param [in]  nPolyhedra                 Number of polyhedra
- *  @param [in]  n_face                      Number of faces
- *  @param [in]  faceConnectivityIdx        Face connectivity index
- *  @param [in]  faceConnectivity           Face connectivity
- *  @param [in]  cellToFaceConnectivityIdx  Cell to face connectivity index
- *  @param [in]  cellToFaceConnectivity     Cell to face connectivity
- *  @param [in]  nVertices                  Number of vertices
- *  @param [in]  coords                     Vertices coordinates
- *  @param [out] volume                     Volume
- *  @param [out] center                     Center
- *  @param [out] characteristicLength       Characteristic length (active if != NULL)
- *  @param [out] isDegenerated              Degenerated edge indicator (active if != NULL)
+ *  @param [in]  nPolyhedra                   Number of polyhedra
+ *  @param [in]  n_face                       Number of faces
+ *  @param [in]  face_connectivity_idx        Face connectivity index
+ *  @param [in]  face_connectivity            Face connectivity
+ *  @param [in]  cellToFace_connectivity_idx  Cell to face connectivity index
+ *  @param [in]  cellToFace_connectivity      Cell to face connectivity
+ *  @param [in]  n_vertices                    Number of vertices
+ *  @param [in]  coords                       Vertices coordinates
+ *  @param [out] volume                       Volume
+ *  @param [out] center                       Center
+ *  @param [out] characteristic_length         Characteristic length (active if != NULL)
+ *  @param [out] is_degenerated                Degenerated edge indicator (active if != NULL)
  */
 
 void
@@ -510,16 +512,16 @@ PDM_geom_elem_polyhedra_properties
  const  int    isOriented,
  const int     nPolyhedra,
  const int     n_face,
- const int    *faceConnectivityIdx,
- const int    *faceConnectivity,
- const int    *cellToFaceConnectivityIdx,
-       int    *cellToFaceConnectivity,
- const int     nVertices,
+ const int    *face_connectivity_idx,
+ const int    *face_connectivity,
+ const int    *cellToFace_connectivity_idx,
+       int    *cellToFace_connectivity,
+ const int     n_vertices,
  const double *coords,
  double       *volume,
  double       *center,
- double       *characteristicLength,
- int         *isDegenerated
+ double       *characteristic_length,
+ int         *is_degenerated
 );
 
 
@@ -529,16 +531,16 @@ PDM_geom_elem_polyhedra_properties_triangulated
  const int     isOriented,
  const int     nPolyhedra,
  const int     n_face,
- const int    *faceConnectivityIdx,
- const int    *faceConnectivity,
- const int    *cellToFaceConnectivityIdx,
-       int    *cellToFaceConnectivity,
- const int     nVertices,
+ const int    *face_connectivity_idx,
+ const int    *face_connectivity,
+ const int    *cellToFace_connectivity_idx,
+       int    *cellToFace_connectivity,
+ const int     n_vertices,
  const double *coords,
        double *volume,
        double *center,
-       double *characteristicLength,
-       int    *isDegenerated
+       double *characteristic_length,
+       int    *is_degenerated
 );
 
 
@@ -573,7 +575,7 @@ PDM_geom_elem_edge_upwind_and_downwind
 (
  int          n_face,
  int          n_edge,
- PDM_g_num_t *cell_ln_to_gn,
+ PDM_g_num_t  *cell_ln_to_gn,
  int          *cell_face_idx,
  int          *cell_face,
  int          *face_vtx_idx,
@@ -591,6 +593,50 @@ PDM_geom_elem_edge_upwind_and_downwind
  double      **upwind_point_out,
  double      **downwind_point_out
 );
+
+
+/**
+ *  \brief Compute downwind and upwind element of all edges (or -1 if not found )
+ *
+ *  @param [in]  i_plane              Cartesian plane (XY : 0, YZ : 1, ZX : 2)
+ *  @param [in]  face_ln_to_gn        Face global IDs (optional, used to guarantee deterministic results)
+ *  @param [in]  face_center          Face centers (optional, used to guarantee deterministic results)
+ *  @param [in]  face_edge_idx        Index for face-edge connectivity
+ *  @param [in]  face_edge            Face-edge connectivity
+ *  @param [in]  n_edge               Number of edges
+ *  @param [in]  edge_vtx             Edge-vertex connectivity
+ *  @param [in]  vtx_face_idx         Index for vertex-face connectivity
+ *  @param [in]  vtx_face             Vertex-face connectivity
+ *  @param [in]  vtx_coord            Vertex coordinates (size = 3*n_vtx)
+ *  @param [out] upwind_face_out      Face number corresponding of upwind face   (or -1) (size =     \p n_edge)
+ *  @param [out] downwind_face_out    Face number corresponding of downwind face (or -1) (size =     \p n_edge)
+ *  @param [out] upwind_edge_out      Edge number corresponding of upwind edge   (or -1) (size =     \p n_edge)
+ *  @param [out] downwind_edge_out    Edge number corresponding of downwind edge (or -1) (size =     \p n_edge)
+ *  @param [out] upwind_point_out     Coordinates of upwind point                        (size = 3 * \p n_edge)
+ *  @param [out] downwind_point_out   Coordinates of downwind point                      (size = 3 * \p n_edge)
+ *
+ */
+void
+PDM_geom_elem_edge_upwind_and_downwind_2d
+(
+ int          i_plane,
+ PDM_g_num_t *face_ln_to_gn,
+ double      *face_center,
+ int         *face_edge_idx,
+ int         *face_edge,
+ int          n_edge,
+ int         *edge_vtx,
+ int         *vtx_face_idx,
+ int         *vtx_face,
+ double      *vtx_coord,
+ int        **upwind_face_out,
+ int        **downwind_face_out,
+ int        **upwind_edge_out,
+ int        **downwind_edge_out,
+ double     **upwind_point_out,
+ double     **downwind_point_out
+);
+
 
 
 #ifdef __cplusplus

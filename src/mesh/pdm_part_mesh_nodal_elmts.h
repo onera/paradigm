@@ -721,7 +721,8 @@ PDM_part_mesh_nodal_elmts_group_set
  const int                           i_group,
        int                           n_group_elmt,
        int                          *group_elmt,
-       PDM_g_num_t                  *group_ln_to_gn
+       PDM_g_num_t                  *group_ln_to_gn,
+       PDM_ownership_t               ownership_group
 );
 
 void
@@ -737,6 +738,68 @@ int
 PDM_part_mesh_nodal_elmts_n_group_get
 (
        PDM_part_mesh_nodal_elmts_t  *pmne
+);
+
+/**
+ * \brief Return the cell->vertex connectivity
+ * The output pointers are owned by the user.
+ *
+ * \param [in]  pmne          Pointer to \ref PDM_part_mesh_nodal_elmts_t object
+ * \param [in]  i_part        Partition identifier
+ * \param [out] cell_vtx_idx  Index for the cell->vertex connectivity
+ * \param [out] cell_vtx      Cell->vertex connectivity
+ *
+ * \return Number of cells in current partition
+ *
+ */
+
+int
+PDM_part_mesh_nodal_elmts_cell_vtx_connect_get
+(
+        PDM_part_mesh_nodal_elmts_t  *pmne,
+  const int                           i_part,
+        int                         **cell_vtx_idx,
+        int                         **cell_vtx
+);
+
+
+/**
+ * \brief Set element to entity indirection for a section
+ *
+ * \param [in]  pmne                    Pointer to \ref PDM_part_mesh_nodal_elmts_t object
+ * \param [in]  id_section              Section identifier
+ * \param [in]  id_part                 Partition identifier
+ * \param [in]  elt_to_entity           Element to entity indirection
+ * \param [in]  ownership               Data ownership
+ *
+ */
+void
+PDM_part_mesh_nodal_elmts_section_elt_to_entity_set
+(
+      PDM_part_mesh_nodal_elmts_t *pmne,
+const int                          id_section,
+const int                          id_part,
+      int                         *elt_to_entity,
+      PDM_ownership_t              ownership
+);
+
+
+/**
+ * \brief Return element to entity indirection for a section
+ *
+ * \param [in]  pmne                    Pointer to \ref PDM_part_mesh_nodal_elmts_t object
+ * \param [in]  id_section              Section identifier
+ * \param [in]  id_part                 Partition identifier
+ * \param [in]  ownership               Data ownership
+ *
+ */
+int *
+PDM_part_mesh_nodal_elmts_section_elmt_to_entity_get
+(
+      PDM_part_mesh_nodal_elmts_t *pmne,
+const int                          id_section,
+const int                          id_part,
+      PDM_ownership_t              ownership
 );
 
 #ifdef __cplusplus

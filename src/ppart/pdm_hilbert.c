@@ -40,10 +40,6 @@ extern "C" {
  * Local Macro definitions
  *============================================================================*/
 
-#define _MIN(a,b)   ((a) < (b) ?  (a) : (b))  /* Minimum of a et b */
-
-#define _MAX(a,b)   ((a) > (b) ?  (a) : (b))  /* Maximum of a et b */
-
 /*=============================================================================
  * Static global variables
  *============================================================================*/
@@ -563,9 +559,9 @@ _evaluate_distribution(int       n_ranges,
   for (i = 0; i < n_ranges; i++) {
 
     if (distribution[i] > optim)
-      d_up = _MAX(d_up, distribution[i] - optim);
+      d_up = PDM_MAX(d_up, distribution[i] - optim);
     else
-      d_low = _MAX(d_low, optim - distribution[i]);
+      d_low = PDM_MAX(d_low, optim - distribution[i]);
 
   }
 
@@ -616,7 +612,8 @@ _define_rank_distrib(int                       dim,
 
   /* Initialization */
 
-  double   *l_distrib = (double   *) malloc (n_samples * sizeof(double));
+  double *l_distrib;
+  PDM_malloc(l_distrib, n_samples, double);
 
   for (int id = 0; id < n_samples; id++) {
     l_distrib[id] = 0;
@@ -652,7 +649,7 @@ _define_rank_distrib(int                       dim,
   /* Define the global distribution */
   PDM_MPI_Allreduce(l_distrib, g_distrib, n_samples, PDM_MPI_DOUBLE, PDM_MPI_SUM, comm);
 
-  free(l_distrib);
+  PDM_free(l_distrib);
 
   /* Define the cumulative frequency related to g_distribution */
   cfreq[0] = 0.;
@@ -672,7 +669,8 @@ _define_rank_distrib(int                       dim,
     static int  loop_id1 = 0;
 
     len = strlen("DistribOutput_l.dat")+1+2;
-    char  *rfilename = (char *) malloc (len * sizeof(char));
+    char *rfilename;
+    PDM_malloc(rfilename, len, char);
     sprintf(rfilename, "DistribOutput_l%02d.dat", loop_id1);
 
     loop_id1++;
@@ -690,7 +688,7 @@ _define_rank_distrib(int                       dim,
             i, 1.0, 1.0, 1.0, 0);
 
     fclose(dbg_file);
-    free(rfilename);
+    PDM_free(rfilename);
 
   }
 
@@ -756,7 +754,7 @@ _update_sampling(int                  dim,
 
   /* Compute new_sampling */
 
-  new_sampling = ( PDM_hilbert_code_t  *) malloc (sizeof(PDM_hilbert_code_t) * (n_samples + 1));
+  PDM_malloc(new_sampling, n_samples + 1, PDM_hilbert_code_t);
 
   new_sampling[0] = _sampling[0];
 
@@ -803,7 +801,7 @@ _update_sampling(int                  dim,
 
   new_sampling[n_samples] = 1.0;
 
-  free(_sampling);
+  PDM_free(_sampling);
 
   /* Return pointers */
 
@@ -871,8 +869,10 @@ _bucket_sampling(int                       dim,
 
   /* Define the distribution associated to the current sampling array */
 
-  double  *distrib = (double *) malloc (sizeof(double) * n_samples      );
-  double  *cfreq   = (double *) malloc (sizeof(double) * (n_samples + 1));
+  double *distrib = NULL;
+  double *cfreq   = NULL;
+  PDM_malloc(distrib, n_samples    , double);
+  PDM_malloc(cfreq  , n_samples + 1, double);
 
   _define_rank_distrib(dim,
                        n_ranks,
@@ -891,7 +891,8 @@ _bucket_sampling(int                       dim,
   fit = _evaluate_distribution(n_ranks, distrib, optim);
   best_fit = fit;
 
-  PDM_hilbert_code_t  *best_sampling = (PDM_hilbert_code_t  *) malloc (sizeof(PDM_hilbert_code_t) * (n_samples + 1));
+  PDM_hilbert_code_t *best_sampling;
+  PDM_malloc(best_sampling, n_samples + 1, PDM_hilbert_code_t);
 
   for (i = 0; i < (n_samples + 1); i++)
     best_sampling[i] = _sampling[i];
@@ -941,9 +942,9 @@ _bucket_sampling(int                       dim,
 
   /* Free memory */
 
-  free(cfreq);
-  free(distrib);
-  free(_sampling);
+  PDM_free(cfreq);
+  PDM_free(distrib);
+  PDM_free(_sampling);
 
   *sampling = best_sampling;
 
@@ -977,7 +978,7 @@ PDM_hilbert_get_coord_extents_seq(      int    dim,
   /* Get global min/max coordinates */
 
   for (j = 0; j < (size_t)dim; j++) {
-    g_extents[j]       = DBL_MAX;
+    g_extents[j]       =  DBL_MAX;
     g_extents[j + dim] = -DBL_MAX;
   }
 
@@ -993,6 +994,30 @@ PDM_hilbert_get_coord_extents_seq(      int    dim,
       }
 
     }
+  }
+
+  double delta = 0.0;
+
+  if (n_coords > 1) {
+    for (j = 0; j < (size_t)dim; j++) {
+      double x = g_extents[j + dim] - g_extents[j];
+      if (delta < x) {
+        delta = x;
+      }
+    }
+  }
+
+  double eps = 1e-7;
+  double tol = 1e-8;
+  if (delta > eps) {
+    delta *= tol;
+  } else {
+    delta = eps;
+  }
+
+  for (j = 0; j < (size_t)dim; j++) {
+    g_extents[j]       -= delta;
+    g_extents[j + dim] += delta;
   }
 }
 
@@ -1057,7 +1082,7 @@ PDM_hilbert_encode_coords(int                  dim,
 
   for (i = 0; i < dim; i++) {
     d[i] = extents[i+dim] - extents[i];
-    d_max = _MAX(d_max, d[i]);
+    d_max = PDM_MAX(d_max, d[i]);
   }
 
   for (i = 0; i < dim; i++) {
@@ -1257,13 +1282,14 @@ PDM_hilbert_local_order_coords(int                  dim,
                                const double         coords[],
                                int                  order[])
 {
-  PDM_hilbert_code_t *h_code = (PDM_hilbert_code_t *) malloc (sizeof(PDM_hilbert_code_t) * n_coords);
+  PDM_hilbert_code_t *h_code;
+  PDM_malloc(h_code, n_coords, PDM_hilbert_code_t);
 
   PDM_hilbert_encode_coords(dim, encode, extents, n_coords, coords, h_code);
 
   PDM_hilbert_local_order(n_coords, h_code, order);
 
-  free(h_code);
+  PDM_free(h_code);
 }
 
 /*----------------------------------------------------------------------------
@@ -1347,8 +1373,8 @@ PDM_hilbert_build_rank_index(int                       dim,
   /* Allocations and Initialization */
   const int  n_samples = PDM_MAX(1, sampling_factor * n_t_part);
 
-  PDM_hilbert_code_t  *sampling =
-          (PDM_hilbert_code_t  *) malloc(sizeof(PDM_hilbert_code_t) * (n_samples + 1));
+  PDM_hilbert_code_t  *sampling;
+  PDM_malloc(sampling, n_samples + 1, PDM_hilbert_code_t);
 
   for (i = 0; i < (n_samples + 1); i++)
     sampling[i] = 0;
@@ -1386,7 +1412,7 @@ PDM_hilbert_build_rank_index(int                       dim,
 
   /* Free memory */
 
-  free(sampling);
+  PDM_free(sampling);
 
   return best_fit;
 }
@@ -1397,5 +1423,3 @@ PDM_hilbert_build_rank_index(int                       dim,
 }
 #endif /* __cplusplus */
 
-#undef _MIN
-#undef _MAX

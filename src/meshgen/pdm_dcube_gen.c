@@ -62,7 +62,8 @@ const double           zero_z,
   PDM_MPI_Comm_size(comm, &n_rank);
   PDM_MPI_Comm_rank(comm, &i_rank);
 
-  PDM_dcube_t *dcube = (PDM_dcube_t *) malloc(sizeof(PDM_dcube_t));
+  PDM_dcube_t *dcube;
+  PDM_malloc(dcube, 1, PDM_dcube_t);
 
   /*
    * Build dcube structure
@@ -84,10 +85,14 @@ const double           zero_z,
   PDM_g_num_t n_vtx_face  = n_vtx_seg * n_vtx_seg;
   PDM_g_num_t n_face_lim  = 6 * n_face_face;
   double step = length / (double) n_face_seg;
-  PDM_g_num_t *distrib_vtx      = (PDM_g_num_t *) malloc((n_rank + 1) * sizeof(PDM_g_num_t));
-  PDM_g_num_t *distrib_face     = (PDM_g_num_t *) malloc((n_rank + 1) * sizeof(PDM_g_num_t));
-  PDM_g_num_t *distrib_cell     = (PDM_g_num_t *) malloc((n_rank + 1) * sizeof(PDM_g_num_t));
-  PDM_g_num_t *distrib_face_lim = (PDM_g_num_t *) malloc((n_rank + 1) * sizeof(PDM_g_num_t));
+  PDM_g_num_t *distrib_vtx      = NULL;
+  PDM_g_num_t *distrib_face     = NULL;
+  PDM_g_num_t *distrib_cell     = NULL;
+  PDM_g_num_t *distrib_face_lim = NULL;
+  PDM_malloc(distrib_vtx     , n_rank + 1, PDM_g_num_t);
+  PDM_malloc(distrib_face    , n_rank + 1, PDM_g_num_t);
+  PDM_malloc(distrib_cell    , n_rank + 1, PDM_g_num_t);
+  PDM_malloc(distrib_face_lim, n_rank + 1, PDM_g_num_t);
 
   //
   // Define distribution
@@ -142,12 +147,12 @@ const double           zero_z,
   PDM_g_num_t _dn_face_lim = distrib_face_lim[i_rank+1] - distrib_face_lim[i_rank];
   int dn_face_lim = (int) _dn_face_lim;
 
-  dcube->dface_cell      = (PDM_g_num_t *) malloc(2*(dcube->dn_face    ) * sizeof(PDM_g_num_t *));
-  dcube->dface_vtx_idx   = (int         *) malloc(  (dcube->dn_face + 1) * sizeof(int         *));
-  dcube->dface_vtx       = (PDM_g_num_t *) malloc(4*(dcube->dn_face    ) * sizeof(PDM_g_num_t *));
-  dcube->dvtx_coord      = (double      *) malloc(3*(dcube->dn_vtx     ) * sizeof(double      *));
-  dcube->dface_group_idx = (int         *) malloc(  (dcube->n_face_group + 1) * sizeof(int *));
-  dcube->dface_group     = (PDM_g_num_t *) malloc(   dn_face_lim              * sizeof(PDM_g_num_t *));
+  PDM_malloc(dcube->dface_cell     , 2*(dcube->dn_face         ), PDM_g_num_t);
+  PDM_malloc(dcube->dface_vtx_idx  ,   (dcube->dn_face + 1     ), int        );
+  PDM_malloc(dcube->dface_vtx      , 4*(dcube->dn_face         ), PDM_g_num_t);
+  PDM_malloc(dcube->dvtx_coord     , 3*(dcube->dn_vtx          ), double     );
+  PDM_malloc(dcube->dface_group_idx,   (dcube->n_face_group + 1), int        );
+  PDM_malloc(dcube->dface_group    ,   dn_face_lim              , PDM_g_num_t);
 
   PDM_g_num_t  *_dface_cell      = dcube->dface_cell;
   int          *_dface_vtx_idx   = dcube->dface_vtx_idx;
@@ -246,18 +251,19 @@ const double           zero_z,
             _dface_cell[2*cpt + 0] = j * n_face_seg + i + 1;
             _dface_cell[2*cpt + 1] = 0;
 
+          } else if (k == n_face_seg) {
+
             _dface_vtx[cpt * 4    ] = k * n_vtx_seg * n_vtx_seg + (    j * n_vtx_seg + i + 2);
             _dface_vtx[cpt * 4 + 1] = k * n_vtx_seg * n_vtx_seg + ((j+1) * n_vtx_seg + i + 2);
             _dface_vtx[cpt * 4 + 2] = k * n_vtx_seg * n_vtx_seg + ((j+1) * n_vtx_seg + i + 1);
             _dface_vtx[cpt * 4 + 3] = k * n_vtx_seg * n_vtx_seg + (    j * n_vtx_seg + i + 1);
 
-          } else if (k == n_face_seg) {
             _dface_cell[2*cpt + 0] = (k-1) * n_face_seg * n_face_seg + j * n_face_seg + i + 1;
             _dface_cell[2*cpt + 1] = 0;
 
           } else {
-            _dface_cell[2*cpt + 0] = (k-1) * n_face_seg * n_face_seg + j * n_face_seg + i + 1;
-            _dface_cell[2*cpt + 1] =     k * n_face_seg * n_face_seg + j * n_face_seg + i + 1;
+            _dface_cell[2*cpt + 0] =     k * n_face_seg * n_face_seg + j * n_face_seg + i + 1;
+            _dface_cell[2*cpt + 1] = (k-1) * n_face_seg * n_face_seg + j * n_face_seg + i + 1;
           }
           cpt += 1;
           if (cpt == dcube->dn_face)
@@ -302,18 +308,19 @@ const double           zero_z,
             _dface_cell[2*cpt + 0] = k * n_face_seg * n_face_seg + j * n_face_seg + i + 1;
             _dface_cell[2*cpt + 1] = 0;
 
+          } else if (i == n_face_seg) {
+
             _dface_vtx[cpt * 4    ] =     k * n_vtx_seg * n_vtx_seg +     j * n_vtx_seg + i + 1;
             _dface_vtx[cpt * 4 + 1] =     k * n_vtx_seg * n_vtx_seg + (j+1) * n_vtx_seg + i + 1;
             _dface_vtx[cpt * 4 + 2] = (k+1) * n_vtx_seg * n_vtx_seg + (j+1) * n_vtx_seg + i + 1;
             _dface_vtx[cpt * 4 + 3] = (k+1) * n_vtx_seg * n_vtx_seg +     j * n_vtx_seg + i + 1;
 
-          } else if (i == n_face_seg) {
             _dface_cell[2*cpt + 0] = k * n_face_seg * n_face_seg + j * n_face_seg + i;
             _dface_cell[2*cpt + 1] = 0;
 
           } else {
-            _dface_cell[2*cpt + 0] = k * n_face_seg * n_face_seg + j * n_face_seg + i ;
-            _dface_cell[2*cpt + 1] = k * n_face_seg * n_face_seg + j * n_face_seg + i + 1;
+            _dface_cell[2*cpt + 0] = k * n_face_seg * n_face_seg + j * n_face_seg + i + 1;
+            _dface_cell[2*cpt + 1] = k * n_face_seg * n_face_seg + j * n_face_seg + i ;
           }
           cpt += 1;
           if (cpt == dcube->dn_face)
@@ -358,18 +365,19 @@ const double           zero_z,
             _dface_cell[2*cpt + 0] = k * n_face_seg * n_face_seg + j * n_face_seg + i + 1;
             _dface_cell[2*cpt + 1] = 0;
 
+          } else if (j == n_face_seg) {
+
             _dface_vtx[cpt * 4    ] = (k+1) * n_vtx_seg * n_vtx_seg + j * n_vtx_seg + i + 1    ;
             _dface_vtx[cpt * 4 + 1] = (k+1) * n_vtx_seg * n_vtx_seg + j * n_vtx_seg + i + 1 + 1;
             _dface_vtx[cpt * 4 + 2] =     k * n_vtx_seg * n_vtx_seg + j * n_vtx_seg + i + 1 + 1;
             _dface_vtx[cpt * 4 + 3] =     k * n_vtx_seg * n_vtx_seg + j * n_vtx_seg + i + 1    ;
 
-          } else if (j == n_face_seg) {
             _dface_cell[2*cpt + 0] =  k * n_face_seg * n_face_seg + (j-1) * n_face_seg + i + 1;
             _dface_cell[2*cpt + 1] = 0;
 
           } else {
-            _dface_cell[2*cpt + 0] = k * n_face_seg * n_face_seg + (j-1) * n_face_seg + i + 1;
-            _dface_cell[2*cpt + 1] = k * n_face_seg * n_face_seg +     j * n_face_seg + i + 1;
+            _dface_cell[2*cpt + 0] = k * n_face_seg * n_face_seg +     j * n_face_seg + i + 1;
+            _dface_cell[2*cpt + 1] = k * n_face_seg * n_face_seg + (j-1) * n_face_seg + i + 1;
           }
           cpt += 1;
           if (cpt == dcube->dn_face)
@@ -617,10 +625,10 @@ const double           zero_z,
   for (int i = 1; i < dcube->n_face_group + 1; i++)
     _dface_group_idx[i] += _dface_group_idx[i-1];
 
-  free(distrib_vtx);
-  free(distrib_face);
-  free(distrib_cell);
-  free(distrib_face_lim);
+  PDM_free(distrib_vtx);
+  PDM_free(distrib_face);
+  PDM_free(distrib_cell);
+  PDM_free(distrib_face_lim);
 
   return (PDM_dcube_t*) dcube;
 }
@@ -711,24 +719,24 @@ PDM_dcube_t        *dcube
 {
   if(dcube->owner == PDM_OWNERSHIP_KEEP) {
     if (dcube->dface_cell  != NULL)
-      free(dcube->dface_cell);
+      PDM_free(dcube->dface_cell);
 
     if (dcube->dface_vtx_idx  != NULL)
-      free(dcube->dface_vtx_idx);
+      PDM_free(dcube->dface_vtx_idx);
 
     if (dcube->dface_vtx  != NULL)
-      free(dcube->dface_vtx);
+      PDM_free(dcube->dface_vtx);
 
     if (dcube->dvtx_coord  != NULL)
-      free(dcube->dvtx_coord);
+      PDM_free(dcube->dvtx_coord);
 
     if (dcube->dface_group_idx  != NULL)
-      free(dcube->dface_group_idx);
+      PDM_free(dcube->dface_group_idx);
 
     if (dcube->dface_group  != NULL)
-      free(dcube->dface_group);
+      PDM_free(dcube->dface_group);
   }
 
-  free(dcube);
+  PDM_free(dcube);
 
 }

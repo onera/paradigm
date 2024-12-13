@@ -220,24 +220,24 @@ _read_cloud_from_mesh
 
     if (n_vtx_field > 0) {
       for (int i = 0; i < n_vtx_field; i++) {
-        free(vtx_field_name [i]);
-        free(vtx_field_value[i]);
+        PDM_free(vtx_field_name [i]);
+        PDM_free(vtx_field_value[i]);
       }
-      free(vtx_field_name );
-      free(vtx_field_type );
-      free(vtx_field_stride);
-      free(vtx_field_value);
+      PDM_free(vtx_field_name );
+      PDM_free(vtx_field_type );
+      PDM_free(vtx_field_stride);
+      PDM_free(vtx_field_value);
     }
 
     if (n_elt_field > 0) {
       for (int i = 0; i < n_elt_field; i++) {
-        free(elt_field_name [i]);
-        // free(elt_field_value[i]);
+        PDM_free(elt_field_name [i]);
+        //PDM_free(elt_field_value[i]);
       }
-      free(elt_field_name );
-      free(elt_field_type );
-      free(elt_field_stride);
-      free(elt_field_value);
+      PDM_free(elt_field_name );
+      PDM_free(elt_field_type );
+      PDM_free(elt_field_stride);
+      PDM_free(elt_field_value);
     }
   }
   else if (strcmp(file_extension, "mesh") == 0) {
@@ -295,10 +295,10 @@ _read_cloud_from_mesh
   // *pts_coord    = vtx_coord;
   // *pts_ln_to_gn = vtx_ln_to_gn;
 
-  *pts_coord = malloc(sizeof(double) * n_vtx * 3);
+  PDM_malloc(*pts_coord, n_vtx * 3, double);
   memcpy(*pts_coord, vtx_coord, sizeof(double) * n_vtx * 3);
 
-  *pts_ln_to_gn = malloc(sizeof(PDM_g_num_t) * n_vtx);
+  PDM_malloc(*pts_ln_to_gn, n_vtx, PDM_g_num_t);
   memcpy(*pts_ln_to_gn, vtx_ln_to_gn, sizeof(PDM_g_num_t) * n_vtx);
 
   if (visu) {
@@ -339,7 +339,8 @@ _read_cloud_from_mesh
                                                 geom_kind,
                                                 0);
 
-    PDM_real_t *val_rank = malloc(sizeof(PDM_real_t) * n_elt);
+    PDM_real_t *val_rank;
+    PDM_malloc(val_rank, n_elt, PDM_real_t);
     for (int i = 0; i < n_elt; i++) {
       val_rank[i] = (PDM_real_t) i_rank;
     }
@@ -359,7 +360,7 @@ _read_cloud_from_mesh
 
     PDM_writer_free(wrt);
 
-    free(val_rank);
+    PDM_free(val_rank);
 
 
     PDM_part_mesh_nodal_free(pmn);
@@ -476,8 +477,8 @@ char *argv[]
 
   /* Free */
 
-  free (coords);
-  free (gnum);
+  PDM_free(coords);
+  PDM_free(gnum);
 
   if (i_rank == 0) {
     PDM_printf ("-- End\n");

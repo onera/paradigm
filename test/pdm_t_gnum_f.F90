@@ -59,11 +59,11 @@ program testf
 
   !  Generate random point cloud
   allocate(pts_coord(3,n_pts))
-  allocate(char_length(n_pts))
+  ! allocate(char_length(n_pts))
 
   call random_seed()
   call random_number(pts_coord)
-  char_length(:) = 1.d-6
+  ! char_length(:) = 1.d-6
 
 
   !  Create PDM_gen_gnum object
@@ -97,7 +97,7 @@ program testf
 
   !  Free memory
   deallocate(pts_coord)
-  deallocate(char_length)
+  ! deallocate(char_length)
 
 
   call pdm_gnum_free(gen_gnum)

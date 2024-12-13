@@ -175,7 +175,7 @@ _polygon_plane_3d(const int    n_vertices,
     /* First rotation of axis (Oz) and angle (Ox, normal proj. on Oxy) */
 
     if (n_vertices > _N_VERTICES_AUTO_MAX) {
-      _tmp_coords_p  = malloc (sizeof(double) * n_vertices*3);
+      PDM_malloc(_tmp_coords_p, n_vertices*3, double);
       tmp_coords = _tmp_coords_p;
     }
 
@@ -234,7 +234,7 @@ _polygon_plane_3d(const int    n_vertices,
     }
 
     if (_tmp_coords_p != NULL) {
-      free (_tmp_coords_p);
+      PDM_free(_tmp_coords_p);
       tmp_coords = NULL;
     }
 
@@ -831,17 +831,17 @@ PDM_triangulate_state_create(const int  n_vertices_max)
   int n_edges_max = (2*n_vertices_max) - 3;
   int n_edges_tot_max = n_edges_max * (n_edges_max - 1) / 2;
 
-  this_state = malloc (sizeof(PDM_triangulate_state_t));
+  PDM_malloc(this_state, 1, PDM_triangulate_state_t);
 
   if (n_vertices_max > 3) {
-    this_state->triangle_vertices = malloc (sizeof(int) * (n_vertices_max - 2) * 3);
-    this_state->coords            = malloc (sizeof(double) * n_vertices_max*3);
-    this_state->list_previous     = malloc (sizeof(int) * n_vertices_max);
-    this_state->list_next         = malloc (sizeof(int) * n_vertices_max);
-    this_state->edge_vertices     = malloc (sizeof(int) * n_edges_tot_max*2);
-    this_state->edge_neighbors    = malloc (sizeof(int) * n_edges_tot_max*2);
-    this_state->edge_is_delaunay  = malloc (sizeof(PDM_bool_t) * n_edges_tot_max);
-    this_state->concave           = malloc (sizeof(PDM_bool_t) * n_vertices_max);
+    PDM_malloc(this_state->triangle_vertices,(n_vertices_max - 2) * 3, int       );
+    PDM_malloc(this_state->coords           , n_vertices_max*3       , double    );
+    PDM_malloc(this_state->list_previous    , n_vertices_max         , int       );
+    PDM_malloc(this_state->list_next        , n_vertices_max         , int       );
+    PDM_malloc(this_state->edge_vertices    , n_edges_tot_max*2      , int       );
+    PDM_malloc(this_state->edge_neighbors   , n_edges_tot_max*2      , int       );
+    PDM_malloc(this_state->edge_is_delaunay , n_edges_tot_max        , PDM_bool_t);
+    PDM_malloc(this_state->concave          , n_vertices_max         , PDM_bool_t);
   }
   else {
     this_state->triangle_vertices = NULL;
@@ -875,16 +875,16 @@ PDM_triangulate_state_destroy(PDM_triangulate_state_t  *this_state)
 {
   if (this_state != NULL) {
     if (this_state->triangle_vertices != NULL) {
-      free (this_state->triangle_vertices);
-      free (this_state->coords);
-      free (this_state->list_previous);
-      free (this_state->list_next);
-      free (this_state->edge_vertices);
-      free (this_state->edge_neighbors);
-      free (this_state->edge_is_delaunay);
-      free (this_state->concave);
+      PDM_free(this_state->triangle_vertices);
+      PDM_free(this_state->coords);
+      PDM_free(this_state->list_previous);
+      PDM_free(this_state->list_next);
+      PDM_free(this_state->edge_vertices);
+      PDM_free(this_state->edge_neighbors);
+      PDM_free(this_state->edge_is_delaunay);
+      PDM_free(this_state->concave);
     }
-    free (this_state);
+    PDM_free(this_state);
   }
 
   return NULL;
@@ -943,14 +943,14 @@ PDM_triangulate_polygon(int                             dim,
     int n_edges_tot_max = n_edges_max * (n_edges_max - 1) / 2;
 
     state->n_vertices_max = n_vertices_max;
-    state->triangle_vertices = realloc (state->triangle_vertices, sizeof(int) * (n_vertices_max - 2) * 3);
-    state->coords            = realloc (state->coords,            sizeof(double) * n_vertices_max*3);
-    state->list_previous     = realloc (state->list_previous,     sizeof(int) * n_vertices_max);
-    state->list_next         = realloc (state->list_next,         sizeof(int) * n_vertices_max);
-    state->edge_vertices     = realloc (state->edge_vertices,     sizeof(int) * n_edges_tot_max*2);
-    state->edge_neighbors    = realloc (state->edge_neighbors,    sizeof(int) * n_edges_tot_max*2);
-    state->edge_is_delaunay  = realloc (state->edge_is_delaunay,  sizeof(PDM_bool_t) * n_edges_tot_max);
-    state->concave           = realloc (state->concave,           sizeof(PDM_bool_t) * n_vertices_max);
+    PDM_realloc(state->triangle_vertices ,state->triangle_vertices , 3 * (n_vertices_max - 2) ,int) ;
+    PDM_realloc(state->coords            ,state->coords            , n_vertices_max*3,double);
+    PDM_realloc(state->list_previous     ,state->list_previous     , n_vertices_max,int);
+    PDM_realloc(state->list_next         ,state->list_next         , n_vertices_max,int);
+    PDM_realloc(state->edge_vertices     ,state->edge_vertices     , n_edges_tot_max*2,int);
+    PDM_realloc(state->edge_neighbors    ,state->edge_neighbors    , n_edges_tot_max*2,int);
+    PDM_realloc(state->edge_is_delaunay  ,state->edge_is_delaunay  , n_edges_tot_max,PDM_bool_t);
+    PDM_realloc(state->concave           ,state->concave           , n_vertices_max,PDM_bool_t);
   }
 
   if (parent_vertex_num != NULL) {
@@ -1073,7 +1073,7 @@ PDM_triangulate_polygon(int                             dim,
      to obtain a Delaunay triangulation */
 
   int *_triangle_vertices;
-  _triangle_vertices = malloc (sizeof(int) * (state->n_vertices_max - 2) * 3);
+  PDM_malloc(_triangle_vertices, (state->n_vertices_max - 2) * 3, int);
 
   for (int iii = 0; iii <  (state->n_vertices_max - 2) * 3; iii++) {
     _triangle_vertices[iii] =  state->triangle_vertices[iii];
@@ -1146,7 +1146,7 @@ PDM_triangulate_polygon(int                             dim,
       triangle_vertices[i] = __triangle_vertices[i] + 1;
   }
 
-  free (_triangle_vertices);
+  PDM_free(_triangle_vertices);
   return n_triangles;
 }
 
@@ -1452,6 +1452,86 @@ PDM_triangulate_hexahedron (int               dim,
   return 5;
 
 
+}
+
+
+
+int
+PDM_triangulate_faces
+(
+  int                       n_face,
+  int                      *face_vtx_idx,
+  int                      *face_vtx,
+  double                   *vtx_coord,
+  int                     **face_tria_idx,
+  int                     **tria_vtx,
+  PDM_triangulate_state_t  *tri_state
+)
+{
+  // Count size of tria_vtx
+  int max_face_vtx_n = 0;
+  int s_tria_vtx     = 0;
+  for (int i_face = 0; i_face < n_face; i_face++) {
+    int face_vtx_n = face_vtx_idx[i_face+1] - face_vtx_idx[i_face];
+    max_face_vtx_n = PDM_MAX(max_face_vtx_n, face_vtx_n);
+    s_tria_vtx     += face_vtx_n - 2;
+  }
+
+  // Create a new PDM_triangulate_state_t if necessary
+  PDM_triangulate_state_t *_tri_state = tri_state;
+  if (tri_state == NULL && max_face_vtx_n > 3) {
+    _tri_state = PDM_triangulate_state_create(max_face_vtx_n);
+  }
+
+
+  PDM_malloc(*face_tria_idx, n_face + 1, int);
+  (*face_tria_idx)[0] = 0;
+
+  PDM_malloc(*tria_vtx, 3*s_tria_vtx, int);
+
+  for (int i_face = 0; i_face < n_face; i_face++) {
+    int *_tria_vtx = *tria_vtx + (*face_tria_idx)[i_face] * 3;
+
+    int *_face_vtx = face_vtx + face_vtx_idx[i_face];
+    int face_vtx_n = face_vtx_idx[i_face+1] - face_vtx_idx[i_face];
+
+    int n_tria = 0;
+
+    if (face_vtx_n == 3) {
+      // Triangular face
+      n_tria = 1;
+      memcpy(_tria_vtx, _face_vtx, sizeof(int) * 3);
+    }
+    else if (face_vtx_n == 4) {
+      // Quadrilateral face
+      n_tria = PDM_triangulate_quadrangle(3,
+                                          vtx_coord,
+                                          NULL,
+                                          _face_vtx,
+                                          _tria_vtx);
+    }
+    else {
+      // Polygonal face
+      n_tria = PDM_triangulate_polygon(3,
+                                       face_vtx_n,
+                                       vtx_coord,
+                                       NULL,
+                                       _face_vtx,
+                                       PDM_TRIANGULATE_MESH_DEF,
+                                       _tria_vtx,
+                                       _tri_state);
+    }
+
+    (*face_tria_idx)[i_face+1] = (*face_tria_idx)[i_face] + n_tria;
+  }
+
+
+  if (tri_state == NULL && _tri_state != NULL) {
+    PDM_triangulate_state_destroy(_tri_state);
+  }
+
+  // Return number of triangles
+  return (*face_tria_idx)[n_face];
 }
 
 

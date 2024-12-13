@@ -515,8 +515,7 @@ PDM_part_renum_graph
 const int   n_entity1,
       int  *entity1_entity1_idx,
       int  *entity1_entity1,
-const int  *new_to_old_order,
-int         start
+const int  *new_to_old_order
 );
 
 /**

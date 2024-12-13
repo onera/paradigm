@@ -1512,9 +1512,10 @@ module pdm_writer
     endif 
       
     c_face_som_nb = C_NULL_PTR
-    if (associated(face_som_nb)) then
-      c_face_som_nb   = c_loc(face_som_nb)
-    endif 
+    ! Temporary fix before API change
+    ! if (associated(face_som_nb)) then
+    !   c_face_som_nb   = c_loc(face_som_nb)
+    ! endif
       
     c_face_som = C_NULL_PTR
     if (associated(face_som)) then

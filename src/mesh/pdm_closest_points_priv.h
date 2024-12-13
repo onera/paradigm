@@ -81,6 +81,7 @@ struct _pdm_closest_point_t {
   PDM_bool_t      results_is_getted;            /*!< Flags to indicate if result is getted      */
   PDM_bool_t      tgt_in_src_results_is_getted; /*!< Flags to indicate if result is getted      */
   PDM_bool_t      tgt_in_src_results_is_getted_d; /*!< Flags to indicate if result is getted      */
+  PDM_bool_t      compute_reverse_results;      /*!< Flags to indicate if reverse results are computed */
 
   int n_closest;                                /*!< Number of closest source points to find for each
                                                   target point  */

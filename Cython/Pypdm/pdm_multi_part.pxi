@@ -123,6 +123,13 @@ cdef extern from "pdm_multipart.h":
                                                  PDM_ownership_t   ownership);
 
     # ------------------------------------------------------------------
+    void PDM_multipart_renum_method_set(PDM_multipart_t     *multipart,
+                                        int                  i_domain,
+                                        PDM_mesh_entities_t  mesh_entity,
+                                        const char          *renum_entity_method,
+                                        const int           *renum_entity_properties);
+
+    # ------------------------------------------------------------------
     void PDM_multipart_part_ghost_infomation_get(PDM_multipart_t *mtp,
                                                  int              i_domain,
                                                  int              ipart,
@@ -269,7 +276,6 @@ cdef class MultiPart:
         PDM_multipart_free(self._mtp)
 
     # ------------------------------------------------------------------
-
     def dmesh_set(self, int i_domain,
                         DMesh dmesh): # DMesh = DistributedMeshCapsule or DistributedMesh
       """
@@ -301,6 +307,29 @@ cdef class MultiPart:
       PDM_multipart_dmesh_nodal_set(self._mtp,
                                     i_domain,
                                     dmn.dmn)
+
+    # ------------------------------------------------------------------
+    def renum_method_set(self,
+                         int i_domain,
+                         PDM_mesh_entities_t entity_type,
+                         char *renum_entity_method,
+                         NPY.ndarray[NPY.int32_t, mode='c', ndim=1] renum_entity_properties):
+      """
+      renum_method_set(i_domain, entity_type, renum_entity_method, renum_entity_properties)
+
+      Set the reordering methods to be used after partitioning
+      Parameters:
+        i_domain                (int)                    : Id of domain which parameters apply (or -1 for all domains)
+        entity_type             (PDM_mesh_entities_t)    : Entity type
+        renum_entity_method     (str)                    : Choice of renumbering method for cells
+        renum_entity_properties (np.ndarray[np.int32_t]) : Parameters used by cache-blocking method : (*n_cell_per_cache_wanted*, *is_asynchronous*, *is_vectorisation*, *n_vect_face*, *split_method*)
+      """
+      cdef int *_renum_entity_properties = np_to_int_pointer(renum_entity_properties)
+      PDM_multipart_renum_method_set(self._mtp,
+                                     i_domain,
+                                     entity_type,
+                                     renum_entity_method,
+                                     _renum_entity_properties)
 
     # ------------------------------------------------------------------
     def reordering_set(self, int i_domain,

@@ -240,6 +240,18 @@ module pdm_extract_part
     integer(pdm_g_num_s), pointer :: edge_ln_to_gn(:)
     integer(pdm_g_num_s), pointer :: vtx_ln_to_gn(:)
     double precision,     pointer :: vtx_coord(:,:)
+    type(c_ptr) :: c_cell_face_idx
+    type(c_ptr) :: c_cell_face
+    type(c_ptr) :: c_face_edge_idx
+    type(c_ptr) :: c_face_edge
+    type(c_ptr) :: c_edge_vtx
+    type(c_ptr) :: c_face_vtx_idx
+    type(c_ptr) :: c_face_vtx
+    type(c_ptr) :: c_cell_ln_to_gn
+    type(c_ptr) :: c_face_ln_to_gn
+    type(c_ptr) :: c_edge_ln_to_gn
+    type(c_ptr) :: c_vtx_ln_to_gn
+    type(c_ptr) :: c_vtx_coord
 
     interface
       subroutine pdm_extract_part_part_set_c (extrp,                    &
@@ -286,24 +298,84 @@ module pdm_extract_part
       end subroutine pdm_extract_part_part_set_c
     end interface
 
+    c_cell_face_idx = C_NULL_PTR
+    if (associated(cell_face_idx)) then
+      c_cell_face_idx = c_loc(cell_face_idx)
+    end if
+
+    c_cell_face = C_NULL_PTR
+    if (associated(cell_face)) then
+      c_cell_face = c_loc(cell_face)
+    end if
+
+    c_face_edge_idx = C_NULL_PTR
+    if (associated(face_edge_idx)) then
+      c_face_edge_idx = c_loc(face_edge_idx)
+    end if
+
+    c_face_edge = C_NULL_PTR
+    if (associated(face_edge)) then
+      c_face_edge = c_loc(face_edge)
+    end if
+
+    c_edge_vtx = C_NULL_PTR
+    if (associated(edge_vtx)) then
+      c_edge_vtx = c_loc(edge_vtx)
+    end if
+
+    c_face_vtx_idx = C_NULL_PTR
+    if (associated(face_vtx_idx)) then
+      c_face_vtx_idx = c_loc(face_vtx_idx)
+    end if
+
+    c_face_vtx = C_NULL_PTR
+    if (associated(face_vtx)) then
+      c_face_vtx = c_loc(face_vtx)
+    end if
+
+    c_cell_ln_to_gn = C_NULL_PTR
+    if (associated(cell_ln_to_gn)) then
+      c_cell_ln_to_gn = c_loc(cell_ln_to_gn)
+    end if
+
+    c_face_ln_to_gn = C_NULL_PTR
+    if (associated(face_ln_to_gn)) then
+      c_face_ln_to_gn = c_loc(face_ln_to_gn)
+    end if
+
+    c_edge_ln_to_gn = C_NULL_PTR
+    if (associated(edge_ln_to_gn)) then
+      c_edge_ln_to_gn = c_loc(edge_ln_to_gn)
+    end if
+
+    c_vtx_ln_to_gn = C_NULL_PTR
+    if (associated(vtx_ln_to_gn)) then
+      c_vtx_ln_to_gn = c_loc(vtx_ln_to_gn)
+    end if
+
+    c_vtx_coord = C_NULL_PTR
+    if (associated(vtx_coord)) then
+      c_vtx_coord = c_loc(vtx_coord)
+    end if
+
     call pdm_extract_part_part_set_c (extrp,                           &
                                       i_part,                          &
                                       n_cell,                          &
                                       n_face,                          &
                                       n_edge,                          &
                                       n_vtx,                           &
-                                      c_loc(cell_face_idx),            &
-                                      c_loc(cell_face),                &
-                                      c_loc(face_edge_idx),            &
-                                      c_loc(face_edge),                &
-                                      c_loc(edge_vtx),                 &
-                                      c_loc(face_vtx_idx),             &
-                                      c_loc(face_vtx),                 &
-                                      c_loc(cell_ln_to_gn),            &
-                                      c_loc(face_ln_to_gn),            &
-                                      c_loc(edge_ln_to_gn),            &
-                                      c_loc(vtx_ln_to_gn),             &
-                                      c_loc(vtx_coord))
+                                      c_cell_face_idx,                 &
+                                      c_cell_face,                     &
+                                      c_face_edge_idx,                 &
+                                      c_face_edge,                     &
+                                      c_edge_vtx,                      &
+                                      c_face_vtx_idx,                  &
+                                      c_face_vtx,                      &
+                                      c_cell_ln_to_gn,                 &
+                                      c_face_ln_to_gn,                 &
+                                      c_edge_ln_to_gn,                 &
+                                      c_vtx_ln_to_gn,                  &
+                                      c_vtx_coord)
 
   end subroutine PDM_extract_part_part_set
 
@@ -521,13 +593,14 @@ module pdm_extract_part
   !! \param [in]   i_part        part identifier
   !! \param [in]   n_extract     Number of entity to select
   !! \param [in]   extract_lnum  List of id to extract (starting at 1)
-  !!
+  !! \param [in]   ownership     Ownership
   !!
 
-  subroutine PDM_extract_part_selected_lnum_set (extrp,     &
-                                                 i_part_in, &
-                                                 n_entity,  &
-                                                 extract_lnum)
+  subroutine PDM_extract_part_selected_lnum_set (extrp,        &
+                                                 i_part_in,    &
+                                                 n_entity,     &
+                                                 extract_lnum, &
+                                                 ownership)
 
     use iso_c_binding
     implicit none
@@ -536,6 +609,7 @@ module pdm_extract_part
     integer, intent(in)                  :: i_part_in
     integer, intent(in)                  :: n_entity
     integer(kind = PDM_l_num_s), pointer :: extract_lnum(:)
+    integer, intent(in)                  :: ownership
 
     type(c_ptr)                          :: c_extract_lnum
 
@@ -543,7 +617,8 @@ module pdm_extract_part
       subroutine pdm_extract_part_selected_lnum_set_c (extrp,        &
                                                        i_part_in,    &
                                                        n_entity,     &
-                                                       extract_lnum) &
+                                                       extract_lnum, &
+                                                       ownership)    &
       bind (c, name='PDM_extract_part_selected_lnum_set')
         use iso_c_binding
         implicit none
@@ -552,6 +627,7 @@ module pdm_extract_part
         integer(c_int), value :: i_part_in
         integer(c_int), value :: n_entity
         type(c_ptr),    value :: extract_lnum
+        integer(c_int), value :: ownership
 
       end subroutine pdm_extract_part_selected_lnum_set_c
     end interface
@@ -564,9 +640,82 @@ module pdm_extract_part
     call pdm_extract_part_selected_lnum_set_c (extrp,             &
                                                i_part_in,         &
                                                n_entity,          &
-                                               c_extract_lnum)
+                                               c_extract_lnum,    &
+                                               ownership)
 
   end subroutine PDM_extract_part_selected_lnum_set
+
+  !>
+  !!
+  !! \brief Set the extract target number
+  !!
+  !! \param [in]   extrp             PDM_extract_part_t
+  !! \param [in]   i_part            part identifier
+  !! \param [in]   n_target          Number of target to select
+  !! \param [in]   target_gnum       List of global id to extract
+  !! \param [in]   target_location   Init location (optional NULL pointer accepted and computed internaly)
+  !! \param [in]   ownership         Ownership
+  !!
+  !!
+
+  subroutine PDM_extract_part_target_set (extrp,           &
+                                          i_part_in,       &
+                                          n_target,        &
+                                          target_gnum,     &
+                                          target_location, &
+                                          ownership)
+
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr), value                   :: extrp
+    integer, intent(in)                  :: i_part_in
+    integer, intent(in)                  :: n_target
+    integer(kind = PDM_g_num_s), pointer :: target_gnum(:)
+    integer(kind = PDM_l_num_s), pointer :: target_location(:)
+    integer, intent(in)                  :: ownership
+
+    type(c_ptr)                          :: c_target_gnum
+    type(c_ptr)                          :: c_target_location
+
+    interface
+      subroutine pdm_extract_part_target_set_c (extrp,           &
+                                                i_part_in,       &
+                                                n_target,        &
+                                                target_gnum,     &
+                                                target_location, &
+                                                ownership)       &
+      bind (c, name='PDM_extract_part_target_set')
+        use iso_c_binding
+        implicit none
+
+        type(c_ptr),    value :: extrp
+        integer(c_int), value :: i_part_in
+        integer(c_int), value :: n_target
+        type(c_ptr),    value :: target_gnum
+        type(c_ptr),    value :: target_location
+        integer(c_int), value :: ownership
+      end subroutine pdm_extract_part_target_set_c
+    end interface
+
+    c_target_gnum = C_NULL_PTR
+    if (associated(target_gnum)) then
+      c_target_gnum = c_loc(target_gnum)
+    end if
+
+    c_target_location = C_NULL_PTR
+    if (associated(target_location)) then
+      c_target_location = c_loc(target_location)
+    end if
+
+    call pdm_extract_part_target_set_c (extrp,             &
+                                        i_part_in,         &
+                                        n_target,          &
+                                        c_target_gnum,     &
+                                        c_target_location, &
+                                        ownership)
+
+  end subroutine PDM_extract_part_target_set
 
   !>
   !!

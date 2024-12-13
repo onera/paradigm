@@ -32,26 +32,6 @@ extern "C" {
 #endif
 #endif /* __cplusplus */
 
-/*=============================================================================
- * Macro definitions
- *============================================================================*/
-
-
-#define _DOT_PRODUCT(v1, v2) \
-  (v1[0]*v2[0] + v1[1]*v2[1] + v1[2]*v2[2])
-
-#define _CROSS_PRODUCT_3D(cross_v1_v2, v1, v2) ( \
- cross_v1_v2[0] = v1[1]*v2[2] - v1[2]*v2[1],   \
- cross_v1_v2[1] = v1[2]*v2[0] - v1[0]*v2[2],   \
- cross_v1_v2[2] = v1[0]*v2[1] - v1[1]*v2[0]  )
-
-#define _MODULE(v) \
-  sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2])
-
-#define _MIN(a,b)   ((a) < (b) ?  (a) : (b))  /* Minimum of a et b */
-
-#define _MAX(a,b)   ((a) > (b) ?  (a) : (b))  /* Maximum of a et b */
-
 /*============================================================================
  * Type
  *============================================================================*/
@@ -137,19 +117,20 @@ PDM_MPI_Comm comm
 )
 {
 
-  PDM_surf_mesh_t *mesh = malloc (sizeof(PDM_surf_mesh_t));
+  PDM_surf_mesh_t *mesh;
+  PDM_malloc(mesh,1,PDM_surf_mesh_t);
 
   mesh->nGFace  = -1;
   mesh->nGVtx   = -1;
 
   mesh->comm    = comm;
   mesh->n_part   = n_part;
-  mesh->part    = (PDM_surf_part_t **) malloc(n_part * sizeof(PDM_surf_part_t *));
+  PDM_malloc(mesh->part,n_part ,PDM_surf_part_t *);
 
   PDM_MPI_Allreduce ((void *)&n_part, (void *)&(mesh->nGPart), 1,
                      PDM_MPI_INT, PDM_MPI_SUM, mesh->comm);
 
-  mesh->gMinCarLgthVtx = DBL_MAX;
+  mesh->gMinCarLgthVtx =  DBL_MAX;
   mesh->gMaxCarLgthVtx = -DBL_MAX;
   mesh->interPartEdgeGraph = NULL;
   mesh->interPartVtxGraph = NULL;
@@ -183,7 +164,7 @@ PDM_surf_mesh_t *mesh
     if (mesh->part != NULL) {
       for (int i = 0; i < mesh->n_part; i++)
         mesh->part[i] = PDM_surf_part_free(mesh->part[i]);
-      free(mesh->part);
+      PDM_free(mesh->part);
       mesh->part = NULL;
 
     }
@@ -191,10 +172,10 @@ PDM_surf_mesh_t *mesh
     mesh->interPartEdgeGraph = PDM_graph_bound_free (mesh->interPartEdgeGraph);
     mesh->interPartVtxGraph = PDM_graph_bound_free (mesh->interPartVtxGraph);
 
-    free (mesh->vtxPartBound);
-    free (mesh->edgePartBound);
+    PDM_free(mesh->vtxPartBound);
+    PDM_free(mesh->edgePartBound);
 
-    free (mesh);
+    PDM_free(mesh);
   }
 
   return NULL;
@@ -234,7 +215,8 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
 
   int nEdgeProc = 0;
   int n_vtxProc = 0;
-  int *nIntEdgePart = (int *) malloc(sizeof(int) * (n_part + 1));
+  int *nIntEdgePart;
+  PDM_malloc(nIntEdgePart,(n_part + 1),int);
   nIntEdgePart[0] = 0;
   for (int i = 0; i < n_part; i++) {
     PDM_surf_part_t *part =  mesh->part[i];
@@ -247,7 +229,8 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
   int  keyMax        = 2 * n_vtxProc;
   int  lHashTableIdx = keyMax + 1;
   int *hashTableIdx  = PDM_array_zeros_int(lHashTableIdx);
-  int *hashTable     = (int *) malloc(sizeof(int) * 2 * nEdgeProc);
+  int *hashTable;
+  PDM_malloc(hashTable,2 * nEdgeProc,int);
   int *nHashTable    = PDM_array_zeros_int(keyMax);
 
   for (int i = 0; i < n_part; i++) {
@@ -276,7 +259,8 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
 
   int nIntEdgeProc = nIntEdgePart[n_part];
 
-  int *nEdgeBoundPart = (int *) malloc(sizeof(int) * n_part);
+  int *nEdgeBoundPart;
+  PDM_malloc(nEdgeBoundPart,n_part,int);
 
   for (int i = 0; i < 2*nEdgeProc; i++) {
     hashTable[i]=-1;
@@ -303,15 +287,16 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
     }
   }
 
-  free(nHashTable);
-  free(nIntEdgePart);
+  PDM_free(nHashTable);
+  PDM_free(nIntEdgePart);
 
   /*
    * Compute global numbering for inter partition boundary edges (intra processus)
    * Build exchange communication graph between boundary edges
    */
 
-  int *edgePartCur = (int *) malloc(sizeof(int) * mesh->n_part);
+  int *edgePartCur;
+  PDM_malloc(edgePartCur,mesh->n_part,int);
 
   for (int i = 0; i < n_part; i++) {
     edgePartCur[i] = 0;
@@ -412,16 +397,16 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
       hashTable[j+1] = -1;
     }
   }
-  free(hashTable);
-  free(hashTableIdx);
-  free(nEdgeBoundPart);
+  PDM_free(hashTable);
+  PDM_free(hashTableIdx);
+  PDM_free(nEdgeBoundPart);
 
   /*
    * Update global numbering
    */
 
-  PDM_g_num_t *nIntEdgeProcs =
-    (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * (lComm + 1));
+  PDM_g_num_t *nIntEdgeProcs;
+  PDM_malloc(nIntEdgeProcs, lComm + 1, PDM_g_num_t);
   nIntEdgeProcs[0] = 0;
   PDM_g_num_t *_nIntEdgeProcs = nIntEdgeProcs + 1;
 
@@ -430,7 +415,8 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
                 (void *) _nIntEdgeProcs, 1, PDM__PDM_MPI_G_NUM, mesh->comm);
 
   int nEdgeWithoutNG = 0;
-  int *edgeWithoutNG = (int *) malloc(sizeof(int) * (2 * nEdgeProc));
+  int *edgeWithoutNG;
+  PDM_malloc(edgeWithoutNG,(2 * nEdgeProc),int);
 
   for (int i = 1; i < lComm + 1; i++)
     nIntEdgeProcs[i] = nIntEdgeProcs[i] +  nIntEdgeProcs[i-1];
@@ -453,7 +439,8 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
    * inter partition boundary edges (inter processus)
    */
 
-  PDM_g_num_t *nKeyProcs = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * (lComm + 1));
+  PDM_g_num_t *nKeyProcs;
+  PDM_malloc(nKeyProcs,(lComm + 1),PDM_g_num_t);
 
   _n_g_enttities_compute(mesh);
   
@@ -509,8 +496,8 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
    * Store keys to send to the others processes
    */
 
-  PDM_g_num_t *edgeToSend =
-    (PDM_g_num_t *) malloc(edgeToSendIdx[lComm] * sizeof(PDM_g_num_t));
+  PDM_g_num_t *edgeToSend;
+  PDM_malloc(edgeToSend, edgeToSendIdx[lComm], PDM_g_num_t);
 
   for (int i = 0; i < nEdgeWithoutNG; i++) {
     int i_part = edgeWithoutNG[2*i];
@@ -537,12 +524,13 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
     edgeToSendN[i_rank1] += nDataToSend;
   }
 
-  free(edgeWithoutNG);
+  PDM_free(edgeWithoutNG);
 
   /*
    * Receive keys from the others processes
    */
-  int *edgeToRecvN = (int *) malloc(lComm * sizeof(int));
+  int *edgeToRecvN;
+  PDM_malloc(edgeToRecvN,lComm ,int);
 
   PDM_MPI_Alltoall(edgeToSendN,
                1,
@@ -554,8 +542,8 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
 
   int *edgeToRecvIdx =  PDM_array_new_idx_from_sizes_int(edgeToRecvN, lComm);
 
-  PDM_g_num_t *edgeToRecv =
-    (PDM_g_num_t *) malloc(edgeToRecvIdx[lComm]*sizeof(PDM_g_num_t));
+  PDM_g_num_t *edgeToRecv;
+  PDM_malloc(edgeToRecv, edgeToRecvIdx[lComm], PDM_g_num_t);
 
   PDM_MPI_Alltoallv(edgeToSend,
                 edgeToSendN,
@@ -575,8 +563,8 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
 
   const int nDatadHashTable = 2;
 
-  PDM_g_num_t *dHashTable =
-    (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * nDatadHashTable * nRecvKey);
+  PDM_g_num_t *dHashTable;
+  PDM_malloc(dHashTable, nDatadHashTable * nRecvKey, PDM_g_num_t);
 
 
   for (int i = 0; i < nRecvKey; i++) {
@@ -601,10 +589,10 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
    }
   }
 
-  free(dNHashTable);
+  PDM_free(dNHashTable);
 
-  PDM_g_num_t *gNBoundPartEdge =
-    (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * 1 * nRecvKey);
+  PDM_g_num_t *gNBoundPartEdge;
+  PDM_malloc(gNBoundPartEdge, 1 * nRecvKey, PDM_g_num_t);
   PDM_g_num_t gNCurrent = 0;
 
   /*
@@ -695,8 +683,8 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
    * of global numbering of internal edges
    */
 
-  PDM_g_num_t *gNCurrentProcs =
-    (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * (lComm + 1));
+  PDM_g_num_t *gNCurrentProcs;
+  PDM_malloc(gNCurrentProcs, lComm + 1, PDM_g_num_t);
 
   PDM_MPI_Allgather((void *) &gNCurrent, 1, PDM__PDM_MPI_G_NUM,
                 (void *) (&gNCurrentProcs[1]), 1, PDM__PDM_MPI_G_NUM, mesh->comm);
@@ -716,9 +704,9 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
     edgeToRecv[i*nDataToSend    ] = gNBoundPartEdge[i] + gNCurrentProcs[myRank];
   }
 
-  free(nIntEdgeProcs);
-  free(dHashTable);
-  free(dHashTableIdx);
+  PDM_free(nIntEdgeProcs);
+  PDM_free(dHashTable);
+  PDM_free(dHashTableIdx);
 
   /*
    * Return to sender of results
@@ -734,9 +722,9 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
                 PDM__PDM_MPI_G_NUM,
                 mesh->comm);
 
-  free(edgeToRecvN);
-  free(edgeToRecvIdx);
-  free(edgeToRecv);
+  PDM_free(edgeToRecvN);
+  PDM_free(edgeToRecvIdx);
+  PDM_free(edgeToRecv);
 
   /*
    * Copy data already computed (intra processus boundary partition)
@@ -802,13 +790,13 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
   PDM_MPI_Allreduce(&nGEdgeProc, &(mesh->nGEdge), 1,
                 PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, mesh->comm);
 
-  free(edgePartCur);
-  free(nKeyProcs);
-  free(edgeToSendN);
-  free(edgeToSendIdx);
-  free(edgeToSend);
-  free(gNBoundPartEdge);
-  free(gNCurrentProcs);
+  PDM_free(edgePartCur);
+  PDM_free(nKeyProcs);
+  PDM_free(edgeToSendN);
+  PDM_free(edgeToSendIdx);
+  PDM_free(edgeToSend);
+  PDM_free(gNBoundPartEdge);
+  PDM_free(gNCurrentProcs);
 
 }
 
@@ -844,7 +832,8 @@ PDM_surf_mesh_t *mesh
    *
    */
 
-  int *nKeyProcs = (int *) malloc(sizeof(int) * (lComm + 1));
+  int *nKeyProcs;
+  PDM_malloc(nKeyProcs,(lComm + 1),int);
 
   _n_g_enttities_compute(mesh);
 
@@ -917,8 +906,8 @@ PDM_surf_mesh_t *mesh
    * Store keys to send to the others processes
    */
 
-  PDM_g_num_t *vtx_to_send =
-    (PDM_g_num_t *) malloc(vtx_to_sendIdx[lComm] * sizeof(PDM_g_num_t));
+  PDM_g_num_t *vtx_to_send;
+  PDM_malloc(vtx_to_send, vtx_to_sendIdx[lComm], PDM_g_num_t);
 
   for (int i = 0; i < n_part; i++) {
     PDM_surf_part_t *part = mesh->part[i];
@@ -959,7 +948,7 @@ PDM_surf_mesh_t *mesh
     }
     PDM_array_reset_int(tagVtx, maxn_vtx, 0);
   }
-  free(tagVtx);
+  PDM_free(tagVtx);
 
   /*
    * Receive keys from the others processes
@@ -978,8 +967,8 @@ PDM_surf_mesh_t *mesh
 
   int *vtxToRecvIdx =  PDM_array_new_idx_from_sizes_int(vtxToRecvN, lComm);
 
-  PDM_g_num_t *vtxToRecv =
-    (PDM_g_num_t *) malloc(vtxToRecvIdx[lComm]*sizeof(PDM_g_num_t));
+  PDM_g_num_t *vtxToRecv;
+  PDM_malloc(vtxToRecv, vtxToRecvIdx[lComm], PDM_g_num_t);
 
 
   PDM_MPI_Alltoallv(vtx_to_send,
@@ -999,8 +988,8 @@ PDM_surf_mesh_t *mesh
    */
 
   const int nDatadHashTable = 2;
-  PDM_g_num_t *dHashTable =
-    (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * nDatadHashTable * n_vtxProc);
+  PDM_g_num_t *dHashTable;
+  PDM_malloc(dHashTable, nDatadHashTable * n_vtxProc, PDM_g_num_t);
 
   for (int i = 0; i < n_vtxProc; i++) {
     PDM_g_num_t key = vtxToRecv[i*nDataToSend] - nKeyProcs[myRank];
@@ -1025,8 +1014,8 @@ PDM_surf_mesh_t *mesh
     }
   }
 
-  free(dNHashTable);
-  free(nKeyProcs);
+  PDM_free(dNHashTable);
+  PDM_free(nKeyProcs);
 
   /*
    * Look for
@@ -1063,8 +1052,8 @@ PDM_surf_mesh_t *mesh
    *  Backup vtxToRecv
    */
 
-  PDM_g_num_t *_cpVtxToRecv =
-    (PDM_g_num_t *) malloc(vtxToRecvIdx[lComm]*sizeof(PDM_g_num_t));
+  PDM_g_num_t *_cpVtxToRecv;
+  PDM_malloc(_cpVtxToRecv, vtxToRecvIdx[lComm], PDM_g_num_t);
   memcpy(_cpVtxToRecv, vtxToRecv, vtxToRecvIdx[lComm]*sizeof(PDM_g_num_t));
 
   /*
@@ -1081,10 +1070,8 @@ PDM_surf_mesh_t *mesh
     vtxToRecvN[i] = 0;
   }
 
-  vtxToRecv = (PDM_g_num_t *) realloc((void *) vtxToRecv,
-                                     vtxToRecvIdx[lComm]*sizeof(PDM_g_num_t));
-  vtx_to_send = (PDM_g_num_t *) realloc((void *) vtx_to_send,
-                                     vtx_to_sendIdx[lComm]*sizeof(PDM_g_num_t));
+  PDM_realloc(vtxToRecv ,vtxToRecv ,                                     vtxToRecvIdx[lComm],PDM_g_num_t);
+  PDM_realloc(vtx_to_send ,vtx_to_send ,                                     vtx_to_sendIdx[lComm],PDM_g_num_t);
 
   for (int i = 0; i < nKeyProc; i++) {
     int idx        = dHashTableIdx[i];
@@ -1119,9 +1106,9 @@ PDM_surf_mesh_t *mesh
     }
   }
 
-  free(dHashTable);
-  free(dHashTableIdx);
-  free(_cpVtxToRecv);
+  PDM_free(dHashTable);
+  PDM_free(dHashTableIdx);
+  PDM_free(_cpVtxToRecv);
 
   PDM_MPI_Alltoallv(vtxToRecv,
                 vtxToRecvN,
@@ -1133,13 +1120,16 @@ PDM_surf_mesh_t *mesh
                 PDM__PDM_MPI_G_NUM,
                 mesh->comm);
 
-  free(vtxToRecv);
-  free(vtxToRecvN);
-  free(vtxToRecvIdx);
+  PDM_free(vtxToRecv);
+  PDM_free(vtxToRecvN);
+  PDM_free(vtxToRecvIdx);
 
-  int **nConnectedElt = (int **) malloc(sizeof(int *) * mesh->n_part);
-  int **nOfferElt = (int **) malloc(sizeof(int *) * mesh->n_part);
-  int *nEltPartBound = (int *) malloc(sizeof(int) * mesh->n_part);
+  int **nConnectedElt;
+  PDM_malloc(nConnectedElt,mesh->n_part,int *);
+  int **nOfferElt;
+  PDM_malloc(nOfferElt,mesh->n_part,int *);
+  int *nEltPartBound;
+  PDM_malloc(nEltPartBound,mesh->n_part,int);
   for (int i = 0; i < n_part; i++) {
     nConnectedElt[i] = NULL;
     nEltPartBound[i] = 0;
@@ -1169,8 +1159,8 @@ PDM_surf_mesh_t *mesh
   }
 
   for (int i = 0; i < n_part; i++) {
-    nConnectedElt[i] = (int *) malloc(sizeof(int) * nEltPartBound[i]);
-    nOfferElt[i] = (int *) malloc(sizeof(int) * nEltPartBound[i]);
+    PDM_malloc(nConnectedElt[i],nEltPartBound[i],int);
+    PDM_malloc(nOfferElt[i],nEltPartBound[i],int);
     nEltPartBound[i] = 0;
   }
 
@@ -1216,12 +1206,12 @@ PDM_surf_mesh_t *mesh
 
   for (int i = 0; i < n_part; i++) {
     nEltPartBound[i] = 0;
-    free (nConnectedElt[i]);
-    free (nOfferElt[i]);
+    PDM_free(nConnectedElt[i]);
+    PDM_free(nOfferElt[i]);
   }
 
-  free (nOfferElt);
-  free (nConnectedElt);
+  PDM_free(nOfferElt);
+  PDM_free(nConnectedElt);
 
   for (int i = 0; i < lComm; i++) {
 
@@ -1278,10 +1268,10 @@ PDM_surf_mesh_t *mesh
     }
   }
 
-  free(nEltPartBound);
-  free(vtx_to_sendN);
-  free(vtx_to_sendIdx);
-  free(vtx_to_send);
+  PDM_free(nEltPartBound);
+  PDM_free(vtx_to_sendN);
+  PDM_free(vtx_to_sendIdx);
+  PDM_free(vtx_to_send);
 
 }
 
@@ -1329,8 +1319,7 @@ PDM_surf_mesh_build_ghost_element
      * Update allocation
      */
 
-    part->faceEdgeIdx = (int *) realloc (part->faceEdgeIdx,
-                                         (part->nTotalFace + 1) * sizeof(int));
+    PDM_realloc(part->faceEdgeIdx ,part->faceEdgeIdx ,                                         (part->nTotalFace + 1) ,int);
 
     int *ghostFaceEdgeIdx = part->faceEdgeIdx + part->n_face + 1;
 
@@ -1345,9 +1334,7 @@ PDM_surf_mesh_build_ghost_element
       part->faceEdgeIdx[j+1] += part->faceEdgeIdx[j];
     }
 
-    part->faceEdge =
-      (int *) realloc (part->faceEdge,
-                       part->faceEdgeIdx[part->nTotalFace] * sizeof(int));
+    PDM_realloc(part->faceEdge ,part->faceEdge ,                       part->faceEdgeIdx[part->nTotalFace] ,int);
 
     /*
      * Update faceEdge
@@ -1387,8 +1374,7 @@ PDM_surf_mesh_build_ghost_element
      * Update allocation
      */
 
-    part->edgeVtx =
-      (int *) realloc (part->edgeVtx, 2 * part->nTotalEdge * sizeof(int));
+    PDM_realloc(part->edgeVtx ,part->edgeVtx , 2 * part->nTotalEdge ,int);
 
     /*
      * Update edgeVtx
@@ -1422,7 +1408,8 @@ PDM_surf_mesh_build_ghost_element
       newVtxEdgeIdx[i1+1] += newVtxEdgeIdx[i1];
     }
 
-    int *newVtxEdge = (int *) malloc (newVtxEdgeIdx[part->n_vtx] * sizeof(int));
+    int *newVtxEdge;
+    PDM_malloc(newVtxEdge,newVtxEdgeIdx[part->n_vtx] ,int);
 
     int *cptVtxEdge = PDM_array_zeros_int(part->n_vtx);
 
@@ -1433,8 +1420,8 @@ PDM_surf_mesh_build_ghost_element
       }
     }
 
-    free (part->vtxEdgeIdx);
-    free (part->vtxEdge);
+    PDM_free(part->vtxEdgeIdx);
+    PDM_free(part->vtxEdge);
 
     part->vtxEdgeIdx = newVtxEdgeIdx;
     part->vtxEdge = newVtxEdge;
@@ -1455,7 +1442,7 @@ PDM_surf_mesh_build_ghost_element
       }
     }
 
-    free (cptVtxEdge);
+    PDM_free(cptVtxEdge);
   }
 }
 
@@ -1482,10 +1469,8 @@ PDM_surf_mesh_build_exchange_graph
 
   PDM_surf_mesh_build_vtx_part_bound (mesh);
 
-  mesh->vtxPartBound =
-    (PDM_part_bound_t **) malloc (mesh->n_part * sizeof(PDM_part_bound_t *));
-  mesh->edgePartBound =
-    (PDM_part_bound_t **) malloc (mesh->n_part * sizeof(PDM_part_bound_t *));
+  PDM_malloc(mesh->vtxPartBound, mesh->n_part, PDM_part_bound_t *);
+  PDM_malloc(mesh->edgePartBound, mesh->n_part, PDM_part_bound_t *);
 
   for (int i = 0; i < mesh->n_part; i++) {
     PDM_surf_part_t *part = mesh->part[i];
@@ -1525,8 +1510,10 @@ PDM_surf_mesh_t *mesh
   assert (mesh != NULL);
 
   const int n_part = mesh->n_part;
-  double **lEdge = (double **) malloc (sizeof(double *) * n_part);
-  double **lEdgeGhost = (double **) malloc (sizeof(double *) * n_part);
+  double **lEdge;
+  PDM_malloc(lEdge,n_part,double *);
+  double **lEdgeGhost;
+  PDM_malloc(lEdgeGhost,n_part,double *);
 
   /*
    * Compute edge length
@@ -1551,7 +1538,7 @@ PDM_surf_mesh_t *mesh
       abort();
     }
 
-    lEdge[i] = (double *) malloc (sizeof(double) * nTotalEdge);
+    PDM_malloc(lEdge[i],nTotalEdge,double);
     lEdgeGhost[i] = lEdge[i] + nEdge;
 
     for (int j = 0; j < nEdge; j++) {
@@ -1565,7 +1552,7 @@ PDM_surf_mesh_t *mesh
       for (int j1 = 0; j1 < 3; j1++) {
         vEdge[j1] = coordVtx2[j1] - coordVtx1[j1];
       }
-      lEdge[i][j] = _MODULE (vEdge);
+      lEdge[i][j] = PDM_MODULE (vEdge);
     }
   }
 
@@ -1590,7 +1577,7 @@ PDM_surf_mesh_t *mesh
 
   PDM_graph_bound_exch_data_wait (mesh->interPartVtxGraph);
 
-  free (lEdgeGhost);
+  PDM_free(lEdgeGhost);
 
   /*
    * Compute caracteristic length with local contribution
@@ -1602,7 +1589,7 @@ PDM_surf_mesh_t *mesh
     const int n_vtx = part->n_vtx;
     double *_lEdge = lEdge[i];
 
-    part->carLgthVtx = (double *) malloc (sizeof(double) * n_vtx);
+    PDM_malloc(part->carLgthVtx,n_vtx,double);
     for (int j = 0; j < n_vtx; j++) {
       part->carLgthVtx[j] = DBL_MAX;
     }
@@ -1614,10 +1601,10 @@ PDM_surf_mesh_t *mesh
     for (int j = 0; j < n_vtx; j++) {
       for (int k = part->vtxEdgeIdx[j]; k < part->vtxEdgeIdx[j+1]; k++) {
         int edge = part->vtxEdge[k] - 1;
-        part->carLgthVtx[j] = _MIN (part->carLgthVtx[j], _lEdge[edge]);
+        part->carLgthVtx[j] = PDM_MIN (part->carLgthVtx[j], _lEdge[edge]);
       }
-      mesh->gMinCarLgthVtx = _MIN (mesh->gMinCarLgthVtx, part->carLgthVtx[j]);
-      mesh->gMaxCarLgthVtx = _MAX (mesh->gMaxCarLgthVtx, part->carLgthVtx[j]);
+      mesh->gMinCarLgthVtx = PDM_MIN (mesh->gMinCarLgthVtx, part->carLgthVtx[j]);
+      mesh->gMaxCarLgthVtx = PDM_MAX (mesh->gMaxCarLgthVtx, part->carLgthVtx[j]);
     }
 
   }
@@ -1639,9 +1626,9 @@ PDM_surf_mesh_t *mesh
    */
 
   for (int i = 0; i < n_part; i++) {
-    free (lEdge[i]);
+    PDM_free(lEdge[i]);
   }
-  free (lEdge);
+  PDM_free(lEdge);
 }
 
 
@@ -1677,7 +1664,7 @@ PDM_surf_mesh_face_normal_get
   const int *face_vtx = part->face_vtx;
 
   if (part->faceNormal  == NULL) {
-    part->faceNormal = (double *) malloc (sizeof(double) * 3 * n_face);
+    PDM_malloc(part->faceNormal,3 * n_face,double);
 
     //TODO : vectorisation par paquet
 
@@ -1700,7 +1687,7 @@ PDM_surf_mesh_face_normal_get
           v1[k1] = coords[3*idx1+k1] - coords[3*idx0+k1];
           v2[k1] = coords[3*idx2+k1] - coords[3*idx0+k1];
         }
-        _CROSS_PRODUCT_3D (subNorm, v1, v2);
+        PDM_CROSS_PRODUCT (subNorm, v1, v2);
         for (int k1 = 0; k1 < 3; k1++) {
           _faceNormal[k1] += subNorm[k1];
         }
@@ -1759,7 +1746,7 @@ PDM_surf_mesh_is_plane_surface
 
     for (int j = 0; j < n_face; j++) {
 
-      if (_DOT_PRODUCT(faceNormal, normalSum) > 0) {
+      if (PDM_DOT_PRODUCT(faceNormal, normalSum) > 0) {
         for (int k = 0; k < 3; k++) {
           normalSum[k] += faceNormal[3*j+k];
         }
@@ -1776,7 +1763,7 @@ PDM_surf_mesh_is_plane_surface
    * Normalize
    */
 
-  double _mod = _MAX(_MODULE (normalSum), epsilonAbs);
+  double _mod = PDM_MAX(PDM_MODULE (normalSum), epsilonAbs);
   for (int k = 0; k < 3; k++) {
     normalSum[k] = normalSum[k]/_mod;
   }
@@ -1793,11 +1780,11 @@ PDM_surf_mesh_is_plane_surface
     const double* _faceNormal = faceNormal;
     for (int j = 0; j < n_face; j++) {
       double faceNormalNorm[3];
-      double _mod1 = _MAX (_MODULE (_faceNormal), epsilonAbs);
+      double _mod1 = PDM_MAX (PDM_MODULE (_faceNormal), epsilonAbs);
       for (int k = 0; k < 3; k++) {
         faceNormalNorm[k] = _faceNormal[k]/_mod1;
       }
-      if ((1 - fabs (_DOT_PRODUCT(faceNormalNorm, normalSum))) > tolerance) {
+      if ((1 - fabs (PDM_DOT_PRODUCT(faceNormalNorm, normalSum))) > tolerance) {
         isPlane = 0;
         break;
       }
@@ -1822,7 +1809,8 @@ PDM_surf_mesh_is_plane_surface
   if (isPlane == lComm) {
 
     isPlane = 1;
-    double *normalSums = (double *) malloc (sizeof(double) * 3 * lComm);
+    double *normalSums;
+    PDM_malloc(normalSums,3 * lComm,double);
 
     PDM_MPI_Allgather(normalSum, 3, PDM__PDM_MPI_REAL,
                   normalSums, 3, PDM__PDM_MPI_REAL,
@@ -1854,14 +1842,14 @@ PDM_surf_mesh_is_plane_surface
         continue;
       }
 
-      if (  (1 - fabs (_DOT_PRODUCT (_normalSumRef, _normalSumRank)))
+      if (  (1 - fabs (PDM_DOT_PRODUCT (_normalSumRef, _normalSumRank)))
           > tolerance) {
         isPlane = 0;
         break;
       }
 
     }
-    free (normalSums);
+    PDM_free(normalSums);
   }
   else {
     isPlane = 0;
@@ -1872,9 +1860,12 @@ PDM_surf_mesh_is_plane_surface
 
   if (isPlane) {
 
-    PDM_g_num_t **_gnums = (PDM_g_num_t **) malloc (sizeof(PDM_g_num_t *) * n_part);
-    int *_n_elts = (int *) malloc (sizeof(int) * n_part);
-    double **_coords = (double **) malloc (sizeof(double *) * n_part);
+    PDM_g_num_t **_gnums;
+    PDM_malloc(_gnums,n_part,PDM_g_num_t *);
+    int *_n_elts;
+    PDM_malloc(_n_elts,n_part,int);
+    double **_coords;
+    PDM_malloc(_coords,n_part,double *);
 
     for (int i = 0; i < n_part; i++) {
       PDM_surf_part_t *part = mesh->part[i];
@@ -1914,9 +1905,9 @@ PDM_surf_mesh_is_plane_surface
 
     PDM_part_to_block_free (ptb);
 
-    free (_gnums);
-    free (_n_elts);
-    free (_coords);
+    PDM_free(_gnums);
+    PDM_free(_n_elts);
+    PDM_free(_coords);
 
     for (int j = 0; j < n_elt_block; j++) {
       for (int k = 0; k < 3; k++) {
@@ -1924,7 +1915,7 @@ PDM_surf_mesh_is_plane_surface
       }
     }
 
-    free (_dcoords);
+    PDM_free(_dcoords);
 
     PDM_MPI_Allreduce (center, barycenter, 3,
                        PDM__PDM_MPI_REAL, PDM_MPI_SUM, mesh->comm);
@@ -1977,7 +1968,7 @@ PDM_surf_mesh_compute_faceExtentsMesh
     const int *face_vtx_idx = part->face_vtx_idx;
     const double *coords = part->coords;
 
-    part->extents = (double *) malloc (sizeof(double) * 6 * n_face);
+    PDM_malloc(part->extents,6 * n_face,double);
 
     /*
      * TODO : Optimization : Split this boucle by blocks (vectorization)
@@ -1996,8 +1987,8 @@ PDM_surf_mesh_compute_faceExtentsMesh
         double *_coords = (double *) coords + 3 * iVtx;
 
         for (int k1 = 0; k1 < 3; k1++) {
-          _extents[k1]   = _MIN (_coords[k1], _extents[k1]);
-          _extents[3+k1] = _MAX (_coords[k1], _extents[3+k1]);
+          _extents[k1]   = PDM_MIN (_coords[k1], _extents[k1]);
+          _extents[3+k1] = PDM_MAX (_coords[k1], _extents[3+k1]);
         }
 
       }
@@ -2005,7 +1996,7 @@ PDM_surf_mesh_compute_faceExtentsMesh
       double delta = -DBL_MAX;
 
       for (int k1 = 0; k1 < 3; k1++) {
-        delta = _MAX (delta, fabs (_extents[k1+3] - _extents[k1]));
+        delta = PDM_MAX (delta, fabs (_extents[k1+3] - _extents[k1]));
       }
 
       delta *= tolerance;
@@ -2480,13 +2471,6 @@ PDM_surf_mesh_n_g_face_get
 
   return mesh->nGFace;
 }
-
-
-#undef _DOT_PRODUCT
-#undef _MODULE
-#undef _MIN
-#undef _MAX
-#undef _CROSS_PRODUCT_3D
 
 #ifdef __cplusplus
 }

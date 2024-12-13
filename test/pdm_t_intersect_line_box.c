@@ -230,10 +230,12 @@ main
   for (PDM_g_num_t i = 0; i < 6*distrib_box[i_rank]; i++) {
     rand();
   }
-  free (distrib_box);
+  PDM_free(distrib_box);
 
-  double *box_centers = malloc (sizeof(double) * n_box * 3);
-  double *box_extents = malloc (sizeof(double) * n_box * 6);
+  double *box_centers = NULL;
+  double *box_extents = NULL;
+  PDM_malloc(box_centers, n_box * 3, double);
+  PDM_malloc(box_extents, n_box * 6, double);
   for (int i = 0; i < n_box; i++) {
     for (int j = 0; j < 3; j++) {
       double x1 = _random01();
@@ -264,7 +266,7 @@ main
   PDM_g_num_t *box_ln_to_gn = PDM_gnum_get (gen_gnum, 0);
 
   PDM_gnum_free (gen_gnum);
-  free (box_centers);
+  PDM_free(box_centers);
 
 
 
@@ -278,10 +280,12 @@ main
   for (PDM_g_num_t i = 0; i < 6*distrib_line[i_rank]; i++) {
     rand();
   }
-  free (distrib_line);
+  PDM_free(distrib_line);
 
-  double *line_centers = malloc (sizeof(double) * n_line * 3);
-  double *line_coords = malloc (sizeof(double) * n_line * 6);
+  double *line_centers = NULL;
+  double *line_coords  = NULL;
+  PDM_malloc(line_centers, n_line * 3, double);
+  PDM_malloc(line_coords , n_line * 6, double);
   for (int i = 0; i < n_line; i++) {
     for (int j = 0; j < 3; j++) {
       double x1 = _random01();
@@ -312,7 +316,7 @@ main
   PDM_g_num_t *line_ln_to_gn = PDM_gnum_get (gen_gnum, 0);
 
   PDM_gnum_free (gen_gnum);
-  free (line_centers);
+  PDM_free(line_centers);
 
 
 
@@ -395,10 +399,13 @@ main
   /*
    *  Check
    */
-  PDM_g_num_t *all_box_ln_to_gn = malloc (sizeof(PDM_g_num_t) * gn_box);
-  double      *all_box_extents  = malloc (sizeof(double)      * gn_box * 6);
+  PDM_g_num_t *all_box_ln_to_gn = NULL;
+  double      *all_box_extents  = NULL;
+  PDM_malloc(all_box_ln_to_gn, gn_box    , PDM_g_num_t);
+  PDM_malloc(all_box_extents , gn_box * 6, double     );
 
-  int *all_n_box = malloc (sizeof(int) * n_rank);
+  int *all_n_box = NULL;
+  PDM_malloc(all_n_box, n_rank, int);
   PDM_MPI_Allgather (&n_box,    1, PDM_MPI_INT,
                      all_n_box, 1, PDM_MPI_INT,
                      comm);
@@ -417,7 +424,7 @@ main
   PDM_MPI_Allgatherv (box_extents, 6*n_box, PDM_MPI_DOUBLE,
                       all_box_extents, all_n_box, recv_shift, PDM_MPI_DOUBLE,
                       comm);
-  free (recv_shift);
+  PDM_free(recv_shift);
 
   PDM_g_num_t ln_wrong = 0;
   double invdir[3];
@@ -457,9 +464,9 @@ main
       }
     }
   }
-  free (all_n_box);
-  free (all_box_ln_to_gn);
-  free (all_box_extents);
+  PDM_free(all_n_box);
+  PDM_free(all_box_ln_to_gn);
+  PDM_free(all_box_extents);
 
 
   PDM_g_num_t gn_wrong;
@@ -473,16 +480,16 @@ main
   /*
    *  Free memory
    */
-  free (intersecting_box_idx);
-  free (intersecting_box_g_num);
+  PDM_free(intersecting_box_idx);
+  PDM_free(intersecting_box_g_num);
 
   PDM_dbbtree_free (dbbt);
   PDM_box_set_destroy (&box_set);
 
-  free (box_extents);
-  free (box_ln_to_gn);
-  free (line_coords);
-  free (line_ln_to_gn);
+  PDM_free(box_extents);
+  PDM_free(box_ln_to_gn);
+  PDM_free(line_coords);
+  PDM_free(line_ln_to_gn);
 
   PDM_MPI_Finalize();
 
