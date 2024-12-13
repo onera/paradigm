@@ -8,13 +8,13 @@ cdef extern from "pdm_multi_block_to_part.h":
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     # > Wrapping of function
 
-    PDM_multi_block_to_part_t* PDM_multi_block_to_part_create(const PDM_g_num_t   *multi_distrib_idx,
-                                                              const int            n_block,
-                                                              const PDM_g_num_t  **block_distrib_idx,
-                                                              const PDM_g_num_t  **gnum_elt,
-                                                              const int           *n_elt,
-                                                              const int            n_part,
-                                                              const PDM_MPI_Comm   comm)
+    PDM_multi_block_to_part_t* PDM_multi_block_to_part_create(PDM_g_num_t   *multi_distrib_idx,
+                                                              int            n_block,
+                                                              PDM_g_num_t  **block_distrib_idx,
+                                                              PDM_g_num_t  **gnum_elt,
+                                                              int           *n_elt,
+                                                              int            n_part,
+                                                              PDM_MPI_Comm   comm)
     
     void PDM_multi_block_to_part_exch2(PDM_multi_block_to_part_t   *mbtp,
                                        size_t                       s_data,
@@ -72,8 +72,8 @@ cdef class MultiBlockToPart:
         # > Create PDM structure
         self.MBTP = PDM_multi_block_to_part_create(_multi_distrib_idx,
                                                    self.n_block,
-                                                   _distrib,
-                                                   _ln_to_gn,
+                           <const PDM_g_num_t **>  _distrib,
+                           <const PDM_g_num_t **>  _ln_to_gn,
                                                    self.pn_elt,
                                                    self.n_part,
                                                    PDMC)

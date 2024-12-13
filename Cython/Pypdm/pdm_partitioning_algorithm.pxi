@@ -331,7 +331,7 @@ def compute_graph_comm_entity_ownership(int                                     
 
   PDM_compute_graph_comm_entity_ownership(n_part,
                                   <int *> n_entity.data,
-                         <PDM_g_num_t **> _entity_ln_to_gn,
+                  <const PDM_g_num_t **> _entity_ln_to_gn,
                                           &_n_owned_entity,
                                           &_lnum_owned_entity,
                                           PDM_comm)
