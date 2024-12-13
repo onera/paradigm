@@ -1,9 +1,9 @@
-cdef extern from "pdm_quaternion.h":
+cdef extern from "pdm_rotation.h":
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
   
   # axis angle -> other formats ---
 
-  void PDM_quaternion_axis_angle_to_euler_angles(const double     axis[3],
+  void PDM_rotation_axis_angle_to_euler_angles(const double     axis[3],
                                                  const double     angle,
                                                  const int        order[3],
                                                  const PDM_bool_t intrinsic,
@@ -11,17 +11,17 @@ cdef extern from "pdm_quaternion.h":
                                                        double*    ang_y,
                                                        double*    ang_z)
 
-  void PDM_quaternion_axis_angle_to_rotation_matrix(const double  axis[3],
+  void PDM_rotation_axis_angle_to_rotation_matrix(const double  axis[3],
                                                     const double  angle,
                                                           double* rotation_matrix)
 
-  void PDM_quaternion_axis_angle_to_homogeneous_matrix(const double  axis[3],
+  void PDM_rotation_axis_angle_to_homogeneous_matrix(const double  axis[3],
                                                        const double  angle,
                                                              double* homogeneous_matrix)
 
   # euler angles -> other formats ---
 
-  void PDM_quaternion_euler_angles_to_axis_angle(const double     ang_x,
+  void PDM_rotation_euler_angles_to_axis_angle(const double     ang_x,
                                                  const double     ang_y,
                                                  const double     ang_z,
                                                  const int        order[3],
@@ -29,7 +29,7 @@ cdef extern from "pdm_quaternion.h":
                                                       double      axis[3],
                                                       double*     angle)
 
-  void PDM_quaternion_euler_angles_to_euler_angles(const double     input_ang_x,
+  void PDM_rotation_euler_angles_to_euler_angles(const double     input_ang_x,
                                                    const double     input_ang_y,
                                                    const double     input_ang_z,
                                                    const int        input_order[3],
@@ -40,14 +40,14 @@ cdef extern from "pdm_quaternion.h":
                                                          double*    output_ang_y,
                                                          double*    output_ang_z)
 
-  void PDM_quaternion_euler_angles_to_rotation_matrix(const double      ang_x,
+  void PDM_rotation_euler_angles_to_rotation_matrix(const double      ang_x,
                                                       const double      ang_y,
                                                       const double      ang_z,
                                                       const int         order[3],
                                                             PDM_bool_t  intrinsic,
                                                             double*     rotation_matrix)
 
-  void PDM_quaternion_euler_angles_to_homogeneous_matrix(const double     ang_x,
+  void PDM_rotation_euler_angles_to_homogeneous_matrix(const double     ang_x,
                                                          const double     ang_y,
                                                          const double     ang_z,
                                                          const int        order[3],
@@ -56,44 +56,44 @@ cdef extern from "pdm_quaternion.h":
 
   # rotation matrix -> other formats ---
 
-  void PDM_quaternion_rotation_matrix_to_axis_angle(const double* rotation_matrix,
+  void PDM_rotation_rotation_matrix_to_axis_angle(const double* rotation_matrix,
                                                           double  axis[3],
                                                           double* angle)
 
-  void PDM_quaternion_rotation_matrix_to_euler_angles(const double*    rotation_matrix,
+  void PDM_rotation_rotation_matrix_to_euler_angles(const double*    rotation_matrix,
                                                       const int        order[3],
                                                       const PDM_bool_t intrinsic,
                                                             double*    ang_x,
                                                             double*    ang_y,
                                                             double*    ang_z)
 
-  void PDM_quaternion_rotation_matrix_to_homogeneous_matrix(const double* rotation_matrix,
+  void PDM_rotation_rotation_matrix_to_homogeneous_matrix(const double* rotation_matrix,
                                                                   double* homogeneous_matrix)
 
   # homogeneous matrix -> other formats ---
 
-  void PDM_quaternion_homogeneous_matrix_to_axis_angle(const double* homogeneous_matrix,
+  void PDM_rotation_homogeneous_matrix_to_axis_angle(const double* homogeneous_matrix,
                                                              double  axis[3],
                                                              double* angle)
 
-  void PDM_quaternion_homogeneous_matrix_to_euler_angles(const double*    homogeneous_matrix,
+  void PDM_rotation_homogeneous_matrix_to_euler_angles(const double*    homogeneous_matrix,
                                                          const int        order[3],
                                                          const PDM_bool_t intrinsic,
                                                                double*    ang_x,
                                                                double*    ang_y,
                                                                double*    ang_z)
 
-  void PDM_quaternion_homogeneous_matrix_to_rotation_matrix(const double* homogeneous_matrix,
+  void PDM_rotation_homogeneous_matrix_to_rotation_matrix(const double* homogeneous_matrix,
                                                                   double* rotation_matrix)
 
   # 2 unit vectors -> other formats ---
 
-  void PDM_quaternion_two_vectors_to_axis_angle(const double  vector_1[3],
+  void PDM_rotation_two_vectors_to_axis_angle(const double  vector_1[3],
                                                 const double  vector_2[3],
                                                       double  axis[3],
                                                       double* angle)
 
-  void PDM_quaternion_two_vectors_to_euler_angles(const double     vector_1[3],
+  void PDM_rotation_two_vectors_to_euler_angles(const double     vector_1[3],
                                                   const double     vector_2[3],
                                                   const int        order[3],
                                                   const PDM_bool_t intrinsic,
@@ -101,48 +101,28 @@ cdef extern from "pdm_quaternion.h":
                                                         double*    ang_y,
                                                         double*    ang_z)
 
-  void PDM_quaternion_two_vectors_to_rotation_matrix(const double  vector_1[3],
+  void PDM_rotation_two_vectors_to_rotation_matrix(const double  vector_1[3],
                                                      const double  vector_2[3],
                                                            double* rotation_matrix)
 
-  void PDM_quaternion_two_vectors_to_homogeneous_matrix(const double  vector_1[3],
+  void PDM_rotation_two_vectors_to_homogeneous_matrix(const double  vector_1[3],
                                                         const double  vector_2[3],
                                                               double* homogeneous_matrix)
 
   # (homogeneous) matrix manipulation ---
 
-  void PDM_quaternion_multiply_n_by_n_matrices(const double* A,
-                                               const double* B,
-                                               const int     n,
-                                                     double* C)
-
-  void PDM_quaternion_apply_n_by_n_matrix(const double* A,
-                                          const double* x,
-                                          const int     n,
-                                          const int     n_samp,
-                                                double* y_out)
-
-  void PDM_quaternion_apply_translation(const double  translation_vector[3],
-                                        const double* vector,
-                                        const int     n_samp,
-                                              double* vector_out)
-
-  void PDM_quaternion_apply_homogeneous_matrix(const double  homogeneous_matrix[16],
+  void PDM_rotation_apply_homogeneous_matrix(const double  homogeneous_matrix[16],
                                                const double* vector,
                                                const int     n_samp,
                                                      double* vector_out)
 
-  void PDM_quaternion_compose_homogeneous_matrices(const double** homogeneous_matrices,
+  void PDM_rotation_compose_homogeneous_matrices(const double** homogeneous_matrices,
                                                    const int      n_matrices,
                                                          double   output_matrix[16])
 
-  void PDM_quaternion_translation_to_homogeneous_matrix(const double     translation_vector[3],
-                                                              PDM_bool_t reverse,
-                                                              double     homogeneous_matrix[16])
-
   # apply functions ---
 
-  void PDM_quaternion_apply_euler_angles_and_rotation_center(const double     ang_x,
+  void PDM_rotation_apply_euler_angles_and_rotation_center(const double     ang_x,
                                                              const double     ang_y,
                                                              const double     ang_z,
                                                              const int        order[3],
@@ -153,7 +133,7 @@ cdef extern from "pdm_quaternion.h":
                                                              const int        n_samp,
                                                                    double*    vector_out)
 
-  void PDM_quaternion_apply_axis_angle_and_rotation_center(const double     axis[3],
+  void PDM_rotation_apply_axis_angle_and_rotation_center(const double     axis[3],
                                                            const double     angle,
                                                            const double     rotation_center[3],
                                                            const PDM_bool_t reverse,
@@ -161,7 +141,7 @@ cdef extern from "pdm_quaternion.h":
                                                            const int        n_samp,
                                                                  double*    vector_out)
 
-  void PDM_quaternion_apply_rotation_matrix_and_rotation_center(const double     rotation_matrix[9],
+  void PDM_rotation_apply_rotation_matrix_and_rotation_center(const double     rotation_matrix[9],
                                                                 const double     rotation_center[3],
                                                                 const PDM_bool_t reverse,
                                                                 const double*    vector,
@@ -214,7 +194,7 @@ def axis_angle_to_euler_angles(
   _check_axis_shape(axis)
   cdef NPY.double_t ang_x,ang_y,ang_z
   cdef int* order_data = np_to_int_pointer(order)
-  PDM_quaternion_axis_angle_to_euler_angles(<double*>axis.data,
+  PDM_rotation_axis_angle_to_euler_angles(<double*>axis.data,
                                             angle,
                                             order_data,
                                             <PDM_bool_t> intrinsic,
@@ -239,7 +219,7 @@ def axis_angle_to_rotation_matrix(
   """
   _check_axis_shape(axis)
   cdef NPY.ndarray[NPY.double_t, mode='c', ndim=2] rotation_matrix = NPY.empty((3,3),dtype=NPY.double)
-  PDM_quaternion_axis_angle_to_rotation_matrix(<double*>axis.data,
+  PDM_rotation_axis_angle_to_rotation_matrix(<double*>axis.data,
                                                angle,
                                               <double*>rotation_matrix.data)
   return rotation_matrix
@@ -271,7 +251,7 @@ def euler_angles_to_axis_angle(
   cdef int* order_data = np_to_int_pointer(order)
   cdef NPY.ndarray[NPY.double_t, mode='c', ndim=1] axis = NPY.empty((3,),dtype=NPY.double)
   cdef NPY.double_t angle
-  PDM_quaternion_euler_angles_to_axis_angle(ang_x,
+  PDM_rotation_euler_angles_to_axis_angle(ang_x,
                                             ang_y,
                                             ang_z,
                                             order_data,
@@ -312,7 +292,7 @@ def euler_angles_to_euler_angles(
   cdef NPY.double_t output_ang_x,output_ang_y,output_ang_z
   cdef int* inp_order_data = np_to_int_pointer(input_order)
   cdef int* out_order_data = np_to_int_pointer(output_order)
-  PDM_quaternion_euler_angles_to_euler_angles(ang_x,
+  PDM_rotation_euler_angles_to_euler_angles(ang_x,
                                               ang_y,
                                               ang_z,
                                               inp_order_data,
@@ -350,7 +330,7 @@ def euler_angles_to_rotation_matrix(
   _check_euler_angles_order(order)
   cdef int* order_data = np_to_int_pointer(order)
   cdef NPY.ndarray[NPY.double_t, mode='c', ndim=2] rotation_matrix = NPY.empty((3,3),dtype=NPY.double)  
-  PDM_quaternion_euler_angles_to_rotation_matrix(ang_x,
+  PDM_rotation_euler_angles_to_rotation_matrix(ang_x,
                                                  ang_y,
                                                  ang_z,
                                                  order_data,
@@ -376,7 +356,7 @@ def rotation_matrix_to_axis_angle(
   _check_matrix_shape(rotation_matrix,(3,3))
   cdef NPY.ndarray[NPY.double_t, mode='c', ndim=1] axis = NPY.empty((3,),dtype=NPY.double)
   cdef NPY.double_t angle
-  PDM_quaternion_rotation_matrix_to_axis_angle(<double*> rotation_matrix.data,
+  PDM_rotation_rotation_matrix_to_axis_angle(<double*> rotation_matrix.data,
                                                <double*> axis.data,
                                                &angle)
   return axis,angle
@@ -404,7 +384,7 @@ def rotation_matrix_to_euler_angles(
 
   cdef NPY.double_t ang_x,ang_y,ang_z
   cdef int* out_order_data = np_to_int_pointer(order)
-  PDM_quaternion_rotation_matrix_to_euler_angles(<double*> rotation_matrix.data,
+  PDM_rotation_rotation_matrix_to_euler_angles(<double*> rotation_matrix.data,
                                                  out_order_data,
                                                  <PDM_bool_t> intrinsic,
                                                  &ang_x,
@@ -433,7 +413,7 @@ def two_vectors_to_axis_angle(
   _check_axis_shape(vector_2,"vector_2")
   cdef NPY.ndarray[NPY.double_t, mode='c', ndim=1] axis = NPY.empty((3,),dtype=NPY.double)
   cdef NPY.double_t angle
-  PDM_quaternion_two_vectors_to_axis_angle(<double*> vector_1.data,
+  PDM_rotation_two_vectors_to_axis_angle(<double*> vector_1.data,
                                            <double*> vector_2.data,
                                            <double*> axis.data,
                                            &angle)
@@ -465,7 +445,7 @@ def two_vectors_to_euler_angles(
   _check_euler_angles_order(order,"order")
   cdef NPY.double_t ang_x,ang_y,ang_z
   cdef int* order_data = np_to_int_pointer(order)
-  PDM_quaternion_two_vectors_to_euler_angles(<double*> vector_1.data,
+  PDM_rotation_two_vectors_to_euler_angles(<double*> vector_1.data,
                                              <double*> vector_2.data,
                                              order_data,
                                              <PDM_bool_t> intrinsic,
@@ -491,7 +471,7 @@ def two_vectors_to_rotation_matrix(
   _check_axis_shape(vector_1,"vector_1")
   _check_axis_shape(vector_2,"vector_2")
   cdef NPY.ndarray[NPY.double_t, mode='c', ndim=2] rotation_matrix = NPY.empty((3,3),dtype=NPY.double)  
-  PDM_quaternion_two_vectors_to_rotation_matrix(<double*> vector_1.data,
+  PDM_rotation_two_vectors_to_rotation_matrix(<double*> vector_1.data,
                                                 <double*> vector_2.data,
                                                 <double*> rotation_matrix.data)
   return rotation_matrix  
@@ -538,7 +518,7 @@ def apply_euler_angles_and_rotation_center_to_coords(
   cdef int* order_data = np_to_int_pointer(order)
   cdef int n_samp = coords.shape[0]
   cdef NPY.ndarray[NPY.double_t, mode='c', ndim=2] vector_out = NPY.empty((n_samp,3),dtype=NPY.double)
-  PDM_quaternion_apply_euler_angles_and_rotation_center(ang_x,
+  PDM_rotation_apply_euler_angles_and_rotation_center(ang_x,
                                                         ang_y,
                                                         ang_z,
                                                         order_data,
@@ -592,7 +572,7 @@ def apply_euler_angles_and_rotation_center_to_vector_field(
   rotation_center_data[:] = [0.,0.,0.]
   cdef int n_samp = vector_field.shape[0]
   cdef NPY.ndarray[NPY.double_t, mode='c', ndim=2] vector_out = NPY.empty((n_samp,3),dtype=NPY.double)
-  PDM_quaternion_apply_euler_angles_and_rotation_center(ang_x,
+  PDM_rotation_apply_euler_angles_and_rotation_center(ang_x,
                                                         ang_y,
                                                         ang_z,
                                                         order_data,
@@ -634,7 +614,7 @@ def apply_axis_angle_and_rotation_center_to_coords(
     raise AssertionError(f"'coords' argument of invalid shape {NPY.shape(coords)}, expects (n,3)")
   cdef int n_samp = coords.shape[0]
   cdef NPY.ndarray[NPY.double_t, mode='c', ndim=2] vector_out = NPY.empty((n_samp,3),dtype=NPY.double)
-  PDM_quaternion_apply_axis_angle_and_rotation_center(<double*> axis.data,
+  PDM_rotation_apply_axis_angle_and_rotation_center(<double*> axis.data,
                                                       angle,
                                                       <double*> rotation_center.data,
                                                       <PDM_bool_t> reverse,
@@ -676,7 +656,7 @@ def apply_axis_angle_and_rotation_center_to_vector_field(
   cdef NPY.ndarray[NPY.double_t, mode='c', ndim=2] vector_out = NPY.empty((n_samp,3),dtype=NPY.double)
   cdef double rotation_center_data[3]
   rotation_center_data[:] = [0.,0.,0.]
-  PDM_quaternion_apply_axis_angle_and_rotation_center(<double*> axis.data,
+  PDM_rotation_apply_axis_angle_and_rotation_center(<double*> axis.data,
                                                       angle,
                                                       rotation_center_data,
                                                       <PDM_bool_t> reverse,
@@ -714,7 +694,7 @@ def apply_rotation_matrix_and_rotation_center_to_coords(
     raise AssertionError(f"'coords' argument of invalid shape {NPY.shape(coords)}, expects (n,3)")
   cdef int n_samp = coords.shape[0]
   cdef NPY.ndarray[NPY.double_t, mode='c', ndim=2] vector_out = NPY.empty((n_samp,3),dtype=NPY.double)
-  PDM_quaternion_apply_rotation_matrix_and_rotation_center(<double*> rotation_matrix.data,
+  PDM_rotation_apply_rotation_matrix_and_rotation_center(<double*> rotation_matrix.data,
                                                            <double*> rotation_center.data,
                                                            <PDM_bool_t> reverse,
                                                            <double*> coords.data,
@@ -750,8 +730,10 @@ def apply_rotation_matrix_and_rotation_center_to_vector_field(
     raise AssertionError(f"'vector_field' argument of invalid shape {NPY.shape(vector_field)}, expects (n,3)")
   cdef int n_samp = vector_field.shape[0]
   cdef NPY.ndarray[NPY.double_t, mode='c', ndim=2] vector_out = NPY.empty((n_samp,3),dtype=NPY.double)
-  PDM_quaternion_apply_rotation_matrix_and_rotation_center(<double*> rotation_matrix.data,
-                                                           <double*> rotation_center.data,
+  cdef double rotation_center_data[3]
+  rotation_center_data[:] = [0.,0.,0.]
+  PDM_rotation_apply_rotation_matrix_and_rotation_center(<double*> rotation_matrix.data,
+                                                           <double*> rotation_center_data,
                                                            <PDM_bool_t> reverse,
                                                            <double*> vector_field.data,
                                                            n_samp,

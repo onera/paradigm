@@ -772,6 +772,6 @@ include "pdm_distrib.pxi"
 # -------------------
 include "pdm_vtk.pxi"
 
-# PDM_quaternion :
+# PDM_rotation :
 # ----------------
-include "pdm_quaternion.pxi"
+include "pdm_rotation.pxi"
