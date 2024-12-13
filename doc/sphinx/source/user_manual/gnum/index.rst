@@ -152,7 +152,7 @@ Fortran API
     use pdm_gnum
     use iso_c_binding
 
-    type(cptr)                    :: gen_gnum
+    type(c_ptr)                   :: gen_gnum = C_NULL_PTR
     double precision,     pointer :: coord => null()
     integer(pdm_g_num_s), pointer :: gnum  => null()
     integer                       :: i_part

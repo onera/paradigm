@@ -291,8 +291,10 @@ int main
 
   int n_domain = n_dom_i * n_dom_j * n_dom_k;
 
-  // PDM_dcube_nodal_t **dcube = (PDM_dcube_nodal_t **) malloc(sizeof(PDM_dcube_nodal_t *) * n_domain);
-  PDM_dmesh_nodal_t **dmn   = (PDM_dmesh_nodal_t **) malloc(sizeof(PDM_dmesh_nodal_t *) * n_domain);
+  // PDM_dcube_nodal_t **dcube;
+  // PDM_malloc(dcube,n_domain,PDM_dcube_nodal_t *);
+  PDM_dmesh_nodal_t **dmn;
+  PDM_malloc(dmn,n_domain,PDM_dmesh_nodal_t *);
   PDM_dcube_nodal_t **dcube = NULL;
   PDM_domain_interface_t *dom_intrf = NULL;
 
@@ -340,15 +342,23 @@ int main
 
   }
 
-  PDM_dmesh_t **dm = malloc(n_domain * sizeof(PDM_dmesh_t *));
+  PDM_dmesh_t **dm;
+  PDM_malloc(dm,n_domain ,PDM_dmesh_t *);
 
-  int          *dn_vtx        = malloc( n_domain * sizeof(int          ));
-  int          *dn_face       = malloc( n_domain * sizeof(int          ));
-  int          *dn_edge       = malloc( n_domain * sizeof(int          ));
-  int         **dface_vtx_idx = malloc( n_domain * sizeof(int         *));
-  PDM_g_num_t **dface_vtx     = malloc( n_domain * sizeof(PDM_g_num_t *));
-  PDM_g_num_t **dedge_vtx     = malloc( n_domain * sizeof(PDM_g_num_t *));
-  int         **dedge_vtx_idx = malloc( n_domain * sizeof(int *        ));
+  int *dn_vtx;
+  PDM_malloc(dn_vtx, n_domain ,int          );
+  int *dn_face;
+  PDM_malloc(dn_face, n_domain ,int          );
+  int *dn_edge;
+  PDM_malloc(dn_edge, n_domain ,int          );
+  int **dface_vtx_idx;
+  PDM_malloc(dface_vtx_idx, n_domain ,int         *);
+  PDM_g_num_t **dface_vtx;
+  PDM_malloc(dface_vtx, n_domain ,PDM_g_num_t *);
+  PDM_g_num_t **dedge_vtx;
+  PDM_malloc(dedge_vtx, n_domain ,PDM_g_num_t *);
+  int **dedge_vtx_idx;
+  PDM_malloc(dedge_vtx_idx, n_domain ,int *        );
  
   for (int i = 0; i < n_domain; i++) {
     PDM_dmesh_nodal_to_dmesh_get_dmesh(dmn_to_dm, i, &dm[i]);
@@ -445,19 +455,19 @@ int main
     PDM_dcube_nodal_gen_free(dcube[i]);
   }
 
-  free(dm);
-  free(dn_vtx);
-  free(dn_face);
-  free(dn_edge);
-  free(dface_vtx_idx);
-  free(dface_vtx);
-  free(dedge_vtx_idx);
-  free(dedge_vtx);
+  PDM_free(dm);
+  PDM_free(dn_vtx);
+  PDM_free(dn_face);
+  PDM_free(dn_edge);
+  PDM_free(dface_vtx_idx);
+  PDM_free(dface_vtx);
+  PDM_free(dedge_vtx_idx);
+  PDM_free(dedge_vtx);
 
   PDM_dmesh_nodal_to_dmesh_free(dmn_to_dm);
   PDM_domain_interface_free(dom_intrf);
-  free(dcube);
-  free(dmn);
+  PDM_free(dcube);
+  PDM_free(dmn);
 
   if (i_rank == 0) {
     printf("-- End\n");

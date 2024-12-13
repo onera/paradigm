@@ -82,7 +82,8 @@ const PDM_hash_tab_key_t  tKey,
 void                     *keyMax
 )
 {
-  _hash_tab_t *ht = malloc (sizeof(_hash_tab_t));
+  _hash_tab_t *ht;
+  PDM_malloc(ht, 1, _hash_tab_t);
   const int nDataDefault = 0;
 
   ht->tKey = tKey;
@@ -99,16 +100,16 @@ void                     *keyMax
   }
 
   ht->l_key_info = PDM_MAX (ht->keyMax/10, 2);
-  ht->key_info = malloc (sizeof(PDM_g_num_t)*ht->l_key_info);
+  PDM_malloc(ht->key_info, ht->l_key_info, PDM_g_num_t);
   ht->n_key_info = 0;
 
-  ht->data = malloc (sizeof(void **) * ht->keyMax);
-  ht->nDataKey = malloc (sizeof(int) * ht->keyMax);
-  ht->mDataKey = malloc (sizeof(int) * ht->keyMax);
+  PDM_malloc(ht->data    , ht->keyMax, void **);
+  PDM_malloc(ht->nDataKey, ht->keyMax, int    );
+  PDM_malloc(ht->mDataKey, ht->keyMax, int    );
   for (int i = 0; i < ht->keyMax; i++) {
     ht->nDataKey[i] = 0;
     ht->mDataKey[i] = nDataDefault;
-    ht->data[i] = malloc (sizeof(void *) * nDataDefault);
+    PDM_malloc(ht->data[i], nDataDefault, void *);
     for (int j = 0; j < nDataDefault; j++) {
       ht->data[i][j] = NULL;
     }
@@ -155,14 +156,13 @@ void           *data
 
   if (_ht->nDataKey[_key] >= _ht->mDataKey[_key]) {
     _ht->mDataKey[_key] += PDM_MAX (1, _ht->mDataKey[_key]);
-    _ht->data[_key] = realloc (_ht->data[_key], sizeof(void *) *
-                                                _ht->mDataKey[_key]);
+    PDM_realloc(_ht->data[_key], _ht->data[_key], _ht->mDataKey[_key], void *);
   }
 
   if (_ht->nDataKey[_key] == 0) {
     if (_ht->n_key_info >= _ht->l_key_info) {
       _ht->l_key_info += PDM_MAX (1, _ht->l_key_info/3);
-      _ht->key_info = realloc(_ht->key_info, sizeof(PDM_g_num_t) *  _ht->l_key_info);
+      PDM_realloc(_ht->key_info, _ht->key_info, _ht->l_key_info, PDM_g_num_t);
     }
     _ht->key_info[_ht->n_key_info] = _key;
     _ht->n_key_info += 1;
@@ -208,7 +208,7 @@ void           *key
 
   for (int i = 0; i < _ht->nDataKey[_key]; i++) {
     if (_ht->data[_key][i] != NULL) {
-      free (_ht->data[_key][i]);
+      PDM_free(_ht->data[_key][i]);
     }
     _ht->data[_key][i] = NULL;
   }
@@ -315,14 +315,14 @@ PDM_hash_tab_t *ht
   _hash_tab_t *_ht = (_hash_tab_t *) ht;
 
   for (int i = 0; i<_ht->keyMax; i++) {
-    free(_ht->data[i]);
+    PDM_free(_ht->data[i]);
   }
-  free (_ht->data);
-  free (_ht->nDataKey);
-  free (_ht->mDataKey);
-  free (_ht->key_info);
+  PDM_free(_ht->data);
+  PDM_free(_ht->nDataKey);
+  PDM_free(_ht->mDataKey);
+  PDM_free(_ht->key_info);
 
-  free (_ht);
+  PDM_free(_ht);
 
   return NULL;
 }

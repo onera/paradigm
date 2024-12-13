@@ -123,7 +123,8 @@ _median_point
 
   int n_pts = point_range[1] - point_range[0];
   if (n_pts > 2) {
-    double *x = malloc(sizeof(double) * n_pts);
+    double *x;
+    PDM_malloc(x, n_pts, double);
 
     for (int j = 0; j < n_pts; j++) {
       int i = point_range[0] + j;
@@ -136,7 +137,7 @@ _median_point
     int h = n_pts / 2;
     // log_trace("n_pts = %d, h = %d\n", n_pts, h);
     mid = 0.5*(x[h] + x[h+1]);
-    free(x);
+    PDM_free(x);
   }
 
   return mid;
@@ -210,7 +211,8 @@ _update_sampling(int     n_sample,
   double  s_low, s_high;
 
   // double new_sampling[n_sample+1];
-  double *new_sampling = malloc(sizeof(double) * (n_sample+1));
+  double *new_sampling;
+  PDM_malloc(new_sampling, n_sample + 1, double);
   double *_sampling = *sampling;
 
 
@@ -254,7 +256,7 @@ _update_sampling(int     n_sample,
 
   new_sampling[n_sample] = _sampling[n_sample];
 
-  free(_sampling);
+  PDM_free(_sampling);
 
   /* Return pointers */
   *sampling = new_sampling;
@@ -277,7 +279,8 @@ _approx_median_point
   int n_pts = point_range[1] - point_range[0];
 
   // double sampling[n_sample+1];
-  double *sampling = malloc(sizeof(double) * (n_sample+1));
+  double *sampling;
+  PDM_malloc(sampling, n_sample + 1, double);
 
    /* Define a naive sampling (uniform distribution) */
   double step = (extents_max - extents_min) / (double) n_sample;
@@ -343,7 +346,7 @@ _approx_median_point
     }
 
   } /* End of while */
-  free(sampling);
+  PDM_free(sampling);
 
   // PDM_log_trace_array_double(best_sampling, n_sample+1, "best_sampling : ");
 
@@ -392,15 +395,15 @@ _build_point_tree_seq_leaves
     }
     ptree->n_nodes_max *= 2;
 
-    nodes->ancestor_id = realloc(nodes->ancestor_id, sizeof(int   ) * ptree->n_nodes_max);
-    nodes->is_leaf     = realloc(nodes->is_leaf,     sizeof(int   ) * ptree->n_nodes_max);
-    nodes->depth       = realloc(nodes->depth,       sizeof(int   ) * ptree->n_nodes_max);
-    nodes->children_id = realloc(nodes->children_id, sizeof(int   ) * ptree->n_nodes_max * n_children);
-    nodes->range       = realloc(nodes->range,       sizeof(int   ) * ptree->n_nodes_max * 2);
-    nodes->idx         = realloc(nodes->idx,         sizeof(int   ) * ptree->n_nodes_max * (n_children+1));
-    nodes->n_points    = realloc(nodes->n_points,    sizeof(int   ) * ptree->n_nodes_max);
-    nodes->extents     = realloc(nodes->extents,     sizeof(double) * ptree->n_nodes_max * 6);
-    nodes->location_in_ancestor = realloc(nodes->location_in_ancestor, sizeof(PDM_point_tree_seq_child_t) * ptree->n_nodes_max);
+    PDM_realloc(nodes->ancestor_id ,nodes->ancestor_id , ptree->n_nodes_max,int   );
+    PDM_realloc(nodes->is_leaf     ,nodes->is_leaf     , ptree->n_nodes_max,int   );
+    PDM_realloc(nodes->depth       ,nodes->depth       , ptree->n_nodes_max,int   );
+    PDM_realloc(nodes->children_id ,nodes->children_id , ptree->n_nodes_max * n_children,int   );
+    PDM_realloc(nodes->range       ,nodes->range       , ptree->n_nodes_max * 2,int   );
+    PDM_realloc(nodes->idx         ,nodes->idx         , ptree->n_nodes_max * (n_children+1),int   );
+    PDM_realloc(nodes->n_points    ,nodes->n_points    , ptree->n_nodes_max,int   );
+    PDM_realloc(nodes->extents     ,nodes->extents     , ptree->n_nodes_max * 6,double);
+    PDM_realloc(nodes->location_in_ancestor ,nodes->location_in_ancestor , ptree->n_nodes_max,PDM_point_tree_seq_child_t);
   }
 
 
@@ -724,15 +727,15 @@ _build_point_tree_seq_leaves_from_boxes
     }
     ptree->n_nodes_max *= 2;
 
-    nodes->ancestor_id = realloc(nodes->ancestor_id, sizeof(int   ) * ptree->n_nodes_max);
-    nodes->is_leaf     = realloc(nodes->is_leaf,     sizeof(int   ) * ptree->n_nodes_max);
-    nodes->depth       = realloc(nodes->depth,       sizeof(int   ) * ptree->n_nodes_max);
-    nodes->children_id = realloc(nodes->children_id, sizeof(int   ) * ptree->n_nodes_max * n_children);
-    nodes->range       = realloc(nodes->range,       sizeof(int   ) * ptree->n_nodes_max * 2);
-    nodes->idx         = realloc(nodes->idx,         sizeof(int   ) * ptree->n_nodes_max * (n_children+1));
-    nodes->n_points    = realloc(nodes->n_points,    sizeof(int   ) * ptree->n_nodes_max);
-    nodes->extents     = realloc(nodes->extents,     sizeof(double) * ptree->n_nodes_max * 6);
-    nodes->location_in_ancestor = realloc(nodes->location_in_ancestor, sizeof(PDM_point_tree_seq_child_t) * ptree->n_nodes_max);
+    PDM_realloc(nodes->ancestor_id ,nodes->ancestor_id , ptree->n_nodes_max,int   );
+    PDM_realloc(nodes->is_leaf     ,nodes->is_leaf     , ptree->n_nodes_max,int   );
+    PDM_realloc(nodes->depth       ,nodes->depth       , ptree->n_nodes_max,int   );
+    PDM_realloc(nodes->children_id ,nodes->children_id , ptree->n_nodes_max * n_children,int   );
+    PDM_realloc(nodes->range       ,nodes->range       , ptree->n_nodes_max * 2,int   );
+    PDM_realloc(nodes->idx         ,nodes->idx         , ptree->n_nodes_max * (n_children+1),int   );
+    PDM_realloc(nodes->n_points    ,nodes->n_points    , ptree->n_nodes_max,int   );
+    PDM_realloc(nodes->extents     ,nodes->extents     , ptree->n_nodes_max * 6,double);
+    PDM_realloc(nodes->location_in_ancestor ,nodes->location_in_ancestor , ptree->n_nodes_max,PDM_point_tree_seq_child_t);
   }
 
   int child_n_box[8] = {0, 0, 0, 0, 0, 0, 0, 0};
@@ -1015,9 +1018,9 @@ _build_point_tree_seq_leaves_from_boxes
         ptree->n_leaf_max *= 2;
       }
 
-      ptree->leaf_ids = realloc(ptree->leaf_ids, sizeof(int) * ptree->n_leaf_max);
-      // ptree->box_ids  = realloc(ptree->leaf_ids, sizeof(int) * ptree->n_leaf_max);
-      ptree->leaf_box_idx  = realloc(ptree->leaf_box_idx, sizeof(int) * (ptree->n_leaf_max+1));
+      PDM_realloc(ptree->leaf_ids ,ptree->leaf_ids , ptree->n_leaf_max,int);
+      // PDM_realloc(// ptree->box_ids  ,// ptree->box_ids  , ptree->n_leaf_max,int);
+      PDM_realloc(ptree->leaf_box_idx  ,ptree->leaf_box_idx  , (ptree->n_leaf_max+1),int);
     }
 
     if(ptree->n_leaf_box_max + curr_n_box >= ptree->n_leaf_box_max) {
@@ -1029,7 +1032,7 @@ _build_point_tree_seq_leaves_from_boxes
       }
       ptree->n_leaf_box_max = PDM_MAX(ptree->n_leaf_box_max, ptree->leaf_box_idx[ptree->n_leaf] + curr_n_box);
 
-      ptree->leaf_box_ids  = realloc(ptree->leaf_box_ids, sizeof(int) * ptree->n_leaf_box_max);
+      PDM_realloc(ptree->leaf_box_ids  ,ptree->leaf_box_ids  , ptree->n_leaf_box_max,int);
     }
 
     ptree->leaf_box_idx[ptree->n_leaf+1] = ptree->leaf_box_idx[ptree->n_leaf];
@@ -1070,7 +1073,7 @@ _build_point_tree
   ptree->n_nodes     = 0;
   ptree->n_nodes_max = 0;
 
-  ptree->nodes = malloc(sizeof(_l_nodes_t));
+  PDM_malloc(ptree->nodes, 1, _l_nodes_t);
   ptree->nodes->ancestor_id          = NULL;
   ptree->nodes->is_leaf              = NULL;
   ptree->nodes->location_in_ancestor = NULL;
@@ -1089,17 +1092,17 @@ _build_point_tree
     }
   }
 
-  ptree->new_to_old = malloc(sizeof(int) * ptree->n_pts);
+  PDM_malloc(ptree->new_to_old, ptree->n_pts, int);
   for (int i = 0; i < ptree->n_pts; i++) {
     ptree->new_to_old[i] = i;
   }
 
-  ptree->old_to_new = malloc(sizeof(int) * ptree->n_pts);
+  PDM_malloc(ptree->old_to_new, ptree->n_pts, int);
   for (int i = 0; i < ptree->n_pts; i++) {
     ptree->old_to_new[i] = i;
   }
 
-  ptree->_pts_coord = malloc(sizeof(double) * ptree->n_pts * 3);
+  PDM_malloc(ptree->_pts_coord, ptree->n_pts * 3, double);
   memcpy(ptree->_pts_coord, ptree->pts_coord, sizeof(double) * ptree->n_pts * 3);
 
   double delta = -1;
@@ -1123,7 +1126,8 @@ _build_point_tree
   if (dbg_ptree) {
     log_trace(">> _build_point_tree_seq_leaves\n");
   }
-  int *tmp_new_to_old = malloc(sizeof(int) * ptree->n_pts);
+  int *tmp_new_to_old = NULL;
+  PDM_malloc(tmp_new_to_old, ptree->n_pts, int);
   _build_point_tree_seq_leaves(-1,
                                (PDM_point_tree_seq_child_t) 0,
                                0,
@@ -1131,7 +1135,7 @@ _build_point_tree
                                ptree,
                                point_range,
                                tmp_new_to_old);
-  free(tmp_new_to_old);
+  PDM_free(tmp_new_to_old);
 
 
   if (ptree->n_nodes > 1) {
@@ -1141,15 +1145,15 @@ _build_point_tree
 
   /* Realloc */
   int n_children = PDM_point_tree_n_children_get(ptree);
-  ptree->nodes->ancestor_id = realloc(ptree->nodes->ancestor_id, sizeof(int   ) * ptree->n_nodes);
-  ptree->nodes->is_leaf     = realloc(ptree->nodes->is_leaf,     sizeof(int   ) * ptree->n_nodes);
-  ptree->nodes->depth       = realloc(ptree->nodes->depth,       sizeof(int   ) * ptree->n_nodes);
-  ptree->nodes->children_id = realloc(ptree->nodes->children_id, sizeof(int   ) * ptree->n_nodes * n_children);
-  ptree->nodes->range       = realloc(ptree->nodes->range,       sizeof(int   ) * ptree->n_nodes * 2);
-  ptree->nodes->idx         = realloc(ptree->nodes->idx,         sizeof(int   ) * ptree->n_nodes * (n_children+1));
-  ptree->nodes->n_points    = realloc(ptree->nodes->n_points,    sizeof(int   ) * ptree->n_nodes);
-  ptree->nodes->extents     = realloc(ptree->nodes->extents,     sizeof(double) * ptree->n_nodes * 6);
-  ptree->nodes->location_in_ancestor = realloc(ptree->nodes->location_in_ancestor, sizeof(PDM_point_tree_seq_child_t) * ptree->n_nodes);
+  PDM_realloc(ptree->nodes->ancestor_id ,ptree->nodes->ancestor_id , ptree->n_nodes,int   );
+  PDM_realloc(ptree->nodes->is_leaf     ,ptree->nodes->is_leaf     , ptree->n_nodes,int   );
+  PDM_realloc(ptree->nodes->depth       ,ptree->nodes->depth       , ptree->n_nodes,int   );
+  PDM_realloc(ptree->nodes->children_id ,ptree->nodes->children_id , ptree->n_nodes * n_children,int   );
+  PDM_realloc(ptree->nodes->range       ,ptree->nodes->range       , ptree->n_nodes * 2,int   );
+  PDM_realloc(ptree->nodes->idx         ,ptree->nodes->idx         , ptree->n_nodes * (n_children+1),int   );
+  PDM_realloc(ptree->nodes->n_points    ,ptree->nodes->n_points    , ptree->n_nodes,int   );
+  PDM_realloc(ptree->nodes->extents     ,ptree->nodes->extents     , ptree->n_nodes * 6,double);
+  PDM_realloc(ptree->nodes->location_in_ancestor ,ptree->nodes->location_in_ancestor , ptree->n_nodes,PDM_point_tree_seq_child_t);
 
   _l_nodes_t *nodes = ptree->nodes;
 
@@ -1229,7 +1233,7 @@ _build_point_tree_from_boxes
   ptree->n_nodes     = 0;
   ptree->n_nodes_max = 0;
 
-  ptree->nodes = malloc(sizeof(_l_nodes_t));
+  PDM_malloc(ptree->nodes, 1, _l_nodes_t);
   ptree->nodes->ancestor_id          = NULL;
   ptree->nodes->is_leaf              = NULL;
   ptree->nodes->location_in_ancestor = NULL;
@@ -1248,17 +1252,17 @@ _build_point_tree_from_boxes
     }
   }
 
-  ptree->new_to_old = malloc(sizeof(int) * ptree->n_pts);
+  PDM_malloc(ptree->new_to_old, ptree->n_pts, int);
   for (int i = 0; i < ptree->n_pts; i++) {
     ptree->new_to_old[i] = i;
   }
 
-  ptree->old_to_new = malloc(sizeof(int) * ptree->n_pts);
+  PDM_malloc(ptree->old_to_new, ptree->n_pts, int);
   for (int i = 0; i < ptree->n_pts; i++) {
     ptree->old_to_new[i] = i;
   }
 
-  ptree->_pts_coord = malloc(sizeof(double) * ptree->n_pts * 3);
+  PDM_malloc(ptree->_pts_coord, ptree->n_pts * 3, double);
   memcpy(ptree->_pts_coord, ptree->pts_coord, sizeof(double) * ptree->n_pts * 3);
 
   double delta = -1;
@@ -1287,13 +1291,14 @@ _build_point_tree_from_boxes
     }
   }
 
-  ptree->leaf_box_idx = malloc(2 * sizeof(int));
+  PDM_malloc(ptree->leaf_box_idx, 2 , int);
   ptree->leaf_box_idx[0] = 0;
 
   if (dbg_ptree) {
     log_trace(">> _build_point_tree_seq_leaves\n");
   }
-  int *tmp_new_to_old = malloc(sizeof(int) * ptree->n_pts);
+  int *tmp_new_to_old;
+  PDM_malloc(tmp_new_to_old, ptree->n_pts, int);
   _build_point_tree_seq_leaves_from_boxes(-1,
                                           (PDM_point_tree_seq_child_t) 0,
                                           0,
@@ -1304,7 +1309,7 @@ _build_point_tree_from_boxes
                                           ptree,
                                           point_range,
                                           tmp_new_to_old);
-  free(tmp_new_to_old);
+  PDM_free(tmp_new_to_old);
 
 
   if (ptree->n_nodes > 1) {
@@ -1314,15 +1319,15 @@ _build_point_tree_from_boxes
 
   /* Realloc */
   int n_children = PDM_point_tree_n_children_get(ptree);
-  ptree->nodes->ancestor_id = realloc(ptree->nodes->ancestor_id, sizeof(int   ) * ptree->n_nodes);
-  ptree->nodes->is_leaf     = realloc(ptree->nodes->is_leaf,     sizeof(int   ) * ptree->n_nodes);
-  ptree->nodes->depth       = realloc(ptree->nodes->depth,       sizeof(int   ) * ptree->n_nodes);
-  ptree->nodes->children_id = realloc(ptree->nodes->children_id, sizeof(int   ) * ptree->n_nodes * n_children);
-  ptree->nodes->range       = realloc(ptree->nodes->range,       sizeof(int   ) * ptree->n_nodes * 2);
-  ptree->nodes->idx         = realloc(ptree->nodes->idx,         sizeof(int   ) * ptree->n_nodes * (n_children+1));
-  ptree->nodes->n_points    = realloc(ptree->nodes->n_points,    sizeof(int   ) * ptree->n_nodes);
-  ptree->nodes->extents     = realloc(ptree->nodes->extents,     sizeof(double) * ptree->n_nodes * 6);
-  ptree->nodes->location_in_ancestor = realloc(ptree->nodes->location_in_ancestor, sizeof(PDM_point_tree_seq_child_t) * ptree->n_nodes);
+  PDM_realloc(ptree->nodes->ancestor_id         , ptree->nodes->ancestor_id         , ptree->n_nodes                 ,int                       );
+  PDM_realloc(ptree->nodes->is_leaf             , ptree->nodes->is_leaf             , ptree->n_nodes                 ,int                       );
+  PDM_realloc(ptree->nodes->depth               , ptree->nodes->depth               , ptree->n_nodes                 ,int                       );
+  PDM_realloc(ptree->nodes->children_id         , ptree->nodes->children_id         , ptree->n_nodes * n_children    ,int                       );
+  PDM_realloc(ptree->nodes->range               , ptree->nodes->range               , ptree->n_nodes * 2             ,int                       );
+  PDM_realloc(ptree->nodes->idx                 , ptree->nodes->idx                 , ptree->n_nodes * (n_children+1),int                       );
+  PDM_realloc(ptree->nodes->n_points            , ptree->nodes->n_points            , ptree->n_nodes                 ,int                       );
+  PDM_realloc(ptree->nodes->extents             , ptree->nodes->extents             , ptree->n_nodes * 6             ,double                    );
+  PDM_realloc(ptree->nodes->location_in_ancestor, ptree->nodes->location_in_ancestor, ptree->n_nodes                 ,PDM_point_tree_seq_child_t);
 
   _l_nodes_t *nodes = ptree->nodes;
 
@@ -1346,7 +1351,7 @@ _build_point_tree_from_boxes
     //           ptree->n_pts, depth_max, n_pts_leaf_min, n_pts_leaf_max, n_pts_mean );
   }
 
-  ptree->leaf_ids = realloc(ptree->leaf_ids, sizeof(int) * ptree->n_leaf);
+  PDM_realloc(ptree->leaf_ids, ptree->leaf_ids, ptree->n_leaf, int);
   // PDM_log_trace_array_int(ptree->leaf_ids, ptree->n_leaf, "ptree->leaf_ids : ");
 
   if (dbg_ptree) {
@@ -1396,17 +1401,17 @@ _l_nodes_free
 {
   if (ptree->nodes != NULL) {
 
-    free(ptree->nodes->ancestor_id);
-    free(ptree->nodes->is_leaf);
-    free(ptree->nodes->depth);
-    free(ptree->nodes->location_in_ancestor);
-    free(ptree->nodes->children_id);
-    free(ptree->nodes->range);
-    free(ptree->nodes->idx);
-    free(ptree->nodes->n_points);
-    free(ptree->nodes->extents);
+    PDM_free(ptree->nodes->ancestor_id);
+    PDM_free(ptree->nodes->is_leaf);
+    PDM_free(ptree->nodes->depth);
+    PDM_free(ptree->nodes->location_in_ancestor);
+    PDM_free(ptree->nodes->children_id);
+    PDM_free(ptree->nodes->range);
+    PDM_free(ptree->nodes->idx);
+    PDM_free(ptree->nodes->n_points);
+    PDM_free(ptree->nodes->extents);
 
-    free(ptree->nodes);
+    PDM_free(ptree->nodes);
 
     ptree->nodes = NULL;
   }
@@ -1505,7 +1510,8 @@ PDM_point_tree_seq_create
   }
 
 
-  PDM_point_tree_seq_t *ptree = (PDM_point_tree_seq_t *) malloc(sizeof(PDM_point_tree_seq_t));
+  PDM_point_tree_seq_t *ptree;
+  PDM_malloc(ptree,1,PDM_point_tree_seq_t);
 
   ptree->tree_type = tree_type;
 
@@ -1556,30 +1562,30 @@ PDM_point_tree_seq_free
 {
   if (ptree != NULL) {
     if (ptree->_pts_coord != NULL) {
-      free(ptree->_pts_coord);
+      PDM_free(ptree->_pts_coord);
     }
 
     if (ptree->new_to_old != NULL) {
-      free(ptree->new_to_old);
+      PDM_free(ptree->new_to_old);
     }
 
     if (ptree->old_to_new != NULL) {
-      free(ptree->old_to_new);
+      PDM_free(ptree->old_to_new);
     }
 
     if(ptree->leaf_box_ids != NULL) {
-      free(ptree->leaf_box_ids);
+      PDM_free(ptree->leaf_box_ids);
     }
     if(ptree->leaf_box_idx != NULL) {
-      free(ptree->leaf_box_idx);
+      PDM_free(ptree->leaf_box_idx);
     }
     if(ptree->leaf_ids != NULL) {
-      free(ptree->leaf_ids);
+      PDM_free(ptree->leaf_ids);
     }
 
     _l_nodes_free(ptree);
 
-    free(ptree);
+    PDM_free(ptree);
   }
 }
 
@@ -1891,10 +1897,13 @@ PDM_point_tree_seq_extract_nodes
 
   int n_children   = PDM_point_tree_n_children_get(ptree);
   int s_pt_stack   = ((n_children - 1) * (ptree->depth_max - 1) + n_children);
-  int *stack_id    = malloc (s_pt_stack * sizeof(int));
-  int *stack_depth = malloc (s_pt_stack * sizeof(int));
+  int *stack_id    = NULL;
+  int *stack_depth = NULL;
+  PDM_malloc(stack_id   , s_pt_stack, int);
+  PDM_malloc(stack_depth, s_pt_stack, int);
 
-  int *id_to_extract = malloc(ptree->n_nodes * sizeof(int));
+  int *id_to_extract = NULL;
+  PDM_malloc(id_to_extract, ptree->n_nodes, int);
 
   int n_extract = 0;
   int pos_stack = 0;
@@ -1927,11 +1936,13 @@ PDM_point_tree_seq_extract_nodes
       }
     }
   }
-  free(stack_id);
-  free(stack_depth);
+  PDM_free(stack_id);
+  PDM_free(stack_depth);
 
-  double* _extents = malloc(n_extract * 6 * sizeof(double));
-  int   * _n_pts   = malloc(n_extract *     sizeof(int   ));
+  double *_extents = NULL;
+  int    *_n_pts   = NULL;
+  PDM_malloc(_extents, n_extract * 6, double);
+  PDM_malloc(_n_pts  , n_extract    , int   );
   for(int i = 0; i < n_extract; ++i) {
     int node_id = id_to_extract[i];
     _n_pts[i] = nodes->n_points[node_id];
@@ -1976,13 +1987,17 @@ PDM_point_tree_seq_extract_extents_by_child_ids
 {
   _l_nodes_t *nodes = ptree->nodes;
 
-  int    *_node_to_child_idx = malloc((n_node_to_extract + 1 ) * sizeof(int   ));
+  int *_node_to_child_idx;
+  PDM_malloc(_node_to_child_idx, n_node_to_extract + 1, int   );
   _node_to_child_idx[0] = 0;
 
   int n_children   = PDM_point_tree_n_children_get(ptree);
-  double *_extract_extents   = malloc(n_node_to_extract * n_children * 6 * sizeof(double));
-  int    *_extract_child_id  = malloc(n_node_to_extract * n_children     * sizeof(int   ));
-  int    *_extract_is_leaf   = malloc(n_node_to_extract * n_children     * sizeof(int   ));
+  double *_extract_extents  = NULL;
+  int    *_extract_child_id = NULL;
+  int    *_extract_is_leaf  = NULL;
+  PDM_malloc(_extract_extents , n_node_to_extract * n_children * 6, double);
+  PDM_malloc(_extract_child_id, n_node_to_extract * n_children    , int   );
+  PDM_malloc(_extract_is_leaf , n_node_to_extract * n_children    , int   );
   int     _n_extract_child   = 0;
 
   for(int i_node_to_extract = 0; i_node_to_extract < n_node_to_extract; ++i_node_to_extract) {
@@ -2019,9 +2034,9 @@ PDM_point_tree_seq_extract_extents_by_child_ids
     }
   }
 
-  _extract_extents  = realloc(_extract_extents , _n_extract_child * 6 * sizeof(double));
-  _extract_child_id = realloc(_extract_child_id, _n_extract_child     * sizeof(int   ));
-  _extract_is_leaf  = realloc(_extract_is_leaf , _n_extract_child     * sizeof(int   ));
+  PDM_realloc(_extract_extents  ,_extract_extents  , _n_extract_child * 6 ,double);
+  PDM_realloc(_extract_child_id ,_extract_child_id , _n_extract_child     ,int   );
+  PDM_realloc(_extract_is_leaf  ,_extract_is_leaf  , _n_extract_child     ,int   );
 
   *n_extract_child   = _n_extract_child;
   *node_to_child_idx = _node_to_child_idx;
@@ -2062,9 +2077,12 @@ double               *closest_ptree_pt_dist2
   double dist_child[n_children];
   int inbox_child[n_children];
 
-  int    *stack           = malloc (sizeof(int   ) * s_pt_stack);
-  int    *inbox_stack     = malloc (sizeof(int   ) * s_pt_stack);
-  double *min_dist2_stack = malloc (sizeof(double) * s_pt_stack);
+  int    *stack           = NULL;
+  int    *inbox_stack     = NULL;
+  double *min_dist2_stack = NULL;
+  PDM_malloc(stack          , s_pt_stack, int   );
+  PDM_malloc(inbox_stack    , s_pt_stack, int   );
+  PDM_malloc(min_dist2_stack, s_pt_stack, double);
 
   _l_nodes_t *nodes = ptree->nodes;
 
@@ -2186,9 +2204,9 @@ double               *closest_ptree_pt_dist2
 
   }
 
-  free (inbox_stack);
-  free (min_dist2_stack);
-  free (stack);
+  PDM_free(inbox_stack);
+  PDM_free(min_dist2_stack);
+  PDM_free(stack);
 
 }
 
@@ -2215,12 +2233,12 @@ PDM_point_tree_seq_points_inside_boxes
        int                  **box_pts
 )
 {
-  *box_pts_idx = malloc (sizeof(int) * (n_box + 1));
+  PDM_malloc(*box_pts_idx, n_box + 1, int);
   int *_box_pts_idx = *box_pts_idx;
   _box_pts_idx[0] = 0;
 
   if (n_box < 1) {
-    *box_pts = malloc (sizeof(int) * _box_pts_idx[n_box]);
+    PDM_malloc(*box_pts, _box_pts_idx[n_box], int);
     return;
   }
 
@@ -2230,13 +2248,14 @@ PDM_point_tree_seq_points_inside_boxes
   _l_nodes_t *nodes = ptree->nodes;
 
   int s_pt_stack = ((n_children - 1) * (ptree->depth_max - 1) + n_children);
-  int *stack_id  = malloc (s_pt_stack * sizeof(int));
+  int *stack_id;
+  PDM_malloc(stack_id, s_pt_stack, int);
 
   int node_inside_box;
   int intersect;
 
   int tmp_size = 4 * n_box;
-  *box_pts = malloc (sizeof(int) * tmp_size);
+  PDM_malloc(*box_pts, tmp_size, int);
   int *_box_pts = *box_pts;
 
   for (int ibox = 0; ibox < n_box; ibox++) {
@@ -2270,7 +2289,7 @@ PDM_point_tree_seq_points_inside_boxes
 
       if (tmp_size <= new_size) {
         tmp_size = PDM_MAX (2*tmp_size, new_size);
-        *box_pts = realloc (*box_pts, sizeof(int) * tmp_size);
+        PDM_realloc(*box_pts ,*box_pts , tmp_size,int);
         _box_pts = *box_pts;
 
       }
@@ -2316,7 +2335,7 @@ PDM_point_tree_seq_points_inside_boxes
           if (pt_inside_box) {
             if (_box_pts_idx[ibox+1] >= tmp_size) {
               tmp_size = PDM_MAX (2*tmp_size, _box_pts_idx[ibox+1] + 1);
-              *box_pts = realloc (*box_pts, sizeof(int) * tmp_size);
+              PDM_realloc(*box_pts ,*box_pts , tmp_size,int);
               _box_pts = *box_pts;
             }
 
@@ -2370,7 +2389,7 @@ PDM_point_tree_seq_points_inside_boxes
 
               if (tmp_size <= new_size) {
                 tmp_size = PDM_MAX (2*tmp_size, new_size);
-                *box_pts = realloc (*box_pts, sizeof(int) * tmp_size);
+                PDM_realloc(*box_pts ,*box_pts , tmp_size,int);
                 _box_pts = *box_pts;
               }
 
@@ -2390,8 +2409,8 @@ PDM_point_tree_seq_points_inside_boxes
     } /* End While */
   } /* End boxe loop */
 
-  free (stack_id);
-  *box_pts = realloc (*box_pts, sizeof(int) * _box_pts_idx[n_box]);
+  PDM_free(stack_id);
+  PDM_realloc(*box_pts ,*box_pts , _box_pts_idx[n_box],int);
 }
 
 
@@ -2428,22 +2447,21 @@ PDM_point_tree_seq_points_inside_balls
   int s_pt_stack = ((n_children - 1) * (ptree->depth_max - 1) + n_children);
 
 
-  *ball_pts_idx = malloc(sizeof(int) * (n_ball + 1));
+  PDM_malloc(*ball_pts_idx, n_ball + 1, int);
   int *pib_idx = *ball_pts_idx;
   pib_idx[0] = 0;
 
   int s_pib = 4*n_ball;
-  *ball_pts       = malloc(sizeof(int   ) * s_pib);
-  *ball_pts_dist2 = malloc(sizeof(double) * s_pib);
+  PDM_malloc(*ball_pts      , s_pib, int   );
+  PDM_malloc(*ball_pts_dist2, s_pib, double);
 
   int    *pib_l_num = *ball_pts;
   double *pib_dist2 = *ball_pts_dist2;
 
-
   _l_nodes_t *nodes = ptree->nodes;
 
-
-  int *stack = malloc(sizeof(int) * s_pt_stack);
+  int *stack;
+  PDM_malloc(stack, s_pt_stack, int);
 
 
   for (int iball = 0; iball < n_ball; iball++) {
@@ -2503,8 +2521,8 @@ PDM_point_tree_seq_points_inside_balls
             if (pib_idx[iball+1] >= s_pib) {
               s_pib *= 2;
 
-              *ball_pts       = realloc(*ball_pts,       sizeof(int   ) * s_pib);
-              *ball_pts_dist2 = realloc(*ball_pts_dist2, sizeof(double) * s_pib);
+              PDM_realloc(*ball_pts       ,*ball_pts       , s_pib,int   );
+              PDM_realloc(*ball_pts_dist2 ,*ball_pts_dist2 , s_pib,double);
 
               pib_l_num = *ball_pts;
               pib_dist2 = *ball_pts_dist2;
@@ -2554,11 +2572,11 @@ PDM_point_tree_seq_points_inside_balls
 
 
   } // End of loop on points
-  free(stack);
+  PDM_free(stack);
 
   s_pib = pib_idx[n_ball];
-  *ball_pts       = realloc(*ball_pts,       sizeof(int   ) * s_pib);
-  *ball_pts_dist2 = realloc(*ball_pts_dist2, sizeof(double) * s_pib);
+  PDM_realloc(*ball_pts       ,*ball_pts       , s_pib,int   );
+  PDM_realloc(*ball_pts_dist2 ,*ball_pts_dist2 , s_pib,double);
 
 }
 
@@ -2575,12 +2593,13 @@ PDM_point_tree_make_shared
   PDM_MPI_Comm_rank (comm_shared, &i_rank_in_shm);
   PDM_MPI_Comm_size (comm_shared, &n_rank_in_shm);
 
-  PDM_point_tree_seq_shm_t* shm_ptree = malloc(sizeof(PDM_point_tree_seq_shm_t));
+  PDM_point_tree_seq_shm_t *shm_ptree;
+  PDM_malloc(shm_ptree, 1, PDM_point_tree_seq_shm_t);
 
   shm_ptree->tree_type = local_ptree->tree_type;
 
   shm_ptree->comm_shared = comm_shared;
-  shm_ptree->ptrees      = malloc(n_rank_in_shm * sizeof(PDM_point_tree_seq_t));
+  PDM_malloc(shm_ptree->ptrees, n_rank_in_shm, PDM_point_tree_seq_t);
 
   /*
    * Exchange size
@@ -2588,13 +2607,16 @@ PDM_point_tree_make_shared
   int s_shm_data_in_rank[2] = {0};
   s_shm_data_in_rank[0] = local_ptree->n_nodes;
   s_shm_data_in_rank[1] = local_ptree->n_pts;
-  int *s_shm_data_in_all_nodes = malloc(2 * n_rank_in_shm * sizeof(int));
+  int *s_shm_data_in_all_nodes;
+  PDM_malloc(s_shm_data_in_all_nodes, 2 * n_rank_in_shm, int);
 
   PDM_MPI_Allgather(s_shm_data_in_rank     , 2, PDM_MPI_INT,
                     s_shm_data_in_all_nodes, 2, PDM_MPI_INT, comm_shared);
 
-  int *shared_nodes_idx = malloc((n_rank_in_shm+1) * sizeof(int));
-  int *shared_pts_idx   = malloc((n_rank_in_shm+1) * sizeof(int));
+  int *shared_nodes_idx = NULL;
+  int *shared_pts_idx   = NULL;
+  PDM_malloc(shared_nodes_idx, n_rank_in_shm+1, int);
+  PDM_malloc(shared_pts_idx  , n_rank_in_shm+1, int);
   shared_nodes_idx[0] = 0;
   shared_pts_idx  [0] = 0;
   for(int i = 0; i < n_rank_in_shm; ++i) {
@@ -2631,16 +2653,16 @@ PDM_point_tree_make_shared
   /*
    *  Set window pointers
    */
-  shm_ptree->shm_n_nodes     = malloc(sizeof(int     ) * n_rank_in_shm);
-  shm_ptree->shm_is_leaf     = malloc(sizeof(int    *) * n_rank_in_shm);
-  shm_ptree->shm_children_id = malloc(sizeof(int    *) * n_rank_in_shm);
-  shm_ptree->shm_range       = malloc(sizeof(int    *) * n_rank_in_shm);
-  shm_ptree->shm_n_points    = malloc(sizeof(int    *) * n_rank_in_shm);
-  shm_ptree->shm_extents     = malloc(sizeof(double *) * n_rank_in_shm);
-  shm_ptree->shm_n_pts       = malloc(sizeof(int     ) * n_rank_in_shm);
-  shm_ptree->shm_pts_coord   = malloc(sizeof(double *) * n_rank_in_shm);
-  shm_ptree->shm_new_to_old  = malloc(sizeof(int    *) * n_rank_in_shm);
-  shm_ptree->shm_old_to_new  = malloc(sizeof(int    *) * n_rank_in_shm);
+  PDM_malloc(shm_ptree->shm_n_nodes    , n_rank_in_shm, int     );
+  PDM_malloc(shm_ptree->shm_is_leaf    , n_rank_in_shm, int    *);
+  PDM_malloc(shm_ptree->shm_children_id, n_rank_in_shm, int    *);
+  PDM_malloc(shm_ptree->shm_range      , n_rank_in_shm, int    *);
+  PDM_malloc(shm_ptree->shm_n_points   , n_rank_in_shm, int    *);
+  PDM_malloc(shm_ptree->shm_extents    , n_rank_in_shm, double *);
+  PDM_malloc(shm_ptree->shm_n_pts      , n_rank_in_shm, int     );
+  PDM_malloc(shm_ptree->shm_pts_coord  , n_rank_in_shm, double *);
+  PDM_malloc(shm_ptree->shm_new_to_old , n_rank_in_shm, int    *);
+  PDM_malloc(shm_ptree->shm_old_to_new , n_rank_in_shm, int    *);
 
   for(int i = 0; i < n_rank_in_shm; ++i) {
 
@@ -2661,7 +2683,7 @@ PDM_point_tree_make_shared
   }
 
 
-  free(s_shm_data_in_all_nodes);
+  PDM_free(s_shm_data_in_all_nodes);
   shm_ptree->shared_nodes_idx = shared_nodes_idx;
   shm_ptree->shared_pts_idx   = shared_pts_idx;
 
@@ -2713,16 +2735,16 @@ PDM_point_tree_seq_shm_free
 )
 {
 
-  free(shm_ptree->shm_n_nodes    );
-  free(shm_ptree->shm_is_leaf    );
-  free(shm_ptree->shm_children_id);
-  free(shm_ptree->shm_range      );
-  free(shm_ptree->shm_n_points   );
-  free(shm_ptree->shm_extents    );
-  free(shm_ptree->shm_n_pts      );
-  free(shm_ptree->shm_pts_coord  );
-  free(shm_ptree->shm_new_to_old );
-  free(shm_ptree->shm_old_to_new );
+  PDM_free(shm_ptree->shm_n_nodes    );
+  PDM_free(shm_ptree->shm_is_leaf    );
+  PDM_free(shm_ptree->shm_children_id);
+  PDM_free(shm_ptree->shm_range      );
+  PDM_free(shm_ptree->shm_n_points   );
+  PDM_free(shm_ptree->shm_extents    );
+  PDM_free(shm_ptree->shm_n_pts      );
+  PDM_free(shm_ptree->shm_pts_coord  );
+  PDM_free(shm_ptree->shm_new_to_old );
+  PDM_free(shm_ptree->shm_old_to_new );
 
   PDM_mpi_win_shared_free(shm_ptree->w_is_leaf    );
   PDM_mpi_win_shared_free(shm_ptree->w_children_id);
@@ -2734,11 +2756,11 @@ PDM_point_tree_seq_shm_free
   PDM_mpi_win_shared_free(shm_ptree->w_new_to_old);
   PDM_mpi_win_shared_free(shm_ptree->w_old_to_new);
 
-  free(shm_ptree->shared_nodes_idx);
-  free(shm_ptree->shared_pts_idx  );
+  PDM_free(shm_ptree->shared_nodes_idx);
+  PDM_free(shm_ptree->shared_pts_idx  );
 
-  free(shm_ptree->ptrees);
-  free(shm_ptree);
+  PDM_free(shm_ptree->ptrees);
+  PDM_free(shm_ptree);
 }
 
 
@@ -2821,12 +2843,12 @@ PDM_point_tree_seq_points_inside_boxes_shared
  )
 {
 
-  *box_pts_idx = malloc (sizeof(int) * (n_box + 1));
+  PDM_malloc(*box_pts_idx, n_box + 1, int);
   int *_box_pts_idx = *box_pts_idx;
   _box_pts_idx[0] = 0;
 
   if (n_box < 1) {
-    *box_pts = malloc (sizeof(int) * _box_pts_idx[n_box]);
+    PDM_malloc(*box_pts, _box_pts_idx[n_box], int);
     return;
   }
 
@@ -2854,14 +2876,15 @@ PDM_point_tree_seq_points_inside_boxes_shared
   int    *new_to_old  = shm_ptree->shm_new_to_old [i_shm_rank];
 
   int s_pt_stack = ((n_children - 1) * (depth_max - 1) + n_children);
-  int *stack_id  = malloc (s_pt_stack * sizeof(int));
+  int *stack_id;
+  PDM_malloc(stack_id, s_pt_stack, int);
 
 
   int node_inside_box;
   int intersect;
 
   int tmp_size = 4 * n_box;
-  *box_pts = malloc (sizeof(int) * tmp_size);
+  PDM_malloc(*box_pts, tmp_size, int);
   int *_box_pts = *box_pts;
 
 
@@ -2896,7 +2919,7 @@ PDM_point_tree_seq_points_inside_boxes_shared
 
       if (tmp_size <= new_size) {
         tmp_size = PDM_MAX (2*tmp_size, new_size);
-        *box_pts = realloc (*box_pts, sizeof(int) * tmp_size);
+        PDM_realloc(*box_pts ,*box_pts , tmp_size,int);
         _box_pts = *box_pts;
 
       }
@@ -2942,7 +2965,7 @@ PDM_point_tree_seq_points_inside_boxes_shared
           if (pt_inside_box) {
             if (_box_pts_idx[ibox+1] >= tmp_size) {
               tmp_size = PDM_MAX (2*tmp_size, _box_pts_idx[ibox+1] + 1);
-              *box_pts = realloc (*box_pts, sizeof(int) * tmp_size);
+              PDM_realloc(*box_pts ,*box_pts , tmp_size,int);
               _box_pts = *box_pts;
             }
 
@@ -2998,7 +3021,7 @@ PDM_point_tree_seq_points_inside_boxes_shared
 
               if (tmp_size <= new_size) {
                 tmp_size = PDM_MAX (2*tmp_size, new_size);
-                *box_pts = realloc (*box_pts, sizeof(int) * tmp_size);
+                PDM_realloc(*box_pts ,*box_pts , tmp_size,int);
                 _box_pts = *box_pts;
               }
 
@@ -3019,8 +3042,8 @@ PDM_point_tree_seq_points_inside_boxes_shared
 
   } // End of loop on boxes
 
-  free (stack_id);
-  *box_pts = realloc (*box_pts, sizeof(int) * _box_pts_idx[n_box]);
+  PDM_free(stack_id);
+  PDM_realloc(*box_pts ,*box_pts , _box_pts_idx[n_box],int);
 }
 
 
@@ -3150,9 +3173,12 @@ PDM_point_tree_seq_closest_point_shared
   int    *new_to_old  = shm_ptree->shm_new_to_old [i_shm_rank];
 
   int s_pt_stack = ((n_children - 1) * (depth_max - 1) + n_children);
-  int    *stack           = malloc(sizeof(int   ) * s_pt_stack);
-  int    *inbox_stack     = malloc(sizeof(int   ) * s_pt_stack);
-  double *min_dist2_stack = malloc(sizeof(double) * s_pt_stack);
+  int    *stack           = NULL;
+  int    *inbox_stack     = NULL;
+  double *min_dist2_stack = NULL;
+  PDM_malloc(stack          , s_pt_stack, int   );
+  PDM_malloc(inbox_stack    , s_pt_stack, int   );
+  PDM_malloc(min_dist2_stack, s_pt_stack, double);
 
   int    sort_child[8];
   double dist_child[8];
@@ -3352,8 +3378,7 @@ _insertion_sort
 
     if ((*box_pts_s) <= (*box_pts_n)) {
       (*box_pts_s) *= 2;
-      (*box_pts)    = realloc((*box_pts),
-                              sizeof(int) * (*box_pts_s));
+      PDM_realloc((*box_pts)    ,(*box_pts)    , (*box_pts_s),int);
     }
 
     for (int j = (*box_pts_n); j > i; j--) {
@@ -3459,8 +3484,10 @@ PDM_tree_intersection_point_box2
   }
 
   int s_queue = 1000; // ?
-  int *queue0 = malloc(sizeof(int) * s_queue * 2);
-  int *queue1 = malloc(sizeof(int) * s_queue * 2);
+  int *queue0 = NULL;
+  int *queue1 = NULL;
+  PDM_malloc(queue0, s_queue * 2, int);
+  PDM_malloc(queue1, s_queue * 2, int);
   int *queues[2] = {queue0, queue1};
 
   int n_queue = 0;
@@ -3472,9 +3499,10 @@ PDM_tree_intersection_point_box2
 
   int  *__box_pts_n = PDM_array_zeros_int(n_boxes);
   int  *__box_pts_s = PDM_array_const_int(n_boxes, 4);
-  int **__box_pts   = malloc(sizeof(int *) * n_boxes);
+  int **__box_pts;
+  PDM_malloc(__box_pts, n_boxes, int *);
   for (int i = 0; i < n_boxes; i++) {
-    __box_pts[i] = malloc(sizeof(int) * __box_pts_s[i]);
+    PDM_malloc(__box_pts[i], __box_pts_s[i], int);
   }
 
 
@@ -3670,8 +3698,8 @@ PDM_tree_intersection_point_box2
             // Check size!!!
             if (new_n_queue >= s_queue) {
               s_queue *= 2;
-              queues[0] = realloc(queues[0], sizeof(int) * s_queue * 2);
-              queues[1] = realloc(queues[1], sizeof(int) * s_queue * 2);
+              PDM_realloc(queues[0] ,queues[0] , s_queue * 2,int);
+              PDM_realloc(queues[1] ,queues[1] , s_queue * 2,int);
             }
 
             queues[1][2*new_n_queue  ] = child_id;
@@ -3707,8 +3735,8 @@ PDM_tree_intersection_point_box2
             // Check size!!!
             if (new_n_queue >= s_queue) {
               s_queue *= 2;
-              queues[0] = realloc(queues[0], sizeof(int) * s_queue * 2);
-              queues[1] = realloc(queues[1], sizeof(int) * s_queue * 2);
+              PDM_realloc(queues[0] ,queues[0] , s_queue * 2,int);
+              PDM_realloc(queues[1] ,queues[1] , s_queue * 2,int);
             }
 
             queues[1][2*new_n_queue  ] = btree_node_id;
@@ -3735,15 +3763,15 @@ PDM_tree_intersection_point_box2
     n_queue = new_n_queue;
 
   } // End of while loop
-  free(__box_pts_s);
-  // free(_pts_coord);
-  free(queues[0]);
-  free(queues[1]);
+  PDM_free(__box_pts_s);
+  //PDM_free(_pts_coord);
+  PDM_free(queues[0]);
+  PDM_free(queues[1]);
 
   /* Re-arrange result */
   *box_pts_idx = PDM_array_new_idx_from_sizes_int(__box_pts_n, n_boxes);
 
-  *box_pts = malloc(sizeof(int) * (*box_pts_idx)[n_boxes]);
+  PDM_malloc(*box_pts, (*box_pts_idx)[n_boxes], int);
   for (int i = 0; i < n_boxes; i++) {
     int *bp = *box_pts + (*box_pts_idx)[i];
 
@@ -3751,13 +3779,13 @@ PDM_tree_intersection_point_box2
       bp[j] = __box_pts[i][j];
     }
 
-    free(__box_pts[i]);
+    PDM_free(__box_pts[i]);
   }
-  free(__box_pts_n);
-  free(__box_pts);
+  PDM_free(__box_pts_n);
+  PDM_free(__box_pts);
 
-  free(queue0);
-  free(queue1);
+  PDM_free(queue0);
+  PDM_free(queue1);
 
 }
 
@@ -3774,12 +3802,12 @@ PDM_point_tree_seq_intersect_box_leaf
        int                  **box_leaf
  )
 {
-  *box_leaf_idx = malloc (sizeof(int) * (n_box + 1));
+  PDM_malloc(*box_leaf_idx, n_box + 1, int);
   int *_box_leaf_idx = *box_leaf_idx;
   _box_leaf_idx[0] = 0;
 
   if (n_box < 1) {
-    *box_leaf = malloc (sizeof(int) * _box_leaf_idx[n_box]);
+    PDM_malloc(*box_leaf, _box_leaf_idx[n_box], int);
     return;
   }
 
@@ -3789,13 +3817,14 @@ PDM_point_tree_seq_intersect_box_leaf
   _l_nodes_t *nodes = ptree->nodes;
 
   int s_pt_stack = ((n_children - 1) * (ptree->depth_max - 1) + n_children);
-  int *stack_id  = malloc (s_pt_stack * sizeof(int));
+  int *stack_id;
+  PDM_malloc(stack_id, s_pt_stack, int);
 
   int node_inside_box;
   int intersect;
 
   int tmp_size = 4 * n_box;
-  *box_leaf = malloc (sizeof(int) * tmp_size);
+  PDM_malloc(*box_leaf, tmp_size, int);
   int *_box_leaf = *box_leaf;
 
   for (int ibox = 0; ibox < n_box; ibox++) {
@@ -3821,7 +3850,7 @@ PDM_point_tree_seq_intersect_box_leaf
     if (nodes->is_leaf[0]) {
       if (tmp_size <= _box_leaf_idx[ibox+1]+1) {
         tmp_size = PDM_MAX (2*tmp_size, _box_leaf_idx[ibox+1]+1);
-        *box_leaf = realloc (*box_leaf, sizeof(int) * tmp_size);
+        PDM_realloc(*box_leaf ,*box_leaf , tmp_size,int);
         _box_leaf = *box_leaf;
       }
       _box_leaf[_box_leaf_idx[ibox+1]++] = 0;
@@ -3881,7 +3910,7 @@ PDM_point_tree_seq_intersect_box_leaf
           if (nodes->is_leaf[child_id]) {
             if (tmp_size <= _box_leaf_idx[ibox+1]+1) {
               tmp_size = PDM_MAX(2*tmp_size, _box_leaf_idx[ibox+1]+1);
-              *box_leaf = realloc(*box_leaf, sizeof(int) * tmp_size);
+              PDM_realloc(*box_leaf ,*box_leaf , tmp_size,int);
               _box_leaf = *box_leaf;
             }
             _box_leaf[_box_leaf_idx[ibox+1]++] = child_id;
@@ -3897,7 +3926,7 @@ PDM_point_tree_seq_intersect_box_leaf
     } /* End While */
   } /* End boxe loop */
 
-  free (stack_id);
-  *box_leaf = realloc(*box_leaf, sizeof(int) * _box_leaf_idx[n_box]);
+  PDM_free(stack_id);
+  PDM_realloc(*box_leaf ,*box_leaf , _box_leaf_idx[n_box],int);
 
 }

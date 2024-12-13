@@ -258,7 +258,7 @@ int main(int argc, char *argv[])
 
   PDM_g_num_t *vtx_distrib = PDM_dmesh_nodal_vtx_distrib_get(dmn);
   int dn_vtx = vtx_distrib[i_rank+1] - vtx_distrib[i_rank];
-  double *dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn);
+  double *dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn, PDM_OWNERSHIP_BAD_VALUE);
   // double amplitude = 0.1;//0.07;
   // double frequence = 4.;
   _deformation(length,
@@ -268,7 +268,8 @@ int main(int argc, char *argv[])
 
   int n_domain = 1;
   // int n_part_domains = {n_part};
-  int *n_part_domains = (int *) malloc(sizeof(int) * n_domain);
+  int *n_part_domains;
+  PDM_malloc(n_part_domains,n_domain,int);
   n_part_domains[0] = n_part;
 
   PDM_multipart_t *mpart = PDM_multipart_create(n_domain,
@@ -289,7 +290,7 @@ int main(int argc, char *argv[])
   PDM_multipart_dmesh_nodal_set(mpart, 0, dmn);
   PDM_multipart_compute(mpart);
 
-  free(n_part_domains);
+  PDM_free(n_part_domains);
 
   PDM_part_mesh_nodal_t* pmsh_nodal = NULL;
   PDM_multipart_get_part_mesh_nodal(mpart, 0, &pmsh_nodal, PDM_OWNERSHIP_KEEP); // Ownership keep is mandatory in C

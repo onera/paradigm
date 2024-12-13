@@ -138,64 +138,6 @@ _read_args
   }
 }
 
-
-
-// static void
-// _gen_polyline
-// (
-//  const PDM_g_num_t   n,
-//  int                *base_n_edge,
-//  int               **base_edge_vtx,
-//  int                *base_n_vtx,
-//  double            **base_vtx_coord
-//  )
-// {
-//   *base_n_edge = (int) n;
-//   *base_n_vtx  = (int) (n + 1);
-
-//   int *rand_edge = malloc(sizeof(int) * (*base_n_edge));
-//   int *perm_edge = malloc(sizeof(int) * (*base_n_edge));
-//   for (int i = 0; i < *base_n_edge; i++) {
-//     rand_edge[i] = rand();
-//     perm_edge[i] = i;
-//   }
-
-//   int *rand_vtx = malloc(sizeof(int) * (*base_n_vtx));
-//   int *perm_vtx = malloc(sizeof(int) * (*base_n_vtx));
-//   for (int i = 0; i < *base_n_vtx; i++) {
-//     rand_vtx[i] = rand();
-//     perm_vtx[i] = i;
-//   }
-
-//   if (1) {
-//     PDM_sort_int(rand_edge, perm_edge, *base_n_edge);
-//     PDM_sort_int(rand_vtx,  perm_vtx,  *base_n_vtx);
-//   }
-//   free(rand_edge);
-//   free(rand_vtx);
-
-//   *base_edge_vtx = malloc(sizeof(int) * 2 * (*base_n_edge));
-//   for (int i = 0; i < *base_n_edge; i++) {
-//     int iedge = perm_edge[i];
-//     (*base_edge_vtx)[2*iedge  ] = perm_vtx[i  ]+1;
-//     (*base_edge_vtx)[2*iedge+1] = perm_vtx[i+1]+1;
-//   }
-
-
-//   *base_vtx_coord = malloc(sizeof(double) * 3 * (*base_n_vtx));
-//   double step = 2*PDM_PI / (double) n;
-//   for (int i = 0; i < *base_n_vtx; i++) {
-//     double x = -PDM_PI + i*step;
-//     (*base_vtx_coord)[3*perm_vtx[i]  ] = x;
-//     (*base_vtx_coord)[3*perm_vtx[i]+1] = 0;
-//     (*base_vtx_coord)[3*perm_vtx[i]+2] = atan(x);
-//   }
-
-//   free(perm_edge);
-//   free(perm_vtx);
-// }
-
-
 static void
 _gen_circle
 (
@@ -209,15 +151,19 @@ _gen_circle
   *base_n_edge = (int) n;
   *base_n_vtx  = (int) (n + 1);
 
-  int *rand_edge = malloc(sizeof(int) * (*base_n_edge));
-  int *perm_edge = malloc(sizeof(int) * (*base_n_edge));
+  int *rand_edge = NULL;
+  int *perm_edge = NULL;
+  PDM_malloc(rand_edge, (*base_n_edge), int);
+  PDM_malloc(perm_edge, (*base_n_edge), int);
   for (int i = 0; i < *base_n_edge; i++) {
     rand_edge[i] = rand();
     perm_edge[i] = i;
   }
 
-  int *rand_vtx = malloc(sizeof(int) * (*base_n_vtx));
-  int *perm_vtx = malloc(sizeof(int) * (*base_n_vtx));
+  int *rand_vtx = NULL;
+  int *perm_vtx = NULL;
+  PDM_malloc(rand_vtx, (*base_n_vtx), int);
+  PDM_malloc(perm_vtx, (*base_n_vtx), int);
   for (int i = 0; i < *base_n_vtx; i++) {
     rand_vtx[i] = rand();
     perm_vtx[i] = i;
@@ -227,10 +173,10 @@ _gen_circle
     PDM_sort_int(rand_edge, perm_edge, *base_n_edge);
     PDM_sort_int(rand_vtx,  perm_vtx,  *base_n_vtx);
   }
-  free(rand_edge);
-  free(rand_vtx);
+  PDM_free(rand_edge);
+  PDM_free(rand_vtx);
 
-  *base_edge_vtx = malloc(sizeof(int) * 2 * (*base_n_edge));
+  PDM_malloc(*base_edge_vtx, 2 * (*base_n_edge), int);
   for (int i = 0; i < *base_n_edge; i++) {
     int iedge = perm_edge[i];
     (*base_edge_vtx)[2*iedge  ] = perm_vtx[i  ]+1;
@@ -238,7 +184,7 @@ _gen_circle
   }
 
 
-  *base_vtx_coord = malloc(sizeof(double) * 3 * (*base_n_vtx));
+  PDM_malloc(*base_vtx_coord, 3 * (*base_n_vtx), double);
   double step = 2*PDM_PI / (double) n;
   for (int i = 0; i < *base_n_vtx; i++) {
     double t = i*step;
@@ -247,8 +193,8 @@ _gen_circle
     (*base_vtx_coord)[3*perm_vtx[i]+2] = 0;
   }
 
-  free(perm_edge);
-  free(perm_vtx);
+  PDM_free(perm_edge);
+  PDM_free(perm_vtx);
 }
 
 
@@ -290,14 +236,15 @@ const PDM_Mesh_nodal_elt_t   elt_type,
 
   *n_face = (int) (distrib_face[i_rank+1] - distrib_face[i_rank]);
 
-  *face_ln_to_gn = malloc(sizeof(PDM_g_num_t) * (*n_face));
+  PDM_malloc(*face_ln_to_gn, (*n_face), PDM_g_num_t);
 
   int face_vtx_n = PDM_Mesh_nodal_n_vtx_elt_get(elt_type, 1);
   *face_vtx_idx = PDM_array_new_idx_from_const_stride_int(face_vtx_n, *n_face);
 
   int s_face_vtx = face_vtx_n * (*n_face);
 
-  PDM_g_num_t *face_vtx_gnum = malloc(sizeof(PDM_g_num_t) * s_face_vtx);
+  PDM_g_num_t *face_vtx_gnum;
+  PDM_malloc(face_vtx_gnum, s_face_vtx, PDM_g_num_t);
 
   int layer_face_n = base_n_edge;
   if (elt_type == PDM_MESH_NODAL_TRIA3) {
@@ -350,23 +297,23 @@ const PDM_Mesh_nodal_elt_t   elt_type,
       abort();
     }
   }
-  free(distrib_face);
+  PDM_free(distrib_face);
 
 
   /* Unique vertices */
-  *face_vtx = malloc(sizeof(int) * s_face_vtx);
+  PDM_malloc(*face_vtx, s_face_vtx, int);
   *n_vtx = PDM_inplace_unique_long2(face_vtx_gnum,
                                     *face_vtx,
                                     0,
                                     s_face_vtx-1);
 
+
   for (int i = 0; i < s_face_vtx; i++) {
     (*face_vtx)[i]++;
   }
 
-
-  *vtx_ln_to_gn = realloc(face_vtx_gnum, sizeof(PDM_g_num_t) * (*n_vtx));
-  *vtx_coord = malloc(sizeof(double) * (*n_vtx) * 3);
+  PDM_realloc(face_vtx_gnum, *vtx_ln_to_gn, (*n_vtx), PDM_g_num_t);
+  PDM_malloc(*vtx_coord, (*n_vtx) * 3, double);
 
   double step = 1. / (double) n_layer;
 
@@ -376,6 +323,7 @@ const PDM_Mesh_nodal_elt_t   elt_type,
 
     int ilayer    = (int) (g / base_n_vtx);
     int ibase_vtx = (int) (g % base_n_vtx);
+
 
     for (int i = 0; i < 3; i++) {
       (*vtx_coord)[3*ivtx+i] = base_vtx_coord[3*ibase_vtx+i] + ilayer*step*extrusion_vector[i];
@@ -452,13 +400,13 @@ main
   //               &base_n_vtx2,
   //               &base_vtx_coord2);
 
-  base_edge_vtx = realloc(base_edge_vtx, sizeof(int) * (base_n_edge + base_n_edge2) * 2);
+  PDM_realloc(base_edge_vtx ,base_edge_vtx , 2 * (base_n_edge + base_n_edge2),int) ;
   for (int i = 0; i < 2*base_n_edge2; i++) {
     base_edge_vtx[2*base_n_edge + i] = base_edge_vtx2[i] + base_n_vtx;
   }
   base_n_edge += base_n_edge2;
 
-  base_vtx_coord = realloc(base_vtx_coord, sizeof(double) * (base_n_vtx + base_n_vtx2) * 3);
+  PDM_realloc(base_vtx_coord ,base_vtx_coord , 3 * (base_n_vtx + base_n_vtx2),double) ;
   for (int i = 0; i < base_n_vtx2; i++) {
     base_vtx_coord[3*base_n_vtx + 3*i  ] = base_vtx_coord2[3*i  ];
     base_vtx_coord[3*base_n_vtx + 3*i+1] = base_vtx_coord2[3*i+1];
@@ -466,8 +414,8 @@ main
   }
   base_n_vtx += base_n_vtx2;
 
-  free(base_edge_vtx2);
-  free(base_vtx_coord2);
+  PDM_free(base_edge_vtx2);
+  PDM_free(base_vtx_coord2);
 
   if (visu && i_rank == 0) {
     PDM_vtk_write_std_elements("base_polyline.vtk",
@@ -562,7 +510,8 @@ main
     PDM_writer_geom_write(wrt,
                           id_geom);
 
-    PDM_real_t *val_part = (PDM_real_t *) malloc(sizeof(PDM_real_t) * n_face);
+    PDM_real_t *val_part;
+    PDM_malloc(val_part, n_face, PDM_real_t);
     for (int i = 0; i < n_face; i++) {
       val_part[i] = (PDM_real_t) i_rank;
     }
@@ -576,7 +525,7 @@ main
                          id_var_part);
     PDM_writer_var_free(wrt,
                         id_var_part);
-    free(val_part);
+    PDM_free(val_part);
 
     PDM_writer_step_end(wrt);
 
@@ -586,14 +535,14 @@ main
 
 
   /* Free memory */
-  free(base_edge_vtx);
-  free(base_vtx_coord);
+  PDM_free(base_edge_vtx);
+  PDM_free(base_vtx_coord);
 
-  free(face_vtx_idx );
-  free(face_vtx     );
-  free(face_ln_to_gn);
-  free(vtx_coord    );
-  free(vtx_ln_to_gn );
+  PDM_free(face_vtx_idx );
+  PDM_free(face_vtx     );
+  PDM_free(face_ln_to_gn);
+  PDM_free(vtx_coord    );
+  PDM_free(vtx_ln_to_gn );
 
   PDM_MPI_Finalize();
 

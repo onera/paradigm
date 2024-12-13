@@ -378,6 +378,23 @@ function PDM_closest_points_n_closest_get (cls)  &
 end function PDM_closest_points_n_closest_get
 
 
+!>
+!!
+!! \brief Disable reverse results computation
+!!
+!! \param [inout] cls        Pointer to \ref PDM_closest_point_t object
+!!
+!!
+
+subroutine PDM_closest_points_reverse_results_disable (cls) &
+  bind (c, name = 'PDM_closest_points_reverse_results_disable')
+
+  use iso_c_binding
+  implicit none
+
+  type(c_ptr), value :: cls
+
+end subroutine PDM_closest_points_reverse_results_disable
 
 
   end interface

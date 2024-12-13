@@ -119,7 +119,7 @@ PDM_g_num_t  nb_vtx_last_problem
     }
   }
 
-  free(check_som) ;
+  PDM_free(check_som) ;
 
   return nb_som_problem ;
 }

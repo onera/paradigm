@@ -13,6 +13,7 @@
 
 #include "pdm.h"
 #include "pdm_priv.h"
+#include "pdm_error.h"
 #include "pdm_part_geom.h"
 #include "pdm_hilbert.h"
 #include "pdm_sort.h"
@@ -91,7 +92,8 @@ PDM_dcompute_cell_center
 
   int dn_face = (int) (distrib_face[i_rank+1] - distrib_face[i_rank]);
 
-  PDM_g_num_t *dface_ln_to_gn = malloc (sizeof(PDM_g_num_t) * dn_face);
+  PDM_g_num_t *dface_ln_to_gn = NULL;
+  PDM_malloc(dface_ln_to_gn, dn_face, PDM_g_num_t);
   for (int i = 0; i < dn_face; i++) {
     dface_ln_to_gn[i] = distrib_face[i_rank] + i + 1;
   }
@@ -110,7 +112,7 @@ PDM_dcompute_cell_center
                                                            &pvtx_ln_to_gn,
                                                            &pface_vtx_idx,
                                                            &pface_vtx);
-  free (dface_ln_to_gn);
+  PDM_free(dface_ln_to_gn);
 
   /*PDM_log_trace_connectivity_long(dface_vtx_idx, dface_vtx, dn_face, "dface_vtx : ");
   PDM_log_trace_connectivity_int (pface_vtx_idx, pface_vtx, dn_face, "pface_vtx : ");
@@ -127,12 +129,13 @@ PDM_dcompute_cell_center
                                         (const PDM_g_num_t **) &pvtx_ln_to_gn,
                                         &tmp_pvtx_coord);
   double *pvtx_coord = tmp_pvtx_coord[0];
-  free(tmp_pvtx_coord);
-  free (pvtx_ln_to_gn);
+  PDM_free(tmp_pvtx_coord);
+  PDM_free(pvtx_ln_to_gn);
 
 
   /* Compute face centers */
-  double *dface_center = malloc (sizeof(double) * dn_face * 3);
+  double *dface_center = NULL;
+  PDM_malloc(dface_center, dn_face * 3, double);
   for (int i = 0; i < dn_face; i++) {
     for (int k = 0; k < 3; k++) {
       dface_center[3*i + k] = 0.;
@@ -151,9 +154,9 @@ PDM_dcompute_cell_center
       dface_center[3*i + k] *= normalization;
     }
   }
-  free (pvtx_coord);
-  free (pface_vtx_idx);
-  free (pface_vtx);
+  PDM_free(pvtx_coord);
+  PDM_free(pface_vtx_idx);
+  PDM_free(pface_vtx);
 
   /* Compute cell centers */
   PDM_compute_center_from_descending_connectivity (dcell_face_idx,
@@ -163,7 +166,7 @@ PDM_dcompute_cell_center
                                                    cell_center,
                                                    dface_center,
                                                    comm);
-  free (dface_center);
+  PDM_free(dface_center);
 }
 /*=============================================================================
  * Public function definitions
@@ -187,7 +190,8 @@ PDM_part_entity_geom
   const int dim = 3;
 
   /** TRAITEMENT HILBERT FVM **/
-  PDM_hilbert_code_t *hilbert_codes     = (PDM_hilbert_code_t *) malloc (dn_entity * sizeof(PDM_hilbert_code_t));
+  PDM_hilbert_code_t *hilbert_codes = NULL;
+  PDM_malloc(hilbert_codes, dn_entity, PDM_hilbert_code_t);
 
   /** Initialisation **/
 
@@ -204,9 +208,11 @@ PDM_part_entity_geom
 
   int n_total_part;
   PDM_MPI_Allreduce ((void *) &n_part, &n_total_part, 1, PDM_MPI_INT, PDM_MPI_SUM, comm);
-  PDM_hilbert_code_t *hilbert_codes_idx = (PDM_hilbert_code_t *) malloc ((n_total_part+1) * sizeof(PDM_hilbert_code_t));
+  PDM_hilbert_code_t *hilbert_codes_idx;
+  PDM_malloc(hilbert_codes_idx, n_total_part+1, PDM_hilbert_code_t);
 
-  double * weight = (double *) malloc (dn_entity * sizeof(double));
+  double *weight = NULL;
+  PDM_malloc(weight, dn_entity, double);
   if (dentity_weight != NULL) {
     for(int i = 0; i < dn_entity; ++i) {
       weight [i] = dentity_weight [i];
@@ -227,7 +233,7 @@ PDM_part_entity_geom
                                 hilbert_codes_idx,
                                 comm);
 
-  free(weight);
+  PDM_free(weight);
 
   /** Remplissage de cell_parts -> en fct des codes Hilbert **/
 
@@ -239,8 +245,8 @@ PDM_part_entity_geom
 
   }
 
-  free(hilbert_codes_idx);
-  free(hilbert_codes);
+  PDM_free(hilbert_codes_idx);
+  PDM_free(hilbert_codes);
 }
 
 /**
@@ -291,7 +297,8 @@ PDM_part_geom
   /*
    * cell center computation
    */
-  double *barycenter_coords = (double *) malloc (dn_cell * 3 * sizeof(double ));
+  double *barycenter_coords;
+  PDM_malloc(barycenter_coords, dn_cell * 3, double );
   PDM_dcompute_cell_center (comm,
                             dn_cell,
                             dcell_face_idx,
@@ -305,7 +312,7 @@ PDM_part_geom
 
   double *dcell_weight_d = NULL;
   if(dcell_weight != NULL) {
-    dcell_weight_d = malloc(dn_cell * sizeof(double));
+    PDM_malloc(dcell_weight_d, dn_cell, double);
     for(int i = 0; i < dn_cell; ++i) {
       dcell_weight_d[i] = dcell_weight[i];
     }
@@ -320,10 +327,10 @@ PDM_part_geom
                        dcell_part);
 
   if(dcell_weight != NULL) {
-    free(dcell_weight_d);
+    PDM_free(dcell_weight_d);
   }
 
-  free(barycenter_coords);
+  PDM_free(barycenter_coords);
 }
 
 
@@ -366,7 +373,8 @@ PDM_part_geom_1d
 
   int *dedge_vtx_idx = PDM_array_new_idx_from_const_stride_int(2, dn_edge);
 
-  double *dedge_center = (double *) malloc(sizeof(double) * dn_edge * 3);
+  double *dedge_center;
+  PDM_malloc(dedge_center, dn_edge * 3, double);
   PDM_compute_center_from_descending_connectivity(dedge_vtx_idx,
                                                   dedge_vtx,
                                                   dn_edge,
@@ -383,9 +391,9 @@ PDM_part_geom_1d
                        dedge_weight,
                        dedge_part);
 
-  free(distrib_vtx);
-  free(dedge_center);
-  free(dedge_vtx_idx);
+  PDM_free(distrib_vtx);
+  PDM_free(dedge_center);
+  PDM_free(dedge_vtx_idx);
 }
 
 void
@@ -409,7 +417,8 @@ PDM_part_geom_2d
 {
 
   PDM_g_num_t *distrib_vtx = PDM_compute_entity_distribution(comm, dn_vtx);
-  double *dface_center = (double *) malloc(sizeof(double) * dn_face * 3);
+  double *dface_center;
+  PDM_malloc(dface_center, dn_face * 3, double);
 
   if(dface_vtx_idx != NULL) {
     PDM_compute_center_from_descending_connectivity(dface_vtx_idx,
@@ -424,7 +433,8 @@ PDM_part_geom_2d
     assert(dface_edge_idx != NULL);
     int *dedge_vtx_idx = PDM_array_new_idx_from_const_stride_int(2, dn_edge);
 
-    double *dedge_center = (double *) malloc(sizeof(double) * dn_edge * 3);
+    double *dedge_center;
+    PDM_malloc(dedge_center, dn_edge * 3, double);
 
     PDM_compute_center_from_descending_connectivity(dedge_vtx_idx,
                                                     dedge_vtx,
@@ -444,9 +454,9 @@ PDM_part_geom_2d
                                                     comm);
 
 
-    free(dedge_vtx_idx);
-    free(dedge_center);
-    free(distrib_edge);
+    PDM_free(dedge_vtx_idx);
+    PDM_free(dedge_center);
+    PDM_free(distrib_edge);
   }
 
   PDM_part_entity_geom(method,
@@ -457,8 +467,8 @@ PDM_part_geom_2d
                        dface_weight,
                        dface_part);
 
-  free(distrib_vtx);
-  free(dface_center);
+  PDM_free(distrib_vtx);
+  PDM_free(dface_center);
 }
 
 
@@ -482,7 +492,8 @@ PDM_dreorder_from_coords
 
   int dn_vtx = distrib_vtx[i_rank+1] - distrib_vtx[i_rank];
 
-  PDM_hilbert_code_t *hilbert_codes     = (PDM_hilbert_code_t *) malloc (dn_vtx * sizeof(PDM_hilbert_code_t));
+  PDM_hilbert_code_t *hilbert_codes;
+  PDM_malloc(hilbert_codes, dn_vtx, PDM_hilbert_code_t);
 
   /** Initialisation **/
   double extents[2*dim]; /** DIM x 2**/
@@ -493,21 +504,8 @@ PDM_dreorder_from_coords
   /** Hilbert Coordinates Computation **/
   PDM_hilbert_encode_coords(dim, PDM_HILBERT_CS, extents, dn_vtx, dcoords, hilbert_codes);
 
-  // PDM_hilbert_code_t *tmp_hilbert_codes = (PDM_hilbert_code_t *) malloc (dn_vtx * sizeof(PDM_hilbert_code_t));
-  // for (int i = 0; i < dn_vtx; ++i) {
-  //   tmp_hilbert_codes [i] = hilbert_codes [i];
-  // }
-
-  ///** Calcul des index des codes Hilbert **/
-  // int * hilbert_order = (int * ) malloc (dn_vtx * sizeof(int));
-  // for (int i = 0; i < dn_vtx; ++i) {
-  //   hilbert_order [i] = i;
-  // }
-  // assert (sizeof(double) == sizeof(PDM_hilbert_code_t));
-  // PDM_sort_double (tmp_hilbert_codes, NULL, dn_vtx);
-  // free(tmp_hilbert_codes);
-
-  PDM_hilbert_code_t *hilbert_codes_idx = (PDM_hilbert_code_t *) malloc ((n_rank+1) * sizeof(PDM_hilbert_code_t));
+  PDM_hilbert_code_t *hilbert_codes_idx;
+  PDM_malloc(hilbert_codes_idx, n_rank+1, PDM_hilbert_code_t);
 
   double *weight = PDM_array_const_double(dn_vtx, 1.);
   PDM_hilbert_build_rank_index (dim,
@@ -518,7 +516,7 @@ PDM_dreorder_from_coords
                                 NULL, // No need order
                                 hilbert_codes_idx,
                                 comm);
-  free(weight);
+  PDM_free(weight);
 
   /** Remplissage de cell_parts -> en fct des codes Hilbert **/
   for(int i = 0; i < dn_vtx; ++i) {
@@ -531,7 +529,8 @@ PDM_dreorder_from_coords
   // part_to_block avec ln_to_gn 1 2 3 4 .... pdm_assembly_partition
   // Puis on échange les hilbert_codes, qu'on retrie localement
 
-  PDM_g_num_t* distrib_rank = (PDM_g_num_t *) malloc( (n_rank+1) * sizeof(PDM_g_num_t));
+  PDM_g_num_t *distrib_rank = NULL;
+  PDM_malloc(distrib_rank, n_rank+1, PDM_g_num_t);
   for(int i = 0; i < n_rank+1; ++i) {
     distrib_rank[i] = i;
   }
@@ -548,7 +547,7 @@ PDM_dreorder_from_coords
                              &dn_vtx,
                              1,
                              comm);
-  free(distrib_rank);
+  PDM_free(distrib_rank);
 
   const int n_vtx_block = PDM_part_to_block_n_elt_block_get (ptb);
 
@@ -579,27 +578,29 @@ PDM_dreorder_from_coords
                           NULL,
                 (void **) &blk_ln_to_gn);
 
-  free(hilbert_codes_idx);
-  free(hilbert_codes);
+  PDM_free(hilbert_codes_idx);
+  PDM_free(hilbert_codes);
   PDM_part_to_block_free(ptb);
 
   /* Reorder locally */
   assert (sizeof(double) == sizeof(PDM_hilbert_code_t));
-  int *hilbert_order = (int * ) malloc( n_vtx_block * sizeof(int));
+  int *hilbert_order = NULL;
+  PDM_malloc(hilbert_order, n_vtx_block, int);
   for (int i = 0; i < n_vtx_block; ++i) {
     hilbert_order [i] = i;
   }
   PDM_sort_double (blk_hilbert_codes, hilbert_order, n_vtx_block);
-  free(blk_hilbert_codes);
+  PDM_free(blk_hilbert_codes);
 
 
   /* Apply order to blk_ln_to_gn */
-  PDM_g_num_t* sorted_blk_ln_to_gn = malloc( n_vtx_block * sizeof(PDM_g_num_t));
+  PDM_g_num_t *sorted_blk_ln_to_gn = NULL;
+  PDM_malloc(sorted_blk_ln_to_gn, n_vtx_block, PDM_g_num_t);
   for(int i = 0; i < n_vtx_block; ++i) {
     sorted_blk_ln_to_gn[i] = blk_ln_to_gn[hilbert_order[i]];
   }
-  free(blk_ln_to_gn);
-  free(hilbert_order);
+  PDM_free(blk_ln_to_gn);
+  PDM_free(hilbert_order);
 
   PDM_g_num_t* distrib_blk_vtx = PDM_compute_entity_distribution(comm, n_vtx_block);
   PDM_block_to_part_t* btp = PDM_block_to_part_create(distrib_blk_vtx,
@@ -617,8 +618,8 @@ PDM_dreorder_from_coords
                          NULL,
               (void **) &ln_to_gn);
   PDM_block_to_part_free(btp);
-  free(sorted_blk_ln_to_gn);
-  free(distrib_blk_vtx);
+  PDM_free(sorted_blk_ln_to_gn);
+  PDM_free(distrib_blk_vtx);
 }
 
 
@@ -639,15 +640,16 @@ PDM_dreorder_from_length
 
   int dn_length = distrib_in[i_rank+1] - distrib_in[i_rank];
 
-  // PDM_hilbert_code_t *hilbert_codes     = (PDM_hilbert_code_t *) malloc (dn_length * sizeof(PDM_hilbert_code_t));
-  PDM_hilbert_code_t *tmp_hilbert_codes = (PDM_hilbert_code_t *) malloc (dn_length * sizeof(PDM_hilbert_code_t));
+  PDM_hilbert_code_t *tmp_hilbert_codes = NULL;
+  PDM_malloc(tmp_hilbert_codes, dn_length, PDM_hilbert_code_t);
 
   for (int i = 0; i < dn_length; ++i) {
     tmp_hilbert_codes [i] = length [i];
   }
 
   ///** Calcul des index des codes Hilbert **/
-  int * hilbert_order = (int * ) malloc (dn_length * sizeof(int));
+  int *hilbert_order = NULL;
+  PDM_malloc(hilbert_order, dn_length, int);
 
   for (int i = 0; i < dn_length; ++i) {
     hilbert_order [i] = i;
@@ -656,9 +658,10 @@ PDM_dreorder_from_length
   assert (sizeof(double) == sizeof(PDM_hilbert_code_t));
   PDM_sort_double (tmp_hilbert_codes, hilbert_order, dn_length);
 
-  free(tmp_hilbert_codes);
+  PDM_free(tmp_hilbert_codes);
 
-  PDM_hilbert_code_t *hilbert_codes_idx = (PDM_hilbert_code_t *) malloc ((n_rank+1) * sizeof(PDM_hilbert_code_t));
+  PDM_hilbert_code_t *hilbert_codes_idx = NULL;
+  PDM_malloc(hilbert_codes_idx, n_rank+1, PDM_hilbert_code_t);
 
   double *weight = PDM_array_const_double(dn_length, 1.);
   PDM_hilbert_build_rank_index (dim,
@@ -671,7 +674,7 @@ PDM_dreorder_from_length
                                 comm);
 
 
-  free(weight);
+  PDM_free(weight);
 
   /** Remplissage de cell_parts -> en fct des codes Hilbert **/
   for(int i = 0; i < dn_length; ++i) {
@@ -684,7 +687,8 @@ PDM_dreorder_from_length
   // part_to_block avec ln_to_gn 1 2 3 4 .... pdm_assembly_partition
   // Puis on échange les hilbert_codes, qu'on retrie localement
 
-  PDM_g_num_t* distrib_rank = (PDM_g_num_t *) malloc( (n_rank+1) * sizeof(PDM_g_num_t));
+  PDM_g_num_t *distrib_rank = NULL;
+  PDM_malloc(distrib_rank, n_rank+1, PDM_g_num_t);
   for(int i = 0; i < n_rank+1; ++i) {
     distrib_rank[i] = i;
   }
@@ -701,7 +705,7 @@ PDM_dreorder_from_length
                              &dn_length,
                              1,
                              comm);
-  free(distrib_rank);
+  PDM_free(distrib_rank);
 
   const int n_vtx_block = PDM_part_to_block_n_elt_block_get (ptb);
 
@@ -732,27 +736,28 @@ PDM_dreorder_from_length
                           NULL,
                 (void **) &blk_ln_to_gn);
 
-  free(hilbert_codes_idx);
+  PDM_free(hilbert_codes_idx);
   PDM_part_to_block_free(ptb);
 
   /* Reorder locally */
   assert (sizeof(double) == sizeof(PDM_hilbert_code_t));
-  hilbert_order = (int * ) realloc(hilbert_order,  n_vtx_block * sizeof(int));
+  PDM_realloc(hilbert_order ,hilbert_order ,  n_vtx_block ,int);
   for (int i = 0; i < n_vtx_block; ++i) {
     hilbert_order [i] = i;
   }
   PDM_sort_double (blk_hilbert_codes, hilbert_order, n_vtx_block);
   //PDM_log_trace_array_double(blk_hilbert_codes, n_vtx_block, "tmp_edge_length : ");
-  free(blk_hilbert_codes);
+  PDM_free(blk_hilbert_codes);
 
 
   /* Apply order to blk_ln_to_gn */
-  PDM_g_num_t* sorted_blk_ln_to_gn = malloc( n_vtx_block * sizeof(PDM_g_num_t));
+  PDM_g_num_t *sorted_blk_ln_to_gn = NULL;
+  PDM_malloc(sorted_blk_ln_to_gn, n_vtx_block, PDM_g_num_t);
   for(int i = 0; i < n_vtx_block; ++i) {
     sorted_blk_ln_to_gn[i] = blk_ln_to_gn[hilbert_order[i]];
   }
-  free(blk_ln_to_gn);
-  free(hilbert_order);
+  PDM_free(blk_ln_to_gn);
+  PDM_free(hilbert_order);
 
   PDM_g_num_t* distrib_blk_vtx = PDM_compute_entity_distribution(comm, n_vtx_block);
   PDM_block_to_part_t* btp = PDM_block_to_part_create(distrib_blk_vtx,
@@ -770,8 +775,320 @@ PDM_dreorder_from_length
                          NULL,
               (void **) &ln_to_gn);
   PDM_block_to_part_free(btp);
-  free(sorted_blk_ln_to_gn);
-  free(distrib_blk_vtx);
+  PDM_free(sorted_blk_ln_to_gn);
+  PDM_free(distrib_blk_vtx);
+}
+
+
+void
+PDM_part_geom_edge_center
+(
+  int       n_part,
+  int      *n_selected,
+  int     **selected_lnum,
+  int     **pedge_vtx,
+  double  **pvtx_coord,
+  double ***edge_center
+)
+{
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    assert(pedge_vtx [i_part] != NULL);
+    assert(pvtx_coord[i_part] != NULL);
+  }
+
+  double **entity_center;
+  PDM_malloc(entity_center, n_part, double *);
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    PDM_malloc(entity_center[i_part], 3 * n_selected[i_part], double);
+
+    double *_pvtx_coord = pvtx_coord[i_part];
+    int    *_pedge_vtx  = pedge_vtx [i_part];
+
+    for(int idx_edge = 0; idx_edge < n_selected[i_part]; ++idx_edge) {
+      int i_edge = idx_edge;
+      if (selected_lnum != NULL) {
+        i_edge = selected_lnum[i_part][idx_edge]-1;
+      }
+      int i_vtx1 = _pedge_vtx[2*i_edge  ]-1;
+      int i_vtx2 = _pedge_vtx[2*i_edge+1]-1;
+      entity_center[i_part][3*idx_edge  ] = 0.5 * (_pvtx_coord[3*i_vtx1  ] + _pvtx_coord[3*i_vtx2  ]);
+      entity_center[i_part][3*idx_edge+1] = 0.5 * (_pvtx_coord[3*i_vtx1+1] + _pvtx_coord[3*i_vtx2+1]);
+      entity_center[i_part][3*idx_edge+2] = 0.5 * (_pvtx_coord[3*i_vtx1+2] + _pvtx_coord[3*i_vtx2+2]);
+    }
+  }
+  *edge_center = entity_center;
+}
+
+
+void
+PDM_part_geom_face_center_from_edge
+(
+  int       n_part,
+  int      *n_selected,
+  int     **selected_lnum,
+  int     **pface_edge_idx,
+  int     **pface_edge,
+  int     **pedge_vtx,
+  double  **pvtx_coord,
+  double ***face_center
+)
+{
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    assert(pface_edge    [i_part] != NULL);
+    assert(pface_edge_idx[i_part] != NULL);
+    assert(pedge_vtx     [i_part] != NULL);
+    assert(pvtx_coord    [i_part] != NULL);
+  }
+
+  double **entity_center;
+  PDM_malloc(entity_center, n_part, double * );
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    PDM_malloc(entity_center[i_part], 3 * n_selected[i_part], double);
+
+    int    *_pface_edge     = pface_edge    [i_part];
+    int    *_pface_edge_idx = pface_edge_idx[i_part];
+    int    *_pedge_vtx      = pedge_vtx     [i_part];
+    double *_pvtx_coord     = pvtx_coord    [i_part];
+
+    for(int idx_face = 0; idx_face < n_selected[i_part]; ++idx_face) {
+
+      int i_face = idx_face;
+      if (selected_lnum != NULL) {
+        i_face = selected_lnum[i_part][idx_face]-1;
+      }
+      entity_center[i_part][3*idx_face  ] = 0.;
+      entity_center[i_part][3*idx_face+1] = 0.;
+      entity_center[i_part][3*idx_face+2] = 0.;
+
+      double inv = 1./((double) _pface_edge_idx[i_face+1] - _pface_edge_idx[i_face]);
+
+      for(int idx_edge = _pface_edge_idx[i_face]; idx_edge < _pface_edge_idx[i_face+1]; ++idx_edge) {
+        int i_edge = PDM_ABS(_pface_edge[idx_edge])-1;
+        int i_vtx1 = _pedge_vtx[2*i_edge  ] - 1;
+        int i_vtx2 = _pedge_vtx[2*i_edge+1] - 1;
+
+        entity_center[i_part][3*idx_face  ] += 0.5 * (_pvtx_coord[3*i_vtx1  ] + _pvtx_coord[3*i_vtx2  ]);
+        entity_center[i_part][3*idx_face+1] += 0.5 * (_pvtx_coord[3*i_vtx1+1] + _pvtx_coord[3*i_vtx2+1]);
+        entity_center[i_part][3*idx_face+2] += 0.5 * (_pvtx_coord[3*i_vtx1+2] + _pvtx_coord[3*i_vtx2+2]);
+
+      }
+      entity_center[i_part][3*idx_face  ] = entity_center[i_part][3*idx_face  ] * inv;
+      entity_center[i_part][3*idx_face+1] = entity_center[i_part][3*idx_face+1] * inv;
+      entity_center[i_part][3*idx_face+2] = entity_center[i_part][3*idx_face+2] * inv;
+    }
+  }
+
+  *face_center = entity_center;
+}
+
+
+void
+PDM_part_geom_face_center_from_vtx
+(
+  int       n_part,
+  int      *n_selected,
+  int     **selected_lnum,
+  int     **pface_vtx_idx,
+  int     **pface_vtx,
+  double  **pvtx_coord,
+  double ***face_center
+)
+{
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    assert(pface_vtx    [i_part] != NULL);
+    assert(pface_vtx_idx[i_part] != NULL);
+    assert(pvtx_coord   [i_part] != NULL);
+  }
+
+  double **entity_center;
+  PDM_malloc(entity_center, n_part, double * );
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    PDM_malloc(entity_center[i_part], 3 * n_selected[i_part], double);
+
+    int    *_pface_vtx     = pface_vtx    [i_part];
+    int    *_pface_vtx_idx = pface_vtx_idx[i_part];
+    double *_pvtx_coord    = pvtx_coord   [i_part];
+
+    for(int idx_face = 0; idx_face < n_selected[i_part]; ++idx_face) {
+
+      int i_face = idx_face;
+      if (selected_lnum != NULL) {
+        i_face = selected_lnum[i_part][idx_face]-1;
+      }
+      entity_center[i_part][3*idx_face  ] = 0.;
+      entity_center[i_part][3*idx_face+1] = 0.;
+      entity_center[i_part][3*idx_face+2] = 0.;
+
+      double inv = 1./((double) _pface_vtx_idx[i_face+1] - _pface_vtx_idx[i_face]);
+
+      for(int idx_vtx = _pface_vtx_idx[i_face]; idx_vtx < _pface_vtx_idx[i_face+1]; ++idx_vtx) {
+        int i_vtx = _pface_vtx[idx_vtx] - 1;
+
+        entity_center[i_part][3*idx_face  ] += _pvtx_coord[3*i_vtx  ];
+        entity_center[i_part][3*idx_face+1] += _pvtx_coord[3*i_vtx+1];
+        entity_center[i_part][3*idx_face+2] += _pvtx_coord[3*i_vtx+2];
+
+      }
+      entity_center[i_part][3*idx_face  ] = entity_center[i_part][3*idx_face  ] * inv;
+      entity_center[i_part][3*idx_face+1] = entity_center[i_part][3*idx_face+1] * inv;
+      entity_center[i_part][3*idx_face+2] = entity_center[i_part][3*idx_face+2] * inv;
+    }
+  }
+
+  *face_center = entity_center;
+}
+
+
+void
+PDM_part_geom_cell_center
+(
+  int       n_part,
+  int      *n_selected,
+  int     **selected_lnum,
+  int     **pcell_face_idx,
+  int     **pcell_face,
+  int     **pface_edge_idx,
+  int     **pface_edge,
+  int     **pface_vtx_idx,
+  int     **pface_vtx,
+  int     **pedge_vtx,
+  double  **pvtx_coord,
+  double ***cell_center
+)
+{
+  int from_edge = (pface_edge != NULL && pface_edge_idx != NULL);
+  int from_face = (pface_vtx  != NULL && pface_vtx_idx  != NULL);
+
+  for (int i_part = 0; i_part < n_part; ++i_part) {
+    if (n_selected[i_part] > 0) {
+      if (from_edge) {
+        if (pface_edge[i_part] == NULL || pface_edge_idx[i_part] == NULL) {
+          from_edge = 0;
+        }
+      }
+      if (from_face) {
+        if (pface_vtx [i_part] == NULL || pface_vtx_idx [i_part] == NULL) {
+          from_face = 0;
+        }
+      }
+    }
+  }
+
+  if (!from_edge && !from_face) {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_part_geom_cell_center: either face->vtx or face->edge connectivity must be provided\n");
+  }
+
+  double **entity_center;
+  PDM_malloc(entity_center, n_part, double *);
+
+  if(from_face == 1) {
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      PDM_malloc(entity_center[i_part], 3 * n_selected[i_part], double);
+
+      int    *_pcell_face     = pcell_face    [i_part];
+      int    *_pcell_face_idx = pcell_face_idx[i_part];
+      int    *_pface_vtx      = pface_vtx     [i_part];
+      int    *_pface_vtx_idx  = pface_vtx_idx [i_part];
+      double *_pvtx_coord     = pvtx_coord    [i_part];
+
+      // PDM_log_trace_array_int(selected_lnum[i_part], n_selected[i_part], "selected_lnum ::");
+      for(int idx_cell = 0; idx_cell < n_selected[i_part]; ++idx_cell) {
+        int i_cell = idx_cell;
+        if (selected_lnum != NULL) {
+          i_cell = selected_lnum[i_part][idx_cell]-1;
+        }
+        entity_center[i_part][3*idx_cell  ] = 0.;
+        entity_center[i_part][3*idx_cell+1] = 0.;
+        entity_center[i_part][3*idx_cell+2] = 0.;
+
+        double inv = 1./((double) _pcell_face_idx[idx_cell+1] - _pcell_face_idx[idx_cell]);
+
+        for(int idx_face = _pcell_face_idx[i_cell]; idx_face < _pcell_face_idx[i_cell+1]; ++idx_face) {
+          int i_face = PDM_ABS(_pcell_face[idx_face])-1;
+
+          double fcx = 0;
+          double fcy = 0;
+          double fcz = 0;
+          double inv2 = 1./((double) _pface_vtx_idx[i_face+1] - _pface_vtx_idx[i_face]);
+
+          for(int idx_vtx = _pface_vtx_idx[i_face]; idx_vtx < _pface_vtx_idx[i_face+1]; ++idx_vtx) {
+            int i_vtx = _pface_vtx[idx_vtx]-1;
+            fcx += _pvtx_coord[3*i_vtx  ];
+            fcy += _pvtx_coord[3*i_vtx+1];
+            fcz += _pvtx_coord[3*i_vtx+2];
+          }
+          fcx = fcx * inv2;
+          fcy = fcy * inv2;
+          fcz = fcz * inv2;
+
+          entity_center[i_part][3*idx_cell  ] += fcx;
+          entity_center[i_part][3*idx_cell+1] += fcy;
+          entity_center[i_part][3*idx_cell+2] += fcz;
+        }
+
+        entity_center[i_part][3*idx_cell  ] = entity_center[i_part][3*idx_cell  ] * inv;
+        entity_center[i_part][3*idx_cell+1] = entity_center[i_part][3*idx_cell+1] * inv;
+        entity_center[i_part][3*idx_cell+2] = entity_center[i_part][3*idx_cell+2] * inv;
+      } /* End cell */
+    }
+  }
+
+  else if( from_edge == 1) {
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      PDM_malloc(entity_center[i_part], 3 * n_selected[i_part], double);
+
+      int    *_pcell_face     = pcell_face    [i_part];
+      int    *_pcell_face_idx = pcell_face_idx[i_part];
+      int    *_pface_edge     = pface_edge    [i_part];
+      int    *_pface_edge_idx = pface_edge_idx[i_part];
+      int    *_pedge_vtx      = pedge_vtx     [i_part];
+      double *_pvtx_coord     = pvtx_coord    [i_part];
+
+      for(int idx_cell = 0; idx_cell < n_selected[i_part]; ++idx_cell) {
+        int i_cell = idx_cell;
+        if (selected_lnum != NULL) {
+          i_cell = selected_lnum[i_part][idx_cell]-1;
+        }
+
+        entity_center[i_part][3*idx_cell  ] = 0.;
+        entity_center[i_part][3*idx_cell+1] = 0.;
+        entity_center[i_part][3*idx_cell+2] = 0.;
+
+        double inv = 1./((double)  _pcell_face_idx[idx_cell+1] - _pcell_face_idx[idx_cell]);
+
+        double fcx = 0;
+        double fcy = 0;
+        double fcz = 0;
+        for(int idx_face = _pcell_face_idx[i_cell]; idx_face < _pcell_face_idx[i_cell+1]; ++idx_face) {
+          int i_face = PDM_ABS(_pcell_face[idx_face])-1;
+
+          double inv2 = 1./((double)  _pface_edge_idx[i_face+1] - _pface_edge_idx[i_face]);
+
+          for(int idx_edge = _pface_edge_idx[i_face]; idx_edge < _pface_edge_idx[i_face+1]; ++idx_edge) {
+            int i_edge = PDM_ABS(_pface_edge[idx_edge])-1;
+            int i_vtx1 = _pedge_vtx[2*i_edge  ] - 1;
+            int i_vtx2 = _pedge_vtx[2*i_edge+1] - 1;
+            fcx += 0.5 * (_pvtx_coord[3*i_vtx1  ] + _pvtx_coord[3*i_vtx2  ]);
+            fcy += 0.5 * (_pvtx_coord[3*i_vtx1+1] + _pvtx_coord[3*i_vtx2+1]);
+            fcz += 0.5 * (_pvtx_coord[3*i_vtx1+2] + _pvtx_coord[3*i_vtx2+2]);
+          }
+          fcx = fcx * inv2;
+          fcy = fcy * inv2;
+          fcz = fcz * inv2;
+
+          entity_center[i_part][3*idx_cell  ] += fcx;
+          entity_center[i_part][3*idx_cell+1] += fcy;
+          entity_center[i_part][3*idx_cell+2] += fcz;
+        }
+
+        entity_center[i_part][3*idx_cell  ] = entity_center[i_part][3*idx_cell  ] * inv;
+        entity_center[i_part][3*idx_cell+1] = entity_center[i_part][3*idx_cell+1] * inv;
+        entity_center[i_part][3*idx_cell+2] = entity_center[i_part][3*idx_cell+2] * inv;
+      } /* End cell */
+    }
+  }
+
+  *cell_center = entity_center;
 }
 
 

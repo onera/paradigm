@@ -82,6 +82,63 @@ PDM_inplace_unique
   return new_size;
 }
 
+
+
+/**
+ *
+ * \brief Unique in place and return order in unique array
+ *
+ * \param [inout]   a             Array to sort
+ * \param [inout]   unique_order  Unique index in old numbering
+ * \param [in]      l             First element
+ * \param [in]      r             Last  element
+ *
+ */
+int
+PDM_inplace_unique_int_with_order_in_unique
+(
+ int a[],
+ int unique_order[],
+ int l,
+ int r
+)
+{
+  int array_size = r - l + 1;
+  if(array_size == 0) {
+    return array_size;
+  }
+  // printf("PDM_inplace_unique_int_with_order_in_unique::array_size::%d\n", array_size);
+  int* order = NULL;
+  PDM_malloc(order, array_size, int);
+
+  for(int i = 0; i < array_size; ++i){
+    order[i] = i;
+  }
+  PDM_sort_int(&a[l], order, array_size);
+
+  int new_size  = 1;
+  int idx_write = l;
+  int last_value = a[l];
+  int idx_save = l;
+  unique_order[order[0]] = idx_save;
+  a[idx_write++] = last_value;
+  for (int idx = l+1; idx <= r; idx++) {
+    if(last_value != a[idx]){
+      last_value = a[idx];
+      // printf(" order[%d] = %d\n", idx-l, order[idx-l]);
+      idx_save = idx_write;
+      unique_order[order[idx-l]] = idx_save;
+      a[idx_write++] = a[idx];
+      new_size++;
+    }
+    unique_order[order[idx-l]] = idx_save;
+  }
+
+  free(order);
+
+  return new_size;
+}
+
 /**
  *
  * \brief Unique
@@ -205,7 +262,8 @@ PDM_inplace_unique_long2
     return array_size;
   }
   // printf("PDM_inplace_unique_long::array_size::%d\n", array_size);
-  int* order = (int *) malloc( (array_size) * sizeof(int));
+  int *order;
+  PDM_malloc(order, array_size, int);
 
   for(int i = 0; i < array_size; ++i){
     order[i] = i;
@@ -231,7 +289,7 @@ PDM_inplace_unique_long2
     unique_order[order[idx-l]] = idx_save;
   }
 
-  free(order);
+  PDM_free(order);
 
   return new_size;
 }
@@ -253,8 +311,10 @@ PDM_unique_long_with_distrib
   PDM_MPI_Comm_size(comm, &n_rank);
   PDM_MPI_Comm_rank(comm, &i_rank);
 
-  int *_unique_order = malloc( array_size * sizeof(int));
-  int *order         = malloc( array_size * sizeof(int));
+  int *_unique_order = NULL;
+  int *order         = NULL;
+  PDM_malloc(_unique_order, array_size, int);
+  PDM_malloc(order        , array_size, int);
   int *rank_id_n     = PDM_array_zeros_int(n_rank+1);
 
   for(int i = 0; i < array_size; ++i) {
@@ -271,8 +331,10 @@ PDM_unique_long_with_distrib
   }
 
   // Swap by rank
-  PDM_g_num_t *tmp_dentity1_entity2_gnum     = malloc( array_size * sizeof(PDM_g_num_t));
-  PDM_g_num_t *_unique_dentity1_entity2_gnum = malloc( array_size * sizeof(PDM_g_num_t));
+  PDM_g_num_t *tmp_dentity1_entity2_gnum     = NULL;
+  PDM_g_num_t *_unique_dentity1_entity2_gnum = NULL;
+  PDM_malloc(tmp_dentity1_entity2_gnum    , array_size, PDM_g_num_t);
+  PDM_malloc(_unique_dentity1_entity2_gnum, array_size, PDM_g_num_t);
   for(int i = 0; i < array_size; ++i) {
     int t_rank    = _unique_order[i];
     int idx_write = rank_id_idx[t_rank]+rank_id_n[t_rank]++;
@@ -280,7 +342,8 @@ PDM_unique_long_with_distrib
     order[idx_write] = i;
   }
 
-  int* unique_tag = malloc(max_dblock * sizeof(int));
+  int *unique_tag;
+  PDM_malloc(unique_tag, max_dblock, int);
 
   int unique_size = 0;
   for(int i = 0; i < n_rank; ++i) {
@@ -303,14 +366,14 @@ PDM_unique_long_with_distrib
     }
   }
 
-  _unique_dentity1_entity2_gnum = realloc(_unique_dentity1_entity2_gnum, unique_size * sizeof(PDM_g_num_t));
+  PDM_realloc(_unique_dentity1_entity2_gnum ,_unique_dentity1_entity2_gnum , unique_size ,PDM_g_num_t);
 
-  free(rank_id_idx);
-  free(rank_id_n);
-  free(order);
-  free(unique_tag);
+  PDM_free(rank_id_idx);
+  PDM_free(rank_id_n);
+  PDM_free(order);
+  PDM_free(unique_tag);
 
-  free(tmp_dentity1_entity2_gnum);
+  PDM_free(tmp_dentity1_entity2_gnum);
 
   *unique_order                 = _unique_order;
   *unique_dentity1_entity2_gnum = _unique_dentity1_entity2_gnum;

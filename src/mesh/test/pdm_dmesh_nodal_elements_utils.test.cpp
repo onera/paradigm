@@ -378,7 +378,7 @@ MPI_TEST_CASE("[pdm_dmesh_nodal_elements_utils] decomposes quad",1) {
                                NULL, NULL,
                                dparent_elmt_pos.data());
 
-  if( 1 == 1)
+  if( 0 == 1)
   {
     PDM_log_trace_array_long(delmt_edge_cell.data()  , n_edge_elt_tot    , "delmt_edge_cell:: ");
     PDM_log_trace_array_int(dcell_edge_vtx_idx.data(), n_edge_elt_tot+1  , "dcell_edge_vtx_idx:: ");

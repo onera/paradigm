@@ -127,8 +127,10 @@ int main(int argc, char *argv[])
   PDM_UNUSED(n_part);
   int pn_elmt = freq * (distrib_init_elmt[i_rank+1] - distrib_init_elmt[i_rank]) ;
 
-  PDM_g_num_t *pln_to_to_gn = malloc(pn_elmt * sizeof(PDM_g_num_t));
-  int         *pfield       = malloc(pn_elmt * sizeof(int        ));
+  PDM_g_num_t *pln_to_to_gn;
+  PDM_malloc(pln_to_to_gn,pn_elmt ,PDM_g_num_t);
+  int *pfield;
+  PDM_malloc(pfield,pn_elmt ,int        );
   for(int i = 0; i < pn_elmt; ++i) {
     unsigned int seed = (unsigned int) (distrib_init_elmt[i_rank] + i);
     srand(seed);
@@ -148,7 +150,8 @@ int main(int argc, char *argv[])
       pn_elmt_pair++;
     }
   }
-  PDM_g_num_t *ppair_ln_to_gn = malloc(pn_elmt_pair * sizeof(PDM_g_num_t));
+  PDM_g_num_t *ppair_ln_to_gn;
+  PDM_malloc(ppair_ln_to_gn,pn_elmt_pair ,PDM_g_num_t);
   pn_elmt_pair = 0;
   for(int i = 0; i < pn_elmt; ++i) {
     if(pln_to_to_gn[i] % 2 == 0) {
@@ -181,11 +184,11 @@ int main(int argc, char *argv[])
 
   PDM_gnum_free(gen_gnum);
 
-  free(pln_to_to_gn);
-  free(distrib_init_elmt);
-  free(pfield);
-  free(ppair_ln_to_gn);
-  free(pln_to_to_gn_child);
+  PDM_free(pln_to_to_gn);
+  PDM_free(distrib_init_elmt);
+  PDM_free(pfield);
+  PDM_free(ppair_ln_to_gn);
+  PDM_free(pln_to_to_gn_child);
 
 
   PDM_MPI_Finalize ();

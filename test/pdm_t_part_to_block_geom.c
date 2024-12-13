@@ -187,7 +187,8 @@ main
                               &src_g_num);
   _rotate(n_src, src_coord);
 
-  double *weight =  malloc( n_src * sizeof(double));
+  double *weight;
+  PDM_malloc(weight, n_src ,double);
   for(int i = 0; i < n_src; ++i) {
     weight[i] = 1.;
   }
@@ -236,7 +237,7 @@ main
                          NULL,
                (void **) &blk_check_gnum);
 
-  // free(blk_check_gnum);
+  //PDM_free(blk_check_gnum);
   // int *part_strid = PDM_array_const_int(n_src, 1);
   // PDM_log_trace_array_int(part_strid, n_src, "part_stride ::");
   // int *blk_strid  = NULL;
@@ -248,7 +249,7 @@ main
   //              (void **) &src_g_num,
   //                        &blk_strid,
   //              (void **) &blk_check_gnum);
-  // free(part_strid);
+  //PDM_free(part_strid);
 
 
   int          n_parent    = PDM_part_to_block_n_elt_block_get  (ptb);
@@ -285,7 +286,8 @@ main
                               NULL);
 
 
-    PDM_g_num_t *debug_gnum = malloc( n_parent * sizeof(PDM_g_num_t));
+    PDM_g_num_t *debug_gnum;
+    PDM_malloc(debug_gnum, n_parent ,PDM_g_num_t);
 
     for(int i = 0; i < n_parent; ++i) {
       debug_gnum[i] = distrib_pts[i_rank] + i + 1;
@@ -309,7 +311,7 @@ main
                               debug_gnum,
                               NULL);
 
-    free(debug_gnum);
+    PDM_free(debug_gnum);
   }
 
   /*
@@ -323,7 +325,8 @@ main
     PDM_hilbert_get_coord_extents_par(dim, n_parent, blk_src_coord, extents, comm);
     PDM_extents_conformize(dim, extents, 1e-3);
 
-    PDM_hilbert_code_t* hilbert_codes = (PDM_hilbert_code_t * ) malloc(n_parent * sizeof(PDM_hilbert_code_t));
+    PDM_hilbert_code_t *hilbert_codes;
+    PDM_malloc(hilbert_codes,n_parent ,PDM_hilbert_code_t);
     PDM_hilbert_encode_coords(dim, PDM_HILBERT_CS, extents, n_parent, blk_src_coord, hilbert_codes);
 
     PDM_hilbert_code_t first = 0.;
@@ -338,16 +341,16 @@ main
       first = hilbert_codes[i];
     }
     // PDM_log_trace_array_double(hilbert_codes, n_parent, "hilbert_codes ::");
-    free (hilbert_codes);
+    PDM_free(hilbert_codes);
   }
   PDM_part_to_block_free(ptb);
 
   /* Free */
-  free (blk_src_coord);
-  free (blk_check_gnum);
-  free (weight);
-  free (src_coord);
-  free (src_g_num);
+  PDM_free(blk_src_coord);
+  PDM_free(blk_check_gnum);
+  PDM_free(weight);
+  PDM_free(src_coord);
+  PDM_free(src_g_num);
 
   PDM_MPI_Barrier (PDM_MPI_COMM_WORLD);
   if (i_rank == 0) {

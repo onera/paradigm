@@ -11,6 +11,7 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
+#include "pdm_priv.h"
 #include "pdm_sort.h"
 #include "pdm_quick_sort.h"
 #include "pdm_radix_sort.h"
@@ -132,7 +133,7 @@ PDM_sort_long
   /* size of subarray sorted by straight insertion */
   const int M = 7;
   /* default size of the stack */
-  int sizeStack = 64; /* default size of the stack */
+  int size_stack = 64; /* default size of the stack */
   int jstack = -1;
   int l = 0;
   int i;
@@ -140,7 +141,8 @@ PDM_sort_long
   int ir = lArray - 1;
   PDM_g_num_t a;
   int        b;
-  int *istack = (int *) malloc (sizeof(int) * sizeStack);
+  int *istack;
+  PDM_malloc(istack, size_stack, int);
 
   if (order != NULL) {
 
@@ -206,9 +208,9 @@ PDM_sort_long
         order[j] = b;
         jstack += 2;
 
-        if (jstack >= sizeStack) {
-          sizeStack *= 2;
-          istack = (int *) realloc (istack, sizeof(int) * sizeStack);
+        if (jstack >= size_stack) {
+          size_stack *= 2;
+          PDM_realloc(istack ,istack , size_stack,int);
         }
 
         if (ir-i+1 >= j-1) {
@@ -276,9 +278,9 @@ PDM_sort_long
         array[j] = a;
         jstack += 2;
 
-        if (jstack >= sizeStack) {
-          sizeStack *= 2;
-          istack = (int *) realloc (istack, sizeof(int) * sizeStack);
+        if (jstack >= size_stack) {
+          size_stack *= 2;
+          PDM_realloc(istack ,istack , size_stack,int);
         }
 
         if (ir-i+1 >= j-1) {
@@ -294,7 +296,7 @@ PDM_sort_long
       }
     }
   }
-  free (istack);
+  PDM_free(istack);
   return;
 
 }
@@ -321,7 +323,7 @@ PDM_sort_int
   /* size of subarray sorted by straight insertion */
   const int M = 7;
   /* default size of the stack */
-  int sizeStack = 64; /* default size of the stack */
+  int size_stack = 64; /* default size of the stack */
   int jstack = -1;
   int l = 0;
   int i;
@@ -329,7 +331,8 @@ PDM_sort_int
   int ir = lArray - 1;
   int  a;
   int  b;
-  int *istack = (int *) malloc (sizeof(int) * sizeStack);
+  int *istack;
+  PDM_malloc(istack, size_stack, int);
 
   if (order != NULL) {
     for (;;) {
@@ -394,9 +397,9 @@ PDM_sort_int
         order[j] = b;
         jstack += 2;
 
-        if (jstack >= sizeStack) {
-          sizeStack *= 2;
-          istack = (int *) realloc (istack, sizeof(int) * sizeStack);
+        if (jstack >= size_stack) {
+          size_stack *= 2;
+          PDM_realloc(istack ,istack , size_stack,int);
         }
 
         if (ir-i+1 >= j-1) {
@@ -464,9 +467,9 @@ PDM_sort_int
         array[j] = a;
         jstack += 2;
 
-        if (jstack >= sizeStack) {
-          sizeStack *= 2;
-          istack = (int *) realloc (istack, sizeof(int) * sizeStack);
+        if (jstack >= size_stack) {
+          size_stack *= 2;
+          PDM_realloc(istack ,istack , size_stack,int);
         }
 
         if (ir-i+1 >= j-1) {
@@ -482,7 +485,7 @@ PDM_sort_int
       }
     }
   }
-  free (istack);
+  PDM_free(istack);
   return;
 
 }
@@ -511,7 +514,7 @@ PDM_sort_double
   const int M = 7;
   /* default size of the stack */
 
-  int sizeStack = 64; /* default size of the stack */
+  int size_stack = 64; /* default size of the stack */
   int jstack = -1;
   int l = 0;
   int i;
@@ -519,7 +522,8 @@ PDM_sort_double
   int ir = lArray - 1;
   double  a;
   int  b;
-  int *istack = (int *) malloc (sizeof(int) * sizeStack);
+  int *istack;
+  PDM_malloc(istack, size_stack, int);
 
   if (order != NULL) {
     for (;;) {
@@ -584,9 +588,9 @@ PDM_sort_double
         order[j] = b;
         jstack += 2;
 
-        if (jstack >= sizeStack) {
-          sizeStack *= 2;
-          istack = (int *) realloc (istack, sizeof(int) * sizeStack);
+        if (jstack >= size_stack) {
+          size_stack *= 2;
+          PDM_realloc(istack ,istack , size_stack,int);
         }
 
         if (ir-i+1 >= j-1) {
@@ -654,9 +658,9 @@ PDM_sort_double
         array[j] = a;
         jstack += 2;
 
-        if (jstack >= sizeStack) {
-          sizeStack *= 2;
-          istack = (int *) realloc (istack, sizeof(int) * sizeStack);
+        if (jstack >= size_stack) {
+          size_stack *= 2;
+          PDM_realloc(istack ,istack , size_stack,int);
         }
 
         if (ir-i+1 >= j-1) {
@@ -672,7 +676,7 @@ PDM_sort_double
       }
     }
   }
-  free (istack);
+  PDM_free(istack);
   return;
 }
 
@@ -699,7 +703,7 @@ PDM_sort_int_special
   /* size of subarray sorted by straight insertion */
   const int M = 7;
   /* default size of the stack */
-  int sizeStack = 64; /* default size of the stack */
+  int size_stack = 64; /* default size of the stack */
   int jstack = -1;
   int l = 0;
   int i;
@@ -707,7 +711,8 @@ PDM_sort_int_special
   int ir = lArray - 1;
   PDM_g_num_t a;
   // int        b;
-  int *istack = (int *) malloc (sizeof(int) * sizeStack);
+  int *istack;
+  PDM_malloc(istack, size_stack, int);
 
   for (;;) {
     if ( ir-l < M ) {
@@ -760,9 +765,9 @@ PDM_sort_int_special
       array[j] = a;
       jstack += 2;
 
-      if (jstack >= sizeStack) {
-        sizeStack *= 2;
-        istack = (int *) realloc (istack, sizeof(int) * sizeStack);
+      if (jstack >= size_stack) {
+        size_stack *= 2;
+        PDM_realloc(istack ,istack , size_stack,int);
       }
 
       if (ir-i+1 >= j-1) {
@@ -777,7 +782,7 @@ PDM_sort_int_special
       }
     }
   }
-  free (istack);
+  PDM_free(istack);
   return;
 
 }

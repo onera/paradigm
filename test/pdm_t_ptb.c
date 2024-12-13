@@ -36,14 +36,17 @@ char *argv[]
   int i_rank;
   PDM_MPI_Comm_rank (PDM_MPI_COMM_WORLD, &i_rank);
 
-  int numProcs;
-  PDM_MPI_Comm_size (PDM_MPI_COMM_WORLD, &numProcs);
+  int n_rank;
+  PDM_MPI_Comm_size (PDM_MPI_COMM_WORLD, &n_rank);
 
   int n_elt_proc = 10;
 
-  PDM_g_num_t *numabs = malloc(sizeof(PDM_g_num_t) * n_elt_proc);
-  double *weights = malloc(sizeof(double) * n_elt_proc);
-  int *stride = malloc(sizeof(stride) * n_elt_proc);
+  PDM_g_num_t *numabs  = NULL;
+  double      *weights = NULL;
+  int         *stride  = NULL;
+  PDM_malloc(numabs , n_elt_proc, PDM_g_num_t );
+  PDM_malloc(weights, n_elt_proc, double      );
+  PDM_malloc(stride , n_elt_proc, int         );
 
   for (int i = 0; i < n_elt_proc; i++) {
     numabs[i] = i_rank * n_elt_proc + i + 1;
@@ -82,10 +85,11 @@ char *argv[]
     weight_sum += block_weights[i];
   }
 
-  double *weights_sum_procs = malloc(sizeof(double) * numProcs);
+  double *weights_sum_procs;
+  PDM_malloc(weights_sum_procs, n_rank, double);
 
   printf("distrib_index : ");
-  for (int i = 0; i < numProcs + 1; i++) {
+  for (int i = 0; i < n_rank + 1; i++) {
     printf(PDM_FMT_G_NUM" ", distrib_index[i]);
   }
   printf("\n");
@@ -95,19 +99,19 @@ char *argv[]
                      PDM_MPI_COMM_WORLD);
 
   printf("weights procs :");
-  for (int i = 0; i < numProcs; i++) {
+  for (int i = 0; i < n_rank; i++) {
     printf(" %12.5e", weights_sum_procs[i]);
   }
   printf("\n");
 
   PDM_part_to_block_free (ptb);
 
-  free (numabs);
-  free (weights);
-  free (weights_sum_procs);
-  free (stride);
-  free (block_stride);
-  free (block_weights);
+  PDM_free(numabs);
+  PDM_free(weights);
+  PDM_free(weights_sum_procs);
+  PDM_free(stride);
+  PDM_free(block_stride);
+  PDM_free(block_weights);
 
   if (i_rank == 0) {
     PDM_printf("-- End\n");

@@ -244,7 +244,7 @@ _generate_surface_mesh
 
   PDM_g_num_t *vtx_distrib = PDM_dmesh_nodal_vtx_distrib_get(dmn);
   int dn_vtx = vtx_distrib[i_rank+1] - vtx_distrib[i_rank];
-  double *dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn);
+  double *dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn, PDM_OWNERSHIP_BAD_VALUE);
   // double amplitude = 0.1;//0.07;
   // double frequence = 4.;
   _deformation(length,
@@ -444,21 +444,25 @@ int main(int argc, char *argv[])
                             &projected,
                             &closest_elt_gnum);
 
-    double *coord = malloc(sizeof(double) * n_pts_clouds * 2 * 3);
+    double *coord;
+    PDM_malloc(coord,n_pts_clouds * 2 * 3,double);
     memcpy(coord,                  pts_coord, sizeof(double) * n_pts_clouds * 3);
     memcpy(coord + 3*n_pts_clouds, projected, sizeof(double) * n_pts_clouds * 3);
 
-    int *connec = malloc(sizeof(int) * n_pts_clouds * 2);
+    int *connec;
+    PDM_malloc(connec,n_pts_clouds * 2,int);
     for (int i = 0; i < n_pts_clouds; i++) {
       connec[2*i  ] = i+1;
       connec[2*i+1] = i+1 + n_pts_clouds;
     }
 
-    PDM_g_num_t *g_num = malloc(sizeof(PDM_g_num_t) * n_pts_clouds * 2);
+    PDM_g_num_t *g_num;
+    PDM_malloc(g_num,n_pts_clouds * 2,PDM_g_num_t);
     memcpy(g_num,                pts_g_num,        sizeof(PDM_g_num_t) * n_pts_clouds);
     memcpy(g_num + n_pts_clouds, closest_elt_gnum, sizeof(PDM_g_num_t) * n_pts_clouds);
 
-    double *_closest_elt_gnum = malloc(sizeof(double) * n_pts_clouds);
+    double *_closest_elt_gnum;
+    PDM_malloc(_closest_elt_gnum,n_pts_clouds,double);
     for (int i = 0; i < n_pts_clouds; i++) {
       _closest_elt_gnum[i] = (double) closest_elt_gnum[i];
     }
@@ -477,10 +481,10 @@ int main(int argc, char *argv[])
                                       2,
                                       field_name,
                                       field_value);
-    free(_closest_elt_gnum);
-    free(coord);
-    free(g_num);
-    free(connec);
+    PDM_free(_closest_elt_gnum);
+    PDM_free(coord);
+    PDM_free(g_num);
+    PDM_free(connec);
   }
 
 
@@ -493,8 +497,8 @@ int main(int argc, char *argv[])
   PDM_multipart_free(mpart_surf);
   PDM_DMesh_nodal_free(dmn_surf);
 
-  free(pts_coord);
-  free(pts_g_num);
+  PDM_free(pts_coord);
+  PDM_free(pts_g_num);
 
 
   PDM_MPI_Barrier(comm);

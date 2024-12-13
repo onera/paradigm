@@ -185,7 +185,7 @@ _generate_volume_mesh
 
 
   PDM_g_num_t *vtx_distrib = PDM_dmesh_nodal_vtx_distrib_get(dmn);
-  double      *dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn);
+  double      *dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn, PDM_OWNERSHIP_BAD_VALUE);
   int dn_vtx = vtx_distrib[i_rank+1] - vtx_distrib[i_rank];
 
   double pi = 4 * atan(1.);
@@ -239,7 +239,8 @@ _generate_volume_mesh
 
   int n_domain = 1;
   // int n_part_domains = {n_part};
-  int *n_part_domains = (int *) malloc(sizeof(int) * n_domain);
+  int *n_part_domains;
+  PDM_malloc(n_part_domains, n_domain, int);
   n_part_domains[0] = n_part;
 
   PDM_multipart_t *mpart = PDM_multipart_create(n_domain,
@@ -260,7 +261,7 @@ _generate_volume_mesh
   PDM_multipart_dmesh_nodal_set(mpart, 0, dmn);
   PDM_multipart_compute(mpart);
 
-  free(n_part_domains);
+  PDM_free(n_part_domains);
 
 
   *_mpart = mpart;
@@ -295,7 +296,8 @@ _cell_center_3d
   }
   assert(pvtx_coord     != NULL);
 
-  double* entity_center = malloc(3 * pn_cell * sizeof(double ));
+  double *entity_center;
+  PDM_malloc(entity_center, 3 * pn_cell, double);
 
   if(from_face == 1) {
     for(int i_cell = 0; i_cell < pn_cell; ++i_cell) {
@@ -409,21 +411,30 @@ _create_wall_surf
   int n_rank;
   PDM_MPI_Comm_size (comm, &n_rank);
 
-  int          *n_surf_vtx           = malloc(n_part * sizeof(int          ));
-  int          *n_surf_face          = malloc(n_part * sizeof(int          ));
-
-  double      **cell_center          = malloc(n_part * sizeof(double      *));
-  double      **psurf_vtx_coord      = malloc(n_part * sizeof(double      *));
-  int         **psurf_face_vtx_idx   = malloc(n_part * sizeof(int         *));
-  int         **psurf_face_vtx_n     = malloc(n_part * sizeof(int         *));
-  int         **psurf_face_vtx       = malloc(n_part * sizeof(int         *));
-  PDM_g_num_t **psurf_face_ln_to_gn  = malloc(n_part * sizeof(PDM_g_num_t *));
-  PDM_g_num_t **psurf_vtx_ln_to_gn   = malloc(n_part * sizeof(PDM_g_num_t *));
-
-  PDM_g_num_t **psurf_face_vtx_g_num = malloc(n_part * sizeof(PDM_g_num_t *));
-
-  int          *pn_cell        = malloc(n_part * sizeof(int          ));
-  PDM_g_num_t **pcell_ln_to_gn = malloc(n_part * sizeof(PDM_g_num_t *));
+  int          *pn_cell              = NULL;
+  int          *n_surf_vtx           = NULL;
+  int          *n_surf_face          = NULL;
+  int         **psurf_face_vtx_idx   = NULL;
+  int         **psurf_face_vtx_n     = NULL;
+  int         **psurf_face_vtx       = NULL;
+  PDM_g_num_t **pcell_ln_to_gn       = NULL;
+  PDM_g_num_t **psurf_face_ln_to_gn  = NULL;;
+  PDM_g_num_t **psurf_vtx_ln_to_gn   = NULL;;
+  PDM_g_num_t **psurf_face_vtx_g_num = NULL;;
+  double      **cell_center          = NULL;;
+  double      **psurf_vtx_coord      = NULL;;
+  PDM_malloc(n_surf_vtx          , n_part, int          );
+  PDM_malloc(n_surf_face         , n_part, int          );
+  PDM_malloc(cell_center         , n_part, double      *);
+  PDM_malloc(psurf_vtx_coord     , n_part, double      *);
+  PDM_malloc(psurf_face_vtx_idx  , n_part, int         *);
+  PDM_malloc(psurf_face_vtx_n    , n_part, int         *);
+  PDM_malloc(psurf_face_vtx      , n_part, int         *);
+  PDM_malloc(psurf_face_ln_to_gn , n_part, PDM_g_num_t *);
+  PDM_malloc(psurf_vtx_ln_to_gn  , n_part, PDM_g_num_t *);
+  PDM_malloc(psurf_face_vtx_g_num, n_part, PDM_g_num_t *);
+  PDM_malloc(pn_cell             , n_part, int          );
+  PDM_malloc(pcell_ln_to_gn      , n_part, PDM_g_num_t *);
 
   /* Compute gnum for vtx and faces */
   PDM_gen_gnum_t* gnum_face = PDM_gnum_create(3,
@@ -541,7 +552,8 @@ _create_wall_surf
     n_surf_face[i_part] = 0;
     int n_surf_face_vtx = 0;
     int n_face_in_group = group_face_idx[i_group+1] - group_face_idx[i_group];
-    int* face_bnd = malloc(n_face_in_group * sizeof(int));
+    int *face_bnd;
+    PDM_malloc(face_bnd, n_face_in_group, int);
     for(int idx_face = group_face_idx[i_group]; idx_face < group_face_idx[i_group+1]; ++idx_face) {
       int i_face = group_face[idx_face]-1;
 
@@ -564,13 +576,13 @@ _create_wall_surf
     }
 
 
-    psurf_vtx_coord     [i_part] = malloc(3 * n_surf_face_vtx          * sizeof(double     ));
-    psurf_face_vtx_idx  [i_part] = malloc(   ( n_surf_face[i_part] +1) * sizeof(int        ));
-    psurf_face_vtx_n    [i_part] = malloc(   ( n_surf_face[i_part]   ) * sizeof(int        ));
-    psurf_face_vtx      [i_part] = malloc(    n_surf_face_vtx          * sizeof(int        ));
-    psurf_face_ln_to_gn [i_part] = malloc(    n_surf_face[i_part]      * sizeof(PDM_g_num_t));
-    psurf_vtx_ln_to_gn  [i_part] = malloc(    n_surf_face_vtx          * sizeof(PDM_g_num_t));
-    psurf_face_vtx_g_num[i_part] = malloc(    n_surf_face_vtx          * sizeof(PDM_g_num_t));
+    PDM_malloc(psurf_vtx_coord     [i_part], 3 * n_surf_face_vtx        , double     );
+    PDM_malloc(psurf_face_vtx_idx  [i_part],     n_surf_face[i_part] + 1, int        );
+    PDM_malloc(psurf_face_vtx_n    [i_part],     n_surf_face[i_part]    , int        );
+    PDM_malloc(psurf_face_vtx      [i_part],     n_surf_face_vtx        , int        );
+    PDM_malloc(psurf_face_ln_to_gn [i_part],     n_surf_face[i_part]    , PDM_g_num_t);
+    PDM_malloc(psurf_vtx_ln_to_gn  [i_part],     n_surf_face_vtx        , PDM_g_num_t);
+    PDM_malloc(psurf_face_vtx_g_num[i_part],     n_surf_face_vtx        , PDM_g_num_t);
 
     double      *_psurf_vtx_coord      = psurf_vtx_coord     [i_part];
     int         *_psurf_face_vtx_idx   = psurf_face_vtx_idx  [i_part];
@@ -580,7 +592,8 @@ _create_wall_surf
     PDM_g_num_t *_psurf_vtx_ln_to_gn   = psurf_vtx_ln_to_gn  [i_part];
     PDM_g_num_t *_psurf_face_vtx_g_num = psurf_face_vtx_g_num[i_part];
 
-    int *vtx_flags = malloc(n_vtx * sizeof(int));
+    int *vtx_flags;
+    PDM_malloc(vtx_flags, n_vtx, int);
     for(int i_vtx = 0; i_vtx < n_vtx; ++i_vtx) {
       vtx_flags[i_vtx] = -100;
     }
@@ -619,15 +632,15 @@ _create_wall_surf
     // printf("n_surf_face = %i \n", n_surf_face[i_part]);
     // printf("n_surf_vtx  = %i \n", n_surf_vtx [i_part]);
 
-    psurf_vtx_coord    [i_part] = realloc(psurf_vtx_coord    [i_part], 3 * n_surf_vtx[i_part] * sizeof(double     ));
-    psurf_vtx_ln_to_gn [i_part] = realloc(psurf_vtx_ln_to_gn [i_part],     n_surf_vtx[i_part] * sizeof(PDM_g_num_t));
+    PDM_realloc(psurf_vtx_coord   [i_part], psurf_vtx_coord   [i_part], 3 * n_surf_vtx[i_part], double     );
+    PDM_realloc(psurf_vtx_ln_to_gn[i_part], psurf_vtx_ln_to_gn[i_part],     n_surf_vtx[i_part], PDM_g_num_t);
 
     PDM_gnum_set_from_parents(gnum_face, i_part, n_surf_face[i_part], _psurf_face_ln_to_gn);
     PDM_gnum_set_from_parents(gnum_vtx , i_part, n_surf_vtx [i_part], psurf_vtx_ln_to_gn [i_part] );
 
-    free(vtx_flags);
-    free(face_bnd);
-    free(face_vtx);
+    PDM_free(vtx_flags);
+    PDM_free(face_bnd);
+    PDM_free(face_vtx);
 
   }
 
@@ -682,8 +695,8 @@ _create_wall_surf
 
   /* A laisser après le ptb vu qu'on ecrase psurf_vtx_ln_to_gn */
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    free(psurf_face_ln_to_gn[i_part]);
-    free(psurf_vtx_ln_to_gn [i_part]);
+    PDM_free(psurf_face_ln_to_gn[i_part]);
+    PDM_free(psurf_vtx_ln_to_gn [i_part]);
     psurf_face_ln_to_gn[i_part] = PDM_gnum_get(gnum_face, 0);
     psurf_vtx_ln_to_gn [i_part] = PDM_gnum_get(gnum_vtx , 0);
   }
@@ -716,16 +729,18 @@ _create_wall_surf
           (void **)      &dface_vtx);
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    free(psurf_face_vtx_g_num[i_part]);
-    free(psurf_face_vtx_n    [i_part]);
+    PDM_free(psurf_face_vtx_g_num[i_part]);
+    PDM_free(psurf_face_vtx_n    [i_part]);
   }
-  free(psurf_face_vtx_g_num);
-  free(psurf_face_vtx_n);
+  PDM_free(psurf_face_vtx_g_num);
+  PDM_free(psurf_face_vtx_n);
 
   PDM_g_num_t *distrib_face_child = PDM_compute_entity_distribution(comm, dn_face);
 
-  PDM_g_num_t* dface_ln_to_gn        = malloc(dn_face * sizeof(PDM_g_num_t));
-  PDM_g_num_t* pface_parent_ln_to_gn = malloc(dn_face * sizeof(PDM_g_num_t));
+  PDM_g_num_t *dface_ln_to_gn        = NULL;
+  PDM_g_num_t *pface_parent_ln_to_gn = NULL;
+  PDM_malloc(dface_ln_to_gn       , dn_face, PDM_g_num_t);
+  PDM_malloc(pface_parent_ln_to_gn, dn_face, PDM_g_num_t);
   for(int i_face = 0; i_face < dn_face; ++i_face) {
     dface_ln_to_gn       [i_face] = distrib_face_child[i_rank] + i_face + 1;
     pface_parent_ln_to_gn[i_face] = blk_face_gnum[i_face];
@@ -753,11 +768,11 @@ _create_wall_surf
   PDM_g_num_t *pequi_surf_vtx_ln_to_gn = tmp_pequi_surf_vtx_ln_to_gn[0];
   int         *pequi_surf_face_vtx_idx = tmp_pequi_surf_face_vtx_idx[0];
   int         *pequi_surf_face_vtx     = tmp_pequi_surf_face_vtx    [0];
-  free(tmp_pequi_surf_nvtx        );
-  free(tmp_pequi_surf_vtx_ln_to_gn);
-  free(tmp_pequi_surf_face_vtx_idx);
-  free(tmp_pequi_surf_face_vtx    );
-  free(dface_vtx_idx    );
+  PDM_free(tmp_pequi_surf_nvtx        );
+  PDM_free(tmp_pequi_surf_vtx_ln_to_gn);
+  PDM_free(tmp_pequi_surf_face_vtx_idx);
+  PDM_free(tmp_pequi_surf_face_vtx    );
+  PDM_free(dface_vtx_idx    );
 
   PDM_block_to_part_t* btp_vtx = PDM_block_to_part_create_from_sparse_block(blk_vtx_gnum,
                                                                             dn_vtx,
@@ -776,17 +791,17 @@ _create_wall_surf
                          NULL,
             (void ***)   &tmp_pvtx_coord);
   double* pequi_surf_vtx_coord = tmp_pvtx_coord[0];
-  free(tmp_pvtx_coord);
-  free(dvtx_coords);
+  PDM_free(tmp_pvtx_coord);
+  PDM_free(dvtx_coords);
 
   PDM_block_to_part_free(btp_vtx);
 
   PDM_part_to_block_free(ptb_face);
   PDM_part_to_block_free(ptb_vtx);
-  free(distrib_face_child);
+  PDM_free(distrib_face_child);
 
-  free(dface_vtx_n);
-  free(dface_vtx);
+  PDM_free(dface_vtx_n);
+  PDM_free(dface_vtx);
 
 
   *pn_cell_out        = pn_cell;
@@ -969,15 +984,21 @@ _create_wall_ray
     pn_ray += n_surf_face[i_part];
   }
 
-  PDM_g_num_t *pray_ln_to_gn = malloc(    pn_ray * sizeof(PDM_g_num_t));
-  PDM_g_num_t *pvtx_ln_to_gn = malloc(2 * pn_ray * sizeof(PDM_g_num_t));
-  double      *pray_coord    = malloc(6 * pn_ray * sizeof(double     ));
-  double      *pface_normal  = malloc(3 * pn_ray * sizeof(double     ));
-  double      *pface_center  = malloc(3 * pn_ray * sizeof(double     ));
+  PDM_g_num_t *pray_ln_to_gn = NULL;
+  PDM_g_num_t *pvtx_ln_to_gn = NULL;
+  double      *pray_coord    = NULL;
+  double      *pface_normal  = NULL;
+  double      *pface_center  = NULL;
+  PDM_malloc(pray_ln_to_gn,     pn_ray, PDM_g_num_t);
+  PDM_malloc(pvtx_ln_to_gn, 2 * pn_ray, PDM_g_num_t);
+  PDM_malloc(pray_coord   , 6 * pn_ray, double     );
+  PDM_malloc(pface_normal , 3 * pn_ray, double     );
+  PDM_malloc(pface_center , 3 * pn_ray, double     );
 
   PDM_g_num_t *distrib_vtx = PDM_compute_entity_distribution (comm, 2 * pn_ray);
 
-  int *pray_vtx = malloc(2 * pn_ray * sizeof(int));
+  int *pray_vtx;
+  PDM_malloc(pray_vtx, 2 * pn_ray, int);
 
   pn_ray = 0;
   int pn_vtx = 0;
@@ -1034,7 +1055,7 @@ _create_wall_ray
     }
   }
 
-  free(distrib_vtx);
+  PDM_free(distrib_vtx);
 
   if(0 == 1) {
     char filename[999];
@@ -1213,7 +1234,8 @@ char *argv[]
 
   PDM_dist_cloud_surf_compute(dist);
 
-  PDM_g_num_t **closest_elt_gnum = malloc(n_part * sizeof(PDM_g_num_t *));
+  PDM_g_num_t **closest_elt_gnum = NULL;
+  PDM_malloc(closest_elt_gnum, n_part, PDM_g_num_t *);
   for (int i_part = 0; i_part < n_part; i_part++) {
 
     double      *distance;
@@ -1249,7 +1271,8 @@ char *argv[]
   }
 
   /* Create field of speed */
-  double **velocity = malloc(n_part * sizeof(double));
+  double **velocity = NULL;
+  PDM_malloc(velocity, n_part, double *);
   for (int i_part = 0; i_part < n_part; i_part++) {
 
     double      *distance;
@@ -1262,7 +1285,7 @@ char *argv[]
                              &projected,
                              &closest_elt_gnum[i_part]);
 
-    velocity[i_part] = malloc(pn_cell[i_part] * sizeof(double));
+    PDM_malloc(velocity[i_part], pn_cell[i_part], double);
 
     for(int i_cell = 0; i_cell < pn_cell[i_part]; ++i_cell) {
       if(cell_center   [i_part][3*i_cell+1] < 0.1 * cell_center   [i_part][3*i_cell]) {
@@ -1474,11 +1497,15 @@ char *argv[]
   // PDM_log_trace_connectivity_long(_gnum1_come_from_idx, _gnum1_come_from, n_ref_b[0], "_gnum1_come_from ::");
   assert(n_lines == n_ref_b[0]);
 
-  double *pseudo_distance = malloc(    _gnum1_come_from_idx[n_lines] * sizeof(double));
-  double *pseudo_coords   = malloc(3 * _gnum1_come_from_idx[n_lines] * sizeof(double));
-  int    *order_by_dist   = malloc(3 * _gnum1_come_from_idx[n_lines] * sizeof(int   ));
+  double *pseudo_distance = NULL;
+  double *pseudo_coords   = NULL;
+  int    *order_by_dist   = NULL;
+  PDM_malloc(pseudo_distance,     _gnum1_come_from_idx[n_lines], double);
+  PDM_malloc(pseudo_coords  , 3 * _gnum1_come_from_idx[n_lines], double);
+  PDM_malloc(order_by_dist  , 3 * _gnum1_come_from_idx[n_lines], int   );
 
-  double *dline_data = malloc(n_lines * sizeof(double));
+  double *dline_data = NULL;
+  PDM_malloc(dline_data, n_lines, double);
 
   for(int idx_line = 0; idx_line < n_ref_b[0]; ++idx_line) {
     int i_line = ref_b[0][idx_line] - 1;
@@ -1559,7 +1586,7 @@ char *argv[]
                          dline_data,
                          NULL,
           (void ***)     &pline_data);
-  free(dline_data);
+  PDM_free(dline_data);
 
 
   for(int i_part = 0; i_part < n_part_line; ++i_part) {
@@ -1591,17 +1618,17 @@ char *argv[]
   PDM_block_to_part_free(btp);
 
   for(int i_part = 0; i_part < n_part_line; ++i_part) {
-    free(pline_to_cell_center  [i_part]);
-    free(pline_to_cell_velocity[i_part]);
-    free(pline_data[i_part]);
+    PDM_free(pline_to_cell_center  [i_part]);
+    PDM_free(pline_to_cell_velocity[i_part]);
+    PDM_free(pline_data[i_part]);
   }
-  free(pline_to_cell_center);
-  free(pline_to_cell_velocity);
-  free(pseudo_distance);
-  free(pseudo_coords  );
-  free(order_by_dist  );
-  free(closest_elt_gnum);
-  free(pline_data);
+  PDM_free(pline_to_cell_center);
+  PDM_free(pline_to_cell_velocity);
+  PDM_free(pseudo_distance);
+  PDM_free(pseudo_coords  );
+  PDM_free(order_by_dist  );
+  PDM_free(closest_elt_gnum);
+  PDM_free(pline_data);
 
 
   PDM_mesh_intersection_free(mi);
@@ -1609,38 +1636,38 @@ char *argv[]
   PDM_dist_cloud_surf_free(dist);
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    free(psurf_vtx_coord    [i_part]);
-    free(psurf_face_vtx_idx [i_part]);
-    free(psurf_face_vtx     [i_part]);
-    free(psurf_face_ln_to_gn[i_part]);
-    free(psurf_vtx_ln_to_gn [i_part]);
-    free(cell_center        [i_part]);
-    free(velocity           [i_part]);
+    PDM_free(psurf_vtx_coord    [i_part]);
+    PDM_free(psurf_face_vtx_idx [i_part]);
+    PDM_free(psurf_face_vtx     [i_part]);
+    PDM_free(psurf_face_ln_to_gn[i_part]);
+    PDM_free(psurf_vtx_ln_to_gn [i_part]);
+    PDM_free(cell_center        [i_part]);
+    PDM_free(velocity           [i_part]);
   }
-  free(psurf_vtx );
-  free(psurf_face);
-  free(psurf_vtx_coord);
-  free(psurf_face_vtx_idx);
-  free(psurf_face_vtx);
-  free(psurf_face_ln_to_gn);
-  free(psurf_vtx_ln_to_gn);
-  free(cell_center);
-  free(pcell_ln_to_gn);
-  free(pn_cell);
-  free(velocity);
-  free(pray_ln_to_gn);
-  free(pvtx_ln_to_gn);
-  free(psurf_face_normal);
-  free(psurf_face_center);
-  free(ray_coord);
-  free(pray_vtx);
+  PDM_free(psurf_vtx );
+  PDM_free(psurf_face);
+  PDM_free(psurf_vtx_coord);
+  PDM_free(psurf_face_vtx_idx);
+  PDM_free(psurf_face_vtx);
+  PDM_free(psurf_face_ln_to_gn);
+  PDM_free(psurf_vtx_ln_to_gn);
+  PDM_free(cell_center);
+  PDM_free(pcell_ln_to_gn);
+  PDM_free(pn_cell);
+  PDM_free(velocity);
+  PDM_free(pray_ln_to_gn);
+  PDM_free(pvtx_ln_to_gn);
+  PDM_free(psurf_face_normal);
+  PDM_free(psurf_face_center);
+  PDM_free(ray_coord);
+  PDM_free(pray_vtx);
 
-  free(pequi_surf_face_vtx_idx        );
-  free(pequi_surf_face_vtx            );
-  free(pequi_surf_face_ln_to_gn       );
-  free(pequi_surf_parent_face_ln_to_gn);
-  free(pequi_surf_vtx_ln_to_gn        );
-  free(pequi_surf_vtx_coord           );
+  PDM_free(pequi_surf_face_vtx_idx        );
+  PDM_free(pequi_surf_face_vtx            );
+  PDM_free(pequi_surf_face_ln_to_gn       );
+  PDM_free(pequi_surf_parent_face_ln_to_gn);
+  PDM_free(pequi_surf_vtx_ln_to_gn        );
+  PDM_free(pequi_surf_vtx_coord           );
 
 
   PDM_DMesh_nodal_free(dmn_vol_a);

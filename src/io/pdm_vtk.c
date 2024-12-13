@@ -39,43 +39,42 @@ extern "C" {
  *============================================================================*/
 
 static char *
-_fortran_to_c_string (
-  const char *application_name_f,
-  const int l_application_name_f
+_fortran_to_c_string
+(
+  const char *f_string,
+  const int l_f_string
 )
 {
-  char *application_name_c;
+  char *c_string;
   int imin = 0;
   int imax = 0;
 
-  while (imin < l_application_name_f && application_name_f[imin] == ' ') {
+  while (imin < l_f_string && f_string[imin] == ' ') {
     imin++;
   }
-  while (imax < l_application_name_f && application_name_f[l_application_name_f - imax - 1] == ' ') {
+  while (imax < l_f_string && f_string[l_f_string - imax - 1] == ' ') {
     imax++;
   }
 
-  imax = l_application_name_f - imax - 1;
+  imax = l_f_string - imax - 1;
 
   assert(imax >= imin);
 
-  if ((imax == l_application_name_f) || (imin == l_application_name_f)) {
-    application_name_c =  (char *) malloc (sizeof(char) * (1));
-    // application_name_c = (char *) malloc(sizeof(char) * 1);
-    application_name_c[0] = '\0';
+  if ((imax == l_f_string) || (imin == l_f_string)) {
+    PDM_malloc(c_string, 1, char);
+    c_string[0] = '\0';
   }
   else {
     int size = imax - imin + 2;
-    application_name_c =  (char *) malloc (sizeof(char) * (size));
-    // application_name_c = (char *) malloc(sizeof(char) * size);
+    PDM_malloc(c_string, size, char);
     int index = 0;
     for (int k = imin ; k <= imax ; k++) {
-      application_name_c[index++] = application_name_f[k];
+      c_string[index++] = f_string[k];
     }
-    application_name_c[index] = '\0';
+    c_string[index] = '\0';
   }
 
-  return application_name_c;
+  return c_string;
 }
 
 /**
@@ -124,7 +123,7 @@ PDM_vtk_write_polydata_cf
                          face_g_num,
                          face_color);
 
-  free(c_filename);
+  PDM_free(c_filename);
 }
 
 /**
@@ -161,7 +160,7 @@ PDM_vtk_write_point_cloud_cf
                             vtx_g_num,
                             color);
 
-  free(c_filename);
+  PDM_free(c_filename);
 }
 
 /*============================================================================
@@ -204,6 +203,9 @@ static int _vtk_elt_type
       break;
     case PDM_MESH_NODAL_QUAD4:
       vtk_elt_type = 9;
+      break;
+    case PDM_MESH_NODAL_POLY_2D:
+      vtk_elt_type = 7;
       break;
     case PDM_MESH_NODAL_TETRA4:
       vtk_elt_type = 10;
@@ -414,7 +416,8 @@ _ijk_to_vtk
 static int *_vtk_lagrange_bar_to_ijk (const int order) {
 
   int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get (PDM_MESH_NODAL_BARHO, order);
-  int *ijk = malloc (sizeof(int) * n_nodes);
+  int *ijk;
+  PDM_malloc(ijk, n_nodes, int);
 
   int idx = 0;
   ijk[idx++] = 0;
@@ -433,7 +436,8 @@ static int *_vtk_lagrange_bar_to_ijk (const int order) {
 static int *_vtk_lagrange_tria_to_ijk (const int order) {
 
   int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get (PDM_MESH_NODAL_TRIAHO, order);
-  int *ijk = malloc (sizeof(int) * n_nodes * 2);
+  int *ijk;
+  PDM_malloc(ijk, 2 * n_nodes, int);
 
   int idx = 0;
 
@@ -475,7 +479,7 @@ static int *_vtk_lagrange_tria_to_ijk (const int order) {
       ijk[idx++] = ijk_sub[2*i  ] + 1;
       ijk[idx++] = ijk_sub[2*i+1] + 1;
     }
-    free (ijk_sub);
+    PDM_free(ijk_sub);
   }
 
   return ijk;
@@ -485,7 +489,8 @@ static int *_vtk_lagrange_tria_to_ijk (const int order) {
 static int *_vtk_lagrange_quad_to_ijk (const int order) {
 
   int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get (PDM_MESH_NODAL_QUADHO, order);
-  int *ijk = malloc (sizeof(int) * n_nodes * 2);
+  int *ijk;
+  PDM_malloc(ijk, 2 * n_nodes, int);
 
   int idx = 0;
 
@@ -538,7 +543,8 @@ static int *_vtk_lagrange_quad_to_ijk (const int order) {
 static int *_vtk_lagrange_tetra_to_ijk (const int order) {
 
   int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get (PDM_MESH_NODAL_TETRAHO, order);
-  int *ijk = malloc (sizeof(int) * n_nodes * 3);
+  int *ijk;
+  PDM_malloc(ijk, 3 * n_nodes, int);
 
   int idx = 0;
 
@@ -649,7 +655,7 @@ static int *_vtk_lagrange_tetra_to_ijk (const int order) {
       ijk[idx++] = ijk_sub[2*i  ] + 1;
       ijk[idx++] = 0;
     }
-    free (ijk_sub);
+    PDM_free(ijk_sub);
 
     // volume
     if (order == 4) {
@@ -663,7 +669,7 @@ static int *_vtk_lagrange_tetra_to_ijk (const int order) {
       for (int i = 0; i < 3*n_sub; i++) {
         ijk[idx++] = ijk_sub[i] + 1;
       }
-      free (ijk_sub);
+      PDM_free(ijk_sub);
     }
   }
 
@@ -674,7 +680,8 @@ static int *_vtk_lagrange_tetra_to_ijk (const int order) {
 static int *_vtk_lagrange_prism_to_ijk (const int order) {
 
   int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get (PDM_MESH_NODAL_PRISMHO, order);
-  int *ijk = malloc (sizeof(int) * n_nodes * 3);
+  int *ijk;
+  PDM_malloc(ijk, 3 * n_nodes, int);
 
   int idx = 0;
 
@@ -789,7 +796,8 @@ static int *_vtk_lagrange_prism_to_ijk (const int order) {
 static int *_vtk_lagrange_hexa_to_ijk (const int order) {
 
   int n_nodes = PDM_Mesh_nodal_n_vtx_elt_get (PDM_MESH_NODAL_HEXAHO, order);
-  int *ijk = malloc (sizeof(int) * n_nodes * 3);
+  int *ijk;
+  PDM_malloc(ijk, 3 * n_nodes, int);
 
   int idx = 0;
 
@@ -968,7 +976,7 @@ _vtk_read_points
   fscanf(f, PDM_FMT_G_NUM, n_vtx);
   fscanf(f, "%s", word); // coord type
 
-  *vtx_coord = malloc(sizeof(double) * (*n_vtx) * 3);
+  PDM_malloc(*vtx_coord, 3 * (*n_vtx), double);
 
   for (int i = 0; i < 3*(*n_vtx); i++) {
     fscanf(f, "%le", &(*vtx_coord)[i]);
@@ -1009,9 +1017,9 @@ _vtk_read_unstructured_grid
       }
       s_elt_vtx -= prepa->n_elt;
 
-      prepa->elt_vtx_idx = malloc(sizeof(int) * (prepa->n_elt + 1));
+      PDM_malloc(prepa->elt_vtx_idx, prepa->n_elt + 1, int        );
+      PDM_malloc(prepa->elt_vtx    , s_elt_vtx       , PDM_g_num_t);
       prepa->elt_vtx_idx[0] = 0;
-      prepa->elt_vtx = malloc(sizeof(PDM_g_num_t) * s_elt_vtx);
 
       for (int i = 0; i < prepa->n_elt; i++) {
         prepa->elt_vtx_idx[i+1] = prepa->elt_vtx_idx[i];
@@ -1035,7 +1043,7 @@ _vtk_read_unstructured_grid
         PDM_error(__FILE__, __LINE__, 0, "Incoherent number of cells (block CELL_TYPES)\n");
       }
 
-      prepa->elt_type = malloc(sizeof(PDM_Mesh_nodal_elt_t) * prepa->n_elt);
+      PDM_malloc(prepa->elt_type, prepa->n_elt, PDM_Mesh_nodal_elt_t);
       for (int i = 0; i < prepa->n_elt; i++) {
         int vtk_elt_type = -1;
         fscanf(f, "%d", &vtk_elt_type);
@@ -1082,10 +1090,10 @@ _vtk_read_polydata
       }
       s_elt_vtx -= prepa->n_elt;
 
-      prepa->elt_vtx_idx = malloc(sizeof(int) * (prepa->n_elt + 1));
+      PDM_malloc(prepa->elt_vtx_idx, prepa->n_elt + 1, int                 );
+      PDM_malloc(prepa->elt_vtx    , s_elt_vtx       , PDM_g_num_t         );
+      PDM_malloc(prepa->elt_type   , prepa->n_elt    , PDM_Mesh_nodal_elt_t);
       prepa->elt_vtx_idx[0] = 0;
-      prepa->elt_vtx = malloc(sizeof(PDM_g_num_t) * s_elt_vtx);
-      prepa->elt_type = malloc(sizeof(PDM_Mesh_nodal_elt_t) * prepa->n_elt);
 
       for (int i = 0; i < prepa->n_elt; i++) {
         prepa->elt_type[i] = PDM_MESH_NODAL_POLY_2D;
@@ -1162,7 +1170,9 @@ _vtk_read_field_values
  )
 {
   size_t s_data = _pdm_data_size(data_type);
-  *values = malloc(s_data * n * stride);
+  char *tmp_values = NULL;
+  PDM_malloc(tmp_values, s_data * n * stride, char);
+  *values = (void *) tmp_values;
 
   if (data_type == PDM_INT) {
     int *_field_value = (int *) *values;
@@ -1217,15 +1227,15 @@ _vtk_read_fields
 
       fscanf(f, "%d", &n_field);
 
-      field_name   = malloc(sizeof(char     *) * n_field);
-      field_type   = malloc(sizeof(PDM_data_t) * n_field);
-      field_stride = malloc(sizeof(int       ) * n_field);
-      field_value  = malloc(sizeof(void     *) * n_field);
+      PDM_malloc(field_name  , n_field, char       *);
+      PDM_malloc(field_type  , n_field, PDM_data_t  );
+      PDM_malloc(field_stride, n_field, int         );
+      PDM_malloc(field_value , n_field, void       *);
 
       for (int i = 0; i < n_field; i++) {
         fscanf(f, "%s", word);
 
-        field_name[i] = malloc(sizeof(char) * (strlen(word) + 1));
+        PDM_malloc(field_name[i], strlen(word) + 1, char);
         strcpy(field_name[i], word);
 
         fscanf(f, "%d", &field_stride[i]);
@@ -1254,10 +1264,10 @@ _vtk_read_fields
 
       n_field = 1;
 
-      field_name   = malloc(sizeof(char     *) * n_field);
-      field_type   = malloc(sizeof(PDM_data_t) * n_field);
-      field_stride = malloc(sizeof(int       ) * n_field);
-      field_value  = malloc(sizeof(void     *) * n_field);
+      PDM_malloc(field_name  , n_field, char       *);
+      PDM_malloc(field_type  , n_field, PDM_data_t  );
+      PDM_malloc(field_stride, n_field, int         );
+      PDM_malloc(field_value , n_field, void       *);
 
       if (strstr(word, "SCALARS") != NULL) {
        field_stride[0] = 1;
@@ -1273,7 +1283,7 @@ _vtk_read_fields
       }
 
       fscanf(f, "%s", word);
-      field_name[0] = malloc(sizeof(char) * (strlen(word) + 1));
+      PDM_malloc(field_name[0], strlen(word) + 1, char);
       strcpy(field_name[0], word);
 
       fscanf(f, "%s", word);
@@ -1293,8 +1303,6 @@ _vtk_read_fields
       }
       fscanf(f, "%s", word);
       assert(strstr(word, "default") != NULL);
-
-
 
       _vtk_read_field_values(f,
                              n,
@@ -2428,7 +2436,8 @@ PDM_vtk_write_std_elements_ho
 
   int n_vtx_elt = PDM_Mesh_nodal_n_vtx_elt_get (elt_type, order);
   if(0 == 1) {
-    int *vtk_idx = malloc (sizeof(int) * n_vtx_elt);
+    int *vtk_idx;
+    PDM_malloc(vtk_idx, n_vtx_elt, int);
     _ijk_to_vtk (elt_type, order, vtk_idx);
   }
 
@@ -2539,7 +2548,8 @@ PDM_vtk_write_std_elements_ho_with_vtx_field
 
   int n_vtx_elt = PDM_Mesh_nodal_n_vtx_elt_get (elt_type, order);
   if(0 == 1) {
-    int *vtk_idx = malloc (sizeof(int) * n_vtx_elt);
+    int *vtk_idx;
+    PDM_malloc(vtk_idx, n_vtx_elt, int);
     _ijk_to_vtk (elt_type, order, vtk_idx);
   }
 
@@ -2747,7 +2757,8 @@ PDM_vtk_lagrange_to_ijk
 {
   switch (elt_type) {
   case PDM_MESH_NODAL_POINT: {
-    int *_ijk = malloc (sizeof(int));
+    int *_ijk;
+    PDM_malloc(_ijk, 1, int);
     _ijk[0] = 0;
     return _ijk;
   }
@@ -2916,9 +2927,9 @@ PDM_vtk_read_to_dmesh_nodal
 
     for (PDM_Mesh_nodal_elt_t t = (PDM_Mesh_nodal_elt_t) 0; t < PDM_MESH_NODAL_N_ELEMENT_TYPES; t++) {
       if (gn_elt[t] > 0) {
-        gelt_vtx[t] = malloc(sizeof(PDM_g_num_t) * idx[t]);
+        PDM_malloc(gelt_vtx[t], idx[t], PDM_g_num_t);
         if (t == PDM_MESH_NODAL_POLY_2D) {
-          gpoly2d_vtx_n = malloc(sizeof(int) * gn_elt[t]);
+          PDM_malloc(gpoly2d_vtx_n, gn_elt[t], int);
         }
       }
       idx[t] = 0;
@@ -2939,15 +2950,15 @@ PDM_vtk_read_to_dmesh_nodal
     gvtx_coord = prepa.vtx_coord;
 
     if (prepa.elt_vtx_idx != NULL) {
-      free(prepa.elt_vtx_idx);
+      PDM_free(prepa.elt_vtx_idx);
     }
 
     if (prepa.elt_vtx != NULL) {
-      free(prepa.elt_vtx);
+      PDM_free(prepa.elt_vtx);
     }
 
     if (prepa.elt_type != NULL) {
-      free(prepa.elt_type);
+      PDM_free(prepa.elt_type);
     }
   }
 
@@ -2975,7 +2986,8 @@ PDM_vtk_read_to_dmesh_nodal
 
     if (n_field[i] > 0) {
       // Bcast field name, stride and type
-      int *l_name = malloc(sizeof(int) * n_field[i]);
+      int *l_name;
+      PDM_malloc(l_name, n_field[i], int);
       if (i_rank == 0) {
         for (int j = 0; j < n_field[i]; j++) {
           l_name[j] = strlen(prepa.field[i].field_name[j]) + 1;
@@ -2983,10 +2995,10 @@ PDM_vtk_read_to_dmesh_nodal
       }
       else {
         prepa.field[i].n_field = n_field[i];
-        prepa.field[i].field_name   = malloc(sizeof(char     *) * n_field[i]);
-        prepa.field[i].field_type   = malloc(sizeof(PDM_data_t) * n_field[i]);
-        prepa.field[i].field_stride = malloc(sizeof(int       ) * n_field[i]);
-        prepa.field[i].field_value  = malloc(sizeof(void     *) * n_field[i]);
+        PDM_malloc(prepa.field[i].field_name  , n_field[i], char     *);
+        PDM_malloc(prepa.field[i].field_type  , n_field[i], PDM_data_t);
+        PDM_malloc(prepa.field[i].field_stride, n_field[i], int       );
+        PDM_malloc(prepa.field[i].field_value , n_field[i], void     *);
       }
 
       PDM_MPI_Bcast(l_name, n_field[i], PDM_MPI_INT, 0, comm);
@@ -2995,7 +3007,8 @@ PDM_vtk_read_to_dmesh_nodal
       for (int j = 0; j < n_field[i]; j++) {
         l_char_buf += l_name[j];
       }
-      char *char_buf = malloc(sizeof(char *) * l_char_buf);
+      char *char_buf;
+      PDM_malloc(char_buf, l_char_buf, char);
       if (i_rank == 0) {
         int idx = 0;
         for (int j = 0; j < n_field[i]; j++) {
@@ -3011,19 +3024,17 @@ PDM_vtk_read_to_dmesh_nodal
       if (i_rank != 0) {
         int idx = 0;
         for (int j = 0; j < n_field[i]; j++) {
-          prepa.field[i].field_name[j] = malloc(sizeof(char) * l_name[j]);
+          PDM_malloc(prepa.field[i].field_name[j], l_name[j], char);
           for (int k = 0; k < l_name[j]; k++) {
             prepa.field[i].field_name[j][k] = char_buf[idx++];
           }
         }
       }
-      free(char_buf);
-      free(l_name);
+      PDM_free(char_buf);
+      PDM_free(l_name);
 
       PDM_MPI_Bcast((void *) prepa.field[i].field_type  , n_field[i], PDM_MPI_INT, 0, comm);
       PDM_MPI_Bcast((void *) prepa.field[i].field_stride, n_field[i], PDM_MPI_INT, 0, comm);
-
-
 
       if (dbg_enabled) {
         log_trace("i = %d\n", i);
@@ -3050,12 +3061,7 @@ PDM_vtk_read_to_dmesh_nodal
       }
 
     }
-
   }
-
-
-
-
 
   int mesh_dimension = -1;
   PDM_g_num_t gn_elt_dim[3] = {0};
@@ -3070,7 +3076,6 @@ PDM_vtk_read_to_dmesh_nodal
   if (dbg_enabled) {
     log_trace("mesh_dimension = %d\n", mesh_dimension);
   }
-
 
   /* Vertices*/
   PDM_g_num_t *init_distrib_vtx = PDM_compute_entity_distribution        (comm, dn_vtx);
@@ -3088,11 +3093,11 @@ PDM_vtk_read_to_dmesh_nodal
                 (void **) &dvtx_coord);
 
   if (gvtx_coord != NULL) {
-    free(gvtx_coord);
+    PDM_free(gvtx_coord);
   }
 
   if (*n_vtx_field > 0) {
-    *vtx_field_value = malloc(sizeof(void *) * (*n_vtx_field));
+    PDM_malloc(*vtx_field_value, (*n_vtx_field), void *);
 
     for (int i = 0; i < *n_vtx_field; i++) {
       PDM_block_to_block_exch(btb_vtx,
@@ -3105,15 +3110,15 @@ PDM_vtk_read_to_dmesh_nodal
                     (void **) &(*vtx_field_value)[i]);
 
       if (i_rank == 0) {
-        free(prepa.field[0].field_value[i]);
+        PDM_free(prepa.field[0].field_value[i]);
       }
     }
-    free(prepa.field[0].field_value);
+    PDM_free(prepa.field[0].field_value);
   }
 
 
   PDM_block_to_block_free(btb_vtx);
-  free(init_distrib_vtx);
+  PDM_free(init_distrib_vtx);
 
 
 
@@ -3131,7 +3136,7 @@ PDM_vtk_read_to_dmesh_nodal
                                                             comm);
 
       if (t == PDM_MESH_NODAL_POLY_2D) {
-        dpoly2d_vtx_n = malloc(sizeof(int) * (distrib_elt[t][i_rank+1] - distrib_elt[t][i_rank]));
+        PDM_malloc(dpoly2d_vtx_n, distrib_elt[t][i_rank+1] - distrib_elt[t][i_rank], int);
         PDM_block_to_block_exch(btb,
                                 sizeof(PDM_g_num_t),
                                 PDM_STRIDE_VAR_INTERLACED,
@@ -3141,7 +3146,7 @@ PDM_vtk_read_to_dmesh_nodal
                                 dpoly2d_vtx_n,
                       (void **) &delt_vtx[t]);
         if (gpoly2d_vtx_n != NULL) {
-          free(gpoly2d_vtx_n);
+          PDM_free(gpoly2d_vtx_n);
         }
       }
       else if (t == PDM_MESH_NODAL_POLY_3D) {
@@ -3161,10 +3166,10 @@ PDM_vtk_read_to_dmesh_nodal
       }
 
       if (gelt_vtx[t] != NULL) {
-        free(gelt_vtx[t]);
+        PDM_free(gelt_vtx[t]);
       }
       PDM_block_to_block_free(btb);
-      free(init_distrib);
+      PDM_free(init_distrib);
     }
   }
 
@@ -3179,7 +3184,7 @@ PDM_vtk_read_to_dmesh_nodal
 
   /* Vertices */
   dn_vtx = (int) (distrib_vtx[i_rank+1] - distrib_vtx[i_rank]);
-  free(distrib_vtx);
+  PDM_free(distrib_vtx);
 
   PDM_DMesh_nodal_coord_set(dmn,
                             dn_vtx,
@@ -3212,7 +3217,7 @@ PDM_vtk_read_to_dmesh_nodal
 
       if (t == PDM_MESH_NODAL_POLY_2D) {
         int *dpoly2d_vtx_idx = PDM_array_new_idx_from_sizes_int(dpoly2d_vtx_n, dn_elt[t]);
-        free(dpoly2d_vtx_n);
+        PDM_free(dpoly2d_vtx_n);
 
         PDM_DMesh_nodal_elmts_section_poly2d_set(dmne,
                                                  id_section,
@@ -3243,24 +3248,141 @@ PDM_vtk_read_to_dmesh_nodal
                                           delt_vtx[t],
                                           dn_elt[t],
                                           "delt_vtx : ");
-          free(connec_idx);
+          PDM_free(connec_idx);
         }
       }
 
 
-      free(distrib_elt[t]);
+      PDM_free(distrib_elt[t]);
     }
   }
 
   if (*n_elt_field > 0) {
     for (int i = 0; i < *n_elt_field; i++) {
       if (i_rank == 0) {
-        free(prepa.field[1].field_value[i]);
+        PDM_free(prepa.field[1].field_value[i]);
       }
     }
-    free(prepa.field[1].field_value);
+    PDM_free(prepa.field[1].field_value);
   }
 
 
   return dmn;
+}
+
+
+
+
+
+void
+PDM_vtk_write_unstructured_grid
+(
+ const char                 *filename,
+ const int                   n_vtx,
+ const double                vtx_coord[],
+ const PDM_g_num_t           vtx_g_num[],
+ const int                   n_elt,
+ const PDM_Mesh_nodal_elt_t  elt_type[],
+ const int                   elt_vtx_idx[],
+ const int                   elt_vtx[],
+ const PDM_g_num_t           elt_g_num[],
+ const int                   n_elt_field,
+ const char                 *elt_field_name[],
+ const double               *elt_field[],
+ const int                   n_vtx_field,
+ const char                 *vtx_field_name[],
+ const double               *vtx_field[]
+ )
+{
+  FILE *f = fopen(filename, "w");
+
+  fprintf(f, "# vtk DataFile Version 2.0\n");
+  fprintf(f, "mesh\n");
+  fprintf(f, "ASCII\n");
+  fprintf(f, "DATASET UNSTRUCTURED_GRID\n");
+
+  fprintf(f, "POINTS %d double\n", n_vtx);
+  for (int i = 0; i < n_vtx; i++) {
+    for (int j = 0; j < 3; j++) {
+      fprintf(f, "%.20lf ", vtx_coord[3*i+j]);
+    }
+    fprintf(f, "\n");
+  }
+
+  fprintf(f, "CELLS %d %d\n", n_elt, n_elt + elt_vtx_idx[n_elt]);
+  for (int i_elt = 0; i_elt < n_elt; i_elt++) {
+    fprintf(f, "%d\n", elt_vtx_idx[i_elt+1] - elt_vtx_idx[i_elt]);
+    for (int i = elt_vtx_idx[i_elt]; i < elt_vtx_idx[i_elt+1]; i++) {
+      fprintf(f, "%d ", elt_vtx[i] - 1);
+    }
+    fprintf(f, "\n");
+  }
+
+  fprintf(f, "CELL_TYPES %d\n", n_elt);
+  for (int i_elt = 0; i_elt < n_elt; i_elt++) {
+    int vtk_elt_type = _vtk_elt_type(elt_type[i_elt], 1);
+    fprintf(f, "%d\n", vtk_elt_type);
+  }
+
+
+  if (vtx_g_num != NULL) {
+    fprintf(f, "POINT_DATA %d\n", n_vtx);
+    fprintf(f, "SCALARS vtx_gnum long 1\n");
+    fprintf(f, "LOOKUP_TABLE default\n");
+    for (int i = 0; i < n_vtx; i++) {
+      fprintf(f, PDM_FMT_G_NUM"\n", vtx_g_num[i]);
+    }
+  }
+
+  if (n_vtx_field > 0) {
+    assert (vtx_field != NULL);
+
+    if (vtx_g_num == NULL) {
+      fprintf(f, "POINT_DATA %d\n", n_vtx);
+    }
+
+    fprintf(f, "FIELD vtx_field %d\n", n_vtx_field);
+    for (int i = 0; i < n_vtx_field; i++) {
+      // assert (vtx_field[i] != NULL);
+      assert (vtx_field_name[i] != NULL);
+
+      fprintf(f, "%s 1 %d double\n", vtx_field_name[i], n_vtx);
+      for (int j = 0; j < n_vtx; j++) {
+        fprintf(f, "%lf ", vtx_field[i][j]);
+      }
+      fprintf(f, "\n");
+    }
+  }
+
+
+  if (elt_g_num != NULL) {
+    fprintf(f, "CELL_DATA %d\n", n_elt);
+    fprintf(f, "SCALARS elt_gnum long 1\n");
+    fprintf(f, "LOOKUP_TABLE default\n");
+    for (int i = 0; i < n_elt; i++) {
+      fprintf(f, PDM_FMT_G_NUM"\n", elt_g_num[i]);
+     }
+  }
+
+  if (n_elt_field > 0) {
+    assert (elt_field != NULL);
+
+    if (elt_g_num == NULL) {
+      fprintf(f, "CELL_DATA %d\n", n_elt);
+    }
+
+    fprintf(f, "FIELD elt_field %d\n", n_elt_field);
+    for (int i = 0; i < n_elt_field; i++) {
+      // assert (elt_field[i] != NULL);
+      assert (elt_field_name[i] != NULL);
+
+      fprintf(f, "%s 1 %d double\n", elt_field_name[i], n_elt);
+      for (int j = 0; j < n_elt; j++) {
+        fprintf(f, "%lf ", elt_field[i][j]);
+      }
+      fprintf(f, "\n");
+    }
+  }
+
+  fclose(f);
 }

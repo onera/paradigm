@@ -37,6 +37,7 @@ target_include_directories(pdm_mpi
   PRIVATE   $<BUILD_INTERFACE:${PDM_BINARY_DIR}>
   PRIVATE   $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
   PUBLIC    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
+  PUBLIC    $<BUILD_INTERFACE:${PDM_SOURCE_DIR}/src/util>
   PUBLIC    $<BUILD_INTERFACE:${PDM_SOURCE_DIR}/src/io>
   PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
   PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>
@@ -97,6 +98,7 @@ if (PDM_ENABLE_STATIC)
   set_target_properties(pdm_mpi_static PROPERTIES OUTPUT_NAME "pdm_mpi")
   set_target_properties(pdm_mpi_static PROPERTIES VERSION ${PDM_VERSION})
   target_link_libraries(pdm_mpi_static ${LINK_LIBRARIES} pdm_io_static)
+  target_link_libraries(pdm_mpi_static ${LINK_LIBRARIES} pdm_static)
   set_target_properties(pdm_mpi_static PROPERTIES
                             PUBLIC_HEADER "${LIST_HEADER}")
 

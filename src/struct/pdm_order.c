@@ -199,6 +199,40 @@ _lexicographic_equal_long
   return x[0] == y[0];
 }
 
+inline
+static
+int
+_lexicographic_compare_int
+(
+  const int *x,
+  const int *y,
+  const int  stride
+)
+{
+  int res = x[0] == y[0];
+  if(res == 1 && stride > 1) {
+    return _lexicographic_compare_int(&x[1], &y[1], stride-1);
+  }
+  return x[0] < y[0];
+}
+
+inline
+static
+int
+_lexicographic_equal_int
+(
+  const int *x,
+  const int *y,
+  const int  stride
+)
+{
+  int res = x[0] == y[0];
+  if(res == 1 && stride > 1) {
+    return _lexicographic_equal_int(&x[1], &y[1], stride-1);
+  }
+  return x[0] == y[0];
+}
+
 /*=============================================================================
  * Public function definitions
  *============================================================================*/
@@ -221,7 +255,8 @@ const int    *new_to_old_order,
 void         *array
 )
 {
-  unsigned char *old_array = (unsigned char *) malloc (size_array * elt_size);
+  unsigned char *old_array;
+  PDM_malloc(old_array, size_array * elt_size, unsigned char);
   unsigned char *_array    = (unsigned char *) array;
 
   for (int i = 0; i < size_array; ++i) {
@@ -236,7 +271,7 @@ void         *array
     }
   }
 
-  free(old_array);
+  PDM_free(old_array);
 }
 
 /**
@@ -399,7 +434,8 @@ const size_t           stride,
   /* Apply sort */
   PDM_order_array (n_entity, stride * sizeof(PDM_g_num_t), order, array);
 
-  PDM_g_num_t *last_value = malloc(stride * sizeof(PDM_g_num_t));
+  PDM_g_num_t *last_value;
+  PDM_malloc(last_value, stride ,PDM_g_num_t);
 
   int new_size  = 1;
   int idx_write = 1;
@@ -421,7 +457,7 @@ const size_t           stride,
     }
   }
 
-  free(last_value);
+  PDM_free(last_value);
 
   return new_size;
 }
@@ -445,7 +481,8 @@ const size_t           stride,
   /* Apply sort */
   PDM_order_array (n_entity, stride * sizeof(PDM_g_num_t), order, array);
 
-  PDM_g_num_t *last_value = malloc(stride * sizeof(PDM_g_num_t));
+  PDM_g_num_t *last_value;
+  PDM_malloc(last_value, stride, PDM_g_num_t);
 
   int new_size  = 1;
   int idx_write = 1;
@@ -468,9 +505,98 @@ const size_t           stride,
     }
   }
 
-  free(last_value);
+  PDM_free(last_value);
 
   return new_size;
+}
+
+
+int
+PDM_order_inplace_unique_int
+(
+const int              n_entity,
+const size_t           stride,
+      int             *array,
+      int             *order
+)
+{
+  if(n_entity == 0) {
+    return 0;
+  }
+
+  PDM_order_lnum_s(array, stride, order, n_entity);
+
+  /* Apply sort */
+  PDM_order_array (n_entity, stride * sizeof(int), order, array);
+
+  int *last_value;
+  PDM_malloc(last_value, stride, int);
+
+  int new_size  = 1;
+  int idx_write = 1;
+  for(int j = 0; j < (int) stride; ++j) {
+    last_value[j] = array[j];
+  }
+
+  // PDM_log_trace_array_int(array, n_entity * stride, "array :: ");
+
+  for(int i = 1; i < n_entity; i++){
+    int is_same = _lexicographic_equal_int(last_value, &array[stride*i], stride);
+    if(is_same == 0){ // N'est pas le meme
+      for(int j = 0; j < (int) stride; ++j) {
+        last_value[j] = array[stride*i+j];
+        array[stride*idx_write+j] = last_value[j];
+      }
+      new_size++;
+      idx_write++;
+    }
+  }
+
+  PDM_free(last_value);
+
+  return new_size;
+}
+
+
+
+int
+PDM_order_binary_search_int
+(
+ const int         elt   [],
+ const int         array [],
+ const size_t      stride,
+ const size_t      nb_ent
+)
+{
+  if(nb_ent == 0) {
+    return -1;
+  }
+
+  int left  = 0;
+  int right = nb_ent - 1;
+  int ind   = (left + right) / 2;
+
+  while ((right - left) > 1) {
+
+    if(_lexicographic_compare_int(elt, &array[stride*ind], stride)) {
+      right = ind;
+    } else {
+      left = ind;
+    }
+
+    ind = (left + right) / 2;
+  }
+
+  if (_lexicographic_equal_int(elt, &array[stride*ind], stride)) {
+    return ind;
+  }
+
+  if (_lexicographic_equal_int(elt, &array[stride*right], stride)) {
+    return right;
+  } else {
+    return -1;
+  }
+
 }
 
 

@@ -29,6 +29,7 @@
 #include "pdm_mpi.h"
 #include "pdm_part_to_part.h"
 #include "pdm_part_mesh_nodal_elmts.h"
+#include "pdm_part_mesh_nodal.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -97,30 +98,38 @@ struct _pdm_extract_part_t
   int               ***group_entity         [PDM_BOUND_TYPE_MAX];
   PDM_g_num_t       ***group_entity_ln_to_gn[PDM_BOUND_TYPE_MAX];
 
+  int                  have_connectivity[PDM_CONNECTIVITY_TYPE_MAX];
+
 
   /* If partition is described by elements */
-  PDM_part_mesh_nodal_elmts_t *pmne;
+  int is_nodal;
+  // PDM_part_mesh_nodal_elmts_t *pmne;
+  PDM_part_mesh_nodal_t       *pmn;
+
 
   /* Which cell or face is selected */
   int                 *n_extract;
   int                **extract_lnum;
+  PDM_ownership_t      owner_extract_lnum;
 
   /* Each rank specify the target AND order they want */
   int                  from_target;
   int                 *n_target;
   PDM_g_num_t        **target_gnum;
   PDM_ownership_t      target_ownership;
+  PDM_ownership_t      owner_target_gnum;
   int                **target_location;
   PDM_mesh_entities_t  master_entity;
 
   /* Extracted part */
   double             **pextract_vtx_coord;
 
-  PDM_bool_t         *is_owner_connectivity;
-  PDM_bool_t         *is_owner_ln_to_gn;
-  PDM_bool_t         *is_owner_parent_ln_to_gn;
-  PDM_bool_t         *is_owner_parent_lnum;
-  PDM_bool_t          is_owner_vtx_coord;
+  PDM_ownership_t     owner_connectivity   [PDM_CONNECTIVITY_TYPE_MAX];
+  PDM_ownership_t     owner_ln_to_gn       [PDM_MESH_ENTITY_MAX];
+  PDM_ownership_t     owner_parent_ln_to_gn[PDM_MESH_ENTITY_MAX];
+  PDM_ownership_t     owner_parent_lnum    [PDM_MESH_ENTITY_MAX];
+  PDM_ownership_t     owner_vtx_coord;
+  PDM_ownership_t     owner_init_location  [PDM_MESH_ENTITY_MAX];
 
   /* Only for mapping and clear API */
   int                *pextract_n_entity              [PDM_MESH_ENTITY_MAX];
@@ -129,15 +138,16 @@ struct _pdm_extract_part_t
   PDM_g_num_t       **pextract_entity_ln_to_gn       [PDM_MESH_ENTITY_MAX];
   PDM_g_num_t       **pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_MAX];
   int               **pextract_entity_parent_lnum    [PDM_MESH_ENTITY_MAX];
+  int               **pextract_entity_init_location  [PDM_MESH_ENTITY_MAX];
 
   // For renumbering
-  PDM_bool_t         *is_owner_color;
+  PDM_ownership_t     owner_color                    [PDM_MESH_ENTITY_MAX];
   int               **pextract_entity_color          [PDM_MESH_ENTITY_MAX];
   int               **pextract_entity_order          [PDM_MESH_ENTITY_MAX];
 
   /* If partition is described by elements */
-  PDM_bool_t                   is_owner_extract_pmne;
-  PDM_part_mesh_nodal_elmts_t *extract_pmne;
+  PDM_ownership_t        owner_extract_pmn;
+  PDM_part_mesh_nodal_t *extract_pmn;
 
   /* Part-to-part objects */
   PDM_part_to_part_t *ptp_entity   [PDM_MESH_ENTITY_MAX];
@@ -152,8 +162,7 @@ struct _pdm_extract_part_t
   PDM_g_num_t        ***pextract_group_entity_ln_to_gn       [PDM_BOUND_TYPE_MAX];
   PDM_g_num_t        ***pextract_group_entity_parent_ln_to_gn[PDM_BOUND_TYPE_MAX];
   PDM_ownership_t      *group_array_ownership                [PDM_BOUND_TYPE_MAX];
-
-  PDM_bool_t           *is_owner_extract_group               [PDM_BOUND_TYPE_MAX];
+  PDM_ownership_t      *group_parent_ownership               [PDM_BOUND_TYPE_MAX];
 
 };
 

@@ -50,7 +50,7 @@ extern "C" {
  */
 
 static double
-_randomVal
+_random_val
 (
  const double min,
  const double max
@@ -70,7 +70,7 @@ _randomVal
 /**
  * \brief Get bounds
  *
- * \param [in]  numPts   Number of polygon vertices
+ * \param [in]  n_pts   Number of polygon vertices
  * \param [in]  pts      Polygon vertices coordinates
  *
  * \return      Bounds
@@ -81,20 +81,21 @@ _randomVal
 double *
 PDM_polygon_bounds_get
 (
- const int     numPts,
+ const int     n_pts,
  const double *pts
 )
 {
-  double *bounds = malloc (sizeof(double) * 6);
+  double *bounds;
+  PDM_malloc(bounds, 6, double);
 
-  bounds[0] = DBL_MAX;
+  bounds[0] =  DBL_MAX;
   bounds[1] = -DBL_MAX;
-  bounds[2] = DBL_MAX;
+  bounds[2] =  DBL_MAX;
   bounds[3] = -DBL_MAX;
-  bounds[4] = DBL_MAX;
+  bounds[4] =  DBL_MAX;
   bounds[5] = -DBL_MAX;
 
-  for (int isom = 0; isom < numPts; isom++) {
+  for (int isom = 0; isom < n_pts; isom++) {
     for (int l = 0; l < 3; l++) {
       double coord = pts[3*isom + l];
       if (bounds[2*l] > coord) {
@@ -114,7 +115,7 @@ PDM_polygon_bounds_get
  * \brief Evaluates the position in a polygon
  *
  * \param [in]  x        Point coordinates to evaluate position
- * \param [in]  numPts   Number of polygon vertices
+ * \param [in]  n_pts   Number of polygon vertices
  * \param [in]  pts      Polygon vertices coordinates
  * \param [out] closest  Closest Point in Polygon or NULL
  * \param [out] minDist2 Square of the distance
@@ -132,7 +133,7 @@ PDM_polygon_status_t
 PDM_polygon_evaluate_position
 (
  const double  x[3],
- const int     numPts,
+ const int     n_pts,
  const double *pts,
  double        closestPoint[3],
  double        *minDist2
@@ -148,17 +149,17 @@ PDM_polygon_evaluate_position
   double ray[3];
   double bary[3];
 
-  double pts_p[3*numPts];
+  double pts_p[3*n_pts];
 
   /*
    * Average plane
    */
 
-  PDM_plane_normal (numPts, pts, n);
+  PDM_plane_normal (n_pts, pts, n);
 
-  PDM_polygon_compute_barycenter (numPts, pts, bary);
+  PDM_polygon_compute_barycenter (n_pts, pts, bary);
 
-  for (int k = 0; k < numPts; k++) {
+  for (int k = 0; k < n_pts; k++) {
     double *pt = (double *) pts + 3*k;
     double *pt_p = pts_p + 3*k;
     PDM_plane_projection2 (pt, bary, n, pt_p);
@@ -166,7 +167,7 @@ PDM_polygon_evaluate_position
 
   double *_pts_p = pts_p;
 
-  PDM_polygon_parameterize (numPts, _pts_p, p0, p10, &l10, p20, &l20, n);
+  PDM_polygon_parameterize (n_pts, _pts_p, p0, p10, &l10, p20, &l20, n);
 
   PDM_plane_projection (x,p0,n,cp);
 
@@ -184,7 +185,7 @@ PDM_polygon_evaluate_position
   //                     DBL_MAX, -DBL_MAX,
   //                     DBL_MAX, -DBL_MAX};
 
-  // for (int isom = 0; isom < numPts; isom++) {
+  // for (int isom = 0; isom < n_pts; isom++) {
   //   for (int l = 0; l < 3; l++) {
   //     double coord = _pts_p[3*isom + l];
   //     if (bounds[2*l] > coord) {
@@ -199,7 +200,7 @@ PDM_polygon_evaluate_position
 
   if (pcoords[0] >= 0.0 && pcoords[0] <= 1.0 &&
       pcoords[1] >= 0.0 && pcoords[1] <= 1.0 &&
-      (PDM_polygon_point_in_new (cp, numPts, _pts_p,
+      (PDM_polygon_point_in_new (cp, n_pts, _pts_p,
                                  bounds, n) == PDM_POLYGON_INSIDE) ) {
     if (closestPoint) {
       closestPoint[0] = cp[0];
@@ -225,9 +226,9 @@ PDM_polygon_evaluate_position
 
     if (closestPoint) {
       *minDist2 = DBL_MAX;
-      for (int i=0; i<numPts; i++) {
+      for (int i=0; i<n_pts; i++) {
         pt1 = (double *) pts_p + 3 * i;
-        pt2 = (double *) pts_p + 3 * ((i+1)%numPts);
+        pt2 = (double *) pts_p + 3 * ((i+1)%n_pts);
         dist2 = PDM_line_distance (x, pt1, pt2, &t, closest);
         if ( dist2 < *minDist2 ) {
           closestPoint[0] = closest[0];
@@ -245,7 +246,7 @@ PDM_polygon_evaluate_position
 /**
  * \brief Computes polygon parametrization
  *
- * \param [in]  numPts  Number of polygon vertices
+ * \param [in]  n_pts  Number of polygon vertices
  * \param [in]  pts     Polygon vertices coordinates
  * \param [out] p0,     Origin vertex
  * \param [out] p10,    First edge vector
@@ -266,7 +267,7 @@ PDM_polygon_evaluate_position
 PDM_bool_t
 PDM_polygon_parameterize
 (
- const int     numPts,
+ const int     n_pts,
  const double *pts,
  double       *p0,
  double       *p10,
@@ -278,7 +279,7 @@ PDM_polygon_parameterize
 {
   double s, t, p[3], p1[3], p2[3], sbounds[2], tbounds[2];
 
-  if (numPts < 3) {
+  if (n_pts < 3) {
     return PDM_FALSE;
   }
 
@@ -289,7 +290,7 @@ PDM_polygon_parameterize
    *  first vertex and the first edge.
    */
 
-  PDM_plane_normal (numPts, pts, n);
+  PDM_plane_normal (n_pts, pts, n);
 
   double x1[3];
   x1[0] = pts[0];
@@ -334,7 +335,7 @@ PDM_GCC_SUPPRESS_WARNING_POP
   tbounds[0] = 0.0;
   tbounds[1] = 0.0;
 
-  for (int i = 1; i < numPts; i++) {
+  for (int i = 1; i < n_pts; i++) {
     x1[0] = pts[3*i];
     x1[1] = pts[3*i+1];
     x1[2] = pts[3*i+2];
@@ -374,7 +375,7 @@ PDM_GCC_SUPPRESS_WARNING_POP
  * \brief Computes polygon parametrization
  *
  * \param [in]  x        Point coordinates to evaluate position
- * \param [in]  numPts  Number of polygon vertices
+ * \param [in]  n_pts  Number of polygon vertices
  * \param [in]  pts     Polygon vertices coordinates
  * \param [out] p0,     Origin vertex
  * \param [out] p10,    First edge vector
@@ -408,7 +409,7 @@ PDM_polygon_status_t
 PDM_polygon_point_in
 (
  const double  x[3],
- const int     numPts,
+ const int     n_pts,
  const double *pts,
  double       *bounds,
  double       *n
@@ -507,8 +508,8 @@ PDM_polygon_point_in
      */
 
     for (rayOK = PDM_FALSE; rayOK == PDM_FALSE; ) {
-      ray[comps[0]] = _randomVal (-rayMag, rayMag);
-      ray[comps[1]] = _randomVal (-rayMag, rayMag);
+      ray[comps[0]] = _random_val (-rayMag, rayMag);
+      ray[comps[1]] = _random_val (-rayMag, rayMag);
       ray[maxComp] = -(n[comps[0]]*ray[comps[0]] +
                        n[comps[1]]*ray[comps[1]]) / n[maxComp];
       if ( (mag = PDM_MODULE(ray)) > rayMag * _TOL_POLY ) {
@@ -531,9 +532,9 @@ PDM_polygon_point_in
 
     int testResult = _POLYGON_CERTAIN;
     int numInts = 0;
-    for (int i = 0; i < numPts; i++) {
+    for (int i = 0; i < n_pts; i++) {
       x1 = (double *) pts + 3*i;
-      x2 = (double *) pts + 3*((i+1)%numPts);
+      x2 = (double *) pts + 3*((i+1)%n_pts);
 
       /*
        * Fire the ray and compute the number of intersections.  Be careful
@@ -606,7 +607,7 @@ PDM_polygon_point_in
 /**
  * \brief Computes polygon barycenter
  *
- * \param [in]   numPts  Number of polygon vertices
+ * \param [in]   n_pts  Number of polygon vertices
  * \param [in]   pts     Polygon vertices coordinates
  * \param [out]  bary    Barycenter
  *
@@ -617,7 +618,7 @@ PDM_polygon_point_in
 void
 PDM_polygon_compute_barycenter
 (
-const int numPts,
+const int n_pts,
 const double *pts,
 double bary[3]
  )
@@ -627,10 +628,10 @@ double bary[3]
   bary[2] = 0.;
 
   for (int i = 0; i < 3; i++) {
-    for (int ipt = 0; ipt < numPts; ipt++) {
+    for (int ipt = 0; ipt < n_pts; ipt++) {
       bary[i] += pts[3*ipt+i];
     }
-    bary[i] /= numPts;
+    bary[i] /= n_pts;
   }
 }
 
@@ -803,7 +804,8 @@ PDM_polygon_status_t PDM_polygon_point_in_3d
   /*
    *  Projection onto median plane
    */
-  double *xy = malloc (sizeof(double) * (n_vtx + 1) * 2);
+  double *xy;
+  PDM_malloc(xy, (n_vtx + 1) * 2, double);
   double *p = xy + 2*n_vtx;
   PDM_polygon_3d_to_2d (n_vtx,
                         vtx_xyz,
@@ -825,7 +827,7 @@ PDM_polygon_status_t PDM_polygon_point_in_3d
                                                        //char_length,
                                                        NULL);
 
-  free (xy);
+  PDM_free(xy);
   return stat;
 }
 
@@ -872,7 +874,7 @@ int PDM_polygon_3d_to_2d
   /* Build a suitable orthonormal frame */
   double tangent_u[3] = {0., 0., 0.}, tangent_v[3];
   if (normal == NULL) {
-    _normal = malloc (sizeof(double) * 3);
+    PDM_malloc(_normal, 3, double);
     PDM_plane_normal (n_vtx,
                       vtx_xyz,
                       _normal);
@@ -943,7 +945,7 @@ int PDM_polygon_3d_to_2d
   }
 
   if (normal == NULL) {
-    free (_normal);
+    PDM_free(_normal);
   }
 
   return 1;

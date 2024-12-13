@@ -166,10 +166,11 @@ PDM_g_num_t **box_ln_to_gn
   for (PDM_g_num_t i = 0; i < 6*distrib_box[i_rank]; i++) {
     rand();
   }
-  free (distrib_box);
+  PDM_free(distrib_box);
 
-  double *box_centers = malloc (sizeof(double) * n_box * 3);
-  *box_extents = malloc (sizeof(double) * n_box * 6);
+  double *box_centers;
+  PDM_malloc( box_centers, n_box * 3, double);
+  PDM_malloc(*box_extents, n_box * 6, double);
   double *_box_extents = *box_extents;
   for (int i = 0; i < n_box; i++) {
     for (int j = 0; j < 3; j++) {
@@ -201,7 +202,7 @@ PDM_g_num_t **box_ln_to_gn
   *box_ln_to_gn = PDM_gnum_get (gen_gnum, 0);
 
   PDM_gnum_free (gen_gnum);
-  free (box_centers);
+  PDM_free(box_centers);
 
   return n_box;
 }
@@ -378,14 +379,14 @@ char *argv[]
   // PDM_log_trace_connectivity_long(box_pts_idx, box_pts, n_boxes, "box_pts :: ");
 
   /* Free */
-  free(box_pts_idx);
-  free(box_pts);
-  free(pts_coords);
+  PDM_free(box_pts_idx);
+  PDM_free(box_pts);
+  PDM_free(pts_coords);
 
-  free (coords);
-  free (gnum);
-  free (box_extents);
-  free (box_ln_to_gn);
+  PDM_free(coords);
+  PDM_free(gnum);
+  PDM_free(box_extents);
+  PDM_free(box_ln_to_gn);
 
   if (i_rank == 0) {
     PDM_printf ("-- End\n");

@@ -396,7 +396,7 @@ _compute_uvw
 
   /* Get number of vertices */
   const int order = 1;
-  n_elt_vertices = PDM_Mesh_nodal_n_vertices_element (elt_type, order);
+  n_elt_vertices = PDM_Mesh_nodal_n_vtx_elt_get (elt_type, order);
 
   assert (elt_type == PDM_MESH_NODAL_QUAD4    ||
           elt_type == PDM_MESH_NODAL_PYRAMID5 ||
@@ -827,7 +827,8 @@ _locate_in_tetrahedron
   int ivtx, idim, ipt, i, j, k;
 
   int n_pts_out = 0;
-  int *pts_out = malloc (sizeof(int) * n_pts);
+  int *pts_out;
+  PDM_malloc(pts_out, n_pts, int);
 
   double v[3][3];
   for (ivtx = 0; ivtx < 3; ivtx++) {
@@ -908,7 +909,7 @@ _locate_in_tetrahedron
 
 
   if (n_pts_out == 0) {
-    free (pts_out);
+    PDM_free(pts_out);
     return;
   }
 
@@ -916,7 +917,8 @@ _locate_in_tetrahedron
   /*
    *  Locate points outside (closest points on boundary)
    */
-  double *pts_out_coord = malloc (sizeof(double) * n_pts_out * 3);
+  double *pts_out_coord;
+  PDM_malloc(pts_out_coord, n_pts_out * 3, double);
   for (ipt = 0; ipt < n_pts_out; ipt++) {
     int id_pt = pts_out[ipt];
     for (idim = 0; idim < 3; idim++) {
@@ -933,10 +935,14 @@ _locate_in_tetrahedron
                              face_vtx_idx,
                              face_vtx);
 
-  int *id_face = malloc (sizeof(int) * n_pts_out);
-  double *bar_coord_face = malloc (sizeof(double) * n_pts_out * 3);
-  double *closest_point_face = malloc (sizeof(double) * n_pts_out * 3);
-  double *distance_face = malloc (sizeof(double) * n_pts_out);
+  int    *id_face            = NULL;
+  double *bar_coord_face     = NULL;
+  double *closest_point_face = NULL;
+  double *distance_face      = NULL;
+  PDM_malloc(id_face           , n_pts_out    , int   );
+  PDM_malloc(bar_coord_face    , n_pts_out * 3, double);
+  PDM_malloc(closest_point_face, n_pts_out * 3, double);
+  PDM_malloc(distance_face     , n_pts_out    , double);
   _locate_on_triangles (4,
                         face_vtx,
                         tetra_coord,
@@ -968,12 +974,12 @@ _locate_in_tetrahedron
     distance[id_pt] = distance_face[ipt];
   }
 
-  free (pts_out);
-  free (pts_out_coord);
-  free (id_face);
-  free (bar_coord_face);
-  free (distance_face);
-  free (closest_point_face);
+  PDM_free(pts_out);
+  PDM_free(pts_out_coord);
+  PDM_free(id_face);
+  PDM_free(bar_coord_face);
+  PDM_free(distance_face);
+  PDM_free(closest_point_face);
 }
 
 
@@ -1013,9 +1019,10 @@ _locate_in_cell_3d
   eps_vtx2 *= eps_vtx2;
 
   const int order = 1;
-  const int n_vtx = PDM_Mesh_nodal_n_vertices_element (elt_type, order);
+  const int n_vtx = PDM_Mesh_nodal_n_vtx_elt_get (elt_type, order);
 
-  int *pts_out = malloc (sizeof(int) * n_pts);
+  int *pts_out;
+  PDM_malloc(pts_out, n_pts, int);
   int n_pts_out = 0;
 
 
@@ -1047,7 +1054,7 @@ _locate_in_cell_3d
 
     //FIXME: Allocation a chaque passage. Prevoir buffer en argument alloue a 8 * 3
 
-    _cell_coord = malloc (sizeof(double) * n_vtx * 3);
+    PDM_malloc(_cell_coord, n_vtx * 3, double);
     _cell_coord[ 0] = cell_coord[ 0];
     _cell_coord[ 1] = cell_coord[ 1];
     _cell_coord[ 2] = cell_coord[ 2];
@@ -1252,7 +1259,7 @@ _locate_in_cell_3d
   } // End loop on points
 
   if (elt_type != PDM_MESH_NODAL_PRISM6) {
-    free (_cell_coord);
+    PDM_free(_cell_coord);
   }
 
 
@@ -1263,10 +1270,6 @@ _locate_in_cell_3d
       int _ipt = pts_out[ipt];
       distance[_ipt] = HUGE_VAL;
     }
-
-    // int    *closest_face  = malloc (sizeof(int)    * n_pts_out);
-    // double *closest_point = malloc (sizeof(double) * n_pts_out * 3);
-    // int    *inside_polygon = PDM_array_zeros_int(n_pts_out);
 
     int n_face = -1;
     int face_vtx_idx[7];
@@ -1644,12 +1647,12 @@ _locate_in_cell_3d
     //   distance[_ipt] = PDM_DOT_PRODUCT (v_p_cp, v_p_cp);
     // }
 
-    // free (closest_face);
-    // free (closest_point);
-    // free (inside_polygon);
+    //PDM_free(closest_face);
+    //PDM_free(closest_point);
+    //PDM_free(inside_polygon);
   }
 
-  free (pts_out);
+  PDM_free(pts_out);
 
 }
 
@@ -1988,7 +1991,7 @@ _locate_in_polyhedron
     }
 
     if (_tri_vtx == NULL) {
-      _tri_vtx = malloc(sizeof(int) * (max_face_vtx_n - 2) * 3);
+      PDM_malloc(_tri_vtx, (max_face_vtx_n - 2) * 3, int);
     }
   }
 
@@ -2222,7 +2225,7 @@ _locate_in_polyhedron
   }
 
   if (_tri_vtx != tri_vtx) {
-    free(_tri_vtx);
+    PDM_free(_tri_vtx);
   }
 
 
@@ -2278,11 +2281,11 @@ PDM_point_location_nodal
 
   int *sections_id = PDM_part_mesh_nodal_elmts_sections_id_get(pmne);
 
-  *distance        = malloc(sizeof(double *) * n_part);
-  *projected_coord = malloc(sizeof(double *) * n_part);
-  *bar_coord_idx   = malloc(sizeof(int    *) * n_part);
-  *bar_coord       = malloc(sizeof(double *) * n_part);
-  *uvw             = malloc(sizeof(double *) * n_part);
+  PDM_malloc(*distance       , n_part, double *);
+  PDM_malloc(*projected_coord, n_part, double *);
+  PDM_malloc(*bar_coord_idx  , n_part, int    *);
+  PDM_malloc(*bar_coord      , n_part, double *);
+  PDM_malloc(*uvw            , n_part, double *);
 
   /* First loop to allocate */
   for (int ipart = 0; ipart < n_part; ipart++) {
@@ -2298,9 +2301,9 @@ PDM_point_location_nodal
 
     int n_pts = pts_idx[ipart][n_cell];
 
-    (*distance       )[ipart] = malloc (sizeof(double) * n_pts);
-    (*projected_coord)[ipart] = malloc (sizeof(double) * n_pts * 3);
-    (*uvw            )[ipart] = malloc (sizeof(double) * n_pts * 3);
+    PDM_malloc((*distance       )[ipart], n_pts    , double);
+    PDM_malloc((*projected_coord)[ipart], n_pts * 3, double);
+    PDM_malloc((*uvw            )[ipart], n_pts * 3, double);
     (*bar_coord_idx  )[ipart] = PDM_array_zeros_int(n_pts+1);
 
     int *_bar_coord_idx = (*bar_coord_idx)[ipart];
@@ -2409,7 +2412,7 @@ PDM_point_location_nodal
     for (int i = 0; i < n_pts; i++) {
       _bar_coord_idx[i+1] += _bar_coord_idx[i];
     }
-    (*bar_coord)[ipart] = malloc(sizeof(double) * _bar_coord_idx[n_pts]);
+    PDM_malloc(( *bar_coord)[ipart], _bar_coord_idx[n_pts], double);
 
   } // End of loop on parts
 
@@ -2458,7 +2461,8 @@ PDM_point_location_nodal
           n_vtx_max = PDM_MAX(n_vtx_max, connec_idx[ielt+1] - connec_idx[ielt]);
         }
 
-        double *poly_coord = malloc(sizeof(double) * n_vtx_max * 3);
+        double *poly_coord;
+        PDM_malloc(poly_coord, n_vtx_max * 3, double);
 
         for (int ielt = 0; ielt < n_elt; ielt++) {
           int icell = ielt;
@@ -2488,7 +2492,7 @@ PDM_point_location_nodal
             _uvw[3*ipt] = _uvw[3*ipt+1] = _uvw[3*ipt+2] = -1.;
           }
         } // End of loop on polygons
-        free(poly_coord);
+        PDM_free(poly_coord);
 
       } // end if PDM_MESH_NODAL_POLY_2D
 
@@ -2549,17 +2553,22 @@ PDM_point_location_nodal
           s_face_vtx_max = PDM_MAX(s_face_vtx_max, s_face_vtx);
         }
 
-        int *_face_orientation = malloc(sizeof(int) * n_face_max);
-        int *_face_vtx_idx = malloc(sizeof(int) * (n_face_max + 1));
+        int *_face_orientation = NULL;
+        int *_face_vtx_idx     = NULL;
+        PDM_malloc(_face_orientation,n_face_max    , int);
+        PDM_malloc(_face_vtx_idx    ,n_face_max + 1, int);
         _face_vtx_idx[0] = 0;
 
-        int *_face_vtx = malloc(sizeof(int) * s_face_vtx_max);
-        double *_vtx_coord = malloc(sizeof(double) * n_vtx_max * 3);
+        int    *_face_vtx  = NULL;
+        double *_vtx_coord = NULL;
+        PDM_malloc(_face_vtx , s_face_vtx_max, int   );
+        PDM_malloc(_vtx_coord, n_vtx_max * 3 , double);
 
         PDM_triangulate_state_t *_tri_state = NULL;
         _tri_state = PDM_triangulate_state_create(s_face_vtx_max);
         int n_tri_vtx = PDM_MAX((s_face_vtx_max - 2) * 3, 0);
-        int *_tri_vtx = malloc(sizeof(int) * n_tri_vtx);
+        int *_tri_vtx = NULL;
+        PDM_malloc(_tri_vtx, n_tri_vtx, int);
 
 
         for (int ielt = 0; ielt < n_elt; ielt++) {
@@ -2617,12 +2626,12 @@ PDM_point_location_nodal
           }
         } // End of loop on polyhedra
 
-        free(_vtx_id);
-        free(_face_orientation);
-        free(_face_vtx_idx);
-        free(_face_vtx);
-        free(_vtx_coord);
-        free(_tri_vtx);
+        PDM_free(_vtx_id);
+        PDM_free(_face_orientation);
+        PDM_free(_face_vtx_idx);
+        PDM_free(_face_vtx);
+        PDM_free(_vtx_coord);
+        PDM_free(_tri_vtx);
         PDM_triangulate_state_destroy(_tri_state);
 
       } // end if PDM_MESH_NODAL_POLY_3D
@@ -2861,11 +2870,13 @@ PDM_point_location_nodal
 
             int n_node = PDM_Mesh_nodal_n_vtx_elt_get(t_elt,
                                                       order);
-            double *elt_coord = malloc(sizeof(double) * n_node * 3);
+            double *elt_coord;
+            PDM_malloc(elt_coord, n_node * 3, double);
 
             int elt_dim = PDM_Mesh_nodal_elt_dim_get(t_elt);
 
-            double *work_array = malloc(sizeof(double) * n_node * (elt_dim+1));
+            double *work_array;
+            PDM_malloc(work_array, n_node * (elt_dim+1), double);
 
             int *ijk_to_user = NULL;
             if (ho_ordering != NULL) {
@@ -2950,8 +2961,8 @@ PDM_point_location_nodal
 
             } // End of loop on elt
             // log_trace("%d converged / %d\n", count_converged, count);
-            free(elt_coord);
-            free(work_array);
+            PDM_free(elt_coord);
+            PDM_free(work_array);
             break;
           } // end case HO LAGRANGE
 

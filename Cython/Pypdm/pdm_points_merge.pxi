@@ -170,6 +170,9 @@ cdef class PointsMerge:
           litrf_gnum_cur.append(create_numpy_g(itrf_gnum_cur[i_cloud], dn_vtx_itrf[i_cloud]))
           litrf_gnum_opp.append(create_numpy_g(itrf_gnum_opp[i_cloud], dn_vtx_itrf[i_cloud]))
 
+        free(itrf_gnum_cur)
+        free(itrf_gnum_opp)
+
         return {'np_cloud_pair'  : np_cloud_pair,
                 'lgnum_cur'      : litrf_gnum_cur,
                 'lgnum_opp'      : litrf_gnum_opp}

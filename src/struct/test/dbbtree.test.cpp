@@ -1,10 +1,12 @@
 #include "doctest/extensions/doctest_mpi.h"
 #include <limits>
 #include <vector>
+#include <stdbool.h>
 #include "pdm.h"
 #include "pdm_priv.h"
 #include "pdm_doctest.h"
 #include "pdm_dbbtree.h"
+#include "pdm_priv.h"
 
 // #define HUGE_VAL 1.0e+30
 
@@ -31,7 +33,8 @@ MPI_TEST_CASE("[pdm_dbbtree] simple test",1) {
 
   std::vector<PDM_g_num_t> cell_ln_to_gn{1, 2, 3, 4, 5, 6, 7, 8};
 
-  double* coords = (double *) malloc( 3 * n_vtx * sizeof(double));
+  double* coords;
+  PDM_malloc(coords, 3 * n_vtx, double);
   for(int i_vtx = 0; i_vtx < n_vtx; ++i_vtx) {
     coords[3*i_vtx  ] = coord_tri_x[i_vtx];
     coords[3*i_vtx+1] = coord_tri_y[i_vtx];
@@ -42,7 +45,8 @@ MPI_TEST_CASE("[pdm_dbbtree] simple test",1) {
 
   double global_extents[6] = {HUGE_VAL,  HUGE_VAL,  HUGE_VAL,
                              -HUGE_VAL, -HUGE_VAL, -HUGE_VAL};
-  double* extents = (double *) malloc( n_cell * 3 * 3 * sizeof(double));
+  double* extents;
+  PDM_malloc(extents, n_cell * 3 * 3, double);
 
   for(int i_cell = 0; i_cell < n_cell; ++i_cell) {
 
@@ -114,7 +118,8 @@ MPI_TEST_CASE("[pdm_dbbtree] simple test",1) {
   PDM_dbbtree_t *dbbtreeA = PDM_dbbtree_create (pdm_comm, dim, global_extents);
 
   int n_part = 1;
-  PDM_g_num_t** pcell_ln_to_gn = (PDM_g_num_t **) malloc(n_part * sizeof(PDM_g_num_t*));
+  PDM_g_num_t** pcell_ln_to_gn;
+  PDM_malloc(pcell_ln_to_gn, n_part, PDM_g_num_t*);
   pcell_ln_to_gn[0] = cell_ln_to_gn.data();
 
   PDM_box_set_t  *boxesA = PDM_dbbtree_boxes_set (dbbtreeA,
@@ -162,10 +167,10 @@ MPI_TEST_CASE("[pdm_dbbtree] simple test",1) {
                                    &pts_g_num,
                                    &pts_coord,
                                    0);
-  free(pts_idx  );
-  free(pts_g_num);
-  free(pts_coord);
-  free(pcell_ln_to_gn);
+  PDM_free(pts_idx  );
+  PDM_free(pts_g_num);
+  PDM_free(pts_coord);
+  PDM_free(pcell_ln_to_gn);
 
   // for(int i_box = 0; i_box < n_boxes; ++i_box) {
   //   printf("i_box = %i \n", i_box);
@@ -178,6 +183,6 @@ MPI_TEST_CASE("[pdm_dbbtree] simple test",1) {
   PDM_dbbtree_free (dbbtreeA);
   PDM_box_set_destroy (&boxesA);
 
-  free(extents);
-  free(coords);
+  PDM_free(extents);
+  PDM_free(coords);
 }

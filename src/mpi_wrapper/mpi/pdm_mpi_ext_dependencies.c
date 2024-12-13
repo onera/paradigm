@@ -127,8 +127,8 @@ const PDM_MPI_Comm comm
 
   else {
 
-    __tpwgts = malloc (sizeof(real_t) * _ncon * _n_parts);
-    __ubvec = malloc (sizeof(real_t) * _ncon);
+    PDM_malloc(__tpwgts,_ncon * _n_parts,real_t);
+    PDM_malloc(__ubvec,_ncon,real_t);
 
     _tpwgts = __tpwgts;
     _ubvec = __ubvec;
@@ -160,9 +160,9 @@ PDM_INTEL_SUPPRESS_WARNING_POP;
   }
 
   else {
-    __vtxdist = (idx_t *) malloc (sizeof(idx_t) * (iSize + 1));
-    __xadj    = (idx_t *) malloc (sizeof(idx_t) * (nNode + 1));
-    __adjncy  = (idx_t *) malloc (sizeof(idx_t) * nEdge);
+    PDM_malloc(__vtxdist,(iSize + 1),idx_t);
+    PDM_malloc(__xadj,(nNode + 1),idx_t);
+    PDM_malloc(__adjncy,nEdge,idx_t);
     _vtxdist = __vtxdist;
     _xadj    = __xadj;
     _adjncy  = __adjncy;
@@ -196,7 +196,7 @@ PDM_INTEL_SUPPRESS_WARNING_POP;
 
   else {
     if (vwgt != NULL) {
-      __vwgt = (idx_t *) malloc (sizeof(idx_t) * nNode);
+      PDM_malloc(__vwgt,nNode,idx_t);
       for (int i = 0; i < nNode; i++) {
         __vwgt[i] = vwgt[i];
       }
@@ -206,7 +206,7 @@ PDM_INTEL_SUPPRESS_WARNING_POP;
     }
 
     if (adjwgt != NULL) {
-      __adjwgt = (idx_t *) malloc (sizeof(idx_t) * nEdge);
+      PDM_malloc(__adjwgt,nEdge,idx_t);
       for (int i = 0; i < nEdge; i++) {
         __adjwgt[i] = adjwgt[i];
       }
@@ -215,7 +215,7 @@ PDM_INTEL_SUPPRESS_WARNING_POP;
       __adjwgt = NULL;
     }
 
-    __part = (idx_t *) malloc (sizeof(idx_t) * nNode);
+    PDM_malloc(__part,nNode,idx_t);
 
     _vwgt   = __vwgt;
     _adjwgt = __adjwgt;
@@ -246,35 +246,35 @@ PDM_INTEL_SUPPRESS_WARNING_POP;
   }
 
   if (__vtxdist != NULL) {
-    free (__vtxdist);
+    PDM_free(__vtxdist);
   }
 
   if (__xadj != NULL) {
-    free (__xadj);
+    PDM_free(__xadj);
   }
 
   if (__adjncy != NULL) {
-    free (__adjncy);
+    PDM_free(__adjncy);
   }
 
   if (__part != NULL) {
-    free (__part);
+    PDM_free(__part);
   }
 
   if (__vwgt != NULL) {
-    free (__vwgt);
+    PDM_free(__vwgt);
   }
 
   if (__adjwgt != NULL) {
-    free (__adjwgt);
+    PDM_free(__adjwgt);
   }
 
   if (__tpwgts != NULL) {
-    free (__tpwgts);
+    PDM_free(__tpwgts);
   }
 
   if (__ubvec != NULL) {
-    free (__ubvec);
+    PDM_free(__ubvec);
   }
 
 
@@ -339,9 +339,9 @@ PDM_INTEL_SUPPRESS_WARNING_POP;
   }
 
   else {
-    __vertloctab = (SCOTCH_Num *) malloc (sizeof(SCOTCH_Num) * (_vertlocnbr + 1));
+    PDM_malloc(__vertloctab,(_vertlocnbr + 1),SCOTCH_Num);
     __vendloctab = __vertloctab + 1;
-    __edgeloctab  = (SCOTCH_Num *) malloc (sizeof(SCOTCH_Num) * _edgelocsiz);
+    PDM_malloc(__edgeloctab,_edgelocsiz,SCOTCH_Num);
 
     for (int i = 0; i < _vertlocnbr + 1; i++) {
       __vertloctab[i] = (SCOTCH_Num) ddual_graph_idx[i];
@@ -375,16 +375,16 @@ PDM_INTEL_SUPPRESS_WARNING_POP;
     __edloloctab = NULL;
 
     if (cell_weight != NULL) {
-      __veloloctab = (SCOTCH_Num *) malloc (sizeof(SCOTCH_Num) * _vertlocnbr);
+      PDM_malloc(__veloloctab,_vertlocnbr,SCOTCH_Num);
       for (int i = 0; i < _vertlocnbr; i++) {
         __veloloctab[i] = cell_weight[i];
       }
     }
 
-    __part       = (SCOTCH_Num *) malloc (sizeof(SCOTCH_Num) * _vertlocnbr);
+    PDM_malloc(__part,_vertlocnbr,SCOTCH_Num);
 
     if (edgeWeight != NULL) {
-      __edloloctab = (SCOTCH_Num *) malloc (sizeof(SCOTCH_Num) * _edgelocsiz);
+      PDM_malloc(__edloloctab,_edgelocsiz,SCOTCH_Num);
       for (int i = 0; i < _edgelocsiz; i++) {
         __edloloctab[i] = edgeWeight[i];
       }
@@ -445,24 +445,24 @@ PDM_INTEL_SUPPRESS_WARNING_POP;
     for (int i = 0; i < _vertlocnbr; i++) {
       part[i] = __part[i];
     }
-    free (__part);
+    PDM_free(__part);
   }
 
   if (__vertloctab != NULL) {
-    free (__vertloctab);
+    PDM_free(__vertloctab);
   }
 
 
   if (__edgeloctab != NULL) {
-    free (__edgeloctab);
+    PDM_free(__edgeloctab);
   }
 
   if (__veloloctab != NULL) {
-    free (__veloloctab);
+    PDM_free(__veloloctab);
   }
 
   if (__edloloctab != NULL) {
-    free (__edloloctab);
+    PDM_free(__edloloctab);
   }
 
 }

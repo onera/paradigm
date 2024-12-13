@@ -9,6 +9,7 @@
 #include <assert.h>
 
 #include "pdm.h"
+#include "pdm_priv.h"
 #include "pdm_printf.h"
 #include "pdm_gnum.h"
 
@@ -138,13 +139,16 @@ int main(int argc, char *argv[])
   int i_rank;
   PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &i_rank);
 
-  double *char_length = malloc(sizeof(double) * gn_elts);
+  double *char_length;
+  PDM_malloc(char_length, gn_elts, double);
   for (int i = 0; i < gn_elts; i++) {
     char_length[i] = 1e-3;
   }
 
-  int     *n_elts = malloc(sizeof(int     ) * n_part);
-  double **coords = malloc(sizeof(double *) * n_part);
+  int     *n_elts = NULL;
+  double **coords = NULL;
+  PDM_malloc(n_elts, n_part, int     );
+  PDM_malloc(coords, n_part, double *);
   for (int i_part = 0; i_part < n_part; i_part++) {
     PDM_g_num_t *gnum = NULL;
     PDM_point_cloud_gen_random(PDM_MPI_COMM_WORLD,
@@ -156,7 +160,7 @@ int main(int argc, char *argv[])
                                &n_elts[i_part],
                                &coords[i_part],
                                &gnum);
-    free(gnum);
+    PDM_free(gnum);
   }
 
   /*
@@ -185,7 +189,8 @@ int main(int argc, char *argv[])
   PDM_gnum_compute(gen_gnum);
 
   // Finally, retrieve the computed global id arrays
-  PDM_g_num_t **gnum = malloc(sizeof(PDM_g_num_t *) * n_part);
+  PDM_g_num_t **gnum = NULL;
+  PDM_malloc(gnum, n_part, PDM_g_num_t *);
   for (int i_part = 0; i_part < n_part; i_part++) {
     gnum[i_part] = PDM_gnum_get(gen_gnum,
                                 i_part);
@@ -208,14 +213,14 @@ int main(int argc, char *argv[])
   /*
    * Free memory
    */
-  free(char_length);
+  PDM_free(char_length);
   for (int i_part = 0; i_part < n_part; i_part++) {
-    free(coords[i_part]);
-    free(gnum  [i_part]);
+    PDM_free(coords[i_part]);
+    PDM_free(gnum  [i_part]);
   }
-  free(n_elts);
-  free(coords);
-  free(gnum);
+  PDM_free(n_elts);
+  PDM_free(coords);
+  PDM_free(gnum);
 
 
 

@@ -85,11 +85,11 @@ MPI_TEST_CASE("[dcube_nodal_gen] - 1p - hexahedron",1) {
     PDM_Mesh_nodal_elt_t t_elmt = PDM_DMesh_nodal_section_type_get(dmesh_nodal, PDM_GEOMETRY_KIND_VOLUMIC, id_section);
 
     PDM_g_num_t* distrib = PDM_DMesh_nodal_section_distri_std_get(dmesh_nodal, PDM_GEOMETRY_KIND_VOLUMIC, id_section);
-    PDM_g_num_t* connect = PDM_DMesh_nodal_section_std_get(dmesh_nodal, PDM_GEOMETRY_KIND_VOLUMIC, id_section);
+    PDM_g_num_t* connect = PDM_DMesh_nodal_section_std_get(dmesh_nodal, PDM_GEOMETRY_KIND_VOLUMIC, id_section, PDM_OWNERSHIP_BAD_VALUE);
 
     int dn_elmt = distrib[i_rank+1] - distrib[i_rank];
 
-    int n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element(t_elmt, 1);
+    int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get(t_elmt, 1);
 
     /* Keep it to make easyly ref */
     // PDM_log_trace_array_long(distrib, n_rank+1                 , "distrib:: ");
@@ -112,11 +112,11 @@ MPI_TEST_CASE("[dcube_nodal_gen] - 1p - hexahedron",1) {
     PDM_Mesh_nodal_elt_t t_elmt = PDM_DMesh_nodal_section_type_get(dmesh_nodal, PDM_GEOMETRY_KIND_SURFACIC, id_section);
 
     PDM_g_num_t* distrib = PDM_DMesh_nodal_section_distri_std_get(dmesh_nodal, PDM_GEOMETRY_KIND_SURFACIC, id_section);
-    PDM_g_num_t* connect = PDM_DMesh_nodal_section_std_get(dmesh_nodal, PDM_GEOMETRY_KIND_SURFACIC, id_section);
+    PDM_g_num_t* connect = PDM_DMesh_nodal_section_std_get(dmesh_nodal, PDM_GEOMETRY_KIND_SURFACIC, id_section, PDM_OWNERSHIP_BAD_VALUE);
 
     int dn_elmt = distrib[i_rank+1] - distrib[i_rank];
 
-    int n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element(t_elmt, 1);
+    int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get(t_elmt, 1);
 
     /* Keep it to make easyly ref */
     // PDM_log_trace_array_long(distrib, n_rank+1                 , "distrib:: ");
@@ -206,11 +206,11 @@ MPI_TEST_CASE("[dcube_nodal_gen] - 1p - prism",1) {
     PDM_Mesh_nodal_elt_t t_elmt = PDM_DMesh_nodal_section_type_get(dmesh_nodal, PDM_GEOMETRY_KIND_VOLUMIC, id_section);
 
     PDM_g_num_t* distrib = PDM_DMesh_nodal_section_distri_std_get(dmesh_nodal, PDM_GEOMETRY_KIND_VOLUMIC, id_section);
-    PDM_g_num_t* connect = PDM_DMesh_nodal_section_std_get(dmesh_nodal, PDM_GEOMETRY_KIND_VOLUMIC, id_section);
+    PDM_g_num_t* connect = PDM_DMesh_nodal_section_std_get(dmesh_nodal, PDM_GEOMETRY_KIND_VOLUMIC, id_section, PDM_OWNERSHIP_BAD_VALUE);
 
     int dn_elmt = distrib[i_rank+1] - distrib[i_rank];
 
-    int n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element(t_elmt, 1);
+    int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get(t_elmt, 1);
 
     /* Keep it to make easyly ref */
     // PDM_log_trace_array_long(distrib, n_rank+1                 , "distrib:: ");
@@ -233,11 +233,11 @@ MPI_TEST_CASE("[dcube_nodal_gen] - 1p - prism",1) {
     PDM_Mesh_nodal_elt_t t_elmt = PDM_DMesh_nodal_section_type_get(dmesh_nodal, PDM_GEOMETRY_KIND_SURFACIC, id_section);
 
     PDM_g_num_t* distrib = PDM_DMesh_nodal_section_distri_std_get(dmesh_nodal, PDM_GEOMETRY_KIND_SURFACIC, id_section);
-    PDM_g_num_t* connect = PDM_DMesh_nodal_section_std_get(dmesh_nodal, PDM_GEOMETRY_KIND_SURFACIC, id_section);
+    PDM_g_num_t* connect = PDM_DMesh_nodal_section_std_get(dmesh_nodal, PDM_GEOMETRY_KIND_SURFACIC, id_section, PDM_OWNERSHIP_BAD_VALUE);
 
     int dn_elmt = distrib[i_rank+1] - distrib[i_rank];
 
-    int n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element(t_elmt, 1);
+    int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get(t_elmt, 1);
 
     /* Keep it to make easyly ref */
     // PDM_log_trace_array_long(distrib, n_rank+1                 , "distrib:: ");
@@ -330,11 +330,11 @@ MPI_TEST_CASE("[dcube_nodal_gen] - 1p - Tetrahedron ",1) {
     PDM_Mesh_nodal_elt_t t_elmt = PDM_DMesh_nodal_section_type_get(dmesh_nodal, PDM_GEOMETRY_KIND_VOLUMIC, id_section);
 
     PDM_g_num_t* distrib = PDM_DMesh_nodal_section_distri_std_get(dmesh_nodal, PDM_GEOMETRY_KIND_VOLUMIC, id_section);
-    PDM_g_num_t* connect = PDM_DMesh_nodal_section_std_get(dmesh_nodal, PDM_GEOMETRY_KIND_VOLUMIC, id_section);
+    PDM_g_num_t* connect = PDM_DMesh_nodal_section_std_get(dmesh_nodal, PDM_GEOMETRY_KIND_VOLUMIC, id_section, PDM_OWNERSHIP_BAD_VALUE);
 
     int dn_elmt = distrib[i_rank+1] - distrib[i_rank];
 
-    int n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element(t_elmt, 1);
+    int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get(t_elmt, 1);
 
     /* Keep it to make easyly ref */
     // PDM_log_trace_array_long(distrib, n_rank+1                 , "distrib:: ");
@@ -357,11 +357,11 @@ MPI_TEST_CASE("[dcube_nodal_gen] - 1p - Tetrahedron ",1) {
     PDM_Mesh_nodal_elt_t t_elmt = PDM_DMesh_nodal_section_type_get(dmesh_nodal, PDM_GEOMETRY_KIND_SURFACIC, id_section);
 
     PDM_g_num_t* distrib = PDM_DMesh_nodal_section_distri_std_get(dmesh_nodal, PDM_GEOMETRY_KIND_SURFACIC, id_section);
-    PDM_g_num_t* connect = PDM_DMesh_nodal_section_std_get(dmesh_nodal, PDM_GEOMETRY_KIND_SURFACIC, id_section);
+    PDM_g_num_t* connect = PDM_DMesh_nodal_section_std_get(dmesh_nodal, PDM_GEOMETRY_KIND_SURFACIC, id_section, PDM_OWNERSHIP_BAD_VALUE);
 
     int dn_elmt = distrib[i_rank+1] - distrib[i_rank];
 
-    int n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element(t_elmt, 1);
+    int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get(t_elmt, 1);
 
     /* Keep it to make easyly ref */
     // PDM_log_trace_array_long(distrib, n_rank+1                 , "distrib:: ");
@@ -454,11 +454,11 @@ MPI_TEST_CASE("[dcube_nodal_gen] - 1p - quad ",1) {
     PDM_Mesh_nodal_elt_t t_elmt = PDM_DMesh_nodal_section_type_get(dmesh_nodal, PDM_GEOMETRY_KIND_SURFACIC, id_section);
 
     PDM_g_num_t* distrib = PDM_DMesh_nodal_section_distri_std_get(dmesh_nodal, PDM_GEOMETRY_KIND_SURFACIC, id_section);
-    PDM_g_num_t* connect = PDM_DMesh_nodal_section_std_get(dmesh_nodal, PDM_GEOMETRY_KIND_SURFACIC, id_section);
+    PDM_g_num_t* connect = PDM_DMesh_nodal_section_std_get(dmesh_nodal, PDM_GEOMETRY_KIND_SURFACIC, id_section, PDM_OWNERSHIP_BAD_VALUE);
 
     int dn_elmt = distrib[i_rank+1] - distrib[i_rank];
 
-    int n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element(t_elmt, 1);
+    int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get(t_elmt, 1);
 
     /* Keep it to make easyly ref */
     // PDM_log_trace_array_long(distrib, n_rank+1                 , "distrib:: ");
@@ -481,11 +481,11 @@ MPI_TEST_CASE("[dcube_nodal_gen] - 1p - quad ",1) {
     PDM_Mesh_nodal_elt_t t_elmt = PDM_DMesh_nodal_section_type_get(dmesh_nodal, PDM_GEOMETRY_KIND_RIDGE, id_section);
 
     PDM_g_num_t* distrib = PDM_DMesh_nodal_section_distri_std_get(dmesh_nodal, PDM_GEOMETRY_KIND_RIDGE, id_section);
-    PDM_g_num_t* connect = PDM_DMesh_nodal_section_std_get(dmesh_nodal, PDM_GEOMETRY_KIND_RIDGE, id_section);
+    PDM_g_num_t* connect = PDM_DMesh_nodal_section_std_get(dmesh_nodal, PDM_GEOMETRY_KIND_RIDGE, id_section, PDM_OWNERSHIP_BAD_VALUE);
 
     int dn_elmt = distrib[i_rank+1] - distrib[i_rank];
 
-    int n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element(t_elmt, 1);
+    int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get(t_elmt, 1);
 
     /* Keep it to make easyly ref */
     // PDM_log_trace_array_long(distrib, n_rank+1                 , "distrib:: ");
@@ -576,11 +576,11 @@ MPI_TEST_CASE("[dcube_nodal_gen] - 1p - Triangle",1) {
     PDM_Mesh_nodal_elt_t t_elmt = PDM_DMesh_nodal_section_type_get(dmesh_nodal, PDM_GEOMETRY_KIND_SURFACIC, id_section);
 
     PDM_g_num_t* distrib = PDM_DMesh_nodal_section_distri_std_get(dmesh_nodal, PDM_GEOMETRY_KIND_SURFACIC, id_section);
-    PDM_g_num_t* connect = PDM_DMesh_nodal_section_std_get(dmesh_nodal, PDM_GEOMETRY_KIND_SURFACIC, id_section);
+    PDM_g_num_t* connect = PDM_DMesh_nodal_section_std_get(dmesh_nodal, PDM_GEOMETRY_KIND_SURFACIC, id_section, PDM_OWNERSHIP_BAD_VALUE);
 
     int dn_elmt = distrib[i_rank+1] - distrib[i_rank];
 
-    int n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element(t_elmt, 1);
+    int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get(t_elmt, 1);
 
     /* Keep it to make easyly ref */
     // PDM_log_trace_array_long(distrib, n_rank+1                 , "distrib:: ");
@@ -603,11 +603,11 @@ MPI_TEST_CASE("[dcube_nodal_gen] - 1p - Triangle",1) {
     PDM_Mesh_nodal_elt_t t_elmt = PDM_DMesh_nodal_section_type_get(dmesh_nodal, PDM_GEOMETRY_KIND_RIDGE, id_section);
 
     PDM_g_num_t* distrib = PDM_DMesh_nodal_section_distri_std_get(dmesh_nodal, PDM_GEOMETRY_KIND_RIDGE, id_section);
-    PDM_g_num_t* connect = PDM_DMesh_nodal_section_std_get(dmesh_nodal, PDM_GEOMETRY_KIND_RIDGE, id_section);
+    PDM_g_num_t* connect = PDM_DMesh_nodal_section_std_get(dmesh_nodal, PDM_GEOMETRY_KIND_RIDGE, id_section, PDM_OWNERSHIP_BAD_VALUE);
 
     int dn_elmt = distrib[i_rank+1] - distrib[i_rank];
 
-    int n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element(t_elmt, 1);
+    int n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get(t_elmt, 1);
 
     /* Keep it to make easyly ref */
     // PDM_log_trace_array_long(distrib, n_rank+1                 , "distrib:: ");

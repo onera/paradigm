@@ -16,6 +16,7 @@ cdef extern from "pdm_part_extension.h":
                                                   PDM_ownership_t    owner)
 
   void PDM_part_extension_compute(PDM_part_extension_t *part_ext)
+  void PDM_part_extension_compute2(PDM_part_extension_t *part_ext, int dim)
 
   void PDM_part_extension_set_part(PDM_part_extension_t *part_ext,
                                    int                   i_domain,
@@ -60,11 +61,33 @@ cdef extern from "pdm_part_extension.h":
                                           int                     **connect_idx,
                                           int                     **connect)
 
+  int PDM_part_extension_connectivity_get2(PDM_part_extension_t     *part_ext,
+                                          int                       i_domain,
+                                          int                       i_part,
+                                          PDM_connectivity_type_t   connectivity_type,
+                                          int                     **connect_idx,
+                                          int                     **connect,
+                                          PDM_ownership_t           ownership)
+
   int PDM_part_extension_ln_to_gn_get(PDM_part_extension_t     *part_ext,
                                       int                       i_domain,
                                       int                       i_part,
                                       PDM_mesh_entities_t       connectivity_type,
                                       PDM_g_num_t             **ln_to_gn)
+
+  int PDM_part_extension_ln_to_gn_get2(PDM_part_extension_t     *part_ext,
+                                      int                       i_domain,
+                                      int                       i_part,
+                                      PDM_mesh_entities_t       connectivity_type,
+                                      PDM_g_num_t             **ln_to_gn,
+                                      PDM_ownership_t           ownership)
+
+  int PDM_part_extension_ancestor_ln_to_gn_get(PDM_part_extension_t     *part_ext,
+                                               int                       i_domain,
+                                               int                       i_part,
+                                               PDM_mesh_entities_t       connectivity_type,
+                                               PDM_g_num_t             **ln_to_gn,
+                                               PDM_ownership_t           ownership)
 
   int PDM_part_extension_interface_get(PDM_part_extension_t     *part_ext,
                                        int                       i_domain,
@@ -86,10 +109,25 @@ cdef extern from "pdm_part_extension.h":
                                    int                     **group_entity,
                                    PDM_g_num_t             **group_ln_to_gn)
 
+  int PDM_part_extension_group_get2(PDM_part_extension_t     *part_ext,
+                                    int                       i_domain,
+                                    int                       i_part,
+                                    PDM_mesh_entities_t       mesh_entity,
+                                    int                     **group_entity_idx,
+                                    int                     **group_entity,
+                                    PDM_g_num_t             **group_ln_to_gn,
+                                    PDM_ownership_t           ownership);
+
   int PDM_part_extension_vtx_coord_get(PDM_part_extension_t     *part_ext,
                                        int                       i_domain,
                                        int                       i_part,
                                        double                  **vtx_coord)
+
+  int PDM_part_extension_vtx_coord_get2(PDM_part_extension_t     *part_ext,
+                                        int                       i_domain,
+                                        int                       i_part,
+                                        double                  **vtx_coord,
+                                        PDM_ownership_t           ownership)
 
   void PDM_part_extension_part_domain_interface_shared_set(PDM_part_extension_t        *part_ext,
                                                            PDM_part_domain_interface_t *pdi);
@@ -130,6 +168,14 @@ cdef extern from "pdm_part_extension.h":
                                     int                      *group_entity_idx,
                                     int                      *group_entity,
                                     PDM_g_num_t              *group_entity_ln_to_gn)
+
+  int PDM_part_extension_path_interface_get(PDM_part_extension_t     *part_ext,
+                                             int                       i_domain,
+                                             int                       i_part,
+                                             PDM_mesh_entities_t       mesh_entity,
+                                             int                     **path_itrf_idx,
+                                             int                     **path_itrf,
+                                             PDM_ownership_t           owner);
 
 cdef class PartExtension:
   """
@@ -326,13 +372,14 @@ cdef class PartExtension:
       connect           (np.ndarray[np.int32_t])  : Connectivity
     """
     cdef int *connect_idx_data = np_to_int_pointer(connect_idx)
+    cdef int *connect_data     = np_to_int_pointer(connect)
 
     PDM_part_extension_connectivity_set(self._part_ext,
                                         i_domain,
                                         i_part,
                                         connectivity_type,
                                         connect_idx_data,
-                                <int *> connect.data)
+                                <int *> connect_data)
 
   # ------------------------------------------------------------------
   def ln_to_gn_set(self,
@@ -351,12 +398,17 @@ cdef class PartExtension:
       entity_type (PDM_mesh_entities_t)        : Type of mesh entity
       ln_to_gn    (np.ndarray[npy_pdm_gnum_t]) : Global ids
     """
+    cdef int          n_entity      = 0;
+    cdef PDM_g_num_t *ln_to_gn_data = np_to_gnum_pointer(ln_to_gn);
+    if ln_to_gn is not None:
+      n_entity = ln_to_gn.size
+
     PDM_part_extension_ln_to_gn_set(self._part_ext,
                                     i_domain,
                                     i_part,
                                     entity_type,
-                                    ln_to_gn.size,
-                    <PDM_g_num_t *> ln_to_gn.data)
+                                    n_entity,
+                    <PDM_g_num_t *> ln_to_gn_data)
 
   # ------------------------------------------------------------------
   def vtx_coord_set(self,
@@ -373,10 +425,12 @@ cdef class PartExtension:
       i_part      (int)                     : Partition identifier
       vtx_coord   (np.ndarray[np.double_t]) : Vertex coordinates (size = 3 * *n_vtx*)
     """
+    cdef double *vtx_coord_data = np_to_double_pointer(vtx_coord);
+
     PDM_part_extension_vtx_coord_set(self._part_ext,
                                      i_domain,
                                      i_part,
-                          <double *> vtx_coord.data)
+                          <double *> vtx_coord_data)
 
   # ------------------------------------------------------------------
   def part_bound_graph_set(self,
@@ -399,13 +453,17 @@ cdef class PartExtension:
       part_bound_part_idx (np.ndarray[np.int32_t]) : Partitioning boundary entities index from partition (size = *n_total_part* + 1)
       part_bound          (np.ndarray[np.int32_t]) : Partitioning boundary entities (size = 4 * ``part_bound_proc_idx`` [ *n_rank* ])
     """
+    cdef int *part_bound_proc_idx_data = np_to_int_pointer(part_bound_proc_idx)
+    cdef int *part_bound_part_idx_data = np_to_int_pointer(part_bound_part_idx)
+    cdef int *part_bound_data          = np_to_int_pointer(part_bound)
+
     PDM_part_extension_part_bound_graph_set(self._part_ext,
                                             i_domain,
                                             i_part,
                                             entity_type,
-                                    <int *> part_bound_proc_idx.data,
-                                    <int *> part_bound_part_idx.data,
-                                    <int *> part_bound.data)
+                                    <int *> part_bound_proc_idx_data,
+                                    <int *> part_bound_part_idx_data,
+                                    <int *> part_bound_data)
 
   # ------------------------------------------------------------------
   def group_set(self,
@@ -428,15 +486,21 @@ cdef class PartExtension:
       group_entity          (np.ndarray[np.int32_t])     : Group->entity connectivity (1-based local ids)
       group_entity_ln_to_gn (np.ndarray[npy_pdm_gnum_t]) : Group->entity connectivity (bound-specific global ids)
     """
-    cdef int n_group = group_entity_idx.size - 1
+    cdef int          n_group = 0
+    cdef int         *group_entity_idx_data      = np_to_int_pointer (group_entity_idx)
+    cdef int         *group_entity_data          = np_to_int_pointer (group_entity)
+    cdef PDM_g_num_t *group_entity_ln_to_gn_data = np_to_gnum_pointer(group_entity_ln_to_gn)
+    if group_entity_idx is not None:
+      n_group = group_entity_idx.size - 1
+
     PDM_part_extension_group_set(self._part_ext,
                                  i_domain,
                                  i_part,
                                  entity_type,
                                  n_group,
-                 <int         *> group_entity_idx.data,
-                 <int         *> group_entity.data,
-                 <PDM_g_num_t *> group_entity_ln_to_gn.data)
+                 <int         *> group_entity_idx_data,
+                 <int         *> group_entity_data,
+                 <PDM_g_num_t *> group_entity_ln_to_gn_data)
 
   # ------------------------------------------------------------------
   def compute(self):
@@ -446,6 +510,13 @@ cdef class PartExtension:
     """
     PDM_part_extension_compute(self._part_ext)
 
+  # ------------------------------------------------------------------
+  def compute2(self, dim):
+    """
+    compute()
+    Compute extended partitions
+    """
+    PDM_part_extension_compute2(self._part_ext, dim)
 
   # ------------------------------------------------------------------
   def part_domain_interface_shared_set(self, PartDomainInterface pdi):
@@ -464,7 +535,8 @@ cdef class PartExtension:
   def connectivity_get(self,
                        int i_domain,
                        int i_part,
-                       PDM_connectivity_type_t   connectivity_type):
+                       PDM_connectivity_type_t   connectivity_type,
+                       int compute_kind = 0):
     """
     connectivity_get(i_domain, i_part, connectivity_type)
     Get extended connectivity
@@ -483,7 +555,16 @@ cdef class PartExtension:
     cdef int *connect_idx,
     cdef int size
 
-    size = PDM_part_extension_connectivity_get(self._part_ext, i_domain, i_part, connectivity_type, &connect_idx, &connect)
+    if( compute_kind == 0):
+      size = PDM_part_extension_connectivity_get(self._part_ext, i_domain, i_part, connectivity_type, &connect_idx, &connect)
+    else:
+      size = PDM_part_extension_connectivity_get2(self._part_ext,
+                                                  i_domain,
+                                                  i_part,
+                                                  connectivity_type,
+                                                  &connect_idx,
+                                                  &connect,
+                                                  PDM_OWNERSHIP_USER)
 
     np_connect_idx = create_numpy_or_none_i(connect_idx, size+1)
 
@@ -498,7 +579,8 @@ cdef class PartExtension:
   def ln_to_gn_get(self,
                    int i_domain,
                    int i_part,
-                   PDM_mesh_entities_t entity_type):
+                   PDM_mesh_entities_t entity_type,
+                   int compute_kind = 0):
     """
     ln_to_gn_get(i_domain, i_part, entity_type)
     Get global ids of extended entities
@@ -514,7 +596,44 @@ cdef class PartExtension:
     cdef PDM_g_num_t *ln_to_gn
     cdef int size
 
-    size = PDM_part_extension_ln_to_gn_get(self._part_ext, i_domain, i_part, entity_type, &ln_to_gn)
+    if( compute_kind == 0):
+      size = PDM_part_extension_ln_to_gn_get(self._part_ext, i_domain, i_part, entity_type, &ln_to_gn)
+    else:
+      size = PDM_part_extension_ln_to_gn_get2(self._part_ext,
+                                              i_domain,
+                                              i_part,
+                                              entity_type,
+                                              &ln_to_gn,
+                                              PDM_OWNERSHIP_USER)
+
+    if (ln_to_gn == NULL) :
+      np_ln_to_gn = create_numpy_g(NULL, 0)
+    else :
+      np_ln_to_gn = create_numpy_g(ln_to_gn, size)
+
+    return np_ln_to_gn
+
+  # ------------------------------------------------------------------
+  def ancestor_ln_to_gn_get(self,
+                            int i_domain,
+                            int i_part,
+                            PDM_mesh_entities_t entity_type):
+    """
+    ln_to_gn_get(i_domain, i_part, entity_type)
+    Get global ids of extended entities
+
+    Parameters:
+      i_domain    (int)                 : Domain identifier
+      i_part      (int)                 : Partition identifier
+      entity_type (PDM_mesh_entities_t) : Entity type
+
+    Returns:
+      Global ids (`np.ndarray[npy_pdm_gnum_t]`)
+    """
+    cdef PDM_g_num_t *ln_to_gn
+    cdef int size
+
+    size = PDM_part_extension_ancestor_ln_to_gn_get(self._part_ext, i_domain, i_part, entity_type, &ln_to_gn, PDM_OWNERSHIP_USER)
 
     if (ln_to_gn == NULL) :
       np_ln_to_gn = create_numpy_g(NULL, 0)
@@ -574,11 +693,51 @@ cdef class PartExtension:
 
     return (np_composed_interface_idx, np_composed_interface, np_composed_ln_to_gn_sorted)
 
+
+  # ------------------------------------------------------------------
+  def get_path_interface(self,
+                         int i_domain,
+                         int i_part,
+                         PDM_mesh_entities_t entity_type):
+    """
+    get_interface(i_domain, i_part, entity_type)
+    Get interface
+
+    Parameters:
+      i_domain    (int)                 : Domain identifier
+      i_part      (int)                 : Partition identifier
+      entity_type (PDM_mesh_entities_t) : Entity type
+
+    Returns:
+      Interfaces pathes (`np.ndarray[np.int32_t]`, `np.ndarray[np.int32_t]`)
+    """
+    cdef int          *path_itrf_idx
+    cdef int          *path_itrf
+    cdef NPY.npy_intp  dim
+
+    n_entity_extended = PDM_part_extension_path_interface_get(self._part_ext,
+                                                              i_domain,
+                                                              i_part,
+                                                              entity_type,
+                                                              &path_itrf_idx,
+                                                              &path_itrf,
+                                                              PDM_OWNERSHIP_USER)
+
+    np_path_itrf_idx = create_numpy_or_none_i(path_itrf_idx, n_entity_extended+1)
+
+    if (path_itrf == NULL): #np_path_itrf_idx can be None
+      np_path_itrf = None
+    else:
+      np_path_itrf = create_numpy_i(path_itrf, np_path_itrf_idx[n_entity_extended])
+
+    return (np_path_itrf_idx, np_path_itrf)
+
   # ------------------------------------------------------------------
   def group_get(self,
                 int i_domain,
                 int i_part,
-                PDM_mesh_entities_t entity_type):
+                PDM_mesh_entities_t entity_type,
+                int compute_kind = 0):
     """
     group_get(i_domain, i_part, entity_type)
 
@@ -600,11 +759,19 @@ cdef class PartExtension:
     cdef PDM_g_num_t *group_ln_to_gn
     cdef int size
 
-    n_group = PDM_part_extension_group_get(self._part_ext, i_domain, i_part,
-                                           entity_type,
-                                           &entity_group_idx,
-                                           &entity_group,
-                                           &group_ln_to_gn)
+    if(compute_kind == 0):
+      n_group = PDM_part_extension_group_get(self._part_ext, i_domain, i_part,
+                                             entity_type,
+                                             &entity_group_idx,
+                                             &entity_group,
+                                             &group_ln_to_gn)
+    else:
+      n_group = PDM_part_extension_group_get2(self._part_ext, i_domain, i_part,
+                                              entity_type,
+                                              &entity_group_idx,
+                                              &entity_group,
+                                              &group_ln_to_gn,
+                                              PDM_OWNERSHIP_USER)
 
     if (group_ln_to_gn == NULL) :
       np_group_ln_to_gn = None
@@ -621,7 +788,10 @@ cdef class PartExtension:
     return (np_entity_group_idx, np_entity_group, np_group_ln_to_gn)
 
   # ------------------------------------------------------------------
-  def vtx_coord_get(self, int i_domain, int i_part):
+  def vtx_coord_get(self,
+                    int i_domain,
+                    int i_part,
+                    int compute_kind = 0):
     """
     vtx_coord_get(i_domain, i_part)
 
@@ -636,8 +806,11 @@ cdef class PartExtension:
     """
     cdef double *coord
     cdef int size
+    if(compute_kind == 0):
+      size = PDM_part_extension_vtx_coord_get(self._part_ext, i_domain, i_part, &coord)
+    else:
+      size = PDM_part_extension_vtx_coord_get2(self._part_ext, i_domain, i_part, &coord, PDM_OWNERSHIP_USER)
 
-    size = PDM_part_extension_vtx_coord_get(self._part_ext, i_domain, i_part, &coord)
     return create_numpy_or_none_d(coord, 3*size)
 
   # ------------------------------------------------------------------

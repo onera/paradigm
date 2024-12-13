@@ -226,8 +226,10 @@ _fetch_back_mesh_partial_dist_cloud_surf
 
 
   // -->> take this as an input (riemannian midpoint...)
-  double *inserted_pt_coord = malloc(sizeof(double) * pwork_n_edge * 3);
-  double *pwork_edge_length = malloc(sizeof(double) * pwork_n_edge);
+  double *inserted_pt_coord = NULL;
+  double *pwork_edge_length = NULL;
+  PDM_malloc(inserted_pt_coord, pwork_n_edge * 3, double);
+  PDM_malloc(pwork_edge_length, pwork_n_edge    , double);
   for (int edge_id = 0; edge_id < pwork_n_edge; edge_id++) {
     int vtx_id1 = pwork_edge_vtx[2*edge_id  ] - 1;
     int vtx_id2 = pwork_edge_vtx[2*edge_id+1] - 1;
@@ -241,8 +243,10 @@ _fetch_back_mesh_partial_dist_cloud_surf
   }
   // <<--
 
-  PDM_g_num_t *closest_back_vtx_gnum  = malloc(sizeof(PDM_g_num_t) * pwork_n_edge);
-  double      *closest_back_vtx_dist2 = malloc(sizeof(double)      * pwork_n_edge);
+  PDM_g_num_t *closest_back_vtx_gnum  = NULL;
+  double      *closest_back_vtx_dist2 = NULL;
+  PDM_malloc(closest_back_vtx_gnum , pwork_n_edge, PDM_g_num_t);
+  PDM_malloc(closest_back_vtx_dist2, pwork_n_edge, double     );
   PDM_para_octree_single_closest_point(octree,
                                        pwork_n_edge,
                                        inserted_pt_coord,
@@ -250,7 +254,7 @@ _fetch_back_mesh_partial_dist_cloud_surf
                                        closest_back_vtx_gnum,
                                        closest_back_vtx_dist2);
   PDM_para_octree_free(octree);
-  free(closest_back_vtx_gnum); // unused
+  PDM_free(closest_back_vtx_gnum); // unused
 
   /* Threshold upper bound distance */
   if (0) {
@@ -259,7 +263,7 @@ _fetch_back_mesh_partial_dist_cloud_surf
                                                 closest_back_vtx_dist2[edge_id]);
     }
   }
-  free(pwork_edge_length);
+  PDM_free(pwork_edge_length);
 
 
   /*
@@ -272,8 +276,8 @@ _fetch_back_mesh_partial_dist_cloud_surf
                                                  closest_back_vtx_dist2,
                                                  pwork_edge_back_face_idx,
                                                  pwork_edge_back_face);
-  free(inserted_pt_coord);
-  free(closest_back_vtx_dist2);
+  PDM_free(inserted_pt_coord);
+  PDM_free(closest_back_vtx_dist2);
 }
 
 
@@ -309,7 +313,8 @@ _fetch_back_mesh_Bruno
   int n_part = 1;
   const double eps_extents = 1.0e-6;
 
-  double *line_coord = malloc(6 * pwork_n_edge * sizeof(double));
+  double *line_coord;
+  PDM_malloc(line_coord, 6 * pwork_n_edge, double);
 
   for(int i_edge = 0; i_edge < pwork_n_edge; ++i_edge) {
     int i_vtx1 = PDM_ABS(pwork_edge_vtx[2*i_edge  ])-1;
@@ -389,7 +394,7 @@ _fetch_back_mesh_Bruno
                          line_coord,
                          pwork_edge_ln_to_gn,
                          NULL);
-    // free (line_coord);
+    //PDM_free(line_coord);
 
 
 
@@ -401,7 +406,8 @@ _fetch_back_mesh_Bruno
                                NULL);
 
 
-    double *proj_line_coord = malloc (sizeof(double) * pback_n_vtx * 6);
+    double *proj_line_coord;
+    PDM_malloc(proj_line_coord, pback_n_vtx * 6, double);
     int idx = 0;
     for (int i = 0; i < pback_n_vtx; i++) {
 
@@ -420,7 +426,7 @@ _fetch_back_mesh_Bruno
                          proj_line_coord,
                          pback_vtx_ln_to_gn,
                          NULL);
-    free (proj_line_coord);
+    PDM_free(proj_line_coord);
 
   }
 
@@ -432,7 +438,8 @@ _fetch_back_mesh_Bruno
    *     part1 = vtx_back
    *     part2 = edge
    */
-  int *closest_elt_gnum_idx = malloc((pback_n_vtx+1) * sizeof(int));
+  int *closest_elt_gnum_idx;
+  PDM_malloc(closest_elt_gnum_idx, pback_n_vtx+1, int);
   for(int i = 0; i < pback_n_vtx+1; ++i) {
     closest_elt_gnum_idx[i] = i;
   }
@@ -446,7 +453,7 @@ _fetch_back_mesh_Bruno
                                                     (const PDM_g_num_t **) &closest_elt_gnum,
                                                                            comm);
 
-  free(closest_elt_gnum_idx);
+  PDM_free(closest_elt_gnum_idx);
 
 
   // int    **part_stride = NULL;
@@ -467,7 +474,7 @@ _fetch_back_mesh_Bruno
 
   PDM_part_to_part_reverse_iexch_wait(ptp, request_return_selected);
   double *recv_line_coord = tmp_part_data[0];
-  free(tmp_part_data);
+  PDM_free(tmp_part_data);
 
   if (verbose) {
     // PDM_log_trace_array_double(recv_line_coord, 6*pback_n_vtx, "recv_line_coord ::");
@@ -581,15 +588,15 @@ _fetch_back_mesh_Bruno
                                     line_to_back_idx,
                                     line_to_back);
 
-  free(recv_line_coord);
+  PDM_free(recv_line_coord);
 
 
   PDM_part_to_part_free(ptp);
 
   PDM_dist_cloud_surf_dump_times(dist);
   PDM_dist_cloud_surf_free (dist);
-  free(line_coord);
-  free(pwork_edge_vtx_idx);
+  PDM_free(line_coord);
+  PDM_free(pwork_edge_vtx_idx);
 
   PDM_dbbtree_free(dbbt);
   PDM_box_set_destroy(&box_set);
@@ -682,7 +689,8 @@ int main(int argc, char *argv[])
   /* Assemble partitions from block-distribution of faces */
   int dback_n_face = back_distrib_face[i_rank+1] - back_distrib_face[i_rank];
 
-  PDM_g_num_t *dback_face_ln_to_gn = malloc(dback_n_face * sizeof(PDM_g_num_t));
+  PDM_g_num_t *dback_face_ln_to_gn;
+  PDM_malloc(dback_face_ln_to_gn, dback_n_face, PDM_g_num_t);
   for (int i = 0; i < dback_n_face; ++i) {
     dback_face_ln_to_gn[i] = back_distrib_face[i_rank] + i + 1;
   }
@@ -712,12 +720,13 @@ int main(int argc, char *argv[])
                  (const PDM_g_num_t **) &pback_vtx_ln_to_gn,
                                         &tmp_pback_vtx_coord);
   double *pback_vtx_coord = tmp_pback_vtx_coord[0];
-  free(tmp_pback_vtx_coord);
+  PDM_free(tmp_pback_vtx_coord);
 
 
 
   /* Compute the bounding boxes of local faces */
-  double *back_face_extents = malloc(sizeof(double) * dback_n_face * 6);
+  double *back_face_extents = NULL;
+  PDM_malloc(back_face_extents, dback_n_face * 6, double);
   const double eps_extents = 1.0e-6;
   for (int iface = 0; iface < dback_n_face; iface++) {
 
@@ -826,7 +835,8 @@ int main(int argc, char *argv[])
   /* Split the mesh */
   PDM_split_dual_t part_method = PDM_SPLIT_DUAL_WITH_HILBERT;
   int n_domain                 = 1;
-  int *n_part_domains          = (int *) malloc(sizeof(int) * n_domain);
+  int *n_part_domains = NULL;
+  PDM_malloc(n_part_domains, n_domain, int);
   n_part_domains[0]            = n_part;
 
   PDM_multipart_t *mpart = PDM_multipart_create(n_domain,
@@ -848,7 +858,7 @@ int main(int argc, char *argv[])
 
   PDM_multipart_compute(mpart);
 
-  free(n_part_domains);
+  PDM_free(n_part_domains);
 
 
 
@@ -890,7 +900,7 @@ int main(int argc, char *argv[])
                                                           &pwork_edge_vtx,
                                                           PDM_OWNERSHIP_KEEP);
 
-  if (pwork_edge_vtx_idx != NULL) free(pwork_edge_vtx_idx);
+  if (pwork_edge_vtx_idx != NULL)PDM_free(pwork_edge_vtx_idx);
 
   PDM_g_num_t *pwork_edge_ln_to_gn = NULL;
   PDM_multipart_part_ln_to_gn_get(mpart,
@@ -1018,13 +1028,14 @@ int main(int argc, char *argv[])
                  (const PDM_g_num_t **) &pwork_back_vtx_ln_to_gn,
                                         &tmp_pwork_back_vtx_coord);
   double *pwork_back_vtx_coord = tmp_pwork_back_vtx_coord[0];
-  free(tmp_pwork_back_vtx_coord);
+  PDM_free(tmp_pwork_back_vtx_coord);
 
 
   if (vtk) {
     char filename[999];
 
-    int *halo_color = (int * ) malloc( line_to_back_idx[pwork_n_edge] * sizeof(int));
+    int *halo_color;
+    PDM_malloc(halo_color, line_to_back_idx[pwork_n_edge], int);
 
     for(int i_line = 0; i_line < pwork_n_edge; ++i_line ){
       for(int idx = line_to_back_idx[i_line]; idx < line_to_back_idx[i_line+1]; ++idx) {
@@ -1043,18 +1054,18 @@ int main(int argc, char *argv[])
                            line_to_back,
                            halo_color);
 
-    free(halo_color);
+    PDM_free(halo_color);
   }
 
 
 
-  free(pwork_back_vtx_ln_to_gn);
-  free(pwork_back_face_vtx_idx);
-  free(pwork_back_face_vtx);
-  free(pwork_back_vtx_coord);
+  PDM_free(pwork_back_vtx_ln_to_gn);
+  PDM_free(pwork_back_face_vtx_idx);
+  PDM_free(pwork_back_face_vtx);
+  PDM_free(pwork_back_vtx_coord);
 
-  free(line_to_back_idx);
-  free(line_to_back);
+  PDM_free(line_to_back_idx);
+  PDM_free(line_to_back);
 
 
   /*
@@ -1062,18 +1073,18 @@ int main(int argc, char *argv[])
    */
   PDM_multipart_free(mpart);
   PDM_DMesh_nodal_free(dmn);
-  free(dback_vtx_coord);
-  free(dback_face_vtx_idx);
-  free(dback_face_vtx);
-  free(back_distrib_vtx);
-  free(back_distrib_face);
-  free(dback_face_ln_to_gn);
-  free(back_face_extents);
+  PDM_free(dback_vtx_coord);
+  PDM_free(dback_face_vtx_idx);
+  PDM_free(dback_face_vtx);
+  PDM_free(back_distrib_vtx);
+  PDM_free(back_distrib_face);
+  PDM_free(dback_face_ln_to_gn);
+  PDM_free(back_face_extents);
 
-  free(pback_vtx_ln_to_gn);
-  free(pback_vtx_coord);
-  free(pback_face_vtx_idx);
-  free(pback_face_vtx);
+  PDM_free(pback_vtx_ln_to_gn);
+  PDM_free(pback_vtx_coord);
+  PDM_free(pback_face_vtx_idx);
+  PDM_free(pback_face_vtx);
 
 
   PDM_MPI_Finalize ();

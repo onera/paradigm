@@ -185,7 +185,7 @@ int main(int argc, char *argv[])
   PDM_dmesh_nodal_generate_distribution(dmn);
 
   PDM_g_num_t *vtx_distrib = PDM_dmesh_nodal_vtx_distrib_get(dmn);
-  double      *dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn);
+  double      *dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn, PDM_OWNERSHIP_BAD_VALUE);
   int dn_vtx = vtx_distrib[i_rank+1] - vtx_distrib[i_rank];
 
   if(0 == 1) {
@@ -258,7 +258,8 @@ int main(int argc, char *argv[])
   /* Random selection */
   PDM_g_num_t *distrib_cell = PDM_compute_entity_distribution(comm, dn_cell);
   int n_cell_extract = dn_cell/2;
-  PDM_g_num_t *selected_cell_gnum = malloc(n_cell_extract * sizeof(PDM_g_num_t));
+  PDM_g_num_t *selected_cell_gnum;
+  PDM_malloc(selected_cell_gnum, n_cell_extract, PDM_g_num_t);
 
   for(int i = 0; i < n_cell_extract; ++i) {
     unsigned int seed = (unsigned int) (distrib_cell[i_rank] + i);
@@ -319,7 +320,8 @@ int main(int argc, char *argv[])
 
   PDM_g_num_t *distrib_face_extract = PDM_compute_entity_distribution(comm, dn_extract_face);
 
-  PDM_g_num_t* extract_face_ln_to_gn = malloc(dn_extract_face * sizeof(PDM_g_num_t));
+  PDM_g_num_t *extract_face_ln_to_gn;
+  PDM_malloc(extract_face_ln_to_gn, dn_extract_face, PDM_g_num_t);
   for(int i = 0; i < dn_extract_face; ++i) {
     extract_face_ln_to_gn[i] = distrib_face_extract[i_rank] + i + 1;
   }
@@ -351,8 +353,8 @@ int main(int argc, char *argv[])
                  (const PDM_g_num_t **) &pextract_vtx_ln_to_gn,
                                         &tmp_pextract_vtx_coord);
   double* pextract_vtx_coord = tmp_pextract_vtx_coord[0];
-  free(tmp_pextract_vtx_coord);
-  free(extract_vtx_distribution);
+  PDM_free(tmp_pextract_vtx_coord);
+  PDM_free(extract_vtx_distribution);
 
   if (post) {
     char filename[999];
@@ -368,18 +370,18 @@ int main(int argc, char *argv[])
                            NULL);
   }
 
-  free(pextract_vtx_ln_to_gn);
-  free(pextract_face_vtx_idx);
-  free(pextract_face_vtx    );
-  free(pextract_vtx_coord   );
+  PDM_free(pextract_vtx_ln_to_gn);
+  PDM_free(pextract_face_vtx_idx);
+  PDM_free(pextract_face_vtx    );
+  PDM_free(pextract_vtx_coord   );
 
-  free(distrib_cell);
-  free(selected_cell_gnum);
+  PDM_free(distrib_cell);
+  PDM_free(selected_cell_gnum);
 
-  free(distrib_face_extract);
-  free(extract_face_ln_to_gn);
+  PDM_free(distrib_face_extract);
+  PDM_free(extract_face_ln_to_gn);
 
-  free(dextract_face_vtx    );
+  PDM_free(dextract_face_vtx    );
 
   PDM_dmesh_extract_free(dme);
 

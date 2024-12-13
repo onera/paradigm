@@ -82,7 +82,8 @@ PDM_compress_connectivity
   entity1_entity2_idx[0] = 0;
   int need_shift = 0;
 
-  int *entity1_entity2_n = (int * ) malloc( n_entity1 * sizeof(int));
+  int *entity1_entity2_n;
+  PDM_malloc(entity1_entity2_n, n_entity1, int);
   for(int i = 0; i < n_entity1; ++i) {
     entity1_entity2_n[i] = entity1_entity2_idx[i+1] - entity1_entity2_idx[i];
   }
@@ -116,7 +117,7 @@ PDM_compress_connectivity
     // printf("idx_comp : %d | idx_block : %d \n", idx_comp, idx_block);
   }
 
-  free(entity1_entity2_n);
+  PDM_free(entity1_entity2_n);
 
 }
 
@@ -147,7 +148,8 @@ PDM_combine_connectivity
  int **entity1_entity3
 )
 {
-  int* _entity1_entity3_idx = (int * ) malloc( (n_entity1 + 1) * sizeof(int));
+  int *_entity1_entity3_idx;
+  PDM_malloc(_entity1_entity3_idx, n_entity1 + 1, int);
   _entity1_entity3_idx[0] = 0;
   for(int i_entity1 = 0; i_entity1 < n_entity1; ++i_entity1) {
     _entity1_entity3_idx[i_entity1+1] = _entity1_entity3_idx[i_entity1];
@@ -158,7 +160,8 @@ PDM_combine_connectivity
   }
 
   // printf("_entity1_entity3_idx[%i] = %i \n", n_entity1, _entity1_entity3_idx[n_entity1]);
-  int* _entity1_entity3 = (int *) malloc( _entity1_entity3_idx[n_entity1] * sizeof(int));
+  int *_entity1_entity3;
+  PDM_malloc(_entity1_entity3, _entity1_entity3_idx[n_entity1], int);
 
   int idx = 0;
   for(int i_entity1 = 0; i_entity1 < n_entity1; ++i_entity1) {
@@ -175,7 +178,7 @@ PDM_combine_connectivity
   // PDM_log_trace_array_int(_entity1_entity3_idx, n_entity1+1                     , "_entity1_entity3_idx::");
   // PDM_log_trace_array_int(_entity1_entity3    , _entity1_entity3_idx[n_entity1], "_entity1_entity3::");
 
-  _entity1_entity3 = realloc(_entity1_entity3, _entity1_entity3_idx[n_entity1] * sizeof(int));
+  PDM_realloc(_entity1_entity3 ,_entity1_entity3 , _entity1_entity3_idx[n_entity1] ,int);
 
   *entity1_entity3_idx = _entity1_entity3_idx;
   *entity1_entity3     = _entity1_entity3;
@@ -205,7 +208,8 @@ const int   n_entity2,
       int **entity2_entity1
 )
 {
-  int* _entity2_entity1_idx = (int * ) malloc( (n_entity2 + 1) * sizeof(int));
+  int *_entity2_entity1_idx;
+  PDM_malloc(_entity2_entity1_idx, n_entity2 + 1, int);
   int* entity2_entity1_n    = PDM_array_zeros_int(n_entity2);
 
 
@@ -219,7 +223,8 @@ const int   n_entity2,
   PDM_array_idx_from_sizes_int(entity2_entity1_n, n_entity2, _entity2_entity1_idx);
   PDM_array_reset_int(entity2_entity1_n, n_entity2, 0);
 
-  int* _entity2_entity1 = (int * ) malloc( _entity2_entity1_idx[n_entity2] * sizeof(int));
+  int *_entity2_entity1;
+  PDM_malloc(_entity2_entity1, _entity2_entity1_idx[n_entity2], int);
 
   for(int i_entity1 = 0; i_entity1 < n_entity1; ++i_entity1) {
     for(int idx_1 = entity1_entity2_idx[i_entity1]; idx_1 < entity1_entity2_idx[i_entity1+1]; ++idx_1 ) {
@@ -235,7 +240,7 @@ const int   n_entity2,
   // PDM_log_trace_array_int(_entity2_entity1   , _entity2_entity1_idx[n_entity2]  , "_entity2_entity1::");
   // PDM_log_trace_connectivity_int(_entity2_entity1_idx, _entity2_entity1   , n_entity2  , "_entity2_entity1::");
 
-  free(entity2_entity1_n);
+  PDM_free(entity2_entity1_n);
 
   *entity2_entity1_idx = _entity2_entity1_idx;
   *entity2_entity1     = _entity2_entity1;
@@ -268,8 +273,8 @@ const int   *n_entity2,
       int ***entity2_entity1
 )
 {
-  *entity2_entity1_idx = (int ** ) malloc( n_part * sizeof(int *));
-  *entity2_entity1     = (int ** ) malloc( n_part * sizeof(int *));
+  PDM_malloc(*entity2_entity1_idx, n_part, int *);
+  PDM_malloc(*entity2_entity1    , n_part, int *);
 
   int** _entity2_entity1_idx = *entity2_entity1_idx;
   int** _entity2_entity1     = *entity2_entity1;
@@ -320,8 +325,8 @@ PDM_part_combine_connectivity
  int       ***entity1_entity3
 )
 {
-  *entity1_entity3_idx = (int ** ) malloc( n_part * sizeof(int *));
-  *entity1_entity3     = (int ** ) malloc( n_part * sizeof(int *));
+  PDM_malloc(*entity1_entity3_idx, n_part, int *);
+  PDM_malloc(*entity1_entity3    , n_part, int *);
 
   int** _entity1_entity3_idx = *entity1_entity3_idx;
   int** _entity1_entity3     = *entity1_entity3;
@@ -343,6 +348,47 @@ PDM_part_combine_connectivity
     _entity1_entity3[i_part]     = _pentity1_entity3;
   }
 }
+
+void
+PDM_part_graph_dual
+(
+  int    n_part,
+  int   *n_entity1,
+  int   *n_entity2,
+  int  **entity1_entity2_idx,
+  int  **entity1_entity2,
+  int ***out_entity2_entity1_idx,
+  int ***out_entity2_entity1,
+  int ***entity1_entity1_idx,
+  int ***entity1_entity1
+)
+{
+
+  int **entity2_entity1_idx = NULL;
+  int **entity2_entity1     = NULL;
+  PDM_part_connectivity_transpose(n_part,
+                                  n_entity1,
+                                  n_entity2,
+                                  entity1_entity2_idx,
+                                  entity1_entity2,
+                                  &entity2_entity1_idx,
+                                  &entity2_entity1);
+
+  *out_entity2_entity1_idx = entity2_entity1_idx;
+  *out_entity2_entity1     = entity2_entity1;
+
+  PDM_part_combine_connectivity(n_part,
+                                n_entity1,
+                                entity1_entity2_idx,
+                                entity1_entity2,
+                                entity2_entity1_idx,
+                                entity2_entity1,
+                                entity1_entity1_idx,
+                                entity1_entity1);
+
+}
+
+
 
 /**
  *
@@ -366,16 +412,16 @@ const int   *n_entity1,
 )
 {
 
-  *entity1_entity2_idx = (int ** ) malloc( n_part * sizeof(int *));
-  *entity1_entity2     = (int ** ) malloc( n_part * sizeof(int *));
+  PDM_malloc(*entity1_entity2_idx, n_part, int *);
+  PDM_malloc(*entity1_entity2    , n_part, int *);
 
   int** _entity1_entity2_idx = *entity1_entity2_idx;
   int** _entity1_entity2     = *entity1_entity2;
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
 
-    _entity1_entity2_idx[i_part] = (int * ) malloc( (    n_entity1[i_part] + 1) * sizeof(int));
-    _entity1_entity2    [i_part] = (int * ) malloc( (2 * n_entity1[i_part]    ) * sizeof(int));
+    PDM_malloc(_entity1_entity2_idx[i_part],     n_entity1[i_part] + 1, int);
+    PDM_malloc(_entity1_entity2    [i_part], 2 * n_entity1[i_part]    , int);
 
     int idx = 0;
     _entity1_entity2_idx[i_part][0] = 0;
@@ -394,25 +440,8 @@ const int   *n_entity1,
       }
     }
 
-    _entity1_entity2    [i_part] = realloc(_entity1_entity2    [i_part], idx * sizeof(int));
-
-
+    PDM_realloc(_entity1_entity2    [i_part] ,_entity1_entity2    [i_part] , idx ,int);
   }
-  // int* face_cell_idx = (int *) malloc( (pn_faces[0] + 1 ) * sizeof(int));
-  // int* face_cell     = (int *) malloc( (2 * pn_faces[0] ) * sizeof(int));
-  // int idx = 0;
-  // face_cell_idx[0] = 0;
-  // for(int i_face = 0; i_face < pn_faces[0]; ++i_face) {
-  //   face_cell_idx[i_face+1] = face_cell_idx[i_face];
-  //   if(pface_cell[0][2*i_face + 1 ] == 0) {
-  //     face_cell_idx[i_face+1]++;
-  //     face_cell[idx++] = pface_cell[0][2*i_face];
-  //   } else {
-  //     face_cell_idx[i_face+1] += 2;
-  //     face_cell[idx++] = pface_cell[0][2*i_face  ];
-  //     face_cell[idx++] = pface_cell[0][2*i_face+1];
-  //   }
-  // }
 
 }
 
@@ -447,7 +476,8 @@ PDM_compute_dface_vtx_from_edges_distrib
   PDM_MPI_Comm_size(comm, &n_rank);
 
   int dn_face = distrib_face[i_rank+1] - distrib_face[i_rank];
-  PDM_g_num_t* face_ln_to_gn = malloc(dn_face * sizeof(PDM_g_num_t));
+  PDM_g_num_t *face_ln_to_gn;
+  PDM_malloc(face_ln_to_gn, dn_face, PDM_g_num_t);
   for(int i_face = 0; i_face < dn_face; ++i_face) {
     face_ln_to_gn[i_face] = distrib_face[i_rank] + i_face + 1;
   }
@@ -466,10 +496,11 @@ PDM_compute_dface_vtx_from_edges_distrib
                                                            &pedge_ln_to_gn,
                                                            &pface_edge_idx,
                                                            &pface_edge);
-  free(face_ln_to_gn );
+  PDM_free(face_ln_to_gn );
 
   int dn_edge = distrib_edge[i_rank+1] - distrib_edge[i_rank];
-  int* dedge_vtx_idx = malloc((dn_edge+1) * sizeof(PDM_g_num_t));
+  int *dedge_vtx_idx;
+  PDM_malloc(dedge_vtx_idx, dn_edge + 1, int);
   for(int i_edge = 0; i_edge < dn_edge+1; ++i_edge) {
     dedge_vtx_idx[i_edge] = 2 * i_edge;
   }
@@ -489,8 +520,8 @@ PDM_compute_dface_vtx_from_edges_distrib
                                                            &pedge_vtx_idx,
                                                            &pedge_vtx);
 
-  free(pedge_ln_to_gn);
-  free(dedge_vtx_idx );
+  PDM_free(pedge_ln_to_gn);
+  PDM_free(dedge_vtx_idx );
   int         *pface_vtx     = NULL;
   PDM_compute_face_vtx_from_face_and_edge(dn_face,
                                           pface_edge_idx,
@@ -498,19 +529,20 @@ PDM_compute_dface_vtx_from_edges_distrib
                                           pedge_vtx,
                                           &pface_vtx);
 
-  free(pface_edge_idx);
-  free(pface_edge    );
-  free(pedge_vtx_idx );
-  free(pedge_vtx     );
+  PDM_free(pface_edge_idx);
+  PDM_free(pface_edge    );
+  PDM_free(pedge_vtx_idx );
+  PDM_free(pedge_vtx     );
 
-  PDM_g_num_t *_dface_vtx = malloc(dface_edge_idx[dn_face] * sizeof(PDM_g_num_t));
+  PDM_g_num_t *_dface_vtx;
+  PDM_malloc(_dface_vtx, dface_edge_idx[dn_face], PDM_g_num_t);
   for(int idx_face = 0; idx_face < dface_edge_idx[dn_face]; ++idx_face) {
     int i_vtx = pface_vtx[idx_face]-1;
     _dface_vtx[idx_face] = pvtx_ln_to_gn[i_vtx];
   }
 
-  free(pvtx_ln_to_gn);
-  free(pface_vtx);
+  PDM_free(pvtx_ln_to_gn);
+  PDM_free(pface_vtx);
 
   *dface_vtx = _dface_vtx;
 }
@@ -551,8 +583,8 @@ PDM_compute_dface_vtx_from_edges
                                            dedge_vtx,
                                            dface_vtx);
 
- free(distrib_face);
- free(distrib_edge);
+  PDM_free(distrib_face);
+  PDM_free(distrib_edge);
 
 }
 
@@ -580,9 +612,10 @@ PDM_compute_face_vtx_from_face_and_edge
 {
   int dbg = 0;
   if (n_face == 0) {
+    *face_vtx = NULL;
     return;
   }
-  *face_vtx = malloc (sizeof(int) * face_edge_idx[n_face]);
+  PDM_malloc(*face_vtx, face_edge_idx[n_face], int);
 
   int n_edge = 0;
   for (int i = 0; i < face_edge_idx[n_face]; i++) {
@@ -629,13 +662,17 @@ PDM_compute_face_vtx_from_face_and_edge
         }
 
         if (edge_vtx[2*iedge] == _face_vtx[i-1]) {
-          assert(_face_edge[j] > 0);
+          if (_face_edge[j] <= 0) {
+            PDM_error(__FILE__, __LINE__, 0, "Incoherence between face->edge and edge->vtx (for face %d, j = %d, got edge %d, but expected > 0)\n", iface, j, _face_edge[j]);
+          }
           _face_vtx[i] = edge_vtx[2*iedge+1];
           edge_tag[iedge] = 1;
           break;
         }
         else if (edge_vtx[2*iedge+1] == _face_vtx[i-1]) {
-          assert(_face_edge[j] < 0);
+          if (_face_edge[j] >= 0) {
+            PDM_error(__FILE__, __LINE__, 0, "Incoherence between face->edge and edge->vtx (for face %d, j = %d, got edge %d, but expected < 0)\n", iface, j, _face_edge[j]);
+          }
           _face_vtx[i] = edge_vtx[2*iedge];
           edge_tag[iedge] = 1;
           break;
@@ -657,7 +694,7 @@ PDM_compute_face_vtx_from_face_and_edge
       edge_tag[iedge] = 0;
     }
   }
-  free(edge_tag);
+  PDM_free(edge_tag);
 }
 
 
@@ -684,7 +721,7 @@ PDM_compute_face_vtx_from_face_and_edge_unsigned
 {
   int dbg = 0;
 
-  *face_vtx = malloc (sizeof(int) * face_edge_idx[n_face]);
+  PDM_malloc(*face_vtx, face_edge_idx[n_face], int);
 
   int n_edge = 0;
   for (int i = 0; i < face_edge_idx[n_face]; i++) {
@@ -751,5 +788,5 @@ PDM_compute_face_vtx_from_face_and_edge_unsigned
       edge_tag[iedge] = 0;
     }
   }
-  free(edge_tag);
+  PDM_free(edge_tag);
 }

@@ -1073,7 +1073,7 @@ PDM_triangle_ngon_to_nodal
  int **face_vtx
  )
 {
-  *face_vtx = malloc(sizeof(int) * n_face * 3);
+  PDM_malloc(*face_vtx,n_face * 3,int);
 
   for (int iface = 0; iface < n_face; iface++) {
 

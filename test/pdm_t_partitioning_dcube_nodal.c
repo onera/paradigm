@@ -251,10 +251,10 @@ int main(int argc, char *argv[])
   //   PDM_log_trace_array_int (dgroup_edge_check_idx, n_group+1                     , "dgroup_edge_check_idx ::");
   //   PDM_log_trace_array_long(dgroup_edge_check    , dgroup_edge_check_idx[n_group], "dgroup_edge_check     ::");
   // }
-  // free(dgroup_edge_check_idx);
-  // free(dgroup_edge_check);
-  // free(dedge_to_group);
-  // free(dedge_to_group_idx);
+  //PDM_free(dgroup_edge_check_idx);
+  //PDM_free(dgroup_edge_check);
+  //PDM_free(dedge_to_group);
+  //PDM_free(dedge_to_group_idx);
 
 
   /*

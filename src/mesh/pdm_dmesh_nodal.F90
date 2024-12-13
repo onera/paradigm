@@ -23,41 +23,135 @@ module pdm_dmesh_nodal
 
   use pdm
   use iso_c_binding
+  use pdm_mesh_nodal
 
   implicit none
 
-  integer(c_int), parameter :: PDM_GEOMETRY_KIND_VOLUMIC  = 0
-  integer(c_int), parameter :: PDM_GEOMETRY_KIND_SURFACIC = 1
-  integer(c_int), parameter :: PDM_GEOMETRY_KIND_RIDGE    = 2
-  integer(c_int), parameter :: PDM_GEOMETRY_KIND_CORNER   = 3
-
   interface PDM_DMesh_nodal_create ; module procedure &
   PDM_DMesh_nodal_create_
+  end interface
+
+  interface PDM_dmesh_nodal_sections_id_get ; module procedure &
+  PDM_dmesh_nodal_sections_id_get_
+  end interface
+
+  interface PDM_DMesh_nodal_section_g_dims_get ; module procedure &
+  PDM_DMesh_nodal_section_g_dims_get_
   end interface
 
   interface PDM_DMesh_nodal_section_add ; module procedure &
   PDM_DMesh_nodal_section_add_
   end interface
 
+  interface PDM_DMesh_nodal_section_std_set ; module procedure &
+  PDM_DMesh_nodal_section_std_set_
+  end interface
+
+  interface PDM_DMesh_nodal_section_std_get ; module procedure &
+  PDM_DMesh_nodal_section_std_get_
+  end interface
+
   interface PDM_DMesh_nodal_section_poly2d_set ; module procedure &
   PDM_DMesh_nodal_section_poly2d_set_
+  end interface
+
+  interface PDM_DMesh_nodal_section_poly2d_get ; module procedure &
+  PDM_DMesh_nodal_section_poly2d_get_
+  end interface
+
+  interface PDM_DMesh_nodal_section_poly3d_set ; module procedure &
+  PDM_DMesh_nodal_section_poly3d_set_
+  end interface
+
+  interface PDM_DMesh_nodal_section_poly3d_get ; module procedure &
+  PDM_DMesh_nodal_section_poly3d_get_
   end interface
 
   interface PDM_DMesh_nodal_section_group_elmt_set ; module procedure &
   PDM_DMesh_nodal_section_group_elmt_set_
   end interface
 
+  interface PDM_DMesh_nodal_section_group_elmt_get ; module procedure &
+  PDM_DMesh_nodal_section_group_elmt_get_
+  end interface
+
   interface PDM_DMesh_nodal_coord_set ; module procedure &
   PDM_DMesh_nodal_coord_set_
   end interface
 
+  interface PDM_DMesh_nodal_vtx_get ; module procedure &
+  PDM_DMesh_nodal_vtx_get_
+  end interface
+
   private :: PDM_DMesh_nodal_create_
+  private :: PDM_DMesh_nodal_section_g_dims_get_
   private :: PDM_DMesh_nodal_section_add_
+  private :: PDM_DMesh_nodal_section_std_set_
+  private :: PDM_DMesh_nodal_section_std_get_
   private :: PDM_DMesh_nodal_section_poly2d_set_
+  private :: PDM_DMesh_nodal_section_poly2d_get_
+  private :: PDM_DMesh_nodal_section_poly3d_set_
+  private :: PDM_DMesh_nodal_section_poly3d_get_
   private :: PDM_DMesh_nodal_section_group_elmt_set_
+  private :: PDM_DMesh_nodal_section_group_elmt_get_
   private :: PDM_DMesh_nodal_coord_set_
+  private :: PDM_DMesh_nodal_vtx_get_
 
   interface
+
+    function PDM_dmesh_nodal_n_vtx_get (dmn)          &
+                                        result(n_vtx) &
+    bind(c, name='PDM_DMesh_nodal_n_vtx_get')
+
+      use iso_c_binding
+      implicit none
+
+      type (c_ptr), value :: dmn
+      integer(c_int)      :: n_vtx
+    end function PDM_dmesh_nodal_n_vtx_get
+
+    function PDM_dmesh_nodal_n_section_get (dmn,              &
+                                            geom_kind)        &
+                                            result(n_section) &
+    bind(c, name='PDM_DMesh_nodal_n_section_get')
+
+      use iso_c_binding
+      implicit none
+
+      type (c_ptr),   value :: dmn
+      integer(c_int), value :: geom_kind
+      integer(c_int)        :: n_section
+    end function PDM_dmesh_nodal_n_section_get
+
+    function PDM_dmesh_nodal_section_n_elt_get (dmn,          &
+                                                geom_kind,    &
+                                                id_section)   &
+                                                result(n_elt) &
+    bind(c, name='PDM_DMesh_nodal_section_n_elt_get')
+
+      use iso_c_binding
+      implicit none
+
+      type (c_ptr),   value :: dmn
+      integer(c_int), value :: geom_kind
+      integer(c_int), value :: id_section
+      integer(c_int)        :: n_elt
+    end function PDM_dmesh_nodal_section_n_elt_get
+
+    function PDM_DMesh_nodal_section_elt_type_get (dmn,          &
+                                                   geom_kind,    &
+                                                   id_section)   &
+                                                   result(elt_type) &
+    bind(c, name='PDM_DMesh_nodal_section_elt_type_get')
+
+      use iso_c_binding
+      implicit none
+
+      type (c_ptr),   value :: dmn
+      integer(c_int), value :: geom_kind
+      integer(c_int), value :: id_section
+      integer(c_int)        :: elt_type
+    end function PDM_DMesh_nodal_section_elt_type_get
 
     !>
     !!
@@ -107,6 +201,44 @@ module pdm_dmesh_nodal
       type (c_ptr)           :: dmn
     end function PDM_DMesh_nodal_create_cf
 
+    function PDM_dmesh_nodal_sections_id_get_cf (dmn,               &
+                                                 geom_kind)         &
+                                                 result(id_section) &
+    bind(c, name='PDM_DMesh_nodal_sections_id_get')
+
+      use iso_c_binding
+      implicit none
+
+      type (c_ptr),   value :: dmn
+      integer(c_int), value :: geom_kind
+      type (c_ptr)          :: id_section
+    end function PDM_dmesh_nodal_sections_id_get_cf
+
+    subroutine PDM_DMesh_nodal_section_g_dims_get_cf (dmn,    &
+                                                      n_cell, &
+                                                      n_face, &
+                                                      n_edge, &
+                                                      n_vtx)  &
+    bind(c, name='PDM_DMesh_nodal_section_g_dims_get')
+
+      use iso_c_binding
+      implicit none
+
+      type (c_ptr), value :: dmn
+#ifdef PDM_LONG_G_NUM
+      integer(c_long)     :: n_cell
+      integer(c_long)     :: n_face
+      integer(c_long)     :: n_edge
+      integer(c_long)     :: n_vtx
+#else
+      integer(c_int)      :: n_cell
+      integer(c_int)      :: n_face
+      integer(c_int)      :: n_edge
+      integer(c_int)      :: n_vtx
+#endif
+
+    end subroutine PDM_DMesh_nodal_section_g_dims_get_cf
+
     function PDM_DMesh_nodal_section_add_cf (dmn, geom_kind, t_elt) result(id_section) &
     bind(c, name='PDM_DMesh_nodal_section_add')
 
@@ -118,6 +250,44 @@ module pdm_dmesh_nodal
       integer(c_int), value :: t_elt
       integer(c_int)        :: id_section
     end function PDM_DMesh_nodal_section_add_cf
+
+    subroutine PDM_DMesh_nodal_section_std_set_cf (dmn,         &
+                                                   geom_kind,   &
+                                                   id_section,  &
+                                                   n_elt,       &
+                                                   connec,      &
+                                                   owner)       &
+    bind(c, name = 'PDM_DMesh_nodal_section_std_set')
+
+      use iso_c_binding
+      implicit none
+
+      type (c_ptr),   value :: dmn
+      integer(c_int), value :: geom_kind
+      integer(c_int), value :: id_section
+      integer(c_int), value :: n_elt
+      type(c_ptr),    value :: connec
+      integer(c_int), value :: owner
+
+    end subroutine PDM_DMesh_nodal_section_std_set_cf
+
+    function PDM_DMesh_nodal_section_std_get_cf (dmn,           &
+                                                 geom_kind,     &
+                                                 id_section,    &
+                                                 owner)         &
+                                                 result(connec) &
+    bind(c, name = 'PDM_DMesh_nodal_section_std_get')
+
+      use iso_c_binding
+      implicit none
+
+      type (c_ptr),   value :: dmn
+      integer(c_int), value :: geom_kind
+      integer(c_int), value :: id_section
+      type(c_ptr)           :: connec
+      integer(c_int), value :: owner
+
+    end function PDM_DMesh_nodal_section_std_get_cf
 
     !>
     !!
@@ -152,6 +322,94 @@ module pdm_dmesh_nodal
 
     end subroutine PDM_DMesh_nodal_section_poly2d_set_cf
 
+    subroutine PDM_DMesh_nodal_section_poly2d_get_cf (dmn,         &
+                                                      geom_kind,   &
+                                                      id_section,  &
+                                                      connec_idx,  &
+                                                      connec,      &
+                                                      owner)       &
+    bind(c, name = 'PDM_DMesh_nodal_section_poly2d_get')
+
+      use iso_c_binding
+      implicit none
+
+      type (c_ptr),   value :: dmn
+      integer(c_int), value :: geom_kind
+      integer(c_int), value :: id_section
+      type(c_ptr)           :: connec_idx
+      type(c_ptr)           :: connec
+      integer(c_int), value :: owner
+
+    end subroutine PDM_DMesh_nodal_section_poly2d_get_cf
+
+    !>
+    !!
+    !! \brief Define a polyhedra section
+    !!
+    !! \param [in]  hdl            Distributed nodal mesh handle
+    !! \param [in]  id_section       Block identifier
+    !! \param [in]  n_elt          Number of polyhedra
+    !! \param [in]  n_face         Number of faces used to describe polyhedra
+    !! \param [in]  facvtx_idx     Index of face vertex connectivity
+    !! \param [in]  facvtx         Face vertex connectivity
+    !! \param [in]  cellfac_idx    Index of cell face connectivity
+    !! \param [in]  cellfac        Cell face connectivity
+    !!
+
+    subroutine PDM_DMesh_nodal_section_poly3d_set_cf (dmn,           &
+                                                      geom_kind,     &
+                                                      id_section,    &
+                                                      n_elt,         &
+                                                      n_face,        &
+                                                      face_vtx_idx,  &
+                                                      face_vtx,      &
+                                                      cell_face_idx, &
+                                                      cell_face,     &
+                                                      owner)         &
+    bind(c, name = 'PDM_DMesh_nodal_section_poly3d_set')
+
+      use iso_c_binding
+      implicit none
+
+      type (c_ptr),   value :: dmn
+      integer(c_int), value :: geom_kind
+      integer(c_int), value :: id_section
+      integer(c_int), value :: n_elt
+      integer(c_int), value :: n_face
+      type(c_ptr),    value :: face_vtx_idx
+      type(c_ptr),    value :: face_vtx
+      type(c_ptr),    value :: cell_face_idx
+      type(c_ptr),    value :: cell_face
+      integer(c_int), value :: owner
+
+    end subroutine PDM_DMesh_nodal_section_poly3d_set_cf
+
+    subroutine PDM_DMesh_nodal_section_poly3d_get_cf (dmn,           &
+                                                      geom_kind,     &
+                                                      id_section,    &
+                                                      n_face,        &
+                                                      face_vtx_idx,  &
+                                                      face_vtx,      &
+                                                      cell_face_idx, &
+                                                      cell_face,     &
+                                                      owner)         &
+    bind(c, name = 'PDM_DMesh_nodal_section_poly3d_get')
+
+      use iso_c_binding
+      implicit none
+
+      type (c_ptr),   value :: dmn
+      integer(c_int), value :: geom_kind
+      integer(c_int), value :: id_section
+      integer(c_int)        :: n_face
+      type(c_ptr)           :: face_vtx_idx
+      type(c_ptr)           :: face_vtx
+      type(c_ptr)           :: cell_face_idx
+      type(c_ptr)           :: cell_face
+      integer(c_int), value :: owner
+
+    end subroutine PDM_DMesh_nodal_section_poly3d_get_cf
+
     subroutine PDM_DMesh_nodal_section_group_elmt_set_cf (dmn,             &
                                                           geom_kind,       &
                                                           n_group_elmt,    &
@@ -171,6 +429,26 @@ module pdm_dmesh_nodal
       integer(c_int), value :: owner
 
     end subroutine PDM_DMesh_nodal_section_group_elmt_set_cf
+
+    subroutine PDM_DMesh_nodal_section_group_elmt_get_cf (dmn,             &
+                                                          geom_kind,       &
+                                                          n_group_elmt,    &
+                                                          dgroup_elmt_idx, &
+                                                          dgroup_elmt,     &
+                                                          owner)           &
+    bind(c, name = 'PDM_DMesh_nodal_section_group_elmt_get')
+
+      use iso_c_binding
+      implicit none
+
+      type (c_ptr),   value :: dmn
+      integer(c_int), value :: geom_kind
+      integer(c_int)        :: n_group_elmt
+      type(c_ptr)           :: dgroup_elmt_idx
+      type(c_ptr)           :: dgroup_elmt
+      integer(c_int), value :: owner
+
+    end subroutine PDM_DMesh_nodal_section_group_elmt_get_cf
 
     !>
     !!
@@ -196,6 +474,20 @@ module pdm_dmesh_nodal
       integer(c_int), value :: owner
 
     end subroutine PDM_DMesh_nodal_coord_set_cf
+
+    function PDM_DMesh_nodal_vtx_get_cf (dmn,           &
+                                         owner)         &
+                                         result(coords) &
+    bind(c, name = 'PDM_DMesh_nodal_vtx_get')
+
+      use iso_c_binding
+      implicit none
+
+      type (c_ptr),   value :: dmn
+      integer(c_int), value :: owner
+      type(c_ptr)           :: coords
+
+    end function PDM_DMesh_nodal_vtx_get_cf
 
     !>
     !!
@@ -266,6 +558,62 @@ module pdm_dmesh_nodal
 
   end subroutine PDM_DMesh_nodal_create_
 
+  subroutine PDM_dmesh_nodal_sections_id_get_ (dmn,       &
+                                               geom_kind, &
+                                               id_section)
+
+    use iso_c_binding
+    implicit none
+
+    type (c_ptr), value           :: dmn
+    integer, intent(in)           :: geom_kind
+    integer(PDM_l_num_s), pointer :: id_section(:)
+
+    integer(c_int) :: c_n_section
+    type(c_ptr)    :: c_id_section
+
+    c_n_section = PDM_DMesh_nodal_n_section_get(dmn,       &
+                                                geom_kind)
+
+    c_id_section = PDM_dmesh_nodal_sections_id_get_cf(dmn,       &
+                                                      geom_kind)
+
+    call c_f_pointer(c_id_section, &
+                     id_section,   &
+                     [c_n_section])
+
+  end subroutine PDM_dmesh_nodal_sections_id_get_
+
+  subroutine PDM_DMesh_nodal_section_g_dims_get_ (dmn,    &
+                                                  n_cell, &
+                                                  n_face, &
+                                                  n_edge, &
+                                                  n_vtx)
+
+    use iso_c_binding
+    implicit none
+
+    type (c_ptr), value  :: dmn
+#ifdef PDM_LONG_G_NUM
+    integer(PDM_g_num_s) :: n_cell
+    integer(PDM_g_num_s) :: n_face
+    integer(PDM_g_num_s) :: n_edge
+    integer(PDM_g_num_s) :: n_vtx
+#else
+    integer(PDM_l_num_s) :: n_cell
+    integer(PDM_l_num_s) :: n_face
+    integer(PDM_l_num_s) :: n_edge
+    integer(PDM_l_num_s) :: n_vtx
+#endif
+
+    call PDM_DMesh_nodal_section_g_dims_get_cf(dmn,    &
+                                               n_cell, &
+                                               n_face, &
+                                               n_edge, &
+                                               n_vtx)
+
+  end subroutine PDM_DMesh_nodal_section_g_dims_get_
+
   subroutine PDM_DMesh_nodal_section_add_ (dmn,       &
                                            geom_kind, &
                                            t_elt,     &
@@ -284,6 +632,83 @@ module pdm_dmesh_nodal
                                                  t_elt)
 
   end subroutine PDM_DMesh_nodal_section_add_
+
+  subroutine PDM_DMesh_nodal_section_std_set_ (dmn,        &
+                                               geom_kind,  &
+                                               id_section, &
+                                               n_elt,      &
+                                               connec,     &
+                                               owner)
+
+    use iso_c_binding
+    implicit none
+
+    type (c_ptr), value           :: dmn
+    integer, intent(in)           :: geom_kind
+    integer, intent(in)           :: id_section
+    integer, intent(in)           :: n_elt
+    integer, intent(in)           :: owner
+    integer(PDM_g_num_s), pointer :: connec(:)
+
+    integer(c_int) :: c_n_elt
+    type(c_ptr)    :: c_connec
+
+    c_n_elt = n_elt
+
+    c_connec = C_NULL_PTR
+    if (associated(connec)) then
+      c_connec = c_loc(connec)
+    end if
+
+    call PDM_DMesh_nodal_section_std_set_cf(dmn,        &
+                                            geom_kind,  &
+                                            id_section, &
+                                            c_n_elt,    &
+                                            c_connec,   &
+                                            owner)
+
+  end subroutine PDM_DMesh_nodal_section_std_set_
+
+  subroutine PDM_DMesh_nodal_section_std_get_ (dmn,        &
+                                               geom_kind,  &
+                                               id_section, &
+                                               connec,     &
+                                               owner)
+
+    use iso_c_binding
+    implicit none
+
+    type (c_ptr), value           :: dmn
+    integer, intent(in)           :: geom_kind
+    integer, intent(in)           :: id_section
+    integer, intent(in)           :: owner
+    integer(PDM_g_num_s), pointer :: connec(:)
+
+    integer(c_int) :: c_n_elt
+    integer(c_int) :: c_elt_type
+    integer(c_int) :: c_n_vtx_elt
+    type(c_ptr)    :: c_connec
+
+    c_n_elt = PDM_DMesh_nodal_section_n_elt_get(dmn,       &
+                                                geom_kind, &
+                                                id_section)
+
+    c_elt_type = PDM_DMesh_nodal_section_elt_type_get(dmn,       &
+                                                      geom_kind, &
+                                                      id_section)
+
+    c_n_vtx_elt = PDM_Mesh_nodal_n_vtx_elt_get_cf(c_elt_type, 1)
+
+    c_connec = PDM_DMesh_nodal_section_std_get_cf(dmn,        &
+                                                  geom_kind,  &
+                                                  id_section, &
+                                                  owner)
+
+    call c_f_pointer(c_connec, &
+                     connec,   &
+                     [c_n_vtx_elt*c_n_elt])
+
+  end subroutine PDM_DMesh_nodal_section_std_get_
 
   !>
   !!
@@ -341,6 +766,192 @@ module pdm_dmesh_nodal
 
   end subroutine PDM_DMesh_nodal_section_poly2d_set_
 
+  subroutine PDM_DMesh_nodal_section_poly2d_get_ (dmn,        &
+                                                  geom_kind,  &
+                                                  id_section, &
+                                                  connec_idx, &
+                                                  connec,     &
+                                                  owner)
+
+    use iso_c_binding
+    implicit none
+
+    type (c_ptr), value           :: dmn
+    integer, intent(in)           :: geom_kind
+    integer, intent(in)           :: id_section
+    integer, intent(in)           :: owner
+    integer(PDM_l_num_s), pointer :: connec_idx(:)
+    integer(PDM_g_num_s), pointer :: connec(:)
+
+    integer(c_int) :: c_n_elt
+    type(c_ptr)    :: c_connec_idx
+    type(c_ptr)    :: c_connec
+
+    c_n_elt = PDM_DMesh_nodal_section_n_elt_get(dmn,       &
+                                                geom_kind, &
+                                                id_section)
+
+    call PDM_DMesh_nodal_section_poly2d_get_cf(dmn,          &
+                                               geom_kind,    &
+                                               id_section,   &
+                                               c_connec_idx, &
+                                               c_connec,     &
+                                               owner)
+
+    call c_f_pointer(c_connec_idx, &
+                     connec_idx,   &
+                     [c_n_elt+1])
+
+    call c_f_pointer(c_connec, &
+                     connec,   &
+                     [connec_idx(c_n_elt+1)])
+
+  end subroutine PDM_DMesh_nodal_section_poly2d_get_
+
+  !>
+  !!
+  !! \brief Define a polyhedra section
+  !!
+  !! \param [in]  hdl            Distributed nodal mesh handle
+  !! \param [in]  id_section       Block identifier
+  !! \param [in]  n_elt          Number of polyhedra
+  !! \param [in]  n_face         Number of faces used to describe polyhedra
+  !! \param [in]  facvtx_idx     Index of face vertex connectivity
+  !! \param [in]  facvtx         Face vertex connectivity
+  !! \param [in]  cellfac_idx    Index of cell face connectivity
+  !! \param [in]  cellfac        Cell face connectivity
+  !!
+
+  subroutine PDM_DMesh_nodal_section_poly3d_set_ (dmn,           &
+                                                  geom_kind,     &
+                                                  id_section,    &
+                                                  n_elt,         &
+                                                  n_face,        &
+                                                  face_vtx_idx,  &
+                                                  face_vtx,      &
+                                                  cell_face_idx, &
+                                                  cell_face,     &
+                                                  owner)
+    use iso_c_binding
+    implicit none
+
+    type (c_ptr), value           :: dmn
+    integer, intent(in)           :: geom_kind
+    integer, intent(in)           :: id_section
+    integer, intent(in)           :: n_elt
+    integer, intent(in)           :: n_face
+    integer, intent(in)           :: owner
+    integer(PDM_l_num_s), pointer :: face_vtx_idx(:)
+    integer(PDM_g_num_s), pointer :: face_vtx(:)
+    integer(PDM_l_num_s), pointer :: cell_face_idx(:)
+    integer(PDM_g_num_s), pointer :: cell_face(:)
+
+    integer(c_int) :: c_n_elt
+    integer(c_int) :: c_n_face
+    type(c_ptr)    :: c_face_vtx_idx
+    type(c_ptr)    :: c_face_vtx
+    type(c_ptr)    :: c_cell_face_idx
+    type(c_ptr)    :: c_cell_face
+
+    c_n_elt  = n_elt
+    c_n_face = n_face
+
+    c_face_vtx_idx = C_NULL_PTR
+    if (associated(face_vtx_idx)) then
+      c_face_vtx_idx = c_loc(face_vtx_idx)
+    end if
+
+    c_face_vtx = C_NULL_PTR
+    if (associated(face_vtx)) then
+      c_face_vtx = c_loc(face_vtx)
+    end if
+
+    c_cell_face_idx = C_NULL_PTR
+    if (associated(cell_face_idx)) then
+      c_cell_face_idx = c_loc(cell_face_idx)
+    end if
+
+    c_cell_face = C_NULL_PTR
+    if (associated(cell_face)) then
+      c_cell_face = c_loc(cell_face)
+    end if
+
+    call PDM_DMesh_nodal_section_poly3d_set_cf(dmn,             &
+                                               geom_kind,       &
+                                               id_section,      &
+                                               c_n_elt,         &
+                                               c_n_face,        &
+                                               c_face_vtx_idx,  &
+                                               c_face_vtx,      &
+                                               c_cell_face_idx, &
+                                               c_cell_face,     &
+                                               owner)
+
+  end subroutine PDM_DMesh_nodal_section_poly3d_set_
+
+  subroutine PDM_DMesh_nodal_section_poly3d_get_ (dmn,           &
+                                                  geom_kind,     &
+                                                  id_section,    &
+                                                  n_face,        &
+                                                  face_vtx_idx,  &
+                                                  face_vtx,      &
+                                                  cell_face_idx, &
+                                                  cell_face,     &
+                                                  owner)
+    use iso_c_binding
+    implicit none
+
+    type (c_ptr), value           :: dmn
+    integer, intent(in)           :: geom_kind
+    integer, intent(in)           :: id_section
+    integer                       :: n_face
+    integer, intent(in)           :: owner
+    integer(PDM_l_num_s), pointer :: face_vtx_idx(:)
+    integer(PDM_g_num_s), pointer :: face_vtx(:)
+    integer(PDM_l_num_s), pointer :: cell_face_idx(:)
+    integer(PDM_g_num_s), pointer :: cell_face(:)
+
+    integer(c_int) :: c_n_elt
+    integer(c_int) :: c_n_face
+    type(c_ptr)    :: c_face_vtx_idx
+    type(c_ptr)    :: c_face_vtx
+    type(c_ptr)    :: c_cell_face_idx
+    type(c_ptr)    :: c_cell_face
+
+    c_n_elt = PDM_DMesh_nodal_section_n_elt_get(dmn,       &
+                                                geom_kind, &
+                                                id_section)
+
+    call PDM_DMesh_nodal_section_poly3d_get_cf(dmn,             &
+                                               geom_kind,       &
+                                               id_section,      &
+                                               c_n_face,        &
+                                               c_face_vtx_idx,  &
+                                               c_face_vtx,      &
+                                               c_cell_face_idx, &
+                                               c_cell_face,     &
+                                               owner)
+
+    n_face = c_n_face
+
+    call c_f_pointer(c_face_vtx_idx, &
+                     face_vtx_idx,   &
+                     [c_n_face+1])
+
+    call c_f_pointer(c_face_vtx, &
+                     face_vtx,   &
+                     [face_vtx_idx(c_n_face+1)])
+
+    call c_f_pointer(c_cell_face_idx, &
+                     cell_face_idx,   &
+                     [c_n_elt+1])
+
+    call c_f_pointer(c_cell_face, &
+                     cell_face,   &
+                     [cell_face_idx(c_n_elt+1)])
+
+  end subroutine PDM_DMesh_nodal_section_poly3d_get_
+
   subroutine PDM_DMesh_nodal_section_group_elmt_set_ (dmn,             &
                                                       geom_kind,       &
                                                       n_group_elmt,    &
@@ -383,6 +994,46 @@ module pdm_dmesh_nodal
 
   end subroutine PDM_DMesh_nodal_section_group_elmt_set_
 
+  subroutine PDM_DMesh_nodal_section_group_elmt_get_ (dmn,             &
+                                                      geom_kind,       &
+                                                      n_group_elmt,    &
+                                                      dgroup_elmt_idx, &
+                                                      dgroup_elmt,     &
+                                                      owner)
+
+    use iso_c_binding
+    implicit none
+
+    type (c_ptr), value           :: dmn
+    integer, intent(in)           :: geom_kind
+    integer                       :: n_group_elmt
+    integer, intent(in)           :: owner
+    integer(PDM_l_num_s), pointer :: dgroup_elmt_idx(:)
+    integer(PDM_g_num_s), pointer :: dgroup_elmt(:)
+
+    integer(c_int) :: c_n_group_elmt
+    type(c_ptr)    :: c_dgroup_elmt_idx
+    type(c_ptr)    :: c_dgroup_elmt
+
+    call PDM_DMesh_nodal_section_group_elmt_get_cf(dmn,               &
+                                                   geom_kind,         &
+                                                   c_n_group_elmt,    &
+                                                   c_dgroup_elmt_idx, &
+                                                   c_dgroup_elmt,     &
+                                                   owner)
+
+    n_group_elmt = c_n_group_elmt
+
+    call c_f_pointer(c_dgroup_elmt_idx, &
+                     dgroup_elmt_idx,   &
+                     [n_group_elmt+1])
+
+    call c_f_pointer(c_dgroup_elmt, &
+                     dgroup_elmt,   &
+                     [dgroup_elmt_idx(n_group_elmt+1)])
+
+  end subroutine PDM_DMesh_nodal_section_group_elmt_get_
+
   !>
   !!
   !! \brief Define partition vertices
@@ -421,5 +1072,30 @@ module pdm_dmesh_nodal
                                       owner)
 
   end subroutine PDM_DMesh_nodal_coord_set_
+
+  subroutine PDM_DMesh_nodal_vtx_get_ (dmn,    &
+                                       coords, &
+                                       owner)
+
+    use iso_c_binding
+    implicit none
+
+    type (c_ptr), value       :: dmn
+    integer(c_int)            :: c_n_vtx
+    integer, intent(in)       :: owner
+    double precision, pointer :: coords(:,:)
+
+    type(c_ptr) :: c_coords
+
+    c_n_vtx = PDM_DMesh_nodal_n_vtx_get(dmn)
+
+    c_coords = PDM_DMesh_nodal_vtx_get_cf(dmn, &
+                                          owner)
+
+    call c_f_pointer(c_coords, &
+                     coords,   &
+                     [3,c_n_vtx])
+
+  end subroutine PDM_DMesh_nodal_vtx_get_
 
 end module pdm_dmesh_nodal

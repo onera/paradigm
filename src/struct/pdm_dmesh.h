@@ -334,6 +334,19 @@ PDM_dmesh_find_topological_ridges
   int          **out_dridge_face_group
 );
 
+
+/**
+ * \brief Compute distributions for all entities
+ *
+ * \param [inout] dmesh
+ */
+
+void
+PDM_dmesh_compute_distributions
+(
+ PDM_dmesh_t *dmesh
+);
+
 /*----------------------------------------------------------------------------*/
 
 #ifdef __cplusplus

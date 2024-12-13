@@ -959,6 +959,25 @@ const int                     id_part
 
 
 /**
+ * \brief Return element to entity indirection for a section
+ *
+ * \param [in]  pmn                     Pointer to \ref PDM_part_mesh_nodal_t object
+ * \param [in]  i_section               Section identifier
+ * \param [in]  id_part                 Partition identifier
+ * \param [in]  ownership               Data ownership
+ *
+ */
+int *
+PDM_part_mesh_nodal_section_elmt_to_entity_get
+(
+      PDM_part_mesh_nodal_t *pmn,
+const int                    i_section,
+const int                    id_part,
+      PDM_ownership_t        ownership
+);
+
+
+/**
  * \brief  Return parent num of vertices
  *
  * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object

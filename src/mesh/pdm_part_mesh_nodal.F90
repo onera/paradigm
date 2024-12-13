@@ -25,12 +25,24 @@ module PDM_part_mesh_nodal
 
   implicit none
 
+  interface PDM_part_mesh_nodal_sections_id_in_geom_kind_get ; module procedure &
+  PDM_part_mesh_nodal_sections_id_in_geom_kind_get_
+  end interface
+
+  interface PDM_part_mesh_nodal_section_in_geom_kind_elt_type_get ; module procedure &
+  PDM_part_mesh_nodal_section_in_geom_kind_elt_type_get_
+  end interface
+
   interface PDM_part_mesh_nodal_section_n_elt_get ; module procedure &
   PDM_part_mesh_nodal_section_n_elt_get_
   end interface
 
   interface PDM_part_mesh_nodal_section_std_get ; module procedure &
   PDM_part_mesh_nodal_section_std_get_
+  end interface
+
+  interface PDM_part_mesh_nodal_section_std_set ; module procedure &
+  PDM_part_mesh_nodal_section_std_set_
   end interface
 
   interface PDM_part_mesh_nodal_vtx_g_num_get ; module procedure &
@@ -52,6 +64,101 @@ module PDM_part_mesh_nodal
   private :: PDM_part_mesh_nodal_section_elt_type_get_
 
   interface
+
+    !>
+    !! \brief  Return number of sections in a specific geometry kind
+    !!
+    !! \param [in]  pmn        Pointer to \ref PDM_part_mesh_nodal_t object
+    !! \param [in]  geom_kind  Geometry kind (corner, ridge, surface or volume)
+    !!
+    !! \return  Number of sections
+    !!
+    !!
+
+    function PDM_part_mesh_nodal_n_section_in_geom_kind_get(pmn,       &
+                                                            geom_kind) &
+    result(n_section) &
+    bind (c, name='PDM_part_mesh_nodal_n_section_in_geom_kind_get')
+      use iso_c_binding
+      implicit none
+
+      type(c_ptr),    value :: pmn
+      integer(c_int), value :: geom_kind
+      integer(c_int)        :: n_section
+
+    end function PDM_part_mesh_nodal_n_section_in_geom_kind_get
+
+    !>
+    !! \brief  Return ids of sections in a specific geometry kind
+    !!
+    !! \param [in]  pmn        Pointer to \ref PDM_part_mesh_nodal_t object
+    !! \param [in]  geom_kind  Geometry kind (corner, ridge, surface or volume)
+    !!
+    !! \return  Ids of sections
+    !!
+    !!
+
+    function PDM_part_mesh_nodal_sections_id_in_geom_kind_get_cf(pmn,       &
+                                                                 geom_kind) &
+    result(sections_id) &
+    bind (c, name='PDM_part_mesh_nodal_sections_id_in_geom_kind_get')
+      use iso_c_binding
+      implicit none
+
+      type(c_ptr),    value :: pmn
+      integer(c_int), value :: geom_kind
+      type(c_ptr)           :: sections_id
+
+    end function PDM_part_mesh_nodal_sections_id_in_geom_kind_get_cf
+
+    !>
+    !! \brief  Return type of section
+    !!
+    !! \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
+    !! \param [in]  geom_kind    Geometry kind (corner, ridge, surface or volume)
+    !! \param [in]  id_section   Section identifier
+    !!
+    !! \return  Type of section
+    !!
+    !!
+
+    function PDM_part_mesh_nodal_section_in_geom_kind_elt_type_get_cf(pmn,        &
+                                                                      geom_kind,  &
+                                                                      id_section) &
+    result(elt_type) &
+    bind (c, name='PDM_part_mesh_nodal_section_in_geom_kind_elt_type_get')
+      use iso_c_binding
+      implicit none
+
+      type(c_ptr),    value :: pmn
+      integer(c_int), value :: geom_kind
+      integer(c_int), value :: id_section
+      integer(c_int)        :: elt_type
+
+    end function PDM_part_mesh_nodal_section_in_geom_kind_elt_type_get_cf
+
+    !>
+    !! \brief  Add a new section to the current mesh
+    !!
+    !! \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
+    !! \param [in]  t_elt        Section type
+    !!
+    !! \return Section identifier
+    !!
+    !!
+
+    function PDM_part_mesh_nodal_section_add (pmn,   &
+                                              t_elt) &
+    result (i_section) &
+    bind (c, name='PDM_part_mesh_nodal_section_add')
+      use iso_c_binding
+      implicit none
+
+      type(c_ptr),    value :: pmn
+      integer(c_int), value :: t_elt
+      integer(c_int)        :: i_section
+
+    end function PDM_part_mesh_nodal_section_add
 
     !>
     !!
@@ -115,6 +222,43 @@ module PDM_part_mesh_nodal
       type (c_ptr)          :: connec, parent_num
 
     end subroutine PDM_part_mesh_nodal_section_std_get_cf
+
+    !>
+    !!
+    !! \brief Define a standard section
+    !!
+    !! \param [in]  pmn                     Pointer to \ref PDM_part_mesh_nodal_t object
+    !! \param [in]  i_section               Section identifier
+    !! \param [in]  i_part                  Partition identifier
+    !! \param [in]  n_elts                  Number of elements
+    !! \param [in]  connec                  Connectivity
+    !! \param [in]  numabs                  Global numbering
+    !! \param [in]  parent_num              Parent numbering or NULL
+    !! \param [in]  parent_entity_g_num     Parent global numbering or NULL
+    !!
+
+    subroutine PDM_part_mesh_nodal_section_std_set_cf(pmn,                 &
+                                                      i_section,           &
+                                                      i_part,              &
+                                                      n_elts,              &
+                                                      connec,              &
+                                                      numabs,              &
+                                                      parent_num,          &
+                                                      parent_entity_g_num, &
+                                                      ownership)           &
+
+      bind (c, name = 'PDM_part_mesh_nodal_section_std_set')
+
+      use iso_c_binding
+      implicit none
+
+      type (c_ptr),   value :: pmn
+      integer(c_int), value :: i_section, i_part, ownership, n_elts
+
+      type (c_ptr), value :: numabs, parent_entity_g_num
+      type (c_ptr), value :: connec, parent_num
+
+    end subroutine PDM_part_mesh_nodal_section_std_set_cf
 
     !>
     !!
@@ -198,7 +342,48 @@ module PDM_part_mesh_nodal
 
   contains
 
+    subroutine PDM_part_mesh_nodal_sections_id_in_geom_kind_get_(pmn,       &
+                                                                 geom_kind, &
+                                                                 sections_id)
+      use iso_c_binding
+      implicit none
 
+      type(c_ptr), value   :: pmn
+      integer, intent(in)  :: geom_kind
+      integer, pointer :: sections_id(:)
+
+      type(c_ptr) :: c_sections_id
+      integer :: n_section
+
+      n_section = PDM_part_mesh_nodal_n_section_in_geom_kind_get(pmn, &
+                                                                 geom_kind)
+
+      c_sections_id = PDM_part_mesh_nodal_sections_id_in_geom_kind_get_cf(pmn, &
+                                                                          geom_kind)
+
+      call c_f_pointer(c_sections_id, &
+                       sections_id,   &
+                       [n_section])
+
+    end subroutine PDM_part_mesh_nodal_sections_id_in_geom_kind_get_
+
+    subroutine PDM_part_mesh_nodal_section_in_geom_kind_elt_type_get_(pmn,        &
+                                                                      geom_kind,  &
+                                                                      id_section, &
+                                                                      elt_type)
+      use iso_c_binding
+      implicit none
+
+      type(c_ptr), value   :: pmn
+      integer, intent(in)  :: geom_kind
+      integer, intent(in)  :: id_section
+      integer              :: elt_type
+
+      elt_type = PDM_part_mesh_nodal_section_in_geom_kind_elt_type_get_cf(pmn,       &
+                                                                          geom_kind, &
+                                                                          id_section)
+
+    end subroutine PDM_part_mesh_nodal_section_in_geom_kind_elt_type_get_
 
     subroutine PDM_part_mesh_nodal_section_n_elt_get_(pmn,       &
                                                       i_section, &
@@ -219,6 +404,70 @@ module PDM_part_mesh_nodal
                                                        i_part)
 
     end subroutine PDM_part_mesh_nodal_section_n_elt_get_
+
+
+
+    subroutine PDM_part_mesh_nodal_section_std_set_(pmn,                 &
+                                                    i_section,           &
+                                                    i_part,              &
+                                                    n_elts,              &
+                                                    connec,              &
+                                                    numabs,              &
+                                                    parent_num,          &
+                                                    parent_entity_g_num, &
+                                                    ownership)
+      ! Return standard section description
+      use iso_c_binding
+      implicit none
+
+      type (c_ptr),   value          :: pmn                    ! Pointer to PDM_part_mesh_nodal_t object
+      integer, intent(in)            :: i_section              ! Section identifier
+      integer, intent(in)            :: i_part                 ! Partition identifier
+      integer, intent(in)            :: ownership              ! Data ownership
+      integer, intent(in)            :: n_elts                 ! Number of elements
+
+      integer(pdm_l_num_s), pointer  :: connec(:)              ! Connectivity
+      integer(pdm_g_num_s), pointer  :: numabs(:)              ! Global ids
+      integer(pdm_l_num_s), pointer  :: parent_num(:)          ! Parent local ids or *null()*
+      integer(pdm_g_num_s), pointer  :: parent_entity_g_num(:) ! Parent global ids or *null()*
+
+      type (c_ptr)   :: c_connec
+      type (c_ptr)   :: c_numabs
+      type (c_ptr)   :: c_parent_num
+      type (c_ptr)   :: c_parent_entity_g_num
+
+      c_connec = C_NULL_PTR
+      if (associated(connec)) then
+        c_connec = c_loc(connec)
+      end if
+
+      c_numabs = C_NULL_PTR
+      if (associated(numabs)) then
+        c_numabs = c_loc(numabs)
+      end if
+
+      c_parent_num = C_NULL_PTR
+      if (associated(parent_num)) then
+        c_parent_num = c_loc(parent_num)
+      end if
+
+      c_parent_entity_g_num = C_NULL_PTR
+      if (associated(parent_entity_g_num)) then
+        c_parent_entity_g_num = c_loc(parent_entity_g_num)
+      end if
+
+      call PDM_part_mesh_nodal_section_std_set_cf(pmn,                   &
+                                                  i_section,             &
+                                                  i_part,                &
+                                                  n_elts,                &
+                                                  c_connec,              &
+                                                  c_numabs,              &
+                                                  c_parent_num,          &
+                                                  c_parent_entity_g_num, &
+                                                  ownership)
+
+    end subroutine PDM_part_mesh_nodal_section_std_set_
+
 
 
 
@@ -484,11 +733,11 @@ module PDM_part_mesh_nodal
     if (associated(coords)) then
       c_coords = c_loc (coords)
     endif
-      
+
     c_numabs = C_NULL_PTR
     if (associated(numabs)) then
       c_numabs = c_loc (numabs)
-    endif    
+    endif
 
     call  PDM_part_mesh_nodal_coord_set_c (mesh, id_part, n_vtx, c_coords, c_numabs, owner)
 
@@ -593,17 +842,17 @@ module PDM_part_mesh_nodal
     if (associated(face_vtx_idx)) then
       c_face_vtx_idx = c_loc (face_vtx_idx)
     endif
-      
+
     c_face_vtx = C_NULL_PTR
     if (associated(face_vtx)) then
       c_face_vtx = c_loc (face_vtx)
     endif
-      
+
     c_numabs = C_NULL_PTR
     if (associated(numabs)) then
       c_numabs = c_loc (numabs)
     endif
-      
+
 
     call  PDM_part_mesh_nodal_faces_facevtx_add_c (mesh, id_part, n_face, c_face_vtx_idx, c_face_vtx, &
                                                    c_numabs, owner)
@@ -658,22 +907,22 @@ module PDM_part_mesh_nodal
     if (associated(edge_vtx)) then
       c_edge_vtx = c_loc (edge_vtx)
     endif
-      
+
     c_face_edge_idx = C_NULL_PTR
     if (associated(face_edge_idx)) then
       c_face_edge_idx = c_loc (face_edge_idx)
     endif
-      
+
     c_face_edge = C_NULL_PTR
     if (associated(face_edge)) then
       c_face_edge = c_loc (face_edge)
     endif
-      
+
     c_numabs = C_NULL_PTR
     if (associated(numabs)) then
       c_numabs = c_loc (numabs)
     endif
-      
+
 
     call  PDM_part_mesh_nodal_face2d_faceedge_add_c (mesh, id_part, n_elt, n_edge, c_edge_vtx, &
                                                      c_face_edge_idx, c_face_edge, c_numabs, owner)
@@ -733,33 +982,33 @@ module PDM_part_mesh_nodal
     c_face_vtx_idx = C_NULL_PTR
     if (associated(face_vtx_idx)) then
       c_face_vtx_idx = c_loc (face_vtx_idx)
-    endif 
-      
+    endif
+
     c_face_vtx = C_NULL_PTR
     if (associated(face_vtx)) then
       c_face_vtx = c_loc (face_vtx)
-    endif 
-      
+    endif
+
     c_face_ln_to_gn = C_NULL_PTR
     if (associated(face_ln_to_gn)) then
       c_face_ln_to_gn = c_loc (face_ln_to_gn)
-    endif 
-      
+    endif
+
     c_cell_face_idx = C_NULL_PTR
     if (associated(cell_face_idx)) then
       c_cell_face_idx = c_loc (cell_face_idx)
-    endif 
-      
+    endif
+
     c_cell_face = C_NULL_PTR
     if (associated(cell_face)) then
       c_cell_face = c_loc (cell_face)
-    endif 
-      
+    endif
+
     c_numabs = C_NULL_PTR
     if (associated(numabs)) then
       c_numabs = c_loc (numabs)
-    endif 
-      
+    endif
+
 
     call  PDM_part_mesh_nodal_cell3d_cellface_add_c (mesh, id_part, n_elt, n_face, c_face_vtx_idx, c_face_vtx, &
                                                      c_face_ln_to_gn, c_cell_face_idx, c_cell_face, c_numabs, owner)

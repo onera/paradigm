@@ -107,9 +107,13 @@ _closest_points_reverse_results
   assert (cls->tgt_cloud->closest_src_gnum != NULL);
   assert (cls->tgt_cloud->closest_src_dist != NULL);
 
-  int* n_points = (int * ) malloc( cls->tgt_cloud->n_part * sizeof(int));
-  PDM_g_num_t **tgt_g_num   = (PDM_g_num_t ** ) malloc( cls->tgt_cloud->n_part * sizeof(PDM_g_num_t *));
-  int         **tgt_g_num_n = (int         ** ) malloc( cls->tgt_cloud->n_part * sizeof(int         *));
+  int          *n_points    = NULL;
+  PDM_g_num_t **tgt_g_num   = NULL;
+  int         **tgt_g_num_n = NULL;
+  PDM_malloc(n_points   , cls->tgt_cloud->n_part, int          );
+  PDM_malloc(tgt_g_num  , cls->tgt_cloud->n_part, PDM_g_num_t *);
+  PDM_malloc(tgt_g_num_n, cls->tgt_cloud->n_part, int         *);
+
   for (int i_part = 0; i_part < cls->tgt_cloud->n_part; i_part++) {
 
     // if (1) {
@@ -122,8 +126,8 @@ _closest_points_reverse_results
     // }
 
     n_points[i_part] = cls->tgt_cloud->n_points[i_part] * cls->n_closest;
-    tgt_g_num  [i_part] = (PDM_g_num_t * ) malloc( n_points[i_part] * sizeof(PDM_g_num_t));
-    tgt_g_num_n[i_part] = (int         * ) malloc( n_points[i_part] * sizeof(int        ));
+    PDM_malloc(tgt_g_num  [i_part], n_points[i_part], PDM_g_num_t);
+    PDM_malloc(tgt_g_num_n[i_part], n_points[i_part], int        );
 
     // PDM_log_trace_array_long(cls->tgt_cloud->closest_src_gnum[i_part], cls->tgt_cloud->n_points[i_part], "cls->tgt_cloud->closest_src_gnum:: " );
 
@@ -205,15 +209,15 @@ _closest_points_reverse_results
                           (void **) cls->tgt_cloud->closest_src_dist,
                                     &block_src_dist_n,
                           (void **) &block_tgt_in_src_dist);
-  free(block_src_dist_n); // Same than block_tgt_in_src_n
+  PDM_free(block_src_dist_n); // Same than block_tgt_in_src_n
 
   for (int i_part = 0; i_part < cls->tgt_cloud->n_part; i_part++) {
-    free(tgt_g_num  [i_part]);
-    free(tgt_g_num_n[i_part]);
+    PDM_free(tgt_g_num  [i_part]);
+    PDM_free(tgt_g_num_n[i_part]);
   }
-  free(tgt_g_num  );
-  free(tgt_g_num_n);
-  free(n_points);
+  PDM_free(tgt_g_num  );
+  PDM_free(tgt_g_num_n);
+  PDM_free(n_points);
 
   int i_rank;
   int n_rank;
@@ -258,10 +262,15 @@ _closest_points_reverse_results
     for (int i_point = 0; i_point < cls->src_cloud->n_points[i_part]; i_point++){
       max_tgt_in_src_n = PDM_MAX( max_tgt_in_src_n, tgt_in_src_n[i_part][i_point] );
     }
-    int  idx_read  = 0;
-    int  idx_write = 0;
-    int    *tgt_order = (int    *) malloc(sizeof(int   ) * max_tgt_in_src_n);
-    double *tgt_dist  = (double *) malloc(sizeof(double) * max_tgt_in_src_n);
+
+    int idx_read  = 0;
+    int idx_write = 0;
+
+    int    *tgt_order = NULL;
+    double *tgt_dist  = NULL;
+    PDM_malloc(tgt_order, max_tgt_in_src_n, int   );
+    PDM_malloc(tgt_dist , max_tgt_in_src_n, double);
+
     for (int i_point = 0; i_point < cls->src_cloud->n_points[i_part]; i_point++){
       if (tgt_in_src_n[i_part][i_point] > 0){
 
@@ -292,28 +301,28 @@ _closest_points_reverse_results
         idx_read = idx_read + n_tgt;
       }
     }
-    free(tgt_order);
-    free(tgt_dist);
+    PDM_free(tgt_order);
+    PDM_free(tgt_dist);
   }
 
-  cls->src_cloud->tgt_in_src_idx = (int **) malloc( cls->src_cloud->n_part * sizeof(int *));
+  PDM_malloc(cls->src_cloud->tgt_in_src_idx, cls->src_cloud->n_part, int *);
   for (int i_part = 0; i_part < cls->src_cloud->n_part; i_part++) {
     // PDM_log_trace_array_int(tgt_in_src_n[i_part]     , cls->src_cloud->n_points[i_part], "cls->src_cloud->n_points[i_part]:: " );
     cls->src_cloud->tgt_in_src_idx[i_part] = PDM_array_new_idx_from_sizes_int(tgt_in_src_n[i_part], cls->src_cloud->n_points[i_part]);
     /* Réallocation à la bonne taille sans doublon */
-    cls->src_cloud->tgt_in_src     [i_part] = realloc(cls->src_cloud->tgt_in_src     [i_part], sizeof(PDM_g_num_t) * cls->src_cloud->tgt_in_src_idx[i_part][cls->src_cloud->n_points[i_part]]);
-    cls->src_cloud->tgt_in_src_dist[i_part] = realloc(cls->src_cloud->tgt_in_src_dist[i_part], sizeof(double)      * cls->src_cloud->tgt_in_src_idx[i_part][cls->src_cloud->n_points[i_part]]);
-    free(tgt_in_src_n[i_part]);
-    free(useless_stride[i_part]);
+    PDM_realloc(cls->src_cloud->tgt_in_src     [i_part] ,cls->src_cloud->tgt_in_src     [i_part] , cls->src_cloud->tgt_in_src_idx[i_part][cls->src_cloud->n_points[i_part]],PDM_g_num_t);
+    PDM_realloc(cls->src_cloud->tgt_in_src_dist[i_part] ,cls->src_cloud->tgt_in_src_dist[i_part] , cls->src_cloud->tgt_in_src_idx[i_part][cls->src_cloud->n_points[i_part]],double);
+    PDM_free(tgt_in_src_n[i_part]);
+    PDM_free(useless_stride[i_part]);
   }
-  free(tgt_in_src_n);
-  free(useless_stride);
+  PDM_free(tgt_in_src_n);
+  PDM_free(useless_stride);
 
   PDM_block_to_part_free(btp);
-  free(_block_distrib_idx);
-  free(block_tgt_in_src_n);
-  free(block_tgt_in_src_g_num);
-  free(block_tgt_in_src_dist);
+  PDM_free(_block_distrib_idx);
+  PDM_free(block_tgt_in_src_n);
+  PDM_free(block_tgt_in_src_g_num);
+  PDM_free(block_tgt_in_src_dist);
 }
 
 
@@ -343,13 +352,15 @@ PDM_closest_points_create
  const PDM_ownership_t owner
 )
 {
-  PDM_closest_point_t *closest = (PDM_closest_point_t *) malloc(sizeof(PDM_closest_point_t));
+  PDM_closest_point_t *closest;
+  PDM_malloc(closest, 1, PDM_closest_point_t);
 
-  closest->comm                         = comm;
-  closest->owner                        = owner;
-  closest->results_is_getted            = PDM_FALSE;
-  closest->tgt_in_src_results_is_getted = PDM_FALSE;
+  closest->comm                           = comm;
+  closest->owner                          = owner;
+  closest->results_is_getted              = PDM_FALSE;
+  closest->tgt_in_src_results_is_getted   = PDM_FALSE;
   closest->tgt_in_src_results_is_getted_d = PDM_FALSE;
+  closest->compute_reverse_results        = PDM_TRUE;
 
   closest->n_closest = n_closest;
   closest->src_cloud = NULL;
@@ -393,22 +404,22 @@ PDM_closest_points_n_part_cloud_set
   assert(cls->src_cloud == NULL);
   assert(cls->tgt_cloud == NULL);
 
-  cls->src_cloud = malloc (sizeof(_src_point_cloud_t));
-  cls->tgt_cloud = malloc (sizeof(_tgt_point_cloud_t));
+  PDM_malloc(cls->src_cloud, 1, _src_point_cloud_t);
+  PDM_malloc(cls->tgt_cloud, 1, _tgt_point_cloud_t);
 
   cls->src_cloud->n_part   = n_part_cloud_src;
-  cls->src_cloud->coords   = malloc (sizeof(double      *) * n_part_cloud_src);
-  cls->src_cloud->gnum     = malloc (sizeof(PDM_g_num_t *) * n_part_cloud_src);
-  cls->src_cloud->n_points = malloc (sizeof(int          ) * n_part_cloud_src);
+  PDM_malloc(cls->src_cloud->coords  , n_part_cloud_src, double      *);
+  PDM_malloc(cls->src_cloud->gnum    , n_part_cloud_src, PDM_g_num_t *);
+  PDM_malloc(cls->src_cloud->n_points, n_part_cloud_src, int          );
 
   cls->src_cloud->tgt_in_src_idx = NULL;
   cls->src_cloud->tgt_in_src     = NULL;
   cls->src_cloud->tgt_in_src_dist= NULL;
 
   cls->tgt_cloud->n_part            = n_part_cloud_tgt;
-  cls->tgt_cloud->coords            = malloc (sizeof(double      *) * n_part_cloud_tgt);
-  cls->tgt_cloud->gnum              = malloc (sizeof(PDM_g_num_t *) * n_part_cloud_tgt);
-  cls->tgt_cloud->n_points          = malloc (sizeof(int          ) * n_part_cloud_tgt);
+  PDM_malloc(cls->tgt_cloud->coords  , n_part_cloud_tgt, double      *);
+  PDM_malloc(cls->tgt_cloud->gnum    , n_part_cloud_tgt, PDM_g_num_t *);
+  PDM_malloc(cls->tgt_cloud->n_points, n_part_cloud_tgt, int          );
   cls->tgt_cloud->closest_src_gnum  = NULL;
   cls->tgt_cloud->closest_src_dist  = NULL;
 }
@@ -561,10 +572,14 @@ PDM_closest_point_t *cls
   for (int i_part = 0; i_part < cls->tgt_cloud->n_part; i_part++)
     n_tgt += cls->tgt_cloud->n_points[i_part];
 
-  double      *tgt_coord = malloc (sizeof(double)      * n_tgt * 3);
-  PDM_g_num_t *tgt_g_num = malloc (sizeof(PDM_g_num_t) * n_tgt);
-  PDM_g_num_t *closest_src_gnum = malloc (sizeof(PDM_g_num_t) * n_tgt * cls->n_closest);
-  double      *closest_src_dist = malloc (sizeof(double)      * n_tgt * cls->n_closest);
+  double      *tgt_coord        = NULL;
+  PDM_g_num_t *tgt_g_num        = NULL;
+  PDM_g_num_t *closest_src_gnum = NULL;
+  double      *closest_src_dist = NULL;
+  PDM_malloc(tgt_coord       , n_tgt * 3             , double     );
+  PDM_malloc(tgt_g_num       , n_tgt                 , PDM_g_num_t);
+  PDM_malloc(closest_src_gnum, n_tgt * cls->n_closest, PDM_g_num_t);
+  PDM_malloc(closest_src_dist, n_tgt * cls->n_closest, double     );
 
   n_tgt = 0;
   for (int i_part = 0; i_part < cls->tgt_cloud->n_part; i_part++) {
@@ -612,18 +627,18 @@ PDM_closest_point_t *cls
   // PDM_log_trace_array_double(closest_src_dist, n_tgt * cls->n_closest, "closest_src_dist:: " );
 
   /* Restore partitions */
-  free (tgt_coord);
-  free (tgt_g_num);
+  PDM_free(tgt_coord);
+  PDM_free(tgt_g_num);
   n_tgt = 0;
 
-  cls->tgt_cloud->closest_src_gnum = malloc (sizeof(PDM_g_num_t *) * cls->tgt_cloud->n_part);
-  cls->tgt_cloud->closest_src_dist = malloc (sizeof(double *)      * cls->tgt_cloud->n_part);
+  PDM_malloc(cls->tgt_cloud->closest_src_gnum, cls->tgt_cloud->n_part, PDM_g_num_t *);
+  PDM_malloc(cls->tgt_cloud->closest_src_dist, cls->tgt_cloud->n_part, double      *);
 
   for (int i_part = 0; i_part < cls->tgt_cloud->n_part; i_part++) {
     int s_closest_src = cls->n_closest * cls->tgt_cloud->n_points[i_part];
 
-    cls->tgt_cloud->closest_src_gnum[i_part] = malloc (sizeof(PDM_g_num_t) * s_closest_src);
-    cls->tgt_cloud->closest_src_dist[i_part] = malloc (sizeof(double)      * s_closest_src);
+    PDM_malloc(cls->tgt_cloud->closest_src_gnum[i_part], s_closest_src, PDM_g_num_t);
+    PDM_malloc(cls->tgt_cloud->closest_src_dist[i_part], s_closest_src, double     );
 
     for (int i = 0; i < cls->tgt_cloud->n_points[i_part]; i++) {
       for (int j = 0; j < cls->n_closest; j++) {
@@ -636,13 +651,15 @@ PDM_closest_point_t *cls
     }
     n_tgt += cls->n_closest * cls->tgt_cloud->n_points[i_part];
   }
-  free (closest_src_gnum);
-  free (closest_src_dist);
+  PDM_free(closest_src_gnum);
+  PDM_free(closest_src_dist);
 
 
   /* Sort closest source points in ascending order of global id */
-  int    *order = malloc(sizeof(int   ) * cls->n_closest);
-  double *tmp   = malloc(sizeof(double) * cls->n_closest);
+  int    *order = NULL;
+  double *tmp   = NULL;
+  PDM_malloc(order, cls->n_closest, int   );
+  PDM_malloc(tmp  , cls->n_closest, double);
   for (int i_part = 0; i_part < cls->tgt_cloud->n_part; i_part++) {
     for (int i = 0; i < cls->tgt_cloud->n_points[i_part]; i++) {
       for (int j = 0; j < cls->n_closest; j++) {
@@ -661,8 +678,8 @@ PDM_closest_point_t *cls
       }
     }
   }
-  free(tmp);
-  free(order);
+  PDM_free(tmp);
+  PDM_free(order);
 
 
   //-->GPU
@@ -670,21 +687,23 @@ PDM_closest_point_t *cls
   PDM_para_octree_free (octree);
   //<--
 
-  _closest_points_reverse_results(cls);
+  if (cls->compute_reverse_results == PDM_TRUE) {
 
+    _closest_points_reverse_results(cls);
 
-  /* Create ptp object */
-  // TO DO: transport triplets to avoid costly gnum_location
-  cls->ptp = PDM_part_to_part_create((const PDM_g_num_t **) cls->src_cloud->gnum,
-                                     (const int          *) cls->src_cloud->n_points,
-                                                            cls->src_cloud->n_part,
-                                     (const PDM_g_num_t **) cls->tgt_cloud->gnum,
-                                     (const int          *) cls->tgt_cloud->n_points,
-                                                            cls->tgt_cloud->n_part,
-                                     (const int         **) cls->src_cloud->tgt_in_src_idx,
-                                     (const PDM_g_num_t **) cls->src_cloud->tgt_in_src,
-                                                            cls->comm);
+    /* Create ptp object */
+    // TO DO: transport triplets to avoid costly gnum_location
+    cls->ptp = PDM_part_to_part_create((const PDM_g_num_t **) cls->src_cloud->gnum,
+                                       (const int          *) cls->src_cloud->n_points,
+                                                              cls->src_cloud->n_part,
+                                       (const PDM_g_num_t **) cls->tgt_cloud->gnum,
+                                       (const int          *) cls->tgt_cloud->n_points,
+                                                              cls->tgt_cloud->n_part,
+                                       (const int         **) cls->src_cloud->tgt_in_src_idx,
+                                       (const PDM_g_num_t **) cls->src_cloud->tgt_in_src,
+                                                              cls->comm);
 
+  }
 
   PDM_timer_hang_on(cls->timer);
 
@@ -749,6 +768,11 @@ PDM_closest_points_tgt_in_src_get
 )
 {
 
+  if (cls->compute_reverse_results == PDM_FALSE) {
+    PDM_error(__FILE__, __LINE__, 0,
+      "PDM_closest_points_tgt_in_src_get error: reverse results not available.\n");
+  }
+
   assert (cls->src_cloud->tgt_in_src_idx != NULL);
   assert (cls->src_cloud->tgt_in_src != NULL);
 
@@ -783,6 +807,11 @@ PDM_closest_points_tgt_in_src_dist_get
 )
 {
 
+  if (cls->compute_reverse_results == PDM_FALSE) {
+    PDM_error(__FILE__, __LINE__, 0,
+      "PDM_closest_points_tgt_in_src_dist_get error: reverse results not available.\n");
+  }
+
   assert (cls->src_cloud->tgt_in_src_idx != NULL);
   assert (cls->src_cloud->tgt_in_src_dist != NULL);
 
@@ -814,7 +843,7 @@ PDM_closest_point_t  *cls
     if (cls->tgt_cloud->closest_src_gnum != NULL) {
       for (int j = 0; j < cls->tgt_cloud->n_part ; j++) {
         if (cls->tgt_cloud->closest_src_gnum[j] != NULL) {
-          free (cls->tgt_cloud->closest_src_gnum[j]);
+          PDM_free(cls->tgt_cloud->closest_src_gnum[j]);
         }
       }
     }
@@ -822,89 +851,93 @@ PDM_closest_point_t  *cls
     if (cls->tgt_cloud->closest_src_dist != NULL) {
       for (int j = 0; j < cls->tgt_cloud->n_part ; j++) {
         if (cls->tgt_cloud->closest_src_dist[j] != NULL) {
-          free (cls->tgt_cloud->closest_src_dist[j]);
+          PDM_free(cls->tgt_cloud->closest_src_dist[j]);
         }
       }
     }
   }
 
-  free (cls->tgt_cloud->closest_src_gnum);
-  free (cls->tgt_cloud->closest_src_dist);
+  PDM_free(cls->tgt_cloud->closest_src_gnum);
+  PDM_free(cls->tgt_cloud->closest_src_dist);
 
-  int free_tgt_in_src_gnum = (cls->owner == PDM_OWNERSHIP_KEEP) ||
-     ( cls->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !cls->tgt_in_src_results_is_getted)||
-     ( cls->owner == PDM_OWNERSHIP_USER                 && !cls->tgt_in_src_results_is_getted); // Dernière condition pour le python essentiellement ou si un utilisateur n'a pas besoin de ce résultats
-  int free_tgt_in_src_dist = (cls->owner == PDM_OWNERSHIP_KEEP) ||
-     ( cls->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !cls->tgt_in_src_results_is_getted_d)||
-     ( cls->owner == PDM_OWNERSHIP_USER                 && !cls->tgt_in_src_results_is_getted_d);
+  if (cls->compute_reverse_results == PDM_TRUE) {
 
-  if (free_tgt_in_src_gnum) {
-    if (cls->src_cloud->tgt_in_src != NULL) {
-      for (int j = 0; j < cls->src_cloud->n_part ; j++) {
-        if (cls->src_cloud->tgt_in_src[j] != NULL) {
-          free (cls->src_cloud->tgt_in_src[j]);
+    int free_tgt_in_src_gnum = (cls->owner == PDM_OWNERSHIP_KEEP) ||
+      ( cls->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !cls->tgt_in_src_results_is_getted)||
+      ( cls->owner == PDM_OWNERSHIP_USER                 && !cls->tgt_in_src_results_is_getted); // Dernière condition pour le python essentiellement ou si un utilisateur n'a pas besoin de ce résultats
+    int free_tgt_in_src_dist = (cls->owner == PDM_OWNERSHIP_KEEP) ||
+      ( cls->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !cls->tgt_in_src_results_is_getted_d)||
+      ( cls->owner == PDM_OWNERSHIP_USER                 && !cls->tgt_in_src_results_is_getted_d);
+
+    if (free_tgt_in_src_gnum) {
+      if (cls->src_cloud->tgt_in_src != NULL) {
+        for (int j = 0; j < cls->src_cloud->n_part ; j++) {
+          if (cls->src_cloud->tgt_in_src[j] != NULL) {
+            PDM_free(cls->src_cloud->tgt_in_src[j]);
+          }
         }
       }
     }
-  }
-  if (free_tgt_in_src_dist) {
-    if (cls->src_cloud->tgt_in_src_dist != NULL) {
-      for (int j = 0; j < cls->src_cloud->n_part ; j++) {
-        if (cls->src_cloud->tgt_in_src_dist[j] != NULL) {
-          free (cls->src_cloud->tgt_in_src_dist[j]);
+    if (free_tgt_in_src_dist) {
+      if (cls->src_cloud->tgt_in_src_dist != NULL) {
+        for (int j = 0; j < cls->src_cloud->n_part ; j++) {
+          if (cls->src_cloud->tgt_in_src_dist[j] != NULL) {
+            PDM_free(cls->src_cloud->tgt_in_src_dist[j]);
+          }
         }
       }
     }
-  }
-  if (free_tgt_in_src_gnum && free_tgt_in_src_dist) {
-    if (cls->src_cloud->tgt_in_src_idx != NULL) {
-      for (int j = 0; j < cls->src_cloud->n_part ; j++) {
-        if (cls->src_cloud->tgt_in_src_idx[j] != NULL) {
-          free (cls->src_cloud->tgt_in_src_idx[j]);
+    if (free_tgt_in_src_gnum && free_tgt_in_src_dist) {
+      if (cls->src_cloud->tgt_in_src_idx != NULL) {
+        for (int j = 0; j < cls->src_cloud->n_part ; j++) {
+          if (cls->src_cloud->tgt_in_src_idx[j] != NULL) {
+            PDM_free(cls->src_cloud->tgt_in_src_idx[j]);
+          }
         }
       }
     }
-  }
 
-  free (cls->src_cloud->tgt_in_src_idx);
-  free (cls->src_cloud->tgt_in_src);
-  free (cls->src_cloud->tgt_in_src_dist);
+    PDM_free(cls->src_cloud->tgt_in_src_idx);
+    PDM_free(cls->src_cloud->tgt_in_src);
+    PDM_free(cls->src_cloud->tgt_in_src_dist);
+
+    if (cls->ptp_ownership == PDM_OWNERSHIP_KEEP) {
+      PDM_part_to_part_free(cls->ptp);
+      cls->ptp = NULL;
+    }
+
+  }
 
   if (cls->tgt_cloud->gnum != NULL) {
-    free (cls->tgt_cloud->gnum);
+    PDM_free(cls->tgt_cloud->gnum);
   }
   if (cls->tgt_cloud->coords != NULL) {
-    free (cls->tgt_cloud->coords);
+    PDM_free(cls->tgt_cloud->coords);
   }
   if (cls->tgt_cloud->n_points != NULL) {
-    free (cls->tgt_cloud->n_points);
+    PDM_free(cls->tgt_cloud->n_points);
   }
   if (cls->tgt_cloud != NULL) {
-    free (cls->tgt_cloud);
+    PDM_free(cls->tgt_cloud);
   }
 
 
   if (cls->src_cloud->gnum != NULL) {
-    free (cls->src_cloud->gnum);
+    PDM_free(cls->src_cloud->gnum);
   }
   if (cls->src_cloud->coords != NULL) {
-    free (cls->src_cloud->coords);
+    PDM_free(cls->src_cloud->coords);
   }
   if (cls->src_cloud->n_points != NULL) {
-    free (cls->src_cloud->n_points);
+    PDM_free(cls->src_cloud->n_points);
   }
   if (cls->src_cloud != NULL) {
-    free (cls->src_cloud);
+    PDM_free(cls->src_cloud);
   }
 
   PDM_timer_free(cls->timer);
 
-  if (cls->ptp_ownership == PDM_OWNERSHIP_KEEP) {
-    PDM_part_to_part_free(cls->ptp);
-    cls->ptp = NULL;
-  }
-
-  free (cls);
+  PDM_free(cls);
 
 }
 
@@ -1012,7 +1045,7 @@ PDM_transform_to_parent_gnum
 
   PDM_part_to_block_free(ptb);
   PDM_block_to_part_free(btp);
-  free(block_parent);
+  PDM_free(block_parent);
 }
 
 /**
@@ -1117,8 +1150,32 @@ PDM_closest_points_part_to_part_get
  PDM_ownership_t       ownership
  )
 {
+
+  if (cls->compute_reverse_results == PDM_FALSE) {
+    PDM_error(__FILE__, __LINE__, 0,
+      "PDM_closest_points_part_to_part_get error: reverse results not available.\n");
+  }
+
   *ptp = cls->ptp;
   cls->ptp_ownership = ownership;
+}
+
+
+/**
+ *
+ * \brief Disable reverse results computation
+ *
+ * \param [inout] cls Pointer to \ref PDM_closest_point_t object
+ *
+ */
+
+void
+PDM_closest_points_reverse_results_disable
+(
+ PDM_closest_point_t *cls
+)
+{
+  cls->compute_reverse_results = PDM_FALSE;
 }
 
 #ifdef	__cplusplus

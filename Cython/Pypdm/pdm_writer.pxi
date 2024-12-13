@@ -91,11 +91,6 @@ cdef extern from "pdm_writer.h":
                              char                 *nom_geom,
                              int                   n_part)
 
-  int PDM_writer_geom_create_from_mesh_nodal(PDM_writer_t        *cs,
-                                            char                *nom_geom,
-                                            PDM_Mesh_nodal_t    *mesh)
-
-
   void PDM_writer_geom_coord_set(PDM_writer_t   *cs,
                                  int             id_geom,
                                  int             id_part,
@@ -341,17 +336,6 @@ cdef class Writer:
                                     nom_geom,
                                     n_part)
 
-
-  # def geom_create_from_mesh_nodal(self,   
-  #                                 char                *nom_geom,
-  #                                 PDM_Mesh_nodal_t    *mesh):
-  #     """
-  #     """
-
-  #     return PDM_writer_geom_create_from_mesh_nodal(self._wt,
-  #                                                   nom_geom,
-  #                                                   mesh)
-
   def geom_cell2d_cellface_add(self,
                                int id_geom,
                                int id_part,
@@ -549,6 +533,18 @@ cdef class Writer:
       """
   
       PDM_writer_geom_data_free(self._wt, id_geom)
+
+
+  def geom_data_reset(self, int id_geom):
+      """
+      geom_data_reset(id_geom)
+      Reset data describing the current geometry.
+
+      Parameters:
+        id_geom (int) : Geometry identifier
+      """
+
+      PDM_writer_geom_data_reset(self._wt, id_geom)
 
 
   def geom_free(self, int id_geom):

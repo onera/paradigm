@@ -55,7 +55,7 @@ _usage(int exit_code)
  *
  * \param [in]      argc       Number of arguments
  * \param [in]      argv       Arguments
- * \param [inout]   n_faceSeg  Number of vertices on the cube side
+ * \param [inout]   n_face_seg  Number of vertices on the cube side
  * \param [inout]   length     Cube length
  * \param [inout]   nTgt       Number of Target points
  * \param [inout]   n_part     Number of partitions par process
@@ -65,7 +65,7 @@ _usage(int exit_code)
 static void
 _read_args(int            argc,
            char         **argv,
-           PDM_g_num_t   *n_faceSeg,
+           PDM_g_num_t   *n_face_seg,
            double        *length,
            PDM_g_num_t   *nTgt,
            double        *radius,
@@ -88,8 +88,8 @@ _read_args(int            argc,
       if (i >= argc)
         _usage(EXIT_FAILURE);
       else {
-        long _n_faceSeg = atol(argv[i]);
-        *n_faceSeg = (PDM_g_num_t) _n_faceSeg;
+        long _n_face_seg = atol(argv[i]);
+        *n_face_seg = (PDM_g_num_t) _n_face_seg;
       }
     }
     else if (strcmp(argv[i], "-l") == 0) {
@@ -160,7 +160,7 @@ _gen_cloud
   if (i_rank < n_pts%n_rank) {
     (*_n_pts)++;
   }
-  *pts_coord = malloc (sizeof(double) * 3 * (*_n_pts));
+  PDM_malloc(*pts_coord, 3 * (*_n_pts), double);
 
   for (int i = 0; i < (*_n_pts); i++) {
     for (int j = 0; j < 3; j++) {
@@ -175,7 +175,7 @@ static void
 _gen_cube_vol
 (
  PDM_MPI_Comm        comm,
- const PDM_g_num_t   n_faceSeg,
+ const PDM_g_num_t   n_face_seg,
  const double        origin[3],
  const double        length,
  const int           randomize,
@@ -190,39 +190,40 @@ _gen_cube_vol
   PDM_MPI_Comm_size(comm, &n_rank);
   PDM_MPI_Comm_rank(comm, &i_rank);
 
-  PDM_g_num_t n_cell = n_faceSeg * n_faceSeg * n_faceSeg;
+  PDM_g_num_t n_cell = n_face_seg * n_face_seg * n_face_seg;
 
-  PDM_g_num_t *distribCell = (PDM_g_num_t *) malloc((n_rank + 1) * sizeof(PDM_g_num_t));
+  PDM_g_num_t *distrib_cell;
+  PDM_malloc(distrib_cell, n_rank + 1, PDM_g_num_t);
 
-  PDM_g_num_t n_faceFace = n_faceSeg * n_faceSeg;
+  PDM_g_num_t n_faceFace = n_face_seg * n_face_seg;
 
   // Define distribution
-  distribCell[0] = 0;
+  distrib_cell[0] = 0;
   PDM_g_num_t stepCell = n_cell / n_rank;
   PDM_g_num_t remainderCell = n_cell % n_rank;
 
   for (int i = 1; i < n_rank + 1; i++) {
-    distribCell[i] = stepCell;
+    distrib_cell[i] = stepCell;
     const int i1 = i - 1;
     if (i1 < remainderCell)
-      distribCell[i] += 1;
+      distrib_cell[i] += 1;
   }
 
   for (int i = 1; i < n_rank + 1; i++) {
-    distribCell[i] += distribCell[i-1];
+    distrib_cell[i] += distrib_cell[i-1];
   }
 
-  PDM_g_num_t _dn_cell = distribCell[i_rank+1] - distribCell[i_rank];
+  PDM_g_num_t _dn_cell = distrib_cell[i_rank+1] - distrib_cell[i_rank];
   *npts = (int) _dn_cell;
 
-  const double step = length / (double) n_faceSeg;
+  const double step = length / (double) n_face_seg;
 
-  *g_num = malloc (sizeof(PDM_g_num_t) * _dn_cell);
-  *coord = malloc (sizeof(double)      * _dn_cell * 3);
+  PDM_malloc(*g_num,_dn_cell,PDM_g_num_t);
+  PDM_malloc(*coord,_dn_cell * 3,double);
 
   if (randomize) {
     for (int i = 0; i < *npts; i++) {
-      (*g_num)[i] = 1 + i + distribCell[i_rank];
+      (*g_num)[i] = 1 + i + distrib_cell[i_rank];
       for (int j = 0; j < 3; j++) {
         (*coord)[3*i+j] = origin[j] + length * _rand01();
       }
@@ -231,19 +232,19 @@ _gen_cube_vol
 
   else {
     int _npts = 0;
-    for (PDM_g_num_t g = distribCell[i_rank]; g < distribCell[i_rank+1]; g++) {
-      PDM_g_num_t i = g % n_faceSeg;
-      PDM_g_num_t j = ((g - i) % n_faceFace) / n_faceSeg;
-      PDM_g_num_t k = (g - i - n_faceSeg * j) / n_faceFace;
+    for (PDM_g_num_t g = distrib_cell[i_rank]; g < distrib_cell[i_rank+1]; g++) {
+      PDM_g_num_t i = g % n_face_seg;
+      PDM_g_num_t j = ((g - i) % n_faceFace) / n_face_seg;
+      PDM_g_num_t k = (g - i - n_face_seg * j) / n_faceFace;
 
       (*coord)[3 * _npts    ] = (i + 0.5) * step + origin[0];
       (*coord)[3 * _npts + 1] = (j + 0.5) * step + origin[1];
       (*coord)[3 * _npts + 2] = (k + 0.5) * step + origin[2];
-      (*g_num)[_npts++] = g + 1;//1 + i + n_faceSeg * j + n_faceFace * k;
+      (*g_num)[_npts++] = g + 1;//1 + i + n_face_seg * j + n_faceFace * k;
     }
   }
 
-  free (distribCell);
+  PDM_free(distrib_cell);
 }
 
 
@@ -346,9 +347,12 @@ _points_within_radius
     _n_tgt += n_tgt[i_part];
   }
 
-  double      *_tgt_coord   = malloc (sizeof(double)      * _n_tgt * 3);
-  PDM_g_num_t *_tgt_g_num   = malloc (sizeof(PDM_g_num_t) * _n_tgt);
-  double      *_tgt_radius2 = malloc (sizeof(double)      * _n_tgt);
+  double      *_tgt_coord   = NULL;
+  PDM_g_num_t *_tgt_g_num   = NULL;
+  double      *_tgt_radius2 = NULL;
+  PDM_malloc(_tgt_coord  , _n_tgt * 3, double     );
+  PDM_malloc(_tgt_g_num  , _n_tgt    , PDM_g_num_t);
+  PDM_malloc(_tgt_radius2, _n_tgt    , double     );
 
   _n_tgt = 0;
   for (int i_part = 0; i_part < n_part_tgt; i_part++) {
@@ -386,22 +390,22 @@ _points_within_radius
       printf("\n");
     }
   }
-  free (_tgt_coord);
-  free (_tgt_g_num);
-  free (_tgt_radius2);
+  PDM_free(_tgt_coord);
+  PDM_free(_tgt_g_num);
+  PDM_free(_tgt_radius2);
 
   /* Restore partitions */
-  *close_points_idx   = (int **)         malloc (sizeof(int *)         * n_part_tgt);
-  *close_points_g_num = (PDM_g_num_t **) malloc (sizeof(PDM_g_num_t *) * n_part_tgt);
-  *close_points_dist2 = (double **)      malloc (sizeof(double *)      * n_part_tgt);
+  PDM_malloc(*close_points_idx  , n_part_tgt, int         *);
+  PDM_malloc(*close_points_g_num, n_part_tgt, PDM_g_num_t *);
+  PDM_malloc(*close_points_dist2, n_part_tgt, double      *);
   int idx_part = 0;
   for (int i_part = 0; i_part < n_part_tgt; i_part++) {
 
     int length_close_points = _close_pts_idx[idx_part + n_tgt[i_part]] - _close_pts_idx[idx_part];
 
-    (*close_points_g_num)[i_part] = malloc (sizeof(PDM_g_num_t) * length_close_points);
-    (*close_points_dist2)[i_part] = malloc (sizeof(double)      * length_close_points);
-    (*close_points_idx)[i_part] = malloc (sizeof(int) * (n_tgt[i_part]+1));
+    PDM_malloc((close_points_g_num)[i_part], length_close_points, PDM_g_num_t);
+    PDM_malloc((close_points_dist2)[i_part], length_close_points, double     );
+    PDM_malloc((close_points_idx  )[i_part], n_tgt[i_part] + 1  , int        );
     int *cp_idx = (*close_points_idx)[i_part];
     cp_idx[0] = 0;
 
@@ -418,9 +422,9 @@ _points_within_radius
 
     idx_part += n_tgt[i_part];
   }
-  free (_close_pts_idx);
-  free (_close_pts_g_num);
-  free (_close_pts_dist2);
+  PDM_free(_close_pts_idx);
+  PDM_free(_close_pts_g_num);
+  PDM_free(_close_pts_dist2);
 
   /* Free parallel octree */
   PDM_para_octree_free (octree);
@@ -505,7 +509,7 @@ _read_point_cloud
                         n_pts);
       assert (stat);
 
-      *coord = malloc (sizeof(double) * (*n_pts) * 3);
+      PDM_malloc(*coord, (*n_pts) * 3, double);
       for (int i = 0; i < *n_pts; i++) {
         fscanf(f, "%lf %lf %lf",
                *coord + 3*i,
@@ -516,7 +520,7 @@ _read_point_cloud
 
     if (strstr(line, "CELL_DATA") != NULL) {
 
-      *g_num = malloc (sizeof(PDM_g_num_t) * (*n_pts));
+      PDM_malloc(*g_num, (*n_pts), PDM_g_num_t);
       fgets(line, sizeof(line), f);
       fgets(line, sizeof(line), f);
       for (int i = 0; i < *n_pts; i++) {
@@ -634,7 +638,8 @@ int main(int argc, char *argv[])
 
     int id_gnum = PDM_gnum_create (3, 1, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD, PDM_OWNERSHIP_USER);
 
-    double *tgt_char_length = malloc (sizeof(double) * _n_tgt);
+    double *tgt_char_length;
+    PDM_malloc(tgt_char_length, _n_tgt, double);
 
     for (int i = 0; i < _n_tgt; i++) {
       tgt_char_length[i] = length * 1.e-6;
@@ -647,14 +652,15 @@ int main(int argc, char *argv[])
     tgt_g_num = PDM_gnum_get (id_gnum, 0);
 
     PDM_gnum_free (id_gnum);
-    free (tgt_char_length);
+    PDM_free(tgt_char_length);
   }
 
 
   /*
    *  Search radius
    */
-  double *tgt_radius = malloc (sizeof(double) * _n_tgt);
+  double *tgt_radius;
+  PDM_malloc(tgt_radius, _n_tgt, double);
   if (radius < 0) {
     for (int i = 0; i < _n_tgt; i++) {
       tgt_radius[i] = -radius * _rand01();
@@ -871,19 +877,19 @@ int main(int argc, char *argv[])
   /*
    *  Finalize
    */
-  free (src_coord);
-  free (src_g_num);
-  free (tgt_coord);
-  free (tgt_g_num);
-  free (tgt_radius);
+  PDM_free(src_coord);
+  PDM_free(src_g_num);
+  PDM_free(tgt_coord);
+  PDM_free(tgt_g_num);
+  PDM_free(tgt_radius);
   for (int i = 0; i < n_part_tgt; i++) {
-    free (close_points_idx[i]);
-    free (close_points_g_num[i]);
-    free (close_points_dist2[i]);
+    PDM_free(close_points_idx[i]);
+    PDM_free(close_points_g_num[i]);
+    PDM_free(close_points_dist2[i]);
   }
-  free (close_points_idx);
-  free (close_points_g_num);
-  free (close_points_dist2);
+  PDM_free(close_points_idx);
+  PDM_free(close_points_g_num);
+  PDM_free(close_points_dist2);
 
   PDM_MPI_Finalize();
 

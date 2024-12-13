@@ -144,7 +144,7 @@ PDM_multipart_t      **_mpart
   PDM_MPI_Comm_rank(comm, &i_rank);
 
   PDM_g_num_t *vtx_distrib = PDM_dmesh_nodal_vtx_distrib_get(dmn);
-  double      *dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn);
+  double      *dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn, PDM_OWNERSHIP_BAD_VALUE);
   int dn_vtx = (int) (vtx_distrib[i_rank+1] - vtx_distrib[i_rank]);
 
   for (int i = 0; i < 3*vtx_distrib[i_rank]; i++) {
@@ -168,7 +168,8 @@ PDM_multipart_t      **_mpart
 
 
   int n_domain = 1;
-  int *n_part_domains = (int *) malloc(sizeof(int) * n_domain);
+  int *n_part_domains;
+  PDM_malloc(n_part_domains,n_domain,int);
   n_part_domains[0] = n_part;
 
   PDM_multipart_t *mpart = PDM_multipart_create(n_domain,
@@ -192,7 +193,7 @@ PDM_multipart_t      **_mpart
   /* Run */
   PDM_multipart_compute (mpart);
 
-  free(n_part_domains);
+  PDM_free(n_part_domains);
 
   *_mpart = mpart;
 
@@ -263,7 +264,7 @@ _compute_face_vtx
  )
 {
   int dbg = 0;
-  *pface_vtx = (int *) malloc(sizeof(int) * pface_edge_idx[n_face]);
+  PDM_malloc(*pface_vtx,pface_edge_idx[n_face],int);
 
   for (int i = 0; i < n_face; i++) {
 
@@ -693,8 +694,10 @@ int main(int argc, char *argv[])
   char    filename[999];
   int     vtx1_idx;
   int     vtx2_idx;
-  double *normalisation  = malloc(    pn_vtx * sizeof(double));
-  double *pvtx_coord_new = malloc(3 * pn_vtx * sizeof(double));
+  double *normalisation;
+  PDM_malloc(normalisation,    pn_vtx ,double);
+  double *pvtx_coord_new;
+  PDM_malloc(pvtx_coord_new,3 * pn_vtx ,double);
 
   /* Set up of Ensight output */
 
@@ -714,8 +717,10 @@ int main(int argc, char *argv[])
   //                                      n_part);
 
 
-  int *face_vtx_n  = (int *) malloc (sizeof(int) * pn_face);
-  int *cell_face_n = (int *) malloc (sizeof(int) * pn_cell);
+  int *face_vtx_n;
+  PDM_malloc(face_vtx_n,pn_face,int);
+  int *cell_face_n;
+  PDM_malloc(cell_face_n,pn_cell,int);
 
   for (int i = 0; i < pn_face; i++) {
     face_vtx_n[i] = pface_edge_idx[i+1] - pface_edge_idx[i];
@@ -865,8 +870,8 @@ int main(int argc, char *argv[])
       pvtx_coord_extension[3*i+2] = pvtx_coord_extension_new[i_part][3*i+2];
     } // end loop on extension coordinates
 
-    free(pvtx_coord_extension_new[i_part]);
-    free(pvtx_coord_extension_new);
+    PDM_free(pvtx_coord_extension_new[i_part]);
+    PDM_free(pvtx_coord_extension_new);
 
     // PDM_writer_step_end(id_cs);
   } // end Laplacian Smoothing loop
@@ -877,27 +882,27 @@ int main(int argc, char *argv[])
   PDM_part_extension_free(pe);
   PDM_part_to_part_free(ptp);
 
-  free(face_vtx_n  );
-  free(cell_face_n );
-  free(extension_vtx_gnum_idx );
+  PDM_free(face_vtx_n  );
+  PDM_free(cell_face_n );
+  PDM_free(extension_vtx_gnum_idx );
 
-  free(pvtx_edge_idx);
-  free(pvtx_edge);
-  free(pedge_group_idx);
-  free(pedge_group);
-  free(pedge_face_idx);
-  free(pedge_face);
-  free(pedge_vtx_idx);
-  free(pface_vtx);
-  free(pface_cell_idx);
-  free(pface_cell);
-  free(pface_group_idx);
-  free(pface_group);
-  free(pvtx_group_idx);
-  free(pvtx_group    );
+  PDM_free(pvtx_edge_idx);
+  PDM_free(pvtx_edge);
+  PDM_free(pedge_group_idx);
+  PDM_free(pedge_group);
+  PDM_free(pedge_face_idx);
+  PDM_free(pedge_face);
+  PDM_free(pedge_vtx_idx);
+  PDM_free(pface_vtx);
+  PDM_free(pface_cell_idx);
+  PDM_free(pface_cell);
+  PDM_free(pface_group_idx);
+  PDM_free(pface_group);
+  PDM_free(pvtx_group_idx);
+  PDM_free(pvtx_group    );
 
-  free(normalisation );
-  free(pvtx_coord_new);
+  PDM_free(normalisation );
+  PDM_free(pvtx_coord_new);
 
   PDM_MPI_Finalize();
   return 0;

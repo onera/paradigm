@@ -393,12 +393,18 @@ int main(int argc, char *argv[])
   }
 
 
-  double *pts_coord = malloc(sizeof(double) * n_pts * 3);
-  double *pts_proj  = malloc(sizeof(double) * n_pts * 3);
-  double *pts_error = malloc(sizeof(double) * n_pts);
-  double *pts_stat  = malloc(sizeof(double) * n_pts);
-  double *pts_dist  = malloc(sizeof(double) * n_pts);
-  PDM_g_num_t *pts_g_num = malloc(sizeof(PDM_g_num_t) * n_pts);
+  double *pts_coord;
+  PDM_malloc(pts_coord,n_pts * 3,double);
+  double *pts_proj;
+  PDM_malloc(pts_proj,n_pts * 3,double);
+  double *pts_error;
+  PDM_malloc(pts_error,n_pts,double);
+  double *pts_stat;
+  PDM_malloc(pts_stat,n_pts,double);
+  double *pts_dist;
+  PDM_malloc(pts_dist,n_pts,double);
+  PDM_g_num_t *pts_g_num;
+  PDM_malloc(pts_g_num,n_pts,PDM_g_num_t);
 
   int count_ok = 0;
 
@@ -520,12 +526,12 @@ int main(int argc, char *argv[])
   }
 
 
-  free(pts_coord);
-  free(pts_proj );
-  free(pts_error);
-  free(pts_stat );
-  free(pts_dist );
-  free(pts_g_num);
+  PDM_free(pts_coord);
+  PDM_free(pts_proj );
+  PDM_free(pts_error);
+  PDM_free(pts_stat );
+  PDM_free(pts_dist );
+  PDM_free(pts_g_num);
 
   printf("%d OK / %d\n", count_ok, n_pts);
 

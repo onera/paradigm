@@ -99,6 +99,16 @@ PDM_order_binary_search_long
  const size_t      nb_ent
 );
 
+int
+PDM_order_binary_search_int
+(
+ const int         elt   [],
+ const int         array [],
+ const size_t      stride,
+ const size_t      nb_ent
+);
+
+
 /**
  *
  * \brief Unique array lexicographicaly
@@ -137,6 +147,27 @@ const size_t           stride,
       PDM_g_num_t     *array,
       int             *order
 );
+
+
+/**
+ *
+ * \brief Unique array lexicographicaly
+ *
+ * \param [in]     n_entity Array to sort
+ * \param [in]     stride   stride of array (number of values to compare)
+ * \param [in,out] array    number array of entity numbers (size : n_entity)
+ * \param [in,out] order    pre-allocated ordering table   (size : n_entity)
+ * \return Number of unique
+ */
+int
+PDM_order_inplace_unique_int
+(
+const int              n_entity,
+const size_t           stride,
+      int             *array,
+      int             *order
+);
+
 
 #ifdef __cplusplus
 }

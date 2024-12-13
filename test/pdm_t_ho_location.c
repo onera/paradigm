@@ -340,11 +340,15 @@ _compute_uvw
 
 
   /* Get number of nodes */
-  n_node = PDM_Mesh_nodal_n_vertices_element (elt_type, order);
-  double *weight     = malloc(sizeof(double) * n_node);
-  double *dweight_du = malloc(sizeof(double) * n_node);
-  double *dweight_dv = malloc(sizeof(double) * n_node);
-  double *dweight_dw = malloc(sizeof(double) * n_node);
+  n_node = PDM_Mesh_nodal_n_vtx_elt_get (elt_type, order);
+  double *weight     = NULL;
+  double *dweight_du = NULL;
+  double *dweight_dv = NULL;
+  double *dweight_dw = NULL;
+  PDM_malloc(weight    , n_node, double);
+  PDM_malloc(dweight_du, n_node, double);
+  PDM_malloc(dweight_dv, n_node, double);
+  PDM_malloc(dweight_dw, n_node, double);
 
   double *dw[3] = {dweight_du, dweight_dv, dweight_dw};
 
@@ -358,7 +362,8 @@ _compute_uvw
   }
 
   double _uvw[12];
-  double *_weight = malloc(sizeof(double) * n_node * 4);
+  double *_weight;
+  PDM_malloc(_weight, n_node * 4, double);
 
   for (iter = 0; iter < max_iter; iter++) {
 
@@ -430,21 +435,21 @@ _compute_uvw
     if (dist <= tolerance2) {
       // log_trace("converged :) %e %e %e\n", uvw[0], uvw[1], uvw[2]);
 
-      free(weight    );
-      free(dweight_du);
-      free(dweight_dv);
-      free(dweight_dw);
-      free(_weight);
+      PDM_free(weight    );
+      PDM_free(dweight_du);
+      PDM_free(dweight_dv);
+      PDM_free(dweight_dw);
+      PDM_free(_weight);
       return 1;
     }
 
   }
 
-  free(weight    );
-  free(dweight_du);
-  free(dweight_dv);
-  free(dweight_dw);
-  free(_weight);
+  PDM_free(weight    );
+  PDM_free(dweight_du);
+  PDM_free(dweight_dv);
+  PDM_free(dweight_dw);
+  PDM_free(_weight);
   return 0;
 }
 
@@ -611,7 +616,7 @@ int main(int argc, char *argv[])
                                        order,
                                        PDM_Mesh_nodal_n_vtx_elt_get(type, order),
                                        ijk);
-      free (ijk);
+      PDM_free(ijk);
     }
   }
 
@@ -649,7 +654,7 @@ int main(int argc, char *argv[])
 
   PDM_g_num_t *vtx_distrib = PDM_dmesh_nodal_vtx_distrib_get(dmn);
   int dn_vtx = vtx_distrib[i_rank+1] - vtx_distrib[i_rank];
-  double *dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn);
+  double *dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn, PDM_OWNERSHIP_BAD_VALUE);
   // double amplitude = 0.1;//0.07;
   // double frequence = 4.;
 
@@ -703,14 +708,15 @@ int main(int argc, char *argv[])
   int id_section = sections_id[0];
   // const PDM_g_num_t    *delmt_distribution = PDM_DMesh_nodal_distrib_section_get(dmn, geom_kind, id_section);
   // int                   n_elt              = PDM_DMesh_nodal_section_n_elt_get  (dmn, geom_kind, id_section);
-  PDM_g_num_t          *dconnec            = PDM_DMesh_nodal_section_std_get    (dmn, geom_kind, id_section);
+  PDM_g_num_t          *dconnec            = PDM_DMesh_nodal_section_std_get    (dmn, geom_kind, id_section, PDM_OWNERSHIP_BAD_VALUE);
   assert(PDM_DMesh_nodal_section_type_get(dmn, geom_kind, id_section) == t_elt);
 
 
-  int n_node = PDM_Mesh_nodal_n_vertices_element(t_elt, order);
+  int n_node = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
 
   int ielt = 0;
-  double *node_coord = malloc(sizeof(double) * n_node * 3);
+  double *node_coord;
+  PDM_malloc(node_coord, n_node * 3, double);
   for (int i = 0; i < n_node; i++) {
     int ivtx = (int) (dconnec[n_node*ielt + i] - 1);
 
@@ -736,8 +742,10 @@ int main(int argc, char *argv[])
 
 
   int n_pts = (int) gn_pts;
-  double *pts_uvw_init = malloc(sizeof(double) * n_pts * elt_dim);
-  double *pts_coord    = malloc(sizeof(double) * n_pts * 3);
+  double *pts_uvw_init = NULL;
+  double *pts_coord    = NULL;
+  PDM_malloc(pts_uvw_init, n_pts * elt_dim, double);
+  PDM_malloc(pts_coord   , n_pts * 3      , double);
   for (int i = 0; i < n_pts; i++) {
     // pts_coord[i] = 0.3 + 0.4*((double) rand() / (double) RAND_MAX);
     while (1) {
@@ -750,7 +758,8 @@ int main(int argc, char *argv[])
     }
   }
 
-  double *pts_weight = malloc(sizeof(double) * n_pts * n_node);
+  double *pts_weight = NULL;
+  PDM_malloc(pts_weight, n_pts * n_node, double);
   PDM_ho_basis(t_elt,
                order,
                n_node,
@@ -771,11 +780,11 @@ int main(int argc, char *argv[])
     }
   }
 
-
-
   /* HO location */
-  double *proj_coord = malloc(sizeof(double) * n_pts * 3);
-  double *pts_uvw    = malloc(sizeof(double) * n_pts * elt_dim);
+  double *proj_coord = NULL;
+  double *pts_uvw    = NULL;
+  PDM_malloc(proj_coord, n_pts * 3      , double);
+  PDM_malloc(pts_uvw   , n_pts * elt_dim, double);
   for (int i = 0; i < n_pts; i++) {
     int stat = 0;
 
@@ -810,7 +819,8 @@ int main(int argc, char *argv[])
 
 
 
-  double *node_uvw = malloc(sizeof(double) * n_node * elt_dim);
+  double *node_uvw = NULL;
+  PDM_malloc(node_uvw, n_node * elt_dim, double);
   PDM_ho_location_uvw_nodes(t_elt,
                             order,
                             0., 1.,
@@ -819,7 +829,8 @@ int main(int argc, char *argv[])
                             node_uvw);
 
 
-  double *node_field = malloc(sizeof(double) * n_node);
+  double *node_field = NULL;
+  PDM_malloc(node_field, n_node, double);
   for (int i = 0; i < n_node; i++) {
     // node_field[i] = _eval_field(node_uvw[3*i  ],
     //                             node_uvw[3*i+1],
@@ -831,8 +842,10 @@ int main(int argc, char *argv[])
                                 order);
   }
 
-  double *interp_field = malloc(sizeof(double) * n_pts);
-  double *proj_field   = malloc(sizeof(double) * n_pts);
+  double *interp_field = NULL;
+  double *proj_field   = NULL;
+  PDM_malloc(interp_field, n_pts, double);
+  PDM_malloc(proj_field  , n_pts, double);
   double field_max = 0.;
   double err_max   = 0.;
   for (int i = 0; i < n_pts; i++) {
@@ -879,8 +892,8 @@ int main(int argc, char *argv[])
 
   printf("err_max = %e, relative = %e\n", err_max, err_max/field_max);
 
-
-  int *connec = malloc(sizeof(int) * n_node);
+  int *connec = NULL;
+  PDM_malloc(connec, n_node, int);
   for (int i = 0; i < n_node; i++) {
     connec[i] = i + 1;
   }
@@ -1012,20 +1025,20 @@ int main(int argc, char *argv[])
                                       (const char   **) field_name,
                                       (const double **) field);
   }
-  free(connec);
+  PDM_free(connec);
 
-  free(node_coord);
-  free(pts_coord);
-  // free(pts_ln_to_gn);
-  free(proj_coord);
-  free(pts_uvw);
-  free(pts_weight);
-  free(pts_uvw_init);
+  PDM_free(node_coord);
+  PDM_free(pts_coord);
+  //PDM_free(pts_ln_to_gn);
+  PDM_free(proj_coord);
+  PDM_free(pts_uvw);
+  PDM_free(pts_weight);
+  PDM_free(pts_uvw_init);
 
-  free(node_uvw);
-  free(node_field);
-  free(interp_field);
-  free(proj_field);
+  PDM_free(node_uvw);
+  PDM_free(node_field);
+  PDM_free(interp_field);
+  PDM_free(proj_field);
 
 
 

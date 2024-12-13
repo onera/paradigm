@@ -3,6 +3,7 @@
 #include "pdm_doctest.h"
 #include "pdm_logging.h"
 #include "pdm_part_connectivity_transform.h"
+#include "pdm_priv.h"
 
 /*
  *  Use case
@@ -66,8 +67,8 @@ MPI_TEST_CASE("[pdm_part_connectivity_transform] - 1p - pdm_connectivity_transfo
   CHECK_EQ_C_ARRAY(cell_face_from_transpose_idx, cell_face_from_transpose_idx_expected, n_cell+1);
   CHECK_EQ_C_ARRAY(cell_face_from_transpose    , cell_face_from_transpose_expected    , cell_face_from_transpose_idx_expected[n_cell]);
 
-  free(cell_face_from_transpose_idx);
-  free(cell_face_from_transpose);
+  PDM_free(cell_face_from_transpose_idx);
+  PDM_free(cell_face_from_transpose);
 
   int* face_cell_from_transpose_idx;
   int* face_cell_from_transpose;
@@ -84,7 +85,7 @@ MPI_TEST_CASE("[pdm_part_connectivity_transform] - 1p - pdm_connectivity_transfo
   CHECK_EQ_C_ARRAY(face_cell_from_transpose_idx, face_cell_from_transpose_idx_expected, n_face+1);
   CHECK_EQ_C_ARRAY(face_cell_from_transpose    , face_cell_from_transpose_expected    , face_cell_from_transpose_idx_expected[n_face]);
 
-  free(face_cell_from_transpose_idx);
-  free(face_cell_from_transpose);
+  PDM_free(face_cell_from_transpose_idx);
+  PDM_free(face_cell_from_transpose);
 
 }

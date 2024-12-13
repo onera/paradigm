@@ -3,6 +3,7 @@
 #include "pdm.h"
 #include "pdm_doctest.h"
 #include "pdm_multi_block_to_part.h"
+#include "pdm_priv.h"
 
 MPI_TEST_CASE("[pdm_multi_block_to_part] - 1p - Simple ",1) {
 
@@ -13,7 +14,8 @@ MPI_TEST_CASE("[pdm_multi_block_to_part] - 1p - Simple ",1) {
   static PDM_g_num_t block_distrib1_idx[2] = {0, 6};
   static PDM_g_num_t block_distrib2_idx[2] = {0, 3};
 
-  PDM_g_num_t** block_distrib_idx = (PDM_g_num_t **) malloc( n_block * sizeof(PDM_g_num_t*));
+  PDM_g_num_t** block_distrib_idx;
+  PDM_malloc(block_distrib_idx, n_block, PDM_g_num_t*);
   block_distrib_idx[0] = block_distrib1_idx;
   block_distrib_idx[1] = block_distrib2_idx;
 
@@ -22,8 +24,10 @@ MPI_TEST_CASE("[pdm_multi_block_to_part] - 1p - Simple ",1) {
   PDM_g_num_t ln_to_gn_p0[n_elmts_part_0] = {9, 7, 5, 2, 1, 3};
 
   // Convenient array
-  int*          n_elmts  = (int         * ) malloc( n_part * sizeof(int          ));
-  PDM_g_num_t** ln_to_gn = (PDM_g_num_t **) malloc( n_part * sizeof(PDM_g_num_t *));
+  int*          n_elmts;
+  PDM_malloc(n_elmts, n_part,  int);
+  PDM_g_num_t** ln_to_gn;
+  PDM_malloc(ln_to_gn, n_part,  PDM_g_num_t *);
   ln_to_gn[0] = ln_to_gn_p0;
   n_elmts[0]  = n_elmts_part_0;
 
@@ -42,14 +46,16 @@ MPI_TEST_CASE("[pdm_multi_block_to_part] - 1p - Simple ",1) {
     static const int darray_size2 = 3;
     static PDM_g_num_t darray1[darray_size1] = {5 , 4 , 6, 1, 3, 2};
     static PDM_g_num_t darray2[darray_size2] = {10, 11, 8};
-    PDM_g_num_t** darray = (PDM_g_num_t **) malloc( n_block * sizeof(PDM_g_num_t*));
+    PDM_g_num_t** darray;
+    PDM_malloc(darray, n_block,  PDM_g_num_t*);
     darray[0] = darray1;
     darray[1] = darray2;
 
     /* Exchange */
-    int** stride_one = (int ** ) malloc( n_block * sizeof(int *));
+    int** stride_one;
+    PDM_malloc(stride_one, n_block, int *);
     for(int i_block = 0; i_block < n_block; ++i_block){
-      stride_one[i_block] = (int * ) malloc( 1 * sizeof(int));
+      PDM_malloc(stride_one[i_block], 1, int);
       stride_one[i_block][0] = 1;
     }
 
@@ -70,14 +76,14 @@ MPI_TEST_CASE("[pdm_multi_block_to_part] - 1p - Simple ",1) {
     CHECK_EQ_C_ARRAY(parray[0], parray_expected_p0, n_elmts_part_0);
 
     for(int i_part = 0; i_part < n_part; i_part++){
-      free(parray[i_part]);
+      PDM_free(parray[i_part]);
     }
-    free(parray);
+    PDM_free(parray);
     for(int i_block = 0; i_block < n_block; ++i_block){
-      free(stride_one[i_block]);
+      PDM_free(stride_one[i_block]);
     }
-    free(stride_one);
-    free(darray);
+    PDM_free(stride_one);
+    PDM_free(darray);
   }
 
 
@@ -92,10 +98,12 @@ MPI_TEST_CASE("[pdm_multi_block_to_part] - 1p - Simple ",1) {
     static int         dstrid1[dnelmt1]      = {2     , 1 , 3         , 1, 1, 3         };
     static PDM_g_num_t darray2[darray_size2] = {10, 100, 11, 8, 80, 800};
     static int         dstrid2[dnelmt2]      = {2      , 1 , 3         };
-    PDM_g_num_t** darray = (PDM_g_num_t **) malloc( n_block * sizeof(PDM_g_num_t*));
+    PDM_g_num_t** darray;
+    PDM_malloc(darray, n_block, PDM_g_num_t*);
     darray[0] = darray1;
     darray[1] = darray2;
-    int** dstri  = (int **) malloc( n_block * sizeof(int *));
+    int** dstri;
+    PDM_malloc(dstri, n_block, int *);
     dstri[0] = dstrid1;
     dstri[1] = dstrid2;
 
@@ -124,21 +132,21 @@ MPI_TEST_CASE("[pdm_multi_block_to_part] - 1p - Simple ",1) {
     CHECK_EQ_C_ARRAY(parray[0], parray_expected_p0, 12);
 
     for(int i_part = 0; i_part < n_part; i_part++){
-      free(parray[i_part]);
-      free(pstrid[i_part]);
+      PDM_free(parray[i_part]);
+      PDM_free(pstrid[i_part]);
     }
-    free(pstrid);
-    free(parray);
-    free(dstri);
-    free(darray);
+    PDM_free(pstrid);
+    PDM_free(parray);
+    PDM_free(dstri);
+    PDM_free(darray);
 
   }
 
   // Free
   PDM_multi_block_to_part_free(mbtp);
-  free(block_distrib_idx);
-  free(ln_to_gn);
-  free(n_elmts);
+  PDM_free(block_distrib_idx);
+  PDM_free(ln_to_gn);
+  PDM_free(n_elmts);
 
 }
 
@@ -152,7 +160,8 @@ MPI_TEST_CASE("[pdm_multi_block_to_part] - 2p - Simple ",2) {
   static PDM_g_num_t block_distrib1_idx[3] = {0, 3, 6};
   static PDM_g_num_t block_distrib2_idx[3] = {0, 2, 3};
 
-  PDM_g_num_t** block_distrib_idx = (PDM_g_num_t **) malloc( n_block * sizeof(PDM_g_num_t*));
+  PDM_g_num_t** block_distrib_idx;
+  PDM_malloc(block_distrib_idx, n_block, PDM_g_num_t*);
   block_distrib_idx[0] = block_distrib1_idx;
   block_distrib_idx[1] = block_distrib2_idx;
 
@@ -163,8 +172,10 @@ MPI_TEST_CASE("[pdm_multi_block_to_part] - 2p - Simple ",2) {
   PDM_g_num_t ln_to_gn_p1[n_elmts_part_1] = {2, 1, 3};
 
   // Convenient array
-  int*          n_elmts  = (int         * ) malloc( n_part * sizeof(int          ));
-  PDM_g_num_t** ln_to_gn = (PDM_g_num_t **) malloc( n_part * sizeof(PDM_g_num_t *));
+  int*          n_elmts;
+  PDM_malloc(n_elmts, n_part,  int);
+  PDM_g_num_t** ln_to_gn;
+  PDM_malloc(ln_to_gn, n_part,  PDM_g_num_t *);
   if(test_rank == 0){
     ln_to_gn[0] = ln_to_gn_p0;
     n_elmts[0]  = n_elmts_part_0;
@@ -193,7 +204,8 @@ MPI_TEST_CASE("[pdm_multi_block_to_part] - 2p - Simple ",2) {
     static const int darray_size2_p1 = 1;
     static PDM_g_num_t darray1_p1[darray_size1_p1] = {1, 3, 2};
     static PDM_g_num_t darray2_p1[darray_size2_p1] = {8};
-    PDM_g_num_t** darray = (PDM_g_num_t **) malloc( n_block * sizeof(PDM_g_num_t*));
+    PDM_g_num_t** darray;
+    PDM_malloc(darray, n_block, PDM_g_num_t*);
 
     if(test_rank == 0){
       darray[0] = darray1_p0;
@@ -204,9 +216,10 @@ MPI_TEST_CASE("[pdm_multi_block_to_part] - 2p - Simple ",2) {
     }
 
     /* Exchange */
-    int** stride_one = (int ** ) malloc( n_block * sizeof(int *));
+    int** stride_one;
+    PDM_malloc(stride_one, n_block, int *);
     for(int i_block = 0; i_block < n_block; ++i_block){
-      stride_one[i_block] = (int * ) malloc( 1 * sizeof(int));
+      PDM_malloc(stride_one[i_block], 1, int);
       stride_one[i_block][0] = 1;
     }
 
@@ -229,14 +242,14 @@ MPI_TEST_CASE("[pdm_multi_block_to_part] - 2p - Simple ",2) {
     MPI_CHECK_EQ_C_ARRAY(1, parray[0], parray_expected_p1, n_elmts_part_1);
 
     for(int i_part = 0; i_part < n_part; i_part++){
-      free(parray[i_part]);
+      PDM_free(parray[i_part]);
     }
-    free(parray);
+    PDM_free(parray);
     for(int i_block = 0; i_block < n_block; ++i_block){
-      free(stride_one[i_block]);
+      PDM_free(stride_one[i_block]);
     }
-    free(stride_one);
-    free(darray);
+    PDM_free(stride_one);
+    PDM_free(darray);
   }
 
   SUBCASE("variable stride ") {
@@ -264,7 +277,8 @@ MPI_TEST_CASE("[pdm_multi_block_to_part] - 2p - Simple ",2) {
     static int         dstrid2_p1[dnelmt2_p1]      = {3         };
 
 
-    PDM_g_num_t** darray = (PDM_g_num_t **) malloc( n_block * sizeof(PDM_g_num_t*));
+    PDM_g_num_t** darray;
+    PDM_malloc(darray, n_block, PDM_g_num_t*);
 
     if(test_rank == 0){
       darray[0] = darray1_p0;
@@ -274,7 +288,8 @@ MPI_TEST_CASE("[pdm_multi_block_to_part] - 2p - Simple ",2) {
       darray[1] = darray2_p1;
     }
 
-    int** dstri  = (int **) malloc( n_block * sizeof(int *));
+    int** dstri;
+    PDM_malloc(dstri, n_block, int*);
 
     if(test_rank == 0){
       dstri[0] = dstrid1_p0;
@@ -315,21 +330,21 @@ MPI_TEST_CASE("[pdm_multi_block_to_part] - 2p - Simple ",2) {
     MPI_CHECK_EQ_C_ARRAY(1, parray[0], parray_expected_p1, 6);
 
     for(int i_part = 0; i_part < n_part; i_part++){
-      free(parray[i_part]);
-      free(pstrid[i_part]);
+      PDM_free(parray[i_part]);
+      PDM_free(pstrid[i_part]);
     }
-    free(pstrid);
-    free(parray);
-    free(dstri);
-    free(darray);
+    PDM_free(pstrid);
+    PDM_free(parray);
+    PDM_free(dstri);
+    PDM_free(darray);
 
   }
 
   // Free
   PDM_multi_block_to_part_free(mbtp);
-  free(block_distrib_idx);
-  free(ln_to_gn);
-  free(n_elmts);
+  PDM_free(block_distrib_idx);
+  PDM_free(ln_to_gn);
+  PDM_free(n_elmts);
 
 }
 
@@ -367,7 +382,8 @@ MPI_TEST_CASE("[pdm_multi_block_to_part] - 3p - n_block=1",3) {
                                    n_elts.data(),
                                    n_part,
                                    pdm_comm);
-  int* stride_one = (int*)malloc( 1 * sizeof(int));
+  int* stride_one;
+  PDM_malloc(stride_one, 1, int);
   stride_one[0] = 1;
 
   std::vector<int32_t> darray(n_elt);
@@ -390,10 +406,10 @@ MPI_TEST_CASE("[pdm_multi_block_to_part] - 3p - n_block=1",3) {
   MPI_CHECK_EQ_C_ARRAY(2, parray[0], darray.data(), n_elt);
 
   for(int i_part = 0; i_part < n_part; ++i_part){
-    free(parray[i_part]);
+    PDM_free(parray[i_part]);
   }
-  free(parray);
-  free(stride_one);
+  PDM_free(parray);
+  PDM_free(stride_one);
   PDM_multi_block_to_part_free(mbtp);
 }
 
@@ -433,9 +449,10 @@ MPI_TEST_CASE("[pdm_multi_block_to_part] - 3p - n_block=2",3) {
                                    n_part,
                                    pdm_comm);
   int stride = 1;
-  int** stride_one = (int ** ) malloc( n_block * sizeof(int *));
+  int** stride_one;
+  PDM_malloc(stride_one, n_block, int *);
   for(int i_block = 0; i_block < n_block; ++i_block){
-    stride_one[i_block] = (int * ) malloc( 1 * sizeof(int));
+    PDM_malloc(stride_one[i_block], 1, int);
     stride_one[i_block][0] = stride;
   }
 
@@ -468,12 +485,12 @@ MPI_TEST_CASE("[pdm_multi_block_to_part] - 3p - n_block=2",3) {
   MPI_CHECK_EQ_C_ARRAY(2, parray[0], parray_expected.data(), n_elt*2);
 
   for(int i_part = 0; i_part < n_part; ++i_part){
-    free(parray[i_part]);
+    PDM_free(parray[i_part]);
   }
-  free(parray);
+  PDM_free(parray);
   for(int i_block = 0; i_block < n_block; ++i_block){
-    free(stride_one[i_block]);
+    PDM_free(stride_one[i_block]);
   }
-  free(stride_one);
+  PDM_free(stride_one);
   PDM_multi_block_to_part_free(mbtp);
 }

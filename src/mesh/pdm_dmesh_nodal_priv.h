@@ -48,7 +48,9 @@ struct PDM_DMesh_nodal_vtx_t {
   int              *dvtx_tag;
   PDM_g_num_t      *dvtx_parent_g_num;
 
-  PDM_ownership_t   owner;
+  PDM_ownership_t   owner_coords;
+  PDM_ownership_t   owner_tag;
+  PDM_ownership_t   owner_parent;
 };
 
 /**

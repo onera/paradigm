@@ -156,6 +156,35 @@ PDM_part_combine_connectivity
 
 /**
  *
+ * \brief Combine connectivity between entity1_entity2 and entity2_entity1 to have entity1_entity1 for all partition
+ *
+ * \param [in]  n_part              Number of partition in current process
+ * \param [in]  n_entity1           Number of entity1
+ * \param [in]  entity1_entity2_idx Connectivity index between entity1 and entity2 (size = n_entity1)
+ * \param [in]  entity1_entity2     Connectivity between entity1 and entity2 (size = entity1_entity2_idx[n_entity1] )
+ * \param [in]  entity2_entity3_idx Connectivity index between entity2 and entity3 (size = n_entity2)
+ * \param [in]  entity2_entity3     Connectivity between entity2 and entity3 (size = entity1_entity2_idx[n_entity2] )
+ * \param [out] entity1_entity1_idx Connectivity index between entity1 and entity1 (size = n_entity1)
+ * \param [out] entity1_entity1     Connectivity between entity1 and entity1 (size = entity1_entity1_idx[n_entity1] )
+ *
+ */
+void
+PDM_part_graph_dual
+(
+  int    n_part,
+  int   *n_entity1,
+  int   *n_entity2,
+  int  **entity1_entity2_idx,
+  int  **entity1_entity2,
+  int ***out_entity2_entity1_idx,
+  int ***out_entity2_entity1,
+  int ***entity1_entity1_idx,
+  int ***entity1_entity1
+);
+
+
+/**
+ *
  * \brief Convert implicit pair connectivity, to a connectivity with index. Useful for convert face_cell or edge_vtx.
  *
  * \param [in]  n_part              Number of partition in current process

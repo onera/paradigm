@@ -176,7 +176,7 @@ PDM_part_to_part_t *ptp,
  */
 
 void
-PDM_part_to_part_reserve_ialltoall
+PDM_part_to_part_reverse_ialltoall
 (
 PDM_part_to_part_t *ptp,
  const size_t       s_data,
