@@ -1,3 +1,39 @@
+## [2.6.0] - 2024-12-13
+### Added
+- PDM_dmesh(_nodal) : Add function to find topological ridges
+- PDM_dmesh_extract : Extract groups (in nodal form)
+- PDM_mem_tool : Overload malloc, calloc, realloc and free with macros for better memory management
+- PDM_gnum : Complete Fortran API
+- PDM_part_mesh_nodal : Complete Fortran API
+- PDM_multipart : Complete Python API
+- PDM_extract_part : Local and reequilibrate modes for nodal meshes
+                     + Automatic extraction of lower-dimension elements
+- PDM_geom_elemt : Add up/downwind edges in 2D (in any axis-aligned plane)
+- PDM_part_mesh_nodal_to_part_mesh : Customizable conversion of part_mesh_nodal to part_mesh (connectivities, gnums, groups, link elmt->entity)
+- PDM_part_comm_graph : Symmetric communication graph for inter-partition exchanges (without gnums)
+- PDM_isosurface : Generation of iso-surface/line meshes in 3d/2d partitioned or distributed meshes (nodal or ngon)
+- PDM_domain_interface : Complete Fortran API
+- PDM_part_extension : Support infinite periodicity, with multiple periodic boundaries
+- PDM_part_to_part : add collective mode for exchanges and reverse exchanges
+- PDM_part_mesh_reorient_geom : reorient a mesh geometrically
+### Changed
+- PDM_extract_part : Better management of ownerships
+- Transfer Gitlab CI from Spiro to Juno 
+### Deprecated
+### Removed
+- PDM_mesh_nodal : Replace struct with PDM_part_mesh_nodal
+                   + Remove redundant functions
+- PDM_part_mesh_nodal_to_pmesh : Replace free function by struct PDM_part_mesh_nodal_to_part_mesh
+### Fixed
+- PDM_reader_gamma : Fix read of meshes with multiple elements
+- PDM_mesh_intersection : Manage cases with zero candidates for intersection
+- PDM_distrib : Fix division by zero in empty distributions
+- PDM_mesh_location : Fix when all target points are outside of the global source bounding box
+- PDM_dcube_gen : Fix orientation of boundary faces
+- PDM_extract_part : Allow n_part_out != n_part_in in reequilibrate mode
+- PDM_domain_interface : Fix face to vtx conversion
+- PDM_io : Support relative paths
+- PDM_part_to_part : Fix Fortran wrapping of part_to_part_reverse_iexch 
 ## [2.5.0] - 2024-05-24
 ### Added
 - PDM_reader_gamma : Add prisms, hexahedra, pyramids, quadrilaterals (C and Python API)
