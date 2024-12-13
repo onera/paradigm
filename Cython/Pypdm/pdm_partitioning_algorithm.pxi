@@ -83,8 +83,7 @@ def part_distgroup_to_partgroup(MPI.Comm                                      co
     cdef int **_pgroup
     cdef PDM_g_num_t **_pgroup_ln_to_gn
 
-    PDM_part_distgroup_to_partgroup(
-                                    PDMC,
+    PDM_part_distgroup_to_partgroup(PDMC,
                                     entity_distribution_data,
                                     _n_group,
                                     dgroup_idx_data,
@@ -128,14 +127,14 @@ def part_distgroup_to_partgroup(MPI.Comm                                      co
 
 cdef extern from "pdm_closest_points.h":
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-    void PDM_transform_to_parent_gnum(int           n_part_initial,
-                                      int          *n_elmt_initial,
-                                      PDM_g_num_t **child_ln_to_gn,
-                                      PDM_g_num_t **parent_ln_to_gn,
-                                      int           n_part_to_transform,
-                                      int          *n_elmt_to_transform,
-                                      PDM_g_num_t **gnum_to_transform,
-                                      PDM_MPI_Comm  comm)
+    void PDM_transform_to_parent_gnum(int             n_part_initial,
+                                      int            *n_elmt_initial,
+                                      PDM_g_num_t   **child_ln_to_gn,
+                                      PDM_g_num_t   **parent_ln_to_gn,
+                                      int             n_part_to_transform,
+                                      int            *n_elmt_to_transform,
+                                      PDM_g_num_t   **gnum_to_transform,
+                                      PDM_MPI_Comm    comm)
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 # ===================================================================================
@@ -162,14 +161,14 @@ def transform_to_parent_gnum(list     gnum_to_transform,
 
   cdef MPI.MPI_Comm c_comm = comm.ob_mpi
   cdef PDM_MPI_Comm PDMC   = PDM_MPI_mpi_2_pdm_mpi_comm(&c_comm)
-  PDM_transform_to_parent_gnum(                 n_part_ini,
-                               <const int          *> _pn_elt_in,
-                               <const PDM_g_num_t **> _child_ln_to_gn,
-                               <const PDM_g_num_t **> _parent_ln_to_gn,
-                                                n_part_out,
-                               <const int          *> _pn_elt_out,
-                               <PDM_g_num_t **> _gnum_to_transform,
-                                                PDMC)
+  PDM_transform_to_parent_gnum(n_part_ini,
+        <const int          *> _pn_elt_in,
+        <const PDM_g_num_t **> _child_ln_to_gn,
+        <const PDM_g_num_t **> _parent_ln_to_gn,
+                               n_part_out,
+        <const int          *> _pn_elt_out,
+        <      PDM_g_num_t **> _gnum_to_transform,
+                               PDMC)
 
   free(_pn_elt_out)
   free(_pn_elt_in)
@@ -197,10 +196,10 @@ def part_dcoordinates_to_pcoordinates(MPI.Comm                                  
 
     PDM_part_dcoordinates_to_pcoordinates(PDMC,
                                           n_part,
-                     <const PDM_g_num_t*> vtx_distribution.data,
-                     <const double*>      dvtx_coord.data,
-                     <const int *>        pn_vtx,
-                     <const PDM_g_num_t**>pvtx_ln_to_gn,
+                    <const PDM_g_num_t *> vtx_distribution.data,
+                    <const double      *> dvtx_coord.data,
+                    <const int         *> pn_vtx,
+                    <const PDM_g_num_t**> pvtx_ln_to_gn,
                                           &pvtx_coord);
 
     l_pvtx_coord = list()
@@ -331,7 +330,7 @@ def compute_graph_comm_entity_ownership(int                                     
 
   PDM_compute_graph_comm_entity_ownership(n_part,
                                   <int *> n_entity.data,
-                  <const PDM_g_num_t **> _entity_ln_to_gn,
+                   <const PDM_g_num_t **> _entity_ln_to_gn,
                                           &_n_owned_entity,
                                           &_lnum_owned_entity,
                                           PDM_comm)
