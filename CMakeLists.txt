@@ -516,6 +516,12 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/pdmConfigVersion.cmake"
 )
 
 #------------------------------------------------------------------------------
+# Création d'un fichier pdm_Build.defs dans install/include qui récapitule
+# les options CMake utilisée pour la configuration de ParaDiGM
+#------------------------------------------------------------------------------
+include(pdm_generate_build_defs)
+
+#------------------------------------------------------------------------------
 # Affichage du message de fin d'installation
 #------------------------------------------------------------------------------
 
