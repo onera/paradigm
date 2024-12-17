@@ -1,9 +1,11 @@
+#-----------------------------------------------------------------------
 # this file contains the options and libraries used for
 # building and linking ParaDiGM code, and is intended to be
 # included in a user's Makefile from the installation
-
 #-----------------------------------------------------------------------
+
 CMAKE_INSTALL_PREFIX = @CMAKE_INSTALL_PREFIX@
+CMAKE_BUILD_TYPE = @CMAKE_BUILD_TYPE@
 
 PDM_ENABLE_Fortran = @PDM_ENABLE_Fortran@
 
@@ -16,7 +18,7 @@ PDM_ENABLE_PARMETIS = @PDM_ENABLE_PARMETIS@
 #PARMETIS_LIBRARIES
 
 PDM_ENABLE_PTSCOTCH = @PDM_ENABLE_PTSCOTCH@
-#SCOTCH_LIBRARIES
+#PTSCOTCH_LIBRARIES
 
 PDM_ENABLE_LONG_G_NUM = @PDM_ENABLE_LONG_G_NUM@
 
