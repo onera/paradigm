@@ -86,8 +86,8 @@ def part_mesh_reorient_geom(int                                         mesh_dim
                                                _face_vtx_idx,
                                                _face_vtx,
                                                _vtx_coord,
-                                               _face_group_idx,
-                                               _face_group,
+                            <const int **>     _face_group_idx,
+                            <const int **>     _face_group,
                                                PDM_comm)
 
   free(_n_cell      )

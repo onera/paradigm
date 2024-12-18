@@ -6,12 +6,6 @@ cdef extern from "pdm_isosurface.h":
   ctypedef struct PDM_isosurface_t:
       pass
 
-  ctypedef double (*PDM_isosurface_python_field_function_t)(void   *python_object,
-                                                            int     id_iso,
-                                                            double  x,
-                                                            double  y,
-                                                            double  z);
-
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
   # > Wrapping of function
   PDM_isosurface_t *PDM_isosurface_create(PDM_MPI_Comm comm,
@@ -93,13 +87,6 @@ cdef extern from "pdm_isosurface.h":
   void PDM_isosurface_equation_set(PDM_isosurface_t *isos,
                                    int               id_isosurface,
                                    double           *coeff);
-
-  void isosurface_python_field_function_set(PDM_isosurface_t                       *isos,
-                                            int                                     id_isosurface,
-                                            PDM_isosurface_python_field_function_t  func);
-
-  void isosurface_python_object_set(PDM_isosurface_t *isos,
-                                    void             *python_object);
 
   void PDM_isosurface_pfield_set(PDM_isosurface_t *isos,
                                  int               id_isosurface,
@@ -233,6 +220,23 @@ cdef extern from "pdm_isosurface.h":
   void PDM_isosurface_free(PDM_isosurface_t  *isos);
 
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+cdef extern from "pdm_isosurface_priv.h":
+  # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+  # > Wrapping of function
+  ctypedef double (*PDM_isosurface_python_field_function_t)(void   *python_object,
+                                                            int     id_iso,
+                                                            double  x,
+                                                            double  y,
+                                                            double  z);
+
+  void isosurface_python_field_function_set(PDM_isosurface_t                       *isos,
+                                            int                                     id_isosurface,
+                                            PDM_isosurface_python_field_function_t  func);
+
+  void isosurface_python_object_set(PDM_isosurface_t *isos,
+                                    void             *python_object);
+
 
 #-------------------------------------------------------------------
 # CALLBACK
