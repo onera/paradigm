@@ -41,66 +41,66 @@ build:
   parallel:
     matrix:
         - COMPILER: "gcc@12"
-          GNUM64: 
-            - "ON"
-          MPI_LIB: 
-            - "intel-oneapi"
-          PDMA:
-            - "ON"  
-          BUILD_TYPE: 
-            - "Sanitize"
-        - COMPILER: "gcc@12"
-          GNUM64: 
-            - "ON"
-          MPI_LIB: 
-            - "intel-oneapi"
-          PDMA:
-            - "OFF"  
-          BUILD_TYPE: 
-            - "Sanitize"
-        - COMPILER: "gcc@12"
-          GNUM64: 
-            - "ON"
-          MPI_LIB: 
-            - "intel-oneapi"
-          PDMA:
-            - "ON"  
-          BUILD_TYPE: 
-            - "Coverage"
-        - COMPILER: "gcc@12"
-          GNUM64: 
-            - "ON"
-          MPI_LIB: 
-            - "openmpi"
-          PDMA:
-            - "ON"  
-          BUILD_TYPE: 
-            - "Debug"
-        - COMPILER: "gcc@12"
-          GNUM64: 
-            - "OFF"
-          MPI_LIB: 
-            - "intel-oneapi"
-          PDMA:
-            - "ON"  
-          BUILD_TYPE: 
-            - "Sanitize"
-        - COMPILER: "intel-llvm@2022"
           GNUM64:
-            - "OFF"
-          MPI_LIB: 
-            - "intel-oneapi"
-          PDMA:
-            - "ON"  
-          BUILD_TYPE: 
-            - "Release"
-        - COMPILER: "intel@2022"
-          GNUM64: 
             - "ON"
           MPI_LIB:
             - "intel-oneapi"
           PDMA:
-            - "ON"  
+            - "ON"
+          BUILD_TYPE:
+            - "Sanitize"
+        - COMPILER: "gcc@12"
+          GNUM64:
+            - "ON"
+          MPI_LIB:
+            - "intel-oneapi"
+          PDMA:
+            - "OFF"
+          BUILD_TYPE:
+            - "Sanitize"
+        - COMPILER: "gcc@12"
+          GNUM64:
+            - "ON"
+          MPI_LIB:
+            - "intel-oneapi"
+          PDMA:
+            - "ON"
+          BUILD_TYPE:
+            - "Coverage"
+        - COMPILER: "gcc@12"
+          GNUM64:
+            - "ON"
+          MPI_LIB:
+            - "openmpi"
+          PDMA:
+            - "ON"
+          BUILD_TYPE:
+            - "Debug"
+        - COMPILER: "gcc@12"
+          GNUM64:
+            - "OFF"
+          MPI_LIB:
+            - "intel-oneapi"
+          PDMA:
+            - "ON"
+          BUILD_TYPE:
+            - "Sanitize"
+        - COMPILER: "intel-llvm@2022"
+          GNUM64:
+            - "OFF"
+          MPI_LIB:
+            - "intel-oneapi"
+          PDMA:
+            - "ON"
+          BUILD_TYPE:
+            - "Release"
+        - COMPILER: "intel@2022"
+          GNUM64:
+            - "ON"
+          MPI_LIB:
+            - "intel-oneapi"
+          PDMA:
+            - "ON"
           BUILD_TYPE:
             - "Debug"
   variables:
@@ -118,15 +118,15 @@ build:
     - echo ${COMPILER}
     - echo ${MPI_LIB}
     - if [[ "${COMPILER}" == "gcc@12" && "${MPI_LIB}" == "intel-oneapi" ]]; then
-    -   cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DPDM_ENABLE_Fortran_MPI_MODULE=OFF -DPDM_ENABLE_PYTHON_BINDINGS=ON -DPDM_ENABLE_STATIC=OFF -DPDM_ENABLE_SHARED=ON -DPDM_ENABLE_Fortran=ON -DPDM_ENABLE_EXTENSION_PDMA=ON -DPDM_ENABLE_LONG_G_NUM=${GNUM64} -DPDM_ENABLE_UNIT_TEST=ON ../
+    -   cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DPDM_ENABLE_Fortran_MPI_MODULE=OFF -DPDM_ENABLE_PYTHON_BINDINGS=ON -DPDM_ENABLE_STATIC=OFF -DPDM_ENABLE_SHARED=ON -DPDM_ENABLE_Fortran=ON -DPDM_ENABLE_EXTENSION_PDMA=${PDMA} -DPDM_ENABLE_LONG_G_NUM=${GNUM64} -DPDM_ENABLE_UNIT_TEST=ON ../
     - elif [[ "${COMPILER}" == "gcc@12" && "${MPI_LIB}" == "openmpi" ]]; then
-    -   cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DPDM_ENABLE_Fortran_MPI_MODULE=OFF -DPDM_ENABLE_PYTHON_BINDINGS=OFF -DPDM_ENABLE_STATIC=OFF -DPDM_ENABLE_SHARED=ON -DPDM_ENABLE_Fortran=OFF -DPDM_ENABLE_EXTENSION_PDMA=ON -DPDM_ENABLE_LONG_G_NUM=${GNUM64} -DPDM_ENABLE_UNIT_TEST=ON  -DPDM_ENABLE_OPENMP=OFF -DMPIEXEC_EXECUTABLE=/opt/tools/openmpi/4.1.1-gnu831-hpc-cuda112/bin/mpirun ../
+    -   cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DPDM_ENABLE_Fortran_MPI_MODULE=OFF -DPDM_ENABLE_PYTHON_BINDINGS=OFF -DPDM_ENABLE_STATIC=OFF -DPDM_ENABLE_SHARED=ON -DPDM_ENABLE_Fortran=OFF -DPDM_ENABLE_EXTENSION_PDMA=${PDMA} -DPDM_ENABLE_LONG_G_NUM=${GNUM64} -DPDM_ENABLE_UNIT_TEST=ON -DPDM_ENABLE_OPENMP=OFF -DMPIEXEC_EXECUTABLE=/opt/tools/openmpi/4.1.1-gnu831-hpc-cuda112/bin/mpirun ../
     - elif [ "${COMPILER}" == "intel@2022" ]; then
-    -   cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DPDM_ENABLE_PYTHON_BINDINGS=ON -DPDM_ENABLE_STATIC=OFF -DPDM_ENABLE_SHARED=ON -DPDM_ENABLE_Fortran=ON -DPDM_ENABLE_EXTENSION_PDMA=${PDMA} -DPDM_ENABLE_LONG_G_NUM=${GNUM64} -DPDM_ENABLE_DOC=ON -DPDM_ENABLE_UNIT_TEST=ON  ../
+    -   cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DPDM_ENABLE_PYTHON_BINDINGS=ON -DPDM_ENABLE_STATIC=OFF -DPDM_ENABLE_SHARED=ON -DPDM_ENABLE_Fortran=ON -DPDM_ENABLE_EXTENSION_PDMA=${PDMA} -DPDM_ENABLE_LONG_G_NUM=${GNUM64} -DPDM_ENABLE_DOC=ON -DPDM_ENABLE_UNIT_TEST=ON ../
     - elif [ "${COMPILER}" == "intel-llvm@2022" ]; then
-    -   cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DPDM_ENABLE_PYTHON_BINDINGS=OFF -DPDM_ENABLE_STATIC=OFF -DPDM_ENABLE_UNIT_TEST=ON -DPDM_ENABLE_SHARED=ON -DPDM_ENABLE_Fortran=ON -DPDM_ENABLE_EXTENSION_PDMA=${PDMA} -DPDM_ENABLE_LONG_G_NUM=${GNUM64} ../
+    -   cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DPDM_ENABLE_PYTHON_BINDINGS=OFF -DPDM_ENABLE_STATIC=OFF -DPDM_ENABLE_SHARED=ON -DPDM_ENABLE_Fortran=ON -DPDM_ENABLE_EXTENSION_PDMA=${PDMA} -DPDM_ENABLE_LONG_G_NUM=${GNUM64} -DPDM_ENABLE_UNIT_TEST=ON ../
     - else
-    -   cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DPDM_ENABLE_PYTHON_BINDINGS=ON -DPDM_ENABLE_STATIC=OFF -DPDM_ENABLE_SHARED=ON -DPDM_ENABLE_UNIT_TEST=ON -DPDM_ENABLE_Fortran=ON -DPDM_ENABLE_EXTENSION_PDMA=${PDMA} -DPDM_ENABLE_LONG_G_NUM=${GNUM64} ../
+    -   cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DPDM_ENABLE_PYTHON_BINDINGS=ON -DPDM_ENABLE_STATIC=OFF -DPDM_ENABLE_SHARED=ON -DPDM_ENABLE_Fortran=ON -DPDM_ENABLE_EXTENSION_PDMA=${PDMA} -DPDM_ENABLE_LONG_G_NUM=${GNUM64} -DPDM_ENABLE_UNIT_TEST=ON ../
     - fi
     - make -j
 
@@ -134,49 +134,49 @@ unit_test:
   parallel:
     matrix:
         - COMPILER: "gcc@12"
-          GNUM64: 
+          GNUM64:
             - "ON"
-          MPI_LIB: 
+          MPI_LIB:
             - "intel-oneapi"
           PDMA:
-            - "ON"  
-          BUILD_TYPE: 
+            - "ON"
+          BUILD_TYPE:
             - "Sanitize"
         - COMPILER: "gcc@12"
-          GNUM64: 
+          GNUM64:
             - "ON"
-          MPI_LIB: 
+          MPI_LIB:
             - "intel-oneapi"
           PDMA:
-            - "OFF"  
-          BUILD_TYPE: 
+            - "OFF"
+          BUILD_TYPE:
             - "Sanitize"
         - COMPILER: "gcc@12"
-          GNUM64: 
+          GNUM64:
             - "ON"
-          MPI_LIB: 
+          MPI_LIB:
             - "intel-oneapi"
           PDMA:
-            - "ON"  
-          BUILD_TYPE: 
+            - "ON"
+          BUILD_TYPE:
             - "Coverage"
         - COMPILER: "gcc@12"
-          GNUM64: 
+          GNUM64:
             - "ON"
-          MPI_LIB: 
+          MPI_LIB:
             - "openmpi"
           PDMA:
-            - "ON"  
-          BUILD_TYPE: 
+            - "ON"
+          BUILD_TYPE:
             - "Debug"
         - COMPILER: "gcc@12"
-          GNUM64: 
+          GNUM64:
             - "OFF"
-          MPI_LIB: 
+          MPI_LIB:
             - "intel-oneapi"
           PDMA:
-            - "ON"  
-          BUILD_TYPE: 
+            - "ON"
+          BUILD_TYPE:
             - "Sanitize"
         - COMPILER: "intel-llvm@2022"
           GNUM64:
@@ -188,12 +188,12 @@ unit_test:
           BUILD_TYPE:
             - "Release"
         - COMPILER: "intel@2022"
-          GNUM64: 
+          GNUM64:
             - "ON"
           MPI_LIB:
             - "intel-oneapi"
           PDMA:
-            - "ON"  
+            - "ON"
           BUILD_TYPE:
             - "Debug"
   variables:
@@ -207,7 +207,7 @@ unit_test:
   script:
     - echo "Runner directory is $PWD; move to working directory $CUSTOM_CI_DIR"
     - export SLURM_EXACT=1
-    - export I_MPI_PMI_LIBRARY=/usr/lib64/libpmi.so 
+    - export I_MPI_PMI_LIBRARY=/usr/lib64/libpmi.so
     - cd $CUSTOM_CI_DIR/build$MATRIX_KEY
     # - ./pdm_run -srun # Pour l'instant ne marche pas avec openmpi
     - ./pdm_run

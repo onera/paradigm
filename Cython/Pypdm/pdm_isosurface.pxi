@@ -1,13 +1,10 @@
+cdef extern from "pdm_part_mesh.h":
+  ctypedef struct PDM_part_mesh_t:
+    pass
 
 cdef extern from "pdm_isosurface.h":
   ctypedef struct PDM_isosurface_t:
       pass
-
-  ctypedef double (*PDM_isosurface_python_field_function_t)(void   *python_object,
-                                                            int     id_iso,
-                                                            double  x,
-                                                            double  y,
-                                                            double  z);
 
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
   # > Wrapping of function
@@ -90,13 +87,6 @@ cdef extern from "pdm_isosurface.h":
   void PDM_isosurface_equation_set(PDM_isosurface_t *isos,
                                    int               id_isosurface,
                                    double           *coeff);
-
-  void isosurface_python_field_function_set(PDM_isosurface_t                       *isos,
-                                            int                                     id_isosurface,
-                                            PDM_isosurface_python_field_function_t  func);
-
-  void isosurface_python_object_set(PDM_isosurface_t *isos,
-                                    void             *python_object);
 
   void PDM_isosurface_pfield_set(PDM_isosurface_t *isos,
                                  int               id_isosurface,
@@ -230,6 +220,23 @@ cdef extern from "pdm_isosurface.h":
   void PDM_isosurface_free(PDM_isosurface_t  *isos);
 
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+cdef extern from "pdm_isosurface_priv.h":
+  # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+  # > Wrapping of function
+  ctypedef double (*PDM_isosurface_python_field_function_t)(void   *python_object,
+                                                            int     id_iso,
+                                                            double  x,
+                                                            double  y,
+                                                            double  z);
+
+  void isosurface_python_field_function_set(PDM_isosurface_t                       *isos,
+                                            int                                     id_isosurface,
+                                            PDM_isosurface_python_field_function_t  func);
+
+  void isosurface_python_object_set(PDM_isosurface_t *isos,
+                                    void             *python_object);
+
 
 #-------------------------------------------------------------------
 # CALLBACK
@@ -481,7 +488,7 @@ cdef class Isosurface:
     cdef int *connect_data     = np_to_int_pointer(connectivity)
 
     PDM_isosurface_pconnectivity_set(self._isos, i_part,
-                                     connectivity_type, 
+                                     connectivity_type,
                                      n_entity,
                                      connect_idx_data,
                                      connect_data)
@@ -521,7 +528,7 @@ cdef class Isosurface:
     cdef PDM_g_num_t *ln_to_gn_data = np_to_gnum_pointer(ln_to_gn)
 
     PDM_isosurface_ln_to_gn_set(self._isos, i_part,
-                                entity_type, 
+                                entity_type,
                                 ln_to_gn_data)
 
   def pgroup_set(self,                               i_part,
@@ -996,7 +1003,7 @@ cdef class Isosurface:
     cdef int         *dconnectivity_idx = NULL
     cdef PDM_g_num_t *dconnectivity     = NULL
     dn_entity = PDM_isosurface_dconnectivity_get(self._isos, id_iso,
-                                                 connectivity_type, 
+                                                 connectivity_type,
                                                 &dconnectivity_idx,
                                                 &dconnectivity,
                                                  PDM_OWNERSHIP_USER)
@@ -1067,7 +1074,7 @@ cdef class Isosurface:
     cdef int         *dgroup_entity_idx = NULL
     cdef PDM_g_num_t *dgroup_entity     = NULL
     n_group = PDM_isosurface_dgroup_get(self._isos, id_iso,
-                                        entity_type, 
+                                        entity_type,
                                        &dgroup_entity_idx,
                                        &dgroup_entity,
                                         PDM_OWNERSHIP_USER)

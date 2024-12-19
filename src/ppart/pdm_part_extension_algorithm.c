@@ -3315,20 +3315,6 @@ PDM_part_extension_build_entity1_graph
   int li_part = 0;
   for(int i_dom = 0; i_dom < n_domain; ++i_dom) {
 
-    int *n_part_shift = NULL;
-    PDM_malloc(n_part_shift, n_rank, int);
-    PDM_MPI_Allgather(&li_part,
-                      1,
-                      PDM_MPI_INT,
-                      n_part_shift,
-                      1,
-                      PDM_MPI_INT,
-                      comm);
-
-    if(0 == 1) {
-      PDM_log_trace_array_int(n_part_shift, n_rank+1, "n_part_shift ::");
-    }
-
     for(int i_part = 0; i_part < n_part[i_dom]; ++i_part) {
       PDM_malloc(part1_to_part2_idx[li_part], pn_entity1[li_part] + 1, int);
       part1_to_part2_idx[li_part][0] = 0;
@@ -3371,7 +3357,7 @@ PDM_part_extension_build_entity1_graph
 
         int idx_write = part1_to_part2_idx[li_part][i_entity] + 3 * part1_to_part2_n[i_entity];
         part1_to_part2_triplet[li_part][idx_write  ] = i_proc_opp;
-        part1_to_part2_triplet[li_part][idx_write+1] = i_part_opp + n_part_shift[i_proc_opp];
+        part1_to_part2_triplet[li_part][idx_write+1] = i_part_opp;
         part1_to_part2_triplet[li_part][idx_write+2] = i_entity_opp;
 
         idx_write = part1_to_part2_idx[li_part][i_entity]/3 + part1_to_part2_n[i_entity]++;
@@ -3403,8 +3389,6 @@ PDM_part_extension_build_entity1_graph
 
       li_part += 1;
     }
-
-    PDM_free(n_part_shift);
   }
 
   PDM_free(n_part_g);

@@ -53,6 +53,12 @@ PDM_domain_interface_create
  PDM_MPI_Comm                comm
 );
 
+int
+PDM_domain_interface_n_interface_get
+(
+ PDM_domain_interface_t *dom_intrf
+);
+
 void
 PDM_domain_interface_set
 (

@@ -486,7 +486,6 @@ int main(int argc, char *argv[])
   for (int i = 0; i < n_part1; i++) {
     for (int j = 0; j < n_elt1[i]; j++) {
       for (int k = part1_to_part2_idx[i][j]; k < part1_to_part2_idx[i][j+1]; k++) {
-        printf("%li %li\n", part1_field_p2p[i][2*k  ], part1_field_coll[i][2*k  ]);
         assert(part1_field_p2p[i][2*k  ] == part1_field_coll[i][2*k  ]);
         assert(part1_field_p2p[i][2*k+1] == part1_field_coll[i][2*k+1]);
       }
