@@ -1231,6 +1231,29 @@ PDM_part_mesh_nodal_sections_id_get
 //  const int       ***select_elt_l_num
 //  );
 
+
+void
+PDM_part_mesh_nodal_n_group_set
+(
+       PDM_part_mesh_nodal_t  *pmn,
+       PDM_geometry_kind_t     geom_kind,
+ const int                     n_group,
+       PDM_ownership_t         ownership_group
+);
+
+void
+PDM_part_mesh_nodal_group_set
+(
+       PDM_part_mesh_nodal_t  *pmn,
+       PDM_geometry_kind_t     geom_kind,
+ const int                     i_part,
+ const int                     i_group,
+       int                     n_group_elmt,
+       int                    *group_elmt,
+       PDM_g_num_t            *group_ln_to_gn,
+       PDM_ownership_t         ownership
+);
+
 void
 PDM_part_mesh_nodal_group_get
 (

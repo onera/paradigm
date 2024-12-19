@@ -82,17 +82,31 @@ cdef extern from "pdm_part_mesh_nodal.h":
                                                           const PDM_geometry_kind_t     geom_kind,
                                                           const int                     id_section_in_geom_kind)
 
+    void PDM_part_mesh_nodal_n_group_set(PDM_part_mesh_nodal_t  *pmn,
+                                         PDM_geometry_kind_t     geom_kind,
+                                         const int               n_group,
+                                         PDM_ownership_t         ownership_group)
+
+    void PDM_part_mesh_nodal_group_set(PDM_part_mesh_nodal_t  *pmn,
+                                       PDM_geometry_kind_t     geom_kind,
+                                       const int               i_part,
+                                       const int               i_group,
+                                       int                     n_group_elmt,
+                                       int                    *group_elmt,
+                                       PDM_g_num_t            *group_ln_to_gn,
+                                       PDM_ownership_t         ownership)
+
     void PDM_part_mesh_nodal_free( PDM_part_mesh_nodal_t* pmn)
 
 # ------------------------------------------------------------------
 cdef class PartMeshNodal:
     """
-      PartMeshNodal: Interface to build face from Element->Vtx connectivity
+      PartMeshNodal: Mesh structure for multi-elmts description
     """
     # ************************************************************************
     # > Class attributes
     cdef PDM_part_mesh_nodal_t *pmn
-    # cdef int idmesh
+    cdef object keep_alive
     cdef int n_rank
     # ************************************************************************
     # ------------------------------------------------------------------------
@@ -101,6 +115,7 @@ cdef class PartMeshNodal:
                         int         mesh_dimension = 3):
         """
         """
+        self.keep_alive = []
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
         self.n_rank = comm.Get_size()
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -114,6 +129,149 @@ cdef class PartMeshNodal:
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
         self.pmn = PDM_part_mesh_nodal_create(mesh_dimension, n_part, PDMC)
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
+
+    def set_coordinates(self,
+                        id_part,
+                        NPY.ndarray[NPY.double_t  , mode='c', ndim=1] pvtx_coord,
+                        NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] pvtx_ln_to_gn):
+        """
+        set_coordinates(pvtx_coord)
+
+        Define partition vertices
+
+        Parameters:
+          id_part       (int)                          : Partition identifier
+          pvtx_coord    (`np.ndarray[np.double_t]`   ) : Coordinate of the mesh
+          pvtx_ln_to_gn (`np.ndarray[npy_pdm_gnum_t]`) : Global numbering
+        """
+        # ************************************************************************
+        # > Declaration
+        cdef int n_vtx
+        # ************************************************************************
+
+        # ::::::::::::::::::::::::::::::::::::::::::::::::::
+        self.keep_alive.append(pvtx_coord)
+        self.keep_alive.append(pvtx_ln_to_gn)
+        # ::::::::::::::::::::::::::::::::::::::::::::::::::
+
+        # ::::::::::::::::::::::::::::::::::::::::::::::::::
+        n_vtx = pvtx_coord.shape[0]//3
+        PDM_part_mesh_nodal_coord_set(self.pmn,
+                                      id_part,
+                                      n_vtx,
+                                      np_to_double_pointer(pvtx_coord),
+                                      np_to_gnum_pointer(pvtx_ln_to_gn),
+                                      PDM_OWNERSHIP_USER)
+        # ::::::::::::::::::::::::::::::::::::::::::::::::::
+
+    # ------------------------------------------------------------------------
+    def add_section(self,
+                    PDM_Mesh_nodal_elt_t elmt_type):
+      """
+      add_section(elmt_type)
+
+        Add for each part, a section of elmt_type and return the internal associated id in order to call set_section
+
+        Parameters:
+          elmt_type (PDM_Mesh_nodal_elt_t) : Kind of element for current sections
+      """
+      id_section = PDM_part_mesh_nodal_section_add(self.pmn,
+                                                   elmt_type)
+      return id_section
+
+    # ------------------------------------------------------------------------
+    def set_section(self,
+                    int                                           id_section,
+                    int                                           id_part,
+                    NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] elmt_vtx,
+                    NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] numabs,
+                    NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] parent_num,
+                    NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] parent_entity_g_num,
+                    int                                           n_elemts):
+        """
+        set_section(elmt_type)
+
+        For id_section and id_part, set the element connectivity and the associated parent_num
+
+        Parameters:
+          id_section (int)                          : id of the section (return by add_section)
+          id_part    (int)                          : id of the part (max = n_part)
+          elmt_vtx   (`np.ndarray[np.int32_t]`)     : Element connectivity
+          numabs     (`np.ndarray[npy_pdm_gnum_t]`) : Global numbering
+          parent_num (`np.ndarray[np.int32_t]`)     : Correspondance table with a PartMesh if any else None
+          numabs     (`np.ndarray[npy_pdm_gnum_t]`) : Global numbering
+        """
+        # ::::::::::::::::::::::::::::::::::::::::::::::::::
+        self.keep_alive.append(elmt_vtx)
+        self.keep_alive.append(numabs)
+        self.keep_alive.append(parent_num)
+        self.keep_alive.append(parent_entity_g_num)
+        # ::::::::::::::::::::::::::::::::::::::::::::::::::
+
+        # ::::::::::::::::::::::::::::::::::::::::::::::::::
+        PDM_part_mesh_nodal_section_std_set(self.pmn,
+                                            id_section,
+                                            id_part,
+                                            n_elemts,
+                                            np_to_int_pointer(elmt_vtx),
+                                            np_to_gnum_pointer(numabs),
+                                            np_to_int_pointer(parent_num),
+                                            np_to_gnum_pointer(parent_entity_g_num),
+                                            PDM_OWNERSHIP_USER)
+        # ::::::::::::::::::::::::::::::::::::::::::::::::::
+
+    # ------------------------------------------------------------------------
+    def n_group_set(self,
+                    PDM_geometry_kind_t geom_kind,
+                    int                 n_group):
+        """
+        n_group_set(geom_kind, n_group)
+
+        Set number of group for the geom_kind
+        Parameters:
+          geom_kind (PDM_geometry_kind_t) : Geometry kind (0D, 1D, 2D, 3D)
+          n_group   (int)                 : Number of group on current geom_kind
+        """
+        PDM_part_mesh_nodal_n_group_set(self.pmn,
+                                        geom_kind,
+                                        n_group,
+                                        PDM_OWNERSHIP_USER)
+
+    # ------------------------------------------------------------------------
+    def group_set(self,
+                  PDM_geometry_kind_t                           geom_kind,
+                  int                                           i_part,
+                  int                                           i_group,
+                  NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] group_elmt,
+                  NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] group_ln_to_gn):
+        """
+        group_set(geom_kind)
+
+        Set number of group for the geom_kind
+        Parameters:
+          geom_kind      (PDM_geometry_kind_t)          : Geometry kind (0D, 1D, 2D, 3D)
+          i_part         (int)                          : id of the section (return by add_section)
+          i_group        (int)                          : id of the group
+          group_elmt     (`np.ndarray[np.int32_t]`)     : Group->entity connectivity (1-based local ids)
+          group_ln_to_gn (`np.ndarray[npy_pdm_gnum_t]`) : Group->entity connectivity (group-specific global ids)
+        """
+        cdef int n_group_elmt
+        n_group_elmt = group_elmt.shape[0]
+        self.keep_alive.append(group_elmt)
+        self.keep_alive.append(group_ln_to_gn)
+        PDM_part_mesh_nodal_group_set(self.pmn,
+                                      geom_kind,
+                                      i_part,
+                                      i_group,
+                                      n_group_elmt,
+                                      np_to_int_pointer(group_elmt),
+                                      np_to_gnum_pointer(group_ln_to_gn),
+                                      PDM_OWNERSHIP_USER)
+
+    def to_view_capsule(self):
+      """
+      """
+      return PyCapsule_New(self.pmn, NULL, NULL);
 
     def dim_get(self):
         return part_mesh_nodal_dim_get(self)
