@@ -725,6 +725,14 @@ PDM_part_mesh_nodal_elmts_group_set
        PDM_ownership_t               ownership_group
 );
 
+/**
+ * \brief Set number of groups
+ *
+ * \param [in]  pmn              Pointer to \ref PDM_part_mesh_nodal_t instance
+ * \param [in]  geom_kind        Geometry kind (volume, surface, ridge or corner)
+ * \param [in]  n_group          Number of groups
+ * \param [in]  ownership_group  Ownership
+ */
 void
 PDM_part_mesh_nodal_elmts_n_group_set
 (

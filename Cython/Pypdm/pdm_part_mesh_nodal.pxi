@@ -135,7 +135,7 @@ cdef class PartMeshNodal:
                         NPY.ndarray[NPY.double_t  , mode='c', ndim=1] pvtx_coord,
                         NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] pvtx_ln_to_gn):
         """
-        set_coordinates(pvtx_coord)
+        set_coordinates(id_part, pvtx_coord, pvtx_ln_to_gn)
 
         Define partition vertices
 
@@ -189,7 +189,7 @@ cdef class PartMeshNodal:
                     NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] parent_entity_g_num,
                     int                                           n_elemts):
         """
-        set_section(elmt_type)
+        set_section(id_section, id_part, elmt_type, numabs, parent_num, parent_entity_g_num)
 
         For id_section and id_part, set the element connectivity and the associated parent_num
 
@@ -245,11 +245,11 @@ cdef class PartMeshNodal:
                   NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] group_elmt,
                   NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] group_ln_to_gn):
         """
-        group_set(geom_kind)
+        group_set(geom_kind, i_part, i_group, group_elmt, group_ln_to_gn)
 
         Set number of group for the geom_kind
         Parameters:
-          geom_kind      (PDM_geometry_kind_t)          : Geometry kind (0D, 1D, 2D, 3D)
+          geom_kind      (PDM_geometry_kind_t)          : Geometry kind (VOLUMIC, SURFACIC, RIDGE, CORNER)
           i_part         (int)                          : id of the section (return by add_section)
           i_group        (int)                          : id of the group
           group_elmt     (`np.ndarray[np.int32_t]`)     : Group->entity connectivity (1-based local ids)
@@ -274,6 +274,11 @@ cdef class PartMeshNodal:
       return PyCapsule_New(self.pmn, NULL, NULL);
 
     def dim_get(self):
+      """
+      Get PartMeshNodal dimension
+
+      Returns: Mesh dimension (0, 1, 2 or 3)
+      """
         return part_mesh_nodal_dim_get(self)
 
     # ------------------------------------------------------------------------
