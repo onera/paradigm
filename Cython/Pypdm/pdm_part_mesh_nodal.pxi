@@ -279,7 +279,7 @@ cdef class PartMeshNodal:
 
       Returns: Mesh dimension (0, 1, 2 or 3)
       """
-        return part_mesh_nodal_dim_get(self)
+      return part_mesh_nodal_dim_get(self)
 
     # ------------------------------------------------------------------------
     def __dealloc__(self):
