@@ -1,10 +1,13 @@
+#include <memory>
+#include <vector>
+#include "doctest/doctest.h"
 #include "doctest/extensions/doctest_mpi.h"
 #include "pdm.h"
 #include "pdm_doctest.h"
 #include "pdm_gnum.h"
 #include "pdm_logging.h"
-#include "pdm_priv.h"
-#include <vector>
+#include "pdm_mpi.h"
+#include "pdm_part_comm_graph.h"
 
 MPI_TEST_CASE("[pdm_gnum] - 1p - from_parent",1) {
 

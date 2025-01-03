@@ -9,9 +9,8 @@
 #include <assert.h>
 #include <float.h>
 #include <math.h>
-#include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
+#include <stdlib.h>
 
 /*----------------------------------------------------------------------------
  *  Local headers
@@ -20,12 +19,11 @@
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
-
-#include "pdm_priv.h"
 #include "pdm_hilbert.h"
-#include "pdm_printf.h"
+#include "pdm.h"
 #include "pdm_error.h"
-#include "pdm_logging.h"
+#include "pdm_mem_tool.h"
+#include "pdm_priv.h"
 
 /*----------------------------------------------------------------------------*/
 

@@ -5,10 +5,8 @@
 #ifndef __PDM_H__
 #define __PDM_H__
 
-#include <stdio.h>
 #include <limits.h>
 #include "pdm_config.h"
-#include "pdm_mpi.h"
 
 /*=============================================================================
  * Macro definitions

@@ -2,35 +2,27 @@
  * Standard C library headers
  *----------------------------------------------------------------------------*/
 
-#include <stdlib.h>
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
-#include <stdint.h>
-#include <sys/types.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
-#include "pdm_mpi.h"
-#include "pdm_binary_search.h"
-#include "pdm_io.h"
-#include "pdm.h"
-#include "pdm_priv.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
-#include "pdm_logging.h"
-#include "pdm_vtk.h"
-#include "pdm_logging.h"
-#include "pdm_gnum.h"
-#include "pdm_array.h"
-#include "pdm_distrib.h"
-#include "pdm_multipart.h"
-#include "pdm_part_to_block.h"
-#include "pdm_block_to_part.h"
-#include "pdm_block_to_block.h"
-
 #include "pdm_reader_stl.h"
+#include "pdm.h"
+#include "pdm_block_to_block.h"
+#include "pdm_distrib.h"
+#include "pdm_error.h"
+#include "pdm_gnum.h"
+#include "pdm_logging.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mesh_nodal.h"
+#include "pdm_mpi.h"
+#include "pdm_part_to_block.h"
+#include "pdm_priv.h"
+#include "pdm_vtk.h"
 
 /*=============================================================================
  * Macro definitions

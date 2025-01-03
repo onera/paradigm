@@ -29,34 +29,18 @@
  * Standard C library headers
  *----------------------------------------------------------------------------*/
 
-#include <assert.h>
 #include <math.h>
-#include <float.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 /*----------------------------------------------------------------------------
  * PDM library headers
  *----------------------------------------------------------------------------*/
 
-#include "pdm.h"
-#include "pdm_priv.h"
-#include "pdm_error.h"
-#include "pdm_printf.h"
-
-/*----------------------------------------------------------------------------
- *  Local headers
- *----------------------------------------------------------------------------*/
-
-#include "pdm_triangle.h"
-#include "pdm_geom_elem.h"
-
-/*----------------------------------------------------------------------------
- *  Header for the current file
- *----------------------------------------------------------------------------*/
-
 #include "pdm_tetrahedron.h"
+#include "pdm.h"
+#include "pdm_mem_tool.h"
+#include "pdm_priv.h"
+#include "pdm_triangle.h"
 
 /*----------------------------------------------------------------------------*/
 

@@ -6,20 +6,19 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
-
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
-#include "pdm.h"
-#include "pdm_priv.h"
-#include "pdm_logging.h"
-#include "pdm_plane.h"
-#include "pdm_line.h"
 #include "pdm_polygon.h"
+#include "pdm.h"
 #include "pdm_geom_elem.h"
-#include "pdm_predicate.h"
+#include "pdm_line.h"
 #include "pdm_mean_values.h"
+#include "pdm_mem_tool.h"
+#include "pdm_plane.h"
+#include "pdm_predicate.h"
+#include "pdm_priv.h"
 
 /*=============================================================================
  * Macro definitions

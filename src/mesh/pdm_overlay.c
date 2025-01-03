@@ -2,38 +2,42 @@
  * Standard C library headers
  *----------------------------------------------------------------------------*/
 
-#include <stdlib.h>
-#include <string.h>
 #include <assert.h>
 #include <math.h>
-#include <float.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
-#include "pdm_mpi.h"
-#include "pdm.h"
-#include "pdm_priv.h"
 #include "pdm_overlay.h"
-#include "pdm_overlay_priv.h"
-#include "pdm_dbbtree.h"
-#include "pdm_sort.h"
-#include "pdm_box_priv.h"
-#include "pdm_binary_search.h"
-#include "pdm_sort.h"
-#include "pdm_part_to_block.h"
-#include "pdm_hash_tab.h"
-#include "pdm_dhash_tab.h"
-#include "pdm_poly_clipp.h"
-#include "pdm_surf_mesh_priv.h"
-#include "pdm_timer.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
+#include "pdm.h"
 #include "pdm_array.h"
+#include "pdm_binary_search.h"
+#include "pdm_box.h"
+#include "pdm_box_priv.h"
+#include "pdm_dbbtree.h"
+#include "pdm_edges_intersect.h"
+#include "pdm_error.h"
 #include "pdm_gnum.h"
-
-#include "pdm_part_to_block_priv.h"
+#include "pdm_hash_tab.h"
+#include "pdm_line.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mpi.h"
+#include "pdm_overlay_priv.h"
+#include "pdm_part_to_block.h"
+#include "pdm_poly_clipp.h"
+#include "pdm_printf.h"
+#include "pdm_priv.h"
+#include "pdm_sort.h"
+#include "pdm_surf_mesh.h"
+#include "pdm_surf_mesh_priv.h"
+#include "pdm_surf_part.h"
+#include "pdm_surf_part_priv.h"
+#include "pdm_timer.h"
+#include "stdbool.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -9,9 +9,6 @@
 
 /* Standard C library headers */
 #include <stdio.h>
-#include <stdarg.h>
-
-/* BFT library headers */
 
 #include "pdm.h"
 /*-----------------------------------------------------------------------------*/

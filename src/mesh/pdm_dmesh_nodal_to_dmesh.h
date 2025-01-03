@@ -14,9 +14,9 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
-#include "pdm_mpi.h"
 #include "pdm_dmesh.h"
 #include "pdm_dmesh_nodal.h"
+#include "pdm_mpi.h"
 
 /*=============================================================================
  * Macro definition

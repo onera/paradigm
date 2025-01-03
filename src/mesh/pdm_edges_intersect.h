@@ -14,10 +14,9 @@
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
-#include "pdm_mpi.h"
 #include "pdm.h"
-#include "pdm_hash_tab.h"
 #include "pdm_line.h"
+#include "pdm_mpi.h"
 
 /*=============================================================================
  * Macro definitions

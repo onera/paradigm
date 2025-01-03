@@ -13,6 +13,8 @@
 #include "pdm.h"
 #include "pdm_surf_mesh.h"
 #include "pdm_mesh_nodal.h"
+#include "pdm_part_to_block.h"
+#include "pdm_block_to_part.h"
 #include "pdm_timer.h"
 
 /*=============================================================================

@@ -5,6 +5,7 @@
 #ifndef __PDM_FILE_SEQ_H__
 #define __PDM_FILE_SEQ_H__
 
+#include <stddef.h>
 #include "pdm.h"
 
 /*============================================================================

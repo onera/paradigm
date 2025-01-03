@@ -1,8 +1,10 @@
+
+#include "doctest/doctest.h"
 #include "doctest/extensions/doctest_mpi.h"
 #include "pdm.h"
-#include "pdm_doctest.h"
-#include "pdm_priv.h"
 #include "pdm_array.h"
+#include "pdm_doctest.h"
+#include "pdm_mem_tool.h"
 
 MPI_TEST_CASE("[pdm_array] - 1p - PDM_array_zeros", 1) {
   int *array = PDM_array_zeros_int(5);

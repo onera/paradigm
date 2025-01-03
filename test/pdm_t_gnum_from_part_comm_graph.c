@@ -6,40 +6,25 @@
  * Standard C library headers
  *----------------------------------------------------------------------------*/
 
-#include <assert.h>
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
-#include <stdbool.h>
+#include <string.h>
 
 /*----------------------------------------------------------------------------
  * Header for the current file
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
-#include "pdm_priv.h"
-#include "pdm_mpi.h"
-#include "pdm_config.h"
-#include "pdm_printf.h"
-#include "pdm_binary_search.h"
-#include "pdm_sort.h"
-#include "pdm_array.h"
-#include "pdm_timer.h"
 #include "pdm_distrib.h"
-#include "pdm_gnum.h"
-#include "pdm_part_to_part.h"
-#include "pdm_part_to_block.h"
-#include "pdm_para_octree.h"
-#include "pdm_closest_points.h"
-#include "pdm_dist_cloud_surf.h"
-
-#include "pdm_extract_part.h"
-#include "pdm_vtk.h"
 #include "pdm_generate_mesh.h"
-#include "pdm_partitioning_algorithm.h"
-#include "pdm_logging.h"
-#include "pdm_distant_neighbor.h"
+#include "pdm_gnum.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mesh_nodal.h"
+#include "pdm_mpi.h"
 #include "pdm_part_comm_graph.h"
+#include "pdm_partitioning_algorithm.h"
+#include "pdm_printf.h"
+#include "pdm_vtk.h"
 
 /*============================================================================
  * Macro definitions

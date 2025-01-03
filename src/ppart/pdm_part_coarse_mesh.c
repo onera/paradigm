@@ -1,33 +1,35 @@
-#include <math.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <assert.h>
-#include <unistd.h>
 
-#include "pdm.h"
-#include "pdm_mpi.h"
-#include "pdm_priv.h"
-#include "pdm_config.h"
-#include "pdm_geom_elem.h"
+/*----------------------------------------------------------------------------
+ * Standard C library headers
+ *----------------------------------------------------------------------------*/
+
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+/*----------------------------------------------------------------------------
+ *  Header for the current file
+ *----------------------------------------------------------------------------*/
 #include "pdm_part_coarse_mesh.h"
 #include "pdm_part_coarse_mesh_priv.h"
-#include "pdm_part_priv.h"
-#include "pdm_timer.h"
-
-#include "pdm_part.h"
-#include "pdm_part_renum.h"
-#include "pdm_order.h"
-#include "pdm_mpi.h"
+#include "pdm.h"
 #include "pdm_array.h"
-
-#include "pdm_part_to_block.h"
 #include "pdm_block_to_part.h"
-
-#include "pdm_ext_wrapper.h"
-#include "pdm_part_graph.h"
-#include "pdm_printf.h"
+#include "pdm_config.h"
 #include "pdm_error.h"
+#include "pdm_ext_wrapper.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mpi.h"
+#include "pdm_order.h"
+#include "pdm_part_coarse_mesh_priv.h"
+#include "pdm_part_graph.h"
+#include "pdm_part_priv.h"
+#include "pdm_part_renum.h"
+#include "pdm_part_to_block.h"
+#include "pdm_printf.h"
+#include "pdm_priv.h"
+#include "pdm_timer.h"
 
 /*=============================================================================
  * Macro definitions

@@ -19,33 +19,33 @@
 */
 
 /*----------------------------------------------------------------------------
- *  Local headers
+ *  System headers
  *----------------------------------------------------------------------------*/
-#include <stdlib.h>
-#include <math.h>
 #include <assert.h>
 #include <limits.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-#include "pdm.h"
-#include "pdm_mpi.h"
-#include "pdm_priv.h"
-
-#include "pdm_error.h"
-#include "pdm_logging.h"
-
-#include "pdm_array.h"
-#include "pdm_mesh_nodal.h"
-#include "pdm_partitioning_algorithm.h"
-#include "pdm_vtk.h"
-#include "pdm_gnum.h"
-#include "pdm_part_mesh.h"
-#include "pdm_part_mesh_nodal.h"
-#include "pdm_part_mesh_nodal_priv.h"
-#include "pdm_part_mesh_nodal_elmts.h"
-#include "pdm_part_mesh_nodal_elmts_utils.h"
-
+/*----------------------------------------------------------------------------
+ *  Local headers
+ *----------------------------------------------------------------------------*/
 #include "pdm_part_mesh_nodal_to_part_mesh.h"
 #include "pdm_part_mesh_nodal_to_part_mesh_priv.h"
+#include "pdm.h"
+#include "pdm_config.h"
+#include "pdm_error.h"
+#include "pdm_gnum.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mesh_nodal.h"
+#include "pdm_mesh_nodal_priv.h"
+#include "pdm_mpi.h"
+#include "pdm_part_mesh.h"
+#include "pdm_part_mesh_nodal.h"
+#include "pdm_part_mesh_nodal_elmts.h"
+#include "pdm_part_mesh_nodal_elmts_utils.h"
+#include "pdm_part_mesh_nodal_priv.h"
+#include "pdm_priv.h"
 
 /*----------------------------------------------------------------------------*/
 

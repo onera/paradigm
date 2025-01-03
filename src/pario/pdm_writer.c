@@ -8,33 +8,27 @@
 
 #include <assert.h>
 #include <stddef.h>
-#include <stdlib.h>
 #include <stdio.h>
-#include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
-#include <math.h>
 #include <sys/stat.h>
-#include <sys/types.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
 #include "pdm_writer.h"
-#include "pdm_writer_priv.h"
-#include "pdm_writer_ensight.h"
-#include "pdm_binary_search.h"
 #include "pdm.h"
-#include "pdm_priv.h"
-#include "pdm_fortran_to_c_string.h"
-#include "pdm_remove_blank.h"
-#include "pdm_printf.h"
+#include "pdm_array.h"
 #include "pdm_error.h"
+#include "pdm_mem_tool.h"
 #include "pdm_mesh_nodal.h"
 #include "pdm_part_mesh_nodal.h"
 #include "pdm_part_mesh_nodal_priv.h"
-#include "pdm_array.h"
-#include "pdm_logging.h"
+#include "pdm_priv.h"
+#include "pdm_remove_blank.h"
+#include "pdm_writer_ensight.h"
+#include "pdm_writer_priv.h"
 
 /*----------------------------------------------------------------------------*/
 

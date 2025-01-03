@@ -23,30 +23,28 @@
 
 #include <assert.h>
 #include <stdio.h>
-#include <math.h>
 #include <string.h>
-#include <stdlib.h>
 
 /*----------------------------------------------------------------------------
  * Local headers
  *----------------------------------------------------------------------------*/
 
-#include "pdm_printf.h"
-#include "pdm_error.h"
-#include "pdm.h"
-#include "pdm_priv.h"
-#include "pdm_mpi.h"
-#include "pdm_timer.h"
 #include "pdm_closest_points.h"
+#include "pdm.h"
+#include "pdm_array.h"
+#include "pdm_block_to_part.h"
 #include "pdm_closest_points_priv.h"
+#include "pdm_error.h"
+#include "pdm_logging.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mpi.h"
 #include "pdm_para_octree.h"
 #include "pdm_part_to_block.h"
 #include "pdm_part_to_part.h"
-#include "pdm_block_to_part.h"
-#include "pdm_array.h"
+#include "pdm_printf.h"
+#include "pdm_priv.h"
 #include "pdm_sort.h"
-#include "pdm_binary_search.h"
-#include "pdm_logging.h"
+#include "pdm_timer.h"
 
 /*----------------------------------------------------------------------------*/
 

@@ -6,7 +6,7 @@
  *----------------------------------------------------------------------------*/
 
 #include <assert.h>
-#include <ctype.h>  /* toupper() */
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,12 +15,13 @@
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
+#include "pdm_writer_ensight_case.h"
+#include "pdm_error.h"
+#include "pdm_mem_tool.h"
+#include "pdm_printf.h"
 #include "pdm_priv.h"
 #include "pdm_writer.h"
 #include "pdm_writer_priv.h"
-#include "pdm_writer_ensight_case.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
 
 /*----------------------------------------------------------------------------*/
 

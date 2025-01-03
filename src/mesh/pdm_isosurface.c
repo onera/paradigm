@@ -19,39 +19,41 @@
 */
 
 /*----------------------------------------------------------------------------
+ * Standard C library headers
+ *----------------------------------------------------------------------------*/
+
+#include <assert.h>
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+/*----------------------------------------------------------------------------
  *  Local headers
  *----------------------------------------------------------------------------*/
-#include <stdlib.h>
-#include <math.h>
-#include <assert.h>
-
-#include "pdm.h"
-#include "pdm_mpi.h"
-#include "pdm_priv.h"
-
-#include "pdm_error.h"
-#include "pdm_logging.h"
-
-#include "pdm_array.h"
-#include "pdm_binary_search.h"
-#include "pdm_distrib.h"
-
-#include "pdm_mesh_nodal.h"
-#include "pdm_partitioning_algorithm.h"
-#include "pdm_extract_part.h"
-#include "pdm_vtk.h"
-#include "pdm_part_mesh_nodal_to_part_mesh.h"
-#include "pdm_part_connectivity_transform.h"
-#include "pdm_triangulate.h"
-
-#include "pdm_distrib.h"
-
-#include "pdm_part_to_block.h"
-#include "pdm_multipart.h"
-#include "pdm_part_mesh_nodal_priv.h"
 
 #include "pdm_isosurface.h"
+#include "pdm.h"
+#include "pdm_array.h"
+#include "pdm_binary_search.h"
+#include "pdm_block_to_part.h"
+#include "pdm_distrib.h"
+#include "pdm_error.h"
+#include "pdm_extract_part.h"
 #include "pdm_isosurface_priv.h"
+#include "pdm_logging.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mesh_nodal.h"
+#include "pdm_mpi.h"
+#include "pdm_multipart.h"
+#include "pdm_part_connectivity_transform.h"
+#include "pdm_part_mesh_nodal_elmts.h"
+#include "pdm_part_mesh_nodal_priv.h"
+#include "pdm_part_mesh_nodal_to_part_mesh.h"
+#include "pdm_part_to_block.h"
+#include "pdm_partitioning_algorithm.h"
+#include "pdm_priv.h"
+#include "pdm_triangulate.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -2273,12 +2275,6 @@ _part_to_dist_elt
     for (int i_elt=0; i_elt<size_elt_vtx; ++i_elt) {
       int elt_lnum = elt_vtx[i_part][i_elt];
       _elt_vtx[i_part][i_elt] = _iso->iso_entity_gnum[PDM_MESH_ENTITY_VTX][i_part][elt_lnum-1];
-    }
-    int idx = 0;
-    for (int i_elt=0; i_elt<n_elt[i_part]; ++i_elt) {
-      // log_trace("elt "PDM_FMT_G_NUM" : ", elt_gnum[i_part][i_elt]);
-      // PDM_log_trace_array_long(_elt_vtx[i_part] + idx, _elt_vtx_strd[i_part][i_elt], "");
-      idx += _elt_vtx_strd[i_part][i_elt];
     }
   }
 

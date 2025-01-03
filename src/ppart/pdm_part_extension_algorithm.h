@@ -13,10 +13,9 @@
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
-#include "pdm_mpi.h"
 #include "pdm.h"
+#include "pdm_mpi.h"
 #include "pdm_part_domain_interface.h"
-#include "pdm_part_to_part.h"
 
 /*=============================================================================
  * Macro definitions

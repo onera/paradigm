@@ -2,6 +2,7 @@
 #include <numeric>
 #include "doctest/extensions/doctest_mpi.h"
 #include "pdm.h"
+#include "pdm_mpi.h"
 #include "pdm_doctest.h"
 #include "pdm_unique.h"
 #include "pdm_logging.h"

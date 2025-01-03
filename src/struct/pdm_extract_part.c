@@ -2,47 +2,45 @@
  * Standard C library headers
  *----------------------------------------------------------------------------*/
 
+#include <assert.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
-#include <math.h>
-#include <float.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
-#include "pdm_mpi.h"
-#include "pdm.h"
-#include "pdm_priv.h"
-#include "pdm_sort.h"
-#include "pdm_binary_search.h"
-#include "pdm_sort.h"
-#include "pdm_part_to_block.h"
-#include "pdm_block_to_part.h"
-#include "pdm_part_to_part.h"
-#include "pdm_timer.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
-#include "pdm_array.h"
-#include "pdm_gnum.h"
-#include "pdm_part_renum.h"
-#include "pdm_part_priv.h"
 #include "pdm_extract_part.h"
-#include "pdm_extract_part_priv.h"
-#include "pdm_partitioning_algorithm.h"
-#include "pdm_dconnectivity_transform.h"
-#include "pdm_para_graph_dual.h"
-#include "pdm_vtk.h"
-#include "pdm_logging.h"
+#include "pdm.h"
+#include "pdm_array.h"
+#include "pdm_binary_search.h"
+#include "pdm_block_to_part.h"
 #include "pdm_distrib.h"
+#include "pdm_error.h"
+#include "pdm_extract_part_priv.h"
+#include "pdm_gnum.h"
 #include "pdm_gnum_location.h"
-#include "pdm_unique.h"
-#include "pdm_part_mesh_nodal_elmts_priv.h"
-#include "pdm_part_mesh_nodal_priv.h"
 #include "pdm_ho_ordering.h"
+#include "pdm_logging.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mesh_nodal.h"
+#include "pdm_mesh_nodal_priv.h"
+#include "pdm_mpi.h"
+#include "pdm_para_graph_dual.h"
+#include "pdm_part_geom.h"
 #include "pdm_part_mesh_nodal.h"
+#include "pdm_part_mesh_nodal_elmts.h"
+#include "pdm_part_mesh_nodal_elmts_priv.h"
 #include "pdm_part_mesh_nodal_elmts_utils.h"
+#include "pdm_part_mesh_nodal_priv.h"
+#include "pdm_part_priv.h"
+#include "pdm_part_renum.h"
+#include "pdm_part_to_block.h"
+#include "pdm_part_to_part.h"
+#include "pdm_partitioning_algorithm.h"
+#include "pdm_priv.h"
+#include "pdm_unique.h"
 
 
 #ifdef __cplusplus

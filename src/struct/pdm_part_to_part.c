@@ -2,11 +2,9 @@
  * Standard C library headers
  *----------------------------------------------------------------------------*/
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <limits.h>
-#include <assert.h>
-#include <math.h>
 #include <string.h>
 
 /*----------------------------------------------------------------------------
@@ -14,21 +12,16 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm_part_to_part.h"
-#include "pdm_part_to_part_priv.h"
-#include "pdm_part_to_block.h"
-#include "pdm_block_to_part.h"
-#include "pdm_gnum_location.h"
 #include "pdm.h"
-#include "pdm_mpi.h"
-#include "pdm_timer.h"
-#include "pdm_priv.h"
-#include "pdm_binary_search.h"
-#include "pdm_sort.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
-#include "pdm_logging.h"
 #include "pdm_array.h"
-#include "pdm_distrib.h"
+#include "pdm_error.h"
+#include "pdm_gnum_location.h"
+#include "pdm_logging.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mpi.h"
+#include "pdm_part_to_part_priv.h"
+#include "pdm_priv.h"
+#include "pdm_sort.h"
 
 #ifdef __cplusplus
 extern "C" {

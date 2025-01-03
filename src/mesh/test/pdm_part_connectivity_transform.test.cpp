@@ -1,9 +1,9 @@
+#include <stdlib.h>
+#include "doctest/doctest.h"
 #include "doctest/extensions/doctest_mpi.h"
-#include "pdm.h"
 #include "pdm_doctest.h"
-#include "pdm_logging.h"
+#include "pdm_mem_tool.h"
 #include "pdm_part_connectivity_transform.h"
-#include "pdm_priv.h"
 
 /*
  *  Use case

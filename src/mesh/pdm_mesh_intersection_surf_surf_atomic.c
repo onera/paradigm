@@ -1,21 +1,21 @@
+/*----------------------------------------------------------------------------
+ *  System headers
+ *----------------------------------------------------------------------------*/
+#include <assert.h>
 #include <math.h>
-#include <sys/time.h>
-#include <time.h>
-#include <sys/resource.h>
-#include <unistd.h>
-#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <assert.h>
 
-#include "pdm_logging.h"
-#include "pdm_vtk.h"
+/*----------------------------------------------------------------------------
+ *  Local headers
+ *----------------------------------------------------------------------------*/
+
+#include "pdm_mesh_intersection_surf_surf_atomic.h"
 #include "pdm.h"
 #include "pdm_error.h"
-#include "pdm_priv.h"
-
 #include "pdm_line.h"
-#include "pdm_mesh_intersection_surf_surf_atomic.h"
+#include "pdm_logging.h"
+#include "pdm_priv.h"
 
 /*============================================================================
  * Global variables

@@ -4,20 +4,18 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <math.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
-#include "pdm.h"
-#include "pdm_priv.h"
 #include "pdm_unique.h"
+#include "pdm.h"
 #include "pdm_array.h"
-#include "pdm_quick_sort.h"
-#include "pdm_radix_sort.h"
 #include "pdm_binary_search.h"
+#include "pdm_mem_tool.h"
+#include "pdm_priv.h"
+#include "pdm_sort.h"
 
 #ifdef __cplusplus
 extern "C" {

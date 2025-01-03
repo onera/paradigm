@@ -4,30 +4,19 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <limits.h>
-#include <assert.h>
-#include <math.h>
-#include <string.h>
-#include <float.h>
-#include <unistd.h>
-
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
 #include "pdm_part_comm_graph.h"
-#include "pdm_part_comm_graph_priv.h"
 #include "pdm.h"
-#include "pdm_timer.h"
-#include "pdm_priv.h"
-#include "pdm_binary_search.h"
-#include "pdm_sort.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
 #include "pdm_array.h"
-#include "pdm_order.h"
+#include "pdm_binary_search.h"
+#include "pdm_error.h"
 #include "pdm_logging.h"
-#include "pdm_distrib.h"
+#include "pdm_mem_tool.h"
+#include "pdm_order.h"
+#include "pdm_part_comm_graph_priv.h"
 #include "pdm_unique.h"
 
 #ifdef __cplusplus

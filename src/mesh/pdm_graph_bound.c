@@ -2,24 +2,24 @@
  * Standard C library headers
  *----------------------------------------------------------------------------*/
 
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
+#include "pdm_array.h"
+#include "pdm_error.h"
+#include "pdm_mem_tool.h"
 #include "pdm_mpi.h"
+#include "pdm_part_bound.h"
+#include "pdm_printf.h"
 #include "pdm_priv.h"
 #include "pdm_graph_bound.h"
 #include "pdm_graph_bound_priv.h"
-#include "pdm_part_bound.h"
-#include "pdm_part_bound_priv.h"
-#include "pdm_array.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
 
 #ifdef __cplusplus
 extern "C" {

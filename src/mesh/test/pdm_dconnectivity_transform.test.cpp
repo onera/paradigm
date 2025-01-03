@@ -1,10 +1,12 @@
+#include <stddef.h>
 #include <vector>
+#include "doctest/doctest.h"
 #include "doctest/extensions/doctest_mpi.h"
 #include "pdm.h"
-#include "pdm_doctest.h"
 #include "pdm_dconnectivity_transform.h"
-#include "pdm_logging.h"
-#include "pdm_priv.h"
+#include "pdm_doctest.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mpi.h"
 
 /*
  *  Use case

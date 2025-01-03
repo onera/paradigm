@@ -17,7 +17,6 @@
  *  Local headers
  *----------------------------------------------------------------------------*/
 
-#include "pdm.h"
 #include "pdm_part.h"
 
 #ifdef	__cplusplus

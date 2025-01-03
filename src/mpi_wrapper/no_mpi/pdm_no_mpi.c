@@ -6,17 +6,16 @@
  * Standard C library headers
  *----------------------------------------------------------------------------*/
 
-#include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
+#include <stdlib.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
-#include "pdm_mpi.h"
-#include "pdm_printf.h"
+#include "pdm.h"
 #include "pdm_error.h"
+#include "pdm_mpi.h"
 
 #ifdef __cplusplus
 extern "C" {

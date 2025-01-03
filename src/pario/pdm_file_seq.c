@@ -6,19 +6,18 @@
  * Standard C library headers
  *----------------------------------------------------------------------------*/
 
-#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
 #include "pdm_file_seq.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
 #include "pdm.h"
-#include "pdm_priv.h"
+#include "pdm_error.h"
+#include "pdm_mem_tool.h"
 
 /*----------------------------------------------------------------------------*/
 

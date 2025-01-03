@@ -4,33 +4,30 @@
  *----------------------------------------------------------------------------*/
 
 #include <assert.h>
+#include <math.h>
 #include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdbool.h>
 
 /*----------------------------------------------------------------------------
  *  Local headers
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
-#include "pdm_priv.h"
-#include "pdm_config.h"
-#include "pdm_morton.h"
 #include "pdm_array.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
-#include "pdm_mpi.h"
-#include "pdm_part_to_block.h"
-#include "pdm_block_to_part.h"
-#include "pdm_logging.h"
-#include "pdm_distant_neighbor.h"
-#include "pdm_part_connectivity_transform.h"
-#include "pdm_partitioning_algorithm.h"
-#include "pdm_distrib.h"
-#include "pdm_vtk.h"
-#include "pdm_order.h"
 #include "pdm_binary_search.h"
+#include "pdm_distant_neighbor.h"
+#include "pdm_distrib.h"
+#include "pdm_logging.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mesh_nodal.h"
+#include "pdm_mpi.h"
+#include "pdm_part_connectivity_transform.h"
+#include "pdm_part_mesh_nodal_elmts.h"
+#include "pdm_part_priv.h"
+#include "pdm_partitioning_algorithm.h"
+#include "pdm_priv.h"
+#include "pdm_vtk.h"
+#include "pdm_field_cell_to_vtx.h"
+#include "pdm_field_cell_to_vtx_priv.h"
 
 /*----------------------------------------------------------------------------
  *  Header for the current file

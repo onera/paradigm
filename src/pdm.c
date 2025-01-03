@@ -3,20 +3,14 @@
  *  Standar headers
  *----------------------------------------------------------------------------*/
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
-
 /*----------------------------------------------------------------------------
  *  Local headers
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
 #include "pdm_error.h"
-#include "pdm_part.h"
+#include "pdm_part_coarse_mesh_priv.h"
 #include "pdm_part_renum.h"
-#include "pdm_part_coarse_mesh.h"
-
 
 #ifdef __cplusplus
 extern "C" {

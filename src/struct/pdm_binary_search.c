@@ -2,17 +2,16 @@
  * Standard C library headers
  *----------------------------------------------------------------------------*/
 
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
-#include "pdm.h"
-#include "pdm_priv.h"
 #include "pdm_binary_search.h"
+#include "pdm.h"
 #include "pdm_printf.h"
 
 #ifdef __cplusplus

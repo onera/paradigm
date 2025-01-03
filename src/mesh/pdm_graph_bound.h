@@ -14,6 +14,7 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
+#include "pdm_mpi.h"
 #include "pdm_part_bound.h"
 
 #ifdef __cplusplus

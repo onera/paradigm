@@ -9,7 +9,9 @@
  * Standard C library headers
  *----------------------------------------------------------------------------*/
 
+#include <stddef.h>
 #include "pdm.h"
+#include "pdm_mpi.h"
 
 /*----------------------------------------------------------------------------
  *  Header for the current file

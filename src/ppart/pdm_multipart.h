@@ -30,12 +30,11 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
-#include "pdm_mpi.h"
 #include "pdm_dmesh.h"
 #include "pdm_dmesh_nodal.h"
-#include "pdm_part_mesh_nodal.h"
-#include "pdm_part_mesh.h"
 #include "pdm_domain_interface.h"
+#include "pdm_mpi.h"
+#include "pdm_part_mesh_nodal.h"
 
 /*----------------------------------------------------------------------------*/
 

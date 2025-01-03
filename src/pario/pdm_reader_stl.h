@@ -23,9 +23,8 @@
   License along with this library. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "pdm.h"
-#include "pdm_mpi.h"
 #include "pdm_dmesh_nodal.h"
+#include "pdm_mpi.h"
 
 /*----------------------------------------------------------------------------
  * Macro for handling of different symbol names (underscored or not,

@@ -1,20 +1,18 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "pdm.h"
-#include "pdm_priv.h"
-#include "pdm_config.h"
-#include "pdm_mpi.h"
-#include "pdm_para_graph_dual.h"
-#include "pdm_multipart.h"
 #include "pdm_dcube_gen.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
-#include "pdm_dmesh.h"
-#include "pdm_writer.h"
 #include "pdm_distrib.h"
+#include "pdm_dmesh.h"
+#include "pdm_io.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mpi.h"
+#include "pdm_multipart.h"
+#include "pdm_printf.h"
+#include "pdm_writer.h"
 
 /*============================================================================
  * Type definitions

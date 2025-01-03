@@ -2,28 +2,28 @@
  * Standard C library headers
  *----------------------------------------------------------------------------*/
 
-#include <stdlib.h>
-#include <stdbool.h>
 #include <assert.h>
-
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
-#include "pdm_priv.h"
+#include "pdm_array.h"
+#include "pdm_block_to_part.h"
+#include "pdm_error.h"
+#include "pdm_hash_tab.h"
 #include "pdm_line.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mpi.h"
+#include "pdm_part_to_block.h"
 #include "pdm_plane.h"
+#include "pdm_printf.h"
+#include "pdm_priv.h"
 #include "pdm_edges_intersect.h"
 #include "pdm_edges_intersect_priv.h"
-#include "pdm_hash_tab.h"
-#include "pdm_part_to_block.h"
-#include "pdm_block_to_part.h"
-#include "pdm_mpi.h"
-#include "pdm_morton.h"
-#include "pdm_array.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
 
 /*=============================================================================
  * Macro definitions

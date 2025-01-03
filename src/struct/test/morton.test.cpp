@@ -1,14 +1,11 @@
-#include <vector>
-#include <numeric>
+#include <stdio.h>
+#include "doctest/doctest.h"
 #include "doctest/extensions/doctest_mpi.h"
-#include "pdm.h"
-#include "pdm_doctest.h"
-#include "pdm_unique.h"
-#include "pdm_logging.h"
+#include "pdm_mem_tool.h"
 #include "pdm_morton.h"
+#include "pdm_mpi.h"
 #include "pdm_part_to_block.h"
-#include "pdm_priv.h"
-
+#include "stdbool.h"
 
 TEST_CASE("[pdm_morton] - PDM_morton_encode") {
 

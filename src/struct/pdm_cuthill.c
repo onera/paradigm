@@ -6,27 +6,18 @@
  * Standard C library headers
  *----------------------------------------------------------------------------*/
 
-#include <assert.h>
-#include <float.h>
-#include <math.h>
-#include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
-
-/*----------------------------------------------------------------------------
- *  Local headers
- *----------------------------------------------------------------------------*/
+#include <stdlib.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
-#include "pdm.h"
-#include "pdm_priv.h"
 #include "pdm_cuthill.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
 #include "pdm_array.h"
+#include "pdm_mem_tool.h"
+#include "pdm_printf.h"
+#include "pdm_priv.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -40,10 +31,6 @@ extern "C" {
 /*=============================================================================
  * Local Macro definitions
  *============================================================================*/
-
-#define _MIN(a,b)   ((a) < (b) ?  (a) : (b))  /* Minimum of a et b */
-
-#define _MAX(a,b)   ((a) > (b) ?  (a) : (b))  /* Maximum of a et b */
 
 /*=============================================================================
  * Static global variables
@@ -84,8 +71,8 @@ int adj[]
     for ( j = adj_row[i]; j <= adj_row[i+1]-1; j++ )
     {
       col = adj[j-1] - 1;
-      band_lo = _MAX( band_lo, i - col );
-      band_hi = _MAX( band_hi, col - i );
+      band_lo = PDM_MAX( band_lo, i - col );
+      band_hi = PDM_MAX( band_hi, col - i );
     }
   }
 

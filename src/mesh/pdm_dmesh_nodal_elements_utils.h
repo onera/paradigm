@@ -9,7 +9,10 @@
  * Standard C library headers
  *----------------------------------------------------------------------------*/
 
-#include "pdm_dmesh_nodal.h"
+#include "pdm.h"
+#include "pdm_dmesh_nodal_elmts.h"
+#include "pdm_mesh_nodal.h"
+
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/

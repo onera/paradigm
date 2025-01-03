@@ -24,12 +24,13 @@
 #include <stdlib.h>
 
 #include "pdm.h"
-#include "pdm_mpi.h"
-#include "pdm_error.h"
 #include "pdm_distrib.h"
-#include "pdm_mesh_nodal.h"
+#include "pdm_dmesh.h"
+#include "pdm_dmesh_nodal.h"
+#include "pdm_error.h"
 #include "pdm_isosurface.h"
 #include "pdm_isosurface_priv.h"
+#include "pdm_mpi.h"
 
 /*----------------------------------------------------------------------------*/
 

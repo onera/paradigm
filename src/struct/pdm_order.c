@@ -3,15 +3,14 @@
  *----------------------------------------------------------------------------*/
 
 #include <stdio.h>
-#include <stdlib.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
-#include "pdm.h"
-#include "pdm_priv.h"
 #include "pdm_order.h"
+#include "pdm.h"
+#include "pdm_mem_tool.h"
 
 #ifdef __cplusplus
 extern "C" {

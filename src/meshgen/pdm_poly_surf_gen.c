@@ -21,22 +21,19 @@
  *  System headers
  *----------------------------------------------------------------------------*/
 
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
-#include <math.h>
 
 /*----------------------------------------------------------------------------
  *  Local headers
  *----------------------------------------------------------------------------*/
 
 #include "pdm_poly_surf_gen.h"
-#include "pdm_config.h"
 #include "pdm.h"
-#include "pdm_priv.h"
+#include "pdm_mem_tool.h"
 #include "pdm_mpi.h"
 #include "pdm_printf.h"
-#include "pdm_error.h"
 
 
 /*============================================================================

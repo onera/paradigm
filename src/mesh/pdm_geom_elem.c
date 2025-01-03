@@ -21,31 +21,30 @@
  * Standard C library headers
  *----------------------------------------------------------------------------*/
 
+#include <assert.h>
+#include <float.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
-#include <float.h>
 #include <string.h>
-#include <assert.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
+#include "pdm_geom_elem.h"
+#include "pdm_array.h"
+#include "pdm_error.h"
+#include "pdm_hash_tab.h"
+#include "pdm_line.h"
+#include "pdm_mem_tool.h"
+#include "pdm_order.h"
+#include "pdm_plane.h"
+#include "pdm_polygon.h"
+#include "pdm_printf.h"
 #include "pdm_priv.h"
 #include "pdm_triangle.h"
 #include "pdm_triangulate.h"
-#include "pdm_polygon.h"
-#include "pdm_plane.h"
-#include "pdm_geom_elem.h"
-#include "pdm_hash_tab.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
-#include "pdm_vtk.h"
-#include "pdm_logging.h"
-#include "pdm_array.h"
-#include "pdm_order.h"
-#include "pdm_line.h"
 
 #ifdef __cplusplus
 extern "C" {

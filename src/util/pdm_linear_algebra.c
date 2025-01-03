@@ -28,19 +28,17 @@
  * Standard C library headers
  *----------------------------------------------------------------------------*/
 
-#include <stdlib.h>
-#include <assert.h>
+#include <math.h>
+#include <stdio.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
-#include "pdm_config.h"
+#include "pdm_linear_algebra.h"
+#include "pdm_error.h"
 #include "pdm_priv.h"
 #include "pdm_sort.h"
-#include "pdm_error.h"
-
-#include "pdm_linear_algebra.h"
 
 
 #ifdef  __cplusplus

@@ -1,24 +1,19 @@
-#include <math.h>
-#include <sys/time.h>
-#include <time.h>
-#include <sys/resource.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+
+/*----------------------------------------------------------------------------
+ * Standard C library headers
+ *----------------------------------------------------------------------------*/
+
 #include <assert.h>
+#include <stdio.h>
+
+/*----------------------------------------------------------------------------
+ * Header for the current file
+ *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
-#include "pdm_priv.h"
-
-#include "pdm_mpi.h"
-#include "pdm_config.h"
 #include "pdm_distant_neighbor.h"
-#include "pdm_points_merge.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
-#include "pdm_logging.h"
-
+#include "pdm_mem_tool.h"
+#include "pdm_mpi.h"
 
 
 /**

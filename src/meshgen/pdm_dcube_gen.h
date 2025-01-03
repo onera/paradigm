@@ -6,6 +6,7 @@
 #define __PDM_DCUBE_GEN_H__
 
 #include "pdm.h"
+#include "pdm_mpi.h"
 
 /*=============================================================================
  * Macro definitions

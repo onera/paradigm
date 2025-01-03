@@ -11,9 +11,9 @@
 
 #include "pdm.h"
 #include "pdm_mpi.h"
-#include "pdm_surf_mesh.h"
-#include "pdm_mesh_nodal.h"
 #include "pdm_part_mesh_nodal.h"
+#include "pdm_surf_mesh.h"
+
 /*----------------------------------------------------------------------------*/
 
 #ifdef	__cplusplus

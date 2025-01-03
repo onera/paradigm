@@ -7,38 +7,28 @@
  *  System headers
  *----------------------------------------------------------------------------*/
 
-#include <math.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <assert.h>
-#include <time.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-
+#include <time.h>
 
 /*----------------------------------------------------------------------------
  *  Local headers
  *----------------------------------------------------------------------------*/
 
-#include "pdm.h"
-#include "pdm_mpi.h"
-#include "pdm_fortran_to_c_string.h"
-#include "pdm_priv.h"
-#include "pdm_config.h"
-#include "pdm_part.h"
-#include "pdm_part_priv.h"
-#include "pdm_timer.h"
-
-#include "pdm_part_geom.h"
 #include "pdm_part_renum.h"
-#include "pdm_hilbert.h"
-#include "pdm_geom_elem.h"
-#include "pdm_sort.h"
-#include "pdm_cuthill.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
-#include "pdm_order.h"
+#include "pdm.h"
 #include "pdm_array.h"
-// #include "pdm_logging.h"
+#include "pdm_cuthill.h"
+#include "pdm_geom_elem.h"
+#include "pdm_hilbert.h"
+#include "pdm_mem_tool.h"
+#include "pdm_order.h"
+#include "pdm_part_priv.h"
+#include "pdm_printf.h"
+#include "pdm_priv.h"
+#include "pdm_sort.h"
 
 #ifdef __cplusplus
 extern "C" {

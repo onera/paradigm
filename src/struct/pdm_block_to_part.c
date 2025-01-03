@@ -2,28 +2,28 @@
  * Standard C library headers
  *----------------------------------------------------------------------------*/
 
-#include <stdlib.h>
-#include <limits.h>
 #include <assert.h>
+#include <limits.h>
+#include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
+#include <unistd.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
-#include "pdm_priv.h"
 #include "pdm_block_to_part.h"
-#include "pdm_block_to_part_priv.h"
-#include "pdm_binary_search.h"
 #include "pdm_array.h"
-#include "pdm_priv.h"
-#include "pdm_logging.h"
+#include "pdm_binary_search.h"
+#include "pdm_block_to_part_priv.h"
 #include "pdm_distrib.h"
-#include "pdm_timer.h"
-#include "pdm_size_idx_from_stride.h"
 #include "pdm_io.h"
+#include "pdm_logging.h"
+#include "pdm_mem_tool.h"
+#include "pdm_priv.h"
+#include "pdm_size_idx_from_stride.h"
+#include "pdm_timer.h"
 
 #ifdef __cplusplus
 extern "C" {

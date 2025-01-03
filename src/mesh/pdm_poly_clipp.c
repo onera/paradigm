@@ -8,26 +8,26 @@
  * Standard C library headers
  *----------------------------------------------------------------------------*/
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <assert.h>
 #include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
-#include "pdm.h"
 #include "pdm_poly_clipp.h"
-#include "pdm_poly_clipp_priv.h"
-#include "pdm_binary_search.h"
+#include "pdm.h"
+#include "pdm_array.h"
+#include "pdm_edges_intersect.h"
+#include "pdm_error.h"
+#include "pdm_line.h"
+#include "pdm_mem_tool.h"
 #include "pdm_plane.h"
+#include "pdm_poly_clipp_priv.h"
 #include "pdm_polygon.h"
 #include "pdm_priv.h"
-#include "pdm_edges_intersect.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
-#include "pdm_array.h"
 
 /*=============================================================================
  * Macro definitions
@@ -1554,7 +1554,7 @@ double                **polyClippCoordsB
         int onPolyA = 1;
         int onPolyB = -onPolyA;
 
-        int n_intersection = 0;
+        // int n_intersection = 0;
         int n_multiplicate = 0;
 
         if (!curr->used && ((curr->isect) || ((!curr->isect) && (curr->tag)))) {
@@ -1575,7 +1575,7 @@ double                **polyClippCoordsB
             origin_vtx[n_vtxClipp] = onPolyA;
             if (curr->isect) {
               origin_vtx[n_vtxClipp] *= 10;
-              n_intersection++;
+              // n_intersection++;
             }
             else if (curr->neighbor != NULL) {
               origin_vtx[n_vtxClipp] *= 100;

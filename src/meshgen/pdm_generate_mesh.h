@@ -2,7 +2,8 @@
 #define __PDM_GENERATE_MESH_H__
 
 #include "pdm.h"
-#include "pdm_part_mesh.h"
+#include "pdm_mesh_nodal.h"
+#include "pdm_mpi.h"
 #include "pdm_part_mesh_nodal.h"
 
 /*=============================================================================

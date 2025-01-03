@@ -6,17 +6,17 @@
  * Standard C library headers
  *----------------------------------------------------------------------------*/
 
-#include <stdlib.h>
 #include <assert.h>
+#include <stdlib.h>
+#include "limits.h"
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
-#include "pdm.h"
 #include "pdm_array.h"
-#include "pdm_config.h"
-#include "pdm_priv.h"
+#include "pdm.h"
+#include "pdm_mem_tool.h"
 
 /*----------------------------------------------------------------------------*/
 

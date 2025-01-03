@@ -1,10 +1,6 @@
 #include <vector>
-#include <numeric>
-#include "doctest/extensions/doctest_mpi.h"
-#include "pdm.h"
-#include "pdm_doctest.h"
+#include "doctest/doctest.h"
 #include "pdm_compare_operator.h"
-#include "pdm_logging.h"
 
 TEST_CASE("[pdm_compare_operator] - PDM_compare_unsigned_ordered_nuplets_int") {
 

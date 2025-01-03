@@ -3,22 +3,17 @@
  *  System headers
  *----------------------------------------------------------------------------*/
 
-#include <math.h>
-#include <stdlib.h>
 #include <stdio.h>
-#include <assert.h>
 
 /*----------------------------------------------------------------------------
  *  Local headers
  *----------------------------------------------------------------------------*/
 
+#include "pdm_dmesh_nodal_elements_utils.h"
 #include "pdm.h"
-#include "pdm_priv.h"
-#include "pdm_error.h"
-#include "pdm_dmesh_nodal_priv.h"
 #include "pdm_dmesh_nodal_elmts.h"
 #include "pdm_dmesh_nodal_elmts_priv.h"
-#include "pdm_dmesh_nodal_elements_utils.h"
+#include "pdm_error.h"
 
 #ifdef __cplusplus
 extern "C" {

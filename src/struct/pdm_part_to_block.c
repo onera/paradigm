@@ -2,13 +2,13 @@
  * Standard C library headers
  *----------------------------------------------------------------------------*/
 
+
+#include <assert.h>
+#include <limits.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <limits.h>
-#include <assert.h>
-#include <math.h>
 #include <string.h>
-#include <float.h>
 #include <unistd.h>
 
 /*----------------------------------------------------------------------------
@@ -16,25 +16,24 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm_part_to_block.h"
-#include "pdm_part_to_block_priv.h"
-#include "pdm_mpi_node_first_rank.h"
 #include "pdm.h"
-#include "pdm_timer.h"
-#include "pdm_priv.h"
+#include "pdm_array.h"
 #include "pdm_binary_search.h"
-#include "pdm_sort.h"
-#include "pdm_printf.h"
+#include "pdm_distrib.h"
 #include "pdm_error.h"
 #include "pdm_hilbert.h"
-#include "pdm_morton.h"
-#include "pdm_array.h"
-#include "pdm_order.h"
-#include "pdm_logging.h"
-#include "pdm_distrib.h"
-#include "pdm_size_idx_from_stride.h"
-
 #include "pdm_io.h"
-#include <string.h>
+#include "pdm_logging.h"
+#include "pdm_mem_tool.h"
+#include "pdm_morton.h"
+#include "pdm_mpi_node_first_rank.h"
+#include "pdm_order.h"
+#include "pdm_part_to_block_priv.h"
+#include "pdm_printf.h"
+#include "pdm_priv.h"
+#include "pdm_size_idx_from_stride.h"
+#include "pdm_sort.h"
+#include "pdm_timer.h"
 
 #ifdef __cplusplus
 extern "C" {

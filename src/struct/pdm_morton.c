@@ -32,26 +32,21 @@
 #include <assert.h>
 #include <float.h>
 #include <math.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
 
 /*----------------------------------------------------------------------------
  *  Local headers
  *----------------------------------------------------------------------------*/
 
-/*----------------------------------------------------------------------------
- *  Header for the current file
- *----------------------------------------------------------------------------*/
-
-#include "pdm_priv.h"
 #include "pdm_morton.h"
-#include "pdm_hilbert.h"
 #include "pdm_binary_search.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
+#include "pdm_hilbert.h"
 #include "pdm_logging.h"
+#include "pdm_mem_tool.h"
+#include "pdm_printf.h"
+#include "pdm_priv.h"
 
 /*----------------------------------------------------------------------------*/
 

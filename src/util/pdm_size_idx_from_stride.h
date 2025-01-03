@@ -14,9 +14,7 @@
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
-#include "pdm.h"
 #include "pdm_mpi.h"
-#include "pdm_part_geom.h"
 
 /*=============================================================================
  * Macro definitions

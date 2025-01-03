@@ -3,40 +3,31 @@
  *----------------------------------------------------------------------------*/
 
 #include <assert.h>
+#include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
-#include "pdm.h"
-#include "pdm_priv.h"
-#include "pdm_config.h"
-#include "pdm_mpi.h"
-#include "pdm_error.h"
-#include "pdm_logging.h"
-#include "pdm_array.h"
-#include "pdm_sort.h"
-#include "pdm_unique.h"
-#include "pdm_distrib.h"
-#include "pdm_gnum.h"
-#include "pdm_binary_search.h"
-#include "pdm_part_to_block.h"
-#include "pdm_block_to_block.h"
-#include "pdm_block_to_part.h"
-#include "pdm_part_to_part.h"
-#include "pdm_multi_block_to_part.h"
-#include "pdm_dconnectivity_transform.h"
-#include "pdm_dmesh_nodal_to_dmesh.h"
-#include "pdm_dmesh_nodal_elements_utils.h"
-#include "pdm_distant_neighbor.h"
-#include "pdm_order.h"
-
-#include "pdm_domain_interface.h"
-#include "pdm_domain_interface_priv.h"
 #include "pdm_part_domain_interface.h"
 #include "pdm_part_domain_interface_priv.h"
+#include "pdm.h"
+#include "pdm_array.h"
+#include "pdm_binary_search.h"
+#include "pdm_distant_neighbor.h"
+#include "pdm_distrib.h"
+#include "pdm_domain_interface.h"
+#include "pdm_domain_interface_priv.h"
+#include "pdm_error.h"
+#include "pdm_logging.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mpi.h"
+#include "pdm_order.h"
+#include "pdm_part_to_block.h"
+#include "pdm_part_to_part.h"
+#include "pdm_priv.h"
+#include "pdm_sort.h"
 
 /*=============================================================================
  * Macro definitions
