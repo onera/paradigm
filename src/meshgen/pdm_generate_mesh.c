@@ -1,32 +1,27 @@
 /*----------------------------------------------------------------------------
  *  System headers
  *----------------------------------------------------------------------------*/
-#include <math.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <assert.h>
+#include <stdio.h>
 #include <string.h>
 
 /*----------------------------------------------------------------------------
  *  Local headers
  *----------------------------------------------------------------------------*/
-
 #include "pdm_generate_mesh.h"
-
 #include "pdm.h"
-#include "pdm_priv.h"
-#include "pdm_mpi.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
-#include "pdm_multipart.h"
-#include "pdm_part_mesh.h"
-#include "pdm_part_mesh_nodal.h"
+#include "pdm_array.h"
+#include "pdm_dcube_nodal_gen.h"
 #include "pdm_dmesh_nodal.h"
+#include "pdm_error.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mpi.h"
+#include "pdm_multipart.h"
+#include "pdm_part_connectivity_transform.h"
+#include "pdm_part_mesh_nodal.h"
+#include "pdm_priv.h"
 #include "pdm_sphere_surf_gen.h"
 #include "pdm_sphere_vol_gen.h"
-#include "pdm_dcube_nodal_gen.h"
-#include "pdm_part_connectivity_transform.h"
-#include "pdm_array.h"
 
 #ifdef __cplusplus
 extern "C"

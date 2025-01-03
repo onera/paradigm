@@ -13,8 +13,8 @@
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
-#include "pdm_part.h"
-#include "pdm_part_coarse_mesh_priv.h"
+#include "pdm.h"
+#include "pdm_mpi.h"
 
 
 #ifdef	__cplusplus

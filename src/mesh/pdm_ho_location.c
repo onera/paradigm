@@ -31,7 +31,6 @@
 
 #include <assert.h>
 #include <math.h>
-#include <float.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -41,28 +40,17 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm_error.h"
-#include "pdm_printf.h"
-#include "pdm_logging.h"
-
-/*----------------------------------------------------------------------------
- *  Local headers
- *----------------------------------------------------------------------------*/
-
-#include "pdm_mesh_nodal.h"
 #include "pdm_ho_basis.h"
-#include "pdm_geom_elem.h"
+#include "pdm_ho_ordering.h"
 #include "pdm_line.h"
+#include "pdm_logging.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mesh_nodal.h"
+#include "pdm_priv.h"
+#include "pdm_tetrahedron.h"
 #include "pdm_triangle.h"
 #include "pdm_triangulate.h"
-#include "pdm_tetrahedron.h"
-
 #include "pdm_vtk.h"
-#include "pdm_ho_ordering.h"
-
-/*----------------------------------------------------------------------------
- *  Header for the current file
- *----------------------------------------------------------------------------*/
-
 #include "pdm_ho_location.h"
 
 /*----------------------------------------------------------------------------*/

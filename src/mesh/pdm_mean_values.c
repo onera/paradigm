@@ -2,26 +2,25 @@
  * Standard C library headers
  *----------------------------------------------------------------------------*/
 
+#include <assert.h>
 #include <float.h>
 #include <math.h>
+#include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
-#include "pdm.h"
-#include "pdm_priv.h"
-#include "pdm_printf.h"
-#include "pdm_plane.h"
-#include "pdm_line.h"
-#include "pdm_polygon.h"
-#include "pdm_geom_elem.h"
-#include "pdm_triangulate.h"
-#include "pdm_logging.h"
-
 #include "pdm_mean_values.h"
+#include "pdm.h"
+#include "pdm_line.h"
+#include "pdm_logging.h"
+#include "pdm_mem_tool.h"
+#include "pdm_plane.h"
+#include "pdm_polygon.h"
+#include "pdm_priv.h"
+#include "pdm_triangulate.h"
 
 /*=============================================================================
  * Macro definitions

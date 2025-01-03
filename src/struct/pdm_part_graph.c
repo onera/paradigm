@@ -7,30 +7,23 @@
  *----------------------------------------------------------------------------*/
 
 #include <assert.h>
-#include <float.h>
-#include <math.h>
-#include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
-
-/*----------------------------------------------------------------------------
- *  Local headers
- *----------------------------------------------------------------------------*/
+#include <stdlib.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
-#include "pdm.h"
-#include "pdm_priv.h"
-#include "pdm_part.h"
 #include "pdm_part_graph.h"
-#include "pdm_hilbert.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
-#include "pdm_sort.h"
-#include "pdm_ext_wrapper.h"
+#include "pdm.h"
 #include "pdm_array.h"
+#include "pdm_config.h"
+#include "pdm_ext_wrapper.h"
+#include "pdm_hilbert.h"
+#include "pdm_mem_tool.h"
+#include "pdm_printf.h"
+#include "pdm_priv.h"
+#include "pdm_sort.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -44,10 +37,6 @@ extern "C" {
 /*=============================================================================
  * Local Macro definitions
  *============================================================================*/
-
-#define _MIN(a,b)   ((a) < (b) ?  (a) : (b))  /* Minimum of a et b */
-
-#define _MAX(a,b)   ((a) > (b) ?  (a) : (b))  /* Maximum of a et b */
 
 /*=============================================================================
  * Static global variables

@@ -1,24 +1,28 @@
-#include <stddef.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+/*----------------------------------------------------------------------------
+ * Standard C library headers
+ *----------------------------------------------------------------------------*/
 #include <assert.h>
+#include <math.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-#include "pdm_part.h"
-#include "pdm_dmesh_nodal_priv.h"
+/*----------------------------------------------------------------------------
+ *  Header for the current file
+ *----------------------------------------------------------------------------*/
 #include "pdm_dcube_nodal_gen.h"
+#include "pdm_array.h"
 #include "pdm_dcube_nodal_gen_priv.h"
+#include "pdm_distrib.h"
+#include "pdm_dmesh_nodal_elmts.h"
+#include "pdm_dmesh_nodal_elmts_priv.h"
+#include "pdm_dmesh_nodal_priv.h"
 #include "pdm_domain_interface.h"
 #include "pdm_domain_interface_priv.h"
-#include "pdm_ho_ordering.h"
-#include "pdm_mpi.h"
-#include "pdm_distrib.h"
-#include "pdm_array.h"
-#include "pdm_printf.h"
 #include "pdm_error.h"
-#include "pdm_priv.h"
 #include "pdm_logging.h"
-#include "pdm_binary_search.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mpi.h"
 
 /*============================================================================
  * Type definitions

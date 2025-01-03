@@ -26,12 +26,15 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
-#include "pdm_mpi.h"
+#include "pdm_dmesh.h"
+#include "pdm_dmesh_nodal.h"
 #include "pdm_isosurface.h"
-#include "pdm_isosurface_priv.h"
-
+#include "pdm_mesh_nodal.h"
+#include "pdm_mpi.h"
 #include "pdm_multipart.h"
-#include "pdm_multipart_priv.h"
+#include "pdm_part_mesh.h"
+#include "pdm_part_mesh_nodal.h"
+
 /*----------------------------------------------------------------------------*/
 
 #ifdef __cplusplus

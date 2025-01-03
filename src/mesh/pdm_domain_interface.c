@@ -10,30 +10,27 @@
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
+#include "pdm_domain_interface.h"
 #include "pdm.h"
-#include "pdm_priv.h"
-#include "pdm_config.h"
-#include "pdm_mpi.h"
-#include "pdm_error.h"
-#include "pdm_logging.h"
 #include "pdm_array.h"
-#include "pdm_sort.h"
-#include "pdm_unique.h"
-#include "pdm_distrib.h"
 #include "pdm_binary_search.h"
-#include "pdm_part_to_block.h"
 #include "pdm_block_to_block.h"
 #include "pdm_block_to_part.h"
-#include "pdm_multi_block_to_part.h"
 #include "pdm_dconnectivity_transform.h"
-#include "pdm_para_graph_dual.h"
-#include "pdm_dmesh_nodal_to_dmesh.h"
+#include "pdm_distrib.h"
 #include "pdm_dmesh_nodal_elements_utils.h"
-
-#include "pdm_domain_interface.h"
-#include "pdm_part_domain_interface.h"
+#include "pdm_dmesh_nodal_to_dmesh.h"
 #include "pdm_domain_interface_priv.h"
-#include "pdm_part_domain_interface_priv.h"
+#include "pdm_error.h"
+#include "pdm_logging.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mpi.h"
+#include "pdm_multi_block_to_part.h"
+#include "pdm_part_domain_interface.h"
+#include "pdm_part_to_block.h"
+#include "pdm_priv.h"
+#include "pdm_sort.h"
+#include "pdm_unique.h"
 
 /*=============================================================================
  * Macro definitions

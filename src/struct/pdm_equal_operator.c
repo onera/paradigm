@@ -3,18 +3,16 @@
  *----------------------------------------------------------------------------*/
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
-#include "pdm.h"
-#include "pdm_priv.h"
+#include "pdm_compare_operator.h"
+#include "pdm_mem_tool.h"
 #include "pdm_quick_sort.h"
 #include "pdm_sort.h"
-#include "pdm_compare_operator.h"
 
 #ifdef __cplusplus
 extern "C" {

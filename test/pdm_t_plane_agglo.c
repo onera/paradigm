@@ -1,27 +1,28 @@
-#include <math.h>
-#include <sys/time.h>
-#include <time.h>
-#include <sys/resource.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+
+/*----------------------------------------------------------------------------
+ * Standard C library headers
+ *----------------------------------------------------------------------------*/
+
 #include <assert.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/time.h>
+
+/*----------------------------------------------------------------------------
+ * Header for the current file
+ *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
-#include "pdm_priv.h"
-
-#include "pdm_mpi.h"
 #include "pdm_config.h"
+#include "pdm_io.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mpi.h"
 #include "pdm_part.h"
 #include "pdm_part_coarse_mesh.h"
-
-#include "pdm_writer.h"
-#include "pdm_part_to_block.h"
 #include "pdm_poly_surf_gen.h"
 #include "pdm_printf.h"
-#include "pdm_error.h"
-
+#include "pdm_priv.h"
+#include "pdm_writer.h"
 
 /*============================================================================
  * Type definitions

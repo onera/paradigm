@@ -5,35 +5,23 @@
  *----------------------------------------------------------------------------*/
 
 #include <assert.h>
-#include <stdio.h>
 #include <math.h>
-#include <string.h>
+#include <stdio.h>
 #include <stdlib.h>
-
-/*----------------------------------------------------------------------------
- *  Local headers
- *----------------------------------------------------------------------------*/
-
-#include "pdm.h"
-#include "pdm_priv.h"
-#include "pdm_config.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
-#include "pdm_mpi.h"
-#include "pdm_box.h"
-#include "pdm_box_tree.h"
-#include "pdm_box_priv.h"
-#include "pdm_array.h"
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
 #include "pdm_octree.h"
+#include "pdm.h"
+#include "pdm_array.h"
+#include "pdm_box.h"
+#include "pdm_box_tree.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mpi.h"
 #include "pdm_octree_seq.h"
-#include "pdm_block_to_part.h"
-#include "pdm_part_to_block.h"
-#include "pdm_timer.h"
+#include "pdm_priv.h"
 
 /*----------------------------------------------------------------------------*/
 

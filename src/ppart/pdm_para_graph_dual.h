@@ -5,7 +5,6 @@
 #ifndef __PDM_PARA_GRAPH_DUAL_H__
 #define __PDM_PARA_GRAPH_DUAL_H__
 
-#include <stdio.h>
 #include "pdm.h"
 #include "pdm_mpi.h"
 

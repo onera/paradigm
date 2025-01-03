@@ -2,22 +2,18 @@
  * Standard C library headers
  *----------------------------------------------------------------------------*/
 
-#include <limits.h>
 #include <float.h>
+#include <math.h>
 #include <string.h>
-
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
-#include "pdm.h"
-#include "pdm_priv.h"
 #include "pdm_line.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
-
+#include "pdm.h"
 #include "pdm_predicate.h"
+#include "pdm_priv.h"
 
 /*=============================================================================
  * Macro definitions

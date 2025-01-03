@@ -1,10 +1,13 @@
-#include "doctest/extensions/doctest_mpi.h"
-#include <array>
+#include <ext/alloc_traits.h>
 #include <vector>
+#include "doctest/doctest.h"
+#include "doctest/extensions/doctest_mpi.h"
 #include "pdm.h"
-#include "pdm_doctest.h"
-#include "pdm_logging.h"
 #include "pdm_dcube_nodal_gen.h"
+#include "pdm_dmesh_nodal.h"
+#include "pdm_doctest.h"
+#include "pdm_mesh_nodal.h"
+#include "pdm_mpi.h"
 
 MPI_TEST_CASE("[dcube_nodal_gen] - 1p - hexahedron",1) {
 

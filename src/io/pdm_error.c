@@ -24,12 +24,6 @@
 
 /*-----------------------------------------------------------------------------*/
 
-#include "pdm_config.h"
-
-/*
- * Standard C library headers
- */
-
 #include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -37,11 +31,11 @@
 #include <string.h>
 
 /*
- * Optional library and BFT headers
+ * Standard C library headers
  */
 
-#include "pdm_printf.h"
 #include "pdm_error.h"
+#include "pdm_printf.h"
 
 /*-----------------------------------------------------------------------------*/
 

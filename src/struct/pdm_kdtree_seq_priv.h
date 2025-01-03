@@ -9,6 +9,7 @@
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
+#include "pdm_mpi.h"
 
 #ifdef __cplusplus
 extern "C" {

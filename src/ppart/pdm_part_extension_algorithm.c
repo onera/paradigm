@@ -2,37 +2,34 @@
  * Standard C library headers
  *----------------------------------------------------------------------------*/
 
-#include <stdlib.h>
-#include <string.h>
 #include <assert.h>
-#include <math.h>
-#include <float.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
-#include "pdm_mpi.h"
-#include "pdm.h"
-#include "pdm_distant_neighbor.h"
-#include "pdm_logging.h"
-#include "pdm_unique.h"
-#include "pdm_binary_search.h"
-#include "pdm_order.h"
-#include "pdm_error.h"
-#include "pdm_part_extension.h"
-#include "pdm_part_to_part.h"
-#include "pdm_block_to_part.h"
-#include "pdm_part_to_block.h"
 #include "pdm_part_extension_algorithm.h"
-#include "pdm_part_extension_priv.h"
+#include "pdm.h"
+#include "pdm_array.h"
+#include "pdm_binary_search.h"
+#include "pdm_block_to_part.h"
+#include "pdm_distrib.h"
+#include "pdm_domain_interface.h"
+#include "pdm_gnum.h"
+#include "pdm_logging.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mpi.h"
+#include "pdm_order.h"
 #include "pdm_part_connectivity_transform.h"
 #include "pdm_part_domain_interface.h"
+#include "pdm_part_to_block.h"
+#include "pdm_part_to_part.h"
 #include "pdm_partitioning_algorithm.h"
-#include "pdm_distrib.h"
-#include "pdm_array.h"
-#include "pdm_gnum.h"
-#include "pdm_vtk.h"
+#include "pdm_priv.h"
+#include "pdm_sort.h"
+#include "pdm_unique.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -1190,6 +1187,7 @@ _find_valid_entities
       for (int i_entity = 0; i_entity < pentity1_entity2_ntot[i_part]; ++i_entity) {
         n_data += p_db_entity2_ancstr_strd[i_part][i_entity];
       }
+      log_trace("n_data = %i \n", n_data);
       PDM_log_trace_array_long(pentity1_entity2_gnum   [i_part], pentity1_entity2_ntot  [i_part], "pentity1_entity2_gnum ::");
       PDM_log_trace_array_int (pentity1_entity2_triplet[i_part], 3*pentity1_entity2_ntot[i_part], "pentity1_entity2_trplt::");
       PDM_log_trace_array_int (pentity2_ordr           [i_part], pn_entity2             [i_part], "pentity2_ordr         ::");

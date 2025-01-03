@@ -2,37 +2,30 @@
  * Standard C library headers
  *----------------------------------------------------------------------------*/
 
-#include <stdlib.h>
+#include <limits.h>
 #include <stdio.h>
 #include <string.h>
-#include <stdint.h>
-#include <assert.h>
-#include <sys/types.h>
-#include <limits.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
+#include "pdm_reader_gamma.h"
 #include "pdm.h"
-#include "pdm_config.h"
-#include "pdm_priv.h"
-#include "pdm_part.h"
-#include "pdm_block_to_block.h"
-#include "pdm_part_to_block.h"
-#include "pdm_distrib.h"
-#include "pdm_dconnectivity_transform.h"
-#include "pdm_dmesh_nodal.h"
-#include "pdm_dmesh_nodal_priv.h"
-#include "pdm_dmesh_nodal_elmts_priv.h"
-#include "pdm_predicate.h"
 #include "pdm_array.h"
-#include "pdm_vtk.h"
-#include "pdm_printf.h"
+#include "pdm_block_to_block.h"
+#include "pdm_dconnectivity_transform.h"
+#include "pdm_distrib.h"
+#include "pdm_dmesh_nodal.h"
+#include "pdm_dmesh_nodal_elmts.h"
+#include "pdm_dmesh_nodal_elmts_priv.h"
+#include "pdm_dmesh_nodal_priv.h"
 #include "pdm_error.h"
 #include "pdm_logging.h"
-
-#include "pdm_reader_gamma.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mesh_nodal.h"
+#include "pdm_predicate.h"
+#include "pdm_priv.h"
 
 /*=============================================================================
  * Macro definitions

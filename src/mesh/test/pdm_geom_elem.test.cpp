@@ -1,12 +1,12 @@
-#include "doctest/extensions/doctest_mpi.h"
-#include "pdm.h"
-#include "pdm_priv.h"
-#include "pdm_doctest.h"
-#include "pdm_geom_elem.h"
-#include "pdm_logging.h"
+#include <stddef.h>
 #include <vector>
 
-
+#include "doctest/doctest.h"
+#include "doctest/extensions/doctest_mpi.h"
+#include "pdm.h"
+#include "pdm_doctest.h"
+#include "pdm_geom_elem.h"
+#include "pdm_mem_tool.h"
 
 MPI_TEST_CASE("PDM_geom_elem_edge_upwind_and_downwind_2d", 1) {
 

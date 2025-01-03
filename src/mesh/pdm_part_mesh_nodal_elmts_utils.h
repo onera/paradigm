@@ -10,9 +10,8 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
-#include "pdm_mpi.h"
+#include "pdm_mesh_nodal.h"
 #include "pdm_part_mesh_nodal_elmts.h"
-#include "pdm_io.h"
 
 /*=============================================================================
  * Macro definition

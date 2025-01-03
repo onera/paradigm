@@ -1,11 +1,8 @@
-#include <vector>
-#include <numeric>
-#include "doctest/extensions/doctest_mpi.h"
-#include "pdm.h"
-#include "pdm_doctest.h"
-#include "pdm_order.h"
-#include "pdm_logging.h"
 
+#include <vector>
+#include "doctest/doctest.h"
+#include "pdm.h"
+#include "pdm_order.h"
 
 TEST_CASE("[pdm_order] - PDM_order_inplace_unique_and_order_long - stride = 1") {
 

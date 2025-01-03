@@ -4,7 +4,6 @@
 
 #include <assert.h>
 #include <math.h>
-#include <float.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,27 +12,23 @@
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
-#include "pdm.h"
-#include "pdm_priv.h"
-#include "pdm_printf.h"
-#include "pdm_logging.h"
-#include "pdm_error.h"
-#include "pdm_plane.h"
-#include "pdm_line.h"
-#include "pdm_triangle.h"
-#include "pdm_polygon.h"
-#include "pdm_triangulate.h"
-#include "pdm_mesh_nodal.h"
-#include "pdm_mean_values.h"
-#include "pdm_geom_elem.h"
-#include "pdm_binary_search.h"
-#include "pdm_ho_location.h"
-#include "pdm_ho_basis.h"
-#include "pdm_ho_ordering.h"
-#include "pdm_part_mesh_nodal_elmts.h"
-#include "pdm_array.h"
-
 #include "pdm_point_location.h"
+#include "pdm.h"
+#include "pdm_array.h"
+#include "pdm_error.h"
+#include "pdm_geom_elem.h"
+#include "pdm_ho_basis.h"
+#include "pdm_ho_location.h"
+#include "pdm_ho_ordering.h"
+#include "pdm_logging.h"
+#include "pdm_mean_values.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mesh_nodal.h"
+#include "pdm_part_mesh_nodal_elmts.h"
+#include "pdm_printf.h"
+#include "pdm_priv.h"
+#include "pdm_triangle.h"
+#include "pdm_triangulate.h"
 
 /*=============================================================================
  * Macro definitions
@@ -2886,8 +2881,8 @@ PDM_point_location_nodal
               assert(ijk_to_user != NULL);
             }
 
-            int count           = 0;
-            int count_converged = 0;
+            // int count           = 0;
+            // int count_converged = 0;
             for (int ielt = 0; ielt < n_elt; ielt++) {
               int icell = ielt;
               if (parent_num != NULL) {
@@ -2906,7 +2901,7 @@ PDM_point_location_nodal
               }
 
               for (int idx_pt = pts_idx[ipart][icell]; idx_pt < pts_idx[ipart][icell+1]; idx_pt++) {
-                count++;
+                // count++;
                 // First, try Newton method
                 int converged = 0;
                 if (1) {
@@ -2924,13 +2919,12 @@ PDM_point_location_nodal
                 // log_trace("converged? %d\n", converged);
 
                 if (converged) {
-                  count_converged++;
+                  // count_converged++;
                   // log_trace("Newton converged :D (%f %f %f)\n",
                   //           pts_coord[ipart][3*idx_pt+0],
                   //           pts_coord[ipart][3*idx_pt+1],
                   //           pts_coord[ipart][3*idx_pt+2]);
-                }
-                else {
+                } else {
                   // log_trace("Newton HO failed to converge! (%f %f %f)\n",
                   //           pts_coord[ipart][3*idx_pt+0],
                   //           pts_coord[ipart][3*idx_pt+1],

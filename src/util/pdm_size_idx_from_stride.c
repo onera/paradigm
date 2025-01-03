@@ -6,19 +6,16 @@
  * Standard C library headers
  *----------------------------------------------------------------------------*/
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include <limits.h>
+#include <stdio.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
-#include "pdm.h"
-#include "pdm_priv.h"
-#include "pdm_mpi.h"
 #include "pdm_size_idx_from_stride.h"
+#include "pdm.h"
+#include "pdm_mpi.h"
 
 /*=============================================================================
  * Macro definitions

@@ -6,37 +6,32 @@
  *  System headers
  *----------------------------------------------------------------------------*/
 
-#include <math.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <assert.h>
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 /*----------------------------------------------------------------------------
  *  Local headers
  *----------------------------------------------------------------------------*/
 
-#include "pdm.h"
-#include "pdm_mpi.h"
-#include "pdm_config.h"
-#include "pdm_priv.h"
 #include "pdm_part.h"
-#include "pdm_multipart.h"
-#include "pdm_part_priv.h"
-#include "pdm_timer.h"
+#include "pdm.h"
+#include "pdm_array.h"
+#include "pdm_binary_search.h"
+#include "pdm_config.h"
+#include "pdm_error.h"
+#include "pdm_mem_tool.h"
 #include "pdm_mpi.h"
 #include "pdm_mpi_ext_dependencies.h"
-#include "pdm_para_graph_dual.h"
-#include "pdm_array.h"
-
+#include "pdm_multipart.h"
 #include "pdm_part_geom.h"
+#include "pdm_part_priv.h"
 #include "pdm_part_renum.h"
-#include "pdm_fortran_to_c_string.h"
 #include "pdm_printf.h"
-#include "pdm_error.h"
+#include "pdm_priv.h"
 #include "pdm_quick_sort.h"
-#include "pdm_binary_search.h"
-#include "pdm_logging.h"
-
+#include "pdm_timer.h"
 
 /*----------------------------------------------------------------------------
  *  Optional headers

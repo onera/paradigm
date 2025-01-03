@@ -2,11 +2,11 @@
  * Standard C library headers
  *----------------------------------------------------------------------------*/
 
-#include <stdlib.h>
-#include <stdio.h>
 #include <assert.h>
-#include <math.h>
 #include <float.h>
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 /*----------------------------------------------------------------------------
@@ -14,16 +14,18 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm_surf_mesh.h"
-#include "pdm_surf_mesh_priv.h"
+#include "pdm_array.h"
+#include "pdm_binary_search.h"
+#include "pdm_error.h"
+#include "pdm_graph_bound.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mpi.h"
+#include "pdm_part_bound.h"
 #include "pdm_part_to_block.h"
+#include "pdm_priv.h"
+#include "pdm_surf_mesh_priv.h"
 #include "pdm_surf_part.h"
 #include "pdm_surf_part_priv.h"
-#include "pdm_binary_search.h"
-#include "pdm_priv.h"
-#include "pdm_mpi.h"
-#include "pdm_array.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -13,6 +13,8 @@
 #include "pdm_dmesh_priv.h"
 #include "pdm_dmesh_nodal_priv.h"
 #include "pdm_dmesh_nodal_to_dmesh.h"
+#include "pdm_part_mesh.h"
+#include "pdm_part_mesh_nodal.h"
 #include "pdm_part_priv.h"
 #include "pdm_timer.h"
 

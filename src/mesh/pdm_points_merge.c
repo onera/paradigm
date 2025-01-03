@@ -4,29 +4,25 @@
 
 #include <assert.h>
 #include <stdio.h>
-#include <math.h>
-#include <string.h>
-#include <stdlib.h>
 
 /*----------------------------------------------------------------------------
  *  Local headers
  *----------------------------------------------------------------------------*/
 
+#include "pdm_points_merge.h"
 #include "pdm.h"
-#include "pdm_priv.h"
-#include "pdm_config.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
+#include "pdm_array.h"
+#include "pdm_distrib.h"
+#include "pdm_gnum.h"
+#include "pdm_logging.h"
+#include "pdm_mem_tool.h"
 #include "pdm_mpi.h"
 #include "pdm_octree.h"
 #include "pdm_octree_seq.h"
-#include "pdm_array.h"
-#include "pdm_gnum.h"
 #include "pdm_part_to_block.h"
 #include "pdm_part_to_part.h"
-#include "pdm_distrib.h"
-#include "pdm_vtk.h"
-#include "pdm_logging.h"
+#include "pdm_points_merge_priv.h"
+#include "pdm_priv.h"
 
 /*----------------------------------------------------------------------------
  *  Header for the current file

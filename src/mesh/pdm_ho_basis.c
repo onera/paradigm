@@ -31,33 +31,17 @@
 
 #include <assert.h>
 #include <math.h>
-#include <float.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 /*----------------------------------------------------------------------------
  * PDM library headers
  *----------------------------------------------------------------------------*/
 
-#include "pdm_error.h"
-#include "pdm_printf.h"
-#include "pdm_mesh_nodal.h"
-#include "pdm_point_location.h"
-
-/*----------------------------------------------------------------------------
- *  Local headers
- *----------------------------------------------------------------------------*/
-
-#include "pdm_triangulate.h"
-
-/*----------------------------------------------------------------------------
- *  Header for the current file
- *----------------------------------------------------------------------------*/
-
 #include "pdm_ho_basis.h"
-
-/*----------------------------------------------------------------------------*/
+#include "pdm_error.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mesh_nodal.h"
+#include "pdm_priv.h"
 
 #ifdef __cplusplus
 extern "C" {

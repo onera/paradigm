@@ -1,13 +1,9 @@
+#include <stdlib.h>
+#include "doctest/doctest.h"
 #include "doctest/extensions/doctest_mpi.h"
-
-#include <limits.h>
-#include <float.h>
-#include <math.h>
-#include "pdm.h"
-#include "pdm_doctest.h"
-#include "pdm_priv.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mpi.h"
 #include "pdm_plane.h"
-#include "pdm_logging.h"
 
 static inline double
 _rand(void) {

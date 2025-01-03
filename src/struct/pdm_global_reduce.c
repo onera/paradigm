@@ -3,26 +3,18 @@
  * Standard C library headers
  *----------------------------------------------------------------------------*/
 
-#include <assert.h>
 #include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdbool.h>
-
 /*----------------------------------------------------------------------------
  *  Local headers
  *----------------------------------------------------------------------------*/
 
+#include "pdm_global_reduce.h"
+#include "pdm_global_reduce_priv.h"
 #include "pdm.h"
-#include "pdm_priv.h"
-#include "pdm_config.h"
-#include "pdm_morton.h"
-#include "pdm_array.h"
-#include "pdm_printf.h"
 #include "pdm_error.h"
+#include "pdm_mem_tool.h"
 #include "pdm_mpi.h"
-#include "pdm_part_to_block.h"
-#include "pdm_block_to_part.h"
+#include "pdm_priv.h"
 
 /*----------------------------------------------------------------------------
  *  Header for the current file

@@ -6,23 +6,17 @@
 /*--------------------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------------
- *  Headers for the current file
+ * Standard C library headers
  *----------------------------------------------------------------------------*/
-
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <execinfo.h>
-#include <stdint.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <time.h>
-#include <malloc.h>
+
+/*----------------------------------------------------------------------------
+ *  Headers for the current file
+ *----------------------------------------------------------------------------*/
 
 #include "pdm_mem_tool.h"
-#include "pdm_timer.h"
-
 
 /*============================================================================
  * Global variables

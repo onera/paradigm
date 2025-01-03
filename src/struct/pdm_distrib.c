@@ -2,23 +2,19 @@
  *  System headers
  *----------------------------------------------------------------------------*/
 
-#include <math.h>
-#include <stdlib.h>
 #include <stdio.h>
-#include <assert.h>
 
 /*----------------------------------------------------------------------------
  *  Local headers
  *----------------------------------------------------------------------------*/
 
+#include "pdm_distrib.h"
 #include "pdm.h"
-#include "pdm_priv.h"
+#include "pdm_binary_search.h"
+#include "pdm_mem_tool.h"
 #include "pdm_mpi.h"
 #include "pdm_printf.h"
-#include "pdm_error.h"
-
-#include "pdm_distrib.h"
-#include "pdm_binary_search.h"
+#include "pdm_priv.h"
 
 #ifdef __cplusplus
 extern "C" {

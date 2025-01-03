@@ -3,45 +3,29 @@
  *  System headers
  *----------------------------------------------------------------------------*/
 
-#include <math.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <assert.h>
-#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 /*----------------------------------------------------------------------------
  *  Local headers
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
-#include "pdm_priv.h"
-#include "pdm_error.h"
-#include "pdm_binary_search.h"
-#include "pdm_dmesh_nodal_priv.h"
-#include "pdm_part_mesh_nodal_priv.h"
-#include "pdm_part_mesh.h"
-#include "pdm_part_mesh_nodal.h"
-#include "pdm_part_mesh_nodal_elmts_utils.h"
-#include "pdm_dconnectivity_transform.h"
-#include "pdm_dmesh_nodal_to_dmesh.h"
-#include "pdm_dmesh_nodal_elements_utils.h"
-#include "pdm_part_to_block.h"
-#include "pdm_block_to_part.h"
-#include "pdm_logging.h"
-#include "pdm_dmesh.h"
-#include "pdm_gnum.h"
-#include "pdm_distrib.h"
-#include "pdm_unique.h"
-#include "pdm_quick_sort.h"
-#include "pdm_para_graph_dual.h"
 #include "pdm_array.h"
-#include "pdm_order.h"
+#include "pdm_binary_search.h"
+#include "pdm_block_to_part.h"
+#include "pdm_distrib.h"
+#include "pdm_dmesh.h"
+#include "pdm_logging.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mesh_nodal.h"
+#include "pdm_part_connectivity_transform.h"
+#include "pdm_part_to_block.h"
 #include "pdm_partitioning_algorithm.h"
+#include "pdm_priv.h"
 #include "pdm_dmesh_to_dmesh_nodal.h"
 #include "pdm_dmesh_to_dmesh_nodal_priv.h"
-#include "pdm_part_connectivity_transform.h"
-#include "pdm_sort.h"
-#include "pdm_vtk.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -24,22 +24,12 @@
 
 /*-----------------------------------------------------------------------------*/
 
-#include "pdm_config.h"
-
 /*
  * Standard C library headers
  */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#include <string.h>
-#include <time.h>
-
-
-/*
- * Optional library and BFT headers
- */
 
 #include "pdm_logging.h"
 #include "pdm_mpi.h"

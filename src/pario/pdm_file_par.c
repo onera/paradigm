@@ -8,18 +8,14 @@
  *----------------------------------------------------------------------------*/
 
 #include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
-
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
 #include "pdm_file_par.h"
-#include "pdm_printf.h"
 #include "pdm_error.h"
-#include "pdm.h"
-#include "pdm_priv.h"
+#include "pdm_mem_tool.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -36,14 +32,14 @@ extern "C" {
  *============================================================================*/
 
 struct _PDM_file_par_t {
-  char                *nom;          /* Nom */
+  char                 *nom;          /* Nom */
   PDM_file_par_mode_t   mode;         /* Mode */
   PDM_file_par_acces_t  acces;        /* Access */
-  int                  rang;         /* Rang MSG */
-  int                  n_rangs;      /* Nombre de rangs MSG  */
-  PDM_MPI_Comm             comm;         /* Communicateur MSG associe a pa_io_fichier_t */
-  PDM_MPI_File             fichier;      /* MSG file*/
-  PDM_MPI_Offset           offset;       /* Offset du fichier */
+  int                   rang;         /* Rang MSG */
+  int                   n_rangs;      /* Nombre de rangs MSG  */
+  PDM_MPI_Comm          comm;         /* Communicateur MSG associe a pa_io_fichier_t */
+  PDM_MPI_File          fichier;      /* MSG file*/
+  PDM_MPI_Offset        offset;       /* Offset du fichier */
 };
 
 /*============================================================================

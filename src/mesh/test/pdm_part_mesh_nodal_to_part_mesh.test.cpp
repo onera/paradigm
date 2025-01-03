@@ -1,16 +1,15 @@
-#include <vector>
+#include <stdio.h>
+#include "doctest/doctest.h"
 #include "doctest/extensions/doctest_mpi.h"
 #include "pdm.h"
-#include "pdm_doctest.h"
-#include "pdm_part_mesh_nodal.h"
-#include "pdm_part_mesh.h"
-#include "pdm_part_mesh_nodal_to_part_mesh.h"
 #include "pdm_generate_mesh.h"
-#include "pdm_priv.h"
-#include "pdm_logging.h"
-#include "pdm_error.h"
-#include "pdm_array.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mesh_nodal.h"
+#include "pdm_mpi.h"
 #include "pdm_part_connectivity_transform.h"
+#include "pdm_part_mesh.h"
+#include "pdm_part_mesh_nodal.h"
+#include "pdm_part_mesh_nodal_to_part_mesh.h"
 
 static PDM_part_mesh_nodal_t *
 _generate_mesh

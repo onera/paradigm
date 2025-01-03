@@ -3,46 +3,50 @@
  *----------------------------------------------------------------------------*/
 
 #include <assert.h>
-#include <stdio.h>
 #include <math.h>
-#include <string.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 /*----------------------------------------------------------------------------
  * Local headers
  *----------------------------------------------------------------------------*/
 
-#include "pdm_printf.h"
-#include "pdm_error.h"
 #include "pdm.h"
-#include "pdm_priv.h"
-#include "pdm_mpi.h"
+#include "pdm_array.h"
+#include "pdm_block_to_part.h"
+#include "pdm_box.h"
+#include "pdm_dbbtree.h"
 #include "pdm_dist_cloud_surf_priv.h"
-#include "pdm_dist_cloud_surf.h"
+#include "pdm_error.h"
+#include "pdm_extract_part.h"
+#include "pdm_ho_bezier.h"
+#include "pdm_ho_location.h"
+#include "pdm_ho_ordering.h"
+#include "pdm_line.h"
+#include "pdm_logging.h"
+#include "pdm_mem_tool.h"
 #include "pdm_mesh_nodal.h"
-#include "pdm_part_mesh_nodal.h"
-#include "pdm_part_mesh_nodal_priv.h"
-#include "pdm_part_mesh_nodal_elmts.h"
-#include "pdm_surf_mesh.h"
+#include "pdm_mpi.h"
 #include "pdm_octree.h"
 #include "pdm_para_octree.h"
-#include "pdm_dbbtree.h"
+#include "pdm_part_mesh_nodal.h"
+#include "pdm_part_mesh_nodal_elmts.h"
+#include "pdm_part_mesh_nodal_priv.h"
 #include "pdm_part_to_block.h"
-#include "pdm_block_to_part.h"
-#include "pdm_line.h"
-#include "pdm_triangle.h"
+#include "pdm_part_to_part.h"
 #include "pdm_polygon.h"
-#include "pdm_timer.h"
-#include "pdm_hash_tab.h"
+#include "pdm_printf.h"
+#include "pdm_priv.h"
 #include "pdm_sort.h"
-#include "pdm_logging.h"
-#include "pdm_extract_part.h"
-#include "pdm_vtk.h"
+#include "pdm_surf_mesh.h"
+#include "pdm_timer.h"
+#include "pdm_triangle.h"
 #include "pdm_unique.h"
-#include "pdm_array.h"
-#include "pdm_ho_location.h"
-#include "pdm_ho_bezier.h"
-#include "pdm_ho_ordering.h"
+#include "pdm_vtk.h"
+#include "pdm_dist_cloud_surf.h"
+#include "pdm_dist_cloud_surf_priv.h"
+
 /*----------------------------------------------------------------------------*/
 
 #ifdef	__cplusplus

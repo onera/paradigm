@@ -2,35 +2,27 @@
  *  System headers
  *----------------------------------------------------------------------------*/
 
-#include <math.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <assert.h>
-#include <string.h>
 #include <limits.h>
+#include <stdio.h>
 
 /*----------------------------------------------------------------------------
  *  Local headers
  *----------------------------------------------------------------------------*/
 
-#include "pdm.h"
-#include "pdm_priv.h"
-#include "pdm_mpi.h"
-#include "pdm_mesh_nodal_priv.h"
-#include "pdm_part_mesh_nodal.h"
-#include "pdm_part_mesh_nodal_priv.h"
 #include "pdm_part_mesh_nodal_elmts_utils.h"
-#include "pdm_printf.h"
-#include "pdm_logging.h"
-#include "pdm_error.h"
-#include "pdm_gnum.h"
-#include "pdm_geom_elem.h"
+#include "pdm.h"
 #include "pdm_array.h"
-#include "pdm_vtk.h"
-#include "pdm_compare_operator.h"
-#include "pdm_sort.h"
 #include "pdm_binary_search.h"
+#include "pdm_compare_operator.h"
+#include "pdm_error.h"
+#include "pdm_logging.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mesh_nodal_priv.h"
+#include "pdm_part_mesh_nodal_elmts_priv.h"
 #include "pdm_part_renum.h"
+#include "pdm_priv.h"
+#include "pdm_sort.h"
 
 #ifdef __cplusplus
 extern "C" {

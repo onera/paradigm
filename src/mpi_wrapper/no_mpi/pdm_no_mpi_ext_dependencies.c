@@ -3,7 +3,6 @@
  *----------------------------------------------------------------------------*/
 
 #include <stdlib.h>
-#include <stdio.h>
 
 /*----------------------------------------------------------------------------
  *  Local headers
@@ -11,10 +10,9 @@
 
 #include "pdm.h"
 #include "pdm_config.h"
+#include "pdm_error.h"
 #include "pdm_mpi.h"
 #include "pdm_mpi_ext_dependencies.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
 
 /*=============================================================================
  * Macro definitions

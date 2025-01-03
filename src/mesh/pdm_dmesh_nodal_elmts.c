@@ -3,10 +3,8 @@
  *  System headers
  *----------------------------------------------------------------------------*/
 
-#include <math.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <assert.h>
+#include <stdio.h>
 #include <string.h>
 
 /*----------------------------------------------------------------------------
@@ -14,15 +12,13 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
-#include "pdm_priv.h"
-#include "pdm_mpi.h"
-#include "pdm_dmesh_nodal_elmts.h"
 #include "pdm_dmesh_nodal_elmts_priv.h"
-#include "pdm_dmesh_nodal_elements_utils.h"
-#include "pdm_printf.h"
-#include "pdm_logging.h"
 #include "pdm_error.h"
 #include "pdm_ho_ordering.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mpi.h"
+#include "pdm_printf.h"
+#include "pdm_dmesh_nodal_elmts.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -1,9 +1,12 @@
+
 #include <vector>
+#include "doctest/doctest.h"
 #include "doctest/extensions/doctest_mpi.h"
 #include "pdm.h"
-#include "pdm_doctest.h"
 #include "pdm_distrib.h"
-#include "pdm_priv.h"
+#include "pdm_doctest.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mpi.h"
 
 MPI_TEST_CASE("[pdm_distrib] - 1p - PDM_distrib_compute",1) {
 

@@ -30,23 +30,17 @@
 
 #include <assert.h>
 #include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
 
 /*----------------------------------------------------------------------------
  *  Local headers
  *----------------------------------------------------------------------------*/
-
+#include "pdm_gnum_location.h"
 #include "pdm.h"
+#include "pdm_block_to_part.h"
+#include "pdm_gnum_location_priv.h"
+#include "pdm_mem_tool.h"
 #include "pdm_mpi.h"
 #include "pdm_part_to_block.h"
-#include "pdm_block_to_part.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
-#include "pdm_gnum_location.h"
-#include "pdm_gnum_location_priv.h"
-#include "pdm_priv.h"
-#include "pdm_logging.h"
 
 /*----------------------------------------------------------------------------*/
 

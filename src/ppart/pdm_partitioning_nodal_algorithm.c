@@ -6,45 +6,33 @@
  *  System headers
  *----------------------------------------------------------------------------*/
 
-#include <math.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 /*----------------------------------------------------------------------------
  *  Local headers
  *----------------------------------------------------------------------------*/
 
+#include "pdm_partitioning_nodal_algorithm.h"
 #include "pdm.h"
-#include "pdm_mpi.h"
-#include "pdm_config.h"
-#include "pdm_priv.h"
-#include "pdm_timer.h"
-#include "pdm_mpi.h"
-#include "pdm_mpi_ext_dependencies.h"
-#include "pdm_part_to_block.h"
+#include "pdm_array.h"
+#include "pdm_binary_search.h"
 #include "pdm_block_to_part.h"
-#include "pdm_multi_block_to_part.h"
-
-#include "pdm_printf.h"
+#include "pdm_distrib.h"
+#include "pdm_dmesh_nodal_elmts_priv.h"
+#include "pdm_dmesh_nodal_priv.h"
 #include "pdm_error.h"
+#include "pdm_gnum.h"
+#include "pdm_logging.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mesh_nodal.h"
+#include "pdm_mpi.h"
+#include "pdm_multi_block_to_part.h"
+#include "pdm_part_to_block.h"
+#include "pdm_partitioning_algorithm.h"
 #include "pdm_sort.h"
 #include "pdm_unique.h"
-#include "pdm_binary_search.h"
-#include "pdm_hash_tab.h"
-#include "pdm_array.h"
-#include "pdm_gnum.h"
-#include "pdm_dmesh_nodal_priv.h"
-#include "pdm_part_mesh_nodal_priv.h"
-#include "pdm_part_mesh_nodal_elmts_priv.h"
-
-#include "pdm_partitioning_nodal_algorithm.h"
-#include "pdm_partitioning_algorithm.h"
-#include "pdm_distrib.h"
-#include "pdm_order.h"
-#include "pdm_logging.h"
-// #include "pdm_para_graph_dual.h"
-
 /*----------------------------------------------------------------------------
  *  Optional headers
  *----------------------------------------------------------------------------*/

@@ -1,31 +1,21 @@
 /*----------------------------------------------------------------------------
  *  System headers
  *----------------------------------------------------------------------------*/
-#include <sys/resource.h>
-
-#include <math.h>
-#include <stdlib.h>
 #include <stdio.h>
-#include <assert.h>
-#include <string.h>
+#include <stdlib.h>
 
 /*----------------------------------------------------------------------------
  *  Local headers
  *----------------------------------------------------------------------------*/
 
+#include "pdm_point_cloud_gen.h"
 #include "pdm.h"
-#include "pdm_priv.h"
-#include "pdm_mpi.h"
-#include "pdm_printf.h"
+#include "pdm_distrib.h"
 #include "pdm_error.h"
 #include "pdm_gnum.h"
-#include "pdm_timer.h"
-#include "pdm_sort.h"
-#include "pdm_array.h"
-#include "pdm_logging.h"
-#include "pdm_distrib.h"
-
-#include "pdm_point_cloud_gen.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mpi.h"
+#include "pdm_priv.h"
 
 #ifdef __cplusplus
 extern "C"

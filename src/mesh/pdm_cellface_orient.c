@@ -3,25 +3,21 @@
  *  System headers
  *----------------------------------------------------------------------------*/
 
-#include <math.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <assert.h>
+#include <stdio.h>
 
 /*----------------------------------------------------------------------------
  *  Local headers
  *----------------------------------------------------------------------------*/
-
 #include "pdm.h"
-#include "pdm_priv.h"
-#include "pdm_mpi.h"
 #include "pdm_array.h"
-#include "pdm_geom_elem.h"
-#include "pdm_cellface_orient.h"
-#include "pdm_hash_tab.h"
 #include "pdm_error.h"
+#include "pdm_geom_elem.h"
+#include "pdm_hash_tab.h"
+#include "pdm_mem_tool.h"
+#include "pdm_priv.h"
 #include "pdm_timer.h"
-#include "pdm_logging.h"
+#include "pdm_cellface_orient.h"
 
 #ifdef __cplusplus
 extern "C" {

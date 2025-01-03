@@ -1,31 +1,18 @@
-#include <math.h>
-#include <sys/time.h>
-#include <time.h>
-#include <sys/resource.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include <assert.h>
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "pdm.h"
-#include "pdm_priv.h"
-#include "pdm_mpi.h"
-#include "pdm_config.h"
-#include "pdm_part.h"
-
-#include "pdm_writer.h"
-#include "pdm_part_to_block.h"
-#include "pdm_poly_surf_gen.h"
-#include "pdm_overlay.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
-#include "pdm_mpi_node_first_rank.h"
-#include "pdm_priv.h"
-#include "pdm_points_merge.h"
-#include "pdm_gnum.h"
-#include "pdm_poly_surf_gen.h"
 #include "pdm_geom_elem.h"
+#include "pdm_gnum.h"
+#include "pdm_io.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mpi.h"
+#include "pdm_overlay.h"
+#include "pdm_priv.h"
+#include "pdm_writer.h"
 
 /*============================================================================
  * Type definitions

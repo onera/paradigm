@@ -1,13 +1,7 @@
-#include "doctest/extensions/doctest_mpi.h"
 
-#include <limits.h>
-#include <float.h>
 #include <math.h>
-#include "pdm.h"
-#include "pdm_doctest.h"
+#include "doctest/doctest.h"
 #include "pdm_line.h"
-#include "pdm_logging.h"
-
 
 static const double tol = 1e-14;
 

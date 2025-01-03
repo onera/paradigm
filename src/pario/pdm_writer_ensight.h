@@ -14,9 +14,7 @@
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
-#include "pdm.h"
-#include "pdm_mpi.h"
-#include "pdm_writer_priv.h"
+#include "pdm_writer.h"
 
 /*=============================================================================
  * Definitions des macro

@@ -1,17 +1,15 @@
+/*----------------------------------------------------------------------------
+ * Standard C library headers
+ *----------------------------------------------------------------------------*/
 #include <stddef.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <assert.h>
 
-#include "pdm_part.h"
+/*----------------------------------------------------------------------------
+ *  Header for the current file
+ *----------------------------------------------------------------------------*/
 #include "pdm_dcube_gen.h"
 #include "pdm_dcube_gen_priv.h"
+#include "pdm_mem_tool.h"
 #include "pdm_mpi.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
-#include "pdm_priv.h"
-
 
 /*============================================================================
  * Type definitions

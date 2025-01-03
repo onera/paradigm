@@ -6,27 +6,18 @@
  * Standard C library headers
  *----------------------------------------------------------------------------*/
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <string.h>
-#include <sys/time.h>
-#include <time.h>
 #include <assert.h>
-#include "pdm_config.h"
-
+#include <stdio.h>
+#include <string.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
 #include "pdm_memory_stats.h"
-#include "pdm_memory_stats_priv.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
 #include "pdm_logging.h"
-#include "pdm.h"
-#include "pdm_priv.h"
+#include "pdm_mem_tool.h"
+#include "pdm_memory_stats_priv.h"
 
 /*----------------------------------------------------------------------------*/
 

@@ -40,37 +40,31 @@
  *----------------------------------------------------------------------------*/
 
 #include <assert.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
 #include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 /*----------------------------------------------------------------------------
  *  Local headers
  *----------------------------------------------------------------------------*/
 
-#include "pdm.h"
-#include "pdm_priv.h"
-#include "pdm_config.h"
-#include "pdm_morton.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
-#include "pdm_binary_search.h"
-#include "pdm_mpi.h"
-#include "pdm_points_merge.h"
-#include "pdm_timer.h"
-#include "pdm_distrib.h"
-#include "pdm_logging.h"
-#include "pdm_unique.h"
-#include "pdm_order.h"
-#include "pdm_part_comm_graph_priv.h"
-
-/*----------------------------------------------------------------------------
- *  Header for the current file
- *----------------------------------------------------------------------------*/
-
 #include "pdm_gnum.h"
 #include "pdm_gnum_priv.h"
+#include "pdm.h"
+#include "pdm_binary_search.h"
+#include "pdm_distrib.h"
+#include "pdm_error.h"
+#include "pdm_gnum_priv.h"
+#include "pdm_logging.h"
+#include "pdm_part_comm_graph_priv.h"
+#include "pdm_mem_tool.h"
+#include "pdm_morton.h"
+#include "pdm_mpi.h"
+#include "pdm_order.h"
+#include "pdm_points_merge.h"
+#include "pdm_priv.h"
+#include "pdm_unique.h"
+
 
 /*----------------------------------------------------------------------------*/
 
@@ -1736,7 +1730,6 @@ _gnum_from_comm_graph
   int *n_l_entity_owner_graph = malloc(gen_gnum->n_part * sizeof(int));
   int *n_l_entity_ghost_graph = malloc(gen_gnum->n_part * sizeof(int));
   for(int i_part = 0; i_part < gen_gnum->n_part; ++i_part) {
-
     const int *lowner = PDM_part_comm_graph_owner_get(pcg, i_part);
     n_l_entity_owner_graph[i_part] = 0;
     n_l_entity_ghost_graph[i_part] = 0;

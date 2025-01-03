@@ -34,7 +34,7 @@
 
 #include "pdm_handles.h"
 #include "pdm_error.h"
-#include "pdm_priv.h"
+#include "pdm_mem_tool.h"
 
 /*----------------------------------------------------------------------------*/
 

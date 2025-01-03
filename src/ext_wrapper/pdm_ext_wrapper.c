@@ -10,14 +10,14 @@
  *  Local headers
  *----------------------------------------------------------------------------*/
 
-#include "pdm.h"
-#include "pdm_priv.h"
-#include "pdm_config.h"
-#include "pdm_mpi.h"
-#include "pdm_mpi_ext_dependencies.h"
+#include <stdio.h>         // for NULL
+#include <stdlib.h>        // for exit
+
 #include "pdm_ext_wrapper.h"
-#include "pdm_printf.h"
+#include "pdm_config.h"
 #include "pdm_error.h"
+#include "pdm_mem_tool.h"
+#include "pdm_printf.h"
 
 #ifdef PDM_HAVE_PTSCOTCH
 #include <scotch.h>
