@@ -1739,7 +1739,7 @@ _gnum_from_comm_graph
       if(gen_gnum->g_nums[i_part][i_entity] == -1) {
         if(lowner[i] == 1) {
           n_l_entity_owner_graph[i_part]++;
-          gen_gnum->g_nums[i_part][i_entity] = -2;
+          gen_gnum->g_nums[i_part][i_entity] = -1; // Owner and interior have same treatment
         } else {
           n_l_entity_ghost_graph[i_part]++;
           gen_gnum->g_nums[i_part][i_entity] = -3;
@@ -1770,14 +1770,11 @@ _gnum_from_comm_graph
     int idx_write_graph    = 0;
     for(int i = 0; i < gen_gnum->n_elts[i_part]; ++i) {
       if(gen_gnum->g_nums[i_part][i] == -1) { // Interior
-        gen_gnum->g_nums[i_part][i] = g_shift + idx_write_interior + 1;
+        gen_gnum->g_nums[i_part][i] = g_shift + l_part_shift + idx_write_interior + 1;
         idx_write_interior++;
-      } else if (gen_gnum->g_nums[i_part][i] == -2) {
-        gen_gnum->g_nums[i_part][i] = g_shift + n_l_entity_interior[i_part] + idx_write_graph + 1;
-        idx_write_graph++;
       }
     }
-    l_part_shift += n_l_entity_owner_graph[i_part];
+    l_part_shift += n_l_entity_interior[i_part] + n_l_entity_owner_graph[i_part];
   }
 
   /* Echange */

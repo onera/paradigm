@@ -380,8 +380,8 @@ MPI_TEST_CASE("[pdm_gnum] - 2p - from_part_comm_graph 2p", 2) {
     PDM_log_trace_array_long(ln_to_gn, n_elmt, "ln_to_gn");
   }
 
-  PDM_g_num_t ln_to_gn_expected_p0[9]  = {1, 2, 7, 3, 4, 8, 5, 6, 9 };
-  PDM_g_num_t ln_to_gn_expected_p1[12] = {7, 10, 11, 12, 8, 13, 14, 15, 9, 16, 17, 18};
+  PDM_g_num_t ln_to_gn_expected_p0[9]  = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+  PDM_g_num_t ln_to_gn_expected_p1[12] = {3, 10, 11, 12, 6, 13, 14, 15, 9, 16, 17, 18};
 
   MPI_CHECK_EQ_C_ARRAY(0, ln_to_gn, ln_to_gn_expected_p0, pn_elmt[i_rank]);
   MPI_CHECK_EQ_C_ARRAY(1, ln_to_gn, ln_to_gn_expected_p1, pn_elmt[i_rank]);
@@ -453,11 +453,80 @@ MPI_TEST_CASE("[pdm_gnum] - 2p - from_entity_graph 2p", 2) {
     PDM_log_trace_array_long(ln_to_gn, n_elmt, "ln_to_gn");
   }
 
-  PDM_g_num_t ln_to_gn_expected_p0[9]  = {1, 2, 7, 3, 4, 8, 5, 6, 9 };
-  PDM_g_num_t ln_to_gn_expected_p1[12] = {7, 10, 11, 12, 8, 13, 14, 15, 9, 16, 17, 18};
+  PDM_g_num_t ln_to_gn_expected_p0[9]  = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+  PDM_g_num_t ln_to_gn_expected_p1[12] = {3, 10, 11, 12, 6, 13, 14, 15, 9, 16, 17, 18};
 
   MPI_CHECK_EQ_C_ARRAY(0, ln_to_gn, ln_to_gn_expected_p0, pn_elmt[i_rank]);
   MPI_CHECK_EQ_C_ARRAY(1, ln_to_gn, ln_to_gn_expected_p1, pn_elmt[i_rank]);
+
+  PDM_gnum_free(gen_gnum);
+
+}
+
+MPI_TEST_CASE("[pdm_gnum] - 1p - from_entity_graph 1p - n_part=1", 1) {
+  PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
+
+  int i_rank;
+  PDM_MPI_Comm_rank(pdm_comm, &i_rank);
+
+  /*
+   *    |++++|++++| 9    9 |++++|++++|++++| 12
+   *    |    |    |        |    |    |    |
+   *    |    |    |        |    |    |    |
+   *    |++++|++++| 6    5 |++++|++++|++++| 8
+   *    |    |    |        |    |    |    |
+   *    |    |    |        |    |    |    |
+   *    |++++|++++|        |++++|++++|++++|
+   *   1     2    3       1     2    3    4
+   */
+
+  /* Part */
+  std::vector<int> vn_elt = {9, 12};
+  // int n_elt1 = vn_elt[i_rank];
+  // int n_part = 1;
+
+  /* Graphe comm */
+  std::vector<int> vn_entity_bound = {3, 3};
+  std::vector<std::vector<int>> ventity_bound = {{3, 0, 2, 1,
+                                                  6, 0, 2, 5,
+                                                  9, 0, 2, 9},
+                                                 {1, 0, 1, 3,
+                                                  5, 0, 1, 6,
+                                                  9, 0, 1, 9}};
+
+  std::vector<int> pn_elmt = {9, 12};
+
+  int n_part = 2;
+  PDM_gen_gnum_t* gen_gnum = PDM_gnum_create(3,
+                                             n_part,
+                                             PDM_TRUE,
+                                             1.e-6,
+                                             pdm_comm,
+                                             PDM_OWNERSHIP_KEEP);
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    PDM_gnum_set_from_entity_graph(gen_gnum,
+                                   i_part,
+                                   pn_elmt        [i_part],
+                                   vn_entity_bound[i_part],
+                                   ventity_bound  [i_part].data());
+  }
+
+  PDM_gnum_compute(gen_gnum);
+
+  PDM_g_num_t* ln_to_gn_part0 = PDM_gnum_get(gen_gnum, 0);
+  PDM_g_num_t* ln_to_gn_part1 = PDM_gnum_get(gen_gnum, 1);
+
+  if(0 == 1) {
+    PDM_log_trace_array_long(ln_to_gn_part0, pn_elmt[0], "ln_to_gn_part0");
+    PDM_log_trace_array_long(ln_to_gn_part1, pn_elmt[1], "ln_to_gn_part1");
+  }
+
+  PDM_g_num_t ln_to_gn_expected_p0[9]  = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+  PDM_g_num_t ln_to_gn_expected_p1[12] = {3, 10, 11, 12, 6, 13, 14, 15, 9, 16, 17, 18};
+
+  MPI_CHECK_EQ_C_ARRAY(0, ln_to_gn_part0, ln_to_gn_expected_p0, pn_elmt[0]);
+  MPI_CHECK_EQ_C_ARRAY(0, ln_to_gn_part1, ln_to_gn_expected_p1, pn_elmt[1]);
 
   PDM_gnum_free(gen_gnum);
 
