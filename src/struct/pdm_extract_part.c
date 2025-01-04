@@ -1203,7 +1203,7 @@ _extract_part_and_reequilibrate_nodal_groups
 
   int n_group = PDM_part_mesh_nodal_elmts_n_group_get(pmne);
 
-  PDM_part_mesh_nodal_elmts_n_group_set(extract_pmne, n_group, PDM_OWNERSHIP_KEEP);
+  PDM_part_mesh_nodal_elmts_n_group_set(extract_pmne, n_group);
 
   extrp->n_group[bound_type] = n_group;
 
@@ -4922,7 +4922,7 @@ _extract_part_nodal_local_pmne
 
   int n_group = PDM_part_mesh_nodal_elmts_n_group_get(pmne);
 
-  PDM_part_mesh_nodal_elmts_n_group_set(extract_pmne, n_group, PDM_OWNERSHIP_KEEP);
+  PDM_part_mesh_nodal_elmts_n_group_set(extract_pmne, n_group);
 
   /* Prepare extracted sections */
   int *extract_sections_id = NULL;

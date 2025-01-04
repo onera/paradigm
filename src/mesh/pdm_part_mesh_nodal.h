@@ -1209,36 +1209,12 @@ PDM_part_mesh_nodal_sections_id_get
  PDM_part_mesh_nodal_t *pmn
 );
 
-
-//********************************************************************************//
-// /**
-//  * \brief Create a new Mesh nodal from elements selected in a parent Mesh nodal
-//  *
-//  * \param [in]   parent_mesh       Parent Mesh nodal structure
-//  * \param [in]   n_select_elt      Number of selected element for each partition of each nodal block
-//  * \param [in]   select_elt_l_num  Local numbers of selected elements (for each partition of each nodal block)
-//  *
-//  * \return       Pointer to new \ref PDM_Mesh_nodal object
-//  *
-//  */
-//---> not used in PDM/CWIPI
-
-// PDM_Mesh_nodal_t *
-// PDM_Mesh_nodal_extract_selection
-// (
-//  PDM_Mesh_nodal_t  *parent_mesh,
-//  const int        **n_select_elt,
-//  const int       ***select_elt_l_num
-//  );
-
-
 void
 PDM_part_mesh_nodal_n_group_set
 (
        PDM_part_mesh_nodal_t  *pmn,
        PDM_geometry_kind_t     geom_kind,
- const int                     n_group,
-       PDM_ownership_t         ownership_group
+ const int                     n_group
 );
 
 void

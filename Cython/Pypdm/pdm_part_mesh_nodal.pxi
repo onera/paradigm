@@ -84,8 +84,7 @@ cdef extern from "pdm_part_mesh_nodal.h":
 
     void PDM_part_mesh_nodal_n_group_set(PDM_part_mesh_nodal_t  *pmn,
                                          PDM_geometry_kind_t     geom_kind,
-                                         const int               n_group,
-                                         PDM_ownership_t         ownership_group)
+                                         const int               n_group)
 
     void PDM_part_mesh_nodal_group_set(PDM_part_mesh_nodal_t  *pmn,
                                        PDM_geometry_kind_t     geom_kind,
@@ -234,8 +233,7 @@ cdef class PartMeshNodal:
         """
         PDM_part_mesh_nodal_n_group_set(self.pmn,
                                         geom_kind,
-                                        n_group,
-                                        PDM_OWNERSHIP_USER)
+                                        n_group)
 
     # ------------------------------------------------------------------------
     def group_set(self,

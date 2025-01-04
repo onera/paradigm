@@ -1767,7 +1767,6 @@ _gnum_from_comm_graph
   PDM_g_num_t l_part_shift = 0;
   for(int i_part = 0; i_part < gen_gnum->n_part; ++i_part) {
     int idx_write_interior = 0;
-    int idx_write_graph    = 0;
     for(int i = 0; i < gen_gnum->n_elts[i_part]; ++i) {
       if(gen_gnum->g_nums[i_part][i] == -1) { // Interior
         gen_gnum->g_nums[i_part][i] = g_shift + l_part_shift + idx_write_interior + 1;

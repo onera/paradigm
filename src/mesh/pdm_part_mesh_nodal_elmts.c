@@ -1123,7 +1123,7 @@ PDM_part_mesh_nodal_elmts_create
   pmne->num_elmt_parent_to_local = NULL;
   pmne->numabs                   = NULL;
 
-  pmne->ownership_group  = PDM_OWNERSHIP_KEEP;
+  pmne->ownership_group  = NULL;
   pmne->ownership_numabs = PDM_OWNERSHIP_KEEP;
   pmne->n_group          = 0;
   pmne->n_group_elmt     = NULL;
@@ -2081,22 +2081,23 @@ PDM_part_mesh_nodal_elmts_free
 
     if (pmne->n_group_elmt != NULL) {
 
-      if(pmne->ownership_group == PDM_OWNERSHIP_KEEP) {
+      for(int i_part = 0; i_part < pmne->n_part; ++i_part) {
 
-        for(int i_part = 0; i_part < pmne->n_part; ++i_part) {
-
-          for(int i_group = 0; i_group < pmne->n_group; ++i_group) {
+        for(int i_group = 0; i_group < pmne->n_group; ++i_group) {
+          if(pmne->ownership_group[i_part][i_group] == PDM_OWNERSHIP_KEEP) {
             PDM_free(pmne->group_elmt    [i_part][i_group]);
             PDM_free(pmne->group_ln_to_gn[i_part][i_group]);
           }
-          PDM_free(pmne->n_group_elmt  [i_part]);
-          PDM_free(pmne->group_elmt    [i_part]);
-          PDM_free(pmne->group_ln_to_gn[i_part]);
         }
+        PDM_free(pmne->n_group_elmt   [i_part]);
+        PDM_free(pmne->group_elmt     [i_part]);
+        PDM_free(pmne->group_ln_to_gn [i_part]);
+        PDM_free(pmne->ownership_group[i_part]);
       }
-      PDM_free(pmne->n_group_elmt  );
-      PDM_free(pmne->group_elmt    );
-      PDM_free(pmne->group_ln_to_gn);
+      PDM_free(pmne->n_group_elmt   );
+      PDM_free(pmne->group_elmt     );
+      PDM_free(pmne->group_ln_to_gn );
+      PDM_free(pmne->ownership_group);
     }
   }
   PDM_free(pmne);
@@ -6336,14 +6337,14 @@ void
 PDM_part_mesh_nodal_elmts_n_group_set
 (
        PDM_part_mesh_nodal_elmts_t  *pmne,
- const int                           n_group,
-       PDM_ownership_t               ownership_group
+ const int                           n_group
 )
 {
   if(pmne->n_group_elmt == NULL) {
-    PDM_malloc(pmne->n_group_elmt,   pmne->n_part, int          *);
-    PDM_malloc(pmne->group_elmt,     pmne->n_part, int         **);
-    PDM_malloc(pmne->group_ln_to_gn, pmne->n_part, PDM_g_num_t **);
+    PDM_malloc(pmne->n_group_elmt   , pmne->n_part, int              *);
+    PDM_malloc(pmne->group_elmt     , pmne->n_part, int             **);
+    PDM_malloc(pmne->group_ln_to_gn , pmne->n_part, PDM_g_num_t     **);
+    PDM_malloc(pmne->ownership_group, pmne->n_part, PDM_ownership_t  *);
 
     for(int i_part = 0; i_part < pmne->n_part; ++i_part) {
       pmne->n_group_elmt  [i_part] = NULL;
@@ -6354,17 +6355,18 @@ PDM_part_mesh_nodal_elmts_n_group_set
 
 
   pmne->n_group         = n_group;
-  pmne->ownership_group = ownership_group;
 
   for(int i_part = 0; i_part < pmne->n_part; ++i_part) {
-    PDM_malloc(pmne->n_group_elmt  [i_part], n_group, int          );
-    PDM_malloc(pmne->group_elmt    [i_part], n_group, int         *);
-    PDM_malloc(pmne->group_ln_to_gn[i_part], n_group, PDM_g_num_t *);
+    PDM_malloc(pmne->n_group_elmt   [i_part], n_group, int              );
+    PDM_malloc(pmne->group_elmt     [i_part], n_group, int             *);
+    PDM_malloc(pmne->group_ln_to_gn [i_part], n_group, PDM_g_num_t     *);
+    PDM_malloc(pmne->ownership_group[i_part], n_group, PDM_ownership_t  );
 
     for(int i_group = 0; i_group < pmne->n_group; ++i_group) {
-      pmne->n_group_elmt  [i_part][i_group] = 0;
-      pmne->group_elmt    [i_part][i_group] = NULL;
-      pmne->group_ln_to_gn[i_part][i_group] = NULL;
+      pmne->n_group_elmt   [i_part][i_group] = 0;
+      pmne->group_elmt     [i_part][i_group] = NULL;
+      pmne->group_ln_to_gn [i_part][i_group] = NULL;
+      pmne->ownership_group[i_part][i_group] = PDM_OWNERSHIP_KEEP;
     }
   }
 }
@@ -6385,7 +6387,7 @@ PDM_part_mesh_nodal_elmts_group_set
   pmne->group_elmt    [i_part][i_group] = group_elmt;
   pmne->group_ln_to_gn[i_part][i_group] = group_ln_to_gn;
 
-  pmne->ownership_group = ownership_group;
+  pmne->ownership_group[i_part][i_group] = ownership_group;
 }
 
 void
@@ -6405,7 +6407,7 @@ PDM_part_mesh_nodal_elmts_group_get
   *group_ln_to_gn = pmne->group_ln_to_gn[i_part][i_group];
 
   if (ownership_group != PDM_OWNERSHIP_BAD_VALUE) {
-    pmne->ownership_group = ownership_group;
+    pmne->ownership_group[i_part][i_group] = ownership_group;
   }
 }
 

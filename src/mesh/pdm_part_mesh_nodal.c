@@ -2392,30 +2392,18 @@ PDM_part_mesh_nodal_sections_id_get
   return pmn->section_id;
 }
 
-/**
- * \brief Set group information for a partition
- *
- * \param [in]  pmn              Pointer to \ref PDM_part_mesh_nodal_t instance
- * \param [in]  geom_kind        Geometry kind (volume, surface, ridge or corner)
- * \param [in]  i_part           Partition identifier
- * \param [in]  i_group          Group identifier
- * \param [in]  n_group_elmt     Number of elements
- * \param [in]  group_elmt       Group->element connectivity (1-based local IDs)
- * \param [in]  group_ln_to_gn   Group-specific element global IDs
- * \param [in]  ownership        Ownership
- */
+
 void
 PDM_part_mesh_nodal_n_group_set
 (
        PDM_part_mesh_nodal_t  *pmn,
        PDM_geometry_kind_t     geom_kind,
- const int                     n_group,
-       PDM_ownership_t         ownership_group
+ const int                     n_group
 )
 {
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
   assert(pmne != NULL);
-  PDM_part_mesh_nodal_elmts_n_group_set(pmne, n_group, ownership_group);
+  PDM_part_mesh_nodal_elmts_n_group_set(pmne, n_group);
 }
 
 void
