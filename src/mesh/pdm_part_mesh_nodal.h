@@ -1120,7 +1120,6 @@ PDM_part_mesh_nodal_section_id_from_geom_kind_get
  * \return  Number of sections
  *
  */
-
 int
 PDM_part_mesh_nodal_n_section_get
 (
@@ -1206,6 +1205,15 @@ PDM_part_mesh_nodal_group_get
        PDM_ownership_t         ownership
 );
 
+/**
+ * \brief Get the section index for a current kind for i_part
+ *
+ * \param [in]  pmn        Pointer to \ref PDM_part_mesh_nodal_t object
+ * \param [in]  geom_kind  Geometry kind (corner, ridge, surface or volume)
+ * \param [in]  i_part     Partition identifier
+ *
+ * \return Index of sections (size=n_sections)
+ */
 int*
 PDM_part_mesh_nodal_compute_sections_idx
 (
