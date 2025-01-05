@@ -53,8 +53,6 @@ typedef struct _pdm_part_mesh_nodal_t PDM_part_mesh_nodal_t;
  * \return       Pointer to \ref PDM_part_mesh_nodal_t object
  *
  */
-//---> PDM_Mesh_nodal_create
-
 PDM_part_mesh_nodal_t*
 PDM_part_mesh_nodal_create
 (
@@ -74,8 +72,6 @@ const PDM_MPI_Comm comm
  * \param [in]  owner      Vertices ownship
  *
  */
-//---> PDM_Mesh_nodal_coord_set
-
 void
 PDM_part_mesh_nodal_coord_set
 (
@@ -101,8 +97,6 @@ PDM_part_mesh_nodal_coord_set
  * \param [in]  owner         Vertices ownship
  *
  */
-//---> PDM_Mesh_nodal_coord_from_parent_set
-
 void
 PDM_part_mesh_nodal_coord_from_parent_set
 (
@@ -125,8 +119,6 @@ PDM_part_mesh_nodal_coord_from_parent_set
  * \return  Number of partitions
  *
  */
-//---> PDM_Mesh_nodal_n_part_get
-
 int
 PDM_part_mesh_nodal_n_part_get
 (
@@ -157,8 +149,6 @@ PDM_part_mesh_nodal_mesh_dimension_get
  * \return  Number of vertices
  *
  */
-//---> PDM_Mesh_nodal_n_vertices_get
-
 int
 PDM_part_mesh_nodal_n_vtx_get
 (
@@ -175,8 +165,6 @@ PDM_part_mesh_nodal_n_vtx_get
  * \return  Coordinates of vertices
  *
  */
-//---> PDM_Mesh_nodal_vertices_get
-
 double*
 PDM_part_mesh_nodal_vtx_coord_get
 (
@@ -193,7 +181,6 @@ PDM_part_mesh_nodal_vtx_coord_get
  * \return  Golbal ids of vertices
  *
  */
-//---> PDM_Mesh_nodal_vertices_g_num_get
 PDM_g_num_t*
 PDM_part_mesh_nodal_vtx_g_num_get
 (
@@ -210,7 +197,6 @@ PDM_part_mesh_nodal_vtx_g_num_get
  * \return  Number of sections
  *
  */
-
 int
 PDM_part_mesh_nodal_n_section_in_geom_kind_get
 (
@@ -227,7 +213,6 @@ PDM_part_mesh_nodal_n_section_in_geom_kind_get
  * \return  Ids of sections
  *
  */
-
 int *
 PDM_part_mesh_nodal_sections_id_in_geom_kind_get
 (
@@ -244,8 +229,6 @@ PDM_part_mesh_nodal_sections_id_in_geom_kind_get
  * \return  Type of section
  *
  */
-//---> PDM_Mesh_nodal_block_type_get
-
 PDM_Mesh_nodal_elt_t
 PDM_part_mesh_nodal_section_elt_type_get
 (
@@ -263,7 +246,6 @@ PDM_part_mesh_nodal_section_elt_type_get
  * \return  Type of section
  *
  */
-
 PDM_Mesh_nodal_elt_t
 PDM_part_mesh_nodal_section_in_geom_kind_elt_type_get
 (
@@ -281,8 +263,6 @@ PDM_part_mesh_nodal_section_in_geom_kind_elt_type_get
  * \return Section identifier
  *
  */
-//---> PDM_Mesh_nodal_block_add
-
 int
 PDM_part_mesh_nodal_section_add
 (
@@ -372,7 +352,6 @@ const PDM_Mesh_nodal_elt_t   t_elt
  * \param [in]  owner                   Ownership
  *
  */
-//---> PDM_Mesh_nodal_block_std_set
 void
 PDM_part_mesh_nodal_section_std_set
 (
@@ -403,7 +382,6 @@ const PDM_g_num_t           *parent_entity_g_num,
  * \param [in]  owner                   Ownership
  *
  */
-
 void
 PDM_part_mesh_nodal_section_std_ho_set
 (
@@ -430,7 +408,6 @@ const char                  *ho_ordering,
  * \return      Number of elements
  *
  */
-//---> PDM_Mesh_nodal_block_n_elt_get
 int
 PDM_part_mesh_nodal_section_n_elt_get
 (
@@ -452,7 +429,6 @@ const int                     id_part
  * \param [in]  ownership               Data ownership
  *
  */
-//---> PDM_Mesh_nodal_block_std_get
 void
 PDM_part_mesh_nodal_section_std_get
 (
@@ -481,7 +457,6 @@ const int                     id_part,
  * \param [in]  ownership               Data ownership
  *
  */
-
 void
 PDM_part_mesh_nodal_section_std_ho_get
 (
@@ -508,7 +483,6 @@ const char                  **ho_ordering,
  * \return      Return parent numbering of block elements
  *
  */
-//---> PDM_Mesh_nodal_block_parent_num_get
 int *
 PDM_part_mesh_nodal_section_parent_num_get
 (
@@ -529,7 +503,6 @@ const int                     id_part,
  * \return      Return global element numbering of section elements
  *
  */
-//---> PDM_Mesh_nodal_g_num_get
 PDM_g_num_t *
 PDM_part_mesh_nodal_g_num_get
 (
@@ -546,7 +519,6 @@ const int                     id_part,
  * \param [in]  pmne         Pointer to \ref PDM_part_mesh_nodal_elmts_t object
  *
  */
-
 void
 PDM_part_mesh_nodal_add_part_mesh_nodal_elmts
 (
@@ -560,7 +532,6 @@ PDM_part_mesh_nodal_add_part_mesh_nodal_elmts
  * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
  *
  */
-//---> PDM_Mesh_nodal_free
 void
 PDM_part_mesh_nodal_free
 (
@@ -585,7 +556,6 @@ PDM_part_mesh_nodal_dump_vtk
  * \param [out] extents        Extents of mesh elements in current part of current block
  *
  */
-//---> PDM_Mesh_nodal_compute_cell_extents
 void
 PDM_part_mesh_nodal_section_elt_extents_compute
 (
@@ -596,7 +566,6 @@ PDM_part_mesh_nodal_section_elt_extents_compute
        double                *extents
 );
 
-
 /**
  * \brief Compute cell centers of a part of section
  *
@@ -606,7 +575,6 @@ PDM_part_mesh_nodal_section_elt_extents_compute
  * \param [in]  ownership      Ownership
  *
  */
-//---> PDM_Mesh_nodal_cell_centers_compute
 void
 PDM_part_mesh_nodal_section_elt_center_compute
 (
@@ -627,7 +595,6 @@ const PDM_ownership_t        ownership
  * \return  Return cell centers
  *
  */
-//---> PDM_Mesh_cell_centers_get
 const double *
 PDM_part_mesh_nodal_section_elt_center_get
 (
@@ -646,7 +613,6 @@ const int                    i_part,
  * \param [in]  id_part        Partition identifier
  *
  */
-//---> PDM_Mesh_nodal_cell_centers_reset
 void
 PDM_part_mesh_nodal_section_elt_center_reset
 (
@@ -670,7 +636,6 @@ const int                    i_part
  * \param [in]  owner          Ownership
  *
  */
-//---> PDM_Mesh_nodal_block_poly2d_set
 void
 PDM_part_mesh_nodal_section_poly2d_set
 (
@@ -685,7 +650,6 @@ const int                   *parent_num,
       PDM_ownership_t        owner
 );
 
-
 /**
  * \brief Return a polygon section description
  *
@@ -697,7 +661,6 @@ const int                   *parent_num,
  * \param [in]  ownership      Data ownership
  *
  */
-//---> PDM_Mesh_nodal_block_poly2d_get
 void
 PDM_part_mesh_nodal_section_poly2d_get
 (
@@ -728,7 +691,6 @@ const int                     id_part,
  * \param [in]  owner          Ownership
  *
  */
-//---> PDM_Mesh_nodal_block_poly3d_set
 void
 PDM_part_mesh_nodal_section_poly3d_set
 (
@@ -766,7 +728,6 @@ const PDM_g_num_t           *parent_entity_g_num,
  * \param [in]  ownership            Data ownership
  *
  */
-//---> PDM_Mesh_nodal_block_poly3d_get
 void
 PDM_part_mesh_nodal_section_poly3d_get
 (
@@ -796,7 +757,6 @@ const int                     id_part,
  * \param [in]  ownership    Data ownership
  *
  */
-
 void
 PDM_part_mesh_nodal_section_poly3d_cell_vtx_connect_get
 (
@@ -816,13 +776,11 @@ const int                     id_part,
  * \return      NULL
  *
  */
-//---> PDM_Mesh_nodal_reset
 void
 PDM_part_mesh_nodal_reset
 (
  PDM_part_mesh_nodal_t *pmn
 );
-
 
 /**
  * \brief  Compute a global numbering in a section
@@ -832,8 +790,6 @@ PDM_part_mesh_nodal_reset
  * \param [in]  ownership    Ownership
  *
  */
-//---> PDM_Mesh_nodal_g_num_in_block_compute
-
 void
 PDM_part_mesh_nodal_g_num_in_section_compute
 (
@@ -852,8 +808,6 @@ const PDM_ownership_t         ownership
  * \return  Return number elements of a partition
  *
  */
-// ---> PDM_Mesh_nodal_n_cell_get
-
 int
 PDM_part_mesh_nodal_n_elmts_get
 (
@@ -873,8 +827,6 @@ const int                     id_part
  * \return  Global ids of element in current partition
  *
  */
-// ---> PDM_Mesh_nodal_g_num_get_from_part
-
 PDM_g_num_t *
 PDM_part_mesh_nodal_g_num_get_from_part
 (
@@ -892,8 +844,6 @@ const int                     id_part,
  * \return      NULL
  *
  */
-//---> PDM_Mesh_nodal_partial_free
-
 void
 PDM_part_mesh_nodal_partial_free
 (
@@ -907,8 +857,6 @@ PDM_part_mesh_nodal_partial_free
  *
  * \return true if the vertices are defined from parents
  */
-//---> PDM_Mesh_nodal_is_set_coord_from_parent
-
 int
 PDM_part_mesh_nodal_is_set_coord_from_parent
 (
@@ -926,8 +874,6 @@ PDM_part_mesh_nodal_is_set_coord_from_parent
  * \return      Return global numbering of block elements inside the block
  *
  */
-//---> PDM_Mesh_nodal_block_g_num_get
-
 PDM_g_num_t *
 PDM_part_mesh_nodal_section_g_num_get
 (
@@ -947,8 +893,6 @@ const int                     id_part,
  * \return  Parent element number to local number
  *
  */
-//---> PDM_Mesh_nodal_num_cell_parent_to_local_get
-
 int *
 PDM_part_mesh_nodal_num_elmt_parent_to_local_get
 (
@@ -976,7 +920,6 @@ const int                    id_part,
       PDM_ownership_t        ownership
 );
 
-
 /**
  * \brief  Return parent num of vertices
  *
@@ -986,13 +929,12 @@ const int                    id_part,
  * \return  Parent of vertices
  *
  */
-//---> PDM_Mesh_nodal_vertices_parent_get
 const int *
 PDM_part_mesh_nodal_vertices_parent_get
 (
       PDM_part_mesh_nodal_t  *pmn,
 const int                     id_part
- );
+);
 
 /**
  * \brief  Return parent  absolute number
@@ -1003,13 +945,12 @@ const int                     id_part
  * \return  Parent of vertices
  *
  */
-//---> PDM_Mesh_nodal_vertices_g_num_parent_get
 const PDM_g_num_t *
 PDM_part_mesh_nodal_vertices_g_num_parent_get
 (
       PDM_part_mesh_nodal_t  *pmn,
 const int                     id_part
- );
+);
 
 /**
  * \brief  Add some 3D cells from cell face conectivity.
@@ -1031,7 +972,6 @@ const int                     id_part
  * \param [in]  ownership      Ownership
  *
  */
-//---> PDM_Mesh_nodal_cell3d_cellface_add
 void
 PDM_part_mesh_nodal_cell3d_cellface_add
 (
@@ -1066,7 +1006,6 @@ const PDM_ownership_t         ownership
  * \param [in]  ownership      Ownership
  *
  */
-//---> PDM_Mesh_nodal_cell2d_celledge_add
 void
 PDM_part_mesh_nodal_face2d_faceedge_add
 (
@@ -1097,7 +1036,6 @@ const PDM_ownership_t         ownership
  * \param [in]  ownership      Ownership
  *
  */
-//---> PDM_Mesh_nodal_cells_cellvtx_add
 void
 PDM_part_mesh_nodal_cells_cellvtx_add
 (
@@ -1125,7 +1063,6 @@ const PDM_ownership_t         ownership
  * \param [in]  ownership      Ownership
  *
  */
-//---> PDM_Mesh_nodal_faces_facevtx_add
 void
 PDM_part_mesh_nodal_faces_facevtx_add
 (
@@ -1148,7 +1085,6 @@ const PDM_ownership_t         ownership
  * \param [out] id_section_in_geom_kind  Section identifier local to the geometry kind
  *
  */
-
 void
 PDM_part_mesh_nodal_section_id_and_geom_kind_get
 (
@@ -1156,7 +1092,7 @@ PDM_part_mesh_nodal_section_id_and_geom_kind_get
  const int                     i_section,
        PDM_geometry_kind_t    *geom_kind,
        int                    *id_section_in_geom_kind
- );
+);
 
 /**
  * \brief  Return unique identifier of a section
@@ -1168,14 +1104,13 @@ PDM_part_mesh_nodal_section_id_and_geom_kind_get
  * \return   Unique section identifier
  *
  */
-
 int
 PDM_part_mesh_nodal_section_id_from_geom_kind_get
 (
        PDM_part_mesh_nodal_t  *pmn,
  const PDM_geometry_kind_t     geom_kind,
  const int                     id_section_in_geom_kind
- );
+);
 
 /**
  * \brief  Return number of sections
@@ -1185,7 +1120,6 @@ PDM_part_mesh_nodal_section_id_from_geom_kind_get
  * \return  Number of sections
  *
  */
-//---> PDM_Mesh_nodal_n_blocks_get
 
 int
 PDM_part_mesh_nodal_n_section_get
@@ -1201,14 +1135,19 @@ PDM_part_mesh_nodal_n_section_get
  * \return  Ids of sections
  *
  */
-//---> PDM_Mesh_nodal_blocks_id_get
-
 int *
 PDM_part_mesh_nodal_sections_id_get
 (
  PDM_part_mesh_nodal_t *pmn
 );
 
+/**
+ * \brief  Set number of group for a current geometry kind
+ *
+ * \param [in]  pmn        Pointer to \ref PDM_part_mesh_nodal_t object
+ * \param [in]  geom_kind  Geometry kind (corner, ridge, surface or volume)
+ * \param [in]  n_group    Number of group in geom_kind
+ */
 void
 PDM_part_mesh_nodal_n_group_set
 (
@@ -1217,6 +1156,18 @@ PDM_part_mesh_nodal_n_group_set
  const int                     n_group
 );
 
+/**
+ * \brief  Set partition group
+ *
+ * \param [in]  pmn            Pointer to \ref PDM_part_mesh_nodal_t object
+ * \param [in]  geom_kind      Geometry kind (corner, ridge, surface or volume)
+ * \param [in]  i_part         Partition identifier
+ * \param [in]  i_group        Group identifier
+ * \param [in]  n_group_elmt   Number of element in current group for current part
+ * \param [in]  group_elmt     List of entity in group (size = n_group_elmt)
+ * \param [in]  group_ln_to_gn List of global identifier in group (size = n_group_elmt)
+ * \param [in]  ownership      Choice of ownership of the resulting arrays \ref PDM_ownership_t
+ */
 void
 PDM_part_mesh_nodal_group_set
 (
@@ -1230,6 +1181,18 @@ PDM_part_mesh_nodal_group_set
        PDM_ownership_t         ownership
 );
 
+/**
+ * \brief  Get partition group
+ *
+ * \param [in]   pmn            Pointer to \ref PDM_part_mesh_nodal_t object
+ * \param [in]   geom_kind      Geometry kind (corner, ridge, surface or volume)
+ * \param [in]   i_part         Partition identifier
+ * \param [in]   i_group        Group identifier
+ * \param [out]  n_group_elmt   Number of element in current group for current part
+ * \param [out]  group_elmt     List of entity in group (size = n_group_elmt)
+ * \param [out]  group_ln_to_gn List of global identifier in group (size = n_group_elmt)
+ * \param [in]   ownership      Choice of ownership of the resulting arrays \ref PDM_ownership_t
+ */
 void
 PDM_part_mesh_nodal_group_get
 (
@@ -1251,6 +1214,14 @@ PDM_part_mesh_nodal_compute_sections_idx
  const int               id_part
 );
 
+/**
+ * \brief Get number of group for a current geometry kind
+ *
+ * \param [in]  pmn        Pointer to \ref PDM_part_mesh_nodal_t object
+ * \param [in]  geom_kind  Geometry kind (corner, ridge, surface or volume)
+ *
+ * \return  Number of group in geom_kind
+ */
 int
 PDM_part_mesh_nodal_n_group_get
 (
@@ -1258,7 +1229,14 @@ PDM_part_mesh_nodal_n_group_get
        PDM_geometry_kind_t     geom_kind
 );
 
-
+/**
+ * \brief Get the substruture \ref PDM_part_mesh_nodal_elmts_t for a current geometry kind
+ *
+ * \param [in]  pmn        Pointer to \ref PDM_part_mesh_nodal_t object
+ * \param [in]  geom_kind  Geometry kind (corner, ridge, surface or volume)
+ *
+ * \return  \ref PDM_part_mesh_nodal_elmts_t of geometry kind
+ */
 PDM_part_mesh_nodal_elmts_t*
 PDM_part_mesh_nodal_part_mesh_nodal_elmts_get
 (
@@ -1276,12 +1254,11 @@ PDM_part_mesh_nodal_part_mesh_nodal_elmts_get
  * \return Geometry kind of highest dimension
  *
  */
-
 PDM_geometry_kind_t
 PDM_part_mesh_nodal_principal_geom_kind_get
 (
  PDM_part_mesh_nodal_t  *pmn
- );
+);
 
 
 /**
@@ -1297,7 +1274,6 @@ PDM_part_mesh_nodal_principal_geom_kind_get
  * \return Number of cells in current partition
  *
  */
-
 int
 PDM_part_mesh_nodal_cell_vtx_connect_get
 (

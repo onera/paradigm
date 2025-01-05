@@ -106,17 +106,6 @@ _get_from_geometry_kind
  * Public function definitions
  *============================================================================*/
 
-/**
- * \brief Create a \ref PDM_part_mesh_nodal_t structure
- *
- * \param [in]   mesh_dimension   Mesh dimension
- * \param [in]   n_part           Number of partition on the current process
- * \param [in]   comm             MPI communicator
- *
- * \return       Pointer to \ref PDM_part_mesh_nodal_t object
- *
- */
-
 PDM_part_mesh_nodal_t*
 PDM_part_mesh_nodal_create
 (
@@ -162,19 +151,6 @@ PDM_part_mesh_nodal_create
   return pmn;
 }
 
-
-/**
- * \brief Define partition vertices
- *
- * \param [in]  pmn       Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  id_part   Partition identifier
- * \param [in]  n_vtx     Number of vertices
- * \param [in]  coords    Interlaced coordinates (size = 3 * \ref n_vtx)
- * \param [in]  numabs    Global numbering
- * \param [in]  owner      Vertices ownship
- *
- */
-
 void
 PDM_part_mesh_nodal_coord_set
 (
@@ -205,21 +181,6 @@ PDM_part_mesh_nodal_coord_set
   vtx->owner   = owner;
 
 }
-
-/**
- * \brief Define partition vertices from parents
- *
- * \param [in]  pmn           Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  id_part       Partition identifier
- * \param [in]  n_vtx         Number of vertices
- * \param [in]  n_vtx_parent  Number of parent vertices
- * \param [in]  numabs        Global numbering (size = \ref n_vtx)
- * \param [in]  numabs        Global numbering of parent vertices (size = \ref n_vtx_parent)
- * \param [in]  coords        Interlaced coordinates (size = 3 * \ref n_vtx)
- * \param [in]  coords        Interlaced coordinates of parent vertices (size = 3 * \ref n_vtx_parent)
- * \param [in]  owner         Vertices ownship
- *
- */
 
 void
 PDM_part_mesh_nodal_coord_from_parent_set
@@ -335,16 +296,6 @@ PDM_part_mesh_nodal_add_part_mesh_nodal_elmts
   }
 }
 
-
-/**
- * \brief  Return the mesh dimension
- *
- * \param [in]  pmn       Pointer to \ref PDM_part_mesh_nodal_t object
- *
- * \return  mesh dimension
- *
- */
-
 int
 PDM_part_mesh_nodal_mesh_dimension_get
 (
@@ -354,15 +305,6 @@ PDM_part_mesh_nodal_mesh_dimension_get
   return pmn->mesh_dimension;
 }
 
-/**
- * \brief  Return number of partitions
- *
- * \param [in]  pmn       Pointer to \ref PDM_part_mesh_nodal_t object
- *
- * \return  Number of partitions
- *
- */
-
 int
 PDM_part_mesh_nodal_n_part_get
 (
@@ -371,17 +313,6 @@ PDM_part_mesh_nodal_n_part_get
 {
   return pmn->n_part;
 }
-
-
-/**
- * \brief  Return number of vertices
- *
- * \param [in]  pmn       Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  id_part   Partition identifier
- *
- * \return  Number of vertices
- *
- */
 
 int
 PDM_part_mesh_nodal_n_vtx_get
@@ -398,17 +329,6 @@ PDM_part_mesh_nodal_n_vtx_get
   return vtx->n_vtx;
 }
 
-
-/**
- * \brief  Return coordinates of vertices
- *
- * \param [in]  pmn       Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  id_part   Partition identifier
- *
- * \return  Coordinates of vertices
- *
- */
-
 double*
 PDM_part_mesh_nodal_vtx_coord_get
 (
@@ -424,17 +344,6 @@ PDM_part_mesh_nodal_vtx_coord_get
   return (double *) vtx->_coords;
 }
 
-
-/**
- * \brief  Return global ids of vertices
- *
- * \param [in]  pmn       Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  id_part   Partition identifier
- *
- * \return  Golbal ids of vertices
- *
- */
-
 PDM_g_num_t*
 PDM_part_mesh_nodal_vtx_g_num_get
 (
@@ -449,17 +358,6 @@ PDM_part_mesh_nodal_vtx_g_num_get
   PDM_Mesh_nodal_vtx_t *vtx = pmn->vtx[id_part];
   return (PDM_g_num_t*) vtx->_numabs;
 }
-
-
-/**
- * \brief  Return number of sections in a specific geometry kind
- *
- * \param [in]  pmn        Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  geom_kind  Geometry kind (corner, ridge, surface or volume)
- *
- * \return  Number of sections
- *
- */
 
 int
 PDM_part_mesh_nodal_n_section_in_geom_kind_get
@@ -480,16 +378,6 @@ PDM_part_mesh_nodal_n_section_in_geom_kind_get
 }
 
 
-/**
- * \brief  Return ids of sections in a specific geometry kind
- *
- * \param [in]  pmn        Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  geom_kind  Geometry kind (corner, ridge, surface or volume)
- *
- * \return  Ids of sections
- *
- */
-
 int *
 PDM_part_mesh_nodal_sections_id_in_geom_kind_get
 (
@@ -507,17 +395,6 @@ PDM_part_mesh_nodal_sections_id_in_geom_kind_get
     return NULL;
   }
 }
-
-
-/**
- * \brief  Return type of section
- *
- * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  i_section    Section identifier
- *
- * \return  Type of section
- *
- */
 
 PDM_Mesh_nodal_elt_t
 PDM_part_mesh_nodal_section_elt_type_get
@@ -538,18 +415,6 @@ PDM_part_mesh_nodal_section_elt_type_get
                                                                id_section);
 }
 
-
-/**
- * \brief  Return type of section
- *
- * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  geom_kind    Geometry kind (corner, ridge, surface or volume)
- * \param [in]  id_section   Section identifier
- *
- * \return  Type of section
- *
- */
-
 PDM_Mesh_nodal_elt_t
 PDM_part_mesh_nodal_section_in_geom_kind_elt_type_get
 (
@@ -563,16 +428,6 @@ PDM_part_mesh_nodal_section_in_geom_kind_elt_type_get
   return PDM_part_mesh_nodal_elmts_section_type_get(pmne, id_section);
 }
 
-
-/**
- * \brief  Add a new section to the current mesh
- *
- * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  t_elt        Section type
- *
- * \return Section identifier
- *
- */
 
 int
 PDM_part_mesh_nodal_section_add
@@ -621,90 +476,6 @@ const PDM_Mesh_nodal_elt_t   t_elt
   return _id_section;
 }
 
-
-/**
- * \brief Define a standard section
- *
- *  - PDM_MESH_NODAL_POINT :
- *
- *   1 x
- *
- *  - PDM_MESH_NODAL_BAR2 :
- *
- *   1 x-------x 2
- *
- *  - PDM_MESH_NODAL_TRIA3 :
- *
- *   1 x-------x 3
- *      \     /
- *       \   /
- *        \ /
- *         x 2
- *
- *  - PDM_MESH_NODAL_QUAD4 :
- *
- *      4 x-------x 3
- *       /       /
- *      /       /
- *   1 x-------x2
- *
- *   - PDM_MESH_NODAL_TETRA4 :
- *
- *         x 4
- *        /|\
- *       / | \
- *      /  |  \
- *   1 x- -|- -x 3
- *      \  |  /
- *       \ | /
- *        \|/
- *         x 2
- *
- *   - PDM_MESH_NODAL_PYRAMID5 :
- *
- *          5 x
- *           /|\
- *          //| \
- *         // |  \
- *      4 x/--|---x 3
- *       //   |  /
- *      //    | /
- *   1 x-------x 2
- *
- *  - PDM_MESH_NODAL_PRSIM6 :
- *
- *   4 x-------x 6
- *     |\     /|
- *     | \   / |
- *   1 x- \-/ -x 3
- *      \ 5x  /
- *       \ | /
- *        \|/
- *         x 2
- *
- *  - PDM_MESH_NODAL_HEXA8 :
- *
- *      8 x-------x 7
- *       /|      /|
- *      / |     / |
- *   5 x-------x6 |
- *     | 4x----|--x 3
- *     | /     | /
- *     |/      |/
- *   1 x-------x 2
- *
- * \param [in]  pmn                     Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  i_section               Section identifier
- * \param [in]  id_part                 Partition identifier
- * \param [in]  n_elt                   Number of elements
- * \param [in]  connec                  Connectivity
- * \param [in]  numabs                  Global numbering
- * \param [in]  parent_num              Parent numbering or NULL
- * \param [in]  parent_entity_g_num     Parent global numbering or NULL
- * \param [in]  owner                   Ownership
- *
- */
-
 void
 PDM_part_mesh_nodal_section_std_set
 (
@@ -730,24 +501,6 @@ const PDM_g_num_t           *parent_entity_g_num,
   assert(pmne != NULL);
   PDM_part_mesh_nodal_elmts_std_set(pmne, id_section, id_part, n_elt, connec, numabs, parent_num, parent_entity_g_num, owner);
 }
-
-
-/**
- * \brief Define a standard high-order section
- *
- * \param [in]  pmn                     Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  i_section               Section identifier
- * \param [in]  id_part                 Partition identifier
- * \param [in]  n_elt                   Number of elements
- * \param [in]  connec                  Connectivity
- * \param [in]  numabs                  Global numbering
- * \param [in]  parent_num              Parent numbering or NULL
- * \param [in]  parent_entity_g_num     Parent global numbering or NULL
- * \param [in]  order                   Element order
- * \param [in]  ho_ordering             HO ordering
- * \param [in]  owner                   Ownership
- *
- */
 
 void
 PDM_part_mesh_nodal_section_std_ho_set
@@ -787,18 +540,6 @@ const char                  *ho_ordering,
                                        owner);
 }
 
-
-/**
- * \brief Get number of section elements
- *
- * \param [in]  pmn        Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  i_section  Section identifier
- * \param [in]  id_part    Partition identifier
- *
- * \return      Number of elements
- *
- */
-
 int
 PDM_part_mesh_nodal_section_n_elt_get
 (
@@ -818,89 +559,6 @@ const int                     id_part
   assert(pmne != NULL);
   return PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne, id_section, id_part);
 }
-
-
-/**
- * \brief Return standard section description
- *
- *  - PDM_MESH_NODAL_POINT :
- *
- *   1 x
- *
- *  - PDM_MESH_NODAL_BAR2 :
- *
- *   1 x-------x 2
- *
- *  - PDM_MESH_NODAL_TRIA3 :
- *
- *   1 x-------x 3
- *      \     /
- *       \   /
- *        \ /
- *         x 2
- *
- *  - PDM_MESH_NODAL_QUAD4 :
- *
- *      4 x-------x 3
- *       /       /
- *      /       /
- *   1 x-------x2
- *
- *   - PDM_MESH_NODAL_TETRA4 :
- *
- *         x 4
- *        /|\
- *       / | \
- *      /  |  \
- *   1 x- -|- -x 3
- *      \  |  /
- *       \ | /
- *        \|/
- *         x 2
- *
- *   - PDM_MESH_NODAL_PYRAMID5 :
- *
- *          5 x
- *           /|\
- *          //| \
- *         // |  \
- *      4 x/--|---x 3
- *       //   |  /
- *      //    | /
- *   1 x-------x 2
- *
- *  - PDM_MESH_NODAL_PRSIM6 :
- *
- *   4 x-------x 6
- *     |\     /|
- *     | \   / |
- *   1 x- \-/ -x 3
- *      \ 5x  /
- *       \ | /
- *        \|/
- *         x 2
- *
- *  - PDM_MESH_NODAL_HEXA8 :
- *
- *      8 x-------x 7
- *       /|      /|
- *      / |     / |
- *   5 x-------x6 |
- *     | 4x----|--x 3
- *     | /     | /
- *     |/      |/
- *   1 x-------x 2
- *
- * \param [in]  pmn                     Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  i_section               Section identifier
- * \param [in]  id_part                 Partition identifier
- * \param [out] connec                  Connectivity
- * \param [out] numabs                  Global numbering
- * \param [out] parent_num              Parent numbering or NULL
- * \param [out] parent_entity_g_num     Parent global numbering or NULL
- * \param [in]  ownership               Who owns the getted arrays?
- *
- */
 
 void
 PDM_part_mesh_nodal_section_std_get
@@ -926,23 +584,6 @@ const int                     id_part,
   assert(pmne != NULL);
   PDM_part_mesh_nodal_elmts_section_std_get(pmne, id_section, id_part, connec, numabs, parent_num, parent_entity_g_num, ownership);
 }
-
-
-/**
- * \brief Return standard high-order section description
- *
- * \param [in]  pmn                     Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  i_section               Section identifier
- * \param [in]  id_part                 Partition identifier
- * \param [out] connec                  Connectivity
- * \param [out] numabs                  Global numbering
- * \param [out] parent_num              Parent numbering or NULL
- * \param [out] parent_entity_g_num     Parent global numbering or NULL
- * \param [out] order                   Element order
- * \param [out] ho_ordering             HO ordering
- * \param [in]  ownership               Who owns the getted arrays?
- *
- */
 
 void
 PDM_part_mesh_nodal_section_std_ho_get
@@ -981,18 +622,6 @@ const char                  **ho_ordering,
 }
 
 
-/**
- * \brief Get parent numbering of block elements
- *
- * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  i_section    Section identifier
- * \param [in]  id_part      Partition identifier
- * \param [in]  ownership               Who owns the getted arrays?
- *
- * \return      Return parent numbering of block elements
- *
- */
-
 int *
 PDM_part_mesh_nodal_section_parent_num_get
 (
@@ -1014,19 +643,6 @@ const int                     id_part,
   return PDM_part_mesh_nodal_elmts_parent_num_get(pmne, id_section, id_part, ownership);
 }
 
-
-/**
- * \brief Get global element numbering of section elements
- *
- * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  i_section    Section identifier
- * \param [in]  id_part      Partition identifier
- * \param [in]  ownership    Who owns the getted arrays?
- *
- * \return      Return global element numbering of section elements
- *
- */
-
 PDM_g_num_t *
 PDM_part_mesh_nodal_g_num_get
 (
@@ -1047,14 +663,6 @@ const int                     id_part,
   assert(pmne != NULL);
   return PDM_part_mesh_nodal_elmts_g_num_get(pmne, id_section, id_part, ownership);
 }
-
-
-/**
- * \brief Free a nodal mesh structure
- *
- * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
- *
- */
 
 void
 PDM_part_mesh_nodal_free
@@ -1220,18 +828,6 @@ PDM_part_mesh_nodal_dump_vtk
   }
 }
 
-
-/**
- * \brief Compute element extents of a part of a section
- *
- * \param [in]  pmn            Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  i_section      Section identifier
- * \param [in]  id_part        Partition identifier
- * \param [in]  tolerance      Expansion tolerance for bounding boxes
- * \param [out] extents        Extents of mesh elements in current part of current block
- *
- */
-
 void
 PDM_part_mesh_nodal_section_elt_extents_compute
 (
@@ -1262,16 +858,6 @@ PDM_part_mesh_nodal_section_elt_extents_compute
                                                 extents);
 }
 
-
-/**
- * \brief Compute cell centers of a part of section
- *
- * \param [in]  pmn            Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  i_section      Section identifier
- * \param [in]  id_part        Partition identifier
- * \param [in]  ownership      Ownership
- *
- */
 
 void
 PDM_part_mesh_nodal_section_elt_center_compute
@@ -1305,18 +891,6 @@ const PDM_ownership_t        ownership
 }
 
 
-/**
- * \brief  Return cell centers
- *
- * \param [in]  pmn            Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  i_section      Section identifier
- * \param [in]  id_part        Partition identifier
- * \param [in]  ownership      Who owns the getted arrays?
- *
- * \return  Return cell centers
- *
- */
-//---> PDM_Mesh_cell_centers_get
 const double *
 PDM_part_mesh_nodal_section_elt_center_get
 (
@@ -1339,16 +913,6 @@ const int                    i_part,
   return PDM_part_mesh_nodal_elmts_elt_center_get(pmne, id_section, i_part, ownership);
 }
 
-
-/**
- * \brief Reset cell center computation
- *
- * \param [in]  pmn            Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  i_section      Section identifier
- * \param [in]  id_part        Partition identifier
- *
- */
-
 void
 PDM_part_mesh_nodal_section_elt_center_reset
 (
@@ -1370,20 +934,6 @@ const int                    i_part
   PDM_part_mesh_nodal_elmts_elt_center_reset(pmne, id_section, i_part);
 }
 
-/**
- * \brief Define a polygon section
- *
- * \param [in]  pmn            Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  i_section      Section identifier
- * \param [in]  id_part        Partition identifier
- * \param [in]  n_elt          Number of elements
- * \param [in]  connec_idx     Connectivity index (size = \ref n_elt + 1)
- * \param [in]  connec         Connectivity
- * \param [in]  numabs         Global numbering
- * \param [in]  parent_num     Parent numbering or NULL
- * \param [in]  owner          Ownership
- *
- */
 
 void
 PDM_part_mesh_nodal_section_poly2d_set
@@ -1421,18 +971,6 @@ const int                   *parent_num,
 }
 
 
-/**
- * \brief Return a polygon section description
- *
- * \param [in]  pmn            Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  i_section      Section identifier
- * \param [in]  id_part        Partition identifier
- * \param [out] connec_idx     Connectivity index
- * \param [out] connec         Connectivity
- * \param [in]  ownership      Who owns the getted arrays?
- *
- */
-//---> PDM_Mesh_nodal_block_poly2d_get
 void
 PDM_part_mesh_nodal_section_poly2d_get
 (
@@ -1461,26 +999,6 @@ assert(geom_kind == PDM_GEOMETRY_KIND_SURFACIC);
                                                connec,
                                                ownership);
 }
-
-
-/**
- * \brief Define a polyhedron section
- *
- * \param [in]  pmn            Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  i_section      Section identifier
- * \param [in]  id_part        Partition identifier
- * \param [in]  n_elt          Number of elements
- * \param [in]  n_face         Number of faces
- * \param [in]  facvtx_idx     Face->vertex connectivity index (size = \ref n_face + 1)
- * \param [in]  facvtx         Face->vertex connectivity
- * \param [in]  face_ln_to_gn  Face global ids
- * \param [in]  cellfac_idx    Cell->face connectivity index (size = \ref n_cell + 1)
- * \param [in]  cellfac        Cell->face connectivity
- * \param [in]  numabs         Cell global ids
- * \param [in]  parent_num     Parent numbering or NULL
- * \param [in]  owner          Ownership
- *
- */
 
 void
 PDM_part_mesh_nodal_section_poly3d_set
@@ -1527,26 +1045,6 @@ const PDM_g_num_t           *parent_entity_g_num,
                                                owner);
 }
 
-
-/**
- * \brief Return a polyhedron section
- *
- * \param [in]  pmn                  Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  i_section            Section identifier
- * \param [in]  id_part              Partition identifier
- * \param [out] n_face               Number of faces
- * \param [out] face_ln_to_gn        Face global ids
- * \param [out] facvtx_idx           Face->vertex connectivity index (size = \ref n_face + 1)
- * \param [out] facvtx               Face->vertex connectivity
- * \param [out] numabs               Cell global ids
- * \param [out] cell_face_idx        Cell->face connectivity index (size = \ref n_cell + 1)
- * \param [out] cell_face            Cell->face connectivity
- * \param [out] parent_num           Parent numbering or NULL
- * \param [out] parent_entity_g_num  Parent global ids or NULL
- * \param [in]  ownership             Who owns the getted arrays?
- *
- */
-//---> PDM_Mesh_nodal_block_poly3d_get
 void
 PDM_part_mesh_nodal_section_poly3d_get
 (
@@ -1590,19 +1088,6 @@ const int                     id_part,
                                                ownership);
 }
 
-
-/**
- * \brief Get the cell-vertex connectivity of a polyhedron section
- *
- * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  i_section    Section identifier
- * \param [in]  id_part      Partition identifier
- * \param [out] cellvtx_idx  Index of cell vertex connectivity
- * \param [out] cellvtx      Cell vertex connectivity
- * \param [in]  ownership    Who owns the getted arrays?
- *
- */
-
 void
 PDM_part_mesh_nodal_section_poly3d_cell_vtx_connect_get
 (
@@ -1631,16 +1116,6 @@ const int                     id_part,
                                                                 cellvtx,
                                                                 ownership);
 }
-
-
-/**
- * \brief Reset a nodal mesh structure
- *
- * \param [in]  pmn           Pointer to \ref PDM_part_mesh_nodal_t object
- *
- * \return      NULL
- *
- */
 
 void
 PDM_part_mesh_nodal_reset
@@ -1677,17 +1152,6 @@ PDM_part_mesh_nodal_reset
   }
 }
 
-
-/**
- * \brief  Compute a global numbering in a section
- *
- * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  i_section    Section identifier
- * \param [in]  ownership    Ownership
- *
- */
-//---> PDM_Mesh_nodal_g_num_in_block_compute
-
 void
 PDM_part_mesh_nodal_g_num_in_section_compute
 (
@@ -1711,19 +1175,6 @@ const PDM_ownership_t         ownership
                                                      ownership);
 }
 
-
-/**
- * \brief  Return number elements of a partition
- *
- * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  geom_kind    Geometry kind (corner, ridge, surface or volume)
- * \param [in]  id_part      Partition identifier
- *
- * \return  Return number elements of a partition
- *
- */
-// ---> PDM_Mesh_nodal_n_cell_get
-
 int
 PDM_part_mesh_nodal_n_elmts_get
 (
@@ -1739,19 +1190,6 @@ const int                     id_part
 }
 
 
-/**
- * \brief Get the element global numbering taking into account parent_num
- *
- * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  geom_kind    Geometry kind (corner, ridge, surface or volume)
- * \param [in]  id_part      Partition identifier
- * \param [in]  ownership Who owns the getted arrays?
- *
- * \return  Global ids of element in current partition
- *
- */
-// ---> PDM_Mesh_nodal_g_num_get_from_part
-
 PDM_g_num_t *
 PDM_part_mesh_nodal_g_num_get_from_part
 (
@@ -1766,17 +1204,6 @@ const int                     id_part,
 
   return PDM_part_mesh_nodal_elmts_g_num_get_from_part(pmne, id_part, ownership);
 }
-
-
-/**
- * \brief Free partially a part_mesh_nodal structure
- *
- * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
- *
- * \return      NULL
- *
- */
-//---> PDM_Mesh_nodal_partial_free
 
 void
 PDM_part_mesh_nodal_partial_free
@@ -1794,16 +1221,6 @@ PDM_part_mesh_nodal_partial_free
   }
 }
 
-
-/**
- * \brief Extract vertices from parent vertices
- *
- * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
- *
- * \return true if the vertices are defined from parents
- */
-//---> PDM_Mesh_nodal_is_set_coord_from_parent
-
 int
 PDM_part_mesh_nodal_is_set_coord_from_parent
 (
@@ -1816,20 +1233,6 @@ PDM_part_mesh_nodal_is_set_coord_from_parent
 
   return pmn->is_vtx_def_from_parent;
 }
-
-
-/**
- * \brief Get global element numbering of block elements inside the block
- *
- * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  i_section    Section identifier
- * \param [in]  id_part      Partition identifier
- * \param [in]  ownership    Who owns the getted arrays?
- *
- * \return      Return global numbering of block elements inside the block
- *
- */
-//---> PDM_Mesh_nodal_block_g_num_get
 
 PDM_g_num_t *
 PDM_part_mesh_nodal_section_g_num_get
@@ -1852,19 +1255,6 @@ const int                     id_part,
 
   return PDM_part_mesh_nodal_elmts_section_g_num_get(pmne, id_section, id_part, ownership);
 }
-
-
-/**
- * \brief  Return parent element number to local number
- *
- * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  geom_kind    Geometry kind (corner, ridge, surface or volume)
- * \param [in]  id_part      Partition identifier
- *
- * \return  Parent element number to local number
- *
- */
-//---> PDM_Mesh_nodal_num_cell_parent_to_local_get
 
 int *
 PDM_part_mesh_nodal_num_elmt_parent_to_local_get
@@ -1943,16 +1333,6 @@ PDM_part_mesh_nodal_compute_sections_idx
 }
 
 
-/**
- * \brief  Return parent num of vertices
- *
- * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  id_part      Partition identifier
- *
- * \return  Parent of vertices
- *
- */
-
 const int *
 PDM_part_mesh_nodal_vertices_parent_get
 (
@@ -1969,16 +1349,6 @@ const int                     id_part
   return vtx->_numparent;
 }
 
-
-/**
- * \brief  Return parent  absolute number
- *
- * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  id_part      Partition identifier
- *
- * \return  Parent of vertices
- *
- */
 
 const PDM_g_num_t *
 PDM_part_mesh_nodal_vertices_g_num_parent_get
@@ -2002,27 +1372,6 @@ const int                     id_part
   return vtx->parent->_numabs;
 }
 
-
-/**
- * \brief  Add some 3D cells from cell face conectivity.
- *
- * For each cell, this function searchs the type of the cell (tetrahedra, hexahedra, ...)
- * and stores it in the corresponding block. \ref ind_num gives the indirection
- * between old and new numbering.
- *
- * \param [in]  pmn            Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  id_part        Partition identifier
- * \param [in]  n_cell         Number of polyhedra
- * \param [in]  n_face         Number of faces used to describe polyhedra
- * \param [in]  face_vtx_idx   Index of face vertex connectivity
- * \param [in]  face_vtx       Face vertex connectivity
- * \param [in]  face_ln_to_gn  Face global numbering
- * \param [in]  cell_face_idx  Index of cell face connectivity
- * \param [in]  cell_face      Cell face connectivity
- * \param [in]  cell_ln_to_gn  Global numbering
- * \param [in]  ownership      Ownership
- *
- */
 
 void
 PDM_part_mesh_nodal_cell3d_cellface_add
@@ -2081,26 +1430,6 @@ const PDM_ownership_t         ownership
   }
 }
 
-
-/**
- * \brief  Add some 2D faces from face edge conectivity.
- *
- * For each face, this function searchs the type of the face (triangles, quandrangles, ...)
- * and stores it in the corresponding block. \ref ind_num gives the indirection
- * between old and new numbering.
- *
- * \param [in]  pmn            Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  id_part        Partition identifier
- * \param [in]  n_face         Number of polyhedra
- * \param [in]  n_edge         Number of edges used to describe polyhedra
- * \param [in]  edge_vtx       edge vertex connectivity
- * \param [in]  face_edge_idx  Index of face edge connectivity
- * \param [in]  face_edge      face edge connectivity
- * \param [in]  face_ln_to_gn  Global numbering
- * \param [in]  ownership      Ownership
- *
- */
-
 void
 PDM_part_mesh_nodal_face2d_faceedge_add
 (
@@ -2157,23 +1486,6 @@ const PDM_ownership_t         ownership
   }
 }
 
-/**
- * \brief  Add some standard 3D cells from cell vertex conectivity.
- *
- * For each cell, this function searchs the type of the cell (tetrahedra, hexahedra, ...)
- * and stores it in the corresponding block. \ref ind_num gives the indirection
- * between old and new numbering.
- *
- * \param [in]  pmne           Pointer to \ref PDM_part_mesh_nodal_elmts object
- * \param [in]  id_part        Partition identifier
- * \param [in]  n_cell         Number of cells
- * \param [in]  cell_vtx_idx   Index of cell vertex connectivity
- * \param [in]  cell_vtx       Cell vertex connectivity
- * \param [in]  numabs         Global numbering
- * \param [in]  ownership      Ownership
- *
- */
-
 void
 PDM_part_mesh_nodal_cells_cellvtx_add
 (
@@ -2224,22 +1536,6 @@ const PDM_ownership_t         ownership
 }
 
 
-/**
- * \brief  Add some 2D faces from face vertex connectivity.
- *
- * For each face, this function searchs the type of the cell (tetrahedra, hexahedra, ...)
- * and stores it in the corresponding block. \ref ind_num gives the indirection
- * between old and new numbering.
- *
- * \param [in]  pmne           Pointer to \ref PDM_part_mesh_nodal_elmts object
- * \param [in]  id_part        Partition identifier
- * \param [in]  n_face         Number of polygon
- * \param [in]  face_vtx_idx   Index of edge vertex connectivity
- * \param [in]  face_vtx       Edge vertex connectivity
- * \param [in]  ownership      Ownership
- *
- */
-
 void
 PDM_part_mesh_nodal_faces_facevtx_add
 (
@@ -2289,17 +1585,6 @@ const PDM_ownership_t         ownership
   }
 }
 
-
-/**
- * \brief  Return geom_kind and id (local to this geom_kind) of a section
- *
- * \param [in]  pmn                      Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  i_section                Unique section identifier
- * \param [out] geom_kind                Geometry kind (corner, ridge, surface or volume)
- * \param [out] id_section_in_geom_kind  Section identifier local to the geometry kind
- *
- */
-
 void
 PDM_part_mesh_nodal_section_id_and_geom_kind_get
 (
@@ -2316,18 +1601,6 @@ PDM_part_mesh_nodal_section_id_and_geom_kind_get
   *geom_kind               = pmn->section_kind[i_section];
   *id_section_in_geom_kind = pmn->section_id  [i_section];
 }
-
-
-/**
- * \brief  Return unique identifier of a section
- *
- * \param [in]  pmn                      Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  geom_kind                Geometry kind (corner, ridge, surface or volume)
- * \param [in]  id_section_in_geom_kind  Section identifier local to the geometry kind
- *
- * \return   Unique section identifier
- *
- */
 
 int
 PDM_part_mesh_nodal_section_id_from_geom_kind_get
@@ -2349,17 +1622,6 @@ PDM_part_mesh_nodal_section_id_from_geom_kind_get
   return -1;
 }
 
-
-/**
- * \brief  Return number of sections
- *
- * \param [in]  pmn        Pointer to \ref PDM_part_mesh_nodal_t object
- *
- * \return  Number of sections
- *
- */
-//---> PDM_Mesh_nodal_n_blocks_get
-
 int
 PDM_part_mesh_nodal_n_section_get
 (
@@ -2370,16 +1632,6 @@ PDM_part_mesh_nodal_n_section_get
 
   return pmn->n_section;
 }
-
-/**
- * \brief  Return ids of sections
- *
- * \param [in]  pmn        Pointer to \ref PDM_part_mesh_nodal_t object
- *
- * \return  Ids of sections
- *
- */
-//---> PDM_Mesh_nodal_blocks_id_get
 
 int *
 PDM_part_mesh_nodal_sections_id_get
@@ -2452,17 +1704,6 @@ PDM_part_mesh_nodal_part_mesh_nodal_elmts_get
   return _get_from_geometry_kind(pmn, geom_kind);
 }
 
-
-/**
- * \brief Return the geometry kind of highest dimension
- * for a given \ref PDM_part_mesh_nodal_t object
- *
- * \param [in] pmn    Pointer to \ref PDM_part_mesh_nodal_t object
- *
- * \return Geometry kind of highest dimension
- *
- */
-
 PDM_geometry_kind_t
 PDM_part_mesh_nodal_principal_geom_kind_get
 (
@@ -2488,21 +1729,6 @@ PDM_part_mesh_nodal_principal_geom_kind_get
 
   return PDM_GEOMETRY_KIND_MAX;
 }
-
-
-/**
- * \brief Return the cell->vertex connectivity
- * The output pointers are owned by the user.
- *
- * \param [in]  pmn           Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  geom_kind     Geometry kind (corner, ridge, surface or volume)
- * \param [in]  i_part        Partition identifier
- * \param [out] cell_vtx_idx  Index for the cell->vertex connectivity
- * \param [out] cell_vtx      Cell->vertex connectivity
- *
- * \return Number of cells in current partition
- *
- */
 
 int
 PDM_part_mesh_nodal_cell_vtx_connect_get
@@ -2531,12 +1757,6 @@ PDM_part_mesh_nodal_cell_vtx_connect_get
                                                         cell_vtx_idx,
                                                         cell_vtx);
 }
-
-
-
-
-
-/*----------------------------------------------------------------------------*/
 
 #ifdef __cplusplus
 }

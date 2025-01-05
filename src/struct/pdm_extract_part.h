@@ -203,12 +203,13 @@ PDM_extract_part_n_group_set
  *
  * \brief Set partition group (optional)
  *
- * \param [in]   extrp             PDM_extract_part_t
- * \param [in]   i_part            part identifier
- * \param [in]   i_group           group identifier
- * \param [in]   bound_type        Kind of group
- * \param [in]   n_group_entity    Number of entity in current group
- * \param [in]   group_entity      List of entity in group (size = n_group_entity)
+ * \param [in]   extrp                 PDM_extract_part_t
+ * \param [in]   i_part                part identifier
+ * \param [in]   i_group               group identifier
+ * \param [in]   bound_type            Kind of group
+ * \param [in]   n_group_entity        Number of entity in current group
+ * \param [in]   group_entity          List of entity in group (size = n_group_entity)
+ * \param [in]   group_entity_ln_to_gn List of global identifier in group (size = n_group_entity)
  *
  */
 void
