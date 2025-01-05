@@ -259,11 +259,11 @@ PDM_extract_part_entity_center_set
 
 /**
  *
- * \brief Set PDM_part_mesh_nodal_elmts_t
+ * \brief Get number of entity for output partition
  *
- * \param [in]   extrp               PDM_extract_part_t structure
- * \param [in]   i_part_out          part identifier
- * \param [in]   PDM_mesh_entities_t Kind of entity required \ref PDM_mesh_entities_t
+ * \param [in]   extrp       PDM_extract_part_t structure
+ * \param [in]   i_part_out  Part identifier
+ * \param [in]   entity_type Kind of entity required \ref PDM_mesh_entities_t
  *
  * \return Number of entity
  */

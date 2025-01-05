@@ -538,12 +538,20 @@ PDM_part_mesh_nodal_free
  PDM_part_mesh_nodal_t* pmn
 );
 
+/**
+ * \brief Export in vtk the current nodal mesh
+ *
+ * \param [in]  pmn             Pointer to \ref PDM_part_mesh_nodal_t object
+ * \param [in]  geom_kind       Geometry kind (corner, ridge, surface or volume)
+ * \param [in]  filename_patter Pattern for file naming (the finction will append i_rank and i_part to this current pattern)
+ *
+ */
 void
 PDM_part_mesh_nodal_dump_vtk
 (
  PDM_part_mesh_nodal_t *pmn,
  PDM_geometry_kind_t    geom_kind,
- const char            *filename_patter
+ const char            *filename_pattern
 );
 
 /**

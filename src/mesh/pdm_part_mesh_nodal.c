@@ -710,7 +710,7 @@ PDM_part_mesh_nodal_dump_vtk
 (
  PDM_part_mesh_nodal_t *pmn,
  PDM_geometry_kind_t    geom_kind,
- const char            *filename_patter
+ const char            *filename_pattern
 )
 {
   int i_rank = -1;
@@ -801,7 +801,7 @@ PDM_part_mesh_nodal_dump_vtk
     const double *field_val [] = {elt_group, elt_section, elt_entity};
 
     char filename[999];
-    sprintf(filename, "%s_%d_%d.vtk", filename_patter, i_part, i_rank);
+    sprintf(filename, "%s_%d_%d.vtk", filename_pattern, i_part, i_rank);
     PDM_vtk_write_unstructured_grid(filename,
                                     pn_vtx,
                                     pvtx_coord,

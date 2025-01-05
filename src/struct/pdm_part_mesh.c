@@ -206,19 +206,6 @@ _build_extract_part_bound
  * Public function definitions
  *============================================================================*/
 
-/**
- *
- * \brief Build a distributed mesh structure
- *
- * \param [in]   dn_cell             Number of distributed cells
- * \param [in]   dn_face             Number of distributed faces
- * \param [in]   dn_vtx              Number of distributed vertices
- * \param [in]   n_bnd               Number of boundaries
- * \param [in]   n_join              Number of interfaces with other domains
- *
- * \return     Identifier
- */
-
 PDM_part_mesh_t*
 PDM_part_mesh_create
 (
@@ -862,7 +849,6 @@ PDM_part_mesh_free
       PDM_free(pmesh->pbound_ln_to_gn[i]);
     }
 
-
     /* Free group */
     for(int i = 0; i < PDM_BOUND_TYPE_MAX; ++i) {
       if(pmesh->is_owner_concat_bound[i] == PDM_TRUE) {
@@ -897,7 +883,6 @@ PDM_part_mesh_free
       PDM_free(pmesh->ppart_bound         [i]);
     }
 
-
     for(int i = 0; i < PDM_MESH_ENTITY_MAX; ++i) {
       PDM_free(pmesh->pn_entity[i]);
     }
@@ -905,18 +890,6 @@ PDM_part_mesh_free
     PDM_free(pmesh);
   }
 }
-
-
-
-/**
- * \brief Export a partitioned mesh in Ensight format
- *
- * \param [in] pmesh          Pointer to \ref PDM_part_mesh_t object
- * \param [in] directory      Output directory
- * \param [in] name           Output name
- * \param [in] export_bounds  Option to export bounds
- *
- */
 
 void
 PDM_part_mesh_dump_ensight
