@@ -5,6 +5,7 @@
 #include "pdm_doctest.h"
 #include "pdm_part_comm_graph.h"
 #include "pdm_logging.h"
+#include "pdm_vtk.h"
 #include <functional>
 
 
@@ -251,7 +252,7 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2p - order ", 2) {
                                                   9, 0, 1, 9}};
 
   int n_entity_bound = vn_entity_bound[i_rank];
-  int *entity_bound  = ventity_bound         [i_rank].data();
+  int *entity_bound  = ventity_bound  [i_rank].data();
 
 
   PDM_part_comm_graph_t* pgc = PDM_part_comm_graph_create(n_part,
@@ -291,4 +292,533 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2p - order ", 2) {
   MPI_CHECK_EQ_C_ARRAY(1, entity_bound, entity_bound_reorder_p1, 12);
 
   PDM_part_comm_graph_free(pgc);
+}
+
+
+
+MPI_TEST_CASE("[PDM_part_comm_graph_entity1_to_entity2] - 1 part - 2p", 2) {
+
+  // Correspond to a QUAD of n_vtx_seg = 3
+  PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
+  int n_part = 1;
+
+  int i_rank;
+  PDM_MPI_Comm_rank(pdm_comm, &i_rank);
+
+  std::vector<int> vn_entity_bound = {3, 3};
+  std::vector<int> vn_entity1      = {6, 6};
+  std::vector<int> vn_entity2      = {7, 7};
+  std::vector<std::vector<int>> ventity_bound = {{4, 1, 1, 1,
+                                                  5, 1, 1, 2,
+                                                  6, 1, 1, 3 },
+                                                 {1, 0, 1, 4,
+                                                  2, 0, 1, 5,
+                                                  3, 0, 1, 6 }};
+
+  std::vector<std::vector<int>> ventity2_entity1_idx = {{0, 2, 4, 6, 8, 10, 12, 14},
+                                                        {0, 2, 4, 6, 8, 10, 12, 14}};
+
+  std::vector<std::vector<int>> ventity2_entity1 = {{1, 2, 4, 1, 2, 3, 2, 5, 5, 4, 3, 6, 6, 5},
+                                                    {2, 1, 3, 2, 4, 1, 2, 5, 5, 4, 3, 6, 6, 5}};
+
+  int n_entity_bound       = vn_entity_bound     [i_rank];
+  int *entity_bound        = ventity_bound       [i_rank].data();
+  int *entity2_entity1_idx = ventity2_entity1_idx[i_rank].data();
+  int *entity2_entity1     = ventity2_entity1    [i_rank].data();
+  int pn_entity1           = vn_entity1          [i_rank];
+  int pn_entity2           = vn_entity2          [i_rank];
+
+  int  *pn_entity2_graph = NULL;
+  int **pentity2_graph   = NULL;
+  PDM_part_comm_graph_entity1_to_entity2(pdm_comm,
+                                         n_part,
+                                         &n_entity_bound,
+                                         &entity_bound,
+                                         &pn_entity1,
+                                         &pn_entity2,
+                                         &entity2_entity1_idx,
+                                         &entity2_entity1,
+                                         &pn_entity2_graph,
+                                         &pentity2_graph);
+
+  int pn_entity2_graph_expected = 2;
+
+  CHECK(pn_entity2_graph_expected == pn_entity2_graph[0]);
+
+  static int entity_bound_reorder_p0[8] = {5, 1, 1, 1, 7, 1, 1, 2};
+  static int entity_bound_reorder_p1[8] = {1, 0, 1, 5, 2, 0, 1, 7};
+
+  MPI_CHECK_EQ_C_ARRAY(0, pentity2_graph[0], entity_bound_reorder_p0, 8);
+  MPI_CHECK_EQ_C_ARRAY(1, pentity2_graph[0], entity_bound_reorder_p1, 8);
+
+  if(1 == 0) {
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      PDM_log_trace_array_int(pentity2_graph[i_part], 4 * pn_entity2_graph[i_part], "pentity2_graph ::");
+    }
+  }
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    free(pentity2_graph[i_part]);
+  }
+  free(pentity2_graph);
+  free(pn_entity2_graph);
+
+}
+
+
+
+MPI_TEST_CASE("[PDM_part_comm_graph_entity1_to_entity2] - 1 part - 2p - revert sens", 2) {
+
+  // Correspond to a QUAD of n_vtx_seg = 3
+  PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
+  int n_part = 1;
+
+  int i_rank;
+  PDM_MPI_Comm_rank(pdm_comm, &i_rank);
+
+  std::vector<int> vn_entity_bound = {3, 3};
+  std::vector<int> vn_entity1      = {6, 6};
+  std::vector<int> vn_entity2      = {7, 7};
+  std::vector<std::vector<int>> ventity_bound = {{4, 1, 1, 1,
+                                                  5, 1, 1, 2,
+                                                  6, 1, 1, 3 },
+                                                 {1, 0, 1, 4,
+                                                  2, 0, 1, 5,
+                                                  3, 0, 1, 6 }};
+
+  std::vector<std::vector<int>> ventity2_entity1_idx = {{0, 2, 4, 6, 8, 10, 12, 14},
+                                                        {0, 2, 4, 6, 8, 10, 12, 14}};
+
+  // std::vector<std::vector<int>> ventity2_entity1 = {{1, 2, 4, 1, 2, 3, 2, 5, 5, 4, 3, 6, 6, 5},
+  //                                                   {2, 1, 3, 2, 4, 1, 2, 5, 5, 4, 3, 6, 6, 5}};
+
+  //                                                                        |----|      |----|
+  std::vector<std::vector<int>> ventity2_entity1 = {{1, 2, 4, 1, 2, 3, 2, 5, 4, 5, 3, 6, 5, 6},
+                                                    {2, 1, 3, 2, 4, 1, 2, 5, 5, 4, 3, 6, 6, 5}};
+
+  int n_entity_bound       = vn_entity_bound     [i_rank];
+  int *entity_bound        = ventity_bound       [i_rank].data();
+  int *entity2_entity1_idx = ventity2_entity1_idx[i_rank].data();
+  int *entity2_entity1     = ventity2_entity1    [i_rank].data();
+  int pn_entity1           = vn_entity1          [i_rank];
+  int pn_entity2           = vn_entity2          [i_rank];
+
+  int  *pn_entity2_graph = NULL;
+  int **pentity2_graph   = NULL;
+  PDM_part_comm_graph_entity1_to_entity2(pdm_comm,
+                                         n_part,
+                                         &n_entity_bound,
+                                         &entity_bound,
+                                         &pn_entity1,
+                                         &pn_entity2,
+                                         &entity2_entity1_idx,
+                                         &entity2_entity1,
+                                         &pn_entity2_graph,
+                                         &pentity2_graph);
+
+  int pn_entity2_graph_expected = 2;
+
+  CHECK(pn_entity2_graph_expected == pn_entity2_graph[0]);
+
+  static int entity_bound_reorder_p0[8] = {5, 1, 1, -1, 7, 1, 1, -2};
+  static int entity_bound_reorder_p1[8] = {1, 0, 1, -5, 2, 0, 1, -7};
+
+  MPI_CHECK_EQ_C_ARRAY(0, pentity2_graph[0], entity_bound_reorder_p0, 8);
+  MPI_CHECK_EQ_C_ARRAY(1, pentity2_graph[0], entity_bound_reorder_p1, 8);
+
+  if(1 == 1) {
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      PDM_log_trace_array_int(pentity2_graph[i_part], 4 * pn_entity2_graph[i_part], "pentity2_graph ::");
+    }
+  }
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    free(pentity2_graph[i_part]);
+  }
+  free(pentity2_graph);
+  free(pn_entity2_graph);
+
+}
+
+
+
+
+MPI_TEST_CASE("[PDM_part_comm_graph_entity1_to_entity2] - 1 part - 2p - 3D ", 2) {
+
+  // Correspond to a HEXA of n_vtx_seg = 3
+  PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
+  int n_part = 1;
+
+  int i_rank;
+  PDM_MPI_Comm_rank(pdm_comm, &i_rank);
+
+  // Keep for debug
+  std::vector<std::vector<double>> vvtx_coords = {{0.0, 0.0, 0.0,
+                                                   0.5, 0.0, 0.0,
+                                                   1.0, 0.0, 0.0,
+                                                   0.0, 0.5, 0.0,
+                                                   0.5, 0.5, 0.0,
+                                                   1.0, 0.5, 0.0,
+                                                   0.0, 1.0, 0.0,
+                                                   0.5, 1.0, 0.0,
+                                                   1.0, 1.0, 0.0,
+                                                   0.0, 0.0, 0.5,
+                                                   0.5, 0.0, 0.5,
+                                                   1.0, 0.0, 0.5,
+                                                   0.0, 0.5, 0.5,
+                                                   0.5, 0.5, 0.5,
+                                                   1.0, 0.5, 0.5,
+                                                   0.0, 1.0, 0.5,
+                                                   0.5, 1.0, 0.5,
+                                                   1.0, 1.0, 0.5 },
+                                                  {0.0, 0.0, 0.5,
+                                                   0.5, 0.0, 0.5,
+                                                   1.0, 0.0, 0.5,
+                                                   0.0, 0.5, 0.5,
+                                                   0.5, 0.5, 0.5,
+                                                   1.0, 0.5, 0.5,
+                                                   0.0, 1.0, 0.5,
+                                                   0.5, 1.0, 0.5,
+                                                   1.0, 1.0, 0.5,
+                                                   0.0, 0.0, 1.0,
+                                                   0.5, 0.0, 1.0,
+                                                   1.0, 0.0, 1.0,
+                                                   0.0, 0.5, 1.0,
+                                                   0.5, 0.5, 1.0,
+                                                   1.0, 0.5, 1.0,
+                                                   0.0, 1.0, 1.0,
+                                                   0.5, 1.0, 1.0,
+                                                   1.0, 1.0, 1.0}};
+
+  std::vector<int> vn_entity_bound = {9 ,  9};
+  std::vector<int> vn_entity1      = {18, 18};
+  std::vector<int> vn_entity2      = {20, 20};
+  std::vector<std::vector<int>> ventity_bound = {{10, 1, 1, 1,
+                                                  11, 1, 1, 2,
+                                                  12, 1, 1, 3,
+                                                  13, 1, 1, 4,
+                                                  14, 1, 1, 5,
+                                                  15, 1, 1, 6,
+                                                  16, 1, 1, 7,
+                                                  17, 1, 1, 8,
+                                                  18, 1, 1, 9 },
+                                                 {1, 0, 1, 10,
+                                                  2, 0, 1, 11,
+                                                  3, 0, 1, 12,
+                                                  4, 0, 1, 13,
+                                                  5, 0, 1, 14,
+                                                  6, 0, 1, 15,
+                                                  7, 0, 1, 16,
+                                                  8, 0, 1, 17,
+                                                  9, 0, 1, 18}};
+
+  std::vector<std::vector<int>> ventity2_entity1_idx = {{0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64, 68, 72, 76, 80},
+                                                        {0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64, 68, 72, 76, 80}};
+
+  std::vector<std::vector<int>> ventity2_entity1 = {{2, 1, 4, 5,
+                                                     2, 5, 6, 3,
+                                                     1, 2, 11, 10,
+                                                     7, 8, 5, 4,
+                                                     1, 10, 13, 4,
+                                                     11, 2, 3, 12,
+                                                     8, 9, 6, 5,
+                                                     11, 2, 5, 14,
+                                                     14, 5, 4, 13,
+                                                     12, 3, 6, 15,
+                                                     15, 6, 5, 14,
+                                                     4, 13, 16, 7,
+                                                     14, 5, 8, 17,
+                                                     14, 13, 10, 11,
+                                                     17, 8, 7, 16,
+                                                     15, 6, 9, 18,
+                                                     15, 14, 11, 12,
+                                                     18, 9, 8, 17,
+                                                     17, 16, 13, 14,
+                                                     18, 17, 14, 15},
+                                                    {5, 4, 1, 2,
+                                                     6, 5, 2, 3,
+                                                     8, 7, 4, 5,
+                                                     11, 10, 1, 2,
+                                                     9, 8, 5, 6,
+                                                     4, 1, 10, 13,
+                                                     12, 11, 2, 3,
+                                                     11, 2, 5, 14,
+                                                     14, 5, 4, 13,
+                                                     15, 12, 3, 6,
+                                                     15, 6, 5, 14,
+                                                     16, 7, 4, 13,
+                                                     14, 5, 8, 17,
+                                                     14, 13, 10, 11,
+                                                     17, 8, 7, 16,
+                                                     18, 15, 6, 9,
+                                                     15, 14, 11, 12,
+                                                     18, 9, 8, 17,
+                                                     17, 16, 13, 14,
+                                                     18, 17, 14, 15}};
+
+  int n_entity_bound       = vn_entity_bound     [i_rank];
+  int *entity_bound        = ventity_bound       [i_rank].data();
+  int *entity2_entity1_idx = ventity2_entity1_idx[i_rank].data();
+  int *entity2_entity1     = ventity2_entity1    [i_rank].data();
+  int pn_entity1           = vn_entity1          [i_rank];
+  int pn_entity2           = vn_entity2          [i_rank];
+
+  int  *pn_entity2_graph = NULL;
+  int **pentity2_graph   = NULL;
+  PDM_part_comm_graph_entity1_to_entity2(pdm_comm,
+                                         n_part,
+                                         &n_entity_bound,
+                                         &entity_bound,
+                                         &pn_entity1,
+                                         &pn_entity2,
+                                         &entity2_entity1_idx,
+                                         &entity2_entity1,
+                                         &pn_entity2_graph,
+                                         &pentity2_graph);
+
+  int pn_entity2_graph_expected = 4;
+
+  CHECK(pn_entity2_graph_expected == pn_entity2_graph[0]);
+
+  static int entity_bound_reorder_p0[16] = {14, 1, 1,  1, 17, 1, 1,  2, 19, 1, 1,  3, 20, 1, 1, 5};
+  static int entity_bound_reorder_p1[16] = { 1, 0, 1, 14,  2, 0, 1, 17,  3, 0, 1, 19,  5, 0, 1,20};
+
+  MPI_CHECK_EQ_C_ARRAY(0, pentity2_graph[0], entity_bound_reorder_p0, 16);
+  MPI_CHECK_EQ_C_ARRAY(1, pentity2_graph[0], entity_bound_reorder_p1, 16);
+
+  if(1 == 0) {
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      PDM_log_trace_array_int(pentity2_graph[i_part], 4 * pn_entity2_graph[i_part], "pentity2_graph ::");
+
+      int *face_tag = (int *) malloc(pn_entity2 * sizeof(int));
+
+      for(int i = 0; i < pn_entity2; ++i) {
+        face_tag[i] = -1;
+      }
+
+      for(int idx = 0; idx < pn_entity2_graph[i_part]; ++idx) {
+        int i_face = pentity2_graph[i_part][4*idx]-1;
+        int t_rank = pentity2_graph[i_part][4*idx+1];
+        face_tag[i_face] = t_rank;
+      }
+
+      const char* field_name[] = {"face_tag", 0 };
+      const int*  field     [] = {face_tag};
+
+      char filename[999];
+      sprintf(filename, "out_face_graph_i_part=%i_%i.vtk", i_part, i_rank);
+      PDM_vtk_write_std_elements(filename,
+                                 pn_entity1,
+                                 vvtx_coords[i_rank].data(),
+                                 NULL,
+                                 PDM_MESH_NODAL_QUAD4,
+                                 pn_entity2,
+                                 entity2_entity1,
+                                 NULL,
+                                 1,
+                                 field_name,
+                                 (const int **)   &field);
+
+
+      free(face_tag);
+    }
+  }
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    free(pentity2_graph[i_part]);
+  }
+  free(pentity2_graph);
+  free(pn_entity2_graph);
+
+}
+
+
+
+MPI_TEST_CASE("[PDM_part_comm_graph_entity1_to_entity2] - 1 part - 2p - 3D - revert face_vtx", 2) {
+
+  // Correspond to a HEXA of n_vtx_seg = 3
+  PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
+  int n_part = 1;
+
+  int i_rank;
+  PDM_MPI_Comm_rank(pdm_comm, &i_rank);
+
+  // Keep for debug
+  std::vector<std::vector<double>> vvtx_coords = {{0.0, 0.0, 0.0,
+                                                   0.5, 0.0, 0.0,
+                                                   1.0, 0.0, 0.0,
+                                                   0.0, 0.5, 0.0,
+                                                   0.5, 0.5, 0.0,
+                                                   1.0, 0.5, 0.0,
+                                                   0.0, 1.0, 0.0,
+                                                   0.5, 1.0, 0.0,
+                                                   1.0, 1.0, 0.0,
+                                                   0.0, 0.0, 0.5,
+                                                   0.5, 0.0, 0.5,
+                                                   1.0, 0.0, 0.5,
+                                                   0.0, 0.5, 0.5,
+                                                   0.5, 0.5, 0.5,
+                                                   1.0, 0.5, 0.5,
+                                                   0.0, 1.0, 0.5,
+                                                   0.5, 1.0, 0.5,
+                                                   1.0, 1.0, 0.5 },
+                                                  {0.0, 0.0, 0.5,
+                                                   0.5, 0.0, 0.5,
+                                                   1.0, 0.0, 0.5,
+                                                   0.0, 0.5, 0.5,
+                                                   0.5, 0.5, 0.5,
+                                                   1.0, 0.5, 0.5,
+                                                   0.0, 1.0, 0.5,
+                                                   0.5, 1.0, 0.5,
+                                                   1.0, 1.0, 0.5,
+                                                   0.0, 0.0, 1.0,
+                                                   0.5, 0.0, 1.0,
+                                                   1.0, 0.0, 1.0,
+                                                   0.0, 0.5, 1.0,
+                                                   0.5, 0.5, 1.0,
+                                                   1.0, 0.5, 1.0,
+                                                   0.0, 1.0, 1.0,
+                                                   0.5, 1.0, 1.0,
+                                                   1.0, 1.0, 1.0}};
+
+  std::vector<int> vn_entity_bound = {9 ,  9};
+  std::vector<int> vn_entity1      = {18, 18};
+  std::vector<int> vn_entity2      = {20, 20};
+  std::vector<std::vector<int>> ventity_bound = {{10, 1, 1, 1,
+                                                  11, 1, 1, 2,
+                                                  12, 1, 1, 3,
+                                                  13, 1, 1, 4,
+                                                  14, 1, 1, 5,
+                                                  15, 1, 1, 6,
+                                                  16, 1, 1, 7,
+                                                  17, 1, 1, 8,
+                                                  18, 1, 1, 9 },
+                                                 {1, 0, 1, 10,
+                                                  2, 0, 1, 11,
+                                                  3, 0, 1, 12,
+                                                  4, 0, 1, 13,
+                                                  5, 0, 1, 14,
+                                                  6, 0, 1, 15,
+                                                  7, 0, 1, 16,
+                                                  8, 0, 1, 17,
+                                                  9, 0, 1, 18}};
+
+  std::vector<std::vector<int>> ventity2_entity1_idx = {{0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64, 68, 72, 76, 80},
+                                                        {0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64, 68, 72, 76, 80}};
+
+  std::vector<std::vector<int>> ventity2_entity1 = {{2, 1, 4, 5,      // 1
+                                                     2, 5, 6, 3,      // 2
+                                                     1, 2, 11, 10,    // 3
+                                                     7, 8, 5, 4,      // 4
+                                                     1, 10, 13, 4,    // 5
+                                                     11, 2, 3, 12,    // 6
+                                                     8, 9, 6, 5,      // 7
+                                                     11, 2, 5, 14,    // 8
+                                                     14, 5, 4, 13,    // 9
+                                                     12, 3, 6, 15,    // 10
+                                                     15, 6, 5, 14,    // 11
+                                                     4, 13, 16, 7,    // 12
+                                                     14, 5, 8, 17,    // 13
+                                                     11, 10, 13, 14,  // 14 original : 14, 13, 10, 11,
+                                                     17, 8, 7, 16,    // 15
+                                                     15, 6, 9, 18,    // 16
+                                                     12, 11, 14, 15,  // 17 original : 15, 14, 11, 12
+                                                     18, 9, 8, 17,    // 18
+                                                     14, 13, 16, 17,  // 19 origianl : 17, 16, 13, 14
+                                                     15, 14, 17, 18}, // 20 original : 18, 17, 14, 15
+                                                    {5, 4, 1, 2,
+                                                     6, 5, 2, 3,
+                                                     8, 7, 4, 5,
+                                                     11, 10, 1, 2,
+                                                     9, 8, 5, 6,
+                                                     4, 1, 10, 13,
+                                                     12, 11, 2, 3,
+                                                     11, 2, 5, 14,
+                                                     14, 5, 4, 13,
+                                                     15, 12, 3, 6,
+                                                     15, 6, 5, 14,
+                                                     16, 7, 4, 13,
+                                                     14, 5, 8, 17,
+                                                     14, 13, 10, 11,
+                                                     17, 8, 7, 16,
+                                                     18, 15, 6, 9,
+                                                     15, 14, 11, 12,
+                                                     18, 9, 8, 17,
+                                                     17, 16, 13, 14,
+                                                     18, 17, 14, 15}};
+
+  int n_entity_bound       = vn_entity_bound     [i_rank];
+  int *entity_bound        = ventity_bound       [i_rank].data();
+  int *entity2_entity1_idx = ventity2_entity1_idx[i_rank].data();
+  int *entity2_entity1     = ventity2_entity1    [i_rank].data();
+  int pn_entity1           = vn_entity1          [i_rank];
+  int pn_entity2           = vn_entity2          [i_rank];
+
+  int  *pn_entity2_graph = NULL;
+  int **pentity2_graph   = NULL;
+  PDM_part_comm_graph_entity1_to_entity2(pdm_comm,
+                                         n_part,
+                                         &n_entity_bound,
+                                         &entity_bound,
+                                         &pn_entity1,
+                                         &pn_entity2,
+                                         &entity2_entity1_idx,
+                                         &entity2_entity1,
+                                         &pn_entity2_graph,
+                                         &pentity2_graph);
+
+  int pn_entity2_graph_expected = 4;
+
+  CHECK(pn_entity2_graph_expected == pn_entity2_graph[0]);
+
+  static int entity_bound_reorder_p0[16] = {14, 1, 1,  -1, 17, 1, 1,  -2, 19, 1, 1, -3, 20, 1, 1, -5};
+  static int entity_bound_reorder_p1[16] = { 1, 0, 1, -14,  2, 0, 1, -17,  3, 0, 1,-19,  5, 0, 1,-20};
+
+  MPI_CHECK_EQ_C_ARRAY(0, pentity2_graph[0], entity_bound_reorder_p0, 16);
+  MPI_CHECK_EQ_C_ARRAY(1, pentity2_graph[0], entity_bound_reorder_p1, 16);
+
+  if(1 == 0) {
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      PDM_log_trace_array_int(pentity2_graph[i_part], 4 * pn_entity2_graph[i_part], "pentity2_graph ::");
+
+      int *face_tag = (int *) malloc(pn_entity2 * sizeof(int));
+
+      for(int i = 0; i < pn_entity2; ++i) {
+        face_tag[i] = -1;
+      }
+
+      for(int idx = 0; idx < pn_entity2_graph[i_part]; ++idx) {
+        int i_face = pentity2_graph[i_part][4*idx]-1;
+        int t_rank = pentity2_graph[i_part][4*idx+1];
+        face_tag[i_face] = t_rank;
+      }
+
+      const char* field_name[] = {"face_tag", 0 };
+      const int*  field     [] = {face_tag};
+
+      char filename[999];
+      sprintf(filename, "out_face_graph_i_part=%i_%i.vtk", i_part, i_rank);
+      PDM_vtk_write_std_elements(filename,
+                                 pn_entity1,
+                                 vvtx_coords[i_rank].data(),
+                                 NULL,
+                                 PDM_MESH_NODAL_QUAD4,
+                                 pn_entity2,
+                                 entity2_entity1,
+                                 NULL,
+                                 1,
+                                 field_name,
+                                 (const int **)   &field);
+
+
+      free(face_tag);
+    }
+  }
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    free(pentity2_graph[i_part]);
+  }
+  free(pentity2_graph);
+  free(pn_entity2_graph);
+
 }
