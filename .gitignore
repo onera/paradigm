@@ -26,3 +26,5 @@ doc/sphinx/source/user_manual/mesh_transform/mesh_eval.rst
 nbproject
 build
 *.ipynb
+.tags
+.tags_sorted_by_file
