@@ -91,9 +91,9 @@ PDM_part_mesh_nodal_coord_set
  * \param [in]  n_vtx         Number of vertices
  * \param [in]  n_vtx_parent  Number of parent vertices
  * \param [in]  numabs        Global numbering (size = \ref n_vtx)
- * \param [in]  numabs        Global numbering of parent vertices (size = \ref n_vtx_parent)
+ * \param [in]  numabs_parent Global numbering of parent vertices (size = \ref n_vtx_parent)
  * \param [in]  coords        Interlaced coordinates (size = 3 * \ref n_vtx)
- * \param [in]  coords        Interlaced coordinates of parent vertices (size = 3 * \ref n_vtx_parent)
+ * \param [in]  numabs_parent Interlaced coordinates of parent vertices (size = 3 * \ref n_vtx_parent)
  * \param [in]  owner         Vertices ownship
  *
  */

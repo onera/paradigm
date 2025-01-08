@@ -61,6 +61,10 @@ User manual
     :ref:`Partitioning <partitioning>`
       Graph partitioning, connectivity reconstruction, partition extension and local renumbering
 
+  .. container:: card
+
+    :ref:`Mesh Structures <struct>`
+      Low-level mesh structures
 
   .. container:: card
 
@@ -121,6 +125,7 @@ User manual
    user_manual/prepro_algo/index
    user_manual/mesh_transform/index
    user_manual/io/index
+   user_manual/struct/index
    user_manual/faq
 
 |
