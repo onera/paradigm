@@ -267,7 +267,7 @@ module PDM_part_mesh_nodal
     !! \param [in]  pmn       Pointer to \ref PDM_part_mesh_nodal_t object
     !! \param [in]  id_part   Partition identifier
     !!
-    !! \return  Golbal ids of vertices
+    !! \return  Global ids of vertices
     !!
 
     function PDM_part_mesh_nodal_vtx_g_num_get_cf(pmn,    &
@@ -562,7 +562,7 @@ module PDM_part_mesh_nodal
       type (c_ptr),   value          :: pmn             ! Pointer to PDM_part_mesh_nodal_t object
 
       integer, intent(in)            :: i_part          ! Partition identifier
-      integer (pdm_g_num_s), pointer :: vtx_ln_to_gn(:) ! Golbal ids of vertices (size = ``n_vtx``)
+      integer (pdm_g_num_s), pointer :: vtx_ln_to_gn(:) ! Global ids of vertices (size = ``n_vtx``)
 
       type (c_ptr)    :: c_vtx_ln_to_gn = C_NULL_PTR
       integer         :: n_vtx
