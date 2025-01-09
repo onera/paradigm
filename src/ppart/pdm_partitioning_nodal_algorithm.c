@@ -758,7 +758,7 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
                                     &pgroup,
                                     &pgroup_ln_to_gn);
 
-    PDM_part_mesh_nodal_elmts_n_group_set(pmne, dmne->n_group_elmt, PDM_OWNERSHIP_KEEP);
+    PDM_part_mesh_nodal_elmts_n_group_set(pmne, dmne->n_group_elmt);
 
     for(int i_part = 0; i_part < n_part; ++i_part) {
       for(int i_group = 0; i_group < dmne->n_group_elmt; ++i_group) {

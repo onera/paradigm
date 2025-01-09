@@ -57,6 +57,8 @@ module PDM_part_mesh_nodal
   PDM_part_mesh_nodal_section_elt_type_get_
   end interface
 
+  private :: PDM_part_mesh_nodal_sections_id_in_geom_kind_get_
+  private :: PDM_part_mesh_nodal_section_in_geom_kind_elt_type_get_
   private :: PDM_part_mesh_nodal_section_n_elt_get_
   private :: PDM_part_mesh_nodal_section_std_get_
   private :: PDM_part_mesh_nodal_vtx_g_num_get_
@@ -148,15 +150,15 @@ module PDM_part_mesh_nodal
     !!
 
     function PDM_part_mesh_nodal_section_add (pmn,   &
-                                              t_elt) &
-    result (i_section) &
+                                              elt_type) &
+    result (id_section) &
     bind (c, name='PDM_part_mesh_nodal_section_add')
       use iso_c_binding
       implicit none
 
       type(c_ptr),    value :: pmn
-      integer(c_int), value :: t_elt
-      integer(c_int)        :: i_section
+      integer(c_int), value :: elt_type
+      integer(c_int)        :: id_section
 
     end function PDM_part_mesh_nodal_section_add
 
@@ -267,7 +269,7 @@ module PDM_part_mesh_nodal
     !! \param [in]  pmn       Pointer to \ref PDM_part_mesh_nodal_t object
     !! \param [in]  id_part   Partition identifier
     !!
-    !! \return  Golbal ids of vertices
+    !! \return  Global ids of vertices
     !!
 
     function PDM_part_mesh_nodal_vtx_g_num_get_cf(pmn,    &
@@ -562,7 +564,7 @@ module PDM_part_mesh_nodal
       type (c_ptr),   value          :: pmn             ! Pointer to PDM_part_mesh_nodal_t object
 
       integer, intent(in)            :: i_part          ! Partition identifier
-      integer (pdm_g_num_s), pointer :: vtx_ln_to_gn(:) ! Golbal ids of vertices (size = ``n_vtx``)
+      integer (pdm_g_num_s), pointer :: vtx_ln_to_gn(:) ! Global ids of vertices (size = ``n_vtx``)
 
       type (c_ptr)    :: c_vtx_ln_to_gn = C_NULL_PTR
       integer         :: n_vtx

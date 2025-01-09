@@ -76,13 +76,13 @@ struct _pdm_part_mesh_t
   int                **pn_bound       [PDM_BOUND_TYPE_MAX];
   PDM_g_num_t       ***pbound_ln_to_gn[PDM_BOUND_TYPE_MAX];
   int               ***pbound         [PDM_BOUND_TYPE_MAX];
-  PDM_bool_t           is_owner_bound [PDM_BOUND_TYPE_MAX];
+  PDM_bool_t         **is_owner_bound [PDM_BOUND_TYPE_MAX];
 
   int                **pconcat_bound_idx      [PDM_BOUND_TYPE_MAX];
   PDM_g_num_t        **pconcat_bound_ln_to_gn [PDM_BOUND_TYPE_MAX];
   int                **pconcat_bound          [PDM_BOUND_TYPE_MAX];
-  PDM_bool_t           is_owner_concat_bound  [PDM_BOUND_TYPE_MAX];
-  PDM_bool_t           is_compute_concat_bound[PDM_BOUND_TYPE_MAX];
+  PDM_bool_t          *is_owner_concat_bound  [PDM_BOUND_TYPE_MAX];
+  PDM_bool_t          *is_compute_concat_bound[PDM_BOUND_TYPE_MAX];
 
   /* Comm graph */
   int                **ppart_bound_proc_idx[PDM_BOUND_TYPE_MAX];
