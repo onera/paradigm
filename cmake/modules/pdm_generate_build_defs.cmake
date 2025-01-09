@@ -1,4 +1,4 @@
-file(READ ${CMAKE_SOURCE_DIR}/pdm_Build.defs.in pdm_build_defs_file)
+file(READ ${CMAKE_CURRENT_SOURCE_DIR}/pdm_Build.defs.in pdm_build_defs_file)
 
 # TODO modifier fichier en fonction des options cmake
 if (PDM_ENABLE_PARMETIS)
