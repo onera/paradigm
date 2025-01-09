@@ -140,8 +140,8 @@ cdef class PartMeshNodal:
 
         Parameters:
           id_part       (int)                          : Partition identifier
-          pvtx_coord    (`np.ndarray[np.double_t]`   ) : Coordinate of the mesh
-          pvtx_ln_to_gn (`np.ndarray[npy_pdm_gnum_t]`) : Global numbering
+          pvtx_coord    (`np.ndarray[np.double_t]`   ) : Vertex coordinates
+          pvtx_ln_to_gn (`np.ndarray[npy_pdm_gnum_t]`) : Vertex global IDs
         """
         # ************************************************************************
         # > Declaration
@@ -188,7 +188,7 @@ cdef class PartMeshNodal:
                     NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] parent_entity_g_num,
                     int                                           n_elemts):
         """
-        set_section(id_section, id_part, elmt_type, numabs, parent_num, parent_entity_g_num)
+        set_section(id_section, id_part, elmt_vtx, numabs, parent_num, parent_entity_g_num, n_elemts)
 
         For id_section and id_part, set the element connectivity and the associated parent_num
 
@@ -197,8 +197,9 @@ cdef class PartMeshNodal:
           id_part    (int)                          : id of the part (max = n_part)
           elmt_vtx   (`np.ndarray[np.int32_t]`)     : Element connectivity
           numabs     (`np.ndarray[npy_pdm_gnum_t]`) : Global numbering
-          parent_num (`np.ndarray[np.int32_t]`)     : Correspondance table with a PartMesh if any else None
+          parent_num (`np.ndarray[np.int32_t]`)     : Correspondence table with a PartMesh (if any, else None)
           numabs     (`np.ndarray[npy_pdm_gnum_t]`) : Global numbering
+          n_elemts   (int)                          : Number of elements in section
         """
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
         self.keep_alive.append(elmt_vtx)
@@ -227,6 +228,7 @@ cdef class PartMeshNodal:
         n_group_set(geom_kind, n_group)
 
         Set number of group for the geom_kind
+
         Parameters:
           geom_kind (PDM_geometry_kind_t) : Geometry kind (0D, 1D, 2D, 3D)
           n_group   (int)                 : Number of group on current geom_kind
@@ -245,7 +247,8 @@ cdef class PartMeshNodal:
         """
         group_set(geom_kind, i_part, i_group, group_elmt, group_ln_to_gn)
 
-        Set number of group for the geom_kind
+        Set group for a partition
+
         Parameters:
           geom_kind      (PDM_geometry_kind_t)          : Geometry kind (VOLUMIC, SURFACIC, RIDGE, CORNER)
           i_part         (int)                          : id of the section (return by add_section)

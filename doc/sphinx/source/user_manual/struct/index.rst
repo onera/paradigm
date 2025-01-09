@@ -8,8 +8,8 @@ Mesh Structures
 
   .. container:: card
 
-    :ref:`Partitionned Nodal Mesh Structure <pmn>`
-      Store a partitionned nodal mesh
+    :ref:`Partitioned Nodal Mesh Structure <pmn>`
+      Store a partitioned nodal mesh
 
 .. toctree::
   :caption: Simple mesh generation

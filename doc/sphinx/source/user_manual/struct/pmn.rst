@@ -1,7 +1,7 @@
 .. _pmn:
 
-Partitionned Nodal Mesh Structure
-=================================
+Partitioned Nodal Mesh Structure
+================================
 
 C API
 -----
@@ -262,26 +262,31 @@ Python API
 
   .. py:class:: PartMeshNodal
 
-    Interface to build face from Element->Vtx connectivity.
-    Once initialized, all the following
+    Python class to store meshes defined by nodal connectivity. Once initialized, all the following
     methods apply to a :class:`PartMeshNodal` instance.
 
     .. rubric:: Initialization
 
-    .. autoclass:: Pypdm.Pypdm.PartMeshNodal.__init__
+    .. autofunction:: Pypdm.Pypdm.PartMeshNodal.__cinit__
 
     .. rubric:: Methods summary
 
     .. autosummary::
       :nosignatures:
 
-      ~Pypdm.Pypdm.PartMeshNodal.dim_get
+      ~Pypdm.Pypdm.PartMeshNodal.set_coordinates
+      ~Pypdm.Pypdm.PartMeshNodal.add_section
+      ~Pypdm.Pypdm.PartMeshNodal.set_section
+      ~Pypdm.Pypdm.PartMeshNodal.n_group_set
+      ~Pypdm.Pypdm.PartMeshNodal.group_set
       ~Pypdm.Pypdm.PartMeshNodal.get_sections
-      ~Pypdm.Pypdm.PartMeshNodal.vtx_g_num_get
 
-    .. automethod:: Pypdm.Pypdm.PartMeshNodal.dim_get
+    .. automethod:: Pypdm.Pypdm.PartMeshNodal.set_coordinates
+    .. automethod:: Pypdm.Pypdm.PartMeshNodal.add_section
+    .. automethod:: Pypdm.Pypdm.PartMeshNodal.set_section
+    .. automethod:: Pypdm.Pypdm.PartMeshNodal.n_group_set
+    .. automethod:: Pypdm.Pypdm.PartMeshNodal.group_set
     .. automethod:: Pypdm.Pypdm.PartMeshNodal.get_sections
-    .. automethod:: Pypdm.Pypdm.PartMeshNodal.vtx_g_num_get
 
 
 .. ifconfig:: enable_python_doc == 'OFF'
