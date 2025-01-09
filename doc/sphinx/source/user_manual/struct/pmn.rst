@@ -156,6 +156,53 @@ Fortran API
 
 .. ifconfig:: enable_fortran_doc == 'ON'
 
+  .. f:subroutine:: PDM_part_mesh_nodal_section_add
+
+    Add a new section to the current mesh
+
+    :param c_ptr   pmn        [in]:  C pointer to \ref PDM_part_mesh_nodal_t instance
+    :param integer elt_type   [in]:  Section type
+    :param integer id_section [out]: Section identifier
+
+  .. f:subroutine:: PDM_part_mesh_nodal_section_std_set
+
+    Define a standard section
+
+    :param c_ptr          pmn                 [in]: C pointer to \ref PDM_part_mesh_nodal_t instance
+    :param integer        i_section           [in]: Section identifier
+    :param integer        i_part              [in]: Partition identifier
+    :param integer        n_elt               [in]: Number of elements
+    :param pdm_l_num_s(:) connec              [in]: Connectivity
+    :param pdm_g_num_s(:) numabs              [in]: Global ids
+    :param pdm_l_num_s(:) parent_num          [in]: Parent local ids or *null()*
+    :param pdm_g_num_s(:) parent_entity_g_num [in]: Parent global ids or *null()*
+    :param integer        ownership           [in]: Ownership
+
+  .. f:subroutine:: PDM_part_mesh_nodal_n_section_in_geom_kind_get
+
+    Return number of sections in a specific geometry kind
+
+    :param c_ptr   pmn        [in]:  C pointer to \ref PDM_part_mesh_nodal_t instance
+    :param integer geom_kind  [in]:  Geometry kind (corner, ridge, surface or volume)
+    :param integer n_sections [out]: Number of sections
+
+  .. f:subroutine:: PDM_part_mesh_nodal_sections_id_in_geom_kind_get
+
+    Return ids of sections in a specific geometry kind
+
+    :param c_ptr      pmn         [in]:  C pointer to \ref PDM_part_mesh_nodal_t instance
+    :param integer    geom_kind   [in]:  Geometry kind (corner, ridge, surface or volume)
+    :param integer(:) sections_id [out]: Ids of sections
+
+  .. f:subroutine:: PDM_part_mesh_nodal_section_in_geom_kind_elt_type_get
+
+    Return type of section in a specific geometry kind
+
+    :param c_ptr   pmn        [in]:  C pointer to \ref PDM_part_mesh_nodal_t instance
+    :param integer geom_kind  [in]:  Geometry kind (corner, ridge, surface or volume)
+    :param integer id_section [in]:  Section identifier
+    :param integer elt_type   [out]: Section type
+
   .. f:subroutine:: PDM_part_mesh_nodal_section_n_elt_get
 
     Get number of section elements

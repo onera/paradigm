@@ -57,6 +57,8 @@ module PDM_part_mesh_nodal
   PDM_part_mesh_nodal_section_elt_type_get_
   end interface
 
+  private :: PDM_part_mesh_nodal_sections_id_in_geom_kind_get_
+  private :: PDM_part_mesh_nodal_section_in_geom_kind_elt_type_get_
   private :: PDM_part_mesh_nodal_section_n_elt_get_
   private :: PDM_part_mesh_nodal_section_std_get_
   private :: PDM_part_mesh_nodal_vtx_g_num_get_
@@ -148,15 +150,15 @@ module PDM_part_mesh_nodal
     !!
 
     function PDM_part_mesh_nodal_section_add (pmn,   &
-                                              t_elt) &
-    result (i_section) &
+                                              elt_type) &
+    result (id_section) &
     bind (c, name='PDM_part_mesh_nodal_section_add')
       use iso_c_binding
       implicit none
 
       type(c_ptr),    value :: pmn
-      integer(c_int), value :: t_elt
-      integer(c_int)        :: i_section
+      integer(c_int), value :: elt_type
+      integer(c_int)        :: id_section
 
     end function PDM_part_mesh_nodal_section_add
 
