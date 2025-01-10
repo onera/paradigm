@@ -52,10 +52,10 @@ typedef struct _pdm_part_comm_graph_t PDM_part_comm_graph_t;
  * \param [in]   pn_entity_graph        Number of bound (size = \p n_part)
  * \param [in]   pentity_graph          Graph comm identifier (size = 4 * \p pn_entity_graph[i_part]) :
                                             For each entity :
-                                              - entity local number
-                                              - Connected process
-                                              - Connected partition on the connected process
-                                              - Connected entity local number in the connected partition
+                                              - entity local number (1-based)
+                                              - Connected process   (0-based)
+                                              - Connected partition on the connected process (1-based)
+                                              - Connected entity local number in the connected partition (1-based)
  * \param [in]   comm                   MPI communicator
  * \return   Initialized \ref PDM_part_comm_graph_t instance
  */
@@ -68,6 +68,33 @@ PDM_part_comm_graph_create
   PDM_MPI_Comm   comm
 );
 
+
+/**
+ *
+ * \brief Build a \ref PDM_part_comm_graph_t instance using additional information represented as a n-uplet
+ * \param [in]   n_part                 Number of partition on current process
+ * \param [in]   pn_entity_graph        Number of bound (size = \p n_part)
+ * \param [in]   pentity_graph          Graph comm identifier (size = 4 * \p pn_entity_graph[i_part]) :
+                                            For each entity :
+                                              - entity local number (1-based)
+                                              - Connected process   (0-based)
+                                              - Connected partition on the connected process (1-based)
+                                              - Connected entity local number in the connected partition (1-based)
+ * \param [in]   nuplet_size            N-uplet size
+ * \param [in]   pentity_nuplet         Additional nuplets (size = \p nuplet_size * \p pn_entity_graph[i_part])
+ * \param [in]   comm                   MPI communicator
+ * \return   Initialized \ref PDM_part_comm_graph_t instance
+ */
+PDM_part_comm_graph_t*
+PDM_part_comm_graph_with_nuplet_create
+(
+  int            n_part,
+  int           *pn_entity_graph,
+  int          **pentity_graph,
+  int            nuplet_size,
+  int          **pentity_nuplet,
+  PDM_MPI_Comm   comm
+);
 
 
 /**
