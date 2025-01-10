@@ -550,9 +550,16 @@ _create
       }
 
       int pos = PDM_order_binary_search_int(to_find, pentity_indices[lpart], stride, n_entity_graph);
-      // if(pos == -1) {
-      //   log_trace("Try to find fail = (%i/%i/%i) --> %i \n", t_rank, lpart, lentity, pos);
-      // }
+      if(pos == -1) {
+        // log_trace("Try to find fail = (%i/%i/%i) --> %i \n", t_rank, lpart, lentity, pos);
+        PDM_log_trace_array_int(to_find, stride, "to_find : ");
+        log_trace("pentity_indices :\n");
+        for (int i = 0; i < n_entity_graph; i++) {
+          log_trace("%d : ", i);
+          PDM_log_trace_array_int(&pentity_indices[lpart][stride*i], stride, "");
+        }
+        PDM_error(__FILE__, __LINE__, 0, "Failed\n");
+      }
       pcg->part_to_recv_buffer[lpart][pentity_indices_order[lpart][pos]] = j;
 
     }
