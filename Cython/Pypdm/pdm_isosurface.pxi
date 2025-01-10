@@ -244,7 +244,7 @@ cdef double callback(void   *_isos,
                      int     id_iso,
                      double  x,
                      double  y,
-                     double  z):
+                     double  z) noexcept:
 
   cdef Isosurface isos = <Isosurface> _isos
 
