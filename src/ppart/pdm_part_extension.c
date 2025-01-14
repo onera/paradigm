@@ -2115,132 +2115,6 @@ _build_bound_graph
 
 }
 
-
-// static
-// void
-// _build_rotation_matrix
-// (
-//   double  *rotation_direction,
-//   double   rotation_angle,
-//   int      sgn_itrf,
-//   double **rotation_matrix
-// )
-// {
-//   double angle = -sgn_itrf*rotation_angle;
-
-//   if (PDM_ABS(rotation_direction[0])>1e-15 &&
-//       PDM_ABS(rotation_direction[1])<1e-15 &&
-//       PDM_ABS(rotation_direction[2])<1e-15) {
-//     rotation_matrix[0][0] = 1.;
-//     rotation_matrix[0][1] = 0.;
-//     rotation_matrix[0][2] = 0.;
-
-//     rotation_matrix[1][0] = 0.;
-//     rotation_matrix[1][1] = cos(angle);
-//     rotation_matrix[1][2] =-sin(angle);
-
-//     rotation_matrix[2][0] = 0.;
-//     rotation_matrix[2][1] = sin(angle);
-//     rotation_matrix[2][2] = cos(angle);
-//   }
-//   else if (PDM_ABS(rotation_direction[0])<1e-15 &&
-//            PDM_ABS(rotation_direction[1])>1e-15 &&
-//            PDM_ABS(rotation_direction[2])<1e-15) {
-//     rotation_matrix[0][0] = cos(angle);
-//     rotation_matrix[0][1] = 0.;
-//     rotation_matrix[0][2] = sin(angle);
-
-//     rotation_matrix[1][0] = 0.;
-//     rotation_matrix[1][1] = 1.;
-//     rotation_matrix[1][2] = 0.;
-
-//     rotation_matrix[2][0] =-sin(angle);
-//     rotation_matrix[2][1] = 0.;
-//     rotation_matrix[2][2] = cos(angle);
-//   }
-//   else if (PDM_ABS(rotation_direction[0])<1e-15 &&
-//            PDM_ABS(rotation_direction[1])<1e-15 &&
-//            PDM_ABS(rotation_direction[2])>1e-15) {
-//     rotation_matrix[0][0] = cos(angle);
-//     rotation_matrix[0][1] =-sin(angle);
-//     rotation_matrix[0][2] = 0.;
-
-//     rotation_matrix[1][0] = sin(angle);
-//     rotation_matrix[1][1] = cos(angle);
-//     rotation_matrix[1][2] = 0.;
-
-//     rotation_matrix[2][0] = 0.;
-//     rotation_matrix[2][1] = 0.;
-//     rotation_matrix[2][2] = 1.;
-//   }
-//   else {
-//     PDM_error(__FILE__, __LINE__, 0, "Don't know how to build rotation matrix around axis (%.3f,%.3f,%.3f)\n",
-//                                   rotation_direction[0],
-//                                   rotation_direction[1],
-//                                   rotation_direction[2]);
-//   }
-// }
-
-
-// static
-// void
-// _build_homogeneous_matrix
-// (
-//   double **rotation_matrix,
-//   double  *rotation_center,
-//   double **homogeneous_matrix
-// )
-// {
-//   double apply_center_matrix[3] = {0, 0., 0.};
-
-//   for (int i=0; i<3; ++i) {
-//     apply_center_matrix[i] = rotation_matrix[0][i]*rotation_center[0]
-//                            + rotation_matrix[1][i]*rotation_center[1]
-//                            + rotation_matrix[2][i]*rotation_center[2];
-
-//     homogeneous_matrix[i][0] = rotation_matrix[i][0];
-//     homogeneous_matrix[i][1] = rotation_matrix[i][1];
-//     homogeneous_matrix[i][2] = rotation_matrix[i][2];
-//     homogeneous_matrix[i][3] = rotation_center[i] - apply_center_matrix[i];
-//   }
-
-//   homogeneous_matrix[3][0] = 0.;
-//   homogeneous_matrix[3][1] = 0.;
-//   homogeneous_matrix[3][2] = 0.;
-//   homogeneous_matrix[3][3] = 1.;
-// }
-
-
-// static
-// void
-// _apply_homogeneous_matrix
-// (
-//   double **homogeneous_matrix,
-//   double  *vector
-// )
-// {
-
-//   double _vector[4] = {0., 0., 0., 0.};
-//   double _result[4] = {0., 0., 0., 0.};
-
-//   _vector[0] = vector[0];
-//   _vector[1] = vector[1];
-//   _vector[2] = vector[2];
-//   _vector[3] = 1.;
-
-//   for (int i=0; i<4; ++i) {
-//     _result[i] = homogeneous_matrix[0][i]*_vector[0]
-//                + homogeneous_matrix[1][i]*_vector[1]
-//                + homogeneous_matrix[2][i]*_vector[2]
-//                + homogeneous_matrix[3][i]*_vector[3];
-//   }
-
-//   for (int i=0; i<3; ++i) {
-//     vector[i] = _result[i];
-//   }
-// }
-
-
 static
 void
 _exchange_coord_and_apply_transform
@@ -2364,27 +2238,14 @@ double              ***pvtx_extended_coords_out
       }
       if(i_interface != 0 && rotation_direction[PDM_ABS(i_interface)-1] != NULL) {
 
-        PDM_rotation_apply_axis_angle_and_rotation_center(rotation_direction[PDM_ABS(i_interface-1)],
-                                                          rotation_angle    [PDM_ABS(i_interface-1)],
-                                                          rotation_center   [PDM_ABS(i_interface-1)],
+        PDM_rotation_apply_axis_angle_and_rotation_center(rotation_direction[PDM_ABS(i_interface)-1],
+                                                          rotation_angle    [PDM_ABS(i_interface)-1],
+                                                          rotation_center   [PDM_ABS(i_interface)-1],
                                                           (PDM_bool_t)(sgn_interface>1),
                                                           &pextract_vtx_coords[i_part][3*i_vtx],
                                                           1,
                                                           &pextract_vtx_coords[i_part][3*i_vtx]);
         
-        // > Build matrix
-        // _build_rotation_matrix(rotation_direction[PDM_ABS(i_interface-1)],
-        //                        rotation_angle    [PDM_ABS(i_interface-1)],
-        //                        sgn_interface,
-        //                        rotation_matrix   [PDM_ABS(i_interface-1)]);
-
-        // _build_homogeneous_matrix(rotation_matrix   [PDM_ABS(i_interface-1)],
-        //                           rotation_center   [PDM_ABS(i_interface-1)],
-        //                           homogeneous_matrix[PDM_ABS(i_interface-1)]);
-
-        // // > Apply matrix
-        // _apply_homogeneous_matrix(homogeneous_matrix[PDM_ABS(i_interface-1)],
-        //                          &pextract_vtx_coords[i_part][3*i_vtx]);
       }
     }
 

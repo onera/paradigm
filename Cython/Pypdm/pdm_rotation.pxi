@@ -323,7 +323,7 @@ def euler_angles_to_rotation_matrix(
     intrinsic       (bool)                    : Axis conventions (https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations)
 
   Returns:
-    rotation_matrix (np.ndarray[np.double_t]) : Rotation matrix (shape = (3,3)))
+    rotation_matrix (np.ndarray[np.double_t]) : Rotation matrix (shape = (3,3))
   """
 
   # checking sizes
@@ -347,7 +347,7 @@ def rotation_matrix_to_axis_angle(
   Converts a rotation expressed as a rotation matrix to axis-angle
   
   Parameters:
-    rotation_matrix (np.ndarray[np.double_t]) : Rotation matrix (shape = (3,3)))
+    rotation_matrix (np.ndarray[np.double_t]) : Rotation matrix (shape = (3,3))
 
   Returns:
     axis            (np.ndarray[np.double_t]) : Rotation axis (shape = (3,))
@@ -370,7 +370,7 @@ def rotation_matrix_to_euler_angles(
   Converts a rotation expressed as a rotation matrix to euler angles
 
   Parameters:
-    rotation_matrix (np.ndarray[np.double_t]) : Rotation matrix (shape = (3,3)))
+    rotation_matrix (np.ndarray[np.double_t]) : Rotation matrix (shape = (3,3))
     order           (np.ndarray[np.int32_t])  : Order of rotations to apply 
     intrinsic       (bool)                    : Axis conventions (https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations)    
   
@@ -466,7 +466,7 @@ def two_vectors_to_rotation_matrix(
     vector_2        (np.ndarray[np.double_t]) : Second vector (shape = (3,))
 
   Returns:
-    rotation_matrix (np.ndarray[np.double_t]) : Rotation matrix (shape = (3,3)))
+    rotation_matrix (np.ndarray[np.double_t]) : Rotation matrix (shape = (3,3))
   """
   _check_axis_shape(vector_1,"vector_1")
   _check_axis_shape(vector_2,"vector_2")
@@ -494,7 +494,7 @@ def apply_euler_angles_and_rotation_center_to_coords(
   rotation center to the provided coords array
 
   Parameters:
-    coords          (np.ndarray[np.double_t]) : Vector of coordinates (shape = (*n*,3)))
+    coords          (np.ndarray[np.double_t]) : Vector of coordinates (shape = (*n*,3))
     ang_x           (double)                  : Rotation angle around the x-axis
     ang_y           (double)                  : Rotation angle around the y-axis
     ang_z           (double)                  : Rotation angle around the z-axis
@@ -504,7 +504,7 @@ def apply_euler_angles_and_rotation_center_to_coords(
     reverse         (bool)                    : If True, applies the reverse transformation
     
   Returns:
-    transformed_coords (np.ndarray[np.double_t]) : Computed coordinates (shape = (*n*,3)))
+    transformed_coords (np.ndarray[np.double_t]) : Computed coordinates (shape = (*n*,3))
   """
   # checking sizes
   if order.size != 3:
@@ -546,7 +546,7 @@ def apply_euler_angles_and_rotation_center_to_vector_field(
   rotation center to the provided vector field array
 
   Parameters:
-    vector_field    (np.ndarray[np.double_t]) : Vector (shape = (*n*,3)))
+    vector_field    (np.ndarray[np.double_t]) : Vector (shape = (*n*,3))
     ang_x           (double)                  : Rotation angle around the x-axis
     ang_y           (double)                  : Rotation angle around the y-axis
     ang_z           (double)                  : Rotation angle around the z-axis
@@ -556,7 +556,7 @@ def apply_euler_angles_and_rotation_center_to_vector_field(
     reverse         (bool)                    : If True, applies the reverse transformation
   
   Returns:
-    transformed_vector_field (np.ndarray[np.double_t]) : Computed vector (shape = (*n*,3)))
+    transformed_vector_field (np.ndarray[np.double_t]) : Computed vector (shape = (*n*,3))
   """
     # checking sizes
   if order.size != 3:
@@ -597,14 +597,14 @@ def apply_axis_angle_and_rotation_center_to_coords(
   provided axis and rotation center to the provided coordinate array
   
   Parameters:
-    coords          (np.ndarray[np.double_t]) : Vector of coordinates (shape = (*n*,3)))
+    coords          (np.ndarray[np.double_t]) : Vector of coordinates (shape = (*n*,3))
     axis            (np.ndarray[np.double_t]) : Rotation axis (shape = (3,))
     angles          (double)                  : Rotation angle (in *radians*)
     rotation_center (np.ndarray[np.double_t]) : 3D rotation center (shape = (3,))
     reverse         (bool)                    : If True, applies the reverse transformation
     
   Returns:
-    transformed_coords (np.ndarray[np.double_t]) : Computed coordinates (shape = (*n*,3)))
+    transformed_coords (np.ndarray[np.double_t]) : Computed coordinates (shape = (*n*,3))
   """
   if axis.size != 3:
     raise AssertionError(f"'axis' argument of invalid shape {NPY.shape(axis)}, expects (3,)")
@@ -637,14 +637,14 @@ def apply_axis_angle_and_rotation_center_to_vector_field(
   provided axis and rotation center to the provided vector field array
   
   Parameters:
-    vector_field    (np.ndarray[np.double_t]) : Vector (shape = (*n*,3)))
+    vector_field    (np.ndarray[np.double_t]) : Vector (shape = (*n*,3))
     axis            (np.ndarray[np.double_t]) : Rotation axis (shape = (3,))
     angles          (double)                  : Rotation angle (in *radians*)
     rotation_center (np.ndarray[np.double_t]) : 3D rotation center (shape = (3,))
     reverse         (bool)                    : If True, applies the reverse transformation
     
   Returns:
-    transformed_vector_field (np.ndarray[np.double_t]) : Computed vector (shape = (*n*,3)))
+    transformed_vector_field (np.ndarray[np.double_t]) : Computed vector (shape = (*n*,3))
   """
   if axis.size != 3:
     raise AssertionError(f"'axis' argument of invalid shape {NPY.shape(axis)}, expects (3,)")
@@ -678,13 +678,13 @@ def apply_rotation_matrix_and_rotation_center_to_coords(
   matrix around the provided axis and rotation center to the provided coordinate array
   
   Parameters:
-    coords          (np.ndarray[np.double_t]) : Vector of coordinates (shape = (*n*,3)))
+    coords          (np.ndarray[np.double_t]) : Vector of coordinates (shape = (*n*,3))
     rotation_matrix (np.ndarray[np.double_t]) : 3-by-3 rotation matrix (shape = (3,3))
     rotation_center (np.ndarray[np.double_t]) : 3D rotation center (shape = (3,))
     reverse         (bool)                    : If True, applies the reverse transformation
     
   Returns:
-    transformed_coords (np.ndarray[np.double_t]) : Computed coordinates (shape = (*n*,3)))
+    transformed_coords (np.ndarray[np.double_t]) : Computed coordinates (shape = (*n*,3))
   """
   if NPY.shape(rotation_matrix) != (3,3):
     raise AssertionError(f"'rotation_matrix' argument of invalid shape {NPY.shape(rotation_matrix)}, expects (3,3)")
@@ -714,13 +714,13 @@ def apply_rotation_matrix_and_rotation_center_to_vector_field(
   matrix around the provided axis and rotation center to the provided vector field array
   
   Parameters:
-    vector_field    (np.ndarray[np.double_t]) : Vector of coordinates (shape = (*n*,3)))
+    vector_field    (np.ndarray[np.double_t]) : Vector of coordinates (shape = (*n*,3))
     rotation_matrix (np.ndarray[np.double_t]) : 3-by-3 rotation matrix (shape = (3,3))
     rotation_center (np.ndarray[np.double_t]) : 3D rotation center (shape = (3,))
     reverse         (bool)                    : If True, applies the reverse transformation
     
   Returns:
-    transformed_vector_field (np.ndarray[np.double_t]) : Computed coordinates (shape = (*n*,3)))
+    transformed_vector_field (np.ndarray[np.double_t]) : Computed coordinates (shape = (*n*,3))
   """
   if NPY.shape(rotation_matrix) != (3,3):
     raise AssertionError(f"'rotation_matrix' argument of invalid shape {NPY.shape(rotation_matrix)}, expects (3,3)")
