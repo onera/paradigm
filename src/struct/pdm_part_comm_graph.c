@@ -387,6 +387,7 @@ _create
   int          **pentity_graph,
   int            nuplet_size,
   int          **pentity_nuplet,
+  PDM_bool_t     is_signed,
   PDM_MPI_Comm   comm
 )
 {
@@ -446,6 +447,8 @@ _create
   int *send_buffer = NULL;
   PDM_malloc(send_buffer, stride * send_idx[n_rank], int);
 
+  int sign = (is_signed == PDM_TRUE) ? -1 : 1;
+
   for (int i_part = 0; i_part < n_part; i_part++) {
     int n_entity_graph = pn_entity_graph[i_part];
 
@@ -458,7 +461,7 @@ _create
       send_buffer[stride*idx_write+1] = i_part;
       send_buffer[stride*idx_write+2] = pentity_graph[i_part][4*idx_entity+3]-1;
       for (int i = 0; i < nuplet_size; i++) {
-        send_buffer[stride*idx_write+3+i] = pentity_nuplet[i_part][nuplet_size*idx_entity+i];
+        send_buffer[stride*idx_write+3+i] = sign * pentity_nuplet[i_part][nuplet_size*idx_entity+i];
       }
 
       pcg->part_to_send_buffer[i_part][idx_entity] = idx_write;
@@ -550,7 +553,7 @@ _create
       }
 
       int pos = PDM_order_binary_search_int(to_find, pentity_indices[lpart], stride, n_entity_graph);
-      if(pos == -1) {
+      if (pos == -1) {
         // log_trace("Try to find fail = (%i/%i/%i) --> %i \n", t_rank, lpart, lentity, pos);
         PDM_log_trace_array_int(to_find, stride, "to_find : ");
         log_trace("pentity_indices :\n");
@@ -558,7 +561,7 @@ _create
           log_trace("%d : ", i);
           PDM_log_trace_array_int(&pentity_indices[lpart][stride*i], stride, "");
         }
-        PDM_error(__FILE__, __LINE__, 0, "Failed\n");
+        PDM_error(__FILE__, __LINE__, 0, "Part-comm graph mismatch(see paradigm_*.log)\n");
       }
       pcg->part_to_recv_buffer[lpart][pentity_indices_order[lpart][pos]] = j;
 
@@ -675,6 +678,7 @@ PDM_part_comm_graph_create
                  pentity_graph,
                  0,
                  NULL,
+                 PDM_FALSE,
                  comm);
 }
 
@@ -687,6 +691,7 @@ PDM_part_comm_graph_with_nuplet_create
   int          **pentity_graph,
   int            nuplet_size,
   int          **pentity_nuplet,
+  PDM_bool_t     is_signed,
   PDM_MPI_Comm   comm
 )
 {
@@ -706,6 +711,7 @@ PDM_part_comm_graph_with_nuplet_create
                  pentity_graph,
                  nuplet_size,
                  pentity_nuplet,
+                 is_signed,
                  comm);
 }
 

@@ -57,6 +57,7 @@ typedef struct _pdm_part_comm_graph_t PDM_part_comm_graph_t;
                                               - Connected partition on the connected process (1-based)
                                               - Connected entity local number in the connected partition (1-based)
  * \param [in]   comm                   MPI communicator
+
  * \return   Initialized \ref PDM_part_comm_graph_t instance
  */
 PDM_part_comm_graph_t*
@@ -82,7 +83,9 @@ PDM_part_comm_graph_create
                                               - Connected entity local number in the connected partition (1-based)
  * \param [in]   nuplet_size            N-uplet size
  * \param [in]   pentity_nuplet         Additional nuplets (size = \p nuplet_size * \p pn_entity_graph[i_part])
+ * \param [in]   is_signed              Use signed nuplets
  * \param [in]   comm                   MPI communicator
+ *
  * \return   Initialized \ref PDM_part_comm_graph_t instance
  */
 PDM_part_comm_graph_t*
@@ -93,6 +96,7 @@ PDM_part_comm_graph_with_nuplet_create
   int          **pentity_graph,
   int            nuplet_size,
   int          **pentity_nuplet,
+  PDM_bool_t     is_signed,
   PDM_MPI_Comm   comm
 );
 

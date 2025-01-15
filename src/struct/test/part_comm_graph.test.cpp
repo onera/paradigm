@@ -925,16 +925,12 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 1 perio - 2p", 2) {
   int *entity_bound  = ventity_bound    [i_rank].data();
   int *entity_nuplet = ventity_interface[i_rank].data();
 
-  // Take absolute values of interface IDs
-  for (int i = 0; i < n_entity_bound; i++) {
-    entity_nuplet[i] = abs(entity_nuplet[i]);
-  }
-
   PDM_part_comm_graph_t *pgc = PDM_part_comm_graph_with_nuplet_create(n_part,
                                                                       &n_entity_bound,
                                                                       &entity_bound,
                                                                       1,
                                                                       &entity_nuplet,
+                                                                      PDM_TRUE,
                                                                       pdm_comm);
 
   const int* lowner_bound = PDM_part_comm_graph_owner_get(pgc, 0);
@@ -1075,16 +1071,12 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2 perio - 2p", 2) {
   int *entity_bound  = ventity_bound    [i_rank].data();
   int *entity_nuplet = ventity_interface[i_rank].data();
 
-  // Take absolute values of interface IDs
-  for (int i = 0; i < n_entity_bound; i++) {
-    entity_nuplet[i] = abs(entity_nuplet[i]);
-  }
-
   PDM_part_comm_graph_t *pgc = PDM_part_comm_graph_with_nuplet_create(n_part,
                                                                       &n_entity_bound,
                                                                       &entity_bound,
                                                                       1,
                                                                       &entity_nuplet,
+                                                                      PDM_TRUE,
                                                                       pdm_comm);
 
   const int* lowner_bound = PDM_part_comm_graph_owner_get(pgc, 0);
