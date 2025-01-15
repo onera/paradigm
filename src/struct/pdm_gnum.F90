@@ -48,7 +48,7 @@ module pdm_gnum
   private :: pdm_gnum_create_
   private :: pdm_gnum_set_from_coords_
   private :: pdm_gnum_set_from_parents_
-  private :: pdm_gnum_set_parents_nuplet
+  private :: pdm_gnum_set_parents_nuplet_
   private :: pdm_gnum_get_
 
   interface
