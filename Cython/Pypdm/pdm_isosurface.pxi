@@ -232,7 +232,7 @@ cdef extern from "pdm_isosurface_priv.h":
 
   void isosurface_python_field_function_set(PDM_isosurface_t                       *isos,
                                             int                                     id_isosurface,
-                                            PDM_isosurface_python_field_function_t  func);
+                                            PDM_isosurface_python_field_function_t  func) noexcept;
 
   void isosurface_python_object_set(PDM_isosurface_t *isos,
                                     void             *python_object);
@@ -244,7 +244,7 @@ cdef double callback(void   *_isos,
                      int     id_iso,
                      double  x,
                      double  y,
-                     double  z):
+                     double  z) noexcept:
 
   cdef Isosurface isos = <Isosurface> _isos
 
