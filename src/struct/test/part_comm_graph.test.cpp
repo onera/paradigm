@@ -1135,9 +1135,11 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 1 perio axi - 2p", 2) {
    *
    * 5 -> (0, 1, 6) through interface -1
    *   -> (1, 1, 5) through interface  0
+   *   -> (1, 1, 4) through interface -1
    *
    * 6 -> (0, 1, 5) through interface +1
    *   -> (1, 1, 4) through interface  0
+   *   -> (1, 1, 5) through interface +1
    *
    * owners : 1, 2, 3, 5
    *
@@ -1152,9 +1154,11 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 1 perio axi - 2p", 2) {
    *
    * 4 -> (1, 1, 5) through interface +1
    *   -> (0, 1, 6) through interface  0
+   *   -> (0, 1, 5) through interface +1
    *
    * 5 -> (1, 1, 4) through interface -1
    *   -> (0, 1, 5) through interface  0
+   *   -> (0, 1, 6) through interface -1
    *
    * 6 -> (0, 1, 2) through interface  0
    *   -> (1, 1, 6) through interface -1
@@ -1168,7 +1172,7 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 1 perio axi - 2p", 2) {
   int n_part = 1;
 
   /* Comm graph */
-  std::vector<int> vn_entity_bound = {11, 11};
+  std::vector<int> vn_entity_bound = {13, 13};
   std::vector<std::vector<int>> ventity_bound = {{1, 0, 1, 1,
                                                   1, 0, 1, 1,
                                                   2, 1, 1, 6,
@@ -1178,22 +1182,26 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 1 perio axi - 2p", 2) {
                                                   4, 0, 1, 3,
                                                   5, 0, 1, 6,
                                                   5, 1, 1, 5,
+                                                  5, 1, 1, 4,
                                                   6, 0, 1, 5,
-                                                  6, 1, 1, 4},
+                                                  6, 1, 1, 4,
+                                                  6, 1, 1, 5},
                                                  {1, 1, 1, 2,
                                                   2, 1, 1, 1,
                                                   3, 1, 1, 3,
                                                   3, 1, 1, 3,
                                                   4, 1, 1, 5,
                                                   4, 0, 1, 6,
+                                                  4, 0, 1, 5,
                                                   5, 1, 1, 4,
                                                   5, 0, 1, 5,
+                                                  5, 0, 1, 6,
                                                   6, 0, 1, 2,
                                                   6, 1, 1, 6,
                                                   6, 1, 1, 6}};
 
-  std::vector<std::vector<int>> ventity_interface = {{-1,  1,  0, -1,  1, -1,  1, -1,  0,  1,  0},
-                                                     { 1, -1, -1,  1,  1,  0, -1,  0,  0, -1,  1}};
+  std::vector<std::vector<int>> ventity_interface = {{-1,  1,  0, -1,  1, -1,  1, -1,  0, -1,  1,  0,  1},
+                                                     { 1, -1, -1,  1,  1,  0,  1, -1,  0, -1,  0, -1,  1}};
 
   int n_entity_bound = vn_entity_bound  [i_rank];
   int *entity_bound  = ventity_bound    [i_rank].data();
@@ -1210,8 +1218,8 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 1 perio axi - 2p", 2) {
   const int* lowner_bound = PDM_part_comm_graph_owner_get(pgc, 0);
   PDM_log_trace_array_int(lowner_bound, n_entity_bound, "lowner_bound ::");
 
-  static int lowner_bound_expected_p0[11] = {1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 0};
-  static int lowner_bound_expected_p1[11] = {1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0};
+  static int lowner_bound_expected_p0[13] = {1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0};
+  static int lowner_bound_expected_p1[13] = {1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
   MPI_CHECK_EQ_C_ARRAY(0, lowner_bound, lowner_bound_expected_p0, n_entity_bound);
   MPI_CHECK_EQ_C_ARRAY(1, lowner_bound, lowner_bound_expected_p1, n_entity_bound);
