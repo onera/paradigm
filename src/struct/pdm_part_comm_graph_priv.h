@@ -48,6 +48,8 @@ struct _pdm_part_comm_graph_t {
 
   int         *n_entity_graph;
   int        **pentity_graph;
+  int          nuplet_size;
+  int        **pentity_nuplet;
 
   int         *send_idx;
   int         *recv_idx;
@@ -65,7 +67,7 @@ struct _pdm_part_comm_graph_t {
   int         *active_rank_send;
   int         *active_rank_recv;
 
-  /* Asynchonous */
+  /* Asynchronous */
 
 };
 

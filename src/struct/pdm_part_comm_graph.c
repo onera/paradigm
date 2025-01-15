@@ -407,6 +407,9 @@ _create
 
   pcg->pentity_graph = pentity_graph;
 
+  pcg->nuplet_size    = nuplet_size;
+  pcg->pentity_nuplet = pentity_nuplet;
+
   int n_g_part = 0;
   PDM_MPI_Allreduce(&n_part, &n_g_part, 1, PDM_MPI_INT, PDM_MPI_SUM, comm);
   pcg->n_g_part = n_g_part;
@@ -1454,6 +1457,50 @@ PDM_part_comm_graph_entity1_to_entity2
   *out_pn_entity2_graph = pn_entity2_graph;
   *out_pentity2_graph   = pentity2_graph;
 
+}
+
+
+int
+PDM_part_comm_graph_entity_graph_get
+(
+  PDM_part_comm_graph_t  *pcg,
+  int                     i_part,
+  int                   **entity_graph
+)
+{
+  if (pcg == NULL) {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_entity_graph_get : Invalid PDM_part_comm_graph_t instance\n");
+  }
+
+  if (i_part < 0 || i_part >= pcg->n_part) {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_entity_graph_get : Invalid i_part (%d / %d)\n", i_part, pcg->n_part);
+  }
+
+  *entity_graph = pcg->pentity_graph[i_part];
+
+  return pcg->n_entity_graph[i_part];
+}
+
+
+int
+PDM_part_comm_graph_entity_nuplet_get
+(
+  PDM_part_comm_graph_t  *pcg,
+  int                     i_part,
+  int                   **entity_nuplet
+)
+{
+  if (pcg == NULL) {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_entity_nuplet_get : Invalid PDM_part_comm_graph_t instance\n");
+  }
+
+  if (i_part < 0 || i_part >= pcg->n_part) {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_entity_nuplet_get : Invalid i_part (%d / %d)\n", i_part, pcg->n_part);
+  }
+
+  *entity_nuplet = pcg->pentity_nuplet[i_part];
+
+  return pcg->nuplet_size;
 }
 
 

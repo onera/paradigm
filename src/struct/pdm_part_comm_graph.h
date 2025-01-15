@@ -230,6 +230,44 @@ PDM_part_comm_graph_entity1_to_entity2
   int                   ***out_pentity2_graph
 );
 
+
+/**
+ *
+ * \brief Get entity graph
+ *
+ * \param [in]  pcg           Pointer to \ref PDM_part_comm_graph_t instance
+ * \param [in]  i_part        Partition identifier
+ * \param [out] entity_graph  Entity graph (size = 4 * n_entity_graph)
+ *
+ * \return Number of entities in graph in current partition
+ */
+int
+PDM_part_comm_graph_entity_graph_get
+(
+  PDM_part_comm_graph_t  *pcg,
+  int                     i_part,
+  int                   **entity_graph
+);
+
+
+/**
+ *
+ * \brief Get entity nuplets
+ *
+ * \param [in]  pcg            Pointer to \ref PDM_part_comm_graph_t instance
+ * \param [in]  i_part         Partition identifier
+ * \param [out] entity_nuplet  Entity nuplets (size = nuplet_size * n_entity_graph)
+ *
+ * \return Size of nuplet
+ */
+int
+PDM_part_comm_graph_entity_nuplet_get
+(
+  PDM_part_comm_graph_t  *pcg,
+  int                     i_part,
+  int                   **entity_nuplet
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
