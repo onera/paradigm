@@ -2227,6 +2227,7 @@ double              ***pvtx_extended_coords_out
     }
   }
 
+  double tmp[3];
   for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
     for(int i_vtx = 0; i_vtx < pn_vtx_extended[i_part]; ++i_vtx) {
       int i_interface   = PDM_ABS (_pvtx_extended_to_pvtx_itrf[i_part][i_vtx]);
@@ -2237,14 +2238,17 @@ double              ***pvtx_extended_coords_out
         }
       }
       if(i_interface != 0 && rotation_direction[PDM_ABS(i_interface)-1] != NULL) {
-
         PDM_rotation_apply_axis_angle_and_rotation_center(rotation_direction[PDM_ABS(i_interface)-1],
                                                           rotation_angle    [PDM_ABS(i_interface)-1],
                                                           rotation_center   [PDM_ABS(i_interface)-1],
-                                                          (PDM_bool_t)(sgn_interface>1),
+                                                          (PDM_bool_t)(sgn_interface<1),
                                                           &pextract_vtx_coords[i_part][3*i_vtx],
                                                           1,
-                                                          &pextract_vtx_coords[i_part][3*i_vtx]);
+                                                          tmp);
+                                                          // &pextract_vtx_coords[i_part][3*i_vtx]);
+        pextract_vtx_coords[i_part][3*i_vtx+0] = tmp[0];                                                  
+        pextract_vtx_coords[i_part][3*i_vtx+1] = tmp[1];                                                  
+        pextract_vtx_coords[i_part][3*i_vtx+2] = tmp[2];                                                  
         
       }
     }
@@ -2383,7 +2387,6 @@ _part_extension_3d
 
   int **pcell_alrdy_sent = NULL;
   PDM_malloc(pcell_alrdy_sent, part_ext->ln_part_tot, int *);
-
   int lpart = 0;
   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
     for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
