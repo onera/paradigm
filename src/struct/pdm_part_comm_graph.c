@@ -382,13 +382,15 @@ _compare_nuplets
 static PDM_part_comm_graph_t *
 _create
 (
-  int            n_part,
-  int           *pn_entity_graph,
-  int          **pentity_graph,
-  int            nuplet_size,
-  int          **pentity_nuplet,
-  PDM_bool_t     is_signed,
-  PDM_MPI_Comm   comm
+  int               n_part,
+  int              *pn_entity_graph,
+  int             **pentity_graph,
+  PDM_ownership_t   owner_graph,
+  int               nuplet_size,
+  int             **pentity_nuplet,
+  PDM_ownership_t   owner_nuplet,
+  PDM_bool_t        is_signed,
+  PDM_MPI_Comm      comm
 )
 {
   PDM_part_comm_graph_t *pcg = NULL;
@@ -409,6 +411,9 @@ _create
 
   pcg->nuplet_size    = nuplet_size;
   pcg->pentity_nuplet = pentity_nuplet;
+
+  pcg->owner_graph  = owner_graph;
+  pcg->owner_nuplet = owner_nuplet;
 
   int n_g_part = 0;
   PDM_MPI_Allreduce(&n_part, &n_g_part, 1, PDM_MPI_INT, PDM_MPI_SUM, comm);
@@ -670,17 +675,20 @@ _create
 PDM_part_comm_graph_t*
 PDM_part_comm_graph_create
 (
-  int            n_part,
-  int           *pn_entity_graph,
-  int          **pentity_graph,
-  PDM_MPI_Comm   comm
+  int               n_part,
+  int              *pn_entity_graph,
+  int             **pentity_graph,
+  PDM_ownership_t   ownership,
+  PDM_MPI_Comm      comm
 )
 {
   return _create(n_part,
                  pn_entity_graph,
                  pentity_graph,
+                 ownership,
                  0,
                  NULL,
+                 PDM_OWNERSHIP_BAD_VALUE,
                  PDM_FALSE,
                  comm);
 }
@@ -689,13 +697,15 @@ PDM_part_comm_graph_create
 PDM_part_comm_graph_t*
 PDM_part_comm_graph_with_nuplet_create
 (
-  int            n_part,
-  int           *pn_entity_graph,
-  int          **pentity_graph,
-  int            nuplet_size,
-  int          **pentity_nuplet,
-  PDM_bool_t     is_signed,
-  PDM_MPI_Comm   comm
+  int               n_part,
+  int              *pn_entity_graph,
+  int             **pentity_graph,
+  PDM_ownership_t   owner_graph,
+  int               nuplet_size,
+  int             **pentity_nuplet,
+  PDM_ownership_t   owner_nuplet,
+  PDM_bool_t        is_signed,
+  PDM_MPI_Comm      comm
 )
 {
   // Check coherence between ranks
@@ -712,8 +722,10 @@ PDM_part_comm_graph_with_nuplet_create
   return _create(n_part,
                  pn_entity_graph,
                  pentity_graph,
+                 owner_graph,
                  nuplet_size,
                  pentity_nuplet,
+                 owner_nuplet,
                  is_signed,
                  comm);
 }
@@ -843,6 +855,7 @@ PDM_part_comm_graph_entity1_to_part_comm_graph_entity2
   PDM_part_comm_graph_t* ptpgc_entity2 = PDM_part_comm_graph_create(ptpgc_entity1->n_part,
                                                                     pn_entity2_graph,
                                                                     pentity2_graph,
+                                                                    PDM_OWNERSHIP_USER,
                                                                     ptpgc_entity1->comm);
 
   for(int i_part = 0; i_part < ptpgc_entity1->n_part; ++i_part) {
@@ -1510,6 +1523,9 @@ PDM_part_comm_graph_free
  PDM_part_comm_graph_t* pcg
 )
 {
+  if (pcg == NULL) {
+    return;
+  }
 
   for(int i_part = 0; i_part < pcg->n_part; ++i_part) {
     PDM_free(pcg->part_to_send_buffer[i_part]);
@@ -1527,6 +1543,20 @@ PDM_part_comm_graph_free
   PDM_free(pcg->recv_n);
   PDM_free(pcg->active_rank_send);
   PDM_free(pcg->active_rank_recv);
+
+  if (pcg->owner_graph == PDM_OWNERSHIP_KEEP) {
+    for (int i_part = 0; i_part < pcg->n_part; i_part++) {
+      PDM_free(pcg->pentity_graph[i_part]);
+    }
+    PDM_free(pcg->pentity_graph);
+  }
+
+  if (pcg->owner_nuplet == PDM_OWNERSHIP_KEEP) {
+    for (int i_part = 0; i_part < pcg->n_part; i_part++) {
+      PDM_free(pcg->pentity_nuplet[i_part]);
+    }
+    PDM_free(pcg->pentity_nuplet);
+  }
 
   PDM_free(pcg);
 }

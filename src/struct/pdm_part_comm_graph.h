@@ -56,6 +56,7 @@ typedef struct _pdm_part_comm_graph_t PDM_part_comm_graph_t;
                                               - Connected process   (0-based)
                                               - Connected partition on the connected process (1-based)
                                               - Connected entity local number in the connected partition (1-based)
+ * \param [in]   ownership              Ownership for \p pentity_graph
  * \param [in]   comm                   MPI communicator
 
  * \return   Initialized \ref PDM_part_comm_graph_t instance
@@ -63,10 +64,11 @@ typedef struct _pdm_part_comm_graph_t PDM_part_comm_graph_t;
 PDM_part_comm_graph_t*
 PDM_part_comm_graph_create
 (
-  int            n_part,
-  int           *pn_entity_graph,
-  int          **pentity_graph,
-  PDM_MPI_Comm   comm
+  int               n_part,
+  int              *pn_entity_graph,
+  int             **pentity_graph,
+  PDM_ownership_t   ownership,
+  PDM_MPI_Comm      comm
 );
 
 
@@ -81,8 +83,10 @@ PDM_part_comm_graph_create
                                               - Connected process   (0-based)
                                               - Connected partition on the connected process (1-based)
                                               - Connected entity local number in the connected partition (1-based)
+ * \param [in]   ownership_graph        Ownership for \p pentity_graph
  * \param [in]   nuplet_size            N-uplet size
  * \param [in]   pentity_nuplet         Additional nuplets (size = \p nuplet_size * \p pn_entity_graph[i_part])
+ * \param [in]   ownership_nuplet       Ownership for \p pentity_nuplet
  * \param [in]   is_signed              Use signed nuplets
  * \param [in]   comm                   MPI communicator
  *
@@ -91,13 +95,15 @@ PDM_part_comm_graph_create
 PDM_part_comm_graph_t*
 PDM_part_comm_graph_with_nuplet_create
 (
-  int            n_part,
-  int           *pn_entity_graph,
-  int          **pentity_graph,
-  int            nuplet_size,
-  int          **pentity_nuplet,
-  PDM_bool_t     is_signed,
-  PDM_MPI_Comm   comm
+  int               n_part,
+  int              *pn_entity_graph,
+  int             **pentity_graph,
+  PDM_ownership_t   ownership_graph,
+  int               nuplet_size,
+  int             **pentity_nuplet,
+  PDM_ownership_t   ownership_nuplet,
+  PDM_bool_t        is_signed,
+  PDM_MPI_Comm      comm
 );
 
 

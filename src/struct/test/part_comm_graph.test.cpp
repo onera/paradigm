@@ -46,6 +46,7 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2p", 2) {
   PDM_part_comm_graph_t* pgc = PDM_part_comm_graph_create(n_part,
                                                           &n_entity_bound,
                                                           &entity_bound,
+                                                          PDM_OWNERSHIP_USER,
                                                           pdm_comm);
 
   const int* lowner_bound = PDM_part_comm_graph_owner_get(pgc, 0);
@@ -200,9 +201,10 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 3p", 3) {
   int *entity_bound   = ventity_bound  [i_rank].data();
 
   PDM_part_comm_graph_t* pgc = PDM_part_comm_graph_create(n_part,
-                                                            &n_entity_bound,
-                                                            &entity_bound,
-                                                            pdm_comm);
+                                                          &n_entity_bound,
+                                                          &entity_bound,
+                                                          PDM_OWNERSHIP_USER,
+                                                          pdm_comm);
 
   const int* lowner_bound = PDM_part_comm_graph_owner_get(pgc, 0);
 
@@ -257,9 +259,10 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2p - order ", 2) {
 
 
   PDM_part_comm_graph_t* pgc = PDM_part_comm_graph_create(n_part,
-                                                            &n_entity_bound,
-                                                            &entity_bound,
-                                                            pdm_comm);
+                                                          &n_entity_bound,
+                                                          &entity_bound,
+                                                          PDM_OWNERSHIP_USER,
+                                                          pdm_comm);
 
   const int* lowner_bound = PDM_part_comm_graph_owner_get(pgc, 0);
 
@@ -934,8 +937,10 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 1 perio - 2p", 2) {
   PDM_part_comm_graph_t *pgc = PDM_part_comm_graph_with_nuplet_create(n_part,
                                                                       &n_entity_bound,
                                                                       &entity_bound,
+                                                                      PDM_OWNERSHIP_USER,
                                                                       1,
                                                                       &entity_nuplet,
+                                                                      PDM_OWNERSHIP_USER,
                                                                       PDM_TRUE,
                                                                       pdm_comm);
 
@@ -1082,8 +1087,10 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2 perio - 2p", 2) {
   PDM_part_comm_graph_t *pgc = PDM_part_comm_graph_with_nuplet_create(n_part,
                                                                       &n_entity_bound,
                                                                       &entity_bound,
+                                                                      PDM_OWNERSHIP_USER,
                                                                       1,
                                                                       &entity_nuplet,
+                                                                      PDM_OWNERSHIP_USER,
                                                                       PDM_TRUE,
                                                                       pdm_comm);
 
@@ -1210,8 +1217,10 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 1 perio axi - 2p", 2) {
   PDM_part_comm_graph_t *pgc = PDM_part_comm_graph_with_nuplet_create(n_part,
                                                                       &n_entity_bound,
                                                                       &entity_bound,
+                                                                      PDM_OWNERSHIP_USER,
                                                                       1,
                                                                       &entity_nuplet,
+                                                                      PDM_OWNERSHIP_USER,
                                                                       PDM_TRUE,
                                                                       pdm_comm);
 
