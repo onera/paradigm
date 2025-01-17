@@ -102,6 +102,11 @@ User manual
 
   .. container:: card
 
+    :ref:`Miscellaneous utils <utils>`
+      Utilities for basic operations
+
+  .. container:: card
+
     :ref:`FAQ <faq>`
       Frequently asked questions about ParaDiGM
 
@@ -126,6 +131,7 @@ User manual
    user_manual/mesh_transform/index
    user_manual/io/index
    user_manual/struct/index
+   user_manual/util/index
    user_manual/faq
 
 |
