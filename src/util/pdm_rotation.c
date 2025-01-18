@@ -495,16 +495,20 @@ void
 PDM_rotation_compose_homogeneous_matrices
 (
   const double** homogeneous_matrices,
-  const int n_matrices,
-        double output_matrix[16]
+  const int      n_matrices,
+        double   output_matrix[16]
 )
 {
   set_identity_to_homogeneous_matrix(output_matrix);
   for (int i = 0; i < n_matrices; i++) {
+    double output_matrix_tmp[16];
     PDM_rotation_multiply_n_by_n_matrices(homogeneous_matrices[i],
                                           output_matrix,
                                           4,
-                                          output_matrix);
+                                          output_matrix_tmp);
+    for(int j = 0; j < 16; ++j) {
+      output_matrix[j] = output_matrix_tmp[j];
+    }
   }
 }
 
