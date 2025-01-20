@@ -329,6 +329,9 @@ cdef class PartMeshNodalCapsule:
   def dim_get(self):
     return part_mesh_nodal_dim_get(self)
 
+  def n_part_get(self):
+    return PDM_part_mesh_nodal_n_part_get(self)
+
   def coord_get(self, i_part):
     """
     coord_get(i_part)
@@ -480,7 +483,8 @@ def part_mesh_nodal_get_sections(PMeshNodal pypmn, PDM_geometry_kind_t geom_kind
     if(parent_entity_g_num != NULL):
       np_parent_entity_g_num = create_numpy_g(parent_entity_g_num, n_elmt_in_section)
 
-    sections.append({"pdm_type"               : t_elmt,
+    sections.append({"n_elmt"                 : n_elmt_in_section,
+                     "pdm_type"               : t_elmt,
                      "np_connec"              : np_connec,
                      "np_parent_num"          : np_parent_num,
                      "np_element_to_entity"   : np_elt_entity,
