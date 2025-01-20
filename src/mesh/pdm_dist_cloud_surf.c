@@ -187,8 +187,8 @@ _dist_cloud_surf_compute
 
     if (mesh_nodal != NULL) {
       n_vertices      = PDM_part_mesh_nodal_n_vtx_get    (mesh_nodal, i_part);
-      vertices_coords = PDM_part_mesh_nodal_vtx_coord_get(mesh_nodal, i_part);
-      vertices_gnum   = PDM_part_mesh_nodal_vtx_g_num_get(mesh_nodal, i_part);
+      vertices_coords = PDM_part_mesh_nodal_vtx_coord_get(mesh_nodal, i_part, PDM_OWNERSHIP_BAD_VALUE);
+      vertices_gnum   = PDM_part_mesh_nodal_vtx_g_num_get(mesh_nodal, i_part, PDM_OWNERSHIP_BAD_VALUE);
     } else if (surf_mesh != NULL) {
       n_vertices      = PDM_surf_mesh_part_n_vtx_get(surf_mesh, i_part);
       vertices_coords = PDM_surf_mesh_part_vtx_get  (surf_mesh, i_part);
@@ -1121,8 +1121,8 @@ _dist_cloud_surf_compute_optim
 
     if (mesh_nodal != NULL) {
       n_vertices      = PDM_part_mesh_nodal_n_vtx_get    (mesh_nodal, i_part);
-      vertices_coords = PDM_part_mesh_nodal_vtx_coord_get(mesh_nodal, i_part);
-      vertices_gnum   = PDM_part_mesh_nodal_vtx_g_num_get(mesh_nodal, i_part);
+      vertices_coords = PDM_part_mesh_nodal_vtx_coord_get(mesh_nodal, i_part, PDM_OWNERSHIP_BAD_VALUE);
+      vertices_gnum   = PDM_part_mesh_nodal_vtx_g_num_get(mesh_nodal, i_part, PDM_OWNERSHIP_BAD_VALUE);
     } else if (surf_mesh != NULL) {
       n_vertices      = PDM_surf_mesh_part_n_vtx_get    (surf_mesh, i_part);
       vertices_coords = PDM_surf_mesh_part_vtx_get      (surf_mesh, i_part);
@@ -1224,7 +1224,7 @@ _dist_cloud_surf_compute_optim
 
       const double *vtx_coord = NULL;
       if (mesh_nodal != NULL) {
-        vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(mesh_nodal, i_part);
+        vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(mesh_nodal, i_part, PDM_OWNERSHIP_BAD_VALUE);
       }
 
       int idx = 0;
@@ -1644,8 +1644,8 @@ _dist_cloud_surf_compute_optim
 
         if (mesh_nodal != NULL) {
           n_vtx        = PDM_part_mesh_nodal_n_vtx_get    (mesh_nodal, i_part);
-          vtx_coord    = PDM_part_mesh_nodal_vtx_coord_get(mesh_nodal, i_part);
-          vtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(mesh_nodal, i_part);
+          vtx_coord    = PDM_part_mesh_nodal_vtx_coord_get(mesh_nodal, i_part, PDM_OWNERSHIP_BAD_VALUE);
+          vtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(mesh_nodal, i_part, PDM_OWNERSHIP_BAD_VALUE);
         }
 
         PDM_part_mesh_nodal_coord_set(_pmn,
@@ -1735,7 +1735,7 @@ _dist_cloud_surf_compute_optim
     }
 
     int     pextract_n_vtx     = PDM_part_mesh_nodal_n_vtx_get    (extract_pmn, 0);
-    double *pextract_vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(extract_pmn, 0);
+    double *pextract_vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(extract_pmn, 0, PDM_OWNERSHIP_BAD_VALUE);
 
 
     PDM_Mesh_nodal_elt_t *elt_type  = NULL;

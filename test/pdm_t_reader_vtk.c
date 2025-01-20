@@ -208,7 +208,7 @@ int main(int argc, char *argv[])
     PDM_malloc(pvtx_ln_to_gn,n_part, PDM_g_num_t *);
     for (int i = 0; i < n_part; i++) {
       pn_vtx[i] = PDM_part_mesh_nodal_n_vtx_get(pmn, i);
-      pvtx_ln_to_gn[i] = PDM_part_mesh_nodal_vtx_g_num_get(pmn, i);
+      pvtx_ln_to_gn[i] = PDM_part_mesh_nodal_vtx_g_num_get(pmn, i, PDM_OWNERSHIP_BAD_VALUE);
     }
 
     PDM_g_num_t *distrib_vtx = PDM_dmesh_nodal_vtx_distrib_get(dmn);

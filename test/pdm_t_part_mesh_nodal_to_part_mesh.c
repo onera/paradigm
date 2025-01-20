@@ -321,8 +321,8 @@ int main(int argc, char *argv[])
       for(int i_part = 0; i_part < n_part; ++i_part) {
 
         int n_vtx = PDM_part_mesh_nodal_n_vtx_get(pmesh_nodal, i_part);
-        double *vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmesh_nodal, i_part);
-        PDM_g_num_t *vtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(pmesh_nodal, i_part);
+        double *vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmesh_nodal, i_part, PDM_OWNERSHIP_BAD_VALUE);
+        PDM_g_num_t *vtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(pmesh_nodal, i_part, PDM_OWNERSHIP_BAD_VALUE);
 
         PDM_g_num_t *face_ln_to_gn = NULL;
         int         *face_vtx_idx  = NULL;
@@ -422,8 +422,8 @@ int main(int argc, char *argv[])
       for(int i_part = 0; i_part < n_part; ++i_part) {
 
         int n_vtx = PDM_part_mesh_nodal_n_vtx_get(pmesh_nodal, i_part);
-        double *vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmesh_nodal, i_part);
-        PDM_g_num_t *vtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(pmesh_nodal, i_part);
+        double *vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmesh_nodal, i_part, PDM_OWNERSHIP_BAD_VALUE);
+        PDM_g_num_t *vtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(pmesh_nodal, i_part, PDM_OWNERSHIP_BAD_VALUE);
 
         PDM_g_num_t *edge_ln_to_gn = NULL;
         int         *edge_vtx_idx  = NULL;

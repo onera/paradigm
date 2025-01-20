@@ -310,8 +310,8 @@ _transfer_vtx
   for (int i_part = 0; i_part < n_part; i_part++) {
 
     int n_vtx = PDM_part_mesh_nodal_n_vtx_get(pmesh_nodal, i_part);
-    double      *_vtx_coord    = PDM_part_mesh_nodal_vtx_coord_get(pmesh_nodal, i_part);
-    PDM_g_num_t *_vtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(pmesh_nodal, i_part);
+    double      *_vtx_coord    = PDM_part_mesh_nodal_vtx_coord_get(pmesh_nodal, i_part, PDM_OWNERSHIP_BAD_VALUE);
+    PDM_g_num_t *_vtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(pmesh_nodal, i_part, PDM_OWNERSHIP_BAD_VALUE);
     double      *vtx_coord     = NULL;
     PDM_g_num_t *vtx_ln_to_gn  = NULL;
 

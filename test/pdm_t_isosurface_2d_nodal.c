@@ -152,7 +152,7 @@ int main(int argc, char *argv[])
 
     for (int i_part=0; i_part<n_part; ++i_part) {
       int     n_vtx     = PDM_part_mesh_nodal_n_vtx_get(pmn, i_part);
-      double *vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmn, i_part);
+      double *vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmn, i_part, PDM_OWNERSHIP_BAD_VALUE);
       
       PDM_malloc(iso_field    [i_part], n_vtx, double);
       PDM_malloc(itp_field_vtx[i_part], n_vtx, double);

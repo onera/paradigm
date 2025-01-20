@@ -161,6 +161,7 @@ PDM_part_mesh_nodal_n_vtx_get
  *
  * \param [in]  pmn       Pointer to \ref PDM_part_mesh_nodal_t object
  * \param [in]  id_part   Partition identifier
+ * \param [in]  ownership Ownership
  *
  * \return  Coordinates of vertices
  *
@@ -169,7 +170,8 @@ double*
 PDM_part_mesh_nodal_vtx_coord_get
 (
        PDM_part_mesh_nodal_t *pmn,
- const int                    id_part
+ const int                    id_part,
+       PDM_ownership_t        ownership
 );
 
 /**
@@ -177,6 +179,7 @@ PDM_part_mesh_nodal_vtx_coord_get
  *
  * \param [in]  pmn       Pointer to \ref PDM_part_mesh_nodal_t object
  * \param [in]  id_part   Partition identifier
+ * \param [in]  ownership Ownership
  *
  * \return  Global ids of vertices
  *
@@ -185,7 +188,8 @@ PDM_g_num_t*
 PDM_part_mesh_nodal_vtx_g_num_get
 (
        PDM_part_mesh_nodal_t *pmn,
- const int                    id_part
+ const int                    id_part,
+       PDM_ownership_t        ownership
 );
 
 /**

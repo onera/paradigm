@@ -405,7 +405,7 @@ _dist_to_part
     // (Re)create block_to_part for transferring vtx data from block to part (TODO: extract from multipart?)
     if (build_btp_vtx) {
       int          n_vtx        = PDM_part_mesh_nodal_n_vtx_get    (isos->pmesh_nodal, 0);
-      PDM_g_num_t *vtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(isos->pmesh_nodal, 0);
+      PDM_g_num_t *vtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(isos->pmesh_nodal, 0, PDM_OWNERSHIP_BAD_VALUE);
 
       const PDM_g_num_t *distrib_vtx      = PDM_DMesh_nodal_distrib_vtx_get(isos->dmesh_nodal);
       const PDM_g_num_t *pvtx_ln_to_gn[1] = {vtx_ln_to_gn};
@@ -710,7 +710,7 @@ _compute_iso_field
     for (int i_part = 0; i_part < n_part; i_part++) {
       if (isosurface_is_nodal(isos)) {
         n_vtx    [i_part] = PDM_part_mesh_nodal_n_vtx_get    (isos->extract_pmesh_nodal, i_part);
-        vtx_coord[i_part] = PDM_part_mesh_nodal_vtx_coord_get(isos->extract_pmesh_nodal, i_part);
+        vtx_coord[i_part] = PDM_part_mesh_nodal_vtx_coord_get(isos->extract_pmesh_nodal, i_part, PDM_OWNERSHIP_BAD_VALUE);
       }
       else {
         n_vtx[i_part] = PDM_extract_part_vtx_coord_get(isos->extrp,
@@ -727,7 +727,7 @@ _compute_iso_field
     if (isosurface_is_nodal(isos)) {
       for (int i_part = 0; i_part < n_part; i_part++) {
         n_vtx    [i_part] = PDM_part_mesh_nodal_n_vtx_get    (isos->pmesh_nodal, i_part);
-        vtx_coord[i_part] = PDM_part_mesh_nodal_vtx_coord_get(isos->pmesh_nodal, i_part);
+        vtx_coord[i_part] = PDM_part_mesh_nodal_vtx_coord_get(isos->pmesh_nodal, i_part, PDM_OWNERSHIP_BAD_VALUE);
       }
     }
     else {
@@ -975,8 +975,8 @@ _extract_nodal
 
     for (int i_part = 0; i_part < isos->n_part; i_part++) {
       int          n_vtx     = PDM_part_mesh_nodal_n_vtx_get    (isos->pmesh_nodal, i_part);
-      double      *vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(isos->pmesh_nodal, i_part);
-      PDM_g_num_t *vtx_g_num = PDM_part_mesh_nodal_vtx_g_num_get(isos->pmesh_nodal, i_part);
+      double      *vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(isos->pmesh_nodal, i_part, PDM_OWNERSHIP_BAD_VALUE);
+      PDM_g_num_t *vtx_g_num = PDM_part_mesh_nodal_vtx_g_num_get(isos->pmesh_nodal, i_part, PDM_OWNERSHIP_BAD_VALUE);
       PDM_part_mesh_nodal_coord_set(pmn,
                                     i_part,
                                     n_vtx,
@@ -1630,8 +1630,8 @@ _ngonize
     for (int i_part = 0; i_part < isos->iso_n_part; i_part++) {
 
       isos->extract_n_vtx    [i_part] = PDM_part_mesh_nodal_n_vtx_get    (extract_pmn, i_part);
-      isos->extract_vtx_coord[i_part] = PDM_part_mesh_nodal_vtx_coord_get(extract_pmn, i_part);
-      isos->extract_vtx_gnum [i_part] = PDM_part_mesh_nodal_vtx_g_num_get(extract_pmn, i_part);
+      isos->extract_vtx_coord[i_part] = PDM_part_mesh_nodal_vtx_coord_get(extract_pmn, i_part, PDM_OWNERSHIP_BAD_VALUE);
+      isos->extract_vtx_gnum [i_part] = PDM_part_mesh_nodal_vtx_g_num_get(extract_pmn, i_part, PDM_OWNERSHIP_BAD_VALUE);
 
       // We assume there is at most one section of TETRA and TRIA
       isos->extract_n_tri      [i_part] = 0;

@@ -508,7 +508,7 @@ int main
 
   for (int i_part = 0; i_part < n_part_in; i_part++) {
 
-    double *vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmn, i_part);
+    double *vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmn, i_part, PDM_OWNERSHIP_BAD_VALUE);
     int n_elt_tot = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, i_part);
 
     PDM_malloc(extract_lnum[i_part], n_elt_tot, int);

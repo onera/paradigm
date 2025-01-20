@@ -1083,9 +1083,9 @@ PDM_writer_ensight_geom_write
     for (int i_part = 0; i_part < n_part; i_part++) {
 
       const int n_vtx = PDM_part_mesh_nodal_n_vtx_get(geom->mesh_nodal, i_part);
-      const double *vtx = PDM_part_mesh_nodal_vtx_coord_get(geom->mesh_nodal, i_part);
+      const double *vtx = PDM_part_mesh_nodal_vtx_coord_get(geom->mesh_nodal, i_part, PDM_OWNERSHIP_BAD_VALUE);
       const PDM_g_num_t *numabs =
-                    PDM_part_mesh_nodal_vtx_g_num_get(geom->mesh_nodal, i_part);
+                    PDM_part_mesh_nodal_vtx_g_num_get(geom->mesh_nodal, i_part, PDM_OWNERSHIP_BAD_VALUE);
 
       for (int i = 0; i < n_vtx; i++) {
         coord_tmp[n_som_proc+i] = (float) vtx[3*i+idim];
@@ -1217,8 +1217,7 @@ PDM_writer_ensight_geom_write
                                             &parent_entity_g_num,
                                             PDM_OWNERSHIP_KEEP);
 
-        const PDM_g_num_t *g_num_vtx = PDM_part_mesh_nodal_vtx_g_num_get(geom->mesh_nodal,
-                                                                          i);
+        const PDM_g_num_t *g_num_vtx = PDM_part_mesh_nodal_vtx_g_num_get(geom->mesh_nodal, i, PDM_OWNERSHIP_BAD_VALUE);
         for (int j = 0; j < n_elt; j++) {
           numabs_tmp[n_elt_proc] = numabs_block[j];
           for (int k = 0; k < n_comp; k++) {
@@ -1321,7 +1320,7 @@ PDM_writer_ensight_geom_write
                                                PDM_OWNERSHIP_KEEP);
 
         const PDM_g_num_t *g_num_vtx =
-              PDM_part_mesh_nodal_vtx_g_num_get(geom->mesh_nodal, i);
+              PDM_part_mesh_nodal_vtx_g_num_get(geom->mesh_nodal, i, PDM_OWNERSHIP_BAD_VALUE);
 
         for (int j = 0; j < n_elt; j++) {
           numabs_tmp[n_elt_proc] = (PDM_g_num_t) numabs_block[j];
@@ -1600,7 +1599,7 @@ PDM_writer_ensight_geom_write
                                                PDM_OWNERSHIP_KEEP);
 
         const PDM_g_num_t *g_num_vtx =
-              PDM_part_mesh_nodal_vtx_g_num_get(geom->mesh_nodal, i);
+              PDM_part_mesh_nodal_vtx_g_num_get(geom->mesh_nodal, i, PDM_OWNERSHIP_BAD_VALUE);
 
         for (int k = 0; k < n_elt; k++) {
           for (int j = cellfac_idx[k]; j < cellfac_idx[k+1]; j++) {
@@ -1798,7 +1797,7 @@ PDM_writer_ensight_var_write
         n_som_proc = 0;
         for (int i = 0; i < n_part; i++) {
           const int n_vertices = PDM_part_mesh_nodal_n_vtx_get(geom->mesh_nodal, i);
-          const PDM_g_num_t *gnum = PDM_part_mesh_nodal_vtx_g_num_get(geom->mesh_nodal, i);
+          const PDM_g_num_t *gnum = PDM_part_mesh_nodal_vtx_g_num_get(geom->mesh_nodal, i, PDM_OWNERSHIP_BAD_VALUE);
           for (int j = 0; j < n_vertices; j++) {
             numabs[n_som_proc++] = (PDM_g_num_t) gnum[j];
           }
