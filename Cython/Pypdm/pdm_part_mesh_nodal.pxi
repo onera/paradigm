@@ -330,7 +330,7 @@ cdef class PartMeshNodalCapsule:
     return part_mesh_nodal_dim_get(self)
 
   def n_part_get(self):
-    return PDM_part_mesh_nodal_n_part_get(self)
+    return PDM_part_mesh_nodal_n_part_get(self.pmn)
 
   def coord_get(self, i_part):
     """
