@@ -1478,7 +1478,8 @@ PDM_part_comm_graph_entity_graph_get
 (
   PDM_part_comm_graph_t  *pcg,
   int                     i_part,
-  int                   **entity_graph
+  int                   **entity_graph,
+  PDM_ownership_t         ownership
 )
 {
   if (pcg == NULL) {
@@ -1487,6 +1488,10 @@ PDM_part_comm_graph_entity_graph_get
 
   if (i_part < 0 || i_part >= pcg->n_part) {
     PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_entity_graph_get : Invalid i_part (%d / %d)\n", i_part, pcg->n_part);
+  }
+
+  if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
+    pcg->owner_graph = ownership;
   }
 
   *entity_graph = pcg->pentity_graph[i_part];
@@ -1500,7 +1505,8 @@ PDM_part_comm_graph_entity_nuplet_get
 (
   PDM_part_comm_graph_t  *pcg,
   int                     i_part,
-  int                   **entity_nuplet
+  int                   **entity_nuplet,
+  PDM_ownership_t         ownership
 )
 {
   if (pcg == NULL) {
@@ -1509,6 +1515,10 @@ PDM_part_comm_graph_entity_nuplet_get
 
   if (i_part < 0 || i_part >= pcg->n_part) {
     PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_entity_nuplet_get : Invalid i_part (%d / %d)\n", i_part, pcg->n_part);
+  }
+
+  if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
+    pcg->owner_nuplet = ownership;
   }
 
   *entity_nuplet = pcg->pentity_nuplet[i_part];

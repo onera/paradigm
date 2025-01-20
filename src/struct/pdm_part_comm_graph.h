@@ -244,6 +244,7 @@ PDM_part_comm_graph_entity1_to_entity2
  * \param [in]  pcg           Pointer to \ref PDM_part_comm_graph_t instance
  * \param [in]  i_part        Partition identifier
  * \param [out] entity_graph  Entity graph (size = 4 * n_entity_graph)
+ * \param [in]  ownership     Ownership for \p entity_graph
  *
  * \return Number of entities in graph in current partition
  */
@@ -252,7 +253,8 @@ PDM_part_comm_graph_entity_graph_get
 (
   PDM_part_comm_graph_t  *pcg,
   int                     i_part,
-  int                   **entity_graph
+  int                   **entity_graph,
+  PDM_ownership_t         ownership
 );
 
 
@@ -263,6 +265,7 @@ PDM_part_comm_graph_entity_graph_get
  * \param [in]  pcg            Pointer to \ref PDM_part_comm_graph_t instance
  * \param [in]  i_part         Partition identifier
  * \param [out] entity_nuplet  Entity nuplets (size = nuplet_size * n_entity_graph)
+ * \param [in]  ownership      Ownership for \p entity_nuplet
  *
  * \return Size of nuplet
  */
@@ -271,7 +274,8 @@ PDM_part_comm_graph_entity_nuplet_get
 (
   PDM_part_comm_graph_t  *pcg,
   int                     i_part,
-  int                   **entity_nuplet
+  int                   **entity_nuplet,
+  PDM_ownership_t         ownership
 );
 
 #ifdef __cplusplus
