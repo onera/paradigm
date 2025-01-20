@@ -4851,8 +4851,11 @@ _extract_part_nodal_local_vtx
                                   i_part,
                                   pextract_n_vtx    [i_part],
                                   pextract_vtx_coord[i_part],
-                                  pextract_vtx_g_num[i_part],
                                   PDM_OWNERSHIP_KEEP);
+    PDM_part_mesh_nodal_vtx_gnum_set(extrp->extract_pmn,
+                                     i_part,
+                                     pextract_vtx_g_num[i_part],
+                                     PDM_OWNERSHIP_KEEP);
   }
   PDM_free(pextract_n_vtx    );
   PDM_free(pextract_vtx_coord);
@@ -6063,8 +6066,12 @@ _extract_part_nodal
                                       i_part,
                                       extrp->pextract_n_entity[PDM_MESH_ENTITY_VTX][i_part],
                                       extrp->pextract_vtx_coord[i_part],
-                                      extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VTX][i_part], // child gnum?
                                       PDM_OWNERSHIP_KEEP);
+
+        PDM_part_mesh_nodal_vtx_gnum_set(extrp->extract_pmn,
+                                         i_part,
+                                         extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VTX][i_part], // child gnum?
+                                         PDM_OWNERSHIP_KEEP);
       }
     } // End greatest dimension
 

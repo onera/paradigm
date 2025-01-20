@@ -1061,8 +1061,11 @@ PDM_mesh_location_part_set
                                 i_part,
                                 n_vtx,
                                 coords,
-                                vtx_ln_to_gn,
                                 PDM_OWNERSHIP_USER);
+  PDM_part_mesh_nodal_vtx_gnum_set(ml->mesh_nodal,
+                                   i_part,
+                                   vtx_ln_to_gn,
+                                   PDM_OWNERSHIP_USER);
 
   PDM_part_mesh_nodal_cell3d_cellface_add(ml->mesh_nodal,
                                           i_part,
@@ -1116,8 +1119,11 @@ PDM_mesh_location_nodal_part_set
                                 i_part,
                                 n_vtx,
                                 coords,
-                                vtx_ln_to_gn,
                                 PDM_OWNERSHIP_USER);
+  PDM_part_mesh_nodal_vtx_gnum_set(ml->mesh_nodal,
+                                   i_part,
+                                   vtx_ln_to_gn,
+                                   PDM_OWNERSHIP_USER);
 
   PDM_part_mesh_nodal_cells_cellvtx_add(ml->mesh_nodal,
                                         i_part,
@@ -1189,8 +1195,12 @@ PDM_mesh_location_part_set_2d
                                 i_part,
                                 n_vtx,
                                 coords,
-                                vtx_ln_to_gn,
                                 PDM_OWNERSHIP_USER);
+
+  PDM_part_mesh_nodal_vtx_gnum_set(ml->mesh_nodal,
+                                   i_part,
+                                   vtx_ln_to_gn,
+                                   PDM_OWNERSHIP_USER);
 
     PDM_part_mesh_nodal_face2d_faceedge_add(ml->mesh_nodal,
                                             i_part,
@@ -1240,8 +1250,12 @@ PDM_mesh_location_nodal_part_set_2d
                                 i_part,
                                 n_vtx,
                                 coords,
-                                vtx_ln_to_gn,
                                 PDM_OWNERSHIP_USER);
+
+  PDM_part_mesh_nodal_vtx_gnum_set(ml->mesh_nodal,
+                                   i_part,
+                                   vtx_ln_to_gn,
+                                   PDM_OWNERSHIP_USER);
 
   PDM_part_mesh_nodal_faces_facevtx_add(ml->mesh_nodal,
                                         i_part,
@@ -1889,8 +1903,12 @@ PDM_mesh_location_compute
                                   i_part,
                                   n_vtx,
                                   vtx_coord,
-                                  vtx_ln_to_gn,
                                   PDM_OWNERSHIP_USER);
+
+    PDM_part_mesh_nodal_vtx_gnum_set(_pmn,
+                                     i_part,
+                                     vtx_ln_to_gn,
+                                     PDM_OWNERSHIP_USER);
   }
 
 

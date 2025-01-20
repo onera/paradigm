@@ -401,8 +401,11 @@ int main(int argc, char *argv[])
                                   i_part,
                                   surf_pn_vtx[i_part],
                                   surf_pvtx_coord[i_part],
-                                  surf_pvtx_ln_to_gn[i_part],
                                   PDM_OWNERSHIP_USER);
+    PDM_part_mesh_nodal_vtx_gnum_set(pmn,
+                                     i_part,
+                                     surf_pvtx_ln_to_gn[i_part],
+                                     PDM_OWNERSHIP_USER);
   }
   PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmne_surf);
 

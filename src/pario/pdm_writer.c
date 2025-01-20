@@ -1309,7 +1309,16 @@ PDM_writer_geom_coord_set
     abort();
   }
 
-  PDM_part_mesh_nodal_coord_set(geom->_mesh_nodal, id_part, n_som, coords, numabs, owner);
+  PDM_part_mesh_nodal_coord_set(geom->_mesh_nodal,
+                                id_part,
+                                n_som,
+                                coords,
+                                owner);
+
+  PDM_part_mesh_nodal_vtx_gnum_set(geom->_mesh_nodal,
+                                   id_part,
+                                   numabs,
+                                   PDM_OWNERSHIP_USER);
 
   if (0 == 1) {
     printf("n_vtx : %d\n", n_som);

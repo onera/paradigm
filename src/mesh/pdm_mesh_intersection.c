@@ -1515,6 +1515,9 @@ _create_extract_part_nodal
                                   i_part,
                                   n_vtx,
                                   vtx_coord,
+                                  PDM_OWNERSHIP_USER);
+    PDM_part_mesh_nodal_vtx_gnum_set(_pmn,
+                                  i_part,
                                   vtx_ln_to_gn,
                                   PDM_OWNERSHIP_USER);
   }

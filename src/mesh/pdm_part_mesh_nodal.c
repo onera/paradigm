@@ -66,12 +66,16 @@ _vtx_free
       vtx->parent = NULL;
     }
 
-    if (vtx->_coords != NULL && vtx->owner == PDM_OWNERSHIP_KEEP) {
+    if (vtx->_coords != NULL && vtx->owner_coords == PDM_OWNERSHIP_KEEP) {
       PDM_free(vtx->_coords);
     }
 
-    if (vtx->_numabs != NULL && vtx->owner == PDM_OWNERSHIP_KEEP) {
+    if (vtx->_numabs != NULL && vtx->owner_numabs == PDM_OWNERSHIP_KEEP) {
       PDM_free(vtx->_numabs);
+    }
+
+    if (vtx->_numparent != NULL && vtx->owner_numparent == PDM_OWNERSHIP_KEEP) {
+      PDM_free(vtx->_numparent);
     }
   }
 }
@@ -124,13 +128,15 @@ PDM_part_mesh_nodal_create
   PDM_malloc(pmn->vtx, n_part, PDM_Mesh_nodal_vtx_t *);
   for (int i = 0; i < n_part; i++) {
     PDM_malloc(pmn->vtx[i], 1, PDM_Mesh_nodal_vtx_t);
-    pmn->vtx[i]->_coords    = NULL;
-    pmn->vtx[i]->_numabs    = NULL;
-    pmn->vtx[i]->_numparent = NULL;
-    pmn->vtx[i]->n_vtx      = 0;
-    pmn->vtx[i]->parent     = NULL;
-    pmn->vtx[i]->coords     = NULL;
-    pmn->vtx[i]->owner      = PDM_OWNERSHIP_KEEP;
+    pmn->vtx[i]->_coords         = NULL;
+    pmn->vtx[i]->_numabs         = NULL;
+    pmn->vtx[i]->_numparent      = NULL;
+    pmn->vtx[i]->n_vtx           = 0;
+    pmn->vtx[i]->parent          = NULL;
+    pmn->vtx[i]->coords          = NULL;
+    pmn->vtx[i]->owner_coords    = PDM_OWNERSHIP_KEEP;
+    pmn->vtx[i]->owner_numabs    = PDM_OWNERSHIP_KEEP;
+    pmn->vtx[i]->owner_numparent = PDM_OWNERSHIP_KEEP;
   }
 
   pmn->n_vol    = PDM_array_zeros_int(n_part);
@@ -158,7 +164,6 @@ PDM_part_mesh_nodal_coord_set
  const int                    id_part,
  const int                    n_vtx,
  const double                *coords,
- const PDM_g_num_t           *numabs,
        PDM_ownership_t        owner
 )
 {
@@ -175,12 +180,39 @@ PDM_part_mesh_nodal_coord_set
   }
 
   /* Mapping memoire */
-  vtx->n_vtx   = n_vtx;
-  vtx->_coords = (double *) coords;
-  vtx->_numabs = (PDM_g_num_t*) numabs;
-  vtx->owner   = owner;
+  vtx->n_vtx        = n_vtx;
+  vtx->_coords      = (double *) coords;
+  vtx->owner_coords = owner;
 
 }
+
+
+void
+PDM_part_mesh_nodal_vtx_gnum_set
+(
+       PDM_part_mesh_nodal_t *pmn,
+ const int                    id_part,
+ const PDM_g_num_t           *numabs,
+       PDM_ownership_t        owner
+)
+{
+
+  if (id_part >= pmn->n_part) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad part identifier\n");
+  }
+
+  PDM_Mesh_nodal_vtx_t *vtx = pmn->vtx[id_part];
+
+  if ((vtx->_numabs != NULL)) {
+    PDM_error(__FILE__, __LINE__, 0, "these partition vertices are already defined\n");
+  }
+
+  vtx->_numabs      = (PDM_g_num_t*) numabs;
+  vtx->owner_numabs = owner;
+}
+
+
+
 
 void
 PDM_part_mesh_nodal_coord_from_parent_set
@@ -214,23 +246,25 @@ PDM_part_mesh_nodal_coord_from_parent_set
 
   PDM_malloc(vtx->parent,1,PDM_Mesh_nodal_vtx_t);
   PDM_Mesh_nodal_vtx_t *_parent = vtx->parent;
-  _parent->parent = NULL;
-  _parent->n_vtx = n_vtx_parent;
-  _parent->coords = NULL;
-  _parent->_coords = (double *) coords_parent ;
-  _parent->_numabs = (PDM_g_num_t *) numabs_parent;
-  _parent->_numparent = NULL;
-  _parent->owner = PDM_OWNERSHIP_USER;
-  _parent->is_coords_get = 0;
+  _parent->parent          = NULL;
+  _parent->n_vtx           = n_vtx_parent;
+  _parent->coords          = NULL;
+  _parent->_coords         = (double      *) coords_parent;
+  _parent->_numabs         = (PDM_g_num_t *) numabs_parent;
+  _parent->_numparent      = NULL;
+  _parent->owner_coords    = PDM_OWNERSHIP_USER;
+  _parent->owner_numabs    = PDM_OWNERSHIP_USER;
+  _parent->owner_numparent = PDM_OWNERSHIP_USER;
 
 
   vtx->n_vtx      = n_vtx;
-  PDM_malloc(vtx->coords,3 * n_vtx,double);
-  vtx->_coords    = (double *) vtx->coords;
-  vtx->_numabs    = (PDM_g_num_t *) numabs;
-  vtx->_numparent = (int *) num_parent;
-  vtx->owner = ownership;
-  vtx->is_coords_get = 0;
+  PDM_malloc(vtx->coords, 3 * n_vtx, double);
+  vtx->_coords         = (double *) vtx->coords;
+  vtx->_numabs         = (PDM_g_num_t *) numabs;
+  vtx->_numparent      = (int *) num_parent;
+  vtx->owner_coords    = ownership;
+  vtx->owner_numabs    = ownership;
+  vtx->owner_numparent = ownership;
 
   for (int i = 0; i < n_vtx; i++) {
     int i_parent = num_parent[i] - 1;
@@ -344,7 +378,7 @@ PDM_part_mesh_nodal_vtx_coord_get
   PDM_Mesh_nodal_vtx_t *vtx = pmn->vtx[id_part];
 
   if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
-    vtx->owner = ownership;
+    vtx->owner_coords = ownership;
   }
 
   return (double *) vtx->_coords;
@@ -365,7 +399,7 @@ PDM_part_mesh_nodal_vtx_g_num_get
   PDM_Mesh_nodal_vtx_t *vtx = pmn->vtx[id_part];
 
   if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
-    vtx->owner = ownership;
+    vtx->owner_numabs = ownership;
   }
   return (PDM_g_num_t*) vtx->_numabs;
 }
@@ -695,9 +729,7 @@ PDM_part_mesh_nodal_free
 
   if (pmn->vtx != NULL) {
     for (int i_part = 0; i_part < pmn->n_part; i_part++) {
-      if(pmn->vtx[i_part]->owner == PDM_OWNERSHIP_KEEP){
-        _vtx_free (pmn->vtx[i_part]);
-      }
+      _vtx_free (pmn->vtx[i_part]);
       PDM_free(pmn->vtx[i_part]);
     }
 

@@ -195,8 +195,11 @@ _generate_mesh
                                     i_part,
                                     n_vtx,
                                     vtx_coord,
-                                    vtx_ln_to_gn,
                                     PDM_OWNERSHIP_KEEP);
+      PDM_part_mesh_nodal_vtx_gnum_set(pmn,
+                                       i_part,
+                                       vtx_ln_to_gn,
+                                       PDM_OWNERSHIP_KEEP);
 
       PDM_part_mesh_nodal_cell3d_cellface_add(pmn,
                                               i_part,

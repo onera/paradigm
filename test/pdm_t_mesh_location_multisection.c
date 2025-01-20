@@ -379,8 +379,11 @@ _multisection_pmn
                                   i_part,
                                   n_vtx    [i_part],
                                   vtx_coord[i_part],
-                                  vtx_g_num[i_part],
                                   PDM_OWNERSHIP_KEEP);
+    PDM_part_mesh_nodal_vtx_gnum_set(pmn,
+                                     i_part,
+                                     vtx_g_num[i_part],
+                                     PDM_OWNERSHIP_KEEP);
 
     for (int i_section = 0; i_section < n_section; i_section++) {
       PDM_part_mesh_nodal_section_std_set(pmn,

@@ -1652,8 +1652,12 @@ _dist_cloud_surf_compute_optim
                                       i_part,
                                       n_vtx,
                                       vtx_coord,
-                                      vtx_ln_to_gn,
                                       PDM_OWNERSHIP_USER);
+
+        PDM_part_mesh_nodal_vtx_gnum_set(_pmn,
+                                         i_part,
+                                         vtx_ln_to_gn,
+                                         PDM_OWNERSHIP_USER);
       }
 
       PDM_extract_part_part_nodal_set(extrp, _pmn);

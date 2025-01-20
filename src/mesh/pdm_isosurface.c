@@ -981,8 +981,11 @@ _extract_nodal
                                     i_part,
                                     n_vtx,
                                     vtx_coord,
-                                    vtx_g_num,
                                     PDM_OWNERSHIP_USER);
+      PDM_part_mesh_nodal_vtx_gnum_set(pmn,
+                                       i_part,
+                                       vtx_g_num,
+                                       PDM_OWNERSHIP_USER);
     }
 
     if (isos->entry_mesh_dim == 3) {

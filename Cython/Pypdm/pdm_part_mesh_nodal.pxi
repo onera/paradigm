@@ -16,8 +16,12 @@ cdef extern from "pdm_part_mesh_nodal.h":
                                        int                    id_part,
                                        int                    n_vtx,
                                        double                *coords,
-                                       PDM_g_num_t           *numabs,
                                        PDM_ownership_t        owner)
+
+    void PDM_part_mesh_nodal_vtx_gnum_set(PDM_part_mesh_nodal_t *pmn,
+                                          int                    id_part,
+                                          PDM_g_num_t           *numabs,
+                                          PDM_ownership_t        owner)
 
     int PDM_part_mesh_nodal_n_part_get(PDM_part_mesh_nodal_t *pmn)
     int PDM_part_mesh_nodal_mesh_dimension_get( PDM_part_mesh_nodal_t *pmn)
@@ -173,8 +177,11 @@ cdef class PartMeshNodal:
                                       id_part,
                                       n_vtx,
                                       np_to_double_pointer(pvtx_coord),
-                                      np_to_gnum_pointer(pvtx_ln_to_gn),
                                       PDM_OWNERSHIP_USER)
+        PDM_part_mesh_nodal_vtx_gnum_set(self.pmn,
+                                         id_part,
+                                         np_to_gnum_pointer(pvtx_ln_to_gn),
+                                         PDM_OWNERSHIP_USER)
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
     # ------------------------------------------------------------------------
