@@ -111,11 +111,9 @@ int main(int argc, char *argv[])
     int pn_vtx = PDM_part_mesh_nodal_n_vtx_get(pmn,
                                                0);
 
-    double* pvtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmn,
-                                                           0);
+    double* pvtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmn, 0, PDM_OWNERSHIP_BAD_VALUE);
 
-    PDM_g_num_t *pvtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(pmn,
-                                                                   0);
+    PDM_g_num_t *pvtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(pmn, 0, PDM_OWNERSHIP_BAD_VALUE);
 
     int pn_elt = PDM_part_mesh_nodal_section_n_elt_get(pmn,
                                                        0,
@@ -177,11 +175,9 @@ int main(int argc, char *argv[])
       int pn_vtx = PDM_part_mesh_nodal_n_vtx_get(pmn,
                                                  0);
 
-      double* pvtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmn,
-                                                             0);
+      double* pvtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmn, 0, PDM_OWNERSHIP_BAD_VALUE);
 
-      PDM_g_num_t *pvtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(pmn,
-                                                                     0);
+      PDM_g_num_t *pvtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(pmn, 0, PDM_OWNERSHIP_BAD_VALUE);
 
       int pn_elt = PDM_part_mesh_nodal_section_n_elt_get(pmn,
                                                          0,
@@ -335,11 +331,9 @@ int main(int argc, char *argv[])
     int pn_vtx = PDM_part_mesh_nodal_n_vtx_get(pmn,
                                                0);
 
-    double* pvtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmn,
-                                                           0);
+    double* pvtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmn, 0, PDM_OWNERSHIP_BAD_VALUE);
 
-    PDM_g_num_t *pvtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(pmn,
-                                                                   0);
+    PDM_g_num_t *pvtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(pmn, 0, PDM_OWNERSHIP_BAD_VALUE);
 
     int pn_elt = PDM_part_mesh_nodal_section_n_elt_get(pmn,
                                                        0,

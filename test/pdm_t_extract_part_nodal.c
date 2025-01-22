@@ -495,8 +495,11 @@ int main(int argc, char *argv[])
                                   i_part,
                                   pn_vtx[i_part],
                                   pvtx_coord[i_part],
-                                  pvtx_ln_to_gn[i_part],
                                   PDM_OWNERSHIP_KEEP);
+    PDM_part_mesh_nodal_vtx_gnum_set(pmn,
+                                     i_part,
+                                     pvtx_ln_to_gn[i_part],
+                                     PDM_OWNERSHIP_KEEP);
   }
 
   /*

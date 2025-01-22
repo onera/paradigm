@@ -648,8 +648,11 @@ int main(int argc, char *argv[])
                                   ipart,
                                   pn_vtx[ipart],
                                   pvtx_coord[ipart],
-                                  pvtx_ln_to_gn[ipart],
                                   PDM_OWNERSHIP_USER);
+    PDM_part_mesh_nodal_vtx_gnum_set(mesh_nodal,
+                                     ipart,
+                                     pvtx_ln_to_gn[ipart],
+                                     PDM_OWNERSHIP_USER);
 
     int         *parent_num          = NULL;
     PDM_g_num_t *parent_entity_g_num = NULL;

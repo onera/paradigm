@@ -730,8 +730,11 @@ _compute_part_mesh_nodal_3d
                                   i_part,
                                   pn_vtx[i_part],
                                   lvtx_coords,
-                                  lvtx_ln_to_gn,
                                   PDM_OWNERSHIP_KEEP);
+    PDM_part_mesh_nodal_vtx_gnum_set(pmn,
+                                     i_part,
+                                     lvtx_ln_to_gn,
+                                     PDM_OWNERSHIP_KEEP);
   }
 
   PDM_free(pcell_ln_to_gn);
@@ -925,8 +928,11 @@ _compute_part_mesh_nodal_2d
                                   i_part,
                                   pn_vtx[i_part],
                                   lvtx_coords,
-                                  lvtx_ln_to_gn,
                                   PDM_OWNERSHIP_KEEP);
+    PDM_part_mesh_nodal_vtx_gnum_set(pmn,
+                                     i_part,
+                                     lvtx_ln_to_gn,
+                                     PDM_OWNERSHIP_KEEP);
     //PDM_free(lvtx_ln_to_gn);
   }
 
@@ -1073,8 +1079,11 @@ _compute_part_mesh_nodal_1d
                                   i_part,
                                   pn_vtx[i_part],
                                   lvtx_coords,
-                                  lvtx_ln_to_gn,
                                   PDM_OWNERSHIP_KEEP);
+    PDM_part_mesh_nodal_vtx_gnum_set(pmn,
+                                     i_part,
+                                     lvtx_ln_to_gn,
+                                     PDM_OWNERSHIP_KEEP);
   }
 
   PDM_free(pedge_ln_to_gn);

@@ -1507,14 +1507,17 @@ _create_extract_part_nodal
 
     if (mesh_nodal != NULL) {
       n_vtx = PDM_part_mesh_nodal_n_vtx_get(mesh_nodal, i_part);
-      vtx_coord    = (double      *) PDM_part_mesh_nodal_vtx_coord_get(mesh_nodal, i_part);
-      vtx_ln_to_gn = (PDM_g_num_t *) PDM_part_mesh_nodal_vtx_g_num_get(mesh_nodal, i_part);
+      vtx_coord    = (double      *) PDM_part_mesh_nodal_vtx_coord_get(mesh_nodal, i_part, PDM_OWNERSHIP_BAD_VALUE);
+      vtx_ln_to_gn = (PDM_g_num_t *) PDM_part_mesh_nodal_vtx_g_num_get(mesh_nodal, i_part, PDM_OWNERSHIP_BAD_VALUE);
     }
 
     PDM_part_mesh_nodal_coord_set(_pmn,
                                   i_part,
                                   n_vtx,
                                   vtx_coord,
+                                  PDM_OWNERSHIP_USER);
+    PDM_part_mesh_nodal_vtx_gnum_set(_pmn,
+                                  i_part,
                                   vtx_ln_to_gn,
                                   PDM_OWNERSHIP_USER);
   }

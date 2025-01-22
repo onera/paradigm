@@ -162,8 +162,14 @@ action='read')
    0,                                           & !- INDICE DE PARTITION DU MAILLAGE NODAL
    n_vtx,                                       & !- NOMBRE DE SOMMETS
    vtx_coord,                                   & !- COORDONNEES DES SOMMETS
+   PDM_OWNERSHIP_USER)                            !- OWNERSHIP
+
+  call PDM_part_mesh_nodal_vtx_gnum_set         &
+  (mesh,                                        & !- IDENTIFICATEUR OBJET MAILLAGE NODAL
+   0,                                           & !- INDICE DE PARTITION DU MAILLAGE NODAL
    vtx_ln_to_gn,                                & !- NUMEROTATION ABSOLUE DES SOMMETS
    PDM_OWNERSHIP_USER)                            !- OWNERSHIP
+
 
   if (i_rank .eq. 0) then
     write(*, *) "-- Set cell-face connectivity"
@@ -228,6 +234,11 @@ action='read')
    0,                                           & !- INDICE DE PARTITION DU MAILLAGE NODAL
    n_vtx,                                       & !- NOMBRE DE SOMMETS
    vtx_coord,                                   & !- COORDONNEES DES SOMMETS
+   PDM_OWNERSHIP_USER)                            !- OWNERSHIP
+
+  call PDM_part_mesh_nodal_vtx_gnum_set         &
+  (mesh,                                        & !- IDENTIFICATEUR OBJET MAILLAGE NODAL
+   0,                                           & !- INDICE DE PARTITION DU MAILLAGE NODAL
    vtx_ln_to_gn,                                & !- NUMEROTATION ABSOLUE DES SOMMETS
    PDM_OWNERSHIP_USER)                            !- OWNERSHIP
 

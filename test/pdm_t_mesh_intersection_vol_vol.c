@@ -640,8 +640,11 @@ _set_mesh_nodal
                                     ipart,
                                     n_vtx,
                                     vtx_coord[ipart],
-                                    vtx_ln_to_gn,
                                     PDM_OWNERSHIP_KEEP);
+      PDM_part_mesh_nodal_vtx_gnum_set(pmn,
+                                       ipart,
+                                       vtx_ln_to_gn,
+                                       PDM_OWNERSHIP_KEEP);
 
       PDM_multipart_part_connectivity_get(mpart,
                                           0,

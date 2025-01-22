@@ -43,9 +43,9 @@ struct PDM_Mesh_nodal_vtx_t {
   PDM_g_num_t          *_numabs;    /*!< Global numbering */
   int                  *_numparent; /*!< Numbering in the parent vertices (mapping) */
 
-  int is_coords_get;
-
-  PDM_ownership_t       owner;
+  PDM_ownership_t       owner_coords;
+  PDM_ownership_t       owner_numabs;
+  PDM_ownership_t       owner_numparent;
 };
 
 /**

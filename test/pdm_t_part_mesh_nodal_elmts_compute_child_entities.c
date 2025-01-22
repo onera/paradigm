@@ -449,8 +449,8 @@ int main(int argc, char *argv[])
     PDM_malloc(pcell_ln_to_gn, n_part, PDM_g_num_t *);
 
     for (int i_part = 0; i_part < n_part; i_part++) {
-      pvtx_coord    [i_part] = PDM_part_mesh_nodal_vtx_coord_get(pmn, i_part);
-      pvtx_ln_to_gn [i_part] = PDM_part_mesh_nodal_vtx_g_num_get(pmn, i_part);
+      pvtx_coord    [i_part] = PDM_part_mesh_nodal_vtx_coord_get(pmn, i_part, PDM_OWNERSHIP_BAD_VALUE);
+      pvtx_ln_to_gn [i_part] = PDM_part_mesh_nodal_vtx_g_num_get(pmn, i_part, PDM_OWNERSHIP_BAD_VALUE);
 
       if (mesh_dimension == 3) {
         PDM_part_mesh_nodal_elmts_t *pmne_vol = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(pmn, PDM_GEOMETRY_KIND_VOLUMIC);

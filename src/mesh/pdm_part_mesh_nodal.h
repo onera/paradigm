@@ -68,7 +68,6 @@ const PDM_MPI_Comm comm
  * \param [in]  id_part   Partition identifier
  * \param [in]  n_vtx     Number of vertices
  * \param [in]  coords    Interlaced coordinates (size = 3 * \ref n_vtx)
- * \param [in]  numabs    Global IDs
  * \param [in]  owner     Vertices ownership
  *
  */
@@ -79,6 +78,24 @@ PDM_part_mesh_nodal_coord_set
  const int                    id_part,
  const int                    n_vtx,
  const double                *coords,
+       PDM_ownership_t        owner
+);
+
+
+/**
+ * \brief Define vertices globals ids
+ *
+ * \param [in]  pmn       Pointer to \ref PDM_part_mesh_nodal_t object
+ * \param [in]  id_part   Partition identifier
+ * \param [in]  numabs    Global IDs
+ * \param [in]  owner     Vertices ownership
+ *
+ */
+void
+PDM_part_mesh_nodal_vtx_gnum_set
+(
+       PDM_part_mesh_nodal_t *pmn,
+ const int                    id_part,
  const PDM_g_num_t           *numabs,
        PDM_ownership_t        owner
 );
@@ -161,6 +178,7 @@ PDM_part_mesh_nodal_n_vtx_get
  *
  * \param [in]  pmn       Pointer to \ref PDM_part_mesh_nodal_t object
  * \param [in]  id_part   Partition identifier
+ * \param [in]  ownership Ownership
  *
  * \return  Coordinates of vertices
  *
@@ -169,7 +187,8 @@ double*
 PDM_part_mesh_nodal_vtx_coord_get
 (
        PDM_part_mesh_nodal_t *pmn,
- const int                    id_part
+ const int                    id_part,
+       PDM_ownership_t        ownership
 );
 
 /**
@@ -177,6 +196,7 @@ PDM_part_mesh_nodal_vtx_coord_get
  *
  * \param [in]  pmn       Pointer to \ref PDM_part_mesh_nodal_t object
  * \param [in]  id_part   Partition identifier
+ * \param [in]  ownership Ownership
  *
  * \return  Global ids of vertices
  *
@@ -185,7 +205,8 @@ PDM_g_num_t*
 PDM_part_mesh_nodal_vtx_g_num_get
 (
        PDM_part_mesh_nodal_t *pmn,
- const int                    id_part
+ const int                    id_part,
+       PDM_ownership_t        ownership
 );
 
 /**

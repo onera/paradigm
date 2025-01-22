@@ -310,18 +310,19 @@ _transfer_vtx
   for (int i_part = 0; i_part < n_part; i_part++) {
 
     int n_vtx = PDM_part_mesh_nodal_n_vtx_get(pmesh_nodal, i_part);
-    double      *_vtx_coord    = PDM_part_mesh_nodal_vtx_coord_get(pmesh_nodal, i_part);
-    PDM_g_num_t *_vtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(pmesh_nodal, i_part);
+    double      *_vtx_coord    = PDM_part_mesh_nodal_vtx_coord_get(pmesh_nodal, i_part, PDM_OWNERSHIP_BAD_VALUE);
+    PDM_g_num_t *_vtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(pmesh_nodal, i_part, PDM_OWNERSHIP_BAD_VALUE);
     double      *vtx_coord     = NULL;
     PDM_g_num_t *vtx_ln_to_gn  = NULL;
 
-    if (pmesh_nodal->vtx[i_part]->owner == PDM_OWNERSHIP_KEEP &&
-        pmn_to_pm->vtx_ownership_pmesh  == PDM_OWNERSHIP_KEEP) {
-      // Copy vtx since both structures claim ownership
-      PDM_malloc(vtx_coord, n_vtx * 3, double);
-      memcpy(vtx_coord, _vtx_coord, sizeof(double) * n_vtx * 3);
+    if (pmn_to_pm->vtx_ownership_pmesh  == PDM_OWNERSHIP_KEEP) {
+      if(pmesh_nodal->vtx[i_part]->owner_coords == PDM_OWNERSHIP_KEEP) {
+        // Copy vtx since both structures claim ownership
+        PDM_malloc(vtx_coord, n_vtx * 3, double);
+        memcpy(vtx_coord, _vtx_coord, sizeof(double) * n_vtx * 3);
+      }
 
-      if (pmn_to_pm->g_num_state[PDM_MESH_ENTITY_VTX] == PMN_TO_PM_STATE_REQ) {
+      if (pmesh_nodal->vtx[i_part]->owner_numabs == PDM_OWNERSHIP_KEEP && pmn_to_pm->g_num_state[PDM_MESH_ENTITY_VTX] == PMN_TO_PM_STATE_REQ) {
         PDM_malloc(vtx_ln_to_gn, n_vtx, PDM_g_num_t);
         memcpy(vtx_ln_to_gn, _vtx_ln_to_gn, sizeof(PDM_g_num_t) * n_vtx);
       }

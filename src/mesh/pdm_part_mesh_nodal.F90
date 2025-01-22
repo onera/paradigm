@@ -698,7 +698,7 @@ module PDM_part_mesh_nodal
   end subroutine PDM_part_mesh_nodal_free
 
 
-  subroutine PDM_part_mesh_nodal_coord_set (mesh, id_part, n_vtx, coords, numabs, owner)
+  subroutine PDM_part_mesh_nodal_coord_set (mesh, id_part, n_vtx, coords, owner)
     ! Define partition vertices
     use iso_c_binding
 
@@ -709,12 +709,10 @@ module PDM_part_mesh_nodal
     integer, intent(in)                 :: n_vtx       ! Number of vertices
     integer, intent(in)                 :: owner       ! Data ownership
     double precision, pointer           :: coords(:,:) ! Interlaced coordinates (shape = [3, n_vtx])
-    integer (pdm_g_num_s), pointer      :: numabs(:)   ! Global numbering
     type(c_ptr) :: c_coords
-    type(c_ptr) :: c_numabs
 
     interface
-      subroutine PDM_part_mesh_nodal_coord_set_c (mesh, id_part, n_vtx, coords, numabs, owner) &
+      subroutine PDM_part_mesh_nodal_coord_set_c (mesh, id_part, n_vtx, coords, owner) &
         bind(c, name='PDM_part_mesh_nodal_coord_set')
 
         use iso_c_binding
@@ -727,7 +725,6 @@ module PDM_part_mesh_nodal
         integer (c_int), intent(in), value :: n_vtx
         integer (c_int), intent(in), value :: owner
         type (c_ptr),                value :: coords
-        type (c_ptr),                value :: numabs
       end subroutine PDM_part_mesh_nodal_coord_set_c
     end interface
 
@@ -736,14 +733,46 @@ module PDM_part_mesh_nodal
       c_coords = c_loc (coords)
     endif
 
+    call  PDM_part_mesh_nodal_coord_set_c (mesh, id_part, n_vtx, c_coords, owner)
+
+  end subroutine PDM_part_mesh_nodal_coord_set
+
+  subroutine PDM_part_mesh_nodal_vtx_gnum_set (mesh, id_part, numabs, owner)
+    ! Define partition vertices
+    use iso_c_binding
+
+    implicit none
+
+    type(c_ptr), value                  :: mesh        ! Pointer to PDM_part_mesh_nodal object
+    integer, intent(in)                 :: id_part     ! Partition identifier
+    integer, intent(in)                 :: owner       ! Data ownership
+    integer (pdm_g_num_s), pointer      :: numabs(:)   ! Global numbering
+    type(c_ptr) :: c_numabs
+
+    interface
+      subroutine PDM_part_mesh_nodal_vtx_gnum_set_c (mesh, id_part, numabs, owner) &
+        bind(c, name='PDM_part_mesh_nodal_vtx_gnum_set')
+
+        use iso_c_binding
+        use pdm
+
+        implicit none
+
+        type(c_ptr),                 value :: mesh
+        integer (c_int), intent(in), value :: id_part
+        integer (c_int), intent(in), value :: owner
+        type (c_ptr),                value :: numabs
+      end subroutine PDM_part_mesh_nodal_vtx_gnum_set_c
+    end interface
+
     c_numabs = C_NULL_PTR
     if (associated(numabs)) then
       c_numabs = c_loc (numabs)
     endif
 
-    call  PDM_part_mesh_nodal_coord_set_c (mesh, id_part, n_vtx, c_coords, c_numabs, owner)
+    call  PDM_part_mesh_nodal_vtx_gnum_set_c (mesh, id_part, c_numabs, owner)
 
-  end subroutine PDM_part_mesh_nodal_coord_set
+  end subroutine PDM_part_mesh_nodal_vtx_gnum_set
 
 
   subroutine PDM_part_mesh_nodal_cells_cellvtx_add (mesh, id_part, n_cell, cell_vtx_idx, cell_vtx, numabs, owner)
