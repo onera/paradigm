@@ -102,9 +102,10 @@ MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_multiply_n_by_n_matrices_2", 1
         4., 8., 12., 16.
     };
     double exp_C[16];
+    double B_end[16];
     multiply_matrices(A,B,exp_C);
-    PDM_rotation_multiply_n_by_n_matrices(A,B,4,B);
-    CHECK_EQ_C_ARRAY_FLOAT(B,exp_C,12,EPS);
+    PDM_rotation_multiply_n_by_n_matrices(A,B,4,B_end);
+    CHECK_EQ_C_ARRAY_FLOAT(B_end,exp_C,12,EPS);
 }
 
 MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_multiply_n_by_n_matrices_3", 1) {
@@ -121,9 +122,10 @@ MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_multiply_n_by_n_matrices_3", 1
         4., 8., 12., 16.
     };
     double exp_C[16];
+    double A_end[16];
     multiply_matrices(A,B,exp_C);
-    PDM_rotation_multiply_n_by_n_matrices(A,B,4,A);
-    CHECK_EQ_C_ARRAY_FLOAT(A,exp_C,12,EPS);
+    PDM_rotation_multiply_n_by_n_matrices(A,B,4,A_end);
+    CHECK_EQ_C_ARRAY_FLOAT(A_end,exp_C,12,EPS);
 }
 
 MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_apply_n_by_n_matrix", 1) {
