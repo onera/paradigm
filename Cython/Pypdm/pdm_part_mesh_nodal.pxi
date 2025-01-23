@@ -327,10 +327,10 @@ cdef class PartMeshNodalCapsule:
     self.pmn = caps_pmn;
 
   def dim_get(self):
-    return part_mesh_nodal_dim_get(self)
+    return part_mesh_nodal_dim_get(self.pmn)
 
   def n_part_get(self):
-    return PDM_part_mesh_nodal_n_part_get(self.pmn)
+    return part_mesh_nodal_n_part_get(self.pmn)
 
   def coord_get(self, i_part):
     """
@@ -348,7 +348,6 @@ cdef class PartMeshNodalCapsule:
     """
     return part_mesh_nodal_vtx_g_num_get(self, i_part)
 
-  # ------------------------------------------------------------------------
   def get_sections(self, PDM_geometry_kind_t geom_kind, int i_part):
     """
     get_sections(geom_kind, i_part)
@@ -370,7 +369,20 @@ cdef class PartMeshNodalCapsule:
     """
     return part_mesh_nodal_get_sections(self, geom_kind, i_part)
 
-  # ------------------------------------------------------------------------
+  def get_n_group(self, PDM_geometry_kind_t geom_kind):
+    """
+    get_n_group(geom_kind)
+
+    Get group number for given ``geom_kind``
+
+    Parameters:
+      geom_kind (PDM_geometry_kind_t) : Geometry kind (volume, surface, ridge or corner)
+
+    Returns:
+      Group number
+    """
+    return part_mesh_nodal_n_group_get(self, geom_kind)
+
   def get_group(self, PDM_geometry_kind_t geom_kind, int i_part, int i_group):
     """
     get_group(geom_kind, i_part, i_group)
@@ -390,7 +402,6 @@ cdef class PartMeshNodalCapsule:
     """
     return part_mesh_nodal_get_group(self, geom_kind, i_part, i_group)
 
-  # ------------------------------------------------------------------------
   def __dealloc__(self):
     """
     """
@@ -410,7 +421,7 @@ def part_mesh_nodal_vtx_g_num_get(PMeshNodal pypmn, int i_part):
 
   n_vtx = PDM_part_mesh_nodal_n_vtx_get(pypmn.pmn, i_part)
 
-  return create_numpy_g(vtx_ln_to_gn, n_vtx, False)
+  return create_numpy_g(vtx_ln_to_gn, n_vtx, True)
 
 
 def part_mesh_nodal_vtx_coord_get(PMeshNodal pypmn, int i_part):
@@ -423,11 +434,16 @@ def part_mesh_nodal_vtx_coord_get(PMeshNodal pypmn, int i_part):
 
   n_vtx = PDM_part_mesh_nodal_n_vtx_get(pypmn.pmn, i_part)
 
-  return create_numpy_d(vtx_coords, 3 * n_vtx, False)
+  return create_numpy_d(vtx_coords, 3 * n_vtx, True)
 
 
 def part_mesh_nodal_dim_get(PMeshNodal pypmn):
   return PDM_part_mesh_nodal_mesh_dimension_get(pypmn.pmn)
+
+
+def part_mesh_nodal_n_part_get(PMeshNodal pypmn):
+  return PDM_part_mesh_nodal_n_part_get(pypmn.pmn)
+
 
 def part_mesh_nodal_get_sections(PMeshNodal pypmn, PDM_geometry_kind_t geom_kind, int i_part):
   """
