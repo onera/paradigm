@@ -309,6 +309,7 @@ int main(int argc, char *argv[])
   PDM_part_comm_graph_t *pgc_vtx = PDM_part_comm_graph_create(n_part,
                                                               pn_vtx_bound,
                                                               pvtx_bound,
+                                                              PDM_OWNERSHIP_USER,
                                                               comm);
   PDM_free(pn_vtx_bound);
 
@@ -338,6 +339,7 @@ int main(int argc, char *argv[])
   PDM_part_comm_graph_t *pgc_edge = PDM_part_comm_graph_create(n_part,
                                                                pn_edge_bound,
                                                                pedge_bound,
+                                                               PDM_OWNERSHIP_USER,
                                                                comm);
   PDM_free(pn_edge_bound);
 
@@ -369,6 +371,7 @@ int main(int argc, char *argv[])
   PDM_part_comm_graph_t *pgc_face = PDM_part_comm_graph_create(n_part,
                                                                pn_face_bound,
                                                                pface_bound,
+                                                               PDM_OWNERSHIP_USER,
                                                                comm);
   PDM_free(pn_face_bound);
 

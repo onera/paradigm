@@ -42,30 +42,35 @@ extern "C" {
  */
 struct _pdm_part_comm_graph_t {
 
-  PDM_MPI_Comm comm;
-  int          n_part;
-  int          n_g_part;
+  PDM_MPI_Comm      comm;
+  int               n_part;
+  int               n_g_part;
 
-  int         *n_entity_graph;
-  int        **pentity_graph;
+  int              *n_entity_graph;
+  int             **pentity_graph;
+  int               nuplet_size;
+  int             **pentity_nuplet;
 
-  int         *send_idx;
-  int         *recv_idx;
-  int         *send_n;
-  int         *recv_n;
+  PDM_ownership_t   owner_graph;
+  PDM_ownership_t   owner_nuplet;
 
-  int        **part_to_send_buffer;
-  int        **part_to_recv_buffer;
+  int              *send_idx;
+  int              *recv_idx;
+  int              *send_n;
+  int              *recv_n;
 
-  int        **bound_owner;
+  int             **part_to_send_buffer;
+  int             **part_to_recv_buffer;
+
+  int             **bound_owner;
 
   /* Communication variability */
-  int          n_active_rank_send;
-  int          n_active_rank_recv;
-  int         *active_rank_send;
-  int         *active_rank_recv;
+  int               n_active_rank_send;
+  int               n_active_rank_recv;
+  int              *active_rank_send;
+  int              *active_rank_recv;
 
-  /* Asynchonous */
+  /* Asynchronous */
 
 };
 

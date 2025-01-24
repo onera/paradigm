@@ -52,22 +52,59 @@ typedef struct _pdm_part_comm_graph_t PDM_part_comm_graph_t;
  * \param [in]   pn_entity_graph        Number of bound (size = \p n_part)
  * \param [in]   pentity_graph          Graph comm identifier (size = 4 * \p pn_entity_graph[i_part]) :
                                             For each entity :
-                                              - entity local number
-                                              - Connected process
-                                              - Connected partition on the connected process
-                                              - Connected entity local number in the connected partition
+                                              - entity local number (1-based)
+                                              - Connected process   (0-based)
+                                              - Connected partition on the connected process (1-based)
+                                              - Connected entity local number in the connected partition (1-based)
+ * \param [in]   ownership              Ownership for \p pentity_graph
  * \param [in]   comm                   MPI communicator
+
  * \return   Initialized \ref PDM_part_comm_graph_t instance
  */
 PDM_part_comm_graph_t*
 PDM_part_comm_graph_create
 (
-  int            n_part,
-  int           *pn_entity_graph,
-  int          **pentity_graph,
-  PDM_MPI_Comm   comm
+  int               n_part,
+  int              *pn_entity_graph,
+  int             **pentity_graph,
+  PDM_ownership_t   ownership,
+  PDM_MPI_Comm      comm
 );
 
+
+/**
+ *
+ * \brief Build a \ref PDM_part_comm_graph_t instance using additional information represented as a n-uplet
+ * \param [in]   n_part                 Number of partition on current process
+ * \param [in]   pn_entity_graph        Number of bound (size = \p n_part)
+ * \param [in]   pentity_graph          Graph comm identifier (size = 4 * \p pn_entity_graph[i_part]) :
+                                            For each entity :
+                                              - entity local number (1-based)
+                                              - Connected process   (0-based)
+                                              - Connected partition on the connected process (1-based)
+                                              - Connected entity local number in the connected partition (1-based)
+ * \param [in]   ownership_graph        Ownership for \p pentity_graph
+ * \param [in]   nuplet_size            N-uplet size
+ * \param [in]   pentity_nuplet         Additional nuplets (size = \p nuplet_size * \p pn_entity_graph[i_part])
+ * \param [in]   ownership_nuplet       Ownership for \p pentity_nuplet
+ * \param [in]   is_signed              Use signed nuplets
+ * \param [in]   comm                   MPI communicator
+ *
+ * \return   Initialized \ref PDM_part_comm_graph_t instance
+ */
+PDM_part_comm_graph_t*
+PDM_part_comm_graph_with_nuplet_create
+(
+  int               n_part,
+  int              *pn_entity_graph,
+  int             **pentity_graph,
+  PDM_ownership_t   ownership_graph,
+  int               nuplet_size,
+  int             **pentity_nuplet,
+  PDM_ownership_t   ownership_nuplet,
+  PDM_bool_t        is_signed,
+  PDM_MPI_Comm      comm
+);
 
 
 /**
@@ -197,6 +234,48 @@ PDM_part_comm_graph_entity1_to_entity2
   int                    **entity2_entity1,
   int                    **out_pn_entity2_graph,
   int                   ***out_pentity2_graph
+);
+
+
+/**
+ *
+ * \brief Get entity graph
+ *
+ * \param [in]  pcg           Pointer to \ref PDM_part_comm_graph_t instance
+ * \param [in]  i_part        Partition identifier
+ * \param [out] entity_graph  Entity graph (size = 4 * n_entity_graph)
+ * \param [in]  ownership     Ownership for \p entity_graph
+ *
+ * \return Number of entities in graph in current partition
+ */
+int
+PDM_part_comm_graph_entity_graph_get
+(
+  PDM_part_comm_graph_t  *pcg,
+  int                     i_part,
+  int                   **entity_graph,
+  PDM_ownership_t         ownership
+);
+
+
+/**
+ *
+ * \brief Get entity nuplets
+ *
+ * \param [in]  pcg            Pointer to \ref PDM_part_comm_graph_t instance
+ * \param [in]  i_part         Partition identifier
+ * \param [out] entity_nuplet  Entity nuplets (size = nuplet_size * n_entity_graph)
+ * \param [in]  ownership      Ownership for \p entity_nuplet
+ *
+ * \return Size of nuplet
+ */
+int
+PDM_part_comm_graph_entity_nuplet_get
+(
+  PDM_part_comm_graph_t  *pcg,
+  int                     i_part,
+  int                   **entity_nuplet,
+  PDM_ownership_t         ownership
 );
 
 #ifdef __cplusplus

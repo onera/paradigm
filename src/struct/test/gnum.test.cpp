@@ -351,9 +351,10 @@ MPI_TEST_CASE("[pdm_gnum] - 2p - from_part_comm_graph 2p", 2) {
   int *entity_bound  = ventity_bound  [i_rank].data();
 
   PDM_part_comm_graph_t* pgc = PDM_part_comm_graph_create(n_part,
-                                                            &n_entity_bound,
-                                                            &entity_bound,
-                                                            pdm_comm);
+                                                          &n_entity_bound,
+                                                          &entity_bound,
+                                                          PDM_OWNERSHIP_USER,
+                                                          pdm_comm);
 
   std::vector<int> pn_elmt = {9, 12};
   const int n_elmt = pn_elmt[i_rank];

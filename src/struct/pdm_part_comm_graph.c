@@ -354,23 +354,47 @@ _exch_strid_var
   PDM_MPI_Type_free(&mpi_type);
 }
 
-
-
-/*=============================================================================
- * Public function definitions
- *============================================================================*/
-
-PDM_part_comm_graph_t*
-PDM_part_comm_graph_create
+/**
+ *  \brief Compare lexicographically two nuplets of same size
+ *
+ *  \return -1 if a > b, 0 if a == b, 1 if a < b
+ */
+static inline int
+_compare_nuplets
 (
-  int            n_part,
-  int           *pn_entity_graph,
-  int          **pentity_graph,
-  PDM_MPI_Comm   comm
+  const int size,
+  const int a[],
+  const int b[]
+)
+{
+  for (int i = 0; i < size; i++) {
+    if (a[i] < b[i]) {
+      return 1;
+    }
+    if (a[i] > b[i]) {
+      return -1;
+    }
+  }
+  return 0;
+}
+
+
+static PDM_part_comm_graph_t *
+_create
+(
+  int               n_part,
+  int              *pn_entity_graph,
+  int             **pentity_graph,
+  PDM_ownership_t   owner_graph,
+  int               nuplet_size,
+  int             **pentity_nuplet,
+  PDM_ownership_t   owner_nuplet,
+  PDM_bool_t        is_signed,
+  PDM_MPI_Comm      comm
 )
 {
   PDM_part_comm_graph_t *pcg = NULL;
-  PDM_malloc(pcg, 1 ,PDM_part_comm_graph_t);
+  PDM_malloc(pcg, 1, PDM_part_comm_graph_t);
 
   pcg->comm   = comm;
   pcg->n_part = n_part;
@@ -385,6 +409,12 @@ PDM_part_comm_graph_create
 
   pcg->pentity_graph = pentity_graph;
 
+  pcg->nuplet_size    = nuplet_size;
+  pcg->pentity_nuplet = pentity_nuplet;
+
+  pcg->owner_graph  = owner_graph;
+  pcg->owner_nuplet = owner_nuplet;
+
   int n_g_part = 0;
   PDM_MPI_Allreduce(&n_part, &n_g_part, 1, PDM_MPI_INT, PDM_MPI_SUM, comm);
   pcg->n_g_part = n_g_part;
@@ -393,9 +423,11 @@ PDM_part_comm_graph_create
   PDM_malloc(pcg->part_to_recv_buffer, n_part, int *);
   PDM_malloc(pcg->n_entity_graph     , n_part, int  );
 
-  PDM_MPI_Datatype mpi_triplet_type;
-  PDM_MPI_Type_create_contiguous(3, PDM_MPI_INT, &mpi_triplet_type);
-  PDM_MPI_Type_commit(&mpi_triplet_type);
+  int stride = 3 + nuplet_size;
+
+  PDM_MPI_Datatype mpi_stride_type;
+  PDM_MPI_Type_create_contiguous(stride, PDM_MPI_INT, &mpi_stride_type);
+  PDM_MPI_Type_commit(&mpi_stride_type);
 
   int *send_n = PDM_array_zeros_int(n_rank);
   int *recv_n = NULL;
@@ -420,8 +452,10 @@ PDM_part_comm_graph_create
     }
     send_n[i] = 0;
   }
-  int *send_triplet = NULL;
-  PDM_malloc(send_triplet, 3 * send_idx[n_rank], int);
+  int *send_buffer = NULL;
+  PDM_malloc(send_buffer, stride * send_idx[n_rank], int);
+
+  int sign = (is_signed == PDM_TRUE) ? -1 : 1;
 
   for (int i_part = 0; i_part < n_part; i_part++) {
     int n_entity_graph = pn_entity_graph[i_part];
@@ -431,9 +465,12 @@ PDM_part_comm_graph_create
     for(int idx_entity = 0; idx_entity < n_entity_graph; ++idx_entity) {
       int t_rank = pentity_graph[i_part][4*idx_entity+1];
       int idx_write = send_idx[t_rank] + send_n[t_rank]++;
-      send_triplet[3*idx_write  ] = pentity_graph[i_part][4*idx_entity+2]-1;
-      send_triplet[3*idx_write+1] = i_part;
-      send_triplet[3*idx_write+2] = pentity_graph[i_part][4*idx_entity+3]-1;
+      send_buffer[stride*idx_write  ] = pentity_graph[i_part][4*idx_entity+2]-1;
+      send_buffer[stride*idx_write+1] = i_part;
+      send_buffer[stride*idx_write+2] = pentity_graph[i_part][4*idx_entity+3]-1;
+      for (int i = 0; i < nuplet_size; i++) {
+        send_buffer[stride*idx_write+3+i] = sign * pentity_nuplet[i_part][nuplet_size*idx_entity+i];
+      }
 
       pcg->part_to_send_buffer[i_part][idx_entity] = idx_write;
     }
@@ -452,23 +489,24 @@ PDM_part_comm_graph_create
     }
   }
 
-  int *recv_triplet = NULL;
-  PDM_malloc(recv_triplet, 3 * recv_idx[n_rank], int);
+  int *recv_buffer = NULL;
+  PDM_malloc(recv_buffer, stride * recv_idx[n_rank], int);
 
   if(0 == 1) {
     PDM_log_trace_array_int(send_idx, n_rank+1, "send_idx ::");
     PDM_log_trace_array_int(recv_idx, n_rank+1, "recv_idx ::");
   }
 
-  PDM_MPI_Alltoallv(send_triplet,
+  PDM_MPI_Alltoallv(send_buffer,
                     send_n,
                     send_idx,
-                    mpi_triplet_type,
-                    recv_triplet,
+                    mpi_stride_type,
+                    recv_buffer,
                     recv_n,
                     recv_idx,
-                    mpi_triplet_type,
+                    mpi_stride_type,
                     comm);
+  PDM_free(send_buffer);
 
   /* Maintenant on cherche à retrouver la correspondance */
   int **pentity_indices       = NULL;
@@ -480,45 +518,64 @@ PDM_part_comm_graph_create
     int n_entity_graph = pn_entity_graph[i_part];
     PDM_malloc(pcg->part_to_recv_buffer[i_part], n_entity_graph, int);
 
-    PDM_malloc(pentity_indices      [i_part], 3 * n_entity_graph, int);
-    PDM_malloc(pentity_indices_order[i_part],     n_entity_graph, int);
+    PDM_malloc(pentity_indices      [i_part], stride * n_entity_graph, int);
+    PDM_malloc(pentity_indices_order[i_part],          n_entity_graph, int);
 
     for(int idx_entity = 0; idx_entity < n_entity_graph; ++idx_entity) {
-      pentity_indices[i_part][3*idx_entity  ] = pentity_graph[i_part][4*idx_entity+1];
-      pentity_indices[i_part][3*idx_entity+1] = pentity_graph[i_part][4*idx_entity+2]-1;
-      pentity_indices[i_part][3*idx_entity+2] = pentity_graph[i_part][4*idx_entity]-1; // Indices locaux
+      pentity_indices[i_part][stride*idx_entity  ] = pentity_graph[i_part][4*idx_entity+1];
+      pentity_indices[i_part][stride*idx_entity+1] = pentity_graph[i_part][4*idx_entity+2]-1;
+      pentity_indices[i_part][stride*idx_entity+2] = pentity_graph[i_part][4*idx_entity]-1; // Indices locaux
+      for (int i = 0; i < nuplet_size; i++) {
+        pentity_indices[i_part][stride*idx_entity+3+i] = pentity_nuplet[i_part][nuplet_size*idx_entity+i];
+      }
     }
 
     PDM_order_lnum_s(pentity_indices[i_part],
-                     3,
+                     stride,
                      pentity_indices_order[i_part],
                      n_entity_graph);
 
     PDM_order_array(n_entity_graph,
-                    3 * sizeof(int),
+                    stride * sizeof(int),
                     pentity_indices_order[i_part],
                     pentity_indices      [i_part]);
   }
 
   /* Post buffer */
+  int *to_find = NULL;
+  PDM_malloc(to_find, stride, int);
+
   for(int t_rank = 0; t_rank < n_rank; ++t_rank) {
     for(int j = recv_idx[t_rank]; j < recv_idx[t_rank+1]; ++j) {
 
-      int lpart   = recv_triplet[3*j  ];
-      int tpart   = recv_triplet[3*j+1];
-      int lentity = recv_triplet[3*j+2];
+      int lpart   = recv_buffer[stride*j  ];
+      int tpart   = recv_buffer[stride*j+1];
+      int lentity = recv_buffer[stride*j+2];
       int n_entity_graph = pn_entity_graph[lpart];
 
-      int to_find[3] = {t_rank, tpart, lentity};
+      to_find[0] = t_rank;
+      to_find[1] = tpart;
+      to_find[2] = lentity;
+      for (int i = 0; i < nuplet_size; i++) {
+        to_find[3+i] = recv_buffer[stride*j+3+i];
+      }
 
-      int pos = PDM_order_binary_search_int(to_find, pentity_indices[lpart], 3, n_entity_graph);
-      // if(pos == -1) {
-      //   log_trace("Try to find fail = (%i/%i/%i) --> %i \n", t_rank, lpart, lentity, pos);
-      // }
+      int pos = PDM_order_binary_search_int(to_find, pentity_indices[lpart], stride, n_entity_graph);
+      if (pos == -1) {
+        // log_trace("Try to find fail = (%i/%i/%i) --> %i \n", t_rank, lpart, lentity, pos);
+        PDM_log_trace_array_int(to_find, stride, "to_find : ");
+        log_trace("pentity_indices :\n");
+        for (int i = 0; i < n_entity_graph; i++) {
+          log_trace("%d : ", i);
+          PDM_log_trace_array_int(&pentity_indices[lpart][stride*i], stride, "");
+        }
+        PDM_error(__FILE__, __LINE__, 0, "Part-comm graph mismatch(see paradigm_*.log)\n");
+      }
       pcg->part_to_recv_buffer[lpart][pentity_indices_order[lpart][pos]] = j;
 
     }
   }
+  PDM_free(to_find);
 
   if(0 == 1) {
     for(int i_part = 0; i_part < n_part; ++i_part) {
@@ -536,9 +593,8 @@ PDM_part_comm_graph_create
   PDM_free(pentity_indices_order );
 
 
-  PDM_free(send_triplet);
-  PDM_free(recv_triplet);
-  PDM_MPI_Type_free(&mpi_triplet_type);
+  PDM_free(recv_buffer);
+  PDM_MPI_Type_free(&mpi_stride_type);
 
   pcg->send_idx = send_idx;
   pcg->recv_idx = recv_idx;
@@ -570,11 +626,11 @@ PDM_part_comm_graph_create
     int n_entity_graph = pn_entity_graph[i_part];
 
     PDM_malloc(pcg->bound_owner[i_part], n_entity_graph, int);
-    int *lbound_entity       = NULL;
+    int *lbound_entity = NULL;
     PDM_malloc(lbound_entity, n_entity_graph, int);
 
     for(int idx_entity = 0; idx_entity < n_entity_graph; ++idx_entity) {
-      lbound_entity      [idx_entity] = pentity_graph[i_part][4*idx_entity];
+      lbound_entity[idx_entity] = pentity_graph[i_part][4*idx_entity];
       pcg->bound_owner[i_part][idx_entity] = -1;
     }
 
@@ -583,16 +639,17 @@ PDM_part_comm_graph_create
     int *lowner = PDM_array_const_int(n_unique, -1);
     for(int idx_entity = 0; idx_entity < n_entity_graph; ++idx_entity) {
       int l_entity = pentity_graph[i_part][4*idx_entity];
-      int t_rank   = pentity_graph[i_part][4*idx_entity+1];
-      int t_part   = pentity_graph[i_part][4*idx_entity+2]-1;
       int pos = PDM_binary_search_int(l_entity, lbound_entity, n_unique);
 
       pcg->bound_owner[i_part][idx_entity] = pos; // Stockage temporaire
 
+      int my_location[3] = {i_rank, i_part+1, l_entity};
+
       if(lowner[pos] != 0) {
-        if(i_rank < t_rank || (i_rank == t_rank && i_part < t_part)) {
+        if (_compare_nuplets(3, my_location, &pentity_graph[i_part][4*idx_entity+1]) >= 0) {
           lowner[pos] = 1;
-        } else {
+        }
+        else {
           lowner[pos] = 0;
         }
       }
@@ -609,6 +666,68 @@ PDM_part_comm_graph_create
   }
 
   return pcg;
+}
+
+/*=============================================================================
+ * Public function definitions
+ *============================================================================*/
+
+PDM_part_comm_graph_t*
+PDM_part_comm_graph_create
+(
+  int               n_part,
+  int              *pn_entity_graph,
+  int             **pentity_graph,
+  PDM_ownership_t   ownership,
+  PDM_MPI_Comm      comm
+)
+{
+  return _create(n_part,
+                 pn_entity_graph,
+                 pentity_graph,
+                 ownership,
+                 0,
+                 NULL,
+                 PDM_OWNERSHIP_BAD_VALUE,
+                 PDM_FALSE,
+                 comm);
+}
+
+
+PDM_part_comm_graph_t*
+PDM_part_comm_graph_with_nuplet_create
+(
+  int               n_part,
+  int              *pn_entity_graph,
+  int             **pentity_graph,
+  PDM_ownership_t   owner_graph,
+  int               nuplet_size,
+  int             **pentity_nuplet,
+  PDM_ownership_t   owner_nuplet,
+  PDM_bool_t        is_signed,
+  PDM_MPI_Comm      comm
+)
+{
+  // Check coherence between ranks
+  int min_nuplet_size;
+  PDM_MPI_Allreduce(&nuplet_size, &min_nuplet_size, 1, PDM_MPI_INT, PDM_MPI_MIN, comm);
+
+  int max_nuplet_size;
+  PDM_MPI_Allreduce(&nuplet_size, &max_nuplet_size, 1, PDM_MPI_INT, PDM_MPI_MAX, comm);
+
+  if (min_nuplet_size != max_nuplet_size) {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_create_with_nuplet : all ranks must have the same nuplet_size\n");
+  }
+
+  return _create(n_part,
+                 pn_entity_graph,
+                 pentity_graph,
+                 owner_graph,
+                 nuplet_size,
+                 pentity_nuplet,
+                 owner_nuplet,
+                 is_signed,
+                 comm);
 }
 
 void
@@ -665,9 +784,9 @@ PDM_part_comm_graph_reorder
 
   /* Prepare exchange */
   int **send_new_id = NULL;
-  PDM_malloc(send_new_id, pcg->n_part, int         *);
+  PDM_malloc(send_new_id, pcg->n_part, int *);
   for(int i_part = 0; i_part < pcg->n_part; ++i_part) {
-    PDM_malloc(send_new_id[i_part], pcg->n_entity_graph[i_part], int        );
+    PDM_malloc(send_new_id[i_part], pcg->n_entity_graph[i_part], int);
     for(int i = 0; i < pcg->n_entity_graph[i_part]; ++i) {
       int i_entity = pentity_graph[i_part][4*i  ]-1;
       send_new_id[i_part][i] = old_to_new[i_part][i_entity];
@@ -676,13 +795,13 @@ PDM_part_comm_graph_reorder
 
   int **recv_new_id = NULL;
   PDM_part_comm_graph_exch(pcg,
-                                   sizeof(int),
-                                   PDM_STRIDE_CST_INTERLACED,
-                                   1,
-                                   NULL,
-                      (void  **)   send_new_id,
-                                   NULL,
-                      (void ***)   &recv_new_id);
+                           sizeof(int),
+                           PDM_STRIDE_CST_INTERLACED,
+                           1,
+                           NULL,
+              (void  **)   send_new_id,
+                           NULL,
+              (void ***)   &recv_new_id);
 
   for(int i_part = 0; i_part < pcg->n_part; ++i_part) {
     PDM_free(send_new_id[i_part]);
@@ -736,6 +855,7 @@ PDM_part_comm_graph_entity1_to_part_comm_graph_entity2
   PDM_part_comm_graph_t* ptpgc_entity2 = PDM_part_comm_graph_create(ptpgc_entity1->n_part,
                                                                     pn_entity2_graph,
                                                                     pentity2_graph,
+                                                                    PDM_OWNERSHIP_USER,
                                                                     ptpgc_entity1->comm);
 
   for(int i_part = 0; i_part < ptpgc_entity1->n_part; ++i_part) {
@@ -1353,12 +1473,69 @@ PDM_part_comm_graph_entity1_to_entity2
 }
 
 
+int
+PDM_part_comm_graph_entity_graph_get
+(
+  PDM_part_comm_graph_t  *pcg,
+  int                     i_part,
+  int                   **entity_graph,
+  PDM_ownership_t         ownership
+)
+{
+  if (pcg == NULL) {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_entity_graph_get : Invalid PDM_part_comm_graph_t instance\n");
+  }
+
+  if (i_part < 0 || i_part >= pcg->n_part) {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_entity_graph_get : Invalid i_part (%d / %d)\n", i_part, pcg->n_part);
+  }
+
+  if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
+    pcg->owner_graph = ownership;
+  }
+
+  *entity_graph = pcg->pentity_graph[i_part];
+
+  return pcg->n_entity_graph[i_part];
+}
+
+
+int
+PDM_part_comm_graph_entity_nuplet_get
+(
+  PDM_part_comm_graph_t  *pcg,
+  int                     i_part,
+  int                   **entity_nuplet,
+  PDM_ownership_t         ownership
+)
+{
+  if (pcg == NULL) {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_entity_nuplet_get : Invalid PDM_part_comm_graph_t instance\n");
+  }
+
+  if (i_part < 0 || i_part >= pcg->n_part) {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_entity_nuplet_get : Invalid i_part (%d / %d)\n", i_part, pcg->n_part);
+  }
+
+  if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
+    pcg->owner_nuplet = ownership;
+  }
+
+  *entity_nuplet = pcg->pentity_nuplet[i_part];
+
+  return pcg->nuplet_size;
+}
+
+
 void
 PDM_part_comm_graph_free
 (
  PDM_part_comm_graph_t* pcg
 )
 {
+  if (pcg == NULL) {
+    return;
+  }
 
   for(int i_part = 0; i_part < pcg->n_part; ++i_part) {
     PDM_free(pcg->part_to_send_buffer[i_part]);
@@ -1376,6 +1553,20 @@ PDM_part_comm_graph_free
   PDM_free(pcg->recv_n);
   PDM_free(pcg->active_rank_send);
   PDM_free(pcg->active_rank_recv);
+
+  if (pcg->owner_graph == PDM_OWNERSHIP_KEEP) {
+    for (int i_part = 0; i_part < pcg->n_part; i_part++) {
+      PDM_free(pcg->pentity_graph[i_part]);
+    }
+    PDM_free(pcg->pentity_graph);
+  }
+
+  if (pcg->owner_nuplet == PDM_OWNERSHIP_KEEP) {
+    for (int i_part = 0; i_part < pcg->n_part; i_part++) {
+      PDM_free(pcg->pentity_nuplet[i_part]);
+    }
+    PDM_free(pcg->pentity_nuplet);
+  }
 
   PDM_free(pcg);
 }

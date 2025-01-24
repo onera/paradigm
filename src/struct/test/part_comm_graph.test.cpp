@@ -2,6 +2,7 @@
 #include <numeric>
 #include "doctest/extensions/doctest_mpi.h"
 #include "pdm.h"
+#include "pdm_array.h"
 #include "pdm_doctest.h"
 #include "pdm_part_comm_graph.h"
 #include "pdm_logging.h"
@@ -43,19 +44,20 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2p", 2) {
   int *entity_bound  = ventity_bound  [i_rank].data();
 
   PDM_part_comm_graph_t* pgc = PDM_part_comm_graph_create(n_part,
-                                                            &n_entity_bound,
-                                                            &entity_bound,
-                                                            pdm_comm);
+                                                          &n_entity_bound,
+                                                          &entity_bound,
+                                                          PDM_OWNERSHIP_USER,
+                                                          pdm_comm);
 
-  const int* lower_bound = PDM_part_comm_graph_owner_get(pgc, 0);
+  const int* lowner_bound = PDM_part_comm_graph_owner_get(pgc, 0);
 
-  // PDM_log_trace_array_int(lower_bound, 3, "lower_bound ::");
+  // PDM_log_trace_array_int(lowner_bound, 3, "lowner_bound ::");
 
-  static int lower_bound_expected_p0[3] = {1, 1, 1};
-  static int lower_bound_expected_p1[3] = {0, 0, 0};
+  static int lowner_bound_expected_p0[3] = {1, 1, 1};
+  static int lowner_bound_expected_p1[3] = {0, 0, 0};
 
-  MPI_CHECK_EQ_C_ARRAY(0, lower_bound, lower_bound_expected_p0, 3);
-  MPI_CHECK_EQ_C_ARRAY(1, lower_bound, lower_bound_expected_p1, 3);
+  MPI_CHECK_EQ_C_ARRAY(0, lowner_bound, lowner_bound_expected_p0, 3);
+  MPI_CHECK_EQ_C_ARRAY(1, lowner_bound, lowner_bound_expected_p1, 3);
 
   // ---------------------------------------------------------------------------
   // Exchange stride cst
@@ -199,21 +201,22 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 3p", 3) {
   int *entity_bound   = ventity_bound  [i_rank].data();
 
   PDM_part_comm_graph_t* pgc = PDM_part_comm_graph_create(n_part,
-                                                            &n_entity_bound,
-                                                            &entity_bound,
-                                                            pdm_comm);
+                                                          &n_entity_bound,
+                                                          &entity_bound,
+                                                          PDM_OWNERSHIP_USER,
+                                                          pdm_comm);
 
-  const int* lower_bound = PDM_part_comm_graph_owner_get(pgc, 0);
+  const int* lowner_bound = PDM_part_comm_graph_owner_get(pgc, 0);
 
-  // PDM_log_trace_array_int(lower_bound, n_entity_bound, "lower_bound ::");
+  // PDM_log_trace_array_int(lowner_bound, n_entity_bound, "lowner_bound ::");
 
-  static int lower_bound_expected_p0[6] = {1, 1, 1, 1, 1, 1};
-  static int lower_bound_expected_p1[7] = {0, 0, 0, 0, 1, 1, 1 };
-  static int lower_bound_expected_p2[7] = {0, 0, 0, 0, 0, 0, 0};
+  static int lowner_bound_expected_p0[6] = {1, 1, 1, 1, 1, 1};
+  static int lowner_bound_expected_p1[7] = {0, 0, 0, 0, 1, 1, 1 };
+  static int lowner_bound_expected_p2[7] = {0, 0, 0, 0, 0, 0, 0};
 
-  MPI_CHECK_EQ_C_ARRAY(0, lower_bound, lower_bound_expected_p0, n_entity_bound);
-  MPI_CHECK_EQ_C_ARRAY(1, lower_bound, lower_bound_expected_p1, n_entity_bound);
-  MPI_CHECK_EQ_C_ARRAY(2, lower_bound, lower_bound_expected_p2, n_entity_bound);
+  MPI_CHECK_EQ_C_ARRAY(0, lowner_bound, lowner_bound_expected_p0, n_entity_bound);
+  MPI_CHECK_EQ_C_ARRAY(1, lowner_bound, lowner_bound_expected_p1, n_entity_bound);
+  MPI_CHECK_EQ_C_ARRAY(2, lowner_bound, lowner_bound_expected_p2, n_entity_bound);
 
 
   PDM_part_comm_graph_free(pgc);
@@ -256,19 +259,20 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2p - order ", 2) {
 
 
   PDM_part_comm_graph_t* pgc = PDM_part_comm_graph_create(n_part,
-                                                            &n_entity_bound,
-                                                            &entity_bound,
-                                                            pdm_comm);
+                                                          &n_entity_bound,
+                                                          &entity_bound,
+                                                          PDM_OWNERSHIP_USER,
+                                                          pdm_comm);
 
-  const int* lower_bound = PDM_part_comm_graph_owner_get(pgc, 0);
+  const int* lowner_bound = PDM_part_comm_graph_owner_get(pgc, 0);
 
-  // PDM_log_trace_array_int(lower_bound, 3, "lower_bound ::");
+  // PDM_log_trace_array_int(lowner_bound, 3, "lowner_bound ::");
 
-  static int lower_bound_expected_p0[3] = {1, 1, 1};
-  static int lower_bound_expected_p1[3] = {0, 0, 0};
+  static int lowner_bound_expected_p0[3] = {1, 1, 1};
+  static int lowner_bound_expected_p1[3] = {0, 0, 0};
 
-  MPI_CHECK_EQ_C_ARRAY(0, lower_bound, lower_bound_expected_p0, 3);
-  MPI_CHECK_EQ_C_ARRAY(1, lower_bound, lower_bound_expected_p1, 3);
+  MPI_CHECK_EQ_C_ARRAY(0, lowner_bound, lowner_bound_expected_p0, 3);
+  MPI_CHECK_EQ_C_ARRAY(1, lowner_bound, lowner_bound_expected_p1, 3);
 
 
   // std::vector<std::vector<int>> vold_to_new = {{0, 1, 2, 3, 4, 5, 6, 7, 8},
@@ -821,4 +825,413 @@ MPI_TEST_CASE("[PDM_part_comm_graph_entity1_to_entity2] - 1 part - 2p - 3D - rev
   free(pentity2_graph);
   free(pn_entity2_graph);
 
+}
+
+
+MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 1 perio - 2p", 2) {
+  PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
+
+  int i_rank;
+  PDM_MPI_Comm_rank(pdm_comm, &i_rank);
+
+  /*
+   *              9 +---+---+---+ 12
+   *                |           |
+   *              5 +   rank 1  + 8
+   *                |           |
+   *                +---+---+---+
+   *                1   2   3   4
+   * interface -1                   interface +1
+   *                9  10  11  12
+   *                +---+---+---+
+   *                |           |
+   *              5 +   rank 0  + 8
+   *                |           |
+   *              1 +---+---+---+ 4
+   *
+   * --- rank 0 ---
+   *  1 -> (0, 1,  4) through interface -1
+   *
+   *  4 -> (0, 1,  1) through interface  1
+   *
+   *  5 -> (0, 1,  8) through interface -1
+   *
+   *  8 -> (0, 1,  5) through interface  1
+   *
+   *  9 -> (1, 1,  1) through interface 0
+   *    -> (0, 1, 12) through interface -1
+   *    -> (1, 1,  4) through interface -1
+   *
+   * 10 -> (1, 1,  2) through interface 0
+   *
+   * 11 -> (1, 1,  3) through interface 0
+   *
+   * 12 -> (1, 1,  4) through interface 0
+   * 12 -> (0, 1,  9) through interface 1
+   * 12 -> (1, 1,  1) through interface 1
+   *
+   * owners : 1, 5, 9, 10, 11, 12
+   *
+   *
+   * --- rank 1 ---
+   *  1 -> (0, 1,  9) through interface 0
+   *    -> (1, 1,  4) through interface -1
+   *    -> (0, 1, 12) through interface -1
+   *
+   *  2 -> (0, 1, 10) through interface 0
+   *
+   *  3 -> (0, 1, 11) through interface 0
+   *
+   *  4 -> (0, 1, 12) through interface 0
+   *    -> (1, 1,  1) through interface 1
+   *    -> (0, 1,  9) through interface 1
+   *
+   *  5 -> (1, 1,  8) through interface -1
+   *
+   *  8 -> (1, 1,  5) through interface  1
+   *
+   *  9 -> (1, 1, 12) through interface -1
+   *
+   * 12 -> (1, 1,  9) through interface  1
+   *
+   * owners : 5, 9
+   *
+   */
+
+  /* Part */
+  int n_part = 1;
+
+  /* Comm graph */
+  std::vector<int> vn_entity_bound = {12, 12};
+  std::vector<std::vector<int>> ventity_bound = {{1,  0, 1,  4,
+                                                  4,  0, 1,  1,
+                                                  5,  0, 1,  8,
+                                                  8,  0, 1,  5,
+                                                  9,  1, 1,  1,
+                                                  9,  0, 1, 12,
+                                                  9,  1, 1,  4,
+                                                  10, 1, 1,  2,
+                                                  11, 1, 1,  3,
+                                                  12, 1, 1,  4,
+                                                  12, 0, 1,  9,
+                                                  12, 1, 1,  1},
+                                                 {1,  0, 1,  9,
+                                                  1,  1, 1,  4,
+                                                  1,  0, 1, 12,
+                                                  2,  0, 1, 10,
+                                                  3,  0, 1, 11,
+                                                  4,  0, 1, 12,
+                                                  4,  1, 1,  1,
+                                                  4,  0, 1,  9,
+                                                  5,  1, 1,  8,
+                                                  8,  1, 1,  5,
+                                                  9,  1, 1, 12,
+                                                  12, 1, 1,  9}};
+  std::vector<std::vector<int>> ventity_interface = {{-1,  1, -1, 1, 0, -1, -1, 0,  0, 0,  1, 1},
+                                                     { 0, -1, -1, 0, 0,  0,  1, 1, -1, 1, -1, 1}};
+
+  int n_entity_bound = vn_entity_bound  [i_rank];
+  int *entity_bound  = ventity_bound    [i_rank].data();
+  int *entity_nuplet = ventity_interface[i_rank].data();
+
+  PDM_part_comm_graph_t *pgc = PDM_part_comm_graph_with_nuplet_create(n_part,
+                                                                      &n_entity_bound,
+                                                                      &entity_bound,
+                                                                      PDM_OWNERSHIP_USER,
+                                                                      1,
+                                                                      &entity_nuplet,
+                                                                      PDM_OWNERSHIP_USER,
+                                                                      PDM_TRUE,
+                                                                      pdm_comm);
+
+  const int* lowner_bound = PDM_part_comm_graph_owner_get(pgc, 0);
+  // PDM_log_trace_array_int(lowner_bound, n_entity_bound, "lowner_bound ::");
+
+  static int lowner_bound_expected_p0[12] = {1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 0, 0};
+  static int lowner_bound_expected_p1[12] = {0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0};
+
+  MPI_CHECK_EQ_C_ARRAY(0, lowner_bound, lowner_bound_expected_p0, n_entity_bound);
+  MPI_CHECK_EQ_C_ARRAY(1, lowner_bound, lowner_bound_expected_p1, n_entity_bound);
+
+  PDM_part_comm_graph_free(pgc);
+}
+
+
+MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2 perio - 2p", 2) {
+  PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
+
+  int i_rank;
+  PDM_MPI_Comm_rank(pdm_comm, &i_rank);
+
+  /*
+   *                 interface +2
+   *
+   *                6  4----5----6
+   *                |\  \        |
+   *                | \  \  rank |
+   *                |  \  \   1  |
+   *  interface -1  |   \  \     |  interface +1
+   *                4    5  2    3
+   *                |     \  \   |
+   *                |      \  \  |
+   *                | rank  \  \ |
+   *                |  0     \  \|
+   *                1----2----3  1
+   *
+   *                 interface -2
+   *
+   * --- rank 0 ---
+   * 1 -> (1, 1, 1) through interface -1
+   *   -> (0, 1, 3) through interface -1
+   *   -> (0, 1, 6) through interface -2
+   *   -> (1, 1, 4) through interface -2
+   *   -> (1, 1, 6) through interface  3
+   *
+   * 2 -> (1, 1, 5) through interface -2
+   *
+   * 3 -> (1, 1, 1) through interface  0
+   *   -> (0, 1, 1) through interface +1
+   *   -> (1, 1, 4) through interface -4
+   *   -> (0, 1, 6) through interface -4
+   *   -> (1, 1, 6) through interface -2
+   *
+   * 4 -> (1, 1, 3) through interface -1
+   *
+   * 5 -> (1, 1, 2) through interface  0
+   *
+   * 6 -> (1, 1, 4) through interface  0
+   *   -> (1, 1, 6) through interface -1
+   *   -> (0, 1, 1) through interface +2
+   *   -> (0, 1, 3) through interface +4
+   *   -> (1, 1, 1) through interface +4
+   *
+   * owners : 1, 2, 4, 5
+   *
+   * --- rank 1 ---
+   * 1 -> (0, 1, 1) through interface +1
+   *   -> (0, 1, 3) through interface  0
+   *   -> (0, 1, 6) through interface -4
+   *   -> (1, 1, 4) through interface -4
+   *   -> (1, 1, 6) through interface -2
+   *
+   * 2 -> (0, 1, 5) through interface  0
+   *
+   * 3 -> (0, 1, 4) through interface +1
+   *
+   * 4 -> (0, 1, 6) through interface  0
+   *   -> (1, 1, 6) through interface -1
+   *   -> (0, 1, 1) through interface +2
+   *   -> (1, 1, 1) through interface +4
+   *   -> (0, 1, 3) through interface +4
+   *
+   * 5 -> (0, 1, 2) through interface +2
+   *
+   * 6 -> (0, 1, 1) through interface -3
+   *   -> (1, 1, 1) through interface +2
+   *   -> (0, 1, 3) through interface +2
+   *   -> (1, 1, 4) through interface +1
+   *   -> (0, 1, 6) through interface +1
+   *
+   * owners : ∅
+   *
+   */
+
+  /* Part */
+  int n_part = 1;
+
+  /* Comm graph */
+  std::vector<int> vn_entity_bound = {18, 18};
+  std::vector<std::vector<int>> ventity_bound = {{1, 1, 1, 1,
+                                                  1, 0, 1, 3,
+                                                  1, 0, 1, 6,
+                                                  1, 1, 1, 4,
+                                                  1, 1, 1, 6,
+                                                  2, 1, 1, 5,
+                                                  3, 1, 1, 1,
+                                                  3, 0, 1, 1,
+                                                  3, 1, 1, 4,
+                                                  3, 0, 1, 6,
+                                                  3, 1, 1, 6,
+                                                  4, 1, 1, 3,
+                                                  5, 1, 1, 2,
+                                                  6, 1, 1, 4,
+                                                  6, 1, 1, 6,
+                                                  6, 0, 1, 1,
+                                                  6, 0, 1, 3,
+                                                  6, 1, 1, 1},
+                                                 {1, 0, 1, 1,
+                                                  1, 0, 1, 3,
+                                                  1, 0, 1, 6,
+                                                  1, 1, 1, 4,
+                                                  1, 1, 1, 6,
+                                                  2, 0, 1, 5,
+                                                  3, 0, 1, 4,
+                                                  4, 0, 1, 6,
+                                                  4, 1, 1, 6,
+                                                  4, 0, 1, 1,
+                                                  4, 1, 1, 1,
+                                                  4, 0, 1, 3,
+                                                  5, 0, 1, 2,
+                                                  6, 0, 1, 1,
+                                                  6, 1, 1, 1,
+                                                  6, 0, 1, 3,
+                                                  6, 1, 1, 4,
+                                                  6, 0, 1, 6}};
+  std::vector<std::vector<int>> ventity_interface = {{-1, -1, -2, -2,  3, -2, 0, 1, -4, -4, -2, -1, 0,  0, -1, 2, 4, 4},
+                                                     { 1,  0, -4, -4, -2,  0, 1, 0, -1,  2,  4,  4, 2, -3,  2, 2, 1, 1}};
+
+  int n_entity_bound = vn_entity_bound  [i_rank];
+  int *entity_bound  = ventity_bound    [i_rank].data();
+  int *entity_nuplet = ventity_interface[i_rank].data();
+
+  PDM_part_comm_graph_t *pgc = PDM_part_comm_graph_with_nuplet_create(n_part,
+                                                                      &n_entity_bound,
+                                                                      &entity_bound,
+                                                                      PDM_OWNERSHIP_USER,
+                                                                      1,
+                                                                      &entity_nuplet,
+                                                                      PDM_OWNERSHIP_USER,
+                                                                      PDM_TRUE,
+                                                                      pdm_comm);
+
+  const int* lowner_bound = PDM_part_comm_graph_owner_get(pgc, 0);
+  // PDM_log_trace_array_int(lowner_bound, n_entity_bound, "lowner_bound ::");
+
+  static int lowner_bound_expected_p0[18] = {1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0};
+  static int lowner_bound_expected_p1[18] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+  MPI_CHECK_EQ_C_ARRAY(0, lowner_bound, lowner_bound_expected_p0, n_entity_bound);
+  MPI_CHECK_EQ_C_ARRAY(1, lowner_bound, lowner_bound_expected_p1, n_entity_bound);
+
+  PDM_part_comm_graph_free(pgc);
+}
+
+
+MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 1 perio axi - 2p", 2) {
+  PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
+
+  int i_rank;
+  PDM_MPI_Comm_rank(pdm_comm, &i_rank);
+
+  /*
+   *                             2 ⎽----⎽ 1
+   *                           ⟋ rank ⟋ /
+   *                         ⟋   1  ⟋  /
+   *                       5 ⎽----⎽ 4  /
+   *                  5 ⎽----⎽ 6  /  ⟋ 3
+   *                ⟋ rank ⟋ /  / ⟋
+   *              ⟋   0  ⟋  /\ /⟋
+   *            3 ⎽----⎽ 4  /  6
+   *              \    /  ⟋ 2
+   * interface -1  \  / ⟋  interface +1
+   *                \/⟋
+   *                1
+   *
+   *
+   * --- rank 0 ---
+   * 1 -> (0, 1, 1) through interface -1
+   *   -> (0, 1, 1) through interface +1
+   *
+   * 2 -> (1, 1, 6) through interface  0
+   *   -> (0, 1, 2) through interface -1
+   *   -> (0, 1, 2) through interface +1
+   *
+   * 3 -> (0, 1, 4) through interface -1
+   *
+   * 4 -> (0, 1, 3) through interface +1
+   *
+   * 5 -> (0, 1, 6) through interface -1
+   *   -> (1, 1, 5) through interface  0
+   *   -> (1, 1, 4) through interface -1
+   *
+   * 6 -> (0, 1, 5) through interface +1
+   *   -> (1, 1, 4) through interface  0
+   *   -> (1, 1, 5) through interface +1
+   *
+   * owners : 1, 2, 3, 5
+   *
+   *
+   * --- rank 1 ---
+   * 1 -> (1, 1, 2) through interface +1
+   *
+   * 2 -> (1, 1, 1) through interface -1
+   *
+   * 3 -> (1, 1, 3) through interface -1
+   *   -> (1, 1, 3) through interface +1
+   *
+   * 4 -> (1, 1, 5) through interface +1
+   *   -> (0, 1, 6) through interface  0
+   *   -> (0, 1, 5) through interface +1
+   *
+   * 5 -> (1, 1, 4) through interface -1
+   *   -> (0, 1, 5) through interface  0
+   *   -> (0, 1, 6) through interface -1
+   *
+   * 6 -> (0, 1, 2) through interface  0
+   *   -> (1, 1, 6) through interface -1
+   *   -> (1, 1, 6) through interface +1
+   *
+   * owners : 1, 3
+   *
+   */
+
+  /* Part */
+  int n_part = 1;
+
+  /* Comm graph */
+  std::vector<int> vn_entity_bound = {13, 13};
+  std::vector<std::vector<int>> ventity_bound = {{1, 0, 1, 1,
+                                                  1, 0, 1, 1,
+                                                  2, 1, 1, 6,
+                                                  2, 0, 1, 2,
+                                                  2, 0, 1, 2,
+                                                  3, 0, 1, 4,
+                                                  4, 0, 1, 3,
+                                                  5, 0, 1, 6,
+                                                  5, 1, 1, 5,
+                                                  5, 1, 1, 4,
+                                                  6, 0, 1, 5,
+                                                  6, 1, 1, 4,
+                                                  6, 1, 1, 5},
+                                                 {1, 1, 1, 2,
+                                                  2, 1, 1, 1,
+                                                  3, 1, 1, 3,
+                                                  3, 1, 1, 3,
+                                                  4, 1, 1, 5,
+                                                  4, 0, 1, 6,
+                                                  4, 0, 1, 5,
+                                                  5, 1, 1, 4,
+                                                  5, 0, 1, 5,
+                                                  5, 0, 1, 6,
+                                                  6, 0, 1, 2,
+                                                  6, 1, 1, 6,
+                                                  6, 1, 1, 6}};
+
+  std::vector<std::vector<int>> ventity_interface = {{-1,  1,  0, -1,  1, -1,  1, -1,  0, -1,  1,  0,  1},
+                                                     { 1, -1, -1,  1,  1,  0,  1, -1,  0, -1,  0, -1,  1}};
+
+  int n_entity_bound = vn_entity_bound  [i_rank];
+  int *entity_bound  = ventity_bound    [i_rank].data();
+  int *entity_nuplet = ventity_interface[i_rank].data();
+
+  PDM_part_comm_graph_t *pgc = PDM_part_comm_graph_with_nuplet_create(n_part,
+                                                                      &n_entity_bound,
+                                                                      &entity_bound,
+                                                                      PDM_OWNERSHIP_USER,
+                                                                      1,
+                                                                      &entity_nuplet,
+                                                                      PDM_OWNERSHIP_USER,
+                                                                      PDM_TRUE,
+                                                                      pdm_comm);
+
+  const int* lowner_bound = PDM_part_comm_graph_owner_get(pgc, 0);
+  PDM_log_trace_array_int(lowner_bound, n_entity_bound, "lowner_bound ::");
+
+  static int lowner_bound_expected_p0[13] = {1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0};
+  static int lowner_bound_expected_p1[13] = {1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+  MPI_CHECK_EQ_C_ARRAY(0, lowner_bound, lowner_bound_expected_p0, n_entity_bound);
+  MPI_CHECK_EQ_C_ARRAY(1, lowner_bound, lowner_bound_expected_p1, n_entity_bound);
+
+  PDM_part_comm_graph_free(pgc);
 }

@@ -293,6 +293,10 @@ PDM_part_mesh_nodal_add_part_mesh_nodal_elmts
  PDM_part_mesh_nodal_elmts_t *pmne
 )
 {
+  if (pmne == NULL) {
+    return;
+  }
+
   assert(pmn->n_part == pmne->n_part);
   assert(pmn->mesh_dimension >= pmne->mesh_dimension);
   PDM_geometry_kind_t geom_kind = PDM_GEOMETRY_KIND_MAX;

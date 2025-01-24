@@ -1714,6 +1714,7 @@ _gnum_from_comm_graph
     pcg = PDM_part_comm_graph_create(gen_gnum->n_part,
                                      gen_gnum->pn_entity_graph,
                                      gen_gnum->pentity_graph,
+                                     PDM_OWNERSHIP_USER,
                                      gen_gnum->comm);
   } else {
     pcg = gen_gnum->pcg;
