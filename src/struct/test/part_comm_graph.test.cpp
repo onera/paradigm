@@ -430,7 +430,7 @@ MPI_TEST_CASE("[PDM_part_comm_graph_entity1_to_entity2] - 1 part - 2p - revert s
   MPI_CHECK_EQ_C_ARRAY(0, pentity2_graph[0], entity_bound_reorder_p0, 8);
   MPI_CHECK_EQ_C_ARRAY(1, pentity2_graph[0], entity_bound_reorder_p1, 8);
 
-  if(1 == 1) {
+  if(0 == 1) {
     for(int i_part = 0; i_part < n_part; ++i_part) {
       PDM_log_trace_array_int(pentity2_graph[i_part], 4 * pn_entity2_graph[i_part], "pentity2_graph ::");
     }
@@ -1225,7 +1225,10 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 1 perio axi - 2p", 2) {
                                                                       pdm_comm);
 
   const int* lowner_bound = PDM_part_comm_graph_owner_get(pgc, 0);
-  PDM_log_trace_array_int(lowner_bound, n_entity_bound, "lowner_bound ::");
+
+  if(1 == 0) {
+    PDM_log_trace_array_int(lowner_bound, n_entity_bound, "lowner_bound ::");
+  }
 
   static int lowner_bound_expected_p0[13] = {1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0};
   static int lowner_bound_expected_p1[13] = {1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0};
