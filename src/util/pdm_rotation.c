@@ -8,18 +8,24 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <sysexits.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
+/* after pdm.h: pdm.h includes pdm_config.h which defines PDM_HAVE_MKL and PDM_HAVE_LAPACK */
+#if defined(PDM_HAVE_MKL) || defined(PDM_HAVE_LAPACK)
+#include <cblas.h>
+#endif
 #include "pdm_timer.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
 #include "pdm_priv.h"
 #include "pdm_quaternion.h"
 #include "pdm_rotation.h"
+
 
 /*----------------------------------------------------------------------------*/
 
@@ -373,31 +379,6 @@ PDM_rotation_two_vectors_to_homogeneous_matrix
 /*----------------------------------------------------------------------------
  *  PDM_rotation_t HOMOGENOUS MATRICES
  *----------------------------------------------------------------------------*/
-
-#if defined(PDM_HAVE_MKL) || defined(PDM_HAVE_LAPACK)
-const int CblasRowMajor  = 101;
-const int CblasColMajor  = 102;
-const int CblasNoTrans   = 111;
-const int CblasTrans     = 112;
-const int CblasConjTrans = 113;
-extern void cblas_dgemm(const int layout,
-                        const int TransA,
-                        const int TransB,
-                        const int M,
-                        const int N,
-                        const int K,
-                        const double alpha,
-                        const double *A,
-                        const int lda,
-                        const double *B,
-                        const int ldb,
-                        const double beta,
-                        double *C,
-                        const int ldc);
-#endif
-
-
-
 void
 PDM_rotation_multiply_n_by_n_matrices
 (
@@ -427,8 +408,8 @@ PDM_rotation_multiply_n_by_n_matrices
   PDM_UNUSED(B);
   PDM_UNUSED(n);
   PDM_UNUSED(C);
-  printf("Error : LAPACK or MKL are mandatory, recompile with them. \n");
-  abort();
+  printf("Error : CBLAS is mandatory (shipped with LAPACK or MKL), recompile with it.\n");
+  exit(EX_CONFIG);
 #endif
 }
 
@@ -461,8 +442,8 @@ PDM_rotation_apply_n_by_n_matrix
   PDM_UNUSED(n);
   PDM_UNUSED(n_samp);
   PDM_UNUSED(y);
-  printf("Error : LAPACK or MKL are mandatory, recompile with them. \n");
-  abort();
+  printf("Error : CBLAS is mandatory (shipped with LAPACK or MKL), recompile with it.\n");
+  exit(EX_CONFIG);
 #endif
 }
 
