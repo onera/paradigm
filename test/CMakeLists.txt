@@ -146,6 +146,7 @@ test_c_create (pdm_t_distant_neighbor_nomatch                   1 PDM_LIST_TEST 
 test_c_create (pdm_t_distant_neighbor2                          2 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_part_to_block_geom                         1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_part_to_part                               2 PDM_LIST_TEST PDM_LIST_NRANK)
+test_c_create (pdm_t_part_comm_graph_periodic_2d                2 PDM_LIST_TEST PDM_LIST_NRANK)
 
 # ppart
 test_c_create (pdm_t_part_dcube               ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRANK)

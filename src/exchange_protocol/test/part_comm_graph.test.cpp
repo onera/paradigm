@@ -338,12 +338,15 @@ MPI_TEST_CASE("[PDM_part_comm_graph_entity1_to_entity2] - 1 part - 2p", 2) {
                                          n_part,
                                          &n_entity_bound,
                                          &entity_bound,
+                                         0,
+                                         NULL,
                                          &pn_entity1,
                                          &pn_entity2,
                                          &entity2_entity1_idx,
                                          &entity2_entity1,
                                          &pn_entity2_graph,
-                                         &pentity2_graph);
+                                         &pentity2_graph,
+                                         NULL);
 
   int pn_entity2_graph_expected = 2;
 
@@ -413,12 +416,15 @@ MPI_TEST_CASE("[PDM_part_comm_graph_entity1_to_entity2] - 1 part - 2p - revert s
                                          n_part,
                                          &n_entity_bound,
                                          &entity_bound,
+                                         0,
+                                         NULL,
                                          &pn_entity1,
                                          &pn_entity2,
                                          &entity2_entity1_idx,
                                          &entity2_entity1,
                                          &pn_entity2_graph,
-                                         &pentity2_graph);
+                                         &pentity2_graph,
+                                         NULL);
 
   int pn_entity2_graph_expected = 2;
 
@@ -573,12 +579,15 @@ MPI_TEST_CASE("[PDM_part_comm_graph_entity1_to_entity2] - 1 part - 2p - 3D ", 2)
                                          n_part,
                                          &n_entity_bound,
                                          &entity_bound,
+                                         0,
+                                         NULL,
                                          &pn_entity1,
                                          &pn_entity2,
                                          &entity2_entity1_idx,
                                          &entity2_entity1,
                                          &pn_entity2_graph,
-                                         &pentity2_graph);
+                                         &pentity2_graph,
+                                         NULL);
 
   int pn_entity2_graph_expected = 4;
 
@@ -764,12 +773,15 @@ MPI_TEST_CASE("[PDM_part_comm_graph_entity1_to_entity2] - 1 part - 2p - 3D - rev
                                          n_part,
                                          &n_entity_bound,
                                          &entity_bound,
+                                         0,
+                                         NULL,
                                          &pn_entity1,
                                          &pn_entity2,
                                          &entity2_entity1_idx,
                                          &entity2_entity1,
                                          &pn_entity2_graph,
-                                         &pentity2_graph);
+                                         &pentity2_graph,
+                                         NULL);
 
   int pn_entity2_graph_expected = 4;
 
