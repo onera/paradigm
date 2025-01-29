@@ -485,6 +485,103 @@ int main
                                                                            PDM_TRUE,
                                                                            comm);
 
+  if (visu) {
+    double **send_data = NULL;
+    double **recv_data = NULL;
+    PDM_malloc(send_data, ln_part, double *);
+
+    j_part = 0; 
+    for (int i_dom = 0; i_dom < n_domain; i_dom++) {
+      for (int i_part = 0; i_part < n_part_per_domain[i_dom]; i_part++) {
+        
+        double *vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmn[i_dom], i_part, PDM_OWNERSHIP_KEEP);
+
+        PDM_malloc(send_data[j_part], n_unified_edge_graph[j_part] * 3 * 2, double);
+        for (int i_bnd = 0; i_bnd < n_unified_edge_graph[j_part]; i_bnd++) {
+          int i_edge = unified_edge_graph[j_part][4*i_bnd] - 1;
+          int i_itrf = PDM_ABS(unified_edge_itrf[j_part][i_bnd]);
+
+          for (int idx_vtx = 0; idx_vtx < 2; idx_vtx++) {
+            double *p = &send_data[j_part][6*i_bnd + 3*idx_vtx];
+            int i_vtx = pedge_vtx[j_part][2*i_edge+idx_vtx] - 1;
+            memcpy(p, &vtx_coord[3*i_vtx], sizeof(double) * 3);
+
+            if (i_itrf == 1) {
+              p[0] -= 2*PDM_SIGN(unified_edge_itrf[j_part][i_bnd]);
+            }
+            if (i_itrf == 2) {
+              p[1] -= 2*PDM_SIGN(unified_edge_itrf[j_part][i_bnd]);
+            }
+          }
+        }
+
+        j_part++;
+      }
+    }
+
+    PDM_part_comm_graph_exch(pcg_edge, 
+                             sizeof(double) * 3 * 2,
+                             PDM_STRIDE_CST_INTERLACED,
+                             1,
+                             NULL,
+                  (void  **) send_data,
+                             NULL,
+                  (void ***) &recv_data);
+
+    j_part = 0; 
+    for (int i_dom = 0; i_dom < n_domain; i_dom++) {
+      for (int i_part = 0; i_part < n_part_per_domain[i_dom]; i_part++) {
+
+        char name[999];
+        sprintf(name, "check_perio_edge_%d_%d.vtk", j_part, i_rank);
+
+        const int *is_owner = PDM_part_comm_graph_owner_get(pcg_edge, j_part);
+
+        int *connec   = NULL;
+        int *opp_rank = NULL;
+        int *opp_part = NULL;
+        int *opp_lnum = NULL;
+        PDM_malloc(connec,   2*n_unified_edge_graph[j_part], int);
+        PDM_malloc(opp_rank,   n_unified_edge_graph[j_part], int);
+        PDM_malloc(opp_part,   n_unified_edge_graph[j_part], int);
+        PDM_malloc(opp_lnum,   n_unified_edge_graph[j_part], int);
+        for (int i = 0; i < n_unified_edge_graph[j_part]; i++) {
+          connec[2*i  ] = 1 + 2*i;
+          connec[2*i+1] = 1 + 2*i+1;
+
+          opp_rank[i] = unified_edge_graph[j_part][4*i+1];
+          opp_part[i] = unified_edge_graph[j_part][4*i+2];
+          opp_lnum[i] = unified_edge_graph[j_part][4*i+3];
+        }
+
+        const char *elt_field_name [] = {"itrf", "opp_rank", "opp_part", "opp_lnum", "is_owner"};
+        const int  *elt_field_value[] = {unified_edge_itrf[j_part], opp_rank, opp_part, opp_lnum, is_owner};
+
+        PDM_vtk_write_std_elements(name, 
+                                   2*n_unified_edge_graph[j_part],
+                                   recv_data[j_part],
+                                   NULL,
+                                   PDM_MESH_NODAL_BAR2,
+                                   n_unified_edge_graph[j_part],
+                                   connec,
+                                   NULL,
+                                   5,
+                                   elt_field_name,
+                                   elt_field_value);
+        PDM_free(connec);
+        PDM_free(opp_rank);
+        PDM_free(opp_part);
+        PDM_free(opp_lnum);
+
+        PDM_free(send_data[j_part]);
+        PDM_free(recv_data[j_part]);
+        j_part++;
+      }
+    }
+    PDM_free(send_data);
+    PDM_free(recv_data);
+  }
+
 
   /* Free memory */
   PDM_part_comm_graph_free(pcg_vtx);
