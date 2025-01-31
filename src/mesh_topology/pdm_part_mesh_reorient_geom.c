@@ -320,7 +320,7 @@ PDM_part_mesh_reorient_geom
         double scal = normal[0]*tmp[0] + normal[1]*tmp[1] + normal[2]*tmp[2];
         // internal face
         if (_face_cell_idx[i_face+1]-_face_cell_idx[i_face] == 2) {
-          assert(_face_cell[idx_face]*_face_cell[idx_face+1] < 0);
+          assert(PDM_SIGN(_face_cell[idx_face])*PDM_SIGN(_face_cell[idx_face+1]) < 0);
           if (_face_cell[idx_face] > 0 && scal < 0.) {
             orient++;
             _face_cell[idx_face  ] = -PDM_ABS(_face_cell[idx_face  ]); // negative face_cell right
@@ -384,7 +384,7 @@ PDM_part_mesh_reorient_geom
         double scal = normal[0]*tmp[0] + normal[1]*tmp[1] + normal[2]*tmp[2];
         // internal edge
         if (_face_cell_idx[i_edge+1]-_face_cell_idx[i_edge] == 2) {
-          assert(_face_cell[idx_face]*_face_cell[idx_face+1] < 0);
+          assert(PDM_SIGN(_face_cell[idx_face])*PDM_SIGN(_face_cell[idx_face+1]) < 0);
           if (_face_cell[idx_face] > 0 && scal < 0.) {
             orient++;
             _face_cell[idx_face  ] = -PDM_ABS(_face_cell[idx_face  ]); // negative face_cell right
