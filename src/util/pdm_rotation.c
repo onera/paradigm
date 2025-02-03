@@ -44,6 +44,8 @@ extern "C" {
  * Global variable
  *============================================================================*/
 
+static const double ROTATION_EPS  = __DBL_EPSILON__;
+
 /*=============================================================================
  * Private function definitions
  *============================================================================*/
@@ -67,6 +69,30 @@ set_identity_to_homogeneous_matrix
   }
 }
 
+static
+void
+transpose_homogeneous_matrix
+(
+  double* homogeneous_matrix
+)
+{
+  // transposing the matrix
+  //  0  1  2  3
+  //  4  5  6  7
+  //  8  9 10 11
+  // 12 13 14 15
+  //
+  double tmp;
+  int swapped_ind_0[6] = {1,2,6, 3, 7,11};
+  int swapped_ind_1[6] = {4,8,9,12,13,14};
+  for (int ind=0;ind<6;ind++){
+    // swapping values
+    tmp = homogeneous_matrix[swapped_ind_0[ind]];
+    homogeneous_matrix[swapped_ind_0[ind]] = homogeneous_matrix[swapped_ind_1[ind]];
+    homogeneous_matrix[swapped_ind_1[ind]] = tmp;
+  }
+}
+
 // static 
 // void 
 // print_matrix(const double* mat,const int n_row,const int n_col) {
@@ -86,7 +112,7 @@ void
 set_translation_to_homogeneous_matrix
 (
   const double translation_vector[3],
-  PDM_bool_t reverse,
+  const PDM_bool_t reverse,
         double homogeneous_matrix[16]
 )
 {
@@ -155,6 +181,45 @@ PDM_rotation_axis_angle_to_homogeneous_matrix
   PDM_quaternion_to_homogeneous_matrix(qt,homogeneous_matrix);
 }
 
+
+void 
+PDM_rotation_axis_angle_and_rotation_center_to_homogeneous_matrix
+(
+  const double axis[3],
+  const double angle,
+  const double rotation_center[3],
+  const PDM_bool_t reverse,
+        double *homogeneous_matrix
+){
+  // helper matrices (matrix multiplication (dgemm) is not inplace)
+  double trans_mat    [16];
+  double rot_mat      [16];
+  double rot_trans_mat[16];
+  // Trans+.Rot.Trans-
+  // translation of -rotation_center
+  set_translation_to_homogeneous_matrix(rotation_center,
+                                        PDM_TRUE,
+                                        trans_mat);
+  // rotation
+  double langle = (reverse ? -angle : angle);
+  PDM_rotation_axis_angle_to_homogeneous_matrix(axis,
+                                                langle,
+                                                rot_mat);
+  PDM_rotation_multiply_n_by_n_matrices(rot_mat,
+                                        trans_mat,
+                                        4,
+                                        rot_trans_mat);
+  // translation of rotation_center
+  // re-using trans_mat                                        
+  set_translation_to_homogeneous_matrix(rotation_center,
+                                        PDM_FALSE,
+                                        trans_mat);
+  PDM_rotation_multiply_n_by_n_matrices(trans_mat,
+                                        rot_trans_mat,
+                                        4,
+                                        homogeneous_matrix);
+}
+
 void
 PDM_rotation_euler_angles_to_axis_angle
 (
@@ -162,7 +227,7 @@ PDM_rotation_euler_angles_to_axis_angle
   const double ang_y,
   const double ang_z,
   const int order[3],
-  PDM_bool_t intrinsic,
+  const PDM_bool_t intrinsic,
         double axis[3],
         double* angle
 )
@@ -199,7 +264,7 @@ PDM_rotation_euler_angles_to_rotation_matrix
   const double ang_y,
   const double ang_z,
   const int order[3],
-  PDM_bool_t intrinsic,
+  const PDM_bool_t intrinsic,
         double* rotation_matrix
 )
 {
@@ -215,7 +280,7 @@ PDM_rotation_euler_angles_to_homogeneous_matrix
   const double ang_y,
   const double ang_z,
   const int order[3],
-  PDM_bool_t intrinsic,
+  const PDM_bool_t intrinsic,
         double* homogeneous_matrix
 )
 {
@@ -224,6 +289,51 @@ PDM_rotation_euler_angles_to_homogeneous_matrix
   PDM_quaternion_to_homogeneous_matrix(qt,homogeneous_matrix);
 }
 
+void
+PDM_rotation_euler_angles_and_rotation_center_to_homogeneous_matrix
+(
+  const double ang_x,
+  const double ang_y,
+  const double ang_z,
+  const int order[3],
+  const PDM_bool_t intrinsic,
+  const double rotation_center[3],
+  const PDM_bool_t reverse,
+        double* homogeneous_matrix
+){
+  // helper matrices (matrix multiplication (dgemm) is not inplace)
+  double trans_mat    [16];
+  double rot_mat      [16];
+  double rot_trans_mat[16];
+  // Trans+.Rot.Trans-
+  // translation of -rotation_center
+  set_translation_to_homogeneous_matrix(rotation_center,
+                                        PDM_TRUE,
+                                        trans_mat);
+  // rotation
+  PDM_rotation_euler_angles_to_homogeneous_matrix(ang_x,
+                                                  ang_y,
+                                                  ang_z,
+                                                  order,
+                                                  intrinsic,
+                                                  rot_mat);
+  if (reverse){
+    transpose_homogeneous_matrix(rot_mat);
+  }
+  PDM_rotation_multiply_n_by_n_matrices(rot_mat,
+                                        trans_mat,
+                                        4,
+                                        rot_trans_mat);
+  // translation of rotation_center
+  // re-using trans_mat                                        
+  set_translation_to_homogeneous_matrix(rotation_center,
+                                        PDM_FALSE,
+                                        trans_mat);
+  PDM_rotation_multiply_n_by_n_matrices(trans_mat,
+                                        rot_trans_mat,
+                                        4,
+                                        homogeneous_matrix);
+}
 
 void 
 PDM_rotation_rotation_matrix_to_axis_angle
@@ -274,6 +384,84 @@ PDM_rotation_rotation_matrix_to_homogeneous_matrix
   homogeneous_matrix[4*3+1] = 0.;
   homogeneous_matrix[4*3+2] = 0.;
   homogeneous_matrix[4*3+3] = 1.;
+}
+
+void 
+PDM_rotation_rotation_matrix_and_rotation_center_to_homogeneous_matrix
+(
+  const double* rotation_matrix,
+  const double  rotation_center[3],
+  const PDM_bool_t reverse,
+        double* homogeneous_matrix
+){
+  // helper matrices (matrix multiplication (dgemm) is not inplace)
+  double trans_mat    [16];
+  double rot_mat      [16];
+  double rot_trans_mat[16];
+  // Trans+.Rot.Trans-
+  // translation of -rotation_center
+  set_translation_to_homogeneous_matrix(rotation_center,
+                                        PDM_TRUE,
+                                        trans_mat);
+  // rotation
+  PDM_rotation_rotation_matrix_to_homogeneous_matrix(rotation_matrix,
+                                                     rot_mat);
+  if (reverse){
+    transpose_homogeneous_matrix(rot_mat);
+  }
+  PDM_rotation_multiply_n_by_n_matrices(rot_mat,
+                                        trans_mat,
+                                        4,
+                                        rot_trans_mat);
+  // translation of rotation_center
+  // re-using trans_mat                                        
+  set_translation_to_homogeneous_matrix(rotation_center,
+                                        PDM_FALSE,
+                                        trans_mat);
+  PDM_rotation_multiply_n_by_n_matrices(trans_mat,
+                                        rot_trans_mat,
+                                        4,
+                                        homogeneous_matrix);
+}
+
+void 
+PDM_rotation_periodic_t_info_to_homogeneous_matrix
+(
+  const double rotation_center[3],
+  const double rotation_angle[3],
+  const double translation[3],
+  const PDM_bool_t reverse,
+        double *homogeneous_matrix
+)
+{ 
+  // TODO: raise error if both translation and rotation
+  PDM_bool_t apply_translation = (PDM_ABS(translation[0])<ROTATION_EPS)    | (PDM_ABS(translation[1])<ROTATION_EPS)    | (PDM_ABS(translation[2])<ROTATION_EPS);
+  PDM_bool_t apply_rotation    = (PDM_ABS(rotation_angle[0])<ROTATION_EPS) | (PDM_ABS(rotation_angle[1])<ROTATION_EPS) | (PDM_ABS(rotation_angle[2])<ROTATION_EPS);
+  if (apply_translation & apply_rotation){
+    printf("Error : A periodic_t node with both a translation and a rotation is not supported yet.\n");
+    exit(EX_DATAERR);
+  }
+  if (apply_translation){
+    // pure translation
+    set_identity_to_homogeneous_matrix(homogeneous_matrix);
+    set_translation_to_homogeneous_matrix(translation,reverse,homogeneous_matrix);
+  }
+  else if(apply_rotation) {
+    // pure rotation
+    const int order[3] = {2,1,0};
+    PDM_rotation_euler_angles_and_rotation_center_to_homogeneous_matrix(rotation_angle[0],
+                                                                        rotation_angle[1],
+                                                                        rotation_angle[2],
+                                                                        order,
+                                                                        PDM_TRUE,
+                                                                        rotation_center,
+                                                                        reverse,
+                                                                        homogeneous_matrix);
+  }
+  else {
+    set_identity_to_homogeneous_matrix(homogeneous_matrix);
+
+  }
 }
 
 void 
@@ -512,50 +700,49 @@ PDM_rotation_apply_euler_angles_and_rotation_center
         double* vector_out
 )
 {
-  // building the homogeneous matrix corresponding to whole transformation:
-  // Trans+.Rot.Trans-
   double homogeneous_matrix    [16];
-  double homogeneous_matrix_tmp[16];
-  double tmp_matrix[16];
-  // translation of -rotation_center
-  set_translation_to_homogeneous_matrix(rotation_center,PDM_TRUE,
-    homogeneous_matrix);
+  PDM_rotation_euler_angles_and_rotation_center_to_homogeneous_matrix(ang_x,
+                                                                      ang_y,
+                                                                      ang_z,
+                                                                      order,
+                                                                      intrinsic,
+                                                                      rotation_center,
+                                                                      reverse,
+                                                                      homogeneous_matrix);
+  // // building the homogeneous matrix corresponding to whole transformation:
+  // // Trans+.Rot.Trans-
+  // double homogeneous_matrix_tmp[16];
+  // double tmp_matrix[16];
+  // set_identity_to_homogeneous_matrix(homogeneous_matrix);
+  // // translation of -rotation_center
+  // set_translation_to_homogeneous_matrix(rotation_center,PDM_TRUE,
+  //   homogeneous_matrix);
   
-  // rotation
-  PDM_rotation_euler_angles_to_homogeneous_matrix(ang_x,ang_y,ang_z,order,
-    intrinsic,tmp_matrix);
-  if (reverse){
-    // transposing the rotation matrix
-    double tmp;
-    tmp = tmp_matrix[1];
-    tmp_matrix[1] = tmp_matrix[4];
-    tmp_matrix[4] = tmp;
-    tmp = tmp_matrix[2];
-    tmp_matrix[2] = tmp_matrix[8];
-    tmp_matrix[8] = tmp;
-    tmp = tmp_matrix[6];
-    tmp_matrix[6] = tmp_matrix[9];
-    tmp_matrix[9] = tmp;
-  }
-  PDM_rotation_multiply_n_by_n_matrices(tmp_matrix,
-                                        homogeneous_matrix,
-                                        4,
-                                        homogeneous_matrix_tmp);
-  for(int i = 0; i < 16; ++i) {
-    homogeneous_matrix[i] = homogeneous_matrix_tmp[i];
-  }
+  // // rotation
+  // PDM_rotation_euler_angles_to_homogeneous_matrix(ang_x,ang_y,ang_z,order,
+  //   intrinsic,tmp_matrix);
+  // if (reverse){
+  //   transpose_homogeneous_matrix(tmp_matrix);
+  // }
+  // PDM_rotation_multiply_n_by_n_matrices(tmp_matrix,
+  //                                       homogeneous_matrix,
+  //                                       4,
+  //                                       homogeneous_matrix_tmp);
+  // for(int i = 0; i < 16; ++i) {
+  //   homogeneous_matrix[i] = homogeneous_matrix_tmp[i];
+  // }
   
-  // translation of rotation_center
-  set_translation_to_homogeneous_matrix(rotation_center,
-                                        PDM_FALSE,
-                                        tmp_matrix);
-  PDM_rotation_multiply_n_by_n_matrices(tmp_matrix,
-                                        homogeneous_matrix,
-                                        4,
-                                        homogeneous_matrix_tmp);
-  for(int i = 0; i < 16; ++i) {
-    homogeneous_matrix[i] = homogeneous_matrix_tmp[i];
-  }
+  // // translation of rotation_center
+  // set_translation_to_homogeneous_matrix(rotation_center,
+  //                                       PDM_FALSE,
+  //                                       tmp_matrix);
+  // PDM_rotation_multiply_n_by_n_matrices(tmp_matrix,
+  //                                       homogeneous_matrix,
+  //                                       4,
+  //                                       homogeneous_matrix_tmp);
+  // for(int i = 0; i < 16; ++i) {
+  //   homogeneous_matrix[i] = homogeneous_matrix_tmp[i];
+  // }
 
   // applying the homogeneous matrix to the coordinate vector
   PDM_rotation_apply_homogeneous_matrix(homogeneous_matrix,
@@ -577,58 +764,55 @@ PDM_rotation_apply_axis_angle_and_rotation_center
         double* vector_out
 )
 {
-  // building the homogeneous matrix corresponding to whole transformation:
-  // Trans+.Rot.Trans-
-  double homogeneous_matrix[16];
-  double homogeneous_matrix_tmp[16];
-  double tmp_matrix[16];
-  // translation of -rotation_center
-  set_translation_to_homogeneous_matrix(rotation_center,PDM_TRUE,
-    homogeneous_matrix);
+  double homogeneous_matrix    [16];
+  PDM_rotation_axis_angle_and_rotation_center_to_homogeneous_matrix(axis,
+                                                                    angle,
+                                                                    rotation_center,
+                                                                    reverse,
+                                                                    homogeneous_matrix);
+  // // building the homogeneous matrix corresponding to whole transformation:
+  // // Trans+.Rot.Trans-
+  // double homogeneous_matrix[16];
+  // double homogeneous_matrix_tmp[16];
+  // double tmp_matrix[16];
+  // set_identity_to_homogeneous_matrix(homogeneous_matrix);
+  // // translation of -rotation_center
+  // set_translation_to_homogeneous_matrix(rotation_center,PDM_TRUE,
+  //   homogeneous_matrix);
   
-  // rotation
-  PDM_rotation_axis_angle_to_homogeneous_matrix(axis,angle,tmp_matrix);
-  if (reverse){
-    // transposing the rotation matrix
-    double tmp;
-    tmp = tmp_matrix[1];
-    tmp_matrix[1] = tmp_matrix[4];
-    tmp_matrix[4] = tmp;
-    tmp = tmp_matrix[2];
-    tmp_matrix[2] = tmp_matrix[8];
-    tmp_matrix[8] = tmp;
-    tmp = tmp_matrix[6];
-    tmp_matrix[6] = tmp_matrix[9];
-    tmp_matrix[9] = tmp;
-  }
+  // // rotation
+  // double langle = (reverse ? -angle : angle);
+  // PDM_rotation_axis_angle_to_homogeneous_matrix(axis,langle,tmp_matrix);
 
-  // BLAS_DGEMM does not support inplace
-  PDM_rotation_multiply_n_by_n_matrices(tmp_matrix,
-                                        homogeneous_matrix,
-                                        4,
-                                        homogeneous_matrix_tmp);
+  // // BLAS_DGEMM does not support inplace
+  // PDM_rotation_multiply_n_by_n_matrices(tmp_matrix,
+  //                                       homogeneous_matrix,
+  //                                       4,
+  //                                       homogeneous_matrix_tmp);
 
-  for(int i = 0; i < 16; ++i) {
-    homogeneous_matrix[i] = homogeneous_matrix_tmp[i];
-  }
+  // for(int i = 0; i < 16; ++i) {
+  //   homogeneous_matrix[i] = homogeneous_matrix_tmp[i];
+  // }
   
-  // translation of rotation_center
-  set_translation_to_homogeneous_matrix(rotation_center,
-                                        PDM_FALSE,
-                                        tmp_matrix);
+  // // translation of rotation_center
+  // set_translation_to_homogeneous_matrix(rotation_center,
+  //                                       PDM_FALSE,
+  //                                       tmp_matrix);
 
-  PDM_rotation_multiply_n_by_n_matrices(tmp_matrix,
-                                        homogeneous_matrix,
-                                        4,
-                                        homogeneous_matrix_tmp);
+  // PDM_rotation_multiply_n_by_n_matrices(tmp_matrix,
+  //                                       homogeneous_matrix,
+  //                                       4,
+  //                                       homogeneous_matrix_tmp);
 
-  for(int i = 0; i < 16; ++i) {
-    homogeneous_matrix[i] = homogeneous_matrix_tmp[i];
-  }
+  // for(int i = 0; i < 16; ++i) {
+  //   homogeneous_matrix[i] = homogeneous_matrix_tmp[i];
+  // }
 
   // applying the homogeneous matrix to the coordinate vector
-  PDM_rotation_apply_homogeneous_matrix(homogeneous_matrix,vector,n_samp,
-    vector_out);
+  PDM_rotation_apply_homogeneous_matrix(homogeneous_matrix,
+                                        vector,
+                                        n_samp,
+                                        vector_out);
 }
 
 void
@@ -642,53 +826,47 @@ PDM_rotation_apply_rotation_matrix_and_rotation_center
         double* vector_out
 )
 {
-  // building the homogeneous matrix corresponding to whole transformation:
-  // Trans+.Rot.Trans-
   double homogeneous_matrix[16];
-  double homogeneous_matrix_tmp[16];
-  double tmp_matrix[16];
-  // translation of -rotation_center
-  set_translation_to_homogeneous_matrix(rotation_center,PDM_TRUE,
-    homogeneous_matrix);
+  PDM_rotation_rotation_matrix_and_rotation_center_to_homogeneous_matrix(rotation_matrix,
+                                                                         rotation_center,
+                                                                         reverse,
+                                                                         homogeneous_matrix);
+  // // building the homogeneous matrix corresponding to whole transformation:
+  // // Trans+.Rot.Trans-
+  // double homogeneous_matrix_tmp[16];
+  // double tmp_matrix[16];
+  // // translation of -rotation_center
+  // set_translation_to_homogeneous_matrix(rotation_center,PDM_TRUE,
+  //   homogeneous_matrix);
   
-  // rotation
-  PDM_rotation_rotation_matrix_to_homogeneous_matrix(rotation_matrix,
-    tmp_matrix);
-  if (reverse){
-    // transposing the rotation matrix
-    double tmp;
-    tmp = tmp_matrix[1];
-    tmp_matrix[1] = tmp_matrix[4];
-    tmp_matrix[4] = tmp;
-    tmp = tmp_matrix[2];
-    tmp_matrix[2] = tmp_matrix[8];
-    tmp_matrix[8] = tmp;
-    tmp = tmp_matrix[6];
-    tmp_matrix[6] = tmp_matrix[9];
-    tmp_matrix[9] = tmp;
-  }
-  PDM_rotation_multiply_n_by_n_matrices(tmp_matrix,
-                                        homogeneous_matrix,
-                                        4,
-                                        homogeneous_matrix_tmp);
+  // // rotation
+  // PDM_rotation_rotation_matrix_to_homogeneous_matrix(rotation_matrix,
+  //   tmp_matrix);
+  // if (reverse){
+  //   transpose_homogeneous_matrix(tmp_matrix);
+  // }
+  // PDM_rotation_multiply_n_by_n_matrices(tmp_matrix,
+  //                                       homogeneous_matrix,
+  //                                       4,
+  //                                       homogeneous_matrix_tmp);
   
-  for(int i = 0; i < 16; ++i) {
-    homogeneous_matrix[i] = homogeneous_matrix_tmp[i];
-  }
+  // for(int i = 0; i < 16; ++i) {
+  //   homogeneous_matrix[i] = homogeneous_matrix_tmp[i];
+  // }
 
-  // translation of rotation_center
-  set_translation_to_homogeneous_matrix(rotation_center,
-                                        PDM_FALSE,
-                                        tmp_matrix);
+  // // translation of rotation_center
+  // set_translation_to_homogeneous_matrix(rotation_center,
+  //                                       PDM_FALSE,
+  //                                       tmp_matrix);
 
-  PDM_rotation_multiply_n_by_n_matrices(tmp_matrix,
-                                        homogeneous_matrix,
-                                        4,
-                                        homogeneous_matrix_tmp);
+  // PDM_rotation_multiply_n_by_n_matrices(tmp_matrix,
+  //                                       homogeneous_matrix,
+  //                                       4,
+  //                                       homogeneous_matrix_tmp);
 
-  for(int i = 0; i < 16; ++i) {
-    homogeneous_matrix[i] = homogeneous_matrix_tmp[i];
-  }
+  // for(int i = 0; i < 16; ++i) {
+  //   homogeneous_matrix[i] = homogeneous_matrix_tmp[i];
+  // }
 
   // applying the homogeneous matrix to the coordinate vector
   PDM_rotation_apply_homogeneous_matrix(homogeneous_matrix,vector,n_samp,

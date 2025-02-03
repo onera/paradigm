@@ -517,6 +517,10 @@ Test_two_vectors_to_euler_angles.test_compute()
 Test_two_vectors_to_rotation_matrix.test_arguments()
 Test_two_vectors_to_rotation_matrix.test_compute()
 
+print(PDM.axis_angle_and_rotation_center_to_homogeneous_matrix)
+print(PDM.euler_angles_and_rotation_center_to_homogeneous_matrix)
+print(PDM.rotation_matrix_and_rotation_center_to_homogeneous_matrix)
+print(PDM.periodic_t_info_to_homogeneous_matrix)
 #region euler angles -----------------------------------------------------------
 
 
