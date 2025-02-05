@@ -15,10 +15,6 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
-/* after pdm.h: pdm.h includes pdm_config.h which defines PDM_HAVE_MKL and PDM_HAVE_LAPACK */
-#if defined(PDM_HAVE_MKL) || defined(PDM_HAVE_LAPACK)
-#include <cblas.h>
-#endif
 #include "pdm_timer.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
@@ -28,6 +24,20 @@
 
 
 /*----------------------------------------------------------------------------*/
+
+#if defined(PDM_HAVE_MKL) || defined(PDM_HAVE_LAPACK)
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+  void dgemm_(char *transA, char *transB, int *m, int *n, int *k,
+                     double *alpha, double *A, int *lda,
+                     double *B, int *ldb, double *beta,
+                     double *C, int *ldc);
+#ifdef __cplusplus
+}
+#endif
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -577,26 +587,32 @@ PDM_rotation_multiply_n_by_n_matrices
 )
 {
 #if defined(PDM_HAVE_MKL) || defined(PDM_HAVE_LAPACK)
-  cblas_dgemm(CblasRowMajor,
-              CblasNoTrans,
-              CblasNoTrans,
-              n,
-              n,
-              n,
-              1.,
-              A,
-              n,
-              B,
-              n,
-              0.,
-              C,
-              n);
+  char no_trans = 'N';
+  double alpha = 1.;
+  double beta = 0.;
+  // avoiding const warnings
+  int n_ = n;
+  double* A_ = (double*) A;
+  double* B_ = (double*) B;
+  dgemm_(&no_trans,
+         &no_trans,
+         &n_,
+         &n_,
+         &n_,
+         &alpha,
+         B_,
+         &n_,
+         A_,
+         &n_,
+         &beta,
+         C,
+         &n_);
 #else
   PDM_UNUSED(A);
   PDM_UNUSED(B);
   PDM_UNUSED(n);
   PDM_UNUSED(C);
-  printf("Error : CBLAS is mandatory (shipped with LAPACK or MKL), recompile with it.\n");
+  printf("Error : BLAS is mandatory (shipped with LAPACK or MKL), recompile with it.\n");
   exit(EX_CONFIG);
 #endif
 }
@@ -612,25 +628,37 @@ PDM_rotation_apply_n_by_n_matrix
 )
 {
 #if defined(PDM_HAVE_MKL) || defined(PDM_HAVE_LAPACK)
-  cblas_dgemm(CblasRowMajor,
-              CblasNoTrans,
-              CblasTrans,
-              n_samp,
-              n,n,
-              1.,
-              x,n,
-              A,
-              n,
-              0.,
-              y,
-              n);
+  // avoiding const warnings
+  char no_trans = 'N';
+  char    trans = 'T';
+  double alpha = 1.;
+  double beta  = 0.;
+  int n_samp_ = n_samp;
+  double* A_ = (double*) A; // (n-by-n) -> k=n / n=n
+  double* x_ = (double*) x; // (n_samp-by-n) -> m=n_samp / k=n
+  int m_ = n_samp;
+  int n_ = n;
+  int k_ = n; // sure
+  dgemm_(&trans,
+         &no_trans,
+         &n_,       // n (flipping m & n > fortran/C)
+         &m_,       // m
+         &k_,       // k
+         &alpha,
+         A_,
+         &n_,       // lda
+         x_,
+         &n_,       // ldb
+         &beta,
+         y,
+         &n_);      // ldc
 #else
   PDM_UNUSED(A);
   PDM_UNUSED(x);
   PDM_UNUSED(n);
   PDM_UNUSED(n_samp);
   PDM_UNUSED(y);
-  printf("Error : CBLAS is mandatory (shipped with LAPACK or MKL), recompile with it.\n");
+  printf("Error : BLAS is mandatory (shipped with LAPACK or MKL), recompile with it.\n");
   exit(EX_CONFIG);
 #endif
 }

@@ -17,17 +17,17 @@ static const double RAD2DEG = 180./M_PI;
  *  PDM_rotation_t COMPOSITE FUNCTIONS
  *----------------------------------------------------------------------------*/
 
-// static void print_matrix(const double* mat,const int n_row,const int n_col) {
-//     PDM_printf("#####\n");
-//     for (int i=0; i<n_row;i++){
-//         PDM_printf("|");
-//         for (int j=0; j<n_col;j++){
-//             PDM_printf("%5.3f\t",mat[n_col*i+j]);
-//         }
-//         PDM_printf("|\n");
-//     }
-//     PDM_printf("#####\n");
-// }
+static void print_matrix(const double* mat,const int n_row,const int n_col) {
+    PDM_printf("#####\n");
+    for (int i=0; i<n_row;i++){
+        PDM_printf("|");
+        for (int j=0; j<n_col;j++){
+            PDM_printf("%5.3f\t",mat[n_col*i+j]);
+        }
+        PDM_printf("|\n");
+    }
+    PDM_printf("#####\n");
+}
 
 static void multiply_matrices(double A[16],double B[16],double C[16]){
     for (int i = 0; i < 4; i++) {
@@ -47,7 +47,6 @@ static void mat_vec(double A[9],double x[3],double y[3]){
             y[i] += A[3*i+j]*x[j];
         }
     }
-
 }
 
 #if defined(PDM_HAVE_MKL) || defined(PDM_HAVE_LAPACK)
@@ -81,10 +80,14 @@ MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_multiply_n_by_n_matrices", 1) 
     double exp_C[16];
     multiply_matrices(A,B,exp_C);
     PDM_rotation_multiply_n_by_n_matrices(A,B,4,C);
+    // print_matrix(C,4,4);
+    // print_matrix(exp_C,4,4);
     CHECK_EQ_C_ARRAY_FLOAT(C,exp_C,12,EPS);
 
     multiply_matrices(D,E,exp_C);
     PDM_rotation_multiply_n_by_n_matrices(D,E,4,C);
+    // print_matrix(C,4,4);
+    // print_matrix(exp_C,4,4);
     CHECK_EQ_C_ARRAY_FLOAT(C,exp_C,12,EPS);
 }
 
@@ -151,6 +154,10 @@ MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_apply_n_by_n_matrix", 1) {
 
     }
     PDM_rotation_apply_n_by_n_matrix(mat,vector,3,n_samp,vector_out);
+    // print_matrix(mat,3,3);
+    // print_matrix(vector,7,3);
+    // print_matrix(vector_out,7,3);
+    // print_matrix(exp_out,7,3);
     CHECK_EQ_C_ARRAY_FLOAT(vector_out,exp_out,12,EPS);
 }
 
