@@ -377,6 +377,30 @@ _compare_nuplets
   return 0;
 }
 
+/**
+ *  \brief Compare lexicographically two nuplets of same size (in absolute value)
+ *
+ *  \return -1 if a > b, 0 if a == b, 1 if a < b
+ */
+static inline int
+_compare_nuplets_abs
+(
+  const int size,
+  const int a[],
+  const int b[]
+)
+{
+  for (int i = 0; i < size; i++) {
+    if (PDM_ABS(a[i]) < PDM_ABS(b[i])) {
+      return 1;
+    }
+    if (PDM_ABS(a[i]) > PDM_ABS(b[i])) {
+      return -1;
+    }
+  }
+  return 0;
+}
+
 
 static PDM_part_comm_graph_t *
 _create
@@ -645,7 +669,7 @@ _create
       int my_location[3] = {i_rank, i_part+1, l_entity};
 
       if(lowner[pos] != 0) {
-        if (_compare_nuplets(3, my_location, &pentity_graph[i_part][4*idx_entity+1]) >= 0) {
+        if (_compare_nuplets_abs(3, my_location, &pentity_graph[i_part][4*idx_entity+1]) >= 0) {
           lowner[pos] = 1;
         }
         else {
@@ -1652,7 +1676,12 @@ PDM_part_comm_graph_entity_nuplet_get
     pcg->owner_nuplet = ownership;
   }
 
-  *entity_nuplet = pcg->pentity_nuplet[i_part];
+  if (pcg->pentity_nuplet != NULL) {
+    *entity_nuplet = pcg->pentity_nuplet[i_part];
+  }
+  else {
+    *entity_nuplet = NULL;
+  }
 
   return pcg->nuplet_size;
 }

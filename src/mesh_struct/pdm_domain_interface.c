@@ -5282,6 +5282,9 @@ PDM_domain_interface_rotation_set
   assert(dom_intrf->rotation_direction[i_interface] == NULL);
   assert(dom_intrf->rotation_center   [i_interface] == NULL);
 
+  PDM_malloc(dom_intrf->rotation_direction[i_interface], 3, double);
+  PDM_malloc(dom_intrf->rotation_center   [i_interface], 3, double);
+
   for(int i = 0; i < 3; ++i) {
     dom_intrf->rotation_direction[i_interface][i] = direction[i];
     dom_intrf->rotation_center   [i_interface][i] = center   [i];

@@ -335,7 +335,7 @@ int main
                                          n_domain,
                                          n_part_per_domain,
                                          n_vtx,
-                                         vtx_ln_to_gn,
+                                         vtx_ln_to_gn, // J'aimerais bien pouvoir passer un pointeur NULL
                                          vtx_part_bound_proc_idx,
                                          vtx_part_bound_part_idx,
                                          vtx_part_bound,
@@ -503,7 +503,7 @@ int main
 
           for (int idx_vtx = 0; idx_vtx < 2; idx_vtx++) {
             double *p = &send_data[j_part][6*i_bnd + 3*idx_vtx];
-            int i_vtx = pedge_vtx[j_part][2*i_edge+idx_vtx] - 1;
+            int i_vtx =  pedge_vtx[j_part][2*i_edge+idx_vtx] - 1;
             memcpy(p, &vtx_coord[3*i_vtx], sizeof(double) * 3);
 
             if (i_itrf == 1) {
