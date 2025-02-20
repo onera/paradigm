@@ -40,11 +40,11 @@ MPI_TEST_CASE("[pdm_mesh_location] - tria", 1) {
   vtx_coord[ 8] = 0.0;
 
   PDM_l_num_t n_face = 1;
-  PDM_l_num_t face_vtx_idx[n_face+1] = {0, 3};
-  PDM_l_num_t face_vtx[face_vtx_idx[n_face]] = {1, 2, 3};
+  PDM_l_num_t face_vtx_idx[2] = {0, 3};
+  PDM_l_num_t face_vtx[3] = {1, 2, 3};
 
-  PDM_g_num_t face_ln_to_gn[n_face] = {1};
-  PDM_g_num_t vtx_ln_to_gn[n_vtx] = {1, 2, 3};
+  PDM_g_num_t face_ln_to_gn[1] = {1};
+  PDM_g_num_t vtx_ln_to_gn[3] = {1, 2, 3};
 
   PDM_mesh_location_t *ml = PDM_mesh_location_create(1,
                                                      comm,
@@ -64,7 +64,7 @@ MPI_TEST_CASE("[pdm_mesh_location] - tria", 1) {
   int n_pts = 1;
   double *pts_coord = NULL;
   PDM_malloc(pts_coord, 3*n_pts, double);
-  PDM_g_num_t gnum[n_pts] = {1};
+  PDM_g_num_t gnum[1] = {1};
 
   pts_coord[0] = fact/2. + 0.5*(1.-fact/2.);
   pts_coord[1] = 0.5;
@@ -102,7 +102,7 @@ MPI_TEST_CASE("[pdm_mesh_location] - tria", 1) {
                                       &points_dist2,
                                       &points_projected_coords);
 
-  double expected_weights[n_vtx] = {0.25, 0.25, 0.5};
+  double expected_weights[3] = {0.25, 0.25, 0.5};
 
   for (int i=0; i<n_vtx; i++){
     CHECK(fabs(points_weights[i] - expected_weights[i]) < tol);
@@ -141,11 +141,11 @@ MPI_TEST_CASE("[pdm_mesh_location] - quad", 1) {
   vtx_coord[11] = 0.0;
 
   PDM_l_num_t n_face = 1;
-  PDM_l_num_t face_vtx_idx[n_face+1] = {0, 4};
-  PDM_l_num_t face_vtx[face_vtx_idx[n_face]] = {1, 2, 3, 4};
+  PDM_l_num_t face_vtx_idx[2] = {0, 4};
+  PDM_l_num_t face_vtx[4] = {1, 2, 3, 4};
 
-  PDM_g_num_t face_ln_to_gn[n_face] = {1};
-  PDM_g_num_t vtx_ln_to_gn[n_vtx] = {1, 2, 3, 4};
+  PDM_g_num_t face_ln_to_gn[1] = {1};
+  PDM_g_num_t vtx_ln_to_gn[4] = {1, 2, 3, 4};
 
   PDM_mesh_location_t *ml = PDM_mesh_location_create(1,
                                                      comm,
@@ -165,7 +165,7 @@ MPI_TEST_CASE("[pdm_mesh_location] - quad", 1) {
   int n_pts = 1;
   double *pts_coord = NULL;
   PDM_malloc(pts_coord, 3*n_pts, double);
-  PDM_g_num_t gnum[n_pts] = {1};
+  PDM_g_num_t gnum[1] = {1};
 
   pts_coord[0] = 0.5*fact;
   pts_coord[1] = 0.5*fact;
@@ -203,7 +203,7 @@ MPI_TEST_CASE("[pdm_mesh_location] - quad", 1) {
                                       &points_dist2,
                                       &points_projected_coords);
 
-  double expected_weights[n_vtx] = {0.33333325, 0.33333325, 2.5e-07, 0.33333325};
+  double expected_weights[4] = {0.33333325, 0.33333325, 2.5e-07, 0.33333325};
 
   for (int i=0; i<n_vtx; i++){
     CHECK(fabs(points_weights[i] - expected_weights[i]) < tol);
@@ -251,11 +251,11 @@ MPI_TEST_CASE("[pdm_mesh_location] - poly", 1) {
   vtx_coord[17] = 0.0;
 
   PDM_l_num_t n_face = 1;
-  PDM_l_num_t face_vtx_idx[n_face+1] = {0, 6};
-  PDM_l_num_t face_vtx[face_vtx_idx[n_face]] = {1, 2, 3, 4, 5, 6};
+  PDM_l_num_t face_vtx_idx[2] = {0, 6};
+  PDM_l_num_t face_vtx[6] = {1, 2, 3, 4, 5, 6};
 
-  PDM_g_num_t face_ln_to_gn[n_face] = {1};
-  PDM_g_num_t vtx_ln_to_gn[n_vtx] = {1, 2, 3, 4, 5, 6};
+  PDM_g_num_t face_ln_to_gn[1] = {1};
+  PDM_g_num_t vtx_ln_to_gn[6] = {1, 2, 3, 4, 5, 6};
 
   PDM_mesh_location_t *ml = PDM_mesh_location_create(1,
                                                      comm,
@@ -275,7 +275,7 @@ MPI_TEST_CASE("[pdm_mesh_location] - poly", 1) {
   int n_pts = 1;
   double *pts_coord = NULL;
   PDM_malloc(pts_coord, 3*n_pts, double);
-  PDM_g_num_t gnum[n_pts] = {1};
+  PDM_g_num_t gnum[1] = {1};
 
   pts_coord[0] = 0.5;
   pts_coord[1] = 1.0;
@@ -364,11 +364,11 @@ MPI_TEST_CASE("[pdm_mesh_location] - tetra", 1) {
   vtx_coord[11] = 1.0*fact;
 
   PDM_l_num_t n_cell = 1;
-  PDM_l_num_t cell_vtx_idx[n_cell+1] = {0,4};
-  PDM_l_num_t cell_vtx[cell_vtx_idx[n_cell]] = {1, 2, 3, 4};
+  PDM_l_num_t cell_vtx_idx[2] = {0,4};
+  PDM_l_num_t cell_vtx[4] = {1, 2, 3, 4};
 
   PDM_g_num_t cell_ln_to_gn[1] = {1};
-  PDM_g_num_t vtx_ln_to_gn[5] = {1, 2, 3, 4};
+  PDM_g_num_t vtx_ln_to_gn[4] = {1, 2, 3, 4};
 
   PDM_mesh_location_t *ml = PDM_mesh_location_create(1,
                                                      comm,
@@ -388,7 +388,7 @@ MPI_TEST_CASE("[pdm_mesh_location] - tetra", 1) {
   int n_pts = 2;
   double *pts_coord = NULL;
   PDM_malloc(pts_coord, 3*n_pts, double);
-  PDM_g_num_t gnum[n_pts] = {1, 2};
+  PDM_g_num_t gnum[2] = {1, 2};
 
   pts_coord[0] = 0.45;
   pts_coord[1] = 0.05*fact;
@@ -431,7 +431,7 @@ MPI_TEST_CASE("[pdm_mesh_location] - tetra", 1) {
                                       &points_projected_coords);
 
 
-  double expected_weights[n_pts*n_vtx] = {0.3625, 0.1275, 0.4125, 0.0975,
+  double expected_weights[8] = {0.3625, 0.1275, 0.4125, 0.0975,
                                           0.18749218769507753, 0.0, 0.43749218769563264, 0.37501562460928983};
 
   for (int i=0; i<n_pts*n_vtx; i++){
@@ -490,8 +490,8 @@ MPI_TEST_CASE("[pdm_mesh_location] - hexa nodal", 1) {
   vtx_coord[23] =  1.0*fact;
 
   PDM_l_num_t n_cell = 1;
-  PDM_l_num_t cell_vtx_idx[n_cell] = {0, 8};
-  PDM_l_num_t cell_vtx[cell_vtx_idx[n_cell]] = {1, 2, 4, 3, 5, 6, 8, 7};
+  PDM_l_num_t cell_vtx_idx[2] = {0, 8};
+  PDM_l_num_t cell_vtx[8] = {1, 2, 4, 3, 5, 6, 8, 7};
 
   PDM_g_num_t cell_ln_to_gn[1] = {1};
   PDM_g_num_t vtx_ln_to_gn[8] = {1, 2, 3, 4, 5, 6, 7, 8};
@@ -514,7 +514,7 @@ MPI_TEST_CASE("[pdm_mesh_location] - hexa nodal", 1) {
   int n_pts = 1;
   double *pts_coord = NULL;
   PDM_malloc(pts_coord, 3*n_pts, double);
-  PDM_g_num_t gnum[n_pts] = {1};
+  PDM_g_num_t gnum[1] = {1};
 
   pts_coord[0] = 1.5;
   pts_coord[1] = 0.0;
@@ -650,22 +650,22 @@ MPI_TEST_CASE("[pdm_mesh_location] - hexa", 1) {
   vtx_coord[23] =  1.0*fact;
 
   PDM_l_num_t n_cell = 1;
-  PDM_l_num_t cell_face_idx[n_cell+1] = {0, 6};
-  PDM_l_num_t cell_face[cell_face_idx[n_cell]] = {1, 2, 3, 4, 5, 6};
+  PDM_l_num_t cell_face_idx[2] = {0, 6};
+  PDM_l_num_t cell_face[6] = {1, 2, 3, 4, 5, 6};
 
-  PDM_g_num_t cell_ln_to_gn[n_cell] = {1};
+  PDM_g_num_t cell_ln_to_gn[1] = {1};
 
   PDM_g_num_t n_face = 6;
-  PDM_l_num_t face_vtx_idx[n_face+1] = {0, 4, 8, 12, 16, 20, 24};
-  PDM_l_num_t face_vtx[face_vtx_idx[n_face]] = {1, 2, 4, 3,
+  PDM_l_num_t face_vtx_idx[7] = {0, 4, 8, 12, 16, 20, 24};
+  PDM_l_num_t face_vtx[24] = {1, 2, 4, 3,
                                                 1, 5, 6, 2,
                                                 2, 6, 8, 4,
                                                 4, 8, 7, 3,
                                                 3, 7, 1, 5,
                                                 5, 7, 8, 6};
 
-  PDM_g_num_t face_ln_to_gn[n_face] = {1, 2, 3, 4, 5, 6};
-  PDM_g_num_t vtx_ln_to_gn[n_vtx] = {1, 2, 3, 4, 5, 6, 7, 8};
+  PDM_g_num_t face_ln_to_gn[6] = {1, 2, 3, 4, 5, 6};
+  PDM_g_num_t vtx_ln_to_gn[8] = {1, 2, 3, 4, 5, 6, 7, 8};
 
   PDM_mesh_location_t *ml = PDM_mesh_location_create(1,
                                                      comm,
@@ -689,7 +689,7 @@ MPI_TEST_CASE("[pdm_mesh_location] - hexa", 1) {
   int n_pts = 1;
   double *pts_coord = NULL;
   PDM_malloc(pts_coord, 3*n_pts, double);
-  PDM_g_num_t gnum[n_pts] = {1};
+  PDM_g_num_t gnum[1] = {1};
 
   pts_coord[0] = 0.75;
   pts_coord[1] = 0.75;
@@ -808,8 +808,8 @@ MPI_TEST_CASE("[pdm_mesh_location] - pyra", 1) {
   vtx_coord[14] = fact;
 
   PDM_l_num_t n_cell = 1;
-  PDM_l_num_t cell_vtx_idx[n_cell+1] = {0, 5};
-  PDM_l_num_t cell_vtx[cell_vtx_idx[n_cell]] = {1, 2, 4, 3, 5};
+  PDM_l_num_t cell_vtx_idx[2] = {0, 5};
+  PDM_l_num_t cell_vtx[5] = {1, 2, 4, 3, 5};
 
   PDM_g_num_t cell_ln_to_gn[1] = {1};
   PDM_g_num_t vtx_ln_to_gn[5] = {1, 2, 4, 3, 5};
@@ -879,7 +879,7 @@ MPI_TEST_CASE("[pdm_mesh_location] - pyra", 1) {
   printf("points_dist2 p1: [%.16e]\n", points_dist2[0]);
   printf("points_projected_coords p1: [%.16e; %.16e; %.16e]\n", points_projected_coords[0], points_projected_coords[1], points_projected_coords[2]);
 
-  double expected_weights[n_pts*n_vtx] = {0.293560606, 0.2231060606, 0.093560606, 0.1231060606, 0.2666666666};
+  double expected_weights[5] = {0.293560606, 0.2231060606, 0.093560606, 0.1231060606, 0.2666666666};
 
   for (int i=0; i<n_pts*n_vtx; i++){
     CHECK(fabs(points_weights[i] - expected_weights[i]) < tol);
@@ -929,11 +929,11 @@ MPI_TEST_CASE("[pdm_mesh_location] - prism", 1) {
   vtx_coord[17] = 1.0;
 
   PDM_l_num_t n_cell = 1;
-  PDM_l_num_t cell_vtx_idx[n_cell+1] = {0, 6};
-  PDM_l_num_t cell_vtx[cell_vtx_idx[n_cell]] = {1, 2, 3, 4, 5, 6};
+  PDM_l_num_t cell_vtx_idx[2] = {0, 6};
+  PDM_l_num_t cell_vtx[6] = {1, 2, 3, 4, 5, 6};
 
-  PDM_g_num_t cell_ln_to_gn[n_cell] = {1};
-  PDM_g_num_t vtx_ln_to_gn[n_vtx] = {1, 2, 3, 4, 5, 6};
+  PDM_g_num_t cell_ln_to_gn[1] = {1};
+  PDM_g_num_t vtx_ln_to_gn[6] = {1, 2, 3, 4, 5, 6};
 
   PDM_mesh_location_t *ml = PDM_mesh_location_create(1,
                                                      comm,
@@ -953,7 +953,7 @@ MPI_TEST_CASE("[pdm_mesh_location] - prism", 1) {
   int n_pts = 1;
   double *pts_coord = NULL;
   PDM_malloc(pts_coord, 3*n_pts, double);
-  PDM_g_num_t gnum[n_pts] = {1};
+  PDM_g_num_t gnum[1] = {1};
 
   pts_coord[0] = 0.0;//*(2-fact);
   pts_coord[1] = 0.0;//*(2-fact);
@@ -1064,26 +1064,26 @@ MPI_TEST_CASE("[pdm_mesh_location] - polyhedron", 1) {
   vtx_coord[23] = 1.0*fact;
 
   PDM_l_num_t n_cell = 1;
-  PDM_l_num_t cell_face_idx[n_cell+1] = {0, 10};
-  PDM_l_num_t cell_face[cell_face_idx[n_cell]] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+  PDM_l_num_t cell_face_idx[2] = {0, 10};
+  PDM_l_num_t cell_face[10] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 
-  PDM_g_num_t cell_ln_to_gn[n_cell] = {1};
+  PDM_g_num_t cell_ln_to_gn[1] = {1};
 
   PDM_g_num_t n_face = 10;
-  PDM_l_num_t face_vtx_idx[n_face+1] = {0, 4, 8, 11, 14, 17, 20, 23, 26, 29, 32};
-  PDM_l_num_t face_vtx[face_vtx_idx[n_face]] = {1, 4, 3, 2,
-                                                5, 6, 7, 8, 
-                                                1, 2, 5,
-                                                2, 3, 6,
-                                                3, 4, 7,
-                                                4, 1, 8,
-                                                1, 5, 8,
-                                                2, 6, 5,
-                                                3, 7, 6,
-                                                4, 8, 7};
+  PDM_l_num_t face_vtx_idx[11] = {0, 4, 8, 11, 14, 17, 20, 23, 26, 29, 32};
+  PDM_l_num_t face_vtx[32] = {1, 4, 3, 2,
+                              5, 6, 7, 8, 
+                              1, 2, 5,
+                              2, 3, 6,
+                              3, 4, 7,
+                              4, 1, 8,
+                              1, 5, 8,
+                              2, 6, 5,
+                              3, 7, 6,
+                              4, 8, 7};
 
-  PDM_g_num_t face_ln_to_gn[n_face] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
-  PDM_g_num_t vtx_ln_to_gn[n_vtx] = {1, 2, 3, 4, 5, 6, 7, 8};
+  PDM_g_num_t face_ln_to_gn[10] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+  PDM_g_num_t vtx_ln_to_gn[8] = {1, 2, 3, 4, 5, 6, 7, 8};
 
   PDM_mesh_location_t *ml = PDM_mesh_location_create(1,
                                                      comm,
@@ -1107,7 +1107,7 @@ MPI_TEST_CASE("[pdm_mesh_location] - polyhedron", 1) {
   int n_pts = 1;
   double *pts_coord = NULL;
   PDM_malloc(pts_coord, 3*n_pts, double);
-  PDM_g_num_t gnum[n_pts] = {1};
+  PDM_g_num_t gnum[1] = {1};
 
   pts_coord[0] = 0.45;
   pts_coord[1] = 0.45;
@@ -1284,7 +1284,7 @@ MPI_TEST_CASE("[pdm_mesh_location] - generated mesh", 1) {
   int n_pts = 1;
   double *pts_coord = NULL;
   PDM_malloc(pts_coord, 3*n_pts, double);
-  PDM_g_num_t gnum[n_pts] = {1};
+  PDM_g_num_t gnum[1] = {1};
 
   pts_coord[0] = 0.66;
   pts_coord[1] = 0.8;
