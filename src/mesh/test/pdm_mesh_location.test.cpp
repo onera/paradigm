@@ -9,6 +9,7 @@
 #include "math.h"
 #include "pdm_generate_mesh.h"
 #include "pdm_priv.h"
+#include "pdm_mpi.h"
 
 #include "pdm_mesh_location.h"
 
@@ -19,7 +20,7 @@ static double tol = 1e-10;
 
 MPI_TEST_CASE("[pdm_mesh_location] - tria", 1) {
 
-  PDM_MPI_Comm comm = PDM_MPI_COMM_WORLD;
+  PDM_MPI_Comm comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);;
 
   int n_vtx = 3;
   double *vtx_coord = NULL;
@@ -51,16 +52,16 @@ MPI_TEST_CASE("[pdm_mesh_location] - tria", 1) {
                                                      PDM_OWNERSHIP_KEEP);
   PDM_mesh_location_mesh_n_part_set(ml, 1);
 
-  PDM_mesh_location_nodal_part_set_2d(ml,
-                                   0,
-                                   n_face,
-                                   face_vtx_idx,
-                                   face_vtx,
-                                   face_ln_to_gn,
-                                   n_vtx,
-                                   vtx_coord,
-                                   vtx_ln_to_gn);
 
+  PDM_mesh_location_nodal_part_set_2d(ml,
+                                      0,
+                                      n_face,
+                                      face_vtx_idx,
+                                      face_vtx,
+                                      face_ln_to_gn,
+                                      n_vtx,
+                                      vtx_coord,
+                                      vtx_ln_to_gn);
   int n_pts = 1;
   double *pts_coord = NULL;
   PDM_malloc(pts_coord, 3*n_pts, double);
@@ -116,7 +117,7 @@ MPI_TEST_CASE("[pdm_mesh_location] - tria", 1) {
 
 MPI_TEST_CASE("[pdm_mesh_location] - quad", 1) {
 
-  PDM_MPI_Comm comm = PDM_MPI_COMM_WORLD;
+  PDM_MPI_Comm comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);;
 
   int n_vtx = 4;
   double *vtx_coord = NULL;
@@ -217,7 +218,7 @@ MPI_TEST_CASE("[pdm_mesh_location] - quad", 1) {
 
 MPI_TEST_CASE("[pdm_mesh_location] - poly", 1) {
 
-  PDM_MPI_Comm comm = PDM_MPI_COMM_WORLD;
+  PDM_MPI_Comm comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);;
 
   int n_vtx = 6;
   double *vtx_coord = NULL;
@@ -339,7 +340,7 @@ MPI_TEST_CASE("[pdm_mesh_location] - poly", 1) {
 
 MPI_TEST_CASE("[pdm_mesh_location] - tetra", 1) {
 
-  PDM_MPI_Comm comm = PDM_MPI_COMM_WORLD;
+  PDM_MPI_Comm comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);;
 
   int n_vtx = 4;
   double *vtx_coord = NULL;
@@ -449,7 +450,7 @@ MPI_TEST_CASE("[pdm_mesh_location] - tetra", 1) {
 
 MPI_TEST_CASE("[pdm_mesh_location] - hexa nodal", 1) {
 
-  PDM_MPI_Comm comm = PDM_MPI_COMM_WORLD;
+  PDM_MPI_Comm comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);;
 
   int n_vtx = 8;
   double *vtx_coord = NULL;
@@ -609,7 +610,7 @@ MPI_TEST_CASE("[pdm_mesh_location] - hexa nodal", 1) {
 
 MPI_TEST_CASE("[pdm_mesh_location] - hexa", 1) {
 
-  PDM_MPI_Comm comm = PDM_MPI_COMM_WORLD;
+  PDM_MPI_Comm comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);;
 
   int n_vtx = 8;
   double *vtx_coord = NULL;
@@ -779,7 +780,7 @@ MPI_TEST_CASE("[pdm_mesh_location] - hexa", 1) {
 
 MPI_TEST_CASE("[pdm_mesh_location] - pyra", 1) {
 
-  PDM_MPI_Comm comm = PDM_MPI_COMM_WORLD;
+  PDM_MPI_Comm comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);;
 
   int n_vtx = 5;
   double *vtx_coord = NULL;
@@ -896,7 +897,7 @@ MPI_TEST_CASE("[pdm_mesh_location] - pyra", 1) {
 
 MPI_TEST_CASE("[pdm_mesh_location] - prism", 1) {
 
-  PDM_MPI_Comm comm = PDM_MPI_COMM_WORLD;
+  PDM_MPI_Comm comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);;
 
   int n_vtx = 6;
   double *vtx_coord = NULL;
@@ -1023,7 +1024,7 @@ MPI_TEST_CASE("[pdm_mesh_location] - prism", 1) {
 
 MPI_TEST_CASE("[pdm_mesh_location] - polyhedron", 1) {
 
-  PDM_MPI_Comm comm = PDM_MPI_COMM_WORLD;
+  PDM_MPI_Comm comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);;
 
   int n_vtx = 8;
   double *vtx_coord = NULL;
@@ -1191,7 +1192,7 @@ MPI_TEST_CASE("[pdm_mesh_location] - generated mesh", 1) {
   /*
    * Generate a cube
    */
-  PDM_MPI_Comm comm = PDM_MPI_COMM_WORLD;
+  PDM_MPI_Comm comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);;
   int n_rank;
   int i_rank;
   PDM_MPI_Comm_size(comm, &n_rank);
