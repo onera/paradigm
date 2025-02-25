@@ -568,6 +568,26 @@ class Test_two_vectors_to_rotation_matrix:
         out = PDM.two_vectors_to_rotation_matrix(vec1,vec2)
         print(out)
 
+class Test_axes_origin_to_homogeneous_matrix:
+
+    @staticmethod
+    def test_arguments():
+        pass
+    @staticmethod
+    def test_compute():
+        ax = np.array([1.,2.,3.])
+        DEG2RAD = np.pi/180.
+        angle = 12.*DEG2RAD
+        orig = np.array([4.,5.,6.,])
+        homo = PDM.axis_angle_and_rotation_center_to_homogenous_matrix(ax,angle,orig)
+        axis_origin_A = np.array([[1.,0.,0.],[0.,1.,0.],[0.,0.,1.],[0.,0.,0.]])
+        axis_origin_B = PDM.apply_homogeneous_matrix_to_coords(axis_origin_A,homo)
+        axis1,axis2,axis3,origin = axis_origin_B
+        homo2 = PDM.axes_and_origin_to_homogeneous_matrix(axis1,axis2,axis3,origin)
+        homo2_rev = PDM.axes_and_origin_to_homogeneous_matrix(axis1,axis2,axis3,origin,reverse=True)
+        assert np.allclose(homo2,homo)
+        assert np.allclose(homo2@homo2_rev,np.eye(4))
+        
 
 class Test_periodic_t_info_to_homogeneous_matrix:
     @staticmethod
@@ -612,6 +632,10 @@ Test_rotation_matrix_and_rotation_center_to_homogeneous_matrix.test_arguments()
 Test_rotation_matrix_and_rotation_center_to_homogeneous_matrix.test_compute()
 Test_periodic_t_info_to_homogeneous_matrix.test_arguments()
 Test_periodic_t_info_to_homogeneous_matrix.test_compute()
+
+Test_axes_origin_to_homogeneous_matrix.test_arguments()
+Test_axes_origin_to_homogeneous_matrix.test_compute()
+
 #region euler angles -----------------------------------------------------------
 
 

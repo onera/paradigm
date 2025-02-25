@@ -34,12 +34,16 @@ extern "C" {
  *  PDM_rotation_t INPUT/OUTPUT FUNCTIONS
  *----------------------------------------------------------------------------*/
 
+
+// Axis angle to other formats ---
+
 /**
  *
  * \brief Converts a rotation expressed as axis-angle to euler angles
  *
  * \param [in]   axis        Rotation axis (3D (unit) vector)
  * \param [in]   angle       Rotation angle (in radians)
+ * \param [in]   reverse     If True, encodes the reverse transformation
  * \param [in]   order       Order of rotations to apply 
  * \param [in]   intrinsic   Axis conventions (https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations)
  * \param [out]  ang_x       Rotation angle around the x-axis
@@ -54,6 +58,7 @@ PDM_rotation_axis_angle_to_euler_angles
 (
   const double axis[3],
   const double angle,
+  const PDM_bool_t reverse,
   const int order[3],
   const PDM_bool_t intrinsic,
         double* ang_x,
@@ -67,6 +72,7 @@ PDM_rotation_axis_angle_to_euler_angles
  *
  * \param [in]   axis            Rotation axis (3D (unit) vector)
  * \param [in]   angle           Rotation angle (in radians)
+ * \param [in]   reverse         If True, encodes the reverse transformation
  * \param [out]  rotation_matrix 3-by-3 rotation matrix
  *
  */
@@ -76,6 +82,7 @@ PDM_rotation_axis_angle_to_rotation_matrix
 (
   const double axis[3],
   const double angle,
+  const PDM_bool_t reverse,
         double *rotation_matrix
 );
 
@@ -85,6 +92,7 @@ PDM_rotation_axis_angle_to_rotation_matrix
  *
  * \param [in]   axis               Rotation axis (3D (unit) vector)
  * \param [in]   angle              Rotation angle (in radians)
+ * \param [in]   reverse            If True, encodes the reverse transformation
  * \param [out]  homogeneous_matrix 4-by-4 rotation matrix
  *
  */
@@ -94,6 +102,7 @@ PDM_rotation_axis_angle_to_homogeneous_matrix
 (
   const double axis[3],
   const double angle,
+  const PDM_bool_t reverse,
         double *homogeneous_matrix
 );
 
@@ -105,8 +114,8 @@ PDM_rotation_axis_angle_to_homogeneous_matrix
  * \param [in]   axis               Rotation axis (3D (unit) vector)
  * \param [in]   angle              Rotation angle (in radians)
  * \param [in]   rotation_center  3D rotation center
- * \param [out]  homogeneous_matrix 4-by-4 rotation matrix
  * \param [in]   reverse          If True, encodes the reverse transformation
+ * \param [out]  homogeneous_matrix 4-by-4 rotation matrix
  *
  */
 
@@ -129,6 +138,7 @@ PDM_rotation_axis_angle_and_rotation_center_to_homogeneous_matrix
  * \param [in]   ang_z       Rotation angle around the z-axis
  * \param [in]   order       Order of rotations to apply 
  * \param [in]   intrinsic   Axis conventions (https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations)
+ * \param [in]   reverse     If True, encodes the reverse transformation
  * \param [out]  axis        Rotation axis (3D (unit) vector)
  * \param [out]  angle       Rotation angle (in radians)
  *
@@ -142,9 +152,12 @@ PDM_rotation_euler_angles_to_axis_angle
   const double ang_z,
   const int order[3],
   const PDM_bool_t intrinsic,
+  const PDM_bool_t reverse,
         double axis[3],
         double* angle
 );
+
+// Euler angles to other formats ---
 
 /**
  *
@@ -155,6 +168,7 @@ PDM_rotation_euler_angles_to_axis_angle
  * \param [in]   input_ang_z       Input rotation angle around the z-axis
  * \param [in]   input_order       Input order of rotations to apply 
  * \param [in]   input_intrinsic   Input axis conventions (https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations)
+ * \param [in]   reverse           If True, encodes the reverse transformation
  * \param [in]   output_order      Output order of rotations to apply 
  * \param [in]   output_intrinsic  Output axis conventions (https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations)
  * \param [out]  output_ang_x      Output rotation angle around the x-axis
@@ -171,6 +185,7 @@ PDM_rotation_euler_angles_to_euler_angles
   const double input_ang_z,
   const int input_order[3],
   const PDM_bool_t input_intrinsic,
+  const PDM_bool_t reverse,
   const int output_order[3],
   const PDM_bool_t output_intrinsic,
         double* output_ang_x,
@@ -187,6 +202,7 @@ PDM_rotation_euler_angles_to_euler_angles
  * \param [in]   ang_z            Rotation angle around the z-axis
  * \param [in]   order            Order of rotations to apply 
  * \param [in]   intrinsic        Axis conventions (https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations)
+ * \param [in]   reverse          If True, encodes the reverse transformation
  * \param [out]  rotation_matrix  3-by-3 rotation matrix
  *
  */
@@ -199,6 +215,7 @@ PDM_rotation_euler_angles_to_rotation_matrix
   const double ang_z,
   const int order[3],
   const PDM_bool_t intrinsic,
+  const PDM_bool_t reverse,
         double* rotation_matrix
 );
 
@@ -211,6 +228,7 @@ PDM_rotation_euler_angles_to_rotation_matrix
  * \param [in]   ang_z              Rotation angle around the z-axis
  * \param [in]   order              Order of rotations to apply 
  * \param [in]   intrinsic          Axis conventions (https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations)
+ * \param [in]   reverse            If True, encodes the reverse transformation
  * \param [out]  homogeneous_matrix 4-by-4 rotation matrix
  *
  */
@@ -223,6 +241,7 @@ PDM_rotation_euler_angles_to_homogeneous_matrix
   const double ang_z,
   const int order[3],
   const PDM_bool_t intrinsic,
+  const PDM_bool_t reverse,
         double* homogeneous_matrix
 );
 
@@ -257,85 +276,6 @@ PDM_rotation_euler_angles_and_rotation_center_to_homogeneous_matrix
 
 /**
  *
- * \brief Converts a rotation expressed as a 3-by-3 rotation matrix to an axis-angle representation
- *
- * \param [in]   rotation_matrix 3-by-3 rotation matrix
- * \param [out]  axis            Rotation axis (3D (unit) vector)
- * \param [out]  angle           Rotation angle (in radians)
- * 
- */
-
-void 
-PDM_rotation_rotation_matrix_to_axis_angle
-(
-  const double* rotation_matrix,
-        double axis[3],
-        double* angle
-);
-
-/**
- *
- * \brief Converts a rotation expressed as a 3-by-3 rotation matrix to euler angles
- *
- * \param [in]   rotation_matrix  3-by-3 rotation matrix
- * \param [in]   order            Order of rotations to apply 
- * \param [in]   intrinsic        Axis conventions (https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations)
- * \param [out]  ang_x            Rotation angle around the x-axis
- * \param [out]  ang_y            Rotation angle around the y-axis
- * \param [out]  ang_z            Rotation angle around the z-axis
- * 
- */
-
-void 
-PDM_rotation_rotation_matrix_to_euler_angles
-(
-  const double* rotation_matrix,
-  const int order[3],
-  const PDM_bool_t intrinsic,
-        double* ang_x,
-        double* ang_y,
-        double* ang_z
-);
-
-/**
- *
- * \brief Converts a rotation expressed as a 3-by-3 rotation matrix to a 4-by-4 homogeneous matrix
- *
- * \param [in]   rotation_matrix    3-by-3 rotation matrix
- * \param [out]  homogeneous_matrix 4-by-4 homogeneous rotation matrix
- * 
- */
-
-void 
-PDM_rotation_rotation_matrix_to_homogeneous_matrix
-(
-  const double* rotation_matrix,
-        double* homogeneous_matrix
-);
-
-/**
- *
- * \brief Converts a rotation expressed as a 3-by-3 rotation matrix and a rotation center
- * to a 4-by-4 homogeneous matrix
- *
- * \param [in]   rotation_matrix    3-by-3 rotation matrix
- * \param [in]   rotation_center
- * \param [in]   reverse            If True, encodes the reverse transformation
- * \param [out]  homogeneous_matrix 4-by-4 homogeneous rotation matrix
- * 
- */
-
-void 
-PDM_rotation_rotation_matrix_and_rotation_center_to_homogeneous_matrix
-(
-  const double* rotation_matrix,
-  const double  rotation_center[3],
-  const PDM_bool_t reverse,
-        double* homogeneous_matrix
-);
-
-/**
- *
  * \brief Converts a the info of a CGNS Periodic_t node to a 4-by-4 homogeneous rotation matrix
  *
  * \param [in]   rotation_center
@@ -356,11 +296,101 @@ PDM_rotation_periodic_t_info_to_homogeneous_matrix
         double *homogeneous_matrix
 );
 
+// Rotation matrix to other formats ---
+
+/**
+ *
+ * \brief Converts a rotation expressed as a 3-by-3 rotation matrix to an axis-angle representation
+ *
+ * \param [in]   rotation_matrix 3-by-3 rotation matrix
+ * \param [in]   reverse         If True, encodes the reverse transformation
+ * \param [out]  axis            Rotation axis (3D (unit) vector)
+ * \param [out]  angle           Rotation angle (in radians)
+ * 
+ */
+
+void 
+PDM_rotation_rotation_matrix_to_axis_angle
+(
+  const double* rotation_matrix,
+  const PDM_bool_t reverse,
+        double axis[3],
+        double* angle
+);
+
+/**
+ *
+ * \brief Converts a rotation expressed as a 3-by-3 rotation matrix to euler angles
+ *
+ * \param [in]   rotation_matrix  3-by-3 rotation matrix
+ * \param [in]   reverse          If True, encodes the reverse transformation
+ * \param [in]   order            Order of rotations to apply 
+ * \param [in]   intrinsic        Axis conventions (https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations)
+ * \param [out]  ang_x            Rotation angle around the x-axis
+ * \param [out]  ang_y            Rotation angle around the y-axis
+ * \param [out]  ang_z            Rotation angle around the z-axis
+ * 
+ */
+
+void 
+PDM_rotation_rotation_matrix_to_euler_angles
+(
+  const double* rotation_matrix,
+  const PDM_bool_t reverse,
+  const int order[3],
+  const PDM_bool_t intrinsic,
+        double* ang_x,
+        double* ang_y,
+        double* ang_z
+);
+
+/**
+ *
+ * \brief Converts a rotation expressed as a 3-by-3 rotation matrix to a 4-by-4 homogeneous matrix
+ *
+ * \param [in]   rotation_matrix    3-by-3 rotation matrix
+ * \param [in]   reverse            If True, encodes the reverse transformation
+ * \param [out]  homogeneous_matrix 4-by-4 homogeneous rotation matrix
+ * 
+ */
+
+void 
+PDM_rotation_rotation_matrix_to_homogeneous_matrix
+(
+  const double* rotation_matrix,
+  const PDM_bool_t reverse,
+        double* homogeneous_matrix
+);
+
+/**
+ *
+ * \brief Converts a rotation expressed as a 3-by-3 rotation matrix and a rotation center
+ * to a 4-by-4 homogeneous matrix
+ *
+ * \param [in]   rotation_matrix    3-by-3 rotation matrix
+ * \param [in]   rotation_center    Rotation center
+ * \param [in]   reverse            If True, encodes the reverse transformation
+ * \param [out]  homogeneous_matrix 4-by-4 homogeneous rotation matrix
+ * 
+ */
+
+void 
+PDM_rotation_rotation_matrix_and_rotation_center_to_homogeneous_matrix
+(
+  const double* rotation_matrix,
+  const double  rotation_center[3],
+  const PDM_bool_t reverse,
+        double* homogeneous_matrix
+);
+
+// Homogeneous matrix to other formats ---
+
 /**
  *
  * \brief Converts a rotation expressed as a 4-by-4 homogeneous rotation matrix to an axis-angle representation
  *
  * \param [in]   homogeneous_matrix 4-by-4 homogeneous rotation matrix
+ * \param [in]   reverse            If True, encodes the reverse transformation
  * \param [out]  axis               Rotation axis (3D (unit) vector)
  * \param [out]  angle              Rotation angle (in radians)
  * 
@@ -370,6 +400,7 @@ void
 PDM_rotation_homogeneous_matrix_to_axis_angle
 (
   const double* homogeneous_matrix,
+  const PDM_bool_t reverse,
         double axis[3],
         double* angle
 );
@@ -379,6 +410,7 @@ PDM_rotation_homogeneous_matrix_to_axis_angle
  * \brief Converts a rotation expressed as a 4-by-4 homogeneous rotation matrix to euler angles
  *
  * \param [in]   homogeneous_matrix 4-by-4 homogeneous rotation matrix
+ * \param [in]   reverse            If True, encodes the reverse transformation
  * \param [in]   order              Order of rotations to apply 
  * \param [in]   intrinsic          Axis conventions (https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations)
  * \param [out]  ang_x              Rotation angle around the x-axis
@@ -391,6 +423,7 @@ void
 PDM_rotation_homogeneous_matrix_to_euler_angles
 (
   const double* homogeneous_matrix,
+  const PDM_bool_t reverse,
   const int order[3],
   const PDM_bool_t intrinsic,
         double* ang_x,
@@ -403,6 +436,7 @@ PDM_rotation_homogeneous_matrix_to_euler_angles
  * \brief Converts a rotation expressed as a 4-by-4 homogeneous matrix to a 3-by-3 rotation matrix
  *
  * \param [in]   homogeneous_matrix 4-by-4 rotation matrix
+ * \param [in]   reverse            If True, encodes the reverse transformation
  * \param [out]  rotation_matrix    3-by-3 rotation matrix
  * 
  */
@@ -411,8 +445,11 @@ void
 PDM_rotation_homogeneous_matrix_to_rotation_matrix
 (
   const double* homogeneous_matrix,
+  const PDM_bool_t reverse,
         double* rotation_matrix
 );
+
+// 2 unit vectors to other formats ---
 
 /**
  *
@@ -420,6 +457,7 @@ PDM_rotation_homogeneous_matrix_to_rotation_matrix
  *
  * \param [in]   vector_1 First 3D-vector
  * \param [in]   vector_2 Second 3D-vector
+ * \param [in]   reverse  If True, encodes the reverse transformation
  * \param [out]  axis     Rotation axis (3D (unit) vector)
  * \param [out]  angle    Rotation angle (in radians)
  * 
@@ -430,6 +468,7 @@ PDM_rotation_two_vectors_to_axis_angle
 (
   const double vector_1[3],
   const double vector_2[3],
+  const PDM_bool_t reverse,
         double axis[3],
         double* angle
 );
@@ -440,6 +479,7 @@ PDM_rotation_two_vectors_to_axis_angle
  *
  * \param [in]   vector_1    First 3D-vector
  * \param [in]   vector_2    Second 3D-vector
+ * \param [in]   reverse     If True, encodes the reverse transformation
  * \param [in]   order       Order of rotations to apply 
  * \param [in]   intrinsic   Axis conventions (https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations)
  * \param [out]  ang_x       Rotation angle around the x-axis
@@ -453,6 +493,7 @@ PDM_rotation_two_vectors_to_euler_angles
 (
   const double vector_1[3],
   const double vector_2[3],
+  const PDM_bool_t reverse,
   const int order[3],
   const PDM_bool_t intrinsic,
         double* ang_x,
@@ -466,6 +507,7 @@ PDM_rotation_two_vectors_to_euler_angles
  *
  * \param [in]   vector_1         First 3D-vector
  * \param [in]   vector_2         Second 3D-vector
+ * \param [in]   reverse          If True, encodes the reverse transformation
  * \param [out]  rotation_matrix  3-by-3 rotation matrix
  * 
  */
@@ -475,6 +517,7 @@ PDM_rotation_two_vectors_to_rotation_matrix
 (
   const double vector_1[3],
   const double vector_2[3],
+  const PDM_bool_t reverse,
         double *rotation_matrix
 );
 
@@ -484,6 +527,7 @@ PDM_rotation_two_vectors_to_rotation_matrix
  *
  * \param [in]   vector_1           First 3D-vector
  * \param [in]   vector_2           Second 3D-vector
+ * \param [in]   reverse            If True, encodes the reverse transformation
  * \param [out]  homogeneous_matrix 4-by-4 homogeneous rotation matrix
  * 
  */
@@ -493,16 +537,57 @@ PDM_rotation_two_vectors_to_homogeneous_matrix
 (
   const double vector_1[3],
   const double vector_2[3],
+  const PDM_bool_t reverse,
         double *homogeneous_matrix
 );
 
 /**
  *
- * \brief Computes A*B -> C 
+ * \brief Converts a rotation expressed as a rotation from one unit vector to another and a rotation center to a 4-by-4 homogeneous rotation matrix
  *
- * \param [out]   homogeneous_matrix 4-by-4 homogeneous rotation matrix
+ * \param [in]   vector_1           First 3D-vector
+ * \param [in]   vector_2           Second 3D-vector
+ * \param [in]   rotation_center    Rotation center
+ * \param [in]   reverse            If True, encodes the reverse transformation
+ * \param [out]  homogeneous_matrix 4-by-4 homogeneous rotation matrix
+ * 
+ */
+
+void 
+PDM_rotation_two_vectors_and_rotation_center_to_homogeneous_matrix
+(
+  const double vector_1[3],
+  const double vector_2[3],
+  const double rotation_center[3],
+  const PDM_bool_t reverse,
+        double *homogeneous_matrix
+);
+
+// Other formats ---
+
+/**
+ *
+ * \brief Computes the homogenous matrix corresponding to switch from cartesian coordinate system A to system B. Axes and origin arguments describe the output coordinate system B using the input coordinate system A.
+ *
+ * \param [in]   axis_1             First axis 3D-vector
+ * \param [in]   axis_2             Second axis 3D-vector
+ * \param [in]   axis_3             Thrid axis 3D-vector
+ * \param [in]   origin             Origin 3D-vector
+ * \param [in]   reverse            If True, encodes the reverse transformation
+ * \param [out]  homogeneous_matrix 4-by-4 homogeneous rotation matrix
  *
  */
+
+void
+PDM_rotation_axes_and_origin_to_homogeneous_matrix
+(
+  const double     axis_1[3],
+  const double     axis_2[3],
+  const double     axis_3[3],
+  const double     origin[3],
+  const PDM_bool_t reverse,
+        double     *homogeneous_matrix
+);
 
 /*----------------------------------------------------------------------------
  *  PDM_rotation_t HOMOGENOUS MATRICES
