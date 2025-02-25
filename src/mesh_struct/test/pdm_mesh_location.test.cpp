@@ -1,7 +1,7 @@
 #include "doctest/extensions/doctest_mpi.h"
+#include "pdm_doctest.h"
 #include "float.h"
 #include "pdm.h"
-#include "pdm_doctest.h"
 #include "pdm_part_mesh_nodal.h"
 #include "pdm_part_mesh_nodal_elmts.h"
 #include "pdm_logging.h"
@@ -19,6 +19,7 @@
 static double tol = 1e-10;
 
 MPI_TEST_CASE("[pdm_mesh_location] - tria", 1) {
+
 
   PDM_MPI_Comm comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);;
 
@@ -111,6 +112,7 @@ MPI_TEST_CASE("[pdm_mesh_location] - tria", 1) {
   for (int i=0; i<3*n_pts; i++){
     CHECK(fabs(points_coords[i] - pts_coord[i]) < tol);
   }
+  PDM_mesh_location_free(ml);
   PDM_free(vtx_coord);
   PDM_free(pts_coord);
 }
@@ -212,6 +214,7 @@ MPI_TEST_CASE("[pdm_mesh_location] - quad", 1) {
   for (int i=0; i<3*n_pts; i++){
     CHECK(fabs(points_coords[i] - pts_coord[i]) < tol);
   }
+  PDM_mesh_location_free(ml);
   PDM_free(vtx_coord);
   PDM_free(pts_coord);
 }
@@ -334,6 +337,7 @@ MPI_TEST_CASE("[pdm_mesh_location] - poly", 1) {
   // for (int i=0; i<3*n_pts; i++){
   //   CHECK(fabs(points_coords[i] - pts_coord[i]) < tol);
   // }
+  PDM_mesh_location_free(ml);
   PDM_free(vtx_coord);
   PDM_free(pts_coord);
 }
@@ -444,6 +448,7 @@ MPI_TEST_CASE("[pdm_mesh_location] - tetra", 1) {
     CHECK(fabs(points_coords[3*(gnum[i]-1)+1] - pts_coord[3*(points_gnum[i]-1)+1]) < tol);
     CHECK(fabs(points_coords[3*(gnum[i]-1)+2] - pts_coord[3*(points_gnum[i]-1)+2]) < tol);
   }
+  PDM_mesh_location_free(ml);
   PDM_free(vtx_coord);
   PDM_free(pts_coord);
 }
@@ -558,26 +563,26 @@ MPI_TEST_CASE("[pdm_mesh_location] - hexa nodal", 1) {
                                       &points_projected_coords);
 
 
-  printf("elt_pts_inside_idx p1: [%i, %i]\n", elt_pts_inside_idx[0], elt_pts_inside_idx[1]);
-  printf("points_coords p1: [%.16e; %.16e; %.16e]\n", points_coords[0], points_coords[1], points_coords[2]);
-  printf("points_uvw p1: [%.16e; %.16e; %.16e]\n", points_uvw[0], points_uvw[1], points_uvw[2]);
-  printf("points_weights_idx p1: [%i; %i]\n", points_weights_idx[0], points_weights_idx[1]);
-  printf("points_weights p1: [%.16e; %.16e; %.16e; %.16e;\n                  %.16e; %.16e; %.16e; %.16e]\n", points_weights[0], points_weights[1], points_weights[2], points_weights[3], 
-                                                                                                           points_weights[4], points_weights[5], points_weights[6], points_weights[7]);
-  printf("points_gnum p1: [%li]\n", points_gnum[0]);
-  printf("points_dist2 p1: [%.16e]\n", points_dist2[0]);
-  printf("points_projected_coords p1: [%.16e; %.16e; %.16e]\n", points_projected_coords[0], points_projected_coords[1], points_projected_coords[2]);
+  // printf("elt_pts_inside_idx p1: [%i, %i]\n", elt_pts_inside_idx[0], elt_pts_inside_idx[1]);
+  // printf("points_coords p1: [%.16e; %.16e; %.16e]\n", points_coords[0], points_coords[1], points_coords[2]);
+  // printf("points_uvw p1: [%.16e; %.16e; %.16e]\n", points_uvw[0], points_uvw[1], points_uvw[2]);
+  // printf("points_weights_idx p1: [%i; %i]\n", points_weights_idx[0], points_weights_idx[1]);
+  // printf("points_weights p1: [%.16e; %.16e; %.16e; %.16e;\n                  %.16e; %.16e; %.16e; %.16e]\n", points_weights[0], points_weights[1], points_weights[2], points_weights[3], 
+  //                                                                                                          points_weights[4], points_weights[5], points_weights[6], points_weights[7]);
+  // printf("points_gnum p1: [%li]\n", points_gnum[0]);
+  // printf("points_dist2 p1: [%.16e]\n", points_dist2[0]);
+  // printf("points_projected_coords p1: [%.16e; %.16e; %.16e]\n", points_projected_coords[0], points_projected_coords[1], points_projected_coords[2]);
 
-  double recompute_point[3] = {0., 0., 0.};
-  for (int i =0; i<n_vtx; i++){
-    // printf("%.16e; %.16e; %.16e\n", vtx_coord[3*(cell_vtx[i]-1)], vtx_coord[3*(cell_vtx[i]-1)+1], vtx_coord[3*(cell_vtx[i]-1)+2]);
-    // printf("%.16e\n", points_weights[i]);
-    recompute_point[0] += points_weights[i]*vtx_coord[3*(cell_vtx[i]-1)];
-    recompute_point[1] += points_weights[i]*vtx_coord[3*(cell_vtx[i]-1)+1];
-    recompute_point[2] += points_weights[i]*vtx_coord[3*(cell_vtx[i]-1)+2];
-  }
+  // double recompute_point[3] = {0., 0., 0.};
+  // for (int i =0; i<n_vtx; i++){
+  //   // printf("%.16e; %.16e; %.16e\n", vtx_coord[3*(cell_vtx[i]-1)], vtx_coord[3*(cell_vtx[i]-1)+1], vtx_coord[3*(cell_vtx[i]-1)+2]);
+  //   // printf("%.16e\n", points_weights[i]);
+  //   recompute_point[0] += points_weights[i]*vtx_coord[3*(cell_vtx[i]-1)];
+  //   recompute_point[1] += points_weights[i]*vtx_coord[3*(cell_vtx[i]-1)+1];
+  //   recompute_point[2] += points_weights[i]*vtx_coord[3*(cell_vtx[i]-1)+2];
+  // }
 
-  printf("recomputed point : \n%.16e; %.16e; %.16e\n", recompute_point[0], recompute_point[1], recompute_point[2]);
+  // printf("recomputed point : \n%.16e; %.16e; %.16e\n", recompute_point[0], recompute_point[1], recompute_point[2]);
 
   // printf("elt_pts_inside_idx p2: [%i, %i]\n", elt_pts_inside_idx[0], elt_pts_inside_idx[1]);
   // printf("points_coords p2: [%.16e; %.16e; %.16e]\n", points_coords[3], points_coords[4], points_coords[5]);
@@ -604,6 +609,7 @@ MPI_TEST_CASE("[pdm_mesh_location] - hexa nodal", 1) {
   //   CHECK(fabs(points_coords[3*(gnum[i]-1)+1] - pts_coord[3*(points_gnum[i]-1)+1]) < tol);
   //   CHECK(fabs(points_coords[3*(gnum[i]-1)+2] - pts_coord[3*(points_gnum[i]-1)+2]) < tol);
   // }
+  PDM_mesh_location_free(ml);
   PDM_free(vtx_coord);
   PDM_free(pts_coord);
 }
@@ -728,15 +734,15 @@ MPI_TEST_CASE("[pdm_mesh_location] - hexa", 1) {
                                       &points_dist2,
                                       &points_projected_coords);
 
-  printf("elt_pts_inside_idx p1: [%i, %i]\n", elt_pts_inside_idx[0], elt_pts_inside_idx[1]);
-  printf("points_coords p1: [%.16e; %.16e; %.16e]\n", points_coords[0], points_coords[1], points_coords[2]);
-  printf("points_uvw p1: [%.16e; %.16e; %.16e]\n", points_uvw[0], points_uvw[1], points_uvw[2]);
-  printf("points_weights_idx p1: [%i; %i]\n", points_weights_idx[0], points_weights_idx[1]);
-  printf("points_weights p1: [%.16e; %.16e; %.16e; %.16e;\n                  %.16e; %.16e; %.16e; %.16e]\n", points_weights[0], points_weights[1], points_weights[2], points_weights[3], 
-                                                                                                           points_weights[4], points_weights[5], points_weights[6], points_weights[7]);
-  printf("points_gnum p1: [%li]\n", points_gnum[0]);
-  printf("points_dist2 p1: [%.16e]\n", points_dist2[0]);
-  printf("points_projected_coords p1: [%.16e; %.16e; %.16e]\n", points_projected_coords[0], points_projected_coords[1], points_projected_coords[2]);
+  // printf("elt_pts_inside_idx p1: [%i, %i]\n", elt_pts_inside_idx[0], elt_pts_inside_idx[1]);
+  // printf("points_coords p1: [%.16e; %.16e; %.16e]\n", points_coords[0], points_coords[1], points_coords[2]);
+  // printf("points_uvw p1: [%.16e; %.16e; %.16e]\n", points_uvw[0], points_uvw[1], points_uvw[2]);
+  // printf("points_weights_idx p1: [%i; %i]\n", points_weights_idx[0], points_weights_idx[1]);
+  // printf("points_weights p1: [%.16e; %.16e; %.16e; %.16e;\n                  %.16e; %.16e; %.16e; %.16e]\n", points_weights[0], points_weights[1], points_weights[2], points_weights[3], 
+  //                                                                                                          points_weights[4], points_weights[5], points_weights[6], points_weights[7]);
+  // printf("points_gnum p1: [%li]\n", points_gnum[0]);
+  // printf("points_dist2 p1: [%.16e]\n", points_dist2[0]);
+  // printf("points_projected_coords p1: [%.16e; %.16e; %.16e]\n", points_projected_coords[0], points_projected_coords[1], points_projected_coords[2]);
 
 
   // printf("elt_pts_inside_idx p2: [%i, %i]\n", elt_pts_inside_idx[0], elt_pts_inside_idx[1]);
@@ -750,10 +756,10 @@ MPI_TEST_CASE("[pdm_mesh_location] - hexa", 1) {
   // printf("points_projected_coords p2: [%.16e; %.16e; %.16e]\n", points_projected_coords[3], points_projected_coords[4], points_projected_coords[5]);
 
 
-  for (int i =0; i<n_vtx; i++){
-    printf("%.16e; %.16e; %.16e\n", vtx_coord[3*i], vtx_coord[3*i+1], vtx_coord[3*i+2]);
-    printf("%.16e\n", points_weights[i]);
-  }
+  // for (int i =0; i<n_vtx; i++){
+  //   printf("%.16e; %.16e; %.16e\n", vtx_coord[3*i], vtx_coord[3*i+1], vtx_coord[3*i+2]);
+  //   printf("%.16e\n", points_weights[i]);
+  // }
 
 
   // printf("recomputed point : [%.16e, %.16e, %.16e]\n", points_weights[0]*vtx_coord[0]+points_weights[1]*vtx_coord[3]+points_weights[2]*vtx_coord[6]+points_weights[3]*vtx_coord[ 9]+points_weights[4]*vtx_coord[12]+points_weights[5]*vtx_coord[15]+points_weights[6]*vtx_coord[18]+points_weights[7]*vtx_coord[21],
@@ -774,6 +780,7 @@ MPI_TEST_CASE("[pdm_mesh_location] - hexa", 1) {
   //   CHECK(fabs(points_coords[3*(gnum[i]-1)+1] - pts_coord[3*(points_gnum[i]-1)+1]) < tol);
   //   CHECK(fabs(points_coords[3*(gnum[i]-1)+2] - pts_coord[3*(points_gnum[i]-1)+2]) < tol);
   // }
+  PDM_mesh_location_free(ml);
   PDM_free(vtx_coord);
   PDM_free(pts_coord);
 }
@@ -871,14 +878,14 @@ MPI_TEST_CASE("[pdm_mesh_location] - pyra", 1) {
                                       &points_dist2,
                                       &points_projected_coords);
 
-  printf("elt_pts_inside_idx p1: [%i, %i]\n", elt_pts_inside_idx[0], elt_pts_inside_idx[1]);
-  printf("points_coords p1: [%.16e; %.16e; %.16e]\n", points_coords[0], points_coords[1], points_coords[2]);
-  printf("points_uvw p1: [%.16e; %.16e; %.16e]\n", points_uvw[0], points_uvw[1], points_uvw[2]);
-  printf("points_weights_idx p1: [%i; %i]\n", points_weights_idx[0], points_weights_idx[1]);
-  printf("points_weights p1: [%.16e; %.16e; %.16e; %.16e; %.16e]\n", points_weights[0], points_weights[1], points_weights[2], points_weights[3], points_weights[4]);
-  printf("points_gnum p1: [%li]\n", points_gnum[0]);
-  printf("points_dist2 p1: [%.16e]\n", points_dist2[0]);
-  printf("points_projected_coords p1: [%.16e; %.16e; %.16e]\n", points_projected_coords[0], points_projected_coords[1], points_projected_coords[2]);
+  // printf("elt_pts_inside_idx p1: [%i, %i]\n", elt_pts_inside_idx[0], elt_pts_inside_idx[1]);
+  // printf("points_coords p1: [%.16e; %.16e; %.16e]\n", points_coords[0], points_coords[1], points_coords[2]);
+  // printf("points_uvw p1: [%.16e; %.16e; %.16e]\n", points_uvw[0], points_uvw[1], points_uvw[2]);
+  // printf("points_weights_idx p1: [%i; %i]\n", points_weights_idx[0], points_weights_idx[1]);
+  // printf("points_weights p1: [%.16e; %.16e; %.16e; %.16e; %.16e]\n", points_weights[0], points_weights[1], points_weights[2], points_weights[3], points_weights[4]);
+  // printf("points_gnum p1: [%li]\n", points_gnum[0]);
+  // printf("points_dist2 p1: [%.16e]\n", points_dist2[0]);
+  // printf("points_projected_coords p1: [%.16e; %.16e; %.16e]\n", points_projected_coords[0], points_projected_coords[1], points_projected_coords[2]);
 
   double expected_weights[5] = {0.293560606, 0.2231060606, 0.093560606, 0.1231060606, 0.2666666666};
 
@@ -891,6 +898,7 @@ MPI_TEST_CASE("[pdm_mesh_location] - pyra", 1) {
     CHECK(fabs(points_coords[3*(gnum[i]-1)+1] - pts_coord[3*(points_gnum[i]-1)+1]) < tol);
     CHECK(fabs(points_coords[3*(gnum[i]-1)+2] - pts_coord[3*(points_gnum[i]-1)+2]) < tol);
   }
+  PDM_mesh_location_free(ml);
   PDM_free(vtx_coord);
   PDM_free(pts_coord);
 }
@@ -992,15 +1000,15 @@ MPI_TEST_CASE("[pdm_mesh_location] - prism", 1) {
                                       &points_dist2,
                                       &points_projected_coords);
 
-  printf("elt_pts_inside_idx p1: [%i, %i]\n", elt_pts_inside_idx[0], elt_pts_inside_idx[1]);
-  printf("points_coords p1: [%.16e; %.16e; %.16e]\n", points_coords[0], points_coords[1], points_coords[2]);
-  printf("points_uvw p1: [%.16e; %.16e; %.16e]\n", points_uvw[0], points_uvw[1], points_uvw[2]);
-  printf("points_weights_idx p1: [%i; %i]\n", points_weights_idx[0], points_weights_idx[1]);
-  printf("points_weights p1: [%.16e; %.16e; %.16e; %.16e; %.16e; %.16e]\n", points_weights[0], points_weights[1], points_weights[2], 
-                                                                            points_weights[3], points_weights[4], points_weights[5]);
-  printf("points_gnum p1: [%li]\n", points_gnum[0]);
-  printf("points_dist2 p1: [%.16e]\n", points_dist2[0]);
-  printf("points_projected_coords p1: [%.16e; %.16e; %.16e]\n", points_projected_coords[0], points_projected_coords[1], points_projected_coords[2]);
+  // printf("elt_pts_inside_idx p1: [%i, %i]\n", elt_pts_inside_idx[0], elt_pts_inside_idx[1]);
+  // printf("points_coords p1: [%.16e; %.16e; %.16e]\n", points_coords[0], points_coords[1], points_coords[2]);
+  // printf("points_uvw p1: [%.16e; %.16e; %.16e]\n", points_uvw[0], points_uvw[1], points_uvw[2]);
+  // printf("points_weights_idx p1: [%i; %i]\n", points_weights_idx[0], points_weights_idx[1]);
+  // printf("points_weights p1: [%.16e; %.16e; %.16e; %.16e; %.16e; %.16e]\n", points_weights[0], points_weights[1], points_weights[2], 
+  //                                                                           points_weights[3], points_weights[4], points_weights[5]);
+  // printf("points_gnum p1: [%li]\n", points_gnum[0]);
+  // printf("points_dist2 p1: [%.16e]\n", points_dist2[0]);
+  // printf("points_projected_coords p1: [%.16e; %.16e; %.16e]\n", points_projected_coords[0], points_projected_coords[1], points_projected_coords[2]);
 
   // double expected_weights[n_pts*n_vtx] = {0.293560606, 0.2231060606, 0.093560606, 0.1231060606, 0.2666666666};
 
@@ -1013,6 +1021,7 @@ MPI_TEST_CASE("[pdm_mesh_location] - prism", 1) {
   //   CHECK(fabs(points_coords[3*(gnum[i]-1)+1] - pts_coord[3*(points_gnum[i]-1)+1]) < tol);
   //   CHECK(fabs(points_coords[3*(gnum[i]-1)+2] - pts_coord[3*(points_gnum[i]-1)+2]) < tol);
   // }
+  PDM_mesh_location_free(ml);
   PDM_free(vtx_coord);
   PDM_free(pts_coord);
 }
@@ -1146,15 +1155,15 @@ MPI_TEST_CASE("[pdm_mesh_location] - polyhedron", 1) {
                                       &points_dist2,
                                       &points_projected_coords);
 
-  printf("elt_pts_inside_idx p1: [%i, %i]\n", elt_pts_inside_idx[0], elt_pts_inside_idx[1]);
-  printf("points_coords p1: [%.16e; %.16e; %.16e]\n", points_coords[0], points_coords[1], points_coords[2]);
-  printf("points_uvw p1: [%.16e; %.16e; %.16e]\n", points_uvw[0], points_uvw[1], points_uvw[2]);
-  printf("points_weights_idx p1: [%i; %i]\n", points_weights_idx[0], points_weights_idx[1]);
-  printf("points_weights p1: [%.16e; %.16e; %.16e; %.16e\n                  %.16e; %.16e; %.16e; %.16e]\n", points_weights[0], points_weights[1], points_weights[2], points_weights[3], 
-                                                                                                           points_weights[4], points_weights[5], points_weights[6], points_weights[7]);
-  printf("points_gnum p1: [%li]\n", points_gnum[0]);
-  printf("points_dist2 p1: [%.16e]\n", points_dist2[0]);
-  printf("points_projected_coords p1: [%.16e; %.16e; %.16e]\n", points_projected_coords[0], points_projected_coords[1], points_projected_coords[2]);
+  // printf("elt_pts_inside_idx p1: [%i, %i]\n", elt_pts_inside_idx[0], elt_pts_inside_idx[1]);
+  // printf("points_coords p1: [%.16e; %.16e; %.16e]\n", points_coords[0], points_coords[1], points_coords[2]);
+  // printf("points_uvw p1: [%.16e; %.16e; %.16e]\n", points_uvw[0], points_uvw[1], points_uvw[2]);
+  // printf("points_weights_idx p1: [%i; %i]\n", points_weights_idx[0], points_weights_idx[1]);
+  // printf("points_weights p1: [%.16e; %.16e; %.16e; %.16e\n                  %.16e; %.16e; %.16e; %.16e]\n", points_weights[0], points_weights[1], points_weights[2], points_weights[3], 
+  //                                                                                                          points_weights[4], points_weights[5], points_weights[6], points_weights[7]);
+  // printf("points_gnum p1: [%li]\n", points_gnum[0]);
+  // printf("points_dist2 p1: [%.16e]\n", points_dist2[0]);
+  // printf("points_projected_coords p1: [%.16e; %.16e; %.16e]\n", points_projected_coords[0], points_projected_coords[1], points_projected_coords[2]);
 
 
 
@@ -1170,15 +1179,10 @@ MPI_TEST_CASE("[pdm_mesh_location] - polyhedron", 1) {
   //   CHECK(fabs(points_coords[3*(gnum[i]-1)+1] - pts_coord[3*(points_gnum[i]-1)+1]) < tol);
   //   CHECK(fabs(points_coords[3*(gnum[i]-1)+2] - pts_coord[3*(points_gnum[i]-1)+2]) < tol);
   // }
+  PDM_mesh_location_free(ml);
   PDM_free(vtx_coord);
   PDM_free(pts_coord);
 }
-
-
-
-
-
-
 
 MPI_TEST_CASE("[pdm_mesh_location] - generated mesh", 1) {
 
@@ -1189,9 +1193,8 @@ MPI_TEST_CASE("[pdm_mesh_location] - generated mesh", 1) {
   double      zero_z                  = 0.0;
   int         n_part                  = 1;
 
-  /*
-   * Generate a cube
-   */
+  // Generate a cube
+
   PDM_MPI_Comm comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);;
   int n_rank;
   int i_rank;
@@ -1236,7 +1239,7 @@ MPI_TEST_CASE("[pdm_mesh_location] - generated mesh", 1) {
                                         n_vtx_seg,
                                         n_vtx_seg,
                                         n_part,
-                                        PDM_SPLIT_DUAL_WITH_PTSCOTCH,
+                                        PDM_SPLIT_DUAL_WITH_PARMETIS,
                                        &pn_vtx,
                                        &pn_edge,
                                        &pn_face,
@@ -1337,6 +1340,49 @@ MPI_TEST_CASE("[pdm_mesh_location] - generated mesh", 1) {
   printf("points_gnum p1: [%li]\n", points_gnum[0]);
   printf("points_dist2 p1: [%.16e]\n", points_dist2[0]);
   printf("points_projected_coords p1: [%.16e; %.16e; %.16e]\n", points_projected_coords[0], points_projected_coords[1], points_projected_coords[2]);
-  
+
+  PDM_free(pn_vtx);
+  PDM_free(pn_edge);
+  PDM_free(pn_face);
+  PDM_free(pn_cell);
+  PDM_free(pn_surface);
+  PDM_free(pn_ridge);
+  for (int i=0; i<n_part; i++){
+    PDM_free(pvtx_coord[i]);
+    PDM_free(pedge_vtx[i]);
+    PDM_free(pface_edge_idx[i]);
+    PDM_free(pface_edge[i]);
+    PDM_free(pface_vtx[i]);
+    PDM_free(pcell_face_idx[i]);
+    PDM_free(pcell_face[i]);
+    PDM_free(pvtx_ln_to_gn[i]);
+    PDM_free(pedge_ln_to_gn[i]);
+    PDM_free(pface_ln_to_gn[i]);
+    PDM_free(pcell_ln_to_gn[i]);
+    PDM_free(psurface_face_idx[i]);
+    PDM_free(psurface_face[i]);
+    PDM_free(psurface_face_ln_to_gn[i]);
+    PDM_free(pridge_edge_idx[i]);
+    PDM_free(pridge_edge[i]);
+    PDM_free(pridge_edge_ln_to_gn[i]);
+  }
+  PDM_free(pvtx_coord);
+  PDM_free(pedge_vtx);
+  PDM_free(pface_edge_idx);
+  PDM_free(pface_edge);
+  PDM_free(pface_vtx);
+  PDM_free(pcell_face_idx);
+  PDM_free(pcell_face);
+  PDM_free(pvtx_ln_to_gn);
+  PDM_free(pedge_ln_to_gn);
+  PDM_free(pface_ln_to_gn);
+  PDM_free(pcell_ln_to_gn);
+  PDM_free(psurface_face_idx);
+  PDM_free(psurface_face);
+  PDM_free(psurface_face_ln_to_gn);
+  PDM_free(pridge_edge_idx);
+  PDM_free(pridge_edge);
+  PDM_free(pridge_edge_ln_to_gn);
+  PDM_mesh_location_free(ml);
   PDM_free(pts_coord);
 }
