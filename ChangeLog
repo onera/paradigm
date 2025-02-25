@@ -1,3 +1,10 @@
+## [2.6.1] - 2024-03-12
+### Added
+### Changed
+### Deprecated
+### Removed
+### Fixed
+- PDM_part_coarse_mesh : int / long int fixes
 ## [2.6.0] - 2024-12-13
 ### Added
 - PDM_dmesh(_nodal) : Add function to find topological ridges

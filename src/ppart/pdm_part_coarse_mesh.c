@@ -2683,7 +2683,7 @@ PDM_coarse_mesh_t * cm
     int stride_one = 1;
 
     PDM_block_to_part_exch_in_place (btp,
-                            sizeof(int),
+                            sizeof(PDM_g_num_t),
                             PDM_STRIDE_CST_INTERLACED,
                             &stride_one,
                             (void *) b_tIntersects,
