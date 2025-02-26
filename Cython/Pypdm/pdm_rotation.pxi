@@ -76,6 +76,12 @@ cdef extern from "pdm_rotation.h":
                                                                            const PDM_bool_t reverse,
                                                                                  double*    homogeneous_matrix)
 
+  void PDM_rotation_periodic_t_info_to_homogeneous_matrix(const double rotation_center[3],
+                                                          const double rotation_angle[3],
+                                                          const double translation[3],
+                                                          const PDM_bool_t reverse,
+                                                                double* homogeneous_matrix)
+
   # rotation matrix -> other formats ---
 
   void PDM_rotation_rotation_matrix_to_axis_angle(const double*    rotation_matrix,
@@ -268,7 +274,7 @@ def axis_angle_to_euler_angles(
 def axis_angle_to_rotation_matrix(
     NPY.ndarray[NPY.double_t, mode='c', ndim=1] axis,
     NPY.double_t angle,
-    bint reverse=False):
+    bint reverse = False):
   """axis_angle_to_rotation_matrix(axis,angle,reverse=False)
 
   Converts a rotation expressed as axis-angle to a 3-by-3 rotation matrix
@@ -289,11 +295,11 @@ def axis_angle_to_rotation_matrix(
                                              <double*>rotation_matrix.data)
   return rotation_matrix
 
-def axis_angle_to_homogenous_matrix(
+def axis_angle_to_homogeneous_matrix(
     NPY.ndarray[NPY.double_t, mode='c', ndim=1] axis,
     NPY.double_t angle,
-    bint reverse=False):
-  """axis_angle_to_homogenous_matrix(axis,angle,reverse=False)
+    bint reverse = False):
+  """axis_angle_to_homogeneous_matrix(axis,angle,reverse=False)
   
   Converts a rotation expressed as axis-angle to a 4-by-4 homogeneous matrix
 
@@ -317,7 +323,7 @@ def axis_angle_and_rotation_center_to_homogeneous_matrix(
     NPY.ndarray[NPY.double_t, mode='c', ndim=1] axis,
     NPY.double_t angle,
     NPY.ndarray[NPY.double_t, mode='c', ndim=1] rotation_center=_default_rotation_center_,
-    bint reverse=False):
+    bint reverse = False):
   """axis_angle_and_rotation_center_to_homogeneous_matrix(axis,angle,rotation_center=[0.,0.,0.],reverse=False)
 
   Computes the homogeneous matrix corresponding to the rotation of the provided angle around the
@@ -474,7 +480,7 @@ def euler_angles_to_homogeneous_matrix(
   """
   euler_angles_to_rotation_matrix(ang_x,ang_y,ang_z,order=(2,1,0),intrinsic=True,reverse=False)
 
-  Computes the homogenous matrix corresponding to the provided euler angles
+  Computes the homogeneous matrix corresponding to the provided euler angles
 
   Parameters:
     ang_x           (double)                  : Rotation angle around the x-axis
@@ -506,12 +512,12 @@ def euler_angles_and_rotation_center_to_homogeneous_matrix(
     NPY.double_t ang_z,
     NPY.ndarray[NPY.int32_t, mode='c', ndim=1] order = _default_order_,# = NPY.array([2,1,0],dtype=NPY.int32),
     bint intrinsic = True,
-    NPY.ndarray[NPY.int32_t, mode='c', ndim=1] rotation_center = _default_rotation_center_,# = NPY.array([0,0,0],dtype=NPY.float64),
+    NPY.ndarray[NPY.double_t, mode='c', ndim=1] rotation_center = _default_rotation_center_,# = NPY.array([0,0,0],dtype=NPY.float64),
     bint reverse = False):
   """
   euler_angles_and_rotation_center_to_homogeneous_matrix(ang_x,ang_y,ang_z,order=(2,1,0),intrinsic=True,rotation_center=[0.,0.,0.],reverse=False)
 
-  Computes the homogenous matrix corresponding to the provided euler angles 
+  Computes the homogeneous matrix corresponding to the provided euler angles 
   and rotation center.
 
   Parameters:
@@ -539,6 +545,38 @@ def euler_angles_and_rotation_center_to_homogeneous_matrix(
                                                                       <double*> rotation_center.data,
                                                                       <PDM_bool_t> reverse,
                                                                       <double*> homogeneous_matrix.data)
+  return homogeneous_matrix
+
+def periodic_t_info_to_homogeneous_matrix(
+    NPY.ndarray[NPY.double_t, mode='c', ndim=1] rotation_center,
+    NPY.ndarray[NPY.double_t, mode='c', ndim=1] rotation_angle,
+    NPY.ndarray[NPY.double_t, mode='c', ndim=1] translation,
+    bint reverse = False):
+  """periodic_t_info_to_homogeneous_matrix(rotation_center,rotation_angle,translation,reverse=False)
+
+  Converts the info of a CGNS Periodic_t node to a 4-by-4 homogeneous rotation matrix.
+  Rotation angles are applied as **intrinsic Euler angles** applied in a *(2,1,0)* order.
+
+  Both translation and rotation cannot be provided simultaneously (one should be null).
+
+  Parameters:
+    rotation_center (np.ndarray[np.double_t]) : 3D rotation center (shape = (3,))
+    rotation_angle  (np.ndarray[np.double_t]) : Rotation angles around the x, y and z axes (shape = (3,))
+    translation     (np.ndarray[np.double_t]) : Translation vector (shape = (3,))
+    reverse         (bool)                    : If True computes the reverse transformation
+
+  Returns:
+    homogeneous_matrix (np.ndarray[np.double_t]) : Homogeneous matrix (shape = (4,4))
+  """
+  _check_axis_shape(rotation_center,"rotation_center")
+  _check_axis_shape(rotation_angle,"rotation_angle")
+  _check_axis_shape(translation,"translation")
+  cdef NPY.ndarray[NPY.double_t, mode='c', ndim=2] homogeneous_matrix = NPY.empty((4,4),dtype=NPY.double)  
+  PDM_rotation_periodic_t_info_to_homogeneous_matrix(<double*> rotation_center.data,
+                                                     <double*> rotation_angle.data,
+                                                     <double*> translation.data,
+                                                     <PDM_bool_t> reverse,
+                                                     <double*> homogeneous_matrix.data)
   return homogeneous_matrix
 
 # region rotation matrix to other formats --------------------------------------
@@ -628,7 +666,7 @@ def rotation_matrix_and_rotation_center_to_homogeneous_matrix(
     bint reverse = False):
   """rotation_matrix_and_rotation_center_to_homogeneous_matrix(rotation_matrix,rotation_center=[0.,0.,0.],reverse=False)
 
-  Computes the homogenous matrix corresponding to the provided rotation matrix 
+  Computes the homogeneous matrix corresponding to the provided rotation matrix 
   and rotation center.
 
   Parameters:
@@ -664,7 +702,7 @@ def homogeneous_matrix_to_rotation_matrix():
 def two_vectors_to_axis_angle(
     NPY.ndarray[NPY.double_t, mode='c', ndim=1] vector_1,
     NPY.ndarray[NPY.double_t, mode='c', ndim=1] vector_2,
-    bint reverse):
+    bint reverse = False):
   """two_vectors_to_axis_angle(vector_1,vector_2,reverse=False)
 
   Converts a rotation from the first vector to the latter to a rotation expressed as axis angle
@@ -777,8 +815,36 @@ def two_vectors_to_homogeneous_matrix(
                                                  <double*> homogeneous_matrix.data)
   return homogeneous_matrix
 
-def two_vectors_and_rotation_center_to_homogeneous_matrix():
-  raise NotImplementedError
+def two_vectors_and_rotation_center_to_homogeneous_matrix(
+    NPY.ndarray[NPY.double_t, mode='c', ndim=1] vector_1,
+    NPY.ndarray[NPY.double_t, mode='c', ndim=1] vector_2,
+    NPY.ndarray[NPY.double_t, mode='c', ndim=1] rotation_center=_default_rotation_center_,
+    bint reverse = False):
+  """two_vectors_and_rotation_center_to_homogeneous_matrix(vector_1,vector_2,rotation_center=[0.,0.,0.],reverse=False)
+
+  Computes the homogeneous matrix corresponding to a rotation from the first vector to the latter
+  around the provided rotation center.
+
+  Parameters:
+    vector_1        (np.ndarray[np.double_t]) : First vector  (shape = (3,))
+    vector_2        (np.ndarray[np.double_t]) : Second vector (shape = (3,))
+    rotation_center (np.ndarray[np.double_t]) : 3D rotation center (shape = (3,))
+    reverse         (bool)                    : If True computes the reverse transformation
+
+  Returns:
+    homogeneous_matrix (np.ndarray[np.double_t]) : Homogeneous matrix (shape = (4,4))
+  """
+  _check_axis_shape(vector_1,"vector_1")
+  _check_axis_shape(vector_2,"vector_2")
+  _check_axis_shape(rotation_center,"rotation_center")
+  cdef NPY.ndarray[NPY.double_t, mode='c', ndim=2] homogeneous_matrix = NPY.empty((4,4),dtype=NPY.double)
+  PDM_rotation_two_vectors_and_rotation_center_to_homogeneous_matrix(<double*> vector_1.data,
+                                                                     <double*> vector_2.data,
+                                                                     <double*> rotation_center.data,
+                                                                     <PDM_bool_t> reverse,
+                                                                     <double*> homogeneous_matrix.data)
+  return homogeneous_matrix
+
 
 # region change in reference frame ---------------------------------------------
 
@@ -790,7 +856,7 @@ def axes_and_origin_to_homogeneous_matrix(
     bint reverse = False):
   """axes_and_origin_to_homogeneous_matrix(axis_1,axis_2,axis_3,origin,reverse=False):
 
-  Computes the homogenous matrix corresponding to switch from cartesian coordinate 
+  Computes the homogeneous matrix corresponding to switch from cartesian coordinate 
   system A to system B. Axes and origin arguments describe the output coordinate 
   system B using the input coordinate system A.
 

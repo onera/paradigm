@@ -276,7 +276,7 @@ PDM_rotation_euler_angles_and_rotation_center_to_homogeneous_matrix
 
 /**
  *
- * \brief Converts a the info of a CGNS Periodic_t node to a 4-by-4 homogeneous rotation matrix
+ * \brief Converts the info of a CGNS Periodic_t node to a 4-by-4 homogeneous rotation matrix
  *
  * \param [in]   rotation_center
  * \param [in]   rotation_angle  
@@ -567,7 +567,7 @@ PDM_rotation_two_vectors_and_rotation_center_to_homogeneous_matrix
 
 /**
  *
- * \brief Computes the homogenous matrix corresponding to switch from cartesian coordinate system A to system B. Axes and origin arguments describe the output coordinate system B using the input coordinate system A.
+ * \brief Computes the homogeneous matrix corresponding to switch from cartesian coordinate system A to system B. Axes and origin arguments describe the output coordinate system B using the input coordinate system A.
  *
  * \param [in]   axis_1             First axis 3D-vector
  * \param [in]   axis_2             Second axis 3D-vector

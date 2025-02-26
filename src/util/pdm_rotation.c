@@ -70,11 +70,7 @@ set_identity_to_homogeneous_matrix
 {
   for (int i = 0; i < 4; i++){
     for (int j = 0; j < 4; j++){
-      if (i==j){
-        homogeneous_matrix[4*i+j] = 1.;
-      }else{
-        homogeneous_matrix[4*i+j] = 0.;
-      }
+      homogeneous_matrix[4*i+j] = (i==j) ? 1. : 0.;
     }
   }
 }
@@ -706,72 +702,89 @@ PDM_rotation_axes_and_origin_to_homogeneous_matrix
         double *homogeneous_matrix
 )
 {
-  PDM_bool_t e1_is_unitary = (PDM_ABS(PDM_DOT_PRODUCT(axis_1,axis_1)-1.)<ROTATION_EPS);
-  PDM_bool_t e2_is_unitary = (PDM_ABS(PDM_DOT_PRODUCT(axis_2,axis_2)-1.)<ROTATION_EPS);
-  PDM_bool_t e3_is_unitary = (PDM_ABS(PDM_DOT_PRODUCT(axis_3,axis_3)-1.)<ROTATION_EPS);
+  double e1_vec_e2[3];
   PDM_bool_t e_is_orthogonal = (PDM_ABS(PDM_DOT_PRODUCT(axis_1,axis_2))<ROTATION_EPS) &\
                                (PDM_ABS(PDM_DOT_PRODUCT(axis_1,axis_3))<ROTATION_EPS) &\
                                (PDM_ABS(PDM_DOT_PRODUCT(axis_2,axis_3))<ROTATION_EPS);
-  double e1_vec_e2[3];
   PDM_CROSS_PRODUCT(e1_vec_e2,axis_1,axis_2);                  
   PDM_bool_t e_is_direct     = (PDM_DOT_PRODUCT(e1_vec_e2,axis_3)>0.);
-  if (!e1_is_unitary){
-    printf("Error : First axis vector [%10.2e %10.2e %10.2e] is not unitary.\n",axis_1[0],axis_1[1],axis_1[2]);
+  // normalizing each basis vector
+  double inv_norm[3];
+  for (int i=0;i<3;i++){
+    inv_norm[i] = PDM_DOT_PRODUCT(axis_1,axis_1);
   }
-  if (!e2_is_unitary){
-    printf("Error : Second axis vector [%10.2e %10.2e %10.2e] is not unitary.\n",axis_2[0],axis_2[1],axis_2[2]);
-  }
-  if (!e3_is_unitary){
-    printf("Error : Third axis vector [%10.2e %10.2e %10.2e] is not unitary.\n",axis_3[0],axis_3[1],axis_3[2]);
-  }
+  PDM_bool_t e1_is_null = (PDM_ABS(inv_norm[0])<ROTATION_EPS);
+  PDM_bool_t e2_is_null = (PDM_ABS(inv_norm[0])<ROTATION_EPS);
+  PDM_bool_t e3_is_null = (PDM_ABS(inv_norm[0])<ROTATION_EPS);
+  PDM_bool_t checks_failed = PDM_FALSE;
   if (!e_is_orthogonal){
     printf("Error : Provided axes are not orthogonal.\n");
+    checks_failed = PDM_TRUE;
   }
   if (!e_is_direct){
     printf("Error : Provided axes are not direct.\n");
+    checks_failed = PDM_TRUE;
   }
-  if ((!e1_is_unitary) & (!e2_is_unitary) & (!e3_is_unitary) & e_is_orthogonal){
+  if (e1_is_null){
+    printf("Error : First axis vector [%10.6e %10.6e %10.6e] is null (norm squared = %.16e).\n",axis_1[0],axis_1[1],axis_1[2],inv_norm[0]);
+    checks_failed = PDM_TRUE;
+  }
+  if (e2_is_null){
+    printf("Error : Second axis vector [%10.6e %10.6e %10.6e] is null (norm squared = %.16e).\n",axis_2[0],axis_2[1],axis_2[2],inv_norm[1]);
+    checks_failed = PDM_TRUE;
+  }
+  if (e3_is_null){
+    printf("Error : Third axis vector [%10.6e %10.6e %10.6e] is null (norm squared = %.16e).\n",axis_3[0],axis_3[1],axis_3[2],inv_norm[2]);
+    checks_failed = PDM_TRUE;
+  }
+  if (checks_failed){
     exit(EX_USAGE);
   }
-  double rotation_matrix[9];
+  for (int i=0;i<3;i++){
+    inv_norm[i] = 1./sqrt(inv_norm[i]);
+  }
   double translation_vec[3];
+  set_identity_to_homogeneous_matrix(homogeneous_matrix);
   if (reverse){
-    homogeneous_matrix[4*0+0] = axis_1[0];
-    homogeneous_matrix[4*0+1] = axis_2[0];
-    homogeneous_matrix[4*0+2] = axis_3[0];
-    homogeneous_matrix[4*1+0] = axis_1[1];
-    homogeneous_matrix[4*1+1] = axis_2[1];
-    homogeneous_matrix[4*1+2] = axis_3[1];
-    homogeneous_matrix[4*2+0] = axis_1[2];
-    homogeneous_matrix[4*2+1] = axis_2[2];
-    homogeneous_matrix[4*2+2] = axis_3[2];
+    // with homogeneous matrices the translation occurs in the second reference frame:
+    // y = H.x = R.x + V
+    // x = R^T.y + V_rev
+    // y = R.(R^T.y + V_rev) + V = y + R.V_rev + V
+    // thus R.V_rev = - V => V_rev = -R^T.V
+    // building R^T
+    double rot_mat_T[9];
+    rot_mat_T[3*0+0] = inv_norm[0]*axis_1[0];
+    rot_mat_T[3*0+1] = inv_norm[0]*axis_1[1];
+    rot_mat_T[3*0+2] = inv_norm[0]*axis_1[2];
+    rot_mat_T[3*1+0] = inv_norm[1]*axis_2[0];
+    rot_mat_T[3*1+1] = inv_norm[1]*axis_2[1];
+    rot_mat_T[3*1+2] = inv_norm[1]*axis_2[2];
+    rot_mat_T[3*2+0] = inv_norm[2]*axis_3[0];
+    rot_mat_T[3*2+1] = inv_norm[2]*axis_3[1];
+    rot_mat_T[3*2+2] = inv_norm[2]*axis_3[2];
+    PDM_rotation_apply_n_by_n_matrix(rot_mat_T,origin,3,1,translation_vec);
+    homogeneous_matrix[4*0+3] = -translation_vec[0];
+    homogeneous_matrix[4*1+3] = -translation_vec[1];
+    homogeneous_matrix[4*2+3] = -translation_vec[2];
+    for (int i = 0; i < 3; i++){
+      for (int j = 0; j < 3; j++){
+        homogeneous_matrix[4*i+j] = rot_mat_T[3*i+j];
+      }
+    }
+  }else{
+    homogeneous_matrix[4*0+0] = inv_norm[0]*axis_1[0];
+    homogeneous_matrix[4*0+1] = inv_norm[1]*axis_2[0];
+    homogeneous_matrix[4*0+2] = inv_norm[2]*axis_3[0];
+    homogeneous_matrix[4*1+0] = inv_norm[0]*axis_1[1];
+    homogeneous_matrix[4*1+1] = inv_norm[1]*axis_2[1];
+    homogeneous_matrix[4*1+2] = inv_norm[2]*axis_3[1];
+    homogeneous_matrix[4*2+0] = inv_norm[0]*axis_1[2];
+    homogeneous_matrix[4*2+1] = inv_norm[1]*axis_2[2];
+    homogeneous_matrix[4*2+2] = inv_norm[2]*axis_3[2];
     homogeneous_matrix[4*0+3] = origin[0];
     homogeneous_matrix[4*1+3] = origin[1];
     homogeneous_matrix[4*2+3] = origin[2];
-  }else{
-    rotation_matrix[3*0+0] = axis_1[0];
-    rotation_matrix[3*0+1] = axis_1[1];
-    rotation_matrix[3*0+2] = axis_1[2];
-    rotation_matrix[3*1+0] = axis_2[0];
-    rotation_matrix[3*1+1] = axis_2[1];
-    rotation_matrix[3*1+2] = axis_2[2];
-    rotation_matrix[3*2+0] = axis_3[0];
-    rotation_matrix[3*2+1] = axis_3[1];
-    rotation_matrix[3*2+2] = axis_3[2];
-    PDM_rotation_apply_n_by_n_matrix(rotation_matrix,origin,3,1,translation_vec);
-    for (int i = 0; i < 3; i++){
-      for (int j = 0; j < 3; j++){
-        homogeneous_matrix[4*i+j] = rotation_matrix[3*i+j];
-      }
-    }
-    homogeneous_matrix[4*0+3] = translation_vec[0];
-    homogeneous_matrix[4*1+3] = translation_vec[1];
-    homogeneous_matrix[4*2+3] = translation_vec[2];
   }
-  homogeneous_matrix[4*3+0] = 0.;
-  homogeneous_matrix[4*3+1] = 0.;
-  homogeneous_matrix[4*3+2] = 0.;
-  homogeneous_matrix[4*3+3] = 1.;
 }
 
 /*----------------------------------------------------------------------------

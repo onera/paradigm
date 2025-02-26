@@ -14,26 +14,31 @@ Format conversion
 .. doxygenfunction:: PDM_rotation_axis_angle_to_euler_angles
 .. doxygenfunction:: PDM_rotation_axis_angle_to_rotation_matrix
 .. doxygenfunction:: PDM_rotation_axis_angle_to_homogeneous_matrix
+.. doxygenfunction:: PDM_rotation_axis_angle_and_rotation_center_to_homogeneous_matrix
+
 .. doxygenfunction:: PDM_rotation_euler_angles_to_axis_angle
 .. doxygenfunction:: PDM_rotation_euler_angles_to_euler_angles
 .. doxygenfunction:: PDM_rotation_euler_angles_to_rotation_matrix
 .. doxygenfunction:: PDM_rotation_euler_angles_to_homogeneous_matrix
+.. doxygenfunction:: PDM_rotation_euler_angles_and_rotation_center_to_homogeneous_matrix
+.. doxygenfunction:: PDM_rotation_periodic_t_info_to_homogeneous_matrix
+
 .. doxygenfunction:: PDM_rotation_rotation_matrix_to_axis_angle
 .. doxygenfunction:: PDM_rotation_rotation_matrix_to_euler_angles
 .. doxygenfunction:: PDM_rotation_rotation_matrix_to_homogeneous_matrix
+.. doxygenfunction:: PDM_rotation_rotation_matrix_and_rotation_center_to_homogeneous_matrix
+
 .. doxygenfunction:: PDM_rotation_homogeneous_matrix_to_axis_angle
 .. doxygenfunction:: PDM_rotation_homogeneous_matrix_to_euler_angles
 .. doxygenfunction:: PDM_rotation_homogeneous_matrix_to_rotation_matrix
+
 .. doxygenfunction:: PDM_rotation_two_vectors_to_axis_angle
 .. doxygenfunction:: PDM_rotation_two_vectors_to_euler_angles
 .. doxygenfunction:: PDM_rotation_two_vectors_to_rotation_matrix
 .. doxygenfunction:: PDM_rotation_two_vectors_to_homogeneous_matrix
 .. doxygenfunction:: PDM_rotation_two_vectors_and_rotation_center_to_homogeneous_matrix
+
 .. doxygenfunction:: PDM_rotation_axes_and_origin_to_homogeneous_matrix
-.. doxygenfunction:: PDM_rotation_axis_angle_and_rotation_center_to_homogeneous_matrix
-.. doxygenfunction:: PDM_rotation_euler_angles_and_rotation_center_to_homogeneous_matrix
-.. doxygenfunction:: PDM_rotation_rotation_matrix_and_rotation_center_to_homogeneous_matrix
-.. doxygenfunction:: PDM_rotation_periodic_t_info_to_homogeneous_matrix
 
 Application to coordinates
 """"""""""""""""""""""""""
@@ -55,7 +60,7 @@ Python API
 
     ~Pypdm.Pypdm.axis_angle_to_euler_angles
     ~Pypdm.Pypdm.axis_angle_to_rotation_matrix
-    ~Pypdm.Pypdm.axis_angle_to_homogenous_matrix
+    ~Pypdm.Pypdm.axis_angle_to_homogeneous_matrix
     ~Pypdm.Pypdm.axis_angle_and_rotation_center_to_homogeneous_matrix
 
     ~Pypdm.Pypdm.euler_angles_to_axis_angle
@@ -73,6 +78,7 @@ Python API
     ~Pypdm.Pypdm.two_vectors_to_euler_angles
     ~Pypdm.Pypdm.two_vectors_to_rotation_matrix
     ~Pypdm.Pypdm.two_vectors_to_homogeneous_matrix
+    ~Pypdm.Pypdm.two_vectors_and_rotation_center_to_homogeneous_matrix
 
     ~Pypdm.Pypdm.axes_and_origin_to_homogeneous_matrix
 
@@ -82,9 +88,6 @@ Python API
     ~Pypdm.Pypdm.apply_axis_angle_and_rotation_center_to_vector_field
     ~Pypdm.Pypdm.apply_rotation_matrix_and_rotation_center_to_coords
     ~Pypdm.Pypdm.apply_rotation_matrix_and_rotation_center_to_vector_field
-    ~Pypdm.Pypdm.axis_angle_and_rotation_center_to_homogeneous_matrix
-    ~Pypdm.Pypdm.euler_angles_and_rotation_center_to_homogeneous_matrix
-    ~Pypdm.Pypdm.rotation_matrix_and_rotation_center_to_homogeneous_matrix
 
   ..~Pypdm.Pypdm.periodic_t_info_to_homogeneous_matrix
 
@@ -92,7 +95,7 @@ Python API
 
   .. autofunction:: Pypdm.Pypdm.axis_angle_to_euler_angles
   .. autofunction:: Pypdm.Pypdm.axis_angle_to_rotation_matrix
-  .. autofunction:: Pypdm.Pypdm.axis_angle_to_homogenous_matrix
+  .. autofunction:: Pypdm.Pypdm.axis_angle_to_homogeneous_matrix
   .. autofunction:: Pypdm.Pypdm.axis_angle_and_rotation_center_to_homogeneous_matrix
 
   .. autofunction:: Pypdm.Pypdm.euler_angles_to_axis_angle
@@ -110,6 +113,7 @@ Python API
   .. autofunction:: Pypdm.Pypdm.two_vectors_to_euler_angles
   .. autofunction:: Pypdm.Pypdm.two_vectors_to_rotation_matrix
   .. autofunction:: Pypdm.Pypdm.two_vectors_to_homogeneous_matrix
+  .. autofunction:: Pypdm.Pypdm.two_vectors_and_rotation_center_to_homogeneous_matrix
 
   .. autofunction:: Pypdm.Pypdm.axes_and_origin_to_homogeneous_matrix
 
