@@ -2202,20 +2202,8 @@ _create
   PDM_part_to_part_t *ptp = NULL;
   PDM_malloc(ptp, 1, PDM_part_to_part_t);
 
-  char *env_var = NULL;
-  env_var = getenv ("PDM_PART_TO_PART_USE_TAG");
-  ptp->use_tag = 0;
-  if (env_var != NULL) {
-    ptp->use_tag = (int) atoi(env_var);
-  }
-
-  /* Init */
-  if(ptp->use_tag == 1) {
-    ptp->comm = comm;
-  } else {
-    ptp->comm = PDM_MPI_COMM_NULL;
-    PDM_MPI_Comm_dup(comm, &ptp->comm);
-  }
+  /* Necessary to duplicate comm to avoid conflict with tag during ISend/Irecv */
+  PDM_MPI_Comm_dup(comm, &ptp->comm);
 
   ptp->n_part1                  = n_part1;
   ptp->gnum_elt1                = gnum_elt1;
@@ -3092,19 +3080,11 @@ _create
   void  *max_tag_tmp;
   int    flag = 0;
 
-  if(ptp->use_tag == 1) {
-    // Mandatory to call with PDM_MPI_COMM_WORLD becuase only this one keep attributes (openMPI implemntation for exemple)
-    PDM_MPI_Comm_get_attr_tag_ub(PDM_MPI_COMM_WORLD, &max_tag_tmp, &flag);
-    ptp->max_tag  = (long) (*((int *) max_tag_tmp));
-    ptp->seed_tag = PDM_MPI_Rand_tag(comm);
-    ptp->next_tag = 1;
-  } else {
-    // Mandatory to call with PDM_MPI_COMM_WORLD becuase only this one keep attributes (openMPI implemntation for exemple)
-    PDM_MPI_Comm_get_attr_tag_ub(PDM_MPI_COMM_WORLD, &max_tag_tmp, &flag);
-    ptp->max_tag  = (long) (*((int *) max_tag_tmp));
-    ptp->seed_tag = 1;
-    ptp->next_tag = 1;
-  }
+  // Mandatory to call with PDM_MPI_COMM_WORLD becuase only this one keep attributes (openMPI implemntation for exemple)
+  PDM_MPI_Comm_get_attr_tag_ub(PDM_MPI_COMM_WORLD, &max_tag_tmp, &flag);
+  ptp->max_tag  = (long) (*((int *) max_tag_tmp));
+  ptp->seed_tag = 1;
+  ptp->next_tag = 1;
 
   return ptp;
 }
@@ -5852,9 +5832,7 @@ PDM_part_to_part_free
   ptp->async_alltoall_n_free  = 0;
   ptp->async_alltoall_l_array = 0;
 
-  if (ptp->use_tag == 0) {
-    PDM_MPI_Comm_free(&ptp->comm);
-  }
+  PDM_MPI_Comm_free(&ptp->comm);
 
   PDM_free(ptp);
   return NULL;
