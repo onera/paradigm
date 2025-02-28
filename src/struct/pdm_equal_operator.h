@@ -38,33 +38,6 @@ extern "C" {
  * Public function prototypes
  *============================================================================*/
 
-/**
- *
- * \brief Equal operator for connectivities
- *
- */
-int
-PDM_operator_equal_string
-(
-const void* a,
-const void* b,
-      void* ctxt
-);
-
-/**
- *
- * \brief Equal operator for connectivities
- *
- */
-int
-PDM_operator_equal_connectivity
-(
-const void* a,
-const void* b,
-      void* ctxt
-);
-
-
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
