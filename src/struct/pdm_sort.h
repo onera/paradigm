@@ -85,7 +85,6 @@ PDM_sort_int
  * \param [in]    lArray       Array length
  *
  */
-
 void
 PDM_sort_double
 (
@@ -94,58 +93,6 @@ PDM_sort_double
  int         lArray
 );
 
-
-/**
- *
- * \brief Compare operator for connectivities
- *
- */
-int
-PDM_operator_compare_string
-(
-const void* a,
-const void* b,
-      void* ctxt
-);
-
-/**
- *
- * \brief Equal operator for connectivities
- *
- */
-int
-PDM_operator_equal_string
-(
-const void* a,
-const void* b,
-      void* ctxt
-);
-
-/**
- *
- * \brief Compare operator for connectivities
- *
- */
-int
-PDM_operator_compare_connectivity
-(
-const void* a,
-const void* b,
-      void* ctxt
-);
-
-/**
- *
- * \brief Equal operator for connectivities
- *
- */
-int
-PDM_operator_equal_connectivity
-(
-const void* a,
-const void* b,
-      void* ctxt
-);
 
 #ifdef __cplusplus
 }
