@@ -667,10 +667,6 @@ include "pdm_gnum.pxi"
 # --------------------
 include "pdm_mesh_location.pxi"
 
-# PDM_interpolate_from_mesh_location :
-# --------------------
-include "pdm_interpolate_from_mesh_location.pxi"
-
 # PDM_closest_points :
 # --------------------
 include "pdm_closest_points.pxi"
