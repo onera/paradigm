@@ -9,7 +9,6 @@ add_subdirectory(mpi_wrapper)
 file(GLOB_RECURSE SOURCES
      mesh/*.[ch]
      meshgen/*.[ch]
-     pario/*.[ch]
      ppart/*.[ch]
      ppart/*.cxx
      struct/*.[ch]
@@ -18,8 +17,7 @@ file(GLOB_RECURSE SOURCES
      test_utils/*.[ch]
      ext_wrapper/*.[ch]
      mpi_wrapper/pdm_mpi_node_first_rank.[hc]
-     io/pdm_logging.[hc]
-     io/pdm_vtk.[hc]
+     io/*.[ch]
      pdm.h
      pdm.c
      pdm_priv.h)
@@ -68,7 +66,6 @@ target_include_directories(pdm
   PRIVATE   $<BUILD_INTERFACE:${PDM_BINARY_DIR}>
   PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>
   PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-  PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/pario>
   PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/ppart>
   PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/io>
   PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/mpi_wrapper>
@@ -97,7 +94,6 @@ if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
     PRIVATE   $<BUILD_INTERFACE:${PDM_BINARY_DIR}>
     PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>
     PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-    PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/pario>
     PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/ppart>
     PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/io>
     PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/mpi_wrapper>
@@ -136,10 +132,8 @@ if (PDM_ENABLE_CUDA)
                               PRIVATE  ${PDM_BINARY_DIR}
                               PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/..
                               PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}
-                              #PUBLIC  /opt/tools/openmpi/4.0.1-gnu-8.3/include/
                               PUBLIC  ${MPI_INCLUDE_PATH}
                               PUBLIC  ${CUDA_INCLUDE_DIRS}
-                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/pario
                               PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/ppart
                               PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/io
                               PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/mpi_wrapper
@@ -160,7 +154,7 @@ list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/pdm_priv.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/util/pdm_version.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/util/pdm_array.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/util/pdm_mem_tool.h")
-list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/pario/pdm_io.h")
+list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/io/pdm_io.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/io/pdm_error.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/io/pdm_printf.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/io/pdm_logging.h")
@@ -170,8 +164,8 @@ list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/ppart/pdm_part_renum.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/ppart/pdm_partitioning_algorithm.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/ppart/pdm_multipart.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/ppart/pdm_part_extension.h")
-list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/pario/pdm_io_tab.h")
-list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/pario/pdm_writer.h")
+list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/io/pdm_io_tab.h")
+list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/io/pdm_writer.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/mesh/pdm_plane.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/mesh/pdm_mesh_nodal.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/mesh/pdm_mesh_intersection.h")
@@ -183,7 +177,7 @@ list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/mesh/pdm_domain_interface.h
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/mesh/pdm_part_domain_interface.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_dmesh.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_part_mesh.h")
-list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/pario/pdm_writer_priv.h")
+list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/io/pdm_writer_priv.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/util/pdm_mpi_node_first_rank.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/util/pdm_timer.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/util/pdm_linear_algebra.h")
@@ -234,10 +228,10 @@ list(APPEND LIST_HEADER "${PDM_BINARY_DIR}/pdm_config.h")
 if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
 
   set (LIST_HEADERF "")
-  list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/pario/pdm_io.F90")
+  list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/io/pdm_io.F90")
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_cf_array.F90")
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_BINARY_DIR}/pdm_cf_array.mod")
-  list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/pario/pdm_writer.F90")
+  list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/io/pdm_writer.F90")
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/pdm.F90")
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/ppart/pdm_multipart.F90")
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_BINARY_DIR}/pdm_multipart.mod")
