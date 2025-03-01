@@ -8,6 +8,7 @@ add_subdirectory(mpi_wrapper)
 
 file(GLOB_RECURSE SOURCES
      mesh/*.[ch]
+     geometry/*.[ch]
      meshgen/*.[ch]
      ppart/*.[ch]
      ppart/*.cxx
@@ -68,6 +69,7 @@ target_include_directories(pdm
   PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
   PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/ppart>
   PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/io>
+  PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/geometry>
   PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/mpi_wrapper>
   PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/ext_wrapper>
   PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/mesh>
