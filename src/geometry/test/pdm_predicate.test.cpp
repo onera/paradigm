@@ -7,7 +7,7 @@
 #include "pdm_predicate.h"
 
 
-TEST_CASE("PDM_predicate") {
+TEST_CASE("PDM_predicate - in_circle") {
 
   PDM_predicate_exactinit();
 
@@ -44,8 +44,29 @@ TEST_CASE("PDM_predicate") {
   printf("(-) : %g\n", sens_minus_u);
   CHECK(PDM_SIGN(sens_plus_u ) == -1);
   CHECK(PDM_SIGN(sens_minus_u) ==  1);
+}
 
+TEST_CASE("PDM_predicate - insphere") {
 
-  // CHECK_EQ_C_ARRAY_FLOAT(vector_out,exp_out,12,EPS);
+  PDM_predicate_exactinit();
+
+  double a[3] = {-1.46, -2.60,  0.37};
+  double b[3] = { 2.49, -1.07, -1.28};
+  double c[3] = {-1.20,  2.34,  1.44};
+  double d[3] = {-0.61, -0.47,  2.90};
+  double e[3] = { 1.00,  2.00,  1.00};
+  double f[3] = {-2.00, -3.00,  1.00};
+
+  double volume = PDM_predicate_orient3d (a, b, c, d);
+  printf("volume = %f\n", volume);
+
+  CHECK(volume == doctest::Approx(46.765126).epsilon(0.01));
+
+  double insphere_e = PDM_predicate_insphere (a, b, c, d, e);
+  double insphere_f = PDM_predicate_insphere (a, b, c, d, f);
+
+  printf("insphere? : e = %f, f = %f\n", insphere_e, insphere_f);
+  CHECK(insphere_e == doctest::Approx(139.000714 ).epsilon(0.01));
+  CHECK(insphere_f == doctest::Approx(-232.157103).epsilon(0.01));
 
 }
