@@ -217,12 +217,6 @@ MPI_TEST_CASE("[PDM_dpoint_cloud_gen_cartesian] - cartesian - 2p", 2) {
 
 }
 
-
-
-
-
-
-
 MPI_TEST_CASE("[PDM_dpoint_cloud_gen_random] - random - 1p", 1) {
 
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
