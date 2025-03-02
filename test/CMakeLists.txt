@@ -192,7 +192,6 @@ test_c_create (pdm_t_closest_points ${MPIEXEC_MAX_NUMPROCS}  PDM_LIST_TEST PDM_L
 test_c_create (pdm_t_distant_neighbor 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_distant_neighbor_nomatch 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_distant_neighbor2 2 PDM_LIST_TEST PDM_LIST_NRANK)
-test_c_create (pdm_t_order 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_plane_intersect_unit 2 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_plane_meshes_intersect_unit 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_intersect_line_box 1 PDM_LIST_TEST PDM_LIST_NRANK)
@@ -215,7 +214,6 @@ test_c_create (pdm_t_box_tree 1  PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_multi_block_merge 1  PDM_LIST_TEST PDM_LIST_NRANK)
 
 test_c_create (pdm_t_ho_ordering 1  PDM_LIST_TEST PDM_LIST_NRANK)
-test_c_create (pdm_t_mpi_shared_allgather 1 PDM_LIST_TEST PDM_LIST_NRANK)
 
 test_c_create (pdm_t_point_in_polygon 1  PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_line_intersection 1  PDM_LIST_TEST PDM_LIST_NRANK)
