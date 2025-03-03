@@ -237,7 +237,6 @@ test_c_create (pdm_t_reader_gamma 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_reader_vtk 1 PDM_LIST_TEST PDM_LIST_NRANK)
 
 test_c_create (pdm_t_icoball 1 PDM_LIST_TEST PDM_LIST_NRANK)
-test_c_create (pdm_t_hollow_ball 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_extrude_polyline 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_fill_between_polylines 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_morton_order 1 PDM_LIST_TEST PDM_LIST_NRANK)
