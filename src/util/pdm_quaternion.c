@@ -324,12 +324,12 @@ PDM_quaternion_from_two_vectors
       double dot2 = PDM_DOT_PRODUCT(norm_vector_1,y_axis);
       if (PDM_ABS(dot2) > 1. - QUATERNION_EPS) { // vector 1 is y_axis
           double axis[3] = {1.,0.,0.}; // x_axis
-          PDM_quaternion_from_axis_angle(axis,M_PI,qt_out);
+          PDM_quaternion_from_axis_angle(axis,PDM_PI,qt_out);
       }
       else { // vector != y_axis
         double axis[3];
         PDM_CROSS_PRODUCT(axis,y_axis,norm_vector_1);
-        PDM_quaternion_from_axis_angle(axis,M_PI,qt_out);
+        PDM_quaternion_from_axis_angle(axis,PDM_PI,qt_out);
       }
     }
   }
@@ -471,7 +471,7 @@ PDM_quaternion_from_euler_angles
   const double ang_y,
   const double ang_z,
   const int order[3],
-  PDM_bool_t intrinsic,
+  const PDM_bool_t intrinsic,
         double qt[4]
 )
 {
@@ -633,7 +633,7 @@ PDM_quaternion_to_euler_angles
     if (PDM_ABS(angle[1])<=1e-7){
         angle[2] = 0.;
         angle[0] = 2*half_sum;
-    }else if (PDM_ABS(angle[1]-M_PI)<=1e-7){
+    }else if (PDM_ABS(angle[1]-PDM_PI)<=1e-7){
         angle[2] = 0.;
         angle[0] = 2*half_diff*(intrinsic?1.:-1.);
         /* code */
@@ -648,19 +648,19 @@ PDM_quaternion_to_euler_angles
         }
     }
     if (!symmetric){
-        angle[1] -= 0.5*M_PI;
+        angle[1] -= 0.5*PDM_PI;
         if (intrinsic){
             angle[0] *= sign;
         }else{
             angle[2] *= sign;
         }
     }
-    if (angle[0] < -M_PI) angle[0] += 2*M_PI;
-    if (angle[0] >  M_PI) angle[0] -= 2*M_PI;
-    if (angle[1] < -M_PI) angle[1] += 2*M_PI;
-    if (angle[1] >  M_PI) angle[1] -= 2*M_PI;
-    if (angle[2] < -M_PI) angle[2] += 2*M_PI;
-    if (angle[2] >  M_PI) angle[2] -= 2*M_PI;
+    if (angle[0] < -PDM_PI) angle[0] += 2*PDM_PI;
+    if (angle[0] >  PDM_PI) angle[0] -= 2*PDM_PI;
+    if (angle[1] < -PDM_PI) angle[1] += 2*PDM_PI;
+    if (angle[1] >  PDM_PI) angle[1] -= 2*PDM_PI;
+    if (angle[2] < -PDM_PI) angle[2] += 2*PDM_PI;
+    if (angle[2] >  PDM_PI) angle[2] -= 2*PDM_PI;
 
     int rev_order[3];
     rev_order[order[0]] = 0;

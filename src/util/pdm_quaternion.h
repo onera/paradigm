@@ -490,7 +490,7 @@ PDM_quaternion_from_euler_angles
   const double ang_y,
   const double ang_z,
   const int order[3],
-  PDM_bool_t intrinsic,
+  const PDM_bool_t intrinsic,
         double qt[4]
 );
 

@@ -17,17 +17,17 @@ static const double RAD2DEG = 180./M_PI;
  *  PDM_rotation_t COMPOSITE FUNCTIONS
  *----------------------------------------------------------------------------*/
 
-// static void print_matrix(const double* mat,const int n_row,const int n_col) {
-//     PDM_printf("#####\n");
-//     for (int i=0; i<n_row;i++){
-//         PDM_printf("|");
-//         for (int j=0; j<n_col;j++){
-//             PDM_printf("%5.3f\t",mat[n_col*i+j]);
-//         }
-//         PDM_printf("|\n");
-//     }
-//     PDM_printf("#####\n");
-// }
+static void print_matrix(const double* mat,const int n_row,const int n_col) {
+    PDM_printf("#####\n");
+    for (int i=0; i<n_row;i++){
+        PDM_printf("|");
+        for (int j=0; j<n_col;j++){
+            PDM_printf("%5.3f\t",mat[n_col*i+j]);
+        }
+        PDM_printf("|\n");
+    }
+    PDM_printf("#####\n");
+}
 
 static void multiply_matrices(double A[16],double B[16],double C[16]){
     for (int i = 0; i < 4; i++) {
@@ -47,7 +47,6 @@ static void mat_vec(double A[9],double x[3],double y[3]){
             y[i] += A[3*i+j]*x[j];
         }
     }
-
 }
 
 #if defined(PDM_HAVE_MKL) || defined(PDM_HAVE_LAPACK)
@@ -81,10 +80,14 @@ MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_multiply_n_by_n_matrices", 1) 
     double exp_C[16];
     multiply_matrices(A,B,exp_C);
     PDM_rotation_multiply_n_by_n_matrices(A,B,4,C);
+    // print_matrix(C,4,4);
+    // print_matrix(exp_C,4,4);
     CHECK_EQ_C_ARRAY_FLOAT(C,exp_C,12,EPS);
 
     multiply_matrices(D,E,exp_C);
     PDM_rotation_multiply_n_by_n_matrices(D,E,4,C);
+    // print_matrix(C,4,4);
+    // print_matrix(exp_C,4,4);
     CHECK_EQ_C_ARRAY_FLOAT(C,exp_C,12,EPS);
 }
 
@@ -133,7 +136,7 @@ MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_apply_n_by_n_matrix", 1) {
     double mat[9];
     double axis[3] = {1.,0.,1.};
     double angle = 12.*DEG2RAD;
-    PDM_rotation_axis_angle_to_rotation_matrix(axis,angle,mat);
+    PDM_rotation_axis_angle_to_rotation_matrix(axis,angle,PDM_FALSE,mat);
     int n_samp = 7;
     double vector[21] = {
         1.,0.,0.,
@@ -151,6 +154,10 @@ MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_apply_n_by_n_matrix", 1) {
 
     }
     PDM_rotation_apply_n_by_n_matrix(mat,vector,3,n_samp,vector_out);
+    // print_matrix(mat,3,3);
+    // print_matrix(vector,7,3);
+    // print_matrix(vector_out,7,3);
+    // print_matrix(exp_out,7,3);
     CHECK_EQ_C_ARRAY_FLOAT(vector_out,exp_out,12,EPS);
 }
 
@@ -173,7 +180,7 @@ MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_apply_euler_angles_and_rotatio
     double tmp_vec[3];
     double tmp_mat[9];
     // doing it by hand:
-    PDM_rotation_euler_angles_to_rotation_matrix(ang_x,ang_y,ang_z,order,intrinsic,tmp_mat);
+    PDM_rotation_euler_angles_to_rotation_matrix(ang_x,ang_y,ang_z,order,intrinsic,PDM_FALSE,tmp_mat);
     // print_matrix(tmp_mat,3,3);
     for (int i = 0; i < n_samp; i++){
         // applying the translation
@@ -213,7 +220,7 @@ MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_apply_axis_angle_and_rotation_
     double tmp_mat[9];
     double vector_out[12];
     // doing it by hand:
-    PDM_rotation_axis_angle_to_rotation_matrix(axis,angle,tmp_mat);
+    PDM_rotation_axis_angle_to_rotation_matrix(axis,angle,PDM_FALSE,tmp_mat);
     // print_matrix(tmp_mat,3,3);
     for (int i = 0; i < n_samp; i++){
         // applying the translation
