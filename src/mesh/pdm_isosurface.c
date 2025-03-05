@@ -1017,7 +1017,8 @@ _extract_nodal
     int n_elt_tot = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, i_part);
     PDM_malloc(extract_lnum[i_part], n_elt_tot, int);
 
-    int i_parent = -1;
+    int  i_parent = -1;
+    int _i_parent = -1;
     for (int i_section = 0; i_section < n_section; i_section++) {
 
       int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne,
@@ -1043,6 +1044,8 @@ _extract_nodal
                                                      PDM_OWNERSHIP_BAD_VALUE);
 
         for (int i_elt = 0; i_elt < n_elt; i_elt++) {
+
+          _i_parent++;
 
           int is_selected = 0;
           int n_vtx_elt = connec_idx[i_elt+1] - connec_idx[i_elt];
@@ -1076,7 +1079,7 @@ _extract_nodal
               i_parent = parent_num[i_elt];
             }
             else {
-              i_parent++;
+              i_parent = _i_parent;
             }
 
             extract_lnum[i_part][n_extract[i_part]++] = i_parent + 1;
@@ -1112,6 +1115,9 @@ _extract_nodal
                                                      PDM_OWNERSHIP_BAD_VALUE);
 
         for (int i_cell = 0; i_cell < n_elt; i_cell++) {
+
+          _i_parent++;
+
           int is_selected = 0;
           for (int idx_face = cell_face_idx[i_cell]; idx_face < cell_face_idx[i_cell+1]; idx_face++) {
             int i_face = PDM_ABS(cell_face[idx_face]) - 1;
@@ -1145,7 +1151,14 @@ _extract_nodal
           } // End of loop on faces of current cell
 
           if (is_selected) {
-            extract_lnum[i_part][n_extract[i_part]++] = i_cell + 1;
+            if (parent_num != NULL) {
+              i_parent = parent_num[i_cell];
+            }
+            else {
+              i_parent = _i_parent;
+            }
+
+            extract_lnum[i_part][n_extract[i_part]++] = i_parent + 1;
           }
         } // End of loop on cells
 
@@ -1184,6 +1197,8 @@ _extract_nodal
 
         for (int i_elt = 0; i_elt < n_elt; i_elt++) {
 
+          _i_parent++;
+
           int is_selected = 0;
           int *_connec = connec + n_vtx_elt*i_elt;
 
@@ -1216,7 +1231,7 @@ _extract_nodal
               i_parent = parent_num[i_elt];
             }
             else {
-              i_parent++;
+              i_parent = _i_parent;
             }
 
             extract_lnum[i_part][n_extract[i_part]++] = i_parent + 1;
