@@ -266,7 +266,6 @@ PDM_inplace_unique_long2
   for(int i = 0; i < array_size; ++i){
     order[i] = i;
   }
-  // PDM_radix_sort_long(&a[l], order, array_size);
   PDM_sort_long(&a[l], order, array_size);
 
   int new_size  = 1;

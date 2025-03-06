@@ -31,6 +31,7 @@
 
 #include "pdm_poly_surf_gen.h"
 #include "pdm.h"
+#include "pdm_priv.h"
 #include "pdm_mem_tool.h"
 #include "pdm_mpi.h"
 #include "pdm_printf.h"
@@ -39,10 +40,6 @@
 /*============================================================================
  * Local macro definitions
  *============================================================================*/
-
-
-#define ABS(a)     ((a) <  0  ? -(a) : (a))
-#define MIN(a,b)   ((a) > (b) ?  (b) : (a))
 
 #ifdef __cplusplus
 extern "C" {
@@ -62,7 +59,7 @@ static double random01(void)
   int sign;
   int rsigna = rand();
   int rsignb = rand();
-  sign = (rsigna - rsignb) / ABS(rsigna - rsignb);
+  sign = (rsigna - rsignb) / PDM_ABS(rsigna - rsignb);
   double resultat = sign*((double)rand())/((double)RAND_MAX);
   return resultat;
 }
@@ -488,10 +485,10 @@ PDM_g_num_t    **dedge_group
   /* Perturbation des coordonnees + Creation d'une courbure en Z */
 
   for (PDM_g_num_t ix = 0; ix <(*dn_vtx) ; ix++) {
-    if (ABS(xmin-(*dvtx_coord)[3*ix]) > eps &&
-        ABS(xmax-(*dvtx_coord)[3*ix]) > eps &&
-        ABS(ymax-(*dvtx_coord)[3*ix+1]) > eps &&
-        ABS(ymin-(*dvtx_coord)[3*ix+1]) > eps) {
+    if (PDM_ABS(xmin-(*dvtx_coord)[3*ix]) > eps &&
+        PDM_ABS(xmax-(*dvtx_coord)[3*ix]) > eps &&
+        PDM_ABS(ymax-(*dvtx_coord)[3*ix+1]) > eps &&
+        PDM_ABS(ymin-(*dvtx_coord)[3*ix+1]) > eps) {
       if (have_random != 0) {
         (*dvtx_coord)[3*ix]   += random01() * coef_rand * cote1;
         (*dvtx_coord)[3*ix+1] += random01() * coef_rand * cote2;
