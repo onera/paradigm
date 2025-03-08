@@ -271,55 +271,6 @@ PDM_binary_search_int
   }
 }
 
-
-/**
- *
- * \brief Search element index in a sorted array
- *
- * \param [in]   elt          Element to find
- * \param [in]   array        Array where to search
- * \param [in]   lArray       Array length
- *
- * \return       Index where element is stored
- */
-
-int
-PDM_binary_search_uint32t
-(
- const uint32_t     elt,
- const uint32_t    *array,
- const int          lArray
-)
-{
-  int left  = 0;
-  int right = lArray - 1;
-  int ind   = (left + right) / 2;
-
-  while ((right - left) > 1) {
-
-    if (elt < array[ind]) {
-      right = ind;
-    }
-    else if (elt >= array[ind]) {
-      left = ind;
-    }
-
-    ind = (left + right) / 2;
-
-  }
-
-  if (elt == array[ind]) {
-    return ind;
-  }
-  if (elt == array[right]) {
-    return right;
-  }
-  else {
-    return -1;
-  }
-}
-
-
 /**
  *
  * \brief Search gap in a sorted array
