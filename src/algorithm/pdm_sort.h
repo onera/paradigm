@@ -53,7 +53,7 @@ extern "C" {
 void
 PDM_sort_long
 (
- PDM_g_num_t  *array,
+ PDM_g_num_t *array,
  int         *order,
  int          lArray
 );
