@@ -10,6 +10,7 @@ file(GLOB_RECURSE SOURCES
      algorithm/*.[ch]
      mesh/*.[ch]
      geometry/*.[ch]
+     gnum_utils/*.[ch]
      meshgen/*.[ch]
      ppart/*.[ch]
      ppart/*.cxx
@@ -70,6 +71,7 @@ target_include_directories(pdm
   PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
   PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/adapt>
   PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/algorithm>
+  PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/gnum_utils>
   PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/geometry>
   PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/ppart>
   PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/io>
@@ -188,6 +190,10 @@ list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/ppart/pdm_partitioning_algo
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/ppart/pdm_multipart.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/ppart/pdm_part_extension.h")
 
+list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/gnum_utils/pdm_distrib.h")
+list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/gnum_utils/pdm_gnum.h")
+list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/gnum_utils/pdm_gnum_location.h")
+
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/geometry/pdm_plane.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/geometry/pdm_geom_elem.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/geometry/pdm_edges_intersect.h")
@@ -224,10 +230,7 @@ list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_global_mean.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_extract_part.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_dmesh.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_part_mesh.h")
-list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_gnum.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_part_comm_graph.h")
-list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_gnum_location.h")
-list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_distrib.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_part_to_block.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_block_to_part.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_multi_block_to_part.h")
