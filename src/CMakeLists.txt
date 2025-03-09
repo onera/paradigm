@@ -11,6 +11,7 @@ file(GLOB_RECURSE SOURCES
      mesh/*.[ch]
      geometry/*.[ch]
      gnum_utils/*.[ch]
+     exchange_protocol/*.[ch]
      meshgen/*.[ch]
      ppart/*.[ch]
      ppart/*.cxx
@@ -71,6 +72,7 @@ target_include_directories(pdm
   PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
   PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/adapt>
   PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/algorithm>
+  PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/exchange_protocol>
   PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/gnum_utils>
   PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/geometry>
   PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/ppart>
@@ -101,6 +103,8 @@ if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
     PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>
     PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
     PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/algorithm>
+    PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/exchange_protocol>
+    PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/gnum_utils>
     PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/ppart>
     PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/io>
     PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/mpi_wrapper>
@@ -145,6 +149,9 @@ if (PDM_ENABLE_CUDA)
                               PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/io
                               PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/mpi_wrapper
                               PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/ext_wrapper
+                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/algorithm
+                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/exchange_protocol
+                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/gnum_utils
                               PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/mesh
                               PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/meshgen
                               PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/struct
@@ -164,6 +171,12 @@ list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/algorithm/pdm_binary_search
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/algorithm/pdm_quick_sort.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/algorithm/pdm_sort.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/algorithm/pdm_unique.h")
+
+list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/exchange_protocol/pdm_part_comm_graph.h")
+list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/exchange_protocol/pdm_part_to_block.h")
+list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/exchange_protocol/pdm_block_to_part.h")
+list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/exchange_protocol/pdm_multi_block_to_part.h")
+list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/exchange_protocol/pdm_part_to_part.h")
 
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/util/pdm_version.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/util/pdm_array.h")
@@ -230,11 +243,6 @@ list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_global_mean.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_extract_part.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_dmesh.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_part_mesh.h")
-list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_part_comm_graph.h")
-list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_part_to_block.h")
-list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_block_to_part.h")
-list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_multi_block_to_part.h")
-list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_part_to_part.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_global_reduce.h")
 
 
@@ -269,15 +277,15 @@ if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_BINARY_DIR}/pdm_dist_cloud_surf.mod")
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/mesh/pdm_dist_cloud_surf.F90")
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_BINARY_DIR}/pdm_part_to_block.mod")
-  list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_part_to_block.F90")
+  list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/exchange_protocol/pdm_part_to_block.F90")
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_BINARY_DIR}/pdm_part_to_part.mod")
-  list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_part_to_part.F90")
+  list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/exchange_protocol/pdm_part_to_part.F90")
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_BINARY_DIR}/pdm_gnum.mod")
-  list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_gnum.F90")
+  list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/gnum_utils/pdm_gnum.F90")
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_BINARY_DIR}/pdm_extract_part.mod")
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_extract_part.F90")
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_BINARY_DIR}/pdm_block_to_part.mod")
-  list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_block_to_part.F90")
+  list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/exchange_protocol/pdm_block_to_part.F90")
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_BINARY_DIR}/pdm_global_mean.mod")
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_global_mean.F90")
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_BINARY_DIR}/pdm_mesh_location.mod")
