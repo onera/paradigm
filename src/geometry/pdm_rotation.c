@@ -380,8 +380,8 @@ PDM_rotation_periodic_t_info_to_homogeneous_matrix
 )
 { 
   // TODO: raise error if both translation and rotation
-  PDM_bool_t apply_translation = (PDM_ABS(translation[0])<ROTATION_EPS)    | (PDM_ABS(translation[1])<ROTATION_EPS)    | (PDM_ABS(translation[2])<ROTATION_EPS);
-  PDM_bool_t apply_rotation    = (PDM_ABS(rotation_angle[0])<ROTATION_EPS) | (PDM_ABS(rotation_angle[1])<ROTATION_EPS) | (PDM_ABS(rotation_angle[2])<ROTATION_EPS);
+  PDM_bool_t apply_translation = (PDM_bool_t) ( PDM_ABS(translation   [0])<ROTATION_EPS || (PDM_ABS(translation   [1])<ROTATION_EPS) || (PDM_ABS(translation   [2])<ROTATION_EPS));
+  PDM_bool_t apply_rotation    = (PDM_bool_t) ( PDM_ABS(rotation_angle[0])<ROTATION_EPS || (PDM_ABS(rotation_angle[1])<ROTATION_EPS) || (PDM_ABS(rotation_angle[2])<ROTATION_EPS));
   if (apply_translation & apply_rotation){
     printf("Error : A periodic_t node with both a translation and a rotation is not supported yet.\n");
     exit(EX_DATAERR);
@@ -703,19 +703,19 @@ PDM_rotation_axes_and_origin_to_homogeneous_matrix
 )
 {
   double e1_vec_e2[3];
-  PDM_bool_t e_is_orthogonal = (PDM_ABS(PDM_DOT_PRODUCT(axis_1,axis_2))<ROTATION_EPS) &\
-                               (PDM_ABS(PDM_DOT_PRODUCT(axis_1,axis_3))<ROTATION_EPS) &\
-                               (PDM_ABS(PDM_DOT_PRODUCT(axis_2,axis_3))<ROTATION_EPS);
+  PDM_bool_t e_is_orthogonal = (PDM_bool_t) ((PDM_ABS(PDM_DOT_PRODUCT(axis_1,axis_2))<ROTATION_EPS) &&\
+                                             (PDM_ABS(PDM_DOT_PRODUCT(axis_1,axis_3))<ROTATION_EPS) &&\
+                                             (PDM_ABS(PDM_DOT_PRODUCT(axis_2,axis_3))<ROTATION_EPS));
   PDM_CROSS_PRODUCT(e1_vec_e2,axis_1,axis_2);                  
-  PDM_bool_t e_is_direct     = (PDM_DOT_PRODUCT(e1_vec_e2,axis_3)>0.);
+  PDM_bool_t e_is_direct     = (PDM_bool_t) (PDM_DOT_PRODUCT(e1_vec_e2,axis_3)>0.);
   // normalizing each basis vector
   double inv_norm[3];
   for (int i=0;i<3;i++){
     inv_norm[i] = PDM_DOT_PRODUCT(axis_1,axis_1);
   }
-  PDM_bool_t e1_is_null = (PDM_ABS(inv_norm[0])<ROTATION_EPS);
-  PDM_bool_t e2_is_null = (PDM_ABS(inv_norm[0])<ROTATION_EPS);
-  PDM_bool_t e3_is_null = (PDM_ABS(inv_norm[0])<ROTATION_EPS);
+  PDM_bool_t e1_is_null = (PDM_bool_t) (PDM_ABS(inv_norm[0])<ROTATION_EPS);
+  PDM_bool_t e2_is_null = (PDM_bool_t) (PDM_ABS(inv_norm[0])<ROTATION_EPS);
+  PDM_bool_t e3_is_null = (PDM_bool_t) (PDM_ABS(inv_norm[0])<ROTATION_EPS);
   PDM_bool_t checks_failed = PDM_FALSE;
   if (!e_is_orthogonal){
     printf("Error : Provided axes are not orthogonal.\n");

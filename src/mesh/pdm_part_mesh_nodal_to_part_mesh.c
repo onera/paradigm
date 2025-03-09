@@ -110,7 +110,7 @@ _check_inputs
   build_entity[PDM_MESH_ENTITY_VTX] = PDM_TRUE;
 
   /* Switch ON entites involved in requested connectivities */
-  for (PDM_connectivity_type_t connectivity_type = 0; connectivity_type < PDM_CONNECTIVITY_TYPE_MAX; connectivity_type++) {
+  for (PDM_connectivity_type_t connectivity_type = (PDM_connectivity_type_t) 0; connectivity_type < PDM_CONNECTIVITY_TYPE_MAX; connectivity_type++) {
     if (pmn_to_pm->connectivity_state[connectivity_type] == PMN_TO_PM_STATE_REQ) {
       PDM_mesh_entities_t entity_type1, entity_type2;
       if (PDM_connectivity_type_to_entity_pair(connectivity_type, &entity_type1, &entity_type2) == 0) {
@@ -135,7 +135,7 @@ _check_inputs
   }
 
   /* Check gnums */
-  for (PDM_mesh_entities_t entity_type = 0; entity_type < PDM_MESH_ENTITY_MAX; entity_type++) {
+  for (PDM_mesh_entities_t entity_type = (PDM_mesh_entities_t) 0; entity_type < PDM_MESH_ENTITY_MAX; entity_type++) {
     if (pmn_to_pm->g_num_state[entity_type] == PMN_TO_PM_STATE_REQ && build_entity[entity_type] == PDM_FALSE) {
       PDM_error(__FILE__, __LINE__, 0,
                 "Gnums requested for entity type %d but this entity is not involved in the requested connectivities\n",
@@ -547,7 +547,7 @@ _generate_gnum
   PDM_connectivity_type_t connectivity_type_vtx  = PDM_entity_pair_to_connectivity_type(entity_type, PDM_MESH_ENTITY_VTX);
 
   // Get direct downward *->entity connectivity type
-  PDM_connectivity_type_t connectivity_type_down = PDM_entity_pair_to_connectivity_type(entity_type-1, entity_type);
+  PDM_connectivity_type_t connectivity_type_down = PDM_entity_pair_to_connectivity_type((PDM_mesh_entities_t) (entity_type-1), entity_type);
 
   // Get entity->vtx connectivity
   PDM_bool_t owner_entity_vtx_idx = PDM_FALSE;
@@ -606,7 +606,7 @@ _generate_gnum
     // Get direct downward connectivity
     int n_entity2 = PDM_part_mesh_n_entity_get(pmesh,
                                                i_part,
-                                               entity_type-1);
+                         (PDM_mesh_entities_t) (entity_type-1));
 
     int *entity2_to_entity_idx = NULL;
     int *entity2_to_entity     = NULL;
@@ -856,7 +856,7 @@ _generate_entities
    * /!\ comment gérer le cas cell->face, (cell->edge,) face->edge, edge->vtx ??
    */
 
-  for (PDM_connectivity_type_t connectivity_type = 0; connectivity_type < PDM_CONNECTIVITY_TYPE_MAX; connectivity_type++) {
+  for (PDM_connectivity_type_t connectivity_type = (PDM_connectivity_type_t) 0; connectivity_type < PDM_CONNECTIVITY_TYPE_MAX; connectivity_type++) {
     if (pmn_to_pm->connectivity_state[connectivity_type] != PMN_TO_PM_STATE_REQ) {
       continue;
     }
@@ -970,7 +970,7 @@ _clean_up
 
   int n_part = pmn_to_pm->n_part;
 
-  for (PDM_connectivity_type_t connectivity_type = 0; connectivity_type < PDM_CONNECTIVITY_TYPE_MAX; connectivity_type++) {
+  for (PDM_connectivity_type_t connectivity_type = (PDM_connectivity_type_t) 0; connectivity_type < PDM_CONNECTIVITY_TYPE_MAX; connectivity_type++) {
 
     if (pmn_to_pm->connectivity_state[connectivity_type] == PMN_TO_PM_STATE_NOT_REQ_DONE) {
 
