@@ -380,8 +380,8 @@ int main
     else {
       for (int i_entity = PDM_MESH_ENTITY_CELL; i_entity < PDM_MESH_ENTITY_MAX; i_entity++) {
         PDM_g_num_t *distrib = NULL;
-        PDM_dmesh_distrib_get     (dmesh, i_entity, &distrib);
-        PDM_isosurface_distrib_set(isos,  i_entity,  distrib);
+        PDM_dmesh_distrib_get     (dmesh, (PDM_mesh_entities_t) i_entity, &distrib);
+        PDM_isosurface_distrib_set(isos,  (PDM_mesh_entities_t) i_entity,  distrib);
       }
 
       int         *dcell_face_idx = NULL;

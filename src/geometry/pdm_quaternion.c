@@ -158,10 +158,10 @@ PDM_quaternion_equal
   const double epsilon
 )
 {
-  return (PDM_ABS(qt[0] - w ) < epsilon) & \
-         (PDM_ABS(qt[1] - v0) < epsilon) &\
-         (PDM_ABS(qt[2] - v1) < epsilon) &\
-         (PDM_ABS(qt[3] - v2) < epsilon);
+  return (PDM_bool_t) ((PDM_ABS(qt[0] - w ) < epsilon) && \
+                       (PDM_ABS(qt[1] - v0) < epsilon) && \
+                       (PDM_ABS(qt[2] - v1) < epsilon) && \
+                       (PDM_ABS(qt[3] - v2) < epsilon));
 }
 
 PDM_bool_t
@@ -606,7 +606,7 @@ PDM_quaternion_to_euler_angles
     int i = intrinsic ? order[2] : order[0];
     int j = order[1];
     int k = intrinsic ? order[0] : order[2];
-    PDM_bool_t symmetric = i==k;
+    PDM_bool_t symmetric = (PDM_bool_t)(i == k);
     if ( symmetric ) {
         k = 3-i-j;
     }

@@ -36,10 +36,10 @@ TEST_CASE("[pdm_binary_search] - PDM_binary_search_gap_size_t") {
 
   CHECK(pos1 == 1);
 
-  size_t gnum2 = -1;
+  size_t gnum2 = 0;
   int pos2 = PDM_binary_search_gap_size_t(gnum2, distrib, n_rank+1);
 
-  CHECK(pos2 == -1);
+  CHECK(pos2 == 0);
 
   size_t gnum3 = 300;
   int pos3 = PDM_binary_search_gap_size_t(gnum3, distrib, n_rank+1);

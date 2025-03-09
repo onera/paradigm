@@ -183,7 +183,7 @@ _eval_mandelbrot
 )
 {
   PDM_UNUSED(z);
-  int f = 0.;
+  double f = 0.;
 
   double _x = x - 0.5;
   double _y = y;
@@ -791,14 +791,14 @@ PDM_isosurface_test_utils_gen_mesh
         int n_entity = PDM_multipart_part_ln_to_gn_get(*mpart,
                                                        0,
                                                        i_part,
-                                                       i_entity,
+                                 (PDM_mesh_entities_t) i_entity,
                                                        &entity_ln_to_gn,
                                                        PDM_OWNERSHIP_KEEP);
 
-        PDM_part_mesh_n_entity_set(pmesh, i_part, i_entity, n_entity);
+        PDM_part_mesh_n_entity_set(pmesh, i_part, (PDM_mesh_entities_t) i_entity, n_entity);
         PDM_part_mesh_entity_ln_to_gn_set(pmesh,
                                           i_part,
-                                          i_entity,
+                    (PDM_mesh_entities_t) i_entity,
                                           entity_ln_to_gn,
                                           PDM_OWNERSHIP_USER);
       }
