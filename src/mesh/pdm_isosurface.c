@@ -3394,12 +3394,12 @@ _isosurface_compute
       if (isosurface_is_nodal(isos)) {
         _build_ptp_dist_nodal(isos,
                               id_isosurface,
-                              i_entity);
+        (PDM_mesh_entities_t) i_entity);
       }
       else {
         _build_ptp_dist(isos,
                         id_isosurface,
-                        i_entity);
+  (PDM_mesh_entities_t) i_entity);
       }
     }
     isosurface_timer_end(isos, ISO_TIMER_PART_TO_DIST);
@@ -3411,7 +3411,7 @@ _isosurface_compute
       for (int i_entity = PDM_MESH_ENTITY_FACE; i_entity < PDM_MESH_ENTITY_MAX; i_entity++) {
         _build_ptp_part(isos,
                         id_isosurface,
-                        i_entity);
+  (PDM_mesh_entities_t) i_entity);
       }
     }
     isosurface_timer_end(isos, ISO_TIMER_BUILD_EXCH_PROTOCOL);
@@ -3725,7 +3725,7 @@ PDM_isosurface_dump_times
   int i_rank;
   PDM_MPI_Comm_rank(isos->comm, &i_rank);
 
-  for (_isosurface_timer_step_t step = 0; step < ISO_TIMER_N_STEPS; step++) {
+  for (_isosurface_timer_step_t step = (_isosurface_timer_step_t) 0; step < ISO_TIMER_N_STEPS; step++) {
 
     /* Skip irrelevant steps */
     if (isos->entry_is_part != 0) {

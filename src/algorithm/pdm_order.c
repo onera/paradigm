@@ -236,15 +236,6 @@ _lexicographic_equal_int
  * Public function definitions
  *============================================================================*/
 
-/**
- * \brief Order an array
- *
- * \param [in]      size_array       Number of elements
- * \param [in]      new_to_old_order   New order (size = \ref nElt
- * \param [in, out] Array           Array to renumber
- *
- */
-
 void
 PDM_order_array
 (
@@ -272,18 +263,6 @@ void         *array
 
   PDM_free(old_array);
 }
-
-/**
- * This function is part of Code_Saturne, a general-purpose CFD tool.
- *  Copyright (C) 1998-2014 EDF S.A.
- *
- * \brief Order a strided array of global numbers lexicographically.
- *
- * \param [in]     number array of entity numbers (if NULL, a default 1 to n numbering is considered)
- * \param [in]     stride stride of array (number of values to compare)
- * \param [in,out] order  pre-allocated ordering table
- * \param [in]     nb_ent number of entities considered
- */
 
 void
 PDM_order_lnum_s
@@ -322,21 +301,6 @@ const size_t nb_ent
     _order_lnum_descend_tree_s(number, stride, 0, i, order);
   }
 }
-
-
-
-
-/**
- * This function is part of Code_Saturne, a general-purpose CFD tool.
- *  Copyright (C) 1998-2014 EDF S.A.
- *
- * \brief Order a strided array of global numbers lexicographically.
- *
- * \param [in]     number array of entity numbers (if NULL, a default 1 to n numbering is considered)
- * \param [in]     stride stride of array (number of values to compare)
- * \param [in,out] order  pre-allocated ordering table
- * \param [in]     nb_ent number of entities considered
- */
 
 void
 PDM_order_gnum_s
