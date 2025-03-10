@@ -48,7 +48,6 @@ extern "C" {
  * \param [in, out] Array            Array to renumber
  *
  */
-
 void
 PDM_order_array
 (
@@ -69,7 +68,6 @@ void         *array
  * \param [in,out] order  pre-allocated ordering table
  * \param [in]     nb_ent number of entities considered
  */
-
 void
 PDM_order_lnum_s
 (
@@ -80,7 +78,17 @@ const size_t nb_ent
 );
 
 
-
+/**
+ * This function is part of Code_Saturne, a general-purpose CFD tool.
+ *  Copyright (C) 1998-2014 EDF S.A.
+ *
+ * \brief Order a strided array of global numbers lexicographically.
+ *
+ * \param [in]     number array of entity numbers (if NULL, a default 1 to n numbering is considered)
+ * \param [in]     stride stride of array (number of values to compare)
+ * \param [in,out] order  pre-allocated ordering table
+ * \param [in]     nb_ent number of entities considered
+ */
 void
 PDM_order_gnum_s
 (
@@ -91,6 +99,17 @@ const size_t      nb_ent
 );
 
 
+/**
+ *
+ * \brief Search element index in a sorted array
+ *
+ * \param [in]   elt          Element to find
+ * \param [in]   array        Array where to search
+ * \param [in]   stride       Stride of array (number of values to compare)
+ * \param [in]   nb_ent       Number of entities considered
+ *
+ * \return       Index where element is stored
+ */
 int
 PDM_order_binary_search_long
 (
@@ -100,6 +119,17 @@ PDM_order_binary_search_long
  const size_t      nb_ent
 );
 
+/**
+ *
+ * \brief Search element index in a sorted array
+ *
+ * \param [in]   elt          Element to find
+ * \param [in]   array        Array where to search
+ * \param [in]   stride       Stride of array (number of values to compare)
+ * \param [in]   nb_ent       Number of entities considered
+ *
+ * \return       Index where element is stored
+ */
 int
 PDM_order_binary_search_int
 (
@@ -108,7 +138,6 @@ PDM_order_binary_search_int
  const size_t      stride,
  const size_t      nb_ent
 );
-
 
 /**
  *
@@ -128,7 +157,6 @@ const size_t           stride,
       PDM_g_num_t     *array,
       int             *order
 );
-
 
 /**
  *

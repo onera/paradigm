@@ -33,15 +33,6 @@ extern "C" {
  * Static function definitions
  *============================================================================*/
 
-/**
- *
- * \brief Quick sort
- *
- * \param [inout]   a     Array to sort
- * \param [in]      l     First element
- * \param [in]      r     Last  element
- *
- */
 void
 PDM_quick_sort_long
 (
@@ -76,15 +67,6 @@ PDM_quick_sort_long
 }
 
 
-/**
- *
- * \brief Quick sort
- *
- * \param [inout]   a     Array to sort
- * \param [in]      l     First element
- * \param [in]      r     Last  element
- *
- */
 void
 PDM_quick_sort_int
 (
@@ -119,17 +101,6 @@ PDM_quick_sort_int
 }
 
 
-
-/**
- *
- * \brief Quick sort 2
- *
- * \param [inout]   a     Array to sort
- * \param [in]      l     First element
- * \param [in]      r     Last  element
- * \param [inout]   c     Array sorted as a
- *
- */
 void
 PDM_quick_sort_int2
 (
@@ -171,16 +142,6 @@ PDM_quick_sort_int2
   }
 }
 
-/**
- *
- * \brief Quick sort
- *
- * \param [inout]   a     Array to sort
- * \param [in]      l     First element
- * \param [in]      r     Last  element
- * \param [inout]   c     Array sorted as a
- *
- */
 
 void
 PDM_quick_sort_long2

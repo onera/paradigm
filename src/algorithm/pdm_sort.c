@@ -106,16 +106,6 @@ double *b
  * Public function definitions
  *============================================================================*/
 
-/**
- *
- * \brief Search element index in a sorted array
- *
- * \param [inout] array        Array to sort
- * \param [inout] order        new indice to old indice (or NULL)
- * \param [in]    lArray       Array length
- *
- */
-
 void
 PDM_sort_long
 (
@@ -296,17 +286,6 @@ PDM_sort_long
 
 }
 
-
-/**
- *
- * \brief Search element index in a sorted array
- *
- * \param [inout]   array        Array to sort
- * \param [inout]   order        new indice to old indice (or NULL)
- * \param [in]      lArray       Array length
- *
- */
-
 void
 PDM_sort_int
 (
@@ -484,17 +463,6 @@ PDM_sort_int
   return;
 
 }
-
-
-/**
- *
- * \brief Search element index in a sorted array
- *
- * \param [inout]   array        Array to sort
- * \param [inout]   order        new indice to old indice (or NULL)
- * \param [in]      lArray       Array length
- *
- */
 
 void
 PDM_sort_double
