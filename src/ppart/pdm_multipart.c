@@ -69,7 +69,7 @@
 #include "pdm_partitioning_nodal_algorithm.h"
 #include "pdm_printf.h"
 #include "pdm_priv.h"
-#include "pdm_quick_sort.h"
+#include "pdm_sort.h"
 #include "pdm_timer.h"
 
 /*----------------------------------------------------------------------------
@@ -4457,8 +4457,8 @@ PDM_multipart_stat_get
                      PDM_MPI_INT,
                      multipart->comm);
 
-  PDM_quick_sort_int(s_tot, 0, dpart_proc[n_rank]-1);
-  PDM_quick_sort_int(n_tot, 0, dpart_proc[n_rank]-1);
+  PDM_sort_int(s_tot, NULL, dpart_proc[n_rank]);
+  PDM_sort_int(n_tot, NULL, dpart_proc[n_rank]);
 
   double   _cells_average;
   double   _bound_part_faces_average;

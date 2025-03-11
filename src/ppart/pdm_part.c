@@ -30,7 +30,7 @@
 #include "pdm_part_renum.h"
 #include "pdm_printf.h"
 #include "pdm_priv.h"
-#include "pdm_quick_sort.h"
+#include "pdm_sort.h"
 #include "pdm_timer.h"
 
 /*----------------------------------------------------------------------------
@@ -1046,11 +1046,8 @@ _distrib_cell
         PDM_printf(" "PDM_FMT_G_NUM, mesh_part->face_ln_to_gn[i1]);
       PDM_printf("\n");
     }
+    PDM_sort_long(mesh_part->face_ln_to_gn, initial_idx, mesh_part->n_face);
 
-    PDM_quick_sort_long2(mesh_part->face_ln_to_gn, /* tableau a trier */
-                         0,                        /* premier elt     */
-                         mesh_part->n_face - 1,    /* dernier elt     */
-                         initial_idx);
 
     /* Remove duplicate faces and build local cell face connectivity*/
 
@@ -1350,11 +1347,7 @@ _distrib_face
       }
 
       /* Sort face_ln_to_gn */
-
-      PDM_quick_sort_long2(mesh_part->vtx_ln_to_gn,                        /* Array to sort */
-                           0,                                              /* First face    */
-                           mesh_part->face_vtx_idx[mesh_part->n_face] - 1, /* Latest face   */
-                           initial_idx);
+      PDM_sort_long(mesh_part->vtx_ln_to_gn, initial_idx, mesh_part->face_vtx_idx[mesh_part->n_face] - 1);
 
       /* Remove duplicate Vertex and build local face vertex connectivity*/
 
@@ -1973,10 +1966,7 @@ _search_part_bound_face
       work_array[j] =  mesh_part->face_part_bound[n_data_face_part_bound * j + 1];
     }
 
-    PDM_quick_sort_int2(work_array,
-                    0,
-                    mesh_part->n_face_part_bound - 1,
-                    ind);
+    PDM_sort_int(work_array, ind, mesh_part->n_face_part_bound);
 
     for (int j = 0; j < n_data_face_part_bound * mesh_part->n_face_part_bound; j++)
       copy_face_part_bound[j] =  mesh_part->face_part_bound[j];
@@ -2001,10 +1991,10 @@ _search_part_bound_face
     }
 
     for (int j = 0; j < n_rank; j++) {
-      PDM_quick_sort_int2(work_array,
-                      mesh_part->face_part_bound_proc_idx[j],
-                      mesh_part->face_part_bound_proc_idx[j+1]-1,
-                      ind);
+      int beg = mesh_part->face_part_bound_proc_idx[j];
+      int end = mesh_part->face_part_bound_proc_idx[j+1];
+      int n_work = end - beg;
+      PDM_sort_int(&work_array[beg], &ind[beg], n_work);
     }
 
     for (int j = 0; j <  mesh_part->n_face_part_bound; j++) {
@@ -2027,10 +2017,10 @@ _search_part_bound_face
     }
 
     for (int j = 0; j < ppart->tn_part; j++) {
-      PDM_quick_sort_long2(work_array2,
-                           mesh_part->face_part_bound_part_idx[j],
-                           mesh_part->face_part_bound_part_idx[j+1]-1,
-                           ind);
+      int beg = mesh_part->face_part_bound_part_idx[j];
+      int end = mesh_part->face_part_bound_part_idx[j+1];
+      int n_work = end - beg;
+      PDM_sort_long(&work_array2[beg], &ind[beg], n_work);
     }
 
     for (int j = 0; j <  mesh_part->n_face_part_bound; j++) {
@@ -3876,8 +3866,8 @@ int         *bound_part_faces_sum
                      PDM_MPI_INT,
                      _ppart->comm);
 
-  PDM_quick_sort_int(s_tot, 0, _ppart->dpart_proc[n_rank]-1);
-  PDM_quick_sort_int(n_tot, 0, _ppart->dpart_proc[n_rank]-1);
+  PDM_sort_int(s_tot, NULL, _ppart->dpart_proc[n_rank]);
+  PDM_sort_int(n_tot, NULL, _ppart->dpart_proc[n_rank]);
 
   double   _cells_average;
 
