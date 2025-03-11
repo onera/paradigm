@@ -1347,7 +1347,7 @@ _distrib_face
       }
 
       /* Sort face_ln_to_gn */
-      PDM_sort_long(mesh_part->vtx_ln_to_gn, initial_idx, mesh_part->face_vtx_idx[mesh_part->n_face] - 1);
+      PDM_sort_long(mesh_part->vtx_ln_to_gn, initial_idx, mesh_part->face_vtx_idx[mesh_part->n_face]);
 
       /* Remove duplicate Vertex and build local face vertex connectivity*/
 
