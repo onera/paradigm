@@ -120,6 +120,7 @@ PDM_part_mesh_nodal_create
 {
   PDM_part_mesh_nodal_t *pmn;
   PDM_malloc(pmn, 1, PDM_part_mesh_nodal_t);
+  memset(pmn, 0, sizeof(PDM_part_mesh_nodal_t));
 
   pmn->comm           = comm;
   pmn->mesh_dimension = mesh_dimension;
@@ -143,11 +144,6 @@ PDM_part_mesh_nodal_create
   pmn->n_surf   = PDM_array_zeros_int(n_part);
   pmn->n_ridge  = PDM_array_zeros_int(n_part);
   pmn->n_corner = PDM_array_zeros_int(n_part);
-
-  pmn->volumic  = NULL;
-  pmn->surfacic = NULL;
-  pmn->ridge    = NULL;
-  pmn->corner   = NULL;
 
   pmn->s_section = 10;
   pmn->n_section = 0;
@@ -332,6 +328,26 @@ PDM_part_mesh_nodal_add_part_mesh_nodal_elmts
     pmn->section_kind[_id_section] = geom_kind;
     pmn->section_id  [_id_section] = sections_id[i];
   }
+}
+
+int
+PDM_part_mesh_nodal_part_comm_graph_set
+(
+ PDM_part_mesh_nodal_t *pmn,
+ PDM_part_comm_graph_t *pcg
+)
+{
+  pmn->pcg = pcg;
+}
+
+int
+PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum
+(
+ PDM_part_mesh_nodal_t *pmn,
+ PDM_part_comm_graph_t *pcg
+)
+{
+  pmn->pcg = pcg;
 }
 
 int
@@ -1804,6 +1820,203 @@ PDM_part_mesh_nodal_cell_vtx_connect_get
                                                         cell_vtx_idx,
                                                         cell_vtx);
 }
+
+void
+PDM_part_mesh_nodal_compute_topo_corners
+(
+  PDM_part_mesh_nodal_t  *pmn,
+  static
+)
+{
+  assert(pmn->n_part == 1);
+
+  PDM_part_mesh_nodal_elmts_t* pmne_ridge = pmn->ridge;
+
+  int *ridge_vtx_idx = NULL;
+  int *ridge_vtx     = NULL;
+  int n_bar = PDM_part_mesh_nodal_elmts_cell_vtx_connect_get(pmne_ridge, 0, &ridge_vtx_idx, &ridge_vtx);
+  PDM_UNUSED(n_bar);
+
+  int n_vtx = PDM_part_mesh_nodal_n_vtx_get(mawr->pmn, 0);
+
+  int *tag_vtx_n  = PDM_array_const_int(n_vtx, 0);
+
+  if (pmne_ridge==NULL) {
+    mawr->n_corner   = 0;
+    mawr->vtx_corner = NULL;
+    return;
+  }
+  int n_group_ridge = PDM_part_mesh_nodal_elmts_n_group_get(pmne_ridge);
+
+  for(int i_group = 0; i_group < n_group_ridge; ++i_group) {
+    int          n_group_elmt   = 0;
+    int         *group_elmt     = NULL;
+    PDM_g_num_t *group_ln_to_gn = NULL;
+    PDM_part_mesh_nodal_elmts_group_get(pmne_ridge,
+                                        0,
+                                        i_group,
+                                        &n_group_elmt,
+                                        &group_elmt,
+                                        &group_ln_to_gn,
+                                        PDM_OWNERSHIP_BAD_VALUE);
+
+    for(int idx_elmt = 0; idx_elmt < n_group_elmt; ++idx_elmt) {
+      int i_elmt = group_elmt[idx_elmt]-1;
+      int i_vtx1 = ridge_vtx[2*i_elmt  ]-1;
+      int i_vtx2 = ridge_vtx[2*i_elmt+1]-1;
+      tag_vtx_n[i_vtx1]++;
+      tag_vtx_n[i_vtx2]++;
+    }
+  }
+
+  int *tag_vtx_idx = PDM_array_const_int(n_vtx+1, 0);
+  for(int i_vtx = 0; i_vtx < n_vtx; ++i_vtx) {
+    tag_vtx_idx[i_vtx+1] = tag_vtx_idx[i_vtx] + tag_vtx_n[i_vtx];
+    tag_vtx_n[i_vtx] = 0;
+  }
+  int *tag_vtx     = malloc(tag_vtx_idx[n_vtx] * sizeof(int));
+
+  for(int i_group = 0; i_group < n_group_ridge; ++i_group) {
+    int          n_group_elmt   = 0;
+    int         *group_elmt     = NULL;
+    PDM_g_num_t *group_ln_to_gn = NULL;
+    PDM_part_mesh_nodal_elmts_group_get(pmne_ridge,
+                                        0,
+                                        i_group,
+                                        &n_group_elmt,
+                                        &group_elmt,
+                                        &group_ln_to_gn,
+                                        PDM_OWNERSHIP_BAD_VALUE);
+
+    for(int idx_elmt = 0; idx_elmt < n_group_elmt; ++idx_elmt) {
+      int i_elmt = group_elmt[idx_elmt]-1;
+      int i_vtx1 = ridge_vtx[2*i_elmt  ]-1;
+      int i_vtx2 = ridge_vtx[2*i_elmt+1]-1;
+      int idx_write1 = tag_vtx_idx[i_vtx1] + tag_vtx_n[i_vtx1]++;
+      int idx_write2 = tag_vtx_idx[i_vtx2] + tag_vtx_n[i_vtx2]++;
+      tag_vtx[idx_write1] = i_group+1;
+      tag_vtx[idx_write2] = i_group+1;
+    }
+  }
+
+  int *send_corner_n    = malloc(mawr->pn_entity_bound[PDM_MESH_ENTITY_VTX] * sizeof(int));
+  int  send_corner_size = 0;
+  int idx_write = 0;
+  int max_stride = 0;
+  for(int i = 0; i < mawr->pn_entity_bound[PDM_MESH_ENTITY_VTX]; ++i) {
+    int i_vtx = mawr->pentity_bound  [PDM_MESH_ENTITY_VTX][4*i]-1;
+    send_corner_n[i]  = tag_vtx_idx[i_vtx+1] - tag_vtx_idx[i_vtx];
+    send_corner_size += send_corner_n[i];
+    max_stride = PDM_MAX(max_stride, send_corner_n[i]);
+  }
+  int *send_corner = malloc(send_corner_size * sizeof(int));
+  for(int i = 0; i < mawr->pn_entity_bound[PDM_MESH_ENTITY_VTX]; ++i) {
+    int i_vtx = mawr->pentity_bound  [PDM_MESH_ENTITY_VTX][4*i]-1;
+    for(int k = tag_vtx_idx[i_vtx]; k < tag_vtx_idx[i_vtx+1]; ++k) {
+      send_corner[idx_write++] = tag_vtx[k];
+    }
+  }
+
+  int **tmp_recv_corner_n = NULL;
+  int **tmp_recv_corner   = NULL;
+  PDM_part_comm_graph_exch(mawr->pcg[PDM_MESH_ENTITY_VTX],
+                           sizeof(int),
+                           PDM_STRIDE_VAR_INTERLACED,
+                           1,
+                           &send_corner_n,
+                (void **)  &send_corner,
+                           &tmp_recv_corner_n,
+                (void ***) &tmp_recv_corner);
+
+  int *recv_corner_n = tmp_recv_corner_n[0];
+  int *recv_corner   = tmp_recv_corner  [0];
+  free(tmp_recv_corner_n);
+  free(tmp_recv_corner  );
+  free(send_corner_n    );
+  free(send_corner      );
+
+  for(int i = 0; i < mawr->pn_entity_bound[PDM_MESH_ENTITY_VTX]; ++i) {
+    int i_vtx = mawr->pentity_bound  [PDM_MESH_ENTITY_VTX][4*i]-1;
+    tag_vtx_n[i_vtx] += recv_corner_n[i];
+  }
+
+  tag_vtx_idx[0] = 0;
+  for(int i_vtx = 0; i_vtx < n_vtx; ++i_vtx) {
+    tag_vtx_idx[i_vtx+1] = tag_vtx_idx[i_vtx] + tag_vtx_n[i_vtx];
+    max_stride = PDM_MAX(max_stride, tag_vtx_n[i_vtx]);
+    tag_vtx_n[i_vtx] = 0;
+  }
+  tag_vtx = realloc(tag_vtx, tag_vtx_idx[n_vtx] * sizeof(int));
+
+  /*
+   * Refill with border
+   */
+  for(int i_group = 0; i_group < n_group_ridge; ++i_group) {
+    int          n_group_elmt   = 0;
+    int         *group_elmt     = NULL;
+    PDM_g_num_t *group_ln_to_gn = NULL;
+    PDM_part_mesh_nodal_elmts_group_get(pmne_ridge,
+                                        0,
+                                        i_group,
+                                        &n_group_elmt,
+                                        &group_elmt,
+                                        &group_ln_to_gn,
+                                        PDM_OWNERSHIP_BAD_VALUE);
+
+    for(int idx_elmt = 0; idx_elmt < n_group_elmt; ++idx_elmt) {
+      int i_elmt = group_elmt[idx_elmt]-1;
+      int i_vtx1 = ridge_vtx[2*i_elmt  ]-1;
+      int i_vtx2 = ridge_vtx[2*i_elmt+1]-1;
+      int idx_write1 = tag_vtx_idx[i_vtx1] + tag_vtx_n[i_vtx1]++;
+      int idx_write2 = tag_vtx_idx[i_vtx2] + tag_vtx_n[i_vtx2]++;
+      tag_vtx[idx_write1] = i_group+1;
+      tag_vtx[idx_write2] = i_group+1;
+    }
+  }
+
+  /*
+   * Fill with pgc info
+   */
+  int idx_read = 0;
+  for(int i = 0; i < mawr->pn_entity_bound[PDM_MESH_ENTITY_VTX]; ++i) {
+    int i_vtx = mawr->pentity_bound  [PDM_MESH_ENTITY_VTX][4*i]-1;
+    for(int k = 0; k < recv_corner_n[i]; k++) {
+      int idx_write = tag_vtx_idx[i_vtx] + tag_vtx_n[i_vtx]++;
+      tag_vtx[idx_write] = recv_corner[idx_read++];
+    }
+  }
+
+  int n_corner = 0;
+  int *corner_vtx = malloc(tag_vtx_idx[n_vtx] * sizeof(int));
+  for(int i_vtx = 0; i_vtx < n_vtx; ++i_vtx) {
+    int beg = tag_vtx_idx[i_vtx  ];
+    int end = tag_vtx_idx[i_vtx+1];
+    if(end - beg > 0){
+      int n_unique = PDM_inplace_unique(tag_vtx, beg, end-1);
+      if(n_unique > 1) {
+        corner_vtx[n_corner++] = i_vtx;
+      }
+    }
+  }
+
+  // printf("n_corner = %i \n", n_corner);
+
+  free(recv_corner_n);
+  free(recv_corner  );
+
+  corner_vtx = realloc(corner_vtx, n_corner * sizeof(int));
+
+  mawr->n_corner   = n_corner;
+  mawr->vtx_corner = corner_vtx;
+
+  PDM_free(tag_vtx);
+  PDM_free(tag_vtx_n);
+  PDM_free(tag_vtx_idx);
+  PDM_free(ridge_vtx_idx);
+  PDM_free(ridge_vtx);
+}
+)
+
 
 #ifdef __cplusplus
 }

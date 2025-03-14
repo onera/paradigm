@@ -56,6 +56,11 @@ struct _pdm_part_mesh_nodal_t {
   PDM_part_mesh_nodal_elmts_t       *ridge;
   PDM_part_mesh_nodal_elmts_t       *corner;
 
+  PDM_part_comm_graph_t             *pcg_vertex;
+  PDM_part_comm_graph_t             *pcg_ridge;
+  PDM_part_comm_graph_t             *pcg_surface;
+  PDM_part_comm_graph_t             *pcg_volumic;
+
   int                                is_vtx_def_from_parent; /*<! Are the points defined from parents */
 
   int s_section;
