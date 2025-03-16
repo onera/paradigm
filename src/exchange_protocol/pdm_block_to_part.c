@@ -1190,10 +1190,31 @@ PDM_block_to_part_exch_in_place
     }
 
 
-    int mandatory_size = PDM_size_idx_from_stride (n_send_buffer, btp->n_rank, btp->comm);
-    mandatory_size = PDM_MAX(PDM_size_idx_from_stride (n_send_buffer, btp->n_rank, btp->comm), mandatory_size);
-  
-    if (mandatory_size > 32) {
+    if (btp->p2p_factor < btp->part_active_rank) {
+
+      int *_i_send_buffer = NULL;
+      int *_i_recv_buffer = NULL;
+      PDM_malloc(_i_send_buffer, btp->n_rank, int);
+      PDM_malloc(_i_recv_buffer, btp->n_rank, int);
+
+      for (int i = 0; i < btp->n_rank; i++) {
+        _i_send_buffer[i] = (int) i_send_buffer[i];
+        _i_recv_buffer[i] = (int) i_recv_buffer[i];
+      }
+
+      PDM_MPI_Alltoallv(send_buffer[0],
+                        n_send_buffer,
+                        _i_send_buffer,
+                        mpi_type,
+                        recv_buffer,
+                        n_recv_buffer,
+                        _i_recv_buffer,
+                        mpi_type,
+                        btp->comm);
+
+      PDM_free(_i_send_buffer);
+      PDM_free(_i_recv_buffer);
+    } else {
   
       PDM_MPI_Alltoallv_p2p_l(send_buffer[0],
                               n_send_buffer,
@@ -1206,49 +1227,6 @@ PDM_block_to_part_exch_in_place
                               btp->comm);
   
     }
-    
-    else {
-  
-      if (btp->p2p_factor < btp->part_active_rank) {
-  
-        int *_i_send_buffer = NULL;
-        int *_i_recv_buffer = NULL;
-        PDM_malloc(_i_send_buffer, btp->n_rank, int);
-        PDM_malloc(_i_recv_buffer, btp->n_rank, int);
-  
-        for (int i = 0; i < btp->n_rank; i++) {
-          _i_send_buffer[i] = (int) i_send_buffer[i];
-          _i_recv_buffer[i] = (int) i_recv_buffer[i];
-        }
-  
-        PDM_MPI_Alltoallv(send_buffer[0],
-                          n_send_buffer,
-                          _i_send_buffer,
-                          mpi_type,
-                          recv_buffer,
-                          n_recv_buffer,
-                          _i_recv_buffer,
-                          mpi_type,
-                          btp->comm);
-  
-        PDM_free(_i_send_buffer);
-        PDM_free(_i_recv_buffer);
-      }
-  
-      else {
-  
-        PDM_MPI_Alltoallv_p2p_l(send_buffer[0],
-                                n_send_buffer,
-                                i_send_buffer,
-                                mpi_type,
-                                recv_buffer,
-                                n_recv_buffer,
-                                i_recv_buffer,
-                                mpi_type,
-                                btp->comm);
-  
-      }
-    }  
 
     // PDM_MPI_Alltoallv_l(send_buffer[0],
     //                     n_send_buffer,
@@ -1631,11 +1609,31 @@ PDM_block_to_part_exch
   /*
    * Data exchange
    */
+  if (btp->p2p_factor  < btp->part_active_rank) {
 
-  int mandatory_size = PDM_size_idx_from_stride (n_send_buffer, btp->n_rank, btp->comm);
-  mandatory_size = PDM_MAX(PDM_size_idx_from_stride (n_send_buffer, btp->n_rank, btp->comm), mandatory_size);
+    int *_i_send_buffer = NULL;
+    int *_i_recv_buffer = NULL;
+    PDM_malloc(_i_send_buffer, btp->n_rank, int);
+    PDM_malloc(_i_recv_buffer, btp->n_rank, int);
 
-  if (mandatory_size > 32) {
+    for (int i = 0; i < btp->n_rank; i++) {
+      _i_send_buffer[i] = (int) i_send_buffer[i];
+      _i_recv_buffer[i] = (int) i_recv_buffer[i];
+    }
+
+    PDM_MPI_Alltoallv(send_buffer,
+                      n_send_buffer,
+                      _i_send_buffer,
+                      mpi_type,
+                      recv_buffer,
+                      n_recv_buffer,
+                      _i_recv_buffer,
+                      mpi_type,
+                      btp->comm);
+
+    PDM_free(_i_send_buffer);
+    PDM_free(_i_recv_buffer);
+  } else {
 
     PDM_MPI_Alltoallv_p2p_l(send_buffer,
                             n_send_buffer,
@@ -1648,49 +1646,6 @@ PDM_block_to_part_exch
                             btp->comm);
 
   }
-  
-  else {
-
-    if (btp->p2p_factor  < btp->part_active_rank) {
-
-      int *_i_send_buffer = NULL;
-      int *_i_recv_buffer = NULL;
-      PDM_malloc(_i_send_buffer, btp->n_rank, int);
-      PDM_malloc(_i_recv_buffer, btp->n_rank, int);
-
-      for (int i = 0; i < btp->n_rank; i++) {
-        _i_send_buffer[i] = (int) i_send_buffer[i];
-        _i_recv_buffer[i] = (int) i_recv_buffer[i];
-      }
-
-      PDM_MPI_Alltoallv(send_buffer,
-                        n_send_buffer,
-                        _i_send_buffer,
-                        mpi_type,
-                        recv_buffer,
-                        n_recv_buffer,
-                        _i_recv_buffer,
-                        mpi_type,
-                        btp->comm);
-
-      PDM_free(_i_send_buffer);
-      PDM_free(_i_recv_buffer);
-    }
-
-    else {
-
-      PDM_MPI_Alltoallv_p2p_l(send_buffer,
-                              n_send_buffer,
-                              i_send_buffer,
-                              mpi_type,
-                              recv_buffer,
-                              n_recv_buffer,
-                              i_recv_buffer,
-                              mpi_type,
-                              btp->comm);
-
-    }
-  }  
 
   // PDM_MPI_Alltoallv_l(send_buffer,
   //                     n_send_buffer,
