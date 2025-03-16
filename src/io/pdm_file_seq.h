@@ -66,8 +66,12 @@ typedef struct _PDM_file_seq_t PDM_file_seq_t;
  *
  *----------------------------------------------------------------------------*/
 
-PDM_file_seq_t *PDM_file_seq_open(const char *nom,
-                                const PDM_file_seq_mode_t mode);
+PDM_file_seq_t*
+PDM_file_seq_open
+(
+  const char                *nom,
+  const PDM_file_seq_mode_t  mode
+);
 
 /*----------------------------------------------------------------------------
  *  Fonction d'ecriture
@@ -82,10 +86,15 @@ PDM_file_seq_t *PDM_file_seq_open(const char *nom,
  *
  *----------------------------------------------------------------------------*/
 
-PDM_g_num_t PDM_file_seq_write(PDM_file_seq_t *fichier,
-                      const size_t      taille_donnee,
-                      const PDM_g_num_t n_donnees,
-                      void              *donnees);
+
+PDM_g_num_t
+PDM_file_seq_write
+(
+       PDM_file_seq_t *fichier,
+ const size_t          taille_donnee,
+ const PDM_g_num_t     n_donnees,
+       void           *donnees
+);
 
 /*----------------------------------------------------------------------------
  *  Fonction de lecture
@@ -100,10 +109,14 @@ PDM_g_num_t PDM_file_seq_write(PDM_file_seq_t *fichier,
  *
  *----------------------------------------------------------------------------*/
 
-PDM_g_num_t PDM_file_seq_read(PDM_file_seq_t *fichier,
-                     const size_t           taille_donnee,
-                     const PDM_g_num_t      n_donnees,
-                     void                   *donnees);
+PDM_g_num_t
+PDM_file_seq_read
+(
+        PDM_file_seq_t *fichier,
+  const size_t          taille_donnee,
+  const PDM_g_num_t     n_donnees,
+        void           *donnees
+);
 
 /*----------------------------------------------------------------------------
  *  Defini la position courante du fichier
@@ -118,10 +131,13 @@ PDM_g_num_t PDM_file_seq_read(PDM_file_seq_t *fichier,
  *
  *----------------------------------------------------------------------------*/
 
-void PDM_file_seq_seek
-(PDM_file_seq_t     *fichier,
- long               offset,
- PDM_file_seq_seek_t whence);
+void
+PDM_file_seq_seek
+(
+ PDM_file_seq_t     *fichier,
+ long                offset,
+ PDM_file_seq_seek_t whence
+);
 
 /*----------------------------------------------------------------------------
  *  Retourne a la position courante du fichier
@@ -133,14 +149,22 @@ void PDM_file_seq_seek
  *
  *----------------------------------------------------------------------------*/
 
-long PDM_file_seq_tell(PDM_file_seq_t *fichier);
+long
+PDM_file_seq_tell
+(
+ PDM_file_seq_t *fichier
+);
 
 /*----------------------------------------------------------------------------
  *  Fonction qui ferme le fichier de donnees
  *
  *----------------------------------------------------------------------------*/
 
-void PDM_file_seq_close(PDM_file_seq_t *fichier);
+void
+PDM_file_seq_close
+(
+ PDM_file_seq_t *fichier
+);
 
 #ifdef __cplusplus
 }
