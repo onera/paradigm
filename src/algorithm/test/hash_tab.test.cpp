@@ -17,10 +17,12 @@ PDM_hash_tab_key_t get_key_type<int>() {
   return PDM_HASH_TAB_KEY_INT;
 }
 
+#ifdef PDM_LONG_G_NUM
 template<>
 PDM_hash_tab_key_t get_key_type<PDM_g_num_t>() {
   return PDM_HASH_TAB_KEY_LONG;
 }
+#endif
 
 template<typename T>
 void
