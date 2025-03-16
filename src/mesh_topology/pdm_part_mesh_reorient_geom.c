@@ -49,37 +49,6 @@ extern "C" {
  * Public function definitions
  *============================================================================*/
 
-/**
- *
- * \brief Fix mesh orientation geometrically
- *
- * \param [in]    mesh_dim               Mesh dimension (2 or 3)
- * \param [in]    mesh_inv               Mesh invariance direction (2D)
- * \param [in]    n_part                 Number of partition
- * \param [in]    n_cell                 Number of cells
- * \param [in]    n_face                 Number of faces
- * \param [in]    n_face_group           Number of face groups
- * \param [inout] cell_face_idx          Cell face connectivity index or NULL
- *                                       (size : n_cell + 1, numbering : 0 to n-1)
- * \param [inout] cell_face              Cell face connectivity or NULL
- *                                       (size : cell_face_idx[n_cell], numbering : 1 to n)
- * \param [inout] face_cell              Face cell connectivity or NULL
- *                                       (size : 2 * n_face, numbering : 1 to n)
- * \param [in]    face_vtx_idx           Face to vertex connectivity index
- *                                       (size : n_face + 1, numbering : 0 to n-1)
- * \param [inout] face_vtx               Face to vertex connectivity
- *                                       (size : face_vtx_idx[n_face], numbering : 1 to n)
- * \param [in]    vtx_coord              Vertex coordinates
- *                                       (size : 3*n_vtx)
- * \param [in]    face_group_idx         Index of faces list of each group
- *                                       (size = n_face_group + 1) or NULL
- * \param [in]    face_group             Faces list of each group
- *                                       (size = face_group[face_group_idx[n_face_group]], numbering : 1 to n)
- *                                       or NULL
- * \param [in]    comm                   MPI communicator
- *
- */
-
 int
 PDM_part_mesh_reorient_geom
 (

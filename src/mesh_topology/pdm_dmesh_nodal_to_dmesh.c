@@ -2965,3 +2965,8 @@ PDM_dmesh_nodal_to_dmesh_get_missing
     PDM_error (__FILE__, __LINE__, 0, "PDM_dmesh_nodal_to_dmesh_get_missing : invalid geom_kind %d\n", geom_kind);
   }
 }
+
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */

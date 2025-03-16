@@ -34,7 +34,6 @@ extern "C" {
  *============================================================================*/
 
 typedef struct _pdm_domain_interface_t PDM_domain_interface_t;
-// typedef struct _pdm_part_domain_interface_t PDM_part_domain_interface_t;
 
 /*=============================================================================
  * Static global variables

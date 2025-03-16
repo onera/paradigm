@@ -42,10 +42,6 @@ extern "C" {
  * Public function definitions
  *============================================================================*/
 
-/**
-*
-* \brief Decompose standard elements to a flatten view of faces
-*/
 void
 PDM_std_decomposes_faces
 (
@@ -122,10 +118,7 @@ PDM_std_decomposes_faces
   *n_dface_current += n_elt * n_face_elt;
 }
 
-/**
-*
-* \brief Decompose standard elements to a flatten view of edges
-*/
+
 void
 PDM_std_decomposes_edges
 (
@@ -201,10 +194,6 @@ PDM_std_decomposes_edges
 }
 
 
-/**
-*
-* \brief Decompose polygons to a flatten view of edges
-*/
 void
 PDM_poly2d_decomposes_faces
 (
@@ -252,10 +241,7 @@ PDM_poly2d_decomposes_faces
   *n_face_current += n_elt;
 }
 
-/**
-*
-* \brief Decompose polygons to a flatten view of edges
-*/
+
 void
 PDM_poly2d_decomposes_edges
 (
@@ -310,10 +296,6 @@ PDM_poly2d_decomposes_edges
 
 
 
-/**
-*
-* \brief Decompose polyhedra to a flatten view of edges
-*/
 void
 PDM_poly3d_decomposes_faces
 (
@@ -388,18 +370,6 @@ PDM_poly3d_decomposes_edges
 }
 
 
-
-/**
-*
-* \brief PDM_sections_decompose_faces
-*
-* \param [in]     mesh               Current mesh
-* \param [inout]  elt_face_vtx_idx   Index of element faces connectivity (preallocated)
-* \param [inout]  elt_face_vtx       Element faces connectivity (preallocated)
-* \param [inout]  elmt_face_cell     Element faces connectivity (preallocated or NULL )
-* \param [inout]  elmt_cell_face     Element faces connectivity (preallocated or NULL )
-*
-*/
 void
 PDM_sections_decompose_faces
 (
@@ -513,17 +483,7 @@ PDM_sections_decompose_faces
   }
 }
 
-/**
-*
-* \brief PDM_sections_decompose_faces
-*
-* \param [in]     mesh               Current mesh
-* \param [inout]  elmt_edge_vtx_idx  Index of element faces connectivity (preallocated)
-* \param [inout]  elmt_edge_vtx      Element faces connectivity (preallocated)
-* \param [inout]  elmt_edge_cell     Element faces connectivity (preallocated or NULL )
-* \param [inout]  elmt_cell_edge     Element faces connectivity (preallocated or NULL )
-*
-*/
+
 void
 PDM_sections_decompose_edges
 (
@@ -634,4 +594,8 @@ PDM_sections_decompose_edges
     }
   }
 }
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 

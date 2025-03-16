@@ -166,23 +166,8 @@ PDM_g_num_t* face_vtx
  * Public function definitions
  *============================================================================*/
 
-/**
- * \brief Remove unconnected vertices in a mesh connectivity
- *
- * If a vertex is not cited in the face->vtx connectivity, the function
- * removes it from the mesh to ensure contiguity
- *
- * /TODO : PDM_mesh_check_unconnected_vertex complexity is n^2. This function must be optimized
- *
- * \param [in, out] n_vtx       Number of vertices
- * \param [in, out] l_face_vtx  Size of face->vtx connectivity
- * \param [in, out] face_vtx    Face->vtx connectivity
- * \param [in, out] coords      Vertices coordinates
- * \param [in, out] n_holes     Number of holes
- *
- */
-
-void PDM_mesh_check_unconnected_vertex
+void
+PDM_mesh_check_unconnected_vertex
 (
 PDM_g_num_t* nb_vtx,
 PDM_g_num_t* l_face_vtx,
@@ -219,7 +204,6 @@ int*         nb_holes
   } while (nb_som_problem != 0) ;
 
 }
-
 
 
 /*----------------------------------------------------------------------------*/

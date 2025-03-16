@@ -32,14 +32,6 @@ extern "C" {
  * Type
  *============================================================================*/
 
-/**
- * \struct PDM_surf_mesh_t
- * \brief  Surface mesh
- *
- *  PDM_surf_mesh_t defines a surface mesh
- *
- */
-
 typedef struct _pdm_surf_mesh_t PDM_surf_mesh_t;
 
 /*=============================================================================

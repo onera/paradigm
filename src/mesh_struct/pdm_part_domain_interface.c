@@ -478,6 +478,7 @@ _exchange_and_sort_neighbor
 /*============================================================================
  * Public function definitions
  *============================================================================*/
+
 PDM_part_domain_interface_t*
 PDM_part_domain_interface_create
 (
@@ -3206,7 +3207,6 @@ PDM_part_domain_interface_face2vtx
 }
 
 
-
-
-
-
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */

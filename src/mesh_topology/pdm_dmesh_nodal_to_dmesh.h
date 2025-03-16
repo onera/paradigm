@@ -175,11 +175,11 @@ PDM_dmesh_nodal_to_dmesh_get_missing
  PDM_geometry_kind_t         geom_kind,
  PDM_g_num_t               **distrib_missing,
  PDM_g_num_t               **dmissing_parent_g_num
- );
+);
 
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
 
-#endif /* __PDM_MESH_NODAL_H__ */
+#endif /* __PDM_DMESH_NODAL_TO_DMESH_H__ */
