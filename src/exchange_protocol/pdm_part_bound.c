@@ -40,29 +40,6 @@ extern "C" {
  * Public function definitions
  *============================================================================*/
 
-
-/**
- * \brief Return an intialized \ref PDM_part_bound_t structure
- *
- * This function returns an initialized \ref PDM_part_bound_t structure
- *
- * \param [in]  lComm           Size of MPI communicator
- * \param [in]  nElt            Number of elements
- * \param [in]  nEltPartBound   Number of elements in the structure
- * \param [in]  cplx            Complexity
- * \param [in]  nConnectedElt   Number of connected elements of each element
- *                              (size : 1 or nEltPartBound according complexity)
- * \param [in]  nOfferElt       Number of connected elements of each element
- *                              (size : 1 or nEltPartBound according complexity)
- * \param [in]  nTotalOfferElt  Total number of offered elements
- * \param [in]  nLocalOfferElt  Local number of offered eleemnts
- * \param [in]  localOfferLnToGn Global num of local offer element
- *                              (size : nLocalOfferElt)
- *
- * \return      A new initialized \ref PDM_part_bound_t structure
- *
- */
-
 PDM_part_bound_t *
 PDM_part_bound_create
 (
@@ -154,18 +131,6 @@ const PDM_g_num_t            *localOfferLnToGn
   return part_bound;
 }
 
-
-/**
- * \brief Set local connected element
- *
- * This function set local connected vertex
- *
- * \param [in]  part_bound      Inter partition boundary to free
- * \param [in]  boundElt             Element in part_bound
- * \param [in]  iElt                  Vertex number
- *
- */
-
 void
 PDM_part_bound_local_elt_set
 (
@@ -181,18 +146,6 @@ PDM_part_bound_local_elt_set
   _part_bound->localElt2BoundElt[localElt - 1] = boundElt;
 }
 
-
-/**
- * \brief Return number of offered elements
- *
- * This function returns the numner of offered elements
- *
- * \param [in]  part_bound      Inter partition boundary to free
- * \param [in]  boundElt        Element in part_bound
- *
- * \return Number of offered element
- *
- */
 
 int
 PDM_part_bound_n_offer_elt_get
@@ -214,17 +167,6 @@ PDM_part_bound_n_offer_elt_get
 }
 
 
-/**
- * \brief Return total number of offered elements
- *
- * This function returns the numner of offered elements
- *
- * \param [in]  part_bound      Inter partition boundary to free
- *
- * \return Total number of offered element
- *
- */
-
 PDM_g_num_t
 PDM_part_bound_n_total_offer_elt_get
 (
@@ -235,17 +177,6 @@ PDM_part_bound_n_total_offer_elt_get
   return _part_bound->nTotalOfferElt;
 }
 
-
-/**
- * \brief Return number of local offered elements
- *
- * This function returns the numner of offered elements
- *
- * \param [in]  part_bound      Inter partition boundary to free
- *
- * \return number of local offered element
- *
- */
 
 int
 PDM_part_bound_n_local_offer_elt_get
@@ -258,17 +189,6 @@ PDM_part_bound_n_local_offer_elt_get
 }
 
 
-/**
- * \brief Return global numbers of local offered elements
- *
- * This function returns the global numbers of local offered elements
- *
- * \param [in]  part_bound      Inter partition boundary to free
- *
- * \return number of local offered element
- *
- */
-
 const PDM_g_num_t *
 PDM_part_bound_local_offer_elt_ln_to_gn_get
 (
@@ -279,19 +199,6 @@ PDM_part_bound_local_offer_elt_ln_to_gn_get
   return _part_bound->localOfferLnToGn;
 }
 
-
-/**
- * \brief Set local connected element
- *
- * This function set local connected vertex
- *
- * \param [in]  part_bound      Inter partition boundary to free
- * \param [in]  boundElt        Element in part_bound
- * \param [in]  iOfferElt       index of offered element
- * \param [in]  iNum            local number
- * \param [in]  gNum            global number
- *
- */
 
 void
 PDM_part_bound_offer_elt_set
@@ -309,20 +216,6 @@ PDM_part_bound_offer_elt_set
   _part_bound->offerElt[idx] = lNum;
   _part_bound->offerLnToGn[idx] = gNum;
 }
-
-
-/**
- * \brief Get offered element
- *
- * This function gets an offered element
- *
- * \param [in]  part_bound      Inter partition boundary to free
- * \param [in]  boundElt        Element in part_bound
- * \param [in]  iOfferElt       index of offered element
- * \param [out]  iNum           local number
- * \param [out]  gNum           global number
- *
- */
 
 void
 PDM_part_bound_offer_elt_get
@@ -342,17 +235,6 @@ PDM_part_bound_offer_elt_get
 }
 
 
-/**
- * \brief Get the number of elements in partition boundary
- *
- * This function returns the number of elements in partition boundary
- *
- * \param [in]  part_bound      Inter partition boundary to free
- *
- * \return Number of elements in partition boundary
- *
- */
-
 int
 PDM_part_bound_n_elt_get
 (
@@ -362,18 +244,6 @@ PDM_part_bound_n_elt_get
   _part_bound_t *_part_bound = (_part_bound_t *) part_bound;
   return _part_bound->nElt;
 }
-
-
-/**
- * \brief Get the number of elements in partition boundary
- *
- * This function returns the number of elements in partition boundary
- *
- * \param [in]  part_bound      Inter partition boundary to free
- *
- * \return Number of elements in partition boundary
- *
- */
 
 int
 PDM_part_bound_n_elt_bound_get
@@ -386,17 +256,6 @@ PDM_part_bound_n_elt_bound_get
 }
 
 
-/**
- * \brief Get the complexity of the partition boundary
- *
- * This function returns the complexity of the partition boundary
- *
- * \param [in]  part_bound      Inter partition boundary to free
- *
- * \return Complexity
- *
- */
-
 PDM_part_bound_cplx_t
 PDM_part_bound_cplx_get
 (
@@ -407,18 +266,6 @@ PDM_part_bound_cplx_get
  return _part_bound->cplx;
 }
 
-
-/**
- * \brief Get local connected element
- *
- * This function returns local connected vertex
- *
- * \param [in]  part_bound      Inter partition boundary to free
- * \param [in]  boundElt       Element in part_bound
- * \param [out] iElt            Local element number
- * \param [out] nConnectedElt   Number of connected elements to local element
- *
- */
 
 void
 PDM_part_bound_bound_elt_get
@@ -442,18 +289,6 @@ PDM_part_bound_bound_elt_get
 }
 
 
-/**
- * \brief Get local connected element
- *
- * This function returns local connected vertex
- *
- * \param [in]  part_bound      Inter partition boundary to free
- * \param [in]  localElt        Local element number
- * \param [out] boundElt        Element in part_bound
- * \param [out] nConnectedElt   Number of connected elements to local element
- *
- */
-
 void
 PDM_part_bound_local_elt_get
 (
@@ -475,20 +310,6 @@ PDM_part_bound_local_elt_get
 
 }
 
-
-/**
- * \brief Set distant connected vertex
- *
- * This function set local connected vertex
- *
- * \param [in]  part_bound      Inter partition boundary to free
- * \param [in]  boundElt             Element in part_bound
- * \param [in]  iConnectedElt         Connected element
- * \param [in]  iProc                 Connected processus
- * \param [in]  iProcPart             Connected partition in the connected processus
- * \param [in]  iProcPartElt          Connected vertex in the connected partition
- *
- */
 
 void
 PDM_part_bound_distant_elt_set
@@ -527,20 +348,6 @@ PDM_part_bound_distant_elt_set
 }
 
 
-/**
- * \brief Set distant connected vertex
- *
- * This function set local connected vertex
- *
- * \param [in]  part_bound            Inter partition boundary structure
- * \param [in]  boundElt             Element in part_bound
- * \param [in]  iConnectedElt         Connected element
- * \param [out] iProc                 Connected processus
- * \param [out] iProcPart             Connected partition in the connected processus
- * \param [out] iProcPartElt          Connected vertex in the connected partition
- * \param [out] iDistElt              Global Index of distant connected element
- *
- */
 
 void
 PDM_part_bound_distant_elt_get
@@ -579,16 +386,6 @@ PDM_part_bound_distant_elt_get
 }
 
 
-/**
- * \brief Set distant connected vertex
- *
- * This function set local connected vertex
- *
- * \param [in]  part_bound      Inter partition boundary to free
- * \param [in]  nEltPartBound Number of elements in the structure
- *
- */
-
 void
 PDM_part_bound_adjust_size
 (
@@ -614,16 +411,6 @@ PDM_part_bound_adjust_size
 }
 
 
-/**
- * \brief Free a part_bound_t object
- *
- * This function frees an part_bound_t object
- *
- * \param [in]  part_bound      Inter partition boundary to free
- *
- * \return      NULL
- *
- */
 
 PDM_part_bound_t *
 PDM_part_bound_free
@@ -659,14 +446,6 @@ PDM_part_bound_t *part_bound
 }
 
 
-/**
- * \brief Dump a part_bound_t object
- *
- * This function dumps a part bound structure
- *
- * \param [in]  part_bound      Inter partition boundary to free
- *
- */
 
 void
 PDM_part_bound_dump
