@@ -22,7 +22,6 @@
 #include "pdm_logging.h"
 #include "pdm_mem_tool.h"
 #include "pdm_priv.h"
-#include "pdm_size_idx_from_stride.h"
 #include "pdm_timer.h"
 
 #ifdef __cplusplus
