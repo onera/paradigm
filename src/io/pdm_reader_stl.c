@@ -24,6 +24,13 @@
 #include "pdm_priv.h"
 #include "pdm_vtk.h"
 
+#ifdef __cplusplus
+extern "C" {
+#if 0
+} /* Fake brace to force back Emacs auto-indentation back to column 0 */
+#endif
+#endif /* __cplusplus */
+
 /*=============================================================================
  * Macro definitions
  *============================================================================*/
@@ -461,18 +468,6 @@ _create_dmesh_nodal
  * Public function prototypes
  *============================================================================*/
 
-
-/**
- *
- * \brief Create a dmesh nodal from a file in ASCII STL mesh format
- *
- * \param[in]  comm                MPI communicator
- * \param[in]  filename            Filename
- *
- * \return Pointer to PDM_dmesh_nodal object
- *
- */
-
 PDM_dmesh_nodal_t *
 PDM_reader_stl_dmesh_nodal
 (
@@ -511,3 +506,7 @@ PDM_reader_stl_dmesh_nodal
 
   return dmn;
 }
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */

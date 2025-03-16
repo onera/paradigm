@@ -1,37 +1,21 @@
-/*
- * \file
- */
-
 #ifndef __PDM_READER_GAMMA_H__
 #define __PDM_READER_GAMMA_H__
-/*
-  This file is part of the CWIPI library.
 
-  Copyright (C) 2011  ONERA
+/*----------------------------------------------------------------------------
+ * Standard C library headers
+ *----------------------------------------------------------------------------*/
 
-  This library is free software; you can redistribute it and/or
-  modify it under the terms of the GNU Lesser General Public
-  License as published by the Free Software Foundation; either
-  version 3 of the License, or (at your option) any later version.
 
-  This library is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  Lesser General Public License for more details.
-
-  You should have received a copy of the GNU Lesser General Public
-  License along with this library. If not, see <http://www.gnu.org/licenses/>.
-*/
-
+/*----------------------------------------------------------------------------
+ *  Header for the current file
+ *----------------------------------------------------------------------------*/
 #include "pdm.h"
 #include "pdm_mpi.h"
 #include "pdm_dmesh_nodal.h"
 
-/*----------------------------------------------------------------------------
- * Macro for handling of different symbol names (underscored or not,
- * lowercase or uppercase) between C and Fortran, for link resolution.
- *----------------------------------------------------------------------------*/
-
+/*=============================================================================
+ * Macro definitions
+ *============================================================================*/
 
 #ifdef __cplusplus
 extern "C" {
@@ -40,7 +24,17 @@ extern "C" {
 #endif
 #endif /* __cplusplus */
 
+/*============================================================================
+ * Macro definitions
+ *============================================================================*/
 
+/*============================================================================
+ * Type definitions
+ *============================================================================*/
+
+/*============================================================================
+ * Public function definitions
+ *============================================================================*/
 
 /**
  *
@@ -62,11 +56,12 @@ PDM_reader_gamma_dmesh_nodal
  const char    *filename,
  int            fix_orientation_2d,
  int            fix_orientation_3d
- );
+);
 
 
 void
-PDM_write_meshb(
+PDM_write_meshb
+(
   const char         *filename,
   const int          *n_elt_table,
         int         **tag_table,
