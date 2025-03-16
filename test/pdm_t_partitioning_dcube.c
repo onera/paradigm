@@ -947,23 +947,6 @@ int main(int argc, char *argv[])
                                     (int ** )  &pn_cell,
                             (PDM_g_num_t ***)  &pcell_ln_to_gn,
                                                 NULL);
-  /*
-   * Tentative extented partition
-   */
-  // PDM_g_num_t** pcell_ln_to_gn_extented;
-  // int*          pn_cell_extented;
-
-  // PDM_extend_mesh(comm,
-  //                 part_distribution,
-  //                 cell_distribution,
-  //                 cell_part,
-  //                 n_res_part,
-  //                 dual_graph_idx,
-  //                 dual_graph,
-  //                 pn_cell,
-  //                 pcell_ln_to_gn,
-  //                &pn_cell_extented,
-  //                &pcell_ln_to_gn_extented);
 
   // pn_cell        = pn_cell_extented;
   // pcell_ln_to_gn = pcell_ln_to_gn_extented;

@@ -38,7 +38,7 @@ extern "C" {
  *
  * \param [in]    n_node            (local) number of nodes in the graph
  * \param [inout] dual_graph_idx    Node to node connectivity indexes (size=n_node+1)
- * \param [in] dual_graph_n         Original number of connected nodes (size=n_node)
+ * \param [in]    dual_graph_n      Original number of connected nodes (size=n_node)
  * \param [inout] dual_graph        Node to node connectivity (size=dual_graph_idx[n_node])
  *
  */
@@ -173,6 +173,23 @@ const double           *part_fraction,
 const PDM_MPI_Comm      comm
 );
 
+/**
+ *
+ * \brief Compute in parallel the dual graph of an unstructured graph represented
+ *        by its node (vertices of the graph) to arc (edges of the graph) connectivity.
+ *        Arc and edge terminology is employed to avoid confusion with geometric entities
+ *        such as vertices, edges, etc.
+ *        Usually for a CFD mesh, the nodes of the graph are the cells of the mesh
+ *        and the arcs of the graph are thus the faces of the mesh.
+ *
+ * \param [in]   comm               PDM_MPI communicator
+ * \param [in]   graph_node_distrib distribution of nodes over the procs (size=n_rank+1)
+ * \param [in]   graph_arc_distrib  distribution of arcs  over the procs (size=n_rank+1)
+ * \param [in]   dnode_arc_idx      Node to arc connectivity indexes (size=dn_node+1)
+ * \param [in]   dnode_arc          Node to arc connectivity (size=dnode_to_arc_idx[dn_node])
+ * \param [out]  dual_graph_idx     Node to node connectivity indexes (size=dn_node+1)
+ * \param [out]  dual_graph         Node to node connectivity (size=dual_graph_idx[dn_node])
+ */
 void
 PDM_para_graph_dual_from_combine_connectivity
 (

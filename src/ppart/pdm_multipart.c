@@ -2946,20 +2946,6 @@ PDM_MPI_Comm       comm
  * Public function definitions
  *============================================================================*/
 
-/**
- *
- * \brief Build a multipart structure. This method allows to split multiple domains
- *
- * \param [in]   n_domain         Number of domains in the original mesh
- * \param [in]   n_part           Number of partition per proc in each domain
- * \param [in]   merge_blocks     Merge or not the domains before splitting
- * \param [in]   split_method     Choice of library used to split the mesh
- * \param [in]   part_size_method Choice of homogeneous or heterogeneous partitions
- * \param [in]   part_weight      Weight (in %) of each partition in heterogeneous case if \ref PDM_part_size_t is set at PDM_PART_SIZE_HETEROGENEOUS
- * \param [in]   comm             PDM_MPI communicator
- *
- * \return     Pointer to a new \ref PDM_multipart_t object
- */
 PDM_multipart_t *
 PDM_multipart_create
 (
@@ -3045,14 +3031,7 @@ PDM_multipart_create
   return (PDM_multipart_t *) multipart;
 }
 
-/**
- *
- * \brief Set distributed mesh data for the input domain
- *
- * \param [in]   multipart      Pointer to \ref PDM_multipart_t object
- * \param [in]   domain_id      Domain identifier
- * \param [in]   dmesh          Pointer on \ref PDM_dmesh_t containaing all distributed connectivities
- */
+
 void PDM_multipart_dmesh_set
 (
  PDM_multipart_t   *multipart,
@@ -3064,14 +3043,7 @@ void PDM_multipart_dmesh_set
   multipart->dmeshes[domain_id] = dmesh;
 }
 
-/**
- *
- * \brief Set distributed mesh data for the input domain. The mesh is describe by nodal connectiviy
- *
- * \param [in]   multipart      Pointer to \ref PDM_multipart_t object
- * \param [in]   domain_id        Global domain id
- * \param [in]   dmesh_nodal    Pointer on \ref PDM_dmesh_nodal_t
- */
+
 void PDM_multipart_dmesh_nodal_set
 (
  PDM_multipart_t         *multipart,
@@ -3085,34 +3057,7 @@ void PDM_multipart_dmesh_nodal_set
 }
 
 
-/**
- * \brief Set block
- *
- * \param [in]   multipart              Pointer to \ref PDM_multipart_t object
- * \param [in]   i_domain               Domain identifier
- * \param [in]   dn_cell                Number of distributed cells
- * \param [in]   dn_face                Number of distributed faces
- * \param [in]   dn_vtx                 Number of distributed vertices
- * \param [in]   n_face_group           Number of face groups
- * \param [in]   dcell_face_idx         Distributed cell face connectivity index or NULL
- *                                      (size : dn_cell + 1, numbering : 0 to n-1)
- * \param [in]   dcell_face             Distributed cell face connectivity or NULL
- *                                      (size : dface_vtx_idx[dn_cell], numbering : 1 to n)
- * \param [in]   dface_cell             Distributed face cell connectivity or NULL
- *                                      (size : 2 * dn_face, numbering : 1 to n)
- * \param [in]   dface_vtx_idx          Distributed face to vertex connectivity index
- *                                      (size : dn_face + 1, numbering : 0 to n-1)
- * \param [in]   dface_vtx              Distributed face to vertex connectivity
- *                                      (size : dface_vtx_idx[dn_face], numbering : 1 to n)
- * \param [in]   dvtx_coord             Distributed vertex coordinates
- *                                      (size : 3*dn_vtx)
- * \param [in]   dface_group_idx        Index of distributed faces list of each group
- *                                      (size = n_face_group + 1) or NULL
- * \param [in]   dface_group            Distributed faces list of each group
- *                                      (size = dface_group[dface_group_idx[n_face_group]], numbering : 1 to n)
- *                                      or NULL
- *
- */
+
 void
 PDM_multipart_block_set
 (
@@ -3186,17 +3131,7 @@ PDM_multipart_domain_interface_shared_set
   abort();
 }
 
-/**
- *
- * \brief Set the reordering methods to be used after partitioning
- *
- * \param [in]   multipart               Pointer to \ref PDM_multipart_t object
- * \param [in]   i_domain                Id of domain which parameters apply (or -1 for all domains)
- * \param [in]   mesh_entity             kind of entity who want to renum
- * \param [in]   renum_entity_method     Choice of renumbering method for cells
- * \param [in]   renum_entity_properties parameter list of current method (can be NULL)
- *
- */
+
 void
 PDM_multipart_renum_method_set
 (
@@ -3236,19 +3171,7 @@ PDM_multipart_renum_method_set
 }
 
 
-/**
- *
- * \brief Set the reordering methods to be used after partitioning
- *
- * \param [in]   multipart             Pointer to \ref PDM_multipart_t object
- * \param [in]   i_domain              Id of domain which parameters apply (or -1 for all domains)
- * \param [in]   renum_cell_method     Choice of renumbering method for cells
- * \param [in]   renum_cell_properties Parameters used by cacheblocking method :
- *                                     [n_cell_per_cache_wanted, is_asynchrone, is_vectorisation,
-                                        n_vect_face, split_method]
- * \param [in]   renum_face_method     Choice of renumbering method for faces
- *
- */
+
 void
 PDM_multipart_set_reordering_options
 (
@@ -3309,11 +3232,7 @@ void PDM_multipart_set_reordering_options_vtx
   }
 }
 
-/**
- * \brief Construct the partitioned meshes on every domains
- *
- * \param [in]   multipart             Pointer to \ref PDM_multipart_t object
- */
+
 void
 PDM_multipart_compute
 (
@@ -3432,15 +3351,6 @@ PDM_multipart_compute
   multipart->timer = NULL;
 }
 
-/**
- * \brief Retreive the partitionned nodal mesh
- *
- * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
- * \param [in]  i_domain              Domain identifier
- * \param [out] pmesh_nodal           Nodal partitionned mesh
- * \param [in]  ownership             Who is responsible to free retreived data ?
- *
- */
 
 void
 PDM_multipart_get_part_mesh_nodal
@@ -3472,15 +3382,6 @@ PDM_ownership_t         ownership
   }
 }
 
-/**
- * \brief Retreive the partitionned mesh
- *
- * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
- * \param [in]  i_domain              Id of domain
- * \param [out] pmesh                 Partitionned mesh
- *
- */
-
 
 // void
 // PDM_multipart_get_part_mesh
@@ -3495,13 +3396,7 @@ PDM_ownership_t         ownership
 //   *pmesh = &(multipart->pmeshes    [i_domain]);
 // }
 
-/**
- *
- * \brief Returns the dimensions of a given partition
- *
- * \param [in]
- *
- */
+
 void
 PDM_multipart_part_dim_get
 (
@@ -3595,18 +3490,7 @@ const int        i_part,
 }
 
 
-/**
- *
- * \brief Returns the connexion graph between partition for the request \ref PDM_bound_type_t
- * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
- * \param [in]  i_domain              Id of domain
- * \param [in]  i_domain              Id of part
- * \param [in]  entity_type           Type of mesh entity
- * \param [out] ppart_bound_proc_idx  Partitioning boundary entities block distribution from processus (size = n_proc + 1)
- * \param [out] ppart_bound_part_idx  Partitioning boundary entities block distribution from partition (size = n_total_part + 1)
- * \param [out] ppart_bound           Partitioning boundary entities (size = 4 * n_entity_part_bound)
- * \param [in]  ownership             Choice of ownership of the resulting arrays \ref PDM_ownership_t
- */
+
 void
 PDM_multipart_part_graph_comm_get
 (
@@ -3634,12 +3518,8 @@ PDM_multipart_part_graph_comm_get
                                     ownership);
 }
 
-/**
- *
- * \brief Returns the data arrays of a given partition
- *
- * \deprecated Use \ref PDM_multipart_part_connectivity_get instead
- */
+
+
 void
 PDM_multipart_part_val_get
 (
@@ -3771,10 +3651,7 @@ const int            i_part,
 }
 
 
-/**
- *
- * \brief Returns the total number of part among all process
- */
+
 int
 PDM_multipart_part_tn_part_get
 (
@@ -3787,15 +3664,8 @@ const int        i_domain
   return PDM_part_mesh_tn_part_get(_pmeshes.pmesh);
 }
 
-/**
- * \brief Return size of leading connectivity on current partition ( n_entity )
- * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
- * \param [in]  i_domain              Id of domain
- * \param [in]  i_part                Id of part
- * \param [in]  connectivity_type     Connectivity kind \ref PDM_connectivity_type_t
- * \param [in]  connect_idx           Connectivity index (size = n_entity+1 )
- * \param [in]  connect               Connectivity array (size = connect_idx[n_entity] )
- */
+
+
 int
 PDM_multipart_part_connectivity_get
 (
@@ -3910,13 +3780,8 @@ const int                       i_part,
   return pn_entity;
 }
 
-/**
- * \brief Return size of leading connectivity on current partition ( n_entity )
- * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
- * \param [in]  i_domain              Id of domain
- * \param [in]  i_part                Id of part
- * \param [in]  entity_type           Entity kind \ref PDM_mesh_entities_t
- */
+
+
 int
 PDM_multipart_part_n_entity_get
 (
@@ -3951,16 +3816,8 @@ const int                   i_part,
   return pn_entity;
 }
 
-/**
- *
- * \brief Return size of entity_type on current partition ( n_entity )
- * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
- * \param [in]  i_domain              Id of domain
- * \param [in]  i_part                Id of part
- * \param [in]  entity_type           Entity kind \ref PDM_mesh_entities_t)
- * \param [out] entity_ln_to_gn       Entity local numbering to global numbering (size = n_entity, numbering : 1 to n)
- * \param [in]  ownership             Ownership for entity_ln_to_gn ( \ref PDM_ownership_t )
- */
+
+
 int
 PDM_multipart_part_ln_to_gn_get
 (
@@ -3987,16 +3844,8 @@ const int                   i_part,
   return pn_entity;
 }
 
-/**
- *
- * \brief Return number of entity on current partition ( n_entity )
- * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
- * \param [in]  i_domain              Id of domain
- * \param [in]  i_part                Id of part
- * \param [in]  entity_type           Entity kind \ref PDM_mesh_entities_t)
- * \param [out] entity_color          Entity color (only for specific renumbering option )
- * \param [in]  ownership             Ownership for color ( \ref PDM_ownership_t )
- */
+
+
 int
 PDM_multipart_partition_color_get
 (
@@ -4021,15 +3870,7 @@ const int                   i_part,
   return pn_entity;
 }
 
-/**
- *
- * \brief Get array containing hyperplane color
- * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
- * \param [in]  i_domain              Id of domain
- * \param [in]  i_part                Id of part
- * \param [in]  hyperplane_color      Hyperplane color
- * \param [in]  ownership             Ownership for color ( \ref PDM_ownership_t )
- */
+
 void
 PDM_multipart_part_hyperplane_color_get
 (
@@ -4051,16 +3892,7 @@ const int               i_part,
   }
 }
 
-/**
- *
- * \brief Get array containing thread color - Only if specific reordering (in paradigma plugins)
- *
- * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
- * \param [in]  i_domain              Id of domain
- * \param [in]  i_part                Id of part
- * \param [in]  thread_color          Thread color
- * \param [in]  ownership             Ownership for color ( \ref PDM_ownership_t )
- */
+
 void
 PDM_multipart_part_thread_color_get
 (
@@ -4082,16 +3914,8 @@ const int               i_part,
   }
 }
 
-/**
- *
- * \brief Get array containing vtx_ghost_information, usefull to have a priority on vertex between 2 partitions
- *
- * \param [in]  multipart             Pointer to \ref PDM_multipart_t object
- * \param [in]  i_domain              Id of domain
- * \param [in]  i_part                Id of part
- * \param [in]  vtx_ghost_information Integer that give the current priority of vertices on current partitions
- * \param [in]  ownership             Ownership for color ( \ref PDM_ownership_t )
- */
+
+
 void
 PDM_multipart_part_ghost_infomation_get
 (
@@ -4114,20 +3938,6 @@ const int               i_part,
   }
 }
 
-
-/**
- *
- * \brief Return times for a given domain
- * (NOT IMPLEMENTED)
- *
- * \param [in]   multipart      Pointer to \ref PDM_multipart_t object
- * \param [in]   i_domain       Id of current domain
- * \param [out]  elapsed        Elapsed time
- * \param [out]  cpu            CPU time
- * \param [out]  cpu_user       User CPU time
- * \param [out]  cpu_sys        System CPU time
- *
- */
 
 void
 PDM_multipart_time_get
@@ -4178,12 +3988,6 @@ PDM_multipart_time_get
 
 }
 
-/**
- *
- * \brief Free the structure
- *
- * \param [in]   multipart      Pointer to \ref PDM_multipart_t object
- */
 
 void
 PDM_multipart_free
@@ -4250,21 +4054,10 @@ PDM_multipart_free
   PDM_free(multipart);
   multipart = NULL;
 
-  // PDM_printf("Cleaned from PDM_multipart_free\n");
 }
 
 
-/**
- *
- * \brief Get the vertex coordinates on current i_domain, i_part partition and return number of vertices
- *
- * \param [in]   multipart      Pointer to \ref PDM_multipart_t object
- * \param [in]   i_domain       Id of current domain
- * \param [in]   i_part         Id of part
- * \param [out]  vtx_coord      Vertex coordinate (size = 3 * n_vtx)
- * \param [in]   ownership      Ownership for color ( \ref PDM_ownership_t )
- *
- */
+
 int
 PDM_multipart_part_vtx_coord_get
 (
@@ -4290,21 +4083,7 @@ const int                       i_part,
 }
 
 
-/**
- *
- * \brief Get the group description for a given entity
- *
- * \param [in]   multipart              Pointer to \ref PDM_multipart_t object
- * \param [in]   i_domain               Domain identifier
- * \param [in]   i_part                 Partition identifier
- * \param [in]   entity_type            Type of mesh entity
- * \param [out]  n_group                Number of groups
- * \param [out]  group_entity_idx       Index for group->entity connectivity (size = \p n_group)
- * \param [out]  group_entity           Group->entity connectivity (1-based local ids, size = \p group_entity_idx[\p n_group])
- * \param [out]  group_entity_ln_to_gn  Group->entity connectivity (group-specific global ids, size = \p group_entity_idx[\p n_group])
- * \param [in]   ownership              Ownership
- *
- */
+
 void PDM_multipart_group_get
 (
  PDM_multipart_t      *multipart,
@@ -4336,23 +4115,7 @@ void PDM_multipart_group_get
 }
 
 
-/**
- *
- * \brief Return statistics
- *
- * \param [in]   ppart                          Pointer to \ref PDM_part object
- * \param [out]  cells_average                  average of cells number
- * \param [out]  cells_median                   median of cells number
- * \param [out]  cells_std_deviation            standard deviation of cells number
- * \param [out]  cells_min                      minimum of cells nummber
- * \param [out]  cells_max                      maximum of cells nummber
- * \param [out]  bound_part_faces_average       average of partitioning boundary faces
- * \param [out]  bound_part_faces_median        median of partitioning boundary faces
- * \param [out]  bound_part_faces_std_deviation standard deviation of partitioning boundary faces
- * \param [out]  bound_part_faces_min           minimum of partitioning boundary faces
- * \param [out]  bound_part_faces_max           maximum of partitioning boundary faces
- *
- */
+
 void
 PDM_multipart_stat_get
 (

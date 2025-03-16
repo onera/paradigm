@@ -45,6 +45,25 @@ typedef enum {
  * Public function definitions
  *============================================================================*/
 
+/**
+ *
+ * \brief Compute cell center of elements
+ *
+ * \param [in]  comm         MPI Communicator
+ * \param [in]  dn_cell       Number of cells in the current process
+ * \param [in]  dn_face       Number of faces in the current process
+ * \param [in]  dn_vtx        Number of vertices in the current process
+ * \param [in]  dcell_face_idx Index of cell_face
+ * \param [in]  dcell_face    cell face connectivity in the current process
+ * \param [in]  dface_vtx_idx  Index of face_vtx
+ * \param [in]  dface_vtx     face vertex connectivity in the current process
+ * \param [in]  distrib_face    face distribution
+ * \param [in]  dvtx_coord    coordinates of vertices
+ * \param [in]  distrib_vtx     Vertex distribution
+ *
+ * \param [out] cell_center   Cell centers
+ *
+ */
 void
 PDM_dcompute_cell_center
 (
