@@ -403,18 +403,6 @@ const double   tolerance
  * Public function definitions
  *============================================================================*/
 
-/**
- *
- * \brief Create a points merge structure
- *
- * \param [in]   n_point_cloud      Number of point cloud
- * \param [in]   tolerance          Relative geometric tolerance
- * \param [in]   comm               MPI communicator
- * \param [in]   owner              Ownership
- *
- * \return     Pointer to \ref PDM_points_merge object
- */
-
 PDM_points_merge_t *
 PDM_points_merge_create
 (
@@ -456,15 +444,6 @@ PDM_points_merge_create
 
 }
 
-
-/**
- *
- * \brief Free a \ref PDM_points_merge object
- *
- * \param [in]   pm             Pointer to \ref PDM_points_merge object
- *
- */
-
 void
 PDM_points_merge_free
 (
@@ -494,19 +473,6 @@ PDM_points_merge_free
   PDM_free(pm);
 }
 
-
-/**
- *
- * \brief Set a point cloud
- *
- * \param [in]   pm             Pointer to \ref PDM_points_merge object
- * \param [in]   i_point_cloud  Index of point cloud
- * \param [in]   n_points       Number of points
- * \param [in]   coords         Point coordinates
- * \param [in]   char_length    Characteristic length (or NULL)
- *
- */
-
 void
 PDM_points_merge_cloud_set
 (
@@ -525,15 +491,6 @@ PDM_points_merge_cloud_set
   PDM_octree_point_cloud_set (pm->octree, i_point_cloud, n_points, coords, NULL);
 
 }
-
-
-/**
- *
- * \brief Process merge points
- *
- * \param [in]   pm             Pointer to \ref PDM_points_merge object
- *
- */
 
 void
 PDM_points_merge_process
@@ -968,20 +925,6 @@ PDM_points_merge_process
 }
 
 
-/**
- *
- * \brief Get candidates to merge for each point
- *
- * \param [in]   pm              Pointer to \ref PDM_points_merge object
- * \param [in]   i_point_cloud   Current cloud
- * \param [out]  candidates_idx  Indexes of candidate for each current cloud point
- *                               (size = number of points in the current cloud + 1)
- * \param [out]  candidates_desc Candidates description (process,
- *                                                       cloud in the process,
- *                                                       point in the cloud)
- *
- */
-
 void
 PDM_points_merge_candidates_get
 (
@@ -1018,16 +961,7 @@ PDM_points_merge_candidates_get
   }
 }
 
-/**
- *
- * \brief Get size of the resulting array
- *
- * \param [in]   pm                Pointer to \ref PDM_points_merge object
- * \param [in]   i_point_cloud     Current cloud
- * \param [out]  n_point_cloud     Number of points in the current cloud
- * \param [out]  n_candidates_desc Size of candidates_desc = candidates_idx[n_point_cloud+1]
- *
- */
+
 void
 PDM_points_merge_candidates_size_get
 (
@@ -1519,3 +1453,7 @@ PDM_points_merge_make_interface
   PDM_free(candidates_idx );
   PDM_free(candidates_desc);
 }
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
