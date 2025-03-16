@@ -276,7 +276,7 @@ PDM_multi_block_merge_exch
 {
   int           **tmp_block_strid_out = NULL;
   unsigned char **tmp_block_data_out  = NULL;
-  PDM_multi_block_to_part_exch2(mbm->mbtp,
+  PDM_multi_block_to_part_exch(mbm->mbtp,
                                 s_data,
                                 t_stride,
                                 block_stride,

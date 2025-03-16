@@ -661,7 +661,7 @@ static int _extract_and_shift_jn_faces
 
   int         **part_stride = NULL;
   PDM_g_num_t **part_data   = NULL;
-  PDM_multi_block_to_part_exch2(mptb,
+  PDM_multi_block_to_part_exch(mptb,
                                 sizeof(PDM_g_num_t),
                                 PDM_STRIDE_VAR_INTERLACED,
                                 face_vtx_n,
@@ -3426,7 +3426,7 @@ PDM_domain_interface_translate_entity1_entity2
 
   int         **pentity2_entity1_n = NULL;
   PDM_g_num_t **pentity2_entity1   = NULL;
-  PDM_multi_block_to_part_exch2(mbtp,
+  PDM_multi_block_to_part_exch(mbtp,
                                 sizeof(PDM_g_num_t),
                                 PDM_STRIDE_VAR_INTERLACED,
                                 dentity2_entity1_n,

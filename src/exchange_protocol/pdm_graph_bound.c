@@ -46,20 +46,6 @@ static const int nDataExchCreate = 5; /*!< Number of exchanged data for creation
  * Public function definitions
  *============================================================================*/
 
-
-/**
- * \brief Return an intialized \ref PDM_graph_bound_t structure
- *
- * This function returns an initialized \ref PDM_graph_bound_t structure
- *
- * \param [in]  comm         MPI communicator
- * \param [in]  n_part        Number of partitions
- * \param [in]  partBound    partition boundaries (size : \ref n_part)
- *
- * \return      A new initialized \ref PDM_graph_bound_t structure
- *
- */
-
 PDM_graph_bound_t *
 PDM_graph_bound_create
 (
@@ -1373,20 +1359,6 @@ const int                n_part,
 
 }
 
-
-/**
- * \brief Return an intialized \ref PDM_graph_bound_t structure
- *
- * This function returns an initialized \ref PDM_graph_bound_t structure
- *
- * \param [in]  graph_bound   Boundary graph
- * \param [in]  nComp         Number of composantes
- * \param [in]  tData         Data type
- * \param [in]  field         Data field
- * \param [out] ghostField    Ghost cell field
- *
- */
-
 void
 PDM_graph_bound_exch_data_init
 (
@@ -1533,16 +1505,6 @@ const PDM_data_t         tData,
 
 }
 
-
-/**
- * \brief Return an intialized \ref PDM_graph_bound_t structure
- *
- * This function returns an initialized \ref PDM_graph_bound_t structure
- *
- * \param [in]  graph_bound   Boundary graph
- *
- */
-
 void
 PDM_graph_bound_exch_data_wait
 (
@@ -1632,18 +1594,6 @@ PDM_graph_bound_t *graph_bound
   graph_bound->recvBuffer = NULL;
 }
 
-
-/**
- * \brief free \ref PDM_graph_bound_t structure
- *
- * This function returns an initialized \ref PDM_graph_bound_t structure
- *
- * \param [in]  graph_bound   Boundary graph
- *
- * \return      NULL
- *
- */
-
 PDM_graph_bound_t *
 PDM_graph_bound_free
 (
@@ -1683,19 +1633,6 @@ PDM_graph_bound_t *graph_bound
   return NULL;
 }
 
-
-/**
- * \brief Return the number of ghost elements for each partition
- *
- * This function returns the number of ghost elements for each partition
- *
- * \param [in]  graph_bound    Boundary graph
- * \param [in]  part           Partition number
- *
- * \return  Number of ghost element
- *
- */
-
 int
 PDM_graph_bound_n_ghost_elt_get
 (
@@ -1713,19 +1650,6 @@ PDM_graph_bound_n_ghost_elt_get
   return graph_bound->nGhostEltPart[part];
 
 }
-
-
-/**
- * \brief Return the number of local elements which touch the current ghost element
- *
- * This function returns the number of local elements which touch the current ghost element
- *
- * \param [in]  graph_bound    Boundary graph
- * \param [in]  part           Partition number
- *
- * \return  Number of local element which touch the current ghost element
- *
- */
 
 int
 PDM_graph_bound_ghost_elt_n_touch_elt_get
@@ -1754,19 +1678,6 @@ PDM_graph_bound_ghost_elt_n_touch_elt_get
   return (ghostEltPartIdx[ghostElt+1] - ghostEltPartIdx[ghostElt]);
 
 }
-
-
-/**
- * \brief Return the list of local elements which touch the current ghost element
- *
- * This function returns the list of local elements which touch the current ghost element
- *
- * \param [in]  graph_bound    Boundary graph
- * \param [in]  part           Partition number
- *
- * \return  list of local elements which touch the current ghost element
- *
- */
 
 int *
 PDM_graph_bound_ghost_elt_touch_elt_get
@@ -1797,19 +1708,6 @@ PDM_graph_bound_ghost_elt_touch_elt_get
 
 }
 
-
-/**
- * \brief Return the number of element to send to the specified processus
- *
- * This function returns the number of element to send to the specified processus
- *
- * \param [in]  graph_bound    Boundary graph
- * \param [in]  iProc          Processus to send
- *
- * \return  Number of element to send
- *
- */
-
 int
 PDM_graph_bound_n_send_elt_get
 (
@@ -1826,19 +1724,6 @@ PDM_graph_bound_n_send_elt_get
 
   return graph_bound->sendEltIdx[iProc+1] - graph_bound->sendEltIdx[iProc];
 }
-
-
-/**
- * \brief Return the local element numbers in theirs partition to send to the specified processus
- *
- * This function returns the local element numbers in theirs partition to send to the specified processus
- *
- * \param [in]  graph_bound    Boundary graph
- * \param [in]  iProc          Processus to send
- *
- * \return  Local element numbers to send to this processus
- *
- */
 
 int *
 PDM_graph_bound_send_elt_get
@@ -1858,18 +1743,6 @@ PDM_graph_bound_send_elt_get
 }
 
 
-/**
- * \brief Return the partitions of elements to send to the specified processus
- *
- * This function returns the partitions of elements to send to the specified processus
- *
- * \param [in]  graph_bound    Boundary graph
- * \param [in]  iProc          Processus to send
- *
- * \return  Paritions of elements to send to this processus
- *
- */
-
 int *
 PDM_graph_bound_send_part_elt_get
 (
@@ -1886,16 +1759,6 @@ PDM_graph_bound_send_part_elt_get
 
   return graph_bound->sendEltPart + graph_bound->sendEltIdx[iProc];
 }
-
-
-/**
- * \brief Dump the graph boundary structure
- *
- * This function dumps the graph boundary structure
- *
- * \param [in]  graph_bound    Boundary graph
- *
- */
 
 void
 PDM_graph_bound_dump
