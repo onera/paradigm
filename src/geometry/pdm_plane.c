@@ -74,16 +74,6 @@ _compute_barycenter
  * Public function definitions
  *============================================================================*/
 
-
-/**
- * \brief Computes barycenter
- *
- * \param [in]   num_pts  Number of polygon vertices
- * \param [in]   pts      Polygon vertices coordinates
- * \param [out]  bary     Barycenter
- *
- */
-
 void
 PDM_plane_barycenter
 (
@@ -94,15 +84,6 @@ PDM_plane_barycenter
 {
   _compute_barycenter (num_pts, pts, n);
 }
-
-/**
- * \brief Computes normal
- *
- * \param [in]   num_pts  Number of polygon vertices
- * \param [in]   pts      Polygon vertices coordinates
- * \param [out]  n        Normal
- *
- */
 
 void
 PDM_plane_normal
@@ -148,16 +129,6 @@ PDM_plane_normal
 }
 
 
-/**
- * \brief Performs plane projection
- *
- * \param [in]   x       Point to project
- * \param [in]   origin  Plane origin
- * \param [in]   n       Plane normal
- * \param [out]  cp      Projected point
- *
- */
-
 void
 PDM_plane_projection
 (
@@ -181,16 +152,6 @@ const double n[3],
 }
 
 
-/**
- * \brief Performs plane projection
- *
- * \param [in]   x       Point to project
- * \param [in]   pt      Point inside the plane
- * \param [in]   n       Plane normal
- * \param [out]  cp      Projected point
- *
- */
-
 void
 PDM_plane_projection2
 (
@@ -210,15 +171,6 @@ const double n[3],
   cp[1] = x[1] + t * n[1];
   cp[2] = x[2] + t * n[2];
 }
-
-/**
- * \brief Intersection between a plane and a line (taken from _intersect_faces_rays in pdm_inside_cloud_surf)
- *
- * \param [in]   line   Points of the line
- * \param [in]   plane  Points of the plane
- * \param [out]  ip     Intersection point
- *
- */
 
 void
 PDM_plane_line_intersection
@@ -320,8 +272,6 @@ PDM_plane_get_cartesian_plane
     return -1;
   }
 }
-
-
 
 #ifdef __cplusplus
 }

@@ -44,6 +44,13 @@
 #include "pdm_priv.h"
 #include "pdm_triangle.h"
 
+#ifdef __cplusplus
+extern "C" {
+#if 0
+} /* Fake brace to force Emacs auto-indentation back to column 0 */
+#endif
+#endif /* __cplusplus */
+
 /*=============================================================================
  * Macro definition
  *============================================================================*/
@@ -448,24 +455,6 @@ _newton_triangle
  * Public function interfaces
  *============================================================================*/
 
-/**
- *
- * \brief De Casteljau algorithm for Bézier curves
- *
- * Evaluates the point with parameter t on the Bézier curve
- * and (optionally) builds the control points of the two
- * subcurves sharing the evaluated point as a common vertex.
- *
- * \param[in]   dim     Dimension
- * \param[in]   order   Order
- * \param[in]   t       Parametric coordinate
- * \param[in]   b       Bézier control points
- * \param[out]  val     Evaluated point
- * \param[out]  l       Control points of the 1st subcurve
- * \param[out]  r       Control points of the 2nd subcurve
- *
- */
-
 void
 PDM_ho_bezier_de_casteljau_curve
 (
@@ -544,25 +533,6 @@ PDM_ho_bezier_de_casteljau_curve
 }
 
 
-/**
- *
- * \brief De Casteljau algorithm for Bézier triangles
- *
- * Evaluates the point (u,v) on the Bézier triangle
- * and (optionally) builds the control points of the three
- * subtriangles sharing the evaluated point as a common vertex.
- *
- * \param[in]   dim     Dimension
- * \param[in]   order   Order
- * \param[in]   u       Parametric coordinate u
- * \param[in]   v       Parametric coordinate v
- * \param[in]   b       Bézier control points
- * \param[out]  val     Evaluated point
- * \param[out]  atr     Control points of the 1st subtriangle
- * \param[out]  ars     Control points of the 2nd subtriangle
- * \param[out]  ast     Control points of the 3rd subtriangle
- *
- */
 
 void
 PDM_ho_bezier_de_casteljau_triangle
@@ -682,16 +652,6 @@ PDM_ho_bezier_de_casteljau_triangle
 }
 
 
-/**
- *
- * \brief Build control points for derivative of a Bézier curve
- *
- * \param[in]   dim     Dimension
- * \param[in]   order   Order
- * \param[in]   b       Bézier control points
- * \param[out]  db_dt   Bézier control points of derivative
- *
- */
 
 void
 PDM_ho_bezier_curve_derivative
@@ -710,17 +670,6 @@ PDM_ho_bezier_curve_derivative
 }
 
 
-/**
- *
- * \brief Build control points for partial derivatives of a Bézier triangle
- *
- * \param[in]   dim     Dimension
- * \param[in]   order   Order
- * \param[in]   b       Bézier control points
- * \param[out]  bu      Bézier control points of 1st partial derivative
- * \param[out]  bv      Bézier control points of 2nd partial derivative
- *
- */
 
 void
 PDM_ho_bezier_triangle_derivatives
@@ -751,18 +700,6 @@ PDM_ho_bezier_triangle_derivatives
 }
 
 
-/**
- *
- * \brief Point location in a high-order Bézier curve
- *
- * \param[in]   order             Order
- * \param[in]   n_node            Number of nodes
- * \param[in]   node_coord        Coordinates of the Bézier control points (size = 3 * \ref n_node)
- * \param[in]   point_coord       Coordinates of the point to locate (size = 3)
- * \param[out]  projected_coords  Coordinates of the projection on the Bézier curve (size = 3)
- * \param[out]  uvw               Parametric coordinates of the projection on the Bézier curve
- *
- */
 
 double
 PDM_ho_bezier_curve_location
@@ -816,19 +753,6 @@ PDM_ho_bezier_curve_location
   return distance;
 }
 
-
-/**
- *
- * \brief Point location in a high-order Bézier triangle
- *
- * \param[in]   order             Order
- * \param[in]   n_node            Number of nodes
- * \param[in]   node_coord        Coordinates of the Bézier control points (size = 3 * \ref n_node)
- * \param[in]   point_coord       Coordinates of the point to locate (size = 3)
- * \param[out]  projected_coords  Coordinates of the projection on the Bézier triangle (size = 3)
- * \param[out]  uvw               Parametric coordinates of the projection on the Bézier triangle
- *
- */
 
 double
 PDM_ho_bezier_triangle_location
@@ -910,8 +834,8 @@ PDM_ho_bezier_triangle_location
   return distance;
 }
 
-
-
-
-
 #undef ij2idx
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */

@@ -104,27 +104,6 @@ _solve_2x2
  *============================================================================*/
 
 
-/**
- * \brief Performs intersection of two finite 3D lines
- *
- *  An intersection is found if the projection of the two lines onto the plane
- *  perpendicular to the cross product of the two lines intersect.
- *  The parameters (u,v) are the parametric coordinates of the lines at the
- *  position of closest approach
- *  This function is more robust than
- *  PDM_line_intersection_mean_square.
- *
- * \param [in]  a1 Coordinates of the first line vertex of 'a'
- * \param [in]  a2 Coordinates of the second line vertex of 'a'
- * \param [in]  b1 Coordinates of the first line vertex of 'b'
- * \param [in]  b2 Coordinates of the second line vertex of 'b'
- * \param [out] u  Parameter of the intersection in line 'a' parametric coordinates
- * \param [out] v  Parameter of the intersection in line 'b' parametric coordinates
- *
- * \return      \ref PDM_TRUE or \ref PDM_FALSE
- *
- */
-
 PDM_line_intersect_t
 PDM_line_intersection
 (
@@ -219,23 +198,6 @@ PDM_line_intersection
 }
 
 
-/**
- * \brief Performs intersection of two finite lines
- *
- *  Performs the intersection of two lines with mean square method
- *
- * \param [in]  a1 Coordinates of the first line vertex of 'a'
- * \param [in]  a2 Coordinates of the second line vertex of 'a'
- * \param [in]  b1 Coordinates of the first line vertex of 'b'
- * \param [in]  b2 Coordinates of the second line vertex of 'b'
- * \param [out] u  Parameter of the intersection in line 'a' parametric coordinates
- * \param [out] v  Parameter of the intersection in line 'b' parametric coordinates
- *
- * \return      \ref PDM_TRUE or \ref PDM_FALSE
- *
- */
-
-
 PDM_line_intersect_t
 PDM_line_intersection_mean_square
 (
@@ -311,19 +273,6 @@ PDM_line_intersection_mean_square
 }
 
 
-/**
- * \brief Computes point-line distance
- *
- * \param [in]  x             Point coordinates
- * \param [in]  p1            First line vertex coordinates
- * \param [in]  p2            Second line vertex coordinates
- * \param [out] t             Parameter of the intersection in line parametric coordinates
- * \param [out] closest_point Closest point
- *
- * \return   The square of the distance
- *
- */
-
 double
 PDM_line_distance
 (
@@ -390,12 +339,6 @@ PDM_line_distance
 
   return  PDM_DOT_PRODUCT(v,v);
 }
-
-
-
-
-
-
 
 PDM_line_intersect_t
 PDM_line_intersection_2d
@@ -594,21 +537,8 @@ PDM_line_distance_2d
 
 
 
-
-/**
- * \brief Evaluates the position on an line segment
- *
- * \param [in]  x               Point coordinates to evaluate position
- * \param [in]  vtx_coord       Line segment vertices coordinates
- * \param [out] closest_point   Closest Point on Line segment or NULL
- * \param [out] min_dist2       Square of the distance
- * \param [out] weights         Vertices weights or NULL
- *
- * \return      -1 if the line segment is degenerate, 0 else
- *
- */
-
-int PDM_line_evaluate_position
+int
+PDM_line_evaluate_position
 (
  const double  x[3],
  const double *vtx_coord,
@@ -684,9 +614,6 @@ int PDM_line_evaluate_position
 
   return 0;
 }
-
-
-
 
 
 PDM_line_intersect_t

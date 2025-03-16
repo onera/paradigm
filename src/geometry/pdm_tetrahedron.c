@@ -126,18 +126,6 @@ _solve_3x3(double  A[3][3],
  * Public function definitions
  *============================================================================*/
 
-/**
- * \brief Evaluates the position in a tetrahedron
- *
- * \param [in]  x                         Point coordinates to evaluate position
- * \param [in]  vtx_coord                 Tetrahedron vertices coordinates
- * \param [out] closest_point             Closest Point in Tetrahedron or NULL
- * \param [out] closest_point_dist2       Square of the distance
- * \param [out] closest_point_weights     Vertices weights or NULL
- *
- * \return      -1 if the tetrahedron is degenerate, 0 else
- *
- */
 
 PDM_tetrahedron_status_t
 PDM_tetrahedron_evaluate_position
@@ -431,16 +419,6 @@ PDM_GCC_SUPPRESS_WARNING_POP
 }
 
 
-
-
-/**
- * \brief Computes tetrahedron barycenter
- *
- * \param [in]   pts     Tetrahedron vertices coordinates
- * \param [out]  bary    Barycenter
- *
- */
-
 void
 PDM_tetrahedron_compute_barycenter
 (
@@ -460,16 +438,6 @@ PDM_tetrahedron_compute_barycenter
   }
 }
 
-
-
-/**
- * \brief Computes the center and radius of a tetrahedron's circumsphere
- *
- * \param [in]   vtx_coord  Tetrahedron vertices coordinates
- * \param [out]  center     Circumsphere center
- * \param [out]  radius     Circumsphere radius
- *
- */
 
 void
 PDM_tetrahedron_circumsphere
@@ -514,17 +482,6 @@ PDM_tetrahedron_circumsphere
 }
 
 
-/**
- * \brief Build tetrahedron->vertex from tetrahedron->face and face->vertex connectivities.
- *
- * \note In each tetrahedron, face #i is opposite to vertex #i.
- *
- * \param [in]  n_cell     Number of cells
- * \param [in]  cell_face  Cell -> face (signed) connectivity (1-based, size : 4 * \p n_cell)
- * \param [in]  face_vtx   Face -> vertex connectivity (1-based, size : 3 * *n_face*)
- * \param [out] cell_vtx   Cell -> vertex connectivity (1-based, size : 4 * \p n_cell)
- *
- */
 
 void
 PDM_tetrahedron_ngon_to_nodal

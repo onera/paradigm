@@ -808,14 +808,6 @@ _polygon_delaunay_flip(const int           n_vertices,
  * Public function definitions
  *============================================================================*/
 
-/**
- * \brief Create a structure necessary to the polygon triangulation algorithm
- *
- * \param [in]   n_vertices_max  Maximum expected number of vertices per polygon
- *
- * \return  Pointer to polygon triangulation state structure
- *
- */
 
 PDM_triangulate_state_t *
 PDM_triangulate_state_create(const int  n_vertices_max)
@@ -855,14 +847,6 @@ PDM_triangulate_state_create(const int  n_vertices_max)
 
 
 
-/**
- * \brief Destroy a structure necessary to the polygon triangulation algorithm
- *
- * \param [in]   this_state  Pointer to structure that should be destroyed
- *
- * \return  NULL pointer
- *
- */
 
 PDM_triangulate_state_t *
 PDM_triangulate_state_destroy(PDM_triangulate_state_t  *this_state)
@@ -885,28 +869,6 @@ PDM_triangulate_state_destroy(PDM_triangulate_state_t  *this_state)
 }
 
 
-
-/**
- * \brief Triangulate a polygonal face
- *
- * For a polygon with n vertices, we should obtain a triangluation with
- * (n-2) triangles and (2n-3) edges. If the polygon_vertices argument
- * is NULL, 1, 2, ...,n local numbering is implied.
- *
- * \param [in]   dim                Spatial dimension (2 or 3)
- * \param [in]   n_vertices         Number of vertices defining the polygon
- * \param [in]   coords             Coordinates of the triangulation's vertices
- * \param [in]   parent_vertex_num  Optional indirection to vertex coordinates (1 to n)
- * \param [in]   polygon_vertices   Polygon connectivity; size: n_vertices or empty
- * \param [in]   mode               Triangles connectivity by vertex number or
- *                                  polygon vertex index (1 to n)
- * \param [out]   triangle_vertices Triangles connectivity
- *                                  (size = (\ref n_vertices - 2) * 3)
- * \param [in]   state              Associated triangulation state structure
- *
- * \return  Number of resulting triangles
- *
- */
 
 int
 PDM_triangulate_polygon(int                             dim,
@@ -1301,18 +1263,6 @@ PDM_triangulate_quadrangle(int                 dim,
 
 
 
-/**
- * \brief Tetrahedralize a pyramid
- *
- * \param [in]   dim               Spatial dimension (3)
- * \param [in]   coords            Coordinates of the vertices
- * \param [in]   parent_vertex_num Optional indirection to vertex coordinates (1 to 5)
- * \param [in]   pyramid_vertices  Pyramid connectivity (size = 5)
- * \param [out]  tetra_vertices    Tetrahedra connectivity (size = 2 * 4)
- *
- * \return  Number of resulting tetrahedra
- *
- */
 
 int
 PDM_triangulate_pyramid (int               dim,
@@ -1344,23 +1294,6 @@ PDM_triangulate_pyramid (int               dim,
   return 2;
 }
 
-
-
-/**
- * \brief Tetrahedralize a prism
- *
- * A simple look-up table is currently used,
- * thus no validity check is performed on the tetrahedra.
- *
- * \param [in]   dim               Spatial dimension (3) (unused)
- * \param [in]   coords            Coordinates of the vertices (unused)
- * \param [in]   parent_vertex_num Optional indirection to vertex coordinates (1 to 6) (unused)
- * \param [in]   prism_vertices    Prism connectivity (size = 6)
- * \param [out]  tetra_vertices    Tetrahedra connectivity (size = 3 * 4)
- *
- * \return  Number of resulting tetrahedra
- *
- */
 
 int
 PDM_triangulate_prism (int               dim,
@@ -1394,22 +1327,6 @@ PDM_triangulate_prism (int               dim,
 }
 
 
-
-/**
- * \brief Tetrahedralize a hexahedron
- *
- * A simple look-up table is currently used,
- * thus no validity check is performed on the tetrahedra.
- *
- * \param [in]   dim               Spatial dimension (3) (unused)
- * \param [in]   coords            Coordinates of the vertices (unused)
- * \param [in]   parent_vertex_num Optional indirection to vertex coordinates (1 to 8) (unused)
- * \param [in]   hexa_vertices     Hexahedron connectivity (size = 8)
- * \param [out]  tetra_vertices    Tetrahedra connectivity (size = 5 * 4)
- *
- * \return  Number of resulting tetrahedra
- *
- */
 
 int
 PDM_triangulate_hexahedron (int               dim,
@@ -1447,7 +1364,6 @@ PDM_triangulate_hexahedron (int               dim,
 
 
 }
-
 
 
 int
