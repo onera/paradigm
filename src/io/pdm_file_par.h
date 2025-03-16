@@ -93,13 +93,14 @@ typedef struct _PDM_file_par_t PDM_file_par_t;
  *
  *----------------------------------------------------------------------------*/
 
-PDM_file_par_t *
+PDM_file_par_t*
 PDM_file_par_open
-(const char                *nom,
+(
+ const char                 *nom,
  const PDM_file_par_acces_t  acces,
  const PDM_file_par_mode_t   mode,
- PDM_MPI_Comm                   comm
- );
+       PDM_MPI_Comm          comm
+);
 
 /*----------------------------------------------------------------------------
  * Lecture globale : Chaque processus lit la meme zone du fichier
@@ -117,11 +118,12 @@ PDM_file_par_open
 
 int
 PDM_file_par_lecture_globale
-(PDM_file_par_t *PDM_file_par,
- const size_t   taille_donnee,
- const int      n_donnees,
- void          *donnees
- );
+(
+       PDM_file_par_t *PDM_file_par,
+ const size_t          taille_donnee,
+ const int             n_donnees,
+       void           *donnees
+);
 
 /*----------------------------------------------------------------------------
  * Ecriture globale : Le processus maitre accede seul au fichier
@@ -139,11 +141,12 @@ PDM_file_par_lecture_globale
 
 int
 PDM_file_par_ecriture_globale
-(PDM_file_par_t *PDM_file_par,
- const size_t   taille_donnee,
- const int      n_donnees,
- void          *donnees
- );
+(
+       PDM_file_par_t *PDM_file_par,
+ const size_t          taille_donnee,
+ const int             n_donnees,
+ void                 *donnees
+);
 
 /*----------------------------------------------------------------------------
  * Lecture parallele de blocs de donnees suivie d'une redistribution des
@@ -167,12 +170,13 @@ PDM_file_par_ecriture_globale
 
 int
 PDM_file_par_lecture_parallele
-(PDM_file_par_t *PDM_file_par,
- const size_t   taille_donnee,
- const int      n_donnees_bloc,
- void          *donnees,
- const long     debut_bloc
- );
+(
+       PDM_file_par_t *PDM_file_par,
+ const size_t          taille_donnee,
+ const int             n_donnees_bloc,
+       void           *donnees,
+ const long            debut_bloc
+);
 
 /*----------------------------------------------------------------------------
  * Ecriture parallele de blocs de donnees tries
@@ -192,12 +196,13 @@ PDM_file_par_lecture_parallele
 
 int
 PDM_file_par_ecriture_parallele
-(PDM_file_par_t *PDM_file_par,
- const size_t   taille_donnee,
- const int      n_donnees_bloc,
- void          *donnees,
- const long     debut_bloc
- );
+(
+       PDM_file_par_t *PDM_file_par,
+ const size_t          taille_donnee,
+ const int             n_donnees_bloc,
+       void           *donnees,
+ const long            debut_bloc
+);
 
 /*----------------------------------------------------------------------------
  *  Defini la position courante du fichier
@@ -212,10 +217,13 @@ PDM_file_par_ecriture_parallele
  *
  *----------------------------------------------------------------------------*/
 
-void PDM_file_par_seek
-(PDM_file_par_t     *fichier,
- PDM_MPI_Offset         offset,
- PDM_file_par_seek_t whence);
+void
+PDM_file_par_seek
+(
+ PDM_file_par_t     *fichier,
+ PDM_MPI_Offset      offset,
+ PDM_file_par_seek_t whence
+);
 
 /*----------------------------------------------------------------------------
  *  Retourne a la position courante du fichier
@@ -227,7 +235,11 @@ void PDM_file_par_seek
  *
  *----------------------------------------------------------------------------*/
 
-PDM_MPI_Offset PDM_file_par_tell(PDM_file_par_t *fichier);
+PDM_MPI_Offset
+PDM_file_par_tell
+(
+ PDM_file_par_t *fichier
+);
 
 /*----------------------------------------------------------------------------
  * Fermeture du fchier
@@ -237,7 +249,11 @@ PDM_MPI_Offset PDM_file_par_tell(PDM_file_par_t *fichier);
  *
  *----------------------------------------------------------------------------*/
 
-void PDM_file_par_close (PDM_file_par_t *PDM_file_par);
+void
+PDM_file_par_close
+(
+ PDM_file_par_t *PDM_file_par
+);
 
 #ifdef __cplusplus
 }

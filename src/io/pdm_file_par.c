@@ -95,13 +95,14 @@ _pdm_mpi_io_error_message
  *
  *----------------------------------------------------------------------------*/
 
-PDM_file_par_t
-*PDM_file_par_open
-(const char                *nom,
+PDM_file_par_t*
+PDM_file_par_open
+(
+ const char                 *nom,
  const PDM_file_par_acces_t  acces,
  const PDM_file_par_mode_t   mode,
- PDM_MPI_Comm                   comm
- )
+       PDM_MPI_Comm          comm
+)
 {
   int _mode = PDM_MPI_MODE_RDWR;
 
@@ -147,26 +148,14 @@ PDM_file_par_t
 
 }
 
-/*----------------------------------------------------------------------------
- * Lecture globale : Chaque processus lit la meme zone du fichier
- *
- * parameters :
- *   PDM_file_par     <-- Pointeur sur le fichier
- *   taille_donnee   <-- Taille unitaire du type de la donnee
- *   n_donnees       <-- Nombre de donnees a lire
- *   donnees         --> Donnees lues
- * return
- *   n_donnees_lues      Nombre de donnees lues
- *                       Erreur de lecture si n_donnees != n_donnees_lues
- *
- *----------------------------------------------------------------------------*/
 
 int
 PDM_file_par_lecture_globale
-(PDM_file_par_t   *PDM_file_par,
- const size_t     taille_donnee,
- const int        n_donnees,
- void            *donnees
+(
+       PDM_file_par_t *PDM_file_par,
+ const size_t          taille_donnee,
+ const int             n_donnees,
+       void           *donnees
 )
 {
 
@@ -240,26 +229,14 @@ PDM_file_par_lecture_globale
   return _n_donnees_lues;
 }
 
-/*----------------------------------------------------------------------------
- * Ecriture globale : Le processus maitre accede seul au fichier
- *
- * parameters :
- *   PDM_file_par       <-- Pointeur sur le fichier
- *   taille_donnee     <-- Taille unitaire de la donnnee
- *   n_donnees         <-- Nombre de donnees a ecrire
- *   donnees            --> Donnees lues
- * return
- *   n_donnees_ecrites      Nombre de donnees ecrites
- *                          Erreur d'ecriture si n_donnees != n_donnees_ecrites
- *
- *----------------------------------------------------------------------------*/
 
 int
 PDM_file_par_ecriture_globale
-(PDM_file_par_t      *PDM_file_par,
- const size_t        taille_donnee,
- const int           n_donnees,
- void               *donnees
+(
+       PDM_file_par_t *PDM_file_par,
+ const size_t          taille_donnee,
+ const int             n_donnees,
+ void                 *donnees
 )
 {
   int n_donnees_ecrites;
@@ -331,28 +308,14 @@ PDM_file_par_ecriture_globale
 
 }
 
-/*----------------------------------------------------------------------------
- * Lecture parallele de blocs de donnees
- *
- * parameters :
- *   PDM_file_par     <-- Pointeur sur le fichier
- *   taille_donnee   <-- Taille unitaire de la donnnee
- *   n_donnees_bloc  <-- Nombre de donnees a lire dans le bloc
- *   donnees         --> Donnees lues
- *   debut_bloc      <-- Debut du bloc dans l'ensemble des donnees
- * return
- *   n_donnees_lues      Nombre de donnees lues
- *                       Erreur de lecture si n_donnees != n_donnees_lues
- *
- *----------------------------------------------------------------------------*/
-
 int
 PDM_file_par_lecture_parallele
-(PDM_file_par_t *PDM_file_par,
- const size_t   taille_donnee,
- const int      n_donnees_bloc,
- void          *donnees,
- const long     debut_bloc
+(
+       PDM_file_par_t *PDM_file_par,
+ const size_t          taille_donnee,
+ const int             n_donnees_bloc,
+       void           *donnees,
+ const long            debut_bloc
  )
 {
   int n_donnees_lues = 0;
@@ -439,28 +402,15 @@ PDM_file_par_lecture_parallele
   return n_donnees_lues;
 }
 
-/*----------------------------------------------------------------------------
- * Ecriture parallele de blocs de donnees tries
- *
- * parameters :
- *   PDM_file_par       <-- Pointeur sur le fichier
- *   taille_donnee     <-- Taille unitaire de la donnnee
- *   n_donnees         <-- Nombre de donnees a lire
- *   donnees           <-- Donnees a ecrire
- *   debut_bloc        <-- Debut du bloc dans l'ensemble des donnees
- * return
- *   n_donnees_ecrites      Nombre de donnees ecrites
- *                          Erreur d'ecriture si n_donnees != n_donnees_ecrites
- *
- *----------------------------------------------------------------------------*/
 
 int
 PDM_file_par_ecriture_parallele
-(PDM_file_par_t *PDM_file_par,
- const size_t   taille_donnee,
- const int      n_donnees_bloc,
- void          *donnees,
- const long     debut_bloc
+(
+       PDM_file_par_t *PDM_file_par,
+ const size_t          taille_donnee,
+ const int             n_donnees_bloc,
+       void           *donnees,
+ const long            debut_bloc
  )
 {
   int  n_donnees_ecrites = 0;
@@ -546,23 +496,13 @@ PDM_file_par_ecriture_parallele
   return n_donnees_ecrites;
 }
 
-/*----------------------------------------------------------------------------
- *  Defini la position courante du fichier
- *
- *  parameters :
- *    fichier            <-- Fichier courant
- *    offset             <-- Position
- *    whence             <-- A partir :
- *                              - du debut du fichier : FICHIER_PAR_SEEK_SET
- *                              - de la position courante : FICHIER_PAR_SEEK_CUR
- *                              - de la fin du fchier : FICHIER_PAR_SEEK_END
- *
- *----------------------------------------------------------------------------*/
-
-void PDM_file_par_seek
-(PDM_file_par_t     *PDM_file_par,
- PDM_MPI_Offset         offset,
- PDM_file_par_seek_t whence)
+void
+PDM_file_par_seek
+(
+ PDM_file_par_t     *PDM_file_par,
+ PDM_MPI_Offset      offset,
+ PDM_file_par_seek_t whence
+)
 {
   int errcode = PDM_MPI_SUCCESS;
 
@@ -615,17 +555,12 @@ void PDM_file_par_seek
     _pdm_mpi_io_error_message(PDM_file_par->nom, errcode);
 }
 
-/*----------------------------------------------------------------------------
- *  Retourne a la position courante du fichier
- *
- *  parameters :
- *    fichier            <-- Fichier courant
- *  Return
- *    offset                 Position courante du fichier
- *
- *----------------------------------------------------------------------------*/
 
-PDM_MPI_Offset PDM_file_par_tell(PDM_file_par_t *PDM_file_par)
+PDM_MPI_Offset
+PDM_file_par_tell
+(
+  PDM_file_par_t *PDM_file_par
+)
 {
 
   /* Theoriquement en mode IP, il faut recuperer la position par
@@ -637,17 +572,10 @@ PDM_MPI_Offset PDM_file_par_tell(PDM_file_par_t *PDM_file_par)
 
 }
 
-/*----------------------------------------------------------------------------
- * Fermeture du fchier
- *
- * parameters :
- *   unite           <-- Unite du fichier
- *
- *----------------------------------------------------------------------------*/
-
 void
 PDM_file_par_close
-(PDM_file_par_t       *PDM_file_par
+(
+  PDM_file_par_t       *PDM_file_par
 )
 {
 
