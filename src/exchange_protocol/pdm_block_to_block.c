@@ -54,22 +54,6 @@ static inline void _compute_displ(int* counts, int* displs, int size) {
  * Public function definitions
  *============================================================================*/
 
-
-/**
- *
- * \brief Create a block to partitions redistribution
- *
- * \param [in]   blockDistribIdx Block distribution (size : \ref size of \ref comm + 1)
- *                               C numbering (blockDistribIdx[0] = 0)
- * \param [in]   gnum_elt        Element global number (size : \ref n_part)
- * \param [in]   n_elt           Local number of elements (size : \ref n_part)
- * \param [in]   n_part          Number of partition
- * \param [in]   comm            MPI communicator
- *
- * \return   Initialized \ref PDM_block_to_block instance
- *
- */
-
 PDM_block_to_block_t *
 PDM_block_to_block_create
 (
@@ -94,7 +78,6 @@ PDM_block_to_block_create
   /*
    * Define requested data for each process
    */
-
   PDM_malloc(btb->block_distrib_ini_idx, n_rank + 1, PDM_g_num_t);
   for (int i = 0; i < n_rank + 1; i++) {
     btb->block_distrib_ini_idx[i] = block_distrib_ini_idx[i];
@@ -118,23 +101,6 @@ PDM_block_to_block_create
   return (PDM_block_to_block_t *) btb;
 
 }
-
-
-/**
- *
- * \brief Initialize an exchange (Variable stride is not yet available)
- *
- * \param [in]   btb          Block to part structure
- * \param [in]   s_data       Data size
- * \param [in]   t_stride     Stride type
- * \param [in]   cst_stride   Constant stride
- * \param [in]   block_stride Stride for each block element for \ref PDM_STRIDE_VAR
- *                            Constant stride for \ref PDM_STRIDE_VAR
- * \param [in]   block_data   Block data
- * \param [out]  part_stride  Partition stride or NULL
- * \param [out]  part_data    Partition data
- *
- */
 
 int
 PDM_block_to_block_exch
@@ -185,10 +151,12 @@ PDM_block_to_block_exch
     for (int i = 0; i < _btb->n_rank; ++i) {
       n_send_buffer[i] = 0;
       n_recv_buffer[i] = 0;
-      for (int j = 0; j < _btb->n_send_buffer[i]; ++j)
+      for (int j = 0; j < _btb->n_send_buffer[i]; ++j) {
         n_send_buffer[i] += block_stride_ini[idx_send++];
-      for (int j = 0; j < _btb->n_recv_buffer[i]; ++j)
+      }
+      for (int j = 0; j < _btb->n_recv_buffer[i]; ++j) {
         n_recv_buffer[i] += block_stride_end[idx_recv++];
+      }
     }
   }
 
@@ -215,9 +183,8 @@ PDM_block_to_block_exch
   /*
    * Data exchange
    */
-
-  unsigned char *sendBuffer = (unsigned char *) block_data_ini;
-  PDM_MPI_Alltoallv(sendBuffer,
+  unsigned char *send_buffer = (unsigned char *) block_data_ini;
+  PDM_MPI_Alltoallv(send_buffer,
                     n_send_buffer,
                     i_send_buffer,
                     mpi_type,
@@ -241,8 +208,6 @@ PDM_block_to_block_exch
   return s_recv_buffer/( (int)s_data );
 
 }
-
-
 
 int
 PDM_block_to_block_exch_with_mpi_type
@@ -291,13 +256,14 @@ PDM_block_to_block_exch_with_mpi_type
     for (int i = 0; i < _btb->n_rank; ++i) {
       n_send_buffer[i] = 0;
       n_recv_buffer[i] = 0;
-      for (int j = 0; j < _btb->n_send_buffer[i]; ++j)
+      for (int j = 0; j < _btb->n_send_buffer[i]; ++j) {
         n_send_buffer[i] += block_stride_ini[idx_send++];
-      for (int j = 0; j < _btb->n_recv_buffer[i]; ++j)
+      }
+      for (int j = 0; j < _btb->n_recv_buffer[i]; ++j){
         n_recv_buffer[i] += block_stride_end[idx_recv++];
+      }
     }
-  }
-  else if (t_stride == PDM_STRIDE_CST_INTERLACED) {
+  } else if (t_stride == PDM_STRIDE_CST_INTERLACED) {
     n_send_buffer = _btb->n_send_buffer;
     n_recv_buffer = _btb->n_recv_buffer;
   }
@@ -317,9 +283,8 @@ PDM_block_to_block_exch_with_mpi_type
   /*
    * Data exchange
    */
-
-  unsigned char *sendBuffer = (unsigned char *) block_data_ini;
-  PDM_MPI_Alltoallv(sendBuffer,
+  unsigned char *send_buffer = (unsigned char *) block_data_ini;
+  PDM_MPI_Alltoallv(send_buffer,
                     n_send_buffer,
                     i_send_buffer,
                     mpi_type,
@@ -342,16 +307,6 @@ PDM_block_to_block_exch_with_mpi_type
 
 }
 
-
-
-/**
- *
- * \brief Free a block to part structure
- *
- * \param [inout] btb  Block to part structure
- *
- * \return       NULL
- */
 
 PDM_block_to_block_t *
 PDM_block_to_block_free
