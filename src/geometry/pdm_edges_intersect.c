@@ -1690,7 +1690,7 @@ PDM_edges_intersect_t *ei
 
   int *keyMax;
 
-  keyMax = (int *) PDM_hash_tab_keyMax_get (_ei->ht);
+  keyMax = (int *) PDM_hash_tab_key_max_get (_ei->ht);
   for (int i = 0; i < *keyMax; i++) {
     int nData = PDM_hash_tab_n_data_get (_ei->ht, &i);
     _edges_intersect_res_t **eir =
@@ -2572,7 +2572,7 @@ PDM_g_num_t            *nAbsNewVtxB
 
   PDM_hash_tab_t *ht = _ei->ht;
 
-  int keyMax  = * ((int *) PDM_hash_tab_keyMax_get (ht));
+  int keyMax  = * ((int *) PDM_hash_tab_key_max_get (ht));
   // int *nDataKey;
  // PDM_malloc(nDataKey,keyMax,int);
 
@@ -4753,13 +4753,13 @@ PDM_edges_intersect_t       *ei
   _edges_intersect_t *_ei = (_edges_intersect_t *) ei;
 
   PDM_printf ("_ei->ht : %d\n", _ei->ht);
-  PDM_printf ("_ei->ht->keyMax : %d\n", *((int *) PDM_hash_tab_keyMax_get(_ei->ht)));
+  PDM_printf ("_ei->ht->keyMax : %d\n", *((int *) PDM_hash_tab_key_max_get(_ei->ht)));
   PDM_hash_tab_dump(_ei->ht);
   PDM_printf ("_ei->htA : %d\n", _ei->htA);
-  PDM_printf ("_ei->htA->keyMax : %d\n", *((int *) PDM_hash_tab_keyMax_get(_ei->htA)));
+  PDM_printf ("_ei->htA->keyMax : %d\n", *((int *) PDM_hash_tab_key_max_get(_ei->htA)));
   PDM_hash_tab_dump(_ei->htA);
   PDM_printf ("_ei->htB : %d\n", _ei->htB);
-  PDM_printf ("_ei->htB->keyMax : %d\n", *((int *) PDM_hash_tab_keyMax_get(_ei->htB)));
+  PDM_printf ("_ei->htB->keyMax : %d\n", *((int *) PDM_hash_tab_key_max_get(_ei->htB)));
   PDM_hash_tab_dump(_ei->htB);
 
 }

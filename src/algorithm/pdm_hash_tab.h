@@ -68,8 +68,8 @@ typedef struct _hash_tab_t PDM_hash_tab_t;
  *
  * This function returns an initialized \ref PDM_hash_tab_t structure
  *
- * \param [in]  tKey   \ref PDM_HASH_TAB_KEY_INT or \ref PDM_HASH_TAB_KEY_LONG
- * \param [in]  keyMax  key max
+ * \param [in]  t_key   \ref PDM_HASH_TAB_KEY_INT or \ref PDM_HASH_TAB_KEY_LONG
+ * \param [in]  key_max  key max
  *
  * \return      A new initialized \ref PDM_hash_tab_t structure
  *
@@ -78,8 +78,8 @@ typedef struct _hash_tab_t PDM_hash_tab_t;
 PDM_hash_tab_t *
 PDM_hash_tab_create
 (
-const PDM_hash_tab_key_t  tKey,
-void                       *keyMax
+ const PDM_hash_tab_key_t  t_key,
+ void                     *key_max
 );
 
 
@@ -241,7 +241,7 @@ PDM_hash_tab_t *ht
  */
 
 void *
-PDM_hash_tab_keyMax_get
+PDM_hash_tab_key_max_get
 (
 PDM_hash_tab_t *ht
 );
@@ -259,7 +259,7 @@ PDM_hash_tab_t *ht
  */
 
 PDM_hash_tab_key_t
-PDM_hash_tab_keyType_get
+PDM_hash_tab_key_type_get
 (
 PDM_hash_tab_t *ht
 );
@@ -289,7 +289,7 @@ PDM_hash_tab_check_collision
 (
  PDM_hash_tab_t *ht,
  const int       value,
- const int       keyMax,
+ const int       key_max,
  int            *key
  );
 

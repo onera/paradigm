@@ -8,6 +8,7 @@
 #include "pdm_doctest.h"
 #include "pdm_mesh_nodal.h"
 #include "pdm_mpi.h"
+#include "pdm_logging.h"
 
 MPI_TEST_CASE("[dcube_nodal_gen] - 1p - hexahedron",1) {
 
@@ -432,6 +433,9 @@ MPI_TEST_CASE("[dcube_nodal_gen] - 1p - quad ",1) {
   PDM_dcube_nodal_gen_build (dcube);
 
   PDM_dmesh_nodal_t* dmesh_nodal = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube); /* It will be free by PDM_dcube_nodal_gen_free because PDM_OWNERSHIP_KEEP */
+
+  double *vtx_coords = PDM_DMesh_nodal_vtx_get(dmesh_nodal, PDM_OWNERSHIP_BAD_VALUE);
+  PDM_log_trace_array_double(vtx_coords, 3 * 9, "vtx_coords");
 
   /* Verif global */
   PDM_g_num_t n_cell_abs = -100;
