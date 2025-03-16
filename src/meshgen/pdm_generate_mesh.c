@@ -416,26 +416,6 @@ _generate_mesh_parallelepiped
  * Public function definitions
  *============================================================================*/
 
-/**
- *
- * \brief Create a partitionned sphere mesh (2D).
- *
- * \param [in]  elt_type    Mesh element type
- * \param [in]  order       Mesh element order
- * \param [in]  ho_ordering High order nodes ordering type
- * \param [in]  radius      Radius of the sphere
- * \param [in]  center_x    x-coordinate of the sphere center
- * \param [in]  center_y    y-coordinate of the sphere center
- * \param [in]  center_z    z-coordinate of the sphere center
- * \param [in]  n_u         Number of points in longitude
- * \param [in]  n_v         Number of points in latitude
- * \param [in]  n_part      Number of mesh partitions
- * \param [in]  part_method Mesh partitionning method
- *
- * \return PDM_part_mesh_nodal_t
- *
- */
-
 PDM_part_mesh_nodal_t *
 PDM_generate_mesh_sphere
 (
@@ -486,18 +466,6 @@ PDM_generate_mesh_sphere
 
 }
 
-/**
- *
- * \brief Create a simple partitionned sphere mesh (2D).
- *
- * \param [in]   comm        MPI communicator
- * \param [out]  n_vtx       Number of vertices
- * \param [out]  n_elt       Number of elements
- * \param [out]  coords      Array of vertex coordinates
- * \param [out]  elt_vtx_idx Index array of the element vertex connectivity
- * \param [out]  elt_vtx     Array of the element vertex connectivity
- *
- */
 
 void
 PDM_generate_mesh_sphere_simplified
@@ -573,30 +541,6 @@ PDM_generate_mesh_sphere_simplified
 
 }
 
-/**
- *
- * \brief Create a partitionned ball mesh (3D).
- *
- * \param [in]  comm            MPI communicator
- * \param [in]  elt_type        Mesh element type
- * \param [in]  order           Mesh element order
- * \param [in]  ho_ordering     High order nodes ordering type
- * \param [in]  radius          Radius of the ball
- * \param [in]  hole_radius     Radius of the hole of the ball
- * \param [in]  center_x        x-coordinate of the ball center
- * \param [in]  center_y        y-coordinate of the ball center
- * \param [in]  center_z        z-coordinate of the ball center
- * \param [in]  n_x             Number of vertices on segments in x-direction
- * \param [in]  n_y             Number of vertices on segments in y-direction
- * \param [in]  n_z             Number of vertices on segments in z-direction
- * \param [in]  n_layer         Number of extrusion layers
- * \param [in]  geometric_ratio Geometric ratio for layer thickness
- * \param [in]  n_part          Number of mesh partitions
- * \param [in]  part_method     Mesh partitionning method
- *
- * \return PDM_part_mesh_t or PDM_part_mesh_nodal_t
- *
- */
 
 PDM_part_mesh_nodal_t *
 PDM_generate_mesh_ball
@@ -655,18 +599,6 @@ PDM_generate_mesh_ball
 
 }
 
-/**
- *
- * \brief Create a simple partitionned ball mesh (3D).
- *
- * \param [in]   comm        MPI communicator
- * \param [out]  n_vtx       Number of vertices
- * \param [out]  n_elt       Number of elements
- * \param [out]  coords      Array of vertex coordinates
- * \param [out]  elt_vtx_idx Index array of the element vertex connectivity
- * \param [out]  elt_vtx     Array of the element vertex connectivity
- *
- */
 
 void
 PDM_generate_mesh_ball_simplified
@@ -740,27 +672,6 @@ PDM_generate_mesh_ball_simplified
   PDM_part_mesh_nodal_free(pmn);
 }
 
-/**
- *
- * \brief Create a partitionned rectangle mesh (2D).
- *
- * \param [in]  comm        MPI communicator
- * \param [in]  elt_type    Mesh element type
- * \param [in]  order       Mesh element order
- * \param [in]  ho_ordering High order nodes ordering type
- * \param [in]  xmin        x-coordinate of the rctangle minimum corner
- * \param [in]  ymin        y-coordinate of the rctangle minimum corner
- * \param [in]  zmin        z-coordinate of the rctangle minimum corner
- * \param [in]  lengthx     Length of the rectangle in the x-direction
- * \param [in]  lengthy     Length of the rectangle in the y-direction
- * \param [in]  n_x         Number of points in the x-direction
- * \param [in]  n_y         Number of points in the y-direction
- * \param [in]  n_part      Number of mesh partitions
- * \param [in]  part_method Mesh partitionning method
- *
- * \return PDM_part_mesh_t or PDM_part_mesh_nodal_t
- *
- */
 
 PDM_part_mesh_nodal_t *
 PDM_generate_mesh_rectangle
@@ -813,19 +724,6 @@ PDM_generate_mesh_rectangle
   return pmn;
 }
 
-/**
- *
- * \brief Create a simple partitionned rectangle mesh (2D).
- *
- * \param [in]   comm        MPI communicator
- * \param [in]   n_vtx_seg   Number of vertices along each side of the rectangle
- * \param [out]  n_vtx       Number of vertices
- * \param [out]  n_elt       Number of elements
- * \param [out]  coords      Array of vertex coordinates
- * \param [out]  elt_vtx_idx Index array of the element vertex connectivity
- * \param [out]  elt_vtx     Array of the element vertex connectivity
- *
- */
 
 void
 PDM_generate_mesh_rectangle_simplified
@@ -904,29 +802,6 @@ PDM_generate_mesh_rectangle_simplified
 
 }
 
-/**
- *
- * \brief Create a partitionned parallelepiped mesh (3D).
- *
- * \param [in]  comm        MPI communicator
- * \param [in]  elt_type    Mesh element type
- * \param [in]  order       Mesh element order
- * \param [in]  ho_ordering High order nodes ordering type
- * \param [in]  xmin        x-coordinate of the rctangle minimum corner
- * \param [in]  ymin        y-coordinate of the rctangle minimum corner
- * \param [in]  zmin        z-coordinate of the rctangle minimum corner
- * \param [in]  lengthx     Length of the rectangle in the x-direction
- * \param [in]  lengthy     Length of the rectangle in the y-direction
- * \param [in]  lengthz     Length of the rectangle in the z-direction
- * \param [in]  n_x         Number of points in the x-direction
- * \param [in]  n_y         Number of points in the y-direction
- * \param [in]  n_z         Number of points in the z-direction
- * \param [in]  n_part      Number of mesh partitions
- * \param [in]  part_method Mesh partitionning method
- *
- * \return PDM_part_mesh_t or PDM_part_mesh_nodal_t
- *
- */
 
 PDM_part_mesh_nodal_t *
 PDM_generate_mesh_parallelepiped
@@ -982,19 +857,6 @@ PDM_generate_mesh_parallelepiped
   return pmn;
 }
 
-/**
- *
- * \brief Create a simple partitionned parallelepiped mesh (3D).
- *
- * \param [in]   comm        MPI communicator
- * \param [in]   n_vtx_seg   Number of vertices along each side of the parallelepiped
- * \param [out]  n_vtx       Number of vertices
- * \param [out]  n_elt       Number of elements
- * \param [out]  coords      Array of vertex coordinates
- * \param [out]  elt_vtx_idx Index array of the element vertex connectivity
- * \param [out]  elt_vtx     Array of the element vertex connectivity
- *
- */
 
 void
 PDM_generate_mesh_parallelepiped_simplified
@@ -1065,7 +927,6 @@ PDM_generate_mesh_parallelepiped_simplified
   PDM_multipart_free(mpart);
   PDM_part_mesh_nodal_free(pmn);
 }
-
 
 
 void
@@ -1660,8 +1521,6 @@ PDM_generate_mesh_parallelepiped_ngon
   PDM_multipart_free(mpart);
 
 }
-
-
 
 #ifdef __cplusplus
 }
