@@ -94,23 +94,6 @@ _quickSort_int
  * Public function definitions
  *============================================================================*/
 
-/**
- *
- * \brief Splits the graph
- *
- * \param [in]  method       Method to be used: choice between (1 for ParMETIS or 2 for PT-Scotch)
- * \param [in]  n_part        Number of partitions
- * \param [in]  part_ini     Part object fine mesh
- *
- * \param [in]  cell_cell                  Dual graph (size : cell_cell_idx[n_cell])
- * \param [in]  cell_cell_idx               Array of indexes of the dual graph (size : n_cell + 1)
- * \param [in]  cell_weight         Cell weight (size = n_cell)
- * \param [in]  face_weight         Face weight (size = n_face)
- *
- * \param [inout] cell_part  Cell partitioning (size : n_cell)
- *
- */
-
 void
 PDM_part_graph_split
 (
@@ -194,25 +177,6 @@ PDM_part_graph_split
                                    &edgecut,
                                    *cell_part);
         }
-        // double inbalance = 0.03;
-        // double balance   = 0;
-        // edgecut   = 0;
-        // // bool   suppress_output = False;
-        // // bool   graph_partitioned = False;
-        // int time_limit = 0;
-        // int seed  = 0;
-        // int mode = 2;
-        // PDM_kaffpa(&(part_ini->n_cell),
-        //            NULL,
-        //            cell_cell_idx,
-        //            NULL,
-        //            cell_cell,
-        //            &n_part,
-        //             &inbalance,
-        //             seed,
-        //             mode,
-        //             &edgecut,
-        //             *cell_part );
 
         if (0 == 1) {
           PDM_printf("\n Contenu de cell_part : \n");
@@ -278,9 +242,6 @@ PDM_part_graph_split
       }
       case 3:
       {
-
-        // To see with eric ...
-        // abort();
         /* Allocation */
         double *cell_center;
         PDM_malloc(cell_center, part_ini->n_cell * 3, double );
@@ -381,16 +342,6 @@ PDM_part_graph_split
 }
 
 
-/**
- *
- * \brief Builds dual graph face cell connectivity
- *
- * \param [inout] part_ini                 Part object - fine mesh partition
- *
- * \param [inout] cell_cell_idxCompressed    Array of indexes of the dual graph
- * \param [inout] cell_cellCompressed       Dual graph
- *
- */
 void
 PDM_part_graph_compute_from_face_cell
 (
@@ -446,8 +397,6 @@ PDM_part_graph_compute_from_face_cell
   //We compress the dual graph since cell_cell_idx was built from cell_face_idx
   //We have then n_face elements in cell_cell whereas it needs to be composed of n_cell elements
 
-  //    PDM_printf("(*cell_cell_idxCompressed)[part_ini->n_cell] : %d \n", (*cell_cell_idxCompressed)[part_ini->n_cell]);
-  //
   assert( (*cell_cellCompressed) == NULL);
   PDM_malloc(*cell_cellCompressed, (*cell_cell_idxCompressed)[part_ini->n_cell], int);
 
@@ -637,26 +586,6 @@ PDM_part_graph_split_bis
                                  *cell_part);
       }
 
-      // double inbalance = 0.03;
-      // double balance   = 0;
-      // edgecut   = 0;
-      // // bool   suppress_output = False;
-      // // bool   graph_partitioned = False;
-      // int time_limit = 0;
-      // int seed  = 0;
-      // int mode = 2;
-      // PDM_kaffpa(&(graph_size),
-      //            NULL,
-      //            cell_cell_idx,
-      //            NULL,
-      //            cell_cell,
-      //            &n_part,
-      //             &inbalance,
-      //             seed,
-      //             mode,
-      //             &edgecut,
-      //             *cell_part );
-
       if (0 == 1) {
         PDM_printf("\n Contenu de cell_part : \n");
         for (int i = 0; i < graph_size; i++) {
@@ -705,8 +634,6 @@ PDM_part_graph_split_bis
     }
     case 3:
     {
-
-      // To see with eric ...
       abort();
       break;
     }

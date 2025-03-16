@@ -497,34 +497,6 @@ PDM_part_dfield_to_pfield2
         unsigned char ***pfield
 );
 
-/**
- *  \brief Extend an existing ln_to_gn from a connectivity
- *
- * \param [in]   comm                PDM_MPI communicator
- * \param [in]   part_distribution   Distribution of partitions over the processes (size=n_rank+1)
- * \param [in]   entity_distribution Distribution of entities over the processes (size=n_rank+1)
- * \param [in]   dentity_to_part     Id of assigned partition for each entity (size=dn_entity)
- * \param [out]  pn_entities         Number of entities in each partition (size = n_part)
- * \param [out]  pentity_ln_to_gn    Array of local to global entity id for each partition (size = n_part)
- *
- * \return       n_part              Number of partitions managed by this process
- */
-void
-PDM_extend_mesh
-(
- const PDM_MPI_Comm    comm,
- const PDM_g_num_t    *part_distribution,
- const PDM_g_num_t    *entity_distribution,
- const int            *dentity_to_part,
- const int             n_part,
- const PDM_g_num_t    *dual_graph_idx,
- const PDM_g_num_t    *dual_graph,
- const int            *pn_entity,
-       PDM_g_num_t   **pentity_ln_to_gn,
-       int           **pn_entity_extented,
-       PDM_g_num_t  ***pentity_ln_to_gn_extended
-);
-
 
 /**
  *  \brief Deduce group for each partition from the distributed one (for cells, faces, edges and vtx)

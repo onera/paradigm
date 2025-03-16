@@ -40,7 +40,7 @@ char *
 PDM_remove_blank
 (
 const char *str1
- );
+);
 
 #ifdef __cplusplus
 }

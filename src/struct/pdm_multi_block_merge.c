@@ -479,9 +479,6 @@ PDM_multi_block_merge_exch_and_update
 }
 
 
-/*
- *
- */
 int
 PDM_multi_block_merge_get_n_block
 (
@@ -492,9 +489,6 @@ PDM_multi_block_merge_get_n_block
 }
 
 
-/*
- *
- */
 PDM_g_num_t*
 PDM_multi_block_merge_get_distrib
 (
@@ -514,9 +508,6 @@ PDM_multi_block_merge_get_multi_distrib
 }
 
 
-/*
- *
- */
 void
 PDM_multi_block_merge_free
 (
@@ -535,8 +526,6 @@ PDM_multi_block_merge_free
   PDM_free(mbm);
 }
 
-
-// PDM_multi_block_merge_renum_from
 
 #ifdef __cplusplus
 }

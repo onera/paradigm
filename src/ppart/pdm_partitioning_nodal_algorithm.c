@@ -231,14 +231,6 @@ _delmt_vtx_to_pelmt_vtx
   PDM_multi_block_to_part_free(mbtp);
 }
 
-// static
-// void
-// (
-// )
-// {
-
-// }
-
 
 /*=============================================================================
  * Public function definitions
@@ -1728,3 +1720,7 @@ PDM_dmesh_nodal_elmts_to_extract_dmesh_nodal_elmts
 
   return extract_dmne;
 }
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
