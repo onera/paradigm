@@ -583,7 +583,7 @@ PDM_mean_values_polygon_3d
 /**
  * \brief Compute mean value coordinates of a point in a polyhedron
  *
- * See "Mean value coordinates for closed triangular meshes", T. Ju et al. (2005).
+ * See "A general construction of spherical barycentric coordinates and applications", Alaa eddine Bensad, Aziz Ikemakhen, (2023).
  *
  * \param [in]    n_vtx            Number of polyhedron vertices
  * \param [in]    vtx_coord        xyz-coordinates of polyhedron vertices (size = 3 * \ref n_vtx)
