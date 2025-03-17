@@ -19,20 +19,6 @@ endfunction()
 
 function(test_create names n_procs LIST_TEST LIST_NRANK)
 
-  # NB: Faire le passage dans le -genv de MPI n'est pas équivalent à faire l'export avant ...
-  set (MPIEXEC_GENV_COMMAND      "")
-  set (MPIEXEC_GENV_PRELOAD      "")
-  set (MPIEXEC_GENV_PRELOAD_PATH "")
-  if (CMAKE_BUILD_TYPE STREQUAL "Sanitize")
-    execute_process(COMMAND gcc -print-file-name=libasan.so OUTPUT_VARIABLE PRELOAD_ASAN  OUTPUT_STRIP_TRAILING_WHITESPACE) 
-    # set(MPIEXEC_PREGENV_PRELOAD "-g env LD_PRELOAD ${PRELOAD_ASAN}") 
- 
-    set(MPIEXEC_GENV_COMMAND      "-genv")
-    set(MPIEXEC_GENV_PRELOAD      "LD_PRELOAD")
-    set(MPIEXEC_GENV_PRELOAD_PATH "${PRELOAD_ASAN}:${PDM_BINARY_DLCLOSE_DIR}/libdlclose.so")
- 
-  endif()
-
   set (command_test "")
 
   set (MPIEXEC_SPLIT "")
@@ -163,21 +149,6 @@ function(test_c_create name n_proc LIST_TEST LIST_NRANK)
    endif()
    #endif()
 
-   # NB: Faire le passage dans le -genv de MPI n'est pas équivalent à faire l'export avant ...
-   set (MPIEXEC_GENV_COMMAND      "")
-   set (MPIEXEC_GENV_PRELOAD      "")
-   set (MPIEXEC_GENV_PRELOAD_PATH "")
-   if (CMAKE_BUILD_TYPE STREQUAL "Sanitize")
-     execute_process(COMMAND gcc -print-file-name=libasan.so OUTPUT_VARIABLE PRELOAD_ASAN OUTPUT_STRIP_TRAILING_WHITESPACE)
-     # set(MPIEXEC_PREGENV_PRELOAD "-genv LD_PRELOAD ${PRELOAD_ASAN}")
-
-     set(MPIEXEC_GENV_COMMAND      "-genv")
-     set(MPIEXEC_GENV_PRELOAD      "LD_PRELOAD")
-     set(MPIEXEC_GENV_PRELOAD_PATH "${PRELOAD_ASAN}:${PDM_BINARY_DLCLOSE_DIR}/libdlclose.so")
-
-   endif()
-
-
    install(TARGETS ${name} RUNTIME DESTINATION bin)
 
    add_test (${name} ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${n_proc}
@@ -242,24 +213,6 @@ function(test_fortran_create name n_proc LIST_TEST LIST_NRANK)
     target_link_libraries(${name} BLAS::BLAS)
   endif()
 
-
-
-  # NB: Faire le passage dans le -genv de MPI n'est pas équivalent à faire l'export avant ...
-  set (MPIEXEC_GENV_COMMAND      "")
-  set (MPIEXEC_GENV_PRELOAD      "")
-  set (MPIEXEC_GENV_PRELOAD_PATH "")
-  if (CMAKE_BUILD_TYPE STREQUAL "Sanitize")
-    execute_process(COMMAND gcc -print-file-name=libasan.so OUTPUT_VARIABLE PRELOAD_ASAN OUTPUT_STRIP_TRAILING_WHITESPACE)
-    # set(MPIEXEC_PREGENV_PRELOAD "-genv LD_PRELOAD ${PRELOAD_ASAN}")
-
-    set(MPIEXEC_GENV_COMMAND      "-genv")
-    set(MPIEXEC_GENV_PRELOAD      "LD_PRELOAD")
-    set(MPIEXEC_GENV_PRELOAD_PATH "${PRELOAD_ASAN}:${PDM_BINARY_DLCLOSE_DIR}/libdlclose.so")
-
-  endif()
-
-
-
   install(TARGETS ${name} RUNTIME DESTINATION bin)
   add_test (${name} ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${n_proc}
             ${MPIEXEC_PREFLAGS}
@@ -300,19 +253,6 @@ function(test_python_create name n_proc LIST_TEST LIST_NRANK)
 
   add_custom_target(${name}
                       DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${name}.py)
-
-  # NB: Faire le passage dans le -genv de MPI n'est pas équivalent à faire l'export avant ...
-  set (MPIEXEC_GENV_COMMAND      "")
-  set (MPIEXEC_GENV_PRELOAD      "")
-  set (MPIEXEC_GENV_PRELOAD_PATH "")
-  if (CMAKE_BUILD_TYPE STREQUAL "Sanitize")
-    execute_process(COMMAND gcc -print-file-name=libasan.so OUTPUT_VARIABLE PRELOAD_ASAN OUTPUT_STRIP_TRAILING_WHITESPACE)
-     # set(MPIEXEC_PREGENV_PRELOAD "-genv LD_PRELOAD ${PRELOAD_ASAN}")
-
-    set(MPIEXEC_GENV_COMMAND      "-genv")
-    set(MPIEXEC_GENV_PRELOAD      "LD_PRELOAD")
-    set(MPIEXEC_GENV_PRELOAD_PATH "${PRELOAD_ASAN}:${PDM_BINARY_DLCLOSE_DIR}/libdlclose.so")
-  endif()
 
   add_test (${name} ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${n_proc}
             ${MPIEXEC_PREFLAGS}

@@ -86,6 +86,28 @@ set (MPIEXEC_EXECUTABLE mpirun)
 
 include(TestCreate)
 
+# NB: Faire le passage dans le -genv de MPI n'est pas équivalent à faire l'export avant ...
+execute_process(COMMAND sh -c "${MPIEXEC} --version | grep -c \"Open MPI\"" OUTPUT_VARIABLE IS_OPENMPI OUTPUT_STRIP_TRAILING_WHITESPACE)
+set (MPIEXEC_GENV_COMMAND      "")
+set (MPIEXEC_GENV_PRELOAD      "")
+set (MPIEXEC_GENV_PRELOAD_PATH "")
+if (CMAKE_BUILD_TYPE STREQUAL "Sanitize")
+  execute_process(COMMAND gcc -print-file-name=libasan.so OUTPUT_VARIABLE PRELOAD_ASAN OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+  if(IS_OPENMPI)
+    set(MPIEXEC_GENV_COMMAND      "-x")
+    set(MPIEXEC_GENV_PRELOAD      "")
+    set(MPIEXEC_GENV_PRELOAD_PATH "LD_PRELOAD=${PRELOAD_ASAN}:${PDM_BINARY_DLCLOSE_DIR}/libdlclose.so")
+  else()
+    set(MPIEXEC_GENV_COMMAND      "-genv")
+    set(MPIEXEC_GENV_PRELOAD      "LD_PRELOAD")
+    set(MPIEXEC_GENV_PRELOAD_PATH "${PRELOAD_ASAN}:${PDM_BINARY_DLCLOSE_DIR}/libdlclose.so")
+  endif()
+
+endif()
+
+
+
 if(PDM_ENABLE_UNIT_TEST)
   file(GLOB_RECURSE __test_files
        CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/../src/*.test.cpp")
