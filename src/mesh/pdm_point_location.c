@@ -1552,6 +1552,7 @@ _locate_in_polyhedron
         }
         n_tri = 1;
         memcpy(_tri_vtx, _face_vtx, sizeof(int) * 3);
+        PDM_free(face_coord);
       }
       else if (face_vtx_n == 4) {
         /* Quadrilateral face */
@@ -1577,6 +1578,7 @@ _locate_in_polyhedron
                                            NULL,
                                            _face_vtx,
                                            _tri_vtx);
+        PDM_free(face_coord);
       }
       else {
         /* Polygonal face */
@@ -1605,6 +1607,7 @@ _locate_in_polyhedron
                                         PDM_TRIANGULATE_MESH_DEF,
                                         _tri_vtx,
                                         _tri_state);
+        PDM_free(face_coord);
       }
 
       /* Loop on subtriangles */
