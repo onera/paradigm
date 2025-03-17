@@ -1705,7 +1705,6 @@ _locate_in_polyhedron
 
 
     if (solid_angle[ipt] > threshold_inside) {
-      printf("INTERIEUR\n");
       /* Point strictly inside polyhedron */
       distance[ipt] = -distance[ipt];
 
@@ -1741,7 +1740,6 @@ _locate_in_polyhedron
     }
 
     else if (distance[ipt] > eps_on_face2) {
-      printf("EXTERIEUR\n");
       if (dbg) {
         /* Point strictly outside polyhedron */
         log_trace("  exterior\n");
@@ -1751,7 +1749,6 @@ _locate_in_polyhedron
     }
 
     else {
-      printf("ON FACE\n");
       if (dbg) {
         /* Point on a polyhedron face */
         log_trace("  on face\n");
