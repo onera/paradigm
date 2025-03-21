@@ -174,7 +174,6 @@ list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/pdm_priv.h")
 
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/algorithm/pdm_hash_tab.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/algorithm/pdm_binary_search.h")
-list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/algorithm/pdm_quick_sort.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/algorithm/pdm_sort.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/algorithm/pdm_unique.h")
 
