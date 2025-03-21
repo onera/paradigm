@@ -47,19 +47,17 @@ typedef enum {
 
 /**
  *
- * \brief Compute cell center of elements
+ * \brief Compute cell centers of block-distributed cells
  *
- * \param [in]  comm         MPI Communicator
- * \param [in]  dn_cell       Number of cells in the current process
- * \param [in]  dn_face       Number of faces in the current process
- * \param [in]  dn_vtx        Number of vertices in the current process
- * \param [in]  dcell_face_idx Index of cell_face
- * \param [in]  dcell_face    cell face connectivity in the current process
- * \param [in]  dface_vtx_idx  Index of face_vtx
- * \param [in]  dface_vtx     face vertex connectivity in the current process
- * \param [in]  distrib_face    face distribution
- * \param [in]  dvtx_coord    coordinates of vertices
- * \param [in]  distrib_vtx     Vertex distribution
+ * \param [in]  comm            MPI Communicator
+ * \param [in]  dn_cell         Number of cells in the current process
+ * \param [in]  dcell_face_idx  Index for cell->face connectivity
+ * \param [in]  dcell_face      Block-distributed cell->face connectivity (global IDs)
+ * \param [in]  dface_vtx_idx   Index for face->vtx connectivity
+ * \param [in]  dface_vtx       Block-distributed face->vertex connectivity (global IDs)
+ * \param [in]  distrib_face    Face distribution (size = n_rank + 1)
+ * \param [in]  dvtx_coord      Coordinates of vertices
+ * \param [in]  distrib_vtx     Vertex distribution (size = n_rank + 1)
  *
  * \param [out] cell_center   Cell centers
  *
