@@ -307,12 +307,7 @@ fake_install:
   before_script:
     - module purge
     - echo "compilo = $COMPILER"
-    # - source /tmp_user/juno/sonics/dist/source_juno_all.sh --compiler $COMPILER --mpi $MPI_LIB && module load py-gcovr-4.2-gcc-8.3.1-6lqfk6f py-breathe-4.21.0-gcc-8.3.1-t576gc7 doxygen-1.9.3-gcc-8.3.1-4qcntlg texlive/2021 && python3 -m pip install sphinx-fortran sphinxcontrib-tikz jupytext
-    - if [[ "${COMPILER}" == "gcc@14" ]]; then
-    -   source /tmp_user/juno/sonics/dist/socle_cfd7/source_gcc14_cython3.sh # socle 7 + gcc 14 + Cython 3
-    - else
-    -   source /tmp_user/juno/sonics/dist/source_juno_all.sh --compiler=$COMPILER --mpi=$MPI_LIB
-    - fi
+    - source /tmp_user/juno/sonics/dist/source_juno_all.sh --compiler=$COMPILER --mpi=$MPI_LIB
   script:
     - echo "Runner directory is $PWD; move to working directory $CUSTOM_CI_DIR"
     - cd $CUSTOM_CI_DIR
