@@ -113,7 +113,7 @@ TEST_CASE("[pdm_hash_tab] - recover_edge") {
   std::vector<int> ridge_vtx     = {1, 2, 2, 3, 8, 7, 9, 8, 4, 1, 7, 4, 3, 6, 6, 9};
 
   int n_quad  = 4;
-  int n_ridge  = 8;
+  int n_ridge = 8;
   int n_vtx   = 9;
   int key_max = n_vtx / 2;
 
