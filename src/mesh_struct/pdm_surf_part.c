@@ -48,23 +48,6 @@ extern "C" {
  * Public function definitions
  *============================================================================*/
 
-/**
- * \brief Return an intialized \ref PDM_surf_part_t structure
- *
- * This function returns an initialized \ref PDM_surf_part_t structure
- *
- * \param [in]  n_face       Number of faces
- * \param [in]  face_vtx_idx  Index in the face -> vertex connectivity
- * \param [in]  face_vtx_idx  face -> vertex connectivity
- * \param [in]  face_ln_to_gn  Local face numbering to global face numbering
- * \param [in]  n_vtx        Number of vertices
- * \param [in]  coords      Coordinates
- * \param [in]  vtx_ln_to_gn   Local vertex numbering to global vertex numbering
- *
- * \return      A new initialized \ref PDM_surf_part_t structure
- *
- */
-
 PDM_surf_part_t *
 PDM_surf_part_create
 (
@@ -109,16 +92,6 @@ const PDM_g_num_t *vtx_ln_to_gn
   return _part;
 }
 
-
-/**
- * \brief Delete a \ref PDM_surf_part_t structure
- *
- * This function deletes a  PDM_surf_part_t structure
- *
- * \param [in]  part      part to delete
- *
- * \return     Null pointer
- */
 
 PDM_surf_part_t *
 PDM_surf_part_free
@@ -173,16 +146,6 @@ PDM_surf_part_free
   return NULL;
 }
 
-
-/**
- * \brief Compute partition edge entities
- *
- * This function defines edges of an initial partitiob and
- * computes edge connectivities
- *
- * \param [in]  _part      Partition to compute
- *
- */
 
 void
 PDM_surf_part_build_edges
@@ -468,14 +431,6 @@ PDM_surf_part_t *part
 }
 
 
-/**
- * \brief Return face_ln_to_gn
- *
- *
- * \param [in]  part      Partition to compute
- *
- */
-
 const PDM_g_num_t *
 PDM_surf_part_faceLnToGn_get
 (
@@ -486,14 +441,6 @@ PDM_surf_part_t *part
   return part->face_ln_to_gn;
 }
 
-/**
- * \brief Dump a PDM_surf_part_t object
- *
- * This function dumps a surf part structure
- *
- * \param [in]  part     surf part to dump
- *
- */
 
 void
 PDM_surf_part_dump

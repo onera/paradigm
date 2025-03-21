@@ -63,12 +63,13 @@ typedef struct _PDM_io_array_t PDM_io_array_t;
  *
  */
 
-void PDM_io_array_write_beg
+void
+PDM_io_array_write_beg
 (
- PDM_io_file_t         *unite,
- const PDM_stride_t  t_rangement,
- const PDM_l_num_t         num_var_cedre_max,
- const PDM_l_num_t         n_partition_local
+       PDM_io_file_t *unite,
+ const PDM_stride_t   t_rangement,
+ const PDM_l_num_t    num_var_cedre_max,
+ const PDM_l_num_t    n_partition_local
 );
 
 
@@ -86,15 +87,16 @@ void PDM_io_array_write_beg
  */
 
 
-void PDM_io_array_write_data_append
+void
+PDM_io_array_write_data_append
 (
- const PDM_l_num_t            num_var_cedre,
- const PDM_l_num_t            i_part,
- const PDM_l_num_t           *n_composantes,
- const PDM_l_num_t            n_donnees,
- const PDM_g_num_t           *indirection,
- void                        *donnees
- );
+ const PDM_l_num_t  num_var_cedre,
+ const PDM_l_num_t  i_part,
+ const PDM_l_num_t *n_composantes,
+ const PDM_l_num_t  n_donnees,
+ const PDM_g_num_t *indirection,
+       void        *donnees
+);
 
 /**
  * \brief Definition d'une variable en ecriture
@@ -107,14 +109,15 @@ void PDM_io_array_write_data_append
  *
  */
 
-void PDM_io_array_write_var_def
+void
+PDM_io_array_write_var_def
 (
- const PDM_l_num_t            num_var_cedre,
- const PDM_l_num_t            num_indirection_cedre,
+ const PDM_l_num_t  num_var_cedre,
+ const PDM_l_num_t  num_indirection_cedre,
  const PDM_stride_t t_n_composantes,
- const PDM_l_num_t            n_composantes,
- const PDM_l_num_t            taille_donnee
- );
+ const PDM_l_num_t  n_composantes,
+ const PDM_l_num_t  taille_donnee
+);
 
 /**
  * \brief Finalise une phase d'écriture parallèle de tableaux de données associées
@@ -142,12 +145,13 @@ void PDM_io_array_write_end
  *
  */
 
-void PDM_io_array_read_beg
+void
+PDM_io_array_read_beg
 (
- PDM_io_file_t         *unite,
- const PDM_stride_t  t_rangement,
- const PDM_l_num_t         num_var_cedre_max,
- const PDM_l_num_t         n_partition_local
+       PDM_io_file_t *unite,
+ const PDM_stride_t   t_rangement,
+ const PDM_l_num_t    num_var_cedre_max,
+ const PDM_l_num_t    n_partition_local
 );
 
 
@@ -163,15 +167,16 @@ void PDM_io_array_read_beg
  *
  */
 
-void PDM_io_array_read_data_append
+void
+PDM_io_array_read_data_append
 (
- const PDM_l_num_t            num_var_cedre,
- const PDM_l_num_t            i_part,
- const PDM_l_num_t           *n_composantes,
- const PDM_l_num_t            n_donnees,
- const PDM_g_num_t           *indirection,
- void                        *donnees
- );
+ const PDM_l_num_t  num_var_cedre,
+ const PDM_l_num_t  i_part,
+ const PDM_l_num_t *n_composantes,
+ const PDM_l_num_t  n_donnees,
+ const PDM_g_num_t *indirection,
+       void        *donnees
+);
 
 /**
  * \brief Definition d'une variable en ecriture
@@ -184,14 +189,15 @@ void PDM_io_array_read_data_append
  *
  */
 
-void PDM_io_array_read_var_def
+void
+PDM_io_array_read_var_def
 (
- const PDM_l_num_t            num_var_cedre,
- const PDM_l_num_t            num_indirection_cedre,
+ const PDM_l_num_t  num_var_cedre,
+ const PDM_l_num_t  num_indirection_cedre,
  const PDM_stride_t t_n_composantes,
- const PDM_l_num_t            n_composantes,
- const PDM_l_num_t            taille_donnee
- );
+ const PDM_l_num_t  n_composantes,
+ const PDM_l_num_t  taille_donnee
+);
 
 /**
  * \brief Finalise une phase de lecture parallèle de tableaux de données associées

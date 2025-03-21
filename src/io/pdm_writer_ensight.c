@@ -814,18 +814,9 @@ _vars_close(PDM_writer_t *cs)
   }
 }
 
-
-/*=============================================================================
- * Fonctions publiques
+/*============================================================================
+ * Public function definitions
  *============================================================================*/
-
-/*----------------------------------------------------------------------------
- * Particularise la creation d'un objet CS (Cedre Sortie)
- *
- * parameters :
- *      cs           <-> objet Cedre Sortie
- *
- *----------------------------------------------------------------------------*/
 
 void
 PDM_writer_ensight_create
@@ -859,14 +850,6 @@ PDM_writer_t *cs
 
 }
 
-/*----------------------------------------------------------------------------
- * Particularise la liberation d'un objet CS (Cedre Sortie)
- *
- * parameters :
- *      cs           <-> objet Cedre Sortie
- *
- *----------------------------------------------------------------------------*/
-
 void
 PDM_writer_ensight_free
 (
@@ -880,14 +863,6 @@ PDM_writer_t *cs
   PDM_free(cs->sortie_fmt);
 }
 
-/*----------------------------------------------------------------------------
- * Particularise le debut d'increment
- *
- * parameters :
- *      cs           <-> objet Cedre Sortie
- *
- *----------------------------------------------------------------------------*/
-
 void
 PDM_writer_ensight_step_beg
 (
@@ -900,14 +875,6 @@ PDM_writer_t *cs
                                         cs->physical_time);
   PDM_writer_ensight->n_time_step += 1;
 }
-
-/*----------------------------------------------------------------------------
- * Particularise la fin d'increment
- *
- * parameters :
- *      cs           <-> objet Cedre Sortie
- *
- *----------------------------------------------------------------------------*/
 
 void
 PDM_writer_ensight_step_end
@@ -926,14 +893,6 @@ PDM_writer_t *cs
 }
 
 
-/*----------------------------------------------------------------------------
- * Particularise la creation de la geometrie
- *
- * parameters :
- *      cs           <-> objet Cedre Sortie
- *
- *----------------------------------------------------------------------------*/
-
 void
 PDM_writer_ensight_geom_create
 (
@@ -945,15 +904,6 @@ PDM_writer_geom_t *geom
   _geom_ensight->num_part = geom->_cs->geom_tab->n_geom;
 }
 
-
-/*----------------------------------------------------------------------------
- * Particularise la creation d'une variable
- *
- * parameters :
- *      cs           <-> objet Cedre Sortie
- *      var          <-- Nouvelle variable
- *
- *----------------------------------------------------------------------------*/
 
 void
 PDM_writer_ensight_var_create
@@ -973,15 +923,6 @@ PDM_writer_ensight_var_create
                                    var->loc);
 }
 
-
-/*----------------------------------------------------------------------------
- * Particularise l'ecriture de la geometrie
- *
- * parameters :
- *      cs           <-> objet Cedre Sortie
- *   id_geom         <-- Identificateur de l'objet geometrique
- *
- *----------------------------------------------------------------------------*/
 
 void
 PDM_writer_ensight_geom_write
@@ -1645,15 +1586,6 @@ PDM_writer_ensight_geom_write
 }
 
 
-/*----------------------------------------------------------------------------
- * Particularise la libération de la geometrie
- *
- * parameters :
- *      cs           <-> objet Cedre Sortie
- *   id_geom         <-- Identificateur de l'objet geometrique
- *
- *----------------------------------------------------------------------------*/
-
 void
 PDM_writer_ensight_geom_free
 (
@@ -1664,15 +1596,6 @@ PDM_writer_ensight_geom_free
     PDM_free(geom->geom_fmt);
 }
 
-
-/*----------------------------------------------------------------------------
- * Particularise l'ecriture de la geometrie
- *
- * parameters :
- *      cs           <-> objet Cedre Sortie
- *   id_geom         <-- Identificateur de l'objet geometrique
- *
- *----------------------------------------------------------------------------*/
 
 void
 PDM_writer_ensight_var_write
@@ -1967,15 +1890,6 @@ PDM_writer_ensight_var_write
   _var_close(_var_ensight, rank);
 }
 
-
-/*----------------------------------------------------------------------------
- * Particularise la libération d'une variable
- *
- * parameters :
- *      var          <-> Objet variable à libérer
- *   id_geom         <-- Identificateur de l'objet geometrique
- *
- *----------------------------------------------------------------------------*/
 
 void
 PDM_writer_ensight_var_free

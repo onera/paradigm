@@ -1348,14 +1348,6 @@ const int idx
 }
 
 
-/**
- *
- * \brief Get the number of renumbering cell methods
- *
- * \return Number of methods
- *
- */
-
 int
 PDM_part_n_renum_method_cell_get
 (
@@ -1370,14 +1362,6 @@ void
 }
 
 
-/**
- *
- * \brief Get the number of renumbering face methods
- *
- * \return Name of the method
- *
- */
-
 int
 PDM_part_n_renum_method_face_get
 (
@@ -1391,15 +1375,6 @@ void
   return n_renum_methods[PDM_MESH_ENTITY_FACE];
 }
 
-/**
- *
- * \brief Add a new method for cell renumbering
- *
- * \param [in]      name           Mesh entity to renumber
- * \param [in]      renum_fct      Renumbering function
- *
- */
-
 int
 PDM_part_renum_method_cell_add
 (
@@ -1412,14 +1387,6 @@ PDM_part_renum_method_cell_add
                                      renum_fct);
 }
 
-/**
- *
- * \brief Add a new method for face renumbering
- *
- * \param [in]      name           Mesh entity to renumber
- * \param [in]      renum_fct      Renumbering function
- *
- */
 
 int
 PDM_part_renum_method_face_add
@@ -1433,14 +1400,6 @@ PDM_part_renum_method_face_add
                                      renum_fct);
 }
 
-/**
- *
- * \brief Add a new method for face renumbering
- *
- * \param [in]      name           Mesh entity to renumber
- * \param [in]      renum_fct      Renumbering function
- *
- */
 
 int
 PDM_part_renum_method_edge_add
@@ -1454,14 +1413,6 @@ PDM_part_renum_method_edge_add
                                      renum_fct);
 }
 
-/**
- *
- * \brief Add a new method for face renumbering
- *
- * \param [in]      name           Mesh entity to renumber
- * \param [in]      renum_fct      Renumbering function
- *
- */
 
 int
 PDM_part_renum_method_vtx_add
@@ -1475,12 +1426,6 @@ PDM_part_renum_method_vtx_add
                                      renum_fct);
 }
 
-
-/**
- *
- * \brief Load local renumbering methods
- *
- */
 
 void
 PDM_part_renum_method_load_local
@@ -1535,14 +1480,6 @@ void
 }
 
 
-/**
- *
- * \brief Perform cell renumbering
- *
- * \param [in,out]  part       part structure
- *
- */
-
 void
 PDM_part_renum_cell
 (
@@ -1568,16 +1505,6 @@ PDM_part_renum_cell
 
 }
 
-
-/**
- *
- * \brief Get name of the face renumbering method
- *
- * \param [in]  idx     Index of the method
- *
- * \return Name of the method (NULL otherwise)
- *
- */
 
 void
 PDM_part_renum_method_face_name_get_cf
@@ -1617,13 +1544,6 @@ const int idx
 }
 
 
-/**
- *
- * \brief Perform mesh entities renumbering
- *
- * \param [in,out]  part       part structure
- *
- */
 
 void
 PDM_part_renum_face
@@ -1648,13 +1568,6 @@ PDM_part_renum_face
   }
 }
 
-/**
- *
- * \brief Perform mesh entities renumbering
- *
- * \param [in,out]  part       part structure
- *
- */
 
 void
 PDM_part_renum_edge
@@ -1679,13 +1592,7 @@ PDM_part_renum_edge
   }
 }
 
-/**
- *
- * \brief Perform mesh entities renumbering
- *
- * \param [in,out]  part       part structure
- *
- */
+
 
 void
 PDM_part_renum_vtx
@@ -1711,14 +1618,7 @@ PDM_part_renum_vtx
 }
 
 
-/**
- *
- * \brief Perform cells renumbering from a new order
- *
- * \param [in,out]  part        Current partition
- * \param [in]      new_to_old_order    NewOrder
- *
- */
+
 void
 PDM_part_reorder_cell
 (
@@ -1784,14 +1684,7 @@ PDM_part_reorder_cell
 }
 
 
-/**
- *
- * \brief Perform faces renumbering from a new order
- *
- * \param [in,out]  part        Current partition
- * \param [in]      new_to_old_order    NewOrder
- *
- */
+
 void
 PDM_part_reorder_face
 (
@@ -1903,14 +1796,7 @@ int     *new_to_old_order
 
 }
 
-/**
- *
- * \brief Perform vtx renumbering from a new order
- *
- * \param [in,out]  part        Current partition
- * \param [in]      new_to_old_order    NewOrder
- *
- */
+
 void
 PDM_part_reorder_edge
 (
@@ -1982,14 +1868,7 @@ int     *new_to_old_order
   PDM_free(old_to_new_order);
 }
 
-/**
- *
- * \brief Perform vtx renumbering from a new order
- *
- * \param [in,out]  part        Current partition
- * \param [in]      new_to_old_order    NewOrder
- *
- */
+
 void
 PDM_part_reorder_vtx
 (
@@ -2078,14 +1957,7 @@ int     *new_to_old_order
 
 }
 
-/**
- *
- * \brief Perform faces renumbering from a new order
- *
- * \param [in,out]  part        Current partition
- * \param [in]      new_to_old_order    NewOrder
- *
- */
+
 void
 PDM_part_reorder_face_bound
 (
@@ -2120,14 +1992,7 @@ int     *new_to_old_order
 
 
 
-/**
- *
- * \brief Perform faces renumbering from a new order
- *
- * \param [in,out]  part        Current partition
- * \param [in]      new_to_old_order    NewOrder
- *
- */
+
 void
 PDM_part_reorder_edge_bound
 (

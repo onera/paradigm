@@ -364,20 +364,6 @@ _del_vars(PDM_writer_ensight_case_t  *const this_case)
  * Public function definitions
  *============================================================================*/
 
-
-/*----------------------------------------------------------------------------
- * Create a new case file structure.
- *
- * parameters:
- *   name            <-- case name
- *   restart         <-- if restart == 1, case file is read
- *   dir_prefix      <-- associated local or absolute directory name
- *   time_dependency <-- indicates if and how meshes will change with time
- *
- * returns:
- *   pointer to new case file structure
- *----------------------------------------------------------------------------*/
-
 PDM_writer_ensight_case_t *
 PDM_writer_ensight_case_cree
 (
@@ -757,19 +743,12 @@ const int                   append
 }
 
 
- /*----------------------------------------------------------------------------
-  * Destroy a case file structure.
-  *
-  * parameters:
-  *   this_case  <-- case structure
-  *
-  * returns:
-  *   NULL pointer
-  *----------------------------------------------------------------------------*/
-
- PDM_writer_ensight_case_t *
- PDM_writer_ensight_case_lib(PDM_writer_ensight_case_t  *this_case)
- {
+PDM_writer_ensight_case_t *
+PDM_writer_ensight_case_lib
+(
+  PDM_writer_ensight_case_t  *this_case
+)
+{
 
    /* Free names */
 
@@ -803,32 +782,12 @@ const int                   append
   return NULL;
 }
 
-/*----------------------------------------------------------------------------
- * Return time dependency status of an EnSight geometry.
- *
- * parameters:
- *   this_case  <-- case structure
- *
- * returns:
- *   time dependency status
- *----------------------------------------------------------------------------*/
-
 PDM_writer_topology_t
 PDM_writer_ensight_case_geo_time_dep_get(PDM_writer_ensight_case_t  *this_case)
 {
   return  this_case->time_dependency;
 }
 
-
-/*----------------------------------------------------------------------------
- * Return time dependency status of an EnSight var
- *
- * parameters:
- *   this_case  <-- case structure
- *
- * returns:
- *   time dependency status
- *----------------------------------------------------------------------------*/
 
 PDM_writer_status_t
 PDM_writer_ensight_case_var_time_dep_get
@@ -854,16 +813,6 @@ PDM_writer_ensight_case_var_time_dep_get
 
   return var->time_dep;
 }
-
-/*----------------------------------------------------------------------------
- * Return time dependency status of an EnSight geometry.
- *
- * parameters:
- *   this_case  <-- case structure
- *
- * returns:
- *   time dependency status
- *----------------------------------------------------------------------------*/
 
 char *
 PDM_writer_ensight_case_var_file_name_get
@@ -899,16 +848,6 @@ const char* name
   return file_name;
 }
 
-/*----------------------------------------------------------------------------
- * Return time dependency status of an EnSight geometry.
- *
- * parameters:
- *   this_case  <-- case structure
- *
- * returns:
- *   time dependency status
- *----------------------------------------------------------------------------*/
-
 char *
 PDM_writer_ensight_case_geo_file_name_get
 (
@@ -927,17 +866,6 @@ PDM_writer_ensight_case_t  *this_case
   return name;
 }
 
-/*----------------------------------------------------------------------------
- * Return time dependency status of an EnSight geometry.
- *
- * parameters:
- *   this_case  <-- case structure
- *
- * returns:
- *   time dependency status
- *----------------------------------------------------------------------------*/
-
-
 void
 PDM_writer_ensight_case_var_cree
 (
@@ -955,16 +883,6 @@ const PDM_writer_var_loc_t  location
            time_dep,
            location);
 }
-
-/*----------------------------------------------------------------------------
- * Return time dependency status of an EnSight geometry.
- *
- * parameters:
- *   this_case  <-- case structure
- *
- * returns:
- *   time dependency status
- *----------------------------------------------------------------------------*/
 
 void
 PDM_writer_ensight_case_time_step_add
@@ -1011,15 +929,6 @@ const double time_value
   }
 }
 
-
-/*----------------------------------------------------------------------------
- * Write an EnSight Gold case file.
- *
- * This function should only be called by one process in parallel mode.
- *
- * parameters:
- *   this_case  <-- case structure
- *----------------------------------------------------------------------------*/
 
 void
 PDM_writer_ensight_case_write(PDM_writer_ensight_case_t  *const this_case,

@@ -231,15 +231,6 @@ _intersect_ray_face
  * Public function definitions
  *============================================================================*/
 
-
-/**
- *  \brief Compute a dynamic geometric epsilon from a characteristic length
- *
- *    @param [in]  characteristic_length  Characteristic length
- *    @param [in]  consEpsilon           Constant part
- *    @return                            Geometric epsilon
- */
-
 double
 PDM_geom_elem_geometric_epsilon
 (
@@ -250,16 +241,6 @@ PDM_geom_elem_geometric_epsilon
   return PDM_MAX(const_epsilon * characteristic_length, GEOM_EPS_MIN);
 }
 
-/**
- *  \brief Triangle surface vector
- *
- *  @param [in]  n_triangle      Number of triangles
- *  @param [in]  connectivity   Connectivity
- *  @param [in]  coords         Vertice coordinates
- *  @param [out] surface_vector  Surface Vector
- *  @param [out] characteristic_length  Characteristic length (active if != NULL)
- *  @param [out] is_degenerated         Degenerated edge indicator (active if != NULL)
- */
 
 void
 PDM_geom_elem_tria_surface_vector
@@ -324,13 +305,6 @@ PDM_geom_elem_tria_surface_vector
   }
 }
 
-/**
- *  \brief Triangle area
- *
- *  @param [in]  n_triangle      Number of triangles
- *  @param [in]  surface_vector         surface_vector vectors
- *  @param [out] area           Area
- */
 
 void
 PDM_geom_elem_tria_area
@@ -347,14 +321,6 @@ PDM_geom_elem_tria_area
   }
 }
 
-/**
- *  \brief Triangle center
- *
- *  @param [in]  n_triangle      Number of triangles
- *  @param [in]  connectivity   Connectivity
- *  @param [in]  coords         Vertice coordinates
- *  @param [out] center         center
- */
 
 void
 PDM_geom_elem_tria_center
@@ -380,16 +346,7 @@ PDM_geom_elem_tria_center
 }
 
 
-/**
- *  \brief Tetrahedra oriented volume
- *
- *  @param [in]  n_tetrahedra           Number of tetrahedra
- *  @param [in]  connectivity          Connectivity
- *  @param [in]  coords                Vertice coordinates
- *  @param [out] volume                Volume
- *  @param [out] characteristic_length  Characteristic length (active if != NULL)
- *  @param [out] is_degenerated         Degenerated edge indicator (active if != NULL)
- */
+
 
 void
 PDM_geom_elem_tetra_oriented_volume
@@ -480,14 +437,7 @@ PDM_geom_elem_tetra_oriented_volume
   }
 }
 
-/**
- *  \brief Tetrahedra center
- *
- *  @param [in]  n_tetrahedra    Number of tetrahedra
- *  @param [in]  connectivity   Connectivity
- *  @param [in]  coords         Vertice coordinates
- *  @param [out] center         center
- */
+
 
 void
 PDM_geom_elem_tetra_center
@@ -518,14 +468,7 @@ PDM_geom_elem_tetra_center
 }
 
 
-/**
- *  \brief Tetrahedra Faces
- *
- *  @param [in]  n_tetrahedra       Number of tetrahedra
- *  @param [in]  orientation       Surface vector oriented towards inside cell (0) or outside (1)
- *  @param [in]  connectivity      Connectivity
- *  @param [out] face_connectivity  Face connectivity
- */
+
 
 void
 PDM_geom_elem_tetra_faces
@@ -592,14 +535,7 @@ PDM_geom_elem_tetra_faces
 }
 
 
-/**
- *  \brief HexahedraFaces
- *
- *  @param [in]  n_hexahedra        Number of hexahedra
- *  @param [in]  orientation       Surface vector oriented towards inside cell (0) or outside (1)
- *  @param [in]  connectivity      Connectivity
- *  @param [out] face_connectivity  Face connectivity
- */
+
 
 void
 PDM_geom_elem_hexa_faces
@@ -694,14 +630,6 @@ PDM_geom_elem_hexa_faces
 }
 
 
-/**
- *  \brief Prism Faces
- *
- *  @param [in]  n_prism            Number of Prism
- *  @param [in]  orientation       Surface vector oriented towards inside cell (0) or outside (1)
- *  @param [in]  connectivity      Connectivity
- *  @param [out] face_connectivity  Face connectivity
- */
 
 void
 PDM_geom_elem_prism_faces
@@ -783,14 +711,7 @@ PDM_geom_elem_prism_faces
   }
 }
 
-/**
- *  \brief Pyramid Faces
- *
- *  @param [in]  n_pyramid          Number of pyramid
- *  @param [in]  orientation       Surface vector oriented towards inside cell (0) or outside (1)
- *  @param [in]  connectivity      Connectivity
- *  @param [out] face_connectivity  Face connectivity
- */
+
 
 void
 PDM_geom_elem_pyramid_faces
@@ -869,18 +790,6 @@ PDM_geom_elem_pyramid_faces
 }
 
 
-/**
- *  \brief Edges properties
- *
- *  @param [in]  n_edges                Number of edges
- *  @param [in]  connectivity          Connectivity
- *  @param [in]  n_vertices             Number of vertices
- *  @param [in]  coords                Vertices coordinates
- *  @param [out] length                Length
- *  @param [out] center                Center
- *  @param [out] characteristic_length  Characteristic length (active if != NULL)
- *  @param [out] is_degenerated         Degenerated edge indicator (active if != NULL)
- */
 
 void
 PDM_geom_elem_edges_properties
@@ -926,18 +835,6 @@ PDM_geom_elem_edges_properties
 }
 
 
-/**
- *  \brief Triangle properties
- *
- *  @param [in]  n_triangle             Number of triangles
- *  @param [in]  connectivity          Connectivity
- *  @param [in]  n_vertices             Number of vertices
- *  @param [in]  coords                Vertices coordinates
- *  @param [out] surface_vector         Surface vector
- *  @param [out] center                Center
- *  @param [out] characteristic_length  Characteristic length (active if != NULL)
- *  @param [out] is_degenerated         Degenerated edge indicator (active if != NULL)
- */
 
 void
 PDM_geom_elem_tria_properties
@@ -966,19 +863,6 @@ PDM_geom_elem_tria_properties
 }
 
 
-/**
- *  \brief Tetrahedra properties
- *
- *  @param [in]  n_tetrahedra           Number of tetrahedra
- *  @param [in]  connectivity          Connectivity
- *  @param [in]  n_vertices             Number of vertices
- *  @param [in]  coords                Vertices coordinates
- *  @param [out] volume                Volume
- *  @param [out] center                Center
- *  @param [out] characteristic_length  Characteristic length (active if != NULL)
- *  @param [out] is_degenerated         Degenerated edge indicator (active if != NULL)
- */
-
 void
 PDM_geom_elem_tetra_properties
 (
@@ -1005,21 +889,6 @@ PDM_geom_elem_tetra_properties
                               center);
 }
 
-
-/**
- * \brief Quadrangle properties
- *
- *  @param [in]  n_triangle             Number of quadrangles
- *  @param [in]  connectivity          Connectivity
- *  @param [in]  n_vertices             Number of vertices
- *  @param [in]  coords                Vertices coordinates
- *  @param [out] surface_vector         Surface vector
- *  @param [out] center                Center
- *  @param [out] characteristic_length  Characteristic length (active if != NULL)
- *  @param [out] is_degenerated         Degenerated edge indicator (active if != NULL)
- *
- *  @return                     The status of properties computation convergence
- */
 
 int
 PDM_geom_elem_quad_properties
@@ -1056,20 +925,6 @@ PDM_geom_elem_quad_properties
   return convergence;
 }
 
-/**
- * \brief Compute the barycentric coordinates of a set of points inside
-          their belonging polygons.
- *
- *  @param [in]  n_points               Number of points
- *  @param [in]  pts_locations          Numbering of the belonging polygons inside the _connectivity_index
- *  @param [in]  _connectivity_index     Mesh connectivity Index
- *  @param [in]  connectivity          Mesh connectivity
- *  @param [in]  coords                Mesh coordinates
- *  @param [out] bar_coords_idx        Pointer to the barycentric coordinates index
- *  @param [out] bar_coords_idx        Pointer to the barycentric coordinates
- *
- *  @return                     The status of properties computation convergence
- */
 
 int
 PDM_geom_elem_compute_polygon_barycentric_coordinates
@@ -1388,22 +1243,6 @@ PDM_geom_elem_compute_polygon_barycentric_coordinates
 }
 
 
-/**
- *  \brief Polygon properties
- *
- *  @param [in]  nPolygon              Number of polygon
- *  @param [in]  _connectivity_index     Connectivity Index
- *  @param [in]  connectivity          Connectivity
- *  @param [in]  n_vertices             Number of vertices
- *  @param [in]  coords                Vertices coordinates
- *  @param [out] surface_vector         Surface vector
- *  @param [out] center                Center
- *  @param [out] characteristic_length  Characteristic length (active if != NULL)
- *  @param [out] is_degenerated         Degenerated edge indicator (active if != NULL)
- *
- *  @return                        The status of properties computation convergence
- */
-
 int
 PDM_geom_elem_polygon_properties
 (
@@ -1586,18 +1425,6 @@ PDM_geom_elem_polygon_properties
 }
 
 
-/**
- *  \brief Hexahedra properties
- *
- *  @param [in]  n_hexahedra            Number of hexahedra
- *  @param [in]  connectivity          Connectivity
- *  @param [in]  n_vertices             Number of vertices
- *  @param [in]  coords                Vertices coordinates
- *  @param [out] volume                Volume
- *  @param [out] center                Center
- *  @param [out] characteristic_length  Characteristic length (active if != NULL)
- *  @param [out] is_degenerated         Degenerated edge indicator (active if != NULL)
- */
 
 void
 PDM_geom_elem_hexa_properties
@@ -1680,19 +1507,6 @@ PDM_geom_elem_hexa_properties
 }
 
 
-/**
- *  \brief Prism properties
- *
- *  @param [in]  n_prism                Number of prism
- *  @param [in]  connectivity          Connectivity
- *  @param [in]  n_vertices             Number of vertices
- *  @param [in]  coords                Vertices coordinates
- *  @param [out] volume                Volume
- *  @param [out] center                Center
- *  @param [out] characteristic_length  Characteristic length (active if != NULL)
- *  @param [out] is_degenerated         Degenerated edge indicator (active if != NULL)
- */
-
 void
 PDM_geom_elem_prism_properties
 (
@@ -1774,18 +1588,6 @@ PDM_geom_elem_prism_properties
 }
 
 
-/**
- *  \brief Pyramid properties
- *
- *  @param [in]  n_pyramid              Number of pyramid
- *  @param [in]  connectivity           Connectivity
- *  @param [in]  n_vertices             Number of vertices
- *  @param [in]  coords                 Vertices coordinates
- *  @param [out] volume                 Volume
- *  @param [out] center                 Center
- *  @param [out] characteristic_length  Characteristic length (active if != NULL)
- *  @param [out] is_degenerated         Degenerated edge indicator (active if != NULL)
- */
 
 void
 PDM_geom_elem_pyramid_properties
@@ -1863,26 +1665,6 @@ PDM_geom_elem_pyramid_properties
 
 }
 
-
-/**
- *  \brief Polyhedra properties
- *
- *  Compute cellCenter and volume. Reorient cell_face_connectivity
- *
- *  @param [in]  is_oriented                 1 if cell_face_connectivity is already oriented, 0 otherwise
- *  @param [in]  n_polyhedra                 Number of polyhedra
- *  @param [in]  n_face                      Number of faces
- *  @param [in]  face_connectivity_idx        Face connectivity index
- *  @param [in]  face_connectivity           Face connectivity
- *  @param [in,out]  cell_face_connectivity_idx  Cell to face connectivity index
- *  @param [in,out]  cell_face_connectivity     Cell to face connectivity
- *  @param [in]  n_vertices                  Number of vertices
- *  @param [in]  coords                     Vertices coordinates
- *  @param [out] volume                     Volume
- *  @param [out] center                     Center
- *  @param [out] characteristic_length       Characteristic length (active if != NULL)
- *  @param [out] is_degenerated              Degenerated edge indicator (active if != NULL)
- */
 
 void
 PDM_geom_elem_polyhedra_properties
@@ -2391,7 +2173,6 @@ PDM_geom_elem_polyhedra_properties
 }
 
 
-
 void
 PDM_geom_elem_polyhedra_properties_triangulated
 (
@@ -2547,34 +2328,6 @@ PDM_geom_elem_polyhedra_properties_triangulated
 
 
 
-
-
-
-/**
- *  \brief Compute downwind and updind elemt of all edges (or -1 if not found )
- *
- *  If the face centers and normals are not provided, the faces are triangulated
- *
- *  @param [in]  n_face               Number of faces
- *  @param [in]  n_edge               Number of edges
- *  @param [in]  cell_face_idx        Index for cell-face connectivity
- *  @param [in]  cell_face            Cell-face connectivity
- *  @param [in]  face_vtx_idx         Index for face-vertex connectivity
- *  @param [in]  face_vtx             Face-vertex connectivity
- *  @param [in]  vtx_cell_idx         Index for vertex-cell connectivity
- *  @param [in]  vtx_cell             Vertex-cell connectivity
- *  @param [in]  edge_vtx             Edge-vertex connectivity
- *  @param [in]  vtx_coord            Vertex coordinates (size = 3*n_vtx)
- *  @param [in]  face_center          Face center (or NULL)
- *  @param [in]  face_normal          Face normal vectors (or NULL, need not be normalized)
- *  @param [out] upwind_cell_out      Cell number corresponding of upwind cell (or -1)   (size =   n_edge)
- *  @param [out] downwind_cell_out    Cell number corresponding of downwind cell (or -1) (size =   n_edge)
- *  @param [out] upwind_face_out      Face number corresponding of upwind face (or -1)   (size =   n_edge)
- *  @param [out] downwind_face_out    Face number corresponding of downwind face (or -1) (size =   n_edge)
- *  @param [out] upwind_point_out     Coordinates of upwind point                        (size = 3*n_edge)
- *  @param [out] downwind_point_out   Coordinates of downwind point                      (size = 3*n_edge)
- *
- */
 void
 PDM_geom_elem_edge_upwind_and_downwind
 (

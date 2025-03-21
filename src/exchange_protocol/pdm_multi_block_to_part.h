@@ -46,20 +46,22 @@ typedef struct _pdm_multi_block_to_part_t PDM_multi_block_to_part_t;
  * Public function prototypes
  *============================================================================*/
 
+
 /**
  *
  * \brief Create a block to partitions redistribution
  *
- * \param [in]   blockDistribIdx Block distribution (size : \ref size of \ref comm + 1)
- * \param [in]   gnum_elt        Element global number (size : \ref n_part)
- * \param [in]   n_elt           Local number of elements (size : \ref n_part)
- * \param [in]   n_part          Number of partition
- * \param [in]   comm            MPI communicator
+ * \param [in]   multi_distrib_idx Multiple block distribution (size : \ref size of \ref nblock + 1)
+ * \param [in]   multi_distrib_idx Number of block
+ * \param [in]   block_distrib_idx Block distribution (size : \ref size of \ref comm + 1)
+ * \param [in]   gnum_elt          Element global number (size : \ref n_part)
+ * \param [in]   n_elt             Local number of elements (size : \ref n_part)
+ * \param [in]   n_part            Number of partition
+ * \param [in]   comm              MPI communicator
  *
  * \return   Initialized \ref PDM_block_to_part instance
  *
  */
-
 PDM_multi_block_to_part_t *
 PDM_multi_block_to_part_create
 (
@@ -90,7 +92,7 @@ PDM_multi_block_to_part_create
  */
 
 void
-PDM_multi_block_to_part_exch2
+PDM_multi_block_to_part_exch
 (
  PDM_multi_block_to_part_t   *btp,
  size_t                       s_data,

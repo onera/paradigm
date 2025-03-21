@@ -132,4 +132,4 @@ PDM_dcube_gen_free
 }
 #endif /* __cplusplus */
 
-#endif  /* __PDM_PART_DCUBE_H__ */
+#endif  /* __PDM_DCUBE_GEN_H__ */

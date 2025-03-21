@@ -1872,19 +1872,6 @@ _gnum_from_comm_graph
  * Public function definitions
  *============================================================================*/
 
-/**
- *
- * \brief Build a global numbering structure
- *
- * \param [in]   dim          Spatial dimension
- * \param [in]   n_part       Number of local partitions
- * \param [in]   merge        Merge double points or not
- * \param [in]   tolerance    Geometric tolerance (used if merge double points is activated)
- * \param [in]   comm         PDM_MPI communicator
- *
- * \return     Pointer to PDM_gen_gnum object
- */
-
 PDM_gen_gnum_t *
 PDM_gnum_create
 (
@@ -1929,24 +1916,6 @@ PDM_gnum_create
 }
 
 
-/**
- *
- * \brief Set from coordinates
- *
- * The ordering is based on a Morton code, and it is expected that
- * entities are unique (i.e. not duplicated on 2 or more ranks).
- * In the case that 2 entities have a same Morton code, their global
- * number will be determined by lexicographical ordering of coordinates.
- *
- * \param [in]   gen_gnum     Pointer to \ref PDM_gen_gnum object
- * \param [in]   i_part       Current partition
- * \param [in]   n_elts       Number of elements
- * \param [in]   coords       Coordinates (size = 3 * \ref n_elts)
- * \param [in]   char_length  Characteristic length (or NULL)
- *                            (used if merge double points is activated)
- *
- */
-
 void
 PDM_gnum_set_from_coords
 (
@@ -1979,17 +1948,6 @@ PDM_gnum_set_from_coords
 
 }
 
-
-/**
- *
- * \brief Set Parent global numbering
- *
- * \param [in]   gen_gnum     Pointer to \ref PDM_gen_gnum object
- * \param [in]   i_part       Current partition
- * \param [in]   n_elts       Number of elements
- * \param [in]   parent_gnum  Parent global numbering (size = \ref n_elts)
- *
- */
 
 void
 PDM_gnum_set_from_parents
@@ -2065,14 +2023,6 @@ PDM_gnum_set_from_entity_graph
 
 }
 
-/**
- *
- * \brief Compute
- *
- * \param [in]   gen_gnum         Pointer to \ref PDM_gen_gnum object
- *
- */
-
 void
 PDM_gnum_compute
 (
@@ -2126,17 +2076,6 @@ PDM_gnum_compute
 
 
 
-/**
- *
- * \brief Get global ids for a given partition
- *
- * \param [in]   gen_gnum     Pointer to \ref PDM_gen_gnum object
- * \param [in]   i_part       Current partition
- *
- * \return     Array of global ids
- *
- */
-
 PDM_g_num_t *
 PDM_gnum_get
 (
@@ -2151,14 +2090,6 @@ PDM_gnum_get
 
 
 
-/**
- *
- * \brief Free
- *
- * \param [in]   gen_gnum         Pointer to \ref PDM_gen_gnum object
- *
- */
-
 void
 PDM_gnum_free
 (
@@ -2166,24 +2097,11 @@ PDM_gen_gnum_t *gen_gnum
 )
 {
 
-  if (gen_gnum->coords != NULL) {
-    PDM_free(gen_gnum->coords);
-  }
-
-  if (gen_gnum->char_length != NULL) {
-    PDM_free(gen_gnum->char_length);
-  }
-
-  if (gen_gnum->parent != NULL) {
-    PDM_free(gen_gnum->parent);
-  }
-
-  if (gen_gnum->pn_entity_graph != NULL) {
-    PDM_free(gen_gnum->pn_entity_graph);
-  }
-  if (gen_gnum->pentity_graph != NULL) {
-    PDM_free(gen_gnum->pentity_graph);
-  }
+  PDM_free(gen_gnum->coords);
+  PDM_free(gen_gnum->char_length);
+  PDM_free(gen_gnum->parent);
+  PDM_free(gen_gnum->pn_entity_graph);
+  PDM_free(gen_gnum->pentity_graph);
 
   if(( gen_gnum->owner == PDM_OWNERSHIP_KEEP ) ||
      ( gen_gnum->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !gen_gnum->results_is_getted)){
@@ -2199,18 +2117,6 @@ PDM_gen_gnum_t *gen_gnum
 
 }
 
-
-
-/**
- *
- * \brief Get number of elements in a partition
- *
- * \param [in]   gen_gnum     Pointer to \ref PDM_gen_gnum object
- * \param [in]   i_part       Current partition
- *
- * \return     Number of elements
- *
- */
 
 int
 PDM_gnum_n_elt_get

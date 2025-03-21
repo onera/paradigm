@@ -11,6 +11,13 @@
 #include "pdm_mem_tool.h"
 #include "pdm_mpi.h"
 
+#ifdef __cplusplus
+extern "C" {
+#if 0
+} /* Fake brace to force back Emacs auto-indentation back to column 0 */
+#endif
+#endif /* __cplusplus */
+
 /*============================================================================
  * Type definitions
  *============================================================================*/
@@ -26,20 +33,6 @@
 /*=============================================================================
  * Public function definitions
  *============================================================================*/
-
-/**
- *
- * \brief Create a distributed cube
- *
- * \param [out]  dcube          Pointer to \ref PDM_dcube_t object
- * \param [in]   comm           Communicator
- * \param [in]   n_vtx_seg      Number of vertices in segments
- * \param [in]   length         Segment length
- * \param [in]   zero_x         Coordinates of the origin
- * \param [in]   zero_y         Coordinates of the origin
- * \param [in]   zero_z         Coordinates of the origin
- *
- */
 
 PDM_dcube_t*
 PDM_dcube_gen_init
@@ -66,7 +59,6 @@ const double           zero_z,
   /*
    * Build dcube structure
    */
-
   dcube->comm      = comm;
   dcube->n_vtx_seg = n_vtx_seg;
   dcube->length    = length;
@@ -632,21 +624,6 @@ const double           zero_z,
 }
 
 
-
-/**
- *
- * \brief Return distributed cube size
- *
- * \param [in]   dcube         Pointer to \ref PDM_dcube_t object
- * \param [out]  n_face_group  Number of faces groups
- * \param [out]  dn_cell       Number of cells stored in this process
- * \param [out]  dn_face       Number of faces stored in this process
- * \param [out]  dn_vtx        Number of vertices stored in this process
- * \param [out]  sface_vtx     Length of dface_vtx array
- * \param [out]  sface_group   Length of dface_group array
- *
- */
-
 void
 PDM_dcube_gen_dim_get
 (
@@ -666,20 +643,6 @@ PDM_dcube_gen_dim_get
   *sface_vtx    = dcube->dface_vtx_idx[dcube->dn_face];
   *sface_group  = dcube->dface_group_idx[dcube->n_face_group];
 }
-
-/**
- *
- * \brief Return distributed cube data
- *
- * \param [in]  dcube           Pointer to \ref PDM_dcube_t object
- * \param [out] dface_cell      Faces from cells connectivity (size = 2 * dn_face)
- * \param [out] dface_vtx_idx    Faces from vertices connectivity index (size = dn_face + 1)
- * \param [out] dface_vtx       Faces from vertices connectivity (size = sface_vtx)
- * \param [out] dvtx_coord      Vertices coordinates (size = 3 * dn_vtx)
- * \param [out] dface_group_idx Faces groups index (size = n_face_group + 1)
- * \param [out] dface_group     Faces groups (size = sface_group)
- *
- */
 
 void
 PDM_dcube_gen_data_get
@@ -701,14 +664,6 @@ PDM_dcube_gen_data_get
   *dface_group     = dcube->dface_group;
 }
 
-/**
- *
- * \brief Free a distributed cube
- *
- * \param [in]  dcube         Pointer to \ref PDM_dcube_t object
- *
- */
-
 void
 PDM_dcube_gen_free
 (
@@ -716,25 +671,16 @@ PDM_dcube_t        *dcube
 )
 {
   if(dcube->owner == PDM_OWNERSHIP_KEEP) {
-    if (dcube->dface_cell  != NULL)
-      PDM_free(dcube->dface_cell);
-
-    if (dcube->dface_vtx_idx  != NULL)
-      PDM_free(dcube->dface_vtx_idx);
-
-    if (dcube->dface_vtx  != NULL)
-      PDM_free(dcube->dface_vtx);
-
-    if (dcube->dvtx_coord  != NULL)
-      PDM_free(dcube->dvtx_coord);
-
-    if (dcube->dface_group_idx  != NULL)
-      PDM_free(dcube->dface_group_idx);
-
-    if (dcube->dface_group  != NULL)
-      PDM_free(dcube->dface_group);
+    PDM_free(dcube->dface_cell);
+    PDM_free(dcube->dface_vtx_idx);
+    PDM_free(dcube->dface_vtx);
+    PDM_free(dcube->dvtx_coord);
+    PDM_free(dcube->dface_group_idx);
+    PDM_free(dcube->dface_group);
   }
-
   PDM_free(dcube);
-
 }
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */

@@ -45,21 +45,6 @@ extern "C" {
  * Public function definitions
  *============================================================================*/
 
-/**
- *
- * \brief Create a block to partitions redistribution
- *
- * \param [in]   multi_distrib_idx Multiple block distribution (size : \ref size of \ref nblock + 1)
- * \param [in]   block_distrib_idx Block distribution (size : \ref size of \ref comm + 1)
- * \param [in]   gnum_elt          Element global number (size : \ref n_part)
- * \param [in]   n_elt             Local number of elements (size : \ref n_part)
- * \param [in]   n_part            Number of partition
- * \param [in]   comm              MPI communicator
- *
- * \return   Initialized \ref PDM_block_to_part instance
- *
- */
-
 PDM_multi_block_to_part_t *
 PDM_multi_block_to_part_create
 (
@@ -248,24 +233,8 @@ PDM_multi_block_to_part_create
   return (PDM_multi_block_to_part_t *) mbtp;
 }
 
-/**
- *
- * \brief Initialize an exchange
- * (part_stride and part_data are allocated in function)
- *
- * \param [in]   btp          Block to part structure
- * \param [in]   s_data       Data size
- * \param [in]   t_stride     Stride type
- * \param [in]   block_stride Stride for each block element for \ref PDM_STRIDE_VAR
- *                            Constant stride for \ref PDM_STRIDE_VAR
- * \param [in]   block_data   Block data
- * \param [out]  part_stride  Partition stride or NULL
- * \param [out]  part_data    Partition data
- *
- */
-
 void
-PDM_multi_block_to_part_exch2
+PDM_multi_block_to_part_exch
 (
  PDM_multi_block_to_part_t   *mbtp,
  size_t                       s_data,
@@ -573,16 +542,6 @@ PDM_multi_block_to_part_exch2
 
   PDM_free(recv_buffer);
 }
-
-
-/**
- *
- * \brief Free a block to part structure
- *
- * \param [inout] btp  Block to part structure
- *
- * \return       NULL
- */
 
 PDM_multi_block_to_part_t *
 PDM_multi_block_to_part_free

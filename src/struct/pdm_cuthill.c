@@ -82,12 +82,6 @@ int adj[]
 
 }
 
-/**
- *
- * \brief TODOUX
- *
- */
-
 static void
 _level_set
 (
@@ -170,11 +164,6 @@ int  level[]
   return;
 }
 
-/**
- *
- * \brief ROOT_FIND finds a pseudo-peripheral node.
- *
- */
 
 static void
 _root_find
@@ -316,11 +305,6 @@ int a[]
   return;
 }
 
-/**
- *
- * \brief TODOUX
- *
- */
 
 static void
 _degree
@@ -412,16 +396,6 @@ int ls[]
   return;
 }
 
-/**
- *
- * \brief Compute reverse Cut-Hill Mac-Kee ordering
- *
- * \param [in,out]  node_num            The number of nodes.
- * \param [in,out]  adj_num[NODE_NUM+1] The number of adjacency entries
- * \param [in,out]  adj_row[ADJ_NUM]    Information about row I is stored in entries ADJ_ROW(I) through ADJ_ROW(I+1)-1 of ADJ
- * \param [in,out]  adj                 The adjacency structure. For each row, it contains the column indices of the nonzero entries.
- * \param [out]     perm                The RCM ordering
- */
 
 static void
 _rcm
@@ -589,16 +563,6 @@ int node_num
 }
 
 
-/**
- *
- * \brief Compute reverse Cut-Hill Mac-Kee ordering
- *
- * \param [in,out]  node_num            The number of nodes.
- * \param [in,out]  adj_num[NODE_NUM+1] The number of adjacency entries
- * \param [in,out]  adj_row[ADJ_NUM]    Information about row I is stored in entries ADJ_ROW(I) through ADJ_ROW(I+1)-1 of ADJ
- * \param [in,out]  adj                 The adjacency structure. For each row, it contains the column indices of the nonzero entries.
- * \param [out]     perm                The RCM ordering
- */
 
 void
 PDM_genrcm
@@ -665,15 +629,6 @@ int perm[]
  * Public function definitions
  *============================================================================*/
 
-/**
- *
- * \brief Compute bandwidth of a mesh partition
- *
- * \param [in] n_elm          Number of elements to reorder
- * \param [in] dual_graph_idx Element to element connectivity indexes (size=n_elm+1)
- * \param [in] dual_graph     Element to element connectivity (size=dual_graph_idx[n_elm])
- */
-
 int
 PDM_cuthill_checkbandwidth
 (
@@ -705,17 +660,6 @@ PDM_cuthill_checkbandwidth
   return dualBandWidth;
 }
 
-/**
- *
- * \brief Compute reverse CutHill-MecKee reordering
- *
- * \param [in] n_elm          Number of elements to reorder
- * \param [in] dual_graph_idx Element to element connectivity indexes (size=n_elm+1)
- * \param [in] dual_graph     Element to element connectivity (size=dual_graph_idx[n_elm])
- *
- * \param [out] perm          Array of permutations
- */
-
 void
 PDM_cuthill_generate
 (
@@ -745,19 +689,10 @@ PDM_cuthill_generate
   PDM_genrcm(n_elm, dual_graph_idx_tmp, dual_graph_tmp, perm);
 
   /** Offset Permutation and Graph arrays **/
-  for (int i = 0; i < n_elm; i++)
-  {
+  for (int i = 0; i < n_elm; i++) {
     perm[i] = perm[i]-1;
   }
 
-  /** Verbose **/
-  if (0 == 1) {
-      PDM_printf("\n Contenu de perm : \n");
-      for(int i = 0; i < n_elm; i++) {
-        PDM_printf(" %d ", perm[i]);
-    }
-    PDM_printf("\n");
-  }
   /** Free **/
   PDM_free(dual_graph_idx_tmp);
   PDM_free(dual_graph_tmp);

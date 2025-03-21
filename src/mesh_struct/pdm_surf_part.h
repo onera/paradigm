@@ -31,17 +31,7 @@ extern "C" {
  * Type
  *============================================================================*/
 
-
-/**
- * \struct PDM_surf_part_t
- * \brief  Surface partition
- *
- *  PDM_surf_part_t defines a surface partition
- *
- */
-
 typedef struct _pdm_surf_part_t PDM_surf_part_t;
-
 
 /*=============================================================================
  * Static global variables
@@ -50,7 +40,6 @@ typedef struct _pdm_surf_part_t PDM_surf_part_t;
 /*=============================================================================
  * Public function prototypes
  *============================================================================*/
-
 
 /**
  * \brief Return an intialized \ref PDM_surf_part_t structure

@@ -185,18 +185,6 @@ _edges_intersect_res_free (_edges_intersect_res_t *eir)
  * Public function definitions
  *============================================================================*/
 
-/**
- *
- * \brief Create a new \ref PDM_edges_intersect_t object
- *
- * \param [in]   maxGNEdgeA    Max global number of edges in mesh A
- * \param [in]   maxGNEdgeN    Max global number of edges in mesh B
- * \param [in]   vtxCarLengthTol Absolute tolerance for characteristic length
- * \param [in]   sMSGComm        size of mpicomm
- *
- * \return      A new \ref PDM_edges_intersect_t
- */
-
 PDM_edges_intersect_t *
 PDM_edges_intersect_create
 (
@@ -238,19 +226,6 @@ const PDM_MPI_Comm   comm
   return (PDM_edges_intersect_t *) ei;
 }
 
-
-/**
- *
- * \brief Get result of the intersection
- *
- * \param [in]   ei               Current edges intersection pointer
- * \param [in]   get_t            Type of key to return data
- * \param [in]   nGEdgeA          Global number of meshA edge
- * \param [in]   nGEdgeB          Global number of meshB edge
- * \param [out]  n_intersect      Number of intersections
- *
- * \return    Result of the intersection
- */
 
 PDM_edges_intersect_res_t **
 PDM_edges_intersect_get
@@ -375,22 +350,6 @@ int                    *n_intersect
 }
 
 
-/**
- *
- * \brief Perform an intersection between a meshA edge and a meshB edge
- *
- * \param [in]   ei               Current edges intersection pointer
- * \param [in]   nGEdgeA          Global number of meshA edge
- * \param [in]   nGVtxA           Global number of edgeA vertices
- * \param [in]   charLgthVtxA[2]  Characteristic length of edgeA vertices
- * \param [in]   coordsVtxA[6]    Coordinates of edgeA vertices
- * \param [in]   nGEdgeB          Global number of meshB edge
- * \param [in]   nGVtxB           Global number of edgeB vertices
- * \param [in]   charLgthVtxB[2]  Characteristic length of edgeB vertices
- * \param [in]   coordsVtxB[6]    Coordinates of edgeB vertices
- *
- * \return    Result of the intersection
- */
 
 PDM_edges_intersect_res_t *
 PDM_edges_intersect_add
@@ -1671,15 +1630,6 @@ const double                 coordsVtxB[6]
 }
 
 
-/**
- *
- * \brief Free \ref PDM_edges_intersect_t object
- *
- * \param [in]   ei               Current edges intersection pointer
- *
- * \return     NULL
- */
-
 PDM_edges_intersect_t *
 PDM_edges_intersect_free
 (
@@ -1690,7 +1640,7 @@ PDM_edges_intersect_t *ei
 
   int *keyMax;
 
-  keyMax = (int *) PDM_hash_tab_keyMax_get (_ei->ht);
+  keyMax = (int *) PDM_hash_tab_key_max_get (_ei->ht);
   for (int i = 0; i < *keyMax; i++) {
     int nData = PDM_hash_tab_n_data_get (_ei->ht, &i);
     _edges_intersect_res_t **eir =
@@ -1710,26 +1660,6 @@ PDM_edges_intersect_t *ei
   return NULL;
 }
 
-
-/**
- *
- * \brief Get data intersection
- *
- * \param [in]  eir             Current edges intersection result pointer
- * \param [in]  mesh            Origin mesh \ref PDM_edges_intersect_MESHA or
- *                                          \ref PDM_edges_intersect_MESHB
- * \param [out] nGEdge          Global number of meshA edge
- * \param [out] originEdge      Global number of edge origin
- * \param [out] tIntersect      Intersection type
- * \param [out] nNewPoints      Number of intersection points
- * \param [out] oNewPoints      Origin of intersection points
- * \param [out] link            Linked vertex in linked mesh
- * \param [out] gNum            Global number in overlay mesh
- * \param [out] coords          Coordinates of intersection point
- * \param [out] u               Parameter of the intersections in edges
- *                              parametric coordinates
- *
- */
 
 void
 PDM_edges_intersect_res_data_get
@@ -1782,25 +1712,6 @@ double                      **u
   }
 }
 
-
-/**
- *
- * \brief Perform edges intersection from two polygons
- *
- * \param [in]    intersect            Edges intersection management
- * \param [in]    n_vtxA                Number of polygon A vertices
- * \param [in]    faceToEdgeA          Polygon A face to edge connectivity
- * \param [in]    faceToVtxA           Polygon A face to vertex connectivity
- * \param [in]    face_vtxCooA          Polygon A vertex coordinates
- * \param [in]    face_vtxEpsA          Polygon A vertex characteristic length
- * \param [in]    gNumB                Polygon B global number
- * \param [in]    n_vtxB                Number of polygon B vertices
- * \param [in]    faceToEdgeB          Polygon B face to edge connectivity
- * \param [in]    faceToVtxB           Polygon B face to vertex connectivity
- * \param [in]    face_vtxCooB          Polygon B vertex coordinates
- * \param [in]    face_vtxEpsB          Polygon B vertex characteristic length
- *
- */
 
 void
 PDM_edges_intersect_poly_add
@@ -2530,18 +2441,6 @@ double                 *face_vtxEpsB
 }
 
 
-/**
- *
- * \brief Remove inconsistencies between processes
- *
- * \param [in]   ei           Current edges intersection pointer
- * \param [in]   nAbsVtxA     Absolute number of vertices in initial A mesh
- * \param [in]   nAbsVtxB     Absolute number of vertices in initial B mesh
- * \param [out]  nAbsNewVtxA  Absolute number of vertices in A mesh after intersections
- * \param [out]  nAbsNewVtxB  Absolute number of vertices in B mesh after intersections
- *
- */
-
 void
 PDM_edges_intersect_synchronize
 (
@@ -2572,7 +2471,7 @@ PDM_g_num_t            *nAbsNewVtxB
 
   PDM_hash_tab_t *ht = _ei->ht;
 
-  int keyMax  = * ((int *) PDM_hash_tab_keyMax_get (ht));
+  int keyMax  = * ((int *) PDM_hash_tab_key_max_get (ht));
   // int *nDataKey;
  // PDM_malloc(nDataKey,keyMax,int);
 
@@ -4735,14 +4634,6 @@ PDM_g_num_t            *nAbsNewVtxB
 
 }
 
-/**
- *
- * \brief dump
- *
- * \param [in]   ei           Current edges intersection pointer
- *
- */
-
 void
 PDM_edges_intersect_dump
 (
@@ -4753,13 +4644,13 @@ PDM_edges_intersect_t       *ei
   _edges_intersect_t *_ei = (_edges_intersect_t *) ei;
 
   PDM_printf ("_ei->ht : %d\n", _ei->ht);
-  PDM_printf ("_ei->ht->keyMax : %d\n", *((int *) PDM_hash_tab_keyMax_get(_ei->ht)));
+  PDM_printf ("_ei->ht->keyMax : %d\n", *((int *) PDM_hash_tab_key_max_get(_ei->ht)));
   PDM_hash_tab_dump(_ei->ht);
   PDM_printf ("_ei->htA : %d\n", _ei->htA);
-  PDM_printf ("_ei->htA->keyMax : %d\n", *((int *) PDM_hash_tab_keyMax_get(_ei->htA)));
+  PDM_printf ("_ei->htA->keyMax : %d\n", *((int *) PDM_hash_tab_key_max_get(_ei->htA)));
   PDM_hash_tab_dump(_ei->htA);
   PDM_printf ("_ei->htB : %d\n", _ei->htB);
-  PDM_printf ("_ei->htB->keyMax : %d\n", *((int *) PDM_hash_tab_keyMax_get(_ei->htB)));
+  PDM_printf ("_ei->htB->keyMax : %d\n", *((int *) PDM_hash_tab_key_max_get(_ei->htB)));
   PDM_hash_tab_dump(_ei->htB);
 
 }

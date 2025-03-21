@@ -154,10 +154,11 @@ typedef struct _PDM_io_file_t PDM_io_file_t;
  *
  */
 
-const char* PDM_io_file_name_get
+const char*
+PDM_io_file_name_get
 (
  PDM_io_file_t *fichier
- );
+);
 
 
 /**
@@ -178,7 +179,8 @@ const char* PDM_io_file_name_get
  *
  */
 
-void PDM_io_open
+void
+PDM_io_open
 (
  const char             *nom,
  const PDM_io_fmt_t      fmt,
@@ -204,11 +206,12 @@ void PDM_io_open
  *
  */
 
-void PDM_io_seek
+void
+PDM_io_seek
 (
- PDM_io_file_t    *fichier,
- const PDM_g_num_t    offset,
- const PDM_io_seek_t  seek
+       PDM_io_file_t    *fichier,
+ const PDM_g_num_t       offset,
+ const PDM_io_seek_t     seek
 );
 
 
@@ -239,13 +242,14 @@ PDM_io_tell
  *
  */
 
-void PDM_io_global_read
+void
+PDM_io_global_read
 (
- PDM_io_file_t  *fichier,
- const PDM_l_num_t  taille_donnee,
- const PDM_g_num_t  n_donnees,
- void              *donnees
- );
+       PDM_io_file_t  *fichier,
+ const PDM_l_num_t     taille_donnee,
+ const PDM_g_num_t     n_donnees,
+ void                 *donnees
+);
 
 
 /**
@@ -258,12 +262,13 @@ void PDM_io_global_read
  *
  */
 
-void PDM_io_global_write
+void
+PDM_io_global_write
 (
- PDM_io_file_t  *fichier,
- const PDM_l_num_t  taille_donnee,
- const PDM_g_num_t  n_donnees,
- const void        *donnees
+       PDM_io_file_t  *fichier,
+ const PDM_l_num_t     taille_donnee,
+ const PDM_g_num_t     n_donnees,
+ const void           *donnees
 );
 
 
@@ -281,16 +286,17 @@ void PDM_io_global_write
  *
  */
 
-void PDM_io_par_interlaced_read
+void
+PDM_io_par_interlaced_read
 (
- PDM_io_file_t             *fichier,
- const PDM_stride_t  t_n_composantes,
- const PDM_l_num_t            *n_composantes,
- const PDM_l_num_t             taille_donnee,
- const PDM_l_num_t             n_donnees,
- const PDM_g_num_t            *indirection,
- void                         *donnees
- );
+       PDM_io_file_t *fichier,
+ const PDM_stride_t   t_n_composantes,
+ const PDM_l_num_t   *n_composantes,
+ const PDM_l_num_t    taille_donnee,
+ const PDM_l_num_t    n_donnees,
+ const PDM_g_num_t   *indirection,
+       void          *donnees
+);
 
 
 /**
@@ -308,15 +314,16 @@ void PDM_io_par_interlaced_read
  *
  */
 
-void PDM_io_par_block_read
+void
+PDM_io_par_block_read
 (
- PDM_io_file_t             *fichier,
- const PDM_stride_t  t_n_composantes,
- const PDM_l_num_t            *n_composantes,
- const PDM_l_num_t             taille_donnee,
- const PDM_l_num_t             n_donnees,
- const PDM_g_num_t             debut_bloc,
- void                         *donnees
+       PDM_io_file_t  *fichier,
+ const PDM_stride_t    t_n_composantes,
+ const PDM_l_num_t    *n_composantes,
+ const PDM_l_num_t     taille_donnee,
+ const PDM_l_num_t     n_donnees,
+ const PDM_g_num_t     debut_bloc,
+       void           *donnees
 );
 
 
@@ -333,15 +340,16 @@ void PDM_io_par_block_read
  *
  */
 
-void PDM_io_par_interlaced_write
+void
+PDM_io_par_interlaced_write
 (
- PDM_io_file_t             *fichier,
- const PDM_stride_t  t_n_composantes,
- const PDM_l_num_t            *n_composantes,
- const PDM_l_num_t             taille_donnee,
- const PDM_l_num_t             n_donnees,
- const PDM_g_num_t            *indirection,
- const void                   *donnees
+       PDM_io_file_t *fichier,
+ const PDM_stride_t   t_n_composantes,
+ const PDM_l_num_t   *n_composantes,
+ const PDM_l_num_t    taille_donnee,
+ const PDM_l_num_t    n_donnees,
+ const PDM_g_num_t   *indirection,
+ const void          *donnees
 );
 
 
@@ -360,15 +368,16 @@ void PDM_io_par_interlaced_write
  *
  */
 
-void PDM_io_par_block_write
+void
+PDM_io_par_block_write
 (
- PDM_io_file_t             *fichier,
- const PDM_stride_t  t_n_composantes,
- const PDM_l_num_t            *n_composantes,
- const PDM_l_num_t             taille_donnee,
- const PDM_l_num_t             n_donnees,
- const PDM_g_num_t             debut_bloc,
- const void                   *donnees
+       PDM_io_file_t *fichier,
+ const PDM_stride_t   t_n_composantes,
+ const PDM_l_num_t   *n_composantes,
+ const PDM_l_num_t    taille_donnee,
+ const PDM_l_num_t    n_donnees,
+ const PDM_g_num_t    debut_bloc,
+ const void          *donnees
 );
 
 
@@ -380,7 +389,8 @@ void PDM_io_par_block_write
  *
  */
 
-void PDM_io_close
+void
+PDM_io_close
 (
  PDM_io_file_t   *fichier
 );
@@ -393,7 +403,8 @@ void PDM_io_close
  *
  */
 
-void PDM_io_free
+void
+PDM_io_free
 (
  PDM_io_file_t   *fichier
 );
@@ -408,11 +419,12 @@ void PDM_io_free
  *
  */
 
-void PDM_io_get_timer_fichier
+void
+PDM_io_get_timer_fichier
 (
  PDM_io_file_t *fichier,
- double           *t_cpu,
- double           *t_elapsed
+ double        *t_cpu,
+ double        *t_elapsed
 );
 
 
@@ -428,8 +440,8 @@ void PDM_io_get_timer_fichier
 void PDM_io_timer_swap_endian_get
 (
  PDM_io_file_t *fichier,
- double           *t_cpu,
- double           *t_elapsed
+ double        *t_cpu,
+ double        *t_elapsed
 );
 
 
@@ -442,11 +454,12 @@ void PDM_io_timer_swap_endian_get
  *
  */
 
-void PDM_io_timer_distrib_get
+void
+PDM_io_timer_distrib_get
 (
  PDM_io_file_t *fichier,
- double           *t_cpu,
- double           *t_elapsed
+ double        *t_cpu,
+ double        *t_elapsed
 );
 
 
@@ -459,11 +472,12 @@ void PDM_io_timer_distrib_get
  *
  */
 
-void PDM_io_timer_total_get
+void
+PDM_io_timer_total_get
 (
  PDM_io_file_t *fichier,
- double           *t_cpu,
- double           *t_elapsed
+ double        *t_cpu,
+ double        *t_elapsed
 );
 
 
@@ -474,7 +488,8 @@ void PDM_io_timer_total_get
  *
  */
 
-void PDM_io_dump
+void
+PDM_io_dump
 (
  PDM_io_file_t   *fichier
 );
@@ -488,7 +503,8 @@ void PDM_io_dump
  *
  */
 
-void PDM_io_comm_get
+void
+PDM_io_comm_get
 (
  PDM_io_file_t *fichier,
  PDM_MPI_Comm     *pdm_mpi_comm
@@ -502,7 +518,8 @@ void PDM_io_comm_get
  *
  */
 
-void PDM_io_swap_endian_on
+void
+PDM_io_swap_endian_on
 (
  PDM_io_file_t   *fichier
 );
@@ -515,7 +532,8 @@ void PDM_io_swap_endian_on
  *
  */
 
-void PDM_io_swap_endian_off
+void
+PDM_io_swap_endian_off
 (
  PDM_io_file_t   *fichier
 );
@@ -531,13 +549,14 @@ void PDM_io_swap_endian_off
  *
  */
 
-void PDM_io_swap_endian
+void
+PDM_io_swap_endian
 (
  const size_t   taille_donnee,
  const size_t   n_donnees,
  const void    *donnees,
- void          *resultats
- );
+       void    *resultats
+);
 
 
 /**
@@ -550,9 +569,10 @@ void PDM_io_swap_endian
  *
  */
 
-void PDM_io_fmt_data_set
+void
+PDM_io_fmt_data_set
 (
- PDM_io_file_t    *fichier,
+       PDM_io_file_t *fichier,
  const PDM_l_num_t    n_char_fmt,
  const PDM_io_type_t  data_type,
  const char          *fmt
@@ -590,11 +610,11 @@ int PDM_io_mkdir
 PDM_g_num_t
 PDM_io_n_data_get
 (
- PDM_io_file_t             *fichier,
- const PDM_stride_t  t_n_composantes,
- const PDM_l_num_t            *n_composantes,
- const PDM_l_num_t             n_donnees,
- const PDM_g_num_t            *indirection
+       PDM_io_file_t  *fichier,
+ const PDM_stride_t    t_n_composantes,
+ const PDM_l_num_t    *n_composantes,
+ const PDM_l_num_t     n_donnees,
+ const PDM_g_num_t    *indirection
 );
 
 

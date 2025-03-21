@@ -184,7 +184,7 @@ _delmt_vtx_to_pelmt_vtx
    */
   int         **pelmts_stride = NULL;
   PDM_g_num_t **pelmts_connec = NULL;
-  PDM_multi_block_to_part_exch2(mbtp,
+  PDM_multi_block_to_part_exch(mbtp,
                                 sizeof(PDM_g_num_t),
                                 PDM_STRIDE_VAR_INTERLACED,
                                 block_elmts_n_vtx,
@@ -203,7 +203,7 @@ _delmt_vtx_to_pelmt_vtx
    * Exchange type of elements
    */
   PDM_Mesh_nodal_elt_t **pelmts_types;
-  PDM_multi_block_to_part_exch2(mbtp,
+  PDM_multi_block_to_part_exch(mbtp,
                                 sizeof(PDM_Mesh_nodal_elt_t),
                                 PDM_STRIDE_CST_INTERLACED,
                                 stride_one,
@@ -230,14 +230,6 @@ _delmt_vtx_to_pelmt_vtx
 
   PDM_multi_block_to_part_free(mbtp);
 }
-
-// static
-// void
-// (
-// )
-// {
-
-// }
 
 
 /*=============================================================================
@@ -411,7 +403,7 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
    */
   int         **pelmts_stride = NULL;
   PDM_g_num_t **pelmts_connec = NULL;
-  PDM_multi_block_to_part_exch2(mbtp,
+  PDM_multi_block_to_part_exch(mbtp,
                                 sizeof(PDM_g_num_t),
                                 PDM_STRIDE_VAR_INTERLACED,
                                 block_elmts_n_vtx,
@@ -429,7 +421,7 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
    * Exchange type of elements
    */
   PDM_Mesh_nodal_elt_t **pelmts_types;
-  PDM_multi_block_to_part_exch2(mbtp,
+  PDM_multi_block_to_part_exch(mbtp,
                                 sizeof(PDM_Mesh_nodal_elt_t),
                                 PDM_STRIDE_CST_INTERLACED,
                                 stride_one,
@@ -1728,3 +1720,7 @@ PDM_dmesh_nodal_elmts_to_extract_dmesh_nodal_elmts
 
   return extract_dmne;
 }
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */

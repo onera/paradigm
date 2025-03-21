@@ -50,6 +50,9 @@ extern "C" {
 
 typedef struct _pdm_memory_stats_t PDM_memory_stats_t;
 
+/*=============================================================================
+ * Public function prototypes
+ *============================================================================*/
 
 PDM_memory_stats_t*
 PDM_memory_stats_create

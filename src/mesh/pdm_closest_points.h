@@ -246,10 +246,17 @@ PDM_closest_points_tgt_in_src_dist_get
 
 
 
-/**
+/*
+ * Reverse operation of child creation : from a parent global numbering
+ * (parent_ln_to_gn) and a child global numbering (child_ln_to_gn) created
+ * from it, take some child global numbers (gnum_to_transform) and retrieve
+ * their original parent number.
  *
- * \brief WTF?
+ * This function allow parent/child numbering to have a different partitionning than
+ * gnum_to_transform. For both arrays, number of part and number of elt per part must
+ * be provided.
  *
+ * gnum_to_transform is modified inplace
  */
 void
 PDM_transform_to_parent_gnum

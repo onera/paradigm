@@ -30,7 +30,6 @@
 #include "pdm_part_to_block.h"
 #include "pdm_partitioning_algorithm.h"
 #include "pdm_priv.h"
-#include "pdm_quick_sort.h"
 #include "pdm_sort.h"
 #include "pdm_dmesh_nodal_to_dmesh.h"
 #include "pdm_dmesh_nodal_to_dmesh_priv.h"
@@ -338,7 +337,7 @@ PDM_g_num_t  **dmissing_child_parent_g_num
             idx_min_1 = j;
           };
         }
-        PDM_quick_sort_long(loc_entity_vtx_1, 0, n_vtx_entity_1-1);
+        PDM_sort_long(loc_entity_vtx_1, NULL, n_vtx_entity_1);
 
         //for(int i_entity_next = i_entity+1; i_entity_next < n_conflict_entitys; ++i_entity_next) {
         for(int idx_entity2 = 0; idx_entity2 < n_conflict_entitys; ++idx_entity2) {
@@ -369,7 +368,7 @@ PDM_g_num_t  **dmissing_child_parent_g_num
                 idx_min_2 = j;
               };
             }
-            PDM_quick_sort_long(loc_entity_vtx_2, 0, n_vtx_entity_2-1);
+            PDM_sort_long(loc_entity_vtx_2, NULL, n_vtx_entity_2);
 
             assert(key_1 == key_2);
 
@@ -2757,7 +2756,7 @@ PDM_g_num_t  **dentity_elmt
             idx_min_1 = j;
           };
         }
-        PDM_quick_sort_long(loc_entity_vtx_1, 0, n_vtx_entity_1-1);
+        PDM_sort_long(loc_entity_vtx_1, NULL, n_vtx_entity_1);
 
         for(int idx_entity2 = 0; idx_entity2 < n_conflict_entitys; ++idx_entity2) {
           int i_entity_next = order[idx_entity2];
@@ -2786,7 +2785,7 @@ PDM_g_num_t  **dentity_elmt
                 idx_min_2 = j;
               };
             }
-            PDM_quick_sort_long(loc_entity_vtx_2, 0, n_vtx_entity_2-1);
+            PDM_sort_long(loc_entity_vtx_2, NULL, n_vtx_entity_2);
 
             assert(key_1 % key_mod == key_2 % key_mod);
 
@@ -2966,3 +2965,8 @@ PDM_dmesh_nodal_to_dmesh_get_missing
     PDM_error (__FILE__, __LINE__, 0, "PDM_dmesh_nodal_to_dmesh_get_missing : invalid geom_kind %d\n", geom_kind);
   }
 }
+
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */

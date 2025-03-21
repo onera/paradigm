@@ -70,19 +70,6 @@ extern "C" {
  *============================================================================*/
 
 
-
-/**
- *
- * \brief Build a global numbering location structure
- *
- * \param [in]   n_part_in      Number of local partitions for elements
- * \param [in]   n_part_out     Number of local partitions for requested locations
- * \param [in]   comm           PDM_MPI communicator
- * \param [in]   owner          Owner
- *
- * \return     Pointer to \ref PDM_gnum_locaion object
- */
-
 PDM_gnum_location_t*
 PDM_gnum_location_create
 (
@@ -120,18 +107,6 @@ PDM_gnum_location_create
 }
 
 
-
-/**
- *
- * \brief Set global numbering
- *
- * \param [in]   gnum_loc    Pointer to \ref PDM_gnum_locaion object
- * \param [in]   i_part_in   Current partition
- * \param [in]   n_elts_in   Number of elements
- * \param [in]   gnum_in     Global numbering
- *
- */
-
 void
 PDM_gnum_location_elements_set
 (
@@ -146,18 +121,6 @@ PDM_gnum_location_elements_set
 }
 
 
-
-/**
- *
- * \brief Set requested elements
- *
- * \param [in]   gnum_loc     Pointer to \ref PDM_gnum_locaion object
- * \param [in]   i_part_out   Current partition
- * \param [in]   n_elts_out   Number of elements
- * \param [in]   gnum_out     Global numbering
- *
- */
-
 void
 PDM_gnum_location_requested_elements_set
 (
@@ -171,13 +134,6 @@ PDM_gnum_location_requested_elements_set
   gnum_loc->g_nums_out[i_part_out] = gnum_out;
 }
 
-/**
- *
- * \brief Compute the location (processus, partittion, local number in the partition)
- *
- * \param [in]   gnum_loc     Pointer to \ref PDM_gnum_locaion object
- *
- */
 
 void
 PDM_gnum_location_compute
@@ -185,14 +141,11 @@ PDM_gnum_location_compute
  PDM_gnum_location_t *gnum_loc
 )
 {
-  // PDM_MPI_Barrier(gnum_loc->comm);
-  // double t1 = PDM_MPI_Wtime();
-
-  int rank;
-  PDM_MPI_Comm_rank (gnum_loc->comm, &rank);
-
+  int i_rank;
   int n_rank;
+  PDM_MPI_Comm_rank (gnum_loc->comm, &i_rank);
   PDM_MPI_Comm_size (gnum_loc->comm, &n_rank);
+
 
   PDM_part_to_block_t *ptb = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                        PDM_PART_TO_BLOCK_POST_MERGE,
@@ -202,8 +155,6 @@ PDM_gnum_location_compute
                                                        gnum_loc->n_elts_in,
                                                        gnum_loc->n_part_in,
                                                        gnum_loc->comm);
-
-  // PDM_g_num_t *block_distrib_index = PDM_part_to_block_distrib_index_get (ptb);
 
   const int s_data = sizeof(int);
   const PDM_stride_t t_stride = PDM_STRIDE_VAR_INTERLACED;
@@ -219,7 +170,7 @@ PDM_gnum_location_compute
     PDM_malloc(part_data  [i], 3 * gnum_loc->n_elts_in[i], int);
     for (int j = 0; j < gnum_loc->n_elts_in[i]; j++) {
       part_stride[i][j]   = 3;
-      part_data[i][3*j]   = rank;
+      part_data[i][3*j]   = i_rank;
       part_data[i][3*j+1] = i;
       part_data[i][3*j+2] = j;
     }
@@ -236,18 +187,6 @@ PDM_gnum_location_compute
                           (void **) part_data,
                           &block_stride,
                           (void **) &block_data);
-
-  // int request_id = -1;
-  // PDM_part_to_block_iexch (ptb,
-  //                          PDM_MPI_COMM_KIND_COLLECTIVE,
-  //                          s_data,
-  //                          t_stride,
-  //                          cst_stride,
-  //                          part_stride,
-  //                (void **) part_data,
-  //                          &block_stride,
-  //                (void **) &block_data,
-  //                          &request_id);
 
   for (int i = 0; i < gnum_loc->n_part_in; i++) {
     PDM_free(part_stride[i]);
@@ -297,26 +236,8 @@ PDM_gnum_location_compute
   PDM_part_to_block_free (ptb);
   PDM_block_to_part_free (btp);
 
-  // PDM_MPI_Barrier(gnum_loc->comm);
-  // double dt = PDM_MPI_Wtime()-t1;
-  // if(rank == 0) {
-  //   printf("Time gnum_location compute : %12.5e \n", dt);
-  // }
-
 }
 
-
-/**
- *
- * \brief Get location
- *
- * \param [in]    gnum_loc       Pointer to \ref PDM_gnum_locaion object
- * \param [in]    i_part_out     Current partition
- * \param [out]   location_idx   Index in the location arrays (size = \ref n_elts + 1)
- * \param [out]   location       Locations of each element
- *                                (Three informations : process, partition, element)
- *
- */
 
 void
 PDM_gnum_location_get
@@ -332,14 +253,6 @@ PDM_gnum_location_get
   gnum_loc->tag_results_get = 1;
 }
 
-
-/**
- *
- * \brief Free
- *
- * \param [in]   gnum_loc      Pointer to \ref PDM_gnum_locaion object
- *
- */
 
 void
 PDM_gnum_location_free
@@ -375,17 +288,6 @@ PDM_gnum_location_free
 }
 
 
-/**
- *
- * \brief Get the number of requested elements in a given partition
- *
- * \param [in]  gnum_loc      Pointer to \ref PDM_gnum_locaion object
- * \param [in]  i_part_out    Id of current partition
- *
- * \return  Number of requested elements in the current partition
- *
- */
-
 int
 PDM_gnum_location_n_requested_elt_get
 (
@@ -398,8 +300,6 @@ PDM_gnum_location_n_requested_elt_get
 
   return gnum_loc->n_elts_out[i_part_out];
 }
-
-
 
 /*----------------------------------------------------------------------------*/
 

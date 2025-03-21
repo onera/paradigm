@@ -77,18 +77,6 @@ extern "C" {
  * Public function definitions
  *============================================================================*/
 
-/**
- *
- * \brief Build a distributed mesh structure
- *
- * \param [in]   dn_cell   Number of distributed cells
- * \param [in]   dn_face   Number of distributed faces
- * \param [in]   dn_edge   Number of distributed edges
- * \param [in]   dn_vtx    Number of distributed vertices
- * \param [in]   comm      PDM_MPI communicator
- *
- * \return     Pointer to a new \ref PDM_dmesh_t object
- */
 PDM_dmesh_t*
 PDM_dmesh_create
 (
@@ -164,16 +152,7 @@ PDM_dmesh_create
   return dmesh;
 }
 
-/**
- *
- * \brief Get the dimensions of the distributed mesh
- *
- * \param [in]    dmesh    Pointer to \ref PDM_dmesh_t object
- * \param [out]   dn_cell  Number of distributed cells
- * \param [out]   dn_face  Number of distributed faces
- * \param [out]   dn_edge  Number of distributed edges
- * \param [out]   dn_vtx   Number of distributed vertices
- */
+
 void
 PDM_dmesh_dims_get
 (
@@ -191,14 +170,6 @@ PDM_dmesh_dims_get
 }
 
 
-/**
- *
- * \brief Get the dimensions of the distributed mesh
- *
- * \param [in]    dmesh             Pointer to \ref PDM_dmesh_t object
- * \param [in]    entity_type       Kind of entity
- * \param [in]    dn_cell           Number of distributed cells
- */
 void
 PDM_dmesh_dn_entity_set
 (
@@ -218,13 +189,7 @@ PDM_dmesh_dn_entity_set
   }
 }
 
-/**
- *
- * \brief Get the dimensions of the distributed mesh
- *
- * \param [in]    dmesh             Pointer to \ref PDM_dmesh_t object
- * \param [in]    entity_type       Kind of mesh entity \ref PDM_mesh_entities_t
- */
+
 int
 PDM_dmesh_dn_entity_get
 (
@@ -245,14 +210,7 @@ PDM_dmesh_dn_entity_get
   }
 }
 
-/**
- *
- * \brief Get the distributed coordinates array
- *
- * \param [in]   dmesh          Pointer to \ref PDM_dmesh_t object
- * \param [out]  dvtx_coord     Vertex coordinate (size = 3 * dn_vtx)
- * \param [in]   ownership      Ownership for color ( \ref PDM_ownership_t )
- */
+
 void
 PDM_dmesh_vtx_coord_get
 (
@@ -269,14 +227,7 @@ PDM_dmesh_vtx_coord_get
   }
 }
 
-/**
- *
- * \brief Set the distributed coordinates array
- *
- * \param [in]   dmesh          Pointer to \ref PDM_dmesh_t object
- * \param [out]  dvtx_coord     Vertex coordinate (size = 3 * dn_vtx)
- * \param [in]   ownership      Ownership for color ( \ref PDM_ownership_t )
- */
+
 void
 PDM_dmesh_vtx_coord_set
 (
@@ -294,16 +245,7 @@ PDM_dmesh_vtx_coord_set
 }
 
 
-/**
- *
- * \brief Set the distributed connectivity array
- *
- * \param [in]  dmesh             Pointer to \ref PDM_dmesh_t object
- * \param [in]  connectivity_type Connectivity kind \ref PDM_connectivity_type_t
- * \param [in]  connect           Connectivity array (size = connect_idx[n_entity] )
- * \param [in]  connect_idx       Connectivity index (size = n_entity+1 )
- * \param [in]  ownership         Choice of ownership of the input arrays \ref PDM_ownership_t
- */
+
 void
 PDM_dmesh_connectivity_set
 (
@@ -325,17 +267,7 @@ PDM_dmesh_connectivity_set
   }
 }
 
-/**
- *
- * \brief Get the distributed connectivity array
- *
- * \param [in]  dmesh             Pointer to \ref PDM_dmesh_t object
- * \param [in]  connectivity_type Connectivity kind \ref PDM_connectivity_type_t
- * \param [out] connect           Connectivity array (size = connect_idx[n_entity] )
- * \param [out] connect_idx       Connectivity index (size = n_entity+1 )
- * \param [in]  ownership         Choice of ownership of the input arrays \ref PDM_ownership_t
- * \return Number of element of entity kind
- */
+
 int
 PDM_dmesh_connectivity_get
 (
@@ -398,18 +330,6 @@ PDM_dmesh_connectivity_get
 }
 
 
-
-/**
- *
- * \brief Get the distributed connectivity bound array
- *
- * \param [in]  dmesh             Pointer to \ref PDM_dmesh_t object
- * \param [in]  bound_type        Connectivity kind \ref PDM_bound_type_t
- * \param [out] connect           Connectivity array (size = connect_idx[n_bound] )
- * \param [out] connect_idx       Connectivity index (size = n_bound+1 )
- * \param [in]  ownership         Choice of ownership of the input arrays \ref PDM_ownership_t
- * \return Number of group for the requested entity (n_bound)
- */
 int
 PDM_dmesh_bound_get
 (
@@ -437,15 +357,6 @@ PDM_dmesh_bound_get
 }
 
 
-/**
- *
- * \brief Get the distribution of requested entity
- *
- * \param [in]  dmesh             Pointer to \ref PDM_dmesh_t object
- * \param [out] entity_type       entity_type       Kind of mesh entity \ref PDM_mesh_entities_t
- * \param [out] distrib           Distribution array (size = n_rank+1, numbering start at 0)
- * \return Number of process on this distribution ( n_rank )
- */
 int
 PDM_dmesh_distrib_get
 (
@@ -477,13 +388,6 @@ PDM_dmesh_distrib_get
 }
 
 
-/**
- *
- * \brief Free
- *
- * \param [in]  dmesh             Pointer to \ref PDM_dmesh_t object
- *
- */
 void
 PDM_dmesh_free
 (
@@ -504,10 +408,6 @@ PDM_dmesh_free
     }
   }
   dmesh->_dvtx_coord       = NULL;
-
-  // On doit gérer les cas ou la structure est partagé en python et auquel cas
-  // On est owner des resultats et il faut free le reste
-  // Donc il faut un is_getted + is_owner pour s'en sortir
 
   if(( dmesh->owner == PDM_OWNERSHIP_KEEP ) ||
      ( dmesh->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE)){
@@ -580,19 +480,11 @@ PDM_dmesh_free
 
 
 
-/**
- *
- * \brief Compute the bounding box extend of current distributed mesh
- *
- * \param [in]  dmesh             Pointer to \ref PDM_dmesh_t object
- * \return Extents of current mesh (6 components Xmin, Ymin, Zmin, Xmax, Ymax, Zmax )
- *
- */
 const double *
 PDM_dmesh_global_extents_get
 (
  PDM_dmesh_t         *dmesh
- )
+)
 {
   if (dmesh->is_computed_g_extents == PDM_FALSE) {
 
@@ -617,17 +509,6 @@ PDM_dmesh_global_extents_get
 }
 
 
-/**
- *
- * \brief Get the distributed connectivity bound array
- *
- * \param [in]  dmesh             Pointer to \ref PDM_dmesh_t object
- * \param [in]  bound_type        Connectivity kind \ref PDM_bound_type_t
- * \param [in]  n_bound           Number of bound for current entity
- * \param [in]  connect           Connectivity array (size = connect_idx[n_bound] )
- * \param [in]  connect_idx       Connectivity index (size = n_bound+1 )
- * \param [in]  ownership         Choice of ownership of the input arrays \ref PDM_ownership_t
- */
 void
 PDM_dmesh_bound_set
 (
@@ -944,18 +825,6 @@ PDM_dmesh_find_topological_ridges
       pridge_edge[dn_ridge++] = i;
     }
     idx_write++;
-
-    // Dans le cas particulier manifold et pas de truc tordu
-    // int igroup1 = dedge_face_group[2*i  ];
-    // int igroup2 = dedge_face_group[2*i+1];
-
-    // if(igroup1 != igroup2) {
-    //   edge_doublet[2*idx_write  ] = PDM_MIN(igroup1, igroup2);
-    //   edge_doublet[2*idx_write+1] = PDM_MAX(igroup1, igroup2);
-    //   pridge_edge[dn_ridge++] = i;
-    //   idx_write++;
-    // }
-
   }
   PDM_free(dedge_face_group);
   PDM_free(group_list);
@@ -992,7 +861,6 @@ PDM_dmesh_find_topological_ridges
     dridge_vtx[2*i+1] = dedge_vtx[2*i_edge+1];
   }
   PDM_free(pridge_edge);
-  // PDM_log_trace_array_long(dridge_vtx, 2 * dn_ridge, "dridge_vtx ::");
 
   /*
    * Re-création des groupes

@@ -293,12 +293,6 @@ _update_elmt_sections_id
   }
 
   dmn_elts->n_section = n_section;
-
-  // printf("_update_elmt_sections_id | n_section                   = %i \n", n_section);
-  // printf("_update_elmt_sections_id | dmn_elts->n_section_std     = %i \n", dmn_elts->n_section_std);
-  // printf("_update_elmt_sections_id | dmn_elts->n_section_poly2d  = %i \n", dmn_elts->n_section_poly2d);
-  // printf("_update_elmt_sections_id | dmn_elts->n_section_poly3d  = %i \n", dmn_elts->n_section_poly3d);
-
 }
 
 /*=============================================================================
@@ -622,7 +616,6 @@ const char                    *ho_ordering
 }
 
 
-/* Update the owner ship of the different composents of dmn_elts */
 void
 PDM_DMesh_nodal_elmts_update_ownership
 (
@@ -643,15 +636,6 @@ PDM_DMesh_nodal_elmts_update_ownership
 }
 
 
-/**
- * \brief Define a standard section
- *
- * \param [in]  hdl            Distributed nodal mesh handle
- * \param [in]  id_section       Block identifier
- * \param [in]  n_elt          Number of elements
- * \param [in]  connect        Connectivity
- *
- */
 void
 PDM_DMesh_nodal_elmts_section_std_set
 (
@@ -672,9 +656,6 @@ const int                n_elt,
   if (section == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
   }
-
-  // PDM_printf("PDM_DMesh_nodal_elmts_section_std_set - _id_section : %i  \n", _id_section);
-  // PDM_printf("PDM_DMesh_nodal_elmts_section_std_set - n_elt       : %i  \n", n_elt);
 
   /* Mapping */
   section->n_elt   = n_elt;
@@ -700,14 +681,7 @@ const int                n_elt,
   }
 }
 
-/**
- * \brief Return standard section description
- * \param [in]  hdl         Distributed nodal mesh handle
- * \param [in]  id_section  Block identifier
- *
- * \return  connect         Connectivity
- *
- */
+
 PDM_g_num_t *
 PDM_DMesh_nodal_elmts_section_std_get
 (
@@ -735,17 +709,6 @@ const int                      id_section,
   return section->_connec;
 }
 
-
-/**
- * \brief Define a polygon section
- *
- * \param [in]  hdl            Distributed nodal mesh handle
- * \param [in]  id_section       Block identifier
- * \param [in]  n_elt          Number of elements
- * \param [in]  connect_idx    Connectivity index (size = \ref n_elt + 1)
- * \param [in]  connect        Connectivity (size = \ref connect_idx[\ref n_elt])
- *
- */
 
 void
 PDM_DMesh_nodal_elmts_section_poly2d_set
@@ -793,16 +756,6 @@ const PDM_l_num_t              n_elt,
 }
 
 
-/**
- * \brief Return a polygon section description
- *
- * \param [in]  hdl            Distributed nodal mesh handle
- * \param [in]  id_section       Block identifier
- * \param [out] connect_idx    Connectivity index (size = \ref n_elt + 1)
- * \param [out] connect        Connectivity (size = \ref connect_idx[\ref n_elt])
- *
- */
-
 void
 PDM_DMesh_nodal_elmts_section_poly2d_get
 (
@@ -828,17 +781,6 @@ const int                       id_section,
   }
 }
 
-
-
-/**
- * \brief  Return section distribution
- *
- * \param [in]  hdl        Distributed nodal mesh handle
- * \param [in]  id_section   Block identifier
- *
- * \return  A array of size \ref n_ranks + 1
- *
- */
 
 const PDM_g_num_t *
 PDM_DMesh_nodal_elmts_distrib_section_get
@@ -891,6 +833,7 @@ const int                      id_section
     return section->distrib;
   }
 }
+
 
 PDM_Mesh_nodal_elt_t
 PDM_DMesh_nodal_elmts_section_type_get
@@ -1042,15 +985,7 @@ PDM_DMesh_nodal_elmts_total_n_elmt_get
 }
 
 
-/**
-*
-* \brief PDM_sections_decompose_faces
-*
-* \param [in]     hdl                Distributed nodal mesh handle
-* \param [inout]  n_face_elt_tot     Number of faces
-* \param [inout]  n_sum_vtx_face_tot Number of vtx for all faces (cumulative)
-*
-*/
+
 void
 PDM_dmesh_nodal_elmts_decompose_faces_get_size
 (
@@ -1092,15 +1027,7 @@ int                     *n_sum_vtx_face_tot
 }
 
 
-/**
-*
-* \brief PDM_dmesh_nodal_decompose_edges_get_size
-*
-* \param [in]     hdl                Distributed nodal mesh handle
-* \param [inout]  n_edge_elt_tot     Number of edges
-* \param [inout]  n_sum_vtx_edge_tot Number of vtx for all edges (cumulative)
-*
-*/
+
 void
 PDM_dmesh_nodal_elmts_decompose_edges_get_size
 (
@@ -1139,6 +1066,8 @@ int                     *n_sum_vtx_edge_tot
 
 }
 
+
+
 void
 PDM_dmesh_nodal_elmts_generate_distribution
 (
@@ -1169,7 +1098,6 @@ PDM_dmesh_nodal_elmts_generate_distribution
     }
   }
 }
-
 
 
 

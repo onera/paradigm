@@ -225,27 +225,13 @@ static void _def_var
  * Definition des fonctions publiques
  *============================================================================*/
 
-/**
- * \brief Initialise une phase d'écriture parallèle de tableaux de données associées
- * aux numéros de variables PDM
- * Chaque tableau a ses propres caractéristiques :
- *         - taille de données
- *         - nombre de donnée
- *         - indirection (numérotation absolue)
- *
- * \param [in] unite              Unite du fichier
- * \param [in] t_rangement        Type de rangement
- * \param [in] num_var_cedre_max  Numéro max de variable PDM
- * \param [in] n_partition_local  Nombre de partitions locales
- *
- */
-
-void PDM_io_array_write_beg
+void
+PDM_io_array_write_beg
 (
- PDM_io_file_t         *unite,
- const PDM_stride_t  t_rangement,
- const PDM_l_num_t         num_var_cedre_max,
- const PDM_l_num_t         n_partition_local
+       PDM_io_file_t *unite,
+ const PDM_stride_t   t_rangement,
+ const PDM_l_num_t    num_var_cedre_max,
+ const PDM_l_num_t    n_partition_local
 )
 {
   if (PDM_io_tabs == NULL) {
@@ -267,28 +253,17 @@ void PDM_io_array_write_beg
   }
 }
 
-/**
- * \brief Ajoute une partie des donnees dans un tableau associés à une variable
- * PDM
- *
- * \param [in] num_var_cedre          Numéro de variable PDM
- * \param [in] i_part                 indice de partition
- * \param [in] n_composantes          Nombre de composantes pour chaque donnee
- * \param [in] n_donnees              Nombre de donnees a lire
- * \param [in] indirection            Indirection de redistribition des donnees
- * \param [in] donnees                Donnees a écrire
- *
- */
 
-void PDM_io_array_write_data_append
+void
+PDM_io_array_write_data_append
 (
- const PDM_l_num_t            num_var_cedre,
- const PDM_l_num_t            i_part,
- const PDM_l_num_t           *n_composantes,
- const PDM_l_num_t            n_donnees,
- const PDM_g_num_t           *indirection,
- void                        *donnees
- )
+ const PDM_l_num_t  num_var_cedre,
+ const PDM_l_num_t  i_part,
+ const PDM_l_num_t *n_composantes,
+ const PDM_l_num_t  n_donnees,
+ const PDM_g_num_t *indirection,
+       void        *donnees
+)
 {
   _ajout_donnees(num_var_cedre,
                  i_part,
@@ -309,14 +284,15 @@ void PDM_io_array_write_data_append
  *
  */
 
-void PDM_io_array_write_var_def
+void
+PDM_io_array_write_var_def
 (
- const PDM_l_num_t            num_var_cedre,
- const PDM_l_num_t            num_indirection_cedre,
+ const PDM_l_num_t  num_var_cedre,
+ const PDM_l_num_t  num_indirection_cedre,
  const PDM_stride_t t_n_composantes,
- const PDM_l_num_t            n_composantes,
- const PDM_l_num_t            taille_donnee
- )
+ const PDM_l_num_t  n_composantes,
+ const PDM_l_num_t  taille_donnee
+)
 {
   _def_var(num_var_cedre,
            num_indirection_cedre,
@@ -325,13 +301,6 @@ void PDM_io_array_write_var_def
            taille_donnee);
 }
 
-
-/**
- * \brief Finalise une phase d'écriture parallèle de tableaux de données associées
- * aux numéros de variables CEDRE. Cette fonction déclenche réellement
- * les écritures
- *
- */
 
 void PDM_io_array_write_end
 (
@@ -609,27 +578,13 @@ void PDM_io_array_write_end
 }
 
 
-/**
- * \brief Initialise une phase de lecture parallèle de tableaux de données associées
- * aux numéros de variables PDM
- * Chaque tableau a ses propres caractéristiques :
- *         - taille de données
- *         - nombre de donnée
- *         - indirection (numérotation absolue)
- *
- * \param [in] unite              Unite du fichier
- * \param [in] t_rangement        Type de rangement
- * \param [in] num_var_cedre_max  Numéro max de variable PDM
- * \param [in] n_partition_local  Nombre de partitions locales
- *
- */
-
-void PDM_io_array_read_beg
+void
+PDM_io_array_read_beg
 (
- PDM_io_file_t         *unite,
- const PDM_stride_t  t_rangement,
- const PDM_l_num_t         num_var_cedre_max,
- const PDM_l_num_t         n_partition_local
+       PDM_io_file_t *unite,
+ const PDM_stride_t   t_rangement,
+ const PDM_l_num_t    num_var_cedre_max,
+ const PDM_l_num_t    n_partition_local
 )
 {
   if (PDM_io_tabs == NULL) {
@@ -651,27 +606,17 @@ void PDM_io_array_read_beg
   }
 }
 
-/**
- * \brief Ajoute une partie des donnees dans un tableau associés à une variable PDM
- *
- * \param [in] num_var_cedre          Numéro de variable PDM
- * \param [in] i_part                 indice de partition
- * \param [in] n_composantes          Nombre de composantes pour chaque donnee
- * \param [in] n_donnees              Nombre de donnees a lire
- * \param [in] indirection            Indirection de redistribition des donnees
- * \param [in] donnees                Donnees a écrire
- *
- */
 
-void PDM_io_array_read_data_append
+void
+PDM_io_array_read_data_append
 (
- const PDM_l_num_t            num_var_cedre,
- const PDM_l_num_t            i_part,
- const PDM_l_num_t           *n_composantes,
- const PDM_l_num_t            n_donnees,
- const PDM_g_num_t           *indirection,
- void                        *donnees
- )
+ const PDM_l_num_t  num_var_cedre,
+ const PDM_l_num_t  i_part,
+ const PDM_l_num_t *n_composantes,
+ const PDM_l_num_t  n_donnees,
+ const PDM_g_num_t *indirection,
+       void        *donnees
+)
 {
   _ajout_donnees(num_var_cedre,
                  i_part,
@@ -681,25 +626,15 @@ void PDM_io_array_read_data_append
                  donnees);
 }
 
-/**
- * \brief Definition d'une variable en ecriture
- *
- * \param [in] num_var_cedre          Numéro de variable PDM
- * \param [in] num_indirection_cedre  Numéro d'indirection PDM
- * \param [in] t_n_composantes        Type de tailles composantes (PDM_STRIDE_CST_INTERLACED ou PDM_STRIDE_VAR_INTERLACED)
- * \param [in] n_composantes          Nombre de composantes pour chaque donnee
- * \param [in] taille_donnee          Taille unitaire de la donnnee
- *
- */
-
-void PDM_io_array_read_var_def
+void
+PDM_io_array_read_var_def
 (
- const PDM_l_num_t            num_var_cedre,
- const PDM_l_num_t            num_indirection_cedre,
+ const PDM_l_num_t  num_var_cedre,
+ const PDM_l_num_t  num_indirection_cedre,
  const PDM_stride_t t_n_composantes,
- const PDM_l_num_t            n_composantes,
- const PDM_l_num_t            taille_donnee
- )
+ const PDM_l_num_t  n_composantes,
+ const PDM_l_num_t  taille_donnee
+)
 {
   _def_var(num_var_cedre,
            num_indirection_cedre,
@@ -718,7 +653,7 @@ void PDM_io_array_read_var_def
 void PDM_io_array_read_end
 (
  void
- )
+)
 {
   if (PDM_io_tabs == NULL) {
     PDM_error(__FILE__, __LINE__, 0, "Erreur PDM_io_array_read_end :"

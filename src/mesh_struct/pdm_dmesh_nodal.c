@@ -198,16 +198,6 @@ const PDM_MPI_Comm        comm,
  * Public function definitions
  *============================================================================*/
 
-/**
- * \brief Create a Mesh nodal structure
- *
- * \param [in]   n_part   Number of partition on the current process
- * \param [in]   comm     MPI communicator
- *
- * \return       New mesh nodal handle
- *
- */
-
 PDM_dmesh_nodal_t*
 PDM_DMesh_nodal_create
 (
@@ -229,17 +219,6 @@ const PDM_MPI_Comm comm,
   return mesh;
 }
 
-
-/**
- * \brief Free a nodal mesh structure
- *
- * \param [in]  idx      Nodal mesh handle
- * \param [in]  partial  if partial is equal to 0, all data are removed.
- *                       Otherwise, results are kept.
- *
- * \return      NULL
- *
- */
 
 void
 PDM_DMesh_nodal_free
@@ -377,15 +356,6 @@ PDM_DMesh_nodal_section_g_dims_get
   *n_vtx_abs  = dmesh_nodal->n_vtx_abs;
 }
 
-/**
- * \brief  Return number of vertices
- *
- * \param [in]  hdl       Distributed nodal mesh handle
- *
- * \return  Number of vertices
- *
- */
-
 int
 PDM_DMesh_nodal_n_vtx_get
 (
@@ -402,15 +372,6 @@ PDM_DMesh_nodal_n_vtx_get
   return vtx->n_vtx;
 }
 
-
-/**
- * \brief  Return coordinates of vertices
- *
- * \param [in]  hdl       Distributed nodal mesh handle
- *
- * \return  Coordinates of vertices
- *
- */
 
 double *
 PDM_DMesh_nodal_vtx_get
@@ -432,15 +393,6 @@ PDM_DMesh_nodal_vtx_get
 
   return vtx->_coords;
 }
-
-/**
- * \brief  Return tag of vertices
- *
- * \param [in]  hdl       Distributed nodal mesh handle
- *
- * \return  Coordinates of vertices
- *
- */
 
 int*
 PDM_DMesh_nodal_vtx_tag_get
@@ -464,15 +416,6 @@ PDM_DMesh_nodal_vtx_tag_get
 }
 
 
-/**
- * \brief  Return coordinates of vertices
- *
- * \param [in]  hdl       Distributed nodal mesh handle
- *
- * \return  Coordinates of vertices
- *
- */
-
 PDM_g_num_t *
 PDM_DMesh_nodal_vtx_parent_gnum_get
 (
@@ -494,14 +437,6 @@ PDM_dmesh_nodal_t  *dmesh_nodal,
   return vtx->dvtx_parent_g_num;
 }
 
-/**
- * \brief  Return number of sections
- *
- * \param [in]  hdl            Nodal mesh handle
- *
- * \return  Number of sections
- *
- */
 
 int
 PDM_DMesh_nodal_n_section_get
@@ -521,14 +456,7 @@ PDM_DMesh_nodal_n_section_get
   }
 }
 
-/**
- * \brief  Return sections identifier
- *
- * \param [in]  hdl            Distributed nodal mesh handle
- *
- * \return  Blocks identifier
- *
- */
+
 int *
 PDM_DMesh_nodal_sections_id_get
 (
@@ -543,15 +471,7 @@ PDM_DMesh_nodal_sections_id_get
   return dmne->sections_id;
 }
 
-/**
- * \brief  Return type of element of section
- *
- * \param [in]  hdl        Distributed nodal mesh handle
- * \param [in]  id_section   Block identifier
- *
- * \return  Type of section
- *
- */
+
 PDM_Mesh_nodal_elt_t
 PDM_DMesh_nodal_section_elt_type_get
 (
@@ -612,15 +532,7 @@ const int                  id_section
   return t_elt;
 }
 
-/**
- * \brief  Return distri of section
- *
- * \param [in] dmesh_nodal
- * \param [in] id_section   Block identifier
- *
- * \return  distri
- *
- */
+
 PDM_g_num_t*
 PDM_DMesh_nodal_section_distri_std_get
 (
@@ -718,14 +630,7 @@ PDM_DMesh_nodal_section_group_elmt_get
                                   owner);
 }
 
-/**
- * \brief Return standard section description
- * \param [in]  hdl            Distributed nodal mesh handle
- * \param [in]  id_section       Block identifier
- *
- * \return  connect           Connectivity
- *
- */
+
 
 PDM_g_num_t *
 PDM_DMesh_nodal_section_std_get
@@ -740,6 +645,7 @@ const int                  id_section,
   assert(dmne != NULL);
   return PDM_DMesh_nodal_elmts_section_std_get(dmne, id_section, owner);
 }
+
 
 PDM_g_num_t *
 PDM_DMesh_nodal_section_std_ho_get
@@ -793,15 +699,6 @@ const char                    **ho_ordering,
   return section->_connec;
 }
 
-/**
- * \brief Get number of section elements
- *
- * \param [in]  hdl            Distributed nodal mesh handle
- * \param [in]  id_section       Block identifier
- *
- * \return      Number of elements
- *
- */
 
 int
 PDM_DMesh_nodal_section_n_elt_get
@@ -815,16 +712,6 @@ const int                  id_section
   return PDM_DMesh_nodal_elmts_section_n_elt_get(dmne, id_section);
 }
 
-
-/**
- * \brief Get number of section elements
- *
- * \param [in]  hdl            Distributed nodal mesh handle
- * \param [in]  id_section       Block identifier
- *
- * \return      Number of elements
- *
- */
 
 int
 PDM_DMesh_nodal_elmts_section_n_elt_get
@@ -877,16 +764,6 @@ const int                      id_section
 }
 
 
-/**
- * \brief Define a polygon section
- *
- * \param [in]  hdl            Distributed nodal mesh handle
- * \param [in]  id_section       Block identifier
- * \param [in]  n_elt          Number of elements
- * \param [in]  connect_idx    Connectivity index (size = \ref n_elt + 1)
- * \param [in]  connect        Connectivity (size = \ref connect_idx[\ref n_elt])
- *
- */
 
 void
 PDM_DMesh_nodal_section_poly2d_set
@@ -906,15 +783,7 @@ const PDM_l_num_t          n_elt,
 }
 
 
-/**
- * \brief Return a polygon section description
- *
- * \param [in]  hdl            Distributed nodal mesh handle
- * \param [in]  id_section       Block identifier
- * \param [out] connect_idx    Connectivity index (size = \ref n_elt + 1)
- * \param [out] connect        Connectivity (size = \ref connect_idx[\ref n_elt])
- *
- */
+
 
 void
 PDM_DMesh_nodal_section_poly2d_get
@@ -933,19 +802,7 @@ const int                  id_section,
 }
 
 
-/**
- * \brief Define a polyhedra section
- *
- * \param [in]  hdl            Distributed nodal mesh handle
- * \param [in]  id_section       Block identifier
- * \param [in]  n_elt          Number of polyhedra
- * \param [in]  n_face         Number of faces used to describe polyhedra
- * \param [in]  facvtx_idx     Index of face vertex connectivity
- * \param [in]  facvtx         Face vertex connectivity
- * \param [in]  cellfac_idx    Index of cell face connectivity
- * \param [in]  cellfac        Cell face connectivity
- *
- */
+
 
 void
 PDM_DMesh_nodal_section_poly3d_set
@@ -970,18 +827,6 @@ const PDM_l_num_t          n_face,
 }
 
 
-/**
- * \brief Define a polyhedra section
- *
- * \param [in]  hdl            Distributed nodal mesh handle
- * \param [in]  id_section       Block identifier
- * \param [out]  n_face         Number of faces used to describe polyhedra
- * \param [out]  facvtx_idx     Index of face vertex connectivity
- * \param [out]  facvtx         Face vertex connectivity
- * \param [out]  cellfac_idx    Index of cell face connectivity
- * \param [out]  cellfac        Cell face connectivity
- *
- */
 
 void
 PDM_DMesh_nodal_section_poly3d_get
@@ -1005,14 +850,6 @@ const int                   id_section,
 }
 
 
-/**
- * \brief  Return total number of elements of a distributed mesh
- *
- * \param [in]  hdl       Distributed nodal mesh handle
- *
- * \return  Return number elements of a partition
- *
- */
 
 PDM_g_num_t
 PDM_dmesh_nodal_total_n_elmt_get
@@ -1028,14 +865,8 @@ PDM_dmesh_nodal_total_n_elmt_get
   return PDM_DMesh_nodal_elmts_total_n_elmt_get(dmne);
 }
 
-/**
- * \brief  Return vtx distribution of a distributed mesh
- *
- * \param [in]  dmesh_nodal
- *
- * \return  Return vtx distribution
- *
- */
+
+
 PDM_g_num_t*
 PDM_dmesh_nodal_vtx_distrib_get
 (
@@ -1046,14 +877,8 @@ PDM_dmesh_nodal_vtx_distrib_get
   return mesh->vtx->distrib;
 }
 
-/**
- * \brief  Return vtx distribution of a distributed mesh
- *
- * \param [in]  dmesh_nodal
- *
- * \return  Return vtx distribution
- *
- */
+
+
 PDM_g_num_t*
 PDM_dmesh_nodal_vtx_distrib_copy_get
 (
@@ -1088,15 +913,7 @@ PDM_dmesh_nodal_t  *dmesh_nodal
   return vtx->distrib[dmesh_nodal->n_rank];
 }
 
-/**
- *
- * \brief Setup global distribution of all elements register in current structure
- *
- * \param [inout]  mesh
- *
- * \return         Null
- *
- */
+
 void
 PDM_dmesh_nodal_generate_distribution
 (
@@ -1117,14 +934,8 @@ PDM_dmesh_nodal_generate_distribution
   }
 }
 
-/**
- * \brief  Compute elt->elt connectivity
- *
- * \param [out]  dual_graph_idx
- * \param [out]  dual_graph
- * \param [in]   dim Distributed nodal mesh handle
- *
- */
+
+
 void
 PDM_dmesh_nodal_dual_graph
 (
@@ -1163,14 +974,6 @@ PDM_dmesh_nodal_dual_graph
 
 }
 
-/**
- * \brief  Return vertices distribution
- *
- * \param [in]  hdl  Distributed nodal mesh handle
- *
- * \return  A array of size \ref n_ranks + 1
- *
- */
 
 const PDM_g_num_t *
 PDM_DMesh_nodal_distrib_vtx_get
@@ -1187,15 +990,7 @@ PDM_dmesh_nodal_t  *dmesh_nodal
   return vtx->distrib;
 }
 
-/**
- * \brief  Return section distribution
- *
- * \param [in]  hdl        Distributed nodal mesh handle
- * \param [in]  id_section   Block identifier
- *
- * \return  A array of size \ref n_ranks + 1
- *
- */
+
 
 const PDM_g_num_t *
 PDM_DMesh_nodal_distrib_section_get
@@ -1211,6 +1006,7 @@ const int                  id_section
   PDM_dmesh_nodal_elmts_t* dmne = _get_from_geometry_kind(dmesh_nodal, geom_kind);
   return PDM_DMesh_nodal_elmts_distrib_section_get(dmne, id_section);
 }
+
 
 void
 PDM_dmesh_nodal_transfer_to_new_dmesh_nodal
@@ -1345,8 +1141,6 @@ PDM_dmesh_nodal_transfer_to_new_dmesh_nodal_gen
 }
 
 
-
-
 void
 PDM_dmesh_nodal_dump_vtk
 (
@@ -1359,8 +1153,6 @@ PDM_dmesh_nodal_dump_vtk
                                       0, NULL, NULL,
                                       0, NULL, NULL);
 }
-
-
 
 
 void

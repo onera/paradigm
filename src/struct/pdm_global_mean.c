@@ -47,17 +47,6 @@ extern "C" {
  * Public function definitions
  *============================================================================*/
 
-
-/**
- *
- * \brief Create a structure that compute a global mean
- *
- * \param [in]   n_part       Number of local partitions
- * \param [in]   comm         PDM_MPI communicator
- *
- * \return     Pointer to \ref PDM_global_mean object
- */
-
 PDM_global_point_mean_t*
 PDM_global_mean_create
 (
@@ -98,17 +87,6 @@ PDM_global_mean_create
 }
 
 
-/**
- *
- * \brief Set absolute number
- *
- * \param [in]   gmean        Pointer to \ref PDM_global_mean object
- * \param [in]   i_part       Current partition
- * \param [in]   n_point      Number of points in the partition
- * \param [in]   numabs       Absolute number of points
- *
- */
-
 void
 PDM_global_mean_set
 (
@@ -123,13 +101,6 @@ PDM_global_mean_set
   PDM_malloc(gmean->strides[i_part], n_point, int);
 }
 
-/**
- *
- * \brief Free a global point mean structure
- *
- * \param [in]   gmean           Pointer to \ref PDM_global_mean object
- *
- */
 
 void
 PDM_global_mean_free
@@ -170,18 +141,7 @@ PDM_global_mean_free
 
 }
 
-/**
- *
- * \brief Set local field and it associated weight
- *
- * \param [in]   gmean                 Pointer to \ref PDM_global_mean object
- * \param [in]   i_part                Current partition
- * \param [in]   stride                Stride of the field
- * \param [in]   local_field           Local value of field
- * \param [in]   local_weight          Local weight used to compute the mean value
- * \param [in]   global_mean_field_ptr Pointer where global mean field
- *                                     will be stored after computing
- */
+
 
 void
 PDM_global_mean_field_set
@@ -201,13 +161,6 @@ PDM_global_mean_field_set
 
 }
 
-/**
- *
- * \brief Compute the global average field
- *
- * \param [in]   gmean        Pointer to \ref PDM_global_mean object
- *
- */
 
 void
 PDM_global_mean_field_compute

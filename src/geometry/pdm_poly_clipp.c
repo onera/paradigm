@@ -980,40 +980,6 @@ const int       nClippVtxB
  * Public function prototypes
  *============================================================================*/
 
-
-/**
- *
- * \brief Perform polygon clipping
- *
- * \param [in]    ei                   Edges intersection management
- * \param [in]    gNumA                Polygon A global number
- * \param [in]    n_vtxA                Number of polygon A vertices
- * \param [in]    faceToEdgeA          Polygon A face to edge connectivity
- * \param [in]    faceToVtxA           Polygon A face to vertex connectivity
- * \param [in]    face_vtxCooA          Polygon A vertex coordinates
- * \param [in]    face_vtxEpsA          Polygon A vertex characteristic length
- * \param [in]    gNumB                Polygon A global number
- * \param [in]    n_vtxB                Number of polygon B vertices
- * \param [in]    faceToEdgeB          Polygon B face to edge connectivity
- * \param [in]    faceToVtxB           Polygon B face to vertex connectivity
- * \param [in]    face_vtxCooB          Polygon B vertex coordinates
- * \param [in]    face_vtxEpsB          Polygon B vertex characteristic length
- * \param [in]    performed_t          Type of performed polygon :  PDM_POLY_CLIPP_CLIP,  PDM_POLY_CLIPP_REVERSE  // Perform clipped polygons , Perform opposit polygons
- * \param [out]   nPolyClippA           Number of clipped polygon
- * \param [out]   polyClippIdxA         Connectivity index for each polygon
- *                                     size = nPolyClipp + 1
- * \param [out]   polyClippConnecA     Connectivity of each clipped polygon
- *                                     size = polyClippIdx[nPolyClipp] (Vtx from A > 0 and vtx from B < 0)
- * \param [out]   polyClippCoordsA     Vertices coordinates of clipping polygon
- * \param [out]   nPolyClippB          Number of clipped polygon
- * \param [out]   polyClippIdxB         Connectivity index for each polygon
- *                                     size = nPolyClipp + 1
- * \param [out]   polyClippConnecB     Connectivity of each clipped polygon
- *                                     size = polyClippIdx[nPolyClipp] (Vtx from B > 0 and vtx from A < 0)
- * \param [out]   polyClippCoordsB     Vertices coordinates of clipping polygon
- *
- */
-
 void
 PDM_poly_clipp
 (

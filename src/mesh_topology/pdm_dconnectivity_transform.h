@@ -37,6 +37,21 @@ extern "C" {
  * Public function interfaces
  *============================================================================*/
 
+/**
+ *
+ * \brief Compute the combine connectivty of entity1 with entity2 to entity3
+ *
+ * \param [in]   comm                  PDM_MPI communicator
+ * \param [in]   entity1_distrib       Distribution of entity1 over the procs (size=n_rank+1)
+ * \param [in]   entity2_distrib       Distribution of entity2 over the procs (size=n_rank+1)
+ * \param [in]   dentity1_entity2_idx
+ * \param [in]   dentity1_entity2
+ * \param [in]   dentity2_entity3_idx
+ * \param [in]   dentity2_entity3
+ * \param [in]   is_signed             If connectivity is signed
+ * \param [in]   dentity1_entity3_idx
+ * \param [in]   dentity1_entity3
+ */
 void
 PDM_deduce_combine_connectivity
 (
@@ -79,25 +94,65 @@ PDM_dconnectivity_transpose
        PDM_g_num_t    **dentity2_entity1
 );
 
-void PDM_dfacecell_to_dcellface
+/**
+ *
+ * \brief Shortcut to PDM_dconnectivity_transpose for facecell like connectivity
+ *
+ * \param [in]   face_distri           distribution of faces over the procs (size=n_rank+1)
+ * \param [in]   cell_distri           distribution of cells over the procs (size=n_rank+1)
+ * \param [in]   dface_cell            Facecell array, including zeros (size=2*dn_face)
+ * \param [out]  dcell_face_idx        Output cell_face_idx. Will be allocated (size=dn_cell+1)
+ * \param [out]  dcell_face            Ouput cell_face. Will be allocated (size=cell_face_idx[dn_cell])
+ * \param [in]   comm                  PDM_MPI communicator
+ */
+void
+PDM_dfacecell_to_dcellface
 (
-  const PDM_g_num_t* face_distri,
-  const PDM_g_num_t* cell_distri,
-  const PDM_g_num_t* dface_cell,
-  int**              dcell_face_idx,
-  PDM_g_num_t**      dcell_face,
-  PDM_MPI_Comm       comm
-);
-void PDM_dcellface_to_dfacecell
-(
-  const PDM_g_num_t* face_distri,
-  const PDM_g_num_t* cell_distri,
-  const int*         dcell_face_idx,
-  const PDM_g_num_t* dcell_face,
-  PDM_g_num_t**      dface_cell,
-  PDM_MPI_Comm       comm
+  const PDM_g_num_t    *face_distri,
+  const PDM_g_num_t    *cell_distri,
+  const PDM_g_num_t    *dface_cell,
+        int           **dcell_face_idx,
+        PDM_g_num_t   **dcell_face,
+        PDM_MPI_Comm    comm
 );
 
+/**
+ *
+ * \brief Shortcut to PDM_dconnectivity_transpose to obtain facecell like connectivity
+ *
+ * \param [in]   face_distri           distribution of faces over the procs (size=n_rank+1)
+ * \param [in]   cell_distri           distribution of cells over the procs (size=n_rank+1)
+ * \param [in]   dcell_face_idx        cell_face idx array (size = dn_cell)
+ * \param [in]   dcell_face            cell_face array (size = cell_face_idx[dn_cell])
+ * \param [out]  dface_cell            Output face_cell. Will be allocated (size = 2*dn_face)
+ * \param [in]   comm                  PDM_MPI communicator
+ */
+void
+PDM_dcellface_to_dfacecell
+(
+  const PDM_g_num_t    *face_distri,
+  const PDM_g_num_t    *cell_distri,
+  const int            *dcell_face_idx,
+  const PDM_g_num_t    *dcell_face,
+        PDM_g_num_t   **dface_cell,
+        PDM_MPI_Comm    comm
+);
+
+/**
+ *
+ * \brief Compute the combine connectivty of entity1 with entity2 to entity3
+ *
+ * \param [in]   comm                  PDM_MPI communicator
+ * \param [in]   entity1_distrib       Distribution of entity1 over the procs (size=n_rank+1)
+ * \param [in]   entity2_distrib       Distribution of entity2 over the procs (size=n_rank+1)
+ * \param [in]   dentity1_entity2_idx
+ * \param [in]   dentity1_entity2
+ * \param [in]   dentity2_entity3_idx
+ * \param [in]   dentity2_entity3
+ * \param [in]   is_signed             If connectivity is signed
+ * \param [in]   dentity1_entity3_idx
+ * \param [in]   dentity1_entity3
+ */
 void
 PDM_deduce_combine_connectivity_dual
 (
@@ -113,7 +168,15 @@ PDM_deduce_combine_connectivity_dual
        PDM_g_num_t    **dentity1_entity3
 );
 
-
+/**
+ *
+ * \brief Compute the dual connectivty of entity1
+ *
+ * \param [in]   comm                  PDM_MPI communicator
+ * \param [in]   entity1_distrib       Distribution of entity1 over the procs (size=n_rank+1)
+ * \param [in]   dentity1_entity2      Connectivity entity1->entity2
+ * \param [in]   dentity2_entity1      Reversed connectivity of entity1->entity2
+ */
 void
 PDM_dorder_reverse
 (

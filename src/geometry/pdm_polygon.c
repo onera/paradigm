@@ -66,17 +66,6 @@ _random_val
  * Public function definition
  *============================================================================*/
 
-/**
- * \brief Get bounds
- *
- * \param [in]  n_pts   Number of polygon vertices
- * \param [in]  pts      Polygon vertices coordinates
- *
- * \return      Bounds
- *
- */
-
-
 double *
 PDM_polygon_bounds_get
 (
@@ -109,24 +98,6 @@ PDM_polygon_bounds_get
   return bounds;
 }
 
-
-/**
- * \brief Evaluates the position in a polygon
- *
- * \param [in]  x        Point coordinates to evaluate position
- * \param [in]  n_pts   Number of polygon vertices
- * \param [in]  pts      Polygon vertices coordinates
- * \param [out] closest  Closest Point in Polygon or NULL
- * \param [out] minDist2 Square of the distance
- *
- * \return      \ref PDM_POLYGON_INSIDE or \ref PDM_POLYGON_OUTSIDE
- *              if the projected is in the polygon or not
- */
-
-/*  This function is derived from VTK                                      */
-/*  Copyright (c) Ken Martin, Will Schroeder, Bill Lorensen                */
-/*  All rights reserved.                                                   */
-/*  See Copyright.txt or http://www.kitware.com/Copyright.htm for details. */
 
 PDM_polygon_status_t
 PDM_polygon_evaluate_position
@@ -241,28 +212,6 @@ PDM_polygon_evaluate_position
   }
 }
 
-
-/**
- * \brief Computes polygon parametrization
- *
- * \param [in]  n_pts  Number of polygon vertices
- * \param [in]  pts     Polygon vertices coordinates
- * \param [out] p0,     Origin vertex
- * \param [out] p10,    First edge vector
- * \param [out] l10,    First edge length
- * \param [out] p20,    First edge vector
- * \param [out] l20,    Second edge vector
- * \param [out] n       Normal
- *
- * \return      \ref PDM_TRUE except for a triangle
- *
- */
-
-/*  This function is derived from VTK                                      */
-/*  Copyright (c) Ken Martin, Will Schroeder, Bill Lorensen                */
-/*  All rights reserved.                                                   */
-/*  See Copyright.txt or http://www.kitware.com/Copyright.htm for details. */
-
 PDM_bool_t
 PDM_polygon_parameterize
 (
@@ -369,28 +318,6 @@ PDM_GCC_SUPPRESS_WARNING_POP
   return PDM_TRUE;
 }
 
-
-/**
- * \brief Computes polygon parametrization
- *
- * \param [in]  x        Point coordinates to evaluate position
- * \param [in]  n_pts  Number of polygon vertices
- * \param [in]  pts     Polygon vertices coordinates
- * \param [out] p0,     Origin vertex
- * \param [out] p10,    First edge vector
- * \param [out] l10,    First edge length
- * \param [out] p20,    First edge vector
- * \param [out] l20,    Second edge vector
- * \param [out] n       Normal
- *
- * \return      \ref Status inside, outside or degenerated
- *
- */
-
-/*  This function is derived from VTK                                      */
-/*  Copyright (c) Ken Martin, Will Schroeder, Bill Lorensen                */
-/*  All rights reserved.                                                   */
-/*  See Copyright.txt or http://www.kitware.com/Copyright.htm for details. */
 
 
 #define _TOL_POLY 1.e-05
@@ -602,18 +529,6 @@ PDM_polygon_point_in
 #undef _POLYGON_MAX_ITER
 #undef _POLYGON_VOTE_THRESHOLD
 
-
-/**
- * \brief Computes polygon barycenter
- *
- * \param [in]   n_pts  Number of polygon vertices
- * \param [in]   pts     Polygon vertices coordinates
- * \param [out]  bary    Barycenter
- *
- *
- */
-
-
 void
 PDM_polygon_compute_barycenter
 (
@@ -634,23 +549,9 @@ double bary[3]
   }
 }
 
-/**
- * Warning : unstable function (Rather use PDM_polygon_point_in )
- *
- * \brief Test if a point is inside a 2d polygon using the Winding Number method
- *        (see http://geomalgorithms.com/a03-_inclusion.html)
- *
- * \param [in]  xy            Point (x,y)-coordinates
- * \param [in]  n_vtx         Number of polygon vertices
- * \param [in]  vtx_xy        Polygon vertices (x,y)-coordinates
- * \param [in]  char_length   Characteristic length (used to scale tolerance)
- * \param [in]  bounds        Bounds (xmin, xmax, ymin, ymax)
- *
- * \return      \ref Status inside, outside or degenerated
- *
- */
 
-PDM_polygon_status_t PDM_polygon_point_in_2d
+PDM_polygon_status_t
+PDM_polygon_point_in_2d
 (
  const double  xy[2],
  const int     n_vtx,
@@ -762,23 +663,8 @@ PDM_polygon_status_t PDM_polygon_point_in_2d
 
 
 
-/**
- * Warning : unstable function (Rather use PDM_polygon_point_in )
- *
- * \brief Test if a point is inside a 3d polygon using the Winding Number method
- *        (see http://geomalgorithms.com/a03-_inclusion.html)
- *
- * \param [in]  xyz           Point (x,y,z)-coordinates
- * \param [in]  n_vtx         Number of polygon vertices
- * \param [in]  vtx_xyz       Polygon vertices (x,y,z)-coordinates
- * \param [in]  char_length   Characteristic length (used to scale tolerance)
- * \param [in]  bounds        Bounds (xmin, xmax, ymin, ymax, zmin, zmax)
- *
- * \return      \ref Status inside, outside or degenerated
- *
- */
-
-PDM_polygon_status_t PDM_polygon_point_in_3d
+PDM_polygon_status_t
+PDM_polygon_point_in_3d
 (
  const double  xyz[3],
  const int     n_vtx,
@@ -831,28 +717,8 @@ PDM_polygon_status_t PDM_polygon_point_in_3d
 }
 
 
-/**
- * \brief Compute parametric coordinates of a polygon's vertices
- * and a set of point inside the polygon's median plane.
- *
- * The uv-coordinate system is defined as follows:
- *   - origin at first polygon vertex ;
- *   - u-axis oriented from first to second polygon vertex.
- * Aspect-ratio and scale is preserved by the projection (no normalization).
- *
- * \param [in]  n_vtx    Number of polygon vertices
- * \param [in]  vtx_xyz  xyz-coordinates of polygon vertices (size = 3 * \ref n_vtx)
- * \param [out] vtx_uv   uv-coordinates of polygon vertices (size = 2 * \ref n_vtx)
- * \param [in]  n_pts    Number of points
- * \param [in]  pts_xyz  xyz-coordinates of points (size = 3 * \ref n_pts)
- * \param [out] pts_uv   uv-coordinates of points (size = 2 * \ref n_pts)
- * \param [in]  normal   Polygon's normal (size = 3 or NULL)
- *
- * \return      0 if the polygon is degenerate, 1 else.
- *
- */
-
-int PDM_polygon_3d_to_2d
+int
+PDM_polygon_3d_to_2d
 (
  const int    n_vtx,
  const double vtx_xyz[],
@@ -949,12 +815,6 @@ int PDM_polygon_3d_to_2d
 
   return 1;
 }
-
-
-
-
-
-
 
 
 PDM_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wfloat-equal")
@@ -1109,24 +969,6 @@ PDM_polygon_point_in_new
   }
 }
 
-
-/**
- * \brief Compute intersection point between a polygon and a semi-infinite ray
- *
- * \param[in]  ray_origin        Ray origin
- * \param[in]  ray_direction     Ray direction (need not be normalized)
- * \param[in]  n_vtx             Number of vertices
- * \param[in]  vtx_coord         Coordinates of the polygon's vertices
- * \param[in]  poly_center       Coordinates of the polygon's centroid (or NULL)
- * \param[in]  poly_normal       Normal to polygon's median plane (or NULL)
- * \param[in]  poly_bound        Polygon's bounds ([xmin, xmax, ymin, ymax, zmin, zmax] or NULL)
- * \param[out] intersection      Coordinates of the intersection point
- * \param[out] t                 Ray-parameter of the intersection point
- * \param[out] weight            Barycentric coordinates in polygon of intersection point (or NULL)
- *
- * \return Intersection status
- *
- */
 
 PDM_polygon_status_t
 PDM_polygon_ray_intersection

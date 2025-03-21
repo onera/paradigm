@@ -30,7 +30,7 @@
 #include "pdm_part_renum.h"
 #include "pdm_printf.h"
 #include "pdm_priv.h"
-#include "pdm_quick_sort.h"
+#include "pdm_sort.h"
 #include "pdm_timer.h"
 
 /*----------------------------------------------------------------------------
@@ -763,20 +763,6 @@ _split
       // printf("chech : %i \n", check);
       int *edgeWeight = NULL;
 
-      // int *dual_graph_n;
-      // PDM_malloc(dual_graph_n,ppart->dn_cell,int);
-      // for(int i_entity = 0; i_entity < ppart->dn_cell; ++i_entity) {
-      //   dual_graph_n[i_entity] = ppart->ddual_graph_idx[i_entity+1] - ppart->ddual_graph_idx[i_entity];
-      // }
-      // log_trace("ppart->ddual_graph_idx[ppart->dn_cell]:: %i \n ", ppart->ddual_graph_idx[ppart->dn_cell]);
-
-      // PDM_para_graph_compress_connectivity(ppart->dn_cell, ppart->ddual_graph_idx, dual_graph_n, ppart->ddual_graph);
-      // PDM_log_trace_array_long(ppart->ddual_graph_idx, ppart->dn_cell+1, "ddual_graph_idx:: ");
-      // log_trace("------------------------- ");
-      // PDM_log_trace_array_long(ppart->ddual_graph, ppart->ddual_graph_idx[ppart->dn_cell], "ddual_graph:: ");
-
-      // log_trace("After ppart->ddual_graph_idx[ppart->dn_cell]:: %i \n ", ppart->ddual_graph_idx[ppart->dn_cell]);
-
       PDM_SCOTCH_dpart (ppart->dn_cell,
                         ppart->ddual_graph_idx,
                         ppart->ddual_graph,
@@ -1046,11 +1032,8 @@ _distrib_cell
         PDM_printf(" "PDM_FMT_G_NUM, mesh_part->face_ln_to_gn[i1]);
       PDM_printf("\n");
     }
+    PDM_sort_long(mesh_part->face_ln_to_gn, initial_idx, mesh_part->n_face);
 
-    PDM_quick_sort_long2(mesh_part->face_ln_to_gn, /* tableau a trier */
-                         0,                        /* premier elt     */
-                         mesh_part->n_face - 1,    /* dernier elt     */
-                         initial_idx);
 
     /* Remove duplicate faces and build local cell face connectivity*/
 
@@ -1350,11 +1333,7 @@ _distrib_face
       }
 
       /* Sort face_ln_to_gn */
-
-      PDM_quick_sort_long2(mesh_part->vtx_ln_to_gn,                        /* Array to sort */
-                           0,                                              /* First face    */
-                           mesh_part->face_vtx_idx[mesh_part->n_face] - 1, /* Latest face   */
-                           initial_idx);
+      PDM_sort_long(mesh_part->vtx_ln_to_gn, initial_idx, mesh_part->face_vtx_idx[mesh_part->n_face]);
 
       /* Remove duplicate Vertex and build local face vertex connectivity*/
 
@@ -1973,10 +1952,7 @@ _search_part_bound_face
       work_array[j] =  mesh_part->face_part_bound[n_data_face_part_bound * j + 1];
     }
 
-    PDM_quick_sort_int2(work_array,
-                    0,
-                    mesh_part->n_face_part_bound - 1,
-                    ind);
+    PDM_sort_int(work_array, ind, mesh_part->n_face_part_bound);
 
     for (int j = 0; j < n_data_face_part_bound * mesh_part->n_face_part_bound; j++)
       copy_face_part_bound[j] =  mesh_part->face_part_bound[j];
@@ -2001,10 +1977,10 @@ _search_part_bound_face
     }
 
     for (int j = 0; j < n_rank; j++) {
-      PDM_quick_sort_int2(work_array,
-                      mesh_part->face_part_bound_proc_idx[j],
-                      mesh_part->face_part_bound_proc_idx[j+1]-1,
-                      ind);
+      int beg = mesh_part->face_part_bound_proc_idx[j];
+      int end = mesh_part->face_part_bound_proc_idx[j+1];
+      int n_work = end - beg;
+      PDM_sort_int(&work_array[beg], &ind[beg], n_work);
     }
 
     for (int j = 0; j <  mesh_part->n_face_part_bound; j++) {
@@ -2027,10 +2003,10 @@ _search_part_bound_face
     }
 
     for (int j = 0; j < ppart->tn_part; j++) {
-      PDM_quick_sort_long2(work_array2,
-                           mesh_part->face_part_bound_part_idx[j],
-                           mesh_part->face_part_bound_part_idx[j+1]-1,
-                           ind);
+      int beg = mesh_part->face_part_bound_part_idx[j];
+      int end = mesh_part->face_part_bound_part_idx[j+1];
+      int n_work = end - beg;
+      PDM_sort_long(&work_array2[beg], &ind[beg], n_work);
     }
 
     for (int j = 0; j <  mesh_part->n_face_part_bound; j++) {
@@ -2882,60 +2858,6 @@ const  int         i_part,
  * Public function definitions
  *============================================================================*/
 
-/**
- *
- * \brief Build a initial partitioning
- *  Build a initial partitioning from :
- *      - Cell block distribution with implicit global numbering
- *         (the first cell is the first cell of the first process and
- *          the latest cell is the latest cell of the latest process)
- *      - Face block distribution with implicit global numbering
- *      - Vertex block distribution with implicit global numbering
- *  To repart an existing partition use \ref PDM_part_repart function
- *
- * \param [in]   comm                   MPI Comminicator
- * \param [in]   split_method           Split method
- * \param [in]   renum_cell_method      Cell renumbering method
- * \param [in]   renum_face_method      Face renumbering method
- * \param [in]   n_property_cell        Number of cell properties
- * \param [in]   renum_properties_cell  For cache blocking [ n_cell_per_cache_wanted, isAsynchrone, isVectorisation ] \ref PDM_renum_cacheblocking
- * \param [in]   n_property_face        Number of face properties
- * \param [in]   renum_properties_face  NOT USED
- * \param [in]   n_part                 Number of partition to build on this process
- * \param [in]   dn_cell                Number of distributed cells
- * \param [in]   dn_face                Number of distributed faces
- * \param [in]   dn_vtx                 Number of distributed vertices
- * \param [in]   n_face_group           Number of face groups
- * \param [in]   dcell_face_idx         Distributed cell face connectivity index or NULL
- *                                      (size : dn_cell + 1, numbering : 0 to n-1)
- * \param [in]   dcell_face             Distributed cell face connectivity or NULL
- *                                      (size : dface_vtx_idx[dn_cell], numbering : 1 to n)
- * \param [in]   dcell_tag              Cell tag (size : n_cell) or NULL
- * \param [in]   dcell_weight           Cell weight (size : n_cell) or NULL
- * \param [in]   have_dcell_part        Presence of an array of cell part id
- * \param [in]   dcell_part             Distributed cell partitioning
- *                                      (size = dn_cell) or NULL (No partitioning if != NULL)
- * \param [in]   dface_cell             Distributed face cell connectivity or NULL
- *                                      (size : 2 * dn_face, numbering : 1 to n)
- * \param [in]   dface_vtx_idx          Distributed face to vertex connectivity index
- *                                      (size : dn_face + 1, numbering : 0 to n-1)
- * \param [in]   dface_vtx              Distributed face to vertex connectivity
- *                                      (size : dface_vtx_idx[dn_face], numbering : 1 to n)
- * \param [in]   dface_tag              Distributed face tag (size : dn_face)
- *                                      or NULL
- * \param [in]   dvtx_coord             Distributed vertex coordinates
- *                                      (size : 3*dn_vtx)
- * \param [in]   dvtx_tag               Distributed vertex tag (size : dn_vtx) or NULL
- * \param [in]   dface_group_idx        Index of distributed faces list of each group
- *                                      (size = n_face_group + 1) or NULL
- * \param [in]   dface_group            Distributed faces list of each group
- *                                      (size = dface_group[dface_group_idx[n_face_group]], numbering : 1 to n)
- *                                      or NULL
- *
- * \return    Pointer to \ref PDM_part object
- *
- */
-
 PDM_part_t *
 PDM_part_create
 (
@@ -3387,26 +3309,6 @@ PDM_part_create
 }
 
 
-/**
- *
- * \brief Return a mesh partition dimensions
- *
- * \param [in]   ppart               Pointer to \ref PDM_part object
- * \param [in]   i_part              Current partition
- * \param [out]  n_cell              Number of cells
- * \param [out]  n_face              Number of faces
- * \param [out]  n_face_part_bound   Number of partitioning boundary faces
- * \param [out]  n_vtx               Number of vertices
- * \param [out]  n_proc              Number of processus
- * \param [out]  n_total_part        Number of partitions
- * \param [out]  scell_face          Size of cell-face connectivity
- * \param [out]  sface_vtx           Size of face-vertex connectivity
- * \param [out]  sFacePartBound      Size of face_part_bound array
- * \param [out]  sface_group         Size of face_group array
- * \param [out]  n_face_group        Number of face groups
- *
- */
-
 void
 PDM_part_part_dim_get
 (
@@ -3467,45 +3369,10 @@ const   int  i_part,
   }
 }
 
-/**
- *
- * \brief Return a mesh partition
- *
- * \param [in]   ppart                     Pointer to \ref PDM_part object
- * \param [in]   i_part                    Current partition
- * \param [out]  cell_tag                  Cell tag (size = n_cell)
- * \param [out]  cell_face_idx             Cell to face connectivity index (size = n_cell + 1, numbering : 0 to n-1)
- * \param [out]  cell_face                 Cell to face connectivity (size = cell_face_idx[n_cell] = lcell_face
- *                                                                   numbering : 1 to n)
- * \param [out]  cell_ln_to_gn             Cell local numbering to global numbering (size = n_cell, numbering : 1 to n)
- * \param [out]  face_tag                  Face tag (size = n_face)
- * \param [out]  face_cell                 Face to cell connectivity  (size = 2 * n_face, numbering : 1 to n)
- * \param [out]  face_vtx_idx              Face to Vertex connectivity index (size = n_face + 1, numbering : 0 to n-1)
- * \param [out]  face_vtx                  Face to Vertex connectivity (size = faceVertexIdx[n_face], numbering : 1 to n)
- * \param [out]  face_ln_to_gn             Face local numbering to global numbering (size = n_face, numbering : 1 to n)
- * \param [out]  face_part_bound_proc_idx  Partitioning boundary faces block distribution from processus (size = n_proc + 1)
- * \param [out]  face_part_bound_part_idx  Partitioning boundary faces block distribution from partition (size = n_total_part + 1)
- * \param [out]  face_part_bound           Partitioning boundary faces (size = 4 * n_face_part_bound)
- *                                          sorted by processus, sorted by partition in each processus, and
- *                                          sorted by absolute face number in each partition
- *                                         For each face :
- *                                           - Face local number (numbering : 1 to n)
- *                                           - Connected process (numbering : 0 to n-1)
- *                                           - Connected Partition
- *                                             on the connected process (numbering :1 to n)
- *                                           - Connected face local number
- *                                             in the connected partition (numbering :1 to n)
- * \param [out]  vtx_tag                   Vertex tag (size = nVertex)
- * \param [out]  vtx                       Vertex coordinates (size = 3 * nVertex)
- * \param [out]  vtx_ln_to_gn              Vertex local numbering to global numbering (size = n_vtx, numbering : 1 to n)
- * \param [out]  face_group_idx            Face group index (size = n_face_group + 1, numbering : 1 to n-1)
- * \param [out]  face_group                Faces for each group (size = face_group_idx[n_face_group] = lFaceGroup, numbering : 1 to n)
- * \param [out]  face_group_ln_to_gn       Faces global numbering for each group
- *                                         (size = face_group_idx[n_face_group] = lFaceGroup, numbering : 1 to n)
- *
- */
 
-void PDM_part_part_val_get
+
+void
+PDM_part_part_val_get
 (
 PDM_part_t     *ppart,
 const  int      i_part,
@@ -3584,20 +3451,8 @@ const  int      i_part,
 }
 
 
-/**
- *
- * \brief Return the coloring of a mesh partition
- *
- * \param [in]   ppart               Pointer to \ref PDM_part object
- * \param [in]   i_part              Current partition
- * \param [out]  cell_color          Cell color (size = n_cell)
- * \param [out]  face_color          Face color (size = n_face)
- * \param [out]  thread_color        Thread color (size = n_cell)
- * \param [out]  hyperplane_color    Hyperplane color (size = n_cell)
- *
- */
-
-void PDM_part_part_color_get
+void
+PDM_part_part_color_get
 (
 PDM_part_t     *ppart,
 const  int      i_part,
@@ -3650,15 +3505,6 @@ const  int      i_part,
   }
 }
 
-
-
-/**
- *
- * \brief Free ppart
- *
- * \param [in]   ppart               Pointer to \ref PDM_part object
- *
- */
 
 void
 PDM_part_free
@@ -3739,20 +3585,8 @@ PDM_part_free
 }
 
 
-
-/**
- *
- * \brief Return times
- *
- * \param [in]   ppart       Pointer to \ref PDM_part object
- * \param [out]  elapsed     Elapsed times (size = 4)
- * \param [out]  cpu         Cpu times (size = 4)
- * \param [out]  cpu_user    User cpu times (size = 4)
- * \param [out]  cpu_sys     System cpu times (size = 4)
- *
- */
-
-void PDM_part_time_get
+void
+PDM_part_time_get
 (
  PDM_part_t  *ppart,
  double     **elapsed,
@@ -3769,24 +3603,6 @@ void PDM_part_time_get
   *cpu_sys  = _ppart->times_cpu_s;
 }
 
-
-/**
- *
- * \brief Return statistics
- *
- * \param [in]   ppart                          Pointer to \ref PDM_part object
- * \param [out]  cells_average                  average of cells number
- * \param [out]  cells_median                   median of cells number
- * \param [out]  cells_std_deviation            standard deviation of cells number
- * \param [out]  cells_min                      minimum of cells nummber
- * \param [out]  cells_max                      maximum of cells nummber
- * \param [out]  bound_part_faces_average       average of partitioning boundary faces
- * \param [out]  bound_part_faces_median        median of partitioning boundary faces
- * \param [out]  bound_part_faces_std_deviation standard deviation of partitioning boundary faces
- * \param [out]  bound_part_faces_min           minimum of partitioning boundary faces
- * \param [out]  bound_part_faces_max           maximum of partitioning boundary faces
- *
- */
 
 void
 PDM_part_stat_get
@@ -3876,8 +3692,8 @@ int         *bound_part_faces_sum
                      PDM_MPI_INT,
                      _ppart->comm);
 
-  PDM_quick_sort_int(s_tot, 0, _ppart->dpart_proc[n_rank]-1);
-  PDM_quick_sort_int(n_tot, 0, _ppart->dpart_proc[n_rank]-1);
+  PDM_sort_int(s_tot, NULL, _ppart->dpart_proc[n_rank]);
+  PDM_sort_int(n_tot, NULL, _ppart->dpart_proc[n_rank]);
 
   double   _cells_average;
 
@@ -3951,15 +3767,6 @@ int         *bound_part_faces_sum
 }
 
 
-
-/**
- *
- * \brief Free partially a \ref PDM_part_object
- *
- * \param [in]   ppart       Pointer to \ref PDM_part object
- *
- */
-
 void
 PDM_part_partial_free
 (
@@ -3993,12 +3800,9 @@ PDM_part_partial_free
     PDM_free(_ppart->ddual_graph);
   _ppart->ddual_graph = NULL;
 
-  // printf("PDM_part_partial_free f2 \n");
   for (int i = 0; i < _ppart->n_part; i++) {
     _part_partial_free(_ppart->mesh_parts[i]);
   }
-  // printf("PDM_part_partial_free f3 \n");
-  // printf("PDM_part_partial_free f8 \n");
 
 }
 

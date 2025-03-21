@@ -27,11 +27,18 @@
 #include "pdm_predicate.h"
 #include "pdm_priv.h"
 
+#ifdef __cplusplus
+extern "C" {
+#if 0
+} /* Fake brace to force back Emacs auto-indentation back to column 0 */
+#endif
+#endif /* __cplusplus */
+
 /*=============================================================================
  * Macro definitions
  *============================================================================*/
- #define PDM_UNUSED_IO_KEY    "TO DEFINE"
- #define PDM_INRIA_IO_KEY_DIM PDM_MESH_NODAL_N_ELEMENT_TYPES
+#define PDM_UNUSED_IO_KEY    "TO DEFINE"
+#define PDM_INRIA_IO_KEY_DIM PDM_MESH_NODAL_N_ELEMENT_TYPES
 
 /*============================================================================
  * Type
@@ -161,19 +168,6 @@ _set_groups
 /*=============================================================================
  * Public function prototypes
  *============================================================================*/
-
-/**
- *
- * \brief Create a dmesh nodal from a file in ASCII GAMMA mesh format
- *
- * \param[in]  comm                MPI communicator
- * \param[in]  filename            Filename
- * \param[in]  fix_orientation_2d  Ensure positive area for 2d faces
- * \param[in]  fix_orientation_3d  Ensure positive volume for 3d cells
- *
- * \return Pointer to PDM_dmesh_nodal object
- *
- */
 
 PDM_dmesh_nodal_t *
 PDM_reader_gamma_dmesh_nodal
@@ -666,16 +660,6 @@ PDM_reader_gamma_dmesh_nodal
 
   PDM_g_num_t *dtetra_vtx = NULL;
   if (gn_tetra > 0) {
-    // Can overflow in buffer send/recv - Two much stride
-    // PDM_block_to_block_exch(btb_tetra,
-    //                         sizeof(PDM_g_num_t),
-    //                         PDM_STRIDE_CST_INTERLACED,
-    //                         4,
-    //                         NULL,
-    //               (void  *) gtetra_vtx,
-    //                         NULL,
-    //               (void **) &dtetra_vtx);
-
     // Economic exchange
     PDM_MPI_Datatype mpi_tetra_type;
     PDM_MPI_Type_create_contiguous(4, PDM__PDM_MPI_G_NUM, &mpi_tetra_type);
@@ -1039,7 +1023,8 @@ PDM_reader_gamma_dmesh_nodal
 
 
 void
-PDM_write_meshb(
+PDM_write_meshb
+(
   const char         *filename,
   const int          *n_elt_table,
         int         **tag_table,
@@ -1476,3 +1461,8 @@ PDM_read_gamma_sol_at_vertices
 
   return n_vtx;
 }
+
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */

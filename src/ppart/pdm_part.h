@@ -208,7 +208,8 @@ const  int    i_part,
  *
  */
 
-void PDM_part_part_val_get
+void
+PDM_part_part_val_get
 (
 PDM_part_t          *ppart,
 const int            i_part,
@@ -246,7 +247,8 @@ const int            i_part,
  *
  */
 
-void PDM_part_part_color_get
+void
+PDM_part_part_color_get
 (
 PDM_part_t          *ppart,
 const int            i_part,

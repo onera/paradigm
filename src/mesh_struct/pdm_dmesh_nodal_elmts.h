@@ -46,7 +46,6 @@ typedef struct _pdm_dmesh_nodal_elts_t PDM_dmesh_nodal_elmts_t;
  * Public function interfaces
  *============================================================================*/
 
-
 PDM_dmesh_nodal_elmts_t*
 PDM_DMesh_nodal_elmts_create
 (

@@ -1362,15 +1362,6 @@ _interpolate
  * Public function definitions
  *============================================================================*/
 
-/**
- *
- * \brief Create a structure that compute a global mean
- *
- * \param [in]   n_part       Number of local partitions
- * \param [in]   comm         PDM_MPI communicator
- *
- * \return     Pointer to \ref PDM_field_cell_to_vtx object
- */
 PDM_field_cell_to_vtx_t*
 PDM_field_cell_to_vtx_create
 (
@@ -1745,8 +1736,6 @@ PDM_field_cell_to_vtx_compute
     }
   }
 
-
-
   /* Free */
   for(int i_part = 0; i_part < fctv->n_part_loc_all_domain; ++i_part){
     PDM_free(pvtx_cell_coords  [i_part]);
@@ -1756,8 +1745,6 @@ PDM_field_cell_to_vtx_compute
   PDM_free(pvtx_cell_coords_n);
 
   /* Compute weight */
-
-
 
 }
 

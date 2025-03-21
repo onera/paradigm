@@ -22,7 +22,6 @@
 #include "pdm_logging.h"
 #include "pdm_mem_tool.h"
 #include "pdm_priv.h"
-#include "pdm_size_idx_from_stride.h"
 #include "pdm_timer.h"
 
 #ifdef __cplusplus
@@ -144,12 +143,6 @@ _comm_graph_statistics
  * Public function definitions
  *============================================================================*/
 
-/**
- *
- * \brief Reset global statistic
- *
- */
-
 void
 PDM_block_to_part_global_statistic_reset
 (
@@ -167,22 +160,6 @@ PDM_block_to_part_global_statistic_reset
   }
 }
 
-
-/**
- *
- * \brief Get global timer in part to block
- *
- * \param [in]   comm                 MPI communicator
- * \param [out]  btp_min_exch_rank_send   Global min part of ranks used to send
- * \param [out]  btp_min_exch_rank_recv   Global min part of ranks used to receive
- * \param [out]  btp_max_exch_rank_send   Global max part of ranks used to send
- * \param [out]  btp_max_exch_rank_recv   Global max part of ranks used to receive
- * \param [out]  min_btp_exch_data_send   Global min sent data for a rank
- * \param [out]  min_btp_exch_data_recv   Global min received data for a rank
- * \param [out]  max_btp_exch_data_send   Global max sent data for a rank
- * \param [out]  max_btp_exch_data_recv   Global max received data for a rank
- * 
- */
 
 void
 PDM_block_to_part_global_statistic_get
@@ -230,26 +207,6 @@ PDM_block_to_part_global_statistic_get
 }
 
 
-/**
- *
- * \brief Get global timer in block to part
- *
- * \param [in]   comm              MPI communicator
- * \param [out]  min_elaps         Min elapsed time
- * \param [out]  max_elaps         Max elapsed time
- * \param [out]  min_cpu           Min cpu time
- * \param [out]  max_cpu           Max cpu time
- * \param [out]  min_elaps_create  Global min elapsed for create function
- * \param [out]  max_elaps_create  Global max elapsed for create function
- * \param [out]  min_cpu_create    Global min cpu for create function
- * \param [out]  max_cpu_create    Global max cpu for create function
- * \param [out]  min_elaps_exch    Global min elapsed for exch function
- * \param [out]  max_elaps_exch    Global max elapsed for exch function
- * \param [out]  min_cpu_exch      Global min cpu for exch function
- * \param [out]  max_cpu_exch      Global max cpu for exch function
- * 
- */
-
 void
 PDM_block_to_part_global_timer_get
 (
@@ -292,15 +249,6 @@ PDM_block_to_part_global_timer_get
   *max_cpu_exch      = max_cpu[DATA_EXCHANGE];   // Indifferently in place or classic
 
 }
-
-/**
- *
- * \brief Global write block-to-part step timer
- *
- * \param [in]  comm            MPI communicator
- * \param [in]  filename        File name
- *
- */
 
 void
 PDM_block_to_part_time_per_step_dump
@@ -396,15 +344,6 @@ PDM_block_to_part_time_per_step_dump
   PDM_io_free(writer);
 }
 
-/**
- *
- * \brief Write in parallel communication graph
- *
- * \param [in]  btp             Block-to-Part structure
- * \param [in]  filename        File name
- *
- */
-
 void
 PDM_block_to_part_comm_graph_dump
 (
@@ -476,20 +415,6 @@ PDM_block_to_part_comm_graph_dump
   PDM_io_free(writer);
 }
 
-/**
- *
- * \brief Create a block to partitions redistribution
- *
- * \param [in]   block_distrib_idx Block distribution (size : \ref size of \ref comm + 1)
- *                               C numbering (block_distrib_idx[0] = 0)
- * \param [in]   gnum_elt        Element global number (size : \ref n_part)
- * \param [in]   n_elt           Local number of elements (size : \ref n_part)
- * \param [in]   n_part          Number of partition
- * \param [in]   comm            MPI communicator
- *
- * \return   Initialized \ref PDM_block_to_part instance
- *
- */
 PDM_block_to_part_t *
 PDM_block_to_part_create_from_sparse_block_and_distrib
 (
@@ -836,21 +761,6 @@ PDM_block_to_part_create
 
 }
 
-
-/**
- *
- * \brief Initialize an exchange
- *
- * \param [in]   btp          Block to part structure
- * \param [in]   s_data       Data size
- * \param [in]   t_stride     Stride type
- * \param [in]   block_stride Stride for each block element for \ref PDM_STRIDE_VAR
- *                            Constant stride for \ref PDM_STRIDE_VAR
- * \param [in]   block_data   Block data
- * \param [out]  part_stride  Partition stride or NULL
- * \param [out]  part_data    Partition data
- *
- */
 
 void
 PDM_block_to_part_exch_in_place
@@ -1279,10 +1189,31 @@ PDM_block_to_part_exch_in_place
     }
 
 
-    int mandatory_size = PDM_size_idx_from_stride (n_send_buffer, btp->n_rank, btp->comm);
-    mandatory_size = PDM_MAX(PDM_size_idx_from_stride (n_send_buffer, btp->n_rank, btp->comm), mandatory_size);
-  
-    if (mandatory_size > 32) {
+    if (btp->p2p_factor < btp->part_active_rank) {
+
+      int *_i_send_buffer = NULL;
+      int *_i_recv_buffer = NULL;
+      PDM_malloc(_i_send_buffer, btp->n_rank, int);
+      PDM_malloc(_i_recv_buffer, btp->n_rank, int);
+
+      for (int i = 0; i < btp->n_rank; i++) {
+        _i_send_buffer[i] = (int) i_send_buffer[i];
+        _i_recv_buffer[i] = (int) i_recv_buffer[i];
+      }
+
+      PDM_MPI_Alltoallv(send_buffer[0],
+                        n_send_buffer,
+                        _i_send_buffer,
+                        mpi_type,
+                        recv_buffer,
+                        n_recv_buffer,
+                        _i_recv_buffer,
+                        mpi_type,
+                        btp->comm);
+
+      PDM_free(_i_send_buffer);
+      PDM_free(_i_recv_buffer);
+    } else {
   
       PDM_MPI_Alltoallv_p2p_l(send_buffer[0],
                               n_send_buffer,
@@ -1295,49 +1226,6 @@ PDM_block_to_part_exch_in_place
                               btp->comm);
   
     }
-    
-    else {
-  
-      if (btp->p2p_factor < btp->part_active_rank) {
-  
-        int *_i_send_buffer = NULL;
-        int *_i_recv_buffer = NULL;
-        PDM_malloc(_i_send_buffer, btp->n_rank, int);
-        PDM_malloc(_i_recv_buffer, btp->n_rank, int);
-  
-        for (int i = 0; i < btp->n_rank; i++) {
-          _i_send_buffer[i] = (int) i_send_buffer[i];
-          _i_recv_buffer[i] = (int) i_recv_buffer[i];
-        }
-  
-        PDM_MPI_Alltoallv(send_buffer[0],
-                          n_send_buffer,
-                          _i_send_buffer,
-                          mpi_type,
-                          recv_buffer,
-                          n_recv_buffer,
-                          _i_recv_buffer,
-                          mpi_type,
-                          btp->comm);
-  
-        PDM_free(_i_send_buffer);
-        PDM_free(_i_recv_buffer);
-      }
-  
-      else {
-  
-        PDM_MPI_Alltoallv_p2p_l(send_buffer[0],
-                                n_send_buffer,
-                                i_send_buffer,
-                                mpi_type,
-                                recv_buffer,
-                                n_recv_buffer,
-                                i_recv_buffer,
-                                mpi_type,
-                                btp->comm);
-  
-      }
-    }  
 
     // PDM_MPI_Alltoallv_l(send_buffer[0],
     //                     n_send_buffer,
@@ -1392,7 +1280,7 @@ PDM_block_to_part_exch_in_place
 
       for (int j = 0; j < btp->n_elt[i]; j++) {
 
-        int idx1  = part_idx[i][j] * (int) s_data;
+        int idx1  = part_idx   [i][j] * (int) s_data;
         int n_elt = part_stride[i][j] * (int) s_data;
 
         int idx2 = recv_idx[btp->ind[i][j]] * (int) s_data;
@@ -1444,24 +1332,6 @@ PDM_block_to_part_exch_in_place
   PDM_free(recv_buffer);
 
 }
-
-
-
-/**
- *
- * \brief Initialize an exchange
- * (part_stride and part_data are allocated in function)
- *
- * \param [in]   btp          Block to part structure
- * \param [in]   s_data       Data size
- * \param [in]   t_stride     Stride type
- * \param [in]   block_stride Stride for each block element for \ref PDM_STRIDE_VAR
- *                            Constant stride for \ref PDM_STRIDE_VAR
- * \param [in]   block_data   Block data
- * \param [out]  part_stride  Partition stride or NULL
- * \param [out]  part_data    Partition data
- *
- */
 
 void
 PDM_block_to_part_exch
@@ -1738,11 +1608,31 @@ PDM_block_to_part_exch
   /*
    * Data exchange
    */
+  if (btp->p2p_factor  < btp->part_active_rank) {
 
-  int mandatory_size = PDM_size_idx_from_stride (n_send_buffer, btp->n_rank, btp->comm);
-  mandatory_size = PDM_MAX(PDM_size_idx_from_stride (n_send_buffer, btp->n_rank, btp->comm), mandatory_size);
+    int *_i_send_buffer = NULL;
+    int *_i_recv_buffer = NULL;
+    PDM_malloc(_i_send_buffer, btp->n_rank, int);
+    PDM_malloc(_i_recv_buffer, btp->n_rank, int);
 
-  if (mandatory_size > 32) {
+    for (int i = 0; i < btp->n_rank; i++) {
+      _i_send_buffer[i] = (int) i_send_buffer[i];
+      _i_recv_buffer[i] = (int) i_recv_buffer[i];
+    }
+
+    PDM_MPI_Alltoallv(send_buffer,
+                      n_send_buffer,
+                      _i_send_buffer,
+                      mpi_type,
+                      recv_buffer,
+                      n_recv_buffer,
+                      _i_recv_buffer,
+                      mpi_type,
+                      btp->comm);
+
+    PDM_free(_i_send_buffer);
+    PDM_free(_i_recv_buffer);
+  } else {
 
     PDM_MPI_Alltoallv_p2p_l(send_buffer,
                             n_send_buffer,
@@ -1755,49 +1645,6 @@ PDM_block_to_part_exch
                             btp->comm);
 
   }
-  
-  else {
-
-    if (btp->p2p_factor  < btp->part_active_rank) {
-
-      int *_i_send_buffer = NULL;
-      int *_i_recv_buffer = NULL;
-      PDM_malloc(_i_send_buffer, btp->n_rank, int);
-      PDM_malloc(_i_recv_buffer, btp->n_rank, int);
-
-      for (int i = 0; i < btp->n_rank; i++) {
-        _i_send_buffer[i] = (int) i_send_buffer[i];
-        _i_recv_buffer[i] = (int) i_recv_buffer[i];
-      }
-
-      PDM_MPI_Alltoallv(send_buffer,
-                        n_send_buffer,
-                        _i_send_buffer,
-                        mpi_type,
-                        recv_buffer,
-                        n_recv_buffer,
-                        _i_recv_buffer,
-                        mpi_type,
-                        btp->comm);
-
-      PDM_free(_i_send_buffer);
-      PDM_free(_i_recv_buffer);
-    }
-
-    else {
-
-      PDM_MPI_Alltoallv_p2p_l(send_buffer,
-                              n_send_buffer,
-                              i_send_buffer,
-                              mpi_type,
-                              recv_buffer,
-                              n_recv_buffer,
-                              i_recv_buffer,
-                              mpi_type,
-                              btp->comm);
-
-    }
-  }  
 
   // PDM_MPI_Alltoallv_l(send_buffer,
   //                     n_send_buffer,
@@ -1897,16 +1744,6 @@ PDM_block_to_part_exch
 
 }
 
-
-/**
- *
- * \brief Free a block to part structure
- *
- * \param [inout] btp  Block to part structure
- *
- * \return       NULL
- */
-
 PDM_block_to_part_t *
 PDM_block_to_part_free
 (
@@ -1944,16 +1781,6 @@ PDM_block_to_part_free
 }
 
 
-/**
- *
- * \brief Return index in the block for a gnum
- *
- * \param [in] ptb         Part to block structure
- * \param [in] gNum        Global number
- *
- * \return  Index
- */
-
 PDM_l_num_t
 PDM_block_to_part_gnum_idx_get
 (
@@ -1963,16 +1790,6 @@ PDM_block_to_part_gnum_idx_get
 {
   return (PDM_l_num_t) (gNum - 1 - btp->block_distrib_idx[btp->i_rank]);
 }
-
-
-/**
- *
- * \brief Get the number of partitions
- *
- * \param [in] btp         Block to part structure
- *
- * \return  Number of partitions
- */
 
 int
 PDM_block_to_part_n_part_get
@@ -1984,17 +1801,6 @@ PDM_block_to_part_n_part_get
 
   return btp->n_part;
 }
-
-
-/**
- *
- * \brief Get the number of elements in a given partition
- *
- * \param [in] btp         Block to part structure
- * \param [in] i_part      Id of current partition
- *
- * \return  Number of element in the current partition
- */
 
 int
 PDM_block_to_part_n_elt_get

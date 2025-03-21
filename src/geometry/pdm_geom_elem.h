@@ -498,12 +498,12 @@ PDM_geom_elem_pyramid_properties
  *  @param [in]  face_connectivity            Face connectivity
  *  @param [in]  cellToFace_connectivity_idx  Cell to face connectivity index
  *  @param [in]  cellToFace_connectivity      Cell to face connectivity
- *  @param [in]  n_vertices                    Number of vertices
+ *  @param [in]  n_vertices                   Number of vertices
  *  @param [in]  coords                       Vertices coordinates
  *  @param [out] volume                       Volume
  *  @param [out] center                       Center
- *  @param [out] characteristic_length         Characteristic length (active if != NULL)
- *  @param [out] is_degenerated                Degenerated edge indicator (active if != NULL)
+ *  @param [out] characteristic_length        Characteristic length (active if != NULL)
+ *  @param [out] is_degenerated               Degenerated edge indicator (active if != NULL)
  */
 
 void

@@ -12,7 +12,6 @@
 
 #include "pdm_compare_operator.h"
 #include "pdm_mem_tool.h"
-#include "pdm_quick_sort.h"
 #include "pdm_sort.h"
 
 
