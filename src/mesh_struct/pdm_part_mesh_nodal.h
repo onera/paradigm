@@ -17,6 +17,7 @@
 #include "pdm_mesh_nodal.h"
 #include "pdm_mpi.h"
 #include "pdm_part_mesh_nodal_elmts.h"
+#include "pdm_part_comm_graph.h"
 
 /*=============================================================================
  * Macro definition
@@ -1247,6 +1248,63 @@ PDM_part_mesh_nodal_cell_vtx_connect_get
   const int                     i_part,
         int                   **cell_vtx_idx,
         int                   **cell_vtx
+);
+
+
+
+/**
+ *
+ * \brief Set part_comm_graph onto part_mesh_nodal struct
+ *
+ * \param [in]  pmn        Pointer to \ref PDM_part_mesh_nodal_t instance
+ * \param [in]  pcg        Pointer to \ref PDM_part_comm_graph_t instance
+ * \param [in]  geom_kind  Geometry kind (corner, ridge, surface or volume)
+ * \param [in]  ownership  part_mesh_nodal ownership on given part_comm_graph
+ *
+ */
+void
+PDM_part_mesh_nodal_part_comm_graph_set
+(
+  PDM_part_mesh_nodal_t *pmn,
+  PDM_part_comm_graph_t *pcg,
+  PDM_geometry_kind_t    geom_kind,
+  PDM_ownership_t        ownership
+);
+
+
+/**
+ *
+ * \brief Get part_mesh_nodal's part_comm_graph
+ *
+ * \param [in]   pmn        Pointer to \ref PDM_part_mesh_nodal_t instance
+ * \param [in]   geom_kind  Geometry kind (corner, ridge, surface or volume)
+ * \param [out]  pcg        Pointer (?) to \ref PDM_part_comm_graph_t instance
+ * \param [in]   ownership  part_mesh_nodal ownership on returned part_comm_graph
+ *
+ */
+void
+PDM_part_mesh_nodal_part_comm_graph_get
+(
+  PDM_part_mesh_nodal_t  *pmn,
+  PDM_geometry_kind_t     geom_kind,
+  PDM_part_comm_graph_t **pcg,
+  PDM_ownership_t         ownership
+);
+
+
+/**
+ *
+ * \brief Compute internal part_comm_graph from part_mesh_nodal entity global ids.
+ *
+ * \param [in]   pmn        Pointer to \ref PDM_part_mesh_nodal_t instance
+ * \param [in]   geom_kind  Geometry kind (corner, ridge, surface or volume)
+ *
+ */
+void
+PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum
+(
+  PDM_part_mesh_nodal_t *pmn,
+  PDM_geometry_kind_t    geom_kind
 );
 
 #ifdef __cplusplus

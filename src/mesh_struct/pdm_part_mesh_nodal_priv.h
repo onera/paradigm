@@ -13,6 +13,7 @@
 #include "pdm_mesh_nodal_priv.h"
 #include "pdm_part_mesh_nodal_elmts.h"
 #include "pdm_part_mesh_nodal_elmts_priv.h"
+#include "pdm_part_comm_graph.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -56,10 +57,8 @@ struct _pdm_part_mesh_nodal_t {
   PDM_part_mesh_nodal_elmts_t       *ridge;
   PDM_part_mesh_nodal_elmts_t       *corner;
 
-  PDM_part_comm_graph_t             *pcg_vertex;
-  PDM_part_comm_graph_t             *pcg_ridge;
-  PDM_part_comm_graph_t             *pcg_surface;
-  PDM_part_comm_graph_t             *pcg_volumic;
+  PDM_ownership_t                    pcg_ownership[PDM_GEOMETRY_KIND_MAX]; // or PDM_MESH_ENTITY_MAX ?
+  PDM_part_comm_graph_t             *pcg[PDM_GEOMETRY_KIND_MAX]; // or PDM_MESH_ENTITY_MAX ?
 
   int                                is_vtx_def_from_parent; /*<! Are the points defined from parents */
 

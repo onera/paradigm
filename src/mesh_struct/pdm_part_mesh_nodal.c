@@ -4,6 +4,7 @@
 
 #include <assert.h>
 #include <stdio.h>
+#include <string.h>
 
 /*----------------------------------------------------------------------------
  *  Local headers
@@ -20,6 +21,10 @@
 #include "pdm_part_mesh_nodal_elmts_priv.h"
 #include "pdm_priv.h"
 #include "pdm_vtk.h"
+#include "pdm_distrib.h"
+#include "pdm_partitioning_algorithm.h"
+#include "pdm_unique.h"
+#include "pdm_logging.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -330,30 +335,147 @@ PDM_part_mesh_nodal_add_part_mesh_nodal_elmts
   }
 }
 
-int
+void
 PDM_part_mesh_nodal_part_comm_graph_set
 (
- PDM_part_mesh_nodal_t *pmn,
- PDM_part_comm_graph_t *pcg
+  PDM_part_mesh_nodal_t *pmn,
+  PDM_part_comm_graph_t *pcg,
+  PDM_geometry_kind_t    geom_kind,
+  PDM_ownership_t        ownership
 )
 {
-  pmn->pcg = pcg;
+  pmn->pcg[geom_kind] = pcg;
+  if (ownership!=PDM_OWNERSHIP_BAD_VALUE) {
+    pmn->pcg_ownership[geom_kind] = ownership;
+  }
 }
 
-int
-PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum
+void
+PDM_part_mesh_nodal_part_comm_graph_get
 (
- PDM_part_mesh_nodal_t *pmn,
- PDM_part_comm_graph_t *pcg
+  PDM_part_mesh_nodal_t  *pmn,
+  PDM_geometry_kind_t     geom_kind,
+  PDM_part_comm_graph_t **pcg,
+  PDM_ownership_t         ownership
 )
 {
-  pmn->pcg = pcg;
+  *pcg = pmn->pcg[geom_kind];
+  if (ownership!=PDM_OWNERSHIP_BAD_VALUE) {
+    pmn->pcg_ownership[geom_kind] = ownership;
+  }
+}
+
+void
+PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum
+(
+  PDM_part_mesh_nodal_t *pmn,
+  PDM_geometry_kind_t    geom_kind
+)
+{
+  if (pmn->pcg[geom_kind]!=NULL) {
+    return;
+  }
+
+  int          *n_entity    = NULL;
+  PDM_g_num_t **entity_gnum = NULL;
+  PDM_malloc(n_entity   , pmn->n_part, int);
+  PDM_malloc(entity_gnum, pmn->n_part, PDM_g_num_t*);
+
+  if (geom_kind==PDM_GEOMETRY_KIND_CORNER) {
+    for (int i_part=0; i_part<pmn->n_part; ++i_part) {
+      n_entity   [i_part] = PDM_part_mesh_nodal_n_vtx_get    (pmn, i_part);
+      entity_gnum[i_part] = PDM_part_mesh_nodal_vtx_g_num_get(pmn, i_part, PDM_OWNERSHIP_BAD_VALUE);
+    }
+  }
+  else if (geom_kind==PDM_GEOMETRY_KIND_RIDGE || geom_kind==PDM_GEOMETRY_KIND_SURFACIC) {
+
+    PDM_part_mesh_nodal_elmts_t *pmne = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(pmn, geom_kind);
+
+    int  n_section   = PDM_part_mesh_nodal_elmts_n_section_get  (pmne);
+    int *sections_id = PDM_part_mesh_nodal_elmts_sections_id_get(pmne);
+
+    for (int i_part = 0; i_part < pmn->n_part; i_part++) {
+
+      int n_elt_tot = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, i_part);
+      PDM_malloc(entity_gnum[i_part], n_elt_tot, PDM_g_num_t);
+      n_entity[i_part] = 0;
+
+      for (int i_section = 0; i_section < n_section; i_section++) {
+
+        int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne,
+                                                                sections_id[i_section],
+                                                                i_part);
+
+        PDM_g_num_t *section_gnum = PDM_part_mesh_nodal_elmts_g_num_get(pmne, i_section, i_part, PDM_OWNERSHIP_BAD_VALUE);
+        memcpy(&entity_gnum[i_part][n_entity[i_part]], section_gnum, n_elt*sizeof(PDM_g_num_t));
+        n_entity[i_part] += n_elt;
+      }
+    }
+  }
+  else {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum: invalid geom_kind (=%d)\n", geom_kind);
+  }
+
+
+  // Retrieve partition boundary entities using global IDs
+  int n_rank;
+  PDM_MPI_Comm_size(pmn->comm, &n_rank);
+
+  PDM_g_num_t *part_distribution = PDM_compute_entity_distribution(pmn->comm, pmn->n_part);
+
+  int  *n_entity_part_bound        = NULL;
+  int **entity_proc_bound_idx      = NULL;
+  int **entity_part_bound_idx      = NULL;
+  int **entity_part_bound          = NULL;
+  int **entity_part_bound_priority = NULL;
+  PDM_part_generate_entity_graph_comm(pmn->comm,
+                                      part_distribution,
+                                      NULL,
+                                      pmn->n_part,
+                                      n_entity,
+               (const PDM_g_num_t **) entity_gnum,
+                                      NULL,
+                                      &entity_proc_bound_idx,
+                                      &entity_part_bound_idx,
+                                      &entity_part_bound,
+                                      &entity_part_bound_priority);
+  PDM_malloc(n_entity_part_bound, pmn->n_part, int);
+  for (int i_part = 0; i_part < pmn->n_part; i_part++) {
+    n_entity_part_bound[i_part] = entity_part_bound_idx[i_part][part_distribution[n_rank]];
+
+    PDM_log_trace_array_int(entity_part_bound[i_part], 4*n_entity_part_bound[i_part], "entity_part_bound[i_part] :: ");
+    PDM_free(entity_proc_bound_idx     [i_part]);
+    PDM_free(entity_part_bound_idx     [i_part]);
+    PDM_free(entity_part_bound_priority[i_part]);
+  }
+  PDM_free(entity_proc_bound_idx);
+  PDM_free(entity_part_bound_idx);
+  PDM_free(entity_part_bound_priority);
+  PDM_free(part_distribution);
+
+  PDM_free(n_entity);
+  if (geom_kind==PDM_GEOMETRY_KIND_RIDGE || geom_kind==PDM_GEOMETRY_KIND_SURFACIC) {
+    for (int i_part = 0; i_part < pmn->n_part; i_part++) {
+      PDM_free(entity_gnum[i_part]);
+    }
+  }
+  PDM_free(entity_gnum);
+
+  // Build part comm graph
+  pmn->pcg[geom_kind] = PDM_part_comm_graph_create(pmn->n_part,
+                                                   n_entity_part_bound,
+                                                   entity_part_bound,
+                                                   PDM_OWNERSHIP_KEEP,
+                                                   pmn->comm);
+  pmn->pcg_ownership[geom_kind] = PDM_OWNERSHIP_KEEP;
+
+  PDM_free(n_entity_part_bound);
 }
 
 int
 PDM_part_mesh_nodal_mesh_dimension_get
 (
-       PDM_part_mesh_nodal_t *pmn
+  PDM_part_mesh_nodal_t *pmn
 )
 {
   return pmn->mesh_dimension;
@@ -362,7 +484,7 @@ PDM_part_mesh_nodal_mesh_dimension_get
 int
 PDM_part_mesh_nodal_n_part_get
 (
-       PDM_part_mesh_nodal_t *pmn
+  PDM_part_mesh_nodal_t *pmn
 )
 {
   return pmn->n_part;
@@ -754,6 +876,12 @@ PDM_part_mesh_nodal_free
     }
 
     PDM_free(pmn->vtx);
+  }
+
+  for (int geom_kind=0; geom_kind<PDM_GEOMETRY_KIND_MAX; ++geom_kind) {
+    if (pmn->pcg_ownership[geom_kind]==PDM_OWNERSHIP_KEEP) {
+      PDM_part_comm_graph_free(pmn->pcg[geom_kind]);
+    }
   }
 
   PDM_free(pmn->n_vol   );
