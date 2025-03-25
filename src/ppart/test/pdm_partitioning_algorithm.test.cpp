@@ -22,9 +22,9 @@ MPI_TEST_CASE("[PDM_part_generate_entity_graph_comm] - 1p - n_part=3", 1) {
   int n_part = 3;
   int n_part_tot = part_distribution[n_rank];
 
-  std::vector<std::vector<int>> vpentity_ln_to_gn = {{1, 2, 3},
-                                                     {3, 4, 5},
-                                                     {3, 5, 7, 8}};
+  std::vector<std::vector<PDM_g_num_t>> vpentity_ln_to_gn = {{1, 2, 3},
+                                                             {3, 4, 5},
+                                                             {3, 5, 7, 8}};
   std::vector<int> vpn_entity(n_part);
 
   PDM_g_num_t **pentity_ln_to_gn = NULL;
@@ -121,9 +121,9 @@ MPI_TEST_CASE("[PDM_part_generate_entity_graph_comm] - 2p - n_part_tot=3", 2) {
   int n_part = part_distribution[i_rank+1]-part_distribution[i_rank];
   int n_part_tot = part_distribution[n_rank];
 
-  std::vector<std::vector<std::vector<int>>> vpentity_ln_to_gn = {{{1, 2, 3},
-                                                                   {3, 4, 5}},
-                                                                  {{3, 5, 7, 8}}};
+  std::vector<std::vector<std::vector<PDM_g_num_t>>> vpentity_ln_to_gn = {{{1, 2, 3},
+                                                                          {3, 4, 5}},
+                                                                         {{3, 5, 7, 8}}};
   std::vector<int> vpn_entity(n_part);
 
   PDM_g_num_t **pentity_ln_to_gn = NULL;
