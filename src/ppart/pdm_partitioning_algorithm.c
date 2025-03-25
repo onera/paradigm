@@ -1401,7 +1401,7 @@ min_sub_index
         int          n_sub_indices
 )
 {
-  int min_idx = part_distribution[sub_indices[0]];
+  int min_idx = part_distribution[sub_indices[0]]+sub_indices_part[0];
   for (int i = 1; i < n_sub_indices; ++i) {
     int idx_part = part_distribution[sub_indices[i]] + sub_indices_part[i];
     if (array[idx_part] < array[min_idx]) {
@@ -1878,7 +1878,7 @@ PDM_part_generate_entity_graph_comm
       _pproc_bound_idx[i_part][i+1] += _pproc_bound_idx[i_part][i];
     }
     for(int i = 0; i < part_distribution[n_rank]; ++i){
-      _ppart_bound_idx[i_part][i+1] +=  _ppart_bound_idx[i_part][i];
+      _ppart_bound_idx[i_part][i+1] += _ppart_bound_idx[i_part][i];
     }
 
     PDM_free(order);
