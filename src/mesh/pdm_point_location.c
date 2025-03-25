@@ -1484,6 +1484,7 @@ _locate_in_polyhedron
        int                     *tri_vtx
  )
 {
+  
   int dbg = 0;
 
   double eps_on_face2 = 1.e-24;
@@ -1693,7 +1694,6 @@ _locate_in_polyhedron
   double threshold_inside = 4*PDM_PI*(1 - eps_solid_angle);
 
   for (int ipt = 0; ipt < n_pts; ipt++) {
-
     const double *p  = pts_coord  + ipt*3;
     double       *w  = weight     + ipt*n_vtx;
     double       *pc = proj_coord + ipt*3;
