@@ -93,26 +93,25 @@ MPI_TEST_CASE("[pdm_part_to_part] - 2p - part_to_part", 2) {
   /*
    * Check
    */
-  int p0_expected_ref_lnum2          [2] = {2, 3};
-  int p0_expected_unref_lnum2        [1] = {1};
-  int p0_expected_gnum1_come_from_idx[3] = {0, 1, 3};
-  int p0_expected_gnum1_come_from    [3] = {2, 1, 3};
+  int         p0_expected_ref_lnum2          [2] = {2, 3};
+  int         p0_expected_unref_lnum2        [1] = {1};
+  int         p0_expected_gnum1_come_from_idx[3] = {0, 1, 3};
+  PDM_g_num_t p0_expected_gnum1_come_from    [3] = {2, 1, 3};
 
   MPI_CHECK_EQ_C_ARRAY(0, ref_lnum2          , p0_expected_ref_lnum2          , 2);
   MPI_CHECK_EQ_C_ARRAY(0, unref_lnum2        , p0_expected_unref_lnum2        , 1);
   MPI_CHECK_EQ_C_ARRAY(0, gnum1_come_from_idx, p0_expected_gnum1_come_from_idx, 3);
   MPI_CHECK_EQ_C_ARRAY(0, gnum1_come_from    , p0_expected_gnum1_come_from    , 3);
 
-  int p1_expected_ref_lnum2          [2] = {1, 2};
-  int p1_expected_unref_lnum2        [1] = {3};
-  int p1_expected_gnum1_come_from_idx[3] = {0, 2, 3};
-  int p1_expected_gnum1_come_from    [3] = {1, 3, 1};
+  int         p1_expected_ref_lnum2          [2] = {1, 2};
+  int         p1_expected_unref_lnum2        [1] = {3};
+  int         p1_expected_gnum1_come_from_idx[3] = {0, 2, 3};
+  PDM_g_num_t p1_expected_gnum1_come_from    [3] = {1, 3, 1};
 
   MPI_CHECK_EQ_C_ARRAY(1, ref_lnum2          , p1_expected_ref_lnum2          , 2);
   MPI_CHECK_EQ_C_ARRAY(1, unref_lnum2        , p1_expected_unref_lnum2        , 1);
   MPI_CHECK_EQ_C_ARRAY(1, gnum1_come_from_idx, p1_expected_gnum1_come_from_idx, 3);
   MPI_CHECK_EQ_C_ARRAY(1, gnum1_come_from    , p1_expected_gnum1_come_from    , 3);
-
 
   /* Exchange gnum1 to part 2 */
   PDM_g_num_t **tmp_recv_part2_to_part1_gnum_elt2 = NULL;
