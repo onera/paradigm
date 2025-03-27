@@ -20,7 +20,6 @@ MPI_TEST_CASE("[pdm_part_to_part] - 2p - part_to_part", 2) {
   PDM_MPI_Comm_rank (pdm_comm, &i_rank);
   PDM_MPI_Comm_size (pdm_comm, &n_rank);
 
-
   /*
    *                   p0                              p1
    *
@@ -31,7 +30,6 @@ MPI_TEST_CASE("[pdm_part_to_part] - 2p - part_to_part", 2) {
    * part2 =      x--------x--------x        x--------x--------x
    *              1        2        3        3        4        5
    */
-
   std::vector<std::vector<PDM_g_num_t>> vgnum_elt1 = {{2, 3}, {3, 1}};
   int n_part1 = 1;
 
@@ -48,8 +46,8 @@ MPI_TEST_CASE("[pdm_part_to_part] - 2p - part_to_part", 2) {
   PDM_g_num_t *gnum_elt1 = vgnum_elt1[i_rank].data();
   PDM_g_num_t *gnum_elt2 = vgnum_elt2[i_rank].data();
 
-  int *part1_to_part2_idx = vpart1_to_part2_idx[i_rank].data();
-  int *part1_to_part2     = vpart1_to_part2    [i_rank].data();
+  int         *part1_to_part2_idx = vpart1_to_part2_idx[i_rank].data();
+  PDM_g_num_t *part1_to_part2     = vpart1_to_part2    [i_rank].data();
   PDM_part_to_part_t* ptp = PDM_part_to_part_create((const PDM_g_num_t **) &gnum_elt1,
                                                     (const int          *) &n_elt1,
                                                                            n_part1,
@@ -83,7 +81,7 @@ MPI_TEST_CASE("[pdm_part_to_part] - 2p - part_to_part", 2) {
   int         *gnum1_come_from_idx = pgnum1_come_from_idx[0];
   PDM_g_num_t *gnum1_come_from     = pgnum1_come_from    [0];
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_int (ref_lnum2  , n_ref_lnum2  , "ref_lnum2   ::");
     PDM_log_trace_array_int (unref_lnum2, n_unref_lnum2, "unref_lnum2 ::");
     PDM_log_trace_array_int (gnum1_come_from_idx, n_ref_lnum2+1, "gnum1_come_from_idx ::");
@@ -113,7 +111,10 @@ MPI_TEST_CASE("[pdm_part_to_part] - 2p - part_to_part", 2) {
   MPI_CHECK_EQ_C_ARRAY(1, gnum1_come_from_idx, p1_expected_gnum1_come_from_idx, 3);
   MPI_CHECK_EQ_C_ARRAY(1, gnum1_come_from    , p1_expected_gnum1_come_from    , 3);
 
-  /* Exchange gnum1 to part 2 */
+  /*
+   * ************************************************************************************************
+   * 1/ Exchange gnum1 to part1->part2 with ORDER_PART1
+   */
   PDM_g_num_t **tmp_recv_part2_to_part1_gnum_elt2 = NULL;
   int request = -1;
   PDM_part_to_part_iexch(ptp,
@@ -130,27 +131,125 @@ MPI_TEST_CASE("[pdm_part_to_part] - 2p - part_to_part", 2) {
   PDM_part_to_part_iexch_wait(ptp, request);
 
   PDM_g_num_t *recv_part2_to_part1_gnum_elt2 = tmp_recv_part2_to_part1_gnum_elt2[0];
-
   PDM_free(tmp_recv_part2_to_part1_gnum_elt2);
 
-
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_long(recv_part2_to_part1_gnum_elt2, gnum1_come_from_idx[n_ref_lnum2], "recv_part2_to_part1_gnum_elt2 ::");
   }
 
   /*
    *  En tout rigeur le 3 pourrait venir du rang 0 et du rang 1 mais en interne on prends le premier venu --> See pdm_part_migrate
    */
+  PDM_g_num_t p0_expected_recv_part2_to_part1_gnum_elt2[3] = {2, 1, 3};
+  PDM_g_num_t p1_expected_recv_part2_to_part1_gnum_elt2[3] = {1, 3, 1};
 
+  MPI_CHECK_EQ_C_ARRAY(0, recv_part2_to_part1_gnum_elt2, p0_expected_recv_part2_to_part1_gnum_elt2, 3);
+  MPI_CHECK_EQ_C_ARRAY(1, recv_part2_to_part1_gnum_elt2, p1_expected_recv_part2_to_part1_gnum_elt2, 3);
 
+  /*
+   * ************************************************************************************************
+   * 2/ Exchange gnum1 to part2->part1 with ORDER_PART2
+   */
+  PDM_g_num_t **tmp_recv_part1_to_part2_gnum_elt2 = NULL;
+  PDM_part_to_part_reverse_iexch(ptp,
+                                 PDM_MPI_COMM_KIND_P2P,
+                                 PDM_STRIDE_CST_INTERLACED,
+                                 PDM_PART_TO_PART_DATA_DEF_ORDER_PART2,
+                                 1,
+                                 sizeof(PDM_g_num_t),
+                                 NULL,
+               (const void **)   &gnum_elt2,
+                                 NULL,
+                   (void ***)    &tmp_recv_part1_to_part2_gnum_elt2,
+                                 &request);
+  PDM_part_to_part_reverse_iexch_wait(ptp, request);
+
+  PDM_g_num_t *recv_part1_to_part2_gnum_elt2 = tmp_recv_part1_to_part2_gnum_elt2[0];
+  PDM_free(tmp_recv_part1_to_part2_gnum_elt2);
+
+  if(0 == 1) {
+    PDM_log_trace_array_long(recv_part1_to_part2_gnum_elt2, part1_to_part2_idx[n_elt1], "recv_part1_to_part2_gnum_elt2 ::");
+  }
+
+  PDM_g_num_t p0_expected_recv_part1_to_part2_gnum_elt2[3] = {20, 30, 30};
+  PDM_g_num_t p1_expected_recv_part1_to_part2_gnum_elt2[4] = {30, 30, 40, 30};
+
+  MPI_CHECK_EQ_C_ARRAY(0, recv_part1_to_part2_gnum_elt2, p0_expected_recv_part1_to_part2_gnum_elt2, 3);
+  MPI_CHECK_EQ_C_ARRAY(1, recv_part1_to_part2_gnum_elt2, p1_expected_recv_part1_to_part2_gnum_elt2, 3);
+
+  /*
+   * ************************************************************************************************
+   * 3/ Exchange gnum1 to part2->part1 with ORDER_PART1_TO_PART2 : (Smart move : On recupère le resulat de l'échange d'avant :p )
+   */
+  PDM_g_num_t **tmp_check_recv_part2_to_part1_gnum_elt2 = NULL;
+  PDM_part_to_part_iexch(ptp,
+                         PDM_MPI_COMM_KIND_P2P,
+                         PDM_STRIDE_CST_INTERLACED,
+                         PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2,
+                         1,
+                         sizeof(PDM_g_num_t),
+                         NULL,
+       (const void **)   &recv_part1_to_part2_gnum_elt2,
+                         NULL,
+           (void ***)    &tmp_check_recv_part2_to_part1_gnum_elt2,
+                         &request);
+  PDM_part_to_part_iexch_wait(ptp, request);
+
+  PDM_g_num_t *check_recv_part2_to_part1_gnum_elt2 = tmp_check_recv_part2_to_part1_gnum_elt2[0];
+  PDM_free(tmp_check_recv_part2_to_part1_gnum_elt2);
+
+  if(0 == 1) {
+    PDM_log_trace_array_long(check_recv_part2_to_part1_gnum_elt2, gnum1_come_from_idx[n_ref_lnum2], "check_recv_part2_to_part1_gnum_elt2 ::");
+  }
+
+  /*
+   *  En tout rigeur le 3 pourrait venir du rang 0 et du rang 1 mais en interne on prends le premier venu --> See pdm_part_migrate
+   */
+  PDM_g_num_t p0_expected_check_recv_part2_to_part1_gnum_elt2[3] = {20, 30, 30};
+  PDM_g_num_t p1_expected_check_recv_part2_to_part1_gnum_elt2[3] = {30, 30, 40};
+
+  MPI_CHECK_EQ_C_ARRAY(0, check_recv_part2_to_part1_gnum_elt2, p0_expected_check_recv_part2_to_part1_gnum_elt2, 3);
+  MPI_CHECK_EQ_C_ARRAY(1, check_recv_part2_to_part1_gnum_elt2, p1_expected_check_recv_part2_to_part1_gnum_elt2, 3);
+
+  /*
+   * ************************************************************************************************
+   * 4/ Exchange gnum1 to part2->part1 with ORDER_PART2 (Smart move : On recupère le resulat de l'échange d'avant :p )
+   */
+  PDM_g_num_t **tmp_check_recv_part1_to_part2_gnum_elt2 = NULL;
+  PDM_part_to_part_reverse_iexch(ptp,
+                                 PDM_MPI_COMM_KIND_P2P,
+                                 PDM_STRIDE_CST_INTERLACED,
+                                 PDM_PART_TO_PART_DATA_DEF_ORDER_GNUM1_COME_FROM,
+                                 1,
+                                 sizeof(PDM_g_num_t),
+                                 NULL,
+               (const void **)   &recv_part2_to_part1_gnum_elt2,
+                                 NULL,
+                   (void ***)    &tmp_check_recv_part1_to_part2_gnum_elt2,
+                                 &request);
+  PDM_part_to_part_reverse_iexch_wait(ptp, request);
+
+  PDM_g_num_t *check_recv_part1_to_part2_gnum_elt2 = tmp_check_recv_part1_to_part2_gnum_elt2[0];
+  PDM_free(tmp_check_recv_part1_to_part2_gnum_elt2);
+
+  if(0 == 1) {
+    PDM_log_trace_array_long(check_recv_part1_to_part2_gnum_elt2, part1_to_part2_idx[n_elt1], "check_recv_part1_to_part2_gnum_elt2 ::");
+  }
+
+  PDM_g_num_t p0_expected_check_recv_part1_to_part2_gnum_elt2[3] = {2, 3, 3};
+  PDM_g_num_t p1_expected_check_recv_part1_to_part2_gnum_elt2[4] = {3, 3, 1, 1};
+
+  MPI_CHECK_EQ_C_ARRAY(0, check_recv_part1_to_part2_gnum_elt2, p0_expected_check_recv_part1_to_part2_gnum_elt2, 3);
+  MPI_CHECK_EQ_C_ARRAY(1, check_recv_part1_to_part2_gnum_elt2, p1_expected_check_recv_part1_to_part2_gnum_elt2, 3);
+
+  /*
+   * Free
+   */
+  PDM_free(recv_part1_to_part2_gnum_elt2);
   PDM_free(recv_part2_to_part1_gnum_elt2);
+  PDM_free(check_recv_part2_to_part1_gnum_elt2);
+  PDM_free(check_recv_part1_to_part2_gnum_elt2);
 
   PDM_part_to_part_free(ptp);
-
 }
 
-
-
-
-  // std::vector<std::vector<int>> vpart1_to_part2_idx     = {{0,     1           , 3}, {0,            2           , 4}};
-  // std::vector<std::vector<int>> vpart1_to_part2_triplet = {{0,0,1, 0,0,2, 1,0,0   }, {0,0,2, 1,0,0, 1,0,1, 0,0,2   }};
