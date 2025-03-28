@@ -2685,7 +2685,7 @@ PDM_MPI_Comm       comm
   PDM_part_renum_cell(parts, n_part, pmeshes->renum_method[PDM_MESH_ENTITY_CELL], (void*) pmeshes->renum_method_properties[PDM_MESH_ENTITY_CELL]);
   PDM_part_renum_face(parts, n_part, pmeshes->renum_method[PDM_MESH_ENTITY_FACE], (void*) pmeshes->renum_method_properties[PDM_MESH_ENTITY_FACE]);
   PDM_part_renum_edge(parts, n_part, pmeshes->renum_method[PDM_MESH_ENTITY_EDGE], (void*) pmeshes->renum_method_properties[PDM_MESH_ENTITY_EDGE]);
-  PDM_part_renum_vtx (parts, n_part, pmeshes->renum_method[PDM_MESH_ENTITY_VTX ], (void*) pmeshes->renum_method_properties[PDM_MESH_ENTITY_VTX ]);
+  PDM_part_renum_vtx (parts, n_part, pmeshes->renum_method[PDM_MESH_ENTITY_VTX ], (void *) pinternal_vtx_priority);
   PDM_free(pinternal_vtx_priority);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
