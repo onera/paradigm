@@ -24,9 +24,9 @@ MPI_TEST_CASE("[pdm_part_to_block] - 1p - part_to_block",1) {
   PDM_g_num_t ln_to_gn_p0[n_elmts_part_0] = {2, 2, 5, 5, 1, 2, 1};
 
   // Convenient array
-  int*          pn_elmt;
-  PDM_malloc(pn_elmt, n_part, int);
-  PDM_g_num_t** pln_to_to_gn;
+  int*          pn_elmt      = NULL;
+  PDM_g_num_t **pln_to_to_gn = NULL;
+  PDM_malloc(pn_elmt     , n_part, int          );
   PDM_malloc(pln_to_to_gn, n_part, PDM_g_num_t *);
   pln_to_to_gn[0] = ln_to_gn_p0;
   pn_elmt     [0] = n_elmts_part_0;
@@ -179,11 +179,8 @@ MPI_TEST_CASE("[pdm_part_to_block] - 1p - part_to_block",1) {
     CHECK_EQ_C_ARRAY(preverse_stri, preverse_stri_expected , 7  );
     CHECK_EQ_C_ARRAY(preverse_data, preverse_data_expected , 35 );
 
-
-
     PDM_free(preverse_data);
     PDM_free(preverse_stri);
-
 
     PDM_part_to_block_free(ptb);
 
@@ -228,9 +225,9 @@ MPI_TEST_CASE("[pdm_part_to_block] - 1p - part_to_block",1) {
     /*
      * Exchange
      */
-    int *blk_data_cst = NULL;
-    int s_tot_size = 0;
+    int  *blk_data_cst      = NULL;
     int **tmp_preverse_data = NULL;
+    int s_tot_size = 0;
 
     SUBCASE("Synchronous exch ") {
       s_tot_size = PDM_part_to_block_exch(ptb,
@@ -314,13 +311,10 @@ MPI_TEST_CASE("[pdm_part_to_block] - 1p - part_to_block",1) {
 
   }
 
-
   PDM_free(pn_elmt);
   PDM_free(pln_to_to_gn);
 
 }
-
-
 
 MPI_TEST_CASE("[pdm_part_to_block] - 2p - zero global weight", 2) {
 
@@ -331,14 +325,15 @@ MPI_TEST_CASE("[pdm_part_to_block] - 2p - zero global weight", 2) {
   PDM_MPI_Comm_size (pdm_comm, &n_rank);
 
   int n_part = 1;
-  int*          pn_elmt;
-  PDM_malloc(pn_elmt, n_part, int);
-  PDM_g_num_t** pln_to_gn;
+  int*          pn_elmt   = NULL;
+  PDM_g_num_t **pln_to_gn = NULL;
+  double      **pweight   = NULL;
+  PDM_g_num_t **part_data = NULL;
+  PDM_malloc(pn_elmt  , n_part, int          );
   PDM_malloc(pln_to_gn, n_part, PDM_g_num_t *);
-  double      **pweight;
-  PDM_malloc(pweight, n_part, double *);
-  PDM_g_num_t **part_data;
+  PDM_malloc(pweight  , n_part, double      *);
   PDM_malloc(part_data, n_part, PDM_g_num_t *);
+
   PDM_g_num_t  *block_data = NULL;
 
   PDM_g_num_t distrib_expected[3];

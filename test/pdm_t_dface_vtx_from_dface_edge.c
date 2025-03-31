@@ -239,7 +239,7 @@ int main(int argc, char *argv[])
   assert(dn_edge == dn_edge2);
 
   if(0 == 1) {
-    PDM_log_trace_array_long(dface_edge_idx, dn_face+1              , "dface_edge_idx ::");
+    PDM_log_trace_array_int (dface_edge_idx, dn_face+1              , "dface_edge_idx ::");
     PDM_log_trace_array_long(dface_edge    , dface_edge_idx[dn_face], "dface_edge     ::");
     PDM_log_trace_array_long(dedge_vtx     , 2 * dn_edge            , "dedge_vtx      ::");
   }
