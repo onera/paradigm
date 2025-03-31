@@ -76,27 +76,26 @@ _read_args(int            argc,
 
   while (i < argc) {
 
-    if (strcmp(argv[i], "-h") == 0)
+    if (strcmp(argv[i], "-h") == 0) {
       _usage(EXIT_SUCCESS);
-
-    else if (strcmp(argv[i], "-n") == 0) {
+    } else if (strcmp(argv[i], "-n") == 0) {
       i++;
-      if (i >= argc)
+      if (i >= argc) {
         _usage(EXIT_FAILURE);
-      else {
+      } else {
         long _n_vtx_seg = atol(argv[i]);
         *n_vtx_seg = (PDM_g_num_t) _n_vtx_seg;
       }
-    }
-    else if (strcmp(argv[i], "-l") == 0) {
+    } else if (strcmp(argv[i], "-l") == 0) {
       i++;
-      if (i >= argc)
+      if (i >= argc) {
         _usage(EXIT_FAILURE);
-      else
+      } else {
         *length = atof(argv[i]);
-    }
-    else
+      }
+    } else {
       _usage(EXIT_FAILURE);
+    }
     i++;
   }
 }
@@ -197,7 +196,6 @@ int main(int argc, char *argv[])
   PDM_malloc(dface_vtx_idx  , n_block, int         *);
   PDM_malloc(dface_vtx      , n_block, PDM_g_num_t *);
 
-
   PDM_dmesh_nodal_t* dmn[] = {dmn1, dmn2};
   for (int i_block = 0; i_block < n_block; i_block++) {
     PDM_DMesh_nodal_section_group_elmt_get(dmn[i_block],
@@ -215,6 +213,7 @@ int main(int argc, char *argv[])
     dface_vtx[i_block] = PDM_DMesh_nodal_section_std_get(dmn[i_block], PDM_GEOMETRY_KIND_SURFACIC, 0, PDM_OWNERSHIP_BAD_VALUE);
 
   }
+
   // LAZY SETUP : we assume that we have only 2 blocks of same size to have same distribution :)
   assert (n_block == 2);
   int jn_size  = dgroup_elmt_idx[0][4] - dgroup_elmt_idx[0][3];
@@ -223,14 +222,17 @@ int main(int argc, char *argv[])
   PDM_malloc(interface_face_ids, 2*jn_size, PDM_g_num_t);
   PDM_malloc(interface_face_dom, 2*jn_size, int        );
   for (int i=0; i < jn_size; i++) {
-    interface_face_ids[2*i]   = dgroup_elmt[0][dgroup_elmt_idx[0][3]+i];
+    interface_face_ids[2*i  ] = dgroup_elmt[0][dgroup_elmt_idx[0][3]+i];
     interface_face_ids[2*i+1] = dgroup_elmt[1][dgroup_elmt_idx[0][2]+i];
-    interface_face_dom[2*i]   = 0;
+    interface_face_dom[2*i  ] = 0;
     interface_face_dom[2*i+1] = 1;
   }
 
-  PDM_domain_interface_t *dom_intrf = PDM_domain_interface_create(
-      1, n_block, PDM_DOMAIN_INTERFACE_MULT_YES, PDM_OWNERSHIP_KEEP, comm);
+  PDM_domain_interface_t *dom_intrf = PDM_domain_interface_create(1,
+                                                                  n_block,
+                                                                  PDM_DOMAIN_INTERFACE_MULT_YES,
+                                                                  PDM_OWNERSHIP_KEEP,
+                                                                  comm);
   PDM_domain_interface_set(dom_intrf, PDM_BOUND_TYPE_FACE, &jn_size, &interface_face_ids, &interface_face_dom);
   //Apparement bug en 2d !!
   PDM_domain_interface_translate_face2vtx(dom_intrf, dn_vtx, dn_face, dface_vtx_idx, dface_vtx);
@@ -239,8 +241,11 @@ int main(int argc, char *argv[])
   int         *graph_vtx_idx = NULL;
   PDM_g_num_t *graph_vtx_ids = NULL;
   int         *graph_vtx_dom = NULL;
-  int graph_vtx_dn = PDM_domain_interface_get_as_graph(dom_intrf, PDM_BOUND_TYPE_VTX,
-      &graph_vtx_idx, &graph_vtx_ids, &graph_vtx_dom);
+  int graph_vtx_dn = PDM_domain_interface_get_as_graph(dom_intrf,
+                                                       PDM_BOUND_TYPE_VTX,
+                                                       &graph_vtx_idx,
+                                                       &graph_vtx_ids,
+                                                       &graph_vtx_dom);
   if(1 == 0) {
     PDM_log_trace_array_int(graph_vtx_idx , graph_vtx_dn+1             , "vtx graph idx"  );
     PDM_log_trace_array_long(graph_vtx_ids, graph_vtx_idx[graph_vtx_dn], "vtx graph gnums");
