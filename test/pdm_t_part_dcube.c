@@ -4,9 +4,7 @@
 #include <sys/time.h>
 
 #include "pdm.h"
-#include "pdm_dconnectivity_transform.h"
 #include "pdm_dcube_gen.h"
-#include "pdm_distrib.h"
 #include "pdm_mem_tool.h"
 #include "pdm_mpi.h"
 #include "pdm_part.h"
@@ -234,70 +232,13 @@ int main(int argc, char *argv[])
                           &dface_group_idx,
                           &dface_group);
 
-  if (dbg_part_dcube) {
-
-    PDM_printf("[%i] n_face_group    : %i\n", i_rank, n_face_group);
-    PDM_printf("[%i] dn_cell        : %i\n", i_rank, dn_cell);
-    PDM_printf("[%i] dn_face        : %i\n", i_rank, dn_face);
-    PDM_printf("[%i] dn_vtx         : %i\n", i_rank, dn_vtx);
-
-    PDM_printf("[%i] dface_cell     : ", i_rank);
-    for (int i = 0; i < 2 * dn_face; i++)
-      PDM_printf(" "PDM_FMT_G_NUM, dface_cell[i]);
-    PDM_printf("\n");
-
-    PDM_printf("[%i] dface_vtx_idx   : ", i_rank);
-    for (int i = 0; i < dn_face + 1; i++)
-      PDM_printf(" %i", dface_vtx_idx[i]);
-    PDM_printf("\n");
-
-    PDM_printf("[%i] dface_vtx      : ", i_rank);
-    for (int i = 0; i < dface_vtx_idx[dn_face]; i++)
-      PDM_printf(" "PDM_FMT_G_NUM, dface_vtx[i]);
-    PDM_printf("\n");
-
-    PDM_printf("[%i] dvtx_coord     : ", i_rank);
-    for (int i = 0; i < 3*dn_vtx; i++)
-      PDM_printf(" %12.5e", dvtx_coord[i]);
-    PDM_printf("\n");
-
-    PDM_printf("[%i] dface_group_idx : ", i_rank);
-    for (int i = 0; i < n_face_group + 1; i++)
-      PDM_printf(" %i", dface_group_idx[i]);
-    PDM_printf("\n");
-
-    PDM_printf("[%i] dface_group    : ", i_rank);
-    for (int i = 0; i < dface_group_idx[n_face_group]; i++)
-      PDM_printf(" "PDM_FMT_G_NUM, dface_group[i]);
-    PDM_printf("\n");
-
-  }
-  // int ppart_id = 0;
-
   if (time_and_stat && !use_multipart) {
     gettimeofday(&t_elaps_debut, NULL);
   }
 
-
-  int         *dcell_face_idx = NULL;
-  PDM_g_num_t *dcell_face     = NULL;
-
-  PDM_g_num_t* cell_distri = PDM_compute_entity_distribution(comm, dn_cell);
-  PDM_g_num_t* face_distri = PDM_compute_entity_distribution(comm, dn_face);
-
-  PDM_dfacecell_to_dcellface(face_distri,
-                             cell_distri,
-                             dface_cell,
-                             &dcell_face_idx,
-                             &dcell_face,
-                             comm);
-  PDM_free(cell_distri);
-  PDM_free(face_distri);
-
   /*
    *  Create mesh partitions
    */
-
   int have_dcell_part = 0;
 
   int *dcell_part;
@@ -334,10 +275,6 @@ int main(int argc, char *argv[])
                                       NULL,
                                       dface_group_idx,
                                       dface_group);
-
-
-  PDM_free(dcell_face_idx);
-  PDM_free(dcell_face    );
 
   if (time_and_stat && !use_multipart) {
 
@@ -451,77 +388,6 @@ int main(int argc, char *argv[])
                             &face_group_idx,
                             &face_group,
                             &face_group_ln_to_gn);
-
-
-      PDM_printf("[%i] n_face_group     : %i\n", i_rank, n_face_group);
-      PDM_printf("[%i] n_cell          : %i\n", i_rank, n_cell);
-      PDM_printf("[%i] n_face          : %i\n", i_rank, n_face);
-      PDM_printf("[%i] n_vtx           : %i\n", i_rank, n_vtx);
-      PDM_printf("[%i] n_face_part_bound : %i\n", i_rank, n_face_part_bound);
-
-      PDM_printf("[%i] cell_face     : ", i_rank);
-      for (int i = 0; i < n_cell; i++) {
-        for (int j = cell_face_idx[i]; j < cell_face_idx[i+1]; j++) {
-          PDM_printf(" %i", cell_face[j]);
-        }
-        PDM_printf("\n");
-      }
-
-      PDM_printf("\n");
-
-      PDM_printf("[%i]  cell_ln_to_gn    : ", i_rank);
-      for (int i = 0; i < n_cell; i++)
-        PDM_printf(" "PDM_FMT_G_NUM, cell_ln_to_gn[i]);
-      PDM_printf("\n");
-
-      PDM_printf("[%i] face_cell     : ", i_rank);
-      for (int i = 0; i < 2 * n_face; i++)
-        PDM_printf(" %i", face_cell[i]);
-      PDM_printf("\n");
-
-      PDM_printf("[%i] face_vtx      : ", i_rank);
-      for (int i = 0; i < n_face; i++) {
-        for (int j = face_vtx_idx[i]; j < face_vtx_idx[i+1]; j++) {
-          PDM_printf(" %i", face_vtx[j]);
-        }
-        PDM_printf("\n");
-      }
-
-      PDM_printf("[%i]  face_ln_to_gn    : ", i_rank);
-      for (int i = 0; i < n_face; i++)
-        PDM_printf(" "PDM_FMT_G_NUM, face_ln_to_gn[i]);
-      PDM_printf("\n");
-
-      PDM_printf("[%i] vtx           : ", i_rank);
-      for (int i = 0; i < 3 * n_vtx; i++)
-        PDM_printf(" %12.5e", vtx[i]);
-      PDM_printf("\n");
-
-      PDM_printf("[%i] vtx_ln_to_gn     : ", i_rank);
-      for (int i = 0; i <  n_vtx; i++)
-        PDM_printf(" "PDM_FMT_G_NUM, vtx_ln_to_gn[i]);
-      PDM_printf("\n");
-
-      PDM_printf("[%i] face_group_idx : ", i_rank);
-      for (int i = 0; i < n_face_group + 1; i++)
-        PDM_printf(" %i", face_group_idx[i]);
-      PDM_printf("\n");
-
-      PDM_printf("[%i] face_group    : ", i_rank);
-      for (int i = 0; i < n_face_group; i++) {
-        for (int j = face_group_idx[i]; j < face_group_idx[i+1]; j++) {
-          PDM_printf(" %i", face_group[j]);
-        }
-        PDM_printf("\n");
-      }
-
-      PDM_printf("[%i] face_group_ln_to_gn   : ", i_rank);
-      for (int i = 0; i < n_face_group; i++) {
-        for (int j = face_group_idx[i]; j < face_group_idx[i+1]; j++) {
-          PDM_printf(" "PDM_FMT_G_NUM, face_group_ln_to_gn[j]);
-        }
-        PDM_printf("\n");
-      }
     }
   }
 
@@ -575,7 +441,6 @@ int main(int argc, char *argv[])
   PDM_part_free(ppart);
 
   PDM_dcube_gen_free(dcube);
-
 
   PDM_MPI_Finalize();
 
