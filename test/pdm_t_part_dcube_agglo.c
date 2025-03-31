@@ -17,7 +17,6 @@
 #include "pdm_error.h"
 #include "pdm_mem_tool.h"
 #include "pdm_part_coarse_mesh.h"
-#include "pdm_coarse_mesh_aniso_agglo.h"
 
 /*============================================================================
  * Type definitions
@@ -474,9 +473,10 @@ int main(int argc, char *argv[])
                                face_part_bound);
   }
 
+  // Si paradigma
   // isFirstagglo, isAnisotropic, dimension, goalCard, minCard, maxCard, checks, verbose
-  int option_aniso[8] = {1, 1, 3, 20, 4, 12, 1, 1};
-  PDM_part_coarse_mesh_add_option_anisotropic(cm, option_aniso);
+  // int option_aniso[8] = {1, 1, 3, 20, 4, 12, 1, 1};
+  // PDM_part_coarse_mesh_add_option_anisotropic(cm, option_aniso);
 
 
   PDM_part_coarse_mesh_compute (cm);
