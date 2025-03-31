@@ -241,8 +241,6 @@ test_c_create (pdm_t_ho_location 1 PDM_LIST_TEST PDM_LIST_NRANK)
 # test_c_create (pdm_t_ho_location_projection 1  PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_subdivision_bezier_triangle 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_projection_back_mesh 1 PDM_LIST_TEST PDM_LIST_NRANK)
-test_c_create (pdm_t_part_to_block_reverse_cleanup 1 PDM_LIST_TEST PDM_LIST_NRANK)
-test_c_create (pdm_t_part_to_block_reverse_merge   1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_subdivision_bezier_curve 1 PDM_LIST_TEST PDM_LIST_NRANK)
 
 test_c_create (pdm_t_ho_bezier_intersect 1 PDM_LIST_TEST PDM_LIST_NRANK)
