@@ -262,6 +262,8 @@ function(test_python_create name n_proc LIST_TEST LIST_NRANK)
             ${Python_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/${name}.py
             ${MPIEXEC_POSTFLAGS})
 
+  add_dependencies(${name} Pypdm)
+
   add_test_pdm_run (${name} ${n_proc} ${LIST_TEST} ${LIST_NRANK})
     set (${LIST_TEST} ${${LIST_TEST}} PARENT_SCOPE)
     set (${LIST_NRANK} ${${LIST_NRANK}} PARENT_SCOPE)
