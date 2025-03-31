@@ -204,3 +204,93 @@ MPI_TEST_CASE("[PDM_part_generate_entity_graph_comm] - 2p - n_part_tot=3", 2) {
 
   PDM_free(pentity_ln_to_gn);
 }
+
+
+
+
+MPI_TEST_CASE("[PDM_compute_face_edge_from_face_vtx] - 2p", 2) {
+
+  PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
+
+  int n_rank = 0;
+  int i_rank = 0;
+  PDM_MPI_Comm_size(pdm_comm, &n_rank);
+  PDM_MPI_Comm_rank(pdm_comm, &i_rank);
+
+  int n_part = 1;
+
+  // Test cases generated on 2 procs with test : test/pdm_t_compute_part_edges -n 3 (with n_vtx_y=n_vtx_z=2)
+  std::vector<std::vector<int>> vpface_vtx_idx = {{0, 4, 8, 12, 16, 20, 24},
+                                                  {0, 4, 8, 12, 16, 20, 24}};
+
+  std::vector<std::vector<int>> vpface_vtx = {{2, 1, 3, 4, 1, 2, 6, 5, 1, 5, 7, 3, 6, 2, 4, 8, 8, 4, 3, 7, 8, 7, 5, 6},
+                                              {1, 3, 4, 2, 5, 1, 2, 6, 5, 1, 3, 7, 6, 2, 4, 8, 8, 4, 3, 7, 8, 7, 5, 6}};
+
+  std::vector<std::vector<PDM_g_num_t>> vpface_ln_to_gn = {{1, 3, 4, 6, 7, 10},
+                                                           {2, 5, 6, 8, 9, 11}};
+
+  std::vector<std::vector<PDM_g_num_t>> vpvtx_ln_to_gn = {{1, 2, 4, 5, 7, 8, 10, 11},
+                                                          {2, 3, 5, 6, 8, 9, 11, 12}};
+
+  int pn_face = vpface_ln_to_gn[i_rank].size();
+  int pn_vtx  = vpvtx_ln_to_gn [i_rank].size();
+
+  int         *pface_vtx_idx  = vpface_vtx_idx [i_rank].data();
+  int         *pface_vtx      = vpface_vtx     [i_rank].data();
+  PDM_g_num_t *pface_ln_to_gn = vpface_ln_to_gn[i_rank].data();
+  PDM_g_num_t *pvtx_ln_to_gn  = vpvtx_ln_to_gn [i_rank].data();
+
+  int           *pn_edge        = NULL;
+  int          **pface_edge_idx = NULL;
+  int          **pface_edge     = NULL;
+  int          **pedge_vtx      = NULL;
+  PDM_g_num_t  **pedge_ln_to_gn = NULL;
+  PDM_compute_face_edge_from_face_vtx(pdm_comm,
+                                      n_part,
+                                      &pn_face,
+                                      &pn_vtx,
+                                      &pface_vtx_idx,
+                                      &pface_vtx,
+                                      &pface_ln_to_gn,
+                                      &pvtx_ln_to_gn,
+                                      &pface_edge_idx,
+                                      &pface_edge,
+                                      &pn_edge,
+                                      &pedge_vtx,
+                                      &pedge_ln_to_gn);
+
+  int         p0_expected_pface_edge_idx[ 7] = {0, 4, 8, 12, 16, 20, 24};
+  int         p0_expected_pface_edge    [24] = {1, 2, 3, 5, -1, 4, 6, 8, -4, -2, 7, 10, -6, -3, 9, 11, -9, -7, -5, 12, -12, -11, -10, -8};
+  int         p0_expected_pedge_vtx     [24] = {2, 1, 1, 3, 4, 2, 5, 1, 3, 4, 2, 6, 7, 3, 6, 5, 4, 8, 5, 7, 8, 6, 7, 8};
+  PDM_g_num_t p0_expected_pedge_ln_to_gn[12] = {1, 2, 4, 5, 6, 8, 11, 12, 13, 14, 17, 18};
+
+  int         p1_expected_pface_edge_idx[ 7] = {0, 4, 8, 12, 16, 20, 24};
+  int         p1_expected_pface_edge    [24] = {-2, 1, 3, 5, -4, -1, 6, 8, -4, -2, 7, 10, -6, -3, 9, 11, -9, -5, 7, 12, -12, -11, -8, 10};
+  int         p1_expected_pedge_vtx     [24] = {2, 1, 3, 1, 4, 2, 1, 5, 3, 4, 2, 6, 3, 7, 6, 5, 4, 8, 7, 5, 8, 6, 7, 8};
+  PDM_g_num_t p1_expected_pedge_ln_to_gn[12] = {3, 4, 7, 8, 9, 10, 13, 15, 16, 17, 19, 20};
+
+  CHECK(pn_edge[0] == 12);
+
+  MPI_CHECK_EQ_C_ARRAY(0, pface_edge_idx[0], p0_expected_pface_edge_idx,  7);
+  MPI_CHECK_EQ_C_ARRAY(0, pface_edge    [0], p0_expected_pface_edge    , 24);
+  MPI_CHECK_EQ_C_ARRAY(0, pedge_vtx     [0], p0_expected_pedge_vtx     , 24);
+  MPI_CHECK_EQ_C_ARRAY(0, pedge_ln_to_gn[0], p0_expected_pedge_ln_to_gn, 12);
+
+  MPI_CHECK_EQ_C_ARRAY(1, pface_edge_idx[0], p1_expected_pface_edge_idx,  7);
+  MPI_CHECK_EQ_C_ARRAY(1, pface_edge    [0], p1_expected_pface_edge    , 24);
+  MPI_CHECK_EQ_C_ARRAY(1, pedge_vtx     [0], p1_expected_pedge_vtx     , 24);
+  MPI_CHECK_EQ_C_ARRAY(1, pedge_ln_to_gn[0], p1_expected_pedge_ln_to_gn, 12);
+
+
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    PDM_free(pface_edge_idx[i_part]);
+    PDM_free(pface_edge    [i_part]);
+    PDM_free(pedge_vtx     [i_part]);
+    PDM_free(pedge_ln_to_gn[i_part]);
+  }
+  PDM_free(pface_edge_idx);
+  PDM_free(pface_edge    );
+  PDM_free(pedge_vtx     );
+  PDM_free(pedge_ln_to_gn);
+  PDM_free(pn_edge);
+}
