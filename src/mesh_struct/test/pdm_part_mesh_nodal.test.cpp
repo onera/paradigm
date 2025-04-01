@@ -8,6 +8,7 @@
 #include "pdm_mesh_nodal.h"
 #include "pdm_mpi.h"
 #include "pdm_part_mesh_nodal.h"
+#include "pdm_part_mesh_nodal_priv.h"
 #include "pdm_part_mesh_nodal_elmts.h"
 #include "pdm_generate_mesh.h"
 
@@ -107,7 +108,7 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal_elmts] Constructor",1) {
 }
 
 
-MPI_TEST_CASE("[pdm_part_mesh_nodal] part_comm_graph from gnum", 2) {
+MPI_TEST_CASE("[pdm_part_mesh_nodal] Find topological boundaries - corners", 2) {
   
   int i_rank = -1;
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
@@ -119,8 +120,64 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] part_comm_graph from gnum", 2) {
                                                                 1., 1., 1., // x/y/z length
                                                                 3, 3, 3, // x/y/z n vertices
                                                                 1, PDM_SPLIT_DUAL_WITH_HILBERT); // part options
+  // > Remove computed corners
+  PDM_part_mesh_nodal_elmts_free(pmn->corner);
+  pmn->corner = NULL; // because shitty C
 
-  PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(pmn, PDM_GEOMETRY_KIND_CORNER);
+  PDM_part_mesh_nodal_compute_topo_boundaries(pmn,
+                                              PDM_GEOMETRY_KIND_RIDGE);
+
+  std::vector<std::vector<int>> expected_n_group      = {{1, 1, 1, 1, 0, 0, 0, 0},
+                                                         {0, 0, 0, 0, 1, 1, 1, 1}};
+
+  std::vector<std::vector<int>> expected_group_entity = {{ 0,  2,  6,  8, -1, -1, -1, -1},
+                                                         {-1, -1, -1, -1,  9, 11, 15, 17}};
+
+  std::vector<std::vector<int>> expected_group_gnum   = {{ 1,  1,  1,  1, -1, -1, -1, -1},
+                                                         {-1, -1, -1, -1,  1,  1,  1,  1}};
+
+
+  PDM_part_mesh_nodal_elmts_t *pmne_corner = NULL; 
+  pmne_corner  = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(pmn, PDM_GEOMETRY_KIND_CORNER);
+  int n_corner = PDM_part_mesh_nodal_elmts_n_group_get(pmne_corner);
+  assert (n_corner==8);
+  int n_section = PDM_part_mesh_nodal_elmts_n_section_get(pmne_corner);
+  assert (n_section==1);
+  for (int i_part=0; i_part<pmn->n_part; ++i_part) {
+    for (int i_group=0; i_group<n_corner; ++i_group) {
+      int          n_group_vtx = 0;
+      int         *group_elmt  = NULL;
+      PDM_g_num_t *group_gnum  = NULL;
+      PDM_part_mesh_nodal_elmts_group_get(pmne_corner, i_part, i_group,
+                                         &n_group_vtx,
+                                         &group_elmt,
+                                         &group_gnum,
+                                          PDM_OWNERSHIP_BAD_VALUE);
+      assert (n_group_vtx==expected_n_group[i_rank][i_group] && "COUCOU1");
+      if (n_group_vtx!=0) {
+        assert (group_elmt[0]==expected_group_entity[i_rank][i_group] && "COUCOU2");
+        assert (group_gnum[0]==expected_group_gnum  [i_rank][i_group] && "COUCOU3");
+      }
+    }
+  }
+
+
+  PDM_part_mesh_nodal_free(pmn);
+}
+
+
+MPI_TEST_CASE("[pdm_part_mesh_nodal] part_comm_graph from gnum", 2) {
+
+  int i_rank = -1;
+  PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
+  PDM_MPI_Comm_rank(pdm_comm, &i_rank);
+
+  PDM_part_mesh_nodal_t *pmn = PDM_generate_mesh_parallelepiped(pdm_comm,
+                                                                PDM_MESH_NODAL_TETRA4, 1, NULL,
+                                                                0., 0., 0., // x/y/z min
+                                                                1., 1., 1., // x/y/z length
+                                                                3, 3, 3, // x/y/z n vertices
+                                                                1, PDM_SPLIT_DUAL_WITH_HILBERT); // part options
   std::vector<std::vector<int>> expected_graph = {{10, 1, 1, 1,
                                                    11, 1, 1, 2,
                                                    12, 1, 1, 3,
@@ -139,7 +196,7 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] part_comm_graph from gnum", 2) {
                                                    7, 0, 1, 16,
                                                    8, 0, 1, 17,
                                                    9, 0, 1, 18,}};
-  
+
   PDM_part_comm_graph_t *pcg_vtx = NULL;
   PDM_part_mesh_nodal_part_comm_graph_get(pmn, PDM_GEOMETRY_KIND_CORNER, &pcg_vtx, PDM_OWNERSHIP_BAD_VALUE);
 
@@ -165,7 +222,6 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] part_comm_graph from gnum", 2) {
   PDM_part_mesh_nodal_part_comm_graph_get(pmn, PDM_GEOMETRY_KIND_SURFACIC, &pcg_surfacic, PDM_OWNERSHIP_BAD_VALUE);
   n_entity = PDM_part_comm_graph_entity_graph_get(pcg_surfacic, 0, &computed_graph, PDM_OWNERSHIP_BAD_VALUE);
   assert(n_entity==0);
-
 
   PDM_part_mesh_nodal_free(pmn);
 }
