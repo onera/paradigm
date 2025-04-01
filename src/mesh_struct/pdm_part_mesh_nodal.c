@@ -145,11 +145,6 @@ PDM_part_mesh_nodal_create
     pmn->vtx[i]->owner_numparent = PDM_OWNERSHIP_KEEP;
   }
 
-  pmn->n_vol    = PDM_array_zeros_int(n_part);
-  pmn->n_surf   = PDM_array_zeros_int(n_part);
-  pmn->n_ridge  = PDM_array_zeros_int(n_part);
-  pmn->n_corner = PDM_array_zeros_int(n_part);
-
   pmn->s_section = 10;
   pmn->n_section = 0;
   PDM_malloc(pmn->section_kind, pmn->s_section, PDM_geometry_kind_t);
@@ -883,11 +878,6 @@ PDM_part_mesh_nodal_free
       PDM_part_comm_graph_free(pmn->pcg[geom_kind]);
     }
   }
-
-  PDM_free(pmn->n_vol   );
-  PDM_free(pmn->n_surf  );
-  PDM_free(pmn->n_ridge );
-  PDM_free(pmn->n_corner);
 
   PDM_free(pmn->section_kind);
   PDM_free(pmn->section_id);

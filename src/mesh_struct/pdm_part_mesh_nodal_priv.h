@@ -47,11 +47,6 @@ struct _pdm_part_mesh_nodal_t {
 
   PDM_Mesh_nodal_vtx_t              **vtx;              /*!< Description des sommmets de chaque partition */
 
-  PDM_l_num_t                        *n_vol;
-  PDM_l_num_t                        *n_surf;
-  PDM_l_num_t                        *n_ridge;
-  PDM_l_num_t                        *n_corner;
-
   PDM_part_mesh_nodal_elmts_t       *volumic;
   PDM_part_mesh_nodal_elmts_t       *surfacic;
   PDM_part_mesh_nodal_elmts_t       *ridge;

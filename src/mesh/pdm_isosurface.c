@@ -1297,10 +1297,6 @@ _extract_nodal
       PDM_free(pmn->vtx[i_part]);
     }
     PDM_free(pmn->vtx);
-    PDM_free(pmn->n_vol   );
-    PDM_free(pmn->n_surf  );
-    PDM_free(pmn->n_ridge );
-    PDM_free(pmn->n_corner);
     PDM_free(pmn->section_kind);
     PDM_free(pmn->section_id);
     PDM_free(pmn);
