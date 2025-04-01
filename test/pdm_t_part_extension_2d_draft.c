@@ -255,8 +255,8 @@ int main
   // 7 -> prism
   // 8 -> hexa
 
-  // PDM_split_dual_t method  = PDM_SPLIT_DUAL_WITH_HILBERT;
-  PDM_split_dual_t method  = PDM_SPLIT_DUAL_WITH_IMPLICIT;
+  PDM_split_dual_t method  = PDM_SPLIT_DUAL_WITH_HILBERT;
+  // PDM_split_dual_t method  = PDM_SPLIT_DUAL_WITH_IMPLICIT;
 
   /*
    *  Read args
