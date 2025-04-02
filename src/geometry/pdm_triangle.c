@@ -973,7 +973,7 @@ PDM_triangle_evaluate_position
 }
 
 
-void
+int
 PDM_triangle_ngon_to_nodal
 (
  int   n_face,
