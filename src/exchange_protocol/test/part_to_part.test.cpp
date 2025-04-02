@@ -28,7 +28,7 @@ MPI_TEST_CASE("[pdm_part_to_part] - 2p - part_to_part", 2) {
    *
    *
    * part2 =      x--------x--------x        x--------x--------x
-   *              1        2        3        3        4        5
+   *              10       20       30       30       40       50
    */
   std::vector<std::vector<PDM_g_num_t>> vgnum_elt1 = {{2, 3}, {3, 1}};
   int n_part1 = 1;
