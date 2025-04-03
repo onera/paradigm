@@ -2685,7 +2685,16 @@ PDM_MPI_Comm       comm
   PDM_part_renum_cell(parts, n_part, pmeshes->renum_method[PDM_MESH_ENTITY_CELL], (void*) pmeshes->renum_method_properties[PDM_MESH_ENTITY_CELL]);
   PDM_part_renum_face(parts, n_part, pmeshes->renum_method[PDM_MESH_ENTITY_FACE], (void*) pmeshes->renum_method_properties[PDM_MESH_ENTITY_FACE]);
   PDM_part_renum_edge(parts, n_part, pmeshes->renum_method[PDM_MESH_ENTITY_EDGE], (void*) pmeshes->renum_method_properties[PDM_MESH_ENTITY_EDGE]);
-  PDM_part_renum_vtx (parts, n_part, pmeshes->renum_method[PDM_MESH_ENTITY_VTX ], (void *) pinternal_vtx_priority);
+
+  const char* method_vtx_name = PDM_part_renum_method_vtx_name_get(pmeshes->renum_method[PDM_MESH_ENTITY_VTX ]);
+  if(strcmp("PDM_PART_RENUM_VTX_SORT_INT_EXT", method_vtx_name) == 0) {
+    PDM_part_renum_vtx (parts, n_part, pmeshes->renum_method[PDM_MESH_ENTITY_VTX ], (void *) pinternal_vtx_priority);
+  } else {
+    /* This renumbering is very specific, the data associated is dynamic and attach at each partition */
+    PDM_part_renum_vtx (parts, n_part, pmeshes->renum_method[PDM_MESH_ENTITY_VTX ], (void*) pmeshes->renum_method_properties[PDM_MESH_ENTITY_VTX ]);
+  }
+
+  //
   PDM_free(pinternal_vtx_priority);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
