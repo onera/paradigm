@@ -121,48 +121,48 @@ if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
     PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/test_utils>
     PUBLIC    $<INSTALL_INTERFACE:include/>
   )
-    if (PDM_ENABLE_EXTENSION_PDMA)
-      target_include_directories(pdmf
-                                 PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../extensions/paradigma/src/plugins/renum>
-                                 )
-    endif()
+  if (PDM_ENABLE_EXTENSION_PDMA)
+    target_include_directories(pdmf
+                               PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../extensions/paradigma/src/plugins/renum>
+                               )
+  endif()
 endif()
 
 if (PTSCOTCH_FOUND)
-    target_include_directories(pdm
-                              PRIVATE $<BUILD_INTERFACE:${PTSCOTCH_INCLUDE_DIRS}>)
+  target_include_directories(pdm
+                             PRIVATE $<BUILD_INTERFACE:${PTSCOTCH_INCLUDE_DIRS}>)
 endif (PTSCOTCH_FOUND)
 
 if (PARMETIS_FOUND)
-    target_include_directories(pdm
-                               PRIVATE $<BUILD_INTERFACE:${PARMETIS_INCLUDE_DIRS}>)
-    target_include_directories(pdm
-                               PRIVATE $<BUILD_INTERFACE:${METIS_INCLUDE_DIRS}>)
+  target_include_directories(pdm
+                             PRIVATE $<BUILD_INTERFACE:${PARMETIS_INCLUDE_DIRS}>)
+  target_include_directories(pdm
+                             PRIVATE $<BUILD_INTERFACE:${METIS_INCLUDE_DIRS}>)
 endif (PARMETIS_FOUND)
 
 if (PDM_ENABLE_CUDA)
-    target_include_directories(pdm_gpu
-                              INTERFACE ${CMAKE_CURRENT_BINARY_DIR}
-                              PRIVATE   ${CMAKE_CURRENT_BINARY_DIR}
-                              PRIVATE  ${CMAKE_BINARY_DIR}
-                              PRIVATE  ${PDM_BINARY_DIR}
-                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/..
-                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}
-                              PUBLIC  ${MPI_INCLUDE_PATH}
-                              PUBLIC  ${CUDA_INCLUDE_DIRS}
-                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/ppart
-                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/io
-                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/mpi_wrapper
-                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/ext_wrapper
-                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/algorithm
-                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/exchange_protocol
-                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/gnum_utils
-                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/mesh
-                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/mesh_struct
-                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/meshgen
-                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/struct
-                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/util
-                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/test_utils)
+  target_include_directories(pdm_gpu
+                            INTERFACE ${CMAKE_CURRENT_BINARY_DIR}
+                            PRIVATE   ${CMAKE_CURRENT_BINARY_DIR}
+                            PRIVATE   ${CMAKE_BINARY_DIR}
+                            PRIVATE   ${PDM_BINARY_DIR}
+                            PUBLIC    ${CMAKE_CURRENT_SOURCE_DIR}/..
+                            PUBLIC    ${CMAKE_CURRENT_SOURCE_DIR}
+                            PUBLIC    ${MPI_INCLUDE_PATH}
+                            PUBLIC    ${CUDA_INCLUDE_DIRS}
+                            PUBLIC    ${CMAKE_CURRENT_SOURCE_DIR}/ppart
+                            PUBLIC    ${CMAKE_CURRENT_SOURCE_DIR}/io
+                            PUBLIC    ${CMAKE_CURRENT_SOURCE_DIR}/mpi_wrapper
+                            PUBLIC    ${CMAKE_CURRENT_SOURCE_DIR}/ext_wrapper
+                            PUBLIC    ${CMAKE_CURRENT_SOURCE_DIR}/algorithm
+                            PUBLIC    ${CMAKE_CURRENT_SOURCE_DIR}/exchange_protocol
+                            PUBLIC    ${CMAKE_CURRENT_SOURCE_DIR}/gnum_utils
+                            PUBLIC    ${CMAKE_CURRENT_SOURCE_DIR}/mesh
+                            PUBLIC    ${CMAKE_CURRENT_SOURCE_DIR}/mesh_struct
+                            PUBLIC    ${CMAKE_CURRENT_SOURCE_DIR}/meshgen
+                            PUBLIC    ${CMAKE_CURRENT_SOURCE_DIR}/struct
+                            PUBLIC    ${CMAKE_CURRENT_SOURCE_DIR}/util
+                            PUBLIC    ${CMAKE_CURRENT_SOURCE_DIR}/test_utils)
 endif ()
 
 # Liste des header
@@ -327,8 +327,7 @@ if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
 endif ()
 
 if (OPENMP_FOUND)
-   set_target_properties(pdm PROPERTIES
-                         COMPILE_FLAGS ${OpenMP_C_FLAGS})
+   set_target_properties(pdm PROPERTIES COMPILE_FLAGS ${OpenMP_C_FLAGS})
 endif()
 
 # Options du link
