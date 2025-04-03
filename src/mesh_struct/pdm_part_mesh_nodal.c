@@ -1965,8 +1965,6 @@ PDM_part_mesh_nodal_compute_straddling_entities
   }
 
 
-  assert(pmn->n_part == 1);
-
   PDM_part_mesh_nodal_elmts_t* pmne = NULL;
   if (geom_kind==PDM_GEOMETRY_KIND_SURFACIC) {
     pmne = pmn->surfacic;
@@ -1988,64 +1986,81 @@ PDM_part_mesh_nodal_compute_straddling_entities
   /**
    * Detect locally which vertices are on multiple entity1 groups
    */
-  int *entity1_vtx_idx = NULL;
-  int *entity1_vtx     = NULL;
-  PDM_part_mesh_nodal_elmts_cell_vtx_connect_get(pmne, 0, &entity1_vtx_idx, &entity1_vtx);
-
-  int n_vtx = PDM_part_mesh_nodal_n_vtx_get(pmn, 0);
-
-  int *tag_vtx_n  = PDM_array_const_int(n_vtx, 0);
+  int  *n_vtx           = NULL;
+  int  *n_entity1       = NULL;
+  int **entity1_vtx_idx = NULL;
+  int **entity1_vtx     = NULL;
+  int **tag_vtx_n       = NULL;
+  int **tag_vtx_idx     = NULL;
+  int **tag_vtx         = NULL;
+  PDM_malloc(n_vtx          , pmn->n_part, int  );
+  PDM_malloc(n_entity1      , pmn->n_part, int  );
+  PDM_malloc(entity1_vtx_idx, pmn->n_part, int *);
+  PDM_malloc(entity1_vtx    , pmn->n_part, int *);
+  PDM_malloc(tag_vtx_n      , pmn->n_part, int *);
+  PDM_malloc(tag_vtx_idx    , pmn->n_part, int *);
+  PDM_malloc(tag_vtx        , pmn->n_part, int *);
 
   int n_group_entity1 = PDM_part_mesh_nodal_elmts_n_group_get(pmne);
-  for(int i_group = 0; i_group < n_group_entity1; ++i_group) {
-    int          n_entity1_group        = 0;
-    int         *entity1_group          = NULL;
-    PDM_g_num_t *entity1_group_ln_to_gn = NULL;
-    PDM_part_mesh_nodal_elmts_group_get(pmne,
-                                        0,
-                                        i_group,
-                                       &n_entity1_group,
-                                       &entity1_group,
-                                       &entity1_group_ln_to_gn,
-                                        PDM_OWNERSHIP_BAD_VALUE);
 
-    for(int idx_elmt = 0; idx_elmt < n_entity1_group; ++idx_elmt) {
-      int i_elmt = entity1_group[idx_elmt]-1;
-      for (int i_elmt_vtx=entity1_vtx_idx[i_elmt];
-               i_elmt_vtx<entity1_vtx_idx[i_elmt+1]; ++i_elmt_vtx) {
-        int i_vtx = entity1_vtx[i_elmt_vtx]-1;
-        tag_vtx_n[i_vtx]++;
+  for (int i_part=0; i_part<pmn->n_part; ++i_part) {
+    n_entity1[i_part] = PDM_part_mesh_nodal_elmts_cell_vtx_connect_get(pmne, i_part,
+                                                                      &entity1_vtx_idx[i_part],
+                                                                      &entity1_vtx[i_part]);
+    n_vtx    [i_part] = PDM_part_mesh_nodal_n_vtx_get(pmn, i_part);
+
+
+    tag_vtx_n[i_part]  = PDM_array_const_int(n_vtx[i_part], i_part);
+
+    for(int i_group = 0; i_group < n_group_entity1; ++i_group) {
+      int          n_entity1_group        = 0;
+      int         *entity1_group          = NULL;
+      PDM_g_num_t *entity1_group_ln_to_gn = NULL;
+      PDM_part_mesh_nodal_elmts_group_get(pmne,
+                                          i_part,
+                                          i_group,
+                                         &n_entity1_group,
+                                         &entity1_group,
+                                         &entity1_group_ln_to_gn,
+                                          PDM_OWNERSHIP_BAD_VALUE);
+
+      for(int idx_elmt = 0; idx_elmt < n_entity1_group; ++idx_elmt) {
+        int i_elmt = entity1_group[idx_elmt]-1;
+        for (int i_elmt_vtx=entity1_vtx_idx[i_part][i_elmt];
+                 i_elmt_vtx<entity1_vtx_idx[i_part][i_elmt+1]; ++i_elmt_vtx) {
+          int i_vtx = entity1_vtx[i_part][i_elmt_vtx]-1;
+          tag_vtx_n[i_part][i_vtx]++;
+        }
       }
     }
-  }
 
-  int *tag_vtx_idx = PDM_array_const_int(n_vtx+1, 0);
-  for(int i_vtx = 0; i_vtx < n_vtx; ++i_vtx) {
-    tag_vtx_idx[i_vtx+1] = tag_vtx_idx[i_vtx] + tag_vtx_n[i_vtx];
-    tag_vtx_n[i_vtx] = 0;
-  }
-  int *tag_vtx = NULL;
-  PDM_malloc(tag_vtx, tag_vtx_idx[n_vtx], int);
+    tag_vtx_idx[i_part] = PDM_array_const_int(n_vtx[i_part]+1, 0);
+    for(int i_vtx = 0; i_vtx < n_vtx[i_part]; ++i_vtx) {
+      tag_vtx_idx[i_part][i_vtx+1] = tag_vtx_idx[i_part][i_vtx] + tag_vtx_n[i_part][i_vtx];
+      tag_vtx_n  [i_part][i_vtx  ] = 0;
+    }
 
-  for(int i_group = 0; i_group < n_group_entity1; ++i_group) {
-    int          n_entity1_group        = 0;
-    int         *entity1_group          = NULL;
-    PDM_g_num_t *entity1_group_ln_to_gn = NULL;
-    PDM_part_mesh_nodal_elmts_group_get(pmne,
-                                        0,
-                                        i_group,
-                                       &n_entity1_group,
-                                       &entity1_group,
-                                       &entity1_group_ln_to_gn,
-                                        PDM_OWNERSHIP_BAD_VALUE);
+    PDM_malloc(tag_vtx[i_part], tag_vtx_idx[i_part][n_vtx[i_part]], int);
+    for(int i_group = 0; i_group < n_group_entity1; ++i_group) {
+      int          n_entity1_group        = 0;
+      int         *entity1_group          = NULL;
+      PDM_g_num_t *entity1_group_ln_to_gn = NULL;
+      PDM_part_mesh_nodal_elmts_group_get(pmne,
+                                          i_part,
+                                          i_group,
+                                         &n_entity1_group,
+                                         &entity1_group,
+                                         &entity1_group_ln_to_gn,
+                                          PDM_OWNERSHIP_BAD_VALUE);
 
-    for(int idx_elmt = 0; idx_elmt < n_entity1_group; ++idx_elmt) {
-      int i_elmt = entity1_group[idx_elmt]-1;
-      for (int i_elmt_vtx=entity1_vtx_idx[i_elmt];
-               i_elmt_vtx<entity1_vtx_idx[i_elmt+1]; ++i_elmt_vtx) {
-        int i_vtx = entity1_vtx[i_elmt_vtx]-1;
-        int idx_write = tag_vtx_idx[i_vtx] + tag_vtx_n[i_vtx]++;
-        tag_vtx[idx_write] = i_group+1;
+      for(int idx_elmt = 0; idx_elmt < n_entity1_group; ++idx_elmt) {
+        int i_elmt = entity1_group[idx_elmt]-1;
+        for (int i_elmt_vtx=entity1_vtx_idx[i_part][i_elmt];
+                 i_elmt_vtx<entity1_vtx_idx[i_part][i_elmt+1]; ++i_elmt_vtx) {
+          int i_vtx = entity1_vtx[i_part][i_elmt_vtx]-1;
+          int idx_write = tag_vtx_idx[i_part][i_vtx] + tag_vtx_n[i_part][i_vtx]++;
+          tag_vtx[i_part][idx_write] = i_group+1;
+        }
       }
     }
   }
@@ -2057,30 +2072,49 @@ PDM_part_mesh_nodal_compute_straddling_entities
   if (pmn->pcg[PDM_GEOMETRY_KIND_CORNER]==NULL) {
     PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(pmn, PDM_GEOMETRY_KIND_CORNER);
   }
-  int *pentity_bound   = NULL;
-  int  pn_entity_bound = PDM_part_comm_graph_entity_graph_get(pmn->pcg[PDM_GEOMETRY_KIND_CORNER],
-                                                              0,
-                                                             &pentity_bound,
-                                                             PDM_OWNERSHIP_BAD_VALUE);
 
-  int  send_entity2_group_size = 0;
-  int *send_entity2_group_n    = NULL;
-  PDM_malloc(send_entity2_group_n, pn_entity_bound, int);
 
-  int idx_write = 0;
-  int max_stride = 0;
-  for(int i = 0; i < pn_entity_bound; ++i) {
-    int i_vtx = pentity_bound[4*i]-1;
-    send_entity2_group_n[i]  = tag_vtx_idx[i_vtx+1] - tag_vtx_idx[i_vtx];
-    send_entity2_group_size += send_entity2_group_n[i];
-    max_stride = PDM_MAX(max_stride, send_entity2_group_n[i]);
-  }
-  int *send_entity2_group = NULL;
-  PDM_malloc(send_entity2_group, send_entity2_group_size, int);
-  for(int i = 0; i < pn_entity_bound; ++i) {
-    int i_vtx = pentity_bound[4*i]-1;
-    for(int k = tag_vtx_idx[i_vtx]; k < tag_vtx_idx[i_vtx+1]; ++k) {
-      send_entity2_group[idx_write++] = tag_vtx[k];
+  int   max_stride = 0;
+  int  *pn_entity_bound      = NULL;
+  int **pentity_bound        = NULL;
+  int **send_entity2_group_n = NULL;
+  int **send_entity2_group   = NULL;
+  int **recv_entity2_group_n = NULL;
+  int **recv_entity2_group   = NULL;
+  PDM_malloc(pn_entity_bound     , pmn->n_part, int  );
+  PDM_malloc(pentity_bound       , pmn->n_part, int *);
+  PDM_malloc(send_entity2_group_n, pmn->n_part, int *);
+  PDM_malloc(send_entity2_group  , pmn->n_part, int *);
+  PDM_malloc(recv_entity2_group_n, pmn->n_part, int *);
+  PDM_malloc(recv_entity2_group  , pmn->n_part, int *);
+
+  for (int i_part=0; i_part<pmn->n_part; ++i_part) {
+
+    pn_entity_bound[i_part] = PDM_part_comm_graph_entity_graph_get(pmn->pcg[PDM_GEOMETRY_KIND_CORNER],
+                                                                   i_part,
+                                                                  &pentity_bound[i_part],
+                                                                   PDM_OWNERSHIP_BAD_VALUE);
+
+    int  send_entity2_group_size = 0;
+    PDM_malloc(send_entity2_group_n[i_part], pn_entity_bound[i_part], int);
+
+    int idx_write = 0;
+    for(int i = 0; i < pn_entity_bound[i_part]; ++i) {
+      log_trace("i %d\n", i);
+      int i_vtx = pentity_bound
+      [i_part]
+      [4*i]-1;
+      send_entity2_group_n[i_part][i]  = tag_vtx_idx[i_part][i_vtx+1] - tag_vtx_idx[i_part][i_vtx];
+      send_entity2_group_size += send_entity2_group_n[i_part][i];
+      max_stride = PDM_MAX(max_stride, send_entity2_group_n[i_part][i]);
+    }
+
+    PDM_malloc(send_entity2_group[i_part], send_entity2_group_size, int);
+    for(int i = 0; i < pn_entity_bound[i_part]; ++i) {
+      int i_vtx = pentity_bound[i_part][4*i]-1;
+      for(int k = tag_vtx_idx[i_part][i_vtx]; k < tag_vtx_idx[i_part][i_vtx+1]; ++k) {
+        send_entity2_group[i_part][idx_write++] = tag_vtx[i_part][k];
+      }
     }
   }
 
@@ -2090,54 +2124,65 @@ PDM_part_mesh_nodal_compute_straddling_entities
                            sizeof(int),
                            PDM_STRIDE_VAR_INTERLACED,
                            1,
-                           &send_entity2_group_n,
-                (void **)  &send_entity2_group,
-                           &tmp_recv_entity2_group_n,
-                (void ***) &tmp_recv_entity2_group);
+                           send_entity2_group_n,
+               (void  **)  send_entity2_group,
+                          &tmp_recv_entity2_group_n,
+               (void ***) &tmp_recv_entity2_group);
 
-  int *recv_entity2_group_n = tmp_recv_entity2_group_n[0];
-  int *recv_entity2_group   = tmp_recv_entity2_group  [0];
+  for (int i_part=0; i_part<pmn->n_part; ++i_part) {
+    recv_entity2_group_n[i_part] = tmp_recv_entity2_group_n[i_part];
+    recv_entity2_group  [i_part] = tmp_recv_entity2_group  [i_part];
+    PDM_free(send_entity2_group_n[i_part]);
+    PDM_free(send_entity2_group  [i_part]);
+
+
+    for(int i = 0; i < pn_entity_bound[i_part]; ++i) {
+      int i_vtx = pentity_bound[i_part][4*i]-1;
+      tag_vtx_n[i_part][i_vtx] += recv_entity2_group_n[i_part][i];
+    }
+
+    tag_vtx_idx[i_part][0] = 0;
+    for(int i_vtx = 0; i_vtx < n_vtx[i_part]; ++i_vtx) {
+      max_stride = PDM_MAX(max_stride, tag_vtx_n[i_part][i_vtx]);
+      tag_vtx_idx[i_part][i_vtx+1] = tag_vtx_idx[i_part][i_vtx] + tag_vtx_n[i_part][i_vtx];
+      tag_vtx_n  [i_part][i_vtx  ] = 0;
+    }
+    PDM_realloc(tag_vtx[i_part], tag_vtx[i_part], tag_vtx_idx[i_part][n_vtx[i_part]], int);
+
+  }
   PDM_free(tmp_recv_entity2_group_n);
-  PDM_free(tmp_recv_entity2_group  );
-  PDM_free(send_entity2_group_n    );
-  PDM_free(send_entity2_group      );
+  PDM_free(tmp_recv_entity2_group);
+  PDM_free(send_entity2_group_n);
+  PDM_free(send_entity2_group);
 
-  for(int i = 0; i < pn_entity_bound; ++i) {
-    int i_vtx = pentity_bound[4*i]-1;
-    tag_vtx_n[i_vtx] += recv_entity2_group_n[i];
-  }
-
-  tag_vtx_idx[0] = 0;
-  for(int i_vtx = 0; i_vtx < n_vtx; ++i_vtx) {
-    max_stride = PDM_MAX(max_stride, tag_vtx_n[i_vtx]);
-    tag_vtx_idx[i_vtx+1] = tag_vtx_idx[i_vtx] + tag_vtx_n[i_vtx];
-    tag_vtx_n  [i_vtx  ] = 0;
-  }
-  PDM_realloc(tag_vtx, tag_vtx, tag_vtx_idx[n_vtx], int);
+  PDM_free(send_entity2_group_n);
+  PDM_free(send_entity2_group);
 
 
   /*
    * Fill entity2 groups with local information
    */
   for(int i_group = 0; i_group < n_group_entity1; ++i_group) {
-    int          n_group_elmt   = 0;
-    int         *group_elmt     = NULL;
-    PDM_g_num_t *group_ln_to_gn = NULL;
-    PDM_part_mesh_nodal_elmts_group_get(pmne,
-                                        0,
-                                        i_group,
-                                        &n_group_elmt,
-                                        &group_elmt,
-                                        &group_ln_to_gn,
-                                        PDM_OWNERSHIP_BAD_VALUE);
+    for (int i_part=0; i_part<pmn->n_part; ++i_part) {
+      int          n_group_elmt   = 0;
+      int         *group_elmt     = NULL;
+      PDM_g_num_t *group_ln_to_gn = NULL;
+      PDM_part_mesh_nodal_elmts_group_get(pmne,
+                                          i_part,
+                                          i_group,
+                                         &n_group_elmt,
+                                         &group_elmt,
+                                         &group_ln_to_gn,
+                                          PDM_OWNERSHIP_BAD_VALUE);
 
-    for(int idx_elmt = 0; idx_elmt < n_group_elmt; ++idx_elmt) {
-      int i_elmt = group_elmt[idx_elmt]-1;
-      for (int i_elmt_vtx=entity1_vtx_idx[i_elmt];
-               i_elmt_vtx<entity1_vtx_idx[i_elmt+1]; ++i_elmt_vtx) {
-        int i_vtx = entity1_vtx[i_elmt_vtx]-1;
-        int idx_write = tag_vtx_idx[i_vtx] + tag_vtx_n[i_vtx]++;
-        tag_vtx[idx_write] = i_group+1;
+      for(int idx_elmt = 0; idx_elmt < n_group_elmt; ++idx_elmt) {
+        int i_elmt = group_elmt[idx_elmt]-1;
+        for (int i_elmt_vtx=entity1_vtx_idx[i_part][i_elmt];
+                 i_elmt_vtx<entity1_vtx_idx[i_part][i_elmt+1]; ++i_elmt_vtx) {
+          int i_vtx = entity1_vtx[i_part][i_elmt_vtx]-1;
+          int idx_write = tag_vtx_idx[i_part][i_vtx] + tag_vtx_n[i_part][i_vtx]++;
+          tag_vtx[i_part][idx_write] = i_group+1;
+        }
       }
     }
   }
@@ -2145,84 +2190,152 @@ PDM_part_mesh_nodal_compute_straddling_entities
   /*
    * Complete entity2 groups with pcg recv data information
    */
-  int idx_read = 0;
-  for(int i = 0; i < pn_entity_bound; ++i) {
-    int i_vtx = pentity_bound[4*i]-1;
-    for(int k = 0; k < recv_entity2_group_n[i]; k++) {
-      int idx_write = tag_vtx_idx[i_vtx] + tag_vtx_n[i_vtx]++;
-      tag_vtx[idx_write] = recv_entity2_group[idx_read++];
+  for (int i_part=0; i_part<pmn->n_part; ++i_part) {
+    int idx_read = 0;
+    for(int i = 0; i < pn_entity_bound[i_part]; ++i) {
+      int i_vtx = pentity_bound[i_part][4*i]-1;
+      for(int k = 0; k < recv_entity2_group_n[i_part][i]; k++) {
+        int idx_write = tag_vtx_idx[i_part][i_vtx] + tag_vtx_n[i_part][i_vtx]++;
+        tag_vtx[i_part][idx_write] = recv_entity2_group[i_part][idx_read++];
+      }
     }
-  }
 
+    PDM_free(entity1_vtx_idx[i_part]);
+    PDM_free(entity1_vtx    [i_part]);
+
+    PDM_free(recv_entity2_group_n[i_part]);
+    PDM_free(recv_entity2_group  [i_part]);
+  }
+  PDM_free(entity1_vtx_idx);
+  PDM_free(entity1_vtx);
   PDM_free(recv_entity2_group_n);
   PDM_free(recv_entity2_group);
+  PDM_free(pn_entity_bound);
+  PDM_free(pentity_bound);
 
 
-  /**
-   * Now that all parent group are received by vertices, unique parents and : 
-   *  - count n_parent_max for gnum gnum
-   *  - count n_parent for each vertex
-   *  - count straddling vertex in vtx_group_idx
-   */
-  int  n_parent_max   = 0;
-  int *group_parent_n = NULL;
-  int *vtx_group_idx  = NULL;
-  PDM_calloc(group_parent_n, n_vtx  , int);
-  PDM_malloc(vtx_group_idx , n_vtx+1, int); vtx_group_idx[0] = 0;
-  for(int i_vtx = 0; i_vtx < n_vtx; ++i_vtx) {
-    vtx_group_idx[i_vtx+1] = vtx_group_idx[i_vtx];
-    int beg = tag_vtx_idx[i_vtx  ];
-    int end = tag_vtx_idx[i_vtx+1];
-    if(end - beg > 0){
-      int n_unique = PDM_inplace_unique(tag_vtx, beg, end-1);
-      n_parent_max = PDM_MAX(n_parent_max, n_unique);
-      if(n_unique > 1) {
-        group_parent_n[i_vtx  ] = n_unique;
-        vtx_group_idx [i_vtx+1] = vtx_group_idx[i_vtx]+1;
+  int           n_parent_max          = 0;
+  int         **group_parent_n        = NULL;
+  int         **vtx_group_idx         = NULL;
+  int         **vtx_parent_group_idx  = NULL;
+  int         **vtx_parent_group      = NULL;
+  PDM_g_num_t **group_parent_nplt     = NULL;
+  PDM_l_num_t **ridge_vtx_candidate   = NULL;
+  PDM_malloc(group_parent_n       , pmn->n_part, int         *);
+  PDM_malloc(vtx_group_idx        , pmn->n_part, int         *);
+  PDM_malloc(vtx_parent_group_idx , pmn->n_part, int         *);
+  PDM_malloc(vtx_parent_group     , pmn->n_part, int         *);
+  PDM_malloc(group_parent_nplt    , pmn->n_part, PDM_g_num_t *);
+  PDM_malloc(ridge_vtx_candidate  , pmn->n_part, PDM_l_num_t *);
+
+  for (int i_part=0; i_part<pmn->n_part; ++i_part) {
+    /**
+     * Now that all parent group are received by vertices, unique parents and : 
+     *  - count n_parent_max for gnum gnum
+     *  - count n_parent for each vertex
+     *  - count straddling vertex in vtx_group_idx
+     */
+    int vtx_parent_group_size = 0;
+
+    PDM_malloc(group_parent_n[i_part], n_vtx[i_part]  , int);
+    PDM_malloc(vtx_group_idx [i_part], n_vtx[i_part]+1, int); vtx_group_idx[i_part][0] = 0;
+    for(int i_vtx = 0; i_vtx < n_vtx[i_part]; ++i_vtx) {
+      group_parent_n[i_part][i_vtx  ] = 0;
+      vtx_group_idx [i_part][i_vtx+1] = vtx_group_idx[i_part][i_vtx];
+      int beg = tag_vtx_idx[i_part][i_vtx  ];
+      int end = tag_vtx_idx[i_part][i_vtx+1];
+      if(end - beg > 0){
+        int n_unique = PDM_inplace_unique(tag_vtx[i_part], beg, end-1);
+        n_parent_max = PDM_MAX(n_parent_max, n_unique);
+        if(n_unique > 1) {
+          vtx_parent_group_size  += n_unique;
+          group_parent_n[i_part][i_vtx  ] = n_unique;
+          vtx_group_idx [i_part][i_vtx+1] = vtx_group_idx[i_part][i_vtx]+1;
+        }
       }
     }
-  }
+
+    if (debug_verbose==1) {
+      printf("i_part = %d\n", i_part);
+      PDM_log_trace_connectivity_int(tag_vtx_idx[i_part], tag_vtx[i_part], n_vtx[i_part], "tag_vtx :: ");
+      PDM_log_trace_array_int(group_parent_n[i_part], n_vtx[i_part], "group_parent_n :: ");
+    }
 
 
-  /**
-   * Prepare nuplet from group gid computation
-   *
-   * Here we could store parent group at same time
-   */
-  int i_write = 0;
-  PDM_g_num_t *group_parent_nplt = NULL;
-  PDM_malloc(group_parent_nplt, n_parent_max*vtx_group_idx[n_vtx], PDM_g_num_t);
-  for(int i_vtx = 0; i_vtx < n_vtx; ++i_vtx) {
-    int beg = tag_vtx_idx[i_vtx  ];
-    if (group_parent_n[i_vtx]>0) {
-      for (int i_read=beg; i_read<beg+group_parent_n[i_vtx]; ++i_read) {
-        group_parent_nplt[i_write++] = (PDM_g_num_t) tag_vtx[i_read];
+    /**
+     * Prepare nuplet from group gid computation
+     *
+     * Here we could store parent group at same time
+     */
+    int i_write_parent = 0;
+    int i_write_nuplet = 0;
+    PDM_malloc(vtx_parent_group_idx[i_part], n_vtx[i_part]+1                                  , int        ); vtx_parent_group_idx[i_part][0] = 0;
+    PDM_malloc(vtx_parent_group    [i_part], vtx_parent_group_size                            , int        );
+    PDM_malloc(group_parent_nplt   [i_part], n_parent_max*vtx_group_idx[i_part][n_vtx[i_part]], PDM_g_num_t);
+    PDM_malloc(ridge_vtx_candidate [i_part], n_vtx[i_part]                                    , PDM_l_num_t);
+    for(int i_vtx = 0; i_vtx < n_vtx[i_part]; ++i_vtx) {
+      vtx_parent_group_idx[i_part][i_vtx+1] = vtx_parent_group_idx[i_part][i_vtx];
+      int beg = tag_vtx_idx[i_part][i_vtx  ];
+      if (group_parent_n[i_part][i_vtx]>0) {
+        vtx_parent_group_idx[i_part][i_vtx+1] += group_parent_n[i_part][i_vtx];
+        for (int i_read=beg; i_read<beg+group_parent_n[i_part][i_vtx]; ++i_read) {
+          group_parent_nplt[i_part][i_write_nuplet++] = (PDM_g_num_t) tag_vtx[i_part][i_read];
+          vtx_parent_group [i_part][i_write_parent++] = tag_vtx[i_part][i_read];
+        }
+        for (int i_read=beg+group_parent_n[i_part][i_vtx]; i_read<beg+n_parent_max; ++i_read) {
+          group_parent_nplt[i_part][i_write_nuplet++] = 0;
+        }
+        ridge_vtx_candidate[i_part][i_vtx] = 1;
       }
-      for (int i_read=beg+group_parent_n[i_vtx]; i_read<beg+n_parent_max; ++i_read) {
-        group_parent_nplt[i_write++] = 0;
+      else {
+        ridge_vtx_candidate[i_part][i_vtx] = 0;
       }
+    }
+    PDM_free(group_parent_n[i_part]);
+
+    PDM_free(tag_vtx_n  [i_part]);
+    PDM_free(tag_vtx_idx[i_part]);
+    PDM_free(tag_vtx    [i_part]);
+
+    if (debug_verbose==1) {
+      int *group_parent_nplt_idx = PDM_array_new_idx_from_const_stride_int(n_parent_max, vtx_group_idx[i_part][n_vtx[i_part]]);
+      PDM_log_trace_connectivity_long(group_parent_nplt_idx, group_parent_nplt[i_part], vtx_group_idx[i_part][n_vtx[i_part]], "group_parent_nplt :: ");
+      PDM_log_trace_connectivity_int (vtx_parent_group_idx[i_part], vtx_parent_group[i_part], n_vtx[i_part], "vtx_parent_group :: ");
+      PDM_free(group_parent_nplt_idx);
     }
   }
   PDM_free(group_parent_n);
+
+  PDM_free(tag_vtx);
+  PDM_free(tag_vtx_n);
+  PDM_free(tag_vtx_idx);
+
 
 
   /**
    * Generate ids for groups
    */
   PDM_gen_gnum_t* gen_group_id = PDM_gnum_create(3,
-                                                 1,
+                                                 pmn->n_part,
                                                  PDM_TRUE,
                                                  1e-4,
                                                  pmn->comm,
                                                  PDM_OWNERSHIP_USER);
   PDM_gnum_set_parents_nuplet(gen_group_id, n_parent_max);
-  PDM_gnum_set_from_parents(gen_group_id, 0, vtx_group_idx[n_vtx], group_parent_nplt);
-
+  for (int i_part=0; i_part<pmn->n_part; ++i_part) {
+    PDM_gnum_set_from_parents(gen_group_id, i_part, vtx_group_idx[i_part][n_vtx[i_part]], group_parent_nplt[i_part]);
+  }
   PDM_gnum_compute(gen_group_id);
 
-  PDM_g_num_t *group_id  = PDM_gnum_get(gen_group_id, 0);
-  int         *vtx_group = NULL;
-  PDM_malloc(vtx_group, vtx_group_idx[n_vtx], int);
+  PDM_g_num_t **group_id  = NULL;
+  int         **vtx_group = NULL;
+  PDM_malloc(group_id , pmn->n_part, PDM_g_num_t *);
+  PDM_malloc(vtx_group, pmn->n_part, int         *);
+  for (int i_part=0; i_part<pmn->n_part; ++i_part) {
+    group_id[i_part] = PDM_gnum_get(gen_group_id, i_part);
+    PDM_malloc(vtx_group[i_part], vtx_group_idx[i_part][n_vtx[i_part]], int);
+    PDM_free(group_parent_nplt[i_part]);
+  }
 
   PDM_gnum_free(gen_group_id);
   PDM_free(group_parent_nplt);
@@ -2232,31 +2345,47 @@ PDM_part_mesh_nodal_compute_straddling_entities
    * Count global n_group while casting group id into integer
    * and transpose vtx_group for pmne storage
    */
+  int **group_vtx_idx = NULL;
+  int **group_vtx     = NULL;
+  PDM_malloc(group_vtx_idx, pmn->n_part, int *);
+  PDM_malloc(group_vtx    , pmn->n_part, int *);
+
   int _g_n_group = 0;
   int  g_n_group = 0;
-  PDM_g_num_t *vtx_gnum = PDM_part_mesh_nodal_vtx_g_num_get(pmn, 0, PDM_OWNERSHIP_BAD_VALUE);
-  for (int i_corner=0; i_corner<vtx_group_idx[n_vtx]; ++i_corner) {
-    _g_n_group = PDM_MAX(group_id[i_corner], _g_n_group);
-    vtx_group[i_corner] = (int) group_id[i_corner];
+  for (int i_part=0; i_part<pmn->n_part; ++i_part) {
+    for (int i_group=0; i_group<vtx_group_idx[i_part][n_vtx[i_part]]; ++i_group) {
+      _g_n_group = PDM_MAX(group_id[i_part][i_group], _g_n_group);
+      vtx_group[i_part][i_group] = (int) group_id[i_part][i_group];
+    }
+
+    if (debug_verbose==1) {
+      int vtx_group_size = vtx_group_idx[i_part][n_vtx[i_part]];
+      PDM_log_trace_array_int(vtx_group_idx[i_part], n_vtx[i_part]+1       , "vtx_group_idx :: ");
+      PDM_log_trace_array_int(vtx_group    [i_part], vtx_group_size, "vtx_group     :: ");
+    }
   }
+
   PDM_MPI_Allreduce(&_g_n_group, &g_n_group, 1, PDM_MPI_INT, PDM_MPI_MAX, pmn->comm);
 
+  for (int i_part=0; i_part<pmn->n_part; ++i_part) {
+    PDM_connectivity_transpose(n_vtx[i_part],
+                               g_n_group,
+                               vtx_group_idx[i_part],
+                               vtx_group    [i_part],
+                              &group_vtx_idx[i_part],
+                              &group_vtx    [i_part]);
 
+    if (debug_verbose==1) {
+      int group_vtx_size = group_vtx_idx[i_part][g_n_group];
+      PDM_log_trace_array_int(group_vtx_idx[i_part], g_n_group+1   , "group_vtx_idx :: ");
+      PDM_log_trace_array_int(group_vtx    [i_part], group_vtx_size, "group_vtx     :: ");
+    }
 
-  int *group_vtx_idx = NULL;
-  int *group_vtx     = NULL;
-  PDM_connectivity_transpose(n_vtx,
-                             g_n_group,
-                             vtx_group_idx,
-                             vtx_group,
-                            &group_vtx_idx,
-                            &group_vtx);
-
+    PDM_free(vtx_group_idx[i_part]);
+    PDM_free(vtx_group    [i_part]);
+  }
   PDM_free(vtx_group_idx);
   PDM_free(vtx_group);
-
-  }
-
 
 
   if (geom_kind_tgt==PDM_GEOMETRY_KIND_CORNER) {
@@ -2268,33 +2397,44 @@ PDM_part_mesh_nodal_compute_straddling_entities
     /**
      * Generate global id for group entities, then store corners in pmne
      */
-    PDM_g_num_t *group_vtx_gnum = NULL;
-    PDM_malloc(group_vtx_gnum, group_vtx_idx[g_n_group], PDM_g_num_t);
-    for (int i_entity=0; i_entity<group_vtx_idx[g_n_group]; ++i_entity) {
-      group_vtx_gnum[i_entity] = vtx_gnum[group_vtx[i_entity]-1];
+    PDM_g_num_t **group_vtx_gnum = NULL;
+    PDM_malloc(group_vtx_gnum, pmn->n_part, PDM_g_num_t *);
+
+    for (int i_part=0; i_part<pmn->n_part; ++i_part) {
+      PDM_g_num_t *vtx_gnum = PDM_part_mesh_nodal_vtx_g_num_get(pmn, 0, PDM_OWNERSHIP_BAD_VALUE);
+
+      PDM_malloc(group_vtx_gnum[i_part], group_vtx_idx[i_part][g_n_group], PDM_g_num_t);
+      for (int i_entity=0; i_entity<group_vtx_idx[i_part][g_n_group]; ++i_entity) {
+        group_vtx_gnum[i_part][i_entity] = vtx_gnum[group_vtx[i_part][i_entity]-1];
+      }
     }
 
     for (int i_group=0; i_group<g_n_group; ++i_group) {
-      int n_group_vtx = group_vtx_idx[i_group+1]-group_vtx_idx[i_group];
 
       PDM_gen_gnum_t* gen_group_gnum = PDM_gnum_create(3,
-                                                     1,
-                                                     PDM_TRUE,
-                                                     1e-4,
-                                                     pmn->comm,
-                                                     PDM_OWNERSHIP_USER);
+                                                       pmn->n_part,
+                                                       PDM_TRUE,
+                                                       1e-4,
+                                                       pmn->comm,
+                                                       PDM_OWNERSHIP_USER);
       PDM_gnum_set_parents_nuplet(gen_group_gnum, 1);
-      PDM_gnum_set_from_parents(gen_group_gnum, 0, n_group_vtx, &group_vtx_gnum[group_vtx_idx[i_group]]);
+      for (int i_part=0; i_part<pmn->n_part; ++i_part) {
+        int n_group_vtx = group_vtx_idx[i_part][i_group+1]-group_vtx_idx[i_part][i_group];
+        PDM_gnum_set_from_parents(gen_group_gnum, i_part, n_group_vtx, &group_vtx_gnum[i_part][group_vtx_idx[i_part][i_group]]);
+      }
 
       PDM_gnum_compute(gen_group_gnum);
 
-      PDM_g_num_t *group_gnum = PDM_gnum_get(gen_group_gnum, 0);
-      for (int i_entity=0; i_entity<n_group_vtx; ++i_entity) {
-        group_vtx_gnum[group_vtx_idx[i_group]+i_entity] = group_gnum[i_entity];
+      for (int i_part=0; i_part<pmn->n_part; ++i_part) {
+        int n_group_vtx = group_vtx_idx[i_part][i_group+1]-group_vtx_idx[i_part][i_group];
+        PDM_g_num_t *group_gnum = PDM_gnum_get(gen_group_gnum, i_part);
+        for (int i_entity=0; i_entity<n_group_vtx; ++i_entity) {
+          group_vtx_gnum[i_part][group_vtx_idx[i_part][i_group]+i_entity] = group_gnum[i_entity];
+        }
+        PDM_free(group_gnum);
       }
 
       PDM_gnum_free(gen_group_gnum);
-      PDM_free(group_gnum);
     }
 
 
@@ -2306,42 +2446,58 @@ PDM_part_mesh_nodal_compute_straddling_entities
       PDM_part_mesh_nodal_elmts_std_set(pmn->corner,
                                         section_corner,
                                         i_part,
-                                        group_vtx_idx[g_n_group],
-                                        group_vtx,
+                                        group_vtx_idx[i_part][g_n_group],
+                                        group_vtx[i_part],
                                         NULL,
                                         NULL,
                                         NULL,
                                         PDM_OWNERSHIP_KEEP);
       for (int i_group=0; i_group<g_n_group; ++i_group) {
-        int n_group_vtx = group_vtx_idx[i_group+1]-group_vtx_idx[i_group];
+        int n_group_vtx = group_vtx_idx[i_part][i_group+1]-group_vtx_idx[i_part][i_group];
         int         *_group_vtx      = NULL;
         PDM_g_num_t *_group_vtx_gnum = NULL;
         PDM_malloc(_group_vtx     , n_group_vtx, int);
         PDM_malloc(_group_vtx_gnum, n_group_vtx, PDM_g_num_t);
-        memcpy(_group_vtx     , &group_vtx     [group_vtx_idx[i_group]], n_group_vtx*sizeof(int        ));
-        memcpy(_group_vtx_gnum, &group_vtx_gnum[group_vtx_idx[i_group]], n_group_vtx*sizeof(PDM_g_num_t));
+        memcpy(_group_vtx     , &group_vtx     [i_part][group_vtx_idx[i_part][i_group]], n_group_vtx*sizeof(int        ));
+        memcpy(_group_vtx_gnum, &group_vtx_gnum[i_part][group_vtx_idx[i_part][i_group]], n_group_vtx*sizeof(PDM_g_num_t));
         PDM_log_trace_array_int (_group_vtx     , n_group_vtx, "_group_vtx     ");
         PDM_log_trace_array_long(_group_vtx_gnum, n_group_vtx, "_group_vtx_gnum");
         PDM_part_mesh_nodal_elmts_group_set(pmn->corner, i_part,
                                             i_group, n_group_vtx,
                                             _group_vtx, _group_vtx_gnum,
                                             PDM_OWNERSHIP_KEEP);
-
       }
+      PDM_free(group_vtx_gnum[i_part]);
     }
     PDM_free(group_vtx_gnum);
   }
   else {
+  for (int i_part=0; i_part<pmn->n_part; ++i_part) {
+    PDM_free(group_vtx_idx[i_part]);
+    // PDM_free(group_vtx    [i_part]);
   }
   PDM_free(group_vtx_idx);
+  PDM_free(group_vtx);
 
+  for (int i_part=0; i_part<pmn->n_part; ++i_part) {
+    PDM_free(vtx_parent_group_idx[i_part]);
+    PDM_free(vtx_parent_group    [i_part]);
+  }
+  PDM_free(vtx_parent_group_idx);
+  PDM_free(vtx_parent_group);
+
+  for (int i_part=0; i_part<pmn->n_part; ++i_part) {
+    PDM_free(group_id[i_part]);
+  }
   PDM_free(group_id);
 
-  PDM_free(tag_vtx);
-  PDM_free(tag_vtx_n);
-  PDM_free(tag_vtx_idx);
-  PDM_free(entity1_vtx_idx);
-  PDM_free(entity1_vtx);
+  for (int i_part=0; i_part<pmn->n_part; ++i_part) {
+    PDM_free(ridge_vtx_candidate[i_part]);
+  }
+  PDM_free(ridge_vtx_candidate);
+
+  PDM_free(n_entity1);
+  PDM_free(n_vtx);
 
 }
 
