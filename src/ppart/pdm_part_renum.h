@@ -105,6 +105,22 @@ PDM_part_renum_method_vtx_add
  const PDM_part_renum_fct_t  renum_fct /*!< Customize \ref PDM_part_renum_face function for the format */
 );
 
+
+/**
+ *
+ * \brief Get name of the vtx renumbering method
+ *
+ * \param [in]  idx     Index of the method
+ *
+ * \return Name of the method
+ *
+ */
+const char *
+PDM_part_renum_method_vtx_name_get
+(
+const int idx
+);
+
 /**
  *
  * \brief Get index of a renumbering cell method

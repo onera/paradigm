@@ -1426,6 +1426,25 @@ PDM_part_renum_method_vtx_add
                                      renum_fct);
 }
 
+const char *
+PDM_part_renum_method_vtx_name_get
+(
+const int idx
+)
+{
+  if (renum_methods[PDM_MESH_ENTITY_VTX] == NULL) {
+    PDM_part_renum_method_load_local();
+  }
+
+  if (idx >= n_renum_methods[PDM_MESH_ENTITY_VTX]) {
+    return NULL;
+  }
+
+  _renum_method_t *method_ptr = renum_methods[PDM_MESH_ENTITY_VTX][idx];
+
+  return method_ptr->name;
+}
+
 
 void
 PDM_part_renum_method_load_local
