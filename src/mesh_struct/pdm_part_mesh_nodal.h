@@ -1254,17 +1254,18 @@ PDM_part_mesh_nodal_cell_vtx_connect_get
 
 /**
  *
- * \brief Compute entities that straddle at least two different groups from geom_kind entities.
+ * \brief Compute entities straddling at least two different groups from geom_kind entities.
  * Generated entities are stored in pmn structure.
  *
  * \param [in]  pmn        Pointer to \ref PDM_part_mesh_nodal_t instance
  * \param [in]  geom_kind  Geometry kind (ridge or surface)
  */
 void
-PDM_part_mesh_nodal_compute_topo_boundaries
+PDM_part_mesh_nodal_compute_straddling_entities
 (
   PDM_part_mesh_nodal_t  *pmn,
-  PDM_geometry_kind_t     geom_kind
+  PDM_geometry_kind_t     geom_kind,
+  PDM_geometry_kind_t     geom_kind_tgt
 );
 
 

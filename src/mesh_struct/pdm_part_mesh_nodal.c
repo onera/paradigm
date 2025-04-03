@@ -26,6 +26,9 @@
 #include "pdm_unique.h"
 #include "pdm_logging.h"
 #include "pdm_gnum.h"
+#include "pdm_part_connectivity_transform.h"
+#include "pdm_order.h"
+#include "pdm_binary_search.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -1942,10 +1945,11 @@ PDM_part_mesh_nodal_cell_vtx_connect_get
 
 
 void
-PDM_part_mesh_nodal_compute_topo_boundaries
+PDM_part_mesh_nodal_compute_straddling_entities
 (
   PDM_part_mesh_nodal_t  *pmn,
-  PDM_geometry_kind_t     geom_kind
+  PDM_geometry_kind_t     geom_kind,
+  PDM_geometry_kind_t     geom_kind_tgt
 )
 {
   int debug_verbose = 1;
@@ -1954,6 +1958,11 @@ PDM_part_mesh_nodal_compute_topo_boundaries
   PDM_MPI_Comm_rank(pmn->comm, &i_rank);
 
 
+  if (!((geom_kind==PDM_GEOMETRY_KIND_SURFACIC && (geom_kind_tgt==PDM_GEOMETRY_KIND_RIDGE ||
+                                                   geom_kind_tgt==PDM_GEOMETRY_KIND_CORNER  ) ) ||
+        (geom_kind==PDM_GEOMETRY_KIND_RIDGE    &&  geom_kind_tgt==PDM_GEOMETRY_KIND_CORNER    )  )) {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_part_mesh_nodal_compute_topo_corners cannot build entities of geom_kind %d from entities of geom_kind %d\n", geom_kind_tgt, geom_kind);
+  }
 
 
   assert(pmn->n_part == 1);
@@ -1970,6 +1979,9 @@ PDM_part_mesh_nodal_compute_topo_boundaries
   }
 
   if (pmne==NULL) {
+    if (i_rank==0) {
+      printf("Warning: no entity of geom_kind %d found\n", geom_kind);
+    }
     return;
   }
 
@@ -1999,10 +2011,11 @@ PDM_part_mesh_nodal_compute_topo_boundaries
 
     for(int idx_elmt = 0; idx_elmt < n_entity1_group; ++idx_elmt) {
       int i_elmt = entity1_group[idx_elmt]-1;
-      int i_vtx1 = entity1_vtx[2*i_elmt  ]-1;
-      int i_vtx2 = entity1_vtx[2*i_elmt+1]-1;
-      tag_vtx_n[i_vtx1]++;
-      tag_vtx_n[i_vtx2]++;
+      for (int i_elmt_vtx=entity1_vtx_idx[i_elmt];
+               i_elmt_vtx<entity1_vtx_idx[i_elmt+1]; ++i_elmt_vtx) {
+        int i_vtx = entity1_vtx[i_elmt_vtx]-1;
+        tag_vtx_n[i_vtx]++;
+      }
     }
   }
 
@@ -2028,12 +2041,12 @@ PDM_part_mesh_nodal_compute_topo_boundaries
 
     for(int idx_elmt = 0; idx_elmt < n_entity1_group; ++idx_elmt) {
       int i_elmt = entity1_group[idx_elmt]-1;
-      int i_vtx1 = entity1_vtx[2*i_elmt  ]-1;
-      int i_vtx2 = entity1_vtx[2*i_elmt+1]-1;
-      int idx_write1 = tag_vtx_idx[i_vtx1] + tag_vtx_n[i_vtx1]++;
-      int idx_write2 = tag_vtx_idx[i_vtx2] + tag_vtx_n[i_vtx2]++;
-      tag_vtx[idx_write1] = i_group+1;
-      tag_vtx[idx_write2] = i_group+1;
+      for (int i_elmt_vtx=entity1_vtx_idx[i_elmt];
+               i_elmt_vtx<entity1_vtx_idx[i_elmt+1]; ++i_elmt_vtx) {
+        int i_vtx = entity1_vtx[i_elmt_vtx]-1;
+        int idx_write = tag_vtx_idx[i_vtx] + tag_vtx_n[i_vtx]++;
+        tag_vtx[idx_write] = i_group+1;
+      }
     }
   }
 
@@ -2096,9 +2109,9 @@ PDM_part_mesh_nodal_compute_topo_boundaries
 
   tag_vtx_idx[0] = 0;
   for(int i_vtx = 0; i_vtx < n_vtx; ++i_vtx) {
-    tag_vtx_idx[i_vtx+1] = tag_vtx_idx[i_vtx] + tag_vtx_n[i_vtx];
     max_stride = PDM_MAX(max_stride, tag_vtx_n[i_vtx]);
-    tag_vtx_n[i_vtx] = 0;
+    tag_vtx_idx[i_vtx+1] = tag_vtx_idx[i_vtx] + tag_vtx_n[i_vtx];
+    tag_vtx_n  [i_vtx  ] = 0;
   }
   PDM_realloc(tag_vtx, tag_vtx, tag_vtx_idx[n_vtx], int);
 
@@ -2120,12 +2133,12 @@ PDM_part_mesh_nodal_compute_topo_boundaries
 
     for(int idx_elmt = 0; idx_elmt < n_group_elmt; ++idx_elmt) {
       int i_elmt = group_elmt[idx_elmt]-1;
-      int i_vtx1 = entity1_vtx[2*i_elmt  ]-1;
-      int i_vtx2 = entity1_vtx[2*i_elmt+1]-1;
-      int idx_write1 = tag_vtx_idx[i_vtx1] + tag_vtx_n[i_vtx1]++;
-      int idx_write2 = tag_vtx_idx[i_vtx2] + tag_vtx_n[i_vtx2]++;
-      tag_vtx[idx_write1] = i_group+1;
-      tag_vtx[idx_write2] = i_group+1;
+      for (int i_elmt_vtx=entity1_vtx_idx[i_elmt];
+               i_elmt_vtx<entity1_vtx_idx[i_elmt+1]; ++i_elmt_vtx) {
+        int i_vtx = entity1_vtx[i_elmt_vtx]-1;
+        int idx_write = tag_vtx_idx[i_vtx] + tag_vtx_n[i_vtx]++;
+        tag_vtx[idx_write] = i_group+1;
+      }
     }
   }
 
@@ -2141,38 +2154,52 @@ PDM_part_mesh_nodal_compute_topo_boundaries
     }
   }
 
-  int  n_corner = 0;
-  int *corner_vtx = NULL;
-  int parent_size = 0;
-  int n_parent_max = 0;
+  PDM_free(recv_entity2_group_n);
+  PDM_free(recv_entity2_group);
+
+
+  /**
+   * Now that all parent group are received by vertices, unique parents and : 
+   *  - count n_parent_max for gnum gnum
+   *  - count n_parent for each vertex
+   *  - count straddling vertex in vtx_group_idx
+   */
+  int  n_parent_max   = 0;
   int *group_parent_n = NULL;
-  PDM_calloc(group_parent_n , n_vtx, int);
-  PDM_malloc(corner_vtx, tag_vtx_idx[n_vtx], int);
+  int *vtx_group_idx  = NULL;
+  PDM_calloc(group_parent_n, n_vtx  , int);
+  PDM_malloc(vtx_group_idx , n_vtx+1, int); vtx_group_idx[0] = 0;
   for(int i_vtx = 0; i_vtx < n_vtx; ++i_vtx) {
+    vtx_group_idx[i_vtx+1] = vtx_group_idx[i_vtx];
     int beg = tag_vtx_idx[i_vtx  ];
     int end = tag_vtx_idx[i_vtx+1];
     if(end - beg > 0){
       int n_unique = PDM_inplace_unique(tag_vtx, beg, end-1);
       n_parent_max = PDM_MAX(n_parent_max, n_unique);
       if(n_unique > 1) {
-        group_parent_n[i_vtx] = n_unique;
-        corner_vtx[n_corner++] = i_vtx;
-        parent_size += n_unique;
+        group_parent_n[i_vtx  ] = n_unique;
+        vtx_group_idx [i_vtx+1] = vtx_group_idx[i_vtx]+1;
       }
     }
   }
-  int i_write2 = 0;
+
+
+  /**
+   * Prepare nuplet from group gid computation
+   *
+   * Here we could store parent group at same time
+   */
+  int i_write = 0;
   PDM_g_num_t *group_parent_nplt = NULL;
-  PDM_malloc(group_parent_nplt, n_parent_max*n_corner, PDM_g_num_t);
+  PDM_malloc(group_parent_nplt, n_parent_max*vtx_group_idx[n_vtx], PDM_g_num_t);
   for(int i_vtx = 0; i_vtx < n_vtx; ++i_vtx) {
     int beg = tag_vtx_idx[i_vtx  ];
-    int end = tag_vtx_idx[i_vtx+1];
     if (group_parent_n[i_vtx]>0) {
       for (int i_read=beg; i_read<beg+group_parent_n[i_vtx]; ++i_read) {
-        group_parent_nplt[i_write2++] = (PDM_g_num_t) tag_vtx[i_read];
+        group_parent_nplt[i_write++] = (PDM_g_num_t) tag_vtx[i_read];
       }
-      for (int i_read=beg+group_parent_n[i_vtx]; i_read<end; ++i_read) {
-        group_parent_nplt[i_write2++] = 0;
+      for (int i_read=beg+group_parent_n[i_vtx]; i_read<beg+n_parent_max; ++i_read) {
+        group_parent_nplt[i_write++] = 0;
       }
     }
   }
@@ -2189,63 +2216,124 @@ PDM_part_mesh_nodal_compute_topo_boundaries
                                                  pmn->comm,
                                                  PDM_OWNERSHIP_USER);
   PDM_gnum_set_parents_nuplet(gen_group_id, n_parent_max);
-  PDM_gnum_set_from_parents(gen_group_id, 0, n_corner, group_parent_nplt);
+  PDM_gnum_set_from_parents(gen_group_id, 0, vtx_group_idx[n_vtx], group_parent_nplt);
 
   PDM_gnum_compute(gen_group_id);
 
-  PDM_g_num_t *group_id = PDM_gnum_get(gen_group_id, 0);
+  PDM_g_num_t *group_id  = PDM_gnum_get(gen_group_id, 0);
+  int         *vtx_group = NULL;
+  PDM_malloc(vtx_group, vtx_group_idx[n_vtx], int);
 
   PDM_gnum_free(gen_group_id);
   PDM_free(group_parent_nplt);
 
+
+  /**
+   * Count global n_group while casting group id into integer
+   * and transpose vtx_group for pmne storage
+   */
   int _g_n_group = 0;
   int  g_n_group = 0;
-  for (int i_corner=0; i_corner<n_corner; ++i_corner) {
+  PDM_g_num_t *vtx_gnum = PDM_part_mesh_nodal_vtx_g_num_get(pmn, 0, PDM_OWNERSHIP_BAD_VALUE);
+  for (int i_corner=0; i_corner<vtx_group_idx[n_vtx]; ++i_corner) {
     _g_n_group = PDM_MAX(group_id[i_corner], _g_n_group);
+    vtx_group[i_corner] = (int) group_id[i_corner];
   }
   PDM_MPI_Allreduce(&_g_n_group, &g_n_group, 1, PDM_MPI_INT, PDM_MPI_MAX, pmn->comm);
 
-  PDM_free(recv_entity2_group_n);
-  PDM_free(recv_entity2_group);
-
-  PDM_realloc(corner_vtx, corner_vtx, n_corner, int);
 
 
+  int *group_vtx_idx = NULL;
+  int *group_vtx     = NULL;
+  PDM_connectivity_transpose(n_vtx,
+                             g_n_group,
+                             vtx_group_idx,
+                             vtx_group,
+                            &group_vtx_idx,
+                            &group_vtx);
 
+  PDM_free(vtx_group_idx);
+  PDM_free(vtx_group);
 
-  if (pmn->corner!=NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_part_mesh_nodal_compute_topo_corners : part_mesh_nodal already has corner section\n");
   }
 
 
-  pmn->corner = PDM_part_mesh_nodal_elmts_create(0, pmn->n_part, pmn->comm);
-  int section_corner = PDM_part_mesh_nodal_elmts_add(pmn->corner, PDM_MESH_NODAL_POINT);
-  PDM_part_mesh_nodal_elmts_n_group_set(pmn->corner, g_n_group);
 
-  for (int i_part=0; i_part<pmn->n_part; ++i_part) {
-    PDM_part_mesh_nodal_elmts_std_set(pmn->corner,
-                                      section_corner,
-                                      i_part,
-                                      n_corner,
-                                      corner_vtx,
-                                      NULL,
-                                      NULL,
-                                      NULL,
-                                      PDM_OWNERSHIP_KEEP);
-    for (int i_corner=0; i_corner<n_corner; ++i_corner) {
-      int         *group_entity = NULL;
-      PDM_g_num_t *group_gnum   = NULL;
-      PDM_malloc(group_entity, 1, int        );
-      PDM_malloc(group_gnum  , 1, PDM_g_num_t);
-      group_entity[0] = corner_vtx[i_corner];
-      group_gnum  [0] = 1;
-      PDM_part_mesh_nodal_elmts_group_set(pmn->corner, i_part,
-                                          group_id[i_corner]-1, 1,
-                                          group_entity, group_gnum,
-                                          PDM_OWNERSHIP_KEEP);
+  if (geom_kind_tgt==PDM_GEOMETRY_KIND_CORNER) {
 
+    if (pmn->corner!=NULL) {
+      PDM_error(__FILE__, __LINE__, 0, "PDM_part_mesh_nodal_compute_topo_corners : part_mesh_nodal already has corner section\n");
     }
+
+    /**
+     * Generate global id for group entities, then store corners in pmne
+     */
+    PDM_g_num_t *group_vtx_gnum = NULL;
+    PDM_malloc(group_vtx_gnum, group_vtx_idx[g_n_group], PDM_g_num_t);
+    for (int i_entity=0; i_entity<group_vtx_idx[g_n_group]; ++i_entity) {
+      group_vtx_gnum[i_entity] = vtx_gnum[group_vtx[i_entity]-1];
+    }
+
+    for (int i_group=0; i_group<g_n_group; ++i_group) {
+      int n_group_vtx = group_vtx_idx[i_group+1]-group_vtx_idx[i_group];
+
+      PDM_gen_gnum_t* gen_group_gnum = PDM_gnum_create(3,
+                                                     1,
+                                                     PDM_TRUE,
+                                                     1e-4,
+                                                     pmn->comm,
+                                                     PDM_OWNERSHIP_USER);
+      PDM_gnum_set_parents_nuplet(gen_group_gnum, 1);
+      PDM_gnum_set_from_parents(gen_group_gnum, 0, n_group_vtx, &group_vtx_gnum[group_vtx_idx[i_group]]);
+
+      PDM_gnum_compute(gen_group_gnum);
+
+      PDM_g_num_t *group_gnum = PDM_gnum_get(gen_group_gnum, 0);
+      for (int i_entity=0; i_entity<n_group_vtx; ++i_entity) {
+        group_vtx_gnum[group_vtx_idx[i_group]+i_entity] = group_gnum[i_entity];
+      }
+
+      PDM_gnum_free(gen_group_gnum);
+      PDM_free(group_gnum);
+    }
+
+
+    pmn->corner = PDM_part_mesh_nodal_elmts_create(0, pmn->n_part, pmn->comm);
+    int section_corner = PDM_part_mesh_nodal_elmts_add(pmn->corner, PDM_MESH_NODAL_POINT);
+    PDM_part_mesh_nodal_elmts_n_group_set(pmn->corner, g_n_group);
+
+    for (int i_part=0; i_part<pmn->n_part; ++i_part) {
+      PDM_part_mesh_nodal_elmts_std_set(pmn->corner,
+                                        section_corner,
+                                        i_part,
+                                        group_vtx_idx[g_n_group],
+                                        group_vtx,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        PDM_OWNERSHIP_KEEP);
+      for (int i_group=0; i_group<g_n_group; ++i_group) {
+        int n_group_vtx = group_vtx_idx[i_group+1]-group_vtx_idx[i_group];
+        int         *_group_vtx      = NULL;
+        PDM_g_num_t *_group_vtx_gnum = NULL;
+        PDM_malloc(_group_vtx     , n_group_vtx, int);
+        PDM_malloc(_group_vtx_gnum, n_group_vtx, PDM_g_num_t);
+        memcpy(_group_vtx     , &group_vtx     [group_vtx_idx[i_group]], n_group_vtx*sizeof(int        ));
+        memcpy(_group_vtx_gnum, &group_vtx_gnum[group_vtx_idx[i_group]], n_group_vtx*sizeof(PDM_g_num_t));
+        PDM_log_trace_array_int (_group_vtx     , n_group_vtx, "_group_vtx     ");
+        PDM_log_trace_array_long(_group_vtx_gnum, n_group_vtx, "_group_vtx_gnum");
+        PDM_part_mesh_nodal_elmts_group_set(pmn->corner, i_part,
+                                            i_group, n_group_vtx,
+                                            _group_vtx, _group_vtx_gnum,
+                                            PDM_OWNERSHIP_KEEP);
+
+      }
+    }
+    PDM_free(group_vtx_gnum);
   }
+  else {
+  }
+  PDM_free(group_vtx_idx);
 
   PDM_free(group_id);
 
