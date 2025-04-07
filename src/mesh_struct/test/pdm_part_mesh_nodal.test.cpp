@@ -164,10 +164,46 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] Find straddling entities - surfacic->corner
     }
   }
 
-
   PDM_part_mesh_nodal_free(pmn);
 }
 
+
+MPI_TEST_CASE("[pdm_part_mesh_nodal] Find straddling entities - surfacic->ridge", 2) {
+  
+  int i_rank = -1;
+  PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
+  PDM_MPI_Comm_rank(pdm_comm, &i_rank);
+
+  PDM_part_mesh_nodal_t *pmn = PDM_generate_mesh_parallelepiped(pdm_comm,
+                                                                PDM_MESH_NODAL_TETRA4, 1, NULL,
+                                                                0., 0., 0., // x/y/z min
+                                                                1., 1., 1., // x/y/z length
+                                                                3, 3, 3, // x/y/z n vertices
+                                                                1, PDM_SPLIT_DUAL_WITH_HILBERT); // part options
+  // > Remove computed corners
+  PDM_part_mesh_nodal_elmts_free(pmn->ridge);
+  pmn->ridge = NULL; // because shitty C
+
+  PDM_part_mesh_nodal_compute_straddling_entities(pmn,
+                                                  PDM_GEOMETRY_KIND_SURFACIC,
+                                                  PDM_GEOMETRY_KIND_RIDGE);
+
+  PDM_part_mesh_nodal_elmts_t *pmne_ridge = NULL; 
+  pmne_ridge  = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(pmn, PDM_GEOMETRY_KIND_RIDGE);
+  int n_ridge = PDM_part_mesh_nodal_elmts_n_group_get(pmne_ridge);
+  int n_section = PDM_part_mesh_nodal_elmts_n_section_get(pmne_ridge);
+
+  assert (n_ridge==12); // 12 ridges
+  assert (n_section==1);
+  for (int i_part=0; i_part<pmn->n_part; ++i_part) {
+    for (int i_group=0; i_group<n_ridge; ++i_group) {
+      assert (0);
+    }
+  }
+
+
+  PDM_part_mesh_nodal_free(pmn);
+}
 
 MPI_TEST_CASE("[pdm_part_mesh_nodal] Find straddling entities - ridge->corner", 2) {
   
