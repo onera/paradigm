@@ -3392,24 +3392,17 @@ PDM_part_mesh_nodal_elmts_elt_extents_compute
 
 
     /* Expand bounding box */
-    double delta = 0.;
+    double delta[3] = {0.0, 0.0, 0.0};
     for (int idim = 0; idim < 3; idim++) {
-      double x = _extents[3+idim] - _extents[idim];
+      delta[idim] = _extents[3+idim] - _extents[idim];
 
-      if (delta < x) {
-        delta = x;
+      if (delta[idim] > eps_extents){
+        delta[idim] *= tolerance;
+      } else {
+        delta[idim] = eps_extents;
       }
-    }
-
-    if (delta > eps_extents) {
-      delta *= tolerance;
-    } else {
-      delta = eps_extents;
-    }
-
-    for (int idim = 0; idim < 3; idim++) {
-      _extents[idim]   -= delta;
-      _extents[3+idim] += delta;
+      _extents[idim]   -= delta[idim];
+      _extents[3+idim] += delta[idim];
     }
   } // End of loop on elements
 
