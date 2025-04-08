@@ -434,8 +434,6 @@ MPI_TEST_CASE("[dcube_nodal_gen] - 1p - quad ",1) {
 
   PDM_dmesh_nodal_t* dmesh_nodal = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube); /* It will be free by PDM_dcube_nodal_gen_free because PDM_OWNERSHIP_KEEP */
 
-  double *vtx_coords = PDM_DMesh_nodal_vtx_get(dmesh_nodal, PDM_OWNERSHIP_BAD_VALUE);
-
   /* Verif global */
   PDM_g_num_t n_cell_abs = -100;
   PDM_g_num_t n_face_abs = -100;
