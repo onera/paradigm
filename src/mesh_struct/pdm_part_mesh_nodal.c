@@ -2341,12 +2341,13 @@ PDM_part_mesh_nodal_compute_straddling_entities
   
   int **_tag_vtx_idx = NULL;
   int **_tag_vtx     = NULL;
-  PDM_part_comm_graph_gather_strided_int_data(pmn->pcg[PDM_GEOMETRY_KIND_CORNER],
-                                              n_vtx,
-                                              tag_vtx_idx,
-                                              tag_vtx,
-                                            &_tag_vtx_idx,
-                                            &_tag_vtx);
+  PDM_part_comm_graph_gather_strided_data(pmn->pcg[PDM_GEOMETRY_KIND_CORNER],
+                                          1*sizeof(int),
+                                          n_vtx,
+                                          tag_vtx_idx,
+                             (void  **)   tag_vtx,
+                                        &_tag_vtx_idx,
+                             (void ***) &_tag_vtx);
   for (int i_part=0; i_part<pmn->n_part; ++i_part) {
     PDM_free(tag_vtx_idx[i_part]);
     PDM_free(tag_vtx    [i_part]);
@@ -2729,12 +2730,13 @@ PDM_part_mesh_nodal_compute_straddling_entities
 
     int **_tag_edge_idx = NULL;
     int **_tag_edge     = NULL;
-    PDM_part_comm_graph_gather_strided_int_data(pmn->pcg[PDM_GEOMETRY_KIND_RIDGE],
-                                                n_unique_edge,
-                                                tag_edge_idx,
-                                                tag_edge,
-                                              &_tag_edge_idx,
-                                              &_tag_edge);
+    PDM_part_comm_graph_gather_strided_data(pmn->pcg[PDM_GEOMETRY_KIND_RIDGE],
+                                            1*sizeof(int),
+                                            n_unique_edge,
+                                            tag_edge_idx,
+                               (void  **)   tag_edge,
+                                          &_tag_edge_idx,
+                               (void ***) &_tag_edge);
     for (int i_part=0; i_part<pmn->n_part; ++i_part) {
       PDM_free(tag_edge_idx[i_part]);
       PDM_free(tag_edge    [i_part]);

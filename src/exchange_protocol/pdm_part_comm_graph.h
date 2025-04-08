@@ -168,25 +168,27 @@ PDM_part_comm_graph_reorder
 
 /**
  *
- * \brief Gather local and distant int data through part_comm_graph communicator
+ * \brief Gather local and distant data through part_comm_graph communicator
  *
  * \param [in]  pcg          \ref PDM_part_comm_graph_t structure
+ * \param [in]  size_data    Data size
  * \param [in]  n_entity     n_entity for data (should be > pn_entity_bound)
- * \param [in]  data_idx     Index of data to gather
- * \param [in]  data         Data to gather
- * \param [out] out_data_idx Gathered data index
- * \param [out] out_data     Gathered data
+ * \param [in]  data_idx     Index of data to gather (size[i_part] = n_entity[i_part]+1)
+ * \param [in]  data         Data to gather (size[i_part] = data_idx[i_part][n_entity[i_part]])
+ * \param [out] out_data_idx Gathered data index (size[i_part] = n_entity[i_part]+1)
+ * \param [out] out_data     Gathered data (size[i_part] = out_data_idx[i_part][n_entity[i_part]])
  *
  */
 void
-PDM_part_comm_graph_gather_strided_int_data
+PDM_part_comm_graph_gather_strided_data
 (
   PDM_part_comm_graph_t   *pcg,
+  const size_t             size_data,
   int                     *n_entity,
   int                    **data_idx,
-  int                    **data,
+  void                   **data,
   int                   ***out_data_idx,
-  int                   ***out_data
+  void                  ***out_data
 );
 
 
