@@ -621,7 +621,7 @@ PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum
 )
 {
   if (pmn->pcg[geom_kind]!=NULL) {
-    return;
+    PDM_error (__FILE__, __LINE__, 0, "PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum: pmn->pcg[geom_kind=%d]!=NULL\n", geom_kind);
   }
 
   int          *n_entity    = NULL;
