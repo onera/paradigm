@@ -2893,8 +2893,6 @@ PDM_part_mesh_nodal_compute_straddling_entities
         PDM_malloc(_group_ridge_gnum, n_group_ridge, PDM_g_num_t);
         memcpy(_group_ridge     , &group_ridge     [i_part][group_ridge_idx[i_part][i_group]], n_group_ridge*sizeof(int        ));
         memcpy(_group_ridge_gnum, &group_ridge_gid[i_part][group_ridge_idx[i_part][i_group]], n_group_ridge*sizeof(PDM_g_num_t));
-        PDM_log_trace_array_int (_group_ridge     , n_group_ridge, "_group_ridge     ");
-        PDM_log_trace_array_long(_group_ridge_gnum, n_group_ridge, "_group_ridge_gnum");
         PDM_part_mesh_nodal_elmts_group_set(pmn->ridge, i_part,
                                             i_group, n_group_ridge,
                                             _group_ridge, _group_ridge_gnum,
