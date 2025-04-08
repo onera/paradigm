@@ -1274,10 +1274,10 @@ PDM_part_mesh_nodal_compute_straddling_entities
  *
  * \brief Set part_comm_graph onto part_mesh_nodal struct
  *
- * \param [in]  pmn        Pointer to \ref PDM_part_mesh_nodal_t instance
- * \param [in]  pcg        Pointer to \ref PDM_part_comm_graph_t instance
- * \param [in]  geom_kind  Geometry kind (corner, ridge, surface or volume)
- * \param [in]  ownership  part_mesh_nodal ownership on given part_comm_graph
+ * \param [in]  pmn         Pointer to \ref PDM_part_mesh_nodal_t instance
+ * \param [in]  pcg         Pointer to \ref PDM_part_comm_graph_t instance
+ * \param [in]  entity_type Entity type (vertex, edge, face or cell)
+ * \param [in]  ownership   part_mesh_nodal ownership on given part_comm_graph
  *
  */
 void
@@ -1285,7 +1285,7 @@ PDM_part_mesh_nodal_part_comm_graph_set
 (
   PDM_part_mesh_nodal_t *pmn,
   PDM_part_comm_graph_t *pcg,
-  PDM_geometry_kind_t    geom_kind,
+  PDM_mesh_entities_t    entity_type,
   PDM_ownership_t        ownership
 );
 
@@ -1294,17 +1294,17 @@ PDM_part_mesh_nodal_part_comm_graph_set
  *
  * \brief Get part_mesh_nodal's part_comm_graph
  *
- * \param [in]   pmn        Pointer to \ref PDM_part_mesh_nodal_t instance
- * \param [in]   geom_kind  Geometry kind (corner, ridge, surface or volume)
- * \param [out]  pcg        Pointer to \ref PDM_part_comm_graph_t instance
- * \param [in]   ownership  part_mesh_nodal ownership on returned part_comm_graph
+ * \param [in]   pmn         Pointer to \ref PDM_part_mesh_nodal_t instance
+ * \param [in]   entity_type Entity type (vertex, edge, face or cell)
+ * \param [out]  pcg         Pointer to \ref PDM_part_comm_graph_t instance
+ * \param [in]   ownership   part_mesh_nodal ownership on returned part_comm_graph
  *
  */
 void
 PDM_part_mesh_nodal_part_comm_graph_get
 (
   PDM_part_mesh_nodal_t  *pmn,
-  PDM_geometry_kind_t     geom_kind,
+  PDM_mesh_entities_t     entity_type,
   PDM_part_comm_graph_t **pcg,
   PDM_ownership_t         ownership
 );
@@ -1314,15 +1314,15 @@ PDM_part_mesh_nodal_part_comm_graph_get
  *
  * \brief Compute internal part_comm_graph from part_mesh_nodal entity global ids.
  *
- * \param [in]   pmn        Pointer to \ref PDM_part_mesh_nodal_t instance
- * \param [in]   geom_kind  Geometry kind (corner, ridge, surface or volume)
+ * \param [in]   pmn         Pointer to \ref PDM_part_mesh_nodal_t instance
+ * \param [in]   entity_type Entity type (vertex, edge, face or cell)
  *
  */
 void
 PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum
 (
   PDM_part_mesh_nodal_t *pmn,
-  PDM_geometry_kind_t    geom_kind
+  PDM_mesh_entities_t    entity_type
 );
 
 #ifdef __cplusplus

@@ -289,7 +289,7 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] part_comm_graph from gnum", 2) {
                                                                 3, 3, 3, // x/y/z n vertices
                                                                 1, PDM_SPLIT_DUAL_WITH_HILBERT); // part options
 
-  PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(pmn, PDM_GEOMETRY_KIND_CORNER);
+  PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(pmn, PDM_MESH_ENTITY_VTX);
   std::vector<std::vector<int>> expected_graph = {{10, 1, 1, 1,
                                                    11, 1, 1, 2,
                                                    12, 1, 1, 3,
@@ -310,7 +310,7 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] part_comm_graph from gnum", 2) {
                                                    9, 0, 1, 18,}};
 
   PDM_part_comm_graph_t *pcg_vtx = NULL;
-  PDM_part_mesh_nodal_part_comm_graph_get(pmn, PDM_GEOMETRY_KIND_CORNER, &pcg_vtx, PDM_OWNERSHIP_BAD_VALUE);
+  PDM_part_mesh_nodal_part_comm_graph_get(pmn, PDM_MESH_ENTITY_VTX, &pcg_vtx, PDM_OWNERSHIP_BAD_VALUE);
 
   int *computed_graph = NULL;
   int n_entity = PDM_part_comm_graph_entity_graph_get(pcg_vtx, 0, &computed_graph, PDM_OWNERSHIP_BAD_VALUE);
@@ -323,15 +323,15 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] part_comm_graph from gnum", 2) {
   }
 
   // > Ridge and surfacic pcg will be empty because no internal elements
-  PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(pmn, PDM_GEOMETRY_KIND_RIDGE);
+  PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(pmn, PDM_MESH_ENTITY_EDGE);
   PDM_part_comm_graph_t *pcg_ridge = NULL;
-  PDM_part_mesh_nodal_part_comm_graph_get(pmn, PDM_GEOMETRY_KIND_RIDGE, &pcg_ridge, PDM_OWNERSHIP_BAD_VALUE);
+  PDM_part_mesh_nodal_part_comm_graph_get(pmn, PDM_MESH_ENTITY_EDGE, &pcg_ridge, PDM_OWNERSHIP_BAD_VALUE);
   n_entity = PDM_part_comm_graph_entity_graph_get(pcg_ridge, 0, &computed_graph, PDM_OWNERSHIP_BAD_VALUE);
   assert(n_entity==0);
 
-  PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(pmn, PDM_GEOMETRY_KIND_SURFACIC);
+  PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(pmn, PDM_MESH_ENTITY_FACE);
   PDM_part_comm_graph_t *pcg_surfacic = NULL;
-  PDM_part_mesh_nodal_part_comm_graph_get(pmn, PDM_GEOMETRY_KIND_SURFACIC, &pcg_surfacic, PDM_OWNERSHIP_BAD_VALUE);
+  PDM_part_mesh_nodal_part_comm_graph_get(pmn, PDM_MESH_ENTITY_FACE, &pcg_surfacic, PDM_OWNERSHIP_BAD_VALUE);
   n_entity = PDM_part_comm_graph_entity_graph_get(pcg_surfacic, 0, &computed_graph, PDM_OWNERSHIP_BAD_VALUE);
   assert(n_entity==0);
 
