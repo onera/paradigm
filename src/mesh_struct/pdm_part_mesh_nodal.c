@@ -187,63 +187,63 @@ _transpose_group_information
 
 
 static void
-_generate_group_entity_gid
+_generate_group_entity_gnum
 (
   PDM_MPI_Comm    comm,
   int             n_part,
-  PDM_g_num_t   **entity_gid,
+  PDM_g_num_t   **entity_gnum,
   int             n_group,
   int           **group_entity_idx,
   int           **group_entity,
-  PDM_g_num_t  ***out_group_entity_gid
+  PDM_g_num_t  ***out_group_entity_gnum
 )
 {
-  PDM_g_num_t **group_entity_gid = NULL;
-  PDM_malloc(group_entity_gid, n_part, PDM_g_num_t *);
+  PDM_g_num_t **group_entity_gnum = NULL;
+  PDM_malloc(group_entity_gnum, n_part, PDM_g_num_t *);
 
   for (int i_part=0; i_part<n_part; ++i_part) {
 
-    PDM_malloc(group_entity_gid[i_part], group_entity_idx[i_part][n_group], PDM_g_num_t);
+    PDM_malloc(group_entity_gnum[i_part], group_entity_idx[i_part][n_group], PDM_g_num_t);
 
     for (int i_entity=0; i_entity<group_entity_idx[i_part][n_group]; ++i_entity) {
-      group_entity_gid[i_part][i_entity] = entity_gid[i_part][group_entity[i_part][i_entity]-1];
+      group_entity_gnum[i_part][i_entity] = entity_gnum[i_part][group_entity[i_part][i_entity]-1];
     }
   }
 
   for (int i_group=0; i_group<n_group; ++i_group) {
 
-    PDM_gen_gnum_t* gen_group_gid = PDM_gnum_create(3,
+    PDM_gen_gnum_t* gen_group_gnum = PDM_gnum_create(3,
                                                      n_part,
                                                      PDM_TRUE,
                                                      1e-4,
                                                      comm,
                                                      PDM_OWNERSHIP_USER);
-    PDM_gnum_set_parents_nuplet(gen_group_gid, 1);
+    PDM_gnum_set_parents_nuplet(gen_group_gnum, 1);
     for (int i_part=0; i_part<n_part; ++i_part) {
       int n_group_entity = group_entity_idx[i_part][i_group+1]-group_entity_idx[i_part][i_group];
-      PDM_gnum_set_from_parents(gen_group_gid, i_part, n_group_entity, &group_entity_gid[i_part][group_entity_idx[i_part][i_group]]);
+      PDM_gnum_set_from_parents(gen_group_gnum, i_part, n_group_entity, &group_entity_gnum[i_part][group_entity_idx[i_part][i_group]]);
     }
 
-    PDM_gnum_compute(gen_group_gid);
+    PDM_gnum_compute(gen_group_gnum);
 
     for (int i_part=0; i_part<n_part; ++i_part) {
       int n_group_entity = group_entity_idx[i_part][i_group+1]-group_entity_idx[i_part][i_group];
-      PDM_g_num_t *group_gid = PDM_gnum_get(gen_group_gid, i_part);
+      PDM_g_num_t *group_gnum = PDM_gnum_get(gen_group_gnum, i_part);
       for (int i_entity=0; i_entity<n_group_entity; ++i_entity) {
-        group_entity_gid[i_part][group_entity_idx[i_part][i_group]+i_entity] = group_gid[i_entity];
+        group_entity_gnum[i_part][group_entity_idx[i_part][i_group]+i_entity] = group_gnum[i_entity];
       }
-      PDM_free(group_gid);
+      PDM_free(group_gnum);
     }
 
-    PDM_gnum_free(gen_group_gid);
+    PDM_gnum_free(gen_group_gnum);
   }
 
-  *out_group_entity_gid = group_entity_gid;
+  *out_group_entity_gnum = group_entity_gnum;
 }
 
 
 static void
-_generate_group_gid
+_generate_group_gnum
 (
   PDM_MPI_Comm   comm,
   int            n_part,
@@ -296,7 +296,7 @@ _generate_group_gid
 
 
     /**
-     * Prepare nuplet from group gid computation
+     * Prepare nuplet from group gnum computation
      *
      * Here we could store parent group at same time
      */
@@ -587,8 +587,14 @@ PDM_part_mesh_nodal_part_comm_graph_set
 )
 {
   pmn->pcg[geom_kind] = pcg;
-  if (ownership!=PDM_OWNERSHIP_BAD_VALUE) {
+  if (ownership==PDM_OWNERSHIP_USER || ownership==PDM_OWNERSHIP_KEEP) {
     pmn->pcg_ownership[geom_kind] = ownership;
+  }
+  else {
+    PDM_error (__FILE__, __LINE__, 0, "PDM_part_mesh_nodal_part_comm_graph_set got invalid ownership (got %d, must be %d or %d)\n",
+      ownership,
+      PDM_OWNERSHIP_KEEP,
+      PDM_OWNERSHIP_USER); 
   }
 }
 
@@ -633,25 +639,9 @@ PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum
 
     PDM_part_mesh_nodal_elmts_t *pmne = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(pmn, geom_kind);
 
-    int  n_section   = PDM_part_mesh_nodal_elmts_n_section_get  (pmne);
-    int *sections_id = PDM_part_mesh_nodal_elmts_sections_id_get(pmne);
-
-    for (int i_part = 0; i_part < pmn->n_part; i_part++) {
-
-      int n_elt_tot = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, i_part);
-      PDM_malloc(entity_gnum[i_part], n_elt_tot, PDM_g_num_t);
-      n_entity[i_part] = 0;
-
-      for (int i_section = 0; i_section < n_section; i_section++) {
-
-        int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne,
-                                                                sections_id[i_section],
-                                                                i_part);
-
-        PDM_g_num_t *section_gnum = PDM_part_mesh_nodal_elmts_g_num_get(pmne, i_section, i_part, PDM_OWNERSHIP_BAD_VALUE);
-        memcpy(&entity_gnum[i_part][n_entity[i_part]], section_gnum, n_elt*sizeof(PDM_g_num_t));
-        n_entity[i_part] += n_elt;
-      }
+    for (int i_part=0; i_part<pmn->n_part; ++i_part) {
+      n_entity   [i_part] = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, i_part);
+      entity_gnum[i_part] = PDM_part_mesh_nodal_elmts_g_num_get_from_part(pmne, i_part, PDM_OWNERSHIP_KEEP);
     }
   }
   else {
@@ -695,11 +685,6 @@ PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum
   PDM_free(part_distribution);
 
   PDM_free(n_entity);
-  if (geom_kind==PDM_GEOMETRY_KIND_RIDGE || geom_kind==PDM_GEOMETRY_KIND_SURFACIC) {
-    for (int i_part = 0; i_part < pmn->n_part; i_part++) {
-      PDM_free(entity_gnum[i_part]);
-    }
-  }
   PDM_free(entity_gnum);
 
   // Build part comm graph
@@ -2197,16 +2182,10 @@ PDM_part_mesh_nodal_compute_straddling_entities
   int debug_verbose = 0;
   int debug_visu    = 0;
 
-  char filename[999];
   if (debug_visu==1) {
-    sprintf(filename, "volume");
-    PDM_part_mesh_nodal_dump_vtk(pmn, PDM_GEOMETRY_KIND_VOLUMIC, filename);
-
-    sprintf(filename, "surface");
-    PDM_part_mesh_nodal_dump_vtk(pmn, PDM_GEOMETRY_KIND_SURFACIC, filename);
-
-    sprintf(filename, "ridge");
-    PDM_part_mesh_nodal_dump_vtk(pmn, PDM_GEOMETRY_KIND_RIDGE, filename);
+    PDM_part_mesh_nodal_dump_vtk(pmn, PDM_GEOMETRY_KIND_VOLUMIC, "volume");
+    PDM_part_mesh_nodal_dump_vtk(pmn, PDM_GEOMETRY_KIND_SURFACIC, "surface");
+    PDM_part_mesh_nodal_dump_vtk(pmn, PDM_GEOMETRY_KIND_RIDGE, "ridge");
   }
 
   int i_rank = -1;
@@ -2366,12 +2345,12 @@ PDM_part_mesh_nodal_compute_straddling_entities
 
 
 
-  int         **vtx_group_idx = NULL;
-  PDM_g_num_t **vtx_group_gid = NULL;
-  PDM_l_num_t **ridge_vtx_candidate   = NULL;
+  int         **vtx_group_idx  = NULL;
+  PDM_g_num_t **vtx_group_gnum = NULL;
+  PDM_l_num_t **ridge_vtx_candidate = NULL;
   if (geom_kind_tgt==PDM_GEOMETRY_KIND_RIDGE) {
     /**
-     * If geom_kind_tgt is ridge, generate vtx group gid is not necessary,
+     * If geom_kind_tgt is ridge, generate vtx group gnum is not necessary,
      * we only need to get straddling vertices to generate edges containing them
      */
     PDM_malloc(ridge_vtx_candidate, pmn->n_part, PDM_l_num_t *);
@@ -2391,13 +2370,13 @@ PDM_part_mesh_nodal_compute_straddling_entities
     }
   }
   else {
-    _generate_group_gid(pmn->comm,
-                        pmn->n_part,
-                        n_vtx,
-                        tag_vtx_idx,
-                        tag_vtx,
-                       &vtx_group_idx,
-                       &vtx_group_gid);
+    _generate_group_gnum(pmn->comm,
+                         pmn->n_part,
+                         n_vtx,
+                         tag_vtx_idx,
+                         tag_vtx,
+                        &vtx_group_idx,
+                        &vtx_group_gnum);
   }
   for (int i_part=0; i_part<pmn->n_part; ++i_part) {
     PDM_free(tag_vtx_idx[i_part]);
@@ -2424,17 +2403,17 @@ PDM_part_mesh_nodal_compute_straddling_entities
                                  pmn->n_part,
                                  n_vtx,
                                  vtx_group_idx,
-                                 vtx_group_gid,
+                                 vtx_group_gnum,
                                 &g_n_group,
                                 &group_vtx_idx,
                                 &group_vtx);
 
     for (int i_part=0; i_part<pmn->n_part; ++i_part) {
-      PDM_free(vtx_group_idx[i_part]);
-      PDM_free(vtx_group_gid[i_part]);
+      PDM_free(vtx_group_idx [i_part]);
+      PDM_free(vtx_group_gnum[i_part]);
     }
     PDM_free(vtx_group_idx);
-    PDM_free(vtx_group_gid);
+    PDM_free(vtx_group_gnum);
 
 
 
@@ -2448,13 +2427,13 @@ PDM_part_mesh_nodal_compute_straddling_entities
       vtx_gnum[i_part] = PDM_part_mesh_nodal_vtx_g_num_get(pmn, i_part, PDM_OWNERSHIP_BAD_VALUE);
     }
 
-    _generate_group_entity_gid(pmn->comm,
-                               pmn->n_part,
-                               vtx_gnum,
-                               g_n_group,
-                               group_vtx_idx,
-                               group_vtx,
-                              &group_vtx_gnum);
+    _generate_group_entity_gnum(pmn->comm,
+                                pmn->n_part,
+                                vtx_gnum,
+                                g_n_group,
+                                group_vtx_idx,
+                                group_vtx,
+                               &group_vtx_gnum);
 
     PDM_free(vtx_gnum);
 
@@ -2550,7 +2529,6 @@ PDM_part_mesh_nodal_compute_straddling_entities
       PDM_malloc(unique_edge_vtx    [i_part], entity1_edge_vtx_idx[i_part][n_edge[i_part]]  , int);
       unique_edge_vtx_idx[i_part][0] = 0;
 
-      // Mysterious but still working
       PDM_part_mesh_nodal_elmts_generate_entity_connectivity(n_edge              [i_part],
                                                              entity1_edge_vtx_idx[i_part],
                                                              entity1_edge_vtx    [i_part],
@@ -2585,51 +2563,51 @@ PDM_part_mesh_nodal_compute_straddling_entities
     PDM_free(unique_edge_to_edge);
 
 
-    PDM_g_num_t **unique_edge_gid = NULL;
+    PDM_g_num_t **unique_edge_gnum = NULL;
     if (pmn->pcg[PDM_GEOMETRY_KIND_RIDGE]==NULL) {
 
       /**
        * Generate global ids for edges from their vertices in order to initialize a pcg
        * to gather group parent info over all procs
        */
-      PDM_g_num_t **unique_edge_vtx_gid = NULL;
-      PDM_malloc(unique_edge_gid    , pmn->n_part, PDM_g_num_t*);
-      PDM_malloc(unique_edge_vtx_gid, pmn->n_part, PDM_g_num_t*);
+      PDM_g_num_t **unique_edge_vtx_gnum = NULL;
+      PDM_malloc(unique_edge_gnum    , pmn->n_part, PDM_g_num_t*);
+      PDM_malloc(unique_edge_vtx_gnum, pmn->n_part, PDM_g_num_t*);
       for (int i_part=0; i_part<pmn->n_part; ++i_part) {
 
-        PDM_malloc(unique_edge_vtx_gid[i_part], 2*n_unique_edge[i_part], PDM_g_num_t);
+        PDM_malloc(unique_edge_vtx_gnum[i_part], 2*n_unique_edge[i_part], PDM_g_num_t);
 
-        PDM_g_num_t *vtx_gid = PDM_part_mesh_nodal_vtx_g_num_get(pmn, i_part, PDM_OWNERSHIP_BAD_VALUE);
+        PDM_g_num_t *vtx_gnum = PDM_part_mesh_nodal_vtx_g_num_get(pmn, i_part, PDM_OWNERSHIP_BAD_VALUE);
 
         for (int i_edge=0; i_edge<n_unique_edge[i_part]; ++i_edge) {
           int vtx1 = unique_edge_vtx[i_part][2*i_edge  ];
           int vtx2 = unique_edge_vtx[i_part][2*i_edge+1];
-          unique_edge_vtx_gid[i_part][2*i_edge  ] = vtx_gid[vtx1];
-          unique_edge_vtx_gid[i_part][2*i_edge+1] = vtx_gid[vtx2];
+          unique_edge_vtx_gnum[i_part][2*i_edge  ] = vtx_gnum[vtx1];
+          unique_edge_vtx_gnum[i_part][2*i_edge+1] = vtx_gnum[vtx2];
         }
       }
 
 
-      PDM_gen_gnum_t* gen_edge_gid = PDM_gnum_create(3,
+      PDM_gen_gnum_t* gen_edge_gnum = PDM_gnum_create(3,
                                                       pmn->n_part,
                                                       PDM_TRUE,
                                                       1e-4,
                                                       pmn->comm,
                                                       PDM_OWNERSHIP_USER);
-      PDM_gnum_set_parents_nuplet(gen_edge_gid, 2);
+      PDM_gnum_set_parents_nuplet(gen_edge_gnum, 2);
       for (int i_part=0; i_part<pmn->n_part; ++i_part) {
-        PDM_gnum_set_from_parents(gen_edge_gid, i_part, n_unique_edge[i_part], unique_edge_vtx_gid[i_part]);
+        PDM_gnum_set_from_parents(gen_edge_gnum, i_part, n_unique_edge[i_part], unique_edge_vtx_gnum[i_part]);
       }
 
-      PDM_gnum_compute(gen_edge_gid);
+      PDM_gnum_compute(gen_edge_gnum);
 
       for (int i_part=0; i_part<pmn->n_part; ++i_part) {
-        unique_edge_gid[i_part] = PDM_gnum_get(gen_edge_gid, i_part);
-        PDM_free(unique_edge_vtx_gid[i_part]);
+        unique_edge_gnum[i_part] = PDM_gnum_get(gen_edge_gnum, i_part);
+        PDM_free(unique_edge_vtx_gnum[i_part]);
       }
-      PDM_free(unique_edge_vtx_gid);
+      PDM_free(unique_edge_vtx_gnum);
 
-      PDM_gnum_free(gen_edge_gid);
+      PDM_gnum_free(gen_edge_gnum);
 
 
       pmn->ridge = PDM_part_mesh_nodal_elmts_create(1, pmn->n_part, pmn->comm);
@@ -2639,9 +2617,9 @@ PDM_part_mesh_nodal_compute_straddling_entities
         PDM_part_mesh_nodal_elmts_std_set(pmn->ridge,
                                           section_ridge,
                                           i_part,
-                                          n_unique_edge[i_part],
-                                          unique_edge_vtx[i_part],
-                                          unique_edge_gid[i_part],
+                                          n_unique_edge   [i_part],
+                                          unique_edge_vtx [i_part],
+                                          unique_edge_gnum[i_part],
                                           NULL,
                                           NULL,
                                           PDM_OWNERSHIP_USER);
@@ -2653,8 +2631,7 @@ PDM_part_mesh_nodal_compute_straddling_entities
 
 
     if (debug_visu==1) {
-      sprintf(filename, "edge_detected");
-      PDM_part_mesh_nodal_dump_vtk(pmn, PDM_GEOMETRY_KIND_RIDGE, filename);
+      PDM_part_mesh_nodal_dump_vtk(pmn, PDM_GEOMETRY_KIND_RIDGE, "edge_detected");
     }
 
 
@@ -2746,15 +2723,15 @@ PDM_part_mesh_nodal_compute_straddling_entities
     tag_edge_idx = _tag_edge_idx;
     tag_edge     = _tag_edge;
 
-    int         **edge_group_idx = NULL;
-    PDM_g_num_t **edge_group_gid = NULL;
-    _generate_group_gid(pmn->comm,
-                        pmn->n_part,
-                        n_unique_edge,
-                        tag_edge_idx,
-                        tag_edge,
-                       &edge_group_idx,
-                       &edge_group_gid);
+    int         **edge_group_idx  = NULL;
+    PDM_g_num_t **edge_group_gnum = NULL;
+    _generate_group_gnum(pmn->comm,
+                         pmn->n_part,
+                         n_unique_edge,
+                         tag_edge_idx,
+                         tag_edge,
+                        &edge_group_idx,
+                        &edge_group_gnum);
     for (int i_part=0; i_part<pmn->n_part; ++i_part) {
       PDM_free(tag_edge_idx[i_part]);
       PDM_free(tag_edge    [i_part]);
@@ -2768,14 +2745,14 @@ PDM_part_mesh_nodal_compute_straddling_entities
     /**
      * All edge created arent ridges, so we need to extract them and regenerate a gnum
      */
-    int          *n_ridge         = NULL;
-    int         **ridge_vtx       = NULL;
-    PDM_g_num_t **ridge_gid       = NULL;
-    int         **ridge_group_idx = NULL;
-    PDM_g_num_t **ridge_group_gid = NULL;
+    int          *n_ridge          = NULL;
+    int         **ridge_vtx        = NULL;
+    PDM_g_num_t **ridge_gnum       = NULL;
+    int         **ridge_group_idx  = NULL;
+    PDM_g_num_t **ridge_group_gnum = NULL;
     PDM_malloc(n_ridge        , pmn->n_part, int          );
     PDM_malloc(ridge_vtx      , pmn->n_part, int         *);
-    PDM_malloc(ridge_gid      , pmn->n_part, PDM_g_num_t *);
+    PDM_malloc(ridge_gnum     , pmn->n_part, PDM_g_num_t *);
     PDM_malloc(ridge_group_idx, pmn->n_part, int         *);
     for (int i_part=0; i_part<pmn->n_part; ++i_part) {
       n_ridge[i_part] = 0;
@@ -2786,47 +2763,48 @@ PDM_part_mesh_nodal_compute_straddling_entities
       }
 
       PDM_malloc(ridge_vtx      [i_part], 2*n_ridge[i_part]  , int        );
-      PDM_malloc(ridge_gid      [i_part],   n_ridge[i_part]  , PDM_g_num_t);
-      PDM_malloc(ridge_group_idx[i_part],   n_ridge[i_part]+1, int        ); ridge_group_idx[i_part][0] = 0;
+      PDM_malloc(ridge_gnum     [i_part],   n_ridge[i_part]  , PDM_g_num_t);
+      PDM_malloc(ridge_group_idx[i_part],   n_ridge[i_part]+1, int        );
+      ridge_group_idx[i_part][0] = 0;
       int i_write = 0;
       for (int i_edge=0; i_edge<n_unique_edge[i_part]; ++i_edge) {
         if (edge_group_idx[i_part][i_edge+1]-edge_group_idx[i_part][i_edge]>0) {
-          ridge_vtx      [i_part][2*i_write+0] = unique_edge_vtx[i_part][2*i_edge+0];
-          ridge_vtx      [i_part][2*i_write+1] = unique_edge_vtx[i_part][2*i_edge+1];
-          ridge_gid      [i_part][  i_write  ] = unique_edge_gid[i_part][  i_edge  ];
-          ridge_group_idx[i_part][  i_write+1] = ridge_group_idx[i_part][  i_write ]+1;
+          ridge_vtx      [i_part][2*i_write+0] = unique_edge_vtx [i_part][2*i_edge+0];
+          ridge_vtx      [i_part][2*i_write+1] = unique_edge_vtx [i_part][2*i_edge+1];
+          ridge_gnum     [i_part][  i_write  ] = unique_edge_gnum[i_part][  i_edge  ];
+          ridge_group_idx[i_part][  i_write+1] = ridge_group_idx [i_part][  i_write ]+1;
           i_write++;
         }
       }
-      PDM_free(unique_edge_vtx[i_part]);
-      PDM_free(unique_edge_gid[i_part]);
-      PDM_free(edge_group_idx [i_part]);
+      PDM_free(unique_edge_vtx [i_part]);
+      PDM_free(unique_edge_gnum[i_part]);
+      PDM_free(edge_group_idx  [i_part]);
     }
     PDM_free(n_unique_edge);
     PDM_free(unique_edge_vtx);
-    PDM_free(unique_edge_gid);
+    PDM_free(unique_edge_gnum);
     PDM_free(edge_group_idx);
 
-    PDM_gen_gnum_t* gen_ridge_gid = PDM_gnum_create(3,
-                                                    pmn->n_part,
-                                                    PDM_TRUE,
-                                                    1e-4,
-                                                    pmn->comm,
-                                                    PDM_OWNERSHIP_USER);
-    PDM_gnum_set_parents_nuplet(gen_ridge_gid, 1);
+    PDM_gen_gnum_t* gen_ridge_gnum = PDM_gnum_create(3,
+                                                     pmn->n_part,
+                                                     PDM_TRUE,
+                                                     1e-4,
+                                                     pmn->comm,
+                                                     PDM_OWNERSHIP_USER);
+    PDM_gnum_set_parents_nuplet(gen_ridge_gnum, 1);
     for (int i_part=0; i_part<pmn->n_part; ++i_part) {
-      PDM_gnum_set_from_parents(gen_ridge_gid, i_part, n_ridge[i_part], ridge_gid[i_part]);
+      PDM_gnum_set_from_parents(gen_ridge_gnum, i_part, n_ridge[i_part], ridge_gnum[i_part]);
     }
 
-    PDM_gnum_compute(gen_ridge_gid);
+    PDM_gnum_compute(gen_ridge_gnum);
 
     for (int i_part=0; i_part<pmn->n_part; ++i_part) {
-      PDM_free(ridge_gid[i_part]);
-      ridge_gid[i_part] = PDM_gnum_get(gen_ridge_gid, i_part);
+      PDM_free(ridge_gnum[i_part]);
+      ridge_gnum[i_part] = PDM_gnum_get(gen_ridge_gnum, i_part);
     }
 
-    PDM_gnum_free(gen_ridge_gid);
-    ridge_group_gid = edge_group_gid;
+    PDM_gnum_free(gen_ridge_gnum);
+    ridge_group_gnum = edge_group_gnum;
 
 
     /**
@@ -2840,31 +2818,31 @@ PDM_part_mesh_nodal_compute_straddling_entities
                                  pmn->n_part,
                                  n_ridge,
                                  ridge_group_idx,
-                                 ridge_group_gid,
+                                 ridge_group_gnum,
                                 &g_n_group,
                                 &group_ridge_idx,
                                 &group_ridge);
 
     for (int i_part=0; i_part<pmn->n_part; ++i_part) {
-      PDM_free(ridge_group_idx[i_part]);
-      PDM_free(ridge_group_gid[i_part]);
+      PDM_free(ridge_group_idx [i_part]);
+      PDM_free(ridge_group_gnum[i_part]);
     }
     PDM_free(ridge_group_idx);
-    PDM_free(ridge_group_gid);
+    PDM_free(ridge_group_gnum);
 
 
     /**
      * Generate global id for group entities, then store corners in pmne
      */
 
-    PDM_g_num_t **group_ridge_gid = NULL;
-    _generate_group_entity_gid(pmn->comm,
-                               pmn->n_part,
-                               ridge_gid,
-                               g_n_group,
-                               group_ridge_idx,
-                               group_ridge,
-                              &group_ridge_gid);
+    PDM_g_num_t **group_ridge_gnum = NULL;
+    _generate_group_entity_gnum(pmn->comm,
+                                pmn->n_part,
+                                ridge_gnum,
+                                g_n_group,
+                                group_ridge_idx,
+                                group_ridge,
+                               &group_ridge_gnum);
 
 
     PDM_part_mesh_nodal_elmts_free(pmn->ridge);
@@ -2877,9 +2855,9 @@ PDM_part_mesh_nodal_compute_straddling_entities
       PDM_part_mesh_nodal_elmts_std_set(pmn->ridge,
                                         section_ridge,
                                         i_part,
-                                        n_ridge[i_part],
-                                        ridge_vtx[i_part],
-                                        ridge_gid[i_part],
+                                        n_ridge   [i_part],
+                                        ridge_vtx [i_part],
+                                        ridge_gnum[i_part],
                                         NULL,
                                         NULL,
                                         PDM_OWNERSHIP_KEEP);
@@ -2890,25 +2868,27 @@ PDM_part_mesh_nodal_compute_straddling_entities
         PDM_malloc(_group_ridge     , n_group_ridge, int);
         PDM_malloc(_group_ridge_gnum, n_group_ridge, PDM_g_num_t);
         memcpy(_group_ridge     , &group_ridge     [i_part][group_ridge_idx[i_part][i_group]], n_group_ridge*sizeof(int        ));
-        memcpy(_group_ridge_gnum, &group_ridge_gid[i_part][group_ridge_idx[i_part][i_group]], n_group_ridge*sizeof(PDM_g_num_t));
-        PDM_part_mesh_nodal_elmts_group_set(pmn->ridge, i_part,
-                                            i_group, n_group_ridge,
-                                            _group_ridge, _group_ridge_gnum,
+        memcpy(_group_ridge_gnum, &group_ridge_gnum[i_part][group_ridge_idx[i_part][i_group]], n_group_ridge*sizeof(PDM_g_num_t));
+        PDM_part_mesh_nodal_elmts_group_set(pmn->ridge,
+                                            i_part,
+                                            i_group,
+                                            n_group_ridge,
+                                            _group_ridge,
+                                            _group_ridge_gnum,
                                             PDM_OWNERSHIP_KEEP);
       }
-      PDM_free(group_ridge_idx[i_part]);
-      PDM_free(group_ridge    [i_part]);
-      PDM_free(group_ridge_gid[i_part]);
+      PDM_free(group_ridge_idx [i_part]);
+      PDM_free(group_ridge     [i_part]);
+      PDM_free(group_ridge_gnum[i_part]);
 
       if (debug_visu==1) {
-        sprintf(filename, "ridge_final");
-        PDM_part_mesh_nodal_dump_vtk(pmn, PDM_GEOMETRY_KIND_RIDGE, filename);
+        PDM_part_mesh_nodal_dump_vtk(pmn, PDM_GEOMETRY_KIND_RIDGE, "ridge_final");
       }
     }
     PDM_free(n_ridge);
     PDM_free(ridge_vtx);
-    PDM_free(ridge_gid);
-    PDM_free(group_ridge_gid);
+    PDM_free(ridge_gnum);
+    PDM_free(group_ridge_gnum);
     PDM_free(group_ridge);
     PDM_free(group_ridge_idx);
 

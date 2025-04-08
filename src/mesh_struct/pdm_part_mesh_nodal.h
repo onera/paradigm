@@ -1257,8 +1257,9 @@ PDM_part_mesh_nodal_cell_vtx_connect_get
  * \brief Compute entities straddling at least two different groups from geom_kind entities.
  * Generated entities are stored in pmn structure.
  *
- * \param [in]  pmn        Pointer to \ref PDM_part_mesh_nodal_t instance
- * \param [in]  geom_kind  Geometry kind (ridge or surface)
+ * \param [in]  pmn           Pointer to \ref PDM_part_mesh_nodal_t instance
+ * \param [in]  geom_kind     Geometry kind (ridge or surface)
+ * \param [in]  geom_kind_tgt Geometry kind of wanted generated entities (ridge or corner)
  */
 void
 PDM_part_mesh_nodal_compute_straddling_entities
@@ -1295,7 +1296,7 @@ PDM_part_mesh_nodal_part_comm_graph_set
  *
  * \param [in]   pmn        Pointer to \ref PDM_part_mesh_nodal_t instance
  * \param [in]   geom_kind  Geometry kind (corner, ridge, surface or volume)
- * \param [out]  pcg        Pointer (?) to \ref PDM_part_comm_graph_t instance
+ * \param [out]  pcg        Pointer to \ref PDM_part_comm_graph_t instance
  * \param [in]   ownership  part_mesh_nodal ownership on returned part_comm_graph
  *
  */
