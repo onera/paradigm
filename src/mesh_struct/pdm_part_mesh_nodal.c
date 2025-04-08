@@ -2823,8 +2823,6 @@ PDM_part_mesh_nodal_compute_straddling_entities
     for (int i_part=0; i_part<pmn->n_part; ++i_part) {
       PDM_free(ridge_gid[i_part]);
       ridge_gid[i_part] = PDM_gnum_get(gen_ridge_gid, i_part);
-      PDM_log_trace_array_long(ridge_gid[i_part], n_ridge[i_part], "ridge_gid :: ");
-
     }
 
     PDM_gnum_free(gen_ridge_gid);
