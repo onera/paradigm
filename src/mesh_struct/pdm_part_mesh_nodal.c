@@ -2318,23 +2318,27 @@ PDM_part_mesh_nodal_compute_straddling_entities
     }
   }
   
-  int **_tag_vtx_idx = NULL;
-  int **_tag_vtx     = NULL;
+  int **_tag_vtx_n = NULL;
+  int **_tag_vtx   = NULL;
   PDM_part_comm_graph_gather_strided_data(pmn->pcg[PDM_GEOMETRY_KIND_CORNER],
                                           1*sizeof(int),
+                                          PDM_STRIDE_CST_INTERLACED,
                                           n_vtx,
-                                          tag_vtx_idx,
+                                          tag_vtx_n,
                              (void  **)   tag_vtx,
-                                        &_tag_vtx_idx,
+                                        &_tag_vtx_n,
                              (void ***) &_tag_vtx);
+
   for (int i_part=0; i_part<pmn->n_part; ++i_part) {
+    PDM_free(tag_vtx_n  [i_part]);
     PDM_free(tag_vtx_idx[i_part]);
     PDM_free(tag_vtx    [i_part]);
+    tag_vtx_idx[i_part] = PDM_array_new_idx_from_sizes_int(_tag_vtx_n[i_part], n_vtx[i_part]);
   }
-  PDM_free(tag_vtx_idx);
+  PDM_free(tag_vtx_n);
   PDM_free(tag_vtx);
-  tag_vtx_idx = _tag_vtx_idx;
-  tag_vtx     = _tag_vtx;
+  tag_vtx_n = _tag_vtx_n;
+  tag_vtx   = _tag_vtx;
 
 
   if (debug_verbose==1) {
@@ -2696,32 +2700,34 @@ PDM_part_mesh_nodal_compute_straddling_entities
         }
       }
 
-      PDM_free(tag_edge_n      [i_part]);
+      PDM_free(tag_edge_idx    [i_part]);
       PDM_free(entity1_edge_idx[i_part]);
       PDM_free(entity1_edge    [i_part]);
     }
-    PDM_free(tag_edge_n);
     PDM_free(entity1_edge_idx);
     PDM_free(entity1_edge);
 
 
-    int **_tag_edge_idx = NULL;
-    int **_tag_edge     = NULL;
+    int **_tag_edge_n = NULL;
+    int **_tag_edge   = NULL;
     PDM_part_comm_graph_gather_strided_data(pmn->pcg[PDM_GEOMETRY_KIND_RIDGE],
                                             1*sizeof(int),
+                                            PDM_STRIDE_CST_INTERLACED,
                                             n_unique_edge,
-                                            tag_edge_idx,
+                                            tag_edge_n,
                                (void  **)   tag_edge,
-                                          &_tag_edge_idx,
+                                          &_tag_edge_n,
                                (void ***) &_tag_edge);
     for (int i_part=0; i_part<pmn->n_part; ++i_part) {
-      PDM_free(tag_edge_idx[i_part]);
-      PDM_free(tag_edge    [i_part]);
+      PDM_free(tag_edge_n [i_part]);
+      PDM_free(tag_edge   [i_part]);
+      tag_edge_idx[i_part] = PDM_array_new_idx_from_sizes_int(_tag_edge_n[i_part], n_unique_edge[i_part]);
+      PDM_free(_tag_edge_n[i_part]);
     }
-    PDM_free(tag_edge_idx);
+    PDM_free(tag_edge_n);
     PDM_free(tag_edge);
-    tag_edge_idx = _tag_edge_idx;
-    tag_edge     = _tag_edge;
+    PDM_free(_tag_edge_n);
+    tag_edge = _tag_edge;
 
     int         **edge_group_idx  = NULL;
     PDM_g_num_t **edge_group_gnum = NULL;
@@ -2738,8 +2744,6 @@ PDM_part_mesh_nodal_compute_straddling_entities
     }
     PDM_free(tag_edge_idx);
     PDM_free(tag_edge);
-
-
 
 
     /**

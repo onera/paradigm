@@ -1294,8 +1294,8 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - gather strided data", 2) {
 
 
   int n_vtx = vn_elt[i_rank];
-  std::vector<std::vector<int   >> vtx_data_idx = {{0, 1, 1, 2, 2, 2, 2, 3, 3, 4},
-                                                   {0, 1, 1, 1, 2, 4, 4, 4, 4, 5, 5, 5, 6}};
+  std::vector<std::vector<int   >> vtx_data_n   = {{1, 0, 1, 0, 0, 0, 1, 0, 1},
+                                                   {1, 0, 0, 1, 2, 0, 0, 0, 1, 0, 0, 1}};
   std::vector<std::vector<double>> vtx_data     = {{0.,0.,0.,
                                                     0.,0.,2.,
                                                     2.,0.,0.,
@@ -1306,18 +1306,19 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - gather strided data", 2) {
                                                     2.,1.,2.,
                                                     6.,1.,2.}};
 
-  int    **gather_vtx_data_idx = NULL;
-  double **gather_vtx_data     = NULL;
+  int    **gather_vtx_data_n = NULL;
+  double **gather_vtx_data   = NULL;
   PDM_part_comm_graph_gather_strided_data(pcg,
                                           3*sizeof(double),
+                                          PDM_STRIDE_CST_INTERLACED,
                                           &n_vtx,
-                               (int   **) &vtx_data_idx[i_rank],
-                               (void  **) &vtx_data    [i_rank],
-                                          &gather_vtx_data_idx,
+                               (int   **) &vtx_data_n[i_rank],
+                               (void  **) &vtx_data  [i_rank],
+                                          &gather_vtx_data_n,
                                (void ***) &gather_vtx_data);
 
-  std::vector<std::vector<int   >> expctd_vtx_data_idx = {{0, 1, 1, 3, 3, 3, 5, 6, 6, 8},
-                                                          {0, 2, 2, 2, 3, 5, 5, 5, 5, 7, 7, 7, 8}};
+  std::vector<std::vector<int   >> expctd_vtx_data_n   = {{1, 0, 2, 0, 0, 2, 1, 0, 2},
+                                                          {2, 0, 0, 1, 2, 0, 0, 0, 2, 0, 0, 1}};
   std::vector<std::vector<double>> expctd_vtx_data     = {{0.,0.,0.,
                                                            0.,0.,2.,  0.,1., 2.,
                                                            2.,1.,1., -2.,1.,-1.,
@@ -1329,21 +1330,20 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - gather strided data", 2) {
                                                            2.,1.,2.,  2.,0., 2.,
                                                            6.,1.,2.}};
 
-  PDM_log_trace_array_int   (gather_vtx_data_idx[0],                          n_vtx+1, "gather_vtx_data_idx :: ");
-  PDM_log_trace_array_double(gather_vtx_data    [0], 3*gather_vtx_data_idx[0][n_vtx] , "gather_vtx_data     :: ");
+  int i_read = 0;
   for (int i_vtx=0; i_vtx<n_vtx; ++i_vtx) {
-    assert (gather_vtx_data_idx[0][i_vtx+1]==expctd_vtx_data_idx[i_rank][i_vtx+1]);
-    for (int i_data=gather_vtx_data_idx[0][i_vtx  ];
-             i_data<gather_vtx_data_idx[0][i_vtx+1]; ++i_data) {
-      assert (gather_vtx_data[0][3*i_data  ]==expctd_vtx_data[i_rank][3*i_data  ]);
-      assert (gather_vtx_data[0][3*i_data+1]==expctd_vtx_data[i_rank][3*i_data+1]);
-      assert (gather_vtx_data[0][3*i_data+2]==expctd_vtx_data[i_rank][3*i_data+2]);
+    assert (gather_vtx_data_n[0][i_vtx]==expctd_vtx_data_n[i_rank][i_vtx]);
+    for (int i_data=0; i_data<gather_vtx_data_n[0][i_vtx]; ++i_data) {
+      assert (gather_vtx_data[0][3*i_read  ]==expctd_vtx_data[i_rank][3*i_read  ]);
+      assert (gather_vtx_data[0][3*i_read+1]==expctd_vtx_data[i_rank][3*i_read+1]);
+      assert (gather_vtx_data[0][3*i_read+2]==expctd_vtx_data[i_rank][3*i_read+2]);
+      i_read++;
     }
   }
 
-  PDM_free(gather_vtx_data_idx[0]);
-  PDM_free(gather_vtx_data    [0]);
-  PDM_free(gather_vtx_data_idx);
+  PDM_free(gather_vtx_data_n[0]);
+  PDM_free(gather_vtx_data  [0]);
+  PDM_free(gather_vtx_data_n);
   PDM_free(gather_vtx_data);
 
   PDM_part_comm_graph_free(pcg);
