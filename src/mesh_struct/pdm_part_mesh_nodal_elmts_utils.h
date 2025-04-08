@@ -36,6 +36,26 @@ extern "C" {
  * Public function interfaces
  *============================================================================*/
 
+void
+PDM_part_mesh_nodal_elmts_generate_entity_connectivity
+(
+  int          n_parent_decompose_entity2,
+  int         *parent_decompose_entity2_vtx_idx,
+  int         *parent_decompose_entity2_vtx,
+  int         *parent_decompose_parent_entity2,
+  int          n_child_decompose_entity2,
+  int         *child_decompose_entity2_vtx_idx,
+  int         *child_decompose_entity2_vtx,
+  int        **out_child_to_parent_idx,
+  int        **out_child_to_parent,
+  int          pn_entity1,
+  int         *pentity1_entity2_idx,
+  int         *pentity1_entity2,
+  int         *out_pn_entity2,
+  int         *pentity2_vtx_idx,
+  int         *pentity2_vtx,
+  PDM_bool_t   compute_parent_child
+);
 /**
  * \brief Decompose a PartMeshNodalElmts into faces.
  *        (All sections and partitions are concatenated.)
