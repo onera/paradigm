@@ -11,7 +11,6 @@
 #include "pdm_part_mesh_nodal_priv.h"
 #include "pdm_part_mesh_nodal_elmts.h"
 #include "pdm_generate_mesh.h"
-#include "pdm_logging.h"
 #include "pdm_priv.h"
 
 /*
@@ -159,7 +158,7 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] Find straddling entities - surfacic->corner
       assert (n_group_vtx==expected_n_group[i_rank][i_group]);
       if (n_group_vtx!=0) {
         assert (group_elmt[0]==         expected_group_entity[i_rank][i_group]);
-        assert (group_gnum[0]==PDM_SIGN(expected_group_entity[i_rank][i_group]+1));
+        assert (group_gnum[0]==PDM_SIGN(expected_group_entity[i_rank][i_group]));
       }
     }
   }
@@ -178,7 +177,7 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] Find straddling entities - surfacic->ridge"
                                                                 PDM_MESH_NODAL_TETRA4, 1, NULL,
                                                                 0., 0., 0., // x/y/z min
                                                                 1., 1., 1., // x/y/z length
-                                                                3, 3, 3, // x/y/z n vertices
+                                                                2, 2, 2, // x/y/z n vertices
                                                                 1, PDM_SPLIT_DUAL_WITH_HILBERT); // part options
   // > Remove computed corners
   PDM_part_mesh_nodal_elmts_free(pmn->ridge);
@@ -187,6 +186,11 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] Find straddling entities - surfacic->ridge"
   PDM_part_mesh_nodal_compute_straddling_entities(pmn,
                                                   PDM_GEOMETRY_KIND_SURFACIC,
                                                   PDM_GEOMETRY_KIND_RIDGE);
+
+  std::vector<std::vector<int>> expected_n_group      = {{1, 1, 0, 1, 0, 1, 0, 0, 1, 0, 0, 1},
+                                                         {0, 0, 1, 0, 1, 0, 1, 1, 0, 1, 1, 0}};
+  std::vector<std::vector<int>> expected_group_entity = {{ 2,  4, -1,  1, -1,  5, -1, -1,  3, -1, -1,  6},
+                                                         {-1, -1,  4, -1,  5, -1,  3,  6, -1,  2,  1, -1}};
 
   PDM_part_mesh_nodal_elmts_t *pmne_ridge = NULL; 
   pmne_ridge  = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(pmn, PDM_GEOMETRY_KIND_RIDGE);
@@ -197,7 +201,19 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] Find straddling entities - surfacic->ridge"
   assert (n_section==1);
   for (int i_part=0; i_part<pmn->n_part; ++i_part) {
     for (int i_group=0; i_group<n_ridge; ++i_group) {
-      assert (0);
+      int          n_group_ridge = 0;
+      int         *group_elmt  = NULL;
+      PDM_g_num_t *group_gnum  = NULL;
+      PDM_part_mesh_nodal_elmts_group_get(pmne_ridge, i_part, i_group,
+                                         &n_group_ridge,
+                                         &group_elmt,
+                                         &group_gnum,
+                                          PDM_OWNERSHIP_BAD_VALUE);
+      assert (n_group_ridge==expected_n_group[i_rank][i_group]);
+      if (n_group_ridge!=0) {
+        assert (group_elmt[0]==         expected_group_entity[i_rank][i_group]);
+        assert (group_gnum[0]==PDM_SIGN(expected_group_entity[i_rank][i_group]));
+      }
     }
   }
 
