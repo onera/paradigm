@@ -800,11 +800,10 @@ void
 PDM_part_comm_graph_reorder
 (
   PDM_part_comm_graph_t  *pcg,
-  int                   **pentity_graph,
   int                   **old_to_new
 )
 {
-  // TODO: reorder nuplet?
+  int **pentity_graph = pcg->pentity_graph;
 
   /* Prepare exchange */
   int **send_new_id = NULL;
@@ -1057,7 +1056,7 @@ PDM_part_comm_graph_entity1_to_entity2
      * At this stage we have the raw graph of entity2 :
      *     - Some info inside can be wrong due to connectivity
      *     - We filter then all
-     * 
+     *
      * On filtre pour ne garder que les entités qui ont toutes leurs entity1 qui existent sur une même partition distante
      */
 
@@ -1123,8 +1122,8 @@ PDM_part_comm_graph_entity1_to_entity2
           int t_part = pentity1_graph[i_part][4*idx_bound+2]-1;
           int same_nuplet = 1;
           if (have_nuplet) {
-            same_nuplet = (_compare_nuplets(nuplet_size, 
-                                            &pentity1_nuplet[i_part][nuplet_size*idx_bound], 
+            same_nuplet = (_compare_nuplets(nuplet_size,
+                                            &pentity1_nuplet[i_part][nuplet_size*idx_bound],
                                             &_pentity2_nuplet       [nuplet_size*idx]) == 0);
           }
 
@@ -1182,14 +1181,14 @@ PDM_part_comm_graph_entity1_to_entity2
 
           int same_nuplet = 1;
           if (have_nuplet) {
-            same_nuplet = (_compare_nuplets(nuplet_size, 
-                                            &pentity1_nuplet[i_part][nuplet_size*idx_bound], 
+            same_nuplet = (_compare_nuplets(nuplet_size,
+                                            &pentity1_nuplet[i_part][nuplet_size*idx_bound],
                                             &pentity2_nuplet[i_part][nuplet_size*idx]) == 0);
           }
 
           if(t_proc == i_proc_opp && t_part == i_part_opp && same_nuplet) {
             send_n[i_proc_opp] += 2;
-          } 
+          }
         }
       }
 
@@ -1243,8 +1242,8 @@ PDM_part_comm_graph_entity1_to_entity2
 
           int same_nuplet = 1;
           if (have_nuplet) {
-            same_nuplet = (_compare_nuplets(nuplet_size, 
-                                            &pentity1_nuplet[i_part][nuplet_size*idx_bound], 
+            same_nuplet = (_compare_nuplets(nuplet_size,
+                                            &pentity1_nuplet[i_part][nuplet_size*idx_bound],
                                             &pentity2_nuplet[i_part][nuplet_size*idx]) == 0);
           }
 
@@ -1401,7 +1400,7 @@ PDM_part_comm_graph_entity1_to_entity2
 
   /* Link with receive */
   idx_read = 0;
-  for(int i = 0; i < n_key_recv_tot; ++i) {
+  for(int i_key = 0; i_key < n_key_recv_tot; ++i_key) {
 
     int n_connec_opp  = recv_data[idx_read++];
     int i_entity2_opp = recv_data[idx_read++];
@@ -1556,7 +1555,7 @@ PDM_part_comm_graph_entity1_to_entity2
 
         if(is_same == 1) {
 
-          // Rebuild graph comm
+          // Rebuild graph
           pentity2_graph[i_part_cur2][4*pn_entity2_graph[i_part_cur2]  ] = i_entity2_cur;
           pentity2_graph[i_part_cur2][4*pn_entity2_graph[i_part_cur2]+1] = i_proc_cur;
           pentity2_graph[i_part_cur2][4*pn_entity2_graph[i_part_cur2]+2] = i_part_cur+1; // Because i_part start at 1 in paradigm

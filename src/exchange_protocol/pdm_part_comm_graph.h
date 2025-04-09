@@ -152,18 +152,16 @@ PDM_part_comm_graph_owner_get
 
 /**
  *
- * \brief Reorder internally all comm graph with the table \p old_to_new.
- *        This method is useful when who want to change the local order of entity and update exchange protocol
- *        This method change the internal data for future exchange and update with the new value of \p pentity_graph and \p old_to_new
+ * \brief Reorder internally the graph with the table \p old_to_new.
+ *        This method is useful when we want to change the local order of entities and update the exchange protocol.
+ *        This method changes the internal data for future exchanges.
  * \param [in]   pcg            \ref PDM_part_comm_graph_t structure
- * \param [in]   pentity_graph  Comm graph identifier (size = 4 * \p pn_entity_graph[i_part])
  * \param [in]   old_to_new     Permutation id old to new (0-based)
  */
 void
 PDM_part_comm_graph_reorder
 (
   PDM_part_comm_graph_t  *pcg,
-  int                   **pentity_graph,
   int                   **old_to_new
 );
 
