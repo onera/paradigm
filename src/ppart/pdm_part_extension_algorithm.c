@@ -1207,7 +1207,7 @@ _find_valid_entities
    *    2/ From interface
    *       a/ Know by relation table and know in current partition : 1
    *       b/ Know by relation table but not local                 : 3
-   *       c/ Unknown by relation table but from other part        : 4
+   *       c/ Unknown by relation table but from other part        : 4 --> seems deprecated
    *       d/ New                                                  : 5
    * On essaye après d'organiser les nouvelles entités dans l'ordre suivant :
    *    [2/3/4]
@@ -1316,7 +1316,7 @@ _find_valid_entities
           if (known_in_db==0) {
             if (debug_loop==1) {log_trace("\t\t ===> Not found = ("PDM_FMT_G_NUM",%i), j = %d \n", cur_gnum, cur_itrf_sgn*cur_itrf, j);}
 
-            if (cur_trplt_part==i_part) { // From the same partition (domain)
+            if (1) { // From the same partition (domain)
               pentity2_itrf[i_part][j] = pentity1_itrf[i_part][i];
               pentity2_kind[i_part][j] = 5;
 
