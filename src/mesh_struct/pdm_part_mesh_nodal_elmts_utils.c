@@ -1791,21 +1791,21 @@ PDM_part_mesh_nodal_elmts_compute_child_parent
 
     pentity_vtx_idx[i_part][0] = 0;
     PDM_part_mesh_nodal_elmts_generate_entity_connectivity(n_decompose_parent_entity      [i_part],
-                                  decompose_parent_entity_vtx_idx[i_part],
-                                  decompose_parent_entity_vtx    [i_part],
-                                  decompose_parent_parent_elmt   [i_part],
-                                  n_decompose_child_entity       [i_part],
-                                  decompose_child_entity_vtx_idx [i_part],
-                                  decompose_child_entity_vtx     [i_part],
-                                 &child_to_parent_idx            [i_part],
-                                 &child_to_parent                [i_part],
-                                  pn_parent,
-                                  decompose_parent_entity_idx    [i_part],
-                                  _decompose_parent_entity,
-                                 &pn_entity                      [i_part],
-                                  pentity_vtx_idx                [i_part],
-                                  pentity_vtx                    [i_part],
-                                  compute_parent_child);
+                                                           decompose_parent_entity_vtx_idx[i_part],
+                                                           decompose_parent_entity_vtx    [i_part],
+                                                           decompose_parent_parent_elmt   [i_part],
+                                                           n_decompose_child_entity       [i_part],
+                                                           decompose_child_entity_vtx_idx [i_part],
+                                                           decompose_child_entity_vtx     [i_part],
+                                                          &child_to_parent_idx            [i_part],
+                                                          &child_to_parent                [i_part],
+                                                           pn_parent,
+                                                           decompose_parent_entity_idx    [i_part],
+                                                           _decompose_parent_entity,
+                                                          &pn_entity                      [i_part],
+                                                           pentity_vtx_idx                [i_part],
+                                                           pentity_vtx                    [i_part],
+                                                           compute_parent_child);
 
     int have_parent_num = -1;
     for (int i_section = 0; i_section < n_section; i_section++) {
