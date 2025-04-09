@@ -284,7 +284,7 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2p - order ", 2) {
 
   // PDM_log_trace_array_int(entity_bound, 4 * n_entity_bound, "entity_bound (Avant) ::");
 
-  PDM_part_comm_graph_reorder(pgc,
+  PDM_part_comm_graph_reorder(pcg,
                               &old_to_new);
 
   // PDM_log_trace_array_int(entity_bound, 4 * n_entity_bound, "entity_bound ::");

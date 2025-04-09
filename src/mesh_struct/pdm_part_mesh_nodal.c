@@ -2593,7 +2593,6 @@ PDM_part_mesh_nodal_compute_straddling_entities
       PDM_free(entity1_edge_vtx       [i_part]);
       PDM_free(edge_parent            [i_part]);
       PDM_free(edge_parent_pos        [i_part]);
-      PDM_free(unique_edge_vtx_idx    [i_part]);
       PDM_free(unique_edge_to_edge_idx[i_part]);
       PDM_free(unique_edge_to_edge    [i_part]);
     }
@@ -2602,57 +2601,12 @@ PDM_part_mesh_nodal_compute_straddling_entities
     PDM_free(entity1_edge_vtx);
     PDM_free(edge_parent);
     PDM_free(edge_parent_pos);
-    PDM_free(unique_edge_vtx_idx);
     PDM_free(unique_edge_to_edge_idx);
     PDM_free(unique_edge_to_edge);
 
 
     PDM_g_num_t **unique_edge_gnum = NULL;
-    if (pmn->pcg[PDM_GEOMETRY_KIND_RIDGE]==NULL) {
-
-      /**
-       * Generate global ids for edges from their vertices in order to initialize a pcg
-       * to gather group parent info over all procs
-       */
-      PDM_g_num_t **unique_edge_vtx_gnum = NULL;
-      PDM_malloc(unique_edge_gnum    , pmn->n_part, PDM_g_num_t*);
-      PDM_malloc(unique_edge_vtx_gnum, pmn->n_part, PDM_g_num_t*);
-      for (int i_part=0; i_part<pmn->n_part; ++i_part) {
-
-        PDM_malloc(unique_edge_vtx_gnum[i_part], 2*n_unique_edge[i_part], PDM_g_num_t);
-
-        PDM_g_num_t *vtx_gnum = PDM_part_mesh_nodal_vtx_g_num_get(pmn, i_part, PDM_OWNERSHIP_BAD_VALUE);
-
-        for (int i_edge=0; i_edge<n_unique_edge[i_part]; ++i_edge) {
-          int vtx1 = unique_edge_vtx[i_part][2*i_edge  ];
-          int vtx2 = unique_edge_vtx[i_part][2*i_edge+1];
-          unique_edge_vtx_gnum[i_part][2*i_edge  ] = vtx_gnum[vtx1];
-          unique_edge_vtx_gnum[i_part][2*i_edge+1] = vtx_gnum[vtx2];
-        }
-      }
-
-
-      PDM_gen_gnum_t* gen_edge_gnum = PDM_gnum_create(3,
-                                                      pmn->n_part,
-                                                      PDM_TRUE,
-                                                      1e-4,
-                                                      pmn->comm,
-                                                      PDM_OWNERSHIP_USER);
-      PDM_gnum_set_parents_nuplet(gen_edge_gnum, 2);
-      for (int i_part=0; i_part<pmn->n_part; ++i_part) {
-        PDM_gnum_set_from_parents(gen_edge_gnum, i_part, n_unique_edge[i_part], unique_edge_vtx_gnum[i_part]);
-      }
-
-      PDM_gnum_compute(gen_edge_gnum);
-
-      for (int i_part=0; i_part<pmn->n_part; ++i_part) {
-        unique_edge_gnum[i_part] = PDM_gnum_get(gen_edge_gnum, i_part);
-        PDM_free(unique_edge_vtx_gnum[i_part]);
-      }
-      PDM_free(unique_edge_vtx_gnum);
-
-      PDM_gnum_free(gen_edge_gnum);
-
+    if (pmn->pcg[PDM_MESH_ENTITY_EDGE]==NULL) {
 
       pmn->ridge = PDM_part_mesh_nodal_elmts_create(1, pmn->n_part, pmn->comm);
       int section_ridge = PDM_part_mesh_nodal_elmts_add(pmn->ridge, PDM_MESH_NODAL_BAR2);
@@ -2663,13 +2617,58 @@ PDM_part_mesh_nodal_compute_straddling_entities
                                           i_part,
                                           n_unique_edge   [i_part],
                                           unique_edge_vtx [i_part],
-                                          unique_edge_gnum[i_part],
+                                          NULL,
                                           NULL,
                                           NULL,
                                           PDM_OWNERSHIP_USER);
       }
 
-      PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(pmn, PDM_MESH_ENTITY_EDGE);
+
+      // > Get vertices part_comm_graph
+      int  *pn_vtx_graph = NULL;
+      int **pvtx_graph   = NULL;
+      PDM_malloc(pn_vtx_graph, pmn->n_part, int  );
+      PDM_malloc(pvtx_graph  , pmn->n_part, int *);
+      for (int i_part=0; i_part<pmn->n_part; ++i_part) {
+        pn_vtx_graph[i_part] = PDM_part_comm_graph_entity_graph_get(pmn->pcg[PDM_MESH_ENTITY_VTX],
+                                                                    i_part,
+                                                                   &pvtx_graph[i_part],
+                                                                    PDM_OWNERSHIP_BAD_VALUE);
+      }
+
+
+      // > Compute edge part_comm_graph from vertices pcg + edge->vtx connectivity
+      int  *pn_edge_graph = NULL;
+      int **pedge_graph   = NULL;
+      PDM_part_comm_graph_entity1_to_entity2(pmn->comm,
+                                             pmn->n_part,
+                                             pn_vtx_graph,
+                                             pvtx_graph,
+                                             0,
+                                             NULL,
+                                             n_vtx,
+                                             n_unique_edge,
+                                             unique_edge_vtx_idx,
+                                             unique_edge_vtx,
+                                            &pn_edge_graph,
+                                            &pedge_graph,
+                                             NULL);
+
+      for (int i_part=0; i_part<pmn->n_part; ++i_part) {
+        PDM_free(unique_edge_vtx_idx[i_part]);
+      }
+      PDM_free(unique_edge_vtx_idx);
+      PDM_free(pn_vtx_graph);
+      PDM_free(pvtx_graph);
+
+      PDM_part_comm_graph_t *pcg_edge = PDM_part_comm_graph_create(pmn->n_part,
+                                                                   pn_edge_graph,
+                                                                   pedge_graph,
+                                                                   PDM_OWNERSHIP_KEEP,
+                                                                   pmn->comm);
+      PDM_free(pn_edge_graph);
+
+      PDM_part_mesh_nodal_part_comm_graph_set(pmn, pcg_edge, PDM_MESH_ENTITY_EDGE, PDM_OWNERSHIP_KEEP);
     }
 
 
@@ -2758,23 +2757,27 @@ PDM_part_mesh_nodal_compute_straddling_entities
         }
       }
 
+      PDM_g_num_t *vtx_gnum = PDM_part_mesh_nodal_vtx_g_num_get(pmn, i_part, PDM_OWNERSHIP_BAD_VALUE);
+
       PDM_malloc(ridge_vtx      [i_part], 2*n_ridge[i_part]  , int        );
-      PDM_malloc(ridge_gnum     [i_part],   n_ridge[i_part]  , PDM_g_num_t);
+      PDM_malloc(ridge_gnum     [i_part], 2*n_ridge[i_part]  , PDM_g_num_t);
       PDM_malloc(ridge_group_idx[i_part],   n_ridge[i_part]+1, int        );
       ridge_group_idx[i_part][0] = 0;
       int i_write = 0;
       for (int i_edge=0; i_edge<n_unique_edge[i_part]; ++i_edge) {
         if (edge_group_idx[i_part][i_edge+1]-edge_group_idx[i_part][i_edge]>0) {
-          ridge_vtx      [i_part][2*i_write+0] = unique_edge_vtx [i_part][2*i_edge+0];
-          ridge_vtx      [i_part][2*i_write+1] = unique_edge_vtx [i_part][2*i_edge+1];
-          ridge_gnum     [i_part][  i_write  ] = unique_edge_gnum[i_part][  i_edge  ];
-          ridge_group_idx[i_part][  i_write+1] = ridge_group_idx [i_part][  i_write ]+1;
+          int vtx1 = unique_edge_vtx[i_part][2*i_edge  ];
+          int vtx2 = unique_edge_vtx[i_part][2*i_edge+1];
+          ridge_vtx      [i_part][2*i_write  ] = vtx1;
+          ridge_vtx      [i_part][2*i_write+1] = vtx2;
+          ridge_gnum     [i_part][2*i_write  ] = vtx_gnum[vtx1-1]; // sure about -1 ?
+          ridge_gnum     [i_part][2*i_write+1] = vtx_gnum[vtx2-1]; // sure about -1 ?
+          ridge_group_idx[i_part][  i_write+1] = ridge_group_idx[i_part][i_write]+1;
           i_write++;
         }
       }
-      PDM_free(unique_edge_vtx [i_part]);
-      PDM_free(unique_edge_gnum[i_part]);
-      PDM_free(edge_group_idx  [i_part]);
+      PDM_free(unique_edge_vtx[i_part]);
+      PDM_free(edge_group_idx [i_part]);
     }
     PDM_free(n_unique_edge);
     PDM_free(unique_edge_vtx);
@@ -2787,7 +2790,7 @@ PDM_part_mesh_nodal_compute_straddling_entities
                                                      1e-4,
                                                      pmn->comm,
                                                      PDM_OWNERSHIP_USER);
-    PDM_gnum_set_parents_nuplet(gen_ridge_gnum, 1);
+    PDM_gnum_set_parents_nuplet(gen_ridge_gnum, 2);
     for (int i_part=0; i_part<pmn->n_part; ++i_part) {
       PDM_gnum_set_from_parents(gen_ridge_gnum, i_part, n_ridge[i_part], ridge_gnum[i_part]);
     }
