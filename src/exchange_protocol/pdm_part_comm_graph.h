@@ -152,18 +152,16 @@ PDM_part_comm_graph_owner_get
 
 /**
  *
- * \brief Reorder internally all comm graph with the table \p old_to_new.
- *        This method is useful when who want to change the local order of entity and update exchange protocol
- *        This method change the internal data for future exchange and update with the new value of \p pentity_graph and \p old_to_new
+ * \brief Reorder internally the graph with the table \p old_to_new.
+ *        This method is useful when we want to change the local order of entities and update the exchange protocol.
+ *        This method changes the internal data for future exchanges.
  * \param [in]   pcg            \ref PDM_part_comm_graph_t structure
- * \param [in]   pentity_graph  Comm graph identifier (size = 4 * \p pn_entity_graph[i_part])
  * \param [in]   old_to_new     Permutation id old to new (0-based)
  */
 void
 PDM_part_comm_graph_reorder
 (
   PDM_part_comm_graph_t  *pcg,
-  int                   **pentity_graph,
   int                   **old_to_new
 );
 
@@ -213,12 +211,15 @@ PDM_part_comm_graph_entity1_to_part_comm_graph_entity2
  * \param [in]  n_part               Number of partition on current process
  * \param [in]  pn_entity1_graph     Number of bound (size = \p n_part)
  * \param [in]  pentity1_graph       Graph comm identifier (size = 4 * \p pn_entity1_graph[i_part]) :
+ * \param [in]  nuplet_size          Nuplet size
+ * \param [in]  pentity1_nuplet      Additional nuplets (NULL or size = \p nuplet_size * \p pn_entity_graph[i_part])
  * \param [in]  pn_entity1           Number of entity1 (size = \p n_part)
  * \param [in]  pn_entity2           Number of entity1 (size = \p n_part)
  * \param [in]  entity2_entity1_idx  Connectivity index (size = \p pn_entity2 + 1 )
  * \param [in]  entity2_entity1      Connectivity array (size = \p entity2_entity1_idx[\p pn_entity2] )
  * \param [out] pn_entity2_graph     Number of bound (size = \p n_part)
  * \param [out] pentity2_graph       Graph comm identifier (size = 4 * \p pn_entity2_graph[i_part]) :
+ * \param [out] pentity2_nuplet      Nuplets for entity2 (NULL or size = 4 * \p pn_entity2_graph[i_part]) :
  *
  */
 void
@@ -228,12 +229,15 @@ PDM_part_comm_graph_entity1_to_entity2
   int                      n_part,
   int                     *pn_entity1_graph,
   int                    **pentity1_graph,
+  int                      nuplet_size,
+  int                    **pentity1_nuplet,
   int                     *pn_entity1,
   int                     *pn_entity2,
   int                    **entity2_entity1_idx,
   int                    **entity2_entity1,
   int                    **out_pn_entity2_graph,
-  int                   ***out_pentity2_graph
+  int                   ***out_pentity2_graph,
+  int                   ***out_pentity2_nuplet
 );
 
 
