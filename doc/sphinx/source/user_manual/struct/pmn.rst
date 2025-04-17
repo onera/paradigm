@@ -38,6 +38,8 @@ Setters
 
 .. doxygenfunction:: PDM_part_mesh_nodal_faces_facevtx_add
 
+.. doxygenfunction:: PDM_part_mesh_nodal_part_comm_graph_set
+
 Compute
 """""""
 
@@ -48,6 +50,8 @@ Compute
 .. doxygenfunction:: PDM_part_mesh_nodal_g_num_in_section_compute
 
 .. doxygenfunction:: PDM_part_mesh_nodal_compute_sections_idx
+
+.. doxygenfunction:: PDM_part_mesh_nodal_compute_straddling_entities
 
 Getters
 """""""
@@ -119,6 +123,8 @@ Getters
 .. doxygenfunction:: PDM_part_mesh_nodal_principal_geom_kind_get
 
 .. doxygenfunction:: PDM_part_mesh_nodal_cell_vtx_connect_get
+
+.. doxygenfunction:: PDM_part_mesh_nodal_part_comm_graph_get
 
 Free
 """"
