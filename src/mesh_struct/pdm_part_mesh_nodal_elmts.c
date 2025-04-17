@@ -3215,7 +3215,7 @@ PDM_part_mesh_nodal_elmts_elt_extents_compute
        double                      *extents
  )
 {
-  const double eps_extents = 1.e-7;
+  const double eps_extents = 1.e-16;
 
   if (pmne == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad pmne identifier\n");
@@ -3390,20 +3390,28 @@ PDM_part_mesh_nodal_elmts_elt_extents_compute
       }
     }
 
-
     /* Expand bounding box */
-    double delta[3] = {0.0, 0.0, 0.0};
+    double l_max = 0.;
     for (int idim = 0; idim < 3; idim++) {
-      delta[idim] = _extents[3+idim] - _extents[idim];
+      double x = _extents[3+idim] - _extents[idim];
 
-      if (delta[idim] > eps_extents){
-        delta[idim] *= tolerance;
-      } else {
-        delta[idim] = eps_extents;
+      if (l_max < x) {
+        l_max = x;
       }
-      _extents[idim]   -= delta[idim];
-      _extents[3+idim] += delta[idim];
     }
+    double delta = l_max;
+    for (int idim = 0; idim < 3; idim++) {
+      double x = _extents[3+idim] - _extents[idim];
+      if (x < eps_extents){
+        delta = l_max * PDM_MAX(tolerance, eps_extents);
+      }
+      else {
+        delta = l_max * tolerance;
+      }
+      _extents[idim]   -= delta;
+      _extents[3+idim] += delta;
+    }
+
   } // End of loop on elements
 
   if (lagrange_coord != NULL) {
