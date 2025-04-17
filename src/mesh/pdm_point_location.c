@@ -1515,9 +1515,11 @@ _locate_in_polyhedron
    *  - compute distance from closest subtriangle
    */
   double solid_angle[n_pts];
+  int closest_face[n_pts];
   for (int ipt = 0; ipt < n_pts; ipt++) {
     solid_angle [ipt] = 0.;
     distance    [ipt] = HUGE_VAL;
+    closest_face[ipt] = -1;
   }
 
   /* Loop on points */
@@ -1568,12 +1570,9 @@ _locate_in_polyhedron
                                                  face_coord,
                                                  closest,
                                                  &min_dist2);
-        PDM_mean_values_polygon_3d(face_vtx_n,
-                                   face_coord,
-                                   1,
-                                   closest,
-                                   face_weight);
-
+        if (location == PDM_POLYGON_DEGENERATED) {
+          continue;
+        }
         n_tri = PDM_triangulate_quadrangle(3,
                                            vtx_coord,
                                            NULL,
@@ -1594,12 +1593,9 @@ _locate_in_polyhedron
                                                  face_coord,
                                                  closest,
                                                  &min_dist2);
-        PDM_mean_values_polygon_3d(face_vtx_n,
-                                   face_coord,
-                                   1,
-                                   closest,
-                                   face_weight);
-
+        if (location == PDM_POLYGON_DEGENERATED) {
+          continue;
+        }
         n_tri = PDM_triangulate_polygon(3,
                                         face_vtx_n,
                                         vtx_coord,
@@ -1668,6 +1664,7 @@ _locate_in_polyhedron
 
       if (min_dist2 < distance[ipt]) {
         distance    [ipt] = min_dist2;
+        closest_face[ipt] = iface;
 
         memcpy(proj_coord + 3*ipt, closest, sizeof(double) * 3);
 
@@ -1704,7 +1701,39 @@ _locate_in_polyhedron
     }
 
 
-    if (solid_angle[ipt] > threshold_inside) {
+    if (solid_angle[ipt] < threshold_inside) {
+      int iface = closest_face[ipt];
+      int n_vtx_face = face_vtx_idx[iface+1] - face_vtx_idx[iface];
+      const int *_face_vtx = face_vtx + face_vtx_idx[iface];
+
+      double *face_coord=NULL;
+      PDM_malloc(face_coord, 3*n_vtx_face, double);
+      double *face_weight=NULL;
+      PDM_malloc(face_weight, n_vtx_face, double);
+
+      for (int ivtx = 0; ivtx < n_vtx_face; ivtx++) {
+        int _ivtx = face_vtx[face_vtx_idx[iface] + ivtx] - 1;
+
+        for (int idim = 0; idim < 3; idim++) {
+          face_coord[3*ivtx + idim] = vtx_coord[3*_ivtx + idim];
+        }
+      }
+
+      PDM_mean_values_polygon_3d(n_vtx_face,
+                                 face_coord,
+                                 1,
+                                 p,
+                                 face_weight);
+
+      for (int i_vtx_face = 0; i_vtx_face < n_vtx_face; i_vtx_face++) {
+        w[_face_vtx[i_vtx_face]-1] = face_weight[i_vtx_face];
+      }
+
+    PDM_free(face_coord);
+    PDM_free(face_weight);
+
+    }
+    else {
       /* Point strictly inside polyhedron */
       distance[ipt] = -distance[ipt];
 
@@ -1739,23 +1768,23 @@ _locate_in_polyhedron
 
     }
 
-    else if (distance[ipt] > eps_on_face2) {
-      if (dbg) {
-        /* Point strictly outside polyhedron */
-        log_trace("  exterior\n");
-        // PDM_log_trace_array_double(w, n_vtx, "  mean_value_coord : ");
-        log_trace("  proj_coord = %f %f %f, dist2 = %e\n", pc[0], pc[1], pc[2], distance[ipt]);
-      }
-    }
+    // else if (distance[ipt] > eps_on_face2) {
+    //   if (dbg) {
+    //     /* Point strictly outside polyhedron */
+    //     log_trace("  exterior\n");
+    //     // PDM_log_trace_array_double(w, n_vtx, "  mean_value_coord : ");
+    //     log_trace("  proj_coord = %f %f %f, dist2 = %e\n", pc[0], pc[1], pc[2], distance[ipt]);
+    //   }
+    // }
 
-    else {
-      if (dbg) {
-        /* Point on a polyhedron face */
-        log_trace("  on face\n");
-        // PDM_log_trace_array_double(w, n_vtx, "  mean_value_coord : ");
-        log_trace("  proj_coord = %f %f %f, dist2 = %e\n", pc[0], pc[1], pc[2], distance[ipt]);
-      }
-    }
+    // else {
+    //   if (dbg) {
+    //     /* Point on a polyhedron face */
+    //     log_trace("  on face\n");
+    //     // PDM_log_trace_array_double(w, n_vtx, "  mean_value_coord : ");
+    //     log_trace("  proj_coord = %f %f %f, dist2 = %e\n", pc[0], pc[1], pc[2], distance[ipt]);
+    //   }
+    // }
 
 
   } // End of loop on points
