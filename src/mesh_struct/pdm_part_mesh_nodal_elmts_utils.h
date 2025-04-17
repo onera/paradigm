@@ -36,6 +36,51 @@ extern "C" {
  * Public function interfaces
  *============================================================================*/
 
+
+/**
+ * \brief Find link between bound decomposed entities and internal decomposed entities,
+ *        while linking with parent entities (eg face for edges).
+ *
+ * \param [in]     n_parent_decompose_entity2        Internal decomposed entity2 number
+ * \param [in]     parent_decompose_entity2_vtx_idx  Internal decomposed entity2->vertex connectivity index
+ * \param [inout]  parent_decompose_entity2_vtx      Internal decomposed entity2->vertex connectivity
+ * \param [inout]  parent_decompose_parent_entity2   Internal decomposed entity2->entity1
+ * \param [inout]  n_child_decompose_entity2         Boundaries decomposed entity2 number
+ * \param [inout]  child_decompose_entity2_vtx_idx   Boundaries decomposed entity2->vertex connectivity index
+ * \param [inout]  child_decompose_entity2_vtx       Boundaries decomposed entity2->vertex connectivity
+ * \param [inout]  out_child_to_parent_idx           Boundaries->Internal connectivity index
+ * \param [inout]  out_child_to_parent               Boundaries->Internal connectivity
+ * \param [in]     pn_entity1                        Entity1 number
+ * \param [inout]  pentity1_entity2_idx              Entity1->vertex connectivity index
+ * \param [inout]  pentity1_entity2                  Entity1->vertex connectivity
+ * \param [inout]  out_pn_entity2                    Entity2 number
+ * \param [inout]  pentity2_vtx_idx                  Entity2->vertex connectivity index
+ * \param [inout]  pentity2_vtx                      Entity2->vertex connectivity
+ * \param [in]     compute_parent_child              Boolean to activate Boundaries->Internal connectivity computation
+ *
+ */
+void
+PDM_part_mesh_nodal_elmts_generate_entity_connectivity
+(
+  int          n_parent_decompose_entity2,
+  int         *parent_decompose_entity2_vtx_idx,
+  int         *parent_decompose_entity2_vtx,
+  int         *parent_decompose_parent_entity2,
+  int          n_child_decompose_entity2,
+  int         *child_decompose_entity2_vtx_idx,
+  int         *child_decompose_entity2_vtx,
+  int        **out_child_to_parent_idx,
+  int        **out_child_to_parent,
+  int          pn_entity1,
+  int         *pentity1_entity2_idx,
+  int         *pentity1_entity2,
+  int         *out_pn_entity2,
+  int         *pentity2_vtx_idx,
+  int         *pentity2_vtx,
+  PDM_bool_t   compute_parent_child
+);
+
+
 /**
  * \brief Decompose a PartMeshNodalElmts into faces.
  *        (All sections and partitions are concatenated.)

@@ -116,6 +116,10 @@ PDM_binary_search_long
  const int          lArray
 )
 {
+  if (lArray==0) {
+    return -1;
+  }
+
   int left  = 0;
   int right = lArray - 1;
   int ind   = (left + right) / 2;
@@ -187,6 +191,10 @@ PDM_binary_search_int
  const int          lArray
 )
 {
+  if (lArray==0) {
+    return -1;
+  }
+
   int left  = 0;
   int right = lArray - 1;
   int ind   = (left + right) / 2;

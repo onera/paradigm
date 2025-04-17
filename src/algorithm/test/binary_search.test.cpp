@@ -116,6 +116,10 @@ TEST_CASE("[pdm_binary_search] - PDM_binary_search_int") {
 
   CHECK(pos3 == 0);
 
+  int pos4 = PDM_binary_search_int(gnum3, array, 0);
+
+  CHECK(pos4 == -1);
+
 }
 
 

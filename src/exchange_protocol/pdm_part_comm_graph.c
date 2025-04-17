@@ -756,14 +756,14 @@ PDM_part_comm_graph_with_nuplet_create
 void
 PDM_part_comm_graph_exch
 (
- PDM_part_comm_graph_t   *pcg,
- size_t                   s_data,
- PDM_stride_t             t_stride,
- int                      cst_stride,
- int                    **send_entity_stride,
- void                   **send_entity_data,
- int                   ***recv_entity_stride,
- void                  ***recv_entity_data
+  PDM_part_comm_graph_t   *pcg,
+  size_t                   s_data,
+  PDM_stride_t             t_stride,
+  int                      cst_stride,
+  int                    **send_entity_stride,
+  void                   **send_entity_data,
+  int                   ***recv_entity_stride,
+  void                  ***recv_entity_data
 )
 {
   if(t_stride == PDM_STRIDE_CST_INTERLACED) {
@@ -789,8 +789,8 @@ PDM_part_comm_graph_exch
 const int*
 PDM_part_comm_graph_owner_get
 (
- PDM_part_comm_graph_t *pcg,
- int                    i_part
+  PDM_part_comm_graph_t *pcg,
+  int                    i_part
 )
 {
   return pcg->bound_owner[i_part];
@@ -1683,6 +1683,174 @@ PDM_part_comm_graph_entity_nuplet_get
   }
 
   return pcg->nuplet_size;
+}
+
+
+void
+PDM_part_comm_graph_gather_strided_data
+(
+  PDM_part_comm_graph_t   *pcg,
+  const size_t             size_data,
+  PDM_stride_t             t_stride,
+  int                     *n_entity,
+  int                    **data_stride,
+  void                   **data,
+  int                   ***out_data_stride,
+  void                  ***out_data
+)
+{
+  if(t_stride == PDM_STRIDE_VAR_INTERLACED) {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_gather_strided_data: PDM_STRIDE_VAR_INTERLACED not implemented \n");
+  }
+  else if(t_stride != PDM_STRIDE_CST_INTERLACED) {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_gather_strided_data: wrong t_stride\n");
+  }
+
+  int n_part = pcg->n_part;
+
+  int           **data_idx        = NULL;
+  int            *pn_entity_bound = NULL;
+  int           **pentity_bound   = NULL;
+  int           **send_data_n     = NULL;
+  unsigned char **send_data       = NULL;
+  PDM_malloc(data_idx       , n_part, int           *);
+  PDM_malloc(pn_entity_bound, n_part, int            );
+  PDM_malloc(pentity_bound  , n_part, int           *);
+  PDM_malloc(send_data_n    , n_part, int           *);
+  PDM_malloc(send_data      , n_part, unsigned char *);
+
+  for (int i_part=0; i_part<n_part; ++i_part) {
+
+    data_idx[i_part] = PDM_array_new_idx_from_sizes_int(data_stride[i_part], n_entity[i_part]);
+
+    pn_entity_bound[i_part] = PDM_part_comm_graph_entity_graph_get(pcg,
+                                                                   i_part,
+                                                                  &pentity_bound[i_part],
+                                                                   PDM_OWNERSHIP_BAD_VALUE);
+
+    PDM_malloc(send_data_n[i_part], pn_entity_bound[i_part], int);
+    int send_data_size = 0;
+    for(int i = 0; i < pn_entity_bound[i_part]; ++i) {
+      int i_entity = pentity_bound[i_part][4*i]-1;
+      int n_data = data_stride[i_part][i_entity];
+      send_data_n[i_part][i] = n_data;
+      send_data_size += send_data_n[i_part][i];
+    }
+
+    PDM_malloc(send_data[i_part], send_data_size*size_data, unsigned char);
+    unsigned char *_data = (unsigned char* ) data[i_part];
+
+    int i_write = 0;
+    for(int i = 0; i < pn_entity_bound[i_part]; ++i) {
+      int i_entity = pentity_bound[i_part][4*i]-1;
+      for(int k = data_idx[i_part][i_entity]; k < data_idx[i_part][i_entity+1]; ++k) {
+        for (int octet = 0; octet <  (int) size_data; ++octet) {
+          send_data[i_part][i_write++] = _data[size_data*k + octet];
+        }
+      }
+    }
+  }
+
+
+  int  **recv_data_n = NULL;
+  void **recv_data   = NULL;
+  PDM_part_comm_graph_exch(pcg,
+                           size_data,
+                           PDM_STRIDE_VAR_INTERLACED,
+                           1,
+                           send_data_n,
+               (void  **)  send_data,
+                          &recv_data_n,
+               (void ***) &recv_data);
+
+  for (int i_part=0; i_part<n_part; ++i_part) {
+    PDM_free(send_data_n[i_part]);
+    PDM_free(send_data  [i_part]);
+  }
+  PDM_free(send_data_n);
+  PDM_free(send_data);
+
+
+  int           **_out_data_n   = NULL;
+  int           **_out_data_idx = NULL;
+  unsigned char **_out_data     = NULL;
+  PDM_malloc(_out_data_n  , n_part, int           *);
+  PDM_malloc(_out_data_idx, n_part, int           *);
+  PDM_malloc(_out_data    , n_part, unsigned char *);
+  for (int i_part=0; i_part<n_part; ++i_part) {
+
+    /**
+     * Count local + rcvd data
+     */
+
+    PDM_calloc(_out_data_n  [i_part], n_entity[i_part]  , int);
+    PDM_malloc(_out_data_idx[i_part], n_entity[i_part]+1, int); _out_data_idx[i_part][0] = 0;
+
+    int recv_data_size = 0;
+    int data_size = data_idx[i_part][n_entity[i_part]];
+    for(int i = 0; i < pn_entity_bound[i_part]; ++i) {
+      int i_entity = pentity_bound[i_part][4*i]-1;
+      _out_data_n[i_part][i_entity] += recv_data_n[i_part][i];
+      data_size                     += recv_data_n[i_part][i];
+      recv_data_size                += recv_data_n[i_part][i];
+    }
+
+    for(int i_entity = 0; i_entity < n_entity[i_part]; ++i_entity) {
+      int n_local = data_idx[i_part][i_entity+1]-data_idx[i_part][i_entity];
+      _out_data_idx[i_part][i_entity+1] = _out_data_idx[i_part][i_entity] + n_local + _out_data_n[i_part][i_entity];
+      _out_data_n  [i_part][i_entity  ] = 0;
+    }
+
+
+    /**
+     * Fill out_data with local and received datas
+     */
+    PDM_malloc(_out_data[i_part], data_size*size_data, unsigned char);
+    unsigned char *_data = (unsigned char *) data[i_part];
+
+    int i_write = 0;
+    for(int i_entity = 0; i_entity < n_entity[i_part]; ++i_entity) {
+      for(int i_read=data_idx[i_part][i_entity];
+              i_read<data_idx[i_part][i_entity+1]; ++i_read) {
+        for (int octet = 0; octet <  (int) size_data; ++octet) {
+          i_write = _out_data_idx[i_part][i_entity] + _out_data_n[i_part][i_entity];
+          i_write = size_data*i_write + octet;
+          _out_data[i_part][i_write] = _data[size_data*i_read + octet];
+        }
+        _out_data_n[i_part][i_entity]++;
+      }
+    }
+
+    int i_readr = 0;
+    unsigned char *_recv_data = (unsigned char *) recv_data[i_part];
+
+    for(int i = 0; i < pn_entity_bound[i_part]; ++i) {
+      int i_entity = pentity_bound[i_part][4*i]-1;
+
+      for(int k=0; k<recv_data_n[i_part][i]; ++k) {
+        for (int octet = 0; octet <  (int) size_data; ++octet) {
+          i_write = _out_data_idx[i_part][i_entity] + _out_data_n[i_part][i_entity];
+          i_write = size_data*i_write + octet;
+          _out_data  [i_part][i_write] = _recv_data[i_readr++];
+        }
+        _out_data_n[i_part][i_entity]++;
+      }
+    }
+
+    PDM_free(data_idx     [i_part]);
+    PDM_free(recv_data_n  [i_part]);
+    PDM_free(recv_data    [i_part]);
+    PDM_free(_out_data_idx[i_part]);
+  }
+  PDM_free(data_idx);
+  PDM_free(recv_data_n);
+  PDM_free(recv_data);
+  PDM_free(_out_data_idx);
+  PDM_free(pentity_bound);
+  PDM_free(pn_entity_bound);
+
+  *out_data_stride =           _out_data_n;
+  *out_data        = (void **) _out_data;
 }
 
 

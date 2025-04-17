@@ -13,6 +13,7 @@
 #include "pdm_mesh_nodal_priv.h"
 #include "pdm_part_mesh_nodal_elmts.h"
 #include "pdm_part_mesh_nodal_elmts_priv.h"
+#include "pdm_part_comm_graph.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -46,15 +47,13 @@ struct _pdm_part_mesh_nodal_t {
 
   PDM_Mesh_nodal_vtx_t              **vtx;              /*!< Description des sommmets de chaque partition */
 
-  PDM_l_num_t                        *n_vol;
-  PDM_l_num_t                        *n_surf;
-  PDM_l_num_t                        *n_ridge;
-  PDM_l_num_t                        *n_corner;
-
   PDM_part_mesh_nodal_elmts_t       *volumic;
   PDM_part_mesh_nodal_elmts_t       *surfacic;
   PDM_part_mesh_nodal_elmts_t       *ridge;
   PDM_part_mesh_nodal_elmts_t       *corner;
+
+  PDM_ownership_t                    pcg_ownership[PDM_MESH_ENTITY_MAX];
+  PDM_part_comm_graph_t             *pcg          [PDM_MESH_ENTITY_MAX];
 
   int                                is_vtx_def_from_parent; /*<! Are the points defined from parents */
 
