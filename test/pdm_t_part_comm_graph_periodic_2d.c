@@ -374,13 +374,13 @@ int main
 
       if (visu) {
         log_trace("j_part %d, unified graph in quadruplets :\n", j_part);
-        for (int i = 0; i < n_unified_vtx_graph[j_part]; i++) {
+        for (int k = 0; k < n_unified_vtx_graph[j_part]; k++) {
           log_trace("%4d %2d %2d %4d  itrf %d\n", 
-                    unified_vtx_graph[j_part][4*i  ],
-                    unified_vtx_graph[j_part][4*i+1],
-                    unified_vtx_graph[j_part][4*i+2],
-                    unified_vtx_graph[j_part][4*i+3],
-                    unified_vtx_graph_itrf[j_part][i]);
+                    unified_vtx_graph[j_part][4*k  ],
+                    unified_vtx_graph[j_part][4*k+1],
+                    unified_vtx_graph[j_part][4*k+2],
+                    unified_vtx_graph[j_part][4*k+3],
+                    unified_vtx_graph_itrf[j_part][k]);
         }
       }
 
