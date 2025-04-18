@@ -83,22 +83,45 @@ module pdm_extract_part
 
   !>
   !!
-  !! \brief Set PDM_part_mesh_nodal_elmts_t
+  !! \brief Set PDM_part_mesh_nodal_t
   !!
   !! \param [inout] extrp  PDM_extract_part_t instance
-  !! \param [in]    pmne   PDM_part_mesh_nodal_elmts_t instance
+  !! \param [in]    pmn   PDM_part_mesh_nodal_t instance
   !!
   !!
 
-  subroutine PDM_extract_part_part_nodal_set (extrp, pmne) &
+  subroutine PDM_extract_part_part_nodal_set (extrp, pmn) &
   bind (c, name='PDM_extract_part_part_nodal_set')
     use iso_c_binding
     implicit none
 
     type(c_ptr), value :: extrp
-    type(c_ptr), value :: pmne
+    type(c_ptr), value :: pmn
 
   end subroutine PDM_extract_part_part_nodal_set
+
+
+  !>
+  !!
+  !! \brief Retrieve the extracted mesh
+  !!
+  !! \param [inout] extrp       PDM_extract_part_t instance
+  !! \param [in]    pmn         PDM_part_mesh_nodal_t instance
+  !! \param [in]    ownership   Who is responsible to free retreived data ?
+  !!
+  !!
+
+  subroutine PDM_extract_part_part_mesh_nodal_get(extrp, pmn, ownership) &
+    bind (c, name='PDM_extract_part_part_mesh_nodal_get')
+      use iso_c_binding
+      implicit none
+
+      type(c_ptr),    value :: extrp
+      type(c_ptr)           :: pmn
+      integer(c_int), value :: ownership
+
+  end subroutine PDM_extract_part_part_mesh_nodal_get
+
 
   end interface
 

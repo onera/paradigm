@@ -1124,4 +1124,41 @@ module PDM_part_mesh_nodal
 
   end subroutine PDM_part_mesh_nodal_cell_vtx_connect_get
 
+
+
+
+  subroutine PDM_part_mesh_nodal_dump_vtk(pmn,              &
+                                          geom_kind,        &
+                                          filename_pattern)
+    ! Export the current nodal mesh in vtk format
+    use iso_c_binding
+    use pdm
+    implicit none
+
+    type(c_ptr),       value     :: pmn              ! C pointer to PDM_part_mesh_nodal_t instance
+    integer,          intent(in) :: geom_kind        ! Geometry kind (corner, ridge, surface or volume)
+    character(len=*), intent(in) :: filename_pattern ! Pattern for file naming (the function will append i_rank and i_part to this current pattern)
+
+    interface
+      subroutine PDM_part_mesh_nodal_dump_vtk_c(pmn,              &
+                                                geom_kind,        &
+                                                filename_pattern) &
+      bind(c, name='PDM_part_mesh_nodal_dump_vtk')
+        use iso_c_binding
+        use pdm
+
+        implicit none
+
+        type(c_ptr),      value :: pmn
+        integer (c_int),  value :: geom_kind
+        character(c_char)       :: filename_pattern(*)
+      end subroutine PDM_part_mesh_nodal_dump_vtk_c
+    end interface
+
+    call PDM_part_mesh_nodal_dump_vtk_c(pmn,       &
+                                        geom_kind, &
+                                        trim(filename_pattern)//C_NULL_CHAR)
+
+  end subroutine PDM_part_mesh_nodal_dump_vtk
+
 end module PDM_part_mesh_nodal

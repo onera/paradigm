@@ -415,7 +415,7 @@ PDM_extract_part_vtx_coord_get
 
 
 /**
- * \brief Retreive the partitionned mesh
+ * \brief Retrieve the extracted mesh
  *
  * \param [in]  extrp             Pointer to \ref PDM_extract_part_t object
  * \param [out] extract_pmn       Partitionned mesh nodal, describe by elements (see \ref PDM_part_mesh_nodal_t )

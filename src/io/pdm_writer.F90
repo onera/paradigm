@@ -467,6 +467,43 @@ module pdm_writer
 
 
 
+  subroutine PDM_writer_geom_create_from_mesh_nodal(cs,       &
+                                                    id_geom,  &
+                                                    nom_geom, &
+                                                    mesh)
+    ! Create a geometry from a nodal mesh structure
+    use iso_c_binding
+    implicit none
+
+    type(c_ptr), value           :: cs        ! C pointer to PDM_writer_t instance
+    integer, intent(out)         :: id_geom   ! Geometry identifier
+    character(len=*), intent(in) :: nom_geom  ! Geometry name
+    type(c_ptr), value           :: mesh      ! C pointer to PDM_part_mesh_nodal_t instance
+
+    interface
+      function PDM_writer_geom_create_from_mesh_nodal_c(cs,       &
+                                                        nom_geom, &
+                                                        mesh)     &
+        result (id_geom)                                          &
+        bind (c, name='PDM_writer_geom_create_from_mesh_nodal')
+          use iso_c_binding
+          implicit none
+
+          type(c_ptr),    value :: cs
+          integer(c_int)        :: id_geom
+          character(c_char)     :: nom_geom(*)
+          type(c_ptr),    value :: mesh
+
+      end function PDM_writer_geom_create_from_mesh_nodal_c
+    end interface
+
+    id_geom = PDM_writer_geom_create_from_mesh_nodal_c(cs, &
+                                                       trim(nom_geom)//C_NULL_CHAR, &
+                                                       mesh)
+
+  end subroutine PDM_writer_geom_create_from_mesh_nodal
+
+
   !>
   !! \brief Definition des coordonnees de la partition courante
   !!
@@ -536,13 +573,13 @@ module pdm_writer
     c_coords = C_NULL_PTR
     if (associated(coords)) then
       c_coords = c_loc(coords)
-    endif 
-      
+    endif
+
     c_numabs = C_NULL_PTR
     if (associated(numabs)) then
       c_numabs = c_loc(numabs)
-    endif 
-      
+    endif
+
 
     call PDM_writer_geom_coord_set_c (cs,        &
                                       c_id_geom, &
@@ -646,22 +683,22 @@ module pdm_writer
     if (associated(numabs)) then
       c_numabs        = c_loc(numabs)
     endif
-      
+
     c_num_parent = C_NULL_PTR
     if (associated(num_parent)) then
       c_num_parent    = c_loc(num_parent)
     endif
-      
+
     c_coords_parent = C_NULL_PTR
     if (associated(coords_parent)) then
       c_coords_parent = c_loc(coords_parent)
     endif
-      
+
     c_numabs_parent = C_NULL_PTR
     if (associated(numabs_parent)) then
       c_numabs_parent = c_loc(numabs_parent)
     endif
-      
+
 
     call PDM_writer_geom_coord_from_parent_set_c (cs,              &
                                                   c_id_geom,       &
@@ -710,7 +747,7 @@ module pdm_writer
     interface
       function PDM_writer_geom_bloc_add_c (cs,             &
                                              id_geom,      &
-                                             t_elt,        & 
+                                             t_elt,        &
                                              owner)        &
       result (id_bloc)                                     &
       bind (c, name='PDM_writer_geom_bloc_add')
@@ -878,12 +915,12 @@ module pdm_writer
     if (associated(connec)) then
       c_connec = c_loc(connec)
     endif
-      
+
     c_numabs = C_NULL_PTR
     if (associated(numabs)) then
       c_numabs = c_loc(numabs)
     endif
-      
+
 
     call PDM_writer_geom_bloc_std_set_c (cs,        &
                                          c_id_geom, &
@@ -971,18 +1008,18 @@ module pdm_writer
     c_connec_idx = C_NULL_PTR
     if (associated(connec_idx)) then
       c_connec_idx = c_loc(connec_idx)
-    endif 
-      
+    endif
+
     c_connec = C_NULL_PTR
     if (associated(connec)) then
       c_connec     = c_loc(connec)
-    endif 
-      
+    endif
+
     c_numabs = C_NULL_PTR
     if (associated(numabs)) then
       c_numabs     = c_loc(numabs)
-    endif 
-      
+    endif
+
 
     call PDM_writer_geom_bloc_poly2d_set_c (cs,           &
                                             c_id_geom,    &
@@ -1088,30 +1125,30 @@ module pdm_writer
     c_n_face  = n_face
 
     c_facsom_idx = C_NULL_PTR
-    if (associated(facsom_idx)) then 
+    if (associated(facsom_idx)) then
       c_facsom_idx  = c_loc(facsom_idx)
-    endif 
-      
+    endif
+
     c_facsom = C_NULL_PTR
-    if (associated(facsom)) then 
+    if (associated(facsom)) then
       c_facsom      = c_loc(facsom)
-    endif 
-      
+    endif
+
     c_cellfac_idx = C_NULL_PTR
-    if (associated(cellfac_idx)) then 
+    if (associated(cellfac_idx)) then
       c_cellfac_idx = c_loc(cellfac_idx)
-    endif 
-      
+    endif
+
     c_cellfac = C_NULL_PTR
-    if (associated(cellfac)) then 
+    if (associated(cellfac)) then
       c_cellfac     = c_loc(cellfac)
-    endif 
-      
+    endif
+
     c_numabs = C_NULL_PTR
-    if (associated(numabs)) then 
+    if (associated(numabs)) then
       c_numabs      = c_loc(numabs)
-    endif 
-      
+    endif
+
 
     call PDM_writer_geom_bloc_poly3d_set_c (cs,            &
                                             c_id_geom,     &
@@ -1233,31 +1270,31 @@ module pdm_writer
     if (associated(face_som_idx)) then
         c_face_som_idx  = c_loc(face_som_idx)
     endif
-        
+
     c_face_som = C_NULL_PTR
     if (associated(face_som)) then
         c_face_som      = c_loc(face_som)
     endif
-        
+
     c_cell_face_idx = C_NULL_PTR
     if (associated(cell_face_idx)) then
         c_cell_face_idx = c_loc(cell_face_idx)
     endif
-        
+
     c_numabs = C_NULL_PTR
     if (associated(numabs)) then
         c_numabs        = c_loc(numabs)
     endif
-        
+
     c_cell_face = C_NULL_PTR
     if (associated(cell_face)) then
         c_cell_face     = c_loc(cell_face)
-    endif      
+    endif
 
     c_face_som_nb   = C_NULL_PTR
     if (associated(face_som_nb)) then
       c_face_som_nb   = c_loc(face_som_nb)
-    endif     
+    endif
 
     c_cell_face_nb  = C_NULL_PTR
     if (associated(cell_face_nb)) then
@@ -1383,27 +1420,27 @@ module pdm_writer
     if (associated(face_som_idx)) then
       c_face_som_idx  = c_loc(face_som_idx)
     endif
-      
+
     c_face_som = C_NULL_PTR
     if (associated(face_som)) then
       c_face_som      = c_loc(face_som)
     endif
-      
+
     c_cell_face_idx = C_NULL_PTR
     if (associated(cell_face_idx)) then
       c_cell_face_idx = c_loc(cell_face_idx)
     endif
-      
+
     c_face_som_nb = C_NULL_PTR
     if (associated(face_som_nb)) then
       c_face_som_nb   = C_NULL_PTR
     endif
-      
+
     c_cell_face = C_NULL_PTR
     if (associated(cell_face)) then
       c_cell_face     = c_loc(cell_face)
     endif
-      
+
     c_numabs = C_NULL_PTR
     if (associated(numabs)) then
       c_numabs        = c_loc(numabs)
@@ -1509,24 +1546,24 @@ module pdm_writer
     c_face_som_idx = C_NULL_PTR
     if (associated(face_som_idx)) then
       c_face_som_idx  = c_loc(face_som_idx)
-    endif 
-      
+    endif
+
     c_face_som_nb = C_NULL_PTR
     ! Temporary fix before API change
     ! if (associated(face_som_nb)) then
     !   c_face_som_nb   = c_loc(face_som_nb)
     ! endif
-      
+
     c_face_som = C_NULL_PTR
     if (associated(face_som)) then
       c_face_som      = c_loc(face_som)
-    endif 
-      
+    endif
+
     c_numabs = C_NULL_PTR
     if (associated(numabs)) then
       c_numabs        = c_loc(numabs)
-    endif 
-      
+    endif
+
 
     call PDM_writer_geom_faces_facesom_add_c (cs,              &
                                               c_id_geom,       &
@@ -1806,7 +1843,7 @@ module pdm_writer
     c_val = C_NULL_PTR
     if (associated(val)) then
       c_val = c_loc(val)
-    endif  
+    endif
 
     call PDM_writer_var_set_c (cs,        &
                                c_id_var,  &
