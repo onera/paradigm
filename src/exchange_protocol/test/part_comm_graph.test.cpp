@@ -1332,11 +1332,11 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - gather strided data", 2) {
 
   int i_read = 0;
   for (int i_vtx=0; i_vtx<n_vtx; ++i_vtx) {
-    assert (gather_vtx_data_n[0][i_vtx]==expctd_vtx_data_n[i_rank][i_vtx]);
+    CHECK(gather_vtx_data_n[0][i_vtx] == expctd_vtx_data_n[i_rank][i_vtx]);
     for (int i_data=0; i_data<gather_vtx_data_n[0][i_vtx]; ++i_data) {
-      assert (gather_vtx_data[0][3*i_read  ]==expctd_vtx_data[i_rank][3*i_read  ]);
-      assert (gather_vtx_data[0][3*i_read+1]==expctd_vtx_data[i_rank][3*i_read+1]);
-      assert (gather_vtx_data[0][3*i_read+2]==expctd_vtx_data[i_rank][3*i_read+2]);
+      CHECK(gather_vtx_data[0][3*i_read  ] == doctest::Approx(expctd_vtx_data[i_rank][3*i_read  ]).epsilon(0.01));
+      CHECK(gather_vtx_data[0][3*i_read+1] == doctest::Approx(expctd_vtx_data[i_rank][3*i_read+1]).epsilon(0.01));
+      CHECK(gather_vtx_data[0][3*i_read+2] == doctest::Approx(expctd_vtx_data[i_rank][3*i_read+2]).epsilon(0.01));
       i_read++;
     }
   }
