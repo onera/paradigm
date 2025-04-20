@@ -991,6 +991,12 @@ PDM_part_mesh_free
     }
 
     for(int i = 0; i < PDM_MESH_ENTITY_MAX; ++i) {
+      if(pmesh->pcg_ownership[i] == PDM_OWNERSHIP_KEEP) {
+        PDM_part_comm_graph_free(pmesh->pcg[i]);
+      }
+    }
+
+    for(int i = 0; i < PDM_MESH_ENTITY_MAX; ++i) {
       PDM_free(pmesh->pn_entity[i]);
     }
 
