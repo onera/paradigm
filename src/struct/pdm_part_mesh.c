@@ -39,8 +39,10 @@
 #include "pdm_error.h"
 #include "pdm_extract_part.h"
 #include "pdm_io.h"
+#include "pdm_distrib.h"
 #include "pdm_mem_tool.h"
 #include "pdm_mpi.h"
+#include "pdm_partitioning_algorithm.h"
 #include "pdm_part_connectivity_transform.h"
 #include "pdm_part_mesh_priv.h"
 #include "pdm_writer.h"
@@ -792,7 +794,7 @@ PDM_part_mesh_part_comm_graph_set
   if (ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_KEEP) {
     pmesh->pcg_ownership[entity_type] = ownership;
   } else {
-    PDM_error (__FILE__, __LINE__, 0, "PDM_part_mesh_nodal_part_comm_graph_set got invalid ownership (got %d, must be %d or %d)\n",
+    PDM_error (__FILE__, __LINE__, 0, "PDM_part_mesh_part_comm_graph_set got invalid ownership (got %d, must be %d or %d)\n",
       ownership,
       PDM_OWNERSHIP_KEEP,
       PDM_OWNERSHIP_USER);
@@ -812,6 +814,65 @@ PDM_part_mesh_part_comm_graph_get
   if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
     pmesh->pcg_ownership[entity_type] = ownership;
   }
+}
+
+
+void
+PDM_part_mesh_part_comm_graph_compute_from_gnum
+(
+  PDM_part_mesh_t      *pmesh,
+  PDM_mesh_entities_t   entity_type
+)
+{
+  if (pmesh->pcg[entity_type] != NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "PDM_part_mesh_part_comm_graph_compute_from_gnum: pmesh->pcg[entity_type=%d]!=NULL\n", entity_type);
+  }
+
+  int n_rank;
+  PDM_MPI_Comm_size(pmesh->comm, &n_rank);
+
+  PDM_g_num_t *part_distribution = PDM_compute_entity_distribution(pmesh->comm, pmesh->n_part);
+
+  int  *n_entity_part_bound        = NULL;
+  int **entity_proc_bound_idx      = NULL;
+  int **entity_part_bound_idx      = NULL;
+  int **entity_part_bound          = NULL;
+  int **entity_part_bound_priority = NULL;
+  PDM_part_generate_entity_graph_comm(pmesh->comm,
+                                      part_distribution,
+                                      NULL,
+                                      pmesh->n_part,
+                                      pmesh->pn_entity       [entity_type],
+               (const PDM_g_num_t **) pmesh->pentity_ln_to_gn[entity_type],
+                                      NULL,
+                                      &entity_proc_bound_idx,
+                                      &entity_part_bound_idx,
+                                      &entity_part_bound,
+                                      &entity_part_bound_priority);
+
+  PDM_malloc(n_entity_part_bound, pmesh->n_part, int);
+  for (int i_part = 0; i_part < pmesh->n_part; i_part++) {
+    n_entity_part_bound[i_part] = entity_part_bound_idx[i_part][part_distribution[n_rank]];
+
+    PDM_free(entity_proc_bound_idx     [i_part]);
+    PDM_free(entity_part_bound_idx     [i_part]);
+    PDM_free(entity_part_bound_priority[i_part]);
+  }
+  PDM_free(entity_proc_bound_idx);
+  PDM_free(entity_part_bound_idx);
+  PDM_free(entity_part_bound_priority);
+  PDM_free(part_distribution);
+
+  // Build part comm graph
+  pmesh->pcg[entity_type] = PDM_part_comm_graph_create(pmesh->n_part,
+                                                       n_entity_part_bound,
+                                                       entity_part_bound,
+                                                       PDM_OWNERSHIP_KEEP,
+                                                       pmesh->comm);
+  pmesh->pcg_ownership[entity_type] = PDM_OWNERSHIP_KEEP;
+
+  PDM_free(n_entity_part_bound);
+
 }
 
 

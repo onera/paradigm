@@ -60,8 +60,8 @@ struct _pdm_part_mesh_t
 
   int                 *pn_entity[PDM_MESH_ENTITY_MAX];                       /* Size for each entity (size = PDM_MESH_ENTITY_MAX)            */
 
-  int                **pconnectivity    [PDM_CONNECTIVITY_TYPE_MAX];                   /* Array of connectivty (size = PDM_CONNECTIVITY_TYPE_MAX)            */
-  int                **pconnectivity_idx[PDM_CONNECTIVITY_TYPE_MAX];               /* Array of connectivty_idx if any (size = PDM_CONNECTIVITY_TYPE_MAX) */
+  int                **pconnectivity    [PDM_CONNECTIVITY_TYPE_MAX];         /* Array of connectivty (size = PDM_CONNECTIVITY_TYPE_MAX)            */
+  int                **pconnectivity_idx[PDM_CONNECTIVITY_TYPE_MAX];         /* Array of connectivty_idx if any (size = PDM_CONNECTIVITY_TYPE_MAX) */
 
   PDM_g_num_t        **pentity_ln_to_gn[PDM_MESH_ENTITY_MAX];                /* Array of connectivty (size = PDM_MESH_ENTITY_MAX)            */
   int                **pentity_color   [PDM_MESH_ENTITY_MAX];

@@ -101,6 +101,7 @@ struct _pdm_multipart_t {
                                                  //   (size = sum n_part[i]), if heterogeneous
   /* Partitioned meshes */
   _part_mesh_t                *pmeshes;          // Partitioned meshes structures (size=n_domain)
+  PDM_ownership_t             *ownership_pmeshes;
 
   /* Timers */
   PDM_timer_t *timer_all;   /*!< Timer */

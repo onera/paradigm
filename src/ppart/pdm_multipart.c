@@ -2997,13 +2997,16 @@ PDM_multipart_create
     multipart->is_owner_dmeshes[i_dom] = PDM_FALSE;
   }
 
-  PDM_malloc(multipart->pmeshes, multipart->n_domain, _part_mesh_t);
+  PDM_malloc(multipart->pmeshes          , multipart->n_domain, _part_mesh_t   );
+  PDM_malloc(multipart->ownership_pmeshes, multipart->n_domain, PDM_ownership_t);
 
   int _renum_cell_method = PDM_part_renum_method_cell_idx_get("PDM_PART_RENUM_CELL_NONE");
   int _renum_face_method = PDM_part_renum_method_face_idx_get("PDM_PART_RENUM_FACE_NONE");
   int _renum_edge_method = PDM_part_renum_method_edge_idx_get("PDM_PART_RENUM_EDGE_NONE");
   int _renum_vtx_method  = PDM_part_renum_method_vtx_idx_get ("PDM_PART_RENUM_VTX_NONE" );
   for (int i_dom = 0; i_dom < multipart->n_domain; i_dom++) {
+
+    multipart->ownership_pmeshes[i_dom] = PDM_OWNERSHIP_KEEP;
 
     multipart->pmeshes[i_dom].renum_method[PDM_MESH_ENTITY_CELL] = _renum_cell_method;
     multipart->pmeshes[i_dom].renum_method[PDM_MESH_ENTITY_FACE] = _renum_face_method;
@@ -3392,18 +3395,23 @@ PDM_ownership_t         ownership
 }
 
 
-// void
-// PDM_multipart_get_part_mesh
-// (
-//        PDM_multipart_t  *multipart,
-//  const int               i_domain,
-//        PDM_part_mesh_t **pmesh
-// )
-// {
-//   assert(i_domain < multipart->n_domain);
+void
+PDM_multipart_get_part_mesh
+(
+       PDM_multipart_t  *multipart,
+ const int               i_domain,
+       PDM_part_mesh_t **pmesh,
+       PDM_ownership_t   ownership
+)
+{
+  assert(i_domain < multipart->n_domain);
 
-//   *pmesh = &(multipart->pmeshes    [i_domain]);
-// }
+  *pmesh = multipart->pmeshes[i_domain].pmesh;
+
+  if(ownership != PDM_OWNERSHIP_BAD_VALUE) {
+    multipart->ownership_pmeshes[i_domain] = ownership;
+  }
+}
 
 
 void
@@ -4039,7 +4047,9 @@ PDM_multipart_free
     PDM_free(multipart->pmeshes[i_domain].hyperplane_color);
     PDM_free(multipart->pmeshes[i_domain].thread_color);
 
-    PDM_part_mesh_free(multipart->pmeshes[i_domain].pmesh);
+    if(multipart->ownership_pmeshes[i_domain] == PDM_OWNERSHIP_KEEP) {
+      PDM_part_mesh_free(multipart->pmeshes[i_domain].pmesh);
+    }
 
     if(multipart->dmeshes[i_domain] != NULL ) {
       if(multipart->is_owner_dmeshes[i_domain] == PDM_TRUE) {
@@ -4058,6 +4068,7 @@ PDM_multipart_free
   PDM_free(multipart->dmn_to_dm);
   PDM_free(multipart->is_owner_dmeshes);
   PDM_free(multipart->n_part);
+  PDM_free(multipart->ownership_pmeshes);
 
   //PDM_part_renum_method_purge();
   PDM_free(multipart);
