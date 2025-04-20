@@ -491,7 +491,7 @@ PDM_part_mesh_part_comm_graph_get
 
 /**
  *
- * \brief Compute internal part_comm_graph from part_mesh_nodal entity global ids.
+ * \brief Compute internal part_comm_graph from part_mesh entity global ids.
  *
  * \param [in]   pmn         Pointer to \ref PDM_part_mesh_t instance
  * \param [in]   entity_type Entity type (vertex, edge, face or cell)
@@ -499,6 +499,21 @@ PDM_part_mesh_part_comm_graph_get
  */
 void
 PDM_part_mesh_part_comm_graph_compute_from_gnum
+(
+  PDM_part_mesh_t      *pmesh,
+  PDM_mesh_entities_t   entity_type
+);
+
+/**
+ *
+ * \brief Compute entity global ids from internal part_comm_graph.
+ *
+ * \param [in]   pmn         Pointer to \ref PDM_part_mesh_t instance
+ * \param [in]   entity_type Entity type (vertex, edge, face or cell)
+ *
+ */
+void
+PDM_part_mesh_gnum_compute_from_part_comm_graph
 (
   PDM_part_mesh_t      *pmesh,
   PDM_mesh_entities_t   entity_type

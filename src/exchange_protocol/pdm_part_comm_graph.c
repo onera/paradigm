@@ -430,10 +430,18 @@ _create
   PDM_MPI_Comm_size(comm, &n_rank);
   PDM_MPI_Comm_rank(comm, &i_rank);
 
-  pcg->pentity_graph = pentity_graph;
+  PDM_malloc(pcg->pentity_graph, n_part, int *);
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    pcg->pentity_graph[i_part] = pentity_graph[i_part];
+  }
 
   pcg->nuplet_size    = nuplet_size;
-  pcg->pentity_nuplet = pentity_nuplet;
+  PDM_malloc(pcg->pentity_nuplet, n_part, int *);
+  if(pentity_nuplet != NULL) {
+    for (int i_part = 0; i_part < n_part; i_part++) {
+      pcg->pentity_nuplet[i_part] = pentity_nuplet[i_part];
+    }
+  }
 
   pcg->owner_graph  = owner_graph;
   pcg->owner_nuplet = owner_nuplet;

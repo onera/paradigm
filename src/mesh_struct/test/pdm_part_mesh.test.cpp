@@ -149,3 +149,89 @@ MPI_TEST_CASE("[pdm_part_mesh] - PDM_part_mesh_part_comm_graph_compute_from_gnum
 
   PDM_part_mesh_free(pm);
 }
+
+
+MPI_TEST_CASE("[pdm_part_mesh] - PDM_part_mesh_gnum_compute_from_part_comm_graph", 2) {
+
+
+  int i_rank = -1;
+  PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
+  PDM_MPI_Comm_rank(pdm_comm, &i_rank);
+
+  PDM_part_mesh_t* pm = _generate_mesh(pdm_comm);
+
+  PDM_g_num_t *pvtx_ln_to_gn  = NULL;
+  PDM_g_num_t *pedge_ln_to_gn = NULL;
+  PDM_g_num_t *pface_ln_to_gn = NULL;
+
+  int n_vtx  = PDM_part_mesh_n_entity_get(pm, 0, PDM_MESH_ENTITY_VTX );
+  int n_edge = PDM_part_mesh_n_entity_get(pm, 0, PDM_MESH_ENTITY_EDGE);
+  int n_face = PDM_part_mesh_n_entity_get(pm, 0, PDM_MESH_ENTITY_FACE);
+
+  PDM_part_mesh_entity_ln_to_gn_get(pm, 0, PDM_MESH_ENTITY_VTX , &pvtx_ln_to_gn , PDM_OWNERSHIP_KEEP);
+  PDM_part_mesh_entity_ln_to_gn_get(pm, 0, PDM_MESH_ENTITY_EDGE, &pedge_ln_to_gn, PDM_OWNERSHIP_KEEP);
+  PDM_part_mesh_entity_ln_to_gn_get(pm, 0, PDM_MESH_ENTITY_FACE, &pface_ln_to_gn, PDM_OWNERSHIP_KEEP);
+
+  if(0 == 1) {
+    PDM_log_trace_array_long(pvtx_ln_to_gn , n_vtx , "pvtx_ln_to_gn  ::");
+    PDM_log_trace_array_long(pedge_ln_to_gn, n_edge, "pedge_ln_to_gn ::");
+    PDM_log_trace_array_long(pface_ln_to_gn, n_face, "pface_ln_to_gn ::");
+  }
+
+  int p0_vtx_ln_to_gn_before [9 ] = {1, 2, 3, 5, 6, 7, 9, 10, 11};
+  int p0_edge_ln_to_gn_before[12] = {1, 2, 3, 5, 6, 7, 9, 10, 12, 13, 14, 16};
+  int p0_face_ln_to_gn_before[4 ] = {1, 2, 4, 5};
+
+  int p1_vtx_ln_to_gn_before [12] = {3, 4, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 };
+  int p1_edge_ln_to_gn_before[16] = {4, 6, 8, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24};
+  int p1_face_ln_to_gn_before[5 ] = {3, 6, 7, 8, 9};
+
+
+  MPI_CHECK_EQ_C_ARRAY(0, pvtx_ln_to_gn , p0_vtx_ln_to_gn_before , 9 );
+  MPI_CHECK_EQ_C_ARRAY(0, pedge_ln_to_gn, p0_edge_ln_to_gn_before, 12);
+  MPI_CHECK_EQ_C_ARRAY(0, pface_ln_to_gn, p0_face_ln_to_gn_before, 4 );
+
+  MPI_CHECK_EQ_C_ARRAY(1, pvtx_ln_to_gn , p1_vtx_ln_to_gn_before , 12);
+  MPI_CHECK_EQ_C_ARRAY(1, pedge_ln_to_gn, p1_edge_ln_to_gn_before, 16);
+  MPI_CHECK_EQ_C_ARRAY(1, pface_ln_to_gn, p1_face_ln_to_gn_before, 5 );
+
+
+  PDM_part_mesh_part_comm_graph_compute_from_gnum(pm, PDM_MESH_ENTITY_VTX );
+  PDM_part_mesh_part_comm_graph_compute_from_gnum(pm, PDM_MESH_ENTITY_EDGE);
+  PDM_part_mesh_part_comm_graph_compute_from_gnum(pm, PDM_MESH_ENTITY_FACE);
+
+
+  PDM_part_mesh_gnum_compute_from_part_comm_graph(pm, PDM_MESH_ENTITY_VTX );
+  PDM_part_mesh_gnum_compute_from_part_comm_graph(pm, PDM_MESH_ENTITY_EDGE);
+  PDM_part_mesh_gnum_compute_from_part_comm_graph(pm, PDM_MESH_ENTITY_FACE);
+
+  PDM_part_mesh_entity_ln_to_gn_get(pm, 0, PDM_MESH_ENTITY_VTX , &pvtx_ln_to_gn , PDM_OWNERSHIP_KEEP);
+  PDM_part_mesh_entity_ln_to_gn_get(pm, 0, PDM_MESH_ENTITY_EDGE, &pedge_ln_to_gn, PDM_OWNERSHIP_KEEP);
+  PDM_part_mesh_entity_ln_to_gn_get(pm, 0, PDM_MESH_ENTITY_FACE, &pface_ln_to_gn, PDM_OWNERSHIP_KEEP);
+
+  if(0 == 1) {
+    PDM_log_trace_array_long(pvtx_ln_to_gn , n_vtx , "pvtx_ln_to_gn  ::");
+    PDM_log_trace_array_long(pedge_ln_to_gn, n_edge, "pedge_ln_to_gn ::");
+    PDM_log_trace_array_long(pface_ln_to_gn, n_face, "pface_ln_to_gn ::");
+  }
+
+  int p0_vtx_ln_to_gn_after [9 ] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+  int p0_edge_ln_to_gn_after[12] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
+  int p0_face_ln_to_gn_after[4 ] = {1, 2, 3, 4};
+
+  int p1_vtx_ln_to_gn_after [12] = {3, 10, 6, 11, 7, 8, 9, 12, 13, 14, 15, 16};
+  int p1_edge_ln_to_gn_after[16] = {13, 5, 14, 15, 10, 11, 16, 12, 17, 18, 19, 20, 21, 22, 23, 24};
+  int p1_face_ln_to_gn_after[5 ] = {5, 6, 7, 8, 9};
+
+
+  MPI_CHECK_EQ_C_ARRAY(0, pvtx_ln_to_gn , p0_vtx_ln_to_gn_after , 9 );
+  MPI_CHECK_EQ_C_ARRAY(0, pedge_ln_to_gn, p0_edge_ln_to_gn_after, 12);
+  MPI_CHECK_EQ_C_ARRAY(0, pface_ln_to_gn, p0_face_ln_to_gn_after, 4 );
+
+  MPI_CHECK_EQ_C_ARRAY(1, pvtx_ln_to_gn , p1_vtx_ln_to_gn_after , 12);
+  MPI_CHECK_EQ_C_ARRAY(1, pedge_ln_to_gn, p1_edge_ln_to_gn_after, 16);
+  MPI_CHECK_EQ_C_ARRAY(1, pface_ln_to_gn, p1_face_ln_to_gn_after, 5 );
+
+  PDM_part_mesh_free(pm);
+
+}

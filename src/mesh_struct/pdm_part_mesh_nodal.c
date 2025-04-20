@@ -780,6 +780,7 @@ PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum
   pmn->pcg_ownership[entity_type] = PDM_OWNERSHIP_KEEP;
 
   PDM_free(n_entity_part_bound);
+  PDM_free(entity_part_bound);
 }
 
 int
@@ -2663,6 +2664,7 @@ PDM_part_mesh_nodal_compute_straddling_entities
                                                                    PDM_OWNERSHIP_KEEP,
                                                                    pmn->comm);
       PDM_free(pn_edge_graph);
+      PDM_free(pedge_graph);
 
       PDM_part_mesh_nodal_part_comm_graph_set(pmn, pcg_edge, PDM_MESH_ENTITY_EDGE, PDM_OWNERSHIP_KEEP);
     }

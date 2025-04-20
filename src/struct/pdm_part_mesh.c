@@ -40,6 +40,7 @@
 #include "pdm_extract_part.h"
 #include "pdm_io.h"
 #include "pdm_distrib.h"
+#include "pdm_gnum.h"
 #include "pdm_mem_tool.h"
 #include "pdm_mpi.h"
 #include "pdm_partitioning_algorithm.h"
@@ -872,7 +873,50 @@ PDM_part_mesh_part_comm_graph_compute_from_gnum
   pmesh->pcg_ownership[entity_type] = PDM_OWNERSHIP_KEEP;
 
   PDM_free(n_entity_part_bound);
+  PDM_free(entity_part_bound);
 
+}
+
+
+void
+PDM_part_mesh_gnum_compute_from_part_comm_graph
+(
+  PDM_part_mesh_t      *pmesh,
+  PDM_mesh_entities_t   entity_type
+)
+{
+  if (pmesh->pcg[entity_type] == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "PDM_part_mesh_gnum_compute_from_part_comm_graph: pmesh->pcg[entity_type=%d]!=NULL\n", entity_type);
+  }
+
+  if(pmesh->is_owner_ln_to_gn[entity_type] == PDM_TRUE) {
+    for(int i_part = 0; i_part < pmesh->n_part; ++i_part) {
+      if(pmesh->pentity_ln_to_gn[entity_type] != NULL) {
+        PDM_free(pmesh->pentity_ln_to_gn[entity_type][i_part]);
+      }
+    }
+  }
+  PDM_free(pmesh->pentity_ln_to_gn[entity_type]);
+
+  PDM_malloc(pmesh->pentity_ln_to_gn[entity_type], pmesh->n_part, PDM_g_num_t *);
+
+  PDM_gen_gnum_t* gen_gnum = PDM_gnum_create(3,
+                                             pmesh->n_part,
+                                             PDM_TRUE,
+                                             1.e-6,
+                                             pmesh->comm,
+                                             PDM_OWNERSHIP_USER);
+
+  PDM_gnum_set_from_part_comm_graph(gen_gnum,
+                                    pmesh->pn_entity[entity_type],
+                                    pmesh->pcg[entity_type]);
+  PDM_gnum_compute(gen_gnum);
+  for(int i_part = 0; i_part < pmesh->n_part; ++i_part) {
+    pmesh->pentity_ln_to_gn [entity_type][i_part] = PDM_gnum_get(gen_gnum, i_part);
+  }
+  pmesh->is_owner_ln_to_gn[entity_type] = PDM_TRUE;
+
+  PDM_gnum_free(gen_gnum);
 }
 
 
