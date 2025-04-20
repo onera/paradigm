@@ -676,8 +676,7 @@ PDM_part_mesh_nodal_part_comm_graph_set
   pmn->pcg[entity_type] = pcg;
   if (ownership==PDM_OWNERSHIP_USER || ownership==PDM_OWNERSHIP_KEEP) {
     pmn->pcg_ownership[entity_type] = ownership;
-  }
-  else {
+  } else {
     PDM_error (__FILE__, __LINE__, 0, "PDM_part_mesh_nodal_part_comm_graph_set got invalid ownership (got %d, must be %d or %d)\n",
       ownership,
       PDM_OWNERSHIP_KEEP,
@@ -707,35 +706,32 @@ PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum
   PDM_mesh_entities_t    entity_type
 )
 {
-  if (pmn->pcg[entity_type]!=NULL) {
+  if (pmn->pcg[entity_type] != NULL) {
     PDM_error (__FILE__, __LINE__, 0, "PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum: pmn->pcg[entity_type=%d]!=NULL\n", entity_type);
   }
 
   int          *n_entity    = NULL;
   PDM_g_num_t **entity_gnum = NULL;
-  PDM_malloc(n_entity   , pmn->n_part, int);
+  PDM_malloc(n_entity   , pmn->n_part, int         );
   PDM_malloc(entity_gnum, pmn->n_part, PDM_g_num_t*);
 
   if (entity_type==PDM_MESH_ENTITY_VTX) {
-    for (int i_part=0; i_part<pmn->n_part; ++i_part) {
+    for (int i_part = 0; i_part < pmn->n_part; ++i_part) {
       n_entity   [i_part] = PDM_part_mesh_nodal_n_vtx_get    (pmn, i_part);
       entity_gnum[i_part] = PDM_part_mesh_nodal_vtx_g_num_get(pmn, i_part, PDM_OWNERSHIP_BAD_VALUE);
     }
-  }
-  else if (entity_type==PDM_MESH_ENTITY_EDGE || entity_type==PDM_MESH_ENTITY_FACE) {
+  } else if (entity_type==PDM_MESH_ENTITY_EDGE || entity_type==PDM_MESH_ENTITY_FACE) {
 
     PDM_geometry_kind_t geom_kind = PDM_entity_type_to_geometry_kind(entity_type);
     PDM_part_mesh_nodal_elmts_t *pmne = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(pmn, geom_kind);
 
-    for (int i_part=0; i_part<pmn->n_part; ++i_part) {
+    for (int i_part = 0; i_part < pmn->n_part; ++i_part) {
       n_entity   [i_part] = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, i_part);
       entity_gnum[i_part] = PDM_part_mesh_nodal_elmts_g_num_get_from_part(pmne, i_part, PDM_OWNERSHIP_KEEP);
     }
-  }
-  else {
+  } else {
     PDM_error(__FILE__, __LINE__, 0, "PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum: invalid entity_type (=%d)\n", entity_type);
   }
-
 
   // Retrieve partition boundary entities using global IDs
   int n_rank;

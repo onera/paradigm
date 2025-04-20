@@ -143,8 +143,8 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] Find straddling entities - surfacic->corner
   int n_corner = PDM_part_mesh_nodal_elmts_n_group_get(pmne_corner);
   int n_section = PDM_part_mesh_nodal_elmts_n_section_get(pmne_corner);
 
-  assert (n_corner==20); // 8 corners + 12 ridges
-  assert (n_section==1);
+  CHECK(n_corner  == 20); // 8 corners + 12 ridges
+  CHECK(n_section == 1);
   for (int i_part=0; i_part<pmn->n_part; ++i_part) {
     for (int i_group=0; i_group<n_corner; ++i_group) {
       int          n_group_vtx = 0;
@@ -155,10 +155,10 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] Find straddling entities - surfacic->corner
                                          &group_elmt,
                                          &group_gnum,
                                           PDM_OWNERSHIP_BAD_VALUE);
-      assert (n_group_vtx==expected_n_group[i_rank][i_group]);
+      CHECK (n_group_vtx==expected_n_group[i_rank][i_group]);
       if (n_group_vtx!=0) {
-        assert (group_elmt[0]==         expected_group_entity[i_rank][i_group]);
-        assert (group_gnum[0]==PDM_SIGN(expected_group_entity[i_rank][i_group]));
+        CHECK (group_elmt[0] ==          expected_group_entity[i_rank][i_group]);
+        CHECK (group_gnum[0] == PDM_SIGN(expected_group_entity[i_rank][i_group]));
       }
     }
   }
@@ -197,8 +197,8 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] Find straddling entities - surfacic->ridge"
   int n_ridge = PDM_part_mesh_nodal_elmts_n_group_get(pmne_ridge);
   int n_section = PDM_part_mesh_nodal_elmts_n_section_get(pmne_ridge);
 
-  assert (n_ridge==12); // 12 ridges
-  assert (n_section==1);
+  CHECK(n_ridge   == 12); // 12 ridges
+  CHECK(n_section == 1 );
   for (int i_part=0; i_part<pmn->n_part; ++i_part) {
     for (int i_group=0; i_group<n_ridge; ++i_group) {
       int          n_group_ridge = 0;
@@ -209,10 +209,10 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] Find straddling entities - surfacic->ridge"
                                          &group_elmt,
                                          &group_gnum,
                                           PDM_OWNERSHIP_BAD_VALUE);
-      assert (n_group_ridge==expected_n_group[i_rank][i_group]);
+      CHECK (n_group_ridge==expected_n_group[i_rank][i_group]);
       if (n_group_ridge!=0) {
-        assert (group_elmt[0]==         expected_group_entity[i_rank][i_group]);
-        assert (group_gnum[0]==PDM_SIGN(expected_group_entity[i_rank][i_group]));
+        CHECK (group_elmt[0]==         expected_group_entity[i_rank][i_group]);
+        CHECK (group_gnum[0]==PDM_SIGN(expected_group_entity[i_rank][i_group]));
       }
     }
   }
@@ -251,8 +251,8 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] Find straddling entities - ridge->corner", 
   int n_corner  = PDM_part_mesh_nodal_elmts_n_group_get(pmne_corner);
   int n_section = PDM_part_mesh_nodal_elmts_n_section_get(pmne_corner);
 
-  assert (n_corner==8);
-  assert (n_section==1);
+  CHECK (n_corner  == 8);
+  CHECK (n_section == 1);
   for (int i_part=0; i_part<pmn->n_part; ++i_part) {
     for (int i_group=0; i_group<n_corner; ++i_group) {
       int          n_group_vtx = 0;
@@ -263,10 +263,10 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] Find straddling entities - ridge->corner", 
                                          &group_elmt,
                                          &group_gnum,
                                           PDM_OWNERSHIP_BAD_VALUE);
-      assert (n_group_vtx==expected_n_group[i_rank][i_group]);
+      CHECK (n_group_vtx == expected_n_group[i_rank][i_group]);
       if (n_group_vtx!=0) {
-        assert (group_elmt[0]==         expected_group_entity[i_rank][i_group]);
-        assert (group_gnum[0]==PDM_SIGN(expected_group_entity[i_rank][i_group]));
+        CHECK (group_elmt[0] ==          expected_group_entity[i_rank][i_group]);
+        CHECK (group_gnum[0] == PDM_SIGN(expected_group_entity[i_rank][i_group]));
       }
     }
   }
@@ -314,26 +314,22 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] part_comm_graph from gnum", 2) {
 
   int *computed_graph = NULL;
   int n_entity = PDM_part_comm_graph_entity_graph_get(pcg_vtx, 0, &computed_graph, PDM_OWNERSHIP_BAD_VALUE);
-  assert(n_entity==9);
-  for (int i_entity=0; i_entity<n_entity; ++i_entity) {
-    assert(computed_graph[4*i_entity+0]==expected_graph[i_rank][4*i_entity+0]);
-    assert(computed_graph[4*i_entity+1]==expected_graph[i_rank][4*i_entity+1]);
-    assert(computed_graph[4*i_entity+2]==expected_graph[i_rank][4*i_entity+2]);
-    assert(computed_graph[4*i_entity+3]==expected_graph[i_rank][4*i_entity+3]);
-  }
+  CHECK(n_entity==9);
+
+  CHECK_EQ_C_ARRAY(computed_graph, expected_graph[i_rank], 4 * n_entity);
 
   // > Ridge and surfacic pcg will be empty because no internal elements
   PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(pmn, PDM_MESH_ENTITY_EDGE);
   PDM_part_comm_graph_t *pcg_ridge = NULL;
   PDM_part_mesh_nodal_part_comm_graph_get(pmn, PDM_MESH_ENTITY_EDGE, &pcg_ridge, PDM_OWNERSHIP_BAD_VALUE);
   n_entity = PDM_part_comm_graph_entity_graph_get(pcg_ridge, 0, &computed_graph, PDM_OWNERSHIP_BAD_VALUE);
-  assert(n_entity==0);
+  CHECK(n_entity==0);
 
   PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(pmn, PDM_MESH_ENTITY_FACE);
   PDM_part_comm_graph_t *pcg_surfacic = NULL;
   PDM_part_mesh_nodal_part_comm_graph_get(pmn, PDM_MESH_ENTITY_FACE, &pcg_surfacic, PDM_OWNERSHIP_BAD_VALUE);
   n_entity = PDM_part_comm_graph_entity_graph_get(pcg_surfacic, 0, &computed_graph, PDM_OWNERSHIP_BAD_VALUE);
-  assert(n_entity==0);
+  CHECK(n_entity==0);
 
   PDM_part_mesh_nodal_free(pmn);
 }

@@ -27,6 +27,7 @@
 
 #include "pdm.h"
 #include "pdm_mpi.h"
+#include "pdm_part_comm_graph.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -89,6 +90,9 @@ struct _pdm_part_mesh_t
   int                **ppart_bound_part_idx[PDM_BOUND_TYPE_MAX];
   int                **ppart_bound         [PDM_BOUND_TYPE_MAX];
   PDM_bool_t           is_owner_part_bound [PDM_BOUND_TYPE_MAX];
+
+  PDM_ownership_t        pcg_ownership[PDM_MESH_ENTITY_MAX];
+  PDM_part_comm_graph_t *pcg          [PDM_MESH_ENTITY_MAX];
 
 };
 
