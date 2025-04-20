@@ -1885,15 +1885,15 @@ PDM_part_comm_graph_free
     for (int i_part = 0; i_part < pcg->n_part; i_part++) {
       PDM_free(pcg->pentity_graph[i_part]);
     }
-    PDM_free(pcg->pentity_graph);
   }
+  PDM_free(pcg->pentity_graph);
 
   if (pcg->owner_nuplet == PDM_OWNERSHIP_KEEP) {
     for (int i_part = 0; i_part < pcg->n_part; i_part++) {
       PDM_free(pcg->pentity_nuplet[i_part]);
     }
-    PDM_free(pcg->pentity_nuplet);
   }
+  PDM_free(pcg->pentity_nuplet);
 
   PDM_free(pcg);
 }
