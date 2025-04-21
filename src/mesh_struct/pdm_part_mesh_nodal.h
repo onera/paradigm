@@ -1325,6 +1325,21 @@ PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum
   PDM_mesh_entities_t    entity_type
 );
 
+/**
+ *
+ * \brief Compute part_comm_graph for geom_kind using only connectivity and vertices part_comm_graph
+ *
+ * \param [in]  pmn         Pointer to \ref PDM_part_mesh_nodal_t instance
+ * \param [in]  geom_kind   Geometry kind (ridge or surface)
+ *
+ */
+void
+PDM_part_mesh_nodal_part_comm_graph_deduce_from_vtx
+(
+  PDM_part_mesh_nodal_t *pmn,
+  PDM_geometry_kind_t    geom_kind
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

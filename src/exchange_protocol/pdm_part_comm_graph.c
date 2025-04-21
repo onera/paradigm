@@ -886,12 +886,29 @@ PDM_part_comm_graph_entity1_to_part_comm_graph_entity2
                                          &pentity2_graph,
                                          &pentity2_nuplet);
 
+  PDM_part_comm_graph_t* ptpgc_entity2 = NULL;
+  if(ptpgc_entity1->nuplet_size == 0) {
+    ptpgc_entity2 = PDM_part_comm_graph_create(ptpgc_entity1->n_part,
+                                               pn_entity2_graph,
+                                               pentity2_graph,
+                                               PDM_OWNERSHIP_USER,
+                                               ptpgc_entity1->comm);
+  } else {
+    ptpgc_entity2 = PDM_part_comm_graph_with_nuplet_create(ptpgc_entity1->n_part,
+                                                           pn_entity2_graph,
+                                                           pentity2_graph,
+                                                           PDM_OWNERSHIP_USER,
+                                                           ptpgc_entity1->nuplet_size,
+                                                           pentity2_nuplet,
+                                                           PDM_OWNERSHIP_USER,
+                                                           PDM_TRUE, // is_signed
+                                                           ptpgc_entity1->comm);
 
-  PDM_part_comm_graph_t* ptpgc_entity2 = PDM_part_comm_graph_create(ptpgc_entity1->n_part,
-                                                                    pn_entity2_graph,
-                                                                    pentity2_graph,
-                                                                    PDM_OWNERSHIP_USER,
-                                                                    ptpgc_entity1->comm);
+    for(int i_part = 0; i_part < ptpgc_entity1->n_part; ++i_part) {
+      PDM_free(pentity2_nuplet[i_part]);
+    }
+    PDM_free(pentity2_nuplet);
+  }
 
   for(int i_part = 0; i_part < ptpgc_entity1->n_part; ++i_part) {
     PDM_free(pentity2_graph[i_part]);

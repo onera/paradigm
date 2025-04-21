@@ -2907,6 +2907,60 @@ PDM_part_mesh_nodal_compute_straddling_entities
 
 }
 
+void
+PDM_part_mesh_nodal_part_comm_graph_deduce_from_vtx
+(
+  PDM_part_mesh_nodal_t *pmn,
+  PDM_geometry_kind_t    geom_kind
+)
+{
+
+  if (pmn->pcg[PDM_MESH_ENTITY_VTX] != NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "PDM_part_mesh_nodal_graph_comm_deduce_from_vtx: pmn->pcg[PDM_MESH_ENTITY_VTX]!=NULL is mandatory in order to deduce other \n");
+  }
+
+  PDM_part_mesh_nodal_elmts_t* pmne = NULL;
+  if (geom_kind == PDM_GEOMETRY_KIND_SURFACIC) {
+    pmne = pmn->surfacic;
+  } else if (geom_kind == PDM_GEOMETRY_KIND_RIDGE) {
+    pmne = pmn->ridge;
+  } else {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_part_mesh_nodal_compute_topo_corners not implemented for geom_kind %d\n", geom_kind);
+  }
+
+  PDM_mesh_entities_t mesh_entity = PDM_geometry_kind_to_entity_type(geom_kind);
+
+  if(pmn->pcg[mesh_entity] != NULL) {
+    return; // Aleady compute
+  }
+
+  int  *n_vtx           = NULL;
+  int  *n_entity2       = NULL;
+  int **entity2_vtx     = NULL;
+  int **entity2_vtx_idx = NULL;
+  PDM_malloc(n_vtx          , pmn->n_part, int  );
+  PDM_malloc(n_entity2      , pmn->n_part, int  );
+  PDM_malloc(entity2_vtx    , pmn->n_part, int *);
+  PDM_malloc(entity2_vtx_idx, pmn->n_part, int *);
+
+  for(int i_part = 0; i_part < pmn->n_part; ++i_part) {
+    n_vtx    [i_part] = PDM_part_mesh_nodal_n_vtx_get(pmn, i_part);
+    n_entity2[i_part] = PDM_part_mesh_nodal_elmts_cell_vtx_connect_get(pmne, i_part, &entity2_vtx_idx[i_part], &entity2_vtx[i_part]);
+  }
+
+  PDM_part_comm_graph_entity1_to_part_comm_graph_entity2(pmn->pcg[PDM_MESH_ENTITY_VTX],
+                                                         n_vtx,
+                                                         n_entity2,
+                                                         entity2_vtx_idx,
+                                                         entity2_vtx,
+                                                         &pmn->pcg[mesh_entity]);
+
+  PDM_free(n_entity2      );
+  PDM_free(entity2_vtx    );
+  PDM_free(entity2_vtx_idx);
+
+}
+
 
 #ifdef __cplusplus
 }
