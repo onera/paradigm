@@ -1237,7 +1237,7 @@ PDM_part_comm_graph_entity1_to_entity2
       send_data[idx_write++] = i_part_opp;
       send_n[i_proc_opp] += 6;
 
-      int n_found = 0;
+      // int n_found = 0;
       for(int idx_entity2 = entity2_entity1_idx[i_part][i_entity2]; idx_entity2 < entity2_entity1_idx[i_part][i_entity2+1]; ++idx_entity2) {
 
         int i_entity1 = PDM_ABS(entity2_entity1[i_part][idx_entity2])-1;
@@ -1256,7 +1256,7 @@ PDM_part_comm_graph_entity1_to_entity2
           }
 
           if(t_proc == i_proc_opp && t_part == i_part_opp && found == 0 && same_nuplet) {
-            n_found++;
+            // n_found++;
 
             send_data[idx_write++] = pentity1_graph[i_part][4*idx_bound  ];
             send_data[idx_write++] = pentity1_graph[i_part][4*idx_bound+3];
@@ -1794,13 +1794,13 @@ PDM_part_comm_graph_gather_strided_data
     PDM_calloc(_out_data_n  [i_part], n_entity[i_part]  , int);
     PDM_malloc(_out_data_idx[i_part], n_entity[i_part]+1, int); _out_data_idx[i_part][0] = 0;
 
-    int recv_data_size = 0;
+    // int recv_data_size = 0;
     int data_size = data_idx[i_part][n_entity[i_part]];
     for(int i = 0; i < pn_entity_bound[i_part]; ++i) {
       int i_entity = pentity_bound[i_part][4*i]-1;
       _out_data_n[i_part][i_entity] += recv_data_n[i_part][i];
       data_size                     += recv_data_n[i_part][i];
-      recv_data_size                += recv_data_n[i_part][i];
+      // recv_data_size                += recv_data_n[i_part][i];
     }
 
     for(int i_entity = 0; i_entity < n_entity[i_part]; ++i_entity) {

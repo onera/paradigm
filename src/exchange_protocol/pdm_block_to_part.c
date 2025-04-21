@@ -146,6 +146,7 @@ _comm_graph_statistics
 void
 PDM_block_to_part_global_statistic_reset
 (
+void
 )
 {
   for (int i = 0; i < NTIMER_BTP; i++) {
