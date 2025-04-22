@@ -45,6 +45,10 @@ module PDM_part_mesh_nodal
   PDM_part_mesh_nodal_section_std_set_
   end interface
 
+  interface PDM_part_mesh_nodal_vtx_coord_get ; module procedure &
+  PDM_part_mesh_nodal_vtx_coord_get_
+  end interface
+
   interface PDM_part_mesh_nodal_vtx_g_num_get ; module procedure &
   PDM_part_mesh_nodal_vtx_g_num_get_
   end interface
@@ -61,6 +65,7 @@ module PDM_part_mesh_nodal
   private :: PDM_part_mesh_nodal_section_in_geom_kind_elt_type_get_
   private :: PDM_part_mesh_nodal_section_n_elt_get_
   private :: PDM_part_mesh_nodal_section_std_get_
+  private :: PDM_part_mesh_nodal_vtx_coord_get_
   private :: PDM_part_mesh_nodal_vtx_g_num_get_
   private :: PDM_part_mesh_nodal_n_vtx_get_
   private :: PDM_part_mesh_nodal_section_elt_type_get_
@@ -264,17 +269,46 @@ module PDM_part_mesh_nodal
 
     !>
     !!
+    !! \brief  Return coordinates of vertices
+    !!
+    !! \param [in]  pmn        Pointer to \ref PDM_part_mesh_nodal_t object
+    !! \param [in]  i_part     Partition identifier
+    !! \param [in]  ownership  Ownership
+    !!
+    !! \return  Coordinates vertices
+    !!
+
+    function PDM_part_mesh_nodal_vtx_coord_get_cf(pmn,       &
+                                                  i_part,    &
+                                                  ownership) &
+      result(vtx_coord) &
+      bind (c, name = 'PDM_part_mesh_nodal_vtx_coord_get')
+
+      use iso_c_binding
+      implicit none
+
+      type (c_ptr),   value :: pmn
+      integer(c_int), value :: i_part
+      integer(c_int), value :: ownership
+
+      type (c_ptr)          :: vtx_coord
+
+    end function PDM_part_mesh_nodal_vtx_coord_get_cf
+
+    !>
+    !!
     !! \brief  Return global ids of vertices
     !!
-    !! \param [in]  pmn       Pointer to \ref PDM_part_mesh_nodal_t object
-    !! \param [in]  id_part   Partition identifier
+    !! \param [in]  pmn        Pointer to \ref PDM_part_mesh_nodal_t object
+    !! \param [in]  i_part     Partition identifier
+    !! \param [in]  ownership  Ownership
     !!
     !! \return  Global ids of vertices
     !!
 
-    function PDM_part_mesh_nodal_vtx_g_num_get_cf(pmn,    &
-                                                  i_part) &
-
+    function PDM_part_mesh_nodal_vtx_g_num_get_cf(pmn,       &
+                                                  i_part,    &
+                                                  ownership) &
       result(vtx_ln_to_gn) &
       bind (c, name = 'PDM_part_mesh_nodal_vtx_g_num_get')
 
@@ -283,6 +317,7 @@ module PDM_part_mesh_nodal
 
       type (c_ptr),   value :: pmn
       integer(c_int), value :: i_part
+      integer(c_int), value :: ownership
 
       type (c_ptr)          :: vtx_ln_to_gn
 
@@ -553,25 +588,70 @@ module PDM_part_mesh_nodal
     end subroutine PDM_part_mesh_nodal_section_std_get_
 
 
+    subroutine PDM_part_mesh_nodal_vtx_coord_get_(pmn,       &
+                                                  i_part,    &
+                                                  vtx_coord, &
+                                                  ownership)
+      ! Return coordinates of vertices
+      use iso_c_binding
+      implicit none
+
+      type (c_ptr),   value         :: pmn            ! Pointer to PDM_part_mesh_nodal_t object
+      integer, intent(in)           :: i_part         ! Partition identifier
+      double precision, pointer     :: vtx_coord(:,:) ! Global ids of vertices (shape = [3,``n_vtx``])
+      integer, intent(in), optional :: ownership      ! Ownership (optional, default value: PDM_OWNERSHIP_BAD_VALUE)
+
+      integer(c_int)                :: c_ownership
+      type(c_ptr)                   :: c_vtx_coord
+      integer(c_int)                :: n_vtx
+
+      if (present(ownership)) then
+        c_ownership = ownership
+      else
+        c_ownership = PDM_OWNERSHIP_BAD_VALUE
+      endif
+
+      c_vtx_coord = PDM_part_mesh_nodal_vtx_coord_get_cf(pmn,         &
+                                                         i_part,      &
+                                                         c_ownership)
+
+      n_vtx = PDM_part_mesh_nodal_n_vtx_get_cf(pmn,    &
+                                               i_part)
+
+      call c_f_pointer(c_vtx_coord, &
+                       vtx_coord,   &
+                       [3, n_vtx])
+
+    end subroutine PDM_part_mesh_nodal_vtx_coord_get_
+
+
 
     subroutine PDM_part_mesh_nodal_vtx_g_num_get_(pmn,          &
                                                   i_part,       &
-                                                  vtx_ln_to_gn)
+                                                  vtx_ln_to_gn, &
+                                                  ownership)
       ! Return global ids of vertices
       use iso_c_binding
       implicit none
 
       type (c_ptr),   value          :: pmn             ! Pointer to PDM_part_mesh_nodal_t object
-
       integer, intent(in)            :: i_part          ! Partition identifier
       integer (pdm_g_num_s), pointer :: vtx_ln_to_gn(:) ! Global ids of vertices (size = ``n_vtx``)
+      integer, intent(in), optional  :: ownership       ! Ownership (optional, default value: PDM_OWNERSHIP_BAD_VALUE)
 
-      type (c_ptr)    :: c_vtx_ln_to_gn = C_NULL_PTR
-      integer         :: n_vtx
+      integer(c_int)                 :: c_ownership
+      type (c_ptr)                   :: c_vtx_ln_to_gn
+      integer                        :: n_vtx
 
+      if (present(ownership)) then
+        c_ownership = ownership
+      else
+        c_ownership = PDM_OWNERSHIP_BAD_VALUE
+      endif
 
-      c_vtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get_cf(pmn, &
-                                                            i_part)
+      c_vtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get_cf(pmn,    &
+                                                            i_part, &
+                                                            c_ownership)
 
       n_vtx = PDM_part_mesh_nodal_n_vtx_get_cf(pmn, &
                                                i_part)
