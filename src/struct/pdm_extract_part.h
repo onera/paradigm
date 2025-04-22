@@ -67,10 +67,10 @@ typedef struct _pdm_extract_part_t PDM_extract_part_t;
  *
  * \brief Build an extract_part struct
  *
- * \param [in]   dim                 Extraction dimension
- * \param [in]   n_part_in           Number of initial partition
- * \param [in]   n_part_out          Number of final partition
- * \param [in]   extract_kind        Extraction kind : (local/requilibrate/from target)
+ * \param [in]   dim                 Mesh dimension
+ * \param [in]   n_part_in           Number of input  partitions
+ * \param [in]   n_part_out          Number of output partitions
+ * \param [in]   extract_kind        Extraction kind (local/requilibrate/from target)
  * \param [in]   split_dual_method   Split method if requilibrate extract_kind
  * \param [in]   compute_child_gnum  Yes/No computation of a newest global numbering
  * \param [in]   ownership           Tell if you want ownership of resulting

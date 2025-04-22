@@ -110,8 +110,9 @@ module pdm_extract_part
   !! \param [in]    ownership   Who is responsible to free retreived data ?
   !!
   !!
-
-  subroutine PDM_extract_part_part_mesh_nodal_get(extrp, pmn, ownership) &
+  subroutine PDM_extract_part_part_mesh_nodal_get(extrp,     &
+                                                  pmn,       &
+                                                  ownership) &
     bind (c, name='PDM_extract_part_part_mesh_nodal_get')
       use iso_c_binding
       implicit none
@@ -682,28 +683,28 @@ module pdm_extract_part
   !!
 
   subroutine PDM_extract_part_target_set (extrp,           &
-                                          i_part_in,       &
+                                          i_part,          &
                                           n_target,        &
                                           target_gnum,     &
                                           target_location, &
                                           ownership)
-
+    ! Set the target entities
     use iso_c_binding
     implicit none
 
-    type(c_ptr), value                   :: extrp
-    integer, intent(in)                  :: i_part_in
-    integer, intent(in)                  :: n_target
-    integer(kind = PDM_g_num_s), pointer :: target_gnum(:)
-    integer(kind = PDM_l_num_s), pointer :: target_location(:)
-    integer, intent(in)                  :: ownership
+    type(c_ptr), value                   :: extrp              ! C pointer to PDM_extract_part_t instance
+    integer, intent(in)                  :: i_part             ! Partition identifier
+    integer, intent(in)                  :: n_target           ! Number of target entities
+    integer(kind = PDM_g_num_s), pointer :: target_gnum(:)     ! Global IDs of target entities (shape [`n_target`])
+    integer(kind = PDM_l_num_s), pointer :: target_location(:) ! Initial location of target entities (optional)
+    integer, intent(in)                  :: ownership          ! Ownership of `target_gnum` and `target_location`
 
     type(c_ptr)                          :: c_target_gnum
     type(c_ptr)                          :: c_target_location
 
     interface
       subroutine pdm_extract_part_target_set_c (extrp,           &
-                                                i_part_in,       &
+                                                i_part,          &
                                                 n_target,        &
                                                 target_gnum,     &
                                                 target_location, &
@@ -713,7 +714,7 @@ module pdm_extract_part
         implicit none
 
         type(c_ptr),    value :: extrp
-        integer(c_int), value :: i_part_in
+        integer(c_int), value :: i_part
         integer(c_int), value :: n_target
         type(c_ptr),    value :: target_gnum
         type(c_ptr),    value :: target_location
@@ -732,7 +733,7 @@ module pdm_extract_part
     end if
 
     call pdm_extract_part_target_set_c (extrp,             &
-                                        i_part_in,         &
+                                        i_part,            &
                                         n_target,          &
                                         c_target_gnum,     &
                                         c_target_location, &

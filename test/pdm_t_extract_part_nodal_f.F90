@@ -232,7 +232,8 @@ contains
     type(c_ptr)                                :: gen_gnum
     double precision,     pointer              :: char_length(:)
 
-    char_length => null()
+    allocate(char_length(n_elt))
+    char_length(:) = 1.d-6
 
     call pdm_gnum_create(gen_gnum,           &
                          3,                  &
@@ -249,6 +250,7 @@ contains
                                   char_length)
 
     call pdm_gnum_compute(gen_gnum)
+    deallocate(char_length)
 
     call pdm_gnum_get(gen_gnum,     &
                       0,            &
