@@ -886,7 +886,7 @@ PDM_part_mesh_gnum_compute_from_part_comm_graph
 )
 {
   if (pmesh->pcg[entity_type] == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "PDM_part_mesh_gnum_compute_from_part_comm_graph: pmesh->pcg[entity_type=%d]!=NULL\n", entity_type);
+    PDM_error(__FILE__, __LINE__, 0, "PDM_part_mesh_gnum_compute_from_part_comm_graph: pmesh->pcg[entity_type=%d]!=NULL\n", entity_type);
   }
 
   if(pmesh->is_owner_ln_to_gn[entity_type] == PDM_TRUE) {
@@ -912,7 +912,7 @@ PDM_part_mesh_gnum_compute_from_part_comm_graph
                                     pmesh->pcg[entity_type]);
   PDM_gnum_compute(gen_gnum);
   for(int i_part = 0; i_part < pmesh->n_part; ++i_part) {
-    pmesh->pentity_ln_to_gn [entity_type][i_part] = PDM_gnum_get(gen_gnum, i_part);
+    pmesh->pentity_ln_to_gn[entity_type][i_part] = PDM_gnum_get(gen_gnum, i_part);
   }
   pmesh->is_owner_ln_to_gn[entity_type] = PDM_TRUE;
 

@@ -2931,7 +2931,7 @@ PDM_part_mesh_nodal_part_comm_graph_deduce_from_vtx
   PDM_mesh_entities_t mesh_entity = PDM_geometry_kind_to_entity_type(geom_kind);
 
   if(pmn->pcg[mesh_entity] != NULL) {
-    return; // Aleady compute
+    return; // Already compute
   }
 
   int  *n_vtx           = NULL;

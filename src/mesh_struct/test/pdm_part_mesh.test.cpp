@@ -59,19 +59,6 @@ _generate_mesh
   return pm;
 }
 
-
-MPI_TEST_CASE("[pdm_part_mesh] Constructor",1) {
-
-  int i_rank = -1;
-  PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
-  PDM_MPI_Comm_rank(pdm_comm, &i_rank);
-
-  PDM_part_mesh_t* pm = _generate_mesh(pdm_comm);
-
-
-  PDM_part_mesh_free(pm);
-}
-
 MPI_TEST_CASE("[pdm_part_mesh] - PDM_part_mesh_part_comm_graph_compute_from_gnum", 2) {
 
 

@@ -508,7 +508,7 @@ PDM_part_mesh_part_comm_graph_compute_from_gnum
  *
  * \brief Compute entity global ids from internal part_comm_graph.
  *
- * \param [in]   pmn         Pointer to \ref PDM_part_mesh_t instance
+ * \param [in]   pmesh       Pointer to \ref PDM_part_mesh_t instance
  * \param [in]   entity_type Entity type (vertex, edge, face or cell)
  *
  */
