@@ -493,7 +493,7 @@ PDM_part_mesh_part_comm_graph_get
  *
  * \brief Compute internal part_comm_graph from part_mesh entity global ids.
  *
- * \param [in]   pmn         Pointer to \ref PDM_part_mesh_t instance
+ * \param [in]   pmesh       Pointer to \ref PDM_part_mesh_t instance
  * \param [in]   entity_type Entity type (vertex, edge, face or cell)
  *
  */
