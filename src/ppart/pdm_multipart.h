@@ -34,6 +34,7 @@
 #include "pdm_dmesh_nodal.h"
 #include "pdm_domain_interface.h"
 #include "pdm_mpi.h"
+#include "pdm_part_mesh.h"
 #include "pdm_part_mesh_nodal.h"
 
 /*----------------------------------------------------------------------------*/
@@ -279,16 +280,17 @@ const int                     i_domain,
  * \param [in]  multipart             Pointer to \ref PDM_multipart_t instance
  * \param [in]  i_domain              Id of domain
  * \param [out] pmesh                 Partitioned mesh
+ * \param [in]  ownership             Who is responsible to free retrieved data ?
  *
  */
-
-// void
-// PDM_multipart_get_part_mesh
-// (
-//        PDM_multipart_t  *multipart,
-//  const int               i_domain,
-//        PDM_part_mesh_t **pmesh
-// );
+void
+PDM_multipart_get_part_mesh
+(
+       PDM_multipart_t  *multipart,
+ const int               i_domain,
+       PDM_part_mesh_t **pmesh,
+       PDM_ownership_t   ownership
+);
 
 /**
  * \brief Specify interface between domain (see \ref PDM_multidomain_interface)

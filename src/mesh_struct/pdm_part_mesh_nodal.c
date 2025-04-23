@@ -342,7 +342,7 @@ _generate_group_gnum
 )
 {
 
-  int           n_parent_max            = 0;
+  int           l_n_parent_max          = 0;
   int         **group_parent_n          = NULL;
   int         **entity_group_idx        = NULL;
   // int         **entity_parent_group_idx = NULL;
@@ -357,7 +357,7 @@ _generate_group_gnum
   for (int i_part=0; i_part<n_part; ++i_part) {
     /**
      * All parent group are known by entities and coherent over all procs, unique parents and : 
-     *  - count n_parent_max for gnum gnum
+     *  - count l_n_parent_max for gnum gnum
      *  - count n_parent for each entity
      *  - count straddling entity in entity_group_idx
      */
@@ -371,8 +371,8 @@ _generate_group_gnum
       int beg = entity_tag_idx[i_part][i_entity  ];
       int end = entity_tag_idx[i_part][i_entity+1];
       if(end - beg > 0){
-        int n_unique = PDM_inplace_unique(entity_tag[i_part], beg, end-1);
-        n_parent_max = PDM_MAX(n_parent_max, n_unique);
+        int n_unique   = PDM_inplace_unique(entity_tag[i_part], beg, end-1);
+        l_n_parent_max = PDM_MAX(l_n_parent_max, n_unique);
         if(n_unique > 1) {
           // entity_parent_group_size  += n_unique;
           group_parent_n  [i_part][i_entity  ] = n_unique;
@@ -380,13 +380,16 @@ _generate_group_gnum
         }
       }
     }
+  }
+  int n_parent_max = -1;
+  PDM_MPI_Allreduce(&l_n_parent_max, &n_parent_max, 1, PDM_MPI_INT, PDM_MPI_MAX, comm);
 
-
-    /**
-     * Prepare nuplet from group gnum computation
-     *
-     * Here we could store parent group at same time
-     */
+  /**
+   * Prepare nuplet from group gnum computation
+   *
+   * Here we could store parent group at same time
+   */
+  for (int i_part=0; i_part<n_part; ++i_part) {
     // int i_write_parent = 0;
     int i_write_nuplet = 0;
     // PDM_malloc(entity_parent_group_idx[i_part], n_entity[i_part]+1                                     , int        ); entity_parent_group_idx[i_part][0] = 0;
@@ -676,8 +679,7 @@ PDM_part_mesh_nodal_part_comm_graph_set
   pmn->pcg[entity_type] = pcg;
   if (ownership==PDM_OWNERSHIP_USER || ownership==PDM_OWNERSHIP_KEEP) {
     pmn->pcg_ownership[entity_type] = ownership;
-  }
-  else {
+  } else {
     PDM_error (__FILE__, __LINE__, 0, "PDM_part_mesh_nodal_part_comm_graph_set got invalid ownership (got %d, must be %d or %d)\n",
       ownership,
       PDM_OWNERSHIP_KEEP,
@@ -707,35 +709,32 @@ PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum
   PDM_mesh_entities_t    entity_type
 )
 {
-  if (pmn->pcg[entity_type]!=NULL) {
+  if (pmn->pcg[entity_type] != NULL) {
     PDM_error (__FILE__, __LINE__, 0, "PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum: pmn->pcg[entity_type=%d]!=NULL\n", entity_type);
   }
 
   int          *n_entity    = NULL;
   PDM_g_num_t **entity_gnum = NULL;
-  PDM_malloc(n_entity   , pmn->n_part, int);
+  PDM_malloc(n_entity   , pmn->n_part, int         );
   PDM_malloc(entity_gnum, pmn->n_part, PDM_g_num_t*);
 
   if (entity_type==PDM_MESH_ENTITY_VTX) {
-    for (int i_part=0; i_part<pmn->n_part; ++i_part) {
+    for (int i_part = 0; i_part < pmn->n_part; ++i_part) {
       n_entity   [i_part] = PDM_part_mesh_nodal_n_vtx_get    (pmn, i_part);
       entity_gnum[i_part] = PDM_part_mesh_nodal_vtx_g_num_get(pmn, i_part, PDM_OWNERSHIP_BAD_VALUE);
     }
-  }
-  else if (entity_type==PDM_MESH_ENTITY_EDGE || entity_type==PDM_MESH_ENTITY_FACE) {
+  } else if (entity_type==PDM_MESH_ENTITY_EDGE || entity_type==PDM_MESH_ENTITY_FACE) {
 
     PDM_geometry_kind_t geom_kind = PDM_entity_type_to_geometry_kind(entity_type);
     PDM_part_mesh_nodal_elmts_t *pmne = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(pmn, geom_kind);
 
-    for (int i_part=0; i_part<pmn->n_part; ++i_part) {
+    for (int i_part = 0; i_part < pmn->n_part; ++i_part) {
       n_entity   [i_part] = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, i_part);
       entity_gnum[i_part] = PDM_part_mesh_nodal_elmts_g_num_get_from_part(pmne, i_part, PDM_OWNERSHIP_KEEP);
     }
-  }
-  else {
+  } else {
     PDM_error(__FILE__, __LINE__, 0, "PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum: invalid entity_type (=%d)\n", entity_type);
   }
-
 
   // Retrieve partition boundary entities using global IDs
   int n_rank;
@@ -784,6 +783,7 @@ PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum
   pmn->pcg_ownership[entity_type] = PDM_OWNERSHIP_KEEP;
 
   PDM_free(n_entity_part_bound);
+  PDM_free(entity_part_bound);
 }
 
 int
@@ -2667,6 +2667,7 @@ PDM_part_mesh_nodal_compute_straddling_entities
                                                                    PDM_OWNERSHIP_KEEP,
                                                                    pmn->comm);
       PDM_free(pn_edge_graph);
+      PDM_free(pedge_graph);
 
       PDM_part_mesh_nodal_part_comm_graph_set(pmn, pcg_edge, PDM_MESH_ENTITY_EDGE, PDM_OWNERSHIP_KEEP);
     }
@@ -2906,6 +2907,60 @@ PDM_part_mesh_nodal_compute_straddling_entities
 
   PDM_free(n_entity1);
   PDM_free(n_vtx);
+
+}
+
+void
+PDM_part_mesh_nodal_part_comm_graph_deduce_from_vtx
+(
+  PDM_part_mesh_nodal_t *pmn,
+  PDM_geometry_kind_t    geom_kind
+)
+{
+
+  if (pmn->pcg[PDM_MESH_ENTITY_VTX] != NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "PDM_part_mesh_nodal_graph_comm_deduce_from_vtx: pmn->pcg[PDM_MESH_ENTITY_VTX]!=NULL is mandatory in order to deduce other \n");
+  }
+
+  PDM_part_mesh_nodal_elmts_t* pmne = NULL;
+  if (geom_kind == PDM_GEOMETRY_KIND_SURFACIC) {
+    pmne = pmn->surfacic;
+  } else if (geom_kind == PDM_GEOMETRY_KIND_RIDGE) {
+    pmne = pmn->ridge;
+  } else {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_part_mesh_nodal_compute_topo_corners not implemented for geom_kind %d\n", geom_kind);
+  }
+
+  PDM_mesh_entities_t mesh_entity = PDM_geometry_kind_to_entity_type(geom_kind);
+
+  if(pmn->pcg[mesh_entity] != NULL) {
+    return; // Already compute
+  }
+
+  int  *n_vtx           = NULL;
+  int  *n_entity2       = NULL;
+  int **entity2_vtx     = NULL;
+  int **entity2_vtx_idx = NULL;
+  PDM_malloc(n_vtx          , pmn->n_part, int  );
+  PDM_malloc(n_entity2      , pmn->n_part, int  );
+  PDM_malloc(entity2_vtx    , pmn->n_part, int *);
+  PDM_malloc(entity2_vtx_idx, pmn->n_part, int *);
+
+  for(int i_part = 0; i_part < pmn->n_part; ++i_part) {
+    n_vtx    [i_part] = PDM_part_mesh_nodal_n_vtx_get(pmn, i_part);
+    n_entity2[i_part] = PDM_part_mesh_nodal_elmts_cell_vtx_connect_get(pmne, i_part, &entity2_vtx_idx[i_part], &entity2_vtx[i_part]);
+  }
+
+  PDM_part_comm_graph_entity1_to_part_comm_graph_entity2(pmn->pcg[PDM_MESH_ENTITY_VTX],
+                                                         n_vtx,
+                                                         n_entity2,
+                                                         entity2_vtx_idx,
+                                                         entity2_vtx,
+                                                         &pmn->pcg[mesh_entity]);
+
+  PDM_free(n_entity2      );
+  PDM_free(entity2_vtx    );
+  PDM_free(entity2_vtx_idx);
 
 }
 

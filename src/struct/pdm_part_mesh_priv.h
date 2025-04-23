@@ -27,6 +27,7 @@
 
 #include "pdm.h"
 #include "pdm_mpi.h"
+#include "pdm_part_comm_graph.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -59,8 +60,8 @@ struct _pdm_part_mesh_t
 
   int                 *pn_entity[PDM_MESH_ENTITY_MAX];                       /* Size for each entity (size = PDM_MESH_ENTITY_MAX)            */
 
-  int                **pconnectivity    [PDM_CONNECTIVITY_TYPE_MAX];                   /* Array of connectivty (size = PDM_CONNECTIVITY_TYPE_MAX)            */
-  int                **pconnectivity_idx[PDM_CONNECTIVITY_TYPE_MAX];               /* Array of connectivty_idx if any (size = PDM_CONNECTIVITY_TYPE_MAX) */
+  int                **pconnectivity    [PDM_CONNECTIVITY_TYPE_MAX];         /* Array of connectivty (size = PDM_CONNECTIVITY_TYPE_MAX)            */
+  int                **pconnectivity_idx[PDM_CONNECTIVITY_TYPE_MAX];         /* Array of connectivty_idx if any (size = PDM_CONNECTIVITY_TYPE_MAX) */
 
   PDM_g_num_t        **pentity_ln_to_gn[PDM_MESH_ENTITY_MAX];                /* Array of connectivty (size = PDM_MESH_ENTITY_MAX)            */
   int                **pentity_color   [PDM_MESH_ENTITY_MAX];
@@ -89,6 +90,9 @@ struct _pdm_part_mesh_t
   int                **ppart_bound_part_idx[PDM_BOUND_TYPE_MAX];
   int                **ppart_bound         [PDM_BOUND_TYPE_MAX];
   PDM_bool_t           is_owner_part_bound [PDM_BOUND_TYPE_MAX];
+
+  PDM_ownership_t        pcg_ownership[PDM_MESH_ENTITY_MAX];
+  PDM_part_comm_graph_t *pcg          [PDM_MESH_ENTITY_MAX];
 
 };
 

@@ -28,6 +28,7 @@
 
 #include <assert.h>
 #include <stdio.h>
+#include <string.h>
 
 /*----------------------------------------------------------------------------
  *  Local headers
@@ -38,8 +39,11 @@
 #include "pdm_error.h"
 #include "pdm_extract_part.h"
 #include "pdm_io.h"
+#include "pdm_distrib.h"
+#include "pdm_gnum.h"
 #include "pdm_mem_tool.h"
 #include "pdm_mpi.h"
+#include "pdm_partitioning_algorithm.h"
 #include "pdm_part_connectivity_transform.h"
 #include "pdm_part_mesh_priv.h"
 #include "pdm_writer.h"
@@ -214,7 +218,8 @@ PDM_part_mesh_create
 )
 {
   PDM_part_mesh_t *pmesh;
-  PDM_malloc(pmesh,1,PDM_part_mesh_t);
+  PDM_malloc(pmesh, 1, PDM_part_mesh_t);
+  memset(pmesh, 0, sizeof(PDM_part_mesh_t));
 
   pmesh->n_part = n_part;
   pmesh->comm   = comm;
@@ -242,7 +247,6 @@ PDM_part_mesh_create
   }
 
   for(int i = 0; i < PDM_BOUND_TYPE_MAX; ++i) {
-
     pmesh->pn_bound       [i] = NULL;
     pmesh->pbound         [i] = NULL;
     pmesh->pbound_ln_to_gn[i] = NULL;
@@ -250,7 +254,6 @@ PDM_part_mesh_create
   }
 
   for(int i = 0; i < PDM_BOUND_TYPE_MAX; ++i) {
-
     PDM_malloc(pmesh->pconcat_bound_idx      [i], pmesh->n_part, int         *);
     PDM_malloc(pmesh->pconcat_bound          [i], pmesh->n_part, int         *);
     PDM_malloc(pmesh->pconcat_bound_ln_to_gn [i], pmesh->n_part, PDM_g_num_t *);
@@ -262,10 +265,8 @@ PDM_part_mesh_create
       pmesh->pconcat_bound_ln_to_gn [i][i_part] = NULL;
       pmesh->is_compute_concat_bound[i][i_part] = PDM_FALSE;
       pmesh->is_owner_concat_bound  [i][i_part] = PDM_FALSE;
-
     }
   }
-
 
   PDM_malloc(pmesh->vtx_coords, pmesh->n_part, double *);
   for(int i_part = 0; i_part < n_part; ++i_part) {
@@ -780,6 +781,145 @@ PDM_part_mesh_part_graph_comm_get
   }
 }
 
+
+void
+PDM_part_mesh_part_comm_graph_set
+(
+  PDM_part_mesh_t       *pmesh,
+  PDM_part_comm_graph_t *pcg,
+  PDM_mesh_entities_t    entity_type,
+  PDM_ownership_t        ownership
+)
+{
+  pmesh->pcg[entity_type] = pcg;
+  if (ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_KEEP) {
+    pmesh->pcg_ownership[entity_type] = ownership;
+  } else {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_part_mesh_part_comm_graph_set got invalid ownership (got %d, must be %d or %d)\n",
+      ownership,
+      PDM_OWNERSHIP_KEEP,
+      PDM_OWNERSHIP_USER);
+  }
+}
+
+void
+PDM_part_mesh_part_comm_graph_get
+(
+  PDM_part_mesh_t        *pmesh,
+  PDM_mesh_entities_t     entity_type,
+  PDM_part_comm_graph_t **pcg,
+  PDM_ownership_t         ownership
+)
+{
+  *pcg = pmesh->pcg[entity_type];
+  if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
+    pmesh->pcg_ownership[entity_type] = ownership;
+  }
+}
+
+
+void
+PDM_part_mesh_part_comm_graph_compute_from_gnum
+(
+  PDM_part_mesh_t      *pmesh,
+  PDM_mesh_entities_t   entity_type
+)
+{
+  if (pmesh->pcg[entity_type] != NULL) {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_part_mesh_part_comm_graph_compute_from_gnum: pmesh->pcg[entity_type=%d]!=NULL\n", entity_type);
+  }
+
+  int n_rank;
+  PDM_MPI_Comm_size(pmesh->comm, &n_rank);
+
+  PDM_g_num_t *part_distribution = PDM_compute_entity_distribution(pmesh->comm, pmesh->n_part);
+
+  int  *n_entity_part_bound        = NULL;
+  int **entity_proc_bound_idx      = NULL;
+  int **entity_part_bound_idx      = NULL;
+  int **entity_part_bound          = NULL;
+  int **entity_part_bound_priority = NULL;
+  PDM_part_generate_entity_graph_comm(pmesh->comm,
+                                      part_distribution,
+                                      NULL,
+                                      pmesh->n_part,
+                                      pmesh->pn_entity       [entity_type],
+               (const PDM_g_num_t **) pmesh->pentity_ln_to_gn[entity_type],
+                                      NULL,
+                                      &entity_proc_bound_idx,
+                                      &entity_part_bound_idx,
+                                      &entity_part_bound,
+                                      &entity_part_bound_priority);
+
+  PDM_malloc(n_entity_part_bound, pmesh->n_part, int);
+  for (int i_part = 0; i_part < pmesh->n_part; i_part++) {
+    n_entity_part_bound[i_part] = entity_part_bound_idx[i_part][part_distribution[n_rank]];
+
+    PDM_free(entity_proc_bound_idx     [i_part]);
+    PDM_free(entity_part_bound_idx     [i_part]);
+    PDM_free(entity_part_bound_priority[i_part]);
+  }
+  PDM_free(entity_proc_bound_idx);
+  PDM_free(entity_part_bound_idx);
+  PDM_free(entity_part_bound_priority);
+  PDM_free(part_distribution);
+
+  // Build part comm graph
+  pmesh->pcg[entity_type] = PDM_part_comm_graph_create(pmesh->n_part,
+                                                       n_entity_part_bound,
+                                                       entity_part_bound,
+                                                       PDM_OWNERSHIP_KEEP,
+                                                       pmesh->comm);
+  pmesh->pcg_ownership[entity_type] = PDM_OWNERSHIP_KEEP;
+
+  PDM_free(n_entity_part_bound);
+  PDM_free(entity_part_bound);
+
+}
+
+
+void
+PDM_part_mesh_gnum_compute_from_part_comm_graph
+(
+  PDM_part_mesh_t      *pmesh,
+  PDM_mesh_entities_t   entity_type
+)
+{
+  if (pmesh->pcg[entity_type] == NULL) {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_part_mesh_gnum_compute_from_part_comm_graph: pmesh->pcg[entity_type=%d]!=NULL\n", entity_type);
+  }
+
+  if(pmesh->is_owner_ln_to_gn[entity_type] == PDM_TRUE) {
+    for(int i_part = 0; i_part < pmesh->n_part; ++i_part) {
+      if(pmesh->pentity_ln_to_gn[entity_type] != NULL) {
+        PDM_free(pmesh->pentity_ln_to_gn[entity_type][i_part]);
+      }
+    }
+  }
+  PDM_free(pmesh->pentity_ln_to_gn[entity_type]);
+
+  PDM_malloc(pmesh->pentity_ln_to_gn[entity_type], pmesh->n_part, PDM_g_num_t *);
+
+  PDM_gen_gnum_t* gen_gnum = PDM_gnum_create(3,
+                                             pmesh->n_part,
+                                             PDM_TRUE,
+                                             1.e-6,
+                                             pmesh->comm,
+                                             PDM_OWNERSHIP_USER);
+
+  PDM_gnum_set_from_part_comm_graph(gen_gnum,
+                                    pmesh->pn_entity[entity_type],
+                                    pmesh->pcg[entity_type]);
+  PDM_gnum_compute(gen_gnum);
+  for(int i_part = 0; i_part < pmesh->n_part; ++i_part) {
+    pmesh->pentity_ln_to_gn[entity_type][i_part] = PDM_gnum_get(gen_gnum, i_part);
+  }
+  pmesh->is_owner_ln_to_gn[entity_type] = PDM_TRUE;
+
+  PDM_gnum_free(gen_gnum);
+}
+
+
 void
 PDM_part_mesh_free
 (
@@ -895,6 +1035,12 @@ PDM_part_mesh_free
     }
 
     for(int i = 0; i < PDM_MESH_ENTITY_MAX; ++i) {
+      if(pmesh->pcg_ownership[i] == PDM_OWNERSHIP_KEEP) {
+        PDM_part_comm_graph_free(pmesh->pcg[i]);
+      }
+    }
+
+    for(int i = 0; i < PDM_MESH_ENTITY_MAX; ++i) {
       PDM_free(pmesh->pn_entity[i]);
     }
 
@@ -930,8 +1076,6 @@ PDM_part_mesh_dump_ensight
   if (max_tn_cell > 0) {
     mesh_dimension = 3;
   }
-
-
 
   PDM_writer_t *wrt = PDM_writer_create("Ensight",
                                         PDM_WRITER_FMT_BIN,
@@ -1048,25 +1192,23 @@ PDM_part_mesh_dump_ensight
     }
   }
 
-
   /* Set elements */
   int has_face_vtx = (pmesh->pconnectivity[PDM_CONNECTIVITY_TYPE_FACE_VTX] != NULL);
   if (!has_face_vtx) {
     assert(pmesh->pconnectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] != NULL);
   }
 
-  int **pface_vtx_idx;
-  PDM_malloc(pface_vtx_idx,pmesh->n_part, int *);
-  int **pface_vtx;
-  PDM_malloc(pface_vtx,pmesh->n_part, int *);
+  int **pface_vtx_idx = NULL;
+  int **pface_vtx     = NULL;
+  PDM_malloc(pface_vtx_idx, pmesh->n_part, int *);
+  PDM_malloc(pface_vtx    , pmesh->n_part, int *);
 
   if (mesh_dimension == 3) {
     for (int i_part = 0; i_part < pmesh->n_part; i_part++) {
       if (has_face_vtx) {
         pface_vtx_idx[i_part] = pmesh->pconnectivity_idx[PDM_CONNECTIVITY_TYPE_FACE_VTX][i_part];
         pface_vtx    [i_part] = pmesh->pconnectivity    [PDM_CONNECTIVITY_TYPE_FACE_VTX][i_part];
-      }
-      else {
+      } else {
         // Compute face->vtx if missing
         pface_vtx_idx[i_part] = pmesh->pconnectivity_idx[PDM_CONNECTIVITY_TYPE_FACE_EDGE][i_part];
         PDM_compute_face_vtx_from_face_and_edge(pmesh->pn_entity[PDM_MESH_ENTITY_FACE][i_part],
@@ -1091,8 +1233,7 @@ PDM_part_mesh_dump_ensight
                                           pmesh->pconnectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE][i_part],
                                           pmesh->pentity_ln_to_gn[PDM_MESH_ENTITY_CELL][i_part]);
     }
-  }
-  else {
+  } else {
 
     for (int i_part = 0; i_part < pmesh->n_part; i_part++) {
       if (has_face_vtx) {
@@ -1104,8 +1245,7 @@ PDM_part_mesh_dump_ensight
                                           NULL,
                                           pmesh->pconnectivity[PDM_CONNECTIVITY_TYPE_FACE_VTX][i_part],
                                           pmesh->pentity_ln_to_gn[PDM_MESH_ENTITY_FACE][i_part]);
-      }
-      else {
+      } else {
         PDM_writer_geom_cell2d_cellface_add(wrt,
                                             id_geom,
                                             i_part,
@@ -1160,9 +1300,7 @@ PDM_part_mesh_dump_ensight
                                      edge_vtx,
                                      edge_ln_to_gn);
       }
-    }
-
-    else if (bound_type == PDM_BOUND_TYPE_FACE) {
+    } else if (bound_type == PDM_BOUND_TYPE_FACE) {
 
       for (int i_part = 0; i_part < pmesh->n_part; i_part++) {
         PDM_g_num_t *face_ln_to_gn = NULL;
@@ -1208,8 +1346,7 @@ PDM_part_mesh_dump_ensight
                                             NULL,
                                             face_vtx,
                                             face_ln_to_gn);
-        }
-        else {
+        } else {
           assert(face_edge_idx != NULL);
           PDM_writer_geom_cell2d_cellface_add(wrt,
                                               id_geom_bound[bound_type],
@@ -1225,17 +1362,14 @@ PDM_part_mesh_dump_ensight
                                               face_ln_to_gn);
         }
       }
-
-    }
-
-    else if (bound_type == PDM_BOUND_TYPE_VTX) {
+    } else if (bound_type == PDM_BOUND_TYPE_VTX) {
 
       id_block = PDM_writer_geom_bloc_add(wrt,
                                           id_geom_bound[bound_type],
                                           PDM_WRITER_POINT,
                                           PDM_OWNERSHIP_USER);
 
-      PDM_malloc(vtx_vtx,pmesh->n_part,int *);
+      PDM_malloc(vtx_vtx, pmesh->n_part, int *);
 
       for (int i_part = 0; i_part < pmesh->n_part; i_part++) {
 
@@ -1259,27 +1393,22 @@ PDM_part_mesh_dump_ensight
                                      vtx_vtx[i_part],
                                      vtx_ln_to_gn);
       }
-
     }
   }
 
-
   /* Write geometries */
-  PDM_writer_geom_write(wrt,
-                        id_geom);
+  PDM_writer_geom_write(wrt, id_geom);
 
   for (int i = 0; i < PDM_BOUND_TYPE_MAX; i++) {
     if (id_geom_bound[i] >= 0) {
-      PDM_writer_geom_write(wrt,
-                            id_geom_bound[i]);
+      PDM_writer_geom_write(wrt, id_geom_bound[i]);
     }
   }
 
-
   /* Set variables */
-  PDM_real_t **val_num_part;
-  PDM_real_t **val_bound_id;
-  PDM_real_t **val_bound_type;
+  PDM_real_t **val_num_part   = NULL;
+  PDM_real_t **val_bound_id   = NULL;
+  PDM_real_t **val_bound_type = NULL;
   PDM_malloc(val_num_part,   pmesh->n_part, PDM_real_t *);
   PDM_malloc(val_bound_id,   pmesh->n_part, PDM_real_t *);
   PDM_malloc(val_bound_type, pmesh->n_part, PDM_real_t *);
@@ -1287,8 +1416,7 @@ PDM_part_mesh_dump_ensight
     int n_entity = 0;
     if (mesh_dimension == 2) {
       n_entity = pmesh->pn_entity[PDM_MESH_ENTITY_FACE][i_part];
-    }
-    else {
+    } else {
       n_entity = pmesh->pn_entity[PDM_MESH_ENTITY_CELL][i_part];
     }
 
@@ -1332,13 +1460,11 @@ PDM_part_mesh_dump_ensight
           n_entity = PDM_extract_part_n_entity_get(extrp[bound_type],
                                                    i_part,
                                                    PDM_MESH_ENTITY_EDGE);
-        }
-        else if (bound_type == PDM_BOUND_TYPE_FACE) {
+        } else if (bound_type == PDM_BOUND_TYPE_FACE) {
           n_entity = PDM_extract_part_n_entity_get(extrp[bound_type],
                                                    i_part,
                                                    PDM_MESH_ENTITY_FACE);
-        }
-        else if (bound_type == PDM_BOUND_TYPE_VTX) {
+        } else if (bound_type == PDM_BOUND_TYPE_VTX) {
           n_entity = PDM_extract_part_n_entity_get(extrp[bound_type],
                                                    i_part,
                                                    PDM_MESH_ENTITY_VTX);
@@ -1391,7 +1517,6 @@ PDM_part_mesh_dump_ensight
 
   PDM_writer_var_write(wrt,
                        id_var_bound_type);
-
 
   PDM_writer_step_end(wrt);
 

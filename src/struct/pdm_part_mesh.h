@@ -31,6 +31,7 @@
 
 #include "pdm.h"
 #include "pdm_mpi.h"
+#include "pdm_part_comm_graph.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -107,7 +108,7 @@ PDM_part_mesh_n_entity_set
 
 /**
  *
- * \brief Set PDM_part_mesh_nodal_elmts_t
+ * \brief Get number of entity on current \ref PDM_part_mesh_t
  *
  * \param [in]   pmesh               PDM_part_mesh_t structure
  * \param [in]   i_part              part identifier
@@ -446,6 +447,76 @@ PDM_part_mesh_part_graph_comm_get
  int                     **ppart_bound_part_idx,
  int                     **ppart_bound,
  PDM_ownership_t           ownership
+);
+
+
+/**
+ *
+ * \brief Set part_comm_graph onto part_mesh struct
+ *
+ * \param [in]  pmesh       Pointer to \ref PDM_part_mesh_t instance
+ * \param [in]  pcg         Pointer to \ref PDM_part_comm_graph_t instance
+ * \param [in]  entity_type Entity type (vertex, edge, face or cell)
+ * \param [in]  ownership   part_mesh ownership on given part_comm_graph
+ *
+ */
+void
+PDM_part_mesh_part_comm_graph_set
+(
+  PDM_part_mesh_t       *pmesh,
+  PDM_part_comm_graph_t *pcg,
+  PDM_mesh_entities_t    entity_type,
+  PDM_ownership_t        ownership
+);
+
+
+/**
+ *
+ * \brief Get part_mesh's part_comm_graph
+ *
+ * \param [in]   pmesh       Pointer to \ref PDM_part_mesh_t instance
+ * \param [in]   entity_type Entity type (vertex, edge, face or cell)
+ * \param [out]  pcg         Pointer to \ref PDM_part_comm_graph_t instance
+ * \param [in]   ownership   part_mesh ownership on returned part_comm_graph
+ *
+ */
+void
+PDM_part_mesh_part_comm_graph_get
+(
+  PDM_part_mesh_t        *pmesh,
+  PDM_mesh_entities_t     entity_type,
+  PDM_part_comm_graph_t **pcg,
+  PDM_ownership_t         ownership
+);
+
+/**
+ *
+ * \brief Compute internal part_comm_graph from part_mesh entity global ids.
+ *
+ * \param [in]   pmesh       Pointer to \ref PDM_part_mesh_t instance
+ * \param [in]   entity_type Entity type (vertex, edge, face or cell)
+ *
+ */
+void
+PDM_part_mesh_part_comm_graph_compute_from_gnum
+(
+  PDM_part_mesh_t      *pmesh,
+  PDM_mesh_entities_t   entity_type
+);
+
+/**
+ *
+ * \brief Compute entity global ids from internal part_comm_graph.
+ *
+ * \param [in]   pmesh       Pointer to \ref PDM_part_mesh_t instance
+ * \param [in]   entity_type Entity type (vertex, edge, face or cell)
+ *
+ */
+void
+PDM_part_mesh_gnum_compute_from_part_comm_graph
+(
+  PDM_part_mesh_t      *pmesh,
+  PDM_mesh_entities_t   entity_type
 );
 
 /**

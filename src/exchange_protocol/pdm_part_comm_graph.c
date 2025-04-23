@@ -430,13 +430,37 @@ _create
   PDM_MPI_Comm_size(comm, &n_rank);
   PDM_MPI_Comm_rank(comm, &i_rank);
 
-  pcg->pentity_graph = pentity_graph;
-
-  pcg->nuplet_size    = nuplet_size;
-  pcg->pentity_nuplet = pentity_nuplet;
-
   pcg->owner_graph  = owner_graph;
   pcg->owner_nuplet = owner_nuplet;
+
+  PDM_malloc(pcg->pentity_graph, n_part, int *);
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    if(owner_graph == PDM_OWNERSHIP_BAD_VALUE) { // We need to copy
+      PDM_malloc(pcg->pentity_graph[i_part], 4 * pn_entity_graph[i_part], int);
+      for(int i = 0; i < 4 * pn_entity_graph[i_part]; ++i) {
+        pcg->pentity_graph[i_part][i] = pentity_graph[i_part][i];
+      }
+      pcg->owner_graph = PDM_OWNERSHIP_KEEP;
+    } else {
+      pcg->pentity_graph[i_part] = pentity_graph[i_part];
+    }
+  }
+
+  pcg->nuplet_size    = nuplet_size;
+  PDM_malloc(pcg->pentity_nuplet, n_part, int *);
+  if(pentity_nuplet != NULL) {
+    for (int i_part = 0; i_part < n_part; i_part++) {
+      if(owner_nuplet == PDM_OWNERSHIP_BAD_VALUE) { // We need to copy
+        PDM_malloc(pcg->pentity_nuplet[i_part], nuplet_size * pn_entity_graph[i_part], int);
+        for(int i = 0; i < nuplet_size * pn_entity_graph[i_part]; ++i) {
+          pcg->pentity_nuplet[i_part][i] = pentity_nuplet[i_part][i];
+        }
+        pcg->owner_nuplet = PDM_OWNERSHIP_KEEP;
+      } else {
+        pcg->pentity_nuplet[i_part] = pentity_nuplet[i_part];
+      }
+    }
+  }
 
   int n_g_part = 0;
   PDM_MPI_Allreduce(&n_part, &n_g_part, 1, PDM_MPI_INT, PDM_MPI_SUM, comm);
@@ -878,16 +902,26 @@ PDM_part_comm_graph_entity1_to_part_comm_graph_entity2
                                          &pentity2_graph,
                                          &pentity2_nuplet);
 
-
-  PDM_part_comm_graph_t* ptpgc_entity2 = PDM_part_comm_graph_create(ptpgc_entity1->n_part,
-                                                                    pn_entity2_graph,
-                                                                    pentity2_graph,
-                                                                    PDM_OWNERSHIP_USER,
-                                                                    ptpgc_entity1->comm);
-
-  for(int i_part = 0; i_part < ptpgc_entity1->n_part; ++i_part) {
-    PDM_free(pentity2_graph[i_part]);
+  PDM_part_comm_graph_t* ptpgc_entity2 = NULL;
+  if(ptpgc_entity1->nuplet_size == 0) {
+    ptpgc_entity2 = PDM_part_comm_graph_create(ptpgc_entity1->n_part,
+                                               pn_entity2_graph,
+                                               pentity2_graph,
+                                               PDM_OWNERSHIP_KEEP,
+                                               ptpgc_entity1->comm);
+  } else {
+    ptpgc_entity2 = PDM_part_comm_graph_with_nuplet_create(ptpgc_entity1->n_part,
+                                                           pn_entity2_graph,
+                                                           pentity2_graph,
+                                                           PDM_OWNERSHIP_KEEP,
+                                                           ptpgc_entity1->nuplet_size,
+                                                           pentity2_nuplet,
+                                                           PDM_OWNERSHIP_KEEP,
+                                                           PDM_TRUE, // is_signed
+                                                           ptpgc_entity1->comm);
   }
+
+  PDM_free(pentity2_nuplet);
   PDM_free(pentity2_graph);
   PDM_free(pn_entity2_graph);
 
@@ -927,7 +961,7 @@ PDM_part_comm_graph_entity1_to_entity2
   PDM_MPI_Comm_size(comm, &n_rank);
   PDM_MPI_Comm_rank(comm, &i_rank);
 
-  int i_have_nuplet = (pentity1_nuplet != NULL);
+  int i_have_nuplet = (nuplet_size != 0);
   int have_nuplet;
   PDM_MPI_Allreduce(&i_have_nuplet, &have_nuplet, 1, PDM_MPI_INT, PDM_MPI_MAX, comm);
 
@@ -1229,7 +1263,6 @@ PDM_part_comm_graph_entity1_to_entity2
       send_data[idx_write++] = i_part_opp;
       send_n[i_proc_opp] += 6;
 
-      int n_found = 0;
       for(int idx_entity2 = entity2_entity1_idx[i_part][i_entity2]; idx_entity2 < entity2_entity1_idx[i_part][i_entity2+1]; ++idx_entity2) {
 
         int i_entity1 = PDM_ABS(entity2_entity1[i_part][idx_entity2])-1;
@@ -1248,7 +1281,6 @@ PDM_part_comm_graph_entity1_to_entity2
           }
 
           if(t_proc == i_proc_opp && t_part == i_part_opp && found == 0 && same_nuplet) {
-            n_found++;
 
             send_data[idx_write++] = pentity1_graph[i_part][4*idx_bound  ];
             send_data[idx_write++] = pentity1_graph[i_part][4*idx_bound+3];
@@ -1575,7 +1607,6 @@ PDM_part_comm_graph_entity1_to_entity2
     }
   }
 
-
   for(int i_part = 0; i_part < n_part; ++i_part) {
     PDM_realloc(pentity2_graph[i_part], pentity2_graph[i_part], 4 * pn_entity2_graph[i_part], int);
     if (have_nuplet) {
@@ -1786,13 +1817,11 @@ PDM_part_comm_graph_gather_strided_data
     PDM_calloc(_out_data_n  [i_part], n_entity[i_part]  , int);
     PDM_malloc(_out_data_idx[i_part], n_entity[i_part]+1, int); _out_data_idx[i_part][0] = 0;
 
-    int recv_data_size = 0;
     int data_size = data_idx[i_part][n_entity[i_part]];
     for(int i = 0; i < pn_entity_bound[i_part]; ++i) {
       int i_entity = pentity_bound[i_part][4*i]-1;
       _out_data_n[i_part][i_entity] += recv_data_n[i_part][i];
       data_size                     += recv_data_n[i_part][i];
-      recv_data_size                += recv_data_n[i_part][i];
     }
 
     for(int i_entity = 0; i_entity < n_entity[i_part]; ++i_entity) {
@@ -1885,15 +1914,15 @@ PDM_part_comm_graph_free
     for (int i_part = 0; i_part < pcg->n_part; i_part++) {
       PDM_free(pcg->pentity_graph[i_part]);
     }
-    PDM_free(pcg->pentity_graph);
   }
+  PDM_free(pcg->pentity_graph);
 
   if (pcg->owner_nuplet == PDM_OWNERSHIP_KEEP) {
     for (int i_part = 0; i_part < pcg->n_part; i_part++) {
       PDM_free(pcg->pentity_nuplet[i_part]);
     }
-    PDM_free(pcg->pentity_nuplet);
   }
+  PDM_free(pcg->pentity_nuplet);
 
   PDM_free(pcg);
 }
