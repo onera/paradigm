@@ -29,9 +29,9 @@ extensions = [
     'sphinx.ext.autodoc',
     # 'sphinx.ext.imgmath',
     'sphinx.ext.mathjax',
-    'sphinx.ext.autosummary', 
-    'sphinx.ext.ifconfig', 
-    'sphinx.ext.viewcode', 
+    'sphinx.ext.autosummary',
+    'sphinx.ext.ifconfig',
+    'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
     'sphinx.ext.todo',
     'sphinx.ext.autosectionlabel',
@@ -397,13 +397,14 @@ if '@PDM_ENABLE_Fortran@' == 'ON':
     extensions.append('sphinxfortran.fortran_autodoc')
 
     fortran_src = [
+        "@PROJECT_SOURCE_DIR@/src/exchange_protocol/pdm_part_to_part.F90",
         "@PROJECT_SOURCE_DIR@/src/gnum_utils/pdm_gnum.F90",
         "@PROJECT_SOURCE_DIR@/src/mesh/pdm_mesh_location.F90",
+        "@PROJECT_SOURCE_DIR@/src/meshgen/pdm_dcube_nodal_gen.F90",
+        "@PROJECT_SOURCE_DIR@/src/mesh_struct/pdm_part_mesh_nodal.F90",
         "@PROJECT_SOURCE_DIR@/src/ppart/pdm_multipart.F90",
         "@PROJECT_SOURCE_DIR@/src/ppart/pdm_part_extension.F90",
-        "@PROJECT_SOURCE_DIR@/src/mesh_struct/pdm_part_mesh_nodal.F90",
-        "@PROJECT_SOURCE_DIR@/src/exchange_protocol/pdm_part_to_part.F90",
-        "@PROJECT_SOURCE_DIR@/src/meshgen/pdm_dcube_nodal_gen.F90",
+        "@PROJECT_SOURCE_DIR@/src/struct/pdm_extract_part.F90",
 @COMMENT_NOT_PDMA@        "@PROJECT_SOURCE_DIR@/extensions/paradigma/src/mesh/pdm_mesh_deform.F90",
     ]
 
