@@ -902,7 +902,6 @@ PDM_part_comm_graph_entity1_to_part_comm_graph_entity2
                                          &pentity2_graph,
                                          &pentity2_nuplet);
 
-  printf("ptpgc_entity1->nuplet_size = %i \n", ptpgc_entity1->nuplet_size);
   PDM_part_comm_graph_t* ptpgc_entity2 = NULL;
   if(ptpgc_entity1->nuplet_size == 0) {
     ptpgc_entity2 = PDM_part_comm_graph_create(ptpgc_entity1->n_part,
