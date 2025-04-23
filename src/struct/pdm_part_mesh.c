@@ -795,7 +795,7 @@ PDM_part_mesh_part_comm_graph_set
   if (ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_KEEP) {
     pmesh->pcg_ownership[entity_type] = ownership;
   } else {
-    PDM_error (__FILE__, __LINE__, 0, "PDM_part_mesh_part_comm_graph_set got invalid ownership (got %d, must be %d or %d)\n",
+    PDM_error(__FILE__, __LINE__, 0, "PDM_part_mesh_part_comm_graph_set got invalid ownership (got %d, must be %d or %d)\n",
       ownership,
       PDM_OWNERSHIP_KEEP,
       PDM_OWNERSHIP_USER);
@@ -826,7 +826,7 @@ PDM_part_mesh_part_comm_graph_compute_from_gnum
 )
 {
   if (pmesh->pcg[entity_type] != NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "PDM_part_mesh_part_comm_graph_compute_from_gnum: pmesh->pcg[entity_type=%d]!=NULL\n", entity_type);
+    PDM_error(__FILE__, __LINE__, 0, "PDM_part_mesh_part_comm_graph_compute_from_gnum: pmesh->pcg[entity_type=%d]!=NULL\n", entity_type);
   }
 
   int n_rank;
