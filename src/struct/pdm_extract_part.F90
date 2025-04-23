@@ -28,7 +28,7 @@ module pdm_extract_part
 
   contains
 
-   subroutine PDM_extract_part_create (extrp,              &
+   subroutine PDM_extract_part_create(extrp,              &
                                       dim,                &
                                       n_part_in,          &
                                       n_part_out,         &
@@ -38,7 +38,6 @@ module pdm_extract_part
                                       ownership,          &
                                       comm)
     ! Build an extract_part struct
-    use iso_c_binding
     implicit none
 
     type(c_ptr)                       :: extrp               ! C pointer to PDM_extract_part_t instance
@@ -120,7 +119,6 @@ module pdm_extract_part
                                         vtx_ln_to_gn,          &
                                         vtx_coord)
     ! Set partition
-    use iso_c_binding
     implicit none
 
     type(c_ptr), value            :: extrp            ! C pointer to PDM_extract_part_t instance
@@ -285,7 +283,6 @@ module pdm_extract_part
                                            bound_type, &
                                            n_group)
     ! Set number of groups (optional)
-    use iso_c_binding
     implicit none
 
     type(c_ptr), value            :: extrp      ! C pointer to PDM_extract_part_t instance
@@ -321,7 +318,6 @@ module pdm_extract_part
                                               group_entity,          &
                                               group_entity_ln_to_gn)
     ! Set partition group (optional)
-    use iso_c_binding
     implicit none
 
     type(c_ptr), value            :: extrp                    ! C pointer to PDM_extract_part_t instance
@@ -369,7 +365,6 @@ module pdm_extract_part
   subroutine PDM_extract_part_part_nodal_set(extrp, &
                                              pmn)
     ! Set PDM_part_mesh_nodal_t
-    use iso_c_binding
     implicit none
 
     type(c_ptr), intent(in) :: extrp ! C pointer to PDM_extract_part_t instance
@@ -396,7 +391,6 @@ module pdm_extract_part
 
   subroutine PDM_extract_part_compute(extrp)
     ! Compute extraction
-    use iso_c_binding
     implicit none
 
     type(c_ptr) :: extrp ! C pointer to PDM_extract_part_t instance
@@ -425,7 +419,6 @@ module pdm_extract_part
                                          extract_group_entity_parent_ln_to_gn, &
                                          ownership)
     ! Get partition group
-    use iso_c_binding
     implicit none
 
     type(c_ptr), value            :: extrp                                   ! C pointer to PDM_extract_part_t instance
@@ -506,7 +499,6 @@ module pdm_extract_part
     ! Select local entities to extract.
     !
     ! (Use only in LOCAL or REEQUILIBRATE mode)
-    use iso_c_binding
     implicit none
 
     type(c_ptr), value                   :: extrp           ! C pointer to PDM_extract_part_t instance
@@ -559,7 +551,6 @@ module pdm_extract_part
     ! Set the target entities.
     !
     ! (Use only in FROM_TARGET mode)
-    use iso_c_binding
     implicit none
 
     type(c_ptr), value                   :: extrp              ! C pointer to PDM_extract_part_t instance
@@ -617,7 +608,6 @@ module pdm_extract_part
                                             entity_type, &
                                             n_entity)
     ! Get number of entities in extraction
-    use iso_c_binding
     implicit none
 
     type(c_ptr), value                :: extrp       ! C pointer to PDM_extract_part_t instance
@@ -657,7 +647,6 @@ module pdm_extract_part
                                                 connect_idx,       &
                                                 ownership)
     ! Get connectivity in extraction
-    use iso_c_binding
     implicit none
 
     type(c_ptr), value                   :: extrp             ! C pointer to PDM_extract_part_t instance
@@ -722,7 +711,6 @@ module pdm_extract_part
                                             pentity_ln_to_gn, &
                                             ownership)
     ! Get global IDs of entities in extraction
-    use iso_c_binding
     implicit none
 
     type(c_ptr), value                   :: extrp               ! C pointer to PDM_extract_part_t instance
@@ -777,7 +765,6 @@ module pdm_extract_part
                                                    parent_ln_to_gn, &
                                                    ownership)
     ! Get parent global IDs of entities in extraction
-    use iso_c_binding
     implicit none
 
     type(c_ptr), value                   :: extrp              ! C pointer to PDM_extract_part_t instance
@@ -832,7 +819,6 @@ module pdm_extract_part
     ! Get local IDs of parent entities.
     !
     ! (Use only in LOCAL mode)
-    use iso_c_binding
     implicit none
 
     type(c_ptr), value                   :: extrp                 ! C pointer to PDM_extract_part_t instance
@@ -885,7 +871,6 @@ module pdm_extract_part
                                                 ptp,         &
                                                 ownership)
     ! Get the Part-to-Part instance for a given entity type
-    use iso_c_binding
     implicit none
 
     type(c_ptr)                          :: extrp       ! C pointer to PDM_extract_part_t instance
@@ -928,7 +913,6 @@ module pdm_extract_part
                                              pvtx_coord,       &
                                              ownership)
     ! Get vertex coordinates in extraction
-    use iso_c_binding
     implicit none
 
     type(c_ptr), value                   :: extrp           ! C pointer to PDM_extract_part_t instance
@@ -974,7 +958,6 @@ module pdm_extract_part
                                                   pmn,       &
                                                   ownership)
     ! Retrieve the extracted PDM_part_mesh_nodal_t
-    use iso_c_binding
     implicit none
 
     type(c_ptr), intent(in)  :: extrp     ! C pointer to PDM_extract_part_t instance
@@ -1005,7 +988,6 @@ module pdm_extract_part
 
   subroutine PDM_extract_part_partial_free(extrp)
     ! Free all resulting data if not owner
-    use iso_c_binding
     implicit none
 
     type(c_ptr) :: extrp ! C pointer to PDM_extract_part_t instance
@@ -1026,7 +1008,6 @@ module pdm_extract_part
 
   subroutine PDM_extract_part_free(extrp)
     ! Free the structure
-    use iso_c_binding
     implicit none
 
     type(c_ptr) :: extrp ! C pointer to PDM_extract_part_t instance
