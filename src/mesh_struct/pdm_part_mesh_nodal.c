@@ -342,7 +342,7 @@ _generate_group_gnum
 )
 {
 
-  int           n_parent_max            = 0;
+  int           l_n_parent_max          = 0;
   int         **group_parent_n          = NULL;
   int         **entity_group_idx        = NULL;
   // int         **entity_parent_group_idx = NULL;
@@ -357,7 +357,7 @@ _generate_group_gnum
   for (int i_part=0; i_part<n_part; ++i_part) {
     /**
      * All parent group are known by entities and coherent over all procs, unique parents and : 
-     *  - count n_parent_max for gnum gnum
+     *  - count l_n_parent_max for gnum gnum
      *  - count n_parent for each entity
      *  - count straddling entity in entity_group_idx
      */
@@ -371,8 +371,8 @@ _generate_group_gnum
       int beg = entity_tag_idx[i_part][i_entity  ];
       int end = entity_tag_idx[i_part][i_entity+1];
       if(end - beg > 0){
-        int n_unique = PDM_inplace_unique(entity_tag[i_part], beg, end-1);
-        n_parent_max = PDM_MAX(n_parent_max, n_unique);
+        int n_unique   = PDM_inplace_unique(entity_tag[i_part], beg, end-1);
+        l_n_parent_max = PDM_MAX(l_n_parent_max, n_unique);
         if(n_unique > 1) {
           // entity_parent_group_size  += n_unique;
           group_parent_n  [i_part][i_entity  ] = n_unique;
@@ -380,13 +380,16 @@ _generate_group_gnum
         }
       }
     }
+  }
+  int n_parent_max = -1;
+  PDM_MPI_Allreduce(&l_n_parent_max, &n_parent_max, 1, PDM_MPI_INT, PDM_MPI_MAX, comm);
 
-
-    /**
-     * Prepare nuplet from group gnum computation
-     *
-     * Here we could store parent group at same time
-     */
+  /**
+   * Prepare nuplet from group gnum computation
+   *
+   * Here we could store parent group at same time
+   */
+  for (int i_part=0; i_part<n_part; ++i_part) {
     // int i_write_parent = 0;
     int i_write_nuplet = 0;
     // PDM_malloc(entity_parent_group_idx[i_part], n_entity[i_part]+1                                     , int        ); entity_parent_group_idx[i_part][0] = 0;
