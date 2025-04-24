@@ -38,6 +38,7 @@ extern "C" {
 struct _pdm_exchange_helper_t {
 
   PDM_MPI_Comm  comm;                         /*!< MPI communicator */
+  int           n_request;
 
 
 };

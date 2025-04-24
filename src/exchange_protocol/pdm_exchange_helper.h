@@ -55,6 +55,11 @@ PDM_exchange_helper_create
 
 // Async + persistent
 
+void
+PDM_exchange_helper_free
+(
+  PDM_exchange_helper_t *exch_helper
+);
 
 #ifdef  __cplusplus
 }

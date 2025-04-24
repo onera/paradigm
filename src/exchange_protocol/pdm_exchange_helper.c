@@ -50,9 +50,30 @@ extern "C" {
  * Public function definitions
  *============================================================================*/
 
+PDM_exchange_helper_t *
+PDM_exchange_helper_create
+(
+ const PDM_MPI_Comm    comm,
+       int             n_request_init
+)
+{
+  PDM_exchange_helper_t *exch_helper = NULL;
+  PDM_malloc(exch_helper, 1, PDM_exchange_helper_t);
 
+  exch_helper->comm      = comm;
+  exch_helper->n_request = n_request_init;
 
+  return exch_helper;
+}
 
+void
+PDM_exchange_helper_free
+(
+  PDM_exchange_helper_t *exch_helper
+)
+{
+  PDM_free(exch_helper);
+}
 
 
 
