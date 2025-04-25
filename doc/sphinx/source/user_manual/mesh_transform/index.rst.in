@@ -17,6 +17,8 @@ Mesh Transformations
 @COMMENT_NOT_PDMA_RST@    :ref:`Mesh Evaluation <mesh_eval>`
 @COMMENT_NOT_PDMA_RST@      Mesh analysis utilities
 
+|
+
 @COMMENT_NOT_PDMA_RST@.. toctree::
 @COMMENT_NOT_PDMA_RST@   :caption: User manual
 @COMMENT_NOT_PDMA_RST@   :maxdepth: 1
@@ -24,4 +26,3 @@ Mesh Transformations
 
 @COMMENT_NOT_PDMA_RST@   mesh_deform
 @COMMENT_NOT_PDMA_RST@   mesh_eval
-

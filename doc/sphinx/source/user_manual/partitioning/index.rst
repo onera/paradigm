@@ -28,18 +28,20 @@ Partitioning
     :ref:`Part extension <part_extension>`
       Generate extended mesh partitions
 
-Enumerators
------------
+|
 
-Here we present enumerators that are usefull for the features detailed in this section.
+.. Enumerators
+.. -----------
 
-.. doxygenenum:: PDM_connectivity_type_t
+.. Here we present enumerators that are usefull for the features detailed in this section.
 
-.. doxygenenum:: PDM_mesh_entities_t
+.. .. doxygenenum:: PDM_connectivity_type_t
 
-* renumbering?
-* agglomeration?
-* domain interfaces/joints?
+.. .. doxygenenum:: PDM_mesh_entities_t
+
+.. * renumbering?
+.. * agglomeration?
+.. * domain interfaces/joints?
 
 
 .. toctree::

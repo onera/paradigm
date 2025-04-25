@@ -100,3 +100,19 @@
   color: #03a621;
   font-size:120%;
 }
+
+/* --------------------------------------------------------------------------- */
+
+dl.class{
+  border-left: 2px solid #6ab0de;
+}
+
+dl.function {
+  border-left: 1px solid #6ab0de;
+  /* background-color: #e5f2f9; */
+  /* background-color: #f5fcff; */
+}
+
+dl.method {
+  border-left: 1px solid #ccc;
+}
