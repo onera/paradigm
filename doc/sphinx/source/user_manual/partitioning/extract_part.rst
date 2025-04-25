@@ -172,8 +172,71 @@ Python API
 
 .. ifconfig:: enable_python_doc == 'ON'
 
-  .. todo::
-    ...
+  .. py:class:: ExtractPart
+
+    Python structure to perform extraction operations. Once initialized, all the following
+    methods apply to a :class:`ExtractPart` instance.
+
+
+    .. rubric:: Initialization
+
+    .. autofunction:: Pypdm.Pypdm.ExtractPart.__init__
+
+
+    .. rubric:: Methods summary
+
+    .. autosummary::
+      :nosignatures:
+
+      ~Pypdm.Pypdm.ExtractPart.part_set
+      ~Pypdm.Pypdm.ExtractPart.part_n_group_set
+      ~Pypdm.Pypdm.ExtractPart.part_group_set
+      ~Pypdm.Pypdm.ExtractPart.selected_lnum_set
+      ~Pypdm.Pypdm.ExtractPart.target_set
+      ~Pypdm.Pypdm.ExtractPart.compute
+      ~Pypdm.Pypdm.ExtractPart.n_entity_get
+      ~Pypdm.Pypdm.ExtractPart.connectivity_get
+      ~Pypdm.Pypdm.ExtractPart.vtx_coord_get
+      ~Pypdm.Pypdm.ExtractPart.ln_to_gn_get
+      ~Pypdm.Pypdm.ExtractPart.parent_ln_to_gn_get
+      ~Pypdm.Pypdm.ExtractPart.extract_part_group_get
+      ~Pypdm.Pypdm.ExtractPart.part_to_part_get
+      ~Pypdm.Pypdm.ExtractPart.part_to_part_group_get
+
+
+    .. rubric:: Define input mesh
+
+    .. autofunction:: Pypdm.Pypdm.ExtractPart.part_set
+    .. autofunction:: Pypdm.Pypdm.ExtractPart.part_n_group_set
+    .. autofunction:: Pypdm.Pypdm.ExtractPart.part_group_set
+
+
+    .. rubric:: Define extraction
+
+    .. autofunction:: Pypdm.Pypdm.ExtractPart.selected_lnum_set
+    .. autofunction:: Pypdm.Pypdm.ExtractPart.target_set
+
+
+    .. rubric:: Compute extraction
+
+    .. autofunction:: Pypdm.Pypdm.ExtractPart.compute
+
+
+    .. rubric:: Get extraction
+
+    .. autofunction:: Pypdm.Pypdm.ExtractPart.n_entity_get
+    .. autofunction:: Pypdm.Pypdm.ExtractPart.connectivity_get
+    .. autofunction:: Pypdm.Pypdm.ExtractPart.vtx_coord_get
+    .. autofunction:: Pypdm.Pypdm.ExtractPart.ln_to_gn_get
+    .. autofunction:: Pypdm.Pypdm.ExtractPart.parent_ln_to_gn_get
+    .. autofunction:: Pypdm.Pypdm.ExtractPart.extract_part_group_get
+
+
+    .. rubric:: Data transfer
+
+    .. autofunction:: Pypdm.Pypdm.ExtractPart.part_to_part_get
+    .. autofunction:: Pypdm.Pypdm.ExtractPart.part_to_part_group_get
+
 
 
 .. ifconfig:: enable_python_doc == 'OFF'
