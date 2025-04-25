@@ -106,6 +106,15 @@ cdef extern from "pdm_extract_part.h":
                                   PDM_g_num_t         **pextract_group_entity_ln_to_gn,
                                   PDM_g_num_t         **pextract_group_entity_parent_ln_to_gn,
                                   PDM_ownership_t       ownership);
+
+  # Not wrapped :
+  # PDM_extract_part_part_nodal_set
+  # PDM_extract_part_entity_center_set
+  # PDM_extract_part_color_get
+  # PDM_extract_part_init_location_get
+  # PDM_extract_part_part_mesh_nodal_get
+  # PDM_extract_part_renum_method_set
+  # PDM_extract_part_part_mesh_get
 # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

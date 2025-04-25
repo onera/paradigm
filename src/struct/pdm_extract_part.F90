@@ -28,6 +28,14 @@ module pdm_extract_part
 
   contains
 
+  ! Not wrapped :
+  ! PDM_extract_part_entity_center_set
+  ! PDM_extract_part_color_get
+  ! PDM_extract_part_init_location_get
+  ! PDM_extract_part_part_to_part_group_get
+  ! PDM_extract_part_renum_method_set
+  ! PDM_extract_part_part_mesh_get
+
    subroutine PDM_extract_part_create(extrp,              &
                                       dim,                &
                                       n_part_in,          &
