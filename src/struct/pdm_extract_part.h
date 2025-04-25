@@ -64,12 +64,12 @@ typedef struct _pdm_extract_part_t PDM_extract_part_t;
  *============================================================================*/
 
 /**
- * \brief Build an extract_part struct
+ * \brief Build an Extract Part structure
  *
  * \param [in]   dim                 Mesh dimension
  * \param [in]   n_part_in           Number of input  partitions
  * \param [in]   n_part_out          Number of output partitions
- * \param [in]   extract_kind        Extraction kind (local/requilibrate/from target)
+ * \param [in]   extract_kind        Extraction kind (local/reequilibrate/from target)
  * \param [in]   split_dual_method   Split method (used only in \ref PDM_EXTRACT_PART_KIND_REEQUILIBRATE mode)
  * \param [in]   compute_child_gnum  Enable generation of new global IDs for extraction
  * \param [in]   ownership           Ownership of extraction
@@ -132,7 +132,7 @@ PDM_extract_part_selected_lnum_set
  * \param [in]   i_part            Partition identifier
  * \param [in]   n_target          Number of target entities
  * \param [in]   target_gnum       Global IDs of target entities (size = \p n_target)
- * \param [in]   target_location   Initial location of target entities (size = 3 * \p n_target] or NULL)
+ * \param [in]   target_location   Initial location of target entities (size = 3 * \p n_target or NULL)
  * \param [in]   ownership         Ownership
  */
 void
@@ -248,7 +248,7 @@ PDM_extract_part_part_nodal_set
 
 
 /**
- * \brief Set entity centers (useful for equilibrate / hilbert ordering )
+ * \brief Set entity centers (useful for Hilbert numbering in PDM_EXTRACT_PART_KIND_REEQUILIBRATE mode)
  *
  * \param [in]   extrp            \ref PDM_extract_part_t instance
  * \param [in]   i_part           Partition identifier
@@ -322,19 +322,21 @@ PDM_extract_part_ln_to_gn_get
   PDM_extract_part_t        *extrp,
   int                        i_part_out,
   PDM_mesh_entities_t        entity_type,
-  PDM_g_num_t              **pentity_ln_to_gn,
+  PDM_g_num_t              **entity_ln_to_gn,
   PDM_ownership_t            ownership
 );
 
 
 /**
+ * \brief Get color of entities in extraction (if a renumbering method was used)
  *
- * \brief Return size of entity_type on current partition ( n_entity )
- * \param [in]  extrp             \ref PDM_extract_part_t instance
- * \param [in]  i_part            Partition identifier
- * \param [in]  entity_type       Entity kind \ref PDM_mesh_entities_t)
- * \param [out] pentity_color     Entity color (size = n_entity, numbering : 1 to n)
- * \param [in]  ownership         Ownership for entity_ln_to_gn ( \ref PDM_ownership_t )
+ * \param [in]  extrp            \ref PDM_extract_part_t instance
+ * \param [in]  i_part           Partition identifier
+ * \param [in]  entity_type      Type of entity
+ * \param [out] entity_color     Entity color
+ * \param [in]  ownership        Ownership
+ *
+ * \return Number of entities
  */
 int
 PDM_extract_part_color_get
@@ -342,7 +344,7 @@ PDM_extract_part_color_get
   PDM_extract_part_t   *extrp,
   int                   i_part_out,
   PDM_mesh_entities_t   entity_type,
-  int                 **pentity_color,
+  int                 **entity_color,
   PDM_ownership_t       ownership
 );
 
@@ -427,9 +429,9 @@ PDM_extract_part_init_location_get
 int
 PDM_extract_part_vtx_coord_get
 (
- PDM_extract_part_t   *extrp,
+ PDM_extract_part_t  *extrp,
  int                  i_part_out,
- double             **pvtx_coord,
+ double             **vtx_coord,
  PDM_ownership_t      ownership
 );
 
@@ -503,8 +505,8 @@ PDM_extract_part_part_to_part_get
  * \param [in]   extrp        \ref PDM_extract_part_t instance
  * \param [in]   bound_type   Type of group
  * \param [in]   i_group      Group identifier
- * \param [out]  ptp          Part to part protocol exchange, to exchange betwenn the input mesh and the output one (\ref PDM_part_to_part_t)
- * \param [in]   ownership    Ownership for color ( \ref PDM_ownership_t )
+ * \param [out]  ptp          \ref PDM_part_to_part_t instance
+ * \param [in]   ownership    Ownership
  */
 void
 PDM_extract_part_part_to_part_group_get
@@ -549,9 +551,9 @@ PDM_extract_part_group_get
  * \brief Set the reordering method to be used after partitioning
  *
  * \param [in]   extrp                    \ref PDM_extract_part_t instance
- * \param [in]   mesh_entity              Kind of entity
+ * \param [in]   mesh_entity              Type of entity
  * \param [in]   renum_entity_method      Renumbering method
- * \param [in]   renum_entity_properties  Renumbering parameters for chose method (can be NULL)
+ * \param [in]   renum_entity_properties  Renumbering parameters for chosen method (can be NULL)
  */
 void
 PDM_extract_part_renum_method_set

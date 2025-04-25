@@ -45,14 +45,14 @@ module pdm_extract_part
                                       compute_child_gnum, &
                                       ownership,          &
                                       comm)
-    ! Build an extract_part struct
+    ! Build an Extract Part structure
     implicit none
 
     type(c_ptr)                       :: extrp              ! C pointer to PDM_extract_part_t instance
     integer, intent(in)               :: dim                ! Mesh dimension
     integer, intent(in)               :: n_part_in          ! Number of input  partitions
     integer, intent(in)               :: n_part_out         ! Number of output partitions
-    integer, intent(in)               :: extract_kind       ! Extraction kind (local/requilibrate/from target)
+    integer, intent(in)               :: extract_kind       ! Extraction kind (local/reequilibrate/from target)
     integer, intent(in)               :: split_dual_method  ! Split method (used only in PDM_EXTRACT_PART_KIND_REEQUILIBRATE mode)
     logical, intent(in)               :: compute_child_gnum ! Enable generation of new global IDs for extraction
     integer, intent(in)               :: ownership          ! Ownership of extraction
@@ -146,7 +146,7 @@ module pdm_extract_part
     integer(pdm_g_num_s), pointer :: face_ln_to_gn(:) ! Face global IDs (shape = [n_face])
     integer(pdm_g_num_s), pointer :: edge_ln_to_gn(:) ! Edge global IDs (shape = [n_edge])
     integer(pdm_g_num_s), pointer :: vtx_ln_to_gn(:)  ! Vertex global IDs (shape = [n_vtx])
-    double precision,     pointer :: vtx_coord(:,:)   ! Vertex coordinates (shape = [3, n_vtx])
+    real(8),              pointer :: vtx_coord(:,:)   ! Vertex coordinates (shape = [3, n_vtx])
     type(c_ptr) :: c_cell_face_idx
     type(c_ptr) :: c_cell_face
     type(c_ptr) :: c_face_edge_idx

@@ -49,7 +49,7 @@ Get extraction
 
   .. doxygenfunction:: PDM_extract_part_part_mesh_nodal_get
 
-  Otherwise, the extracted mesh can be retrived using the following accessors:
+  Otherwise, the extracted mesh can be retrieved using the following accessors:
 
   .. doxygenfunction:: PDM_extract_part_n_entity_get
   .. doxygenfunction:: PDM_extract_part_connectivity_get
@@ -64,7 +64,7 @@ Get extraction
 Data transfer
 """""""""""""
 
-  Application-specific data can also be transferred from the extracted mesh to the input mesh, and vice versa.
+  Application-specific data can be can be transferred between the extracted and input meshes.
 
   If the extraction was performed in PDM_EXTRACT_PART_KIND_LOCAL mode, the transfer is performed locally using the *parent* indirection.
 
@@ -128,7 +128,7 @@ Fortran API
 
     .. f:autosubroutine:: pdm_extract_part/PDM_extract_part_part_mesh_nodal_get
 
-    Otherwise, the extracted mesh can be retrived using the following accessors:
+    Otherwise, the extracted mesh can be retrieved using the following accessors:
 
     .. f:autosubroutine:: pdm_extract_part/PDM_extract_part_n_entity_get
     .. f:autosubroutine:: pdm_extract_part/PDM_extract_part_connectivity_get
@@ -140,7 +140,7 @@ Fortran API
   Data transfer
   """""""""""""
 
-    Application-specific data can also be transferred from the extracted mesh to the input mesh, and vice versa.
+    Application-specific data can be can be transferred between the extracted and input meshes.
 
     If the extraction was performed in PDM_EXTRACT_PART_KIND_LOCAL mode, the transfer is performed locally using the *parent* indirection.
 
