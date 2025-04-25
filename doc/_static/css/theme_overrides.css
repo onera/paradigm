@@ -5,8 +5,12 @@
  * More info:
  *    https://www.sphinx-doc.org/en/master/extdev/appapi.html#sphinx.application.Sphinx.add_css_file
  */
+
+@import url("theme.css");
+
 .wy-nav-content {
   max-width: 1200px !important;
+  /* max-width: none; */
 }
 
 /*.wy-menu-vertical p.caption {
