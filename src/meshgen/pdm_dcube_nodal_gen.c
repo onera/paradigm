@@ -2686,7 +2686,7 @@ PDM_dcube_nodal_cart_topo
   *dom_intrf = PDM_domain_interface_create(n_interface,
                                            n_domain,
                                            PDM_DOMAIN_INTERFACE_MULT_NO,
-                                           owner,
+                                           PDM_OWNERSHIP_KEEP,
                                            comm);
   PDM_domain_interface_t* _dom_intrf = *dom_intrf;
 
