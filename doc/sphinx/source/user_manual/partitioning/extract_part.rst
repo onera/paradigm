@@ -7,8 +7,80 @@ Extract part
 C API
 -----
 
-.. todo::
-  ...
+Initialization
+""""""""""""""
+
+  .. doxygenfunction:: PDM_extract_part_create
+
+
+Define input mesh
+"""""""""""""""""
+
+  One can define the input mesh either as a :ref:`Part Mesh Nodal <pmn>` structure:
+
+  .. doxygenfunction:: PDM_extract_part_part_nodal_set
+
+  Or by providing primitive arrays:
+
+  .. doxygenfunction:: PDM_extract_part_part_set
+  .. doxygenfunction:: PDM_extract_part_n_group_set
+  .. doxygenfunction:: PDM_extract_part_part_group_set
+
+
+Define extraction
+"""""""""""""""""
+
+  .. doxygenfunction:: PDM_extract_part_selected_lnum_set
+  .. doxygenfunction:: PDM_extract_part_target_set
+  .. doxygenfunction:: PDM_extract_part_renum_method_set
+
+
+Compute extraction
+""""""""""""""""""
+
+  .. doxygenfunction:: PDM_extract_part_compute
+
+
+Get extraction
+""""""""""""""
+
+  If the input mesh was defined as a :ref:`Part Mesh Nodal <pmn>` structure,
+  the extracted mesh is also retrieved in the form of a :ref:`Part Mesh Nodal <pmn>`:
+
+  .. doxygenfunction:: PDM_extract_part_part_mesh_nodal_get
+
+  Otherwise, the extracted mesh can be retrived using the following accessors:
+
+  .. doxygenfunction:: PDM_extract_part_n_entity_get
+  .. doxygenfunction:: PDM_extract_part_connectivity_get
+  .. doxygenfunction:: PDM_extract_part_vtx_coord_get
+  .. doxygenfunction:: PDM_extract_part_ln_to_gn_get
+  .. doxygenfunction:: PDM_extract_part_parent_ln_to_gn_get
+  .. doxygenfunction:: PDM_extract_part_group_get
+  .. doxygenfunction:: PDM_extract_part_color_get
+  .. doxygenfunction:: PDM_extract_part_init_location_get
+
+
+Data transfer
+"""""""""""""
+
+  Application-specific data can also be transferred from the extracted mesh to the input mesh, and vice versa.
+
+  If the extraction was performed in PDM_EXTRACT_PART_KIND_LOCAL mode, the transfer is performed locally using the *parent* indirection.
+
+  .. doxygenfunction:: PDM_extract_part_parent_lnum_get
+
+  Otherwise, the transfer is performed by means of a :ref:`Part-to-part <ptp>` instance for each type of entity.
+
+  .. doxygenfunction:: PDM_extract_part_part_to_part_get
+  .. doxygenfunction:: PDM_extract_part_part_to_part_group_get
+
+
+Finalization
+""""""""""""
+
+  .. doxygenfunction:: PDM_extract_part_partial_free
+  .. doxygenfunction:: PDM_extract_part_free
 
 
 
