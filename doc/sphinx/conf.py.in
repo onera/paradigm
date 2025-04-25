@@ -37,7 +37,8 @@ extensions = [
     'sphinx.ext.autosectionlabel',
     'sphinx.ext.intersphinx',
     'breathe',
-    'sphinxcontrib.tikz',
+    "sphinx_tabs.tabs",
+    # 'sphinxcontrib.tikz',
     # 'sphinx.ext.coverage',
     # 'sphinx.ext.doctest',
 ]
@@ -436,6 +437,7 @@ rst_prolog = """
 
 
 def setup(app):
+    app.add_config_value('fake_bool',          'ON',                           'env')
     app.add_config_value('enable_fortran_doc', '@PDM_ENABLE_Fortran@',         'env')
     app.add_config_value('enable_python_doc',  '@PDM_ENABLE_PYTHON_BINDINGS@', 'env')
     app.add_config_value('enable_pdma',        '@PDM_ENABLE_EXTENSION_PDMA@',  'env')

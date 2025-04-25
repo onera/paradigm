@@ -4,242 +4,222 @@ Extract part
 ============
 
 
-C API
------
+.. tabs::
 
-Initialization
-""""""""""""""
+  .. tab:: C API
 
-  .. doxygenfunction:: PDM_extract_part_create
+    .. ifconfig:: fake_bool == 'ON'
 
+      Initialization
+      """"""""""""""
 
-Define input mesh
-"""""""""""""""""
+        .. doxygenfunction:: PDM_extract_part_create
 
-  One can define the input mesh either as a :ref:`Part Mesh Nodal <pmn>` structure:
 
-  .. doxygenfunction:: PDM_extract_part_part_nodal_set
+      Define input mesh
+      """""""""""""""""
 
-  Or by providing primitive arrays:
+        One can define the input mesh either as a :ref:`Part Mesh Nodal <pmn>` structure:
 
-  .. doxygenfunction:: PDM_extract_part_part_set
-  .. doxygenfunction:: PDM_extract_part_n_group_set
-  .. doxygenfunction:: PDM_extract_part_part_group_set
+        .. doxygenfunction:: PDM_extract_part_part_nodal_set
 
+        Or by providing primitive arrays:
 
-Define extraction
-"""""""""""""""""
+        .. doxygenfunction:: PDM_extract_part_part_set
+        .. doxygenfunction:: PDM_extract_part_n_group_set
+        .. doxygenfunction:: PDM_extract_part_part_group_set
 
-  .. doxygenfunction:: PDM_extract_part_selected_lnum_set
-  .. doxygenfunction:: PDM_extract_part_target_set
-  .. doxygenfunction:: PDM_extract_part_renum_method_set
 
+      Define extraction
+      """""""""""""""""
 
-Compute extraction
-""""""""""""""""""
+        .. doxygenfunction:: PDM_extract_part_selected_lnum_set
+        .. doxygenfunction:: PDM_extract_part_target_set
+        .. doxygenfunction:: PDM_extract_part_renum_method_set
 
-  .. doxygenfunction:: PDM_extract_part_compute
 
+      Compute extraction
+      """"""""""""""""""
 
-Get extraction
-""""""""""""""
+        .. doxygenfunction:: PDM_extract_part_compute
 
-  If the input mesh was defined as a :ref:`Part Mesh Nodal <pmn>` structure,
-  the extracted mesh is also retrieved in the form of a :ref:`Part Mesh Nodal <pmn>`:
 
-  .. doxygenfunction:: PDM_extract_part_part_mesh_nodal_get
+      Get extraction
+      """"""""""""""
 
-  Otherwise, the extracted mesh can be retrieved using the following accessors:
+        If the input mesh was defined as a :ref:`Part Mesh Nodal <pmn>` structure,
+        the extracted mesh is also retrieved in the form of a :ref:`Part Mesh Nodal <pmn>`:
 
-  .. doxygenfunction:: PDM_extract_part_n_entity_get
-  .. doxygenfunction:: PDM_extract_part_connectivity_get
-  .. doxygenfunction:: PDM_extract_part_vtx_coord_get
-  .. doxygenfunction:: PDM_extract_part_ln_to_gn_get
-  .. doxygenfunction:: PDM_extract_part_parent_ln_to_gn_get
-  .. doxygenfunction:: PDM_extract_part_group_get
-  .. doxygenfunction:: PDM_extract_part_color_get
-  .. doxygenfunction:: PDM_extract_part_init_location_get
+        .. doxygenfunction:: PDM_extract_part_part_mesh_nodal_get
 
+        Otherwise, the extracted mesh can be retrieved using the following accessors:
 
-Data transfer
-"""""""""""""
+        .. doxygenfunction:: PDM_extract_part_n_entity_get
+        .. doxygenfunction:: PDM_extract_part_connectivity_get
+        .. doxygenfunction:: PDM_extract_part_vtx_coord_get
+        .. doxygenfunction:: PDM_extract_part_ln_to_gn_get
+        .. doxygenfunction:: PDM_extract_part_parent_ln_to_gn_get
+        .. doxygenfunction:: PDM_extract_part_group_get
+        .. doxygenfunction:: PDM_extract_part_color_get
+        .. doxygenfunction:: PDM_extract_part_init_location_get
 
-  Application-specific data can be can be transferred between the extracted and input meshes.
 
-  If the extraction was performed in PDM_EXTRACT_PART_KIND_LOCAL mode, the transfer is performed locally using the *parent* indirection.
+      Data transfer
+      """""""""""""
 
-  .. doxygenfunction:: PDM_extract_part_parent_lnum_get
+        Application-specific data can be can be transferred between the extracted and input meshes.
 
-  Otherwise, the transfer is performed by means of a :ref:`Part-to-part <ptp>` instance for each type of entity.
+        If the extraction was performed in PDM_EXTRACT_PART_KIND_LOCAL mode, the transfer is performed locally using the *parent* indirection.
 
-  .. doxygenfunction:: PDM_extract_part_part_to_part_get
-  .. doxygenfunction:: PDM_extract_part_part_to_part_group_get
+        .. doxygenfunction:: PDM_extract_part_parent_lnum_get
 
+        Otherwise, the transfer is performed by means of a :ref:`Part-to-part <ptp>` instance for each type of entity.
 
-Finalization
-""""""""""""
+        .. doxygenfunction:: PDM_extract_part_part_to_part_get
+        .. doxygenfunction:: PDM_extract_part_part_to_part_group_get
 
-  .. doxygenfunction:: PDM_extract_part_partial_free
-  .. doxygenfunction:: PDM_extract_part_free
 
+      Finalization
+      """"""""""""
 
+        .. doxygenfunction:: PDM_extract_part_partial_free
+        .. doxygenfunction:: PDM_extract_part_free
 
 
 
-Fortran API
------------
 
-.. ifconfig:: enable_fortran_doc == 'ON'
 
-  Initialization
-  """"""""""""""
+  .. tab:: Fortran API
 
-    .. f:autosubroutine:: pdm_extract_part/PDM_extract_part_create
+    .. ifconfig:: enable_fortran_doc == 'ON'
 
-  Define input mesh
-  """""""""""""""""
+      Initialization
+      """"""""""""""
 
-    One can define the input mesh either as a :ref:`Part Mesh Nodal <pmn>` structure:
+        .. f:autosubroutine:: pdm_extract_part/PDM_extract_part_create
 
-    .. f:autosubroutine:: pdm_extract_part/PDM_extract_part_part_nodal_set
+      Define input mesh
+      """""""""""""""""
 
-    Or by providing primitive arrays:
+        One can define the input mesh either as a :ref:`Part Mesh Nodal <pmn>` structure:
 
-    .. f:autosubroutine:: pdm_extract_part/PDM_extract_part_part_set
-    .. f:autosubroutine:: pdm_extract_part/PDM_extract_part_n_group_set
-    .. f:autosubroutine:: pdm_extract_part/PDM_extract_part_part_group_set
+        .. f:autosubroutine:: pdm_extract_part/PDM_extract_part_part_nodal_set
 
-  Define extraction
-  """""""""""""""""
+        Or by providing primitive arrays:
 
-    .. f:autosubroutine:: pdm_extract_part/PDM_extract_part_selected_lnum_set
-    .. f:autosubroutine:: pdm_extract_part/PDM_extract_part_target_set
+        .. f:autosubroutine:: pdm_extract_part/PDM_extract_part_part_set
+        .. f:autosubroutine:: pdm_extract_part/PDM_extract_part_n_group_set
+        .. f:autosubroutine:: pdm_extract_part/PDM_extract_part_part_group_set
 
-  Compute extraction
-  """"""""""""""""""
+      Define extraction
+      """""""""""""""""
 
-    .. f:autosubroutine:: pdm_extract_part/PDM_extract_part_compute
+        .. f:autosubroutine:: pdm_extract_part/PDM_extract_part_selected_lnum_set
+        .. f:autosubroutine:: pdm_extract_part/PDM_extract_part_target_set
 
-  Get extraction
-  """"""""""""""
+      Compute extraction
+      """"""""""""""""""
 
-    If the input mesh was defined as a :ref:`Part Mesh Nodal <pmn>` structure,
-    the extracted mesh is also retrieved in the form of a :ref:`Part Mesh Nodal <pmn>`:
+        .. f:autosubroutine:: pdm_extract_part/PDM_extract_part_compute
 
-    .. f:autosubroutine:: pdm_extract_part/PDM_extract_part_part_mesh_nodal_get
+      Get extraction
+      """"""""""""""
 
-    Otherwise, the extracted mesh can be retrieved using the following accessors:
+        If the input mesh was defined as a :ref:`Part Mesh Nodal <pmn>` structure,
+        the extracted mesh is also retrieved in the form of a :ref:`Part Mesh Nodal <pmn>`:
 
-    .. f:autosubroutine:: pdm_extract_part/PDM_extract_part_n_entity_get
-    .. f:autosubroutine:: pdm_extract_part/PDM_extract_part_connectivity_get
-    .. f:autosubroutine:: pdm_extract_part/PDM_extract_part_vtx_coord_get
-    .. f:autosubroutine:: pdm_extract_part/PDM_extract_part_ln_to_gn_get
-    .. f:autosubroutine:: pdm_extract_part/PDM_extract_part_parent_ln_to_gn_get
-    .. f:autosubroutine:: pdm_extract_part/PDM_extract_part_group_get
+        .. f:autosubroutine:: pdm_extract_part/PDM_extract_part_part_mesh_nodal_get
 
-  Data transfer
-  """""""""""""
+        Otherwise, the extracted mesh can be retrieved using the following accessors:
 
-    Application-specific data can be can be transferred between the extracted and input meshes.
+        .. f:autosubroutine:: pdm_extract_part/PDM_extract_part_n_entity_get
+        .. f:autosubroutine:: pdm_extract_part/PDM_extract_part_connectivity_get
+        .. f:autosubroutine:: pdm_extract_part/PDM_extract_part_vtx_coord_get
+        .. f:autosubroutine:: pdm_extract_part/PDM_extract_part_ln_to_gn_get
+        .. f:autosubroutine:: pdm_extract_part/PDM_extract_part_parent_ln_to_gn_get
+        .. f:autosubroutine:: pdm_extract_part/PDM_extract_part_group_get
 
-    If the extraction was performed in PDM_EXTRACT_PART_KIND_LOCAL mode, the transfer is performed locally using the *parent* indirection.
+      Data transfer
+      """""""""""""
 
-    .. f:autosubroutine:: pdm_extract_part/PDM_extract_part_parent_lnum_get
+        Application-specific data can be can be transferred between the extracted and input meshes.
 
-    Otherwise, the transfer is performed by means of a :ref:`Part-to-part <ptp>` instance for each type of entity.
+        If the extraction was performed in PDM_EXTRACT_PART_KIND_LOCAL mode, the transfer is performed locally using the *parent* indirection.
 
-    .. note::
+        .. f:autosubroutine:: pdm_extract_part/PDM_extract_part_parent_lnum_get
 
-      Note that *direct* exchanges go from extraction to input and *reverse* exchanges go from input to extraction.
+        Otherwise, the transfer is performed by means of a :ref:`Part-to-part <ptp>` instance for each type of entity.
 
-    .. f:autosubroutine:: pdm_extract_part/PDM_extract_part_part_to_part_get
+        .. note::
 
-  Finalization
-  """"""""""""
+          Note that *direct* exchanges go from extraction to input and *reverse* exchanges go from input to extraction.
 
-    .. f:autosubroutine:: pdm_extract_part/PDM_extract_part_partial_free
-    .. f:autosubroutine:: pdm_extract_part/PDM_extract_part_free
+        .. f:autosubroutine:: pdm_extract_part/PDM_extract_part_part_to_part_get
 
-.. ifconfig:: enable_fortran_doc == 'OFF'
+      Finalization
+      """"""""""""
 
-  .. warning::
-    Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+        .. f:autosubroutine:: pdm_extract_part/PDM_extract_part_partial_free
+        .. f:autosubroutine:: pdm_extract_part/PDM_extract_part_free
 
+    .. ifconfig:: enable_fortran_doc == 'OFF'
 
+      .. warning::
+        Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
 
-Python API
-----------
 
-.. ifconfig:: enable_python_doc == 'ON'
 
-  .. py:class:: ExtractPart
+  .. tab:: Python API
 
-    Python structure to perform extraction operations. Once initialized, all the following
-    methods apply to a :class:`ExtractPart` instance.
+    .. ifconfig:: enable_python_doc == 'ON'
 
+      .. py:class:: ExtractPart
 
-    .. rubric:: Initialization
+        Python structure to perform extraction operations. Once initialized, all the following
+        methods apply to a :class:`ExtractPart` instance.
 
-    .. autofunction:: Pypdm.Pypdm.ExtractPart.__init__
 
+        .. rubric:: Initialization
 
-    .. rubric:: Methods summary
+        .. autofunction:: Pypdm.Pypdm.ExtractPart.__init__
 
-    .. autosummary::
-      :nosignatures:
 
-      ~Pypdm.Pypdm.ExtractPart.part_set
-      ~Pypdm.Pypdm.ExtractPart.part_n_group_set
-      ~Pypdm.Pypdm.ExtractPart.part_group_set
-      ~Pypdm.Pypdm.ExtractPart.selected_lnum_set
-      ~Pypdm.Pypdm.ExtractPart.target_set
-      ~Pypdm.Pypdm.ExtractPart.compute
-      ~Pypdm.Pypdm.ExtractPart.n_entity_get
-      ~Pypdm.Pypdm.ExtractPart.connectivity_get
-      ~Pypdm.Pypdm.ExtractPart.vtx_coord_get
-      ~Pypdm.Pypdm.ExtractPart.ln_to_gn_get
-      ~Pypdm.Pypdm.ExtractPart.parent_ln_to_gn_get
-      ~Pypdm.Pypdm.ExtractPart.extract_part_group_get
-      ~Pypdm.Pypdm.ExtractPart.part_to_part_get
-      ~Pypdm.Pypdm.ExtractPart.part_to_part_group_get
+        .. rubric:: Define input mesh
 
+        .. autofunction:: Pypdm.Pypdm.ExtractPart.part_set
+        .. autofunction:: Pypdm.Pypdm.ExtractPart.part_n_group_set
+        .. autofunction:: Pypdm.Pypdm.ExtractPart.part_group_set
 
-    .. rubric:: Define input mesh
 
-    .. autofunction:: Pypdm.Pypdm.ExtractPart.part_set
-    .. autofunction:: Pypdm.Pypdm.ExtractPart.part_n_group_set
-    .. autofunction:: Pypdm.Pypdm.ExtractPart.part_group_set
+        .. rubric:: Define extraction
 
+        .. autofunction:: Pypdm.Pypdm.ExtractPart.selected_lnum_set
+        .. autofunction:: Pypdm.Pypdm.ExtractPart.target_set
 
-    .. rubric:: Define extraction
 
-    .. autofunction:: Pypdm.Pypdm.ExtractPart.selected_lnum_set
-    .. autofunction:: Pypdm.Pypdm.ExtractPart.target_set
+        .. rubric:: Compute extraction
 
+        .. autofunction:: Pypdm.Pypdm.ExtractPart.compute
 
-    .. rubric:: Compute extraction
 
-    .. autofunction:: Pypdm.Pypdm.ExtractPart.compute
+        .. rubric:: Get extraction
 
+        .. autofunction:: Pypdm.Pypdm.ExtractPart.n_entity_get
+        .. autofunction:: Pypdm.Pypdm.ExtractPart.connectivity_get
+        .. autofunction:: Pypdm.Pypdm.ExtractPart.vtx_coord_get
+        .. autofunction:: Pypdm.Pypdm.ExtractPart.ln_to_gn_get
+        .. autofunction:: Pypdm.Pypdm.ExtractPart.parent_ln_to_gn_get
+        .. autofunction:: Pypdm.Pypdm.ExtractPart.extract_part_group_get
 
-    .. rubric:: Get extraction
 
-    .. autofunction:: Pypdm.Pypdm.ExtractPart.n_entity_get
-    .. autofunction:: Pypdm.Pypdm.ExtractPart.connectivity_get
-    .. autofunction:: Pypdm.Pypdm.ExtractPart.vtx_coord_get
-    .. autofunction:: Pypdm.Pypdm.ExtractPart.ln_to_gn_get
-    .. autofunction:: Pypdm.Pypdm.ExtractPart.parent_ln_to_gn_get
-    .. autofunction:: Pypdm.Pypdm.ExtractPart.extract_part_group_get
+        .. rubric:: Data transfer
 
+        .. autofunction:: Pypdm.Pypdm.ExtractPart.part_to_part_get
+        .. autofunction:: Pypdm.Pypdm.ExtractPart.part_to_part_group_get
 
-    .. rubric:: Data transfer
 
-    .. autofunction:: Pypdm.Pypdm.ExtractPart.part_to_part_get
-    .. autofunction:: Pypdm.Pypdm.ExtractPart.part_to_part_group_get
 
+    .. ifconfig:: enable_python_doc == 'OFF'
 
-
-.. ifconfig:: enable_python_doc == 'OFF'
-
-  .. warning::
-    Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+      .. warning::
+        Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
