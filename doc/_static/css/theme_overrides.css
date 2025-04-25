@@ -5,6 +5,9 @@
  * More info:
  *    https://www.sphinx-doc.org/en/master/extdev/appapi.html#sphinx.application.Sphinx.add_css_file
  */
+.wy-nav-content {
+  max-width: 1200px !important;
+}
 
 /*.wy-menu-vertical p.caption {
   color: #e6e6e6;
