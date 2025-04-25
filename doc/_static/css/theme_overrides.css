@@ -9,8 +9,9 @@
 @import url("theme.css");
 
 .wy-nav-content {
-  max-width: 1200px !important;
+  max-width: 1000px !important;
   /* max-width: none; */
+  /* max-width: 75% !important; */
 }
 
 /*.wy-menu-vertical p.caption {
