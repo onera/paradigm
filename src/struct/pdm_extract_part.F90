@@ -40,15 +40,15 @@ module pdm_extract_part
     ! Build an extract_part struct
     implicit none
 
-    type(c_ptr)                       :: extrp               ! C pointer to PDM_extract_part_t instance
-    integer, intent(in)               :: dim                 ! Extraction dimension
-    integer, intent(in)               :: n_part_in           ! Number of input  partitions
-    integer, intent(in)               :: n_part_out          ! Number of output partitions
-    integer, intent(in)               :: extract_kind        ! Extraction kind (local/requilibrate/from target)
-    integer, intent(in)               :: split_dual_method   ! Split method (if requilibrate)
-    logical, intent(in)               :: compute_child_gnum  ! Enable generation of new global IDs for extraction
-    integer, intent(in)               :: ownership           ! Ownership of extraction
-    integer, intent(in)               :: comm                ! MPI communicator
+    type(c_ptr)                       :: extrp              ! C pointer to PDM_extract_part_t instance
+    integer, intent(in)               :: dim                ! Mesh dimension
+    integer, intent(in)               :: n_part_in          ! Number of input  partitions
+    integer, intent(in)               :: n_part_out         ! Number of output partitions
+    integer, intent(in)               :: extract_kind       ! Extraction kind (local/requilibrate/from target)
+    integer, intent(in)               :: split_dual_method  ! Split method (used only in PDM_EXTRACT_PART_KIND_REEQUILIBRATE mode)
+    logical, intent(in)               :: compute_child_gnum ! Enable generation of new global IDs for extraction
+    integer, intent(in)               :: ownership          ! Ownership of extraction
+    integer, intent(in)               :: comm               ! MPI communicator
 
     integer(c_int)                    :: c_compute_child_gnum
     integer(c_int)                    :: c_comm
@@ -127,13 +127,13 @@ module pdm_extract_part
     integer, intent(in)           :: n_face           ! Number of faces
     integer, intent(in)           :: n_edge           ! Number of edges
     integer, intent(in)           :: n_vtx            ! Number of vertices
-    integer(pdm_l_num_s), pointer :: cell_face_idx(:) ! Index for cell->face connectivity (shape = [n_cell+1])
-    integer(pdm_l_num_s), pointer :: cell_face(:)     ! Cell->face connectivity (shape = [cell_face_idx(n_cell+1)])
-    integer(pdm_l_num_s), pointer :: face_edge_idx(:) ! Index for face->edge connectivity (shape = [n_face+1])
-    integer(pdm_l_num_s), pointer :: face_edge(:)     ! Face->edge connectivity (shape = [face_edge_idx(n_face+1)])
-    integer(pdm_l_num_s), pointer :: edge_vtx(:)      ! Edge->vtx connectivity (shape = [2*n_edge])
-    integer(pdm_l_num_s), pointer :: face_vtx_idx(:)  ! Index for face->vtx connectivity (shape = [n_face+1])
-    integer(pdm_l_num_s), pointer :: face_vtx(:)      ! Face->vtx connectivity (shape = [face_vtx_idx(n_face+1)])
+    integer(pdm_l_num_s), pointer :: cell_face_idx(:) ! Index for cell→face connectivity (shape = [n_cell+1])
+    integer(pdm_l_num_s), pointer :: cell_face(:)     ! Cell→face connectivity (shape = [cell_face_idx(n_cell+1)])
+    integer(pdm_l_num_s), pointer :: face_edge_idx(:) ! Index for face→edge connectivity (shape = [n_face+1])
+    integer(pdm_l_num_s), pointer :: face_edge(:)     ! Face→edge connectivity (shape = [face_edge_idx(n_face+1)])
+    integer(pdm_l_num_s), pointer :: edge_vtx(:)      ! Edge→vtx connectivity (shape = [2*n_edge])
+    integer(pdm_l_num_s), pointer :: face_vtx_idx(:)  ! Index for face→vtx connectivity (shape = [n_face+1])
+    integer(pdm_l_num_s), pointer :: face_vtx(:)      ! Face→vtx connectivity (shape = [face_vtx_idx(n_face+1)])
     integer(pdm_g_num_s), pointer :: cell_ln_to_gn(:) ! Cell global IDs (shape = [n_cell])
     integer(pdm_g_num_s), pointer :: face_ln_to_gn(:) ! Face global IDs (shape = [n_face])
     integer(pdm_g_num_s), pointer :: edge_ln_to_gn(:) ! Edge global IDs (shape = [n_edge])
@@ -282,7 +282,7 @@ module pdm_extract_part
   subroutine PDM_extract_part_n_group_set (extrp,      &
                                            bound_type, &
                                            n_group)
-    ! Set number of groups (optional)
+    ! Set number of groups
     implicit none
 
     type(c_ptr), value            :: extrp      ! C pointer to PDM_extract_part_t instance
@@ -310,6 +310,7 @@ module pdm_extract_part
 
   end subroutine PDM_extract_part_n_group_set
 
+
   subroutine PDM_extract_part_part_group_set (extrp,                 &
                                               i_part,                &
                                               i_group,               &
@@ -317,7 +318,7 @@ module pdm_extract_part
                                               n_group_entity,        &
                                               group_entity,          &
                                               group_entity_ln_to_gn)
-    ! Set partition group (optional)
+    ! Set partition group
     implicit none
 
     type(c_ptr), value            :: extrp                    ! C pointer to PDM_extract_part_t instance
@@ -498,7 +499,7 @@ module pdm_extract_part
                                                  ownership)
     ! Select local entities to extract.
     !
-    ! (Use only in LOCAL or REEQUILIBRATE mode)
+    ! (Use only in PDM_EXTRACT_PART_KIND_LOCAL or PDM_EXTRACT_PART_KIND_REEQUILIBRATE mode)
     implicit none
 
     type(c_ptr), value                   :: extrp           ! C pointer to PDM_extract_part_t instance
@@ -550,14 +551,14 @@ module pdm_extract_part
                                           ownership)
     ! Set the target entities.
     !
-    ! (Use only in FROM_TARGET mode)
+    ! (Use only in PDM_EXTRACT_PART_KIND_FROM_TARGET mode)
     implicit none
 
     type(c_ptr), value                   :: extrp              ! C pointer to PDM_extract_part_t instance
     integer, intent(in)                  :: i_part             ! Partition identifier
     integer, intent(in)                  :: n_target           ! Number of target entities
-    integer(kind = PDM_g_num_s), pointer :: target_gnum(:)     ! Global IDs of target entities (shape [n_target])
-    integer(kind = PDM_l_num_s), pointer :: target_location(:) ! Initial location of target entities (optional)
+    integer(kind = PDM_g_num_s), pointer :: target_gnum(:)     ! Global IDs of target entities (shape = [n_target])
+    integer(kind = PDM_l_num_s), pointer :: target_location(:) ! Initial location of target entities (shape = [3*n_target] or *null()*)
     integer, intent(in)                  :: ownership          ! Ownership
 
     type(c_ptr)                          :: c_target_gnum
@@ -818,7 +819,7 @@ module pdm_extract_part
                                                ownership)
     ! Get local IDs of parent entities.
     !
-    ! (Use only in LOCAL mode)
+    ! (Use only in PDM_EXTRACT_PART_KIND_LOCAL mode)
     implicit none
 
     type(c_ptr), value                   :: extrp                 ! C pointer to PDM_extract_part_t instance
@@ -905,6 +906,46 @@ module pdm_extract_part
     call PDM_extract_part_part_to_part_get_c (extrp, c_entity_type, ptp, c_ownership)
 
   end subroutine PDM_extract_part_part_to_part_get
+
+
+  subroutine PDM_extract_part_part_to_part_group_get(extrp,      &
+                                                     bound_type, &
+                                                     i_group,    &
+                                                     ptp,        &
+                                                     ownership)
+    ! Get the Part-to-Part instance for a given group
+    implicit none
+
+    type(c_ptr)                          :: extrp      ! C pointer to PDM_extract_part_t instance
+    integer, intent(in)                  :: bound_type ! Type of group
+    integer, intent(in)                  :: i_group    ! Group identifier
+    type(c_ptr)                          :: ptp        ! C pointer to PDM_part_to_part_t instance
+    integer, intent(in)                  :: ownership  ! Ownership
+
+    interface
+      subroutine PDM_extract_part_part_to_part_group_get_c(extrp,      &
+                                                           bound_type, &
+                                                           i_group,    &
+                                                           ptp,        &
+                                                           ownership)  &
+      bind (c, name='PDM_extract_part_part_to_part_group_get')
+        use iso_c_binding
+        implicit none
+        type(c_ptr), value           :: extrp
+        integer(c_int), value        :: bound_type
+        integer(c_int), value        :: i_group
+        type(c_ptr)                  :: ptp
+        integer(c_int), value        :: ownership
+      end subroutine PDM_extract_part_part_to_part_group_get_c
+    end interface
+
+    call PDM_extract_part_part_to_part_group_get_c(extrp,      &
+                                                   bound_type, &
+                                                   i_group,    &
+                                                   ptp,        &
+                                                   ownership)
+
+  end subroutine PDM_extract_part_part_to_part_group_get
 
 
   subroutine PDM_extract_part_vtx_coord_get (extrp,            &

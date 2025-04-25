@@ -24,14 +24,14 @@ Fortran API
 
     .. f:autosubroutine:: pdm_extract_part/PDM_extract_part_create
 
-  Input mesh definition
-  """"""""""""""""""""""
+  Define input mesh
+  """""""""""""""""
 
     One can define the input mesh either as a :ref:`Part Mesh Nodal <pmn>` structure:
 
     .. f:autosubroutine:: pdm_extract_part/PDM_extract_part_part_nodal_set
 
-    Or by by providing primitive arrays:
+    Or by providing primitive arrays:
 
     .. f:autosubroutine:: pdm_extract_part/PDM_extract_part_part_set
     .. f:autosubroutine:: pdm_extract_part/PDM_extract_part_n_group_set
@@ -70,7 +70,7 @@ Fortran API
 
     Application-specific data can also be transferred from the extracted mesh to the input mesh, and vice versa.
 
-    If the extraction was performed in ``PDM_EXTRACT_PART_KIND_LOCAL`` mode, the transfer is performed locally using the *parent* indirection.
+    If the extraction was performed in PDM_EXTRACT_PART_KIND_LOCAL mode, the transfer is performed locally using the *parent* indirection.
 
     .. f:autosubroutine:: pdm_extract_part/PDM_extract_part_parent_lnum_get
 
