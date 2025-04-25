@@ -111,29 +111,41 @@ cdef extern from "pdm_extract_part.h":
 # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 # > Class definition
 cdef class ExtractPart:
-  """
-
-  """
   # --------------------------------------------------------------------------
   # > Class attributes
   cdef PDM_extract_part_t* _extrp
-  cdef MPI.Comm py_comm   
+  cdef MPI.Comm py_comm
   cdef dict ptp_objects
   cdef dict ptp_group_objects
   cdef list keep_alive
+
+  LOCAL         = _PDM_EXTRACT_PART_KIND_LOCAL
+  REEQUILIBRATE = _PDM_EXTRACT_PART_KIND_REEQUILIBRATE
+  FROM_TARGET   = _PDM_EXTRACT_PART_KIND_FROM_TARGET
   # --------------------------------------------------------------------------
 
   # ------------------------------------------------------------------
-  def __cinit__(self,
-                int                     dim,
-                int                     n_part_in,
-                int                     n_part_out,
-                PDM_extract_part_kind_t extract_kind,
-                PDM_split_dual_t        split_dual_method,
-                PDM_bool_t              compute_child_gnum,
-                MPI.Comm                comm):
+  def __init__(self,
+               int                     dim,
+               int                     n_part_in,
+               int                     n_part_out,
+               PDM_extract_part_kind_t extract_kind,
+               PDM_split_dual_t        split_dual_method,
+               PDM_bool_t              compute_child_gnum,
+               MPI.Comm                comm):
     """
-    Compute the distance from point clouds to a surface
+    __init__(dim, n_part_in, n_part_out, extract_kind, split_dual_method, compute_child_gnum, comm)
+
+    Create an extract-part structure.
+
+    Parameters:
+      dim                (int)                     : Mesh dimension
+      n_part_in          (int)                     : Number of input  partitions
+      n_part_out         (int)                     : Number of output partitions
+      extract_kind       (PDM_extract_part_kind_t) : Extraction kind (local/requilibrate/from target)
+      split_dual_method  (PDM_split_dual_t)        : Split method (used only in PDM_EXTRACT_PART_KIND_REEQUILIBRATE mode)
+      compute_child_gnum (int)                     : Enable generation of new global IDs for extraction
+      comm               (MPI.Comm)                : MPI communicator
     """
     self.ptp_objects = dict()
     self.ptp_group_objects = dict()
@@ -155,6 +167,17 @@ cdef class ExtractPart:
                         int i_part,
                         NPY.ndarray[NPY.int32_t, mode='c', ndim=1] extract_lnum):
     """
+    selected_lnum_set(i_part, extract_lnum)
+
+    Select local entities to extract
+
+    .. note::
+
+      Use only in PDM_EXTRACT_PART_KIND_LOCAL or PDM_EXTRACT_PART_KIND_REEQUILIBRATE mode
+
+    Parameters:
+      i_part       (int)                    : Partition identifier
+      extract_lnum (np.ndarray[np.int32_t]) : Local IDs of entities to extract (1-based)
     """
     self.keep_alive.append(extract_lnum)
     cdef int n_extract = extract_lnum.shape[0]
@@ -171,6 +194,18 @@ cdef class ExtractPart:
                  NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] target_gnum,
                  NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] target_location):
     """
+    target_set(i_part, target_gnum, target_location)
+
+    Set the target entities
+
+    .. note::
+
+      Use only in PDM_EXTRACT_PART_KIND_FROM_TARGET mode
+
+    Parameters:
+      i_part          (int)                        : Partition identifier
+      target_gnum     (np.ndarray[npy_pdm_gnum_t]) : Global IDs of target entities
+      target_location (np.ndarray[np.int32_t])     : Initial location of target entities (triplets : (rank, part, local ID))
     """
     self.keep_alive.append(target_gnum)
     self.keep_alive.append(target_location)
@@ -203,6 +238,28 @@ cdef class ExtractPart:
                NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] vtx_ln_to_gn ,
                NPY.ndarray[NPY.double_t  , mode='c', ndim=1] coords):
     """
+    part_set(i_part, n_cell, n_face, n_edge, n_vtx, cell_face_idx, cell_face, face_edge_idx, face_edge, edge_vtx, face_vtx_idx, face_vtx, cell_ln_to_gn, face_ln_to_gn, edge_ln_to_gn, vtx_ln_to_gn, coords)
+
+    Set partition
+
+    Parameters:
+      i_part        (int)                        : Partition identifer
+      n_cell        (int)                        : Number of cells
+      n_face        (int)                        : Number of faces
+      n_edge        (int)                        : Number of edges
+      n_vtx         (int)                        : Number of vertices
+      cell_face_idx (np.ndarray[np.int32_t])     : Index for cell→face connectivity
+      cell_face     (np.ndarray[np.int32_t])     : Cell→face connectivity
+      face_edge_idx (np.ndarray[np.int32_t])     : Index for face→edge connectivity
+      face_edge     (np.ndarray[np.int32_t])     : Face→edge connectivity
+      edge_vtx      (np.ndarray[np.int32_t])     : Edge→vtx connectivity
+      face_vtx_idx  (np.ndarray[np.int32_t])     : Index for face→vtx connectivity
+      face_vtx      (np.ndarray[np.int32_t])     : Face→vtx connectivity
+      cell_ln_to_gn (np.ndarray[npy_pdm_gnum_t]) : Cell global IDs
+      face_ln_to_gn (np.ndarray[npy_pdm_gnum_t]) : Face global IDs
+      edge_ln_to_gn (np.ndarray[npy_pdm_gnum_t]) : Edge global IDs
+      vtx_ln_to_gn  (np.ndarray[npy_pdm_gnum_t]) : Vertex global IDs
+      coords        (np.ndarray[np.double_t])    : Vertex coordinates
     """
     self.keep_alive.append(cell_face_idx)
     self.keep_alive.append(cell_face)
@@ -247,6 +304,13 @@ cdef class ExtractPart:
                        PDM_bound_type_t bound_type,
                        int              n_group):
     """
+    part_n_group_set(bound_type, n_group)
+
+    Set number of groups
+
+    Parameters:
+      bound_type (PDM_bound_type_t) : Kind of group
+      n_group    (int)              : Number of groups
     """
     PDM_extract_part_n_group_set(self._extrp,
                                  bound_type,
@@ -261,6 +325,16 @@ cdef class ExtractPart:
                      NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] np_group_entity,
                      NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] np_group_entity_ln_to_gn):
     """
+    part_group_set(i_part, i_group, bound_type, np_group_entity, np_group_entity_ln_to_gn)
+
+    Set partition group
+
+    Parameters:
+      i_part                   (int)                        : Partition identifier
+      i_group                  (int)                        : Group identifier
+      bound_type               (PDM_bound_type_t)           : Kind of group
+      np_group_entity          (np.ndarray[np.int32_t])     : Local IDs of entities in group
+      np_group_entity_ln_to_gn (np.ndarray[npy_pdm_gnum_t]) : Group-specific global IDs of entities in group
     """
     self.keep_alive.append(np_group_entity)
     self.keep_alive.append(np_group_entity_ln_to_gn)
@@ -276,6 +350,7 @@ cdef class ExtractPart:
   # ------------------------------------------------------------------
   def compute(self):
     """
+    Compute extraction
     """
     PDM_extract_part_compute(self._extrp)
 
@@ -284,6 +359,16 @@ cdef class ExtractPart:
                    int ipart,
                    PDM_mesh_entities_t entity_type):
     """
+    n_entity_get(ipart, entity_type)
+
+    Get number of entities in extraction
+
+    Parameters:
+      ipart       (int)                 : Partition identifier
+      entity_type (PDM_mesh_entities_t) : Type of entity
+
+    Returns:
+      Number of entities (`int`)
     """
     return PDM_extract_part_n_entity_get(self._extrp, ipart, entity_type)
 
@@ -292,6 +377,18 @@ cdef class ExtractPart:
                        int ipart,
                        PDM_connectivity_type_t connectivity_type):
     """
+    connectivity_get(ipart, connectivity_type)
+
+    Get connectivity in extraction
+
+    Parameters:
+      ipart             (int)                     : Partition identifier
+      connectivity_type (PDM_connectivity_type_t) : Type of connectivity
+
+    Returns:
+      Tuple
+        - np_connect_idx (`np.ndarray[np.int32_t]`) : Connectivity index
+        - np_connect     (`np.ndarray[np.int32_t]`) : Connectivity array
     """
     cdef int  n_entity
     cdef int *connect
@@ -310,7 +407,7 @@ cdef class ExtractPart:
       np_connect_idx = create_numpy_i(connect_idx, n_entity+1           )
       np_connect     = create_numpy_i(connect    , connect_idx[n_entity])
     else:
-      np_connect  = create_numpy_i(connect    , 2 * n_entity)
+      np_connect = create_numpy_i(connect, 2 * n_entity)
 
     # return PDM_extract_part_n_entity_get(self._extrp, ipart, entity_type)
     return np_connect_idx, np_connect
@@ -320,6 +417,16 @@ cdef class ExtractPart:
                    int ipart,
                    PDM_mesh_entities_t entity_type):
     """
+    ln_to_gn_get(ipart, entity_type)
+
+    Get global IDs of entities in extraction
+
+    Parameters:
+      ipart       (int)                 : Partition identifier
+      entity_type (PDM_mesh_entities_t) : Type of entity
+
+    Returns:
+      Global IDs (`np.ndarray[npy_pdm_gnum_t]`)
     """
     cdef int  n_entity
     cdef PDM_g_num_t *entity_ln_to_gn
@@ -336,6 +443,16 @@ cdef class ExtractPart:
                           int ipart,
                           PDM_mesh_entities_t entity_type):
     """
+    parent_ln_to_gn_get(ipart, entity_type)
+
+    Get parent global IDs of entities in extraction
+
+    Parameters:
+      ipart       (int)                 : Partition identifier
+      entity_type (PDM_mesh_entities_t) : Type of entity
+
+    Returns:
+      Parent global IDs (`np.ndarray[npy_pdm_gnum_t]`)
     """
     cdef int  n_entity
     cdef PDM_g_num_t *parent_ln_to_gn
@@ -351,6 +468,15 @@ cdef class ExtractPart:
   def vtx_coord_get(self,
                     int ipart):
     """
+    vtx_coord_get(ipart)
+
+    Get vertex coordinates in extraction
+
+    Parameters:
+      ipart (int) : Partition identifier
+
+    Returns:
+      Vertex coordinates (`np.ndarray[np.double_t]`)
     """
     cdef int     n_vtx
     cdef double *pvtx_coord
@@ -363,6 +489,18 @@ cdef class ExtractPart:
   def part_to_part_get(                    self,
                        PDM_mesh_entities_t entity_type):
     """
+    part_to_part_get(entity_type)
+
+    Get the PartToPart instance for a given entity type
+
+    .. note:: Note that *direct* exchanges go from extraction to input
+              and *reverse* exchanges go from input to extraction.
+
+    Parameters:
+      entity_type (PDM_mesh_entities_t) : Type of entity
+
+    Returns:
+      PartToPart object (:py:class:`PartToPart`)
     """
     cdef PDM_part_to_part_t  *ptpc
     try:
@@ -381,6 +519,19 @@ cdef class ExtractPart:
                              PDM_bound_type_t bound_type,
                              int              i_group):
     """
+    part_to_part_group_get(bound_type, i_group)
+
+    Get the PartToPart instance for a given group
+
+    .. note:: Note that *direct* exchanges go from extraction to input
+              and *reverse* exchanges go from input to extraction.
+
+    Parameters:
+      bound_type (PDM_bound_type_t) : Type of group
+      i_group     (int)             : Group identifier
+
+    Returns:
+      PartToPart object (:py:class:`PartToPart`)
     """
     cdef PDM_part_to_part_t  *ptpc
     try:
@@ -401,6 +552,20 @@ cdef class ExtractPart:
                              int              i_group,
                              PDM_bound_type_t bound_type):
     """
+    extract_part_group_get(ipart, i_group, bound_type)
+
+    Get partition group
+
+    Parameters:
+      ipart       (int)             : Partition identifier
+      i_group     (int)             : Group identifier
+      bound_type (PDM_bound_type_t) : Type of group
+
+    Returns:
+      Dictionary
+       - ``"group_entity"``                 (`np.ndarray[np.int32_t]`)     : Local IDs of entities in group
+       - ``"group_entity_ln_to_gn"``        (`np.ndarray[npy_pdm_gnum_t]`) : Group-specific global IDs (in extraction) of entities in group
+       - ``"group_entity_parent_ln_to_gn"`` (`np.ndarray[npy_pdm_gnum_t]`) : Group-specific global IDs of entities in group
     """
     cdef int          pn_extract_group_entity
     cdef int         *pextract_group_entity
