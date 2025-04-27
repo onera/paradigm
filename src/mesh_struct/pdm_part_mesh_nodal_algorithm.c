@@ -482,7 +482,7 @@ PDM_part_mesh_nodal_part_comm_graph_deduce_from_vtx
 )
 {
 
-  if (pmn->pcg[PDM_MESH_ENTITY_VTX] != NULL) {
+  if (pmn->pcg[PDM_MESH_ENTITY_VTX] == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "PDM_part_mesh_nodal_graph_comm_deduce_from_vtx: pmn->pcg[PDM_MESH_ENTITY_VTX]!=NULL is mandatory in order to deduce other \n");
   }
 
@@ -522,12 +522,56 @@ PDM_part_mesh_nodal_part_comm_graph_deduce_from_vtx
                                                          entity2_vtx,
                                                          &pmn->pcg[mesh_entity]);
 
+  for(int i_part = 0; i_part < pmn->n_part; ++i_part) {
+    PDM_free(entity2_vtx_idx[i_part]);
+    PDM_free(entity2_vtx    [i_part]);
+  }
+  PDM_free(n_vtx          );
   PDM_free(n_entity2      );
   PDM_free(entity2_vtx    );
   PDM_free(entity2_vtx_idx);
 }
 
+void
+PDM_part_mesh_nodal_complete_part_comm_graph
+(
+  PDM_part_mesh_nodal_t  *pmn
+)
+{
+  /*
+   * Check scenario :
+   *    1/ We have vertices gnum
+   *    2/ We have vertices part_comm_graph
+   */
+  int have_vtx_gnum = 1;
+  for (int i_part = 0; i_part < pmn->n_part; ++i_part) {
+    if(PDM_part_mesh_nodal_vtx_g_num_get(pmn, i_part, PDM_OWNERSHIP_BAD_VALUE) == NULL) {
+      have_vtx_gnum = 0;
+    }
+  }
 
+  int have_g_vtx_gnum = 1;
+  PDM_MPI_Allreduce(&have_vtx_gnum, &have_g_vtx_gnum, 1, PDM_MPI_INT, PDM_MPI_MIN, pmn->comm);
+
+  if (pmn->pcg[PDM_MESH_ENTITY_VTX] == NULL && have_g_vtx_gnum == 0) {
+    PDM_error (__FILE__, __LINE__, 0, "PDM_part_mesh_nodal_complete_part_comm_graph: pmn->pcg[PDM_MESH_ENTITY_VTX]!=NULL or gnum for vertices is mandatory in order to deduce other \n");
+  }
+
+  /*
+   *  Compute the pcg of vertices with gnum
+   */
+  if(pmn->pcg[PDM_MESH_ENTITY_VTX] == NULL) {
+    PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(pmn, PDM_MESH_ENTITY_VTX);
+  }
+
+  /*
+   * Deduce all other
+   */
+  PDM_part_mesh_nodal_part_comm_graph_deduce_from_vtx(pmn, PDM_GEOMETRY_KIND_RIDGE);
+  if(pmn->mesh_dimension == 3) { // Mostly this graph comm is empty except for non manifold cases
+    PDM_part_mesh_nodal_part_comm_graph_deduce_from_vtx(pmn, PDM_GEOMETRY_KIND_SURFACIC);
+  }
+}
 
 void
 PDM_part_mesh_nodal_compute_straddling_entities

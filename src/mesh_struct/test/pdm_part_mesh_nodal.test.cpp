@@ -13,6 +13,7 @@
 #include "pdm_part_mesh_nodal_algorithm.h"
 #include "pdm_generate_mesh.h"
 #include "pdm_priv.h"
+#include "pdm_logging.h"
 
 /*
  *  Use case
@@ -331,6 +332,62 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] part_comm_graph from gnum", 2) {
   PDM_part_mesh_nodal_part_comm_graph_get(pmn, PDM_MESH_ENTITY_FACE, &pcg_surfacic, PDM_OWNERSHIP_BAD_VALUE);
   n_entity = PDM_part_comm_graph_entity_graph_get(pcg_surfacic, 0, &computed_graph, PDM_OWNERSHIP_BAD_VALUE);
   CHECK(n_entity==0);
+
+  PDM_part_mesh_nodal_free(pmn);
+}
+
+
+
+
+
+MPI_TEST_CASE("[pdm_part_mesh_nodal] PDM_part_mesh_nodal_complete_part_comm_graph", 2) {
+
+  int i_rank = -1;
+  PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
+  PDM_MPI_Comm_rank(pdm_comm, &i_rank);
+
+  PDM_part_mesh_nodal_t *pmn = PDM_generate_mesh_parallelepiped(pdm_comm,
+                                                                PDM_MESH_NODAL_TETRA4, 1, NULL,
+                                                                0., 0., 0., // x/y/z min
+                                                                1., 1., 1., // x/y/z length
+                                                                2, 2, 2, // x/y/z n vertices
+                                                                1, PDM_SPLIT_DUAL_WITH_HILBERT); // part options
+
+  PDM_part_mesh_nodal_complete_part_comm_graph(pmn);
+
+  PDM_part_comm_graph_t *pcg_edge = NULL;
+  PDM_part_mesh_nodal_part_comm_graph_get(pmn,
+                                          PDM_MESH_ENTITY_EDGE,
+                                          &pcg_edge,
+                                          PDM_OWNERSHIP_KEEP);
+
+  int* pedge_bound = NULL;
+  int n_edge_bound = PDM_part_comm_graph_entity_graph_get(pcg_edge,
+                                                          0,
+                                                          &pedge_bound,
+                                                          PDM_OWNERSHIP_KEEP);
+
+  // PDM_log_trace_array_int(pedge_bound, 4* n_edge_bound, "pedge_bound ::");
+  CHECK(n_edge_bound == 0);
+
+
+  PDM_part_comm_graph_t *pcg_face = NULL;
+  PDM_part_mesh_nodal_part_comm_graph_get(pmn,
+                                          PDM_MESH_ENTITY_FACE,
+                                          &pcg_face,
+                                          PDM_OWNERSHIP_USER);
+
+  int* pface_bound = NULL;
+  int n_face_bound = PDM_part_comm_graph_entity_graph_get(pcg_face,
+                                                          0,
+                                                          &pface_bound,
+                                                          PDM_OWNERSHIP_KEEP);
+  CHECK(n_face_bound == 0);
+
+  // PDM_log_trace_array_int(pface_bound, 4* n_face_bound, "pface_bound ::");
+
+
+  PDM_part_comm_graph_free(pcg_face);
 
   PDM_part_mesh_nodal_free(pmn);
 }

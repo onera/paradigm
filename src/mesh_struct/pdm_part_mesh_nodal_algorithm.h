@@ -63,7 +63,22 @@ PDM_part_mesh_nodal_part_comm_graph_deduce_from_vtx
   PDM_geometry_kind_t    geom_kind
 );
 
-
+/**
+ *
+ * \brief Complete all internal \ref PDM_part_comm_graph_t inside a \ref PDM_part_mesh_nodal_t structure.
+ * If vtx_ln_to_gn is only specified, compute the part_comm_graph for vertives, then deduces all other possible connectivity.
+ * If only \ref PDM_part_comm_graph_t vertices is inside the \ref PDM_part_mesh_nodal we directly compute all other possible connectivity.
+ * If not global ids or communication graph is provided, we raise an error.
+ * This call can be is collective
+ *
+ * \param [in]   pmn         Pointer to \ref PDM_part_mesh_nodal_t instance
+ *
+ */
+void
+PDM_part_mesh_nodal_complete_part_comm_graph
+(
+  PDM_part_mesh_nodal_t *pmn
+);
 
 /**
  *
