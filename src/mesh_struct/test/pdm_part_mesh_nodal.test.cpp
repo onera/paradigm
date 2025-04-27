@@ -10,6 +10,7 @@
 #include "pdm_part_mesh_nodal.h"
 #include "pdm_part_mesh_nodal_priv.h"
 #include "pdm_part_mesh_nodal_elmts.h"
+#include "pdm_part_mesh_nodal_algorithm.h"
 #include "pdm_generate_mesh.h"
 #include "pdm_priv.h"
 
