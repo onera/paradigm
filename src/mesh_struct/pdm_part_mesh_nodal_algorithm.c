@@ -21,6 +21,7 @@
 #include "pdm_partitioning_algorithm.h"
 #include "pdm_part_connectivity_transform.h"
 #include "pdm_part_mesh_nodal_elmts_utils.h"
+#include "pdm_part_mesh_nodal_algorithm.h"
 #include "pdm_unique.h"
 #include "pdm_part_comm_graph.h"
 #include "pdm_priv.h"

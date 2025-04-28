@@ -339,11 +339,6 @@ PDM_part_mesh_nodal_part_comm_graph_set
   pmn->pcg[entity_type] = pcg;
   if (ownership==PDM_OWNERSHIP_USER || ownership==PDM_OWNERSHIP_KEEP) {
     pmn->pcg_ownership[entity_type] = ownership;
-  } else {
-    PDM_error (__FILE__, __LINE__, 0, "PDM_part_mesh_nodal_part_comm_graph_set got invalid ownership (got %d, must be %d or %d)\n",
-      ownership,
-      PDM_OWNERSHIP_KEEP,
-      PDM_OWNERSHIP_USER); 
   }
 }
 
