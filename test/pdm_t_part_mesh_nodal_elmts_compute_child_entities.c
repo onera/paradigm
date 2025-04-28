@@ -140,7 +140,7 @@ int main(int argc, char *argv[])
   PDM_split_dual_t     split_method         = PDM_SPLIT_DUAL_WITH_HILBERT;
   PDM_bool_t           compute_parent_child = PDM_FALSE;
   int                  verbose              = 0;
-  PDM_bool_t           no_child_pmne        = 0;
+  PDM_bool_t           no_child_pmne        = PDM_FALSE;
 
   _read_args(argc,
              argv,

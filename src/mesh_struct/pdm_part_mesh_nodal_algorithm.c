@@ -568,8 +568,10 @@ PDM_part_mesh_nodal_complete_part_comm_graph
   /*
    * Deduce all other
    */
-  PDM_part_mesh_nodal_part_comm_graph_deduce_from_vtx(pmn, PDM_GEOMETRY_KIND_RIDGE);
-  if(pmn->mesh_dimension == 3) { // Mostly this graph comm is empty except for non manifold cases
+  if(pmn->pcg[PDM_MESH_ENTITY_EDGE] == NULL) {
+    PDM_part_mesh_nodal_part_comm_graph_deduce_from_vtx(pmn, PDM_GEOMETRY_KIND_RIDGE);
+  }
+  if(pmn->mesh_dimension == 3 && pmn->pcg[PDM_MESH_ENTITY_FACE] == NULL) { // Mostly this graph comm is empty except for non manifold cases
     PDM_part_mesh_nodal_part_comm_graph_deduce_from_vtx(pmn, PDM_GEOMETRY_KIND_SURFACIC);
   }
 }
