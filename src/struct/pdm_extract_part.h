@@ -464,7 +464,7 @@ PDM_extract_part_free
 );
 
 /**
- * \brief Free all resulting array if not owner
+ * \brief Free all resulting arrays if not owner
  *
  * \param [in]   extrp  \ref PDM_extract_part_t instance
  */

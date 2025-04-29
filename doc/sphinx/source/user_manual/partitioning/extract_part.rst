@@ -6,7 +6,7 @@ Extract part
 
 .. tabs::
 
-  .. tab:: C API
+  .. tab:: C
 
     .. ifconfig:: fake_bool == 'ON'
 
@@ -89,7 +89,7 @@ Extract part
 
 
 
-  .. tab:: Fortran API
+  .. tab:: Fortran
 
     .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -169,7 +169,7 @@ Extract part
 
 
 
-  .. tab:: Python API
+  .. tab:: Python
 
     .. ifconfig:: enable_python_doc == 'ON'
 
