@@ -368,9 +368,9 @@ typedef enum {
 
 typedef enum {
 
-  PDM_EXTRACT_PART_KIND_LOCAL         = 0, /*!< Extraction local                    */
-  PDM_EXTRACT_PART_KIND_REEQUILIBRATE = 1, /*!< Requilibrate and reform partition   */
-  PDM_EXTRACT_PART_KIND_FROM_TARGET   = 2, /*!< Extract into target specify by user */
+  PDM_EXTRACT_PART_KIND_LOCAL         = 0, /*!< The entities of interest are selected locally and are extracted in place */
+  PDM_EXTRACT_PART_KIND_REEQUILIBRATE = 1, /*!< The entities of interest are selected locally and are redistributed according to the chosen partitioning method */
+  PDM_EXTRACT_PART_KIND_FROM_TARGET   = 2, /*!< The requested target entities are fetched from their location in the input mesh */
 } PDM_extract_part_kind_t;
 
 typedef enum {

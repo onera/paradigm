@@ -145,14 +145,20 @@ cdef class ExtractPart:
     """
     __init__(dim, n_part_in, n_part_out, extract_kind, split_dual_method, compute_child_gnum, comm)
 
-    Create an extract-part structure.
+    Create an :py:class:`ExtractPart` instance.
+
+    Admissible values for ``extract_kind`` are :
+      - :py:attr:`ExtractPart.LOCAL`
+      - :py:attr:`ExtractPart.REEQUILIBRATE`
+      - :py:attr:`ExtractPart.FROM_TARGET`
+
 
     Parameters:
       dim                (int)                     : Mesh dimension
       n_part_in          (int)                     : Number of input  partitions
       n_part_out         (int)                     : Number of output partitions
-      extract_kind       (PDM_extract_part_kind_t) : Extraction kind (local/requilibrate/from target)
-      split_dual_method  (PDM_split_dual_t)        : Split method (used only in PDM_EXTRACT_PART_KIND_REEQUILIBRATE mode)
+      extract_kind       (PDM_extract_part_kind_t) : Extraction kind
+      split_dual_method  (PDM_split_dual_t)        : Repartitioning method (used only in :py:attr:`ExtractPart.REEQUILIBRATE` mode)
       compute_child_gnum (int)                     : Enable generation of new global IDs for extraction
       comm               (MPI.Comm)                : MPI communicator
     """
@@ -182,7 +188,7 @@ cdef class ExtractPart:
 
     .. note::
 
-      Use only in PDM_EXTRACT_PART_KIND_LOCAL or PDM_EXTRACT_PART_KIND_REEQUILIBRATE mode
+      Use only in :py:attr:`ExtractPart.LOCAL` or :py:attr:`ExtractPart.REEQUILIBRATE` mode
 
     Parameters:
       i_part       (int)                    : Partition identifier
@@ -209,7 +215,7 @@ cdef class ExtractPart:
 
     .. note::
 
-      Use only in PDM_EXTRACT_PART_KIND_FROM_TARGET mode
+      Use only in :py:attr:`ExtractPart.FROM_TARGET` mode
 
     Parameters:
       i_part          (int)                        : Partition identifier
@@ -370,7 +376,7 @@ cdef class ExtractPart:
     """
     n_entity_get(ipart, entity_type)
 
-    Get number of entities in extraction
+    Get the number of entities of a given type in extraction
 
     Parameters:
       ipart       (int)                 : Partition identifier
@@ -502,7 +508,7 @@ cdef class ExtractPart:
 
     Get the PartToPart instance for a given entity type
 
-    .. note:: Note that *direct* exchanges go from extraction to input
+    .. note:: *Direct* exchanges go from extraction to input
               and *reverse* exchanges go from input to extraction.
 
     Parameters:
@@ -532,7 +538,7 @@ cdef class ExtractPart:
 
     Get the PartToPart instance for a given group
 
-    .. note:: Note that *direct* exchanges go from extraction to input
+    .. note:: *Direct* exchanges go from extraction to input
               and *reverse* exchanges go from input to extraction.
 
     Parameters:

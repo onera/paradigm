@@ -3,6 +3,17 @@
 Extract part
 ============
 
+**Extract part** is a service for extraction of mesh regions based on arbitrary criteria.
+Meshes of dimension 0 (point clouds), 1, 2 and 3 are supported.
+Group information associated with extracted parts is preserved.
+Facilities for data transfer between input and extracted parts are provided.
+
+Three extraction modes are available :
+
+.. doxygenenum:: PDM_extract_part_kind_t
+
+API
+"""
 
 .. tabs::
 
@@ -19,7 +30,7 @@ Extract part
       Define input mesh
       """""""""""""""""
 
-        One can define the input mesh either as a :ref:`Part Mesh Nodal <pmn>` structure:
+        One can define the input mesh either as a :ref:`Part Mesh Nodal <pmn>` instance:
 
         .. doxygenfunction:: PDM_extract_part_part_nodal_set
 
@@ -47,7 +58,7 @@ Extract part
       Get extraction
       """"""""""""""
 
-        If the input mesh was defined as a :ref:`Part Mesh Nodal <pmn>` structure,
+        If the input mesh was defined as a :ref:`Part Mesh Nodal <pmn>` instance,
         the extracted mesh is also retrieved in the form of a :ref:`Part Mesh Nodal <pmn>`:
 
         .. doxygenfunction:: PDM_extract_part_part_mesh_nodal_get
@@ -101,7 +112,7 @@ Extract part
       Define input mesh
       """""""""""""""""
 
-        One can define the input mesh either as a :ref:`Part Mesh Nodal <pmn>` structure:
+        One can define the input mesh either as a :ref:`Part Mesh Nodal <pmn>` instance:
 
         .. f:autosubroutine:: pdm_extract_part/PDM_extract_part_part_nodal_set
 
@@ -125,7 +136,7 @@ Extract part
       Get extraction
       """"""""""""""
 
-        If the input mesh was defined as a :ref:`Part Mesh Nodal <pmn>` structure,
+        If the input mesh was defined as a :ref:`Part Mesh Nodal <pmn>` instance,
         the extracted mesh is also retrieved in the form of a :ref:`Part Mesh Nodal <pmn>`:
 
         .. f:autosubroutine:: pdm_extract_part/PDM_extract_part_part_mesh_nodal_get
@@ -152,9 +163,10 @@ Extract part
 
         .. note::
 
-          Note that *direct* exchanges go from extraction to input and *reverse* exchanges go from input to extraction.
+          *Direct* exchanges go from extraction to input and *reverse* exchanges go from input to extraction.
 
         .. f:autosubroutine:: pdm_extract_part/PDM_extract_part_part_to_part_get
+        .. f:autosubroutine:: pdm_extract_part/PDM_extract_part_part_to_part_group_get
 
       Finalization
       """"""""""""
@@ -174,10 +186,6 @@ Extract part
     .. ifconfig:: enable_python_doc == 'ON'
 
       .. py:class:: ExtractPart
-
-        Python structure to perform extraction operations. Once initialized, all the following
-        methods apply to a :class:`ExtractPart` instance.
-
 
         .. rubric:: Initialization
 

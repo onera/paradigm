@@ -45,7 +45,7 @@ module pdm_extract_part
                                       compute_child_gnum, &
                                       ownership,          &
                                       comm)
-    ! Build an Extract Part structure
+    ! Build an Extract Part instance
     implicit none
 
     type(c_ptr)                       :: extrp              ! C pointer to PDM_extract_part_t instance
@@ -53,7 +53,7 @@ module pdm_extract_part
     integer, intent(in)               :: n_part_in          ! Number of input  partitions
     integer, intent(in)               :: n_part_out         ! Number of output partitions
     integer, intent(in)               :: extract_kind       ! Extraction kind (local/reequilibrate/from target)
-    integer, intent(in)               :: split_dual_method  ! Split method (used only in PDM_EXTRACT_PART_KIND_REEQUILIBRATE mode)
+    integer, intent(in)               :: split_dual_method  ! Repartitioning method (used only in PDM_EXTRACT_PART_KIND_REEQUILIBRATE mode)
     logical, intent(in)               :: compute_child_gnum ! Enable generation of new global IDs for extraction
     integer, intent(in)               :: ownership          ! Ownership of extraction
     integer, intent(in)               :: comm               ! MPI communicator
@@ -616,7 +616,7 @@ module pdm_extract_part
                                             i_part_out,  &
                                             entity_type, &
                                             n_entity)
-    ! Get number of entities in extraction
+    ! Get the number of entities of a given type in extraction
     implicit none
 
     type(c_ptr), value                :: extrp       ! C pointer to PDM_extract_part_t instance
@@ -968,7 +968,7 @@ module pdm_extract_part
     integer, intent(in)                  :: i_part_out      ! Partition identifier
     integer, intent(in)                  :: ownership       ! Ownership
     integer                              :: n_entity        ! Number of vertices
-    double precision, pointer            :: pvtx_coord(:,:) ! Coordinates of vertices (shape = [3, n_entity])
+    real(8), pointer                     :: pvtx_coord(:,:) ! Coordinates of vertices (shape = [3, n_entity])
 
     type(c_ptr)                          :: c_pvtx_coord = C_NULL_PTR
 
@@ -1037,6 +1037,8 @@ module pdm_extract_part
 
   subroutine PDM_extract_part_partial_free(extrp)
     ! Free all resulting data if not owner
+    !
+    ! (It is not necessary to call this subroutine before calling PDM_extract_part_free)
     implicit none
 
     type(c_ptr) :: extrp ! C pointer to PDM_extract_part_t instance

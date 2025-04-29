@@ -64,13 +64,13 @@ typedef struct _pdm_extract_part_t PDM_extract_part_t;
  *============================================================================*/
 
 /**
- * \brief Build an Extract Part structure
+ * \brief Build an Extract Part instance
  *
  * \param [in]   dim                 Mesh dimension
  * \param [in]   n_part_in           Number of input  partitions
  * \param [in]   n_part_out          Number of output partitions
  * \param [in]   extract_kind        Extraction kind (local/reequilibrate/from target)
- * \param [in]   split_dual_method   Split method (used only in \ref PDM_EXTRACT_PART_KIND_REEQUILIBRATE mode)
+ * \param [in]   split_dual_method   Repartitioning method (used only in \ref PDM_EXTRACT_PART_KIND_REEQUILIBRATE mode)
  * \param [in]   compute_child_gnum  Enable generation of new global IDs for extraction
  * \param [in]   ownership           Ownership of extraction
  * \param [in]   comm                MPI communicator
@@ -248,7 +248,7 @@ PDM_extract_part_part_nodal_set
 
 
 /**
- * \brief Set entity centers (useful for Hilbert numbering in PDM_EXTRACT_PART_KIND_REEQUILIBRATE mode)
+ * \brief Set entity centers (useful for Hilbert numbering in \ref PDM_EXTRACT_PART_KIND_REEQUILIBRATE mode)
  *
  * \param [in]   extrp            \ref PDM_extract_part_t instance
  * \param [in]   i_part           Partition identifier
@@ -264,7 +264,7 @@ PDM_extract_part_entity_center_set
 
 
 /**
- * \brief Get number of entities in extraction
+ * \brief Get the number of entities of a given type in extraction
  *
  * \param [in]   extrp        \ref PDM_extract_part_t instance
  * \param [in]   i_part_out   Partition identifier
@@ -395,7 +395,7 @@ PDM_extract_part_parent_lnum_get
 
 
 /**
- * \brief Get initial location of extracted entities
+ * \brief Get the initial location of extracted entities
  *
  * \param [in]  extrp          \ref PDM_extract_part_t instance
  * \param [in]  i_part         Partition identifier
@@ -466,6 +466,8 @@ PDM_extract_part_free
 /**
  * \brief Free all resulting arrays if not owner
  *
+ * \note It is not necessary to call this function before calling \ref PDM_extract_part_free.
+ *
  * \param [in]   extrp  \ref PDM_extract_part_t instance
  */
 void
@@ -478,7 +480,7 @@ PDM_extract_part_partial_free
 /**
  * \brief Get the \ref PDM_part_to_part_t instance for a given entity type
  *
- * \note Note that *direct* exchanges go from extraction to input
+ * \note *Direct* exchanges go from extraction to input
  *       and *reverse* exchanges go from input to extraction.
  *
  * \param [in]   extrp        \ref PDM_extract_part_t instance
@@ -499,7 +501,7 @@ PDM_extract_part_part_to_part_get
 /**
  * \brief Get the Part-to-Part instance for a given group
  *
- * \note Note that *direct* exchanges go from extraction to input
+ * \note *Direct* exchanges go from extraction to input
  *       and *reverse* exchanges go from input to extraction.
  *
  * \param [in]   extrp        \ref PDM_extract_part_t instance
