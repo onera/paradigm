@@ -22,24 +22,22 @@ program extract_part_nodal_f
 #endif
 
   !---------------------------------------------------------------
-  integer, parameter            :: comm = MPI_COMM_WORLD         ! MPI Communicator
+  integer, parameter            :: comm = MPI_COMM_WORLD             ! MPI Communicator
   integer                       :: i_rank, ierr
 
   integer                       :: i_arg
   character(len=99)             :: arg
 
-  integer                       :: extract_kind                  ! Extraction kind (LOCAL or REEQUILIBRATE)
-  integer                       :: part_method                   ! Re-partitioning method kind (if REEQUILIBRATE)
+  integer                       :: extract_kind                      ! Extraction kind (LOCAL or REEQUILIBRATE)
+  integer                       :: part_method                       ! Re-partitioning method kind (if REEQUILIBRATE)
+  logical                       :: visu                              ! Enable output for visualization
 
-  integer                       :: dim                           ! Mesh dimension
-  integer                       :: n_part                        ! Number of partitions on current MPI rank
+  integer                       :: dim                               ! Mesh dimension
+  integer                       :: n_part                            ! Number of partitions on current MPI rank
 
   integer                       :: n_vtx                             ! Number of vertices
   double precision,     pointer :: vtx_coord(:,:)  => null()         ! Vertex coordinates
   integer(pdm_g_num_s), pointer :: vtx_ln_to_gn(:) => null()         ! Vertex global IDs
-  ! integer                       :: n_tri                             ! Number of triangles
-  ! integer(pdm_g_num_s), pointer :: tri_vtx(:)      => null()         ! Triangle->vtx connectivity
-  ! integer(pdm_g_num_s), pointer :: tri_ln_to_gn(:) => null()         ! Triangle global IDs
   integer                       :: n_tet                             ! Number of tetra
   integer(pdm_l_num_s), pointer :: tet_vtx(:)      => null()         ! Tetra->vtx connectivity
   integer(pdm_g_num_s), pointer :: tet_ln_to_gn(:) => null()         ! Tetra global IDs
@@ -48,7 +46,6 @@ program extract_part_nodal_f
   integer(pdm_l_num_s), pointer :: tet_vtx_idx(:)  => null()         ! Not used
 
   type(c_ptr)                   :: mesh = C_NULL_PTR                 ! Initial PartMeshNodal (ParaDiGM object)
-  ! integer                       :: id_tri                            ! ID of triangle section
   integer                       :: id_tet                            ! ID of tetra section
 
   type(c_ptr)                   :: extrp = C_NULL_PTR                ! ExtractPart (ParaDiGM object)
@@ -76,6 +73,7 @@ program extract_part_nodal_f
 
   extract_kind = PDM_EXTRACT_PART_KIND_LOCAL
   part_method  = PDM_SPLIT_DUAL_WITH_HILBERT
+  visu         = .false.
 
   !----------------------------------------
   ! Parse command line arguments
@@ -92,6 +90,9 @@ program extract_part_nodal_f
         i_arg = i_arg + 1
         call get_command_argument(i_arg, arg)
         read(arg, *) part_method
+
+      case ("-visu")
+        visu = .true.
 
     endselect
 
@@ -130,7 +131,7 @@ program extract_part_nodal_f
   !----------------------------------------
   ! Create a PartMeshNodal instance to group all mesh data into a single structure.
   n_part = 1 ! Number of partitions (subdomains) on current MPI rank
-  dim    = 3 ! Mesh dimension
+  dim    = 3 ! Mesh dimension (volume)
   call PDM_part_mesh_nodal_create(mesh,   & ! -> PartMeshNodal instance
                                   dim,    & ! <- Mesh dimension
                                   n_part, & ! <- Number of subdomains on current MPI rank
@@ -147,23 +148,7 @@ program extract_part_nodal_f
                                         vtx_ln_to_gn,       & ! <- Global IDs of vertices in current subdomain
                                         PDM_OWNERSHIP_USER)   ! <- Ownership
 
-  ! Add sections
-  ! !   Triangles
-  ! id_tri = PDM_part_mesh_nodal_section_add(mesh,                 & ! <- PartMeshNodal instance
-  !                                          PDM_MESH_NODAL_TRIA3)   ! <- Triangles
-
-  ! call PDM_part_mesh_nodal_section_std_set(mesh,               & ! <- PartMeshNodal instance
-  !                                          id_tri,             & ! <- Triangle section ID
-  !                                          0,                  & ! <- ID of current subdomain (i_part)
-  !                                          n_tri,              & ! <- Number of triangles in current subdomain
-  !                                          tri_vtx,            & ! <- Connectivity triangle->vtx in current subdomain
-  !                                          tri_ln_to_gn,       & ! <- Global IDs of triangle in current subdomain
-  !                                          parent_num,         & ! <- null()
-  !                                          parent_gnum,        & ! <- null()
-  !                                          PDM_OWNERSHIP_USER)   ! <- Ownership
-
-
-  !   Tetrahedra
+  ! Set tetrahedra
   id_tet = PDM_part_mesh_nodal_section_add(mesh,                  & ! <- PartMeshNodal instance
                                            PDM_MESH_NODAL_TETRA4)   ! <- Tetrahedra
 
@@ -239,30 +224,30 @@ program extract_part_nodal_f
                                          extract_vtx_coord,  & ! -> Coordinates of extracted vertices
                                          PDM_OWNERSHIP_KEEP)   ! <- Ownership ('extract_mesh' keeps ownership)
 
-  call PDM_part_mesh_nodal_vtx_g_num_get(extract_mesh,          & ! <- Extracted mesh (PartMeshNodal)
-                                         0,                     & ! <- ID of current subdomain (i_part)
-                                         extract_vtx_ln_to_gn,  & ! -> Global IDs of extracted vertices
-                                         PDM_OWNERSHIP_KEEP)      ! <- Ownership ('extract_mesh' keeps ownership)
+  call PDM_part_mesh_nodal_vtx_g_num_get(extract_mesh,         & ! <- Extracted mesh (PartMeshNodal)
+                                         0,                    & ! <- ID of current subdomain (i_part)
+                                         extract_vtx_ln_to_gn, & ! -> Global IDs of extracted vertices
+                                         PDM_OWNERSHIP_KEEP)     ! <- Ownership ('extract_mesh' keeps ownership)
 
   !  Tetrahedra
-  call PDM_part_mesh_nodal_section_n_elt_get(extract_mesh, & ! <- Extracted mesh (PartMeshNodal)
-                                             id_tet,       & ! <- Tetra section ID
-                                             0,            & ! <- ID of current subdomain (i_part)
-                                             extract_n_tet)  ! -> Number of extracted tetra in current subdomain
+  call PDM_part_mesh_nodal_section_n_elt_get(extract_mesh,  & ! <- Extracted mesh (PartMeshNodal)
+                                             id_tet,        & ! <- Tetra section ID
+                                             0,             & ! <- ID of current subdomain (i_part)
+                                             extract_n_tet)   ! -> Number of extracted tetra in current subdomain
 
   if (extract_kind == PDM_EXTRACT_PART_KIND_LOCAL .and. extract_n_tet /= n_selected) then
     print *, "extract_n_tet =", extract_n_tet, " but expected", n_selected
     STOP
   endif
 
-  call PDM_part_mesh_nodal_section_std_get(extract_mesh,          & ! <- Extracted mesh (PartMeshNodal)
-                                           id_tet,                & ! <- Tetra section ID
-                                           0,                     & ! <- ID of current subdomain (i_part)
-                                           extract_tet_vtx,       & ! -> Extracted connectivity tetra->vtx in current subdomain
-                                           extract_tet_ln_to_gn,  & ! -> Global IDs of extracted tetra in current subdomain
-                                           parent_num,            & ! -> null()
-                                           parent_gnum,           & ! -> null()
-                                           PDM_OWNERSHIP_KEEP)      ! <- Ownership ('extract_mesh' keeps ownership)
+  call PDM_part_mesh_nodal_section_std_get(extract_mesh,         & ! <- Extracted mesh (PartMeshNodal)
+                                           id_tet,               & ! <- Tetra section ID
+                                           0,                    & ! <- ID of current subdomain (i_part)
+                                           extract_tet_vtx,      & ! -> Extracted connectivity tetra->vtx in current subdomain
+                                           extract_tet_ln_to_gn, & ! -> Global IDs of extracted tetra in current subdomain
+                                           parent_num,           & ! -> null()
+                                           parent_gnum,          & ! -> null()
+                                           PDM_OWNERSHIP_KEEP)     ! <- Ownership ('extract_mesh' keeps ownership)
   !----------------------------------------
 
 
@@ -287,15 +272,15 @@ program extract_part_nodal_f
     extract_vtx_field(1:extract_n_vtx) = vtx_field(extract_vtx_parent(1:extract_n_vtx))
   else
     ! Reequilibrate mode => parallel transfer
-    call data_transfer(extrp,               &
-                       PDM_MESH_ENTITY_VTX, &
-                       vtx_field,           &
-                       extract_n_vtx,       &
-                       extract_vtx_field)
+    call data_transfer(extrp,               & ! <- ExtractPart instance
+                       PDM_MESH_ENTITY_VTX, & ! <- Vertices
+                       vtx_field,           & ! <- Field at vertices (local to current subdomain)
+                       extract_n_vtx,       & ! <- Number of extracted vertices in current subdomain
+                       extract_vtx_field)     ! -> Field at extracted vertices
   endif
 
 
-  !  Field at tetrahedra
+  !  Field at tetrahedra : take average of field values at vertices
   allocate(tet_field(n_tet))
   allocate(extract_tet_field(extract_n_tet))
 
@@ -309,28 +294,30 @@ program extract_part_nodal_f
     extract_tet_field(1:n_selected) = tet_field(selected(1:n_selected))
   else
     ! Reequilibrate mode => parallel transfer
-    call data_transfer(extrp,                &
-                       PDM_MESH_ENTITY_CELL, &
-                       tet_field,            &
-                       extract_n_tet,       &
-                       extract_tet_field)
+    call data_transfer(extrp,                & ! <- ExtractPart instance
+                       PDM_MESH_ENTITY_CELL, & ! <- Cells (tetra)
+                       tet_field,            & ! <- Field at tetra (local to current subdomain)
+                       extract_n_tet,        & ! <- Number of extracted tetra in current subdomain
+                       extract_tet_field)      ! -> Field at extracted tetra
   endif
   !----------------------------------------
 
 
   !----------------------------------------
   ! Visu
-  call visu_pmn(comm,      & ! <- MPI communicator
-                mesh,      & ! <- Mesh (PartMeshNodal)
-                vtx_field, & ! <- Field at vertices (local to current subdomain)
-                tet_field, & ! <- Field at tetra (local to current subdomain)
-                "init")      ! <- Output name
+  if (visu) then
+    call visu_pmn(comm,      & ! <- MPI communicator
+                  mesh,      & ! <- Mesh (PartMeshNodal)
+                  vtx_field, & ! <- Field at vertices (local to current subdomain)
+                  tet_field, & ! <- Field at tetra (local to current subdomain)
+                  "init")      ! <- Output name
 
-  call visu_pmn(comm,              & ! <- MPI communicator
-                extract_mesh,      & ! <- Extracted mesh (PartMeshNodal)
-                extract_vtx_field, & ! <- Field at extracted vertices
-                extract_tet_field, & ! <- Field at extracted tetra
-                "extract")           ! <- Output name
+    call visu_pmn(comm,              & ! <- MPI communicator
+                  extract_mesh,      & ! <- Extracted mesh (PartMeshNodal)
+                  extract_vtx_field, & ! <- Field at extracted vertices
+                  extract_tet_field, & ! <- Field at extracted tetra
+                  "extract")           ! <- Output name
+  endif
   !----------------------------------------
 
 
@@ -416,13 +403,13 @@ contains
     ! Generate global IDs for vertices and tetrahedra (assume 1 part per rank)
     implicit none
 
-    integer,                       intent(in)  :: comm
-    integer,                       intent(in)  :: n_vtx
-    integer,                       intent(in)  :: n_tet
-    double precision,     pointer, intent(in)  :: vtx_coord(:,:)
-    integer(pdm_l_num_s), pointer, intent(in)  :: tet_vtx(:)
-    integer(pdm_g_num_s), pointer, intent(out) :: vtx_ln_to_gn(:)
-    integer(pdm_g_num_s), pointer, intent(out) :: tet_ln_to_gn(:)
+    integer,                       intent(in)  :: comm            ! <- MPI communicator
+    integer,                       intent(in)  :: n_vtx           ! <- Local number of vertices
+    integer,                       intent(in)  :: n_tet           ! <- Local number of tetra
+    double precision,     pointer, intent(in)  :: vtx_coord(:,:)  ! <- Coordinates of vertices
+    integer(pdm_l_num_s), pointer, intent(in)  :: tet_vtx(:)      ! <- Tetra->vtx connectivity
+    integer(pdm_g_num_s), pointer, intent(out) :: vtx_ln_to_gn(:) ! -> Vertex global IDs
+    integer(pdm_g_num_s), pointer, intent(out) :: tet_ln_to_gn(:) ! -> Tetra global IDs
 
     double precision,     pointer              :: tet_coord(:,:)
     integer                                    :: i_tet, i
@@ -525,47 +512,55 @@ contains
     endif
 
     ! Begin a time-step (only one here)
-    call PDM_writer_step_beg(wrt, 0.d0)
+    call PDM_writer_step_beg(wrt,  & ! <- Writer instance
+                             0.d0)   ! <- Time
 
     ! Write the geometry
-    call PDM_writer_geom_write(wrt, id_geom)
+    call PDM_writer_geom_write(wrt,     & ! <- Writer instance
+                               id_geom)   ! <- Geometry identifier
 
     ! Write 'i_part' variable
-    call PDM_part_mesh_nodal_section_n_elt_get(mesh, 0, 0, n_elt)
+    call PDM_part_mesh_nodal_section_n_elt_get(mesh,  & ! <- Mesh structure
+                                               0,     & ! <- Section identifier
+                                               0,     & ! <- ID of current subdomain (i_part)
+                                               n_elt)   ! -> Number of elements
     allocate(val_elt_part(n_elt))
     val_elt_part(:) = i_rank
 
-    call PDM_writer_var_set(wrt,             &
-                            id_var_elt_part, &
-                            id_geom,         &
-                            0,               &
-                            val_elt_part)
+    call PDM_writer_var_set(wrt,             & ! <- Writer instance
+                            id_var_elt_part, & ! <- Variable identifier
+                            id_geom,         & ! <- Geometry identifier
+                            0,               & ! <- ID of current subdomain (i_part)
+                            val_elt_part)      ! <- Variable values
 
-    call PDM_writer_var_write(wrt, id_var_elt_part)
+    call PDM_writer_var_write(wrt,             & ! <- Writer instance
+                              id_var_elt_part)   ! <- Variable identifier
     deallocate(val_elt_part)
 
 
     if (associated(vtx_field)) then
       ! Write 'vtx_field'
-      call PDM_writer_var_set(wrt,              &
-                              id_var_vtx_field, &
-                              id_geom,          &
-                              0,                &
-                              vtx_field)
+      call PDM_writer_var_set(wrt,              & ! <- Writer instance
+                              id_var_vtx_field, & ! <- Variable identifier
+                              id_geom,          & ! <- Geometry identifier
+                              0,                & ! <- ID of current subdomain (i_part)
+                              vtx_field)          ! <- Variable values
 
-      call PDM_writer_var_write(wrt, id_var_vtx_field)
+      call PDM_writer_var_write(wrt,              & ! <- Writer instance
+                                id_var_vtx_field)   ! <- Variable identifier
     endif
 
 
     if (associated(elt_field)) then
       ! Write 'elt_field'
-      call PDM_writer_var_set(wrt,              &
-                              id_var_elt_field, &
-                              id_geom,          &
-                              0,                &
-                              elt_field)
+      call PDM_writer_var_set(wrt,              & ! <- Writer instance
+                              id_var_elt_field, & ! <- Variable identifier
+                              id_geom,          & ! <- Geometry identifier
+                              0,                & ! <- ID of current subdomain (i_part)
+                              elt_field)          ! <- Variable values
 
-      call PDM_writer_var_write(wrt, id_var_elt_field)
+      call PDM_writer_var_write(wrt,              & ! <- Writer instance
+                                id_var_elt_field)   ! <- Variable identifier
     endif
 
     ! End time-step
@@ -633,7 +628,8 @@ contains
                                         request)                                 ! -> MPI request
 
     ! Finalize exchange
-    call PDM_part_to_part_reverse_iexch_wait(ptp, request)
+    call PDM_part_to_part_reverse_iexch_wait(ptp,     & ! <- PartToPart instance
+                                             request)   ! <- MPI request
 
     call PDM_pointer_array_part_get(pa_extract_field,   & ! <- Pointer array
                                     0,                  & ! <- ID of current subdomain (i_part)
