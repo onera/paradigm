@@ -14,4 +14,4 @@ int dlclose(void *handle);
 }
 #endif /* __cplusplus */
 
-#endif 
+#endif
