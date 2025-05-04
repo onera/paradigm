@@ -1,3 +1,6 @@
+
+
+
 /*----------------------------------------------------------------------------
  * Standard C library headers
  *----------------------------------------------------------------------------*/
@@ -18,6 +21,7 @@
 #include "pdm_part_to_block.h"
 #include "pdm.h"
 #include "pdm_array.h"
+#include "pdm_mesh_adapt.h"
 #include "pdm_binary_search.h"
 #include "pdm_distrib.h"
 #include "pdm_error.h"
