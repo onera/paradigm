@@ -6,7 +6,7 @@ Extract part
 **Extract part** is a service for extraction of mesh regions based on arbitrary criteria.
 Meshes of dimension 0 (point clouds), 1, 2 and 3 are supported.
 Group information associated with extracted parts is preserved.
-Facilities for data transfer between input and extracted parts are provided.
+Facilities for data transfer between input and extracted parts are provided as well.
 
 Three extraction modes are available :
 
@@ -195,8 +195,8 @@ API
         .. rubric:: Define input mesh
 
         .. autofunction:: Pypdm.Pypdm.ExtractPart.part_set
-        .. autofunction:: Pypdm.Pypdm.ExtractPart.part_n_group_set
-        .. autofunction:: Pypdm.Pypdm.ExtractPart.part_group_set
+        .. autofunction:: Pypdm.Pypdm.ExtractPart.n_group_set
+        .. autofunction:: Pypdm.Pypdm.ExtractPart.group_set
 
 
         .. rubric:: Define extraction
@@ -217,7 +217,7 @@ API
         .. autofunction:: Pypdm.Pypdm.ExtractPart.vtx_coord_get
         .. autofunction:: Pypdm.Pypdm.ExtractPart.ln_to_gn_get
         .. autofunction:: Pypdm.Pypdm.ExtractPart.parent_ln_to_gn_get
-        .. autofunction:: Pypdm.Pypdm.ExtractPart.extract_part_group_get
+        .. autofunction:: Pypdm.Pypdm.ExtractPart.group_get
 
 
         .. rubric:: Data transfer

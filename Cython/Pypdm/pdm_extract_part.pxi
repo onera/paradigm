@@ -236,10 +236,6 @@ cdef class ExtractPart:
   # ------------------------------------------------------------------
   def part_set(self,
                int                                           i_part,
-               int                                           n_cell,
-               int                                           n_face,
-               int                                           n_edge,
-               int                                           n_vtx,
                NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] cell_face_idx,
                NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] cell_face    ,
                NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] face_edge_idx,
@@ -253,16 +249,12 @@ cdef class ExtractPart:
                NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] vtx_ln_to_gn ,
                NPY.ndarray[NPY.double_t  , mode='c', ndim=1] coords):
     """
-    part_set(i_part, n_cell, n_face, n_edge, n_vtx, cell_face_idx, cell_face, face_edge_idx, face_edge, edge_vtx, face_vtx_idx, face_vtx, cell_ln_to_gn, face_ln_to_gn, edge_ln_to_gn, vtx_ln_to_gn, coords)
+    part_set(i_part, cell_face_idx, cell_face, face_edge_idx, face_edge, edge_vtx, face_vtx_idx, face_vtx, cell_ln_to_gn, face_ln_to_gn, edge_ln_to_gn, vtx_ln_to_gn, coords)
 
     Set partition
 
     Parameters:
       i_part        (int)                        : Partition identifer
-      n_cell        (int)                        : Number of cells
-      n_face        (int)                        : Number of faces
-      n_edge        (int)                        : Number of edges
-      n_vtx         (int)                        : Number of vertices
       cell_face_idx (np.ndarray[np.int32_t])     : Index for cell→face connectivity
       cell_face     (np.ndarray[np.int32_t])     : Cell→face connectivity
       face_edge_idx (np.ndarray[np.int32_t])     : Index for face→edge connectivity
@@ -290,10 +282,27 @@ cdef class ExtractPart:
     self.keep_alive.append(coords)
 
     cdef int * _face_edge_idx = np_to_int_pointer(face_edge_idx)
-    cdef int * _face_edge = np_to_int_pointer(face_edge)
-    cdef int * _edge_vtx = np_to_int_pointer(edge_vtx)
+    cdef int * _face_edge     = np_to_int_pointer(face_edge)
+    cdef int * _edge_vtx      = np_to_int_pointer(edge_vtx)
 
     cdef PDM_g_num_t* _edge_ln_to_gn = np_to_gnum_pointer(edge_ln_to_gn)
+
+    cdef int n_cell = 0
+    cdef int n_face = 0
+    cdef int n_edge = 0
+    cdef int n_vtx  = 0
+
+    if cell_ln_to_gn is not None:
+      n_cell = cell_ln_to_gn.size
+
+    if face_ln_to_gn is not None:
+      n_face = face_ln_to_gn.size
+
+    if edge_ln_to_gn is not None:
+      n_edge = edge_ln_to_gn.size
+
+    if vtx_ln_to_gn is not None:
+      n_vtx = vtx_ln_to_gn.size
 
     PDM_extract_part_part_set(self._extrp,
                               i_part,
@@ -308,18 +317,18 @@ cdef class ExtractPart:
                              _edge_vtx,
              <int         *>  face_vtx_idx .data,
              <int         *>  face_vtx     .data,
-             <PDM_g_num_t *> cell_ln_to_gn.data,
-             <PDM_g_num_t *> face_ln_to_gn.data,
-                            _edge_ln_to_gn,
-             <PDM_g_num_t *> vtx_ln_to_gn .data,
-             <double      *> coords       .data)
+             <PDM_g_num_t *>  cell_ln_to_gn.data,
+             <PDM_g_num_t *>  face_ln_to_gn.data,
+                             _edge_ln_to_gn,
+             <PDM_g_num_t *>  vtx_ln_to_gn .data,
+             <double      *>  coords       .data)
 
   # ------------------------------------------------------------------
-  def part_n_group_set(self,
-                       PDM_bound_type_t bound_type,
-                       int              n_group):
+  def n_group_set(self,
+                  PDM_bound_type_t bound_type,
+                  int              n_group):
     """
-    part_n_group_set(bound_type, n_group)
+    n_group_set(bound_type, n_group)
 
     Set number of groups
 
@@ -333,14 +342,14 @@ cdef class ExtractPart:
 
 
   # ------------------------------------------------------------------
-  def part_group_set(self,
-                     int                                           i_part,
-                     int                                           i_group,
-                     PDM_bound_type_t                              bound_type,
-                     NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] np_group_entity,
-                     NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] np_group_entity_ln_to_gn):
+  def group_set(self,
+                int                                           i_part,
+                int                                           i_group,
+                PDM_bound_type_t                              bound_type,
+                NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] np_group_entity,
+                NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] np_group_entity_ln_to_gn):
     """
-    part_group_set(i_part, i_group, bound_type, np_group_entity, np_group_entity_ln_to_gn)
+    group_set(i_part, i_group, bound_type, np_group_entity, np_group_entity_ln_to_gn)
 
     Set partition group
 
@@ -562,12 +571,12 @@ cdef class ExtractPart:
       return self.ptp_group_objects[(i_group, bound_type)]
 
   # ------------------------------------------------------------------
-  def extract_part_group_get(self,
-                             int              ipart,
-                             int              i_group,
-                             PDM_bound_type_t bound_type):
+  def group_get(self,
+                int              ipart,
+                int              i_group,
+                PDM_bound_type_t bound_type):
     """
-    extract_part_group_get(ipart, i_group, bound_type)
+    group_get(ipart, i_group, bound_type)
 
     Get partition group
 
