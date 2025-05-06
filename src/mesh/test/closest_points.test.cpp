@@ -7,7 +7,6 @@
 #include "pdm_closest_points.h"
 #include "pdm_logging.h"
 #include "pdm_mpi.h"
-#include "pdm_gnum_location.h"
 
 MPI_TEST_CASE("[pdm_closest_points] - 1p",1) {
 
