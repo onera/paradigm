@@ -3,8 +3,8 @@
 Rotations in 3D
 ===============
 
-This module handles rotations (and translations) of rigid bodies in 3D (using
- `quaternions <https://en.wikipedia.org/wiki/Quaternions_and_spatial_rotation>`_ ).
+This module handles rotations (and translations) of rigid bodies in 3D (using `quaternions <https://en.wikipedia.org/wiki/Quaternions_and_spatial_rotation>`_).
+
 C API
 -----
 
@@ -89,7 +89,7 @@ Python API
     ~Pypdm.Pypdm.apply_rotation_matrix_and_rotation_center_to_coords
     ~Pypdm.Pypdm.apply_rotation_matrix_and_rotation_center_to_vector_field
 
-  ..~Pypdm.Pypdm.periodic_t_info_to_homogeneous_matrix
+  .. ~Pypdm.Pypdm.periodic_t_info_to_homogeneous_matrix
 
   .. rubric:: Format conversion
 
@@ -126,7 +126,7 @@ Python API
   .. autofunction:: Pypdm.Pypdm.apply_rotation_matrix_and_rotation_center_to_coords
   .. autofunction:: Pypdm.Pypdm.apply_rotation_matrix_and_rotation_center_to_vector_field
   .. autofunction:: Pypdm.Pypdm.apply_homogeneous_matrix_to_coords
-  
+
 .. ifconfig:: enable_python_doc == 'OFF'
 
   .. warning::

@@ -478,7 +478,7 @@ def euler_angles_to_homogeneous_matrix(
     bint intrinsic = True,
     bint reverse = False):
   """
-  euler_angles_to_rotation_matrix(ang_x,ang_y,ang_z,order=(2,1,0),intrinsic=True,reverse=False)
+  euler_angles_to_homogeneous_matrix(ang_x, ang_y, ang_z, order=(2,1,0), intrinsic=True, reverse=False)
 
   Computes the homogeneous matrix corresponding to the provided euler angles
 
@@ -667,7 +667,7 @@ def rotation_matrix_and_rotation_center_to_homogeneous_matrix(
   """rotation_matrix_and_rotation_center_to_homogeneous_matrix(rotation_matrix,rotation_center=[0.,0.,0.],reverse=False)
 
   Computes the homogeneous matrix corresponding to the provided rotation matrix 
-  and rotation center.
+  and rotation center
 
   Parameters:
     rotation_matrix (np.ndarray[np.double_t]) : Rotation matrix (shape = (3,3))
@@ -854,11 +854,11 @@ def axes_and_origin_to_homogeneous_matrix(
     NPY.ndarray[NPY.double_t, mode='c', ndim=1] axis_3,
     NPY.ndarray[NPY.double_t, mode='c', ndim=1] origin,
     bint reverse = False):
-  """axes_and_origin_to_homogeneous_matrix(axis_1,axis_2,axis_3,origin,reverse=False):
+  """axes_and_origin_to_homogeneous_matrix(axis_1, axis_2, axis_3, origin, reverse=False)
 
   Computes the homogeneous matrix corresponding to switch from cartesian coordinate 
   system A to system B. Axes and origin arguments describe the output coordinate 
-  system B using the input coordinate system A.
+  system B using the input coordinate system A
 
   Parameters:
     axis_1          (np.ndarray[np.double_t]) : First axis (shape = (3,))
