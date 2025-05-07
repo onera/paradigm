@@ -66,30 +66,30 @@ program extract_part_f
 
 
   !---------------------------------------------------------------
-  integer, parameter            :: comm = MPI_COMM_WORLD             ! MPI Communicator
+  integer, parameter            :: comm = MPI_COMM_WORLD           ! MPI Communicator
   integer                       :: i_rank, ierr
 
   integer                       :: i_arg
   character(len=99)             :: arg
 
-  integer                       :: extract_kind                      ! Extraction kind (LOCAL or REEQUILIBRATE)
-  integer                       :: n_part_in                         ! Number of initial parts per MPI rank
-  integer                       :: n_part_out                        ! Number of output  parts per MPI rank
-  integer                       :: part_method                       ! Re-partitioning method kind (if REEQUILIBRATE)
-  logical                       :: visu                              ! Enable output for visualization
-  integer(pdm_g_num_s)          :: n_subdiv                          ! Enable output for visualization
+  integer                       :: extract_kind                    ! Extraction kind (LOCAL or REEQUILIBRATE)
+  integer                       :: n_part_in                       ! Number of initial parts per MPI rank
+  integer                       :: n_part_out                      ! Number of output  parts per MPI rank
+  integer                       :: part_method                     ! Re-partitioning method kind (if REEQUILIBRATE)
+  logical                       :: visu                            ! Enable output for visualization
+  integer(pdm_g_num_s)          :: n_subdiv                        ! Number of subdivisions (mesh density)
 
-  type(part_t), allocatable     :: ini_parts(:)                      ! Initial parts
-  type(part_t), allocatable     :: ext_parts(:)                      ! Extracted parts
+  type(part_t), allocatable     :: ini_parts(:)                    ! Initial parts
+  type(part_t), allocatable     :: ext_parts(:)                    ! Extracted parts
 
-  type(c_ptr)                   :: extrp = C_NULL_PTR                ! ExtractPart (ParaDiGM object)
+  type(c_ptr)                   :: extrp = C_NULL_PTR              ! ExtractPart (ParaDiGM object)
 
   integer                       :: i_part, i_cell, i_face, i_vtx
   integer                       :: idx_face, idx_vtx, i
   double precision              :: min_x, max_x
 
   integer                       :: extract_n_vtx
-  integer(pdm_l_num_s), pointer :: extract_vtx_parent(:) => null()   ! Extracted vertices IDs
+  integer(pdm_l_num_s), pointer :: extract_vtx_parent(:) => null() ! Extracted vertices IDs
   !---------------------------------------------------------------
 
   extract_kind = PDM_EXTRACT_PART_KIND_LOCAL
@@ -518,11 +518,11 @@ contains
     call PDM_fortran_free_c(c_loc(part%cell_ln_to_gn))
     call PDM_fortran_free_c(c_loc(part%face_ln_to_gn))
     call PDM_fortran_free_c(c_loc(part%vtx_ln_to_gn))
-    call PDM_fortran_free_c(c_loc(part%cell_parent_ln_to_gn))
-    call PDM_fortran_free_c(c_loc(part%face_parent_ln_to_gn))
-    call PDM_fortran_free_c(c_loc(part%vtx_parent_ln_to_gn))
-    if (associated(part%selected))    deallocate(part%selected)
-    if (associated(part%cell_center)) deallocate(part%cell_center)
+    if (associated(part%cell_parent_ln_to_gn)) call PDM_fortran_free_c(c_loc(part%cell_parent_ln_to_gn))
+    if (associated(part%face_parent_ln_to_gn)) call PDM_fortran_free_c(c_loc(part%face_parent_ln_to_gn))
+    if (associated(part%vtx_parent_ln_to_gn))  call PDM_fortran_free_c(c_loc(part%vtx_parent_ln_to_gn))
+    if (associated(part%selected))             deallocate(part%selected)
+    if (associated(part%cell_center))          deallocate(part%cell_center)
     deallocate(part%vtx_field)
     deallocate(part%cell_field)
 
