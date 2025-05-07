@@ -503,8 +503,7 @@ module pdm_extract_part
   subroutine PDM_extract_part_selected_lnum_set (extrp,        &
                                                  i_part_in,    &
                                                  n_entity,     &
-                                                 extract_lnum, &
-                                                 ownership)
+                                                 extract_lnum)
     ! Select local entities to extract.
     !
     ! (Use only in PDM_EXTRACT_PART_KIND_LOCAL or PDM_EXTRACT_PART_KIND_REEQUILIBRATE mode)
@@ -514,7 +513,6 @@ module pdm_extract_part
     integer, intent(in)                  :: i_part_in       ! Partition identifier
     integer, intent(in)                  :: n_entity        ! Number of entities to extract
     integer(kind = PDM_l_num_s), pointer :: extract_lnum(:) ! Local IDs of entities to extract (shape = [n_entity])
-    integer, intent(in)                  :: ownership       ! Ownership
 
     type(c_ptr)                          :: c_extract_lnum
 
@@ -546,7 +544,7 @@ module pdm_extract_part
                                                i_part_in,         &
                                                n_entity,          &
                                                c_extract_lnum,    &
-                                               ownership)
+                                               PDM_OWNERSHIP_USER)
 
   end subroutine PDM_extract_part_selected_lnum_set
 
@@ -555,8 +553,7 @@ module pdm_extract_part
                                           i_part,          &
                                           n_target,        &
                                           target_gnum,     &
-                                          target_location, &
-                                          ownership)
+                                          target_location)
     ! Set the target entities.
     !
     ! (Use only in PDM_EXTRACT_PART_KIND_FROM_TARGET mode)
@@ -567,7 +564,6 @@ module pdm_extract_part
     integer, intent(in)                  :: n_target           ! Number of target entities
     integer(kind = PDM_g_num_s), pointer :: target_gnum(:)     ! Global IDs of target entities (shape = [n_target])
     integer(kind = PDM_l_num_s), pointer :: target_location(:) ! Initial location of target entities (shape = [3*n_target] or *null()*)
-    integer, intent(in)                  :: ownership          ! Ownership
 
     type(c_ptr)                          :: c_target_gnum
     type(c_ptr)                          :: c_target_location
@@ -607,7 +603,7 @@ module pdm_extract_part
                                         n_target,          &
                                         c_target_gnum,     &
                                         c_target_location, &
-                                        ownership)
+                                        PDM_OWNERSHIP_USER)
 
   end subroutine PDM_extract_part_target_set
 

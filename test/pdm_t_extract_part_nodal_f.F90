@@ -199,11 +199,10 @@ program extract_part_nodal_f
     endif
   enddo
 
-  call PDM_extract_part_selected_lnum_set(extrp,              & ! <- ExtractPart instance
-                                          0,                  & ! <- ID of current subdomain (i_part)
-                                          n_selected,         & ! <- Local number of extracted elements
-                                          selected,           & ! <- Local IDs of extracted elements
-                                          PDM_OWNERSHIP_USER)   ! <- Ownership
+  call PDM_extract_part_selected_lnum_set(extrp,      & ! <- ExtractPart instance
+                                          0,          & ! <- ID of current subdomain (i_part)
+                                          n_selected, & ! <- Local number of extracted elements
+                                          selected)     ! <- Local IDs of extracted elements
 
   ! Realize extraction
   call PDM_extract_part_compute(extrp)

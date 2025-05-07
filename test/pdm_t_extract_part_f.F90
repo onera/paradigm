@@ -220,8 +220,7 @@ program extract_part_f
     call PDM_extract_part_selected_lnum_set(extrp,                        & ! <- ExtractPart instance
                                             i_part-1,                     & ! <- ID of current part
                                             ini_parts(i_part)%n_selected, & ! <- Local number of extracted elements
-                                            ini_parts(i_part)%selected,   & ! <- Local IDs of extracted elements
-                                            PDM_OWNERSHIP_USER)             ! <- Ownership
+                                            ini_parts(i_part)%selected)     ! <- Local IDs of extracted elements
   enddo ! End loop on parts
 
   ! Realize extraction
