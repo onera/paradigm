@@ -156,7 +156,6 @@ Developer manual
    :maxdepth: 1
    :hidden:
 
-   developer_manual/api/index
    developer_manual/coding_rules
    developer_manual/mesh_adaptation/index
 
