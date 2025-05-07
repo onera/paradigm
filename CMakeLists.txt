@@ -38,7 +38,7 @@ if (NOT TARGET Python::Python OR NOT TARGET Python::NumPy)
   find_package(Python 3.8 REQUIRED COMPONENTS Development NumPy)
 endif()
 if (NOT TARGET MPI::MPI_CXX)
-  find_package(MPI REQUIRED COMPONENTS CXX)
+  find_package(MPI REQUIRED COMPONENTS Fortran CXX)
 endif()
 if (NOT TARGET Mpi4Py::Mpi4Py)
   find_package(Mpi4Py REQUIRED)
@@ -63,6 +63,11 @@ option(PDM_ENABLE_Fortran         "Build Fortran Interface"       ON )
 option(PDM_ENABLE_PYTHON_BINDINGS "Build Python module"           OFF)
 
 option(PDM_ENABLE_UNIT_TEST       "Enable unit test "             OFF)
+
+option(PDM_ENABLE_CUDA "Enable CUDA" OFF)
+if (PDM_ENABLE_CUDA)
+  enable_language(CUDA)
+endif ()
 
 if (PDM_ENABLE_Fortran_MPI_MODULE)
   set(CMAKE_Fortran_PREPROCESS ON)
@@ -103,6 +108,17 @@ if(PDM_ENABLE_SHARED)
   list(APPEND LIB_TYPES SHARED)
 endif()
 
+# if (PDM_ENABLE_CUDA)
+#   add_library(pdm_gpu STATIC ${SOURCESGPU})
+#   set_target_properties(pdm_gpu PROPERTIES
+#                             CUDA_SEPARABLE_COMPILATION ON)
+#   target_compile_options(pdm_gpu PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:
+#   -maxrregcount=32;--fmad=false;#-G;-g;
+#   -gencode=arch=compute_61,code=sm_61;
+#   >)
+# endif()
+
+
 foreach(lib_type IN LISTS LIB_TYPES)
 
   add_library(pdm_${lib_type} ${lib_type} ${src_files})
@@ -112,23 +128,26 @@ foreach(lib_type IN LISTS LIB_TYPES)
   set_target_properties(pdmf_${lib_type} PROPERTIES OUTPUT_NAME "pdmf")
 
   target_include_directories(pdm_${lib_type} PUBLIC
-    ${PDM_SUBDIRS}
     $<BUILD_INTERFACE:${src_dir}>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
     $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
   )
 
-  # > Les 2 marches
-  # foreach(subdir IN LISTS PDM_SUBDIRS)
-  #   target_include_directories(pdm_${lib_type} PUBLIC
-  #       $<BUILD_INTERFACE:${subdir}>
-  #       $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
-  #   )
-  # endforeach()
+  foreach(subdir IN LISTS PDM_SUBDIRS)
+    target_include_directories(pdm_${lib_type} PUBLIC
+        $<BUILD_INTERFACE:${subdir}>
+        $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
+    )
+  endforeach()
 
   target_link_libraries(pdm_${lib_type}
     PUBLIC
       MPI::MPI_CXX
+  )
+
+  target_link_libraries(pdmf_${lib_type}
+    PUBLIC
+      MPI::MPI_Fortran
   )
 
   target_compile_definitions(pdm_${lib_type} PRIVATE PDM_USE_MULTIPART=0)
@@ -198,9 +217,95 @@ if (${PROJECT_NAME}_ENABLE_TESTS)
   add_subdirectory(test)
 endif()
 
+# pdm_run
+string(REPLACE ";" " " PDM_LIST_TEST  "${PDM_LIST_TEST}")
+string(REPLACE ";" " " PDM_LIST_NRANK "${PDM_LIST_NRANK}")
+
+set (PDM_RUN_PRELOAD "")
+set (PDM_RUN_LSAN "")
+set (PDM_RUN_PYTHONPATH "")
+
+if (CMAKE_BUILD_TYPE STREQUAL "Sanitize")
+  execute_process(COMMAND gcc -print-file-name=libasan.so OUTPUT_VARIABLE PRELOAD_ASAN OUTPUT_STRIP_TRAILING_WHITESPACE)
+  set(PDM_RUN_PRELOAD "LD_PRELOAD ${PRELOAD_ASAN}:${PROJECT_BINARY_DIR}/script/asan/fake_dlclose/libdlclose.so")
+  set(PDM_RUN_PRELOAD_SRUN "LD_PRELOAD=${PRELOAD_ASAN}:${PROJECT_BINARY_DIR}/script/asan/fake_dlclose/libdlclose.so")
+  set(PDM_RUN_LSAN "LSAN_OPTIONS=suppressions=${PROJECT_SOURCE_DIR}/script/asan/asan.supp")
+
+  if (PDM_ENABLE_DOC)
+    message(FATAL_ERROR "Documention can not be built in Sanitize CMAKE_BUILD_TYPE")
+  endif ()
+endif()
+
+if(DEFINED ENV{PYTHONPATH})
+  set (PDM_RUN_PYTHONPATH "PYTHONPATH=${PROJECT_BINARY_DIR}/Cython:$ENV{PYTHONPATH}")
+else()
+  set (PDM_RUN_PYTHONPATH "PYTHONPATH=${PROJECT_BINARY_DIR}/Cython")
+endif()
+
+configure_file(${PROJECT_SOURCE_DIR}/script/pdm_run.in "${PROJECT_BINARY_DIR}/pdm_run"
+               @ONLY)
+
+configure_file(${PROJECT_SOURCE_DIR}/script/pdm_launch.in "${PROJECT_BINARY_DIR}/pdm_launch"
+               @ONLY)
+
+configure_file(${PROJECT_SOURCE_DIR}/script/pdm_launch_python.in "${PROJECT_BINARY_DIR}/pdm_launch_python"
+               @ONLY)
+
+# Je comprends pas encore pourquoi on a besoin de ca (Je reporte pour l'instant pour pas oublier) :
+# configure_file(${PROJECT_SOURCE_DIR}/script/pdm_run.in "${PROJECT_BINARY_DIR}/test/pdm_run"
+#                @ONLY)
+# if(PDM_ENABLE_EXTENSION_PDMA)
+#  configure_file(${PROJECT_SOURCE_DIR}/script/pdm_run.in "${PROJECT_BINARY_DIR}/extensions/paradigma/test/pdm_run"
+#                @ONLY)
+# endif()
+
+# ----------------------------------------------------------------------
+# Summary
 # ----------------------------------------------------------------------
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
   include(FeatureSummary)
   feature_summary(WHAT ALL)
 endif()
 # ----------------------------------------------------------------------
+
+# ----------------------------------------------------------------------
+# Install
+# ----------------------------------------------------------------------
+set (_targets "")
+if (PDM_ENABLE_Fortran)
+  if (PDM_ENABLE_STATIC)
+    list (APPEND _targets pdmf_STATIC)
+  endif()
+  if (PDM_ENABLE_SHARED)
+    list (APPEND _targets pdmf_SHARED)
+  endif()
+endif()
+
+if (PDM_ENABLE_STATIC)
+  list (APPEND _targets pdm_STATIC)
+endif()
+
+if (PDM_ENABLE_SHARED)
+  list (APPEND _targets pdm_SHARED)
+endif()
+
+foreach(_target IN ITEMS ${_targets})
+  install(TARGETS ${_target} EXPORT ${_target}Targets
+    RUNTIME DESTINATION bin
+    LIBRARY DESTINATION lib
+    PUBLIC_HEADER DESTINATION include
+    ARCHIVE DESTINATION lib
+  )
+  install(EXPORT ${_target}Targets
+    FILE ${_target}Targets.cmake
+    NAMESPACE pdm::
+    DESTINATION lib/cmake/${_target}
+  )
+  add_library(pdm::${_target} ALIAS ${_target})
+endforeach()
+
+file(GLOB_RECURSE all_headers "${CMAKE_SOURCE_DIR}/src/*.h")
+set(install_headers ${all_headers})
+list(FILTER install_headers EXCLUDE REGEX ".*\\_priv\\.h$")
+
+install(FILES ${install_headers} DESTINATION include)

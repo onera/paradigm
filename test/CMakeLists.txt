@@ -243,7 +243,7 @@ if (PDM_ENABLE_PYTHON_BINDINGS)
    endif()
 endif()
 
-if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
+if(PDM_ENABLE_FORTRAN)
   test_fortran_create (pdm_t_closest_points_f             2 PDM_LIST_TEST PDM_LIST_NRANK)
   test_fortran_create (pdm_t_mesh_location_f              1 PDM_LIST_TEST PDM_LIST_NRANK)
   test_fortran_create (pdm_t_part_to_block_f              1 PDM_LIST_TEST PDM_LIST_NRANK)
@@ -277,5 +277,5 @@ endif()
 
 add_subdirectory(tutorial)
 
-set (PDM_LIST_TEST ${PDM_LIST_TEST} PARENT_SCOPE )
+set (PDM_LIST_TEST  ${PDM_LIST_TEST}  PARENT_SCOPE )
 set (PDM_LIST_NRANK ${PDM_LIST_NRANK} PARENT_SCOPE )
