@@ -338,7 +338,7 @@ pages:
     - ''
   script:
     - mkdir -p public
-    - cp -r $CUSTOM_CI_DIR/build_intel@2022_intel-oneapi_GNUM64_ON_BUILD_Debug_PDMA_ON/doc/sphinx/html public/dev
+    - cp -r $CUSTOM_CI_DIR/build_gcc@14_openmpi_GNUM64_ON_BUILD_Debug_PDMA_ON/doc/sphinx/html public/dev
   artifacts:
     paths:
       - public
