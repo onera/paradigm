@@ -203,7 +203,7 @@ program extract_part_nodal_f
                                           0,                  & ! <- ID of current subdomain (i_part)
                                           n_selected,         & ! <- Local number of extracted elements
                                           selected,           & ! <- Local IDs of extracted elements
-                                          PDM_OWNERSHIP_USER)   ! <- Ownership (since paradigm-2.6.0)
+                                          PDM_OWNERSHIP_USER)   ! <- Ownership
 
   ! Realize extraction
   call PDM_extract_part_compute(extrp)
