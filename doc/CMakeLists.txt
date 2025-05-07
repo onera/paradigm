@@ -7,7 +7,7 @@ endif()
 
 if(PDM_ENABLE_DOC)
     find_package(Doxygen 1.8.9 REQUIRED)
-    find_package(Sphinx 3 REQUIRED)
+    find_package(Sphinx 6 REQUIRED)
     find_package(Breathe REQUIRED)
 
     #------------------------------------------------------------------------------
