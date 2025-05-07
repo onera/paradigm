@@ -6,10 +6,13 @@ Util
 
 .. container:: toc-cards
 
-  .. container:: card
+  .. card:: Rotations
+    :link: rot
+    :link-type: ref
 
-    :ref:`Rotations <rot>`
-      Services handling 3D rigid body rotations
+    Services handling 3D rigid body rotations
+
+|
 
 |
 

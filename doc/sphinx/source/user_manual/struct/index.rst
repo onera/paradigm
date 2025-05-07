@@ -6,10 +6,13 @@ Mesh Structures
 
 .. container:: toc-cards
 
-  .. container:: card
+  .. card:: Partitioned Nodal Mesh Structure
+    :link: pmn
+    :link-type: ref
+    
+    Store a partitioned nodal mesh
 
-    :ref:`Partitioned Nodal Mesh Structure <pmn>`
-      Store a partitioned nodal mesh
+|
 
 |
 

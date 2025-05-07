@@ -7,21 +7,29 @@ Pre-/co-/post-processing
 
 .. container:: toc-cards
 
-  .. container:: card
+  .. card:: Mesh location
+    :link: mesh_location
+    :link-type: ref
+    
+    Point clouds location inside a mesh
 
-    :ref:`Mesh location <mesh_location>`
-      Point clouds location inside a mesh
 
 
-  .. container:: card
+  .. card:: Closest points
+    :link: closest_points
+    :link-type: ref
+    
+    Nearest neighbors search between point clouds
 
-    :ref:`Closest points <closest_points>`
-      Nearest neighbors search between point clouds
 
-  .. container:: card
 
-    :ref:`Iso-surfaces <isosurface>`
-      Extract slices and iso-surfaces
+  .. card:: Iso-surfaces
+    :link: isosurface
+    :link-type: ref
+    
+    Extract slices and iso-surfaces
+
+
 
 .. toctree::
   :caption: Pre-/co-/post-processing algorithms
@@ -34,11 +42,10 @@ Pre-/co-/post-processing
 
 |
 
-Other
-=====
-* distance from surface
-* inside cloud surf
-* mesh intersection
-* iso-surfaces & slices
-* overlay
-* mesh adaptation/remeshing
+.. Other
+.. =====
+.. * distance from surface
+.. * inside cloud surf
+.. * mesh intersection
+.. * overlaya
+.. * mesh adaptation/remeshing
