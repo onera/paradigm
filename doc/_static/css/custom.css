@@ -1,0 +1,259 @@
+/* @import url("https://fonts.googleapis.com/css2?family=Source+Sans+3");
+/* @import url("https://fonts.googleapis.com/css2?family=Roboto"); */
+/* @import url("https://fonts.googleapis.com/css2?family=Roboto+Mono"); */
+
+/* Roboto */
+@font-face {
+	font-family: Roboto;
+	font-style: normal;
+	font-weight: 400;
+	src: local("Roboto"), local("Roboto-Regular"), url(fonts/roboto/roboto.woff2) format("woff2");
+}
+@font-face {
+	font-family: Roboto;
+	font-style: italic;
+	font-weight: 400;
+	src: local("Roboto Italic"), local("Roboto-Italic"), url(fonts/roboto/roboto-italic.woff2) format("woff2");
+}
+@font-face {
+	font-family: Roboto;
+	font-style: normal;
+	font-weight: 700;
+	src: local("Roboto Bold"), local("Roboto-Bold"), url(fonts/roboto/roboto-bold.woff2) format("woff2");
+}
+
+
+/* Roboto Mono */
+@font-face {
+	font-family: Roboto Mono;
+	font-style: normal;
+	font-weight: 400;
+	src: local("Roboto Mono Regular"), local("RobotoMono-Regular"), url(fonts/roboto-mono/roboto-mono.woff2) format("woff2");
+}
+@font-face {
+	font-family: Roboto Mono;
+	font-style: italic;
+	font-weight: 400;
+	src: local("Roboto Mono Italic"), local("RobotoMono-Italic"), url(fonts/roboto-mono/roboto-mono-italic.woff2) format("woff2");
+}
+@font-face {
+	font-family: Roboto Mono;
+	font-style: normal;
+	font-weight: 700;
+	src: local("Roboto Mono Bold"), local("RobotoMono-Bold"), url(fonts/roboto-mono/roboto-mono-bold.woff2) format("woff2");
+}
+@font-face {
+	font-family: Roboto Mono;
+	font-style: italic;
+	font-weight: 700;
+	src: local("Roboto Mono Bold Italic"), local("RobotoMono-BoldItalic"), url(fonts/roboto-mono/roboto-mono-bold-italic.woff2) format("woff2");
+}
+
+
+body {
+	--sidebar-caption-font-size: var(--font-size--normal);
+	--toc-title-font-size: var(--font-size--normal);
+	--toc-font-size: var(--sidebar-item-font-size);
+	--admonition-font-size: var(--font-size--normal);
+	--admonition-title-font-size: var(--font-size--normal);
+	--color-brand-visited: var(--color-brand-content) !important;
+}
+
+
+h1,
+h2,
+h3 {
+  font-weight: 700;
+	margin-top: 1.75rem;
+	margin-bottom: 1rem;
+}
+
+h1 {
+	font-size: 2em;
+}
+
+h2 {
+	font-size: 1.5em;
+}
+
+h3 {
+	font-size: 1.25em;
+}
+
+h4,
+h5,
+h6,
+.rubric {
+	margin-top: 1.25rem;
+	margin-bottom: 0.75rem;
+	font-size: 1.125em;
+}
+
+
+
+/* Don't underline any text within code blocks (hurts readability). */
+.highlight .nc,
+.highlight .nn,
+.highlight .gu {
+	text-decoration-line: none !important;
+}
+
+
+/* Break long code references onto a second line */
+a > code.docutils {
+	overflow-wrap: anywhere;
+}
+
+table.docutils{ /*td:first-child, table.docutils th:first-child {*/
+  text-wrap-style: stable;
+  overflow-wrap: anywhere;
+}
+
+
+/* Applied on main index:sections. */
+
+.global-index-toc {
+	display: none;
+}
+
+/* Start Cards */
+.toc-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(225px, 1fr));
+  grid-gap: 20px;
+  list-style-type: none;
+  margin-bottom: 12px;
+}
+
+.card {
+  border-radius: .4em;
+  user-select: none;
+	background-color: var(--color-background-secondary);
+  box-shadow: 0 .2rem .5rem rgba(0, 0, 0, .07), 0 0 .0625rem rgba(0, 0, 0, .12);
+}
+
+.card div.figure,
+.card figure {
+  margin-bottom: 0;
+  display: block;
+}
+
+.card img {
+  border-top-left-radius: .4em;
+  border-top-right-radius: .4em;
+}
+
+.card dl {
+  margin-bottom: 10px
+}
+
+.card dl dt>a {
+  display: block;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.card dl dt a em,
+.card dl dt a span {
+  font-weight: bold;
+  font-style: normal;
+  font-size: 115%;
+}
+
+.card dl dt {
+  padding: 18px 15px 0px !important
+}
+
+.card dl dd {
+  padding: 0px 15px 5px 15px;
+  font-style: normal;
+  margin: 0px;
+	color: var(--color-foreground-secondary);
+  font-size: 90%;
+}
+
+.sd-card-title {
+  font-size: large;
+  color: var(--color-link);
+}
+
+/* End Cards */
+
+
+
+/* Start custom toctree. */
+/* Underline provided by nested ul (not li). */
+.toctree-wrapper * ul {
+	margin-bottom: 1rem !important;
+	border-top: solid var(--color-background-border) 1px;
+	padding-left: 2em;
+	padding-top: 0.25em;
+}
+/* End custom toctree. */
+
+
+/* API reference */
+dl.subroutine,
+dl.method,
+dl.function {
+  border-radius: .3em;
+  margin-bottom: 1rem;
+  background-color: var(--color-background-secondary);
+  padding: 1em;
+}
+
+.sig:not(.sig-inline) {
+  font-weight:    normal;
+  padding-top:    0;
+  padding-bottom: 0.25rem;
+  padding-left:   1rem;
+  padding-right:  1rem;
+  text-indent:    0;
+  margin-bottom:  1em;
+}
+
+.sig-param {
+  font-weight: bold;
+  color: var(--color-api-overall);
+}
+
+.sig-name {
+  font-weight: bold;
+}
+
+.sig-indent {
+  margin-left: 2rem;
+}
+
+dl.py em.sig-param {
+  margin-left: 2rem;
+}
+
+
+/* "Headings" (like "Parameters" and "Return") */
+dl[class]:not(.option-list):not(.field-list):not(.footnote):not(.glossary):not(.simple) .field-list>dt {
+  font-size: var(--font-size--normal);
+  text-transform: none;
+}
+
+/* End API reference */
+
+
+.red {
+  color: #eb4034;
+}
+
+.green {
+  color: #03a621;
+}
+
+
+.largered {
+  color: #eb4034;
+  font-size:120%;
+}
+
+.largegreen {
+  color: #03a621;
+  font-size:120%;
+}

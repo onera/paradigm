@@ -134,6 +134,7 @@ add_module_names = False
 
 # The name of the Pygments (syntax highlighting) style to use.
 # pygments_style = 'sphinx'
+pygments_dark_style = 'material'
 
 # A list of ignored prefixes for module index sorting.
 # modindex_common_prefix = []
@@ -169,11 +170,38 @@ breathe_default_project = "paradigm"
 #
 
 html_theme = 'sphinx_rtd_theme'
+try:
+    import furo
+    html_theme = "furo"
+    del furo
+except ModuleNotFoundError:
+    pass
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
 html_theme_options = {
+    "light_css_variables": {
+        "font-stack": "Roboto, Segoe UI, Helvetica, sans-serif",
+        "font-stack--monospace": "Roboto Mono, SFMono-Regular, Menlo, Consolas, Monaco, Liberation Mono, Lucida Console, monospace",
+        "color-foreground-primary": "#23373b",
+        "color-brand-primary": "#1c64ff",
+        "color-link": "#366ce4",
+        "color-highlight-on-target": "#ffeee6",
+        "color-foreground-tertiary": "#d9d9da",
+        "color-background-tertiary": "#f1f2f7",
+	    "color-api-name": "#d63736",
+    },
+    "dark_css_variables": {
+        "color-brand-primary": "#3d94ff",
+        "color-link": "#5ca5ff",
+        "color-highlight-on-target": "#2d1d0c",
+        "color-foreground-tertiary": "#3f4144",
+        "color-background-secondary": "#2a2c34",
+        "color-background-tertiary": "#1d1f22",
+	    "color-api-name": "#ff6d6c",
+    },
+
     "display_version": True,
     # "collapse_navigation": True,
     # "navigation_depth": -1,
@@ -207,7 +235,9 @@ html_short_title = project
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['../../_static']
 
-html_css_files = ["css/theme_overrides.css"]
+html_css_files = ["css/custom.css"]
+
+html_js_files = ["js/custom.js"]
 
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied
