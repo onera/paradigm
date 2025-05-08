@@ -237,7 +237,7 @@ unit_test:
     - export I_MPI_PMI_LIBRARY=/usr/lib64/libpmi.so
     - cd $CUSTOM_CI_DIR/build$MATRIX_KEY
     # - ./pdm_run -srun # Pour l'instant ne marche pas avec openmpi
-    - ./pdm_run
+    - ./pdm_run -timeout 360
     - if [ "${BUILD_TYPE}" == "Coverage" ]; then
     -   cd $CUSTOM_CI_DIR/build$MATRIX_KEY/src/CMakeFiles/pdm.dir
     -   for d in */ ; do cd $d && gcov -b -l -p -c *.gcno && cd .. ; done
