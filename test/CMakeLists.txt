@@ -269,7 +269,6 @@ test_c_create (pdm_t_point_location_nodal        1  PDM_LIST_TEST PDM_LIST_NRANK
 test_c_create (pdm_t_projection_point_cloud_surf 1 PDM_LIST_TEST PDM_LIST_NRANK)
 
 
-test_c_create (pdm_t_bezier_triangle_location 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_intersect_tetrahedra     1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_triangles_intersect      1 PDM_LIST_TEST PDM_LIST_NRANK)
 

@@ -34,6 +34,13 @@
  *  Local headers
  *----------------------------------------------------------------------------*/
 
+#ifdef __cplusplus
+extern "C" {
+#if 0
+} /* Fake brace to force back Emacs auto-indentation back to column 0 */
+#endif
+#endif /* __cplusplus */
+
 /*============================================================================
  * Private function definitions
  *============================================================================*/
@@ -75,7 +82,7 @@ PDM_ho_bezier_de_casteljau_curve
  double       *val,
  double       *l,
  double       *r
- );
+);
 
 /**
  *
@@ -109,7 +116,7 @@ PDM_ho_bezier_de_casteljau_triangle
  double       *atr,
  double       *ars,
  double       *ast
- );
+);
 
 
 /**
@@ -130,7 +137,7 @@ PDM_ho_bezier_curve_derivative
  const int     order,
        double *b,
        double *db_dt
- );
+);
 
 
 /**
@@ -153,7 +160,7 @@ PDM_ho_bezier_triangle_derivatives
  double    *b,
  double    *bu,
  double    *bv
- );
+);
 
 
 /**
@@ -178,8 +185,7 @@ PDM_ho_bezier_curve_location
        double *point_coord,
        double *projected_coord,
        double *u
- );
-
+);
 
 /**
  *
@@ -203,6 +209,10 @@ PDM_ho_bezier_triangle_location
        double *point_coord,
        double *projected_coord,
        double *uv
- );
+);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* __PDM_HO_BEZIER_H__ */

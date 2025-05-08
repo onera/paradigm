@@ -1,20 +1,11 @@
-
-#include <stdio.h>
-
+#include <cstdio>
+#include <math.h>
+#include "doctest/doctest.h"
 #include "pdm_ho_bezier.h"
-#include "pdm_mesh_nodal.h"
-#include "pdm_mpi.h"
-#include "pdm_vtk.h"
 
-/**
- *
- * \brief  Main
- *
- */
+static const double tol = 1e-14;
 
-int main(int argc, char *argv[])
-{
-  PDM_MPI_Init(&argc, &argv);
+TEST_CASE("PDM_ho_bezier_triangle_location") {
 
   double point_coord[3] = {
     -1.7516283337977998e+03, -2.4366417578898277e+03, -1.6904612902513327e+03
@@ -42,28 +33,7 @@ int main(int argc, char *argv[])
                                   proj_coord,
                                   uvw);
 
-  if (0) {
-    PDM_vtk_write_point_cloud("point.vtk",
-                              1,
-                              point_coord,
-                              NULL,
-                              NULL);
+  // printf("proj_coord = %12.5e / %12.5e / %12.5e \n", proj_coord[0], proj_coord[1], proj_coord[2]);
+  // printf("proj_coord = %12.5e / %12.5e / %12.5e \n", uvw[0], uvw[1], uvw[2]);
 
-    int connec[10] = {1, 4, 10, 2, 3, 7, 9, 8, 5, 6};
-    PDM_vtk_write_std_elements_ho("bezier_triangle.vtk",
-                                  3,
-                                  10,
-                                  node_coord,
-                                  NULL,
-                                  PDM_MESH_NODAL_TRIAHO_BEZIER,
-                                  1,
-                                  connec,
-                                  NULL,
-                                  0,
-                                  NULL,
-                                  NULL);
-  }
-  PDM_MPI_Finalize();
-
-  return 0;
 }
