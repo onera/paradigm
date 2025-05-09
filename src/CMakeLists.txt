@@ -233,6 +233,8 @@ list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/mesh_struct/pdm_part_mesh_n
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/mesh_struct/pdm_dmesh_nodal_elmts.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/mesh_struct/pdm_part_mesh_nodal_elmts.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/mesh_struct/pdm_surf_mesh.h")
+list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/mesh_struct/pdm_part_mesh.h")
+list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/mesh_struct/pdm_dmesh.h")
 
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/mesh_topology/pdm_part_connectivity_transform.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/mesh_topology/pdm_cellface_orient.h")
@@ -250,8 +252,6 @@ list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/meshgen/pdm_poly_vol_gen.h"
 
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_global_mean.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_extract_part.h")
-list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_dmesh.h")
-list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_part_mesh.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_global_reduce.h")
 
 
