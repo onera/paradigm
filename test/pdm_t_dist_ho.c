@@ -196,9 +196,8 @@ _generate_surface_mesh
        PDM_multipart_t      **_mpart
 )
 {
-  int i_rank, n_rank;
+  int i_rank;
   PDM_MPI_Comm_rank(comm, &i_rank);
-  PDM_MPI_Comm_size(comm, &n_rank);
 
   /* First: generate a dcube nodal */
   PDM_dcube_nodal_t *dcube = PDM_dcube_nodal_gen_create(comm,
@@ -269,12 +268,6 @@ _generate_surface_mesh
   *_dmn   = dmn;
 }
 
-
-
-
-
-
-
 /**
  *
  * \brief  Main
@@ -294,8 +287,7 @@ int main(int argc, char *argv[])
   int                   post           = 0;
   int                   order          = 1;
   PDM_Mesh_nodal_elt_t  elt_type       = PDM_MESH_NODAL_TRIA3;
-
-  PDM_split_dual_t part_method    = PDM_SPLIT_DUAL_WITH_HILBERT;
+  PDM_split_dual_t      part_method    = PDM_SPLIT_DUAL_WITH_HILBERT;
 
   setenv("PDM_DIST_CLOUD_SURF_OPTIM", "1", 1);
 
@@ -313,20 +305,14 @@ int main(int argc, char *argv[])
              &elt_type,
      (int *) &part_method);
 
-  //double radius = length;//2*length;
-
-
-
   /*
    *  Init
    */
   PDM_MPI_Comm comm = PDM_MPI_COMM_WORLD;
   int i_rank;
-  int n_rank;
 
   PDM_MPI_Init(&argc, &argv);
   PDM_MPI_Comm_rank(comm, &i_rank);
-  PDM_MPI_Comm_size(comm, &n_rank);
 
 
   /*
@@ -377,7 +363,6 @@ int main(int argc, char *argv[])
   /*
    *  Create dist_cloud_surf object
    */
-
   int n_point_cloud = 1;
   PDM_dist_cloud_surf_t *dist = PDM_dist_cloud_surf_create(PDM_MESH_NATURE_NODAL_SHARED,
                                                            n_point_cloud,
@@ -470,7 +455,6 @@ int main(int argc, char *argv[])
     PDM_free(g_num);
     PDM_free(connec);
   }
-
 
   /*
    *  Free memory

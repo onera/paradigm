@@ -138,10 +138,6 @@ _read_args(int            argc,
   }
 }
 
-
-
-
-
 static
 void
 _generate_surface_mesh
@@ -210,8 +206,6 @@ _generate_surface_mesh
 
 }
 
-
-
 /**
  *
  * \brief  Main
@@ -231,8 +225,7 @@ int main(int argc, char *argv[])
   int                   n_part         = 1;
   int                   post           = 0;
   int                   ngon           = 0;
-
-  PDM_split_dual_t part_method    = PDM_SPLIT_DUAL_WITH_HILBERT;
+  PDM_split_dual_t      part_method    = PDM_SPLIT_DUAL_WITH_HILBERT;
 
   setenv("PDM_DIST_CLOUD_SURF_OPTIM", "1", 1);
 
@@ -256,11 +249,9 @@ int main(int argc, char *argv[])
    */
   PDM_MPI_Comm comm = PDM_MPI_COMM_WORLD;
   int i_rank;
-  int n_rank;
 
   PDM_MPI_Init(&argc, &argv);
   PDM_MPI_Comm_rank(comm, &i_rank);
-  PDM_MPI_Comm_size(comm, &n_rank);
 
   /*
    *  Generate cloud
@@ -306,26 +297,26 @@ int main(int argc, char *argv[])
                           &dmn_surf,
                           &mpart_surf);
 
-  int *surf_pn_vtx;
-  PDM_malloc(surf_pn_vtx,n_part,int          );
-  int *surf_pn_face;
-  PDM_malloc(surf_pn_face,n_part,int          );
-  int *surf_pn_edge;
-  PDM_malloc(surf_pn_edge,n_part,int          );
-  int **surf_pface_edge_idx;
-  PDM_malloc(surf_pface_edge_idx,n_part,int         *);
-  int **surf_pface_edge;
-  PDM_malloc(surf_pface_edge,n_part,int         *);
-  int **surf_pedge_vtx;
-  PDM_malloc(surf_pedge_vtx,n_part,int         *);
-  int **surf_pface_vtx;
-  PDM_malloc(surf_pface_vtx,n_part,int         *);
-  double **surf_pvtx_coord;
-  PDM_malloc(surf_pvtx_coord,n_part,double      *);
-  PDM_g_num_t **surf_pvtx_ln_to_gn;
-  PDM_malloc(surf_pvtx_ln_to_gn,n_part,PDM_g_num_t *);
-  PDM_g_num_t **surf_pface_ln_to_gn;
-  PDM_malloc(surf_pface_ln_to_gn,n_part,PDM_g_num_t *);
+  int          *surf_pn_vtx         = NULL;
+  int          *surf_pn_face        = NULL;
+  int          *surf_pn_edge        = NULL;
+  int         **surf_pface_edge_idx = NULL;
+  int         **surf_pface_edge     = NULL;
+  int         **surf_pedge_vtx      = NULL;
+  int         **surf_pface_vtx      = NULL;
+  double      **surf_pvtx_coord     = NULL;
+  PDM_g_num_t **surf_pvtx_ln_to_gn  = NULL;
+  PDM_g_num_t **surf_pface_ln_to_gn = NULL;
+  PDM_malloc(surf_pn_vtx        , n_part, int          );
+  PDM_malloc(surf_pn_face       , n_part, int          );
+  PDM_malloc(surf_pn_edge       , n_part, int          );
+  PDM_malloc(surf_pface_edge_idx, n_part, int         *);
+  PDM_malloc(surf_pface_edge    , n_part, int         *);
+  PDM_malloc(surf_pedge_vtx     , n_part, int         *);
+  PDM_malloc(surf_pface_vtx     , n_part, int         *);
+  PDM_malloc(surf_pvtx_coord    , n_part, double      *);
+  PDM_malloc(surf_pvtx_ln_to_gn , n_part, PDM_g_num_t *);
+  PDM_malloc(surf_pface_ln_to_gn, n_part, PDM_g_num_t *);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
     surf_pn_vtx[i_part] = PDM_multipart_part_vtx_coord_get(mpart_surf,
@@ -408,9 +399,6 @@ int main(int argc, char *argv[])
                                      PDM_OWNERSHIP_USER);
   }
   PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmne_surf);
-
-  // PDM_part_mesh_nodal_free(pmn);
-
 
   /*
    * Identity for each point in cloud if it's inside or outside surf
@@ -496,7 +484,7 @@ int main(int argc, char *argv[])
 
   PDM_MPI_Barrier (PDM_MPI_COMM_WORLD);
   if (i_rank == 0) {
-  PDM_printf ("-- End\n");
+    PDM_printf ("-- End\n");
   }
 
   PDM_MPI_Finalize ();

@@ -253,10 +253,6 @@ main
                               &n_tgt,
                               &tgt_coord,
                               &tgt_g_num);
-  // n_tgt = n_src;
-  // tgt_coord = src_coord;
-  // tgt_g_num = src_g_num;
-
 
   PDM_closest_point_t* clsp = PDM_closest_points_create (comm,
                                                          n_closest_points,
@@ -292,26 +288,6 @@ main
                           &closest_src_gnum,
                           &closest_src_dist);
 
-
-  if (0 == 1) {
-    printf("\n\n============================\n\n");
-
-    for (int i = 0; i < n_tgt; i++) {
-      printf("Target point #%d ("PDM_FMT_G_NUM") [%f, %f, %f]\n", i, tgt_g_num[i],
-             tgt_coord[3*i], tgt_coord[3*i+1], tgt_coord[3*i+2]);
-      for (int j = 0; j < n_closest_points; j++)
-        printf("\t%d:\t"PDM_FMT_G_NUM"\t%f\n",
-               j+1,
-               closest_src_gnum[n_closest_points*i + j],
-               closest_src_dist[n_closest_points*i + j]);
-      printf("\n\n");
-    }
-
-
-    printf("============================\n\n");
-  }
-
-
   /* Check ptp */
   if (1) {
     PDM_part_to_part_t *ptp = NULL;
@@ -330,22 +306,11 @@ main
                                                        (const PDM_g_num_t **) &closest_src_gnum,
                                                        comm);
 
-    // PDM_log_trace_connectivity_long(tgt_to_src_idx,
-    //                                 closest_src_gnum,
-    //                                 n_tgt,
-    //                                 "closest_src_gnum : ");
-
     int         **come_from_idx;
     PDM_g_num_t **come_from;
     PDM_part_to_part_gnum1_come_from_get(ptp,
                                          &come_from_idx,
                                          &come_from);
-
-    // PDM_log_trace_connectivity_long(come_from_idx[0],
-    //                                 come_from[0],
-    //                                 n_tgt,
-    //                                 "come_from        : ");
-
 
     double **recv_coord = NULL;
     int request = -1;
@@ -362,8 +327,7 @@ main
             (      void ***) &recv_coord,
                              &request);
       PDM_part_to_part_iexch_wait(ptp, request);
-    }
-    else {
+    } else {
       PDM_part_to_part_reverse_iexch(ptp2,
                                      PDM_MPI_COMM_KIND_P2P,
                                      PDM_STRIDE_CST_INTERLACED,

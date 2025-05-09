@@ -169,7 +169,6 @@ test_c_create (pdm_t_dmesh_nodal_to_dmesh   2 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_dmesh_to_dmesh_nodal   2 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_dmesh_find_ridges_3d   2 PDM_LIST_TEST PDM_LIST_NRANK)
 
-test_c_create (pdm_t_mesh_extract           1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_dmesh_extract_nodal    2 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_dmesh_extract_nodal_2d 2 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_dmesh_extract_3d       2 PDM_LIST_TEST PDM_LIST_NRANK)

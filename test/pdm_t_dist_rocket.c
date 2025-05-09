@@ -407,12 +407,6 @@ _gen_cloud_grid
 }
 
 
-
-
-
-
-
-
 static void
 _gen_rocket
 (
@@ -923,7 +917,7 @@ _get_connectivity
     int _n_vtx;
     int _n_proc;
     int _n_t_part;
-    int _sFace_edge;
+    int _s_face_edge;
     int _s_edge_vtx;
     int _s_edge_group;
     int _n_edge_group2;
@@ -936,12 +930,12 @@ _get_connectivity
                            &_n_vtx,
                            &_n_proc,
                            &_n_t_part,
-                           &_sFace_edge,
+                           &_s_face_edge,
                            &_s_edge_vtx,
                            &_s_edge_group,
                            &_n_edge_group2);
 
-    int         *_faceTag;
+    int         *_face_tag;
     int         *_face_edge_idx;
     int         *_face_edge;
     PDM_g_num_t *_face_ln_to_gn;
@@ -962,7 +956,7 @@ _get_connectivity
 
     PDM_part_part_val_get (ppart,
                            ipart,
-                           &_faceTag,
+                           &_face_tag,
                            &_face_edge_idx,
                            &_face_edge,
                            &_face_ln_to_gn,
@@ -992,14 +986,14 @@ _get_connectivity
 
     /* Faces */
     (*n_face)[ipart] = _n_face;
-    PDM_malloc((*face_edge_idx)[ipart], _n_face + 1, int        );
-    PDM_malloc((*face_edge    )[ipart], _sFace_edge, int        );
-    PDM_malloc((*face_vtx_idx )[ipart], _n_face + 1, int        );
-    PDM_malloc((*face_vtx     )[ipart], _sFace_edge, int        );
-    PDM_malloc((*face_ln_to_gn)[ipart], _n_face    , PDM_g_num_t);
+    PDM_malloc((*face_edge_idx)[ipart], _n_face + 1 , int        );
+    PDM_malloc((*face_edge    )[ipart], _s_face_edge, int        );
+    PDM_malloc((*face_vtx_idx )[ipart], _n_face + 1 , int        );
+    PDM_malloc((*face_vtx     )[ipart], _s_face_edge, int        );
+    PDM_malloc((*face_ln_to_gn)[ipart], _n_face     , PDM_g_num_t);
 
     memcpy ((*face_edge_idx)[ipart], _face_edge_idx, (_n_face + 1) * sizeof(int        ));
-    memcpy ((*face_edge    )[ipart], _face_edge    , _sFace_edge   * sizeof(int        ));
+    memcpy ((*face_edge    )[ipart], _face_edge    , _s_face_edge  * sizeof(int        ));
     memcpy ((*face_vtx_idx )[ipart], _face_edge_idx, (_n_face + 1) * sizeof(int        ));
     memcpy ((*face_ln_to_gn)[ipart], _face_ln_to_gn, _n_face       * sizeof(PDM_g_num_t));
 
@@ -1202,8 +1196,8 @@ _gen_src_mesh
     PDM_part_split_t part_method  = PDM_PART_SPLIT_HILBERT;
 
     int n_property_face = 0;
-    int *renum_properties_face = NULL;
     int n_property_edge = 0;
+    int *renum_properties_face = NULL;
     int *renum_properties_edge = NULL;
 
     PDM_part_t *ppart = PDM_part_create (comm,
