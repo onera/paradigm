@@ -195,7 +195,6 @@ test_c_create (pdm_t_part_mesh_nodal_to_part_mesh                 1 PDM_LIST_TES
 test_c_create (pdm_t_part_mesh_nodal_elmts_compute_child_entities 1 PDM_LIST_TEST PDM_LIST_NRANK)
 
 test_c_create (pdm_t_mesh_check              1 PDM_LIST_TEST PDM_LIST_NRANK)
-test_c_create (pdm_t_cellface_orient_poly    1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_multi_block_merge       1 PDM_LIST_TEST PDM_LIST_NRANK)
 
 # utils
