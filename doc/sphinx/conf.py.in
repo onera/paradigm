@@ -170,12 +170,13 @@ breathe_default_project = "paradigm"
 #
 
 html_theme = 'sphinx_rtd_theme'
-try:
-    import furo
-    html_theme = "furo"
-    del furo
-except ModuleNotFoundError:
-    pass
+if sphinx.__version__ >= "6.0":
+    try:
+        import furo
+        html_theme = "furo"
+        del furo
+    except ModuleNotFoundError:
+        pass
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
