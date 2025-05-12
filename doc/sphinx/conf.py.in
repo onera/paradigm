@@ -170,6 +170,7 @@ breathe_default_project = "paradigm"
 #
 
 html_theme = 'sphinx_rtd_theme'
+import sphinx
 if sphinx.__version__ >= "6.0":
     try:
         import furo
