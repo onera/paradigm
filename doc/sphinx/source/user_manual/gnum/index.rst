@@ -235,8 +235,7 @@ Examples
       .. literalinclude:: ../../../../../test/pdm_t_gen_gnum.c
         :name: c_gen_gnum_ex
         :language: c
-        :dedent: 2
-        :lines: 159-186
+        :lines: 6-7, 158-186
 
 
     .. tab-item:: Fortran
@@ -249,7 +248,7 @@ Examples
           :name: fortran_gen_gnum_ex
           :language: fortran
           :dedent: 2
-          :lines: 43-46, 70-99
+          :lines: 25, 29, 42-46, 70-99
 
 
       .. ifconfig:: enable_fortran_doc == 'OFF'

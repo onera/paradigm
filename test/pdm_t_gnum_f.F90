@@ -26,7 +26,7 @@ program pdm_t_gnum_f
 #ifdef PDM_HAVE_FORTRAN_MPI_MODULE
   use mpi
 #endif
-  use PDM_gnum
+  use pdm_gnum
   use iso_c_binding
   use pdm_fortran
 
