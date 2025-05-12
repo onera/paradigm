@@ -171,6 +171,8 @@ breathe_default_project = "paradigm"
 
 html_theme = 'sphinx_rtd_theme'
 import sphinx
+print(f"Sphinx version : {sphinx.__version__}")
+print(f"Sphinx path    : {sphinx.__file__}")
 if sphinx.__version__ >= "6.0":
     try:
         import furo
