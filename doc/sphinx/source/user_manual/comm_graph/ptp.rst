@@ -3,191 +3,190 @@
 Part to Part
 ============
 
-C API
------
 
-Enumerators
-"""""""""""
+API
+"""
 
-.. doxygenenum:: PDM_mpi_comm_kind_t
+.. dropdown:: Initialization
 
-.. doxygenenum:: PDM_part_to_part_data_def_t
+  .. tab-set::
 
-Initialization
-""""""""""""""
+    .. tab-item:: C
 
-.. doxygenfunction:: PDM_part_to_part_create
+      .. doxygenfunction:: PDM_part_to_part_create
+      .. doxygenfunction:: PDM_part_to_part_create_from_num2_triplet
 
-.. doxygenfunction:: PDM_part_to_part_create_from_num2_triplet
 
 
-Information on Part 2 side
-""""""""""""""""""""""""""
+    .. tab-item:: Fortran
 
-.. doxygenfunction:: PDM_part_to_part_ref_lnum2_get
+      .. ifconfig:: enable_fortran_doc == 'ON'
 
-.. doxygenfunction:: PDM_part_to_part_unref_lnum2_get
+        .. f:autosubroutine:: PDM_part_to_part_create
 
-.. doxygenfunction:: PDM_part_to_part_gnum1_come_from_get
+      .. ifconfig:: enable_fortran_doc == 'OFF'
 
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
 
-Exchange
-""""""""
 
-.. doxygenfunction:: PDM_part_to_part_iexch
 
-.. doxygenfunction:: PDM_part_to_part_iexch_wait
+    .. tab-item:: Python
 
-.. doxygenfunction:: PDM_part_to_part_reverse_iexch
+      .. ifconfig:: enable_python_doc == 'ON'
 
-.. doxygenfunction:: PDM_part_to_part_reverse_iexch_wait
+        .. autofunction:: Pypdm.Pypdm.PartToPart.__init__
+          :noindex:
 
-.. .. doxygenfunction:: PDM_part_to_part_issend
+        .. autofunction:: Pypdm.Pypdm.PartToPart.from_triplet
+          :noindex:
 
-.. .. doxygenfunction:: PDM_part_to_part_issend_wait
+      .. ifconfig:: enable_python_doc == 'OFF'
 
-.. .. doxygenfunction:: PDM_part_to_part_reverse_issend
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
 
-.. .. doxygenfunction:: PDM_part_to_part_reverse_issend_wait
 
-.. .. doxygenfunction:: PDM_part_to_part_irecv
 
-.. .. doxygenfunction:: PDM_part_to_part_irecv_wait
 
-.. .. doxygenfunction:: PDM_part_to_part_reverse_irecv
+.. dropdown:: Information on Part 2 side
 
-.. .. doxygenfunction:: PDM_part_to_part_reverse_irecv_wait
+  .. tab-set::
 
+    .. tab-item:: C
 
-Finalization
-""""""""""""
+      .. doxygenfunction:: PDM_part_to_part_ref_lnum2_get
+      .. doxygenfunction:: PDM_part_to_part_unref_lnum2_get
+      .. doxygenfunction:: PDM_part_to_part_gnum1_come_from_get
 
-.. doxygenfunction:: PDM_part_to_part_free
 
 
+    .. tab-item:: Fortran
 
-Fortran API
------------
+      .. ifconfig:: enable_fortran_doc == 'ON'
 
-.. ifconfig:: enable_fortran_doc == 'ON'
+        .. f:autosubroutine:: PDM_part_to_part_ref_lnum2_get
+        .. f:autosubroutine:: PDM_part_to_part_unref_lnum2_get
+        .. f:autosubroutine:: PDM_part_to_part_gnum1_come_from_get
 
-  Initialization
-  """"""""""""""
+      .. ifconfig:: enable_fortran_doc == 'OFF'
 
-  .. f:autosubroutine:: PDM_part_to_part_create
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
 
-  Information on Part 2 side
-  """"""""""""""""""""""""""
 
-  .. f:autosubroutine:: PDM_part_to_part_ref_lnum2_get
 
-  .. f:autosubroutine:: PDM_part_to_part_unref_lnum2_get
+    .. tab-item:: Python
 
-  .. f:autosubroutine:: PDM_part_to_part_gnum1_come_from_get
+      .. ifconfig:: enable_python_doc == 'ON'
 
-  Exchange
-  """"""""
+        .. autofunction:: Pypdm.Pypdm.PartToPart.get_referenced_lnum2
+          :noindex:
 
-  .. f:autosubroutine:: PDM_part_to_part_iexch
+        .. autofunction:: Pypdm.Pypdm.PartToPart.get_unreferenced_lnum2
+          :noindex:
 
-  .. f:autosubroutine PDM_part_to_part_iexch_wait
+        .. autofunction:: Pypdm.Pypdm.PartToPart.get_gnum1_come_from
+          :noindex:
 
-  .. f:subroutine:: pdm_part_to_part_iexch_wait(ptp, request)
 
-    Finalize a non-blocking exchange (Part1→Part2)
+      .. ifconfig:: enable_python_doc == 'OFF'
 
-    :p c_ptr ptp [in]:       Part-to-Part instance
-    :p integer request [in]: Request
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
 
-  .. f:autosubroutine:: PDM_part_to_part_reverse_iexch
 
-  .. f:autosubroutine PDM_part_to_part_reverse_iexch_wait
 
-  .. f:subroutine:: pdm_part_to_part_reverse_iexch_wait(ptp, request)
 
-    Finalize a non-blocking exchange (Part2→Part1)
+.. dropdown:: Exchange
 
-    :p c_ptr ptp [in]:       Part-to-Part instance
-    :p integer request [in]: Request
+  .. tab-set::
 
-  .. f:autosubroutine PDM_part_to_part_issend
+    .. tab-item:: C
 
-  .. f:autosubroutine PDM_part_to_part_issend_wait
+      .. doxygenfunction:: PDM_part_to_part_iexch
+      .. doxygenfunction:: PDM_part_to_part_iexch_wait
+      .. doxygenfunction:: PDM_part_to_part_reverse_iexch
+      .. doxygenfunction:: PDM_part_to_part_reverse_iexch_wait
 
-  .. f:autosubroutine PDM_part_to_part_irecv_raw
 
-  .. f:autosubroutine PDM_part_to_part_irecv_wait_raw
+    .. tab-item:: Fortran
 
-  Finalization
-  """"""""""""
+      .. ifconfig:: enable_fortran_doc == 'ON'
 
-  .. f:autosubroutine PDM_part_to_part_free
+        .. f:autosubroutine:: PDM_part_to_part_iexch
 
-  .. f:subroutine:: pdm_part_to_part_free(ptp)
+        .. f:subroutine:: pdm_part_to_part_iexch_wait(ptp, request)
 
-    Free a Part-to-Part structure
+          Finalize a non-blocking exchange (Part1→Part2)
 
-    :p c_ptr ptp [inout]: Part-to-part instance
+          :p c_ptr ptp [in]:       Part-to-Part instance
+          :p integer request [in]: Request
 
+        .. f:autosubroutine:: PDM_part_to_part_reverse_iexch
 
-.. ifconfig:: enable_fortran_doc == 'OFF'
+        .. f:subroutine:: pdm_part_to_part_reverse_iexch_wait(ptp, request)
 
-  .. warning::
-    Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+          Finalize a non-blocking exchange (Part2→Part1)
 
+          :p c_ptr ptp [in]:       Part-to-Part instance
+          :p integer request [in]: Request
 
 
-Python API
-----------
+      .. ifconfig:: enable_fortran_doc == 'OFF'
 
-.. ifconfig:: enable_python_doc == 'ON'
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
 
-  .. py:class:: PartToPart
 
-    Python structure to perform partition-to-partition data exchanges. Once initialized, all the following
-    methods apply to a :class:`PartToPart` instance.
 
-    .. rubric:: Initialization
+    .. tab-item:: Python
 
-    .. autoclass:: Pypdm.Pypdm.PartToPart.__init__
-    .. automethod:: Pypdm.Pypdm.PartToPart.from_triplet
+      .. ifconfig:: enable_python_doc == 'ON'
 
+        .. autofunction:: Pypdm.Pypdm.PartToPart.iexch
+          :noindex:
+        .. autofunction:: Pypdm.Pypdm.PartToPart.wait
+          :noindex:
+        .. autofunction:: Pypdm.Pypdm.PartToPart.reverse_iexch
+          :noindex:
+        .. autofunction:: Pypdm.Pypdm.PartToPart.reverse_wait
+          :noindex:
 
-    .. rubric:: Methods summary
+      .. ifconfig:: enable_python_doc == 'OFF'
 
-    .. autosummary::
-      :nosignatures:
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
 
-      ~Pypdm.Pypdm.PartToPart.get_referenced_lnum2
-      ~Pypdm.Pypdm.PartToPart.get_unreferenced_lnum2
-      ~Pypdm.Pypdm.PartToPart.get_gnum1_come_from
-      ~Pypdm.Pypdm.PartToPart.iexch
-      ~Pypdm.Pypdm.PartToPart.wait
-      ~Pypdm.Pypdm.PartToPart.reverse_iexch
-      ~Pypdm.Pypdm.PartToPart.reverse_wait
 
 
-    .. rubric:: Information on Part 2 side
+.. dropdown:: Finalization
 
-    .. automethod:: Pypdm.Pypdm.PartToPart.get_referenced_lnum2
+  .. tab-set::
 
-    .. automethod:: Pypdm.Pypdm.PartToPart.get_unreferenced_lnum2
+    .. tab-item:: C
 
-    .. automethod:: Pypdm.Pypdm.PartToPart.get_gnum1_come_from
+      .. doxygenfunction:: PDM_part_to_part_free
 
 
-    .. rubric:: Exchange
 
-    .. automethod:: Pypdm.Pypdm.PartToPart.iexch
+    .. tab-item:: Fortran
 
-    .. automethod:: Pypdm.Pypdm.PartToPart.wait
+      .. ifconfig:: enable_fortran_doc == 'ON'
 
-    .. automethod:: Pypdm.Pypdm.PartToPart.reverse_iexch
+        .. f:subroutine:: pdm_part_to_part_free(ptp)
 
-    .. automethod:: Pypdm.Pypdm.PartToPart.reverse_wait
+          Free a Part-to-Part structure
 
+          :p c_ptr ptp [inout]: Part-to-part instance
 
-.. ifconfig:: enable_python_doc == 'OFF'
+      .. ifconfig:: enable_fortran_doc == 'OFF'
 
-  .. warning::
-    Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+
+
+
+    .. tab-item:: Python
+
+      The instance is automatically freed by Python's garbage collector when it is no longer referenced
