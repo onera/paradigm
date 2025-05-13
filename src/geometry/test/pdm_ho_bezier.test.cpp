@@ -36,4 +36,15 @@ TEST_CASE("PDM_ho_bezier_triangle_location") {
   // printf("proj_coord = %12.5e / %12.5e / %12.5e \n", proj_coord[0], proj_coord[1], proj_coord[2]);
   // printf("proj_coord = %12.5e / %12.5e / %12.5e \n", uvw[0], uvw[1], uvw[2]);
 
+  double expexted_proj_coord[3] = {-7.42836e+02, -1.42693e+03, -9.91425e+02};
+  double expected_uvw       [3] = { 1.67385e-01,  1.81742e-01,  6.50874e-01};
+
+  CHECK(proj_coord[0] == doctest::Approx(expexted_proj_coord[0]).epsilon(0.01));
+  CHECK(proj_coord[1] == doctest::Approx(expexted_proj_coord[1]).epsilon(0.01));
+  CHECK(proj_coord[2] == doctest::Approx(expexted_proj_coord[2]).epsilon(0.01));
+
+  CHECK(uvw[0] == doctest::Approx(expected_uvw[0]).epsilon(0.01));
+  CHECK(uvw[1] == doctest::Approx(expected_uvw[1]).epsilon(0.01));
+  CHECK(uvw[2] == doctest::Approx(expected_uvw[2]).epsilon(0.01));
+
 }
