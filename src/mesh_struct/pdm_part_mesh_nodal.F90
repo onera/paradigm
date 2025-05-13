@@ -923,19 +923,20 @@ module pdm_part_mesh_nodal
 
 
   subroutine PDM_part_mesh_nodal_cell_vtx_connect_get(mesh,         &
+                                                      geom_kind,    &
                                                       id_part,      &
                                                       cell_vtx_idx, &
                                                       cell_vtx)
-    ! Get cell-vertex connectivity
+    ! Get cell-vertex connectivity. (The output pointers are owned by the user.)
     implicit none
 
     type(c_ptr), intent(in)        :: mesh            ! Pointer to PDM_part_mesh_nodal instance
+    integer,     intent(in)        :: geom_kind       ! Geometry kind (corner, ridge, surface or volume)
     integer,     intent(in)        :: id_part         ! Partition identifier
     integer (pdm_l_num_s), pointer :: cell_vtx_idx(:) ! Index of cell->vertex connectivity
     integer (pdm_l_num_s), pointer :: cell_vtx(:)     ! Cell->vertex connectivity
     type(c_ptr)    :: c_cell_vtx_idx
     type(c_ptr)    :: c_cell_vtx
-    integer(c_int) :: geom_kind
     integer(c_int) :: n_elt
 
     interface
@@ -951,10 +952,9 @@ module pdm_part_mesh_nodal
       end subroutine
     end interface
 
-    geom_kind = PDM_part_mesh_nodal_principal_geom_kind_get_c(mesh)
-    n_elt     = PDM_part_mesh_nodal_n_elmts_get_c(mesh,      &
-                                                  geom_kind, &
-                                                  id_part)
+    n_elt = PDM_part_mesh_nodal_n_elmts_get_c(mesh,      &
+                                              geom_kind, &
+                                              id_part)
 
     c_cell_vtx_idx = C_NULL_PTR
     c_cell_vtx     = C_NULL_PTR
