@@ -176,18 +176,6 @@ Fortran API
 
     :p c_ptr mpart[inout]: Multipart instance
 
-  Partitioned nodal mesh
-  ~~~~~~~~~~~~~~~~~~~~~~
-
-  Here we describe the getters of the structure retrieved using ``PDM_multipart_get_part_mesh_nodal``.
-  This allows to have the arrays corresponding to the partitioned mesh described in nodal connectivity style.
-
-  .. f:autosubroutine:: PDM_part_mesh_nodal_section_n_elt_get_
-
-  .. f:autosubroutine:: PDM_part_mesh_nodal_section_std_get_
-
-  .. f:autosubroutine:: PDM_part_mesh_nodal_vtx_g_num_get_
-
 .. ifconfig:: enable_fortran_doc == 'OFF'
 
   .. warning::
@@ -202,7 +190,7 @@ Python API
 
   .. py:class:: MultiPart
 
-    Python structure to perform multiple domain mesh partitioning. 
+    Python structure to perform multiple domain mesh partitioning.
     Once initialized, all the following
     methods apply to a :class:`MultiPart` instance.
 
@@ -232,7 +220,7 @@ Python API
       ~Pypdm.Pypdm.MultiPart.thread_color_get
 
     .. rubric:: Set inputs
-    
+
     .. automethod:: Pypdm.Pypdm.MultiPart.dmesh_nodal_set
     .. automethod:: Pypdm.Pypdm.MultiPart.dmesh_set
 
