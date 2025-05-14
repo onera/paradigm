@@ -1,36 +1,16 @@
-
-#include <stdio.h>
-
-#include "pdm_mpi.h"
+#include <stddef.h>
+#include <vector>
+#include "doctest/doctest.h"
+#include "doctest/extensions/doctest_mpi.h"
+#include "pdm.h"
 #include "pdm_cellface_orient.h"
+#include "pdm_doctest.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mpi.h"
+#include "pdm_logging.h"
 
-/*============================================================================
- * Type definitions
- *============================================================================*/
 
-/*============================================================================
- * Private function definitions
- *============================================================================*/
-
-/**
- *
- * \brief  Main
- *
- */
-
-int main(int argc, char *argv[])
-{
-
-  /*
-   *  Init
-   */
-
-  int i_rank;
-  int numProcs;
-
-  PDM_MPI_Init(&argc, &argv);
-  PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &i_rank);
-  PDM_MPI_Comm_size(PDM_MPI_COMM_WORLD, &numProcs);
+MPI_TEST_CASE("[PDM_cellface_orient] - Unit ",1) {
 
   const int      n_cell = 3;
   const int      n_face = 42;
@@ -89,7 +69,15 @@ int main(int argc, char *argv[])
                        face_vtx_idx,
                        face_vtx);
 
-  PDM_MPI_Finalize();
+  if(0 == 1) {
+    PDM_log_trace_array_int(cell_face, cell_face_idx[n_cell], "cell_face ::");
+    PDM_log_trace_array_int(face_vtx, face_vtx_idx[n_face], "face_vtx ::");
+  }
 
-  return 0;
+  int expected_cell_face[52] = {1, 2, 6, 7, 9, 10, 12, -15, 21, 24, 26, 27, 29, -35, -36, 37, 40, 41, 4, 5, -10, 11, 15, 16, 17, 18, 19, 20, 25, 28, 32, 33, 34, 35, 36, 42, -2, 3, -7, 8, 13, 14, -16, -17, 22, 23, -24, -25, 30, 31, 38, 39};
+  int expected_face_vtx [168] = {13, 17, 5, 1, 2, 6, 18, 14, 4, 8, 20, 16, 17, 21, 9, 5, 8, 12, 24, 20, 25, 29, 17, 13, 14, 18, 30, 26, 16, 20, 32, 28, 29, 33, 21, 17, 19, 23, 35, 31, 20, 24, 36, 32, 1, 2, 14, 13, 2, 3, 15, 14, 3, 4, 16, 15, 5, 6, 18, 17, 6, 7, 19, 18, 7, 8, 20, 19, 21, 22, 10, 9, 22, 23, 11, 10, 23, 24, 12, 11, 13, 14, 26, 25, 14, 15, 27, 26, 15, 16, 28, 27, 18, 19, 31, 30, 19, 20, 32, 31, 33, 34, 22, 21, 34, 35, 23, 22, 35, 36, 24, 23, 5, 6, 2, 1, 6, 7, 3, 2, 7, 8, 4, 3, 9, 10, 6, 5, 10, 11, 7, 6, 11, 12, 8, 7, 17, 18, 22, 21, 18, 19, 23, 22, 25, 26, 30, 29, 26, 27, 31, 30, 27, 28, 32, 31, 29, 30, 34, 33, 30, 31, 35, 34, 31, 32, 36, 35};
+
+  CHECK_EQ_C_ARRAY(expected_cell_face, cell_face, 52);
+  CHECK_EQ_C_ARRAY(expected_face_vtx , face_vtx , 168);
+
 }

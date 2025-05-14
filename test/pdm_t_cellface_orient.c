@@ -62,11 +62,11 @@ _usage(int exit_code)
 static void
 _read_args(int            argc,
            char         **argv,
-           PDM_g_num_t  *n_vtx_seg,
+           PDM_g_num_t   *n_vtx_seg,
            double        *length,
            int           *n_part,
-     int           *post,
-     int           *method)
+           int           *post,
+           int           *method)
 {
   int i = 1;
 
@@ -142,7 +142,6 @@ int main(int argc, char *argv[])
   /*
    *  Read args
    */
-
   _read_args(argc,
              argv,
              &n_vtx_seg,
@@ -174,8 +173,8 @@ int main(int argc, char *argv[])
   double       *dvtx_coord      = NULL;
   int          *dface_group_idx = NULL;
   PDM_g_num_t  *dface_group     = NULL;
-  int           dface_vtxL;
-  int           dface_groupL;
+  int           dface_vtx_l;
+  int           dface_group_l;
 
   /*
    *  Create distributed cube
@@ -193,8 +192,8 @@ int main(int argc, char *argv[])
                         &dn_cell,
                         &dn_face,
                         &dn_vtx,
-                        &dface_vtxL,
-                        &dface_groupL);
+                        &dface_vtx_l,
+                        &dface_group_l);
 
   PDM_dcube_gen_data_get(dcube,
                          &dface_cell,
@@ -203,22 +202,20 @@ int main(int argc, char *argv[])
                          &dvtx_coord,
                          &dface_group_idx,
                          &dface_group);
-  // int ppart_id = 0;
-
   gettimeofday(&t_elaps_debut, NULL);
 
   /*
    *  Create mesh partitions
    */
 
+  int *dcell_part     = NULL;
   int have_dcell_part = 0;
-
-  int *dcell_part;
   PDM_malloc(dcell_part, dn_cell, int);
+
   int *renum_properties_cell = NULL;
   int *renum_properties_face = NULL;
-  int n_property_cell = 0;
-  int n_property_face = 0;
+  int  n_property_cell       = 0;
+  int  n_property_face       = 0;
 
   PDM_part_t *ppart = PDM_part_create(PDM_MPI_COMM_WORLD,
                                       method,
@@ -250,10 +247,10 @@ int main(int argc, char *argv[])
 
   PDM_free(dcell_part);
 
-  double  *elapsed = NULL;
-  double  *cpu = NULL;
+  double  *elapsed  = NULL;
+  double  *cpu      = NULL;
   double  *cpu_user = NULL;
-  double  *cpu_sys = NULL;
+  double  *cpu_sys  = NULL;
 
   PDM_part_time_get(ppart,
                     &elapsed,
@@ -345,8 +342,8 @@ int main(int argc, char *argv[])
   PDM_malloc(val_coo_xyz , n_part, PDM_real_t *);
   PDM_malloc(nsom_part   , n_part, int         );
 
-  int *n_part_procs;
-  PDM_malloc(n_part_procs,n_rank,int);
+  int *n_part_procs = NULL;
+  PDM_malloc(n_part_procs, n_rank, int);
 
   PDM_MPI_Allgather((void *) &n_part,      1, PDM_MPI_INT,
                     (void *) n_part_procs, 1, PDM_MPI_INT,
@@ -396,16 +393,16 @@ int main(int argc, char *argv[])
     int          *face_cell;
     int          *face_vtx_idx;
     int          *face_vtx;
-    PDM_g_num_t *face_ln_to_gn;
+    PDM_g_num_t  *face_ln_to_gn;
     int          *face_part_bound_proc_idx;
     int          *face_part_bound_part_idx;
     int          *face_part_bound;
     int          *vtx_tag;
     double       *vtx;
-    PDM_g_num_t *vtx_ln_to_gn;
+    PDM_g_num_t  *vtx_ln_to_gn;
     int          *face_group_idx;
     int          *face_group;
-    PDM_g_num_t *face_group_ln_to_gn;
+    PDM_g_num_t  *face_group_ln_to_gn;
 
     assert(sizeof(PDM_g_num_t) == sizeof(PDM_g_num_t));
 
@@ -493,10 +490,9 @@ int main(int argc, char *argv[])
                               n_vtx,
                               vtx,
                               vtx_ln_to_gn,
-                                PDM_OWNERSHIP_USER);
+                              PDM_OWNERSHIP_USER);
 
     /* Construction de la connectivite pour sortie graphique */
-
     PDM_writer_geom_cell3d_cellface_add (id_cs,
                                          id_geom,
                                          i_part,

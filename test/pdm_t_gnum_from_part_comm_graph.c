@@ -178,9 +178,6 @@ _generate_gnum
   PDM_gnum_free(gnum);
 }
 
-
-
-
 /*=============================================================================
  * Test-specific function definitions
  *============================================================================*/
@@ -195,12 +192,12 @@ int main(int argc, char *argv[])
 {
   PDM_MPI_Init(&argc, &argv);
 
-  PDM_g_num_t n_vtx_seg               = 30;
-  double      length                  = 1.;
-  double      zero_x                  = -length/2;
-  double      zero_y                  = -length/2;
-  double      zero_z                  = -length/2;
-  int         n_part                  = 1;
+  PDM_g_num_t n_vtx_seg = 30;
+  double      length    = 1.;
+  double      zero_x    = -length/2;
+  double      zero_y    = -length/2;
+  double      zero_z    = -length/2;
+  int         n_part    = 1;
 
   _read_args(argc,
              argv,
@@ -211,9 +208,8 @@ int main(int argc, char *argv[])
    * Generate a cube
    */
   PDM_MPI_Comm comm = PDM_MPI_COMM_WORLD;
-  int n_rank;
+
   int i_rank;
-  PDM_MPI_Comm_size(comm, &n_rank);
   PDM_MPI_Comm_rank(comm, &i_rank);
 
   int n_g_part = 0;
@@ -451,7 +447,6 @@ int main(int argc, char *argv[])
   }
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    // PDM_log_trace_array_long(pnew_vtx_ln_to_gn[i_part], pn_vtx[i_part], "pnew_vtx_ln_to_gn : ");
     free(pnew_vtx_ln_to_gn[i_part]);
   }
   free(pnew_vtx_ln_to_gn);
@@ -580,7 +575,6 @@ int main(int argc, char *argv[])
   PDM_free(pface_bound_part_idx);
   PDM_free(pface_bound         );
   PDM_free(pinternal_face_priority);
-
 
   for (int i_part = 0; i_part < n_part; i_part++) {
     PDM_free(pvtx_coord            [i_part]);

@@ -242,7 +242,6 @@ int main(int argc, char *argv[])
   /*
    *  Read args
    */
-
   _read_args(argc,
              argv,
              &gn_src,
@@ -254,16 +253,13 @@ int main(int argc, char *argv[])
   /*
    *  Init
    */
-
   int i_rank;
-  int n_rank;
 
   PDM_MPI_Init (&argc, &argv);
 
   PDM_MPI_Comm comm = PDM_MPI_COMM_WORLD;
 
   PDM_MPI_Comm_rank (comm, &i_rank);
-  PDM_MPI_Comm_size (comm, &n_rank);
 
   /*
    *  Create lines
@@ -284,9 +280,6 @@ int main(int argc, char *argv[])
               &line_g_num,
               &line_vtx_idx,
               &line_vtx);
-
-
-
 
   /*
    *  Create target point cloud
@@ -416,9 +409,6 @@ int main(int argc, char *argv[])
 
   }
 
-
-
-
   PDM_dist_cloud_surf_dump_times(dist);
   PDM_dist_cloud_surf_free (dist);
 
@@ -430,7 +420,6 @@ int main(int argc, char *argv[])
   PDM_free(vtx_g_num);
   PDM_free(pts_coord);
   PDM_free(pts_g_num);
-
 
   PDM_MPI_Finalize();
 

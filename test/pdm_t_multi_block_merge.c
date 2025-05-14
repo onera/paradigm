@@ -113,8 +113,8 @@ int main(int argc, char *argv[])
    *  Set default values
    */
 
-  PDM_g_num_t        n_vtx_seg = 4;
-  double             length  = 1.;
+  PDM_g_num_t n_vtx_seg = 4;
+  double      length    = 1.;
 
   /*
    *  Read args
@@ -138,24 +138,20 @@ int main(int argc, char *argv[])
   int n_block = 2;
 
   PDM_dcube_nodal_t* dcube1 = PDM_dcube_nodal_gen_create(comm,
-                                                        n_vtx_seg,
-                                                        n_vtx_seg,
-                                                        n_vtx_seg,
-                                                        length,
-                                                        0.,
-                                                        0.,
-                                                        0.,
-                                                        PDM_MESH_NODAL_HEXA8,
-                                                        1,
-                                                        PDM_OWNERSHIP_KEEP);
+                                                         n_vtx_seg,
+                                                         n_vtx_seg,
+                                                         n_vtx_seg,
+                                                         length,
+                                                         0.,
+                                                         0.,
+                                                         0.,
+                                                         PDM_MESH_NODAL_HEXA8,
+                                                         1,
+                                                         PDM_OWNERSHIP_KEEP);
 
   PDM_dcube_nodal_gen_build (dcube1);
 
   PDM_dmesh_nodal_t*  dmn1 = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube1);
-  /*
-   * Define distribution of cell
-   */
-  // PDM_dmesh_nodal_dump_vtk(dmn1, PDM_GEOMETRY_KIND_VOLUMIC, "out_volumic_dcube1_");
 
   /*
    * Define distibution of vtx
@@ -323,39 +319,6 @@ int main(int argc, char *argv[])
                  (void * )   dvtx_coord,
                              NULL,
                  (void **)   &dmerge_vtx_coord);
-
-
-  //
-  //
-  //
-  // PDM_multi_block_merge_exch(mbm_elt,
-  //                            3 * sizeof(double),
-  //                            PDM_STRIDE_CST_INTERLACED,
-  //                            stride_one,
-  //                (void * )   dcell_vtx,
-  //                            NULL,
-  //                (void **)   &dmerge_dcell_vtx);
-
-
-  // origin_cell get_orgin_block (size= n_dmerge_cell)
-
-  // orgin_vtx = 4 * s_orgini_cell
-
-  // origin = 
-
-  // Creer dans PDM_multi_block_merge une fonction qui applique la nouvelle numerotation
-  // à un tableau contenant des références à l'ancienne numerotation  
-  //
-  // Transformer indication numerotation en doublon / numabs origin
-  //
-  // PDM_multi_block_merge_apply_array(mbm,
-  //                            size_dmerge_dcell_vtx,
-  //                            dmerge_vtx_origi_block,
-  //                            dmerge_dcell_vtx,
-  //                            dmerge_dcell_new_vtx);
-
-
-
   PDM_free(dvtx_coord);
 
   /*
@@ -553,7 +516,6 @@ int main(int argc, char *argv[])
   PDM_free(block_elmt_distrib_idx);
   PDM_free(n_selected);
   PDM_free(n_elmt_selected);
-
 
   PDM_dcube_nodal_gen_free(dcube1);
   PDM_dcube_nodal_gen_free(dcube2);

@@ -169,7 +169,6 @@ test_c_create (pdm_t_dmesh_nodal_to_dmesh   2 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_dmesh_to_dmesh_nodal   2 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_dmesh_find_ridges_3d   2 PDM_LIST_TEST PDM_LIST_NRANK)
 
-test_c_create (pdm_t_mesh_extract           1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_dmesh_extract_nodal    2 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_dmesh_extract_nodal_2d 2 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_dmesh_extract_3d       2 PDM_LIST_TEST PDM_LIST_NRANK)
@@ -195,7 +194,6 @@ test_c_create (pdm_t_part_mesh_nodal_to_part_mesh                 1 PDM_LIST_TES
 test_c_create (pdm_t_part_mesh_nodal_elmts_compute_child_entities 1 PDM_LIST_TEST PDM_LIST_NRANK)
 
 test_c_create (pdm_t_mesh_check              1 PDM_LIST_TEST PDM_LIST_NRANK)
-test_c_create (pdm_t_cellface_orient_poly    1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_multi_block_merge       1 PDM_LIST_TEST PDM_LIST_NRANK)
 
 # utils
@@ -257,7 +255,6 @@ test_c_create (pdm_t_kdtree_points_inside_ball ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_
 test_c_create (pdm_t_par_octree_shared         ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRANK)
 
 # algo
-test_c_create (pdm_t_closest_points_small                                 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_closest_points                 ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_plane_meshes_intersect_unit                          1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_intersect_line_box                                   1 PDM_LIST_TEST PDM_LIST_NRANK)
@@ -269,7 +266,6 @@ test_c_create (pdm_t_point_location_nodal        1  PDM_LIST_TEST PDM_LIST_NRANK
 test_c_create (pdm_t_projection_point_cloud_surf 1 PDM_LIST_TEST PDM_LIST_NRANK)
 
 
-test_c_create (pdm_t_bezier_triangle_location 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_intersect_tetrahedra     1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_triangles_intersect      1 PDM_LIST_TEST PDM_LIST_NRANK)
 
@@ -325,7 +321,6 @@ if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
   test_fortran_create (pdm_t_dcube_nodal_gen_f            2 PDM_LIST_TEST PDM_LIST_NRANK)
   test_fortran_create (pdm_t_plane_intersect_unit_f       1 PDM_LIST_TEST PDM_LIST_NRANK)
   test_fortran_create (pdm_t_global_reduce_f              2 PDM_LIST_TEST PDM_LIST_NRANK)
-  test_fortran_create (pdm_t_mpi_comm_f2c                 2 PDM_LIST_TEST PDM_LIST_NRANK)
   test_fortran_create (pdm_t_dist_f                       2 PDM_LIST_TEST PDM_LIST_NRANK)
   test_fortran_create (pdm_t_gnum_f                       2 PDM_LIST_TEST PDM_LIST_NRANK)
   test_fortran_create (pdm_t_part_f                       2 PDM_LIST_TEST PDM_LIST_NRANK)

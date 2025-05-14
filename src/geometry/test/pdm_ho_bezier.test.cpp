@@ -1,20 +1,11 @@
-
-#include <stdio.h>
-
+#include <cstdio>
+#include <math.h>
+#include "doctest/doctest.h"
 #include "pdm_ho_bezier.h"
-#include "pdm_mesh_nodal.h"
-#include "pdm_mpi.h"
-#include "pdm_vtk.h"
 
-/**
- *
- * \brief  Main
- *
- */
+static const double tol = 1e-14;
 
-int main(int argc, char *argv[])
-{
-  PDM_MPI_Init(&argc, &argv);
+TEST_CASE("PDM_ho_bezier_triangle_location") {
 
   double point_coord[3] = {
     -1.7516283337977998e+03, -2.4366417578898277e+03, -1.6904612902513327e+03
@@ -42,28 +33,18 @@ int main(int argc, char *argv[])
                                   proj_coord,
                                   uvw);
 
-  if (0) {
-    PDM_vtk_write_point_cloud("point.vtk",
-                              1,
-                              point_coord,
-                              NULL,
-                              NULL);
+  // printf("proj_coord = %12.5e / %12.5e / %12.5e \n", proj_coord[0], proj_coord[1], proj_coord[2]);
+  // printf("proj_coord = %12.5e / %12.5e / %12.5e \n", uvw[0], uvw[1], uvw[2]);
 
-    int connec[10] = {1, 4, 10, 2, 3, 7, 9, 8, 5, 6};
-    PDM_vtk_write_std_elements_ho("bezier_triangle.vtk",
-                                  3,
-                                  10,
-                                  node_coord,
-                                  NULL,
-                                  PDM_MESH_NODAL_TRIAHO_BEZIER,
-                                  1,
-                                  connec,
-                                  NULL,
-                                  0,
-                                  NULL,
-                                  NULL);
-  }
-  PDM_MPI_Finalize();
+  double expexted_proj_coord[3] = {-7.42836e+02, -1.42693e+03, -9.91425e+02};
+  double expected_uvw       [3] = { 1.67385e-01,  1.81742e-01,  6.50874e-01};
 
-  return 0;
+  CHECK(proj_coord[0] == doctest::Approx(expexted_proj_coord[0]).epsilon(0.01));
+  CHECK(proj_coord[1] == doctest::Approx(expexted_proj_coord[1]).epsilon(0.01));
+  CHECK(proj_coord[2] == doctest::Approx(expexted_proj_coord[2]).epsilon(0.01));
+
+  CHECK(uvw[0] == doctest::Approx(expected_uvw[0]).epsilon(0.01));
+  CHECK(uvw[1] == doctest::Approx(expected_uvw[1]).epsilon(0.01));
+  CHECK(uvw[2] == doctest::Approx(expected_uvw[2]).epsilon(0.01));
+
 }

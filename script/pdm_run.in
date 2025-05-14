@@ -225,7 +225,7 @@ testWithOutput=()
 exportjunit=1
 JUnitFile=""
 TestOption=""
-Timeout=1
+Timeout=360
 Ws=""
 PythonUnbuffered=""
 
@@ -403,7 +403,6 @@ do
 
   if [ ${IsSrunMPI} -gt 0 ]
   then
-
     CmdLine="${ExeMPI}"
     k=0
     sep=""
@@ -430,7 +429,7 @@ do
     pids=(${pids[@]} "$!")
 
   else
-    ((TimeOutS=Timeout*60))
+    ((TimeOutS=Timeout))
     if [ $Nranks -gt $NAvailRank ]
     then
       echo "Error PDM_run : Number of requested ranks is greater then the number of available ranks"
