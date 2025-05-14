@@ -60,6 +60,7 @@ program testf
   integer                              :: n_vtx
   integer                              :: n_face
   integer                              :: n_cell
+  integer                              :: geom_kind
 
   integer                              :: i, ifac, isom, tmp(6)
   integer                              :: fid = 13
@@ -194,8 +195,11 @@ action='read')
   end if
 
   ! Récupération de la connectivité du maillage
+  geom_kind = PDM_part_mesh_nodal_principal_geom_kind_get(mesh)
+
   call pdm_part_mesh_nodal_cell_vtx_connect_get & !-
   (mesh,                                        & !- IDENTIFICATEUR OBJET LOCALISATEUR
+   geom_kind,                                   & !- DIMENSION PRINCIPALE
    0,                                           & !- INDICE DE PARTITION DU MAILLAGE NODAL
    tmp_cell_vtx_idx,                            & !- ADRESSES DES NUMEROS DE SOMMETS PAR CELLULE
    tmp_cell_vtx)                                  !- NUMEROS DE SOMMETS PAR CELLULE
