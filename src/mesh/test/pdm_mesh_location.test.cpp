@@ -17,7 +17,7 @@
 
 static double tol = 1e-10;
 
-MPI_TEST_CASE("[pdm_mesh_location] - 2D", 1) {
+MPI_TEST_CASE("[pdm_mesh_location] - 2D nodal", 1) {
   PDM_MPI_Comm comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
   PDM_l_num_t n_vtx;
   double *vtx_coord=NULL;
@@ -46,8 +46,6 @@ MPI_TEST_CASE("[pdm_mesh_location] - 2D", 1) {
 
 
   SUBCASE("tria") {
-
-    printf("TRIA\n");
     n_vtx = 3;
     PDM_malloc(vtx_coord, 3*n_vtx, double);
     fact = 1.0e-6; 
@@ -99,7 +97,6 @@ MPI_TEST_CASE("[pdm_mesh_location] - 2D", 1) {
   }
 
   SUBCASE("quad") {
-    printf("QUAD\n");
     n_vtx = 4;
     PDM_malloc(vtx_coord, 3*n_vtx, double);
     fact = 1.0e-5;  
@@ -153,12 +150,11 @@ MPI_TEST_CASE("[pdm_mesh_location] - 2D", 1) {
     expected_weights[0] = 5.9998250e-02;
     expected_weights[1] = 5.3999925e-01;
     expected_weights[2] = 3.6000325e-01;
-    expected_weights[3] = 3.9999250e-02;    
+    expected_weights[3] = 3.9999250e-02;
 
   }
 
   SUBCASE("polygon convexe") {
-    printf("POLY 1\n");
     n_vtx = 5;
     PDM_malloc(vtx_coord, 3*n_vtx, double);
     fact = 1.0e-4;
@@ -227,7 +223,6 @@ MPI_TEST_CASE("[pdm_mesh_location] - 2D", 1) {
 
   }
   SUBCASE("polygon concave"){
-    printf("POLY 2\n");
     n_vtx = 8;
     PDM_malloc(vtx_coord, 3*n_vtx, double);
     fact = 1.0e-6;
@@ -383,6 +378,189 @@ MPI_TEST_CASE("[pdm_mesh_location] - 2D", 1) {
 }
 
 
+MPI_TEST_CASE("[pdm_mesh_location] - 2D", 1) {
+  PDM_MPI_Comm comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
+  PDM_l_num_t n_vtx;
+  double *vtx_coord=NULL;
+  double fact;
+
+  PDM_l_num_t n_face;
+  PDM_l_num_t *face_edge_idx = NULL;
+  PDM_l_num_t *face_edge = NULL;
+
+  PDM_l_num_t n_edge;
+  PDM_l_num_t *edge_vtx = NULL;
+
+  PDM_g_num_t *face_ln_to_gn = NULL;
+  PDM_g_num_t *vtx_ln_to_gn = NULL;
+
+  PDM_l_num_t n_pts;
+  double *pts_coord = NULL;
+  PDM_g_num_t *gnum = NULL;
+
+  int expected_located;
+  int expected_unlocated;
+  double *expected_weights = NULL;
+
+  PDM_mesh_location_t *ml = PDM_mesh_location_create(1,
+                                                     comm,
+                                                     PDM_OWNERSHIP_KEEP);
+
+  PDM_mesh_location_method_set(ml, PDM_MESH_LOCATION_DBBTREE);
+
+  SUBCASE("quad") {
+    n_vtx = 4;
+    PDM_malloc(vtx_coord, 3*n_vtx, double);
+    fact = 1.0e-5;  
+
+    // 1er point
+    vtx_coord[ 0] = 0.0;
+    vtx_coord[ 1] = 0.0;
+    vtx_coord[ 2] = 0.0;
+    // 2e point
+    vtx_coord[ 3] = 0.5*(1.0+fact);
+    vtx_coord[ 4] = 0.5*(1.0-fact);
+    vtx_coord[ 5] = 0.0;
+    // 3e point
+    vtx_coord[ 6] = 1.0;
+    vtx_coord[ 7] = 1.0;
+    vtx_coord[ 8] = 0.0;
+    // 4e point
+    vtx_coord[ 9] = 0.5*(1.0-fact);
+    vtx_coord[10] = 0.5*(1.0+fact);
+    vtx_coord[11] = 0.0;
+
+
+    n_face = 1;
+    PDM_malloc(face_edge_idx, n_face+1, PDM_l_num_t);
+    face_edge_idx[0] = 0;
+    face_edge_idx[1] = 4;
+    PDM_malloc(face_edge, face_edge_idx[n_face], PDM_l_num_t);
+    face_edge[0] = 1;
+    face_edge[1] = 2;
+    face_edge[2] = 3;
+    face_edge[3] = 4;
+
+    n_edge = 4;
+    PDM_malloc(edge_vtx, 2*n_edge, PDM_l_num_t);
+    edge_vtx[0] = 1;
+    edge_vtx[1] = 2;
+    edge_vtx[2] = 2;
+    edge_vtx[3] = 3;
+    edge_vtx[4] = 3;
+    edge_vtx[5] = 4;
+    edge_vtx[6] = 4;
+    edge_vtx[7] = 1;
+
+    PDM_malloc(face_ln_to_gn, n_face, PDM_g_num_t);
+    PDM_malloc(vtx_ln_to_gn, n_vtx, PDM_g_num_t);
+    face_ln_to_gn[0] = 1;
+    vtx_ln_to_gn[0]  = 1;
+    vtx_ln_to_gn[1]  = 2;
+    vtx_ln_to_gn[2]  = 3;
+    vtx_ln_to_gn[3]  = 4;
+
+    n_pts = 2;
+    PDM_malloc(pts_coord, 3*n_pts, double);
+    PDM_malloc(gnum, n_pts, PDM_g_num_t);
+
+    gnum[0] = 1;
+    pts_coord[0] = 0.65 + 0.5*fact;
+    pts_coord[1] = 0.65;
+    pts_coord[2] = 0.0;
+
+    gnum[1] = 2;
+    pts_coord[3] = 0.5;
+    pts_coord[4] = 0.5;
+    pts_coord[5] = 0.5;
+
+    expected_unlocated = 1;
+    expected_located = 1;
+
+    PDM_malloc(expected_weights, n_vtx*expected_located, double);
+    expected_weights[0] = 5.9998250e-02;
+    expected_weights[1] = 5.3999925e-01;
+    expected_weights[2] = 3.6000325e-01;
+    expected_weights[3] = 3.9999250e-02;
+
+  }
+
+
+  PDM_mesh_location_mesh_n_part_set(ml, 1);
+
+
+  PDM_mesh_location_part_set_2d(ml,
+                                0,
+                                n_face,
+                                face_edge_idx,
+                                face_edge,
+                                face_ln_to_gn,
+                                n_edge,
+                                edge_vtx,
+                                n_vtx,
+                                vtx_coord,
+                                vtx_ln_to_gn);
+
+
+  PDM_mesh_location_n_part_cloud_set(ml, 0, 1);
+
+  PDM_mesh_location_cloud_set(ml,
+                              0,
+                              0,
+                              n_pts,
+                              pts_coord,
+                              gnum);
+
+  PDM_mesh_location_compute(ml);
+
+  int *elt_pts_inside_idx = NULL;
+  PDM_g_num_t *points_gnum = NULL;
+  double *points_coords = NULL;
+  double *points_uvw = NULL;
+  int *points_weights_idx = NULL;
+  double *points_weights = NULL;
+  double *points_dist2 = NULL;
+  double *points_projected_coords = NULL;
+
+  PDM_mesh_location_points_in_elt_get(ml,
+                                      0,
+                                      0,
+                                      &elt_pts_inside_idx,
+                                      &points_gnum,
+                                      &points_coords,
+                                      &points_uvw,
+                                      &points_weights_idx,
+                                      &points_weights,
+                                      &points_dist2,
+                                      &points_projected_coords);
+
+
+
+  int located = PDM_mesh_location_n_located_get(ml, 0, 0);
+  int unlocated = PDM_mesh_location_n_unlocated_get(ml, 0, 0);
+
+  CHECK(located   == expected_located);
+  CHECK(unlocated == expected_unlocated);
+
+  for (int i=0; i<n_vtx; i++){
+    printf("%.16e\n", points_weights[i]);
+    CHECK(fabs(points_weights[i] - expected_weights[i]) < tol);
+  }
+
+
+  PDM_mesh_location_free(ml);
+  PDM_free(vtx_coord);
+  PDM_free(face_edge_idx);
+  PDM_free(face_edge);
+  PDM_free(edge_vtx);
+  PDM_free(face_ln_to_gn);
+  PDM_free(vtx_ln_to_gn);
+  PDM_free(pts_coord);
+  PDM_free(gnum);
+  PDM_free(expected_weights);
+}
+
+
 MPI_TEST_CASE("[pdm_mesh_location] - 3D nodal", 1) {
 
   PDM_MPI_Comm comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
@@ -411,7 +589,6 @@ MPI_TEST_CASE("[pdm_mesh_location] - 3D nodal", 1) {
 
 
   SUBCASE("tetra"){
-    printf("TETRA\n");
     n_vtx = 4;
     PDM_malloc(vtx_coord, 3*n_vtx, double);
     fact = 1.0e-2;
@@ -478,7 +655,6 @@ MPI_TEST_CASE("[pdm_mesh_location] - 3D nodal", 1) {
   }
 
   SUBCASE("hexa"){
-    printf("HEXA\n");
     n_vtx = 8;
     PDM_malloc(vtx_coord, 3*n_vtx, double);
     fact = 1.0;  
@@ -565,8 +741,6 @@ MPI_TEST_CASE("[pdm_mesh_location] - 3D nodal", 1) {
 
 
   SUBCASE("pyra"){
-    printf("PYRA\n");
-
     n_vtx = 5;
     PDM_malloc(vtx_coord, 3*n_vtx, double);
     fact = 1.0e-11;
@@ -632,8 +806,6 @@ MPI_TEST_CASE("[pdm_mesh_location] - 3D nodal", 1) {
 
 
   SUBCASE("prism"){
-    printf("PRISME\n");
-
     n_vtx = 6;
     PDM_malloc(vtx_coord, 3*n_vtx, double);
     // double fact = 1.0e-1;
@@ -796,6 +968,7 @@ MPI_TEST_CASE("[pdm_mesh_location] - 3D", 1) {
   PDM_l_num_t *face_vtx_idx = NULL;
   PDM_l_num_t *face_vtx = NULL;
 
+
   PDM_g_num_t *cell_ln_to_gn = NULL;
   PDM_g_num_t *face_ln_to_gn = NULL;
   PDM_g_num_t *vtx_ln_to_gn = NULL;
@@ -813,7 +986,6 @@ MPI_TEST_CASE("[pdm_mesh_location] - 3D", 1) {
   PDM_mesh_location_tolerance_set(ml, 1e-16);
 
   SUBCASE("hexa"){
-    printf("HEXA\n");
     n_vtx = 8;
     PDM_malloc(vtx_coord, 3*n_vtx, double);
     fact = 1.0;  
@@ -940,8 +1112,6 @@ MPI_TEST_CASE("[pdm_mesh_location] - 3D", 1) {
   }
 
   SUBCASE("polyedre convexe"){
-    printf("POLY 1\n");
-
     n_vtx = 8;
     PDM_malloc(vtx_coord, 3*n_vtx, double);
     fact = 1.0;  
@@ -1088,8 +1258,6 @@ MPI_TEST_CASE("[pdm_mesh_location] - 3D", 1) {
 
 
   SUBCASE("polyedre concave"){
-    printf("POLY 2\n");
-
     n_vtx = 8;
     PDM_malloc(vtx_coord, 3*n_vtx, double);
     fact = 1.0;  
@@ -1265,6 +1433,14 @@ MPI_TEST_CASE("[pdm_mesh_location] - 3D", 1) {
 
   PDM_mesh_location_compute(ml);
 
+  PDM_l_num_t *cell_vtx_idx = NULL;
+  PDM_l_num_t *cell_vtx = NULL;
+
+  PDM_mesh_location_cell_vertex_get(ml,
+                                    0,
+                                    &cell_vtx_idx,
+                                    &cell_vtx);
+
   int *elt_pts_inside_idx = NULL;
   PDM_g_num_t *points_gnum = NULL;
   double *points_coords = NULL;
@@ -1286,9 +1462,6 @@ MPI_TEST_CASE("[pdm_mesh_location] - 3D", 1) {
                                       &points_dist2,
                                       &points_projected_coords);
 
-
-
-  int located = PDM_mesh_location_n_located_get(ml, 0, 0);
 
   for (int i=0; i<n_pts*n_vtx; i++){
     CHECK(fabs(points_weights[i] - expected_weights[i]) < tol);
