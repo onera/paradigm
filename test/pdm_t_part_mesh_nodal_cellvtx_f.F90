@@ -198,7 +198,7 @@ action='read')
   geom_kind = PDM_part_mesh_nodal_principal_geom_kind_get(mesh)
 
   call pdm_part_mesh_nodal_cell_vtx_connect_get & !-
-  (mesh,                                        & !- IDENTIFICATEUR OBJET LOCALISATEUR
+  (mesh,                                        & !- IDENTIFICATEUR OBJET MAILLAGE NODAL
    geom_kind,                                   & !- DIMENSION PRINCIPALE
    0,                                           & !- INDICE DE PARTITION DU MAILLAGE NODAL
    tmp_cell_vtx_idx,                            & !- ADRESSES DES NUMEROS DE SOMMETS PAR CELLULE
