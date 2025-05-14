@@ -436,7 +436,7 @@ Examples
 
         Finally, we transfer fields from the initial mesh to the extraction.
 
-        Let's create a dummy field.
+        Let's create a dummy field ...
 
         .. figure:: ../../../../../doc/images/extract_part/03_initial_field.png
           :width: 200
@@ -450,7 +450,7 @@ Examples
           :dedent: 2
           :lines: 255-257
 
-        And transfer it to the extraction  (see ``test/pdm_t_extract_part_nodal_f.F90`` for the detailed implementation of the ``data_transfer`` procedure).
+        ... and transfer it to the extraction  (see ``test/pdm_t_extract_part_nodal_f.F90`` for the detailed implementation of the ``data_transfer`` procedure).
 
         .. figure:: ../../../../../doc/images/extract_part/04_extracted_field.png
           :width: 200
