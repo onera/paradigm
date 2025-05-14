@@ -239,6 +239,15 @@ dl[class]:not(.option-list):not(.field-list):not(.footnote):not(.glossary):not(.
 /* End API reference */
 
 
+/* Side bar */
+
+.sidebar-brand-text {
+  font-weight: 700;
+}
+
+/* End Side bar */
+
+
 .red {
   color: #eb4034;
 }
