@@ -761,13 +761,13 @@ const PDM_ownership_t         ownership
 );
 
 /**
- * \brief  Return number elements in a partition
+ * \brief  Return number of elements in a partition
  *
  * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t object
  * \param [in]  geom_kind    Geometry kind (corner, ridge, surface or volume)
  * \param [in]  id_part      Partition identifier
  *
- * \return  Return number elements in a partition
+ * \return  Return number of elements in a partition
  *
  */
 int

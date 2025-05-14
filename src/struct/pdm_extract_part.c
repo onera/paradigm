@@ -4380,6 +4380,44 @@ _compute_child_gnums_nodal
   PDM_g_num_t **parent_g_num = NULL;
   PDM_malloc(parent_g_num, n_part, PDM_g_num_t *);
 
+  PDM_gen_gnum_t *gen_gnum = NULL;
+
+  /* Vertices */
+  gen_gnum = PDM_gnum_create(3,  // unused,
+                             extrp->n_part_out,
+                             PDM_FALSE,
+                             1., // unused,
+                             extrp->comm,
+                             PDM_OWNERSHIP_USER);
+
+  for (int i_part = 0; i_part < extrp->n_part_out; i_part++) {
+    int n_vtx = PDM_part_mesh_nodal_n_vtx_get(extrp->extract_pmn, i_part);
+    parent_g_num[i_part] = PDM_part_mesh_nodal_vtx_g_num_get(extrp->extract_pmn,
+                                                             i_part,
+                                                             PDM_OWNERSHIP_BAD_VALUE);
+    PDM_gnum_set_from_parents(gen_gnum,
+                              i_part,
+                              n_vtx,
+                              parent_g_num[i_part]);
+  }
+
+  PDM_gnum_compute(gen_gnum);
+
+  for (int i_part = 0; i_part < extrp->n_part_out; i_part++) {
+    PDM_free(parent_g_num[i_part]);
+    extrp->extract_pmn->vtx[i_part]->_numabs = NULL;
+
+    PDM_g_num_t *vtx_g_num = PDM_gnum_get(gen_gnum, i_part);
+
+    PDM_part_mesh_nodal_vtx_gnum_set(extrp->extract_pmn,
+                                     i_part,
+                                     vtx_g_num,
+                                     PDM_OWNERSHIP_KEEP);
+  }
+  PDM_gnum_free(gen_gnum);
+
+
+  /* Elements */
   PDM_geometry_kind_t geom_kind_parent = PDM_part_mesh_nodal_principal_geom_kind_get(extrp->extract_pmn);
 
   for (PDM_geometry_kind_t geom_kind = geom_kind_parent; geom_kind < PDM_GEOMETRY_KIND_MAX; geom_kind++) {
@@ -4394,12 +4432,12 @@ _compute_child_gnums_nodal
     int  n_section   = PDM_part_mesh_nodal_elmts_n_section_get  (pmne);
     int *sections_id = PDM_part_mesh_nodal_elmts_sections_id_get(pmne);
 
-    PDM_gen_gnum_t *gen_gnum = PDM_gnum_create(3,  // unused,
-                                               n_part,
-                                               PDM_FALSE,
-                                               1., // unused,
-                                               extrp->comm,
-                                               PDM_OWNERSHIP_KEEP);
+    gen_gnum = PDM_gnum_create(3,  // unused,
+                               n_part,
+                               PDM_FALSE,
+                               1., // unused,
+                               extrp->comm,
+                               PDM_OWNERSHIP_KEEP);
 
     /* Get parent gnums */
     for (int i_part = 0; i_part < n_part; i_part++) {

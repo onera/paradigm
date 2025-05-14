@@ -11,6 +11,8 @@ Mesh Structures
     :ref:`Partitioned Nodal Mesh Structure <pmn>`
       Store a partitioned nodal mesh
 
+|
+
 .. toctree::
   :caption: Simple mesh generation
   :maxdepth: 1

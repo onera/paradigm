@@ -11,6 +11,8 @@ Util
     :ref:`Rotations <rot>`
       Services handling 3D rigid body rotations
 
+|
+
 .. toctree::
   :caption: Util
   :maxdepth: 1
