@@ -2,8 +2,8 @@
  * \file
  */
 
-#ifndef __PDM_PART_MESH_NODAL_GEOM_H__
-#define __PDM_PART_MESH_NODAL_GEOM_H__
+#ifndef __PDM_PART_MESH_GEOM_H__
+#define __PDM_PART_MESH_GEOM_H__
 
 /*----------------------------------------------------------------------------
  * Standard C library headers
@@ -29,34 +29,19 @@ extern "C" {
  *
  * \brief Compute dual volumes
  *
- * \param [in]  pmn         Pointer to \ref PDM_part_mesh_nodal_t instance
+ * \param [in]  pm          Pointer to \ref PDM_part_mesh_t instance
  * \param [in]  dual_vol    For each part, dual volume for each vertices (synchronise at partition interface)
  *
  */
 void
-PDM_part_mesh_nodal_dual_volume_compute
+PDM_part_mesh_dual_volume_compute
 (
-  PDM_part_mesh_nodal_t   *pmn,
-  double                ***dual_vol
-);
-
-/**
- *
- * \brief Compute total dual volumes for all domain
- *
- * \param [in]  pmn         Pointer to \ref PDM_part_mesh_nodal_t instance
- *
- * \return Total volume
- *
- */
-double
-PDM_part_mesh_nodal_dual_volume_total_compute
-(
-  PDM_part_mesh_nodal_t   *pmn
+  PDM_part_mesh_t   *pm,
+  double          ***dual_vol
 );
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
 
-#endif /* __PDM_PART_MESH_NODAL_GEOM_H__ */
+#endif /* __PDM_PART_MESH_GEOM_H__ */

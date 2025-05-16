@@ -12,6 +12,7 @@
 
 #include "pdm_part_mesh_nodal.h"
 #include "pdm_part_mesh_nodal_geom.h"
+#include "pdm_part_mesh_geom.h"
 #include "pdm_part_mesh_nodal_priv.h"
 #include "pdm.h"
 #include "pdm_error.h"
@@ -205,6 +206,7 @@ PDM_part_mesh_nodal_dual_volume_total_compute
   PDM_part_mesh_nodal_t   *pmn
 )
 {
+  PDM_UNUSED(pmn);
   return 0.;
 }
 
