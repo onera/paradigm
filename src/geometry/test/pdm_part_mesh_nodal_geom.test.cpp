@@ -20,6 +20,7 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal_geom] 2d - TRIA3 - simplices ", 1) {
   int i_rank = -1;
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
   PDM_MPI_Comm_rank(pdm_comm, &i_rank);
+  int n_part = 1;
 
   PDM_part_mesh_nodal_t *pmn = PDM_generate_mesh_rectangle(pdm_comm,
                                                            PDM_MESH_NODAL_TRIA3, 1, NULL,
@@ -28,7 +29,14 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal_geom] 2d - TRIA3 - simplices ", 1) {
                                                            2, 2,       // x/y/z n vertices
                                                            1, PDM_SPLIT_DUAL_WITH_HILBERT); // part options
 
+  double **pdual_volume = NULL;
+  PDM_part_mesh_nodal_dual_volume_compute(pmn, &pdual_volume);
 
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    PDM_free(pdual_volume[i_part]);
+  }
+  PDM_free(pdual_volume);
 
   PDM_part_mesh_nodal_free(pmn);
 }
@@ -47,6 +55,8 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal_geom] 2d - QUAD4 ", 1) {
                                                            1, PDM_SPLIT_DUAL_WITH_HILBERT); // part options
 
 
+  double **pdual_volume = NULL;
+  PDM_part_mesh_nodal_dual_volume_compute(pmn, &pdual_volume);
 
   PDM_part_mesh_nodal_free(pmn);
 }

@@ -36,8 +36,8 @@ extern "C" {
 void
 PDM_part_mesh_nodal_dual_volume_compute
 (
-  PDM_part_mesh_nodal_t  *pmn,
-  double                **dual_vol
+  PDM_part_mesh_nodal_t   *pmn,
+  double                ***dual_vol
 );
 
 #ifdef __cplusplus

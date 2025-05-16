@@ -15,6 +15,7 @@
 #include "pdm_part_mesh_nodal_priv.h"
 #include "pdm.h"
 #include "pdm_error.h"
+#include "pdm_predicate.h"
 #include "pdm_mem_tool.h"
 #include "pdm_logging.h"
 
@@ -76,6 +77,57 @@ _check_if_all_simplices
   return all_simplices;
 }
 
+/**
+ * \brief Compute *local* measure of dual volumes.
+ */
+static void
+_compute_dual_volume_simplex
+(
+  int                 dim,
+  int                 n_part,
+  int                *n_elt,
+  int                *n_vtx,
+  int               **elt_vtx,
+  double            **vtx_coord,
+  double           ***out_vtx_volume
+)
+{
+  double **vtx_volume = NULL;
+  PDM_malloc(vtx_volume, n_part, double *);
+
+  int elt_size = dim + 1;
+  double factor = (dim == 2) ? 1./6. : 1./24.; // vol / (det * n_vtx_per_elt)
+
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    PDM_calloc(vtx_volume[i_part], n_vtx[i_part], double);
+
+    for (int i_elt = 0; i_elt < n_elt[i_part]; i_elt++) {
+
+      int *_elt_vtx = elt_vtx[i_part] + elt_size*i_elt;
+
+      double elt_vol = 0;
+      if (dim == 2) {
+        elt_vol = factor * PDM_predicate_orient2d(vtx_coord[i_part] + 3*(_elt_vtx[0]-1),
+                                                  vtx_coord[i_part] + 3*(_elt_vtx[1]-1),
+                                                  vtx_coord[i_part] + 3*(_elt_vtx[2]-1));
+      }
+      else {
+        elt_vol = factor * PDM_predicate_orient3d(vtx_coord[i_part] + 3*(_elt_vtx[0]-1),
+                                                  vtx_coord[i_part] + 3*(_elt_vtx[1]-1),
+                                                  vtx_coord[i_part] + 3*(_elt_vtx[2]-1),
+                                                  vtx_coord[i_part] + 3*(_elt_vtx[3]-1));
+      }
+
+      for (int i = 0; i < elt_size; i++) {
+        vtx_volume[i_part][_elt_vtx[i]-1] += elt_vol;
+      }
+
+    } // End loop on elements
+  } // End loop on parts
+
+  *out_vtx_volume = vtx_volume;
+}
+
 
 /*=============================================================================
  * Public function definitions
@@ -84,15 +136,77 @@ _check_if_all_simplices
 void
 PDM_part_mesh_nodal_dual_volume_compute
 (
-  PDM_part_mesh_nodal_t  *pmn,
-  double                **dual_vol
+  PDM_part_mesh_nodal_t   *pmn,
+  double                ***dual_vol
 )
 {
+  /**
+   *  Prevoir une syncrho en option ?
+   *  OU
+   *  Adpater la gradation pour utiliser habilement le pcg pour ne pas sommer 2 fois les contributions de complexité
+   */
 
   int all_simplices = _check_if_all_simplices(pmn);
 
+  if (all_simplices) {
+    PDM_geometry_kind_t geom_kind = (pmn->mesh_dimension == 2) ? PDM_GEOMETRY_KIND_SURFACIC : PDM_GEOMETRY_KIND_VOLUMIC;
+
+    int     *n_vtx     = NULL;
+    int     *n_elt     = NULL;
+    int    **elt_vtx   = NULL;
+    double **vtx_coord = NULL;
+    PDM_malloc(n_vtx    , pmn->n_part, int     );
+    PDM_malloc(n_elt    , pmn->n_part, int     );
+    PDM_malloc(elt_vtx  , pmn->n_part, int    *);
+    PDM_malloc(vtx_coord, pmn->n_part, double *);
+
+    for (int i_part = 0; i_part <pmn->n_part; i_part++) {
+      int *elt_vtx_idx = NULL;
+      n_elt[i_part] = PDM_part_mesh_nodal_cell_vtx_connect_get(pmn,
+                                                               geom_kind,
+                                                               i_part,
+                                                               &elt_vtx_idx,
+                                                               &elt_vtx[i_part]);
+      n_vtx    [i_part] = PDM_part_mesh_nodal_n_vtx_get    (pmn, i_part);
+      vtx_coord[i_part] = PDM_part_mesh_nodal_vtx_coord_get(pmn, i_part, PDM_OWNERSHIP_BAD_VALUE);
+
+      PDM_free(elt_vtx_idx);
+    }
+
+    _compute_dual_volume_simplex(pmn->mesh_dimension,
+                                 pmn->n_part,
+                                 n_elt,
+                                 n_vtx,
+                                 elt_vtx,
+                                 vtx_coord,
+                                 dual_vol);
+
+    for (int i_part = 0; i_part < pmn->n_part; i_part++) {
+      PDM_free(elt_vtx[i_part]);
+    }
+    PDM_free(n_vtx);
+    PDM_free(n_elt);
+    PDM_free(elt_vtx);
+    PDM_free(vtx_coord);
+  }
+  printf("all_simplices = %i \n", all_simplices);
+
+
+  // Synchro volume
+
+
+
 }
 
+
+double
+PDM_part_mesh_nodal_dual_volume_total_compute
+(
+  PDM_part_mesh_nodal_t   *pmn
+)
+{
+  return 0.;
+}
 
 
 #ifdef __cplusplus
