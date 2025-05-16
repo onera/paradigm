@@ -1339,7 +1339,7 @@ contains
                                              c_ppart_bound,          &
                                              ownership)
 
-    call PDM_multipart_part_dim_get_ (multipart, &
+    call PDM_multipart_part_dim_get_c(multipart, &
                                       i_domain, &
                                       i_part, &
                                       n_cell, &
