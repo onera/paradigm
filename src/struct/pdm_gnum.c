@@ -1382,10 +1382,19 @@ _gnum_from_parent_compute_nuplet
   for(int i_part = 0; i_part < gen_gnum->n_part; ++i_part) {
     PDM_malloc(key_ln_to_gn[i_part], gen_gnum->n_elts[i_part], PDM_g_num_t);
     for(int i = 0; i < gen_gnum->n_elts[i_part]; ++i) {
+      /* La boucle suivante (ou l'imbrication des trois boucles) semble poser probleme
+       * au compilo intel (icc) en optimisé.
+       * On la remplace par l'utilisation d'une variable temporaire (cf ci-dessous)
       key_ln_to_gn[i_part][i] = 1;
       for(int k = 0; k < nuplet; ++k) {
         key_ln_to_gn[i_part][i] += PDM_ABS(gen_gnum->parent[i_part][nuplet * i + k]);
       }
+      */
+      PDM_g_num_t tmp = 1;
+      for(int k = 0; k < nuplet; ++k) {
+        tmp += PDM_ABS(gen_gnum->parent[i_part][nuplet * i + k]);
+      }
+      key_ln_to_gn[i_part][i] = tmp;
     }
   }
 

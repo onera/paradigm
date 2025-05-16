@@ -526,7 +526,9 @@ PDM_closest_point_t *cls
   PDM_g_num_t gn_src_pts;
   PDM_MPI_Allreduce (&ln_src_pts, &gn_src_pts, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, cls->comm);
 
-  assert (gn_src_pts >= cls->n_closest);
+  if(gn_src_pts < cls->n_closest) {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_closest_points_compute : User request n_closest = %d but total number of points in source cloud is lower (= "PDM_FMT_G_NUM") \n", cls->n_closest, gn_src_pts);
+  }
 
 
 

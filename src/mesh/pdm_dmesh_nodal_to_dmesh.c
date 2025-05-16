@@ -819,7 +819,7 @@ PDM_g_num_t  **dmissing_child_parent_g_num
   /*
    * Exchange data
    */
-  int is_async = 1;
+  int is_async = 0;
 
   int         *blk_tot_entity_vtx_n    = NULL;
   PDM_g_num_t *blk_tot_entity_vtx      = NULL;

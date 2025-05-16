@@ -319,7 +319,7 @@ function(test_python_create name n_proc LIST_TEST LIST_NRANK)
             ${MPIEXEC_GENV_COMMAND}
             ${MPIEXEC_GENV_PRELOAD}
             ${MPIEXEC_GENV_PRELOAD_PATH}
-            python ${CMAKE_CURRENT_BINARY_DIR}/${name}.py
+            ${Python_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/${name}.py
             ${MPIEXEC_POSTFLAGS})
 
   add_test_pdm_run (${name} ${n_proc} ${LIST_TEST} ${LIST_NRANK})
