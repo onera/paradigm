@@ -140,6 +140,111 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2p", 2) {
   PDM_part_comm_graph_free(pcg);
 }
 
+
+MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2p - allreduce ", 2) {
+  PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
+
+  int i_rank;
+  PDM_MPI_Comm_rank(pdm_comm, &i_rank);
+
+  /*
+   *    |++++|++++| 9    9 |++++|++++|++++| 12
+   *    |    |    |        |    |    |    |
+   *    |    |    |        |    |    |    |
+   *    |++++|++++| 6    5 |++++|++++|++++| 8
+   *    |    |    |        |    |    |    |
+   *    |    |    |        |    |    |    |
+   *    |++++|++++|        |++++|++++|++++|
+   *   1     2    3       1     2    3    4
+   */
+
+  /* Part */
+  std::vector<int> vn_elt = {9, 12};
+  // int n_elt1 = vn_elt[i_rank];
+  int n_part = 1;
+
+  /* Graphe comm */
+  std::vector<int> vn_entity_bound = {3, 3};
+  std::vector<std::vector<int>> ventity_bound = {{3, 1, 1, 1,
+                                                  6, 1, 1, 5,
+                                                  9, 1, 1, 9},
+                                                 {1, 0, 1, 3,
+                                                  5, 0, 1, 6,
+                                                  9, 0, 1, 9}};
+  int n_entity_bound = vn_entity_bound[i_rank];
+  int *entity_bound  = ventity_bound  [i_rank].data();
+
+  PDM_part_comm_graph_t* pcg = PDM_part_comm_graph_create(n_part,
+                                                          &n_entity_bound,
+                                                          &entity_bound,
+                                                          PDM_OWNERSHIP_USER,
+                                                          pdm_comm);
+
+  // ------------------ MAX / INT ------------------
+  std::vector<std::vector<int>> vpdata = {{1, 1, 1, 1, 1, 1, 1, 1, 1},
+                                          {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2}};
+  int *pdata = vpdata[i_rank].data();
+
+  PDM_part_comm_graph_all_reduce(pcg,
+                                 PDM_MPI_INT,
+                                 PDM_MPI_MAX,
+            ( unsigned char **)  &pdata);
+
+  if(0 == 1) {
+    PDM_log_trace_array_int(pdata, vn_elt[i_rank], "pdata ::");
+  }
+
+  int expexted_max_int_p0[9]  = {1, 1, 2, 1, 1, 2, 1, 1, 2};
+  int expexted_max_int_p1[12] = {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2};
+
+  MPI_CHECK_EQ_C_ARRAY(0, pdata, expexted_max_int_p0,  9);
+  MPI_CHECK_EQ_C_ARRAY(1, pdata, expexted_max_int_p1, 12);
+
+  // ------------------ MIN / INT ------------------
+  for(int i = 0; i < vn_elt[i_rank]; ++i) {
+    vpdata[i_rank][i] = i_rank+1;
+  }
+
+  PDM_part_comm_graph_all_reduce(pcg,
+                                 PDM_MPI_INT,
+                                 PDM_MPI_MIN,
+            ( unsigned char **)  &pdata);
+
+  if(0 == 1) {
+    PDM_log_trace_array_int(pdata, vn_elt[i_rank], "pdata ::");
+  }
+
+  int expexted_min_int_p0[9]  = {1, 1, 1, 1, 1, 1, 1, 1, 1};
+  int expexted_min_int_p1[12] = {1, 2, 2, 2, 1, 2, 2, 2, 1, 2, 2, 2};
+
+  MPI_CHECK_EQ_C_ARRAY(0, pdata, expexted_min_int_p0,  9);
+  MPI_CHECK_EQ_C_ARRAY(1, pdata, expexted_min_int_p1, 12);
+
+  // ------------------ SUM / INT ------------------
+  for(int i = 0; i < vn_elt[i_rank]; ++i) {
+    vpdata[i_rank][i] = i_rank+1;
+  }
+
+  PDM_part_comm_graph_all_reduce(pcg,
+                                 PDM_MPI_INT,
+                                 PDM_MPI_SUM,
+            ( unsigned char **)  &pdata);
+
+  if(0 == 1) {
+    PDM_log_trace_array_int(pdata, vn_elt[i_rank], "pdata ::");
+  }
+
+  int expexted_sum_int_p0[9]  = {1, 1, 3, 1, 1, 3, 1, 1, 3};
+  int expexted_sum_int_p1[12] = {3, 2, 2, 2, 3, 2, 2, 2, 3, 2, 2, 2};
+
+  MPI_CHECK_EQ_C_ARRAY(0, pdata, expexted_sum_int_p0,  9);
+  MPI_CHECK_EQ_C_ARRAY(1, pdata, expexted_sum_int_p1, 12);
+
+  PDM_part_comm_graph_free(pcg);
+
+}
+
+
 MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 3p", 3) {
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
 
