@@ -12,6 +12,7 @@
 
 #include "pdm.h"
 #include "pdm_part_mesh_nodal.h"
+#include "pdm_part_mesh_nodal_algorithm.h"
 #include "pdm_part_mesh_nodal_geom.h"
 #include "pdm_part_mesh_geom.h"
 #include "pdm_part_mesh_nodal_priv.h"
@@ -190,6 +191,18 @@ PDM_part_mesh_nodal_dual_volume_compute
     PDM_free(n_elt);
     PDM_free(elt_vtx);
     PDM_free(vtx_coord);
+
+    if(pmn->pcg[PDM_MESH_ENTITY_VTX] == NULL) {
+      PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(pmn, PDM_MESH_ENTITY_VTX);
+    }
+
+    // Synchro volume :
+    PDM_part_comm_graph_all_reduce(pmn->pcg[PDM_MESH_ENTITY_VTX],
+                                   PDM_MPI_DOUBLE,
+                                   PDM_MPI_SUM,
+             (unsigned char **)    *dual_vol);
+
+
   } else {
 
     /*
