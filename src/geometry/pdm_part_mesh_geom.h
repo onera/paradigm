@@ -14,6 +14,7 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
+#include "pdm_part_mesh.h"
 
 /*=============================================================================
  * Macro definitions
@@ -37,7 +38,7 @@ void
 PDM_part_mesh_dual_volume_compute
 (
   PDM_part_mesh_t   *pm,
-  double          ***dual_vol
+  double          ***out_dual_vol
 );
 
 #ifdef __cplusplus

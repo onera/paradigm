@@ -101,4 +101,4 @@ struct _pdm_part_mesh_t
 }
 #endif /* __cplusplus */
 
-#endif /* __PDM_DMESH_H__ */
+#endif /* __PDM_PART_MESH_PRIV_H__ */

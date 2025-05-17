@@ -10,11 +10,12 @@
  *  Local headers
  *----------------------------------------------------------------------------*/
 
+#include "pdm.h"
 #include "pdm_part_mesh_nodal.h"
 #include "pdm_part_mesh_nodal_geom.h"
 #include "pdm_part_mesh_geom.h"
 #include "pdm_part_mesh_nodal_priv.h"
-#include "pdm.h"
+#include "pdm_part_mesh_nodal_to_part_mesh.h"
 #include "pdm_error.h"
 #include "pdm_predicate.h"
 #include "pdm_mem_tool.h"
@@ -189,6 +190,31 @@ PDM_part_mesh_nodal_dual_volume_compute
     PDM_free(n_elt);
     PDM_free(elt_vtx);
     PDM_free(vtx_coord);
+  } else {
+
+    /*
+     * Dual volume computation need all downing connectivity
+     *   - We use part_mesh_nodal_to_part_mesh to express all connectity then compute the dual volume
+     */
+    PDM_part_mesh_nodal_to_part_mesh_t *pmn_to_pm = PDM_part_mesh_nodal_to_part_mesh_create(pmn,
+                                                                                            PDM_FALSE,
+                                                                                            PDM_OWNERSHIP_USER);
+
+    if (pmn->mesh_dimension == 3) {
+      PDM_part_mesh_nodal_to_part_mesh_connectivity_enable(pmn_to_pm, PDM_CONNECTIVITY_TYPE_CELL_FACE);
+    }
+    PDM_part_mesh_nodal_to_part_mesh_connectivity_enable(pmn_to_pm, PDM_CONNECTIVITY_TYPE_FACE_EDGE);
+    PDM_part_mesh_nodal_to_part_mesh_connectivity_enable(pmn_to_pm, PDM_CONNECTIVITY_TYPE_EDGE_VTX);
+
+    PDM_part_mesh_nodal_to_part_mesh_compute(pmn_to_pm);
+
+    PDM_part_mesh_t *pmesh = NULL;
+    PDM_part_mesh_nodal_to_part_mesh_part_mesh_get(pmn_to_pm, &pmesh, PDM_OWNERSHIP_KEEP);
+
+    // Compute dual volume via part_mesh
+    PDM_part_mesh_dual_volume_compute(pmesh, dual_vol);
+
+    PDM_part_mesh_nodal_to_part_mesh_free(pmn_to_pm);
   }
   printf("all_simplices = %i \n", all_simplices);
 
