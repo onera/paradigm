@@ -218,6 +218,7 @@ PDM_part_mesh_nodal_dual_volume_compute
     }
     PDM_part_mesh_nodal_to_part_mesh_connectivity_enable(pmn_to_pm, PDM_CONNECTIVITY_TYPE_FACE_EDGE);
     PDM_part_mesh_nodal_to_part_mesh_connectivity_enable(pmn_to_pm, PDM_CONNECTIVITY_TYPE_EDGE_VTX);
+    PDM_part_mesh_nodal_to_part_mesh_g_nums_enable(pmn_to_pm, PDM_MESH_ENTITY_VTX);
 
     PDM_part_mesh_nodal_to_part_mesh_compute(pmn_to_pm);
 
@@ -229,24 +230,7 @@ PDM_part_mesh_nodal_dual_volume_compute
 
     PDM_part_mesh_nodal_to_part_mesh_free(pmn_to_pm);
   }
-  printf("all_simplices = %i \n", all_simplices);
 
-
-  // Synchro volume
-
-
-
-}
-
-
-double
-PDM_part_mesh_nodal_dual_volume_total_compute
-(
-  PDM_part_mesh_nodal_t   *pmn
-)
-{
-  PDM_UNUSED(pmn);
-  return 0.;
 }
 
 

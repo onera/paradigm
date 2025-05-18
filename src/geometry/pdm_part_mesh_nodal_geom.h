@@ -40,21 +40,6 @@ PDM_part_mesh_nodal_dual_volume_compute
   double                ***dual_vol
 );
 
-/**
- *
- * \brief Compute total dual volumes for all domain
- *
- * \param [in]  pmn         Pointer to \ref PDM_part_mesh_nodal_t instance
- *
- * \return Total volume
- *
- */
-double
-PDM_part_mesh_nodal_dual_volume_total_compute
-(
-  PDM_part_mesh_nodal_t   *pmn
-);
-
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

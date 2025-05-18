@@ -282,11 +282,13 @@ PDM_part_mesh_dual_volume_compute
     PDM_malloc(cell_face_idx, pm->n_part, int *);
     PDM_malloc(cell_face,     pm->n_part, int *);
   }
-  PDM_malloc(n_face,        pm->n_part, int  );
-  PDM_malloc(n_edge,        pm->n_part, int  );
-  PDM_malloc(face_edge_idx, pm->n_part, int *);
-  PDM_malloc(face_edge,     pm->n_part, int *);
-  PDM_malloc(edge_vtx,      pm->n_part, int *);
+  PDM_malloc(n_face       , pm->n_part, int     );
+  PDM_malloc(n_edge       , pm->n_part, int     );
+  PDM_malloc(n_vtx        , pm->n_part, int     );
+  PDM_malloc(face_edge_idx, pm->n_part, int    *);
+  PDM_malloc(face_edge    , pm->n_part, int    *);
+  PDM_malloc(edge_vtx     , pm->n_part, int    *);
+  PDM_malloc(vtx_coord    , pm->n_part, double *);
   for (int i_part = 0; i_part < pm->n_part; i_part++) {
     if (mesh_dimension == 3) {
       n_cell[i_part] = PDM_part_mesh_n_entity_get(pm,
@@ -300,6 +302,9 @@ PDM_part_mesh_dual_volume_compute
                                      PDM_OWNERSHIP_BAD_VALUE);
     }
 
+    n_vtx[i_part] = PDM_part_mesh_n_entity_get(pm,
+                                               i_part,
+                                               PDM_MESH_ENTITY_VTX);
     PDM_part_mesh_vtx_coord_get(pm,
                                 i_part,
                                 &vtx_coord[i_part],
@@ -325,7 +330,7 @@ PDM_part_mesh_dual_volume_compute
                                    &edge_vtx    [i_part],
                                    &edge_vtx_idx,
                                    PDM_OWNERSHIP_BAD_VALUE);
-    PDM_free(edge_vtx_idx);
+    // PDM_free(edge_vtx_idx);
   }
 
   if (mesh_dimension == 2) {
@@ -353,7 +358,28 @@ PDM_part_mesh_dual_volume_compute
                                  out_dual_vol);
   }
 
+  if (mesh_dimension == 3) {
+    PDM_free(n_cell);
+    PDM_free(cell_face_idx);
+    PDM_free(cell_face);
+  }
+  PDM_free(n_face);
+  PDM_free(n_edge);
+  PDM_free(n_vtx);
+  PDM_free(face_edge_idx);
+  PDM_free(face_edge);
+  PDM_free(edge_vtx);
+  PDM_free(vtx_coord);
 
+  if(pm->pcg[PDM_MESH_ENTITY_VTX] == NULL) {
+    PDM_part_mesh_part_comm_graph_compute_from_gnum(pm, PDM_MESH_ENTITY_VTX);
+  }
+
+  // Synchro volume :
+  PDM_part_comm_graph_all_reduce(pm->pcg[PDM_MESH_ENTITY_VTX],
+                                 PDM_MPI_DOUBLE,
+                                 PDM_MPI_SUM,
+          (unsigned char **)    *out_dual_vol);
 
 }
 
