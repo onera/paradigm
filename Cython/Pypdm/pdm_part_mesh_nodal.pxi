@@ -113,7 +113,11 @@ cdef extern from "pdm_part_mesh_nodal.h":
     int PDM_part_mesh_nodal_n_group_get(PDM_part_mesh_nodal_t  *pmn,
                                         PDM_geometry_kind_t     geom_kind);
 
-    void PDM_part_mesh_nodal_free( PDM_part_mesh_nodal_t* pmn)
+    void PDM_part_mesh_nodal_free( PDM_part_mesh_nodal_t* pmn);
+
+cdef extern from "pdm_part_mesh_nodal_geom.h":
+    void PDM_part_mesh_nodal_dual_volume_compute(PDM_part_mesh_nodal_t   *pmn,
+                                                 double                ***dual_vol);
 
 # ------------------------------------------------------------------
 cdef class PartMeshNodal:
@@ -540,3 +544,35 @@ def part_mesh_nodal_get_group(PMeshNodal pypmn, PDM_geometry_kind_t geom_kind, i
     np_group_ln_to_gn = create_numpy_g(group_ln_to_gn, n_group_elmt)
 
   return np_group_elmt, np_group_ln_to_gn
+
+def part_mesh_nodal_dual_volume(PMeshNodal pypmn):
+  """
+
+      part_mesh_nodal_dual_volume(pypmn)
+
+      Compute dual volumes vertices
+
+      Parameters:
+        pypmn (PMeshNodal) : PartMeshNodal or PartMeshNodalCapsule
+
+      Returns:
+        For each part of PartMeshNodal, the dual volume at vertices (len = n_part)
+  """
+  # ************************************************************************
+  # > Declaration
+  cdef double **dual_vol
+  # ************************************************************************
+
+  PDM_part_mesh_nodal_dual_volume_compute(pypmn.pmn,
+                                          &dual_vol)
+
+  n_part = PDM_part_mesh_nodal_n_part_get(pypmn.pmn)
+
+  res = list()
+  for i_part in range(n_part):
+    n_vtx = PDM_part_mesh_nodal_n_vtx_get(pypmn.pmn, i_part)
+    np_dual_vol  = create_numpy_d(dual_vol[i_part], n_vtx)
+    res.append(np_dual_vol)
+
+  free(dual_vol)
+  return res
