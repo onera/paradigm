@@ -80,11 +80,13 @@ _check_if_all_simplices
   return all_simplices;
 }
 
-/**
- * \brief Compute *local* measure of dual volumes.
- */
-static void
-_compute_dual_volume_simplex
+/*=============================================================================
+ * Public function definitions
+ *============================================================================*/
+
+
+void
+PDM_compute_dual_volume_simplex
 (
   int                 dim,
   int                 n_part,
@@ -132,10 +134,6 @@ _compute_dual_volume_simplex
 }
 
 
-/*=============================================================================
- * Public function definitions
- *============================================================================*/
-
 void
 PDM_part_mesh_nodal_dual_volume_compute
 (
@@ -176,13 +174,13 @@ PDM_part_mesh_nodal_dual_volume_compute
       PDM_free(elt_vtx_idx);
     }
 
-    _compute_dual_volume_simplex(pmn->mesh_dimension,
-                                 pmn->n_part,
-                                 n_elt,
-                                 n_vtx,
-                                 elt_vtx,
-                                 vtx_coord,
-                                 dual_vol);
+    PDM_compute_dual_volume_simplex(pmn->mesh_dimension,
+                                    pmn->n_part,
+                                    n_elt,
+                                    n_vtx,
+                                    elt_vtx,
+                                    vtx_coord,
+                                    dual_vol);
 
     for (int i_part = 0; i_part < pmn->n_part; i_part++) {
       PDM_free(elt_vtx[i_part]);

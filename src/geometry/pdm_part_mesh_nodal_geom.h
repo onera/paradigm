@@ -15,15 +15,53 @@
 
 #include "pdm.h"
 
-/*=============================================================================
- * Macro definitions
- *============================================================================*/
 #ifdef __cplusplus
 extern "C" {
 #if 0
 } /* Fake brace to force back Emacs auto-indentation back to column 0 */
 #endif
 #endif /* __cplusplus */
+
+/*=============================================================================
+ * Macro definitions
+ *============================================================================*/
+
+/*============================================================================
+ * Type definitions
+ *============================================================================*/
+
+/*=============================================================================
+ * Static global variables
+ *============================================================================*/
+
+/*=============================================================================
+ * Public function prototypes
+ *============================================================================*/
+
+
+/**
+ * \brief Compute *local* measure of dual volumes for simplex (tria/tetra only)
+ *
+ * \param [in]  dim             Number of partitions
+ * \param [in]  n_part          Number of partitions
+ * \param [in]  n_elt           Number of elements for each partitions
+ * \param [in]  n_vtx           Vertex coordinates (size = 3 * n_vtx)
+ * \param [in]  elt_vtx         Element vertices connectivities array (stride is 3 ou 4 implicitly)
+ * \param [in]  vtx_coord       Vertex coordinates (size = 3 * n_vtx)
+ * \param [out] out_vtx_volume  Entity center computed by mean with vertices coordinnates (size = n_vtx)
+ */
+void
+PDM_compute_dual_volume_simplex
+(
+  int                 dim,
+  int                 n_part,
+  int                *n_elt,
+  int                *n_vtx,
+  int               **elt_vtx,
+  double            **vtx_coord,
+  double           ***out_vtx_volume
+);
+
 
 /**
  *

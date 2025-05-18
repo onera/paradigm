@@ -46,8 +46,14 @@ extern "C" {
  * Private function definitions
  *============================================================================*/
 
-static void
-_compute_entity_center
+
+/*=============================================================================
+ * Public function definitions
+ *============================================================================*/
+
+
+void
+PDM_compute_entity_center
 (
   int     n_entity,
   int    *connect_idx,
@@ -75,8 +81,8 @@ _compute_entity_center
   }
 }
 
-static void
-_compute_dual_volume_ngon_2d
+void
+PDM_compute_dual_volume_ngon_2d
 (
   int       n_part,
   int      *n_face,
@@ -111,11 +117,11 @@ _compute_dual_volume_ngon_2d
     for (int i_face = 0; i_face < n_face[i_part]; i_face++) {
 
       double face_center[3];
-      _compute_entity_center(1,
-                            &face_edge_idx[i_part][i_face],
-                             face_edge    [i_part],
-                             edge_center,
-                             face_center);
+      PDM_compute_entity_center(1,
+                                &face_edge_idx[i_part][i_face],
+                                face_edge     [i_part],
+                                edge_center,
+                                face_center);
 
       for (int idx_edge = face_edge_idx[i_part][i_face]; idx_edge < face_edge_idx[i_part][i_face+1]; idx_edge++) {
 
@@ -144,9 +150,8 @@ _compute_dual_volume_ngon_2d
   *out_vtx_volume = vtx_volume;
 }
 
-// TODO: factoriser qque part?
-static void
-_compute_dual_volume_ngon_3d
+void
+PDM_compute_dual_volume_ngon_3d
 (
   int       n_part,
   int      *n_cell,
@@ -186,21 +191,21 @@ _compute_dual_volume_ngon_3d
     }
 
     // Compute face centers
-    _compute_entity_center(n_face       [i_part],
-                           face_edge_idx[i_part],
-                           face_edge    [i_part],
-                           edge_center,
-                           face_center);
+    PDM_compute_entity_center(n_face       [i_part],
+                              face_edge_idx[i_part],
+                              face_edge    [i_part],
+                              edge_center,
+                              face_center);
 
     // Sum up contributions from each quadruplet (cell, face, edge, vtx)
     for (int i_cell = 0; i_cell < n_cell[i_part]; i_cell++) {
 
       double cell_center[3];
-      _compute_entity_center(1,
-                            &cell_face_idx[i_part][i_cell],
-                             cell_face    [i_part],
-                             face_center,
-                             cell_center);
+      PDM_compute_entity_center(1,
+                                &cell_face_idx[i_part][i_cell],
+                                cell_face    [i_part],
+                                face_center,
+                                cell_center);
 
       for (int idx_face = cell_face_idx[i_part][i_cell]; idx_face < cell_face_idx[i_part][i_cell+1]; idx_face++) {
 
@@ -238,9 +243,6 @@ _compute_dual_volume_ngon_3d
 }
 
 
-/*=============================================================================
- * Public function definitions
- *============================================================================*/
 
 void
 PDM_part_mesh_dual_volume_compute
@@ -334,28 +336,28 @@ PDM_part_mesh_dual_volume_compute
   }
 
   if (mesh_dimension == 2) {
-    _compute_dual_volume_ngon_2d(pm->n_part,
-                                 n_face,
-                                 n_edge,
-                                 n_vtx,
-                                 face_edge_idx,
-                                 face_edge,
-                                 edge_vtx,
-                                 vtx_coord,
-                                 out_dual_vol);
+    PDM_compute_dual_volume_ngon_2d(pm->n_part,
+                                    n_face,
+                                    n_edge,
+                                    n_vtx,
+                                    face_edge_idx,
+                                    face_edge,
+                                    edge_vtx,
+                                    vtx_coord,
+                                    out_dual_vol);
   } else {
-    _compute_dual_volume_ngon_3d(pm->n_part,
-                                 n_cell,
-                                 n_face,
-                                 n_edge,
-                                 n_vtx,
-                                 cell_face_idx,
-                                 cell_face,
-                                 face_edge_idx,
-                                 face_edge,
-                                 edge_vtx,
-                                 vtx_coord,
-                                 out_dual_vol);
+    PDM_compute_dual_volume_ngon_3d(pm->n_part,
+                                    n_cell,
+                                    n_face,
+                                    n_edge,
+                                    n_vtx,
+                                    cell_face_idx,
+                                    cell_face,
+                                    face_edge_idx,
+                                    face_edge,
+                                    edge_vtx,
+                                    vtx_coord,
+                                    out_dual_vol);
   }
 
   if (mesh_dimension == 3) {
