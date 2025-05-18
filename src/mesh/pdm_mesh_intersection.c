@@ -2100,9 +2100,7 @@ _build_ptp
           user_elt_ln_to_gn_a[ipart][i] = elt_ln_to_gn[ielt];
         }
       }
-
-    }
-    else {
+    } else {
       user_n_elt_a[ipart] = 0;
       user_elt_ln_to_gn_a[ipart] = NULL;
     }
@@ -2155,8 +2153,7 @@ _build_ptp
       user_n_elt_b[ipart] = PDM_part_mesh_n_entity_get(mi->mesh[1],
                                                        ipart,
                                                        entity_type[1]);
-    }
-    else if (mi->mesh_nodal[1] != NULL) {
+    } else if (mi->mesh_nodal[1] != NULL) {
       PDM_geometry_kind_t geom_kind = PDM_GEOMETRY_KIND_MAX;
       switch (mi->dim_mesh[1]) {
       case 1:
@@ -2187,8 +2184,7 @@ _build_ptp
                                                                      id_section,
                                                                      ipart);
       }
-    }
-    else {
+    } else {
       user_n_elt_b[ipart] = 0;
     }
   }
@@ -2231,6 +2227,15 @@ _build_ptp
 
     PDM_part_to_part_iexch_wait(mi->ptp, request_volume);
   }
+
+  // Setup n_entity
+  int n_part_a = 0;
+  int n_part_b = 0;
+  PDM_part_to_part_n_part_and_n_elt_get(mi->ptp,
+                                        &n_part_a,
+                                        &n_part_b,
+                                        &mi->n_elt_a,
+                                        &mi->n_elt_b);
 
   PDM_free(user_n_elt_a);
   PDM_free(user_n_elt_b);
@@ -5623,19 +5628,12 @@ PDM_mesh_intersection_compute
     PDM_box_set_destroy (&boxes_mesh[0]);
     PDM_box_set_destroy (&boxes_mesh[1]);
 
-  }
-
-  else {
-
-    // if (mi->mesh_nodal[0] != NULL ||
-    //     mi->mesh_nodal[1] != NULL) {
-    //   PDM_error(__FILE__, __LINE__, 0, "Nodal version not implemented yet\n");
-    // }
+  } else {
 
     if(mi->dim_mesh[0] == 3 && mi->dim_mesh[1] == 3) {
-        _mesh_intersection_vol_vol(mi,
-                                   redistribute_box_a_to_box_b_idx,
-                                   redistribute_box_a_to_box_b);
+      _mesh_intersection_vol_vol(mi,
+                                 redistribute_box_a_to_box_b_idx,
+                                 redistribute_box_a_to_box_b);
     } else if(mi->dim_mesh[0] == 3 && mi->dim_mesh[1] == 2) {
       // On suppose que l'utilisateur met A = Vol et B = Surf
       _mesh_intersection_vol_surf(mi,
@@ -5894,14 +5892,6 @@ PDM_mesh_intersection_free
   PDM_free(mi);
 }
 
-/**
- * \brief Get part_to_part object to exchange data between the intersected meshes
- *
- * \param [in ] mi         Pointer to \ref PDM_mesh_intersection_t object
- * \param [out] ptp        Pointer to \ref PDM_part_to_part_t object
- * \param [in ] ownership  Ownership for ptp
- *
- */
 
 void
 PDM_mesh_intersection_part_to_part_get
@@ -5909,47 +5899,52 @@ PDM_mesh_intersection_part_to_part_get
  PDM_mesh_intersection_t  *mi,
  PDM_part_to_part_t      **ptp,
  PDM_ownership_t           ownership
- )
+)
 {
   *ptp = mi->ptp;
-  mi->ptp_ownership = ownership;
+  if(ownership != PDM_OWNERSHIP_BAD_VALUE) {
+    mi->ptp_ownership = ownership;
+  }
 }
 
 
 
-void
+int
 PDM_mesh_intersection_result_from_a_get
 (
        PDM_mesh_intersection_t  *mi,
- const int                       ipart,
+ const int                       i_part,
        int                     **elt_a_elt_b_idx,
        PDM_g_num_t             **elt_a_elt_b,
        double                  **elt_a_elt_b_volume
  )
 {
-  assert(ipart < mi->n_part_mesh[0]);
+  assert(i_part < mi->n_part_mesh[0]);
 
-  *elt_a_elt_b_idx    = mi->elt_a_elt_b_idx   [ipart];
-  *elt_a_elt_b        = mi->elt_a_elt_b       [ipart];
-  *elt_a_elt_b_volume = mi->elt_a_elt_b_volume[ipart];
+  *elt_a_elt_b_idx    = mi->elt_a_elt_b_idx   [i_part];
+  *elt_a_elt_b        = mi->elt_a_elt_b       [i_part];
+  *elt_a_elt_b_volume = mi->elt_a_elt_b_volume[i_part];
 
   mi->tag_elt_a_elt_b_get = 1;
+
+  return mi->n_elt_a[i_part];
 }
 
 
-void
+int
 PDM_mesh_intersection_result_from_b_get
 (
        PDM_mesh_intersection_t  *mi,
- const int                       ipart,
+ const int                       i_part,
        double                  **elt_b_elt_a_volume
  )
 {
-  assert(ipart < mi->n_part_mesh[1]);
+  assert(i_part < mi->n_part_mesh[1]);
 
-  *elt_b_elt_a_volume = mi->elt_b_elt_a_volume[ipart];
+  *elt_b_elt_a_volume = mi->elt_b_elt_a_volume[i_part];
 
   mi->tag_elt_b_elt_a_get = 1;
+  return mi->n_elt_b[i_part];
 }
 
 
