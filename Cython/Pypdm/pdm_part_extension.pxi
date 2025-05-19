@@ -210,7 +210,7 @@ cdef class PartExtension:
     Admissible values for ``extend_type`` are :
       - :py:attr:`PartExtension.FACE`
       - :py:attr:`PartExtension.EDGE`
-      - :py:attr:`PartExtension.VTX `
+      - :py:attr:`PartExtension.VTX`
     """
   # ------------------------------------------------------------------
   def __cinit__(self,

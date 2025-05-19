@@ -3,182 +3,221 @@
 Part extension
 ==============
 
-C API
------
+**Part extension** is a service for computing extended partitions by fetching ghost cells topology and geometry.
 
-Enumerators
-~~~~~~~~~~~
+Extension to an arbitrary depth from vertices, edges or faces is supported.
+If provided, group information associated with extended entities is fetched as well.
 
-.. doxygenenum:: PDM_extend_type_t
 
-Initialization
-~~~~~~~~~~~~~~
+API
+"""
 
-.. doxygenfunction:: PDM_part_extension_create
+.. dropdown:: Initialization
 
-Set inputs
-~~~~~~~~~~
 
-.. doxygenfunction:: PDM_part_extension_connectivity_set
+  .. tab-set::
 
-.. doxygenfunction:: PDM_part_extension_vtx_coord_set
+    .. tab-item:: C
 
-.. doxygenfunction:: PDM_part_extension_ln_to_gn_set
+      .. doxygenfunction:: PDM_part_extension_create
 
-.. doxygenfunction:: PDM_part_extension_part_bound_graph_set
 
-.. doxygenfunction:: PDM_part_extension_group_set
 
-.. .. doxygenfunction:: PDM_part_extension_set_part
+    .. tab-item:: Fortran
 
-.. .. doxygenfunction:: PDM_part_extension_part_domain_interface_shared_set
+      .. ifconfig:: enable_fortran_doc == 'ON'
 
-Perform exchange of extended partition
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        .. f:autosubroutine:: PDM_part_extension_create
 
-.. doxygenfunction:: PDM_part_extension_compute
+      .. ifconfig:: enable_fortran_doc == 'OFF'
 
-Get outputs
-~~~~~~~~~~~
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
 
-.. doxygenfunction:: PDM_part_extension_connectivity_get
 
-.. doxygenfunction:: PDM_part_extension_ln_to_gn_get
 
-.. doxygenfunction:: PDM_part_extension_vtx_coord_get
+    .. tab-item:: Python
 
-.. doxygenfunction:: PDM_part_extension_group_get
+      .. ifconfig:: enable_python_doc == 'ON'
 
-.. .. doxygenfunction:: PDM_part_extension_interface_get
+        .. autofunction:: Pypdm.Pypdm.PartExtension.__init__
+          :noindex:
 
-.. .. doxygenfunction:: PDM_part_extension_composed_interface_get
+      .. ifconfig:: enable_python_doc == 'OFF'
 
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
 
-Finalize
-~~~~~~~~
 
-.. doxygenfunction:: PDM_part_extension_free
 
-Fortran API
------------
 
-.. ifconfig:: enable_fortran_doc == 'ON'
+.. dropdown:: Set input mesh
 
-  Initialization
-  ~~~~~~~~~~~~~~
 
-  .. f:autosubroutine:: PDM_part_extension_create
+  .. tab-set::
 
-  Set inputs
-  ~~~~~~~~~~
+    .. tab-item:: C
 
-  .. f:autosubroutine PDM_part_extension_set_part
+      .. doxygenfunction:: PDM_part_extension_connectivity_set
+      .. doxygenfunction:: PDM_part_extension_vtx_coord_set
+      .. doxygenfunction:: PDM_part_extension_ln_to_gn_set
+      .. doxygenfunction:: PDM_part_extension_part_bound_graph_set
+      .. doxygenfunction:: PDM_part_extension_group_set
 
-  .. f:autosubroutine:: PDM_part_extension_connectivity_set
 
-  .. f:autosubroutine:: PDM_part_extension_vtx_coord_set
 
-  .. f:autosubroutine:: PDM_part_extension_ln_to_gn_set
+    .. tab-item:: Fortran
 
-  .. f:autosubroutine:: PDM_part_extension_part_bound_graph_set
+      .. ifconfig:: enable_fortran_doc == 'ON'
 
-  .. f:autosubroutine:: PDM_part_extension_group_set
+        .. f:autosubroutine:: PDM_part_extension_connectivity_set
+        .. f:autosubroutine:: PDM_part_extension_vtx_coord_set
+        .. f:autosubroutine:: PDM_part_extension_ln_to_gn_set
+        .. f:autosubroutine:: PDM_part_extension_part_bound_graph_set
+        .. f:autosubroutine:: PDM_part_extension_group_set
 
-  Perform exchange of extended partition
-  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      .. ifconfig:: enable_fortran_doc == 'OFF'
 
-  .. f:autosubroutine PDM_part_extension_compute
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
 
-  .. f:subroutine:: pdm_part_extension_compute(part_ext)
 
-    Compute extended partitions
 
-    :p c_ptr part_ext[in]: Part Extension instance
+    .. tab-item:: Python
 
-  Get outputs
-  ~~~~~~~~~~~
+      .. ifconfig:: enable_python_doc == 'ON'
 
-  .. f:autosubroutine:: PDM_part_extension_connectivity_get
+        .. autofunction:: Pypdm.Pypdm.PartExtension.connectivity_set
+          :noindex:
+        .. autofunction:: Pypdm.Pypdm.PartExtension.vtx_coord_set
+          :noindex:
+        .. autofunction:: Pypdm.Pypdm.PartExtension.ln_to_gn_set
+          :noindex:
+        .. autofunction:: Pypdm.Pypdm.PartExtension.part_bound_graph_set
+          :noindex:
+        .. autofunction:: Pypdm.Pypdm.PartExtension.group_set
+          :noindex:
 
-  .. f:autosubroutine:: PDM_part_extension_ln_to_gn_get
+      .. ifconfig:: enable_python_doc == 'OFF'
 
-  .. f:autosubroutine:: PDM_part_extension_vtx_coord_get
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
 
-  .. f:autosubroutine:: PDM_part_extension_group_get
 
-  Finalize
-  ~~~~~~~~
 
-  .. f:autosubroutine PDM_part_extension_free
 
-  .. f:subroutine:: pdm_part_extension_free(part_ext)
+.. dropdown:: Compute extended partitions
 
-    Free a Part Extension structure
+  .. tab-set::
 
-    :p c_ptr part_ext[inout]: Part Extension instance
+    .. tab-item:: C
 
-.. ifconfig:: enable_fortran_doc == 'OFF'
+      .. doxygenfunction:: PDM_part_extension_compute
 
-  .. warning::
-    Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
 
-Python API
-----------
 
-.. ifconfig:: enable_python_doc == 'ON'
+    .. tab-item:: Fortran
 
-  .. py:class:: PartExtension
+      .. ifconfig:: enable_fortran_doc == 'ON'
 
-    Python structure to perform partition extension.
-    Once initialized, all the following
-    methods apply to a :class:`PartExtension` instance.
+        .. f:autosubroutine:: PDM_part_extension_compute
 
-    .. rubric:: Initialization
+      .. ifconfig:: enable_fortran_doc == 'OFF'
 
-    .. automethod:: Pypdm.Pypdm.PartExtension.__init__
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
 
-    .. rubric:: Methods summary
 
-    .. autosummary::
-      :nosignatures:
 
-      ~Pypdm.Pypdm.PartExtension.connectivity_set
-      ~Pypdm.Pypdm.PartExtension.vtx_coord_set
-      ~Pypdm.Pypdm.PartExtension.ln_to_gn_set
-      ~Pypdm.Pypdm.PartExtension.part_bound_graph_set
-      ~Pypdm.Pypdm.PartExtension.group_set
-      ~Pypdm.Pypdm.PartExtension.compute
-      ~Pypdm.Pypdm.PartExtension.connectivity_get
-      ~Pypdm.Pypdm.PartExtension.vtx_coord_get
-      ~Pypdm.Pypdm.PartExtension.ln_to_gn_get
-      ~Pypdm.Pypdm.PartExtension.group_get
+    .. tab-item:: Python
 
-    .. rubric:: Set inputs
+      .. ifconfig:: enable_python_doc == 'ON'
 
-    .. automethod:: Pypdm.Pypdm.PartExtension.connectivity_set
-    .. automethod:: Pypdm.Pypdm.PartExtension.vtx_coord_set
-    .. automethod:: Pypdm.Pypdm.PartExtension.ln_to_gn_set
-    .. automethod:: Pypdm.Pypdm.PartExtension.part_bound_graph_set
-    .. automethod:: Pypdm.Pypdm.PartExtension.group_set
+        .. autofunction:: Pypdm.Pypdm.PartExtension.compute
+          :noindex:
 
-    ..  .. autofunction:: Pypdm.Pypdm.PartExtension.set_part
-    ..  .. autofunction:: Pypdm.Pypdm.PartExtension.part_domain_interface_shared_set
+      .. ifconfig:: enable_python_doc == 'OFF'
 
-    .. rubric:: Perform exchange of extended partition
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
 
-    .. automethod:: Pypdm.Pypdm.PartExtension.compute
 
-    .. rubric:: Get outputs
 
-    .. automethod:: Pypdm.Pypdm.PartExtension.connectivity_get
-    .. automethod:: Pypdm.Pypdm.PartExtension.vtx_coord_get
-    .. automethod:: Pypdm.Pypdm.PartExtension.ln_to_gn_get
-    .. automethod:: Pypdm.Pypdm.PartExtension.group_get
 
-    .. .. autofunction:: Pypdm.Pypdm.PartExtension.get_interface
-    .. .. autofunction:: Pypdm.Pypdm.PartExtension.get_composed_interface
+.. dropdown:: Get extended entities
 
-.. ifconfig:: enable_python_doc == 'OFF'
 
-  .. warning::
-    Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+  .. tab-set::
+
+    .. tab-item:: C
+
+      .. doxygenfunction:: PDM_part_extension_connectivity_get
+      .. doxygenfunction:: PDM_part_extension_vtx_coord_get
+      .. doxygenfunction:: PDM_part_extension_ln_to_gn_get
+      .. doxygenfunction:: PDM_part_extension_group_get
+
+
+
+    .. tab-item:: Fortran
+
+      .. ifconfig:: enable_fortran_doc == 'ON'
+
+        .. f:autosubroutine:: PDM_part_extension_connectivity_get
+        .. f:autosubroutine:: PDM_part_extension_vtx_coord_get
+        .. f:autosubroutine:: PDM_part_extension_ln_to_gn_get
+        .. f:autosubroutine:: PDM_part_extension_group_get
+
+      .. ifconfig:: enable_fortran_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+
+
+
+    .. tab-item:: Python
+
+      .. ifconfig:: enable_python_doc == 'ON'
+
+        .. autofunction:: Pypdm.Pypdm.PartExtension.connectivity_get
+          :noindex:
+        .. autofunction:: Pypdm.Pypdm.PartExtension.vtx_coord_get
+          :noindex:
+        .. autofunction:: Pypdm.Pypdm.PartExtension.ln_to_gn_get
+          :noindex:
+        .. autofunction:: Pypdm.Pypdm.PartExtension.group_get
+          :noindex:
+
+      .. ifconfig:: enable_python_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+
+
+
+
+.. dropdown:: Finalization
+
+  .. tab-set::
+
+    .. tab-item:: C
+
+      .. doxygenfunction:: PDM_part_extension_free
+
+
+
+    .. tab-item:: Fortran
+
+      .. ifconfig:: enable_fortran_doc == 'ON'
+
+        .. f:autosubroutine:: PDM_part_extension_free
+
+      .. ifconfig:: enable_fortran_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+
+
+
+    .. tab-item:: Python
+
+      The instance is automatically freed by Python's garbage collector when it is no longer referenced
