@@ -29,6 +29,12 @@ set(PDM_VERSION "${PDM_VERSION_MAJOR}.${PDM_VERSION_MINOR}.${PDM_VERSION_PATCH}"
 ### C++ standard
 set(SUPPORTED_CXX_STANDARDS 11 14 17 20)
 
+#------------------------------------------------------------------------------
+# Default compiler flags
+#------------------------------------------------------------------------------
+# A mettre uniquement si on est parent ?
+include(${CMAKE_MODULE_PATH}/default_flags.cmake)
+
 
 # ------------------------------------------------------------------------------
 # Dependencies
