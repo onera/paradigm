@@ -40,7 +40,6 @@ if (CMAKE_BUILD_TYPE STREQUAL "Sanitize")
 endif()
 
 if(PDM_ENABLE_UNIT_TEST)
-  message("ooooooo")
   file(GLOB_RECURSE __test_files
        CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/../src/*.test.cpp")
   test_cpp_unit_create(pdm_t_unit_test ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRANK SOURCES ${__test_files} )

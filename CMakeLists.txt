@@ -68,6 +68,7 @@ option(PDM_ENABLE_LONG_G_NUM      "Enable long for global number"             ON
 option(PDM_ENABLE_SHARED          "Build Shared Libraries"                    ON )
 option(PDM_ENABLE_STATIC          "Build Static Libraries"                    OFF)
 option(PDM_ENABLE_BLASLAPACK      "Build with BLAS/LAPACK"                    OFF)
+option(PDM_ENABLE_OPENMP          "Enable OpenMP"                             OFF)
 
 option(PDM_ENABLE_Fortran         "Build Fortran Interface"                   ON )
 option(PDM_ENABLE_PYTHON_BINDINGS "Build Python module"                       OFF)
@@ -76,7 +77,6 @@ option(PDM_ENABLE_TESTS           "Make CTest run the tests"                  ON
 option(PDM_ENABLE_UNIT_TEST       "Enable unit test "                         OFF)
 option(PDM_ENABLE_DOC             "Enable Sphinx documentation"               OFF)
 
-option(PDM_ENABLE_CUDA "Enable CUDA" OFF)
 if (PDM_ENABLE_CUDA)
   enable_language(CUDA)
 endif ()
