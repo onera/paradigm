@@ -16,19 +16,16 @@ API
 """
 
 .. dropdown:: Initialization
-  :name: Initialization
 
   .. tab-set::
 
     .. tab-item:: C
-      :name: C
 
       .. doxygenfunction:: PDM_extract_part_create
 
 
 
     .. tab-item:: Fortran
-      :name: Fortran
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -42,7 +39,6 @@ API
 
 
     .. tab-item:: Python
-      :name: Python
 
       .. ifconfig:: enable_python_doc == 'ON'
 
@@ -57,7 +53,6 @@ API
 
 
 .. dropdown:: Define input mesh
-  :name: Define input mesh
 
   .. tab-set::
 
@@ -119,7 +114,6 @@ API
 
 
 .. dropdown:: Define extraction
-  :name: Define extraction
 
   .. tab-set::
 
@@ -165,7 +159,6 @@ API
 
 
 .. dropdown:: Compute extraction
-  :name: Compute extraction
 
   .. tab-set::
 
@@ -205,7 +198,6 @@ API
 
 
 .. dropdown:: Get extraction
-  :name: Get extraction
 
   .. tab-set::
 
@@ -286,7 +278,6 @@ API
 
 
 .. dropdown:: Data transfer
-  :name: Data transfer
 
   .. tab-set::
 
@@ -351,7 +342,6 @@ API
 
 
 .. dropdown:: Finalization
-  :name: Finalization
 
   .. tab-set::
 
@@ -385,7 +375,6 @@ Examples
 """"""""
 
 .. dropdown:: Nodal mesh
-  :name: nodal
 
   .. tab-set::
 
@@ -407,7 +396,6 @@ Examples
           Initial partitioned mesh (colored by MPI rank)
 
         .. literalinclude:: ../../../../../test/pdm_t_extract_part_nodal_f.F90
-          :name: nodal_f_ex_1
           :language: fortran
           :dedent: 2
           :lines: 24-165
@@ -425,7 +413,6 @@ Examples
           Extracted mesh (colored by MPI rank)
 
         .. literalinclude:: ../../../../../test/pdm_t_extract_part_nodal_f.F90
-          :name: nodal_f_ex_2
           :language: fortran
           :dedent: 2
           :lines: 168-250
@@ -445,7 +432,6 @@ Examples
           Field on the initial mesh
 
         .. literalinclude:: ../../../../../test/pdm_t_extract_part_nodal_f.F90
-          :name: nodal_f_ex_3
           :language: fortran
           :dedent: 2
           :lines: 255-257
@@ -459,7 +445,6 @@ Examples
           Field transferred to the extracted mesh
 
         .. literalinclude:: ../../../../../test/pdm_t_extract_part_nodal_f.F90
-          :name: nodal_f_ex_4
           :language: fortran
           :dedent: 2
           :lines: 266-285

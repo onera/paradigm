@@ -495,6 +495,8 @@ API
           Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
 
 
+
+
 .. dropdown:: Get location data
 
   Once computed, the location data can retrieved either from the perspective of the target point cloud or from the perspective of the source mesh.
@@ -642,7 +644,9 @@ API
 
 .. dropdown:: Data transfer
 
-  Data can be transferred between the source mesh and each point cloud using the :ref:`PDM_part_to_part <ptp>` instance created by Mesh Location.
+  Data can be transferred between the source mesh and each point cloud using the :ref:`PDM_part_to_part <ptp>` instance created by **Mesh location**.
+
+  .. note:: *Direct* exchanges go from source to target and *reverse* exchanges go from target to source.
 
   .. tab-set::
 
