@@ -39,7 +39,6 @@ module pdm_isosurface
   interface
 
 
-
     subroutine PDM_isosurface_n_part_set (isos,   &
                                           n_part) &
     bind (c, name = 'PDM_isosurface_n_part_set')
@@ -75,8 +74,8 @@ module pdm_isosurface
       use iso_c_binding
       implicit none
 
-      type(c_ptr),    value :: isos  ! PDM_isosurface_t instance
-      type(c_ptr),    value :: pmesh ! PDM_part_mesh_t instance
+      type(c_ptr), value :: isos  ! PDM_isosurface_t instance
+      type(c_ptr), value :: pmesh ! PDM_part_mesh_t instance
 
     end subroutine PDM_isosurface_part_mesh_set
 
@@ -88,8 +87,8 @@ module pdm_isosurface
       use iso_c_binding
       implicit none
 
-      type(c_ptr),    value :: isos ! PDM_isosurface_t instance
-      type(c_ptr),    value :: pmn  ! PDM_part_mesh_nodal_t instance
+      type(c_ptr), value :: isos ! PDM_isosurface_t instance
+      type(c_ptr), value :: pmn  ! PDM_part_mesh_nodal_t instance
 
     end subroutine PDM_isosurface_part_mesh_nodal_set
 
@@ -97,12 +96,12 @@ module pdm_isosurface
     subroutine PDM_isosurface_dmesh_set (isos,  &
                                          dmesh) &
     bind(c, name = 'PDM_isosurface_dmesh_set')
-
+      ! Set block-distributed mesh
       use iso_c_binding
       implicit none
 
-      type(c_ptr),    value :: isos
-      type(c_ptr),    value :: dmesh
+      type(c_ptr), value :: isos  ! PDM_isosurface_t instance
+      type(c_ptr), value :: dmesh ! PDM_dmesh_t instance
 
     end subroutine PDM_isosurface_dmesh_set
 
@@ -110,43 +109,73 @@ module pdm_isosurface
     subroutine PDM_isosurface_dmesh_nodal_set (isos, &
                                                dmn)  &
     bind(c, name = 'PDM_isosurface_dmesh_nodal_set')
-
+      ! Set block-distributed nodal mesh
       use iso_c_binding
       implicit none
 
-      type(c_ptr),    value :: isos
-      type(c_ptr),    value :: dmn
+      type(c_ptr), value :: isos ! PDM_isosurface_t instance
+      type(c_ptr), value :: dmn  ! PDM_dmesh_nodal_t instance
 
     end subroutine PDM_isosurface_dmesh_nodal_set
 
 
-    ! subroutine PDM_isosurface_field_function_set (isos, &
-    !                                               id_isosurface, &
-    !                                               func)
-    !   bind(c, name = 'PDM_isosurface_field_function_set')
+    subroutine PDM_isosurface_field_function_set (isos, &
+                                                  id_isosurface, &
+                                                  pdm_isosurface_field_function_t) &
+    bind(c, name = 'PDM_isosurface_field_function_set')
+      ! Set source field function
+      use iso_c_binding
+      implicit none
 
-    !   use iso_c_binding
+      type(c_ptr),    value :: isos          ! PDM_isosurface_t instance
+      integer(c_int), value :: id_isosurface ! Iso-surface identifier
 
-    !   implicit none
+      interface
+        subroutine pdm_isosurface_field_function_t (x, &
+                                                    y, &
+                                                    z, &
+                                                    value) &
+        bind(c)
+          use iso_c_binding
+          implicit none
 
-    !   type(c_ptr),    value :: isos
-    !   integer(c_int), value :: id_isosurface
-    !   type(c_ptr),    value :: func
+          real(c_double), value :: x
+          real(c_double), value :: y
+          real(c_double), value :: z
+          type(c_ptr),    value :: value
 
-    ! end subroutine PDM_isosurface_field_function_set
+        end subroutine pdm_isosurface_field_function_t
+
+        subroutine PDM_isosurface_field_function_set_cf (isos, &
+                                                         id_isosurface, &
+                                                         pdm_isosurface_field_function_t) &
+        bind(c, name="PDM_isosurface_field_function_set")
+
+          use iso_c_binding
+          implicit none
+
+          type(c_ptr),    value :: isos
+          integer(c_int), value :: id_isosurface
+          type(c_funptr), value :: pdm_isosurface_field_function_t
+
+        end subroutine PDM_isosurface_field_function_set_cf
+      end interface
+
+
+    end subroutine PDM_isosurface_field_function_set
 
 
     subroutine PDM_isosurface_redistribution_set (isos,         &
                                                   extract_kind, &
                                                   part_method)  &
     bind(c, name = 'PDM_isosurface_redistribution_set')
-
+      ! Set the isosurface redistribution options
       use iso_c_binding
       implicit none
 
-      type(c_ptr),    value :: isos
-      integer(c_int), value :: extract_kind
-      integer(c_int), value :: part_method
+      type(c_ptr),    value :: isos         ! PDM_isosurface_t instance
+      integer(c_int), value :: extract_kind ! Redistribution kind
+      integer(c_int), value :: part_method  ! Partitioning method (only used if \ref extract_kind is set to \ref PDM_EXTRACT_PART_KIND_REEQUILIBRATE)
 
     end subroutine PDM_isosurface_redistribution_set
 
@@ -154,12 +183,12 @@ module pdm_isosurface
     subroutine PDM_isosurface_reset (isos,          &
                                      id_isosurface) &
     bind(c, name = 'PDM_isosurface_reset')
-
+      ! Clear the constructed iso-surface meshes
       use iso_c_binding
       implicit none
 
-      type(c_ptr),    value :: isos
-      integer(c_int), value :: id_isosurface
+      type(c_ptr),    value :: isos          ! PDM_isosurface_t instance
+      integer(c_int), value :: id_isosurface ! Iso-surface identifier (if <0, reset all iso-surfaces)
 
     end subroutine PDM_isosurface_reset
 
@@ -167,12 +196,12 @@ module pdm_isosurface
     subroutine PDM_isosurface_n_part_out_set (isos,       &
                                               n_part_out) &
     bind(c, name = 'PDM_isosurface_n_part_out_set')
-
+      ! Set the number of partitions in the isosurface mesh (Optional)
       use iso_c_binding
       implicit none
 
-      type(c_ptr),    value :: isos
-      integer(c_int), value :: n_part_out
+      type(c_ptr),    value :: isos       ! PDM_isosurface_t instance
+      integer(c_int), value :: n_part_out ! Number of partitions
 
     end subroutine PDM_isosurface_n_part_out_set
 
@@ -180,23 +209,23 @@ module pdm_isosurface
     subroutine PDM_isosurface_compute (isos,          &
                                        id_isosurface) &
     bind(c, name = 'PDM_isosurface_compute')
-
+      ! Compute the iso-surface mesh for all requested iso-values
       use iso_c_binding
       implicit none
 
-      type(c_ptr),    value :: isos
-      integer(c_int), value :: id_isosurface
+      type(c_ptr),    value :: isos          ! PDM_isosurface_t instance
+      integer(c_int), value :: id_isosurface ! Iso-surface identifier (if < 0, compute all iso-surfaces)
 
     end subroutine PDM_isosurface_compute
 
 
     subroutine PDM_isosurface_dump_times (isos) &
     bind(c, name = 'PDM_isosurface_dump_times')
-
+      ! Dump elapsed and CPU times
       use iso_c_binding
       implicit none
 
-      type(c_ptr),    value :: isos
+      type(c_ptr),    value :: isos ! PDM_isosurface_t instance
 
     end subroutine PDM_isosurface_dump_times
 
@@ -210,10 +239,10 @@ module pdm_isosurface
       use iso_c_binding
       implicit none
 
-      type(c_ptr),    value :: isos
-      integer(c_int), value :: id_isosurface
-      integer(c_int), value :: entity_type
-      integer(c_int), value :: unify_parent_info
+      type(c_ptr),    value :: isos ! PDM_isosurface_t instance
+      integer(c_int), value :: id_isosurface ! Iso-surface identifier
+      integer(c_int), value :: entity_type ! Type of mesh entities
+      integer(c_int), value :: unify_parent_info ! Get all parent over all procs (not implemented)
 
     end subroutine PDM_isosurface_part_to_part_enable
 
@@ -228,11 +257,11 @@ module pdm_isosurface
       use iso_c_binding
       implicit none
 
-      type(c_ptr),    value :: isos
-      integer(c_int), value :: id_isosurface
-      integer(c_int), value :: entity_type
-      type(c_ptr)           :: ptp
-      integer(c_int), value :: ownership
+      type(c_ptr),    value :: isos ! PDM_isosurface_t instance
+      integer(c_int), value :: id_isosurface ! Iso-surface identifier
+      integer(c_int), value :: entity_type ! Type of mesh entities
+      type(c_ptr)           :: ptp ! Pointer
+      integer(c_int), value :: ownership ! Ownership
 
     end subroutine PDM_isosurface_part_to_part_get
 
