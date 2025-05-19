@@ -60,6 +60,9 @@ find_package(Doxygen)
 option(PDM_ENABLE_LONG_G_NUM      "Enable long for global number" ON )
 option(PDM_ENABLE_SHARED          "Build Shared Libraries"        ON )
 option(PDM_ENABLE_STATIC          "Build Static Libraries"        OFF)
+option(PDM_ENABLE_BLASLAPACK      "Build with BLAS/LAPACK"        OFF)
+option(PDM_ENABLE_DOC             "Enable Sphinx documentation"   OFF)
+option(PDM_ENABLE_TESTS           "Make CTest run the tests"      ON)
 
 option(PDM_ENABLE_Fortran         "Build Fortran Interface"       ON )
 option(PDM_ENABLE_PYTHON_BINDINGS "Build Python module"           OFF)
@@ -269,7 +272,7 @@ endif()
 # Testing
 # ----------------------------------------------------------------------
 include(CTest)
-if (${PROJECT_NAME}_ENABLE_TESTS)
+if (PDM_ENABLE_TESTS)
   add_subdirectory(test)
 endif()
 
