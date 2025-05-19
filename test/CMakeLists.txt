@@ -226,6 +226,7 @@ test_c_create (pdm_t_subdivision_bezier_triangle 1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_projection_back_mesh        1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_subdivision_bezier_curve    1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_ho_bezier_intersect         1 PDM_LIST_TEST PDM_LIST_NRANK)
+test_c_create (pdm_t_iso_surf         1 PDM_LIST_TEST PDM_LIST_NRANK)
 
 if (PDM_ENABLE_PYTHON_BINDINGS)
    test_python_create (pdm_t_part_to_part_p             2 PDM_LIST_TEST PDM_LIST_NRANK)

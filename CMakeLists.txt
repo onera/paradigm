@@ -88,14 +88,15 @@ set(test_dir    ${PROJECT_SOURCE_DIR}/test)
 set(include_dir ${PROJECT_SOURCE_DIR}/src)
 
 file(GLOB_RECURSE all_src_files
-  CONFIGURE_DEPENDS "${src_dir}/*.cxx" "${src_dir}/*.cpp" "${src_dir}/*.c"
+  CONFIGURE_DEPENDS "${src_dir}/*.cxx" "${src_dir}/*.cpp" "${src_dir}/*.c" "${PROJECT_SOURCE_DIR}/extensions/paradigma/src/*.c"
 )
 
 file(GLOB_RECURSE all_src_fortran_files
   CONFIGURE_DEPENDS "${src_dir}/*.F90"
 )
 
-get_all_subdirectories(PDM_SUBDIRS ${src_dir})
+get_all_subdirectories(PDM_SUBDIRS  ${src_dir})
+get_all_subdirectories(PDMA_SUBDIRS "${PROJECT_SOURCE_DIR}/extensions/paradigma/src/")
 
 set(src_files ${all_src_files})
 list(FILTER src_files EXCLUDE REGEX ".*\\.test\\.cpp$")
@@ -122,10 +123,13 @@ endif()
 foreach(lib_type IN LISTS LIB_TYPES)
 
   add_library(pdm_${lib_type} ${lib_type} ${src_files})
-  add_library(pdmf_${lib_type} ${lib_type} ${all_src_fortran_files})
 
   set_target_properties(pdm_${lib_type} PROPERTIES OUTPUT_NAME "pdm")
-  set_target_properties(pdmf_${lib_type} PROPERTIES OUTPUT_NAME "pdmf")
+
+  if(PDM_ENABLE_Fortran)
+    add_library(pdmf_${lib_type} ${lib_type} ${all_src_fortran_files})
+    set_target_properties(pdmf_${lib_type} PROPERTIES OUTPUT_NAME "pdmf")
+  endif()
 
   target_include_directories(pdm_${lib_type} PUBLIC
     $<BUILD_INTERFACE:${src_dir}>
@@ -140,15 +144,24 @@ foreach(lib_type IN LISTS LIB_TYPES)
     )
   endforeach()
 
+  foreach(subdir IN LISTS PDMA_SUBDIRS)
+    target_include_directories(pdm_${lib_type} PUBLIC
+        $<BUILD_INTERFACE:${subdir}>
+        $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
+    )
+  endforeach()
+
   target_link_libraries(pdm_${lib_type}
     PUBLIC
       MPI::MPI_CXX
   )
 
-  target_link_libraries(pdmf_${lib_type}
-    PUBLIC
-      MPI::MPI_Fortran
-  )
+  if(PDM_ENABLE_Fortran)
+    target_link_libraries(pdmf_${lib_type}
+      PUBLIC
+        MPI::MPI_Fortran
+    )
+  endif()
 
   target_compile_definitions(pdm_${lib_type} PRIVATE PDM_USE_MULTIPART=0)
 
@@ -186,10 +199,12 @@ foreach(lib_type IN LISTS LIB_TYPES)
     )
   endif()
 
-  target_link_libraries(pdmf_${lib_type}
-    PUBLIC
-      pdm_${lib_type}
-  )
+  if(PDM_ENABLE_Fortran)
+    target_link_libraries(pdmf_${lib_type}
+      PUBLIC
+        pdm_${lib_type}
+    )
+  endif()
 endforeach()
 
 # ----------------------------------------------------------------------
