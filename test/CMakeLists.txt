@@ -243,7 +243,7 @@ if (PDM_ENABLE_PYTHON_BINDINGS)
    endif()
 endif()
 
-if(PDM_ENABLE_FORTRAN)
+if(PDM_ENABLE_Fortran)
   test_fortran_create (pdm_t_closest_points_f             2 PDM_LIST_TEST PDM_LIST_NRANK)
   test_fortran_create (pdm_t_mesh_location_f              1 PDM_LIST_TEST PDM_LIST_NRANK)
   test_fortran_create (pdm_t_part_to_block_f              1 PDM_LIST_TEST PDM_LIST_NRANK)
