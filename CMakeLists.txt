@@ -114,7 +114,7 @@ endif()
 # Fake dlclose path
 #------------------------------------------------------------------------------
 set(PDM_BINARY_DLCLOSE_DIR ${CMAKE_BINARY_DIR}/script/asan/fake_dlclose)
-
+add_subdirectory(script)
 
 # ------------------------------------------------------------------------------
 # Compilation
@@ -290,7 +290,6 @@ include(CTest)
 if (PDM_ENABLE_TESTS)
   add_subdirectory(test)
 endif()
-add_subdirectory(script)
 
 # pdm_run
 string(REPLACE ";" " " PDM_LIST_TEST  "${PDM_LIST_TEST}")
