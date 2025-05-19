@@ -77,6 +77,16 @@ endif()
 if (PDM_ENABLE_LONG_G_NUM)
   set(PDM_LONG_G_NUM 1)
 endif ()
+set (PDM_HAVE_ANISO_AGGLO 1)
+
+if (PDM_ENABLE_PYTHON_BINDINGS)
+
+  find_package(Python REQUIRED COMPONENTS Interpreter Development NumPy)
+  find_package(Mpi4Py REQUIRED)
+  # include(UseCython)
+
+endif()
+
 
 configure_file(pdm_config.h.in "${CMAKE_CURRENT_BINARY_DIR}/pdm_config.h")
 
@@ -86,9 +96,14 @@ configure_file(pdm_config.h.in "${CMAKE_CURRENT_BINARY_DIR}/pdm_config.h")
 set(src_dir     ${PROJECT_SOURCE_DIR}/src)
 set(test_dir    ${PROJECT_SOURCE_DIR}/test)
 set(include_dir ${PROJECT_SOURCE_DIR}/src)
+if(PDM_ENABLE_EXTENSION_PDMA)
+  set(pdma_dir      ${PROJECT_SOURCE_DIR}/extensions/paradigma/)
+  set(pdma_src_dir  ${pdma_dir}/src)
+  set(pdma_test_dir ${pdma_dir}/test)
+endif()
 
 file(GLOB_RECURSE all_src_files
-  CONFIGURE_DEPENDS "${src_dir}/*.cxx" "${src_dir}/*.cpp" "${src_dir}/*.c" "${PROJECT_SOURCE_DIR}/extensions/paradigma/src/*.c"
+  CONFIGURE_DEPENDS "${src_dir}/*.cxx" "${src_dir}/*.cpp" "${src_dir}/*.c"
 )
 
 file(GLOB_RECURSE all_src_fortran_files
@@ -96,7 +111,21 @@ file(GLOB_RECURSE all_src_fortran_files
 )
 
 get_all_subdirectories(PDM_SUBDIRS  ${src_dir})
-get_all_subdirectories(PDMA_SUBDIRS "${PROJECT_SOURCE_DIR}/extensions/paradigma/src/")
+
+if(PDM_ENABLE_EXTENSION_PDMA)
+  file(GLOB_RECURSE pdma_sources
+    CONFIGURE_DEPENDS "${pdma_src_dir}/*.cxx" "${pdma_src_dir}/*.cpp" "${pdma_src_dir}/*.c"
+  )
+  list(APPEND all_src_files "${pdma_sources}")
+
+  file(GLOB_RECURSE pdmaf_sources
+    CONFIGURE_DEPENDS "${pdma_src_dir}/*.F90"
+  )
+  list(APPEND all_src_fortran_files "${pdmaf_sources}")
+
+  get_all_subdirectories(PDMA_SUBDIRS ${pdma_src_dir})
+endif()
+
 
 set(src_files ${all_src_files})
 list(FILTER src_files EXCLUDE REGEX ".*\\.test\\.cpp$")
@@ -118,7 +147,6 @@ endif()
 #   -gencode=arch=compute_61,code=sm_61;
 #   >)
 # endif()
-
 
 foreach(lib_type IN LISTS LIB_TYPES)
 
@@ -206,6 +234,11 @@ foreach(lib_type IN LISTS LIB_TYPES)
     )
   endif()
 endforeach()
+
+if (PDM_ENABLE_PYTHON_BINDINGS)
+  add_subdirectory(Cython)
+  # On passe en shared forcement ?
+endif()
 
 # ----------------------------------------------------------------------
 # Unit test
