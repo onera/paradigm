@@ -33,15 +33,17 @@ set(SUPPORTED_CXX_STANDARDS 11 14 17 20)
 # ------------------------------------------------------------------------------
 # Dependencies
 # ------------------------------------------------------------------------------
-## System dependencies ###
-if (NOT TARGET Python::Python OR NOT TARGET Python::NumPy)
-  find_package(Python 3.8 REQUIRED COMPONENTS Development NumPy)
-endif()
+## System dependencies ###()
 if (NOT TARGET MPI::MPI_CXX)
   find_package(MPI REQUIRED COMPONENTS Fortran CXX)
 endif()
-if (NOT TARGET Mpi4Py::Mpi4Py)
-  find_package(Mpi4Py REQUIRED)
+if (PDM_ENABLE_PYTHON_BINDINGS)
+  if(NOT TARGET Python::Python OR NOT TARGET Python::NumPy)
+    find_package(Python 3.8 REQUIRED COMPONENTS Development NumPy)
+  endif()
+  if (NOT TARGET Mpi4Py::Mpi4Py)
+    find_package(Mpi4Py REQUIRED)
+  endif()
 endif()
 
 find_package(PTScotch)
