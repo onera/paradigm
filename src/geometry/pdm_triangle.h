@@ -209,16 +209,18 @@ PDM_triangle_ray_intersection
  * \param [in]  edge_vtx   Edge -> vertex connectivity (1-based, size : 2 * *n_edge*)
  * \param [out] face_vtx   Face -> vertex connectivity (1-based, size : 3 * \p n_face)
  *
+ * \return 0 if successful, else 1-based local ID of first triangle that failed
+ *
  */
 
-void
+int
 PDM_triangle_ngon_to_nodal
 (
  int   n_face,
  int  *face_edge,
  int  *edge_vtx,
  int **face_vtx
- );
+);
 
 
 /**
