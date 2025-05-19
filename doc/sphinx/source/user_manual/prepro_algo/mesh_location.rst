@@ -3,315 +3,710 @@
 Mesh location
 =============
 
+**Mesh location** is a service for locating points inside a partitioned, unstructured mesh.
+All types of mesh elements are supported: standard elements (bars, triangles, 
+quadrangles, tetrahedra, pyramids, prisms, hexahedra), general polygons and polyhedra, 
+as well as high-order, curved elements.
 
-C API
------
+A mapping between the source mesh elements and the target points they contain is computed, which consists in
+  - geometric data (distances, barycentric and parametric coordinates, ...) ;
+  - a :ref:`PDM_part_to_part <ptp>` instance to transfer data in parallel.
 
-Initialization
-""""""""""""""
+This mapping can be used to performed spatial interpolation, as in `CWIPI <https://github.com/onera/cwipi>`_ and `Maia <https://github.com/onera/maia>`_.
 
-.. doxygenfunction:: PDM_mesh_location_create
+API
+"""
 
-Source mesh definition
-""""""""""""""""""""""
+.. dropdown:: Initialization
 
-.. doxygenfunction:: PDM_mesh_location_mesh_n_part_set
 
-.. doxygenfunction:: PDM_mesh_location_part_set
+  .. tab-set::
 
-.. doxygenfunction:: PDM_mesh_location_nodal_part_set
+    .. tab-item:: C
 
-.. doxygenfunction:: PDM_mesh_location_part_set_2d
+      .. doxygenfunction:: PDM_mesh_location_create
 
-.. doxygenfunction:: PDM_mesh_location_nodal_part_set_2d
 
-Target point clouds definition
-""""""""""""""""""""""""""""""
 
-.. doxygenfunction:: PDM_mesh_location_n_part_cloud_set
+    .. tab-item:: Fortran
 
-.. doxygenfunction:: PDM_mesh_location_cloud_set
+      .. ifconfig:: enable_fortran_doc == 'ON'
 
-Location computation
-""""""""""""""""""""
+        .. f:autosubroutine:: PDM_mesh_location_create
 
-.. doxygenfunction:: PDM_mesh_location_method_set
+      .. ifconfig:: enable_fortran_doc == 'OFF'
 
-.. doxygenfunction:: PDM_mesh_location_tolerance_set
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
 
-.. doxygenfunction:: PDM_mesh_location_compute
 
-.. doxygenfunction:: PDM_mesh_location_dump_times
 
-Results
-"""""""
-.. doxygenfunction:: PDM_mesh_location_n_located_get
+    .. tab-item:: Python
 
-.. doxygenfunction:: PDM_mesh_location_located_get
+      .. ifconfig:: enable_python_doc == 'ON'
 
-.. doxygenfunction:: PDM_mesh_location_n_unlocated_get
+        .. autofunction:: Pypdm.Pypdm.MeshLocation.__init__
+          :noindex:
 
-.. doxygenfunction:: PDM_mesh_location_unlocated_get
+      .. ifconfig:: enable_python_doc == 'OFF'
 
-.. doxygenfunction:: PDM_mesh_location_points_in_elt_get
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
 
-.. doxygenfunction:: PDM_mesh_location_point_location_get
 
-.. doxygenfunction:: PDM_mesh_location_cell_vertex_get
 
-.. doxygenfunction:: PDM_mesh_location_part_to_part_get
 
-Finalization
-""""""""""""
+.. dropdown:: Set target point clouds
 
-.. doxygenfunction:: PDM_mesh_location_free
+  Multiple target point clouds can be processed with a single Mesh Location instance.
+  Each of them can have a distinct number of parts per MPI rank, and has its own global numbering.
 
+  A point cloud is defined by coordinates and global IDs (if you don't have a global numbering, check out :ref:`this page <gnum>` to see how to generate one). 
 
 
-Fortran API
------------
+  .. tab-set::
 
-.. ifconfig:: enable_fortran_doc == 'ON'
+    .. tab-item:: C
 
-  Initialization
-  """"""""""""""
+      .. doxygenfunction:: PDM_mesh_location_n_part_cloud_set
+      .. doxygenfunction:: PDM_mesh_location_cloud_set
 
-  .. f:autosubroutine:: pdm_mesh_location/pdm_mesh_location_create_
 
-  Source mesh definition
-  """"""""""""""""""""""
 
-  .. f:subroutine:: pdm_mesh_location_mesh_n_part_set(mloc, n_part)
+    .. tab-item:: Fortran
 
-    Set the number of partitions of the source mesh
+      .. ifconfig:: enable_fortran_doc == 'ON'
 
-    :param c_ptr   mesh_loc [in]: C pointer to PDM_mesh_location_t object
-    :param integer n_part   [in]:   Number of partitions
+        .. f:autosubroutine:: PDM_mesh_location_n_part_cloud_set
+        .. f:autosubroutine:: PDM_mesh_location_cloud_set
 
+      .. ifconfig:: enable_fortran_doc == 'OFF'
 
-  .. f:autosubroutine:: pdm_mesh_location/pdm_mesh_location_part_set_
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
 
-  .. f:autosubroutine:: pdm_mesh_location/pdm_mesh_location_nodal_part_set
 
-  .. f:autosubroutine:: pdm_mesh_location/pdm_mesh_location_part_set_2d_
 
-  .. f:autosubroutine:: pdm_mesh_location/pdm_mesh_location_nodal_part_set_2d
+    .. tab-item:: Python
 
-  Target point clouds definition
-  """"""""""""""""""""""""""""""
+      .. ifconfig:: enable_python_doc == 'ON'
 
-  .. f:autosubroutine pdm_mesh_location/pdm_mesh_location_n_part_cloud_set
-  .. f:subroutine:: pdm_mesh_location_n_part_cloud_set(mloc, i_point_cloud, n_part)
+        .. autofunction:: Pypdm.Pypdm.MeshLocation.n_part_cloud_set
+          :noindex:
+        .. autofunction:: Pypdm.Pypdm.MeshLocation.cloud_set
+          :noindex:
 
-    Set the number of partitions of a point cloud
+      .. ifconfig:: enable_python_doc == 'OFF'
 
-    :param c_ptr   mesh_loc      [in]: C pointer to PDM_mesh_location_t object
-    :param integer i_point_cloud [in]: Point cloud identifier
-    :param integer n_part        [in]: Number of partitions
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
 
-  .. f:autosubroutine:: pdm_mesh_location/pdm_mesh_location_cloud_set_
 
-  Location computation
-  """"""""""""""""""""
 
-  .. f:autosubroutine pdm_mesh_location/pdm_mesh_location_method_set
-  .. f:subroutine:: pdm_mesh_location_method_set(mesh_loc, method)
 
-    Set the method for computing location (preconditioning stage)
+.. dropdown:: Set source mesh
 
-    .. note::
-      This is an optional setting
+  The source mesh can be defined in several ways.
 
-    Admissible values are :
-      - ``PDM_MESH_LOCATION_OCTREE``         : Use point octree (default method)
-      - ``PDM_MESH_LOCATION_DBBTREE``        : Use bounding-box tree
-      - ``PDM_MESH_LOCATION_LOCATE_ALL_TGT`` : All target points are guaranteed to be located
+  If you have a :ref:`Part Mesh Nodal <pmn>` instance, you can use it directly 
+  (note that this is the only way to define high-order, curved elements):
 
-    :p c_ptr mesh_loc[in]: Mesh location instance
-    :p integer method[in]: Preconditioning method
+  .. tab-set::
 
+    .. tab-item:: C
 
+      .. doxygenfunction:: PDM_mesh_location_shared_nodal_mesh_set
 
-  .. f:subroutine:: pdm_mesh_location_tolerance_set(mesh_loc, tol)
+    .. tab-item:: Fortran
 
-    Set the relative tolerance for bounding boxes
+      .. ifconfig:: enable_fortran_doc == 'ON'
 
-    .. note::
-      This is an optional setting. By default a relative tolerance equal to 0 is used.
+        .. f:autosubroutine:: PDM_mesh_location_shared_nodal_mesh_set
+          
+      .. ifconfig:: enable_fortran_doc == 'OFF'
 
-    :p c_ptr mesh_loc[in]: Mesh location instance
-    :p real    method[in]: Tolerance
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
 
 
+    .. tab-item:: Python
 
-  .. f:autosubroutine pdm_mesh_location/pdm_mesh_location_compute
-  .. f:subroutine:: pdm_mesh_location_compute(mesh_loc)
+      .. ifconfig:: enable_python_doc == 'ON'
 
-    Compute point location
+        Not yet available
 
-    :p c_ptr mesh_loc[in]: Mesh location instance
+      .. ifconfig:: enable_python_doc == 'OFF'
 
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
 
-  .. f:subroutine:: pdm_mesh_location_dump_times(mesh_loc)
+    
+  Alternatively, you can define the source mesh by providing each part separately. 
+  If you do so, you should always start by setting the number of part:
 
-    Dump elapsed and CPU times
+  .. tab-set::
 
-    :p c_ptr mesh_loc[in]: Mesh location instance
+    .. tab-item:: C
 
-  Results
-  """""""
-  .. f:autosubroutine pdm_mesh_location/pdm_mesh_location_n_located_get
-  .. f:function:: pdm_mesh_location_n_located_get(mloc, i_point_cloud, i_part) result(n_located)
+      .. doxygenfunction:: PDM_mesh_location_mesh_n_part_set
 
-    Get the number of located points
 
-    :p c_ptr mesh_loc[in]: Mesh location instance
-    :p integer i_point_cloud[in]: Point cloud identifier
-    :p integer i_part[in]: Partition identifier
-    :p integer n_located[out]: Number of located points
 
-  .. f:autosubroutine:: pdm_mesh_location/pdm_mesh_location_located_get_
+    .. tab-item:: Fortran
 
-  .. f:autosubroutine pdm_mesh_location/pdm_mesh_location_n_unlocated_get
-  .. f:function:: pdm_mesh_location_n_unlocated_get(mloc, i_point_cloud, i_part) result(n_unlocated)
+      .. ifconfig:: enable_fortran_doc == 'ON'
 
-    Get the number of unlocated points
+        .. f:autosubroutine:: PDM_mesh_location_mesh_n_part_set
 
-    :p c_ptr mesh_loc[in]: Mesh location instance
-    :p integer i_point_cloud[in]: Point cloud identifier
-    :p integer i_part[in]: Partition identifier
-    :p integer n_unlocated[out]: Number of unlocated points
+      .. ifconfig:: enable_fortran_doc == 'OFF'
 
-  .. f:autosubroutine:: pdm_mesh_location/pdm_mesh_location_unlocated_get_
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
 
-  .. f:autosubroutine:: pdm_mesh_location/pdm_mesh_location_points_in_elt_get_
 
-  .. f:autosubroutine:: pdm_mesh_location/pdm_mesh_location_point_location_get_
 
-  .. f:autosubroutine pdm_mesh_location/pdm_mesh_location_cell_vertex_get_
-  .. f:subroutine:: pdm_mesh_location_cell_vertex_get(mloc, i_part, cell_vtx_idx, cell_vtx)
+    .. tab-item:: Python
 
-    Get the cell→vertex connectivity used for internal computations
+      .. ifconfig:: enable_python_doc == 'ON'
 
-    .. note::
-      For non-standard elements, this connectivity is built by ParaDiGM and is necessary to associate
-      the ``points_weights`` array (returned by **pdm_mesh_location_points_in_elt_get**)
-      to the appropriate mesh vertices.
+        .. autofunction:: Pypdm.Pypdm.MeshLocation.mesh_n_part_set
+          :noindex:
 
-    :p c_ptr mesh_loc[in]:           Mesh location instance
-    :p integer i_part[in]:           Partition identifier
-    :p integer(:) cell_vtx_idx[out]: Index for cell → vertex connectivity
-    :p integer(:) cell_vtx[out]:     Cell → vertex connectivity
+      .. ifconfig:: enable_python_doc == 'OFF'
 
-  .. f:autosubroutine pdm_mesh_location/pdm_mesh_location_part_to_part_get_
-  .. f:subroutine:: pdm_mesh_location_part_to_part_get(mesh_loc, icloud, ptp, owner)
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
 
-    Get Part-to-part instance to exchange data between the source mesh and a target point cloud
 
-    :p c_ptr mesh_loc[in]: Mesh location instance
-    :p integer icloud[in]: Point cloud identifier
-    :p c_ptr ptp[out]:     Part-to-part instance
-    :p integer owner[in]:  Ownership for ``ptp``
+  Then you can use the appropriate setter depending on the mesh dimension and type:
 
-  Finalization
-  """"""""""""
+  .. dropdown:: Volume mesh
 
-  .. f:autosubroutine pdm_mesh_location/pdm_mesh_location_free
-  .. f:subroutine:: pdm_mesh_location_free(mesh_loc)
+    .. dropdown:: Nodal connectivity
 
-    Free a Mesh location structure
+      .. tab-set::
 
-    :p c_ptr mesh_loc[inout]: Mesh location instance
+          .. tab-item:: C
 
-.. ifconfig:: enable_fortran_doc == 'OFF'
+            .. doxygenfunction:: PDM_mesh_location_nodal_part_set
 
-  .. warning::
-    Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
 
 
-Python API
-----------
+          .. tab-item:: Fortran
 
-.. ifconfig:: enable_python_doc == 'ON'
+            .. ifconfig:: enable_fortran_doc == 'ON'
 
-  .. py:class:: MeshLocation
+              .. f:autosubroutine:: PDM_mesh_location_nodal_part_set
 
-    .. we don't use autoclass here, because it does not render good with the autoclass_content = 'both' option.
-       If this option is removed, move class description in py file and use autoclass:: Pypdm.Pypdm.MeshLocation
+            .. ifconfig:: enable_fortran_doc == 'OFF'
 
-    Python structure to perform mesh location operations. Once initialized, all the following
-    methods apply to a :class:`MeshLocation` instance.
+              .. warning::
+                Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
 
-    .. rubric:: Initialization
 
-    .. autofunction:: Pypdm.Pypdm.MeshLocation.__init__
 
-    .. rubric:: Instance attributes
+          .. tab-item:: Python
 
-    .. autoattribute:: Pypdm.Pypdm.MeshLocation.tolerance
-    .. autoattribute:: Pypdm.Pypdm.MeshLocation.method
+            .. ifconfig:: enable_python_doc == 'ON'
 
-    .. rubric:: Methods summary
+              .. autofunction:: Pypdm.Pypdm.MeshLocation.nodal_part_set
+                :noindex:
 
-    .. autosummary::
-      :nosignatures:
+            .. ifconfig:: enable_python_doc == 'OFF'
 
-      ~Pypdm.Pypdm.MeshLocation.mesh_n_part_set
-      ~Pypdm.Pypdm.MeshLocation.part_set
-      ~Pypdm.Pypdm.MeshLocation.nodal_part_set
-      ~Pypdm.Pypdm.MeshLocation.part_set_2d
-      ~Pypdm.Pypdm.MeshLocation.nodal_part_set_2d
-      ~Pypdm.Pypdm.MeshLocation.n_part_cloud_set
-      ~Pypdm.Pypdm.MeshLocation.cloud_set
-      ~Pypdm.Pypdm.MeshLocation.compute
-      ~Pypdm.Pypdm.MeshLocation.dump_times
-      ~Pypdm.Pypdm.MeshLocation.located_get
-      ~Pypdm.Pypdm.MeshLocation.unlocated_get
-      ~Pypdm.Pypdm.MeshLocation.location_get
-      ~Pypdm.Pypdm.MeshLocation.points_in_elt_get
-      ~Pypdm.Pypdm.MeshLocation.cell_vertex_get
-      ~Pypdm.Pypdm.MeshLocation.part_to_part_get
+              .. warning::
+                Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+    
+    
+    
+    .. dropdown:: Ngon connectivity
 
+      .. tab-set::
 
-    .. rubric:: Source mesh definition
+          .. tab-item:: C
 
-    .. automethod:: Pypdm.Pypdm.MeshLocation.mesh_n_part_set
+            .. doxygenfunction:: PDM_mesh_location_part_set
 
-    .. automethod:: Pypdm.Pypdm.MeshLocation.part_set
 
-    .. automethod:: Pypdm.Pypdm.MeshLocation.nodal_part_set
 
-    .. automethod:: Pypdm.Pypdm.MeshLocation.part_set_2d
+          .. tab-item:: Fortran
 
-    .. automethod:: Pypdm.Pypdm.MeshLocation.nodal_part_set_2d
+            .. ifconfig:: enable_fortran_doc == 'ON'
 
-    .. rubric:: Target point clouds definition
+              .. f:autosubroutine:: PDM_mesh_location_part_set
 
-    .. automethod:: Pypdm.Pypdm.MeshLocation.n_part_cloud_set
+            .. ifconfig:: enable_fortran_doc == 'OFF'
 
-    .. automethod:: Pypdm.Pypdm.MeshLocation.cloud_set
+              .. warning::
+                Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
 
-    .. rubric:: Location computation
 
-    .. automethod:: Pypdm.Pypdm.MeshLocation.compute
 
-    .. automethod:: Pypdm.Pypdm.MeshLocation.dump_times
+          .. tab-item:: Python
 
-    .. rubric:: Results
+            .. ifconfig:: enable_python_doc == 'ON'
 
-    .. automethod:: Pypdm.Pypdm.MeshLocation.located_get
+              .. autofunction:: Pypdm.Pypdm.MeshLocation.part_set
+                :noindex:
+                
+            .. ifconfig:: enable_python_doc == 'OFF'
 
-    .. automethod:: Pypdm.Pypdm.MeshLocation.unlocated_get
+              .. warning::
+                Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+  
+  
+  
+  .. dropdown:: Surface mesh
 
-    .. automethod:: Pypdm.Pypdm.MeshLocation.location_get
+    .. dropdown:: Nodal connectivity
 
-    .. automethod:: Pypdm.Pypdm.MeshLocation.points_in_elt_get
+      .. tab-set::
 
-    .. automethod:: Pypdm.Pypdm.MeshLocation.cell_vertex_get
+          .. tab-item:: C
 
-    .. automethod:: Pypdm.Pypdm.MeshLocation.part_to_part_get
+            .. doxygenfunction:: PDM_mesh_location_nodal_part_set_2d
 
-.. ifconfig:: enable_python_doc == 'OFF'
 
-  .. warning::
-    Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+
+          .. tab-item:: Fortran
+
+            .. ifconfig:: enable_fortran_doc == 'ON'
+
+              .. f:autosubroutine:: PDM_mesh_location_nodal_part_set_2d
+
+            .. ifconfig:: enable_fortran_doc == 'OFF'
+
+              .. warning::
+                Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+
+
+
+          .. tab-item:: Python
+
+            .. ifconfig:: enable_python_doc == 'ON'
+
+              .. autofunction:: Pypdm.Pypdm.MeshLocation.nodal_part_set_2d
+                :noindex:
+
+            .. ifconfig:: enable_python_doc == 'OFF'
+
+              .. warning::
+                Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+    
+    
+    
+    .. dropdown:: Ngon connectivity
+
+      .. tab-set::
+
+          .. tab-item:: C
+
+            .. doxygenfunction:: PDM_mesh_location_part_set_2d
+
+
+
+          .. tab-item:: Fortran
+
+            .. ifconfig:: enable_fortran_doc == 'ON'
+
+              .. f:autosubroutine:: PDM_mesh_location_part_set_2d
+
+            .. ifconfig:: enable_fortran_doc == 'OFF'
+
+              .. warning::
+                Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+
+
+
+          .. tab-item:: Python
+
+            .. ifconfig:: enable_python_doc == 'ON'
+
+              .. autofunction:: Pypdm.Pypdm.MeshLocation.part_set_2d
+                :noindex:
+                
+            .. ifconfig:: enable_python_doc == 'OFF'
+
+              .. warning::
+                Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+
+
+
+
+.. dropdown:: *Optional* parameters
+
+  .. dropdown:: Geometric tolerance
+
+    The location algorithms relies on bounding-box tests to quickly find candidate pair of points and elements, before computing the exact location.
+    A target point will be considered as *located* if it lies in the bounding box of at least one source mesh element (even if it does not actually lie inside the element). 
+    These bounding boxes can be expanded using a relative tolerance. 
+    
+    By default, the tolerance is set to zero, but it can be adjusted.
+    This is especially useful for non-planar, surface meshes where alignment with cartesian axes might cause some detection misses if the tolerance is set too low. 
+    However, keep in mind that setting a very large tolerance will have a significant impact on performance.
+
+    We recommend keeping the tolerance between 0 and 0.1.
+
+    .. tab-set::
+
+      .. tab-item:: C
+
+        .. doxygenfunction:: PDM_mesh_location_tolerance_set
+
+
+
+      .. tab-item:: Fortran
+
+        .. ifconfig:: enable_fortran_doc == 'ON'
+
+          .. f:autosubroutine:: PDM_mesh_location_tolerance_set
+
+        .. ifconfig:: enable_fortran_doc == 'OFF'
+
+          .. warning::
+            Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+
+
+
+      .. tab-item:: Python
+
+        .. ifconfig:: enable_python_doc == 'ON'
+
+          .. autoattribute:: Pypdm.Pypdm.MeshLocation.tolerance
+            :noindex:
+
+        .. ifconfig:: enable_python_doc == 'OFF'
+
+          .. warning::
+            Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+
+
+  .. dropdown:: Preconditioning method
+
+    Experienced users can also choose the preconditioning method used in the first step of the location algorithm: 
+
+    .. tab-set::
+
+      .. tab-item:: C
+
+        .. doxygenfunction:: PDM_mesh_location_method_set
+
+
+
+      .. tab-item:: Fortran
+
+        .. ifconfig:: enable_fortran_doc == 'ON'
+
+          .. f:autosubroutine:: PDM_mesh_location_method_set
+
+        .. ifconfig:: enable_fortran_doc == 'OFF'
+
+          .. warning::
+            Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+
+
+
+      .. tab-item:: Python
+
+        .. ifconfig:: enable_python_doc == 'ON'
+
+          .. autoattribute:: Pypdm.Pypdm.MeshLocation.method
+            :noindex:
+
+        .. ifconfig:: enable_python_doc == 'OFF'
+
+          .. warning::
+            Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+
+
+
+
+.. dropdown:: Compute location
+
+  Once the target point clouds and source mesh have been set, the location can be computed: 
+
+  .. tab-set::
+
+    .. tab-item:: C
+
+      .. doxygenfunction:: PDM_mesh_location_compute
+
+
+
+    .. tab-item:: Fortran
+
+      .. ifconfig:: enable_fortran_doc == 'ON'
+
+        .. f:autosubroutine:: PDM_mesh_location_compute
+
+      .. ifconfig:: enable_fortran_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+
+
+
+    .. tab-item:: Python
+
+      .. ifconfig:: enable_python_doc == 'ON'
+
+        .. autofunction:: Pypdm.Pypdm.MeshLocation.compute
+          :noindex:
+
+      .. ifconfig:: enable_python_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+
+
+  Once the calculation is complete, you can optionally display the elapsed and CPU times:
+
+  .. tab-set::
+
+    .. tab-item:: C
+
+      .. doxygenfunction:: PDM_mesh_location_dump_times
+
+
+
+    .. tab-item:: Fortran
+
+      .. ifconfig:: enable_fortran_doc == 'ON'
+
+        .. f:autosubroutine:: PDM_mesh_location_dump_times
+
+      .. ifconfig:: enable_fortran_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+
+
+
+    .. tab-item:: Python
+
+      .. ifconfig:: enable_python_doc == 'ON'
+
+        .. autofunction:: Pypdm.Pypdm.MeshLocation.dump_times
+          :noindex:
+
+      .. ifconfig:: enable_python_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+
+
+.. dropdown:: Get location data
+
+  Once computed, the location data can retrieved either from the perspective of the target point cloud or from the perspective of the source mesh.
+
+  .. dropdown:: Target perspective
+
+    First, the number and IDs of located/unlocated points in each part:
+
+    .. tab-set::
+
+      .. tab-item:: C
+
+        .. doxygenfunction:: PDM_mesh_location_n_located_get
+        .. doxygenfunction:: PDM_mesh_location_located_get
+
+        .. doxygenfunction:: PDM_mesh_location_n_unlocated_get
+        .. doxygenfunction:: PDM_mesh_location_unlocated_get
+
+
+
+      .. tab-item:: Fortran
+
+        .. ifconfig:: enable_fortran_doc == 'ON'
+
+          .. f:autosubroutine:: PDM_mesh_location_n_located_get
+          .. f:autosubroutine:: PDM_mesh_location_located_get
+
+          .. f:autosubroutine:: PDM_mesh_location_n_unlocated_get
+          .. f:autosubroutine:: PDM_mesh_location_unlocated_get
+
+        .. ifconfig:: enable_fortran_doc == 'OFF'
+
+          .. warning::
+            Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+
+
+
+      .. tab-item:: Python
+
+        .. ifconfig:: enable_python_doc == 'ON'
+
+          .. autofunction:: Pypdm.Pypdm.MeshLocation.located_get
+            :noindex:
+          .. autofunction:: Pypdm.Pypdm.MeshLocation.unlocated_get
+            :noindex:
+
+        .. ifconfig:: enable_python_doc == 'OFF'
+
+          .. warning::
+            Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+
+
+    Second, the location data of located points:
+
+    .. tab-set::
+
+      .. tab-item:: C
+
+        .. doxygenfunction:: PDM_mesh_location_point_location_get
+
+
+
+      .. tab-item:: Fortran
+
+        .. ifconfig:: enable_fortran_doc == 'ON'
+
+          .. f:autosubroutine:: PDM_mesh_location_point_location_get
+
+        .. ifconfig:: enable_fortran_doc == 'OFF'
+
+          .. warning::
+            Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+
+
+
+      .. tab-item:: Python
+
+        .. ifconfig:: enable_python_doc == 'ON'
+
+          .. autofunction:: Pypdm.Pypdm.MeshLocation.location_get
+            :noindex:
+
+        .. ifconfig:: enable_python_doc == 'OFF'
+
+          .. warning::
+            Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+
+
+
+  .. dropdown:: Source perspective
+
+    .. tab-set::
+
+      .. tab-item:: C
+
+        .. doxygenfunction:: PDM_mesh_location_points_in_elt_get
+
+        .. doxygenfunction:: PDM_mesh_location_cell_vertex_get
+
+
+
+      .. tab-item:: Fortran
+
+        .. ifconfig:: enable_fortran_doc == 'ON'
+
+          .. f:autosubroutine:: PDM_mesh_location_points_in_elt_get
+
+          .. f:subroutine:: pdm_mesh_location_cell_vertex_get(mloc, i_part, cell_vtx_idx, cell_vtx)
+
+            Get the cell→vertex connectivity used for internal computations
+
+            .. note::
+              For non-standard elements, this connectivity is built by ParaDiGM and is necessary to associate
+              the ``points_weights`` array (returned by **pdm_mesh_location_points_in_elt_get**)
+              to the appropriate mesh vertices.
+
+            :p c_ptr mesh_loc[in]:           Mesh location instance
+            :p integer i_part[in]:           Partition identifier
+            :p integer(:) cell_vtx_idx[out]: Index for cell → vertex connectivity
+            :p integer(:) cell_vtx[out]:     Cell → vertex connectivity
+
+        .. ifconfig:: enable_fortran_doc == 'OFF'
+
+          .. warning::
+            Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+
+
+
+      .. tab-item:: Python
+
+        .. ifconfig:: enable_python_doc == 'ON'
+
+          .. autofunction:: Pypdm.Pypdm.MeshLocation.points_in_elt_get
+            :noindex:
+          .. autofunction:: Pypdm.Pypdm.MeshLocation.cell_vertex_get
+            :noindex:
+
+        .. ifconfig:: enable_python_doc == 'OFF'
+
+          .. warning::
+            Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+
+
+
+
+.. dropdown:: Data transfer
+
+  Data can be transferred between the source mesh and each point cloud using the :ref:`PDM_part_to_part <ptp>` instance created by Mesh Location.
+
+  .. tab-set::
+
+    .. tab-item:: C
+
+      .. doxygenfunction:: PDM_mesh_location_part_to_part_get
+
+
+
+    .. tab-item:: Fortran
+
+      .. ifconfig:: enable_fortran_doc == 'ON'
+
+        .. f:autosubroutine:: PDM_mesh_location_part_to_part_get
+
+      .. ifconfig:: enable_fortran_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+
+
+
+    .. tab-item:: Python
+
+      .. ifconfig:: enable_python_doc == 'ON'
+
+        .. autofunction:: Pypdm.Pypdm.MeshLocation.part_to_part_get
+          :noindex:
+
+      .. ifconfig:: enable_python_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+
+
+
+
+.. dropdown:: Finalization
+
+  .. tab-set::
+
+    .. tab-item:: C
+
+      .. doxygenfunction:: PDM_mesh_location_free
+
+
+
+    .. tab-item:: Fortran
+
+      .. ifconfig:: enable_fortran_doc == 'ON'
+
+        .. f:autosubroutine:: PDM_mesh_location_free
+
+      .. ifconfig:: enable_fortran_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+
+
+
+    .. tab-item:: Python
+
+      The instance is automatically freed by Python's garbage collector when it is no longer referenced
+
+
+
+

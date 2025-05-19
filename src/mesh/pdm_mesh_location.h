@@ -418,8 +418,6 @@ PDM_mesh_location_tolerance_set
  *
  * \brief Set the method for computing location (preconditioning stage)
  *
- * \note This is an optional setting.
- *
  * Admissible values are :
  *    - \p PDM_MESH_LOCATION_OCTREE         : Use point octree (default method)
  *    - \p PDM_MESH_LOCATION_DBBTREE        : Use bounding-box tree

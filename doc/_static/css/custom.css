@@ -193,6 +193,7 @@ table.docutils{ /*td:first-child, table.docutils th:first-child {*/
 
 
 /* API reference */
+dl.attribute,
 dl.subroutine,
 dl.method,
 dl.function {
