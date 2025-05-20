@@ -399,7 +399,18 @@ PDM_reader_gamma_dmesh_nodal
         }
       }
       // ---- Fix orientation for quads
-      // ---- TODO !
+      // ---- TODO : Add volume check to reorient if needed
+      for (PDM_g_num_t i=0; i<gn_quad; i++) {
+        PDM_g_num_t *tv  = gquad_vtx + 4*i;
+        PDM_g_num_t  tmp = tv[0];
+
+        gquad_vtx[4*i  ] = tv[3];
+        gquad_vtx[4*i+3] = tmp;
+
+        tmp              = tv[1];
+        gquad_vtx[4*i+1] = gquad_vtx[4*i+2];
+        gquad_vtx[4*i+2] = tmp; 
+      }
 
       if (0) {
         printf("flipped %d triangles / "PDM_FMT_G_NUM"\n", n_tria_flipped, gn_tria);
