@@ -220,7 +220,7 @@ foreach(lib_type IN LISTS LIB_TYPES)
   target_compile_definitions(pdm_${lib_type} PRIVATE PDM_USE_MULTIPART=0)
 
   if (PTSCOTCH_FOUND)
-    target_compile_definitions(pdm_${lib_type} PRIVATE PDM_HAVE_PTSCOTCH=1)
+    target_compile_definitions(pdm_${lib_type} PUBLIC PDM_HAVE_PTSCOTCH=1)
     target_link_libraries(pdm_${lib_type}
     PUBLIC
       PTScotch::PTScotch
@@ -230,7 +230,7 @@ foreach(lib_type IN LISTS LIB_TYPES)
   endif()
 
   if (PARMETIS_FOUND)
-    target_compile_definitions(pdm_${lib_type} PRIVATE PDM_HAVE_PARMETIS=1)
+    target_compile_definitions(pdm_${lib_type} PUBLIC PDM_HAVE_PARMETIS=1)
     target_link_libraries(pdm_${lib_type}
     PUBLIC
       ParMETIS::ParMETIS
@@ -238,7 +238,7 @@ foreach(lib_type IN LISTS LIB_TYPES)
   endif()
 
   if (BLAS_FOUND)
-    target_compile_definitions(pdm_${lib_type} PRIVATE PDM_HAVE_BLAS=1)
+    target_compile_definitions(pdm_${lib_type} PUBLIC PDM_HAVE_BLAS=1)
     target_link_libraries(pdm_${lib_type}
     PUBLIC
       BLAS::BLAS
@@ -246,7 +246,7 @@ foreach(lib_type IN LISTS LIB_TYPES)
   endif()
 
   if (LAPACK_FOUND)
-    target_compile_definitions(pdm_${lib_type} PRIVATE PDM_HAVE_LAPACK=1)
+    target_compile_definitions(pdm_${lib_type} PUBLIC PDM_HAVE_LAPACK=1)
     target_link_libraries(pdm_${lib_type}
     PUBLIC
       LAPACK::LAPACK
@@ -289,6 +289,9 @@ endif()
 include(CTest)
 if (PDM_ENABLE_TESTS)
   add_subdirectory(test)
+  if(PDM_ENABLE_EXTENSION_PDMA)
+    add_subdirectory(extensions/paradigma/test)
+  endif()
 endif()
 
 # pdm_run
