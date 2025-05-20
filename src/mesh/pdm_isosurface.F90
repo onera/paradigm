@@ -145,20 +145,6 @@ module pdm_isosurface
           type(c_ptr),    value :: value
 
         end subroutine pdm_isosurface_field_function_t
-
-        subroutine PDM_isosurface_field_function_set_cf (isos, &
-                                                         id_isosurface, &
-                                                         pdm_isosurface_field_function_t) &
-        bind(c, name="PDM_isosurface_field_function_set")
-
-          use iso_c_binding
-          implicit none
-
-          type(c_ptr),    value :: isos
-          integer(c_int), value :: id_isosurface
-          type(c_funptr), value :: pdm_isosurface_field_function_t
-
-        end subroutine PDM_isosurface_field_function_set_cf
       end interface
 
 
