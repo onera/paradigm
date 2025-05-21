@@ -275,7 +275,8 @@ if(PDM_ENABLE_Fortran)
   test_fortran_create (pdm_t_isosurface_nodal_f           1 PDM_LIST_TEST PDM_LIST_NRANK)
 endif()
 
-# add_subdirectory(tutorial)
+
+add_subdirectory(tutorial)
 
 set (PDM_LIST_TEST  ${PDM_LIST_TEST}  PARENT_SCOPE )
 set (PDM_LIST_NRANK ${PDM_LIST_NRANK} PARENT_SCOPE )
