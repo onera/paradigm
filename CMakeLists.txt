@@ -76,6 +76,7 @@ option(PDM_ENABLE_PYTHON_BINDINGS "Build Python module"                       OF
 option(PDM_ENABLE_TESTS           "Make CTest run the tests"                  ON )
 option(PDM_ENABLE_UNIT_TEST       "Enable unit test "                         OFF)
 option(PDM_ENABLE_DOC             "Enable Sphinx documentation"               OFF)
+option(PDM_ENABLE_TRAINING        "Enable training Jupyter Notebooks"         OFF)
 
 if (PDM_ENABLE_CUDA)
   enable_language(CUDA)
@@ -335,6 +336,15 @@ configure_file(${PROJECT_SOURCE_DIR}/script/pdm_launch_python.in "${PROJECT_BINA
 #  configure_file(${PROJECT_SOURCE_DIR}/script/pdm_run.in "${PROJECT_BINARY_DIR}/extensions/paradigma/test/pdm_run"
 #                @ONLY)
 # endif()
+
+if (PDM_ENABLE_TRAINING)
+  add_subdirectory(training)
+endif()
+
+# ----------------------------------------------------------------------
+# Documentation
+# ----------------------------------------------------------------------
+add_subdirectory(doc)
 
 # ----------------------------------------------------------------------
 # Summary

@@ -55,16 +55,16 @@ if(PDM_ENABLE_DOC)
     endif()
 
     if (PDM_ENABLE_SHARED)
-        set(DOXYGEN_DEP pdm_shared)
+        set(DOXYGEN_DEP pdm_SHARED)
     else ()
-        set(DOXYGEN_DEP pdm_static)
+        set(DOXYGEN_DEP pdm_STATIC)
     endif()
 
     if(PDM_ENABLE_Fortran)
       if (PDM_ENABLE_SHARED)
-          set(DOXYGEN_DEP ${DOXYGEN_DEP} pdmf_shared)
+          set(DOXYGEN_DEP ${DOXYGEN_DEP} pdmf_SHARED)
       else ()
-          set(DOXYGEN_DEP ${DOXYGEN_DEP} pdmf_static)
+          set(DOXYGEN_DEP ${DOXYGEN_DEP} pdmf_STATIC)
       endif()
     endif()
 
@@ -75,7 +75,7 @@ if(PDM_ENABLE_DOC)
                        DEPENDS ${DOXYGEN_DEP} # NB : trying to do documentation after module generation
                        VERBATIM)
 
-    add_custom_target(doxygen ALL DEPENDS ${DOXYGEN_INDEX_FILE} pdm)
+    add_custom_target(doxygen ALL DEPENDS ${DOXYGEN_INDEX_FILE})
 
 
     #------------------------------------------------------------------------------
