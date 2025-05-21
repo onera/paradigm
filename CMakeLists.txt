@@ -184,6 +184,7 @@ foreach(lib_type IN LISTS LIB_TYPES)
   if(PDM_ENABLE_Fortran)
     add_library(pdmf_${lib_type} ${lib_type} ${all_src_fortran_files})
     set_target_properties(pdmf_${lib_type} PROPERTIES OUTPUT_NAME "pdmf")
+    set_target_properties(pdmf_${lib_type} PROPERTIES Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/modules/)
   endif()
 
   target_include_directories(pdm_${lib_type} PUBLIC
@@ -394,5 +395,10 @@ endforeach()
 file(GLOB_RECURSE all_headers "${CMAKE_SOURCE_DIR}/src/*.h")
 set(install_headers ${all_headers})
 list(FILTER install_headers EXCLUDE REGEX ".*\\_priv\\.h$")
+
+if(PDM_ENABLE_Fortran)
+  install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/modules/ DESTINATION include/)
+endif()
+
 
 install(FILES ${install_headers} DESTINATION include)
