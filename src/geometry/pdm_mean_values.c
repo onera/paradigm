@@ -748,10 +748,7 @@ PDM_mean_values_polyhedron
       // theta
       l = sqrt (_distance2 (ui, v));
       theta[i] = 2.0 * asin(0.5 * l);
-
     }
-
-
 
     PDM_bool_t outlier = PDM_FALSE;
     for (i = 0; i < n_vtx_face; i++) {

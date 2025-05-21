@@ -43,8 +43,6 @@ MPI_TEST_CASE("[pdm_mesh_location] - 2D nodal", 1) {
   PDM_mesh_location_tolerance_set(ml, 1e-16);
 
 
-
-
   SUBCASE("tria") {
     n_vtx = 3;
     PDM_malloc(vtx_coord, 3*n_vtx, double);
@@ -218,9 +216,6 @@ MPI_TEST_CASE("[pdm_mesh_location] - 2D nodal", 1) {
     expected_weights[3] = 1.292956678e-05;
     expected_weights[4] = 3.210510032e-01;
 
-
-
-
   }
   SUBCASE("polygon concave"){
     n_vtx = 8;
@@ -306,6 +301,7 @@ MPI_TEST_CASE("[pdm_mesh_location] - 2D nodal", 1) {
     expected_weights[5] =  6.5344852282e-06;
     expected_weights[6] =  1.1126286778e-05;
     expected_weights[7] =  1.1126393782e-05;
+
   }
 
   PDM_mesh_location_mesh_n_part_set(ml, 1);
@@ -353,8 +349,6 @@ MPI_TEST_CASE("[pdm_mesh_location] - 2D nodal", 1) {
                                       &points_weights,
                                       &points_dist2,
                                       &points_projected_coords);
-
-
 
   int located = PDM_mesh_location_n_located_get(ml, 0, 0);
 
@@ -543,7 +537,6 @@ MPI_TEST_CASE("[pdm_mesh_location] - 2D", 1) {
   CHECK(unlocated == expected_unlocated);
 
   for (int i=0; i<n_vtx; i++){
-    printf("%.16e\n", points_weights[i]);
     CHECK(fabs(points_weights[i] - expected_weights[i]) < tol);
   }
 
@@ -949,10 +942,6 @@ MPI_TEST_CASE("[pdm_mesh_location] - 3D nodal", 1) {
 }
 
 
-
-
-
-
 MPI_TEST_CASE("[pdm_mesh_location] - 3D", 1) {
 
   PDM_MPI_Comm comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
@@ -1254,6 +1243,7 @@ MPI_TEST_CASE("[pdm_mesh_location] - 3D", 1) {
     expected_weights[5] = 5.594466685e-02;
     expected_weights[6] = 4.272605627e-02;
     expected_weights[7] = 3.125833420e-01;
+    
   }
 
 

@@ -260,7 +260,6 @@ MPI_TEST_CASE("[PDM_ho_basis] quad",1) {
     for (int p=0; p<n_pts; p++){
       double weights_summed = 0;
       for (int n=0; n<n_nodes; n++){
-        // printf("weights : %.12f\n", weights[n_nodes*p+n]);
         CHECK(fabs(weights[n_nodes*p+n] - weights_expected[n_nodes*p+n]) < tol);
         weights_summed +=weights[n_nodes*p+n];
       }
