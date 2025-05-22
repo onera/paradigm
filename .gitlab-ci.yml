@@ -269,7 +269,7 @@ unit_test:
     - if [ "${BUILD_TYPE}" == "Coverage" ]; then
     # -   find src -name "*.gcno" -exec gcov -b -l -p -c {} + || true
     # -   find extensions/paradigma/src -name "*.gcno" -exec gcov -b -l -p -c {} + || true
-    -   find * -name "*.gcno" -exec gcov -b -l -p -c {} +
+    -   find * -name "*.gcno" -exec gcov -b -l -p -c {} + || true
     -   cd $CUSTOM_CI_DIR/build$MATRIX_KEY
     -   gcovr --gcov-ignore-parse-errors -g -k --xml-pretty --print-summary --root $CUSTOM_CI_DIR --object-directory $CUSTOM_CI_DIR/build$MATRIX_KEY --output $INIT_ORIGINAL_FOLDER/coverage.xml
     - fi
