@@ -90,6 +90,7 @@ program tp_mesh_location
   double precision, pointer          :: plane_isovalues(:)
 
   ! Writer
+  integer :: visu = 0
   character(len=256) :: filename
   character(len=17)  :: fmt = "(A18 I1 A8 I1 A4)"
 
@@ -412,58 +413,57 @@ program tp_mesh_location
                                     n_part1, &
                                     n_part2)
 
-  write(*,*) n_part1
-  write(*,*) n_part2
-
 
   !  Write geometry
-  do i_part = 1, n_part_out
+  if (visu == 1) then
+    do i_part = 1, n_part_out
 
-  
-    isos_n_face = PDM_isosurface_pconnectivity_get (isos,                           &
-                                                    id_isosurface,                  &
-                                                    i_part-1,                       &
-                                                    PDM_CONNECTIVITY_TYPE_FACE_VTX, &
-                                                    isos_face_vtx_idx,              &
-                                                    isos_face_vtx,                  &
-                                                    PDM_OWNERSHIP_KEEP)
+    
+      isos_n_face = PDM_isosurface_pconnectivity_get (isos,                           &
+                                                      id_isosurface,                  &
+                                                      i_part-1,                       &
+                                                      PDM_CONNECTIVITY_TYPE_FACE_VTX, &
+                                                      isos_face_vtx_idx,              &
+                                                      isos_face_vtx,                  &
+                                                      PDM_OWNERSHIP_KEEP)
 
-    isos_n_face = PDM_isosurface_ln_to_gn_get (isos,                 &
-                                               id_isosurface,        &
-                                               i_part-1,             &
-                                               PDM_MESH_ENTITY_FACE, &
-                                               isos_face_ln_to_gn,   &
-                                               PDM_OWNERSHIP_KEEP)
+      isos_n_face = PDM_isosurface_ln_to_gn_get (isos,                 &
+                                                 id_isosurface,        &
+                                                 i_part-1,             &
+                                                 PDM_MESH_ENTITY_FACE, &
+                                                 isos_face_ln_to_gn,   &
+                                                 PDM_OWNERSHIP_KEEP)
 
 
-    isos_n_vtx = PDM_isosurface_pvtx_coord_get (isos,           &
-                                                id_isosurface,  &
-                                                i_part-1,       &
-                                                isos_vtx_coord, &
+      isos_n_vtx = PDM_isosurface_pvtx_coord_get (isos,           &
+                                                  id_isosurface,  &
+                                                  i_part-1,       &
+                                                  isos_vtx_coord, &
+                                                  PDM_OWNERSHIP_KEEP)
+
+      isos_n_vtx = PDM_isosurface_ln_to_gn_get (isos,                &
+                                                id_isosurface,       &
+                                                i_part-1,            &
+                                                PDM_MESH_ENTITY_VTX, &
+                                                isos_vtx_ln_to_gn,   &
                                                 PDM_OWNERSHIP_KEEP)
 
-    isos_n_vtx = PDM_isosurface_ln_to_gn_get (isos,                &
-                                              id_isosurface,       &
-                                              i_part-1,            &
-                                              PDM_MESH_ENTITY_VTX, &
-                                              isos_vtx_ln_to_gn,   &
-                                              PDM_OWNERSHIP_KEEP)
+      ! filename = "isosurface_function.vtk" 
+      write(filename, fmt) "isosurface_i_part_", i_part, "_i_rank_", i_rank, ".vtk"
+      ! write(*,*) ">", trim(filename), "<"
 
-    ! filename = "isosurface_function" + ".vtk" 
-    write(filename, fmt) "isosurface_i_part_", i_part, "_i_rank_", i_rank, ".vtk"
-    write(*,*) ">", trim(filename), "<"
+      call PDM_vtk_write_polydata (trim(filename), &
+                                   isos_n_vtx, &
+                                   isos_vtx_coord, &
+                                   isos_vtx_ln_to_gn, &
+                                   isos_n_face, &
+                                   isos_face_vtx_idx, &
+                                   isos_face_vtx, &
+                                   isos_face_ln_to_gn, &
+                                   isos_face_color)
 
-    call PDM_vtk_write_polydata (trim(filename), &
-                                 isos_n_vtx, &
-                                 isos_vtx_coord, &
-                                 isos_vtx_ln_to_gn, &
-                                 isos_n_face, &
-                                 isos_face_vtx_idx, &
-                                 isos_face_vtx, &
-                                 isos_face_ln_to_gn, &
-                                 isos_face_color)
-
-  end do
+    end do
+  end if
 
 
 
