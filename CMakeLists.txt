@@ -32,9 +32,9 @@ set(SUPPORTED_CXX_STANDARDS 11 14 17 20)
 #------------------------------------------------------------------------------
 # Default compiler flags
 #------------------------------------------------------------------------------
-# A mettre uniquement si on est parent ?
-include(${CMAKE_MODULE_PATH}/default_flags.cmake)
-
+if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
+  include(${CMAKE_MODULE_PATH}/default_flags.cmake)
+endif()
 
 # ------------------------------------------------------------------------------
 # Dependencies
