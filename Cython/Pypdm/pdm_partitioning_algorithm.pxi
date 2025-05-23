@@ -405,11 +405,13 @@ def generate_entity_graph_comm(MPI.Comm                                      com
     entity_distribution_data = np_to_gnum_pointer(entity_distribution)
 
   cdef int _n_part = len(pn_entity)
+  assert len(pentity_ln_to_gn) == _n_part
 
   cdef int          * _pn_entity        = list_to_int_pointer(pn_entity)
   cdef PDM_g_num_t ** _pentity_ln_to_gn = np_list_to_gnum_pointers(pentity_ln_to_gn)
   cdef int         ** _pentity_hint     = NULL
   if pentity_hint is not None:
+    assert len(pentity_hint) == _n_part
     _pentity_hint = np_list_to_int_pointers(pentity_hint)
 
   cdef int **_pproc_bound_idx
