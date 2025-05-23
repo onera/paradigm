@@ -49,6 +49,18 @@ cdef extern from "pdm_partitioning_algorithm.h":
                                                  int          ***lnum_owned_entity,
                                                  PDM_MPI_Comm    comm)
 
+    void PDM_part_generate_entity_graph_comm(const PDM_MPI_Comm   comm,
+                                             const PDM_g_num_t   *part_distribution,
+                                             const PDM_g_num_t   *entity_distribution,
+                                             const int            n_part,
+                                             const int           *pn_entity,
+                                             const PDM_g_num_t  **pentity_ln_to_gn,
+                                             const int          **pentity_hint,
+                                                   int         ***pproc_bound_idx,
+                                                   int         ***ppart_bound_idx,
+                                                   int         ***pentity_bound,
+                                                   int         ***pentity_priority)
+
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
@@ -345,3 +357,70 @@ def compute_graph_comm_entity_ownership(int                                     
   free(_lnum_owned_entity)
 
   return n_owned_entity, lnum_owned_entity
+
+# ===================================================================================
+def generate_entity_graph_comm(MPI.Comm                                      comm,
+                               NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] part_distribution,
+                               NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] entity_distribution,
+                               int                                           n_part,
+                               list                                          pn_entity,
+                               list                                          pentity_ln_to_gn,
+                               list                                          pentity_hint):
+
+  """
+  Compute communication graph of entities from global numbering
+  """
+
+  # > Convert mpi4py -> PDM_MPI
+  cdef MPI.MPI_Comm c_comm = comm.ob_mpi
+  cdef PDM_MPI_Comm PDMC   = PDM_MPI_mpi_2_pdm_mpi_comm(&c_comm)
+
+  cdef int n_rank = comm.Get_size()
+
+  cdef PDM_g_num_t * part_distribution_data   = np_to_gnum_pointer(part_distribution)
+  cdef PDM_g_num_t * entity_distribution_data = NULL
+  if entity_distribution is not None:
+    entity_distribution_data = np_to_gnum_pointer(entity_distribution)
+
+  cdef int _n_part = n_part
+
+  cdef int          * _pn_entity        = list_to_int_pointer(pn_entity)
+  cdef PDM_g_num_t ** _pentity_ln_to_gn = np_list_to_gnum_pointers(pentity_ln_to_gn)
+  cdef int         ** _pentity_hint     = NULL
+  if pentity_hint is not None:
+    _pentity_hint = np_list_to_int_pointers(pentity_hint)
+
+  cdef int **_pproc_bound_idx
+  cdef int **_ppart_bound_idx
+  cdef int **_pentity_bound
+  cdef int **_pentity_priority
+
+  PDM_part_generate_entity_graph_comm(PDMC,
+                                      part_distribution_data,
+                                      entity_distribution_data,
+                                      _n_part,
+                                      _pn_entity,
+               <const PDM_g_num_t **> _pentity_ln_to_gn,
+               <const int         **> _pentity_hint,
+                                      &_pproc_bound_idx,
+                                      &_ppart_bound_idx,
+                                      &_pentity_bound,
+                                      &_pentity_priority)
+
+  list_bound_part = list()
+  for i_part in range(n_part):
+    dict_bound_part = {'np_part_bound_proc_idx': create_numpy_or_none_i(_pproc_bound_idx [i_part], n_rank + 1),
+                       'np_part_bound_part_idx': create_numpy_or_none_i(_ppart_bound_idx [i_part], part_distribution[n_rank] + 1),
+                       'np_part_bound'         : create_numpy_or_none_i(_pentity_bound   [i_part], 4*_ppart_bound_idx[i_part][part_distribution[n_rank]]),
+                       'np_part_priority'      : create_numpy_or_none_i(_pentity_priority[i_part], pn_entity[i_part])}
+    list_bound_part.append(dict_bound_part)
+
+  free(_pn_entity)
+  free(_pproc_bound_idx)
+  free(_ppart_bound_idx)
+  free(_pentity_bound)
+  free(_pentity_priority)
+  free(_pentity_ln_to_gn)
+  free(_pentity_hint)
+
+  return list_bound_part
