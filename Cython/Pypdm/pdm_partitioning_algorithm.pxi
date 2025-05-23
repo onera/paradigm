@@ -362,13 +362,35 @@ def compute_graph_comm_entity_ownership(int                                     
 def generate_entity_graph_comm(MPI.Comm                                      comm,
                                NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] part_distribution,
                                NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] entity_distribution,
-                               int                                           n_part,
                                list                                          pn_entity,
                                list                                          pentity_ln_to_gn,
                                list                                          pentity_hint):
 
   """
-  Compute communication graph of entities from global numbering
+  generate_entity_graph_comm(comm, part_distribution, entity_distribution, n_part, pn_entity, pentity_ln_to_gn, pentity_hint)
+
+  Parameters:
+    comm                (MPI.Comm)                              : MPI communicator
+    part_distribution   (np.ndarray[np.npy_pdm_gnum_t])         : Distribution of partitions
+    entity_distribution (np.ndarray[np.npy_pdm_gnum_t])         : Distribution of entities
+    pn_entity           (list of int)                           : Number of entities per partition
+    pentity_ln_to_gn    (list of np.ndarray[np.npy_pdm_gnum_t]) : Global IDs of entities
+    pentity_hint        (list of np.ndarray[np.int32_t])        : Can be used to indicate whether (1) or not (0) an entity is potentially
+                                                                  shared with an other partition in order to minimize exchanged data
+
+  Returns:
+    List of dictionaries. For each partition:
+      - ``"np_part_bound_proc_idx"`` () : Indexes of communication information related to the
+                                          other procs (size = n_rank+1)
+      - ``"np_part_bound_part_idx"`` () : Indexes of communication information related to the
+                                          other (global id) parts (size = part_distribution[n_rank]+1)
+      - ``"np_part_bound"``          () : 4-tuple communication information:
+                                          (local id, opposite proc number, opposite part number on opposite proc,
+                                          local id in the opposite partition)
+                                          (size = 4*np_part_bound_part_idx[part_distribution[n_rank]])
+      - ``"np_part_priority"``       () : Indicate whether the entity exists only on the current rank (-1) or
+                                          or the lowest rank index owning the entity.
+                                          (size = Number of entities per partition in the partition)
   """
 
   # > Convert mpi4py -> PDM_MPI
@@ -382,7 +404,7 @@ def generate_entity_graph_comm(MPI.Comm                                      com
   if entity_distribution is not None:
     entity_distribution_data = np_to_gnum_pointer(entity_distribution)
 
-  cdef int _n_part = n_part
+  cdef int _n_part = len(pn_entity)
 
   cdef int          * _pn_entity        = list_to_int_pointer(pn_entity)
   cdef PDM_g_num_t ** _pentity_ln_to_gn = np_list_to_gnum_pointers(pentity_ln_to_gn)
@@ -408,7 +430,7 @@ def generate_entity_graph_comm(MPI.Comm                                      com
                                       &_pentity_priority)
 
   list_bound_part = list()
-  for i_part in range(n_part):
+  for i_part in range(_n_part):
     dict_bound_part = {'np_part_bound_proc_idx': create_numpy_or_none_i(_pproc_bound_idx [i_part], n_rank + 1),
                        'np_part_bound_part_idx': create_numpy_or_none_i(_ppart_bound_idx [i_part], part_distribution[n_rank] + 1),
                        'np_part_bound'         : create_numpy_or_none_i(_pentity_bound   [i_part], 4*_ppart_bound_idx[i_part][part_distribution[n_rank]]),

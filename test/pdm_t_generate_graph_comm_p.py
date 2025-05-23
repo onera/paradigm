@@ -53,7 +53,6 @@ part_distribution = np.array([0, 2, 5, 6]).astype(PDM.npy_pdm_gnum_dtype)
 data = PDM.generate_entity_graph_comm(comm,
                                       part_distribution,
                                       None,
-                                      n_part,
                                       n_entity,
                                       entity_ln_to_gn,
                                       None)
