@@ -380,17 +380,17 @@ def generate_entity_graph_comm(MPI.Comm                                      com
 
   Returns:
     List of dictionaries. For each partition:
-      - ``"np_part_bound_proc_idx"`` () : Indexes of communication information related to the
-                                          other procs (size = n_rank+1)
-      - ``"np_part_bound_part_idx"`` () : Indexes of communication information related to the
-                                          other (global id) parts (size = part_distribution[n_rank]+1)
-      - ``"np_part_bound"``          () : 4-tuple communication information:
-                                          (local id, opposite proc number, opposite part number on opposite proc,
-                                          local id in the opposite partition)
-                                          (size = 4*np_part_bound_part_idx[part_distribution[n_rank]])
-      - ``"np_part_priority"``       () : Indicate whether the entity exists only on the current rank (-1) or
-                                          or the lowest rank index owning the entity.
-                                          (size = Number of entities per partition in the partition)
+      - ``"np_part_bound_proc_idx"`` (np.ndarray[np.int32_t]) : Indexes of communication information related to the
+                                                                other procs (size = n_rank+1)
+      - ``"np_part_bound_part_idx"`` (np.ndarray[np.int32_t]) : Indexes of communication information related to the
+                                                                other (global id) parts (size = part_distribution[n_rank]+1)
+      - ``"np_part_bound"``          (np.ndarray[np.int32_t]) : 4-tuple communication information:
+                                                                (local id, opposite proc number, opposite part number on opposite proc,
+                                                                local id in the opposite partition)
+                                                                (size = 4*np_part_bound_part_idx[part_distribution[n_rank]])
+      - ``"np_part_priority"``       (np.ndarray[np.int32_t]) : Indicate whether the entity exists only on the current rank (-1) or
+                                                                or the lowest rank index owning the entity.
+                                                                (size = Number of entities per partition in the partition)
   """
 
   # > Convert mpi4py -> PDM_MPI
