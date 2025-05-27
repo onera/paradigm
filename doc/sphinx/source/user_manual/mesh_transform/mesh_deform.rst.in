@@ -3,198 +3,225 @@
 Mesh Deformation
 ================
 
-C API
------
+API
+"""
 
-Enumerators
-~~~~~~~~~~~
+.. dropdown:: Initialization
 
-.. doxygenenum:: PDM_clustering_kind_t
 
-Initialization
-~~~~~~~~~~~~~~
+  .. tab-set::
 
-.. doxygenfunction:: PDM_mesh_deform_create
+    .. tab-item:: C
 
+      .. doxygenfunction:: PDM_mesh_deform_create
 
-Set inputs
-~~~~~~~~~~
 
-.. doxygenfunction:: PDM_mesh_deform_surf_part_set
 
-.. doxygenfunction:: PDM_mesh_deform_cloud_part_set
+    .. tab-item:: Fortran
 
-Perform deformation
-~~~~~~~~~~~~~~~~~~~
+      .. ifconfig:: enable_fortran_doc == 'ON'
 
-.. doxygenfunction:: PDM_mesh_deform_compute
+        .. f:autosubroutine:: PDM_mesh_deform_create
 
-.. doxygenfunction:: PDM_mesh_deform_cloud_displ_finalize
+      .. ifconfig:: enable_fortran_doc == 'OFF'
 
-Get outputs
-~~~~~~~~~~~
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
 
-.. doxygenfunction:: PDM_mesh_deform_n_aux_geom_get
 
-.. doxygenfunction:: PDM_mesh_deform_cloud_block_n_points_get
 
-.. doxygenfunction:: PDM_mesh_deform_cloud_block_buffer_size_get
+    .. tab-item:: Python
 
-.. doxygenfunction:: PDM_mesh_deform_cloud_block_buffer_from_surf_get
+      .. ifconfig:: enable_python_doc == 'ON'
 
-.. doxygenfunction:: PDM_mesh_deform_cloud_block_get
+        .. autofunction:: Pypdm.Pypdm.MeshDeform.__init__
+          :noindex:
 
-.. doxygenfunction:: PDM_mesh_deform_cloud_n_points_part_get
+      .. ifconfig:: enable_python_doc == 'OFF'
 
-.. doxygenfunction:: PDM_mesh_deform_cloud_displ_part_get
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
 
-Finalize
-~~~~~~~~
 
-.. doxygenfunction:: PDM_mesh_deform_free
 
-Timers
-~~~~~~
 
-.. doxygenfunction:: PDM_mesh_deform_dump_times
+.. dropdown:: Set inputs
 
-Fortran API
------------
 
-.. ifconfig:: enable_fortran_doc == 'ON'
+  .. tab-set::
 
-  Initialization
-  ~~~~~~~~~~~~~~
+    .. tab-item:: C
 
-  .. f:autosubroutine:: PDM_mesh_deform_create
+      .. doxygenfunction:: PDM_mesh_deform_surf_part_set
+      .. doxygenfunction:: PDM_mesh_deform_cloud_part_set
 
-  Set inputs
-  ~~~~~~~~~~
 
-  .. f:autosubroutine:: PDM_mesh_deform_surf_part_set
 
-  .. f:autosubroutine:: PDM_mesh_deform_cloud_part_set
+    .. tab-item:: Fortran
 
-  Perform deformation
-  ~~~~~~~~~~~~~~~~~~~
+      .. ifconfig:: enable_fortran_doc == 'ON'
 
-  .. f:subroutine:: PDM_mesh_deform_compute(def)
+        .. f:autosubroutine:: PDM_mesh_deform_create
+        .. f:autosubroutine:: PDM_mesh_deform_create
 
-    Compute clusters and source to target connectivity
+      .. ifconfig:: enable_fortran_doc == 'OFF'
 
-    :param c_ptr def [inout]: C pointer to PDM_mesh_deform_t instance
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
 
-  .. f:subroutine:: PDM_mesh_deform_cloud_displ_finalize(def)
 
-    Finalize the computation of target cloud points displacements. Cloud points
-    are reequilibrated in block. Exchanges back to partition are performed here.
-    PDM_mesh_deform_cloud_displ_finalize is to be called after computing
-    target displacements according to user-defined mesh deformation strategy
-    (inverse distance weighting for example).
 
-    :param c_ptr def [inout]: C pointer to PDM_mesh_deform_t instance
+    .. tab-item:: Python
 
-  Get outputs
-  ~~~~~~~~~~~
+      .. ifconfig:: enable_python_doc == 'ON'
 
-  .. f:autosubroutine:: PDM_mesh_deform_cloud_block_buffer_from_surf_get
+        .. autofunction:: Pypdm.Pypdm.MeshDeform.surf_part_set
+          :noindex:
+        .. autofunction:: Pypdm.Pypdm.MeshDeform.cloud_part_set
+          :noindex:
 
-  .. f:autosubroutine:: PDM_mesh_deform_cloud_block_get
+      .. ifconfig:: enable_python_doc == 'OFF'
 
-  .. f:autosubroutine:: PDM_mesh_deform_cloud_n_points_part_get
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
 
-  .. f:autosubroutine:: PDM_mesh_deform_cloud_displ_part_get
 
-  .. f:function:: PDM_mesh_deform_n_aux_geom_get(def) result(n_aux_geom)
 
-    Get number of auxiliary geometric variables
 
-    :param c_ptr   def        [in]:  C pointer to PDM_mesh_deform_t instance
-    :param integer n_aux_geom [out]: Number of auxiliary geometric variables
+.. dropdown:: Perform deformation
 
-  .. f:function:: PDM_mesh_deform_cloud_block_n_points_get(def) result(n_points)
 
-    Get number of points in block
+  .. tab-set::
 
-    :param c_ptr   def      [in]:  C pointer to PDM_mesh_deform_t instance
-    :param integer n_points [out]: Number of points in block
+    .. tab-item:: C
 
-  .. f:function:: PDM_mesh_deform_cloud_block_buffer_size_get(def) result(s_buffer)
+      .. doxygenfunction:: PDM_mesh_deform_compute
+      .. doxygenfunction:: PDM_mesh_deform_cloud_displ_finalize
+      .. doxygenfunction:: PDM_mesh_deform_dump_times
 
-    Get size of block buffer
 
-    :param c_ptr   def      [in]:  C pointer to PDM_mesh_deform_t instance
-    :param integer s_buffer [out]: Size of block buffer
 
-  Finalize
-  ~~~~~~~~
+    .. tab-item:: Fortran
 
-  .. f:subroutine:: PDM_mesh_deform_free(def)
+      .. ifconfig:: enable_fortran_doc == 'ON'
 
-    Free PDM_mesh_deform_t instance
+        .. f:autosubroutine:: PDM_mesh_deform_compute
+        .. f:autosubroutine:: PDM_mesh_deform_cloud_displ_finalize
+        .. f:autosubroutine:: PDM_mesh_deform_dump_times
 
-    :param c_ptr def [inout]: C pointer to PDM_mesh_deform_t instance
+      .. ifconfig:: enable_fortran_doc == 'OFF'
 
-  Timers
-  ~~~~~~
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
 
-  .. f:subroutine:: PDM_mesh_deform_dump_times(def)
 
-    Get execution times
 
-    :param c_ptr def [inout]: C pointer to PDM_mesh_deform_t instance
+    .. tab-item:: Python
 
-Python API
-----------
+      .. ifconfig:: enable_python_doc == 'ON'
 
-.. ifconfig:: enable_python_doc == 'ON'
+        .. autofunction:: Pypdm.Pypdm.MeshDeform.compute
+          :noindex:
+        .. autofunction:: Pypdm.Pypdm.MeshDeform.cloud_displ_finalize
+          :noindex:
+        .. autofunction:: Pypdm.Pypdm.MeshDeform.dump_times
+          :noindex:
 
-  .. py:class:: MeshDeform
+      .. ifconfig:: enable_python_doc == 'OFF'
 
-    Python object to perform mesh deformation.
-    Once initialized, all the following
-    methods apply to a :class:`MeshDeform` instance.
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
 
-    .. rubric:: Initialization
 
-    .. autofunction:: Pypdm.Pypdm.MeshDeform.__cinit__
 
-    .. rubric:: Methods summary
 
-    .. autosummary::
-      :nosignatures:
+.. dropdown:: Get outputs
 
-      ~Pypdm.Pypdm.MeshDeform.surf_part_set
-      ~Pypdm.Pypdm.MeshDeform.cloud_part_set
-      ~Pypdm.Pypdm.MeshDeform.compute
-      ~Pypdm.Pypdm.MeshDeform.cloud_displ_finalize
-      ~Pypdm.Pypdm.MeshDeform.cloud_n_points_part_get
-      ~Pypdm.Pypdm.MeshDeform.cloud_displ_part_get
-      ~Pypdm.Pypdm.MeshDeform.n_aux_geom
-      ~Pypdm.Pypdm.MeshDeform.cloud_block_n_points
-      ~Pypdm.Pypdm.MeshDeform.cloud_block_buffer_from_surf_get
-      ~Pypdm.Pypdm.MeshDeform.cloud_block_get
-      ~Pypdm.Pypdm.MeshDeform.dump_times
 
-    .. rubric:: Set inputs
+  .. tab-set::
 
-    .. automethod:: Pypdm.Pypdm.MeshDeform.surf_part_set
-    .. automethod:: Pypdm.Pypdm.MeshDeform.cloud_part_set
+    .. tab-item:: C
 
-    .. rubric:: Perform deformation
+      .. doxygenfunction:: PDM_mesh_deform_n_aux_geom_get
+      .. doxygenfunction:: PDM_mesh_deform_cloud_block_n_points_get
+      .. doxygenfunction:: PDM_mesh_deform_cloud_block_buffer_size_get
+      .. doxygenfunction:: PDM_mesh_deform_cloud_block_buffer_from_surf_get
+      .. doxygenfunction:: PDM_mesh_deform_cloud_block_get
+      .. doxygenfunction:: PDM_mesh_deform_cloud_n_points_part_get
+      .. doxygenfunction:: PDM_mesh_deform_cloud_displ_part_get
 
-    .. automethod:: Pypdm.Pypdm.MeshDeform.compute
-    .. automethod:: Pypdm.Pypdm.MeshDeform.cloud_displ_finalize
 
-    .. rubric:: Get outputs
 
-    .. automethod:: Pypdm.Pypdm.MeshDeform.cloud_n_points_part_get
-    .. automethod:: Pypdm.Pypdm.MeshDeform.cloud_displ_part_get
-    .. automethod:: Pypdm.Pypdm.MeshDeform.n_aux_geom
-    .. automethod:: Pypdm.Pypdm.MeshDeform.cloud_block_n_points
-    .. automethod:: Pypdm.Pypdm.MeshDeform.cloud_block_buffer_from_surf_get
-    .. automethod:: Pypdm.Pypdm.MeshDeform.cloud_block_get
+    .. tab-item:: Fortran
 
-    .. rubric:: Timers
+      .. ifconfig:: enable_fortran_doc == 'ON'
 
-    .. automethod:: Pypdm.Pypdm.MeshDeform.dump_times
+        .. f:autofunction::   PDM_mesh_deform_n_aux_geom_get
+        .. f:autosubroutine:: PDM_mesh_deform_cloud_block_n_points_get
+        .. f:autosubroutine:: PDM_mesh_deform_cloud_block_buffer_size_get
+        .. f:autosubroutine:: PDM_mesh_deform_cloud_block_buffer_from_surf_get
+        .. f:autosubroutine:: PDM_mesh_deform_cloud_block_get
+        .. f:autosubroutine:: PDM_mesh_deform_cloud_n_points_part_get
+        .. f:autosubroutine:: PDM_mesh_deform_cloud_displ_part_get
+
+      .. ifconfig:: enable_fortran_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+
+
+
+    .. tab-item:: Python
+
+      .. ifconfig:: enable_python_doc == 'ON'
+
+        .. autofunction:: Pypdm.Pypdm.MeshDeform.cloud_n_points_part_get
+          :noindex:
+        .. autofunction:: Pypdm.Pypdm.MeshDeform.cloud_displ_part_get
+          :noindex:
+        .. autofunction:: Pypdm.Pypdm.MeshDeform.n_aux_geom
+          :noindex:
+        .. autofunction:: Pypdm.Pypdm.MeshDeform.cloud_block_n_points
+          :noindex:
+        .. autofunction:: Pypdm.Pypdm.MeshDeform.cloud_block_buffer_from_surf_get
+          :noindex:
+        .. autofunction:: Pypdm.Pypdm.MeshDeform.cloud_block_get
+          :noindex:
+
+      .. ifconfig:: enable_python_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+
+
+
+
+.. dropdown:: Finalization
+
+  .. tab-set::
+
+    .. tab-item:: C
+
+      .. doxygenfunction:: PDM_mesh_deform_free
+
+
+
+    .. tab-item:: Fortran
+
+      .. ifconfig:: enable_fortran_doc == 'ON'
+
+        .. f:autosubroutine:: PDM_mesh_deform_free
+
+      .. ifconfig:: enable_fortran_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+
+
+
+    .. tab-item:: Python
+
+      The instance is automatically freed by Python's garbage collector when it is no longer referenced
+
+
+
