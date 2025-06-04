@@ -4,8 +4,8 @@ Mesh location
 =============
 
 **Mesh location** is a service for locating points inside a partitioned, unstructured mesh.
-All types of mesh elements are supported: standard elements (bars, triangles, 
-quadrangles, tetrahedra, pyramids, prisms, hexahedra), general polygons and polyhedra, 
+All types of mesh elements are supported: standard elements (bars, triangles,
+quadrangles, tetrahedra, pyramids, prisms, hexahedra), general polygons and polyhedra,
 as well as high-order, curved elements.
 
 A mapping between the source mesh elements and the target points they contain is computed, which consists in
@@ -61,7 +61,7 @@ API
   Multiple target point clouds can be processed with a single Mesh Location instance.
   Each of them can have a distinct number of parts per MPI rank, and has its own global numbering.
 
-  A point cloud is defined by coordinates and global IDs (if you don't have a global numbering, check out :ref:`this page <gnum>` to see how to generate one). 
+  A point cloud is defined by coordinates and global IDs (if you don't have a global numbering, check out :ref:`this page <gnum>` to see how to generate one).
 
 
   .. tab-set::
@@ -108,7 +108,7 @@ API
 
   The source mesh can be defined in several ways.
 
-  If you have a :ref:`Part Mesh Nodal <pmn>` instance, you can use it directly 
+  If you have a :ref:`Part Mesh Nodal <pmn>` instance, you can use it directly
   (note that this is the only way to define high-order, curved elements):
 
   .. tab-set::
@@ -122,7 +122,7 @@ API
       .. ifconfig:: enable_fortran_doc == 'ON'
 
         .. f:autosubroutine:: PDM_mesh_location_shared_nodal_mesh_set
-          
+
       .. ifconfig:: enable_fortran_doc == 'OFF'
 
         .. warning::
@@ -140,8 +140,8 @@ API
         .. warning::
           Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
 
-    
-  Alternatively, you can define the source mesh by providing each part separately. 
+
+  Alternatively, you can define the source mesh by providing each part separately.
   If you do so, you should always start by setting the number of part:
 
   .. tab-set::
@@ -216,9 +216,9 @@ API
 
               .. warning::
                 Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
-    
-    
-    
+
+
+
     .. dropdown:: Ngon connectivity
 
       .. tab-set::
@@ -248,14 +248,14 @@ API
 
               .. autofunction:: Pypdm.Pypdm.MeshLocation.part_set
                 :noindex:
-                
+
             .. ifconfig:: enable_python_doc == 'OFF'
 
               .. warning::
                 Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
-  
-  
-  
+
+
+
   .. dropdown:: Surface mesh
 
     .. dropdown:: Nodal connectivity
@@ -292,9 +292,9 @@ API
 
               .. warning::
                 Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
-    
-    
-    
+
+
+
     .. dropdown:: Ngon connectivity
 
       .. tab-set::
@@ -324,7 +324,7 @@ API
 
               .. autofunction:: Pypdm.Pypdm.MeshLocation.part_set_2d
                 :noindex:
-                
+
             .. ifconfig:: enable_python_doc == 'OFF'
 
               .. warning::
@@ -338,11 +338,11 @@ API
   .. dropdown:: Geometric tolerance
 
     The location algorithms relies on bounding-box tests to quickly find candidate pair of points and elements, before computing the exact location.
-    A target point will be considered as *located* if it lies in the bounding box of at least one source mesh element (even if it does not actually lie inside the element). 
-    These bounding boxes can be expanded using a relative tolerance. 
-    
+    A target point will be considered as *located* if it lies in the bounding box of at least one source mesh element (even if it does not actually lie inside the element).
+    These bounding boxes can be expanded using a relative tolerance.
+
     By default, the tolerance is set to zero, but it can be adjusted.
-    This is especially useful for non-planar, surface meshes where alignment with cartesian axes might cause some detection misses if the tolerance is set too low. 
+    This is especially useful for non-planar, surface meshes where alignment with cartesian axes might cause some detection misses if the tolerance is set too low.
     However, keep in mind that setting a very large tolerance will have a significant impact on performance.
 
     We recommend keeping the tolerance between 0 and 0.1.
@@ -383,7 +383,7 @@ API
 
   .. dropdown:: Preconditioning method
 
-    Experienced users can also choose the preconditioning method used in the first step of the location algorithm: 
+    Experienced users can also choose the preconditioning method used in the first step of the location algorithm:
 
     .. tab-set::
 
@@ -423,7 +423,7 @@ API
 
 .. dropdown:: Compute location
 
-  Once the target point clouds and source mesh have been set, the location can be computed: 
+  Once the target point clouds and source mesh have been set, the location can be computed:
 
   .. tab-set::
 
@@ -709,7 +709,7 @@ API
 
     .. tab-item:: Python
 
-      The instance is automatically freed by Python's garbage collector when it is no longer referenced
+      |python_gc|
 
 
 

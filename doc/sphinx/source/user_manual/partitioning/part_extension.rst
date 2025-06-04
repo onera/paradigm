@@ -220,4 +220,4 @@ API
 
     .. tab-item:: Python
 
-      The instance is automatically freed by Python's garbage collector when it is no longer referenced
+      |python_gc|

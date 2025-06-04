@@ -470,6 +470,8 @@ rst_prolog = """
 .. |ok| replace:: :largegreen:`✔`
 
 .. |ko| replace:: :largered:`✘`
+
+.. |python_gc| replace:: The instance is automatically freed by Python's garbage collector when it is no longer referenced
 """
 
 

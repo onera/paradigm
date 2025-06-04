@@ -54,11 +54,14 @@ API
           Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
 
 
+
+
+
 .. dropdown:: Set point clouds
 
   Both the target and source point clouds can have a distinct number of parts per MPI rank, and have their own global numbering (which *must* range from 1 to the total number of points in each cloud).
 
-  A point cloud is defined by coordinates and global IDs (if you don't have a global numbering, check out :ref:`this page <gnum>` to see how to generate one). 
+  A point cloud is defined by coordinates and global IDs (if you don't have a global numbering, check out :ref:`this page <gnum>` to see how to generate one).
 
   First, the number of partitions of each point cloud must be defined:
 
@@ -140,7 +143,7 @@ API
 
 .. dropdown:: Find closest points
 
-  Once the source and target point clouds have been set, the correspondence between them can be computed: 
+  Once the source and target point clouds have been set, the correspondence between them can be computed:
 
   .. tab-set::
 
@@ -364,5 +367,5 @@ API
 
     .. tab-item:: Python
 
-      The instance is automatically freed by Python's garbage collector when it is no longer referenced
+      |python_gc|
 
