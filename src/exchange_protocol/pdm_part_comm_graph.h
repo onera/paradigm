@@ -289,6 +289,23 @@ PDM_part_comm_graph_entity_graph_get
   PDM_ownership_t         ownership
 );
 
+/**
+ *
+ * \brief Get entity nuplets
+ *
+ * \param [in]     pcg            Pointer to \ref PDM_part_comm_graph_t instance
+ * \param [in]     datatype       Mpi datatype (PDM_MPI_DOUBLE/PDM_MPI_INT)
+ * \param [in]     op             Reduction operation kind (SUM/MIN/MAX)
+ * \param [in/out] pdata          Buffer of data to synchronise (size = n_entity)
+ */
+void
+PDM_part_comm_graph_all_reduce
+(
+  PDM_part_comm_graph_t   *pcg,
+  PDM_MPI_Datatype         datatype,
+  PDM_MPI_Op               op,
+  unsigned char          **pdata
+);
 
 /**
  *
