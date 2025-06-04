@@ -168,10 +168,14 @@ PDM_polygon_evaluate_position
   // }
   double *bounds = NULL;
 
+  PDM_polygon_status_t location = PDM_polygon_point_in_new (cp, n_pts, _pts_p, bounds, n);
+  if (location == PDM_POLYGON_DEGENERATED){
+      return(location);
+  }
+
   if (pcoords[0] >= 0.0 && pcoords[0] <= 1.0 &&
       pcoords[1] >= 0.0 && pcoords[1] <= 1.0 &&
-      (PDM_polygon_point_in_new (cp, n_pts, _pts_p,
-                                 bounds, n) == PDM_POLYGON_INSIDE) ) {
+      (location == PDM_POLYGON_INSIDE) ) {
     if (closestPoint) {
       closestPoint[0] = cp[0];
       closestPoint[1] = cp[1];
@@ -182,14 +186,14 @@ PDM_polygon_evaluate_position
 
       *minDist2 = PDM_DOT_PRODUCT (v, v);
     }
-    return PDM_POLYGON_INSIDE;
+    return location;
   }
 
   /*
    * If here, point is outside of polygon, so need to find distance to boundary
    */
 
-  else {
+  else if (location == PDM_POLYGON_OUTSIDE){
     double t, dist2;
     double closest[3];
     double *pt1, *pt2;
@@ -208,7 +212,7 @@ PDM_polygon_evaluate_position
         }
       }
     }
-    return PDM_POLYGON_OUTSIDE;
+    return location;
   }
 }
 

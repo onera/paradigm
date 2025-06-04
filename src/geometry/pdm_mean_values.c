@@ -583,7 +583,7 @@ PDM_mean_values_polygon_3d
 /**
  * \brief Compute mean value coordinates of a point in a polyhedron
  *
- * See "Mean value coordinates for closed triangular meshes", T. Ju et al. (2005).
+ * See "A general construction of spherical barycentric coordinates and applications", Alaa eddine Bensad, Aziz Ikemakhen, (2023).
  *
  * \param [in]    n_vtx            Number of polyhedron vertices
  * \param [in]    vtx_coord        xyz-coordinates of polyhedron vertices (size = 3 * \ref n_vtx)
@@ -671,8 +671,8 @@ PDM_mean_values_polyhedron
 
     // unit vector v.
     double v[3] = {0., 0., 0.};
-    double angle;
-    double temp[3];
+    double half_angle;
+    double niip[3];
     for (i = 0; i < n_vtx_face; i++) {
       if (face_orientation[iface] < 0) {
         ui  = u + 3*(_face_vtx[i] - 1);
@@ -682,22 +682,21 @@ PDM_mean_values_polyhedron
         uip = u + 3*(_face_vtx[(i+1)%n_vtx_face] - 1);
       }
 
-      PDM_CROSS_PRODUCT (temp, ui, uip);
-      mag = PDM_MODULE (temp);
+      PDM_CROSS_PRODUCT (niip, ui, uip);
+      mag = PDM_MODULE (niip);
       if (mag < eps) {
         printf("!!! face %d, mag(u[%d] x u[%d]) = %f\n",
                iface, _face_vtx[i] - 1, _face_vtx[(i+1)%n_vtx_face] - 1, mag);
       }
-      temp[0] /= mag;
-      temp[1] /= mag;
-      temp[2] /= mag;
+      niip[0] /= mag;
+      niip[1] /= mag;
+      niip[2] /= mag;
 
       l = sqrt (_distance2 (ui, uip));
-      angle = asin(0.5 * l);
-
-      v[0] += angle * temp[0];
-      v[1] += angle * temp[1];
-      v[2] += angle * temp[2];
+      half_angle = asin(0.5 * l);
+      v[0] += half_angle * niip[0];
+      v[1] += half_angle * niip[1];
+      v[2] += half_angle * niip[2];
     }
 
     const double mag_v = PDM_MODULE (v);
@@ -708,9 +707,8 @@ PDM_mean_values_polyhedron
     v[1] /= mag_v;
     v[2] /= mag_v;
 
-
     // angles between edges
-    double n0[3], n1[3];
+    double n0[3], n1[3], temp[3];
     for (i = 0; i < n_vtx_face; i++) {
       if (face_orientation[iface] < 0) {
         ui  = u + 3*(_face_vtx[i] - 1);
@@ -741,6 +739,8 @@ PDM_mean_values_polyhedron
 
       l2 = _distance2 (n0, n1);
       tan_half_alpha[i] = 0.5 * sqrt(l2 / (1.0 - 0.25 * l2));
+
+      PDM_CROSS_PRODUCT(temp, n0, n1);
       if (PDM_DOT_PRODUCT (temp, v) < 0) {
         tan_half_alpha[i] = -tan_half_alpha[i];
       }
@@ -749,7 +749,6 @@ PDM_mean_values_polyhedron
       l = sqrt (_distance2 (ui, v));
       theta[i] = 2.0 * asin(0.5 * l);
     }
-
 
     PDM_bool_t outlier = PDM_FALSE;
     for (i = 0; i < n_vtx_face; i++) {
@@ -806,6 +805,10 @@ PDM_mean_values_polyhedron
 
         l2 = _distance2 (ui, uip);
         tan_half_alpha[i] = 0.5 * sqrt(l2 / (1.0 - 0.25 * l2));
+        PDM_CROSS_PRODUCT(temp, ui, uip);
+        if (PDM_DOT_PRODUCT (temp, v) < 0) {
+          tan_half_alpha[i] = -tan_half_alpha[i];
+        }        
       }
 
 
@@ -869,11 +872,6 @@ PDM_mean_values_polyhedron
   PDM_free(tan_half_alpha);
   PDM_free(theta);
 }
-
-
-
-
-
 
 
 /*  UNUSED FUNCTIONS  */

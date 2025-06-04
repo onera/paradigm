@@ -83,8 +83,6 @@ PDM_mean_values_polygon_3d
  double       mean_value_coord[]
  );
 
-
-
 /**
  * \brief Compute mean value coordinates of a point in a polyhedron
  *
@@ -113,10 +111,6 @@ PDM_mean_values_polyhedron
  const double      pt_coord[],
  double            weights[]
  );
-
-
-
-
 
 /*  UNUSED FUNCTIONS  */
 
