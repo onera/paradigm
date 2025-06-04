@@ -123,12 +123,12 @@ module pdm_part_mesh_nodal
     ! Create a PDM_part_mesh_nodal structure
     implicit none
 
-    type(c_ptr)          :: mesh           ! Pointer to PDM_part_mesh_nodal instance
-    integer, intent(in)  :: mesh_dimension ! Mesh dimension
-    integer, intent(in)  :: n_part         ! Number of partition on the current process
-    integer, intent(in)  :: f_comm         ! MPI communicator
+    type(c_ptr), intent(out) :: mesh           ! Pointer to new PDM_part_mesh_nodal instance
+    integer,     intent(in)  :: mesh_dimension ! Mesh dimension
+    integer,     intent(in)  :: n_part         ! Number of partition on the current process
+    integer,     intent(in)  :: f_comm         ! MPI communicator
 
-    integer(c_int)       :: c_comm
+    integer(c_int)           :: c_comm
 
     interface
       function PDM_part_mesh_nodal_create_c (mesh_dimension, n_part, c_comm) result(mesh) &
@@ -672,6 +672,104 @@ module pdm_part_mesh_nodal
   end subroutine PDM_part_mesh_nodal_cell3d_cellface_add
 
 
+  subroutine PDM_part_mesh_nodal_n_group_set(pmn,       &
+                                             geom_kind, &
+                                             n_group)
+    ! Set number of group for a current geometry kind
+    implicit none
+
+    type(c_ptr), intent(in) :: pmn       ! Pointer to PDM_part_mesh_nodal_t instance
+    integer,     intent(in) :: geom_kind ! Geometry kind (corner, ridge, surface or volume)
+    integer,     intent(in) :: n_group   ! Number of group in geom_kind
+
+    interface
+      subroutine PDM_part_mesh_nodal_n_group_set_c(pmn,       &
+                                                   geom_kind, &
+                                                   n_group)   &
+      bind(c, name='PDM_part_mesh_nodal_n_group_set')
+        use iso_c_binding
+        implicit none
+        type(c_ptr),     value :: pmn
+        integer (c_int), value :: geom_kind
+        integer (c_int), value :: n_group
+      end subroutine PDM_part_mesh_nodal_n_group_set_c
+    end interface
+
+    call PDM_part_mesh_nodal_n_group_set_c(pmn,       &
+                                           geom_kind, &
+                                           n_group)
+
+  end subroutine PDM_part_mesh_nodal_n_group_set
+
+
+
+  subroutine PDM_part_mesh_nodal_group_set(pmn,            &
+                                           geom_kind,      &
+                                           i_part,         &
+                                           i_group,        &
+                                           n_group_elmt,   &
+                                           group_elmt,     &
+                                           group_ln_to_gn)
+    ! Set partition group
+    implicit none
+
+    type(c_ptr),       intent(in) :: pmn               ! Pointer to PDM_part_mesh_nodal_t instance
+    integer,           intent(in) :: geom_kind         ! Geometry kind (corner, ridge, surface or volume)
+    integer,           intent(in) :: i_part            ! Partition identifier
+    integer,           intent(in) :: i_group           ! Group identifier
+    integer,           intent(in) :: n_group_elmt      ! Number of element in current group for current part
+    integer(pdm_l_num_s), pointer :: group_elmt(:)     ! Local IDs of elements in group (size = n_group_elmt)
+    integer(pdm_g_num_s), pointer :: group_ln_to_gn(:) ! Group-specific global IDs (size = n_group_elmt)
+
+    type(c_ptr)                   :: c_group_elmt
+    type(c_ptr)                   :: c_group_ln_to_gn
+
+    interface
+      subroutine PDM_part_mesh_nodal_group_set_c(pmn,            &
+                                                 geom_kind,      &
+                                                 i_part,         &
+                                                 i_group,        &
+                                                 n_group_elmt,   &
+                                                 group_elmt,     &
+                                                 group_ln_to_gn, &
+                                                 ownership)      &
+      bind(c, name='PDM_part_mesh_nodal_group_set')
+        use iso_c_binding
+        implicit none
+        type(c_ptr),    value :: pmn
+        integer(c_int), value :: geom_kind
+        integer(c_int), value :: i_part
+        integer(c_int), value :: i_group
+        integer(c_int), value :: n_group_elmt
+        type(c_ptr)           :: group_elmt
+        type(c_ptr)           :: group_ln_to_gn
+        integer(c_int), value :: ownership
+      end subroutine PDM_part_mesh_nodal_group_set_c
+    end interface
+
+    c_group_elmt = C_NULL_PTR
+    if (associated(group_elmt)) then
+      c_group_elmt = c_loc(group_elmt)
+    endif
+
+    c_group_ln_to_gn = C_NULL_PTR
+    if (associated(group_ln_to_gn)) then
+      c_group_ln_to_gn = c_loc(group_ln_to_gn)
+    endif
+
+    call PDM_part_mesh_nodal_group_set_c(pmn,              &
+                                         geom_kind,        &
+                                         i_part,           &
+                                         i_group,          &
+                                         n_group_elmt,     &
+                                         c_group_elmt,     &
+                                         c_group_ln_to_gn, &
+                                         PDM_OWNERSHIP_USER) ! Force USER to avoid memory management issues
+
+  end subroutine PDM_part_mesh_nodal_group_set
+
+
+
   function PDM_part_mesh_nodal_principal_geom_kind_get(pmn) &
     result(geom_kind)
     ! Return the geometry kind of highest dimension
@@ -683,6 +781,7 @@ module pdm_part_mesh_nodal
     geom_kind = PDM_part_mesh_nodal_principal_geom_kind_get_c(pmn)
 
   end function PDM_part_mesh_nodal_principal_geom_kind_get
+
 
 
   function PDM_part_mesh_nodal_n_section_in_geom_kind_get(pmn,       &
@@ -699,6 +798,7 @@ module pdm_part_mesh_nodal
                                                                  geom_kind)
 
   end function PDM_part_mesh_nodal_n_section_in_geom_kind_get
+
 
 
   subroutine PDM_part_mesh_nodal_sections_id_in_geom_kind_get(pmn,       &
@@ -738,6 +838,7 @@ module pdm_part_mesh_nodal
   end subroutine PDM_part_mesh_nodal_sections_id_in_geom_kind_get
 
 
+
   subroutine PDM_part_mesh_nodal_section_in_geom_kind_elt_type_get(pmn,        &
                                                                    geom_kind,  &
                                                                    id_section, &
@@ -769,6 +870,7 @@ module pdm_part_mesh_nodal
   end subroutine PDM_part_mesh_nodal_section_in_geom_kind_elt_type_get
 
 
+
   subroutine PDM_part_mesh_nodal_section_n_elt_get(pmn,       &
                                                    i_section, &
                                                    i_part,    &
@@ -788,6 +890,7 @@ module pdm_part_mesh_nodal
   end subroutine PDM_part_mesh_nodal_section_n_elt_get
 
 
+
   subroutine PDM_part_mesh_nodal_section_elt_type_get(pmn,       &
                                                       i_section, &
                                                       elt_t)
@@ -802,6 +905,7 @@ module pdm_part_mesh_nodal
                                                        i_section)
 
   end subroutine PDM_part_mesh_nodal_section_elt_type_get
+
 
 
   subroutine PDM_part_mesh_nodal_section_std_get(pmn,                 &
@@ -903,6 +1007,7 @@ module pdm_part_mesh_nodal
   end subroutine PDM_part_mesh_nodal_section_std_get
 
 
+
   subroutine PDM_part_mesh_nodal_n_elmts_get(pmn,       &
                                              geom_kind, &
                                              i_part,    &
@@ -920,6 +1025,7 @@ module pdm_part_mesh_nodal
                                                 i_part)
 
   end subroutine PDM_part_mesh_nodal_n_elmts_get
+
 
 
   subroutine PDM_part_mesh_nodal_cell_vtx_connect_get(mesh,         &
@@ -975,6 +1081,7 @@ module pdm_part_mesh_nodal
   end subroutine PDM_part_mesh_nodal_cell_vtx_connect_get
 
 
+
   subroutine PDM_part_mesh_nodal_n_vtx_get(pmn,    &
                                            i_part, &
                                            n_vtx)
@@ -989,6 +1096,7 @@ module pdm_part_mesh_nodal
                                             i_part)
 
   end subroutine PDM_part_mesh_nodal_n_vtx_get
+
 
 
   subroutine PDM_part_mesh_nodal_vtx_coord_get(pmn,       &
@@ -1039,6 +1147,7 @@ module pdm_part_mesh_nodal
   end subroutine PDM_part_mesh_nodal_vtx_coord_get
 
 
+
   subroutine PDM_part_mesh_nodal_vtx_g_num_get(pmn,          &
                                                i_part,       &
                                                vtx_ln_to_gn, &
@@ -1087,6 +1196,107 @@ module pdm_part_mesh_nodal
   end subroutine PDM_part_mesh_nodal_vtx_g_num_get
 
 
+
+  subroutine PDM_part_mesh_nodal_n_group_get(pmn,       &
+                                             geom_kind, &
+                                             n_group)
+    ! Get number of group for a current geometry kind
+    implicit none
+
+    type(c_ptr), intent(in)  :: pmn       ! Pointer to PDM_part_mesh_nodal_t instance
+    integer,     intent(in)  :: geom_kind ! Geometry kind (corner, ridge, surface or volume)
+    integer,     intent(out) :: n_group   ! Number of group in geom_kind
+
+    interface
+      function PDM_part_mesh_nodal_n_group_get_c(pmn,       &
+                                                 geom_kind) &
+      result (n_group)                                      &
+      bind(c, name='PDM_part_mesh_nodal_n_group_get')
+        use iso_c_binding
+        implicit none
+        type(c_ptr),     value :: pmn
+        integer (c_int), value :: geom_kind
+        integer (c_int)        :: n_group
+      end function PDM_part_mesh_nodal_n_group_get_c
+    end interface
+
+    n_group = PDM_part_mesh_nodal_n_group_get_c(pmn, &
+                                                geom_kind)
+
+  end subroutine PDM_part_mesh_nodal_n_group_get
+
+
+
+  subroutine PDM_part_mesh_nodal_group_get(pmn,            &
+                                           geom_kind,      &
+                                           i_part,         &
+                                           i_group,        &
+                                           n_group_elmt,   &
+                                           group_elmt,     &
+                                           group_ln_to_gn, &
+                                           ownership)
+    ! Get partition group
+    implicit none
+
+    type(c_ptr),      intent(in)  :: pmn               ! Pointer to PDM_part_mesh_nodal_t instance
+    integer,          intent(in)  :: geom_kind         ! Geometry kind (corner, ridge, surface or volume)
+    integer,          intent(in)  :: i_part            ! Partition identifier
+    integer,          intent(in)  :: i_group           ! Group identifier
+    integer,          intent(out) :: n_group_elmt      ! Number of element in current group for current part
+    integer(pdm_l_num_s), pointer :: group_elmt(:)     ! Local IDs of elements in group (size = n_group_elmt)
+    integer(pdm_g_num_s), pointer :: group_ln_to_gn(:) ! Group-specific global IDs (size = n_group_elmt)
+    integer,          intent(in)  :: ownership         ! Ownership
+
+    type(c_ptr)                   :: c_group_elmt
+    type(c_ptr)                   :: c_group_ln_to_gn
+
+    interface
+      subroutine PDM_part_mesh_nodal_group_get_c(pmn,            &
+                                                 geom_kind,      &
+                                                 i_part,         &
+                                                 i_group,        &
+                                                 n_group_elmt,   &
+                                                 group_elmt,     &
+                                                 group_ln_to_gn, &
+                                                 ownership)      &
+      bind(c, name='PDM_part_mesh_nodal_group_get')
+        use iso_c_binding
+        implicit none
+        type(c_ptr),    value :: pmn
+        integer(c_int), value :: geom_kind
+        integer(c_int), value :: i_part
+        integer(c_int), value :: i_group
+        integer(c_int), value :: n_group_elmt
+        type(c_ptr)           :: group_elmt
+        type(c_ptr)           :: group_ln_to_gn
+        integer(c_int), value :: ownership
+      end subroutine PDM_part_mesh_nodal_group_get_c
+    end interface
+
+    c_group_elmt     = C_NULL_PTR
+    c_group_ln_to_gn = C_NULL_PTR
+
+    call PDM_part_mesh_nodal_group_get_c(pmn,              &
+                                         geom_kind,        &
+                                         i_part,           &
+                                         i_group,          &
+                                         n_group_elmt,     &
+                                         c_group_elmt,     &
+                                         c_group_ln_to_gn, &
+                                         ownership)
+
+    call c_f_pointer(c_group_elmt, &
+                     group_elmt,   &
+                     [n_group_elmt])
+
+    call c_f_pointer(c_group_ln_to_gn, &
+                     group_ln_to_gn,   &
+                     [n_group_elmt])
+
+  end subroutine PDM_part_mesh_nodal_group_get
+
+
+
   subroutine PDM_part_mesh_nodal_partial_free(mesh)
     ! Free partially a PDM_part_mesh_nodal structure
     implicit none
@@ -1107,6 +1317,7 @@ module pdm_part_mesh_nodal
   end subroutine PDM_part_mesh_nodal_partial_free
 
 
+
   subroutine PDM_part_mesh_nodal_free(mesh)
     ! Free a PDM_part_mesh_nodal instance
     implicit none
@@ -1125,6 +1336,7 @@ module pdm_part_mesh_nodal
     call PDM_part_mesh_nodal_free_c(mesh)
 
   end subroutine PDM_part_mesh_nodal_free
+
 
 
   subroutine PDM_part_mesh_nodal_dump_vtk(pmn,              &

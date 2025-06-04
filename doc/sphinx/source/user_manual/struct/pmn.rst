@@ -1,234 +1,478 @@
 .. _pmn:
 
-Partitioned Nodal Mesh Structure
-================================
+Partitioned Nodal Mesh
+======================
 
-C API
------
+Description
+"""""""""""
 
-Initialization
-""""""""""""""
+**Part Mesh Nodal** is a partitioned mesh data structure in which elements of different types are stored in separate containers called *sections*.
+These sections can be addressed either globally or by spatial dimension (*geometry kind*).
 
-.. doxygenfunction:: PDM_part_mesh_nodal_create
+.. If a mesh is composed of elements of multiple dimensions (e.g. a volume mesh with its surface boundary), each dimension is stored in its own container as well (one **Part Mesh Nodal Elmts** instance per dimension).
 
-Setters
-"""""""
+If a **Part Mesh Nodal** is constructed from a soup of mixed-type elements, the indirection from the sections to the original soup is stored in the data structure (*parent_num*).
 
-.. doxygenfunction:: PDM_part_mesh_nodal_coord_set
+The structure can also store group information and the inter-partition communication graph (**Part Comm Graph**) for each geometry kind.
 
-.. doxygenfunction:: PDM_part_mesh_nodal_vtx_gnum_set
 
-.. doxygenfunction:: PDM_part_mesh_nodal_coord_from_parent_set
+API
+"""
 
-.. doxygenfunction:: PDM_part_mesh_nodal_section_add
+.. dropdown:: Initialization
 
-.. doxygenfunction:: PDM_part_mesh_nodal_section_std_set
 
-.. doxygenfunction:: PDM_part_mesh_nodal_section_std_ho_set
+  .. tab-set::
 
-.. doxygenfunction:: PDM_part_mesh_nodal_add_part_mesh_nodal_elmts
+    .. tab-item:: C
 
-.. doxygenfunction:: PDM_part_mesh_nodal_section_poly2d_set
+      .. doxygenfunction:: PDM_part_mesh_nodal_create
 
-.. doxygenfunction:: PDM_part_mesh_nodal_section_poly3d_set
 
-.. doxygenfunction:: PDM_part_mesh_nodal_cell3d_cellface_add
 
-.. doxygenfunction:: PDM_part_mesh_nodal_face2d_faceedge_add
+    .. tab-item:: Fortran
 
-.. doxygenfunction:: PDM_part_mesh_nodal_cells_cellvtx_add
+      .. ifconfig:: enable_fortran_doc == 'ON'
 
-.. doxygenfunction:: PDM_part_mesh_nodal_faces_facevtx_add
+        .. f:autosubroutine:: PDM_part_mesh_nodal_create
 
-.. doxygenfunction:: PDM_part_mesh_nodal_part_comm_graph_set
+      .. ifconfig:: enable_fortran_doc == 'OFF'
 
-Compute
-"""""""
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
 
-.. doxygenfunction:: PDM_part_mesh_nodal_section_elt_extents_compute
 
-.. doxygenfunction:: PDM_part_mesh_nodal_section_elt_center_compute
 
-.. doxygenfunction:: PDM_part_mesh_nodal_g_num_in_section_compute
+    .. tab-item:: Python
 
-.. doxygenfunction:: PDM_part_mesh_nodal_compute_sections_idx
+      .. ifconfig:: enable_python_doc == 'ON'
 
-.. doxygenfunction:: PDM_part_mesh_nodal_compute_straddling_entities
+        .. autofunction:: Pypdm.Pypdm.PartMeshNodal.__init__
+          :noindex:
 
-Getters
-"""""""
+      .. ifconfig:: enable_python_doc == 'OFF'
 
-.. doxygenfunction:: PDM_part_mesh_nodal_n_part_get
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
 
-.. doxygenfunction:: PDM_part_mesh_nodal_mesh_dimension_get
 
-.. doxygenfunction:: PDM_part_mesh_nodal_n_vtx_get
 
-.. doxygenfunction:: PDM_part_mesh_nodal_vtx_coord_get
 
-.. doxygenfunction:: PDM_part_mesh_nodal_vtx_g_num_get
+.. dropdown:: Set vertices
 
-.. doxygenfunction:: PDM_part_mesh_nodal_n_section_in_geom_kind_get
 
-.. doxygenfunction:: PDM_part_mesh_nodal_sections_id_in_geom_kind_get
+  .. tab-set::
 
-.. doxygenfunction:: PDM_part_mesh_nodal_section_elt_type_get
+    .. tab-item:: C
 
-.. doxygenfunction:: PDM_part_mesh_nodal_section_in_geom_kind_elt_type_get
+      .. doxygenfunction:: PDM_part_mesh_nodal_coord_set
+      .. doxygenfunction:: PDM_part_mesh_nodal_vtx_gnum_set
+      .. .. doxygenfunction:: PDM_part_mesh_nodal_coord_from_parent_set
 
-.. doxygenfunction:: PDM_part_mesh_nodal_section_n_elt_get
 
-.. doxygenfunction:: PDM_part_mesh_nodal_section_std_get
+    .. tab-item:: Fortran
 
-.. doxygenfunction:: PDM_part_mesh_nodal_section_std_ho_get
+      .. ifconfig:: enable_fortran_doc == 'ON'
 
-.. doxygenfunction:: PDM_part_mesh_nodal_section_parent_num_get
+        .. f:autosubroutine:: PDM_part_mesh_nodal_coord_set
+        .. f:autosubroutine:: PDM_part_mesh_nodal_vtx_gnum_set
 
-.. doxygenfunction:: PDM_part_mesh_nodal_g_num_get
+      .. ifconfig:: enable_fortran_doc == 'OFF'
 
-.. doxygenfunction:: PDM_part_mesh_nodal_section_elt_center_get
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
 
-.. doxygenfunction:: PDM_part_mesh_nodal_section_poly2d_get
 
-.. doxygenfunction:: PDM_part_mesh_nodal_section_poly3d_get
 
-.. doxygenfunction:: PDM_part_mesh_nodal_section_poly3d_cell_vtx_connect_get
+    .. tab-item:: Python
 
-.. doxygenfunction:: PDM_part_mesh_nodal_n_elmts_get
+      .. ifconfig:: enable_python_doc == 'ON'
 
-.. doxygenfunction:: PDM_part_mesh_nodal_g_num_get_from_part
+        .. autofunction:: Pypdm.Pypdm.PartMeshNodal.set_coordinates
+          :noindex:
 
-.. doxygenfunction:: PDM_part_mesh_nodal_is_set_coord_from_parent
+      .. ifconfig:: enable_python_doc == 'OFF'
 
-.. doxygenfunction:: PDM_part_mesh_nodal_section_g_num_get
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
 
-.. doxygenfunction:: PDM_part_mesh_nodal_num_elmt_parent_to_local_get
 
-.. doxygenfunction:: PDM_part_mesh_nodal_vertices_parent_get
 
-.. doxygenfunction:: PDM_part_mesh_nodal_vertices_g_num_parent_get
 
-.. doxygenfunction:: PDM_part_mesh_nodal_section_id_and_geom_kind_get
+.. dropdown:: Set elements
 
-.. doxygenfunction:: PDM_part_mesh_nodal_section_id_from_geom_kind_get
+  The mesh elements can be defined in multiple ways.
 
-.. doxygenfunction:: PDM_part_mesh_nodal_n_section_get
+  If only a soup of mixed elements is available (of same geometry kind), **Part Mesh Nodal** can divide them into appropriate sections automatically:
 
-.. doxygenfunction:: PDM_part_mesh_nodal_sections_id_get
+  .. dropdown:: Mixed setters
 
-.. doxygenfunction:: PDM_part_mesh_nodal_group_get
+    .. tab-set::
 
-.. doxygenfunction:: PDM_part_mesh_nodal_n_group_get
+      .. tab-item:: C
 
-.. doxygenfunction:: PDM_part_mesh_nodal_part_mesh_nodal_elmts_get
+        .. doxygenfunction:: PDM_part_mesh_nodal_cell3d_cellface_add
+        .. doxygenfunction:: PDM_part_mesh_nodal_face2d_faceedge_add
+        .. doxygenfunction:: PDM_part_mesh_nodal_cells_cellvtx_add
+        .. doxygenfunction:: PDM_part_mesh_nodal_faces_facevtx_add
 
-.. doxygenfunction:: PDM_part_mesh_nodal_principal_geom_kind_get
 
-.. doxygenfunction:: PDM_part_mesh_nodal_cell_vtx_connect_get
 
-.. doxygenfunction:: PDM_part_mesh_nodal_part_comm_graph_get
+      .. tab-item:: Fortran
 
-Free
-""""
+        .. ifconfig:: enable_fortran_doc == 'ON'
 
-.. doxygenfunction:: PDM_part_mesh_nodal_free
+          .. f:autosubroutine:: PDM_part_mesh_nodal_cells_cellvtx_add
+          .. f:autosubroutine:: PDM_part_mesh_nodal_faces_facevtx_add
+          .. f:autosubroutine:: PDM_part_mesh_nodal_cell3d_cellface_add
+          .. f:autosubroutine:: PDM_part_mesh_nodal_face2d_faceedge_add
 
-.. doxygenfunction:: PDM_part_mesh_nodal_partial_free
+        .. ifconfig:: enable_fortran_doc == 'OFF'
 
-.. doxygenfunction:: PDM_part_mesh_nodal_reset
+          .. warning::
+            Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
 
-.. doxygenfunction:: PDM_part_mesh_nodal_section_elt_center_reset
 
-Debug
-"""""
+  |
 
-.. doxygenfunction:: PDM_part_mesh_nodal_dump_vtk
+  If the mesh elements are already separated by types, the sections can be specified one by one:
 
-Example
-"""""""
+  .. dropdown:: Section setters
 
-It is necessary to take care of a subtlety relative to the internal structure
-of this mesh container. Some functions return local section indices, while others
-expect global indices as input. Here's how to proceed :
+    .. tab-set::
 
-.. code-block:: c
+      .. tab-item:: C
 
-  int *i_surface_sections = PDM_part_mesh_nodal_sections_id_in_geom_kind_get(pmn, PDM_GEOMETRY_KIND_SURFACIC);
+        .. doxygenfunction:: PDM_part_mesh_nodal_section_add
 
-  int i_global_surface_0_section = PDM_part_mesh_nodal_section_id_from_geom_kind_get(pmn,
-                                                                                     PDM_GEOMETRY_KIND_SURFACIC,
-                                                                                     i_surface_sections[0]);
+        .. doxygenfunction:: PDM_part_mesh_nodal_section_std_set
+        .. doxygenfunction:: PDM_part_mesh_nodal_section_std_ho_set
+        .. doxygenfunction:: PDM_part_mesh_nodal_section_poly2d_set
+        .. doxygenfunction:: PDM_part_mesh_nodal_section_poly3d_set
 
-Fortran API
------------
 
-.. ifconfig:: enable_fortran_doc == 'ON'
 
-  .. f:autosubroutine:: PDM_part_mesh_nodal_create
-  .. f:autosubroutine:: PDM_part_mesh_nodal_coord_set
-  .. f:autosubroutine:: PDM_part_mesh_nodal_vtx_gnum_set
-  .. f:autofunction::   PDM_part_mesh_nodal_section_add
-  .. f:autosubroutine:: PDM_part_mesh_nodal_section_std_set
-  .. f:autosubroutine:: PDM_part_mesh_nodal_cells_cellvtx_add
-  .. f:autosubroutine:: PDM_part_mesh_nodal_faces_facevtx_add
-  .. f:autosubroutine:: PDM_part_mesh_nodal_cell3d_cellface_add
-  .. f:autosubroutine:: PDM_part_mesh_nodal_face2d_faceedge_add
-  .. f:autosubroutine:: PDM_part_mesh_nodal_principal_geom_kind_get
-  .. f:autofunction::   PDM_part_mesh_nodal_n_section_in_geom_kind_get
-  .. f:autosubroutine:: PDM_part_mesh_nodal_sections_id_in_geom_kind_get
-  .. f:autosubroutine:: PDM_part_mesh_nodal_section_in_geom_kind_elt_type_get
-  .. f:autosubroutine:: PDM_part_mesh_nodal_section_n_elt_get
-  .. f:autosubroutine:: PDM_part_mesh_nodal_section_elt_type_get
-  .. f:autosubroutine:: PDM_part_mesh_nodal_section_std_get
-  .. f:autosubroutine:: PDM_part_mesh_nodal_cell_vtx_connect_get
-  .. f:autosubroutine:: PDM_part_mesh_nodal_n_vtx_get
-  .. f:autosubroutine:: PDM_part_mesh_nodal_vtx_coord_get
-  .. f:autosubroutine:: PDM_part_mesh_nodal_vtx_g_num_get
-  .. f:autosubroutine:: PDM_part_mesh_nodal_free
+      .. tab-item:: Fortran
 
-.. ifconfig:: enable_fortran_doc == 'OFF'
+        .. ifconfig:: enable_fortran_doc == 'ON'
 
-  .. warning::
-    Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+          .. f:autofunction::   PDM_part_mesh_nodal_section_add
 
-Python API
-----------
+          .. f:autosubroutine:: PDM_part_mesh_nodal_section_std_set
 
-.. ifconfig:: enable_python_doc == 'ON'
+        .. ifconfig:: enable_fortran_doc == 'OFF'
 
+          .. warning::
+            Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
 
-  .. py:class:: PartMeshNodal
 
-    Python class to store meshes defined by nodal connectivity. Once initialized, all the following
-    methods apply to a :class:`PartMeshNodal` instance.
 
-    .. rubric:: Initialization
+      .. tab-item:: Python
 
-    .. autofunction:: Pypdm.Pypdm.PartMeshNodal.__cinit__
+        .. ifconfig:: enable_python_doc == 'ON'
 
-    .. rubric:: Methods summary
+          .. autofunction:: Pypdm.Pypdm.PartMeshNodal.add_section
+            :noindex:
+          .. autofunction:: Pypdm.Pypdm.PartMeshNodal.set_section
+            :noindex:
 
-    .. autosummary::
-      :nosignatures:
+        .. ifconfig:: enable_python_doc == 'OFF'
 
-      ~Pypdm.Pypdm.PartMeshNodal.set_coordinates
-      ~Pypdm.Pypdm.PartMeshNodal.add_section
-      ~Pypdm.Pypdm.PartMeshNodal.set_section
-      ~Pypdm.Pypdm.PartMeshNodal.n_group_set
-      ~Pypdm.Pypdm.PartMeshNodal.group_set
-      ~Pypdm.Pypdm.PartMeshNodal.get_sections
+          .. warning::
+            Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
 
-    .. automethod:: Pypdm.Pypdm.PartMeshNodal.set_coordinates
-    .. automethod:: Pypdm.Pypdm.PartMeshNodal.add_section
-    .. automethod:: Pypdm.Pypdm.PartMeshNodal.set_section
-    .. automethod:: Pypdm.Pypdm.PartMeshNodal.n_group_set
-    .. automethod:: Pypdm.Pypdm.PartMeshNodal.group_set
-    .. automethod:: Pypdm.Pypdm.PartMeshNodal.get_sections
 
+  |
 
-.. ifconfig:: enable_python_doc == 'OFF'
+  Finally, if a **Part Mesh Nodal Elmts** is already available, it can simply be added to the structure:
 
-  .. warning::
-    Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+  .. tab-set::
 
+    .. tab-item:: C
 
+      .. doxygenfunction:: PDM_part_mesh_nodal_add_part_mesh_nodal_elmts
+
+
+
+
+.. dropdown:: Set groups
+
+
+  .. tab-set::
+
+    .. tab-item:: C
+
+      .. doxygenfunction:: PDM_part_mesh_nodal_n_group_set
+      .. doxygenfunction:: PDM_part_mesh_nodal_group_set
+
+
+
+    .. tab-item:: Fortran
+
+      .. ifconfig:: enable_fortran_doc == 'ON'
+
+        .. f:autosubroutine:: PDM_part_mesh_nodal_n_group_set
+        .. f:autosubroutine:: PDM_part_mesh_nodal_group_set
+
+      .. ifconfig:: enable_fortran_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+
+
+
+    .. tab-item:: Python
+
+      .. ifconfig:: enable_python_doc == 'ON'
+
+        .. autofunction:: Pypdm.Pypdm.PartMeshNodal.n_group_set
+          :noindex:
+        .. autofunction:: Pypdm.Pypdm.PartMeshNodal.group_set
+          :noindex:
+
+      .. ifconfig:: enable_python_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+
+
+
+
+.. dropdown:: Set communication graph
+
+
+  .. tab-set::
+
+    .. tab-item:: C
+
+      .. doxygenfunction:: PDM_part_mesh_nodal_part_comm_graph_set
+
+
+
+
+.. dropdown:: Computations
+
+
+  .. tab-set::
+
+    .. tab-item:: C
+
+      .. doxygenfunction:: PDM_part_mesh_nodal_section_elt_extents_compute
+      .. doxygenfunction:: PDM_part_mesh_nodal_section_elt_center_compute
+      .. doxygenfunction:: PDM_part_mesh_nodal_g_num_in_section_compute
+      .. doxygenfunction:: PDM_part_mesh_nodal_compute_sections_idx
+      .. doxygenfunction:: PDM_part_mesh_nodal_compute_straddling_entities
+
+
+
+
+.. dropdown:: Get vertices
+
+
+  .. tab-set::
+
+    .. tab-item:: C
+
+      .. doxygenfunction:: PDM_part_mesh_nodal_n_vtx_get
+      .. doxygenfunction:: PDM_part_mesh_nodal_vtx_coord_get
+      .. doxygenfunction:: PDM_part_mesh_nodal_vtx_g_num_get
+
+
+    .. tab-item:: Fortran
+
+      .. ifconfig:: enable_fortran_doc == 'ON'
+
+        .. f:autosubroutine:: PDM_part_mesh_nodal_n_vtx_get
+        .. f:autosubroutine:: PDM_part_mesh_nodal_vtx_coord_get
+        .. f:autosubroutine:: PDM_part_mesh_nodal_vtx_g_num_get
+
+      .. ifconfig:: enable_fortran_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+
+
+
+    .. tab-item:: Python
+
+      .. ifconfig:: enable_python_doc == 'ON'
+
+        .. autofunction:: Pypdm.Pypdm.PartMeshNodalCapsule.coord_get
+          :noindex:
+        .. autofunction:: Pypdm.Pypdm.PartMeshNodalCapsule.vtx_g_num_get
+          :noindex:
+
+      .. ifconfig:: enable_python_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+
+
+
+
+.. dropdown:: Get elements
+
+  The mesh elements can be accessed either all together or by section.
+  The *parent_num* indirection is used to link the two representations.
+
+  .. dropdown:: Mixed getters
+
+    .. tab-set::
+
+      .. tab-item:: C
+
+        .. doxygenfunction:: PDM_part_mesh_nodal_principal_geom_kind_get
+        .. doxygenfunction:: PDM_part_mesh_nodal_n_elmts_get
+        .. doxygenfunction:: PDM_part_mesh_nodal_cell_vtx_connect_get
+
+
+
+      .. tab-item:: Fortran
+
+        .. ifconfig:: enable_fortran_doc == 'ON'
+
+          .. f:autofunction::   PDM_part_mesh_nodal_principal_geom_kind_get
+          .. f:autosubroutine:: PDM_part_mesh_nodal_n_elmts_get
+          .. f:autosubroutine:: PDM_part_mesh_nodal_cell_vtx_connect_get
+
+        .. ifconfig:: enable_fortran_doc == 'OFF'
+
+          .. warning::
+            Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+
+
+
+  .. dropdown:: Section getters
+
+    .. tab-set::
+
+      .. tab-item:: C
+
+        .. doxygenfunction:: PDM_part_mesh_nodal_n_section_get
+        .. doxygenfunction:: PDM_part_mesh_nodal_sections_id_get
+        .. doxygenfunction:: PDM_part_mesh_nodal_section_elt_type_get
+        .. doxygenfunction:: PDM_part_mesh_nodal_g_num_get
+        .. doxygenfunction:: PDM_part_mesh_nodal_section_parent_num_get
+        .. doxygenfunction:: PDM_part_mesh_nodal_section_std_get
+        .. doxygenfunction:: PDM_part_mesh_nodal_section_std_ho_get
+        .. doxygenfunction:: PDM_part_mesh_nodal_section_poly2d_get
+        .. doxygenfunction:: PDM_part_mesh_nodal_section_poly3d_get
+        .. doxygenfunction:: PDM_part_mesh_nodal_section_poly3d_cell_vtx_connect_get
+        .. doxygenfunction:: PDM_part_mesh_nodal_section_elt_center_get
+
+
+
+      .. tab-item:: Fortran
+
+        .. ifconfig:: enable_fortran_doc == 'ON'
+
+          .. .. f:autosubroutine:: PDM_part_mesh_nodal_n_section_get
+          .. .. f:autosubroutine:: PDM_part_mesh_nodal_sections_id_get
+          .. .. f:autosubroutine:: PDM_part_mesh_nodal_g_num_get
+          .. .. f:autosubroutine:: PDM_part_mesh_nodal_section_parent_num_get
+          .. f:autosubroutine:: PDM_part_mesh_nodal_section_std_get
+          .. .. f:autosubroutine:: PDM_part_mesh_nodal_section_std_ho_get
+          .. .. f:autosubroutine:: PDM_part_mesh_nodal_section_poly2d_get
+          .. .. f:autosubroutine:: PDM_part_mesh_nodal_section_poly3d_get
+          .. .. f:autosubroutine:: PDM_part_mesh_nodal_section_poly3d_cell_vtx_connect_get
+          .. .. f:autosubroutine:: PDM_part_mesh_nodal_section_elt_center_get
+
+
+        .. ifconfig:: enable_fortran_doc == 'OFF'
+
+          .. warning::
+            Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+
+
+
+      .. tab-item:: Python
+
+        .. ifconfig:: enable_python_doc == 'ON'
+
+          .. autofunction:: Pypdm.Pypdm.PartMeshNodalCapsule.get_sections
+            :noindex:
+
+        .. ifconfig:: enable_python_doc == 'OFF'
+
+          .. warning::
+            Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+
+
+
+
+.. dropdown:: Get groups
+
+
+  .. tab-set::
+
+    .. tab-item:: C
+
+      .. doxygenfunction:: PDM_part_mesh_nodal_n_group_get
+      .. doxygenfunction:: PDM_part_mesh_nodal_group_get
+
+
+
+    .. tab-item:: Fortran
+
+      .. f:autosubroutine:: PDM_part_mesh_nodal_n_group_get
+      .. f:autosubroutine:: PDM_part_mesh_nodal_group_get
+
+
+
+    .. tab-item:: Python
+
+      .. ifconfig:: enable_python_doc == 'ON'
+
+        .. autofunction:: Pypdm.Pypdm.PartMeshNodalCapsule.get_n_group
+          :noindex:
+        .. autofunction:: Pypdm.Pypdm.PartMeshNodalCapsule.get_group
+          :noindex:
+
+      .. ifconfig:: enable_python_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+
+
+
+
+.. dropdown:: Get communication graph
+
+
+  .. tab-set::
+
+    .. tab-item:: C
+
+      .. doxygenfunction:: PDM_part_mesh_nodal_part_comm_graph_get
+
+
+
+
+.. dropdown:: Finalization
+
+  .. tab-set::
+
+    .. tab-item:: C
+
+      .. doxygenfunction:: PDM_part_mesh_nodal_partial_free
+      .. doxygenfunction:: PDM_part_mesh_nodal_free
+
+
+
+    .. tab-item:: Fortran
+
+      .. ifconfig:: enable_fortran_doc == 'ON'
+
+        .. f:autosubroutine:: PDM_part_mesh_nodal_partial_free
+        .. f:autosubroutine:: PDM_part_mesh_nodal_free
+
+      .. ifconfig:: enable_fortran_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+
+
+
+    .. tab-item:: Python
+
+      |python_gc|
