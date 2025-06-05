@@ -1528,7 +1528,7 @@ _locate_in_polyhedron
 
   double *face_coord;
   double *face_weight;
-  int max_n_vtx_face;
+  int max_n_vtx_face = 0;
   for (int iface = 0; iface < n_face; iface++) {
     int n_vtx_face = face_vtx_idx[iface+1] - face_vtx_idx[iface];
     max_n_vtx_face = PDM_MAX(max_n_vtx_face, n_vtx_face);
