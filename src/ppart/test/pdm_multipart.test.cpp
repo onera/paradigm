@@ -5,6 +5,7 @@
 #include "doctest/extensions/doctest_mpi.h"
 #include "pdm.h"
 #include "pdm_doctest.h"
+#include "pdm_logging.h"
 #include "pdm_mem_tool.h"
 #include "pdm_mpi.h"
 #include "pdm_multipart.h"
@@ -102,13 +103,13 @@ MPI_TEST_CASE("[pdm_multipart] - 2p - 1 domain, with dcell_part", 2) {
   int n_face = PDM_multipart_part_ln_to_gn_get(mpart,
                                                0,
                                                0,
-                                               PDM_MESH_ENTITY_FACE,
+                                               PDM_MESH_ENTITY_CELL, // /!\ FACE = CELL here
                                                &face_ln_to_gn,
                                                PDM_OWNERSHIP_KEEP);
 
   // Check face global IDs
-  static PDM_g_num_t expected_face_ln_to_gn0[] = {1, 3};
-  static PDM_g_num_t expected_face_ln_to_gn1[] = {2, 4};
+  static PDM_g_num_t expected_face_ln_to_gn0[] = {2, 4};
+  static PDM_g_num_t expected_face_ln_to_gn1[] = {1, 3};
 
   MPI_CHECK_EQ_C_ARRAY(0, face_ln_to_gn, expected_face_ln_to_gn0, n_face);
   MPI_CHECK_EQ_C_ARRAY(1, face_ln_to_gn, expected_face_ln_to_gn1, n_face);
