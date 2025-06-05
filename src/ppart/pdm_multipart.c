@@ -2404,15 +2404,16 @@ static
 void
 _run_ppart_domain
 (
-PDM_multipart_t   *multipart,
-PDM_dmesh_t       *dmesh,
-PDM_dmesh_nodal_t *dmesh_nodal,
-_part_mesh_t      *pmeshes,
-int                n_part,
-PDM_split_dual_t   split_method,
-PDM_part_size_t    part_size_method,
-const double*      part_fraction,
-PDM_MPI_Comm       comm
+  PDM_multipart_t   *multipart,
+  PDM_dmesh_t       *dmesh,
+  PDM_dmesh_nodal_t *dmesh_nodal,
+  int               *dcell_part,
+  _part_mesh_t      *pmeshes,
+  int                n_part,
+  PDM_split_dual_t   split_method,
+  PDM_part_size_t    part_size_method,
+  const double*      part_fraction,
+  PDM_MPI_Comm       comm
 )
 {
 
@@ -2453,20 +2454,38 @@ PDM_MPI_Comm       comm
   }
 
   /*
-   *  Split graph (manage 3D/2D automaticaly)
+   *  Split graph (manage 3D/2D automatically)
    */
-  int *node_part = NULL;
+  int *node_part = dcell_part;
+  int i_have_dcell_part = (node_part != NULL);
+  int all_have_dcell_part;
+  PDM_MPI_Allreduce(&i_have_dcell_part, &all_have_dcell_part, 1, PDM_MPI_INT, PDM_MPI_MAX, comm);
+
   PDM_g_num_t *distrib_node = PDM_compute_entity_distribution(comm, dn_node);
-  PDM_g_num_t* distrib_partition = _split_graph(multipart,
-                                                comm,
-                                                dmesh,
-                                                pmeshes,
-                                                n_part,
-                                                split_method,
-                                                part_size_method,
-                                                part_fraction,
-                                                distrib_node,
-                                                &node_part);
+  PDM_g_num_t* distrib_partition = NULL;
+
+  if (all_have_dcell_part) {
+    distrib_partition = PDM_compute_entity_distribution(comm, n_part);
+
+    // Check dcell_part
+    for (int i_node = 0; i_node < dn_node; i_node++) {
+      if (node_part[i_node] < 0 || node_part[i_node] >= distrib_partition[n_rank]) {
+        PDM_error(__FILE__, __LINE__, 0, "Invalid node_part (%d / "PDM_FMT_G_NUM")\n", node_part[i_node], distrib_partition[n_rank]);
+      }
+    }
+  }
+  else {
+    distrib_partition = _split_graph(multipart,
+                                     comm,
+                                     dmesh,
+                                     pmeshes,
+                                     n_part,
+                                     split_method,
+                                     part_size_method,
+                                     part_fraction,
+                                     distrib_node,
+                                     &node_part);
+  }
 
   // Start construct partionned mesh timer
   PDM_timer_resume(multipart->timer);
@@ -2491,7 +2510,10 @@ PDM_MPI_Comm       comm
                               &pn_node,
                               &pnode_ln_to_gn,
                                NULL);
-  PDM_free(node_part);
+
+  if (!all_have_dcell_part) {
+    PDM_free(node_part);
+  }
 
   if(0 == 1) {
     for(int i_part = 0; i_part < n_part; ++i_part) {
@@ -2989,12 +3011,14 @@ PDM_multipart_create
   PDM_malloc(multipart->dmeshes_nodal   , multipart->n_domain, PDM_dmesh_nodal_t          *);
   PDM_malloc(multipart->dmn_to_dm       , multipart->n_domain, PDM_dmesh_nodal_to_dmesh_t *);
   PDM_malloc(multipart->is_owner_dmeshes, multipart->n_domain, PDM_bool_t                  );
+  PDM_malloc(multipart->dcell_part      , multipart->n_domain, int                        *);
 
   for (int i_dom = 0; i_dom < multipart->n_domain; ++i_dom) {
     multipart->dmeshes_nodal   [i_dom] = NULL;
     multipart->dmeshes         [i_dom] = NULL;
     multipart->dmn_to_dm       [i_dom] = NULL;
     multipart->is_owner_dmeshes[i_dom] = PDM_FALSE;
+    multipart->dcell_part      [i_dom] = NULL;
   }
 
   PDM_malloc(multipart->pmeshes          , multipart->n_domain, _part_mesh_t   );
@@ -3246,6 +3270,25 @@ void PDM_multipart_set_reordering_options_vtx
 
 
 void
+PDM_multipart_dcell_part_set
+(
+  PDM_multipart_t *multipart,
+  int              i_domain,
+  int             *dcell_part
+)
+{
+  if (multipart == NULL) {
+    PDM_error(__FILE__, __LINE__, 0, "Invalid PDM_multipart_t instance\n");
+  }
+  if (i_domain < multipart->n_domain) {
+    PDM_error(__FILE__, __LINE__, 0, "Invalid i_domain (%d / %d)\n", i_domain, multipart->n_domain);
+  }
+
+  multipart->dcell_part[i_domain] = dcell_part;
+}
+
+
+void
 PDM_multipart_compute
 (
  PDM_multipart_t *multipart
@@ -3313,7 +3356,16 @@ PDM_multipart_compute
 
         PDM_dmesh_t  *_dmesh = NULL;
         PDM_dmesh_nodal_to_dmesh_get_dmesh(dmn_to_dm, 0, &_dmesh);
-        _run_ppart_domain(multipart, _dmesh, dmesh_nodal, pmesh, n_part, split_method, part_size_method, part_fraction, comm);
+        _run_ppart_domain(multipart,
+                          _dmesh,
+                          dmesh_nodal,
+                          multipart->dcell_part[i_domain],
+                          pmesh,
+                          n_part,
+                          split_method,
+                          part_size_method,
+                          part_fraction,
+                          comm);
         multipart->dmeshes  [i_domain] = _dmesh;
         multipart->dmn_to_dm[i_domain] = dmn_to_dm; /* Store it - We need it for PDM_multipart_get_part_mesh_nodal */
         // PDM_dmesh_nodal_to_dmesh_free(dmn_to_dm);
@@ -3337,7 +3389,16 @@ PDM_multipart_compute
         if (0 && i_rank == 0)
           PDM_printf("Running partitioning for block %i...\n", i_domain+1);
         PDM_timer_resume(timer);
-        _run_ppart_domain(multipart, _dmeshes, NULL, _pmeshes, n_part, split_method, part_size_method, part_fraction, comm);
+        _run_ppart_domain(multipart,
+                          _dmeshes,
+                          NULL,
+                          multipart->dcell_part[i_domain],
+                          _pmeshes,
+                          n_part,
+                          split_method,
+                          part_size_method,
+                          part_fraction,
+                          comm);
         PDM_timer_hang_on(timer);
         if (0 && i_rank == 0)
           PDM_printf("...completed (elapsed time : %f)\n", PDM_timer_elapsed(timer) - cum_elapsed_time);
@@ -4069,6 +4130,7 @@ PDM_multipart_free
   PDM_free(multipart->is_owner_dmeshes);
   PDM_free(multipart->n_part);
   PDM_free(multipart->ownership_pmeshes);
+  PDM_free(multipart->dcell_part);
 
   //PDM_part_renum_method_purge();
   PDM_free(multipart);

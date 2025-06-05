@@ -88,6 +88,8 @@ struct _pdm_multipart_t {
   PDM_dmesh_nodal_t          **dmeshes_nodal;
   PDM_dmesh_nodal_to_dmesh_t **dmn_to_dm;
 
+  int                        **dcell_part;
+
   PDM_MPI_Comm                 comm;             // MPI communicator
   PDM_ownership_t              owner;            // Which have the responsabilities of results
 

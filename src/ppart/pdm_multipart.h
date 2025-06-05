@@ -244,6 +244,23 @@ void PDM_multipart_set_reordering_options_vtx
 
 /**
  *
+ * \brief Set the destination part of block-distributed cells
+ *
+ * \param [in]   multipart   Pointer to \ref PDM_multipart_t instance
+ * \param [in]   i_domain    Domain identifier
+ * \param [in]   dcell_part  Distributed cell partitioning (0-based)
+ */
+void
+PDM_multipart_dcell_part_set
+(
+  PDM_multipart_t *multipart,
+  int              i_domain,
+  int             *dcell_part
+);
+
+
+/**
+ *
  * \brief Construct the partitioned meshes on all domains
  *
  * \param [in]   multipart             Pointer to \ref PDM_multipart_t instance
