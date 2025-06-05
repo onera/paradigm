@@ -82,18 +82,14 @@ MPI_TEST_CASE("[pdm_multipart] - 2p - 1 domain, with dpart_id", 2) {
                           NULL);
 
   // Set desired partitioning
-  PDM_g_num_t distrib_face[] = {0, 2, 4};
-
-  PDM_g_num_t gn_part = 2;
-  int *dpart_id = NULL;
-  PDM_malloc(dpart_id, dn_face, int);
-  for (int i_face = 0; i_face < dn_face; i_face++) {
-    dpart_id[i_face] = (i_face + distrib_face[test_rank] + 1) % gn_part;
-  }
+  std::vector<int> dpart_id[] = {
+    {1, 0},
+    {1, 0}
+  };
 
   PDM_multipart_dpart_id_set(mpart,
                              0,
-                             dpart_id,
+                             dpart_id[test_rank].data(),
                              PDM_OWNERSHIP_USER);
 
   // Compute partitioning
@@ -116,6 +112,5 @@ MPI_TEST_CASE("[pdm_multipart] - 2p - 1 domain, with dpart_id", 2) {
   MPI_CHECK_EQ_C_ARRAY(1, face_ln_to_gn, expected_face_ln_to_gn1, n_face);
 
   // Free memory
-  PDM_free(dpart_id);
   PDM_multipart_free(mpart);
 }

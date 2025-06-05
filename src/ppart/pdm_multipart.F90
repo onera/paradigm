@@ -1437,12 +1437,12 @@ contains
   subroutine PDM_multipart_dpart_id_set(multipart, &
                                         i_domain,  &
                                         dpart_id)
-    ! Set the destination part
+    ! Set the destination parts
     implicit none
 
     type(c_ptr),                   intent(in) :: multipart   ! Multipart instance
     integer,                       intent(in) :: i_domain    ! Domain identifier
-    integer(pdm_l_num_s), pointer, intent(in) :: dpart_id(:) ! Destination part (0-based)
+    integer(pdm_l_num_s), pointer, intent(in) :: dpart_id(:) ! Destination parts (0-based)
 
     type(c_ptr)                               :: c_dpart_id
 
@@ -1479,12 +1479,12 @@ contains
                                         i_domain,  &
                                         dpart_id,  &
                                         ownership)
-    ! Get the destination part
+    ! Get the destination parts
     implicit none
 
     type(c_ptr),                   intent(in)  :: multipart   ! Multipart instance
     integer,                       intent(in)  :: i_domain    ! Domain identifier
-    integer(pdm_l_num_s), pointer, intent(out) :: dpart_id(:) ! Destination part (0-based)
+    integer(pdm_l_num_s), pointer, intent(out) :: dpart_id(:) ! Destination parts (0-based)
     integer,                       intent(in)  :: ownership   ! Ownership
 
     type(c_ptr)                                :: c_dpart_id

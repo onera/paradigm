@@ -244,11 +244,11 @@ void PDM_multipart_set_reordering_options_vtx
 
 /**
  *
- * \brief Set the destination part
+ * \brief Set the destination parts
  *
  * \param [in]   multipart   Pointer to \ref PDM_multipart_t instance
  * \param [in]   i_domain    Domain identifier
- * \param [in]   dpart_id    Destination part (0-based)
+ * \param [in]   dpart_id    Destination parts (0-based)
  * \param [in]   ownership   Ownership for \p dpart_id
  *
  */
@@ -264,11 +264,11 @@ PDM_multipart_dpart_id_set
 
 /**
  *
- * \brief Get the destination part
+ * \brief Get the destination parts
  *
  * \param [in]   multipart   Pointer to \ref PDM_multipart_t instance
  * \param [in]   i_domain    Domain identifier
- * \param [out]  dpart_id    Destination part (0-based)
+ * \param [out]  dpart_id    Destination parts (0-based)
  * \param [in]   ownership   Ownership for \p dpart_id
  *
  * \return Number of block-distributed entities

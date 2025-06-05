@@ -387,11 +387,11 @@ cdef class MultiPart:
       """
       dpart_id_set(i_domain, dpart_id)
 
-      Set the destination part
+      Set the destination parts
 
       Parameters:
         i_domain (`int`)                    : Domain identifier
-        dpart_id (`np.ndarray[np.int32_t]`) : Destination part (0-based)
+        dpart_id (`np.ndarray[np.int32_t]`) : Destination parts (0-based)
       """
       cdef int *_dpart_id = np_to_int_pointer(dpart_id)
       PDM_multipart_dpart_id_set(self._mtp,
@@ -405,13 +405,13 @@ cdef class MultiPart:
       """
       dpart_id_get(i_domain)
 
-      Get the destination part
+      Get the destination parts
 
       Parameters:
         i_domain (`int`) : Domain identifier
 
       Returns:
-        Destination part (0-based `np.ndarray[np.int32_t]`)
+        Destination parts (0-based `np.ndarray[np.int32_t]`)
       """
 
       cdef int *_dpart_id = NULL
