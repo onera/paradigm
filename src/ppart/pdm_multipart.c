@@ -3274,18 +3274,46 @@ PDM_multipart_dcell_part_set
 (
   PDM_multipart_t *multipart,
   int              i_domain,
-  int             *dcell_part
+  int             *dcell_part,
+  PDM_ownership_t  ownership
 )
 {
   if (multipart == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Invalid PDM_multipart_t instance\n");
+    PDM_error(__FILE__, __LINE__, 0, "Error - PDM_multipart_dcell_part_set : Invalid PDM_multipart_t instance\n");
   }
   if (i_domain >= multipart->n_domain) {
-    PDM_error(__FILE__, __LINE__, 0, "Invalid i_domain (%d / %d)\n", i_domain, multipart->n_domain);
+    PDM_error(__FILE__, __LINE__, 0, "Error - PDM_multipart_dcell_part_set : Invalid i_domain (%d / %d)\n", i_domain, multipart->n_domain);
+  }
+  if (ownership != PDM_OWNERSHIP_KEEP &&
+      ownership != PDM_OWNERSHIP_USER) {
+    PDM_error(__FILE__, __LINE__, 0, "Error - PDM_multipart_dcell_part_set : Invalid ownership (must be either PDM_OWNERSHIP_KEEP or PDM_OWNERSHIP_USER)\n");
   }
 
   multipart->dcell_part          [i_domain] = dcell_part;
-  multipart->ownership_dcell_part[i_domain] = PDM_OWNERSHIP_USER;
+  multipart->ownership_dcell_part[i_domain] = ownership;
+}
+
+
+void
+PDM_multipart_dcell_part_get
+(
+  PDM_multipart_t  *multipart,
+  int               i_domain,
+  int             **dcell_part,
+  PDM_ownership_t   ownership
+)
+{
+  if (multipart == NULL) {
+    PDM_error(__FILE__, __LINE__, 0, "Error - PDM_multipart_dcell_part_get : Invalid PDM_multipart_t instance\n");
+  }
+  if (i_domain >= multipart->n_domain) {
+    PDM_error(__FILE__, __LINE__, 0, "Error - PDM_multipart_dcell_part_get : Invalid i_domain (%d / %d)\n", i_domain, multipart->n_domain);
+  }
+
+  *dcell_part = multipart->dcell_part[i_domain];
+  if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
+    multipart->ownership_dcell_part[i_domain] = ownership;
+  }
 }
 
 

@@ -93,7 +93,8 @@ MPI_TEST_CASE("[pdm_multipart] - 2p - 1 domain, with dcell_part", 2) {
 
   PDM_multipart_dcell_part_set(mpart,
                                0,
-                               dface_part);
+                               dface_part,
+                               PDM_OWNERSHIP_USER);
 
   // Compute partitioning
   PDM_multipart_compute(mpart);
