@@ -196,6 +196,7 @@ cdef class MultiPart:
     # > For Ppart
     cdef PDM_multipart_t* _mtp
     cdef int n_rank
+    cdef list keep_alive
 
 
     HOMOGENEOUS   = PDM_PART_SIZE_HOMOGENEOUS
@@ -270,6 +271,7 @@ cdef class MultiPart:
       # print("MultiPart::merge_domains -->", merge_domains)
       # print("MultiPart::split_method -->", split_method)
       self.n_rank = comm.Get_size()
+      self.keep_alive = list()
 
       cdef double* part_fraction_data = np_to_double_pointer(part_fraction)
 
@@ -393,6 +395,8 @@ cdef class MultiPart:
         i_domain (`int`)                    : Domain identifier
         dpart_id (`np.ndarray[np.int32_t]`) : Destination parts (0-based)
       """
+      self.keep_alive.append(dpart_id)
+
       cdef int *_dpart_id = np_to_int_pointer(dpart_id)
       PDM_multipart_dpart_id_set(self._mtp,
                                  i_domain,
