@@ -38,6 +38,18 @@ cdef extern from "pdm_multipart.h":
                                                   const int              i_domain,
                                                   const char            *renum_vtx_method)
 
+
+    # ------------------------------------------------------------------
+    void PDM_multipart_dpart_id_set(PDM_multipart_t *multipart,
+                                    int              i_domain,
+                                    int             *dpart_id,
+                                    PDM_ownership_t  ownership)
+
+    void PDM_multipart_dpart_id_get(PDM_multipart_t  *multipart,
+                                    int               i_domain,
+                                    int             **dpart_id,
+                                    PDM_ownership_t   ownership)
+
     # ------------------------------------------------------------------
     void PDM_multipart_compute(PDM_multipart_t *mtp)
 
@@ -368,6 +380,48 @@ cdef class MultiPart:
       PDM_multipart_set_reordering_options_vtx(self._mtp,
                                                i_domain,
                                                renum_vtx_method)
+    # ------------------------------------------------------------------
+    def dpart_id_set(self,
+                     int i_domain,
+                     NPY.ndarray[NPY.int32_t, mode='c', ndim=1] dpart_id not None):
+      """
+      dpart_id_set(i_domain, dpart_id)
+
+      Set the destination part
+
+      Parameters:
+        i_domain (`int`)                    : Domain identifier
+        dpart_id (`np.ndarray[np.int32_t]`) : Destination part (0-based)
+      """
+      cdef int *_dpart_id = np_to_int_pointer(dpart_id)
+      PDM_multipart_dpart_id_set(self._mtp,
+                                 i_domain,
+                                 _dpart_id,
+                                 PDM_OWNERSHIP_USER)
+
+    # ------------------------------------------------------------------
+    def dpart_id_get(self,
+                     int i_domain):
+      """
+      dpart_id_get(i_domain)
+
+      Get the destination part
+
+      Parameters:
+        i_domain (`int`) : Domain identifier
+
+      Returns:
+        Destination part (0-based `np.ndarray[np.int32_t]`)
+      """
+
+      cdef int *_dpart_id = NULL
+      cdef int dn_node = PDM_multipart_dpart_id_get(self._mtp,
+                                                    i_domain,
+                                                    &_dpart_id,
+                                                    PDM_OWNERSHIP_USER)
+
+      return create_numpy_or_none_i(_dpart_id, dn_node)
+
     # ------------------------------------------------------------------
     def compute(self):
       """

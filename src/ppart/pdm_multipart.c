@@ -2455,18 +2455,18 @@ _run_ppart_domain
   /*
    *  Split graph (manage 3D/2D automatically)
    */
-  int *node_part = multipart->dcell_part[i_domain];
-  int i_have_dcell_part = (node_part != NULL);
-  int all_have_dcell_part;
-  PDM_MPI_Allreduce(&i_have_dcell_part, &all_have_dcell_part, 1, PDM_MPI_INT, PDM_MPI_MAX, comm);
+  int *node_part = multipart->dpart_id[i_domain];
+  int i_have_dpart_id = (node_part != NULL);
+  int all_have_dpart_id;
+  PDM_MPI_Allreduce(&i_have_dpart_id, &all_have_dpart_id, 1, PDM_MPI_INT, PDM_MPI_MAX, comm);
 
   PDM_g_num_t *distrib_node = PDM_compute_entity_distribution(comm, dn_node);
   PDM_g_num_t* distrib_partition = NULL;
 
-  if (all_have_dcell_part) {
+  if (all_have_dpart_id) {
     distrib_partition = PDM_compute_entity_distribution(comm, n_part);
 
-    // Check dcell_part
+    // Check dpart_id
     for (int i_node = 0; i_node < dn_node; i_node++) {
       if (node_part[i_node] < 0 || node_part[i_node] >= distrib_partition[n_rank]) {
         PDM_error(__FILE__, __LINE__, 0, "Invalid node_part (%d / "PDM_FMT_G_NUM")\n", node_part[i_node], distrib_partition[n_rank]);
@@ -2485,8 +2485,8 @@ _run_ppart_domain
                                      distrib_node,
                                      &node_part);
 
-    multipart->dcell_part          [i_domain] = node_part;
-    multipart->ownership_dcell_part[i_domain] = PDM_OWNERSHIP_KEEP;
+    multipart->dpart_id          [i_domain] = node_part;
+    multipart->ownership_dpart_id[i_domain] = PDM_OWNERSHIP_KEEP;
   }
 
   // Start construct partionned mesh timer
@@ -3005,20 +3005,20 @@ PDM_multipart_create
   multipart->comm             = comm;
   multipart->owner            = owner;
 
-  PDM_malloc(multipart->dmeshes             , multipart->n_domain, PDM_dmesh_t                *);
-  PDM_malloc(multipart->dmeshes_nodal       , multipart->n_domain, PDM_dmesh_nodal_t          *);
-  PDM_malloc(multipart->dmn_to_dm           , multipart->n_domain, PDM_dmesh_nodal_to_dmesh_t *);
-  PDM_malloc(multipart->is_owner_dmeshes    , multipart->n_domain, PDM_bool_t                  );
-  PDM_malloc(multipart->dcell_part          , multipart->n_domain, int                        *);
-  PDM_malloc(multipart->ownership_dcell_part, multipart->n_domain, PDM_ownership_t             );
+  PDM_malloc(multipart->dmeshes           , multipart->n_domain, PDM_dmesh_t                *);
+  PDM_malloc(multipart->dmeshes_nodal     , multipart->n_domain, PDM_dmesh_nodal_t          *);
+  PDM_malloc(multipart->dmn_to_dm         , multipart->n_domain, PDM_dmesh_nodal_to_dmesh_t *);
+  PDM_malloc(multipart->is_owner_dmeshes  , multipart->n_domain, PDM_bool_t                  );
+  PDM_malloc(multipart->dpart_id          , multipart->n_domain, int                        *);
+  PDM_malloc(multipart->ownership_dpart_id, multipart->n_domain, PDM_ownership_t             );
 
   for (int i_dom = 0; i_dom < multipart->n_domain; ++i_dom) {
-    multipart->dmeshes_nodal       [i_dom] = NULL;
-    multipart->dmeshes             [i_dom] = NULL;
-    multipart->dmn_to_dm           [i_dom] = NULL;
-    multipart->is_owner_dmeshes    [i_dom] = PDM_FALSE;
-    multipart->dcell_part          [i_dom] = NULL;
-    multipart->ownership_dcell_part[i_dom] = PDM_OWNERSHIP_KEEP;
+    multipart->dmeshes_nodal     [i_dom] = NULL;
+    multipart->dmeshes           [i_dom] = NULL;
+    multipart->dmn_to_dm         [i_dom] = NULL;
+    multipart->is_owner_dmeshes  [i_dom] = PDM_FALSE;
+    multipart->dpart_id          [i_dom] = NULL;
+    multipart->ownership_dpart_id[i_dom] = PDM_OWNERSHIP_KEEP;
   }
 
   PDM_malloc(multipart->pmeshes          , multipart->n_domain, _part_mesh_t   );
@@ -3270,50 +3270,53 @@ void PDM_multipart_set_reordering_options_vtx
 
 
 void
-PDM_multipart_dcell_part_set
+PDM_multipart_dpart_id_set
 (
   PDM_multipart_t *multipart,
   int              i_domain,
-  int             *dcell_part,
+  int             *dpart_id,
   PDM_ownership_t  ownership
 )
 {
   if (multipart == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Error - PDM_multipart_dcell_part_set : Invalid PDM_multipart_t instance\n");
+    PDM_error(__FILE__, __LINE__, 0, "Error - PDM_multipart_dpart_id_set : Invalid PDM_multipart_t instance\n");
   }
   if (i_domain >= multipart->n_domain) {
-    PDM_error(__FILE__, __LINE__, 0, "Error - PDM_multipart_dcell_part_set : Invalid i_domain (%d / %d)\n", i_domain, multipart->n_domain);
+    PDM_error(__FILE__, __LINE__, 0, "Error - PDM_multipart_dpart_id_set : Invalid i_domain (%d / %d)\n", i_domain, multipart->n_domain);
   }
   if (ownership != PDM_OWNERSHIP_KEEP &&
       ownership != PDM_OWNERSHIP_USER) {
-    PDM_error(__FILE__, __LINE__, 0, "Error - PDM_multipart_dcell_part_set : Invalid ownership (must be either PDM_OWNERSHIP_KEEP or PDM_OWNERSHIP_USER)\n");
+    PDM_error(__FILE__, __LINE__, 0, "Error - PDM_multipart_dpart_id_set : Invalid ownership (must be either PDM_OWNERSHIP_KEEP or PDM_OWNERSHIP_USER)\n");
   }
 
-  multipart->dcell_part          [i_domain] = dcell_part;
-  multipart->ownership_dcell_part[i_domain] = ownership;
+  multipart->dpart_id          [i_domain] = dpart_id;
+  multipart->ownership_dpart_id[i_domain] = ownership;
 }
 
 
-void
-PDM_multipart_dcell_part_get
+int
+PDM_multipart_dpart_id_get
 (
   PDM_multipart_t  *multipart,
   int               i_domain,
-  int             **dcell_part,
+  int             **dpart_id,
   PDM_ownership_t   ownership
 )
 {
   if (multipart == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Error - PDM_multipart_dcell_part_get : Invalid PDM_multipart_t instance\n");
+    PDM_error(__FILE__, __LINE__, 0, "Error - PDM_multipart_dpart_id_get : Invalid PDM_multipart_t instance\n");
   }
   if (i_domain >= multipart->n_domain) {
-    PDM_error(__FILE__, __LINE__, 0, "Error - PDM_multipart_dcell_part_get : Invalid i_domain (%d / %d)\n", i_domain, multipart->n_domain);
+    PDM_error(__FILE__, __LINE__, 0, "Error - PDM_multipart_dpart_id_get : Invalid i_domain (%d / %d)\n", i_domain, multipart->n_domain);
   }
 
-  *dcell_part = multipart->dcell_part[i_domain];
+  *dpart_id = multipart->dpart_id[i_domain];
   if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
-    multipart->ownership_dcell_part[i_domain] = ownership;
+    multipart->ownership_dpart_id[i_domain] = ownership;
   }
+
+  return PDM_multipart_dn_node_get(multipart,
+                                   i_domain);
 }
 
 
@@ -3397,7 +3400,6 @@ PDM_multipart_compute
                           comm);
         multipart->dmeshes  [i_domain] = _dmesh;
         multipart->dmn_to_dm[i_domain] = dmn_to_dm; /* Store it - We need it for PDM_multipart_get_part_mesh_nodal */
-        // PDM_dmesh_nodal_to_dmesh_free(dmn_to_dm);
 
       } else { // face representation
         // PDM_printf("Partitionning face domain %d/%d \n", i_domain+1, multipart->n_domain);
@@ -4152,8 +4154,8 @@ PDM_multipart_free
       multipart->dmn_to_dm[i_domain] = NULL;
     }
 
-    if (multipart->ownership_dcell_part[i_domain] == PDM_OWNERSHIP_KEEP) {
-      PDM_free(multipart->dcell_part[i_domain]);
+    if (multipart->ownership_dpart_id[i_domain] == PDM_OWNERSHIP_KEEP) {
+      PDM_free(multipart->dpart_id[i_domain]);
     }
   }
   PDM_free(multipart->pmeshes);
@@ -4163,8 +4165,8 @@ PDM_multipart_free
   PDM_free(multipart->is_owner_dmeshes);
   PDM_free(multipart->n_part);
   PDM_free(multipart->ownership_pmeshes);
-  PDM_free(multipart->dcell_part);
-  PDM_free(multipart->ownership_dcell_part);
+  PDM_free(multipart->dpart_id);
+  PDM_free(multipart->ownership_dpart_id);
 
   //PDM_part_renum_method_purge();
   PDM_free(multipart);
@@ -4408,6 +4410,53 @@ PDM_multipart_stat_get
   PDM_free(n_loc);
   PDM_free(s_loc);
   PDM_free(dpart_proc);
+}
+
+
+
+int
+PDM_multipart_dn_node_get
+(
+  PDM_multipart_t  *multipart,
+  int               i_domain
+)
+{
+  int dn_node = 0;
+
+  PDM_dmesh_t *dmesh = multipart->dmeshes[i_domain];
+
+  if (dmesh == NULL) {
+    PDM_error(__FILE__, __LINE__, 0, "Error - PDM_multipart_dn_node_get : Invalid dmesh\n");
+  }
+
+  int dn_cell;
+  int dn_face;
+  int dn_edge;
+  int dn_vtx;
+  PDM_dmesh_dims_get(dmesh,
+                     &dn_cell,
+                     &dn_face,
+                     &dn_edge,
+                     &dn_vtx);
+
+  if (dmesh->n_g_cell != 0) {
+    // Dimension 3
+    dn_node = dmesh->dn_cell;
+  }
+  else if (dmesh->n_g_face != 0) {
+    // Dimension 2
+    dn_node = dmesh->dn_face;
+  }
+  else if (dmesh->n_g_edge != 0) {
+    // Dimension 1
+    dn_node = dmesh->dn_edge;
+  }
+  else if (dmesh->n_g_vtx != 0) {
+    // Dimension 0
+    dn_node = dmesh->dn_vtx;
+  }
+
+  return dn_node;
 }
 
 

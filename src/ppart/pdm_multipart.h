@@ -244,40 +244,41 @@ void PDM_multipart_set_reordering_options_vtx
 
 /**
  *
- * \brief Set the destination part of block-distributed cells
+ * \brief Set the destination part
  *
  * \param [in]   multipart   Pointer to \ref PDM_multipart_t instance
  * \param [in]   i_domain    Domain identifier
- * \param [in]   dcell_part  Distributed cell partitioning (0-based, size = dn_cell)
- * \param [in]   ownership   Ownership for \p dcell_part
+ * \param [in]   dpart_id    Destination part (0-based)
+ * \param [in]   ownership   Ownership for \p dpart_id
  *
  */
 void
-PDM_multipart_dcell_part_set
+PDM_multipart_dpart_id_set
 (
   PDM_multipart_t *multipart,
   int              i_domain,
-  int             *dcell_part,
+  int             *dpart_id,
   PDM_ownership_t  ownership
 );
 
 
 /**
  *
- * \brief Get the destination part of block-distributed cells
+ * \brief Get the destination part
  *
  * \param [in]   multipart   Pointer to \ref PDM_multipart_t instance
  * \param [in]   i_domain    Domain identifier
- * \param [out]  dcell_part  Distributed cell partitioning (0-based, size = dn_cell)
- * \param [in]   ownership   Ownership for \p dcell_part
+ * \param [out]  dpart_id    Destination part (0-based)
+ * \param [in]   ownership   Ownership for \p dpart_id
  *
+ * \return Number of block-distributed entities
  */
-void
-PDM_multipart_dcell_part_get
+int
+PDM_multipart_dpart_id_get
 (
   PDM_multipart_t  *multipart,
   int               i_domain,
-  int             **dcell_part,
+  int             **dpart_id,
   PDM_ownership_t   ownership
 );
 
@@ -713,6 +714,21 @@ PDM_multipart_stat_get
  int              *bound_part_faces_min,
  int              *bound_part_faces_max,
  int              *bound_part_faces_sum
+);
+
+/**
+ * \brief Return number of block-distributed leading entities in a given domain
+ *
+ * \param [in] multipart  Pointer to \ref PDM_multipart instance
+ * \param [in] i_domain   Domain identifier
+ *
+ * \return Number of block-distributed entities
+ */
+int
+PDM_multipart_dn_node_get
+(
+  PDM_multipart_t  *multipart,
+  int               i_domain
 );
 
 /*----------------------------------------------------------------------------*/
