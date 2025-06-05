@@ -45,10 +45,10 @@ cdef extern from "pdm_multipart.h":
                                     int             *dpart_id,
                                     PDM_ownership_t  ownership)
 
-    void PDM_multipart_dpart_id_get(PDM_multipart_t  *multipart,
-                                    int               i_domain,
-                                    int             **dpart_id,
-                                    PDM_ownership_t   ownership)
+    int PDM_multipart_dpart_id_get(PDM_multipart_t  *multipart,
+                                   int               i_domain,
+                                   int             **dpart_id,
+                                   PDM_ownership_t   ownership)
 
     # ------------------------------------------------------------------
     void PDM_multipart_compute(PDM_multipart_t *mtp)
