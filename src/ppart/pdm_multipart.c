@@ -87,6 +87,22 @@ extern "C" {
 #endif
 #endif /* __cplusplus */
 
+
+#define CHECK_INSTANCE(multipart) \
+  if ((multipart) == NULL) { \
+    PDM_error(__FILE__, __LINE__, 0, "Error : Invalid PDM_multipart_t instance\n"); \
+  }
+
+#define CHECK_I_DOMAIN(multipart, i_domain) \
+if ((i_domain) >= (multipart)->n_domain) { \
+  PDM_error(__FILE__, __LINE__, 0, "Error : Invalid i_domain (%d / %d)\n", (i_domain), (multipart)->n_domain); \
+}
+
+#define CHECK_I_PART(multipart, i_domain, i_part) \
+if ((i_part) >= (multipart)->n_part[(i_domain)]) { \
+  PDM_error(__FILE__, __LINE__, 0, "Error : Invalid i_part for domain %d (%d / %d)\n", (i_domain), (i_part), (multipart)->n_part[(i_domain)]); \
+}
+
 /*============================================================================
  * Local structure definitions
  *============================================================================*/
@@ -3053,7 +3069,9 @@ void PDM_multipart_dmesh_set
        PDM_dmesh_t *dmesh
 )
 {
-  assert(domain_id < multipart->n_domain);
+  CHECK_INSTANCE(multipart);
+  CHECK_I_DOMAIN(multipart, domain_id);
+
   multipart->dmeshes[domain_id] = dmesh;
 }
 
@@ -3065,7 +3083,9 @@ void PDM_multipart_dmesh_nodal_set
        PDM_dmesh_nodal_t *dmesh_nodal
 )
 {
-  assert(domain_id < multipart->n_domain);
+  CHECK_INSTANCE(multipart);
+  CHECK_I_DOMAIN(multipart, domain_id);
+
   assert(multipart->dmeshes_nodal[domain_id] == NULL);
   multipart->dmeshes_nodal[domain_id] = dmesh_nodal;
 }
@@ -3091,6 +3111,8 @@ PDM_multipart_block_set
  const PDM_g_num_t           *dface_group
 )
 {
+  CHECK_INSTANCE(multipart);
+  CHECK_I_DOMAIN(multipart, i_domain);
 
   // Create dmesh
   PDM_dmesh_t* dm = PDM_dmesh_create(PDM_OWNERSHIP_KEEP,
@@ -3156,14 +3178,19 @@ PDM_multipart_renum_method_set
  const int           *renum_entity_properties
 )
 {
+  CHECK_INSTANCE(multipart);
+
   int method_renum_id = -1;
   if(mesh_entity == PDM_MESH_ENTITY_CELL) {
     method_renum_id = PDM_part_renum_method_cell_idx_get(renum_entity_method);
-  } else if(mesh_entity == PDM_MESH_ENTITY_FACE) {
+  }
+  else if(mesh_entity == PDM_MESH_ENTITY_FACE) {
     method_renum_id = PDM_part_renum_method_face_idx_get(renum_entity_method);
-  } else if(mesh_entity == PDM_MESH_ENTITY_EDGE) {
+  }
+  else if(mesh_entity == PDM_MESH_ENTITY_EDGE) {
     method_renum_id = PDM_part_renum_method_edge_idx_get(renum_entity_method);
-  } else if(mesh_entity == PDM_MESH_ENTITY_VTX) {
+  }
+  else if(mesh_entity == PDM_MESH_ENTITY_VTX) {
     method_renum_id = PDM_part_renum_method_vtx_idx_get(renum_entity_method);
   }
 
@@ -3196,6 +3223,7 @@ PDM_multipart_set_reordering_options
  const char      *renum_face_method
 )
 {
+  CHECK_INSTANCE(multipart);
 
   int _renum_cell_method = PDM_part_renum_method_cell_idx_get(renum_cell_method);
   int _renum_face_method = PDM_part_renum_method_face_idx_get(renum_face_method);
@@ -3229,6 +3257,7 @@ void PDM_multipart_set_reordering_options_vtx
  const char      *renum_vtx_method
 )
 {
+  CHECK_INSTANCE(multipart);
 
   int _renum_vtx_method = PDM_part_renum_method_vtx_idx_get(renum_vtx_method);
   if (_renum_vtx_method == -1) {
@@ -3256,12 +3285,9 @@ PDM_multipart_dpart_id_set
   PDM_ownership_t  ownership
 )
 {
-  if (multipart == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Error - PDM_multipart_dpart_id_set : Invalid PDM_multipart_t instance\n");
-  }
-  if (i_domain >= multipart->n_domain) {
-    PDM_error(__FILE__, __LINE__, 0, "Error - PDM_multipart_dpart_id_set : Invalid i_domain (%d / %d)\n", i_domain, multipart->n_domain);
-  }
+  CHECK_INSTANCE(multipart);
+  CHECK_I_DOMAIN(multipart, i_domain);
+
   if (ownership != PDM_OWNERSHIP_KEEP &&
       ownership != PDM_OWNERSHIP_USER) {
     PDM_error(__FILE__, __LINE__, 0, "Error - PDM_multipart_dpart_id_set : Invalid ownership (must be either PDM_OWNERSHIP_KEEP or PDM_OWNERSHIP_USER)\n");
@@ -3281,12 +3307,8 @@ PDM_multipart_dpart_id_get
   PDM_ownership_t   ownership
 )
 {
-  if (multipart == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Error - PDM_multipart_dpart_id_get : Invalid PDM_multipart_t instance\n");
-  }
-  if (i_domain >= multipart->n_domain) {
-    PDM_error(__FILE__, __LINE__, 0, "Error - PDM_multipart_dpart_id_get : Invalid i_domain (%d / %d)\n", i_domain, multipart->n_domain);
-  }
+  CHECK_INSTANCE(multipart);
+  CHECK_I_DOMAIN(multipart, i_domain);
 
   *dpart_id = multipart->dpart_id[i_domain];
   if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
@@ -3304,6 +3326,8 @@ PDM_multipart_compute
  PDM_multipart_t *multipart
 )
 {
+  CHECK_INSTANCE(multipart);
+
   int i_rank;
   int n_rank;
   PDM_MPI_Comm_rank(multipart->comm, &i_rank);
@@ -3443,7 +3467,8 @@ PDM_part_mesh_nodal_t **pmesh_nodal,
 PDM_ownership_t         ownership
 )
 {
-  assert(i_domain < multipart->n_domain);
+  CHECK_INSTANCE(multipart);
+  CHECK_I_DOMAIN(multipart, i_domain);
 
   _part_mesh_t      *pmesh       = &(multipart->pmeshes    [i_domain]);
   PDM_dmesh_nodal_t *dmesh_nodal = multipart->dmeshes_nodal[i_domain];
@@ -3474,7 +3499,8 @@ PDM_multipart_get_part_mesh
        PDM_ownership_t   ownership
 )
 {
-  assert(i_domain < multipart->n_domain);
+  CHECK_INSTANCE(multipart);
+  CHECK_I_DOMAIN(multipart, i_domain);
 
   *pmesh = multipart->pmeshes[i_domain].pmesh;
 
@@ -3502,8 +3528,10 @@ const int        i_part,
       int       *n_bound_groups
 )
 {
+  CHECK_INSTANCE(multipart);
+  CHECK_I_DOMAIN(multipart, i_domain);
+  CHECK_I_PART  (multipart, i_domain, i_part);
 
-  assert(i_domain < multipart->n_domain && i_part < multipart->n_part[i_domain]);
   _part_mesh_t _pmeshes = multipart->pmeshes[i_domain];
 
   *n_cell = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_CELL);
@@ -3591,7 +3619,10 @@ PDM_multipart_part_graph_comm_get
  PDM_ownership_t       ownership
 )
 {
-  assert(i_domain < multipart->n_domain && i_part < multipart->n_part[i_domain]);
+  CHECK_INSTANCE(multipart);
+  CHECK_I_DOMAIN(multipart, i_domain);
+  CHECK_I_PART  (multipart, i_domain, i_part);
+
   _part_mesh_t _pmeshes = multipart->pmeshes[i_domain];
 
   PDM_bound_type_t bound_type = PDM_entity_type_to_bound_type(entity_type);
@@ -3630,8 +3661,10 @@ const int            i_part,
       PDM_g_num_t  **face_bound_ln_to_gn
 )
 {
+  CHECK_INSTANCE(multipart);
+  CHECK_I_DOMAIN(multipart, i_domain);
+  CHECK_I_PART  (multipart, i_domain, i_part);
 
-  assert(i_domain < multipart->n_domain && i_part < multipart->n_part[i_domain]);
   _part_mesh_t _pmeshes = multipart->pmeshes[i_domain];
 
   // *cell_tag = NULL;
@@ -3746,7 +3779,9 @@ PDM_multipart_t *multipart,
 const int        i_domain
 )
 {
-  assert(i_domain < multipart->n_domain);
+  CHECK_INSTANCE(multipart);
+  CHECK_I_DOMAIN(multipart, i_domain);
+
   _part_mesh_t _pmeshes = multipart->pmeshes[i_domain];
   return PDM_part_mesh_tn_part_get(_pmeshes.pmesh);
 }
@@ -3765,42 +3800,20 @@ const int                       i_part,
       PDM_ownership_t           ownership
 )
 {
-  assert(i_domain < multipart->n_domain && i_part < multipart->n_part[i_domain]);
+  CHECK_INSTANCE(multipart);
+  CHECK_I_DOMAIN(multipart, i_domain);
+  CHECK_I_PART  (multipart, i_domain, i_part);
 
   _part_mesh_t _pmeshes = multipart->pmeshes[i_domain];
-  int pn_entity = -1;
 
-  if( connectivity_type == PDM_CONNECTIVITY_TYPE_CELL_ELMT ||
-      connectivity_type == PDM_CONNECTIVITY_TYPE_CELL_CELL ||
-      connectivity_type == PDM_CONNECTIVITY_TYPE_CELL_FACE ||
-      connectivity_type == PDM_CONNECTIVITY_TYPE_CELL_EDGE ||
-      connectivity_type == PDM_CONNECTIVITY_TYPE_CELL_VTX)
-  {
-    pn_entity = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_CELL  );
-  } else if( connectivity_type == PDM_CONNECTIVITY_TYPE_FACE_ELMT ||
-             connectivity_type == PDM_CONNECTIVITY_TYPE_FACE_CELL ||
-             connectivity_type == PDM_CONNECTIVITY_TYPE_FACE_FACE ||
-             connectivity_type == PDM_CONNECTIVITY_TYPE_FACE_EDGE ||
-             connectivity_type == PDM_CONNECTIVITY_TYPE_FACE_VTX )
-  {
-    pn_entity = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_FACE  );
-  } else if( connectivity_type == PDM_CONNECTIVITY_TYPE_EDGE_ELMT ||
-             connectivity_type == PDM_CONNECTIVITY_TYPE_EDGE_CELL ||
-             connectivity_type == PDM_CONNECTIVITY_TYPE_EDGE_FACE ||
-             connectivity_type == PDM_CONNECTIVITY_TYPE_EDGE_EDGE ||
-             connectivity_type == PDM_CONNECTIVITY_TYPE_EDGE_VTX )
-  {
-    pn_entity = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_EDGE  );
-  } else if( connectivity_type == PDM_CONNECTIVITY_TYPE_VTX_ELMT ||
-             connectivity_type == PDM_CONNECTIVITY_TYPE_VTX_CELL ||
-             connectivity_type == PDM_CONNECTIVITY_TYPE_VTX_FACE ||
-             connectivity_type == PDM_CONNECTIVITY_TYPE_VTX_EDGE ||
-             connectivity_type == PDM_CONNECTIVITY_TYPE_VTX_VTX )
-  {
-    pn_entity = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_VTX);
-  } else {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_multipart_part_connectivity_get error : Wrong connectivity_type \n");
-  }
+  PDM_mesh_entities_t entity_type1;
+  PDM_mesh_entities_t entity_type2;
+
+  PDM_connectivity_type_to_entity_pair(connectivity_type,
+                                       &entity_type1,
+                                       &entity_type2);
+
+  int pn_entity = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, entity_type1);
 
   PDM_part_mesh_connectivity_get(_pmeshes.pmesh,
                                  i_part,
@@ -3878,29 +3891,17 @@ const int                   i_part,
       PDM_mesh_entities_t   entity_type
 )
 {
-  assert(i_domain < multipart->n_domain && i_part < multipart->n_part[i_domain]);
+  CHECK_INSTANCE(multipart);
+  CHECK_I_DOMAIN(multipart, i_domain);
+  CHECK_I_PART  (multipart, i_domain, i_part);
+
   _part_mesh_t _pmeshes = multipart->pmeshes[i_domain];
 
-  int pn_entity = 0;
-  switch (entity_type) {
-    case PDM_MESH_ENTITY_CELL:
-       pn_entity = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_CELL);
-      break;
-    case PDM_MESH_ENTITY_FACE:
-       pn_entity = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_FACE);
-      break;
-    case PDM_MESH_ENTITY_EDGE:
-       pn_entity = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_EDGE);
-      break;
-    case PDM_MESH_ENTITY_VTX:
-       pn_entity = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_VTX);
-      break;
-    default:
-      PDM_error(__FILE__, __LINE__, 0, "PDM_multipart_part_n_entity_get error : Wrong entity_type \n");
-      break;
+  if (entity_type < 0 || entity_type >= PDM_MESH_ENTITY_MAX) {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_multipart_part_n_entity_get error : Wrong entity_type %d\n", entity_type);
   }
 
-  return pn_entity;
+  return PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, entity_type);
 }
 
 
@@ -3916,7 +3917,9 @@ const int                   i_part,
       PDM_ownership_t       ownership
 )
 {
-  assert(i_domain < multipart->n_domain && i_part < multipart->n_part[i_domain]);
+  CHECK_INSTANCE(multipart);
+  CHECK_I_DOMAIN(multipart, i_domain);
+  CHECK_I_PART  (multipart, i_domain, i_part);
 
   _part_mesh_t _pmeshes = multipart->pmeshes[i_domain];
 
@@ -3944,7 +3947,10 @@ const int                   i_part,
       PDM_ownership_t       ownership
 )
 {
-  assert(i_domain < multipart->n_domain && i_part < multipart->n_part[i_domain]);
+  CHECK_INSTANCE(multipart);
+  CHECK_I_DOMAIN(multipart, i_domain);
+  CHECK_I_PART  (multipart, i_domain, i_part);
+
   _part_mesh_t _pmeshes = multipart->pmeshes[i_domain];
 
   int pn_entity = PDM_multipart_part_n_entity_get(multipart, i_domain, i_part, entity_type);
@@ -3968,7 +3974,10 @@ const int               i_part,
       PDM_ownership_t   ownership
 )
 {
-  assert(i_domain < multipart->n_domain && i_part < multipart->n_part[i_domain]);
+  CHECK_INSTANCE(multipart);
+  CHECK_I_DOMAIN(multipart, i_domain);
+  CHECK_I_PART  (multipart, i_domain, i_part);
+
   _part_mesh_t* _pmeshes = (&multipart->pmeshes[i_domain]);
 
   *hyperplane_color = _pmeshes->hyperplane_color[i_part];
@@ -3990,7 +3999,10 @@ const int               i_part,
       PDM_ownership_t   ownership
 )
 {
-  assert(i_domain < multipart->n_domain && i_part < multipart->n_part[i_domain]);
+  CHECK_INSTANCE(multipart);
+  CHECK_I_DOMAIN(multipart, i_domain);
+  CHECK_I_PART  (multipart, i_domain, i_part);
+
   _part_mesh_t* _pmeshes = (&multipart->pmeshes[i_domain]);
 
   *thread_color = _pmeshes->thread_color[i_part];
@@ -4013,8 +4025,10 @@ const int               i_part,
       PDM_ownership_t   ownership
 )
 {
+  CHECK_INSTANCE(multipart);
+  CHECK_I_DOMAIN(multipart, i_domain);
+  CHECK_I_PART  (multipart, i_domain, i_part);
 
-  assert(i_domain < multipart->n_domain && i_part < multipart->n_part[i_domain]);
   _part_mesh_t* _pmeshes = (&multipart->pmeshes[i_domain]);
 
   *vtx_ghost_information = _pmeshes->vtx_ghost_information[i_part];
@@ -4164,9 +4178,9 @@ const int                       i_part,
       PDM_ownership_t           ownership
 )
 {
-  PDM_UNUSED(ownership);
-
-  assert(i_domain < multipart->n_domain && i_part < multipart->n_part[i_domain]);
+  CHECK_INSTANCE(multipart);
+  CHECK_I_DOMAIN(multipart, i_domain);
+  CHECK_I_PART  (multipart, i_domain, i_part);
 
   _part_mesh_t _pmeshes = multipart->pmeshes[i_domain];
 
@@ -4193,8 +4207,10 @@ void PDM_multipart_group_get
  PDM_ownership_t       ownership
 )
 {
+  CHECK_INSTANCE(multipart);
+  CHECK_I_DOMAIN(multipart, i_domain);
+  CHECK_I_PART  (multipart, i_domain, i_part);
 
-  assert(i_domain < multipart->n_domain && i_part < multipart->n_part[i_domain]);
   _part_mesh_t _pmeshes = multipart->pmeshes[i_domain];
 
   PDM_bound_type_t bound_type = PDM_entity_type_to_bound_type(entity_type);
@@ -4230,10 +4246,12 @@ PDM_multipart_stat_get
  int              *bound_part_faces_sum
 )
 {
+  CHECK_INSTANCE(multipart);
+  CHECK_I_DOMAIN(multipart, i_domain);
+
   int n_rank;
   PDM_MPI_Comm_size(multipart->comm, &n_rank);
 
-  assert(i_domain < multipart->n_domain);
   _part_mesh_t _pmeshes = multipart->pmeshes[i_domain];
 
   int *dpart_proc;
@@ -4399,6 +4417,9 @@ PDM_multipart_dn_node_get
   int               i_domain
 )
 {
+  CHECK_INSTANCE(multipart);
+  CHECK_I_DOMAIN(multipart, i_domain);
+
   PDM_dmesh_t *dmesh = multipart->dmeshes[i_domain];
 
   if (dmesh == NULL) {

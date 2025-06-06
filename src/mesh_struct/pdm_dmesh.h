@@ -351,7 +351,7 @@ PDM_dmesh_compute_distributions
 /**
  * \brief Get spatial dimension of a PDM_dmesh_t instance
  *
- * \param [inout] dmesh  \ref PDM_dmesh_t instance
+ * \param [in] dmesh  \ref PDM_dmesh_t instance
  *
  * \return Dimension
  */
