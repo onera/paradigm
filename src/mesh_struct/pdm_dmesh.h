@@ -347,6 +347,20 @@ PDM_dmesh_compute_distributions
  PDM_dmesh_t *dmesh
 );
 
+
+/**
+ * \brief Get spatial dimension of a PDM_dmesh_t instance
+ *
+ * \param [inout] dmesh  \ref PDM_dmesh_t instance
+ *
+ * \return Dimension
+ */
+int
+PDM_dmesh_dimension_get
+(
+  PDM_dmesh_t *dmesh
+);
+
 /*----------------------------------------------------------------------------*/
 
 #ifdef __cplusplus

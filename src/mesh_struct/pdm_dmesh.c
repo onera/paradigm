@@ -977,6 +977,39 @@ PDM_dmesh_compute_distributions
 }
 
 
+int
+PDM_dmesh_dimension_get
+(
+  PDM_dmesh_t *dmesh
+)
+{
+  if (dmesh == NULL) {
+    PDM_error(__FILE__, __LINE__, 0, "Invalid dmesh\n");
+  }
+
+  int dim = -1;
+
+  if (dmesh->n_g_cell != 0) {
+    // Dimension 3
+    dim = 3;
+  }
+  else if (dmesh->n_g_face != 0) {
+    // Dimension 2
+    dim = 2;
+  }
+  else if (dmesh->n_g_edge != 0) {
+    // Dimension 1
+    dim = 1;
+  }
+  else if (dmesh->n_g_vtx != 0) {
+    // Dimension 0
+    dim = 0;
+  }
+
+  return dim;
+}
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

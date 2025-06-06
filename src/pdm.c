@@ -204,6 +204,36 @@ PDM_entity_type_to_geometry_kind
 }
 
 
+PDM_mesh_entities_t
+PDM_dimension_to_entity_type
+(
+  const int dim
+)
+{
+  switch (dim) {
+
+    case 3: {
+      return PDM_MESH_ENTITY_CELL;
+    }
+    case 2: {
+      return PDM_MESH_ENTITY_FACE;
+    }
+    case 1: {
+      return PDM_MESH_ENTITY_EDGE;
+    }
+    case 0: {
+      return PDM_MESH_ENTITY_VTX;
+    }
+    default: {
+      PDM_error(__FILE__, __LINE__, 0, "Invalid dimension %d\n", dim);
+    }
+
+  }
+
+  return PDM_MESH_ENTITY_MAX;
+}
+
+
 PDM_connectivity_type_t
 PDM_entity_pair_to_connectivity_type
 (
