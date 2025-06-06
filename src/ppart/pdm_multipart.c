@@ -1431,7 +1431,6 @@ _split_graph
       PDM_multipart_t   *multipart,
       PDM_MPI_Comm       comm,
       PDM_dmesh_t       *dmesh,
-      _part_mesh_t      *pmeshes,
       int                n_part,
       PDM_split_dual_t   split_method,
       PDM_part_size_t    part_size_method,
@@ -1500,11 +1499,10 @@ const double            *part_fraction,
   PDM_malloc(_node_part, dn_node, int);
 
   // Compute total number of partitions for this domain
-  int tn_part;
-  PDM_MPI_Allreduce(&n_part, &tn_part, 1, PDM_MPI_INT, PDM_MPI_SUM, comm);
-  pmeshes->tn_part = tn_part;
+  PDM_g_num_t *distrib_partition = PDM_compute_entity_distribution(comm, n_part);
 
-  PDM_g_num_t *distrib_partition = PDM_compute_entity_distribution(comm, n_part );
+  int tn_part = (int) distrib_partition[n_rank];
+
   double *part_fractions = NULL;
   if (part_size_method == PDM_PART_SIZE_HETEROGENEOUS){
     int *n_part_per_rank;
@@ -2455,7 +2453,6 @@ _run_ppart_domain
     distrib_partition = _split_graph(multipart,
                                      comm,
                                      dmesh,
-                                     pmeshes,
                                      n_part,
                                      split_method,
                                      part_size_method,
@@ -2466,6 +2463,9 @@ _run_ppart_domain
     multipart->dpart_id          [i_domain] = node_part;
     multipart->ownership_dpart_id[i_domain] = PDM_OWNERSHIP_KEEP;
   }
+
+  pmeshes->tn_part = (int) distrib_partition[n_rank];
+
 
   // Start construct partionned mesh timer
   PDM_timer_resume(multipart->timer);
