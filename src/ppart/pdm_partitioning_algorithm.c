@@ -1061,17 +1061,16 @@ PDM_part_dconnectivity_to_pconnectivity_sort
 
   // 0. create pconnectivity with global numbering
   PDM_g_num_t** pconnectivity_abs;
-  _dconnectivity_to_pconnectivity_abs(
-    comm,
-    entity_distribution,
-    dconnectivity_idx,
-    dconnectivity,
-    n_part,
-    pn_entity,
-    pentity_ln_to_gn,
-    pconnectivity_idx,&pconnectivity_abs
-  );
-  int** _pconnectivity_idx       = *pconnectivity_idx;
+  _dconnectivity_to_pconnectivity_abs(comm,
+                                      entity_distribution,
+                                      dconnectivity_idx,
+                                      dconnectivity,
+                                      n_part,
+                                      pn_entity,
+                                      pentity_ln_to_gn,
+                                      pconnectivity_idx,
+                                      &pconnectivity_abs);
+  int** _pconnectivity_idx = *pconnectivity_idx;
 
   // 1. Create local numbering
   // Caution the recv connectivity can be negative

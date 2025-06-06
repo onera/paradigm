@@ -181,12 +181,15 @@ program testf
   dcell_face     => null()
   dcell_tag      => null()
   dcell_weight   => null()
-  ! dcell_part     => null()
   allocate(dcell_part(dn_cell))
   dface_tag      => null()
   dvtx_tag       => null()
 
-  have_dcell_part = .false.
+  have_dcell_part = .true.
+
+  if (have_dcell_part) then
+    dcell_part(1:dn_cell) = i_rank ! similar to PDM_SPLIT_DUAL_WITH_IMPLICIT
+  endif
 
   call pdm_part_create(ppart,                      &
                        comm,                       &
