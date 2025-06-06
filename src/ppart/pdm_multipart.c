@@ -2008,7 +2008,9 @@ _deduce_part_connectivity_3d
                              &dcell_face,
                              &dcell_face_idx,
                              PDM_OWNERSHIP_BAD_VALUE);
-  assert(dcell_face_idx != NULL);
+  if (dcell_face_idx == NULL) {
+    PDM_error(__FILE__, __LINE__, 0, "Error - _deduce_part_connectivity_3d : dcell_face_idx = NULL");
+  }
 
   int          *pn_face        = NULL;
   PDM_g_num_t **pface_ln_to_gn = NULL;
@@ -2324,11 +2326,14 @@ _run_ppart_domain
 
   dn_node = PDM_dmesh_dn_entity_get(dmesh, entity_type1);
 
+  if (split_method != PDM_SPLIT_DUAL_WITH_HILBERT) {
+    if (dn_node <= 0) {
+      PDM_error(__FILE__, __LINE__, 0, "Error : Hilbert partitioning requires non-empty blocks (dn_node = %d)\n", dn_node);
+    }
+  }
+
   switch (dim) {
     case 3: {
-      if (split_method != PDM_SPLIT_DUAL_WITH_HILBERT) {
-        assert(dn_node > 0);
-      }
       _renum_node_method_none    = PDM_part_renum_method_cell_idx_get("PDM_PART_RENUM_CELL_NONE");
       _pmeshes_renum_node_method = pmeshes->renum_method[PDM_MESH_ENTITY_CELL];
       break;
@@ -3536,9 +3541,9 @@ const int        i_part,
     *s_face_vtx  = 0;
   }
 
-  int                     *face_part_bound_proc_idx;
-  int                     *face_part_bound_part_idx;
-  int                     *face_part_bound;
+  int *face_part_bound_proc_idx;
+  int *face_part_bound_part_idx;
+  int *face_part_bound;
   PDM_part_mesh_part_graph_comm_get(_pmeshes.pmesh,
                                     i_part,
                                     PDM_BOUND_TYPE_FACE,
