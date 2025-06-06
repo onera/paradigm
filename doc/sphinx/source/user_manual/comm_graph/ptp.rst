@@ -115,23 +115,10 @@ API
       .. ifconfig:: enable_fortran_doc == 'ON'
 
         .. f:autosubroutine:: PDM_part_to_part_iexch
-
-        .. f:subroutine:: pdm_part_to_part_iexch_wait(ptp, request)
-
-          Finalize a non-blocking exchange (Part1→Part2)
-
-          :p c_ptr ptp [in]:       Part-to-Part instance
-          :p integer request [in]: Request
+        .. f:autosubroutine:: PDM_part_to_part_iexch_wait
 
         .. f:autosubroutine:: PDM_part_to_part_reverse_iexch
-
-        .. f:subroutine:: pdm_part_to_part_reverse_iexch_wait(ptp, request)
-
-          Finalize a non-blocking exchange (Part2→Part1)
-
-          :p c_ptr ptp [in]:       Part-to-Part instance
-          :p integer request [in]: Request
-
+        .. f:autosubroutine:: PDM_part_to_part_reverse_iexch_wait
 
       .. ifconfig:: enable_fortran_doc == 'OFF'
 
@@ -174,11 +161,7 @@ API
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
-        .. f:subroutine:: pdm_part_to_part_free(ptp)
-
-          Free a Part-to-Part structure
-
-          :p c_ptr ptp [inout]: Part-to-part instance
+        .. f:autosubroutine:: PDM_part_to_part_free
 
       .. ifconfig:: enable_fortran_doc == 'OFF'
 
