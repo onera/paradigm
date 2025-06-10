@@ -314,7 +314,7 @@ PDM_generate_mesh_parallelepiped
  * \param [out]  pn_face        Number of faces (size = \p n_part)
  * \param [out]  pvtx_coord     Vertex coordinates (for each part, size = \p pn_vtx)
  * \param [out]  pedge_vtx      Edge->vertex connectivity (for each part, size = 2 * \p pn_edge)
- * \param [out]  pface_edge_idx Index of face->edge connectivity (for each part, size = \p pn_face + 1)
+ * \param [out]  pface_edge_idx Index of face->edge and face->vtx connectivities (for each part, size = \p pn_face + 1)
  * \param [out]  pface_edge     Face->edge connectivity (for each part, size = \p face_edge_idx[\p pn_face])
  * \param [out]  pface_vtx      Face->vertex connectivity (for each part, size = \p face_edge_idx[\p pn_face])
  * \param [out]  pvtx_ln_to_gn  Vertex global ids (for each part, size = \p pn_vtx)
@@ -500,37 +500,40 @@ PDM_generate_mesh_ball_ngon
  * \param [in]  elt_type                  Mesh element type
  * \param [in]  order                     Mesh element order
  * \param [in]  ho_ordering               High order nodes ordering type
- * \param [in]  radius                    Radius of the ball
- * \param [in]  hole_radius               Radius of the hole of the ball
- * \param [in]  center_x                  x-coordinate of the ball center
- * \param [in]  center_y                  y-coordinate of the ball center
- * \param [in]  center_z                  z-coordinate of the ball center
- * \param [in]  n_x                       Number of vertices on segments in x-direction
- * \param [in]  n_y                       Number of vertices on segments in y-direction
- * \param [in]  n_z                       Number of vertices on segments in z-direction
- * \param [in]  n_layer                   Number of extrusion layers
- * \param [in]  geometric_ratio           Geometric ratio for layer thickness
+ * \param [in]  xmin                      Minimal x-coordinate
+ * \param [in]  ymin                      Minimal y-coordinate
+ * \param [in]  zmin                      Minimal z-coordinate
+ * \param [in]  lengthx                   Length of the rectangle in the x-direction
+ * \param [in]  lengthy                   Length of the rectangle in the y-direction
+ * \param [in]  lengthz                   Length of the rectangle in the z-direction
+ * \param [in]  n_x                       Number of points in the x-direction
+ * \param [in]  n_y                       Number of points in the y-direction
+ * \param [in]  n_z                       Number of points in the z-direction
  * \param [in]  n_part                    Number of mesh partitions
  * \param [in]  part_method               Mesh partitioning method
  * \param [out] pn_vtx                    Number of vertices
  * \param [out] pn_edge                   Number of edges
  * \param [out] pn_face                   Number of faces
+ * \param [out] pn_cell                   Number of cells
  * \param [out] pvtx_coord                Vertex coordinates
  * \param [out] pedge_vtx                 Edge->vertex connectivity
- * \param [out] pface_edge_idx            Index of face->edge connectivity
+ * \param [out] pface_edge_idx            Index of face->edge and face->vtx connectivities
  * \param [out] pface_edge                Face->edge connectivity
  * \param [out] pface_vtx                 Face->vertex connectivity
- * \param [out] pvtx_ln_to_gn             Vertex global number
- * \param [out] pedge_ln_to_gn            Edge global number
- * \param [out] pface_ln_to_gn            Face global number
+ * \param [out] pcell_face_idx            Index of cell->face connectivity
+ * \param [out] pcell_face                Cell->face connectivity
+ * \param [out] pvtx_ln_to_gn             Vertex global IDs
+ * \param [out] pedge_ln_to_gn            Edge global IDs
+ * \param [out] pface_ln_to_gn            Face global IDs
+ * \param [out] pcell_ln_to_gn            Cell global IDs
  * \param [out] pn_surface                Number of surfaces
  * \param [out] psurface_face_idx         Surface->face connectivity index
  * \param [out] psurface_face             Surface->face connectivity
- * \param [out] psurface_face_ln_to_gn    Surface->face connectivity with global numbers
+ * \param [out] psurface_face_ln_to_gn    Surface->face connectivity with global IDs
  * \param [out] pn_ridge                  Number of ridges
  * \param [out] pridge_edge_idx           Ridge->edge connectivity index
  * \param [out] pridge_edge               Ridge->edge connectivity
- * \param [out] pridge_edge_ln_to_gn      Ridge->edge connectivity with global numbers
+ * \param [out] pridge_edge_ln_to_gn      Ridge->edge connectivity with global IDs
  *
  */
 

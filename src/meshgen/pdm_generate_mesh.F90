@@ -22,6 +22,7 @@
 
 module pdm_generate_mesh
 
+  use iso_c_binding
   use pdm
   use pdm_pointer_array
 
@@ -59,10 +60,6 @@ module pdm_generate_mesh
   PDM_generate_mesh_parallelepiped_
   end interface
 
-  interface PDM_generate_mesh_rectangle_ngon ; module procedure &
-  PDM_generate_mesh_rectangle_ngon_
-  end interface
-
   interface PDM_generate_mesh_sphere_ngon ; module procedure &
   PDM_generate_mesh_sphere_ngon_
   end interface
@@ -71,9 +68,6 @@ module pdm_generate_mesh
   PDM_generate_mesh_ball_ngon_
   end interface
 
-  interface PDM_generate_mesh_parallelepiped_ngon ; module procedure &
-  PDM_generate_mesh_parallelepiped_ngon_
-  end interface
 
 
   private :: PDM_generate_mesh_rectangle_simplified_
@@ -84,10 +78,8 @@ module pdm_generate_mesh
   private :: PDM_generate_mesh_rectangle_
   private :: PDM_generate_mesh_ball_
   private :: PDM_generate_mesh_parallelepiped_
-  private :: PDM_generate_mesh_rectangle_ngon_
   private :: PDM_generate_mesh_sphere_ngon_
   private :: PDM_generate_mesh_ball_ngon_
-  private :: PDM_generate_mesh_parallelepiped_ngon_
 
   interface
 
@@ -130,7 +122,7 @@ module pdm_generate_mesh
     use iso_c_binding
     implicit none
 
-    integer(c_int), value  :: comm 
+    integer(c_int), value  :: comm
     integer(c_int)         :: n_vtx
     integer(c_int)         :: n_elt
     type(c_ptr)            :: coords
@@ -150,7 +142,7 @@ module pdm_generate_mesh
     use iso_c_binding
     implicit none
 
-    integer(c_int), value :: comm 
+    integer(c_int), value :: comm
     integer(c_int)        :: n_vtx
     integer(c_int)        :: n_elt
     type(c_ptr)           :: coords
@@ -171,7 +163,7 @@ module pdm_generate_mesh
     use iso_c_binding
     implicit none
 
-    integer(c_int), value :: comm 
+    integer(c_int), value :: comm
 #ifdef PDM_LONG_G_NUM
     integer(c_long), value :: n_vtx_seg
 #else
@@ -202,7 +194,7 @@ module pdm_generate_mesh
     use iso_c_binding
     implicit none
 
-    integer(c_int), value :: comm 
+    integer(c_int), value :: comm
     integer(c_int), value :: elt_type
     integer(c_int), value :: order
     type(c_ptr), value    :: ho_ordering
@@ -319,7 +311,7 @@ module pdm_generate_mesh
 
 
   function PDM_generate_mesh_parallelepiped_cf (comm,         &
-                                                elt_type,     & 
+                                                elt_type,     &
                                                 order,        &
                                                 ho_ordering,  &
                                                 xmin,         &
@@ -336,10 +328,10 @@ module pdm_generate_mesh
 
     result(mesh_nodal) &
     bind (c, name = 'PDM_generate_mesh_parallelepiped')
- 
+
     use iso_c_binding
     implicit none
-! 
+!
     integer(c_int), value :: comm
     integer(c_int), value :: elt_type
     integer(c_int), value :: order
@@ -365,7 +357,7 @@ module pdm_generate_mesh
     type(c_ptr)           :: mesh_nodal
 
   end function PDM_generate_mesh_parallelepiped_cf
-! 
+!
   subroutine PDM_generate_mesh_rectangle_ngon_cf(comm,           &
                                                  elt_type,       &
                                                  xmin,           &
@@ -443,11 +435,11 @@ module pdm_generate_mesh
                                                pface_ln_to_gn) &
 
     bind (c, name = 'PDM_generate_mesh_sphere_ngon')
-! 
+!
     use iso_c_binding
     implicit none
-! 
-    integer(c_int), value :: comm 
+!
+    integer(c_int), value :: comm
     integer(c_int), value :: elt_type
     integer(c_int), value :: order
     type(c_ptr), value    :: ho_ordering
@@ -747,18 +739,18 @@ module pdm_generate_mesh
                                                   n_elt,       &
                                                   coords,      &
                                                   elt_vtx_idx, &
-                                                  elt_vtx)     
+                                                  elt_vtx)
     use iso_c_binding
     implicit none
 
-    integer, intent(in)                     :: comm 
+    integer, intent(in)                     :: comm
     integer, intent(out)                    :: n_vtx
     integer, intent(out)                    :: n_elt
     double precision,               pointer :: coords(:,:)
     integer(kind=pdm_l_num_s),      pointer :: elt_vtx_idx(:)
     integer(kind=pdm_l_num_s),      pointer :: elt_vtx(:)
 
-    integer(c_int)         :: c_comm 
+    integer(c_int)         :: c_comm
     integer(c_int)         :: c_n_vtx       = 0
     integer(c_int)         :: c_n_elt       = 0
     type(c_ptr)            :: c_coords      = C_NULL_PTR
@@ -810,19 +802,19 @@ module pdm_generate_mesh
                                                 n_elt,       &
                                                 coords,      &
                                                 elt_vtx_idx, &
-                                                elt_vtx)     
+                                                elt_vtx)
     use iso_c_binding
     implicit none
 
-    integer, intent(in)                     :: comm 
+    integer, intent(in)                     :: comm
     integer, intent(out)                    :: n_vtx
     integer, intent(out)                    :: n_elt
     double precision,               pointer :: coords(:,:)
     integer(kind=pdm_l_num_s),      pointer :: elt_vtx_idx(:)
     integer(kind=pdm_l_num_s),      pointer :: elt_vtx(:)
 
-    integer(c_int)         :: c_comm 
-    integer(c_int)         :: c_n_vtx       = 0 
+    integer(c_int)         :: c_comm
+    integer(c_int)         :: c_n_vtx       = 0
     integer(c_int)         :: c_n_elt       = 0
     type(c_ptr)            :: c_coords      = C_NULL_PTR
     type(c_ptr)            :: c_elt_vtx_idx = C_NULL_PTR
@@ -915,7 +907,7 @@ module pdm_generate_mesh
     call c_f_pointer(c_elt_vtx_idx, &
                      elt_vtx_idx,   &
                      [n_elt + 1])
-  
+
     call c_f_pointer(c_elt_vtx, &
                      elt_vtx,   &
                      [elt_vtx_idx(n_elt + 1)])
@@ -955,12 +947,12 @@ module pdm_generate_mesh
                                      n_v,         &
                                      n_part,      &
                                      part_method) &
-    result(mesh_nodal) 
+    result(mesh_nodal)
 
     use iso_c_binding
     implicit none
 
-    integer, intent(in)                   :: comm 
+    integer, intent(in)                   :: comm
     integer, intent(in)                   :: elt_type
     integer, intent(in)                   :: order
     type(c_ptr), intent(in)               :: ho_ordering
@@ -973,7 +965,7 @@ module pdm_generate_mesh
     integer, intent(in)                   :: n_part
     integer, intent(in)                   :: part_method
 
-    integer(c_int)        :: c_comm 
+    integer(c_int)        :: c_comm
     integer(c_int)        :: c_elt_type
     integer(c_int)        :: c_order
     type(c_ptr)           :: c_ho_ordering
@@ -1018,8 +1010,8 @@ module pdm_generate_mesh
                                              c_n_u,         &
                                              c_n_v,         &
                                              c_n_part,      &
-                                             c_part_method) 
- 
+                                             c_part_method)
+
   end function PDM_generate_mesh_sphere_
 
 !>
@@ -1125,7 +1117,7 @@ module pdm_generate_mesh
                                                  c_n_x,         &
                                                  c_n_y,         &
                                                  c_n_part,      &
-                                                 c_part_method) 
+                                                 c_part_method)
 
   end function PDM_generate_mesh_rectangle_
 
@@ -1253,7 +1245,7 @@ module pdm_generate_mesh
                                             c_n_layer,         &
                                             c_geometric_ratio, &
                                             c_n_part,          &
-                                            c_part_method)     
+                                            c_part_method)
 
   end function PDM_generate_mesh_ball_
 
@@ -1282,7 +1274,7 @@ module pdm_generate_mesh
 !!
 
   function PDM_generate_mesh_parallelepiped_ (comm,         &
-                                              elt_type,     & 
+                                              elt_type,     &
                                               order,        &
                                               ho_ordering,  &
                                               xmin,         &
@@ -1297,11 +1289,11 @@ module pdm_generate_mesh
                                               n_part,       &
                                               part_method)  &
 
-    result(mesh_nodal) 
+    result(mesh_nodal)
 
     use iso_c_binding
     implicit none
-! 
+!
     integer, intent(in)                   :: comm
     integer, intent(in)                   :: elt_type
     integer, intent(in)                   :: order
@@ -1360,7 +1352,7 @@ module pdm_generate_mesh
     c_part_method = part_method
 
     mesh_nodal =  PDM_generate_mesh_parallelepiped_cf (c_comm,         &
-                                                       c_elt_type,     & 
+                                                       c_elt_type,     &
                                                        c_order,        &
                                                        c_ho_ordering,  &
                                                        c_xmin,         &
@@ -1373,40 +1365,13 @@ module pdm_generate_mesh
                                                        c_n_y,          &
                                                        c_n_z,          &
                                                        c_n_part,       &
-                                                       c_part_method)  
+                                                       c_part_method)
 
   end function PDM_generate_mesh_parallelepiped_
 
-!>
-!!
-!! \brief Create a partitionned rectangle mesh (2D) with descending connectivities.
-!!
-!! \param [in]   comm           MPI communicator
-!! \param [in]   elt_type       Element type
-!! \param [in]   xmin           Minimal x-coordinate
-!! \param [in]   ymin           Minimal y-coordinate
-!! \param [in]   zmin           Minimal z-coordinate
-!! \param [in]   lengthx        Length of the rectangle in the x-direction
-!! \param [in]   lengthy        Length of the rectangle in the y-direction
-!! \param [in]   n_x            Number of points in the x-direction
-!! \param [in]   n_y            Number of points in the y-direction
-!! \param [in]   n_part         Number of partitions
-!! \param [in]   part_method    Paritioning method
-!! \param [in]   pn_vtx         Number of vertices
-!! \param [in]   pn_edge        Number of edges
-!! \param [in]   pn_face        Number of faces
-!! \param [in]   pvtx_coord     Vertex coordinates
-!! \param [in]   pedge_vtx      edge->vertex connectivity
-!! \param [in]   pface_edge_idx Index of face->edge connectivity
-!! \param [in]   pface_edge     face->edge connectivity
-!! \param [in]   pvtx_ln_to_gn  Vertex global number
-!! \param [in]   pedge_ln_to_gn Edge global number
-!! \param [in]   pface_ln_to_gn Face global number
-!!
-!!
 
 
-  subroutine PDM_generate_mesh_rectangle_ngon_(comm,           &
+  subroutine PDM_generate_mesh_rectangle_ngon(comm,           &
                                               elt_type,       &
                                               xmin,           &
                                               ymin,           &
@@ -1435,32 +1400,31 @@ module pdm_generate_mesh
     !   - ``PDM_MESH_NODAL_TRIA3``   : triangles
     !   - ``PDM_MESH_NODAL_QUAD4``   : quadrangles
     !   - ``PDM_MESH_NODAL_POLY_2D`` : mixed polygons (triangles, quadrangles and octagons)
-    use iso_c_binding
     implicit none
 
-    integer(c_int),       intent(in)           :: comm              ! MPI communicator
-    integer(c_int),       intent(in)           :: elt_type          ! Element type
-    real(c_double),       intent(in)           :: xmin              ! Minimal x-coordinate
-    real(c_double),       intent(in)           :: ymin              ! Minimal y-coordinate
-    real(c_double),       intent(in)           :: zmin              ! Minimal z-coordinate
-    real(c_double),       intent(in)           :: lengthx           ! Length of the rectangle in the x-direction
-    real(c_double),       intent(in)           :: lengthy           ! Length of the rectangle in the y-direction
-    integer(pdm_g_num_s), intent(in)           :: n_x               ! Number of points in the x-direction
-    integer(pdm_g_num_s), intent(in)           :: n_y               ! Number of points in the y-direction
-    integer(c_int),       intent(in)           :: n_part            ! Number of partitions
-    integer(c_int),       intent(in)           :: part_method       ! Partitioning method
-    integer(pdm_l_num_s),      pointer         :: pn_vtx(:)         ! Number of vertices
-    integer(pdm_l_num_s),      pointer         :: pn_edge(:)        ! Number of edges
-    integer(pdm_l_num_s),      pointer         :: pn_face(:)        ! Number of faces
-    type(PDM_pointer_array_t), pointer         :: pvtx_coord        ! Vertex coordinates
-    type(PDM_pointer_array_t), pointer         :: pedge_vtx         ! Edge->vertex connectivity
-    type(PDM_pointer_array_t), pointer         :: pface_edge_idx    ! Index of face->edge connectivity
-    type(PDM_pointer_array_t), pointer         :: pface_edge        ! Face->edge connectivity
-    type(PDM_pointer_array_t), pointer         :: pface_vtx         ! Face->vertex connectivity
-    type(PDM_pointer_array_t), pointer         :: pvtx_ln_to_gn     ! Vertex global ids
-    type(PDM_pointer_array_t), pointer         :: pedge_ln_to_gn    ! Edge global ids
-    type(PDM_pointer_array_t), pointer         :: pface_ln_to_gn    ! Face global ids
-    real(c_double),       intent(in), optional :: random_factor_opt ! Randomization factor (between 0 and 1)
+    integer(c_int),                     intent(in)           :: comm              ! MPI communicator
+    integer(c_int),                     intent(in)           :: elt_type          ! Element type
+    real(c_double),                     intent(in)           :: xmin              ! Minimal x-coordinate
+    real(c_double),                     intent(in)           :: ymin              ! Minimal y-coordinate
+    real(c_double),                     intent(in)           :: zmin              ! Minimal z-coordinate
+    real(c_double),                     intent(in)           :: lengthx           ! Length of the rectangle in the x-direction
+    real(c_double),                     intent(in)           :: lengthy           ! Length of the rectangle in the y-direction
+    integer(pdm_g_num_s),               intent(in)           :: n_x               ! Number of points in the x-direction
+    integer(pdm_g_num_s),               intent(in)           :: n_y               ! Number of points in the y-direction
+    integer(c_int),                     intent(in)           :: n_part            ! Number of partitions
+    integer(c_int),                     intent(in)           :: part_method       ! Partitioning method
+    integer(pdm_l_num_s),      pointer, intent(out)          :: pn_vtx(:)         ! Number of vertices
+    integer(pdm_l_num_s),      pointer, intent(out)          :: pn_edge(:)        ! Number of edges
+    integer(pdm_l_num_s),      pointer, intent(out)          :: pn_face(:)        ! Number of faces
+    type(PDM_pointer_array_t), pointer, intent(out)          :: pvtx_coord        ! Vertex coordinates
+    type(PDM_pointer_array_t), pointer, intent(out)          :: pedge_vtx         ! Edge->vertex connectivity
+    type(PDM_pointer_array_t), pointer, intent(out)          :: pface_edge_idx    ! Index of face->edge and face->vtx connectivities
+    type(PDM_pointer_array_t), pointer, intent(out)          :: pface_edge        ! Face->edge connectivity
+    type(PDM_pointer_array_t), pointer, intent(out)          :: pface_vtx         ! Face->vertex connectivity
+    type(PDM_pointer_array_t), pointer, intent(out)          :: pvtx_ln_to_gn     ! Vertex global ids
+    type(PDM_pointer_array_t), pointer, intent(out)          :: pedge_ln_to_gn    ! Edge global ids
+    type(PDM_pointer_array_t), pointer, intent(out)          :: pface_ln_to_gn    ! Face global ids
+    real(c_double),                     intent(in), optional :: random_factor_opt ! Randomization factor (between 0 and 1)
 
     integer(c_int)          :: c_comm
     type(c_ptr)             :: c_pn_vtx
@@ -1494,10 +1458,10 @@ module pdm_generate_mesh
     cc_pvtx_ln_to_gn  = C_NULL_PTR
     cc_pedge_ln_to_gn = C_NULL_PTR
     cc_pface_ln_to_gn = C_NULL_PTR
-    
-    fptr          => null() 
-    face_edge_idx => null() 
-    
+
+    fptr          => null()
+    face_edge_idx => null()
+
     if (present(random_factor_opt)) then
       random_factor = random_factor_opt
     else
@@ -1592,7 +1556,7 @@ module pdm_generate_mesh
                                   PDM_OWNERSHIP_KEEP)
 
     do i_part = 1, n_part
-      call c_f_pointer(cc_pface_edge_idx, fptr,         [n_part])
+      call c_f_pointer(cc_pface_edge_idx, fptr,          [n_part])
       call c_f_pointer(fptr(i_part),      face_edge_idx, [pn_face(i_part) + 1])
       length(i_part) = face_edge_idx(pn_face(i_part))
     enddo
@@ -1610,7 +1574,7 @@ module pdm_generate_mesh
                                   length,        &
                                   PDM_OWNERSHIP_KEEP)
 
-  end subroutine PDM_generate_mesh_rectangle_ngon_
+  end subroutine PDM_generate_mesh_rectangle_ngon
 
 
 !>
@@ -1658,7 +1622,7 @@ module pdm_generate_mesh
                                              pn_vtx,         &
                                              pn_edge,        &
                                              pn_face,        &
-                                             pvtx_coord,     & 
+                                             pvtx_coord,     &
                                              pedge_vtx,      &
                                              pface_edge_idx, &
                                              pface_edge,     &
@@ -1671,7 +1635,7 @@ module pdm_generate_mesh
     use iso_c_binding
     implicit none
 
-    integer, intent(in)                   :: comm 
+    integer, intent(in)                   :: comm
     integer, intent(in)                   :: elt_type
     integer, intent(in)                   :: order
     type(c_ptr), intent(in)               :: ho_ordering
@@ -1684,7 +1648,7 @@ module pdm_generate_mesh
     integer, intent(in)                   :: n_part
     integer, intent(in)                   :: part_method
 
-    integer(c_int)        :: c_comm 
+    integer(c_int)        :: c_comm
     integer(c_int)        :: c_elt_type
     integer(c_int)        :: c_order
     type(c_ptr)           :: c_ho_ordering
@@ -1729,7 +1693,7 @@ module pdm_generate_mesh
 
     integer, allocatable  :: s_array(:)
 
-    integer :: i  
+    integer :: i
     integer, pointer      :: ipart_pface_edge_idx(:)
 
     c_comm = PDM_MPI_Comm_f2c(comm)
@@ -1769,7 +1733,7 @@ module pdm_generate_mesh
                                            c_pvtx_ln_to_gn, &
                                            c_pedge_ln_to_gn, &
                                            c_pface_ln_to_gn)
- 
+
     call c_f_pointer(c_pn_vtx, &
                      pn_vtx,   &
                      [n_part])
@@ -1782,7 +1746,7 @@ module pdm_generate_mesh
                      pn_face,   &
                      [n_part])
 
-    allocate(s_array(n_part)) 
+    allocate(s_array(n_part))
 
     do i = 1, n_part
       s_array(i) = 3 * pn_vtx(i)
@@ -1820,7 +1784,7 @@ module pdm_generate_mesh
     do i = 1, n_part
       call PDM_pointer_array_part_get (pface_edge_idx, &
                                        i-1,            &
-                                       ipart_pface_edge_idx)      
+                                       ipart_pface_edge_idx)
       s_array(i) = ipart_pface_edge_idx(pn_face(i) + 1)
     enddo
 
@@ -1873,7 +1837,7 @@ module pdm_generate_mesh
 
     deallocate(s_array)
 
-  end subroutine PDM_generate_mesh_sphere_ngon_ 
+  end subroutine PDM_generate_mesh_sphere_ngon_
 
 
 !>
@@ -1935,17 +1899,17 @@ module pdm_generate_mesh
                                            pn_face,         &
                                            pn_cell,         &
                                            pvtx_coord,      &
-                                           pedge_vtx,       & 
+                                           pedge_vtx,       &
                                            pface_edge_idx,  &
                                            pface_edge,      &
                                            pface_vtx,       &
-                                           pcell_face_idx,  & 
-                                           pcell_face,      & 
+                                           pcell_face_idx,  &
+                                           pcell_face,      &
                                            pvtx_ln_to_gn,   &
                                            pedge_ln_to_gn,  &
                                            pface_ln_to_gn,  &
                                            pcell_ln_to_gn,  &
-                                           pn_surface,      & 
+                                           pn_surface,      &
                                            psurface_face_idx,&
                                            psurface_face,    &
                                            psurface_face_ln_to_gn)
@@ -2037,7 +2001,7 @@ module pdm_generate_mesh
 
     integer, allocatable  :: s_array(:)
 
-    integer          :: i  
+    integer          :: i
     integer, pointer :: ipart_pface_edge_idx(:)
     integer, pointer :: ipart_pcell_face_idx(:)
     integer, pointer :: ipsurface_face_idx(:)
@@ -2116,7 +2080,7 @@ module pdm_generate_mesh
                      pn_surface,   &
                      [n_part])
 
-    allocate(s_array(n_part)) 
+    allocate(s_array(n_part))
 
     do i = 1, n_part
       s_array(i) = 3 * pn_vtx(i)
@@ -2154,7 +2118,7 @@ module pdm_generate_mesh
     do i = 1, n_part
       call PDM_pointer_array_part_get (pface_edge_idx, &
                                        i-1,            &
-                                       ipart_pface_edge_idx)      
+                                       ipart_pface_edge_idx)
       s_array(i) = ipart_pface_edge_idx(pn_face(i) + 1)
     enddo
 
@@ -2186,7 +2150,7 @@ module pdm_generate_mesh
     do i = 1, n_part
       call PDM_pointer_array_part_get (pcell_face_idx, &
                                        i-1,            &
-                                       ipart_pcell_face_idx)      
+                                       ipart_pcell_face_idx)
       s_array(i) = ipart_pcell_face_idx(pn_cell(i) + 1)
     enddo
 
@@ -2254,7 +2218,7 @@ module pdm_generate_mesh
     do i = 1, n_part
       call PDM_pointer_array_part_get (psurface_face_idx, &
                                        i-1,               &
-                                       ipsurface_face_idx)      
+                                       ipsurface_face_idx)
       s_array(i) = ipsurface_face_idx(pn_surface(i) + 1)
     enddo
 
@@ -2276,129 +2240,89 @@ module pdm_generate_mesh
 
   end subroutine PDM_generate_mesh_ball_ngon_
 
-!>
-!!
-!! \brief Create a partitionned parallelepiped mesh (3D) with descending connectivities.
-!!
-!! \param [in]  comm                      MPI communicator
-!! \param [in]  elt_type                  Mesh element type
-!! \param [in]  order                     Mesh element order
-!! \param [in]  ho_ordering               High order nodes ordering type
-!! \param [in]  radius                    Radius of the ball
-!! \param [in]  hole_radius               Radius of the hole of the ball
-!! \param [in]  center_x                  x-coordinate of the ball center
-!! \param [in]  center_y                  y-coordinate of the ball center
-!! \param [in]  center_z                  z-coordinate of the ball center
-!! \param [in]  n_x                       Number of vertices on segments in x-direction
-!! \param [in]  n_y                       Number of vertices on segments in y-direction
-!! \param [in]  n_z                       Number of vertices on segments in z-direction
-!! \param [in]  n_layer                   Number of extrusion layers
-!! \param [in]  geometric_ratio           Geometric ratio for layer thickness
-!! \param [in]  n_part                    Number of mesh partitions
-!! \param [in]  part_method               Mesh partitionning method
-!! \param [out] pn_vtx                    Number of vertices
-!! \param [out] pn_edge                   Number of edges
-!! \param [out] pn_face                   Number of faces
-!! \param [out] pvtx_coord                Vertex coordinates
-!! \param [out] pedge_vtx                 edge->vertex connectivity
-!! \param [out] pface_edge_idx            Index of face->edge connectivity
-!! \param [out] pface_edge                face->edge connectivity
-!! \param [out] pface_vtx                 face->vtx connectivity
-!! \param [out] pvtx_ln_to_gn             Vertex global number
-!! \param [out] pedge_ln_to_gn            Edge global number
-!! \param [out] pface_ln_to_gn            Face global number
-!! \param [out] pn_surface                Number of surfaces
-!! \param [out] psurface_face_idx         surface->face connectivity index
-!! \param [out] psurface_face             surface->face connectivity
-!! \param [out] psurface_face_ln_to_gn    surface->face connectivity with global numbers
-!! \param [out] pn_ridge                  Number of ridges
-!! \param [out] pridge_edge_idx           ridge->edge connectivity index
-!! \param [out] pridge_edge               ridge->edge connectivity
-!! \param [out] pridge_edge_ln_to_gn      ridge->edge connectivity with global numbers
-!!
-!!
 
-  subroutine PDM_generate_mesh_parallelepiped_ngon_ (comm,                   &
-                                                     elt_type,               & 
-                                                     order,                  &
-                                                     ho_ordering,            &
-                                                     xmin,                   &
-                                                     ymin,                   &
-                                                     zmin,                   &
-                                                     lengthx,                &
-                                                     lengthy,                &
-                                                     lengthz,                &
-                                                     n_x,                    &
-                                                     n_y,                    &
-                                                     n_z,                    &
-                                                     n_part,                 &
-                                                     part_method,            &
-                                                     pn_vtx,                 &
-                                                     pn_edge,                &
-                                                     pn_face,                &
-                                                     pn_cell,                &
-                                                     pvtx_coord,             &
-                                                     pedge_vtx,              &
-                                                     pface_edge_idx,         &
-                                                     pface_edge,             &
-                                                     pface_vtx,              &
-                                                     pcell_face_idx,         &
-                                                     pcell_face,             &
-                                                     pvtx_ln_to_gn,          &
-                                                     pedge_ln_to_gn,         &
-                                                     pface_ln_to_gn,         &
-                                                     pcell_ln_to_gn,         &
-                                                     pn_surface,             &
-                                                     psurface_face_idx,      &
-                                                     psurface_face,          &
-                                                     psurface_face_ln_to_gn, &
-                                                     pn_ridge,               &
-                                                     pridge_edge_idx,        &
-                                                     pridge_edge,            &
-                                                     pridge_edge_ln_to_gn)
-      
-    use iso_c_binding
+
+  subroutine PDM_generate_mesh_parallelepiped_ngon(comm,                   &
+                                                   elt_type,               &
+                                                   order,                  &
+                                                   ho_ordering,            &
+                                                   xmin,                   &
+                                                   ymin,                   &
+                                                   zmin,                   &
+                                                   lengthx,                &
+                                                   lengthy,                &
+                                                   lengthz,                &
+                                                   n_x,                    &
+                                                   n_y,                    &
+                                                   n_z,                    &
+                                                   n_part,                 &
+                                                   part_method,            &
+                                                   pn_vtx,                 &
+                                                   pn_edge,                &
+                                                   pn_face,                &
+                                                   pn_cell,                &
+                                                   pvtx_coord,             &
+                                                   pedge_vtx,              &
+                                                   pface_edge_idx,         &
+                                                   pface_edge,             &
+                                                   pface_vtx,              &
+                                                   pcell_face_idx,         &
+                                                   pcell_face,             &
+                                                   pvtx_ln_to_gn,          &
+                                                   pedge_ln_to_gn,         &
+                                                   pface_ln_to_gn,         &
+                                                   pcell_ln_to_gn,         &
+                                                   pn_surface,             &
+                                                   psurface_face_idx,      &
+                                                   psurface_face,          &
+                                                   psurface_face_ln_to_gn, &
+                                                   pn_ridge,               &
+                                                   pridge_edge_idx,        &
+                                                   pridge_edge,            &
+                                                   pridge_edge_ln_to_gn)
+
+    ! Create a partitioned parallelepiped mesh (3D) with descending connectivities
     implicit none
-! 
-    integer, intent(in)                   :: comm
-    integer, intent(in)                   :: elt_type
-    integer, intent(in)                   :: order
-    type(c_ptr), intent(in)               :: ho_ordering
-    double precision, intent(in)          :: xmin
-    double precision, intent(in)          :: ymin
-    double precision, intent(in)          :: zmin
-    double precision, intent(in)          :: lengthx
-    double precision, intent(in)          :: lengthy
-    double precision, intent(in)          :: lengthz
-    integer(kind=pdm_g_num_s), intent(in) :: n_x
-    integer(kind=pdm_g_num_s), intent(in) :: n_y
-    integer(kind=pdm_g_num_s), intent(in) :: n_z
-    integer, intent(in)                   :: n_part
-    integer, intent(in)                   :: part_method
 
-    integer(kind=pdm_l_num_s), pointer    :: pn_vtx(:)
-    integer(kind=pdm_l_num_s), pointer    :: pn_edge(:)
-    integer(kind=pdm_l_num_s), pointer    :: pn_face(:)
-    integer(kind=pdm_l_num_s), pointer    :: pn_cell(:)
-    integer(kind=pdm_l_num_s), pointer    :: pn_surface(:)
-    integer(kind=pdm_l_num_s), pointer    :: pn_ridge(:)
-    type(PDM_pointer_array_t), pointer    :: pvtx_coord
-    type(PDM_pointer_array_t), pointer    :: pedge_vtx
-    type(PDM_pointer_array_t), pointer    :: pface_edge_idx
-    type(PDM_pointer_array_t), pointer    :: pface_edge
-    type(PDM_pointer_array_t), pointer    :: pface_vtx
-    type(PDM_pointer_array_t), pointer    :: pcell_face_idx
-    type(PDM_pointer_array_t), pointer    :: pcell_face
-    type(PDM_pointer_array_t), pointer    :: pvtx_ln_to_gn
-    type(PDM_pointer_array_t), pointer    :: pedge_ln_to_gn
-    type(PDM_pointer_array_t), pointer    :: pface_ln_to_gn
-    type(PDM_pointer_array_t), pointer    :: pcell_ln_to_gn
-    type(PDM_pointer_array_t), pointer    :: psurface_face_idx
-    type(PDM_pointer_array_t), pointer    :: psurface_face
-    type(PDM_pointer_array_t), pointer    :: psurface_face_ln_to_gn
-    type(PDM_pointer_array_t), pointer    :: pridge_edge_idx
-    type(PDM_pointer_array_t), pointer    :: pridge_edge
-    type(PDM_pointer_array_t), pointer    :: pridge_edge_ln_to_gn
+    integer,                            intent(in)  :: comm                   ! MPI communicator
+    integer,                            intent(in)  :: elt_type               ! Mesh element type
+    integer,                            intent(in)  :: order                  ! Mesh element order
+    type(c_ptr),                        intent(in)  :: ho_ordering            ! High order nodes ordering type
+    real(c_double),                     intent(in)  :: xmin                   ! Minimal x-coordinate
+    real(c_double),                     intent(in)  :: ymin                   ! Minimal y-coordinate
+    real(c_double),                     intent(in)  :: zmin                   ! Minimal z-coordinate
+    real(c_double),                     intent(in)  :: lengthx                ! Length of the rectangle in the x-direction
+    real(c_double),                     intent(in)  :: lengthy                ! Length of the rectangle in the y-direction
+    real(c_double),                     intent(in)  :: lengthz                ! Length of the rectangle in the z-direction
+    integer(kind=pdm_g_num_s),          intent(in)  :: n_x                    ! Number of points in the x-direction
+    integer(kind=pdm_g_num_s),          intent(in)  :: n_y                    ! Number of points in the y-direction
+    integer(kind=pdm_g_num_s),          intent(in)  :: n_z                    ! Number of points in the z-direction
+    integer,                            intent(in)  :: n_part                 ! Number of mesh partitions
+    integer,                            intent(in)  :: part_method            ! Mesh partitioning method
+
+    integer(kind=pdm_l_num_s), pointer, intent(out) :: pn_vtx(:)              ! Number of vertices
+    integer(kind=pdm_l_num_s), pointer, intent(out) :: pn_edge(:)             ! Number of edges
+    integer(kind=pdm_l_num_s), pointer, intent(out) :: pn_face(:)             ! Number of face
+    integer(kind=pdm_l_num_s), pointer, intent(out) :: pn_cell(:)             ! Number of cells
+    type(PDM_pointer_array_t), pointer, intent(out) :: pvtx_coord             ! Vertex coordinates
+    type(PDM_pointer_array_t), pointer, intent(out) :: pedge_vtx              ! Edge->vertex connectivity
+    type(PDM_pointer_array_t), pointer, intent(out) :: pface_edge_idx         ! Index of face->edge and face->vtx connectivities
+    type(PDM_pointer_array_t), pointer, intent(out) :: pface_edge             ! Face->edge connectivity
+    type(PDM_pointer_array_t), pointer, intent(out) :: pface_vtx              ! Face->vertex connectivity
+    type(PDM_pointer_array_t), pointer, intent(out) :: pcell_face_idx         ! Index of cell->face connectivity
+    type(PDM_pointer_array_t), pointer, intent(out) :: pcell_face             ! Cell->face connectivity
+    type(PDM_pointer_array_t), pointer, intent(out) :: pvtx_ln_to_gn          ! Vertex global IDs
+    type(PDM_pointer_array_t), pointer, intent(out) :: pedge_ln_to_gn         ! Edge global IDs
+    type(PDM_pointer_array_t), pointer, intent(out) :: pface_ln_to_gn         ! Face global IDs
+    type(PDM_pointer_array_t), pointer, intent(out) :: pcell_ln_to_gn         ! Cell global IDs
+    integer(kind=pdm_l_num_s), pointer, intent(out) :: pn_surface(:)          ! Number of surfaces
+    type(PDM_pointer_array_t), pointer, intent(out) :: psurface_face_idx      ! Surface->face connectivity index
+    type(PDM_pointer_array_t), pointer, intent(out) :: psurface_face          ! Surface->face connectivity
+    type(PDM_pointer_array_t), pointer, intent(out) :: psurface_face_ln_to_gn ! Surface->face connectivity with global IDs
+    integer(kind=pdm_l_num_s), pointer, intent(out) :: pn_ridge(:)            ! Number of ridges
+    type(PDM_pointer_array_t), pointer, intent(out) :: pridge_edge_idx        ! Ridge->edge connectivity index
+    type(PDM_pointer_array_t), pointer, intent(out) :: pridge_edge            ! Ridge->edge connectivity
+    type(PDM_pointer_array_t), pointer, intent(out) :: pridge_edge_ln_to_gn   ! Ridge->edge connectivity with global IDs
 
     integer(c_int)   :: c_comm
     integer(c_int)   :: c_elt_type
@@ -2448,7 +2372,7 @@ module pdm_generate_mesh
 
     integer, allocatable  :: s_array(:)
 
-    integer          :: i  
+    integer          :: i
     integer, pointer :: ipart_pface_edge_idx(:)
     integer, pointer :: ipart_pcell_face_idx(:)
     integer, pointer :: ipsurface_face_idx(:)
@@ -2470,9 +2394,9 @@ module pdm_generate_mesh
     c_n_z = n_z
     c_n_part = n_part
     c_part_method = part_method
- 
+
     call PDM_generate_mesh_parallelepiped_ngon_cf (c_comm,                   &
-                                                   c_elt_type,               & 
+                                                   c_elt_type,               &
                                                    c_order,                  &
                                                    c_ho_ordering,            &
                                                    c_xmin,                   &
@@ -2534,7 +2458,7 @@ module pdm_generate_mesh
                      pn_ridge,   &
                      [n_part])
 
-    allocate(s_array(n_part)) 
+    allocate(s_array(n_part))
 
     do i = 1, n_part
       s_array(i) = 3 * pn_vtx(i)
@@ -2572,7 +2496,7 @@ module pdm_generate_mesh
     do i = 1, n_part
       call PDM_pointer_array_part_get (pface_edge_idx, &
                                        i-1,            &
-                                       ipart_pface_edge_idx)      
+                                       ipart_pface_edge_idx)
       s_array(i) = ipart_pface_edge_idx(pn_face(i) + 1)
     enddo
 
@@ -2604,7 +2528,7 @@ module pdm_generate_mesh
     do i = 1, n_part
       call PDM_pointer_array_part_get (pcell_face_idx, &
                                        i-1,            &
-                                       ipart_pcell_face_idx)      
+                                       ipart_pcell_face_idx)
       s_array(i) = ipart_pcell_face_idx(pn_cell(i) + 1)
     enddo
 
@@ -2671,8 +2595,8 @@ module pdm_generate_mesh
 
     do i = 1, n_part
       call PDM_pointer_array_part_get (psurface_face_idx, &
-                                       i-1,                 &
-                                       ipsurface_face_idx)      
+                                       i-1,               &
+                                       ipsurface_face_idx)
       s_array(i) = ipsurface_face_idx(pn_surface(i) + 1)
     enddo
 
@@ -2694,36 +2618,36 @@ module pdm_generate_mesh
       s_array(i) = pn_ridge(i) + 1
     enddo
 
-    call PDM_pointer_array_create (pridge_edge_idx,  &
-                                   n_part,             &
-                                   PDM_TYPE_INT,       &
-                                   c_pridge_edge_idx,&
-                                   s_array,            &
+    call PDM_pointer_array_create (pridge_edge_idx,   &
+                                   n_part,            &
+                                   PDM_TYPE_INT,      &
+                                   c_pridge_edge_idx, &
+                                   s_array,           &
                                    PDM_OWNERSHIP_KEEP)
 
     do i = 1, n_part
       call PDM_pointer_array_part_get (pridge_edge_idx, &
-                                       i-1,         &
-                                       ipridge_edge_idx)      
+                                       i-1,             &
+                                       ipridge_edge_idx)
       s_array(i) = ipsurface_face_idx(pn_surface(i) + 1)
     enddo
 
     call PDM_pointer_array_create (pridge_edge,      &
-                                   n_part,             &
-                                   PDM_TYPE_INT,       &
+                                   n_part,           &
+                                   PDM_TYPE_INT,     &
                                    c_pridge_edge,    &
-                                   s_array,            &
+                                   s_array,          &
                                    PDM_OWNERSHIP_KEEP)
 
     call PDM_pointer_array_create (pridge_edge_ln_to_gn,   &
-                                   n_part,                   &
-                                   PDM_TYPE_G_NUM,           &
+                                   n_part,                 &
+                                   PDM_TYPE_G_NUM,         &
                                    c_pridge_edge_ln_to_gn, &
-                                   s_array,                  &
+                                   s_array,                &
                                    PDM_OWNERSHIP_KEEP)
 
     deallocate(s_array)
 
-  end subroutine PDM_generate_mesh_parallelepiped_ngon_
+  end subroutine PDM_generate_mesh_parallelepiped_ngon
 
 end module pdm_generate_mesh
