@@ -67,8 +67,6 @@ option(PDM_ENABLE_EXTENSION_PDMA  "Enable advanced functionalities extension" OF
 option(PDM_ENABLE_LONG_G_NUM      "Enable long for global number"             ON )
 option(PDM_ENABLE_SHARED          "Build Shared Libraries"                    ON )
 option(PDM_ENABLE_STATIC          "Build Static Libraries"                    OFF)
-option(PDM_ENABLE_BLASLAPACK      "Build with BLAS/LAPACK"                    OFF)
-option(PDM_ENABLE_OPENMP          "Enable OpenMP"                             OFF)
 option(PDM_ENABLE_ANISO_AGGLO     "Enable anisotropic agglomeration"          ON )
 
 option(PDM_ENABLE_Fortran         "Build Fortran Interface"                   ON )
@@ -93,6 +91,18 @@ if (PDM_ENABLE_LONG_G_NUM)
 endif ()
 if(PDM_ENABLE_EXTENSION_PDMA AND PDM_ENABLE_ANISO_AGGLO)
   set (PDM_HAVE_ANISO_AGGLO 1)
+endif()
+if (PTSCOTCH_FOUND)
+  set (PDM_HAVE_PTSCOTCH 1)
+endif()
+if (PARMETIS_FOUND)
+  set (PDM_HAVE_PARMETIS 1)
+endif()
+if (BLAS_FOUND)
+  set (PDM_HAVE_BLAS 1)
+endif()
+if (LAPACK_FOUND)
+  set (PDM_HAVE_LAPACK 1)
 endif()
 
 if (PDM_ENABLE_PYTHON_BINDINGS)
@@ -178,92 +188,105 @@ endif()
 #   >)
 # endif()
 
+add_library(pdm OBJECT ${src_files})
+
+target_include_directories(pdm PUBLIC
+  $<BUILD_INTERFACE:${src_dir}>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
+  $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
+)
+
+foreach(subdir IN LISTS PDM_SUBDIRS)
+  target_include_directories(pdm PUBLIC
+      $<BUILD_INTERFACE:${subdir}>
+      $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
+  )
+endforeach()
+
+foreach(subdir IN LISTS PDMA_SUBDIRS)
+  target_include_directories(pdm PUBLIC
+      $<BUILD_INTERFACE:${subdir}>
+      $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
+  )
+endforeach()
+
+target_link_libraries(pdm
+PUBLIC
+  MPI::MPI_CXX
+)
+
+if (PTSCOTCH_FOUND)
+  target_compile_definitions(pdm PUBLIC PDM_HAVE_PTSCOTCH=1)
+  target_link_libraries(pdm
+  PUBLIC
+    PTScotch::PTScotch
+    Scotch::Scotch
+    Scotch::ScotchErr
+  )
+endif()
+
+if (PARMETIS_FOUND)
+  target_compile_definitions(pdm PUBLIC PDM_HAVE_PARMETIS=1)
+  target_link_libraries(pdm
+  PUBLIC
+    ParMETIS::ParMETIS
+  )
+endif()
+
+if (BLAS_FOUND)
+  target_compile_definitions(pdm PUBLIC PDM_HAVE_BLAS=1)
+  target_link_libraries(pdm
+  PUBLIC
+    BLAS::BLAS
+  )
+endif()
+
+if (LAPACK_FOUND)
+  target_compile_definitions(pdm PUBLIC PDM_HAVE_LAPACK=1)
+  target_link_libraries(pdm
+  PUBLIC
+    LAPACK::LAPACK
+  )
+endif()
+
+get_target_property(PDM_INC pdm INCLUDE_DIRECTORIES)
+get_target_property(PDM_LIB pdm LINK_LIBRARIES)
+
+if(PDM_ENABLE_Fortran)
+  add_library(pdmf OBJECT ${all_src_fortran_files})
+  target_include_directories(pdmf PUBLIC ${PDM_INC})
+  target_link_libraries(pdmf
+  PUBLIC
+    MPI::MPI_Fortran
+  )
+  get_target_property(PDMF_INC pdmf INCLUDE_DIRECTORIES)
+  get_target_property(PDMF_LIB pdmf LINK_LIBRARIES)
+endif()
+
 foreach(lib_type IN LISTS LIB_TYPES)
 
-  add_library(pdm_${lib_type} ${lib_type} ${src_files})
-
+  add_library(pdm_${lib_type} ${lib_type} $<TARGET_OBJECTS:pdm>)
+  add_dependencies(pdm_${lib_type} pdm)
   set_target_properties(pdm_${lib_type} PROPERTIES OUTPUT_NAME "pdm")
 
+  target_include_directories(pdm_${lib_type} PUBLIC ${PDM_INC})
+  target_link_libraries(pdm_${lib_type}      PUBLIC ${PDM_LIB})
+
   if(PDM_ENABLE_Fortran)
-    add_library(pdmf_${lib_type} ${lib_type} ${all_src_fortran_files})
+    add_library(pdmf_${lib_type} ${lib_type} $<TARGET_OBJECTS:pdmf>)
+    add_dependencies(pdmf_${lib_type} pdmf)
     set_target_properties(pdmf_${lib_type} PROPERTIES OUTPUT_NAME "pdmf")
     set_target_properties(pdmf_${lib_type} PROPERTIES Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/modules/)
-  endif()
 
-  target_include_directories(pdm_${lib_type} PUBLIC
-    $<BUILD_INTERFACE:${src_dir}>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
-    $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
-  )
+    target_include_directories(pdmf_${lib_type} PUBLIC ${PDMF_INC})
+    target_link_libraries(pdmf_${lib_type}      PUBLIC ${PDMF_LIB})
 
-  foreach(subdir IN LISTS PDM_SUBDIRS)
-    target_include_directories(pdm_${lib_type} PUBLIC
-        $<BUILD_INTERFACE:${subdir}>
-        $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
-    )
-  endforeach()
-
-  foreach(subdir IN LISTS PDMA_SUBDIRS)
-    target_include_directories(pdm_${lib_type} PUBLIC
-        $<BUILD_INTERFACE:${subdir}>
-        $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
-    )
-  endforeach()
-
-  target_link_libraries(pdm_${lib_type}
-    PUBLIC
-      MPI::MPI_CXX
-  )
-
-  if(PDM_ENABLE_Fortran)
-    target_link_libraries(pdmf_${lib_type}
-      PUBLIC
-        MPI::MPI_Fortran
-    )
-  endif()
-
-  target_compile_definitions(pdm_${lib_type} PRIVATE PDM_USE_MULTIPART=0)
-
-  if (PTSCOTCH_FOUND)
-    target_compile_definitions(pdm_${lib_type} PUBLIC PDM_HAVE_PTSCOTCH=1)
-    target_link_libraries(pdm_${lib_type}
-    PUBLIC
-      PTScotch::PTScotch
-      Scotch::Scotch
-      Scotch::ScotchErr
-    )
-  endif()
-
-  if (PARMETIS_FOUND)
-    target_compile_definitions(pdm_${lib_type} PUBLIC PDM_HAVE_PARMETIS=1)
-    target_link_libraries(pdm_${lib_type}
-    PUBLIC
-      ParMETIS::ParMETIS
-    )
-  endif()
-
-  if (BLAS_FOUND)
-    target_compile_definitions(pdm_${lib_type} PUBLIC PDM_HAVE_BLAS=1)
-    target_link_libraries(pdm_${lib_type}
-    PUBLIC
-      BLAS::BLAS
-    )
-  endif()
-
-  if (LAPACK_FOUND)
-    target_compile_definitions(pdm_${lib_type} PUBLIC PDM_HAVE_LAPACK=1)
-    target_link_libraries(pdm_${lib_type}
-    PUBLIC
-      LAPACK::LAPACK
-    )
-  endif()
-
-  if(PDM_ENABLE_Fortran)
     target_link_libraries(pdmf_${lib_type}
       PUBLIC
         pdm_${lib_type}
     )
   endif()
+
 endforeach()
 
 if (PDM_ENABLE_PYTHON_BINDINGS)
