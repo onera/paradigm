@@ -2340,11 +2340,11 @@ _run_ppart_domain
 
   dn_node = PDM_dmesh_dn_entity_get(dmesh, entity_type1);
 
-  if (split_method != PDM_SPLIT_DUAL_WITH_HILBERT) {
-    if (dn_node <= 0) {
-      PDM_error(__FILE__, __LINE__, 0, "Error : Hilbert partitioning requires non-empty blocks (dn_node = %d)\n", dn_node);
-    }
-  }
+  // if (split_method != PDM_SPLIT_DUAL_WITH_HILBERT) {
+  //   if (dn_node <= 0) {
+  //     PDM_error(__FILE__, __LINE__, 0, "Error : Hilbert partitioning requires non-empty blocks (dn_node = %d)\n", dn_node);
+  //   }
+  // }
 
   switch (dim) {
     case 3: {
