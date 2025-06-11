@@ -3,552 +3,451 @@
 Writer
 ======
 
-C API
------
+**Writer** is a service for writing meshes and associated fields in parallel using MPI-IO.
 
-Enumerators
-~~~~~~~~~~~
 
-.. doxygenenum:: PDM_writer_status_t
 
-.. doxygenenum:: PDM_writer_topology_t
+.. dropdown:: Initialization
 
-.. doxygenenum:: PDM_writer_fmt_fic_t
 
-.. doxygenenum:: PDM_writer_var_dim_t
 
-.. doxygenenum:: PDM_writer_var_loc_t
+  .. tab-set::
 
-The Writer feature allows several types of elements for the input mesh, described by :
+    .. tab-item:: C
 
-.. doxygenenum:: PDM_writer_elt_geom_t
+      .. doxygenfunction:: PDM_writer_create
 
-Refer to the table below for the numbering convention of the standard elements in the list.
 
-.. list-table:: Numbering convention used in ParaDiGM for standard elements
-  :widths: 50 50
 
-  * - .. figure:: ../../../../images/pdm_mesh_nodal_point.svg
-        :alt: PDM_MESH_NODAL_POINT
+    .. tab-item:: Fortran
 
-        ``PDM_MESH_NODAL_POINT``
+      .. ifconfig:: enable_fortran_doc == 'ON'
 
-    - .. figure:: ../../../../images/pdm_mesh_nodal_bar2.svg
-        :alt: PDM_MESH_NODAL_BAR2
+        .. f:autosubroutine:: PDM_writer_create
 
-        ``PDM_MESH_NODAL_BAR2``
+      .. ifconfig:: enable_fortran_doc == 'OFF'
 
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
 
-  * - .. figure:: ../../../../images/pdm_mesh_nodal_tria3.svg
-        :alt: PDM_MESH_NODAL_TRIA3
 
-        ``PDM_MESH_NODAL_TRIA3``
 
+    .. tab-item:: Python
 
-    - .. figure:: ../../../../images/pdm_mesh_nodal_quad4.svg
-        :alt: PDM_MESH_NODAL_QUAD4
+      .. ifconfig:: enable_python_doc == 'ON'
 
-        ``PDM_MESH_NODAL_QUAD4``
+        .. autofunction:: Pypdm.Pypdm.Writer.__init__
+          :noindex:
 
+      .. ifconfig:: enable_python_doc == 'OFF'
 
-  * - .. figure:: ../../../../images/pdm_mesh_nodal_tetra4.svg
-        :alt: PDM_MESH_NODAL_TETRA4
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
 
-        ``PDM_MESH_NODAL_TETRA4``
+  |
 
+  **Writer** supports binary or ASCII writing:
 
-    - .. figure:: ../../../../images/pdm_mesh_nodal_pyram5.svg
-        :alt: PDM_MESH_NODAL_PYRAM5
+  .. doxygenenum:: PDM_writer_fmt_fic_t
 
-        ``PDM_MESH_NODAL_PYRAM5``
+  |
 
+  Meshes with time-dependent geometry and topology are also supported:
 
-  * - .. figure:: ../../../../images/pdm_mesh_nodal_prism6.svg
-        :alt: PDM_MESH_NODAL_PRISM6
+  .. doxygenenum:: PDM_writer_topology_t
 
-        ``PDM_MESH_NODAL_PRISM6``
 
+.. dropdown:: Define geometry
 
-    - .. figure:: ../../../../images/pdm_mesh_nodal_hexa8.svg
-        :alt: PDM_MESH_NODAL_HEXA8
+  If a :ref:`Part Mesh Nodal <pmn>` instance is available, it can be used directly to define the geometry.
 
-        ``PDM_MESH_NODAL_HEXA8``
+  .. tab-set::
 
-Initialization
-~~~~~~~~~~~~~~
+    .. tab-item:: C
 
-.. doxygenfunction:: PDM_writer_create
+      .. doxygenfunction:: PDM_writer_geom_create_from_mesh_nodal
 
-Step
-~~~~
 
-.. doxygenfunction:: PDM_writer_step_beg
 
-.. doxygenfunction:: PDM_writer_is_open_step
+    .. tab-item:: Fortran
 
-.. doxygenfunction:: PDM_writer_step_end
+      .. ifconfig:: enable_fortran_doc == 'ON'
 
-Geometry
-~~~~~~~~
+        .. f:autosubroutine:: PDM_writer_geom_create_from_mesh_nodal
 
-.. doxygenfunction:: PDM_writer_geom_create
+      .. ifconfig:: enable_fortran_doc == 'OFF'
 
-.. doxygenfunction:: PDM_writer_geom_create_from_mesh_nodal
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
 
-.. doxygenfunction:: PDM_writer_geom_set_from_mesh_nodal
 
-.. doxygenfunction:: PDM_writer_geom_coord_set
 
-.. doxygenfunction:: PDM_writer_geom_coord_from_parent_set
 
-.. doxygenfunction:: PDM_writer_geom_bloc_add
+  |
 
-.. doxygenfunction:: PDM_writer_geom_bloc_std_set
+  Otherwise, one geometry instance must be created for each dimension present in the mesh.
 
-.. doxygenfunction:: PDM_writer_geom_bloc_poly2d_set
+  .. tab-set::
 
-.. doxygenfunction:: PDM_writer_geom_bloc_poly3d_set
+    .. tab-item:: C
 
-.. doxygenfunction:: PDM_writer_geom_cell3d_cellface_add
+      .. doxygenfunction:: PDM_writer_geom_create
 
-.. doxygenfunction:: PDM_writer_geom_cell2d_cellface_add
 
-.. doxygenfunction:: PDM_writer_geom_faces_facesom_add
 
-.. doxygenfunction:: PDM_writer_geom_write
+    .. tab-item:: Fortran
 
-.. doxygenfunction:: PDM_writer_geom_data_reset
+      .. ifconfig:: enable_fortran_doc == 'ON'
 
-Variable & Co
-~~~~~~~~~~~~~
+        .. f:autosubroutine:: PDM_writer_geom_create
 
-.. doxygenfunction:: PDM_writer_cst_global_var_create
+      .. ifconfig:: enable_fortran_doc == 'OFF'
 
-.. doxygenfunction:: PDM_writer_cst_global_var_set
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
 
-.. doxygenfunction:: PDM_writer_var_create
 
-.. doxygenfunction:: PDM_writer_var_write
 
-.. doxygenfunction:: PDM_writer_var_set
+    .. tab-item:: Python
 
-.. doxygenfunction:: PDM_writer_fmt_add
+      .. ifconfig:: enable_python_doc == 'ON'
 
-.. doxygenfunction:: PDM_writer_name_map_add
+        .. autofunction:: Pypdm.Pypdm.Writer.geom_create
+          :noindex:
 
-Finalize
-~~~~~~~~
+      .. ifconfig:: enable_python_doc == 'OFF'
 
-.. doxygenfunction:: PDM_writer_fmt_free
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
 
-.. doxygenfunction:: PDM_writer_var_data_free
 
-.. doxygenfunction:: PDM_writer_var_free
+  |
 
-.. doxygenfunction:: PDM_writer_geom_data_free
 
-.. doxygenfunction:: PDM_writer_geom_free
+  .. dropdown:: Set vertices
 
-.. doxygenfunction:: PDM_writer_free
+    .. tab-set::
 
-Fortran API
------------
+      .. tab-item:: C
 
-.. ifconfig:: enable_fortran_doc == 'ON'
+        .. doxygenfunction:: PDM_writer_geom_coord_set
+        .. doxygenfunction:: PDM_writer_geom_coord_from_parent_set
 
-  Initialization
-  ~~~~~~~~~~~~~~
 
-  .. f:subroutine:: PDM_writer_create(def)
 
-    Create a structure for parallel writing of geometry and associated variables
+      .. tab-item:: Fortran
 
-    :param c_ptr            cs                 [out]: Pointer to Writer instance
-    :param character        fmt                [in]:  Output format
-    :param integer          fmt_fic            [in]:  Binary or ASCII
-    :param integer          topologie          [in]:  Indicates whether the mesh is mobile
-    :param integer          st_reprise         [in]:  Finalizes previous outputs before restart
-    :param character        rep_sortie         [in]:  Output repository
-    :param character        nom_sortie         [in]:  Output filename
-    :param integer          f_comm             [in]:  MPI communicator
-    :param integer          acces              [in]:  Access type
-    :param real             prop_noeuds_actifs [in]:  Amount of active nodes:
-                                                        *  -1 : all active
-                                                        *   1 : one process per node
-                                                        * 0 < val < 1 : one process per active node
-    :param character        options            [in]:  Complementary options for the format structured as
-                                                      ("name_1 = val_1 : ... : name_n = val_n")
+        .. ifconfig:: enable_fortran_doc == 'ON'
 
-  Step
-  ~~~~
+          .. f:autosubroutine:: PDM_writer_geom_coord_set
+          .. f:autosubroutine:: PDM_writer_geom_coord_from_parent_set
 
-  .. f:subroutine:: PDM_writer_step_beg(def)
+        .. ifconfig:: enable_fortran_doc == 'OFF'
 
-    Begin a time step
+          .. warning::
+            Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
 
-    :param c_ptr   cs            [in]: Pointer to Writer instance
-    :param real    physical_time [in]: Time
 
-  .. f:subroutine:: PDM_writer_step_end(def)
 
-    Increment end
+      .. tab-item:: Python
 
-    :param c_ptr cs [in]: Pointer to Writer instance
+        .. ifconfig:: enable_python_doc == 'ON'
 
-  Geometry
-  ~~~~~~~~
+          .. autofunction:: Pypdm.Pypdm.Writer.geom_coord_set
+            :noindex:
 
-  .. f:subroutine:: PDM_writer_geom_create(def)
 
-    Create a new geometry in the writer structure
+        .. ifconfig:: enable_python_doc == 'OFF'
 
-    :param c_ptr     cs       [in]:  Pointer to Writer instance
-    :param integer   id_geom  [out]: Identifier of the geometry within the writer instance
-    :param character nom_geom [in]:  Name of the geometry
-    :param integer   n_part   [in]:  Number of partitions
+          .. warning::
+            Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
 
-  .. f:subroutine:: PDM_writer_geom_coord_set(def)
 
-    Define the coordinates of the current partition
 
-    :param c_ptr                   cs       [in]: Pointer to Writer instance
-    :param integer                 id_geom  [in]: Geometry identifier
-    :param integer                 id_part  [in]: Partition identifier
-    :param integer                 n_som    [in]: Number of vertices
-    :param real(8)(:,:)            coords   [in]: Coordinates (shape = [3, ``n_som``])
-    :param integer(pdm_g_num_s)(:) numabs   [in]: Vertex global numbering (size = ``n_som``)
-    :param integer                 owner    [in]: Ownership
 
-  .. f:subroutine:: PDM_writer_geom_coord_from_parent_set(def)
 
-    Definition of the coordinates of the vertices
-    in the current partition from a parent set
+  .. dropdown:: Set elements
 
-    :param c_ptr                   cs            [in]: Pointer to Writer instance
-    :param integer                 id_geom       [in]: Geometry identifier
-    :param integer                 id_part       [in]: Partition identifier
-    :param integer                 n_som         [in]: Number of vertices
-    :param integer                 n_som_parent  [in]: Number of parent vertices
-    :param integer(pdm_g_num_s)(:) numabs        [in]: Vertex global numbering (size = ``n_som``)
-    :param integer(pdm_l_num_s)(:) num_parent    [in]: Vertex parent local numbering (size = ``n_som``)
-    :param real(8)(:,:)            coords_parent [in]: Coordinates of parent vertices (shape = [3, ``n_som_parent``])
-    :param integer(pdm_g_num_s)(:) numabs_parent [in]: Vertex parent global numbering (size = ``n_som_parent``)
-    :param integer                 owner         [in]: Ownership
+    The mesh elements can be defined in multiple ways.
 
-  .. f:subroutine:: PDM_writer_geom_bloc_add(def)
+    If only a soup of mixed elements is available, it can be set using the appropriate function.
 
-    Add a block of elements of a given type
+    .. dropdown:: Mixed setters
 
-    :param c_ptr   cs       [in]:  Pointer to Writer instance
-    :param integer id_geom  [in]:  Geometry identifier
-    :param integer t_elt    [in]:  Element type
-    :param integer owner    [in]:  Ownership
-    :param integer id_block [out]: Block identifier
+      .. tab-set::
 
-  .. f:subroutine:: PDM_writer_geom_bloc_std_set(def)
+        .. tab-item:: C
 
-    Set in the given geometry a block of elements of a given type
+          .. doxygenfunction:: PDM_writer_geom_cell3d_cellface_add
+          .. doxygenfunction:: PDM_writer_geom_cell2d_cellface_add
+          .. doxygenfunction:: PDM_writer_geom_faces_facesom_add
 
-    :param c_ptr                   cs       [in]: Pointer to Writer instance
-    :param integer                 id_geom  [in]: Geometry identifier
-    :param integer                 id_bloc  [in]: Block identifier
-    :param integer                 id_part  [in]: Partition identifier
-    :param integer                 n_elt    [in]: Number of elements
-    :param integer(pdm_l_num_s)(:) connec   [in]: Element->Vertex connectivity
-    :param integer(pdm_g_num_s)(:) numabs   [in]: Element global numbering
 
-  .. f:subroutine:: PDM_writer_geom_bloc_poly2d_set(def)
 
-    Add a block of polygons to the current partition
+        .. tab-item:: Fortran
 
-    :param c_ptr                   cs         [in]: Pointer to Writer instance
-    :param integer                 id_geom    [in]: Geometry identifier
-    :param integer                 id_bloc    [in]: Block identifier
-    :param integer                 id_part    [in]: Partition identifier
-    :param integer                 n_elt      [in]: Number of elements
-    :param integer(pdm_l_num_s)(:) connec_idx [in]: Index of the Element->Vertex connectivity (size = ``n_elt`` + 1)
-    :param integer(pdm_l_num_s)(:) connec     [in]: Element->Vertex connectivity (size = ``connec_idx(n_elt)``)
-    :param integer(pdm_g_num_s)(:) numabs     [in]: Element global numbering (size = ``n_elt``)
+          .. ifconfig:: enable_fortran_doc == 'ON'
 
-  .. f:subroutine:: PDM_writer_geom_bloc_poly3d_set(def)
+            .. f:autosubroutine:: PDM_writer_geom_cell3d_cellface_add
+            .. f:autosubroutine:: PDM_writer_geom_cell2d_cellface_add
+            .. f:autosubroutine:: PDM_writer_geom_faces_facesom_add
 
-    Add a block of polyhedra to the current partition
+          .. ifconfig:: enable_fortran_doc == 'OFF'
 
-    :param c_ptr                   cs          [in]: Pointer to Writer instance
-    :param integer                 id_geom     [in]: Geometry identifier
-    :param integer                 id_bloc     [in]: Block identifier
-    :param integer                 id_part     [in]: Partition identifier
-    :param integer                 n_elt       [in]: Number of elements
-    :param integer                 n_face      [in]: Number of faces
-    :param integer(pdm_l_num_s)(:) facsom_idx  [in]: Index of the Face->Vertex connectivity (size = ``n_face`` + 1)
-    :param integer(pdm_l_num_s)(:) facsom      [in]: Face->Vertex connectivity (size = ``facsom_idx(n_face)``)
-    :param integer(pdm_l_num_s)(:) cellfac_idx [in]: Index of the Cell->Face connectivity (size = ``n_elt`` + 1)
-    :param integer(pdm_l_num_s)(:) cellfac     [in]: Cell->Face connectivity (size = ``cellfac_idx(n_elt)``)
-    :param integer(pdm_g_num_s)(:) numabs      [in]: Cell global numbering (size = ``n_elt``)
+            .. warning::
+              Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
 
-  .. f:subroutine:: PDM_writer_geom_cell3d_cellface_add(def)
 
-    Add 3D cells described in terms of faces
-    This function determines element types and creates
-    blocks grouping elements of the same type.
-    It returns the indirection to the new arrangement order of the cells.
 
-    :param c_ptr                   cs            [in]: Pointer to Writer instance
-    :param integer                 id_geom       [in]: Geometry identifier
-    :param integer                 id_part       [in]: Partition identifier
-    :param integer                 n_cell        [in]: Number of 3D cells
-    :param integer                 n_face        [in]: Number of faces
-    :param integer(pdm_l_num_s)(:) face_som_idx  [in]: Index of the Face->Vertex connectivity (size = ``n_face`` + 1)
-    :param integer(pdm_l_num_s)(:) face_som_nb   [in]: Number of vertices per face (optional)
-    :param integer(pdm_l_num_s)(:) face_som      [in]: Face->Vertex connectivity (size = ``face_som_idx(n_face)``)
-    :param integer(pdm_l_num_s)(:) cell_face_idx [in]: Index of the Cell->Face connectivity (size = ``n_cell`` + 1)
-    :param integer(pdm_l_num_s)(:) cell_face_nb  [in]: Number of faces per cell (optional)
-    :param integer(pdm_l_num_s)(:) cell_face     [in]: Cell->Face connectivity (size = ``cell_face_idx(n_cell)``)
-    :param integer(pdm_g_num_s)(:) numabs        [in]: Cell global numbering (size = ``n_cell``)
+        .. tab-item:: Python
 
-  .. f:subroutine:: PDM_writer_geom_cell2d_cellface_add(def)
+          .. ifconfig:: enable_python_doc == 'ON'
 
-    Add of 2D cells described in terms of faces
-    This function determines element types and creates
-    blocks grouping elements of the same type.
-    It returns the indirection to the new arrangement order of the cells.
+            .. autofunction:: Pypdm.Pypdm.Writer.geom_cell3d_cellface_add
+              :noindex:
+            .. autofunction:: Pypdm.Pypdm.Writer.geom_cell2d_cellface_add
+              :noindex:
+            .. autofunction:: Pypdm.Pypdm.Writer.geom_faces_facevtx_add
+              :noindex:
 
-    :param c_ptr                   cs            [in]: Pointer to Writer instance
-    :param integer                 id_geom       [in]: Geometry identifier
-    :param integer                 id_part       [in]: Partition identifier
-    :param integer                 n_cell        [in]: Number of 2D cells
-    :param integer                 n_face        [in]: Number of faces
-    :param integer(pdm_l_num_s)(:) face_som_idx  [in]: Index of the Face->Vertex connectivity (unused)
-    :param integer(pdm_l_num_s)(:) face_som_nb   [in]: Number of Vertices per Face (unused)
-    :param integer(pdm_l_num_s)(:) face_som      [in]: Face->Vertex connectivity (size = 2 * ``n_face``)
-    :param integer(pdm_l_num_s)(:) cell_face_idx [in]: Index of the Cell->Face connectivity (size = ``n_cell`` + 1)
-    :param integer(pdm_l_num_s)(:) cell_face_nb  [in]: Number of Faces per Cell (optional)
-    :param integer(pdm_l_num_s)(:) cell_face     [in]: Cell->Face connectivity (size = ``cell_face_idx(n_cell)``)
-    :param integer(pdm_g_num_s)(:) numabs        [in]: Cell global numbering (size = ``n_cell``)
 
-  .. f:subroutine:: PDM_writer_geom_faces_facesom_add(def)
+    |
 
-    Add of faces described in nodal fashion
-    This function determines element types and creates
-    blocks grouping elements of the same type.
-    It returns the indirection to the new arrangement order of the cells.
+    If the mesh elements are already separated by types, sections can be added and set one by one:
 
-    :param c_ptr                   cs           [in]: Pointer to Writer instance
-    :param integer                 id_geom      [in]: Geometry identifier
-    :param integer                 id_part      [in]: Partition identifier
-    :param integer                 n_face       [in]: Number of faces
-    :param integer(pdm_l_num_s)(:) face_som_idx [in]: Index of the Face->Vertex connectivity (size = ``n_face`` + 1)
-    :param integer(pdm_l_num_s)(:) face_som_nb  [in]: Number of Vertices per Face (optional)
-    :param integer(pdm_l_num_s)(:) face_som     [in]: Face->Vertex connectivity (size = ``face_som_idx(n_face)``)
-    :param integer(pdm_g_num_s)(:) numabs       [in]: Face global numbering (size = ``n_face``)
+    .. dropdown:: Section setters
 
-  .. f:subroutine:: PDM_writer_geom_write(def)
+      .. tab-set::
 
-    Write of current mesh
+        .. tab-item:: C
 
-    :param c_ptr   cs      [in]: Pointer to Writer instance
-    :param integer id_geom [in]: Geometry identifier
+          .. doxygenfunction:: PDM_writer_geom_bloc_add
+          .. doxygenfunction:: PDM_writer_geom_bloc_std_set
+          .. doxygenfunction:: PDM_writer_geom_bloc_poly2d_set
+          .. doxygenfunction:: PDM_writer_geom_bloc_poly3d_set
 
-  .. f:subroutine:: PDM_writer_geom_data_reset(def)
 
-    Reset of data describing the current mesh
 
-    :param c_ptr   cs      [in]: Pointer to Writer instance
-    :param integer id_geom [in]: Geometry identifier
+        .. tab-item:: Fortran
 
-  Variable & Co
-  ~~~~~~~~~~~~~
+          .. ifconfig:: enable_fortran_doc == 'ON'
 
-  .. f:subroutine:: PDM_writer_cst_global_var_create(def)
+            .. f:autosubroutine:: PDM_writer_geom_bloc_add
+            .. f:autosubroutine:: PDM_writer_geom_bloc_std_set
+            .. f:autosubroutine:: PDM_writer_geom_bloc_poly2d_set
+            .. f:autosubroutine:: PDM_writer_geom_bloc_poly3d_set
 
-    Create a global constant variable
+          .. ifconfig:: enable_fortran_doc == 'OFF'
 
-    :param c_ptr            cs      [in]:  Pointer to Writer instance
-    :param integer          id_var  [out]: Variable identifier
-    :param character        nom_var [in]:  Variable name
-    :param real             val_var [in]:  Variable value
+            .. warning::
+              Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
 
-  .. f:subroutine:: PDM_writer_cst_global_var_set(def)
 
-    Create a global constant variable
 
-    :param c_ptr            cs      [in]: Pointer to Writer instance
-    :param integer          id_var  [in]: Variable identifier
-    :param real             val_var [in]: Variable value
+        .. tab-item:: Python
 
-  .. f:subroutine:: PDM_writer_var_create(def)
+          .. ifconfig:: enable_python_doc == 'ON'
 
-    Create a variable
+            .. autofunction:: Pypdm.Pypdm.Writer.geom_block_add
+              :noindex:
+            .. autofunction:: Pypdm.Pypdm.Writer.geom_block_std_set
+              :noindex:
 
-    :param c_ptr     cs           [in]:  Pointer to Writer instance
-    :param integer   id_var       [out]: Variable identifier
-    :param integer   st_dep_temps [in]:  Indicates whether the variable is time dependent
-    :param integer   dim          [in]:  Variable's dimension
-    :param integer   loc          [in]:  Variable's location
-    :param character nom_var      [in]:  Name of the variable
 
-  .. f:subroutine:: PDM_writer_var_write(def)
+          .. ifconfig:: enable_python_doc == 'OFF'
 
-    Write variable values
+            .. warning::
+              Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
 
-    :param c_ptr     cs     [in]: Pointer to Writer instance
-    :param integer   id_var [in]: Variable identifier
 
-  .. f:subroutine:: PDM_writer_var_set(def)
 
-    Update variable values
+.. dropdown:: Define variables
 
-    .. warning:: the values defined for the elements must be defined in the order in which the blocks are defined!
+  **Writer** supports both *local* variables (i.e. vertex- of element-based fields), and *global* variables (i.e. that depend solely on time).
 
-    :param c_ptr            cs      [in]: Pointer to Writer instance
-    :param integer          id_var  [in]: Variable identifier
-    :param integer          id_geom [in]: Geometry identifier
-    :param integer          id_part [in]: Partition identifier
-    :param real(8)(:)       val     [in]: Variable values
+  .. dropdown:: Local variables
 
-  .. f:subroutine:: PDM_writer_fmt_add(def)
+    .. tab-set::
 
-    Define a new format writer
+      .. tab-item:: C
 
-    .. warning:: has not been tested, not sure about procedure pointer interoperability
+        .. doxygenfunction:: PDM_writer_var_create
+        .. doxygenfunction:: PDM_writer_name_map_add
+        .. doxygenfunction:: PDM_writer_var_set
 
-    :param character   name            [in]: Name
-    :param procedure() create_fct      [in]: Customize \ref PDM_writer_create function for the new format  (or NULL)
-    :param procedure() free_fct        [in]: Customize \ref PDM_writer_free function for the new format (or NULL)
-    :param procedure() beg_step_fct    [in]: Customize \ref PDM_writer_step_beg function for the new format (or NULL)
-    :param procedure() end_step_fct    [in]: Customize \ref PDM_writer_step_end function for the new format (or NULL)
-    :param procedure() geom_create_fct [in]: Customize \ref PDM_writer_geom_create function for the new format (or NULL)
-    :param procedure() geom_write_fct  [in]: Customize \ref PDM_writer_geom_write function for the new format
-    :param procedure() geom_free_fct   [in]: Customize \ref PDM_writer_geom_free function for the new format (or NULL)
-    :param procedure() var_create_fct  [in]: Customize \ref PDM_writer_var_create function for the new format (or NULL)
-    :param procedure() var_write_fct   [in]: Customize \ref PDM_writer_var_write function for the new format
-    :param procedure() var_free_fct    [in]: Customize \ref PDM_writer_var_free function for the new format (or NULL)
 
-  .. f:subroutine:: PDM_writer_name_map_add(def)
 
-    Variable name mapping
+      .. tab-item:: Fortran
 
-    :param c_ptr     cs          [in]: Pointer to Writer instance
-    :param character public_name [in]: Public variable name
-    :param character pivate_name [in]: Private variable name
+        .. ifconfig:: enable_fortran_doc == 'ON'
 
-  Finalize
-  ~~~~~~~~
+          .. f:autosubroutine:: PDM_writer_var_create
+          .. f:autosubroutine:: PDM_writer_name_map_add
+          .. f:autosubroutine:: PDM_writer_var_set
 
-  .. f:subroutine:: PDM_writer_fmt_free(def)
+        .. ifconfig:: enable_fortran_doc == 'OFF'
 
-    Free format
+          .. warning::
+            Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
 
-  .. f:subroutine:: PDM_writer_var_data_free(def)
 
-    Free variable data arrays
 
-    :param c_ptr   cs     [in]: Pointer to Writer instance
-    :param integer id_var [in]: Variable identifier
+      .. tab-item:: Python
 
-  .. f:subroutine:: PDM_writer_var_free(def)
+        .. ifconfig:: enable_python_doc == 'ON'
 
-    Free variable
+          .. autofunction:: Pypdm.Pypdm.Writer.var_create
+            :noindex:
+          .. autofunction:: Pypdm.Pypdm.Writer.name_map_add
+            :noindex:
+          .. autofunction:: Pypdm.Pypdm.Writer.var_set
+            :noindex:
 
-    :param c_ptr   cs     [in]: Pointer to Writer instance
-    :param integer id_var [in]: Variable identifier
+        .. ifconfig:: enable_python_doc == 'OFF'
 
-  .. f:subroutine:: PDM_writer_geom_data_free(def)
+          .. warning::
+            Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
 
-    Free data describing the current mesh
-    Indirections on absolute numbering are retained
+    .. doxygenenum:: PDM_writer_var_loc_t
 
-    :param c_ptr   cs      [in]: Pointer to Writer instance
-    :param integer id_geom [in]: Geometry identifier
+  .. dropdown:: Global variables
 
-  .. f:subroutine:: PDM_writer_geom_free(def)
+    .. tab-set::
 
-    Free data describing the current mesh
+      .. tab-item:: C
 
-    :param c_ptr   cs      [in]: Pointer to Writer instance
-    :param integer id_geom [in]: Geometry identifier
+        .. doxygenfunction:: PDM_writer_cst_global_var_create
+        .. doxygenfunction:: PDM_writer_cst_global_var_set
 
-  .. f:subroutine:: PDM_writer_free(def)
 
-    Free a writer structure
 
-    :param c_ptr   cs      [in]: Pointer to Writer instance
+      .. tab-item:: Fortran
 
-Python API
-----------
+        .. ifconfig:: enable_fortran_doc == 'ON'
 
-.. ifconfig:: enable_python_doc == 'ON'
+          .. f:autosubroutine:: PDM_writer_cst_global_var_create
+          .. f:autosubroutine:: PDM_writer_cst_global_var_set
 
-  .. py:class:: Writer
+        .. ifconfig:: enable_fortran_doc == 'OFF'
 
-    Python object to perform mesh and associated data write.
-    Once initialized, all the following
-    methods apply to a :class:`Writer` instance.
+          .. warning::
+            Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
 
-    .. rubric:: Initialization
 
-    .. autofunction:: Pypdm.Pypdm.Writer.__init__
 
-    .. rubric:: Methods summary
 
-    .. autosummary::
-      :nosignatures:
+.. dropdown:: Manage time steps
 
-      ~Pypdm.Pypdm.Writer.geom_create
-      ~Pypdm.Pypdm.Writer.geom_cell2d_cellface_add
-      ~Pypdm.Pypdm.Writer.geom_cell3d_cellface_add
-      ~Pypdm.Pypdm.Writer.geom_coord_set
-      ~Pypdm.Pypdm.Writer.geom_faces_facevtx_add
-      ~Pypdm.Pypdm.Writer.geom_block_add
-      ~Pypdm.Pypdm.Writer.geom_block_std_set
-      ~Pypdm.Pypdm.Writer.geom_write
-      ~Pypdm.Pypdm.Writer.geom_data_free
-      ~Pypdm.Pypdm.Writer.geom_free
-      ~Pypdm.Pypdm.Writer.var_create
-      ~Pypdm.Pypdm.Writer.name_map_add
-      ~Pypdm.Pypdm.Writer.var_write
-      ~Pypdm.Pypdm.Writer.var_set
-      ~Pypdm.Pypdm.Writer.var_data_free
-      ~Pypdm.Pypdm.Writer.var_free
-      ~Pypdm.Pypdm.Writer.step_beg
-      ~Pypdm.Pypdm.Writer.step_end
+  All writes must be framed by the beginning and end of a time step.
 
-    .. rubric:: Step
+  .. tab-set::
 
-    .. automethod:: Pypdm.Pypdm.Writer.step_beg
+    .. tab-item:: C
 
-    .. automethod:: Pypdm.Pypdm.Writer.step_end
+      .. doxygenfunction:: PDM_writer_step_beg
+      .. doxygenfunction:: PDM_writer_step_end
 
-    .. rubric:: Geometry
 
-    .. automethod:: Pypdm.Pypdm.Writer.geom_create
 
-    .. automethod:: Pypdm.Pypdm.Writer.geom_cell2d_cellface_add
+    .. tab-item:: Fortran
 
-    .. automethod:: Pypdm.Pypdm.Writer.geom_cell3d_cellface_add
+      .. ifconfig:: enable_fortran_doc == 'ON'
 
-    .. automethod:: Pypdm.Pypdm.Writer.geom_coord_set
+        .. f:autosubroutine:: PDM_writer_step_beg
+        .. f:autosubroutine:: PDM_writer_step_end
 
-    .. automethod:: Pypdm.Pypdm.Writer.geom_faces_facevtx_add
+      .. ifconfig:: enable_fortran_doc == 'OFF'
 
-    .. automethod:: Pypdm.Pypdm.Writer.geom_block_add
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
 
-    .. automethod:: Pypdm.Pypdm.Writer.geom_block_std_set
 
-    .. automethod:: Pypdm.Pypdm.Writer.geom_write
 
-    .. rubric:: Variable & Co
+    .. tab-item:: Python
 
-    .. automethod:: Pypdm.Pypdm.Writer.var_write
+      .. ifconfig:: enable_python_doc == 'ON'
 
-    .. automethod:: Pypdm.Pypdm.Writer.var_set
+        .. autofunction:: Pypdm.Pypdm.Writer.step_beg
+          :noindex:
+        .. autofunction:: Pypdm.Pypdm.Writer.step_end
+          :noindex:
 
-    .. automethod:: Pypdm.Pypdm.Writer.var_free
+      .. ifconfig:: enable_python_doc == 'OFF'
 
-    .. rubric:: Finalize
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
 
-    .. automethod:: Pypdm.Pypdm.Writer.geom_data_free
 
-    .. automethod:: Pypdm.Pypdm.Writer.geom_free
 
-    .. automethod:: Pypdm.Pypdm.Writer.var_data_free
+
+.. dropdown:: Write
+
+  .. tab-set::
+
+    .. tab-item:: C
+
+      .. doxygenfunction:: PDM_writer_geom_write
+      .. doxygenfunction:: PDM_writer_var_write
+
+
+
+    .. tab-item:: Fortran
+
+      .. ifconfig:: enable_fortran_doc == 'ON'
+
+        .. f:autosubroutine:: PDM_writer_geom_write
+        .. f:autosubroutine:: PDM_writer_var_write
+
+      .. ifconfig:: enable_fortran_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+
+
+
+    .. tab-item:: Python
+
+      .. ifconfig:: enable_python_doc == 'ON'
+
+        .. autofunction:: Pypdm.Pypdm.Writer.geom_write
+          :noindex:
+        .. autofunction:: Pypdm.Pypdm.Writer.var_write
+          :noindex:
+
+      .. ifconfig:: enable_python_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+
+
+
+.. dropdown:: Finalization
+
+  .. tab-set::
+
+    .. tab-item:: C
+
+      .. doxygenfunction:: PDM_writer_var_free
+      .. doxygenfunction:: PDM_writer_geom_free
+      .. doxygenfunction:: PDM_writer_free
+
+
+
+    .. tab-item:: Fortran
+
+      .. ifconfig:: enable_fortran_doc == 'ON'
+
+        .. f:autosubroutine:: PDM_writer_var_free
+        .. f:autosubroutine:: PDM_writer_geom_free
+        .. f:autosubroutine:: PDM_writer_free
+
+      .. ifconfig:: enable_fortran_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+
+
+
+    .. tab-item:: Python
+
+      |python_gc|

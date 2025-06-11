@@ -178,11 +178,11 @@ typedef enum {
  * \param [in] prop_noeuds_actifs   Amount of active nodes:
  *                                    *  -1 : all active
  *                                    *   1 : one process per node
- *                                    * 0 < val < 1 : one process per active node
+ *                                    * 0 < val < 1 : some processes per active node
  * \param [in] options              Complementary options for the format structured as
  *                                  ("name_1 = val_1 : ... : name_n = val_n")
  *
- * \return   Pointer to \ref PDM_writer_t object
+ * \return   Pointer to \ref PDM_writer_t instance
  *
  */
 
@@ -203,9 +203,9 @@ const char                   *options
 
 
 /**
- * \brief Free a writer structure
+ * \brief Free a \ref PDM_writer_t instance
  *
- * \param [in] cs    Pointer to \ref PDM_writer_t object
+ * \param [in] cs    Pointer to \ref PDM_writer_t instance
  *
  */
 
@@ -219,7 +219,7 @@ PDM_writer_free
 /**
  * \brief Begin a time step
  *
- * \param [in] cs             Pointer to \ref PDM_writer_t object
+ * \param [in] cs             Pointer to \ref PDM_writer_t instance
  * \param [in] physical_time  Time
  */
 
@@ -234,7 +234,7 @@ PDM_writer_step_beg
 /**
  * \brief Is there a open time step?
  *
- * \param [in] cs             Pointer to \ref PDM_writer_t object
+ * \param [in] cs             Pointer to \ref PDM_writer_t instance
  *
  * \return   Flag which indicates if a time step is open
  */
@@ -249,7 +249,7 @@ PDM_writer_is_open_step
 /**
  * \brief End a time step
  *
- * \param [in] cs             Pointer to \ref PDM_writer_t object
+ * \param [in] cs             Pointer to \ref PDM_writer_t instance
  *
  */
 
@@ -263,7 +263,7 @@ PDM_writer_step_end
 /**
  * \brief Create a new geometry in the writer structure
  *
- * \param [in]  cs                Pointer to \ref PDM_writer_t object
+ * \param [in]  cs                Pointer to \ref PDM_writer_t instance
  * \param [in]  nom_geom          Name of the geometry
  * \param [in]  n_part            Number of partitions
  *
@@ -283,7 +283,7 @@ PDM_writer_geom_create
 /**
  * \brief Create a geometry from a nodal mesh structure
  *
- * \param [in]  cs                Pointer to \ref PDM_writer_t object
+ * \param [in]  cs                Pointer to \ref PDM_writer_t instance
  * \param [in]  nom_geom          Name of the geometry
  * \param [in]  mesh              Pointer to \ref PDM_part_mesh_nodal_t instance
  *
@@ -303,7 +303,7 @@ PDM_writer_geom_create_from_mesh_nodal
 /**
  * \brief Set a geometry from a nodal mesh structure
  *
- * \param [in]  cs                Pointer to \ref PDM_writer_t object
+ * \param [in]  cs                Pointer to \ref PDM_writer_t instance
  * \param [in]  id_geom           Geometry identifier
  * \param [in]  mesh              Pointer to \ref PDM_part_mesh_nodal_t instance
  *
@@ -321,12 +321,12 @@ PDM_writer_geom_set_from_mesh_nodal
 /**
  * \brief Define the coordinates of the current partition
  *
- * \param [in] cs        Pointer to \ref PDM_writer_t object
+ * \param [in] cs        Pointer to \ref PDM_writer_t instance
  * \param [in] id_geom   Geometry identifier
  * \param [in] id_part   Partition identifier
  * \param [in] n_som     Number of vertices
  * \param [in] coords    Coordinates (size = 3 * \p n_som)
- * \param [in] numabs    Vertex global numbering (size = \p n_som)
+ * \param [in] numabs    Vertex global IDs (size = \p n_som)
  * \param [in] ownership Ownership
  *
  */
@@ -348,15 +348,15 @@ PDM_writer_geom_coord_set
  * \brief Definition of the coordinates of the vertices in the current partition from a parent set
  *
  *
- * \param [in] cs               Pointer to \ref PDM_writer_t object
+ * \param [in] cs               Pointer to \ref PDM_writer_t instance
  * \param [in] id_geom          Geometry identifier
  * \param [in] id_part          Partition identifier
  * \param [in] n_som            Number of vertices
  * \param [in] n_som_parent     Number of parent vertices
- * \param [in] numabs           Vertex global numbering (size = \p n_som)
- * \param [in] num_parent       Vertex parent local numbering (size = \p n_som)
+ * \param [in] numabs           Vertex global IDs (size = \p n_som)
+ * \param [in] num_parent       Vertex parent local IDs (size = \p n_som)
  * \param [in] coords_parent    Coordinates of parent vertices (size = 3 * \p n_som_parent)
- * \param [in] numabs_parent    Vertex parent global numbering (size = \p n_som_parent)
+ * \param [in] numabs_parent    Vertex parent global IDs (size = \p n_som_parent)
  * \param [in] ownership        Ownership
  *
  */
@@ -378,14 +378,14 @@ PDM_writer_geom_coord_from_parent_set
 
 
 /**
- * \brief Add a block of elements of a given type
+ * \brief Add a section of elements of a given type
  *
- * \param [in] cs             Pointer to \ref PDM_writer_t object
+ * \param [in] cs             Pointer to \ref PDM_writer_t instance
  * \param [in] id_geom        Geometry identifier
  * \param [in] t_elt          Element type
- * \param [in] owner          Block ownership
+ * \param [in] owner          Section ownership
  *
- * \return   Block identifier
+ * \return   Section identifier
  *
  */
 
@@ -400,15 +400,15 @@ PDM_writer_geom_bloc_add
 
 
 /**
- * \brief Set in the given geometry a block of elements of a given type
+ * \brief Set in the given geometry a section of elements of a given type
  *
- * \param [in] cs                  Pointer to \ref PDM_writer_t object
+ * \param [in] cs                  Pointer to \ref PDM_writer_t instance
  * \param [in] id_geom             Geometry identifier
- * \param [in] id_bloc             Block identifier
+ * \param [in] id_bloc             Section identifier
  * \param [in] id_part             Partition identifier
  * \param [in] n_elt               Number of elements
  * \param [in] connec              Element->Vertex connectivity
- * \param [in] numabs              Element global numbering
+ * \param [in] numabs              Element global IDs
  *
  */
 
@@ -426,16 +426,16 @@ PDM_writer_geom_bloc_std_set
 
 
 /**
- * \brief Add a block of polygons to the current partition
+ * \brief Add a section of polygons to the current partition
  *
- * \param [in] cs              Pointer to \ref PDM_writer_t object
+ * \param [in] cs              Pointer to \ref PDM_writer_t instance
  * \param [in] id_geom         Geometry identifier
- * \param [in] id_bloc         Block identifier
+ * \param [in] id_bloc         Section identifier
  * \param [in] id_part         Partition identifier
  * \param [in] n_elt           Number of elements
  * \param [in] connec_idx      Index of the Element->Vertex connectivity (size = \p n_elt+1)
  * \param [in] connec          Element->Vertex connectivity (size = \p connec_idx[\p n_elt])
- * \param [in] numabs          Element global numbering (size = \p n_elt)
+ * \param [in] numabs          Element global IDs (size = \p n_elt)
  *
  */
 
@@ -454,11 +454,11 @@ const PDM_l_num_t    n_elt,
 
 
 /**
- * \brief Add a block of polyhedra to the current partition
+ * \brief Add a section of polyhedra to the current partition
  *
- * \param [in] cs              Pointer to \ref PDM_writer_t object
+ * \param [in] cs              Pointer to \ref PDM_writer_t instance
  * \param [in] id_geom         Geometry identifier
- * \param [in] id_bloc         Block identifier
+ * \param [in] id_bloc         Section identifier
  * \param [in] id_part         Partition identifier
  * \param [in] n_elt           Number of elements
  * \param [in] n_face          Number of faces
@@ -466,7 +466,7 @@ const PDM_l_num_t    n_elt,
  * \param [in] facsom          Face->Vertex connectivity (size = \p facsom_idx[\p n_face])
  * \param [in] cellfac_idx     Index of the Cell->Face connectivity (size = \p n_elt+1)
  * \param [in] cellfac         Cell->Face connectivity (size = \p cellfac_idx[\p n_elt])
- * \param [in] numabs          Cell global numbering (size = \p n_elt)
+ * \param [in] numabs          Cell global IDs (size = \p n_elt)
  *
  */
 
@@ -492,9 +492,9 @@ const PDM_l_num_t    n_face,
  * \brief Add 3D cells described in terms of faces
  *
  * This function determines element types and creates
- * blocks grouping elements of the same type.
+ * sections grouping elements of the same type.
  *
- * \param [in]  cs              Pointer to \ref PDM_writer_t object
+ * \param [in]  cs              Pointer to \ref PDM_writer_t instance
  * \param [in]  id_geom         Geometry identifier
  * \param [in]  id_part         Partition identifier
  * \param [in]  n_cell          Number of 3D cells
@@ -505,7 +505,7 @@ const PDM_l_num_t    n_face,
  * \param [in]  cell_face_idx   Index of the Cell->Face connectivity (size = \p n_cell + 1)
  * \param [in]  cell_face_nb    Number of faces per cell (optional)
  * \param [in]  cell_face       Cell->Face connectivity (size = \p cell_face_idx[\p n_cell])
- * \param [in]  numabs          Cell global numbering (size = \p n_cell)
+ * \param [in]  numabs          Cell global IDs (size = \p n_cell)
  *
  */
 
@@ -532,9 +532,9 @@ PDM_writer_geom_cell3d_cellface_add
  * \brief Add 2D cells described in terms of faces
  *
  * This function determines element types and creates
- * blocks grouping elements of the same type.
+ * sections grouping elements of the same type.
  *
- * \param [in] cs              Pointer to \ref PDM_writer_t object
+ * \param [in] cs              Pointer to \ref PDM_writer_t instance
  * \param [in] id_geom         Geometry identifier
  * \param [in] id_part         Partition identifier
  * \param [in] n_cell          Number of 2D cells
@@ -545,7 +545,7 @@ PDM_writer_geom_cell3d_cellface_add
  * \param [in] cell_face_idx   Index of the Cell->Face connectivity (size = \p n_cell + 1)
  * \param [in] cell_face_nb    Number of faces per cell (optional)
  * \param [in] cell_face       Cell->Face connectivity (size = \p cell_face_idx[\p n_cell])
- * \param [in] numabs          Cell global numbering (size = \p n_cell)
+ * \param [in] numabs          Cell global IDs (size = \p n_cell)
  *
  */
 
@@ -572,16 +572,16 @@ PDM_writer_geom_cell2d_cellface_add
  * \brief Add faces described in nodal fashion
  *
  * This function determines element types and creates
- * blocks grouping elements of the same type.
+ * sections grouping elements of the same type.
  *
- * \param [in] cs              Pointer to \ref PDM_writer_t object
+ * \param [in] cs              Pointer to \ref PDM_writer_t instance
  * \param [in] id_geom         Geometry identifier
  * \param [in] id_part         Partition identifier
  * \param [in] n_face          Number of faces
  * \param [in] face_som_idx    Index of the Face->Vertex connectivity (size = \p n_face + 1)
  * \param [in] face_som_nb     Number of vertices per face (optional)
  * \param [in] face_som        Face->Vertex connectivity (size = \p face_som_idx[\p n_face])
- * \param [in] numabs          Face global numbering (size = \p n_face)
+ * \param [in] numabs          Face global IDs (size = \p n_face)
  *
  */
 
@@ -602,7 +602,7 @@ PDM_writer_geom_faces_facesom_add
 /**
  * \brief Write current geometry
  *
- * \param [in] cs              Pointer to \ref PDM_writer_t object
+ * \param [in] cs              Pointer to \ref PDM_writer_t instance
  * \param [in] id_geom         Geometry identifier
  *
  */
@@ -617,9 +617,9 @@ PDM_writer_geom_write
 
 /**
  * \brief Free data describing the current geometry
- *        Indirections on absolute numbering are retained
+ *        Indirections on global IDs are retained
  *
- * \param [in] cs              Pointer to \ref PDM_writer_t object
+ * \param [in] cs              Pointer to \ref PDM_writer_t instance
  * \param [in] id_geom         Geometry identifier
  *
  */
@@ -633,9 +633,9 @@ PDM_writer_geom_data_free
 
 
 /**
- * \brief Free data describing the current geometry
+ * \brief Free the current geometry
  *
- * \param [in] cs              Pointer to \ref PDM_writer_t object
+ * \param [in] cs              Pointer to \ref PDM_writer_t instance
  * \param [in] id_geom         Geometry identifier
  *
  */
@@ -651,7 +651,7 @@ PDM_writer_geom_free
 /**
  * \brief Create a global constant variable
  *
- * \param [in] cs              Pointer to \ref PDM_writer_t object
+ * \param [in] cs              Pointer to \ref PDM_writer_t instance
  * \param [in] nom_var         Variable name
  * \param [in] val_var         Variable value
  *
@@ -671,7 +671,7 @@ PDM_writer_cst_global_var_create
 /**
  * \brief Set a global constant variable
  *
- * \param [in] cs              Pointer to \ref PDM_writer_t object
+ * \param [in] cs              Pointer to \ref PDM_writer_t instance
  * \param [in] id_var          Variable identifier
  * \param [in] val_var         Variable value
  *
@@ -692,7 +692,7 @@ PDM_writer_cst_global_var_set
 /**
  * \brief Create a variable
  *
- * \param [in] cs              Pointer to \ref PDM_writer_t object
+ * \param [in] cs              Pointer to \ref PDM_writer_t instance
  * \param [in] st_dep_temps    Indicates whether the variable is time dependent
  * \param [in] dim             Variable's dimension
  * \param [in] loc             Variable's location
@@ -716,7 +716,7 @@ PDM_writer_var_create
 /**
  * \brief Variable name mapping
  *
- * \param [in] cs              Pointer to \ref PDM_writer_t object
+ * \param [in] cs              Pointer to \ref PDM_writer_t instance
  * \param [in] public_name     Public variable name
  * \param [in] pivate_name     Private variable name
  *
@@ -734,7 +734,7 @@ PDM_writer_name_map_add
 /**
  * \brief Write variable values
  *
- * \param [in] cs              Pointer to \ref PDM_writer_t object
+ * \param [in] cs              Pointer to \ref PDM_writer_t instance
  * \param [in] id_var          Variable identifier
  *
  */
@@ -750,9 +750,11 @@ PDM_writer_var_write
 /**
  * \brief Update variable values
  *
- * \warning the values defined for the elements must be defined in the order in which the blocks are defined!
+ * \note The values are hard-copied (bufferization)
  *
- * \param [in] cs              Pointer to \ref PDM_writer_t object
+ * \warning The values defined for the elements must be defined in the order in which the sections are defined!
+ *
+ * \param [in] cs              Pointer to \ref PDM_writer_t instance
  * \param [in] id_var          Variable identifier
  * \param [in] id_geom         Geometry identifier
  * \param [in] id_part         Partition identifier
@@ -774,7 +776,7 @@ PDM_writer_var_set
 /**
  * \brief Free variable data arrays
  *
- * \param [in] cs              Pointer to \ref PDM_writer_t object
+ * \param [in] cs              Pointer to \ref PDM_writer_t instance
  * \param [in] id_var          Variable identifier
  *
  */
@@ -790,7 +792,7 @@ PDM_writer_var_data_free
 /**
  * \brief Free variable
  *
- * \param [in] cs              Pointer to \ref PDM_writer_t object
+ * \param [in] cs              Pointer to \ref PDM_writer_t instance
  * \param [in] id_var          Variable identifier
  *
  */
@@ -854,7 +856,7 @@ PDM_writer_fmt_free
 /**
  * \brief Reset data describing the current geometry
  *
- * \param [in] cs              Pointer to \ref PDM_writer_t object
+ * \param [in] cs              Pointer to \ref PDM_writer_t instance
  * \param [in] id_geom         Geometry identifier
  *
  */
