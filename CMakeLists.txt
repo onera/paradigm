@@ -69,6 +69,7 @@ option(PDM_ENABLE_SHARED          "Build Shared Libraries"                    ON
 option(PDM_ENABLE_STATIC          "Build Static Libraries"                    OFF)
 option(PDM_ENABLE_BLASLAPACK      "Build with BLAS/LAPACK"                    OFF)
 option(PDM_ENABLE_OPENMP          "Enable OpenMP"                             OFF)
+option(PDM_ENABLE_ANISO_AGGLO     "Enable anisotropic agglomeration"          ON )
 
 option(PDM_ENABLE_Fortran         "Build Fortran Interface"                   ON )
 option(PDM_ENABLE_PYTHON_BINDINGS "Build Python module"                       OFF)
@@ -90,7 +91,7 @@ endif()
 if (PDM_ENABLE_LONG_G_NUM)
   set(PDM_LONG_G_NUM 1)
 endif ()
-if(PDM_ENABLE_EXTENSION_PDMA)
+if(PDM_ENABLE_EXTENSION_PDMA AND PDM_ENABLE_ANISO_AGGLO)
   set (PDM_HAVE_ANISO_AGGLO 1)
 endif()
 
@@ -102,12 +103,14 @@ if (PDM_ENABLE_PYTHON_BINDINGS)
 
 endif()
 
-
+set (install_configs "")
 configure_file(pdm_config.h.in "${CMAKE_CURRENT_BINARY_DIR}/pdm_config.h")
+list (APPEND install_configs ${CMAKE_CURRENT_BINARY_DIR}/pdm_config.h)
 if(PDM_ENABLE_Fortran)
   if ("${CMAKE_CURRENT_BINARY_DIR}/pdm_config.h" IS_NEWER_THAN  "${CMAKE_CURRENT_BINARY_DIR}/pdm_configf.h")
     include (FortranizeFile)
     fortranize ("${CMAKE_CURRENT_BINARY_DIR}/pdm_config.h")
+    list (APPEND install_configs ${CMAKE_CURRENT_BINARY_DIR}/pdm_configf.h)
   endif ()
 endif()
 
@@ -402,3 +405,4 @@ endif()
 
 
 install(FILES ${install_headers} DESTINATION include)
+install(FILES ${install_configs} DESTINATION include)
