@@ -67,7 +67,9 @@ option(PDM_ENABLE_EXTENSION_PDMA  "Enable advanced functionalities extension" OF
 option(PDM_ENABLE_LONG_G_NUM      "Enable long for global number"             ON )
 option(PDM_ENABLE_SHARED          "Build Shared Libraries"                    ON )
 option(PDM_ENABLE_STATIC          "Build Static Libraries"                    OFF)
-option(PDM_ENABLE_ANISO_AGGLO     "Enable anisotropic agglomeration"          ON )
+if(PDM_ENABLE_EXTENSION_PDMA)
+  option(PDM_ENABLE_ANISO_AGGLO   "Enable anisotropic agglomeration"          ON )
+endif()
 
 option(PDM_ENABLE_Fortran         "Build Fortran Interface"                   ON )
 option(PDM_ENABLE_PYTHON_BINDINGS "Build Python module"                       OFF)
