@@ -397,51 +397,23 @@ PDM_dmesh_free
   if (dmesh == NULL) {
     return;
   }
-  dmesh->dn_cell           = 0;
-  dmesh->dn_face           = 0;
-  dmesh->dn_edge           = 0;
-  dmesh->dn_vtx            = 0;
 
-  if(dmesh->is_owner_vtx_coord ==  PDM_TRUE) {
-    if(dmesh->_dvtx_coord != NULL) {
-      PDM_free(dmesh->_dvtx_coord);
+  if (dmesh->is_owner_vtx_coord == PDM_TRUE) {
+    PDM_free(dmesh->_dvtx_coord);
+  }
+
+  for(int i = 0; i < PDM_CONNECTIVITY_TYPE_MAX; ++i) {
+    if(dmesh->is_owner_connectivity[i] == PDM_TRUE) {
+      PDM_free(dmesh->dconnectivity[i]);
+      PDM_free(dmesh->dconnectivity_idx[i]);
     }
   }
-  dmesh->_dvtx_coord       = NULL;
 
-  if(( dmesh->owner == PDM_OWNERSHIP_KEEP ) ||
-     ( dmesh->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE)){
-    for(int i = 0; i < PDM_CONNECTIVITY_TYPE_MAX; ++i) {
-
-      if(dmesh->is_owner_connectivity[i] == PDM_TRUE) {
-
-        if(dmesh->dconnectivity[i] != NULL){
-          PDM_free(dmesh->dconnectivity[i]);
-        }
-        if(dmesh->dconnectivity_idx[i] != NULL){
-          PDM_free(dmesh->dconnectivity_idx[i]);
-        }
-        dmesh->dconnectivity    [i] = NULL;
-        dmesh->dconnectivity_idx[i] = NULL;
-
-      }
-    }
-
-    for(int i = 0; i < PDM_BOUND_TYPE_MAX; ++i) {
-
-      if(dmesh->is_owner_bound[i] == PDM_TRUE) {
-
-        //printf(" dmesh_free :: %i \n", i);
-        if(dmesh->dbound[i] != NULL) {
-          PDM_free(dmesh->dbound[i]);
-        }
-        if(dmesh->dbound_idx[i] != NULL){
-          PDM_free(dmesh->dbound_idx[i]);
-        }
-        dmesh->dbound    [i] = NULL;
-        dmesh->dbound_idx[i] = NULL;
-
-      }
+  for(int i = 0; i < PDM_BOUND_TYPE_MAX; ++i) {
+    if(dmesh->is_owner_bound[i] == PDM_TRUE) {
+      //printf(" dmesh_free :: %i \n", i);
+      PDM_free(dmesh->dbound    [i]);
+      PDM_free(dmesh->dbound_idx[i]);
     }
   }
 
@@ -454,26 +426,11 @@ PDM_dmesh_free
   PDM_free(dmesh->dbound_idx    );
   PDM_free(dmesh->is_owner_bound);
 
-  /* This result is never getted so we can free them */
-  if(dmesh->cell_distrib != NULL) {
-    PDM_free(dmesh->cell_distrib);
-    dmesh->cell_distrib = NULL;
-  }
-
-  if(dmesh->face_distrib != NULL) {
-    PDM_free(dmesh->face_distrib);
-    dmesh->face_distrib = NULL;
-  }
-
-  if(dmesh->edge_distrib != NULL) {
-    PDM_free(dmesh->edge_distrib);
-    dmesh->edge_distrib = NULL;
-  }
-
-  if(dmesh->vtx_distrib != NULL) {
-    PDM_free(dmesh->vtx_distrib);
-    dmesh->vtx_distrib = NULL;
-  }
+  /* This result is never get so we can free them */
+  PDM_free(dmesh->cell_distrib);
+  PDM_free(dmesh->face_distrib);
+  PDM_free(dmesh->edge_distrib);
+  PDM_free(dmesh->vtx_distrib);
 
   PDM_free(dmesh);
 }
