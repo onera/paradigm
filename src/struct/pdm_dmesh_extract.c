@@ -379,7 +379,7 @@ _dmesh_extract_3d
                                              &dme->distrib_extract                 [PDM_MESH_ENTITY_FACE],
                                              &dme->parent_extract_gnum             [PDM_MESH_ENTITY_FACE]);
 
-  dme->dmesh_extract->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE] = PDM_TRUE;
+  dme->dmesh_extract->owner_connectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE] = PDM_OWNERSHIP_KEEP;
   dme->dmesh_extract->dn_face = dme->distrib_extract[PDM_MESH_ENTITY_FACE][i_rank+1] - dme->distrib_extract[PDM_MESH_ENTITY_FACE][i_rank];
 
   if(from_face_edge == 1) {
@@ -396,7 +396,7 @@ _dmesh_extract_3d
                                                      &dme->distrib_extract                 [PDM_MESH_ENTITY_EDGE],
                                                      &dme->parent_extract_gnum             [PDM_MESH_ENTITY_EDGE]);
 
-    dme->dmesh_extract->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] = PDM_TRUE;
+    dme->dmesh_extract->owner_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] = PDM_OWNERSHIP_KEEP;
 
     // edge_vtx
     distrib_edge = PDM_compute_entity_distribution(dme->comm, dn_edge);
@@ -429,7 +429,7 @@ _dmesh_extract_3d
                                                      &dme->distrib_extract                 [PDM_MESH_ENTITY_VTX],
                                                      &dme->parent_extract_gnum             [PDM_MESH_ENTITY_VTX]);
 
-    dme->dmesh_extract->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX] = PDM_TRUE;
+    dme->dmesh_extract->owner_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX] = PDM_OWNERSHIP_KEEP;
     PDM_free(dme->dmesh_extract->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_VTX]);
     dme->dmesh_extract->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_VTX] = NULL;
     if(dedge_vtx_idx == NULL)  {
@@ -449,7 +449,7 @@ _dmesh_extract_3d
                                                      &dme->distrib_extract                 [PDM_MESH_ENTITY_VTX],
                                                      &dme->parent_extract_gnum             [PDM_MESH_ENTITY_VTX]);
 
-    dme->dmesh_extract->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_FACE_VTX] = PDM_TRUE;
+    dme->dmesh_extract->owner_connectivity[PDM_CONNECTIVITY_TYPE_FACE_VTX] = PDM_OWNERSHIP_KEEP;
  }
 
   dme->dmesh_extract->dn_face = dme->distrib_extract[PDM_MESH_ENTITY_FACE][i_rank+1] - dme->distrib_extract[PDM_MESH_ENTITY_FACE][i_rank];
@@ -541,7 +541,7 @@ _dmesh_extract_2d
                                                &dme->distrib_extract                 [PDM_MESH_ENTITY_EDGE],
                                                &dme->parent_extract_gnum             [PDM_MESH_ENTITY_EDGE]);
 
-    dme->dmesh_extract->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] = PDM_TRUE;
+    dme->dmesh_extract->owner_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] = PDM_OWNERSHIP_KEEP;
 
     // edge_vtx
     distrib_edge = PDM_compute_entity_distribution(dme->comm, dn_edge);
@@ -574,7 +574,7 @@ _dmesh_extract_2d
                                                      &dme->distrib_extract                 [PDM_MESH_ENTITY_VTX],
                                                      &dme->parent_extract_gnum             [PDM_MESH_ENTITY_VTX]);
 
-    dme->dmesh_extract->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX] = PDM_TRUE;
+    dme->dmesh_extract->owner_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX] = PDM_OWNERSHIP_KEEP;
     PDM_free(dme->dmesh_extract->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_VTX]);
     dme->dmesh_extract->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_VTX] = NULL;
     if(dedge_vtx_idx == NULL)  {
@@ -596,7 +596,7 @@ _dmesh_extract_2d
                                                &dme->distrib_extract                 [PDM_MESH_ENTITY_VTX],
                                                &dme->parent_extract_gnum             [PDM_MESH_ENTITY_VTX]);
 
-    dme->dmesh_extract->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_FACE_VTX] = PDM_TRUE;
+    dme->dmesh_extract->owner_connectivity[PDM_CONNECTIVITY_TYPE_FACE_VTX] = PDM_OWNERSHIP_KEEP;
  }
 
   dme->dmesh_extract->dn_face = dme->distrib_extract[PDM_MESH_ENTITY_FACE][i_rank+1] - dme->distrib_extract[PDM_MESH_ENTITY_FACE][i_rank];
@@ -669,7 +669,7 @@ _dmesh_extract_1d
                                              &dme->distrib_extract                 [PDM_MESH_ENTITY_VTX],
                                              &dme->parent_extract_gnum             [PDM_MESH_ENTITY_VTX]);
 
-  dme->dmesh_extract->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX] = PDM_TRUE;
+  dme->dmesh_extract->owner_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX] = PDM_OWNERSHIP_KEEP;
   PDM_free(dme->dmesh_extract->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_VTX]);
   dme->dmesh_extract->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_VTX] = NULL;
   if(dedge_vtx_idx == NULL)  {

@@ -121,28 +121,26 @@ PDM_dmesh_create
   dmesh->vtx_distrib       = NULL;
 
   dmesh->_dvtx_coord       = NULL;
-  dmesh->is_owner_vtx_coord  = PDM_TRUE;
+  dmesh->owner_vtx_coord   = PDM_OWNERSHIP_KEEP;
 
   PDM_malloc(dmesh->dconnectivity        , PDM_CONNECTIVITY_TYPE_MAX, PDM_g_num_t *);
   PDM_malloc(dmesh->dconnectivity_idx    , PDM_CONNECTIVITY_TYPE_MAX, int         *);
-  PDM_malloc(dmesh->is_owner_connectivity, PDM_CONNECTIVITY_TYPE_MAX, PDM_bool_t   );
 
   for(int i = 0; i < PDM_CONNECTIVITY_TYPE_MAX; ++i) {
-    dmesh->is_owner_connectivity[i] = PDM_FALSE;
+    dmesh->owner_connectivity   [i] = PDM_OWNERSHIP_KEEP;
     dmesh->dconnectivity        [i] = NULL;
     dmesh->dconnectivity_idx    [i] = NULL;
   }
 
   PDM_malloc(dmesh->dbound        , PDM_BOUND_TYPE_MAX, PDM_g_num_t *);
   PDM_malloc(dmesh->dbound_idx    , PDM_BOUND_TYPE_MAX, int         *);
-  PDM_malloc(dmesh->is_owner_bound, PDM_BOUND_TYPE_MAX, PDM_bool_t   );
 
   for(int i = 0; i < PDM_BOUND_TYPE_MAX; ++i ) {
     dmesh->n_group_bnd[i] = 0;
   }
 
   for(int i = 0; i < PDM_BOUND_TYPE_MAX; ++i) {
-    dmesh->is_owner_bound[i] = PDM_FALSE;
+    dmesh->owner_bound   [i] = PDM_OWNERSHIP_KEEP;
     dmesh->dbound        [i] = NULL;
     dmesh->dbound_idx    [i] = NULL;
   }
@@ -221,9 +219,10 @@ PDM_dmesh_vtx_coord_get
 {
   *dvtx_coord      = dmesh->_dvtx_coord;
   if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
-    dmesh->is_owner_vtx_coord = PDM_FALSE;
   } else if(ownership == PDM_OWNERSHIP_KEEP) {
-    dmesh->is_owner_vtx_coord = PDM_TRUE;
+  }
+  if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
+    dmesh->owner_vtx_coord = ownership;
   }
 }
 
@@ -238,10 +237,12 @@ PDM_dmesh_vtx_coord_set
 {
   dmesh->_dvtx_coord = dvtx_coord;
   if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
-    dmesh->is_owner_vtx_coord = PDM_FALSE;
   } else if(ownership == PDM_OWNERSHIP_KEEP) {
-    dmesh->is_owner_vtx_coord = PDM_TRUE;
   }
+  if (ownership == PDM_OWNERSHIP_BAD_VALUE) {
+    PDM_error(__FILE__, __LINE__, 0, "Invalid ownership %d (must be either PDM_OWNERSHIP_KEEP or PDM_OWNERSHIP_USER)s\n", ownership);
+  }
+  dmesh->owner_vtx_coord = ownership;
 }
 
 
@@ -261,10 +262,12 @@ PDM_dmesh_connectivity_set
   dmesh->dconnectivity_idx[connectivity_type] = connect_idx;
 
   if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
-    dmesh->is_owner_connectivity[connectivity_type] = PDM_FALSE;
   } else if(ownership == PDM_OWNERSHIP_KEEP) {
-    dmesh->is_owner_connectivity[connectivity_type] = PDM_TRUE;
   }
+  if (ownership == PDM_OWNERSHIP_BAD_VALUE) {
+    PDM_error(__FILE__, __LINE__, 0, "Invalid ownership %d (must be either PDM_OWNERSHIP_KEEP or PDM_OWNERSHIP_USER)s\n", ownership);
+  }
+  dmesh->owner_connectivity[connectivity_type] = ownership;
 }
 
 
@@ -284,9 +287,10 @@ PDM_dmesh_connectivity_get
   *connect_idx = dmesh->dconnectivity_idx[connectivity_type];
 
   if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
-    dmesh->is_owner_connectivity[connectivity_type] = PDM_FALSE;
   } else if(ownership == PDM_OWNERSHIP_KEEP) {
-    dmesh->is_owner_connectivity[connectivity_type] = PDM_TRUE;
+  }
+  if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
+    dmesh->owner_connectivity[connectivity_type] = ownership;
   }
 
   int dn_entity = -1;
@@ -343,9 +347,10 @@ PDM_dmesh_bound_get
   assert(dmesh != NULL);
 
   if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
-    dmesh->is_owner_bound[bound_type] = PDM_FALSE;
   } else if(ownership == PDM_OWNERSHIP_KEEP) {
-    dmesh->is_owner_bound[bound_type] = PDM_TRUE;
+  }
+  if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
+    dmesh->owner_bound[bound_type] = ownership;
   }
 
   // assert(dmesh->dbound[bound_type] != NULL);
@@ -398,19 +403,19 @@ PDM_dmesh_free
     return;
   }
 
-  if (dmesh->is_owner_vtx_coord == PDM_TRUE) {
+  if (dmesh->owner_vtx_coord == PDM_OWNERSHIP_KEEP) {
     PDM_free(dmesh->_dvtx_coord);
   }
 
   for(int i = 0; i < PDM_CONNECTIVITY_TYPE_MAX; ++i) {
-    if(dmesh->is_owner_connectivity[i] == PDM_TRUE) {
+    if(dmesh->owner_connectivity[i] == PDM_OWNERSHIP_KEEP) {
       PDM_free(dmesh->dconnectivity[i]);
       PDM_free(dmesh->dconnectivity_idx[i]);
     }
   }
 
   for(int i = 0; i < PDM_BOUND_TYPE_MAX; ++i) {
-    if(dmesh->is_owner_bound[i] == PDM_TRUE) {
+    if(dmesh->owner_bound[i] == PDM_OWNERSHIP_KEEP) {
       //printf(" dmesh_free :: %i \n", i);
       PDM_free(dmesh->dbound    [i]);
       PDM_free(dmesh->dbound_idx[i]);
@@ -420,11 +425,9 @@ PDM_dmesh_free
   PDM_free(dmesh->results_is_getted    );
   PDM_free(dmesh->dconnectivity        );
   PDM_free(dmesh->dconnectivity_idx    );
-  PDM_free(dmesh->is_owner_connectivity);
 
   PDM_free(dmesh->dbound        );
   PDM_free(dmesh->dbound_idx    );
-  PDM_free(dmesh->is_owner_bound);
 
   /* This result is never get so we can free them */
   PDM_free(dmesh->cell_distrib);
@@ -484,10 +487,13 @@ PDM_dmesh_bound_set
   dmesh->dbound_idx [bound_type] = connect_idx;
 
   if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
-    dmesh->is_owner_bound[bound_type] = PDM_FALSE;
   } else if(ownership == PDM_OWNERSHIP_KEEP) {
-    dmesh->is_owner_bound[bound_type] = PDM_TRUE;
   }
+
+  if (ownership == PDM_OWNERSHIP_BAD_VALUE) {
+    PDM_error(__FILE__, __LINE__, 0, "Invalid ownership %d (must be either PDM_OWNERSHIP_KEEP or PDM_OWNERSHIP_USER)s\n", ownership);
+  }
+  dmesh->owner_bound[bound_type] = ownership;
 }
 
 
