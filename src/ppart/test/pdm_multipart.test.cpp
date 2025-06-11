@@ -201,7 +201,7 @@ MPI_TEST_CASE("[pdm_multipart] - 2p - 2D, 1 domain, one empty block", 2) {
                                         dn_face[test_rank],
                                         dn_edge[test_rank],
                                         dn_vtx [test_rank],
-                                        test_comm);
+                                        pdm_comm);
 
   PDM_dmesh_vtx_coord_set(dmesh,
                           dvtx_coord[test_rank].data(),
@@ -313,7 +313,7 @@ MPI_TEST_CASE("[pdm_multipart] - 2p - 1D, 1 domain, one empty block", 2) {
                                         0,
                                         dn_edge[test_rank],
                                         dn_vtx [test_rank],
-                                        test_comm);
+                                        pdm_comm);
 
   PDM_dmesh_vtx_coord_set(dmesh,
                           dvtx_coord[test_rank].data(),
