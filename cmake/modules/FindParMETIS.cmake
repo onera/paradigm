@@ -96,7 +96,7 @@ if(PARMETIS_FOUND)
         add_library(Metis::Metis UNKNOWN IMPORTED)
         set_target_properties(Metis::Metis PROPERTIES
             IMPORTED_LOCATION "${METIS_LIBRARY}"
-            INTERFACE_INCLUDE_DIRECTORIES "${PARMETIS_INCLUDE_DIR}"
+            INTERFACE_INCLUDE_DIRECTORIES "${METIS_INCLUDE_DIR}"
         )
     endif()
 endif()
