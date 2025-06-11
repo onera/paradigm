@@ -2342,7 +2342,7 @@ _run_ppart_domain
 
   // if (split_method != PDM_SPLIT_DUAL_WITH_HILBERT) {
   //   if (dn_node <= 0) {
-  //     PDM_error(__FILE__, __LINE__, 0, "Error : Hilbert partitioning requires non-empty blocks (dn_node = %d)\n", dn_node);
+  //     PDM_error(__FILE__, __LINE__, 0, "Error : Graph-based partitioning requires non-empty blocks (dn_node = %d)\n", dn_node);
   //   }
   // }
 
@@ -2422,12 +2422,11 @@ _run_ppart_domain
                                &dnode_to_arc_idx,
                                PDM_OWNERSHIP_BAD_VALUE);
 
-    if (dnode_to_arc_idx == NULL) {
+    if (dnode_to_arc_idx == NULL &&
+        dnode_to_arc     == NULL) {
 
       int dn_arc = PDM_dmesh_dn_entity_get(dmesh, entity_type2);
       PDM_g_num_t *distrib_arc = PDM_compute_entity_distribution(comm, dn_arc);
-
-      // /!\ 1D ??
 
       assert(darc_to_node_tmp != NULL);
       assert(darc_to_node_idx == NULL);
