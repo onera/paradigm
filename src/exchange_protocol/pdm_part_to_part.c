@@ -2346,16 +2346,16 @@ _create
   // if (gnum_elt2 != NULL || part1_to_part2_triplet == NULL ) {
   if (from_triplet == 0) {
 
-    gl = PDM_gnum_location_create (n_part2, n_part1, comm, PDM_OWNERSHIP_KEEP);
+    gl = PDM_gnum_location_create(n_part2, n_part1, comm, PDM_OWNERSHIP_KEEP);
 
     for (int i = 0; i < n_part2; i++) {
       // PDM_log_trace_array_long(gnum_elt2[i], n_elt2[i]  , "gnum_elt2::");
-      PDM_gnum_location_elements_set (gl, i, n_elt2[i], gnum_elt2[i]);
+      PDM_gnum_location_elements_set(gl, i, n_elt2[i], gnum_elt2[i]);
     }
 
     for (int i = 0; i < n_part1; i++) {
       // PDM_log_trace_array_long(part1_to_part2[i], part1_to_part2_idx[i][n_elt1[i]]  , "part1_to_part2::");
-      PDM_gnum_location_requested_elements_set (gl, i, part1_to_part2_idx[i][n_elt1[i]], part1_to_part2[i]);
+      PDM_gnum_location_requested_elements_set(gl, i, part1_to_part2_idx[i][n_elt1[i]], part1_to_part2[i]);
     }
 
     PDM_gnum_location_compute(gl);
@@ -2368,15 +2368,15 @@ _create
     int *location_part1_to_part2;
 
     if (from_triplet == 0) {
-      PDM_gnum_location_get (gl,
-                             i,
-                             &location_part1_to_part2_idx,
-                             &location_part1_to_part2);
+      PDM_gnum_location_get(gl,
+                            i,
+                           &location_part1_to_part2_idx,
+                           &location_part1_to_part2);
       n_total_elt += location_part1_to_part2_idx[part1_to_part2_idx[i][n_elt1[i]]];
     }
     else if (from_triplet == 1) {
       location_part1_to_part2_idx = (int *) ptp->part1_to_part2_idx[i];
-      location_part1_to_part2     = (int *)  part1_to_part2_triplet[i];
+      location_part1_to_part2     = (int *) part1_to_part2_triplet [i];
 
       n_total_elt += 3 * ptp->part1_to_part2_idx[i][n_elt1[i]];
       // n_total_elt += 3 * location_part1_to_part2_idx[ptp->part1_to_part2_idx[i][n_elt1[i]]];
@@ -2424,14 +2424,14 @@ _create
     int *location_part1_to_part2;
 
     if (from_triplet == 0) {
-      PDM_gnum_location_get (gl,
-                             i,
-                             &location_part1_to_part2_idx,
-                             &location_part1_to_part2);
+      PDM_gnum_location_get(gl,
+                            i,
+                           &location_part1_to_part2_idx,
+                           &location_part1_to_part2);
     }
     else if (from_triplet == 2) {
       location_part1_to_part2_idx = (int *) part1_to_part2_triplet_idx[i];
-      location_part1_to_part2     = (int *) part1_to_part2_triplet[i];
+      location_part1_to_part2     = (int *) part1_to_part2_triplet    [i];
     }
 
     if (from_triplet != 1) {
@@ -2458,7 +2458,7 @@ _create
     else {
 
       location_part1_to_part2_idx = (int *) ptp->part1_to_part2_idx[i];
-      location_part1_to_part2     = (int *) part1_to_part2_triplet[i];
+      location_part1_to_part2     = (int *) part1_to_part2_triplet [i];
 
       for (int j = 0; j < n_elt1[i]; j++) {
         for (int k = location_part1_to_part2_idx[j];
@@ -5616,4 +5616,3 @@ PDM_part_to_part_n_ranks_get
 #ifdef __cplusplus
 }
 #endif
-

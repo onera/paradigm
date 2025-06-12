@@ -17,6 +17,15 @@ cdef extern from "pdm_part_to_part.h":
                                                 int           **part1_to_part2_idx,
                                                 PDM_g_num_t   **part1_to_part2,
                                                 PDM_MPI_Comm    comm);
+    PDM_part_to_part_t *PDM_part_to_part_create_from_num2_triplet(const PDM_g_num_t   **gnum_elt1,
+                                                                  const int            *n_elt1,
+                                                                  const int             n_part1,
+                                                                  const int            *n_elt2,
+                                                                  const int             n_part2,
+                                                                  const int           **part1_to_part2_idx,
+                                                                  const int           **part1_to_part2_triplet_idx,
+                                                                  const int           **part1_to_part2_triplet,
+                                                                  const PDM_MPI_Comm    comm);
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -84,14 +93,14 @@ cdef extern from "pdm_part_to_part.h":
                                                 int               **n_elt2 );
 
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-    
+
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     void PDM_part_to_part_part1_to_part2_get( PDM_part_to_part_t *ptp               ,
                                               int               **n_elt1            ,
                                               int              ***part1_to_part2_idx,
                                               PDM_g_num_t      ***part1_to_part2    );
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-    
+
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     PDM_part_to_part_t *PDM_part_to_part_free(PDM_part_to_part_t *ptp);
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -190,7 +199,7 @@ cdef class PartToPartCapsule:
   def reverse_wait(self, int request_id):
     return reverse_wait(self, request_id)
 
-  
+
   # --------------------------------------------------------------------
   def __dealloc__(self):
     PDM_part_to_part_free(self.ptp)
@@ -198,10 +207,60 @@ cdef class PartToPartCapsule:
 # ------------------------------------------------------------------------
 # ========================================================================
 
+def part_to_part_from_triplet(MPI.Comm comm,
+                              list part1_ln_to_gn,
+                              list n_elt2,
+                              list part1_to_part2_idx,
+                              list part1_to_part2_triplet_idx,
+                              list part1_to_part2_triplet):
+  """
+  part_to_part_from_triplet(comm, part1_ln_to_gn, n_elt2, part1_to_part2_idx, part1_to_part2_triplet_idx, part1_to_part2_triplet)
 
+  Create PDM_part_to_part object from part2 triplet.
 
+  Parameters:
+    comm                       (MPI.Comm)                               : MPI communicator
+    part1_ln_to_gn             (`list` of `np.ndarray[npy_pdm_gnum_t]`) : Element global ids in Part1
+    n_elt2                     (`list` of `int`)                        : Number of elements in Part2
+    part1_to_part2_idx         (`list` of `np.ndarray[np.int32_t]`)     : Index for Part1→Part2 mapping
+    part1_to_part2_triplet_idx (`list` of `np.ndarray[np.int32_t]`)     : Index for Part2 triplets
+    part1_to_part2             (`list` of `np.ndarray[npy_pdm_gnum_t]`) : Part1→Part2 mapping (i_rank, i_part, lnum triplet)
 
+  Returns:
+    PartToPartCapsule
+  """
+  py_comm                    = comm
+  cdef MPI.MPI_Comm c_comm   = comm.ob_mpi
+  cdef PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&c_comm)
 
+  _n_part1 = len(part1_ln_to_gn)
+  _n_part2 = len(n_elt2)
+
+  assert(len(part1_to_part2_idx) == _n_part1)
+
+  _n_elt1 = list_to_int_pointer([array.size for array in part1_ln_to_gn])
+  _n_elt2 = list_to_int_pointer(n_elt2)
+
+  _part1_ln_to_gn             = np_list_to_gnum_pointers(part1_ln_to_gn)
+  _part1_to_part2_idx         = np_list_to_int_pointers (part1_to_part2_idx)
+  _part1_to_part2_triplet_idx = NULL
+  if part1_to_part2_triplet_idx is not None:
+    _part1_to_part2_triplet_idx = np_list_to_int_pointers (part1_to_part2_triplet_idx)
+  _part1_to_part2_triplet     = np_list_to_int_pointers (part1_to_part2_triplet)
+
+  cdef PDM_part_to_part_t *ptp = NULL
+  ptp = PDM_part_to_part_create_from_num2_triplet(<const PDM_g_num_t **> _part1_ln_to_gn,
+                                                  <const int          *> _n_elt1,
+                                                                         _n_part1,
+                                                  <const int          *> _n_elt2,
+                                                                         _n_part2,
+                                                  <const int         **> _part1_to_part2_idx,
+                                                  <const int         **> _part1_to_part2_triplet_idx,
+                                                  <const int         **> _part1_to_part2_triplet,
+                                                                          pdm_comm)
+
+  capsule = PyCapsule_New(ptp, NULL, NULL)
+  return PartToPartCapsule(capsule, comm)
 
 
 # ========================================================================
@@ -422,7 +481,7 @@ cdef class PartToPart:
       - Part1 data   (`list` of same dtype as ``part2_data`` in :py:func:`reverse_iexch`)
     """
     return reverse_wait(self, request_id)
-  
+
   # --------------------------------------------------------------------
   def __dealloc__(self):
     PDM_part_to_part_free(self.ptp)
