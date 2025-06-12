@@ -54,14 +54,12 @@ extern "C" {
 
 struct _pdm_dmesh_t
 {
-  PDM_MPI_Comm         comm;
-  PDM_ownership_t      owner;                   /*!< Which have the responsabilities of results */
-  PDM_bool_t          *results_is_getted;       /*!< Flags to indicate if result is getted      */
+  PDM_MPI_Comm comm;
 
-  int          dn_cell;                         /*!< Number of distributed cells         */
-  int          dn_face;                         /*!< Number of distributed faces         */
-  int          dn_edge;                         /*!< Number of distributed edges         */
-  int          dn_vtx;                          /*!< Number of distributed vertices      */
+  int         dn_cell;                          /*!< Number of distributed cells         */
+  int         dn_face;                          /*!< Number of distributed faces         */
+  int         dn_edge;                          /*!< Number of distributed edges         */
+  int         dn_vtx;                           /*!< Number of distributed vertices      */
 
   PDM_g_num_t n_g_cell;                         /*!< Number of distributed cells         */
   PDM_g_num_t n_g_face;                         /*!< Number of distributed faces         */

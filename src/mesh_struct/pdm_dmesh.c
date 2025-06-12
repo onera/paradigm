@@ -88,22 +88,22 @@ PDM_dmesh_create
        PDM_MPI_Comm    comm
 )
 {
+  PDM_UNUSED(owner);
+
   PDM_dmesh_t *dmesh;
   PDM_malloc(dmesh, 1, PDM_dmesh_t);
 
-  dmesh->comm              = comm;
-  dmesh->owner             = owner;
-  PDM_malloc(dmesh->results_is_getted, PDM_CONNECTIVITY_TYPE_MAX, PDM_bool_t);
+  dmesh->comm = comm;
 
-  dmesh->dn_cell           = dn_cell;
-  dmesh->dn_face           = dn_face;
-  dmesh->dn_edge           = dn_edge;
-  dmesh->dn_vtx            = dn_vtx;
+  dmesh->dn_cell  = dn_cell;
+  dmesh->dn_face  = dn_face;
+  dmesh->dn_edge  = dn_edge;
+  dmesh->dn_vtx   = dn_vtx;
 
-  dmesh->n_g_cell          = 0;
-  dmesh->n_g_face          = 0;
-  dmesh->n_g_edge          = 0;
-  dmesh->n_g_vtx           = 0;
+  dmesh->n_g_cell = 0;
+  dmesh->n_g_face = 0;
+  dmesh->n_g_edge = 0;
+  dmesh->n_g_vtx  = 0;
 
   PDM_g_num_t _dn_cell = dmesh->dn_cell;
   PDM_g_num_t _dn_face = dmesh->dn_face;
@@ -115,34 +115,34 @@ PDM_dmesh_create
   PDM_MPI_Allreduce(&_dn_edge, &dmesh->n_g_edge, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, comm);
   PDM_MPI_Allreduce(&_dn_vtx , &dmesh->n_g_vtx , 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, comm);
 
-  dmesh->cell_distrib      = NULL;
-  dmesh->face_distrib      = NULL;
-  dmesh->edge_distrib      = NULL;
-  dmesh->vtx_distrib       = NULL;
+  dmesh->cell_distrib = NULL;
+  dmesh->face_distrib = NULL;
+  dmesh->edge_distrib = NULL;
+  dmesh->vtx_distrib  = NULL;
 
-  dmesh->_dvtx_coord       = NULL;
-  dmesh->owner_vtx_coord   = PDM_OWNERSHIP_KEEP;
+  dmesh->_dvtx_coord     = NULL;
+  dmesh->owner_vtx_coord = PDM_OWNERSHIP_KEEP;
 
-  PDM_malloc(dmesh->dconnectivity        , PDM_CONNECTIVITY_TYPE_MAX, PDM_g_num_t *);
-  PDM_malloc(dmesh->dconnectivity_idx    , PDM_CONNECTIVITY_TYPE_MAX, int         *);
+  PDM_malloc(dmesh->dconnectivity    , PDM_CONNECTIVITY_TYPE_MAX, PDM_g_num_t *);
+  PDM_malloc(dmesh->dconnectivity_idx, PDM_CONNECTIVITY_TYPE_MAX, int         *);
 
   for(int i = 0; i < PDM_CONNECTIVITY_TYPE_MAX; ++i) {
-    dmesh->owner_connectivity   [i] = PDM_OWNERSHIP_KEEP;
-    dmesh->dconnectivity        [i] = NULL;
-    dmesh->dconnectivity_idx    [i] = NULL;
+    dmesh->owner_connectivity[i] = PDM_OWNERSHIP_KEEP;
+    dmesh->dconnectivity     [i] = NULL;
+    dmesh->dconnectivity_idx [i] = NULL;
   }
 
-  PDM_malloc(dmesh->dbound        , PDM_BOUND_TYPE_MAX, PDM_g_num_t *);
-  PDM_malloc(dmesh->dbound_idx    , PDM_BOUND_TYPE_MAX, int         *);
+  PDM_malloc(dmesh->dbound    , PDM_BOUND_TYPE_MAX, PDM_g_num_t *);
+  PDM_malloc(dmesh->dbound_idx, PDM_BOUND_TYPE_MAX, int         *);
 
   for(int i = 0; i < PDM_BOUND_TYPE_MAX; ++i ) {
     dmesh->n_group_bnd[i] = 0;
   }
 
   for(int i = 0; i < PDM_BOUND_TYPE_MAX; ++i) {
-    dmesh->owner_bound   [i] = PDM_OWNERSHIP_KEEP;
-    dmesh->dbound        [i] = NULL;
-    dmesh->dbound_idx    [i] = NULL;
+    dmesh->owner_bound[i] = PDM_OWNERSHIP_KEEP;
+    dmesh->dbound     [i] = NULL;
+    dmesh->dbound_idx [i] = NULL;
   }
 
   dmesh->is_computed_g_extents = PDM_FALSE;
@@ -409,7 +409,7 @@ PDM_dmesh_free
 
   for(int i = 0; i < PDM_CONNECTIVITY_TYPE_MAX; ++i) {
     if(dmesh->owner_connectivity[i] == PDM_OWNERSHIP_KEEP) {
-      PDM_free(dmesh->dconnectivity[i]);
+      PDM_free(dmesh->dconnectivity    [i]);
       PDM_free(dmesh->dconnectivity_idx[i]);
     }
   }
@@ -422,12 +422,11 @@ PDM_dmesh_free
     }
   }
 
-  PDM_free(dmesh->results_is_getted    );
-  PDM_free(dmesh->dconnectivity        );
-  PDM_free(dmesh->dconnectivity_idx    );
+  PDM_free(dmesh->dconnectivity    );
+  PDM_free(dmesh->dconnectivity_idx);
 
-  PDM_free(dmesh->dbound        );
-  PDM_free(dmesh->dbound_idx    );
+  PDM_free(dmesh->dbound    );
+  PDM_free(dmesh->dbound_idx);
 
   /* This result is never get so we can free them */
   PDM_free(dmesh->cell_distrib);

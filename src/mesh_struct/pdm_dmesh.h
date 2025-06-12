@@ -63,6 +63,7 @@ typedef struct _pdm_dmesh_t PDM_dmesh_t;
  *
  * \brief Build a distributed mesh structure
  *
+ * \param [in]   owner     (Not used, will be removed in future release)
  * \param [in]   dn_cell   Number of distributed cells
  * \param [in]   dn_face   Number of distributed faces
  * \param [in]   dn_edge   Number of distributed edges
