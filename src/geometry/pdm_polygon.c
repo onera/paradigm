@@ -213,7 +213,7 @@ PDM_polygon_evaluate_position
     return location;
   }
 
-  return PDM_POLYGON_DEGENERATED;
+  return location;
 }
 
 PDM_bool_t
