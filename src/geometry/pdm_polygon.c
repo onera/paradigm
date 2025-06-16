@@ -137,28 +137,19 @@ PDM_polygon_evaluate_position
 
   double *_pts_p = pts_p;
 
-  printf("1er ptsp : %.16e, %.16e, %.16e\n", _pts_p[0], _pts_p[1], _pts_p[2]);
-
   PDM_polygon_parameterize (n_pts, _pts_p, p0, p10, &l10, p20, &l20, n);
-  printf("P0  : %.16e, %.16e, %.16e\n", p0[0], p0[1], p0[2]);
-  printf("P10 : %.16e, %.16e, %.16e\n", p10[0], p10[1], p10[2]);
-  printf("P20 : %.16e, %.16e, %.16e\n", p20[0], p20[1], p20[2]);
-
 
   PDM_plane_projection (x,p0,n,cp);
 
   for (int i = 0; i < 3; i++) {
     ray[i] = cp[i] - p0[i];
   }
-  printf("RAY : %.16e, %.16e, %.16E\n", ray[0], ray[1], ray[2]);
 
   double pcoords[3];
 
   pcoords[0] = PDM_DOT_PRODUCT(ray,p10) / (l10*l10);
   pcoords[1] = PDM_DOT_PRODUCT(ray,p20) / (l20*l20);
   pcoords[2] = 0.0;
-
-  printf("pcoords : %.16e, %.16e\n", pcoords[0], pcoords[1]);
 
   // double bounds[6] = {DBL_MAX, -DBL_MAX,
   //                     DBL_MAX, -DBL_MAX,
