@@ -1167,19 +1167,19 @@ _split_graph_hilbert
       PDM_dmesh_vtx_coord_get(dmesh, &dvtx_coord, PDM_OWNERSHIP_BAD_VALUE);
 
       PDM_part_geom_2d(PDM_PART_GEOM_HILBERT,
-                      n_part,
-                      comm,
-                      dmesh->dn_face,
-                      dmesh->dn_edge,
-                      dmesh->dn_vtx,
-                      dface_vtx_idx,
-                      dface_vtx,
-                      dface_edge_idx,
-                      dface_edge,
-                      dedge_vtx,
-                      dvtx_coord,
-                      NULL,
-                      node_part);
+                       n_part,
+                       comm,
+                       dmesh->dn_face,
+                       dmesh->dn_edge,
+                       dmesh->dn_vtx,
+                       dface_vtx_idx,
+                       dface_vtx,
+                       dface_edge_idx,
+                       dface_edge,
+                       dedge_vtx,
+                       dvtx_coord,
+                       NULL,
+                       node_part);
       break;
     }
 
