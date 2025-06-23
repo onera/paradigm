@@ -152,7 +152,7 @@ program isosurface_3d_ngon
   integer                            :: i_parent
 
   ! Writer
-  logical            :: visu = .true.
+  logical            :: visu = .false.
   character(len=256) :: filename
   character(len=8)   :: fmt = "(A11 I1)"
 
