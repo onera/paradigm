@@ -73,14 +73,13 @@ program isosurface_3d_nodal
   character(len=99) :: arg
 
   ! mesh generation
-  integer, parameter :: n_vtx_seg = 20
-  integer(c_int)     :: n_part = 1
-
+  integer, parameter                 :: n_vtx_seg = 20
+  integer(c_int)                     :: n_part = 1
   ! part mesh definition
+  type(c_ptr)               :: multipart
   type(c_ptr)               :: pmesh_nodal
   integer(pdm_l_num_s)      :: n_vtx
   double precision, pointer :: ipart_vtx_coord(:,:) => null()
-
   ! dist mesh definition
   type(c_ptr)               :: dmesh_nodal
   integer                   :: dn_vtx
@@ -211,7 +210,7 @@ program isosurface_3d_nodal
                 PDM_MESH_NODAL_HEXA8, &
                 1,                    &
                 dmesh_nodal,          &
-                pmesh_nodal)
+                multipart)
 
 
 
@@ -223,6 +222,12 @@ program isosurface_3d_nodal
 
 
   if (n_part > 0) then
+
+    call PDM_multipart_get_part_mesh_nodal(multipart,   &
+                                           0,           &
+                                           pmesh_nodal, &
+                                           PDM_OWNERSHIP_KEEP)
+
     call PDM_isosurface_part_mesh_nodal_set(isos, &
                                             pmesh_nodal)
 
@@ -231,18 +236,16 @@ program isosurface_3d_nodal
                                    PDM_TYPE_DOUBLE)
     do i_part=1, n_part
 
-      call PDM_part_mesh_nodal_n_vtx_get(pmesh_nodal, &
-                                         i_part-1,    &
-                                         n_vtx)
-
-      call PDM_part_mesh_nodal_vtx_coord_get(pmesh_nodal,    &
-                                            i_part-1,        &
-                                            ipart_vtx_coord, &
-                                            PDM_OWNERSHIP_KEEP)
+      call PDM_multipart_part_vtx_coord_get(multipart,          &
+                                            0,                  &
+                                            i_part-1,           &
+                                            ipart_vtx_coord,    &
+                                            PDM_OWNERSHIP_KEEP, &
+                                            n_vtx)
 
       allocate(ipart_field(n_vtx))
-      call PDM_field(n_vtx,           &
-                     ipart_vtx_coord, &
+      call PDM_field(n_vtx,            &
+                     ipart_vtx_coord,  &
                      ipart_field)
 
           
@@ -639,7 +642,7 @@ program isosurface_3d_nodal
                       elt_type,    &
                       order,       &
                       dmesh_nodal, &
-                      pmesh_nodal)
+                      multipart)
     implicit none
 
     integer :: comm
@@ -650,13 +653,12 @@ program isosurface_3d_nodal
     integer :: elt_type
     integer :: order
     type(c_ptr) :: dmesh_nodal
-    type(c_ptr) :: pmesh_nodal
+    type(c_ptr) :: multipart
 
     type(c_ptr) :: dcube
     integer :: n_domain = 1
     integer(kind = PDM_l_num_s), pointer :: n_part_domain(:)
     double precision, pointer :: part_fraction(:) => null()
-    type(c_ptr) :: multipart
 
     allocate(n_part_domain(n_domain))
     n_part_domain(1) = n_part
@@ -697,10 +699,6 @@ program isosurface_3d_nodal
 
       call PDM_multipart_compute(multipart)
 
-      call PDM_multipart_get_part_mesh_nodal(multipart,   &
-                                             0,           &
-                                             pmesh_nodal, &
-                                             PDM_OWNERSHIP_KEEP);
     end if
 
   end subroutine mesh_gen
