@@ -87,8 +87,8 @@ program isosurface_3d_nodal
 
   ! Mesh field definition
   type(PDM_pointer_array_t), pointer :: array_field    => null() 
-  double precision,          pointer :: ipart_field(:) => null()
-  double precision,          pointer :: dfield(:)      => null()
+  double precision,          pointer :: ipart_field(:)
+  double precision,          pointer :: dfield(:)
 
   ! Isosurface structure
   type(c_ptr)               :: isos = C_NULL_PTR
@@ -139,9 +139,8 @@ program isosurface_3d_nodal
   ! Writer
   logical            :: visu = .false.
   character(len=256) :: filename
-  character(len=8)   :: fmt = "(A11 I1)"
 
-  integer :: i_rank, ierr
+  integer :: i_rank, ierr=0
   integer :: i_part
   integer :: i_vtx, i_vtx_parent
 
@@ -200,7 +199,6 @@ program isosurface_3d_nodal
   call mpi_init (ierr)
   call mpi_comm_rank (comm, i_rank, ierr)
 
-
   ! Generate partitioned source mesh
   call mesh_gen(comm,                 &
                 n_vtx_seg,            &
@@ -211,9 +209,6 @@ program isosurface_3d_nodal
                 1,                    &
                 dmesh_nodal,          &
                 multipart)
-
-
-
 
   call pdm_isosurface_create (comm, &
                               3,    &
@@ -280,7 +275,6 @@ program isosurface_3d_nodal
                                     dfield )       ! <- Field    
 
   end if
-
 
 
   allocate(plane_equation(3))
@@ -541,12 +535,12 @@ program isosurface_3d_nodal
 
       end do
 
-      write(filename, fmt) "isosurface_", i_iso-1
       if (visu) then
+        write(filename, "(A11I1)") "isosurface_", i_iso-1
         call writer_wrapper(comm,                     &
                             i_rank,                   &
                             ".",                      &
-                            filename,                 &
+                            trim(filename),           &
                             n_part_out,               &
                             isos_n_vtx,               &
                             array_isos_vtx_coord,     &
@@ -711,16 +705,14 @@ program isosurface_3d_nodal
 
     integer, intent(in) :: n_vtx
     double precision, intent(in), pointer :: vtx_coords(:,:)
-    double precision, intent(out), pointer :: field(:)
+    double precision, intent(inout), pointer :: field(:)
 
-    double precision, dimension(n_vtx) :: x, y, z, center
+    double precision, dimension(n_vtx) :: x, y, z
+    double precision                   :: center = 3.0
 
     x = vtx_coords(1,:)
     y = vtx_coords(2,:)
     z = vtx_coords(3,:)
-
-    center = 3.0
-
 
     ! do i_vtx=1, n_vtx
       ! field(i_vtx) = vtx_coords(1,i_vtx)*vtx_coords(1,i_vtx) + vtx_coords(2,i_vtx)*vtx_coords(2,i_vtx) + vtx_coords(3,i_vtx)*vtx_coords(3,i_vtx)

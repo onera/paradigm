@@ -69,7 +69,7 @@ program isosurface_3d_ngon
   character(len=99) :: arg
 
   ! mesh generation
-  integer(pdm_g_num_s), parameter :: n_vtx_seg   = 49
+  integer(pdm_g_num_s), parameter :: n_vtx_seg   = 20
   integer                         :: order       = 1
   type(c_ptr)                     :: ho_ordering = C_NULL_PTR  
   integer(c_int)                  :: n_part      = 4
@@ -154,7 +154,6 @@ program isosurface_3d_ngon
   ! Writer
   logical            :: visu = .false.
   character(len=256) :: filename
-  character(len=8)   :: fmt = "(A11 I1)"
 
   integer :: i_rank, ierr
   integer :: i_part
@@ -177,12 +176,6 @@ program isosurface_3d_ngon
     end subroutine PDM_my_function
   end interface
 
-
-  !---------------------------------------------------------------
-
-  ! Initialize MPI
-  call mpi_init (ierr)
-  call mpi_comm_rank (comm, i_rank, ierr)
 
 
   !----------------------------------------
@@ -214,6 +207,12 @@ program isosurface_3d_ngon
     i_arg = i_arg + 1
   enddo
 
+
+  !---------------------------------------------------------------
+
+  ! Initialize MPI
+  call mpi_init (ierr)
+  call mpi_comm_rank (comm, i_rank, ierr)
 
 
 
@@ -670,7 +669,7 @@ program isosurface_3d_ngon
 
     end do
     if (visu) then
-      write(filename, fmt) "isosurface_", i_iso-1
+      write(filename, "(A11I1)") "isosurface_", i_iso-1
       call writer_wrapper(comm,                     &
                           i_rank,                   &
                           ".",                      &
@@ -694,6 +693,7 @@ program isosurface_3d_ngon
     call PDM_pointer_array_free (interp_array_iso_field(1)%pa)
   end do
 
+
   call PDM_pointer_array_free (array_field)
 
 
@@ -707,15 +707,14 @@ program isosurface_3d_ngon
 
     integer,          intent(in)           :: n_vtx
     double precision, intent(in),  pointer :: vtx_coords(:,:)
-    double precision, intent(out), pointer :: field(:)
+    double precision, intent(inout), pointer :: field(:)
 
-    double precision, dimension(n_vtx) :: x, y, z, center
+    double precision, dimension(n_vtx) :: x, y, z
+    double precision                   :: center = 3.0
 
     x = vtx_coords(1,:)
     y = vtx_coords(2,:)
     z = vtx_coords(3,:)
-
-    center = 3.0
 
     field(:) = (x(:)-center)*(x(:)-center) + (y(:)-center)*(y(:)-center) + (z(:)-center)*(z(:)-center) - 2.0d0
 
