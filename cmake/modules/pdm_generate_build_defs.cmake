@@ -1,15 +1,15 @@
 file(READ ${CMAKE_CURRENT_SOURCE_DIR}/pdm_Build.defs.in pdm_build_defs_file)
 
 # TODO modifier fichier en fonction des options cmake
-if (PDM_ENABLE_PARMETIS)
-  string(REPLACE "#PARMETIS_LIBRARIES" "PARMETIS_LIBRARIES         = ${PARMETIS_LIBRARIES}\nMETIS_LIBRARIES            = ${METIS_LIBRARIES}"
+if (PDM_HAVE_PARMETIS)
+  string(REPLACE "#PARMETIS_LIBRARIES" "PARMETIS_LIBRARIES            = ${PARMETIS_LIBRARY}\nMETIS_LIBRARIES               = ${METIS_LIBRARY}"
          pdm_build_defs_file ${pdm_build_defs_file})
 else()
   string(REPLACE "#PARMETIS_LIBRARIES" "" pdm_build_defs_file ${pdm_build_defs_file})
 endif()
 
-if (PDM_ENABLE_PTSCOTCH)
-  string(REPLACE "#PTSCOTCH_LIBRARIES" "PTSCOTCH_LIBRARIES         = ${PTSCOTCH_LIBRARIES}" pdm_build_defs_file ${pdm_build_defs_file})
+if (PDM_HAVE_PTSCOTCH)
+  string(REPLACE "#PTSCOTCH_LIBRARIES" "PTSCOTCH_LIBRARIES            = ${PTScotch_LIBRARY}" pdm_build_defs_file ${pdm_build_defs_file})
 else()
   string(REPLACE "#PTSCOTCH_LIBRARIES" "" pdm_build_defs_file ${pdm_build_defs_file})
 endif()

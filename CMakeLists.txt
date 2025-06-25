@@ -32,6 +32,9 @@ set(SUPPORTED_CXX_STANDARDS 11 14 17 20)
 #------------------------------------------------------------------------------
 # Default compiler flags
 #------------------------------------------------------------------------------
+if (NOT CMAKE_BUILD_TYPE)
+ set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel" FORCE)
+endif()
 if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
   include(${CMAKE_MODULE_PATH}/default_flags.cmake)
 endif()
@@ -39,7 +42,7 @@ endif()
 # ------------------------------------------------------------------------------
 # Dependencies
 # ------------------------------------------------------------------------------
-## System dependencies ###()
+## System dependencies ##
 if (NOT TARGET MPI::MPI_CXX)
   find_package(MPI REQUIRED COMPONENTS Fortran CXX)
 endif()
@@ -54,65 +57,70 @@ endif()
 
 find_package(PTScotch)
 find_package(ParMETIS)
-find_package(BLAS)
-find_package(LAPACK)
 find_package(Doxygen)
-
 
 # ------------------------------------------------------------------------------
 # Features
 # ------------------------------------------------------------------------------
 
-option(PDM_ENABLE_EXTENSION_PDMA  "Enable advanced functionalities extension" OFF)
-option(PDM_ENABLE_LONG_G_NUM      "Enable long for global number"             ON )
-option(PDM_ENABLE_SHARED          "Build Shared Libraries"                    ON )
-option(PDM_ENABLE_STATIC          "Build Static Libraries"                    OFF)
+option(PDM_ENABLE_EXTENSION_PDMA     "Enable advanced functionalities extension" OFF)
+option(PDM_ENABLE_LONG_G_NUM         "Enable long for global number"             ON )
+option(PDM_ENABLE_SHARED             "Build Shared Libraries"                    ON )
+option(PDM_ENABLE_STATIC             "Build Static Libraries"                    OFF)
 if(PDM_ENABLE_EXTENSION_PDMA)
-  option(PDM_ENABLE_ANISO_AGGLO   "Enable anisotropic agglomeration"          ON )
+  option(PDM_ENABLE_ANISO_AGGLO      "Enable anisotropic agglomeration"          ON )
 endif()
 
-option(PDM_ENABLE_Fortran         "Build Fortran Interface"                   ON )
-option(PDM_ENABLE_PYTHON_BINDINGS "Build Python module"                       OFF)
+option(PDM_ENABLE_Fortran            "Build Fortran Interface"                   ON )
+option(PDM_ENABLE_Fortran_MPI_MODULE "Build with Fortran MPI module"             OFF)
+option(PDM_ENABLE_PYTHON_BINDINGS    "Build Python module"                       OFF)
+option(PDM_ENABLE_CUDA               "Build with CUDA"                           OFF)
+option(PDM_ENABLE_BLASLAPACK         "Build with BLAS/LAPACK"                    OFF)
 
-option(PDM_ENABLE_TESTS           "Make CTest run the tests"                  ON )
-option(PDM_ENABLE_UNIT_TEST       "Enable unit test "                         OFF)
-option(PDM_ENABLE_DOC             "Enable Sphinx documentation"               OFF)
-option(PDM_ENABLE_TRAINING        "Enable training Jupyter Notebooks"         OFF)
+option(PDM_ENABLE_TESTS              "Make CTest run the tests"                  ON )
+option(PDM_ENABLE_UNIT_TEST          "Enable unit test "                         OFF)
+option(PDM_ENABLE_DOC                "Enable Sphinx documentation"               OFF)
+option(PDM_ENABLE_TRAINING           "Enable training Jupyter Notebooks"         OFF)
 
-if (PDM_ENABLE_CUDA)
-  enable_language(CUDA)
+if (PDM_ENABLE_LONG_G_NUM)
+  set(PDM_LONG_G_NUM 1)
 endif ()
+
+if(PDM_ENABLE_EXTENSION_PDMA AND PDM_ENABLE_ANISO_AGGLO)
+  set (PDM_HAVE_ANISO_AGGLO ON)
+endif()
 
 if (PDM_ENABLE_Fortran_MPI_MODULE)
   set(CMAKE_Fortran_PREPROCESS ON)
   set(PDM_HAVE_FORTRAN_MPI_MODULE 1)
 endif()
 
-if (PDM_ENABLE_LONG_G_NUM)
-  set(PDM_LONG_G_NUM 1)
-endif ()
-if(PDM_ENABLE_EXTENSION_PDMA AND PDM_ENABLE_ANISO_AGGLO)
-  set (PDM_HAVE_ANISO_AGGLO 1)
-endif()
-if (PTSCOTCH_FOUND)
-  set (PDM_HAVE_PTSCOTCH 1)
-endif()
-if (PARMETIS_FOUND)
-  set (PDM_HAVE_PARMETIS 1)
-endif()
-if (BLAS_FOUND)
-  set (PDM_HAVE_BLAS 1)
-endif()
-if (LAPACK_FOUND)
-  set (PDM_HAVE_LAPACK 1)
-endif()
-
 if (PDM_ENABLE_PYTHON_BINDINGS)
-
   find_package(Python REQUIRED COMPONENTS Interpreter Development NumPy)
   find_package(Mpi4Py REQUIRED)
   # include(UseCython)
+endif()
 
+if (PDM_ENABLE_CUDA)
+  enable_language(CUDA)
+endif ()
+
+if (PDM_ENABLE_BLASLAPACK)
+  find_package(BLAS)
+  find_package(LAPACK)
+endif ()
+
+if (PTSCOTCH_FOUND)
+  set (PDM_HAVE_PTSCOTCH ON)
+endif()
+if (PARMETIS_FOUND)
+  set (PDM_HAVE_PARMETIS ON)
+endif()
+if (BLAS_FOUND)
+  set (PDM_HAVE_BLAS ON)
+endif()
+if (LAPACK_FOUND)
+  set (PDM_HAVE_LAPACK ON)
 endif()
 
 set (install_configs "")
@@ -218,7 +226,6 @@ PUBLIC
 )
 
 if (PTSCOTCH_FOUND)
-  target_compile_definitions(pdm PUBLIC PDM_HAVE_PTSCOTCH=1)
   target_link_libraries(pdm
   PUBLIC
     PTScotch::PTScotch
@@ -228,7 +235,6 @@ if (PTSCOTCH_FOUND)
 endif()
 
 if (PARMETIS_FOUND)
-  target_compile_definitions(pdm PUBLIC PDM_HAVE_PARMETIS=1)
   target_link_libraries(pdm
   PUBLIC
     ParMETIS::ParMETIS
@@ -236,7 +242,6 @@ if (PARMETIS_FOUND)
 endif()
 
 if (BLAS_FOUND)
-  target_compile_definitions(pdm PUBLIC PDM_HAVE_BLAS=1)
   target_link_libraries(pdm
   PUBLIC
     BLAS::BLAS
@@ -244,7 +249,6 @@ if (BLAS_FOUND)
 endif()
 
 if (LAPACK_FOUND)
-  target_compile_definitions(pdm PUBLIC PDM_HAVE_LAPACK=1)
   target_link_libraries(pdm
   PUBLIC
     LAPACK::LAPACK
@@ -382,6 +386,7 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
   include(FeatureSummary)
   feature_summary(WHAT ALL)
 endif()
+include(pdm_generate_build_defs)
 # ----------------------------------------------------------------------
 
 # ----------------------------------------------------------------------
