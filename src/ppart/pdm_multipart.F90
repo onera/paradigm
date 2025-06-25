@@ -21,6 +21,7 @@
 
 module pdm_multipart
 
+  use iso_c_binding
   use pdm
 
   implicit none
@@ -1430,5 +1431,93 @@ contains
                      [4 * ppart_bound_part_idx(n_total_part+1)])
 
   end subroutine PDM_multipart_part_graph_comm_get_
+
+
+
+  subroutine PDM_multipart_dpart_id_set(multipart, &
+                                        i_domain,  &
+                                        dpart_id)
+    ! Set the destination parts
+    implicit none
+
+    type(c_ptr),                   intent(in) :: multipart   ! Multipart instance
+    integer,                       intent(in) :: i_domain    ! Domain identifier
+    integer(pdm_l_num_s), pointer, intent(in) :: dpart_id(:) ! Destination parts (0-based)
+
+    type(c_ptr)                               :: c_dpart_id
+
+    interface
+      subroutine PDM_multipart_dpart_id_set_c(multipart, &
+                                              i_domain,  &
+                                              dpart_id,  &
+                                              ownership) &
+      bind (c, name="PDM_multipart_dpart_id_set")
+        use iso_c_binding
+        implicit none
+        type(c_ptr),    value :: multipart
+        integer(c_int), value :: i_domain
+        type(c_ptr),    value :: dpart_id
+        integer(c_int), value :: ownership
+      end subroutine PDM_multipart_dpart_id_set_c
+    end interface
+
+    c_dpart_id = C_NULL_PTR
+    if (associated(dpart_id)) then
+      c_dpart_id = c_loc(dpart_id)
+    endif
+
+    call PDM_multipart_dpart_id_set_c(multipart,          &
+                                      i_domain,           &
+                                      c_dpart_id,         &
+                                      PDM_OWNERSHIP_USER)
+
+  end subroutine PDM_multipart_dpart_id_set
+
+
+
+  subroutine PDM_multipart_dpart_id_get(multipart, &
+                                        i_domain,  &
+                                        dpart_id,  &
+                                        dn_entity, &
+                                        ownership)
+    ! Get the destination parts
+    implicit none
+
+    type(c_ptr),                   intent(in)  :: multipart   ! Multipart instance
+    integer,                       intent(in)  :: i_domain    ! Domain identifier
+    integer(pdm_l_num_s), pointer, intent(out) :: dpart_id(:) ! Destination parts (0-based)
+    integer,                       intent(out) :: dn_entity   ! Number of entities in block
+    integer,                       intent(in)  :: ownership   ! Ownership
+
+    type(c_ptr)                                :: c_dpart_id
+
+    interface
+      function PDM_multipart_dpart_id_get_c(multipart, &
+                                            i_domain,  &
+                                            dpart_id,  &
+                                            ownership) &
+      result (dn_entity)                               &
+      bind (c, name="PDM_multipart_dpart_id_get")
+        use iso_c_binding
+        implicit none
+        type(c_ptr),    value :: multipart
+        integer(c_int), value :: i_domain
+        type(c_ptr)           :: dpart_id
+        integer(c_int), value :: ownership
+        integer(c_int)        :: dn_entity
+      end function PDM_multipart_dpart_id_get_c
+    end interface
+
+    c_dpart_id = C_NULL_PTR
+    dn_entity = PDM_multipart_dpart_id_get_c(multipart,  &
+                                             i_domain,   &
+                                             c_dpart_id, &
+                                             ownership)
+
+    call c_f_pointer(c_dpart_id, &
+                     dpart_id,   &
+                     [dn_entity])
+
+  end subroutine PDM_multipart_dpart_id_get
 
 end module pdm_multipart

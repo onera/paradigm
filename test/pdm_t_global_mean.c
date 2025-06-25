@@ -402,7 +402,7 @@ int main(int argc, char *argv[])
     int n_cell_vtx = 0;
     for (int i = 0; i < n_cell; i++) {
       for (int j = cell_face_idx[i]; j < cell_face_idx[i+1]; j++) {
-        int face = cell_face[j] - 1;
+        int face = PDM_ABS(cell_face[j]) - 1;
         n_cell_vtx += face_vtx_idx[face+1] - face_vtx_idx[face];
       }
     }
@@ -480,7 +480,7 @@ int main(int argc, char *argv[])
     int n_cell_vtx = 0;
     for (int i = 0; i < n_cell; i++) {
       for (int j = cell_face_idx[i]; j < cell_face_idx[i+1]; j++) {
-        int face = cell_face[j] - 1;
+        int face = PDM_ABS(cell_face[j]) - 1;
         for (int k = face_vtx_idx[face]; k < face_vtx_idx[face+1]; k++) {
           int iVtx = face_vtx[k] - 1;
           cell_vtx_gnum[i_part][n_cell_vtx++] = vtx_ln_to_gn[iVtx];
@@ -568,7 +568,7 @@ int main(int argc, char *argv[])
     int n_cell_vtx = 0;
     for (int i = 0; i < n_cell; i++) {
       for (int j = cell_face_idx[i]; j < cell_face_idx[i+1]; j++) {
-        int face = cell_face[j] - 1;
+        int face = PDM_ABS(cell_face[j]) - 1;
         n_cell_vtx += face_vtx_idx[face+1] - face_vtx_idx[face];
       }
     }
@@ -580,7 +580,7 @@ int main(int argc, char *argv[])
     n_cell_vtx = 0;
     for (int i = 0; i < n_cell; i++) {
       for (int j = cell_face_idx[i]; j < cell_face_idx[i+1]; j++) {
-        int face = cell_face[j] - 1;
+        int face = PDM_ABS(cell_face[j]) - 1;
         for (int k = face_vtx_idx[face]; k < face_vtx_idx[face+1]; k++) {
           int i_vtx = face_vtx[k] - 1;
           for (int l = 0; l < 3; l++) {
@@ -671,7 +671,7 @@ int main(int argc, char *argv[])
     int n_cell_vtx = 0;
     for (int i = 0; i < n_cell; i++) {
       for (int j = cell_face_idx[i]; j < cell_face_idx[i+1]; j++) {
-        int face = cell_face[j] - 1;
+        int face = PDM_ABS(cell_face[j]) - 1;
         n_cell_vtx += face_vtx_idx[face+1] - face_vtx_idx[face];
       }
     }

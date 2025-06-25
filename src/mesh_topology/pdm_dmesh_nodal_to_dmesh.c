@@ -1174,25 +1174,17 @@ _generate_faces_from_dmesh_nodal
 
 
   /* Memory is deallocated inside */
-  dm->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_FACE_CELL] = PDM_TRUE;
-  dm->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_FACE_VTX ] = PDM_TRUE;
+  dm->owner_connectivity[PDM_CONNECTIVITY_TYPE_FACE_CELL] = PDM_OWNERSHIP_KEEP;
+  dm->owner_connectivity[PDM_CONNECTIVITY_TYPE_FACE_VTX ] = PDM_OWNERSHIP_KEEP;
 
 
 
   int n_section_child = dmesh_nodal->surfacic->n_section;
   PDM_g_num_t n_g_child = dmesh_nodal->surfacic->section_distribution[n_section_child];
-  if(dmesh_nodal->surfacic->dparent_idx != NULL) {
-    PDM_free(dmesh_nodal->surfacic->dparent_idx);
-  }
-  if(dmesh_nodal->surfacic->dparent_gnum != NULL) {
-    PDM_free(dmesh_nodal->surfacic->dparent_gnum);
-  }
-  if(dmesh_nodal->surfacic->dparent_sign != NULL) {
-    PDM_free(dmesh_nodal->surfacic->dparent_sign);
-  }
-  if(dmesh_nodal->surfacic->delmt_child_distrib != NULL) {
-    PDM_free(dmesh_nodal->surfacic->delmt_child_distrib);
-  }
+  PDM_free(dmesh_nodal->surfacic->dparent_idx);
+  PDM_free(dmesh_nodal->surfacic->dparent_gnum);
+  PDM_free(dmesh_nodal->surfacic->dparent_sign);
+  PDM_free(dmesh_nodal->surfacic->delmt_child_distrib);
   PDM_generate_entitiy_connectivity(dmesh_nodal->comm,
                                     dmesh_nodal->n_vtx_abs,
                                     n_g_child,
@@ -1339,7 +1331,7 @@ _generate_faces_from_dmesh_nodal
   assert(dm->cell_distrib == NULL);
   PDM_malloc(dm->cell_distrib, dmesh_nodal->n_rank + 1, PDM_g_num_t);
   dm->cell_distrib[0] = -1;
-  dm->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE] = PDM_TRUE;
+  dm->owner_connectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE] = PDM_OWNERSHIP_KEEP;
   PDM_dconnectivity_transpose(dmesh_nodal->comm,
                               dm->face_distrib,
                               dm->cell_distrib,
@@ -1466,18 +1458,10 @@ _generate_faces_from_dmesh_nodal
       n_section_child_ridge = dmesh_nodal->ridge->n_section;
       n_g_child_ridge       = dmesh_nodal->ridge->section_distribution[n_section_child_ridge];
 
-      if(dmesh_nodal->ridge->dparent_idx != NULL) {
-        PDM_free(dmesh_nodal->ridge->dparent_idx);
-      }
-      if(dmesh_nodal->ridge->dparent_gnum != NULL) {
-        PDM_free(dmesh_nodal->ridge->dparent_gnum);
-      }
-      if(dmesh_nodal->ridge->dparent_sign != NULL) {
-        PDM_free(dmesh_nodal->ridge->dparent_sign);
-      }
-      if(dmesh_nodal->ridge->delmt_child_distrib != NULL) {
-        PDM_free(dmesh_nodal->ridge->delmt_child_distrib);
-      }
+      PDM_free(dmesh_nodal->ridge->dparent_idx);
+      PDM_free(dmesh_nodal->ridge->dparent_gnum);
+      PDM_free(dmesh_nodal->ridge->dparent_sign);
+      PDM_free(dmesh_nodal->ridge->delmt_child_distrib);
 
       PDM_generate_entitiy_connectivity(dmesh_nodal->comm,
                                         dmesh_nodal->n_vtx_abs,
@@ -1542,8 +1526,8 @@ _generate_faces_from_dmesh_nodal
     PDM_free(delmt_edge_vtx_idx);
     PDM_free(delmt_edge_vtx    );
 
-    dm->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX ] = PDM_TRUE;
-    dm->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_FACE] = PDM_TRUE;
+    dm->owner_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX ] = PDM_OWNERSHIP_KEEP;
+    dm->owner_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_FACE] = PDM_OWNERSHIP_KEEP;
 
     if( 0 == 1 ){
       printf("dmesh_nodal->dn_edge ::%i\n", dm->dn_edge );
@@ -1559,7 +1543,7 @@ _generate_faces_from_dmesh_nodal
 
     assert(dm->edge_distrib != NULL);
     assert(dm->face_distrib != NULL);
-    dm->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] = PDM_TRUE;
+    dm->owner_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] = PDM_OWNERSHIP_KEEP;
     PDM_dconnectivity_transpose(dmesh_nodal->comm,
                                 dm->edge_distrib,
                                 dm->face_distrib,
@@ -1694,24 +1678,16 @@ _generate_edges_from_dmesh_nodal
   delmt_edge_vtx    [1] = delmt_ridge_edge_vtx    ;
 
 
-  if(dmesh_nodal->ridge->dparent_idx != NULL) {
-    PDM_free(dmesh_nodal->ridge->dparent_idx);
-  }
-  if(dmesh_nodal->ridge->dparent_gnum != NULL) {
-    PDM_free(dmesh_nodal->ridge->dparent_gnum);
-  }
-  if(dmesh_nodal->ridge->dparent_sign != NULL) {
-    PDM_free(dmesh_nodal->ridge->dparent_sign);
-  }
-  if(dmesh_nodal->ridge->delmt_child_distrib != NULL) {
-    PDM_free(dmesh_nodal->ridge->delmt_child_distrib);
-  }
+  PDM_free(dmesh_nodal->ridge->dparent_idx);
+  PDM_free(dmesh_nodal->ridge->dparent_gnum);
+  PDM_free(dmesh_nodal->ridge->dparent_sign);
+  PDM_free(dmesh_nodal->ridge->delmt_child_distrib);
 
   /* Memory is deallocated inside */
   int n_section_child = dmesh_nodal->ridge->n_section;
   PDM_g_num_t n_g_child = dmesh_nodal->ridge->section_distribution[n_section_child];
-  dm->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_FACE] = PDM_TRUE;
-  dm->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX ] = PDM_TRUE;
+  dm->owner_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_FACE] = PDM_OWNERSHIP_KEEP;
+  dm->owner_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX ] = PDM_OWNERSHIP_KEEP;
   PDM_generate_entitiy_connectivity(dmesh_nodal->comm,
                                     dmesh_nodal->n_vtx_abs,
                                     n_g_child,
@@ -1870,7 +1846,7 @@ _generate_edges_from_dmesh_nodal
   assert(dm->face_distrib == NULL);
   PDM_malloc(dm->face_distrib, dmesh_nodal->n_rank + 1, PDM_g_num_t);
   dm->face_distrib[0] = -1;
-  dm->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] = PDM_TRUE;
+  dm->owner_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] = PDM_OWNERSHIP_KEEP;
   PDM_dconnectivity_transpose(dmesh_nodal->comm,
                               dm->edge_distrib,
                               dm->face_distrib,
@@ -1955,9 +1931,9 @@ _generate_vtx_from_dmesh_nodal
 
   assert(link->dmesh == NULL);
   link->dmesh = dm;
-  dm->dconnectivity_idx    [PDM_CONNECTIVITY_TYPE_EDGE_VTX] = NULL;
-  dm->dconnectivity        [PDM_CONNECTIVITY_TYPE_EDGE_VTX] = delmt_ridge_edge_vtx;
-  dm->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX] = PDM_TRUE;
+  dm->dconnectivity_idx [PDM_CONNECTIVITY_TYPE_EDGE_VTX] = NULL;
+  dm->dconnectivity     [PDM_CONNECTIVITY_TYPE_EDGE_VTX] = delmt_ridge_edge_vtx;
+  dm->owner_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX] = PDM_OWNERSHIP_KEEP;
 
 }
 
@@ -2047,6 +2023,7 @@ _translate_element_group_to_faces
   PDM_g_num_t *dface_bound;
   int         *dface_bound_idx;
 
+  dm->owner_bound[PDM_BOUND_TYPE_FACE] = PDM_OWNERSHIP_KEEP;
   if(dmesh_nodal->surfacic != NULL && dmesh_nodal->surfacic->n_group_elmt > 0) {
     _translate_element_group_to_entity(dmesh_nodal->comm,
                                        dmesh_nodal->surfacic->delmt_child_distrib,
@@ -2058,18 +2035,16 @@ _translate_element_group_to_faces
                                        &dface_bound,
                                        &dface_bound_idx);
 
-    dm->is_owner_bound[PDM_BOUND_TYPE_FACE] = PDM_TRUE;
-    dm->dbound_idx    [PDM_BOUND_TYPE_FACE] = dface_bound_idx;
-    dm->dbound        [PDM_BOUND_TYPE_FACE] = dface_bound;
+    dm->dbound_idx [PDM_BOUND_TYPE_FACE] = dface_bound_idx;
+    dm->dbound     [PDM_BOUND_TYPE_FACE] = dface_bound;
     // dm->n_bnd                               = dmesh_nodal->surfacic->n_group_elmt; // TODO : TO REMOVE
-    dm->n_group_bnd   [PDM_BOUND_TYPE_FACE] = dmesh_nodal->surfacic->n_group_elmt;
+    dm->n_group_bnd[PDM_BOUND_TYPE_FACE] = dmesh_nodal->surfacic->n_group_elmt;
   }
   else {
-    dm->is_owner_bound[PDM_BOUND_TYPE_FACE] = PDM_TRUE;
-    dm->dbound_idx    [PDM_BOUND_TYPE_FACE] = PDM_array_zeros_int(1);
-    dm->dbound        [PDM_BOUND_TYPE_FACE] = NULL;
+    dm->dbound_idx [PDM_BOUND_TYPE_FACE] = PDM_array_zeros_int(1);
+    dm->dbound     [PDM_BOUND_TYPE_FACE] = NULL;
     // dm->n_bnd                               = 0;
-    dm->n_group_bnd   [PDM_BOUND_TYPE_FACE] = 0;
+    dm->n_group_bnd[PDM_BOUND_TYPE_FACE] = 0;
   }
 
   // Par recursion on peut avoir les group de vertex ou de edge
@@ -2090,6 +2065,7 @@ _translate_element_group_to_edges
   PDM_g_num_t *dedge_bound;
   int         *dedge_bound_idx;
 
+  dm->owner_bound[PDM_BOUND_TYPE_EDGE] = PDM_OWNERSHIP_KEEP;
   if(dmesh_nodal->ridge != NULL && dmesh_nodal->ridge->n_group_elmt > 0) {
     _translate_element_group_to_entity(dmesh_nodal->comm,
                                        dmesh_nodal->ridge->delmt_child_distrib,
@@ -2100,18 +2076,16 @@ _translate_element_group_to_edges
                                        dmesh_nodal->ridge->dparent_gnum,
                                        &dedge_bound,
                                        &dedge_bound_idx);
-    dm->is_owner_bound[PDM_BOUND_TYPE_EDGE] = PDM_TRUE;
-    dm->dbound_idx    [PDM_BOUND_TYPE_EDGE] = dedge_bound_idx;
-    dm->dbound        [PDM_BOUND_TYPE_EDGE] = dedge_bound;
+    dm->dbound_idx [PDM_BOUND_TYPE_EDGE] = dedge_bound_idx;
+    dm->dbound     [PDM_BOUND_TYPE_EDGE] = dedge_bound;
     // dm->n_bnd                               = dmesh_nodal->ridge->n_group_elmt; // TODO : TO REMOVE
-    dm->n_group_bnd   [PDM_BOUND_TYPE_EDGE] = dmesh_nodal->ridge->n_group_elmt;
+    dm->n_group_bnd[PDM_BOUND_TYPE_EDGE] = dmesh_nodal->ridge->n_group_elmt;
   }
   else {
-    dm->is_owner_bound[PDM_BOUND_TYPE_EDGE] = PDM_TRUE;
-    dm->dbound_idx    [PDM_BOUND_TYPE_EDGE] = PDM_array_zeros_int(1);
-    dm->dbound        [PDM_BOUND_TYPE_EDGE] = NULL;
+    dm->dbound_idx [PDM_BOUND_TYPE_EDGE] = PDM_array_zeros_int(1);
+    dm->dbound     [PDM_BOUND_TYPE_EDGE] = NULL;
     // dm->n_bnd                               = 0;
-    dm->n_group_bnd   [PDM_BOUND_TYPE_EDGE] = 0;
+    dm->n_group_bnd[PDM_BOUND_TYPE_EDGE] = 0;
   }
 }
 
@@ -2165,11 +2139,11 @@ _translate_element_group_to_vtx
     //                                    dmesh_nodal->corner->dparent_gnum,
     //                                    &dcorner_elt,
     //                                    &dcorner_elt_idx);
-    dm->is_owner_bound[PDM_BOUND_TYPE_VTX] = PDM_TRUE;
-    dm->dbound_idx    [PDM_BOUND_TYPE_VTX] = dcorner_elt_idx;
-    dm->dbound        [PDM_BOUND_TYPE_VTX] = dcorner_elt;
+    dm->owner_bound[PDM_BOUND_TYPE_VTX] = PDM_OWNERSHIP_KEEP;
+    dm->dbound_idx [PDM_BOUND_TYPE_VTX] = dcorner_elt_idx;
+    dm->dbound     [PDM_BOUND_TYPE_VTX] = dcorner_elt;
   //   dm->n_bnd                              = dmesh_nodal->corner->n_group_elmt; // TODO : TO REMOVE
-    dm->n_group_bnd   [PDM_BOUND_TYPE_VTX] = dmesh_nodal->corner->n_group_elmt;
+    dm->n_group_bnd[PDM_BOUND_TYPE_VTX] = dmesh_nodal->corner->n_group_elmt;
   }
 }
 
@@ -2203,10 +2177,10 @@ _set_mesh_dimension_groups
            elmt->dgroup_elmt,
            sizeof(PDM_g_num_t) * dgroup_elt_idx[elmt->n_group_elmt]);
 
-    dm->n_group_bnd   [bount_t] = elmt->n_group_elmt;
-    dm->is_owner_bound[bount_t] = PDM_TRUE;
-    dm->dbound_idx    [bount_t] = dgroup_elt_idx;
-    dm->dbound        [bount_t] = dgroup_elt;
+    dm->n_group_bnd[bount_t] = elmt->n_group_elmt;
+    dm->owner_bound[bount_t] = PDM_OWNERSHIP_KEEP;
+    dm->dbound_idx [bount_t] = dgroup_elt_idx;
+    dm->dbound     [bount_t] = dgroup_elt;
   } // end if groups
 }
 
@@ -2265,75 +2239,22 @@ _link_dmesh_nodal_to_dmesh_free
 
   if(( link->owner == PDM_OWNERSHIP_KEEP ) ||
      ( link->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !link->results_is_getted)){
-    if(link->dmesh != NULL) {
-      PDM_dmesh_free(link->dmesh);
-    }
+    PDM_dmesh_free(link->dmesh);
   }
 
-  if(link->elmt_distrib != NULL) {
-    PDM_free(link->elmt_distrib);
-    link->elmt_distrib = NULL;
-  }
-
-  if(link->_delmt_face != NULL) {
-    PDM_free(link->_delmt_face);
-    link->_delmt_face = NULL;
-  }
-
-  if(link->_delmt_face_idx != NULL) {
-    PDM_free(link->_delmt_face_idx);
-    link->_delmt_face_idx = NULL;
-  }
-
-  if(link->_dface_elmt != NULL) {
-    PDM_free(link->_dface_elmt);
-    link->_dface_elmt = NULL;
-  }
-
-  if(link->_dface_elmt_idx != NULL) {
-    PDM_free(link->_dface_elmt_idx);
-    link->_dface_elmt_idx = NULL;
-  }
-
-  if(link->_dface_parent_element_position != NULL) {
-    PDM_free(link->_dface_parent_element_position);
-    link->_dface_parent_element_position = NULL;
-  }
-
-  if(link->_dedge_elmt != NULL) {
-    PDM_free(link->_dedge_elmt);
-    link->_dedge_elmt = NULL;
-  }
-
-  if(link->_dedge_elmt_idx != NULL) {
-    PDM_free(link->_dedge_elmt_idx);
-    link->_dedge_elmt_idx = NULL;
-  }
-
-  if(link->_dedge_parent_element_position != NULL) {
-    PDM_free(link->_dedge_parent_element_position);
-    link->_dedge_parent_element_position = NULL;
-  }
-
-  if (link->distrib_missing_ridge != NULL) {
-    PDM_free(link->distrib_missing_ridge);
-    link->distrib_missing_ridge = NULL;
-  }
-
-  if (link->dmissing_ridge_parent_g_num != NULL) {
-    PDM_free(link->dmissing_ridge_parent_g_num);
-    link->dmissing_ridge_parent_g_num = NULL;
-  }
-
-  if (link->distrib_missing_surface != NULL) {
-    PDM_free(link->distrib_missing_surface);
-    link->distrib_missing_surface = NULL;
-  }
-
-  if (link->dmissing_surface_parent_g_num != NULL) {
-    PDM_free(link->dmissing_surface_parent_g_num);
-    link->dmissing_surface_parent_g_num = NULL;
-  }
+  PDM_free(link->elmt_distrib);
+  PDM_free(link->_delmt_face);
+  PDM_free(link->_delmt_face_idx);
+  PDM_free(link->_dface_elmt);
+  PDM_free(link->_dface_elmt_idx);
+  PDM_free(link->_dface_parent_element_position);
+  PDM_free(link->_dedge_elmt);
+  PDM_free(link->_dedge_elmt_idx);
+  PDM_free(link->_dedge_parent_element_position);
+  PDM_free(link->distrib_missing_ridge);
+  PDM_free(link->dmissing_ridge_parent_g_num);
+  PDM_free(link->distrib_missing_surface);
+  PDM_free(link->dmissing_surface_parent_g_num);
 
   PDM_free(link);
 

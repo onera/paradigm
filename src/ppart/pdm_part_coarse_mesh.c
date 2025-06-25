@@ -1011,6 +1011,13 @@ _coarsecell_face_from_face_coarse_cell
   for (int i = 0; i < n_face_checked; i++) {
     int coarse_cell1 = face_coarse_cell[2 * i    ];
     int coarse_cell2 = face_coarse_cell[2 * i + 1];
+
+    if(coarse_cell1 == 0) {
+      assert(coarse_cell2 != 0);
+      coarse_cell1 = coarse_cell2;
+      coarse_cell2 = 0;
+    }
+
     cpt_faces_per_coarse_cell[coarse_cell1 - 1]++;
 
     /*
@@ -1052,6 +1059,12 @@ _coarsecell_face_from_face_coarse_cell
   for (int i = 0; i < n_face_checked; i++) {
     int coarse_cell1 = face_coarse_cell[2 * i];
     int coarse_cell2 = face_coarse_cell[2 * i + 1];
+
+    if(coarse_cell1 == 0) {
+      assert(coarse_cell2 != 0);
+      coarse_cell1 = coarse_cell2;
+      coarse_cell2 = 0;
+    }
 
     int idx1 = (*coarsecell_face_idx)[coarse_cell1 - 1] + cpt_faces_per_coarse_cell[coarse_cell1 - 1];
     int idx2 = -1;

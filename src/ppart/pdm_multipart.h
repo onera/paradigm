@@ -79,7 +79,7 @@ typedef enum {
  *
  * \param [in]   n_domain         Number of domains in the original mesh
  * \param [in]   n_part           Number of partition per rank in each domain
- * \param [in]   merge_domains    Merge or not the domains before splitting
+ * \param [in]   merge_domains    Merge or not the domains before splitting (*Not implemented*)
  * \param [in]   split_method     Choice of library used to split the mesh
  * \param [in]   part_size_method Choice of homogeneous or heterogeneous partitions
  * \param [in]   part_fraction    Weight (in %) of each partition in heterogeneous case (i.e. if \p part_size_method is set to \p PDM_PART_SIZE_HETEROGENEOUS)
@@ -239,6 +239,47 @@ void PDM_multipart_set_reordering_options_vtx
  PDM_multipart_t *multipart,
  const int        i_domain,
  const char      *renum_vtx_method
+);
+
+
+/**
+ *
+ * \brief Set the destination parts
+ *
+ * \param [in]   multipart   Pointer to \ref PDM_multipart_t instance
+ * \param [in]   i_domain    Domain identifier
+ * \param [in]   dpart_id    Destination parts (0-based)
+ * \param [in]   ownership   Ownership for \p dpart_id
+ *
+ */
+void
+PDM_multipart_dpart_id_set
+(
+  PDM_multipart_t *multipart,
+  int              i_domain,
+  int             *dpart_id,
+  PDM_ownership_t  ownership
+);
+
+
+/**
+ *
+ * \brief Get the destination parts
+ *
+ * \param [in]   multipart   Pointer to \ref PDM_multipart_t instance
+ * \param [in]   i_domain    Domain identifier
+ * \param [out]  dpart_id    Destination parts (0-based)
+ * \param [in]   ownership   Ownership for \p dpart_id
+ *
+ * \return Number of block-distributed entities
+ */
+int
+PDM_multipart_dpart_id_get
+(
+  PDM_multipart_t  *multipart,
+  int               i_domain,
+  int             **dpart_id,
+  PDM_ownership_t   ownership
 );
 
 
@@ -673,6 +714,21 @@ PDM_multipart_stat_get
  int              *bound_part_faces_min,
  int              *bound_part_faces_max,
  int              *bound_part_faces_sum
+);
+
+/**
+ * \brief Return number of block-distributed leading entities in a given domain
+ *
+ * \param [in] multipart  Pointer to \ref PDM_multipart instance
+ * \param [in] i_domain   Domain identifier
+ *
+ * \return Number of block-distributed entities
+ */
+int
+PDM_multipart_dn_node_get
+(
+  PDM_multipart_t  *multipart,
+  int               i_domain
 );
 
 /*----------------------------------------------------------------------------*/

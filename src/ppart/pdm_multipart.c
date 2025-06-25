@@ -87,6 +87,22 @@ extern "C" {
 #endif
 #endif /* __cplusplus */
 
+
+#define CHECK_INSTANCE(multipart) \
+  if ((multipart) == NULL) { \
+    PDM_error(__FILE__, __LINE__, 0, "Error : Invalid PDM_multipart_t instance\n"); \
+  }
+
+#define CHECK_I_DOMAIN(multipart, i_domain) \
+if ((i_domain) >= (multipart)->n_domain) { \
+  PDM_error(__FILE__, __LINE__, 0, "Error : Invalid i_domain (%d / %d)\n", (i_domain), (multipart)->n_domain); \
+}
+
+#define CHECK_I_PART(multipart, i_domain, i_part) \
+if ((i_part) >= (multipart)->n_part[(i_domain)]) { \
+  PDM_error(__FILE__, __LINE__, 0, "Error : Invalid i_part for domain %d (%d / %d)\n", (i_domain), (i_part), (multipart)->n_part[(i_domain)]); \
+}
+
 /*============================================================================
  * Local structure definitions
  *============================================================================*/
@@ -99,34 +115,6 @@ extern "C" {
 /*=============================================================================
  * Private function definitions
  *============================================================================*/
-
-static
-PDM_bound_type_t
-_entity_type_to_bound_type
-(
- PDM_mesh_entities_t entity_type
- )
-{
-  PDM_bound_type_t bound_type = PDM_BOUND_TYPE_MAX;
-  switch (entity_type) {
-    case PDM_MESH_ENTITY_VTX:
-      bound_type = PDM_BOUND_TYPE_VTX;
-      break;
-
-    case PDM_MESH_ENTITY_EDGE:
-      bound_type = PDM_BOUND_TYPE_EDGE;
-      break;
-
-    case PDM_MESH_ENTITY_FACE:
-      bound_type = PDM_BOUND_TYPE_FACE;
-      break;
-
-    default:
-      PDM_error(__FILE__, __LINE__, 0, "Entity type %d has no corresponding bound type\n", entity_type);
-  }
-
-  return bound_type;
-}
 
 
 /**
@@ -147,18 +135,18 @@ _map_part_t_with_part_mesh
 
     pdm_part[i_part] = _part_create();
 
-    pdm_part[i_part]->n_cell                   = PDM_part_mesh_n_entity_get(pm, i_part, PDM_MESH_ENTITY_CELL);
-    pdm_part[i_part]->n_face                   = PDM_part_mesh_n_entity_get(pm, i_part, PDM_MESH_ENTITY_FACE);
-    pdm_part[i_part]->n_edge                   = PDM_part_mesh_n_entity_get(pm, i_part, PDM_MESH_ENTITY_EDGE);
-    pdm_part[i_part]->n_vtx                    = PDM_part_mesh_n_entity_get(pm, i_part, PDM_MESH_ENTITY_VTX);
-    pdm_part[i_part]->n_section                = 0;
-    pdm_part[i_part]->n_elt                    = NULL;
+    pdm_part[i_part]->n_cell            = PDM_part_mesh_n_entity_get(pm, i_part, PDM_MESH_ENTITY_CELL);
+    pdm_part[i_part]->n_face            = PDM_part_mesh_n_entity_get(pm, i_part, PDM_MESH_ENTITY_FACE);
+    pdm_part[i_part]->n_edge            = PDM_part_mesh_n_entity_get(pm, i_part, PDM_MESH_ENTITY_EDGE);
+    pdm_part[i_part]->n_vtx             = PDM_part_mesh_n_entity_get(pm, i_part, PDM_MESH_ENTITY_VTX);
+    pdm_part[i_part]->n_section         = 0;
+    pdm_part[i_part]->n_elt             = NULL;
 
-    pdm_part[i_part]->n_face_group             = PDM_part_mesh_n_bound_get(pm, PDM_BOUND_TYPE_FACE);
-    pdm_part[i_part]->n_edge_group             = PDM_part_mesh_n_bound_get(pm, PDM_BOUND_TYPE_EDGE);
+    pdm_part[i_part]->n_face_group      = PDM_part_mesh_n_bound_get(pm, PDM_BOUND_TYPE_FACE);
+    pdm_part[i_part]->n_edge_group      = PDM_part_mesh_n_bound_get(pm, PDM_BOUND_TYPE_EDGE);
 
-    pdm_part[i_part]->n_face_part_bound        = 0;
-    pdm_part[i_part]->n_vtx_part_bound         = 0;
+    pdm_part[i_part]->n_face_part_bound = 0;
+    pdm_part[i_part]->n_vtx_part_bound  = 0;
 
     PDM_part_mesh_vtx_coord_get(pm, i_part, &pdm_part[i_part]->vtx, PDM_OWNERSHIP_BAD_VALUE);
     PDM_part_mesh_connectivity_get(pm,
@@ -311,43 +299,22 @@ _part_free
 )
 {
   /* Following is not results but internal array */
-  if (part->new_to_old_order_cell != NULL)
-    PDM_free(part->new_to_old_order_cell);
-  part->new_to_old_order_cell = NULL;
-
-  if (part->new_to_old_order_face != NULL)
-    PDM_free(part->new_to_old_order_face);
-  part->new_to_old_order_face = NULL;
-
-  if (part->new_to_old_order_edge != NULL)
-    PDM_free(part->new_to_old_order_edge);
-  part->new_to_old_order_edge = NULL;
-
-
-  if (part->new_to_old_order_vtx != NULL)
-    PDM_free(part->new_to_old_order_vtx);
-  part->new_to_old_order_vtx = NULL;
+  PDM_free(part->new_to_old_order_cell);
+  PDM_free(part->new_to_old_order_face);
+  PDM_free(part->new_to_old_order_edge);
+  PDM_free(part->new_to_old_order_vtx);
 
   if(part->subpartlayout != NULL){
-    if(part->subpartlayout->cell_tile_idx!= NULL)
-      PDM_free(part->subpartlayout->cell_tile_idx);
-    if(part->subpartlayout->face_tile_idx!= NULL)
-      PDM_free(part->subpartlayout->face_tile_idx);
-    if(part->subpartlayout->face_bnd_tile_idx!= NULL)
-      PDM_free(part->subpartlayout->face_bnd_tile_idx);
-    if(part->subpartlayout->mask_tile_idx!= NULL)
-      PDM_free(part->subpartlayout->mask_tile_idx);
-    if(part->subpartlayout->cell_vect_tile_idx!= NULL)
-      PDM_free(part->subpartlayout->cell_vect_tile_idx);
-    if(part->subpartlayout->mask_tile_n!= NULL)
-      PDM_free(part->subpartlayout->mask_tile_n);
-    if(part->subpartlayout->cell_vect_tile_n!= NULL)
-      PDM_free(part->subpartlayout->cell_vect_tile_n);
-    if(part->subpartlayout->mask_tile!= NULL)
-      PDM_free(part->subpartlayout->mask_tile);
+    PDM_free(part->subpartlayout->cell_tile_idx);
+    PDM_free(part->subpartlayout->face_tile_idx);
+    PDM_free(part->subpartlayout->face_bnd_tile_idx);
+    PDM_free(part->subpartlayout->mask_tile_idx);
+    PDM_free(part->subpartlayout->cell_vect_tile_idx);
+    PDM_free(part->subpartlayout->mask_tile_n);
+    PDM_free(part->subpartlayout->cell_vect_tile_n);
+    PDM_free(part->subpartlayout->mask_tile);
     PDM_free(part->subpartlayout);
   }
-
 
   PDM_free(part);
 }
@@ -1106,141 +1073,158 @@ _split_graph_hilbert
  int           *node_part
 )
 {
-  if(dmesh->n_g_cell != 0) {
+  int dim = PDM_dmesh_dimension_get(dmesh);
 
-    int         *dcell_face_idx = NULL;
-    PDM_g_num_t *dcell_face     = NULL;
-    PDM_dmesh_connectivity_get(dmesh, PDM_CONNECTIVITY_TYPE_CELL_FACE,
-                               &dcell_face,
-                               &dcell_face_idx,
-                               PDM_OWNERSHIP_BAD_VALUE);
 
-    int         *dface_vtx_idx = NULL;
-    PDM_g_num_t *dface_vtx     = NULL;
-    PDM_dmesh_connectivity_get(dmesh, PDM_CONNECTIVITY_TYPE_FACE_VTX,
-                               &dface_vtx,
-                               &dface_vtx_idx,
-                               PDM_OWNERSHIP_BAD_VALUE);
+  switch (dim) {
 
-    PDM_g_num_t *distrib_face = NULL;
-    PDM_dmesh_distrib_get(dmesh, PDM_MESH_ENTITY_FACE, &distrib_face);
+    case 3: {
+      // Dimension 3
+      int         *dcell_face_idx = NULL;
+      PDM_g_num_t *dcell_face     = NULL;
+      PDM_dmesh_connectivity_get(dmesh, PDM_CONNECTIVITY_TYPE_CELL_FACE,
+                                &dcell_face,
+                                &dcell_face_idx,
+                                PDM_OWNERSHIP_BAD_VALUE);
 
-    int own_distrib_face = 0;
-    if(distrib_face == NULL) {
-      own_distrib_face = 1;
-      distrib_face = PDM_compute_entity_distribution(comm, dmesh->dn_face);
+      int         *dface_vtx_idx = NULL;
+      PDM_g_num_t *dface_vtx     = NULL;
+      PDM_dmesh_connectivity_get(dmesh, PDM_CONNECTIVITY_TYPE_FACE_VTX,
+                                &dface_vtx,
+                                &dface_vtx_idx,
+                                PDM_OWNERSHIP_BAD_VALUE);
+
+      PDM_g_num_t *distrib_face = NULL;
+      PDM_dmesh_distrib_get(dmesh, PDM_MESH_ENTITY_FACE, &distrib_face);
+
+      int own_distrib_face = 0;
+      if(distrib_face == NULL) {
+        own_distrib_face = 1;
+        distrib_face = PDM_compute_entity_distribution(comm, dmesh->dn_face);
+      }
+
+      PDM_g_num_t *distrib_vtx = NULL;
+      PDM_dmesh_distrib_get(dmesh, PDM_MESH_ENTITY_VTX, &distrib_vtx);
+      int own_distrib_vtx = 0;
+      if(distrib_vtx == NULL) {
+        own_distrib_vtx = 1;
+        distrib_vtx = PDM_compute_entity_distribution(comm, dmesh->dn_vtx);
+      }
+
+      double *dvtx_coord = NULL;
+      PDM_dmesh_vtx_coord_get(dmesh, &dvtx_coord, PDM_OWNERSHIP_BAD_VALUE);
+
+      PDM_part_geom (PDM_PART_GEOM_HILBERT,
+                    n_part,
+                    comm,
+                    dmesh->dn_cell,
+                    dcell_face_idx,
+                    dcell_face,
+                    NULL, //cell_weight
+                    dface_vtx_idx,
+                    dface_vtx,
+                    distrib_face,
+                    dvtx_coord,
+                    distrib_vtx,
+                    node_part);
+
+      if(own_distrib_vtx) {
+        PDM_free(distrib_vtx);
+      }
+
+      if(own_distrib_face) {
+        PDM_free(distrib_face);
+      }
+      break;
     }
 
-    PDM_g_num_t *distrib_vtx = NULL;
-    PDM_dmesh_distrib_get(dmesh, PDM_MESH_ENTITY_VTX, &distrib_vtx);
-    int own_distrib_vtx = 0;
-    if(distrib_vtx == NULL) {
-      own_distrib_vtx = 1;
-      distrib_vtx = PDM_compute_entity_distribution(comm, dmesh->dn_vtx);
+    case 2: {
+      // Dimension 2
+      int         *dface_vtx_idx = NULL;
+      PDM_g_num_t *dface_vtx     = NULL;
+      PDM_dmesh_connectivity_get(dmesh, PDM_CONNECTIVITY_TYPE_FACE_VTX,
+                                &dface_vtx,
+                                &dface_vtx_idx,
+                                PDM_OWNERSHIP_BAD_VALUE);
+
+
+      int         *dedge_vtx_idx = NULL;
+      PDM_g_num_t *dedge_vtx     = NULL;
+      PDM_dmesh_connectivity_get(dmesh, PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                &dedge_vtx,
+                                &dedge_vtx_idx,
+                                PDM_OWNERSHIP_BAD_VALUE);
+
+
+      int         *dface_edge_idx = NULL;
+      PDM_g_num_t *dface_edge     = NULL;
+      PDM_dmesh_connectivity_get(dmesh, PDM_CONNECTIVITY_TYPE_FACE_EDGE,
+                                &dface_edge,
+                                &dface_edge_idx,
+                                PDM_OWNERSHIP_BAD_VALUE);
+
+      double *dvtx_coord = NULL;
+      PDM_dmesh_vtx_coord_get(dmesh, &dvtx_coord, PDM_OWNERSHIP_BAD_VALUE);
+
+      PDM_part_geom_2d(PDM_PART_GEOM_HILBERT,
+                       n_part,
+                       comm,
+                       dmesh->dn_face,
+                       dmesh->dn_edge,
+                       dmesh->dn_vtx,
+                       dface_vtx_idx,
+                       dface_vtx,
+                       dface_edge_idx,
+                       dface_edge,
+                       dedge_vtx,
+                       dvtx_coord,
+                       NULL,
+                       node_part);
+      break;
     }
 
-    double *dvtx_coord = NULL;
-    PDM_dmesh_vtx_coord_get(dmesh, &dvtx_coord, PDM_OWNERSHIP_BAD_VALUE);
+    case 1: {
+      // Dimension 1
+      int         *dedge_vtx_idx = NULL;
+      PDM_g_num_t *dedge_vtx     = NULL;
+      PDM_dmesh_connectivity_get(dmesh, PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                &dedge_vtx,
+                                &dedge_vtx_idx,
+                                PDM_OWNERSHIP_BAD_VALUE);
 
-    PDM_part_geom (PDM_PART_GEOM_HILBERT,
-                   n_part,
-                   comm,
-                   dmesh->dn_cell,
-                   dcell_face_idx,
-                   dcell_face,
-                   NULL, //cell_weight
-                   dface_vtx_idx,
-                   dface_vtx,
-                   distrib_face,
-                   dvtx_coord,
-                   distrib_vtx,
-                   node_part);
+      double *dvtx_coord = NULL;
+      PDM_dmesh_vtx_coord_get(dmesh, &dvtx_coord, PDM_OWNERSHIP_BAD_VALUE);
 
-    if(own_distrib_vtx) {
-      PDM_free(distrib_vtx);
+      PDM_part_geom_1d(PDM_PART_GEOM_HILBERT,
+                      n_part,
+                      comm,
+                      dmesh->dn_edge,
+                      dmesh->dn_vtx,
+                      dedge_vtx,
+                      dvtx_coord,
+                      NULL,
+                      node_part);
+      break;
     }
 
-    if(own_distrib_face) {
-      PDM_free(distrib_face);
+    case 0: {
+      // Dimension 0
+      double *dvtx_coord = NULL;
+      PDM_dmesh_vtx_coord_get(dmesh, &dvtx_coord, PDM_OWNERSHIP_BAD_VALUE);
+
+      PDM_part_geom_0d(PDM_PART_GEOM_HILBERT,
+                      n_part,
+                      comm,
+                      dmesh->dn_vtx,
+                      dvtx_coord,
+                      NULL,
+                      node_part);
+      break;
     }
 
-  } else if (dmesh->n_g_face != 0) {
-
-    int         *dface_vtx_idx = NULL;
-    PDM_g_num_t *dface_vtx     = NULL;
-    PDM_dmesh_connectivity_get(dmesh, PDM_CONNECTIVITY_TYPE_FACE_VTX,
-                               &dface_vtx,
-                               &dface_vtx_idx,
-                               PDM_OWNERSHIP_BAD_VALUE);
-
-
-    int         *dedge_vtx_idx = NULL;
-    PDM_g_num_t *dedge_vtx     = NULL;
-    PDM_dmesh_connectivity_get(dmesh, PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                               &dedge_vtx,
-                               &dedge_vtx_idx,
-                               PDM_OWNERSHIP_BAD_VALUE);
-
-
-    int         *dface_edge_idx = NULL;
-    PDM_g_num_t *dface_edge     = NULL;
-    PDM_dmesh_connectivity_get(dmesh, PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                               &dface_edge,
-                               &dface_edge_idx,
-                               PDM_OWNERSHIP_BAD_VALUE);
-
-    double *dvtx_coord = NULL;
-    PDM_dmesh_vtx_coord_get(dmesh, &dvtx_coord, PDM_OWNERSHIP_BAD_VALUE);
-
-    PDM_part_geom_2d(PDM_PART_GEOM_HILBERT,
-                     n_part,
-                     comm,
-                     dmesh->dn_face,
-                     dmesh->dn_edge,
-                     dmesh->dn_vtx,
-                     dface_vtx_idx,
-                     dface_vtx,
-                     dface_edge_idx,
-                     dface_edge,
-                     dedge_vtx,
-                     dvtx_coord,
-                     NULL,
-                     node_part);
-
-  } else if (dmesh->n_g_edge != 0) {
-
-    int         *dedge_vtx_idx = NULL;
-    PDM_g_num_t *dedge_vtx     = NULL;
-    PDM_dmesh_connectivity_get(dmesh, PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                               &dedge_vtx,
-                               &dedge_vtx_idx,
-                               PDM_OWNERSHIP_BAD_VALUE);
-
-    double *dvtx_coord = NULL;
-    PDM_dmesh_vtx_coord_get(dmesh, &dvtx_coord, PDM_OWNERSHIP_BAD_VALUE);
-
-    PDM_part_geom_1d(PDM_PART_GEOM_HILBERT,
-                     n_part,
-                     comm,
-                     dmesh->dn_edge,
-                     dmesh->dn_vtx,
-                     dedge_vtx,
-                     dvtx_coord,
-                     NULL,
-                     node_part);
-
-  } else if (dmesh->n_g_vtx != 0) {
-
-    double *dvtx_coord = NULL;
-    PDM_dmesh_vtx_coord_get(dmesh, &dvtx_coord, PDM_OWNERSHIP_BAD_VALUE);
-
-    PDM_part_geom_0d(PDM_PART_GEOM_HILBERT,
-                     n_part,
-                     comm,
-                     dmesh->dn_vtx,
-                     dvtx_coord,
-                     NULL,
-                     node_part);
+    default: {
+      PDM_error(__FILE__, __LINE__, 0, "Invalid dimension %d\n", dim);
+    }
   }
 }
 
@@ -1266,127 +1250,69 @@ _warm_up_for_split
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
-  int         *darc_to_elmt_idx = NULL; // Donc face_cell OU edge_face
+  int         *darc_to_elmt_idx = NULL;
   PDM_g_num_t *darc_to_elmt_tmp = NULL;
   PDM_g_num_t *darc_to_elmt     = NULL;
-  int         *delmt_to_arc_idx = NULL; // Donc cell_face OU face_edge
+  int         *delmt_to_arc_idx = NULL;
   PDM_g_num_t *delmt_to_arc     = NULL;
   int dn_node = 0;
   int dn_arc  = 0;
 
-  PDM_g_num_t *distrib_arc  = NULL;
+  PDM_g_num_t *distrib_arc = NULL;
 
-  int is1d = 0;
 
-  if(dmesh->n_g_cell != 0) { // Donc 3D
-    dn_node = dmesh->dn_cell;
-    dn_arc  = dmesh->dn_face;
-    distrib_arc  = PDM_compute_entity_distribution(comm, dn_arc );
+  int dim = PDM_dmesh_dimension_get(dmesh);
 
-    PDM_dmesh_connectivity_get(dmesh, PDM_CONNECTIVITY_TYPE_FACE_CELL,
-                               &darc_to_elmt_tmp,
-                               &darc_to_elmt_idx,
-                               PDM_OWNERSHIP_BAD_VALUE);
+  if (dim == 0) {
+    return;
+  }
 
-    PDM_dmesh_connectivity_get(dmesh, PDM_CONNECTIVITY_TYPE_CELL_FACE,
-                               &delmt_to_arc,
-                               &delmt_to_arc_idx,
-                               PDM_OWNERSHIP_BAD_VALUE);
+  int is1d = (dim == 1);
 
-    // If the partionning is done using PT-Scotch or Parmetis,
-    // it is necessary to generate darc_to_elmt(_idx)
-    if(split_method == PDM_SPLIT_DUAL_WITH_PARMETIS ||
-       split_method == PDM_SPLIT_DUAL_WITH_PTSCOTCH) {
+  PDM_mesh_entities_t entity_type1 = PDM_dimension_to_entity_type(dim);
+  PDM_mesh_entities_t entity_type2 = PDM_dimension_to_entity_type(dim-1);
 
-      if(darc_to_elmt_tmp == NULL) {
-        assert(delmt_to_arc_idx != NULL);
-        PDM_dcellface_to_dfacecell(distrib_arc,
-                                   distrib_node,
-                                   delmt_to_arc_idx,
-                                   delmt_to_arc,
-                                   &darc_to_elmt_tmp,
-                                   comm);
+  dn_node = PDM_dmesh_dn_entity_get(dmesh, entity_type1);
+  dn_arc  = PDM_dmesh_dn_entity_get(dmesh, entity_type2);
 
-        PDM_dmesh_connectivity_set(dmesh, PDM_CONNECTIVITY_TYPE_FACE_CELL,
-                                   darc_to_elmt_tmp,
-                                   darc_to_elmt_idx,
-                                   PDM_OWNERSHIP_KEEP);
-      }
+  distrib_arc = PDM_compute_entity_distribution(comm, dn_arc);
 
-    }
-  } else if(dmesh->n_g_face != 0) { // Donc 2D
 
-    dn_node = dmesh->dn_face;
-    dn_arc  = dmesh->dn_edge;
-    distrib_arc  = PDM_compute_entity_distribution(comm, dn_arc );
 
-    PDM_dmesh_connectivity_get(dmesh, PDM_CONNECTIVITY_TYPE_EDGE_FACE,
-                               &darc_to_elmt_tmp,
-                               &darc_to_elmt_idx,
-                               PDM_OWNERSHIP_BAD_VALUE);
+  PDM_connectivity_type_t connect_type_down = PDM_entity_pair_to_connectivity_type(entity_type1,
+                                                                                   entity_type2);
 
-    PDM_dmesh_connectivity_get(dmesh, PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                               &delmt_to_arc,
-                               &delmt_to_arc_idx,
-                               PDM_OWNERSHIP_BAD_VALUE);
 
-    // If the partionning is done using PT-Scotch or Parmetis,
-    // it is necessary to generate darc_to_elmt(_idx)
-    if(split_method == PDM_SPLIT_DUAL_WITH_PARMETIS ||
-       split_method == PDM_SPLIT_DUAL_WITH_PTSCOTCH) {
+  PDM_connectivity_type_t connect_type_up   = PDM_entity_pair_to_connectivity_type(entity_type2,
+                                                                                   entity_type1);
 
-      if(darc_to_elmt_tmp == NULL) {
-        assert(delmt_to_arc_idx != NULL);
-        PDM_dcellface_to_dfacecell(distrib_arc,
-                                   distrib_node,
-                                   delmt_to_arc_idx,
-                                   delmt_to_arc,
-                                   &darc_to_elmt_tmp,
-                                   comm);
+  PDM_dmesh_connectivity_get(dmesh,
+                             connect_type_up,
+                             &darc_to_elmt_tmp,
+                             &darc_to_elmt_idx,
+                             PDM_OWNERSHIP_BAD_VALUE);
 
-        PDM_dmesh_connectivity_set(dmesh, PDM_CONNECTIVITY_TYPE_EDGE_FACE,
-                                   darc_to_elmt_tmp,
-                                   darc_to_elmt_idx,
-                                   PDM_OWNERSHIP_KEEP);
-      } // end if darc_to_elmt not inputed
+  PDM_dmesh_connectivity_get(dmesh,
+                             connect_type_down,
+                             &delmt_to_arc,
+                             &delmt_to_arc_idx,
+                             PDM_OWNERSHIP_BAD_VALUE);
 
-    } // end if PT-Scotch or Parmetis
+  // If the dual grpah is required (e.g. for graph-splitting with PT-Scotch or Parmetis),
+  // it is necessary to generate darc_to_elmt(_idx)
+  if (split_method == PDM_SPLIT_DUAL_WITH_PARMETIS ||
+      split_method == PDM_SPLIT_DUAL_WITH_PTSCOTCH) {
 
-  } else if(dmesh->n_g_edge != 0) { // Donc 1D
+    if (darc_to_elmt_tmp == NULL) {
 
-    dn_node = dmesh->dn_edge;
-    dn_arc  = dmesh->dn_vtx;
-    is1d    = 1;
-
-    distrib_arc  = PDM_compute_entity_distribution(comm, dn_arc );
-
-    PDM_dmesh_connectivity_get(dmesh, PDM_CONNECTIVITY_TYPE_VTX_EDGE,
-                               &darc_to_elmt_tmp,
-                               &darc_to_elmt_idx,
-                               PDM_OWNERSHIP_BAD_VALUE);
-
-    PDM_dmesh_connectivity_get(dmesh, PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                               &delmt_to_arc,
-                               &delmt_to_arc_idx,
-                               PDM_OWNERSHIP_BAD_VALUE);
-
-    // If the partionning is done using PT-Scotch or Parmetis,
-    // it is necessary to generate darc_to_elmt(_idx)
-    if(split_method == PDM_SPLIT_DUAL_WITH_PARMETIS ||
-       split_method == PDM_SPLIT_DUAL_WITH_PTSCOTCH) {
-
-      if(darc_to_elmt_tmp == NULL) {
+      if (is1d) {
+        // Dimension 1
         assert(delmt_to_arc_idx == NULL);
         PDM_malloc(delmt_to_arc_idx, dn_node+1, int);
         for(int i = 0; i < dn_node+1; ++i) {
           delmt_to_arc_idx[i] = 2*i;
         }
-        // PDM_dcellface_to_dfacecell(distrib_arc,
-        //                            distrib_node,
-        //                            delmt_to_arc_idx,
-        //                            delmt_to_arc,
-        //                            &darc_to_elmt_tmp,
-        //                            comm);
+
         PDM_dconnectivity_transpose(comm,
                                     distrib_node,
                                     distrib_arc,
@@ -1395,18 +1321,26 @@ _warm_up_for_split
                                     0,
                                     &darc_to_elmt_idx,
                                     &darc_to_elmt_tmp);
+      }
+      else {
+        // Dimension 2 or 3
+        assert(delmt_to_arc_idx != NULL);
+        PDM_dcellface_to_dfacecell(distrib_arc,
+                                   distrib_node,
+                                   delmt_to_arc_idx,
+                                   delmt_to_arc,
+                                   &darc_to_elmt_tmp,
+                                   comm);
+      }
 
-        PDM_dmesh_connectivity_set(dmesh, PDM_CONNECTIVITY_TYPE_VTX_EDGE,
-                                   darc_to_elmt_tmp,
-                                   darc_to_elmt_idx,
-                                   PDM_OWNERSHIP_KEEP);
-      } // end if darc_to_elmt not inputed
-    } // end if PT-Scotch or Parmetis
-
-
-  } else if(dmesh->n_g_vtx != 0) { // Donc 0D
-    return;
+      PDM_dmesh_connectivity_set(dmesh,
+                                 connect_type_up,
+                                 darc_to_elmt_tmp,
+                                 darc_to_elmt_idx,
+                                 PDM_OWNERSHIP_KEEP);
+    }
   }
+
 
   /*
    * Reminder :
@@ -1444,7 +1378,7 @@ _warm_up_for_split
   }
 
   if(delmt_to_arc_idx == NULL) {
-    if(dmesh->n_g_cell != 0) { // Donc 3D
+    if (dim > 1) {
       PDM_dconnectivity_transpose(comm,
                                   distrib_arc,
                                   distrib_node,
@@ -1454,40 +1388,11 @@ _warm_up_for_split
                                   &delmt_to_arc_idx,
                                   &delmt_to_arc);
 
-      PDM_dmesh_connectivity_set(dmesh, PDM_CONNECTIVITY_TYPE_CELL_FACE,
+      PDM_dmesh_connectivity_set(dmesh,
+                                 connect_type_down,
                                  delmt_to_arc,
                                  delmt_to_arc_idx,
                                  PDM_OWNERSHIP_KEEP);
-
-    } else if(dmesh->n_g_face != 0) {
-      PDM_dconnectivity_transpose(comm,
-                                  distrib_arc,
-                                  distrib_node,
-                                  darc_to_elmt_idx,
-                                  darc_to_elmt,
-                                  1,
-                                  &delmt_to_arc_idx,
-                                  &delmt_to_arc);
-
-      PDM_dmesh_connectivity_set(dmesh, PDM_CONNECTIVITY_TYPE_FACE_EDGE,
-                                 delmt_to_arc,
-                                 delmt_to_arc_idx,
-                                 PDM_OWNERSHIP_KEEP);
-
-    } else if(dmesh->n_g_edge != 0) {
-      // PDM_dconnectivity_transpose(comm,
-      //                             distrib_node,
-      //                             distrib_arc,
-      //                             darc_to_elmt_idx,
-      //                             darc_to_elmt,
-      //                             1,
-      //                             &delmt_to_arc_idx,
-      //                             &delmt_to_arc);
-
-      // PDM_dmesh_connectivity_set(dmesh, PDM_CONNECTIVITY_TYPE_VTX_EDGE,
-      //                            delmt_to_arc,
-      //                            delmt_to_arc_idx,
-      //                            PDM_OWNERSHIP_KEEP);
     }
   }
 
@@ -1542,7 +1447,6 @@ _split_graph
       PDM_multipart_t   *multipart,
       PDM_MPI_Comm       comm,
       PDM_dmesh_t       *dmesh,
-      _part_mesh_t      *pmeshes,
       int                n_part,
       PDM_split_dual_t   split_method,
       PDM_part_size_t    part_size_method,
@@ -1611,11 +1515,10 @@ const double            *part_fraction,
   PDM_malloc(_node_part, dn_node, int);
 
   // Compute total number of partitions for this domain
-  int tn_part;
-  PDM_MPI_Allreduce(&n_part, &tn_part, 1, PDM_MPI_INT, PDM_MPI_SUM, comm);
-  pmeshes->tn_part = tn_part;
+  PDM_g_num_t *distrib_partition = PDM_compute_entity_distribution(comm, n_part);
 
-  PDM_g_num_t *distrib_partition = PDM_compute_entity_distribution(comm, n_part );
+  int tn_part = (int) distrib_partition[n_rank];
+
   double *part_fractions = NULL;
   if (part_size_method == PDM_PART_SIZE_HETEROGENEOUS){
     int *n_part_per_rank;
@@ -2119,6 +2022,9 @@ _deduce_part_connectivity_3d
                              &dcell_face,
                              &dcell_face_idx,
                              PDM_OWNERSHIP_BAD_VALUE);
+  if (dcell_face_idx == NULL) {
+    PDM_error(__FILE__, __LINE__, 0, "Error - _deduce_part_connectivity_3d : dcell_face_idx = NULL");
+  }
 
   int          *pn_face        = NULL;
   PDM_g_num_t **pface_ln_to_gn = NULL;
@@ -2216,7 +2122,7 @@ _deduce_part_connectivity_3d
     PDM_part_mesh_connectivity_set(pmeshes->pmesh,
                                    i_part,
                                    PDM_CONNECTIVITY_TYPE_FACE_CELL,
-                                   pface_cell     [i_part],
+                                   pface_cell[i_part],
                                    NULL,
                                    PDM_OWNERSHIP_KEEP);
   }
@@ -2226,7 +2132,7 @@ _deduce_part_connectivity_3d
 
 
   /*
-   * Group (usefull for ordering)
+   * Group (useful for ordering)
    */
   _rebuild_part_mesh_group(dmesh,
                            pmeshes,
@@ -2354,7 +2260,7 @@ _deduce_part_connectivity_2d
     PDM_part_mesh_connectivity_set(pmeshes->pmesh,
                                    i_part,
                                    PDM_CONNECTIVITY_TYPE_EDGE_FACE,
-                                   pedge_face     [i_part],
+                                   pedge_face[i_part],
                                    NULL,
                                    PDM_OWNERSHIP_KEEP);
   }
@@ -2404,15 +2310,16 @@ static
 void
 _run_ppart_domain
 (
-PDM_multipart_t   *multipart,
-PDM_dmesh_t       *dmesh,
-PDM_dmesh_nodal_t *dmesh_nodal,
-_part_mesh_t      *pmeshes,
-int                n_part,
-PDM_split_dual_t   split_method,
-PDM_part_size_t    part_size_method,
-const double*      part_fraction,
-PDM_MPI_Comm       comm
+  PDM_multipart_t   *multipart,
+  PDM_dmesh_t       *dmesh,
+  PDM_dmesh_nodal_t *dmesh_nodal,
+  int                i_domain,
+  _part_mesh_t      *pmeshes,
+  int                n_part,
+  PDM_split_dual_t   split_method,
+  PDM_part_size_t    part_size_method,
+  const double*      part_fraction,
+  PDM_MPI_Comm       comm
 )
 {
 
@@ -2421,52 +2328,159 @@ PDM_MPI_Comm       comm
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
-  // int  dn_cell = PDM_dmesh_dn_entity_get(dmesh, PDM_MESH_ENTITY_CELL);
-  int  dn_face = PDM_dmesh_dn_entity_get(dmesh, PDM_MESH_ENTITY_FACE);
-  int  dn_edge = PDM_dmesh_dn_entity_get(dmesh, PDM_MESH_ENTITY_EDGE);
-  int  dn_vtx  = PDM_dmesh_dn_entity_get(dmesh, PDM_MESH_ENTITY_VTX);
 
   int dn_node = 0;
   int _renum_node_method_none    = 0;
   int _pmeshes_renum_node_method = 0;
-  if(dmesh->n_g_cell != 0) {
-    if(split_method != PDM_SPLIT_DUAL_WITH_HILBERT) {
-      assert(dmesh->dn_cell > 0);
+
+  int dim = PDM_dmesh_dimension_get(dmesh);
+
+  PDM_mesh_entities_t entity_type1 = PDM_dimension_to_entity_type(dim);
+  PDM_mesh_entities_t entity_type2 = PDM_dimension_to_entity_type(PDM_MAX(dim-1, 0));
+
+  dn_node = PDM_dmesh_dn_entity_get(dmesh, entity_type1);
+
+  // if (split_method != PDM_SPLIT_DUAL_WITH_HILBERT) {
+  //   if (dn_node <= 0) {
+  //     PDM_error(__FILE__, __LINE__, 0, "Error : Graph-based partitioning requires non-empty blocks (dn_node = %d)\n", dn_node);
+  //   }
+  // }
+
+  switch (dim) {
+    case 3: {
+      _renum_node_method_none    = PDM_part_renum_method_cell_idx_get("PDM_PART_RENUM_CELL_NONE");
+      _pmeshes_renum_node_method = pmeshes->renum_method[PDM_MESH_ENTITY_CELL];
+      break;
     }
-    dn_node = dmesh->dn_cell;
-    _renum_node_method_none = PDM_part_renum_method_cell_idx_get("PDM_PART_RENUM_CELL_NONE");
-    _pmeshes_renum_node_method = pmeshes->renum_method[PDM_MESH_ENTITY_CELL];
-  } else if (dmesh->n_g_face != 0) {
-    dn_node = dmesh->dn_face;
-    _renum_node_method_none = PDM_part_renum_method_face_idx_get("PDM_PART_RENUM_FACE_NONE");
-    _pmeshes_renum_node_method = pmeshes->renum_method[PDM_MESH_ENTITY_FACE];
-  } else if (dmesh->n_g_edge != 0) {
-    dn_node = dmesh->dn_edge;
-    _renum_node_method_none = PDM_part_renum_method_edge_idx_get("PDM_PART_RENUM_EDGE_NONE");
-    _pmeshes_renum_node_method = pmeshes->renum_method[PDM_MESH_ENTITY_EDGE];
-  } else if (dmesh->n_g_vtx != 0) {
-    dn_node = dmesh->dn_vtx;
-    _renum_node_method_none = PDM_part_renum_method_vtx_idx_get ("PDM_PART_RENUM_VTX_NONE");
-    _pmeshes_renum_node_method = pmeshes->renum_method[PDM_MESH_ENTITY_VTX];
-  } else {
-    dn_node = 0;
+
+    case 2: {
+      _renum_node_method_none    = PDM_part_renum_method_face_idx_get("PDM_PART_RENUM_FACE_NONE");
+      _pmeshes_renum_node_method = pmeshes->renum_method[PDM_MESH_ENTITY_FACE];
+      break;
+    }
+
+    case 1: {
+      _renum_node_method_none    = PDM_part_renum_method_edge_idx_get("PDM_PART_RENUM_EDGE_NONE");
+      _pmeshes_renum_node_method = pmeshes->renum_method[PDM_MESH_ENTITY_EDGE];
+      break;
+    }
+
+    case 0: {
+      _renum_node_method_none    = PDM_part_renum_method_vtx_idx_get("PDM_PART_RENUM_VTX_NONE");
+      _pmeshes_renum_node_method = pmeshes->renum_method[PDM_MESH_ENTITY_VTX];
+      break;
+    }
+
+    default: {
+      PDM_error(__FILE__, __LINE__, 0, "Invalid dimension %d\n", dim);
+    }
   }
 
   /*
-   *  Split graph (manage 3D/2D automaticaly)
+   *  Split graph (manage 3D/2D automatically)
    */
-  int *node_part = NULL;
+  int *node_part = multipart->dpart_id[i_domain];
+  int i_have_dpart_id = (node_part != NULL);
+  int all_have_dpart_id;
+  PDM_MPI_Allreduce(&i_have_dpart_id, &all_have_dpart_id, 1, PDM_MPI_INT, PDM_MPI_MAX, comm);
+
   PDM_g_num_t *distrib_node = PDM_compute_entity_distribution(comm, dn_node);
-  PDM_g_num_t* distrib_partition = _split_graph(multipart,
-                                                comm,
-                                                dmesh,
-                                                pmeshes,
-                                                n_part,
-                                                split_method,
-                                                part_size_method,
-                                                part_fraction,
-                                                distrib_node,
-                                                &node_part);
+  PDM_g_num_t* distrib_partition = NULL;
+
+  if (all_have_dpart_id) {
+    distrib_partition = PDM_compute_entity_distribution(comm, n_part);
+
+    // Check dpart_id
+    for (int i_node = 0; i_node < dn_node; i_node++) {
+      if (node_part[i_node] < 0 || node_part[i_node] >= distrib_partition[n_rank]) {
+        PDM_error(__FILE__, __LINE__, 0, "Invalid node_part (%d / "PDM_FMT_G_NUM")\n", node_part[i_node], distrib_partition[n_rank]);
+      }
+    }
+
+    // Fix if only upward dconnectivity was provided
+    PDM_connectivity_type_t connect_type_down = PDM_entity_pair_to_connectivity_type(entity_type1,
+                                                                                     entity_type2);
+
+
+    PDM_connectivity_type_t connect_type_up   = PDM_entity_pair_to_connectivity_type(entity_type2,
+                                                                                     entity_type1);
+
+    int         *dnode_to_arc_idx = NULL;
+    PDM_g_num_t *dnode_to_arc     = NULL;
+    int         *darc_to_node_idx = NULL;
+    PDM_g_num_t *darc_to_node_tmp = NULL;
+
+    PDM_dmesh_connectivity_get(dmesh,
+                               connect_type_up,
+                               &darc_to_node_tmp,
+                               &darc_to_node_idx,
+                               PDM_OWNERSHIP_BAD_VALUE);
+
+    PDM_dmesh_connectivity_get(dmesh,
+                               connect_type_down,
+                               &dnode_to_arc,
+                               &dnode_to_arc_idx,
+                               PDM_OWNERSHIP_BAD_VALUE);
+
+    if (dnode_to_arc_idx == NULL &&
+        dnode_to_arc     == NULL) {
+
+      int dn_arc = PDM_dmesh_dn_entity_get(dmesh, entity_type2);
+      PDM_g_num_t *distrib_arc = PDM_compute_entity_distribution(comm, dn_arc);
+
+      assert(darc_to_node_tmp != NULL);
+      assert(darc_to_node_idx == NULL);
+      for (int i = 0; i < dn_arc; i++) {
+        darc_to_node_tmp[2*i+1] = -darc_to_node_tmp[2*i+1];
+      }
+
+      PDM_g_num_t *darc_to_node = NULL;
+      PDM_setup_connectivity_idx(dn_arc,
+                                 2,
+                                 darc_to_node_tmp,
+                                 &darc_to_node_idx,
+                                 &darc_to_node);
+      /* Remake same sign */
+      for (int i = 0; i < dn_arc; i++) {
+        darc_to_node_tmp[2*i+1] = -darc_to_node_tmp[2*i+1];
+      }
+
+      PDM_dconnectivity_transpose(comm,
+                                  distrib_arc,
+                                  distrib_node,
+                                  darc_to_node_idx,
+                                  darc_to_node,
+                                  1,
+                                  &dnode_to_arc_idx,
+                                  &dnode_to_arc);
+      PDM_free(darc_to_node_idx);
+      PDM_free(darc_to_node);
+
+      PDM_dmesh_connectivity_set(dmesh,
+                                 connect_type_down,
+                                 dnode_to_arc,
+                                 dnode_to_arc_idx,
+                                 PDM_OWNERSHIP_KEEP);
+      PDM_free(distrib_arc);
+    }
+  }
+  else {
+    distrib_partition = _split_graph(multipart,
+                                     comm,
+                                     dmesh,
+                                     n_part,
+                                     split_method,
+                                     part_size_method,
+                                     part_fraction,
+                                     distrib_node,
+                                     &node_part);
+
+    multipart->dpart_id          [i_domain] = node_part;
+    multipart->ownership_dpart_id[i_domain] = PDM_OWNERSHIP_KEEP;
+  }
+
+  pmeshes->tn_part = (int) distrib_partition[n_rank];
+
 
   // Start construct partionned mesh timer
   PDM_timer_resume(multipart->timer);
@@ -2491,7 +2505,6 @@ PDM_MPI_Comm       comm
                               &pn_node,
                               &pnode_ln_to_gn,
                                NULL);
-  PDM_free(node_part);
 
   if(0 == 1) {
     for(int i_part = 0; i_part < n_part; ++i_part) {
@@ -2501,20 +2514,20 @@ PDM_MPI_Comm       comm
 
   PDM_g_num_t *face_distrib = NULL;
   PDM_g_num_t *edge_distrib = NULL;
-  PDM_g_num_t *vtx_distrib  = PDM_compute_entity_distribution(comm, dn_vtx);
+  PDM_g_num_t *vtx_distrib  = PDM_compute_entity_distribution(comm, dmesh->dn_vtx);
 
   PDM_dmesh_distrib_get(dmesh, PDM_MESH_ENTITY_EDGE, &edge_distrib);
   int own_edge_distrib = 0;
   if(edge_distrib == NULL) {
     own_edge_distrib = 1;
-    edge_distrib = PDM_compute_entity_distribution(comm, dn_edge);
+    edge_distrib = PDM_compute_entity_distribution(comm, dmesh->dn_edge);
   }
 
   PDM_dmesh_distrib_get(dmesh, PDM_MESH_ENTITY_FACE, &face_distrib);
   int own_face_distrib = 0;
   if(face_distrib == NULL) {
     own_face_distrib = 1;
-    face_distrib = PDM_compute_entity_distribution(comm, dn_face);
+    face_distrib = PDM_compute_entity_distribution(comm, dmesh->dn_face);
   }
 
   /*
@@ -2985,16 +2998,20 @@ PDM_multipart_create
   multipart->comm             = comm;
   multipart->owner            = owner;
 
-  PDM_malloc(multipart->dmeshes         , multipart->n_domain, PDM_dmesh_t                *);
-  PDM_malloc(multipart->dmeshes_nodal   , multipart->n_domain, PDM_dmesh_nodal_t          *);
-  PDM_malloc(multipart->dmn_to_dm       , multipart->n_domain, PDM_dmesh_nodal_to_dmesh_t *);
-  PDM_malloc(multipart->is_owner_dmeshes, multipart->n_domain, PDM_bool_t                  );
+  PDM_malloc(multipart->dmeshes           , multipart->n_domain, PDM_dmesh_t                *);
+  PDM_malloc(multipart->dmeshes_nodal     , multipart->n_domain, PDM_dmesh_nodal_t          *);
+  PDM_malloc(multipart->dmn_to_dm         , multipart->n_domain, PDM_dmesh_nodal_to_dmesh_t *);
+  PDM_malloc(multipart->is_owner_dmeshes  , multipart->n_domain, PDM_bool_t                  );
+  PDM_malloc(multipart->dpart_id          , multipart->n_domain, int                        *);
+  PDM_malloc(multipart->ownership_dpart_id, multipart->n_domain, PDM_ownership_t             );
 
   for (int i_dom = 0; i_dom < multipart->n_domain; ++i_dom) {
-    multipart->dmeshes_nodal   [i_dom] = NULL;
-    multipart->dmeshes         [i_dom] = NULL;
-    multipart->dmn_to_dm       [i_dom] = NULL;
-    multipart->is_owner_dmeshes[i_dom] = PDM_FALSE;
+    multipart->dmeshes_nodal     [i_dom] = NULL;
+    multipart->dmeshes           [i_dom] = NULL;
+    multipart->dmn_to_dm         [i_dom] = NULL;
+    multipart->is_owner_dmeshes  [i_dom] = PDM_FALSE;
+    multipart->dpart_id          [i_dom] = NULL;
+    multipart->ownership_dpart_id[i_dom] = PDM_OWNERSHIP_KEEP;
   }
 
   PDM_malloc(multipart->pmeshes          , multipart->n_domain, _part_mesh_t   );
@@ -3051,7 +3068,9 @@ void PDM_multipart_dmesh_set
        PDM_dmesh_t *dmesh
 )
 {
-  assert(domain_id < multipart->n_domain);
+  CHECK_INSTANCE(multipart);
+  CHECK_I_DOMAIN(multipart, domain_id);
+
   multipart->dmeshes[domain_id] = dmesh;
 }
 
@@ -3063,7 +3082,9 @@ void PDM_multipart_dmesh_nodal_set
        PDM_dmesh_nodal_t *dmesh_nodal
 )
 {
-  assert(domain_id < multipart->n_domain);
+  CHECK_INSTANCE(multipart);
+  CHECK_I_DOMAIN(multipart, domain_id);
+
   assert(multipart->dmeshes_nodal[domain_id] == NULL);
   multipart->dmeshes_nodal[domain_id] = dmesh_nodal;
 }
@@ -3089,6 +3110,8 @@ PDM_multipart_block_set
  const PDM_g_num_t           *dface_group
 )
 {
+  CHECK_INSTANCE(multipart);
+  CHECK_I_DOMAIN(multipart, i_domain);
 
   // Create dmesh
   PDM_dmesh_t* dm = PDM_dmesh_create(PDM_OWNERSHIP_KEEP,
@@ -3154,14 +3177,19 @@ PDM_multipart_renum_method_set
  const int           *renum_entity_properties
 )
 {
+  CHECK_INSTANCE(multipart);
+
   int method_renum_id = -1;
   if(mesh_entity == PDM_MESH_ENTITY_CELL) {
     method_renum_id = PDM_part_renum_method_cell_idx_get(renum_entity_method);
-  } else if(mesh_entity == PDM_MESH_ENTITY_FACE) {
+  }
+  else if(mesh_entity == PDM_MESH_ENTITY_FACE) {
     method_renum_id = PDM_part_renum_method_face_idx_get(renum_entity_method);
-  } else if(mesh_entity == PDM_MESH_ENTITY_EDGE) {
+  }
+  else if(mesh_entity == PDM_MESH_ENTITY_EDGE) {
     method_renum_id = PDM_part_renum_method_edge_idx_get(renum_entity_method);
-  } else if(mesh_entity == PDM_MESH_ENTITY_VTX) {
+  }
+  else if(mesh_entity == PDM_MESH_ENTITY_VTX) {
     method_renum_id = PDM_part_renum_method_vtx_idx_get(renum_entity_method);
   }
 
@@ -3194,6 +3222,7 @@ PDM_multipart_set_reordering_options
  const char      *renum_face_method
 )
 {
+  CHECK_INSTANCE(multipart);
 
   int _renum_cell_method = PDM_part_renum_method_cell_idx_get(renum_cell_method);
   int _renum_face_method = PDM_part_renum_method_face_idx_get(renum_face_method);
@@ -3227,6 +3256,7 @@ void PDM_multipart_set_reordering_options_vtx
  const char      *renum_vtx_method
 )
 {
+  CHECK_INSTANCE(multipart);
 
   int _renum_vtx_method = PDM_part_renum_method_vtx_idx_get(renum_vtx_method);
   if (_renum_vtx_method == -1) {
@@ -3246,11 +3276,57 @@ void PDM_multipart_set_reordering_options_vtx
 
 
 void
+PDM_multipart_dpart_id_set
+(
+  PDM_multipart_t *multipart,
+  int              i_domain,
+  int             *dpart_id,
+  PDM_ownership_t  ownership
+)
+{
+  CHECK_INSTANCE(multipart);
+  CHECK_I_DOMAIN(multipart, i_domain);
+
+  if (ownership != PDM_OWNERSHIP_KEEP &&
+      ownership != PDM_OWNERSHIP_USER) {
+    PDM_error(__FILE__, __LINE__, 0, "Error - PDM_multipart_dpart_id_set : Invalid ownership (must be either PDM_OWNERSHIP_KEEP or PDM_OWNERSHIP_USER)\n");
+  }
+
+  multipart->dpart_id          [i_domain] = dpart_id;
+  multipart->ownership_dpart_id[i_domain] = ownership;
+}
+
+
+int
+PDM_multipart_dpart_id_get
+(
+  PDM_multipart_t  *multipart,
+  int               i_domain,
+  int             **dpart_id,
+  PDM_ownership_t   ownership
+)
+{
+  CHECK_INSTANCE(multipart);
+  CHECK_I_DOMAIN(multipart, i_domain);
+
+  *dpart_id = multipart->dpart_id[i_domain];
+  if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
+    multipart->ownership_dpart_id[i_domain] = ownership;
+  }
+
+  return PDM_multipart_dn_node_get(multipart,
+                                   i_domain);
+}
+
+
+void
 PDM_multipart_compute
 (
  PDM_multipart_t *multipart
 )
 {
+  CHECK_INSTANCE(multipart);
+
   int i_rank;
   int n_rank;
   PDM_MPI_Comm_rank(multipart->comm, &i_rank);
@@ -3313,10 +3389,18 @@ PDM_multipart_compute
 
         PDM_dmesh_t  *_dmesh = NULL;
         PDM_dmesh_nodal_to_dmesh_get_dmesh(dmn_to_dm, 0, &_dmesh);
-        _run_ppart_domain(multipart, _dmesh, dmesh_nodal, pmesh, n_part, split_method, part_size_method, part_fraction, comm);
+        _run_ppart_domain(multipart,
+                          _dmesh,
+                          dmesh_nodal,
+                          i_domain,
+                          pmesh,
+                          n_part,
+                          split_method,
+                          part_size_method,
+                          part_fraction,
+                          comm);
         multipart->dmeshes  [i_domain] = _dmesh;
         multipart->dmn_to_dm[i_domain] = dmn_to_dm; /* Store it - We need it for PDM_multipart_get_part_mesh_nodal */
-        // PDM_dmesh_nodal_to_dmesh_free(dmn_to_dm);
 
       } else { // face representation
         // PDM_printf("Partitionning face domain %d/%d \n", i_domain+1, multipart->n_domain);
@@ -3328,8 +3412,8 @@ PDM_multipart_compute
 
         const double* part_fraction = &multipart->part_fraction[starting_part_idx[i_domain]];
 
-        PDM_dmesh_t  *_dmeshes =   multipart->dmeshes[i_domain];
-        _part_mesh_t *_pmeshes = &(multipart->pmeshes[i_domain]);
+        PDM_dmesh_t  *_dmesh =   multipart->dmeshes[i_domain];
+        _part_mesh_t *_pmesh = &(multipart->pmeshes[i_domain]);
 
         int n_part = multipart->n_part[i_domain];
 
@@ -3337,7 +3421,16 @@ PDM_multipart_compute
         if (0 && i_rank == 0)
           PDM_printf("Running partitioning for block %i...\n", i_domain+1);
         PDM_timer_resume(timer);
-        _run_ppart_domain(multipart, _dmeshes, NULL, _pmeshes, n_part, split_method, part_size_method, part_fraction, comm);
+        _run_ppart_domain(multipart,
+                          _dmesh,
+                          NULL,
+                          i_domain,
+                          _pmesh,
+                          n_part,
+                          split_method,
+                          part_size_method,
+                          part_fraction,
+                          comm);
         PDM_timer_hang_on(timer);
         if (0 && i_rank == 0)
           PDM_printf("...completed (elapsed time : %f)\n", PDM_timer_elapsed(timer) - cum_elapsed_time);
@@ -3373,7 +3466,8 @@ PDM_part_mesh_nodal_t **pmesh_nodal,
 PDM_ownership_t         ownership
 )
 {
-  assert(i_domain < multipart->n_domain);
+  CHECK_INSTANCE(multipart);
+  CHECK_I_DOMAIN(multipart, i_domain);
 
   _part_mesh_t      *pmesh       = &(multipart->pmeshes    [i_domain]);
   PDM_dmesh_nodal_t *dmesh_nodal = multipart->dmeshes_nodal[i_domain];
@@ -3404,7 +3498,8 @@ PDM_multipart_get_part_mesh
        PDM_ownership_t   ownership
 )
 {
-  assert(i_domain < multipart->n_domain);
+  CHECK_INSTANCE(multipart);
+  CHECK_I_DOMAIN(multipart, i_domain);
 
   *pmesh = multipart->pmeshes[i_domain].pmesh;
 
@@ -3432,8 +3527,10 @@ const int        i_part,
       int       *n_bound_groups
 )
 {
+  CHECK_INSTANCE(multipart);
+  CHECK_I_DOMAIN(multipart, i_domain);
+  CHECK_I_PART  (multipart, i_domain, i_part);
 
-  assert(i_domain < multipart->n_domain && i_part < multipart->n_part[i_domain]);
   _part_mesh_t _pmeshes = multipart->pmeshes[i_domain];
 
   *n_cell = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_CELL);
@@ -3471,9 +3568,9 @@ const int        i_part,
     *s_face_vtx  = 0;
   }
 
-  int                     *face_part_bound_proc_idx;
-  int                     *face_part_bound_part_idx;
-  int                     *face_part_bound;
+  int *face_part_bound_proc_idx;
+  int *face_part_bound_part_idx;
+  int *face_part_bound;
   PDM_part_mesh_part_graph_comm_get(_pmeshes.pmesh,
                                     i_part,
                                     PDM_BOUND_TYPE_FACE,
@@ -3521,10 +3618,13 @@ PDM_multipart_part_graph_comm_get
  PDM_ownership_t       ownership
 )
 {
-  assert(i_domain < multipart->n_domain && i_part < multipart->n_part[i_domain]);
+  CHECK_INSTANCE(multipart);
+  CHECK_I_DOMAIN(multipart, i_domain);
+  CHECK_I_PART  (multipart, i_domain, i_part);
+
   _part_mesh_t _pmeshes = multipart->pmeshes[i_domain];
 
-  PDM_bound_type_t bound_type = _entity_type_to_bound_type(entity_type);
+  PDM_bound_type_t bound_type = PDM_entity_type_to_bound_type(entity_type);
 
   PDM_part_mesh_part_graph_comm_get(_pmeshes.pmesh,
                                     i_part,
@@ -3560,8 +3660,10 @@ const int            i_part,
       PDM_g_num_t  **face_bound_ln_to_gn
 )
 {
+  CHECK_INSTANCE(multipart);
+  CHECK_I_DOMAIN(multipart, i_domain);
+  CHECK_I_PART  (multipart, i_domain, i_part);
 
-  assert(i_domain < multipart->n_domain && i_part < multipart->n_part[i_domain]);
   _part_mesh_t _pmeshes = multipart->pmeshes[i_domain];
 
   // *cell_tag = NULL;
@@ -3676,7 +3778,9 @@ PDM_multipart_t *multipart,
 const int        i_domain
 )
 {
-  assert(i_domain < multipart->n_domain);
+  CHECK_INSTANCE(multipart);
+  CHECK_I_DOMAIN(multipart, i_domain);
+
   _part_mesh_t _pmeshes = multipart->pmeshes[i_domain];
   return PDM_part_mesh_tn_part_get(_pmeshes.pmesh);
 }
@@ -3695,42 +3799,20 @@ const int                       i_part,
       PDM_ownership_t           ownership
 )
 {
-  assert(i_domain < multipart->n_domain && i_part < multipart->n_part[i_domain]);
+  CHECK_INSTANCE(multipart);
+  CHECK_I_DOMAIN(multipart, i_domain);
+  CHECK_I_PART  (multipart, i_domain, i_part);
 
   _part_mesh_t _pmeshes = multipart->pmeshes[i_domain];
-  int pn_entity = -1;
 
-  if( connectivity_type == PDM_CONNECTIVITY_TYPE_CELL_ELMT ||
-      connectivity_type == PDM_CONNECTIVITY_TYPE_CELL_CELL ||
-      connectivity_type == PDM_CONNECTIVITY_TYPE_CELL_FACE ||
-      connectivity_type == PDM_CONNECTIVITY_TYPE_CELL_EDGE ||
-      connectivity_type == PDM_CONNECTIVITY_TYPE_CELL_VTX)
-  {
-    pn_entity = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_CELL  );
-  } else if( connectivity_type == PDM_CONNECTIVITY_TYPE_FACE_ELMT ||
-             connectivity_type == PDM_CONNECTIVITY_TYPE_FACE_CELL ||
-             connectivity_type == PDM_CONNECTIVITY_TYPE_FACE_FACE ||
-             connectivity_type == PDM_CONNECTIVITY_TYPE_FACE_EDGE ||
-             connectivity_type == PDM_CONNECTIVITY_TYPE_FACE_VTX )
-  {
-    pn_entity = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_FACE  );
-  } else if( connectivity_type == PDM_CONNECTIVITY_TYPE_EDGE_ELMT ||
-             connectivity_type == PDM_CONNECTIVITY_TYPE_EDGE_CELL ||
-             connectivity_type == PDM_CONNECTIVITY_TYPE_EDGE_FACE ||
-             connectivity_type == PDM_CONNECTIVITY_TYPE_EDGE_EDGE ||
-             connectivity_type == PDM_CONNECTIVITY_TYPE_EDGE_VTX )
-  {
-    pn_entity = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_EDGE  );
-  } else if( connectivity_type == PDM_CONNECTIVITY_TYPE_VTX_ELMT ||
-             connectivity_type == PDM_CONNECTIVITY_TYPE_VTX_CELL ||
-             connectivity_type == PDM_CONNECTIVITY_TYPE_VTX_FACE ||
-             connectivity_type == PDM_CONNECTIVITY_TYPE_VTX_EDGE ||
-             connectivity_type == PDM_CONNECTIVITY_TYPE_VTX_VTX )
-  {
-    pn_entity = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_VTX);
-  } else {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_multipart_part_connectivity_get error : Wrong connectivity_type \n");
-  }
+  PDM_mesh_entities_t entity_type1;
+  PDM_mesh_entities_t entity_type2;
+
+  PDM_connectivity_type_to_entity_pair(connectivity_type,
+                                       &entity_type1,
+                                       &entity_type2);
+
+  int pn_entity = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, entity_type1);
 
   PDM_part_mesh_connectivity_get(_pmeshes.pmesh,
                                  i_part,
@@ -3808,29 +3890,17 @@ const int                   i_part,
       PDM_mesh_entities_t   entity_type
 )
 {
-  assert(i_domain < multipart->n_domain && i_part < multipart->n_part[i_domain]);
+  CHECK_INSTANCE(multipart);
+  CHECK_I_DOMAIN(multipart, i_domain);
+  CHECK_I_PART  (multipart, i_domain, i_part);
+
   _part_mesh_t _pmeshes = multipart->pmeshes[i_domain];
 
-  int pn_entity = 0;
-  switch (entity_type) {
-    case PDM_MESH_ENTITY_CELL:
-       pn_entity = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_CELL);
-      break;
-    case PDM_MESH_ENTITY_FACE:
-       pn_entity = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_FACE);
-      break;
-    case PDM_MESH_ENTITY_EDGE:
-       pn_entity = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_EDGE);
-      break;
-    case PDM_MESH_ENTITY_VTX:
-       pn_entity = PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, PDM_MESH_ENTITY_VTX);
-      break;
-    default:
-      PDM_error(__FILE__, __LINE__, 0, "PDM_multipart_part_n_entity_get error : Wrong entity_type \n");
-      break;
+  if (entity_type < 0 || entity_type >= PDM_MESH_ENTITY_MAX) {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_multipart_part_n_entity_get error : Wrong entity_type %d\n", entity_type);
   }
 
-  return pn_entity;
+  return PDM_part_mesh_n_entity_get(_pmeshes.pmesh, i_part, entity_type);
 }
 
 
@@ -3846,7 +3916,9 @@ const int                   i_part,
       PDM_ownership_t       ownership
 )
 {
-  assert(i_domain < multipart->n_domain && i_part < multipart->n_part[i_domain]);
+  CHECK_INSTANCE(multipart);
+  CHECK_I_DOMAIN(multipart, i_domain);
+  CHECK_I_PART  (multipart, i_domain, i_part);
 
   _part_mesh_t _pmeshes = multipart->pmeshes[i_domain];
 
@@ -3874,7 +3946,10 @@ const int                   i_part,
       PDM_ownership_t       ownership
 )
 {
-  assert(i_domain < multipart->n_domain && i_part < multipart->n_part[i_domain]);
+  CHECK_INSTANCE(multipart);
+  CHECK_I_DOMAIN(multipart, i_domain);
+  CHECK_I_PART  (multipart, i_domain, i_part);
+
   _part_mesh_t _pmeshes = multipart->pmeshes[i_domain];
 
   int pn_entity = PDM_multipart_part_n_entity_get(multipart, i_domain, i_part, entity_type);
@@ -3898,7 +3973,10 @@ const int               i_part,
       PDM_ownership_t   ownership
 )
 {
-  assert(i_domain < multipart->n_domain && i_part < multipart->n_part[i_domain]);
+  CHECK_INSTANCE(multipart);
+  CHECK_I_DOMAIN(multipart, i_domain);
+  CHECK_I_PART  (multipart, i_domain, i_part);
+
   _part_mesh_t* _pmeshes = (&multipart->pmeshes[i_domain]);
 
   *hyperplane_color = _pmeshes->hyperplane_color[i_part];
@@ -3920,7 +3998,10 @@ const int               i_part,
       PDM_ownership_t   ownership
 )
 {
-  assert(i_domain < multipart->n_domain && i_part < multipart->n_part[i_domain]);
+  CHECK_INSTANCE(multipart);
+  CHECK_I_DOMAIN(multipart, i_domain);
+  CHECK_I_PART  (multipart, i_domain, i_part);
+
   _part_mesh_t* _pmeshes = (&multipart->pmeshes[i_domain]);
 
   *thread_color = _pmeshes->thread_color[i_part];
@@ -3943,8 +4024,10 @@ const int               i_part,
       PDM_ownership_t   ownership
 )
 {
+  CHECK_INSTANCE(multipart);
+  CHECK_I_DOMAIN(multipart, i_domain);
+  CHECK_I_PART  (multipart, i_domain, i_part);
 
-  assert(i_domain < multipart->n_domain && i_part < multipart->n_part[i_domain]);
   _part_mesh_t* _pmeshes = (&multipart->pmeshes[i_domain]);
 
   *vtx_ghost_information = _pmeshes->vtx_ghost_information[i_part];
@@ -4061,6 +4144,10 @@ PDM_multipart_free
       PDM_dmesh_nodal_to_dmesh_free(multipart->dmn_to_dm[i_domain]);
       multipart->dmn_to_dm[i_domain] = NULL;
     }
+
+    if (multipart->ownership_dpart_id[i_domain] == PDM_OWNERSHIP_KEEP) {
+      PDM_free(multipart->dpart_id[i_domain]);
+    }
   }
   PDM_free(multipart->pmeshes);
   PDM_free(multipart->dmeshes);
@@ -4069,6 +4156,8 @@ PDM_multipart_free
   PDM_free(multipart->is_owner_dmeshes);
   PDM_free(multipart->n_part);
   PDM_free(multipart->ownership_pmeshes);
+  PDM_free(multipart->dpart_id);
+  PDM_free(multipart->ownership_dpart_id);
 
   //PDM_part_renum_method_purge();
   PDM_free(multipart);
@@ -4088,9 +4177,9 @@ const int                       i_part,
       PDM_ownership_t           ownership
 )
 {
-  PDM_UNUSED(ownership);
-
-  assert(i_domain < multipart->n_domain && i_part < multipart->n_part[i_domain]);
+  CHECK_INSTANCE(multipart);
+  CHECK_I_DOMAIN(multipart, i_domain);
+  CHECK_I_PART  (multipart, i_domain, i_part);
 
   _part_mesh_t _pmeshes = multipart->pmeshes[i_domain];
 
@@ -4117,11 +4206,13 @@ void PDM_multipart_group_get
  PDM_ownership_t       ownership
 )
 {
+  CHECK_INSTANCE(multipart);
+  CHECK_I_DOMAIN(multipart, i_domain);
+  CHECK_I_PART  (multipart, i_domain, i_part);
 
-  assert(i_domain < multipart->n_domain && i_part < multipart->n_part[i_domain]);
   _part_mesh_t _pmeshes = multipart->pmeshes[i_domain];
 
-  PDM_bound_type_t bound_type = _entity_type_to_bound_type(entity_type);
+  PDM_bound_type_t bound_type = PDM_entity_type_to_bound_type(entity_type);
 
   *n_group = PDM_part_mesh_n_bound_get(_pmeshes.pmesh, bound_type);
 
@@ -4154,10 +4245,12 @@ PDM_multipart_stat_get
  int              *bound_part_faces_sum
 )
 {
+  CHECK_INSTANCE(multipart);
+  CHECK_I_DOMAIN(multipart, i_domain);
+
   int n_rank;
   PDM_MPI_Comm_size(multipart->comm, &n_rank);
 
-  assert(i_domain < multipart->n_domain);
   _part_mesh_t _pmeshes = multipart->pmeshes[i_domain];
 
   int *dpart_proc;
@@ -4312,6 +4405,40 @@ PDM_multipart_stat_get
   PDM_free(n_loc);
   PDM_free(s_loc);
   PDM_free(dpart_proc);
+}
+
+
+
+int
+PDM_multipart_dn_node_get
+(
+  PDM_multipart_t  *multipart,
+  int               i_domain
+)
+{
+  CHECK_INSTANCE(multipart);
+  CHECK_I_DOMAIN(multipart, i_domain);
+
+  PDM_dmesh_t *dmesh = multipart->dmeshes[i_domain];
+
+  if (dmesh == NULL) {
+    PDM_error(__FILE__, __LINE__, 0, "Error - PDM_multipart_dn_node_get : Invalid dmesh\n");
+  }
+
+  int dn_entity[4];
+  PDM_dmesh_dims_get(dmesh,
+                     &dn_entity[3],
+                     &dn_entity[2],
+                     &dn_entity[1],
+                     &dn_entity[0]);
+
+  int dim = PDM_dmesh_dimension_get(dmesh);
+
+  if (dim < 0 || dim > 3) {
+    PDM_error(__FILE__, __LINE__, 0, "Invalid dimension %d\n", dim);
+  }
+
+  return dn_entity[dim];
 }
 
 

@@ -2710,6 +2710,13 @@ _multipart_create
           (int         *) dface_group_idx,
           (PDM_g_num_t *) dface_group);
 
+  if (have_dcell_part) {
+    PDM_multipart_dpart_id_set(multipart,
+                               0,
+                               dcell_part,
+                               PDM_OWNERSHIP_USER);
+  }
+
   // Run
   PDM_multipart_compute(multipart);
 

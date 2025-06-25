@@ -54,14 +54,12 @@ extern "C" {
 
 struct _pdm_dmesh_t
 {
-  PDM_MPI_Comm         comm;
-  PDM_ownership_t      owner;                   /*!< Which have the responsabilities of results */
-  PDM_bool_t          *results_is_getted;       /*!< Flags to indicate if result is getted      */
+  PDM_MPI_Comm comm;
 
-  int          dn_cell;                         /*!< Number of distributed cells         */
-  int          dn_face;                         /*!< Number of distributed faces         */
-  int          dn_edge;                         /*!< Number of distributed edges         */
-  int          dn_vtx;                          /*!< Number of distributed vertices      */
+  int         dn_cell;                          /*!< Number of distributed cells         */
+  int         dn_face;                          /*!< Number of distributed faces         */
+  int         dn_edge;                          /*!< Number of distributed edges         */
+  int         dn_vtx;                           /*!< Number of distributed vertices      */
 
   PDM_g_num_t n_g_cell;                         /*!< Number of distributed cells         */
   PDM_g_num_t n_g_face;                         /*!< Number of distributed faces         */
@@ -75,18 +73,18 @@ struct _pdm_dmesh_t
 
   double      *_dvtx_coord;                     /*!< Coordinates of ditributed vertices
                                                   (size = 3 * dn_vtx)                    */
-  int          is_owner_vtx_coord;
+  PDM_ownership_t owner_vtx_coord;
 
   int           n_group_bnd[PDM_BOUND_TYPE_MAX]; /*!< Number of group by elememnt type            */
   PDM_g_num_t **dconnectivity;                   /* Array of connectivty (size = PDM_CONNECTIVITY_TYPE_MAX) */
   int         **dconnectivity_idx;               /* Array of connectivty_idx if any (size = PDM_CONNECTIVITY_TYPE_MAX) */
 
-  PDM_bool_t   *is_owner_connectivity;
+  PDM_ownership_t owner_connectivity[PDM_CONNECTIVITY_TYPE_MAX];
 
   PDM_g_num_t **dbound;                   /* Array of connectivty (size = PDM_CONNECTIVITY_TYPE_MAX) */
   int         **dbound_idx;               /* Array of connectivty_idx if any (size = PDM_CONNECTIVITY_TYPE_MAX) */
 
-  PDM_bool_t   *is_owner_bound;
+  PDM_ownership_t owner_bound[PDM_BOUND_TYPE_MAX];
 
   PDM_bool_t   is_computed_g_extents;
   double       g_extents[6];

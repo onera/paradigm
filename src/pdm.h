@@ -442,6 +442,16 @@ PDM_entity_type_to_geometry_kind
 );
 
 /**
+ * \brief Helper to get entity type according to a dimension
+ *
+ */
+PDM_mesh_entities_t
+PDM_dimension_to_entity_type
+(
+  const int dim
+);
+
+/**
  * \brief Convert a pair of entity types to its corresponding connectivity type
  *
  * \param [in]  connectivity_type   Connectivity type

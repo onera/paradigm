@@ -63,6 +63,7 @@ typedef struct _pdm_dmesh_t PDM_dmesh_t;
  *
  * \brief Build a distributed mesh structure
  *
+ * \param [in]   owner     (Not used, will be removed in future release)
  * \param [in]   dn_cell   Number of distributed cells
  * \param [in]   dn_face   Number of distributed faces
  * \param [in]   dn_edge   Number of distributed edges
@@ -345,6 +346,20 @@ void
 PDM_dmesh_compute_distributions
 (
  PDM_dmesh_t *dmesh
+);
+
+
+/**
+ * \brief Get spatial dimension of a PDM_dmesh_t instance
+ *
+ * \param [in] dmesh  \ref PDM_dmesh_t instance
+ *
+ * \return Dimension
+ */
+int
+PDM_dmesh_dimension_get
+(
+  PDM_dmesh_t *dmesh
 );
 
 /*----------------------------------------------------------------------------*/
