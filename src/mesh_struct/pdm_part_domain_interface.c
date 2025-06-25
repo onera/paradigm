@@ -767,49 +767,62 @@ PDM_part_domain_interface_free
 
     for(int i_part = 0; i_part < dom_intrf->n_part[i_domain]; ++i_part) {
 
-      if(dom_intrf->ownership == PDM_OWNERSHIP_KEEP) {
+      // if(dom_intrf->ownership == PDM_OWNERSHIP_KEEP) {
+      if(1) {
         if(dom_intrf->interface_pn_vtx       [i_domain][i_part] != NULL) {
           PDM_free(dom_intrf->interface_pn_vtx       [i_domain][i_part]);
           dom_intrf->interface_pn_vtx       [i_domain][i_part] = NULL;
         };
         if(dom_intrf->interface_vtx_ln_to_gn [i_domain][i_part] != NULL) {
           for(int i_interface = 0; i_interface < dom_intrf->n_interface; ++i_interface){
-            PDM_free(dom_intrf->interface_vtx_ln_to_gn [i_domain][i_part][i_interface]);
+            if(dom_intrf->ownership == PDM_OWNERSHIP_KEEP) {
+              PDM_free(dom_intrf->interface_vtx_ln_to_gn [i_domain][i_part][i_interface]);
+            }
           }
           PDM_free(dom_intrf->interface_vtx_ln_to_gn [i_domain][i_part]);
           dom_intrf->interface_vtx_ln_to_gn [i_domain][i_part] = NULL;
         };
         if(dom_intrf->interface_sgn_vtx      [i_domain][i_part] != NULL) {
           for(int i_interface = 0; i_interface < dom_intrf->n_interface; ++i_interface){
-            PDM_free(dom_intrf->interface_sgn_vtx      [i_domain][i_part][i_interface]);
+            if(dom_intrf->ownership == PDM_OWNERSHIP_KEEP) {
+              PDM_free(dom_intrf->interface_sgn_vtx      [i_domain][i_part][i_interface]);
+            }
           }
           PDM_free(dom_intrf->interface_sgn_vtx      [i_domain][i_part]);
           dom_intrf->interface_sgn_vtx      [i_domain][i_part] = NULL;
         };
         if(dom_intrf->interface_sens_vtx      [i_domain][i_part] != NULL) {
           for(int i_interface = 0; i_interface < dom_intrf->n_interface; ++i_interface){
-            PDM_free(dom_intrf->interface_sens_vtx      [i_domain][i_part][i_interface]);
+            if(dom_intrf->ownership == PDM_OWNERSHIP_KEEP) {
+              PDM_free(dom_intrf->interface_sens_vtx      [i_domain][i_part][i_interface]);
+            }
           }
           PDM_free(dom_intrf->interface_sens_vtx      [i_domain][i_part]);
           dom_intrf->interface_sens_vtx      [i_domain][i_part] = NULL;
         };
         if(dom_intrf->interface_ids_vtx      [i_domain][i_part] != NULL) {
           for(int i_interface = 0; i_interface < dom_intrf->n_interface; ++i_interface){
-            PDM_free(dom_intrf->interface_ids_vtx      [i_domain][i_part][i_interface]);
+            if(dom_intrf->ownership == PDM_OWNERSHIP_KEEP) {
+              PDM_free(dom_intrf->interface_ids_vtx      [i_domain][i_part][i_interface]);
+            }
           }
           PDM_free(dom_intrf->interface_ids_vtx      [i_domain][i_part]);
           dom_intrf->interface_ids_vtx      [i_domain][i_part] = NULL;
         };
         if(dom_intrf->interface_ids_vtx_idx  [i_domain][i_part] != NULL) {
           for(int i_interface = 0; i_interface < dom_intrf->n_interface; ++i_interface){
-            PDM_free(dom_intrf->interface_ids_vtx_idx  [i_domain][i_part][i_interface]);
+            if(dom_intrf->ownership == PDM_OWNERSHIP_KEEP) {
+              PDM_free(dom_intrf->interface_ids_vtx_idx  [i_domain][i_part][i_interface]);
+            }
           }
           PDM_free(dom_intrf->interface_ids_vtx_idx  [i_domain][i_part]);
           dom_intrf->interface_ids_vtx_idx  [i_domain][i_part] = NULL;
         };
         if(dom_intrf->interface_dom_vtx      [i_domain][i_part] != NULL) {
           for(int i_interface = 0; i_interface < dom_intrf->n_interface; ++i_interface){
-            PDM_free(dom_intrf->interface_dom_vtx      [i_domain][i_part][i_interface]);
+            if(dom_intrf->ownership == PDM_OWNERSHIP_KEEP) {
+              PDM_free(dom_intrf->interface_dom_vtx      [i_domain][i_part][i_interface]);
+            }
           }
           PDM_free(dom_intrf->interface_dom_vtx      [i_domain][i_part]);
           dom_intrf->interface_dom_vtx      [i_domain][i_part] = NULL;
@@ -821,42 +834,54 @@ PDM_part_domain_interface_free
         };
         if(dom_intrf->interface_edge_ln_to_gn[i_domain][i_part] != NULL) {
           for(int i_interface = 0; i_interface < dom_intrf->n_interface; ++i_interface){
-            PDM_free(dom_intrf->interface_edge_ln_to_gn[i_domain][i_part][i_interface]);
+            if(dom_intrf->ownership == PDM_OWNERSHIP_KEEP) {
+              PDM_free(dom_intrf->interface_edge_ln_to_gn[i_domain][i_part][i_interface]);
+            }
           }
           PDM_free(dom_intrf->interface_edge_ln_to_gn[i_domain][i_part]);
           dom_intrf->interface_edge_ln_to_gn[i_domain][i_part] = NULL;
         };
         if(dom_intrf->interface_sgn_edge     [i_domain][i_part] != NULL) {
           for(int i_interface = 0; i_interface < dom_intrf->n_interface; ++i_interface){
-            PDM_free(dom_intrf->interface_sgn_edge     [i_domain][i_part][i_interface]);
+            if(dom_intrf->ownership == PDM_OWNERSHIP_KEEP) {
+              PDM_free(dom_intrf->interface_sgn_edge     [i_domain][i_part][i_interface]);
+            }
           }
           PDM_free(dom_intrf->interface_sgn_edge     [i_domain][i_part]);
           dom_intrf->interface_sgn_edge     [i_domain][i_part] = NULL;
         };
         if(dom_intrf->interface_sens_edge     [i_domain][i_part] != NULL) {
           for(int i_interface = 0; i_interface < dom_intrf->n_interface; ++i_interface){
-            PDM_free(dom_intrf->interface_sens_edge     [i_domain][i_part][i_interface]);
+            if(dom_intrf->ownership == PDM_OWNERSHIP_KEEP) {
+              PDM_free(dom_intrf->interface_sens_edge     [i_domain][i_part][i_interface]);
+            }
           }
           PDM_free(dom_intrf->interface_sens_edge     [i_domain][i_part]);
           dom_intrf->interface_sens_edge     [i_domain][i_part] = NULL;
         };
         if(dom_intrf->interface_ids_edge     [i_domain][i_part] != NULL) {
           for(int i_interface = 0; i_interface < dom_intrf->n_interface; ++i_interface){
-            PDM_free(dom_intrf->interface_ids_edge     [i_domain][i_part][i_interface]);
+            if(dom_intrf->ownership == PDM_OWNERSHIP_KEEP) {
+              PDM_free(dom_intrf->interface_ids_edge     [i_domain][i_part][i_interface]);
+            }
           }
           PDM_free(dom_intrf->interface_ids_edge     [i_domain][i_part]);
           dom_intrf->interface_ids_edge     [i_domain][i_part] = NULL;
         };
         if(dom_intrf->interface_ids_edge_idx [i_domain][i_part] != NULL) {
           for(int i_interface = 0; i_interface < dom_intrf->n_interface; ++i_interface){
-            PDM_free(dom_intrf->interface_ids_edge_idx [i_domain][i_part][i_interface]);
+            if(dom_intrf->ownership == PDM_OWNERSHIP_KEEP) {
+              PDM_free(dom_intrf->interface_ids_edge_idx [i_domain][i_part][i_interface]);
+            }
           }
           PDM_free(dom_intrf->interface_ids_edge_idx [i_domain][i_part]);
           dom_intrf->interface_ids_edge_idx [i_domain][i_part] = NULL;
         };
         if(dom_intrf->interface_dom_edge     [i_domain][i_part] != NULL) {
           for(int i_interface = 0; i_interface < dom_intrf->n_interface; ++i_interface){
-            PDM_free(dom_intrf->interface_dom_edge     [i_domain][i_part][i_interface]);
+            if(dom_intrf->ownership == PDM_OWNERSHIP_KEEP) {
+              PDM_free(dom_intrf->interface_dom_edge     [i_domain][i_part][i_interface]);
+            }
           }
           PDM_free(dom_intrf->interface_dom_edge     [i_domain][i_part]);
           dom_intrf->interface_dom_edge     [i_domain][i_part] = NULL;
@@ -868,42 +893,54 @@ PDM_part_domain_interface_free
         };
         if(dom_intrf->interface_face_ln_to_gn[i_domain][i_part] != NULL) {
           for(int i_interface = 0; i_interface < dom_intrf->n_interface; ++i_interface){
-            PDM_free(dom_intrf->interface_face_ln_to_gn[i_domain][i_part][i_interface]);
+            if(dom_intrf->ownership == PDM_OWNERSHIP_KEEP) {
+              PDM_free(dom_intrf->interface_face_ln_to_gn[i_domain][i_part][i_interface]);
+            }
           }
           PDM_free(dom_intrf->interface_face_ln_to_gn[i_domain][i_part]);
           dom_intrf->interface_face_ln_to_gn[i_domain][i_part] = NULL;
         };
         if(dom_intrf->interface_sgn_face     [i_domain][i_part] != NULL) {
           for(int i_interface = 0; i_interface < dom_intrf->n_interface; ++i_interface){
-            PDM_free(dom_intrf->interface_sgn_face     [i_domain][i_part][i_interface]);
+            if(dom_intrf->ownership == PDM_OWNERSHIP_KEEP) {
+              PDM_free(dom_intrf->interface_sgn_face     [i_domain][i_part][i_interface]);
+            }
           }
           PDM_free(dom_intrf->interface_sgn_face     [i_domain][i_part]);
           dom_intrf->interface_sgn_face     [i_domain][i_part] = NULL;
         };
         if(dom_intrf->interface_sens_face     [i_domain][i_part] != NULL) {
           for(int i_interface = 0; i_interface < dom_intrf->n_interface; ++i_interface){
-            PDM_free(dom_intrf->interface_sens_face     [i_domain][i_part][i_interface]);
+            if(dom_intrf->ownership == PDM_OWNERSHIP_KEEP) {
+              PDM_free(dom_intrf->interface_sens_face     [i_domain][i_part][i_interface]);
+            }
           }
           PDM_free(dom_intrf->interface_sens_face     [i_domain][i_part]);
           dom_intrf->interface_sens_face     [i_domain][i_part] = NULL;
         };
         if(dom_intrf->interface_ids_face     [i_domain][i_part] != NULL) {
           for(int i_interface = 0; i_interface < dom_intrf->n_interface; ++i_interface){
-            PDM_free(dom_intrf->interface_ids_face     [i_domain][i_part][i_interface]);
+            if(dom_intrf->ownership == PDM_OWNERSHIP_KEEP) {
+              PDM_free(dom_intrf->interface_ids_face     [i_domain][i_part][i_interface]);
+            }
           }
           PDM_free(dom_intrf->interface_ids_face     [i_domain][i_part]);
           dom_intrf->interface_ids_face     [i_domain][i_part] = NULL;
         };
         if(dom_intrf->interface_ids_face_idx [i_domain][i_part] != NULL) {
           for(int i_interface = 0; i_interface < dom_intrf->n_interface; ++i_interface){
-            PDM_free(dom_intrf->interface_ids_face_idx [i_domain][i_part][i_interface]);
+            if(dom_intrf->ownership == PDM_OWNERSHIP_KEEP) {
+              PDM_free(dom_intrf->interface_ids_face_idx [i_domain][i_part][i_interface]);
+            }
           }
           PDM_free(dom_intrf->interface_ids_face_idx [i_domain][i_part]);
           dom_intrf->interface_ids_face_idx [i_domain][i_part] = NULL;
         };
         if(dom_intrf->interface_dom_face     [i_domain][i_part] != NULL) {
           for(int i_interface = 0; i_interface < dom_intrf->n_interface; ++i_interface){
-            PDM_free(dom_intrf->interface_dom_face     [i_domain][i_part][i_interface]);
+            if(dom_intrf->ownership == PDM_OWNERSHIP_KEEP) {
+              PDM_free(dom_intrf->interface_dom_face     [i_domain][i_part][i_interface]);
+            }
           }
           PDM_free(dom_intrf->interface_dom_face     [i_domain][i_part]);
           dom_intrf->interface_dom_face     [i_domain][i_part] = NULL;
@@ -2280,7 +2317,7 @@ PDM_part_domain_interface_to_domain_interface
 
 
   /*
-   * Tag all entity concerns by interface
+   * Tag all entities related to interface
    */
   int **is_entity1_on_itrf = NULL;
   PDM_malloc(is_entity1_on_itrf, n_part_loc_all_domain, int *);
@@ -2336,7 +2373,7 @@ PDM_part_domain_interface_to_domain_interface
         int idx_write = 0;
         for(int idx_entity = 0; idx_entity < ln_interface; ++idx_entity) {
 
-          int found        = 0;
+          int found = 0;
           for(int j = pinterface_ids_idx[idx_entity]; j < pinterface_ids_idx[idx_entity+1]; ++j) {
             int i_proc_opp   = pinterface_ids[3*j  ];
             int i_part_opp   = pinterface_ids[3*j+1];
@@ -2387,7 +2424,7 @@ PDM_part_domain_interface_to_domain_interface
                                                         n_part_loc_all_domain,
                                                         dom_intrf->comm);
 
-    int* *stride_one;
+    int **stride_one;
     PDM_malloc(stride_one, n_part_loc_all_domain, int *);
     for(int i_part = 0; i_part < n_part_loc_all_domain; ++i_part) {
       stride_one[i_part] = PDM_array_const_int(pn_interface[i_interface][i_part], 1);
@@ -2461,7 +2498,7 @@ PDM_part_domain_interface_to_domain_interface
       n_data += dblk_strid[i];
     }
 
-    if(0 == 1) {
+    if(debug == 1) {
       PDM_log_trace_array_int (dblk_strid   , n_gnum, "dblk_strid    ::");
       PDM_log_trace_array_long(dentity1_gnum, n_data, "dentity1_gnum ::");
       PDM_log_trace_array_int (dentity1_sgn , n_data, "dentity1_sgn  ::");
@@ -2469,7 +2506,7 @@ PDM_part_domain_interface_to_domain_interface
       PDM_log_trace_array_int (dentity1_dom , n_data, "dentity1_dom  ::");
     }
 
-    dinterface_dn [i_interface] = n_gnum;
+    dinterface_dn[i_interface] = n_gnum;
     PDM_malloc(dinterface_ids[i_interface], 2 * n_gnum, PDM_g_num_t);
     PDM_malloc(dinterface_dom[i_interface], 2 * n_gnum, int        );
 
@@ -2511,7 +2548,8 @@ PDM_part_domain_interface_to_domain_interface
 
       PDM_sort_long(tmp_dentity1_gnum, order, n_ldata);
 
-      PDM_g_num_t first = tmp_dentity1_gnum[0];
+      PDM_g_num_t first     = tmp_dentity1_gnum[0];
+      int         first_sgn = tmp_dentity1_sgn [0];
       dblk_strid_unique[i] = 1;
 
       dentity1_gnum[idx_write] = tmp_dentity1_gnum[0];
@@ -2548,7 +2586,7 @@ PDM_part_domain_interface_to_domain_interface
       n_data += dblk_strid[i];
     }
 
-    if(0 == 1) {
+    if(debug == 1) {
       PDM_log_trace_array_int (dblk_strid   , n_gnum, "dblk_strid    (unique)::");
       PDM_log_trace_array_long(dentity1_gnum, n_data, "dentity1_gnum (unique)::");
       PDM_log_trace_array_int (dentity1_sgn , n_data, "dentity1_sgn  (unique)::");
@@ -2605,7 +2643,7 @@ PDM_part_domain_interface_to_domain_interface
          * For pair entities, multiple case can happen
          *   - entities        have same sens (possible with edge for example)
          *   - entities do not have same sens (normally true for faces)
-         *      in this case multiple possibility can happen 
+         *      in this case multiple possibility can happen
          *        - sens1 =  1 ; sens2 = -1 (typically information coming from pdm)
          *        - sens1 = -1 ; sens2 = -1 (if user do not have information of which entity
          *                                   is with the good sens, but knows that pair have
@@ -2676,7 +2714,7 @@ PDM_part_domain_interface_add
  int                            connectivity_is_signed
 )
 {
-  int debug = 0;
+  int debug = 1;
 
   // log_trace("PDM_part_domain_interface_to_domain_interface %i to %i \n", interface_kind1, interface_kind2);
   int i_rank;
@@ -2860,8 +2898,10 @@ PDM_part_domain_interface_add
   /*
    * Translate in distributed
    */
-  if(0 == 1) {
+  if(debug == 1) {
     for(int i_interface = 0; i_interface < n_interface; ++i_interface) {
+      log_trace("\n");
+      log_trace("Entity1 distributed interface info::\n");
       PDM_log_trace_array_long(ditrf->interface_ids_vtx[i_interface], 2 *ditrf->interface_dn_vtx[i_interface], "interface_ids_vtx ::");
       PDM_log_trace_array_int (ditrf->interface_dom_vtx[i_interface], 2 *ditrf->interface_dn_vtx[i_interface], "interface_dom_vtx ::");
     }
