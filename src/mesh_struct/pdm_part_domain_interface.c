@@ -2557,8 +2557,10 @@ PDM_part_domain_interface_to_domain_interface
       dentity1_sens[idx_write] = tmp_dentity1_sens[order[0]];
       dentity1_dom [idx_write] = tmp_dentity1_dom [order[0]];
       idx_write++;
+      int found = 0;
       for(int k = 1; k < n_ldata; ++k) {
         if(first != tmp_dentity1_gnum[k]) {
+          found = 1;
           dentity1_gnum[idx_write] = tmp_dentity1_gnum[k];
           dentity1_sgn [idx_write] = tmp_dentity1_sgn [order[k]];
           dentity1_sens[idx_write] = tmp_dentity1_sens[order[k]];
@@ -2566,8 +2568,29 @@ PDM_part_domain_interface_to_domain_interface
           idx_write++;
 
           dblk_strid_unique[i]++;
-          first = tmp_dentity1_gnum[k];
+          break;
+          // first = tmp_dentity1_gnum[k]; // comprend pas
         }
+      }
+      /**
+       * if no other gnum, maybe its connected with same partition
+       */
+      if (found==0) {
+        for(int k = 1; k < n_ldata; ++k) {
+          if(first == tmp_dentity1_gnum[k] && first_sgn == -tmp_dentity1_sgn[order[k]]) {
+            found = 1;
+            dentity1_gnum[idx_write] = tmp_dentity1_gnum[k];
+            dentity1_sgn [idx_write] = tmp_dentity1_sgn [order[k]];
+            dentity1_sens[idx_write] = tmp_dentity1_sens[order[k]];
+            dentity1_dom [idx_write] = tmp_dentity1_dom [order[k]];
+            idx_write++;
+
+            dblk_strid_unique[i]++;
+            // first = tmp_dentity1_gnum[k];
+            break;
+          }
+        }
+        assert (found==1);
       }
 
       idx_read += dblk_strid[i];
