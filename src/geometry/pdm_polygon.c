@@ -124,22 +124,21 @@ PDM_polygon_evaluate_position
   /*
    * Average plane
    */
+  PDM_plane_normal(n_pts, pts, n);
 
-  PDM_plane_normal (n_pts, pts, n);
-
-  PDM_polygon_compute_barycenter (n_pts, pts, bary);
+  PDM_polygon_compute_barycenter(n_pts, pts, bary);
 
   for (int k = 0; k < n_pts; k++) {
     double *pt = (double *) pts + 3*k;
     double *pt_p = pts_p + 3*k;
-    PDM_plane_projection2 (pt, bary, n, pt_p);
+    PDM_plane_projection2(pt, bary, n, pt_p);
   }
 
   double *_pts_p = pts_p;
 
-  PDM_polygon_parameterize (n_pts, _pts_p, p0, p10, &l10, p20, &l20, n);
+  PDM_polygon_parameterize(n_pts, _pts_p, p0, p10, &l10, p20, &l20, n);
 
-  PDM_plane_projection (x,p0,n,cp);
+  PDM_plane_projection(x,p0,n,cp);
 
   for (int i = 0; i < 3; i++) {
     ray[i] = cp[i] - p0[i];
@@ -168,9 +167,9 @@ PDM_polygon_evaluate_position
   // }
   double *bounds = NULL;
 
-  PDM_polygon_status_t location = PDM_polygon_point_in_new (cp, n_pts, _pts_p, bounds, n);
+  PDM_polygon_status_t location = PDM_polygon_point_in_new(cp, n_pts, _pts_p, bounds, n);
   if (location == PDM_POLYGON_DEGENERATED){
-      return(location);
+    return(location);
   }
 
   if (pcoords[0] >= 0.0 && pcoords[0] <= 1.0 &&
@@ -192,7 +191,6 @@ PDM_polygon_evaluate_position
   /*
    * If here, point is outside of polygon, so need to find distance to boundary
    */
-
   else if (location == PDM_POLYGON_OUTSIDE){
     double t, dist2;
     double closest[3];
@@ -214,6 +212,8 @@ PDM_polygon_evaluate_position
     }
     return location;
   }
+
+  return location;
 }
 
 PDM_bool_t
