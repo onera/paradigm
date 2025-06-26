@@ -1,4 +1,4 @@
-
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -57,6 +57,7 @@ _usage(int exit_code)
  * \param [inout]   n_part   Number of partitions par process
  * \param [inout]   post     Ensight outputs status
  * \param [inout]   part_method Partitioner (1 ParMETIS, 2 Pt-Scotch)
+ * \param [inout]   local     Enable local mode for extract part
  *
  */
 
@@ -67,7 +68,9 @@ _read_args(int            argc,
            double        *length,
            int           *n_part,
            int           *post,
-           int           *part_method)
+           int           *part_method,
+           int           *local)
+
 {
   int i = 1;
 
@@ -111,6 +114,9 @@ _read_args(int            argc,
     else if (strcmp(argv[i], "-parmetis") == 0) {
       *part_method = 1;
     }
+    else if (strcmp(argv[i], "-local") == 0) {
+      *local = 1;
+    }
     else
       _usage(EXIT_FAILURE);
     i++;
@@ -134,6 +140,7 @@ int main(int argc, char *argv[])
   double             length    = 1.;
   int                n_part    = 1;
   int                post      = 0;
+  int                local     = 0;
   PDM_split_dual_t part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
 
   /*
@@ -145,7 +152,8 @@ int main(int argc, char *argv[])
              &length,
              &n_part,
              &post,
-     (int *) &part_method);
+     (int *) &part_method,
+             &local);
 
   /*
    *  Init
@@ -252,6 +260,7 @@ int main(int argc, char *argv[])
   int i_domain = 0;
 
   int         **selected_face_l_num = NULL;
+  int         **fake_group_face     = NULL;
   PDM_g_num_t **pcell_ln_to_gn      = NULL;
   PDM_g_num_t **pface_ln_to_gn      = NULL;
   PDM_g_num_t **pvtx_ln_to_gn       = NULL;
@@ -266,6 +275,7 @@ int main(int argc, char *argv[])
   double      **pvtx_coord          = NULL;
   double      **face_center         = NULL;
   PDM_malloc(selected_face_l_num, n_part_domains, int         *);
+  PDM_malloc(fake_group_face,     n_part_domains, int         *);
   PDM_malloc(pcell_ln_to_gn     , n_part_domains, PDM_g_num_t *);
   PDM_malloc(pface_ln_to_gn     , n_part_domains, PDM_g_num_t *);
   PDM_malloc(pvtx_ln_to_gn      , n_part_domains, PDM_g_num_t *);
@@ -432,8 +442,11 @@ int main(int argc, char *argv[])
    * Extract
    */
   int n_part_out = 1;
-  // PDM_extract_part_kind_t extract_kind = PDM_EXTRACT_PART_KIND_LOCAL;
+
   PDM_extract_part_kind_t extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
+  if (local) {
+    extract_kind = PDM_EXTRACT_PART_KIND_LOCAL;
+  }
   PDM_extract_part_t* extrp = PDM_extract_part_create(2,
                                                       n_part,
                                                       n_part_out,
@@ -442,6 +455,8 @@ int main(int argc, char *argv[])
                                                       PDM_TRUE, // compute_child_gnum
                                                       PDM_OWNERSHIP_KEEP,
                                                       comm);
+
+  PDM_extract_part_n_group_set(extrp, PDM_BOUND_TYPE_FACE, 1);
 
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
@@ -474,6 +489,18 @@ int main(int argc, char *argv[])
                                        selected_face_l_num[i_part],
                                        PDM_OWNERSHIP_KEEP); // to test ownership is correctly managed
 
+    /* Add a fake face group */
+    PDM_malloc(fake_group_face[i_part], pn_face[i_part], int);
+    for (int i_face=0; i_face < pn_face[i_part]; ++i_face) {
+      fake_group_face[i_part][i_face] = i_face+1; // Fill with lnum
+    }
+    PDM_extract_part_part_group_set(extrp,
+                                    i_part,
+                                    0,
+                                    PDM_BOUND_TYPE_FACE,
+                                    pn_face[i_part],
+                                    fake_group_face[i_part],
+                                    pface_ln_to_gn[i_part]);
     // PDM_log_trace_array_int(selected_face_l_num[i_part], pn_select_face[i_part], "selected_face_l_num ::");
 
   }
@@ -530,6 +557,21 @@ int main(int argc, char *argv[])
                                   PDM_MESH_ENTITY_VTX,
                                   &pextract_vtx_ln_to_gn[i_part],
                                   PDM_OWNERSHIP_KEEP);
+
+    int          pn_extract_group_entity               = 0;
+    int         *pextract_group_entity                 = NULL;
+    PDM_g_num_t *pextract_group_entity_ln_to_gn        = NULL;
+    PDM_g_num_t *pextract_group_entity_parent_ln_to_gn = NULL;
+    PDM_extract_part_group_get(extrp,
+                               PDM_BOUND_TYPE_FACE,
+                               i_part,
+                               0,
+                               &pn_extract_group_entity,
+                               &pextract_group_entity,
+                               &pextract_group_entity_ln_to_gn,
+                               &pextract_group_entity_parent_ln_to_gn,
+                               PDM_OWNERSHIP_KEEP);
+  assert (pn_extract_group_entity == pn_extract_face[i_part]);
   }
 
   /*
@@ -563,8 +605,10 @@ int main(int argc, char *argv[])
   for (int i_part = 0; i_part < n_part_domains; i_part++){
     // PDM_free(selected_face_l_num[i_part]);
     PDM_free(face_center        [i_part]);
+    PDM_free(fake_group_face    [i_part]);
   }
   PDM_free(selected_face_l_num);
+  PDM_free(fake_group_face);
   PDM_free(pn_cell);
   PDM_free(pn_face);
   PDM_free(pn_vtx);
