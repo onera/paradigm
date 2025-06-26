@@ -459,8 +459,8 @@ PDM_isosurface_isovalues_set
  * \param [in]  id_isosurface  Iso-surface identifier
  * \param [in]  coeff          Equation coefficients
  *
- * - \ref PDM_ISO_SURFACE_KIND_PLANE (3 coefficients):
- *   \f$\phi(x,y,z) = \texttt{coeff[0]} \cdot x + \texttt{coeff[1]} \cdot y + \texttt{coeff[2]} \cdot z\f$
+ * - \ref PDM_ISO_SURFACE_KIND_PLANE (4 coefficients):
+ *   \f$\phi(x,y,z) = \texttt{coeff[0]} \cdot x + \texttt{coeff[1]} \cdot y + \texttt{coeff[2]} \cdot z - \texttt{coeff[3]}\f$
  * 
  * 
  * - \ref PDM_ISO_SURFACE_KIND_SPHERE (4 coefficients):
