@@ -232,7 +232,7 @@ program isosurface_3d_ngon
                                               n_vtx_seg,                    &
                                               n_vtx_seg,                    &
                                               n_part,                       &
-                                              PDM_SPLIT_DUAL_WITH_PARMETIS, &
+                                              PDM_SPLIT_DUAL_WITH_HILBERT,  &
                                               n_vtx,                        &
                                               n_edge,                       &
                                               n_face,                       &
@@ -412,12 +412,12 @@ program isosurface_3d_ngon
 
   end do
 
-  allocate(plane_equation(3))
-  plane_equation = [1.0d0, 1.0d0, 1.0d0]
-  allocate(isovalues1(2))
+  allocate(plane_equation(4))
+  plane_equation = [1.0d0, 1.0d0, 1.0d0, -4.5d0]
+  allocate(isovalues1(1))
   allocate(isovalues2(1))
   allocate(isovalues3(1))
-  isovalues1 = [-4.5d0]
+  isovalues1 = [0.0d0]
   isovalues2 = [0.0d0]
   isovalues3 = [0.0d0]
 
@@ -468,7 +468,7 @@ program isosurface_3d_ngon
 
   call PDM_isosurface_redistribution_set (isos,         &
                                           extract_kind, &
-                                          PDM_SPLIT_DUAL_WITH_PARMETIS)
+                                          PDM_SPLIT_DUAL_WITH_HILBERT)
 
   if (extract_kind == PDM_EXTRACT_PART_KIND_REEQUILIBRATE) then
     call PDM_isosurface_n_part_out_set (isos, &
@@ -533,38 +533,38 @@ program isosurface_3d_ngon
 
     do i_part = 1, n_part_out
 
-       call PDM_isosurface_pconnectivity_get (isos,                           &
-                                              i_iso-1,                        &
-                                              i_part-1,                       &
-                                              PDM_CONNECTIVITY_TYPE_FACE_VTX, &
-                                              isos_n_face(i_part),            &
-                                              isos_face_vtx_idx,              &
-                                              isos_face_vtx,                  &
-                                              PDM_OWNERSHIP_KEEP)
+      call PDM_isosurface_pconnectivity_get (isos,                           &
+                                             i_iso-1,                        &
+                                             i_part-1,                       &
+                                             PDM_CONNECTIVITY_TYPE_FACE_VTX, &
+                                             isos_n_face(i_part),            &
+                                             isos_face_vtx_idx,              &
+                                             isos_face_vtx,                  &
+                                             PDM_OWNERSHIP_KEEP)
 
-       call PDM_isosurface_ln_to_gn_get (isos,                 &
-                                         i_iso-1,              &
-                                         i_part-1,             &
-                                         PDM_MESH_ENTITY_FACE, &
-                                         isos_n_face(i_part),  &
-                                         isos_face_ln_to_gn,   &
-                                         PDM_OWNERSHIP_KEEP)
+      call PDM_isosurface_ln_to_gn_get (isos,                 &
+                                        i_iso-1,              &
+                                        i_part-1,             &
+                                        PDM_MESH_ENTITY_FACE, &
+                                        isos_n_face(i_part),  &
+                                        isos_face_ln_to_gn,   &
+                                        PDM_OWNERSHIP_KEEP)
 
 
-       call PDM_isosurface_pvtx_coord_get (isos,               &
-                                           i_iso-1,            &
-                                           i_part-1,           &
-                                           isos_n_vtx(i_part), &
-                                           isos_vtx_coord,     &
-                                           PDM_OWNERSHIP_KEEP)
+      call PDM_isosurface_pvtx_coord_get (isos,               &
+                                          i_iso-1,            &
+                                          i_part-1,           &
+                                          isos_n_vtx(i_part), &
+                                          isos_vtx_coord,     &
+                                          PDM_OWNERSHIP_KEEP)
 
-       call PDM_isosurface_ln_to_gn_get (isos,                &
-                                         i_iso-1,             &
-                                         i_part-1,            &
-                                         PDM_MESH_ENTITY_VTX, &
-                                         isos_n_vtx(i_part),  &
-                                         isos_vtx_ln_to_gn,   &
-                                         PDM_OWNERSHIP_KEEP)
+      call PDM_isosurface_ln_to_gn_get (isos,                &
+                                        i_iso-1,             &
+                                        i_part-1,            &
+                                        PDM_MESH_ENTITY_VTX, &
+                                        isos_n_vtx(i_part),  &
+                                        isos_vtx_ln_to_gn,   &
+                                        PDM_OWNERSHIP_KEEP)
 
       call PDM_pointer_array_part_set(array_isos_face_vtx_idx, & ! <- Pointer array
                                       i_part-1,                & ! <- ID of current part
@@ -607,14 +607,14 @@ program isosurface_3d_ngon
 
 
 
-         call PDM_isosurface_pparent_weight_get(isos, &
-                                                i_iso-1,               &
-                                                i_part-1,              &
-                                                PDM_MESH_ENTITY_VTX,   &
-                                                isos_n_vtx(i_part),    &
-                                                pvtx_parent_idx,            &
-                                                pvtx_parent_weight,         &
-                                                PDM_OWNERSHIP_KEEP)
+        call PDM_isosurface_pparent_weight_get(isos, &
+                                               i_iso-1,               &
+                                               i_part-1,              &
+                                               PDM_MESH_ENTITY_VTX,   &
+                                               isos_n_vtx(i_part),    &
+                                               pvtx_parent_idx,            &
+                                               pvtx_parent_weight,         &
+                                               PDM_OWNERSHIP_KEEP)
 
         allocate(interp_iso_field(isos_n_vtx(i_part)))
         do i_vtx=1, isos_n_vtx(i_part)
@@ -631,23 +631,23 @@ program isosurface_3d_ngon
                                          i_part-1,    &
                                          ipart_field)
 
-         call  PDM_isosurface_pparent_weight_get(isos,                &
-                                                 i_iso-1,             &
-                                                 i_part-1,            &
-                                                 PDM_MESH_ENTITY_VTX, &
-                                                 isos_n_vtx(i_part),  &
-                                                 pvtx_parent_idx,     &
-                                                 pvtx_parent_weight,  &
-                                                 PDM_OWNERSHIP_KEEP)
+        call  PDM_isosurface_pparent_weight_get(isos,                &
+                                                i_iso-1,             &
+                                                i_part-1,            &
+                                                PDM_MESH_ENTITY_VTX, &
+                                                isos_n_vtx(i_part),  &
+                                                pvtx_parent_idx,     &
+                                                pvtx_parent_weight,  &
+                                                PDM_OWNERSHIP_KEEP)
 
-         call PDM_isosurface_plocal_parent_get(isos,                &
-                                               i_iso-1,             &
-                                               i_part-1,            &
-                                               PDM_MESH_ENTITY_VTX, &
-                                               isos_n_vtx(i_part),  &
-                                               pvtx_parent_idx,     &
-                                               pvtx_parent,         &
-                                               PDM_OWNERSHIP_KEEP)
+        call PDM_isosurface_plocal_parent_get(isos,                &
+                                              i_iso-1,             &
+                                              i_part-1,            &
+                                              PDM_MESH_ENTITY_VTX, &
+                                              isos_n_vtx(i_part),  &
+                                              pvtx_parent_idx,     &
+                                              pvtx_parent,         &
+                                              PDM_OWNERSHIP_KEEP)
 
 
         allocate(interp_iso_field(isos_n_vtx(i_part)))
@@ -696,6 +696,7 @@ program isosurface_3d_ngon
 
   call PDM_pointer_array_free (array_field)
 
+  call mpi_finalize(ierr)
 
   contains
 
