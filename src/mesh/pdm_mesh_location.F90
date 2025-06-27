@@ -827,12 +827,12 @@ module pdm_mesh_location
   subroutine PDM_mesh_location_method_set(mloc, &
                                           method)
     ! Set the method for computing location (preconditioning stage)
-    !                                      
-    ! Admissible values are : 
-    !   - PDM_MESH_LOCATION_OCTREE : Use point octree (default method)
-    !   - PDM_MESH_LOCATION_DBBTREE : Use bounding-box tree
-    !   - PDM_MESH_LOCATION_LOCATE_ALL_TGT : All target points are guaranteed to be located
-    
+    !
+    ! Admissible values are :
+    !   - ``PDM_MESH_LOCATION_OCTREE`` : Use point octree (default method)
+    !   - ``PDM_MESH_LOCATION_DBBTREE`` : Use bounding-box tree
+    !   - ``PDM_MESH_LOCATION_LOCATE_ALL_TGT`` : All target points are guaranteed to be located
+
     implicit none
 
     type (c_ptr), intent(in) :: mloc   ! C pointer to PDM_mesh_location_t object

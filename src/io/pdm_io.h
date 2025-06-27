@@ -540,7 +540,7 @@ PDM_io_swap_endian_off
 
 
 /**
- * \brief Swap endian pour conversion little endian <-> big endian
+ * \brief Swap endian for little endian <-> big endian conversion
  *
  * \param [in]  taille_donnee   Size of a unit piece of data
  * \param [in]  n_donnee        Amount of data

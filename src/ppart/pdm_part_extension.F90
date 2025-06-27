@@ -1345,7 +1345,7 @@ subroutine PDM_part_extension_connectivity_set(part_ext, &
   integer,     intent(in)       :: i_domain            ! Domain identifier
   integer,     intent(in)       :: i_part              ! Partition identifier
   integer,     intent(in)       :: connectivity_type   ! Type of connectivity
-  integer(pdm_l_num_s), pointer :: connect_idx(:)      ! Index for connectivity (can be \p NULL for
+  integer(pdm_l_num_s), pointer :: connect_idx(:)      ! Index for connectivity (can be *null()* for EDGE_VTX)
   integer(pdm_l_num_s), pointer :: connect(:)          ! Connectivity
 
   call PDM_part_extension_connectivity_set_c(part_ext, &

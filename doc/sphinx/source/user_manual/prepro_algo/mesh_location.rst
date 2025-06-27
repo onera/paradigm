@@ -337,7 +337,7 @@ API
 
   .. dropdown:: Geometric tolerance
 
-    The location algorithms relies on bounding-box tests to quickly find candidate pair of points and elements, before computing the exact location.
+    The location algorithms rely on bounding-box tests to quickly find candidate pairs of points and elements, before computing the exact location.
     A target point will be considered as *located* if it lies in the bounding box of at least one source mesh element (even if it does not actually lie inside the element).
     These bounding boxes can be expanded using a relative tolerance.
 

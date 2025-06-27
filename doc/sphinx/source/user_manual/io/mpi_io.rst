@@ -159,7 +159,7 @@ Fortran API
 
   .. f:subroutine:: PDM_io_swap_endian(def)
 
-    Swap endian pour conversion little endian <-> big endian
+    Swap endian for little endian <-> big endian conversion
 
     :param integer taille_donnee [in]:  Size of a unit piece of data
     :param integer n_donnees     [in]:  Amount of data

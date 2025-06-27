@@ -1,8 +1,8 @@
 .. _util:
 
-####
-Util
-####
+#####
+Utils
+#####
 
 .. container:: toc-cards
 
