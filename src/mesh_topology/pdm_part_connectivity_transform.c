@@ -668,6 +668,50 @@ PDM_compute_face_vtx_from_face_and_edge_unsigned
   PDM_free(edge_tag);
 }
 
+
+
+void
+PDM_graph_compress
+(
+  int  n_entity,
+  int *graph_idx,
+  int *graph
+)
+{
+
+  int *old_graph_idx = NULL;
+  PDM_malloc(old_graph_idx, n_entity+1, int);
+
+  for(int i = 0; i < n_entity+1; ++i) {
+    old_graph_idx[i] = graph_idx[i];
+  }
+
+  graph_idx[0] = 0;
+  for(int i = 0; i < n_entity; ++i) {
+
+    int beg = old_graph_idx[i  ];
+    int end = old_graph_idx[i+1];
+
+    graph_idx[i+1] = graph_idx[i];
+
+    for(int idx = beg; idx < end; ++idx ) {
+      graph[idx] = PDM_ABS(graph[idx])-1;
+    }
+
+    int n_unique = PDM_inplace_unique(graph, beg, end-1);
+    for(int k = 0; k < n_unique; ++k) {
+      if(graph[beg+k] != i) {
+        int idx_write = graph_idx[i+1]++;
+        graph[idx_write] = graph[beg+k];
+      }
+    }
+  }
+
+  PDM_free(old_graph_idx);
+
+}
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

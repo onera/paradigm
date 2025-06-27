@@ -295,6 +295,27 @@ PDM_compute_dface_vtx_from_edges
  PDM_g_num_t  **dface_vtx
 );
 
+/**
+ *
+ * \brief Sort and unique on a graph (obtained for exemple with a combinaison of part_connectivity_transpose / combine ) to have vtx_vtx graph
+ *        We remove also diagonal
+ *        This method is usefull to prepare a graph in order to split it with METIS or scotch
+ *        We can reallocate graphe after the call
+ *        Graph are 1-based in input and 0-based in output
+ *
+ * \param [in]     n_entity        Number of entity is the current graph
+ * \param [inout]  graph_idx       Idx of graph (size = n_entity+1)
+ * \param [inout]  graph           Node connectivity
+ *
+ */
+void
+PDM_graph_compress
+(
+  int  n_entity,
+  int *graph_idx,
+  int *graph
+);
+
 #ifdef  __cplusplus
 }
 #endif
