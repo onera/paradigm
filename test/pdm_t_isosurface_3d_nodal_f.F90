@@ -66,15 +66,15 @@ program isosurface_3d_nodal
 
 
   !---------------------------------------------------------------
-  integer,              parameter    :: comm = MPI_COMM_WORLD
+  integer, parameter :: comm = MPI_COMM_WORLD
 
   ! Parsing option
   integer :: i_arg
   character(len=99) :: arg
 
   ! mesh generation
-  integer, parameter                 :: n_vtx_seg = 20
-  integer(c_int)                     :: n_part = 1
+  integer, parameter :: n_vtx_seg = 20
+  integer(c_int)     :: n_part = 1
   ! part mesh definition
   type(c_ptr)               :: multipart
   type(c_ptr)               :: pmesh_nodal
@@ -248,7 +248,11 @@ program isosurface_3d_nodal
                                       i_part-1,    & ! <- ID of current part
                                       ipart_field )  ! <- Field
 
+     
+
     end do
+
+
   else 
 
     call PDM_pointer_array_create (array_field, &
@@ -272,7 +276,9 @@ program isosurface_3d_nodal
 
     call PDM_pointer_array_part_set(array_field, & ! <- Pointer array
                                     0,           & ! <- ID of current part
-                                    dfield )       ! <- Field    
+                                    dfield )       ! <- Field   
+
+    
 
   end if
 
@@ -348,6 +354,8 @@ program isosurface_3d_nodal
     else
       n_part_out = n_part
     end if
+  else
+    n_part_out = n_part
   end if
 
   do i_iso=1, n_iso
@@ -375,8 +383,7 @@ program isosurface_3d_nodal
                                           i_iso-1,             &
                                           PDM_MESH_ENTITY_VTX, &
                                           ptp,                 &
-                                          PDM_OWNERSHIP_USER)
-
+                                          PDM_OWNERSHIP_KEEP)
     if (n_part_out > 0) then
       call PDM_pointer_array_create (array_isos_face_vtx_idx, &
                                       n_part_out,             &
@@ -456,6 +463,7 @@ program isosurface_3d_nodal
                                         i_part-1,                & ! <- ID of current part
                                         isos_vtx_ln_to_gn )        ! <- Field
 
+        allocate(interp_iso_field(isos_n_vtx(i_part)))
 
         if (extract_kind == PDM_EXTRACT_PART_KIND_REEQUILIBRATE) then
           call PDM_part_to_part_reverse_iexch (ptp,                                    &
@@ -484,7 +492,6 @@ program isosurface_3d_nodal
                                                  pvtx_parent_weight,   &
                                                  PDM_OWNERSHIP_KEEP)
 
-          allocate(interp_iso_field(isos_n_vtx(i_part)))
           do i_vtx=1, isos_n_vtx(i_part)
             interp_iso_field(i_vtx) = 0.0d0
             do i_vtx_parent=pvtx_parent_idx(i_vtx), pvtx_parent_idx(i_vtx+1)-1
@@ -518,7 +525,6 @@ program isosurface_3d_nodal
                                                 PDM_OWNERSHIP_KEEP)
 
 
-          allocate(interp_iso_field(isos_n_vtx(i_part)))
           do i_vtx=1, isos_n_vtx(i_part)
             interp_iso_field(i_vtx) = 0.0d0
             do i_vtx_parent=pvtx_parent_idx(i_vtx), pvtx_parent_idx(i_vtx+1)-1
@@ -532,6 +538,7 @@ program isosurface_3d_nodal
         call PDM_pointer_array_part_set(interp_array_iso_field(1)%pa, & ! <- Pointer array
                                         i_part-1,                     & ! <- ID of current part
                                         interp_iso_field )              ! <- Field
+
 
       end do
 
@@ -557,13 +564,14 @@ program isosurface_3d_nodal
       call PDM_pointer_array_free (array_isos_vtx_coord)
       call PDM_pointer_array_free (array_isos_vtx_ln_to_gn)
       call PDM_pointer_array_free (interp_array_iso_field(1)%pa)
+      deallocate(interp_iso_field)
 
     else 
       call PDM_isosurface_part_to_part_get (isos,                &
                                             i_iso-1,             &
                                             PDM_MESH_ENTITY_VTX, &
                                             ptp,                 &
-                                            PDM_OWNERSHIP_USER)
+                                            PDM_OWNERSHIP_KEEP)
 
       call PDM_isosurface_dconnectivity_get (isos,                           &
                                              i_iso-1,                        &
@@ -611,6 +619,7 @@ program isosurface_3d_nodal
           interp_iso_field(i_vtx) = interp_iso_field(i_vtx) + dparent_weight(i_vtx_parent+1) * ipart_iso_field(i_vtx_parent+1)
         end do 
       enddo
+      deallocate(interp_iso_field)
 
 
       call PDM_pointer_array_free (array_iso_field)
@@ -619,7 +628,26 @@ program isosurface_3d_nodal
 
   end do
 
+  deallocate(plane_equation)
+  deallocate(isovalues1)
+  deallocate(isovalues2)
+  deallocate(isovalues3)
+  deallocate(isos_n_face)
+  deallocate(isos_n_vtx)
+  deallocate(interp_array_iso_field)
+
   call PDM_pointer_array_free (array_field)
+
+  call PDM_dmesh_nodal_free (dmesh_nodal)
+  call PDM_multipart_free (multipart)
+  call PDM_isosurface_free(isos)
+  if (n_part > 0) then
+    call PDM_part_mesh_nodal_free(pmesh_nodal)
+    deallocate(ipart_field)
+  else
+    deallocate(dfield) 
+  end if
+
 
   call mpi_finalize(ierr)
 
@@ -639,15 +667,15 @@ program isosurface_3d_nodal
                       multipart)
     implicit none
 
-    integer :: comm
-    integer :: n_x
-    integer :: n_y
-    integer :: n_z
-    integer :: n_part
-    integer :: elt_type
-    integer :: order
-    type(c_ptr) :: dmesh_nodal
-    type(c_ptr) :: multipart
+    integer, intent(in) :: comm
+    integer, intent(in) :: n_x
+    integer, intent(in) :: n_y
+    integer, intent(in) :: n_z
+    integer, intent(in) :: n_part
+    integer, intent(in) :: elt_type
+    integer, intent(in) :: order
+    type(c_ptr), intent(inout) :: dmesh_nodal
+    type(c_ptr), intent(inout) :: multipart
 
     type(c_ptr) :: dcube
     integer :: n_domain = 1
@@ -668,13 +696,11 @@ program isosurface_3d_nodal
                                     -5.0d0,   &
                                     elt_type, &
                                     order,    &
-                                    PDM_OWNERSHIP_KEEP)
+                                    PDM_OWNERSHIP_USER)
 
     call PDM_dcube_nodal_gen_build(dcube, &
                                    dmesh_nodal)
 
-
-    ! call PDM_dmesh_nodal_generate_distribution(dmesh_nodal)
 
     if (n_part > 0) then
       call PDM_multipart_create(multipart,                   &
@@ -694,6 +720,8 @@ program isosurface_3d_nodal
       call PDM_multipart_compute(multipart)
 
     end if
+    deallocate(n_part_domain)
+    call PDM_dcube_nodal_gen_free(dcube)
 
   end subroutine mesh_gen
 

@@ -72,7 +72,7 @@ program isosurface_3d_ngon
   integer(pdm_g_num_s), parameter :: n_vtx_seg   = 20
   integer                         :: order       = 1
   type(c_ptr)                     :: ho_ordering = C_NULL_PTR  
-  integer(c_int)                  :: n_part      = 4
+  integer(c_int)                  :: n_part      = 1
   ! part mesh definition
   integer(pdm_l_num_s), pointer :: n_vtx(:)                  => null()
   integer(pdm_l_num_s), pointer :: n_edge(:)                 => null()
@@ -218,43 +218,43 @@ program isosurface_3d_ngon
 
 
   ! Generate partitioned source mesh
-  call PDM_generate_mesh_parallelepiped_ngon (comm,                         &
-                                              PDM_MESH_NODAL_TETRA4,        &
-                                              order,                        &
-                                              ho_ordering,                  &
-                                              -5.0d0,                       &
-                                              -5.0d0,                       &
-                                              -5.0d0,                       &
-                                              10.d0,                        &
-                                              10.d0,                        &
-                                              10.d0,                        &
-                                              n_vtx_seg,                    &
-                                              n_vtx_seg,                    &
-                                              n_vtx_seg,                    &
-                                              n_part,                       &
-                                              PDM_SPLIT_DUAL_WITH_HILBERT,  &
-                                              n_vtx,                        &
-                                              n_edge,                       &
-                                              n_face,                       &
-                                              n_cell,                       &
-                                              vtx_coord,                    &
-                                              edge_vtx,                     &
-                                              face_edge_idx,                &
-                                              face_edge,                    &
-                                              face_vtx,                     &
-                                              cell_face_idx,                &
-                                              cell_face,                    &
-                                              vtx_ln_to_gn,                 &
-                                              edge_ln_to_gn,                &
-                                              face_ln_to_gn,                &
-                                              cell_ln_to_gn,                &
-                                              n_surface,                    &
-                                              surface_face_idx,             &
-                                              surface_face,                 &
-                                              surface_ln_to_gn,             &
-                                              n_ridge,                      &
-                                              ridge_edge_idx,               &
-                                              ridge_edge,                   &
+  call PDM_generate_mesh_parallelepiped_ngon (comm,                        &
+                                              PDM_MESH_NODAL_TETRA4,       &
+                                              order,                       &
+                                              ho_ordering,                 &
+                                              -5.0d0,                      &
+                                              -5.0d0,                      &
+                                              -5.0d0,                      &
+                                              10.d0,                       &
+                                              10.d0,                       &
+                                              10.d0,                       &
+                                              n_vtx_seg,                   &
+                                              n_vtx_seg,                   &
+                                              n_vtx_seg,                   &
+                                              n_part,                      &
+                                              PDM_SPLIT_DUAL_WITH_HILBERT, &
+                                              n_vtx,                       &
+                                              n_edge,                      &
+                                              n_face,                      &
+                                              n_cell,                      &
+                                              vtx_coord,                   &
+                                              edge_vtx,                    &
+                                              face_edge_idx,               &
+                                              face_edge,                   &
+                                              face_vtx,                    &
+                                              cell_face_idx,               &
+                                              cell_face,                   &
+                                              vtx_ln_to_gn,                &
+                                              edge_ln_to_gn,               &
+                                              face_ln_to_gn,               &
+                                              cell_ln_to_gn,               &
+                                              n_surface,                   &
+                                              surface_face_idx,            &
+                                              surface_face,                &
+                                              surface_ln_to_gn,            &
+                                              n_ridge,                     &
+                                              ridge_edge_idx,              &
+                                              ridge_edge,                  &
                                               ridge_ln_to_gn)
 
 
@@ -505,7 +505,7 @@ program isosurface_3d_ngon
                                           i_iso-1,             &
                                           PDM_MESH_ENTITY_VTX, &
                                           ptp,                 &
-                                          PDM_OWNERSHIP_USER)
+                                          PDM_OWNERSHIP_KEEP)
 
     call PDM_pointer_array_create (array_isos_face_vtx_idx, &
                                     n_part_out,             &
@@ -532,6 +532,8 @@ program isosurface_3d_ngon
                                     PDM_TYPE_DOUBLE)
 
     do i_part = 1, n_part_out
+
+      write(*,*) "TOP"
 
       call PDM_isosurface_pconnectivity_get (isos,                           &
                                              i_iso-1,                        &
@@ -586,6 +588,8 @@ program isosurface_3d_ngon
                                       i_part-1,                & ! <- ID of current part
                                       isos_vtx_ln_to_gn )        ! <- Field
 
+      allocate(interp_iso_field(isos_n_vtx(i_part)))
+      
       if (extract_kind == PDM_EXTRACT_PART_KIND_REEQUILIBRATE) then
 
         call PDM_part_to_part_reverse_iexch (ptp,                           &
@@ -616,7 +620,6 @@ program isosurface_3d_ngon
                                                pvtx_parent_weight,         &
                                                PDM_OWNERSHIP_KEEP)
 
-        allocate(interp_iso_field(isos_n_vtx(i_part)))
         do i_vtx=1, isos_n_vtx(i_part)
           interp_iso_field(i_vtx) = 0.0d0
           do i_vtx_parent=pvtx_parent_idx(i_vtx), pvtx_parent_idx(i_vtx+1)-1
@@ -649,8 +652,6 @@ program isosurface_3d_ngon
                                               pvtx_parent,         &
                                               PDM_OWNERSHIP_KEEP)
 
-
-        allocate(interp_iso_field(isos_n_vtx(i_part)))
         do i_vtx=1, isos_n_vtx(i_part)
           interp_iso_field(i_vtx) = 0.0d0
           do i_vtx_parent=pvtx_parent_idx(i_vtx), pvtx_parent_idx(i_vtx+1)-1
@@ -691,10 +692,22 @@ program isosurface_3d_ngon
     call PDM_pointer_array_free (array_isos_vtx_coord)
     call PDM_pointer_array_free (array_isos_vtx_ln_to_gn)
     call PDM_pointer_array_free (interp_array_iso_field(1)%pa)
+    deallocate(interp_iso_field)
   end do
 
 
   call PDM_pointer_array_free (array_field)
+
+  deallocate(ipart_field)
+  deallocate(plane_equation)
+  deallocate(isovalues1)
+  deallocate(isovalues2)
+  deallocate(isovalues3)
+  deallocate(isos_n_face)
+  deallocate(isos_n_vtx)
+  deallocate(interp_array_iso_field)
+
+  call PDM_isosurface_free(isos)
 
   call mpi_finalize(ierr)
 
