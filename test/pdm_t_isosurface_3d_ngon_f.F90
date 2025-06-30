@@ -533,8 +533,6 @@ program isosurface_3d_ngon
 
     do i_part = 1, n_part_out
 
-      write(*,*) "TOP"
-
       call PDM_isosurface_pconnectivity_get (isos,                           &
                                              i_iso-1,                        &
                                              i_part-1,                       &
@@ -698,7 +696,6 @@ program isosurface_3d_ngon
 
   call PDM_pointer_array_free (array_field)
 
-  deallocate(ipart_field)
   deallocate(plane_equation)
   deallocate(isovalues1)
   deallocate(isovalues2)

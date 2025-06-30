@@ -643,9 +643,6 @@ program isosurface_3d_nodal
   call PDM_isosurface_free(isos)
   if (n_part > 0) then
     call PDM_part_mesh_nodal_free(pmesh_nodal)
-    deallocate(ipart_field)
-  else
-    deallocate(dfield) 
   end if
 
 
