@@ -323,18 +323,12 @@ fake_install:
 pages:
   stage: deploy
   rules:
-    - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_TAG != null
+    - if: $CI_COMMIT_BRANCH == "dev"
   before_script:
     - ''
   script:
     - mkdir -p public
-    - echo "CI_COMMIT_TAG = ${CI_COMMIT_TAG}"
-    - if [ "${CI_COMMIT_TAG}" == "" ]; then
-    -   cp -r $CUSTOM_CI_DIR/build_intel@2022_intel-oneapi_GNUM64_ON_BUILD_Debug_PDMA_ON/doc/sphinx/html public/$CI_COMMIT_BRANCH
-    - else
-    -   cp -r $CUSTOM_CI_DIR/build_intel@2022_intel-oneapi_GNUM64_ON_BUILD_Debug_PDMA_ON/doc/sphinx/html public/$CI_COMMIT_TAG
-    - fi
+    - cp -r $CUSTOM_CI_DIR/build_intel@2022_intel-oneapi_GNUM64_ON_BUILD_Debug_PDMA_ON/doc/sphinx/html public/dev
   artifacts:
     paths:
       - public
-    expire_in: never
