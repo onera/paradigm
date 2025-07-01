@@ -2912,7 +2912,7 @@ _extract_part
       n_entity = extrp->n_face;
       native_entity = PDM_MESH_ENTITY_FACE;
     }
-    else if (extrp->dim == 1) {
+    else {
       n_entity = extrp->n_edge;
       native_entity = PDM_MESH_ENTITY_EDGE;
     }
