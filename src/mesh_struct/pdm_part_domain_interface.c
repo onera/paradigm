@@ -2361,7 +2361,7 @@ PDM_part_domain_interface_to_domain_interface
           PDM_log_trace_array_int (pinterface_sgn     ,   ln_interface, "pinterface_sgn      ::");
           PDM_log_trace_array_int (pinterface_sens    ,   ln_interface, "pinterface_sens     ::");
           PDM_log_trace_array_int (pinterface_dom     , 2*ln_interface, "pinterface_dom      ::");
-          PDM_log_trace_array_long(pinterface_ln_to_gn,   ln_interface, "pinterface_ln_to_gn ::");
+          PDM_log_trace_array_int (pinterface_ids_idx ,   ln_interface, "pinterface_ids_idx  ::");
           PDM_log_trace_graph_nuplet_int(pinterface_ids_idx, pinterface_ids, 3, ln_interface, "pinterface_ids ::");
         }
 
@@ -2511,7 +2511,7 @@ PDM_part_domain_interface_to_domain_interface
     PDM_malloc(dinterface_dom[i_interface], 2 * n_gnum, int        );
 
     /*
-     * We can have multiple occurence for the same gnum (triple point for exemple)
+     * We can have multiple occurence for the same gnum (triple point for exemple) CB: whats that
      *
      */
     int max_blk_strid = 0;
@@ -2827,7 +2827,7 @@ PDM_part_domain_interface_add
 
         if(have_interf) {
           _filter_entity2_entity1_idx[n_filter_entity2[i_part]+1] = _filter_entity2_entity1_idx[n_filter_entity2[i_part]];
-          _filter_entity2_entity1_n[n_filter_entity2[i_part]] = 0;
+          _filter_entity2_entity1_n  [n_filter_entity2[i_part]  ] = 0;
           for(int idx_entity1 = _pentity2_entity1_idx[i]; idx_entity1 < _pentity2_entity1_idx[i+1]; ++idx_entity1) {
             int sgn       = PDM_SIGN(_pentity2_entity1[idx_entity1]);
             int i_entity1 = PDM_ABS (_pentity2_entity1[idx_entity1])-1;
