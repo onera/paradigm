@@ -87,8 +87,8 @@ program isosurface_3d_nodal
 
   ! Mesh field definition
   type(PDM_pointer_array_t), pointer :: array_field    => null() 
-  double precision,          pointer :: ipart_field(:)
-  double precision,          pointer :: dfield(:)
+  double precision,          pointer :: ipart_field(:) => null()
+  double precision,          pointer :: dfield(:)      => null()
 
   ! Isosurface structure
   type(c_ptr)               :: isos = C_NULL_PTR
@@ -247,8 +247,6 @@ program isosurface_3d_nodal
       call PDM_pointer_array_part_set(array_field, & ! <- Pointer array
                                       i_part-1,    & ! <- ID of current part
                                       ipart_field )  ! <- Field
-
-     
 
     end do
 
@@ -643,6 +641,7 @@ program isosurface_3d_nodal
   call PDM_isosurface_free(isos)
   if (n_part > 0) then
     call PDM_part_mesh_nodal_free(pmesh_nodal)
+    
   end if
 
 
