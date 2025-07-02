@@ -174,8 +174,6 @@ int main(int argc, char *argv[])
   int          *dface_vtx_idx = NULL;
   PDM_g_num_t  *dface_vtx = NULL;
   double       *dvtx_coord = NULL;
-  int          *dface_group_idx_tmp = NULL;
-  PDM_g_num_t  *dface_group_tmp = NULL;
   int          *dface_group_idx = NULL;
   PDM_g_num_t  *dface_group = NULL;
   int           dface_vtxL;
@@ -202,8 +200,8 @@ int main(int argc, char *argv[])
                          &dface_vtx_idx,
                          &dface_vtx,
                          &dvtx_coord,
-                         &dface_group_idx_tmp,
-                         &dface_group_tmp);
+                         &dface_group_idx,
+                         &dface_group);
 
   /*
    * Create dmesh
@@ -232,51 +230,9 @@ int main(int argc, char *argv[])
                              NULL,
                              PDM_OWNERSHIP_USER);
 
-  /* Add two groups, gathering odd and even faces (in gnum) */
-  PDM_g_num_t* face_distrib;
-  PDM_dmesh_compute_distributions(dm);
-  PDM_dmesh_distrib_get(dm, PDM_MESH_ENTITY_FACE, &face_distrib);
-  PDM_g_num_t n_face_tot = face_distrib[n_rank];
-  PDM_g_num_t n_face_even = n_face_tot / 2 + (n_face_tot % 2);
-  PDM_g_num_t n_face_odd  = n_face_tot / 2;
-  /* Rank 0 declares even faces, rank -1 declares odd faces */
-  PDM_malloc(dface_group_idx, n_face_group+2+1, int);
-  for (int i=0; i < n_face_group+1; ++i) {
-    dface_group_idx[i] = dface_group_idx_tmp[i];
-  }
-  if (i_rank == 0) {
-    dface_group_idx[n_face_group+1] = dface_group_idx[n_face_group] + n_face_even;
-  }
-  else {
-    dface_group_idx[n_face_group+1] = dface_group_idx[n_face_group];
-  }
-  if (i_rank == n_rank-1) {
-    dface_group_idx[n_face_group+2] = dface_group_idx[n_face_group+1] + n_face_odd;
-  }
-  else {
-    dface_group_idx[n_face_group+2] = dface_group_idx[n_face_group+1];
-  }
-  
-  PDM_malloc(dface_group, dface_group_idx[n_face_group+2], PDM_g_num_t);
-  for (int i=0; i < dface_group_idx[n_face_group]; ++i) {
-    dface_group[i] = dface_group_tmp[i];
-  }
-  if (i_rank == 0) {
-    for (int i=0; i < n_face_even; ++i) {
-      dface_group[dface_group_idx[n_face_group]+i] = 2*i+1;
-    }
-  }
-  if (i_rank == n_rank-1) {
-    for (int i=0; i < n_face_odd; ++i) {
-      dface_group[dface_group_idx[n_face_group+1]+i] = 2*(i+1);
-    }
-  }
-  
-  
-
   PDM_dmesh_bound_set(dm,
                       PDM_BOUND_TYPE_FACE,
-                      n_face_group+2,
+                      n_face_group,
                       dface_group,
                       dface_group_idx,
                       PDM_OWNERSHIP_USER);
@@ -334,6 +290,7 @@ int main(int argc, char *argv[])
   PDM_malloc(pvtx_coord         , n_part_domains, double      *);
   PDM_malloc(face_center        , n_part_domains, double      *);
 
+  int i_extract_face_group = 2;
   for (int i_part = 0; i_part < n_part_domains; i_part++){
 
     PDM_g_num_t* cell_ln_to_gn = NULL;
@@ -441,7 +398,6 @@ int main(int argc, char *argv[])
     /*
      * Sub-part
      */
-    int i_extract_face_group = 2;
     double bbox[6];
     bbox[0] = 0.3;
     bbox[1] = 0.3;
@@ -536,7 +492,7 @@ int main(int argc, char *argv[])
     /* Add a fake face group */
     PDM_malloc(fake_group_face[i_part], pn_face[i_part], int);
     for (int i_face=0; i_face < pn_face[i_part]; ++i_face) {
-      fake_group_face[i_part][i_face] = i_face+1; // Fill with lnum
+      fake_group_face[i_part][i_face] = i_face+1; // Fill with lnum of all faces
     }
     PDM_extract_part_part_group_set(extrp,
                                     i_part,
@@ -561,20 +517,22 @@ int main(int argc, char *argv[])
                             &group_face_ln_to_gn,
                             PDM_OWNERSHIP_KEEP);
 
+    // This fake group stores all the faces belonging to the extracted BC (so we exept to get all faces after extraction)
     PDM_extract_part_part_group_set(extrp,
                                     i_part,
                                     1,
                                     PDM_BOUND_TYPE_FACE,
-                                    group_face_idx[n_face_group+1] - group_face_idx[n_face_group],
-                                    &group_face[group_face_idx[n_face_group]],
-                                    &group_face_ln_to_gn[group_face_idx[n_face_group]]);
+                                    group_face_idx[i_extract_face_group+1] - group_face_idx[i_extract_face_group],
+                                    &group_face[group_face_idx[i_extract_face_group]],
+                                    &group_face_ln_to_gn[group_face_idx[i_extract_face_group]]);
+    // This fake group stores all the faces belonging to an other BC (so we except to get no faces after extraction)
     PDM_extract_part_part_group_set(extrp,
                                     i_part,
                                     2,
                                     PDM_BOUND_TYPE_FACE,
-                                    group_face_idx[n_face_group+2] - group_face_idx[n_face_group+1],
-                                    &group_face[group_face_idx[n_face_group+1]],
-                                    &group_face_ln_to_gn[group_face_idx[n_face_group+1]]);
+                                    group_face_idx[1] - group_face_idx[0],
+                                    &group_face[group_face_idx[0]],
+                                    &group_face_ln_to_gn[group_face_idx[0]]);
 
     // PDM_log_trace_array_int(selected_face_l_num[i_part], pn_select_face[i_part], "selected_face_l_num ::");
 
@@ -649,27 +607,28 @@ int main(int argc, char *argv[])
 
     assert (pn_extract_group_entity == pn_extract_face[i_part]);
 
-    int pn_extract_face_even = 0;
+    int pn_extract_face_own;
     PDM_extract_part_group_get(extrp,
                                PDM_BOUND_TYPE_FACE,
                                i_part,
                                1,
-                               &pn_extract_face_even,
+                               &pn_extract_face_own,
                                &pextract_group_entity,
                                &pextract_group_entity_ln_to_gn,
                                &pextract_group_entity_parent_ln_to_gn,
                                PDM_OWNERSHIP_KEEP);
-    int pn_extract_face_odd = 0;
+    int pn_extract_face_other;
     PDM_extract_part_group_get(extrp,
                                PDM_BOUND_TYPE_FACE,
                                i_part,
                                2,
-                               &pn_extract_face_odd,
+                               &pn_extract_face_other,
                                &pextract_group_entity,
                                &pextract_group_entity_ln_to_gn,
                                &pextract_group_entity_parent_ln_to_gn,
                                PDM_OWNERSHIP_KEEP);
-    assert (pn_extract_group_entity == pn_extract_face_odd + pn_extract_face_even);
+    assert (pn_extract_face_own == pn_extract_group_entity);
+    assert (pn_extract_face_other == 0);
   }
 
   /*
@@ -731,8 +690,6 @@ int main(int argc, char *argv[])
   PDM_free(pextract_vtx_ln_to_gn );
 
   PDM_multipart_free(mpart);
-  PDM_free(dface_group_idx);
-  PDM_free(dface_group);
   PDM_dcube_gen_free(dcube);
   PDM_dmesh_free(dm);
 
