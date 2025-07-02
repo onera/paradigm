@@ -2899,6 +2899,44 @@ _extract_part
     }
   }
 
+  /* Fill old_to_new for "native" entity (the one beeing extracted) : this is not done in the above
+  functions, except for vertices */
+  if (extrp->dim != 0) {
+    int* n_entity;
+    PDM_mesh_entities_t native_entity;
+    if (extrp->dim == 3) {
+      n_entity = extrp->n_cell;
+      native_entity = PDM_MESH_ENTITY_CELL;
+    }
+    else if (extrp->dim == 2) {
+      n_entity = extrp->n_face;
+      native_entity = PDM_MESH_ENTITY_FACE;
+    }
+    else {
+      n_entity = extrp->n_edge;
+      native_entity = PDM_MESH_ENTITY_EDGE;
+    }
+    
+    PDM_malloc(old_to_new[native_entity], extrp->n_part_in, int*);
+    for(int i_part = 0; i_part < extrp->n_part_in; ++i_part) {
+      PDM_malloc(old_to_new[native_entity][i_part], n_entity[i_part], int);
+      int* _old_to_new = old_to_new[native_entity][i_part];
+      int* is_visited;
+      PDM_malloc(is_visited, n_entity[i_part], int);
+      for(int i = 0; i < n_entity[i_part]; ++i) {
+        _old_to_new[i] = -1;
+        is_visited[i] = 0;
+      }
+      int idx_write = 0;
+      for (int i=0; i < extrp->n_extract[i_part]; ++i) {
+        if (is_visited[i] == 0) {
+          is_visited[i] = 1;
+          _old_to_new[extrp->extract_lnum[i_part][i]-1] = idx_write++;
+        }
+      }
+      PDM_free(is_visited);
+    }
+  }
 
   /* Groups */
   for (PDM_bound_type_t i_bound = PDM_BOUND_TYPE_FACE; i_bound < PDM_BOUND_TYPE_MAX; i_bound++) {
