@@ -57,7 +57,7 @@ _usage(int exit_code)
  * \param [inout]   n_part   Number of partitions par process
  * \param [inout]   post     Ensight outputs status
  * \param [inout]   part_method Partitioner (1 ParMETIS, 2 Pt-Scotch)
- * \param [inout]   local     Enable local mode for extract part
+ * \param [inout]   reequilibrate Enable reequilibrated mode for extract part
  *
  */
 
@@ -69,7 +69,7 @@ _read_args(int            argc,
            int           *n_part,
            int           *post,
            int           *part_method,
-           int           *local)
+           int           *reequilibrate)
 
 {
   int i = 1;
@@ -114,8 +114,8 @@ _read_args(int            argc,
     else if (strcmp(argv[i], "-parmetis") == 0) {
       *part_method = 1;
     }
-    else if (strcmp(argv[i], "-local") == 0) {
-      *local = 1;
+    else if (strcmp(argv[i], "-reequilibrate") == 0) {
+      *reequilibrate = 1;
     }
     else
       _usage(EXIT_FAILURE);
@@ -140,7 +140,7 @@ int main(int argc, char *argv[])
   double             length    = 1.;
   int                n_part    = 1;
   int                post      = 0;
-  int                local     = 0;
+  int                reequilibrate = 0;
   PDM_split_dual_t part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
 
   /*
@@ -153,7 +153,7 @@ int main(int argc, char *argv[])
              &n_part,
              &post,
      (int *) &part_method,
-             &local);
+             &reequilibrate);
 
   /*
    *  Init
@@ -443,9 +443,9 @@ int main(int argc, char *argv[])
    */
   int n_part_out = 1;
 
-  PDM_extract_part_kind_t extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
-  if (local) {
-    extract_kind = PDM_EXTRACT_PART_KIND_LOCAL;
+  PDM_extract_part_kind_t extract_kind = PDM_EXTRACT_PART_KIND_LOCAL;
+  if (reequilibrate) {
+    extract_kind = PDM_EXTRACT_PART_KIND_REEQUILIBRATE;
   }
   PDM_extract_part_t* extrp = PDM_extract_part_create(2,
                                                       n_part,
