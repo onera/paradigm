@@ -136,7 +136,12 @@ PDM_polygon_evaluate_position
 
   double *_pts_p = pts_p;
 
-  PDM_polygon_parameterize(n_pts, _pts_p, p0, p10, &l10, p20, &l20, n);
+  /*
+  TODO :
+    - remove parametrization : it is redundant with PDM_polygon_point_in_new
+  */
+
+  PDM_polygon_parameterize (n_pts, _pts_p, p0, p10, &l10, p20, &l20, n);
 
   PDM_plane_projection(x,p0,n,cp);
 
@@ -169,7 +174,7 @@ PDM_polygon_evaluate_position
 
   PDM_polygon_status_t location = PDM_polygon_point_in_new(cp, n_pts, _pts_p, bounds, n);
   if (location == PDM_POLYGON_DEGENERATED){
-    return(location);
+      return location;
   }
 
   if (pcoords[0] >= 0.0 && pcoords[0] <= 1.0 &&
@@ -185,13 +190,14 @@ PDM_polygon_evaluate_position
 
       *minDist2 = PDM_DOT_PRODUCT (v, v);
     }
-    return location;
+    return PDM_POLYGON_INSIDE;
   }
 
   /*
    * If here, point is outside of polygon, so need to find distance to boundary
    */
-  else if (location == PDM_POLYGON_OUTSIDE){
+
+  else {
     double t, dist2;
     double closest[3];
     double *pt1, *pt2;
@@ -210,7 +216,7 @@ PDM_polygon_evaluate_position
         }
       }
     }
-    return location;
+    return PDM_POLYGON_OUTSIDE;
   }
 
   return location;
