@@ -437,6 +437,91 @@ _get_file_extension
   }
 }
 
+
+static void
+_read_mesh_file
+(
+  const PDM_MPI_Comm        comm,
+  const int                 n_part,
+  const PDM_split_dual_t    part_method,
+  const char               *filename,
+        PDM_dmesh_nodal_t **out_dmn,
+        PDM_multipart_t   **out_mpart
+)
+{
+  // Get file extension
+  const char *file_extension = _get_file_extension(filename);
+
+  // Use appropriate reader
+  if (strcmp(file_extension, "stl") == 0) {
+    // STL
+    *out_dmn = PDM_reader_stl_dmesh_nodal(comm,
+                                          filename);
+  }
+
+  else if (strcmp(file_extension, "mesh") == 0) {
+    // GAMMA
+    *out_dmn = PDM_reader_gamma_dmesh_nodal(comm,
+                                            filename,
+                                            0,
+                                            0);
+  }
+
+  else if (strcmp(file_extension, "vtk") == 0) {
+    // VTK
+    int          n_vtx_field      = 0;
+    char       **vtx_field_name   = NULL;
+    PDM_data_t  *vtx_field_type   = NULL;
+    int         *vtx_field_stride = NULL;
+    void       **vtx_field_value  = NULL;
+    int          n_elt_field      = 0;
+    char       **elt_field_name   = NULL;
+    PDM_data_t  *elt_field_type   = NULL;
+    int         *elt_field_stride = NULL;
+    void       **elt_field_value  = NULL;
+    *out_dmn = PDM_vtk_read_to_dmesh_nodal(comm,
+                                            filename,
+                                            &n_vtx_field,
+                                            &vtx_field_name,
+                                            &vtx_field_type,
+                                            &vtx_field_stride,
+                                            &vtx_field_value,
+                                            &n_elt_field,
+                                            &elt_field_name,
+                                            &elt_field_type,
+                                            &elt_field_stride,
+                                            &elt_field_value);
+    for (int i_field = 0; i_field < n_vtx_field; i_field++) {
+      PDM_free(vtx_field_name [i_field]);
+      PDM_free(vtx_field_value[i_field]);
+    }
+    for (int i_field = 0; i_field < n_elt_field; i_field++) {
+      PDM_free(elt_field_name [i_field]);
+      PDM_free(elt_field_value[i_field]);
+    }
+    PDM_free(vtx_field_name  );
+    PDM_free(vtx_field_type  );
+    PDM_free(vtx_field_stride);
+    PDM_free(vtx_field_value );
+    PDM_free(elt_field_name  );
+    PDM_free(elt_field_type  );
+    PDM_free(elt_field_stride);
+    PDM_free(elt_field_value );
+  }
+
+  else {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_generate_mesh_from_file: Unknown mesh format %s\n", file_extension);
+  }
+
+  // Partition mesh
+  _dmn_to_multipart(comm,
+                    part_method,
+                    n_part,
+                    *out_dmn,
+                    out_mpart);
+}
+
+
 /*=============================================================================
  * Public function definitions
  *============================================================================*/
@@ -1183,8 +1268,8 @@ PDM_generate_mesh_sphere_ngon
     }
 
     PDM_compute_face_vtx_from_face_and_edge((*pn_face)[ipart],
-                                            (*pface_edge_idx)[ipart], 
-                                            (*pface_edge)[ipart], 
+                                            (*pface_edge_idx)[ipart],
+                                            (*pface_edge)[ipart],
                                             (*pedge_vtx)[ipart],
                                             &(*pface_vtx)[ipart]);
 
@@ -1339,8 +1424,8 @@ PDM_generate_mesh_ball_ngon
     }
 
     PDM_compute_face_vtx_from_face_and_edge((*pn_face)[ipart],
-                                            (*pface_edge_idx)[ipart], 
-                                            (*pface_edge)[ipart], 
+                                            (*pface_edge_idx)[ipart],
+                                            (*pface_edge)[ipart],
                                             (*pedge_vtx)[ipart],
                                             &(*pface_vtx)[ipart]);
 
@@ -1515,8 +1600,8 @@ PDM_generate_mesh_parallelepiped_ngon
     }
 
     PDM_compute_face_vtx_from_face_and_edge((*pn_face)[ipart],
-                                            (*pface_edge_idx)[ipart], 
-                                            (*pface_edge)[ipart], 
+                                            (*pface_edge_idx)[ipart],
+                                            (*pface_edge)[ipart],
                                             (*pedge_vtx)[ipart],
                                             &(*pface_vtx)[ipart]);
 
@@ -1550,7 +1635,7 @@ PDM_generate_mesh_parallelepiped_ngon
 
 
 PDM_part_mesh_nodal_t *
-PDM_generate_mesh_from_file
+PDM_generate_mesh_nodal_from_file
 (
   const PDM_MPI_Comm      comm,
   const int               n_part,
@@ -1558,79 +1643,15 @@ PDM_generate_mesh_from_file
   const char             *filename
 )
 {
-  // Get file extension
-  const char *file_extension = _get_file_extension(filename);
-
-  PDM_dmesh_nodal_t *dmn = NULL;
-
-  // Use appropriate reader
-  if (strcmp(file_extension, "stl") == 0) {
-    // STL
-    dmn = PDM_reader_stl_dmesh_nodal(comm,
-                                      filename);
-  }
-
-  else if (strcmp(file_extension, "mesh") == 0) {
-    // GAMMA
-    dmn = PDM_reader_gamma_dmesh_nodal(comm,
-                                        filename,
-                                        0,
-                                        0);
-  }
-
-  else if (strcmp(file_extension, "vtk") == 0) {
-    // VTK
-    int            n_vtx_field      = 0;
-    char         **vtx_field_name   = NULL;
-    PDM_data_t    *vtx_field_type   = NULL;
-    int           *vtx_field_stride = NULL;
-    void         **vtx_field_value  = NULL;
-    int            n_elt_field      = 0;
-    char         **elt_field_name   = NULL;
-    PDM_data_t    *elt_field_type   = NULL;
-    int           *elt_field_stride = NULL;
-    void         **elt_field_value  = NULL;
-    dmn = PDM_vtk_read_to_dmesh_nodal(comm,
-                                      filename,
-                                      &n_vtx_field,
-                                      &vtx_field_name,
-                                      &vtx_field_type,
-                                      &vtx_field_stride,
-                                      &vtx_field_value,
-                                      &n_elt_field,
-                                      &elt_field_name,
-                                      &elt_field_type,
-                                      &elt_field_stride,
-                                      &elt_field_value);
-    for (int i_field = 0; i_field < n_vtx_field; i_field++) {
-      PDM_free(vtx_field_name [i_field]);
-      PDM_free(vtx_field_value[i_field]);
-    }
-    for (int i_field = 0; i_field < n_elt_field; i_field++) {
-      PDM_free(elt_field_name [i_field]);
-      PDM_free(elt_field_value[i_field]);
-    }
-    PDM_free(vtx_field_name  );
-    PDM_free(vtx_field_type  );
-    PDM_free(vtx_field_stride);
-    PDM_free(vtx_field_value );
-    PDM_free(elt_field_name  );
-    PDM_free(elt_field_type  );
-    PDM_free(elt_field_stride);
-    PDM_free(elt_field_value );
-  }
-
-  else {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_generate_mesh_from_file: Unknown mesh format %s\n", file_extension);
-  }
-
-  // Partition mesh
-  PDM_multipart_t *mpart = NULL;
-  _dmn_to_multipart(comm,
-                    part_method,
-                    n_part,
-                    dmn,
-                    &mpart);
+  // Read and partition mesh
+  PDM_dmesh_nodal_t *dmn   = NULL;
+  PDM_multipart_t   *mpart = NULL;
+  _read_mesh_file(comm,
+                  n_part,
+                  part_method,
+                  filename,
+                  &dmn,
+                  &mpart);
 
   // Retrieve partitioned mesh
   PDM_part_mesh_nodal_t *pmn = NULL;
@@ -1645,6 +1666,42 @@ PDM_generate_mesh_from_file
 
   return pmn;
 }
+
+
+
+PDM_part_mesh_t *
+PDM_generate_mesh_from_file
+(
+  const PDM_MPI_Comm      comm,
+  const int               n_part,
+  const PDM_split_dual_t  part_method,
+  const char             *filename
+)
+{
+  // Read and partition mesh
+  PDM_dmesh_nodal_t *dmn   = NULL;
+  PDM_multipart_t   *mpart = NULL;
+  _read_mesh_file(comm,
+                  n_part,
+                  part_method,
+                  filename,
+                  &dmn,
+                  &mpart);
+
+  // Retrieve partitioned mesh
+  PDM_part_mesh_t *pmesh = NULL;
+  PDM_multipart_get_part_mesh(mpart,
+                              0,
+                              &pmesh,
+                              PDM_OWNERSHIP_USER);
+
+  // Free memory
+  PDM_DMesh_nodal_free(dmn);
+  PDM_multipart_free(mpart);
+
+  return pmesh;
+}
+
 
 #ifdef __cplusplus
 }

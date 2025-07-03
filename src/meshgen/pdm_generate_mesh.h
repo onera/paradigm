@@ -4,6 +4,7 @@
 #include "pdm.h"
 #include "pdm_mesh_nodal.h"
 #include "pdm_mpi.h"
+#include "pdm_part_mesh.h"
 #include "pdm_part_mesh_nodal.h"
 
 /*=============================================================================
@@ -591,6 +592,28 @@ PDM_generate_mesh_parallelepiped_ngon
  * \return \ref PDM_part_mesh_nodal_t instance
  */
 PDM_part_mesh_nodal_t *
+PDM_generate_mesh_nodal_from_file
+(
+  const PDM_MPI_Comm      comm,
+  const int               n_part,
+  const PDM_split_dual_t  part_method,
+  const char             *filename
+);
+
+
+/**
+ * \brief Read and partition a mesh from a file
+ *
+ * Supports ASCII files in STL, VTK and GAMMA (.mesh) format
+ *
+ * \param [in] comm         MPI Communicator
+ * \param [in] n_part       Number of partitions on current MPI rank
+ * \param [in] part_method  Partitioning method
+ * \param [in] filename     File name
+ *
+ * \return \ref PDM_part_mesh_t instance
+ */
+PDM_part_mesh_t *
 PDM_generate_mesh_from_file
 (
   const PDM_MPI_Comm      comm,
