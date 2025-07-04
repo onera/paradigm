@@ -6,6 +6,7 @@
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
+#include "pdm_error.h"
 #include "pdm_linear_programming.h"
 #include "pdm_logging.h"
 #include "pdm_priv.h"
@@ -21,8 +22,8 @@ extern "C" {
  * Static global variables
  *============================================================================*/
 
-static const double eps_lp  = 1.e-15;
-static const double big_lp  = 1.e15;
+static const double LP_EPS  = 1.e-15;
+static const double LP_BIG  = 1e15;
 static const int    verbose = 0;
 
 /*=============================================================================
@@ -30,13 +31,13 @@ static const int    verbose = 0;
  *============================================================================*/
 
 /* To avoid zero division */
-static int
+static inline int
 _is_zero
 (
-const double x
+  const double x
 )
 {
- return (PDM_ABS(x) < eps_lp);
+  return (PDM_ABS(x) < LP_EPS);
 }
 
 /**
@@ -47,15 +48,15 @@ const double x
 static PDM_lp_status_t
 _lp_solve_1d
 (
- const int  n,
- double    *a,
- double    *b,
- double     c,
- double    *x
- )
+  const int  n,
+  double    *a,
+  double    *b,
+  double     c,
+  double    *x
+)
 {
-  double L = -big_lp;
-  double R =  big_lp;
+  double L = -LP_BIG;
+  double R =  LP_BIG;
 
   if (verbose) PDM_log_trace_array_double(a, n, "  a : ");
 
@@ -116,89 +117,6 @@ _lp_solve_1d
     }
 
   return PDM_LP_FEASIBLE;
-
-
-  // // Different cases
-  // enum { BOTH,
-  //        POSITIVE,
-  //        NEGATIVE};
-
-  // int cas; // cases of 1d Seidel's algorithm
-  // int count; // count if ai coefficients have same sign
-
-  // // Compute L and R
-  // double L = - big_lp;
-  // double R = big_lp;
-
-  // for (int i = 0; i < n; i++) {
-
-  //   if (!_is_zero(a[i])) {
-  //     if (a[i] > 0) {
-  //       double si = b[i] / a[i];
-  //       R = PDM_MIN(si, R);
-  //       count ++;
-  //     }
-
-  //     if (a[i] < 0) {
-  //       double si = b[i] / a[i];
-  //       L = PDM_MAX(si, L);
-  //       count --;
-  //     }
-  //   } // a[i] is not null
-
-  // }
-
-  // // log_trace("L = %lf and R = %lf\n", L, R);
-
-  // // Get case
-  // if (PDM_ABS(count) != n) {
-  //   cas = BOTH;
-  // } else {
-  //   if (count > 0) {
-  //     cas = POSITIVE;
-  //   } else {
-  //     cas = NEGATIVE;
-  //   }
-  // }
-
-  // // log_trace("case = %d\n", cas);
-
-  // // Procede according to case
-  // if (cas == BOTH) {
-  //   if (L > R) {
-  //     return PDM_LP_UNFEASIBLE;
-  //   } else {
-  //     if (c > 0) {
-  //       *x = R;
-  //       return PDM_LP_FEASIBLE;
-  //     } else {
-  //       *x = L;
-  //       return PDM_LP_FEASIBLE;
-  //     }
-  //   }
-  // }
-
-  // if (cas == POSITIVE) {
-  //   if (c > 0) {
-  //     *x = R;
-  //     return PDM_LP_FEASIBLE;
-  //   } else {
-  //     *x = R;
-  //     return PDM_LP_UNBOUNDED;
-  //   }
-  // }
-
-  // if (cas == NEGATIVE) {
-  //   if (c < 0) {
-  //     *x = L;
-  //     return PDM_LP_FEASIBLE;
-  //   } else {
-  //     *x = L;
-  //     return PDM_LP_UNBOUNDED;
-  //   }
-  // }
-
-  // return PDM_LP_FEASIBLE;
 }
 
 /*=============================================================================
@@ -223,13 +141,13 @@ _lp_solve_1d
 PDM_lp_status_t
 PDM_lp_solve_nd
 (
- const int  dim,
- const int  n,
- double    *a,
- double    *b,
- double    *c,
- double    *x
- )
+  const int  dim,
+  const int  n,
+  double    *a,
+  double    *b,
+  double    *c,
+  double    *x
+)
 {
   if (dim == 1) {
     return _lp_solve_1d(n, a, b, c[0], x);
@@ -241,7 +159,7 @@ PDM_lp_solve_nd
   double sub_c[dim-1];
   double sub_x[dim-1];
 
-    if (verbose) log_trace("\n\ndim = %d\n", dim);
+  if (verbose) log_trace("\n\ndim = %d\n", dim);
 
   for (int i = 0; i < n; i++) {
 
@@ -323,7 +241,7 @@ PDM_lp_solve_nd
     }
 
     if (verbose) PDM_log_trace_array_double(sub_c, dim-1, "  sub_c : ");
-    if (mag_sub_c < eps_lp) {
+    if (mag_sub_c < LP_EPS) {
       if (verbose) log_trace("c is null !\n");
     }
 
@@ -354,7 +272,6 @@ PDM_lp_solve_nd
   } // end loop on constraints
 
   return PDM_LP_FEASIBLE;
-
 }
 
 /**
@@ -413,5 +330,70 @@ PDM_lp_intersect_volume_box
   PDM_lp_status_t stat =  PDM_lp_solve_nd(3, n_plane+6, a, b, c, x);
 
   return (stat != PDM_LP_UNFEASIBLE);
+}
 
+
+
+void
+PDM_lp_pts_inside_convex_hull
+(
+  const int     dim,
+  const int     n_src,
+  const double *src_coord,
+  const int     n_tgt,
+  const double *tgt_coord,
+        int    *tgt_status
+)
+{
+  /**
+   * Based upon https://www.cs.mcgill.ca/~fukuda/soft/polyfaq/node22.html
+   */
+  if (dim > 3) {
+    PDM_error(__FILE__, __LINE__, 0, "Invalid dim %d (must be <= 3)\n", dim);
+  }
+
+  // Setup LP arrays
+  double lp_constraint[(dim+1) * (n_src+1)];
+  double lp_rhs       [          (n_src+1)];
+  double lp_objective [ dim+1             ];
+  double lp_solution  [ dim+1             ];
+
+  // Target-point-independent constraints
+  for (int i = 0; i < n_src; i++) {
+    for (int j = 0; j < dim; j++) {
+      lp_constraint[(dim+1)*i+j] = src_coord[3*i+j];
+    }
+    lp_constraint[(dim+1)*i+dim] = -1;
+    lp_rhs[i] = 0;
+  }
+
+  for (int i_tgt = 0; i_tgt < n_tgt; i_tgt++) {
+
+    // Objective function
+    for (int j = 0; j < dim; j++) {
+      lp_objective[j] = tgt_coord[3*i_tgt+j];
+    }
+    lp_objective[dim] = -1;
+
+    // Constraint = opposite sign w.r.t. src points
+    for (int j = 0; j <= dim; j++) {
+      lp_constraint[(dim+1)*n_src+j] = -lp_objective[j];
+    }
+    lp_rhs[n_src] = -1;
+
+    // Initialize solution
+    for (int j = 0; j <= dim; j++) {
+      lp_solution[j] = 1e10*lp_objective[j];
+    }
+
+    PDM_lp_status_t stat = PDM_lp_solve_nd(dim+1,
+                                           n_src+1,
+                                           lp_constraint,
+                                           lp_rhs,
+                                           lp_objective,
+                                           lp_solution);
+
+    tgt_status[i_tgt] = (stat == PDM_LP_UNFEASIBLE);
+
+  } // End loop on target points
 }
