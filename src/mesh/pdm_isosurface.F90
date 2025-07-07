@@ -556,12 +556,12 @@ module pdm_isosurface
     use iso_c_binding
     implicit none
 
-    type(c_ptr), intent(in)            :: isos              ! PDM_isosurface_t instance
-    integer,     intent(in)            :: i_part            ! Partition identifier
-    integer,     intent(in)            :: connectivity_type ! Type of connectivity
-    integer,     intent(in)            :: n_entity          ! Local number of leading entities
-    integer(kind=pdm_l_num_s), pointer :: connect_idx(:)    ! Index for connectivity
-    integer(kind=pdm_l_num_s), pointer :: connect(:)        ! Connectivity
+    type(c_ptr),               intent(in) :: isos              ! PDM_isosurface_t instance
+    integer,                   intent(in) :: i_part            ! Partition identifier
+    integer,                   intent(in) :: connectivity_type ! Type of connectivity
+    integer(kind=pdm_l_num_s), intent(in) :: n_entity          ! Local number of leading entities
+    integer(kind=pdm_l_num_s), pointer    :: connect_idx(:)    ! Index for connectivity
+    integer(kind=pdm_l_num_s), pointer    :: connect(:)        ! Connectivity
 
     type(c_ptr) :: c_connect_idx
     type(c_ptr) :: c_connect
@@ -616,10 +616,10 @@ module pdm_isosurface
     use iso_c_binding
     implicit none
 
-    type(c_ptr), intent(in) :: isos           ! PDM_isosurface_t instance
-    integer,     intent(in) :: i_part         ! Partition identifier
-    integer,     intent(in) :: n_vtx          ! Local number of vertices
-    real(8), pointer        :: vtx_coord(:,:) ! Vertex coordinates (shape = [3, n_vtx])
+    type(c_ptr),               intent(in) :: isos           ! PDM_isosurface_t instance
+    integer,                   intent(in) :: i_part         ! Partition identifier
+    integer(kind=pdm_l_num_s), intent(in) :: n_vtx          ! Local number of vertices
+    real(8), pointer                      :: vtx_coord(:,:) ! Vertex coordinates (shape = [3, n_vtx])
 
     type(c_ptr) :: c_vtx_coord
 
@@ -957,7 +957,7 @@ module pdm_isosurface
     implicit none
 
     type(c_ptr), intent(in)  :: isos           ! PDM_isosurface_t instance
-    integer,     intent(in)  :: kind           ! Iso-surface kind (discrete field, slice equation or function pointer)
+    integer,     intent(in)  :: kind           ! Iso-surface kind (discrete field, slice equation or function pointer) see :ref:`note below <PDM_iso_surface_kind_t>`
     integer,     intent(in)  :: n_isovalues    ! Number os iso-values to capture
     real(8), pointer         :: isovalues(:)   ! Iso-values to capture (size = ``n_isovalues``)
     integer,     intent(out) :: id_isosurface  ! Iso-surface identifier

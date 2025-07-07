@@ -334,7 +334,7 @@ cdef class Isosurface:
     Set isosurface kind and isovalues.
 
     Parameters:
-      kind      (PDM_iso_surface_kind_t) : Isosurface kind
+      kind      (PDM_iso_surface_kind_t) : Isosurface kind see :ref:`note below <PDM_iso_surface_kind_t>`
       isovalues (list of double)         : Isosurface values
     Returns:
       id_iso (int) Isosurface id
@@ -616,9 +616,9 @@ cdef class Isosurface:
     Set partition field.
 
     Parameters:
-      id_iso      (int)                     : Isosurface id
-      i_part      (int)                     : Partition id
-      coordinates (np.ndarray[np.double_t]) : Field
+      id_iso (int)                     : Isosurface id
+      i_part (int)                     : Partition id
+      field  (np.ndarray[np.double_t]) : Field
     """
     cdef double *field_data = np_to_double_pointer(field)
 

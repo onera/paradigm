@@ -412,7 +412,7 @@ PDM_isosurface_dmesh_nodal_set
  * \brief Add a requested set of iso-surfaces
  *
  * \param [in]  isos         \ref PDM_isosurface_t instance
- * \param [in]  kind         Iso-surface kind (discrete field, slice equation or function pointer)
+ * \param [in]  kind         Iso-surface kind (discrete field, slice equation or function pointer) see \verbatim embed:rst:inline :ref:`note below <PDM_iso_surface_kind_t>` \endverbatim
  * \param [in]  n_isovalues  Number of iso-values to capture
  * \param [in]  isovalues    Iso-values to capture (size = \p n_isovalues)
  *
