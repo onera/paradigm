@@ -2724,20 +2724,20 @@ PDM_part_domain_interface_to_domain_interface
 void
 PDM_part_domain_interface_add
 (
- PDM_part_domain_interface_t   *dom_intrf,
- PDM_bound_type_t               interface_kind1,
- PDM_bound_type_t               interface_kind2,
- int                           *n_part,
- int                          **pn_entity1,
- PDM_g_num_t                 ***entity1_ln_to_gn,
- int                          **pn_entity2,
- PDM_g_num_t                 ***entity2_ln_to_gn,
- int                         ***entity2_entity1_idx,
- int                         ***entity2_entity1,
- int                            connectivity_is_signed
+  PDM_part_domain_interface_t   *dom_intrf,
+  PDM_bound_type_t               interface_kind1,
+  PDM_bound_type_t               interface_kind2,
+  int                           *n_part,
+  int                          **pn_entity1,
+  PDM_g_num_t                 ***entity1_ln_to_gn,
+  int                          **pn_entity2,
+  PDM_g_num_t                 ***entity2_ln_to_gn,
+  int                         ***entity2_entity1_idx,
+  int                         ***entity2_entity1,
+  int                            connectivity_is_signed
 )
 {
-  int debug = 1;
+  int debug = 0;
 
   // log_trace("PDM_part_domain_interface_to_domain_interface %i to %i \n", interface_kind1, interface_kind2);
   int i_rank;
@@ -2921,14 +2921,14 @@ PDM_part_domain_interface_add
   /*
    * Translate in distributed
    */
-  if(debug == 1) {
-    for(int i_interface = 0; i_interface < n_interface; ++i_interface) {
-      log_trace("\n");
-      log_trace("Entity1 distributed interface info::\n");
-      PDM_log_trace_array_long(ditrf->interface_ids_vtx[i_interface], 2 *ditrf->interface_dn_vtx[i_interface], "interface_ids_vtx ::");
-      PDM_log_trace_array_int (ditrf->interface_dom_vtx[i_interface], 2 *ditrf->interface_dn_vtx[i_interface], "interface_dom_vtx ::");
-    }
-  }
+  // if(debug == 1) {
+  //   for(int i_interface = 0; i_interface < n_interface; ++i_interface) {
+  //     log_trace("\n");
+  //     log_trace("Entity1 distributed interface info::\n");
+  //     PDM_log_trace_array_long(ditrf->interface_ids_vtx[i_interface], 2 *ditrf->interface_dn_vtx[i_interface], "interface_ids_vtx ::");
+  //     PDM_log_trace_array_int (ditrf->interface_dom_vtx[i_interface], 2 *ditrf->interface_dn_vtx[i_interface], "interface_dom_vtx ::");
+  //   }
+  // }
 
   /*
    * Management of cases

@@ -2308,7 +2308,7 @@ PDM_domain_interface_translate_entity1_entity2
  int                   ***interface_dom_entity2
 )
 {
-  int debug_verbose = 1;
+  int debug_verbose = 0;
   // log_trace("PDM_domain_interface_translate_entity1_entity2 beg \n");
   // TODO :
   //  -> reduce time by extracting dentity2_entity1_idx for only concerns interfaces
