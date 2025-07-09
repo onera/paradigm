@@ -32,11 +32,11 @@ init_repo:
     - WORK_FOLDER=/tmp_user/juno/$(whoami)/.jacamar-ci/${CI_PROJECT_NAME}
     - mkdir -p ${WORK_FOLDER}
     - cd ${WORK_FOLDER}
+    - echo "Clone directory $PWD/${CI_PIPELINE_ID}"
+    - echo "CUSTOM_CI_DIR=$PWD/${CI_PIPELINE_ID}" >> ${INIT_ORIGINAL_FOLDER}/build.env
     - git clone ${CI_REPOSITORY_URL} ${CI_PIPELINE_ID}
     - cd ${CI_PIPELINE_ID}
     - git checkout ${CI_COMMIT_SHA}
-    - echo "Clone directory $PWD"
-    - echo "CUSTOM_CI_DIR=$PWD" >> ${INIT_ORIGINAL_FOLDER}/build.env
     - git submodule update --init extensions/paradigma
   artifacts:
     reports:
