@@ -24,15 +24,19 @@ default:
 
 init_repo:
   variables:
-    GIT_STRATEGY: clone
-    GIT_SUBMODULE_STRATEGY: none
     SCHEDULER_PARAMETERS:  "--qos=co_inter_bigmem  --cpus-per-task=24  --ntasks=1 --time=01:00:00"
     #SCHEDULER_PARAMETERS:  "-M rhel8 --qos=el8_gbe --ntasks=1 --time=00:10:00"
   stage: init
   script: # explicitly load modules one by one, so that if one fails, it will be easy to identify
-#    - echo "CI_PROJECT_DIR: $CI_PROJECT_DIR"
-    - echo "Clone directory $PWD"
-    - echo "CUSTOM_CI_DIR=$PWD" >> build.env
+    - INIT_ORIGINAL_FOLDER=$(pwd)
+    - WORK_FOLDER=/tmp_user/juno/$(whoami)/.jacamar-ci/${CI_PROJECT_NAME}
+    - mkdir -p ${WORK_FOLDER}
+    - cd ${WORK_FOLDER}
+    - echo "Clone directory $PWD/${CI_PIPELINE_ID}"
+    - echo "CUSTOM_CI_DIR=$PWD/${CI_PIPELINE_ID}" >> ${INIT_ORIGINAL_FOLDER}/build.env
+    - git clone ${CI_REPOSITORY_URL} ${CI_PIPELINE_ID}
+    - cd ${CI_PIPELINE_ID}
+    - git checkout ${CI_COMMIT_SHA}
     - git submodule update --init extensions/paradigma
   artifacts:
     reports:
