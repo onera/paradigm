@@ -141,11 +141,11 @@ Input mesh definition
 
         .. group-tab:: Partitioned
 
-          .. automethod:: Pypdm.Pypdm.Isosurface.mesh_n_part_set
-          .. automethod:: Pypdm.Pypdm.Isosurface.connectivity_set
-          .. automethod:: Pypdm.Pypdm.Isosurface.coordinates_set
+          .. automethod:: Pypdm.Pypdm.Isosurface.n_part_set
+          .. automethod:: Pypdm.Pypdm.Isosurface.pconnectivity_set
+          .. automethod:: Pypdm.Pypdm.Isosurface.pcoordinates_set
           .. automethod:: Pypdm.Pypdm.Isosurface.ln_to_gn_set
-          .. automethod:: Pypdm.Pypdm.Isosurface.group_set
+          .. automethod:: Pypdm.Pypdm.Isosurface.pgroup_set
 
           .. automethod:: Pypdm.Pypdm.Isosurface.part_mesh_set
 
@@ -177,10 +177,6 @@ Iso-surface settings
 
     .. ifconfig:: fake_bool == 'ON'
 
-      .. doxygenfunction:: PDM_isosurface_redistribution_set
-
-      .. doxygenfunction:: PDM_isosurface_n_part_out_set
-
       .. doxygenfunction:: PDM_isosurface_add
 
       .. doxygenfunction:: PDM_isosurface_isovalues_set
@@ -201,15 +197,15 @@ Iso-surface settings
 
           .. doxygenfunction:: PDM_isosurface_dfield_set
 
+      .. doxygenfunction:: PDM_isosurface_redistribution_set
+
+      .. doxygenfunction:: PDM_isosurface_n_part_out_set
+
       .. doxygenfunction:: PDM_isosurface_set_tolerance
 
   .. group-tab:: ForTran
 
     .. ifconfig:: enable_fortran_doc == 'ON'
-
-      .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_redistribution_set
-
-      .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_n_part_out_set
 
       .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_add
 
@@ -229,6 +225,10 @@ Iso-surface settings
 
           .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_dfield_set
 
+      .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_redistribution_set
+
+      .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_n_part_out_set
+
       .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_set_tolerance
 
     .. ifconfig:: enable_fortran_doc == 'OFF'
@@ -239,10 +239,6 @@ Iso-surface settings
   .. group-tab:: Python
 
     .. ifconfig:: enable_python_doc == 'ON'
-
-      .. automethod:: Pypdm.Pypdm.Isosurface.redistribution_set
-
-      .. automethod:: Pypdm.Pypdm.Isosurface.n_part_out_set
 
       .. automethod:: Pypdm.Pypdm.Isosurface.add
 
@@ -261,6 +257,10 @@ Iso-surface settings
         .. group-tab:: Block-distributed
 
           .. automethod:: Pypdm.Pypdm.Isosurface.dfield_set
+
+      .. automethod:: Pypdm.Pypdm.Isosurface.redistribution_set
+
+      .. automethod:: Pypdm.Pypdm.Isosurface.n_part_out_set
 
       .. automethod:: Pypdm.Pypdm.Isosurface.tolerance_set
 
@@ -286,16 +286,16 @@ Iso-surface computation
 
     .. ifconfig:: fake_bool == 'ON'
 
-      .. doxygenfunction:: PDM_isosurface_reset
       .. doxygenfunction:: PDM_isosurface_compute
+      .. doxygenfunction:: PDM_isosurface_reset
       .. doxygenfunction:: PDM_isosurface_dump_times
 
   .. group-tab:: ForTran
 
     .. ifconfig:: enable_fortran_doc == 'ON'
 
-      .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_reset
       .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_compute
+      .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_reset
       .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_dump_times
 
     .. ifconfig:: enable_fortran_doc == 'OFF'
@@ -339,9 +339,9 @@ Outputs
 
         .. group-tab:: Block-distributed
 
-          .. doxygenfunction:: PDM_isosurface_distrib_get
           .. doxygenfunction:: PDM_isosurface_dconnectivity_get
           .. doxygenfunction:: PDM_isosurface_dvtx_coord_get
+          .. doxygenfunction:: PDM_isosurface_distrib_get
           .. doxygenfunction:: PDM_isosurface_dgroup_get
           .. doxygenfunction:: PDM_isosurface_dparent_weight_get
           .. doxygenfunction:: PDM_isosurface_disovalue_entity_get
@@ -364,9 +364,9 @@ Outputs
 
         .. group-tab:: Block-distributed
 
-          .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_distrib_get
           .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_dconnectivity_get
           .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_dvtx_coord_get
+          .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_distrib_get
           .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_dgroup_get
           .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_dparent_weight_get
           .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_disovalue_entity_get
@@ -394,9 +394,9 @@ Outputs
 
         .. group-tab:: Block-distributed
 
-          .. automethod:: Pypdm.Pypdm.Isosurface.distribution_get
           .. automethod:: Pypdm.Pypdm.Isosurface.dconnectivity_get
           .. automethod:: Pypdm.Pypdm.Isosurface.dcoordinates_get
+          .. automethod:: Pypdm.Pypdm.Isosurface.distribution_get
           .. automethod:: Pypdm.Pypdm.Isosurface.dgroup_get
           .. automethod:: Pypdm.Pypdm.Isosurface.dparent_weight_get
           .. automethod:: Pypdm.Pypdm.Isosurface.disovalue_entity_get

@@ -171,7 +171,7 @@ PDM_isosurface_pconnectivity_set
  * \param [in]  isos       \ref PDM_isosurface_t instance
  * \param [in]  i_part     Partition identifier
  * \param [in]  n_vtx      Local number of vertices
- * \param [in]  vtx_coord  Vertex coordinates (size = 3 * \p n_vtx)
+ * \param [in]  vtx_coord  Vertex coordinates (size = 3 * *n_vtx*)
  *
  */
 
@@ -457,22 +457,7 @@ PDM_isosurface_isovalues_set
  *
  * \param [in]  isos           \ref PDM_isosurface_t instance
  * \param [in]  id_isosurface  Iso-surface identifier
- * \param [in]  coeff          Equation coefficients
- *
- * - \ref PDM_ISO_SURFACE_KIND_PLANE (4 coefficients):
- *   \f$\phi(x,y,z) = \texttt{coeff[0]} \cdot x + \texttt{coeff[1]} \cdot y + \texttt{coeff[2]} \cdot z - \texttt{coeff[3]}\f$
- * 
- * 
- * - \ref PDM_ISO_SURFACE_KIND_SPHERE (4 coefficients):
- *   \f$\phi(x,y,z) = (x - \texttt{coeff[0]})^2 + (y - \texttt{coeff[1]})^2 + (z - \texttt{coeff[2]})^2 - \texttt{coeff[3]}^2\f$
- * 
- * 
- * - \ref PDM_ISO_SURFACE_KIND_ELLIPSE (7 coefficients):
- *   \f$\phi(x,y,z) = \left(\frac{x - \texttt{coeff[0]}}{\texttt{coeff[3]}}\right)^2 + \left(\frac{y - \texttt{coeff[1]}}{\texttt{coeff[4]}}\right)^2 + \left(\frac{z - \texttt{coeff[2]}}{\texttt{coeff[5]}}\right)^2 - \texttt{coeff[6]}^2\f$
- * 
- * 
- * - \ref PDM_ISO_SURFACE_KIND_QUADRIC (10 coefficients):
- *   \f$\phi(x,y,z) = \texttt{coeff[6]} \left(\frac{x - \texttt{coeff[0]}}{\texttt{coeff[3]}}\right)^2 + \texttt{coeff[7]} \left(\frac{y - \texttt{coeff[1]}}{\texttt{coeff[4]}}\right)^2 + \texttt{coeff[8]} \left(\frac{z - \texttt{coeff[2]}}{\texttt{coeff[5]}}\right)^2 - \texttt{coeff[9]}^2\f$
+ * \param [in]  coeff          Equation coefficients refer to the \verbatim embed:rst:inline :ref:`note below <PDM_iso_surface_kind_t>` \endverbatim to know how many coefficients are needed for each PDM_iso_surface_kind_t
  *
  */
 

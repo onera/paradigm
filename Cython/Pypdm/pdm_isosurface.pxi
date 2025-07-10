@@ -381,7 +381,7 @@ cdef class Isosurface:
 
     Parameters:
       id_iso       (int)            : Isosurface id
-      coefficients (list of double) : Equation coefficients
+      coefficients (list of double) : Equation coefficients refer to the :ref:`note below <PDM_iso_surface_kind_t>` to know how many coefficients are needed for each PDM_iso_surface_kind_t
     """
     cdef double *coeff_data = list_to_double_pointer(coefficients)
 
@@ -601,8 +601,13 @@ cdef class Isosurface:
 
     Set reequilibrate strategy and repartionning tool.
 
+    .. note:: Admissible values for ``extract_kind`` are:
+    
+      - PDM_EXTRACT_PART_KIND_REEQUILIBRATE: the iso-surface is evenly redistributed (Default kind)
+      - PDM_EXTRACT_PART_KIND_LOCAL: the iso-surface is not redistributed (same partitioning as the input mesh)      
+
     Parameters:
-      extract_kind (PDM_extract_part_kind_t) : PDM_extract_part_kind_t
+      extract_kind (PDM_extract_part_kind_t) : Redistribution :ref:`kind <PDM_extract_part_kind_t>`
       part_method  (PDM_split_dual_t       ) : PDM_split_dual_t
     """
     PDM_isosurface_redistribution_set(self._isos, extract_kind, part_method)
