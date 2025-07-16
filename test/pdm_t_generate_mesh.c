@@ -365,6 +365,7 @@ int main(int argc, char *argv[])
                                NULL);
 
   }
+  PDM_part_mesh_nodal_free(pmn);
 
 
   // Generate simplified parallelepiped mesh
@@ -404,13 +405,105 @@ int main(int argc, char *argv[])
                                NULL);
   }
 
+
+  PDM_part_mesh_t *pmesh = NULL;
+
+  /* Read VTK */
+  pmesh = PDM_generate_mesh_from_file(comm,
+                                      1,
+                                      PDM_SPLIT_DUAL_WITH_HILBERT,
+                                      PDM_MESH_DIR"bunny1k.vtk");
+
+  if (visu) {
+    PDM_part_mesh_dump_ensight(pmesh,
+                               "generate_mesh",
+                               "bunny1k",
+                               PDM_FALSE);
+  }
+
+  PDM_part_mesh_free(pmesh);
+
+
+  pmn = PDM_generate_mesh_nodal_from_file(comm,
+                                          1,
+                                          PDM_SPLIT_DUAL_WITH_HILBERT,
+                                          PDM_MESH_DIR"bunny1k.vtk");
+
+  if (visu) {
+    PDM_part_mesh_nodal_dump_vtk(pmn,
+                                 PDM_GEOMETRY_KIND_SURFACIC,
+                                 "generate_mesh_bunny1k");
+  }
+
+  PDM_part_mesh_nodal_free(pmn);
+
+
+
+  /* Read STL */
+  pmesh = PDM_generate_mesh_from_file(comm,
+                                      1,
+                                      PDM_SPLIT_DUAL_WITH_HILBERT,
+                                      PDM_MESH_DIR"sphere.stl");
+
+  if (visu) {
+    PDM_part_mesh_dump_ensight(pmesh,
+                               "generate_mesh",
+                               "sphere",
+                               PDM_FALSE);
+  }
+
+  PDM_part_mesh_free(pmesh);
+
+
+  pmn = PDM_generate_mesh_nodal_from_file(comm,
+                                          1,
+                                          PDM_SPLIT_DUAL_WITH_HILBERT,
+                                          PDM_MESH_DIR"sphere.stl");
+
+  if (visu) {
+    PDM_part_mesh_nodal_dump_vtk(pmn,
+                                 PDM_GEOMETRY_KIND_SURFACIC,
+                                 "generate_mesh_sphere");
+  }
+
+  PDM_part_mesh_nodal_free(pmn);
+
+
+
+  /* Read GMF */
+  pmesh = PDM_generate_mesh_from_file(comm,
+                                      1,
+                                      PDM_SPLIT_DUAL_WITH_HILBERT,
+                                      PDM_MESH_DIR"mixed_elements_3d.mesh");
+
+  if (visu) {
+    PDM_part_mesh_dump_ensight(pmesh,
+                               "generate_mesh",
+                               "mixed_elements_3d",
+                               PDM_FALSE);
+  }
+
+  PDM_part_mesh_free(pmesh);
+
+
+  pmn = PDM_generate_mesh_nodal_from_file(comm,
+                                          1,
+                                          PDM_SPLIT_DUAL_WITH_HILBERT,
+                                          PDM_MESH_DIR"mixed_elements_3d.mesh");
+
+  if (visu) {
+    PDM_part_mesh_nodal_dump_vtk(pmn,
+                                 PDM_GEOMETRY_KIND_VOLUMIC,
+                                 "generate_mesh_mixed_elements_3d");
+  }
+
+  PDM_part_mesh_nodal_free(pmn);
+
+
   // free
   PDM_free(coords     );
   PDM_free(elt_vtx_idx);
   PDM_free(elt_vtx    );
-
-  // free
-  PDM_part_mesh_nodal_free(pmn);
 
   PDM_MPI_Finalize();
 
