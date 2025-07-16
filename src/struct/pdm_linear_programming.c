@@ -358,6 +358,20 @@ PDM_lp_pts_inside_convex_hull
   double lp_objective [ dim+1             ];
   double lp_solution  [ dim+1             ];
 
+  // Source points axis-aligned bounding box (AABB)
+  double src_aabb[2*dim];
+  for (int j = 0; j < dim; j++) {
+    src_aabb[    j] =  HUGE_VAL;
+    src_aabb[dim+j] = -HUGE_VAL;
+  }
+
+  for (int i = 0; i < n_src; i++) {
+    for (int j = 0; j < dim; j++) {
+      src_aabb[    j] = PDM_MIN(src_aabb[    j], src_coord[3*i+j]);
+      src_aabb[dim+j] = PDM_MIN(src_aabb[dim+j], src_coord[3*i+j]);
+    }
+  }
+
   // Target-point-independent constraints
   for (int i = 0; i < n_src; i++) {
     for (int j = 0; j < dim; j++) {
@@ -368,6 +382,15 @@ PDM_lp_pts_inside_convex_hull
   }
 
   for (int i_tgt = 0; i_tgt < n_tgt; i_tgt++) {
+
+    // Quick point-in-AABB test
+    for (int j = 0; j < dim; j++) {
+      if (tgt_coord[3*i_tgt+j] < src_aabb[j] || tgt_coord[3*i_tgt+j] > src_aabb[dim+j]) {
+        // the current target point is outside the source AABB, hence it is outside the convex hull
+        tgt_status[i_tgt] = 0;
+        continue;
+      }
+    }
 
     // Objective function
     for (int j = 0; j < dim; j++) {
