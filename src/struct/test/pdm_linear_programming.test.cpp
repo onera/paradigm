@@ -1,0 +1,62 @@
+#include <vector>
+#include "doctest/doctest.h"
+#include "pdm.h"
+#include "pdm_doctest.h"
+#include "pdm_mem_tool.h"
+#include "pdm_linear_programming.h"
+#include "pdm_logging.h"
+#include "pdm_priv.h"
+
+static double eps = 1e-15;
+static double big = 1e15;
+
+
+TEST_CASE("[pdm_linear_programming] - PDM_lp_solve_nd 2d") {
+
+  /**
+   * Maximize 2x + y
+   * subject to constraints:
+   *   x     >= 0  <=>  -x     <=  0
+   *       y >= 0  <=>      -y <=  0
+   *   x + y <= 6
+   *   x - y <= 4
+   */
+
+  const int dim = 2; // spatial dimension
+  const int n   = 4; // number of constraints
+
+  // Objective function
+  double c[dim] = {2, 1};
+
+  // Constraints
+  double a[dim*n] = {
+    -1,  0,
+     0, -1,
+     1,  1,
+     1, -1,
+  };
+
+  double b[n] = {
+     0,
+     0,
+     6,
+     4,
+  };
+
+  // Initialize
+  double x[dim];
+  for (int i = 0; i < dim; i++) {
+    x[i] = big*PDM_SIGN(c[i]);
+  }
+
+  // Solve
+  PDM_lp_status_t stat = PDM_lp_solve_nd(dim, n, a, b, c, x);
+
+  // Check
+  CHECK(stat == PDM_LP_FEASIBLE);
+
+  double expected_sol[dim] = {5, 1};
+  CHECK_EQ_C_ARRAY_FLOAT(x, expected_sol, dim, eps);
+}
+
+
