@@ -438,7 +438,7 @@ _get_file_extension
 }
 
 
-static void
+static int
 _read_mesh_file
 (
   const PDM_MPI_Comm        comm,
@@ -510,7 +510,7 @@ _read_mesh_file
   }
 
   else {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_generate_mesh_from_file: Unknown mesh format %s\n", file_extension);
+    return 1;
   }
 
   // Partition mesh
@@ -519,6 +519,8 @@ _read_mesh_file
                     n_part,
                     *out_dmn,
                     out_mpart);
+
+  return 0;
 }
 
 
@@ -1646,12 +1648,17 @@ PDM_generate_mesh_nodal_from_file
   // Read and partition mesh
   PDM_dmesh_nodal_t *dmn   = NULL;
   PDM_multipart_t   *mpart = NULL;
-  _read_mesh_file(comm,
-                  n_part,
-                  part_method,
-                  filename,
-                  &dmn,
-                  &mpart);
+
+  int error = _read_mesh_file(comm,
+                              n_part,
+                              part_method,
+                              filename,
+                              &dmn,
+                              &mpart);
+
+  if (error == 1) {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_generate_mesh_nodal_from_file: Unknown mesh format %s\n", filename);
+  }
 
   // Retrieve partitioned mesh
   PDM_part_mesh_nodal_t *pmn = NULL;
@@ -1681,12 +1688,16 @@ PDM_generate_mesh_from_file
   // Read and partition mesh
   PDM_dmesh_nodal_t *dmn   = NULL;
   PDM_multipart_t   *mpart = NULL;
-  _read_mesh_file(comm,
-                  n_part,
-                  part_method,
-                  filename,
-                  &dmn,
-                  &mpart);
+  int error = _read_mesh_file(comm,
+                              n_part,
+                              part_method,
+                              filename,
+                              &dmn,
+                              &mpart);
+
+  if (error == 1) {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_generate_mesh_from_file: Unknown mesh format %s\n", filename);
+  }
 
   // Retrieve partitioned mesh
   PDM_part_mesh_t *pmesh = NULL;
