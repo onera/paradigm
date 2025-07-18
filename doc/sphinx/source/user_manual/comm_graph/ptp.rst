@@ -150,6 +150,7 @@ Python API
     .. rubric:: Initialization
 
     .. autoclass:: Pypdm.Pypdm.PartToPart.__init__
+    .. automethod:: Pypdm.Pypdm.PartToPart.from_triplet
 
 
     .. rubric:: Methods summary
