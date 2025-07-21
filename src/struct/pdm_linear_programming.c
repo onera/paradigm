@@ -349,16 +349,6 @@ PDM_lp_intersect_volume_box
   // constraints
   double a[n_plane*3];
   double b[n_plane];
-  a[ 0] = -1.; a[ 1] =  0.; a[ 2] =  0.;
-  a[ 3] =  0.; a[ 4] = -1.; a[ 5] =  0.;
-  a[ 6] =  0.; a[ 7] =  0.; a[ 8] = -1.;
-  a[ 9] =  1.; a[10] =  0.; a[11] =  0.;
-  a[12] =  0.; a[13] =  1.; a[14] =  0.;
-  a[15] =  0.; a[16] =  0.; a[17] =  1.;
-  for (int i = 0; i < 3; i++) {
-    b[i]   = -box_extents[i];
-    b[i+3] = box_extents[i+3];
-  }
   for (int iplane = 0; iplane < n_plane; iplane++) {
     for (int i = 0; i < 3; i++) {
       a[3*iplane + i] = -plane_normal[3*iplane + i];
