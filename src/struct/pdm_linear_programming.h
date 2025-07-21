@@ -52,27 +52,31 @@ typedef enum {
  * \brief Solve the d-dimensional linear optimization problem
  *          maximize c.x
  *          subject to constraints ai.x <= bi
+ *                                 l <= x <= u
  *
  * \param [in]     dim   Dimension
  * \param [in]     n     Number of inequality constraints
  * \param [in]     a     a in ax <= b (size = \p n * \p dim)
  * \param [in]     b     b in ax <= b (size = \p n)
+ * \param [in]     l     Lower bounds l <= x (size = \p dim)
+ * \param [in]     u     Upper bounds x <= u (size = \p dim)
  * \param [in]     c     Constant in the objective function (size = \p dim)
  * \param [inout]  x     Initial point - Optimum (size = \p dim)
  *
  * \return Problem status
  */
-
 PDM_lp_status_t
 PDM_lp_solve_nd
 (
- const int  dim,
- const int  n,
- double    *a,
- double    *b,
- double    *c,
- double    *x
- );
+  const int     dim,
+  const int     n,
+  const double *a,
+  const double *b,
+  const double *l,
+  const double *u,
+  const double *c,
+        double *x
+);
 
 /**
  *

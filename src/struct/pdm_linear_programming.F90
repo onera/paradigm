@@ -39,18 +39,23 @@ module pdm_linear_programming
                              n,    &
                              a,    &
                              b,    &
+                             l,    &
+                             u,    &
                              c,    &
                              x,    &
                              stat)
     ! Solve the d-dimensional linear optimization problem
     !   maximize c.x
     !   subject to constraints ai.x <= bi
+    !                          l <= x <= u
     implicit none
 
     integer,          intent(in)    :: dim  ! Dimension
     integer,          intent(in)    :: n    ! Number of inequality constraints
     real(8), pointer, intent(in)    :: a(:) ! a in ax <= b (size = n * dim)
     real(8), pointer, intent(in)    :: b(:) ! b in ax <= b (size = n)
+    real(8), pointer, intent(in)    :: l(:) ! Lower bounds l <= x (size = dim)
+    real(8), pointer, intent(in)    :: u(:) ! Upper bounds x <= u (size = dim)
     real(8), pointer, intent(in)    :: c(:) ! Constant in the objective function (size = dim)
     real(8), pointer, intent(inout) :: x(:) ! b in ax <= b (size = dim)
     integer,          intent(out)   :: stat ! Problem status
@@ -60,6 +65,8 @@ module pdm_linear_programming
                                  n,    &
                                  a,    &
                                  b,    &
+                                 l,    &
+                                 u,    &
                                  c,    &
                                  x)    &
       result (stat)                    &
@@ -70,6 +77,8 @@ module pdm_linear_programming
         integer(c_int),   value :: n
         type(c_ptr),      value :: a
         type(c_ptr),      value :: b
+        type(c_ptr),      value :: l
+        type(c_ptr),      value :: u
         type(c_ptr),      value :: c
         type(c_ptr),      value :: x
         integer(c_int)          :: stat
@@ -81,6 +90,8 @@ module pdm_linear_programming
                              n,        &
                              c_loc(a), &
                              c_loc(b), &
+                             c_loc(l), &
+                             c_loc(u), &
                              c_loc(c), &
                              c_loc(x))
 
