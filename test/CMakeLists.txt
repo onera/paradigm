@@ -339,6 +339,7 @@ if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
   test_fortran_create (pdm_t_point_in_convex_hull_f       1 PDM_LIST_TEST PDM_LIST_NRANK)
   test_fortran_create (pdm_t_isosurface_3d_ngon_f         1 PDM_LIST_TEST PDM_LIST_NRANK)
   test_fortran_create (pdm_t_isosurface_3d_nodal_f        1 PDM_LIST_TEST PDM_LIST_NRANK)
+  test_fortran_create (pdm_t_isosurface_nodal_f           1 PDM_LIST_TEST PDM_LIST_NRANK)
 endif()
 
 add_subdirectory(tutorial)
