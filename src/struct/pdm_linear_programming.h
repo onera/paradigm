@@ -54,6 +54,8 @@ typedef enum {
  *          subject to constraints ai.x <= bi
  *                                 l <= x <= u
  *
+ * \note The matrix \p a is defined in row-major (C) order, i.e. a_{i,j} = a[dim*i+j]
+ *
  * \param [in]     dim   Dimension
  * \param [in]     n     Number of inequality constraints
  * \param [in]     a     a in ax <= b (size = \p n * \p dim)

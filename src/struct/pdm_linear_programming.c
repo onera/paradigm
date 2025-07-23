@@ -383,12 +383,12 @@ PDM_lp_pts_inside_convex_hull
 {
   /**
    * Based upon https://www.cs.mcgill.ca/~fukuda/soft/polyfaq/node22.html
-   * 
-   * We seek for an hyperplane separating the tgt point from the src point cloud, 
-   * i.e. find (h_0, ..., h_dim) such that 
+   *
+   * We seek for an hyperplane separating the tgt point from the src point cloud,
+   * i.e. find (h_0, ..., h_dim) such that
    *    dot((h_0, ..., h_{dim-1}), tgt_coord) - h_dim >= 0, and
    *    dot((h_0, ..., h_{dim-1}), s        ) - h_dim <= 0 for all s in src_coord
-   * 
+   *
    * If such hyperplane does not exist then tgt_coord is inside the convex hull.
    */
   if (dim > 3) {
@@ -413,7 +413,7 @@ PDM_lp_pts_inside_convex_hull
   for (int i = 0; i < n_src; i++) {
     for (int j = 0; j < dim; j++) {
       src_aabb[    j] = PDM_MIN(src_aabb[    j], src_coord[3*i+j]);
-      src_aabb[dim+j] = PDM_MIN(src_aabb[dim+j], src_coord[3*i+j]);
+      src_aabb[dim+j] = PDM_MAX(src_aabb[dim+j], src_coord[3*i+j]);
     }
   }
 
@@ -457,13 +457,13 @@ PDM_lp_pts_inside_convex_hull
 
     // Solve LP problem
     PDM_lp_status_t stat = PDM_lp_solve_nd(dim+1,
-                                              n_src+1,
-                                              lp_constraint,
-                                              lp_rhs,
-                                              lp_lower,
-                                              lp_upper,
-                                              lp_objective,
-                                              lp_solution);
+                                           n_src+1,
+                                           lp_constraint,
+                                           lp_rhs,
+                                           lp_lower,
+                                           lp_upper,
+                                           lp_objective,
+                                           lp_solution);
 
     tgt_status[i_tgt] = (stat == PDM_LP_UNFEASIBLE);
   } // End loop on target points

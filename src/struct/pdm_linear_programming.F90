@@ -48,6 +48,8 @@ module pdm_linear_programming
     !   maximize c.x
     !   subject to constraints ai.x <= bi
     !                          l <= x <= u
+    !
+    ! .. note:: The matrix ``a`` is defined in row-major (C) order, i.e. ``a_{i,j} = a(dim*(i-1)+j)`` (1 <= i <= n, 1 <= j <= dim)
     implicit none
 
     integer,          intent(in)    :: dim  ! Dimension
