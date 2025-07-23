@@ -369,19 +369,25 @@ program extract_part_nodal_f
 
   !----------------------------------------
   ! Free memory
-  ! deallocate(vtx_field,         &
-  !            tet_field,         &
-  !            extract_vtx_field, &
-  !            extract_tet_field)
-  ! deallocate(selected)
-  ! call PDM_part_mesh_nodal_free(extract_mesh)
-  ! call PDM_extract_part_free(extrp)
-  ! call PDM_part_mesh_nodal_free(mesh)
+  deallocate(vtx_field, &
+             tet_field, &
+             iso_field, &
+             iso_face_field)
+  deallocate(plane_equation, isovalues)
+  call PDM_isosurface_free(isos)
+  call PDM_part_mesh_nodal_free(mesh)
 
-  ! call PDM_fortran_free_c(c_loc(vtx_coord))
-  ! call PDM_fortran_free_c(c_loc(tet_vtx))
-  ! call PDM_fortran_free_c(c_loc(vtx_ln_to_gn))
-  ! call PDM_fortran_free_c(c_loc(tet_ln_to_gn))
+  call PDM_fortran_free_c(c_loc(vtx_coord))
+  call PDM_fortran_free_c(c_loc(tet_vtx_idx))
+  call PDM_fortran_free_c(c_loc(tet_vtx))
+  call PDM_fortran_free_c(c_loc(vtx_ln_to_gn))
+  call PDM_fortran_free_c(c_loc(tet_ln_to_gn))
+
+  call PDM_fortran_free_c(c_loc(iso_vtx_coord))
+  call PDM_fortran_free_c(c_loc(iso_face_vtx_idx))
+  call PDM_fortran_free_c(c_loc(iso_face_vtx))
+  call PDM_fortran_free_c(c_loc(iso_vtx_ln_to_gn))
+  call PDM_fortran_free_c(c_loc(iso_face_ln_to_gn))  
   !----------------------------------------
 
   if (i_rank == 0) then
