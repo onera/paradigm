@@ -119,7 +119,7 @@ cdef class PartToPartCapsule:
 
   # --- Attributes -----------------------------------------------------
   cdef public:
-      object lpart1_to_part2_idx, lpart1_to_part2
+      object lpart1_to_part2_idx
   cdef PDM_part_to_part_t         *ptp
   cdef int*                        n_elt1
   cdef int                         n_part1
@@ -205,62 +205,7 @@ cdef class PartToPartCapsule:
     PDM_part_to_part_free(self.ptp)
 
 # ------------------------------------------------------------------------
-# ========================================================================
 
-def part_to_part_from_triplet(MPI.Comm comm,
-                              list part1_ln_to_gn,
-                              list n_elt2,
-                              list part1_to_part2_idx,
-                              list part1_to_part2_triplet_idx,
-                              list part1_to_part2_triplet):
-  """
-  part_to_part_from_triplet(comm, part1_ln_to_gn, n_elt2, part1_to_part2_idx, part1_to_part2_triplet_idx, part1_to_part2_triplet)
-
-  Create PDM_part_to_part object from part2 triplet.
-
-  Parameters:
-    comm                       (MPI.Comm)                               : MPI communicator
-    part1_ln_to_gn             (`list` of `np.ndarray[npy_pdm_gnum_t]`) : Element global ids in Part1
-    n_elt2                     (`list` of `int`)                        : Number of elements in Part2
-    part1_to_part2_idx         (`list` of `np.ndarray[np.int32_t]`)     : Index for Part1→Part2 mapping
-    part1_to_part2_triplet_idx (`list` of `np.ndarray[np.int32_t]`)     : Index for Part2 triplets
-    part1_to_part2             (`list` of `np.ndarray[npy_pdm_gnum_t]`) : Part1→Part2 mapping (i_rank, i_part, lnum triplet)
-
-  Returns:
-    PartToPartCapsule
-  """
-  py_comm                    = comm
-  cdef MPI.MPI_Comm c_comm   = comm.ob_mpi
-  cdef PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&c_comm)
-
-  _n_part1 = len(part1_ln_to_gn)
-  _n_part2 = len(n_elt2)
-
-  assert(len(part1_to_part2_idx) == _n_part1)
-
-  _n_elt1 = list_to_int_pointer([array.size for array in part1_ln_to_gn])
-  _n_elt2 = list_to_int_pointer(n_elt2)
-
-  _part1_ln_to_gn             = np_list_to_gnum_pointers(part1_ln_to_gn)
-  _part1_to_part2_idx         = np_list_to_int_pointers (part1_to_part2_idx)
-  _part1_to_part2_triplet_idx = NULL
-  if part1_to_part2_triplet_idx is not None:
-    _part1_to_part2_triplet_idx = np_list_to_int_pointers (part1_to_part2_triplet_idx)
-  _part1_to_part2_triplet     = np_list_to_int_pointers (part1_to_part2_triplet)
-
-  cdef PDM_part_to_part_t *ptp = NULL
-  ptp = PDM_part_to_part_create_from_num2_triplet(<const PDM_g_num_t **> _part1_ln_to_gn,
-                                                  <const int          *> _n_elt1,
-                                                                         _n_part1,
-                                                  <const int          *> _n_elt2,
-                                                                         _n_part2,
-                                                  <const int         **> _part1_to_part2_idx,
-                                                  <const int         **> _part1_to_part2_triplet_idx,
-                                                  <const int         **> _part1_to_part2_triplet,
-                                                                          pdm_comm)
-
-  capsule = PyCapsule_New(ptp, NULL, NULL)
-  return PartToPartCapsule(capsule, comm)
 
 
 # ========================================================================
@@ -269,7 +214,7 @@ cdef class PartToPart:
   # ************************************************************************
   # > Class attributes
   cdef public:
-      object lpart1_ln_to_gn, lpart2_ln_to_gn, lpart1_to_part2_idx, lpart1_to_part2
+      object lpart1_to_part2_idx
   cdef PDM_part_to_part_t         *ptp
   cdef int*                        n_elt1
   cdef int                         n_part1
@@ -279,6 +224,8 @@ cdef class PartToPart:
   cdef PDM_g_num_t               **_part2_ln_to_gn
   cdef int                       **_part1_to_part2_idx
   cdef PDM_g_num_t               **_part1_to_part2
+  cdef int                       **_part1_to_part2_triplet_idx
+  cdef int                       **_part1_to_part2_triplet
   cdef dict                        request_data
   cdef MPI.Comm                    py_comm
 
@@ -286,14 +233,13 @@ cdef class PartToPart:
   DATA_DEF_ORDER_PART1_TO_PART2  = _PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2
   DATA_DEF_ORDER_PART2           = _PDM_PART_TO_PART_DATA_DEF_ORDER_PART2
   DATA_DEF_ORDER_GNUM1_COME_FROM = _PDM_PART_TO_PART_DATA_DEF_ORDER_GNUM1_COME_FROM
+
   # ************************************************************************
-  # ------------------------------------------------------------------
-  # Fake init (Use only for docstring)
   def __init__(self, MPI.Comm comm,
-               list part1_ln_to_gn,
-               list part2_ln_to_gn,
-               list part1_to_part2_idx,
-               list part1_to_part2):
+                      list part1_ln_to_gn,
+                      list part2_ln_to_gn,
+                      list part1_to_part2_idx,
+                      list part1_to_part2):
     """
     __init__(comm, part1_ln_to_gn, part2_ln_to_gn, part1_to_part2_idx, part1_to_part2)
 
@@ -306,25 +252,13 @@ cdef class PartToPart:
       part1_to_part2_idx (`list` of `np.ndarray[np.int32_t]`)     : Index for Part1→Part2 mapping
       part1_to_part2     (`list` of `np.ndarray[npy_pdm_gnum_t]`) : Part1→Part2 mapping (global ids)
     """
-
-  # ------------------------------------------------------------------------
-  def __cinit__(self, MPI.Comm comm,
-                      list part1_ln_to_gn,
-                      list part2_ln_to_gn,
-                      list part1_to_part2_idx,
-                      list part1_to_part2):
-    """
-    """
     self.n_part1 = len(part1_ln_to_gn)
     self.n_part2 = len(part2_ln_to_gn)
     self.request_data = dict()
 
     assert(len(part1_to_part2_idx) == self.n_part1)
 
-    self.lpart1_ln_to_gn     = part1_ln_to_gn
-    self.lpart2_ln_to_gn     = part2_ln_to_gn
     self.lpart1_to_part2_idx = part1_to_part2_idx
-    self.lpart1_to_part2     = part1_to_part2
 
     # > Convert input data
     self.py_comm               = comm
@@ -338,6 +272,8 @@ cdef class PartToPart:
     self._part2_ln_to_gn     = np_list_to_gnum_pointers(part2_ln_to_gn)
     self._part1_to_part2_idx = np_list_to_int_pointers (part1_to_part2_idx)
     self._part1_to_part2     = np_list_to_gnum_pointers(part1_to_part2)
+    self._part1_to_part2_triplet_idx = NULL
+    self._part1_to_part2_triplet     = NULL
 
     self.ptp = PDM_part_to_part_create(<const PDM_g_num_t **> self._part1_ln_to_gn,
                                        <const int *>          self.n_elt1,
@@ -347,7 +283,69 @@ cdef class PartToPart:
                                                               self.n_part2,
                                        <const int **>         self._part1_to_part2_idx,
                                        <const PDM_g_num_t **> self._part1_to_part2,
-                                       pdm_comm);
+                                                              pdm_comm)
+
+  # ------------------------------------------------------------------------
+  @classmethod
+  def from_triplet(cls, MPI.Comm comm,
+                        list part1_ln_to_gn,
+                        list n_elt2,
+                        list part1_to_part2_idx,
+                        list part1_to_part2_triplet_idx,
+                        list part1_to_part2_triplet):
+    """
+    from_triplet(comm, part1_ln_to_gn, n_elt2, part1_to_part2_idx, part1_to_part2_triplet_idx, part1_to_part2_triplet)
+    
+    An alternative constructor (classmethod) that create a PDM_part_to_part object from part2 triplet.
+
+    Parameters:
+      comm                       (MPI.Comm)                               : MPI communicator
+      part1_ln_to_gn             (`list` of `np.ndarray[npy_pdm_gnum_t]`) : Element global ids in Part1
+      n_elt2                     (`list` of `int`)                        : Number of elements in Part2
+      part1_to_part2_idx         (`list` of `np.ndarray[np.int32_t]`)     : Index for Part1→Part2 mapping
+      part1_to_part2_triplet_idx (`list` of `np.ndarray[np.int32_t]`)     : Index for Part2 triplets
+      part1_to_part2             (`list` of `np.ndarray[npy_pdm_gnum_t]`) : Part1→Part2 mapping (i_rank, i_part, lnum) triplet
+    """
+    
+    cdef PartToPart obj = PartToPart.__new__(PartToPart)
+    obj.py_comm                = comm
+    cdef MPI.MPI_Comm c_comm   = comm.ob_mpi
+    cdef PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&c_comm)
+
+    obj.n_part1 = len(part1_ln_to_gn)
+    obj.n_part2 = len(n_elt2)
+    obj.lpart1_to_part2_idx = part1_to_part2_idx
+
+    assert(len(part1_to_part2_idx) == obj.n_part1)
+
+    obj.n_elt1 = list_to_int_pointer([array.size for array in part1_ln_to_gn])
+    obj.n_elt2 = list_to_int_pointer(n_elt2)
+
+    obj._part1_ln_to_gn             = np_list_to_gnum_pointers(part1_ln_to_gn)
+    obj._part2_ln_to_gn             = NULL
+    obj._part1_to_part2_idx         = np_list_to_int_pointers (part1_to_part2_idx)
+    obj._part1_to_part2             = NULL
+    obj._part1_to_part2_triplet_idx = NULL
+    if part1_to_part2_triplet_idx is not None:
+      obj._part1_to_part2_triplet_idx = np_list_to_int_pointers (part1_to_part2_triplet_idx)
+    obj._part1_to_part2_triplet     = np_list_to_int_pointers (part1_to_part2_triplet)
+
+    cdef PDM_part_to_part_t *ptp = NULL
+    ptp = PDM_part_to_part_create_from_num2_triplet(<const PDM_g_num_t **> obj._part1_ln_to_gn,
+                                                    <const int          *> obj.n_elt1,
+                                                                           obj.n_part1,
+                                                    <const int          *> obj.n_elt2,
+                                                                           obj.n_part2,
+                                                    <const int         **> obj._part1_to_part2_idx,
+                                                    <const int         **> obj._part1_to_part2_triplet_idx,
+                                                    <const int         **> obj._part1_to_part2_triplet,
+                                                                            pdm_comm)
+
+    obj.ptp = ptp
+    obj.request_data = dict()
+
+    return obj
+
 
   # --------------------------------------------------------------------
   def get_referenced_lnum2(self):
@@ -493,6 +491,8 @@ cdef class PartToPart:
     free(self._part2_ln_to_gn    )
     free(self._part1_to_part2_idx)
     free(self._part1_to_part2    )
+    free(self._part1_to_part2_triplet_idx)
+    free(self._part1_to_part2_triplet)
 
   # --------------------------------------------------------------------
 
