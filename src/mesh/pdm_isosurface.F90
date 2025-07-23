@@ -219,8 +219,8 @@ module pdm_isosurface
     use iso_c_binding
     implicit none
 
-    type(c_ptr),    value :: isos          ! PDM_isosurface_t instance
-    integer(c_int), value :: id_isosurface ! Iso-surface identifier
+    type(c_ptr), value  :: isos          ! PDM_isosurface_t instance
+    integer, intent(in) :: id_isosurface ! Iso-surface identifier
 
     interface
       subroutine pdm_isosurface_field_function_t (x, &
@@ -307,7 +307,7 @@ module pdm_isosurface
     use iso_c_binding
     implicit none
 
-    type(c_ptr) :: isos                  ! PDM_isosurface_t instance
+    type(c_ptr)         :: isos          ! PDM_isosurface_t instance
     integer, intent(in) :: id_isosurface ! Iso-surface identifier (if <0, reset all iso-surfaces)
 
     interface
@@ -336,7 +336,7 @@ module pdm_isosurface
     use iso_c_binding
     implicit none
 
-    type(c_ptr) :: isos               ! PDM_isosurface_t instance
+    type(c_ptr)         :: isos       ! PDM_isosurface_t instance
     integer, intent(in) :: n_part_out ! Number of partitions
 
     interface
@@ -364,7 +364,7 @@ module pdm_isosurface
     use iso_c_binding
     implicit none
 
-    type(c_ptr) :: isos                  ! PDM_isosurface_t instance
+    type(c_ptr)         :: isos          ! PDM_isosurface_t instance
     integer, intent(in) :: id_isosurface ! Iso-surface identifier (if < 0, compute all iso-surfaces)
 
     interface
@@ -417,7 +417,7 @@ module pdm_isosurface
     use iso_c_binding
     implicit none
 
-    type(c_ptr) :: isos                      ! PDM_isosurface_t instance
+    type(c_ptr)         :: isos              ! PDM_isosurface_t instance
     integer, intent(in) :: id_isosurface     ! Iso-surface identifier
     integer, intent(in) :: entity_type       ! Type of mesh entities
     integer, intent(in) :: unify_parent_info ! Get all parent over all procs (not implemented)
@@ -561,12 +561,12 @@ module pdm_isosurface
     use iso_c_binding
     implicit none
 
-    type(c_ptr),               intent(in) :: isos              ! PDM_isosurface_t instance
-    integer,                   intent(in) :: i_part            ! Partition identifier
-    integer,                   intent(in) :: connectivity_type ! Type of connectivity
-    integer(kind=pdm_l_num_s), intent(in) :: n_entity          ! Local number of leading entities
-    integer(kind=pdm_l_num_s), pointer    :: connect_idx(:)    ! Index for connectivity
-    integer(kind=pdm_l_num_s), pointer    :: connect(:)        ! Connectivity
+    type(c_ptr),                        intent(in) :: isos              ! PDM_isosurface_t instance
+    integer,                            intent(in) :: i_part            ! Partition identifier
+    integer,                            intent(in) :: connectivity_type ! Type of connectivity
+    integer,                            intent(in) :: n_entity          ! Local number of leading entities
+    integer(kind=pdm_l_num_s), pointer, intent(in) :: connect_idx(:)    ! Index for connectivity
+    integer(kind=pdm_l_num_s), pointer, intent(in) :: connect(:)        ! Connectivity
 
     type(c_ptr) :: c_connect_idx
     type(c_ptr) :: c_connect
@@ -621,10 +621,10 @@ module pdm_isosurface
     use iso_c_binding
     implicit none
 
-    type(c_ptr),               intent(in) :: isos           ! PDM_isosurface_t instance
-    integer,                   intent(in) :: i_part         ! Partition identifier
-    integer(kind=pdm_l_num_s), intent(in) :: n_vtx          ! Local number of vertices
-    real(8), pointer                      :: vtx_coord(:,:) ! Vertex coordinates (shape = [3, *n_vtx*])
+    type(c_ptr),      intent(in) :: isos           ! PDM_isosurface_t instance
+    integer,          intent(in) :: i_part         ! Partition identifier
+    integer,          intent(in) :: n_vtx          ! Local number of vertices
+    real(8), pointer, intent(in) :: vtx_coord(:,:) ! Vertex coordinates (shape = [3, *n_vtx*])
 
     type(c_ptr) :: c_vtx_coord
 
@@ -667,10 +667,10 @@ module pdm_isosurface
     use iso_c_binding
     implicit none
 
-    type(c_ptr), intent(in)            :: isos           ! PDM_isosurface_t instance
-    integer,     intent(in)            :: i_part         ! Partition identifier
-    integer,     intent(in)            :: entity_type    ! Type of mesh entity
-    integer(kind=pdm_g_num_s), pointer :: ln_to_gn(:)    ! Global Ids
+    type(c_ptr),                        intent(in) :: isos           ! PDM_isosurface_t instance
+    integer,                            intent(in) :: i_part         ! Partition identifier
+    integer,                            intent(in) :: entity_type    ! Type of mesh entity
+    integer(kind=pdm_g_num_s), pointer, intent(in) :: ln_to_gn(:)    ! Global Ids
 
     type(c_ptr) :: c_ln_to_gn
 
@@ -715,12 +715,12 @@ module pdm_isosurface
     use iso_c_binding
     implicit none
 
-    type(c_ptr), intent(in)            :: isos                     ! PDM_isosurface_t instance
-    integer,     intent(in)            :: i_part                   ! Partition identifier
-    integer,     intent(in)            :: entity_type              ! Type of mesh entity
-    integer(kind=pdm_l_num_s), pointer :: group_entity_idx(:)      ! Index for group->entity connectivity (size = ``n_group`` + 1)
-    integer(kind=pdm_l_num_s), pointer :: group_entity(:)          ! Group->entity connectivity (size = ``group_entity_idx``[``n_group``])
-    integer(kind=pdm_g_num_s), pointer :: group_entity_ln_to_gn(:) ! Group->entity connectivity (group-specific global ids, size = ``group_entity_idx``[``n_group``])
+    type(c_ptr),                        intent(in) :: isos                     ! PDM_isosurface_t instance
+    integer,                            intent(in) :: i_part                   ! Partition identifier
+    integer,                            intent(in) :: entity_type              ! Type of mesh entity
+    integer(kind=pdm_l_num_s), pointer, intent(in) :: group_entity_idx(:)      ! Index for group->entity connectivity (size = ``n_group`` + 1)
+    integer(kind=pdm_l_num_s), pointer, intent(in) :: group_entity(:)          ! Group->entity connectivity (size = ``group_entity_idx``[``n_group``])
+    integer(kind=pdm_g_num_s), pointer, intent(in) :: group_entity_ln_to_gn(:) ! Group->entity connectivity (group-specific global ids, size = ``group_entity_idx``[``n_group``])
 
     type(c_ptr) :: c_group_entity_idx
     type(c_ptr) :: c_group_entity
@@ -782,10 +782,10 @@ module pdm_isosurface
     use iso_c_binding
     implicit none
 
-    type(c_ptr), intent(in)            :: isos              ! PDM_isosurface_t instance
-    integer,     intent(in)            :: connectivity_type ! Type of connectivity
-    integer(kind=pdm_l_num_s), pointer :: dconnect_idx(:)   ! Index for connectivity
-    integer(kind=pdm_g_num_s), pointer :: dconnect(:)       ! Connectivity
+    type(c_ptr),                        intent(in) :: isos              ! PDM_isosurface_t instance
+    integer,                            intent(in) :: connectivity_type ! Type of connectivity
+    integer(kind=pdm_l_num_s), pointer, intent(in) :: dconnect_idx(:)   ! Index for connectivity
+    integer(kind=pdm_g_num_s), pointer, intent(in) :: dconnect(:)       ! Connectivity
 
     type(c_ptr) :: c_dconnect_idx
     type(c_ptr) :: c_dconnect
@@ -831,8 +831,8 @@ module pdm_isosurface
     use iso_c_binding
     implicit none
 
-    type(c_ptr), intent(in) :: isos            ! PDM_isosurface_t instance
-    real(8), pointer        :: dvtx_coord(:,:) ! Vertices coordinates (shape = [3, *n_vtx*])
+    type(c_ptr),      intent(in) :: isos            ! PDM_isosurface_t instance
+    real(8), pointer, intent(in) :: dvtx_coord(:,:) ! Vertices coordinates (shape = [3, *n_vtx*])
 
     type(c_ptr) :: c_dvtx_coord
 
@@ -867,9 +867,9 @@ module pdm_isosurface
     use iso_c_binding
     implicit none
 
-    type(c_ptr), intent(in)            :: isos        ! PDM_isosurface_t instance
-    integer,     intent(in)            :: entity_type ! Type of mesh entity
-    integer(kind=pdm_g_num_s), pointer :: distrib(:)  ! Block-distribution (size = *n_rank* + 1)
+    type(c_ptr),                        intent(in) :: isos        ! PDM_isosurface_t instance
+    integer,                            intent(in) :: entity_type ! Type of mesh entity
+    integer(kind=pdm_g_num_s), pointer, intent(in) :: distrib(:)  ! Block-distribution (size = *n_rank* + 1)
 
     type(c_ptr) :: c_distrib
 
@@ -908,10 +908,10 @@ module pdm_isosurface
     use iso_c_binding
     implicit none
 
-    type(c_ptr), intent(in)            :: isos                 ! PDM_isosurface_t instance
-    integer,     intent(in)            :: entity_type          ! Type of mesh entity
-    integer(kind=pdm_l_num_s), pointer :: dgroup_entity_idx(:) ! Index for group->entity connectivity (size = ``n_group`` + 1)
-    integer(kind=pdm_g_num_s), pointer :: dgroup_entity(:)     ! Group->entity connectivity (size = ``dgroup_entity_idx(n_group+1)``)
+    type(c_ptr),                        intent(in) :: isos                 ! PDM_isosurface_t instance
+    integer,                            intent(in) :: entity_type          ! Type of mesh entity
+    integer(kind=pdm_l_num_s), pointer, intent(in) :: dgroup_entity_idx(:) ! Index for group->entity connectivity (size = ``n_group`` + 1)
+    integer(kind=pdm_g_num_s), pointer, intent(in) :: dgroup_entity(:)     ! Group->entity connectivity (size = ``dgroup_entity_idx(n_group+1)``)
 
     type(c_ptr) :: c_dgroup_entity_idx
     type(c_ptr) :: c_dgroup_entity
@@ -961,11 +961,11 @@ module pdm_isosurface
     use iso_c_binding
     implicit none
 
-    type(c_ptr), intent(in)  :: isos           ! PDM_isosurface_t instance
-    integer,     intent(in)  :: kind           ! Iso-surface kind (discrete field, slice equation or function pointer) see :ref:`note below <PDM_iso_surface_kind_t>`
-    integer,     intent(in)  :: n_isovalues    ! Number os iso-values to capture
-    real(8), pointer         :: isovalues(:)   ! Iso-values to capture (size = ``n_isovalues``)
-    integer,     intent(out) :: id_isosurface  ! Iso-surface identifier
+    type(c_ptr),      intent(in)  :: isos           ! PDM_isosurface_t instance
+    integer,          intent(in)  :: kind           ! Iso-surface kind (discrete field, slice equation or function pointer) see :ref:`note below <PDM_iso_surface_kind_t>`
+    integer,          intent(in)  :: n_isovalues    ! Number os iso-values to capture
+    real(8), pointer, intent(in)  :: isovalues(:)   ! Iso-values to capture (size = ``n_isovalues``)
+    integer,          intent(out) :: id_isosurface  ! Iso-surface identifier
 
     type(c_ptr) :: c_isovalues
 
@@ -1009,10 +1009,10 @@ module pdm_isosurface
     use iso_c_binding
     implicit  none
 
-    type(c_ptr), intent(in) :: isos          ! PDM_isosurface_t instance
-    integer,     intent(in) :: id_isosurface ! Iso-surface identifier
-    integer,     intent(in) :: n_isovalues   ! Number of iso-values to capture
-    real(8), pointer        :: isovalues(:)  ! Iso-values to capture (size = ``n_isovalues``)
+    type(c_ptr),      intent(in) :: isos          ! PDM_isosurface_t instance
+    integer,          intent(in) :: id_isosurface ! Iso-surface identifier
+    integer,          intent(in) :: n_isovalues   ! Number of iso-values to capture
+    real(8), pointer, intent(in) :: isovalues(:)  ! Iso-values to capture (size = ``n_isovalues``)
 
     type(c_ptr) :: c_isovalues
 
@@ -1053,9 +1053,9 @@ module pdm_isosurface
     use iso_c_binding
     implicit none
 
-    type(c_ptr), intent(in) :: isos          ! PDM_isosurface_t instance
-    integer,     intent(in) :: id_isosurface ! Iso-surface identifier
-    real(8), pointer        :: coeff(:)      ! Equation coefficients refer to the :ref:`note below <PDM_iso_surface_kind_t>` to know how many coefficients are needed for each PDM_iso_surface_kind_t
+    type(c_ptr),      intent(in) :: isos          ! PDM_isosurface_t instance
+    integer,          intent(in) :: id_isosurface ! Iso-surface identifier
+    real(8), pointer, intent(in) :: coeff(:)      ! Equation coefficients refer to the :ref:`note below <PDM_iso_surface_kind_t>` to know how many coefficients are needed for each PDM_iso_surface_kind_t
 
     type(c_ptr) :: c_coeff
 
@@ -1095,10 +1095,10 @@ module pdm_isosurface
     use iso_c_binding
     implicit none
 
-    type(c_ptr), intent(in) :: isos          ! PDM_isosurface_t instance
-    integer,     intent(in) :: id_isosurface ! Iso-surface identifier
-    integer,     intent(in) :: i_part        ! Partition identifier
-    real(8), pointer        :: field(:)      ! Field values (size = *n_vtx*)
+    type(c_ptr),      intent(in) :: isos          ! PDM_isosurface_t instance
+    integer,          intent(in) :: id_isosurface ! Iso-surface identifier
+    integer,          intent(in) :: i_part        ! Partition identifier
+    real(8), pointer, intent(in) :: field(:)      ! Field values (size = *n_vtx*)
 
     type(c_ptr) :: c_field
 
@@ -1141,9 +1141,9 @@ module pdm_isosurface
     use iso_c_binding
     implicit none
 
-    type(c_ptr), intent(in) :: isos          ! PDM_isosurface_t instance
-    integer,     intent(in) :: id_isosurface ! Iso-surface identifier
-    real(8), pointer        :: dfield(:)     ! Field values (size = *dn_vtx*)
+    type(c_ptr),      intent(in) :: isos          ! PDM_isosurface_t instance
+    integer,          intent(in) :: id_isosurface ! Iso-surface identifier
+    real(8), pointer, intent(in) :: dfield(:)     ! Field values (size = *dn_vtx*)
 
     type(c_ptr) :: c_dfield
 
@@ -1182,8 +1182,8 @@ module pdm_isosurface
     use iso_c_binding
     implicit none
 
-    type(c_ptr) :: isos ! Iso-surface instance
-    real(8)     :: tol  ! Field tolerance (default at 0)
+    type(c_ptr)         :: isos ! Iso-surface instance
+    real(8), intent(in) :: tol  ! Field tolerance (default at 0)
 
     real(c_double) :: c_tol
 
@@ -1441,7 +1441,7 @@ module pdm_isosurface
     integer, intent(in)                :: id_isosurface            ! Iso-surface identifier
     integer, intent(in)                :: i_part                   ! Partition identifier
     integer, intent(in)                :: entity_type              ! Type of mesh entity
-    integer(kind=pdm_l_num_s)          :: n_group                  ! Number of groups
+    integer                            :: n_group                  ! Number of groups
     integer(kind=pdm_l_num_s), pointer :: group_entity_idx(:)      ! Index for group->entity connectivity
     integer(kind=pdm_l_num_s), pointer :: group_entity(:)          ! Group->entity connectivity
     integer(kind=pdm_g_num_s), pointer :: group_entity_ln_to_gn(:) ! Group->entity connectivity (group-specific global ids, size = ``group_entity_idx``[``n_group``])
@@ -1531,7 +1531,7 @@ module pdm_isosurface
     type(c_ptr)                        :: isos              ! PDM_isosurface_t instance
     integer, intent(in)                :: id_isosurface     ! Iso-surface identifier
     integer, intent(in)                :: connectivity_type ! Type of connectivity
-    integer(kind=pdm_l_num_s)          :: n_entity          ! Number of leading entity
+    integer                            :: n_entity          ! Number of leading entity
     integer(kind=pdm_l_num_s), pointer :: dconnect_idx(:)   ! Connectivity index
     integer(kind=pdm_g_num_s), pointer :: dconnect(:)       ! Connectivity
     integer, intent(in)                :: ownership         ! Ownership
@@ -1605,7 +1605,7 @@ module pdm_isosurface
     type(c_ptr)                        :: isos              ! PDM_isosurface_t instance
     integer, intent(in)                :: id_isosurface     ! Iso-surface identifier
     integer, intent(in)                :: entity_type       ! Type of mesh entity
-    integer(kind=pdm_l_num_s)          :: n_iso_entity      ! Number of iso-surface entities
+    integer                            :: n_iso_entity      ! Number of iso-surface entities
     integer(kind=pdm_l_num_s), pointer :: dparent_idx(:)    ! Index for parent weights
     real(8),                   pointer :: dparent_weight(:) ! Parent weight
     integer, intent(in)                :: ownership         ! Ownership
@@ -1792,7 +1792,7 @@ module pdm_isosurface
     type(c_ptr)                        :: isos                 ! PDM_isosurface_t instance
     integer, intent(in)                :: id_isosurface        ! Iso-surface identifier
     integer, intent(in)                :: entity_type          ! Type of mesh entity
-    integer(kind=pdm_l_num_s)          :: n_group              ! Number of groups
+    integer                            :: n_group              ! Number of groups
     integer(kind=pdm_l_num_s), pointer :: dgroup_entity_idx(:) ! Index for group→entity connectivity (size = ``n_group``+1)
     integer(kind=pdm_g_num_s), pointer :: dgroup_entity(:)     ! Group->entity connectivity (group-specific global ids, size = ``group_entity_idx``[``n_group``+1])
     integer, intent(in)                :: ownership            ! Ownership
@@ -1867,7 +1867,7 @@ module pdm_isosurface
     integer, intent(in)                :: id_isosurface           ! Iso-surface identifier
     integer, intent(in)                :: i_part                  ! Partition identifier
     integer, intent(in)                :: entity_type             ! Type of mesh entity
-    integer(kind=pdm_l_num_s)          :: n_isovalues             ! Number of isovalues
+    integer                            :: n_isovalues             ! Number of isovalues
     integer(kind=pdm_l_num_s), pointer :: isovalue_entity_idx (:) ! Index for isovalue->entity connectivity (size = ``n_isovalue``+1)
     integer, intent(in)                :: ownership               ! Ownership
 
@@ -1937,7 +1937,7 @@ module pdm_isosurface
     type(c_ptr)                        :: isos                    ! PDM_isosurface_t instance
     integer, intent(in)                :: id_isosurface           ! Iso-surface identifier
     integer, intent(in)                :: entity_type             ! Type of mesh entity
-    integer(kind=pdm_l_num_s)          :: n_isovalues             ! Number of isovalues
+    integer                            :: n_isovalues             ! Number of isovalues
     integer(kind=pdm_l_num_s), pointer :: disovalue_entity_idx(:) ! Index for isovalue->entity connectivity (size = [``n_isovalue``+1])
     integer(kind=pdm_g_num_s), pointer :: disovalue_entity(:)     ! Isovalue→entity connectivity (size = ``disovalue_entity_idx``[``n_isovalue``+1])
     integer, intent(in)                :: ownership               ! Ownership
@@ -2013,7 +2013,7 @@ module pdm_isosurface
     integer, intent(in)                :: id_isosurface        ! Iso-surface identifier
     integer, intent(in)                :: i_part               ! Partition identifier
     integer, intent(in)                :: entity_type          ! Type of mesh entity
-    integer(kind=pdm_l_num_s)          :: n_entity             ! Number of entities
+    integer                            :: n_entity             ! Number of entities
     integer(kind=pdm_l_num_s), pointer :: entity_parent_idx(:) ! Index for isosurface entity->parent connectivity (size = ``n_entity`` + 1)
     integer(kind=pdm_l_num_s), pointer :: entity_parent(:)     ! Isosurface entity->parent connectivity (size = ``entity_parent_idx``[``n_entity``])
     integer, intent(in)                :: ownership            ! Ownership
@@ -2094,7 +2094,7 @@ module pdm_isosurface
     integer, intent(in)                :: id_isosurface    ! Iso-surface identifier
     integer, intent(in)                :: i_part           ! Partition identifier
     integer, intent(in)                :: entity_type      ! Type of mesh entity
-    integer(kind=pdm_l_num_s)          :: n_iso_entity     ! Number of iso-surface entity
+    integer                            :: n_iso_entity     ! Number of iso-surface entity
     integer(kind=pdm_l_num_s), pointer :: parent_idx(:)    ! Index for interpolation weights
     real(8),                   pointer :: parent_weight(:) ! Interpolation weights
     integer, intent(in)                :: ownership        ! Ownership
