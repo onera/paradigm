@@ -637,9 +637,9 @@ program isosurface_3d_nodal
   call PDM_pointer_array_free (array_field)
 
   call PDM_dmesh_nodal_free (dmesh_nodal)
-  call PDM_multipart_free (multipart)
   call PDM_isosurface_free(isos)
   if (n_part > 0) then
+    call PDM_multipart_free (multipart)
     call PDM_part_mesh_nodal_free(pmesh_nodal)
     
   end if
