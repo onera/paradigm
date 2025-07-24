@@ -447,8 +447,6 @@ cdef class Isosurface:
 
     Set the number of partitions in the isosurface mesh (Optional).
 
-    .. warning:: This function must be called prior to :py:func:`compute`
-
     .. note::
       By default, the number of partitions in the isosurface mesh is set to:
 
@@ -861,8 +859,6 @@ cdef class Isosurface:
     """
     Enable construction of a communication graph between source mesh entities and iso-surface entities.
 
-    .. warning:: This function must be called prior to :py:func:`compute`
-
     Parameters:
       id_iso            (int)               : Isosurface id
       entity_type       (PDM_entity_type_t) : Entity type
@@ -934,6 +930,8 @@ cdef class Isosurface:
     pparent_weight_get(id_iso, i_part, entity_type)
 
     Get isosurface entity parent interpolation weight.
+
+    .. warning:: These weights are only computed if the construction of the entity Part-to-Part has been :ref:`enabled <PDM_isosurface_part_to_part_enable_p>`.
 
     Parameters:
       id_iso      (int)                 : Isosurface id

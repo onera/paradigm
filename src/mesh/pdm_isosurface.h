@@ -574,8 +574,6 @@ PDM_isosurface_reset
  * \param [in]  isos        \ref PDM_isosurface_t instance
  * \param [in]  n_part_out  Number of partitions
  *
- * \warning This function must be called prior to \ref PDM_isosurface_compute.
- *
  * \note By default, the number of partitions in the isosurface mesh is set to
  *  - 1 in \ref PDM_EXTRACT_PART_KIND_REEQUILIBRATE mode
  *  - the number of partitions in the source mesh in \ref PDM_EXTRACT_PART_KIND_LOCAL mode (mandatory)
@@ -958,8 +956,6 @@ PDM_isosurface_disovalue_entity_get
  *   - PDM_MESH_ENTITY_EDGE : parents are faces
  *   - PDM_MESH_ENTITY_FACE : parents are cells
  *
- * \warning comment on fait en block-distribué?
- *
  */
 
 int
@@ -987,7 +983,7 @@ PDM_isosurface_plocal_parent_get
  * \param [in]  ownership      Ownership
  *
  * \warning These weights are only computed if the construction
- * of the entity Part-to-Part has been enabled (see \ref PDM_isosurface_part_to_part_enable).
+ * of the entity Part-to-Part has been \verbatim embed:rst:inline :ref:`enabled <PDM_isosurface_part_to_part_enable_c>` \endverbatim.
  *
  * \return  Number of iso-surface entities
  *
@@ -1014,8 +1010,6 @@ PDM_isosurface_pparent_weight_get
  * \param [in]  id_isosurface     Iso-surface identifier
  * \param [in]  entity_type       Entity type
  * \param [in]  unify_parent_info Get all parent over all procs (not implemented)
- *
- * \warning This function must be called prior to \ref PDM_isosurface_compute
  *
  */
 

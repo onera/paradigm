@@ -333,6 +333,11 @@ module pdm_isosurface
   subroutine PDM_isosurface_n_part_out_set (isos,       &
                                             n_part_out)
     ! Set the number of partitions in the isosurface mesh (Optional).
+    !
+    ! .. note:: By default, the number of partitions in the isosurface mesh is set to:
+    !
+    !   - 1 in `REEQUILIBRATE` mode
+    !   - the number of partitions in the source mesh in `LOCAL` mode (mandatory)
     use iso_c_binding
     implicit none
 
@@ -2087,6 +2092,8 @@ module pdm_isosurface
                                                 parent_weight, &
                                                 ownership)
     ! Get interpolation weights of iso-surface entities.
+    !
+    ! .. warning:: These weights are only computed if the construction of the entity Part-to-Part has been :ref:`enabled <PDM_isosurface_part_to_part_enable_f>`.
     use iso_c_binding
     implicit none
 

@@ -175,7 +175,12 @@ Iso-surface settings
 
   .. group-tab:: C
 
+
     .. ifconfig:: fake_bool == 'ON'
+
+      .. warning::
+
+        These functions must be called prior to :ref:`PDM_isosurface_compute <PDM_isosurface_compute_c>`.
 
       .. doxygenfunction:: PDM_isosurface_add
 
@@ -203,9 +208,17 @@ Iso-surface settings
 
       .. doxygenfunction:: PDM_isosurface_set_tolerance
 
+      .. _PDM_isosurface_part_to_part_enable_c:
+
+      .. doxygenfunction:: PDM_isosurface_part_to_part_enable
+
   .. group-tab:: ForTran
 
     .. ifconfig:: enable_fortran_doc == 'ON'
+
+      .. warning::
+
+        These subroutines must be called prior to :ref:`PDM_isosurface_compute <PDM_isosurface_compute_f>`.
 
       .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_add
 
@@ -231,6 +244,10 @@ Iso-surface settings
 
       .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_set_tolerance
 
+      .. _PDM_isosurface_part_to_part_enable_f:
+
+      .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_part_to_part_enable
+
     .. ifconfig:: enable_fortran_doc == 'OFF'
 
       .. warning::
@@ -239,6 +256,10 @@ Iso-surface settings
   .. group-tab:: Python
 
     .. ifconfig:: enable_python_doc == 'ON'
+
+      .. warning::
+
+        These methods must be called prior to :py:meth:`.Isosurface.compute`.
 
       .. automethod:: Pypdm.Pypdm.Isosurface.add
 
@@ -264,6 +285,9 @@ Iso-surface settings
 
       .. automethod:: Pypdm.Pypdm.Isosurface.tolerance_set
 
+      .. _PDM_isosurface_part_to_part_enable_p:
+
+      .. automethod:: Pypdm.Pypdm.Isosurface.part_to_part_enable
 
     .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -286,6 +310,8 @@ Iso-surface computation
 
     .. ifconfig:: fake_bool == 'ON'
 
+      .. _PDM_isosurface_compute_c:
+
       .. doxygenfunction:: PDM_isosurface_compute
       .. doxygenfunction:: PDM_isosurface_reset
       .. doxygenfunction:: PDM_isosurface_dump_times
@@ -293,6 +319,8 @@ Iso-surface computation
   .. group-tab:: ForTran
 
     .. ifconfig:: enable_fortran_doc == 'ON'
+
+      .. _PDM_isosurface_compute_f:
 
       .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_compute
       .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_reset
@@ -325,6 +353,8 @@ Outputs
 
     .. ifconfig:: fake_bool == 'ON'
 
+      .. doxygenfunction:: PDM_isosurface_part_to_part_get
+
       .. tabs::
 
         .. group-tab:: Partitioned
@@ -349,6 +379,8 @@ Outputs
   .. group-tab:: ForTran
 
     .. ifconfig:: enable_fortran_doc == 'ON'
+
+      .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_part_to_part_get
 
       .. tabs::
 
@@ -380,17 +412,19 @@ Outputs
 
     .. ifconfig:: enable_python_doc == 'ON'
 
+      .. automethod:: Pypdm.Pypdm.Isosurface.part_to_part_get
+
       .. tabs::
 
         .. group-tab:: Partitioned
 
-          .. automethod:: Pypdm.Pypdm.Isosurface.connectivity_get
-          .. automethod:: Pypdm.Pypdm.Isosurface.coordinates_get
+          .. automethod:: Pypdm.Pypdm.Isosurface.pconnectivity_get
+          .. automethod:: Pypdm.Pypdm.Isosurface.pcoordinates_get
           .. automethod:: Pypdm.Pypdm.Isosurface.ln_to_gn_get
-          .. automethod:: Pypdm.Pypdm.Isosurface.group_get
-          .. automethod:: Pypdm.Pypdm.Isosurface.parent_lnum_get
-          .. automethod:: Pypdm.Pypdm.Isosurface.parent_weight_get
-          .. automethod:: Pypdm.Pypdm.Isosurface.isovalue_idx_get
+          .. automethod:: Pypdm.Pypdm.Isosurface.pgroup_get
+          .. automethod:: Pypdm.Pypdm.Isosurface.pparent_lnum_get
+          .. automethod:: Pypdm.Pypdm.Isosurface.pparent_weight_get
+          .. automethod:: Pypdm.Pypdm.Isosurface.pisovalue_idx_get
 
         .. group-tab:: Block-distributed
 
@@ -406,41 +440,6 @@ Outputs
       .. warning::
         Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
 
-Communication graphs
-~~~~~~~~~~~~~~~~~~~~
-
-.. tabs::
-
-  .. group-tab:: C
-
-    .. ifconfig:: fake_bool == 'ON'
-
-      .. doxygenfunction:: PDM_isosurface_part_to_part_enable
-      .. doxygenfunction:: PDM_isosurface_part_to_part_get
-
-  .. group-tab:: ForTran
-
-    .. ifconfig:: enable_fortran_doc == 'ON'
-
-      .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_part_to_part_enable
-      .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_part_to_part_get
-
-    .. ifconfig:: enable_fortran_doc == 'OFF'
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
-
-  .. group-tab:: Python
-
-    .. ifconfig:: enable_python_doc == 'ON'
-
-      .. automethod:: Pypdm.Pypdm.Isosurface.part_to_part_enable
-      .. automethod:: Pypdm.Pypdm.Isosurface.part_to_part_get
-
-    .. ifconfig:: enable_python_doc == 'OFF'
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
 
 Finalization
 """"""""""""
