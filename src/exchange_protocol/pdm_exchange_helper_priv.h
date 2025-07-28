@@ -27,6 +27,11 @@ extern "C" {
  * Type
  *============================================================================*/
 
+typedef enum {
+  EXCHANGE_HELPER_STATUS_FREE,
+  EXCHANGE_HELPER_STATUS_READY,
+  EXCHANGE_HELPER_STATUS_ONGOING,
+} _exch_helper_status_t;
 
 /**
  * \struct _pdm_partgnum1_partgnum2_t
@@ -37,9 +42,12 @@ extern "C" {
 
 struct _pdm_exchange_helper_t {
 
-  PDM_MPI_Comm  comm;                         /*!< MPI communicator */
-  int           n_request;
+  PDM_MPI_Comm        comm;                         /*!< MPI communicator */
+  int                 n_request;
 
+  _exch_helper_status_t  *requests_status;
+  int                    *n_sub_requests;
+  PDM_MPI_Request       **sub_requests;
 
 };
 
