@@ -73,7 +73,7 @@ _find_available_request
   }
 
   exch_helper->n_request = n_new_request;
-  return exch_helper->n_request;
+  return exch_helper->n_request-1;
 }
 
 /*=============================================================================
@@ -166,6 +166,17 @@ PDM_exchange_helper_exch
 }
 
 
+// void*
+// PDM_exchange_helper_exch_buffer_get
+// (
+//   PDM_exchange_helper_t       *exch_helper,
+//   PDM_exchange_helper_sens_t   sens,
+//   PDM_ownership_t              ownership
+// )
+// {
+
+// }
+
 int
 PDM_exchange_helper_exch_init
 (
@@ -238,6 +249,11 @@ PDM_exchange_helper_exch_start
   int                    request_id
 )
 {
+  if(exch_helper->requests_status[request_id] != EXCHANGE_HELPER_STATUS_READY) {
+    PDM_error(__FILE__, __LINE__, 0,
+              "Error PDM_exchange_helper_exch_start with status = %i for request_id = %i, you should initialize exch with PDM_exchange_helper_exch_init or PDM_exchange_helper_iexch\n", exch_helper->requests_status[request_id], request_id);
+  }
+
   exch_helper->requests_status[request_id] = EXCHANGE_HELPER_STATUS_ONGOING;
   PDM_MPI_Startall(exch_helper->n_sub_requests[request_id],
                    exch_helper->sub_requests  [request_id]);

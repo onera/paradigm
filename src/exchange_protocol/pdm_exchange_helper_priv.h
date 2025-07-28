@@ -34,16 +34,16 @@ typedef enum {
 } _exch_helper_status_t;
 
 /**
- * \struct _pdm_partgnum1_partgnum2_t
+ * \struct _pdm_exchange_helper_t
  *
- * \brief  Data transfer from partitions to blocks
+ * \brief  Helper for data_exchange
  *
  */
 
 struct _pdm_exchange_helper_t {
 
-  PDM_MPI_Comm        comm;                         /*!< MPI communicator */
-  int                 n_request;
+  PDM_MPI_Comm            comm;               /*!< MPI communicator */
+  int                     n_request;
 
   _exch_helper_status_t  *requests_status;
   int                    *n_sub_requests;
