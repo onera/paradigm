@@ -52,6 +52,8 @@ struct _pdm_exchange_helper_t {
   void                   **recv_buffer;
 
   PDM_stride_t            *t_stride;
+  size_t                  *s_data;
+  int                     *cst_stride;
   int                   ***p_send_stride;
   void                  ***p_send_data;
   int                   ***p_recv_stride;
