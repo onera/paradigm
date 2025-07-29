@@ -1662,7 +1662,7 @@ const PDM_g_num_t                 *parent_entity_g_num,
     if (block->owner            != PDM_OWNERSHIP_USER) block->owner             = owner;
     if (block->numabs_owner     != PDM_OWNERSHIP_USER) block->numabs_owner      = owner;
     if (block->parent_num_owner != PDM_OWNERSHIP_USER) block->parent_num_owner  = owner;
-    if (block->elt_vtx_owner    != PDM_OWNERSHIP_USER) block->elt_vtx_owner     = owner;
+    //if (block->elt_vtx_owner    != PDM_OWNERSHIP_USER) block->elt_vtx_owner     = owner; // not an input so keep default ownership until get
   }
 
   /* Compute cell-vertex connectivity */
