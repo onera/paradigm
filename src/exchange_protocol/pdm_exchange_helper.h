@@ -79,8 +79,8 @@ PDM_exchange_helper_exch_init
 (
   PDM_exchange_helper_t *exch_helper,
   PDM_mpi_comm_kind_t    kcomm,
-  int                    cst_stride,
   size_t                 s_data,
+  int                    cst_stride,
   int                   *send_idx,
   int                   *send_n,
   void                  *send_buffer,

@@ -42,12 +42,26 @@ typedef enum {
 
 struct _pdm_exchange_helper_t {
 
-  PDM_MPI_Comm            comm;               /*!< MPI communicator */
-  int                     n_request;
+  PDM_MPI_Comm             comm;               /*!< MPI communicator */
+  int                      n_request;
 
-  _exch_helper_status_t  *requests_status;
-  int                    *n_sub_requests;
-  PDM_MPI_Request       **sub_requests;
+  _exch_helper_status_t   *requests_status;
+  int                     *n_sub_requests;
+  PDM_MPI_Request        **sub_requests;
+  void                   **send_buffer;
+  void                   **recv_buffer;
+
+  PDM_stride_t            *t_stride;
+  int                   ***p_send_stride;
+  void                  ***p_send_data;
+  int                   ***p_recv_stride;
+  void                  ***p_recv_data;
+
+  int                    **d_send_stride;
+  void                   **d_send_data;
+  int                    **d_recv_stride;
+  void                   **d_recv_data;
+
 
 };
 

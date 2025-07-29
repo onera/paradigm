@@ -47,8 +47,8 @@ MPI_TEST_CASE("[PDM_exchange_helper] - Create ", 2) {
   // Persistent
   int request_id_0 = PDM_exchange_helper_exch_init(exch_helper,
                                                    PDM_MPI_COMM_KIND_P2P,
-                                                   1,
                                                    sizeof(int),
+                                                   1,
                                                    send_idx   [i_rank].data(),
                                                    send_n             .data(),
                                                    send_buffer[i_rank].data(),
@@ -60,8 +60,8 @@ MPI_TEST_CASE("[PDM_exchange_helper] - Create ", 2) {
 
   int request_id_1 = PDM_exchange_helper_exch_init(exch_helper,
                                                    PDM_MPI_COMM_KIND_P2P,
-                                                   1,
                                                    sizeof(int),
+                                                   1,
                                                    send_idx   [i_rank].data(),
                                                    send_n             .data(),
                                                    send_buffer[i_rank].data(),
@@ -75,8 +75,8 @@ MPI_TEST_CASE("[PDM_exchange_helper] - Create ", 2) {
 
   int request_id_2 = PDM_exchange_helper_exch_init(exch_helper,
                                                    PDM_MPI_COMM_KIND_P2P,
-                                                   1,
                                                    sizeof(int),
+                                                   1,
                                                    send_idx   [i_rank].data(),
                                                    send_n             .data(),
                                                    send_buffer[i_rank].data(),
@@ -147,8 +147,8 @@ MPI_TEST_CASE("[PDM_exchange_helper] - Exch ", 2) {
   // Persistent
   int request_id = PDM_exchange_helper_exch_init(exch_helper,
                                                  PDM_MPI_COMM_KIND_P2P,
-                                                 1,
                                                  sizeof(int),
+                                                 1,
                                                  send_idx   [i_rank].data(),
                                                  send_n             .data(),
                                                  send_buffer[i_rank].data(),

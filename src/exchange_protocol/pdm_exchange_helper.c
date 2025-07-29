@@ -62,9 +62,22 @@ _find_available_request
 
   // Realloc
   int n_new_request = PDM_MAX(exch_helper->n_request * 2, 1);
-  PDM_realloc(exch_helper->requests_status, exch_helper->requests_status, n_new_request, _exch_helper_status_t );
-  PDM_realloc(exch_helper->sub_requests   , exch_helper->sub_requests   , n_new_request, PDM_MPI_Request      *);
-  PDM_realloc(exch_helper->n_sub_requests , exch_helper->n_sub_requests , n_new_request, int                   );
+  PDM_realloc(exch_helper->requests_status, exch_helper->requests_status, n_new_request, _exch_helper_status_t  );
+  PDM_realloc(exch_helper->sub_requests   , exch_helper->sub_requests   , n_new_request, PDM_MPI_Request       *);
+  PDM_realloc(exch_helper->n_sub_requests , exch_helper->n_sub_requests , n_new_request, int                    );
+  PDM_realloc(exch_helper->send_buffer    , exch_helper->send_buffer    , n_new_request, void                  *);
+  PDM_realloc(exch_helper->recv_buffer    , exch_helper->recv_buffer    , n_new_request, void                  *);
+
+  PDM_realloc(exch_helper->t_stride       , exch_helper->t_stride       , n_new_request, PDM_stride_t           );
+  PDM_realloc(exch_helper->p_send_stride  , exch_helper->p_send_stride  , n_new_request, int                  **);
+  PDM_realloc(exch_helper->p_send_data    , exch_helper->p_send_data    , n_new_request, void                 **);
+  PDM_realloc(exch_helper->p_recv_stride  , exch_helper->p_recv_stride  , n_new_request, int                  **);
+  PDM_realloc(exch_helper->p_recv_data    , exch_helper->p_recv_data    , n_new_request, void                 **);
+
+  PDM_realloc(exch_helper->d_send_stride  , exch_helper->d_send_stride  , n_new_request, int                   *);
+  PDM_realloc(exch_helper->d_send_data    , exch_helper->d_send_data    , n_new_request, void                  *);
+  PDM_realloc(exch_helper->d_recv_stride  , exch_helper->d_recv_stride  , n_new_request, int                   *);
+  PDM_realloc(exch_helper->d_recv_data    , exch_helper->d_recv_data    , n_new_request, void                  *);
 
   for(int i = exch_helper->n_request; i < n_new_request; ++i) {
     exch_helper->requests_status[i] = EXCHANGE_HELPER_STATUS_FREE;
@@ -93,14 +106,37 @@ PDM_exchange_helper_create
   exch_helper->comm      = comm;
   exch_helper->n_request = n_request_init;
 
-  PDM_malloc(exch_helper->requests_status, exch_helper->n_request, _exch_helper_status_t );
-  PDM_malloc(exch_helper->sub_requests   , exch_helper->n_request, PDM_MPI_Request      *);
-  PDM_malloc(exch_helper->n_sub_requests , exch_helper->n_request, int                   );
+  PDM_malloc(exch_helper->requests_status, exch_helper->n_request, _exch_helper_status_t  );
+  PDM_malloc(exch_helper->sub_requests   , exch_helper->n_request, PDM_MPI_Request       *);
+  PDM_malloc(exch_helper->n_sub_requests , exch_helper->n_request, int                    );
+  PDM_malloc(exch_helper->send_buffer    , exch_helper->n_request, void                  *);
+  PDM_malloc(exch_helper->recv_buffer    , exch_helper->n_request, void                  *);
+
+  PDM_malloc(exch_helper->t_stride       , exch_helper->n_request, PDM_stride_t           );
+  PDM_malloc(exch_helper->p_send_stride  , exch_helper->n_request, int                  **);
+  PDM_malloc(exch_helper->p_send_data    , exch_helper->n_request, void                 **);
+  PDM_malloc(exch_helper->p_recv_stride  , exch_helper->n_request, int                  **);
+  PDM_malloc(exch_helper->p_recv_data    , exch_helper->n_request, void                 **);
+
+  PDM_malloc(exch_helper->d_send_stride  , exch_helper->n_request, int                   *);
+  PDM_malloc(exch_helper->d_send_data    , exch_helper->n_request, void                  *);
+  PDM_malloc(exch_helper->d_recv_stride  , exch_helper->n_request, int                   *);
+  PDM_malloc(exch_helper->d_recv_data    , exch_helper->n_request, void                  *);
 
   for(int i = 0; i < exch_helper->n_request; ++i) {
     exch_helper->requests_status[i] = EXCHANGE_HELPER_STATUS_FREE;
     exch_helper->n_sub_requests [i] = 0;
     exch_helper->sub_requests   [i] = NULL;
+    exch_helper->send_buffer    [i] = NULL;
+    exch_helper->recv_buffer    [i] = NULL;
+    exch_helper->p_send_stride  [i] = NULL;
+    exch_helper->p_send_data    [i] = NULL;
+    exch_helper->p_recv_stride  [i] = NULL;
+    exch_helper->p_recv_data    [i] = NULL;
+    exch_helper->d_send_stride  [i] = NULL;
+    exch_helper->d_send_data    [i] = NULL;
+    exch_helper->d_recv_stride  [i] = NULL;
+    exch_helper->d_recv_data    [i] = NULL;
   }
 
   return exch_helper;
@@ -165,25 +201,13 @@ PDM_exchange_helper_exch
   PDM_MPI_Type_free(&mpi_type);
 }
 
-
-// void*
-// PDM_exchange_helper_exch_buffer_get
-// (
-//   PDM_exchange_helper_t       *exch_helper,
-//   PDM_exchange_helper_sens_t   sens,
-//   PDM_ownership_t              ownership
-// )
-// {
-
-// }
-
 int
 PDM_exchange_helper_exch_init
 (
   PDM_exchange_helper_t *exch_helper,
   PDM_mpi_comm_kind_t    kcomm,
-  int                    cst_stride,
   size_t                 s_data,
+  int                    cst_stride,
   int                   *send_idx,
   int                   *send_n,
   void                  *send_buffer,
@@ -332,8 +356,21 @@ PDM_exchange_helper_free
     }
   }
   PDM_free(exch_helper->requests_status);
-  PDM_free(exch_helper->n_sub_requests);
-  PDM_free(exch_helper->sub_requests  );
+  PDM_free(exch_helper->n_sub_requests );
+  PDM_free(exch_helper->sub_requests   );
+  PDM_free(exch_helper->send_buffer    );
+  PDM_free(exch_helper->recv_buffer    );
+
+  PDM_free(exch_helper->t_stride       );
+  PDM_free(exch_helper->p_send_stride  );
+  PDM_free(exch_helper->p_send_data    );
+  PDM_free(exch_helper->p_recv_stride  );
+  PDM_free(exch_helper->p_recv_data    );
+  PDM_free(exch_helper->d_send_stride  );
+  PDM_free(exch_helper->d_send_data    );
+  PDM_free(exch_helper->d_recv_stride  );
+  PDM_free(exch_helper->d_recv_data    );
+
 
   PDM_free(exch_helper);
 }
