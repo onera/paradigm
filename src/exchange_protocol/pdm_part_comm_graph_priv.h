@@ -10,6 +10,7 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm_mpi.h"
+#include "pdm_exchange_helper.h"
 #include "pdm_timer.h"
 #include "pdm_error.h"
 #include "pdm_printf.h"
@@ -72,6 +73,7 @@ struct _pdm_part_comm_graph_t {
   int              *active_rank_recv;
 
   /* Asynchronous */
+  PDM_exchange_helper_t *exch_h;
 
 };
 
