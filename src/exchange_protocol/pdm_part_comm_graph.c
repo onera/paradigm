@@ -943,7 +943,9 @@ PDM_part_comm_graph_exch_init
   pcg->exch_h->cst_stride   [request_id] = cst_stride;
   pcg->exch_h->p_send_stride[request_id] = send_entity_stride;
   pcg->exch_h->p_send_data  [request_id] = send_entity_data;
-  pcg->exch_h->p_recv_stride[request_id] = (*recv_entity_stride);
+  if(recv_entity_stride != NULL) {
+    pcg->exch_h->p_recv_stride[request_id] = (*recv_entity_stride);
+  }
   pcg->exch_h->p_recv_data  [request_id] = (*recv_entity_data);
 
   PDM_MPI_Type_free(&mpi_type);
