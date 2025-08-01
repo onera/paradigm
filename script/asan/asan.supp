@@ -51,3 +51,4 @@ leak:ompi_comm_set_nb
 leak:ompi_attr_set_c
 leak:PyUFunc_FromFuncAndDataAndSignatureAndIdentity
 leak:list_resize
+leak:ompi_proc_unpack
