@@ -858,7 +858,6 @@ PDM_part_comm_graph_exch
                     send_entity_data,
                     recv_entity_data);
   } else if (t_stride == PDM_STRIDE_VAR_INTERLACED) {
-
     _exch_strid_var(pcg,
                     s_data,
                     send_entity_stride,
@@ -998,6 +997,9 @@ PDM_part_comm_graph_exch_free
 )
 {
   PDM_exchange_helper_exch_free(pcg->exch_h, request_id);
+
+  PDM_free(pcg->exch_h->send_buffer[request_id]);
+  PDM_free(pcg->exch_h->recv_buffer[request_id]);
 
 }
 
@@ -1414,6 +1416,27 @@ PDM_part_comm_graph_all_reduce
 
 }
 
+
+void
+PDM_part_comm_graph_part_to_send_buffer_get
+(
+  PDM_part_comm_graph_t   *pcg,
+  int                   ***out_part_to_send_buffer
+)
+{
+  *out_part_to_send_buffer = pcg->part_to_send_buffer;
+}
+
+
+void
+PDM_part_comm_graph_part_to_recv_buffer_get
+(
+  PDM_part_comm_graph_t   *pcg,
+  int                   ***part_to_recv_buffer
+)
+{
+  *part_to_recv_buffer = pcg->part_to_recv_buffer;
+}
 
 void
 PDM_part_comm_graph_free

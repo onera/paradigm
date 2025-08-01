@@ -209,6 +209,35 @@ PDM_part_comm_graph_exch_free
   int                      request_id
 );
 
+
+/**
+ *
+ * \brief Get internal indirection to fill send buffer throw MPI from user data layout
+ * \param [in]   pcg                 \ref PDM_part_comm_graph_t structure
+ * \param [in]   part_to_send_buffer Indirection table to fill directly send buffer
+ *
+ */
+void
+PDM_part_comm_graph_part_to_send_buffer_get
+(
+  PDM_part_comm_graph_t   *pcg,
+  int                   ***out_part_to_send_buffer
+);
+
+/**
+ *
+ * \brief Get internal indirection to fill recv buffer throw MPI from user data layout
+ * \param [in]   pcg                 \ref PDM_part_comm_graph_t structure
+ * \param [in]   part_to_recv_buffer Indirection table to fill directly recv buffer
+ *
+ */
+void
+PDM_part_comm_graph_part_to_recv_buffer_get
+(
+  PDM_part_comm_graph_t   *pcg,
+  int                   ***part_to_recv_buffer
+);
+
 /**
  *
  * \brief Get the owner array computed inside the structure, useful to manage reduction of array for example
