@@ -119,7 +119,7 @@ PDM_exchange_helper_create
   PDM_exchange_helper_t *exch_helper = NULL;
   PDM_malloc(exch_helper, 1, PDM_exchange_helper_t);
 
-  exch_helper->comm      = comm;
+  PDM_MPI_Comm_dup(comm, &exch_helper->comm);
   exch_helper->n_request = n_request_init;
 
   PDM_malloc(exch_helper->requests_status, exch_helper->n_request, _exch_helper_status_t  );
@@ -159,6 +159,16 @@ PDM_exchange_helper_create
     exch_helper->d_recv_stride  [i] = NULL;
     exch_helper->d_recv_data    [i] = NULL;
   }
+
+  // Create tag for P2P
+  void  *max_tag_tmp;
+  int    flag = 0;
+
+  // Mandatory to call with PDM_MPI_COMM_WORLD becuase only this one keep attributes (openMPI implemntation for exemple)
+  PDM_MPI_Comm_get_attr_tag_ub(PDM_MPI_COMM_WORLD, &max_tag_tmp, &flag);
+  exch_helper->max_tag  = (long) (*((int *) max_tag_tmp));
+  exch_helper->seed_tag = 1;
+  exch_helper->next_tag = 1;
 
   return exch_helper;
 }
@@ -226,7 +236,7 @@ int
 PDM_exchange_helper_exch_init
 (
   PDM_exchange_helper_t *exch_helper,
-  PDM_mpi_comm_kind_t    kcomm,
+  PDM_mpi_comm_kind_t    k_comm,
   size_t                 s_data,
   int                    cst_stride,
   int                   *send_idx,
@@ -237,9 +247,15 @@ PDM_exchange_helper_exch_init
   void                  *recv_buffer
 )
 {
-  // Ownership ou pas ??
-  // Vu qu'on gère des request deja, et qu'on souhaite allegé les structures internes, je dirai que oui,
-  // Le ptp construit les buffer, et on les gardes en interne ici plutot que dans le ptp ?
+  int tag = -10000;
+  if (k_comm == PDM_MPI_COMM_KIND_P2P) {
+    tag  = exch_helper->seed_tag;
+    tag += (exch_helper->next_tag++);
+    tag %= exch_helper->max_tag;
+  }
+
+  int n_rank;
+  PDM_MPI_Comm_size(exch_helper->comm, &n_rank);
 
   int request_id = _find_available_request(exch_helper);
 
@@ -249,7 +265,7 @@ PDM_exchange_helper_exch_init
   PDM_MPI_Type_create_contiguous(s_data_tot, PDM_MPI_BYTE, &mpi_type);
   PDM_MPI_Type_commit(&mpi_type);
 
-  if(kcomm == PDM_MPI_COMM_KIND_COLLECTIVE) {
+  if(k_comm == PDM_MPI_COMM_KIND_COLLECTIVE) {
     exch_helper->n_sub_requests[request_id] = 1;
     PDM_malloc(exch_helper->sub_requests[request_id], exch_helper->n_sub_requests[request_id], PDM_MPI_Request);
     PDM_MPI_Alltoallv_init(send_buffer,
@@ -262,7 +278,7 @@ PDM_exchange_helper_exch_init
                            mpi_type,
                            exch_helper->comm,
                            &exch_helper->sub_requests[request_id][0]);
-  } else if(kcomm == PDM_MPI_COMM_KIND_P2P) {
+  } else if(k_comm == PDM_MPI_COMM_KIND_P2P) {
     PDM_MPI_Alltoallv_p2p_init(send_buffer,
                                send_n,
                                send_idx,
@@ -271,12 +287,39 @@ PDM_exchange_helper_exch_init
                                recv_n,
                                recv_idx,
                                mpi_type,
+                               tag,
                                exch_helper->comm,
                                &exch_helper->n_sub_requests[request_id],
                                &exch_helper->sub_requests  [request_id]);
+  } else if(k_comm == PDM_MPI_COMM_KIND_WIN_RMA) {
+    // Window creation
+    PDM_MPI_Win_create(send_buffer, send_idx[n_rank], s_data_tot, exch_helper->comm, &exch_helper->win_send[request_id]);
+    PDM_MPI_Win_create(recv_buffer, recv_idx[n_rank], s_data_tot, exch_helper->comm, &exch_helper->win_recv[request_id]);
+
+    PDM_MPI_Group world_group;
+    PDM_MPI_Comm_group(exch_helper->comm, &world_group);
+
+    // Creation des groupes de synchro associé
+    int *tmp_rank_id = NULL;
+    PDM_malloc(tmp_rank_id, n_rank, int);
+
+    int n_send = 0;
+    for(int i = 0; i < n_rank; ++i) {
+      if(send_n[i] > 0) {
+        tmp_rank_id[n_send++] = i;
+      }
+    }
+
+    PDM_MPI_Group partner_group;
+    PDM_MPI_Group_incl(world_group, n_send, tmp_rank_id, &partner_group);
+    PDM_MPI_Group_free(&world_group);
+    PDM_MPI_Group_free(&partner_group);
+
+    PDM_free(tmp_rank_id);
+
   } else {
     PDM_error(__FILE__, __LINE__, 0,
-              "Error PDM_exchange_helper_exch not yet implemented with kcomm = %i\n", kcomm);
+              "Error PDM_exchange_helper_exch not yet implemented with kcomm = %i\n", k_comm);
   }
   PDM_MPI_Type_free(&mpi_type);
 
@@ -285,6 +328,14 @@ PDM_exchange_helper_exch_init
   return request_id;
 }
 
+int
+PDM_mpi_comm_kind_is_persistent
+(
+  PDM_mpi_comm_kind_t    k_comm
+)
+{
+  return 0;
+}
 
 
 void
@@ -298,6 +349,15 @@ PDM_exchange_helper_exch_start
     PDM_error(__FILE__, __LINE__, 0,
               "Error PDM_exchange_helper_exch_start with status = %i for request_id = %i, you should initialize exch with PDM_exchange_helper_exch_init or PDM_exchange_helper_iexch\n", exch_helper->requests_status[request_id], request_id);
   }
+
+  // if(!PDM_mpi_comm_kind_is_persistent(k_comm)) { // Donc
+  //   if(exch_helper->n_sub_requests[request_id] != 0) {
+  //     PDM_error(__FILE__, __LINE__, 0, "Error PDM_exchange_helper_exch_start with strange behaviour");
+  //   }
+
+  //   // On appelle la methode basse couche (Asynchrone)
+
+  // }
 
   exch_helper->requests_status[request_id] = EXCHANGE_HELPER_STATUS_ONGOING;
   PDM_MPI_Startall(exch_helper->n_sub_requests[request_id],
@@ -394,6 +454,7 @@ PDM_exchange_helper_free
   PDM_free(exch_helper->d_recv_stride  );
   PDM_free(exch_helper->d_recv_data    );
 
+  PDM_MPI_Comm_free(&exch_helper->comm);
 
   PDM_free(exch_helper);
 }

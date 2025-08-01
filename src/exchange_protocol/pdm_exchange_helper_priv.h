@@ -45,9 +45,16 @@ struct _pdm_exchange_helper_t {
   PDM_MPI_Comm             comm;               /*!< MPI communicator */
   int                      n_request;
 
+  long                     max_tag;
+  int                      seed_tag;
+  int                      next_tag;
+
   _exch_helper_status_t   *requests_status;
   int                     *n_sub_requests;
   PDM_MPI_Request        **sub_requests;
+  PDM_MPI_Win             *win_send;
+  PDM_MPI_Win             *win_recv;
+
   void                   **send_buffer;
   void                   **recv_buffer;
 
