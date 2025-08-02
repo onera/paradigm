@@ -52,8 +52,12 @@ struct _pdm_exchange_helper_t {
   _exch_helper_status_t   *requests_status;
   int                     *n_sub_requests;
   PDM_MPI_Request        **sub_requests;
+
   PDM_MPI_Win             *win_send;
   PDM_MPI_Win             *win_recv;
+  PDM_MPI_Group           *group_send;
+  PDM_MPI_Group           *group_recv;
+  int                    **target_disp;
 
   void                   **send_buffer;
   void                   **recv_buffer;

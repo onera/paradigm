@@ -68,6 +68,12 @@ _find_available_request
   PDM_realloc(exch_helper->send_buffer    , exch_helper->send_buffer    , n_new_request, void                  *);
   PDM_realloc(exch_helper->recv_buffer    , exch_helper->recv_buffer    , n_new_request, void                  *);
 
+  PDM_realloc(exch_helper->win_send       , exch_helper->win_send       , n_new_request, PDM_MPI_Win            );
+  PDM_realloc(exch_helper->win_recv       , exch_helper->win_recv       , n_new_request, PDM_MPI_Win            );
+  PDM_realloc(exch_helper->group_send     , exch_helper->group_send     , n_new_request, PDM_MPI_Group          );
+  PDM_realloc(exch_helper->group_recv     , exch_helper->group_recv     , n_new_request, PDM_MPI_Group          );
+  PDM_realloc(exch_helper->target_disp    , exch_helper->target_disp    , n_new_request, int                   *);
+
   PDM_realloc(exch_helper->t_stride       , exch_helper->t_stride       , n_new_request, PDM_stride_t           );
   PDM_realloc(exch_helper->s_data         , exch_helper->s_data         , n_new_request, size_t                 );
   PDM_realloc(exch_helper->cst_stride     , exch_helper->cst_stride     , n_new_request, int                    );
@@ -88,6 +94,12 @@ _find_available_request
 
     exch_helper->send_buffer    [i] = NULL;
     exch_helper->recv_buffer    [i] = NULL;
+
+    exch_helper->win_send       [i] = PDM_MPI_WIN_NULL;
+    exch_helper->win_recv       [i] = PDM_MPI_WIN_NULL;
+    exch_helper->group_send     [i] = PDM_MPI_GROUP_NULL;
+    exch_helper->group_recv     [i] = PDM_MPI_GROUP_NULL;
+    exch_helper->target_disp    [i] = NULL;
 
     exch_helper->s_data         [i] = 0;
     exch_helper->cst_stride     [i] = 0;
@@ -128,6 +140,13 @@ PDM_exchange_helper_create
   PDM_malloc(exch_helper->send_buffer    , exch_helper->n_request, void                  *);
   PDM_malloc(exch_helper->recv_buffer    , exch_helper->n_request, void                  *);
 
+  // RMA
+  PDM_malloc(exch_helper->win_send       , exch_helper->n_request, PDM_MPI_Win            );
+  PDM_malloc(exch_helper->win_recv       , exch_helper->n_request, PDM_MPI_Win            );
+  PDM_malloc(exch_helper->group_send     , exch_helper->n_request, PDM_MPI_Group          );
+  PDM_malloc(exch_helper->group_recv     , exch_helper->n_request, PDM_MPI_Group          );
+  PDM_malloc(exch_helper->target_disp    , exch_helper->n_request, int                   *);
+
   PDM_malloc(exch_helper->t_stride       , exch_helper->n_request, PDM_stride_t           );
   PDM_malloc(exch_helper->s_data         , exch_helper->n_request, size_t                 );
   PDM_malloc(exch_helper->cst_stride     , exch_helper->n_request, int                    );
@@ -147,6 +166,11 @@ PDM_exchange_helper_create
     exch_helper->sub_requests   [i] = NULL;
     exch_helper->send_buffer    [i] = NULL;
     exch_helper->recv_buffer    [i] = NULL;
+    exch_helper->win_send       [i] = PDM_MPI_WIN_NULL;
+    exch_helper->win_recv       [i] = PDM_MPI_WIN_NULL;
+    exch_helper->group_send     [i] = PDM_MPI_GROUP_NULL;
+    exch_helper->group_recv     [i] = PDM_MPI_GROUP_NULL;
+    exch_helper->target_disp    [i] = NULL;
 
     exch_helper->s_data         [i] = 0;
     exch_helper->cst_stride     [i] = 0;
@@ -292,9 +316,11 @@ PDM_exchange_helper_exch_init
                                &exch_helper->n_sub_requests[request_id],
                                &exch_helper->sub_requests  [request_id]);
   } else if(k_comm == PDM_MPI_COMM_KIND_WIN_RMA) {
-    // Window creation
+    // Window creation :
+    //   --> Si on fait des RGet uniquement besoin de rendre en window le send
     PDM_MPI_Win_create(send_buffer, send_idx[n_rank], s_data_tot, exch_helper->comm, &exch_helper->win_send[request_id]);
-    PDM_MPI_Win_create(recv_buffer, recv_idx[n_rank], s_data_tot, exch_helper->comm, &exch_helper->win_recv[request_id]);
+    //   --> On pourrait faire des RPut sur le buffer de reception aussi
+    // PDM_MPI_Win_create(recv_buffer, recv_idx[n_rank], s_data_tot, exch_helper->comm, &exch_helper->win_recv[request_id]);
 
     PDM_MPI_Group world_group;
     PDM_MPI_Comm_group(exch_helper->comm, &world_group);
@@ -303,18 +329,20 @@ PDM_exchange_helper_exch_init
     int *tmp_rank_id = NULL;
     PDM_malloc(tmp_rank_id, n_rank, int);
 
-    int n_send = 0;
+    int n_recv = 0;
     for(int i = 0; i < n_rank; ++i) {
-      if(send_n[i] > 0) {
-        tmp_rank_id[n_send++] = i;
+      if(recv_n[i] > 0) {
+        tmp_rank_id[n_recv++] = i;
       }
     }
 
-    PDM_MPI_Group partner_group;
-    PDM_MPI_Group_incl(world_group, n_send, tmp_rank_id, &partner_group);
+    PDM_MPI_Group_incl(world_group, n_recv, tmp_rank_id, &exch_helper->group_recv[request_id]);
     PDM_MPI_Group_free(&world_group);
-    PDM_MPI_Group_free(&partner_group);
 
+    PDM_malloc(exch_helper->target_disp[request_id], n_rank, int);
+
+    PDM_MPI_Alltoall(send_idx                            , 1, PDM_MPI_INT,
+                     exch_helper->target_disp[request_id], 1, PDM_MPI_INT, exch_helper->comm);
     PDM_free(tmp_rank_id);
 
   } else {
@@ -355,7 +383,9 @@ PDM_exchange_helper_exch_start
   //     PDM_error(__FILE__, __LINE__, 0, "Error PDM_exchange_helper_exch_start with strange behaviour");
   //   }
 
+        // MPI_Win_post(group_recv, MPI_MODE_NOPRECEDE, win);
   //   // On appelle la methode basse couche (Asynchrone)
+  //   PDM_MPI_Ialltoallv_p2p_rma
 
   // }
 
@@ -380,6 +410,9 @@ PDM_exchange_helper_exch_wait
   for(int i = 0; i < exch_helper->n_sub_requests[request_id]; ++i) {
     PDM_MPI_Wait(&exch_helper->sub_requests[request_id][i]);
   }
+
+  // MPI_Win_complete(win);
+
   exch_helper->requests_status[request_id] = EXCHANGE_HELPER_STATUS_READY;
 }
 
@@ -397,6 +430,15 @@ PDM_exchange_helper_exch_free
   PDM_free(exch_helper->sub_requests[request_id]);
   exch_helper->requests_status[request_id] = EXCHANGE_HELPER_STATUS_FREE;
   exch_helper->n_sub_requests [request_id] = 0;
+
+
+  PDM_MPI_Win_free  (&exch_helper->win_send  [request_id]);
+  PDM_MPI_Win_free  (&exch_helper->win_recv  [request_id]);
+  PDM_MPI_Group_free(&exch_helper->group_send[request_id]);
+  PDM_MPI_Group_free(&exch_helper->group_recv[request_id]);
+  PDM_free(exch_helper->target_disp[request_id]);
+
+
 }
 
 
@@ -441,6 +483,12 @@ PDM_exchange_helper_free
   PDM_free(exch_helper->sub_requests   );
   PDM_free(exch_helper->send_buffer    );
   PDM_free(exch_helper->recv_buffer    );
+
+  PDM_free(exch_helper->win_send       );
+  PDM_free(exch_helper->win_recv       );
+  PDM_free(exch_helper->group_send     );
+  PDM_free(exch_helper->group_recv     );
+  PDM_free(exch_helper->target_disp    );
 
   PDM_free(exch_helper->t_stride       );
   PDM_free(exch_helper->s_data         );
