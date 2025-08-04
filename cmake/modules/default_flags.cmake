@@ -203,7 +203,7 @@ if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
   set (CMAKE_C_FLAGS_PROFILING       "-O3 -pg")
   set (CMAKE_C_FLAGS_RELWITHDEBINFO  "-O3 -g")
   set (CMAKE_C_FLAGS_MINSIZEREL      "-O2 -g")
-  set (CMAKE_C_FLAGS_SANITIZE        "-O0 -g -fsanitize=address -fno-omit-frame-pointer -Wall -Wextra")
+  set (CMAKE_C_FLAGS_SANITIZE        "-O0 -g -fsanitize=address,float-divide-by-zero,shift,integer-divide-by-zero -fno-omit-frame-pointer -Wall -Wextra")
   set (CMAKE_C_FLAGS_COVERAGE        "-O0 -g --coverage") # --coverage equivalent to -fprofile-arcs -ftest-coverage for recent compilers
 
 elseif (CMAKE_C_COMPILER_ID STREQUAL "Intel")
@@ -358,7 +358,7 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   set (CMAKE_CXX_FLAGS_PROFILING       "-O3 -pg")
   set (CMAKE_CXX_FLAGS_RELWITHDEBINFO  "-O3 -g")
   set (CMAKE_CXX_FLAGS_MINSIZEREL      "-O2 -g")
-  set (CMAKE_CXX_FLAGS_SANITIZE        "-O0 -g -fsanitize=address -fno-omit-frame-pointer -Wall -Wextra ")
+  set (CMAKE_CXX_FLAGS_SANITIZE        "-O0 -g -fsanitize=address,float-divide-by-zero,shift,integer-divide-by-zero -fno-omit-frame-pointer -Wall -Wextra ")
   set (CMAKE_CXX_FLAGS_COVERAGE        "-O0 -g --coverage") # --coverage equivalent to -fprofile-arcs -ftest-coverage for recent compilers
 
   set (CXX_LIBRARIES          stdc++)

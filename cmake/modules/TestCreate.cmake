@@ -107,6 +107,7 @@ function(test_create names n_procs LIST_TEST LIST_NRANK)
 
   if (CMAKE_BUILD_TYPE STREQUAL "Sanitize")
     list(APPEND LIST_TEST_ENV "LSAN_OPTIONS=suppressions=${PDM_SOURCE_DIR}/script/asan/asan.supp")
+    list(APPEND LIST_TEST_ENV "UBSAN_OPTIONS=print_stacktrace=1:halt_on_error=0")
   endif()
 
   if(DEFINED ENV{PATH})
@@ -172,6 +173,7 @@ function(test_c_create name n_proc LIST_TEST LIST_NRANK)
     # set(PYTHON_TEST_ENV "LD_PRELOAD=${PYTHON_TEST_ENV1} ${CMAKE_BINARY_DIR}/script/asan/fake_dlclose/libdlclose.so")
     # list(APPEND LIST_TEST_ENV "${PYTHON_TEST_ENV}")
     list(APPEND LIST_TEST_ENV "LSAN_OPTIONS=suppressions=${PDM_SOURCE_DIR}/script/asan/asan.supp")
+    list(APPEND LIST_TEST_ENV "UBSAN_OPTIONS=print_stacktrace=1:halt_on_error=0")
   endif()
 
   if(DEFINED ENV{PATH})
@@ -234,6 +236,7 @@ function(test_fortran_create name n_proc LIST_TEST LIST_NRANK)
     # list(APPEND LIST_TEST_ENV "${PYTHON_TEST_ENV}")
 
     list(APPEND LIST_TEST_ENV "LSAN_OPTIONS=suppressions=${PDM_SOURCE_DIR}/script/asan/asan.supp")
+    list(APPEND LIST_TEST_ENV "UBSAN_OPTIONS=print_stacktrace=1:halt_on_error=0")
   endif()
 
   if(DEFINED ENV{PATH})
@@ -277,6 +280,7 @@ function(test_python_create name n_proc LIST_TEST LIST_NRANK)
     # set(PYTHON_TEST_ENV "LD_PRELOAD=${PYTHON_TEST_ENV1} ${CMAKE_BINARY_DIR}/script/asan/fake_dlclose/libdlclose.so")
     # list(APPEND LIST_TEST_ENV "${PYTHON_TEST_ENV}")
     list(APPEND LIST_TEST_ENV "LSAN_OPTIONS=suppressions=${PDM_SOURCE_DIR}/script/asan/asan.supp")
+    list(APPEND LIST_TEST_ENV "UBSAN_OPTIONS=print_stacktrace=1:halt_on_error=0")
   endif()
 
   if(DEFINED ENV{PYTHONPATH})
@@ -342,6 +346,7 @@ function(test_cpp_unit_create name n_proc LIST_TEST LIST_NRANK)
     # list(APPEND LIST_TEST_ENV "${PYTHON_TEST_ENV}")
 
     list(APPEND LIST_TEST_ENV "LSAN_OPTIONS=suppressions=${PDM_SOURCE_DIR}/script/asan/asan.supp")
+    list(APPEND LIST_TEST_ENV "UBSAN_OPTIONS=print_stacktrace=1:halt_on_error=0")
   endif()
 
   if (LIST_TEST_ENV)
@@ -378,6 +383,7 @@ function(test_cpp_create name n_proc LIST_TEST LIST_NRANK)
     # set(PYTHON_TEST_ENV "LD_PRELOAD=${PYTHON_TEST_ENV1} ${CMAKE_BINARY_DIR}/script/asan/fake_dlclose/libdlclose.so")
     # list(APPEND LIST_TEST_ENV "${PYTHON_TEST_ENV}")
     list(APPEND LIST_TEST_ENV "LSAN_OPTIONS=suppressions=${PDM_SOURCE_DIR}/script/asan/asan.supp")
+    list(APPEND LIST_TEST_ENV "UBSAN_OPTIONS=print_stacktrace=1:halt_on_error=0")
   endif()
 
   if (LIST_TEST_ENV)

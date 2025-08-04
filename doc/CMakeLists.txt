@@ -34,7 +34,7 @@ if(PDM_ENABLE_DOC)
     set(DOXYGEN_INDEX_FILE ${CMAKE_CURRENT_BINARY_DIR}/xml/index.xml)
     if (NOT PDM_ENABLE_EXTENSION_PDMA)
       set(COMMENT_NOT_PDMA_RST ".. ")
-    endif ()  
+    endif ()
 
     configure_file(${DOXYFILE_IN} ${DOXYFILE_OUT} @ONLY)
     configure_file(${SPHINX_IN} ${SPHINX_OUT} @ONLY)
@@ -60,7 +60,7 @@ if(PDM_ENABLE_DOC)
 
     add_custom_command(OUTPUT ${DOXYGEN_INDEX_FILE}
                        COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYFILE_OUT}
-                       MAIN_DEPENDENCY ${DOXYFILE_OUT} 
+                       MAIN_DEPENDENCY ${DOXYFILE_OUT}
                        COMMENT "Generating API documentation with Doxygen"
                        DEPENDS ${DOXYGEN_DEP} # NB : trying to do documentation after module generation
                        VERBATIM)
@@ -86,6 +86,7 @@ if(PDM_ENABLE_DOC)
       execute_process(COMMAND gcc -print-file-name=libasan.so OUTPUT_VARIABLE PRELOAD_ASAN OUTPUT_STRIP_TRAILING_WHITESPACE)
       set(DOC_PRELOAD "LD_PRELOAD=${PRELOAD_ASAN}")
       set(RUN_LSAN "LSAN_OPTIONS=suppressions=${PROJECT_SOURCE_DIR}/external/paradigm/script/asan/asan.supp")
+      set(RUN_UBSAN "UBSAN_OPTIONS=print_stacktrace=1:halt_on_error=0")
     endif()
 
     # Only regenerate Sphinx when:
@@ -105,15 +106,15 @@ if(PDM_ENABLE_DOC)
     #endforeach()
 
     add_custom_command(OUTPUT ${SPHINX_INDEX_FILE}
-                       COMMAND ${CMAKE_COMMAND} -E env ${DOC_PYTHONPATH} env ${DOC_PRELOAD} env ${RUN_LSAN}
-                         ${SPHINX_EXECUTABLE} -b html 
+                       COMMAND ${CMAKE_COMMAND} -E env ${DOC_PYTHONPATH} env ${DOC_PRELOAD} env ${RUN_LSAN} env ${RUN_UBSAN}
+                         ${SPHINX_EXECUTABLE} -b html
                          -Q # Remove to have complete log file
                          -w ${CMAKE_CURRENT_BINARY_DIR}/sphinx_build_warnings.log
                          # Tell Breathe where to find the Doxygen output
                          -Dbreathe_projects.cwipi=${CMAKE_CURRENT_BINARY_DIR}/xml
                          ${SPHINX_SOURCE} ${SPHINX_BUILD} > ${CMAKE_CURRENT_BINARY_DIR}/sphinx.log 2>&1
                        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-                       DEPENDS 
+                       DEPENDS
                        # Other docs files you want to track should go here (or in some variable)
                        ${DOXYGEN_INDEX_FILE}
                        ${SOURCES_SPHINX}
