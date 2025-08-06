@@ -133,6 +133,39 @@ PDM_part_comm_graph_exch
   void                  ***recv_entity_data
 );
 
+
+/**
+ *
+ * \brief Start exchange data between graph comm with asyncrhonous exchange,
+ *        after this call you need to use PDM_part_comm_graph_exch_start and wait.
+ *        When you finish, you need to free the persistent exchange with PDM_part_comm_graph_exch_free
+ * \param [in]   pcg                 \ref PDM_part_comm_graph_t structure
+ * \param [in]   kcomm               Kind of MPI communication
+ * \param [in]   s_data              Data size
+ * \param [in]   t_stride            Kind of stride (see \ref PDM_stride_t)
+ * \param [in]   cst_stride          Constant stride
+ * \param [in]   send_entity_stride  Stride of send data (following pentity_graph)
+ * \param [in]   send_entity_data    Send data           (following pentity_graph)
+ * \param [out]  recv_entity_stride  Stride of recv data (following pentity_graph)
+ * \param [out]  recv_entity_data    Recv data           (following pentity_graph)
+ *
+ * \return Request id
+ *
+ */
+int
+PDM_part_comm_graph_iexch
+(
+ PDM_part_comm_graph_t   *pcg,
+ PDM_mpi_comm_kind_t      kcomm,
+ size_t                   s_data,
+ PDM_stride_t             t_stride,
+ int                      cst_stride,
+ int                    **send_entity_stride,
+ void                   **send_entity_data,
+ int                   ***recv_entity_stride,
+ void                  ***recv_entity_data
+);
+
 /**
  *
  * \brief Prepare exchange data between graph comm with persistent exchange,

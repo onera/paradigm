@@ -885,8 +885,59 @@ PDM_part_comm_graph_iexch
   void                  ***recv_entity_data
 )
 {
+  int n_rank;
+  PDM_MPI_Comm_size(pcg->comm, &n_rank);
 
-  return -1;
+  int s_data_tot = s_data * cst_stride;
+
+  PDM_MPI_Datatype mpi_type;
+  PDM_MPI_Type_create_contiguous(s_data_tot, PDM_MPI_BYTE, &mpi_type);
+  PDM_MPI_Type_commit(&mpi_type);
+
+  unsigned char *send_buffer = NULL;
+  _allocate_send_buffer_strid_cst(pcg, s_data, cst_stride, &send_buffer);
+
+  unsigned char *recv_buffer = NULL;
+  _allocate_recv_buffer_strid_cst(pcg, s_data, cst_stride, &recv_buffer);
+
+  // Hook internal send_buffer et send_entity_data
+  _fill_send_strid_cst(pcg,
+                       s_data,
+                       cst_stride,
+                       send_entity_data,
+                       send_buffer);
+
+  int request_id = PDM_exchange_helper_iexch(pcg->exch_h,
+                                             kcomm,
+                                             s_data,
+                                             cst_stride,
+                                             pcg->send_idx,
+                                             pcg->send_n,
+                                             send_buffer,
+                                             pcg->recv_idx,
+                                             pcg->recv_n,
+                                             recv_buffer);
+
+  pcg->exch_h->send_buffer  [request_id] = send_buffer;
+  pcg->exch_h->recv_buffer  [request_id] = recv_buffer;
+
+  unsigned char **_recv_entity_data = NULL;
+  _allocate_recv_strid_cst(pcg, s_data, cst_stride, &_recv_entity_data);
+  *recv_entity_data = (void **) _recv_entity_data;
+
+  pcg->exch_h->t_stride     [request_id] = t_stride;
+  pcg->exch_h->s_data       [request_id] = s_data;
+  pcg->exch_h->cst_stride   [request_id] = cst_stride;
+  pcg->exch_h->p_send_stride[request_id] = send_entity_stride;
+  pcg->exch_h->p_send_data  [request_id] = send_entity_data;
+  if(recv_entity_stride != NULL) {
+    pcg->exch_h->p_recv_stride[request_id] = (*recv_entity_stride);
+  }
+  pcg->exch_h->p_recv_data  [request_id] = (*recv_entity_data);
+
+  PDM_MPI_Type_free(&mpi_type);
+
+  return request_id;
 }
 
 
