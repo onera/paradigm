@@ -71,8 +71,20 @@ PDM_exchange_helper_exch
   void                  *recv_buffer
 );
 
-
-
+int
+PDM_exchange_helper_iexch
+(
+  PDM_exchange_helper_t *exch_helper,
+  PDM_mpi_comm_kind_t    k_comm,
+  size_t                 s_data,
+  int                    cst_stride,
+  int                   *send_idx,
+  int                   *send_n,
+  void                  *send_buffer,
+  int                   *recv_idx,
+  int                   *recv_n,
+  void                  *recv_buffer
+);
 
 int
 PDM_exchange_helper_exch_init
@@ -89,39 +101,6 @@ PDM_exchange_helper_exch_init
   void                  *recv_buffer
 );
 
-// MPI_Topo_test --> Permet de determiner si Alltoall ou neigtbor_alltoall automatiquement
-//
-
-// Pour ne pas avoir a syncrhoniser les rang pour l'utilisateur on peut faire :
-//   PDM_exchange_helper_exch_iinit (donc non bloquant + synchrone)
-//   PDM_exchange_helper_exch_warm_up (table de hash sur les tag enregistrés + check + création des windows / RMA / Persistent )
-//   Attention en GPU c'est plus subtile car on pourra pas faire l'alloc dans paradigm ?
-
-// Async + persistent
-
-//
-// Interface synchone à faire --> Toujours pratique
-//   --> Nous permet de facilement delegué avec différents type d'échange
-//   Il faut réfléchir a la stride variable --> Besoin d'échanger avant pour les tailles
-//   En persistant pas trop de sens
-// Si le comm est defini par un dist_graph_comm, on doit recuper n_send_rank, recv_rank, n_recv_rank, recv_rank via le comm
-//   PDM_MPI_Dist_graph_create_adjacent
-// Cas tordu : Le comm est un graph, mais on veut faire du p2p
-// Persistent
-int
-PDM_exchange_helper_exch_init2
-(
-  PDM_exchange_helper_t *exch_helper,
-  PDM_mpi_comm_kind_t    k_comm,
-  int                    cst_stride,
-  size_t                 s_data,
-  int                    tag,
-  int                   *send_buffer_idx,
-  void                  *send_buffer,
-  int                   *recv_buffer_idx,
-  void                  *recv_buffer,
-  PDM_ownership_t        ownership
-);
 
 /*
  * Idéal pour cwipi si on veut separé les send / recv

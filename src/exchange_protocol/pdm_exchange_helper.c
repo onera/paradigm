@@ -45,6 +45,22 @@ extern "C" {
  * Static function definitions
  *============================================================================*/
 
+static
+int
+_get_next_tag
+(
+  PDM_exchange_helper_t *exch_helper,
+  PDM_mpi_comm_kind_t    k_comm
+)
+{
+  int tag = -10000;
+  if (k_comm == PDM_MPI_COMM_KIND_P2P) {
+    tag  = exch_helper->seed_tag;
+    tag += (exch_helper->next_tag++);
+    tag %= exch_helper->max_tag;
+  }
+  return tag;
+}
 
 static
 int
@@ -257,6 +273,189 @@ PDM_exchange_helper_exch
 }
 
 int
+PDM_exchange_helper_iexch
+(
+  PDM_exchange_helper_t *exch_helper,
+  PDM_mpi_comm_kind_t    k_comm,
+  size_t                 s_data,
+  int                    cst_stride,
+  int                   *send_idx,
+  int                   *send_n,
+  void                  *send_buffer,
+  int                   *recv_idx,
+  int                   *recv_n,
+  void                  *recv_buffer
+)
+{
+  int tag        = _get_next_tag          (exch_helper, k_comm);
+  int request_id = _find_available_request(exch_helper);
+
+  int s_data_tot = s_data * cst_stride;
+
+  int n_rank;
+  PDM_MPI_Comm_size(exch_helper->comm, &n_rank);
+
+  PDM_MPI_Datatype mpi_type;
+  PDM_MPI_Type_create_contiguous(s_data_tot, PDM_MPI_BYTE, &mpi_type);
+  PDM_MPI_Type_commit(&mpi_type);
+
+  if(k_comm == PDM_MPI_COMM_KIND_COLLECTIVE) {
+    exch_helper->n_sub_requests[request_id] = 1;
+    PDM_malloc(exch_helper->sub_requests[request_id], exch_helper->n_sub_requests[request_id], PDM_MPI_Request);
+    PDM_MPI_Ialltoallv(send_buffer,
+                       send_n,
+                       send_idx,
+                       mpi_type,
+                       recv_buffer,
+                       recv_n,
+                       recv_idx,
+                       mpi_type,
+                       exch_helper->comm,
+                       &exch_helper->sub_requests[request_id][0]);
+  } else if (k_comm == PDM_MPI_COMM_KIND_P2P) {
+    PDM_MPI_Ialltoallv_p2p(send_buffer,
+                           send_n,
+                           send_idx,
+                           mpi_type,
+                           0,    // n_send_rank
+                           NULL, // send_rank
+                           recv_buffer,
+                           recv_n,
+                           recv_idx,
+                           mpi_type,
+                           0,    // n_recv_rank
+                           NULL, // recv_rank
+                           tag,
+                           exch_helper->comm,
+                           &exch_helper->n_sub_requests[request_id],
+                           &exch_helper->sub_requests  [request_id]);
+  } else if(k_comm == PDM_MPI_COMM_KIND_WIN_RMA) {
+
+    /*
+     * Creates a memory window (`win_send`) on `send_buffer`.
+     */
+    PDM_MPI_Win_create(send_buffer, s_data_tot * send_idx[n_rank], s_data_tot, exch_helper->comm, &exch_helper->win_send[request_id]);
+
+    /*
+     * Initialization of MPI synchronization groups for the Active Target model.
+     * This step is necessary to identify communication partners.
+     * It is typically done once at the beginning to be reused later.
+     */
+    PDM_MPI_Group world_group;
+    PDM_MPI_Comm_group(exch_helper->comm, &world_group);
+
+    /*
+     * Creates a process group (`group_recv`).
+     * This group contains all processes from whom the current process will receive data.
+     */
+    int *tmp_rank_id = NULL;
+    PDM_malloc(tmp_rank_id, n_rank, int);
+
+    int n_recv = 0;
+    for(int i = 0; i < n_rank; ++i) {
+      if(recv_n[i] > 0) {
+        tmp_rank_id[n_recv++] = i;
+      }
+    }
+
+    PDM_MPI_Group_incl(world_group, n_recv, tmp_rank_id, &exch_helper->group_recv[request_id]);
+    PDM_MPI_Group_free(&world_group);
+
+    PDM_malloc(exch_helper->target_disp[request_id], n_rank, int);
+
+    /*
+     * Uses an MPI_Alltoall collective communication to exchange offsets.
+     * Each process sends its own offset (`send_idx`) and receives the offsets from all others.
+     * These offsets (stored in `exch_helper->target_disp`) are crucial
+     * for the current process to know where to read/write in the remote windows.
+     */
+    PDM_MPI_Alltoall(send_idx                            , 1, PDM_MPI_INT,
+                     exch_helper->target_disp[request_id], 1, PDM_MPI_INT, exch_helper->comm);
+
+    if(0 == 1) {
+      PDM_log_trace_array_int(exch_helper->target_disp[request_id], n_rank, "exch_helper->target_disp[request_id]");
+      PDM_log_trace_array_int(send_idx, n_rank+1, "send_idx ::");
+      PDM_log_trace_array_int(recv_idx, n_rank+1, "recv_idx ::");
+      PDM_log_trace_array_int(tmp_rank_id, n_recv, "tmp_rank_id ::");
+    }
+    PDM_free(tmp_rank_id);
+
+    /*
+     * This is the beginning of an MPI Active Target RMA communication epoch.
+     * These two calls, `Win_post` and `Win_start`, are typically called back-to-back,
+     * but they have very different roles. They can be thought of as a handshake
+     * between the partners defined by the groups.
+     *
+     * 1. Declares that this process's window (`win_send`) is available.
+     *    The current process "posts" its window, indicating that the processes in `group_recv`
+     *    are now allowed to access its memory. This enables the group members to start
+     *    their RMA operations (Rget/Rput) to/from this window.
+     *
+     */
+    PDM_MPI_Win_post (exch_helper->group_recv[request_id], 0, exch_helper->win_send[request_id]);
+
+    /*
+     * 2. Starts an access epoch to the partners' windows.
+     *    The current process "starts" an access epoch, declaring that it will initiate
+     *    RMA operations to the windows of the processes in `group_recv`.
+     *    This call is a prerequisite before launching any `MPI_Rget` or `MPI_Rput` functions.
+     */
+    PDM_MPI_Win_start(exch_helper->group_recv[request_id], 0, exch_helper->win_send[request_id]);
+
+    /*
+     * Once the `post` and `start` epochs are established, data transfers can be launched.
+     *
+     * Launches the asynchronous Ialltoallv_p2p_rma operations.
+     * These operations will use the local `win_send` window, the remote offsets
+     * (`target_disp`), and the local `recv_buffer` to read data from partners
+     * (with MPI_Rget) or write data to them (with MPI_Rput).
+     * These calls are non-blocking and generate requests that must be completed later
+     * with a `PDM_MPI_Waitall` (or equivalent).
+     */
+    PDM_MPI_Ialltoallv_p2p_rma(exch_helper->win_send   [request_id],
+                               exch_helper->target_disp[request_id],
+                               recv_buffer,
+                               recv_n,
+                               recv_idx,
+                               mpi_type,
+                               exch_helper->comm,
+                               &exch_helper->n_sub_requests[request_id],
+                               &exch_helper->sub_requests  [request_id]);
+  } else {
+    PDM_error(__FILE__, __LINE__, 0,
+              "Error PDM_exchange_helper_iexch not yet implemented with kcomm = %i\n", k_comm);
+  }
+
+  PDM_MPI_Type_free(&mpi_type);
+
+  exch_helper->requests_status[request_id] = EXCHANGE_HELPER_STATUS_ONGOING;
+
+  return request_id;
+}
+
+// A réfléchir pour appeler plus facilement les IAlltoall
+// int
+// PDM_exchange_helper_exch_init
+// (
+//   PDM_exchange_helper_t *exch_helper,
+//   PDM_mpi_comm_kind_t    k_comm,
+//   size_t                 s_data,
+//   int                    cst_stride,
+//   int                    n_send_rank,
+//   int                   *send_rank,
+//   int                   *send_idx,
+//   int                   *send_n,
+//   void                  *send_buffer,
+//   int                    n_recv_rank,
+//   int                   *recv_rank,
+//   int                   *recv_idx,
+//   int                   *recv_n,
+//   void                  *recv_buffer
+// );
+// Si le send_rank ou le recv_rank est NULL --> Alltoall classique
+// Sinon on peut faire du ISend/Irecv plus fin
+
+int
 PDM_exchange_helper_exch_init
 (
   PDM_exchange_helper_t *exch_helper,
@@ -271,16 +470,7 @@ PDM_exchange_helper_exch_init
   void                  *recv_buffer
 )
 {
-  int tag = -10000;
-  if (k_comm == PDM_MPI_COMM_KIND_P2P) {
-    tag  = exch_helper->seed_tag;
-    tag += (exch_helper->next_tag++);
-    tag %= exch_helper->max_tag;
-  }
-
-  int n_rank;
-  PDM_MPI_Comm_size(exch_helper->comm, &n_rank);
-
+  int tag        = _get_next_tag          (exch_helper, k_comm);
   int request_id = _find_available_request(exch_helper);
 
   int s_data_tot = s_data * cst_stride;
@@ -315,36 +505,6 @@ PDM_exchange_helper_exch_init
                                exch_helper->comm,
                                &exch_helper->n_sub_requests[request_id],
                                &exch_helper->sub_requests  [request_id]);
-  } else if(k_comm == PDM_MPI_COMM_KIND_WIN_RMA) {
-    // Window creation :
-    //   --> Si on fait des RGet uniquement besoin de rendre en window le send
-    PDM_MPI_Win_create(send_buffer, send_idx[n_rank], s_data_tot, exch_helper->comm, &exch_helper->win_send[request_id]);
-    //   --> On pourrait faire des RPut sur le buffer de reception aussi
-    // PDM_MPI_Win_create(recv_buffer, recv_idx[n_rank], s_data_tot, exch_helper->comm, &exch_helper->win_recv[request_id]);
-
-    PDM_MPI_Group world_group;
-    PDM_MPI_Comm_group(exch_helper->comm, &world_group);
-
-    // Creation des groupes de synchro associé
-    int *tmp_rank_id = NULL;
-    PDM_malloc(tmp_rank_id, n_rank, int);
-
-    int n_recv = 0;
-    for(int i = 0; i < n_rank; ++i) {
-      if(recv_n[i] > 0) {
-        tmp_rank_id[n_recv++] = i;
-      }
-    }
-
-    PDM_MPI_Group_incl(world_group, n_recv, tmp_rank_id, &exch_helper->group_recv[request_id]);
-    PDM_MPI_Group_free(&world_group);
-
-    PDM_malloc(exch_helper->target_disp[request_id], n_rank, int);
-
-    PDM_MPI_Alltoall(send_idx                            , 1, PDM_MPI_INT,
-                     exch_helper->target_disp[request_id], 1, PDM_MPI_INT, exch_helper->comm);
-    PDM_free(tmp_rank_id);
-
   } else {
     PDM_error(__FILE__, __LINE__, 0,
               "Error PDM_exchange_helper_exch not yet implemented with kcomm = %i\n", k_comm);
@@ -378,17 +538,6 @@ PDM_exchange_helper_exch_start
               "Error PDM_exchange_helper_exch_start with status = %i for request_id = %i, you should initialize exch with PDM_exchange_helper_exch_init or PDM_exchange_helper_iexch\n", exch_helper->requests_status[request_id], request_id);
   }
 
-  // if(!PDM_mpi_comm_kind_is_persistent(k_comm)) { // Donc
-  //   if(exch_helper->n_sub_requests[request_id] != 0) {
-  //     PDM_error(__FILE__, __LINE__, 0, "Error PDM_exchange_helper_exch_start with strange behaviour");
-  //   }
-
-        // MPI_Win_post(group_recv, MPI_MODE_NOPRECEDE, win);
-  //   // On appelle la methode basse couche (Asynchrone)
-  //   PDM_MPI_Ialltoallv_p2p_rma
-
-  // }
-
   exch_helper->requests_status[request_id] = EXCHANGE_HELPER_STATUS_ONGOING;
   PDM_MPI_Startall(exch_helper->n_sub_requests[request_id],
                    exch_helper->sub_requests  [request_id]);
@@ -406,12 +555,30 @@ PDM_exchange_helper_exch_wait
     PDM_error(__FILE__, __LINE__, 0,
               "Error PDM_exchange_helper_exch_wait with status = %i for request_id = %i, you should initialize exch with PDM_exchange_helper_exch_init or PDM_exchange_helper_iexch\n", exch_helper->requests_status[request_id], request_id);
   }
+  printf("request_id = %i - n_sub_requests = %i \n", request_id, exch_helper->n_sub_requests[request_id]);
 
   for(int i = 0; i < exch_helper->n_sub_requests[request_id]; ++i) {
     PDM_MPI_Wait(&exch_helper->sub_requests[request_id][i]);
   }
 
-  // MPI_Win_complete(win);
+  /*
+   * Completes the window's access epoch.
+   * This call signals to the target processes (those with whom this process communicated)
+   * that this process has finished all its RMA operations (Rget/Rput) to their windows.
+   * This allows target processes, which are waiting with PDM_MPI_Win_wait, to proceed.
+   */
+  PDM_MPI_Win_complete(exch_helper->win_send[request_id]);
+
+  /* Completes the window's exposure epoch.
+   * This call waits for all source processes (those who accessed this process's memory)
+   * to have finished their work and signaled their completion via their PDM_MPI_Win_complete.
+   * It ensures that all incoming data "pushed" into this process's memory is
+   * now visible and ready to be used by the local process.
+   */
+  PDM_MPI_Win_wait(exch_helper->win_send[request_id]);
+
+  // RM Group and target_dsip
+
 
   exch_helper->requests_status[request_id] = EXCHANGE_HELPER_STATUS_READY;
 }
