@@ -410,6 +410,7 @@ string(REPLACE ";" " " PDM_LIST_NRANK "${PDM_LIST_NRANK}")
 
 set (PDM_RUN_PRELOAD "")
 set (PDM_RUN_LSAN "")
+set (PDM_RUN_UBSAN "")
 set (PDM_RUN_PYTHONPATH "")
 
 if (CMAKE_BUILD_TYPE STREQUAL "Sanitize")
@@ -417,6 +418,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Sanitize")
   set(PDM_RUN_PRELOAD "LD_PRELOAD ${PRELOAD_ASAN}:${PROJECT_BINARY_DIR}/script/asan/fake_dlclose/libdlclose.so")
   set(PDM_RUN_PRELOAD_SRUN "LD_PRELOAD=${PRELOAD_ASAN}:${PROJECT_BINARY_DIR}/script/asan/fake_dlclose/libdlclose.so")
   set(PDM_RUN_LSAN "LSAN_OPTIONS=suppressions=${PROJECT_SOURCE_DIR}/script/asan/asan.supp")
+  set(PDM_RUN_UBSAN "UBSAN_OPTIONS=print_stacktrace=1:halt_on_error=0")
 
   if (PDM_ENABLE_DOC)
     message(FATAL_ERROR "Documention can not be built in Sanitize CMAKE_BUILD_TYPE")

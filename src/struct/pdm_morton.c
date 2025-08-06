@@ -1161,6 +1161,9 @@ PDM_morton_encode_coords(int                dim,
     d_max = PDM_MAX(d_max, d[i]);
   }
 
+  if (d_max < 1e-10)
+    d_max = 1.0;
+
   for (i = 0; i < (size_t)dim; i++) { /* Reduce effective dimension */
     if (d[i] < d_max * 1e-10)
       d[i] = d_max * 1e-10;

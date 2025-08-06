@@ -11,8 +11,6 @@ variables:
 #  CI_BUILDS_DIR: $WORKDIR/.jacamar-ci/builds
   CUSTOM_CI_BUILDS_DIR: $WORKDIR/test # inactif car option non activee dans la configuration du runner
   GIT_STRATEGY: none # don't do anything by default
-  # SCHEDULER_PARAMETERS:  "--qos=co_inter_bigmem  --ntasks=40 --time=01:00:00 --exclusive" # spiro
-  # SCHEDULER_PARAMETERS:  "--ntasks=1 --nodes=1-1 --time=00:30:00"                         # juno
   # CI_DEBUG_TRACE: "true" #Uncomment to debug CI
 default:
   tags: #All jobs uses jamacar-slurm executor
@@ -24,8 +22,7 @@ default:
 
 init_repo:
   variables:
-    SCHEDULER_PARAMETERS:  "--qos=co_inter_bigmem  --cpus-per-task=24  --ntasks=1 --time=01:00:00"
-    #SCHEDULER_PARAMETERS:  "-M rhel8 --qos=el8_gbe --ntasks=1 --time=00:10:00"
+    SCHEDULER_PARAMETERS: "--qos=co_inter_bigmem --cpus-per-task=24 --ntasks=1 --time=01:00:00" # useless with juno-shell
   stage: init
   script: # explicitly load modules one by one, so that if one fails, it will be easy to identify
     - INIT_ORIGINAL_FOLDER=$(pwd)
@@ -41,6 +38,7 @@ init_repo:
   artifacts:
     reports:
       dotenv: build.env
+
 
 build:
   parallel:
@@ -90,6 +88,15 @@ build:
             - "ON"
           BUILD_TYPE:
             - "Debug"
+        - COMPILER: "gcc@15" # socle7: openmpi, gcc@15, Cython 3
+          GNUM64:
+            - "ON"
+          MPI_LIB:
+            - "openmpi"
+          PDMA:
+            - "ON"
+          BUILD_TYPE:
+            - "Sanitize"
         - COMPILER: "gcc@12"
           GNUM64:
             - "OFF"
@@ -123,9 +130,10 @@ build:
   before_script:
     - module purge
     - echo "compilo = $COMPILER"
-    # - source /tmp_user/juno/sonics/dist/source_juno_all.sh --compiler $COMPILER --mpi $MPI_LIB && module load py-gcovr-4.2-gcc-8.3.1-6lqfk6f py-breathe-4.21.0-gcc-8.3.1-t576gc7 doxygen-1.9.3-gcc-8.3.1-4qcntlg texlive/2021 && python3 -m pip install sphinx-fortran sphinxcontrib-tikz jupytext
-    - if [[ "${COMPILER}" == "gcc@14" ]]; then
+    - if   [[ "${COMPILER}" == "gcc@14" ]]; then
     -   source /tmp_user/juno/sonics/dist/socle_cfd7/source_gcc14_cython3.sh # socle 7 + gcc 14 + Cython 3
+    - elif [[ "${COMPILER}" == "gcc@15" ]]; then
+    -   source /tmp_user/juno/sonics/dist/socle_cfd7/source_gcc15_cython3.sh # socle 7 + gcc 15 + Cython 3
     - else
     -   source /tmp_user/juno/sonics/dist/source_juno_all.sh --compiler=$COMPILER --mpi=$MPI_LIB
     - fi
@@ -135,7 +143,7 @@ build:
     - mkdir -p build$MATRIX_KEY && cd build$MATRIX_KEY
     - echo ${COMPILER}
     - echo ${MPI_LIB}
-    - if [[ "${COMPILER}" == "gcc@12" && "${MPI_LIB}" == "intel-oneapi" ]]; then
+    - if   [[ "${COMPILER}" == "gcc@12" && "${MPI_LIB}" == "intel-oneapi" ]]; then
     -   cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DPDM_ENABLE_Fortran_MPI_MODULE=OFF -DPDM_ENABLE_PYTHON_BINDINGS=ON -DPDM_ENABLE_BLASLAPACK=ON -DPDM_ENABLE_STATIC=OFF -DPDM_ENABLE_SHARED=ON -DPDM_ENABLE_Fortran=ON -DPDM_ENABLE_EXTENSION_PDMA=${PDMA} -DPDM_ENABLE_LONG_G_NUM=${GNUM64} -DPDM_ENABLE_UNIT_TEST=ON ../
     - elif [[ "${COMPILER}" == "gcc@12" && "${MPI_LIB}" == "openmpi" ]]; then
     -   cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DPDM_ENABLE_Fortran_MPI_MODULE=OFF -DPDM_ENABLE_PYTHON_BINDINGS=OFF -DPDM_ENABLE_BLASLAPACK=ON -DPDM_ENABLE_STATIC=OFF -DPDM_ENABLE_SHARED=ON -DPDM_ENABLE_Fortran=OFF -DPDM_ENABLE_EXTENSION_PDMA=${PDMA} -DPDM_ENABLE_LONG_G_NUM=${GNUM64} -DPDM_ENABLE_UNIT_TEST=ON -DPDM_ENABLE_OPENMP=OFF -DMPIEXEC_EXECUTABLE=/opt/tools/openmpi/4.1.1-gnu831-hpc-cuda112/bin/mpirun ../
@@ -147,6 +155,7 @@ build:
     -   cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DPDM_ENABLE_PYTHON_BINDINGS=ON -DPDM_ENABLE_BLASLAPACK=ON -DPDM_ENABLE_STATIC=OFF -DPDM_ENABLE_SHARED=ON -DPDM_ENABLE_Fortran=ON -DPDM_ENABLE_EXTENSION_PDMA=${PDMA} -DPDM_ENABLE_LONG_G_NUM=${GNUM64} -DPDM_ENABLE_UNIT_TEST=ON ../
     - fi
     - make -j
+
 
 unit_test:
   parallel:
@@ -196,6 +205,15 @@ unit_test:
             - "ON"
           BUILD_TYPE:
             - "Debug"
+        - COMPILER: "gcc@15" # socle7: openmpi, gcc@15, Cython 3
+          GNUM64:
+            - "ON"
+          MPI_LIB:
+            - "openmpi"
+          PDMA:
+            - "ON"
+          BUILD_TYPE:
+            - "Sanitize"
         - COMPILER: "gcc@12"
           GNUM64:
             - "OFF"
@@ -225,13 +243,14 @@ unit_test:
             - "Debug"
   variables:
     MATRIX_KEY: _${COMPILER}_${MPI_LIB}_GNUM64_${GNUM64}_BUILD_${BUILD_TYPE}_PDMA_${PDMA}
-    SCHEDULER_PARAMETERS:  "--qos=co_inter_bigmem  --ntasks=40 --time=01:00:00 --exclusive"
+    SCHEDULER_PARAMETERS: "--qos=co_inter_bigmem --ntasks=40 --time=01:00:00 --exclusive" # useless with juno-shell
   stage: test
   before_script:
     - module purge
-    # - source /tmp_user/juno/sonics/dist/source_juno_all.sh --compiler $COMPILER --mpi $MPI_LIB && module load py-gcovr-4.2-gcc-8.3.1-6lqfk6f
-    - if [[ "${COMPILER}" == "gcc@14" ]]; then
+    - if   [[ "${COMPILER}" == "gcc@14" ]]; then
     -   source /tmp_user/juno/sonics/dist/socle_cfd7/source_gcc14_cython3.sh # socle 7 + gcc 14 + Cython 3
+    - elif [[ "${COMPILER}" == "gcc@15" ]]; then
+    -   source /tmp_user/juno/sonics/dist/socle_cfd7/source_gcc15_cython3.sh # socle 7 + gcc 15 + Cython 3
     - else
     -   source /tmp_user/juno/sonics/dist/source_juno_all.sh --compiler=$COMPILER --mpi=$MPI_LIB
     - fi
@@ -240,7 +259,7 @@ unit_test:
     - export SLURM_EXACT=1
     - export I_MPI_PMI_LIBRARY=/usr/lib64/libpmi.so
     - cd $CUSTOM_CI_DIR/build$MATRIX_KEY
-    # - ./pdm_run -srun # Pour l'instant ne marche pas avec openmpi
+#    - ./pdm_run -srun # KO avec openmpi
     - ./pdm_run -timeout 360
     - if [ "${BUILD_TYPE}" == "Coverage" ]; then
     -   cd $CUSTOM_CI_DIR/build$MATRIX_KEY/src/CMakeFiles/pdm.dir
@@ -248,26 +267,15 @@ unit_test:
     -   cd $CUSTOM_CI_DIR/build$MATRIX_KEY
     -   gcovr --gcov-ignore-parse-errors -g -k --xml-pretty --print-summary --root $CUSTOM_CI_DIR --object-directory $CUSTOM_CI_DIR/build$MATRIX_KEY --output coverage.xml
     - fi
-# - cd $CUSTOM_CI_DIR/build$MATRIX_KEY
-# - ctest --output-junit $CI_PROJECT_DIR/paradigm_ctest$MATRIX_KEY.xml
-#    # Artefacts are searched in CI_PROJECT_DIR, but job was executed in CUSTOM_CI_DIR
-#    #- ctest -V --output-junit $CI_PROJECT_DIR/paradigm_ctest$MATRIX_KEY.xml
-#    # Go back to runner dir for artifact modification
-  after_script:
-    - echo $PWD
-    - cd $CI_PROJECT_DIR
-    - sed -i '/testsuite name/c\<testsuite name="'"$MATRIX_KEY"'"' paradigm_ctest$MATRIX_KEY.xml
-    - sed -i 's/" classname/_'"$MATRIX_KEY"'" classname/' paradigm_ctest$MATRIX_KEY.xml
-
   when: on_success
   coverage: /lines:\s*(\d+\.\d+)%/
   artifacts:
     when: always
     reports:
-      junit: paradigm_ctest$MATRIX_KEY.xml
       coverage_report:
         coverage_format: cobertura
         path: build$MATRIX_KEY/coverage.xml
+
 
 # non_regression:
 #   variables:
@@ -290,13 +298,6 @@ unit_test:
 #    when: always
 #    reports:
 #      junit: paradigm_alltest$MATRIX_KEY.xml
-
-# TODO :
-#  - Rajouter des regles pour faire plus de compilo quand on merge sur dev : impi + clang + pgi par exemple
-# rules:
-#   - if: $CI_COMMIT_BRANCH == "dev"
-# Rajouter int/long
-# Tester si paradigm se compiler seul (sans paradigma)
 
 
 fake_install:
