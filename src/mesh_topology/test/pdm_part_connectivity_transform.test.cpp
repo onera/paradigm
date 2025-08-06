@@ -129,3 +129,34 @@ MPI_TEST_CASE("[PDM_compute_dface_vtx_from_edges] - 2p",2) {
 
   PDM_free(dface_vtx);
 }
+
+
+
+
+MPI_TEST_CASE("[PDM_graph_compress] ", 1) {
+
+  int n_entity = 5;
+  std::vector<int> graph_idx = {0, 5, 10, 15, 20, 26};
+  std::vector<int> graph     = {4, 5, 2, 1, 1,
+                                1, 2, 3, 5, 3,
+                                4, 3, 2, 4, 5,
+                                5, 4, 1, 3, 5,
+                                1, 2, 3, 4, 5, 5};
+
+  PDM_graph_compress(n_entity, graph_idx.data(), graph.data());
+
+  // PDM_log_trace_array_int(graph_idx.data(), n_entity+1, "graph_idx ::");
+  // PDM_log_trace_array_int(graph.data(), graph_idx[n_entity], "graph ::");
+
+  int expected_graph_idx[6 ] = {0, 3, 6, 9, 12, 16};
+  int expected_graph    [16] = {1, 3, 4,
+                                0, 2, 4,
+                                1, 3, 4,
+                                0, 2, 4,
+                                0, 1, 2, 3};
+
+  MPI_CHECK_EQ_C_ARRAY(0, graph_idx, expected_graph_idx, 6);
+  MPI_CHECK_EQ_C_ARRAY(0, graph    , expected_graph    , 16);
+
+
+}
