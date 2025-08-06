@@ -3497,30 +3497,6 @@ PDM_part_to_block_iexch
                        mpi_type,
                        ptb->comm,
                        &ptb->request_mpi[request_id]);
-  } else if (k_comm == PDM_MPI_COMM_KIND_NEIGHBOR_COLLECTIVE) {
-
-    printf ("Error PDM_part_to_block_iexch : "
-            " PDM_MPI_COMM_KIND_NEIGHBOR_COLLECTIVE k_comm is not implemented yet\n");
-    abort();
-
-  } else if (k_comm == PDM_MPI_COMM_KIND_WIN_SHARED_AND_P2P) {
-
-    printf ("Error PDM_part_to_block_iexch : "
-            " PDM_MPI_COMM_KIND_WIN_SHARED_AND_P2P k_comm is not implemented yet\n");
-    abort();
-
-  } else if (k_comm == PDM_MPI_COMM_KIND_WIN_SHARED_AND_COLLECTIVE) {
-
-    printf ("Error PDM_part_to_block_iexch : "
-            " PDM_MPI_COMM_KIND_WIN_SHARED_AND_COLLECTIVE k_comm is not implemented yet\n");
-    abort();
-
-  } else if (k_comm == PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE) {
-
-    printf ("Error PDM_part_to_block_iexch : "
-            " PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE k_comm is not implemented yet\n");
-    abort();
-
   } else if (k_comm == PDM_MPI_COMM_KIND_WIN_RMA) {
 
     // double t1 = PDM_MPI_Wtime();
@@ -3539,9 +3515,10 @@ PDM_part_to_block_iexch
                            ptb->comm);
     // double dt = PDM_MPI_Wtime() - t1;
     // log_trace("PDM_MPI_Get_ialltoallv + fence dt = %12.5e \n", dt);
-
+  } else {
+    printf ("Error PDM_part_to_block_iexch : k_comm = %i is not implemented yet \n", k_comm);
+    abort();
   }
-
 
   ptb->wait_status[request_id] = 0;
 }
@@ -3691,7 +3668,7 @@ PDM_part_to_block_reverse_iexch
 
   if (k_comm == PDM_MPI_COMM_KIND_P2P) {
     printf ("Error PDM_part_to_block_iexch : "
-            " PDM_MPI_COMM_KIND_NEIGHBOR_COLLECTIVE k_comm is not implemented yet\n");
+            " PDM_MPI_COMM_KIND_P2P k_comm is not implemented yet\n");
     abort();
   } else if(k_comm == PDM_MPI_COMM_KIND_COLLECTIVE) {
     PDM_MPI_Ialltoallv(send_buffer,
@@ -3704,30 +3681,6 @@ PDM_part_to_block_reverse_iexch
                        mpi_type,
                        ptb->comm,
                        &ptb->request_mpi[request_id]);
-  } else if (k_comm == PDM_MPI_COMM_KIND_NEIGHBOR_COLLECTIVE) {
-
-    printf ("Error PDM_part_to_block_iexch : "
-            " PDM_MPI_COMM_KIND_NEIGHBOR_COLLECTIVE k_comm is not implemented yet\n");
-    abort();
-
-  } else if (k_comm == PDM_MPI_COMM_KIND_WIN_SHARED_AND_P2P) {
-
-    printf ("Error PDM_part_to_block_iexch : "
-            " PDM_MPI_COMM_KIND_WIN_SHARED_AND_P2P k_comm is not implemented yet\n");
-    abort();
-
-  } else if (k_comm == PDM_MPI_COMM_KIND_WIN_SHARED_AND_COLLECTIVE) {
-
-    printf ("Error PDM_part_to_block_iexch : "
-            " PDM_MPI_COMM_KIND_WIN_SHARED_AND_COLLECTIVE k_comm is not implemented yet\n");
-    abort();
-
-  } else if (k_comm == PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE) {
-
-    printf ("Error PDM_part_to_block_iexch : "
-            " PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE k_comm is not implemented yet\n");
-    abort();
-
   } else if (k_comm == PDM_MPI_COMM_KIND_WIN_RMA) {
 
     // double t1 = PDM_MPI_Wtime();
@@ -3746,15 +3699,13 @@ PDM_part_to_block_reverse_iexch
                            ptb->comm);
     // double dt = PDM_MPI_Wtime() - t1;
     // log_trace("PDM_MPI_Get_ialltoallv + fence dt = %12.5e \n", dt);
-
+  } else {
+    printf ("Error PDM_part_to_block_iexch : k_comm = %i is not implemented yet \n", k_comm);
+    abort();
   }
-
 
   ptb->wait_status[request_id] = 0;
 }
-
-
-
 
 /**
  *

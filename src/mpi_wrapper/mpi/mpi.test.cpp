@@ -35,6 +35,14 @@ MPI_TEST_CASE("[PDM_MPI_Topo_test]", 2) {
     CHECK(status == PDM_MPI_COMM_UNDEFINED);
   }
 
+  SUBCASE("Standard communicator has MPI_UNDEFINED topology") {
+    int status;
+    int err_code = PDM_MPI_Topo_test(pdm_comm, &status);
+
+    CHECK(err_code == MPI_SUCCESS);
+    CHECK(status == PDM_MPI_UNDEFINED);
+  }
+
   SUBCASE("Distributed graph communicator has MPI_DIST_GRAPH topology") {
     int status;
     PDM_MPI_Comm dist_graph_comm;

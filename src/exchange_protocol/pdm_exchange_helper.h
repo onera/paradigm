@@ -132,13 +132,15 @@ PDM_exchange_helper_exch_one_way_pack_init
 int
 PDM_exchange_helper_exch_one_way_init
 (
-  PDM_exchange_helper_t  *exch_helper,
-  PDM_mpi_comm_kind_t     kcomm,
-  int                     cst_stride,
-  size_t                  s_data,
-  int                     tag,
-  void                  **buffer, // A voir
-  PDM_ownership_t         ownership
+  PDM_exchange_helper_t    *exch_helper,
+  PDM_exchange_direction_t  direction,
+  int                       cst_stride,
+  size_t                    s_data,
+  int                       n_active_rank,
+  int                      *active_rank,
+  int                       tag,
+  void                     *buffer,
+  PDM_ownership_t           ownership
 );
 
 

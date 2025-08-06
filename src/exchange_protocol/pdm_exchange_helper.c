@@ -234,7 +234,10 @@ PDM_exchange_helper_exch
   PDM_MPI_Type_create_contiguous(s_data_tot, PDM_MPI_BYTE, &mpi_type);
   PDM_MPI_Type_commit(&mpi_type);
 
-  if(kcomm == PDM_MPI_COMM_KIND_COLLECTIVE) {
+  int topo_kind = PDM_MPI_UNDEFINED;
+  PDM_MPI_Topo_test(exch_helper->comm, &topo_kind);
+
+  if(kcomm == PDM_MPI_COMM_KIND_COLLECTIVE && topo_kind == PDM_MPI_UNDEFINED) {
     PDM_MPI_Alltoallv(send_buffer,
                       send_n,
                       send_idx,
@@ -244,7 +247,7 @@ PDM_exchange_helper_exch
                       recv_idx,
                       mpi_type,
                       exch_helper->comm);
-  } else if(kcomm == PDM_MPI_COMM_KIND_NEIGHBOR_COLLECTIVE) {
+  } else if(kcomm == PDM_MPI_COMM_KIND_COLLECTIVE && topo_kind == PDM_MPI_DIST_GRAPH) {
     PDM_MPI_Neighbor_alltoallv(send_buffer,
                                send_n,
                                send_idx,
@@ -525,6 +528,13 @@ PDM_mpi_comm_kind_is_persistent
   return 0;
 }
 
+// Si comm graph -> Neighbor automatique ? Voire dans le part_migrate
+// RMA --> init, start, free (Permet d'économiser la création des groupes et du target_disp)
+// Etat des lieux des k_comm dans PDM --> Pour moi pas cohérent
+// Echange ONE-Way à faire ( send / recv )
+// Gestion des actives rank pour le p2p
+// Test exch_helper
+
 
 void
 PDM_exchange_helper_exch_start
@@ -612,17 +622,19 @@ PDM_exchange_helper_exch_free
 int
 PDM_exchange_helper_exch_one_way_init
 (
-  PDM_exchange_helper_t  *exch_helper,
-  PDM_mpi_comm_kind_t     kcomm,
-  int                     cst_stride,
-  size_t                  s_data,
-  int                     tag,
-  void                  **buffer,
-  PDM_ownership_t         ownership
+  PDM_exchange_helper_t    *exch_helper,
+  PDM_exchange_direction_t  direction,
+  int                       cst_stride,
+  size_t                    s_data,
+  int                       n_active_rank,
+  int                      *active_rank,
+  int                       tag,
+  void                     *buffer,
+  PDM_ownership_t           ownership
 )
 {
   PDM_UNUSED(exch_helper);
-  PDM_UNUSED(kcomm);
+  PDM_UNUSED(direction);
   PDM_UNUSED(cst_stride);
   PDM_UNUSED(s_data);
   PDM_UNUSED(tag);

@@ -4147,9 +4147,7 @@ PDM_part_to_part_iexch
                         (void **)___part2_data,
                                 tag,
                                 &(ptp->async_exch_subrequest[_request][2*i+1]));
-      }
-
-      else if (k_comm == PDM_MPI_COMM_KIND_COLLECTIVE) {
+      } else if (k_comm == PDM_MPI_COMM_KIND_COLLECTIVE) {
 
         PDM_part_to_part_ialltoall (ptp,
                                     s_data,
@@ -4158,45 +4156,7 @@ PDM_part_to_part_iexch
                             (void **)___part2_data,
                                     &(ptp->async_exch_subrequest[_request][2*i]));
 
-      }
-
-      else if (k_comm == PDM_MPI_COMM_KIND_NEIGHBOR_COLLECTIVE) {
-
-        printf ("Error PDM_part_to_part_iexch : "
-                 "PDM_STRIDE_CST_INTERLEAVED stride with"
-                 " PDM_MPI_COMM_KIND_NEIGHBOR_COLLECTIVE k_comm is not implemented yet\n");
-        abort();
-
-      }
-
-      else if (k_comm == PDM_MPI_COMM_KIND_WIN_SHARED_AND_P2P) {
-
-        printf ("Error PDM_part_to_part_iexch : "
-                 "PDM_STRIDE_CST_INTERLEAVED stride with"
-                 " PDM_MPI_COMM_KIND_WIN_SHARED_AND_P2P k_comm is not implemented yet\n");
-        abort();
-
-      }
-
-      else if (k_comm == PDM_MPI_COMM_KIND_WIN_SHARED_AND_COLLECTIVE) {
-
-        printf ("Error PDM_part_to_part_iexch : "
-                 "PDM_STRIDE_CST_INTERLEAVED stride with"
-                 " PDM_MPI_COMM_KIND_WIN_SHARED_AND_COLLECTIVE k_comm is not implemented yet\n");
-        abort();
-
-      }
-
-      else if (k_comm == PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE) {
-
-        printf ("Error PDM_part_to_part_iexch : "
-                 "PDM_STRIDE_CST_INTERLEAVED stride with"
-                 " PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE k_comm is not implemented yet\n");
-        abort();
-
-      }
-
-      else if (k_comm == PDM_MPI_COMM_KIND_WIN_RMA) {
+      } else if (k_comm == PDM_MPI_COMM_KIND_WIN_RMA) {
 
         printf ("Error PDM_part_to_part_iexch : "
                  "PDM_STRIDE_CST_INTERLEAVED stride with"
@@ -4204,9 +4164,6 @@ PDM_part_to_part_iexch
         abort();
 
       }
-
-
-
     }
 
     if (t_part1_data_def == PDM_PART_TO_PART_DATA_DEF_ORDER_PART1) {
@@ -4217,9 +4174,7 @@ PDM_part_to_part_iexch
     PDM_free(__part1_to_part2_data);
     PDM_free(___part2_data);
 
-  }
-
-  else if (t_stride == PDM_STRIDE_CST_INTERLACED) {
+  } else if (t_stride == PDM_STRIDE_CST_INTERLACED) {
 
     void  **_part1_to_part2_data    = (void **) part1_data;
     void  **__part1_to_part2_data   = NULL;
@@ -4262,7 +4217,6 @@ PDM_part_to_part_iexch
 
     if (k_comm == PDM_MPI_COMM_KIND_P2P) {
 
-
       PDM_part_to_part_issend (ptp,
                                s_data,
                                cst_stride,
@@ -4277,9 +4231,7 @@ PDM_part_to_part_iexch
                               tag,
                               &(ptp->async_exch_subrequest[_request][1]));
 
-    }
-
-    else if (k_comm == PDM_MPI_COMM_KIND_COLLECTIVE) {
+    } else if (k_comm == PDM_MPI_COMM_KIND_COLLECTIVE) {
 
       PDM_part_to_part_ialltoall (ptp,
                                   s_data,
@@ -4288,55 +4240,14 @@ PDM_part_to_part_iexch
                           (void **)*part2_data,
                                   &(ptp->async_exch_subrequest[_request][0]));
 
-    }
-
-    else if (k_comm == PDM_MPI_COMM_KIND_NEIGHBOR_COLLECTIVE) {
-
-      printf ("Error PDM_part_to_part_iexch : "
-               "PDM_STRIDE_CST_INTERLACED stride with"
-               " PDM_MPI_COMM_KIND_NEIGHBOR_COLLECTIVE k_comm is not implemented yet\n");
-      abort();
-
-    }
-
-    else if (k_comm == PDM_MPI_COMM_KIND_WIN_SHARED_AND_P2P) {
-
-      printf ("Error PDM_part_to_part_iexch : "
-               "PDM_STRIDE_CST_INTERLACED stride with"
-               " PDM_MPI_COMM_KIND_WIN_SHARED_AND_P2P k_comm is not implemented yet\n");
-      abort();
-
-    }
-
-    else if (k_comm == PDM_MPI_COMM_KIND_WIN_SHARED_AND_COLLECTIVE) {
-
-      printf ("Error PDM_part_to_part_iexch : "
-               "PDM_STRIDE_CST_INTERLACED stride with"
-               " PDM_MPI_COMM_KIND_WIN_SHARED_AND_COLLECTIVE k_comm is not implemented yet\n");
-      abort();
-
-    }
-
-    else if (k_comm == PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE) {
-
-      printf ("Error PDM_part_to_part_iexch : "
-               "PDM_STRIDE_CST_INTERLACED stride with"
-               " PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE k_comm is not implemented yet\n");
-      abort();
-
-    }
-
-    else if (k_comm == PDM_MPI_COMM_KIND_WIN_RMA) {
+    } else if (k_comm == PDM_MPI_COMM_KIND_WIN_RMA) {
 
       printf ("Error PDM_part_to_part_iexch : "
                "PDM_STRIDE_CST_INTERLACED stride with"
                " PDM_MPI_COMM_KIND_WIN_RMA k_comm is not implemented yet\n");
       abort();
 
-    }
-
-
-    else {
+    } else {
 
       printf ("Error PDM_part_to_part_iexch : "
                "PDM_STRIDE_CST_INTERLACED stride with"
@@ -4352,9 +4263,7 @@ PDM_part_to_part_iexch
       PDM_free(__part1_to_part2_data);
       __part1_to_part2_data = NULL;
     }
-  }
-
-  else if (t_stride == PDM_STRIDE_VAR_INTERLACED) {
+  } else if (t_stride == PDM_STRIDE_VAR_INTERLACED) {
 
     if (k_comm == PDM_MPI_COMM_KIND_P2P) {
 
@@ -4369,9 +4278,7 @@ PDM_part_to_part_iexch
                              part2_data,
                              _request);
 
-    }
-
-    else if (k_comm == PDM_MPI_COMM_KIND_COLLECTIVE) {
+    } else if (k_comm == PDM_MPI_COMM_KIND_COLLECTIVE) {
 
       _alltotall_stride_var_iexch(ptp,
                                   t_part1_data_def,
@@ -4383,45 +4290,7 @@ PDM_part_to_part_iexch
                                   &(ptp->async_exch_subrequest[_request][0]));
 
 
-    }
-
-    else if (k_comm == PDM_MPI_COMM_KIND_NEIGHBOR_COLLECTIVE) {
-
-      printf ("Error PDM_part_to_part_iexch : "
-               "PDM_STRIDE_VAR_INTERLACED stride with"
-               " PDM_MPI_COMM_KIND_NEIGHBOR_COLLECTIVE k_comm is not implemented yet\n");
-      abort();
-
-    }
-
-    else if (k_comm == PDM_MPI_COMM_KIND_WIN_SHARED_AND_P2P) {
-
-      printf ("Error PDM_part_to_part_iexch : "
-               "PDM_STRIDE_VAR_INTERLACED stride with"
-               " PDM_MPI_COMM_KIND_WIN_SHARED_AND_P2P k_comm is not implemented yet\n");
-      abort();
-
-    }
-
-    else if (k_comm == PDM_MPI_COMM_KIND_WIN_SHARED_AND_COLLECTIVE) {
-
-      printf ("Error PDM_part_to_part_iexch : "
-               "PDM_STRIDE_VAR_INTERLACED stride with"
-               " PDM_MPI_COMM_KIND_WIN_SHARED_AND_COLLECTIVE k_comm is not implemented yet\n");
-      abort();
-
-    }
-
-    else if (k_comm == PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE) {
-
-      printf ("Error PDM_part_to_part_iexch : "
-               "PDM_STRIDE_VAR_INTERLACED stride with"
-               " PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE k_comm is not implemented yet\n");
-      abort();
-
-    }
-
-    else if (k_comm == PDM_MPI_COMM_KIND_WIN_RMA) {
+    } else if (k_comm == PDM_MPI_COMM_KIND_WIN_RMA) {
 
       printf ("Error PDM_part_to_part_iexch : "
                "PDM_STRIDE_VAR_INTERLACED stride with"
@@ -4460,10 +4329,7 @@ PDM_part_to_part_iexch_wait
         PDM_part_to_part_issend_wait (ptp, ptp->async_exch_subrequest[_request][2*i]);
 
       }
-
-    }
-
-    else if (ptp->async_exch_k_comm[_request] == PDM_MPI_COMM_KIND_COLLECTIVE) {
+    } else if (ptp->async_exch_k_comm[_request] == PDM_MPI_COMM_KIND_COLLECTIVE) {
 
       for (int i = 0; i < ptp->async_exch_subrequest_s[_request]; i++) {
 
@@ -4509,7 +4375,7 @@ PDM_part_to_part_iexch_wait
 
     }
 
-    else if (ptp->async_exch_k_comm[_request] == PDM_MPI_COMM_KIND_WIN_RMA) {
+    } else if (ptp->async_exch_k_comm[_request] == PDM_MPI_COMM_KIND_WIN_RMA) {
 
       printf ("Error PDM_part_to_part_iexch_wait : "
                "PDM_STRIDE_CST_INTERLEAVED stride with"
@@ -4517,10 +4383,7 @@ PDM_part_to_part_iexch_wait
       abort();
 
     }
-
-  }
-
-  else if (ptp->async_exch_t_stride[_request] == PDM_STRIDE_CST_INTERLACED) {
+  } else if (ptp->async_exch_t_stride[_request] == PDM_STRIDE_CST_INTERLACED) {
 
     if (ptp->async_exch_k_comm[_request] == PDM_MPI_COMM_KIND_P2P) {
 
@@ -4528,9 +4391,7 @@ PDM_part_to_part_iexch_wait
 
       PDM_part_to_part_issend_wait (ptp, ptp->async_exch_subrequest[_request][0]);
 
-    }
-
-    else if (ptp->async_exch_k_comm[_request] == PDM_MPI_COMM_KIND_COLLECTIVE) {
+    } else if (ptp->async_exch_k_comm[_request] == PDM_MPI_COMM_KIND_COLLECTIVE) {
 
       PDM_part_to_part_ialltoall_wait(ptp, ptp->async_exch_subrequest[_request][0]);
 
@@ -4570,18 +4431,14 @@ PDM_part_to_part_iexch_wait
                " PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE k_comm is not implemented yet\n");
       abort();
 
-    }
-
-    else if (ptp->async_exch_k_comm[_request] == PDM_MPI_COMM_KIND_WIN_RMA) {
+    } else if (ptp->async_exch_k_comm[request] == PDM_MPI_COMM_KIND_WIN_RMA) {
 
       printf ("Error PDM_part_to_part_iexch_wait : "
                "PDM_STRIDE_CST_INTERLACED stride with"
                " PDM_MPI_COMM_KIND_WIN_RMA k_comm is not implemented yet\n");
       abort();
 
-    }
-
-    else {
+    } else {
 
       printf ("Error PDM_part_to_part_iexch_wait : "
                "PDM_STRIDE_CST_INTERLACED stride with"
@@ -4600,9 +4457,7 @@ PDM_part_to_part_iexch_wait
 
       _p2p_stride_var_iexch_wait (ptp, _request);
 
-    }
-
-    else if (ptp->async_exch_k_comm[_request] == PDM_MPI_COMM_KIND_COLLECTIVE) {
+    } else if (ptp->async_exch_k_comm[_request] == PDM_MPI_COMM_KIND_COLLECTIVE) {
 
       _alltotall_stride_var_wait_and_post(ptp, ptp->async_exch_subrequest[_request][0]);
 
@@ -4642,9 +4497,7 @@ PDM_part_to_part_iexch_wait
                " PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE k_comm is not implemented yet\n");
       abort();
 
-    }
-
-    else if (ptp->async_exch_k_comm[_request] == PDM_MPI_COMM_KIND_WIN_RMA) {
+    } else if (ptp->async_exch_k_comm[request] == PDM_MPI_COMM_KIND_WIN_RMA) {
 
       printf ("Error PDM_part_to_part_iexch_wait : "
                "PDM_STRIDE_VAR_INTERLACED stride with"
@@ -4777,9 +4630,7 @@ PDM_part_to_part_reverse_iexch
                                         tag,
                                         &(ptp->async_exch_subrequest[_request][2*i+1]));
 
-      }
-
-      else if (k_comm == PDM_MPI_COMM_KIND_COLLECTIVE) {
+      } else if (k_comm == PDM_MPI_COMM_KIND_COLLECTIVE) {
 
         PDM_part_to_part_reverse_ialltoall (ptp,
                                             s_data,
@@ -4788,45 +4639,7 @@ PDM_part_to_part_reverse_iexch
                                    (void **)___part1_data,
                                             &(ptp->async_exch_subrequest[_request][2*i]));
 
-      }
-
-      else if (k_comm == PDM_MPI_COMM_KIND_NEIGHBOR_COLLECTIVE) {
-
-        printf ("Error PDM_part_to_part_reverse_iexch : "
-                 "PDM_STRIDE_CST_INTERLEAVED stride with"
-                 " PDM_MPI_COMM_KIND_NEIGHBOR_COLLECTIVE k_comm is not implemented yet\n");
-        abort();
-
-      }
-
-      else if (k_comm == PDM_MPI_COMM_KIND_WIN_SHARED_AND_P2P) {
-
-        printf ("Error PDM_part_to_part_reverse_iexch : "
-                 "PDM_STRIDE_CST_INTERLEAVED stride with"
-                 " PDM_MPI_COMM_KIND_WIN_SHARED_AND_P2P k_comm is not implemented yet\n");
-        abort();
-
-      }
-
-      else if (k_comm == PDM_MPI_COMM_KIND_WIN_SHARED_AND_COLLECTIVE) {
-
-        printf ("Error PDM_part_to_part_reverse_iexch : "
-                 "PDM_STRIDE_CST_INTERLEAVED stride with"
-                 " PDM_MPI_COMM_KIND_WIN_SHARED_AND_COLLECTIVE k_comm is not implemented yet\n");
-        abort();
-
-      }
-
-      else if (k_comm == PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE) {
-
-        printf ("Error PDM_part_to_part_reverse_iexch : "
-                 "PDM_STRIDE_CST_INTERLEAVED stride with"
-                 " PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE k_comm is not implemented yet\n");
-        abort();
-
-      }
-
-      else if (k_comm == PDM_MPI_COMM_KIND_WIN_RMA) {
+      } else if (k_comm == PDM_MPI_COMM_KIND_WIN_RMA) {
 
         printf ("Error PDM_part_to_part_reverse_iexch : "
                  "PDM_STRIDE_CST_INTERLEAVED stride with"
@@ -4907,9 +4720,7 @@ PDM_part_to_part_reverse_iexch
                                       tag,
                                       &(ptp->async_exch_subrequest[_request][1]));
 
-    }
-
-    else if (k_comm == PDM_MPI_COMM_KIND_COLLECTIVE) {
+    } else if (k_comm == PDM_MPI_COMM_KIND_COLLECTIVE) {
 
       PDM_part_to_part_reverse_ialltoall (ptp,
                                           s_data,
@@ -4918,54 +4729,14 @@ PDM_part_to_part_reverse_iexch
                                           _part1_data,
                                           &(ptp->async_exch_subrequest[_request][0]));
 
-    }
-
-    else if (k_comm == PDM_MPI_COMM_KIND_NEIGHBOR_COLLECTIVE) {
-
-      printf ("Error PDM_part_to_part_reverse_iexch : "
-               "PDM_STRIDE_CST_INTERLACED stride with"
-               " PDM_MPI_COMM_KIND_NEIGHBOR_COLLECTIVE k_comm is not implemented yet\n");
-      abort();
-
-    }
-
-    else if (k_comm == PDM_MPI_COMM_KIND_WIN_SHARED_AND_P2P) {
-
-      printf ("Error PDM_part_to_part_reverse_iexch : "
-               "PDM_STRIDE_CST_INTERLACED stride with"
-               " PDM_MPI_COMM_KIND_WIN_SHARED_AND_P2P k_comm is not implemented yet\n");
-      abort();
-
-    }
-
-    else if (k_comm == PDM_MPI_COMM_KIND_WIN_SHARED_AND_COLLECTIVE) {
-
-      printf ("Error PDM_part_to_part_reverse_iexch : "
-               "PDM_STRIDE_CST_INTERLACED stride with"
-               " PDM_MPI_COMM_KIND_WIN_SHARED_AND_COLLECTIVE k_comm is not implemented yet\n");
-      abort();
-
-    }
-
-    else if (k_comm == PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE) {
-
-      printf ("Error PDM_part_to_part_reverse_iexch : "
-               "PDM_STRIDE_CST_INTERLACED stride with"
-               " PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE k_comm is not implemented yet\n");
-      abort();
-
-    }
-
-    else if (k_comm == PDM_MPI_COMM_KIND_WIN_RMA) {
+    } else if (k_comm == PDM_MPI_COMM_KIND_WIN_RMA) {
 
       printf ("Error PDM_part_to_part_reverse_iexch : "
                "PDM_STRIDE_CST_INTERLACED stride with"
                " PDM_MPI_COMM_KIND_WIN_RMA k_comm is not implemented yet\n");
       abort();
 
-    }
-
-    else {
+    } else {
 
       printf ("Error PDM_part_to_part_reverse_iexch : "
                "PDM_STRIDE_CST_INTERLACED stride with"
@@ -4998,54 +4769,14 @@ PDM_part_to_part_reverse_iexch
                                      part1_data,
                                      _request);
 
-    }
-
-    else if (k_comm == PDM_MPI_COMM_KIND_COLLECTIVE) {
+    } else if (k_comm == PDM_MPI_COMM_KIND_COLLECTIVE) {
 
       printf ("Error PDM_part_to_part_reverse_iexch : "
                "PDM_STRIDE_VAR_INTERLACED stride with"
                " PDM_MPI_COMM_KIND_COLLECTIVE k_comm is not implemented yet\n");
       abort();
 
-    }
-
-    else if (k_comm == PDM_MPI_COMM_KIND_NEIGHBOR_COLLECTIVE) {
-
-      printf ("Error PDM_part_to_part_reverse_iexch : "
-               "PDM_STRIDE_VAR_INTERLACED stride with"
-               " PDM_MPI_COMM_KIND_NEIGHBOR_COLLECTIVE k_comm is not implemented yet\n");
-      abort();
-
-    }
-
-    else if (k_comm == PDM_MPI_COMM_KIND_WIN_SHARED_AND_P2P) {
-
-      printf ("Error PDM_part_to_part_reverse_iexch : "
-               "PDM_STRIDE_VAR_INTERLACED stride with"
-               " PDM_MPI_COMM_KIND_WIN_SHARED_AND_P2P k_comm is not implemented yet\n");
-      abort();
-
-    }
-
-    else if (k_comm == PDM_MPI_COMM_KIND_WIN_SHARED_AND_COLLECTIVE) {
-
-      printf ("Error PDM_part_to_part_reverse_iexch : "
-               "PDM_STRIDE_VAR_INTERLACED stride with"
-               " PDM_MPI_COMM_KIND_WIN_SHARED_AND_COLLECTIVE k_comm is not implemented yet\n");
-      abort();
-
-    }
-
-    else if (k_comm == PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE) {
-
-      printf ("Error PDM_part_to_part_reverse_iexch : "
-               "PDM_STRIDE_VAR_INTERLACED stride with"
-               " PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE k_comm is not implemented yet\n");
-      abort();
-
-    }
-
-    else if (k_comm == PDM_MPI_COMM_KIND_WIN_RMA) {
+    } else if (k_comm == PDM_MPI_COMM_KIND_WIN_RMA) {
 
       printf ("Error PDM_part_to_part_reverse_iexch : "
                "PDM_STRIDE_VAR_INTERLACED stride with"
@@ -5082,10 +4813,7 @@ PDM_part_to_part_reverse_iexch_wait
         PDM_part_to_part_reverse_issend_wait (ptp, ptp->async_exch_subrequest[_request][2*i]);
 
       }
-
-    }
-
-    else if (ptp->async_exch_k_comm[_request] == PDM_MPI_COMM_KIND_COLLECTIVE) {
+    } else if (ptp->async_exch_k_comm[_request] == PDM_MPI_COMM_KIND_COLLECTIVE) {
 
       for (int i = 0; i < ptp->async_exch_subrequest_s[_request]; i++) {
 
@@ -5093,117 +4821,30 @@ PDM_part_to_part_reverse_iexch_wait
 
       }
 
-    }
-
-    else if (ptp->async_exch_k_comm[_request] == PDM_MPI_COMM_KIND_NEIGHBOR_COLLECTIVE) {
-
-      printf ("Error PDM_part_to_part_reverse_iexch_wait : "
-               "PDM_STRIDE_CST_INTERLEAVED stride with"
-               " PDM_MPI_COMM_KIND_NEIGHBOR_COLLECTIVE k_comm is not implemented yet\n");
-      abort();
-
-    }
-
-    else if (ptp->async_exch_k_comm[_request] == PDM_MPI_COMM_KIND_WIN_SHARED_AND_P2P) {
-
-      printf ("Error PDM_part_to_part_reverse_iexch_wait : "
-               "PDM_STRIDE_CST_INTERLEAVED stride with"
-               " PDM_MPI_COMM_KIND_WIN_SHARED_AND_P2P k_comm is not implemented yet\n");
-      abort();
-
-    }
-
-    else if (ptp->async_exch_k_comm[_request] == PDM_MPI_COMM_KIND_WIN_SHARED_AND_COLLECTIVE) {
-
-      printf ("Error PDM_part_to_part_reverse_iexch_wait : "
-               "PDM_STRIDE_CST_INTERLEAVED stride with"
-               " PDM_MPI_COMM_KIND_WIN_SHARED_AND_COLLECTIVE k_comm is not implemented yet\n");
-      abort();
-
-    }
-
-    else if (ptp->async_exch_k_comm[_request] == PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE) {
-
-      printf ("Error PDM_part_to_part_reverse_iexch_wait : "
-               "PDM_STRIDE_CST_INTERLEAVED stride with"
-               " PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE k_comm is not implemented yet\n");
-      abort();
-
-    }
-
-    else if (ptp->async_exch_k_comm[_request] == PDM_MPI_COMM_KIND_WIN_RMA) {
-
+    } else if (ptp->async_exch_k_comm[_request] == PDM_MPI_COMM_KIND_WIN_RMA) {
       printf ("Error PDM_part_to_part_reverse_iexch_wait : "
                "PDM_STRIDE_CST_INTERLEAVED stride with"
                " PDM_MPI_COMM_KIND_WIN_RMA k_comm is not implemented yet\n");
       abort();
 
     }
-
-  }
-
-  else if (ptp->async_exch_t_stride[_request] == PDM_STRIDE_CST_INTERLACED) {
-
+  } else if (ptp->async_exch_t_stride[_request] == PDM_STRIDE_CST_INTERLACED) {
     if (ptp->async_exch_k_comm[_request] == PDM_MPI_COMM_KIND_P2P) {
 
       PDM_part_to_part_reverse_irecv_wait (ptp, ptp->async_exch_subrequest[_request][1]);
 
       PDM_part_to_part_reverse_issend_wait (ptp, ptp->async_exch_subrequest[_request][0]);
-
-    }
-
-    else if (ptp->async_exch_k_comm[_request] == PDM_MPI_COMM_KIND_COLLECTIVE) {
+    } else if (ptp->async_exch_k_comm[_request] == PDM_MPI_COMM_KIND_COLLECTIVE) {
 
       PDM_part_to_part_reverse_ialltoall_wait(ptp, ptp->async_exch_subrequest[_request][0]);
 
-    }
-
-    else if (ptp->async_exch_k_comm[_request] == PDM_MPI_COMM_KIND_NEIGHBOR_COLLECTIVE) {
-
-      printf ("Error PDM_part_to_part_reverse_iexch_wait : "
-               "PDM_STRIDE_CST_INTERLACED stride with"
-               " PDM_MPI_COMM_KIND_NEIGHBOR_COLLECTIVE k_comm is not implemented yet\n");
-      abort();
-
-    }
-
-    else if (ptp->async_exch_k_comm[_request] == PDM_MPI_COMM_KIND_WIN_SHARED_AND_P2P) {
-
-      printf ("Error PDM_part_to_part_reverse_iexch_wait : "
-               "PDM_STRIDE_CST_INTERLACED stride with"
-               " PDM_MPI_COMM_KIND_WIN_SHARED_AND_P2P k_comm is not implemented yet\n");
-      abort();
-
-    }
-
-    else if (ptp->async_exch_k_comm[_request] == PDM_MPI_COMM_KIND_WIN_SHARED_AND_COLLECTIVE) {
-
-      printf ("Error PDM_part_to_part_reverse_iexch_wait : "
-               "PDM_STRIDE_CST_INTERLACED stride with"
-               " PDM_MPI_COMM_KIND_WIN_SHARED_AND_COLLECTIVE k_comm is not implemented yet\n");
-      abort();
-
-    }
-
-    else if (ptp->async_exch_k_comm[_request] == PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE) {
-
-      printf ("Error PDM_part_to_part_reverse_iexch_wait : "
-               "PDM_STRIDE_CST_INTERLACED stride with"
-               " PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE k_comm is not implemented yet\n");
-      abort();
-
-    }
-
-    else if (ptp->async_exch_k_comm[_request] == PDM_MPI_COMM_KIND_WIN_RMA) {
-
+    } else if (ptp->async_exch_k_comm[_request] == PDM_MPI_COMM_KIND_WIN_RMA) {
       printf ("Error PDM_part_to_part_reverse_iexch_wait : "
                "PDM_STRIDE_CST_INTERLACED stride with"
                " PDM_MPI_COMM_KIND_WIN_RMA k_comm is not implemented yet\n");
       abort();
 
-    }
-
-    else {
+    } else {
 
       printf ("Error PDM_part_to_part_reverse_iexch_wait : "
                "PDM_STRIDE_CST_INTERLACED stride with"
@@ -5211,10 +4852,7 @@ PDM_part_to_part_reverse_iexch_wait
       abort();
 
     }
-
-  }
-
-  else if (ptp->async_exch_t_stride[_request] == PDM_STRIDE_VAR_INTERLACED) {
+  } else if (ptp->async_exch_t_stride[_request] == PDM_STRIDE_VAR_INTERLACED) {
 
     if (ptp->async_exch_k_comm[_request] == PDM_MPI_COMM_KIND_P2P) {
 
@@ -5222,54 +4860,13 @@ PDM_part_to_part_reverse_iexch_wait
 
       _p2p_stride_var_reverse_iexch_wait (ptp, _request);
 
-    }
-
-    else if (ptp->async_exch_k_comm[_request] == PDM_MPI_COMM_KIND_COLLECTIVE) {
+    } else if (ptp->async_exch_k_comm[_request] == PDM_MPI_COMM_KIND_COLLECTIVE) {
 
       printf ("Error PDM_part_to_part_reverse_iexch_wait : "
                "PDM_STRIDE_VAR_INTERLACED stride with"
                " PDM_MPI_COMM_KIND_COLLECTIVE k_comm is not implemented yet\n");
       abort();
-
-    }
-
-    else if (ptp->async_exch_k_comm[_request] == PDM_MPI_COMM_KIND_NEIGHBOR_COLLECTIVE) {
-
-      printf ("Error PDM_part_to_part_reverse_iexch_wait : "
-               "PDM_STRIDE_VAR_INTERLACED stride with"
-               " PDM_MPI_COMM_KIND_NEIGHBOR_COLLECTIVE k_comm is not implemented yet\n");
-      abort();
-
-    }
-
-    else if (ptp->async_exch_k_comm[_request] == PDM_MPI_COMM_KIND_WIN_SHARED_AND_P2P) {
-
-      printf ("Error PDM_part_to_part_reverse_iexch_wait : "
-               "PDM_STRIDE_VAR_INTERLACED stride with"
-               " PDM_MPI_COMM_KIND_WIN_SHARED_AND_P2P k_comm is not implemented yet\n");
-      abort();
-
-    }
-
-    else if (ptp->async_exch_k_comm[_request] == PDM_MPI_COMM_KIND_WIN_SHARED_AND_COLLECTIVE) {
-
-      printf ("Error PDM_part_to_part_reverse_iexch_wait : "
-               "PDM_STRIDE_VAR_INTERLACED stride with"
-               " PDM_MPI_COMM_KIND_WIN_SHARED_AND_COLLECTIVE k_comm is not implemented yet\n");
-      abort();
-
-    }
-
-    else if (ptp->async_exch_k_comm[_request] == PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE) {
-
-      printf ("Error PDM_part_to_part_reverse_iexch_wait : "
-               "PDM_STRIDE_VAR_INTERLACED stride with"
-               " PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE k_comm is not implemented yet\n");
-      abort();
-
-    }
-
-    else if (ptp->async_exch_k_comm[_request] == PDM_MPI_COMM_KIND_WIN_RMA) {
+    } else if (ptp->async_exch_k_comm[_request] == PDM_MPI_COMM_KIND_WIN_RMA) {
 
       printf ("Error PDM_part_to_part_reverse_iexch_wait : "
                "PDM_STRIDE_VAR_INTERLACED stride with"
@@ -5277,7 +4874,6 @@ PDM_part_to_part_reverse_iexch_wait
       abort();
 
     }
-
   }
 
   _free_async_exch (ptp, _request);
