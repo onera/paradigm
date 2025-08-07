@@ -55,19 +55,27 @@ struct _pdm_exchange_helper_t {
   int                     *n_sub_requests;
   PDM_MPI_Request        **sub_requests;
 
+  void                   **send_buffer;
+  void                   **recv_buffer;
+
+  /* Very specific to RMA, allowing RMA + API Persistent */
+  int                    **recv_n;
+  int                    **recv_idx;
+
   PDM_MPI_Win             *win_send;
   PDM_MPI_Win             *win_recv;
   PDM_MPI_Group           *group_send;
   PDM_MPI_Group           *group_recv;
   int                    **target_disp;
 
-  void                   **send_buffer;
-  void                   **recv_buffer;
-
-  PDM_stride_t            *t_stride;
   PDM_mpi_comm_kind_t     *k_comm;
+  PDM_stride_t            *t_stride;
   size_t                  *s_data;
   int                     *cst_stride;
+  PDM_MPI_Datatype        *mpi_type;
+
+
+  /* High-User helper to keep pointer */
   int                   ***p_send_stride;
   void                  ***p_send_data;
   int                   ***p_recv_stride;

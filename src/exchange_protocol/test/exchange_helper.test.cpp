@@ -125,14 +125,16 @@ MPI_TEST_CASE("[PDM_exchange_helper] - Exch ", 2) {
   }
   std::vector<int> recv_buffer(recv_idx[n_rank]);
 
-  std::vector<PDM_mpi_comm_kind_t> lexch_type = {PDM_MPI_COMM_KIND_P2P, PDM_MPI_COMM_KIND_COLLECTIVE};
+  std::vector<PDM_mpi_comm_kind_t> lexch_type = {PDM_MPI_COMM_KIND_P2P,
+                                                 PDM_MPI_COMM_KIND_COLLECTIVE,
+                                                 PDM_MPI_COMM_KIND_WIN_RMA};
   int n_type_exch = lexch_type.size();
 
 
   static int recv_buffer_expected_p0[4] = {1, 2, 3, 10};
   static int recv_buffer_expected_p1[5] = {4, 5, 20, 30, 40};
 
-  for(int i_type_exch = 0; i_type_exch < n_type_exch; ++i_type_exch) {
+  for(int i_type_exch = 0; i_type_exch < n_type_exch-1; ++i_type_exch) { // RMA + bloquant -> Pas géré
 
     // Synchronous
     PDM_exchange_helper_exch(exch_helper,
@@ -153,52 +155,90 @@ MPI_TEST_CASE("[PDM_exchange_helper] - Exch ", 2) {
 
   static int recv_buffer_expected2_p0[4] = {11, 12, 13, 20};
   static int recv_buffer_expected2_p1[5] = {14, 15, 30, 40, 50};
-  for(int i_type_exch = 0; i_type_exch < n_type_exch; ++i_type_exch) {
 
-    // Persistent
-    int request_id = PDM_exchange_helper_exch_init(exch_helper,
-                                                   PDM_MPI_COMM_KIND_P2P,
-                                                   sizeof(int),
-                                                   1,
-                                                   send_idx   [i_rank].data(),
-                                                   send_n             .data(),
-                                                   send_buffer[i_rank].data(),
-                                                   recv_idx           .data(),
-                                                   recv_n             .data(),
-                                                   recv_buffer        .data());
+  int n_try = 4;
+  for(int i_try = 0; i_try < n_try; ++i_try) {
+    for(int i_type_exch = 0; i_type_exch < n_type_exch; ++i_type_exch) {
 
-    PDM_exchange_helper_exch_start(exch_helper, request_id);
+#ifndef HAVE_MPI_COLLECTIVE_INIT_FUNC
+      if(lexch_type[i_type_exch] == PDM_MPI_COMM_KIND_COLLECTIVE) {
+        continue;
+      }
+#endif
 
-    PDM_exchange_helper_exch_wait(exch_helper, request_id);
+      // Persistent
+      int request_id = PDM_exchange_helper_exch_init(exch_helper,
+                                                     lexch_type[i_type_exch],
+                                                     sizeof(int),
+                                                     1,
+                                                     send_idx   [i_rank].data(),
+                                                     send_n             .data(),
+                                                     send_buffer[i_rank].data(),
+                                                     recv_idx           .data(),
+                                                     recv_n             .data(),
+                                                     recv_buffer        .data());
 
-    if(0 == 1) {
-      PDM_log_trace_array_int(recv_buffer.data(), recv_idx[n_rank], "recv_buffer ::");
+      PDM_exchange_helper_exch_start(exch_helper, request_id);
+
+      PDM_exchange_helper_exch_wait(exch_helper, request_id);
+
+      if(0 == 1) {
+        PDM_log_trace_array_int(recv_buffer.data(), recv_idx[n_rank], "recv_buffer ::");
+      }
+
+      MPI_CHECK_EQ_C_ARRAY(0, recv_buffer, recv_buffer_expected_p0, recv_idx.back());
+      MPI_CHECK_EQ_C_ARRAY(1, recv_buffer, recv_buffer_expected_p1, recv_idx.back());
+
+      // Changement des buffers !
+      for(int i = 0; i < static_cast<int>(send_buffer[i_rank].size()); ++i) {
+        send_buffer[i_rank][i] += 10;
+      }
+
+      PDM_exchange_helper_exch_start(exch_helper, request_id);
+
+      PDM_exchange_helper_exch_wait(exch_helper, request_id);
+
+      if(0 == 1) {
+        PDM_log_trace_array_int(recv_buffer.data(), recv_idx[n_rank], "recv_buffer ::");
+      }
+
+      MPI_CHECK_EQ_C_ARRAY(0, recv_buffer, recv_buffer_expected2_p0, recv_idx.back());
+      MPI_CHECK_EQ_C_ARRAY(1, recv_buffer, recv_buffer_expected2_p1, recv_idx.back());
+
+      PDM_exchange_helper_exch_free(exch_helper, request_id);
+
+      // Changement des buffers !
+      for(int i = 0; i < static_cast<int>(send_buffer[i_rank].size()); ++i) {
+        send_buffer[i_rank][i] -= 10;
+      }
     }
+  }
 
-    MPI_CHECK_EQ_C_ARRAY(0, recv_buffer, recv_buffer_expected_p0, recv_idx.back());
-    MPI_CHECK_EQ_C_ARRAY(1, recv_buffer, recv_buffer_expected_p1, recv_idx.back());
 
-    // Changement des buffers !
-    for(int i = 0; i < static_cast<int>(send_buffer[i_rank].size()); ++i) {
-      send_buffer[i_rank][i] += 10;
-    }
+  for(int i_try = 0; i_try < n_try; ++i_try) {
+    for(int i_type_exch = 0; i_type_exch < n_type_exch; ++i_type_exch) {
 
-    PDM_exchange_helper_exch_start(exch_helper, request_id);
+      // Persistent
+      int request_id = PDM_exchange_helper_iexch(exch_helper,
+                                                 lexch_type[i_type_exch],
+                                                 sizeof(int),
+                                                 1,
+                                                 send_idx   [i_rank].data(),
+                                                 send_n             .data(),
+                                                 send_buffer[i_rank].data(),
+                                                 recv_idx           .data(),
+                                                 recv_n             .data(),
+                                                 recv_buffer        .data());
 
-    PDM_exchange_helper_exch_wait(exch_helper, request_id);
+      PDM_exchange_helper_exch_wait(exch_helper, request_id);
 
-    if(0 == 1) {
-      PDM_log_trace_array_int(recv_buffer.data(), recv_idx[n_rank], "recv_buffer ::");
-    }
+      if(0 == 1) {
+        PDM_log_trace_array_int(recv_buffer.data(), recv_idx[n_rank], "recv_buffer ::");
+      }
 
-    MPI_CHECK_EQ_C_ARRAY(0, recv_buffer, recv_buffer_expected2_p0, recv_idx.back());
-    MPI_CHECK_EQ_C_ARRAY(1, recv_buffer, recv_buffer_expected2_p1, recv_idx.back());
+      MPI_CHECK_EQ_C_ARRAY(0, recv_buffer, recv_buffer_expected_p0, recv_idx.back());
+      MPI_CHECK_EQ_C_ARRAY(1, recv_buffer, recv_buffer_expected_p1, recv_idx.back());
 
-    PDM_exchange_helper_exch_free(exch_helper, request_id);
-
-    // Changement des buffers !
-    for(int i = 0; i < static_cast<int>(send_buffer[i_rank].size()); ++i) {
-      send_buffer[i_rank][i] -= 10;
     }
   }
 

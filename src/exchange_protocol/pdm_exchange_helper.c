@@ -79,10 +79,14 @@ _find_available_request
   // Realloc
   int n_new_request = PDM_MAX(exch_helper->n_request * 2, 1);
   PDM_realloc(exch_helper->requests_status, exch_helper->requests_status, n_new_request, _exch_helper_status_t  );
+  PDM_realloc(exch_helper->is_persistent  , exch_helper->is_persistent  , n_new_request, int                    );
   PDM_realloc(exch_helper->sub_requests   , exch_helper->sub_requests   , n_new_request, PDM_MPI_Request       *);
   PDM_realloc(exch_helper->n_sub_requests , exch_helper->n_sub_requests , n_new_request, int                    );
+
   PDM_realloc(exch_helper->send_buffer    , exch_helper->send_buffer    , n_new_request, void                  *);
   PDM_realloc(exch_helper->recv_buffer    , exch_helper->recv_buffer    , n_new_request, void                  *);
+  PDM_realloc(exch_helper->recv_n         , exch_helper->recv_n         , n_new_request, int                   *);
+  PDM_realloc(exch_helper->recv_idx       , exch_helper->recv_idx       , n_new_request, int                   *);
 
   PDM_realloc(exch_helper->win_send       , exch_helper->win_send       , n_new_request, PDM_MPI_Win            );
   PDM_realloc(exch_helper->win_recv       , exch_helper->win_recv       , n_new_request, PDM_MPI_Win            );
@@ -90,9 +94,13 @@ _find_available_request
   PDM_realloc(exch_helper->group_recv     , exch_helper->group_recv     , n_new_request, PDM_MPI_Group          );
   PDM_realloc(exch_helper->target_disp    , exch_helper->target_disp    , n_new_request, int                   *);
 
+  PDM_realloc(exch_helper->k_comm         , exch_helper->k_comm         , n_new_request, PDM_mpi_comm_kind_t    );
   PDM_realloc(exch_helper->t_stride       , exch_helper->t_stride       , n_new_request, PDM_stride_t           );
   PDM_realloc(exch_helper->s_data         , exch_helper->s_data         , n_new_request, size_t                 );
   PDM_realloc(exch_helper->cst_stride     , exch_helper->cst_stride     , n_new_request, int                    );
+  PDM_realloc(exch_helper->mpi_type       , exch_helper->mpi_type       , n_new_request, PDM_MPI_Datatype       );
+
+  /* High-User helper to keep pointer */
   PDM_realloc(exch_helper->p_send_stride  , exch_helper->p_send_stride  , n_new_request, int                  **);
   PDM_realloc(exch_helper->p_send_data    , exch_helper->p_send_data    , n_new_request, void                 **);
   PDM_realloc(exch_helper->p_recv_stride  , exch_helper->p_recv_stride  , n_new_request, int                  **);
@@ -111,6 +119,8 @@ _find_available_request
 
     exch_helper->send_buffer    [i] = NULL;
     exch_helper->recv_buffer    [i] = NULL;
+    exch_helper->recv_n         [i] = NULL;
+    exch_helper->recv_idx       [i] = NULL;
 
     exch_helper->win_send       [i] = PDM_MPI_WIN_NULL;
     exch_helper->win_recv       [i] = PDM_MPI_WIN_NULL;
@@ -118,10 +128,11 @@ _find_available_request
     exch_helper->group_recv     [i] = PDM_MPI_GROUP_NULL;
     exch_helper->target_disp    [i] = NULL;
 
-    exch_helper->s_data         [i] = 0;
-    exch_helper->t_stride       [i] = PDM_STRIDE_CST_INTERLACED;
     exch_helper->k_comm         [i] = PDM_MPI_COMM_KIND_INVALID;
+    exch_helper->t_stride       [i] = PDM_STRIDE_CST_INTERLACED;
+    exch_helper->s_data         [i] = 0;
     exch_helper->cst_stride     [i] = 0;
+    exch_helper->mpi_type       [i] = PDM_MPI_DATATYPE_NULL;
     exch_helper->p_send_stride  [i] = NULL;
     exch_helper->p_send_data    [i] = NULL;
     exch_helper->p_recv_stride  [i] = NULL;
@@ -134,6 +145,93 @@ _find_available_request
 
   exch_helper->n_request = n_new_request;
   return exch_helper->n_request-1;
+}
+
+static
+void
+_warm_up_rma
+(
+  PDM_exchange_helper_t *exch_helper,
+  int                   *send_idx,
+  int                   *recv_n,
+  int                    request_id
+)
+{
+  int n_rank;
+  PDM_MPI_Comm_size(exch_helper->comm, &n_rank);
+  /*
+   * Initialization of MPI synchronization groups for the Active Target model.
+   * This step is necessary to identify communication partners.
+   * It is typically done once at the beginning to be reused later.
+   */
+  PDM_MPI_Group world_group;
+  PDM_MPI_Comm_group(exch_helper->comm, &world_group);
+
+  /*
+   * Creates a process group (`group_recv`).
+   * This group contains all processes from whom the current process will receive data.
+   */
+  int *tmp_rank_id = NULL;
+  PDM_malloc(tmp_rank_id, n_rank, int);
+
+  int n_recv = 0;
+  for(int i = 0; i < n_rank; ++i) {
+    if(recv_n[i] > 0) {
+      tmp_rank_id[n_recv++] = i;
+    }
+  }
+
+  PDM_MPI_Group_incl(world_group, n_recv, tmp_rank_id, &exch_helper->group_recv[request_id]);
+  PDM_MPI_Group_free(&world_group);
+
+  PDM_malloc(exch_helper->target_disp[request_id], n_rank, int);
+
+  /*
+   * Uses an MPI_Alltoall collective communication to exchange offsets.
+   * Each process sends its own offset (`send_idx`) and receives the offsets from all others.
+   * These offsets (stored in `exch_helper->target_disp`) are crucial
+   * for the current process to know where to read/write in the remote windows.
+   */
+  PDM_MPI_Alltoall(send_idx                            , 1, PDM_MPI_INT,
+                   exch_helper->target_disp[request_id], 1, PDM_MPI_INT, exch_helper->comm);
+
+  if(0 == 1) {
+    PDM_log_trace_array_int(exch_helper->target_disp[request_id], n_rank, "exch_helper->target_disp[request_id]");
+    PDM_log_trace_array_int(send_idx, n_rank+1, "send_idx ::");
+    PDM_log_trace_array_int(tmp_rank_id, n_recv, "tmp_rank_id ::");
+  }
+  PDM_free(tmp_rank_id);
+}
+
+static
+void
+_synchro_rma_begin
+(
+  PDM_exchange_helper_t *exch_helper,
+  int                    request_id
+)
+{
+  /*
+   * This is the beginning of an MPI Active Target RMA communication epoch.
+   * These two calls, `Win_post` and `Win_start`, are typically called back-to-back,
+   * but they have very different roles. They can be thought of as a handshake
+   * between the partners defined by the groups.
+   *
+   * 1. Declares that this process's window (`win_send`) is available.
+   *    The current process "posts" its window, indicating that the processes in `group_recv`
+   *    are now allowed to access its memory. This enables the group members to start
+   *    their RMA operations (Rget/Rput) to/from this window.
+   *
+   */
+  PDM_MPI_Win_post (exch_helper->group_recv[request_id], 0, exch_helper->win_send[request_id]);
+
+  /*
+   * 2. Starts an access epoch to the partners' windows.
+   *    The current process "starts" an access epoch, declaring that it will initiate
+   *    RMA operations to the windows of the processes in `group_recv`.
+   *    This call is a prerequisite before launching any `MPI_Rget` or `MPI_Rput` functions.
+   */
+  PDM_MPI_Win_start(exch_helper->group_recv[request_id], 0, exch_helper->win_send[request_id]);
 }
 
 /*=============================================================================
@@ -159,6 +257,8 @@ PDM_exchange_helper_create
   PDM_malloc(exch_helper->n_sub_requests , exch_helper->n_request, int                    );
   PDM_malloc(exch_helper->send_buffer    , exch_helper->n_request, void                  *);
   PDM_malloc(exch_helper->recv_buffer    , exch_helper->n_request, void                  *);
+  PDM_malloc(exch_helper->recv_n         , exch_helper->n_request, int                   *);
+  PDM_malloc(exch_helper->recv_idx       , exch_helper->n_request, int                   *);
 
   // RMA
   PDM_malloc(exch_helper->win_send       , exch_helper->n_request, PDM_MPI_Win            );
@@ -167,10 +267,12 @@ PDM_exchange_helper_create
   PDM_malloc(exch_helper->group_recv     , exch_helper->n_request, PDM_MPI_Group          );
   PDM_malloc(exch_helper->target_disp    , exch_helper->n_request, int                   *);
 
-  PDM_malloc(exch_helper->t_stride       , exch_helper->n_request, PDM_stride_t           );
   PDM_malloc(exch_helper->k_comm         , exch_helper->n_request, PDM_mpi_comm_kind_t    );
+  PDM_malloc(exch_helper->t_stride       , exch_helper->n_request, PDM_stride_t           );
   PDM_malloc(exch_helper->s_data         , exch_helper->n_request, size_t                 );
   PDM_malloc(exch_helper->cst_stride     , exch_helper->n_request, int                    );
+  PDM_malloc(exch_helper->mpi_type       , exch_helper->n_request, PDM_MPI_Datatype       );
+
   PDM_malloc(exch_helper->p_send_stride  , exch_helper->n_request, int                  **);
   PDM_malloc(exch_helper->p_send_data    , exch_helper->n_request, void                 **);
   PDM_malloc(exch_helper->p_recv_stride  , exch_helper->n_request, int                  **);
@@ -188,16 +290,19 @@ PDM_exchange_helper_create
     exch_helper->sub_requests   [i] = NULL;
     exch_helper->send_buffer    [i] = NULL;
     exch_helper->recv_buffer    [i] = NULL;
+    exch_helper->recv_n         [i] = NULL;
+    exch_helper->recv_idx       [i] = NULL;
     exch_helper->win_send       [i] = PDM_MPI_WIN_NULL;
     exch_helper->win_recv       [i] = PDM_MPI_WIN_NULL;
     exch_helper->group_send     [i] = PDM_MPI_GROUP_NULL;
     exch_helper->group_recv     [i] = PDM_MPI_GROUP_NULL;
     exch_helper->target_disp    [i] = NULL;
 
-    exch_helper->s_data         [i] = 0;
-    exch_helper->t_stride       [i] = PDM_STRIDE_CST_INTERLACED;
     exch_helper->k_comm         [i] = PDM_MPI_COMM_KIND_INVALID;
+    exch_helper->t_stride       [i] = PDM_STRIDE_CST_INTERLACED;
+    exch_helper->s_data         [i] = 0;
     exch_helper->cst_stride     [i] = 0;
+    exch_helper->mpi_type       [i] = PDM_MPI_DATATYPE_NULL;
     exch_helper->p_send_stride  [i] = NULL;
     exch_helper->p_send_data    [i] = NULL;
     exch_helper->p_recv_stride  [i] = NULL;
@@ -298,13 +403,13 @@ PDM_exchange_helper_iexch
   void                  *recv_buffer
 )
 {
+  int n_rank;
+  PDM_MPI_Comm_size(exch_helper->comm, &n_rank);
+
   int tag        = _get_next_tag          (exch_helper, k_comm);
   int request_id = _find_available_request(exch_helper);
 
   int s_data_tot = s_data * cst_stride;
-
-  int n_rank;
-  PDM_MPI_Comm_size(exch_helper->comm, &n_rank);
 
   PDM_MPI_Datatype mpi_type;
   PDM_MPI_Type_create_contiguous(s_data_tot, PDM_MPI_BYTE, &mpi_type);
@@ -360,71 +465,13 @@ PDM_exchange_helper_iexch
      */
     PDM_MPI_Win_create(send_buffer, s_data_tot * send_idx[n_rank], s_data_tot, exch_helper->comm, &exch_helper->win_send[request_id]);
 
-    /*
-     * Initialization of MPI synchronization groups for the Active Target model.
-     * This step is necessary to identify communication partners.
-     * It is typically done once at the beginning to be reused later.
-     */
-    PDM_MPI_Group world_group;
-    PDM_MPI_Comm_group(exch_helper->comm, &world_group);
+    _warm_up_rma(exch_helper,
+                 send_idx,
+                 recv_n,
+                 request_id);
 
-    /*
-     * Creates a process group (`group_recv`).
-     * This group contains all processes from whom the current process will receive data.
-     */
-    int *tmp_rank_id = NULL;
-    PDM_malloc(tmp_rank_id, n_rank, int);
-
-    int n_recv = 0;
-    for(int i = 0; i < n_rank; ++i) {
-      if(recv_n[i] > 0) {
-        tmp_rank_id[n_recv++] = i;
-      }
-    }
-
-    PDM_MPI_Group_incl(world_group, n_recv, tmp_rank_id, &exch_helper->group_recv[request_id]);
-    PDM_MPI_Group_free(&world_group);
-
-    PDM_malloc(exch_helper->target_disp[request_id], n_rank, int);
-
-    /*
-     * Uses an MPI_Alltoall collective communication to exchange offsets.
-     * Each process sends its own offset (`send_idx`) and receives the offsets from all others.
-     * These offsets (stored in `exch_helper->target_disp`) are crucial
-     * for the current process to know where to read/write in the remote windows.
-     */
-    PDM_MPI_Alltoall(send_idx                            , 1, PDM_MPI_INT,
-                     exch_helper->target_disp[request_id], 1, PDM_MPI_INT, exch_helper->comm);
-
-    if(0 == 1) {
-      PDM_log_trace_array_int(exch_helper->target_disp[request_id], n_rank, "exch_helper->target_disp[request_id]");
-      PDM_log_trace_array_int(send_idx, n_rank+1, "send_idx ::");
-      PDM_log_trace_array_int(recv_idx, n_rank+1, "recv_idx ::");
-      PDM_log_trace_array_int(tmp_rank_id, n_recv, "tmp_rank_id ::");
-    }
-    PDM_free(tmp_rank_id);
-
-    /*
-     * This is the beginning of an MPI Active Target RMA communication epoch.
-     * These two calls, `Win_post` and `Win_start`, are typically called back-to-back,
-     * but they have very different roles. They can be thought of as a handshake
-     * between the partners defined by the groups.
-     *
-     * 1. Declares that this process's window (`win_send`) is available.
-     *    The current process "posts" its window, indicating that the processes in `group_recv`
-     *    are now allowed to access its memory. This enables the group members to start
-     *    their RMA operations (Rget/Rput) to/from this window.
-     *
-     */
-    PDM_MPI_Win_post (exch_helper->group_recv[request_id], 0, exch_helper->win_send[request_id]);
-
-    /*
-     * 2. Starts an access epoch to the partners' windows.
-     *    The current process "starts" an access epoch, declaring that it will initiate
-     *    RMA operations to the windows of the processes in `group_recv`.
-     *    This call is a prerequisite before launching any `MPI_Rget` or `MPI_Rput` functions.
-     */
-    PDM_MPI_Win_start(exch_helper->group_recv[request_id], 0, exch_helper->win_send[request_id]);
+    _synchro_rma_begin(exch_helper,
+                       request_id);
 
     /*
      * Once the `post` and `start` epochs are established, data transfers can be launched.
@@ -452,6 +499,7 @@ PDM_exchange_helper_iexch
 
   PDM_MPI_Type_free(&mpi_type);
 
+  exch_helper->k_comm         [request_id] = k_comm;
   exch_helper->is_persistent  [request_id] = 0;
   exch_helper->requests_status[request_id] = EXCHANGE_HELPER_STATUS_ONGOING;
 
@@ -495,6 +543,9 @@ PDM_exchange_helper_exch_init
   void                  *recv_buffer
 )
 {
+  int n_rank;
+  PDM_MPI_Comm_size(exch_helper->comm, &n_rank);
+
   int tag        = _get_next_tag          (exch_helper, k_comm);
   int request_id = _find_available_request(exch_helper);
 
@@ -533,15 +584,33 @@ PDM_exchange_helper_exch_init
                                exch_helper->comm,
                                &exch_helper->n_sub_requests[request_id],
                                &exch_helper->sub_requests  [request_id]);
+  } else if(k_comm == PDM_MPI_COMM_KIND_WIN_RMA) {
+    /*
+     * Creates a memory window (`win_send`) on `send_buffer`.
+     */
+    PDM_MPI_Win_create(send_buffer, s_data_tot * send_idx[n_rank], s_data_tot, exch_helper->comm, &exch_helper->win_send[request_id]);
+
+    _warm_up_rma(exch_helper,
+                 send_idx,
+                 recv_n,
+                 request_id);
+
+    /*
+     * Keep information to fake persitent
+     */
+     exch_helper->recv_buffer[request_id] = recv_buffer;
+     exch_helper->recv_n     [request_id] = recv_n;
+     exch_helper->recv_idx   [request_id] = recv_idx;
+
   } else {
     PDM_error(__FILE__, __LINE__, 0,
               "Error PDM_exchange_helper_exch not yet implemented with k_comm = %i\n", k_comm);
   }
-  PDM_MPI_Type_free(&mpi_type);
 
   exch_helper->is_persistent  [request_id] = 1;
   exch_helper->k_comm         [request_id] = k_comm;
   exch_helper->requests_status[request_id] = EXCHANGE_HELPER_STATUS_READY;
+  exch_helper->mpi_type       [request_id] = mpi_type;
 
   return request_id;
 }
@@ -567,9 +636,29 @@ PDM_exchange_helper_exch_start
               "Error PDM_exchange_helper_exch_start with status = %i for request_id = %i, you should initialize exch with PDM_exchange_helper_exch_init or PDM_exchange_helper_iexch\n", exch_helper->requests_status[request_id], request_id);
   }
 
-  exch_helper->requests_status[request_id] = EXCHANGE_HELPER_STATUS_ONGOING;
-  PDM_MPI_Startall(exch_helper->n_sub_requests[request_id],
-                   exch_helper->sub_requests  [request_id]);
+  if(exch_helper->k_comm[request_id] == PDM_MPI_COMM_KIND_WIN_RMA) {
+    _synchro_rma_begin(exch_helper,
+                       request_id);
+
+    PDM_free(exch_helper->sub_requests  [request_id]);
+
+    PDM_MPI_Ialltoallv_p2p_rma(exch_helper->win_send   [request_id],
+                               exch_helper->target_disp[request_id],
+                               exch_helper->recv_buffer[request_id],
+                               exch_helper->recv_n     [request_id],
+                               exch_helper->recv_idx   [request_id],
+                               exch_helper->mpi_type   [request_id],
+                               exch_helper->comm,
+                               &exch_helper->n_sub_requests[request_id],
+                               &exch_helper->sub_requests  [request_id]);
+    exch_helper->requests_status[request_id] = EXCHANGE_HELPER_STATUS_ONGOING;
+
+  } else {
+    exch_helper->requests_status[request_id] = EXCHANGE_HELPER_STATUS_ONGOING;
+    PDM_MPI_Startall(exch_helper->n_sub_requests[request_id],
+                     exch_helper->sub_requests  [request_id]);
+  }
+
 }
 
 
@@ -609,17 +698,16 @@ PDM_exchange_helper_exch_wait
     /*
      * On fait la confusion volontaire du RMA appelé via _init/_start ou via _iexch
      * Dans le cas du iexch on doit free le tableau juste après le wait, en persitant on veut pas pour limiter l'overhead de création du group et du target disp
+     * --> Regler dans le PDM_exchange_helper_exch_free
      */
-    if(!exch_helper->is_persistent[request_id]) {
-      PDM_MPI_Group_free(&exch_helper->group_send[request_id]);
-      PDM_MPI_Group_free(&exch_helper->group_recv[request_id]);
-      PDM_free(exch_helper->target_disp[request_id]);
-    }
 
   }
 
-
   exch_helper->requests_status[request_id] = EXCHANGE_HELPER_STATUS_READY;
+
+  if(exch_helper->is_persistent[request_id] == 0) {
+    PDM_exchange_helper_exch_free(exch_helper, request_id);
+  }
 }
 
 void
@@ -637,11 +725,29 @@ PDM_exchange_helper_exch_free
   exch_helper->requests_status[request_id] = EXCHANGE_HELPER_STATUS_FREE;
   exch_helper->n_sub_requests [request_id] = 0;
 
+  PDM_MPI_Type_free(&exch_helper->mpi_type[request_id]);
+
   PDM_MPI_Win_free  (&exch_helper->win_send  [request_id]);
   PDM_MPI_Win_free  (&exch_helper->win_recv  [request_id]);
   PDM_MPI_Group_free(&exch_helper->group_send[request_id]);
   PDM_MPI_Group_free(&exch_helper->group_recv[request_id]);
   PDM_free(exch_helper->target_disp[request_id]);
+
+  /*
+   * Reset all pointer to avoid undefined behavior
+   */
+  // PDM_free(exch_helper->recv_n  [request_id]);
+  // PDM_free(exch_helper->recv_idx[request_id]);
+
+  exch_helper->recv_n  [request_id] = NULL;
+  exch_helper->recv_idx[request_id] = NULL;
+
+  exch_helper->k_comm    [request_id] = PDM_MPI_COMM_KIND_INVALID;
+  exch_helper->t_stride  [request_id] = PDM_STRIDE_CST_INTERLACED;
+  exch_helper->s_data    [request_id] = 0;
+  exch_helper->cst_stride[request_id] = 0;
+  exch_helper->mpi_type  [request_id] = PDM_MPI_DATATYPE_NULL;
+
 }
 
 
@@ -691,6 +797,8 @@ PDM_exchange_helper_free
   PDM_free(exch_helper->sub_requests   );
   PDM_free(exch_helper->send_buffer    );
   PDM_free(exch_helper->recv_buffer    );
+  PDM_free(exch_helper->recv_n         );
+  PDM_free(exch_helper->recv_idx       );
 
   PDM_free(exch_helper->win_send       );
   PDM_free(exch_helper->win_recv       );
@@ -698,10 +806,11 @@ PDM_exchange_helper_free
   PDM_free(exch_helper->group_recv     );
   PDM_free(exch_helper->target_disp    );
 
-  PDM_free(exch_helper->t_stride       );
   PDM_free(exch_helper->k_comm         );
+  PDM_free(exch_helper->t_stride       );
   PDM_free(exch_helper->s_data         );
   PDM_free(exch_helper->cst_stride     );
+  PDM_free(exch_helper->mpi_type       );
   PDM_free(exch_helper->p_send_stride  );
   PDM_free(exch_helper->p_send_data    );
   PDM_free(exch_helper->p_recv_stride  );
