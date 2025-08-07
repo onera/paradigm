@@ -30,7 +30,7 @@ extern "C" {
 typedef enum {
   EXCHANGE_HELPER_STATUS_FREE,
   EXCHANGE_HELPER_STATUS_READY,
-  EXCHANGE_HELPER_STATUS_ONGOING,
+  EXCHANGE_HELPER_STATUS_ONGOING
 } _exch_helper_status_t;
 
 /**
@@ -44,12 +44,14 @@ struct _pdm_exchange_helper_t {
 
   PDM_MPI_Comm             comm;               /*!< MPI communicator */
   int                      n_request;
+  int                      topo_kind;
 
   long                     max_tag;
   int                      seed_tag;
   int                      next_tag;
 
   _exch_helper_status_t   *requests_status;
+  int                     *is_persistent;
   int                     *n_sub_requests;
   PDM_MPI_Request        **sub_requests;
 
@@ -63,6 +65,7 @@ struct _pdm_exchange_helper_t {
   void                   **recv_buffer;
 
   PDM_stride_t            *t_stride;
+  PDM_mpi_comm_kind_t     *k_comm;
   size_t                  *s_data;
   int                     *cst_stride;
   int                   ***p_send_stride;

@@ -105,6 +105,7 @@ _find_available_request
 
   for(int i = exch_helper->n_request; i < n_new_request; ++i) {
     exch_helper->requests_status[i] = EXCHANGE_HELPER_STATUS_FREE;
+    exch_helper->is_persistent  [i] = -1;
     exch_helper->n_sub_requests [i] = 0;
     exch_helper->sub_requests   [i] = NULL;
 
@@ -118,6 +119,8 @@ _find_available_request
     exch_helper->target_disp    [i] = NULL;
 
     exch_helper->s_data         [i] = 0;
+    exch_helper->t_stride       [i] = PDM_STRIDE_CST_INTERLACED;
+    exch_helper->k_comm         [i] = PDM_MPI_COMM_KIND_INVALID;
     exch_helper->cst_stride     [i] = 0;
     exch_helper->p_send_stride  [i] = NULL;
     exch_helper->p_send_data    [i] = NULL;
@@ -151,6 +154,7 @@ PDM_exchange_helper_create
   exch_helper->n_request = n_request_init;
 
   PDM_malloc(exch_helper->requests_status, exch_helper->n_request, _exch_helper_status_t  );
+  PDM_malloc(exch_helper->is_persistent  , exch_helper->n_request, int                    );
   PDM_malloc(exch_helper->sub_requests   , exch_helper->n_request, PDM_MPI_Request       *);
   PDM_malloc(exch_helper->n_sub_requests , exch_helper->n_request, int                    );
   PDM_malloc(exch_helper->send_buffer    , exch_helper->n_request, void                  *);
@@ -164,6 +168,7 @@ PDM_exchange_helper_create
   PDM_malloc(exch_helper->target_disp    , exch_helper->n_request, int                   *);
 
   PDM_malloc(exch_helper->t_stride       , exch_helper->n_request, PDM_stride_t           );
+  PDM_malloc(exch_helper->k_comm         , exch_helper->n_request, PDM_mpi_comm_kind_t    );
   PDM_malloc(exch_helper->s_data         , exch_helper->n_request, size_t                 );
   PDM_malloc(exch_helper->cst_stride     , exch_helper->n_request, int                    );
   PDM_malloc(exch_helper->p_send_stride  , exch_helper->n_request, int                  **);
@@ -178,6 +183,7 @@ PDM_exchange_helper_create
 
   for(int i = 0; i < exch_helper->n_request; ++i) {
     exch_helper->requests_status[i] = EXCHANGE_HELPER_STATUS_FREE;
+    exch_helper->is_persistent  [i] = -1;
     exch_helper->n_sub_requests [i] = 0;
     exch_helper->sub_requests   [i] = NULL;
     exch_helper->send_buffer    [i] = NULL;
@@ -189,6 +195,8 @@ PDM_exchange_helper_create
     exch_helper->target_disp    [i] = NULL;
 
     exch_helper->s_data         [i] = 0;
+    exch_helper->t_stride       [i] = PDM_STRIDE_CST_INTERLACED;
+    exch_helper->k_comm         [i] = PDM_MPI_COMM_KIND_INVALID;
     exch_helper->cst_stride     [i] = 0;
     exch_helper->p_send_stride  [i] = NULL;
     exch_helper->p_send_data    [i] = NULL;
@@ -210,6 +218,9 @@ PDM_exchange_helper_create
   exch_helper->seed_tag = 1;
   exch_helper->next_tag = 1;
 
+  exch_helper->topo_kind = PDM_MPI_UNDEFINED;
+  PDM_MPI_Topo_test(exch_helper->comm, &exch_helper->topo_kind);
+
   return exch_helper;
 }
 
@@ -217,7 +228,7 @@ void
 PDM_exchange_helper_exch
 (
   PDM_exchange_helper_t *exch_helper,
-  PDM_mpi_comm_kind_t    kcomm,
+  PDM_mpi_comm_kind_t    k_comm,
   int                    cst_stride,
   size_t                 s_data,
   int                   *send_idx,
@@ -234,10 +245,7 @@ PDM_exchange_helper_exch
   PDM_MPI_Type_create_contiguous(s_data_tot, PDM_MPI_BYTE, &mpi_type);
   PDM_MPI_Type_commit(&mpi_type);
 
-  int topo_kind = PDM_MPI_UNDEFINED;
-  PDM_MPI_Topo_test(exch_helper->comm, &topo_kind);
-
-  if(kcomm == PDM_MPI_COMM_KIND_COLLECTIVE && topo_kind == PDM_MPI_UNDEFINED) {
+  if(k_comm == PDM_MPI_COMM_KIND_COLLECTIVE && exch_helper->topo_kind == PDM_MPI_UNDEFINED) {
     PDM_MPI_Alltoallv(send_buffer,
                       send_n,
                       send_idx,
@@ -247,7 +255,7 @@ PDM_exchange_helper_exch
                       recv_idx,
                       mpi_type,
                       exch_helper->comm);
-  } else if(kcomm == PDM_MPI_COMM_KIND_COLLECTIVE && topo_kind == PDM_MPI_DIST_GRAPH) {
+  } else if(k_comm == PDM_MPI_COMM_KIND_COLLECTIVE && exch_helper->topo_kind == PDM_MPI_DIST_GRAPH) {
     PDM_MPI_Neighbor_alltoallv(send_buffer,
                                send_n,
                                send_idx,
@@ -257,7 +265,7 @@ PDM_exchange_helper_exch
                                recv_idx,
                                mpi_type,
                                exch_helper->comm);
-  } else if(kcomm == PDM_MPI_COMM_KIND_P2P) {
+  } else if(k_comm == PDM_MPI_COMM_KIND_P2P) {
     PDM_MPI_Alltoallv_p2p(send_buffer,
                           send_n,
                           send_idx,
@@ -269,7 +277,7 @@ PDM_exchange_helper_exch
                           exch_helper->comm);
   } else {
     PDM_error(__FILE__, __LINE__, 0,
-              "Error PDM_exchange_helper_exch not yet implemented with kcomm = %i\n", kcomm);
+              "Error PDM_exchange_helper_exch not yet implemented with k_comm = %i\n", k_comm);
   }
 
   PDM_MPI_Type_free(&mpi_type);
@@ -302,7 +310,7 @@ PDM_exchange_helper_iexch
   PDM_MPI_Type_create_contiguous(s_data_tot, PDM_MPI_BYTE, &mpi_type);
   PDM_MPI_Type_commit(&mpi_type);
 
-  if(k_comm == PDM_MPI_COMM_KIND_COLLECTIVE) {
+  if(k_comm == PDM_MPI_COMM_KIND_COLLECTIVE && exch_helper->topo_kind == PDM_MPI_UNDEFINED) {
     exch_helper->n_sub_requests[request_id] = 1;
     PDM_malloc(exch_helper->sub_requests[request_id], exch_helper->n_sub_requests[request_id], PDM_MPI_Request);
     PDM_MPI_Ialltoallv(send_buffer,
@@ -315,6 +323,19 @@ PDM_exchange_helper_iexch
                        mpi_type,
                        exch_helper->comm,
                        &exch_helper->sub_requests[request_id][0]);
+  } else if(k_comm == PDM_MPI_COMM_KIND_COLLECTIVE && exch_helper->topo_kind == PDM_MPI_DIST_GRAPH) {
+    exch_helper->n_sub_requests[request_id] = 1;
+    PDM_malloc(exch_helper->sub_requests[request_id], exch_helper->n_sub_requests[request_id], PDM_MPI_Request);
+    PDM_MPI_Ineighbor_alltoallv(send_buffer,
+                                send_n,
+                                send_idx,
+                                mpi_type,
+                                recv_buffer,
+                                recv_n,
+                                recv_idx,
+                                mpi_type,
+                                exch_helper->comm,
+                                &exch_helper->sub_requests[request_id][0]);
   } else if (k_comm == PDM_MPI_COMM_KIND_P2P) {
     PDM_MPI_Ialltoallv_p2p(send_buffer,
                            send_n,
@@ -426,11 +447,12 @@ PDM_exchange_helper_iexch
                                &exch_helper->sub_requests  [request_id]);
   } else {
     PDM_error(__FILE__, __LINE__, 0,
-              "Error PDM_exchange_helper_iexch not yet implemented with kcomm = %i\n", k_comm);
+              "Error PDM_exchange_helper_iexch not yet implemented with k_comm = %i\n", k_comm);
   }
 
   PDM_MPI_Type_free(&mpi_type);
 
+  exch_helper->is_persistent  [request_id] = 0;
   exch_helper->requests_status[request_id] = EXCHANGE_HELPER_STATUS_ONGOING;
 
   return request_id;
@@ -482,7 +504,7 @@ PDM_exchange_helper_exch_init
   PDM_MPI_Type_create_contiguous(s_data_tot, PDM_MPI_BYTE, &mpi_type);
   PDM_MPI_Type_commit(&mpi_type);
 
-  if(k_comm == PDM_MPI_COMM_KIND_COLLECTIVE) {
+  if(k_comm == PDM_MPI_COMM_KIND_COLLECTIVE && exch_helper->topo_kind == PDM_MPI_UNDEFINED) {
     exch_helper->n_sub_requests[request_id] = 1;
     PDM_malloc(exch_helper->sub_requests[request_id], exch_helper->n_sub_requests[request_id], PDM_MPI_Request);
     PDM_MPI_Alltoallv_init(send_buffer,
@@ -495,6 +517,9 @@ PDM_exchange_helper_exch_init
                            mpi_type,
                            exch_helper->comm,
                            &exch_helper->sub_requests[request_id][0]);
+  } else if(k_comm == PDM_MPI_COMM_KIND_COLLECTIVE && exch_helper->topo_kind == PDM_MPI_DIST_GRAPH) {
+    PDM_error(__FILE__, __LINE__, 0,
+              "Error PDM_exchange_helper_exch not yet implemented with k_comm = %i\n", k_comm);
   } else if(k_comm == PDM_MPI_COMM_KIND_P2P) {
     PDM_MPI_Alltoallv_p2p_init(send_buffer,
                                send_n,
@@ -510,23 +535,17 @@ PDM_exchange_helper_exch_init
                                &exch_helper->sub_requests  [request_id]);
   } else {
     PDM_error(__FILE__, __LINE__, 0,
-              "Error PDM_exchange_helper_exch not yet implemented with kcomm = %i\n", k_comm);
+              "Error PDM_exchange_helper_exch not yet implemented with k_comm = %i\n", k_comm);
   }
   PDM_MPI_Type_free(&mpi_type);
 
+  exch_helper->is_persistent  [request_id] = 1;
+  exch_helper->k_comm         [request_id] = k_comm;
   exch_helper->requests_status[request_id] = EXCHANGE_HELPER_STATUS_READY;
 
   return request_id;
 }
 
-int
-PDM_mpi_comm_kind_is_persistent
-(
-  PDM_mpi_comm_kind_t    k_comm
-)
-{
-  return 0;
-}
 
 // Si comm graph -> Neighbor automatique ? Voire dans le part_migrate
 // RMA --> init, start, free (Permet d'économiser la création des groupes et du target_disp)
@@ -565,29 +584,39 @@ PDM_exchange_helper_exch_wait
     PDM_error(__FILE__, __LINE__, 0,
               "Error PDM_exchange_helper_exch_wait with status = %i for request_id = %i, you should initialize exch with PDM_exchange_helper_exch_init or PDM_exchange_helper_iexch\n", exch_helper->requests_status[request_id], request_id);
   }
-  printf("request_id = %i - n_sub_requests = %i \n", request_id, exch_helper->n_sub_requests[request_id]);
 
   for(int i = 0; i < exch_helper->n_sub_requests[request_id]; ++i) {
     PDM_MPI_Wait(&exch_helper->sub_requests[request_id][i]);
   }
 
-  /*
-   * Completes the window's access epoch.
-   * This call signals to the target processes (those with whom this process communicated)
-   * that this process has finished all its RMA operations (Rget/Rput) to their windows.
-   * This allows target processes, which are waiting with PDM_MPI_Win_wait, to proceed.
-   */
-  PDM_MPI_Win_complete(exch_helper->win_send[request_id]);
+  if(exch_helper->k_comm[request_id] == PDM_MPI_COMM_KIND_WIN_RMA) {
+    /*
+     * Completes the window's access epoch.
+     * This call signals to the target processes (those with whom this process communicated)
+     * that this process has finished all its RMA operations (Rget/Rput) to their windows.
+     * This allows target processes, which are waiting with PDM_MPI_Win_wait, to proceed.
+     */
+    PDM_MPI_Win_complete(exch_helper->win_send[request_id]);
 
-  /* Completes the window's exposure epoch.
-   * This call waits for all source processes (those who accessed this process's memory)
-   * to have finished their work and signaled their completion via their PDM_MPI_Win_complete.
-   * It ensures that all incoming data "pushed" into this process's memory is
-   * now visible and ready to be used by the local process.
-   */
-  PDM_MPI_Win_wait(exch_helper->win_send[request_id]);
+    /* Completes the window's exposure epoch.
+     * This call waits for all source processes (those who accessed this process's memory)
+     * to have finished their work and signaled their completion via their PDM_MPI_Win_complete.
+     * It ensures that all incoming data "pushed" into this process's memory is
+     * now visible and ready to be used by the local process.
+     */
+    PDM_MPI_Win_wait(exch_helper->win_send[request_id]);
 
-  // RM Group and target_dsip
+    /*
+     * On fait la confusion volontaire du RMA appelé via _init/_start ou via _iexch
+     * Dans le cas du iexch on doit free le tableau juste après le wait, en persitant on veut pas pour limiter l'overhead de création du group et du target disp
+     */
+    if(!exch_helper->is_persistent[request_id]) {
+      PDM_MPI_Group_free(&exch_helper->group_send[request_id]);
+      PDM_MPI_Group_free(&exch_helper->group_recv[request_id]);
+      PDM_free(exch_helper->target_disp[request_id]);
+    }
+
+  }
 
 
   exch_helper->requests_status[request_id] = EXCHANGE_HELPER_STATUS_READY;
@@ -608,14 +637,11 @@ PDM_exchange_helper_exch_free
   exch_helper->requests_status[request_id] = EXCHANGE_HELPER_STATUS_FREE;
   exch_helper->n_sub_requests [request_id] = 0;
 
-
   PDM_MPI_Win_free  (&exch_helper->win_send  [request_id]);
   PDM_MPI_Win_free  (&exch_helper->win_recv  [request_id]);
   PDM_MPI_Group_free(&exch_helper->group_send[request_id]);
   PDM_MPI_Group_free(&exch_helper->group_recv[request_id]);
   PDM_free(exch_helper->target_disp[request_id]);
-
-
 }
 
 
@@ -637,6 +663,8 @@ PDM_exchange_helper_exch_one_way_init
   PDM_UNUSED(direction);
   PDM_UNUSED(cst_stride);
   PDM_UNUSED(s_data);
+  PDM_UNUSED(n_active_rank);
+  PDM_UNUSED(active_rank);
   PDM_UNUSED(tag);
   PDM_UNUSED(buffer);
   PDM_UNUSED(ownership);
@@ -658,6 +686,7 @@ PDM_exchange_helper_free
     }
   }
   PDM_free(exch_helper->requests_status);
+  PDM_free(exch_helper->is_persistent  );
   PDM_free(exch_helper->n_sub_requests );
   PDM_free(exch_helper->sub_requests   );
   PDM_free(exch_helper->send_buffer    );
@@ -670,6 +699,7 @@ PDM_exchange_helper_free
   PDM_free(exch_helper->target_disp    );
 
   PDM_free(exch_helper->t_stride       );
+  PDM_free(exch_helper->k_comm         );
   PDM_free(exch_helper->s_data         );
   PDM_free(exch_helper->cst_stride     );
   PDM_free(exch_helper->p_send_stride  );

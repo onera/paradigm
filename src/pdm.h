@@ -143,16 +143,17 @@ typedef enum {
 
 typedef enum {
 
-  PDM_MPI_COMM_KIND_P2P                                = 0, /*!< Peer-to-peer (MPI_issend/MPI_irecv) */
-  PDM_MPI_COMM_KIND_COLLECTIVE                         = 1, /*!< Collective communications (MPI_Ialltoall, ...) */
-  PDM_MPI_COMM_KIND_WIN_RMA                            = 2  /*!< RMA windows (MPI_Put, MPI_GET, ...) */
+  PDM_MPI_COMM_KIND_P2P        = 0, /*!< Peer-to-peer (MPI_issend/MPI_irecv) */
+  PDM_MPI_COMM_KIND_COLLECTIVE = 1, /*!< Collective communications (MPI_Ialltoall, ...) */
+  PDM_MPI_COMM_KIND_WIN_RMA    = 2,  /*!< RMA windows (MPI_Put, MPI_GET, ...) */
+  PDM_MPI_COMM_KIND_INVALID    = 3  /*!< For init */
 
 } PDM_mpi_comm_kind_t;
 
 
 typedef enum {
-  PDM_EXCHANGE_SEND,
-  PDM_EXCHANGE_RECV,
+  PDM_EXCHANGE_SEND = 0,
+  PDM_EXCHANGE_RECV = 1,
 } PDM_exchange_direction_t;
 
 

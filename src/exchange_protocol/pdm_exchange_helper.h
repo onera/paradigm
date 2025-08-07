@@ -113,7 +113,7 @@ int
 PDM_exchange_helper_exch_one_way_pack_init
 (
   PDM_exchange_helper_t *exch_helper,
-  PDM_mpi_comm_kind_t    kcomm,
+  PDM_mpi_comm_kind_t    k_comm,
   int                    cst_stride,
   size_t                 s_data,
   int                    tag,
