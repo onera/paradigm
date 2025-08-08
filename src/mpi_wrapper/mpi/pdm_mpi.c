@@ -735,6 +735,51 @@ PDM_MPI_Sends_init
     }
   }
   *out_requests = requests;
+
+  return _mpi_2_pdm_mpi_err(code);
+}
+
+
+int
+PDM_MPI_Isends
+(
+  const void              *sendbuf,
+        int               *sendcounts,
+        int               *sdispls,
+        PDM_MPI_Datatype   datatype,
+        int                n_active_send,
+        int               *active_send,
+        int                tag,
+        PDM_MPI_Comm       comm,
+        PDM_MPI_Request  **out_requests
+)
+{
+  PDM_MPI_Request *requests = NULL;
+  PDM_malloc(requests, n_active_send, PDM_MPI_Request);
+
+  int size_send_type;
+  MPI_Type_size(_pdm_mpi_2_mpi_datatype(datatype), &size_send_type);
+
+  int code = MPI_SUCCESS;
+  for (int i = 0; i < n_active_send; i++) {
+    void *buf = (void *) ((unsigned char*) sendbuf + sdispls[i] * size_send_type);
+    MPI_Request _mpi_request = MPI_REQUEST_NULL;
+    int t_rank = active_send[i];
+    code = MPI_Isend(buf,
+                     sendcounts[i],
+                     _pdm_mpi_2_mpi_datatype(datatype),
+                     t_rank,
+                     tag,
+                     _pdm_mpi_2_mpi_comm(comm),
+                     &_mpi_request);
+    requests[i] = _mpi_2_pdm_mpi_request_add(_mpi_request);
+    if (code != MPI_SUCCESS) {
+      break;
+    }
+  }
+  *out_requests = requests;
+
+  return _mpi_2_pdm_mpi_err(code);
 }
 
 /*----------------------------------------------------------------------------
@@ -807,9 +852,51 @@ PDM_MPI_Recvs_init
     }
   }
   *out_requests = requests;
+  return _mpi_2_pdm_mpi_err(code);
 }
 
 
+int
+PDM_MPI_Irecvs
+(
+  const void              *recvbuf,
+        int               *recvcounts,
+        int               *sdispls,
+        PDM_MPI_Datatype   datatype,
+        int                n_active_recv,
+        int               *active_recv,
+        int                tag,
+        PDM_MPI_Comm       comm,
+        PDM_MPI_Request  **out_requests
+)
+{
+  PDM_MPI_Request *requests = NULL;
+  PDM_malloc(requests, n_active_recv, PDM_MPI_Request);
+
+  int size_recv_type;
+  MPI_Type_size(_pdm_mpi_2_mpi_datatype(datatype), &size_recv_type);
+
+  int code = MPI_SUCCESS;
+  for (int i = 0; i < n_active_recv; i++) {
+    void *buf = (void *) ((unsigned char*) recvbuf + sdispls[i] * size_recv_type);
+    MPI_Request _mpi_request = MPI_REQUEST_NULL;
+    int t_rank = active_recv[i];
+    code = MPI_Irecv(buf,
+                     recvcounts[i],
+                     _pdm_mpi_2_mpi_datatype(datatype),
+                     t_rank,
+                     tag,
+                     _pdm_mpi_2_mpi_comm(comm),
+                     &_mpi_request);
+    requests[i] = _mpi_2_pdm_mpi_request_add(_mpi_request);
+    if (code != MPI_SUCCESS) {
+      break;
+    }
+  }
+  *out_requests = requests;
+
+  return _mpi_2_pdm_mpi_err(code);
+}
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_Wait (wrapping de la fonction MPI_Wait)
