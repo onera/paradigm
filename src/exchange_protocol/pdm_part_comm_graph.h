@@ -271,6 +271,30 @@ PDM_part_comm_graph_part_to_recv_buffer_get
   int                   ***part_to_recv_buffer
 );
 
+/**
+ * \brief Initializes a persistent one-way, non-blocking communication request using raw data.
+ *
+ * This function prepares a persistent communication request for a one-way exchange
+ * (either send or receive) using a pre-defined communication graph. The raw data
+ * refers to the fact that the function uses the buffer directly without complex
+ * indexing. The communication itself is not started, but is ready to be initiated
+ * by a call to PDM_part_comm_graph_exch_one_way_raw_start.
+ * Buffer are filled with part_to_send or part_to_recv buffer \see PDM_part_comm_graph_part_to_send_buffer_get and
+ * PDM_part_comm_graph_part_to_recv_buffer_get
+ *
+ * \param[in,out] pcg The communication graph object, which contains all communication
+ *                     topology information (ranks, counts, etc.).
+ * \param[in]     direction Specifies the direction of the exchange: either send or receive.
+ * \param[in]     s_data The size of a single data element in bytes.
+ * \param[in]     cst_stride The stride for non-contiguous data within the buffer.
+ * \param[in,out] raw_buffer A pointer to the buffer containing the raw data to be sent or
+ *                received. The content of this buffer should not be modified until the communication is complete.
+ * \param[in]     tag The MPI message tag to be used for the exchange.
+ * \return An integer ID for the persistent request on success, or a negative value on failure.
+ *
+ * \see PDM_part_comm_graph_exch_one_way_raw_start
+ * \see PDM_part_comm_graph_exch_one_way_raw_wait
+ */
 int
 PDM_part_comm_graph_exch_one_way_raw_init
 (
@@ -282,6 +306,20 @@ PDM_part_comm_graph_exch_one_way_raw_init
  int                         tag
 );
 
+/**
+ * \brief Starts a persistent one-way communication request.
+ *
+ * This function initiates the non-blocking communication associated with a
+ * previously initialized persistent request ID. The function returns immediately
+ * and the communication proceeds in the background.
+ *
+ * \param[in,out] pcg The communication graph object.
+ * \param[in]     request_id The ID of the persistent request to be started, as
+ *                returned by PDM_part_comm_graph_exch_one_way_raw_init.
+ *
+ * \see PDM_part_comm_graph_exch_one_way_raw_init
+ * \see PDM_part_comm_graph_exch_one_way_raw_wait
+ */
 void
 PDM_part_comm_graph_exch_one_way_raw_start
 (
@@ -289,6 +327,19 @@ PDM_part_comm_graph_exch_one_way_raw_start
  int                         request_id
 );
 
+/**
+ * \brief Waits for a persistent one-way communication request to complete.
+ *
+ * This function blocks the calling process until the non-blocking communication
+ * associated with the given request ID has finished. It must be called to
+ * ensure all data has been successfully sent or received before reusing
+ * the communication buffers.
+ *
+ * \param[in,out] pcg The communication graph object.
+ * \param[in]     request_id The ID of the request to wait for.
+ *
+ * \see PDM_part_comm_graph_exch_one_way_raw_start
+ */
 void
 PDM_part_comm_graph_exch_one_way_raw_wait
 (
@@ -296,6 +347,21 @@ PDM_part_comm_graph_exch_one_way_raw_wait
   int                      request_id
 );
 
+/**
+ * \brief Frees all resources associated with a persistent communication request.
+ *
+ * This function releases the memory and resources allocated for a specific
+ * persistent request. It should be called when a request is no longer needed
+ * to prevent memory leaks.
+ *
+ * \pre The communication associated with request_id must be completed
+ * (e.g., via PDM_part_comm_graph_exch_one_way_raw_wait) before freeing it.
+ *
+ * \param[in,out] pcg The communication graph object.
+ * \param[in]     request_id The ID of the request to be freed.
+ *
+ * \see PDM_part_comm_graph_exch_one_way_raw_init
+ */
 void
 PDM_part_comm_graph_exch_one_way_raw_free
 (
