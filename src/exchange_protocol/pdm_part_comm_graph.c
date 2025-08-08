@@ -1029,6 +1029,10 @@ PDM_part_comm_graph_exch_wait
                        _precv_data,
                        pcg->exch_h->recv_buffer[request_id]);
 
+  if(pcg->exch_h->is_persistent[request_id] == 0) {
+    PDM_part_comm_graph_exch_free(pcg, request_id);
+  }
+
 }
 
 

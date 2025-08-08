@@ -302,34 +302,49 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2p - iexch", 2) {
   std::vector<std::vector<int>> vsend_cst_data = {{-3, -2, -1}, {10, 20, 30}};
   int *send_cst_data = vsend_cst_data[i_rank].data();
 
-  int **tmp_recv_cst_data = NULL;
-  int req0 = PDM_part_comm_graph_iexch(pcg,
-                                       PDM_MPI_COMM_KIND_WIN_RMA,
-                                       sizeof(int),
-                                       PDM_STRIDE_CST_INTERLACED,
-                                       1,
-                                       NULL,
-                        (void **)      &send_cst_data,
-                                       NULL,
-                       (void ***)      &tmp_recv_cst_data);
-  PDM_part_comm_graph_exch_wait(pcg, req0);
-
-  int *recv_cst_data = tmp_recv_cst_data[0];
-
-  if(0 == 1) {
-    PDM_log_trace_array_int(recv_cst_data, n_entity_bound, "recv_cst_data ::");
-  }
-
   static int recv_cst_data_expected_p0[3] = {10, 20, 30};
   static int recv_cst_data_expected_p1[3] = {-3, -2, -1};
 
-  MPI_CHECK_EQ_C_ARRAY(0, recv_cst_data, recv_cst_data_expected_p0, n_entity_bound);
-  MPI_CHECK_EQ_C_ARRAY(1, recv_cst_data, recv_cst_data_expected_p1, n_entity_bound);
+  std::vector<PDM_mpi_comm_kind_t> lexch_type = {PDM_MPI_COMM_KIND_P2P,
+                                                 PDM_MPI_COMM_KIND_COLLECTIVE,
+                                                 PDM_MPI_COMM_KIND_WIN_RMA};
+  int n_type_exch = lexch_type.size();
+  int n_try = 4;
 
-  free(recv_cst_data);
-  free(tmp_recv_cst_data);
+  for(int i_try = 0; i_try < n_try; ++i_try) {
+    for(int i_type_exch = 0; i_type_exch < n_type_exch; ++i_type_exch) {
 
-  PDM_part_comm_graph_exch_free(pcg, req0);
+#ifndef HAVE_MPI_COLLECTIVE_INIT_FUNC
+      if(lexch_type[i_type_exch] == PDM_MPI_COMM_KIND_COLLECTIVE) {
+        continue;
+      }
+#endif
+
+      int **tmp_recv_cst_data = NULL;
+      int req0 = PDM_part_comm_graph_iexch(pcg,
+                                           lexch_type[i_type_exch],
+                                           sizeof(int),
+                                           PDM_STRIDE_CST_INTERLACED,
+                                           1,
+                                           NULL,
+                            (void **)      &send_cst_data,
+                                           NULL,
+                           (void ***)      &tmp_recv_cst_data);
+      PDM_part_comm_graph_exch_wait(pcg, req0);
+
+      int *recv_cst_data = tmp_recv_cst_data[0];
+
+      if(0 == 1) {
+        PDM_log_trace_array_int(recv_cst_data, n_entity_bound, "recv_cst_data ::");
+      }
+
+      MPI_CHECK_EQ_C_ARRAY(0, recv_cst_data, recv_cst_data_expected_p0, n_entity_bound);
+      MPI_CHECK_EQ_C_ARRAY(1, recv_cst_data, recv_cst_data_expected_p1, n_entity_bound);
+
+      free(recv_cst_data);
+      free(tmp_recv_cst_data);
+    }
+  }
 
   PDM_part_comm_graph_free(pcg);
 }
