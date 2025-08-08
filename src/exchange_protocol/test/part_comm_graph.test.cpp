@@ -63,6 +63,110 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2p", 2) {
   MPI_CHECK_EQ_C_ARRAY(1, lowner_bound, lowner_bound_expected_p1, 3);
 
   // ---------------------------------------------------------------------------
+  // Check for raw buffer
+  int **tmp_part_to_send_buffer = NULL;
+  PDM_part_comm_graph_part_to_send_buffer_get(pcg, &tmp_part_to_send_buffer);
+
+  int **tmp_part_to_recv_buffer = NULL;
+  PDM_part_comm_graph_part_to_recv_buffer_get(pcg, &tmp_part_to_recv_buffer);
+
+  int *part_to_send_buffer = tmp_part_to_send_buffer[0];
+  int *part_to_recv_buffer = tmp_part_to_recv_buffer[0];
+
+  static int part_to_send_buffer_p0[3] = {0, 1, 2};
+  static int part_to_send_buffer_p1[3] = {0, 1, 2};
+  static int part_to_recv_buffer_p0[3] = {0, 1, 2};
+  static int part_to_recv_buffer_p1[3] = {0, 1, 2};
+
+  MPI_CHECK_EQ_C_ARRAY(0, part_to_send_buffer, part_to_send_buffer_p0, 3);
+  MPI_CHECK_EQ_C_ARRAY(1, part_to_send_buffer, part_to_send_buffer_p1, 3);
+
+  MPI_CHECK_EQ_C_ARRAY(0, part_to_recv_buffer, part_to_recv_buffer_p0, 3);
+  MPI_CHECK_EQ_C_ARRAY(1, part_to_recv_buffer, part_to_recv_buffer_p1, 3);
+
+  if(0 == 1) {
+    PDM_log_trace_array_int(part_to_send_buffer, n_entity_bound, "part_to_send_buffer ::");
+    PDM_log_trace_array_int(part_to_recv_buffer, n_entity_bound, "part_to_recv_buffer ::");
+  }
+
+  // ---------------------------------------------------------------------------
+  // Exchange stride cst RAW
+  int *send_buffer = NULL;
+  int *recv_buffer = NULL;
+  PDM_malloc(send_buffer, 2 * n_entity_bound, int);
+  PDM_malloc(recv_buffer, 2 * n_entity_bound, int);
+
+  static int expected_recv_buffer_p0[6] = {2, 20, 3, 21, 4, 22};
+  static int expected_recv_buffer_p1[6] = {1, 10, 2, 11, 3, 12};
+
+  static int expected_recv_buffer2_p0[6] = {12, 30, 13, 31, 14, 32};
+  static int expected_recv_buffer2_p1[6] = {11, 20, 12, 21, 13, 22};
+
+  int n_try = 4;
+  for(int i_try = 0; i_try < n_try; ++i_try) {
+    for(int i = 0; i < n_entity_bound; ++i) {
+      int i_bound = part_to_send_buffer[i];
+      send_buffer[2*i_bound  ] =    (i_rank+1) + i_bound;
+      send_buffer[2*i_bound+1] = 10*(i_rank+1) + i_bound;
+    }
+
+    int req_recv_raw = PDM_part_comm_graph_exch_one_way_raw_init(pcg,
+                                                                 PDM_EXCHANGE_DIRECTION_RECV,
+                                                                 sizeof(int),
+                                                                 2,
+                                                                 recv_buffer,
+                                                                 10);
+    int req_send_raw = PDM_part_comm_graph_exch_one_way_raw_init(pcg,
+                                                                 PDM_EXCHANGE_DIRECTION_SEND,
+                                                                 sizeof(int),
+                                                                 2,
+                                                                 send_buffer,
+                                                                 10);
+
+    PDM_part_comm_graph_exch_one_way_raw_start(pcg, req_recv_raw);
+    PDM_part_comm_graph_exch_one_way_raw_start(pcg, req_send_raw);
+
+    PDM_part_comm_graph_exch_one_way_raw_wait(pcg, req_recv_raw);
+    PDM_part_comm_graph_exch_one_way_raw_wait(pcg, req_send_raw);
+
+    if(0 == 1) {
+      PDM_log_trace_array_int(recv_buffer, 2 * n_entity_bound, "recv_buffer ::");
+    }
+
+
+    MPI_CHECK_EQ_C_ARRAY(0, recv_buffer, expected_recv_buffer_p0, 6);
+    MPI_CHECK_EQ_C_ARRAY(1, recv_buffer, expected_recv_buffer_p1, 6);
+
+    // Check persitent
+    for(int i = 0; i < n_entity_bound; ++i) {
+      int i_bound = part_to_send_buffer[i];
+      send_buffer[2*i_bound  ] += 10;
+      send_buffer[2*i_bound+1] += 10;
+    }
+
+    PDM_part_comm_graph_exch_one_way_raw_start(pcg, req_recv_raw);
+    PDM_part_comm_graph_exch_one_way_raw_start(pcg, req_send_raw);
+
+    PDM_part_comm_graph_exch_one_way_raw_wait(pcg, req_recv_raw);
+    PDM_part_comm_graph_exch_one_way_raw_wait(pcg, req_send_raw);
+
+    if(0 == 1) {
+      PDM_log_trace_array_int(recv_buffer, 2 * n_entity_bound, "recv_buffer ::");
+    }
+
+    MPI_CHECK_EQ_C_ARRAY(0, recv_buffer, expected_recv_buffer2_p0, 6);
+    MPI_CHECK_EQ_C_ARRAY(1, recv_buffer, expected_recv_buffer2_p1, 6);
+
+    PDM_part_comm_graph_exch_one_way_raw_free(pcg, req_recv_raw);
+    PDM_part_comm_graph_exch_one_way_raw_free(pcg, req_send_raw);
+
+  }
+
+
+  PDM_free(send_buffer);
+  PDM_free(recv_buffer);
+
+  // ---------------------------------------------------------------------------
   // Exchange stride cst
   std::vector<std::vector<int>> vsend_cst_data = {{-3, -2, -1}, {10, 20, 30}};
   int *send_cst_data = vsend_cst_data[i_rank].data();

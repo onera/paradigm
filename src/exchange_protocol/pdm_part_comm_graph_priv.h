@@ -61,6 +61,11 @@ struct _pdm_part_comm_graph_t {
   int              *send_n;
   int              *recv_n;
 
+  int              *active_send_idx;
+  int              *active_recv_idx;
+  int              *active_send_n;
+  int              *active_recv_n;
+
   int             **part_to_send_buffer;
   int             **part_to_recv_buffer;
 

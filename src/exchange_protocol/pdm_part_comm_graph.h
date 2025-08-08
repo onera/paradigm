@@ -271,6 +271,38 @@ PDM_part_comm_graph_part_to_recv_buffer_get
   int                   ***part_to_recv_buffer
 );
 
+int
+PDM_part_comm_graph_exch_one_way_raw_init
+(
+ PDM_part_comm_graph_t      *pcg,
+ PDM_exchange_direction_t    direction,
+ size_t                      s_data,
+ int                         cst_stride,
+ int                        *raw_buffer,
+ int                         tag
+);
+
+void
+PDM_part_comm_graph_exch_one_way_raw_start
+(
+ PDM_part_comm_graph_t      *pcg,
+ int                         request_id
+);
+
+void
+PDM_part_comm_graph_exch_one_way_raw_wait
+(
+  PDM_part_comm_graph_t   *pcg,
+  int                      request_id
+);
+
+void
+PDM_part_comm_graph_exch_one_way_raw_free
+(
+ PDM_part_comm_graph_t      *pcg,
+ int                         request_id
+);
+
 /**
  *
  * \brief Get the owner array computed inside the structure, useful to manage reduction of array for example

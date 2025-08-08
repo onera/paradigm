@@ -706,20 +706,38 @@ _create
   pcg->recv_n   = recv_n;
 
   /* Compute p2p array */
-  PDM_malloc(pcg->active_rank_send, pcg->n_active_rank_send, int);
+  PDM_malloc(pcg->active_rank_send, n_rank, int);
   PDM_malloc(pcg->active_rank_recv, pcg->n_active_rank_recv, int);
+
+  PDM_malloc(pcg->active_send_idx, n_rank, int);
+  PDM_malloc(pcg->active_send_n  , n_rank, int);
+  PDM_malloc(pcg->active_recv_idx, n_rank, int);
+  PDM_malloc(pcg->active_recv_n  , n_rank, int);
 
   pcg->n_active_rank_send = 0;
   pcg->n_active_rank_recv = 0;
 
   for(int i = 0; i < n_rank; ++i) {
     if(send_n[i] > 0) {
-      pcg->active_rank_send[pcg->n_active_rank_send++] = i;
+      pcg->active_send_idx [pcg->n_active_rank_send] = send_idx[i];
+      pcg->active_send_n   [pcg->n_active_rank_send] = send_n  [i];
+      pcg->active_rank_send[pcg->n_active_rank_send] = i;
+      pcg->n_active_rank_send++;
     }
     if(recv_n[i] > 0) {
-      pcg->active_rank_recv[pcg->n_active_rank_recv++] = i;
+      pcg->active_recv_idx [pcg->n_active_rank_recv] = recv_idx[i];
+      pcg->active_recv_n   [pcg->n_active_rank_recv] = recv_n  [i];
+      pcg->active_rank_recv[pcg->n_active_rank_recv] = i;
+      pcg->n_active_rank_recv++;
     }
   }
+
+  PDM_realloc(pcg->active_rank_send, pcg->active_rank_send, pcg->n_active_rank_send, int);
+  PDM_realloc(pcg->active_rank_recv, pcg->active_rank_recv, pcg->n_active_rank_recv, int);
+  PDM_realloc(pcg->active_send_idx , pcg->active_send_idx , pcg->n_active_rank_send, int);
+  PDM_realloc(pcg->active_send_n   , pcg->active_send_n   , pcg->n_active_rank_send, int);
+  PDM_realloc(pcg->active_recv_idx , pcg->active_recv_idx , pcg->n_active_rank_recv, int);
+  PDM_realloc(pcg->active_recv_n   , pcg->active_recv_n   , pcg->n_active_rank_recv, int);
 
   /*
    * Compute owner
@@ -1049,6 +1067,91 @@ PDM_part_comm_graph_exch_free
   PDM_free(pcg->exch_h->recv_buffer[request_id]);
 
 }
+
+
+
+int
+PDM_part_comm_graph_exch_one_way_raw_init
+(
+ PDM_part_comm_graph_t      *pcg,
+ PDM_exchange_direction_t    direction,
+ size_t                      s_data,
+ int                         cst_stride,
+ int                        *raw_buffer,
+ int                         tag
+)
+{
+  int *send_or_recv_idx = NULL;
+  int *send_or_recv_n   = NULL;
+  int  n_active_rank    = 0;
+  int *active_rank      = 0;
+
+  if(direction == PDM_EXCHANGE_DIRECTION_SEND) {
+    n_active_rank    = pcg->n_active_rank_send;
+    active_rank      = pcg->active_rank_send;
+    send_or_recv_idx = pcg->active_send_idx;
+    send_or_recv_n   = pcg->active_send_n;
+  } else if (direction == PDM_EXCHANGE_DIRECTION_RECV) {
+    n_active_rank    = pcg->n_active_rank_send;
+    active_rank      = pcg->active_rank_send;
+    send_or_recv_idx = pcg->active_recv_idx;
+    send_or_recv_n   = pcg->active_recv_n;
+  } else {
+    PDM_error(__FILE__, __LINE__, 0,
+              "Error PDM_part_comm_graph_exch_one_way_raw_init not yet implemented with direction = %i\n", direction);
+  }
+
+  int request_id = PDM_exchange_helper_exch_one_way_init(pcg->exch_h,
+                                                         direction,
+                                                         s_data,
+                                                         cst_stride,
+                                                         n_active_rank,
+                                                         active_rank,
+                                                         send_or_recv_idx,
+                                                         send_or_recv_n,
+                                                         tag,
+                                                         raw_buffer);
+
+  pcg->exch_h->send_buffer  [request_id] = raw_buffer;
+  pcg->exch_h->s_data       [request_id] = s_data;
+  pcg->exch_h->cst_stride   [request_id] = cst_stride;
+
+  return request_id;
+}
+
+
+void
+PDM_part_comm_graph_exch_one_way_raw_start
+(
+ PDM_part_comm_graph_t      *pcg,
+ int                         request_id
+)
+{
+  PDM_exchange_helper_exch_start(pcg->exch_h, request_id);
+}
+
+void
+PDM_part_comm_graph_exch_one_way_raw_wait
+(
+  PDM_part_comm_graph_t   *pcg,
+  int                      request_id
+)
+{
+  PDM_exchange_helper_exch_wait(pcg->exch_h, request_id);
+}
+
+void
+PDM_part_comm_graph_exch_one_way_raw_free
+(
+ PDM_part_comm_graph_t      *pcg,
+ int                         request_id
+)
+{
+  pcg->exch_h->send_buffer  [request_id] = NULL;
+
+  PDM_exchange_helper_exch_free(pcg->exch_h, request_id);
+}
+
 
 const int*
 PDM_part_comm_graph_owner_get
@@ -1511,6 +1614,10 @@ PDM_part_comm_graph_free
   PDM_free(pcg->recv_n);
   PDM_free(pcg->active_rank_send);
   PDM_free(pcg->active_rank_recv);
+  PDM_free(pcg->active_send_idx);
+  PDM_free(pcg->active_send_n  );
+  PDM_free(pcg->active_recv_idx);
+  PDM_free(pcg->active_recv_n  );
 
   if (pcg->owner_graph == PDM_OWNERSHIP_KEEP) {
     for (int i_part = 0; i_part < pcg->n_part; i_part++) {
