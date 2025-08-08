@@ -46,6 +46,24 @@ typedef struct _pdm_exchange_helper_t PDM_exchange_helper_t;
  * Public function prototypes
  *============================================================================*/
 
+/**
+ * \brief Creates and initializes an exchange helper object.
+ *
+ * This function allocates memory for a new PDM_exchange_helper_t object
+ * and initializes its internal state. It is the constructor for the exchange
+ * helper and must be called before using any other functions in this module.
+ *
+ * \param[in] comm           The MPI communicator to be used for all exchange operations.
+ * \param[in] n_request_init The initial number of non-blocking requests that
+ *                           can be stored. This value can be a hint; the helper may dynamically resize.
+ *
+ * \return A pointer to the newly created PDM_exchange_helper_t object on success,
+ * or a null pointer on failure.
+ *
+ * \see PDM_exchange_helper_free to destroy the object.
+ */
+PDM_exchange_helper_t *
+PDM_exchange_helper_create(const PDM_MPI_Comm comm, int n_request_init);
 PDM_exchange_helper_t *
 PDM_exchange_helper_create
 (
@@ -53,9 +71,25 @@ PDM_exchange_helper_create
         int             n_request_init
 );
 
-
-
-// Faire le exch classique pour gerer les variantes directement cachés : P2P/RMA/Collective
+/**
+ * \brief Performs a blocking exchange of data between processes.
+ *
+ * This function handles both sending and receiving data in a single,
+ * blocking call. It is typically used for `all-to-all` or `point-to-point`
+ * exchanges where the sending and receiving data sizes and indices are
+ * known beforehand.
+ *
+ * \param[in,out] exch_helper The initialized exchange helper object.
+ * \param[in]     k_comm The communication kind (e.g., all-to-all, point-to-point).
+ * \param[in]     cst_stride The stride for non-contiguous send/receive buffers.
+ * \param[in]     s_data The size of a single data element in bytes.
+ * \param[in]     send_idx Array of destination ranks for sending data.
+ * \param[in]     send_n Array of data counts to be sent to each destination.
+ * \param[in]     send_buffer Pointer to the data buffer for sending.
+ * \param[in]     recv_idx Array of source ranks for receiving data.
+ * \param[in]     recv_n Array of data counts to be received from each source.
+ * \param[out]    recv_buffer Pointer to the data buffer for receiving.
+ */
 void
 PDM_exchange_helper_exch
 (
@@ -71,6 +105,28 @@ PDM_exchange_helper_exch
   void                  *recv_buffer
 );
 
+/**
+ * \brief Initializes and starts a non-blocking exchange of data.
+ *
+ * This function initiates a non-blocking exchange and immediately returns.
+ * The operation must be completed later by calling a wait function. This
+ * allows other work to be performed concurrently with communication.
+ *
+ * \param[in,out] exch_helper The initialized exchange helper object.
+ * \param[in]     k_comm The communication kind (e.g., all-to-all, point-to-point).
+ * \param[in]     s_data The size of a single data element in bytes.
+ * \param[in]     cst_stride The stride for non-contiguous send/receive buffers.
+ * \param[in]     send_idx Array of destination ranks for sending data.
+ * \param[in]     send_n Array of data counts to be sent to each destination.
+ * \param[in]     send_buffer Pointer to the data buffer for sending.
+ * \param[in]     recv_idx Array of source ranks for receiving data.
+ * \param[in]     recv_n Array of data counts to be received from each source.
+ * \param[out]    recv_buffer Pointer to the data buffer for receiving.
+ *
+ * \return An ID for the non-blocking request, to be used with wait/free functions.
+ *
+ * \see PDM_exchange_helper_exch_wait to complete the operation.
+ */
 int
 PDM_exchange_helper_iexch
 (
@@ -86,6 +142,29 @@ PDM_exchange_helper_iexch
   void                  *recv_buffer
 );
 
+/**
+ * \brief Prepares a persistent, non-blocking exchange request.
+ *
+ * This function initializes a persistent communication request for a
+ * two-way exchange. The communication itself is not started. This is useful
+ * when the same communication pattern (e.g., same ranks and counts) will be
+ * repeated multiple times.
+ *
+ * \param[in,out] exch_helper The initialized exchange helper object.
+ * \param[in] k_comm The communication kind (e.g., all-to-all, point-to-point).
+ * \param[in] s_data The size of a single data element in bytes.
+ * \param[in] cst_stride The stride for non-contiguous send/receive buffers.
+ * \param[in] send_idx Array of destination ranks for sending data.
+ * \param[in] send_n Array of data counts to be sent to each destination.
+ * \param[in] send_buffer Pointer to the data buffer for sending.
+ * \param[in] recv_idx Array of source ranks for receiving data.
+ * \param[in] recv_n Array of data counts to be received from each source.
+ * \param[out] recv_buffer Pointer to the data buffer for receiving.
+ *
+ * \return An ID for the persistent request, to be used with start/wait/free functions.
+ *
+ * \see PDM_exchange_helper_exch_start and PDM_exchange_helper_exch_wait.
+ */
 int
 PDM_exchange_helper_exch_init
 (
@@ -101,32 +180,28 @@ PDM_exchange_helper_exch_init
   void                  *recv_buffer
 );
 
-
-/*
- * Idéal pour cwipi si on veut separé les send / recv
- * Doit couvrir les ONE-SIDED
+/**
+ * \brief Prepares a persistent one-way communication request.
  *
+ * This function is similar to `PDM_exchange_helper_exch_init` but is
+ * specialized for one-way communication (either all sends or all receives).
+ * This is useful for asymmetric communication patterns.
+ *
+ * \param[in,out] exch_helper The initialized exchange helper object.
+ * \param[in]     direction The direction of communication (send or receive).
+ * \param[in]     s_data The size of a single data element in bytes.
+ * \param[in]     cst_stride The stride for non-contiguous send/receive buffers.
+ * \param[in]     n_active_rank The number of active ranks for this operation.
+ * \param[in]     active_rank Array of active ranks.
+ * \param[in]     send_or_recv_idx Array of offsets for the data buffer.
+ * \param[in]     send_or_recv_n Array of counts for each active rank.
+ * \param[in]     tag The message tag to be used.
+ * \param[in,out] buffer Pointer to the data buffer.
+ *
+ * \return An ID for the persistent request.
+ *
+ * \see PDM_exchange_helper_exch_start and PDM_exchange_helper_exch_wait.
  */
-// Persistent
-// Pour les RMA : La fonction INIT prepare la window, on doit retourné le buffer !!!!
-int
-PDM_exchange_helper_exch_one_way_pack_init
-(
-  PDM_exchange_helper_t *exch_helper,
-  PDM_mpi_comm_kind_t    k_comm,
-  int                    cst_stride,
-  size_t                 s_data,
-  int                    tag,
-  int                    n_active_rank,
-  int                   *active_rank,
-  int                   *buffer_idx,
-  void                  *buffer,
-  PDM_ownership_t        ownership
-);
-
-// API pour get le buffer interne envoie / reception ...
-
-
 int
 PDM_exchange_helper_exch_one_way_init
 (
@@ -142,6 +217,17 @@ PDM_exchange_helper_exch_one_way_init
   void                     *buffer
 );
 
+/**
+ * \brief Starts a previously initialized persistent communication request.
+ *
+ * This function activates a persistent request created with `..._init` functions.
+ * The communication is initiated in a non-blocking manner.
+ *
+ * \param[in,out] exch_helper The initialized exchange helper object.
+ * \param[in]     request The ID of the persistent request to be started.
+ *
+ * \see PDM_exchange_helper_exch_init to create the request.
+ */
 void
 PDM_exchange_helper_exch_start
 (
@@ -149,7 +235,18 @@ PDM_exchange_helper_exch_start
   int                    request
 );
 
-
+/**
+ * \brief Waits for a non-blocking communication request to complete.
+ *
+ * This function blocks until the non-blocking communication specified by
+ * the request ID has finished. It is used to complete requests from
+ * `PDM_exchange_helper_iexch` or `PDM_exchange_helper_exch_start`.
+ *
+ * \param[in,out] exch_helper The initialized exchange helper object.
+ * \param[in]     request The ID of the non-blocking request to wait for.
+ *
+ * \see PDM_exchange_helper_iexch to initiate a non-blocking exchange.
+ */
 void
 PDM_exchange_helper_exch_wait
 (
@@ -157,21 +254,19 @@ PDM_exchange_helper_exch_wait
   int                    request
 );
 
-//
-// Attention :
-//   - MPI_Request_free(&request) necessaire a la fin des persistente
-//
-//  MPI_Wait(&request, &status) (ou MPI_Test(&request, &flag, &status)) :
-//   Ces appels sont utilisés pour compléter la communication.
-//   Quand MPI_Wait se termine ou MPI_Test indique que l'opération est finie (flag == true), la communication est considérée comme terminée.
-//   La requête repasse alors dans un état inactif. Elle n'est pas encore libérée de la mémoire, mais elle n'est plus associée à une communication en cours et peut être redémarrée par un autre MPI_Start.
-// En interne de paradim il faut check qu'on repasse pas la requete a NULL car elle pourrait restart après ....
-// RMA
-
-
-// Pour les RMA : La fonction INIT prepare la window, on doit retourné le buffer !!!!
-
-
+/**
+ * \brief Frees a persistent communication request.
+ *
+ * This function releases all resources associated with a specific
+ * persistent request. It should be called after a request is no longer needed.
+ *
+ * \param[in,out] exch_helper The initialized exchange helper object.
+ * \param[in]     request_id The ID of the persistent request to free.
+ *
+ * \pre The communication associated with request_id must be completed before freeing it.
+ *
+ * \see PDM_exchange_helper_exch_init to create the request.
+ */
 void
 PDM_exchange_helper_exch_free
 (
@@ -179,6 +274,17 @@ PDM_exchange_helper_exch_free
   int                    request_id
 );
 
+/**
+ * \brief Frees all memory associated with an exchange helper object.
+ *
+ * This is the destructor for the exchange helper. It frees all internal
+ * memory, including any non-freed persistent requests. The object should
+ * not be used after this call.
+ *
+ * \param[in,out] exch_helper A pointer to the exchange helper object to be freed.
+ *
+ * \see PDM_exchange_helper_create to create the object.
+ */
 void
 PDM_exchange_helper_free
 (
