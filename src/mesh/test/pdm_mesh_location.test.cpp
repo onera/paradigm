@@ -351,6 +351,7 @@ MPI_TEST_CASE("[pdm_mesh_location] - 2D nodal", 1) {
                                       &points_projected_coords);
 
   int located = PDM_mesh_location_n_located_get(ml, 0, 0);
+  CHECK(located == 1);
 
   for (int i=0; i<n_vtx; i++){
     CHECK(fabs(points_weights[i] - expected_weights[i]) < tol);
@@ -374,21 +375,21 @@ MPI_TEST_CASE("[pdm_mesh_location] - 2D nodal", 1) {
 
 MPI_TEST_CASE("[pdm_mesh_location] - 2D", 1) {
   PDM_MPI_Comm comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
-  PDM_l_num_t n_vtx;
+  PDM_l_num_t n_vtx = 0;
   double *vtx_coord=NULL;
   double fact;
 
-  PDM_l_num_t n_face;
+  PDM_l_num_t n_face = 0;
   PDM_l_num_t *face_edge_idx = NULL;
   PDM_l_num_t *face_edge = NULL;
 
-  PDM_l_num_t n_edge;
+  PDM_l_num_t n_edge = 0;
   PDM_l_num_t *edge_vtx = NULL;
 
   PDM_g_num_t *face_ln_to_gn = NULL;
   PDM_g_num_t *vtx_ln_to_gn = NULL;
 
-  PDM_l_num_t n_pts;
+  PDM_l_num_t n_pts = 0;
   double *pts_coord = NULL;
   PDM_g_num_t *gnum = NULL;
 
@@ -920,6 +921,7 @@ MPI_TEST_CASE("[pdm_mesh_location] - 3D nodal", 1) {
 
 
   int located = PDM_mesh_location_n_located_get(ml, 0, 0);
+  PDM_UNUSED(located);
 
   for (int i=0; i<n_pts*n_vtx; i++){
     CHECK(fabs(points_weights[i] - expected_weights[i]) < tol);

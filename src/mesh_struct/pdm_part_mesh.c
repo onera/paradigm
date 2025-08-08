@@ -47,6 +47,7 @@
 #include "pdm_part_connectivity_transform.h"
 #include "pdm_part_mesh_priv.h"
 #include "pdm_writer.h"
+#include "pdm_priv.h"
 
 
 /*----------------------------------------------------------------------------*/

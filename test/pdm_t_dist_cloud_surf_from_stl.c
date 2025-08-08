@@ -16,6 +16,7 @@
 #include "pdm_point_cloud_gen.h"
 #include "pdm_printf.h"
 #include "pdm_reader_stl.h"
+#include "pdm_priv.h"
 
 /*============================================================================
  * Type definitions

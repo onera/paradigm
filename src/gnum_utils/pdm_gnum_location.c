@@ -41,6 +41,7 @@
 #include "pdm_mem_tool.h"
 #include "pdm_mpi.h"
 #include "pdm_part_to_block.h"
+#include "pdm_priv.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -200,7 +201,7 @@ PDM_gnum_location_compute
   int          dn_block    = PDM_part_to_block_n_elt_block_get(ptb);
   PDM_block_to_part_t *btp = PDM_block_to_part_create_from_sparse_block(block_g_num,
                                                                         dn_block,
-                                                                        gnum_loc->g_nums_out,
+                                        (const PDM_g_num_t **) (void *) gnum_loc->g_nums_out,
                                                                         gnum_loc->n_elts_out,
                                                                         gnum_loc->n_part_out,
                                                                         gnum_loc->comm);

@@ -14,6 +14,7 @@
 #include "pdm_poly_surf_gen.h"
 #include "pdm_printf.h"
 #include "pdm_writer.h"
+#include "pdm_priv.h"
 
 /*============================================================================
  * Type definitions
@@ -689,8 +690,8 @@ _create_split_mesh
     }
   }
 
-  PDM_MPI_Bcast (n_g_face, 1, PDM__PDM_MPI_G_NUM, 0, PDM_MPI_COMM_WORLD);
-  PDM_MPI_Bcast (n_g_vtx, 1, PDM__PDM_MPI_G_NUM, 0, PDM_MPI_COMM_WORLD);
+  PDM_MPI_Bcast (n_g_face, 1, PDM__PDM_MPI_G_NUM, 0, pdm_mpi_comm);
+  PDM_MPI_Bcast (n_g_vtx , 1, PDM__PDM_MPI_G_NUM, 0, pdm_mpi_comm);
 
 }
 
@@ -775,8 +776,8 @@ _export_ini_mesh
     strcpy (nom_geom,"mesh1");
 
     id_geom = PDM_writer_geom_create (id_cs,
-                                             nom_geom,
-                                             n_part);
+                                      nom_geom,
+                                      n_part);
     /*
      * Debut des ecritures
      */
@@ -789,7 +790,7 @@ _export_ini_mesh
 
     PDM_MPI_Allgather ((void *) &n_part,      1, PDM_MPI_INT,
                        (void *) n_part_procs, 1, PDM_MPI_INT,
-                       PDM_MPI_COMM_WORLD);
+                       pdm_mpi_comm);
 
     int *deb_part_procs;
     PDM_malloc(deb_part_procs, n_rank + 1, int);
@@ -1035,7 +1036,7 @@ char *argv[]
   int activeRankMesh = 1;
 
   if (n_proc_data > 0 && n_proc_data < n_rank) {
-    int rankInNode = PDM_io_mpi_node_rank (PDM_MPI_COMM_WORLD);
+    int rankInNode = PDM_io_mpi_node_rank (meshComm);
 
     int nNode = 0;
     int iNode = -1;
@@ -1047,8 +1048,8 @@ char *argv[]
     int *rankInNodes;
     PDM_malloc(rankInNodes, n_rank, int);
 
-    PDM_MPI_Allreduce (&masterRank, &nNode, 1, PDM_MPI_INT, PDM_MPI_SUM, PDM_MPI_COMM_WORLD);
-    PDM_MPI_Allgather (&rankInNode, 1, PDM_MPI_INT, rankInNodes, 1, PDM_MPI_INT, PDM_MPI_COMM_WORLD);
+    PDM_MPI_Allreduce (&masterRank, &nNode, 1, PDM_MPI_INT, PDM_MPI_SUM, meshComm);
+    PDM_MPI_Allgather (&rankInNode, 1, PDM_MPI_INT, rankInNodes, 1, PDM_MPI_INT, meshComm);
 
     activeRankMesh = 0;
 
@@ -1075,7 +1076,7 @@ char *argv[]
 
     }
 
-    PDM_MPI_Comm_split(PDM_MPI_COMM_WORLD, activeRankMesh, i_rank, &meshComm);
+    PDM_MPI_Comm_split(meshComm, activeRankMesh, i_rank, &meshComm);
 
     PDM_free(rankInNodes);
   }

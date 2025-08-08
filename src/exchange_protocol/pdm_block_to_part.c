@@ -519,12 +519,12 @@ PDM_block_to_part_create_from_sparse_block
   _block_distrib_idx[n_rank] = PDM_MAX(_block_distrib_idx[n_rank], gmax_part_g_num+1);
 
   PDM_block_to_part_t* btp = PDM_block_to_part_create_from_sparse_block_and_distrib(_block_distrib_idx,
-                                                                                   delt_gnum,
-                                                                                   dn_elt,
-                                                                                   gnum_elt,
-                                                                                   n_elt,
-                                                                                   n_part,
-                                                                                   comm);
+                                                                                    delt_gnum,
+                                                                                    dn_elt,
+                                                                                    gnum_elt,
+                                                                                    n_elt,
+                                                                                    n_part,
+                                                                                    comm);
   PDM_free(_block_distrib_idx);
   return btp;
 }

@@ -16,6 +16,7 @@
 #include "pdm_io_tab.h"
 #include "pdm_error.h"
 #include "pdm_mem_tool.h"
+#include "pdm_priv.h"
 
 /*----------------------------------------------------------------------------*/
 

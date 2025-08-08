@@ -18,6 +18,7 @@
 #include "pdm_partitioning_algorithm.h"
 #include "pdm_printf.h"
 #include "pdm_vtk.h"
+#include "pdm_priv.h"
 
 /*============================================================================
  * Type definitions

@@ -20,6 +20,7 @@
 #include "pdm_points_merge.h"
 #include "pdm_printf.h"
 #include "pdm_vtk.h"
+#include "pdm_priv.h"
 
 /*============================================================================
  * Type definitions

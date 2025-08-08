@@ -8,6 +8,7 @@
 #include "pdm_mem_tool.h"
 #include "pdm_mpi.h"
 #include "pdm_printf.h"
+#include "pdm_priv.h"
 
 /**
  * \example pdm_t_block_to_part_sol1.c

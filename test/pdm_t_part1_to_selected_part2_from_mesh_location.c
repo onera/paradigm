@@ -22,6 +22,7 @@
 #include "pdm_part_to_part.h"
 #include "pdm_printf.h"
 #include "pdm_sort.h"
+#include "pdm_priv.h"
 
 /*============================================================================
  * Type definitions

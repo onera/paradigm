@@ -14,6 +14,7 @@
 #include "pdm_part_geom.h"
 #include "pdm_partitioning_algorithm.h"
 #include "pdm_printf.h"
+#include "pdm_priv.h"
 
 /*============================================================================
  * Type definitions
