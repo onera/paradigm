@@ -126,23 +126,21 @@ PDM_exchange_helper_exch_one_way_pack_init
 
 // API pour get le buffer interne envoie / reception ...
 
-//
-// Persistent
-// Pour les RMA : La fonction INIT prepare la window, on doit retourné le buffer !!!!
+
 int
 PDM_exchange_helper_exch_one_way_init
 (
   PDM_exchange_helper_t    *exch_helper,
   PDM_exchange_direction_t  direction,
-  int                       cst_stride,
   size_t                    s_data,
+  int                       cst_stride,
   int                       n_active_rank,
   int                      *active_rank,
+  int                      *send_or_recv_idx,
+  int                      *send_or_recv_n,
   int                       tag,
-  void                     *buffer,
-  PDM_ownership_t           ownership
+  void                     *buffer
 );
-
 
 void
 PDM_exchange_helper_exch_start

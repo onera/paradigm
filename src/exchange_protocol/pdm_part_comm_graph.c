@@ -958,12 +958,6 @@ PDM_part_comm_graph_exch_init
   int n_rank;
   PDM_MPI_Comm_size(pcg->comm, &n_rank);
 
-  int s_data_tot = s_data * cst_stride;
-
-  PDM_MPI_Datatype mpi_type;
-  PDM_MPI_Type_create_contiguous(s_data_tot, PDM_MPI_BYTE, &mpi_type);
-  PDM_MPI_Type_commit(&mpi_type);
-
   unsigned char *send_buffer = NULL;
   _allocate_send_buffer_strid_cst(pcg, s_data, cst_stride, &send_buffer);
 
@@ -997,8 +991,6 @@ PDM_part_comm_graph_exch_init
     pcg->exch_h->p_recv_stride[request_id] = (*recv_entity_stride);
   }
   pcg->exch_h->p_recv_data  [request_id] = (*recv_entity_data);
-
-  PDM_MPI_Type_free(&mpi_type);
 
   return request_id;
 }

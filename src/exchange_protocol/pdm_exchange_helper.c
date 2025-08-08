@@ -323,7 +323,7 @@ PDM_exchange_helper_create
   exch_helper->seed_tag = 1;
   exch_helper->next_tag = 1;
 
-  exch_helper->topo_kind = PDM_MPI_UNDEFINED;
+  exch_helper->topo_kind = PDM_MPI_COMM_UNDEFINED;
   PDM_MPI_Topo_test(exch_helper->comm, &exch_helper->topo_kind);
 
   return exch_helper;
@@ -350,7 +350,7 @@ PDM_exchange_helper_exch
   PDM_MPI_Type_create_contiguous(s_data_tot, PDM_MPI_BYTE, &mpi_type);
   PDM_MPI_Type_commit(&mpi_type);
 
-  if(k_comm == PDM_MPI_COMM_KIND_COLLECTIVE && exch_helper->topo_kind == PDM_MPI_UNDEFINED) {
+  if(k_comm == PDM_MPI_COMM_KIND_COLLECTIVE && exch_helper->topo_kind == PDM_MPI_COMM_UNDEFINED) {
     PDM_MPI_Alltoallv(send_buffer,
                       send_n,
                       send_idx,
@@ -415,7 +415,7 @@ PDM_exchange_helper_iexch
   PDM_MPI_Type_create_contiguous(s_data_tot, PDM_MPI_BYTE, &mpi_type);
   PDM_MPI_Type_commit(&mpi_type);
 
-  if(k_comm == PDM_MPI_COMM_KIND_COLLECTIVE && exch_helper->topo_kind == PDM_MPI_UNDEFINED) {
+  if(k_comm == PDM_MPI_COMM_KIND_COLLECTIVE && exch_helper->topo_kind == PDM_MPI_COMM_UNDEFINED) {
     exch_helper->n_sub_requests[request_id] = 1;
     PDM_malloc(exch_helper->sub_requests[request_id], exch_helper->n_sub_requests[request_id], PDM_MPI_Request);
     PDM_MPI_Ialltoallv(send_buffer,
@@ -555,7 +555,7 @@ PDM_exchange_helper_exch_init
   PDM_MPI_Type_create_contiguous(s_data_tot, PDM_MPI_BYTE, &mpi_type);
   PDM_MPI_Type_commit(&mpi_type);
 
-  if(k_comm == PDM_MPI_COMM_KIND_COLLECTIVE && exch_helper->topo_kind == PDM_MPI_UNDEFINED) {
+  if(k_comm == PDM_MPI_COMM_KIND_COLLECTIVE && exch_helper->topo_kind == PDM_MPI_COMM_UNDEFINED) {
     exch_helper->n_sub_requests[request_id] = 1;
     PDM_malloc(exch_helper->sub_requests[request_id], exch_helper->n_sub_requests[request_id], PDM_MPI_Request);
     PDM_MPI_Alltoallv_init(send_buffer,
@@ -614,15 +614,6 @@ PDM_exchange_helper_exch_init
 
   return request_id;
 }
-
-
-// Si comm graph -> Neighbor automatique ? Voire dans le part_migrate
-// RMA --> init, start, free (Permet d'économiser la création des groupes et du target_disp)
-// Etat des lieux des k_comm dans PDM --> Pour moi pas cohérent
-// Echange ONE-Way à faire ( send / recv )
-// Gestion des actives rank pour le p2p
-// Test exch_helper
-
 
 void
 PDM_exchange_helper_exch_start
@@ -750,32 +741,71 @@ PDM_exchange_helper_exch_free
 
 }
 
+// Echange ONE-Way à faire ( send / recv )
+// Gestion des actives rank pour le p2p
+
 
 int
 PDM_exchange_helper_exch_one_way_init
 (
   PDM_exchange_helper_t    *exch_helper,
   PDM_exchange_direction_t  direction,
-  int                       cst_stride,
   size_t                    s_data,
+  int                       cst_stride,
   int                       n_active_rank,
   int                      *active_rank,
+  int                      *send_or_recv_idx,
+  int                      *send_or_recv_n,
   int                       tag,
-  void                     *buffer,
-  PDM_ownership_t           ownership
+  void                     *buffer
 )
 {
-  PDM_UNUSED(exch_helper);
-  PDM_UNUSED(direction);
-  PDM_UNUSED(cst_stride);
-  PDM_UNUSED(s_data);
-  PDM_UNUSED(n_active_rank);
-  PDM_UNUSED(active_rank);
-  PDM_UNUSED(tag);
-  PDM_UNUSED(buffer);
-  PDM_UNUSED(ownership);
+  int n_rank;
+  PDM_MPI_Comm_size(exch_helper->comm, &n_rank);
 
-  return -1;
+  int request_id = _find_available_request(exch_helper);
+
+  int s_data_tot = s_data * cst_stride;
+
+  PDM_MPI_Datatype mpi_type;
+  PDM_MPI_Type_create_contiguous(s_data_tot, PDM_MPI_BYTE, &mpi_type);
+  PDM_MPI_Type_commit(&mpi_type);
+
+  if(direction == PDM_EXCHANGE_DIRECTION_SEND) {
+
+    exch_helper->n_sub_requests[request_id] = n_active_rank;
+    PDM_MPI_Sends_init(buffer,
+                       send_or_recv_n,
+                       send_or_recv_idx,
+                       mpi_type,
+                       n_active_rank,
+                       active_rank,
+                       tag,
+                       exch_helper->comm,
+                       &exch_helper->sub_requests[request_id]);
+
+  } else if (direction == PDM_EXCHANGE_DIRECTION_RECV) {
+    exch_helper->n_sub_requests[request_id] = n_active_rank;
+    PDM_MPI_Recvs_init(buffer,
+                       send_or_recv_n,
+                       send_or_recv_idx,
+                       mpi_type,
+                       n_active_rank,
+                       active_rank,
+                       tag,
+                       exch_helper->comm,
+                       &exch_helper->sub_requests[request_id]);
+  } else {
+    PDM_error(__FILE__, __LINE__, 0,
+              "Error PDM_exchange_helper_exch_one_way_init not yet implemented with direction = %i\n", direction);
+  }
+
+
+  exch_helper->k_comm         [request_id] = PDM_MPI_COMM_KIND_P2P;
+  exch_helper->is_persistent  [request_id] = 1;
+  exch_helper->requests_status[request_id] = EXCHANGE_HELPER_STATUS_READY;
+
+  return request_id;
 }
 
 

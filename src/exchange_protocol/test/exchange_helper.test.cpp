@@ -242,26 +242,50 @@ MPI_TEST_CASE("[PDM_exchange_helper] - Exch ", 2) {
     }
   }
 
+  /*
+   * One-way
+   */
+  std::vector<int> send_active_rank = {0, 1};
+  std::vector<int> recv_active_rank = {0, 1};
 
-  // Scenario 2 :
-  //   - Simple exch of data (two-way)
+  int n_send_active_rank = send_active_rank.size();
+  int n_recv_active_rank = recv_active_rank.size();
 
-  // Dans les échanges c'est pas forcement bijectif : ex --> RMA
-  // Dans l'utilisation avec sonics par exemple l'allocation est externe, et on aura pas le choix en RMA aussi (car synchro amont obligatoire)
+  std::fill(begin(recv_buffer), end(recv_buffer), -1000);
 
-  // PDM_exchange_helper_exch_add(exch_helper,
-  //                              cst_stride,
-  //                              s_data,
-  //                              tag,
-  //                               PDM_OWNERSHIP_KEEP);
+  int req_recv = PDM_exchange_helper_exch_one_way_init(exch_helper,
+                                                       PDM_EXCHANGE_DIRECTION_RECV,
+                                                       sizeof(int),
+                                                       1,
+                                                       n_recv_active_rank,
+                                                       recv_active_rank.data(),
+                                                       recv_idx        .data(),
+                                                       recv_n          .data(),
+                                                       11,
+                                                       recv_buffer.data());
 
-  // PDM_exchange_helper_add_recv_exch(exch_helper,
-  //                                   cst_stride,
-  //                                   s_data, )
+  int req_send = PDM_exchange_helper_exch_one_way_init(exch_helper,
+                                                       PDM_EXCHANGE_DIRECTION_SEND,
+                                                       sizeof(int),
+                                                       1,
+                                                       n_send_active_rank,
+                                                       send_active_rank   .data(),
+                                                       send_idx   [i_rank].data(),
+                                                       send_n             .data(),
+                                                       11,
+                                                       send_buffer[i_rank].data());
 
-  // PDM_exchange_helper_add_collective_exch(exch_helper,
-  //                                         cst_stride,
-  //                                         s_data, )
+  PDM_exchange_helper_exch_start(exch_helper, req_send);
+  PDM_exchange_helper_exch_start(exch_helper, req_recv);
+
+  PDM_exchange_helper_exch_wait(exch_helper, req_send);
+  PDM_exchange_helper_exch_wait(exch_helper, req_recv);
+
+  PDM_exchange_helper_exch_free(exch_helper, req_send);
+  PDM_exchange_helper_exch_free(exch_helper, req_recv);
+
+  MPI_CHECK_EQ_C_ARRAY(0, recv_buffer, recv_buffer_expected_p0, recv_idx.back());
+  MPI_CHECK_EQ_C_ARRAY(1, recv_buffer, recv_buffer_expected_p1, recv_idx.back());
 
 
   PDM_exchange_helper_free(exch_helper);

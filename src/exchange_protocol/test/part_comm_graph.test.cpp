@@ -248,6 +248,92 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2p - Persistent exchange", 2) {
 }
 
 
+MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2p - iexch", 2) {
+  PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
+
+  int i_rank;
+  PDM_MPI_Comm_rank(pdm_comm, &i_rank);
+
+  /*
+   *    |++++|++++| 9    9 |++++|++++|++++| 12
+   *    |    |    |        |    |    |    |
+   *    |    |    |        |    |    |    |
+   *    |++++|++++| 6    5 |++++|++++|++++| 8
+   *    |    |    |        |    |    |    |
+   *    |    |    |        |    |    |    |
+   *    |++++|++++|        |++++|++++|++++|
+   *   1     2    3       1     2    3    4
+   */
+
+  /* Part */
+  std::vector<int> vn_elt = {9, 12};
+  // int n_elt1 = vn_elt[i_rank];
+  int n_part = 1;
+
+  /* Graphe comm */
+  std::vector<int> vn_entity_bound = {3, 3};
+  std::vector<std::vector<int>> ventity_bound = {{3, 1, 1, 1,
+                                                  6, 1, 1, 5,
+                                                  9, 1, 1, 9},
+                                                 {1, 0, 1, 3,
+                                                  5, 0, 1, 6,
+                                                  9, 0, 1, 9}};
+  int n_entity_bound = vn_entity_bound[i_rank];
+  int *entity_bound  = ventity_bound  [i_rank].data();
+
+  PDM_part_comm_graph_t* pcg = PDM_part_comm_graph_create(n_part,
+                                                          &n_entity_bound,
+                                                          &entity_bound,
+                                                          PDM_OWNERSHIP_USER,
+                                                          pdm_comm);
+
+  const int* lowner_bound = PDM_part_comm_graph_owner_get(pcg, 0);
+
+  // PDM_log_trace_array_int(lowner_bound, 3, "lowner_bound ::");
+
+  static int lowner_bound_expected_p0[3] = {1, 1, 1};
+  static int lowner_bound_expected_p1[3] = {0, 0, 0};
+
+  MPI_CHECK_EQ_C_ARRAY(0, lowner_bound, lowner_bound_expected_p0, 3);
+  MPI_CHECK_EQ_C_ARRAY(1, lowner_bound, lowner_bound_expected_p1, 3);
+
+  // ---------------------------------------------------------------------------
+  // Exchange stride cst
+  std::vector<std::vector<int>> vsend_cst_data = {{-3, -2, -1}, {10, 20, 30}};
+  int *send_cst_data = vsend_cst_data[i_rank].data();
+
+  int **tmp_recv_cst_data = NULL;
+  int req0 = PDM_part_comm_graph_iexch(pcg,
+                                       PDM_MPI_COMM_KIND_WIN_RMA,
+                                       sizeof(int),
+                                       PDM_STRIDE_CST_INTERLACED,
+                                       1,
+                                       NULL,
+                        (void **)      &send_cst_data,
+                                       NULL,
+                       (void ***)      &tmp_recv_cst_data);
+  PDM_part_comm_graph_exch_wait(pcg, req0);
+
+  int *recv_cst_data = tmp_recv_cst_data[0];
+
+  if(1 == 1) {
+    PDM_log_trace_array_int(recv_cst_data, n_entity_bound, "recv_cst_data ::");
+  }
+
+  static int recv_cst_data_expected_p0[3] = {10, 20, 30};
+  static int recv_cst_data_expected_p1[3] = {-3, -2, -1};
+
+  MPI_CHECK_EQ_C_ARRAY(0, recv_cst_data, recv_cst_data_expected_p0, n_entity_bound);
+  MPI_CHECK_EQ_C_ARRAY(1, recv_cst_data, recv_cst_data_expected_p1, n_entity_bound);
+
+  free(recv_cst_data);
+  free(tmp_recv_cst_data);
+
+  PDM_part_comm_graph_exch_free(pcg, req0);
+
+  PDM_part_comm_graph_free(pcg);
+}
+
 
 MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2p - allreduce ", 2) {
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);

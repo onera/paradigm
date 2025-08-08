@@ -152,8 +152,8 @@ typedef enum {
 
 
 typedef enum {
-  PDM_EXCHANGE_SEND = 0,
-  PDM_EXCHANGE_RECV = 1,
+  PDM_EXCHANGE_DIRECTION_SEND = 0,
+  PDM_EXCHANGE_DIRECTION_RECV = 1,
 } PDM_exchange_direction_t;
 
 
