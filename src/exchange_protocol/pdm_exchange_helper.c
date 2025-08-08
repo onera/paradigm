@@ -734,10 +734,6 @@ PDM_exchange_helper_exch_free
   exch_helper->recv_idx[request_id] = NULL;
 
   exch_helper->k_comm    [request_id] = PDM_MPI_COMM_KIND_INVALID;
-  exch_helper->t_stride  [request_id] = PDM_STRIDE_CST_INTERLACED;
-  exch_helper->s_data    [request_id] = 0;
-  exch_helper->cst_stride[request_id] = 0;
-  exch_helper->mpi_type  [request_id] = PDM_MPI_DATATYPE_NULL;
 
 }
 

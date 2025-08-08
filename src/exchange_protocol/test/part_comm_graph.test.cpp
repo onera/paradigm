@@ -316,7 +316,7 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2p - iexch", 2) {
 
   int *recv_cst_data = tmp_recv_cst_data[0];
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_int(recv_cst_data, n_entity_bound, "recv_cst_data ::");
   }
 
