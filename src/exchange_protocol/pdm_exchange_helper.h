@@ -180,6 +180,51 @@ PDM_exchange_helper_exch_init
   void                  *recv_buffer
 );
 
+
+/**
+ * \brief Starts a non-blocking one-way communication operation.
+ *
+ * This function initiates a one-way exchange of data in a non-blocking manner
+ * and returns immediately with a request ID. The actual communication happens
+ * asynchronously in the background. The operation can be a set of send or
+ * receive operations, as specified by the direction parameter.
+ *
+ * The caller must use a `wait` function with the returned request ID to ensure
+ * the communication has completed before reusing the data buffer.
+ *
+ * \param[in,out] exch_helper The initialized exchange helper object.
+ * \param[in]     direction The direction of communication, either sending or receiving.
+ * \param[in]     s_data The size of a single data element in bytes.
+ * \param[in]     cst_stride The stride for non-contiguous data within the buffer.
+ * \param[in]     n_active_rank The number of ranks involved in the communication.
+ * \param[in]     active_rank Array of size n_active_rank, containing the ranks
+ *                of the destination (for sends) or source (for receives) processes.
+ * \param[in]     send_or_recv_idx Array of size n_active_rank, where each element
+ *                is the displacement from the buffer to the starting element for the corresponding active rank.
+ * \param[in]     send_or_recv_n Array of size n_active_rank, where each element
+ *                is the number of elements to send or receive for the corresponding active rank.
+ * \param[in]     tag The MPI message tag to be used for the exchange.
+ * \param[in,out] buffer Pointer to the data buffer for the send or receive operation.
+ *
+ * \return The integer ID of the non-blocking request, which must be passed to
+ *         a corresponding wait function to complete the communication. \see PDM_exchange_helper_exch_wait
+ */
+int
+PDM_exchange_helper_iexch_one_way
+(
+  PDM_exchange_helper_t    *exch_helper,
+  PDM_exchange_direction_t  direction,
+  size_t                    s_data,
+  int                       cst_stride,
+  int                       n_active_rank,
+  int                      *active_rank,
+  int                      *send_or_recv_idx,
+  int                      *send_or_recv_n,
+  int                       tag,
+  void                     *buffer
+);
+
+
 /**
  * \brief Prepares a persistent one-way communication request.
  *

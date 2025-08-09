@@ -733,13 +733,72 @@ PDM_exchange_helper_exch_free
   exch_helper->recv_n  [request_id] = NULL;
   exch_helper->recv_idx[request_id] = NULL;
 
-  exch_helper->k_comm    [request_id] = PDM_MPI_COMM_KIND_INVALID;
+  exch_helper->k_comm  [request_id] = PDM_MPI_COMM_KIND_INVALID;
 
 }
 
-// Echange ONE-Way à faire ( send / recv )
-// Gestion des actives rank pour le p2p
 
+int
+PDM_exchange_helper_iexch_one_way
+(
+  PDM_exchange_helper_t    *exch_helper,
+  PDM_exchange_direction_t  direction,
+  size_t                    s_data,
+  int                       cst_stride,
+  int                       n_active_rank,
+  int                      *active_rank,
+  int                      *send_or_recv_idx,
+  int                      *send_or_recv_n,
+  int                       tag,
+  void                     *buffer
+)
+{
+  int n_rank;
+  PDM_MPI_Comm_size(exch_helper->comm, &n_rank);
+
+  int request_id = _find_available_request(exch_helper);
+
+  int s_data_tot = s_data * cst_stride;
+
+  PDM_MPI_Datatype mpi_type;
+  PDM_MPI_Type_create_contiguous(s_data_tot, PDM_MPI_BYTE, &mpi_type);
+  PDM_MPI_Type_commit(&mpi_type);
+
+  if(direction == PDM_EXCHANGE_DIRECTION_SEND) {
+
+    exch_helper->n_sub_requests[request_id] = n_active_rank;
+    PDM_MPI_Isends(buffer,
+                   send_or_recv_n,
+                   send_or_recv_idx,
+                   mpi_type,
+                   n_active_rank,
+                   active_rank,
+                   tag,
+                   exch_helper->comm,
+                   &exch_helper->sub_requests[request_id]);
+
+  } else if (direction == PDM_EXCHANGE_DIRECTION_RECV) {
+    exch_helper->n_sub_requests[request_id] = n_active_rank;
+    PDM_MPI_Irecvs(buffer,
+                   send_or_recv_n,
+                   send_or_recv_idx,
+                   mpi_type,
+                   n_active_rank,
+                   active_rank,
+                   tag,
+                   exch_helper->comm,
+                   &exch_helper->sub_requests[request_id]);
+  } else {
+    PDM_error(__FILE__, __LINE__, 0,
+              "Error PDM_exchange_helper_iexch_one_way not yet implemented with direction = %i\n", direction);
+  }
+
+  exch_helper->k_comm         [request_id] = PDM_MPI_COMM_KIND_P2P;
+  exch_helper->is_persistent  [request_id] = 0;
+  exch_helper->requests_status[request_id] = EXCHANGE_HELPER_STATUS_ONGOING;
+
+  return request_id;
+}
 
 int
 PDM_exchange_helper_exch_one_way_init

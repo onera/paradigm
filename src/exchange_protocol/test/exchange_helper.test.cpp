@@ -243,7 +243,7 @@ MPI_TEST_CASE("[PDM_exchange_helper] - Exch ", 2) {
   }
 
   /*
-   * One-way
+   * One-way - Persistent
    */
   std::vector<int> send_active_rank = {0, 1};
   std::vector<int> recv_active_rank = {0, 1};
@@ -287,6 +287,37 @@ MPI_TEST_CASE("[PDM_exchange_helper] - Exch ", 2) {
   MPI_CHECK_EQ_C_ARRAY(0, recv_buffer, recv_buffer_expected_p0, recv_idx.back());
   MPI_CHECK_EQ_C_ARRAY(1, recv_buffer, recv_buffer_expected_p1, recv_idx.back());
 
+  /*
+   * One-way - Asynchronous
+   */
+  std::fill(begin(recv_buffer), end(recv_buffer), -1000);
+
+  int req_recv_a = PDM_exchange_helper_iexch_one_way(exch_helper,
+                                                     PDM_EXCHANGE_DIRECTION_RECV,
+                                                     sizeof(int),
+                                                     1,
+                                                     n_recv_active_rank,
+                                                     recv_active_rank.data(),
+                                                     recv_idx        .data(),
+                                                     recv_n          .data(),
+                                                     11,
+                                                     recv_buffer.data());
+
+  int req_send_a = PDM_exchange_helper_iexch_one_way(exch_helper,
+                                                     PDM_EXCHANGE_DIRECTION_SEND,
+                                                     sizeof(int),
+                                                     1,
+                                                     n_send_active_rank,
+                                                     send_active_rank   .data(),
+                                                     send_idx   [i_rank].data(),
+                                                     send_n             .data(),
+                                                     11,
+                                                     send_buffer[i_rank].data());
+  PDM_exchange_helper_exch_wait(exch_helper, req_send_a);
+  PDM_exchange_helper_exch_wait(exch_helper, req_recv_a);
+
+  MPI_CHECK_EQ_C_ARRAY(0, recv_buffer, recv_buffer_expected_p0, recv_idx.back());
+  MPI_CHECK_EQ_C_ARRAY(1, recv_buffer, recv_buffer_expected_p1, recv_idx.back());
 
   PDM_exchange_helper_free(exch_helper);
 }
