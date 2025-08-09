@@ -61,8 +61,6 @@ extern "C" {
  * Type
  *============================================================================*/
 
-enum {false, true};
-
 /*=============================================================================
  * Static global variables
  *============================================================================*/
@@ -1393,7 +1391,7 @@ PDM_geom_elem_polygon_properties
        */
 
       else if (nIterMax < nIter) {
-        convergence = false;
+        convergence = PDM_FALSE;
         break;
       }
     } /* while (1) */
@@ -1694,7 +1692,7 @@ PDM_geom_elem_polyhedra_properties
   PDM_malloc(polyhedra_vertices,lpolyhedra_vertices,int); //First allocation
 
   for (int i = 0; i < n_vertices; i++){
-    colorVertice[i] = false;
+    colorVertice[i] = PDM_FALSE;
   }
 
   /*
@@ -1957,7 +1955,7 @@ PDM_geom_elem_polyhedra_properties
 
     for (int j = 0; j < n_polyhedra_vertices; j++) {
       const int vertex = polyhedra_vertices[j];
-      colorVertice[vertex] = false;
+      colorVertice[vertex] = PDM_FALSE;
       for (int i = 0; i < 3; i++)
         poly_center[i] += coords[3*vertex + i];
     }
@@ -2096,8 +2094,9 @@ PDM_geom_elem_polyhedra_properties
      * Check convergence
      */
 
-    if (!convergenceFace)
-      convergence = false;
+    if (!convergenceFace) {
+      convergence = PDM_FALSE;
+    }
 
     if ((characteristic_length != NULL) && (is_degenerated != NULL)) {
 

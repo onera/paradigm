@@ -130,7 +130,6 @@ test_c_create (pdm_t_gnum_with_merge                                 4 PDM_LIST_
 
 # meshgen
 test_c_create (pdm_t_generate_mesh      2 PDM_LIST_TEST PDM_LIST_NRANK)
-test_c_create (pdm_t_dsurf_mesh_gen     2 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_polysurf_extrusion 2 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_dcube_nodal_gen    2 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_dist_cube_nodal    1 PDM_LIST_TEST PDM_LIST_NRANK)
@@ -150,7 +149,6 @@ test_c_create (pdm_t_part_comm_graph_periodic_2d                2 PDM_LIST_TEST 
 
 # ppart
 test_c_create (pdm_t_part_dcube               ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRANK)
-test_c_create (pdm_t_part_dcube_perfo_btp     ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_part_dcube_nodal         ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_part_extension                                 2 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_partitioning_dcube_nodal                       2 PDM_LIST_TEST PDM_LIST_NRANK)

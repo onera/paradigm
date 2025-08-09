@@ -3,8 +3,6 @@
 #include "doctest/doctest.h"
 #include "pdm_ho_bezier.h"
 
-static const double tol = 1e-14;
-
 TEST_CASE("PDM_ho_bezier_triangle_location") {
 
   double point_coord[3] = {

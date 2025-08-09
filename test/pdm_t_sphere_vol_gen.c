@@ -18,6 +18,7 @@
 #include "pdm_sphere_surf_gen.h"
 #include "pdm_sphere_vol_gen.h"
 #include "pdm_vtk.h"
+#include "pdm_priv.h"
 
 /*============================================================================
  * Type definitions

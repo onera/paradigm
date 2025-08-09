@@ -782,7 +782,7 @@ const int                       id_section,
 }
 
 
-const PDM_g_num_t *
+PDM_g_num_t *
 PDM_DMesh_nodal_elmts_distrib_section_get
 (
       PDM_dmesh_nodal_elmts_t *dmn_elts,

@@ -33,6 +33,7 @@
 #include "pdm_partitioning_algorithm.h"
 #include "pdm_sort.h"
 #include "pdm_unique.h"
+#include "pdm_priv.h"
 /*----------------------------------------------------------------------------
  *  Optional headers
  *----------------------------------------------------------------------------*/

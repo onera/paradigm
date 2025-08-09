@@ -149,8 +149,8 @@ MPI_TEST_CASE("[pdm_morton] - PDM_morton_local_sort", 1) {
 
   int n_pts = 4;
 
-  int dim = 3;
-  double extents[2*dim];
+  static int dim = 3;
+  double extents[6];
 
   PDM_morton_get_coord_extents(dim, n_pts, coords, extents, pdm_comm);
   PDM_extents_conformize(dim, extents, 1e-3);

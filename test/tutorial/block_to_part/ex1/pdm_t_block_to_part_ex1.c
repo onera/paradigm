@@ -8,6 +8,7 @@
 #include "pdm_mem_tool.h"
 #include "pdm_mpi.h"
 #include "pdm_printf.h"
+#include "pdm_priv.h"
 
 /*============================================================================
  * Type definitions

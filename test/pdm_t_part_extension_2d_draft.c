@@ -691,7 +691,7 @@ int main
   for (int i_dom = 0; i_dom < n_domain; i_dom++) {
     for (int i_part = 0; i_part < pn_n_part[i_dom]; i_part++){
       if (0) {
-        log_trace("\ni_dom = %d; i_part = %d\n", i_dom, i_part);
+        log_trace("\ni_dom = %d; i_part = %d; l_part=%i\n", i_dom, i_part, l_part);
       }
 
       /**

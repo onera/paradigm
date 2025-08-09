@@ -26,6 +26,7 @@
 #include "pdm_part_to_block.h"
 #include "pdm_partitioning_algorithm.h"
 #include "pdm_partitioning_nodal_algorithm.h"
+#include "pdm_priv.h"
 
 #ifdef __cplusplus
 extern "C" {

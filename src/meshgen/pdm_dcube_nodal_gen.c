@@ -2320,7 +2320,7 @@ PDM_dcube_nodal_gen_ordering_set
  const char        *ordering
 )
 {
-  dcube->ordering = (char *) ordering;
+  dcube->ordering = ordering;
 }
 
 

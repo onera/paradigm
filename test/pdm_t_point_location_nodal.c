@@ -19,6 +19,7 @@
 #include "pdm_printf.h"
 #include "pdm_reader_gamma.h"
 #include "pdm_vtk.h"
+#include "pdm_priv.h"
 
 /*============================================================================
  * Private function definitions

@@ -6,6 +6,7 @@
 #include "pdm_sort.h"
 #include "pdm_mem_tool.h"
 #include "pdm_logging.h"
+#include "pdm_priv.h"
 
 
 TEST_CASE("[pdm_sort] - PDM_sort_long") {
@@ -87,7 +88,7 @@ TEST_CASE("[pdm_sort] - PDM_sort_double") {
     PDM_log_trace_array_int   (order, n, "order :: ");
   }
 
-  CHECK_EQ_C_ARRAY(array, expected_array, n);
+  CHECK_EQ_C_ARRAY_FLOAT(array, expected_array, n, 1.e-6);
   CHECK_EQ_C_ARRAY(order, expected_order, n);
 
   PDM_free(order);

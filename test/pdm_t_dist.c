@@ -417,11 +417,9 @@ int main(int argc, char *argv[])
                            &face_group,
                            &face_group_ln_to_gn);
 
-    int iii = 0;
     for (int i = 0; i < n_face; i++) {
       int icel2 = face_cell[2*i+1];
       if (icel2 == 0) {
-        iii++;
         select_face[i_part][i] = 1;
       }
     }

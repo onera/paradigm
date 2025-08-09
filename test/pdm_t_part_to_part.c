@@ -6,6 +6,7 @@
 #include "pdm_mem_tool.h"
 #include "pdm_mpi.h"
 #include "pdm_part_to_part.h"
+#include "pdm_priv.h"
 
 /*============================================================================
  * Type definitions

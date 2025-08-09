@@ -39,7 +39,6 @@ extern "C" {
  *============================================================================*/
 
 
-enum {false, true};
 
 typedef enum {
   FACE_UNPROCESSED,

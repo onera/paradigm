@@ -1116,7 +1116,7 @@ PDM_box_set_dump(const PDM_box_set_t  *boxes,
 {
   int   i;
 
-  const char  XYZ[3] = "XYZ";
+  const char  XYZ[] = "XYZ";
 
   if (boxes == NULL)
     return;

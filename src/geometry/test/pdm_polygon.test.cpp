@@ -19,8 +19,8 @@ MPI_TEST_CASE("PDM_polygon_evaluate_position", 1) {
   PDM_polygon_status_t location, expected_location;
   double tol = 1e-16;
 
-  double rand_fact1 = 0.1 * (double) rand() / (double) RAND_MAX;
-  double rand_fact2 = 0.1 * (double) rand() / (double) RAND_MAX;
+  // double rand_fact1 = 0.1 * (double) rand() / (double) RAND_MAX;
+  // double rand_fact2 = 0.1 * (double) rand() / (double) RAND_MAX;
 
   double pts[3*n_pts] = { 0.078309922375860597, 0.078309922375860597, 0.0,
                           1.0, 0.0, 0.0,

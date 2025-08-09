@@ -1199,13 +1199,10 @@ int main(int argc, char *argv[])
       PDM_free(_face_vtx);
     }
 
-    int iii = 0;
     for (int i = 0; i < n_face; i++) {
       int icel2 = face_cell[2*i+1];
       if (icel2 == 0) {
-        iii++;
         select_face[i_part][i] = 1;
-        //select_face[i_part][i] = 0;
       }
     }
 

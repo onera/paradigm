@@ -14,6 +14,7 @@
 #include "pdm_printf.h"
 #include "pdm_reader_gamma.h"
 #include "pdm_writer.h"
+#include "pdm_priv.h"
 
 
 /*============================================================================

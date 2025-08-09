@@ -4,11 +4,6 @@
 #include "pdm_priv.h"
 #include "pdm_printf.h"
 #include "pdm_rotation.h"
-
-static const double EPS = 8*__DBL_EPSILON__;
-static const double DEG2RAD = M_PI/180.;
-static const double RAD2DEG = 180./M_PI;
-
 /*----------------------------------------------------------------------------
  *  PDM_rotation_t INPUT/OUTPUT FUNCTIONS
  *----------------------------------------------------------------------------*/
@@ -29,6 +24,13 @@ static const double RAD2DEG = 180./M_PI;
 //     PDM_printf("#####\n");
 // }
 
+#if defined(PDM_HAVE_MKL) || defined(PDM_HAVE_LAPACK)
+
+
+static const double EPS = 8*__DBL_EPSILON__;
+static const double DEG2RAD = M_PI/180.;
+static const double RAD2DEG = 180./M_PI;
+
 static void multiply_matrices(double A[16],double B[16],double C[16]){
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
@@ -48,8 +50,6 @@ static void mat_vec(double A[9],double x[3],double y[3]){
         }
     }
 }
-
-#if defined(PDM_HAVE_MKL) || defined(PDM_HAVE_LAPACK)
 
 MPI_TEST_CASE("[pdm_rotation] - 1p - PDM_rotation_multiply_n_by_n_matrices", 1) {
     double A[16] = {
