@@ -1120,6 +1120,56 @@ PDM_part_comm_graph_exch_one_way_raw_init
 }
 
 
+int
+PDM_part_comm_graph_iexch_one_way_raw
+(
+ PDM_part_comm_graph_t      *pcg,
+ PDM_exchange_direction_t    direction,
+ size_t                      s_data,
+ int                         cst_stride,
+ int                        *raw_buffer,
+ int                         tag
+)
+{
+  int *send_or_recv_idx = NULL;
+  int *send_or_recv_n   = NULL;
+  int  n_active_rank    = 0;
+  int *active_rank      = 0;
+
+  if(direction == PDM_EXCHANGE_DIRECTION_SEND) {
+    n_active_rank    = pcg->n_active_rank_send;
+    active_rank      = pcg->active_rank_send;
+    send_or_recv_idx = pcg->active_send_idx;
+    send_or_recv_n   = pcg->active_send_n;
+  } else if (direction == PDM_EXCHANGE_DIRECTION_RECV) {
+    n_active_rank    = pcg->n_active_rank_send;
+    active_rank      = pcg->active_rank_send;
+    send_or_recv_idx = pcg->active_recv_idx;
+    send_or_recv_n   = pcg->active_recv_n;
+  } else {
+    PDM_error(__FILE__, __LINE__, 0,
+              "Error PDM_part_comm_graph_exch_one_way_raw_init not yet implemented with direction = %i\n", direction);
+  }
+
+  int request_id = PDM_exchange_helper_iexch_one_way(pcg->exch_h,
+                                                     direction,
+                                                     s_data,
+                                                     cst_stride,
+                                                     n_active_rank,
+                                                     active_rank,
+                                                     send_or_recv_idx,
+                                                     send_or_recv_n,
+                                                     tag,
+                                                     raw_buffer);
+
+  pcg->exch_h->send_buffer  [request_id] = raw_buffer;
+  pcg->exch_h->s_data       [request_id] = s_data;
+  pcg->exch_h->cst_stride   [request_id] = cst_stride;
+
+  return request_id;
+}
+
+
 void
 PDM_part_comm_graph_exch_one_way_raw_start
 (

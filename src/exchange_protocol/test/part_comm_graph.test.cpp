@@ -102,7 +102,41 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2p", 2) {
   static int expected_recv_buffer2_p0[6] = {12, 30, 13, 31, 14, 32};
   static int expected_recv_buffer2_p1[6] = {11, 20, 12, 21, 13, 22};
 
+  // Asyncrhonous
   int n_try = 4;
+  for(int i_try = 0; i_try < n_try; ++i_try) {
+    for(int i = 0; i < n_entity_bound; ++i) {
+      int i_bound = part_to_send_buffer[i];
+      send_buffer[2*i_bound  ] =    (i_rank+1) + i_bound;
+      send_buffer[2*i_bound+1] = 10*(i_rank+1) + i_bound;
+    }
+
+    int req_recv_raw = PDM_part_comm_graph_iexch_one_way_raw(pcg,
+                                                             PDM_EXCHANGE_DIRECTION_RECV,
+                                                             sizeof(int),
+                                                             2,
+                                                             recv_buffer,
+                                                             22);
+    int req_send_raw = PDM_part_comm_graph_iexch_one_way_raw(pcg,
+                                                             PDM_EXCHANGE_DIRECTION_SEND,
+                                                             sizeof(int),
+                                                             2,
+                                                             send_buffer,
+                                                             22);
+
+    PDM_part_comm_graph_exch_one_way_raw_wait(pcg, req_recv_raw);
+    PDM_part_comm_graph_exch_one_way_raw_wait(pcg, req_send_raw);
+
+    if(0 == 1) {
+      PDM_log_trace_array_int(recv_buffer, 2 * n_entity_bound, "recv_buffer ::");
+    }
+
+    MPI_CHECK_EQ_C_ARRAY(0, recv_buffer, expected_recv_buffer_p0, 6);
+    MPI_CHECK_EQ_C_ARRAY(1, recv_buffer, expected_recv_buffer_p1, 6);
+  }
+
+
+  // Persistent
   for(int i_try = 0; i_try < n_try; ++i_try) {
     for(int i = 0; i < n_entity_bound; ++i) {
       int i_bound = part_to_send_buffer[i];
