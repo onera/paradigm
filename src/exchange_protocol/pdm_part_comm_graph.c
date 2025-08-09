@@ -1092,8 +1092,8 @@ PDM_part_comm_graph_exch_one_way_raw_init
     send_or_recv_idx = pcg->active_send_idx;
     send_or_recv_n   = pcg->active_send_n;
   } else if (direction == PDM_EXCHANGE_DIRECTION_RECV) {
-    n_active_rank    = pcg->n_active_rank_send;
-    active_rank      = pcg->active_rank_send;
+    n_active_rank    = pcg->n_active_rank_recv;
+    active_rank      = pcg->active_rank_recv;
     send_or_recv_idx = pcg->active_recv_idx;
     send_or_recv_n   = pcg->active_recv_n;
   } else {
@@ -1142,8 +1142,8 @@ PDM_part_comm_graph_iexch_one_way_raw
     send_or_recv_idx = pcg->active_send_idx;
     send_or_recv_n   = pcg->active_send_n;
   } else if (direction == PDM_EXCHANGE_DIRECTION_RECV) {
-    n_active_rank    = pcg->n_active_rank_send;
-    active_rank      = pcg->active_rank_send;
+    n_active_rank    = pcg->n_active_rank_recv;
+    active_rank      = pcg->active_rank_recv;
     send_or_recv_idx = pcg->active_recv_idx;
     send_or_recv_n   = pcg->active_recv_n;
   } else {
