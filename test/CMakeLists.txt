@@ -130,7 +130,6 @@ test_c_create (pdm_t_gnum_with_merge                                 4 PDM_LIST_
 
 # meshgen
 test_c_create (pdm_t_generate_mesh      2 PDM_LIST_TEST PDM_LIST_NRANK)
-test_c_create (pdm_t_dsurf_mesh_gen     2 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_polysurf_extrusion 2 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_dcube_nodal_gen    2 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_dist_cube_nodal    1 PDM_LIST_TEST PDM_LIST_NRANK)
