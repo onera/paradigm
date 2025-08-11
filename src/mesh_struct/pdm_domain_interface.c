@@ -2308,15 +2308,17 @@ PDM_domain_interface_translate_entity1_entity2
  int                   ***interface_dom_entity2
 )
 {
+  int debug_verbose = 0;
   // log_trace("PDM_domain_interface_translate_entity1_entity2 beg \n");
   // TODO :
   //  -> reduce time by extracting dentity2_entity1_idx for only concerns interfaces
   //  -> Pour l'insant la reduction est faite en dehors (via PDM_dmesh_extract )
 
-  if(0 == 1) {
+  if(debug_verbose == 1) {
     for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
       PDM_log_trace_connectivity_long(dentity2_entity1_idx[i_domain],
-                                      dentity2_entity1[i_domain],dn_entity2[i_domain], "dentity2_entity1 ::" );
+                                      dentity2_entity1    [i_domain],
+                                      dn_entity2          [i_domain], "dentity2_entity1 ::" );
     }
   }
 
@@ -2336,14 +2338,14 @@ PDM_domain_interface_translate_entity1_entity2
   double      **weight                = NULL;
   int         **stride_one            = NULL;
   int          *dn_interface_twice    = NULL;
-  PDM_malloc(interface_ids_shifted,n_interface ,PDM_g_num_t *);
-  PDM_malloc(send_data_gnum    , n_interface, PDM_g_num_t *);
-  PDM_malloc(send_data_dom     , n_interface, int         *);
-  PDM_malloc(send_data_sens    , n_interface, int         *);
-  PDM_malloc(send_data_intno   , n_interface, int         *);
-  PDM_malloc(weight            , n_interface, double      *);
-  PDM_malloc(stride_one        , n_interface, int         *);
-  PDM_malloc(dn_interface_twice, n_interface, int          );
+  PDM_malloc(interface_ids_shifted, n_interface ,PDM_g_num_t *);
+  PDM_malloc(send_data_gnum       , n_interface, PDM_g_num_t *);
+  PDM_malloc(send_data_dom        , n_interface, int         *);
+  PDM_malloc(send_data_sens       , n_interface, int         *);
+  PDM_malloc(send_data_intno      , n_interface, int         *);
+  PDM_malloc(weight               , n_interface, double      *);
+  PDM_malloc(stride_one           , n_interface, int         *);
+  PDM_malloc(dn_interface_twice   , n_interface, int          );
 
   if(n_domain > 1) {
     for(int i_domain = 1; i_domain < n_domain; ++i_domain) {
@@ -2362,9 +2364,9 @@ PDM_domain_interface_translate_entity1_entity2
     PDM_malloc(send_data_sens       [itrf], 2 * dn_interface[itrf], int        );
     PDM_malloc(send_data_intno      [itrf], 2 * dn_interface[itrf], int        );
     PDM_malloc(weight               [itrf], 2 * dn_interface[itrf], double     );
-    dn_interface_twice   [itrf] = 2*dn_interface[itrf];
+    dn_interface_twice[itrf] = 2*dn_interface[itrf];
 
-    if (0 == 1) {
+    if (1 == 1) {
       PDM_log_trace_array_long(interface_ids[itrf], 2 * dn_interface[itrf], "interface_ids:: ");
     }
 
@@ -2380,10 +2382,10 @@ PDM_domain_interface_translate_entity1_entity2
 
       int sgn_cur = PDM_SIGN(interface_ids[itrf][2*k  ]);
       int sgn_opp = PDM_SIGN(interface_ids[itrf][2*k+1]);
-      send_data_gnum       [itrf][2*k  ] = PDM_ABS(interface_ids[itrf][2*k+1]) + entity1_per_block_offset[domopp];
-      send_data_gnum       [itrf][2*k+1] = PDM_ABS(interface_ids[itrf][2*k  ]) + entity1_per_block_offset[dom   ];
-      send_data_dom        [itrf][2*k  ] = domopp;
-      send_data_dom        [itrf][2*k+1] = dom   ;
+      send_data_gnum[itrf][2*k  ] = PDM_ABS(interface_ids[itrf][2*k+1]) + entity1_per_block_offset[domopp];
+      send_data_gnum[itrf][2*k+1] = PDM_ABS(interface_ids[itrf][2*k  ]) + entity1_per_block_offset[dom   ];
+      send_data_dom [itrf][2*k  ] = domopp;
+      send_data_dom [itrf][2*k+1] = dom   ;
 
       /* Send it separatly */
       // send_data_sens       [itrf][2*k  ] = 1;
@@ -2397,20 +2399,21 @@ PDM_domain_interface_translate_entity1_entity2
       // send_data_sens       [itrf][2*k  ] = sgn_opp;
       // send_data_sens       [itrf][2*k+1] = sgn_cur;
 
-      send_data_sens       [itrf][2*k  ] = sgn_opp;
-      send_data_sens       [itrf][2*k+1] = sgn_cur;
+      send_data_sens[itrf][2*k  ] = sgn_opp;
+      send_data_sens[itrf][2*k+1] = sgn_cur;
 
 
-      send_data_intno      [itrf][2*k  ] =  (itrf+1);
-      send_data_intno      [itrf][2*k+1] = -(itrf+1);
-      weight               [itrf][2*k  ] = 1.;
-      weight               [itrf][2*k+1] = 1.;
-      stride_one           [itrf][2*k  ] = 1;
-      stride_one           [itrf][2*k+1] = 1;
+      send_data_intno[itrf][2*k  ] =  (itrf+1);
+      send_data_intno[itrf][2*k+1] = -(itrf+1);
+      weight         [itrf][2*k  ] = 1.;
+      weight         [itrf][2*k+1] = 1.;
+      stride_one     [itrf][2*k  ] = 1;
+      stride_one     [itrf][2*k+1] = 1;
     }
 
-    if (0 == 1) {
-      log_trace("Interface %d\n", itrf);
+    if (debug_verbose == 1) {
+      log_trace("\n");
+      log_trace("Splitted distributed dom itrf %d\n", itrf);
       PDM_log_trace_array_long(interface_ids_shifted[itrf], 2*dn_interface[itrf], "shifted gnum    :: ");
       PDM_log_trace_array_int (send_data_dom        [itrf], 2*dn_interface[itrf], "send_data_dom   :: ");
       PDM_log_trace_array_int (send_data_sens       [itrf], 2*dn_interface[itrf], "send_data_sens  :: ");
@@ -2432,11 +2435,11 @@ PDM_domain_interface_translate_entity1_entity2
                                                       comm);
 
   // Save distribution & gnum from first PtB. We will use it for following PtBs
-  int n_gnum = PDM_part_to_block_n_elt_block_get(ptb);
+  int          n_gnum = PDM_part_to_block_n_elt_block_get(ptb);
   PDM_g_num_t *gnum   = PDM_part_to_block_block_gnum_get(ptb);
   // PDM_g_num_t *distri = PDM_part_to_block_distrib_index_get(ptb);
 
-  if(0 == 1) {
+  if(debug_verbose == 1) {
     PDM_log_trace_array_long(gnum, n_gnum, "gnum ::");
   }
 
@@ -2488,7 +2491,7 @@ PDM_domain_interface_translate_entity1_entity2
                                          &recv_stride,
                                (void **) &recv_data_gnum);
 
-  if (0 == 1) {
+  if (debug_verbose == 1) {
     PDM_log_trace_array_long(gnum           , n_gnum       , "gnum           ::");
     PDM_log_trace_array_int (recv_stride    , n_gnum       , "recv stride    ::");
     PDM_log_trace_array_int (recv_data_dom  , n_connected_l, "recv_data_dom  ::");
@@ -2606,7 +2609,7 @@ PDM_domain_interface_translate_entity1_entity2
 
 
   /*
-   * For each face we receive for each vertex all possible interface
+   * For each entity2 we receive for each entity1 all possible interface
    *   - Condition 1 : All vtx of the should have the same interface domain
    */
   int  *l_interface_n       = NULL;
@@ -2624,19 +2627,20 @@ PDM_domain_interface_translate_entity1_entity2
   PDM_malloc(n_entity2_intf      , n_domain   , int  );
   PDM_malloc(key_data_size_approx, n_domain   , int  );
 
-  if(0 == 1) {
-    PDM_log_trace_array_int(dn_entity1, n_domain, "dn_entity1"    );
-    PDM_log_trace_array_int(dn_entity2, n_domain, "dn_entity2"    );
+  if(debug_verbose == 1) {
+    PDM_log_trace_array_int(dn_entity1, n_domain, "dn_entity1");
+    PDM_log_trace_array_int(dn_entity2, n_domain, "dn_entity2");
   }
 
   for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
 
-    if(0 == 1) {
-      PDM_log_trace_array_int(part_stride     [i_domain], n_dentity2_entity1[i_domain], "part_stride"    );
-      PDM_log_trace_array_int(part_stride_idx [i_domain], n_dentity2_entity1[i_domain], "part_stride_idx");
-      PDM_log_trace_array_int(part_data_sens  [i_domain], part_stride_idx[i_domain][n_dentity2_entity1[i_domain]], "part_data_sens  ::");
-      PDM_log_trace_array_int(part_data_intno [i_domain], part_stride_idx[i_domain][n_dentity2_entity1[i_domain]], "part_data_intno ::");
-      PDM_log_trace_array_long(part_data_gnum [i_domain], part_stride_idx[i_domain][n_dentity2_entity1[i_domain]], "part_data_gnum  ::");
+    if(debug_verbose == 1) {
+      PDM_log_trace_array_long(dentity2_entity1[i_domain],                           n_dentity2_entity1[i_domain] , "dentity2_entity1     ::");
+      PDM_log_trace_array_int (part_stride     [i_domain],                           n_dentity2_entity1[i_domain] , "part_stride     ::");
+      PDM_log_trace_array_int (part_stride_idx [i_domain],                           n_dentity2_entity1[i_domain] , "part_stride_idx ::");
+      PDM_log_trace_array_int (part_data_sens  [i_domain], part_stride_idx[i_domain][n_dentity2_entity1[i_domain]], "part_data_sens  ::");
+      PDM_log_trace_array_int (part_data_intno [i_domain], part_stride_idx[i_domain][n_dentity2_entity1[i_domain]], "part_data_intno ::");
+      PDM_log_trace_array_long(part_data_gnum  [i_domain], part_stride_idx[i_domain][n_dentity2_entity1[i_domain]], "part_data_gnum  ::");
     }
 
     key_data_size_approx[i_domain] = 0;
@@ -2669,8 +2673,8 @@ PDM_domain_interface_translate_entity1_entity2
           if(l_interface_sgn[itrf] == 0) {
             l_interface_sgn[itrf] = PDM_SIGN(part_data_intno[i_domain][idx+k]);
           }
-          // Ce asset peut planter pour de mauvaise raison sur le cas d'un maillage monocellule par exemple
-          // Pour corriger il suffit de dire que si tout les éléments recu sont de sign différents
+          // Ce assert peut planter pour de mauvaise raison sur le cas d'un maillage monocellule par exemple
+          // Pour corriger il suffit de dire que si tous les éléments recus sont de signe différent
           // assert(l_interface_sgn[itrf] == PDM_SIGN(part_data_intno[i_domain][idx+k]));
         }
       }
@@ -2685,7 +2689,7 @@ PDM_domain_interface_translate_entity1_entity2
 
       int n_new_interface = 0;
       for(int i = 0; i < n_interface; ++i) {
-        if(l_interface_n[i] == n_connect) {
+        if(l_interface_n[i] >= n_connect) { // if butterfly
           int idx_write = entity2_intf_no_idx[i_domain][n_entity2_intf[i_domain]] + n_new_interface++;
           // entity2_intf_no[i_domain][idx_write] = i;
           assert(l_interface_sgn[i] != 0);
@@ -2695,16 +2699,16 @@ PDM_domain_interface_translate_entity1_entity2
       }
 
       if(n_new_interface > 0) {
-        entity2_intf_no_idx [i_domain][n_entity2_intf[i_domain]+1] = entity2_intf_no_idx[i_domain][n_entity2_intf[i_domain]] + n_new_interface;
-        entity2_lids        [i_domain][n_entity2_intf[i_domain]++] = i_entity2;
+        entity2_intf_no_idx[i_domain][n_entity2_intf[i_domain]+1] = entity2_intf_no_idx[i_domain][n_entity2_intf[i_domain]] + n_new_interface;
+        entity2_lids       [i_domain][n_entity2_intf[i_domain]++] = i_entity2;
       }
     }
 
-    PDM_realloc(entity2_lids       [i_domain] ,entity2_lids       [i_domain] , ( n_entity2_intf[i_domain]   )                          ,int);
-    PDM_realloc(entity2_intf_no_idx[i_domain] ,entity2_intf_no_idx[i_domain] , ( n_entity2_intf[i_domain]+1 )                          ,int);
-    PDM_realloc(entity2_intf_no    [i_domain] ,entity2_intf_no    [i_domain] , entity2_intf_no_idx[i_domain][n_entity2_intf[i_domain]] ,int);
+    PDM_realloc(entity2_lids       [i_domain], entity2_lids       [i_domain], ( n_entity2_intf[i_domain]   )                          ,int);
+    PDM_realloc(entity2_intf_no_idx[i_domain], entity2_intf_no_idx[i_domain], ( n_entity2_intf[i_domain]+1 )                          ,int);
+    PDM_realloc(entity2_intf_no    [i_domain], entity2_intf_no    [i_domain], entity2_intf_no_idx[i_domain][n_entity2_intf[i_domain]] ,int);
 
-    if(0 == 1) {
+    if(debug_verbose == 1) {
       PDM_log_trace_array_int(entity2_lids       [i_domain], n_entity2_intf[i_domain]  , " n_entity2_intf ::");
       PDM_log_trace_array_int(entity2_intf_no_idx[i_domain], n_entity2_intf[i_domain]+1, " entity2_intf_no_idx ::");
       PDM_log_trace_array_int(entity2_intf_no    [i_domain], entity2_intf_no_idx[i_domain][n_entity2_intf[i_domain]], " n_entity2_intf ::");
@@ -2794,6 +2798,9 @@ PDM_domain_interface_translate_entity1_entity2
 
         /* Add opposite contribution */
         for(int j = _dentity2_entity1_idx[i_entity2]; j < _dentity2_entity1_idx[i_entity2+1]; ++j) {
+
+          PDM_calloc(l_interface_n, n_interface, int);
+
           int idx = part_stride_idx[i_domain][j];
           for(int k = 0; k < part_stride[i_domain][j]; ++k) {
             int t_itrf = PDM_ABS(part_data_intno[i_domain][idx+k])-1;
@@ -2809,6 +2816,14 @@ PDM_domain_interface_translate_entity1_entity2
 
               // log_trace(" \t Opposit part part sens = %i / part_data_gnum = %i / key_data = %i \n", sens, part_data_gnum[i_domain][idx+k], sens * part_data_gnum[i_domain][idx+k]);
 
+              break;
+              /**
+               * Si
+               * interface n'est qu'entre 2 domaines
+               * je ne vois pas pk il faudrait stocker plusieurs entités match pour une entité
+               * normalement c'est du 1 pour 1
+               * par contre, comment ca gère le multiraccord ?
+               */
             } else {
 
               // log_trace(" \t Skip with sens = %i \n", part_data_sens[i_domain][idx+k]);
@@ -2928,7 +2943,7 @@ PDM_domain_interface_translate_entity1_entity2
   /*
    * Post-Treatment :
    *   - Dans chaque bucket de clé on a dkey_strid conflict
-   *   - Yon need to unified them
+   *   - You need to unified them
    */
   int dn_key = PDM_part_to_block_n_elt_block_get(ptb_hash);
 
@@ -2994,11 +3009,17 @@ PDM_domain_interface_translate_entity1_entity2
 
     int n_conflict_keys = dkey_strid[i];
 
+    int max_stride = 0;
     conflict_data_idx[0] = 0;
     for(int j = 0; j < n_conflict_keys; ++j) {
       is_treated[j] = 0;
       conflict_data_idx[j+1] = conflict_data_idx[j] + dkey_data_n[idx_read+j];
+      max_stride = PDM_MAX(max_stride, dkey_data_n[idx_read+j]);
     }
+    int *_inv_order1 = NULL;
+    int *_inv_order2 = NULL;
+    PDM_malloc(_inv_order1, max_stride, int);
+    PDM_malloc(_inv_order2, max_stride, int);
 
     // log_trace("----------------------------------------------- \n");
     // log_trace("%i --> n_conflict = %i \n", i, n_conflict_keys);
@@ -3006,12 +3027,16 @@ PDM_domain_interface_translate_entity1_entity2
     /*
      * On trie tout dans conflict_sort_data
      */
+    int *conflict_sort_ordr = NULL;
+    PDM_malloc(conflict_sort_ordr, conflict_data_idx[n_conflict_keys], int);
+
     for(int j = 0; j < n_conflict_keys; ++j) {
       for(int k = conflict_data_idx[j]; k < conflict_data_idx[j+1]; ++k) {
         conflict_sort_data[k] = PDM_ABS(dkey_data[idx_read_data+k]);
+        conflict_sort_ordr[k] = k-conflict_data_idx[j];
       }
 
-      PDM_sort_long(&conflict_sort_data[conflict_data_idx[j]], 0, dkey_data_n[idx_read+j]);
+      PDM_sort_long(&conflict_sort_data[conflict_data_idx[j]], &conflict_sort_ordr[conflict_data_idx[j]], dkey_data_n[idx_read+j]);
 
       // PDM_log_trace_array_long(&conflict_sort_data[conflict_data_idx[j]], dkey_data_n[idx_read+j], "conflict_sort_data ::");
     }
@@ -3024,7 +3049,8 @@ PDM_domain_interface_translate_entity1_entity2
       }
 
       // PDM_g_num_t* data1  = &dkey_data[idx_read_data+conflict_data_idx[i_conflict]];
-      PDM_g_num_t* data1  = &conflict_sort_data[conflict_data_idx[i_conflict]];
+      PDM_g_num_t *data1  = &conflict_sort_data[conflict_data_idx[i_conflict]];
+      int         *ordr1  = &conflict_sort_ordr[conflict_data_idx[i_conflict]];
       int          n_val1 = dkey_data_n[idx_read+i_conflict];
 
       // PDM_log_trace_array_long(data1, n_val1, "data1 :: ");
@@ -3033,6 +3059,20 @@ PDM_domain_interface_translate_entity1_entity2
       //   key1 += data1[k];
       // }
       // log_trace("key1 = %i \n", key1);
+      PDM_g_num_t key1 = 0;
+      for(int k = 0; k < n_val1; ++k) {
+        key1 += data1[k];
+        _inv_order1[ordr1[k]] = k;
+      }
+      int          og_conn_size = (conflict_data_idx[i_conflict+1]-conflict_data_idx[i_conflict])/2;
+      PDM_g_num_t *og_conn1 = NULL;
+      PDM_g_num_t *og_conn2 = NULL;
+      PDM_malloc(og_conn1, og_conn_size, PDM_g_num_t);
+      PDM_malloc(og_conn2, og_conn_size, PDM_g_num_t);
+      for (int i_entity=0; i_entity<og_conn_size; ++i_entity) {
+        og_conn1[i_entity] = data1[_inv_order1[i_entity]];
+      }
+      PDM_sort_long(og_conn1, NULL, og_conn_size);
 
       for(int i_conflict2 = i_conflict+1; i_conflict2 < n_conflict_keys; ++i_conflict2) {
 
@@ -3041,7 +3081,8 @@ PDM_domain_interface_translate_entity1_entity2
         }
 
         // PDM_g_num_t* data2  = &dkey_data[idx_read_data+conflict_data_idx[i_conflict2]];
-        PDM_g_num_t* data2  = &conflict_sort_data[conflict_data_idx[i_conflict2]];
+        PDM_g_num_t *data2  = &conflict_sort_data[conflict_data_idx[i_conflict2]];
+        int         *ordr2  = &conflict_sort_ordr[conflict_data_idx[i_conflict2]];
         int          n_val2 = dkey_data_n[idx_read+i_conflict2];
 
         // PDM_log_trace_array_long(data2, n_val2, "data2 :: ");
@@ -3050,6 +3091,11 @@ PDM_domain_interface_translate_entity1_entity2
         //   key2 += data2[k];
         // }
         // log_trace("key2 = %i \n", key2);
+        PDM_g_num_t key2 = 0;
+        for(int k = 0; k < n_val2; ++k) {
+          key2 += data2[k];
+          _inv_order2[ordr2[k]] = k;
+        }
 
         if(n_val1 != n_val2) {
           continue;
@@ -3067,12 +3113,37 @@ PDM_domain_interface_translate_entity1_entity2
           continue;
         }
 
-        int int_no1    = dkey_intf_no[idx_read+i_conflict ];
-        int int_no2    = dkey_intf_no[idx_read+i_conflict2];
+        int int_no1 = dkey_intf_no[idx_read+i_conflict ];
+        int int_no2 = dkey_intf_no[idx_read+i_conflict2];
 
         if(PDM_ABS(int_no1) != PDM_ABS(int_no2)) {
           continue;
         }
+
+        // assert(int_no1 == -int_no2);
+        if (int_no1 == int_no2) {
+          continue;
+        }
+
+        // TODO: checker que les entités sont bien match par interface
+        for (int i_entity=0; i_entity<og_conn_size; ++i_entity) {
+          og_conn2[i_entity] = data2[_inv_order2[og_conn_size+i_entity]]; // we take opposite ones
+        }
+        PDM_sort_long(og_conn2, NULL, og_conn_size);
+
+        PDM_log_trace_array_long(og_conn2, og_conn_size, "  og_conn2 :: ");
+
+        int entities2_matching = 1;
+        for (int i_entity=0; i_entity<og_conn_size; ++i_entity) {
+          if (og_conn1[i_entity]!=og_conn2[i_entity]) {
+            entities2_matching = 0;
+          }
+        }
+
+        if (entities2_matching == 0) {
+          continue;
+        }
+
 
         /*
          * Si on arrive ici on a un match !!
@@ -3083,8 +3154,6 @@ PDM_domain_interface_translate_entity1_entity2
         /*
          * Build for each interface the correct array
          */
-        // log_trace("int_no1 = %i | int_no2 = %i \n", int_no1, int_no2);
-        assert(int_no1 == -int_no2);
         int int_no    = PDM_ABS(dkey_intf_no[idx_read+i_conflict])-1;
         int idx_write = _interface_dn_entity2 [int_no]++;
 
@@ -3349,8 +3418,8 @@ PDM_domain_interface_translate_entity1_entity2
   PDM_free(dkey_gnum_entity2);
 
   for(int i_interface = 0; i_interface < n_interface; ++i_interface) {
-    PDM_realloc(_interface_ids_entity2[i_interface] ,_interface_ids_entity2[i_interface] , 2 * _interface_dn_entity2 [i_interface] ,PDM_g_num_t);
-    PDM_realloc(_interface_dom_entity2[i_interface] ,_interface_dom_entity2[i_interface] , 2 * _interface_dn_entity2 [i_interface] ,int        );
+    PDM_realloc(_interface_ids_entity2[i_interface] ,_interface_ids_entity2[i_interface] , 2 * _interface_dn_entity2[i_interface] ,PDM_g_num_t);
+    PDM_realloc(_interface_dom_entity2[i_interface] ,_interface_dom_entity2[i_interface] , 2 * _interface_dn_entity2[i_interface] ,int        );
 
     if(0 == 1) {
       PDM_log_trace_array_long(_interface_ids_entity2[i_interface], 2 * _interface_dn_entity2 [i_interface], "_interface_ids_entity2 : " );
@@ -3587,6 +3656,7 @@ PDM_domain_interface_translate_entity1_entity2
           if(PDM_ABS(_pentity2_entity1_intno[p]) == i_interface+1) {
             lentity2_entity1_cur[i_data_cur] = lentity2_entity1_cur[i_data_cur] * _pentity2_entity1_sens[p];
             i_data_cur++;
+            break; // if entity found by interface, no need to find other normally (maybe an issue with sign ??)
           }
         }
       }
@@ -3598,6 +3668,7 @@ PDM_domain_interface_translate_entity1_entity2
           if(PDM_ABS(_pentity2_entity1_intno[p]) == i_interface+1) {
             lentity2_entity1_opp[i_data_opp] = PDM_SIGN(lentity2_entity1_opp[i_data_opp]) * _pentity2_entity1_gnum_opp[p];
             i_data_opp++;
+            break; // if entity found by interface, no need to find other normally (maybe an issue with sign ??)
           }
         }
       }

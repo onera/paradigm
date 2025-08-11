@@ -2245,10 +2245,10 @@ double              ***pvtx_extended_coords_out
                                                           1,
                                                           tmp);
                                                           // &pextract_vtx_coords[i_part][3*i_vtx]);
-        pextract_vtx_coords[i_part][3*i_vtx+0] = tmp[0];                                                  
-        pextract_vtx_coords[i_part][3*i_vtx+1] = tmp[1];                                                  
-        pextract_vtx_coords[i_part][3*i_vtx+2] = tmp[2];                                                  
-        
+        pextract_vtx_coords[i_part][3*i_vtx+0] = tmp[0];
+        pextract_vtx_coords[i_part][3*i_vtx+1] = tmp[1];
+        pextract_vtx_coords[i_part][3*i_vtx+2] = tmp[2];
+
       }
     }
 
@@ -7957,4 +7957,3 @@ PDM_part_extension_group_set
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-

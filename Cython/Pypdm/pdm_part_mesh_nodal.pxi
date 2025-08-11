@@ -540,6 +540,7 @@ def part_mesh_nodal_get_group(PMeshNodal pypmn, PDM_geometry_kind_t geom_kind, i
                                 PDM_OWNERSHIP_USER);
 
   np_group_elmt = create_numpy_i(group_elmt, n_group_elmt)
+  np_group_ln_to_gn = None
   if(group_ln_to_gn != NULL):
     np_group_ln_to_gn = create_numpy_g(group_ln_to_gn, n_group_elmt)
 
