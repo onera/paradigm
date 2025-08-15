@@ -289,6 +289,7 @@ foreach(lib_type IN LISTS LIB_TYPES)
     target_include_directories(pdmf_${lib_type} PUBLIC ${PDMF_INC})
     target_link_libraries(pdmf_${lib_type}      PUBLIC ${PDMF_LIB})
 
+    add_dependencies(pdmf_${lib_type} pdm_${lib_type})
     target_link_libraries(pdmf_${lib_type}
       PUBLIC
         pdm_${lib_type}
