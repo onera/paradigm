@@ -255,6 +255,7 @@ unit_test:
     -   source /tmp_user/juno/sonics/dist/source_juno_all.sh --compiler=$COMPILER --mpi=$MPI_LIB
     - fi
   script:
+    - INIT_ORIGINAL_FOLDER=$(pwd)
     - echo "Runner directory is $PWD; move to working directory $CUSTOM_CI_DIR"
     - export SLURM_EXACT=1
     - export I_MPI_PMI_LIBRARY=/usr/lib64/libpmi.so
@@ -265,7 +266,7 @@ unit_test:
     -   cd $CUSTOM_CI_DIR/build$MATRIX_KEY/src/CMakeFiles/pdm.dir
     -   for d in */ ; do cd $d && gcov -b -l -p -c *.gcno && cd .. ; done
     -   cd $CUSTOM_CI_DIR/build$MATRIX_KEY
-    -   gcovr --gcov-ignore-parse-errors -g -k --xml-pretty --print-summary --root $CUSTOM_CI_DIR --object-directory $CUSTOM_CI_DIR/build$MATRIX_KEY --output coverage.xml
+    -   gcovr --gcov-ignore-parse-errors -g -k --xml-pretty --print-summary --root $CUSTOM_CI_DIR --object-directory $CUSTOM_CI_DIR/build$MATRIX_KEY --output $INIT_ORIGINAL_FOLDER/coverage.xml
     - fi
   when: on_success
   coverage: /lines:\s*(\d+\.\d+)%/
@@ -274,7 +275,7 @@ unit_test:
     reports:
       coverage_report:
         coverage_format: cobertura
-        path: build$MATRIX_KEY/coverage.xml
+        path: coverage.xml
 
 
 # non_regression:
