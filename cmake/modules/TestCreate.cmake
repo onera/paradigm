@@ -184,11 +184,11 @@ function(test_fortran_create name n_proc LIST_TEST LIST_NRANK)
 
   if(PDM_ENABLE_STATIC AND NOT PDM_ENABLE_SHARED)
     target_link_libraries(${name} PRIVATE pdmf_STATIC)
-    get_target_property(MODDIR pdmf_SHARED Fortran_MODULE_DIRECTORY)
+    get_target_property(MODDIR pdmf Fortran_MODULE_DIRECTORY)
   endif()
   if(PDM_ENABLE_SHARED)
     target_link_libraries(${name} PRIVATE pdmf_SHARED)
-    get_target_property(MODDIR pdmf_SHARED Fortran_MODULE_DIRECTORY)
+    get_target_property(MODDIR pdmf Fortran_MODULE_DIRECTORY)
   endif()
 
   target_include_directories(${name} PRIVATE ${MODDIR})

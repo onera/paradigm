@@ -96,6 +96,9 @@ if (PDM_ENABLE_Fortran_MPI_MODULE)
 endif()
 
 if (PDM_ENABLE_PYTHON_BINDINGS)
+  if (NOT PDM_ENABLE_SHARED)
+    set (PDM_ENABLE_SHARED "ON" CACHE STRING "Build Shared Libraries" FORCE)
+  endif()
   find_package(Python REQUIRED COMPONENTS Interpreter Development NumPy)
   find_package(Mpi4Py REQUIRED)
   # include(UseCython)
@@ -127,7 +130,7 @@ set (install_configs "")
 configure_file(pdm_config.h.in "${CMAKE_CURRENT_BINARY_DIR}/pdm_config.h")
 list (APPEND install_configs ${CMAKE_CURRENT_BINARY_DIR}/pdm_config.h)
 if(PDM_ENABLE_Fortran)
-  if ("${CMAKE_CURRENT_BINARY_DIR}/pdm_config.h" IS_NEWER_THAN  "${CMAKE_CURRENT_BINARY_DIR}/pdm_configf.h")
+  if ("${CMAKE_CURRENT_BINARY_DIR}/pdm_config.h" IS_NEWER_THAN "${CMAKE_CURRENT_BINARY_DIR}/pdm_configf.h")
     include (FortranizeFile)
     fortranize ("${CMAKE_CURRENT_BINARY_DIR}/pdm_config.h")
     list (APPEND install_configs ${CMAKE_CURRENT_BINARY_DIR}/pdm_configf.h)
@@ -160,7 +163,7 @@ file(GLOB_RECURSE all_src_fortran_files
   CONFIGURE_DEPENDS "${src_dir}/*.F90"
 )
 
-get_all_subdirectories(PDM_SUBDIRS  ${src_dir})
+get_all_subdirectories(PDM_SUBDIRS ${src_dir})
 
 if(PDM_ENABLE_EXTENSION_PDMA)
   file(GLOB_RECURSE pdma_sources
@@ -175,7 +178,6 @@ if(PDM_ENABLE_EXTENSION_PDMA)
 
   get_all_subdirectories(PDMA_SUBDIRS ${pdma_src_dir})
 endif()
-
 
 set(src_files ${all_src_files})
 list(FILTER src_files EXCLUDE REGEX ".*\\.test\\.cpp$")
@@ -260,6 +262,7 @@ get_target_property(PDM_LIB pdm LINK_LIBRARIES)
 
 if(PDM_ENABLE_Fortran)
   add_library(pdmf OBJECT ${all_src_fortran_files})
+  set_target_properties(pdmf PROPERTIES Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/modules)
   target_include_directories(pdmf PUBLIC ${PDM_INC})
   target_link_libraries(pdmf
   PUBLIC
@@ -282,7 +285,6 @@ foreach(lib_type IN LISTS LIB_TYPES)
     add_library(pdmf_${lib_type} ${lib_type} $<TARGET_OBJECTS:pdmf>)
     add_dependencies(pdmf_${lib_type} pdmf)
     set_target_properties(pdmf_${lib_type} PROPERTIES OUTPUT_NAME "pdmf")
-    set_target_properties(pdmf_${lib_type} PROPERTIES Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/modules/)
 
     target_include_directories(pdmf_${lib_type} PUBLIC ${PDMF_INC})
     target_link_libraries(pdmf_${lib_type}      PUBLIC ${PDMF_LIB})
@@ -297,7 +299,6 @@ endforeach()
 
 if (PDM_ENABLE_PYTHON_BINDINGS)
   add_subdirectory(Cython)
-  # On passe en shared forcement ?
 endif()
 
 # ----------------------------------------------------------------------
@@ -334,6 +335,7 @@ string(REPLACE ";" " " PDM_LIST_NRANK "${PDM_LIST_NRANK}")
 
 set (PDM_RUN_PRELOAD "")
 set (PDM_RUN_LSAN "")
+set (PDM_RUN_UBSAN "")
 set (PDM_RUN_PYTHONPATH "")
 
 if (CMAKE_BUILD_TYPE STREQUAL "Sanitize")
@@ -341,6 +343,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Sanitize")
   set(PDM_RUN_PRELOAD "LD_PRELOAD ${PRELOAD_ASAN}:${PROJECT_BINARY_DIR}/script/asan/fake_dlclose/libdlclose.so")
   set(PDM_RUN_PRELOAD_SRUN "LD_PRELOAD=${PRELOAD_ASAN}:${PROJECT_BINARY_DIR}/script/asan/fake_dlclose/libdlclose.so")
   set(PDM_RUN_LSAN "LSAN_OPTIONS=suppressions=${PROJECT_SOURCE_DIR}/script/asan/asan.supp")
+  set(PDM_RUN_UBSAN "UBSAN_OPTIONS=print_stacktrace=1:halt_on_error=0")
 
   if (PDM_ENABLE_DOC)
     message(FATAL_ERROR "Documention can not be built in Sanitize CMAKE_BUILD_TYPE")
@@ -430,9 +433,8 @@ set(install_headers ${all_headers})
 list(FILTER install_headers EXCLUDE REGEX ".*\\_priv\\.h$")
 
 if(PDM_ENABLE_Fortran)
-  install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/modules/ DESTINATION include/)
+  install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/modules DESTINATION include)
 endif()
-
 
 install(FILES ${install_headers} DESTINATION include)
 install(FILES ${install_configs} DESTINATION include)
