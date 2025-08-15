@@ -205,20 +205,18 @@ add_library(pdm OBJECT ${src_files})
 target_include_directories(pdm PUBLIC
   $<BUILD_INTERFACE:${src_dir}>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
-  $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
+  $<INSTALL_INTERFACE:include>
 )
 
 foreach(subdir IN LISTS PDM_SUBDIRS)
   target_include_directories(pdm PUBLIC
-      $<BUILD_INTERFACE:${subdir}>
-      $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
+    $<BUILD_INTERFACE:${subdir}>
   )
 endforeach()
 
 foreach(subdir IN LISTS PDMA_SUBDIRS)
   target_include_directories(pdm PUBLIC
-      $<BUILD_INTERFACE:${subdir}>
-      $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
+    $<BUILD_INTERFACE:${subdir}>
   )
 endforeach()
 
@@ -264,6 +262,9 @@ if(PDM_ENABLE_Fortran)
   add_library(pdmf OBJECT ${all_src_fortran_files})
   set_target_properties(pdmf PROPERTIES Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/modules)
   target_include_directories(pdmf PUBLIC ${PDM_INC})
+  target_include_directories(pdmf PUBLIC
+    $<INSTALL_INTERFACE:include/modules>
+  )
   target_link_libraries(pdmf
   PUBLIC
     MPI::MPI_Fortran
