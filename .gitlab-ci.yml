@@ -263,8 +263,8 @@ unit_test:
 #    - ./pdm_run -srun # KO avec openmpi
     - ./pdm_run -timeout 360
     - if [ "${BUILD_TYPE}" == "Coverage" ]; then
-    -   cd $CUSTOM_CI_DIR/build$MATRIX_KEY/src/CMakeFiles/pdm.dir
-    -   for d in */ ; do cd $d && gcov -b -l -p -c *.gcno && cd .. ; done
+    -   find src -name "*.gcno" -exec gcov -b -l -p -c {} + || true
+    -   find extensions/paradigma/src -name "*.gcno" -exec gcov -b -l -p -c {} + || true
     -   cd $CUSTOM_CI_DIR/build$MATRIX_KEY
     -   gcovr --gcov-ignore-parse-errors -g -k --xml-pretty --print-summary --root $CUSTOM_CI_DIR --object-directory $CUSTOM_CI_DIR/build$MATRIX_KEY --output $INIT_ORIGINAL_FOLDER/coverage.xml
     - fi
