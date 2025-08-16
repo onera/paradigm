@@ -1,6 +1,3 @@
-
-
-
 /*----------------------------------------------------------------------------
  * Standard C library headers
  *----------------------------------------------------------------------------*/
@@ -21,7 +18,6 @@
 #include "pdm_part_to_block.h"
 #include "pdm.h"
 #include "pdm_array.h"
-#include "pdm_mesh_adapt.h"
 #include "pdm_binary_search.h"
 #include "pdm_distrib.h"
 #include "pdm_error.h"
@@ -862,7 +858,7 @@ _distrib_data_hilbert
                       ptb->i_recv_data,
                       PDM__PDM_MPI_G_NUM,
                       ptb->comm);
-  
+
     PDM_MPI_Alltoallv(send_codes,
                       ptb->n_send_data,
                       ptb->i_send_data,
@@ -884,7 +880,7 @@ _distrib_data_hilbert
                           ptb->i_recv_data,
                           PDM__PDM_MPI_G_NUM,
                           ptb->comm);
-  
+
     PDM_MPI_Alltoallv_p2p(send_codes,
                           ptb->n_send_data,
                           ptb->i_send_data,
@@ -1164,7 +1160,7 @@ _distrib_data_morton
                       ptb->i_recv_data,
                       PDM__PDM_MPI_G_NUM,
                       ptb->comm);
-  
+
     PDM_MPI_Datatype mpi_morton_type;
     PDM_MPI_Type_create_contiguous(4, PDM_MPI_INT, &mpi_morton_type);
     PDM_MPI_Type_commit(&mpi_morton_type);
@@ -1191,7 +1187,7 @@ _distrib_data_morton
                           ptb->i_recv_data,
                           PDM__PDM_MPI_G_NUM,
                           ptb->comm);
-  
+
     PDM_MPI_Datatype mpi_morton_type;
     PDM_MPI_Type_create_contiguous(4, PDM_MPI_INT, &mpi_morton_type);
     PDM_MPI_Type_commit(&mpi_morton_type);
@@ -1207,7 +1203,7 @@ _distrib_data_morton
     PDM_MPI_Type_free(&mpi_morton_type);
   }
 
-  
+
   PDM_free(send_gnum);
   PDM_free(send_codes);
   PDM_free(part_idx);
@@ -1745,7 +1741,7 @@ _prepare_reverse_exchange
                          ptb->n_send_data,
                          ptb->i_send_data,
                          PDM_MPI_INT,
-                         ptb->comm); 
+                         ptb->comm);
     }
     else {
       PDM_MPI_Alltoallv_p2p (_send_stride,
@@ -1756,7 +1752,7 @@ _prepare_reverse_exchange
                              ptb->n_send_data,
                              ptb->i_send_data,
                              PDM_MPI_INT,
-                             ptb->comm);      
+                             ptb->comm);
     }
 
     if(0 == 1) {

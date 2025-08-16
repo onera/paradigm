@@ -146,12 +146,10 @@ add_subdirectory(script)
 # ------------------------------------------------------------------------------
 # Compilation
 # ------------------------------------------------------------------------------
-set(src_dir  ${PROJECT_SOURCE_DIR}/src)
-set(test_dir ${PROJECT_SOURCE_DIR}/test)
+set(src_dir ${PROJECT_SOURCE_DIR}/src)
 if(PDM_ENABLE_EXTENSION_PDMA)
-  set(pdma_dir      ${PROJECT_SOURCE_DIR}/extensions/paradigma)
-  set(pdma_src_dir  ${pdma_dir}/src)
-  set(pdma_test_dir ${pdma_dir}/test)
+  set(pdma_dir     ${PROJECT_SOURCE_DIR}/extensions/paradigma)
+  set(pdma_src_dir ${pdma_dir}/src)
 endif()
 
 file(GLOB_RECURSE all_src_files
