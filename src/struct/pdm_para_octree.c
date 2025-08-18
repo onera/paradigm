@@ -1409,15 +1409,13 @@ _complete_octree
       sbuff[2] = L2->codes[0].X[1];
       sbuff[3] = L2->codes[0].X[2];
 
-      PDM_MPI_Issend ((void *) sbuff,
-                      4,
-                      PDM_MPI_UNSIGNED,
-                      prev_rank,
-                      0,
-                      comm,
-                      &srequest);
-
-
+      PDM_MPI_Isend ((void *) sbuff,
+                     4,
+                     PDM_MPI_UNSIGNED,
+                     prev_rank,
+                     0,
+                     comm,
+                     &srequest);
     }
 
     if (rank < last_rank && rank_n_nodes[rank] > 0) {
