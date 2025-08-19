@@ -27,7 +27,7 @@
  */
 MPI_TEST_CASE("[PDM_part_domain_interface] PDM_part_domain_interface_to_domain_interface - butterfly", 2) {
 
-  int debug_verbose = 1;
+  int debug_verbose = 0;
 
   int i_rank;
   PDM_MPI_Comm comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);

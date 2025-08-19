@@ -382,6 +382,13 @@ if (PDM_ENABLE_STATIC)
                              PUBLIC_HEADER "${LIST_HEADER}")
   get_target_property(PDM_INC pdm INCLUDE_DIRECTORIES)
   target_include_directories(pdm_static PUBLIC ${PDM_INC})
+  if (LAPACK_FOUND)
+    target_link_libraries(pdm_static LAPACK::LAPACK)
+  else ()
+    if (BLAS_FOUND)
+      target_link_libraries(pdm_static LAPACK::LAPACK)
+    endif()
+  endif()
 
 endif()
 
