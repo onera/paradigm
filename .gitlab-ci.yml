@@ -327,7 +327,7 @@ fake_install:
     - cd $CUSTOM_CI_DIR
     - mkdir -p test_fake_install$MATRIX_KEY && cd test_fake_install$MATRIX_KEY
     - export PDM_ROOT=${PDM_INSTALL_ROOT}
-    - cmake ../cmake/fake_install/
+    - cmake ../cmake/check_install/
 
 
 pages:

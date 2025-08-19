@@ -55,7 +55,7 @@ Dump_mem()
   then
     listErrFile=$(ls $1.*)
   else
-    listErrFile=$(find $2 -name stderr)
+    listErrFile=$(ls $2.*.err)
   fi
 
   for file in ${listErrFile}
@@ -86,7 +86,7 @@ Dump_time()
   then
     listErrFile=$(ls $1.*)
   else
-    listErrFile=$(find $2 -name stderr)
+    listErrFile=$(ls $2.*.err)
   fi
 
   for file in ${listErrFile}
