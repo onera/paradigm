@@ -432,7 +432,7 @@ cdef class Isosurface:
   # > Partitionned setter API
   def n_part_set(self, n_part):
     """
-    n_part(n_part)
+    n_part_set(n_part)
 
     Set entry mesh number of partitions.
 
@@ -751,8 +751,8 @@ cdef class Isosurface:
       connectivity_type (PDM_connectivity_type_t) : Connectivity type
 
     Returns:
-      connectivity_idx (`np.ndarray[np.int32_t]`) : Connectivity index
-      connectivity     (`np.ndarray[np.int32_t]`) : Connectivity
+      - `np.ndarray[np.int32_t]` - Connectivity index
+      - `np.ndarray[np.int32_t]` - Connectivity
     """
     cdef int  n_entity         = 0
     cdef int *connectivity_idx = NULL
@@ -785,7 +785,7 @@ cdef class Isosurface:
       i_part (int) : Partition id
 
     Returns:
-      coordinates (`np.ndarray[np.double_t]`) : Coordinates
+      `np.ndarray[np.double_t]` - Vertex coordinates
     """
     cdef int     n_vtx       = 0
     cdef double *coordinates = NULL
@@ -808,7 +808,7 @@ cdef class Isosurface:
       entity_type (PDM_mesh_entities_t) : Entity type
 
     Returns:
-      ln_to_gn (`np.ndarray[npy_pdm_gnum_t]`) : Global ids
+      `np.ndarray[npy_pdm_gnum_t]` - Global ids
     """
     cdef int          n_entity = 0
     cdef PDM_g_num_t *ln_to_gn = NULL
@@ -833,9 +833,9 @@ cdef class Isosurface:
       entity_type (PDM_mesh_entities_t) : Entity type
 
     Returns:
-      group_entity_idx (`np.ndarray[np.int32_t]`)     : Group index
-      group_entity     (`np.ndarray[np.int32_t]`)     : Group entities
-      group_ln_to_gn   (`np.ndarray[npy_pdm_gnum_t]`) : Group entities global ids
+      - `np.ndarray[np.int32_t]`     - Group index
+      - `np.ndarray[np.int32_t]`     - Group entities
+      - `np.ndarray[npy_pdm_gnum_t]` - Group entities global ids
     """
     cdef int          n_group          = 0
     cdef int         *group_entity_idx = NULL
@@ -879,7 +879,7 @@ cdef class Isosurface:
       entity_type (PDM_mesh_entities_t) : Entity type
 
     Returns:
-      PDM_part_to_part (PDM_part_to_part) : PDM_part_to_part
+      `PartToPart` - PartToPart object
     """
     cdef PDM_part_to_part_t *ptp
     try:
@@ -898,14 +898,22 @@ cdef class Isosurface:
 
     Get entity_type isosurface entities parent local ids.
 
+    .. note::
+      This function can only be called if extract_kind has been set to PDM_EXTRACT_PART_KIND_LOCAL
+      in PDM_isosurface_redistribution_set. The nature of parent entities depends on entity_type as follows:
+
+        - PDM_MESH_ENTITY_VTX  : parents are vertices
+        - PDM_MESH_ENTITY_EDGE : parents are faces
+        - PDM_MESH_ENTITY_FACE : parents are cells
+
     Parameters:
       id_iso      (int)                 : Isosurface id
       i_part      (int)                 : Partition id
       entity_type (PDM_mesh_entities_t) : Entity type
 
     Returns:
-      parent_idx  (`np.ndarray[np.int32_t]`)     : Parent index
-      parent_lnum (`np.ndarray[npy_pdm_gnum_t]`) : Parent entities local ids
+      - `np.ndarray[np.int32_t]`     - Parent index
+      - `np.ndarray[npy_pdm_gnum_t]` - Parent entities local ids
     """
     cdef int  n_entity    = 0
     cdef int *parent_idx  = NULL
@@ -939,8 +947,8 @@ cdef class Isosurface:
       entity_type (PDM_mesh_entities_t) : Entity type
 
     Returns:
-      parent_idx    (`np.ndarray[np.int32_t]`)  : Entity parent index
-      parent_weight (`np.ndarray[np.double_t]`) : Entity parent weight
+      - `np.ndarray[np.int32_t]`  - Entity parent index
+      - `np.ndarray[np.double_t]` - Entity parent weight
     """
     cdef int     n_entity      = 0
     cdef int    *parent_idx    = NULL
@@ -973,7 +981,7 @@ cdef class Isosurface:
       entity_type (PDM_mesh_entities_t) : Entity type
 
     Returns:
-      isovalue_idx (`np.ndarray[np.int32_t]`) : Isovalue index
+      `np.ndarray[np.int32_t]` - Isovalue index
     """
     cdef int  n_isovalues  = 0
     cdef int *isovalue_idx = NULL
@@ -999,8 +1007,8 @@ cdef class Isosurface:
       connectivity_type (PDM_connectivity_type_t) : Connectivity type
 
     Returns:
-      connectivity_idx (`np.ndarray[np.int32_t]`)        : Distributed connectivity index
-      connectivity     (`np.ndarray[np.npy_pdm_gnum_t]`) : Distributed connectivity
+      - `np.ndarray[np.int32_t]`        - Distributed connectivity index
+      - `np.ndarray[np.npy_pdm_gnum_t]` - Distributed connectivity
     """
     cdef int          dn_entity         = 0
     cdef int         *dconnectivity_idx = NULL
@@ -1027,7 +1035,7 @@ cdef class Isosurface:
       id_iso (int) : Isosurface id
 
     Returns:
-      coordinates (`np.ndarray[np.double_t]`) : Distributed coordinates
+      `np.ndarray[np.double_t]` - Distributed coordinates
     """
     cdef int     dn_vtx       = 0
     cdef double *dcoordinates = NULL
@@ -1049,7 +1057,7 @@ cdef class Isosurface:
       entity_type (PDM_mesh_entities_t) : Entity type
 
     Returns:
-      distribution (`np.ndarray[np.npy_pdm_gnum_t]`) : Entity distribution
+      `np.ndarray[np.npy_pdm_gnum_t]` - Entity distribution
     """
     cdef PDM_g_num_t *distrib = NULL
     PDM_isosurface_distrib_get(self._isos, id_iso, entity_type,
@@ -1070,8 +1078,8 @@ cdef class Isosurface:
       entity_type (PDM_mesh_entities_t) : Entity type
 
     Returns:
-      group_entity_idx (`np.ndarray[np.int32_t]`)     : Group index
-      group_entity     (`np.ndarray[npy_pdm_gnum_t]`) : Group entities global ids
+      - `np.ndarray[np.int32_t]`     - Group index
+      - `np.ndarray[npy_pdm_gnum_t]` - Group entities global ids
     """
     cdef int          n_group           = 0
     cdef int         *dgroup_entity_idx = NULL
@@ -1098,8 +1106,8 @@ cdef class Isosurface:
       entity_type (PDM_mesh_entities_t) : Entity type
 
     Returns:
-      parent_idx    (`np.ndarray[np.int32_t]`)  : Entity parent index
-      parent_weight (`np.ndarray[np.double_t]`) : Entity parent weights
+      - `np.ndarray[np.int32_t]`  - Entity parent index
+      - `np.ndarray[np.double_t]` - Entity parent weights
     """
     cdef int     n_entity      = 0
     cdef int    *parent_idx    = NULL
@@ -1127,8 +1135,8 @@ cdef class Isosurface:
       entity_type (PDM_mesh_entities_t) : Entity type
 
     Returns:
-      disovalue_entity_idx (`np.ndarray[np.int32_t]`)     : Isovalue index
-      disovalue_entity     (`np.ndarray[npy_pdm_gnum_t]`) : Isovalue entities global ids
+      - `np.ndarray[np.int32_t]`     - Isovalue index
+      - `np.ndarray[npy_pdm_gnum_t]` - Isovalue entities global ids
     """
     cdef int          n_isovalues          = 0
     cdef int         *disovalue_entity_idx = NULL

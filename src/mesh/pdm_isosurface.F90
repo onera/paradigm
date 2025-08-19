@@ -2011,6 +2011,14 @@ module pdm_isosurface
                                                entity_parent,     &
                                                ownership)
     ! Get local parents of iso-surface entities.
+    !
+    ! .. note::
+    !   This function can only be called if extract_kind has been set to PDM_EXTRACT_PART_KIND_LOCAL
+    !   in PDM_isosurface_redistribution_set. The nature of parent entities depends on entity_type as follows:
+    !
+    !     - PDM_MESH_ENTITY_VTX  : parents are vertices
+    !     - PDM_MESH_ENTITY_EDGE : parents are faces
+    !     - PDM_MESH_ENTITY_FACE : parents are cells
     use iso_c_binding
     implicit none
 
