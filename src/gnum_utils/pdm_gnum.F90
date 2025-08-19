@@ -25,32 +25,6 @@ module pdm_gnum
 
   implicit none
 
-  interface PDM_gnum_create ; module procedure &
-  pdm_gnum_create_
-  end interface
-
-  interface PDM_gnum_set_from_coords ; module procedure &
-  pdm_gnum_set_from_coords_
-  end interface
-
-  interface PDM_gnum_set_from_parents ; module procedure &
-  pdm_gnum_set_from_parents_
-  end interface
-
-  interface PDM_gnum_set_parents_nuplet ; module procedure &
-  pdm_gnum_set_parents_nuplet_
-  end interface
-
-  interface PDM_gnum_get ; module procedure &
-  pdm_gnum_get_
-  end interface
-
-  private :: pdm_gnum_create_
-  private :: pdm_gnum_set_from_coords_
-  private :: pdm_gnum_set_from_parents_
-  private :: pdm_gnum_set_parents_nuplet_
-  private :: pdm_gnum_get_
-
   interface
 
   !>
@@ -270,13 +244,13 @@ module pdm_gnum
 contains
 
 
-  subroutine PDM_gnum_create_ (gen_gnum,  &
-                               dim,       &
-                               n_part,    &
-                               merge,     &
-                               tolerance, &
-                               f_comm,    &
-                               owner)
+  subroutine PDM_gnum_create (gen_gnum,  &
+                              dim,       &
+                              n_part,    &
+                              merge,     &
+                              tolerance, &
+                              f_comm,    &
+                              owner)
   ! Build a global numbering structure
   use iso_c_binding
   implicit none
@@ -312,15 +286,15 @@ contains
                                  c_comm,      &
                                  c_owner)
 
-  end subroutine PDM_gnum_create_
+  end subroutine PDM_gnum_create
 
 
 
-  subroutine PDM_gnum_set_from_coords_(gen_gnum,    &
-                                       i_part,      &
-                                       n_elts,      &
-                                       coords,      &
-                                       char_length)
+  subroutine PDM_gnum_set_from_coords(gen_gnum,    &
+                                      i_part,      &
+                                      n_elts,      &
+                                      coords,      &
+                                      char_length)
     ! Set from coordinates
     use iso_c_binding
     implicit none
@@ -349,14 +323,14 @@ contains
                                       c_coords,      &
                                       c_char_length)
 
-  end subroutine PDM_gnum_set_from_coords_
+  end subroutine PDM_gnum_set_from_coords
 
 
 
-  subroutine PDM_gnum_set_from_parents_ (gen_gnum,    &
-                                         i_part,      &
-                                         n_elts,      &
-                                         parent_gnum)
+  subroutine PDM_gnum_set_from_parents (gen_gnum,    &
+                                        i_part,      &
+                                        n_elts,      &
+                                        parent_gnum)
     ! Set parent global numbering
     use iso_c_binding
     implicit none
@@ -381,12 +355,12 @@ contains
                                        c_n_elts,      &
                                        c_parent_gnum)
 
-  end subroutine PDM_gnum_set_from_parents_
+  end subroutine PDM_gnum_set_from_parents
 
 
 
-  subroutine PDM_gnum_set_parents_nuplet_(gen_gnum, &
-                                          nuplet)
+  subroutine PDM_gnum_set_parents_nuplet(gen_gnum, &
+                                         nuplet)
     ! Set size of tuple for nuplet
     use iso_c_binding
     implicit none
@@ -397,13 +371,13 @@ contains
     call PDM_gnum_set_parents_nuplet_cf(gen_gnum, &
                                         nuplet)
 
-  end subroutine PDM_gnum_set_parents_nuplet_
+  end subroutine PDM_gnum_set_parents_nuplet
 
 
 
-  subroutine PDM_gnum_get_ (gen_gnum, &
-                            i_part,   &
-                            g_nums)
+  subroutine PDM_gnum_get (gen_gnum, &
+                           i_part,   &
+                           g_nums)
     ! Get global ids for a given partition
     use iso_c_binding
     implicit none
@@ -429,6 +403,6 @@ contains
                      g_nums,   &
                      [n_elts])
 
-  end subroutine PDM_gnum_get_
+  end subroutine PDM_gnum_get
 
 end module pdm_gnum

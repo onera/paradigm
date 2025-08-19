@@ -33,7 +33,7 @@ API
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
-        .. f:autosubroutine:: pdm_gnum_create_
+        .. f:autosubroutine:: PDM_gnum_create
 
       .. ifconfig:: enable_fortran_doc == 'OFF'
 
@@ -73,9 +73,9 @@ API
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
-          .. f:autosubroutine:: pdm_gnum_set_from_coords_
-          .. f:autosubroutine:: pdm_gnum_set_from_parents_
-          .. f:autosubroutine:: pdm_gnum_set_parents_nuplet_
+          .. f:autosubroutine:: PDM_gnum_set_from_coords
+          .. f:autosubroutine:: PDM_gnum_set_from_parents
+          .. f:autosubroutine:: PDM_gnum_set_parents_nuplet
 
       .. ifconfig:: enable_fortran_doc == 'OFF'
 
@@ -160,7 +160,7 @@ API
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
-        .. f:autosubroutine:: pdm_gnum_get_
+        .. f:autosubroutine:: PDM_gnum_get
 
 
       .. ifconfig:: enable_fortran_doc == 'OFF'
