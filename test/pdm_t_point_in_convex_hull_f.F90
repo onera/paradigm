@@ -6,7 +6,7 @@ program point_in_convex_hull_f
 #ifdef PDM_HAVE_FORTRAN_MPI_MODULE
   use mpi
 #endif
-  use pdm_linear_programming
+  use pdm_convex
   use pdm_vtk
   use iso_c_binding
 
@@ -30,7 +30,7 @@ program point_in_convex_hull_f
   integer                       :: rnd_n
   integer, allocatable          :: rnd_seed(:)
   !---------------------------------------------------------------
-  
+
   ! Default values
   dim   = 2
   n_src = 10
@@ -68,7 +68,7 @@ program point_in_convex_hull_f
 
   ! Classify target points w.r.t. convex hull of source points
   allocate(tgt_status(n_tgt))
-  call PDM_lp_pts_inside_convex_hull(dim,        &
+  call PDM_points_inside_convex_hull(dim,        &
                                      n_src,      &
                                      src_coord,  &
                                      n_tgt,      &
