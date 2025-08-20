@@ -259,7 +259,7 @@ contains
   integer,          intent(in) :: dim       ! Spatial dimension
   integer,          intent(in) :: n_part    ! Number of local partitions
   integer,          intent(in) :: merge     ! Merge coincident points or not
-  double precision, intent(in) :: tolerance ! Geometric tolerance (used only if ``merge`` is enabled)
+  real(8),          intent(in) :: tolerance ! Geometric tolerance (used only if ``merge`` is enabled)
   integer,          intent(in) :: f_comm    ! Fortran MPI communicator
   integer,          intent(in) :: owner     ! Ownership
 
@@ -302,8 +302,8 @@ contains
     type(c_ptr), value        :: gen_gnum       ! C pointer to PDM_gen_gnum_t object
     integer, intent(in)       :: i_part         ! Current partition
     integer, intent(in)       :: n_elts         ! Number of elements
-    double precision, pointer :: coords(:,:)    ! Coordinates (size = 3 * ``n_elts``)
-    double precision, pointer :: char_length(:) ! Characteristic length (or *null()*) (used only if ``merge`` was enabled in PDM_gnum_create)
+    real(8), pointer          :: coords(:,:)    ! Coordinates (size = 3 * ``n_elts``)
+    real(8), pointer          :: char_length(:) ! Characteristic length (or *null()*) (used only if ``merge`` was enabled in PDM_gnum_create)
 
     integer(c_int)            :: c_i_part
     integer(c_int)            :: c_n_elts
