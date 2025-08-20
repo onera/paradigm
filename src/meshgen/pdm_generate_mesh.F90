@@ -28,59 +28,6 @@ module pdm_generate_mesh
 
   implicit none
 
-  interface PDM_generate_mesh_rectangle_simplified ; module procedure &
-  PDM_generate_mesh_rectangle_simplified_
-  end interface
-
-  interface PDM_generate_mesh_sphere_simplified ; module procedure &
-  PDM_generate_mesh_sphere_simplified_
-  end interface
-
-  interface PDM_generate_mesh_ball_simplified ; module procedure &
-  PDM_generate_mesh_ball_simplified_
-  end interface
-
-  interface PDM_generate_mesh_parallelepiped_simplified ; module procedure &
-  PDM_generate_mesh_parallelepiped_simplified_
-  end interface
-
-  interface PDM_generate_mesh_sphere ; module procedure &
-  PDM_generate_mesh_sphere_
-  end interface
-
-  interface PDM_generate_mesh_rectangle ; module procedure &
-  PDM_generate_mesh_rectangle_
-  end interface
-
-  interface PDM_generate_mesh_ball ; module procedure &
-  PDM_generate_mesh_ball_
-  end interface
-
-  interface PDM_generate_mesh_parallelepiped ; module procedure &
-  PDM_generate_mesh_parallelepiped_
-  end interface
-
-  interface PDM_generate_mesh_sphere_ngon ; module procedure &
-  PDM_generate_mesh_sphere_ngon_
-  end interface
-
-  interface PDM_generate_mesh_ball_ngon ; module procedure &
-  PDM_generate_mesh_ball_ngon_
-  end interface
-
-
-
-  private :: PDM_generate_mesh_rectangle_simplified_
-  private :: PDM_generate_mesh_sphere_simplified_
-  private :: PDM_generate_mesh_ball_simplified_
-  private :: PDM_generate_mesh_parallelepiped_simplified_
-  private :: PDM_generate_mesh_sphere_
-  private :: PDM_generate_mesh_rectangle_
-  private :: PDM_generate_mesh_ball_
-  private :: PDM_generate_mesh_parallelepiped_
-  private :: PDM_generate_mesh_sphere_ngon_
-  private :: PDM_generate_mesh_ball_ngon_
-
   interface
 
   subroutine PDM_generate_mesh_rectangle_simplified_cf(comm,        &
@@ -653,38 +600,25 @@ module pdm_generate_mesh
 
   contains
 
-  !>
-  !!
-  !! \brief Create a simple partitionned rectangle mesh (2D).
-  !!
-  !! \param [in]   comm        MPI communicator
-  !! \param [in]   n_vtx_seg   Number of vertices along each side of the rectangle
-  !! \param [out]  n_vtx       Number of vertices
-  !! \param [out]  n_elt       Number of elements
-  !! \param [out]  coords      Array of vertex coordinates
-  !! \param [out]  elt_vtx_idx Index array of the element vertex connectivity
-  !! \param [out]  elt_vtx     Array of the element vertex connectivity
-  !!
-  !!
 
-  subroutine PDM_generate_mesh_rectangle_simplified_(comm,        &
-                                                     n_vtx_seg,   &
-                                                     n_vtx,       &
-                                                     n_elt,       &
-                                                     coords,      &
-                                                     elt_vtx_idx, &
-                                                     elt_vtx)
+  subroutine PDM_generate_mesh_rectangle_simplified(comm,        &
+                                                    n_vtx_seg,   &
+                                                    n_vtx,       &
+                                                    n_elt,       &
+                                                    coords,      &
+                                                    elt_vtx_idx, &
+                                                    elt_vtx)
 
-      use iso_c_binding
+      ! Create a simple partitioned rectangle mesh (2D).
       implicit none
 
-      integer,                     intent(in) :: comm
-      integer(kind=pdm_g_num_s),   intent(in) :: n_vtx_seg
-      integer,                    intent(out) :: n_vtx
-      integer,                    intent(out) :: n_elt
-      double precision,               pointer :: coords(:,:)
-      integer(kind=pdm_l_num_s),      pointer :: elt_vtx_idx(:)
-      integer(kind=pdm_l_num_s),      pointer :: elt_vtx(:)
+      integer,                    intent(in)  :: comm           ! MPI communicator
+      integer(kind=pdm_g_num_s),  intent(in)  :: n_vtx_seg      ! Number of vertices along each side of the rectangle
+      integer,                    intent(out) :: n_vtx          ! Number of vertices
+      integer,                    intent(out) :: n_elt          ! Number of elements
+      real(8),                    pointer     :: coords(:,:)    ! Vertex coordinates
+      integer(kind=pdm_l_num_s),  pointer     :: elt_vtx_idx(:) ! Index of the element vertex connectivity
+      integer(kind=pdm_l_num_s),  pointer     :: elt_vtx(:)     ! Element vertex connectivity
 
       integer(c_int)                          :: c_comm
       integer(c_int)                          :: c_n_vtx
@@ -718,37 +652,25 @@ module pdm_generate_mesh
                        elt_vtx,   &
                        [elt_vtx_idx(n_elt + 1)])
 
-  end subroutine PDM_generate_mesh_rectangle_simplified_
+  end subroutine PDM_generate_mesh_rectangle_simplified
 
 
-!>
-!!
-!! \brief Create a simple partitionned sphere mesh (2D).
-!!
-!! \param [in]   comm        MPI communicator
-!! \param [out]  n_vtx       Number of vertices
-!! \param [out]  n_elt       Number of elements
-!! \param [out]  coords      Array of vertex coordinates
-!! \param [out]  elt_vtx_idx Index array of the element vertex connectivity
-!! \param [out]  elt_vtx     Array of the element vertex connectivity
-!!
-!!
 
-  subroutine PDM_generate_mesh_sphere_simplified_(comm,        &
-                                                  n_vtx,       &
-                                                  n_elt,       &
-                                                  coords,      &
-                                                  elt_vtx_idx, &
-                                                  elt_vtx)
-    use iso_c_binding
+  subroutine PDM_generate_mesh_sphere_simplified(comm,        &
+                                                 n_vtx,       &
+                                                 n_elt,       &
+                                                 coords,      &
+                                                 elt_vtx_idx, &
+                                                 elt_vtx)
+    ! Create a simple partitioned sphere mesh (2D).
     implicit none
 
-    integer, intent(in)                     :: comm
-    integer, intent(out)                    :: n_vtx
-    integer, intent(out)                    :: n_elt
-    double precision,               pointer :: coords(:,:)
-    integer(kind=pdm_l_num_s),      pointer :: elt_vtx_idx(:)
-    integer(kind=pdm_l_num_s),      pointer :: elt_vtx(:)
+    integer,                   intent(in)  :: comm           ! MPI communicator
+    integer,                   intent(out) :: n_vtx          ! Number of vertices
+    integer,                   intent(out) :: n_elt          ! Number of elements
+    real(8),                   pointer     :: coords(:,:)    ! Vertex coordinates
+    integer(kind=pdm_l_num_s), pointer     :: elt_vtx_idx(:) ! Index of the element vertex connectivity
+    integer(kind=pdm_l_num_s), pointer     :: elt_vtx(:)     ! Element vertex connectivity
 
     integer(c_int)         :: c_comm
     integer(c_int)         :: c_n_vtx       = 0
@@ -782,36 +704,25 @@ module pdm_generate_mesh
                      [elt_vtx_idx(n_elt + 1)])
 
 
-  end subroutine PDM_generate_mesh_sphere_simplified_
+  end subroutine PDM_generate_mesh_sphere_simplified
 
- !>
- !!
- !! \brief Create a simple partitionned ball mesh (3D).
- !!
- !! \param [in]   comm        MPI communicator
- !! \param [out]  n_vtx       Number of vertices
- !! \param [out]  n_elt       Number of elements
- !! \param [out]  coords      Array of vertex coordinates
- !! \param [out]  elt_vtx_idx Index array of the element vertex connectivity
- !! \param [out]  elt_vtx     Array of the element vertex connectivity
- !!
- !!
 
-  subroutine PDM_generate_mesh_ball_simplified_(comm,        &
-                                                n_vtx,       &
-                                                n_elt,       &
-                                                coords,      &
-                                                elt_vtx_idx, &
-                                                elt_vtx)
-    use iso_c_binding
+
+  subroutine PDM_generate_mesh_ball_simplified(comm,        &
+                                               n_vtx,       &
+                                               n_elt,       &
+                                               coords,      &
+                                               elt_vtx_idx, &
+                                               elt_vtx)
+    ! Create a simple partitioned ball mesh (3D).
     implicit none
 
-    integer, intent(in)                     :: comm
-    integer, intent(out)                    :: n_vtx
-    integer, intent(out)                    :: n_elt
-    double precision,               pointer :: coords(:,:)
-    integer(kind=pdm_l_num_s),      pointer :: elt_vtx_idx(:)
-    integer(kind=pdm_l_num_s),      pointer :: elt_vtx(:)
+    integer,                   intent(in)  :: comm           ! MPI communicator
+    integer,                   intent(out) :: n_vtx          ! Number of vertices
+    integer,                   intent(out) :: n_elt          ! Number of elements
+    real(8),                   pointer     :: coords(:,:)    ! Vertex coordinates
+    integer(kind=pdm_l_num_s), pointer     :: elt_vtx_idx(:) ! Index of the element vertex connectivity
+    integer(kind=pdm_l_num_s), pointer     :: elt_vtx(:)     ! Element vertex connectivity
 
     integer(c_int)         :: c_comm
     integer(c_int)         :: c_n_vtx       = 0
@@ -845,40 +756,28 @@ module pdm_generate_mesh
                      [elt_vtx_idx(n_elt + 1)])
 
 
-  end subroutine PDM_generate_mesh_ball_simplified_
+  end subroutine PDM_generate_mesh_ball_simplified
 
-!>
-!!
-!! \brief Create a simple partitionned parallelepiped mesh (3D).
-!!
-!! \param [in]   comm        MPI communicator
-!! \param [in]   n_vtx_seg   Number of vertices along each side of the parallelepiped
-!! \param [out]  n_vtx       Number of vertices
-!! \param [out]  n_elt       Number of elements
-!! \param [out]  coords      Array of vertex coordinates
-!! \param [out]  elt_vtx_idx Index array of the element vertex connectivity
-!! \param [out]  elt_vtx     Array of the element vertex connectivity
-!!
-!!
 
-  subroutine PDM_generate_mesh_parallelepiped_simplified_(comm,        &
-                                                          n_vtx_seg,   &
-                                                          n_vtx,       &
-                                                          n_elt,       &
-                                                          coords,      &
-                                                          elt_vtx_idx, &
-                                                          elt_vtx)
 
-    use iso_c_binding
+  subroutine PDM_generate_mesh_parallelepiped_simplified(comm,        &
+                                                         n_vtx_seg,   &
+                                                         n_vtx,       &
+                                                         n_elt,       &
+                                                         coords,      &
+                                                         elt_vtx_idx, &
+                                                         elt_vtx)
+
+    ! Create a simple partitioned parallelepiped mesh (3D).
     implicit none
 
-    integer,                     intent(in) :: comm
-    integer(kind=pdm_g_num_s),   intent(in) :: n_vtx_seg
-    integer,                    intent(out) :: n_vtx
-    integer,                    intent(out) :: n_elt
-    double precision,               pointer :: coords(:,:)
-    integer(kind=pdm_l_num_s),      pointer :: elt_vtx_idx(:)
-    integer(kind=pdm_l_num_s),      pointer :: elt_vtx(:)
+    integer,                    intent(in)  :: comm           ! MPI communicator
+    integer(kind=pdm_g_num_s),  intent(in)  :: n_vtx_seg      ! Number of vertices along each side of the parallelepiped
+    integer,                    intent(out) :: n_vtx          ! Number of vertices
+    integer,                    intent(out) :: n_elt          ! Number of elements
+    real(8),                    pointer     :: coords(:,:)    ! Vertex coordinates
+    integer(kind=pdm_l_num_s),  pointer     :: elt_vtx_idx(:) ! Index of the element vertex connectivity
+    integer(kind=pdm_l_num_s),  pointer     :: elt_vtx(:)     ! Element vertex connectivity
 
     integer(c_int)                          :: c_comm
     integer(c_int)                          :: c_n_vtx
@@ -912,58 +811,40 @@ module pdm_generate_mesh
                      elt_vtx,   &
                      [elt_vtx_idx(n_elt + 1)])
 
-  end subroutine PDM_generate_mesh_parallelepiped_simplified_
+  end subroutine PDM_generate_mesh_parallelepiped_simplified
 
-!>
-!!
-!! \brief Create a partitionned sphere mesh (2D).
-!!
-!! \param [in]  comm        MPI communicator
-!! \param [in]  elt_type    Mesh element type
-!! \param [in]  order       Mesh element order
-!! \param [in]  ho_ordering High order nodes ordering type
-!! \param [in]  radius      Radius of the sphere
-!! \param [in]  center_x    x-coordinate of the sphere center
-!! \param [in]  center_y    y-coordinate of the sphere center
-!! \param [in]  center_z    z-coordinate of the sphere center
-!! \param [in]  n_u         Number of points in longitude
-!! \param [in]  n_v         Number of points in latitude
-!! \param [in]  n_part      Number of mesh partitions
-!! \param [in]  part_method Mesh partitionning method
-!!
-!! \return PDM_part_mesh_nodal_t
-!!
-!!
 
-  function PDM_generate_mesh_sphere_(comm,        &
-                                     elt_type,    &
-                                     order,       &
-                                     ho_ordering, &
-                                     radius,      &
-                                     center_x,    &
-                                     center_y,    &
-                                     center_z,    &
-                                     n_u,         &
-                                     n_v,         &
-                                     n_part,      &
-                                     part_method) &
+
+  function PDM_generate_mesh_sphere(comm,        &
+                                    elt_type,    &
+                                    order,       &
+                                    ho_ordering, &
+                                    radius,      &
+                                    center_x,    &
+                                    center_y,    &
+                                    center_z,    &
+                                    n_u,         &
+                                    n_v,         &
+                                    n_part,      &
+                                    part_method) &
     result(mesh_nodal)
 
-    use iso_c_binding
+    ! Create a partitioned sphere mesh (2D).
     implicit none
 
-    integer, intent(in)                   :: comm
-    integer, intent(in)                   :: elt_type
-    integer, intent(in)                   :: order
-    type(c_ptr), intent(in)               :: ho_ordering
-    double precision, intent(in)          :: radius
-    double precision, intent(in)          :: center_x
-    double precision, intent(in)          :: center_y
-    double precision, intent(in)          :: center_z
-    integer(kind=pdm_g_num_s), intent(in) :: n_u
-    integer(kind=pdm_g_num_s), intent(in) :: n_v
-    integer, intent(in)                   :: n_part
-    integer, intent(in)                   :: part_method
+    integer,                   intent(in) :: comm        ! MPI communicator
+    integer,                   intent(in) :: elt_type    ! Mesh element type
+    integer,                   intent(in) :: order       ! Mesh element order
+    type(c_ptr),               intent(in) :: ho_ordering ! High order nodes ordering type
+    real(8),                   intent(in) :: radius      ! Radius of the sphere
+    real(8),                   intent(in) :: center_x    ! x-coordinate of the sphere center
+    real(8),                   intent(in) :: center_y    ! y-coordinate of the sphere center
+    real(8),                   intent(in) :: center_z    ! z-coordinate of the sphere center
+    integer(kind=pdm_g_num_s), intent(in) :: n_u         ! Number of points in longitude
+    integer(kind=pdm_g_num_s), intent(in) :: n_v         ! Number of points in latitude
+    integer,                   intent(in) :: n_part      ! Number of mesh partitions
+    integer,                   intent(in) :: part_method ! Mesh partitioning method
+    type(c_ptr)                           :: mesh_nodal  ! PDM_part_mesh_nodal_t instance
 
     integer(c_int)        :: c_comm
     integer(c_int)        :: c_elt_type
@@ -983,7 +864,6 @@ module pdm_generate_mesh
     integer(c_int)        :: c_n_part
     integer(c_int)        :: c_part_method
 
-    type(c_ptr)            :: mesh_nodal
 
     c_comm = PDM_MPI_Comm_f2c(comm)
 
@@ -1012,64 +892,43 @@ module pdm_generate_mesh
                                              c_n_part,      &
                                              c_part_method)
 
-  end function PDM_generate_mesh_sphere_
+  end function PDM_generate_mesh_sphere
 
-!>
-!!
-!! \brief Create a partitionned rectangle mesh (2D).
-!!
-!! \param [in]  comm        MPI communicator
-!! \param [in]  elt_type    Mesh element type
-!! \param [in]  order       Mesh element order
-!! \param [in]  ho_ordering High order nodes ordering type
-!! \param [in]  xmin        x-coordinate of the rctangle minimum corner
-!! \param [in]  ymin        y-coordinate of the rctangle minimum corner
-!! \param [in]  zmin        z-coordinate of the rctangle minimum corner
-!! \param [in]  lengthx     Length of the rectangle in the x-direction
-!! \param [in]  lengthy     Length of the rectangle in the y-direction
-!! \param [in]  n_x         Number of points in the x-direction
-!! \param [in]  n_y         Number of points in the y-direction
-!! \param [in]  n_part      Number of mesh partitions
-!! \param [in]  part_method Mesh partitionning method
-!!
-!! \return PDM_part_mesh_t or PDM_part_mesh_nodal_t
-!!
-!!
 
-  function PDM_generate_mesh_rectangle_ (comm,        &
-                                         elt_type,    &
-                                         order,       &
-                                         ho_ordering, &
-                                         xmin,        &
-                                         ymin,        &
-                                         zmin,        &
-                                         lengthx,     &
-                                         lengthy,     &
-                                         n_x,         &
-                                         n_y,         &
-                                         n_part,      &
-                                         part_method) &
 
+  function PDM_generate_mesh_rectangle(comm,        &
+                                       elt_type,    &
+                                       order,       &
+                                       ho_ordering, &
+                                       xmin,        &
+                                       ymin,        &
+                                       zmin,        &
+                                       lengthx,     &
+                                       lengthy,     &
+                                       n_x,         &
+                                       n_y,         &
+                                       n_part,      &
+                                       part_method) &
     result(mesh_nodal)
 
-    use iso_c_binding
+    ! Create a partitioned rectangle mesh (2D).
     implicit none
 
-    integer, intent(in)                   :: comm
-    integer, intent(in)                   :: elt_type
-    integer, intent(in)                   :: order
-    type(c_ptr), intent(in)               :: ho_ordering
-    double precision, intent(in)          :: xmin
-    double precision, intent(in)          :: ymin
-    double precision, intent(in)          :: zmin
-    double precision, intent(in)          :: lengthx
-    double precision, intent(in)          :: lengthy
-    integer(kind=pdm_g_num_s), intent(in) :: n_x
-    integer(kind=pdm_g_num_s), intent(in) :: n_y
-    integer, intent(in)                   :: n_part
-    integer, intent(in)                   :: part_method
+    integer,                   intent(in) :: comm        ! MPI communicator
+    integer,                   intent(in) :: elt_type    ! Mesh element type
+    integer,                   intent(in) :: order       ! Mesh element order
+    type(c_ptr),               intent(in) :: ho_ordering ! High order nodes ordering type
+    real(8),                   intent(in) :: xmin        ! x-coordinate of the rectangle minimum corner
+    real(8),                   intent(in) :: ymin        ! y-coordinate of the rectangle minimum corner
+    real(8),                   intent(in) :: zmin        ! z-coordinate of the rectangle minimum corner
+    real(8),                   intent(in) :: lengthx     ! Length of the rectangle in the x-direction
+    real(8),                   intent(in) :: lengthy     ! Length of the rectangle in the y-direction
+    integer(kind=pdm_g_num_s), intent(in) :: n_x         ! Number of points in the x-direction
+    integer(kind=pdm_g_num_s), intent(in) :: n_y         ! Number of points in the y-direction
+    integer,                   intent(in) :: n_part      ! Number of mesh partitions
+    integer,                   intent(in) :: part_method ! Mesh partitioning method
+    type(c_ptr)                           :: mesh_nodal  ! PDM_part_mesh_nodal_t instance
 
-    type(c_ptr)            :: mesh_nodal
 
     integer(c_int)        :: c_comm
     integer(c_int)        :: c_elt_type
@@ -1105,88 +964,63 @@ module pdm_generate_mesh
     c_n_part = n_part
     c_part_method = part_method
 
-    mesh_nodal = PDM_generate_mesh_rectangle_cf (c_comm,        &
-                                                 c_elt_type,    &
-                                                 c_order,       &
-                                                 c_ho_ordering, &
-                                                 c_xmin,        &
-                                                 c_ymin,        &
-                                                 c_zmin,        &
-                                                 c_lengthx,     &
-                                                 c_lengthy,     &
-                                                 c_n_x,         &
-                                                 c_n_y,         &
-                                                 c_n_part,      &
-                                                 c_part_method)
+    mesh_nodal = PDM_generate_mesh_rectangle_cf(c_comm,        &
+                                                c_elt_type,    &
+                                                c_order,       &
+                                                c_ho_ordering, &
+                                                c_xmin,        &
+                                                c_ymin,        &
+                                                c_zmin,        &
+                                                c_lengthx,     &
+                                                c_lengthy,     &
+                                                c_n_x,         &
+                                                c_n_y,         &
+                                                c_n_part,      &
+                                                c_part_method)
 
-  end function PDM_generate_mesh_rectangle_
+  end function PDM_generate_mesh_rectangle
 
 
-!>
-!!
-!! \brief Create a partitionned ball mesh (3D).
-!!
-!! \param [in]  comm            MPI communicator
-!! \param [in]  elt_type        Mesh element type
-!! \param [in]  order           Mesh element order
-!! \param [in]  ho_ordering     High order nodes ordering type
-!! \param [in]  radius          Radius of the ball
-!! \param [in]  hole_radius     Radius of the hole of the ball
-!! \param [in]  center_x        x-coordinate of the ball center
-!! \param [in]  center_y        y-coordinate of the ball center
-!! \param [in]  center_z        z-coordinate of the ball center
-!! \param [in]  n_x             Number of vertices on segments in x-direction
-!! \param [in]  n_y             Number of vertices on segments in y-direction
-!! \param [in]  n_z             Number of vertices on segments in z-direction
-!! \param [in]  n_layer         Number of extrusion layers
-!! \param [in]  geometric_ratio Geometric ratio for layer thickness
-!! \param [in]  n_part          Number of mesh partitions
-!! \param [in]  part_method     Mesh partitionning method
-!!
-!! \return PDM_part_mesh_t or PDM_part_mesh_nodal_t
-!!
-!!
 
-  function PDM_generate_mesh_ball_ (comm,            &
-                                    elt_type,        &
-                                    order,           &
-                                    ho_ordering,     &
-                                    radius,          &
-                                    hole_radius,     &
-                                    center_x,        &
-                                    center_y,        &
-                                    center_z,        &
-                                    n_x,             &
-                                    n_y,             &
-                                    n_z,             &
-                                    n_layer,         &
-                                    geometric_ratio, &
-                                    n_part,          &
-                                    part_method)     &
-
+  function PDM_generate_mesh_ball(comm,            &
+                                  elt_type,        &
+                                  order,           &
+                                  ho_ordering,     &
+                                  radius,          &
+                                  hole_radius,     &
+                                  center_x,        &
+                                  center_y,        &
+                                  center_z,        &
+                                  n_x,             &
+                                  n_y,             &
+                                  n_z,             &
+                                  n_layer,         &
+                                  geometric_ratio, &
+                                  n_part,          &
+                                  part_method)     &
     result(mesh_nodal)
 
-    use iso_c_binding
+    ! Create a partitioned ball mesh (3D).
     implicit none
 
-    integer, intent(in)                   :: comm
-    integer, intent(in)                   :: elt_type
-    integer, intent(in)                   :: order
-    type(c_ptr), intent(in)               :: ho_ordering
-    double precision, intent(in)          :: radius
-    double precision, intent(in)          :: hole_radius
-    double precision, intent(in)          :: center_x
-    double precision, intent(in)          :: center_y
-    double precision, intent(in)          :: center_z
-    integer(kind=pdm_g_num_s), intent(in) :: n_x
-    integer(kind=pdm_g_num_s), intent(in) :: n_y
-    integer(kind=pdm_g_num_s), intent(in) :: n_z
-    integer(kind=pdm_g_num_s), intent(in) :: n_layer
-    double precision, intent(in)          :: geometric_ratio
-    integer, intent(in)                   :: n_part
-    integer, intent(in)                   :: part_method
+    integer,                   intent(in) :: comm            ! MPI communicator
+    integer,                   intent(in) :: elt_type        ! Mesh element type
+    integer,                   intent(in) :: order           ! Mesh element order
+    type(c_ptr),               intent(in) :: ho_ordering     ! High order nodes ordering type
+    real(8),                   intent(in) :: radius          ! Radius of the ball
+    real(8),                   intent(in) :: hole_radius     ! Radius of the hole of the ball
+    real(8),                   intent(in) :: center_x        ! x-coordinate of the ball center
+    real(8),                   intent(in) :: center_y        ! y-coordinate of the ball center
+    real(8),                   intent(in) :: center_z        ! z-coordinate of the ball center
+    integer(kind=pdm_g_num_s), intent(in) :: n_x             ! Number of vertices on segments in x-direction
+    integer(kind=pdm_g_num_s), intent(in) :: n_y             ! Number of vertices on segments in y-direction
+    integer(kind=pdm_g_num_s), intent(in) :: n_z             ! Number of vertices on segments in z-direction
+    integer(kind=pdm_g_num_s), intent(in) :: n_layer         ! Number of extrusion layers
+    real(8),                   intent(in) :: geometric_ratio ! Geometric ratio for layer thickness
+    integer,                   intent(in) :: n_part          ! Number of mesh partitions
+    integer,                   intent(in) :: part_method     ! Mesh partitioning method
 
-    type(c_ptr)            :: mesh_nodal
+    type(c_ptr)                           :: mesh_nodal      ! PDM_part_mesh_nodal_t instance
 
     integer(c_int) :: c_comm
     integer(c_int) :: c_elt_type
@@ -1231,23 +1065,23 @@ module pdm_generate_mesh
     c_part_method = part_method
 
     mesh_nodal = PDM_generate_mesh_ball_cf(c_comm,            &
-                                            c_elt_type,        &
-                                            c_order,           &
-                                            c_ho_ordering,     &
-                                            c_radius,          &
-                                            c_hole_radius,     &
-                                            c_center_x,        &
-                                            c_center_y,        &
-                                            c_center_z,        &
-                                            c_n_x,             &
-                                            c_n_y,             &
-                                            c_n_z,             &
-                                            c_n_layer,         &
-                                            c_geometric_ratio, &
-                                            c_n_part,          &
-                                            c_part_method)
+                                           c_elt_type,        &
+                                           c_order,           &
+                                           c_ho_ordering,     &
+                                           c_radius,          &
+                                           c_hole_radius,     &
+                                           c_center_x,        &
+                                           c_center_y,        &
+                                           c_center_z,        &
+                                           c_n_x,             &
+                                           c_n_y,             &
+                                           c_n_z,             &
+                                           c_n_layer,         &
+                                           c_geometric_ratio, &
+                                           c_n_part,          &
+                                           c_part_method)
 
-  end function PDM_generate_mesh_ball_
+  end function PDM_generate_mesh_ball
 
 !>
 !!
@@ -1273,44 +1107,43 @@ module pdm_generate_mesh
 !!
 !!
 
-  function PDM_generate_mesh_parallelepiped_ (comm,         &
-                                              elt_type,     &
-                                              order,        &
-                                              ho_ordering,  &
-                                              xmin,         &
-                                              ymin,         &
-                                              zmin,         &
-                                              lengthx,      &
-                                              lengthy,      &
-                                              lengthz,      &
-                                              n_x,          &
-                                              n_y,          &
-                                              n_z,          &
-                                              n_part,       &
-                                              part_method)  &
-
+  function PDM_generate_mesh_parallelepiped(comm,         &
+                                            elt_type,     &
+                                            order,        &
+                                            ho_ordering,  &
+                                            xmin,         &
+                                            ymin,         &
+                                            zmin,         &
+                                            lengthx,      &
+                                            lengthy,      &
+                                            lengthz,      &
+                                            n_x,          &
+                                            n_y,          &
+                                            n_z,          &
+                                            n_part,       &
+                                            part_method)  &
     result(mesh_nodal)
 
-    use iso_c_binding
+    ! Create a partitioned parallelepiped mesh (3D).
     implicit none
-!
-    integer, intent(in)                   :: comm
-    integer, intent(in)                   :: elt_type
-    integer, intent(in)                   :: order
-    type(c_ptr), intent(in)               :: ho_ordering
-    double precision, intent(in)          :: xmin
-    double precision, intent(in)          :: ymin
-    double precision, intent(in)          :: zmin
-    double precision, intent(in)          :: lengthx
-    double precision, intent(in)          :: lengthy
-    double precision, intent(in)          :: lengthz
-    integer(kind=pdm_g_num_s), intent(in) :: n_x
-    integer(kind=pdm_g_num_s), intent(in) :: n_y
-    integer(kind=pdm_g_num_s), intent(in) :: n_z
-    integer, intent(in)                   :: n_part
-    integer, intent(in)                   :: part_method
 
-    type(c_ptr)           :: mesh_nodal
+    integer,                   intent(in) :: comm        ! MPI communicator
+    integer,                   intent(in) :: elt_type    ! Mesh element type
+    integer,                   intent(in) :: order       ! Mesh element order
+    type(c_ptr),               intent(in) :: ho_ordering ! High order nodes ordering type
+    real(8),                   intent(in) :: xmin        ! x-coordinate of the rectangle minimum corner
+    real(8),                   intent(in) :: ymin        ! y-coordinate of the rectangle minimum corner
+    real(8),                   intent(in) :: zmin        ! z-coordinate of the rectangle minimum corner
+    real(8),                   intent(in) :: lengthx     ! Length of the rectangle in the x-direction
+    real(8),                   intent(in) :: lengthy     ! Length of the rectangle in the y-direction
+    real(8),                   intent(in) :: lengthz     ! Length of the rectangle in the z-direction
+    integer(kind=pdm_g_num_s), intent(in) :: n_x         ! Number of points in the x-direction
+    integer(kind=pdm_g_num_s), intent(in) :: n_y         ! Number of points in the y-direction
+    integer(kind=pdm_g_num_s), intent(in) :: n_z         ! Number of points in the z-direction
+    integer,                   intent(in) :: n_part      ! Number of mesh partitions
+    integer,                   intent(in) :: part_method ! Mesh partitioning method
+
+    type(c_ptr)                           :: mesh_nodal  ! PDM_part_mesh_nodal_t instance
 
     integer(c_int)   :: c_comm
     integer(c_int)   :: c_elt_type
@@ -1351,23 +1184,23 @@ module pdm_generate_mesh
     c_n_part = n_part
     c_part_method = part_method
 
-    mesh_nodal =  PDM_generate_mesh_parallelepiped_cf (c_comm,         &
-                                                       c_elt_type,     &
-                                                       c_order,        &
-                                                       c_ho_ordering,  &
-                                                       c_xmin,         &
-                                                       c_ymin,         &
-                                                       c_zmin,         &
-                                                       c_lengthx,      &
-                                                       c_lengthy,      &
-                                                       c_lengthz,      &
-                                                       c_n_x,          &
-                                                       c_n_y,          &
-                                                       c_n_z,          &
-                                                       c_n_part,       &
-                                                       c_part_method)
+    mesh_nodal =  PDM_generate_mesh_parallelepiped_cf(c_comm,         &
+                                                      c_elt_type,     &
+                                                      c_order,        &
+                                                      c_ho_ordering,  &
+                                                      c_xmin,         &
+                                                      c_ymin,         &
+                                                      c_zmin,         &
+                                                      c_lengthx,      &
+                                                      c_lengthy,      &
+                                                      c_lengthz,      &
+                                                      c_n_x,          &
+                                                      c_n_y,          &
+                                                      c_n_z,          &
+                                                      c_n_part,       &
+                                                      c_part_method)
 
-  end function PDM_generate_mesh_parallelepiped_
+  end function PDM_generate_mesh_parallelepiped
 
 
 
@@ -1639,10 +1472,10 @@ module pdm_generate_mesh
     integer, intent(in)                   :: elt_type
     integer, intent(in)                   :: order
     type(c_ptr), intent(in)               :: ho_ordering
-    double precision, intent(in)          :: radius
-    double precision, intent(in)          :: center_x
-    double precision, intent(in)          :: center_y
-    double precision, intent(in)          :: center_z
+    real(8), intent(in)          :: radius
+    real(8), intent(in)          :: center_x
+    real(8), intent(in)          :: center_y
+    real(8), intent(in)          :: center_z
     integer(kind=pdm_g_num_s), intent(in) :: n_u
     integer(kind=pdm_g_num_s), intent(in) :: n_v
     integer, intent(in)                   :: n_part
@@ -1878,82 +1711,79 @@ module pdm_generate_mesh
 !!
 !!
 
-  subroutine PDM_generate_mesh_ball_ngon_ (comm,            &
-                                           elt_type,        &
-                                           order,           &
-                                           ho_ordering,     &
-                                           radius,          &
-                                           hole_radius,     &
-                                           center_x,        &
-                                           center_y,        &
-                                           center_z,        &
-                                           n_x,             &
-                                           n_y,             &
-                                           n_z,             &
-                                           n_layer,         &
-                                           geometric_ratio, &
-                                           n_part,          &
-                                           part_method,     &
-                                           pn_vtx,          &
-                                           pn_edge,         &
-                                           pn_face,         &
-                                           pn_cell,         &
-                                           pvtx_coord,      &
-                                           pedge_vtx,       &
-                                           pface_edge_idx,  &
-                                           pface_edge,      &
-                                           pface_vtx,       &
-                                           pcell_face_idx,  &
-                                           pcell_face,      &
-                                           pvtx_ln_to_gn,   &
-                                           pedge_ln_to_gn,  &
-                                           pface_ln_to_gn,  &
-                                           pcell_ln_to_gn,  &
-                                           pn_surface,      &
-                                           psurface_face_idx,&
-                                           psurface_face,    &
-                                           psurface_face_ln_to_gn)
-
-
-    use iso_c_binding
+  subroutine PDM_generate_mesh_ball_ngon(comm,                   &
+                                         elt_type,               &
+                                         order,                  &
+                                         ho_ordering,            &
+                                         radius,                 &
+                                         hole_radius,            &
+                                         center_x,               &
+                                         center_y,               &
+                                         center_z,               &
+                                         n_x,                    &
+                                         n_y,                    &
+                                         n_z,                    &
+                                         n_layer,                &
+                                         geometric_ratio,        &
+                                         n_part,                 &
+                                         part_method,            &
+                                         pn_vtx,                 &
+                                         pn_edge,                &
+                                         pn_face,                &
+                                         pn_cell,                &
+                                         pvtx_coord,             &
+                                         pedge_vtx,              &
+                                         pface_edge_idx,         &
+                                         pface_edge,             &
+                                         pface_vtx,              &
+                                         pcell_face_idx,         &
+                                         pcell_face,             &
+                                         pvtx_ln_to_gn,          &
+                                         pedge_ln_to_gn,         &
+                                         pface_ln_to_gn,         &
+                                         pcell_ln_to_gn,         &
+                                         pn_surface,             &
+                                         psurface_face_idx,      &
+                                         psurface_face,          &
+                                         psurface_face_ln_to_gn)
+    ! Create a partitioned ball mesh (3D) with descending connectivities.
     implicit none
 
-    integer, intent(in)                   :: comm
-    integer, intent(in)                   :: elt_type
-    integer, intent(in)                   :: order
-    type(c_ptr), intent(in)               :: ho_ordering
-    double precision, intent(in)          :: radius
-    double precision, intent(in)          :: hole_radius
-    double precision, intent(in)          :: center_x
-    double precision, intent(in)          :: center_y
-    double precision, intent(in)          :: center_z
-    integer(kind=pdm_g_num_s), intent(in) :: n_x
-    integer(kind=pdm_g_num_s), intent(in) :: n_y
-    integer(kind=pdm_g_num_s), intent(in) :: n_z
-    integer(kind=pdm_g_num_s), intent(in) :: n_layer
-    double precision, intent(in)          :: geometric_ratio
-    integer, intent(in)                   :: n_part
-    integer, intent(in)                   :: part_method
-
-    integer(kind=pdm_l_num_s), pointer    :: pn_vtx(:)
-    integer(kind=pdm_l_num_s), pointer    :: pn_edge(:)
-    integer(kind=pdm_l_num_s), pointer    :: pn_face(:)
-    integer(kind=pdm_l_num_s), pointer    :: pn_cell(:)
-    integer(kind=pdm_l_num_s), pointer    :: pn_surface(:)
-    type(PDM_pointer_array_t), pointer    :: pvtx_coord
-    type(PDM_pointer_array_t), pointer    :: pedge_vtx
-    type(PDM_pointer_array_t), pointer    :: pface_edge_idx
-    type(PDM_pointer_array_t), pointer    :: pface_edge
-    type(PDM_pointer_array_t), pointer    :: pface_vtx
-    type(PDM_pointer_array_t), pointer    :: pcell_face_idx
-    type(PDM_pointer_array_t), pointer    :: pcell_face
-    type(PDM_pointer_array_t), pointer    :: pvtx_ln_to_gn
-    type(PDM_pointer_array_t), pointer    :: pedge_ln_to_gn
-    type(PDM_pointer_array_t), pointer    :: pface_ln_to_gn
-    type(PDM_pointer_array_t), pointer    :: pcell_ln_to_gn
-    type(PDM_pointer_array_t), pointer    :: psurface_face_idx
-    type(PDM_pointer_array_t), pointer    :: psurface_face
-    type(PDM_pointer_array_t), pointer    :: psurface_face_ln_to_gn
+    integer,                   intent(in) :: comm                   ! MPI communicator
+    integer,                   intent(in) :: elt_type               ! Mesh element type
+    integer,                   intent(in) :: order                  ! Mesh element order
+    type(c_ptr),               intent(in) :: ho_ordering            ! High order nodes ordering type
+    real(8),                   intent(in) :: radius                 ! Radius of the ball
+    real(8),                   intent(in) :: hole_radius            ! Radius of the hole of the ball
+    real(8),                   intent(in) :: center_x               ! x-coordinate of the ball center
+    real(8),                   intent(in) :: center_y               ! y-coordinate of the ball center
+    real(8),                   intent(in) :: center_z               ! z-coordinate of the ball center
+    integer(kind=pdm_g_num_s), intent(in) :: n_x                    ! Number of vertices on segments in x-direction
+    integer(kind=pdm_g_num_s), intent(in) :: n_y                    ! Number of vertices on segments in y-direction
+    integer(kind=pdm_g_num_s), intent(in) :: n_z                    ! Number of vertices on segments in z-direction
+    integer(kind=pdm_g_num_s), intent(in) :: n_layer                ! Number of extrusion layers
+    real(8),                   intent(in) :: geometric_ratio        ! Geometric ratio for layer thickness
+    integer,                   intent(in) :: n_part                 ! Number of mesh partitions
+    integer,                   intent(in) :: part_method            ! Mesh partitioning method
+    integer(kind=pdm_l_num_s), pointer    :: pn_vtx(:)              ! Number of vertices
+    integer(kind=pdm_l_num_s), pointer    :: pn_edge(:)             ! Number of edges
+    integer(kind=pdm_l_num_s), pointer    :: pn_face(:)             ! Number of faces
+    integer(kind=pdm_l_num_s), pointer    :: pn_cell(:)             ! Number of cells
+    integer(kind=pdm_l_num_s), pointer    :: pn_surface(:)          ! Vertex coordinates
+    type(PDM_pointer_array_t), pointer    :: pvtx_coord             ! Edge->vertex connectivity
+    type(PDM_pointer_array_t), pointer    :: pedge_vtx              ! Index of face->edge connectivity
+    type(PDM_pointer_array_t), pointer    :: pface_edge_idx         ! Face->edge connectivity
+    type(PDM_pointer_array_t), pointer    :: pface_edge             ! Face->vertex connectivity
+    type(PDM_pointer_array_t), pointer    :: pface_vtx              ! Index of cell->face connectivity
+    type(PDM_pointer_array_t), pointer    :: pcell_face_idx         ! Cell->face connectivity
+    type(PDM_pointer_array_t), pointer    :: pcell_face             ! Vertex global IDs
+    type(PDM_pointer_array_t), pointer    :: pvtx_ln_to_gn          ! Edge global IDs
+    type(PDM_pointer_array_t), pointer    :: pedge_ln_to_gn         ! Face global IDs
+    type(PDM_pointer_array_t), pointer    :: pface_ln_to_gn         ! Cell global IDs
+    type(PDM_pointer_array_t), pointer    :: pcell_ln_to_gn         ! Number of surfaces
+    type(PDM_pointer_array_t), pointer    :: psurface_face_idx      ! Surface->face connectivity index
+    type(PDM_pointer_array_t), pointer    :: psurface_face          ! Surface->face connectivity
+    type(PDM_pointer_array_t), pointer    :: psurface_face_ln_to_gn ! Surface->face connectivity with global IDs
 
     type(c_ptr) :: c_pn_vtx
     type(c_ptr) :: c_pn_edge
@@ -2024,41 +1854,41 @@ module pdm_generate_mesh
     c_n_part          = n_part
     c_part_method     = part_method
 
-    call PDM_generate_mesh_ball_ngon_cf (c_comm, &
-                                         c_elt_type, &
-                                         c_order, &
-                                         c_ho_ordering, &
-                                         c_radius, &
-                                         c_hole_radius, &
-                                         c_center_x, &
-                                         c_center_y, &
-                                         c_center_z, &
-                                         c_n_x, &
-                                         c_n_y, &
-                                         c_n_z, &
-                                         c_n_layer, &
-                                         c_geometric_ratio, &
-                                         c_n_part, &
-                                         c_part_method, &
-                                         c_pn_vtx, &
-                                         c_pn_edge, &
-                                         c_pn_face, &
-                                         c_pn_cell, &
-                                         c_pvtx_coord, &
-                                         c_pedge_vtx, &
-                                         c_pface_edge_idx, &
-                                         c_pface_edge, &
-                                         c_pface_vtx, &
-                                         c_pcell_face_idx, &
-                                         c_pcell_face, &
-                                         c_pvtx_ln_to_gn, &
-                                         c_pedge_ln_to_gn, &
-                                         c_pface_ln_to_gn, &
-                                         c_pcell_ln_to_gn, &
-                                         c_pn_surface, &
-                                         c_psurface_face_idx, &
-                                         c_psurface_face, &
-                                         c_psurface_face_ln_to_gn)
+    call PDM_generate_mesh_ball_ngon_cf(c_comm, &
+                                        c_elt_type, &
+                                        c_order, &
+                                        c_ho_ordering, &
+                                        c_radius, &
+                                        c_hole_radius, &
+                                        c_center_x, &
+                                        c_center_y, &
+                                        c_center_z, &
+                                        c_n_x, &
+                                        c_n_y, &
+                                        c_n_z, &
+                                        c_n_layer, &
+                                        c_geometric_ratio, &
+                                        c_n_part, &
+                                        c_part_method, &
+                                        c_pn_vtx, &
+                                        c_pn_edge, &
+                                        c_pn_face, &
+                                        c_pn_cell, &
+                                        c_pvtx_coord, &
+                                        c_pedge_vtx, &
+                                        c_pface_edge_idx, &
+                                        c_pface_edge, &
+                                        c_pface_vtx, &
+                                        c_pcell_face_idx, &
+                                        c_pcell_face, &
+                                        c_pvtx_ln_to_gn, &
+                                        c_pedge_ln_to_gn, &
+                                        c_pface_ln_to_gn, &
+                                        c_pcell_ln_to_gn, &
+                                        c_pn_surface, &
+                                        c_psurface_face_idx, &
+                                        c_psurface_face, &
+                                        c_psurface_face_ln_to_gn)
 
     call c_f_pointer(c_pn_vtx, &
                      pn_vtx,   &
@@ -2238,7 +2068,7 @@ module pdm_generate_mesh
 
     deallocate(s_array)
 
-  end subroutine PDM_generate_mesh_ball_ngon_
+  end subroutine PDM_generate_mesh_ball_ngon
 
 
 
