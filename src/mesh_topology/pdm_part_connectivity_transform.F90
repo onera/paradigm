@@ -22,147 +22,30 @@
 module pdm_part_connectivity_transform
 
   use pdm
+  use iso_c_binding
   implicit none
 
-  interface PDM_combine_connectivity ; module procedure &
-  PDM_combine_connectivity_
-  end interface
-
-  interface PDM_connectivity_transpose ; module procedure &
-  PDM_connectivity_transpose_
-  end interface
-
-  interface PDM_compute_face_vtx_from_face_and_edge ; module procedure &
-  PDM_compute_face_vtx_from_face_and_edge_
-  end interface
-
-  private :: PDM_combine_connectivity_
-  private :: PDM_connectivity_transpose_
-  private :: PDM_compute_face_vtx_from_face_and_edge_
-
-  interface
-
-    !!>
-    !!
-    !! \brief PDM_combine_connectivity
-
-    subroutine PDM_combine_connectivity_cf (n_entity1,           &
-                                            entity1_entity2_idx, &
-                                            entity1_entity2,     &
-                                            entity2_entity3_idx, &
-                                            entity2_entity3,     &
-                                            entity1_entity3_idx, &
-                                            entity1_entity3)     &
-
-    bind (c, name = 'PDM_combine_connectivity')
-
-      use iso_c_binding
-
-      implicit none
-
-      integer(c_int), value :: n_entity1
-
-      type(c_ptr), value    :: entity1_entity2_idx
-      type(c_ptr), value    :: entity1_entity2
-      type(c_ptr), value    :: entity2_entity3_idx
-      type(c_ptr), value    :: entity2_entity3
-
-      type(c_ptr)           :: entity1_entity3_idx
-      type(c_ptr)           :: entity1_entity3
-
-    end subroutine PDM_combine_connectivity_cf
-
-    !!>
-    !!
-    !! \brief PDM_connectivity_transpose
-
-    subroutine PDM_connectivity_transpose_cf (n_entity1,           &
-                                              n_entity2,           &
-                                              entity1_entity2_idx, &
-                                              entity1_entity2,     &
-                                              entity2_entity1_idx, &
-                                              entity2_entity1)     &
-
-    bind (c, name = 'PDM_connectivity_transpose')
-
-      use iso_c_binding
-
-      implicit none
-
-      integer(c_int), value :: n_entity1
-      integer(c_int), value :: n_entity2
-
-      type(c_ptr), value    :: entity1_entity2_idx
-      type(c_ptr), value    :: entity1_entity2
-
-      type(c_ptr)           :: entity2_entity1_idx
-      type(c_ptr)           :: entity2_entity1
-
-    end subroutine PDM_connectivity_transpose_cf
-
-    !!>
-    !!
-    !! \brief PDM_compute_face_vtx_from_face_and_edge
-
-    subroutine PDM_compute_face_vtx_from_face_and_edge_cf (n_face,        &
-                                                           face_edge_idx, &
-                                                           face_edge,     &
-                                                           edge_vtx,      &
-                                                           face_vtx)      &
-
-    bind (c, name = 'PDM_compute_face_vtx_from_face_and_edge')
-
-      use iso_c_binding
-
-      implicit none
-
-      integer(c_int), value :: n_face
-
-      type(c_ptr), value    :: face_edge_idx
-      type(c_ptr), value    :: face_edge
-      type(c_ptr), value    :: edge_vtx
-
-      type(c_ptr)           :: face_vtx
-
-    end subroutine PDM_compute_face_vtx_from_face_and_edge_cf
-
-  end interface
 
   contains
 
-    !!>
-    !!
-    !! \brief Combine entity1->entity2 with entity2->entity3 to create entity1->entity3
-    !!
-    !! \param [in]   n_entity1
-    !! \param [in]   entity1_entity2_idx
-    !! \param [in]   entity1_entity2
-    !! \param [in]   entity2_entity3_idx
-    !! \param [in]   entity2_entity3
-    !! \param [out]  entity1_entity3_idx
-    !! \param [out]  entity1_entity3
-    !!
+    subroutine PDM_combine_connectivity(n_entity1,           &
+                                        entity1_entity2_idx, &
+                                        entity1_entity2,     &
+                                        entity2_entity3_idx, &
+                                        entity2_entity3,     &
+                                        entity1_entity3_idx, &
+                                        entity1_entity3)
 
-    subroutine PDM_combine_connectivity_ (n_entity1,           &
-                                          entity1_entity2_idx, &
-                                          entity1_entity2,     &
-                                          entity2_entity3_idx, &
-                                          entity2_entity3,     &
-                                          entity1_entity3_idx, &
-                                          entity1_entity3)
-
-      use iso_c_binding
-
+      ! Combine connectivity between entity1_entity2 and entity2_entity3 to have entity1_entity3
       implicit none
 
-      integer, intent(in) :: n_entity1
-
-      integer, pointer    :: entity1_entity2_idx(:)
-      integer, pointer    :: entity1_entity2(:)
-      integer, pointer    :: entity2_entity3_idx(:)
-      integer, pointer    :: entity2_entity3(:)
-      integer, pointer    :: entity1_entity3_idx(:)
-      integer, pointer    :: entity1_entity3(:)
+      integer,              intent(in) :: n_entity1              ! Number of entity1
+      integer(pdm_l_num_s), pointer    :: entity1_entity2_idx(:) ! Connectivity index between entity1 and entity2 (size = n_entity1+1)
+      integer(pdm_l_num_s), pointer    :: entity1_entity2(:)     ! Connectivity between entity1 and entity2 (size = entity1_entity2_idx(n_entity1+1) )
+      integer(pdm_l_num_s), pointer    :: entity2_entity3_idx(:) ! Connectivity index between entity2 and entity3 (size = n_entity2+1)
+      integer(pdm_l_num_s), pointer    :: entity2_entity3(:)     ! Connectivity between entity2 and entity3 (size = entity1_entity2_idx(n_entity2+1) )
+      integer(pdm_l_num_s), pointer    :: entity1_entity3_idx(:) ! Connectivity index between entity1 and entity3 (size = n_entity1+1)
+      integer(pdm_l_num_s), pointer    :: entity1_entity3(:)     ! Connectivity between entity1 and entity3 (size = entity1_entity2_idx(n_entity1+1) )
 
       integer(c_int) :: c_n_entity1
 
@@ -173,30 +56,52 @@ module pdm_part_connectivity_transform
       type(c_ptr)    :: c_entity1_entity3_idx
       type(c_ptr)    :: c_entity1_entity3
 
+      interface
+        subroutine PDM_combine_connectivity_cf(n_entity1,           &
+                                               entity1_entity2_idx, &
+                                               entity1_entity2,     &
+                                               entity2_entity3_idx, &
+                                               entity2_entity3,     &
+                                               entity1_entity3_idx, &
+                                               entity1_entity3)     &
+
+        bind (c, name = 'PDM_combine_connectivity')
+          use iso_c_binding
+          implicit none
+          integer(c_int), value :: n_entity1
+          type(c_ptr),    value :: entity1_entity2_idx
+          type(c_ptr),    value :: entity1_entity2
+          type(c_ptr),    value :: entity2_entity3_idx
+          type(c_ptr),    value :: entity2_entity3
+          type(c_ptr)           :: entity1_entity3_idx
+          type(c_ptr)           :: entity1_entity3
+        end subroutine PDM_combine_connectivity_cf
+      end interface
+
       c_n_entity1 = n_entity1
 
       c_entity1_entity2_idx = C_NULL_PTR
       if (associated(entity1_entity2_idx)) then
         c_entity1_entity2_idx = c_loc(entity1_entity2_idx)
       endif
-        
+
       c_entity1_entity2 = C_NULL_PTR
       if (associated(entity1_entity2)) then
-        c_entity1_entity2     = c_loc(entity1_entity2)
+        c_entity1_entity2 = c_loc(entity1_entity2)
       endif
-        
+
       c_entity2_entity3_idx = C_NULL_PTR
       if (associated(entity2_entity3_idx)) then
         c_entity2_entity3_idx = c_loc(entity2_entity3_idx)
       endif
-        
+
       c_entity2_entity3 = C_NULL_PTR
       if (associated(entity2_entity3)) then
-        c_entity2_entity3     = c_loc(entity2_entity3)
+        c_entity2_entity3 = c_loc(entity2_entity3)
       endif
-        
-      c_entity1_entity3_idx     = C_NULL_PTR
-      c_entity1_entity3         = C_NULL_PTR
+
+      c_entity1_entity3_idx = C_NULL_PTR
+      c_entity1_entity3     = C_NULL_PTR
 
       call PDM_combine_connectivity_cf(c_n_entity1,           &
                                        c_entity1_entity2_idx, &
@@ -214,38 +119,26 @@ module pdm_part_connectivity_transform
                        entity1_entity3,   &
                        [entity1_entity3_idx(n_entity1+1)])
 
-    end subroutine PDM_combine_connectivity_
+    end subroutine PDM_combine_connectivity
 
-    !!>
-    !!
-    !! \brief Transpose entity1->entity2 to create entity2->entity1
-    !!
-    !! \param [in]   n_entity1
-    !! \param [in]   n_entity2
-    !! \param [in]   entity1_entity2_idx
-    !! \param [in]   entity1_entity2
-    !! \param [out]  entity2_entity1_idx
-    !! \param [out]  entity2_entity1
-    !!
 
-    subroutine PDM_connectivity_transpose_ (n_entity1,           &
-                                            n_entity2,           &
-                                            entity1_entity2_idx, &
-                                            entity1_entity2,     &
-                                            entity2_entity1_idx, &
-                                            entity2_entity1)
 
-      use iso_c_binding
+    subroutine PDM_connectivity_transpose(n_entity1,           &
+                                          n_entity2,           &
+                                          entity1_entity2_idx, &
+                                          entity1_entity2,     &
+                                          entity2_entity1_idx, &
+                                          entity2_entity1)
 
+      ! Transpose connectivity entity1_entity2 to have entity2_entity1
       implicit none
 
-      integer, intent(in) :: n_entity1
-      integer, intent(in) :: n_entity2
-
-      integer, pointer    :: entity1_entity2_idx(:)
-      integer, pointer    :: entity1_entity2(:)
-      integer, pointer    :: entity2_entity1_idx(:)
-      integer, pointer    :: entity2_entity1(:)
+      integer,              intent(in) :: n_entity1              ! Number of entity1
+      integer,              intent(in) :: n_entity2              ! Number of entity2
+      integer(pdm_l_num_s), pointer    :: entity1_entity2_idx(:) ! Connectivity index between entity1 and entity2 (size = n_entity1+1)
+      integer(pdm_l_num_s), pointer    :: entity1_entity2(:)     ! Connectivity between entity1 and entity2 (size = entity1_entity2_idx(n_entity1+1) )
+      integer(pdm_l_num_s), pointer    :: entity2_entity1_idx(:) ! Connectivity index between entity2 and entity1 (size = n_entity2+1)
+      integer(pdm_l_num_s), pointer    :: entity2_entity1(:)     ! Connectivity between entity2 and entity1 (size = entity1_entity2_idx(n_entity2+1) )
 
       integer(c_int) :: c_n_entity1
       integer(c_int) :: c_n_entity2
@@ -254,6 +147,25 @@ module pdm_part_connectivity_transform
       type(c_ptr)    :: c_entity1_entity2
       type(c_ptr)    :: c_entity2_entity1_idx
       type(c_ptr)    :: c_entity2_entity1
+
+      interface
+        subroutine PDM_connectivity_transpose_cf(n_entity1,           &
+                                                 n_entity2,           &
+                                                 entity1_entity2_idx, &
+                                                 entity1_entity2,     &
+                                                 entity2_entity1_idx, &
+                                                 entity2_entity1)     &
+        bind (c, name = 'PDM_connectivity_transpose')
+          use iso_c_binding
+          implicit none
+          integer(c_int), value :: n_entity1
+          integer(c_int), value :: n_entity2
+          type(c_ptr),    value :: entity1_entity2_idx
+          type(c_ptr),    value :: entity1_entity2
+          type(c_ptr)           :: entity2_entity1_idx
+          type(c_ptr)           :: entity2_entity1
+        end subroutine PDM_connectivity_transpose_cf
+      end interface
 
       c_n_entity1 = n_entity1
       c_n_entity2 = n_entity2
@@ -278,26 +190,24 @@ module pdm_part_connectivity_transform
                        entity2_entity1,   &
                        [entity2_entity1_idx(n_entity2+1)])
 
-    end subroutine PDM_connectivity_transpose_
+    end subroutine PDM_connectivity_transpose
 
-    ! Combine face->edge with edge-vtx to create face-vtx preserving orientation
 
-    subroutine PDM_compute_face_vtx_from_face_and_edge_ (n_face,        &
-                                          face_edge_idx, &
-                                          face_edge,     &
-                                          edge_vtx,      &
-                                          face_vtx)
 
-      use iso_c_binding
 
+    subroutine PDM_compute_face_vtx_from_face_and_edge(n_face,        &
+                                                       face_edge_idx, &
+                                                       face_edge,     &
+                                                       edge_vtx,      &
+                                                       face_vtx)
+      ! Combine face->edge with edge-vtx to create face-vtx preserving orientation
       implicit none
 
-      integer, intent(in) :: n_face           ! Number of faces
-
-      integer, pointer    :: face_edge_idx(:) ! Index of face->edge connectivity
-      integer, pointer    :: face_edge(:)     ! face->edge connectivity
-      integer, pointer    :: edge_vtx(:)      ! edge->vtx connectivity
-      integer, pointer    :: face_vtx(:)      ! face->vtx connectivity
+      integer,              intent(in) :: n_face           ! Number of faces
+      integer(pdm_l_num_s), pointer    :: face_edge_idx(:) ! Index of face->edge connectivity
+      integer(pdm_l_num_s), pointer    :: face_edge(:)     ! Face->edge connectivity
+      integer(pdm_l_num_s), pointer    :: edge_vtx(:)      ! Edge->vtx connectivity
+      integer(pdm_l_num_s), pointer    :: face_vtx(:)      ! Face->vtx connectivity
 
       integer(c_int) :: c_n_face
 
@@ -305,6 +215,23 @@ module pdm_part_connectivity_transform
       type(c_ptr)    :: c_face_edge         = C_NULL_PTR
       type(c_ptr)    :: c_edge_vtx          = C_NULL_PTR
       type(c_ptr)    :: c_face_vtx          = C_NULL_PTR
+
+      interface
+        subroutine PDM_compute_face_vtx_from_face_and_edge_cf(n_face,        &
+                                                              face_edge_idx, &
+                                                              face_edge,     &
+                                                              edge_vtx,      &
+                                                              face_vtx)      &
+        bind (c, name = 'PDM_compute_face_vtx_from_face_and_edge')
+          use iso_c_binding
+          implicit none
+          integer(c_int), value :: n_face
+          type(c_ptr),    value :: face_edge_idx
+          type(c_ptr),    value :: face_edge
+          type(c_ptr),    value :: edge_vtx
+          type(c_ptr)           :: face_vtx
+        end subroutine PDM_compute_face_vtx_from_face_and_edge_cf
+      end interface
 
       c_n_face = n_face
 
@@ -322,6 +249,6 @@ module pdm_part_connectivity_transform
                        face_vtx,   &
                        [face_edge_idx(n_face+1)])
 
-    end subroutine PDM_compute_face_vtx_from_face_and_edge_
+    end subroutine PDM_compute_face_vtx_from_face_and_edge
 
 end module pdm_part_connectivity_transform
