@@ -44,8 +44,8 @@
 #include "pdm_array.h"
 #include "pdm_box_priv.h"
 #include "pdm_box_tree_priv.h"
+#include "pdm_convex.h"
 #include "pdm_error.h"
-#include "pdm_linear_programming.h"
 #include "pdm_logging.h"
 #include "pdm_mem_tool.h"
 #include "pdm_morton.h"
@@ -3466,7 +3466,7 @@ double  *box_extents
   }
 
   // Undefined case
-  return PDM_lp_intersect_volume_box(n_planes, plane_pt, n, box_extents);
+  return PDM_intersect_convex_volume_box(n_planes, plane_pt, n, box_extents);
 }
 
 /*============================================================================

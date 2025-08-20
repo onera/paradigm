@@ -211,7 +211,7 @@ module pdm_vtk
 
       double precision, pointer          :: vtx_coord(:,:)
       integer(kind=pdm_g_num_s), pointer :: vtx_g_num(:)
-      integer, pointer                   :: color(:)
+      integer(kind=pdm_l_num_s), pointer :: color(:)
 
       type(c_ptr)      :: c_vtx_coord
       type(c_ptr)      :: c_vtx_g_num
