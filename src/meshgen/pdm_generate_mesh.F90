@@ -1410,76 +1410,56 @@ module pdm_generate_mesh
   end subroutine PDM_generate_mesh_rectangle_ngon
 
 
-!>
-!!
-!! \brief Create a partitionned sphere mesh (2D) with descending connectivities.
-!!
-!! \param [in]   comm           MPI communicator
-!! \param [in]   elt_type       Element type
-!! \param [in]   order          Element order
-!! \param [in]   ho_ordering    Ordering of nodes of the HO element
-!! \param [in]   radius         Radius of the sphere
-!! \param [in]   center_x       x-coordinate of the sphere center
-!! \param [in]   center_y       y-coordinate of the sphere center
-!! \param [in]   center_z       z-coordinate of the sphere center
-!! \param [in]   n_u            Number of vertices in the u-direction
-!! \param [in]   n_v            Number of vertices in the v-direction
-!! \param [in]   n_part         Number of partitions
-!! \param [in]   part_method    Paritioning method
-!! \param [in]   pn_vtx         Number of vertices
-!! \param [in]   pn_edge        Number of edges
-!! \param [in]   pn_face        Number of faces
-!! \param [in]   pvtx_coord     Vertex coordinates
-!! \param [in]   pedge_vtx      edge->vertex connectivity
-!! \param [in]   pface_edge_idx Index of face->edge connectivity
-!! \param [in]   pface_edge     face->edge connectivity
-!! \param [in]   pface_vtx      face->vtx connectivity
-!! \param [in]   pvtx_ln_to_gn  Vertex global number
-!! \param [in]   pedge_ln_to_gn Edge global number
-!! \param [in]   pface_ln_to_gn Face global number
-!!
-!!
 
-  subroutine PDM_generate_mesh_sphere_ngon_ (comm,           &
-                                             elt_type,       &
-                                             order,          &
-                                             ho_ordering,    &
-                                             radius,         &
-                                             center_x,       &
-                                             center_y,       &
-                                             center_z,       &
-                                             n_u,            &
-                                             n_v,            &
-                                             n_part,         &
-                                             part_method,    &
-                                             pn_vtx,         &
-                                             pn_edge,        &
-                                             pn_face,        &
-                                             pvtx_coord,     &
-                                             pedge_vtx,      &
-                                             pface_edge_idx, &
-                                             pface_edge,     &
-                                             pface_vtx,      &
-                                             pvtx_ln_to_gn,  &
-                                             pedge_ln_to_gn, &
-                                             pface_ln_to_gn)
-
-
-    use iso_c_binding
+  subroutine PDM_generate_mesh_sphere_ngon(comm,           &
+                                           elt_type,       &
+                                           order,          &
+                                           ho_ordering,    &
+                                           radius,         &
+                                           center_x,       &
+                                           center_y,       &
+                                           center_z,       &
+                                           n_u,            &
+                                           n_v,            &
+                                           n_part,         &
+                                           part_method,    &
+                                           pn_vtx,         &
+                                           pn_edge,        &
+                                           pn_face,        &
+                                           pvtx_coord,     &
+                                           pedge_vtx,      &
+                                           pface_edge_idx, &
+                                           pface_edge,     &
+                                           pface_vtx,      &
+                                           pvtx_ln_to_gn,  &
+                                           pedge_ln_to_gn, &
+                                           pface_ln_to_gn)
+    ! Create a partitioned sphere mesh (2D) with descending connectivities.
     implicit none
 
-    integer, intent(in)                   :: comm
-    integer, intent(in)                   :: elt_type
-    integer, intent(in)                   :: order
-    type(c_ptr), intent(in)               :: ho_ordering
-    real(8), intent(in)          :: radius
-    real(8), intent(in)          :: center_x
-    real(8), intent(in)          :: center_y
-    real(8), intent(in)          :: center_z
-    integer(kind=pdm_g_num_s), intent(in) :: n_u
-    integer(kind=pdm_g_num_s), intent(in) :: n_v
-    integer, intent(in)                   :: n_part
-    integer, intent(in)                   :: part_method
+    integer,                   intent(in) :: comm           ! MPI communicator
+    integer,                   intent(in) :: elt_type       ! Element type
+    integer,                   intent(in) :: order          ! Element order
+    type(c_ptr),               intent(in) :: ho_ordering    ! Ordering of nodes of the HO element
+    real(8),                   intent(in) :: radius         ! Radius of the sphere
+    real(8),                   intent(in) :: center_x       ! x-coordinate of the sphere center
+    real(8),                   intent(in) :: center_y       ! y-coordinate of the sphere center
+    real(8),                   intent(in) :: center_z       ! z-coordinate of the sphere center
+    integer(pdm_g_num_s),      intent(in) :: n_u            ! Number of vertices in the u-direction
+    integer(pdm_g_num_s),      intent(in) :: n_v            ! Number of vertices in the v-direction
+    integer,                   intent(in) :: n_part         ! Number of partitions
+    integer,                   intent(in) :: part_method    ! Partitioning method
+    integer(pdm_l_num_s),      pointer    :: pn_vtx(:)      ! Number of vertices
+    integer(pdm_l_num_s),      pointer    :: pn_edge(:)     ! Number of edges
+    integer(pdm_l_num_s),      pointer    :: pn_face(:)     ! Number of faces
+    type(PDM_pointer_array_t), pointer    :: pvtx_coord     ! Vertex coordinates
+    type(PDM_pointer_array_t), pointer    :: pedge_vtx      ! Edge->vertex connectivity
+    type(PDM_pointer_array_t), pointer    :: pface_edge_idx ! Index of face->edge connectivity
+    type(PDM_pointer_array_t), pointer    :: pface_edge     ! Face->edge connectivity
+    type(PDM_pointer_array_t), pointer    :: pface_vtx      ! Face->vertex connectivity
+    type(PDM_pointer_array_t), pointer    :: pvtx_ln_to_gn  ! Vertex global IDs
+    type(PDM_pointer_array_t), pointer    :: pedge_ln_to_gn ! Edge global IDs
+    type(PDM_pointer_array_t), pointer    :: pface_ln_to_gn ! Face global IDs
 
     integer(c_int)        :: c_comm
     integer(c_int)        :: c_elt_type
@@ -1499,18 +1479,7 @@ module pdm_generate_mesh
     integer(c_int)        :: c_n_part
     integer(c_int)        :: c_part_method
 
-    integer(kind=pdm_l_num_s), pointer    :: pn_vtx(:)
-    integer(kind=pdm_l_num_s), pointer    :: pn_edge(:)
-    integer(kind=pdm_l_num_s), pointer    :: pn_face(:)
 
-    type(PDM_pointer_array_t), pointer    :: pvtx_coord
-    type(PDM_pointer_array_t), pointer    :: pedge_vtx
-    type(PDM_pointer_array_t), pointer    :: pface_edge_idx
-    type(PDM_pointer_array_t), pointer    :: pface_edge
-    type(PDM_pointer_array_t), pointer    :: pface_vtx
-    type(PDM_pointer_array_t), pointer    :: pvtx_ln_to_gn
-    type(PDM_pointer_array_t), pointer    :: pedge_ln_to_gn
-    type(PDM_pointer_array_t), pointer    :: pface_ln_to_gn
 
     type(c_ptr)           :: c_pn_vtx
     type(c_ptr)           :: c_pn_edge
@@ -1526,7 +1495,7 @@ module pdm_generate_mesh
 
     integer, allocatable  :: s_array(:)
 
-    integer :: i
+    integer               :: i
     integer, pointer      :: ipart_pface_edge_idx(:)
 
     c_comm = PDM_MPI_Comm_f2c(comm)
@@ -1670,46 +1639,9 @@ module pdm_generate_mesh
 
     deallocate(s_array)
 
-  end subroutine PDM_generate_mesh_sphere_ngon_
+  end subroutine PDM_generate_mesh_sphere_ngon
 
 
-!>
-!!
-!! \brief Create a partitionned ball mesh (3D) with descending connectivities.
-!!
-!! \param [in]  comm                      MPI communicator
-!! \param [in]  elt_type                  Mesh element type
-!! \param [in]  order                     Mesh element order
-!! \param [in]  ho_ordering               High order nodes ordering type
-!! \param [in]  radius                    Radius of the ball
-!! \param [in]  hole_radius               Radius of the hole of the ball
-!! \param [in]  center_x                  x-coordinate of the ball center
-!! \param [in]  center_y                  y-coordinate of the ball center
-!! \param [in]  center_z                  z-coordinate of the ball center
-!! \param [in]  n_x                       Number of vertices on segments in x-direction
-!! \param [in]  n_y                       Number of vertices on segments in y-direction
-!! \param [in]  n_z                       Number of vertices on segments in z-direction
-!! \param [in]  n_layer                   Number of extrusion layers
-!! \param [in]  geometric_ratio           Geometric ratio for layer thickness
-!! \param [in]  n_part                    Number of mesh partitions
-!! \param [in]  part_method               Mesh partitionning method
-!! \param [out] pn_vtx                    Number of vertices
-!! \param [out] pn_edge                   Number of edges
-!! \param [out] pn_face                   Number of faces
-!! \param [out] pvtx_coord                Vertex coordinates
-!! \param [out] pedge_vtx                 edge->vertex connectivity
-!! \param [out] pface_edge_idx            Index of face->edge connectivity
-!! \param [out] pface_edge                face->edge connectivity
-!! \param [out] pface_vtx                face->vtx connectivity
-!! \param [out] pvtx_ln_to_gn             Vertex global number
-!! \param [out] pedge_ln_to_gn            Edge global number
-!! \param [out] pface_ln_to_gn            Face global number
-!! \param [out] pn_surface                Number of surfaces
-!! \param [out] psurface_face_idx         surface->face connectivity index
-!! \param [out] psurface_face             surface->face connectivity
-!! \param [out] psurface_face_ln_to_gn    surface->face connectivity with global numbers
-!!
-!!
 
   subroutine PDM_generate_mesh_ball_ngon(comm,                   &
                                          elt_type,               &

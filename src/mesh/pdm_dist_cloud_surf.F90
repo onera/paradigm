@@ -384,7 +384,7 @@ module pdm_dist_cloud_surf
     interface
       subroutine pdm_dist_cloud_surf_nodal_mesh_set_cf(dcs,        &
                                                        mesh_nodal) &
-        bind (c, name = 'pdm_dist_cloud_surf_nodal_mesh_set')
+        bind (c, name = 'PDM_dist_cloud_surf_nodal_mesh_set')
         use iso_c_binding
         implicit none
         type(c_ptr), value :: dcs
@@ -392,8 +392,7 @@ module pdm_dist_cloud_surf
       end subroutine pdm_dist_cloud_surf_nodal_mesh_set_cf
     end interface
 
-    call pdm_dist_cloud_surf_nodal_mesh_set_cf(dcs, &
-                                               mesh_nodal)
+    call pdm_dist_cloud_surf_nodal_mesh_set_cf(dcs, mesh_nodal)
 
   end subroutine pdm_dist_cloud_surf_nodal_mesh_set
 
@@ -408,7 +407,7 @@ module pdm_dist_cloud_surf
     integer,     intent(in) :: n_part ! Number of partitions
 
     interface
-      subroutine pdm_dist_cloud_surf_surf_mesh_global_data_set_cf(dcs, &
+      subroutine pdm_dist_cloud_surf_surf_mesh_global_data_set_cf(dcs,    &
                                                                   n_part) &
         bind (c, name = 'PDM_dist_cloud_surf_surf_mesh_global_data_set')
         use iso_c_binding
