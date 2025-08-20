@@ -267,3 +267,10 @@ dl[class]:not(.option-list):not(.field-list):not(.footnote):not(.glossary):not(.
   color: #03a621;
   font-size:120%;
 }
+
+
+.pdmkw {
+  color: var(--color-pdmkw);
+  /* font-weight: bold; */
+  font-family: var(--font-stack--monospace);
+}
