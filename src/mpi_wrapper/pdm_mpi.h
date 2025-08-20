@@ -408,11 +408,11 @@ int PDM_MPI_Send(void *buf, int count, PDM_MPI_Datatype datatype, int dest,
              int tag, PDM_MPI_Comm comm);
 
 /*----------------------------------------------------------------------------
- * PDM_MPI_Issend (wrapping de la fonction MPI_Issend)
+ * PDM_MPI_Isend (wrapping de la fonction MPI_Issend)
  *
  *----------------------------------------------------------------------------*/
 
-int PDM_MPI_Issend(const void *buf, int count, PDM_MPI_Datatype datatype, int dest, int tag,
+int PDM_MPI_Isend(const void *buf, int count, PDM_MPI_Datatype datatype, int dest, int tag,
                PDM_MPI_Comm comm, PDM_MPI_Request *request);
 
 

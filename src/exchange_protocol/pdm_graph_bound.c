@@ -246,7 +246,7 @@ const int                n_part,
     int idx =   nDataExchCreate * offeredEltsRankIdx[iProc];
     int count = nDataExchCreate * offeredEltsRankIdx[iProc+1] - idx;
 
-    PDM_MPI_Issend((void *) (sendOfferedElts + idx),
+    PDM_MPI_Isend((void *) (sendOfferedElts + idx),
                count,
                PDM_MPI_INT,
                iProc,
@@ -520,7 +520,7 @@ const int                n_part,
     int idx   = offeredEltsRankIdx[iProc];
     int count = offeredEltsRankIdx[iProc+1] - offeredEltsRankIdx[iProc];
 
-    PDM_MPI_Issend((void *) (gNumOfferedEltsSend + idx),
+    PDM_MPI_Isend((void *) (gNumOfferedEltsSend + idx),
                count,
                PDM__PDM_MPI_G_NUM,
                iProc,
@@ -947,7 +947,7 @@ const int                n_part,
     int count = graph_bound->ghostEltIdx[iProc+1] -
                 graph_bound->ghostEltIdx[iProc];
 
-    PDM_MPI_Issend ((void *) (tagGhostElt + idx),
+    PDM_MPI_Isend ((void *) (tagGhostElt + idx),
                 count,
                 PDM_MPI_INT,
                 iProc,
@@ -1471,7 +1471,7 @@ const PDM_data_t         tData,
               graph_bound->comm,
               &graph_bound->recvRequest[i]);
 
-    PDM_MPI_Issend((void *) sendPtr,
+    PDM_MPI_Isend((void *) sendPtr,
                sendCount,
                PDM_MPI_UNSIGNED_CHAR,
                iProc,

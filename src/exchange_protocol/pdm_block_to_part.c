@@ -1095,13 +1095,13 @@ PDM_block_to_part_exch_in_place
             }
           }
 
-          PDM_MPI_Issend(send_buffer[i],
-                         n_send_buffer[active_rank[i]],
-                         mpi_type,
-                         active_rank[i],
-                         0,
-                         btp->comm,
-                         s_request + i);
+          PDM_MPI_Isend(send_buffer[i],
+                        n_send_buffer[active_rank[i]],
+                        mpi_type,
+                        active_rank[i],
+                        0,
+                        btp->comm,
+                        s_request + i);
         }
       }
 

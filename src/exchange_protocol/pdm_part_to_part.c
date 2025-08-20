@@ -903,8 +903,8 @@ _p2p_stride_var_data_issend
     int dest = ptp->active_rank_send[i];
     unsigned char *buf =  ptp->async_send_buffer[_request] + ptp->async_i_send_buffer[_request][dest];
     int count = ptp->async_n_send_buffer[_request][dest];
-    PDM_MPI_Issend (buf, count, PDM_MPI_UNSIGNED_CHAR, dest,
-                    tag, ptp->comm, &(ptp->async_send_request[_request][i]));
+    PDM_MPI_Isend (buf, count, PDM_MPI_UNSIGNED_CHAR, dest,
+                   tag, ptp->comm, &(ptp->async_send_request[_request][i]));
   }
 }
 
@@ -1017,11 +1017,11 @@ _p2p_stride_var_data_reverse_issend
     int dest = ptp->active_rank_recv[i];
     unsigned char *buf =  ptp->async_send_buffer[_request] + ptp->async_i_send_buffer[_request][dest];
     int count = ptp->async_n_send_buffer[_request][dest];
-    PDM_MPI_Issend (buf, count, PDM_MPI_UNSIGNED_CHAR, dest,
-                    tag, ptp->comm, &(ptp->async_send_request[_request][i]));
+    PDM_MPI_Isend (buf, count, PDM_MPI_UNSIGNED_CHAR, dest,
+                   tag, ptp->comm, &(ptp->async_send_request[_request][i]));
     // unsigned char *buf =  ptp->async_recv_buffer[_request] + ptp->async_i_recv_buffer[_request][dest];
     // int count = ptp->async_n_recv_buffer[_request][dest];
-    // PDM_MPI_Issend (buf, count, PDM_MPI_UNSIGNED_CHAR, dest,
+    // PDM_MPI_Isend (buf, count, PDM_MPI_UNSIGNED_CHAR, dest,
     //                 tag, ptp->comm, &(ptp->async_recv_request[_request][i]));
   }
 }
@@ -3549,8 +3549,8 @@ PDM_part_to_part_issend
     int dest = ptp->active_rank_send[i];
     unsigned char *buf =  ptp->async_send_buffer[_request] + ptp->async_i_send_buffer[_request][dest];
     int count = ptp->async_n_send_buffer[_request][dest];
-    PDM_MPI_Issend (buf, count, PDM_MPI_UNSIGNED_CHAR, dest,
-                    tag, ptp->comm, &(ptp->async_send_request[_request][i]));
+    PDM_MPI_Isend (buf, count, PDM_MPI_UNSIGNED_CHAR, dest,
+                   tag, ptp->comm, &(ptp->async_send_request[_request][i]));
   }
 }
 
@@ -3586,8 +3586,8 @@ PDM_part_to_part_issend_raw
     int dest = ptp->active_rank_send[i];
     unsigned char *buf = (unsigned char *) raw_buffer + ptp->async_i_send_buffer[_request][dest];
     int count = ptp->async_n_send_buffer[_request][dest];
-    PDM_MPI_Issend (buf, count, PDM_MPI_UNSIGNED_CHAR, dest,
-                    tag, ptp->comm, &(ptp->async_send_request[_request][i]));
+    PDM_MPI_Isend (buf, count, PDM_MPI_UNSIGNED_CHAR, dest,
+                   tag, ptp->comm, &(ptp->async_send_request[_request][i]));
   }
 }
 
@@ -3665,8 +3665,8 @@ PDM_part_to_part_reverse_issend
     int dest = ptp->active_rank_recv[i];
     unsigned char *buf =  ptp->async_send_buffer[_request] + ptp->async_i_send_buffer[_request][dest];
     int count = ptp->async_n_send_buffer[_request][dest];
-    PDM_MPI_Issend (buf, count, PDM_MPI_UNSIGNED_CHAR, dest,
-                    tag, ptp->comm, &(ptp->async_send_request[_request][i]));
+    PDM_MPI_Isend (buf, count, PDM_MPI_UNSIGNED_CHAR, dest,
+                   tag, ptp->comm, &(ptp->async_send_request[_request][i]));
   }
 }
 

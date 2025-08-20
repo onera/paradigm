@@ -1684,16 +1684,16 @@ int PDM_MPI_Send(void *buf, int count, PDM_MPI_Datatype datatype, int dest,
 }
 
 /*----------------------------------------------------------------------------
- * PDM_MPI_Issend (wrapping de la fonction MPI_Issend)
+ * PDM_MPI_Isend (wrapping de la fonction MPI_Isend)
  *
  *----------------------------------------------------------------------------*/
 
-int PDM_MPI_Issend(const void *buf, int count, PDM_MPI_Datatype datatype, int dest, int tag,
-               PDM_MPI_Comm comm, PDM_MPI_Request *request)
+int PDM_MPI_Isend(const void *buf, int count, PDM_MPI_Datatype datatype, int dest, int tag,
+                  PDM_MPI_Comm comm, PDM_MPI_Request *request)
 {
   MPI_Request _mpi_request = MPI_REQUEST_NULL;
-  int code = MPI_Issend(buf, count, _pdm_mpi_2_mpi_datatype(datatype), dest,
-                        tag, _pdm_mpi_2_mpi_comm(comm), &_mpi_request);
+  int code = MPI_Isend(buf, count, _pdm_mpi_2_mpi_datatype(datatype), dest,
+                       tag, _pdm_mpi_2_mpi_comm(comm), &_mpi_request);
 
   *request = _mpi_2_pdm_mpi_request_add(_mpi_request);
   assert(code == 0);
@@ -2217,8 +2217,8 @@ int PDM_MPI_Alltoallv_p2p(void *sendbuf, int *sendcounts, int *sdispls, PDM_MPI_
 
     if (sendcounts[i] != 0) {
       void *buf = (void *) ((unsigned char*) sendbuf + sdispls[i] * size_sendType);
-      code = MPI_Issend(buf, sendcounts[i], _pdm_mpi_2_mpi_datatype(sendtype), i,
-                        0, _pdm_mpi_2_mpi_comm(comm), request_s + n_request_s);
+      code = MPI_Isend(buf, sendcounts[i], _pdm_mpi_2_mpi_datatype(sendtype), i,
+                       0, _pdm_mpi_2_mpi_comm(comm), request_s + n_request_s);
       n_request_s++; 
       if (code != MPI_SUCCESS) {
         break;
@@ -2290,8 +2290,8 @@ int PDM_MPI_Alltoallv_p2p_l(void *sendbuf, int *sendcounts, size_t *sdispls, PDM
 
     if (sendcounts[i] != 0) {
       void *buf = (void *) ((unsigned char*) sendbuf + sdispls[i] * size_sendType);
-      code = MPI_Issend(buf, sendcounts[i], _pdm_mpi_2_mpi_datatype(sendtype), i,
-                        0, _pdm_mpi_2_mpi_comm(comm), request_s + n_request_s);
+      code = MPI_Isend(buf, sendcounts[i], _pdm_mpi_2_mpi_datatype(sendtype), i,
+                       0, _pdm_mpi_2_mpi_comm(comm), request_s + n_request_s);
       n_request_s++; 
       if (code != MPI_SUCCESS) {
         break;
@@ -2401,8 +2401,8 @@ int PDM_MPI_Alltoallv_l(void *sendbuf, int *sendcounts, size_t *sdispls,
       }
       if (sendcounts[i] != 0) {
         void *buf = (void *) ((unsigned char*) sendbuf + sdispls[i] * size_sendType);
-        code = MPI_Issend(buf, sendcounts[i], _pdm_mpi_2_mpi_datatype(sendtype), i,
-                          0, _pdm_mpi_2_mpi_comm(comm), request_s + i);
+        code = MPI_Isend(buf, sendcounts[i], _pdm_mpi_2_mpi_datatype(sendtype), i,
+                         0, _pdm_mpi_2_mpi_comm(comm), request_s + i);
         if (code != MPI_SUCCESS) {
           break;
         }
@@ -2486,8 +2486,8 @@ int PDM_MPI_Ialltoallv_p2p (void *sendbuf, int *sendcounts, int *sdispls, PDM_MP
     if (sendcounts[i] != 0) {
       void *buf = (void *) ((unsigned char*) sendbuf + sdispls[i] * size_sendType);
       MPI_Request _mpi_request = MPI_REQUEST_NULL;
-      code = MPI_Issend(buf, sendcounts[i], _pdm_mpi_2_mpi_datatype(sendtype), i,
-                        0, _pdm_mpi_2_mpi_comm(comm), &_mpi_request);
+      code = MPI_Isend(buf, sendcounts[i], _pdm_mpi_2_mpi_datatype(sendtype), i,
+                       0, _pdm_mpi_2_mpi_comm(comm), &_mpi_request);
       (*request_s)[i] = _mpi_2_pdm_mpi_request_add(_mpi_request);
       (*n_request_s)++; 
       if (code != MPI_SUCCESS) {
@@ -2539,8 +2539,8 @@ int PDM_MPI_Ialltoallv_p2p_l (void *sendbuf, int *sendcounts, size_t *sdispls, P
     if (sendcounts[i] != 0) {
       void *buf = (void *) ((unsigned char*) sendbuf + sdispls[i] * size_sendType);
       MPI_Request _mpi_request = MPI_REQUEST_NULL;
-      code = MPI_Issend(buf, sendcounts[i], _pdm_mpi_2_mpi_datatype(sendtype), i,
-                        0, _pdm_mpi_2_mpi_comm(comm), &_mpi_request);
+      code = MPI_Isend(buf, sendcounts[i], _pdm_mpi_2_mpi_datatype(sendtype), i,
+                       0, _pdm_mpi_2_mpi_comm(comm), &_mpi_request);
       (*request_s)[i] = _mpi_2_pdm_mpi_request_add(_mpi_request);
       (*n_request_s)++; 
       if (code != MPI_SUCCESS) {
