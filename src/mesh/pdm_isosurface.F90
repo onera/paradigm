@@ -26,16 +26,6 @@ module pdm_isosurface
 
   implicit none
 
-  integer(c_int), parameter :: PDM_ISO_SURFACE_KIND_FIELD    = 0 ! Isosurface follows given field
-  integer(c_int), parameter :: PDM_ISO_SURFACE_KIND_PLANE    = 1 ! Isosurface follows a plane
-  integer(c_int), parameter :: PDM_ISO_SURFACE_KIND_SPHERE   = 2 ! Isosurface follows a sphere
-  integer(c_int), parameter :: PDM_ISO_SURFACE_KIND_ELLIPSE  = 3 ! Isosurface follows an ellipse
-  integer(c_int), parameter :: PDM_ISO_SURFACE_KIND_QUADRIC  = 4 ! Isosurface follows a quadric
-  integer(c_int), parameter :: PDM_ISO_SURFACE_KIND_HEART    = 5 ! Isosurface follows a heart function
-  integer(c_int), parameter :: PDM_ISO_SURFACE_KIND_FUNCTION = 6 ! Isosurface follows given function
-  integer(c_int), parameter :: PDM_ISO_SURFACE_KIND_MAX      = 7 ! Not yet available
-
-
   contains
 
   subroutine PDM_isosurface_n_part_set(isos, &
