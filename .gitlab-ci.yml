@@ -132,6 +132,7 @@ build:
     - echo "compilo = $COMPILER"
     - if   [[ "${COMPILER}" == "gcc@14" ]]; then
     -   source /tmp_user/juno/sonics/dist/socle_cfd7/source_gcc14_cython3.sh # socle 7 + gcc 14 + Cython 3
+    -   module load doxygen/1.8.20-gnu831
     - elif [[ "${COMPILER}" == "gcc@15" ]]; then
     -   source /tmp_user/juno/sonics/dist/socle_cfd7/source_gcc15_cython3.sh # socle 7 + gcc 15 + Cython 3
     - else
