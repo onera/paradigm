@@ -80,6 +80,30 @@ function fix_autodoc_fortran_subroutines() {
   });
 }
 
+/**
+ * Ugly patch to remove code symbols from toctree
+ */
+function rm_docutils_from_toctree() {
+  const lists = document.querySelectorAll("li");
+
+  Array(...lists).forEach((element) => {
+
+    // element.className = "titi"
+
+    var items = Array(...element.childNodes);
+
+    if (items[0].className == "reference internal") {
+
+      var children = Array(...items[0].childNodes);
+
+      if (children[0].className == "docutils literal notranslate") {
+        element.remove();
+        // children[0].className = "tototototo"
+      }
+    }
+
+  });
+}
 
 document.addEventListener("DOMContentLoaded", function() {
   console.log("custom theme loaded")
@@ -87,4 +111,5 @@ document.addEventListener("DOMContentLoaded", function() {
   setup_autodoc_py()
   setup_autodoc_cpp_f()
   fix_autodoc_fortran_subroutines()
+  rm_docutils_from_toctree()
 })
