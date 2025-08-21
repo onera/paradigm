@@ -6,7 +6,7 @@ Mesh Deformation
 Description
 """""""""""
 
-TODO
+**Mesh deform** is a service for deforming a point cloud by interpolating the given deformation of a surface mesh.
 
 
 API

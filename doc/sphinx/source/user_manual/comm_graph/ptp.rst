@@ -6,7 +6,7 @@ Part to Part
 Description
 """""""""""
 
-TODO
+**Part to Part** is a service for managing MPI data transfers between two arbitrarily partitioned sets of entities.
 
 
 API

@@ -6,7 +6,8 @@ Distributed Nodal Square/Cube Mesh
 Description
 """""""""""
 
-TODO
+**Dcube nodal gen** is a service for generating 2D or 3D block-distributed cuboid nodal meshes.
+All standard of mesh elements are supported: triangles, quadrangles, tetrahedra, pyramids, prisms, hexahedra, as well as high-order, curved elements.
 
 
 API
