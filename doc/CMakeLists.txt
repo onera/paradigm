@@ -106,7 +106,7 @@ if(PDM_ENABLE_DOC)
     #endforeach()
 
     add_custom_command(OUTPUT ${SPHINX_INDEX_FILE}
-                       COMMAND ${CMAKE_COMMAND} -E env ${DOC_PYTHONPATH} env ${DOC_PRELOAD} env ${RUN_LSAN} env ${RUN_UBSAN}
+                       COMMAND ${CMAKE_COMMAND} -E env ${DOC_PYTHONPATH} env MPI4PY_RC_INITIALIZE=False env ${DOC_PRELOAD} env ${RUN_LSAN} env ${RUN_UBSAN}
                          ${SPHINX_EXECUTABLE} -b html
                          -Q # Remove to have complete log file
                          -w ${CMAKE_CURRENT_BINARY_DIR}/sphinx_build_warnings.log
