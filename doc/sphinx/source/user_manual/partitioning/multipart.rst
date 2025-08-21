@@ -3,6 +3,9 @@
 Multipart
 =========
 
+Description
+"""""""""""
+
 **Multipart** is a service for partitioning (possibly multi-domain) block-distributed meshes.
 Meshes of dimension 0 (point clouds), 1, 2 and 3 are supported.
 
@@ -19,14 +22,17 @@ API
 
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_multipart_create
 
 
 
     .. tab-item:: Fortran
+      :sync: Fortran
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -40,6 +46,7 @@ API
 
 
     .. tab-item:: Python
+      :sync: Python
 
       .. ifconfig:: enable_python_doc == 'ON'
 
@@ -56,8 +63,10 @@ API
 .. dropdown:: Set inputs
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_multipart_dmesh_nodal_set
 
@@ -66,6 +75,7 @@ API
       .. doxygenfunction:: PDM_multipart_domain_interface_shared_set
 
     .. tab-item:: Fortran
+      :sync: Fortran
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -83,6 +93,7 @@ API
 
 
     .. tab-item:: Python
+      :sync: Python
 
       .. ifconfig:: enable_python_doc == 'ON'
 
@@ -105,8 +116,10 @@ API
     List available renumbering methods
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_multipart_set_reordering_options
       .. doxygenfunction:: PDM_multipart_set_reordering_options_vtx
@@ -114,6 +127,7 @@ API
 
 
     .. tab-item:: Fortran
+      :sync: Fortran
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -128,6 +142,7 @@ API
 
 
     .. tab-item:: Python
+      :sync: Python
 
       .. ifconfig:: enable_python_doc == 'ON'
 
@@ -148,8 +163,10 @@ API
 
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_multipart_compute
       .. doxygenfunction:: PDM_multipart_stat_get
@@ -157,6 +174,7 @@ API
 
 
     .. tab-item:: Fortran
+      :sync: Fortran
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -170,6 +188,7 @@ API
 
 
     .. tab-item:: Python
+      :sync: Python
 
       .. ifconfig:: enable_python_doc == 'ON'
 
@@ -188,8 +207,10 @@ API
 
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_multipart_get_part_mesh_nodal
 
@@ -207,6 +228,7 @@ API
 
 
     .. tab-item:: Fortran
+      :sync: Fortran
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -228,6 +250,7 @@ API
 
 
     .. tab-item:: Python
+      :sync: Python
 
       .. ifconfig:: enable_python_doc == 'ON'
 
@@ -264,14 +287,17 @@ API
 .. dropdown:: Finalization
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_multipart_free
 
 
 
     .. tab-item:: Fortran
+      :sync: Fortran
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -285,5 +311,6 @@ API
 
 
     .. tab-item:: Python
+      :sync: Python
 
       |python_gc|

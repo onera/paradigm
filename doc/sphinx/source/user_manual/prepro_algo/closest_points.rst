@@ -3,6 +3,9 @@
 Closest points
 ==============
 
+Description
+"""""""""""
+
 **Closest points** is a service for finding nearest neighbors between a source and a target point cloud.
 
 A mapping between the associated points is computed, which consists in
@@ -21,14 +24,17 @@ API
 
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_closest_points_create
 
 
 
     .. tab-item:: Fortran
+      :sync: Fortran
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -42,6 +48,7 @@ API
 
 
     .. tab-item:: Python
+      :sync: Python
 
       .. ifconfig:: enable_python_doc == 'ON'
 
@@ -66,14 +73,17 @@ API
   First, the number of partitions of each point cloud must be defined:
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_closest_points_n_part_cloud_set
 
 
 
     .. tab-item:: Fortran
+      :sync: Fortran
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -87,6 +97,7 @@ API
 
 
     .. tab-item:: Python
+      :sync: Python
 
       .. ifconfig:: enable_python_doc == 'ON'
 
@@ -102,8 +113,10 @@ API
   Then, each point cloud is defined one partition at a time:
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_closest_points_src_cloud_set
       .. doxygenfunction:: PDM_closest_points_tgt_cloud_set
@@ -111,6 +124,7 @@ API
 
 
     .. tab-item:: Fortran
+      :sync: Fortran
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -125,6 +139,7 @@ API
 
 
     .. tab-item:: Python
+      :sync: Python
 
       .. ifconfig:: enable_python_doc == 'ON'
 
@@ -146,14 +161,17 @@ API
   Once the source and target point clouds have been set, the correspondence between them can be computed:
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_closest_points_compute
 
 
 
     .. tab-item:: Fortran
+      :sync: Fortran
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -167,6 +185,7 @@ API
 
 
     .. tab-item:: Python
+      :sync: Python
 
       .. ifconfig:: enable_python_doc == 'ON'
 
@@ -182,14 +201,17 @@ API
   Once the calculation is complete, you can optionally display the elapsed and CPU times:
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_closest_points_dump_times
 
 
 
     .. tab-item:: Fortran
+      :sync: Fortran
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -203,6 +225,7 @@ API
 
 
     .. tab-item:: Python
+      :sync: Python
 
       .. ifconfig:: enable_python_doc == 'ON'
 
@@ -225,14 +248,17 @@ API
   .. dropdown:: Target perspective
 
     .. tab-set::
+      :sync-group: language
 
       .. tab-item:: C
+        :sync: C
 
         .. doxygenfunction:: PDM_closest_points_get
 
 
 
       .. tab-item:: Fortran
+        :sync: Fortran
 
         .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -246,6 +272,7 @@ API
 
 
       .. tab-item:: Python
+        :sync: Python
 
         .. ifconfig:: enable_python_doc == 'ON'
 
@@ -263,8 +290,10 @@ API
   .. dropdown:: Source perspective
 
     .. tab-set::
+      :sync-group: language
 
       .. tab-item:: C
+        :sync: C
 
         .. doxygenfunction:: PDM_closest_points_tgt_in_src_get
         .. doxygenfunction:: PDM_closest_points_tgt_in_src_dist_get
@@ -272,6 +301,7 @@ API
 
 
       .. tab-item:: Fortran
+        :sync: Fortran
 
         .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -286,6 +316,7 @@ API
 
 
       .. tab-item:: Python
+        :sync: Python
 
         .. ifconfig:: enable_python_doc == 'ON'
 
@@ -307,14 +338,17 @@ API
   .. note:: *Direct* exchanges go from source to target and *reverse* exchanges go from target to source.
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_closest_points_part_to_part_get
 
 
 
     .. tab-item:: Fortran
+      :sync: Fortran
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -328,6 +362,7 @@ API
 
 
     .. tab-item:: Python
+      :sync: Python
 
       .. ifconfig:: enable_python_doc == 'ON'
 
@@ -345,14 +380,17 @@ API
 .. dropdown:: Finalization
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_closest_points_free
 
 
 
     .. tab-item:: Fortran
+      :sync: Fortran
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -366,6 +404,7 @@ API
 
 
     .. tab-item:: Python
+      :sync: Python
 
       |python_gc|
 

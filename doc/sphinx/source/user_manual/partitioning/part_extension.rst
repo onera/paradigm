@@ -3,6 +3,9 @@
 Part extension
 ==============
 
+Description
+"""""""""""
+
 **Part extension** is a service for computing extended partitions by fetching ghost cells topology and geometry.
 
 Extension to an arbitrary depth from vertices, edges or faces is supported.
@@ -16,14 +19,17 @@ API
 
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_part_extension_create
 
 
 
     .. tab-item:: Fortran
+      :sync: Fortran
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -37,6 +43,7 @@ API
 
 
     .. tab-item:: Python
+      :sync: Python
 
       .. ifconfig:: enable_python_doc == 'ON'
 
@@ -55,8 +62,10 @@ API
 
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_part_extension_connectivity_set
       .. doxygenfunction:: PDM_part_extension_vtx_coord_set
@@ -67,6 +76,7 @@ API
 
 
     .. tab-item:: Fortran
+      :sync: Fortran
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -84,6 +94,7 @@ API
 
 
     .. tab-item:: Python
+      :sync: Python
 
       .. ifconfig:: enable_python_doc == 'ON'
 
@@ -109,14 +120,17 @@ API
 .. dropdown:: Compute extended partitions
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_part_extension_compute
 
 
 
     .. tab-item:: Fortran
+      :sync: Fortran
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -130,6 +144,7 @@ API
 
 
     .. tab-item:: Python
+      :sync: Python
 
       .. ifconfig:: enable_python_doc == 'ON'
 
@@ -148,8 +163,10 @@ API
 
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_part_extension_connectivity_get
       .. doxygenfunction:: PDM_part_extension_vtx_coord_get
@@ -159,6 +176,7 @@ API
 
 
     .. tab-item:: Fortran
+      :sync: Fortran
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -175,6 +193,7 @@ API
 
 
     .. tab-item:: Python
+      :sync: Python
 
       .. ifconfig:: enable_python_doc == 'ON'
 
@@ -198,14 +217,17 @@ API
 .. dropdown:: Finalization
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_part_extension_free
 
 
 
     .. tab-item:: Fortran
+      :sync: Fortran
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -219,5 +241,6 @@ API
 
 
     .. tab-item:: Python
+      :sync: Python
 
       |python_gc|

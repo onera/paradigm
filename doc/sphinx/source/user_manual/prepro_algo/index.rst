@@ -10,15 +10,15 @@ Pre-/co-/post-processing
   .. card:: Mesh location
     :link: mesh_location
     :link-type: ref
-    
-    Point clouds location inside a mesh
+
+    Locate points inside a mesh
 
 
 
   .. card:: Closest points
     :link: closest_points
     :link-type: ref
-    
+
     Nearest neighbors search between point clouds
 
 
@@ -26,7 +26,7 @@ Pre-/co-/post-processing
   .. card:: Iso-surfaces
     :link: isosurface
     :link-type: ref
-    
+
     Extract slices and iso-surfaces
 
 

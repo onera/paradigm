@@ -9,14 +9,17 @@ Generation of simple partitioned meshes
 .. dropdown:: Rectangle NGon
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_generate_mesh_rectangle_ngon
 
 
 
     .. tab-item:: Fortran
+      :sync: Fortran
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -30,6 +33,7 @@ Generation of simple partitioned meshes
 
 
     .. tab-item:: Python
+      :sync: Python
 
       .. ifconfig:: enable_python_doc == 'ON'
 
@@ -46,14 +50,17 @@ Generation of simple partitioned meshes
 .. dropdown:: Parallelepiped NGon
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_generate_mesh_parallelepiped_ngon
 
 
 
     .. tab-item:: Fortran
+      :sync: Fortran
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -67,6 +74,7 @@ Generation of simple partitioned meshes
 
 
     .. tab-item:: Python
+      :sync: Python
 
       .. ifconfig:: enable_python_doc == 'ON'
 

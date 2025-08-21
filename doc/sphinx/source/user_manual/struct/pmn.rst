@@ -23,14 +23,17 @@ API
 
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_part_mesh_nodal_create
 
 
 
     .. tab-item:: Fortran
+      :sync: Fortran
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -44,6 +47,7 @@ API
 
 
     .. tab-item:: Python
+      :sync: Python
 
       .. ifconfig:: enable_python_doc == 'ON'
 
@@ -62,8 +66,10 @@ API
 
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_part_mesh_nodal_coord_set
       .. doxygenfunction:: PDM_part_mesh_nodal_vtx_gnum_set
@@ -71,6 +77,7 @@ API
 
 
     .. tab-item:: Fortran
+      :sync: Fortran
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -85,6 +92,7 @@ API
 
 
     .. tab-item:: Python
+      :sync: Python
 
       .. ifconfig:: enable_python_doc == 'ON'
 
@@ -108,8 +116,10 @@ API
   .. dropdown:: Mixed setters
 
     .. tab-set::
+      :sync-group: language
 
       .. tab-item:: C
+        :sync: C
 
         .. doxygenfunction:: PDM_part_mesh_nodal_cell3d_cellface_add
         .. doxygenfunction:: PDM_part_mesh_nodal_face2d_faceedge_add
@@ -119,6 +129,7 @@ API
 
 
       .. tab-item:: Fortran
+        :sync: Fortran
 
         .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -140,8 +151,10 @@ API
   .. dropdown:: Section setters
 
     .. tab-set::
+      :sync-group: language
 
       .. tab-item:: C
+        :sync: C
 
         .. doxygenfunction:: PDM_part_mesh_nodal_section_add
 
@@ -153,6 +166,7 @@ API
 
 
       .. tab-item:: Fortran
+        :sync: Fortran
 
         .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -168,6 +182,7 @@ API
 
 
       .. tab-item:: Python
+        :sync: Python
 
         .. ifconfig:: enable_python_doc == 'ON'
 
@@ -187,8 +202,10 @@ API
   Finally, if a **Part Mesh Nodal Elmts** is already available, it can simply be added to the structure:
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_part_mesh_nodal_add_part_mesh_nodal_elmts
 
@@ -199,8 +216,10 @@ API
 
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_part_mesh_nodal_n_group_set
       .. doxygenfunction:: PDM_part_mesh_nodal_group_set
@@ -208,6 +227,7 @@ API
 
 
     .. tab-item:: Fortran
+      :sync: Fortran
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -222,6 +242,7 @@ API
 
 
     .. tab-item:: Python
+      :sync: Python
 
       .. ifconfig:: enable_python_doc == 'ON'
 
@@ -242,8 +263,10 @@ API
 
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_part_mesh_nodal_part_comm_graph_set
 
@@ -254,8 +277,10 @@ API
 
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_part_mesh_nodal_section_elt_extents_compute
       .. doxygenfunction:: PDM_part_mesh_nodal_section_elt_center_compute
@@ -270,8 +295,10 @@ API
 
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_part_mesh_nodal_n_vtx_get
       .. doxygenfunction:: PDM_part_mesh_nodal_vtx_coord_get
@@ -279,6 +306,7 @@ API
 
 
     .. tab-item:: Fortran
+      :sync: Fortran
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -294,6 +322,7 @@ API
 
 
     .. tab-item:: Python
+      :sync: Python
 
       .. ifconfig:: enable_python_doc == 'ON'
 
@@ -318,8 +347,10 @@ API
   .. dropdown:: Mixed getters
 
     .. tab-set::
+      :sync-group: language
 
       .. tab-item:: C
+        :sync: C
 
         .. doxygenfunction:: PDM_part_mesh_nodal_principal_geom_kind_get
         .. doxygenfunction:: PDM_part_mesh_nodal_n_elmts_get
@@ -328,6 +359,7 @@ API
 
 
       .. tab-item:: Fortran
+        :sync: Fortran
 
         .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -345,8 +377,10 @@ API
   .. dropdown:: Section getters
 
     .. tab-set::
+      :sync-group: language
 
       .. tab-item:: C
+        :sync: C
 
         .. doxygenfunction:: PDM_part_mesh_nodal_n_section_get
         .. doxygenfunction:: PDM_part_mesh_nodal_sections_id_get
@@ -363,6 +397,7 @@ API
 
 
       .. tab-item:: Fortran
+        :sync: Fortran
 
         .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -386,6 +421,7 @@ API
 
 
       .. tab-item:: Python
+        :sync: Python
 
         .. ifconfig:: enable_python_doc == 'ON'
 
@@ -404,8 +440,10 @@ API
 
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_part_mesh_nodal_n_group_get
       .. doxygenfunction:: PDM_part_mesh_nodal_group_get
@@ -413,6 +451,7 @@ API
 
 
     .. tab-item:: Fortran
+      :sync: Fortran
 
       .. f:autosubroutine:: PDM_part_mesh_nodal_n_group_get
       .. f:autosubroutine:: PDM_part_mesh_nodal_group_get
@@ -420,6 +459,7 @@ API
 
 
     .. tab-item:: Python
+      :sync: Python
 
       .. ifconfig:: enable_python_doc == 'ON'
 
@@ -440,8 +480,10 @@ API
 
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_part_mesh_nodal_part_comm_graph_get
 
@@ -451,8 +493,10 @@ API
 .. dropdown:: Finalization
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_part_mesh_nodal_partial_free
       .. doxygenfunction:: PDM_part_mesh_nodal_free
@@ -460,6 +504,7 @@ API
 
 
     .. tab-item:: Fortran
+      :sync: Fortran
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -474,5 +519,6 @@ API
 
 
     .. tab-item:: Python
+      :sync: Python
 
       |python_gc|

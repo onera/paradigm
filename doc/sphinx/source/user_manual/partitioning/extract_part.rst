@@ -3,6 +3,9 @@
 Extract part
 ============
 
+Description
+"""""""""""
+
 **Extract part** is a service for extraction of mesh regions based on arbitrary criteria.
 Meshes of dimension 0 (point clouds), 1, 2 and 3 are supported.
 Group information associated with extracted parts is preserved.
@@ -18,14 +21,17 @@ API
 .. dropdown:: Initialization
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_extract_part_create
 
 
 
     .. tab-item:: Fortran
+      :sync: Fortran
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -39,6 +45,7 @@ API
 
 
     .. tab-item:: Python
+      :sync: Python
 
       .. ifconfig:: enable_python_doc == 'ON'
 
@@ -55,8 +62,10 @@ API
 .. dropdown:: Define input mesh
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       One can define the input mesh either as a :ref:`Part Mesh Nodal <pmn>` instance:
 
@@ -71,6 +80,7 @@ API
 
 
     .. tab-item:: Fortran
+      :sync: Fortran
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -92,6 +102,7 @@ API
 
 
     .. tab-item:: Python
+      :sync: Python
 
       .. ifconfig:: enable_python_doc == 'ON'
 
@@ -116,8 +127,10 @@ API
 .. dropdown:: Define extraction
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_extract_part_selected_lnum_set
       .. doxygenfunction:: PDM_extract_part_target_set
@@ -126,6 +139,7 @@ API
 
 
     .. tab-item:: Fortran
+      :sync: Fortran
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -140,6 +154,7 @@ API
 
 
     .. tab-item:: Python
+      :sync: Python
 
       .. ifconfig:: enable_python_doc == 'ON'
 
@@ -161,14 +176,17 @@ API
 .. dropdown:: Compute extraction
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_extract_part_compute
 
 
 
     .. tab-item:: Fortran
+      :sync: Fortran
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -182,6 +200,7 @@ API
 
 
     .. tab-item:: Python
+      :sync: Python
 
       .. ifconfig:: enable_python_doc == 'ON'
 
@@ -200,8 +219,10 @@ API
 .. dropdown:: Get extraction
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       If the input mesh was defined as a :ref:`Part Mesh Nodal <pmn>` structure,
       the extracted mesh is also retrieved in the form of a :ref:`Part Mesh Nodal <pmn>`:
@@ -222,6 +243,7 @@ API
 
 
     .. tab-item:: Fortran
+      :sync: Fortran
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -247,6 +269,7 @@ API
 
 
     .. tab-item:: Python
+      :sync: Python
 
       .. ifconfig:: enable_python_doc == 'ON'
 
@@ -280,8 +303,10 @@ API
 .. dropdown:: Data transfer
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       Application-specific data can be can be transferred between the extracted and input meshes.
 
@@ -297,6 +322,7 @@ API
 
 
     .. tab-item:: Fortran
+      :sync: Fortran
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -323,6 +349,7 @@ API
 
 
     .. tab-item:: Python
+      :sync: Python
 
       .. ifconfig:: enable_python_doc == 'ON'
 
@@ -344,8 +371,10 @@ API
 .. dropdown:: Finalization
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_extract_part_partial_free
       .. doxygenfunction:: PDM_extract_part_free
@@ -353,6 +382,7 @@ API
 
 
     .. tab-item:: Fortran
+      :sync: Fortran
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -367,6 +397,7 @@ API
 
 
     .. tab-item:: Python
+      :sync: Python
 
       |python_gc|
 
@@ -377,8 +408,10 @@ Examples
 .. dropdown:: Nodal mesh
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: Fortran
+      :sync: Fortran
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 

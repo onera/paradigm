@@ -3,23 +3,30 @@
 Writer
 ======
 
+Description
+"""""""""""
+
 **Writer** is a service for writing meshes and associated fields in parallel using MPI-IO.
 
 
+API
+"""
 
 .. dropdown:: Initialization
 
 
-
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_writer_create
 
 
 
     .. tab-item:: Fortran
+      :sync: Fortran
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -33,6 +40,7 @@ Writer
 
 
     .. tab-item:: Python
+      :sync: Python
 
       .. ifconfig:: enable_python_doc == 'ON'
 
@@ -62,14 +70,17 @@ Writer
   If a :ref:`Part Mesh Nodal <pmn>` instance is available, it can be used directly to define the geometry.
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_writer_geom_create_from_mesh_nodal
 
 
 
     .. tab-item:: Fortran
+      :sync: Fortran
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -88,14 +99,17 @@ Writer
   Otherwise, one geometry instance must be created for each dimension present in the mesh.
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_writer_geom_create
 
 
 
     .. tab-item:: Fortran
+      :sync: Fortran
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -109,6 +123,7 @@ Writer
 
 
     .. tab-item:: Python
+      :sync: Python
 
       .. ifconfig:: enable_python_doc == 'ON'
 
@@ -127,8 +142,10 @@ Writer
   .. dropdown:: Set vertices
 
     .. tab-set::
+      :sync-group: language
 
       .. tab-item:: C
+        :sync: C
 
         .. doxygenfunction:: PDM_writer_geom_coord_set
         .. doxygenfunction:: PDM_writer_geom_coord_from_parent_set
@@ -136,6 +153,7 @@ Writer
 
 
       .. tab-item:: Fortran
+        :sync: Fortran
 
         .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -150,6 +168,7 @@ Writer
 
 
       .. tab-item:: Python
+        :sync: Python
 
         .. ifconfig:: enable_python_doc == 'ON'
 
@@ -175,8 +194,10 @@ Writer
     .. dropdown:: Mixed setters
 
       .. tab-set::
+        :sync-group: language
 
         .. tab-item:: C
+          :sync: C
 
           .. doxygenfunction:: PDM_writer_geom_cell3d_cellface_add
           .. doxygenfunction:: PDM_writer_geom_cell2d_cellface_add
@@ -185,6 +206,7 @@ Writer
 
 
         .. tab-item:: Fortran
+          :sync: Fortran
 
           .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -200,6 +222,7 @@ Writer
 
 
         .. tab-item:: Python
+          :sync: Python
 
           .. ifconfig:: enable_python_doc == 'ON'
 
@@ -218,8 +241,10 @@ Writer
     .. dropdown:: Section setters
 
       .. tab-set::
+        :sync-group: language
 
         .. tab-item:: C
+          :sync: C
 
           .. doxygenfunction:: PDM_writer_geom_bloc_add
           .. doxygenfunction:: PDM_writer_geom_bloc_std_set
@@ -229,6 +254,7 @@ Writer
 
 
         .. tab-item:: Fortran
+          :sync: Fortran
 
           .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -245,6 +271,7 @@ Writer
 
 
         .. tab-item:: Python
+          :sync: Python
 
           .. ifconfig:: enable_python_doc == 'ON'
 
@@ -268,8 +295,10 @@ Writer
   .. dropdown:: Local variables
 
     .. tab-set::
+      :sync-group: language
 
       .. tab-item:: C
+        :sync: C
 
         .. doxygenfunction:: PDM_writer_var_create
         .. doxygenfunction:: PDM_writer_name_map_add
@@ -278,6 +307,7 @@ Writer
 
 
       .. tab-item:: Fortran
+        :sync: Fortran
 
         .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -293,6 +323,7 @@ Writer
 
 
       .. tab-item:: Python
+        :sync: Python
 
         .. ifconfig:: enable_python_doc == 'ON'
 
@@ -313,8 +344,10 @@ Writer
   .. dropdown:: Global variables
 
     .. tab-set::
+      :sync-group: language
 
       .. tab-item:: C
+        :sync: C
 
         .. doxygenfunction:: PDM_writer_cst_global_var_create
         .. doxygenfunction:: PDM_writer_cst_global_var_set
@@ -322,6 +355,7 @@ Writer
 
 
       .. tab-item:: Fortran
+        :sync: Fortran
 
         .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -341,8 +375,10 @@ Writer
   All writes must be framed by the beginning and end of a time step.
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_writer_step_beg
       .. doxygenfunction:: PDM_writer_step_end
@@ -350,6 +386,7 @@ Writer
 
 
     .. tab-item:: Fortran
+      :sync: Fortran
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -364,6 +401,7 @@ Writer
 
 
     .. tab-item:: Python
+      :sync: Python
 
       .. ifconfig:: enable_python_doc == 'ON'
 
@@ -383,8 +421,10 @@ Writer
 .. dropdown:: Write
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_writer_geom_write
       .. doxygenfunction:: PDM_writer_var_write
@@ -392,6 +432,7 @@ Writer
 
 
     .. tab-item:: Fortran
+      :sync: Fortran
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -406,6 +447,7 @@ Writer
 
 
     .. tab-item:: Python
+      :sync: Python
 
       .. ifconfig:: enable_python_doc == 'ON'
 
@@ -424,8 +466,10 @@ Writer
 .. dropdown:: Finalization
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_writer_var_free
       .. doxygenfunction:: PDM_writer_geom_free
@@ -434,6 +478,7 @@ Writer
 
 
     .. tab-item:: Fortran
+      :sync: Fortran
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -449,5 +494,10 @@ Writer
 
 
     .. tab-item:: Python
+      :sync: Python
 
       |python_gc|
+
+
+Examples
+""""""""

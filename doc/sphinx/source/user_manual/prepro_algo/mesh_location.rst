@@ -3,6 +3,9 @@
 Mesh location
 =============
 
+Description
+"""""""""""
+
 **Mesh location** is a service for locating points inside a partitioned, unstructured mesh.
 All types of mesh elements are supported: standard elements (bars, triangles,
 quadrangles, tetrahedra, pyramids, prisms, hexahedra), general polygons and polyhedra,
@@ -21,14 +24,17 @@ API
 
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_mesh_location_create
 
 
 
     .. tab-item:: Fortran
+      :sync: Fortran
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -42,6 +48,7 @@ API
 
 
     .. tab-item:: Python
+      :sync: Python
 
       .. ifconfig:: enable_python_doc == 'ON'
 
@@ -65,8 +72,10 @@ API
 
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_mesh_location_n_part_cloud_set
       .. doxygenfunction:: PDM_mesh_location_cloud_set
@@ -74,6 +83,7 @@ API
 
 
     .. tab-item:: Fortran
+      :sync: Fortran
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -88,6 +98,7 @@ API
 
 
     .. tab-item:: Python
+      :sync: Python
 
       .. ifconfig:: enable_python_doc == 'ON'
 
@@ -112,12 +123,15 @@ API
   (note that this is the only way to define high-order, curved elements):
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_mesh_location_shared_nodal_mesh_set
 
     .. tab-item:: Fortran
+      :sync: Fortran
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -130,6 +144,7 @@ API
 
 
     .. tab-item:: Python
+      :sync: Python
 
       .. ifconfig:: enable_python_doc == 'ON'
 
@@ -145,14 +160,17 @@ API
   If you do so, you should always start by setting the number of part:
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_mesh_location_mesh_n_part_set
 
 
 
     .. tab-item:: Fortran
+      :sync: Fortran
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -166,6 +184,7 @@ API
 
 
     .. tab-item:: Python
+      :sync: Python
 
       .. ifconfig:: enable_python_doc == 'ON'
 
@@ -185,74 +204,82 @@ API
     .. dropdown:: Nodal connectivity
 
       .. tab-set::
+        :sync-group: language
 
-          .. tab-item:: C
+        .. tab-item:: C
+          :sync: C
 
-            .. doxygenfunction:: PDM_mesh_location_nodal_part_set
-
-
-
-          .. tab-item:: Fortran
-
-            .. ifconfig:: enable_fortran_doc == 'ON'
-
-              .. f:autosubroutine:: PDM_mesh_location_nodal_part_set
-
-            .. ifconfig:: enable_fortran_doc == 'OFF'
-
-              .. warning::
-                Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+          .. doxygenfunction:: PDM_mesh_location_nodal_part_set
 
 
 
-          .. tab-item:: Python
+        .. tab-item:: Fortran
+          :sync: Fortran
 
-            .. ifconfig:: enable_python_doc == 'ON'
+          .. ifconfig:: enable_fortran_doc == 'ON'
 
-              .. autofunction:: Pypdm.Pypdm.MeshLocation.nodal_part_set
-                :noindex:
+            .. f:autosubroutine:: PDM_mesh_location_nodal_part_set
 
-            .. ifconfig:: enable_python_doc == 'OFF'
+          .. ifconfig:: enable_fortran_doc == 'OFF'
 
-              .. warning::
-                Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+            .. warning::
+              Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+
+
+
+        .. tab-item:: Python
+          :sync: Python
+
+          .. ifconfig:: enable_python_doc == 'ON'
+
+            .. autofunction:: Pypdm.Pypdm.MeshLocation.nodal_part_set
+              :noindex:
+
+          .. ifconfig:: enable_python_doc == 'OFF'
+
+            .. warning::
+              Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
 
 
 
     .. dropdown:: Ngon connectivity
 
       .. tab-set::
+        :sync-group: language
 
-          .. tab-item:: C
+        .. tab-item:: C
+          :sync: C
 
-            .. doxygenfunction:: PDM_mesh_location_part_set
-
-
-
-          .. tab-item:: Fortran
-
-            .. ifconfig:: enable_fortran_doc == 'ON'
-
-              .. f:autosubroutine:: PDM_mesh_location_part_set
-
-            .. ifconfig:: enable_fortran_doc == 'OFF'
-
-              .. warning::
-                Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+          .. doxygenfunction:: PDM_mesh_location_part_set
 
 
 
-          .. tab-item:: Python
+        .. tab-item:: Fortran
+          :sync: Fortran
 
-            .. ifconfig:: enable_python_doc == 'ON'
+          .. ifconfig:: enable_fortran_doc == 'ON'
 
-              .. autofunction:: Pypdm.Pypdm.MeshLocation.part_set
-                :noindex:
+            .. f:autosubroutine:: PDM_mesh_location_part_set
 
-            .. ifconfig:: enable_python_doc == 'OFF'
+          .. ifconfig:: enable_fortran_doc == 'OFF'
 
-              .. warning::
-                Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+            .. warning::
+              Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+
+
+
+        .. tab-item:: Python
+          :sync: Python
+
+          .. ifconfig:: enable_python_doc == 'ON'
+
+            .. autofunction:: Pypdm.Pypdm.MeshLocation.part_set
+              :noindex:
+
+          .. ifconfig:: enable_python_doc == 'OFF'
+
+            .. warning::
+              Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
 
 
 
@@ -261,74 +288,82 @@ API
     .. dropdown:: Nodal connectivity
 
       .. tab-set::
+        :sync-group: language
 
-          .. tab-item:: C
+        .. tab-item:: C
+          :sync: C
 
-            .. doxygenfunction:: PDM_mesh_location_nodal_part_set_2d
-
-
-
-          .. tab-item:: Fortran
-
-            .. ifconfig:: enable_fortran_doc == 'ON'
-
-              .. f:autosubroutine:: PDM_mesh_location_nodal_part_set_2d
-
-            .. ifconfig:: enable_fortran_doc == 'OFF'
-
-              .. warning::
-                Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+          .. doxygenfunction:: PDM_mesh_location_nodal_part_set_2d
 
 
 
-          .. tab-item:: Python
+        .. tab-item:: Fortran
+          :sync: Fortran
 
-            .. ifconfig:: enable_python_doc == 'ON'
+          .. ifconfig:: enable_fortran_doc == 'ON'
 
-              .. autofunction:: Pypdm.Pypdm.MeshLocation.nodal_part_set_2d
-                :noindex:
+            .. f:autosubroutine:: PDM_mesh_location_nodal_part_set_2d
 
-            .. ifconfig:: enable_python_doc == 'OFF'
+          .. ifconfig:: enable_fortran_doc == 'OFF'
 
-              .. warning::
-                Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+            .. warning::
+              Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+
+
+
+        .. tab-item:: Python
+          :sync: Python
+
+          .. ifconfig:: enable_python_doc == 'ON'
+
+            .. autofunction:: Pypdm.Pypdm.MeshLocation.nodal_part_set_2d
+              :noindex:
+
+          .. ifconfig:: enable_python_doc == 'OFF'
+
+            .. warning::
+              Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
 
 
 
     .. dropdown:: Ngon connectivity
 
       .. tab-set::
+        :sync-group: language
 
-          .. tab-item:: C
+        .. tab-item:: C
+          :sync: C
 
-            .. doxygenfunction:: PDM_mesh_location_part_set_2d
-
-
-
-          .. tab-item:: Fortran
-
-            .. ifconfig:: enable_fortran_doc == 'ON'
-
-              .. f:autosubroutine:: PDM_mesh_location_part_set_2d
-
-            .. ifconfig:: enable_fortran_doc == 'OFF'
-
-              .. warning::
-                Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+          .. doxygenfunction:: PDM_mesh_location_part_set_2d
 
 
 
-          .. tab-item:: Python
+        .. tab-item:: Fortran
+          :sync: Fortran
 
-            .. ifconfig:: enable_python_doc == 'ON'
+          .. ifconfig:: enable_fortran_doc == 'ON'
 
-              .. autofunction:: Pypdm.Pypdm.MeshLocation.part_set_2d
-                :noindex:
+            .. f:autosubroutine:: PDM_mesh_location_part_set_2d
 
-            .. ifconfig:: enable_python_doc == 'OFF'
+          .. ifconfig:: enable_fortran_doc == 'OFF'
 
-              .. warning::
-                Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+            .. warning::
+              Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+
+
+
+        .. tab-item:: Python
+          :sync: Python
+
+          .. ifconfig:: enable_python_doc == 'ON'
+
+            .. autofunction:: Pypdm.Pypdm.MeshLocation.part_set_2d
+              :noindex:
+
+          .. ifconfig:: enable_python_doc == 'OFF'
+
+            .. warning::
+              Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
 
 
 
@@ -348,14 +383,17 @@ API
     We recommend keeping the tolerance between 0 and 0.1.
 
     .. tab-set::
+      :sync-group: language
 
       .. tab-item:: C
+        :sync: C
 
         .. doxygenfunction:: PDM_mesh_location_tolerance_set
 
 
 
       .. tab-item:: Fortran
+        :sync: Fortran
 
         .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -369,6 +407,7 @@ API
 
 
       .. tab-item:: Python
+        :sync: Python
 
         .. ifconfig:: enable_python_doc == 'ON'
 
@@ -386,6 +425,7 @@ API
     Experienced users can also choose the preconditioning method used in the first step of the location algorithm:
 
     .. tab-set::
+      :sync-group: language
 
       .. tab-item:: C
 
@@ -426,14 +466,17 @@ API
   Once the target point clouds and source mesh have been set, the location can be computed:
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_mesh_location_compute
 
 
 
     .. tab-item:: Fortran
+      :sync: Fortran
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -447,6 +490,7 @@ API
 
 
     .. tab-item:: Python
+      :sync: Python
 
       .. ifconfig:: enable_python_doc == 'ON'
 
@@ -462,14 +506,17 @@ API
   Once the calculation is complete, you can optionally display the elapsed and CPU times:
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_mesh_location_dump_times
 
 
 
     .. tab-item:: Fortran
+      :sync: Fortran
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -483,6 +530,7 @@ API
 
 
     .. tab-item:: Python
+      :sync: Python
 
       .. ifconfig:: enable_python_doc == 'ON'
 
@@ -506,6 +554,7 @@ API
     First, the number and IDs of located/unlocated points in each part:
 
     .. tab-set::
+      :sync-group: language
 
       .. tab-item:: C
 
@@ -552,14 +601,17 @@ API
     Second, the location data of located points:
 
     .. tab-set::
+      :sync-group: language
 
       .. tab-item:: C
+        :sync: C
 
         .. doxygenfunction:: PDM_mesh_location_point_location_get
 
 
 
       .. tab-item:: Fortran
+        :sync: Fortran
 
         .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -573,6 +625,7 @@ API
 
 
       .. tab-item:: Python
+        :sync: Python
 
         .. ifconfig:: enable_python_doc == 'ON'
 
@@ -589,8 +642,10 @@ API
   .. dropdown:: Source perspective
 
     .. tab-set::
+      :sync-group: language
 
       .. tab-item:: C
+        :sync: C
 
         .. doxygenfunction:: PDM_mesh_location_points_in_elt_get
 
@@ -599,6 +654,7 @@ API
 
 
       .. tab-item:: Fortran
+        :sync: Fortran
 
         .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -626,6 +682,7 @@ API
 
 
       .. tab-item:: Python
+        :sync: Python
 
         .. ifconfig:: enable_python_doc == 'ON'
 
@@ -649,14 +706,17 @@ API
   .. note:: *Direct* exchanges go from source to target and *reverse* exchanges go from target to source.
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_mesh_location_part_to_part_get
 
 
 
     .. tab-item:: Fortran
+      :sync: Fortran
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -670,6 +730,7 @@ API
 
 
     .. tab-item:: Python
+      :sync: Python
 
       .. ifconfig:: enable_python_doc == 'ON'
 
@@ -687,14 +748,17 @@ API
 .. dropdown:: Finalization
 
   .. tab-set::
+    :sync-group: language
 
     .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_mesh_location_free
 
 
 
     .. tab-item:: Fortran
+      :sync: Fortran
 
       .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -708,6 +772,7 @@ API
 
 
     .. tab-item:: Python
+      :sync: Python
 
       |python_gc|
 
