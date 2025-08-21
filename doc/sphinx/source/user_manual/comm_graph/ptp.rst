@@ -45,10 +45,8 @@ API
       .. ifconfig:: enable_python_doc == 'ON'
 
         .. autofunction:: Pypdm.Pypdm.PartToPart.__init__
-          :noindex:
 
         .. autofunction:: Pypdm.Pypdm.PartToPart.from_triplet
-          :noindex:
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -94,13 +92,10 @@ API
       .. ifconfig:: enable_python_doc == 'ON'
 
         .. autofunction:: Pypdm.Pypdm.PartToPart.get_referenced_lnum2
-          :noindex:
 
         .. autofunction:: Pypdm.Pypdm.PartToPart.get_unreferenced_lnum2
-          :noindex:
 
         .. autofunction:: Pypdm.Pypdm.PartToPart.get_gnum1_come_from
-          :noindex:
 
 
       .. ifconfig:: enable_python_doc == 'OFF'
@@ -149,13 +144,9 @@ API
       .. ifconfig:: enable_python_doc == 'ON'
 
         .. autofunction:: Pypdm.Pypdm.PartToPart.iexch
-          :noindex:
         .. autofunction:: Pypdm.Pypdm.PartToPart.wait
-          :noindex:
         .. autofunction:: Pypdm.Pypdm.PartToPart.reverse_iexch
-          :noindex:
         .. autofunction:: Pypdm.Pypdm.PartToPart.reverse_wait
-          :noindex:
 
       .. ifconfig:: enable_python_doc == 'OFF'
 

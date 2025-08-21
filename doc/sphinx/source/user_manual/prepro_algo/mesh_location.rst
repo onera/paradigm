@@ -53,7 +53,6 @@ API
       .. ifconfig:: enable_python_doc == 'ON'
 
         .. autofunction:: Pypdm.Pypdm.MeshLocation.__init__
-          :noindex:
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -103,9 +102,7 @@ API
       .. ifconfig:: enable_python_doc == 'ON'
 
         .. autofunction:: Pypdm.Pypdm.MeshLocation.n_part_cloud_set
-          :noindex:
         .. autofunction:: Pypdm.Pypdm.MeshLocation.cloud_set
-          :noindex:
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -189,7 +186,6 @@ API
       .. ifconfig:: enable_python_doc == 'ON'
 
         .. autofunction:: Pypdm.Pypdm.MeshLocation.mesh_n_part_set
-          :noindex:
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -233,7 +229,6 @@ API
           .. ifconfig:: enable_python_doc == 'ON'
 
             .. autofunction:: Pypdm.Pypdm.MeshLocation.nodal_part_set
-              :noindex:
 
           .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -274,7 +269,6 @@ API
           .. ifconfig:: enable_python_doc == 'ON'
 
             .. autofunction:: Pypdm.Pypdm.MeshLocation.part_set
-              :noindex:
 
           .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -317,7 +311,6 @@ API
           .. ifconfig:: enable_python_doc == 'ON'
 
             .. autofunction:: Pypdm.Pypdm.MeshLocation.nodal_part_set_2d
-              :noindex:
 
           .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -358,7 +351,6 @@ API
           .. ifconfig:: enable_python_doc == 'ON'
 
             .. autofunction:: Pypdm.Pypdm.MeshLocation.part_set_2d
-              :noindex:
 
           .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -412,7 +404,6 @@ API
         .. ifconfig:: enable_python_doc == 'ON'
 
           .. autoattribute:: Pypdm.Pypdm.MeshLocation.tolerance
-            :noindex:
 
         .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -451,7 +442,6 @@ API
         .. ifconfig:: enable_python_doc == 'ON'
 
           .. autoattribute:: Pypdm.Pypdm.MeshLocation.method
-            :noindex:
 
         .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -495,7 +485,6 @@ API
       .. ifconfig:: enable_python_doc == 'ON'
 
         .. autofunction:: Pypdm.Pypdm.MeshLocation.compute
-          :noindex:
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -535,7 +524,6 @@ API
       .. ifconfig:: enable_python_doc == 'ON'
 
         .. autofunction:: Pypdm.Pypdm.MeshLocation.dump_times
-          :noindex:
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -588,9 +576,7 @@ API
         .. ifconfig:: enable_python_doc == 'ON'
 
           .. autofunction:: Pypdm.Pypdm.MeshLocation.located_get
-            :noindex:
           .. autofunction:: Pypdm.Pypdm.MeshLocation.unlocated_get
-            :noindex:
 
         .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -630,7 +616,6 @@ API
         .. ifconfig:: enable_python_doc == 'ON'
 
           .. autofunction:: Pypdm.Pypdm.MeshLocation.location_get
-            :noindex:
 
         .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -687,9 +672,7 @@ API
         .. ifconfig:: enable_python_doc == 'ON'
 
           .. autofunction:: Pypdm.Pypdm.MeshLocation.points_in_elt_get
-            :noindex:
           .. autofunction:: Pypdm.Pypdm.MeshLocation.cell_vertex_get
-            :noindex:
 
         .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -735,7 +718,6 @@ API
       .. ifconfig:: enable_python_doc == 'ON'
 
         .. autofunction:: Pypdm.Pypdm.MeshLocation.part_to_part_get
-          :noindex:
 
       .. ifconfig:: enable_python_doc == 'OFF'
 

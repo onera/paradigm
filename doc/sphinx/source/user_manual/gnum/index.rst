@@ -51,7 +51,6 @@ API
       .. ifconfig:: enable_python_doc == 'ON'
 
         .. autofunction:: Pypdm.Pypdm.GlobalNumbering.__init__
-          :noindex:
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -97,11 +96,8 @@ API
       .. ifconfig:: enable_python_doc == 'ON'
 
         .. autofunction:: Pypdm.Pypdm.GlobalNumbering.set_from_coords
-          :noindex:
         .. autofunction:: Pypdm.Pypdm.GlobalNumbering.set_from_parent
-          :noindex:
         .. autofunction:: Pypdm.Pypdm.GlobalNumbering.set_parents_nuplet
-          :noindex:
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -148,7 +144,6 @@ API
       .. ifconfig:: enable_python_doc == 'ON'
 
         .. autofunction:: Pypdm.Pypdm.GlobalNumbering.compute
-          :noindex:
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -191,7 +186,6 @@ API
       .. ifconfig:: enable_python_doc == 'ON'
 
         .. autofunction:: Pypdm.Pypdm.GlobalNumbering.get
-          :noindex:
 
       .. ifconfig:: enable_python_doc == 'OFF'
 

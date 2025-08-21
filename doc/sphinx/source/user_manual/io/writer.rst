@@ -45,7 +45,6 @@ API
       .. ifconfig:: enable_python_doc == 'ON'
 
         .. autofunction:: Pypdm.Pypdm.Writer.__init__
-          :noindex:
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -128,7 +127,6 @@ API
       .. ifconfig:: enable_python_doc == 'ON'
 
         .. autofunction:: Pypdm.Pypdm.Writer.geom_create
-          :noindex:
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -173,7 +171,6 @@ API
         .. ifconfig:: enable_python_doc == 'ON'
 
           .. autofunction:: Pypdm.Pypdm.Writer.geom_coord_set
-            :noindex:
 
 
         .. ifconfig:: enable_python_doc == 'OFF'
@@ -227,11 +224,8 @@ API
           .. ifconfig:: enable_python_doc == 'ON'
 
             .. autofunction:: Pypdm.Pypdm.Writer.geom_cell3d_cellface_add
-              :noindex:
             .. autofunction:: Pypdm.Pypdm.Writer.geom_cell2d_cellface_add
-              :noindex:
             .. autofunction:: Pypdm.Pypdm.Writer.geom_faces_facevtx_add
-              :noindex:
 
 
     |
@@ -276,9 +270,7 @@ API
           .. ifconfig:: enable_python_doc == 'ON'
 
             .. autofunction:: Pypdm.Pypdm.Writer.geom_block_add
-              :noindex:
             .. autofunction:: Pypdm.Pypdm.Writer.geom_block_std_set
-              :noindex:
 
 
           .. ifconfig:: enable_python_doc == 'OFF'
@@ -328,11 +320,8 @@ API
         .. ifconfig:: enable_python_doc == 'ON'
 
           .. autofunction:: Pypdm.Pypdm.Writer.var_create
-            :noindex:
           .. autofunction:: Pypdm.Pypdm.Writer.name_map_add
-            :noindex:
           .. autofunction:: Pypdm.Pypdm.Writer.var_set
-            :noindex:
 
         .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -406,9 +395,7 @@ API
       .. ifconfig:: enable_python_doc == 'ON'
 
         .. autofunction:: Pypdm.Pypdm.Writer.step_beg
-          :noindex:
         .. autofunction:: Pypdm.Pypdm.Writer.step_end
-          :noindex:
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -452,9 +439,7 @@ API
       .. ifconfig:: enable_python_doc == 'ON'
 
         .. autofunction:: Pypdm.Pypdm.Writer.geom_write
-          :noindex:
         .. autofunction:: Pypdm.Pypdm.Writer.var_write
-          :noindex:
 
       .. ifconfig:: enable_python_doc == 'OFF'
 

@@ -38,7 +38,6 @@ Generation of simple partitioned meshes
       .. ifconfig:: enable_python_doc == 'ON'
 
         .. autofunction:: Pypdm.Pypdm.generate_mesh_rectangle_ngon
-          :noindex:
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -79,7 +78,6 @@ Generation of simple partitioned meshes
       .. ifconfig:: enable_python_doc == 'ON'
 
         .. autofunction:: Pypdm.Pypdm.generate_mesh_parallelepiped_ngon
-          :noindex:
 
       .. ifconfig:: enable_python_doc == 'OFF'
 

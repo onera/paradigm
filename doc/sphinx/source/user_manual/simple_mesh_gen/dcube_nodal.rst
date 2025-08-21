@@ -45,7 +45,6 @@ API
       .. ifconfig:: enable_python_doc == 'ON'
 
         .. autofunction:: Pypdm.Pypdm.DCubeNodalGenerator.__init__
-          :noindex:
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -88,9 +87,7 @@ API
       .. ifconfig:: enable_python_doc == 'ON'
 
         .. autofunction:: Pypdm.Pypdm.DCubeNodalGenerator.set_random_factor
-          :noindex:
         .. autofunction:: Pypdm.Pypdm.DCubeNodalGenerator.set_ordering
-          :noindex:
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -133,9 +130,7 @@ API
       .. ifconfig:: enable_python_doc == 'ON'
 
         .. autofunction:: Pypdm.Pypdm.DCubeNodalGenerator.compute
-          :noindex:
         .. autofunction:: Pypdm.Pypdm.DCubeNodalGenerator.get_dmesh_nodal
-          :noindex:
 
       .. ifconfig:: enable_python_doc == 'OFF'
 

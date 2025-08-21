@@ -48,7 +48,6 @@ API
       .. ifconfig:: enable_python_doc == 'ON'
 
         .. autofunction:: Pypdm.Pypdm.PartExtension.__init__
-          :noindex:
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -99,15 +98,10 @@ API
       .. ifconfig:: enable_python_doc == 'ON'
 
         .. autofunction:: Pypdm.Pypdm.PartExtension.connectivity_set
-          :noindex:
         .. autofunction:: Pypdm.Pypdm.PartExtension.vtx_coord_set
-          :noindex:
         .. autofunction:: Pypdm.Pypdm.PartExtension.ln_to_gn_set
-          :noindex:
         .. autofunction:: Pypdm.Pypdm.PartExtension.part_bound_graph_set
-          :noindex:
         .. autofunction:: Pypdm.Pypdm.PartExtension.group_set
-          :noindex:
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -149,7 +143,6 @@ API
       .. ifconfig:: enable_python_doc == 'ON'
 
         .. autofunction:: Pypdm.Pypdm.PartExtension.compute
-          :noindex:
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -198,13 +191,9 @@ API
       .. ifconfig:: enable_python_doc == 'ON'
 
         .. autofunction:: Pypdm.Pypdm.PartExtension.connectivity_get
-          :noindex:
         .. autofunction:: Pypdm.Pypdm.PartExtension.vtx_coord_get
-          :noindex:
         .. autofunction:: Pypdm.Pypdm.PartExtension.ln_to_gn_get
-          :noindex:
         .. autofunction:: Pypdm.Pypdm.PartExtension.group_get
-          :noindex:
 
       .. ifconfig:: enable_python_doc == 'OFF'
 

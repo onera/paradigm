@@ -53,7 +53,6 @@ API
       .. ifconfig:: enable_python_doc == 'ON'
 
         .. autofunction:: Pypdm.Pypdm.ClosestPoints.__init__
-          :noindex:
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -102,7 +101,6 @@ API
       .. ifconfig:: enable_python_doc == 'ON'
 
         .. autofunction:: Pypdm.Pypdm.ClosestPoints.n_part_cloud_set
-          :noindex:
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -144,9 +142,7 @@ API
       .. ifconfig:: enable_python_doc == 'ON'
 
         .. autofunction:: Pypdm.Pypdm.ClosestPoints.src_cloud_set
-          :noindex:
         .. autofunction:: Pypdm.Pypdm.ClosestPoints.tgt_cloud_set
-          :noindex:
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -190,7 +186,6 @@ API
       .. ifconfig:: enable_python_doc == 'ON'
 
         .. autofunction:: Pypdm.Pypdm.ClosestPoints.compute
-          :noindex:
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -230,7 +225,6 @@ API
       .. ifconfig:: enable_python_doc == 'ON'
 
         .. autofunction:: Pypdm.Pypdm.ClosestPoints.dump_times
-          :noindex:
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -277,7 +271,6 @@ API
         .. ifconfig:: enable_python_doc == 'ON'
 
           .. autofunction:: Pypdm.Pypdm.ClosestPoints.points_get
-            :noindex:
 
         .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -321,7 +314,6 @@ API
         .. ifconfig:: enable_python_doc == 'ON'
 
           .. autofunction:: Pypdm.Pypdm.ClosestPoints.tgt_in_src_get
-            :noindex:
 
         .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -367,7 +359,6 @@ API
       .. ifconfig:: enable_python_doc == 'ON'
 
         .. autofunction:: Pypdm.Pypdm.ClosestPoints.part_to_part_get
-          :noindex:
 
       .. ifconfig:: enable_python_doc == 'OFF'
 

@@ -51,7 +51,6 @@ API
       .. ifconfig:: enable_python_doc == 'ON'
 
         .. autofunction:: Pypdm.Pypdm.MultiPart.__init__
-          :noindex:
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -98,9 +97,7 @@ API
       .. ifconfig:: enable_python_doc == 'ON'
 
         .. autofunction:: Pypdm.Pypdm.MultiPart.dmesh_nodal_set
-          :noindex:
         .. autofunction:: Pypdm.Pypdm.MultiPart.dmesh_set
-          :noindex:
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -147,9 +144,7 @@ API
       .. ifconfig:: enable_python_doc == 'ON'
 
         .. autofunction:: Pypdm.Pypdm.MultiPart.reordering_set
-          :noindex:
         .. autofunction:: Pypdm.Pypdm.MultiPart.reordering_vtx_set
-          :noindex:
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -193,7 +188,6 @@ API
       .. ifconfig:: enable_python_doc == 'ON'
 
         .. autofunction:: Pypdm.Pypdm.MultiPart.compute
-          :noindex:
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -255,26 +249,16 @@ API
       .. ifconfig:: enable_python_doc == 'ON'
 
         .. autofunction:: Pypdm.Pypdm.MultiPart.part_mesh_nodal_get
-          :noindex:
 
         .. autofunction:: Pypdm.Pypdm.MultiPart.n_entity_get
-          :noindex:
         .. autofunction:: Pypdm.Pypdm.MultiPart.connectivity_get
-          :noindex:
         .. autofunction:: Pypdm.Pypdm.MultiPart.ln_to_gn_get
-          :noindex:
         .. autofunction:: Pypdm.Pypdm.MultiPart.vtx_coord_get
-          :noindex:
         .. autofunction:: Pypdm.Pypdm.MultiPart.graph_comm_get
-          :noindex:
         .. autofunction:: Pypdm.Pypdm.MultiPart.ghost_information_get
-          :noindex:
         .. autofunction:: Pypdm.Pypdm.MultiPart.color_get
-          :noindex:
         .. autofunction:: Pypdm.Pypdm.MultiPart.hyper_plane_color_get
-          :noindex:
         .. autofunction:: Pypdm.Pypdm.MultiPart.thread_color_get
-          :noindex:
 
       .. ifconfig:: enable_python_doc == 'OFF'
 

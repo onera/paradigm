@@ -45,7 +45,6 @@ API
       .. ifconfig:: enable_python_doc == 'ON'
 
         .. autofunction:: Pypdm.Pypdm.MeshDeform.__init__
-          :noindex:
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -90,9 +89,7 @@ API
       .. ifconfig:: enable_python_doc == 'ON'
 
         .. autofunction:: Pypdm.Pypdm.MeshDeform.surf_part_set
-          :noindex:
         .. autofunction:: Pypdm.Pypdm.MeshDeform.cloud_part_set
-          :noindex:
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -139,11 +136,8 @@ API
       .. ifconfig:: enable_python_doc == 'ON'
 
         .. autofunction:: Pypdm.Pypdm.MeshDeform.compute
-          :noindex:
         .. autofunction:: Pypdm.Pypdm.MeshDeform.cloud_displ_finalize
-          :noindex:
         .. autofunction:: Pypdm.Pypdm.MeshDeform.dump_times
-          :noindex:
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -198,17 +192,11 @@ API
       .. ifconfig:: enable_python_doc == 'ON'
 
         .. autofunction:: Pypdm.Pypdm.MeshDeform.cloud_n_points_part_get
-          :noindex:
         .. autofunction:: Pypdm.Pypdm.MeshDeform.cloud_displ_part_get
-          :noindex:
         .. autofunction:: Pypdm.Pypdm.MeshDeform.n_aux_geom
-          :noindex:
         .. autofunction:: Pypdm.Pypdm.MeshDeform.cloud_block_n_points
-          :noindex:
         .. autofunction:: Pypdm.Pypdm.MeshDeform.cloud_block_buffer_from_surf_get
-          :noindex:
         .. autofunction:: Pypdm.Pypdm.MeshDeform.cloud_block_get
-          :noindex:
 
       .. ifconfig:: enable_python_doc == 'OFF'
 

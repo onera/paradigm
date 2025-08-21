@@ -50,7 +50,6 @@ API
       .. ifconfig:: enable_python_doc == 'ON'
 
         .. autofunction:: Pypdm.Pypdm.ExtractPart.__init__
-          :noindex:
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -107,13 +106,8 @@ API
       .. ifconfig:: enable_python_doc == 'ON'
 
         .. autofunction:: Pypdm.Pypdm.ExtractPart.part_set
-          :noindex:
-
         .. autofunction:: Pypdm.Pypdm.ExtractPart.n_group_set
-          :noindex:
-
         .. autofunction:: Pypdm.Pypdm.ExtractPart.group_set
-          :noindex:
 
 
       .. ifconfig:: enable_python_doc == 'OFF'
@@ -159,10 +153,7 @@ API
       .. ifconfig:: enable_python_doc == 'ON'
 
         .. autofunction:: Pypdm.Pypdm.ExtractPart.selected_lnum_set
-          :noindex:
-
         .. autofunction:: Pypdm.Pypdm.ExtractPart.target_set
-          :noindex:
 
 
       .. ifconfig:: enable_python_doc == 'OFF'
@@ -205,7 +196,6 @@ API
       .. ifconfig:: enable_python_doc == 'ON'
 
         .. autofunction:: Pypdm.Pypdm.ExtractPart.compute
-          :noindex:
 
 
       .. ifconfig:: enable_python_doc == 'OFF'
@@ -274,22 +264,11 @@ API
       .. ifconfig:: enable_python_doc == 'ON'
 
         .. autofunction:: Pypdm.Pypdm.ExtractPart.n_entity_get
-          :noindex:
-
         .. autofunction:: Pypdm.Pypdm.ExtractPart.connectivity_get
-          :noindex:
-
         .. autofunction:: Pypdm.Pypdm.ExtractPart.vtx_coord_get
-          :noindex:
-
         .. autofunction:: Pypdm.Pypdm.ExtractPart.ln_to_gn_get
-          :noindex:
-
         .. autofunction:: Pypdm.Pypdm.ExtractPart.parent_ln_to_gn_get
-          :noindex:
-
         .. autofunction:: Pypdm.Pypdm.ExtractPart.group_get
-          :noindex:
 
 
       .. ifconfig:: enable_python_doc == 'OFF'
@@ -354,10 +333,7 @@ API
       .. ifconfig:: enable_python_doc == 'ON'
 
         .. autofunction:: Pypdm.Pypdm.ExtractPart.part_to_part_get
-          :noindex:
-
         .. autofunction:: Pypdm.Pypdm.ExtractPart.part_to_part_group_get
-          :noindex:
 
 
       .. ifconfig:: enable_python_doc == 'OFF'
