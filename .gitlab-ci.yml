@@ -137,9 +137,6 @@ build:
     - else
     -   source /tmp_user/juno/sonics/dist/source_juno_all.sh --compiler=$COMPILER --mpi=$MPI_LIB
     - fi
-    - if [[ "${COMPILER}" == "intel@2022" ]]; then
-    -   python3 -m pip install sphinx==7.1.2
-    - fi
   script:
     - echo "Runner directory is $PWD; move to working directory $CUSTOM_CI_DIR"
     - cd $CUSTOM_CI_DIR
