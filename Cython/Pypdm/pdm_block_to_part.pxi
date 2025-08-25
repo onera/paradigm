@@ -133,8 +133,8 @@ cdef class BlockToPart:
         interlaced_str (bool)                            : Indicate if data are interlaced (True) or interleaved 
       
       Returns:
-        - Stride for partitioned data (`int` of `list` of `np.ndarray[np.int32]`) : 
-        - Partitioned data arrays (`list` of `np.ndarray`)                    : 
+        - Stride for partitioned data (`int` or `list` of `np.ndarray[np.int32]`)
+        - Partitioned data arrays (`list` of `np.ndarray`)
       """
 
       cdef NPY.ndarray[NPY.int32_t, ndim=1, mode='c'] numpy_int
