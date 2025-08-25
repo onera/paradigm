@@ -419,12 +419,14 @@ API
       :sync-group: language
 
       .. tab-item:: C
+        :sync: C
 
         .. doxygenfunction:: PDM_mesh_location_method_set
 
 
 
       .. tab-item:: Fortran
+        :sync: Fortran
 
         .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -438,6 +440,7 @@ API
 
 
       .. tab-item:: Python
+        :sync: Python
 
         .. ifconfig:: enable_python_doc == 'ON'
 
@@ -545,6 +548,7 @@ API
       :sync-group: language
 
       .. tab-item:: C
+        :sync: C
 
         .. doxygenfunction:: PDM_mesh_location_n_located_get
         .. doxygenfunction:: PDM_mesh_location_located_get
@@ -555,6 +559,7 @@ API
 
 
       .. tab-item:: Fortran
+        :sync: Fortran
 
         .. ifconfig:: enable_fortran_doc == 'ON'
 
@@ -572,6 +577,7 @@ API
 
 
       .. tab-item:: Python
+        :sync: Python
 
         .. ifconfig:: enable_python_doc == 'ON'
 
