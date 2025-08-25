@@ -495,29 +495,20 @@ contains
                                   comm, &
                                   owner)
     ! Build a Multipart structure instance
-    !
-    ! Admissible values for ``split_method`` are:
-    !   - ``PDM_SPLIT_DUAL_WITH_HILBERT``
-    !   - ``PDM_SPLIT_DUAL_WITH_PARMETIS``
-    !   - ``PDM_SPLIT_DUAL_WITH_PTSCOTCH``
-    !
-    ! Admissible values for ``part_size_method`` are:
-    !   - ``PDM_PART_SIZE_HOMOGENEOUS``: All requested partition have the same size
-    !   - ``PDM_PART_SIZE_HETEROGENEOUS``: Each requested partition can have a portion (within 0. and 1.) of the mesh
     implicit none
 
-    type(c_ptr)                        :: multipart        ! Pointer to a new PDM_multipart_t object
-    integer(c_int),         intent(in) :: n_domain         ! Number of domains in the original mesh
-    integer(kind=PDM_l_num_s), pointer :: n_part(:)        ! Number of partition per proc in each domain (size = ``n_domain``)
-    integer(c_int),         intent(in) :: merge_domains    ! Merge or not the domains before splitting
-    integer(c_int),         intent(in) :: split_method     ! Choice of method used to split the mesh
-    integer(c_int),         intent(in) :: part_size_method ! Choice of homogeneous or heterogeneous partitions
-    real(8),                   pointer :: part_fraction(:) ! Weight (in %) of each partition in heterogeneous case
-    integer(c_int),         intent(in) :: comm             ! MPI communicator
-    integer(c_int),         intent(in) :: owner            ! Data ownership
-    type(c_ptr)                        :: c_n_part
-    type(c_ptr)                        :: c_part_fraction
-    integer(c_int)                     :: c_comm
+    type(c_ptr),            intent(out) :: multipart        ! Pointer to a new PDM_multipart_t object
+    integer(c_int),         intent(in)  :: n_domain         ! Number of domains in the original mesh
+    integer(kind=PDM_l_num_s), pointer  :: n_part(:)        ! Number of partition per proc in each domain (size = ``n_domain``)
+    integer(c_int),         intent(in)  :: merge_domains    ! Merge or not the domains before splitting
+    integer(c_int),         intent(in)  :: split_method     ! Choice of :ref:`method<PDM_split_dual_t>` used to split the mesh
+    integer(c_int),         intent(in)  :: part_size_method ! Choice of :ref:`homogeneous or heterogeneous<PDM_part_size_t>` partitions
+    real(8),                   pointer  :: part_fraction(:) ! Weight (between 0 and 1) of each partition in heterogeneous case
+    integer(c_int),         intent(in)  :: comm             ! MPI communicator
+    integer(c_int),         intent(in)  :: owner            ! Data ownership
+    type(c_ptr)                         :: c_n_part
+    type(c_ptr)                         :: c_part_fraction
+    integer(c_int)                      :: c_comm
 
     c_n_part = C_NULL_PTR
     if (associated(n_part)) then

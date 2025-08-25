@@ -231,13 +231,13 @@ cdef class MultiPart:
         comm             (MPI.Comm)                : MPI communicator
 
       Admissible values for ``split_method`` are:
-        - :py:attr:`HILBERT`
-        - :py:attr:`PARMETIS`
-        - :py:attr:`PTSCOTCH`
+        - :py:attr:`MultiPart.HILBERT`
+        - :py:attr:`MultiPart.PARMETIS`
+        - :py:attr:`MultiPart.PTSCOTCH`
 
       Admissible values for ``part_size_method`` are:
-        - :py:attr:`HOMOGENEOUS`: All requested partition have the same size
-        - :py:attr:`HETEROGENEOUS`: Each requested partition can have a portion (within 0. and 1.) of the mesh
+        - :py:attr:`MultiPart.HOMOGENEOUS`: All requested partition have the same size
+        - :py:attr:`MultiPart.HETEROGENEOUS`: Each requested partition can have a portion (within 0. and 1.) of the mesh
       """
     # ------------------------------------------------------------------
     def __cinit__(self,

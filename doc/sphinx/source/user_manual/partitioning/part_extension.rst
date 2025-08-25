@@ -7,10 +7,13 @@ Description
 """""""""""
 
 **Part extension** is a service for computing extended partitions by fetching ghost cells topology and geometry.
-
-Extension to an arbitrary depth from vertices, edges or faces is supported.
 If provided, group information associated with extended entities is fetched as well.
 
+Extension to an arbitrary depth from vertices, edges or faces is supported :
+
+.. _PDM_extend_type_t:
+
+.. doxygenenum:: PDM_extend_type_t
 
 API
 """

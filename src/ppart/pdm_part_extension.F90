@@ -151,17 +151,12 @@ subroutine PDM_part_extension_create (part_ext,    &
                                       comm,        &
                                       owner)
   ! Initialize a part extension structure
-  !
-  ! Admissible values for ``extend_type``:
-  !   - ``PDM_EXTEND_FROM_FACE``
-  !   - ``PDM_EXTEND_FROM_EDGE``
-  !   - ``PDM_EXTEND_FROM_VTX``
   implicit none
 
   type(c_ptr)                   :: part_ext    ! Part Extension instance
   integer, intent(in)           :: n_domain    ! Number of domains
   integer(pdm_l_num_s), pointer :: n_part(:)   ! Number of partitions per domain (size = ``n_domain``)
-  integer, intent(in)           :: extend_type ! Type of extension
+  integer, intent(in)           :: extend_type ! :ref:`Type of extension<PDM_extend_type_t>`
   integer, intent(in)           :: depth       ! Extension depth
   integer, intent(in)           :: comm        ! MPI communicator
   integer, intent(in)           :: owner       ! Data ownership

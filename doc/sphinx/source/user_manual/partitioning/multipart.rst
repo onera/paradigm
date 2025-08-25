@@ -11,7 +11,18 @@ Meshes of dimension 0 (point clouds), 1, 2 and 3 are supported.
 
 The partitioning can be performed using different graph-splitting or geometric methods:
 
+
+.. _PDM_split_dual_t:
+
 .. doxygenenum:: PDM_split_dual_t
+
+|
+
+Partitions can be homogeneous or heterogeneous in size :
+
+.. _PDM_part_size_t:
+
+.. doxygenenum:: PDM_part_size_t
 
 
 
