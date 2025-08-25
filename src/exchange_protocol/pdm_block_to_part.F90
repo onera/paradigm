@@ -21,30 +21,13 @@
 
 module pdm_block_to_part
 
+  use iso_c_binding
   use pdm
   use pdm_pointer_array
 
   implicit none
 
 interface
-
-!>
-!!
-!! \brief Free a block to part structure
-!!
-!! \param [inout] btp  Block to part structure
-!!
-!! \return       NULL
-!!
-
-subroutine PDM_block_to_part_free (btp) &
-bind (c, name='PDM_block_to_part_free')
-  use iso_c_binding
-  implicit none
-
-  type(c_ptr), value :: btp
-
-end subroutine PDM_block_to_part_free
 
 
 !>
@@ -168,35 +151,23 @@ private :: PDM_block_to_part_exch_in_place_finalize
 
 contains
 
-!>
-!!
-!! \brief Create a block to partitions redistribution
-!!
-!! \param [out]  btp               Initialized \ref PDM_block_to_part instance
-!! \param [in]   block_distrib_idx Block distribution (size : \ref size of \ref comm + 1)
-!! \param [in]   gnum_elt          Element global number (size : \ref n_part)
-!! \param [in]   n_elt             Local number of elements (size : \ref n_part)
-!! \param [in]   n_part            Number of partition
-!! \param [in]   comm              MPI communicator
-!!
 
-subroutine PDM_block_to_part_create (btp,               &
-                                     block_distrib_idx, &
-                                     gnum_elt,          &
-                                     n_elt,             &
-                                     n_part,            &
-                                     comm)
-  use iso_c_binding
+subroutine PDM_block_to_part_create(btp,               &
+                                    block_distrib_idx, &
+                                    gnum_elt,          &
+                                    n_elt,             &
+                                    n_part,            &
+                                    comm)
   implicit none
 
-  type(c_ptr)                       :: btp
-  integer(pdm_g_num_s), pointer     :: block_distrib_idx(:)
-  type(PDM_pointer_array_t), pointer :: gnum_elt
-  integer(pdm_l_num_s), pointer     :: n_elt(:)
-  integer, intent(in)               :: n_part
-  integer, intent(in)               :: comm
+  type(c_ptr),               intent(out) :: btp                  ! PDM_block_to_part instance              
+  integer(pdm_g_num_s),      pointer     :: block_distrib_idx(:) ! Block distribution (size = n_rank + 1)               
+  type(PDM_pointer_array_t), pointer     :: gnum_elt             ! Global IDs
+  integer(pdm_l_num_s),      pointer     :: n_elt(:)             ! Local number of elements
+  integer,                   intent(in)  :: n_part               ! Number of partitions
+  integer,                   intent(in)  :: comm                 ! MPI communicator
 
-  integer(c_int)                    :: c_comm
+  integer(c_int)                         :: c_comm
 
   interface
     function PDM_block_to_part_create_c (block_distrib_idx, &
@@ -1354,5 +1325,27 @@ subroutine PDM_block_to_part_exch_in_place_finalize (btp,           &
 
 
 end subroutine PDM_block_to_part_exch_in_place_finalize
+
+
+
+subroutine PDM_block_to_part_free(btp) 
+  ! Free a Block-to-Part instance
+  implicit none
+
+  type(c_ptr), intent(inout) :: btp ! PDM_block_to_part_t instance
+
+  interface
+    subroutine PDM_block_to_part_free_c(btp) &
+    bind (c, name='PDM_block_to_part_free')
+      use iso_c_binding
+      implicit none
+      type(c_ptr), value :: btp
+    end subroutine PDM_block_to_part_free_c
+  end interface
+
+  call PDM_block_to_part_free_c(btp)
+
+end subroutine PDM_block_to_part_free
+
 
 end module pdm_block_to_part
