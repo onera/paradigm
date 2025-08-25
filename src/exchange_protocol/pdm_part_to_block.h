@@ -218,7 +218,7 @@ PDM_part_to_block_comm_graph_dump
 
 /**
  *
- * \brief Create a part-to-block redistribution
+ * \brief Create a Part-to-Block instance
  *
  * \param [in]   t_distrib       Distribution type
  * \param [in]   t_post          Post processing type
@@ -249,7 +249,7 @@ PDM_part_to_block_create
 
 /**
  *
- * \brief Create a part-to-block redistribution from a given distribution index
+ * \brief Create a Part-to-Block instance from a given distribution index
  *
  * \param [in]   t_distrib       Distribution type
  * \param [in]   t_post          Post processing type
