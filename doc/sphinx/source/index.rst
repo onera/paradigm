@@ -157,7 +157,6 @@ Developer manual
    :hidden:
 
    developer_manual/coding_rules
-   developer_manual/mesh_adaptation/index
 
 
 

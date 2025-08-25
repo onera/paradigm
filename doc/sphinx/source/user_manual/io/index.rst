@@ -22,22 +22,14 @@ Parallel I/O
     Writer
 
 
-
-  .. card:: GMF-IO
-    :link: gmf_io
-    :link-type: ref
-
-    Gamma Mesh Format pseudo-parallel IO
-
 |
 
 |
 
 .. toctree::
-  :caption: Communication graphs
+  :caption: Parallel IO
   :maxdepth: 1
   :hidden:
 
   mpi_io
   writer
-  gmf_io
