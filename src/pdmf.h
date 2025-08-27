@@ -106,3 +106,12 @@
   integer, parameter :: PDM_GEOMETRY_KIND_SURFACIC = 1
   integer, parameter :: PDM_GEOMETRY_KIND_RIDGE    = 2
   integer, parameter :: PDM_GEOMETRY_KIND_CORNER   = 3
+
+  integer, parameter :: PDM_ISO_SURFACE_KIND_FIELD    = 0
+  integer, parameter :: PDM_ISO_SURFACE_KIND_PLANE    = 1
+  integer, parameter :: PDM_ISO_SURFACE_KIND_SPHERE   = 2
+  integer, parameter :: PDM_ISO_SURFACE_KIND_ELLIPSE  = 3
+  integer, parameter :: PDM_ISO_SURFACE_KIND_QUADRIC  = 4
+  integer, parameter :: PDM_ISO_SURFACE_KIND_HEART    = 5
+  integer, parameter :: PDM_ISO_SURFACE_KIND_FUNCTION = 6
+  integer, parameter :: PDM_ISO_SURFACE_KIND_MAX      = 7

@@ -346,16 +346,14 @@ typedef enum {
  *
  */
 typedef enum {
-
-  PDM_ISO_SURFACE_KIND_FIELD    = 0,
-  PDM_ISO_SURFACE_KIND_PLANE    = 1,
-  PDM_ISO_SURFACE_KIND_SPHERE   = 2,
-  PDM_ISO_SURFACE_KIND_ELLIPSE  = 3,
-  PDM_ISO_SURFACE_KIND_QUADRIC  = 4,
-  PDM_ISO_SURFACE_KIND_HEART    = 5,
-  PDM_ISO_SURFACE_KIND_FUNCTION = 6,
-  PDM_ISO_SURFACE_KIND_MAX      = 7
-
+  PDM_ISO_SURFACE_KIND_FIELD    = 0, /*!< (\c Isosurface.FIELD in Python).     Isosurface follows given partitioned ( or block-distributed ) field */
+  PDM_ISO_SURFACE_KIND_PLANE    = 1, /*!< (\c Isosurface.PLANE in Python).     Isosurface follow the plane of equation (4 coefficients) : \n \f$\phi(x,y,z) = \texttt{coeff[0]} \cdot x + \texttt{coeff[1]} \cdot y + \texttt{coeff[2]} \cdot z - \texttt{coeff[3]}\f$                                                                                                                                                                           */
+  PDM_ISO_SURFACE_KIND_SPHERE   = 2, /*!< (\c Isosurface.SPHERE in Python).    Isosurface follow the sphere of equation (4 coefficients) : \n \f$\phi(x,y,z) = (x - \texttt{coeff[0]})^2 + (y - \texttt{coeff[1]})^2 + (z - \texttt{coeff[2]})^2 - \texttt{coeff[3]}^2\f$                                                                                                                                                                        */
+  PDM_ISO_SURFACE_KIND_ELLIPSE  = 3, /*!< (\c Isosurface.ELLIPSE in Python).   Isosurface follow the ellipse of equation (7 coefficients) : \n \f$\phi(x,y,z) = \left(\frac{x - \texttt{coeff[0]}}{\texttt{coeff[3]}}\right)^2 + \left(\frac{y - \texttt{coeff[1]}}{\texttt{coeff[4]}}\right)^2 + \left(\frac{z - \texttt{coeff[2]}}{\texttt{coeff[5]}}\right)^2 - \texttt{coeff[6]}^2\f$                                                        */
+  PDM_ISO_SURFACE_KIND_QUADRIC  = 4, /*!< (\c Isosurface.QUADRIC in Python).   Isosurface follow the quadric of equation (10 coefficients) : \n \f$\phi(x,y,z) = \texttt{coeff[6]} \left(\frac{x - \texttt{coeff[0]}}{\texttt{coeff[3]}}\right)^2 + \texttt{coeff[7]} \left(\frac{y - \texttt{coeff[1]}}{\texttt{coeff[4]}}\right)^2 + \texttt{coeff[8]} \left(\frac{z - \texttt{coeff[2]}}{\texttt{coeff[5]}}\right)^2 - \texttt{coeff[9]}^2\f$ */
+  PDM_ISO_SURFACE_KIND_HEART    = 5, /*!< (\c Isosurface.HEART in Python).     Isosurface follows a heart-shaped function                          */
+  PDM_ISO_SURFACE_KIND_FUNCTION = 6, /*!< (\c Isosurface.FUNCTION in Python).  Isosurface follows a user-defined function                          */
+  PDM_ISO_SURFACE_KIND_MAX      = 7  /*!< Enumerator to list the number of iso-surface kind available */ 
 } PDM_iso_surface_kind_t;
 
 typedef enum {
