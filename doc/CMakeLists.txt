@@ -100,7 +100,7 @@ if(PDM_ENABLE_DOC)
     set(SPHINX_RELEASE_NOTES ${SPHINX_SOURCE}/changelog.rst)
     add_custom_command(OUTPUT ${SPHINX_RELEASE_NOTES}
                        COMMAND ${CMAKE_COMMAND} -E env ${DOC_PYTHONPATH} env MPI4PY_RC_INITIALIZE=False env ${DOC_PRELOAD} env ${RUN_LSAN} env ${RUN_UBSAN}
-                       ${Python_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/gen_release_notes.py -i ${CHANGELOG_FILE} -o ${SPHINX_RELEASE_NOTES}
+                       ${Python_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/gen_release_notes.py -i ${CHANGELOG_FILE} -o ${SPHINX_RELEASE_NOTES} -p ${SPHINX_SOURCE}
                        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/gen_release_notes.py ${CHANGELOG_FILE}
                        COMMENT "Generating Release Notes page")
 

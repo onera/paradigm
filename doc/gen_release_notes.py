@@ -31,7 +31,7 @@ def list_documented_features(directory):
   pattern_ref = r'^\.\. _.*:'
   regex_ref = re.compile(pattern_ref)
 
-  for path_to_file in glob.glob(directory + '**/*.rst', recursive=True):
+  for path_to_file in glob.glob(directory + '/**/*.rst', recursive=True):
     try:
       with open(path_to_file, 'r', encoding='utf-8') as file:
         for line in file:
@@ -174,7 +174,7 @@ if __name__ == "__main__":
   parser = argparse.ArgumentParser()
 
   parser.add_argument("-i", "--input",   type=str, default="../ChangeLog")
-  parser.add_argument("-p", "--path",    type=str, default="../doc/sphinx/")
+  parser.add_argument("-p", "--path",    type=str, default="../doc/sphinx/source")
   parser.add_argument("-o", "--output",  type=str, default="../doc/sphinx/source/changelog.rst")
   parser.add_argument("-v", "--verbose", action="store_true")
 
