@@ -34,7 +34,7 @@ API
 
         .. py:class:: BlockToPart
 
-          .. autofunction:: Pypdm.Pypdm.BlockToPart.__init__
+          .. automethod:: Pypdm.Pypdm.BlockToPart.__init__
 
 
 
@@ -83,8 +83,8 @@ API
     .. tab-item:: Python
       :sync: Python
 
-        .. autofunction:: Pypdm.Pypdm.BlockToPart.exchange_field
-        .. autofunction:: Pypdm.Pypdm.BlockToPart.exchange_field_inplace
+        .. automethod:: Pypdm.Pypdm.BlockToPart.exchange_field
+        .. automethod:: Pypdm.Pypdm.BlockToPart.exchange_field_inplace
 
 
 

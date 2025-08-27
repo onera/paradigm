@@ -46,7 +46,7 @@ API
 
         .. py:class:: Writer
 
-          .. autofunction:: Pypdm.Pypdm.Writer.__init__
+          .. automethod:: Pypdm.Pypdm.Writer.__init__
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -128,7 +128,7 @@ API
 
       .. ifconfig:: enable_python_doc == 'ON'
 
-        .. autofunction:: Pypdm.Pypdm.Writer.geom_create
+        .. automethod:: Pypdm.Pypdm.Writer.geom_create
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -172,7 +172,7 @@ API
 
         .. ifconfig:: enable_python_doc == 'ON'
 
-          .. autofunction:: Pypdm.Pypdm.Writer.geom_coord_set
+          .. automethod:: Pypdm.Pypdm.Writer.geom_coord_set
 
 
         .. ifconfig:: enable_python_doc == 'OFF'
@@ -225,9 +225,9 @@ API
 
           .. ifconfig:: enable_python_doc == 'ON'
 
-            .. autofunction:: Pypdm.Pypdm.Writer.geom_cell3d_cellface_add
-            .. autofunction:: Pypdm.Pypdm.Writer.geom_cell2d_cellface_add
-            .. autofunction:: Pypdm.Pypdm.Writer.geom_faces_facevtx_add
+            .. automethod:: Pypdm.Pypdm.Writer.geom_cell3d_cellface_add
+            .. automethod:: Pypdm.Pypdm.Writer.geom_cell2d_cellface_add
+            .. automethod:: Pypdm.Pypdm.Writer.geom_faces_facevtx_add
 
 
     |
@@ -271,8 +271,8 @@ API
 
           .. ifconfig:: enable_python_doc == 'ON'
 
-            .. autofunction:: Pypdm.Pypdm.Writer.geom_block_add
-            .. autofunction:: Pypdm.Pypdm.Writer.geom_block_std_set
+            .. automethod:: Pypdm.Pypdm.Writer.geom_block_add
+            .. automethod:: Pypdm.Pypdm.Writer.geom_block_std_set
 
 
           .. ifconfig:: enable_python_doc == 'OFF'
@@ -321,9 +321,9 @@ API
 
         .. ifconfig:: enable_python_doc == 'ON'
 
-          .. autofunction:: Pypdm.Pypdm.Writer.var_create
-          .. autofunction:: Pypdm.Pypdm.Writer.name_map_add
-          .. autofunction:: Pypdm.Pypdm.Writer.var_set
+          .. automethod:: Pypdm.Pypdm.Writer.var_create
+          .. automethod:: Pypdm.Pypdm.Writer.name_map_add
+          .. automethod:: Pypdm.Pypdm.Writer.var_set
 
         .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -396,8 +396,8 @@ API
 
       .. ifconfig:: enable_python_doc == 'ON'
 
-        .. autofunction:: Pypdm.Pypdm.Writer.step_beg
-        .. autofunction:: Pypdm.Pypdm.Writer.step_end
+        .. automethod:: Pypdm.Pypdm.Writer.step_beg
+        .. automethod:: Pypdm.Pypdm.Writer.step_end
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -440,8 +440,8 @@ API
 
       .. ifconfig:: enable_python_doc == 'ON'
 
-        .. autofunction:: Pypdm.Pypdm.Writer.geom_write
-        .. autofunction:: Pypdm.Pypdm.Writer.var_write
+        .. automethod:: Pypdm.Pypdm.Writer.geom_write
+        .. automethod:: Pypdm.Pypdm.Writer.var_write
 
       .. ifconfig:: enable_python_doc == 'OFF'
 

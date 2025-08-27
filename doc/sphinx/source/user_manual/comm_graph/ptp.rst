@@ -46,9 +46,9 @@ API
 
         .. py:class:: PartToPart
 
-          .. autofunction:: Pypdm.Pypdm.PartToPart.__init__
+          .. automethod:: Pypdm.Pypdm.PartToPart.__init__
 
-          .. autofunction:: Pypdm.Pypdm.PartToPart.from_triplet
+          .. automethod:: Pypdm.Pypdm.PartToPart.from_triplet
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -93,11 +93,11 @@ API
 
       .. ifconfig:: enable_python_doc == 'ON'
 
-        .. autofunction:: Pypdm.Pypdm.PartToPart.get_referenced_lnum2
+        .. automethod:: Pypdm.Pypdm.PartToPart.get_referenced_lnum2
 
-        .. autofunction:: Pypdm.Pypdm.PartToPart.get_unreferenced_lnum2
+        .. automethod:: Pypdm.Pypdm.PartToPart.get_unreferenced_lnum2
 
-        .. autofunction:: Pypdm.Pypdm.PartToPart.get_gnum1_come_from
+        .. automethod:: Pypdm.Pypdm.PartToPart.get_gnum1_come_from
 
 
       .. ifconfig:: enable_python_doc == 'OFF'
@@ -145,10 +145,10 @@ API
 
       .. ifconfig:: enable_python_doc == 'ON'
 
-        .. autofunction:: Pypdm.Pypdm.PartToPart.iexch
-        .. autofunction:: Pypdm.Pypdm.PartToPart.wait
-        .. autofunction:: Pypdm.Pypdm.PartToPart.reverse_iexch
-        .. autofunction:: Pypdm.Pypdm.PartToPart.reverse_wait
+        .. automethod:: Pypdm.Pypdm.PartToPart.iexch
+        .. automethod:: Pypdm.Pypdm.PartToPart.wait
+        .. automethod:: Pypdm.Pypdm.PartToPart.reverse_iexch
+        .. automethod:: Pypdm.Pypdm.PartToPart.reverse_wait
 
       .. ifconfig:: enable_python_doc == 'OFF'
 

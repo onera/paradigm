@@ -37,7 +37,7 @@ API
 
         .. py:class:: PartToBlock
 
-          .. autofunction:: Pypdm.Pypdm.PartToBlock.__init__
+          .. automethod:: Pypdm.Pypdm.PartToBlock.__init__
 
 
 
@@ -65,7 +65,7 @@ API
     .. tab-item:: Python
       :sync: Python
 
-      .. autofunction:: Pypdm.Pypdm.PartToBlock.getBlockGnumCopy
+      .. automethod:: Pypdm.Pypdm.PartToBlock.getBlockGnumCopy
 
 
 
@@ -104,7 +104,7 @@ API
     .. tab-item:: Python
       :sync: Python
 
-        .. autofunction:: Pypdm.Pypdm.PartToBlock.exchange_field
+        .. automethod:: Pypdm.Pypdm.PartToBlock.exchange_field
 
 
 

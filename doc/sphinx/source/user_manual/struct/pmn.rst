@@ -53,7 +53,7 @@ API
 
         .. py:class:: PartMeshNodal
 
-          .. autofunction:: Pypdm.Pypdm.PartMeshNodal.__init__
+          .. automethod:: Pypdm.Pypdm.PartMeshNodal.__init__
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -97,7 +97,7 @@ API
 
       .. ifconfig:: enable_python_doc == 'ON'
 
-        .. autofunction:: Pypdm.Pypdm.PartMeshNodal.set_coordinates
+        .. automethod:: Pypdm.Pypdm.PartMeshNodal.set_coordinates
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -186,8 +186,8 @@ API
 
         .. ifconfig:: enable_python_doc == 'ON'
 
-          .. autofunction:: Pypdm.Pypdm.PartMeshNodal.add_section
-          .. autofunction:: Pypdm.Pypdm.PartMeshNodal.set_section
+          .. automethod:: Pypdm.Pypdm.PartMeshNodal.add_section
+          .. automethod:: Pypdm.Pypdm.PartMeshNodal.set_section
 
         .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -244,8 +244,8 @@ API
 
       .. ifconfig:: enable_python_doc == 'ON'
 
-        .. autofunction:: Pypdm.Pypdm.PartMeshNodal.n_group_set
-        .. autofunction:: Pypdm.Pypdm.PartMeshNodal.group_set
+        .. automethod:: Pypdm.Pypdm.PartMeshNodal.n_group_set
+        .. automethod:: Pypdm.Pypdm.PartMeshNodal.group_set
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -322,8 +322,8 @@ API
 
       .. ifconfig:: enable_python_doc == 'ON'
 
-        .. autofunction:: Pypdm.Pypdm.PartMeshNodalCapsule.coord_get
-        .. autofunction:: Pypdm.Pypdm.PartMeshNodalCapsule.vtx_g_num_get
+        .. automethod:: Pypdm.Pypdm.PartMeshNodalCapsule.coord_get
+        .. automethod:: Pypdm.Pypdm.PartMeshNodalCapsule.vtx_g_num_get
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -419,7 +419,7 @@ API
 
         .. ifconfig:: enable_python_doc == 'ON'
 
-          .. autofunction:: Pypdm.Pypdm.PartMeshNodalCapsule.get_sections
+          .. automethod:: Pypdm.Pypdm.PartMeshNodalCapsule.get_sections
 
         .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -456,8 +456,8 @@ API
 
       .. ifconfig:: enable_python_doc == 'ON'
 
-        .. autofunction:: Pypdm.Pypdm.PartMeshNodalCapsule.get_n_group
-        .. autofunction:: Pypdm.Pypdm.PartMeshNodalCapsule.get_group
+        .. automethod:: Pypdm.Pypdm.PartMeshNodalCapsule.get_n_group
+        .. automethod:: Pypdm.Pypdm.PartMeshNodalCapsule.get_group
 
       .. ifconfig:: enable_python_doc == 'OFF'
 

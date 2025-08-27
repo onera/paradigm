@@ -55,7 +55,7 @@ API
 
         .. py:class:: Isosurface
 
-          .. autofunction:: Pypdm.Pypdm.Isosurface.__init__
+          .. automethod:: Pypdm.Pypdm.Isosurface.__init__
 
       .. ifconfig:: enable_python_doc == 'OFF'
 

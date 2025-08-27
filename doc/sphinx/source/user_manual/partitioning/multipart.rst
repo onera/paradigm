@@ -63,7 +63,7 @@ API
 
         .. py:class:: MultiPart
 
-          .. autofunction:: Pypdm.Pypdm.MultiPart.__init__
+          .. automethod:: Pypdm.Pypdm.MultiPart.__init__
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -109,8 +109,8 @@ API
 
       .. ifconfig:: enable_python_doc == 'ON'
 
-        .. autofunction:: Pypdm.Pypdm.MultiPart.dmesh_nodal_set
-        .. autofunction:: Pypdm.Pypdm.MultiPart.dmesh_set
+        .. automethod:: Pypdm.Pypdm.MultiPart.dmesh_nodal_set
+        .. automethod:: Pypdm.Pypdm.MultiPart.dmesh_set
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -156,8 +156,8 @@ API
 
       .. ifconfig:: enable_python_doc == 'ON'
 
-        .. autofunction:: Pypdm.Pypdm.MultiPart.reordering_set
-        .. autofunction:: Pypdm.Pypdm.MultiPart.reordering_vtx_set
+        .. automethod:: Pypdm.Pypdm.MultiPart.reordering_set
+        .. automethod:: Pypdm.Pypdm.MultiPart.reordering_vtx_set
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -200,7 +200,7 @@ API
 
       .. ifconfig:: enable_python_doc == 'ON'
 
-        .. autofunction:: Pypdm.Pypdm.MultiPart.compute
+        .. automethod:: Pypdm.Pypdm.MultiPart.compute
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -261,18 +261,18 @@ API
 
       .. ifconfig:: enable_python_doc == 'ON'
 
-        .. autofunction:: Pypdm.Pypdm.MultiPart.part_mesh_nodal_get
+        .. automethod:: Pypdm.Pypdm.MultiPart.part_mesh_nodal_get
 
-        .. autofunction:: Pypdm.Pypdm.MultiPart.n_entity_get
-        .. autofunction:: Pypdm.Pypdm.MultiPart.connectivity_get
-        .. autofunction:: Pypdm.Pypdm.MultiPart.ln_to_gn_get
-        .. autofunction:: Pypdm.Pypdm.MultiPart.vtx_coord_get
-        .. autofunction:: Pypdm.Pypdm.MultiPart.group_get
-        .. autofunction:: Pypdm.Pypdm.MultiPart.graph_comm_get
-        .. autofunction:: Pypdm.Pypdm.MultiPart.ghost_information_get
-        .. autofunction:: Pypdm.Pypdm.MultiPart.color_get
-        .. autofunction:: Pypdm.Pypdm.MultiPart.hyper_plane_color_get
-        .. autofunction:: Pypdm.Pypdm.MultiPart.thread_color_get
+        .. automethod:: Pypdm.Pypdm.MultiPart.n_entity_get
+        .. automethod:: Pypdm.Pypdm.MultiPart.connectivity_get
+        .. automethod:: Pypdm.Pypdm.MultiPart.ln_to_gn_get
+        .. automethod:: Pypdm.Pypdm.MultiPart.vtx_coord_get
+        .. automethod:: Pypdm.Pypdm.MultiPart.group_get
+        .. automethod:: Pypdm.Pypdm.MultiPart.graph_comm_get
+        .. automethod:: Pypdm.Pypdm.MultiPart.ghost_information_get
+        .. automethod:: Pypdm.Pypdm.MultiPart.color_get
+        .. automethod:: Pypdm.Pypdm.MultiPart.hyper_plane_color_get
+        .. automethod:: Pypdm.Pypdm.MultiPart.thread_color_get
 
       .. ifconfig:: enable_python_doc == 'OFF'
 

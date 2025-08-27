@@ -46,7 +46,7 @@ API
 
         .. py:class:: MeshDeform
 
-          .. autofunction:: Pypdm.Pypdm.MeshDeform.__init__
+          .. automethod:: Pypdm.Pypdm.MeshDeform.__init__
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -90,8 +90,8 @@ API
 
       .. ifconfig:: enable_python_doc == 'ON'
 
-        .. autofunction:: Pypdm.Pypdm.MeshDeform.surf_part_set
-        .. autofunction:: Pypdm.Pypdm.MeshDeform.cloud_part_set
+        .. automethod:: Pypdm.Pypdm.MeshDeform.surf_part_set
+        .. automethod:: Pypdm.Pypdm.MeshDeform.cloud_part_set
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -137,9 +137,9 @@ API
 
       .. ifconfig:: enable_python_doc == 'ON'
 
-        .. autofunction:: Pypdm.Pypdm.MeshDeform.compute
-        .. autofunction:: Pypdm.Pypdm.MeshDeform.cloud_displ_finalize
-        .. autofunction:: Pypdm.Pypdm.MeshDeform.dump_times
+        .. automethod:: Pypdm.Pypdm.MeshDeform.compute
+        .. automethod:: Pypdm.Pypdm.MeshDeform.cloud_displ_finalize
+        .. automethod:: Pypdm.Pypdm.MeshDeform.dump_times
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -193,12 +193,12 @@ API
 
       .. ifconfig:: enable_python_doc == 'ON'
 
-        .. autofunction:: Pypdm.Pypdm.MeshDeform.cloud_n_points_part_get
-        .. autofunction:: Pypdm.Pypdm.MeshDeform.cloud_displ_part_get
-        .. autofunction:: Pypdm.Pypdm.MeshDeform.n_aux_geom
-        .. autofunction:: Pypdm.Pypdm.MeshDeform.cloud_block_n_points
-        .. autofunction:: Pypdm.Pypdm.MeshDeform.cloud_block_buffer_from_surf_get
-        .. autofunction:: Pypdm.Pypdm.MeshDeform.cloud_block_get
+        .. automethod:: Pypdm.Pypdm.MeshDeform.cloud_n_points_part_get
+        .. automethod:: Pypdm.Pypdm.MeshDeform.cloud_displ_part_get
+        .. automethod:: Pypdm.Pypdm.MeshDeform.n_aux_geom
+        .. automethod:: Pypdm.Pypdm.MeshDeform.cloud_block_n_points
+        .. automethod:: Pypdm.Pypdm.MeshDeform.cloud_block_buffer_from_surf_get
+        .. automethod:: Pypdm.Pypdm.MeshDeform.cloud_block_get
 
       .. ifconfig:: enable_python_doc == 'OFF'
 

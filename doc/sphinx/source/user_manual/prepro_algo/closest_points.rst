@@ -54,7 +54,7 @@ API
 
         .. py:class:: ClosestPoints
 
-          .. autofunction:: Pypdm.Pypdm.ClosestPoints.__init__
+          .. automethod:: Pypdm.Pypdm.ClosestPoints.__init__
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -102,7 +102,7 @@ API
 
       .. ifconfig:: enable_python_doc == 'ON'
 
-        .. autofunction:: Pypdm.Pypdm.ClosestPoints.n_part_cloud_set
+        .. automethod:: Pypdm.Pypdm.ClosestPoints.n_part_cloud_set
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -143,8 +143,8 @@ API
 
       .. ifconfig:: enable_python_doc == 'ON'
 
-        .. autofunction:: Pypdm.Pypdm.ClosestPoints.src_cloud_set
-        .. autofunction:: Pypdm.Pypdm.ClosestPoints.tgt_cloud_set
+        .. automethod:: Pypdm.Pypdm.ClosestPoints.src_cloud_set
+        .. automethod:: Pypdm.Pypdm.ClosestPoints.tgt_cloud_set
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -187,7 +187,7 @@ API
 
       .. ifconfig:: enable_python_doc == 'ON'
 
-        .. autofunction:: Pypdm.Pypdm.ClosestPoints.compute
+        .. automethod:: Pypdm.Pypdm.ClosestPoints.compute
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -226,7 +226,7 @@ API
 
       .. ifconfig:: enable_python_doc == 'ON'
 
-        .. autofunction:: Pypdm.Pypdm.ClosestPoints.dump_times
+        .. automethod:: Pypdm.Pypdm.ClosestPoints.dump_times
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -272,7 +272,7 @@ API
 
         .. ifconfig:: enable_python_doc == 'ON'
 
-          .. autofunction:: Pypdm.Pypdm.ClosestPoints.points_get
+          .. automethod:: Pypdm.Pypdm.ClosestPoints.points_get
 
         .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -315,7 +315,7 @@ API
 
         .. ifconfig:: enable_python_doc == 'ON'
 
-          .. autofunction:: Pypdm.Pypdm.ClosestPoints.tgt_in_src_get
+          .. automethod:: Pypdm.Pypdm.ClosestPoints.tgt_in_src_get
 
         .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -360,7 +360,7 @@ API
 
       .. ifconfig:: enable_python_doc == 'ON'
 
-        .. autofunction:: Pypdm.Pypdm.ClosestPoints.part_to_part_get
+        .. automethod:: Pypdm.Pypdm.ClosestPoints.part_to_part_get
 
       .. ifconfig:: enable_python_doc == 'OFF'
 

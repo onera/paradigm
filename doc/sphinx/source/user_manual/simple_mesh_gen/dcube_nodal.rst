@@ -46,7 +46,7 @@ API
 
         .. py:class:: DCubeNodalGenerator
 
-          .. autofunction:: Pypdm.Pypdm.DCubeNodalGenerator.__init__
+          .. automethod:: Pypdm.Pypdm.DCubeNodalGenerator.__init__
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -88,8 +88,8 @@ API
 
       .. ifconfig:: enable_python_doc == 'ON'
 
-        .. autofunction:: Pypdm.Pypdm.DCubeNodalGenerator.set_random_factor
-        .. autofunction:: Pypdm.Pypdm.DCubeNodalGenerator.set_ordering
+        .. automethod:: Pypdm.Pypdm.DCubeNodalGenerator.set_random_factor
+        .. automethod:: Pypdm.Pypdm.DCubeNodalGenerator.set_ordering
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -131,8 +131,8 @@ API
 
       .. ifconfig:: enable_python_doc == 'ON'
 
-        .. autofunction:: Pypdm.Pypdm.DCubeNodalGenerator.compute
-        .. autofunction:: Pypdm.Pypdm.DCubeNodalGenerator.get_dmesh_nodal
+        .. automethod:: Pypdm.Pypdm.DCubeNodalGenerator.compute
+        .. automethod:: Pypdm.Pypdm.DCubeNodalGenerator.get_dmesh_nodal
 
       .. ifconfig:: enable_python_doc == 'OFF'
 

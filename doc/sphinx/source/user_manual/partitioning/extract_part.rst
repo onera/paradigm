@@ -51,7 +51,7 @@ API
 
         .. py:class:: ExtractPart
 
-          .. autofunction:: Pypdm.Pypdm.ExtractPart.__init__
+          .. automethod:: Pypdm.Pypdm.ExtractPart.__init__
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -107,9 +107,9 @@ API
 
       .. ifconfig:: enable_python_doc == 'ON'
 
-        .. autofunction:: Pypdm.Pypdm.ExtractPart.part_set
-        .. autofunction:: Pypdm.Pypdm.ExtractPart.n_group_set
-        .. autofunction:: Pypdm.Pypdm.ExtractPart.group_set
+        .. automethod:: Pypdm.Pypdm.ExtractPart.part_set
+        .. automethod:: Pypdm.Pypdm.ExtractPart.n_group_set
+        .. automethod:: Pypdm.Pypdm.ExtractPart.group_set
 
 
       .. ifconfig:: enable_python_doc == 'OFF'
@@ -154,8 +154,8 @@ API
 
       .. ifconfig:: enable_python_doc == 'ON'
 
-        .. autofunction:: Pypdm.Pypdm.ExtractPart.selected_lnum_set
-        .. autofunction:: Pypdm.Pypdm.ExtractPart.target_set
+        .. automethod:: Pypdm.Pypdm.ExtractPart.selected_lnum_set
+        .. automethod:: Pypdm.Pypdm.ExtractPart.target_set
 
 
       .. ifconfig:: enable_python_doc == 'OFF'
@@ -197,7 +197,7 @@ API
 
       .. ifconfig:: enable_python_doc == 'ON'
 
-        .. autofunction:: Pypdm.Pypdm.ExtractPart.compute
+        .. automethod:: Pypdm.Pypdm.ExtractPart.compute
 
 
       .. ifconfig:: enable_python_doc == 'OFF'
@@ -265,12 +265,12 @@ API
 
       .. ifconfig:: enable_python_doc == 'ON'
 
-        .. autofunction:: Pypdm.Pypdm.ExtractPart.n_entity_get
-        .. autofunction:: Pypdm.Pypdm.ExtractPart.connectivity_get
-        .. autofunction:: Pypdm.Pypdm.ExtractPart.vtx_coord_get
-        .. autofunction:: Pypdm.Pypdm.ExtractPart.ln_to_gn_get
-        .. autofunction:: Pypdm.Pypdm.ExtractPart.parent_ln_to_gn_get
-        .. autofunction:: Pypdm.Pypdm.ExtractPart.group_get
+        .. automethod:: Pypdm.Pypdm.ExtractPart.n_entity_get
+        .. automethod:: Pypdm.Pypdm.ExtractPart.connectivity_get
+        .. automethod:: Pypdm.Pypdm.ExtractPart.vtx_coord_get
+        .. automethod:: Pypdm.Pypdm.ExtractPart.ln_to_gn_get
+        .. automethod:: Pypdm.Pypdm.ExtractPart.parent_ln_to_gn_get
+        .. automethod:: Pypdm.Pypdm.ExtractPart.group_get
 
 
       .. ifconfig:: enable_python_doc == 'OFF'
@@ -334,8 +334,8 @@ API
 
       .. ifconfig:: enable_python_doc == 'ON'
 
-        .. autofunction:: Pypdm.Pypdm.ExtractPart.part_to_part_get
-        .. autofunction:: Pypdm.Pypdm.ExtractPart.part_to_part_group_get
+        .. automethod:: Pypdm.Pypdm.ExtractPart.part_to_part_get
+        .. automethod:: Pypdm.Pypdm.ExtractPart.part_to_part_group_get
 
 
       .. ifconfig:: enable_python_doc == 'OFF'
