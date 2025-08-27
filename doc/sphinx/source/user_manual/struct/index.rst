@@ -7,9 +7,9 @@ Mesh Structures
 .. container:: toc-cards
 
   .. card:: Partitioned Nodal Mesh Structure
-    :link: pmn
+    :link: part_mesh_nodal
     :link-type: ref
-    
+
     Store a partitioned nodal mesh
 
 |
@@ -21,4 +21,4 @@ Mesh Structures
   :maxdepth: 1
   :hidden:
 
-  pmn
+  part_mesh_nodal

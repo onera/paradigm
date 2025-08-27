@@ -1,4 +1,4 @@
-.. _ptb:
+.. _part_to_block:
 
 Part to Block
 =============

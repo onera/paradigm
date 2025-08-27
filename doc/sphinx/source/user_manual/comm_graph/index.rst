@@ -45,9 +45,9 @@ Communication graphs
   :maxdepth: 1
   :hidden:
 
-  ptp
-  btp
-  ptb
+  part_to_part
+  block_to_part
+  part_to_block
 
 ..  reduce
 ..  gnum_location

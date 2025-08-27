@@ -1,4 +1,4 @@
-.. _ptp:
+.. _part_to_part:
 
 Part to Part
 ============

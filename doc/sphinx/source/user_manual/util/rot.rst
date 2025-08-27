@@ -1,4 +1,4 @@
-.. _rot:
+.. _rotation:
 
 Rotations in 3D
 ===============

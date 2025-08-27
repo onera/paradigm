@@ -66,7 +66,7 @@ API
 
 .. dropdown:: Define geometry
 
-  If a :ref:`Part Mesh Nodal <pmn>` instance is available, it can be used directly to define the geometry.
+  If a :ref:`Part Mesh Nodal <part_mesh_nodal>` instance is available, it can be used directly to define the geometry.
 
   .. tab-set::
     :sync-group: language

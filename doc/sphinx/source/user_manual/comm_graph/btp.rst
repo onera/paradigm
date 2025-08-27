@@ -1,4 +1,4 @@
-.. _btp:
+.. _block_to_part:
 
 Block to Part
 =============
@@ -12,7 +12,7 @@ API
 """
 
 .. dropdown:: Initialization
-  
+
   .. tab-set::
     :sync-group: language
 
@@ -28,14 +28,14 @@ API
 
       .. f:autosubroutine:: PDM_block_to_part_create
 
-    
+
     .. tab-item:: Python
       :sync: Python
 
         .. autofunction:: Pypdm.Pypdm.BlockToPart.__init__
 
 
-      
+
 
 
 .. dropdown:: Exchange
@@ -64,7 +64,7 @@ API
         :p pdm_pointer_array_t part_stride [out]: Stride for ``part_data``
         :p pdm_pointer_array_t part_data [out]: Partitioned data
 
-      
+
       .. f:subroutine:: pdm_block_to_part_exch_in_place(btp, t_stride, block_stride, block_data, part_stride, part_data)
 
         Exchange data from blocks to partitions. Output arrays are allocated by the user *before* the call to this subroutine.
@@ -77,13 +77,13 @@ API
         :p pdm_pointer_array_t part_data [inout]: Partitioned data
 
 
-    
+
     .. tab-item:: Python
       :sync: Python
 
         .. autofunction:: Pypdm.Pypdm.BlockToPart.exchange_field
         .. autofunction:: Pypdm.Pypdm.BlockToPart.exchange_field_inplace
-        
+
 
 
 
@@ -104,7 +104,7 @@ API
         .. f:autosubroutine:: PDM_block_to_part_free
 
 
-    
+
     .. tab-item:: Python
       :sync: Python
 

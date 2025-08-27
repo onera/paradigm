@@ -1,4 +1,4 @@
-.. _dcube_nodal:
+.. _dcube_nodal_gen:
 
 Distributed Nodal Square/Cube Mesh
 ==================================

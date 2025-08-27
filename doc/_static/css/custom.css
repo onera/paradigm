@@ -272,5 +272,5 @@ dl[class]:not(.option-list):not(.field-list):not(.footnote):not(.glossary):not(.
 .pdmkw {
   color: var(--color-pdmkw);
   /* font-weight: bold; */
-  font-family: var(--font-stack--monospace);
+  /* font-family: var(--font-stack--monospace); */
 }

@@ -190,7 +190,7 @@ html_theme_options = {
         "font-stack--monospace": "Roboto Mono, SFMono-Regular, Menlo, Consolas, Monaco, Liberation Mono, Lucida Console, monospace",
         "color-foreground-primary": "#23373b",
         "color-brand-primary": "#1c64ff",
-        "color-pdmkw": "#4c76c2",
+        "color-pdmkw": "#6d80a1",
         "color-link": "#366ce4",
         "color-highlight-on-target": "#ffeee6",
         "color-foreground-tertiary": "#d9d9da",
@@ -199,7 +199,7 @@ html_theme_options = {
     },
     "dark_css_variables": {
         "color-brand-primary": "#3d94ff",
-        "color-pdmkw": "#70a7df",
+        "color-pdmkw": "#879aad",
         "color-link": "#5ca5ff",
         "color-highlight-on-target": "#2d1d0c",
         "color-foreground-tertiary": "#3f4144",

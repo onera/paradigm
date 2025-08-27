@@ -1,4 +1,4 @@
-.. _pmn:
+.. _part_mesh_nodal:
 
 Partitioned Nodal Mesh
 ======================

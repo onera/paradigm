@@ -94,11 +94,23 @@ if(PDM_ENABLE_DOC)
     # - Our doc files have been updated
     # - The Sphinx config has been updated
 
+
+    # Generate Release Notes page for Sphinx doc from ChangeLog text file
+    set(CHANGELOG_FILE ${PROJECT_SOURCE_DIR}/ChangeLog)
+    set(SPHINX_RELEASE_NOTES ${SPHINX_SOURCE}/changelog.rst)
+    add_custom_command(OUTPUT ${SPHINX_RELEASE_NOTES}
+                       COMMAND ${CMAKE_COMMAND} -E env ${DOC_PYTHONPATH} env MPI4PY_RC_INITIALIZE=False env ${DOC_PRELOAD} env ${RUN_LSAN} env ${RUN_UBSAN}
+                       ${Python_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/gen_release_notes.py -i ${CHANGELOG_FILE} -o ${SPHINX_RELEASE_NOTES}
+                       DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/gen_release_notes.py ${CHANGELOG_FILE}
+                       COMMENT "Generating Release Notes page")
+
     #file (COPY ${CMAKE_CURRENT_SOURCE_DIR}/sphinx DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
     file(GLOB_RECURSE SOURCES_SPHINX
-      ${CMAKE_CURRENT_SOURCE_DIR}/sphinx/source/*.rst
+      ${SPHINX_SOURCE}/*.rst
     )
+
+    list(APPEND SOURCES_SPHINX ${SPHINX_RELEASE_NOTES})
 
     #foreach(_src IN ITEMS ${SOURCES_SPHINX})
     #  file(RELATIVE_PATH F_BASENAME ${CMAKE_CURRENT_SOURCE_DIR} ${_src})

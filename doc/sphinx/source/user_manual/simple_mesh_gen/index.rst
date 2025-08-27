@@ -7,9 +7,9 @@ Simple mesh generation
 .. container:: toc-cards
 
   .. card:: Dcube nodal
-    :link: dcube_nodal
+    :link: dcube_nodal_gen
     :link-type: ref
-    
+
     Generate block-distributed square/cube meshes with nodal connectivity
 
 
@@ -17,7 +17,7 @@ Simple mesh generation
   .. card:: Simplified mesh generation
     :link: generate_mesh
     :link-type: ref
-    
+
     Generate simple partitioned meshes in a single function call
 
 
@@ -27,7 +27,7 @@ Simple mesh generation
   :maxdepth: 1
   :hidden:
 
-  dcube_nodal
+  dcube_nodal_gen
   generate_mesh
 
 |

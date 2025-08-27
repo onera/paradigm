@@ -7,7 +7,7 @@ Utils
 .. container:: toc-cards
 
   .. card:: Rotations
-    :link: rot
+    :link: rotation
     :link-type: ref
 
     Services handling 3D rigid body rotations
@@ -21,4 +21,4 @@ Utils
   :maxdepth: 1
   :hidden:
 
-  rot
+  rotation
