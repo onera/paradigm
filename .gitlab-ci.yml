@@ -12,6 +12,7 @@ variables:
   CUSTOM_CI_BUILDS_DIR: $WORKDIR/test # inactif car option non activee dans la configuration du runner
   GIT_STRATEGY: none # don't do anything by default
   # CI_DEBUG_TRACE: "true" #Uncomment to debug CI
+  PYTHONNOUSERSITE: 1
 default:
   tags: #All jobs uses jamacar-slurm executor
     - juno-shell
