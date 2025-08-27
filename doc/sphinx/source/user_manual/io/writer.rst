@@ -44,7 +44,9 @@ API
 
       .. ifconfig:: enable_python_doc == 'ON'
 
-        .. autofunction:: Pypdm.Pypdm.Writer.__init__
+        .. py:class:: Writer
+
+          .. autofunction:: Pypdm.Pypdm.Writer.__init__
 
       .. ifconfig:: enable_python_doc == 'OFF'
 

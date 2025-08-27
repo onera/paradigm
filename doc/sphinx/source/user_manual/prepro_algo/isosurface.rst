@@ -55,11 +55,6 @@ API
 
         .. py:class:: Isosurface
 
-          Python structure to perform isosurface and slice construction. Once initialized, all the following
-          methods apply to a :class:`Isosurface` instance.
-
-          .. rubric:: Initialization
-
           .. autofunction:: Pypdm.Pypdm.Isosurface.__init__
 
       .. ifconfig:: enable_python_doc == 'OFF'
@@ -515,13 +510,8 @@ API
     .. tab-item:: Python
       :sync: Python
 
-      .. ifconfig:: enable_python_doc == 'ON'
+      |python_gc|
 
-
-      .. ifconfig:: enable_python_doc == 'OFF'
-
-        .. warning::
-          Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
 
 
 Appendices

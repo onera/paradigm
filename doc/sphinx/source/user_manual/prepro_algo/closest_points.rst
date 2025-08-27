@@ -52,7 +52,9 @@ API
 
       .. ifconfig:: enable_python_doc == 'ON'
 
-        .. autofunction:: Pypdm.Pypdm.ClosestPoints.__init__
+        .. py:class:: ClosestPoints
+
+          .. autofunction:: Pypdm.Pypdm.ClosestPoints.__init__
 
       .. ifconfig:: enable_python_doc == 'OFF'
 

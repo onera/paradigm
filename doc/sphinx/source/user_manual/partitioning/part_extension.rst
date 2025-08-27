@@ -50,7 +50,9 @@ API
 
       .. ifconfig:: enable_python_doc == 'ON'
 
-        .. autofunction:: Pypdm.Pypdm.PartExtension.__init__
+        .. py:class:: PartExtension
+
+          .. autofunction:: Pypdm.Pypdm.PartExtension.__init__
 
       .. ifconfig:: enable_python_doc == 'OFF'
 

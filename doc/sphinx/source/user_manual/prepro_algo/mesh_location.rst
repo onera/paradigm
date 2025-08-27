@@ -52,7 +52,9 @@ API
 
       .. ifconfig:: enable_python_doc == 'ON'
 
-        .. autofunction:: Pypdm.Pypdm.MeshLocation.__init__
+        .. py:class:: MeshLocation
+
+          .. autofunction:: Pypdm.Pypdm.MeshLocation.__init__
 
       .. ifconfig:: enable_python_doc == 'OFF'
 

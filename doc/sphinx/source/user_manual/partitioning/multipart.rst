@@ -61,7 +61,9 @@ API
 
       .. ifconfig:: enable_python_doc == 'ON'
 
-        .. autofunction:: Pypdm.Pypdm.MultiPart.__init__
+        .. py:class:: MultiPart
+
+          .. autofunction:: Pypdm.Pypdm.MultiPart.__init__
 
       .. ifconfig:: enable_python_doc == 'OFF'
 

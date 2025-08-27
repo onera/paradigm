@@ -51,7 +51,9 @@ API
 
       .. ifconfig:: enable_python_doc == 'ON'
 
-        .. autofunction:: Pypdm.Pypdm.PartMeshNodal.__init__
+        .. py:class:: PartMeshNodal
+
+          .. autofunction:: Pypdm.Pypdm.PartMeshNodal.__init__
 
       .. ifconfig:: enable_python_doc == 'OFF'
 

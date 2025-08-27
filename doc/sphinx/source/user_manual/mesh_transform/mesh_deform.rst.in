@@ -44,7 +44,9 @@ API
 
       .. ifconfig:: enable_python_doc == 'ON'
 
-        .. autofunction:: Pypdm.Pypdm.MeshDeform.__init__
+        .. py:class:: MeshDeform
+
+          .. autofunction:: Pypdm.Pypdm.MeshDeform.__init__
 
       .. ifconfig:: enable_python_doc == 'OFF'
 

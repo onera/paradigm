@@ -46,7 +46,7 @@ API
 
         .. py:class:: DCubeNodalGenerator
 
-        .. autofunction:: Pypdm.Pypdm.DCubeNodalGenerator.__init__
+          .. autofunction:: Pypdm.Pypdm.DCubeNodalGenerator.__init__
 
       .. ifconfig:: enable_python_doc == 'OFF'
 

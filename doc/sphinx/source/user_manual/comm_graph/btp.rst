@@ -32,7 +32,9 @@ API
     .. tab-item:: Python
       :sync: Python
 
-        .. autofunction:: Pypdm.Pypdm.BlockToPart.__init__
+        .. py:class:: BlockToPart
+
+          .. autofunction:: Pypdm.Pypdm.BlockToPart.__init__
 
 
 

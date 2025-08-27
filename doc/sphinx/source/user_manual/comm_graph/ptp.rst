@@ -44,9 +44,11 @@ API
 
       .. ifconfig:: enable_python_doc == 'ON'
 
-        .. autofunction:: Pypdm.Pypdm.PartToPart.__init__
+        .. py:class:: PartToPart
 
-        .. autofunction:: Pypdm.Pypdm.PartToPart.from_triplet
+          .. autofunction:: Pypdm.Pypdm.PartToPart.__init__
+
+          .. autofunction:: Pypdm.Pypdm.PartToPart.from_triplet
 
       .. ifconfig:: enable_python_doc == 'OFF'
 

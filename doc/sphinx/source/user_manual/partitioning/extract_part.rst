@@ -49,7 +49,9 @@ API
 
       .. ifconfig:: enable_python_doc == 'ON'
 
-        .. autofunction:: Pypdm.Pypdm.ExtractPart.__init__
+        .. py:class:: ExtractPart
+
+          .. autofunction:: Pypdm.Pypdm.ExtractPart.__init__
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
