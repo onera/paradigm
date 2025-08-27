@@ -1,9 +1,9 @@
 #include "pdm_configf.h"
 
-subroutine PDM_my_function(x, &
-                           y, &
-                           z, &
-                           value) &
+subroutine iso_surface_function(x,     &
+                                y,     &
+                                z,     &
+                                value) &
 bind(c)
   use iso_c_binding
   implicit none
@@ -36,8 +36,7 @@ bind(c)
              + d*(x + y + z)                   &
              + e
 
-end subroutine PDM_my_function
-
+end subroutine iso_surface_function
 
 program isosurface_3d_ngon
 
@@ -160,10 +159,10 @@ program isosurface_3d_ngon
   integer :: i_vtx, i_vtx_parent
 
   interface
-    subroutine PDM_my_function(x,     &
-                               y,     &
-                               z,     &
-                               value) &
+    subroutine iso_surface_function(x,     &
+                                    y,     &
+                                    z,     &
+                                    value) &
     bind(c)
       use iso_c_binding
       implicit none
@@ -173,10 +172,8 @@ program isosurface_3d_ngon
       real(c_double), value :: z
       type(c_ptr), value :: value
 
-    end subroutine PDM_my_function
+    end subroutine iso_surface_function
   end interface
-
-
 
   !----------------------------------------
   ! Parse command line arguments
@@ -401,9 +398,9 @@ program isosurface_3d_ngon
                                     ipart_surface_ln_to_gn)
     ! FIELD
     allocate(ipart_field(n_vtx(i_part)))
-    call PDM_field(n_vtx(i_part), &
-                   ipart_vtx_coord, &
-                   ipart_field)
+    call compute_field(n_vtx(i_part), &
+                       ipart_vtx_coord, &
+                       ipart_field)
 
         
     call PDM_pointer_array_part_set(array_field, & ! <- Pointer array
@@ -442,7 +439,7 @@ program isosurface_3d_ngon
 
   call PDM_isosurface_field_function_set(isos, &
                                          iso2, &
-                                         PDM_my_function);
+                                         iso_surface_function);
 
 
 
@@ -710,9 +707,9 @@ program isosurface_3d_ngon
 
   contains
 
-  subroutine PDM_field(n_vtx,      &
-                       vtx_coords, &
-                       field)
+  subroutine compute_field(n_vtx,      &
+                           vtx_coords, &
+                           field)
     use iso_c_binding
     implicit none
 
@@ -729,7 +726,6 @@ program isosurface_3d_ngon
 
     field(:) = (x(:)-center)*(x(:)-center) + (y(:)-center)*(y(:)-center) + (z(:)-center)*(z(:)-center) - 2.0d0
 
-  end subroutine PDM_field
-
+  end subroutine compute_field
 
 end program isosurface_3d_ngon

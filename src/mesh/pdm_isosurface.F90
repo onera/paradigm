@@ -26,12 +26,29 @@ module pdm_isosurface
 
   implicit none
 
+  interface
+    subroutine pdm_isosurface_field_function_t (x, &
+                                                y, &
+                                                z, &
+                                                value) &
+    bind(c)
+      use iso_c_binding
+      implicit none
+
+      real(c_double), value :: x
+      real(c_double), value :: y
+      real(c_double), value :: z
+      type(c_ptr),    value :: value
+
+    end subroutine pdm_isosurface_field_function_t
+  end interface
+
+
   contains
 
   subroutine PDM_isosurface_n_part_set(isos, &
                                        n_part)
     ! Set the number of partitions.
-    use iso_c_binding
     implicit none
 
     type(c_ptr)         :: isos   ! PDM_isosurface_t instance
@@ -59,8 +76,7 @@ module pdm_isosurface
   subroutine PDM_isosurface_n_group_set(isos, &
                                         entity_type, &
                                         n_group)
-    ! Set the number of group.
-    use iso_c_binding
+    ! Set the number of groups.
     implicit none
 
     type(c_ptr) :: isos                ! PDM_isosurface_t instance
@@ -93,7 +109,6 @@ module pdm_isosurface
   subroutine PDM_isosurface_part_mesh_set(isos, & 
                                           pmesh)
     ! Set partioned mesh. Not yet available
-    use iso_c_binding
     implicit none
 
     type(c_ptr) :: isos  ! PDM_isosurface_t instance
@@ -121,7 +136,6 @@ module pdm_isosurface
   subroutine PDM_isosurface_part_mesh_nodal_set (isos, &
                                                  pmn)
     ! Set nodal mesh.
-    use iso_c_binding
     implicit none
 
     type(c_ptr) :: isos ! PDM_isosurface_t instance
@@ -149,7 +163,6 @@ module pdm_isosurface
   subroutine PDM_isosurface_dmesh_set (isos,  &
                                        dmesh)
     ! Set block-distributed mesh. Not yet available.
-    use iso_c_binding
     implicit none
 
     type(c_ptr) :: isos  ! PDM_isosurface_t instance
@@ -177,7 +190,6 @@ module pdm_isosurface
   subroutine PDM_isosurface_dmesh_nodal_set (isos, &
                                              dmn)
     ! Set block-distributed nodal mesh.
-    use iso_c_binding
     implicit none
 
     type(c_ptr) :: isos ! PDM_isosurface_t instance
@@ -202,35 +214,20 @@ module pdm_isosurface
   end subroutine PDM_isosurface_dmesh_nodal_set
 
 
-  subroutine PDM_isosurface_field_function_set (isos, &
+  subroutine PDM_isosurface_field_function_set (isos,          &
                                                 id_isosurface, &
-                                                pdm_isosurface_field_function_t)
+                                                func)
     ! Set source field function.
-    use iso_c_binding
     implicit none
 
-    type(c_ptr), value  :: isos          ! PDM_isosurface_t instance
-    integer, intent(in) :: id_isosurface ! Iso-surface identifier
+    type(c_ptr), value                         :: isos          ! PDM_isosurface_t instance
+    integer, intent(in)                        :: id_isosurface ! Iso-surface identifier
+    procedure(pdm_isosurface_field_function_t) :: func          ! Subroutine name of field function
 
     interface
-      subroutine pdm_isosurface_field_function_t (x, &
-                                                  y, &
-                                                  z, &
-                                                  value) &
-      bind(c)
-        use iso_c_binding
-        implicit none
-
-        real(c_double), value :: x
-        real(c_double), value :: y
-        real(c_double), value :: z
-        type(c_ptr),    value :: value
-
-      end subroutine pdm_isosurface_field_function_t
-
-      subroutine PDM_isosurface_field_function_set_cf (isos, &
+      subroutine PDM_isosurface_field_function_set_cf (isos,          &
                                                        id_isosurface, &
-                                                       pdm_isosurface_field_function_t) &
+                                                       func)          &
       bind(c, name="PDM_isosurface_field_function_set")
 
         use iso_c_binding
@@ -238,14 +235,15 @@ module pdm_isosurface
 
         type(c_ptr),    value :: isos
         integer(c_int), value :: id_isosurface
-        type(c_funptr), value :: pdm_isosurface_field_function_t
+        type(c_funptr), value :: func
 
       end subroutine PDM_isosurface_field_function_set_cf
     end interface
 
+
     call PDM_isosurface_field_function_set_cf (isos, &
                                                id_isosurface, &
-                                               c_funloc(pdm_isosurface_field_function_t))
+                                               c_funloc(func))
 
 
   end subroutine PDM_isosurface_field_function_set
@@ -261,7 +259,6 @@ module pdm_isosurface
     !
     !  - PDM_EXTRACT_PART_KIND_REEQUILIBRATE: the iso-surface is evenly redistributed (Default kind)
     !  - PDM_EXTRACT_PART_KIND_LOCAL: the iso-surface is not redistributed (same partitioning as the input mesh)
-    use iso_c_binding
     implicit none
 
     type(c_ptr) :: isos                 ! PDM_isosurface_t instance
@@ -294,7 +291,6 @@ module pdm_isosurface
   subroutine PDM_isosurface_reset (isos,          &
                                    id_isosurface)
     ! Clear the constructed iso-surface meshes.
-    use iso_c_binding
     implicit none
 
     type(c_ptr)         :: isos          ! PDM_isosurface_t instance
@@ -328,7 +324,6 @@ module pdm_isosurface
     !
     !   - 1 in `REEQUILIBRATE` mode
     !   - the number of partitions in the source mesh in `LOCAL` mode (mandatory)
-    use iso_c_binding
     implicit none
 
     type(c_ptr)         :: isos       ! PDM_isosurface_t instance
@@ -356,7 +351,6 @@ module pdm_isosurface
   subroutine PDM_isosurface_compute (isos,          &
                                      id_isosurface)
     ! Compute the iso-surface mesh for all requested iso-values.
-    use iso_c_binding
     implicit none
 
     type(c_ptr)         :: isos          ! PDM_isosurface_t instance
@@ -383,7 +377,6 @@ module pdm_isosurface
 
   subroutine PDM_isosurface_dump_times (isos)
     ! Dump elapsed and CPU times.
-    use iso_c_binding
     implicit none
 
     type(c_ptr) :: isos ! PDM_isosurface_t instance
@@ -409,7 +402,6 @@ module pdm_isosurface
                                                  entity_type,       &
                                                  unify_parent_info)
     ! Enable construction of a communication graph between source mesh entities and iso-surface entities.
-    use iso_c_binding
     implicit none
 
     type(c_ptr)         :: isos              ! PDM_isosurface_t instance
@@ -448,7 +440,6 @@ module pdm_isosurface
                                               ptp,           &
                                               ownership)
     ! Get PDM_part_to_part_t instance to exchange data between source mesh entities and iso-surface entities.
-    use iso_c_binding
     implicit none
 
     type(c_ptr)              :: isos          ! PDM_isosurface_t instance
@@ -487,7 +478,6 @@ module pdm_isosurface
 
   subroutine PDM_isosurface_free (isos)
     ! Free a PDM_isosurface_t instance.
-    use iso_c_binding
     implicit none
 
     type(c_ptr) :: isos ! PDM_isosurface_t instance
@@ -513,7 +503,6 @@ module pdm_isosurface
                                    mesh_dimension, &
                                    isos)
     ! Create a PDM_isosurface_t instance.
-    use iso_c_binding
     implicit none
 
     integer, intent(in) :: comm           ! MPI communicator
@@ -553,7 +542,6 @@ module pdm_isosurface
                                                connect_idx,       &
                                                connect)
     ! Set connectivity.
-    use iso_c_binding
     implicit none
 
     type(c_ptr),                        intent(in) :: isos              ! PDM_isosurface_t instance
@@ -613,7 +601,6 @@ module pdm_isosurface
                                            n_vtx,  &
                                            vtx_coord)
     ! Set vertex coordinates.
-    use iso_c_binding
     implicit none
 
     type(c_ptr),      intent(in) :: isos           ! PDM_isosurface_t instance
@@ -659,7 +646,6 @@ module pdm_isosurface
                                          entity_type, &
                                          ln_to_gn)
     ! Set global ids.
-    use iso_c_binding
     implicit none
 
     type(c_ptr),                        intent(in) :: isos           ! PDM_isosurface_t instance
@@ -707,7 +693,6 @@ module pdm_isosurface
                                        group_entity,     &
                                        group_entity_ln_to_gn)
     ! Set group description.
-    use iso_c_binding
     implicit none
 
     type(c_ptr),                        intent(in) :: isos                     ! PDM_isosurface_t instance
@@ -774,7 +759,6 @@ module pdm_isosurface
                                               dconnect_idx,      &
                                               dconnect)
     ! Set block-distributed connectivity.
-    use iso_c_binding
     implicit none
 
     type(c_ptr),                        intent(in) :: isos              ! PDM_isosurface_t instance
@@ -823,7 +807,6 @@ module pdm_isosurface
   subroutine PDM_isosurface_dvtx_coord_set(isos, &
                                            dvtx_coord)
     ! Set block-distributed vertex coordinates.
-    use iso_c_binding
     implicit none
 
     type(c_ptr),      intent(in) :: isos            ! PDM_isosurface_t instance
@@ -859,7 +842,6 @@ module pdm_isosurface
                                         entity_type, &
                                         distrib)
     ! Set entity block distribution index.
-    use iso_c_binding
     implicit none
 
     type(c_ptr),                        intent(in) :: isos        ! PDM_isosurface_t instance
@@ -900,7 +882,6 @@ module pdm_isosurface
                                        dgroup_entity_idx, &
                                        dgroup_entity)
     ! Set block-distributed group description.
-    use iso_c_binding
     implicit none
 
     type(c_ptr),                        intent(in) :: isos                 ! PDM_isosurface_t instance
@@ -953,7 +934,6 @@ module pdm_isosurface
                                  isovalues,     &
                                  id_isosurface)
     ! Add a requested set of iso-surfaces.
-    use iso_c_binding
     implicit none
 
     type(c_ptr),      intent(in)  :: isos           ! PDM_isosurface_t instance
@@ -1001,7 +981,6 @@ module pdm_isosurface
                                           n_isovalues,   &
                                           isovalues)
     ! Reset isovalues of given isosurface.
-    use iso_c_binding
     implicit  none
 
     type(c_ptr),      intent(in) :: isos          ! PDM_isosurface_t instance
@@ -1045,7 +1024,6 @@ module pdm_isosurface
                                           id_isosurface, &
                                           coeff)
     ! Set source field equation.
-    use iso_c_binding
     implicit none
 
     type(c_ptr),      intent(in) :: isos          ! PDM_isosurface_t instance
@@ -1087,7 +1065,6 @@ module pdm_isosurface
                                         i_part,        &
                                         field)
     ! Set field values.
-    use iso_c_binding
     implicit none
 
     type(c_ptr),      intent(in) :: isos          ! PDM_isosurface_t instance
@@ -1133,7 +1110,6 @@ module pdm_isosurface
                                         id_isosurface, &
                                         dfield)
     ! Set block-distributed field values.
-    use iso_c_binding
     implicit none
 
     type(c_ptr),      intent(in) :: isos          ! PDM_isosurface_t instance
@@ -1174,7 +1150,6 @@ module pdm_isosurface
   subroutine PDM_isosurface_set_tolerance(isos, &
                                           tol)
     ! Set isosurface tolerance. May improve resulting mesh quality.
-    use iso_c_binding
     implicit none
 
     type(c_ptr)         :: isos ! Iso-surface instance
@@ -1212,7 +1187,6 @@ module pdm_isosurface
                                                connect,           &
                                                ownership)
     ! Get the iso-surfaces mesh connectivity.
-    use iso_c_binding
     implicit none
 
     type(c_ptr), value                 :: isos              ! PDM_isosurface_t instance
@@ -1291,7 +1265,6 @@ module pdm_isosurface
                                             vtx_coord,     &
                                             ownership)
     ! Get coordinates of iso-surface vertices.
-    use iso_c_binding
     implicit none
 
     type(c_ptr), value  :: isos           ! PDM_isosurface_t instance
@@ -1356,7 +1329,6 @@ module pdm_isosurface
                                           ln_to_gn,      &
                                           ownership)
     ! Get global ids of iso-surface entities.
-    use iso_c_binding
     implicit none
 
     type(c_ptr), value                 :: isos          ! PDM_isosurface_t instance
@@ -1429,7 +1401,6 @@ module pdm_isosurface
                                         group_entity_ln_to_gn, &
                                         ownership)
     ! Get group description.
-    use iso_c_binding
     implicit none
 
     type(c_ptr)                        :: isos                     ! PDM_isosurface_t instance
@@ -1520,7 +1491,6 @@ module pdm_isosurface
                                                dconnect,          &
                                                ownership)
     ! Get iso-surface block-distributed mesh connectivity.
-    use iso_c_binding
     implicit none
 
     type(c_ptr)                        :: isos              ! PDM_isosurface_t instance
@@ -1594,7 +1564,6 @@ module pdm_isosurface
                                                 dparent_weight, &
                                                 ownership)
     ! Get iso-surface parent interpolation weight for iso entities.
-    use iso_c_binding
     implicit none
 
     type(c_ptr)                        :: isos              ! PDM_isosurface_t instance
@@ -1665,7 +1634,6 @@ module pdm_isosurface
                                             dvtx_coord,    &
                                             ownership)
     ! Get coordinates of block-distributed iso-surface vertices.
-    use iso_c_binding
     implicit none
 
     type(c_ptr)         :: isos            ! PDM_isosurface_t instance
@@ -1722,7 +1690,6 @@ module pdm_isosurface
                                          n_entity,      &
                                          distribution)
     ! Get block distribution.
-    use iso_c_binding
     implicit none
 
     type(c_ptr)                        :: isos            ! PDM_isosurface_t instance
@@ -1781,7 +1748,6 @@ module pdm_isosurface
                                         dgroup_entity,     &
                                         ownership)
     ! Get block-distributed group description.
-    use iso_c_binding
     implicit none
 
     type(c_ptr)                        :: isos                 ! PDM_isosurface_t instance
@@ -1855,7 +1821,6 @@ module pdm_isosurface
                                                       isovalue_entity_idx, &
                                                       ownership)
     ! Get isovalue.
-    use iso_c_binding
     implicit none
 
     type(c_ptr)                        :: isos                    ! PDM_isosurface_t instance
@@ -1926,7 +1891,6 @@ module pdm_isosurface
                                                   disovalue_entity,     &
                                                   ownership)
     ! Get distributed isovalue→entity.
-    use iso_c_binding
     implicit none
 
     type(c_ptr)                        :: isos                    ! PDM_isosurface_t instance
@@ -2009,7 +1973,6 @@ module pdm_isosurface
     !     - PDM_MESH_ENTITY_VTX  : parents are vertices
     !     - PDM_MESH_ENTITY_EDGE : parents are faces
     !     - PDM_MESH_ENTITY_FACE : parents are cells
-    use iso_c_binding
     implicit none
 
     type(c_ptr)                        :: isos                 ! PDM_isosurface_t instance
@@ -2092,7 +2055,6 @@ module pdm_isosurface
     ! Get interpolation weights of iso-surface entities.
     !
     ! .. warning:: These weights are only computed if the construction of the entity Part-to-Part has been :ref:`enabled <PDM_isosurface_part_to_part_enable_f>`.
-    use iso_c_binding
     implicit none
 
     type(c_ptr)                        :: isos             ! PDM_isosurface_t instance

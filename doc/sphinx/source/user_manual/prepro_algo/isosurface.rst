@@ -81,6 +81,7 @@ Input mesh definition
           .. doxygenfunction:: PDM_isosurface_pconnectivity_set
           .. doxygenfunction:: PDM_isosurface_pvtx_coord_set
           .. doxygenfunction:: PDM_isosurface_ln_to_gn_set
+          .. doxygenfunction:: PDM_isosurface_n_group_set
           .. doxygenfunction:: PDM_isosurface_pgroup_set
 
           .. doxygenfunction:: PDM_isosurface_part_mesh_set
@@ -92,6 +93,7 @@ Input mesh definition
           .. doxygenfunction:: PDM_isosurface_dconnectivity_set
           .. doxygenfunction:: PDM_isosurface_dvtx_coord_set
           .. doxygenfunction:: PDM_isosurface_distrib_set
+          .. doxygenfunction:: PDM_isosurface_n_group_set
           .. doxygenfunction:: PDM_isosurface_dgroup_set
 
           .. doxygenfunction:: PDM_isosurface_dmesh_set
@@ -111,6 +113,7 @@ Input mesh definition
           .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_pconnectivity_set
           .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_pvtx_coord_set
           .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_ln_to_gn_set
+          .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_n_group_set
           .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_pgroup_set
 
           .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_part_mesh_set
@@ -122,6 +125,7 @@ Input mesh definition
           .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_dconnectivity_set
           .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_dvtx_coord_set
           .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_distrib_set
+          .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_n_group_set
           .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_dgroup_set
 
           .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_dmesh_set

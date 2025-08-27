@@ -1,6 +1,6 @@
 #include "pdm_configf.h"
 
-program extract_part_nodal_f
+program isosurface_nodal_f
 
   use pdm
 #ifdef PDM_HAVE_FORTRAN_MPI_MODULE
@@ -197,7 +197,7 @@ program extract_part_nodal_f
                                    plane_equation); ! <- Coefficient of the plane equation (a*x + b*y + c*z - d = isovalues)
 
 
-  ! Realize extraction
+  ! Generate isosurface
   if (extract_kind == PDM_EXTRACT_PART_KIND_REEQUILIBRATE) then
 
     call PDM_isosurface_part_to_part_enable(isos,                & ! <- IsoSurface instance
@@ -213,43 +213,43 @@ program extract_part_nodal_f
   call PDM_isosurface_compute (isos, & ! <- IsoSurface instance
                                id_iso) ! <- ID of the isosurface (-1 to compute all isosurface at once)
 
-  ! Retrieve extracted mesh
+  ! Retrieve isosurface connectivities
   call PDM_isosurface_pconnectivity_get(isos,                           & ! <- IsoSurface instance
                                         id_iso,                         & ! <- ID of the isosurface
                                         0,                              & ! <- ID of current part
                                         PDM_CONNECTIVITY_TYPE_FACE_VTX, & ! <- Face->vtx
-                                        iso_n_face,                     & ! -> Number of extracted faces
-                                        iso_face_vtx_idx,               & ! -> Index for extracted face->vtx connectivity
-                                        iso_face_vtx,                   & ! -> Extracted face->vtx connectivity
+                                        iso_n_face,                     & ! -> Number of isosurface faces
+                                        iso_face_vtx_idx,               & ! -> Index for isosurface face->vtx connectivity
+                                        iso_face_vtx,                   & ! -> Isosurface face->vtx connectivity
                                         PDM_OWNERSHIP_USER)               ! <- Ownership
   ! Coordinates
   call PDM_isosurface_pvtx_coord_get(isos,               & ! <- IsoSurface instance
                                      id_iso,             & ! <- ID of the isosurface
                                      0,                  & ! <- ID of current parts
-                                     iso_n_vtx,          & ! -> Number of extracted vertices
-                                     iso_vtx_coord,      & ! -> Coordinates of extracted vertices
+                                     iso_n_vtx,          & ! -> Number of isosurface vertices
+                                     iso_vtx_coord,      & ! -> Coordinates of isosurface vertices
                                      PDM_OWNERSHIP_USER)   ! <- Ownership
 
-  ! Global IDs (in extracted mesh)
+  ! Global IDs (at isosurface)
   call PDM_isosurface_ln_to_gn_get(isos,                 & ! <- IsoSurface instance
                                    id_iso,               & ! <- ID of the isosurface
                                    0,                    & ! <- ID of current part
                                    PDM_MESH_ENTITY_FACE, & ! <- Faces
-                                   iso_n_face,           & ! -> Number of extracted faces
-                                   iso_face_ln_to_gn,    & ! -> Global IDs of extracted faces
+                                   iso_n_face,           & ! -> Number of isosurface faces
+                                   iso_face_ln_to_gn,    & ! -> Global IDs of isosurface faces
                                    PDM_OWNERSHIP_USER)     ! <- Ownership
 
   call PDM_isosurface_ln_to_gn_get(isos,                & ! <- IsoSurface instance
                                    id_iso,              & ! <- ID of the isosurface
                                    0,                   & ! <- ID of current part
                                    PDM_MESH_ENTITY_VTX, & ! <- Vertices
-                                   iso_n_vtx,           & ! -> Number of extracted vertices
-                                   iso_vtx_ln_to_gn,    & ! -> Global IDs of extracted vertices
+                                   iso_n_vtx,           & ! -> Number of isosurface vertices
+                                   iso_vtx_ln_to_gn,    & ! -> Global IDs of isosurface vertices
                                    PDM_OWNERSHIP_USER)    ! <- Ownership
 
 
   !----------------------------------------
-  ! Transfer data from initial mesh to extraction
+  ! Transfer data from initial mesh to isosurface mesh
 
   !  Field at vertices
   allocate(vtx_field(n_vtx))
@@ -264,7 +264,7 @@ program extract_part_nodal_f
                                             id_iso,                     & ! <- ID of the isosurface
                                             0,                          & ! <- ID of current part
                                             PDM_MESH_ENTITY_VTX,        & ! <- Entity mesh of isosurface : vertices
-                                            iso_n_vtx,                  & ! -> Number of extracted vertices
+                                            iso_n_vtx,                  & ! -> Number of isosurface vertices
                                             piso_vtx_parent_vtx_idx,    & ! -> Index of connectivity vtx->vtx between isosurface and global mesh
                                             pvtx_parent_weight, &         ! -> Interpolation weights 
                                             PDM_OWNERSHIP_USER)           ! <- Ownership
@@ -273,7 +273,7 @@ program extract_part_nodal_f
                                           id_iso,                  & ! <- ID of the isosurface
                                           0,                       & ! <- ID of current part
                                           PDM_MESH_ENTITY_VTX,     & ! <- Entity mesh of isosurface : vertices
-                                          iso_n_vtx,               & ! -> Number of extracted vertices
+                                          iso_n_vtx,               & ! -> Number of isosurface vertices
                                           piso_vtx_parent_vtx_idx, & ! -> Index of connectivity vtx->vtx between isosurface and global mesh
                                           piso_vtx_parent_vtx,     & ! -> Connectivity vtx->vtx between isosurface and global mesh
                                           PDM_OWNERSHIP_USER)        ! <- Ownership
@@ -292,8 +292,8 @@ program extract_part_nodal_f
     call data_transfer(isos,                & ! <- IsoSurface instance
                        PDM_MESH_ENTITY_VTX, & ! <- Vertices
                        vtx_field,           & ! <- Field at vertices (local to current subdomain)
-                       iso_n_vtx,           & ! <- Number of extracted vertices in current subdomain
-                       iso_field)             ! -> Field at extracted vertices
+                       iso_n_vtx,           & ! <- Number of isosurface vertices in current subdomain
+                       iso_field)             ! -> Field at isosurface vertices
   endif
 
 
@@ -312,7 +312,7 @@ program extract_part_nodal_f
                                           id_iso,                    & ! <- ID of the isosurface
                                           0,                         & ! <- ID of current part
                                           PDM_MESH_ENTITY_FACE,      & ! <- Entity mesh of isosurface : faces
-                                          iso_n_face,                & ! -> Number of extracted faces
+                                          iso_n_face,                & ! -> Number of isosurface faces
                                           piso_face_parent_cell_idx, & ! -> Index of connectivity face->cell between isosurface and global mesh
                                           piso_face_parent_cell,     & ! -> Connectivity face->cell between isosurface and global mesh
                                           PDM_OWNERSHIP_USER)          ! <- Ownership
@@ -329,8 +329,8 @@ program extract_part_nodal_f
     call data_transfer(isos,                 & ! <- IsoSurface instance
                        PDM_MESH_ENTITY_FACE, & ! <- Faces
                        tet_field,            & ! <- Field at tetra (local to current subdomain)
-                       iso_n_face,           & ! <- Number of extracted tetra in current subdomain
-                       iso_face_field)         ! -> Field at extracted faces
+                       iso_n_face,           & ! <- Number of isosurface faces in current subdomain
+                       iso_face_field)         ! -> Field at isosurface faces
 
   endif
   !----------------------------------------
@@ -517,7 +517,9 @@ contains
     integer                   :: id_var_vtx_field
     integer                   :: id_var_elt_field
     double precision, pointer :: val_elt_part(:) => null()
-    integer                   :: i_rank  
+    integer                   :: i_rank, err
+
+    call mpi_comm_rank(comm, i_rank, err)
 
     call PDM_writer_create(wrt,                    & ! -> Writer instance
                            "Ensight",              & ! <- Format
@@ -669,7 +671,7 @@ contains
 
 
   !--------------------------------------------------------------------------------
-  ! Transfer fields from initial mesh to extraction (for REEQUILIBRATE mode)
+  ! Transfer fields from initial mesh to isosurface mesh (for REEQUILIBRATE mode)
   subroutine data_transfer(isos,          &
                            entity_type,   &
                            field,         &
@@ -680,8 +682,8 @@ contains
     type(c_ptr),               intent(in)    :: isos             ! <- Isosurface instance
     integer,                   intent(in)    :: entity_type      ! <- Type of mesh entity
     double precision, pointer, intent(in)    :: field(:)         ! <- Field on local, initial mesh entities
-    integer,                   intent(in)    :: iso_n_elt        ! <- Local number of extracted entities
-    double precision, pointer, intent(out)   :: iso_field(:)     ! -> Field on local, extracted mesh entities
+    integer,                   intent(in)    :: iso_n_elt        ! <- Local number of isosurface entities
+    double precision, pointer, intent(out)   :: iso_field(:)     ! -> Field on local, isosurface mesh entities
 
     type(c_ptr)                              :: ptp
     type(PDM_pointer_array_t), pointer       :: pa_field
@@ -761,4 +763,4 @@ contains
   end subroutine data_transfer
   !--------------------------------------------------------------------------------
 
-end program extract_part_nodal_f
+end program isosurface_nodal_f
