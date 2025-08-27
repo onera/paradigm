@@ -21,4 +21,4 @@ Mesh Structures
   :maxdepth: 1
   :hidden:
 
-  part_mesh_nodal
+  pmn

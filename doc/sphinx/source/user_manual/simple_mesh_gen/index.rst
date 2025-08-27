@@ -27,7 +27,7 @@ Simple mesh generation
   :maxdepth: 1
   :hidden:
 
-  dcube_nodal_gen
+  dcube_nodal
   generate_mesh
 
 |

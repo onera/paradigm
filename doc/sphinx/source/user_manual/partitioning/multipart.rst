@@ -265,6 +265,7 @@ API
         .. autofunction:: Pypdm.Pypdm.MultiPart.connectivity_get
         .. autofunction:: Pypdm.Pypdm.MultiPart.ln_to_gn_get
         .. autofunction:: Pypdm.Pypdm.MultiPart.vtx_coord_get
+        .. autofunction:: Pypdm.Pypdm.MultiPart.group_get
         .. autofunction:: Pypdm.Pypdm.MultiPart.graph_comm_get
         .. autofunction:: Pypdm.Pypdm.MultiPart.ghost_information_get
         .. autofunction:: Pypdm.Pypdm.MultiPart.color_get
