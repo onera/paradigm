@@ -58,11 +58,11 @@ typedef struct _pdm_multipart_t PDM_multipart_t;
 
 /**
  * \enum PDM_part_size_t
- * \brief Use homogeneous or heterogeneous partition sizes (only for ParMetis method)
+ * \brief Use homogeneous or heterogeneous partition sizes (only for ParMETIS method)
  */
 typedef enum {
   PDM_PART_SIZE_HOMOGENEOUS   = 1, /*!< All requested partition have the same size */
-  PDM_PART_SIZE_HETEROGENEOUS = 2, /*!< Each requested partition can have a portion (within 0. and 1.) of the mesh */
+  PDM_PART_SIZE_HETEROGENEOUS = 2, /*!< Each requested partition can have a portion (between 0 and 1) of the mesh */
 } PDM_part_size_t;
 
 /*=============================================================================
@@ -210,8 +210,7 @@ PDM_multipart_renum_method_set
  * \param [in]   multipart             Pointer to \ref PDM_multipart_t instance
  * \param [in]   i_domain              Id of domain which parameters apply (or -1 for all domains)
  * \param [in]   renum_cell_method     Choice of renumbering method for cells
- * \param [in]   renum_cell_properties Parameters used by cache-blocking method :
- *                                     [*n_cell_per_cache_wanted*, *is_asynchronous*, *is_vectorisation*, *n_vect_face*, *split_method*]
+ * \param [in]   renum_cell_properties Renumbering parameters for chosen method (can be *NULL*, check out \verbatim embed:rst:inline :ref:`this page<renumbering>` \endverbatim for more details)
  * \param [in]   renum_face_method     Choice of renumbering method for faces
  *
  */

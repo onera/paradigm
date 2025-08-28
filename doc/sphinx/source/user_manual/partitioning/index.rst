@@ -26,8 +26,7 @@ Partitioning
     :link: connec_transform
     :link-type: ref
 
-    Utilities for processing unstructured mesh connectivities (partitioned and distributed)
-
+    Utilities for processing unstructured mesh connectivities (partitioned and block-distributed)
 
 
 
@@ -36,6 +35,14 @@ Partitioning
     :link-type: ref
 
     Generate extended mesh partitions
+
+
+
+  .. card:: Renumbering
+    :link: renumbering
+    :link-type: ref
+
+    Optimize memory layout to improve performance
 
 |
 
@@ -60,4 +67,5 @@ Partitioning
    extract_part
    connec_transform
    part_extension
+   renumbering
 

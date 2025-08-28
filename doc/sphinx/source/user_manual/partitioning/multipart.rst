@@ -122,8 +122,7 @@ API
 
 .. dropdown:: Renumbering options
 
-  .. todo::
-    List available renumbering methods
+  Check out :ref:`this page<renumbering>` to know which renumbering method you should use.
 
   .. tab-set::
     :sync-group: language

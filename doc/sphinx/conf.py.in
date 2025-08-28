@@ -27,7 +27,6 @@
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
-    # 'sphinx.ext.imgmath',
     'sphinx.ext.mathjax',
     'sphinx.ext.autosummary',
     'sphinx.ext.ifconfig',
@@ -47,16 +46,16 @@ extensions = [
 
 # Napoleon settings
 napoleon_google_docstring = True
-napoleon_numpy_docstring = True
+napoleon_numpy_docstring  = True
 napoleon_include_private_with_doc = False
 napoleon_include_special_with_doc = True
-napoleon_use_admonition_for_examples = True
-napoleon_use_admonition_for_notes = False
+napoleon_use_admonition_for_examples   = True
+napoleon_use_admonition_for_notes      = False
 napoleon_use_admonition_for_references = False
-napoleon_use_ivar = False
+napoleon_use_ivar  = False
 napoleon_use_param = True
 napoleon_use_rtype = True
-autoclass_content = 'both'  # JDG: this concatenates the class.doc + __init__.doc
+autoclass_content  = 'both'  # JDG: this concatenates the class.doc + __init__.doc
 
 
 
@@ -65,8 +64,7 @@ templates_path = ['_templates']
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
-#
-# source_suffix = ['.rst', '.md']
+
 source_suffix = '.rst'
 
 # The encoding of source files.
@@ -77,9 +75,9 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'ParaDiGM'
+project   = 'ParaDiGM'
 copyright = '2025, ONERA The French Aerospace Lab'
-author = 'B. Andrieu, K. Hoogveld, B. Maugars, E. Quémerais'
+author    = 'B. Andrieu, K. Hoogveld, B. Maugars, E. Quémerais'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -171,8 +169,6 @@ breathe_default_project = "paradigm"
 
 html_theme = 'sphinx_rtd_theme'
 import sphinx
-print(f"Sphinx version : {sphinx.__version__}")
-print(f"Sphinx path    : {sphinx.__file__}")
 if sphinx.__version__ >= "6.0":
     try:
         import furo
@@ -188,24 +184,24 @@ html_theme_options = {
     "light_css_variables": {
         "font-stack": "Roboto, Segoe UI, Helvetica, sans-serif",
         "font-stack--monospace": "Roboto Mono, SFMono-Regular, Menlo, Consolas, Monaco, Liberation Mono, Lucida Console, monospace",
-        "color-foreground-primary": "#23373b",
-        "color-brand-primary": "#1c64ff",
-        "color-pdmkw": "#6d80a1",
-        "color-link": "#366ce4",
-        "color-highlight-on-target": "#ffeee6",
+        "color-foreground-primary":  "#23373b",
+        "color-brand-primary":       "#1c64ff",
+        "color-pdmkw":               "#6d80a1",
+        "color-link":                "#366ce4",
+        "color-highlight-on-target": "#fff4d1",
         "color-foreground-tertiary": "#d9d9da",
         "color-background-tertiary": "#f1f2f7",
-	    "color-api-name": "#d63736",
+	    "color-api-name":            "#d63736",
     },
     "dark_css_variables": {
-        "color-brand-primary": "#3d94ff",
-        "color-pdmkw": "#879aad",
-        "color-link": "#5ca5ff",
-        "color-highlight-on-target": "#2d1d0c",
+        "color-brand-primary":       "#3d94ff",
+        "color-pdmkw":               "#879aad",
+        "color-link":                "#5ca5ff",
+        "color-highlight-on-target": "#2e0c14",
         "color-foreground-tertiary": "#3f4144",
-        "color-background-secondary": "#2a2c34",
+        "color-background-secondary":"#2a2c34",
         "color-background-tertiary": "#1d1f22",
-	    "color-api-name": "#ff6d6c",
+	    "color-api-name":            "#ff6d6c",
     },
 
     "display_version": True,
@@ -489,6 +485,7 @@ def setup(app):
     app.add_config_value('enable_fortran_doc', '@PDM_ENABLE_Fortran@',         'env')
     app.add_config_value('enable_python_doc',  '@PDM_ENABLE_PYTHON_BINDINGS@', 'env')
     app.add_config_value('enable_pdma',        '@PDM_ENABLE_EXTENSION_PDMA@',  'env')
+
 """
 .. raw:: html
 
