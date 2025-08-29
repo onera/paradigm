@@ -66,7 +66,7 @@ User manual
 
 
 
-  .. card:: Mesh Structures
+  .. card:: Mesh structures
     :link: struct
     :link-type: ref
 
@@ -106,7 +106,7 @@ User manual
 
 
 
-  .. card:: Mesh Transformation
+  .. card:: Mesh transformation
     :link: mesh_transform
     :link-type: ref
 
