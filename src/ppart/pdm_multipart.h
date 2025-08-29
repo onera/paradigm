@@ -513,9 +513,9 @@ const int                   i_part,
  * \param [in]  i_domain              Id of domain
  * \param [in]  i_part                Id of part
  * \param [in]  entity_type           Entity kind
- * \param [out] entity_color          Entity color (only for specific renumbering option )
+ * \param [out] entity_color          Entity color (only for specific renumbering option, size = n_entity)
  * \param [in]  ownership             Ownership for \p entity_color
- *  *
+ *
  * \return Number of entities
  */
 int
