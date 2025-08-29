@@ -1,6 +1,6 @@
 cdef extern from "pdm_rotation.h":
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-  
+
   # axis angle -> other formats ---
 
   void PDM_rotation_axis_angle_to_euler_angles(const double     axis[3],
@@ -250,13 +250,13 @@ def axis_angle_to_euler_angles(
     axis            (np.ndarray[np.double_t]) : Rotation axis (shape = (3,))
     angles          (double)                  : Rotation angle (in *radians*)
     reverse         (bool)                    : If True computes the reverse transformation
-    order           (np.ndarray[np.int32_t])  : Order of rotations to apply 
-    intrinsic       (bool)                    : Axis conventions (https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations)
+    order           (np.ndarray[np.int32_t])  : Order of rotations to apply
+    intrinsic       (bool)                    : `Axis conventions <https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations>`_
 
   Returns:
-    ang_x           (double)                  : Rotation angle around the x-axis
-    ang_y           (double)                  : Rotation angle around the y-axis
-    ang_z           (double)                  : Rotation angle around the z-axis
+    - Rotation angle around the x-axis (`double`)
+    - Rotation angle around the y-axis (`double`)
+    - Rotation angle around the z-axis (`double`)
   """
   _check_axis_shape(axis)
   cdef NPY.double_t ang_x,ang_y,ang_z
@@ -285,7 +285,7 @@ def axis_angle_to_rotation_matrix(
     reverse         (bool)                    : If True computes the reverse transformation
 
   Returns:
-    rotation_matrix (np.ndarray[np.double_t]) : 3-by-3 rotation matrix (shape = (3,3))
+    3-by-3 rotation matrix (`np.ndarray[np.double_t]`, shape = (3,3))
   """
   _check_axis_shape(axis)
   cdef NPY.ndarray[NPY.double_t, mode='c', ndim=2] rotation_matrix = NPY.empty((3,3),dtype=NPY.double)
@@ -300,7 +300,7 @@ def axis_angle_to_homogeneous_matrix(
     NPY.double_t angle,
     bint reverse = False):
   """axis_angle_to_homogeneous_matrix(axis,angle,reverse=False)
-  
+
   Converts a rotation expressed as axis-angle to a 4-by-4 homogeneous matrix
 
   Parameters:
@@ -309,7 +309,7 @@ def axis_angle_to_homogeneous_matrix(
     reverse         (bool)                    : If True computes the reverse transformation
 
   Returns:
-    homogeneous_matrix (np.ndarray[np.double_t]) : 4-by-4 rotation matrix (shape = (4,4))
+    4-by-4 homogeneous matrix (`np.ndarray[np.double_t]`, shape = (4,4))
   """
   _check_axis_shape(axis)
   cdef NPY.ndarray[NPY.double_t, mode='c', ndim=2] homogeneous_matrix = NPY.empty((4,4),dtype=NPY.double)
@@ -336,7 +336,7 @@ def axis_angle_and_rotation_center_to_homogeneous_matrix(
     reverse         (bool)                    : If True computes the reverse transformation
 
   Returns:
-    homogeneous_matrix (np.ndarray[np.double_t]) : 4-by-4 rotation matrix (shape = (4,4))
+    4-by-4 homogeneous matrix (`np.ndarray[np.double_t]`, shape = (4,4))
   """
   _check_axis_shape(axis)
   _check_axis_shape(rotation_center,"rotation_center")
@@ -365,13 +365,13 @@ def euler_angles_to_axis_angle(
     ang_x           (double)                  : Rotation angle around the x-axis
     ang_y           (double)                  : Rotation angle around the y-axis
     ang_z           (double)                  : Rotation angle around the z-axis
-    order           (np.ndarray[np.int32_t])  : Order of rotations to apply 
-    intrinsic       (bool)                    : Axis conventions (https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations)
+    order           (np.ndarray[np.int32_t])  : Order of rotations to apply
+    intrinsic       (bool)                    : `Axis conventions <https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations>`_
     reverse         (bool)                    : If True computes the reverse transformation
 
   Returns:
-    axis            (np.ndarray[np.double_t]) : Rotation axis (shape = (3,))
-    angles          (double)                  : Rotation angle (in *radians*)
+    - Rotation axis  (`np.ndarray[np.double_t]`, shape = (3,))
+    - Rotation angle (`double`, in *radians*)
   """
   _check_euler_angles_order(order)
   cdef int* order_data = np_to_int_pointer(order)
@@ -399,21 +399,21 @@ def euler_angles_to_euler_angles(
   """euler_angles_to_euler_angles(ang_x,ang_y,ang_z,input_order=(2,1,0),input_intrinsic=True,reverse=False,output_order=(2,1,0),output_intrinsic=True)
 
   Converts a rotation expressed as euler angles to another euler angles expression
-  
+
   Parameters:
     ang_x            (double)                  : Rotation angle around the x-axis
     ang_y            (double)                  : Rotation angle around the y-axis
     ang_z            (double)                  : Rotation angle around the z-axis
-    input_order      (np.ndarray[np.int32_t])  : Input order of rotations to apply 
-    input_intrinsic  (bool)                    : Input axis conventions (https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations)
+    input_order      (np.ndarray[np.int32_t])  : Input order of rotations to apply
+    input_intrinsic  (bool)                    : Input `axis conventions <https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations>`_
     reverse          (bool)                    : If True computes the reverse transformation
-    output_order     (np.ndarray[np.int32_t])  : Output order of rotations to apply 
-    output_intrinsic (bool)                    : Output axis conventions (https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations)
+    output_order     (np.ndarray[np.int32_t])  : Output order of rotations to apply
+    output_intrinsic (bool)                    : Output `axis conventions <https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations>`_
 
   Returns:
-    ang_x           (double)                  : Output rotation angle around the x-axis
-    ang_y           (double)                  : Output rotation angle around the y-axis
-    ang_z           (double)                  : Output rotation angle around the z-axis
+    - Rotation angle around the x-axis (`double`)
+    - Rotation angle around the y-axis (`double`)
+    - Rotation angle around the z-axis (`double`)
   """
   _check_euler_angles_order(input_order, "input_order")
   _check_euler_angles_order(output_order,"output_order")
@@ -450,17 +450,17 @@ def euler_angles_to_rotation_matrix(
     ang_x           (double)                  : Rotation angle around the x-axis
     ang_y           (double)                  : Rotation angle around the y-axis
     ang_z           (double)                  : Rotation angle around the z-axis
-    order           (np.ndarray[np.int32_t])  : Order of rotations to apply 
-    intrinsic       (bool)                    : Axis conventions (https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations)
+    order           (np.ndarray[np.int32_t])  : Order of rotations to apply
+    intrinsic       (bool)                    : `Axis conventions <https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations>`_
     reverse         (bool)                    : If True computes the reverse transformation
 
   Returns:
-    rotation_matrix (np.ndarray[np.double_t]) : Rotation matrix (shape = (3,3))
+    3-by-3 rotation matrix (`np.ndarray[np.double_t]`, shape = (3,3))
   """
 
   _check_euler_angles_order(order)
   cdef int* order_data = np_to_int_pointer(order)
-  cdef NPY.ndarray[NPY.double_t, mode='c', ndim=2] rotation_matrix = NPY.empty((3,3),dtype=NPY.double)  
+  cdef NPY.ndarray[NPY.double_t, mode='c', ndim=2] rotation_matrix = NPY.empty((3,3),dtype=NPY.double)
   PDM_rotation_euler_angles_to_rotation_matrix(ang_x,
                                                ang_y,
                                                ang_z,
@@ -486,17 +486,17 @@ def euler_angles_to_homogeneous_matrix(
     ang_x           (double)                  : Rotation angle around the x-axis
     ang_y           (double)                  : Rotation angle around the y-axis
     ang_z           (double)                  : Rotation angle around the z-axis
-    order           (np.ndarray[np.int32_t])  : Order of rotations to apply 
-    intrinsic       (bool)                    : Axis conventions (https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations)
+    order           (np.ndarray[np.int32_t])  : Order of rotations to apply
+    intrinsic       (bool)                    : `Axis conventions <https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations>`_
     reverse         (bool)                    : If True computes the reverse transformation
 
   Returns:
-    homogeneous_matrix (np.ndarray[np.double_t]) : Homogeneous matrix (shape = (4,4))
+    4-by-4 homogeneous matrix (`np.ndarray[np.double_t]`, shape = (4,4))
   """
 
   _check_euler_angles_order(order)
   cdef int* order_data = np_to_int_pointer(order)
-  cdef NPY.ndarray[NPY.double_t, mode='c', ndim=2] homogeneous_matrix = NPY.empty((4,4),dtype=NPY.double)  
+  cdef NPY.ndarray[NPY.double_t, mode='c', ndim=2] homogeneous_matrix = NPY.empty((4,4),dtype=NPY.double)
   PDM_rotation_euler_angles_to_homogeneous_matrix(ang_x,
                                                   ang_y,
                                                   ang_z,
@@ -517,26 +517,26 @@ def euler_angles_and_rotation_center_to_homogeneous_matrix(
   """
   euler_angles_and_rotation_center_to_homogeneous_matrix(ang_x,ang_y,ang_z,order=(2,1,0),intrinsic=True,rotation_center=[0.,0.,0.],reverse=False)
 
-  Computes the homogeneous matrix corresponding to the provided euler angles 
+  Computes the homogeneous matrix corresponding to the provided euler angles
   and rotation center.
 
   Parameters:
     ang_x           (double)                  : Rotation angle around the x-axis
     ang_y           (double)                  : Rotation angle around the y-axis
     ang_z           (double)                  : Rotation angle around the z-axis
-    order           (np.ndarray[np.int32_t])  : Order of rotations to apply 
-    intrinsic       (bool)                    : Axis conventions (https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations)
+    order           (np.ndarray[np.int32_t])  : Order of rotations to apply
+    intrinsic       (bool)                    : `Axis conventions <https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations>`_
     rotation_center (np.ndarray[np.double_t]) : 3D rotation center (shape = (3,))
     reverse         (bool)                    : If True computes the reverse transformation
 
   Returns:
-    homogeneous_matrix (np.ndarray[np.double_t]) : Homogeneous matrix (shape = (4,4))
+    4-by-4 homogeneous matrix (`np.ndarray[np.double_t]`, shape = (4,4))
   """
 
   _check_euler_angles_order(order)
   _check_axis_shape(rotation_center,"rotation_center")
   cdef int* order_data = np_to_int_pointer(order)
-  cdef NPY.ndarray[NPY.double_t, mode='c', ndim=2] homogeneous_matrix = NPY.empty((4,4),dtype=NPY.double)  
+  cdef NPY.ndarray[NPY.double_t, mode='c', ndim=2] homogeneous_matrix = NPY.empty((4,4),dtype=NPY.double)
   PDM_rotation_euler_angles_and_rotation_center_to_homogeneous_matrix(ang_x,
                                                                       ang_y,
                                                                       ang_z,
@@ -566,12 +566,12 @@ def periodic_t_info_to_homogeneous_matrix(
     reverse         (bool)                    : If True computes the reverse transformation
 
   Returns:
-    homogeneous_matrix (np.ndarray[np.double_t]) : Homogeneous matrix (shape = (4,4))
+    4-by-4 homogeneous matrix (`np.ndarray[np.double_t]`, shape = (4,4))
   """
   _check_axis_shape(rotation_center,"rotation_center")
   _check_axis_shape(rotation_angle,"rotation_angle")
   _check_axis_shape(translation,"translation")
-  cdef NPY.ndarray[NPY.double_t, mode='c', ndim=2] homogeneous_matrix = NPY.empty((4,4),dtype=NPY.double)  
+  cdef NPY.ndarray[NPY.double_t, mode='c', ndim=2] homogeneous_matrix = NPY.empty((4,4),dtype=NPY.double)
   PDM_rotation_periodic_t_info_to_homogeneous_matrix(<double*> rotation_center.data,
                                                      <double*> rotation_angle.data,
                                                      <double*> translation.data,
@@ -587,14 +587,14 @@ def rotation_matrix_to_axis_angle(
   """rotation_matrix_to_axis_angle(rotation_matrix,reverse=False)
 
   Converts a rotation expressed as a rotation matrix to axis-angle
-  
+
   Parameters:
     rotation_matrix (np.ndarray[np.double_t]) : Rotation matrix (shape = (3,3))
     reverse         (bool)                    : If True computes the reverse transformation
 
   Returns:
-    axis            (np.ndarray[np.double_t]) : Rotation axis (shape = (3,))
-    angles          (double)                  : Rotation angle (in *radians*)
+    Rotation axis  (`np.ndarray[np.double_t]`, shape = (3,))
+    Rotation angle (`double`, in *radians*)
   """
   _check_matrix_shape(rotation_matrix,(3,3))
   cdef NPY.ndarray[NPY.double_t, mode='c', ndim=1] axis = NPY.empty((3,),dtype=NPY.double)
@@ -617,13 +617,13 @@ def rotation_matrix_to_euler_angles(
   Parameters:
     rotation_matrix (np.ndarray[np.double_t]) : Rotation matrix (shape = (3,3))
     reverse         (bool)                    : If True computes the reverse transformation
-    order           (np.ndarray[np.int32_t])  : Order of rotations to apply 
-    intrinsic       (bool)                    : Axis conventions (https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations)    
-  
+    order           (np.ndarray[np.int32_t])  : Order of rotations to apply
+    intrinsic       (bool)                    : `Axis conventions <https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations>`_
+
   Returns:
-    ang_x           (double)                  : Rotation angle around the x-axis
-    ang_y           (double)                  : Rotation angle around the y-axis
-    ang_z           (double)                  : Rotation angle around the z-axis
+    Rotation angle around the x-axis (`double`)
+    Rotation angle around the y-axis (`double`)
+    Rotation angle around the z-axis (`double`)
   """
   _check_matrix_shape(rotation_matrix,(3,3))
   _check_euler_angles_order(order)
@@ -651,7 +651,7 @@ def rotation_matrix_to_homogeneous_matrix(
     reverse         (bool)                    : If True computes the reverse transformation
 
   Returns:
-    homogeneous_matrix (np.ndarray[np.double_t]) : Homogeneous matrix (shape = (4,4))
+    4-by-4 homogeneous matrix (`np.ndarray[np.double_t]`, shape = (4,4))
   """
   _check_matrix_shape(rotation_matrix,(3,3))
   cdef NPY.ndarray[NPY.double_t, mode='c', ndim=2] homogeneous_matrix = NPY.empty((4,4),dtype=NPY.double)
@@ -666,7 +666,7 @@ def rotation_matrix_and_rotation_center_to_homogeneous_matrix(
     bint reverse = False):
   """rotation_matrix_and_rotation_center_to_homogeneous_matrix(rotation_matrix,rotation_center=[0.,0.,0.],reverse=False)
 
-  Computes the homogeneous matrix corresponding to the provided rotation matrix 
+  Computes the homogeneous matrix corresponding to the provided rotation matrix
   and rotation center
 
   Parameters:
@@ -675,7 +675,7 @@ def rotation_matrix_and_rotation_center_to_homogeneous_matrix(
     reverse         (bool)                    : If True computes the reverse transformation
 
   Returns:
-    homogeneous_matrix (np.ndarray[np.double_t]) : Homogeneous matrix (shape = (4,4))
+    4-by-4 homogeneous matrix (`np.ndarray[np.double_t]`, shape = (4,4))
 
   """
   _check_matrix_shape(rotation_matrix,(3,3))
@@ -713,8 +713,8 @@ def two_vectors_to_axis_angle(
     reverse         (bool)                    : If True computes the reverse transformation
 
   Returns:
-    axis            (np.ndarray[np.double_t]) : Rotation axis (shape = (3,))
-    angles          (double)                  : Rotation angle (in *radians*)
+    Rotation axis  (`np.ndarray[np.double_t]`, shape = (3,))
+    Rotation angle (`double`, in *radians*)
   """
   _check_axis_shape(vector_1,"vector_1")
   _check_axis_shape(vector_2,"vector_2")
@@ -741,13 +741,13 @@ def two_vectors_to_euler_angles(
     vector_1        (np.ndarray[np.double_t]) : First vector  (shape = (3,))
     vector_2        (np.ndarray[np.double_t]) : Second vector (shape = (3,))
     reverse         (bool)                    : If True computes the reverse transformation
-    order           (np.ndarray[np.int32_t])  : Order of rotations to apply 
-    intrinsic       (bool)                    : Axis conventions (https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations)
+    order           (np.ndarray[np.int32_t])  : Order of rotations to apply
+    intrinsic       (bool)                    : `Axis conventions <https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations>`_
 
   Returns:
-    ang_x           (double)                  : Rotation angle around the x-axis
-    ang_y           (double)                  : Rotation angle around the y-axis
-    ang_z           (double)                  : Rotation angle around the z-axis
+    Rotation angle around the x-axis (`double`)
+    Rotation angle around the y-axis (`double`)
+    Rotation angle around the z-axis (`double`)
 
   """
   _check_axis_shape(vector_1,"vector_1")
@@ -772,23 +772,23 @@ def two_vectors_to_rotation_matrix(
   """two_vectors_to_rotation_matrix(vector_1,vector_2,reverse=False)
 
   Converts a rotation from the first vector to the latter to a rotation expressed as a 3-by-3 rotation matrix
-  
+
   Parameters:
     vector_1        (np.ndarray[np.double_t]) : First vector  (shape = (3,))
     vector_2        (np.ndarray[np.double_t]) : Second vector (shape = (3,))
     reverse         (bool)                    : If True computes the reverse transformation
 
   Returns:
-    rotation_matrix (np.ndarray[np.double_t]) : Rotation matrix (shape = (3,3))
+    3-by-3 rotation matrix (`np.ndarray[np.double_t]`, shape = (3,3))
   """
   _check_axis_shape(vector_1,"vector_1")
   _check_axis_shape(vector_2,"vector_2")
-  cdef NPY.ndarray[NPY.double_t, mode='c', ndim=2] rotation_matrix = NPY.empty((3,3),dtype=NPY.double)  
+  cdef NPY.ndarray[NPY.double_t, mode='c', ndim=2] rotation_matrix = NPY.empty((3,3),dtype=NPY.double)
   PDM_rotation_two_vectors_to_rotation_matrix(<double*> vector_1.data,
                                               <double*> vector_2.data,
                                               <PDM_bool_t> reverse,
                                               <double*> rotation_matrix.data)
-  return rotation_matrix  
+  return rotation_matrix
 
 def two_vectors_to_homogeneous_matrix(
     NPY.ndarray[NPY.double_t, mode='c', ndim=1] vector_1,
@@ -804,7 +804,7 @@ def two_vectors_to_homogeneous_matrix(
     reverse         (bool)                    : If True computes the reverse transformation
 
   Returns:
-    homogeneous_matrix (np.ndarray[np.double_t]) : Homogeneous matrix (shape = (4,4))
+    4-by-4 homogeneous matrix (`np.ndarray[np.double_t]`, shape = (4,4))
   """
   _check_axis_shape(vector_1,"vector_1")
   _check_axis_shape(vector_2,"vector_2")
@@ -832,7 +832,7 @@ def two_vectors_and_rotation_center_to_homogeneous_matrix(
     reverse         (bool)                    : If True computes the reverse transformation
 
   Returns:
-    homogeneous_matrix (np.ndarray[np.double_t]) : Homogeneous matrix (shape = (4,4))
+    4-by-4 homogeneous matrix (`np.ndarray[np.double_t]`, shape = (4,4))
   """
   _check_axis_shape(vector_1,"vector_1")
   _check_axis_shape(vector_2,"vector_2")
@@ -856,8 +856,8 @@ def axes_and_origin_to_homogeneous_matrix(
     bint reverse = False):
   """axes_and_origin_to_homogeneous_matrix(axis_1, axis_2, axis_3, origin, reverse=False)
 
-  Computes the homogeneous matrix corresponding to switch from cartesian coordinate 
-  system A to system B. Axes and origin arguments describe the output coordinate 
+  Computes the homogeneous matrix corresponding to switch from cartesian coordinate
+  system A to system B. Axes and origin arguments describe the output coordinate
   system B using the input coordinate system A
 
   Parameters:
@@ -866,9 +866,9 @@ def axes_and_origin_to_homogeneous_matrix(
     axis_3          (np.ndarray[np.double_t]) : Third axis (shape = (3,))
     origin          (np.ndarray[np.double_t]) : Origin (shape = (3,))
     reverse         (bool)                    : If True returns the homogeneous matrix corresponding to the inverse transformation
-    
+
   Returns:
-    homogeneous_matrix (np.ndarray[np.double_t]) : Homogeneous matrix (shape = (4,4))
+    4-by-4 homogeneous matrix (`np.ndarray[np.double_t]`, shape = (4,4))
   """
   _check_axis_shape(axis_1,"axis_1")
   _check_axis_shape(axis_2,"axis_2")
@@ -905,13 +905,13 @@ def apply_euler_angles_and_rotation_center_to_coords(
     ang_x           (double)                  : Rotation angle around the x-axis
     ang_y           (double)                  : Rotation angle around the y-axis
     ang_z           (double)                  : Rotation angle around the z-axis
-    order           (np.ndarray[np.int32_t])  : Order of rotations to apply 
-    intrinsic       (bool)                    : Axis conventions (https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations)
+    order           (np.ndarray[np.int32_t])  : Order of rotations to apply
+    intrinsic       (bool)                    : `Axis conventions <https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations>`_
     rotation_center (np.ndarray[np.double_t]) : 3D rotation center (shape = (3,))
     reverse         (bool)                    : If True, applies the reverse transformation
-    
+
   Returns:
-    transformed_coords (np.ndarray[np.double_t]) : Computed coordinates (shape = (*n*,3))
+    Transformed coordinates (`np.ndarray[np.double_t]`, shape = (*n*,3))
   """
   _check_euler_angles_order(order)
   _check_axis_shape(rotation_center,"rotation_center")
@@ -931,7 +931,7 @@ def apply_euler_angles_and_rotation_center_to_coords(
                                                       n_samp,
                                                       <double*> vector_out.data)
   return vector_out
-  
+
 def apply_euler_angles_and_rotation_center_to_vector_field(
     NPY.ndarray[NPY.double_t, mode='c', ndim=2] vector_field,
     NPY.double_t ang_x,
@@ -952,13 +952,13 @@ def apply_euler_angles_and_rotation_center_to_vector_field(
     ang_x           (double)                  : Rotation angle around the x-axis
     ang_y           (double)                  : Rotation angle around the y-axis
     ang_z           (double)                  : Rotation angle around the z-axis
-    order           (np.ndarray[np.int32_t])  : Order of rotations to apply 
-    intrinsic       (bool)                    : Axis conventions (https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations)
+    order           (np.ndarray[np.int32_t])  : Order of rotations to apply
+    intrinsic       (bool)                    : `Axis conventions <https://en.wikipedia.org/wiki/Euler_angles#Conventions_by_intrinsic_rotations>`_
     rotation_center (np.ndarray[np.double_t]) : 3D rotation center (shape = (3,))
     reverse         (bool)                    : If True, applies the reverse transformation
-  
+
   Returns:
-    transformed_vector_field (np.ndarray[np.double_t]) : Computed vector (shape = (*n*,3))
+    Transformed vector field (`np.ndarray[np.double_t]`, shape = (*n*,3))
   """
   _check_euler_angles_order(order)
   _check_axis_shape(rotation_center,"rotation_center")
@@ -992,16 +992,16 @@ def apply_axis_angle_and_rotation_center_to_coords(
 
   Applies the rigid transform corresponding to the rotation of the provided angle around the
   provided axis and rotation center to the provided coordinate array
-  
+
   Parameters:
     coords          (np.ndarray[np.double_t]) : Vector of coordinates (shape = (*n*,3))
     axis            (np.ndarray[np.double_t]) : Rotation axis (shape = (3,))
     angle           (double)                  : Rotation angle (in *radians*)
     rotation_center (np.ndarray[np.double_t]) : 3D rotation center (shape = (3,))
     reverse         (bool)                    : If True, applies the reverse transformation
-    
+
   Returns:
-    transformed_coords (np.ndarray[np.double_t]) : Computed coordinates (shape = (*n*,3))
+    Transformed coordinates (`np.ndarray[np.double_t]`, shape = (*n*,3))
   """
   _check_axis_shape(axis)
   _check_axis_shape(rotation_center,"rotation_center")
@@ -1030,16 +1030,16 @@ def apply_axis_angle_and_rotation_center_to_vector_field(
 
   Applies the rigid transform corresponding to rotation of the provided angle around the
   provided axis and rotation center to the provided vector field array
-  
+
   Parameters:
     vector_field    (np.ndarray[np.double_t]) : Vector (shape = (*n*,3))
     axis            (np.ndarray[np.double_t]) : Rotation axis (shape = (3,))
     angles          (double)                  : Rotation angle (in *radians*)
     rotation_center (np.ndarray[np.double_t]) : 3D rotation center (shape = (3,))
     reverse         (bool)                    : If True, applies the reverse transformation
-    
+
   Returns:
-    transformed_vector_field (np.ndarray[np.double_t]) : Computed vector (shape = (*n*,3))
+    Transformed vector field (`np.ndarray[np.double_t]`, shape = (*n*,3))
   """
   _check_axis_shape(axis)
   _check_axis_shape(rotation_center)
@@ -1067,17 +1067,17 @@ def apply_rotation_matrix_and_rotation_center_to_coords(
   """
   apply_rotation_matrix_and_rotation_center_to_coords(coords,rotation_matrix,rotation_center=[0.,0.,0.],reverse=False)
 
-  Applies the rigid transform corresponding to rotation of the provided rotation 
+  Applies the rigid transform corresponding to rotation of the provided rotation
   matrix around the provided axis and rotation center to the provided coordinate array
-  
+
   Parameters:
     coords          (np.ndarray[np.double_t]) : Vector of coordinates (shape = (*n*,3))
     rotation_matrix (np.ndarray[np.double_t]) : 3-by-3 rotation matrix (shape = (3,3))
     rotation_center (np.ndarray[np.double_t]) : 3D rotation center (shape = (3,))
     reverse         (bool)                    : If True, applies the reverse transformation
-    
+
   Returns:
-    transformed_coords (np.ndarray[np.double_t]) : Computed coordinates (shape = (*n*,3))
+    Transformed coordinates (`np.ndarray[np.double_t]`, shape = (*n*,3))
   """
   _check_matrix_shape(rotation_matrix,(3,3))
   _check_axis_shape(rotation_center,"rotation_center")
@@ -1107,7 +1107,7 @@ def apply_homogeneous_matrix_to_coords(
     homogeneous_matrix (np.ndarray[np.double_t]) : 4-by-4 rotation matrix (shape = (4,4))
 
   Returns:
-    transformed_coords (np.ndarray[np.double_t]) : Computed coordinates (shape = (*n*,3))
+    Transformed coordinates (`np.ndarray[np.double_t]`, shape = (*n*,3))
   """
   if coords.shape[1] != 3:
     raise AssertionError(f"'coords' argument of invalid shape {NPY.shape(coords)}, expects (n,3)")
@@ -1128,17 +1128,17 @@ def apply_rotation_matrix_and_rotation_center_to_vector_field(
   """
   apply_rotation_matrix_and_rotation_center_to_vector_field(vector_field,rotation_matrix,rotation_center=[0.,0.,0.],reverse=False)
 
-  Applies the rigid transform corresponding to rotation of the provided rotation 
+  Applies the rigid transform corresponding to rotation of the provided rotation
   matrix around the provided axis and rotation center to the provided vector field array
-  
+
   Parameters:
     vector_field    (np.ndarray[np.double_t]) : Vector of coordinates (shape = (*n*,3))
     rotation_matrix (np.ndarray[np.double_t]) : 3-by-3 rotation matrix (shape = (3,3))
     rotation_center (np.ndarray[np.double_t]) : 3D rotation center (shape = (3,))
     reverse         (bool)                    : If True, applies the reverse transformation
-    
+
   Returns:
-    transformed_vector_field (np.ndarray[np.double_t]) : Computed coordinates (shape = (*n*,3))
+    Transformed vector field (`np.ndarray[np.double_t]`, shape = (*n*,3))
   """
   _check_matrix_shape(rotation_matrix,(3,3))
   _check_axis_shape(rotation_center,"rotation_center")
