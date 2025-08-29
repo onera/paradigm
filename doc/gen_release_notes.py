@@ -18,7 +18,6 @@ SECTIONS_ICONS = {
 
 IGNORE_EMPTY_SECTIONS = True
 
-
 documented_features = []
 
 def list_documented_features(directory):
@@ -77,7 +76,7 @@ def parse_markdown(file_in):
       str_version = line[line.find("[")+1:line.find("]")]
       date        = line[line.find(" - ")+3:].split("-")
 
-      assert(str_version not in changelog.keys())
+      assert(str_version not in changelog)
       changelog[str_version] = dict()
       version = changelog[str_version]
 
@@ -88,7 +87,7 @@ def parse_markdown(file_in):
     elif line.startswith("### "):
       # Start new section
       str_section = line[4:]
-      assert(str_section not in version["sections"].keys())
+      assert(str_section not in version["sections"])
 
       version["sections"][str_section] = list()
       section = version["sections"][str_section]
@@ -123,46 +122,74 @@ def parse_markdown(file_in):
   return changelog
 
 
-def render_rst(changelog, ignore_empty_sections=False):
+def render_rst(changelog, ignore_empty_sections=False, ignore_before_version=None):
   """
   Convert changelog (dict) into ReStructured Text
   """
   pattern = r'PDM_\w+\.*\(*\w+\)*'
 
   txt_out = []
+  indent  = ""
   #  Versions
-  for v in changelog.keys():
-    txt_out.append("")
-    if len(txt_out) > 1: txt_out.append("|") # add larger space between versions
-    txt_out.append("")
+  for i_version, v in enumerate(changelog):
+
+    if ignore_before_version is not None:
+      if v < str(ignore_before_version):
+        continue
+
     year, month, day = [int(x) for x in changelog[v]["date"]]
     heading = f"Version {v} ({calendar.month_name[month]} {year})"
-    txt_out.append(heading)
-    txt_out.append(HEADING_UNDERLINE["version"] * len(heading))
+    txt_out.append("")
+    if i_version == 0:
+      txt_out.append(heading)
+      txt_out.append(HEADING_UNDERLINE["version"] * len(heading))
+    else:
+      if i_version == 1:
+        txt_out.append("|") # add larger space between versions
+        title = "Earlier versions"
+        txt_out.append("")
+        txt_out.append(title)
+        txt_out.append(HEADING_UNDERLINE["version"] * len(title))
+        txt_out.append("")
+      txt_out.append(f".. dropdown:: {heading}")
+      indent = "  "
 
     #  Sections
-    for s in changelog[v]["sections"].keys():
+    i_section = 0
+    for s in changelog[v]["sections"]:
 
       if ignore_empty_sections and len(changelog[v]["sections"][s]) == 0:
         # Skip empty section
         continue
 
+      if i_version > 0 and i_section > 0:
+        txt_out.append("")
+        txt_out.append(indent + "|") # add larger space between sections
+
       txt_out.append("")
       len_under = len(s)
       section = s
+
+      decoration = "**" if i_version > 0 else ""
+
       # Add appropriate icon
       if section in SECTIONS_ICONS:
-        section = SECTIONS_ICONS[s] + " " + section
-        len_under += 3
-      txt_out.append(section)
-      txt_out.append(HEADING_UNDERLINE["section"] * len_under)
+        section = decoration + SECTIONS_ICONS[s] + " " + section + decoration
+        len_under += 3 + 2*len(decoration)
+      txt_out.append(indent + section)
+      if i_version == 0:
+        txt_out.append(indent + HEADING_UNDERLINE["section"] * len_under)
+      txt_out.append("")
 
       #  Lines
       for l in changelog[v]["sections"][s]:
         # Highlight PDM_* words
         line = re.sub(pattern, highlight, l, flags=re.IGNORECASE)
 
-        txt_out.append(line)
+        txt_out.append(indent + line)
+
+      i_section += 1
+
 
   return "\n".join(txt_out)
 
@@ -172,9 +199,10 @@ if __name__ == "__main__":
   # Parse command line args
   parser = argparse.ArgumentParser()
 
-  parser.add_argument("-i", "--input",   type=str, default="../ChangeLog")
-  parser.add_argument("-p", "--path",    type=str, default="../doc/sphinx/source")
-  parser.add_argument("-o", "--output",  type=str, default="../doc/sphinx/source/changelog.rst")
+  parser.add_argument("-i",   "--input",                 type=str, default="../ChangeLog")
+  parser.add_argument("-p",   "--path",                  type=str, default="../doc/sphinx/source")
+  parser.add_argument("-o",   "--output",                type=str, default="../doc/sphinx/source/changelog.rst")
+  parser.add_argument("-ibv", "--ignore_before_version", type=str, default=None)
   parser.add_argument("-v", "--verbose", action="store_true")
 
   args = parser.parse_args()
@@ -190,15 +218,15 @@ if __name__ == "__main__":
 
   # Print structured ChangeLog
   if args.verbose:
-    for v in changelog.keys():
+    for v in changelog:
       print(f"\n{v}")
-      for s in changelog[v]["sections"].keys():
+      for s in changelog[v]["sections"]:
         print(f"  {s}")
         for l in changelog[v]["sections"][s]:
           print(f"    {l}")
 
   # Generate RST str
-  rst_txt = render_rst(changelog, IGNORE_EMPTY_SECTIONS)
+  rst_txt = render_rst(changelog, IGNORE_EMPTY_SECTIONS, args.ignore_before_version)
 
   # Print RST output
   if args.verbose:
