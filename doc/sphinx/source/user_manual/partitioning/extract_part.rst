@@ -6,7 +6,7 @@ Extract part
 Description
 """""""""""
 
-**Extract part** is a service for extraction of mesh regions based on arbitrary criteria.
+**Extract part** is a service for extraction of mesh regions by selecting specific mesh entity IDs.
 Meshes of dimension 0 (point clouds), 1, 2 and 3 are supported.
 Group information associated with extracted parts is preserved.
 Facilities for data transfer between input and extracted parts are provided as well.

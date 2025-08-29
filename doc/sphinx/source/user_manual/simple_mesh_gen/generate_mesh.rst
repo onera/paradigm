@@ -3,8 +3,10 @@
 Generation of simple partitioned meshes
 =======================================
 
+**ParaDiGM** offers shortcut functions to generate simple partitioned meshes.
+These functions embed calls to :ref:`Dcube Nodal Gen<dcube_nodal_gen>` and :ref:`Multipart<multipart>`.
 
-
+|
 
 .. dropdown:: Rectangle NGon
 
