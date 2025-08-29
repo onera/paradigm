@@ -32,6 +32,16 @@ Getting started
     **ParaDiGM**'s key concepts, terminology, conventions and philosophy
 
 
+
+  .. card:: FAQ
+    :link: faq
+    :link-type: ref
+    :img-top: ../../images/index_faq.png
+
+    Frequently asked questions
+
+
+
 .. toctree::
    :caption: Getting Started
    :maxdepth: 1
@@ -39,6 +49,8 @@ Getting started
 
    getting_started/installation
    getting_started/general
+   getting_started/faq
+
 
 
 
@@ -122,14 +134,6 @@ User manual
 
 
 
-  .. card:: FAQ
-    :link: faq
-    :link-type: ref
-    :img-top: ../../images/index_faq.png
-
-    Frequently asked questions
-
-
 
 .. toctree::
    :caption: User manual
@@ -145,7 +149,6 @@ User manual
    user_manual/io/index
    user_manual/struct/index
    user_manual/util/index
-   user_manual/faq
 
 |
 
