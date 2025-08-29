@@ -97,14 +97,19 @@ if(PDM_ENABLE_DOC)
 
 
     # Generate Release Notes page for Sphinx doc from ChangeLog text file
+    IF (NOT Python_EXECUTABLE)
+      find_package(Python)
+    ENDIF(NOT Python_EXECUTABLE)
+
     set(CHANGELOG_FILE ${PROJECT_SOURCE_DIR}/ChangeLog)
     set(SPHINX_RELEASE_NOTES ${SPHINX_SOURCE}/changelog.rst)
-    add_custom_command(OUTPUT ${SPHINX_RELEASE_NOTES}
-                       COMMAND ${CMAKE_COMMAND} -E env ${DOC_PYTHONPATH} env MPI4PY_RC_INITIALIZE=False env ${DOC_PRELOAD} env ${RUN_LSAN} env ${RUN_UBSAN}
-                       ${Python_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/gen_release_notes.py -i ${CHANGELOG_FILE} -o ${SPHINX_RELEASE_NOTES} -p ${SPHINX_SOURCE}
-                       DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/gen_release_notes.py ${CHANGELOG_FILE}
-                       COMMENT "Generating Release Notes page")
-
+    IF (Python_EXECUTABLE)
+      add_custom_command(OUTPUT ${SPHINX_RELEASE_NOTES}
+                         COMMAND ${CMAKE_COMMAND} -E env ${DOC_PYTHONPATH} env MPI4PY_RC_INITIALIZE=False env ${DOC_PRELOAD} env ${RUN_LSAN} env ${RUN_UBSAN}
+                         ${Python_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/gen_release_notes.py -i ${CHANGELOG_FILE} -o ${SPHINX_RELEASE_NOTES} -p ${SPHINX_SOURCE}
+                         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/gen_release_notes.py ${CHANGELOG_FILE}
+                         COMMENT "Generating Release Notes page")
+    ENDIF(Python_EXECUTABLE)
     #file (COPY ${CMAKE_CURRENT_SOURCE_DIR}/sphinx DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
     file(GLOB_RECURSE SOURCES_SPHINX
