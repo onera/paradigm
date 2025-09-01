@@ -485,6 +485,3 @@ API
 
       |python_gc|
 
-
-Examples
-""""""""

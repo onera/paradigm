@@ -7,21 +7,21 @@ Communication graphs
 .. container:: toc-cards
 
   .. card:: Part to Part
-    :link: ptp
+    :link: part_to_part
     :link-type: ref
 
     Generic partition-to-partition communication graph
 
 
   .. card:: Block to Part
-    :link: btp
+    :link: block_to_part
     :link-type: ref
 
     Block-distributed frame to partitioned frame
 
 
   .. card:: Part to Block
-    :link: ptb
+    :link: part_to_block
     :link-type: ref
 
     Partitioned frame to block-distributed frame
