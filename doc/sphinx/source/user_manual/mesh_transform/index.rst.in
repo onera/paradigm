@@ -15,12 +15,6 @@ Mesh Transformations
 @COMMENT_NOT_PDMA_RST@
 @COMMENT_NOT_PDMA_RST@
 @COMMENT_NOT_PDMA_RST@
-@COMMENT_NOT_PDMA_RST@  .. card:: Mesh Eval
-@COMMENT_NOT_PDMA_RST@    :link: mesh_eval
-@COMMENT_NOT_PDMA_RST@    :link-type: ref
-@COMMENT_NOT_PDMA_RST@
-@COMMENT_NOT_PDMA_RST@    Mesh analysis utilities
-@COMMENT_NOT_PDMA_RST@
 @COMMENT_NOT_PDMA_RST@|
 @COMMENT_NOT_PDMA_RST@
 @COMMENT_NOT_PDMA_RST@.. toctree::
@@ -29,4 +23,3 @@ Mesh Transformations
 @COMMENT_NOT_PDMA_RST@   :hidden:
 @COMMENT_NOT_PDMA_RST@
 @COMMENT_NOT_PDMA_RST@   mesh_deform
-@COMMENT_NOT_PDMA_RST@   mesh_eval

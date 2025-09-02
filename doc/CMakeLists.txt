@@ -38,11 +38,12 @@ if(PDM_ENABLE_DOC)
 
     configure_file(${DOXYFILE_IN} ${DOXYFILE_OUT} @ONLY)
     configure_file(${SPHINX_IN} ${SPHINX_OUT} @ONLY)
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/sphinx/source/user_manual/util/index.rst.in ${CMAKE_CURRENT_SOURCE_DIR}/sphinx/source/user_manual/util/index.rst @ONLY)
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/sphinx/source/user_manual/mesh_transform/index.rst.in ${CMAKE_CURRENT_SOURCE_DIR}/sphinx/source/user_manual/mesh_transform/index.rst @ONLY)
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/sphinx/source/user_manual/partitioning/renumbering.rst.in ${CMAKE_CURRENT_SOURCE_DIR}/sphinx/source/user_manual/partitioning/renumbering.rst @ONLY)
     if (PDM_ENABLE_EXTENSION_PDMA)
       configure_file(${CMAKE_CURRENT_SOURCE_DIR}/sphinx/source/user_manual/mesh_transform/mesh_deform.rst.in ${CMAKE_CURRENT_SOURCE_DIR}/sphinx/source/user_manual/mesh_transform/mesh_deform.rst @ONLY)
-      configure_file(${CMAKE_CURRENT_SOURCE_DIR}/sphinx/source/user_manual/mesh_transform/mesh_eval.rst.in ${CMAKE_CURRENT_SOURCE_DIR}/sphinx/source/user_manual/mesh_transform/mesh_eval.rst @ONLY)
+      configure_file(${CMAKE_CURRENT_SOURCE_DIR}/sphinx/source/user_manual/util/mesh_eval.rst.in ${CMAKE_CURRENT_SOURCE_DIR}/sphinx/source/user_manual/util/mesh_eval.rst @ONLY)
     endif()
 
     if (PDM_ENABLE_SHARED)
