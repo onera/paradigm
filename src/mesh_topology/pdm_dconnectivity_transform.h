@@ -39,18 +39,18 @@ extern "C" {
 
 /**
  *
- * \brief Compute the combine connectivty of entity1 with entity2 to entity3
+ * \brief Combine \p dentity1_entity2 and \p dentity2_entity3 connectivities to get \p dentity1_entity3
  *
- * \param [in]   comm                  PDM_MPI communicator
- * \param [in]   entity1_distrib       Distribution of entity1 over the procs (size=n_rank+1)
- * \param [in]   entity2_distrib       Distribution of entity2 over the procs (size=n_rank+1)
- * \param [in]   dentity1_entity2_idx
- * \param [in]   dentity1_entity2
- * \param [in]   dentity2_entity3_idx
- * \param [in]   dentity2_entity3
+ * \param [in]   comm                  MPI communicator
+ * \param [in]   entity1_distrib       Distribution of entity1
+ * \param [in]   entity2_distrib       Distribution of entity2
+ * \param [in]   dentity1_entity2_idx  Index of entity1->entity2 connectivity
+ * \param [in]   dentity1_entity2      Entity1->entity2 connectivity
+ * \param [in]   dentity2_entity3_idx  Index of entity2->entity3 connectivity
+ * \param [in]   dentity2_entity3      Entity2->entity3 connectivity
  * \param [in]   is_signed             If connectivity is signed
- * \param [in]   dentity1_entity3_idx
- * \param [in]   dentity1_entity3
+ * \param [out]  dentity1_entity3_idx  Index of entity1->entity3 connectivity
+ * \param [out]  dentity1_entity3      Entity1->entity3 connectivity
  */
 void
 PDM_deduce_combine_connectivity
@@ -70,7 +70,7 @@ PDM_deduce_combine_connectivity
 
 /**
  *
- * \brief Compute the dual connectivty of entity1
+ * \brief Transpose \p dentity1_entity2 connectivity to get \p dentity2_entity3 connectivity
  *
  * \param [in]   comm                  PDM_MPI communicator
  * \param [in]   entity1_distrib       Distribution of entity1 over the procs (size=n_rank+1)
@@ -78,8 +78,8 @@ PDM_deduce_combine_connectivity
  * \param [in]   dentity1_entity2_idx  Index of dentitiy1->dentity2 connectivity
  * \param [in]   dentity1_entity2      Connectivity of dentitiy1->dentity2
  * \param [in]   is_signed             If connectivity is signed
- * \param [in]   dentity2_entity1_idx  Index of dentitiy2->dentity1 connectivity
- * \param [in]   dentity2_entity1      Connectivity of dentitiy2->dentity1
+ * \param [out]  dentity2_entity1_idx  Index of dentitiy2->dentity1 connectivity
+ * \param [out]  dentity2_entity1      Connectivity of dentitiy2->dentity1
  */
 void
 PDM_dconnectivity_transpose
@@ -150,8 +150,8 @@ PDM_dcellface_to_dfacecell
  * \param [in]   dentity2_entity3_idx
  * \param [in]   dentity2_entity3
  * \param [in]   is_signed             If connectivity is signed
- * \param [in]   dentity1_entity3_idx
- * \param [in]   dentity1_entity3
+ * \param [out]  dentity1_entity3_idx
+ * \param [out]  dentity1_entity3
  */
 void
 PDM_deduce_combine_connectivity_dual
@@ -175,7 +175,7 @@ PDM_deduce_combine_connectivity_dual
  * \param [in]   comm                  PDM_MPI communicator
  * \param [in]   entity1_distrib       Distribution of entity1 over the procs (size=n_rank+1)
  * \param [in]   dentity1_entity2      Connectivity entity1->entity2
- * \param [in]   dentity2_entity1      Reversed connectivity of entity1->entity2
+ * \param [out]  dentity2_entity1      Reversed connectivity of entity1->entity2
  */
 void
 PDM_dorder_reverse
@@ -293,6 +293,18 @@ PDM_dconnectivity_to_extract_dconnectivity
        PDM_g_num_t         **dparent_entity2_g_num
 );
 
+
+/**
+ * \brief Generate \p dface_vtx connectivity from \p dface_edge and \p dedge_vtx connectivities
+ *
+ * \param [in]  comm            MPI communicator
+ * \param [in]  distrib_face    Distribution of faces
+ * \param [in]  distrib_edge    Distribution of edges
+ * \param [in]  dface_edge_idx  Index of face->edge connectivity
+ * \param [in]  dface_edge      Face->edge connectivity
+ * \param [in]  dedge_vtx       Edge->vtx connectivity
+ * \param [out] dface_vtx       Face->vtx connectivity
+ */
 void
 PDM_dconnectivity_dface_vtx_from_face_and_edge
 (

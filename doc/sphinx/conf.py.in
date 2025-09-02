@@ -442,6 +442,7 @@ if '@PDM_ENABLE_Fortran@' == 'ON':
         "@PROJECT_SOURCE_DIR@/src/meshgen/pdm_dcube_nodal_gen.F90",
         "@PROJECT_SOURCE_DIR@/src/meshgen/pdm_generate_mesh.F90",
         "@PROJECT_SOURCE_DIR@/src/mesh_struct/pdm_part_mesh_nodal.F90",
+        "@PROJECT_SOURCE_DIR@/src/mesh_topology/pdm_part_connectivity_transform.F90",
         "@PROJECT_SOURCE_DIR@/src/ppart/pdm_multipart.F90",
         "@PROJECT_SOURCE_DIR@/src/ppart/pdm_part_extension.F90",
         "@PROJECT_SOURCE_DIR@/src/struct/pdm_extract_part.F90",

@@ -22,14 +22,6 @@ Partitioning
 
 
 
-  .. card:: Connectivity transformation
-    :link: connec_transform
-    :link-type: ref
-
-    Utilities for processing unstructured mesh connectivities (partitioned and block-distributed)
-
-
-
   .. card:: Part extension
     :link: part_extension
     :link-type: ref
@@ -65,7 +57,6 @@ Partitioning
 
    multipart
    extract_part
-   connec_transform
    part_extension
    renumbering
 

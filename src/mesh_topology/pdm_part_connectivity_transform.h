@@ -189,7 +189,7 @@ PDM_part_graph_dual
 
 /**
  *
- * \brief Convert implicit pair connectivity, to a connectivity with index. Useful for convert face_cell or edge_vtx.
+ * \brief Convert implicit pair connectivity, to a connectivity with index. Useful for converting face_cell or edge_vtx.
  *
  * \param [in]  n_part              Number of partitions in current process
  * \param [in]  n_entity1           Number of entity1
@@ -199,7 +199,7 @@ PDM_part_graph_dual
  *
  */
 void
-PDM_part_connectivity_to_connectity_idx
+PDM_part_connectivity_to_connectivity_idx
 (
   const int    n_part,
   const int   *n_entity1,

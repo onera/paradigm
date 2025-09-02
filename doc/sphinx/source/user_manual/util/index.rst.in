@@ -12,7 +12,16 @@ Utils
 
     Services handling 3D rigid body rotations
 
-@COMMENT_NOT_PDMA_RST@
+
+
+  .. card:: Connectivity transformation
+    :link: connec_transform
+    :link-type: ref
+
+    Utilities for processing unstructured mesh connectivities (partitioned and block-distributed)
+
+
+
 @COMMENT_NOT_PDMA_RST@  .. card:: Mesh Evaluation Utils
 @COMMENT_NOT_PDMA_RST@    :link: mesh_eval
 @COMMENT_NOT_PDMA_RST@    :link-type: ref
@@ -29,4 +38,5 @@ Utils
   :hidden:
 
   rot
+  connec_transform
 @COMMENT_NOT_PDMA_RST@  mesh_eval
