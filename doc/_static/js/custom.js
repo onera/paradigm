@@ -97,13 +97,32 @@ function rm_docutils_from_toctree() {
       var children = Array(...items[0].childNodes);
 
       if (children[0].className == "docutils literal notranslate") {
-        element.remove();
+        element.remove()
         // children[0].className = "tototototo"
       }
     }
 
   });
 }
+
+
+/**
+ * Fix sidebar branding text -> just version number
+ */
+function fix_sidebar_brand_text() {
+  const spans = document.querySelectorAll("span");
+
+  Array(...spans).forEach((element) => {
+
+    if (element.className == "sidebar-brand-text") {
+      title   = element.textContent.split(" ") // ["ParaDiGM", version, "documentation"]
+      version = title[1]
+      element.textContent = "v" + version
+    }
+
+  });
+}
+
 
 document.addEventListener("DOMContentLoaded", function() {
   console.log("custom theme loaded")
@@ -112,4 +131,5 @@ document.addEventListener("DOMContentLoaded", function() {
   setup_autodoc_cpp_f()
   fix_autodoc_fortran_subroutines()
   rm_docutils_from_toctree()
+  fix_sidebar_brand_text()
 })

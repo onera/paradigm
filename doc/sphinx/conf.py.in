@@ -182,26 +182,26 @@ if sphinx.__version__ >= "6.0":
 # documentation.
 html_theme_options = {
     "light_css_variables": {
-        "font-stack": "Roboto, Segoe UI, Helvetica, sans-serif",
-        "font-stack--monospace": "Roboto Mono, SFMono-Regular, Menlo, Consolas, Monaco, Liberation Mono, Lucida Console, monospace",
-        "color-foreground-primary":  "#23373b",
-        "color-brand-primary":       "#1c64ff",
-        "color-pdmkw":               "#6d80a1",
-        "color-link":                "#366ce4",
-        "color-highlight-on-target": "#fff4d1",
-        "color-foreground-tertiary": "#d9d9da",
-        "color-background-tertiary": "#f1f2f7",
-	    "color-api-name":            "#d63736",
+        "font-stack"                : "Roboto, Segoe UI, Helvetica, sans-serif",
+        "font-stack--monospace"     : "Roboto Mono, SFMono-Regular, Menlo, Consolas, Monaco, Liberation Mono, Lucida Console, monospace",
+        "color-foreground-primary"  : "#23373b",
+        "color-brand-primary"       : "#1c64ff",
+        "color-pdmkw"               : "#6d80a1",
+        "color-link"                : "#366ce4",
+        "color-highlight-on-target" : "#fff4d1",
+        "color-foreground-tertiary" : "#d9d9da",
+        "color-background-tertiary" : "#f1f2f7",
+	    "color-api-name"            : "#d63736",
     },
     "dark_css_variables": {
-        "color-brand-primary":       "#3d94ff",
-        "color-pdmkw":               "#879aad",
-        "color-link":                "#5ca5ff",
-        "color-highlight-on-target": "#2e0c14",
-        "color-foreground-tertiary": "#3f4144",
-        "color-background-secondary":"#2a2c34",
-        "color-background-tertiary": "#1d1f22",
-	    "color-api-name":            "#ff6d6c",
+        "color-brand-primary"        : "#3d94ff",
+        "color-pdmkw"                : "#879aad",
+        "color-link"                 : "#5ca5ff",
+        "color-highlight-on-target"  : "#2e0c14",
+        "color-foreground-tertiary"  : "#3f4144",
+        "color-background-secondary" : "#2a2c34",
+        "color-background-tertiary"  : "#1d1f22",
+	    "color-api-name"             : "#ff6d6c",
     },
 
     "display_version": True,
@@ -224,7 +224,7 @@ html_short_title = project
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
 #
-# html_logo = "@CMAKE_CURRENT_SOURCE_DIR@/images/logo.png"
+html_logo = "@CMAKE_CURRENT_SOURCE_DIR@/_static/logo.svg"
 
 # The name of an image file (relative to this directory) to use as a favicon of
 # the docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32

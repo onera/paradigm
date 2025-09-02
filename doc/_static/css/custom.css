@@ -243,7 +243,10 @@ dl[class]:not(.option-list):not(.field-list):not(.footnote):not(.glossary):not(.
 /* Side bar */
 
 .sidebar-brand-text {
-  font-weight: 700;
+  font-size:110%;
+  font-weight: bold;
+  text-align: center;
+  /* color: var(--color-link); */
 }
 
 /* End Side bar */
