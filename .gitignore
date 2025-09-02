@@ -21,7 +21,9 @@ cython/cwipi.c
 doc/sphinx/source/conf.py
 doc/sphinx/source/user_manual/mesh_transform/index.rst
 doc/sphinx/source/user_manual/mesh_transform/mesh_deform.rst
-doc/sphinx/source/user_manual/mesh_transform/mesh_eval.rst
+doc/sphinx/source/user_manual/partitioning/renumbering.rst
+doc/sphinx/source/user_manual/util/index.rst
+doc/sphinx/source/user_manual/util/mesh_eval.rst
 \#*
 nbproject
 build
