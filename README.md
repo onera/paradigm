@@ -1,10 +1,12 @@
-# ParaDiGM #
+<p align="center">
+    <img src="doc/_static/logo.svg" alt="Logo" width="250"/>
+</p>
 
 **ParaDiGM** (*Parallel Distributed General Mesh*) is a parallel computational geometry library under LGPL, with interfaces in C, Fortran and Python.
 
 ## Documentation  ##
 
-User documentation is deployed on ONERA's internal GitLab pages server: https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev/index.html
+User documentation is deployed on ONERA's internal GitLab pages server and can be found [here](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev/index.html).
 
 ## Build and install ##
 
