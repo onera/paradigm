@@ -659,7 +659,7 @@ PDM_rotation_apply_homogeneous_matrix
  *
  * \brief Composes (multipies) homogeneous (4-by-4) matrices
  *
- * Computes A_0*A_1*...A_[n-1]
+ * Computes \f$A_0 \times A_1 \times ... \times A_{n-1}\f$
  *
  * \param [in]   homogeneous_matrices Array of 4-by-4 homogeneous matrix (Row major (C-order) flatten)
  * \param [in]   n_matrices           Number of matrices
