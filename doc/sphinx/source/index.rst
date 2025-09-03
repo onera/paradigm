@@ -111,7 +111,7 @@ User manual
 
 
   .. card:: Parallel I/O
-    :link: io
+    :link: parallel_io
     :link-type: ref
 
     Parallel read and write

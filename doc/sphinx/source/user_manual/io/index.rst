@@ -1,4 +1,4 @@
-.. _io:
+.. _parallel_io:
 
 
 ############
@@ -7,8 +7,8 @@ Parallel I/O
 
 .. container:: toc-cards
 
-  .. card:: MPI-IO
-    :link: mpi_io
+  .. card:: IO
+    :link: io
     :link-type: ref
 
     MPI-IO wrappings to read/write files in parallel
@@ -19,7 +19,7 @@ Parallel I/O
     :link: writer
     :link-type: ref
 
-    Writer
+    API for writing meshes and solutions in parallel
 
 
 |
@@ -31,5 +31,5 @@ Parallel I/O
   :maxdepth: 1
   :hidden:
 
-  mpi_io
+  io
   writer
