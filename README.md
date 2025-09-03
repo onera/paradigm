@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="doc/_static/logo.svg" alt="Logo" width="33%"/>
+    <img src="doc/_static/logo.svg" alt="Logo" width="25%"/>
 </p>
 
 **ParaDiGM** (*Parallel Distributed General Mesh*) is a parallel computational geometry library under LGPL, with interfaces in C, Fortran and Python.
