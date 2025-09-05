@@ -439,25 +439,25 @@ def generate_mesh_parallelepiped_ngon(MPI.Comm             comm,
     # Array
     pvtx_coord.append(create_numpy_d(_pvtx_coord[i_part], 3*pn_vtx[i_part]))
 
-    pedge_vtx.append(create_numpy_i(_pedge_vtx[i_part], 2*pn_edge[i_part]))
-    pface_edge_idx.append(create_numpy_i(_pface_edge_idx[i_part], pn_face[i_part] + 1))
-    pface_edge.append(create_numpy_i(_pface_edge[i_part], pface_edge_idx[i_part][pn_face[i_part]]))
-    pface_vtx.append(create_numpy_or_none_i(_pface_vtx[i_part], pface_edge_idx[i_part][pn_face[i_part]]))
-    pcell_face_idx.append(create_numpy_i(_pcell_face_idx[i_part], pn_cell[i_part] + 1))
-    pcell_face.append(create_numpy_i(_pcell_face[i_part], pcell_face_idx[i_part][pn_cell[i_part]]))
+    pedge_vtx.append     (create_numpy_i        (_pedge_vtx     [i_part], 2*pn_edge[i_part]))
+    pface_edge_idx.append(create_numpy_i        (_pface_edge_idx[i_part], pn_face[i_part] + 1))
+    pface_edge.append    (create_numpy_i        (_pface_edge    [i_part], pface_edge_idx[i_part][pn_face[i_part]]))
+    pface_vtx.append     (create_numpy_or_none_i(_pface_vtx     [i_part], pface_edge_idx[i_part][pn_face[i_part]]))
+    pcell_face_idx.append(create_numpy_i        (_pcell_face_idx[i_part], pn_cell[i_part] + 1))
+    pcell_face.append    (create_numpy_i        (_pcell_face    [i_part], pcell_face_idx[i_part][pn_cell[i_part]]))
 
-    psurface_face_idx.append(create_numpy_or_none_i(_psurface_face_idx[i_part], pn_surface[i_part] + 1))
-    psurface_face.append(create_numpy_or_none_i(_psurface_face[i_part], psurface_face_idx[i_part][pn_surface[i_part]]))
-    pridge_edge_idx.append(create_numpy_or_none_i(_pridge_edge_idx[i_part], pn_ridge[i_part] + 1))
-    pridge_edge.append(create_numpy_or_none_i(_pridge_edge[i_part], pridge_edge_idx[i_part][pn_ridge[i_part]]))
+    psurface_face_idx.     append(create_numpy_or_none_i(_psurface_face_idx     [i_part], pn_surface[i_part] + 1))
+    psurface_face.         append(create_numpy_or_none_i(_psurface_face         [i_part], psurface_face_idx[i_part][pn_surface[i_part]]))
+    psurface_face_ln_to_gn.append(create_numpy_g        (_psurface_face_ln_to_gn[i_part], psurface_face_idx[i_part][pn_surface[i_part]]))
+
+    pridge_edge_idx.     append(create_numpy_or_none_i(_pridge_edge_idx     [i_part], pn_ridge[i_part] + 1))
+    pridge_edge.         append(create_numpy_or_none_i(_pridge_edge         [i_part], pridge_edge_idx[i_part][pn_ridge[i_part]]))
+    pridge_edge_ln_to_gn.append(create_numpy_g        (_pridge_edge_ln_to_gn[i_part], pridge_edge_idx[i_part][pn_ridge[i_part]]))
 
     pvtx_ln_to_gn.append(create_numpy_g(_pvtx_ln_to_gn[i_part], pn_vtx[i_part]))
     pedge_ln_to_gn.append(create_numpy_g(_pedge_ln_to_gn[i_part], pn_edge[i_part]))
     pface_ln_to_gn.append(create_numpy_g(_pface_ln_to_gn[i_part], pn_face[i_part]))
     pcell_ln_to_gn.append(create_numpy_g(_pcell_ln_to_gn[i_part], pn_cell[i_part]))
-
-    psurface_face_ln_to_gn.append(create_numpy_g(_psurface_face_ln_to_gn[i_part], pn_surface[i_part]))
-    pridge_edge_ln_to_gn.append(create_numpy_g(_pridge_edge_ln_to_gn[i_part], pn_ridge[i_part]))
 
   # Free
   free(_pn_vtx                );

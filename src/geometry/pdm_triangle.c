@@ -12,7 +12,9 @@
 
 #include "pdm_triangle.h"
 #include "pdm.h"
+#include "pdm_error.h"
 #include "pdm_line.h"
+#include "pdm_logging.h"
 #include "pdm_mem_tool.h"
 #include "pdm_plane.h"
 #include "pdm_predicate.h"
@@ -971,7 +973,7 @@ PDM_triangle_evaluate_position
 }
 
 
-void
+int
 PDM_triangle_ngon_to_nodal
 (
  int   n_face,
@@ -980,7 +982,7 @@ PDM_triangle_ngon_to_nodal
  int **face_vtx
  )
 {
-  PDM_malloc(*face_vtx,n_face * 3,int);
+  PDM_malloc(*face_vtx, n_face * 3, int);
 
   for (int iface = 0; iface < n_face; iface++) {
 
@@ -1004,12 +1006,27 @@ PDM_triangle_ngon_to_nodal
     int ivtx2 = edge_vtx[2*iedge+1];
     if (ivtx1 == fv[1] || ivtx1 == fv[2]) {
       fv[0] = ivtx2;
-    } else {
-      assert(ivtx2 == fv[1] || ivtx2 == fv[2]);
+    }
+    else {
+      // assert(ivtx2 == fv[1] || ivtx2 == fv[2]);
+      if (ivtx2 != fv[1] && ivtx2 != fv[2]) {
+        log_trace("iface = %d\n", iface);
+        for (int i = 0; i < 3; i++) {
+          log_trace("  edge %6d : ", fe[i]);
+          if (fe[i] < 0) log_trace("%6d %6d\n", edge_vtx[2*(-fe[i]-1)+1], edge_vtx[2*(-fe[i]-1)  ]);
+          else           log_trace("%6d %6d\n", edge_vtx[2*( fe[i]-1)  ], edge_vtx[2*( fe[i]-1)+1]);
+        }
+        // PDM_error(__FILE__, __LINE__, 0, "PDM_triangle_ngon_to_nodal failed, see paradigm_*.log\n");
+        printf("PDM_triangle_ngon_to_nodal failed (see paradigm_*.log) !\n");
+        fflush(stdout);
+        return iface+1;
+      }
       fv[0] = ivtx1;
     }
 
   }
+
+  return 0;
 }
 
 
