@@ -135,7 +135,7 @@ int main(int argc, char *argv[])
   PDM_malloc(n_elts, n_part, int     );
   PDM_malloc(coords, n_part, double *);
   for (int i_part = 0; i_part < n_part; i_part++) {
-    PDM_g_num_t *gnum = NULL;
+    PDM_g_num_t *_gnum = NULL;
     PDM_point_cloud_gen_random(comm,
                                n_rank*i_part + i_rank, // seed
                                0,
@@ -144,13 +144,18 @@ int main(int argc, char *argv[])
                                1., 1., 1.,
                                &n_elts[i_part],
                                &coords[i_part],
-                               &gnum);
-    PDM_free(gnum);
+                               &_gnum);
+    PDM_free(_gnum);
   }
+
+
+  PDM_g_num_t **gnum = NULL;
+  PDM_malloc(gnum, n_part, PDM_g_num_t *);
 
   /*
    * Generate a global numbering for the points from their coordinates
    */
+
   // First, create a PDM_gen_gnum_t instance and set some parameters
   PDM_gen_gnum_t *gen_gnum = PDM_gnum_create(3,     // dimension
                                              n_part,
@@ -160,7 +165,7 @@ int main(int argc, char *argv[])
                                              PDM_OWNERSHIP_USER);
 
   // Then, provide the coordinates array for each partition
-  // (`char_length` can be NULL if `merge` is disabled)
+  // (`char_length` can be NULL if `merge` is set to PDM_FALSE)
   for (int i_part = 0; i_part < n_part; i_part++) {
     PDM_gnum_set_from_coords(gen_gnum,
                              i_part,
@@ -172,9 +177,7 @@ int main(int argc, char *argv[])
   // Once all partitions have been set, build the global numbering
   PDM_gnum_compute(gen_gnum);
 
-  // Finally, retrieve the computed global id arrays
-  PDM_g_num_t **gnum = NULL;
-  PDM_malloc(gnum, n_part, PDM_g_num_t *);
+  // Finally, retrieve the computed global IDs
   for (int i_part = 0; i_part < n_part; i_part++) {
     gnum[i_part] = PDM_gnum_get(gen_gnum, i_part);
   }

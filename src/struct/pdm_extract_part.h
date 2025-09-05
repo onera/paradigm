@@ -555,7 +555,7 @@ PDM_extract_part_group_get
  * \param [in]   extrp                    \ref PDM_extract_part_t instance
  * \param [in]   mesh_entity              Type of entity
  * \param [in]   renum_entity_method      Renumbering method
- * \param [in]   renum_entity_properties  Renumbering parameters for chosen method (can be NULL)
+ * \param [in]   renum_entity_properties  Renumbering parameters for chosen method (can be *NULL*, check out \verbatim embed:rst:inline :ref:`this page<renumbering>` \endverbatim for more details)
  */
 void
 PDM_extract_part_renum_method_set

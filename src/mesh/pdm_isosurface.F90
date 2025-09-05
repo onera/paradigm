@@ -1,7 +1,7 @@
 !-----------------------------------------------------------------------------
 ! This file is part of the ParaDiGM library.
 !
-! Copyright (C) 2020  ONERA
+! Copyright (C) 2025  ONERA
 !
 ! This library is free software; you can redistribute it and/or
 ! modify it under the terms of the GNU Lesser General Public
@@ -106,7 +106,7 @@ module pdm_isosurface
 
 
 
-  subroutine PDM_isosurface_part_mesh_set(isos, & 
+  subroutine PDM_isosurface_part_mesh_set(isos, &
                                           pmesh)
     ! Set partioned mesh. Not yet available
     implicit none
@@ -676,7 +676,7 @@ module pdm_isosurface
     c_ln_to_gn = C_NULL_PTR
     if (associated(ln_to_gn)) then
       c_ln_to_gn = c_loc(ln_to_gn)
-    endif    
+    endif
 
     call PDM_isosurface_ln_to_gn_set_cf(isos,        &
                                         i_part,      &
@@ -732,17 +732,17 @@ module pdm_isosurface
     c_group_entity_idx = C_NULL_PTR
     if (associated(group_entity_idx)) then
       c_group_entity_idx = c_loc(group_entity_idx)
-    endif    
+    endif
 
     c_group_entity = C_NULL_PTR
     if (associated(group_entity)) then
       c_group_entity = c_loc(group_entity)
-    endif    
+    endif
 
     c_group_entity_ln_to_gn = C_NULL_PTR
     if (associated(group_entity_ln_to_gn)) then
       c_group_entity_ln_to_gn = c_loc(group_entity_ln_to_gn)
-    endif            
+    endif
 
     call PDM_isosurface_pgroup_set_cf(isos,               &
                                       i_part,             &
@@ -790,12 +790,12 @@ module pdm_isosurface
     c_dconnect_idx = C_NULL_PTR
     if (associated(dconnect_idx)) then
       c_dconnect_idx = c_loc(dconnect_idx)
-    endif    
+    endif
 
     c_dconnect = C_NULL_PTR
     if (associated(dconnect)) then
       c_dconnect = c_loc(dconnect)
-    endif    
+    endif
 
     call PDM_isosurface_dconnectivity_set_cf(isos,              &
                                              connectivity_type, &
@@ -831,7 +831,7 @@ module pdm_isosurface
     c_dvtx_coord = C_NULL_PTR
     if (associated(dvtx_coord)) then
       c_dvtx_coord = c_loc(dvtx_coord)
-    endif    
+    endif
 
     call PDM_isosurface_dvtx_coord_set_cf(isos, &
                                           c_dvtx_coord)
@@ -869,11 +869,11 @@ module pdm_isosurface
     c_distrib = C_NULL_PTR
     if (associated(distrib)) then
       c_distrib = c_loc(distrib)
-    endif   
+    endif
 
     call PDM_isosurface_distrib_set_cf(isos,        &
                                        entity_type, &
-                                       c_distrib)     
+                                       c_distrib)
 
   end subroutine PDM_isosurface_distrib_set
 
@@ -913,17 +913,17 @@ module pdm_isosurface
     c_dgroup_entity_idx = C_NULL_PTR
     if (associated(dgroup_entity_idx)) then
       c_dgroup_entity_idx = c_loc(dgroup_entity_idx)
-    endif   
+    endif
 
     c_dgroup_entity = C_NULL_PTR
     if (associated(dgroup_entity)) then
       c_dgroup_entity = c_loc(dgroup_entity)
-    endif  
+    endif
 
     call PDM_isosurface_dgroup_set_cf (isos,                &
                                        entity_type,         &
                                        c_dgroup_entity_idx, &
-                                       c_dgroup_entity)     
+                                       c_dgroup_entity)
 
   end subroutine PDM_isosurface_dgroup_set
 
@@ -967,7 +967,7 @@ module pdm_isosurface
     c_isovalues = C_NULL_PTR
     if (associated(isovalues)) then
       c_isovalues = c_loc(isovalues)
-    endif  
+    endif
 
     id_isosurface =  PDM_isosurface_add_cf (isos,        &
                                             kind,        &
@@ -1011,12 +1011,12 @@ module pdm_isosurface
     c_isovalues = C_NULL_PTR
     if (associated(isovalues)) then
       c_isovalues = c_loc(isovalues)
-    endif  
+    endif
 
     call PDM_isosurface_isovalues_set_cf (isos,          &
                                           id_isosurface, &
                                           n_isovalues,   &
-                                          c_isovalues)    
+                                          c_isovalues)
 
   end subroutine PDM_isosurface_isovalues_set
 
@@ -1051,7 +1051,7 @@ module pdm_isosurface
     c_coeff = C_NULL_PTR
     if (associated(coeff)) then
       c_coeff = c_loc(coeff)
-    endif      
+    endif
 
     call PDM_isosurface_equation_set_cf (isos,          &
                                          id_isosurface, &
@@ -1091,12 +1091,12 @@ module pdm_isosurface
         type(c_ptr),    value :: field
 
       end subroutine PDM_isosurface_pfield_set_cf
-    end interface    
+    end interface
 
     c_field = C_NULL_PTR
     if (associated(field)) then
       c_field = c_loc(field)
-    endif      
+    endif
 
     call PDM_isosurface_pfield_set_cf (isos,          &
                                        id_isosurface, &
@@ -1138,7 +1138,7 @@ module pdm_isosurface
     c_dfield = C_NULL_PTR
     if (associated(dfield)) then
       c_dfield = c_loc(dfield)
-    endif      
+    endif
 
     call PDM_isosurface_dfield_set_cf (isos,          &
                                        id_isosurface, &
@@ -1174,7 +1174,7 @@ module pdm_isosurface
 
     call PDM_isosurface_set_tolerance_cf(isos,&
                                          tol)
-    
+
   end subroutine PDM_isosurface_set_tolerance
 
 
@@ -1205,7 +1205,7 @@ module pdm_isosurface
     type(c_ptr)    :: c_connect
     integer(c_int) :: c_ownership
     integer(c_int) :: c_n_entity
-    
+
     interface
       function PDM_isosurface_pconnectivity_get_cf(isos,              &
                                                    id_isosurface,     &
@@ -1253,7 +1253,7 @@ module pdm_isosurface
 
     call c_f_pointer(c_connect, &
                      connect,   &
-                     [connect_idx(n_entity+1)])    
+                     [connect_idx(n_entity+1)])
 
   end subroutine PDM_isosurface_pconnectivity_get
 
@@ -1279,7 +1279,7 @@ module pdm_isosurface
     type(c_ptr)    :: c_vtx_coord
     integer(c_int) :: c_ownership
     integer(c_int) :: c_n_vtx
-    
+
     interface
       function PDM_isosurface_pvtx_coord_get_cf(isos,          &
                                                 id_isosurface, &
@@ -1316,7 +1316,7 @@ module pdm_isosurface
 
     call c_f_pointer(c_vtx_coord, &
                      vtx_coord,   &
-                     [3, n_vtx])    
+                     [3, n_vtx])
 
   end subroutine PDM_isosurface_pvtx_coord_get
 
@@ -1345,7 +1345,7 @@ module pdm_isosurface
     type(c_ptr)    :: c_ln_to_gn
     integer(c_int) :: c_ownership
     integer(c_int) :: c_n_entity
-    
+
     interface
       function PDM_isosurface_ln_to_gn_get_cf(isos,          &
                                               id_isosurface, &
@@ -1386,7 +1386,7 @@ module pdm_isosurface
 
     call c_f_pointer(c_ln_to_gn, &
                      ln_to_gn,   &
-                     [n_entity])    
+                     [n_entity])
 
   end subroutine PDM_isosurface_ln_to_gn_get
 
@@ -1469,15 +1469,15 @@ module pdm_isosurface
 
     call c_f_pointer(c_group_entity_idx, &
                      group_entity_idx,   &
-                     [n_group+1])    
+                     [n_group+1])
 
     call c_f_pointer(c_group_entity, &
                      group_entity,   &
-                     [group_entity_idx(n_group+1)])    
+                     [group_entity_idx(n_group+1)])
 
     call c_f_pointer(c_group_entity_ln_to_gn, &
                      group_entity_ln_to_gn,   &
-                     [group_entity_idx(n_group+1)])    
+                     [group_entity_idx(n_group+1)])
 
 
   end subroutine PDM_isosurface_pgroup_get
@@ -1541,13 +1541,13 @@ module pdm_isosurface
                                                       c_connectivity_type, &
                                                       c_dconnect_idx,      &
                                                       c_dconnect,          &
-                                                      c_ownership)           
+                                                      c_ownership)
 
     n_entity = c_n_entity
 
     call c_f_pointer(c_dconnect_idx, &
                      dconnect_idx,   &
-                     [n_entity + 1])    
+                     [n_entity + 1])
 
     call c_f_pointer(c_dconnect, &
                      dconnect,   &
@@ -1614,13 +1614,13 @@ module pdm_isosurface
                                                            c_entity_type,    &
                                                            c_dparent_idx,    &
                                                            c_dparent_weight, &
-                                                           c_ownership)           
+                                                           c_ownership)
 
     n_iso_entity = c_n_iso_entity
 
     call c_f_pointer(c_dparent_idx, &
                      dparent_idx,   &
-                     [n_iso_entity + 1])    
+                     [n_iso_entity + 1])
 
     call c_f_pointer(c_dparent_weight, &
                      dparent_weight,   &

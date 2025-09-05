@@ -1804,7 +1804,7 @@ _create_cell_cell_graph
         pcell_face    [i_part] = part_ext->parts[i_domain][i_part].cell_face;
       }
 
-      PDM_part_connectivity_to_connectity_idx(part_ext->n_part[i_domain],
+      PDM_part_connectivity_to_connectivity_idx(part_ext->n_part[i_domain],
                                               pn_face,
                                               pface_cell,
                                               &face_cell_idx[i_domain],
@@ -6068,9 +6068,9 @@ PDM_part_extension_create
   PDM_malloc(part_ext->ownership_border_group          , PDM_MESH_ENTITY_MAX      , PDM_ownership_t **);
   PDM_malloc(part_ext->ownership_border_graph          , PDM_MESH_ENTITY_MAX      , PDM_ownership_t **);
   PDM_malloc(part_ext->ownership_border_path_itrf      , PDM_MESH_ENTITY_MAX      , PDM_ownership_t **);
-  
+
   for (int i_entity=0; i_entity<PDM_MESH_ENTITY_MAX; ++i_entity) {
-    
+
     PDM_malloc(part_ext->ownership_border_ln_to_gn       [i_entity], n_domain, PDM_ownership_t *);
     PDM_malloc(part_ext->ownership_border_ln_to_gn_ancstr[i_entity], n_domain, PDM_ownership_t *);
     PDM_malloc(part_ext->ownership_border_group          [i_entity], n_domain, PDM_ownership_t *);
@@ -6084,7 +6084,7 @@ PDM_part_extension_create
       PDM_malloc(part_ext->ownership_border_group          [i_entity][i_domain], n_part[i_domain], PDM_ownership_t);
       PDM_malloc(part_ext->ownership_border_graph          [i_entity][i_domain], n_part[i_domain], PDM_ownership_t);
       PDM_malloc(part_ext->ownership_border_path_itrf      [i_entity][i_domain], n_part[i_domain], PDM_ownership_t);
-      
+
       for (int i_part = 0; i_part < n_part[i_domain]; i_part++) {
 
         part_ext->ownership_border_ln_to_gn       [i_entity][i_domain][i_part] = PDM_OWNERSHIP_BAD_VALUE;

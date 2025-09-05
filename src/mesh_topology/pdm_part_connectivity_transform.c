@@ -321,7 +321,7 @@ PDM_part_graph_dual
 
 
 void
-PDM_part_connectivity_to_connectity_idx
+PDM_part_connectivity_to_connectivity_idx
 (
 const int    n_part,
 const int   *n_entity1,

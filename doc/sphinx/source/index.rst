@@ -1,6 +1,6 @@
-************************************
-Welcome to ParaDiGM's documentation!
-************************************
+**************************
+**ParaDiGM** documentation
+**************************
 
 **ParaDiGM** (*Parallel Distributed General Mesh*) is a parallel computational geometry library developed at ONERA.
 It provides a progressive framework, which consists of a set of low-, mid- and high-level services usable by developers of scientific computing software.
@@ -12,21 +12,34 @@ It provides a progressive framework, which consists of a set of low-, mid- and h
 Getting started
 ###############
 
+
 .. container:: toc-cards
 
-  .. container:: card
+  .. card:: Installation
+    :link: installation
+    :link-type: ref
+    :img-top: ../../images/index_installation.png
 
-    .. figure:: ../../images/index_installation.png
-      :target: getting_started/installation.html
-
-    :ref:`Installation <installation>`
-      A guide to install and configure ParaDiGM
+    A guide to install and configure **ParaDiGM**
 
 
-  .. container:: card
 
-    :ref:`General presentation <general>`
-      ParaDiGM's key concepts, terminology, conventions and philosophy
+  .. card:: General presentation
+    :link: general
+    :link-type: ref
+    :img-top: ../../images/index_general_presentation.png
+
+    **ParaDiGM**'s key concepts, terminology, conventions and philosophy
+
+
+
+  .. card:: FAQ
+    :link: faq
+    :link-type: ref
+    :img-top: ../../images/index_faq.png
+
+    Frequently asked questions
+
 
 
 .. toctree::
@@ -36,6 +49,8 @@ Getting started
 
    getting_started/installation
    getting_started/general
+   getting_started/faq
+
 
 
 
@@ -47,75 +62,77 @@ User manual
 
 .. container:: toc-cards
 
-  .. container:: card
+  .. card:: Simple mesh generation
+    :link: simple_mesh_gen
+    :link-type: ref
 
-    .. .. figure:: ../../images/icosphere.png
-    ..   :target: user_manual/simple_mesh_gen/index.html
-
-    :ref:`Simple mesh generation <simple_mesh_gen>`
-      Automatic generation of meshes with simple parametrable shapes
+    Automatic generation of meshes with simple parametrable shapes
 
 
-  .. container:: card
 
-    :ref:`Partitioning <partitioning>`
-      Graph partitioning, connectivity reconstruction, partition extension and local renumbering
+  .. card:: Partitioning
+    :link: partitioning
+    :link-type: ref
 
-  .. container:: card
-
-    :ref:`Mesh Structures <struct>`
-      Low-level mesh structures
-
-  .. container:: card
-
-    :ref:`Communication graphs <comm_graph>`
-      High-level capabilities for building and operating generic communication graphs
+    Graph partitioning, connectivity reconstruction, partition extension and local renumbering
 
 
-  .. container:: card
 
-    :ref:`Global numbering <gnum>`
-      Global ID generation
+  .. card:: Mesh structures
+    :link: struct
+    :link-type: ref
 
-
-  .. container:: card
-
-    :ref:`Pre-/co-/post-processing <prepro_algo>`
-      Distributed geometric and topological algorithms for pre-/co-/post-processing
+    Mesh data structures
 
 
-  .. container:: card
 
-    :ref:`Parallel I/O <io>`
-      Parallel read and write
+  .. card:: Communication graphs
+    :link: comm_graph
+    :link-type: ref
+
+    High-level capabilities for building and operating generic communication graphs
 
 
-  .. container:: card
 
-    High-order meshes
-      Utilities for high-order, curved meshes
+  .. card:: Global numbering
+    :link: gnum
+    :link-type: ref
 
-  .. container:: card
+    Global ID generation and manipulation
 
-    :ref:`Mesh Transformation <mesh_transform>`
-      Algorithms performing geometrical or topological transformations on meshes
 
-  .. container:: card
 
-    :ref:`Miscellaneous utils <utils>`
-      Utilities for basic operations
+  .. card:: Pre-/co-/post-processing
+    :link: prepro_algo
+    :link-type: ref
 
-  .. container:: card
+    Parrallel geometric and topological algorithms for pre-/co-/post-processing
 
-    :ref:`FAQ <faq>`
-      Frequently asked questions about ParaDiGM
 
-.. * (Reste?)
 
-..   * cellface_orient
-..   * geom_elem
-..   * triangulate
-..   * ...
+  .. card:: Parallel I/O
+    :link: parallel_io
+    :link-type: ref
+
+    Parallel read and write
+
+
+
+  .. card:: Mesh transformation
+    :link: mesh_transform
+    :link-type: ref
+
+    Algorithms performing geometrical or topological transformations on meshes
+
+
+
+  .. card:: Miscellaneous utils
+    :link: util
+    :link-type: ref
+
+    Utilities for basic operations
+
+
 
 
 .. toctree::
@@ -132,7 +149,6 @@ User manual
    user_manual/io/index
    user_manual/struct/index
    user_manual/util/index
-   user_manual/faq
 
 |
 
@@ -143,23 +159,9 @@ Developer manual
 
 .. container:: toc-cards
 
-  .. .. container:: card
-  ..
-  ..   :ref:`Low level features`
-  ..     * octree, dbbtree
-  ..     * ...
-
-
-  .. container:: card
-
-    :ref:`API reference <api>`
-      .. toto
-
-
-  .. container:: card
-
-    :ref:`Coding rules & guidelines<coding_rules>`
-      .. toto
+  .. card:: Coding rules & guidelines
+    :link: coding_rules
+    :link-type: ref
 
 
 .. toctree::
@@ -167,9 +169,7 @@ Developer manual
    :maxdepth: 1
    :hidden:
 
-   developer_manual/api/index
    developer_manual/coding_rules
-   developer_manual/mesh_adaptation/index
 
 
 

@@ -58,7 +58,7 @@ if (CYTHON_EXECUTABLE)
 
        if (CYTHON_FIND_VERSION)
 
-           if (${CYTHON_VERSION} VERSION_LESS $Cython_FIND_VERSION})
+           if (${CYTHON_VERSION} VERSION_LESS ${Cython_FIND_VERSION})
   	          MESSAGE(FATAL_ERROR
 	              "Cython version " ${Cython_VERSION}
 	              " is less than required version " ${Cython_FIND_VERSION}
@@ -67,7 +67,7 @@ if (CYTHON_EXECUTABLE)
            endif()
         endif()
 
-        mark_as_advanced( CYTHON_EXECUTABLE CYTHON_VERSION)
+        mark_as_advanced(CYTHON_EXECUTABLE CYTHON_VERSION)
 
    else ()
 

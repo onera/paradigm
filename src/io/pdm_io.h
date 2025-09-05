@@ -157,7 +157,7 @@ typedef struct _PDM_io_file_t PDM_io_file_t;
 const char*
 PDM_io_file_name_get
 (
- PDM_io_file_t *fichier
+  PDM_io_file_t *fichier
 );
 
 
@@ -168,13 +168,13 @@ PDM_io_file_name_get
  * \param [in]  fmt                 Text of Binary format
  * \param [in]  suff_t              Type of suffix (manual or automatic)
  * \param [in]  suff_u              Suffix (if manual)
- * \param [in]  s_backup            Activates the backup of a pre-existing file in write mode
+ * \param [in]  s_backup            Enables the backup of a pre-existing file in write mode
  * \param [in]  acces               Type (parallel with MPI-IO, parallel without MPI-IO, sequential)
  * \param [in]  mode                Access mode (read, write, read/write)
  * \param [in]  endian              Endian type (big, little or native)
- * \param [in]  comm                Communicator associated to the file
+ * \param [in]  comm                MPI communicator
  * \param [in]  prop_noeuds_actifs  Proportion of active nodes
- * \param [out] unite               Unit of the file
+ * \param [out] unite               \ref PDM_io_file_t instance
  * \param [out] ierr                Indicates whether the file is of type PDM_io or not (for read-only opening only)
  *
  */
@@ -182,18 +182,18 @@ PDM_io_file_name_get
 void
 PDM_io_open
 (
- const char             *nom,
- const PDM_io_fmt_t      fmt,
- const PDM_io_suff_t     suff_t,
- const char             *suff_u,
- const PDM_io_backup_t   s_backup,
- const PDM_io_kind_t     acces,
- const PDM_io_mod_t      mode,
- const PDM_io_endian_t   endian,
- PDM_MPI_Comm            comm,
- double                  prop_noeuds_actifs,
- PDM_io_file_t         **unite,
- PDM_l_num_t            *ierr
+  const char             *nom,
+  const PDM_io_fmt_t      fmt,
+  const PDM_io_suff_t     suff_t,
+  const char             *suff_u,
+  const PDM_io_backup_t   s_backup,
+  const PDM_io_kind_t     acces,
+  const PDM_io_mod_t      mode,
+  const PDM_io_endian_t   endian,
+  PDM_MPI_Comm            comm,
+  double                  prop_noeuds_actifs,
+  PDM_io_file_t         **unite,
+  PDM_l_num_t            *ierr
 );
 
 
@@ -209,9 +209,9 @@ PDM_io_open
 void
 PDM_io_seek
 (
-       PDM_io_file_t    *fichier,
- const PDM_g_num_t       offset,
- const PDM_io_seek_t     seek
+        PDM_io_file_t    *fichier,
+  const PDM_g_num_t       offset,
+  const PDM_io_seek_t     seek
 );
 
 
@@ -227,7 +227,7 @@ PDM_io_seek
 PDM_g_num_t
 PDM_io_tell
 (
- PDM_io_file_t   *fichier
+  PDM_io_file_t   *fichier
 );
 
 
@@ -245,10 +245,10 @@ PDM_io_tell
 void
 PDM_io_global_read
 (
-       PDM_io_file_t  *fichier,
- const PDM_l_num_t     taille_donnee,
- const PDM_g_num_t     n_donnees,
- void                 *donnees
+        PDM_io_file_t  *fichier,
+  const PDM_l_num_t     taille_donnee,
+  const PDM_g_num_t     n_donnees,
+  void                 *donnees
 );
 
 
@@ -265,10 +265,10 @@ PDM_io_global_read
 void
 PDM_io_global_write
 (
-       PDM_io_file_t  *fichier,
- const PDM_l_num_t     taille_donnee,
- const PDM_g_num_t     n_donnees,
- const void           *donnees
+        PDM_io_file_t  *fichier,
+  const PDM_l_num_t     taille_donnee,
+  const PDM_g_num_t     n_donnees,
+  const void           *donnees
 );
 
 
@@ -289,20 +289,20 @@ PDM_io_global_write
 void
 PDM_io_par_interlaced_read
 (
-       PDM_io_file_t *fichier,
- const PDM_stride_t   t_n_composantes,
- const PDM_l_num_t   *n_composantes,
- const PDM_l_num_t    taille_donnee,
- const PDM_l_num_t    n_donnees,
- const PDM_g_num_t   *indirection,
-       void          *donnees
+        PDM_io_file_t *fichier,
+  const PDM_stride_t   t_n_composantes,
+  const PDM_l_num_t   *n_composantes,
+  const PDM_l_num_t    taille_donnee,
+  const PDM_l_num_t    n_donnees,
+  const PDM_g_num_t   *indirection,
+        void          *donnees
 );
 
 
 /**
- * \brief Parallel reading of data blocks
- *        The blocks must be arranged in ascending order
- *        according to the numbering of the processes
+ * \brief Parallel reading of data blocks.
+ *
+ * The blocks must be arranged in ascending order according to the numbering of the processes
  *
  * \param [in]  fichier          Pointer to \ref PDM_io_file_t object
  * \param [in]  t_n_composantes  Component size type (PDM_STRIDE_CST_INTERLACED or PDM_STRIDE_VAR_INTERLACED)
@@ -317,13 +317,13 @@ PDM_io_par_interlaced_read
 void
 PDM_io_par_block_read
 (
-       PDM_io_file_t  *fichier,
- const PDM_stride_t    t_n_composantes,
- const PDM_l_num_t    *n_composantes,
- const PDM_l_num_t     taille_donnee,
- const PDM_l_num_t     n_donnees,
- const PDM_g_num_t     debut_bloc,
-       void           *donnees
+        PDM_io_file_t  *fichier,
+  const PDM_stride_t    t_n_composantes,
+  const PDM_l_num_t    *n_composantes,
+  const PDM_l_num_t     taille_donnee,
+  const PDM_l_num_t     n_donnees,
+  const PDM_g_num_t     debut_bloc,
+        void           *donnees
 );
 
 
@@ -343,18 +343,19 @@ PDM_io_par_block_read
 void
 PDM_io_par_interlaced_write
 (
-       PDM_io_file_t *fichier,
- const PDM_stride_t   t_n_composantes,
- const PDM_l_num_t   *n_composantes,
- const PDM_l_num_t    taille_donnee,
- const PDM_l_num_t    n_donnees,
- const PDM_g_num_t   *indirection,
- const void          *donnees
+        PDM_io_file_t *fichier,
+  const PDM_stride_t   t_n_composantes,
+  const PDM_l_num_t   *n_composantes,
+  const PDM_l_num_t    taille_donnee,
+  const PDM_l_num_t    n_donnees,
+  const PDM_g_num_t   *indirection,
+  const void          *donnees
 );
 
 
 /**
  * \brief Parallel writing of data blocks
+ *
  *        Blocks must be arranged in ascending order according
  *        to numbering of the processes
  *
@@ -371,13 +372,13 @@ PDM_io_par_interlaced_write
 void
 PDM_io_par_block_write
 (
-       PDM_io_file_t *fichier,
- const PDM_stride_t   t_n_composantes,
- const PDM_l_num_t   *n_composantes,
- const PDM_l_num_t    taille_donnee,
- const PDM_l_num_t    n_donnees,
- const PDM_g_num_t    debut_bloc,
- const void          *donnees
+        PDM_io_file_t *fichier,
+  const PDM_stride_t   t_n_composantes,
+  const PDM_l_num_t   *n_composantes,
+  const PDM_l_num_t    taille_donnee,
+  const PDM_l_num_t    n_donnees,
+  const PDM_g_num_t    debut_bloc,
+  const void          *donnees
 );
 
 
@@ -392,7 +393,7 @@ PDM_io_par_block_write
 void
 PDM_io_close
 (
- PDM_io_file_t   *fichier
+  PDM_io_file_t   *fichier
 );
 
 
@@ -406,7 +407,7 @@ PDM_io_close
 void
 PDM_io_free
 (
- PDM_io_file_t   *fichier
+  PDM_io_file_t   *fichier
 );
 
 
@@ -422,9 +423,9 @@ PDM_io_free
 void
 PDM_io_get_timer_fichier
 (
- PDM_io_file_t *fichier,
- double        *t_cpu,
- double        *t_elapsed
+  PDM_io_file_t *fichier,
+  double        *t_cpu,
+  double        *t_elapsed
 );
 
 
@@ -439,9 +440,9 @@ PDM_io_get_timer_fichier
 
 void PDM_io_timer_swap_endian_get
 (
- PDM_io_file_t *fichier,
- double        *t_cpu,
- double        *t_elapsed
+  PDM_io_file_t *fichier,
+  double        *t_cpu,
+  double        *t_elapsed
 );
 
 
@@ -457,9 +458,9 @@ void PDM_io_timer_swap_endian_get
 void
 PDM_io_timer_distrib_get
 (
- PDM_io_file_t *fichier,
- double        *t_cpu,
- double        *t_elapsed
+  PDM_io_file_t *fichier,
+  double        *t_cpu,
+  double        *t_elapsed
 );
 
 
@@ -475,9 +476,9 @@ PDM_io_timer_distrib_get
 void
 PDM_io_timer_total_get
 (
- PDM_io_file_t *fichier,
- double        *t_cpu,
- double        *t_elapsed
+  PDM_io_file_t *fichier,
+  double        *t_cpu,
+  double        *t_elapsed
 );
 
 
@@ -491,7 +492,7 @@ PDM_io_timer_total_get
 void
 PDM_io_dump
 (
- PDM_io_file_t   *fichier
+  PDM_io_file_t   *fichier
 );
 
 
@@ -506,8 +507,8 @@ PDM_io_dump
 void
 PDM_io_comm_get
 (
- PDM_io_file_t *fichier,
- PDM_MPI_Comm     *pdm_mpi_comm
+  PDM_io_file_t *fichier,
+  PDM_MPI_Comm     *pdm_mpi_comm
 );
 
 
@@ -521,7 +522,7 @@ PDM_io_comm_get
 void
 PDM_io_swap_endian_on
 (
- PDM_io_file_t   *fichier
+  PDM_io_file_t   *fichier
 );
 
 
@@ -535,12 +536,12 @@ PDM_io_swap_endian_on
 void
 PDM_io_swap_endian_off
 (
- PDM_io_file_t   *fichier
+  PDM_io_file_t   *fichier
 );
 
 
 /**
- * \brief Swap endian pour conversion little endian <-> big endian
+ * \brief Swap endian for little endian <-> big endian conversion
  *
  * \param [in]  taille_donnee   Size of a unit piece of data
  * \param [in]  n_donnee        Amount of data
@@ -552,10 +553,10 @@ PDM_io_swap_endian_off
 void
 PDM_io_swap_endian
 (
- const size_t   taille_donnee,
- const size_t   n_donnees,
- const void    *donnees,
-       void    *resultats
+  const size_t   taille_donnee,
+  const size_t   n_donnees,
+  const void    *donnees,
+        void    *resultats
 );
 
 
@@ -572,10 +573,10 @@ PDM_io_swap_endian
 void
 PDM_io_fmt_data_set
 (
-       PDM_io_file_t *fichier,
- const PDM_l_num_t    n_char_fmt,
- const PDM_io_type_t  data_type,
- const char          *fmt
+        PDM_io_file_t *fichier,
+  const PDM_l_num_t    n_char_fmt,
+  const PDM_io_type_t  data_type,
+  const char          *fmt
 );
 
 
@@ -590,12 +591,12 @@ PDM_io_fmt_data_set
 
 int PDM_io_mkdir
 (
- const char* path
+  const char* path
 );
 
 
 /**
- * \brief Calculating the total size of a data field
+ * \brief Calculate the total size of a data field
  *
  * \param [in]  fichier          Pointer to \ref PDM_io_file_t object
  * \param [in]  t_n_composantes  Type of component sizes (PDM_STRIDE_CST_INTERLACED or PDM_STRIDE_VAR_INTERLACED)
@@ -610,11 +611,11 @@ int PDM_io_mkdir
 PDM_g_num_t
 PDM_io_n_data_get
 (
-       PDM_io_file_t  *fichier,
- const PDM_stride_t    t_n_composantes,
- const PDM_l_num_t    *n_composantes,
- const PDM_l_num_t     n_donnees,
- const PDM_g_num_t    *indirection
+        PDM_io_file_t  *fichier,
+  const PDM_stride_t    t_n_composantes,
+  const PDM_l_num_t    *n_composantes,
+  const PDM_l_num_t     n_donnees,
+  const PDM_g_num_t    *indirection
 );
 
 

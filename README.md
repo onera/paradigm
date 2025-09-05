@@ -1,10 +1,12 @@
-# ParaDiGM #
+<p align="center">
+    <img src="doc/_static/logo.svg" alt="Logo" width="25%"/>
+</p>
 
 **ParaDiGM** (*Parallel Distributed General Mesh*) is a parallel computational geometry library under LGPL, with interfaces in C, Fortran and Python.
 
 ## Documentation  ##
 
-User documentation is deployed on ONERA's internal GitLab pages server: https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev/index.html
+User documentation is deployed on ONERA's internal GitLab pages server and can be found [here](https://numerics.gitlab-pages.onera.net/mesh/paradigm/dev/index.html).
 
 ## Build and install ##
 
@@ -90,14 +92,14 @@ CMake looks for
 #### Enable the use of [BLAS](https://www.netlib.org/blas/) / [LAPACK](https://www.netlib.org/lapack/) (linear algebra)
     PDM_ENABLE_BLASLAPACK=<ON | OFF> (default : OFF)
 
-#### Enable long global IDs
+#### Enable ``long int`` for global IDs
     PDM_ENABLE_LONG_G_NUM=<ON | OFF> (default : ON)
 - `ON`  : `PDM_g_num_t` type is `long int`
 - `OFF` : `PDM_g_num_t` type is `int`
 
 #### Enable documentation compilation
     PDM_ENABLE_DOC=<ON | OFF> (default : OFF)
-Once built, the documentation can be found in `build/doc/sphinx/html` and launch `index.html` file
+Once built (using the ``make doc`` command), the documentation home page can be found in `build/doc/sphinx/html/index.html`
 
 ### Compiler choice
     CC=<C compiler> CXX=<CXX compiler> FC=<Fortran compiler> cmake ...
@@ -130,4 +132,4 @@ Issues can be reported directly in the [Issues](https://gitlab.onera.net/numeric
 
 ## Copyright ##
 
-Copyright 2023, ONERA The French Aerospace Lab
+Copyright 2025, ONERA The French Aerospace Lab

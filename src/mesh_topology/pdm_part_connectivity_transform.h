@@ -38,134 +38,138 @@ extern "C" {
 
 /**
  *
- * \brief Compress connectivity to be unique - Realloc need to be done extern to this method
+ * \brief Compress connectivity by removing duplicate entries
  *
- * \param [in]     n_entity1           Number of entity in connectivity
- * \param [inout]  entity1_entity2_idx Connectivity index between entity1 and entity2 (size = n_entity1)
- * \param [inout]  entity1_entity2     Connectivity between entity1 and entity2 (size = entity1_entity2_idx[n_entity1] )
+ * \p entity1_entity2 can be realloc'd after calling this function
+ *
+ * \param [in]     n_entity1           Number of entity1
+ * \param [inout]  entity1_entity2_idx Connectivity index between entity1 and entity2 (size = \p n_entity1 + 1)
+ * \param [inout]  entity1_entity2     Connectivity between entity1 and entity2 (size = \p entity1_entity2_idx[\p n_entity1])
  *
  */
 void
 PDM_compress_connectivity
 (
- int  n_entity1,
- int *entity1_entity2_idx,
- int *entity1_entity2
+  int  n_entity1,
+  int *entity1_entity2_idx,
+  int *entity1_entity2
 );
 
 /**
  *
- * \brief Combine connectivity between entity1_entity2 and entity2_entity3 to have entity1_entity3
+ * \brief Combine \p entity1_entity2 and \p entity2_entity3 connectivities to get \p entity1_entity3
  *
  * \param [in]  n_entity1           Number of entity1
- * \param [in]  entity1_entity2_idx Connectivity index between entity1 and entity2 (size = n_entity1)
- * \param [in]  entity1_entity2     Connectivity between entity1 and entity2 (size = entity1_entity2_idx[n_entity1] )
- * \param [in]  entity2_entity3_idx Connectivity index between entity2 and entity3 (size = n_entity2)
- * \param [in]  entity2_entity3     Connectivity between entity2 and entity3 (size = entity1_entity2_idx[n_entity2] )
- * \param [out] entity1_entity3_idx Connectivity index between entity1 and entity3 (size = n_entity1)
- * \param [out] entity1_entity3     Connectivity between entity1 and entity3 (size = entity1_entity2_idx[n_entity1] )
+ * \param [in]  entity1_entity2_idx Connectivity index between entity1 and entity2 (size = \p n_entity1 + 1)
+ * \param [in]  entity1_entity2     Connectivity between entity1 and entity2 (size = \p entity1_entity2_idx[\p n_entity1])
+ * \param [in]  entity2_entity3_idx Connectivity index between entity2 and entity3 (size = \p n_entity2 + 1)
+ * \param [in]  entity2_entity3     Connectivity between entity2 and entity3 (size = \p entity2_entity3_idx[\p n_entity2] )
+ * \param [out] entity1_entity3_idx Connectivity index between entity1 and entity3 (size = \p n_entity1 + 1)
+ * \param [out] entity1_entity3     Connectivity between entity1 and entity3 (size = \p entity1_entity3_idx[\p n_entity1])
  *
  */
 void
 PDM_combine_connectivity
 (
- int   n_entity1,
- int  *entity1_entity2_idx,
- int  *entity1_entity2,
- int  *entity2_entity3_idx,
- int  *entity2_entity3,
- int **entity1_entity3_idx,
- int **entity1_entity3
+  int   n_entity1,
+  int  *entity1_entity2_idx,
+  int  *entity1_entity2,
+  int  *entity2_entity3_idx,
+  int  *entity2_entity3,
+  int **entity1_entity3_idx,
+  int **entity1_entity3
 );
 
 
 /**
  *
- * \brief Transpose connectivity entity1_entity2 to have entity2_entity1
+ * \brief Transpose connectivity \p entity1_entity2 to get \p entity2_entity1
  *
  * \param [in]  n_entity1           Number of entity1
  * \param [in]  n_entity1           Number of entity2
- * \param [in]  entity1_entity2_idx Connectivity index between entity1 and entity2 (size = n_entity1)
- * \param [in]  entity1_entity2     Connectivity between entity1 and entity2 (size = entity1_entity2_idx[n_entity1] )
- * \param [out] entity2_entity1_idx Connectivity index between entity2 and entity1 (size = n_entity2)
- * \param [out] entity2_entity1     Connectivity between entity2 and entity1 (size = entity1_entity2_idx[n_entity2] )
+ * \param [in]  entity1_entity2_idx Connectivity index between entity1 and entity2 (size = \p n_entity1 + 1)
+ * \param [in]  entity1_entity2     Connectivity between entity1 and entity2 (size = \p entity1_entity2_idx[\p n_entity1])
+ * \param [out] entity2_entity1_idx Connectivity index between entity2 and entity1 (size = \p n_entity2 + 1)
+ * \param [out] entity2_entity1     Connectivity between entity2 and entity1 (size = \p entity2_entity1_idx[\p n_entity2] )
  *
  */
 void
 PDM_connectivity_transpose
 (
-const int   n_entity1,
-const int   n_entity2,
-      int  *entity1_entity2_idx,
-      int  *entity1_entity2,
-      int **entity2_entity1_idx,
-      int **entity2_entity1
+  const int   n_entity1,
+  const int   n_entity2,
+        int  *entity1_entity2_idx,
+        int  *entity1_entity2,
+        int **entity2_entity1_idx,
+        int **entity2_entity1
 );
 
 /**
  *
- * \brief Transpose connectivity entity1_entity2 to have entity2_entity1 for all partition
+ * \brief Transpose connectivity \p entity1_entity2 to get \p entity2_entity1 for multiple partitions
  *
- * \param [in]  n_part              Number of partition in current process
+ * \param [in]  n_part              Number of partitions in current process
  * \param [in]  n_entity1           Number of entity1
  * \param [in]  n_entity1           Number of entity2
- * \param [in]  entity1_entity2_idx Connectivity index between entity1 and entity2 (size = n_entity1)
- * \param [in]  entity1_entity2     Connectivity between entity1 and entity2 (size = entity1_entity2_idx[n_entity1] )
- * \param [out] entity2_entity1_idx Connectivity index between entity2 and entity1 (size = n_entity2)
- * \param [out] entity2_entity1     Connectivity between entity2 and entity1 (size = entity1_entity2_idx[n_entity2] )
+ * \param [in]  entity1_entity2_idx Connectivity index between entity1 and entity2 (size = \p n_entity1 + 1)
+ * \param [in]  entity1_entity2     Connectivity between entity1 and entity2 (size = \p entity1_entity2_idx[\p n_entity1])
+ * \param [out] entity2_entity1_idx Connectivity index between entity2 and entity1 (size = \p n_entity2 + 1)
+ * \param [out] entity2_entity1     Connectivity between entity2 and entity1 (size = \p entity2_entity1_idx[\p n_entity2])
  *
  */
 void
 PDM_part_connectivity_transpose
 (
-const int    n_part,
-const int   *n_entity1,
-const int   *n_entity2,
-      int  **entity1_entity2_idx,
-      int  **entity1_entity2,
-      int ***entity2_entity1_idx,
-      int ***entity2_entity1
+  const int    n_part,
+  const int   *n_entity1,
+  const int   *n_entity2,
+        int  **entity1_entity2_idx,
+        int  **entity1_entity2,
+        int ***entity2_entity1_idx,
+        int ***entity2_entity1
 );
 
 /**
  *
- * \brief Combine connectivity between entity1_entity2 and entity2_entity3 to have entity1_entity3 for all partition
+ * \brief Combine connectivity between \p entity1_entity2 and \p entity2_entity3 to get \p entity1_entity3 for multiple partitions
  *
- * \param [in]  n_part              Number of partition in current process
+ * \param [in]  n_part              Number of partitions in current process
  * \param [in]  n_entity1           Number of entity1
- * \param [in]  entity1_entity2_idx Connectivity index between entity1 and entity2 (size = n_entity1)
- * \param [in]  entity1_entity2     Connectivity between entity1 and entity2 (size = entity1_entity2_idx[n_entity1] )
- * \param [in]  entity2_entity3_idx Connectivity index between entity2 and entity3 (size = n_entity2)
- * \param [in]  entity2_entity3     Connectivity between entity2 and entity3 (size = entity1_entity2_idx[n_entity2] )
- * \param [out] entity1_entity3_idx Connectivity index between entity1 and entity3 (size = n_entity1)
- * \param [out] entity1_entity3     Connectivity between entity1 and entity3 (size = entity1_entity2_idx[n_entity1] )
+ * \param [in]  entity1_entity2_idx Connectivity index between entity1 and entity2 (size = \p n_entity1 + 1)
+ * \param [in]  entity1_entity2     Connectivity between entity1 and entity2 (size = \p entity1_entity2_idx[\p n_entity1])
+ * \param [in]  entity2_entity3_idx Connectivity index between entity2 and entity3 (size = \p n_entity2 + 1)
+ * \param [in]  entity2_entity3     Connectivity between entity2 and entity3 (size = \p entity2_entity3_idx[\p n_entity2])
+ * \param [out] entity1_entity3_idx Connectivity index between entity1 and entity3 (size = \p n_entity1 + 1)
+ * \param [out] entity1_entity3     Connectivity between entity1 and entity3 (size = \p entity1_entity3_idx[\p n_entity1])
  *
  */
 void
 PDM_part_combine_connectivity
 (
- const int    n_part,
- int         *n_entity1,
- int        **entity1_entity2_idx,
- int        **entity1_entity2,
- int        **entity2_entity3_idx,
- int        **entity2_entity3,
- int       ***entity1_entity3_idx,
- int       ***entity1_entity3
+  const int    n_part,
+  int         *n_entity1,
+  int        **entity1_entity2_idx,
+  int        **entity1_entity2,
+  int        **entity2_entity3_idx,
+  int        **entity2_entity3,
+  int       ***entity1_entity3_idx,
+  int       ***entity1_entity3
 );
+
 
 /**
  *
- * \brief Combine connectivity between entity1_entity2 and entity2_entity1 to have entity1_entity1 for all partition
+ * \brief Build dual graph \p entity1_entity1 (and \p entity2_entity1) from \p entity1_entity1 connectivity (multiple partitions)
  *
- * \param [in]  n_part              Number of partition in current process
+ * \param [in]  n_part              Number of partitions in current process
  * \param [in]  n_entity1           Number of entity1
- * \param [in]  entity1_entity2_idx Connectivity index between entity1 and entity2 (size = n_entity1)
- * \param [in]  entity1_entity2     Connectivity between entity1 and entity2 (size = entity1_entity2_idx[n_entity1] )
- * \param [in]  entity2_entity3_idx Connectivity index between entity2 and entity3 (size = n_entity2)
- * \param [in]  entity2_entity3     Connectivity between entity2 and entity3 (size = entity1_entity2_idx[n_entity2] )
- * \param [out] entity1_entity1_idx Connectivity index between entity1 and entity1 (size = n_entity1)
- * \param [out] entity1_entity1     Connectivity between entity1 and entity1 (size = entity1_entity1_idx[n_entity1] )
+ * \param [in]  n_entity1           Number of entity2
+ * \param [in]  entity1_entity2_idx Connectivity index between entity1 and entity2 (size = \p n_entity1 + 1)
+ * \param [in]  entity1_entity2     Connectivity between entity1 and entity2 (size = \p entity1_entity2_idx[\p n_entity1] )
+ * \param [in]  entity2_entity1_idx Connectivity index between entity2 and entity1 (size = \p n_entity2 + 1)
+ * \param [in]  entity2_entity1     Connectivity between entity2 and entity1 (size = \p entity1_entity2_idx[\p n_entity2] )
+ * \param [out] entity1_entity1_idx Connectivity index between entity1 and entity1 (size = \p n_entity1 + 1)
+ * \param [out] entity1_entity1     Connectivity between entity1 and entity1 (size = \p entity1_entity1_idx[\p n_entity1] )
  *
  */
 void
@@ -176,8 +180,8 @@ PDM_part_graph_dual
   int   *n_entity2,
   int  **entity1_entity2_idx,
   int  **entity1_entity2,
-  int ***out_entity2_entity1_idx,
-  int ***out_entity2_entity1,
+  int ***entity2_entity1_idx,
+  int ***entity2_entity1,
   int ***entity1_entity1_idx,
   int ***entity1_entity1
 );
@@ -185,127 +189,127 @@ PDM_part_graph_dual
 
 /**
  *
- * \brief Convert implicit pair connectivity, to a connectivity with index. Useful for convert face_cell or edge_vtx.
+ * \brief Convert implicit pair connectivity, to a connectivity with index. Useful for converting face_cell or edge_vtx.
  *
- * \param [in]  n_part              Number of partition in current process
+ * \param [in]  n_part              Number of partitions in current process
  * \param [in]  n_entity1           Number of entity1
- * \param [in]  entity1_entity2_in  Implicit connectivity (face_cell for exemple with right cell is boundary face[2*i+1] == 0)
- * \param [out] entity1_entity2_idx Connectivity index between entity1 and entity2 (size = n_entity1)
- * \param [out] entity1_entity2     Connectivity between entity1 and entity2 (size = entity1_entity2_idx[n_entity1] )
+ * \param [in]  entity1_entity2_in  Implicit connectivity (face_cell for example with right cell is boundary face[2*i+1] == 0)
+ * \param [out] entity1_entity2_idx Connectivity index between entity1 and entity2 (size = \p n_entity1 + 1)
+ * \param [out] entity1_entity2     Connectivity between entity1 and entity2 (size = \p entity1_entity2_idx[\p n_entity1])
  *
  */
 void
-PDM_part_connectivity_to_connectity_idx
+PDM_part_connectivity_to_connectivity_idx
 (
-const int    n_part,
-const int   *n_entity1,
-      int  **entity1_entity2_in,
-      int ***entity1_entity2_idx,
-      int ***entity1_entity2
+  const int    n_part,
+  const int   *n_entity1,
+        int  **entity1_entity2_in,
+        int ***entity1_entity2_idx,
+        int ***entity1_entity2
 );
 
 /**
  *
- * \brief Generate face_vtx according to the sign connectivity face_edge and edge_vtx
+ * \brief Generate face->vtx connectivity from (*signed*) face->edge and edge->vtx connectivities
  *
- * \param [in]  n_face        Number of partition in current process
- * \param [in]  face_edge_idx Connectivity index between face and edge (size = n_face+1)
- * \param [in]  face_edge     Connectivity between face and edge (signed) (size = face_edge_idx[n_face])
- * \param [in]  edge_vtx      Connectivity between edge and vtx - Implicit (size = 2 * n_edge)
- * \param [out] face_vtx      Connectivity between entity1 and entity2 (size = entity1_entity2_idx[n_entity1] )
+ * \param [in]  n_face        Number of faces
+ * \param [in]  face_edge_idx Index for face->edge connectivity (size = \p n_face + 1)
+ * \param [in]  face_edge     Face->edge connectivity (1-based, signed) (size = \p face_edge_idx[\p n_face])
+ * \param [in]  edge_vtx      Edge->vertex connectivity (size = 2 * n_edge)
+ * \param [out] face_vtx      Face->vertex (size = \p face_edge_idx[\p n_face])
  *
  */
 void
 PDM_compute_face_vtx_from_face_and_edge
 (
- int   n_face,
- int  *face_edge_idx,
- int  *face_edge,
- int  *edge_vtx,
- int **face_vtx
+  int   n_face,
+  int  *face_edge_idx,
+  int  *face_edge,
+  int  *edge_vtx,
+  int **face_vtx
 );
 
 /**
  *
- * \brief Generate face_vtx with face_edge and edge_vtx
+ * \brief Generate face->vtx connectivity from (*unsigned*) face->edge and edge->vtx connectivities
  *
- * \param [in]  n_face        Number of partition in current process
- * \param [in]  face_edge_idx Connectivity index between face and edge (size = n_face+1)
- * \param [in]  face_edge     Connectivity between face and edge (size = face_edge_idx[n_face])
- * \param [in]  edge_vtx      Connectivity between edge and vtx - Implicit (size = 2 * n_edge)
- * \param [out] face_vtx      Connectivity between entity1 and entity2 (size = entity1_entity2_idx[n_entity1] )
+ * \param [in]  n_face        Number of faces
+ * \param [in]  face_edge_idx Index for face->edge connectivity (size = \p n_face + 1)
+ * \param [in]  face_edge     Face->edge connectivity (1-based, unsigned) (size = \p face_edge_idx[\p n_face])
+ * \param [in]  edge_vtx      Edge->vertex connectivity (size = 2 * n_edge)
+ * \param [out] face_vtx      Face->vertex (size = \p face_edge_idx[\p n_face])
  *
  */
 void
 PDM_compute_face_vtx_from_face_and_edge_unsigned
 (
- int   n_face,
- int  *face_edge_idx,
- int  *face_edge,
- int  *edge_vtx,
- int **face_vtx
+  int   n_face,
+  int  *face_edge_idx,
+  int  *face_edge,
+  int  *edge_vtx,
+  int **face_vtx
 );
 
 
 /**
  *
- * \brief Generate face_vtx with face_edge and edge_vtx
+ * \brief Generate face->vtx with face->edge and edge->vtx using block-distributions (**Block-distributed**)
  *
  * \param [in]  comm            PDM_MPI communicator
  * \param [in]  distrib_face    Distribution of faces among process (size = n_rank+1)
  * \param [in]  distrib_edge    Distribution of faces among process (size = n_rank+1)
- * \param [in]  dface_edge_idx  Connectivity index between face and edge (size = dn_face )
- * \param [in]  dface_edge      Connectivity between face and edge (size = dface_edge_idx[dn_face])
- * \param [out] dface_vtx       Connectivity between face and vtx (size = dface_edge_idx[dn_face])
+ * \param [in]  dface_edge_idx  Connectivity index between face and edge (size = dn_face + 1)
+ * \param [in]  dface_edge      Connectivity between face and edge (size = \p dface_edge_idx[dn_face])
+ * \param [out] dface_vtx       Connectivity between face and vtx (size = \p dface_edge_idx[dn_face])
  *
  */
 void
 PDM_compute_dface_vtx_from_edges_distrib
 (
- PDM_MPI_Comm   comm,
- PDM_g_num_t   *distrib_face,
- PDM_g_num_t   *distrib_edge,
- int           *dface_edge_idx,
- PDM_g_num_t   *dface_edge,
- PDM_g_num_t   *dedge_vtx,
- PDM_g_num_t  **dface_vtx
+  PDM_MPI_Comm   comm,
+  PDM_g_num_t   *distrib_face,
+  PDM_g_num_t   *distrib_edge,
+  int           *dface_edge_idx,
+  PDM_g_num_t   *dface_edge,
+  PDM_g_num_t   *dedge_vtx,
+  PDM_g_num_t  **dface_vtx
 );
 
 /**
  *
- * \brief Generate face_vtx with face_edge and edge_vtx
+ * \brief Generate face->vtx connectivity from face->edge and edge->vtx connectivities (**Block-distributed**)
  *
  * \param [in]  comm            PDM_MPI communicator
- * \param [in]  dn_face         Number of distributed faces
- * \param [in]  dn_edge         Number of distributed edges
- * \param [in]  dface_edge_idx  Connectivity index between face and edge (size = dn_face )
- * \param [in]  dface_edge      Connectivity between face and edge (size = dface_edge_idx[dn_face])
- * \param [out] dface_vtx       Connectivity between entity1 and entity2 (size = dface_edge_idx[dn_face])
+ * \param [in]  dn_face         Number of faces
+ * \param [in]  dn_edge         Number of edges
+ * \param [in]  dface_edge_idx  Index of Face->edge connectivity (size = \p dn_face + 1)
+ * \param [in]  dface_edge      Face->edge connectivity (size = \p dface_edge_idx[\p dn_face])
+ * \param [out] dface_vtx       Face->vertex connectivity (size = \p dface_edge_idx[\p dn_face])
  *
  */
 void
 PDM_compute_dface_vtx_from_edges
 (
- PDM_MPI_Comm   comm,
- int            dn_face,
- int            dn_edge,
- int           *dface_edge_idx,
- PDM_g_num_t   *dface_edge,
- PDM_g_num_t   *dedge_vtx,
- PDM_g_num_t  **dface_vtx
+  PDM_MPI_Comm   comm,
+  int            dn_face,
+  int            dn_edge,
+  int           *dface_edge_idx,
+  PDM_g_num_t   *dface_edge,
+  PDM_g_num_t   *dedge_vtx,
+  PDM_g_num_t  **dface_vtx
 );
 
 /**
  *
- * \brief Sort and unique on a graph (obtained for exemple with a combinaison of part_connectivity_transpose / combine ) to have vtx_vtx graph
- *        We remove also diagonal
- *        This method is usefull to prepare a graph in order to split it with METIS or scotch
- *        We can reallocate graphe after the call
- *        Graph are 1-based in input and 0-based in output
+ * \brief Sort and unique on a graph (obtained for example with a combination of part_connectivity_transpose / combine) to get vtx_vtx graph.
+ *        The diagonal part is removed.
+ *        This method is useful to prepare a graph in order to split it with METIS or Scotch.
+ *        We can reallocate \p graph after the call.
+ *        \p graph is 1-based in input and 0-based in output.
  *
  * \param [in]     n_entity        Number of entity is the current graph
- * \param [inout]  graph_idx       Idx of graph (size = n_entity+1)
- * \param [inout]  graph           Node connectivity
+ * \param [inout]  graph_idx       Index of graph (size = \p n_entity + 1)
+ * \param [inout]  graph           Graph
  *
  */
 void

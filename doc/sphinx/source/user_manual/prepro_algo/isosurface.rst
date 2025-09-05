@@ -24,58 +24,58 @@ For more details, please refer to the :ref:`Algorithm description` section.
 API
 ---
 
-Initialization
-""""""""""""""
-.. tabs::
+.. dropdown:: Initialization
 
-  .. group-tab:: C
+  .. tab-set::
+    :sync-group: language
 
-    .. ifconfig:: fake_bool == 'ON'
+    .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_isosurface_create
 
-  .. group-tab:: ForTran
 
-    .. ifconfig:: enable_fortran_doc == 'ON'
+    .. tab-item:: Fortran
+      :sync: Fortran
 
-      .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_create
+      .. ifconfig:: enable_fortran_doc == 'ON'
 
-    .. ifconfig:: enable_fortran_doc == 'OFF'
+        .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_create
 
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+      .. ifconfig:: enable_fortran_doc == 'OFF'
 
-  .. group-tab:: Python
-
-    .. ifconfig:: enable_python_doc == 'ON'
-
-      .. py:class:: Isosurface
-
-        Python structure to perform isosurface and slice construction. Once initialized, all the following
-        methods apply to a :class:`Isosurface` instance.
-
-        .. rubric:: Initialization
-
-        .. autofunction:: Pypdm.Pypdm.Isosurface.__init__
-
-    .. ifconfig:: enable_python_doc == 'OFF'
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
 
 
-Input mesh definition
-"""""""""""""""""""""
+    .. tab-item:: Python
+      :sync: Python
 
-.. tabs::
+      .. ifconfig:: enable_python_doc == 'ON'
 
-  .. group-tab:: C
+        .. py:class:: Isosurface
 
-    .. ifconfig:: fake_bool == 'ON'
-      
-      .. tabs::
+          .. automethod:: Pypdm.Pypdm.Isosurface.__init__
 
-        .. group-tab:: Partitioned
+      .. ifconfig:: enable_python_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+
+
+.. dropdown:: Input mesh definition
+
+  .. tab-set::
+    :sync-group: language
+
+    .. tab-item:: C
+      :sync: C
+
+      .. tab-set::
+        :sync-group: partdist
+
+        .. tab-item:: Partitioned
+          :sync: Partitioned
 
           .. doxygenfunction:: PDM_isosurface_n_part_set
           .. doxygenfunction:: PDM_isosurface_pconnectivity_set
@@ -88,7 +88,8 @@ Input mesh definition
 
           .. doxygenfunction:: PDM_isosurface_part_mesh_nodal_set
 
-        .. group-tab:: Block-distributed
+        .. tab-item:: Block-distributed
+          :sync: Block-distributed
 
           .. doxygenfunction:: PDM_isosurface_dconnectivity_set
           .. doxygenfunction:: PDM_isosurface_dvtx_coord_set
@@ -101,86 +102,93 @@ Input mesh definition
           .. doxygenfunction:: PDM_isosurface_dmesh_nodal_set
 
 
-  .. group-tab:: ForTran
+    .. tab-item:: Fortran
+      :sync: Fortran
 
-    .. ifconfig:: enable_fortran_doc == 'ON'
+      .. ifconfig:: enable_fortran_doc == 'ON'
 
-      .. tabs::
+        .. tab-set::
+          :sync-group: partdist
 
-        .. group-tab:: Partitioned
+          .. tab-item:: Partitioned
+            :sync: Partitioned
 
-          .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_n_part_set
-          .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_pconnectivity_set
-          .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_pvtx_coord_set
-          .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_ln_to_gn_set
-          .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_n_group_set
-          .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_pgroup_set
+            .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_n_part_set
+            .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_pconnectivity_set
+            .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_pvtx_coord_set
+            .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_ln_to_gn_set
+            .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_n_group_set
+            .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_pgroup_set
 
-          .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_part_mesh_set
+            .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_part_mesh_set
 
-          .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_part_mesh_nodal_set
+            .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_part_mesh_nodal_set
 
-        .. group-tab:: Block-distributed
+          .. tab-item:: Block-distributed
+            :sync: Block-distributed
 
-          .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_dconnectivity_set
-          .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_dvtx_coord_set
-          .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_distrib_set
-          .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_n_group_set
-          .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_dgroup_set
+            .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_dconnectivity_set
+            .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_dvtx_coord_set
+            .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_distrib_set
+            .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_n_group_set
+            .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_dgroup_set
 
-          .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_dmesh_set
+            .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_dmesh_set
 
-          .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_dmesh_nodal_set
+            .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_dmesh_nodal_set
 
-    .. ifconfig:: enable_fortran_doc == 'OFF'
+      .. ifconfig:: enable_fortran_doc == 'OFF'
 
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
-
-  .. group-tab:: Python
-
-    .. ifconfig:: enable_python_doc == 'ON'
-
-      .. tabs::
-
-        .. group-tab:: Partitioned
-
-          .. automethod:: Pypdm.Pypdm.Isosurface.n_part_set
-          .. automethod:: Pypdm.Pypdm.Isosurface.pconnectivity_set
-          .. automethod:: Pypdm.Pypdm.Isosurface.pcoordinates_set
-          .. automethod:: Pypdm.Pypdm.Isosurface.ln_to_gn_set
-          .. automethod:: Pypdm.Pypdm.Isosurface.pgroup_set
-
-          .. automethod:: Pypdm.Pypdm.Isosurface.part_mesh_set
-
-          .. automethod:: Pypdm.Pypdm.Isosurface.part_mesh_nodal_set
-
-        .. group-tab:: Block-distributed
-
-          .. automethod:: Pypdm.Pypdm.Isosurface.dconnectivity_set
-          .. automethod:: Pypdm.Pypdm.Isosurface.dcoordinates_set
-          .. automethod:: Pypdm.Pypdm.Isosurface.distribution_set
-          .. automethod:: Pypdm.Pypdm.Isosurface.dgroup_set
-
-          .. automethod:: Pypdm.Pypdm.Isosurface.dmesh_set
-
-          .. automethod:: Pypdm.Pypdm.Isosurface.dmesh_nodal_set
-
-    .. ifconfig:: enable_python_doc == 'OFF'
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
 
 
-Iso-surface settings
-""""""""""""""""""""
+    .. tab-item:: Python
+      :sync: Python
 
-.. tabs::
+      .. ifconfig:: enable_python_doc == 'ON'
 
-  .. group-tab:: C
+        .. tab-set::
+          :sync-group: partdist
+
+          .. tab-item:: Partitioned
+            :sync: Partitioned
+
+            .. automethod:: Pypdm.Pypdm.Isosurface.n_part_set
+            .. automethod:: Pypdm.Pypdm.Isosurface.pconnectivity_set
+            .. automethod:: Pypdm.Pypdm.Isosurface.pcoordinates_set
+            .. automethod:: Pypdm.Pypdm.Isosurface.ln_to_gn_set
+            .. automethod:: Pypdm.Pypdm.Isosurface.pgroup_set
+
+            .. automethod:: Pypdm.Pypdm.Isosurface.part_mesh_set
+
+            .. automethod:: Pypdm.Pypdm.Isosurface.part_mesh_nodal_set
+
+          .. tab-item:: Block-distributed
+            :sync: Block-distributed
+
+            .. automethod:: Pypdm.Pypdm.Isosurface.dconnectivity_set
+            .. automethod:: Pypdm.Pypdm.Isosurface.dcoordinates_set
+            .. automethod:: Pypdm.Pypdm.Isosurface.distribution_set
+            .. automethod:: Pypdm.Pypdm.Isosurface.dgroup_set
+
+            .. automethod:: Pypdm.Pypdm.Isosurface.dmesh_set
+
+            .. automethod:: Pypdm.Pypdm.Isosurface.dmesh_nodal_set
+
+      .. ifconfig:: enable_python_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
 
 
-    .. ifconfig:: fake_bool == 'ON'
+.. dropdown:: Iso-surface settings
+
+  .. tab-set::
+    :sync-group: language
+
+    .. tab-item:: C
+      :sync: C
 
       .. warning::
 
@@ -196,13 +204,16 @@ Iso-surface settings
 
       .. doxygentypedef:: PDM_isosurface_field_function_t
 
-      .. tabs::
+      .. tab-set::
+        :sync-group: partdist
 
-        .. group-tab:: Partitioned
+        .. tab-item:: Partitioned
+          :sync: Partitioned
 
           .. doxygenfunction:: PDM_isosurface_pfield_set
 
-        .. group-tab:: Block-distributed
+        .. tab-item:: Block-distributed
+          :sync: Block-distributed
 
           .. doxygenfunction:: PDM_isosurface_dfield_set
 
@@ -216,103 +227,112 @@ Iso-surface settings
 
       .. doxygenfunction:: PDM_isosurface_part_to_part_enable
 
-  .. group-tab:: ForTran
 
-    .. ifconfig:: enable_fortran_doc == 'ON'
+    .. tab-item:: Fortran
+      :sync: Fortran
 
-      .. warning::
+      .. ifconfig:: enable_fortran_doc == 'ON'
 
-        These subroutines must be called prior to :ref:`PDM_isosurface_compute <PDM_isosurface_compute_f>`.
+        .. warning::
 
-      .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_add
+          These subroutines must be called prior to :ref:`PDM_isosurface_compute <PDM_isosurface_compute_f>`.
 
-      .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_isovalues_set
+        .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_add
 
-      .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_equation_set
+        .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_isovalues_set
 
-      .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_field_function_set
+        .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_equation_set
 
-      .. tabs::
+        .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_field_function_set
 
-        .. group-tab:: Partitioned
+        .. tab-set::
+          :sync-group: partdist
 
-          .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_pfield_set
+          .. tab-item:: Partitioned
+            :sync: Partitioned
 
-        .. group-tab:: Block-distributed
+            .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_pfield_set
 
-          .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_dfield_set
+          .. tab-item:: Block-distributed
+            :sync: Block-distributed
 
-      .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_redistribution_set
+            .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_dfield_set
 
-      .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_n_part_out_set
+        .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_redistribution_set
 
-      .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_set_tolerance
+        .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_n_part_out_set
 
-      .. _PDM_isosurface_part_to_part_enable_f:
+        .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_set_tolerance
 
-      .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_part_to_part_enable
+        .. _PDM_isosurface_part_to_part_enable_f:
 
-    .. ifconfig:: enable_fortran_doc == 'OFF'
+        .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_part_to_part_enable
 
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+      .. ifconfig:: enable_fortran_doc == 'OFF'
 
-  .. group-tab:: Python
-
-    .. ifconfig:: enable_python_doc == 'ON'
-
-      .. warning::
-
-        These methods must be called prior to :py:meth:`.Isosurface.compute`.
-
-      .. automethod:: Pypdm.Pypdm.Isosurface.add
-
-      .. automethod:: Pypdm.Pypdm.Isosurface.isovalues_set
-
-      .. automethod:: Pypdm.Pypdm.Isosurface.equation_set
-
-      .. automethod:: Pypdm.Pypdm.Isosurface.field_function_set
-
-      .. tabs::
-
-        .. group-tab:: Partitioned
-
-          .. automethod:: Pypdm.Pypdm.Isosurface.pfield_set
-
-        .. group-tab:: Block-distributed
-
-          .. automethod:: Pypdm.Pypdm.Isosurface.dfield_set
-
-      .. automethod:: Pypdm.Pypdm.Isosurface.redistribution_set
-
-      .. automethod:: Pypdm.Pypdm.Isosurface.n_part_out_set
-
-      .. automethod:: Pypdm.Pypdm.Isosurface.tolerance_set
-
-      .. _PDM_isosurface_part_to_part_enable_p:
-
-      .. automethod:: Pypdm.Pypdm.Isosurface.part_to_part_enable
-
-    .. ifconfig:: enable_python_doc == 'OFF'
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
-
-.. _PDM_iso_surface_kind_t:
-
-.. note::
-
-  .. doxygenenum:: PDM_iso_surface_kind_t
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
 
 
-Iso-surface computation
-"""""""""""""""""""""""
+    .. tab-item:: Python
+      :sync: Python
 
-.. tabs::
+      .. ifconfig:: enable_python_doc == 'ON'
 
-  .. group-tab:: C
+        .. warning::
 
-    .. ifconfig:: fake_bool == 'ON'
+          These methods must be called prior to :py:meth:`.Isosurface.compute`.
+
+        .. automethod:: Pypdm.Pypdm.Isosurface.add
+
+        .. automethod:: Pypdm.Pypdm.Isosurface.isovalues_set
+
+        .. automethod:: Pypdm.Pypdm.Isosurface.equation_set
+
+        .. automethod:: Pypdm.Pypdm.Isosurface.field_function_set
+
+        .. tab-set::
+          :sync-group: partdist
+
+          .. tab-item:: Partitioned
+            :sync: Partitioned
+
+            .. automethod:: Pypdm.Pypdm.Isosurface.pfield_set
+
+          .. tab-item:: Block-distributed
+            :sync: Block-distributed
+
+            .. automethod:: Pypdm.Pypdm.Isosurface.dfield_set
+
+        .. automethod:: Pypdm.Pypdm.Isosurface.redistribution_set
+
+        .. automethod:: Pypdm.Pypdm.Isosurface.n_part_out_set
+
+        .. automethod:: Pypdm.Pypdm.Isosurface.tolerance_set
+
+        .. _PDM_isosurface_part_to_part_enable_p:
+
+        .. automethod:: Pypdm.Pypdm.Isosurface.part_to_part_enable
+
+      .. ifconfig:: enable_python_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+
+  .. _PDM_iso_surface_kind_t:
+
+  .. note::
+
+    .. doxygenenum:: PDM_iso_surface_kind_t
+
+
+.. dropdown:: Iso-surface computation
+
+  .. tab-set::
+    :sync-group: language
+
+    .. tab-item:: C
+      :sync: C
 
       .. _PDM_isosurface_compute_c:
 
@@ -320,48 +340,55 @@ Iso-surface computation
       .. doxygenfunction:: PDM_isosurface_reset
       .. doxygenfunction:: PDM_isosurface_dump_times
 
-  .. group-tab:: ForTran
 
-    .. ifconfig:: enable_fortran_doc == 'ON'
+    .. tab-item:: Fortran
+      :sync: Fortran
 
-      .. _PDM_isosurface_compute_f:
+      .. ifconfig:: enable_fortran_doc == 'ON'
 
-      .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_compute
-      .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_reset
-      .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_dump_times
+        .. _PDM_isosurface_compute_f:
 
-    .. ifconfig:: enable_fortran_doc == 'OFF'
+        .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_compute
+        .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_reset
+        .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_dump_times
 
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+      .. ifconfig:: enable_fortran_doc == 'OFF'
 
-  .. group-tab:: Python
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
 
-    .. ifconfig:: enable_python_doc == 'ON'
 
-      .. automethod:: Pypdm.Pypdm.Isosurface.compute
-      .. automethod:: Pypdm.Pypdm.Isosurface.reset
-      .. automethod:: Pypdm.Pypdm.Isosurface.dump_times
+    .. tab-item:: Python
+      :sync: Python
 
-    .. ifconfig:: enable_python_doc == 'OFF'
+      .. ifconfig:: enable_python_doc == 'ON'
 
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+        .. automethod:: Pypdm.Pypdm.Isosurface.compute
+        .. automethod:: Pypdm.Pypdm.Isosurface.reset
+        .. automethod:: Pypdm.Pypdm.Isosurface.dump_times
 
-Outputs
-"""""""
+      .. ifconfig:: enable_python_doc == 'OFF'
 
-.. tabs::
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
 
-  .. group-tab:: C
 
-    .. ifconfig:: fake_bool == 'ON'
+
+.. dropdown:: Outputs
+
+  .. tab-set::
+    :sync-group: language
+
+    .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_isosurface_part_to_part_get
 
-      .. tabs::
+      .. tab-set::
+        :sync-group: partdist
 
-        .. group-tab:: Partitioned
+        .. tab-item:: Partitioned
+          :sync: Partitioned
 
           .. doxygenfunction:: PDM_isosurface_pconnectivity_get
           .. doxygenfunction:: PDM_isosurface_pvtx_coord_get
@@ -371,7 +398,8 @@ Outputs
           .. doxygenfunction:: PDM_isosurface_pparent_weight_get
           .. doxygenfunction:: PDM_isosurface_pisovalue_entity_idx_get
 
-        .. group-tab:: Block-distributed
+        .. tab-item:: Block-distributed
+          :sync: Block-distributed
 
           .. doxygenfunction:: PDM_isosurface_dconnectivity_get
           .. doxygenfunction:: PDM_isosurface_dvtx_coord_get
@@ -380,102 +408,110 @@ Outputs
           .. doxygenfunction:: PDM_isosurface_dparent_weight_get
           .. doxygenfunction:: PDM_isosurface_disovalue_entity_get
 
-  .. group-tab:: ForTran
 
-    .. ifconfig:: enable_fortran_doc == 'ON'
+    .. tab-item:: Fortran
+      :sync: Fortran
 
-      .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_part_to_part_get
+      .. ifconfig:: enable_fortran_doc == 'ON'
 
-      .. tabs::
+        .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_part_to_part_get
 
-        .. group-tab:: Partitioned
+        .. tab-set::
+          :sync-group: partdist
 
-          .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_pconnectivity_get
-          .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_pvtx_coord_get
-          .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_ln_to_gn_get
-          .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_pgroup_get
-          .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_plocal_parent_get
-          .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_pparent_weight_get
-          .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_pisovalue_entity_idx_get
+          .. tab-item:: Partitioned
+            :sync: Partitioned
 
-        .. group-tab:: Block-distributed
+            .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_pconnectivity_get
+            .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_pvtx_coord_get
+            .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_ln_to_gn_get
+            .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_pgroup_get
+            .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_plocal_parent_get
+            .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_pparent_weight_get
+            .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_pisovalue_entity_idx_get
 
-          .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_dconnectivity_get
-          .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_dvtx_coord_get
-          .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_distrib_get
-          .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_dgroup_get
-          .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_dparent_weight_get
-          .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_disovalue_entity_get
+          .. tab-item:: Block-distributed
+            :sync: Block-distributed
 
-    .. ifconfig:: enable_fortran_doc == 'OFF'
+            .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_dconnectivity_get
+            .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_dvtx_coord_get
+            .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_distrib_get
+            .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_dgroup_get
+            .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_dparent_weight_get
+            .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_disovalue_entity_get
 
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+      .. ifconfig:: enable_fortran_doc == 'OFF'
 
-  .. group-tab:: Python
-
-    .. ifconfig:: enable_python_doc == 'ON'
-
-      .. automethod:: Pypdm.Pypdm.Isosurface.part_to_part_get
-
-      .. tabs::
-
-        .. group-tab:: Partitioned
-
-          .. automethod:: Pypdm.Pypdm.Isosurface.pconnectivity_get
-          .. automethod:: Pypdm.Pypdm.Isosurface.pcoordinates_get
-          .. automethod:: Pypdm.Pypdm.Isosurface.ln_to_gn_get
-          .. automethod:: Pypdm.Pypdm.Isosurface.pgroup_get
-          .. automethod:: Pypdm.Pypdm.Isosurface.pparent_lnum_get
-          .. automethod:: Pypdm.Pypdm.Isosurface.pparent_weight_get
-          .. automethod:: Pypdm.Pypdm.Isosurface.pisovalue_idx_get
-
-        .. group-tab:: Block-distributed
-
-          .. automethod:: Pypdm.Pypdm.Isosurface.dconnectivity_get
-          .. automethod:: Pypdm.Pypdm.Isosurface.dcoordinates_get
-          .. automethod:: Pypdm.Pypdm.Isosurface.distribution_get
-          .. automethod:: Pypdm.Pypdm.Isosurface.dgroup_get
-          .. automethod:: Pypdm.Pypdm.Isosurface.dparent_weight_get
-          .. automethod:: Pypdm.Pypdm.Isosurface.disovalue_entity_get
-
-    .. ifconfig:: enable_python_doc == 'OFF'
-
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
 
 
-Finalization
-""""""""""""
+    .. tab-item:: Python
+      :sync: Python
 
-.. tabs::
+      .. ifconfig:: enable_python_doc == 'ON'
 
-  .. group-tab:: C
+        .. automethod:: Pypdm.Pypdm.Isosurface.part_to_part_get
 
-    .. ifconfig:: fake_bool == 'ON'
+        .. tab-set::
+          :sync-group: partdist
+
+          .. tab-item:: Partitioned
+            :sync: Partitioned
+
+            .. automethod:: Pypdm.Pypdm.Isosurface.pconnectivity_get
+            .. automethod:: Pypdm.Pypdm.Isosurface.pcoordinates_get
+            .. automethod:: Pypdm.Pypdm.Isosurface.ln_to_gn_get
+            .. automethod:: Pypdm.Pypdm.Isosurface.pgroup_get
+            .. automethod:: Pypdm.Pypdm.Isosurface.pparent_lnum_get
+            .. automethod:: Pypdm.Pypdm.Isosurface.pparent_weight_get
+            .. automethod:: Pypdm.Pypdm.Isosurface.pisovalue_idx_get
+
+          .. tab-item:: Block-distributed
+            :sync: Block-distributed
+
+            .. automethod:: Pypdm.Pypdm.Isosurface.dconnectivity_get
+            .. automethod:: Pypdm.Pypdm.Isosurface.dcoordinates_get
+            .. automethod:: Pypdm.Pypdm.Isosurface.distribution_get
+            .. automethod:: Pypdm.Pypdm.Isosurface.dgroup_get
+            .. automethod:: Pypdm.Pypdm.Isosurface.dparent_weight_get
+            .. automethod:: Pypdm.Pypdm.Isosurface.disovalue_entity_get
+
+      .. ifconfig:: enable_python_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+
+
+.. dropdown:: Finalization
+
+  .. tab-set::
+    :sync-group: language
+
+    .. tab-item:: C
+      :sync: C
 
       .. doxygenfunction:: PDM_isosurface_free
 
-  .. group-tab:: ForTran
 
-    .. ifconfig:: enable_fortran_doc == 'ON'
+    .. tab-item:: Fortran
+      :sync: Fortran
 
-      .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_free
+      .. ifconfig:: enable_fortran_doc == 'ON'
 
-    .. ifconfig:: enable_fortran_doc == 'OFF'
+        .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_free
 
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+      .. ifconfig:: enable_fortran_doc == 'OFF'
 
-  .. group-tab:: Python
-
-    .. ifconfig:: enable_python_doc == 'ON'
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
 
 
-    .. ifconfig:: enable_python_doc == 'OFF'
+    .. tab-item:: Python
+      :sync: Python
 
-      .. warning::
-        Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+      |python_gc|
+
 
 
 Appendices

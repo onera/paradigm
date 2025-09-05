@@ -12,238 +12,283 @@ Global numbering generation
 ===========================
 
 **ParaDiGM** relies heavily on the notion of :ref:`global numbering <concept_global_id>`.
-If your code does not use global ids, these can be generated from geometric data.
+If your code does not use global IDs, these can be generated from geometric data.
 Such global numbering is achieved by encoding Cartesian coordinates along the `Morton space-filling curve <https://en.wikipedia.org/wiki/Z-order_curve>`_.
 
-.. Alternatively, from parents & nuplets...
-.. Either way, the first step consists in creating an instance of ``PDM_gen_gnum_t`` (or :class:`Pypdm.Pypdm.GlobalNumbering` in Python).
 
+API
+"""
 
-C API
------
+.. dropdown:: Initialization
 
-Initialization
-""""""""""""""
+  .. tab-set::
+    :sync-group: language
 
-.. doxygenfunction:: PDM_gnum_create
+    .. tab-item:: C
+      :sync: C
 
-Set inputs
-""""""""""
+      .. doxygenfunction:: PDM_gnum_create
 
-.. doxygenfunction:: PDM_gnum_set_from_coords
 
-.. doxygenfunction:: PDM_gnum_set_from_parents
 
-.. doxygenfunction:: PDM_gnum_set_parents_nuplet
+    .. tab-item:: Fortran
+      :sync: Fortran
 
-Build global numbering
-""""""""""""""""""""""
+      .. ifconfig:: enable_fortran_doc == 'ON'
 
-.. doxygenfunction:: PDM_gnum_compute
+        .. f:autosubroutine:: PDM_gnum_create
 
-Get outputs
-"""""""""""
+      .. ifconfig:: enable_fortran_doc == 'OFF'
 
-.. doxygenfunction:: PDM_gnum_get
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
 
-Finalization
-""""""""""""
 
-.. doxygenfunction:: PDM_gnum_free
 
+    .. tab-item:: Python
+      :sync: Python
 
-Example
-"""""""
-The following example shows how to build a global numbering from a set of geometric coordinates (extract from the test case ``pdm_t_gen_gnum.c``).
+      .. ifconfig:: enable_python_doc == 'ON'
 
-.. code:: c
+        .. autofunction:: Pypdm.Pypdm.GlobalNumbering.__init__
 
-  #include "pdm.h"
-  #include "pdm_gnum.h"
+      .. ifconfig:: enable_python_doc == 'OFF'
 
-  // First, create a PDM_gen_gnum_t instance and set some parameters
-  PDM_gen_gnum_t *gen_gnum = PDM_gnum_create(3,     // dimension
-                                             n_part,
-                                             merge,
-                                             1.e-3, // tolerance
-                                             PDM_MPI_COMM_WORLD,
-                                             PDM_OWNERSHIP_USER);
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
 
-  // Then, provide the coordinates array for each partition
-  // (`char_length` can be NULL if `merge` is disabled)
-  for (int i_part = 0; i_part < n_part; i_part++) {
-    PDM_gnum_set_from_coords(gen_gnum,
-                             i_part,
-                             n_elts[i_part],
-                             coords[i_part],
-                             char_length);
-  }
 
-  // Once all partitions have been set, build the global numbering
-  PDM_gnum_compute(gen_gnum);
 
-  // Finally, retrieve the computed global id arrays
-  PDM_g_num_t **gnum = malloc(sizeof(PDM_g_num_t) * n_part);
-  for (int i_part = 0; i_part < n_part; i_part++) {
-    gnum[i_part] = PDM_gnum_get(gen_gnum,
-                                i_part);
 
-  }
+.. dropdown:: Set inputs
 
-  // Deallocate the PDM_gen_gnum_t instance
-  PDM_gnum_free(gen_gnum);
+  .. tab-set::
+    :sync-group: language
 
+    .. tab-item:: C
+      :sync: C
 
+      .. doxygenfunction:: PDM_gnum_set_from_coords
+      .. doxygenfunction:: PDM_gnum_set_from_parents
+      .. doxygenfunction:: PDM_gnum_set_parents_nuplet
 
-.. The ``dim``, ``merge`` and ``tolerance`` arguments are only relevant if you want the global numbering to be based on geometric data.
 
 
-Fortran API
------------
+    .. tab-item:: Fortran
+      :sync: Fortran
 
-.. ifconfig:: enable_fortran_doc == 'ON'
+      .. ifconfig:: enable_fortran_doc == 'ON'
 
-  .. .. f:automodule:: pdm_gnum
+          .. f:autosubroutine:: PDM_gnum_set_from_coords
+          .. f:autosubroutine:: PDM_gnum_set_from_parents
+          .. f:autosubroutine:: PDM_gnum_set_parents_nuplet
 
-  Initialization
-  """"""""""""""
+      .. ifconfig:: enable_fortran_doc == 'OFF'
 
-  .. f:autosubroutine:: pdm_gnum_create_
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
 
-  Set inputs
-  """"""""""
 
-  .. f:autosubroutine:: pdm_gnum_set_from_coords_
 
-  .. f:autosubroutine:: pdm_gnum_set_from_parents_
+    .. tab-item:: Python
+      :sync: Python
 
-  .. .. f:autosubroutine:: pdm_gnum_set_parents_nuplet_
+      .. ifconfig:: enable_python_doc == 'ON'
 
-  Build global numbering
-  """"""""""""""""""""""
+        .. autofunction:: Pypdm.Pypdm.GlobalNumbering.set_from_coords
+        .. autofunction:: Pypdm.Pypdm.GlobalNumbering.set_from_parent
+        .. autofunction:: Pypdm.Pypdm.GlobalNumbering.set_parents_nuplet
 
-  .. f:subroutine:: pdm_gnum_compute(gen_gnum)
+      .. ifconfig:: enable_python_doc == 'OFF'
 
-    Build global numbering
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
 
-    :p c_ptr gen_gnum [in]:  C pointer to PDM_gen_gnum_t object
 
-  Get outputs
-  """""""""""
 
-  .. f:autosubroutine:: pdm_gnum_get_
 
-  Finalization
-  """"""""""""
+.. dropdown:: Build global numbering
 
-  .. f:subroutine:: pdm_gnum_free(gen_gnum)
+  .. tab-set::
+    :sync-group: language
 
-    Free the Global Numbering Generation object
+    .. tab-item:: C
+      :sync: C
 
-    :p c_ptr gen_gnum [in]:  C pointer to PDM_gen_gnum_t object
+      .. doxygenfunction:: PDM_gnum_compute
 
-  Example
-  """""""
-  The following example shows how to build a global numbering from a set of geometric coordinates.
 
-  .. code:: fortran
 
-    use pdm
-    use pdm_gnum
-    use iso_c_binding
+    .. tab-item:: Fortran
+      :sync: Fortran
 
-    type(c_ptr)                   :: gen_gnum = C_NULL_PTR
-    double precision,     pointer :: coord => null()
-    integer(pdm_g_num_s), pointer :: gnum  => null()
-    integer                       :: i_part
+      .. ifconfig:: enable_fortran_doc == 'ON'
 
-    ! First, create a PDM_gen_gnum_t instance and set some parameters
-    call pdm_gnum_create(gen_gnum,           &
-                         dim,                &
-                         n_part,             &
-                         merge,              &
-                         tolerance,          &
-                         MPI_COMM_WORLD,     &
-                         PDM_OWNERSHIP_USER)
+        .. f:subroutine:: pdm_gnum_compute(gen_gnum)
 
-    ! Then, provide the coordinates array for each partition
-    ! (`char_length` can be null() if `merge` is disabled)
-    do i_part = 1, n_part
-      ! get coordinates pointer for current partition
-      coords = my_data_structure(i_part)%coords
+          Build global numbering
 
-      call pdm_gnum_set_from_coords(gen_gnum,       &
-                                    i_part,         &
-                                    n_elts(i_part), &
-                                    coords,         &
-                                    null())
-    enddo
+          :p c_ptr gen_gnum [in]:  C pointer to PDM_gen_gnum_t object
 
-    ! Once all partitions have been set, build the global numbering
-    call pdm_gnum_compute(gen_gnum)
 
-    ! Finally, retrieve the computed global id arrays
-    do i_part = 1, n_part
-      call pdm_gnum_get(gen_gnum, &
-                        i_part,   &
-                        gnum)
-    enddo
+      .. ifconfig:: enable_fortran_doc == 'OFF'
 
-    ! Deallocate gen_gnum
-    call pdm_gnum_free(gen_gnum)
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
 
-.. ifconfig:: enable_fortran_doc == 'OFF'
 
-  .. warning::
-    Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
 
+    .. tab-item:: Python
+      :sync: Python
 
+      .. ifconfig:: enable_python_doc == 'ON'
 
-Python API
-----------
+        .. autofunction:: Pypdm.Pypdm.GlobalNumbering.compute
 
-.. ifconfig:: enable_python_doc == 'ON'
+      .. ifconfig:: enable_python_doc == 'OFF'
 
-  API reference
-  """""""""""""
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
 
-  .. py:class:: GlobalNumbering
 
-    Python structure to create a global numbering.
-    Once initialized, all the following
-    methods apply to a :class:`GlobalNumbering` instance.
 
-    .. rubric:: Initialization
 
-    .. automethod:: Pypdm.Pypdm.GlobalNumbering.__init__
+.. dropdown:: Get outputs
 
-    .. rubric:: Set inputs
+  .. tab-set::
+    :sync-group: language
 
-    .. automethod:: Pypdm.Pypdm.GlobalNumbering.set_from_coords
-    .. automethod:: Pypdm.Pypdm.GlobalNumbering.set_from_parent
-    .. automethod:: Pypdm.Pypdm.GlobalNumbering.set_parents_nuplet
+    .. tab-item:: C
+      :sync: C
 
-    .. rubric:: Build global numbering
+      .. doxygenfunction:: PDM_gnum_get
 
-    .. automethod:: Pypdm.Pypdm.GlobalNumbering.compute
 
-    .. rubric:: Get outputs
 
-    .. automethod:: Pypdm.Pypdm.GlobalNumbering.get
+    .. tab-item:: Fortran
+      :sync: Fortran
 
-  Example
-  """""""
-  The following example shows how to build a global numbering from a set of geometric coordinates (extract from the test case ``pdm_t_gnum_p.py``).
+      .. ifconfig:: enable_fortran_doc == 'ON'
 
+        .. f:autosubroutine:: PDM_gnum_get
 
-  .. literalinclude:: ../../../../../test/pdm_t_gnum_p.py
-    :name: python_gen_gnum_ex
-    :language: python
-    :dedent: 2
-    :lines: 6,7,62-83
 
-.. ifconfig:: enable_python_doc == 'OFF'
+      .. ifconfig:: enable_fortran_doc == 'OFF'
 
-  .. warning::
-    Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
 
+
+
+    .. tab-item:: Python
+      :sync: Python
+
+      .. ifconfig:: enable_python_doc == 'ON'
+
+        .. autofunction:: Pypdm.Pypdm.GlobalNumbering.get
+
+      .. ifconfig:: enable_python_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+
+
+
+
+.. dropdown:: Finalization
+
+  .. tab-set::
+    :sync-group: language
+
+    .. tab-item:: C
+      :sync: C
+
+      .. doxygenfunction:: PDM_gnum_free
+
+
+
+    .. tab-item:: Fortran
+      :sync: Fortran
+
+      .. ifconfig:: enable_fortran_doc == 'ON'
+
+        .. f:subroutine:: pdm_gnum_free(gen_gnum)
+
+          Free the Global Numbering Generation object
+
+          :p c_ptr gen_gnum [in]:  C pointer to PDM_gen_gnum_t object
+
+
+      .. ifconfig:: enable_fortran_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+
+
+
+    .. tab-item:: Python
+      :sync: Python
+
+      |python_gc|
+
+
+
+
+
+Examples
+""""""""
+
+.. dropdown:: From coordinates
+
+  .. tab-set::
+    :sync-group: language
+
+    .. tab-item:: C
+      :sync: C
+
+      (Extract from ``test/pdm_t_gen_gnum.c``)
+
+      .. literalinclude:: ../../../../../test/pdm_t_gen_gnum.c
+        :name: c_gen_gnum_ex
+        :language: c
+        :lines: 6-7, 158-186
+
+
+    .. tab-item:: Fortran
+      :sync: Fortran
+
+      .. ifconfig:: enable_fortran_doc == 'ON'
+
+        (Extract from ``test/pdm_t_gnum_f.F90``)
+
+        .. literalinclude:: ../../../../../test/pdm_t_gnum_f.F90
+          :name: fortran_gen_gnum_ex
+          :language: fortran
+          :dedent: 2
+          :lines: 25, 29, 42-46, 70-99
+
+
+      .. ifconfig:: enable_fortran_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+
+
+
+    .. tab-item:: Python
+      :sync: Python
+
+      .. ifconfig:: enable_python_doc == 'ON'
+
+        (Extract from ``test/pdm_t_gnum_p.py``)
+
+        .. literalinclude:: ../../../../../test/pdm_t_gnum_p.py
+          :name: python_gen_gnum_ex
+          :language: python
+          :dedent: 2
+          :lines: 63-83
+
+      .. ifconfig:: enable_python_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)

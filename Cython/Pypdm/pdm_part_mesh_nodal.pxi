@@ -122,7 +122,7 @@ cdef extern from "pdm_part_mesh_nodal_geom.h":
 # ------------------------------------------------------------------
 cdef class PartMeshNodal:
     """
-      PartMeshNodal: Mesh structure for multi-elmts description
+      PartMeshNodal: Mesh structure for multi-elements description
     """
     # ************************************************************************
     # > Class attributes
@@ -131,10 +131,18 @@ cdef class PartMeshNodal:
     cdef int n_rank
     # ************************************************************************
     # ------------------------------------------------------------------------
-    def __cinit__(self, MPI.Comm    comm,
-                        int         n_part,
-                        int         mesh_dimension = 3):
+    def __init__(self, MPI.Comm    comm,
+                       int         n_part,
+                       int         mesh_dimension = 3):
         """
+        __init__(comm, n_part, mesh_dimension = 3)
+
+        Create a new :py:class:`PartMeshNodal` instance
+
+        Parameters:
+          comm           (MPI.Comm) : MPI communicator
+          n_part         (int)      : Number of partitions
+          mesh_dimension (int)      : Mesh dimension (default : 3)
         """
         self.keep_alive = []
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -198,6 +206,9 @@ cdef class PartMeshNodal:
 
         Parameters:
           elmt_type (PDM_Mesh_nodal_elt_t) : Kind of element for current sections
+
+        Returns:
+          Section identifier (`int`)
       """
       id_section = PDM_part_mesh_nodal_section_add(self.pmn,
                                                    elmt_type)
@@ -340,7 +351,13 @@ cdef class PartMeshNodalCapsule:
     """
     coord_get(i_part)
 
-    Get coordinates of mesh
+    Get coordinates of mesh vertices
+
+    Parameters:
+      i_part (int) : Partition identifier
+
+    Returns:
+      Vertex coordinates (`np.array[np.double_t]`)
     """
     return part_mesh_nodal_vtx_coord_get(self, i_part)
 
@@ -348,7 +365,13 @@ cdef class PartMeshNodalCapsule:
     """
     vtx_g_num_get(i_part)
 
-    Get global ids of mesh vertices
+    Get global IDs of mesh vertices
+
+    Parameters:
+      i_part (int) : Partition identifier
+
+    Returns:
+      Vertex global IDs (`np.array[np.npy_pdm_gnum_t]`)
     """
     return part_mesh_nodal_vtx_g_num_get(self, i_part)
 
@@ -383,7 +406,7 @@ cdef class PartMeshNodalCapsule:
       geom_kind (PDM_geometry_kind_t) : Geometry kind (volume, surface, ridge or corner)
 
     Returns:
-      Group number
+      Number of groups
     """
     return part_mesh_nodal_n_group_get(self, geom_kind)
 
@@ -402,7 +425,7 @@ cdef class PartMeshNodalCapsule:
       Tuple
 
         - ``"group_elmt"``             (`np.ndarray[np.int32_t]`)     : Connectivity group elements
-        - ``"group_ln_to_gn"``         (`np.ndarray[npy_pdm_gnum_t]`) : Element global ids
+        - ``"group_ln_to_gn"``         (`np.ndarray[npy_pdm_gnum_t]`) : Group-specific element global IDs
     """
     return part_mesh_nodal_get_group(self, geom_kind, i_part, i_group)
 
@@ -539,7 +562,10 @@ def part_mesh_nodal_get_group(PMeshNodal pypmn, PDM_geometry_kind_t geom_kind, i
                                 &group_ln_to_gn,
                                 PDM_OWNERSHIP_USER);
 
-  np_group_elmt = create_numpy_i(group_elmt, n_group_elmt)
+  np_group_elmt = None
+  if(group_elmt != NULL):
+    np_group_elmt = create_numpy_i(group_elmt, n_group_elmt)
+
   np_group_ln_to_gn = None
   if(group_ln_to_gn != NULL):
     np_group_ln_to_gn = create_numpy_g(group_ln_to_gn, n_group_elmt)

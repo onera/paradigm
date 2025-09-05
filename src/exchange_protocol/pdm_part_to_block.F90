@@ -21,6 +21,7 @@
 
 module pdm_part_to_block
 
+  use iso_c_binding
   use pdm
   use pdm_pointer_array
 
@@ -35,24 +36,6 @@ module pdm_part_to_block
   integer, parameter :: PDM_PART_TO_BLOCK_POST_MERGE                = 2  ! Merge multi-elements
 
 interface
-
-!>
-!!
-!! \brief Free a part to block structure
-!!
-!! \param [inout] ptb  Part to block structure
-!!
-!! \return       NULL
-!!
-
-subroutine PDM_part_to_block_free (ptb) &
-bind (c, name='PDM_part_to_block_free')
-  use iso_c_binding
-  implicit none
-
-  type(c_ptr), value :: ptb
-
-end subroutine PDM_part_to_block_free
 
 
 !>
@@ -103,7 +86,7 @@ end function PDM_part_to_block_is_active_rank
 !! \return Number of element in the current process
 !!
 
-function PDM_part_to_block_n_elt_block_get (ptb) &
+function PDM_part_to_block_n_elt_block_get_c(ptb) &
 result(n_elt_block)                              &
 bind (c, name = 'PDM_part_to_block_n_elt_block_get')
   use iso_c_binding
@@ -112,7 +95,7 @@ bind (c, name = 'PDM_part_to_block_n_elt_block_get')
   type(c_ptr), value :: ptb
   integer(c_int)     :: n_elt_block
 
-end function PDM_part_to_block_n_elt_block_get
+end function PDM_part_to_block_n_elt_block_get_c
 
 
 !>
@@ -200,45 +183,30 @@ end interface
 contains
 
 
-!>
-!!
-!! \brief Create a partitioning to block redistribution
-!!
-!! \param [out]  ptb             Initialized PDM_part_to_block_t
-!! \param [in]   t_distrib       Distribution type
-!! \param [in]   t_post          Post processing type
-!! \param [in]   partActiveNode  Part of active nodes (\ref PDM_writer_BLOCK_DISTRIB_PART_OF_NODE mode)
-!! \param [in]   gnum_elt        Element global number
-!! \param [in]   weight          Weight of elements (or NULL)
-!! \param [in]   n_elt           Local number of elements
-!! \param [in]   n_part          Number of partition
-!! \param [in]   comm            MPI communicator
-!!
-
-subroutine PDM_part_to_block_create (ptb,            &
-                                     t_distrib,      &
-                                     t_post,         &
-                                     partActiveNode, &
-                                     gnum_elt,       &
-                                     weight,         &
-                                     n_elt,          &
-                                     n_part,         &
-                                     comm)
-  use iso_c_binding
+subroutine PDM_part_to_block_create(ptb,            &
+                                    t_distrib,      &
+                                    t_post,         &
+                                    partActiveNode, &
+                                    gnum_elt,       &
+                                    weight,         &
+                                    n_elt,          &
+                                    n_part,         &
+                                    comm)
+  ! Create a Part-to-Block instance
   implicit none
 
-  type(c_ptr)                       :: ptb
-  integer,          intent(in)      :: t_distrib
-  integer,          intent(in)      :: t_post
-  double precision, intent(in)      :: partActiveNode
-  type(PDM_pointer_array_t), pointer :: gnum_elt
-  type(PDM_pointer_array_t), pointer :: weight
-  integer(pdm_l_num_s), pointer     :: n_elt(:)
-  integer,          intent(in)      :: n_part
-  integer,          intent(in)      :: comm
+  type(c_ptr),               intent(out) :: ptb            ! PDM_part_to_block_t instance
+  integer,                   intent(in)  :: t_distrib      ! Distribution type
+  integer,                   intent(in)  :: t_post         ! Post processing type
+  real(8),                   intent(in)  :: partActiveNode ! Part of active nodes
+  type(PDM_pointer_array_t), pointer     :: gnum_elt       ! Element global IDs
+  type(PDM_pointer_array_t), pointer     :: weight         ! Element weights of elements (or ``null()``)
+  integer(pdm_l_num_s),      pointer     :: n_elt(:)       ! Local number of elements per partition
+  integer,                   intent(in)  :: n_part         ! Number of partitions
+  integer,                   intent(in)  :: comm           ! MPI communicator
 
-  integer(c_int)                    :: c_comm
-  type(c_ptr)                       :: c_weight
+  integer(c_int)                         :: c_comm
+  type(c_ptr)                            :: c_weight
 
   interface
     function PDM_part_to_block_create_c (t_distrib,      &
@@ -286,46 +254,30 @@ subroutine PDM_part_to_block_create (ptb,            &
 end subroutine PDM_part_to_block_create
 
 
-!>
-!!
-!! \brief Create a part-to-block redistribution from a given distribution index
-!!
-!! \param [in]   t_distrib         Distribution type
-!! \param [in]   t_post            Post processing type
-!! \param [in]   partActiveNode    Part of active nodes (\ref PDM_writer_BLOCK_DISTRIB_PART_OF_NODE mode)
-!! \param [in]   gnum_elt          Element global numbers
-!! \param [in]   dataDistribIndex  Distribution index (\p distrib[0] = 0 and size = *n_rank* + 1)
-!! \param [in]   n_elt             Local number of elements
-!! \param [in]   n_part            Number of partitions
-!! \param [in]   comm              MPI communicator
-!!
-!! \return   Initialized \ref PDM_part_to_block_t object
-!!
-!!
 
-subroutine PDM_part_to_block_create_from_distrib (ptb,              &
-                                                  t_distrib,        &
-                                                  t_post,           &
-                                                  partActiveNode,   &
-                                                  gnum_elt,         &
-                                                  dataDistribIndex, &
-                                                  n_elt,            &
-                                                  n_part,           &
-                                                  comm)
-  use iso_c_binding
+subroutine PDM_part_to_block_create_from_distrib(ptb,              &
+                                                 t_distrib,        &
+                                                 t_post,           &
+                                                 partActiveNode,   &
+                                                 gnum_elt,         &
+                                                 dataDistribIndex, &
+                                                 n_elt,            &
+                                                 n_part,           &
+                                                 comm)
+  ! Create a Part-to-Block instance from a given distribution index
   implicit none
 
-  type(c_ptr)                        :: ptb
-  integer,          intent(in)       :: t_distrib
-  integer,          intent(in)       :: t_post
-  double precision, intent(in)       :: partActiveNode
-  type(PDM_pointer_array_t), pointer :: gnum_elt
-  integer(pdm_g_num_s),      pointer :: dataDistribIndex(:)
-  integer(pdm_l_num_s),      pointer :: n_elt(:)
-  integer,          intent(in)       :: n_part
-  integer,          intent(in)       :: comm
+  type(c_ptr),               intent(out) :: ptb                 ! PDM_part_to_block_t instance
+  integer,                   intent(in)  :: t_distrib           ! Distribution type
+  integer,                   intent(in)  :: t_post              ! Post processing type
+  real(8),                   intent(in)  :: partActiveNode      ! Part of active nodes
+  type(PDM_pointer_array_t), pointer     :: gnum_elt            ! Element global IDs
+  integer(pdm_g_num_s),      pointer     :: dataDistribIndex(:) ! Distribution index (``distrib(1) = 0`` and size = n_rank + 1)
+  integer(pdm_l_num_s),      pointer     :: n_elt(:)            ! Local number of elements per partition
+  integer,                   intent(in)  :: n_part              ! Number of partitions
+  integer,                   intent(in)  :: comm                ! MPI communicator
 
-  integer(c_int)                     :: c_comm
+  integer(c_int)                         :: c_comm
 
   interface
     function PDM_part_to_block_create_from_distrib_c (t_distrib,        &
@@ -426,7 +378,7 @@ subroutine PDM_part_to_block_exch_int (ptb,          &
                                            c_block_stride,          &
                                            c_block_data)
 
-  n_elt_block = PDM_part_to_block_n_elt_block_get (ptb)
+  n_elt_block = PDM_part_to_block_n_elt_block_get_c(ptb)
 
   call c_f_pointer(c_block_stride, &
                    block_stride,   &
@@ -488,7 +440,7 @@ subroutine PDM_part_to_block_exch_g_num (ptb,          &
                                            c_block_stride,          &
                                            c_block_data)
 
-  n_elt_block = PDM_part_to_block_n_elt_block_get (ptb)
+  n_elt_block = PDM_part_to_block_n_elt_block_get_c(ptb)
 
   call c_f_pointer(c_block_stride, &
                    block_stride,   &
@@ -518,7 +470,7 @@ subroutine PDM_part_to_block_exch_double (ptb,          &
   type(PDM_pointer_array_t), pointer :: part_stride
   type(PDM_pointer_array_t), pointer :: part_data
   integer(pdm_l_num_s), pointer     :: block_stride(:)
-  double precision,     pointer     :: block_data(:)
+  real(8),     pointer     :: block_data(:)
 
   integer                           :: s_block_data
   type(c_ptr)                       :: c_block_stride
@@ -550,7 +502,7 @@ subroutine PDM_part_to_block_exch_double (ptb,          &
                                            c_block_stride,          &
                                            c_block_data)
 
-  n_elt_block = PDM_part_to_block_n_elt_block_get (ptb)
+  n_elt_block = PDM_part_to_block_n_elt_block_get_c(ptb)
 
   call c_f_pointer(c_block_stride, &
                    block_stride,   &
@@ -612,7 +564,7 @@ subroutine PDM_part_to_block_exch_complex4 (ptb,          &
                                            c_block_stride,          &
                                            c_block_data)
 
-  n_elt_block = PDM_part_to_block_n_elt_block_get (ptb)
+  n_elt_block = PDM_part_to_block_n_elt_block_get_c(ptb)
 
   call c_f_pointer(c_block_stride, &
                    block_stride,   &
@@ -674,7 +626,7 @@ subroutine PDM_part_to_block_exch_real4 (ptb,          &
                                            c_block_stride,          &
                                            c_block_data)
 
-  n_elt_block = PDM_part_to_block_n_elt_block_get (ptb)
+  n_elt_block = PDM_part_to_block_n_elt_block_get_c(ptb)
 
   call c_f_pointer(c_block_stride, &
                    block_stride,   &
@@ -735,7 +687,7 @@ subroutine PDM_part_to_block_exch_complex8 (ptb,          &
                                            c_block_stride,          &
                                            c_block_data)
 
-  n_elt_block = PDM_part_to_block_n_elt_block_get (ptb)
+  n_elt_block = PDM_part_to_block_n_elt_block_get_c(ptb)
 
   call c_f_pointer(c_block_stride, &
                    block_stride,   &
@@ -798,7 +750,7 @@ subroutine PDM_part_to_block_exch_cptr (ptb,          &
                                            c_block_stride,          &
                                            c_block_data)
 
-  n_elt_block = PDM_part_to_block_n_elt_block_get (ptb)
+  n_elt_block = PDM_part_to_block_n_elt_block_get_c(ptb)
 
   call c_f_pointer(c_block_stride, &
                    block_stride,   &
@@ -850,23 +802,16 @@ subroutine PDM_part_to_block_active_ranks_get (ptb,          &
 end subroutine PDM_part_to_block_active_ranks_get
 
 
-!>
-!! \brief Return global numbers of element in the current process
-!!
-!! \param [in]   ptb          Part to block structure
-!! \param [out]  g_nums       Global numbers
-!!
-
-subroutine PDM_part_to_block_block_gnum_get (ptb,    &
-                                               g_nums)
-  use iso_c_binding
+subroutine PDM_part_to_block_block_gnum_get(ptb,    &
+                                            g_nums)
+  ! Return global IDs of elements in current rank's block
   implicit none
 
-  type(c_ptr), value            :: ptb
-  integer(pdm_g_num_s), pointer :: g_nums(:)
+  type(c_ptr),          intent(in) :: ptb       ! Part-to-Block instance
+  integer(pdm_g_num_s), pointer    :: g_nums(:) ! Global IDs of elements in block
 
-  type(c_ptr)                   :: c_g_nums
-  integer                       :: n_elt
+  type(c_ptr)                      :: c_g_nums
+  integer                          :: n_elt
 
   interface
     function PDM_part_to_block_block_gnum_get_c (ptb) &
@@ -883,7 +828,7 @@ subroutine PDM_part_to_block_block_gnum_get (ptb,    &
 
   c_g_nums = PDM_part_to_block_block_gnum_get_c (ptb)
 
-  n_elt = PDM_part_to_block_n_elt_block_get (ptb)
+  n_elt = PDM_part_to_block_n_elt_block_get_c(ptb)
 
   call c_f_pointer(c_g_nums, &
                    g_nums,   &
@@ -892,23 +837,17 @@ subroutine PDM_part_to_block_block_gnum_get (ptb,    &
 end subroutine PDM_part_to_block_block_gnum_get
 
 
-!>
-!! \brief Return block distribution index
-!!
-!! \param [in] ptb         Part to block structure
-!!
-!! \return  Distribution (size = communicator size + 1)
 
-subroutine PDM_part_to_block_distrib_index_get (ptb,         &
-                                                distrib_idx)
-  use iso_c_binding
+subroutine PDM_part_to_block_distrib_index_get(ptb,         &
+                                               distrib_idx)
+  ! Return block-distribution index
   implicit none
 
-  type(c_ptr), value            :: ptb
-  integer(pdm_g_num_s), pointer :: distrib_idx(:)
+  type(c_ptr),          intent(in) :: ptb            ! Part-to-Block instance
+  integer(pdm_g_num_s), pointer    :: distrib_idx(:) ! Distribution index (size = n_rank + 1)
 
-  type(c_ptr)                   :: c_distrib_idx
-  integer                       :: n_rank
+  type(c_ptr)                      :: c_distrib_idx
+  integer                          :: n_rank
 
   interface
     function PDM_part_to_block_distrib_index_get_c (ptb) &
@@ -975,5 +914,40 @@ subroutine PDM_part_to_block_destination_get (ptb,         &
                    [n_elt_proc])
 
 end subroutine PDM_part_to_block_destination_get
+
+
+
+function PDM_part_to_block_n_elt_block_get(ptb) result(n_elt_block)   
+
+  ! Return number of element in current rank's block
+  implicit none
+
+  type(c_ptr), intent(in) :: ptb         ! Part-to-Block instance
+  integer                 :: n_elt_block ! Number of element in current rank's block
+
+  n_elt_block = PDM_part_to_block_n_elt_block_get_c(ptb)
+
+end function PDM_part_to_block_n_elt_block_get
+
+
+
+subroutine PDM_part_to_block_free(ptb)
+  ! Free a Part-to-Block instance
+  implicit none
+
+  type(c_ptr), intent(inout) :: ptb ! Part-to-Block instance
+
+  interface
+    subroutine PDM_part_to_block_free_c(ptb) &
+    bind (c, name='PDM_part_to_block_free')
+      use iso_c_binding
+      implicit none
+      type(c_ptr), value :: ptb
+    end subroutine PDM_part_to_block_free_c
+  end interface
+
+  call PDM_part_to_block_free_c(ptb)
+
+end subroutine PDM_part_to_block_free
 
 end module pdm_part_to_block

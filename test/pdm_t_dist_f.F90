@@ -348,7 +348,7 @@ program testf
   deallocate(face_vtx_idx)
   deallocate(face_vtx)
 
-  call PDM_dist_cloud_surf_free(dist, 0)
+  call PDM_dist_cloud_surf_free(dist)
 
   write (*, '(a1,i0,a12,i0)') "[", i_rank, "] n_error = ", n_error
 

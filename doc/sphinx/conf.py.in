@@ -27,7 +27,6 @@
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
-    # 'sphinx.ext.imgmath',
     'sphinx.ext.mathjax',
     'sphinx.ext.autosummary',
     'sphinx.ext.ifconfig',
@@ -36,8 +35,9 @@ extensions = [
     'sphinx.ext.todo',
     'sphinx.ext.autosectionlabel',
     'sphinx.ext.intersphinx',
+    'sphinx_copybutton',
+    'sphinx_design',
     'breathe',
-    "sphinx_tabs.tabs",
     # 'sphinxcontrib.tikz',
     # 'sphinx.ext.coverage',
     # 'sphinx.ext.doctest',
@@ -46,16 +46,16 @@ extensions = [
 
 # Napoleon settings
 napoleon_google_docstring = True
-napoleon_numpy_docstring = True
+napoleon_numpy_docstring  = True
 napoleon_include_private_with_doc = False
 napoleon_include_special_with_doc = True
-napoleon_use_admonition_for_examples = True
-napoleon_use_admonition_for_notes = False
+napoleon_use_admonition_for_examples   = True
+napoleon_use_admonition_for_notes      = False
 napoleon_use_admonition_for_references = False
-napoleon_use_ivar = False
+napoleon_use_ivar  = False
 napoleon_use_param = True
 napoleon_use_rtype = True
-autoclass_content = 'both'  # JDG: this concatenates the class.doc + __init__.doc
+autoclass_content  = 'both'  # JDG: this concatenates the class.doc + __init__.doc
 
 
 
@@ -64,8 +64,7 @@ templates_path = ['_templates']
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
-#
-# source_suffix = ['.rst', '.md']
+
 source_suffix = '.rst'
 
 # The encoding of source files.
@@ -76,9 +75,9 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'ParaDiGM'
-copyright = '2024, ONERA The French Aerospace Lab'
-author = 'B. Andrieu, K. Hoogveld, B. Maugars, E. Quémerais'
+project   = 'ParaDiGM'
+copyright = '2025, ONERA The French Aerospace Lab'
+author    = 'B. Andrieu, K. Hoogveld, B. Maugars, E. Quémerais'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -133,6 +132,7 @@ add_module_names = False
 
 # The name of the Pygments (syntax highlighting) style to use.
 # pygments_style = 'sphinx'
+pygments_dark_style = 'material'
 
 # A list of ignored prefixes for module index sorting.
 # modindex_common_prefix = []
@@ -168,11 +168,42 @@ breathe_default_project = "paradigm"
 #
 
 html_theme = 'sphinx_rtd_theme'
+import sphinx
+if sphinx.__version__ >= "6.0":
+    try:
+        import furo
+        html_theme = "furo"
+        del furo
+    except ModuleNotFoundError:
+        pass
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
 html_theme_options = {
+    "light_css_variables": {
+        "font-stack"                : "Roboto, Segoe UI, Helvetica, sans-serif",
+        "font-stack--monospace"     : "Roboto Mono, SFMono-Regular, Menlo, Consolas, Monaco, Liberation Mono, Lucida Console, monospace",
+        "color-foreground-primary"  : "#23373b",
+        "color-brand-primary"       : "#1c64ff",
+        "color-pdmkw"               : "#6d80a1",
+        "color-link"                : "#366ce4",
+        "color-highlight-on-target" : "#fff4d1",
+        "color-foreground-tertiary" : "#d9d9da",
+        "color-background-tertiary" : "#f1f2f7",
+	    "color-api-name"            : "#d63736",
+    },
+    "dark_css_variables": {
+        "color-brand-primary"        : "#3d94ff",
+        "color-pdmkw"                : "#879aad",
+        "color-link"                 : "#5ca5ff",
+        "color-highlight-on-target"  : "#2e0c14",
+        "color-foreground-tertiary"  : "#3f4144",
+        "color-background-secondary" : "#2a2c34",
+        "color-background-tertiary"  : "#1d1f22",
+	    "color-api-name"             : "#ff6d6c",
+    },
+
     "display_version": True,
     # "collapse_navigation": True,
     # "navigation_depth": -1,
@@ -193,7 +224,7 @@ html_short_title = project
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
 #
-# html_logo = "@CMAKE_CURRENT_SOURCE_DIR@/images/logo.png"
+html_logo = "@CMAKE_CURRENT_SOURCE_DIR@/_static/logo.svg"
 
 # The name of an image file (relative to this directory) to use as a favicon of
 # the docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
@@ -206,7 +237,9 @@ html_short_title = project
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['../../_static']
 
-html_css_files = ["css/theme_overrides.css"]
+html_css_files = ["css/custom.css"]
+
+html_js_files = ["js/custom.js"]
 
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied
@@ -398,12 +431,19 @@ if '@PDM_ENABLE_Fortran@' == 'ON':
     extensions.append('sphinxfortran.fortran_autodoc')
 
     fortran_src = [
+        "@PROJECT_SOURCE_DIR@/src/exchange_protocol/pdm_block_to_part.F90",
+        "@PROJECT_SOURCE_DIR@/src/exchange_protocol/pdm_part_to_block.F90",
         "@PROJECT_SOURCE_DIR@/src/exchange_protocol/pdm_part_to_part.F90",
         "@PROJECT_SOURCE_DIR@/src/gnum_utils/pdm_gnum.F90",
-        "@PROJECT_SOURCE_DIR@/src/mesh/pdm_mesh_location.F90",
-        "@PROJECT_SOURCE_DIR@/src/mesh/pdm_isosurface.F90",
-        "@PROJECT_SOURCE_DIR@/src/meshgen/pdm_dcube_nodal_gen.F90",
+        "@PROJECT_SOURCE_DIR@/src/io/pdm_io.F90",
+        "@PROJECT_SOURCE_DIR@/src/io/pdm_writer.F90",
         "@PROJECT_SOURCE_DIR@/src/mesh_struct/pdm_part_mesh_nodal.F90",
+        "@PROJECT_SOURCE_DIR@/src/mesh_topology/pdm_part_connectivity_transform.F90",
+        "@PROJECT_SOURCE_DIR@/src/mesh/pdm_closest_points.F90",
+        "@PROJECT_SOURCE_DIR@/src/mesh/pdm_isosurface.F90",
+        "@PROJECT_SOURCE_DIR@/src/mesh/pdm_mesh_location.F90",
+        "@PROJECT_SOURCE_DIR@/src/meshgen/pdm_dcube_nodal_gen.F90",
+        "@PROJECT_SOURCE_DIR@/src/meshgen/pdm_generate_mesh.F90",
         "@PROJECT_SOURCE_DIR@/src/ppart/pdm_multipart.F90",
         "@PROJECT_SOURCE_DIR@/src/ppart/pdm_part_extension.F90",
         "@PROJECT_SOURCE_DIR@/src/struct/pdm_extract_part.F90",
@@ -423,6 +463,9 @@ rst_prolog = """
 
 .. role:: largegreen
 
+.. role:: pdmkw
+  :class: pdmkw
+
 .. |<-| unicode:: U+2190
 
 .. |->| unicode:: U+2192
@@ -434,6 +477,8 @@ rst_prolog = """
 .. |ok| replace:: :largegreen:`✔`
 
 .. |ko| replace:: :largered:`✘`
+
+.. |python_gc| replace:: The instance is automatically freed by Python's garbage collector when it is no longer referenced
 """
 
 
@@ -442,7 +487,7 @@ def setup(app):
     app.add_config_value('enable_fortran_doc', '@PDM_ENABLE_Fortran@',         'env')
     app.add_config_value('enable_python_doc',  '@PDM_ENABLE_PYTHON_BINDINGS@', 'env')
     app.add_config_value('enable_pdma',        '@PDM_ENABLE_EXTENSION_PDMA@',  'env')
-    app.add_css_file('theme_overrides.css')
+
 """
 .. raw:: html
 

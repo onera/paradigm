@@ -108,7 +108,7 @@ program extract_part_nodal_f
 
 
   !----------------------------------------
-  ! Generate mesh
+  ! Generate a simple 3D mesh composed of tetrahedra (1 part per MPI rank)
   call PDM_generate_mesh_ball_simplified(comm,        & ! <- MPI communicator
                                          n_vtx,       & ! -> Local number of vertices
                                          n_tet,       & ! -> Local number of tetra
@@ -180,7 +180,7 @@ program extract_part_nodal_f
   ! Set input mesh
   call PDM_extract_part_part_nodal_set(extrp, mesh)
 
-  ! Select elements to extract
+  ! Select elements to extract : the ones that cross the (x = 0) plane
   allocate(selected(n_tet))
   n_selected = 0
   do i_tet = 1, n_tet
@@ -192,7 +192,6 @@ program extract_part_nodal_f
       max_x = max(max_x, vtx_coord(1,i_vtx))
     enddo
 
-    ! Select current tetra if it crosses the (x = 0) plane
     if (min_x <= 0.d0 .and. max_x >= 0.d0) then
       n_selected = n_selected + 1
       selected(n_selected) = i_tet
@@ -252,13 +251,19 @@ program extract_part_nodal_f
 
   !----------------------------------------
   ! Transfer data from initial mesh to extraction
-
-  !  Field at vertices
+  !  Create dummy field on initial mesh
   allocate(vtx_field(n_vtx))
+  vtx_field(:) = cos(4*(vtx_coord(1,:) - vtx_coord(2,:) - vtx_coord(3,:)))
+
+  allocate(tet_field(n_tet))
+  tet_field(:) = 0.25d0*(vtx_field(tet_vtx(1::4)) + &
+                         vtx_field(tet_vtx(2::4)) + &
+                         vtx_field(tet_vtx(3::4)) + &
+                         vtx_field(tet_vtx(4::4)))
+
+
+  !  Transfer field at vertices
   allocate(extract_vtx_field(extract_n_vtx))
-
-  vtx_field(:) = cos(4*(vtx_coord(1,:) + vtx_coord(2,:) + vtx_coord(3,:)))
-
   if (extract_kind == PDM_EXTRACT_PART_KIND_LOCAL) then
     ! Local transfer
     call PDM_extract_part_parent_lnum_get(extrp,               & ! <- ExtractPart instance
@@ -270,7 +275,7 @@ program extract_part_nodal_f
 
     extract_vtx_field(1:extract_n_vtx) = vtx_field(extract_vtx_parent(1:extract_n_vtx))
   else
-    ! Reequilibrate mode => parallel transfer
+    ! Reequilibrate mode => transfer in parallel
     call data_transfer(extrp,               & ! <- ExtractPart instance
                        PDM_MESH_ENTITY_VTX, & ! <- Vertices
                        vtx_field,           & ! <- Field at vertices (local to current subdomain)
@@ -279,20 +284,13 @@ program extract_part_nodal_f
   endif
 
 
-  !  Field at tetrahedra : take average of field values at vertices
-  allocate(tet_field(n_tet))
+  !  Transfer field at tetrahedra
   allocate(extract_tet_field(extract_n_tet))
-
-  tet_field(:) = 0.25d0*(vtx_field(tet_vtx(1::4)) + &
-                         vtx_field(tet_vtx(2::4)) + &
-                         vtx_field(tet_vtx(3::4)) + &
-                         vtx_field(tet_vtx(4::4)))
-
   if (extract_kind == PDM_EXTRACT_PART_KIND_LOCAL) then
     ! Local transfer
     extract_tet_field(1:n_selected) = tet_field(selected(1:n_selected))
   else
-    ! Reequilibrate mode => parallel transfer
+    ! Reequilibrate mode => transfer in parallel
     call data_transfer(extrp,                & ! <- ExtractPart instance
                        PDM_MESH_ENTITY_CELL, & ! <- Cells (tetra)
                        tet_field,            & ! <- Field at tetra (local to current subdomain)

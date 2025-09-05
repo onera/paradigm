@@ -313,7 +313,7 @@ PDM_block_to_part_free
  *
  * \brief Return index in the block for a global id
  *
- * \param [in] ptb         Block-to-Part structure
+ * \param [in] btp         Block-to-Part structure
  * \param [in] gNum        Global id
  *
  * \return  Index in local block (zero-based)

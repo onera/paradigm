@@ -21,6 +21,7 @@
 
 module pdm_part_to_part
 
+  use iso_c_binding
   use pdm
   use pdm_pointer_array
 
@@ -56,25 +57,6 @@ end function PDM_part_to_part_n_ranks_get
 
 !>
 !!
-!! \brief Free a part to part structure
-!!
-!! \param [inout] ptp  Part to part structure
-!!
-!! \return       NULL
-!!
-
-subroutine PDM_part_to_part_free (ptp) &
-bind (c, name='PDM_part_to_part_free')
-  use iso_c_binding
-  implicit none
-
-  type(c_ptr), value :: ptp
-
-end subroutine PDM_part_to_part_free
-
-
-!>
-!!
 !! \brief Get number of partitions
 !!
 !! \param [in]  ptp       Pointer to \ref PDM_part_to_part_t object
@@ -96,31 +78,6 @@ bind (c, name='PDM_part_to_part_n_part_get')
 
 end subroutine PDM_part_to_part_n_part_get
 
-
-subroutine PDM_part_to_part_iexch_wait (ptp,     &
-                                        request) &
-bind (c, name='PDM_part_to_part_iexch_wait')
-  ! Finalize a non-blocking exchange (Part1→Part2)
-  use iso_c_binding
-  implicit none
-
-  type(c_ptr),    value :: ptp     ! Part-to-Part instance
-  integer(c_int), value :: request ! Request
-
-end subroutine PDM_part_to_part_iexch_wait
-
-
-subroutine PDM_part_to_part_reverse_iexch_wait (ptp,     &
-                                                request) &
-bind (c, name='PDM_part_to_part_reverse_iexch_wait')
-  ! Finalize a non-blocking exchange (Part2→Part1)
-  use iso_c_binding
-  implicit none
-
-  type(c_ptr),    value :: ptp     ! Part-to-Part instance
-  integer(c_int), value :: request ! Request
-
-end subroutine PDM_part_to_part_reverse_iexch_wait
 
 
 !>
@@ -182,8 +139,7 @@ subroutine PDM_part_to_part_create (ptp,                &
                                     part1_to_part2_idx, &
                                     part1_to_part2,     &
                                     comm)
-  ! Create a Partition-to-Partition redistribution from global ids
-  use iso_c_binding
+  ! Create a Part-to-Part redistribution from global IDs
   implicit none
 
   type(c_ptr)                       :: ptp                ! Part-to-part instance
@@ -262,7 +218,6 @@ subroutine PDM_part_to_part_issend_raw (ptp,        &
                                         raw_buffer, &
                                         tag,        &
                                         request)
-  use iso_c_binding
   implicit none
 
   type(c_ptr), value                :: ptp
@@ -322,7 +277,6 @@ subroutine PDM_part_to_part_irecv_raw (ptp,        &
                                        raw_buffer, &
                                        tag,        &
                                        request)
-  use iso_c_binding
   implicit none
 
   type(c_ptr), value                :: ptp
@@ -374,7 +328,6 @@ subroutine PDM_part_to_part_iexch (ptp,              &
                                    part2_data,       &
                                    request)
   ! Initiate a non-blocking exchange (Part1→Part2)
-  use iso_c_binding
   implicit none
 
   type(c_ptr), value                 :: ptp              ! Part-to-part instance
@@ -390,14 +343,14 @@ subroutine PDM_part_to_part_iexch (ptp,              &
 
   integer                           :: n_part1
   integer                           :: n_part2
-  type(c_ptr)                       :: c_part1_stride 
-  type(c_ptr)                       :: c_part2_stride 
-  type(c_ptr)                       :: c_part2_data   
+  type(c_ptr)                       :: c_part1_stride
+  type(c_ptr)                       :: c_part2_stride
+  type(c_ptr)                       :: c_part2_data
   integer                           :: n_ref
-  integer(pdm_l_num_s), pointer     :: ref(:)                 
-  integer(pdm_l_num_s), pointer     :: gnum1_come_from_idx(:) 
-  integer(pdm_g_num_s), pointer     :: gnum1_come_from(:)     
-  integer(pdm_l_num_s), pointer     :: stride(:)              
+  integer(pdm_l_num_s), pointer     :: ref(:)
+  integer(pdm_l_num_s), pointer     :: gnum1_come_from_idx(:)
+  integer(pdm_g_num_s), pointer     :: gnum1_come_from(:)
+  integer(pdm_l_num_s), pointer     :: stride(:)
   integer                           :: s_part2_data
   integer                           :: i, j
 
@@ -575,7 +528,6 @@ subroutine PDM_part_to_part_reverse_iexch (ptp,              &
                                            part1_data,       &
                                            request)
   ! Initiate a non-blocking exchange (Part2→Part1)
-  use iso_c_binding
   implicit none
 
   type(c_ptr), value                :: ptp              ! Part-to-part instance
@@ -591,11 +543,11 @@ subroutine PDM_part_to_part_reverse_iexch (ptp,              &
 
   integer                           :: n_part1
   integer                           :: n_part2
-  type(c_ptr)                       :: c_part1_stride 
-  type(c_ptr)                       :: c_part1_data   
+  type(c_ptr)                       :: c_part1_stride
+  type(c_ptr)                       :: c_part1_data
   integer                           :: n_elt1
   integer(pdm_l_num_s), pointer     :: part1_to_part2_idx(:)
-  integer(pdm_l_num_s), pointer     :: stride(:)            
+  integer(pdm_l_num_s), pointer     :: stride(:)
   integer                           :: s_part1_data
   integer                           :: i, j
 
@@ -743,7 +695,6 @@ subroutine PDM_part_to_part_ref_lnum2_get (ptp,         &
                                            n_ref_lnum2, &
                                            ref_lnum2)
   ! Get referenced Part2 elements
-  use iso_c_binding
   implicit none
 
   type(c_ptr), value            :: ptp          ! Part-to-Part instance
@@ -791,7 +742,6 @@ subroutine PDM_part_to_part_unref_lnum2_get (ptp,           &
                                              n_unref_lnum2, &
                                              unref_lnum2)
   ! Get unreferenced Part2 elements
-  use iso_c_binding
   implicit none
 
   type(c_ptr), value            :: ptp            ! Part-to-Part instance
@@ -839,7 +789,6 @@ subroutine PDM_part_to_part_gnum1_come_from_get (ptp,                 &
                                                  gnum1_come_from_idx, &
                                                  gnum1_come_from)
   ! Get Part2→Part1 mapping for referenced Part2 elements
-  use iso_c_binding
   implicit none
 
   type(c_ptr), value            :: ptp                    ! Part-to-Part instance
@@ -848,7 +797,7 @@ subroutine PDM_part_to_part_gnum1_come_from_get (ptp,                 &
   integer(pdm_g_num_s), pointer :: gnum1_come_from(:)     ! Part2→Part1 mapping (global ids) (size = ``gnum1_come_from_idx(n_ref_lnum2 + 1)``)
 
   type(c_ptr)                   :: c_gnum1_come_from_idx
-  type(c_ptr)                   :: c_gnum1_come_from    
+  type(c_ptr)                   :: c_gnum1_come_from
   integer                       :: n_ref
   integer(pdm_l_num_s), pointer :: ref(:)
 
@@ -908,7 +857,6 @@ end subroutine PDM_part_to_part_gnum1_come_from_get
 subroutine PDM_part_to_part_gnum1_to_send_buffer_get (ptp,                      &
                                                       gnum1_to_send_buffer_idx, &
                                                       gnum1_to_send_buffer)
-  use iso_c_binding
   implicit none
 
   type(c_ptr), value                :: ptp
@@ -919,11 +867,11 @@ subroutine PDM_part_to_part_gnum1_to_send_buffer_get (ptp,                      
   integer                       :: n_part1
   integer                       :: n_part2
   integer                       :: n_elt1
-  integer(pdm_l_num_s), pointer :: part1_to_part2_idx(:)             
-  integer(pdm_l_num_s), pointer :: gnum1_to_send_buffer_idx_ipart(:) 
+  integer(pdm_l_num_s), pointer :: part1_to_part2_idx(:)
+  integer(pdm_l_num_s), pointer :: gnum1_to_send_buffer_idx_ipart(:)
 
-  type(c_ptr)                   :: c_gnum1_to_send_buffer_idx 
-  type(c_ptr)                   :: c_gnum1_to_send_buffer     
+  type(c_ptr)                   :: c_gnum1_to_send_buffer_idx
+  type(c_ptr)                   :: c_gnum1_to_send_buffer
 
   integer, allocatable          :: length_gnum1_to_send_buffer(:)
   integer, allocatable          :: length_gnum1_to_send_buffer_idx(:)
@@ -1013,7 +961,6 @@ end subroutine PDM_part_to_part_gnum1_to_send_buffer_get
 
 subroutine PDM_part_to_part_recv_buffer_to_ref_lnum2_get (ptp,                      &
                                                           recv_buffer_to_ref_lnum2)
-  use iso_c_binding
   implicit none
 
   type(c_ptr), value                 :: ptp
@@ -1023,9 +970,9 @@ subroutine PDM_part_to_part_recv_buffer_to_ref_lnum2_get (ptp,                  
   integer                       :: n_part1
   integer                       :: n_part2
   integer                       :: n_ref
-  integer(pdm_l_num_s), pointer :: ref(:)                 
-  integer(pdm_l_num_s), pointer :: gnum1_come_from_idx(:) 
-  integer(pdm_g_num_s), pointer :: gnum1_come_from(:)     
+  integer(pdm_l_num_s), pointer :: ref(:)
+  integer(pdm_l_num_s), pointer :: gnum1_come_from_idx(:)
+  integer(pdm_g_num_s), pointer :: gnum1_come_from(:)
 
   type(c_ptr)                   :: c_recv_buffer_to_ref_lnum2
   integer, allocatable          :: length_recv_buffer_to_ref_lnum2(:)
@@ -1099,7 +1046,6 @@ end subroutine PDM_part_to_part_recv_buffer_to_ref_lnum2_get
 subroutine PDM_part_to_part_default_send_buffer_get (ptp,                   &
                                                      default_n_send_buffer, &
                                                      default_i_send_buffer)
-  use iso_c_binding
   implicit none
 
   type(c_ptr), value            :: ptp
@@ -1155,7 +1101,6 @@ end subroutine PDM_part_to_part_default_send_buffer_get
 subroutine PDM_part_to_part_default_recv_buffer_get (ptp,                   &
                                                      default_n_recv_buffer, &
                                                      default_i_recv_buffer)
-  use iso_c_binding
   implicit none
 
   type(c_ptr), value            :: ptp
@@ -1181,7 +1126,7 @@ interface
   end subroutine PDM_part_to_part_default_recv_buffer_get_c
 end interface
 
-  c_default_n_recv_buffer = C_NULL_PTR  
+  c_default_n_recv_buffer = C_NULL_PTR
   c_default_i_recv_buffer = C_NULL_PTR
 
   call PDM_part_to_part_default_recv_buffer_get_c (ptp,                     &
@@ -1216,7 +1161,6 @@ subroutine PDM_part_to_part_part1_to_part2_idx_get (ptp,                &
                                                     i_part,             &
                                                     n_elt1,             &
                                                     part1_to_part2_idx)
-  use iso_c_binding
   implicit none
 
   type(c_ptr), value            :: ptp
@@ -1256,6 +1200,79 @@ end interface
 
 
 end subroutine PDM_part_to_part_part1_to_part2_idx_get
+
+
+
+subroutine PDM_part_to_part_iexch_wait(ptp,     &
+                                       request)
+  ! Finalize a non-blocking exchange (Part1→Part2)
+  implicit none
+
+  type(c_ptr), intent(in) :: ptp     ! Part-to-Part instance
+  integer,     intent(in) :: request ! Request
+
+  interface
+    subroutine PDM_part_to_part_iexch_wait_c(ptp,     &
+                                             request) &
+    bind (c, name='PDM_part_to_part_iexch_wait')
+      use iso_c_binding
+      implicit none
+      type(c_ptr),    value :: ptp
+      integer(c_int), value :: request
+    end subroutine PDM_part_to_part_iexch_wait_c
+  end interface
+
+  call PDM_part_to_part_iexch_wait_c(ptp,     &
+                                     request)
+
+end subroutine PDM_part_to_part_iexch_wait
+
+
+
+subroutine PDM_part_to_part_reverse_iexch_wait(ptp,     &
+                                               request)
+  ! Finalize a non-blocking exchange (Part2→Part1)
+  implicit none
+
+  type(c_ptr), intent(in) :: ptp     ! Part-to-Part instance
+  integer,     intent(in) :: request ! Request
+
+  interface
+    subroutine PDM_part_to_part_reverse_iexch_wait_c(ptp,     &
+                                                     request) &
+    bind (c, name='PDM_part_to_part_reverse_iexch_wait')
+      use iso_c_binding
+      implicit none
+      type(c_ptr),    value :: ptp
+      integer(c_int), value :: request
+    end subroutine PDM_part_to_part_reverse_iexch_wait_c
+  end interface
+
+  call PDM_part_to_part_reverse_iexch_wait_c(ptp,     &
+                                             request)
+
+end subroutine PDM_part_to_part_reverse_iexch_wait
+
+
+
+subroutine PDM_part_to_part_free(ptp)
+  ! Free a Part-to-part instance
+  implicit none
+
+  type(c_ptr), intent(inout) :: ptp ! Part-to-Part instance
+
+  interface
+    subroutine PDM_part_to_part_free_c(ptp) &
+    bind (c, name='PDM_part_to_part_free')
+      use iso_c_binding
+      implicit none
+      type(c_ptr), value :: ptp
+    end subroutine PDM_part_to_part_free_c
+  end interface
+
+  call PDM_part_to_part_free_c(ptp)
+
+end subroutine PDM_part_to_part_free
 
 
 end module pdm_part_to_part
