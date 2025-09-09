@@ -2366,7 +2366,7 @@ PDM_domain_interface_translate_entity1_entity2
     PDM_malloc(weight               [itrf], 2 * dn_interface[itrf], double     );
     dn_interface_twice[itrf] = 2*dn_interface[itrf];
 
-    if (1 == 1) {
+    if (0 == 1) {
       PDM_log_trace_array_long(interface_ids[itrf], 2 * dn_interface[itrf], "interface_ids:: ");
     }
 
