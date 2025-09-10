@@ -740,7 +740,7 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
   PDM_g_num_t **pgroup_ln_to_gn = NULL;
   if(dmne->n_group_elmt > 0) {
     PDM_part_distgroup_to_partgroup(dmne->comm,
-                                    NULL,
+                                    dmne->delmt_child_distrib,
                                     dmne->n_group_elmt,
                                     dmne->dgroup_elmt_idx,
                                     dmne->dgroup_elmt,
