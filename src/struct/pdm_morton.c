@@ -631,7 +631,7 @@ _define_rank_distrib(int                      dim,
 
   if(order == NULL) {
     gmax_level = 21;
-    uint64_t max     = 1l << (gmax_level * dim);
+    uint64_t max     = UINT64_C(1) << (gmax_level * dim);
     double   inv_max = 1./((double) max);
 
     /* morton_codes codes if not ordered !!!! */
