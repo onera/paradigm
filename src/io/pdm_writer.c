@@ -2185,11 +2185,10 @@ PDM_writer_var_data_free
 
     if (var->_val != NULL) {
 
-      const int n_ind = cs->geom_tab->n_geom;
+      const int n_ind = cs->geom_tab == NULL ? 0 : cs->geom_tab->n_geom;
 
       for (int i = 0; i < n_ind; i++) {
-        int idx = i;
-        PDM_writer_geom_t *geom = cs->geom_tab->geom[idx];
+        PDM_writer_geom_t *geom = cs->geom_tab->geom[i];
 
         if (geom == NULL) {
           PDM_error(__FILE__, __LINE__, 0, 
@@ -2199,11 +2198,9 @@ PDM_writer_var_data_free
 
         int n_part = geom->n_part;
 
-        if ((geom != NULL) && (var->_val[idx] != NULL)) {
+        if ((geom != NULL) && (var->_val[i] != NULL)) {
           for (int j = 0; j < n_part; j++) {
-            if (var->_val[idx][j] != NULL)
-              PDM_free(var->_val[idx][j]);
-            var->_val[idx][j] = NULL;
+            PDM_free(var->_val[i][j]);
           }
         }
       }
@@ -2242,6 +2239,7 @@ PDM_writer_var_free
       PDM_free(var->nom_var);
 
       const int n_ind = cs->geom_tab->n_geom;
+      const int n_ind = cs->geom_tab == NULL ? 0 : cs->geom_tab->n_geom;
 
       if (var->_val != NULL) {
         for (int i = 0; i < n_ind; i++) {
