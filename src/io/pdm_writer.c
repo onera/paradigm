@@ -2238,7 +2238,6 @@ PDM_writer_var_free
 
       PDM_free(var->nom_var);
 
-      const int n_ind = cs->geom_tab->n_geom;
       const int n_ind = cs->geom_tab == NULL ? 0 : cs->geom_tab->n_geom;
 
       if (var->_val != NULL) {
