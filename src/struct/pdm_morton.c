@@ -994,7 +994,7 @@ _intersect_node_box
 
   const PDM_morton_int_t level_diff = box_min.L - node.L;
 
-  const PDM_morton_int_t side = 1 << level_diff;
+  const PDM_morton_int_t side = UINT32_C(1) << level_diff;
 
   for (int i = 0; i < dim; i++) {
     PDM_morton_int_t xmin = side * node.X[i];
