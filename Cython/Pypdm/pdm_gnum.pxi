@@ -49,6 +49,8 @@ cdef class GlobalNumbering:
   # > Class attributes
   cdef PDM_gen_gnum_t* _gen_gnum
   cdef NPY.npy_intp[:] _n_elem_per_part
+  cdef _nuplet
+  cdef MPI.Comm _py_comm
   # --------------------------------------------------------------------------
 
   # --------------------------------------------------------------------------
@@ -77,6 +79,8 @@ cdef class GlobalNumbering:
     # ************************************************************************
     # > Init private array storing partition sizes
     self._n_elem_per_part = NPY.zeros(n_part, dtype=NPY.intp)
+    self._nuplet = set()
+    self._py_comm = comm
     # ************************************************************************
 
     # ************************************************************************
@@ -140,23 +144,29 @@ cdef class GlobalNumbering:
   # --------------------------------------------------------------------------
   def set_from_parent(self,
                       int i_part,
-                      NPY.ndarray[npy_pdm_gnum_t  , mode='c', ndim=1] parent_gnum not None):
+                      NPY.ndarray[npy_pdm_gnum_t  , mode='c', ndim=1] parent_gnum not None,
+                      nuplet=None):
     """
-    set_from_parent(i_part, n_elts, parent_gnum)
+    set_from_parent(i_part, n_elts, parent_gnum, nuplet=None)
 
     Set parent global numbering
 
     Parameters:
       i_part      (int)                    : Current partition
       parent_gnum (np.ndarray[np.double_t) : Parent global ids
+      nuplet (int, optional) : If provided, trigger nuplet mode with the specified size
     """
     # ************************************************************************
     # > Declaration
     # ************************************************************************
 
     # ************************************************************************
+    self._nuplet.add(nuplet)
+    if nuplet is None:
+      nuplet = 1
+
     # > Store size to use it in the get
-    cdef int n_elts = len(parent_gnum)
+    cdef int n_elts = len(parent_gnum) // nuplet
     self._n_elem_per_part[i_part] = n_elts
     # ************************************************************************
 
@@ -170,24 +180,19 @@ cdef class GlobalNumbering:
 
 
   # --------------------------------------------------------------------------
-  def set_parents_nuplet(self,
-                         int nuplet):
-    """
-    set_parents_nuplet(nuplet)
-
-    Set size of tuple for nuplet
-
-    Parameters:
-      nuplet (int) : Size of tuple
-    """
-    PDM_gnum_set_parents_nuplet(self._gen_gnum,
-                                nuplet)
-
-  # --------------------------------------------------------------------------
   def compute(self):
     """
     Build global numbering
     """
+    # Retrieve nuplet to call PDM_gnum_set_parents_nuplet (should be the same on each rank/part)
+    nuplet = self._py_comm.allreduce(self._nuplet, lambda s1,s2: s1 | s2)
+    if len(nuplet) == 1:
+      val = nuplet.pop()
+      if val is not None:
+        PDM_gnum_set_parents_nuplet(self._gen_gnum, val)
+    elif len(nuplet) > 1:
+      raise ValueError("Some partitions have been set with different ``nuplet`` value")
+
     PDM_gnum_compute(self._gen_gnum)
 
   # --------------------------------------------------------------------------

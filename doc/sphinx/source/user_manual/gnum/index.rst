@@ -97,7 +97,6 @@ API
 
         .. autofunction:: Pypdm.Pypdm.GlobalNumbering.set_from_coords
         .. autofunction:: Pypdm.Pypdm.GlobalNumbering.set_from_parent
-        .. autofunction:: Pypdm.Pypdm.GlobalNumbering.set_parents_nuplet
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
