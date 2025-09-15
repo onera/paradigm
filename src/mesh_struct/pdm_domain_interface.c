@@ -3131,7 +3131,9 @@ PDM_domain_interface_translate_entity1_entity2
         }
         PDM_sort_long(og_conn2, NULL, og_conn_size);
 
-        PDM_log_trace_array_long(og_conn2, og_conn_size, "  og_conn2 :: ");
+        if (0 == 1) {
+          PDM_log_trace_array_long(og_conn2, og_conn_size, "  og_conn2 :: ");
+        }
 
         int entities2_matching = 1;
         for (int i_entity=0; i_entity<og_conn_size; ++i_entity) {
