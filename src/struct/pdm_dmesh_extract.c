@@ -660,7 +660,7 @@ _dmesh_extract_1d
                                              dme->n_selected,
                                              dme->selected_gnum,
                                              distrib_edge,
-                                             dedge_vtx_idx,
+                                             _dedge_vtx_idx,
                                              dedge_vtx,
                                              &dme->distrib_extract                 [PDM_MESH_ENTITY_EDGE],
                                              &dme->parent_extract_gnum             [PDM_MESH_ENTITY_EDGE],
