@@ -2404,9 +2404,25 @@ PDM_geom_elem_edge_upwind_and_downwind
     PDM_malloc(poly_coord, max_face_vtx_n * 3, double);
   }
 
+  /* Compute majorant */
+  int n_max_cell_face = 0;
+  for (int iedge = 0; iedge < n_edge; iedge++) {
+
+    int ln_max_cell_face = 0;
+    for (int idx_vtx = 0; idx_vtx < 2; idx_vtx++) {
+      int vtx_id  = edge_vtx[2*iedge + idx_vtx] - 1;
+
+      for (int idx_cell = vtx_cell_idx[vtx_id]; idx_cell < vtx_cell_idx[vtx_id+1]; idx_cell++) {
+        int cell_id = PDM_ABS(vtx_cell[idx_cell]) - 1;
+        ln_max_cell_face += cell_face_idx[cell_id+1] - cell_face_idx[cell_id];
+      }
+    }
+    n_max_cell_face = PDM_MAX(n_max_cell_face, ln_max_cell_face);
+  }
+
   int *is_visited_face = PDM_array_zeros_int(n_face);
   int *visited_face;
-  PDM_malloc(visited_face, n_face, int);
+  PDM_malloc(visited_face, n_max_cell_face, int);
   int n_visited_face = 0;
 
   for (int iedge = 0; iedge < n_edge; iedge++) {
