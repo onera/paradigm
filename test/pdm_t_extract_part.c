@@ -7,6 +7,7 @@
 #include "pdm_array.h"
 #include "pdm_dcube_gen.h"
 #include "pdm_dmesh.h"
+#include "pdm_error.h"
 #include "pdm_extract_part.h"
 #include "pdm_logging.h"
 #include "pdm_mem_tool.h"
@@ -576,11 +577,11 @@ int main(int argc, char *argv[])
     /** Cell groups **/
     PDM_malloc(group_cell         [i_part], pn_cell[i_part], int        );
     PDM_malloc(group_cell_ln_to_gn[i_part], pn_cell[i_part], PDM_g_num_t);
-    
+
     int *group_cell_n = PDM_array_zeros_int(n_group_cell);
     for (int i_cell = 0; i_cell < pn_cell[i_part]; i_cell++) {
       PDM_g_num_t g_num = pcell_ln_to_gn[i_part][i_cell];
-      int i_group = (int) (g_num % 2);
+      int i_group = (int) (g_num % n_group_cell);
       group_cell_n[i_group]++;
     }
 
@@ -589,10 +590,10 @@ int main(int argc, char *argv[])
 
     for (int i_cell = 0; i_cell < pn_cell[i_part]; i_cell++) {
       PDM_g_num_t g_num = pcell_ln_to_gn[i_part][i_cell];
-      int i_group = (int) (g_num % 2);
+      int i_group = (int) (g_num % n_group_cell);
       int idx     = group_cell_idx[i_part][i_group] + group_cell_n[i_group]++;
       group_cell         [i_part][idx] = i_cell + 1;
-      group_cell_ln_to_gn[i_part][idx] = 1 + (g_num - 1) / 2;
+      group_cell_ln_to_gn[i_part][idx] = 1 + (g_num - 1) / n_group_cell;
     }
 
 
@@ -757,6 +758,13 @@ int main(int argc, char *argv[])
                                  &pextract_group_cell_ln_to_gn,
                                  &pextract_group_cell_parent_ln_to_gn,
                                   PDM_OWNERSHIP_KEEP);
+
+      for (int i = 0; i < pn_extract_group_cell; i++) {
+        int i_cell = pextract_group_cell[i] - 1;
+        if (pextract_parent_cell_ln_to_gn[i_cell] % n_group_cell != i_group) {
+          PDM_error(__FILE__, __LINE__, 0, "Error in cell group extraction\n");
+        }
+      }
     }
   }
 
