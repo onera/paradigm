@@ -467,10 +467,6 @@ int main(int argc, char *argv[])
                                n_fake_group_vtx);
 
   PDM_extract_part_n_group_set(extrp,
-                               PDM_BOUND_TYPE_FACE,
-                               n_bound+1);
-
-  PDM_extract_part_n_group_set(extrp,
                                PDM_BOUND_TYPE_CELL,
                                n_group_cell);
 
@@ -534,6 +530,9 @@ int main(int argc, char *argv[])
     }
 
     /** Face groups **/
+    PDM_extract_part_n_group_set(extrp,
+                                 PDM_BOUND_TYPE_FACE,
+                                 n_bound+1);
 
     /* Add n_bound+1 groups */
     int fake_group_n_face = group_face_idx[n_bound]-group_face_idx[n_bound-1];
