@@ -1063,7 +1063,7 @@ PDM_part_mesh_dump_ensight
   PDM_MPI_Comm_rank(pmesh->comm, &i_rank);
   PDM_MPI_Comm_size(pmesh->comm, &n_rank);
 
-  
+
   int *part_distrib = NULL;
   PDM_malloc(part_distrib, n_rank+1, int);
   part_distrib[0] = 0;
@@ -1088,7 +1088,7 @@ PDM_part_mesh_dump_ensight
   }
 
   PDM_writer_t *wrt = PDM_writer_create("Ensight",
-                                        PDM_WRITER_FMT_ASCII,
+                                        PDM_WRITER_FMT_BIN,
                                         PDM_WRITER_TOPO_CST,
                                         PDM_WRITER_OFF,
                                         directory,
@@ -1331,7 +1331,7 @@ PDM_part_mesh_dump_ensight
                                             &edge_vtx,
                                             &edge_vtx_idx,
                                             PDM_OWNERSHIP_KEEP);
-        
+
           PDM_compute_face_vtx_from_face_and_edge(n_face,
                                                   _face_vtx_idx,
                                                   face_edge,
@@ -1420,7 +1420,7 @@ PDM_part_mesh_dump_ensight
                                               face_ln_to_gn);
         }
       }
-    } 
+    }
     else if (bound_type == PDM_BOUND_TYPE_EDGE) {
       id_block = PDM_writer_geom_bloc_add(wrt,
                                           id_geom_bound[bound_type],
@@ -1452,7 +1452,7 @@ PDM_part_mesh_dump_ensight
                                      edge_vtx,
                                      edge_ln_to_gn);
       }
-    } 
+    }
     else if (bound_type == PDM_BOUND_TYPE_VTX) {
 
       id_block = PDM_writer_geom_bloc_add(wrt,
@@ -1554,17 +1554,17 @@ PDM_part_mesh_dump_ensight
         n_entity = PDM_extract_part_n_entity_get(extrp[bound_type],
                                                  i_part,
                                                  PDM_MESH_ENTITY_CELL);
-      } 
+      }
       else if (bound_type == PDM_BOUND_TYPE_FACE) {
         n_entity = PDM_extract_part_n_entity_get(extrp[bound_type],
                                                  i_part,
                                                  PDM_MESH_ENTITY_FACE);
-      } 
+      }
       else if (bound_type == PDM_BOUND_TYPE_EDGE) {
         n_entity = PDM_extract_part_n_entity_get(extrp[bound_type],
                                                  i_part,
                                                  PDM_MESH_ENTITY_EDGE);
-      }  
+      }
       else if (bound_type == PDM_BOUND_TYPE_VTX) {
         n_entity = PDM_extract_part_n_entity_get(extrp[bound_type],
                                                  i_part,
