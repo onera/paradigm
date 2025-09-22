@@ -34,20 +34,21 @@
  *  Local headers
  *----------------------------------------------------------------------------*/
 
-#include "pdm_part_mesh.h"
 #include "pdm.h"
+#include "pdm_distrib.h"
 #include "pdm_error.h"
 #include "pdm_extract_part.h"
-#include "pdm_io.h"
-#include "pdm_distrib.h"
 #include "pdm_gnum.h"
+#include "pdm_io.h"
+#include "pdm_logging.h"
 #include "pdm_mem_tool.h"
 #include "pdm_mpi.h"
-#include "pdm_partitioning_algorithm.h"
 #include "pdm_part_connectivity_transform.h"
 #include "pdm_part_mesh_priv.h"
-#include "pdm_writer.h"
+#include "pdm_part_mesh.h"
+#include "pdm_partitioning_algorithm.h"
 #include "pdm_priv.h"
+#include "pdm_writer.h"
 
 
 /*----------------------------------------------------------------------------*/
@@ -135,16 +136,16 @@ _build_extract_part_bound
                                        group_entity[i_part],
                                        PDM_OWNERSHIP_USER);
 
-    int n_cell                 = 0;
-    int n_face                 = 0;
-    int n_edge                 = 0;
-    int *cell_face_idx         = NULL;
-    int *cell_face             = NULL;
-    int *face_edge_idx         = NULL;
-    int *face_edge             = NULL;
-    int *face_vtx_idx          = NULL;
-    int *face_vtx              = NULL;
-    int *edge_vtx              = NULL;
+    int          n_cell        = 0;
+    int          n_face        = 0;
+    int          n_edge        = 0;
+    int         *cell_face_idx = NULL;
+    int         *cell_face     = NULL;
+    int         *face_edge_idx = NULL;
+    int         *face_edge     = NULL;
+    int         *face_vtx_idx  = NULL;
+    int         *face_vtx      = NULL;
+    int         *edge_vtx      = NULL;
     PDM_g_num_t *cell_ln_to_gn = NULL;
     PDM_g_num_t *face_ln_to_gn = NULL;
     PDM_g_num_t *edge_ln_to_gn = NULL;
@@ -1058,8 +1059,16 @@ PDM_part_mesh_dump_ensight
  PDM_bool_t       export_bounds
 )
 {
-  int i_rank;
+  int i_rank, n_rank;
   PDM_MPI_Comm_rank(pmesh->comm, &i_rank);
+  PDM_MPI_Comm_size(pmesh->comm, &n_rank);
+
+  
+  int *part_distrib = NULL;
+  PDM_malloc(part_distrib, n_rank+1, int);
+  part_distrib[0] = 0;
+  PDM_MPI_Scan(&pmesh->n_part, &part_distrib[1], 1, PDM_MPI_INT, PDM_MPI_SUM, pmesh->comm);
+
 
   /* Compute mesh highest dimension */
   int mesh_dimension = 2;
@@ -1079,7 +1088,7 @@ PDM_part_mesh_dump_ensight
   }
 
   PDM_writer_t *wrt = PDM_writer_create("Ensight",
-                                        PDM_WRITER_FMT_BIN,
+                                        PDM_WRITER_FMT_ASCII,
                                         PDM_WRITER_TOPO_CST,
                                         PDM_WRITER_OFF,
                                         directory,
@@ -1110,6 +1119,10 @@ PDM_part_mesh_dump_ensight
   for (int bound_type = 0; bound_type < PDM_BOUND_TYPE_MAX; bound_type++) {
     id_geom_bound[bound_type] = -1;
     extrp        [bound_type] = NULL;
+
+    if (bound_type == PDM_BOUND_TYPE_VTX) {
+      continue;
+    }
 
     // log_trace("%d %s\n", pmesh->n_group_bnd[bound_type], bound_type_name[bound_type]);
 
@@ -1270,38 +1283,82 @@ PDM_part_mesh_dump_ensight
     if (id_geom_bound[bound_type] < 0) continue;
 
     int id_block = -1;
-    if (bound_type == PDM_BOUND_TYPE_EDGE) {
-      id_block = PDM_writer_geom_bloc_add(wrt,
-                                          id_geom_bound[bound_type],
-                                          PDM_WRITER_BAR2,
-                                          PDM_OWNERSHIP_USER);
+
+    if (bound_type == PDM_BOUND_TYPE_CELL) {
 
       for (int i_part = 0; i_part < pmesh->n_part; i_part++) {
-        PDM_g_num_t *edge_ln_to_gn = NULL;
-        int n_edge = PDM_extract_part_ln_to_gn_get(extrp[bound_type],
+        PDM_g_num_t *cell_ln_to_gn = NULL;
+        int n_cell = PDM_extract_part_ln_to_gn_get(extrp[bound_type],
                                                    i_part,
-                                                   PDM_MESH_ENTITY_EDGE,
-                                                   &edge_ln_to_gn,
+                                                   PDM_MESH_ENTITY_CELL,
+                                                   &cell_ln_to_gn,
                                                    PDM_OWNERSHIP_KEEP);
 
-        int *edge_vtx     = NULL;
-        int *edge_vtx_idx = NULL;
+        int *cell_face     = NULL;
+        int *cell_face_idx = NULL;
         PDM_extract_part_connectivity_get(extrp[bound_type],
                                           i_part,
-                                          PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                          &edge_vtx,
-                                          &edge_vtx_idx,
+                                          PDM_CONNECTIVITY_TYPE_CELL_FACE,
+                                          &cell_face,
+                                          &cell_face_idx,
                                           PDM_OWNERSHIP_KEEP);
 
-        PDM_writer_geom_bloc_std_set(wrt,
-                                     id_geom_bound[bound_type],
-                                     id_block,
-                                     i_part,
-                                     n_edge,
-                                     edge_vtx,
-                                     edge_ln_to_gn);
+        int *face_vtx     = NULL;
+        int *face_vtx_idx = NULL;
+        int n_face = PDM_extract_part_connectivity_get(extrp[bound_type],
+                                                       i_part,
+                                                       PDM_CONNECTIVITY_TYPE_FACE_VTX,
+                                                       &face_vtx,
+                                                       &face_vtx_idx,
+                                                       PDM_OWNERSHIP_KEEP);
+
+        int *_face_vtx_idx = face_vtx_idx;
+
+        if (face_vtx_idx == NULL) {
+          int *face_edge     = NULL;
+          n_face = PDM_extract_part_connectivity_get(extrp[bound_type],
+                                                     i_part,
+                                                     PDM_CONNECTIVITY_TYPE_FACE_EDGE,
+                                                     &face_edge,
+                                                     &_face_vtx_idx,
+                                                     PDM_OWNERSHIP_KEEP);
+
+          int *edge_vtx     = NULL;
+          int *edge_vtx_idx = NULL;
+          PDM_extract_part_connectivity_get(extrp[bound_type],
+                                            i_part,
+                                            PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                            &edge_vtx,
+                                            &edge_vtx_idx,
+                                            PDM_OWNERSHIP_KEEP);
+        
+          PDM_compute_face_vtx_from_face_and_edge(n_face,
+                                                  _face_vtx_idx,
+                                                  face_edge,
+                                                  edge_vtx,
+                                                  &face_vtx);
+        }
+
+        PDM_writer_geom_cell3d_cellface_add(wrt,
+                                            id_geom_bound[bound_type],
+                                            i_part,
+                                            n_cell,
+                                            n_face,
+                                            _face_vtx_idx,
+                                            NULL,
+                                            face_vtx,
+                                            cell_face_idx,
+                                            NULL,
+                                            cell_face,
+                                            cell_ln_to_gn);
+
+        if (face_vtx_idx == NULL) {
+          PDM_free(face_vtx);
+        }
       }
-    } else if (bound_type == PDM_BOUND_TYPE_FACE) {
+
+    }
+    else if (bound_type == PDM_BOUND_TYPE_FACE) {
 
       for (int i_part = 0; i_part < pmesh->n_part; i_part++) {
         PDM_g_num_t *face_ln_to_gn = NULL;
@@ -1363,7 +1420,40 @@ PDM_part_mesh_dump_ensight
                                               face_ln_to_gn);
         }
       }
-    } else if (bound_type == PDM_BOUND_TYPE_VTX) {
+    } 
+    else if (bound_type == PDM_BOUND_TYPE_EDGE) {
+      id_block = PDM_writer_geom_bloc_add(wrt,
+                                          id_geom_bound[bound_type],
+                                          PDM_WRITER_BAR2,
+                                          PDM_OWNERSHIP_USER);
+
+      for (int i_part = 0; i_part < pmesh->n_part; i_part++) {
+        PDM_g_num_t *edge_ln_to_gn = NULL;
+        int n_edge = PDM_extract_part_ln_to_gn_get(extrp[bound_type],
+                                                   i_part,
+                                                   PDM_MESH_ENTITY_EDGE,
+                                                   &edge_ln_to_gn,
+                                                   PDM_OWNERSHIP_KEEP);
+
+        int *edge_vtx     = NULL;
+        int *edge_vtx_idx = NULL;
+        PDM_extract_part_connectivity_get(extrp[bound_type],
+                                          i_part,
+                                          PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                          &edge_vtx,
+                                          &edge_vtx_idx,
+                                          PDM_OWNERSHIP_KEEP);
+
+        PDM_writer_geom_bloc_std_set(wrt,
+                                     id_geom_bound[bound_type],
+                                     id_block,
+                                     i_part,
+                                     n_edge,
+                                     edge_vtx,
+                                     edge_ln_to_gn);
+      }
+    } 
+    else if (bound_type == PDM_BOUND_TYPE_VTX) {
 
       id_block = PDM_writer_geom_bloc_add(wrt,
                                           id_geom_bound[bound_type],
@@ -1425,7 +1515,7 @@ PDM_part_mesh_dump_ensight
     PDM_malloc(val_bound_id  [i_part], n_entity, PDM_real_t);
     PDM_malloc(val_bound_type[i_part], n_entity, PDM_real_t);
     for (int i = 0; i < n_entity; i++) {
-      val_num_part  [i_part][i] = i_rank * pmesh->n_part + i_part; // !! works only if each rank has the same nb of partitions
+      val_num_part  [i_part][i] = part_distrib[i_rank] + i_part;
       val_bound_id  [i_part][i] = 0;
       val_bound_type[i_part][i] = -1;
     }
@@ -1452,62 +1542,73 @@ PDM_part_mesh_dump_ensight
     PDM_free(val_bound_type[i_part]);
   }
 
+
   for (int bound_type = 0; bound_type < PDM_BOUND_TYPE_MAX; bound_type++) {
-    if (id_geom_bound[bound_type] >= 0) {
-
-      for (int i_part = 0; i_part < pmesh->n_part; i_part++) {
-        int n_entity = 0;
-        if (bound_type == PDM_BOUND_TYPE_EDGE) {
-          n_entity = PDM_extract_part_n_entity_get(extrp[bound_type],
-                                                   i_part,
-                                                   PDM_MESH_ENTITY_EDGE);
-        } else if (bound_type == PDM_BOUND_TYPE_FACE) {
-          n_entity = PDM_extract_part_n_entity_get(extrp[bound_type],
-                                                   i_part,
-                                                   PDM_MESH_ENTITY_FACE);
-        } else if (bound_type == PDM_BOUND_TYPE_VTX) {
-          n_entity = PDM_extract_part_n_entity_get(extrp[bound_type],
-                                                   i_part,
-                                                   PDM_MESH_ENTITY_VTX);
-        }
-
-        PDM_malloc(val_num_part  [i_part], n_entity, PDM_real_t);
-        PDM_malloc(val_bound_type[i_part], n_entity, PDM_real_t);
-        for (int k = 0; k < n_entity; k++) {
-          val_num_part  [i_part][k] = i_rank * pmesh->n_part + i_part; // !! works only if each rank has the same nb of partitions
-          val_bound_type[i_part][k] = bound_type;
-        }
-
-        PDM_malloc(val_bound_id[i_part],n_entity,PDM_real_t);
-        for (int bound_id = 0; bound_id < pmesh->n_group_bnd[bound_type]; bound_id++) {
-          for (int k = pmesh->pconcat_bound_idx[bound_type][i_part][bound_id]; k < pmesh->pconcat_bound_idx[bound_type][i_part][bound_id+1]; k++) {
-            val_bound_id[i_part][k] = bound_id+1;
-          }
-        }
-
-        PDM_writer_var_set(wrt,
-                           id_var_num_part,
-                           id_geom_bound[bound_type],
-                           i_part,
-                           val_num_part[i_part]);
-        PDM_free(val_num_part[i_part]);
-
-        PDM_writer_var_set(wrt,
-                           id_var_bound_id,
-                           id_geom_bound[bound_type],
-                           i_part,
-                           val_bound_id[i_part]);
-        PDM_free(val_bound_id[i_part]);
-
-        PDM_writer_var_set(wrt,
-                           id_var_bound_type,
-                           id_geom_bound[bound_type],
-                           i_part,
-                           val_bound_type[i_part]);
-        PDM_free(val_bound_type[i_part]);
-      }
+    if (id_geom_bound[bound_type] < 0) {
+      continue;
     }
-  }
+
+    for (int i_part = 0; i_part < pmesh->n_part; i_part++) {
+      int n_entity = 0;
+      if (bound_type == PDM_BOUND_TYPE_CELL) {
+        n_entity = PDM_extract_part_n_entity_get(extrp[bound_type],
+                                                 i_part,
+                                                 PDM_MESH_ENTITY_CELL);
+      } 
+      else if (bound_type == PDM_BOUND_TYPE_FACE) {
+        n_entity = PDM_extract_part_n_entity_get(extrp[bound_type],
+                                                 i_part,
+                                                 PDM_MESH_ENTITY_FACE);
+      } 
+      else if (bound_type == PDM_BOUND_TYPE_EDGE) {
+        n_entity = PDM_extract_part_n_entity_get(extrp[bound_type],
+                                                 i_part,
+                                                 PDM_MESH_ENTITY_EDGE);
+      }  
+      else if (bound_type == PDM_BOUND_TYPE_VTX) {
+        n_entity = PDM_extract_part_n_entity_get(extrp[bound_type],
+                                                 i_part,
+                                                 PDM_MESH_ENTITY_VTX);
+      }
+
+      PDM_malloc(val_num_part  [i_part], n_entity, PDM_real_t);
+      PDM_malloc(val_bound_type[i_part], n_entity, PDM_real_t);
+      for (int i_entity = 0; i_entity < n_entity; i_entity++) {
+        val_num_part  [i_part][i_entity] = part_distrib[i_rank] + i_part;
+        val_bound_type[i_part][i_entity] = bound_type;
+      }
+
+      PDM_malloc(val_bound_id[i_part], n_entity, PDM_real_t);
+      for (int bound_id = 0; bound_id < pmesh->n_group_bnd[bound_type]; bound_id++) {
+        for (int k = pmesh->pconcat_bound_idx[bound_type][i_part][bound_id]; k < pmesh->pconcat_bound_idx[bound_type][i_part][bound_id+1]; k++) {
+          val_bound_id[i_part][k] = bound_id+1;
+        }
+      }
+
+      PDM_writer_var_set(wrt,
+                          id_var_num_part,
+                          id_geom_bound[bound_type],
+                          i_part,
+                          val_num_part[i_part]);
+      PDM_free(val_num_part[i_part]);
+
+      PDM_writer_var_set(wrt,
+                          id_var_bound_id,
+                          id_geom_bound[bound_type],
+                          i_part,
+                          val_bound_id[i_part]);
+      PDM_free(val_bound_id[i_part]);
+
+      PDM_writer_var_set(wrt,
+                          id_var_bound_type,
+                          id_geom_bound[bound_type],
+                          i_part,
+                          val_bound_type[i_part]);
+      PDM_free(val_bound_type[i_part]);
+    } // End loop on parts
+  } // End loop on bound types
+  PDM_free(part_distrib);
+
 
   /* Write variables */
   PDM_writer_var_write(wrt,
