@@ -631,7 +631,7 @@ _define_rank_distrib(int                      dim,
 
   if(order == NULL) {
     gmax_level = 21;
-    uint64_t max     = 1l << (gmax_level * dim);
+    uint64_t max     = UINT64_C(1) << (gmax_level * dim);
     double   inv_max = 1./((double) max);
 
     /* morton_codes codes if not ordered !!!! */
@@ -994,7 +994,7 @@ _intersect_node_box
 
   const PDM_morton_int_t level_diff = box_min.L - node.L;
 
-  const PDM_morton_int_t side = 1 << level_diff;
+  const PDM_morton_int_t side = UINT32_C(1) << level_diff;
 
   for (int i = 0; i < dim; i++) {
     PDM_morton_int_t xmin = side * node.X[i];

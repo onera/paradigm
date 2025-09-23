@@ -11,6 +11,7 @@
 #include "pdm_error.h"
 #include "pdm_part_coarse_mesh_priv.h"
 #include "pdm_part_renum.h"
+#include "pdm_writer.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -408,6 +409,7 @@ void
 
  PDM_part_renum_method_purge();
  PDM_coarse_mesh_method_purge();
+ PDM_writer_fmt_free();
 
 }
 
