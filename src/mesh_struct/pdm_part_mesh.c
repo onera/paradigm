@@ -1065,7 +1065,7 @@ PDM_part_mesh_dump_ensight
 
 
   int part_offset = 0;
-  PDM_MPI_Scan(&pmesh->n_part, &part_offset, 1, PDM_MPI_INT, PDM_MPI_SUM, comm);
+  PDM_MPI_Scan(&pmesh->n_part, &part_offset, 1, PDM_MPI_INT, PDM_MPI_SUM, pmesh->comm);
 
 
   /* Compute mesh highest dimension */
