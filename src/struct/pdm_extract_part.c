@@ -249,21 +249,31 @@ _extract_part_group
   PDM_MPI_Comm_rank(extrp->comm, &i_rank);
 
   PDM_mesh_entities_t entity_type = PDM_MESH_ENTITY_MAX;
-  int* n_entity = 0;
-  if(bound_type == PDM_BOUND_TYPE_FACE) {
-    entity_type = PDM_MESH_ENTITY_FACE;
-    n_entity = extrp->n_face;
-  }
-  else if(bound_type == PDM_BOUND_TYPE_EDGE) {
-    entity_type = PDM_MESH_ENTITY_EDGE;
-    n_entity = extrp->n_edge;
-  }
-  else if(bound_type == PDM_BOUND_TYPE_VTX) {
-    entity_type = PDM_MESH_ENTITY_VTX;
-    n_entity = extrp->n_vtx;
-  }
-  else {
-    return;
+  int *n_entity = NULL;
+  switch (bound_type) {
+    case PDM_BOUND_TYPE_CELL: {
+      entity_type = PDM_MESH_ENTITY_CELL;
+      n_entity    = extrp->n_cell;
+      break;
+    }
+    case PDM_BOUND_TYPE_FACE: {
+      entity_type = PDM_MESH_ENTITY_FACE;
+      n_entity    = extrp->n_face;
+      break;
+    }
+    case PDM_BOUND_TYPE_EDGE: {
+      entity_type = PDM_MESH_ENTITY_EDGE;
+      n_entity    = extrp->n_edge;
+      break;
+    }
+    case PDM_BOUND_TYPE_VTX: {
+      entity_type = PDM_MESH_ENTITY_VTX;
+      n_entity    = extrp->n_vtx;
+      break;
+    }
+    default: {
+      return;
+    }
   }
 
   PDM_part_to_part_t* ptp = extrp->ptp_entity[entity_type];
@@ -302,7 +312,7 @@ _extract_part_group
     }
 
     int *entity_send_idx;
-    PDM_malloc(entity_send_idx, (n_entity[i_part] +1) ,int        );
+    PDM_malloc(entity_send_idx, n_entity[i_part] + 1, int);
     entity_send_idx[0] = 0;
     for(int i_entity = 0; i_entity < n_entity[i_part]; ++i_entity) {
       entity_send_idx[i_entity+1] = entity_send_idx[i_entity] + entity_send_n[i_part][i_entity];
@@ -328,7 +338,7 @@ _extract_part_group
     PDM_free(entity_send_idx);
   }
 
-  int           exch_request = -1;
+  int   exch_request        = -1;
   int **pextract_entity_tag = NULL;
   int **pextract_entity_n   = NULL;
   PDM_part_to_part_reverse_iexch(ptp,
@@ -2720,7 +2730,8 @@ _extract_part
       }
       PDM_free(pedge_vtx_idx);
 
-    } else if(from_face_vtx == 1){
+    } 
+    else if(from_face_vtx == 1){
 
       _extract_and_local_renum_entity1_entity2(extrp->comm,
                                                extrp->compute_child_gnum,
@@ -2905,15 +2916,15 @@ _extract_part
     int* n_entity;
     PDM_mesh_entities_t native_entity;
     if (extrp->dim == 3) {
-      n_entity = extrp->n_cell;
+      n_entity      = extrp->n_cell;
       native_entity = PDM_MESH_ENTITY_CELL;
     }
     else if (extrp->dim == 2) {
-      n_entity = extrp->n_face;
+      n_entity      = extrp->n_face;
       native_entity = PDM_MESH_ENTITY_FACE;
     }
     else {
-      n_entity = extrp->n_edge;
+      n_entity      = extrp->n_edge;
       native_entity = PDM_MESH_ENTITY_EDGE;
     }
     
@@ -2939,7 +2950,7 @@ _extract_part
   }
 
   /* Groups */
-  for (PDM_bound_type_t i_bound = PDM_BOUND_TYPE_FACE; i_bound < PDM_BOUND_TYPE_MAX; i_bound++) {
+  for (PDM_bound_type_t i_bound = PDM_BOUND_TYPE_CELL; i_bound < PDM_BOUND_TYPE_MAX; i_bound++) {
 
 
     if (extrp->n_group[i_bound] <= 0) {
@@ -2963,6 +2974,10 @@ _extract_part
       }
       case PDM_MESH_ENTITY_FACE: {
         old_ln_to_gn = extrp->face_ln_to_gn;
+        break;
+      }
+      case PDM_MESH_ENTITY_CELL: {
+        old_ln_to_gn = extrp->cell_ln_to_gn;
         break;
       }
       default: {
