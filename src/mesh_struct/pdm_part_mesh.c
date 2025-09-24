@@ -1064,10 +1064,8 @@ PDM_part_mesh_dump_ensight
   PDM_MPI_Comm_size(pmesh->comm, &n_rank);
 
 
-  int *part_distrib = NULL;
-  PDM_malloc(part_distrib, n_rank+1, int);
-  part_distrib[0] = 0;
-  PDM_MPI_Scan(&pmesh->n_part, &part_distrib[1], 1, PDM_MPI_INT, PDM_MPI_SUM, pmesh->comm);
+  int part_offset = 0;
+  PDM_MPI_Scan(&pmesh->n_part, &part_offset, 1, PDM_MPI_INT, PDM_MPI_SUM, comm);
 
 
   /* Compute mesh highest dimension */
@@ -1515,7 +1513,7 @@ PDM_part_mesh_dump_ensight
     PDM_malloc(val_bound_id  [i_part], n_entity, PDM_real_t);
     PDM_malloc(val_bound_type[i_part], n_entity, PDM_real_t);
     for (int i = 0; i < n_entity; i++) {
-      val_num_part  [i_part][i] = part_distrib[i_rank] + i_part;
+      val_num_part  [i_part][i] = part_offset + i_part;
       val_bound_id  [i_part][i] = 0;
       val_bound_type[i_part][i] = -1;
     }
@@ -1574,7 +1572,7 @@ PDM_part_mesh_dump_ensight
       PDM_malloc(val_num_part  [i_part], n_entity, PDM_real_t);
       PDM_malloc(val_bound_type[i_part], n_entity, PDM_real_t);
       for (int i_entity = 0; i_entity < n_entity; i_entity++) {
-        val_num_part  [i_part][i_entity] = part_distrib[i_rank] + i_part;
+        val_num_part  [i_part][i_entity] = part_offset + i_part;
         val_bound_type[i_part][i_entity] = bound_type;
       }
 
@@ -1607,7 +1605,6 @@ PDM_part_mesh_dump_ensight
       PDM_free(val_bound_type[i_part]);
     } // End loop on parts
   } // End loop on bound types
-  PDM_free(part_distrib);
 
 
   /* Write variables */
