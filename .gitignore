@@ -24,6 +24,7 @@ doc/sphinx/source/user_manual/mesh_transform/mesh_deform.rst
 doc/sphinx/source/user_manual/partitioning/renumbering.rst
 doc/sphinx/source/user_manual/util/index.rst
 doc/sphinx/source/user_manual/util/mesh_eval.rst
+doc/sphinx/source/changelog.rst
 \#*
 nbproject
 build

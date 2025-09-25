@@ -32,6 +32,7 @@
   - New theme
   - Rearrange families of features
   - Improve description of features
+- PDM_dist_cloud_surf: Remove 'partial' argument in free
 - PDM_extract_part: Add ownership in accessors
 - PDM_mpi: Replace Issend by Isend
 - PDM_part_comm_graph: Add ownership
@@ -41,7 +42,7 @@
 - PDM_point_location, PDM_mean_values: Improve interpolation weights for points located outside polyhedral cells (used in PDM_mesh_location )
 ### Deprecated
 ### Removed
-- Old and unfinished source files and tests
+- Obsolete and unfinished source files and tests
 ### Fixed
 - Porting to gcc14, gcc15 and Cython 3 (tested in GitLab CI)
 - PDM_gnum :
