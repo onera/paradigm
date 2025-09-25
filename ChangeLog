@@ -1,3 +1,68 @@
+## [2.7.0] - 2025-09-27
+### Added
+- PDM_convex: New file for convex geometry computations (eg. point-in-convex-hull query)
+- PDM_extract_part: Add support for volume groups
+- PDM_isosurface: Add Fortran API
+- PDM_multipart: Enable use of user-defined target partitions
+- PDM_part_comm_graph: Add "with nuplet" mode
+- PDM_part_mesh: Embedded PDM_part_comm_graph
+- PDM_part_mesh_nodal:
+  - Compute dual volumes
+  - Find topological ridges and corners
+  - Embedded PDM_part_comm_graph
+- PDM_part_to_part: Add Python interface for creation from triplets
+- PDM_rotation: New file for handling rigid-body rotations
+- Unit tests:
+  - algorithm: PDM_binary_search, PDM_hash_tab, PDM_quick_sort, PDM_sort
+  - exchange_protocol: PDM_part_to_part
+  - geometry: PDM_ho_basis, PDM_part_mesh_nodal, PDM_polygon, PDM_predicate
+  - gnum_utils: PDM_gnum_location
+  - mesh: PDM_closest_points, PDM_mesh_location
+  - mesh_struct: PDM_part_domain_interface, PDM_part_mesh
+  - mesh_topology: PDM_cellface_orient
+  - meshgen: PDM_box_gen, PDM_point_cloud_gen, PDM_sphere_surf_gen, PDM_sphere_vol_gen
+  - ppart: PDM_multipart, PDM_partitioning_algorithm
+  - struct: PDM_linear_programming
+- Documentation:
+  - More documented features with some examples of use
+  - Add release notes
+### Changed
+- Cleaner organization of source files
+- Documentation:
+  - New theme
+  - Rearrange families of features
+  - Improve description of features
+- PDM_extract_part: Add ownership in accessors
+- PDM_mpi: Replace Issend by Isend
+- PDM_part_comm_graph: Add ownership
+- PDM_part_mesh_nodal:
+  - Split setter for vertices into 2 functions: coordinates and global IDs
+  - Add ownership arguments
+- PDM_point_location, PDM_mean_values: Improve interpolation weights for points located outside polyhedral cells (used in PDM_mesh_location )
+### Deprecated
+### Removed
+- Old and unfinished source files and tests
+### Fixed
+- Porting to gcc14, gcc15 and Cython 3 (tested in GitLab CI)
+- PDM_gnum :
+  - Fix Python API for "from parent" mode with nuplet
+  - Fix Fortran interface
+- Removed memory leaks
+## [2.6.2] - 2024-05-16
+### Added
+### Changed
+### Deprecated
+### Removed
+### Fixed
+- PDM_dmesh_nodal_to_dmesh : disable async mode
+- PDM_gnum : Rewrite a loop breaking icc compiler optimizations
+## [2.6.1] - 2024-03-12
+### Added
+### Changed
+### Deprecated
+### Removed
+### Fixed
+- PDM_part_coarse_mesh : int / long int fixes
 ## [2.6.0] - 2024-12-13
 ### Added
 - PDM_dmesh, PDM_dmesh_nodal : Add function to find topological ridges
