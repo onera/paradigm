@@ -3,12 +3,45 @@
 #include "doctest/doctest.h"
 #include "doctest/extensions/doctest_mpi.h"
 #include "pdm.h"
-#include "pdm_doctest.h"
-#include "pdm_gnum.h"
-#include "pdm_logging.h"
-#include "pdm_mpi.h"
 #include "pdm_distrib.h"
+#include "pdm_doctest.h"
+#include "pdm_logging.h"
 #include "pdm_mem_tool.h"
+#include "pdm_mpi.h"
+
+
+MPI_TEST_CASE("[PDM_distrib_compute] - 1p", 1) {
+
+  PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
+
+  int i_rank;
+  int n_rank;
+  PDM_MPI_Comm_rank(pdm_comm, &i_rank);
+  PDM_MPI_Comm_size(pdm_comm, &n_rank);
+
+  PDM_g_num_t* distrib;
+  PDM_malloc(distrib, n_rank+1, PDM_g_num_t);
+
+  int dnelmt = 10;
+
+  SUBCASE("No offset") {
+    int offset = 0;
+    PDM_distrib_compute(dnelmt, distrib, offset, pdm_comm);
+
+    std::vector<PDM_g_num_t> distrib_expected = { 1, 11};
+    MPI_CHECK_EQ_C_ARRAY(0, distrib, distrib_expected.data(), n_rank+1);
+  }
+
+  SUBCASE("With offset") {
+    int offset = 20;
+    PDM_distrib_compute(dnelmt, distrib, offset, pdm_comm);
+
+    std::vector<PDM_g_num_t> distrib_expected = { 21, 31};
+    MPI_CHECK_EQ_C_ARRAY(0, distrib, distrib_expected.data(), n_rank+1);
+  }
+
+  PDM_free(distrib);
+}
 
 
 MPI_TEST_CASE("[PDM_distrib_compute] - 2p",2) {
@@ -23,13 +56,46 @@ MPI_TEST_CASE("[PDM_distrib_compute] - 2p",2) {
 
   int dn_elmt = pdn_elmt[i_rank];
   std::vector<PDM_g_num_t> distrib(n_rank+1);
-  PDM_distrib_compute(dn_elmt, distrib.data(), -1, pdm_comm);
 
-  PDM_g_num_t expected_distrib[3] = {0, 4, 12};
+  SUBCASE("No offset") {
+    int offset = -1;
+    PDM_distrib_compute(dn_elmt, distrib.data(), offset, pdm_comm);
 
-  CHECK_EQ_C_ARRAY(distrib.data(), expected_distrib, n_rank+1);
+    PDM_g_num_t expected_distrib[3] = {0, 4, 12};
 
+    CHECK_EQ_C_ARRAY(distrib.data(), expected_distrib, n_rank+1);
+  }
+
+  SUBCASE("With offset") {
+    int offset = 19;
+    PDM_distrib_compute(dn_elmt, distrib.data(), offset, pdm_comm);
+
+    PDM_g_num_t expected_distrib[3] = {20, 24, 32};
+
+    CHECK_EQ_C_ARRAY(distrib.data(), expected_distrib, n_rank+1);
+  }
 }
+
+
+MPI_TEST_CASE("[PDM_compute_entity_distribution] - 1p",1) {
+
+  PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
+
+  int i_rank;
+  int n_rank;
+  PDM_MPI_Comm_rank(pdm_comm, &i_rank);
+  PDM_MPI_Comm_size(pdm_comm, &n_rank);
+
+  int dnelmt = 10;
+
+  PDM_g_num_t* distrib = PDM_compute_entity_distribution(pdm_comm, dnelmt);
+
+  std::vector<PDM_g_num_t> distrib_expected = {0, 10};
+  MPI_CHECK_EQ_C_ARRAY(0, distrib, distrib_expected.data(), n_rank+1);
+
+  PDM_free(distrib);
+}
+
 
 MPI_TEST_CASE("[PDM_compute_entity_distribution] - 2p",2) {
 
@@ -44,8 +110,35 @@ MPI_TEST_CASE("[PDM_compute_entity_distribution] - 2p",2) {
 
   PDM_g_num_t* distrib = PDM_compute_entity_distribution(pdm_comm, dn_elmt);
 
+  std::vector<PDM_g_num_t> distrib_expected = {0, 4, 12};
+  CHECK_EQ_C_ARRAY(distrib, distrib_expected.data(), n_rank+1);
+
   PDM_free(distrib);
 }
+
+
+MPI_TEST_CASE("[PDM_compute_uniform_entity_distribution] - 1p",1) {
+
+  PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
+
+  int i_rank;
+  int n_rank;
+  PDM_MPI_Comm_rank(pdm_comm, &i_rank);
+  PDM_MPI_Comm_size(pdm_comm, &n_rank);
+
+  PDM_g_num_t n_g_elmt = 9;
+  PDM_g_num_t* distrib = PDM_compute_uniform_entity_distribution(pdm_comm, n_g_elmt);
+
+  int dn_elemt = PDM_compute_uniform_dn_entity(pdm_comm, n_g_elmt);
+
+  MPI_CHECK(0, dn_elemt == 9);
+
+  std::vector<PDM_g_num_t> distrib_expected = { 0, 9};
+  MPI_CHECK_EQ_C_ARRAY(0, distrib, distrib_expected.data(), n_rank+1);
+
+  PDM_free(distrib);
+}
+
 
 MPI_TEST_CASE("[PDM_compute_uniform_entity_distribution] - 2p",2) {
 
@@ -65,7 +158,6 @@ MPI_TEST_CASE("[PDM_compute_uniform_entity_distribution] - 2p",2) {
 
   PDM_free(distrib);
 }
-
 
 
 MPI_TEST_CASE("[PDM_compute_uniform_entity_distribution_from_partition] - 2p",2) {
