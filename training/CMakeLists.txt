@@ -1,9 +1,5 @@
 include(check_python_module)
 
-if (PDM_ENABLE_FORTRAN)
-  check_python_module(sphinxfortran REQUIRED)
-endif()
-
 find_package(Jupyter REQUIRED)
 find_package(Jupytext REQUIRED)
 
@@ -49,7 +45,7 @@ foreach(_md_file IN ITEMS ${SOURCES_JUPITEXT})
   add_custom_command(OUTPUT ${_ipynb_file}
                      COMMAND ${JUPYTEXT_EXECUTABLE} --to ipynb ${_md_file} -o ${_ipynb_file} -q
                      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-                     DEPENDS 
+                     DEPENDS
                      ${JUPYTEXT_DEP}
                      MAIN_DEPENDENCY ${_md_file}
                      VERBATIM)

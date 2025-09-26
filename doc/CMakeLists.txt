@@ -9,6 +9,7 @@ if(PDM_ENABLE_DOC)
     find_package(Doxygen 1.8.9 REQUIRED)
     find_package(Sphinx 6 REQUIRED)
     find_package(Breathe REQUIRED)
+    include(check_python_module)
 
     #------------------------------------------------------------------------------
     # Build doxygen documentation
@@ -25,6 +26,13 @@ if(PDM_ENABLE_DOC)
     if(NOT BREATHE_FOUND)
         message(FATAL_ERROR "Breathe is needed to build the documentation.")
     endif()
+
+    # Check that the required Sphinx extensions are available
+    if (PDM_ENABLE_FORTRAN)
+      check_python_module(sphinxfortran REQUIRED)
+    endif()
+    check_python_module(sphinx_copybutton REQUIRED)
+    check_python_module(sphinx_design REQUIRED)
 
     set(DOXYFILE_IN ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in)
     set(DOXYFILE_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
