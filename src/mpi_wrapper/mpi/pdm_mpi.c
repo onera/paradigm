@@ -2012,6 +2012,26 @@ int PDM_MPI_Wait(PDM_MPI_Request *request)
 
 
 /*----------------------------------------------------------------------------
+ * PDM_MPI_Waitall (wrapping de la fonction PDM_MPI_Waitall)
+ *
+ *----------------------------------------------------------------------------*/
+int
+PDM_MPI_Waitall(int count, PDM_MPI_Request array_of_requests[]) {
+  int code = 0;
+  // Can also be done with : PDM_MPI_Waitall(count, array_of_requests, MPI_STATUSES_IGNORE)
+  // But need request copy
+  for(int i = 0; i < count; ++i) {
+    code = PDM_MPI_Wait(&array_of_requests[i]);
+    assert(code == 0);
+  }
+  return code;
+}
+
+
+
+
+
+/*----------------------------------------------------------------------------
  * PDM_MPI_Request_free (wrapping de la fonction MPI_Request_free)
  *
  *----------------------------------------------------------------------------*/

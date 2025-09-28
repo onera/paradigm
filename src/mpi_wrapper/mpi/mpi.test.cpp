@@ -421,3 +421,100 @@ MPI_TEST_CASE("[PDM_MPI_Partofactiverank]", 4) {
                              &part_active_rank3);
     CHECK(part_active_rank3 == doctest::Approx(0.25).epsilon(0.01));
 }
+
+
+
+
+MPI_TEST_CASE("[PDM_MPI_Sends_init/PDM_MPI_Recvs_init]", 2) {
+
+  PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
+  int i_rank;
+  int n_rank;
+  PDM_MPI_Comm_rank (pdm_comm, &i_rank);
+  PDM_MPI_Comm_size (pdm_comm, &n_rank);
+
+  std::vector<std::vector<int>> send_buf = {{1, 2, 3}, {-1, -2, -3}};
+  std::vector<std::vector<int>> send_n   = {{1, 2   }, {3, 0   }};
+  std::vector<std::vector<int>> send_idx = {{0, 1   }, {0, 3   }};
+
+  std::vector<int> recv_n(n_rank);
+  PDM_MPI_Alltoall(send_n[i_rank].data(), 1, PDM_MPI_INT,
+                   recv_n        .data(), 1, PDM_MPI_INT,
+                   pdm_comm);
+
+  std::vector<int> recv_idx(n_rank+1, 0);
+  for(int i = 0; i < n_rank; ++i) {
+    recv_idx[i+1] = recv_idx[i] + recv_n[i];
+  }
+
+  std::vector<int> n_active_send = {2, 1};
+  std::vector<int> n_active_recv = {2, 1};
+  std::vector<std::vector<int>> active_rank_send = {{0, 1}, {0}};
+  std::vector<std::vector<int>> active_rank_recv = {{0, 1}, {0}};
+
+  std::vector<int> recv_buf(recv_idx[n_rank], -10000);
+  PDM_MPI_Request *requests_send;
+  PDM_MPI_Request *requests_recv;
+
+  // Same but with shortcut
+  PDM_MPI_Sends_init(send_buf[i_rank].data(),
+                     send_n  [i_rank].data(),
+                     send_idx[i_rank].data(),
+                     PDM_MPI_INT,
+                     n_active_send   [i_rank],
+                     active_rank_send[i_rank].data(),
+                     10,
+                     pdm_comm,
+                     &requests_send);
+
+  PDM_MPI_Recvs_init(recv_buf.data(),
+                     recv_n  .data(),
+                     recv_idx.data(),
+                     PDM_MPI_INT,
+                     n_active_recv   [i_rank],
+                     active_rank_recv[i_rank].data(),
+                     10,
+                     pdm_comm,
+                     &requests_recv);
+
+  int recv_buf_expected_p0[4] = {1, -1, -2, -3};
+  int recv_buf_expected_p1[2] = {2, 3};
+  for(int i_iter = 0; i_iter < 5; ++i_iter) {
+
+    PDM_MPI_Startall(n_active_recv[i_rank], requests_recv);
+    PDM_MPI_Startall(n_active_send[i_rank], requests_send);
+
+    PDM_MPI_Waitall(n_active_recv[i_rank], requests_recv);
+    PDM_MPI_Waitall(n_active_send[i_rank], requests_send);
+
+    MPI_CHECK_EQ_C_ARRAY(0, recv_buf.data(), recv_buf_expected_p0, 4);
+    MPI_CHECK_EQ_C_ARRAY(1, recv_buf.data(), recv_buf_expected_p1, 2);
+
+
+    // Fake buffer changement for all iteration
+    for(int k = 0; k < recv_idx[n_rank]; ++k) {
+      recv_buf[k] = -1;
+    }
+
+    for(int k = 0; k < static_cast<int>(send_buf[i_rank].size()); ++k) {
+      send_buf[i_rank][k] += 1;
+    }
+
+    for(int i = 0; i < 4; ++i) {
+      recv_buf_expected_p0[i] += 1;
+    }
+
+    for(int i = 0; i < 2; ++i) {
+      recv_buf_expected_p1[i] += 1;
+    }
+
+  }
+
+  if(0 == 1) {
+    PDM_log_trace_array_int(recv_buf.data(), recv_idx[n_rank], "recv_buf :");
+  }
+
+  PDM_free(requests_send);
+  PDM_free(requests_recv);
+
+}

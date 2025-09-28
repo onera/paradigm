@@ -720,8 +720,13 @@ PDM_MPI_Recvs_init
  * PDM_MPI_Wait (wrapping de la fonction MPI_Wait)
  *
  *----------------------------------------------------------------------------*/
-
 int PDM_MPI_Wait(PDM_MPI_Request *request);
+
+/*----------------------------------------------------------------------------
+ * PDM_MPI_Waitall (wrapping de la fonction MPI_Wait)
+ *
+ *----------------------------------------------------------------------------*/
+int PDM_MPI_Waitall(int count, PDM_MPI_Request array_of_requests[]);
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_Request_free (wrapping de la fonction MPI_Request_free)
