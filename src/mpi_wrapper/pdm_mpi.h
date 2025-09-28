@@ -758,24 +758,32 @@ int PDM_MPI_Start(PDM_MPI_Request *request);
  * PDM_MPI_Type_hindexed (wrapping de la fonction MPI_Type_hindexed)
  *
  *----------------------------------------------------------------------------*/
-
-int PDM_MPI_Type_create_hindexed(int count, const int array_of_blocklengths[],
-                      const PDM_MPI_Aint array_of_displacements[],
-                      PDM_MPI_Datatype oldtype, PDM_MPI_Datatype *newtype);
+int
+PDM_MPI_Type_create_hindexed
+(
+        int               count,
+  const int               array_of_blocklengths[],
+  const PDM_MPI_Aint      array_of_displacements[],
+        PDM_MPI_Datatype  oldtype,
+        PDM_MPI_Datatype *newtype
+);
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_Type_create_contiguous (wrapping de la fonction MPI_Type_create_contiguous)
  *
  *----------------------------------------------------------------------------*/
+int
+PDM_MPI_Type_create_contiguous
+(
+  int               count,
+  PDM_MPI_Datatype  oldtype,
+  PDM_MPI_Datatype *newtype
+);
 
-int PDM_MPI_Type_create_contiguous(int               count,
-                                   PDM_MPI_Datatype  oldtype,
-                                   PDM_MPI_Datatype *newtype);
 /*----------------------------------------------------------------------------
  * PDM_MPI_Type_commit (wrapping de la fonction MPI_Type_commit)
  *
  *----------------------------------------------------------------------------*/
-
 int PDM_MPI_Type_commit(PDM_MPI_Datatype *datatype);
 
 /*----------------------------------------------------------------------------
@@ -788,46 +796,48 @@ int PDM_MPI_Type_size(PDM_MPI_Datatype datatype, int *size);
  * PDM_MPI_Type_free (wrapping de la fonction MPI_Type_free)
  *
  *----------------------------------------------------------------------------*/
-
 int PDM_MPI_Type_free(PDM_MPI_Datatype *datatype);
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_Comm_f2c (wrapping de la fonction MPI_comm_f2c)
  *
  *----------------------------------------------------------------------------*/
-
 PDM_MPI_Comm PDM_MPI_Comm_f2c(PDM_MPI_Fint comm);
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_Comm_c2f (wrapping de la fonction MPI_comm_c2f)
  *
  *----------------------------------------------------------------------------*/
-
 PDM_MPI_Fint PDM_MPI_Comm_c2f(PDM_MPI_Comm comm);
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_Scatter (wrapping de la fonction MPI_Scatter)
  *
  *----------------------------------------------------------------------------*/
-
-int PDM_MPI_Scatter(void *sendbuf, int sendcount, PDM_MPI_Datatype sendtype,
-                void *recvbuf, int recvcount, PDM_MPI_Datatype recvtype,
-                int root, PDM_MPI_Comm comm);
+int
+PDM_MPI_Scatter
+(
+  void             *sendbuf,
+  int               sendcount,
+  PDM_MPI_Datatype  sendtype,
+  void             *recvbuf,
+  int               recvcount,
+  PDM_MPI_Datatype  recvtype,
+  int               root,
+  PDM_MPI_Comm      comm
+);
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_Barrier (wrapping de la fonction MPI_Barrier)
  *
  *----------------------------------------------------------------------------*/
-
 int PDM_MPI_Barrier(PDM_MPI_Comm comm);
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_Wtime (wrapping de la fonction MPI_Wtime)
  *
  *----------------------------------------------------------------------------*/
-
 double PDM_MPI_Wtime(void);
-
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_Alloc_mem (wrapping de la fonction MPI_Alloc_mem)
@@ -835,149 +845,288 @@ double PDM_MPI_Wtime(void);
  *----------------------------------------------------------------------------*/
 int PDM_MPI_Alloc_mem(PDM_MPI_Aint size, void *baseptr);
 
-
 /*----------------------------------------------------------------------------
  * PDM_MPI_Free_mem (wrapping de la fonction MPI_Free_mem)
  *
  *----------------------------------------------------------------------------*/
 int PDM_MPI_Free_mem(void *baseptr);
 
-
 /*----------------------------------------------------------------------------
  * PDM_MPI_Bcast (wrapping de la fonction MPI_Bcast)
  *
  *----------------------------------------------------------------------------*/
-
-int PDM_MPI_Bcast(void *buffer, int count, PDM_MPI_Datatype datatype,
-              int root, PDM_MPI_Comm comm);
+int
+PDM_MPI_Bcast
+(
+  void             *buffer,
+  int               count,
+  PDM_MPI_Datatype  datatype,
+  int               root,
+  PDM_MPI_Comm      comm
+);
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_IBcast (wrapping de la fonction MPI_IBcast)
  *
  *----------------------------------------------------------------------------*/
-
-int PDM_MPI_Ibcast(void *buffer, int count, PDM_MPI_Datatype datatype,
-                   int root, PDM_MPI_Comm comm, PDM_MPI_Request *request);
+int
+PDM_MPI_Ibcast
+(
+  void              *buffer,
+  int                count,
+  PDM_MPI_Datatype   datatype,
+  int                root,
+  PDM_MPI_Comm       comm,
+  PDM_MPI_Request   *request
+);
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_Allgather (wrapping de la fonction MPI_Allgather)
  *
  *----------------------------------------------------------------------------*/
-
-int PDM_MPI_Allgather(void *sendbuf, int sendcount, PDM_MPI_Datatype sendtype,
-                  void *recvbuf, int recvcount,
-                  PDM_MPI_Datatype recvtype, PDM_MPI_Comm comm);
+int
+PDM_MPI_Allgather
+(
+  void             *sendbuf,
+  int               sendcount,
+  PDM_MPI_Datatype  sendtype,
+  void             *recvbuf,
+  int               recvcount,
+  PDM_MPI_Datatype  recvtype,
+  PDM_MPI_Comm      comm
+);
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_Allgatherv (wrapping de la fonction MPI_Allgatherv)
  *
  *----------------------------------------------------------------------------*/
-
-int PDM_MPI_Allgatherv(void *sendbuf, int sendcount, PDM_MPI_Datatype sendtype,
-                   void *recvbuf, int *recvcounts,
-                   int *displs, PDM_MPI_Datatype recvtype, PDM_MPI_Comm comm);
+int
+PDM_MPI_Allgatherv
+(
+  void             *sendbuf,
+  int               sendcount,
+  PDM_MPI_Datatype  sendtype,
+  void             *recvbuf,
+  int              *recvcounts,
+  int              *displs,
+  PDM_MPI_Datatype  recvtype,
+  PDM_MPI_Comm      comm
+);
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_Reduce (wrapping de la fonction MPI_Reduce)
  *
  *----------------------------------------------------------------------------*/
-
-int PDM_MPI_Reduce(void *sendbuf, void *recvbuf, int count,
-		   PDM_MPI_Datatype datatype, PDM_MPI_Op op,
-		   int root, PDM_MPI_Comm comm);
+int
+PDM_MPI_Reduce
+(
+  void             *sendbuf,
+  void             *recvbuf,
+  int               count,
+  PDM_MPI_Datatype  datatype,
+  PDM_MPI_Op        op,
+  int               root,
+  PDM_MPI_Comm      comm
+);
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_Reduce_scatter (wrapping de la fonction MPI_Reduce_scatter)
  *
  *----------------------------------------------------------------------------*/
-int PDM_MPI_Reduce_scatter(void *sendbuf, void *recvbuf, int *counts,
-                           PDM_MPI_Datatype datatype, PDM_MPI_Op op,
-                           PDM_MPI_Comm comm);
+int
+PDM_MPI_Reduce_scatter
+(
+  void             *sendbuf,
+  void             *recvbuf,
+  int              *counts,
+  PDM_MPI_Datatype  datatype,
+  PDM_MPI_Op        op,
+  PDM_MPI_Comm      comm
+);
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_Allreduce (wrapping de la fonction MPI_Allreduce)
  *
- *----------------------------------------------------------------------------*/
-
-int PDM_MPI_Allreduce(void *sendbuf, void *recvbuf, int count,
-                  PDM_MPI_Datatype datatype, PDM_MPI_Op op, PDM_MPI_Comm comm);
-
+ *----------------------------------------------------------------------------*/int
+PDM_MPI_Allreduce
+(
+   void             *sendbuf,
+   void             *recvbuf,
+   int               count,
+   PDM_MPI_Datatype  datatype,
+   PDM_MPI_Op        op,
+   PDM_MPI_Comm      comm
+);
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_Scan (wrapping de la fonction MPI_Scan)
  *
  *----------------------------------------------------------------------------*/
+int
+PDM_MPI_Scan
+(
+  const void             *sendbuf,
+        void             *recvbuf,
+        int               count,
+        PDM_MPI_Datatype  datatype,
+        PDM_MPI_Op        op,
+        PDM_MPI_Comm      comm
+);
 
-int PDM_MPI_Scan(const void *sendbuf, void *recvbuf, int count,
-             PDM_MPI_Datatype datatype, PDM_MPI_Op op, PDM_MPI_Comm comm);
 
-int PDM_MPI_Exscan(const void *sendbuf, void *recvbuf, int count,
-                   PDM_MPI_Datatype datatype, PDM_MPI_Op op, PDM_MPI_Comm comm);
+/*----------------------------------------------------------------------------
+ * PDM_MPI_Exscan (wrapping de la fonction MPI_Exscan)
+ *
+ *----------------------------------------------------------------------------*/
+int
+PDM_MPI_Exscan
+(
+  const void             *sendbuf,
+        void             *recvbuf,
+        int               count,
+        PDM_MPI_Datatype  datatype,
+        PDM_MPI_Op        op,
+        PDM_MPI_Comm      comm
+);
 
-int PDM_MPI_Iscan(const void *sendbuf, void *recvbuf, int count,
-             PDM_MPI_Datatype datatype, PDM_MPI_Op op, PDM_MPI_Comm comm,
-             PDM_MPI_Request *request);
+/*----------------------------------------------------------------------------
+ * PDM_MPI_Iscan (wrapping de la fonction MPI_Iscan)
+ *
+ *----------------------------------------------------------------------------*/
+int
+PDM_MPI_Iscan
+(
+  const void             *sendbuf,
+        void             *recvbuf,
+        int               count,
+        PDM_MPI_Datatype  datatype,
+        PDM_MPI_Op        op,
+        PDM_MPI_Comm      comm,
+        PDM_MPI_Request  *request
+);
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_Alltoall (wrapping de la fonction MPI_Alltoall)
  *
  *----------------------------------------------------------------------------*/
-
-int PDM_MPI_Alltoall(void *sendbuf, int sendcount, PDM_MPI_Datatype sendtype,
-                 void *recvbuf, int recvcount,
-                 PDM_MPI_Datatype recvtype, PDM_MPI_Comm comm);
+int
+PDM_MPI_Alltoall
+(
+  void             *sendbuf,
+  int               sendcount,
+  PDM_MPI_Datatype  sendtype,
+  void             *recvbuf,
+  int               recvcount,
+  PDM_MPI_Datatype  recvtype,
+  PDM_MPI_Comm      comm
+);
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_Ialltoall (wrapping de la fonction MPI_Alltoall)
  *
  *----------------------------------------------------------------------------*/
-
-int PDM_MPI_Ialltoall(void *sendbuf, int sendcount, PDM_MPI_Datatype sendtype,
-                      void *recvbuf, int recvcount,
-                      PDM_MPI_Datatype recvtype, PDM_MPI_Comm comm, PDM_MPI_Request *request);
+int
+PDM_MPI_Ialltoall
+(
+  void             *sendbuf,
+  int               sendcount,
+  PDM_MPI_Datatype  sendtype,
+  void             *recvbuf,
+  int               recvcount,
+  PDM_MPI_Datatype  recvtype,
+  PDM_MPI_Comm      comm,
+  PDM_MPI_Request  *request
+);
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_Alltoallv (wrapping de la fonction MPI_Alltoallv)
  *
  *----------------------------------------------------------------------------*/
+int
+PDM_MPI_Alltoallv
+(
+  void             *sendbuf,
+  int              *sendcounts,
+  int              *sdispls,
+  PDM_MPI_Datatype  sendtype,
+  void             *recvbuf,
+  int              *recvcounts,
+  int              *rdispls,
+  PDM_MPI_Datatype  recvtype,
+  PDM_MPI_Comm      comm
+);
 
-int PDM_MPI_Alltoallv(void *sendbuf, int *sendcounts, int *sdispls,
-                  PDM_MPI_Datatype sendtype, void *recvbuf, int *recvcounts,
-                  int *rdispls, PDM_MPI_Datatype recvtype, PDM_MPI_Comm comm);
 
-int PDM_MPI_Alltoallv_l(void *sendbuf, int *sendcounts, size_t *sdispls,
-                  PDM_MPI_Datatype sendtype, void *recvbuf, int *recvcounts,
-                  size_t *rdispls, PDM_MPI_Datatype recvtype, PDM_MPI_Comm comm);
+int
+PDM_MPI_Alltoallv_l
+(
+  void             *sendbuf,
+  int              *sendcounts,
+  size_t           *sdispls,
+  PDM_MPI_Datatype  sendtype,
+  void             *recvbuf,
+  int              *recvcounts,
+  size_t           *rdispls,
+  PDM_MPI_Datatype  recvtype,
+  PDM_MPI_Comm      comm
+);
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_Ialltoallv (wrapping de la fonction MPI_Ialltoallv)
  *
  *----------------------------------------------------------------------------*/
-
-int PDM_MPI_Ialltoallv(void *sendbuf, int *sendcounts, int *sdispls,
-                  PDM_MPI_Datatype sendtype, void *recvbuf, int *recvcounts,
-                  int *rdispls, PDM_MPI_Datatype recvtype,
-                  PDM_MPI_Comm comm, PDM_MPI_Request *request);
+int
+PDM_MPI_Ialltoallv
+(
+  void             *sendbuf,
+  int              *sendcounts,
+  int              *sdispls,
+  PDM_MPI_Datatype  sendtype,
+  void             *recvbuf,
+  int              *recvcounts,
+  int              *rdispls,
+  PDM_MPI_Datatype  recvtype,
+  PDM_MPI_Comm      comm,
+  PDM_MPI_Request  *request
+);
 
 /*----------------------------------------------------------------------------
  *
  * PDM_MPI_Partofactiverank()
  *
  *----------------------------------------------------------------------------*/
-
-void PDM_MPI_Partofactiverank(int *sendcounts,
-                             int *recvcounts, PDM_MPI_Comm comm, double* part_active_rank);
+void
+PDM_MPI_Partofactiverank
+(
+  int          *sendcounts,
+  int          *recvcounts,
+  PDM_MPI_Comm  comm,
+  double       *part_active_rank
+);
 
 /*----------------------------------------------------------------------------
  *
  * PDM_MPI_Ialltoallv_p2p (MPI_Ialltoallv in p2p)
  *
  *----------------------------------------------------------------------------*/
+int
+PDM_MPI_Ialltoallv_p2p_l
+(
+  void              *sendbuf,
+  int               *sendcounts,
+  size_t            *sdispls,
+  PDM_MPI_Datatype   sendtype,
+  void              *recvbuf,
+  int               *recvcounts,
+  size_t            *rdispls,
+  PDM_MPI_Datatype   recvtype,
+  PDM_MPI_Comm       comm,
+  PDM_MPI_Request  **request_s,
+  PDM_MPI_Request  **request_r,
+  int               *n_request_s,
+  int               *n_request_r
+);
 
-int PDM_MPI_Ialltoallv_p2p_l (void *sendbuf, int *sendcounts, size_t *sdispls, PDM_MPI_Datatype sendtype,
-                            void *recvbuf, int *recvcounts, size_t *rdispls, PDM_MPI_Datatype recvtype,
-                            PDM_MPI_Comm comm, PDM_MPI_Request **request_s, PDM_MPI_Request **request_r,
-                            int *n_request_s, int *n_request_r);
 /**
  * @brief Emulates MPI_Ialltoallv using non-blocking P2P messages.
  *
@@ -1130,7 +1279,6 @@ PDM_MPI_Alltoallv_p2p_l
  * PDM_MPI_Ialltoallv_p2p (wait request for PDM_MPI_Ialltoallv_p2p)
  *
  *----------------------------------------------------------------------------*/
-
 int PDM_MPI_Ialltoallv_p2p_wait (PDM_MPI_Request **request_s,
                                  PDM_MPI_Request **request_r,
                                  int n_request_s,
@@ -1157,7 +1305,6 @@ int PDM_MPI_Get_ialltoallv(PDM_MPI_Win       win_send,
  * PDM_MPI_Alltoallv_Init (wrapping de la fonction MPI_Alltoallv_Init)
  *
  *----------------------------------------------------------------------------*/
-
 int
 PDM_MPI_Alltoallv_init
 (
@@ -1384,7 +1531,6 @@ int PDM_mpi_win_shared_sync(PDM_mpi_win_shared_t* win);
  * PDM_MPI_rand_tag_get
  *
  *----------------------------------------------------------------------------*/
-
 int PDM_MPI_Comm_get_attr_tag_ub(PDM_MPI_Comm comm, void *attribute_val, int *flag);
 int PDM_MPI_Rand_tag            (PDM_MPI_Comm comm);
 
@@ -1405,57 +1551,104 @@ int PDM_MPI_Dist_graph_create_adjacent(PDM_MPI_Comm  comm_old,
  * PDM_MPI_Allgather (wrapping de la fonction MPI_Allgather)
  *
  *----------------------------------------------------------------------------*/
-
-int PDM_MPI_Neighbor_allgather(void *sendbuf, int sendcount, PDM_MPI_Datatype sendtype,
-                               void *recvbuf, int recvcount,
-                               PDM_MPI_Datatype recvtype, PDM_MPI_Comm comm);
+int
+PDM_MPI_Neighbor_allgather
+(
+  void             *sendbuf,
+  int               sendcount,
+  PDM_MPI_Datatype  sendtype,
+  void             *recvbuf,
+  int               recvcount,
+  PDM_MPI_Datatype  recvtype,
+  PDM_MPI_Comm      comm
+);
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_Neighbor_allgatherv (wrapping de la fonction MPI_Neighbor_allgatherv)
  *
  *----------------------------------------------------------------------------*/
-
-int PDM_MPI_Neighbor_allgatherv(void *sendbuf, int sendcount, PDM_MPI_Datatype sendtype,
-                   void *recvbuf, int *recvcounts,
-                   int *displs, PDM_MPI_Datatype recvtype, PDM_MPI_Comm comm);
-
+int
+PDM_MPI_Neighbor_allgatherv
+(
+ void             *sendbuf,
+ int               sendcount,
+ PDM_MPI_Datatype  sendtype,
+ void             *recvbuf,
+ int              *recvcounts,
+ int              *displs,
+ PDM_MPI_Datatype  recvtype,
+ PDM_MPI_Comm      comm
+);
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_Neighbor_alltoall (wrapping de la fonction MPI_Neighbor_alltoall)
  *
  *----------------------------------------------------------------------------*/
-
-int PDM_MPI_Neighbor_alltoall(void *sendbuf, int sendcount, PDM_MPI_Datatype sendtype,
-                              void *recvbuf, int recvcount,
-                              PDM_MPI_Datatype recvtype, PDM_MPI_Comm comm);
+int
+PDM_MPI_Neighbor_alltoall
+(
+  void             *sendbuf,
+  int               sendcount,
+  PDM_MPI_Datatype  sendtype,
+  void             *recvbuf,
+  int               recvcount,
+  PDM_MPI_Datatype  recvtype,
+  PDM_MPI_Comm      comm
+);
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_Ialltoall (wrapping de la fonction MPI_Ialltoall)
  *
  *----------------------------------------------------------------------------*/
-
-int PDM_MPI_Ineighbor_alltoall(void *sendbuf, int sendcount, PDM_MPI_Datatype sendtype,
-                               void *recvbuf, int recvcount,
-                               PDM_MPI_Datatype recvtype, PDM_MPI_Comm comm, PDM_MPI_Request *request);
+int
+PDM_MPI_Ineighbor_alltoall
+(
+  void             *sendbuf,
+  int               sendcount,
+  PDM_MPI_Datatype  sendtype,
+  void             *recvbuf,
+  int               recvcount,
+  PDM_MPI_Datatype  recvtype,
+  PDM_MPI_Comm      comm,
+  PDM_MPI_Request  *request
+);
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_Neighbor_alltoallv (wrapping de la fonction MPI_Neighbor_alltoallv)
  *
  *----------------------------------------------------------------------------*/
-
-int PDM_MPI_Neighbor_alltoallv(void *sendbuf, int *sendcounts, int *sdispls,
-                               PDM_MPI_Datatype sendtype, void *recvbuf, int *recvcounts,
-                               int *rdispls, PDM_MPI_Datatype recvtype, PDM_MPI_Comm comm);
+int
+PDM_MPI_Neighbor_alltoallv
+(
+  void             *sendbuf,
+  int              *sendcounts,
+  int              *sdispls,
+  PDM_MPI_Datatype  sendtype,
+  void             *recvbuf,
+  int              *recvcounts,
+  int              *rdispls,
+  PDM_MPI_Datatype  recvtype,
+  PDM_MPI_Comm      comm
+);
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_Ineighbor_alltoallv (wrapping de la fonction MPI_Ineighbor_alltoallv)
  *
  *----------------------------------------------------------------------------*/
-
-int PDM_MPI_Ineighbor_alltoallv(void *sendbuf, int *sendcounts, int *sdispls,
-                                PDM_MPI_Datatype sendtype, void *recvbuf, int *recvcounts,
-                                int *rdispls, PDM_MPI_Datatype recvtype, PDM_MPI_Comm comm,
-                                PDM_MPI_Request *request);
+int
+PDM_MPI_Ineighbor_alltoallv
+(
+  void             *sendbuf,
+  int              *sendcounts,
+  int              *sdispls,
+  PDM_MPI_Datatype  sendtype,
+  void             *recvbuf,
+  int              *recvcounts,
+  int              *rdispls,
+  PDM_MPI_Datatype  recvtype,
+  PDM_MPI_Comm      comm,
+  PDM_MPI_Request  *request
+);
 
 void
 PDM_MPI_setup_hybrid_dist_comm_graph
