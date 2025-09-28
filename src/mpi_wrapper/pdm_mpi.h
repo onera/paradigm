@@ -693,10 +693,17 @@ int PDM_MPI_Request_free(PDM_MPI_Request *request);
 int PDM_MPI_Test(PDM_MPI_Request *request, int *flag);
 
 /*----------------------------------------------------------------------------
- * PDM_MPI_Request (wrapping de la fonction MPI_Startall)
+ * PDM_MPI_Startall (wrapping de la fonction MPI_Startall)
  *
  *----------------------------------------------------------------------------*/
 int PDM_MPI_Startall(int count, PDM_MPI_Request array_of_requests[]);
+
+/*----------------------------------------------------------------------------
+ * PDM_MPI_Start (wrapping de la fonction MPI_Start)
+ *
+ *----------------------------------------------------------------------------*/
+int PDM_MPI_Start(PDM_MPI_Request *request);
+
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_Type_hindexed (wrapping de la fonction MPI_Type_hindexed)
@@ -1041,12 +1048,33 @@ PDM_MPI_Ialltoallv_p2p_rma
  * PDM_MPI_Alltoallv (wrapping de la fonction MPI_Alltoallv)
  *
  *----------------------------------------------------------------------------*/
+int
+PDM_MPI_Alltoallv_p2p
+(
+  void             *sendbuf,
+  int              *sendcounts,
+  int              *sdispls,
+  PDM_MPI_Datatype  sendtype,
+  void             *recvbuf,
+  int              *recvcounts,
+  int              *rdispls,
+  PDM_MPI_Datatype  recvtype,
+  PDM_MPI_Comm      comm
+);
 
-int PDM_MPI_Alltoallv_p2p(void *sendbuf, int *sendcounts, int *sdispls, PDM_MPI_Datatype sendtype, void *recvbuf, int *recvcounts,
-                          int *rdispls, PDM_MPI_Datatype recvtype, PDM_MPI_Comm comm);
-
-int PDM_MPI_Alltoallv_p2p_l(void *sendbuf, int *sendcounts, size_t *sdispls, PDM_MPI_Datatype sendtype, void *recvbuf,
-                            int *recvcounts, size_t *rdispls, PDM_MPI_Datatype recvtype, PDM_MPI_Comm comm);
+int
+PDM_MPI_Alltoallv_p2p_l
+(
+  void             *sendbuf,
+  int              *sendcounts,
+  size_t           *sdispls,
+  PDM_MPI_Datatype  sendtype,
+  void             *recvbuf,
+  int              *recvcounts,
+  size_t           *rdispls,
+  PDM_MPI_Datatype  recvtype,
+  PDM_MPI_Comm      comm
+);
 
 /*----------------------------------------------------------------------------
  *
