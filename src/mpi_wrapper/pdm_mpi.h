@@ -259,124 +259,173 @@ void *PDM_MPI_free_mpi_comm(void *mpi_comm);
  * PDM_MPI_File_open (wrapping de la fonction MPI_File_open)
  *
  *----------------------------------------------------------------------------*/
-
-int PDM_MPI_File_open(PDM_MPI_Comm comm, char *filename, int amode,
-                  PDM_MPI_File *fh);
+int
+PDM_MPI_File_open
+(
+  PDM_MPI_Comm  comm,
+  char         *filename,
+  int           amode,
+  PDM_MPI_File *fh
+);
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_File_close (wrapping de la fonction MPI_File_close)
  *
  *----------------------------------------------------------------------------*/
-
 int PDM_MPI_File_close(PDM_MPI_File *fh);
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_File_seek (wrapping de la fonction MPI_File_seek)
  *
  *----------------------------------------------------------------------------*/
-
 int PDM_MPI_File_seek(PDM_MPI_File, PDM_MPI_Offset, int);
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_File_get_size (wrapping de la fonction MPI_File_get_size)
  *
  *----------------------------------------------------------------------------*/
-
 int PDM_MPI_File_get_size(PDM_MPI_File, PDM_MPI_Offset *);
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_File_get_position (wrapping de la fonction MPI_File_get_position)
  *
  *----------------------------------------------------------------------------*/
-
 int PDM_MPI_File_get_position(PDM_MPI_File, PDM_MPI_Offset *);
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_File_set_view (wrapping de la fonction MPI_File_set_view)
  *
  *----------------------------------------------------------------------------*/
-
-int PDM_MPI_File_set_view(PDM_MPI_File, PDM_MPI_Offset, PDM_MPI_Datatype,
-                      PDM_MPI_Datatype, const char *);
+int PDM_MPI_File_set_view(PDM_MPI_File, PDM_MPI_Offset, PDM_MPI_Datatype, PDM_MPI_Datatype, const char *);
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_File_get_view (wrapping de la fonction MPI_File_get_view)
  *
  *----------------------------------------------------------------------------*/
-
-int PDM_MPI_File_get_view(PDM_MPI_File, PDM_MPI_Offset *,
-                 PDM_MPI_Datatype *, PDM_MPI_Datatype *, char *);
+int PDM_MPI_File_get_view(PDM_MPI_File, PDM_MPI_Offset *, PDM_MPI_Datatype *, PDM_MPI_Datatype *, char *);
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_File_read_at (wrapping de la fonction MPI_File_read_at)
  *
  *----------------------------------------------------------------------------*/
-
-int PDM_MPI_File_read_at(PDM_MPI_File fh, PDM_MPI_Offset offset, void *buf,
-                     int count, PDM_MPI_Datatype datatype, int *n_octet_lus);
+int
+PDM_MPI_File_read_at
+(
+  PDM_MPI_File      fh,
+  PDM_MPI_Offset    offset,
+  void             *buf,
+  int               count,
+  PDM_MPI_Datatype  datatype,
+  int              *n_octet_lus
+);
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_File_read_at_all (wrapping de la fonction MPI_File_read_at_all)
  *
  *----------------------------------------------------------------------------*/
-
-int PDM_MPI_File_read_at_all(PDM_MPI_File fh, PDM_MPI_Offset offset, void *buf,
-                         int count, PDM_MPI_Datatype datatype, int *n_octet_lus);
+int
+PDM_MPI_File_read_at_all
+(
+  PDM_MPI_File      fh,
+  PDM_MPI_Offset    offset,
+  void             *buf,
+  int               count,
+  PDM_MPI_Datatype  datatype,
+  int              *n_octet_lus
+);
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_File_write_at (wrapping de la fonction MPI_File_write_at)
  *
  *----------------------------------------------------------------------------*/
-
-int PDM_MPI_File_write_at(PDM_MPI_File fh, PDM_MPI_Offset offset, void *buf,
-                      int count, PDM_MPI_Datatype datatype, int *n_octet_ecrits);
+int
+PDM_MPI_File_write_at
+(
+  PDM_MPI_File      fh,
+  PDM_MPI_Offset    offset,
+  void             *buf,
+  int               count,
+  PDM_MPI_Datatype  datatype,
+  int              *n_octet_ecrits
+);
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_File_write_at_all (wrapping de la fonction MPI_File_write_at_all)
  *
  *----------------------------------------------------------------------------*/
-
-int PDM_MPI_File_write_at_all(PDM_MPI_File fh, PDM_MPI_Offset offset, void *buf,
-                          int count, PDM_MPI_Datatype datatype, int *n_octet_ecrits);
+int
+PDM_MPI_File_write_at_all
+(
+  PDM_MPI_File      fh,
+  PDM_MPI_Offset    offset,
+  void             *buf,
+  int               count,
+  PDM_MPI_Datatype  datatype,
+  int              *n_octet_ecrits
+);
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_File_read (wrapping de la fonction MPI_File_read)
  *
  *----------------------------------------------------------------------------*/
-
-int PDM_MPI_File_read(PDM_MPI_File fh, void *buf, int count,
-                  PDM_MPI_Datatype datatype, int *n_octet_lus);
+int
+PDM_MPI_File_read
+(
+  PDM_MPI_File      fh,
+  void             *buf,
+  int               count,
+  PDM_MPI_Datatype  datatype,
+  int              *n_octet_lus
+);
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_File_read_all (wrapping de la fonction MPI_File_read_all)
  *
  *----------------------------------------------------------------------------*/
-
-int PDM_MPI_File_read_all(PDM_MPI_File fh, void *buf, int count,
-                      PDM_MPI_Datatype datatype, int *n_octet_lus);
+int
+PDM_MPI_File_read_all
+(
+  PDM_MPI_File      fh,
+  void             *buf,
+  int               count,
+  PDM_MPI_Datatype  datatype,
+  int              *n_octet_lus
+);
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_File_write (wrapping de la fonction MPI_File_write)
  *
  *----------------------------------------------------------------------------*/
-
-int PDM_MPI_File_write(PDM_MPI_File fh, void *buf, int count,
-                   PDM_MPI_Datatype datatype, int *n_octet_ecrits);
+int
+PDM_MPI_File_write
+(
+  PDM_MPI_File      fh,
+  void             *buf,
+  int               count,
+  PDM_MPI_Datatype  datatype,
+  int              *n_octet_ecrits
+);
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_File_write_all (wrapping de la fonction MPI_File_write_all)
  *
  *----------------------------------------------------------------------------*/
-
-int PDM_MPI_File_write_all(PDM_MPI_File fh, void *buf, int count,
-                       PDM_MPI_Datatype datatype, int *n_octet_ecrits);
+int
+PDM_MPI_File_write_all
+(
+  PDM_MPI_File      fh,
+  void             *buf,
+  int               count,
+  PDM_MPI_Datatype  datatype,
+  int              *n_octet_ecrits
+);
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_Gather (wrapping de la fonction MPI_Gather)
  *
  *----------------------------------------------------------------------------*/
-
-int PDM_MPI_Gather(void *sendbuf, int sendcount, PDM_MPI_Datatype sendtype,
+int
+PDM_MPI_Gather(void *sendbuf, int sendcount, PDM_MPI_Datatype sendtype,
                void *recvbuf, int recvcount, PDM_MPI_Datatype recvtype,
                int root, PDM_MPI_Comm comm);
 
@@ -384,51 +433,46 @@ int PDM_MPI_Gather(void *sendbuf, int sendcount, PDM_MPI_Datatype sendtype,
  * PDM_MPI_Gather (wrapping de la fonction MPI_Gather)
  *
  *----------------------------------------------------------------------------*/
-
 int PDM_MPI_Igather(void *sendbuf, int sendcount, PDM_MPI_Datatype sendtype,
-               void *recvbuf, int recvcount, PDM_MPI_Datatype recvtype,
-               int root, PDM_MPI_Comm comm, PDM_MPI_Request *reqauest);
+                    void *recvbuf, int recvcount, PDM_MPI_Datatype recvtype,
+                    int root, PDM_MPI_Comm comm,
+                    PDM_MPI_Request *request);
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_Gatherv (wrapping de la fonction MPI_Gatherv)
  *
  *----------------------------------------------------------------------------*/
-
 int PDM_MPI_Gatherv(void *sendbuf, int sendcount, PDM_MPI_Datatype sendtype,
-                void *recvbuf, int *recvcounts, int *displs,
-                PDM_MPI_Datatype recvtype, int root, PDM_MPI_Comm comm);
+                    void *recvbuf, int *recvcounts, int *displs,
+                    PDM_MPI_Datatype recvtype, int root, PDM_MPI_Comm comm);
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_Recv (wrapping de la fonction MPI_Recv)
  *
  *----------------------------------------------------------------------------*/
-
 int PDM_MPI_Recv(void *buf, int count, PDM_MPI_Datatype datatype, int source,
-             int tag, PDM_MPI_Comm comm);
+                 int tag, PDM_MPI_Comm comm);
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_Recv (wrapping de la fonction MPI_Recv)
  *
  *----------------------------------------------------------------------------*/
-
 int PDM_MPI_Irecv(void *buf, int count, PDM_MPI_Datatype datatype, int source,
-              int tag, PDM_MPI_Comm comm, PDM_MPI_Request *request);
+                  int tag, PDM_MPI_Comm comm, PDM_MPI_Request *request);
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_Send (wrapping de la fonction MPI_Send)
  *
  *----------------------------------------------------------------------------*/
-
 int PDM_MPI_Send(void *buf, int count, PDM_MPI_Datatype datatype, int dest,
-             int tag, PDM_MPI_Comm comm);
+                 int tag, PDM_MPI_Comm comm);
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_Isend (wrapping de la fonction MPI_Issend)
  *
  *----------------------------------------------------------------------------*/
-
 int PDM_MPI_Isend(const void *buf, int count, PDM_MPI_Datatype datatype, int dest, int tag,
-               PDM_MPI_Comm comm, PDM_MPI_Request *request);
+                  PDM_MPI_Comm comm, PDM_MPI_Request *request);
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_Send_init (wrapping de la fonction MPI_Send_init)
@@ -1109,9 +1153,21 @@ int PDM_MPI_Get_ialltoallv(PDM_MPI_Win       win_send,
  *
  *----------------------------------------------------------------------------*/
 
-int PDM_MPI_Alltoallv_init(void *sendbuf, int *sendcounts, int *sdispls,
-                           PDM_MPI_Datatype sendtype, void *recvbuf, int *recvcounts,
-                           int *rdispls, PDM_MPI_Datatype recvtype, PDM_MPI_Comm comm, PDM_MPI_Request *request);
+int
+PDM_MPI_Alltoallv_init
+(
+  void             *sendbuf,
+  int              *sendcounts,
+  int              *sdispls,
+  PDM_MPI_Datatype  sendtype,
+  void             *recvbuf,
+  int              *recvcounts,
+  int              *rdispls,
+  PDM_MPI_Datatype  recvtype,
+  PDM_MPI_Comm      comm,
+  PDM_MPI_Request  *request
+);
+
 int
 PDM_MPI_Alltoallv_p2p_init
 (

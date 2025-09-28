@@ -153,9 +153,6 @@ MPI_TEST_CASE("[PDM_MPI_Alltoallv_p2p_l]", 2) {
 
 }
 
-
-
-
 MPI_TEST_CASE("[PDM_MPI_Ialltoallv_p2p]", 2) {
 
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
