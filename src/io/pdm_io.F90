@@ -275,7 +275,7 @@ subroutine PDM_io_open(nom,                &
   integer(c_int)                :: c_acces
   integer(c_int)                :: c_mode
   integer(c_int)                :: c_endian
-  integer(c_int)                :: c_comm
+  type(c_ptr)                   :: c_comm
   real(c_double)                :: c_prop_noeuds_actifs
   integer(c_int)                :: c_ierr
 
@@ -304,7 +304,7 @@ subroutine PDM_io_open(nom,                &
       integer(c_int), value :: acces
       integer(c_int), value :: mode
       integer(c_int), value :: endian
-      integer(c_int), value :: comm
+      type(c_ptr), value    :: comm
       real(c_double), value :: prop_noeuds_actifs
       type(c_ptr)           :: unite
       integer(c_int)        :: ierr

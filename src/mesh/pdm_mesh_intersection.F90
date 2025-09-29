@@ -175,7 +175,7 @@ subroutine PDM_mesh_intersection_create_ (mi,                &
       integer(c_int), value :: dim_mesh_a
       integer(c_int), value :: dim_mesh_b
       real(c_double), value :: project_coeff
-      integer(c_int), value :: comm
+      type(c_ptr), value    :: comm
       integer(c_int), value :: owner
   
       type(c_ptr)           :: mi
@@ -187,7 +187,7 @@ subroutine PDM_mesh_intersection_create_ (mi,                &
   integer(c_int) :: c_dim_mesh_a
   integer(c_int) :: c_dim_mesh_b
   real(c_double) :: c_project_coeff
-  integer(c_int) :: c_comm
+  type(c_ptr)    :: c_comm
   integer(c_int) :: c_owner
 
   c_intersection_kind = intersection_kind

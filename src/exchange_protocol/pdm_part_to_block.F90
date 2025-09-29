@@ -205,7 +205,7 @@ subroutine PDM_part_to_block_create(ptb,            &
   integer,                   intent(in)  :: n_part         ! Number of partitions
   integer,                   intent(in)  :: comm           ! MPI communicator
 
-  integer(c_int)                         :: c_comm
+  type(c_ptr)                            :: c_comm
   type(c_ptr)                            :: c_weight
 
   interface
@@ -230,7 +230,7 @@ subroutine PDM_part_to_block_create(ptb,            &
       type(c_ptr),    value :: weight
       type(c_ptr),    value :: n_elt
       integer(c_int), value :: n_part
-      integer(c_int), value :: comm
+      type(c_ptr),    value :: comm
 
     end function PDM_part_to_block_create_c
   end interface
@@ -277,7 +277,7 @@ subroutine PDM_part_to_block_create_from_distrib(ptb,              &
   integer,                   intent(in)  :: n_part              ! Number of partitions
   integer,                   intent(in)  :: comm                ! MPI communicator
 
-  integer(c_int)                         :: c_comm
+  type(c_ptr)                            :: c_comm
 
   interface
     function PDM_part_to_block_create_from_distrib_c (t_distrib,        &
@@ -301,7 +301,7 @@ subroutine PDM_part_to_block_create_from_distrib(ptb,              &
       type(c_ptr),    value :: dataDistribIndex
       type(c_ptr),    value :: n_elt
       integer(c_int), value :: n_part
-      integer(c_int), value :: comm
+      type(c_ptr),    value :: comm
 
     end function PDM_part_to_block_create_from_distrib_c
   end interface

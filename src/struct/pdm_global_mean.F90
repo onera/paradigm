@@ -93,7 +93,7 @@ module pdm_global_mean
   type (c_ptr)        :: gmean
 
   integer(c_int)      :: c_n_part
-  integer(c_int)      :: c_comm
+  type(c_ptr)         :: c_comm
 
   interface
     function pdm_global_mean_create_cf (n_part, fComm) &
@@ -103,7 +103,7 @@ module pdm_global_mean
       implicit none
 
       integer(c_int), value :: n_part
-      integer(c_int), value :: fComm
+      type(c_ptr)   , value :: fComm
       type (c_ptr)          :: gmean
 
     end function pdm_global_mean_create_cf

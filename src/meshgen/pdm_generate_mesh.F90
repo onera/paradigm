@@ -43,7 +43,7 @@ module pdm_generate_mesh
       use iso_c_binding
       implicit none
 
-      integer(c_int),  value :: comm
+      type(c_ptr),  value :: comm
 #ifdef PDM_LONG_G_NUM
       integer(c_long), value :: n_vtx_seg
 #else
@@ -69,7 +69,7 @@ module pdm_generate_mesh
     use iso_c_binding
     implicit none
 
-    integer(c_int), value  :: comm
+    type(c_ptr), value     :: comm
     integer(c_int)         :: n_vtx
     integer(c_int)         :: n_elt
     type(c_ptr)            :: coords
@@ -89,7 +89,7 @@ module pdm_generate_mesh
     use iso_c_binding
     implicit none
 
-    integer(c_int), value :: comm
+    type(c_ptr), value    :: comm
     integer(c_int)        :: n_vtx
     integer(c_int)        :: n_elt
     type(c_ptr)           :: coords
@@ -110,7 +110,7 @@ module pdm_generate_mesh
     use iso_c_binding
     implicit none
 
-    integer(c_int), value :: comm
+    type(c_ptr), value :: comm
 #ifdef PDM_LONG_G_NUM
     integer(c_long), value :: n_vtx_seg
 #else
@@ -141,7 +141,7 @@ module pdm_generate_mesh
     use iso_c_binding
     implicit none
 
-    integer(c_int), value :: comm
+    type(c_ptr), value    :: comm
     integer(c_int), value :: elt_type
     integer(c_int), value :: order
     type(c_ptr), value    :: ho_ordering
@@ -182,7 +182,7 @@ module pdm_generate_mesh
     use iso_c_binding
     implicit none
 
-    integer(c_int), value :: comm
+    type(c_ptr), value    :: comm
     integer(c_int), value :: elt_type
     integer(c_int), value :: order
     type(c_ptr), value    :: ho_ordering
@@ -228,7 +228,7 @@ module pdm_generate_mesh
     use iso_c_binding
     implicit none
 
-    integer(c_int), value :: comm
+    type(c_ptr), value    :: comm
     integer(c_int), value :: elt_type
     integer(c_int), value :: order
     type(c_ptr), value    :: ho_ordering
@@ -279,7 +279,7 @@ module pdm_generate_mesh
     use iso_c_binding
     implicit none
 !
-    integer(c_int), value :: comm
+    type(c_ptr), value    :: comm
     integer(c_int), value :: elt_type
     integer(c_int), value :: order
     type(c_ptr), value    :: ho_ordering
@@ -333,7 +333,7 @@ module pdm_generate_mesh
     use iso_c_binding
     implicit none
 
-    integer(c_int), value :: comm
+    type(c_ptr), value    :: comm
     integer(c_int), value :: elt_type
     real(c_double), value :: xmin, ymin, zmin, lengthx, lengthy
 #ifdef PDM_LONG_G_NUM
@@ -386,7 +386,7 @@ module pdm_generate_mesh
     use iso_c_binding
     implicit none
 !
-    integer(c_int), value :: comm
+    type(c_ptr), value    :: comm
     integer(c_int), value :: elt_type
     integer(c_int), value :: order
     type(c_ptr), value    :: ho_ordering
@@ -459,7 +459,7 @@ module pdm_generate_mesh
     use iso_c_binding
     implicit none
 
-    integer(c_int), value :: comm
+    type(c_ptr), value    :: comm
     integer(c_int), value :: elt_type
     integer(c_int), value :: order
     type(c_ptr), value    :: ho_ordering
@@ -548,7 +548,7 @@ module pdm_generate_mesh
     use iso_c_binding
     implicit none
 
-    integer(c_int), value :: comm
+    type(c_ptr), value    :: comm
     integer(c_int), value :: elt_type
     integer(c_int), value :: order
     type(c_ptr), value    :: ho_ordering
@@ -620,7 +620,7 @@ module pdm_generate_mesh
       integer(kind=pdm_l_num_s),  pointer     :: elt_vtx_idx(:) ! Index of the element vertex connectivity
       integer(kind=pdm_l_num_s),  pointer     :: elt_vtx(:)     ! Element vertex connectivity
 
-      integer(c_int)                          :: c_comm
+      type(c_ptr)                             :: c_comm
       integer(c_int)                          :: c_n_vtx
       integer(c_int)                          :: c_n_elt
       type(c_ptr)                             :: c_coords
@@ -672,7 +672,7 @@ module pdm_generate_mesh
     integer(kind=pdm_l_num_s), pointer     :: elt_vtx_idx(:) ! Index of the element vertex connectivity
     integer(kind=pdm_l_num_s), pointer     :: elt_vtx(:)     ! Element vertex connectivity
 
-    integer(c_int)         :: c_comm
+    type(c_ptr)            :: c_comm
     integer(c_int)         :: c_n_vtx       = 0
     integer(c_int)         :: c_n_elt       = 0
     type(c_ptr)            :: c_coords      = C_NULL_PTR
@@ -724,7 +724,7 @@ module pdm_generate_mesh
     integer(kind=pdm_l_num_s), pointer     :: elt_vtx_idx(:) ! Index of the element vertex connectivity
     integer(kind=pdm_l_num_s), pointer     :: elt_vtx(:)     ! Element vertex connectivity
 
-    integer(c_int)         :: c_comm
+    type(c_ptr)            :: c_comm
     integer(c_int)         :: c_n_vtx       = 0
     integer(c_int)         :: c_n_elt       = 0
     type(c_ptr)            :: c_coords      = C_NULL_PTR
@@ -779,7 +779,7 @@ module pdm_generate_mesh
     integer(kind=pdm_l_num_s),  pointer     :: elt_vtx_idx(:) ! Index of the element vertex connectivity
     integer(kind=pdm_l_num_s),  pointer     :: elt_vtx(:)     ! Element vertex connectivity
 
-    integer(c_int)                          :: c_comm
+    type(c_ptr)                             :: c_comm
     integer(c_int)                          :: c_n_vtx
     integer(c_int)                          :: c_n_elt
     type(c_ptr)                             :: c_coords
@@ -846,7 +846,7 @@ module pdm_generate_mesh
     integer,                   intent(in) :: part_method ! Mesh partitioning method
     type(c_ptr)                           :: mesh_nodal  ! PDM_part_mesh_nodal_t instance
 
-    integer(c_int)        :: c_comm
+    type(c_ptr)           :: c_comm
     integer(c_int)        :: c_elt_type
     integer(c_int)        :: c_order
     type(c_ptr)           :: c_ho_ordering
@@ -930,7 +930,7 @@ module pdm_generate_mesh
     type(c_ptr)                           :: mesh_nodal  ! PDM_part_mesh_nodal_t instance
 
 
-    integer(c_int)        :: c_comm
+    type(c_ptr)           :: c_comm
     integer(c_int)        :: c_elt_type
     integer(c_int)        :: c_order
     type(c_ptr)           :: c_ho_ordering
@@ -1022,7 +1022,7 @@ module pdm_generate_mesh
 
     type(c_ptr)                           :: mesh_nodal      ! PDM_part_mesh_nodal_t instance
 
-    integer(c_int) :: c_comm
+    type(c_ptr)    :: c_comm
     integer(c_int) :: c_elt_type
     integer(c_int) :: c_order
     type(c_ptr)    :: c_ho_ordering
@@ -1145,7 +1145,7 @@ module pdm_generate_mesh
 
     type(c_ptr)                           :: mesh_nodal  ! PDM_part_mesh_nodal_t instance
 
-    integer(c_int)   :: c_comm
+    type(c_ptr)      :: c_comm
     integer(c_int)   :: c_elt_type
     integer(c_int)   :: c_order
     type(c_ptr)      :: c_ho_ordering
@@ -1259,7 +1259,7 @@ module pdm_generate_mesh
     type(PDM_pointer_array_t), pointer, intent(out)          :: pface_ln_to_gn    ! Face global ids
     real(c_double),                     intent(in), optional :: random_factor_opt ! Randomization factor (between 0 and 1)
 
-    integer(c_int)          :: c_comm
+    type(c_ptr)             :: c_comm
     type(c_ptr)             :: c_pn_vtx
     type(c_ptr)             :: c_pn_edge
     type(c_ptr)             :: c_pn_face
@@ -1461,7 +1461,7 @@ module pdm_generate_mesh
     type(PDM_pointer_array_t), pointer    :: pedge_ln_to_gn ! Edge global IDs
     type(PDM_pointer_array_t), pointer    :: pface_ln_to_gn ! Face global IDs
 
-    integer(c_int)        :: c_comm
+    type(c_ptr)           :: c_comm
     integer(c_int)        :: c_elt_type
     integer(c_int)        :: c_order
     type(c_ptr)           :: c_ho_ordering
@@ -1737,7 +1737,7 @@ module pdm_generate_mesh
     type(c_ptr) :: c_psurface_face
     type(c_ptr) :: c_psurface_face_ln_to_gn
 
-    integer(c_int) :: c_comm
+    type(c_ptr)    :: c_comm
     integer(c_int) :: c_elt_type
     integer(c_int) :: c_order
     type(c_ptr)    :: c_ho_ordering
@@ -2086,7 +2086,7 @@ module pdm_generate_mesh
     type(PDM_pointer_array_t), pointer, intent(out) :: pridge_edge            ! Ridge->edge connectivity
     type(PDM_pointer_array_t), pointer, intent(out) :: pridge_edge_ln_to_gn   ! Ridge->edge connectivity with global IDs
 
-    integer(c_int)   :: c_comm
+    type(c_ptr)      :: c_comm
     integer(c_int)   :: c_elt_type
     integer(c_int)   :: c_order
     type(c_ptr)      :: c_ho_ordering

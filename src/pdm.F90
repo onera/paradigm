@@ -14,11 +14,9 @@ bind (c, name = 'PDM_MPI_Comm_f2c')
   implicit none
 
   integer(c_int), value :: f_comm
-  integer(c_int)        :: c_comm
+  type(c_ptr)           :: c_comm
 
 end function PDM_MPI_Comm_f2c
-
-
 
 function PDM_MPI_Comm_c2f (c_comm) &
 result (f_comm)                    &
@@ -27,8 +25,8 @@ bind (c, name = 'PDM_MPI_Comm_c2f')
   use iso_c_binding
   implicit none
 
-  integer(c_int), value :: c_comm
-  integer(c_int)        :: f_comm
+  type(c_ptr), value :: c_comm
+  integer(c_int)     :: f_comm
 
 end function PDM_MPI_Comm_c2f
 

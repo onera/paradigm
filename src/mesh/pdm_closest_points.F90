@@ -144,7 +144,7 @@ module pdm_closest_points
     integer,     intent(in)  :: n_closest ! Number of closest source points to find for each target point
     integer,     intent(in)  :: owner     ! Ownership
 
-    integer(c_int)           :: c_comm
+    type(c_ptr)           :: c_comm
 
     interface
       function PDM_closest_points_create_cf(comm,      &
@@ -155,7 +155,7 @@ module pdm_closest_points
         use iso_c_binding
         implicit none
         type(c_ptr)           :: cls
-        integer(c_int), value :: comm
+        type(c_ptr), value    :: comm
         integer(c_int), value :: n_closest
         integer(c_int), value :: owner
       end function PDM_closest_points_create_cf

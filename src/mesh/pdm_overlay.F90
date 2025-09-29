@@ -95,7 +95,7 @@ module pdm_overlay
   integer(c_int), value :: n_partMeshA
   integer(c_int), value :: n_partMeshB
   real(c_double), value :: projectCoeff
-  integer(c_int), value :: comm
+  type(c_ptr), value :: comm
 
   type(c_ptr)           :: ol
 
@@ -538,7 +538,7 @@ contains
   integer(c_int) :: c_n_partMeshA
   integer(c_int) :: c_n_partMeshB
   real(c_double) :: c_projectCoeff
-  integer(c_int) :: c_comm
+  type(c_ptr)    :: c_comm
 
   c_comm = PDM_MPI_Comm_f2c(f_comm)
 
