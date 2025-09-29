@@ -144,15 +144,22 @@ PDM_linear_algebra_linsolve_gauss
 
 void PDM_linear_algebra_eigv_3x3_sym
 (
- double a[6],
- double val[3],
- double vec[9]
- );
+  double a[6],
+  double val[3],
+  double vec[9]
+);
+
+
+void //inline ?
+PDM_sym_tensor_from_eig
+(
+  const double *eig_val,
+  const double *eig_vec,
+  double       *a
+);
 
 #ifdef  __cplusplus
 }
 #endif
 
 #endif // PDM_LINEAR_ALGEBRA_H
-
-
