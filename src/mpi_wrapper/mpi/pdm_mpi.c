@@ -3104,8 +3104,8 @@ int PDM_MPI_Topo_test(PDM_MPI_Comm comm, int *status) {
  *----------------------------------------------------------------------------*/
 int PDM_MPI_Error_string(int errorcode, char *string, int *resultlen)
 {
-   int code = MPI_Error_string(mpi_err[errorcode], string, resultlen);
-   return _mpi_2_pdm_mpi_err(code);
+  int code = MPI_Error_string(mpi_err[errorcode], string, resultlen);
+  return _mpi_2_pdm_mpi_err(code);
 }
 
 /*----------------------------------------------------------------------------
@@ -3168,7 +3168,6 @@ int PDM_MPI_Comm_split(PDM_MPI_Comm comm, int color, int key, PDM_MPI_Comm *newc
 /*----------------------------------------------------------------------------
  * PDM_MPI_Comm_dup
  *----------------------------------------------------------------------------*/
-
 int PDM_MPI_Comm_dup(PDM_MPI_Comm comm, PDM_MPI_Comm *newcomm)
 {
   MPI_Comm _newcomm = MPI_COMM_NULL;
@@ -3655,7 +3654,6 @@ PDM_MPI_Sends_init
   return _mpi_2_pdm_mpi_err(code);
 }
 
-
 int
 PDM_MPI_Isends
 (
@@ -3697,7 +3695,6 @@ PDM_MPI_Isends
 
   return _mpi_2_pdm_mpi_err(code);
 }
-
 
 int
 PDM_MPI_Recvs_init
@@ -4078,10 +4075,10 @@ PDM_MPI_setup_hybrid_dist_comm_graph
   int *recv_n;
   int *send_idx;
   int *recv_idx;
-  PDM_malloc(send_n  ,  n_rank   , int);
-  PDM_malloc(recv_n  ,  n_rank   , int);
-  PDM_malloc(send_idx, (n_rank+1), int);
-  PDM_malloc(recv_idx, (n_rank+1), int);
+  PDM_malloc(send_n  , n_rank  , int);
+  PDM_malloc(recv_n  , n_rank  , int);
+  PDM_malloc(send_idx, n_rank+1, int);
+  PDM_malloc(recv_idx, n_rank+1, int);
 
   for(int i = 0; i < n_rank; ++i) {
     send_n[i] = 0;
@@ -4267,8 +4264,6 @@ PDM_MPI_Alltoallv_p2p
   PDM_free(request_s);
 
   return _mpi_2_pdm_mpi_err(code);
-
-
 }
 
 
@@ -4362,8 +4357,6 @@ PDM_MPI_Alltoallv_p2p_l
 
   return _mpi_2_pdm_mpi_err(code);
 }
-
-
 
 void
 PDM_MPI_setup_dist_graph_from_neighbor_in
