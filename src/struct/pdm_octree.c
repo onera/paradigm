@@ -1311,8 +1311,8 @@ double           *closest_octree_pt_dist2
 
   int         *send_bounds_next     = NULL;
 
-  PDM_MPI_Request Request_coord[2] = {-100, -100};
-  PDM_MPI_Request Request_gnum[2] = {-100, -100};
+  PDM_MPI_Request Request_coord[2] = {PDM_MPI_REQUEST_NULL, PDM_MPI_REQUEST_NULL};
+  PDM_MPI_Request Request_gnum [2] = {PDM_MPI_REQUEST_NULL, PDM_MPI_REQUEST_NULL};
 
   /* printf ("n_send_pts : "); */
   /* for (int i = 0; i < n_rank; i++) { */

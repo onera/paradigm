@@ -94,6 +94,7 @@ struct _pdm_part_to_part_t {
   int                *async_alltoall_free;          /*!< Free asynchronous sendings */ 
   int                 async_alltoall_l_array;       /*!< Size of arrays to store asynchonous sendings */ 
   int                *async_alltoall_subrequest;    /*!< send/recv request associated to the exchange */ 
+  PDM_MPI_Request    *async_alltoall_mpi_request;   /*!< send/recv request associated to the exchange */
 
   int                 async_recv_n_free;            /*!< Number of free asynchronous reception */ 
   int                *async_recv_free;              /*!< Free asynchronous receptions */ 
