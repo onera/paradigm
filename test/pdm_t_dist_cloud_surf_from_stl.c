@@ -1,39 +1,22 @@
-#include <math.h>
-#include <sys/time.h>
-#include <time.h>
-#include <sys/resource.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include <assert.h>
-
-#include <pdm_mpi.h>
+#include "pdm_mpi.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "pdm.h"
 #include "pdm_config.h"
-#include "pdm_priv.h"
-#include "pdm_part.h"
-#include "pdm_dcube_gen.h"
 #include "pdm_dist_cloud_surf.h"
-#include "pdm_geom_elem.h"
-#include "pdm_gnum.h"
-#include "pdm_point_cloud_gen.h"
-#include "pdm_sphere_surf_gen.h"
-#include "pdm_multipart.h"
-#include "pdm_block_to_block.h"
-#include "pdm_part_to_block.h"
-#include "pdm_distrib.h"
-#include "pdm_part_connectivity_transform.h"
 #include "pdm_dmesh_nodal.h"
-#include "pdm_reader_stl.h"
-
-#include "pdm_vtk.h"
-
-#include "pdm_writer.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
 #include "pdm_logging.h"
+#include "pdm_mem_tool.h"
+#include "pdm_multipart.h"
+#include "pdm_part.h"
+#include "pdm_part_connectivity_transform.h"
+#include "pdm_point_cloud_gen.h"
+#include "pdm_printf.h"
+#include "pdm_reader_stl.h"
+#include "pdm_priv.h"
 
 /*============================================================================
  * Type definitions

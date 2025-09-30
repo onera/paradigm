@@ -1,27 +1,25 @@
-#include <math.h>
-#include <sys/time.h>
-#include <time.h>
-#include <sys/resource.h>
-#include <unistd.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 
 #include "pdm.h"
-#include "pdm_priv.h"
-#include "pdm_config.h"
-#include "pdm_mpi.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
-#include "pdm_logging.h"
-#include "pdm_dcube_nodal_gen.h"
-#include "pdm_reader_gamma.h"
-#include "pdm_poly_vol_gen.h"
-#include "pdm_multipart.h"
-#include "pdm_extract_part.h"
 #include "pdm_array.h"
+#include "pdm_dcube_nodal_gen.h"
 #include "pdm_distrib.h"
+#include "pdm_dmesh.h"
+#include "pdm_dmesh_nodal.h"
+#include "pdm_extract_part.h"
+#include "pdm_logging.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mesh_nodal.h"
+#include "pdm_mpi.h"
+#include "pdm_multipart.h"
+#include "pdm_part_mesh_nodal.h"
+#include "pdm_part_mesh_nodal_elmts.h"
+#include "pdm_part_to_part.h"
+#include "pdm_poly_vol_gen.h"
+#include "pdm_priv.h"
+#include "pdm_reader_gamma.h"
 
 /*============================================================================
  * Type definitions
@@ -377,8 +375,11 @@ _gen_mesh
                                     i_part,
                                     n_vtx,
                                     vtx_coord,
-                                    vtx_ln_to_gn,
                                     PDM_OWNERSHIP_KEEP);
+      PDM_part_mesh_nodal_vtx_gnum_set(pmn,
+                                       i_part,
+                                       vtx_ln_to_gn,
+                                       PDM_OWNERSHIP_KEEP);
 
       PDM_part_mesh_nodal_cell3d_cellface_add(pmn,
                                               i_part,
@@ -402,6 +403,66 @@ _gen_mesh
 
   PDM_DMesh_nodal_free(dmn);
   PDM_multipart_free(mpart);
+
+
+  PDM_geometry_kind_t geom_kind = PDM_part_mesh_nodal_principal_geom_kind_get(pmn);
+
+  if (geom_kind == PDM_GEOMETRY_KIND_VOLUMIC) {
+    PDM_part_mesh_nodal_elmts_t *pmne = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(pmn,
+                                                                                      geom_kind);
+    int n_group = PDM_part_mesh_nodal_elmts_n_group_get(pmne);
+
+    if (n_group == 0) {
+      // Add volume groups
+      n_group = 3;
+
+      PDM_part_mesh_nodal_elmts_n_group_set(pmne, n_group);
+
+      int         **group_elt          = NULL;
+      PDM_g_num_t **group_elt_ln_to_gn = NULL;
+      PDM_malloc(group_elt,          n_group, int         *);
+      PDM_malloc(group_elt_ln_to_gn, n_group, PDM_g_num_t *);
+
+      for (int i_part = 0; i_part < n_part; i_part++) {
+        int n_elt = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, i_part);
+
+        PDM_g_num_t *g_num = PDM_part_mesh_nodal_elmts_g_num_get_from_part(pmne,
+                                                                           i_part,
+                                                                           PDM_OWNERSHIP_KEEP);
+        int *group_elt_n = PDM_array_zeros_int(n_group);
+        for (int i_elt = 0; i_elt < n_elt; i_elt++) {
+          int i_group = g_num[i_elt] % n_group;
+          group_elt_n[i_group]++;
+        }
+
+        for (int i_group = 0; i_group < n_group; i_group++) {
+          PDM_malloc(group_elt         [i_group], group_elt_n[i_group], int        );
+          PDM_malloc(group_elt_ln_to_gn[i_group], group_elt_n[i_group], PDM_g_num_t);
+          group_elt_n[i_group] = 0;
+        }
+
+        for (int i_elt = 0; i_elt < n_elt; i_elt++) {
+          int i_group = g_num[i_elt] % n_group;
+          group_elt         [i_group][group_elt_n[i_group]] = i_elt+1;
+          group_elt_ln_to_gn[i_group][group_elt_n[i_group]] = 1 + (g_num[i_elt] - 1) / n_group;
+          group_elt_n[i_group]++;
+        }
+
+        for (int i_group = 0; i_group < n_group; i_group++) {
+          PDM_part_mesh_nodal_elmts_group_set(pmne,
+                                              i_part,
+                                              i_group,
+                                              group_elt_n       [i_group],
+                                              group_elt         [i_group],
+                                              group_elt_ln_to_gn[i_group],
+                                              PDM_OWNERSHIP_KEEP);
+        }
+        PDM_free(group_elt_n);
+      }
+      PDM_free(group_elt         );
+      PDM_free(group_elt_ln_to_gn);
+    }
+  }
 
   return pmn;
 }

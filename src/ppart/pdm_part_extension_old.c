@@ -2,33 +2,33 @@
  * Standard C library headers
  *----------------------------------------------------------------------------*/
 
-#include <stdlib.h>
-#include <string.h>
 #include <assert.h>
 #include <math.h>
-#include <float.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
-#include "pdm_mpi.h"
 #include "pdm.h"
-#include "pdm_distant_neighbor.h"
-#include "pdm_logging.h"
-#include "pdm_unique.h"
-#include "pdm_binary_search.h"
-#include "pdm_order.h"
-#include "pdm_error.h"
-#include "pdm_part_extension.h"
-#include "pdm_part_to_part.h"
-#include "pdm_block_to_part.h"
-#include "pdm_part_to_block.h"
-#include "pdm_part_extension_priv.h"
-#include "pdm_part_connectivity_transform.h"
-#include "pdm_distrib.h"
 #include "pdm_array.h"
+#include "pdm_binary_search.h"
+#include "pdm_distant_neighbor.h"
+#include "pdm_distrib.h"
+#include "pdm_error.h"
+#include "pdm_logging.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mpi.h"
+#include "pdm_order.h"
+#include "pdm_part_connectivity_transform.h"
+#include "pdm_part_domain_interface.h"
+#include "pdm_part_extension.h"
+#include "pdm_part_extension_priv.h"
+#include "pdm_part_priv.h"
 #include "pdm_partitioning_algorithm.h"
+#include "pdm_priv.h"
+#include "pdm_sort.h"
 #include "pdm_vtk.h"
 
 #ifdef __cplusplus
@@ -1804,7 +1804,7 @@ _create_cell_cell_graph
         pcell_face    [i_part] = part_ext->parts[i_domain][i_part].cell_face;
       }
 
-      PDM_part_connectivity_to_connectity_idx(part_ext->n_part[i_domain],
+      PDM_part_connectivity_to_connectivity_idx(part_ext->n_part[i_domain],
                                               pn_face,
                                               pface_cell,
                                               &face_cell_idx[i_domain],
@@ -2044,16 +2044,16 @@ _compute_other_domain_interface
     PDM_malloc(pface_edge    , part_ext->n_domain, int         **);
 
     for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
-      PDM_malloc(pn_vtx        [i_domain], part_ext->n_domain, int          );
-      PDM_malloc(pn_edge       [i_domain], part_ext->n_domain, int          );
-      PDM_malloc(pn_face       [i_domain], part_ext->n_domain, int          );
-      PDM_malloc(pvtx_ln_to_gn [i_domain], part_ext->n_domain, PDM_g_num_t *);
-      PDM_malloc(pedge_ln_to_gn[i_domain], part_ext->n_domain, PDM_g_num_t *);
-      PDM_malloc(pface_ln_to_gn[i_domain], part_ext->n_domain, PDM_g_num_t *);
-      PDM_malloc(pedge_vtx_idx [i_domain], part_ext->n_domain, int         *);
-      PDM_malloc(pedge_vtx     [i_domain], part_ext->n_domain, int         *);
-      PDM_malloc(pface_edge_idx[i_domain], part_ext->n_domain, int         *);
-      PDM_malloc(pface_edge    [i_domain], part_ext->n_domain, int         *);
+      PDM_malloc(pn_vtx        [i_domain], part_ext->n_part[i_domain], int          );
+      PDM_malloc(pn_edge       [i_domain], part_ext->n_part[i_domain], int          );
+      PDM_malloc(pn_face       [i_domain], part_ext->n_part[i_domain], int          );
+      PDM_malloc(pvtx_ln_to_gn [i_domain], part_ext->n_part[i_domain], PDM_g_num_t *);
+      PDM_malloc(pedge_ln_to_gn[i_domain], part_ext->n_part[i_domain], PDM_g_num_t *);
+      PDM_malloc(pface_ln_to_gn[i_domain], part_ext->n_part[i_domain], PDM_g_num_t *);
+      PDM_malloc(pedge_vtx_idx [i_domain], part_ext->n_part[i_domain], int         *);
+      PDM_malloc(pedge_vtx     [i_domain], part_ext->n_part[i_domain], int         *);
+      PDM_malloc(pface_edge_idx[i_domain], part_ext->n_part[i_domain], int         *);
+      PDM_malloc(pface_edge    [i_domain], part_ext->n_part[i_domain], int         *);
 
       for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
         pn_vtx        [i_domain][i_part] = part_ext->parts[i_domain][i_part].n_vtx;
@@ -4868,7 +4868,6 @@ _generate_extended_partition_connectivity
   }
 
   int idx = 0;
-  int i_entity2_extented = 0;
   for(int i = 0; i < s_tot; ++i) {
     PDM_g_num_t g_entity2 = PDM_ABS(border_gentity1_entity2[i]);
 
@@ -4886,8 +4885,6 @@ _generate_extended_partition_connectivity
         int sgn    = PDM_SIGN(border_lentity1_entity2[i]); // A aller cherche dans le cell_face de depart
         int sens   = cur_interface_sens[pos_interface];
         border_lentity1_entity2[idx++] = sens * sgn * ( cur_interface_entity2[pos_interface] + 1 ); // Car on shift
-        // border_lentity1_entity2[idx++] = - sgn * ( cur_interface_entity2[pos_interface] + 1 ); // Car on shift
-        i_entity2_extented++;
         continue;
       }
     }
@@ -4911,7 +4908,6 @@ _generate_extended_partition_connectivity
       // printf(" Rebuild from exterior [%i] with gnum = "PDM_FMT_G_NUM" and pos : %i - new numbering %i \n ", i, g_entity2, pos, ( pos + n_entity2 + 1 ));
 
       border_lentity1_entity2[idx++] = sgn * ( pos + n_entity2 + 1 ); // Car on shift
-      i_entity2_extented++;
     } else {
 
       int pos_interior2 = PDM_binary_search_long(g_entity2, _sorted_entity2_ln_to_gn, n_entity2);
@@ -6072,9 +6068,9 @@ PDM_part_extension_create
   PDM_malloc(part_ext->ownership_border_group          , PDM_MESH_ENTITY_MAX      , PDM_ownership_t **);
   PDM_malloc(part_ext->ownership_border_graph          , PDM_MESH_ENTITY_MAX      , PDM_ownership_t **);
   PDM_malloc(part_ext->ownership_border_path_itrf      , PDM_MESH_ENTITY_MAX      , PDM_ownership_t **);
-  
+
   for (int i_entity=0; i_entity<PDM_MESH_ENTITY_MAX; ++i_entity) {
-    
+
     PDM_malloc(part_ext->ownership_border_ln_to_gn       [i_entity], n_domain, PDM_ownership_t *);
     PDM_malloc(part_ext->ownership_border_ln_to_gn_ancstr[i_entity], n_domain, PDM_ownership_t *);
     PDM_malloc(part_ext->ownership_border_group          [i_entity], n_domain, PDM_ownership_t *);
@@ -6088,7 +6084,7 @@ PDM_part_extension_create
       PDM_malloc(part_ext->ownership_border_group          [i_entity][i_domain], n_part[i_domain], PDM_ownership_t);
       PDM_malloc(part_ext->ownership_border_graph          [i_entity][i_domain], n_part[i_domain], PDM_ownership_t);
       PDM_malloc(part_ext->ownership_border_path_itrf      [i_entity][i_domain], n_part[i_domain], PDM_ownership_t);
-      
+
       for (int i_part = 0; i_part < n_part[i_domain]; i_part++) {
 
         part_ext->ownership_border_ln_to_gn       [i_entity][i_domain][i_part] = PDM_OWNERSHIP_BAD_VALUE;
@@ -6681,35 +6677,6 @@ PDM_part_extension_compute
                              &border_neighor_n,
                   (void ***) &border_neighor);
 
-
-    // int **border_neighor_idx = NULL;
-    for(int i_part = 0; i_part < n_part_loc_all_domain; ++i_part) {
-
-      int *_border_neighor_n = border_neighor_n[i_part];
-      // int *_border_neighor   = border_neighor  [i_part];
-
-      int *_vtx_vtx_extended_idx = part_ext->vtx_vtx_extended_idx[i_part];
-      // int *_vtx_vtx_extended     = part_ext->vtx_vtx_extended    [i_part];
-      // int *_vtx_vtx_interface    = part_ext->vtx_vtx_interface  [i_part];
-
-      int idx_read = 0;
-      for(int i = 0; i < n_vtx[i_part]; ++i) {
-        // printf("i_vtx = %i \n", i);
-        for(int idx = _vtx_vtx_extended_idx[i]; idx < _vtx_vtx_extended_idx[i+1]; ++idx) {
-          // printf("\t  ---> Connected with (%i): %i %i %i %i \n", idx,
-          //                                                      _vtx_vtx_extended[3*idx  ],
-          //                                                      _vtx_vtx_extended[3*idx+1],
-          //                                                      _vtx_vtx_extended[3*idx+2],
-          //                                                      _vtx_vtx_interface[idx]);
-
-          for(int k = 0; k < _border_neighor_n[idx]; ++k) {
-            // printf("\t\t to merge with = %i %i %i %i \n", _border_neighor[4*idx_read], _border_neighor[4*idx_read+1], _border_neighor[4*idx_read+2], _border_neighor[4*idx_read+3]);
-            idx_read++;
-          }
-        }
-      }
-    }
-
     for(int i_part = 0; i_part < n_part_loc_all_domain; ++i_part) {
       PDM_free(pdi_neighbor_n            [i_part]);
       PDM_free(part_ext->pdi_neighbor_idx[i_part]);
@@ -7045,3 +7012,4 @@ PDM_part_extension_compute
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
+

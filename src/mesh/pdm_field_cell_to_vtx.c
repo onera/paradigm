@@ -4,33 +4,30 @@
  *----------------------------------------------------------------------------*/
 
 #include <assert.h>
+#include <math.h>
 #include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdbool.h>
 
 /*----------------------------------------------------------------------------
  *  Local headers
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
-#include "pdm_priv.h"
-#include "pdm_config.h"
-#include "pdm_morton.h"
 #include "pdm_array.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
-#include "pdm_mpi.h"
-#include "pdm_part_to_block.h"
-#include "pdm_block_to_part.h"
-#include "pdm_logging.h"
-#include "pdm_distant_neighbor.h"
-#include "pdm_part_connectivity_transform.h"
-#include "pdm_partitioning_algorithm.h"
-#include "pdm_distrib.h"
-#include "pdm_vtk.h"
-#include "pdm_order.h"
 #include "pdm_binary_search.h"
+#include "pdm_distant_neighbor.h"
+#include "pdm_distrib.h"
+#include "pdm_logging.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mesh_nodal.h"
+#include "pdm_mpi.h"
+#include "pdm_part_connectivity_transform.h"
+#include "pdm_part_mesh_nodal_elmts.h"
+#include "pdm_part_priv.h"
+#include "pdm_partitioning_algorithm.h"
+#include "pdm_priv.h"
+#include "pdm_vtk.h"
+#include "pdm_field_cell_to_vtx.h"
+#include "pdm_field_cell_to_vtx_priv.h"
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -1365,15 +1362,6 @@ _interpolate
  * Public function definitions
  *============================================================================*/
 
-/**
- *
- * \brief Create a structure that compute a global mean
- *
- * \param [in]   n_part       Number of local partitions
- * \param [in]   comm         PDM_MPI communicator
- *
- * \return     Pointer to \ref PDM_field_cell_to_vtx object
- */
 PDM_field_cell_to_vtx_t*
 PDM_field_cell_to_vtx_create
 (
@@ -1748,8 +1736,6 @@ PDM_field_cell_to_vtx_compute
     }
   }
 
-
-
   /* Free */
   for(int i_part = 0; i_part < fctv->n_part_loc_all_domain; ++i_part){
     PDM_free(pvtx_cell_coords  [i_part]);
@@ -1759,8 +1745,6 @@ PDM_field_cell_to_vtx_compute
   PDM_free(pvtx_cell_coords_n);
 
   /* Compute weight */
-
-
 
 }
 

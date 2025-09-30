@@ -6,29 +6,22 @@
  * Standard C library headers
  *----------------------------------------------------------------------------*/
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <string.h>
-#include <sys/time.h>
-#include <time.h>
 #include <assert.h>
-#include "pdm_config.h"
-
+#include <stdio.h>
+#include <string.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
 #include "pdm_memory_stats.h"
-#include "pdm_memory_stats_priv.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
 #include "pdm_logging.h"
-#include "pdm.h"
-#include "pdm_priv.h"
+#include "pdm_mem_tool.h"
+#include "pdm_memory_stats_priv.h"
 
-/*----------------------------------------------------------------------------*/
+/*=============================================================================
+ * Macro definitions
+ *============================================================================*/
 
 #ifdef __cplusplus
 extern "C" {
@@ -37,7 +30,17 @@ extern "C" {
 #endif
 #endif /* __cplusplus */
 
+/*============================================================================
+ * Macro definitions
+ *============================================================================*/
 
+/*============================================================================
+ * Type definitions
+ *============================================================================*/
+
+/*============================================================================
+ * Private function definitions
+ *============================================================================*/
 
 static
 void
@@ -96,6 +99,12 @@ PDM_get_current_memory
   }
   fclose(file);
 }
+
+
+/*============================================================================
+ * Public function definitions
+ *============================================================================*/
+
 
 PDM_memory_stats_t*
 PDM_memory_stats_create
@@ -188,11 +197,7 @@ PDM_memory_stats_log
                 peak_virt);
 
     }
-
-
   }
-
-
 }
 
 

@@ -1,31 +1,22 @@
-#include <math.h>
-#include <sys/time.h>
-#include <time.h>
-#include <sys/resource.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "pdm.h"
 #include "pdm_config.h"
-#include "pdm_mpi.h"
-#include "pdm_partitioning_algorithm.h"
-#include "pdm_dmesh_nodal_to_dmesh.h"
-#include "pdm_dmesh_nodal_elements_utils.h"
-#include "pdm_dconnectivity_transform.h"
-#include "pdm_part_connectivity_transform.h"
 #include "pdm_dcube_nodal_gen.h"
+#include "pdm_dmesh_nodal.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mesh_nodal.h"
+#include "pdm_mpi.h"
 #include "pdm_multipart.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
-#include "pdm_vtk.h"
-#include "pdm_dmesh.h"
-#include "pdm_logging.h"
-#include "pdm_priv.h"
+#include "pdm_part_connectivity_transform.h"
+#include "pdm_part_mesh.h"
+#include "pdm_part_mesh_nodal.h"
 #include "pdm_part_mesh_nodal_to_part_mesh.h"
-#include "pdm_distrib.h"
+#include "pdm_printf.h"
+#include "pdm_vtk.h"
 
 /*============================================================================
  * Type definitions
@@ -330,8 +321,8 @@ int main(int argc, char *argv[])
       for(int i_part = 0; i_part < n_part; ++i_part) {
 
         int n_vtx = PDM_part_mesh_nodal_n_vtx_get(pmesh_nodal, i_part);
-        double *vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmesh_nodal, i_part);
-        PDM_g_num_t *vtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(pmesh_nodal, i_part);
+        double *vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmesh_nodal, i_part, PDM_OWNERSHIP_BAD_VALUE);
+        PDM_g_num_t *vtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(pmesh_nodal, i_part, PDM_OWNERSHIP_BAD_VALUE);
 
         PDM_g_num_t *face_ln_to_gn = NULL;
         int         *face_vtx_idx  = NULL;
@@ -431,8 +422,8 @@ int main(int argc, char *argv[])
       for(int i_part = 0; i_part < n_part; ++i_part) {
 
         int n_vtx = PDM_part_mesh_nodal_n_vtx_get(pmesh_nodal, i_part);
-        double *vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmesh_nodal, i_part);
-        PDM_g_num_t *vtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(pmesh_nodal, i_part);
+        double *vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmesh_nodal, i_part, PDM_OWNERSHIP_BAD_VALUE);
+        PDM_g_num_t *vtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(pmesh_nodal, i_part, PDM_OWNERSHIP_BAD_VALUE);
 
         PDM_g_num_t *edge_ln_to_gn = NULL;
         int         *edge_vtx_idx  = NULL;

@@ -2,9 +2,6 @@
  * Standard C library headers
  *----------------------------------------------------------------------------*/
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
 #include <string.h>
 
 /*----------------------------------------------------------------------------
@@ -13,7 +10,7 @@
 
 #include "pdm_version.h"
 #include "pdm_config.h"
-#include "pdm_priv.h"
+#include "pdm_mem_tool.h"
 
 /*----------------------------------------------------------------------------*/
 

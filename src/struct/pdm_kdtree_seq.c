@@ -3,23 +3,21 @@
  *----------------------------------------------------------------------------*/
 
 #include <assert.h>
-#include <stdio.h>
 #include <math.h>
+#include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
 
 /*----------------------------------------------------------------------------
  *  Local headers
  *----------------------------------------------------------------------------*/
 
-#include "pdm.h"
-#include "pdm_priv.h"
-#include "pdm_config.h"
-#include "pdm_printf.h"
-#include "pdm_logging.h"
-#include "pdm_error.h"
-#include "pdm_sort.h"
+#include "pdm_kdtree_seq.h"
 #include "pdm_binary_search.h"
+#include "pdm_kdtree_seq_priv.h"
+#include "pdm_logging.h"
+#include "pdm_mem_tool.h"
+#include "pdm_priv.h"
+#include "pdm_sort.h"
 
 /*----------------------------------------------------------------------------
  *  Header for the current file

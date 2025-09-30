@@ -1,28 +1,22 @@
 #include <math.h>
-#include <sys/time.h>
-#include <time.h>
-#include <sys/resource.h>
-#include <unistd.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include <assert.h>
-
-#include <pdm_mpi.h>
+#include <sys/time.h>
 
 #include "pdm.h"
-#include "pdm_config.h"
-#include "pdm_priv.h"
-#include "pdm_part.h"
 #include "pdm_dcube_gen.h"
 #include "pdm_dist_cloud_surf.h"
-#include "pdm_gnum.h"
 #include "pdm_geom_elem.h"
-
-#include "pdm_writer.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
+#include "pdm_gnum.h"
+#include "pdm_io.h"
 #include "pdm_logging.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mpi.h"
+#include "pdm_part.h"
+#include "pdm_printf.h"
+#include "pdm_priv.h"
+#include "pdm_writer.h"
 
 /*============================================================================
  * Type definitions
@@ -423,11 +417,9 @@ int main(int argc, char *argv[])
                            &face_group,
                            &face_group_ln_to_gn);
 
-    int iii = 0;
     for (int i = 0; i < n_face; i++) {
       int icel2 = face_cell[2*i+1];
       if (icel2 == 0) {
-        iii++;
         select_face[i_part][i] = 1;
       }
     }

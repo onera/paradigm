@@ -5,11 +5,10 @@
 #ifndef __PDM_PARTITIONING_NODAL_ALGORITHM_H__
 #define __PDM_PARTITIONING_NODAL_ALGORITHM_H__
 
-#include <stdio.h>
 #include "pdm.h"
-#include "pdm_mpi.h"
 #include "pdm_dmesh_nodal.h"
-#include "pdm_part_mesh_nodal.h"
+#include "pdm_dmesh_nodal_elmts.h"
+#include "pdm_mpi.h"
 #include "pdm_part_mesh_nodal_elmts.h"
 
 /*=============================================================================

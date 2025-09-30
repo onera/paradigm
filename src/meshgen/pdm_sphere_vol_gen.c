@@ -1,52 +1,32 @@
-/*
-  This file is part of the CWIPI library.
-
-  Copyright (C) 2011  ONERA
-
-  This library is free software; you can redistribute it and/or
-  modify it under the terms of the GNU Lesser General Public
-  License as published by the Free Software Foundation; either
-  version 3 of the License, or (at your option) any later version.
-
-  This library is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  Lesser General Public License for more details.
-
-  You should have received a copy of the GNU Lesser General Public
-  License along with this library. If not, see <http://www.gnu.org/licenses/>.
-*/
-
 /*----------------------------------------------------------------------------
- *  System headers
+ * Standard C library headers
  *----------------------------------------------------------------------------*/
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <assert.h>
 #include <math.h>
+#include <stdio.h>
 #include <string.h>
 
 /*----------------------------------------------------------------------------
- *  Local headers
+ *  Header for the current file
  *----------------------------------------------------------------------------*/
 
-#include "pdm_dcube_nodal_gen.h"
-#include "pdm_dmesh_nodal_priv.h"
-#include "pdm_config.h"
-#include "pdm.h"
-#include "pdm_priv.h"
-#include "pdm_mpi.h"
-#include "pdm_array.h"
-#include "pdm_distrib.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
-#include "pdm_logging.h"
-#include "pdm_binary_search.h"
-#include "pdm_vtk.h"
-#include "pdm_geom_elem.h"
-
 #include "pdm_sphere_vol_gen.h"
+#include "pdm.h"
+#include "pdm_array.h"
+#include "pdm_binary_search.h"
+#include "pdm_dcube_nodal_gen.h"
+#include "pdm_distrib.h"
+#include "pdm_dmesh_nodal_elmts.h"
+#include "pdm_dmesh_nodal_elmts_priv.h"
+#include "pdm_dmesh_nodal_priv.h"
+#include "pdm_error.h"
+#include "pdm_geom_elem.h"
+#include "pdm_logging.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mpi.h"
+#include "pdm_priv.h"
+#include "pdm_vtk.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -56,8 +36,8 @@ extern "C" {
 #endif /* __cplusplus */
 
 
-/*============================================================================
- * Local macro definitions
+/*=============================================================================
+ * Macro definitions
  *============================================================================*/
 
 #define ij2idx(i, j, n) ((i) + ((n)+1)*(j) - ((j)-1)*(j)/2)
@@ -2067,24 +2047,6 @@ _set_dmesh_nodal
  * Public function definitions
  *============================================================================*/
 
-/**
- *
- * \brief Create a volume mesh bounded by a sphere (deformed cube)
- *
- * \param[in]  comm            MPI communicator
- * \param[in]  n_vtx_x         Number of vertices on segments in x-direction
- * \param[in]  n_vtx_y         Number of vertices on segments in y-direction
- * \param[in]  n_vtx_z         Number of vertices on segments in z-direction
- * \param[in]  radius          Radius of the sphere
- * \param[in]  center_x        x coordinate of the center of the sphere
- * \param[in]  center_y        y coordinate of the center of the sphere
- * \param[in]  center_z        z coordinate of the center of the sphere
- * \param[in]  t_elt           Element type
- * \param[in]  order           Element order
- * \param[out] dmn             Pointer to a \ref PDM_dmesh_nodal object
- *
- */
-
 void
 PDM_sphere_vol_gen_nodal
 (
@@ -2287,30 +2249,6 @@ PDM_sphere_vol_gen_nodal
 
   PDM_dcube_nodal_gen_free(dcube);
 }
-
-
-
-
-
-
-/**
- * \brief Create a volume mesh bounded by an icosphere
- * (all cells are tetrahedra)
- *
- * \param[in]  comm            MPI communicator
- * \param[in]  n               Number of icosphere subdivisions
- * \param[in]  x_center        x coordinate of the center of the sphere
- * \param[in]  y_center        y coordinate of the center of the sphere
- * \param[in]  z_center        z coordinate of the center of the sphere
- * \param[in]  radius          Radius of the sphere
- * \param[out] dvtx_coord      Connectivity of distributed vertex to coordinates
- * \param[out] dface_vtx       Connectivity of distributed face to vertex
- * \param[out] dcell_vtx       Connectivity of distributed cell to vertex
- * \param[out] distrib_vtx     Distribution of vertices
- * \param[out] distrib_face    Distribution of faces
- * \param[out] distrib_face    Distribution of cells
- *
- */
 
 void
 PDM_sphere_vol_icosphere_gen
@@ -2553,22 +2491,6 @@ PDM_sphere_vol_icosphere_gen
 }
 
 
-
-
-/**
- * \brief Create a volume mesh bounded by an icosphere
- * (all cells are tetrahedra)
- *
- * \param[in]  comm            MPI communicator
- * \param[in]  n               Number of icosphere subdivisions
- * \param[in]  x_center        x coordinate of the center of the sphere
- * \param[in]  y_center        y coordinate of the center of the sphere
- * \param[in]  z_center        z coordinate of the center of the sphere
- * \param[in]  radius          Radius of the sphere
- * \param[out] dmn             Pointer to a \ref PDM_dmesh_nodal object
- *
- */
-
 void
 PDM_sphere_vol_icosphere_gen_nodal
 (
@@ -2620,25 +2542,6 @@ PDM_sphere_vol_icosphere_gen_nodal
   PDM_free(distrib_cell);
 }
 
-
-
-
-/**
- * \brief Create a volume mesh bounded by two concentric icospheres
- * (all cells are prisms)
- *
- * \param[in]  comm            MPI communicator
- * \param[in]  n               Number of icosphere subdivisions
- * \param[in]  n_layer         Number of extrusion layers
- * \param[in]  x_center        x coordinate of the center of the sphere
- * \param[in]  y_center        y coordinate of the center of the sphere
- * \param[in]  z_center        z coordinate of the center of the sphere
- * \param[in]  radius_interior Radius of the interior sphere
- * \param[in]  radius_exterior Radius of the exterior sphere
- * \param[in]  geometric_ratio Geometric ratio for layer thickness
- * \param[out] dmn             Pointer to a \ref PDM_dmesh_nodal object
- *
- */
 
 void
 PDM_sphere_vol_hollow_gen_nodal

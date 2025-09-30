@@ -26,12 +26,11 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
-#include "pdm_mpi.h"
-#include "pdm_mesh_nodal.h"
-#include "pdm_part_mesh_nodal.h"
-#include "pdm_dmesh_nodal.h"
-#include "pdm_part_mesh.h"
 #include "pdm_dmesh.h"
+#include "pdm_dmesh_nodal.h"
+#include "pdm_mpi.h"
+#include "pdm_part_mesh.h"
+#include "pdm_part_mesh_nodal.h"
 #include "pdm_part_to_part.h"
 
 /*----------------------------------------------------------------------------*/
@@ -172,7 +171,7 @@ PDM_isosurface_pconnectivity_set
  * \param [in]  isos       \ref PDM_isosurface_t instance
  * \param [in]  i_part     Partition identifier
  * \param [in]  n_vtx      Local number of vertices
- * \param [in]  vtx_coord  Vertex coordinates (size = 3 * \p n_vtx)
+ * \param [in]  vtx_coord  Vertex coordinates (size = 3 * *n_vtx*)
  *
  */
 
@@ -413,7 +412,7 @@ PDM_isosurface_dmesh_nodal_set
  * \brief Add a requested set of iso-surfaces
  *
  * \param [in]  isos         \ref PDM_isosurface_t instance
- * \param [in]  kind         Iso-surface kind (discrete field, slice equation or function pointer)
+ * \param [in]  kind         Iso-surface kind (discrete field, slice equation or function pointer) see \verbatim embed:rst:inline :ref:`note below <PDM_iso_surface_kind_t>` \endverbatim
  * \param [in]  n_isovalues  Number of iso-values to capture
  * \param [in]  isovalues    Iso-values to capture (size = \p n_isovalues)
  *
@@ -458,22 +457,7 @@ PDM_isosurface_isovalues_set
  *
  * \param [in]  isos           \ref PDM_isosurface_t instance
  * \param [in]  id_isosurface  Iso-surface identifier
- * \param [in]  coeff          Equation coefficients
- *
- * - \ref PDM_ISO_SURFACE_KIND_PLANE (3 coefficients):
- *   \f$\phi(x,y,z) = \texttt{coeff[0]} \cdot x + \texttt{coeff[1]} \cdot y + \texttt{coeff[2]} \cdot z\f$
- * 
- * 
- * - \ref PDM_ISO_SURFACE_KIND_SPHERE (4 coefficients):
- *   \f$\phi(x,y,z) = (x - \texttt{coeff[0]})^2 + (y - \texttt{coeff[1]})^2 + (z - \texttt{coeff[2]})^2 - \texttt{coeff[3]}^2\f$
- * 
- * 
- * - \ref PDM_ISO_SURFACE_KIND_ELLIPSE (7 coefficients):
- *   \f$\phi(x,y,z) = \left(\frac{x - \texttt{coeff[0]}}{\texttt{coeff[3]}}\right)^2 + \left(\frac{y - \texttt{coeff[1]}}{\texttt{coeff[4]}}\right)^2 + \left(\frac{z - \texttt{coeff[2]}}{\texttt{coeff[5]}}\right)^2 - \texttt{coeff[6]}^2\f$
- * 
- * 
- * - \ref PDM_ISO_SURFACE_KIND_QUADRIC (10 coefficients):
- *   \f$\phi(x,y,z) = \texttt{coeff[6]} \left(\frac{x - \texttt{coeff[0]}}{\texttt{coeff[3]}}\right)^2 + \texttt{coeff[7]} \left(\frac{y - \texttt{coeff[1]}}{\texttt{coeff[4]}}\right)^2 + \texttt{coeff[8]} \left(\frac{z - \texttt{coeff[2]}}{\texttt{coeff[5]}}\right)^2 - \texttt{coeff[9]}^2\f$
+ * \param [in]  coeff          Equation coefficients refer to the \verbatim embed:rst:inline :ref:`note below <PDM_iso_surface_kind_t>` \endverbatim to know how many coefficients are needed for each PDM_iso_surface_kind_t
  *
  */
 
@@ -589,8 +573,6 @@ PDM_isosurface_reset
  *
  * \param [in]  isos        \ref PDM_isosurface_t instance
  * \param [in]  n_part_out  Number of partitions
- *
- * \warning This function must be called prior to \ref PDM_isosurface_compute.
  *
  * \note By default, the number of partitions in the isosurface mesh is set to
  *  - 1 in \ref PDM_EXTRACT_PART_KIND_REEQUILIBRATE mode
@@ -974,8 +956,6 @@ PDM_isosurface_disovalue_entity_get
  *   - PDM_MESH_ENTITY_EDGE : parents are faces
  *   - PDM_MESH_ENTITY_FACE : parents are cells
  *
- * \warning comment on fait en block-distribué?
- *
  */
 
 int
@@ -1003,7 +983,7 @@ PDM_isosurface_plocal_parent_get
  * \param [in]  ownership      Ownership
  *
  * \warning These weights are only computed if the construction
- * of the entity Part-to-Part has been enabled (see \ref PDM_isosurface_part_to_part_enable).
+ * of the entity Part-to-Part has been \verbatim embed:rst:inline :ref:`enabled <PDM_isosurface_part_to_part_enable_c>` \endverbatim.
  *
  * \return  Number of iso-surface entities
  *
@@ -1030,8 +1010,6 @@ PDM_isosurface_pparent_weight_get
  * \param [in]  id_isosurface     Iso-surface identifier
  * \param [in]  entity_type       Entity type
  * \param [in]  unify_parent_info Get all parent over all procs (not implemented)
- *
- * \warning This function must be called prior to \ref PDM_isosurface_compute
  *
  */
 

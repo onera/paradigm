@@ -2,22 +2,16 @@
  * Standard C library headers
  *----------------------------------------------------------------------------*/
 
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
-#include <math.h>
-#include <float.h>
-
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
-#include "pdm_mpi.h"
-#include "pdm.h"
-#include "pdm_priv.h"
-#include "pdm_array.h"
-#include "pdm_logging.h"
 #include "pdm_domain_utils.h"
+#include "pdm.h"
+#include "pdm_array.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mpi.h"
+#include "pdm_priv.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -47,17 +41,7 @@ extern "C" {
 /*============================================================================
  * Public function definitions
  *============================================================================*/
-/**
- * \brief Shift all ln_to_gn of all current partition by the last max last domain
- *
- * \param [in]     n_domain             Number of domain
- * \param [in]     n_part               Number of partition for each domain       (size : n_domain )
- * \param [in]     pn_entity            Number of entity by domain and partition  (size : n_domaine, n_part)
- * \param [inout]  pentity_ln_to_gn     Number of entity by domain and partition  (size : n_domaine, n_part)
- * \param [in]     comm                 MPI Communicator
- *
- * \returnd        Array of shift (size : n_domain+1)
- */
+
 PDM_g_num_t*
 PDM_compute_offset_ln_to_gn_by_domain
 (
@@ -93,17 +77,7 @@ PDM_compute_offset_ln_to_gn_by_domain
   return shift_by_domain;
 }
 
-/**
- * \brief Shift all ln_to_gn of all current partition by the last max last domain
- *
- * \param [in]     n_domain             Number of domain
- * \param [in]     n_part               Number of partition for each domain       (size : n_domain )
- * \param [in]     pn_entity            Number of entity by domain and partition  (size : n_domaine, n_part)
- * \param [inout]  pentity_ln_to_gn     Number of entity by domain and partition  (size : n_domaine, n_part)
- * \param [in]     shift_by_domain      For each domain shift to apply (can be compute by PDM_compute_offset_ln_to_gn_by_domain)
- * \param [in]     sens                 Manage sens of shift (1 or - 1)
- *
- */
+
 void
 PDM_offset_ln_to_gn_by_domain
 (
@@ -125,8 +99,6 @@ PDM_offset_ln_to_gn_by_domain
     }
   }
 }
-
-
 
 
 #ifdef __cplusplus

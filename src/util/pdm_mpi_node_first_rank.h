@@ -2,10 +2,10 @@
  * \file
  */
 
-#ifndef __CEDRE_IO_MPI_IO_NODE_RANK_H__
-#define __CEDRE_IO_MPI_IO_NODE_RANK_H__
+#ifndef __PDM_IO_MPI_NODE_FIRST_RANK_H__
+#define __PDM_IO_MPI_NODE_FIRST_RANK_H__
 
-#include "pdm.h"
+#include <stddef.h>
 #include "pdm_mpi.h"
 
 #ifdef __cplusplus
@@ -59,4 +59,4 @@ size_t *hostname_length
 }
 #endif /* __cplusplus */
 
-#endif /* __CEDRE_IO_MPI_IO_NODE_RANK_H__ */
+#endif /* __PDM_IO_MPI_NODE_FIRST_RANK_H__ */

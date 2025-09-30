@@ -4,7 +4,6 @@
 
 #include <assert.h>
 #include <math.h>
-#include <float.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,27 +12,24 @@
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
+#include "pdm_point_location.h"
 #include "pdm.h"
-#include "pdm_priv.h"
-#include "pdm_printf.h"
-#include "pdm_logging.h"
+#include "pdm_array.h"
 #include "pdm_error.h"
-#include "pdm_plane.h"
-#include "pdm_line.h"
+#include "pdm_geom_elem.h"
+#include "pdm_ho_basis.h"
+#include "pdm_ho_location.h"
+#include "pdm_ho_ordering.h"
+#include "pdm_logging.h"
+#include "pdm_mean_values.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mesh_nodal.h"
+#include "pdm_part_mesh_nodal_elmts.h"
+#include "pdm_printf.h"
+#include "pdm_priv.h"
 #include "pdm_triangle.h"
 #include "pdm_polygon.h"
 #include "pdm_triangulate.h"
-#include "pdm_mesh_nodal.h"
-#include "pdm_mean_values.h"
-#include "pdm_geom_elem.h"
-#include "pdm_binary_search.h"
-#include "pdm_ho_location.h"
-#include "pdm_ho_basis.h"
-#include "pdm_ho_ordering.h"
-#include "pdm_part_mesh_nodal_elmts.h"
-#include "pdm_array.h"
-
-#include "pdm_point_location.h"
 
 /*=============================================================================
  * Macro definitions
@@ -1315,347 +1311,83 @@ _locate_in_cell_3d
 
     }
 
-    PDM_l_num_t n_tri;
-    double tri_coord[9];
-    PDM_l_num_t _tri_vtx[3], tri_vtx[6];
-    // PDM_triangulate_state_t *state = PDM_triangulate_state_create (4);
-
-    /* Find closest face/point for each point outside the cell */
+    double *face_coord;
+    int max_n_vtx_face = 0;
     for (int iface = 0; iface < n_face; iface++) {
-
-      const PDM_l_num_t *_face_vtx = face_vtx + face_vtx_idx[iface];
       n_vtx_face = face_vtx_idx[iface+1] - face_vtx_idx[iface];
+      max_n_vtx_face = PDM_MAX(max_n_vtx_face, n_vtx_face);
+    }
+    PDM_malloc(face_coord, 3*max_n_vtx_face, double);
 
-      /* Triangular face */
-      if (n_vtx_face == 3) {
-        n_tri = 1;
-        for (int ivtx = 0; ivtx < 3; ivtx++) {
-          tri_vtx[ivtx] = _face_vtx[ivtx];
-        }
-      }
+    for (int ipt=0; ipt<n_pts_out; ipt++)
+    {
+      int _ipt = pts_out[ipt];
+      const double *_pt = pts_coord     + 3 * _ipt;
+      double       *_pp = proj_coord + 3 *  _ipt;
+      double       *_bc = bar_coord  + n_vtx * _ipt;
 
-      /* Quadrilateral face */
-      else {
-        n_tri = PDM_triangulate_quadrangle (3,
-                                            (double *) cell_coord,
-                                            NULL,
-                                            _face_vtx,
-                                            tri_vtx);
-      }
-
-      /* Loop on face triangles */
-      for (int itri = 0; itri < n_tri; itri++) {
-
-        for (int ivtx = 0; ivtx < 3; ivtx++) {
-          _tri_vtx[ivtx] = tri_vtx[3*itri + ivtx] - 1;
-        }
-
-        for (int ivtx = 0; ivtx < 3; ivtx++) {
-          for (int idim = 0; idim < 3; idim++) {
-            tri_coord[3*ivtx + idim] = cell_coord[3*_tri_vtx[ivtx] + idim];
+      for (int iface = 0; iface < n_face; iface++) {
+        n_vtx_face = face_vtx_idx[iface+1] - face_vtx_idx[iface];
+        double min_dist2, closest[3];
+        double weight[n_vtx_face];
+        const PDM_l_num_t *_face_vtx = face_vtx + face_vtx_idx[iface];
+        int location;
+        /* Triangular face */
+        if (n_vtx_face == 3) {
+          for (int i_vtx_face=0; i_vtx_face<n_vtx_face; i_vtx_face++){
+            face_coord[3*i_vtx_face  ] = cell_coord[3*(_face_vtx[i_vtx_face]-1)  ];
+            face_coord[3*i_vtx_face+1] = cell_coord[3*(_face_vtx[i_vtx_face]-1)+1];
+            face_coord[3*i_vtx_face+2] = cell_coord[3*(_face_vtx[i_vtx_face]-1)+2];
           }
-        }
-
-        /* Loop on points */
-        for (int ipt = 0; ipt < n_pts_out; ipt++) {
-
-          int _ipt = pts_out[ipt];
-          const double *_pt = pts_coord     + 3 * _ipt;
-          // double       *_cp = closest_point + 3 *  ipt;
-          double       *_pp = proj_coord + 3 *  _ipt;
-          double       *_bc = bar_coord  + n_vtx * _ipt;
-          int dbg = (_pt[0] > 1.46 && _pt[0] < 1.47 &&
-                     _pt[1] > 14.7 && _pt[1] < 14.8 &&
-                     _pt[2] > 10.0 && _pt[2] < 10.1);
-          dbg = 0;
-
-// Fix #74 setenv is not portable
-          // if (dbg) {
-          //   setenv("DBG_TRIANGLE", "1", 1);
-          // }
-          // else {
-          //   setenv("DBG_TRIANGLE", "0", 1);
-          // }
-
-          double min_dist2, closest[3], weight[3];
-          PDM_triangle_status_t error = PDM_triangle_evaluate_position(_pt,
-                                                                       tri_coord,
-                                                                       closest,
-                                                                       &min_dist2,
-                                                                       weight);
-
-          if (dbg) {
-            double err[3] = {closest[0], closest[1], closest[2]};
-            for (int i = 0; i < 3; i++) {
-              for (int j = 0; j < 3; j++) {
-                err[j] -= weight[i]*tri_coord[3*i+j];
-              }
-            }
-            log_trace("  err = %e\n", PDM_MODULE(err));
-
-            log_trace("pt %20.16f %20.16f %20.16f at dist %20.16f from tri #%d of face %d\n",
-                      _pt[0], _pt[1], _pt[2], sqrt(min_dist2), itri, iface);
-            for (int i = 0; i < 3; i++) {
-              log_trace("  %20.16f %20.16f %20.16f\n",
-                        tri_coord[3*i], tri_coord[3*i+1], tri_coord[3*i+2]);
-            }
-          }
-
-
-          if (error == PDM_TRIANGLE_DEGENERATED) {
+          location = PDM_triangle_evaluate_position(_pt,
+                                                    face_coord,
+                                                    closest,
+                                                    &min_dist2,
+                                                    weight);
+          if (location == PDM_TRIANGLE_DEGENERATED) {
             continue;
           }
-
-          // if (error == PDM_TRIANGLE_INSIDE) {
-          //   inside_polygon[ipt] = 1;
-          // }
-
-          if (distance[_ipt] > min_dist2) {
-            distance[_ipt] = min_dist2;
-
-            // closest_face[ipt] = iface;
-            for (int idim = 0; idim < 3; idim++) {
-              _pp[idim] = closest[idim];
-            }
-
-            for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
-              _bc[ivtx] = 0;
-            }
-
-            for (int ivtx = 0; ivtx < 3; ivtx++) {
-              _bc[_tri_vtx[ivtx]] = weight[ivtx];
-              if (dbg) {
-                log_trace(" += %f * (%f %f %f)\n",
-                          _bc[_tri_vtx[ivtx]],
-                          cell_coord[3*_tri_vtx[ivtx] + 0],
-                          cell_coord[3*_tri_vtx[ivtx] + 1],
-                          cell_coord[3*_tri_vtx[ivtx] + 2]);
-              }
-            }
-            if (dbg) {
-              log_trace(" pp = %f %f %f\n", _pp[0], _pp[1], _pp[2]);
-            }
-
+        }   
+        /* Quadrilateral face */
+        else{
+          for (int i_vtx_face=0; i_vtx_face<n_vtx_face; i_vtx_face++){
+            face_coord[3*i_vtx_face  ] = cell_coord[3*(_face_vtx[i_vtx_face]-1)  ];
+            face_coord[3*i_vtx_face+1] = cell_coord[3*(_face_vtx[i_vtx_face]-1)+1];
+            face_coord[3*i_vtx_face+2] = cell_coord[3*(_face_vtx[i_vtx_face]-1)+2];
           }
+          location = PDM_polygon_evaluate_position(_pt,
+                                                   n_vtx_face,
+                                                   face_coord,
+                                                   closest,
+                                                   &min_dist2);
 
-        } // End loop on points
-
-      } // End loop on triangles
-
-    } // End loop on faces
-
-
-
-
-
-    // /* Find closest face/point for each point outside the cell */
-    // for (int iface = 0; iface < n_face; iface++) {
-
-    //   const PDM_l_num_t *_face_vtx = face_vtx + face_vtx_idx[iface];
-    //   n_vtx_face = face_vtx_idx[iface+1] - face_vtx_idx[iface];
-
-    //   /* Triangular face */
-    //   if (n_vtx_face == 3) {
-    //     n_tri = 1;
-    //     for (int ivtx = 0; ivtx < 3; ivtx++) {
-    //       tri_vtx[ivtx] = _face_vtx[ivtx];
-    //     }
-    //   }
-
-    //   /* Quadrilateral face */
-    //   else {
-    //     n_tri = PDM_triangulate_quadrangle (3,
-    //                                         (double *) cell_coord,
-    //                                         NULL,
-    //                                         _face_vtx,
-    //                                         tri_vtx);
-    //   }
-
-    //   /* Loop on face triangles */
-    //   for (int itri = 0; itri < n_tri; itri++) {
-
-    //     for (int ivtx = 0; ivtx < 3; ivtx++) {
-    //       _tri_vtx[ivtx] = tri_vtx[3*itri + ivtx] - 1;
-    //     }
-
-    //     for (int ivtx = 0; ivtx < 3; ivtx++) {
-    //       for (int idim = 0; idim < 3; idim++) {
-    //         tri_coord[3*ivtx + idim] = cell_coord[3*_tri_vtx[ivtx] + idim];
-    //       }
-    //     }
-
-    //     /* Loop on points */
-    //     for (int ipt = 0; ipt < n_pts_out; ipt++) {
-
-    //       int _ipt = pts_out[ipt];
-    //       const double *_pt = pts_coord     + 3 * _ipt;
-    //       double       *_cp = closest_point + 3 *  ipt;
-    //       int dbg = (_pt[0] > -8.323 && _pt[0] < -8.322 &&
-    //                  _pt[1] > 13.33  && _pt[1] < 13.34  &&
-    //                  _pt[2] > 3.89   && _pt[2] < 3.90);
-
-    //       if (dbg) {
-    //         setenv("DBG_TRIANGLE", "1", 1);
-    //       }
-    //       else {
-    //         setenv("DBG_TRIANGLE", "0", 1);
-    //       }
-
-    //       double min_dist2, closest[3], weight[3];
-    //       PDM_triangle_status_t error = PDM_triangle_evaluate_position(_pt,
-    //                                                                    tri_coord,
-    //                                                                    closest,
-    //                                                                    &min_dist2,
-    //                                                                    weight);
-
-    //       if (dbg) {
-    //         double err[3] = {closest[0], closest[1], closest[2]};
-    //         for (int i = 0; i < 3; i++) {
-    //           for (int j = 0; j < 3; j++) {
-    //             err[j] -= weight[i]*tri_coord[3*i+j];
-    //           }
-    //         }
-    //         log_trace("  err = %e\n", PDM_MODULE(err));
-
-    //         log_trace("pt %20.16f %20.16f %20.16f at dist %20.16f from tri #%d of face %d\n",
-    //                   _pt[0], _pt[1], _pt[2], sqrt(min_dist2), itri, iface);
-    //         for (int i = 0; i < 3; i++) {
-    //           log_trace("  %20.16f %20.16f %20.16f\n",
-    //                     tri_coord[3*i], tri_coord[3*i+1], tri_coord[3*i+2]);
-    //         }
-    //       }
-
-
-    //       if (error == PDM_TRIANGLE_DEGENERATED) {
-    //         continue;
-    //       }
-
-    //       if (error == PDM_TRIANGLE_INSIDE) {
-    //         inside_polygon[ipt] = 1;
-    //       }
-
-    //       if (distance[_ipt] > min_dist2) {
-    //         distance[_ipt] = min_dist2;
-
-    //         closest_face[ipt] = iface;
-    //         for (int idim = 0; idim < 3; idim++) {
-    //           _cp[idim] = closest[idim];
-    //         }
-    //       }
-
-    //     } // End loop on points
-
-    //   } // End loop on triangles
-
-    // } // End loop on faces
-
-    // state = PDM_triangulate_state_destroy(state);
-
-    // /* Loctate closest points on closest faces */
-    // double face_coord[12];
-    // double bar_coord_face[4];
-    // for (int ipt = 0; ipt < n_pts_out; ipt++) {
-
-    //   int _ipt = pts_out[ipt];
-
-    //   const double *_pt = pts_coord     + 3     * _ipt;
-    //   double       *_cp = closest_point + 3     *  ipt;
-    //   double       *_bc = bar_coord     + n_vtx * _ipt;
-
-    //   int dbg = (_pt[0] > -8.323 && _pt[0] < -8.322 &&
-    //              _pt[1] > 13.33  && _pt[1] < 13.34  &&
-    //              _pt[2] > 3.89   && _pt[2] < 3.90);
-
-    //   for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
-    //     _bc[ivtx] = 0.;
-    //   }
-
-    //   int iface = closest_face[ipt];
-    //   n_vtx_face = face_vtx_idx[iface+1] - face_vtx_idx[iface];
-
-    //   for (int ivtx = 0; ivtx < n_vtx_face; ivtx++) {
-    //     int _ivtx = face_vtx[face_vtx_idx[iface] + ivtx] - 1;
-
-    //     for (int idim = 0; idim < 3; idim++) {
-    //       face_coord[3*ivtx + idim] = cell_coord[3*_ivtx + idim];
-    //     }
-    //   }
-
-    //   if (dbg) {
-    //     log_trace(">>> cp = %20.16e %20.16e %20.16e\n", _cp[0], _cp[1], _cp[2]);
-    //   }
-    //   if (inside_polygon[ipt]) {
-    //     PDM_mean_values_polygon_3d (n_vtx_face,
-    //                                 face_coord,
-    //                                 1,
-    //                                 _cp,
-    //                                 bar_coord_face);
-    //   }
-    //   else {
-
-    //   }
-
-    //   if (dbg) {
-    //     log_trace("pt %f %f %f : closest_face %d, dist = %f,  coord :\n",
-    //               _pt[0], _pt[1], _pt[2], iface, distance[_ipt]);
-    //     for (int i = 0; i < n_vtx_face; i++) {
-    //       log_trace("  %20.16e %20.16e %20.16e\n",
-    //                 face_coord[3*i], face_coord[3*i+1], face_coord[3*i+2]);
-    //     }
-    //     PDM_log_trace_array_double(bar_coord_face, n_vtx_face, "  mvc in face : ");
-    //   }
-
-    //   for (int ivtx = 0; ivtx < n_vtx_face; ivtx++) {
-    //     int _ivtx = face_vtx[face_vtx_idx[iface] + ivtx] - 1;
-    //     _bc[_ivtx] = bar_coord_face[ivtx];
-    //   }
-
-    //   // const double *_pt = pts_coord + 3 * _ipt;
-    //   double *_pp = proj_coord + 3 * _ipt;
-    //   // // for (int idim = 0; idim < 3; idim++) {
-    //   // //   _pp[idim] = 0.;
-    //   // // }
-
-    //   for (int ivtx = 0; ivtx < n_vtx_face; ivtx++) {
-    //     int _ivtx = face_vtx[face_vtx_idx[iface] + ivtx] - 1;
-    //     if (dbg) {
-    //       log_trace(" += %f * (%f %f %f)\n",
-    //                 bar_coord_face[ivtx],
-    //                 face_coord[3*ivtx + 0],
-    //                 face_coord[3*ivtx + 1],
-    //                 face_coord[3*ivtx + 2]);
-    //                 // cell_coord[3*_ivtx + 0],
-    //                 // cell_coord[3*_ivtx + 1],
-    //                 // cell_coord[3*_ivtx + 2]);
-    //     }
-    //     for (int idim = 0; idim < 3; idim++) {
-    //       // _pp[idim] += bar_coord_face[ivtx] * cell_coord[3*_ivtx + idim];
-    //       _pp[idim] += bar_coord_face[ivtx] * face_coord[3*ivtx + idim];
-    //     }
-    //   }
-
-    //   double err = 0;
-    //   for (int idim = 0; idim < 3; idim++) {
-    //     double delta = _cp[idim] - _pp[idim];
-    //     err += delta*delta;
-    //   }
-
-    //   if (dbg) {
-    //     log_trace(  "err = %e\n", sqrt(err));
-    //   }
-
-    //   double v_p_cp[3] = {_pt[0] - _pp[0], _pt[1] - _pp[1], _pt[2] - _pp[2]};
-    //   distance[_ipt] = PDM_DOT_PRODUCT (v_p_cp, v_p_cp);
-    // }
-
-    //PDM_free(closest_face);
-    //PDM_free(closest_point);
-    //PDM_free(inside_polygon);
+          PDM_mean_values_polygon_3d(n_vtx_face,
+                                     face_coord,
+                                     1,
+                                     closest,
+                                     weight);
+        }
+        if (distance[_ipt] > min_dist2) {
+          distance[_ipt] = min_dist2;
+          for (int idim = 0; idim < 3; idim++) {
+            _pp[idim] = closest[idim];
+          }
+          for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+            _bc[ivtx] = 0;
+          }
+          for (int i_vtx_face = 0; i_vtx_face < n_vtx_face; i_vtx_face++) {
+            _bc[_face_vtx[i_vtx_face]-1] = weight[i_vtx_face];
+          }
+        }
+      } // loop on face
+    } // loop on point
+    PDM_free(face_coord);
   }
 
   PDM_free(pts_out);
 
 }
+
 
 
 
@@ -1721,223 +1453,6 @@ _locate_in_polygon
 }
 
 
-
-
-static void
-_compute_mean_value_coord_polyhedron_point_inside
-(
- const int                      n_vtx,
- const double                   vtx_coord[],
- const int                      n_face,
- const int                      face_vtx_idx[],
- const int                      face_vtx[],
- const int                      face_orientation[],
- const double                   pt_coord[],
-       double                   weight[],
-       PDM_triangulate_state_t *tri_state,
-       int                     *tri_vtx
- )
- {
-  double eps_in_triangle = 1e-12;
-
-  /* Initialize weights */
-  for (int i = 0; i < n_vtx; i++) {
-    weight[i] = 0.;
-  }
-
-  /*
-   * Compute distances d between p and the vertices
-   * and unit vectors u from point to vertex
-   */
-  double d[n_vtx];
-  double u[n_vtx][3];
-
-  for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
-    d[ivtx] = 0.;
-    for (int j = 0; j < 3; j++) {
-      u[ivtx][j] = vtx_coord[3*ivtx+j] - pt_coord[j];
-      d[ivtx] += u[ivtx][j]*u[ivtx][j];
-    }
-
-    d[ivtx] = sqrt(d[ivtx]);
-    double invd = 1/d[ivtx];
-    for (int j = 0; j < 3; j++) {
-      u[ivtx][j] *= invd;
-    }
-  } // End of loop on vertices
-
-  /* Loop on faces */
-  int on_triangle = 0;
-  for (int iface = 0; iface < n_face; iface++) {
-
-    const int *_face_vtx = face_vtx + face_vtx_idx[iface];
-    int face_vtx_n = face_vtx_idx[iface+1] - face_vtx_idx[iface];
-
-    /* Triangulate face if necessary */
-    int n_tri;
-    if (face_vtx_n == 3) {
-      /* Triangular face */
-      n_tri = 1;
-      memcpy(tri_vtx, _face_vtx, sizeof(int) * 3);
-    }
-    else if (face_vtx_n == 4) {
-      /* Quadrilateral face */
-      n_tri = PDM_triangulate_quadrangle(3,
-                                         vtx_coord,
-                                         NULL,
-                                         _face_vtx,
-                                         tri_vtx);
-    }
-    else {
-      /* Polygonal face */
-      n_tri = PDM_triangulate_polygon(3,
-                                      face_vtx_n,
-                                      vtx_coord,
-                                      NULL,
-                                      _face_vtx,
-                                      PDM_TRIANGULATE_MESH_DEF,
-                                      tri_vtx,
-                                      tri_state);
-    }
-
-
-    /* Loop on triangles */
-    double *tri_u[3];
-    // double tri_eps2[3];
-    for (int itri = 0; itri < n_tri; itri++) {
-
-      int __tri_vtx[3];
-      if (face_orientation[iface] > 0) {
-        for (int ivtx = 0; ivtx < 3; ivtx++) {
-          __tri_vtx[ivtx] = tri_vtx[3*itri + ivtx] - 1;
-        }
-      }
-      else {
-        for (int ivtx = 0; ivtx < 3; ivtx++) {
-          __tri_vtx[ivtx] = tri_vtx[3*itri + 2-ivtx] - 1;
-        }
-      }
-
-      for (int ivtx = 0; ivtx < 3; ivtx++) {
-        tri_u   [ivtx] = u[__tri_vtx[ivtx]];
-        // tri_eps2[ivtx] = vtx_eps2[__tri_vtx[ivtx]];
-      }
-
-      double l[3];
-      double theta[3];
-      double sin_theta[3];
-      double h = 0.;
-      for (int ivtx = 0; ivtx < 3; ivtx++) {
-        int ip = (ivtx+1)%3;
-        int im = (ivtx+2)%3;
-        l[ivtx] = 0.;
-        for (int j = 0; j < 3; j++) {
-          double delta = tri_u[ip][j] - tri_u[im][j];
-          l[ivtx] += delta*delta;
-        }
-
-        // assert(l[ivtx] > tri_eps2[ip] && l[ivtx] > tri_eps2[im]);
-
-        l[ivtx] = sqrt(l[ivtx]);
-
-        theta[ivtx] = asin(PDM_MIN(1., 0.5*l[ivtx]));
-        h += theta[ivtx];
-        theta[ivtx] *= 2;
-
-        sin_theta[ivtx] = sin(theta[ivtx]);
-      }
-
-      /* Check if p is coplanar with current triangle to avoid division by zero */
-      on_triangle = (PDM_PI - h < eps_in_triangle);
-
-      if (on_triangle) {
-        // log_trace("!! on triangle, pt_coord = %f %f %f\n",
-        //           pt_coord[0], pt_coord[1], pt_coord[2]);
-        // log_trace("tri_coord :\n");
-        // for (int ivtx = 0; ivtx < 3; ivtx++) {
-        //   PDM_log_trace_array_double(vtx_coord + 3*__tri_vtx[ivtx], 3, "");
-        // }
-
-        double tri_coord[9];
-        for (int ivtx = 0; ivtx < 3; ivtx++) {
-          memcpy(tri_coord + 3*ivtx,
-                 vtx_coord + 3*__tri_vtx[ivtx],
-                 sizeof(double) * 3);
-        }
-
-        double tri_closest_point[3];
-        double tri_dist2;
-        double tri_weight[3];
-        PDM_triangle_status_t stat = PDM_triangle_evaluate_position(pt_coord,
-                                                                    tri_coord,
-                                                                    tri_closest_point,
-                                                                    &tri_dist2,
-                                                                    tri_weight);
-        assert(stat == PDM_TRIANGLE_INSIDE);
-        for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
-          weight[ivtx] = 0;
-        }
-        for (int ivtx = 0; ivtx < 3; ivtx++) {
-          weight[__tri_vtx[ivtx]] = tri_weight[ivtx];
-        }
-
-        break;
-      }
-
-      double sdet = PDM_SIGN(_determinant_3x3(tri_u[0],
-                                              tri_u[1],
-                                              tri_u[2]));
-
-      double c[3];
-      double s[3];
-      double sin_h = sin(h);
-      int coplanar_outside = 0;
-      for (int ivtx = 0; ivtx < 3; ivtx++) {
-        int ip = (ivtx+1)%3;
-        int im = (ivtx+2)%3;
-
-        // check denominator ?
-        c[ivtx] = -1 + (2 * sin_h * sin(h - theta[ivtx])) /
-        (sin_theta[ip] * sin_theta[im]);
-
-        s[ivtx] = sdet * sqrt(PDM_MAX(0., 1 - c[ivtx]*c[ivtx]));
-
-        if (PDM_ABS(s[ivtx]) < eps_in_triangle) {
-          coplanar_outside = 1;
-          break;
-        }
-      }
-
-      if (coplanar_outside) {
-        /* p lies outside current triangle, on the same plane */
-        continue;
-      }
-
-      for (int i = 0; i < 3; i++) {
-        int ip = (i+1)%3;
-        int im = (i+2)%3;
-        weight[__tri_vtx[i]] += (theta[i] - c[ip]*theta[im] - c[im]*theta[ip]) /
-        (d[__tri_vtx[i]] * sin_theta[ip] * s[im]);
-      }
-
-    } // End of loop on triangles
-
-    if (on_triangle) break;
-
-  } // End of loop on faces
-
-
-  /* Normalize weights */
-  double sum_w = 0.;
-  for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
-    sum_w += weight[ivtx];
-  }
-  double isum_w = 1./sum_w;
-  for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
-    weight[ivtx] *= isum_w;
-  }
- }
-
 /*----------------------------------------------------------------------------
  * Locate points in a given polyhedron.
  *
@@ -1973,6 +1488,7 @@ _locate_in_polyhedron
        int                     *tri_vtx
  )
 {
+  
   int dbg = 0;
 
   double eps_on_face2 = 1.e-24;
@@ -2003,111 +1519,126 @@ _locate_in_polyhedron
    *  - compute distance from closest subtriangle
    */
   double solid_angle[n_pts];
+  int closest_face[n_pts];
   for (int ipt = 0; ipt < n_pts; ipt++) {
     solid_angle [ipt] = 0.;
     distance    [ipt] = HUGE_VAL;
+    closest_face[ipt] = -1;
   }
 
-  /* Loop on faces */
+  double *face_coord;
+  double *face_weight;
+  int max_n_vtx_face = 0;
   for (int iface = 0; iface < n_face; iface++) {
-
-    const int *_face_vtx = face_vtx + face_vtx_idx[iface];
-    int face_vtx_n = face_vtx_idx[iface+1] - face_vtx_idx[iface];
-
-    /* Triangulate face if necessary */
-    int n_tri;
-    if (face_vtx_n == 3) {
-      /* Triangular face */
-      n_tri = 1;
-      memcpy(_tri_vtx, _face_vtx, sizeof(int) * 3);
-    }
-    else if (face_vtx_n == 4) {
-      /* Quadrilateral face */
-      n_tri = PDM_triangulate_quadrangle(3,
-                                         vtx_coord,
-                                         NULL,
-                                         _face_vtx,
-                                         _tri_vtx);
-    }
-    else {
-      /* Polygonal face */
-      n_tri = PDM_triangulate_polygon(3,
-                                      face_vtx_n,
-                                      vtx_coord,
-                                      NULL,
-                                      _face_vtx,
-                                      PDM_TRIANGULATE_MESH_DEF,
-                                      _tri_vtx,
-                                      _tri_state);
-    }
-
-    /* Loop on subtriangles */
-    for (int itri = 0; itri < n_tri; itri++) {
-
-      double tri_coord[9];
-      // if (face_orientation[iface] > 0) {
-      //   for (int idx_vtx = 0; idx_vtx < 3; idx_vtx++) {
-      //     int vtx_id = _tri_vtx[3*itri + idx_vtx] - 1;
-      //     memcpy(tri_coord + 3*idx_vtx, vtx_coord + 3*vtx_id, sizeof(double) * 3);
-      //   }
-      // } else {
-      //   for (int idx_vtx = 0; idx_vtx < 3; idx_vtx++) {
-      //     int vtx_id = _tri_vtx[3*itri + 2-idx_vtx] - 1;
-      //     memcpy(tri_coord + 3*idx_vtx, vtx_coord + 3*vtx_id, sizeof(double) * 3);
-      //   }
-      // }
-      if (face_orientation[iface] < 0) {
-        int tmp = _tri_vtx[3*itri];
-        _tri_vtx[3*itri  ] = _tri_vtx[3*itri+2];
-        _tri_vtx[3*itri+2] = tmp;
-      }
+    int n_vtx_face = face_vtx_idx[iface+1] - face_vtx_idx[iface];
+    max_n_vtx_face = PDM_MAX(max_n_vtx_face, n_vtx_face);
+  }
+  PDM_malloc(face_coord, 3*max_n_vtx_face, double);
+  PDM_malloc(face_weight, max_n_vtx_face, double);
 
 
-      for (int idx_vtx = 0; idx_vtx < 3; idx_vtx++) {
-        int vtx_id = _tri_vtx[3*itri + idx_vtx] - 1;
-        memcpy(tri_coord + 3*idx_vtx, vtx_coord + 3*vtx_id, sizeof(double) * 3);
-      }
+  /* Loop on points */
+  for (int ipt = 0; ipt < n_pts; ipt++) {
+    const double *pt_coord = pts_coord + 3*ipt;
+    /* Loop on faces */
+    for (int iface = 0; iface < n_face; iface++) {
 
-      /* Loop on points */
-      for (int ipt = 0; ipt < n_pts; ipt++) {
+      const int *_face_vtx = face_vtx + face_vtx_idx[iface];
+      int face_vtx_n = face_vtx_idx[iface+1] - face_vtx_idx[iface];
+      double min_dist2, closest[3];
+      int location;
 
-        if (distance[ipt] < eps_on_face2) {
+      /* Triangulate face if necessary */
+      int n_tri;
+      if (face_vtx_n == 3) {
+        /* Triangular face */
+        for (int i_vtx_face=0; i_vtx_face<face_vtx_n; i_vtx_face++){
+          face_coord[3*i_vtx_face  ] = vtx_coord[3*(_face_vtx[i_vtx_face]-1)  ];
+          face_coord[3*i_vtx_face+1] = vtx_coord[3*(_face_vtx[i_vtx_face]-1)+1];
+          face_coord[3*i_vtx_face+2] = vtx_coord[3*(_face_vtx[i_vtx_face]-1)+2];
+        }
+        location = PDM_triangle_evaluate_position(pt_coord,
+                                                  face_coord,
+                                                  closest,
+                                                  &min_dist2,
+                                                  NULL);
+        if (location == PDM_TRIANGLE_DEGENERATED) {
           continue;
         }
-
-        const double *pt_coord = pts_coord + 3*ipt;
-
-        /* Distance */
-        double tri_dist2, tri_closest_point[3], tri_weight[3];
-        PDM_triangle_status_t stat = PDM_triangle_evaluate_position(pt_coord,
-                                                                    tri_coord,
-                                                                    tri_closest_point,
-                                                                    &tri_dist2,
-                                                                    tri_weight);
-
-        if (stat == PDM_TRIANGLE_DEGENERATED) {
-          /* Raise error? */
+        n_tri = 1;
+        memcpy(_tri_vtx, _face_vtx, sizeof(int) * 3);
+      }
+      else if (face_vtx_n == 4) {
+        /* Quadrilateral face */
+        for (int i_vtx_face=0; i_vtx_face<face_vtx_n; i_vtx_face++){
+          face_coord[3*i_vtx_face  ] = vtx_coord[3*(_face_vtx[i_vtx_face]-1)  ];
+          face_coord[3*i_vtx_face+1] = vtx_coord[3*(_face_vtx[i_vtx_face]-1)+1];
+          face_coord[3*i_vtx_face+2] = vtx_coord[3*(_face_vtx[i_vtx_face]-1)+2];
+        }
+        location = PDM_polygon_evaluate_position(pt_coord,
+                                                 face_vtx_n,
+                                                 face_coord,
+                                                 closest,
+                                                 &min_dist2);
+        if (location == PDM_POLYGON_DEGENERATED) {
           continue;
         }
+        n_tri = PDM_triangulate_quadrangle(3,
+                                           vtx_coord,
+                                           NULL,
+                                           _face_vtx,
+                                           _tri_vtx);
+      }
+      else {
+        /* Polygonal face */
+        for (int i_vtx_face=0; i_vtx_face<face_vtx_n; i_vtx_face++){
+          face_coord[3*i_vtx_face  ] = vtx_coord[3*(_face_vtx[i_vtx_face]-1)  ];
+          face_coord[3*i_vtx_face+1] = vtx_coord[3*(_face_vtx[i_vtx_face]-1)+1];
+          face_coord[3*i_vtx_face+2] = vtx_coord[3*(_face_vtx[i_vtx_face]-1)+2];
+        }
+        location = PDM_polygon_evaluate_position(pt_coord,
+                                                 face_vtx_n,
+                                                 face_coord,
+                                                 closest,
+                                                 &min_dist2);
+        if (location == PDM_POLYGON_DEGENERATED) {
+          continue;
+        }
+        n_tri = PDM_triangulate_polygon(3,
+                                        face_vtx_n,
+                                        vtx_coord,
+                                        NULL,
+                                        _face_vtx,
+                                        PDM_TRIANGULATE_MESH_DEF,
+                                        _tri_vtx,
+                                        _tri_state);
+      }
 
-        if (tri_dist2 < distance[ipt]) {
-          distance    [ipt] = tri_dist2;
+      /* Loop on subtriangles */
+      for (int itri = 0; itri < n_tri; itri++) {
 
-          memcpy(proj_coord + 3*ipt, tri_closest_point, sizeof(double) * 3);
+        double tri_coord[9];
+        // if (face_orientation[iface] > 0) {
+        //   for (int idx_vtx = 0; idx_vtx < 3; idx_vtx++) {
+        //     int vtx_id = _tri_vtx[3*itri + idx_vtx] - 1;
+        //     memcpy(tri_coord + 3*idx_vtx, vtx_coord + 3*vtx_id, sizeof(double) * 3);
+        //   }
+        // } else {
+        //   for (int idx_vtx = 0; idx_vtx < 3; idx_vtx++) {
+        //     int vtx_id = _tri_vtx[3*itri + 2-idx_vtx] - 1;
+        //     memcpy(tri_coord + 3*idx_vtx, vtx_coord + 3*vtx_id, sizeof(double) * 3);
+        //   }
+        // }
+        if (face_orientation[iface] < 0) {
+          int tmp = _tri_vtx[3*itri];
+          _tri_vtx[3*itri  ] = _tri_vtx[3*itri+2];
+          _tri_vtx[3*itri+2] = tmp;
+        }
 
-          double *w = weight + ipt*n_vtx;
-          for (int i = 0; i < n_vtx; i++) {
-            w[i] = 0;
-          }
 
-          for (int i = 0; i < 3; i++) {
-            int vtx_id = _tri_vtx[3*itri + i] - 1;
-            w[vtx_id] = tri_weight[i];
-          }
-
-          if (distance[ipt] < eps_on_face2) {
-            continue;
-          }
+        for (int idx_vtx = 0; idx_vtx < 3; idx_vtx++) {
+          int vtx_id = _tri_vtx[3*itri + idx_vtx] - 1;
+          memcpy(tri_coord + 3*idx_vtx, vtx_coord + 3*vtx_id, sizeof(double) * 3);
         }
 
         /* Solid angle */
@@ -2136,11 +1667,19 @@ _locate_in_polyhedron
 
         solid_angle[ipt] += 2*half_angle;
 
-      } // End of loop on points
+      }
 
-    } // End of loop on subtriangles
+      if (min_dist2 < distance[ipt]) {
+        distance    [ipt] = min_dist2;
+        closest_face[ipt] = iface;
 
-  } // End of loop on faces
+        memcpy(proj_coord + 3*ipt, closest, sizeof(double) * 3);
+        if (distance[ipt] < eps_on_face2) {
+          continue;
+        }
+      }
+    } // End of loop on face
+  } // End of loop on points
 
 
   /*
@@ -2150,7 +1689,6 @@ _locate_in_polyhedron
   double threshold_inside = 4*PDM_PI*(1 - eps_solid_angle);
 
   for (int ipt = 0; ipt < n_pts; ipt++) {
-
     const double *p  = pts_coord  + ipt*3;
     double       *w  = weight     + ipt*n_vtx;
     double       *pc = proj_coord + ipt*3;
@@ -2161,21 +1699,44 @@ _locate_in_polyhedron
     }
 
 
-    if (solid_angle[ipt] > threshold_inside) {
+    if (solid_angle[ipt] < threshold_inside) {
+      int iface = closest_face[ipt];
+      int n_vtx_face = face_vtx_idx[iface+1] - face_vtx_idx[iface];
+      const int *_face_vtx = face_vtx + face_vtx_idx[iface];
+
+      for (int ivtx = 0; ivtx < n_vtx_face; ivtx++) {
+        int _ivtx = face_vtx[face_vtx_idx[iface] + ivtx] - 1;
+
+        for (int idim = 0; idim < 3; idim++) {
+          face_coord[3*ivtx + idim] = vtx_coord[3*_ivtx + idim];
+        }
+      }
+
+      PDM_mean_values_polygon_3d(n_vtx_face,
+                                 face_coord,
+                                 1,
+                                 p,
+                                 face_weight);
+
+      for (int i_vtx_face = 0; i_vtx_face < n_vtx_face; i_vtx_face++) {
+        w[_face_vtx[i_vtx_face]-1] = face_weight[i_vtx_face];
+      }
+
+
+    }
+    else {
       /* Point strictly inside polyhedron */
       distance[ipt] = -distance[ipt];
 
       // Compute mean value coordinates
-      _compute_mean_value_coord_polyhedron_point_inside(n_vtx,
-                                                        vtx_coord,
-                                                        n_face,
-                                                        face_vtx_idx,
-                                                        face_vtx,
-                                                        face_orientation,
-                                                        p,
-                                                        w,
-                                                        _tri_state,
-                                                        _tri_vtx);
+      PDM_mean_values_polyhedron(n_vtx,
+                                 vtx_coord,
+                                 n_face,
+                                 face_vtx_idx,
+                                 face_vtx,
+                                 face_orientation,
+                                 p,
+                                 w);
 
       for (int j = 0; j < 3; j++) {
         pc[j] = 0.;
@@ -2198,27 +1759,29 @@ _locate_in_polyhedron
 
     }
 
-    else if (distance[ipt] > eps_on_face2) {
-      if (dbg) {
-        /* Point strictly outside polyhedron */
-        log_trace("  exterior\n");
-        // PDM_log_trace_array_double(w, n_vtx, "  mean_value_coord : ");
-        log_trace("  proj_coord = %f %f %f, dist2 = %e\n", pc[0], pc[1], pc[2], distance[ipt]);
-      }
-    }
+    // else if (distance[ipt] > eps_on_face2) {
+    //   if (dbg) {
+    //     /* Point strictly outside polyhedron */
+    //     log_trace("  exterior\n");
+    //     // PDM_log_trace_array_double(w, n_vtx, "  mean_value_coord : ");
+    //     log_trace("  proj_coord = %f %f %f, dist2 = %e\n", pc[0], pc[1], pc[2], distance[ipt]);
+    //   }
+    // }
 
-    else {
-      if (dbg) {
-        /* Point on a polyhedron face */
-        log_trace("  on face\n");
-        // PDM_log_trace_array_double(w, n_vtx, "  mean_value_coord : ");
-        log_trace("  proj_coord = %f %f %f, dist2 = %e\n", pc[0], pc[1], pc[2], distance[ipt]);
-      }
-    }
+    // else {
+    //   if (dbg) {
+    //     /* Point on a polyhedron face */
+    //     log_trace("  on face\n");
+    //     // PDM_log_trace_array_double(w, n_vtx, "  mean_value_coord : ");
+    //     log_trace("  proj_coord = %f %f %f, dist2 = %e\n", pc[0], pc[1], pc[2], distance[ipt]);
+    //   }
+    // }
 
 
   } // End of loop on points
 
+  PDM_free(face_coord);
+  PDM_free(face_weight);
 
 
   if (_tri_state != tri_state && _tri_state != NULL) {
@@ -2887,8 +2450,8 @@ PDM_point_location_nodal
               assert(ijk_to_user != NULL);
             }
 
-            int count           = 0;
-            int count_converged = 0;
+            // int count           = 0;
+            // int count_converged = 0;
             for (int ielt = 0; ielt < n_elt; ielt++) {
               int icell = ielt;
               if (parent_num != NULL) {
@@ -2907,7 +2470,7 @@ PDM_point_location_nodal
               }
 
               for (int idx_pt = pts_idx[ipart][icell]; idx_pt < pts_idx[ipart][icell+1]; idx_pt++) {
-                count++;
+                // count++;
                 // First, try Newton method
                 int converged = 0;
                 if (1) {
@@ -2925,13 +2488,12 @@ PDM_point_location_nodal
                 // log_trace("converged? %d\n", converged);
 
                 if (converged) {
-                  count_converged++;
+                  // count_converged++;
                   // log_trace("Newton converged :D (%f %f %f)\n",
                   //           pts_coord[ipart][3*idx_pt+0],
                   //           pts_coord[ipart][3*idx_pt+1],
                   //           pts_coord[ipart][3*idx_pt+2]);
-                }
-                else {
+                } else {
                   // log_trace("Newton HO failed to converge! (%f %f %f)\n",
                   //           pts_coord[ipart][3*idx_pt+0],
                   //           pts_coord[ipart][3*idx_pt+1],

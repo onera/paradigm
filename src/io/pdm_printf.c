@@ -24,17 +24,11 @@
 
 /*-----------------------------------------------------------------------------*/
 
-#include "pdm_config.h"
-
 /*
  * Standard C library headers
  */
-
-#include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 /*
  * Optional library and BFT headers
@@ -118,19 +112,6 @@ _PDM_printf_flush_proxy_default(void)
  * Public function definitions
  *============================================================================*/
 
-/*!
- * \brief Replacement for PDM_printf() with modifiable behavior.
- *
- * This function calls vprintf() by default, or a function with similar
- * arguments indicated by PDM_printf_proxy_set().
- *
- * \param [in] format format string, as PDM_printf() and family.
- * \param [in] ...    variable arguments based on format string.
- *
- * \return number of characters printed, not counting the trailing '\\0'
- *         used to end output strings
- */
-
 int
 PDM_printf(const char *const format,
            ...)
@@ -147,30 +128,12 @@ PDM_printf(const char *const format,
   return retval;
 }
 
-/*!
- * \brief Flush for output of PDM_printf() with modifiable behavior.
- *
- * This function calls fflush(stdout) if PDM_printf()'s default behavior is
- * used. If PDM_printf's behavior is modified with PDM_printf_proxy_set(),
- * PDM_printf_flush()'s behavior may have to be also adjusted with
- * PDM_printf_flush_proxy_set().
- *
- * \return using the default behavior, the return value is that of
- *         fflush(stdout): O upon successful completion, EOF otherwise
- *         (with errno set to indicate the error).
- */
-
 int
 PDM_printf_flush(void)
 {
   return _PDM_printf_flush_proxy();
 }
 
-/*!
- * \brief Returns function associated with the PDM_printf() function.
- *
- * \return pointer to the vprintf() or replacement function.
- */
 
 PDM_printf_proxy_t *
 PDM_printf_proxy_get(void)
@@ -178,42 +141,17 @@ PDM_printf_proxy_get(void)
   return _PDM_printf_proxy;
 }
 
-/*!
- * \brief Associates a vprintf() type function with the PDM_printf() function.
- *
- * \param [in] fct pointer to a vprintf() type function.
- */
-
 void
 PDM_printf_proxy_set(PDM_printf_proxy_t *const fct)
 {
   _PDM_printf_proxy = fct;
 }
 
-/*!
- * \brief Returns function associated with PDM_printf_flush().
- *
- * \return pointer to the PDM_printf_flush() proxy.
- */
-
 PDM_printf_flush_proxy_t *
 PDM_printf_flush_proxy_get(void)
 {
   return _PDM_printf_flush_proxy;
 }
-
-/*!
- * \brief Associates a proxy function with PDM_printf_flush().
- *
- * \warning
- *   PDM_printf() is called by the default PDM_error() error handler
- *   (so as to ensure that the error text appears at the end of the
- *   program output), so a PDM_print_flush replacement must not itself
- *   call (directly or indirectly) PDM_error() if the default error
- *   handler is used.
- *
- * \param [in] fct pointer to a function similar to {return fflush(stdout)}.
- */
 
 void
 PDM_printf_flush_proxy_set(PDM_printf_flush_proxy_t *const fct)

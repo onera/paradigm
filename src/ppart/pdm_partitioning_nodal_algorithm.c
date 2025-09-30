@@ -6,45 +6,34 @@
  *  System headers
  *----------------------------------------------------------------------------*/
 
-#include <math.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 /*----------------------------------------------------------------------------
  *  Local headers
  *----------------------------------------------------------------------------*/
 
+#include "pdm_partitioning_nodal_algorithm.h"
 #include "pdm.h"
-#include "pdm_mpi.h"
-#include "pdm_config.h"
-#include "pdm_priv.h"
-#include "pdm_timer.h"
-#include "pdm_mpi.h"
-#include "pdm_mpi_ext_dependencies.h"
-#include "pdm_part_to_block.h"
+#include "pdm_array.h"
+#include "pdm_binary_search.h"
 #include "pdm_block_to_part.h"
-#include "pdm_multi_block_to_part.h"
-
-#include "pdm_printf.h"
+#include "pdm_distrib.h"
+#include "pdm_dmesh_nodal_elmts_priv.h"
+#include "pdm_dmesh_nodal_priv.h"
 #include "pdm_error.h"
+#include "pdm_gnum.h"
+#include "pdm_logging.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mesh_nodal.h"
+#include "pdm_mpi.h"
+#include "pdm_multi_block_to_part.h"
+#include "pdm_part_to_block.h"
+#include "pdm_partitioning_algorithm.h"
 #include "pdm_sort.h"
 #include "pdm_unique.h"
-#include "pdm_binary_search.h"
-#include "pdm_hash_tab.h"
-#include "pdm_array.h"
-#include "pdm_gnum.h"
-#include "pdm_dmesh_nodal_priv.h"
-#include "pdm_part_mesh_nodal_priv.h"
-#include "pdm_part_mesh_nodal_elmts_priv.h"
-
-#include "pdm_partitioning_nodal_algorithm.h"
-#include "pdm_partitioning_algorithm.h"
-#include "pdm_distrib.h"
-#include "pdm_order.h"
-#include "pdm_logging.h"
-// #include "pdm_para_graph_dual.h"
-
+#include "pdm_priv.h"
 /*----------------------------------------------------------------------------
  *  Optional headers
  *----------------------------------------------------------------------------*/
@@ -196,7 +185,7 @@ _delmt_vtx_to_pelmt_vtx
    */
   int         **pelmts_stride = NULL;
   PDM_g_num_t **pelmts_connec = NULL;
-  PDM_multi_block_to_part_exch2(mbtp,
+  PDM_multi_block_to_part_exch(mbtp,
                                 sizeof(PDM_g_num_t),
                                 PDM_STRIDE_VAR_INTERLACED,
                                 block_elmts_n_vtx,
@@ -215,7 +204,7 @@ _delmt_vtx_to_pelmt_vtx
    * Exchange type of elements
    */
   PDM_Mesh_nodal_elt_t **pelmts_types;
-  PDM_multi_block_to_part_exch2(mbtp,
+  PDM_multi_block_to_part_exch(mbtp,
                                 sizeof(PDM_Mesh_nodal_elt_t),
                                 PDM_STRIDE_CST_INTERLACED,
                                 stride_one,
@@ -242,14 +231,6 @@ _delmt_vtx_to_pelmt_vtx
 
   PDM_multi_block_to_part_free(mbtp);
 }
-
-// static
-// void
-// (
-// )
-// {
-
-// }
 
 
 /*=============================================================================
@@ -423,7 +404,7 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
    */
   int         **pelmts_stride = NULL;
   PDM_g_num_t **pelmts_connec = NULL;
-  PDM_multi_block_to_part_exch2(mbtp,
+  PDM_multi_block_to_part_exch(mbtp,
                                 sizeof(PDM_g_num_t),
                                 PDM_STRIDE_VAR_INTERLACED,
                                 block_elmts_n_vtx,
@@ -441,7 +422,7 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
    * Exchange type of elements
    */
   PDM_Mesh_nodal_elt_t **pelmts_types;
-  PDM_multi_block_to_part_exch2(mbtp,
+  PDM_multi_block_to_part_exch(mbtp,
                                 sizeof(PDM_Mesh_nodal_elt_t),
                                 PDM_STRIDE_CST_INTERLACED,
                                 stride_one,
@@ -759,7 +740,7 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
   PDM_g_num_t **pgroup_ln_to_gn = NULL;
   if(dmne->n_group_elmt > 0) {
     PDM_part_distgroup_to_partgroup(dmne->comm,
-                                    NULL,
+                                    dmne->delmt_child_distrib,
                                     dmne->n_group_elmt,
                                     dmne->dgroup_elmt_idx,
                                     dmne->dgroup_elmt,
@@ -770,7 +751,7 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
                                     &pgroup,
                                     &pgroup_ln_to_gn);
 
-    PDM_part_mesh_nodal_elmts_n_group_set(pmne, dmne->n_group_elmt, PDM_OWNERSHIP_KEEP);
+    PDM_part_mesh_nodal_elmts_n_group_set(pmne, dmne->n_group_elmt);
 
     for(int i_part = 0; i_part < n_part; ++i_part) {
       for(int i_group = 0; i_group < dmne->n_group_elmt; ++i_group) {
@@ -1740,3 +1721,7 @@ PDM_dmesh_nodal_elmts_to_extract_dmesh_nodal_elmts
 
   return extract_dmne;
 }
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */

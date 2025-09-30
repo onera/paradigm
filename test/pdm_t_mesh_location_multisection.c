@@ -1,33 +1,24 @@
-#include <math.h>
-#include <sys/time.h>
-#include <time.h>
-#include <sys/resource.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include <assert.h>
-
-#include <pdm_mpi.h>
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "pdm.h"
-#include "pdm_config.h"
-#include "pdm_priv.h"
-#include "pdm_part.h"
-#include "pdm_mesh_location.h"
-
 #include "pdm_array.h"
-#include "pdm_writer.h"
-#include "pdm_printf.h"
-#include "pdm_logging.h"
 #include "pdm_error.h"
-#include "pdm_part_to_block.h"
-
-#include "pdm_vtk.h"
-
 #include "pdm_generate_mesh.h"
+#include "pdm_logging.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mesh_location.h"
+#include "pdm_mesh_nodal.h"
+#include "pdm_mpi.h"
+#include "pdm_part.h"
 #include "pdm_part_mesh_nodal.h"
-
+#include "pdm_part_to_part.h"
+#include "pdm_printf.h"
+#include "pdm_priv.h"
+#include "pdm_vtk.h"
 
 /*============================================================================
  * Type definitions
@@ -314,8 +305,8 @@ _gen_mesh
       }
 
       (*n_vtx)[ipart]         = PDM_part_mesh_nodal_n_vtx_get(pmn, ipart);
-      double      *_vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmn, ipart);
-      PDM_g_num_t *_vtx_g_num = PDM_part_mesh_nodal_vtx_g_num_get(pmn, ipart);
+      double      *_vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmn, ipart, PDM_OWNERSHIP_BAD_VALUE);
+      PDM_g_num_t *_vtx_g_num = PDM_part_mesh_nodal_vtx_g_num_get(pmn, ipart, PDM_OWNERSHIP_BAD_VALUE);
 
       PDM_malloc((*vtx_coord)[ipart], (*n_vtx)[ipart] * 3, double);
       memcpy((*vtx_coord)[ipart],
@@ -388,8 +379,11 @@ _multisection_pmn
                                   i_part,
                                   n_vtx    [i_part],
                                   vtx_coord[i_part],
-                                  vtx_g_num[i_part],
                                   PDM_OWNERSHIP_KEEP);
+    PDM_part_mesh_nodal_vtx_gnum_set(pmn,
+                                     i_part,
+                                     vtx_g_num[i_part],
+                                     PDM_OWNERSHIP_KEEP);
 
     for (int i_section = 0; i_section < n_section; i_section++) {
       PDM_part_mesh_nodal_section_std_set(pmn,
@@ -587,8 +581,8 @@ int main(int argc, char *argv[])
   for (int i_part = 0; i_part < n_part; i_part++) {
 
     int          n_tgt     = PDM_part_mesh_nodal_n_vtx_get    (tgt_pmn, i_part);
-    double      *tgt_coord = PDM_part_mesh_nodal_vtx_coord_get(tgt_pmn, i_part);
-    PDM_g_num_t *tgt_g_num = PDM_part_mesh_nodal_vtx_g_num_get(tgt_pmn, i_part);
+    double      *tgt_coord = PDM_part_mesh_nodal_vtx_coord_get(tgt_pmn, i_part, PDM_OWNERSHIP_BAD_VALUE);
+    PDM_g_num_t *tgt_g_num = PDM_part_mesh_nodal_vtx_g_num_get(tgt_pmn, i_part, PDM_OWNERSHIP_BAD_VALUE);
 
     PDM_mesh_location_cloud_set(mesh_loc,
                                 0,
@@ -635,7 +629,7 @@ int main(int argc, char *argv[])
   PDM_malloc(send_field, n_part, double *);
   for (int i_part = 0; i_part < n_part; i_part++) {
 
-    double *vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(src_pmn, i_part);
+    double *vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(src_pmn, i_part, PDM_OWNERSHIP_BAD_VALUE);
 
     int n_cell = PDM_part_mesh_nodal_n_elmts_get(src_pmn,
                                                  PDM_GEOMETRY_KIND_VOLUMIC,
@@ -670,7 +664,7 @@ int main(int argc, char *argv[])
 
     if (0 && post) {
       int          n_vtx     = PDM_part_mesh_nodal_n_vtx_get    (src_pmn, i_part);
-      PDM_g_num_t *vtx_g_num = PDM_part_mesh_nodal_vtx_g_num_get(src_pmn, i_part);
+      PDM_g_num_t *vtx_g_num = PDM_part_mesh_nodal_vtx_g_num_get(src_pmn, i_part, PDM_OWNERSHIP_BAD_VALUE);
 
       char filename[999];
       sprintf(filename, "mesh_location_multisection_src_%d_%d.vtk", i_part, i_rank);
@@ -736,8 +730,8 @@ int main(int argc, char *argv[])
 
   double lmax_err = 0.;
   for (int i_part = 0; i_part < n_part; i_part++) {
-    double      *tgt_coord = PDM_part_mesh_nodal_vtx_coord_get(tgt_pmn, i_part);
-    PDM_g_num_t *tgt_g_num = PDM_part_mesh_nodal_vtx_g_num_get(tgt_pmn, i_part);
+    double      *tgt_coord = PDM_part_mesh_nodal_vtx_coord_get(tgt_pmn, i_part, PDM_OWNERSHIP_BAD_VALUE);
+    PDM_g_num_t *tgt_g_num = PDM_part_mesh_nodal_vtx_g_num_get(tgt_pmn, i_part, PDM_OWNERSHIP_BAD_VALUE);
 
 
     int n_located = PDM_mesh_location_n_located_get(mesh_loc,

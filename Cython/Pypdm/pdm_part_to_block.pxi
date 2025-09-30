@@ -97,13 +97,28 @@ cdef class PartToBlock:
     cdef MPI.Comm             py_comm
     # ************************************************************************
     # ------------------------------------------------------------------------
-    def __cinit__(self, MPI.Comm comm, list pLNToGN, list pWeight, int partN,
-                        PDM_part_to_block_distrib_t t_distrib = <PDM_part_to_block_distrib_t> (0),
-                        PDM_part_to_block_post_t    t_post    = <PDM_part_to_block_post_t   > (0),
-                        double partActiveNode = 1.,
-                        NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] userDistribution=None):
+    def __init__(self, MPI.Comm comm, list pLNToGN, list pWeight, int partN,
+                       PDM_part_to_block_distrib_t t_distrib = <PDM_part_to_block_distrib_t> (0),
+                       PDM_part_to_block_post_t    t_post    = <PDM_part_to_block_post_t   > (0),
+                       double partActiveNode = 1.,
+                       NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] userDistribution=None):
         """
-        Constructor of PartToBlock object : Python wrapping of PDM library (E. Quémerais)
+        __init__(comm, pLNToGN, pWeight, partN, t_distrib, t_post, partActiveNode = 1., userDistribution=None)
+        
+        Create a Part-to-Block instance
+
+        Parameters:
+          comm             (MPI.Comm)                               : MPI communicator
+          pLNToGN          (`list` of `np.ndarray[npy_pdm_gnum_t]`) : Element global IDs
+          pWeight          (`list` of `np.ndarray[np.double]`)      : Element weight
+          partN            (int)                                    : Number of partitions
+          t_distrib        (int)                                    : Distribution type
+          t_post           (int)                                    : Post processing type
+          partActiveNode   (float)                                  : Part of active nodes
+          userDistribution (`np.ndarray[npy_pdm_gnum_t]`)           : Distribution index
+
+        Returns:
+          New :py:class:`PartToBlock` instance
         """
         # > Some checks
         assert(len(pLNToGN) == partN)
@@ -157,14 +172,18 @@ cdef class PartToBlock:
     # ------------------------------------------------------------------------
     def exchange_field(self, list part_data, part_stride=1, bint interlaced_str=True):
       """
-      Wrapping for PDM_part_to_block_exch : transfert partioned data fields to the
-      distribution, allocate and return the distributed array.
+      exchange_field(part_data, part_stride=1, bint interlaced_str=True)
+      
+      Transfer partitioned data fields to the distributed blocks, allocate and return the distributed array.
 
-      :param self:        PartToBlock object
-      :param part_data:   List of partitioned data arrays, each beeing 1 dimensional and with same datatype
-      :param part_stride: Stride for partitioned arrays. Can be either a list of n_part array, each element beeing of size
-                          pn_elt[i_part] (variable stride will be used) or an integer (cst stride will be used)
-      :param interlaced_str: indicate if data are interlaced (True) or interleaved 
+      Parameters:
+       part_data      (`list` of `np.ndarray`)                    : List of partitioned data arrays, each being 1-dimensional and with same datatype
+       part_stride    (`int` or `list` of `np.ndarray[np.int32]`) : Stride for partitioned arrays. Can be either a list of n_part arrays, each element being of size pn_elt[i_part] (variable stride will be used) or an integer (constant stride will be used)
+       interlaced_str (bool)                                      : Indicate if data are interlaced (True) or interleaved 
+      
+      Returns:
+        - Stride for block-distributed data (`int` or `np.ndarray[np.int32]`)
+        - Block-distributed data array  (`np.ndarray` of same datatype as ``part_data``)
       """
       cdef PDM_stride_t _stride_t
       
@@ -229,7 +248,12 @@ cdef class PartToBlock:
 
     # ------------------------------------------------------------------------
     def getBlockGnumCopy(self):
-      """ Return a copy of the global numbers """
+      """ 
+      Return a copy of the global IDs of elements in current rank's block
+
+      Returns:
+        Global IDs of elements in block (`np.ndarray[npy_pdm_gnum_t]`)
+      """
       BlockGnumNPY = create_numpy_g(PDM_part_to_block_block_gnum_get(self.PTB),
                                     PDM_part_to_block_n_elt_block_get(self.PTB),
                                     flag_owndata=False)

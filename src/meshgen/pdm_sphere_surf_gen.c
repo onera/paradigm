@@ -1,49 +1,29 @@
-/*
-  This file is part of the CWIPI library.
-
-  Copyright (C) 2011  ONERA
-
-  This library is free software; you can redistribute it and/or
-  modify it under the terms of the GNU Lesser General Public
-  License as published by the Free Software Foundation; either
-  version 3 of the License, or (at your option) any later version.
-
-  This library is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  Lesser General Public License for more details.
-
-  You should have received a copy of the GNU Lesser General Public
-  License along with this library. If not, see <http://www.gnu.org/licenses/>.
-*/
-
 /*----------------------------------------------------------------------------
- *  System headers
+ * Standard C library headers
  *----------------------------------------------------------------------------*/
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <assert.h>
 #include <math.h>
+#include <stdio.h>
 #include <string.h>
 
 /*----------------------------------------------------------------------------
- *  Local headers
+ *  Header for the current file
  *----------------------------------------------------------------------------*/
 
 #include "pdm_sphere_surf_gen.h"
-#include "pdm_dmesh_nodal_priv.h"
-#include "pdm_config.h"
 #include "pdm.h"
-#include "pdm_priv.h"
-#include "pdm_mpi.h"
 #include "pdm_array.h"
 #include "pdm_distrib.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
-#include "pdm_logging.h"
+#include "pdm_dmesh_nodal_elmts.h"
+#include "pdm_dmesh_nodal_elmts_priv.h"
+#include "pdm_dmesh_nodal_priv.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mesh_nodal.h"
+#include "pdm_mpi.h"
 #include "pdm_multipart.h"
 #include "pdm_part_connectivity_transform.h"
+#include "pdm_priv.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -152,25 +132,6 @@ _set_dmesh_nodal
 /*=============================================================================
  * Public function definitions
  *============================================================================*/
-
-/**
- *
- * \brief Create a surface mesh of a sphere
- *
- * \param[in]  comm            MPI communicator
- * \param[in]  nu              Number of points in longitude
- * \param[in]  nv              Number of points in latitude
- * \param[in]  x_center        x coordinate of the center of the sphere
- * \param[in]  y_center        y coordinate of the center of the sphere
- * \param[in]  z_center        z coordinate of the center of the sphere
- * \param[in]  radius          Radius of the sphere
- * \param[out] dvtx_coord      Connectivity of distributed vertex to coordinates
- * \param[out] dface_vtx_idx   Index of distributed face to vertex
- * \param[out] dface_vtx       Connectivity of distributed face to vertex
- * \param[out] distrib_vtx     Distribution of vertices
- * \param[out] distrib_face    Distribution of faces
- *
- */
 
 void
 PDM_sphere_surf_gen
@@ -322,21 +283,6 @@ PDM_sphere_surf_gen
 }
 
 
-/**
- *
- * \brief Create a surface mesh of a sphere
- *
- * \param[in]  comm            MPI communicator
- * \param[in]  nu              Number of points in longitude
- * \param[in]  nv              Number of points in latitude
- * \param[in]  x_center        x coordinate of the center of the sphere
- * \param[in]  y_center        y coordinate of the center of the sphere
- * \param[in]  z_center        z coordinate of the center of the sphere
- * \param[in]  radius          Radius of the sphere
- * \param[out] _dmn            Sphere mesh in the form of a distributed nodal mesh
- *
- */
-
 void
 PDM_sphere_surf_gen_nodal
 (
@@ -385,25 +331,6 @@ PDM_sphere_surf_gen_nodal
   PDM_free(distrib_face);
   PDM_free(dface_vtx_idx);
 }
-
-
-/**
- *
- * \brief Create a surface mesh of a sphere (icosphere)
- *
- * \param[in]  comm            MPI communicator
- * \param[in]  n               Number of icosphere subdivisions
- * \param[in]  x_center        x coordinate of the center of the sphere
- * \param[in]  y_center        y coordinate of the center of the sphere
- * \param[in]  z_center        z coordinate of the center of the sphere
- * \param[in]  radius          Radius of the sphere
- * \param[out] dvtx_coord      Connectivity of distributed vertex to coordinates
- * \param[out] dface_vtx_idx   Index of distributed face to vertex
- * \param[out] dface_vtx       Connectivity of distributed face to vertex
- * \param[out] distrib_vtx     Distribution of vertices
- * \param[out] distrib_face    Distribution of faces
- *
- */
 
 void
 PDM_sphere_surf_icosphere_gen
@@ -782,28 +709,9 @@ PDM_sphere_surf_icosphere_gen
       (*dface_vtx)[3*iface+2] = 1 + idx_face + face_int_vtx_n*ibase + ij2idx(i,   j+1, n-2);
 
     }
-
-
-
   }
-
-
 }
 
-
-/**
- *
- * \brief Create a surface mesh of a sphere (icosphere)
- *
- * \param[in]  comm            MPI communicator
- * \param[in]  n               Number of icosphere subdivisions
- * \param[in]  x_center        x coordinate of the center of the sphere
- * \param[in]  y_center        y coordinate of the center of the sphere
- * \param[in]  z_center        z coordinate of the center of the sphere
- * \param[in]  radius          Radius of the sphere
- * \param[out] _dmn            Sphere mesh in the form of a distributed nodal mesh
- *
- */
 
 void
 PDM_sphere_surf_icosphere_gen_nodal
@@ -847,10 +755,6 @@ PDM_sphere_surf_icosphere_gen_nodal
   PDM_free(distrib_face);
   PDM_free(dface_vtx_idx);
 }
-
-
-
-
 
 
 void

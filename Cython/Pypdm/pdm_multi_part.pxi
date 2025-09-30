@@ -38,6 +38,18 @@ cdef extern from "pdm_multipart.h":
                                                   const int              i_domain,
                                                   const char            *renum_vtx_method)
 
+
+    # ------------------------------------------------------------------
+    void PDM_multipart_dpart_id_set(PDM_multipart_t *multipart,
+                                    int              i_domain,
+                                    int             *dpart_id,
+                                    PDM_ownership_t  ownership)
+
+    int PDM_multipart_dpart_id_get(PDM_multipart_t  *multipart,
+                                   int               i_domain,
+                                   int             **dpart_id,
+                                   PDM_ownership_t   ownership)
+
     # ------------------------------------------------------------------
     void PDM_multipart_compute(PDM_multipart_t *mtp)
 
@@ -184,6 +196,7 @@ cdef class MultiPart:
     # > For Ppart
     cdef PDM_multipart_t* _mtp
     cdef int n_rank
+    cdef list keep_alive
 
 
     HOMOGENEOUS   = PDM_PART_SIZE_HOMOGENEOUS
@@ -218,13 +231,13 @@ cdef class MultiPart:
         comm             (MPI.Comm)                : MPI communicator
 
       Admissible values for ``split_method`` are:
-        - :py:attr:`HILBERT`
-        - :py:attr:`PARMETIS`
-        - :py:attr:`PTSCOTCH`
+        - :py:attr:`MultiPart.HILBERT`
+        - :py:attr:`MultiPart.PARMETIS`
+        - :py:attr:`MultiPart.PTSCOTCH`
 
       Admissible values for ``part_size_method`` are:
-        - :py:attr:`HOMOGENEOUS`: All requested partition have the same size
-        - :py:attr:`HETEROGENEOUS`: Each requested partition can have a portion (within 0. and 1.) of the mesh
+        - :py:attr:`MultiPart.HOMOGENEOUS`: All requested partition have the same size
+        - :py:attr:`MultiPart.HETEROGENEOUS`: Each requested partition can have a portion (within 0. and 1.) of the mesh
       """
     # ------------------------------------------------------------------
     def __cinit__(self,
@@ -258,6 +271,7 @@ cdef class MultiPart:
       # print("MultiPart::merge_domains -->", merge_domains)
       # print("MultiPart::split_method -->", split_method)
       self.n_rank = comm.Get_size()
+      self.keep_alive = list()
 
       cdef double* part_fraction_data = np_to_double_pointer(part_fraction)
 
@@ -368,6 +382,50 @@ cdef class MultiPart:
       PDM_multipart_set_reordering_options_vtx(self._mtp,
                                                i_domain,
                                                renum_vtx_method)
+    # ------------------------------------------------------------------
+    def dpart_id_set(self,
+                     int i_domain,
+                     NPY.ndarray[NPY.int32_t, mode='c', ndim=1] dpart_id not None):
+      """
+      dpart_id_set(i_domain, dpart_id)
+
+      Set the destination parts
+
+      Parameters:
+        i_domain (`int`)                    : Domain identifier
+        dpart_id (`np.ndarray[np.int32_t]`) : Destination parts (0-based)
+      """
+      self.keep_alive.append(dpart_id)
+
+      cdef int *_dpart_id = np_to_int_pointer(dpart_id)
+      PDM_multipart_dpart_id_set(self._mtp,
+                                 i_domain,
+                                 _dpart_id,
+                                 PDM_OWNERSHIP_USER)
+
+    # ------------------------------------------------------------------
+    def dpart_id_get(self,
+                     int i_domain):
+      """
+      dpart_id_get(i_domain)
+
+      Get the destination parts
+
+      Parameters:
+        i_domain (`int`) : Domain identifier
+
+      Returns:
+        Destination parts (0-based `np.ndarray[np.int32_t]`)
+      """
+
+      cdef int *_dpart_id = NULL
+      cdef int dn_node = PDM_multipart_dpart_id_get(self._mtp,
+                                                    i_domain,
+                                                    &_dpart_id,
+                                                    PDM_OWNERSHIP_USER)
+
+      return create_numpy_or_none_i(_dpart_id, dn_node)
+
     # ------------------------------------------------------------------
     def compute(self):
       """

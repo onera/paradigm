@@ -1,0 +1,168 @@
+.. _renumbering:
+
+Renumbering
+===========
+
+
+Why renumber mesh entities within a partition?
+----------------------------------------------
+
+After :ref:`partitioning<multipart>` an unstructured mesh (e.g. with parallel partitioners such as `PT-Scotch <https://gitlab.inria.fr/scotch/scotch>`_ or `ParMETIS <https://github.com/KarypisLab/ParMETIS>`_), the entities (cells, faces, edges, vertices) of the mesh are ordered nearly randomly within each MPI rank or process.
+This initial numbering produced by the partitioner may not be optimal for performance reasons related to data locality, memory usage, or solver convergence.
+
+Renumbering the partitioned mesh entities aims to:
+
+- **Improve data locality**: By reordering entities so that those spatially or topologically close are also numerically close, cache usage is optimized, reducing memory access times.
+- **Enhance solver efficiency**: Certain numerical solvers perform better when the mesh entity numbers follow spatial coherence, improving convergence rates.
+- **Reduce communication overhead** in parallel computations by limiting the number and cost of data exchanges between partitions.
+- **Provide flexibility and control**: Allow the user or algorithms to select different renumbering strategies tailored to their simulation or hardware architecture.
+
+Renumbering methods for mesh entities
+-------------------------------------
+
+**ParaDiGM** features multiple renumbering methods for different mesh entity types (cells, faces, edges, vertices).
+
+.. tab-set::
+    :sync-group: language
+
+    .. tab-item:: C
+      :sync: C
+
+      .. note:: Renumbering methods must be enabled by calling the ``PDM_plugin_load()`` function.
+
+
+    .. tab-item:: Fortran
+      :sync: Fortran
+
+      .. ifconfig:: enable_fortran_doc == 'ON'
+
+        .. note:: Renumbering methods must be enabled by calling the ``PDM_plugin_load()`` subroutine.
+
+      .. ifconfig:: enable_fortran_doc == 'OFF'
+
+          .. warning::
+            Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+
+
+
+
+
+The following methods are available:
+
+- **Cells (PDM_MESH_ENTITY_CELL)**:
+
+  - `PDM_PART_RENUM_CELL_NONE`: No renumbering, retain the original partition numbering.
+  - `PDM_PART_RENUM_CELL_RANDOM`: Assign a random permutation to cell indices.
+  - `PDM_PART_RENUM_CELL_HILBERT`: Use the `Hilbert space-filling curve <https://en.wikipedia.org/wiki/Hilbert_curve>`_ to order cells, promoting spatial locality.
+  - `PDM_PART_RENUM_CELL_CUTHILL`: Apply the `Cuthill-McKee algorithm <https://en.wikipedia.org/wiki/Cuthill%E2%80%93McKee_algorithm>`_ to reduce matrix bandwidth equivalent to minimizing connectivity graph bandwidth.
+
+- **Faces (PDM_MESH_ENTITY_FACE)**:
+
+  - `PDM_PART_RENUM_FACE_NONE`: No renumbering.
+  - `PDM_PART_RENUM_FACE_RANDOM`: Random permutation.
+  - `PDM_PART_RENUM_FACE_LEXICOGRAPHIC`: Order faces lexicographically based on coordinate or topology information.
+
+- **Edges (PDM_MESH_ENTITY_EDGE)**:
+
+  - `PDM_PART_RENUM_EDGE_NONE`: No renumbering.
+
+- **Vertices (PDM_MESH_ENTITY_VTX)**:
+
+  - `PDM_PART_RENUM_VTX_NONE`: No renumbering.
+  - `PDM_PART_RENUM_VTX_SORT_INT_EXT`: Sort vertices based on an interior-exterior criterion or another geometric property.
+
+
+
+@COMMENT_NOT_PDMA_RST@HPC renumbering (**ParaDiGMA**)
+@COMMENT_NOT_PDMA_RST@-------------------------------
+@COMMENT_NOT_PDMA_RST@
+@COMMENT_NOT_PDMA_RST@The `PDM_PART_RENUM_CELL/FACE/VTX_HPC` methods perform renumbering of cells/faces/vertices using high-performance computing (HPC) optimizations tailored for cell-centered or vertex-centered solvers.
+@COMMENT_NOT_PDMA_RST@
+@COMMENT_NOT_PDMA_RST@The following parameters allow fine control over the renumbering process:
+@COMMENT_NOT_PDMA_RST@
+@COMMENT_NOT_PDMA_RST@- **split_method**: Defines how entities are split or grouped during renumbering to influence ordering and data locality.
+@COMMENT_NOT_PDMA_RST@
+@COMMENT_NOT_PDMA_RST@  - 1: `METIS <https://github.com/KarypisLab/METIS>`_
+@COMMENT_NOT_PDMA_RST@  - 2: `Scotch <https://gitlab.inria.fr/scotch/scotch>`_
+@COMMENT_NOT_PDMA_RST@  - 3: Hyperplane (BFS)
+@COMMENT_NOT_PDMA_RST@
+@COMMENT_NOT_PDMA_RST@- **n_cell_per_cache_wanted**: Sets the targeted number of cells per cache block, optimizing memory usage and reducing cache misses.
+@COMMENT_NOT_PDMA_RST@
+@COMMENT_NOT_PDMA_RST@- **is_asynchrone**: Enables asynchronous execution, allowing overlapping computations which can speed up the process.
+@COMMENT_NOT_PDMA_RST@
+@COMMENT_NOT_PDMA_RST@- **is_gauss_seidel**: Enables :ref:`Gauss-Seidel smoothing<gauss_seidel_smoothing>` during renumbering to improve convergence and ordering quality.
+@COMMENT_NOT_PDMA_RST@
+@COMMENT_NOT_PDMA_RST@- **is_gauss_seidel_cell_face**: Applies :ref:`Gauss-Seidel smoothing<gauss_seidel_smoothing>` specifically on the connectivity between cells and faces when enabled.
+@COMMENT_NOT_PDMA_RST@
+@COMMENT_NOT_PDMA_RST@- **enforce_rank_in_subdomain**: Forces renumbering to preserve MPI partition rank boundaries within subdomains, maintaining data locality in parallel runs. See :ref:`below<enforce_rank_in_subdomain>` for more details.
+@COMMENT_NOT_PDMA_RST@
+@COMMENT_NOT_PDMA_RST@- **is_vectorisation**: Enables vectorization optimizations in loops to boost performance using SIMD instructions; generally set to enabled.
+@COMMENT_NOT_PDMA_RST@
+@COMMENT_NOT_PDMA_RST@- **n_vect_face**: Number of faces to process concurrently in vectorized operations to improve efficiency.
+@COMMENT_NOT_PDMA_RST@
+@COMMENT_NOT_PDMA_RST@- **n_depth**: Defines how deep neighboring subdomains are included in cache blocks, balancing granularity and memory overhead.
+@COMMENT_NOT_PDMA_RST@
+@COMMENT_NOT_PDMA_RST@These parameters provide flexible tuning to adapt the renumbering to specific hardware architectures and problem characteristics, enabling efficient and scalable mesh computations.
+@COMMENT_NOT_PDMA_RST@
+
+@COMMENT_NOT_PDMA_RST@
+@COMMENT_NOT_PDMA_RST@.. _gauss_seidel_smoothing:
+@COMMENT_NOT_PDMA_RST@
+@COMMENT_NOT_PDMA_RST@Importance of Gauss-Seidel smoothing
+@COMMENT_NOT_PDMA_RST@------------------------------------
+@COMMENT_NOT_PDMA_RST@
+@COMMENT_NOT_PDMA_RST@`Gauss-Seidel <https://en.wikipedia.org/wiki/Gauss%E2%80%93Seidel_method>`_ is an iterative method used for solving linear systems of the form :math:`Ax = b`, where :math:`A` is a matrix and :math:`x`, :math:`b` are vectors. It improves convergence by successively refining the solution estimate, using already updated values within an iteration. This results in a faster convergence compared to simpler methods like `Jacobi <https://en.wikipedia.org/wiki/Jacobi_method>`_.
+@COMMENT_NOT_PDMA_RST@
+@COMMENT_NOT_PDMA_RST@In the context of renumbering and mesh computations, Gauss-Seidel smoothing can help improve the quality of the numbering by reducing the bandwidth of the associated system matrix, which in turn enhances solver efficiency and reduces iteration counts in implicit solvers.
+@COMMENT_NOT_PDMA_RST@
+@COMMENT_NOT_PDMA_RST@However, if your computations are explicit — that is, if no linear system is implicitly solved at each step — applying Gauss-Seidel smoothing offers little benefit. Explicit methods update solutions directly using known values, so the iterative smoothing to accelerate convergence is unnecessary. In fact, enabling Gauss-Seidel in explicit schemes may add unwarranted computational cost without improving results.
+@COMMENT_NOT_PDMA_RST@
+@COMMENT_NOT_PDMA_RST@Therefore, Gauss-Seidel smoothing is particularly valuable when the renumbering interacts with implicit solvers or iterative linear system resolutions, but should generally be disabled for explicit computations.
+@COMMENT_NOT_PDMA_RST@
+
+@COMMENT_NOT_PDMA_RST@
+@COMMENT_NOT_PDMA_RST@.. _enforce_rank_in_subdomain:
+@COMMENT_NOT_PDMA_RST@
+@COMMENT_NOT_PDMA_RST@Enforce rank in subdomain
+@COMMENT_NOT_PDMA_RST@-------------------------
+@COMMENT_NOT_PDMA_RST@
+@COMMENT_NOT_PDMA_RST@This option enhances the implicit ordering of cells within subdomains after partitioning. Typically, the cells are organized by subdomain using a prefix-sum structure that defines the continuous range of cell indices for each subdomain. Additionally, the subdomains themselves are numbered so that adjacent subdomains have close numbering — achieved by performing a breadth-first search (BFS) traversal over the subdomain adjacency graph.
+@COMMENT_NOT_PDMA_RST@
+@COMMENT_NOT_PDMA_RST@The role of `enforce_rank_in_subdomain` is to enforce a refined ordering of cells on the boundaries between two adjacent subdomains. Specifically, cells that lie on the interface between subdomains are placed first in the subdomain with the higher rank.
+@COMMENT_NOT_PDMA_RST@
+@COMMENT_NOT_PDMA_RST@This strategy leverages the fact that the renumbering scheme treats the lower-ranked subdomain as a master relative to higher-ranked neighbors. Therefore, placing boundary cells first in the higher-ranked subdomain simplifies initialization and iteration over just the interface cells within the current subdomain by allowing range-based loops without gaps.
+@COMMENT_NOT_PDMA_RST@
+@COMMENT_NOT_PDMA_RST@As a result, this option improves data locality and facilitates efficient traversal of boundary elements during computations, benefiting overall solver performance and communication patterns in parallel HPC simulations.
+
+@COMMENT_NOT_PDMA_RST@
+@COMMENT_NOT_PDMA_RST@Importance of post-processing renumbered partitions within solvers
+@COMMENT_NOT_PDMA_RST@------------------------------------------------------------------
+@COMMENT_NOT_PDMA_RST@
+@COMMENT_NOT_PDMA_RST@Renumbering the mesh partition is a crucial step to optimize data locality and computational efficiency. However, the renumbering alone is often insufficient to fully exploit these benefits in solver computations.
+@COMMENT_NOT_PDMA_RST@
+@COMMENT_NOT_PDMA_RST@A key aspect for achieving optimal performance is **post-processing the renumbered information inside the solvers**. This post-treatment involves reorganizing data to:
+@COMMENT_NOT_PDMA_RST@
+@COMMENT_NOT_PDMA_RST@- **Reconstruct vectorization packets**: Grouping data elements into packets that match hardware SIMD capabilities, allowing efficient vectorized processing.
+@COMMENT_NOT_PDMA_RST@- **Identify Gauss-Seidel fronts**: Detecting independent sets or fronts in the Gauss-Seidel iteration to enable parallel execution and reduce synchronization overhead.
+@COMMENT_NOT_PDMA_RST@- **Collapse index ranges**: Compressing or reorganizing numbering into continuous ranges, simplifying loops and memory accesses.
+@COMMENT_NOT_PDMA_RST@- **Provide user-friendly subdomain information**: Abstracting partition details using structures such as a `cell_color` array, which marks subdomains without exposing complex indexing.
+@COMMENT_NOT_PDMA_RST@
+@COMMENT_NOT_PDMA_RST@Without this post-processing on the solver side, the renumbering is **sub-optimal**, as raw numeration may not correspond to the optimal traversal or computation order needed by algorithms.
+@COMMENT_NOT_PDMA_RST@
+@COMMENT_NOT_PDMA_RST@The post-processing phase must be implemented in the calling codes to ensure that the renumbered partitions are efficiently organized into cache-friendly ranges, vectorization groups, and Gauss-Seidel fronts. This adaptation maximizes hardware utilization and solver scalability while simplifying the interface exposed to end-users.
+@COMMENT_NOT_PDMA_RST@
+@COMMENT_NOT_PDMA_RST@Therefore, the renumbering step and the solver post-processing form a complementary pair, both necessary to realize the full potential of optimizing mesh partitioning for HPC contexts.
+@COMMENT_NOT_PDMA_RST@
+
+@COMMENT_NOT_PDMA_RST@
+@COMMENT_NOT_PDMA_RST@User recommendations: verifying vectorization quality and subdomain balancing
+@COMMENT_NOT_PDMA_RST@-----------------------------------------------------------------------------
+@COMMENT_NOT_PDMA_RST@
+@COMMENT_NOT_PDMA_RST@After completing the post-processing of the renumbered mesh partitions, it is strongly recommended that users verify the effectiveness of the vectorization and the balance of subdomains.
+@COMMENT_NOT_PDMA_RST@
+@COMMENT_NOT_PDMA_RST@Using tools such as histograms to analyze the distribution of vector packets and the workload per subdomain provides a quick and intuitive assessment of the partition quality.
+@COMMENT_NOT_PDMA_RST@
+@COMMENT_NOT_PDMA_RST@Balanced histograms indicate good load distribution across subdomains, which is essential for efficient parallel computations, while uniform vector packet sizes ensure optimal hardware utilization through vectorization.
+@COMMENT_NOT_PDMA_RST@
+@COMMENT_NOT_PDMA_RST@Regularly checking these metrics helps identify potential bottlenecks or imbalances early, enabling users to adjust parameters or renumbering strategies accordingly for better performance.
+@COMMENT_NOT_PDMA_RST@

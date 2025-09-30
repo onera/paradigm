@@ -1,21 +1,14 @@
-#include <math.h>
-#include <sys/time.h>
-#include <time.h>
-#include <sys/resource.h>
-#include <unistd.h>
-#include <stdlib.h>
+
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 
 #include "pdm.h"
-#include "pdm_priv.h"
-#include "pdm_printf.h"
 #include "pdm_gnum.h"
-
+#include "pdm_mem_tool.h"
 #include "pdm_mpi.h"
-#include "pdm_config.h"
 #include "pdm_point_cloud_gen.h"
+#include "pdm_printf.h"
 
 
 /**
@@ -73,38 +66,30 @@ _read_args
 
   while (i < argc) {
 
-    if (strcmp(argv[i], "-h") == 0)
+    if (strcmp(argv[i], "-h") == 0) {
       _usage(EXIT_SUCCESS);
-
-    else if (strcmp(argv[i], "-v") == 0) {
+    } else if (strcmp(argv[i], "-v") == 0) {
       *verbose = 1;
-    }
-
-    else if (strcmp (argv[i], "-n_part") == 0) {
+    } else if (strcmp (argv[i], "-n_part") == 0) {
       i++;
-      if (i >= argc)
+      if (i >= argc) {
         _usage(EXIT_FAILURE);
-      else {
+      } else {
         *n_part = atoi(argv[i]);
       }
-    }
-
-    else if (strcmp (argv[i], "-n") == 0) {
+    } else if (strcmp (argv[i], "-n") == 0) {
       i++;
-      if (i >= argc)
+      if (i >= argc) {
         _usage(EXIT_FAILURE);
-      else {
+      } else {
         long n = atol(argv[i]);
         *gn_pts = (PDM_g_num_t) n;
       }
-    }
-
-    else if (strcmp (argv[i], "-merge") == 0) {
+    } else if (strcmp (argv[i], "-merge") == 0) {
       *merge = (PDM_bool_t) 1;
-    }
-
-    else
+    } else {
       _usage(EXIT_FAILURE);
+    }
     i++;
   }
 }
@@ -115,7 +100,6 @@ _read_args
  * \brief  Main
  *
  */
-
 int main(int argc, char *argv[])
 {
   PDM_MPI_Init(&argc, &argv);
@@ -134,15 +118,16 @@ int main(int argc, char *argv[])
   /*
    * Generate a random point cloud
    */
+  PDM_MPI_Comm comm = PDM_MPI_COMM_WORLD;
   int n_rank;
-  PDM_MPI_Comm_size(PDM_MPI_COMM_WORLD, &n_rank);
   int i_rank;
-  PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+  PDM_MPI_Comm_rank(comm, &i_rank);
 
-  double *char_length;
+  double *char_length = NULL;
   PDM_malloc(char_length, gn_elts, double);
   for (int i = 0; i < gn_elts; i++) {
-    char_length[i] = 1e-3;
+    char_length[i] = 1.e-3;
   }
 
   int     *n_elts = NULL;
@@ -150,8 +135,8 @@ int main(int argc, char *argv[])
   PDM_malloc(n_elts, n_part, int     );
   PDM_malloc(coords, n_part, double *);
   for (int i_part = 0; i_part < n_part; i_part++) {
-    PDM_g_num_t *gnum = NULL;
-    PDM_point_cloud_gen_random(PDM_MPI_COMM_WORLD,
+    PDM_g_num_t *_gnum = NULL;
+    PDM_point_cloud_gen_random(comm,
                                n_rank*i_part + i_rank, // seed
                                0,
                                gn_elts,
@@ -159,9 +144,13 @@ int main(int argc, char *argv[])
                                1., 1., 1.,
                                &n_elts[i_part],
                                &coords[i_part],
-                               &gnum);
-    PDM_free(gnum);
+                               &_gnum);
+    PDM_free(_gnum);
   }
+
+
+  PDM_g_num_t **gnum = NULL;
+  PDM_malloc(gnum, n_part, PDM_g_num_t *);
 
   /*
    * Generate a global numbering for the points from their coordinates
@@ -172,11 +161,11 @@ int main(int argc, char *argv[])
                                              n_part,
                                              merge,
                                              1.e-3, // tolerance
-                                             PDM_MPI_COMM_WORLD,
+                                             comm,
                                              PDM_OWNERSHIP_USER);
 
   // Then, provide the coordinates array for each partition
-  // (`char_length` can be NULL if `merge` is disabled)
+  // (`char_length` can be NULL if `merge` is set to PDM_FALSE)
   for (int i_part = 0; i_part < n_part; i_part++) {
     PDM_gnum_set_from_coords(gen_gnum,
                              i_part,
@@ -188,27 +177,13 @@ int main(int argc, char *argv[])
   // Once all partitions have been set, build the global numbering
   PDM_gnum_compute(gen_gnum);
 
-  // Finally, retrieve the computed global id arrays
-  PDM_g_num_t **gnum = NULL;
-  PDM_malloc(gnum, n_part, PDM_g_num_t *);
+  // Finally, retrieve the computed global IDs
   for (int i_part = 0; i_part < n_part; i_part++) {
-    gnum[i_part] = PDM_gnum_get(gen_gnum,
-                                i_part);
-
+    gnum[i_part] = PDM_gnum_get(gen_gnum, i_part);
   }
 
   // Deallocate the PDM_gen_gnum_t instance
   PDM_gnum_free(gen_gnum);
-
-  if (verbose) {
-    for (int i_part = 0; i_part < n_part; i_part++) {
-      printf("part %d: ", i_part);
-      for (int i = 0; i < n_elts[i_part]; i++) {
-        printf(PDM_FMT_G_NUM " ", gnum[i_part][i]);
-      }
-      printf("\n");
-    }
-  }
 
   /*
    * Free memory
@@ -221,9 +196,6 @@ int main(int argc, char *argv[])
   PDM_free(n_elts);
   PDM_free(coords);
   PDM_free(gnum);
-
-
-
 
   if (i_rank == 0) {
     PDM_printf ("-- End\n");

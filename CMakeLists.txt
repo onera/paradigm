@@ -201,16 +201,8 @@ if (NOT CMAKE_BUILD_TYPE)
  set(CMAKE_BUILD_TYPE "Release" CACHE STRING  "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel" FORCE)
 endif()
 
-# ADD "-DDEBUG_CLASSE" in Debug
-#------------------------------
-
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-  add_definitions (-DDEBUG_CLASSE)
-endif()
-
 # Add "-DHAVE_GETRUSAGE" if function getrusage and gettimeofday exist
 #--------------------------------------------------------------------
-
 include(CheckFunctionExists)
 CHECK_FUNCTION_EXISTS(getrusage PDM_HAVE_GETRUSAGE)
 CHECK_FUNCTION_EXISTS(gettimeofday PDM_HAVE_GETTIMEOFDAY)
@@ -218,8 +210,6 @@ CHECK_FUNCTION_EXISTS(gettimeofday PDM_HAVE_GETTIMEOFDAY)
 #------------------------------------------------------------------------------
 # Default compiler flags
 #------------------------------------------------------------------------------
-
-
 include(${CMAKE_MODULE_PATH}/default_flags.cmake)
 
 #------------------------------------------------------------------------------
@@ -305,11 +295,8 @@ if (PDM_ENABLE_BLASLAPACK)
 
 endif()
 
-# find_package(mmg CONFIG)
-
 # Check OpenMP (TODO : check MPI wrapper function check )
 # -------------------------------------------------------
-
 if (PDM_ENABLE_OPENMP)
   find_package(OpenMP)
   if (OPENMP_FOUND)
@@ -351,24 +338,18 @@ endif ()
 #------------------------------------------------------------------------------
 # Doc
 #------------------------------------------------------------------------------
-
-
 find_package(Doxygen)
 
 #------------------------------------------------------------------------------
 # Print summary of found and not found optional packages
 #------------------------------------------------------------------------------
-
-
 include(FeatureSummary)
 FEATURE_SUMMARY(WHAT ALL)
 
 #------------------------------------------------------------------------------
 # Installation de PDM
 #------------------------------------------------------------------------------
-
 # Append the library version information to the library target properties
-
 if (PDM_WITH_LIBRARY_VERSION)
   string(REPLACE "+" "" PDM_LIBRARY_VERSION ${PDM_VERSION})
   # This setting of SOVERSION assumes that any API change
@@ -429,6 +410,7 @@ string(REPLACE ";" " " PDM_LIST_NRANK "${PDM_LIST_NRANK}")
 
 set (PDM_RUN_PRELOAD "")
 set (PDM_RUN_LSAN "")
+set (PDM_RUN_UBSAN "")
 set (PDM_RUN_PYTHONPATH "")
 
 if (CMAKE_BUILD_TYPE STREQUAL "Sanitize")
@@ -436,6 +418,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Sanitize")
   set(PDM_RUN_PRELOAD "LD_PRELOAD ${PRELOAD_ASAN}:${PROJECT_BINARY_DIR}/script/asan/fake_dlclose/libdlclose.so")
   set(PDM_RUN_PRELOAD_SRUN "LD_PRELOAD=${PRELOAD_ASAN}:${PROJECT_BINARY_DIR}/script/asan/fake_dlclose/libdlclose.so")
   set(PDM_RUN_LSAN "LSAN_OPTIONS=suppressions=${PROJECT_SOURCE_DIR}/script/asan/asan.supp")
+  set(PDM_RUN_UBSAN "UBSAN_OPTIONS=print_stacktrace=1:halt_on_error=0")
 
   if (PDM_ENABLE_DOC)
     message(FATAL_ERROR "Documention can not be built in Sanitize CMAKE_BUILD_TYPE")
@@ -478,11 +461,6 @@ if(PDM_ENABLE_UNIT_TEST)
     GIT_REPOSITORY https://github.com/doctest/doctest.git
     GIT_TAG        v2.4.11
   )
-  # FetchContent_Declare(
-  #   doctest
-  #    GIT_REPOSITORY https://github.com/BerengerBerthoul/doctest.git
-  #    GIT_TAG        f13a00607463ce211004be23b5aa0bdf24d3ab61
-  # )
   FetchContent_GetProperties(doctest)
   if(NOT doctest_POPULATED)
     FetchContent_Populate(doctest)
@@ -516,8 +494,12 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/pdmConfigVersion.cmake"
 )
 
 #------------------------------------------------------------------------------
+# Création d'un fichier pdm_Build.defs dans install/include qui récapitule
+# les options CMake utilisée pour la configuration de ParaDiGM
+#------------------------------------------------------------------------------
+include(pdm_generate_build_defs)
+
+#------------------------------------------------------------------------------
 # Affichage du message de fin d'installation
 #------------------------------------------------------------------------------
-
-
 add_subdirectory(${PDM_CMAKE_DIR}/post-install)

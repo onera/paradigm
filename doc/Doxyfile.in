@@ -767,13 +767,18 @@ INPUT                  = @PDM_SOURCE_DIR@/doc/mainpage.h \
                          @PDM_SOURCE_DIR@/test/tutorial/part_to_block/ex1/pdm_t_part_to_block_sol2.c \
                          @PDM_SOURCE_DIR@/src/pdm.h \
                          @PDM_SOURCE_DIR@/src/adapt \
+                         @PDM_SOURCE_DIR@/src/algorithm \
+                         @PDM_SOURCE_DIR@/src/exchange_protocol \
                          @PDM_SOURCE_DIR@/src/ext_wrapper \
+                         @PDM_SOURCE_DIR@/src/geometry \
+                         @PDM_SOURCE_DIR@/src/gnum_utils \
                          @PDM_SOURCE_DIR@/src/gpu \
                          @PDM_SOURCE_DIR@/src/io \
                          @PDM_SOURCE_DIR@/src/mesh \
                          @PDM_SOURCE_DIR@/src/meshgen \
+                         @PDM_SOURCE_DIR@/src/mesh_struct \
+                         @PDM_SOURCE_DIR@/src/mesh_topology \
                          @PDM_SOURCE_DIR@/src/mpi_wrapper \
-                         @PDM_SOURCE_DIR@/src/pario \
                          @PDM_SOURCE_DIR@/src/ppart \
                          @PDM_SOURCE_DIR@/src/struct \
                          @PDM_SOURCE_DIR@/src/util \

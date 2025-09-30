@@ -28,19 +28,17 @@
  * Standard C library headers
  *----------------------------------------------------------------------------*/
 
-#include <stdlib.h>
-#include <assert.h>
+#include <math.h>
+#include <stdio.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
-#include "pdm_config.h"
+#include "pdm_linear_algebra.h"
+#include "pdm_error.h"
 #include "pdm_priv.h"
 #include "pdm_sort.h"
-#include "pdm_error.h"
-
-#include "pdm_linear_algebra.h"
 
 
 #ifdef  __cplusplus
@@ -339,23 +337,6 @@ static void _compute_eigvec1
  * Public function definitions
  *============================================================================*/
 
-/**
- * \brief Compute Singular Value Decomposition of a rectangular matrix
- * (Adapted from Numerical Recipes)
- *
- * Given a n_row*n_col matrix A (n_col <= n_row), the SVD A = U * diag(w) * Vt is computed.
- * A is overwritten by U.
- * (matrices are stored in C-order, i.e. Aij = A[n_col*i + j])
- *
- * \param [in]    n_row  Number of rows    in matrix A
- * \param [in]    n_col  Number of columns in matrix A
- * \param [inout] a      Rectangular matrix to decompose, overwritten by U (size = n_row * n_col)
- * \param [out]   w      Array of singular values (size = n_col)
- * \param [out]   v      Matrix Vt (size = n_col * n_col)
- *
- * \return 0 if converged, 1 else
- *
- */
 
 int
 PDM_linear_algebra_svd
@@ -652,26 +633,6 @@ PDM_linear_algebra_svd
 }
 
 
-/**
- * \brief Solve the linear system ax = b using Singular Value Decomposition
- *
- * a : n_row * n_col matrix of the linear system
- * b : n_row * stride matrix (right-hand side term)
- * x : n_col * stride matrix (solution)
- * (a is overwritten in the process)
- *
- * \param [in]    n_row    Number of rows    in matrix A
- * \param [in]    n_col    Number of columns in matrix A
- * \param [in]    stride   Number of columns in matrix b
- * \param [in]    tol      Tolerance for singular value truncation (relative to greatest singular value)
- * \param [inout] a        Rectangular matrix (overwritten) (size = n_row * n_col)
- * \param [in]    b        Right-hand side of the system (size = n_row * stride)
- * \param [out]   x        Solution to the system (if SVD converged) (size = n_col * stride)
- *
- * \return 0 if SVD converged, 1 else
- *
- */
-
 int
 PDM_linear_algebra_linsolve_svd
 (
@@ -709,21 +670,6 @@ PDM_linear_algebra_linsolve_svd
 }
 
 
-
-/**
- * \brief Solve the square linear system Ax = b using Gaussian elimination,
- * where A is a n*n matrix and b, x are n*stride matrices
- * (Aij = A[n*i+j], bij = b[stride*i+j], xij = x[stride*i+j])
- *
- * /!\ Gaussian elimination is performed in place
- * (A and x are used as work arrays)
- *
- * \param [in]    n  Number of rows and columns
- * \param [inout] A  Matrix (overwritten) (size = n * n)
- * \param [inout] x  Right-hand side term at input, solution at output (size = n * stride)
- *
- * \return 1 if A is singular, 0 else
- */
 
 int
 PDM_linear_algebra_linsolve_gauss
@@ -807,19 +753,8 @@ PDM_linear_algebra_linsolve_gauss
 PDM_GCC_SUPPRESS_WARNING_POP
 
 
-/**
- * \brief Compute the eigenvalues and eigenvectors of a 3x3 symmetric matrix.
- *
- * (Only the upper triangular part of matrix A is specified.)
- * The eigenvalues are sorted in ascending order.
- *
- * \param a   [in]   Upper triangular part of the symmetric matrix (A[0,0], A[0,1], A[0,2], A[1,1], A[1,2], A[2,2])
- * \param val [out]  Eigenvalues
- * \param vec [out]  Eigenvectors (vec[3*i:3*(i+1)] is the i-th eigenvector)
- *
- */
-
-void PDM_linear_algebra_eigv_3x3_sym
+void
+PDM_linear_algebra_eigv_3x3_sym
 (
  double a[6],
  double val[3],

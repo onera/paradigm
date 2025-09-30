@@ -15,8 +15,6 @@
 
 #include "pdm.h"
 #include "pdm_mpi.h"
-#include "pdm_part_to_block.h"
-#include "pdm_block_to_part.h"
 
 /*----------------------------------------------------------------------------*/
 

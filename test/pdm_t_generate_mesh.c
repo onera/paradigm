@@ -1,24 +1,17 @@
-#include <math.h>
-#include <sys/time.h>
-#include <time.h>
-#include <sys/resource.h>
-#include <unistd.h>
-#include <stdlib.h>
+
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 
 #include "pdm.h"
-#include "pdm_priv.h"
-#include "pdm_config.h"
-#include "pdm_mpi.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
-#include "pdm_logging.h"
-#include "pdm_array.h"
-#include "pdm_vtk.h"
 #include "pdm_generate_mesh.h"
+#include "pdm_logging.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mesh_nodal.h"
+#include "pdm_mpi.h"
 #include "pdm_part_mesh_nodal.h"
+#include "pdm_printf.h"
+#include "pdm_vtk.h"
 
 /**
  *
@@ -118,11 +111,9 @@ int main(int argc, char *argv[])
     int pn_vtx = PDM_part_mesh_nodal_n_vtx_get(pmn,
                                                0);
 
-    double* pvtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmn,
-                                                           0);
+    double* pvtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmn, 0, PDM_OWNERSHIP_BAD_VALUE);
 
-    PDM_g_num_t *pvtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(pmn,
-                                                                   0);
+    PDM_g_num_t *pvtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(pmn, 0, PDM_OWNERSHIP_BAD_VALUE);
 
     int pn_elt = PDM_part_mesh_nodal_section_n_elt_get(pmn,
                                                        0,
@@ -184,11 +175,9 @@ int main(int argc, char *argv[])
       int pn_vtx = PDM_part_mesh_nodal_n_vtx_get(pmn,
                                                  0);
 
-      double* pvtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmn,
-                                                             0);
+      double* pvtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmn, 0, PDM_OWNERSHIP_BAD_VALUE);
 
-      PDM_g_num_t *pvtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(pmn,
-                                                                     0);
+      PDM_g_num_t *pvtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(pmn, 0, PDM_OWNERSHIP_BAD_VALUE);
 
       int pn_elt = PDM_part_mesh_nodal_section_n_elt_get(pmn,
                                                          0,
@@ -342,11 +331,9 @@ int main(int argc, char *argv[])
     int pn_vtx = PDM_part_mesh_nodal_n_vtx_get(pmn,
                                                0);
 
-    double* pvtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmn,
-                                                           0);
+    double* pvtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmn, 0, PDM_OWNERSHIP_BAD_VALUE);
 
-    PDM_g_num_t *pvtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(pmn,
-                                                                   0);
+    PDM_g_num_t *pvtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(pmn, 0, PDM_OWNERSHIP_BAD_VALUE);
 
     int pn_elt = PDM_part_mesh_nodal_section_n_elt_get(pmn,
                                                        0,
@@ -378,6 +365,7 @@ int main(int argc, char *argv[])
                                NULL);
 
   }
+  PDM_part_mesh_nodal_free(pmn);
 
 
   // Generate simplified parallelepiped mesh
@@ -417,13 +405,105 @@ int main(int argc, char *argv[])
                                NULL);
   }
 
+
+  PDM_part_mesh_t *pmesh = NULL;
+
+  /* Read VTK */
+  pmesh = PDM_generate_mesh_from_file(comm,
+                                      1,
+                                      PDM_SPLIT_DUAL_WITH_HILBERT,
+                                      PDM_MESH_DIR"bunny1k.vtk");
+
+  if (visu) {
+    PDM_part_mesh_dump_ensight(pmesh,
+                               "generate_mesh",
+                               "bunny1k",
+                               PDM_FALSE);
+  }
+
+  PDM_part_mesh_free(pmesh);
+
+
+  pmn = PDM_generate_mesh_nodal_from_file(comm,
+                                          1,
+                                          PDM_SPLIT_DUAL_WITH_HILBERT,
+                                          PDM_MESH_DIR"bunny1k.vtk");
+
+  if (visu) {
+    PDM_part_mesh_nodal_dump_vtk(pmn,
+                                 PDM_GEOMETRY_KIND_SURFACIC,
+                                 "generate_mesh_bunny1k");
+  }
+
+  PDM_part_mesh_nodal_free(pmn);
+
+
+
+  /* Read STL */
+  pmesh = PDM_generate_mesh_from_file(comm,
+                                      1,
+                                      PDM_SPLIT_DUAL_WITH_HILBERT,
+                                      PDM_MESH_DIR"sphere.stl");
+
+  if (visu) {
+    PDM_part_mesh_dump_ensight(pmesh,
+                               "generate_mesh",
+                               "sphere",
+                               PDM_FALSE);
+  }
+
+  PDM_part_mesh_free(pmesh);
+
+
+  pmn = PDM_generate_mesh_nodal_from_file(comm,
+                                          1,
+                                          PDM_SPLIT_DUAL_WITH_HILBERT,
+                                          PDM_MESH_DIR"sphere.stl");
+
+  if (visu) {
+    PDM_part_mesh_nodal_dump_vtk(pmn,
+                                 PDM_GEOMETRY_KIND_SURFACIC,
+                                 "generate_mesh_sphere");
+  }
+
+  PDM_part_mesh_nodal_free(pmn);
+
+
+
+  /* Read GMF */
+  pmesh = PDM_generate_mesh_from_file(comm,
+                                      1,
+                                      PDM_SPLIT_DUAL_WITH_HILBERT,
+                                      PDM_MESH_DIR"mixed_elements_3d.mesh");
+
+  if (visu) {
+    PDM_part_mesh_dump_ensight(pmesh,
+                               "generate_mesh",
+                               "mixed_elements_3d",
+                               PDM_FALSE);
+  }
+
+  PDM_part_mesh_free(pmesh);
+
+
+  pmn = PDM_generate_mesh_nodal_from_file(comm,
+                                          1,
+                                          PDM_SPLIT_DUAL_WITH_HILBERT,
+                                          PDM_MESH_DIR"mixed_elements_3d.mesh");
+
+  if (visu) {
+    PDM_part_mesh_nodal_dump_vtk(pmn,
+                                 PDM_GEOMETRY_KIND_VOLUMIC,
+                                 "generate_mesh_mixed_elements_3d");
+  }
+
+  PDM_part_mesh_nodal_free(pmn);
+
+
   // free
   PDM_free(coords     );
   PDM_free(elt_vtx_idx);
   PDM_free(elt_vtx    );
-
-  // free
-  PDM_part_mesh_nodal_free(pmn);
 
   PDM_MPI_Finalize();
 

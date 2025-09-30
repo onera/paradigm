@@ -1,31 +1,18 @@
 /*----------------------------------------------------------------------------
  *  System headers
  *----------------------------------------------------------------------------*/
-#include <sys/resource.h>
-
-#include <math.h>
 #include <stdlib.h>
-#include <stdio.h>
-#include <assert.h>
-#include <string.h>
 
 /*----------------------------------------------------------------------------
  *  Local headers
  *----------------------------------------------------------------------------*/
 
-#include "pdm.h"
-#include "pdm_priv.h"
-#include "pdm_mpi.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
-#include "pdm_gnum.h"
-#include "pdm_timer.h"
-#include "pdm_sort.h"
-#include "pdm_array.h"
-#include "pdm_logging.h"
-#include "pdm_distrib.h"
-
 #include "pdm_box_gen.h"
+#include "pdm.h"
+#include "pdm_distrib.h"
+#include "pdm_gnum.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mpi.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -54,28 +41,6 @@ extern "C"
 /*=============================================================================
  * Public function definitions
  *============================================================================*/
-
-/**
- *
- * \brief Generate a random set of boxes
- *
- * \param [in]   comm                   MPI Communicator id
- * \param [in]   seed                   Random seed
- * \param [in]   geometric_g_num        Compute global ids from coordinates
- * \param [in]   gn_box                 Global number of boxes
- * \param [in]   min_size               Minimal box size
- * \param [in]   max_size               Maximal box size
- * \param [in]   x_min                  Minimal X-coordinate for box centers
- * \param [in]   y_min                  Minimal Y-coordinate for box centers
- * \param [in]   z_min                  Minimal Z-coordinate for box centers
- * \param [in]   x_max                  Maximal X-coordinate for box centers
- * \param [in]   y_max                  Maximal Y-coordinate for box centers
- * \param [in]   z_max                  Maximal Z-coordinate for box centers
- * \param [out]  n_box                  Local number of boxes
- * \param [out]  box_extents            Extents of the local boxes
- * \param [out]  box_ln_to_gn           Global ids of the local boxes
- *
- */
 
 void
 PDM_box_gen_random
@@ -165,26 +130,6 @@ PDM_box_gen_random
 }
 
 
-/**
- *
- * \brief Generate a cartesian set of boxes
- *
- * \param [in]   comm                   MPI Communicator id
- * \param [in]   nx                     Number of points in X-direction
- * \param [in]   ny                     Number of points in Y-direction
- * \param [in]   nz                     Number of points in Z-direction
- * \param [in]   x_min                  X-coordinate of the first cuboid corner
- * \param [in]   y_min                  Y-coordinate of the first cuboid corner
- * \param [in]   z_min                  Z-coordinate of the first cuboid corner
- * \param [in]   x_max                  X-coordinate of the opposite cuboid corner
- * \param [in]   y_max                  Y-coordinate of the opposite cuboid corner
- * \param [in]   z_max                  Z-coordinate of the opposite cuboid corner
- * \param [out]  n_box                  Local number of boxes
- * \param [out]  box_extents            Extents of the local boxes
- * \param [out]  box_ln_to_gn           Global ids of the local boxes
- *
- */
-
 void
 PDM_box_gen_cartesian
 (
@@ -257,3 +202,7 @@ PDM_box_gen_cartesian
   *box_extents  = _box_extents;
   *box_ln_to_gn = _box_ln_to_gn;
 }
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */

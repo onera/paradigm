@@ -6,17 +6,16 @@
  * Standard C library headers
  *----------------------------------------------------------------------------*/
 
-#include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
+#include <stdlib.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
-#include "pdm_mpi.h"
-#include "pdm_printf.h"
+#include "pdm.h"
 #include "pdm_error.h"
+#include "pdm_mpi.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -508,12 +507,12 @@ int PDM_MPI_Send(void *buf, int count, PDM_MPI_Datatype datatype, int dest,
 }
 
 /*----------------------------------------------------------------------------
- * PDM_MPI_Issend (wrapping de la fonction MPI_Issend)
+ * PDM_MPI_Isend (wrapping de la fonction MPI_Issend)
  *
  *----------------------------------------------------------------------------*/
 
-int PDM_MPI_Issend(const void *buf, int count, PDM_MPI_Datatype datatype, int dest, int tag,
-               PDM_MPI_Comm comm, PDM_MPI_Request *request)
+int PDM_MPI_Isend(const void *buf, int count, PDM_MPI_Datatype datatype, int dest, int tag,
+                  PDM_MPI_Comm comm, PDM_MPI_Request *request)
 {
   PDM_UNUSED(buf);
   PDM_UNUSED(count);
@@ -523,7 +522,7 @@ int PDM_MPI_Issend(const void *buf, int count, PDM_MPI_Datatype datatype, int de
   PDM_UNUSED(comm);
   PDM_UNUSED(request);
 
-  PDM_error(__FILE__, __LINE__, 0, "PDM_MPI_Issend : Unavailable function with pdm_no_mpi library\n" );
+  PDM_error(__FILE__, __LINE__, 0, "PDM_MPI_Isend : Unavailable function with pdm_no_mpi library\n" );
   abort();
   return 1;
 }

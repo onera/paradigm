@@ -13,8 +13,6 @@
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
-#include "pdm.h"
-
 /*----------------------------------------------------------------------------*/
 
 #ifdef __cplusplus
@@ -42,7 +40,7 @@ char *
 PDM_remove_blank
 (
 const char *str1
- );
+);
 
 #ifdef __cplusplus
 }

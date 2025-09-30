@@ -74,18 +74,23 @@ cdef class BlockToPart:
     cdef MPI.Comm             py_comm
     # ************************************************************************
     # ------------------------------------------------------------------------
-    def __cinit__(self, NPY.ndarray[npy_pdm_gnum_t, ndim=1, mode='c'] Distrib,
-                        MPI.Comm comm,
-                        list     pLNToGN,
-                        int      partN):
+    def __init__(self, NPY.ndarray[npy_pdm_gnum_t, ndim=1, mode='c'] Distrib,
+                       MPI.Comm comm,
+                       list     pLNToGN,
+                       int      partN):
         """
-        Constructor of BlockToPart object : Python wrapping of PDM library (E. Quémerais)
+        __init__(Distrib, comm, pLNToGN, partN)
 
-            :param comm:     MPI Communicator (Caution MPI Comm is a mpi4py object )
-            :param Distrib:  Distribution of distribute array (Size = nRank+1)
-            :param pLNToGN:  Part list containaing numpy on LNToGN for each partition (len = partN)
-            :param partN:    Number of partitions
+        Create a Block-to-Part instance
 
+        Parameters:
+            Distrib (`np.ndarray[npy_pdm_gnum_t]`)           : Block distribution index (Size = ``comm.size+1``)
+            comm    (MPI.Comm)                               : MPI Communicator
+            pLNToGN (`list` of `np.ndarray[npy_pdm_gnum_t]`) : Part list containaing numpy on LNToGN for each partition (len = ``partN``)
+            partN   (int)                                    : Number of partitions
+
+        Returns:
+          New :py:class:`BlockToPart` instance
         """
         # > Some checks
         assert(len(pLNToGN) == partN)
@@ -118,14 +123,18 @@ cdef class BlockToPart:
     # ------------------------------------------------------------------
     def exchange_field(self, NPY.ndarray block_data, block_stride=1, bint interlaced_str=True):
       """
-      Wrapping for PDM_block_to_part_exch : transfert a distributed data field to the
-      partitions, allocate and return the partitionned array list.
+      exchange_field(block_data, block_stride=1, interlaced_str=True)
 
-      :param self:         BlockToPart object
-      :param block_data:   Distributed data array, 1 dimensional and with same datatype for each rank
-      :param block_stride: Stride for distributed array. Can be either an array of size dn_elt (variable
-                           stride will be used) or an integer (cst stride will be used)
-      :param interlaced_str: indicate if data are interlaced (True) or interleaved 
+      Transfer a block-distributed data field to the partitions, allocate and return the partitioned array list.
+
+      Parameters:
+        block_data     (np.ndarray)                      : Block-distributed data array, 1-dimensional and with same datatype for each rank
+        block_stride   (`int` or `np.ndarray[np.int32]`) : Stride for ``block_data``. Can be either an array of size dn_elt (variable stride will be used) or an integer (constant stride will be used)
+        interlaced_str (bool)                            : Indicate if data are interlaced (True) or interleaved 
+      
+      Returns:
+        - Stride for partitioned data (`int` or `list` of `np.ndarray[np.int32]`)
+        - Partitioned data arrays (`list` of `np.ndarray`)
       """
 
       cdef NPY.ndarray[NPY.int32_t, ndim=1, mode='c'] numpy_int
@@ -188,17 +197,16 @@ cdef class BlockToPart:
     def exchange_field_inplace(self, NPY.ndarray block_data, list part_data, 
       block_stride=1, list part_stride=None, bint interlaced_str=True):
       """
-      Wrapping for PDM_block_to_part_exch_in_place : transfert a distributed data field to the
-      partitions. Fill the pre-allocated partitionned arrays
+      exchange_field_inplace(block_data, part_data, block_stride=1, part_stride=None, interlaced_str=True)
 
-      :param self:         BlockToPart object
-      :param block_data:   Distributed data array, 1 dimensional and with same datatype for each rank
-      :param part_data:    List of the partN pre allocated partitionned data array, each one beeing 1 dimensional 
-                           and with same datatype than block_data
-      :param block_stride: Stride for distributed array. Can be either an array of size dn_elt (variable
-                           stride will be used) or an integer (cst stride will be used)
-      :param part_stride:  List of the partN pre allocated parititioned data strides
-      :param interlaced_str: indicate if data are interlaced (True) or interleaved 
+      Transfer a distributed data field to the partitions. Fill the pre-allocated partitioned arrays.
+
+      Parameters:
+        block_data     (np.ndarray)                       : Block-distributed data array, 1-dimensional and with same datatype for each rank
+        part_data      (`list` of `np.ndarray`)           : List of the partN pre allocated partitionned data array, each one being 1-dimensional and with same datatype as ``block_data``
+        block_stride   (`int` or `np.ndarray[np.int32]`)  : Stride for ``block_data``. Can be either an array of size dn_elt (variable stride will be used) or an integer (constant stride will be used)
+        part_stride    (`list` of `np.ndarray[np.int32]`) : List of the partN pre allocated parititioned data strides
+        interlaced_str (bool)                             : Indicate if data are interlaced (True) or interleaved 
       """
       cdef NPY.ndarray[NPY.int32_t, ndim=1, mode='c'] numpy_int
       cdef PDM_stride_t _stride_t

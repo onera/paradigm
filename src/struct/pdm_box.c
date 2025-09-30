@@ -29,9 +29,8 @@
  *---------------------------------------------------------------------------*/
 
 #include <assert.h>
-#include <float.h>
 #include <limits.h>
-#include <math.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -43,16 +42,16 @@
  *  Header for the current file
  *---------------------------------------------------------------------------*/
 
-#include "pdm.h"
-#include "pdm_mpi.h"
-#include "pdm_priv.h"
 #include "pdm_box.h"
+#include "pdm.h"
+#include "pdm_array.h"
 #include "pdm_box_priv.h"
-#include "pdm_printf.h"
 #include "pdm_error.h"
 #include "pdm_hash_tab.h"
-#include "pdm_array.h"
-#include "pdm_logging.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mpi.h"
+#include "pdm_printf.h"
+#include "pdm_priv.h"
 
 /*---------------------------------------------------------------------------*/
 
@@ -1117,7 +1116,7 @@ PDM_box_set_dump(const PDM_box_set_t  *boxes,
 {
   int   i;
 
-  const char  XYZ[3] = "XYZ";
+  const char  XYZ[] = "XYZ";
 
   if (boxes == NULL)
     return;

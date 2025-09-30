@@ -1,22 +1,21 @@
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 
 #include "pdm.h"
-#include "pdm_priv.h"
-#include "pdm_config.h"
+#include "pdm_array.h"
+#include "pdm_dcube_nodal_gen.h"
+#include "pdm_dmesh_nodal.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mesh_nodal.h"
 #include "pdm_mpi.h"
 #include "pdm_multipart.h"
-#include "pdm_dcube_nodal_gen.h"
-#include "pdm_mesh_nodal.h"
-#include "pdm_array.h"
-#include "pdm_vtk.h"
-#include "pdm_printf.h"
 #include "pdm_part_extension.h"
-
+#include "pdm_part_mesh_nodal.h"
+#include "pdm_printf.h"
+#include "pdm_vtk.h"
+#include "pdm_writer.h"
 #include "pdm_writer_priv.h"
-#include "pdm_part_connectivity_transform.h"
 
 /*============================================================================
  * Private function definitions
@@ -214,8 +213,7 @@ int main
                                                  &coords,
                                                  PDM_OWNERSHIP_USER);
 
-    PDM_g_num_t *vtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(pmn,
-                                                                  i_part);
+    PDM_g_num_t *vtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(pmn, i_part, PDM_OWNERSHIP_BAD_VALUE);
 
     // Visualisation cell->vtx
     if (vtk) {

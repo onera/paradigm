@@ -1,6 +1,7 @@
 #define DOCTEST_CONFIG_IMPLEMENT
-#include "mpi.h"
+#include "doctest/doctest.h"
 #include "doctest/extensions/doctest_mpi.h"
+#include "mpi.h"
 
 namespace {
 

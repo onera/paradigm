@@ -1,27 +1,25 @@
-#include <math.h>
-#include <sys/time.h>
-#include <time.h>
-#include <sys/resource.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include <assert.h>
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-#include "pdm_error.h"
-#include "pdm_printf.h"
-#include "pdm_priv.h"
-#include "pdm_vtk.h"
-#include "pdm_logging.h"
-#include "pdm_ho_basis.h"
-#include "pdm_ho_ordering.h"
 #include "pdm_array.h"
-#include "pdm_triangle.h"
-#include "pdm_line.h"
+#include "pdm_config.h"
+#include "pdm_error.h"
 #include "pdm_ho_bezier.h"
 #include "pdm_ho_bezier_basis.h"
 #include "pdm_ho_location.h"
+#include "pdm_line.h"
+#include "pdm_logging.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mesh_nodal.h"
+#include "pdm_mpi.h"
+#include "pdm_printf.h"
+#include "pdm_priv.h"
 #include "pdm_sort.h"
+#include "pdm_triangle.h"
+#include "pdm_vtk.h"
 
 /*============================================================================
  * Private function definitions
@@ -731,10 +729,10 @@ int main(int argc, char *argv[])
   /*
    *  Set default values
    */
-  char *filename = NULL;
-  double pt_coord[3] = {0.23062829, 0.39873915, -0.02889847};
-  int random_seed = -1;
-  int visu        = 0;
+  char   *filename    = NULL;
+  double  pt_coord[3] = {0.23062829, 0.39873915, -0.02889847};
+  int     random_seed = -1;
+  int     visu        = 0;
 
   /*
    *  Read args
@@ -749,20 +747,12 @@ int main(int argc, char *argv[])
   if (filename == NULL) {
     filename = (char *) PDM_MESH_DIR"back_faces_P1.dat";
   }
-
   srand(random_seed);
-  // if (random_seed >= 0) {
-  //   for (int i = 0; i < 3; i++) {
-  //     pt_coord[i] = 2 * ((double) rand() / (double) RAND_MAX) - 1;
-  //   }
-  // }
 
   /*
    *  Init
    */
   PDM_MPI_Init(&argc, &argv);
-
-
 
   /*
    *  Read back mesh
@@ -791,8 +781,6 @@ int main(int argc, char *argv[])
     }
   }
 
-  // log_trace("elt_type = %d, elt_order = %d\n", (int) elt_type, elt_order);
-
   int stride = PDM_Mesh_nodal_n_vtx_elt_get(elt_type, 1);
   int *parent_node = NULL;
   if (elt_order > 1) {
@@ -814,7 +802,7 @@ int main(int argc, char *argv[])
     }
   }
 
-  int *elt_elt;
+  int *elt_elt = NULL;
   PDM_malloc(elt_elt, stride * n_elt, int);
   int elt_dim = PDM_Mesh_nodal_elt_dim_get(elt_type);
   if (elt_dim == 1) {
@@ -834,8 +822,10 @@ int main(int argc, char *argv[])
                                   parent_node,
                                   elt_elt);
   }
-  if (parent_node != NULL)PDM_free(parent_node);
 
+  if(parent_node != NULL) {
+    PDM_free(parent_node);
+  }
 
   if (elt_type == PDM_MESH_NODAL_BARHO_BEZIER) {
     if (0) {
@@ -849,15 +839,9 @@ int main(int argc, char *argv[])
     elt_type = PDM_MESH_NODAL_BARHO;
   }
 
-
-
-
-
-
   /*
    *  Projection
    */
-  // PDM_log_trace_array_double(pt_coord, 3, "pt_coord : ");
   int stride_ho = PDM_Mesh_nodal_n_vtx_elt_get(elt_type, elt_order);
   int *elt_vtx_idx = PDM_array_new_idx_from_const_stride_int(stride_ho, n_elt);
 
@@ -885,7 +869,6 @@ int main(int argc, char *argv[])
                                                    history_elt,
                                                    history_proj);
 
-
   /*
    *  Visu VTK
    */
@@ -899,8 +882,7 @@ int main(int argc, char *argv[])
                                    elt_vtx);
   }
 
-
-  double *visiting_order;
+  double *visiting_order = NULL;
   PDM_malloc(visiting_order, n_elt, double);
   for (int i = 0; i < n_elt; i++) {
     visiting_order[i] = -n_step;
@@ -927,8 +909,6 @@ int main(int argc, char *argv[])
   }
   PDM_free(visiting_order);
 
-
-
   double proj_p[6] = {
     pt_coord[0], pt_coord[1], pt_coord[2],
     proj_pt_coord[0], proj_pt_coord[1], proj_pt_coord[2]
@@ -950,7 +930,7 @@ int main(int argc, char *argv[])
                                NULL);
   }
 
-  int *history_bar;
+  int *history_bar = NULL;
   PDM_malloc(history_bar, (n_step-1) * 2, int);
   for (int i = 0; i < n_step-1; i++) {
     history_bar[2*i  ] = i+1;
@@ -971,9 +951,6 @@ int main(int argc, char *argv[])
                                NULL);
   }
   PDM_free(history_bar);
-
-
-
   PDM_free(vtx_coord);
   PDM_free(elt_vtx);
   PDM_free(elt_vtx_idx);

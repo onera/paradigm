@@ -1,109 +1,174 @@
-.. _dcube_nodal:
+.. _dcube_nodal_gen:
 
-Distributed nodal square/cube mesh
+Distributed Nodal Square/Cube Mesh
 ==================================
 
+Description
+"""""""""""
 
-C API
------
-
-Initialization
-""""""""""""""
-
-.. doxygenfunction:: PDM_dcube_nodal_gen_create
-
-Options
-"""""""
-
-.. doxygenfunction:: PDM_dcube_nodal_gen_random_factor_set
-
-.. doxygenfunction:: PDM_dcube_nodal_gen_ordering_set
+**Dcube nodal gen** is a service for generating 2D or 3D block-distributed cuboid nodal meshes.
+All standard of mesh elements are supported: triangles, quadrangles, tetrahedra, pyramids, prisms, hexahedra, as well as high-order, curved elements.
 
 
-Mesh generation
-"""""""""""""""
+API
+"""
 
-.. doxygenfunction:: PDM_dcube_nodal_gen_build
+.. dropdown:: Initialization
 
-.. doxygenfunction:: PDM_dcube_nodal_gen_dmesh_nodal_get
+  .. tab-set::
+    :sync-group: language
 
+    .. tab-item:: C
+      :sync: C
 
-Multi-domain mesh generation
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. doxygenfunction:: PDM_dcube_nodal_cart_topo
-
-
-Finalization
-""""""""""""
-
-.. doxygenfunction:: PDM_dcube_nodal_gen_free
+      .. doxygenfunction:: PDM_dcube_nodal_gen_create
 
 
 
+    .. tab-item:: Fortran
+      :sync: Fortran
 
-Fortran API
------------
+      .. ifconfig:: enable_fortran_doc == 'ON'
 
-.. ifconfig:: enable_fortran_doc == 'ON'
+        .. f:autosubroutine:: PDM_dcube_nodal_gen_create
 
-  Initialization
-  """"""""""""""
+      .. ifconfig:: enable_fortran_doc == 'OFF'
 
-  .. f:autosubroutine:: PDM_dcube_nodal_gen_create_
-
-  Options
-  """""""
-
-  .. f:autosubroutine PDM_dcube_nodal_gen_random_factor_set
-
-  Mesh generation
-  """""""""""""""
-
-  .. f:autosubroutine:: PDM_dcube_nodal_gen_build_
-
-  .. f:autosubroutine:: PDM_dcube_nodal_gen_dmesh_nodal_get_
-
-  Finalization
-  """"""""""""
-
-  .. f:autosubroutine PDM_dcube_nodal_gen_free
-
-.. ifconfig:: enable_fortran_doc == 'OFF'
-
-  .. warning::
-    Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
 
 
 
+    .. tab-item:: Python
+      :sync: Python
 
-Python API
-----------
+      .. ifconfig:: enable_python_doc == 'ON'
 
-.. ifconfig:: enable_python_doc == 'ON'
+        .. py:class:: DCubeNodalGenerator
 
-  .. py:class:: DCubeNodalGenerator
+          .. automethod:: Pypdm.Pypdm.DCubeNodalGenerator.__init__
 
-    Python structure to generate a distributed mesh nodal from a cartesian topology.
+      .. ifconfig:: enable_python_doc == 'OFF'
 
-    .. rubric:: Initialization
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
 
-    .. autofunction:: Pypdm.Pypdm.DCubeNodalGenerator.__init__
 
-    .. rubric:: Setting options
 
-    .. automethod:: Pypdm.Pypdm.DCubeNodalGenerator.set_random_factor
-    .. automethod:: Pypdm.Pypdm.DCubeNodalGenerator.set_ordering
+.. dropdown:: Set options
 
-    .. rubric:: Mesh generation
+  .. tab-set::
+    :sync-group: language
 
-    .. automethod:: Pypdm.Pypdm.DCubeNodalGenerator.compute
+    .. tab-item:: C
+      :sync: C
 
-    .. automethod:: Pypdm.Pypdm.DCubeNodalGenerator.get_dmesh_nodal
-    
+      .. doxygenfunction:: PDM_dcube_nodal_gen_random_factor_set
+      .. doxygenfunction:: PDM_dcube_nodal_gen_ordering_set
 
-.. ifconfig:: enable_python_doc == 'OFF'
 
-  .. warning::
-    Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
 
+    .. tab-item:: Fortran
+      :sync: Fortran
+
+      .. ifconfig:: enable_fortran_doc == 'ON'
+
+        .. f:autosubroutine:: PDM_dcube_nodal_gen_random_factor_set
+        .. .. f:autosubroutine:: PDM_dcube_nodal_gen_ordering_set
+
+      .. ifconfig:: enable_fortran_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+
+
+
+    .. tab-item:: Python
+      :sync: Python
+
+      .. ifconfig:: enable_python_doc == 'ON'
+
+        .. automethod:: Pypdm.Pypdm.DCubeNodalGenerator.set_random_factor
+        .. automethod:: Pypdm.Pypdm.DCubeNodalGenerator.set_ordering
+
+      .. ifconfig:: enable_python_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+
+
+
+.. dropdown:: Generate mesh
+
+  .. tab-set::
+    :sync-group: language
+
+    .. tab-item:: C
+      :sync: C
+
+      .. doxygenfunction:: PDM_dcube_nodal_gen_build
+      .. doxygenfunction:: PDM_dcube_nodal_gen_dmesh_nodal_get
+
+
+
+    .. tab-item:: Fortran
+      :sync: Fortran
+
+      .. ifconfig:: enable_fortran_doc == 'ON'
+
+        .. f:autosubroutine:: PDM_dcube_nodal_gen_build
+        .. f:autosubroutine:: PDM_dcube_nodal_gen_dmesh_nodal_get
+
+      .. ifconfig:: enable_fortran_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+
+
+
+    .. tab-item:: Python
+      :sync: Python
+
+      .. ifconfig:: enable_python_doc == 'ON'
+
+        .. automethod:: Pypdm.Pypdm.DCubeNodalGenerator.compute
+        .. automethod:: Pypdm.Pypdm.DCubeNodalGenerator.get_dmesh_nodal
+
+      .. ifconfig:: enable_python_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+
+
+
+
+.. dropdown:: Finalization
+
+  .. tab-set::
+    :sync-group: language
+
+    .. tab-item:: C
+      :sync: C
+
+      .. doxygenfunction:: PDM_dcube_nodal_gen_free
+
+
+
+    .. tab-item:: Fortran
+      :sync: Fortran
+
+      .. ifconfig:: enable_fortran_doc == 'ON'
+
+        .. f:autosubroutine:: PDM_dcube_nodal_gen_free
+
+      .. ifconfig:: enable_fortran_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+
+
+
+    .. tab-item:: Python
+      :sync: Python
+
+      |python_gc|

@@ -7,33 +7,27 @@
  *  System headers
  *----------------------------------------------------------------------------*/
 
-#include <math.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 /*----------------------------------------------------------------------------
  *  Local headers
  *----------------------------------------------------------------------------*/
 
+#include "pdm_para_graph_dual.h"
 #include "pdm.h"
-#include "pdm_mpi.h"
+#include "pdm_array.h"
+#include "pdm_binary_search.h"
 #include "pdm_config.h"
-#include "pdm_priv.h"
-#include "pdm_timer.h"
+#include "pdm_dconnectivity_transform.h"
+#include "pdm_mem_tool.h"
 #include "pdm_mpi.h"
 #include "pdm_mpi_ext_dependencies.h"
-
-#include "pdm_printf.h"
-#include "pdm_error.h"
-#include "pdm_sort.h"
-#include "pdm_unique.h"
-#include "pdm_binary_search.h"
 #include "pdm_part_to_block.h"
-#include "pdm_block_to_part.h"
-#include "pdm_para_graph_dual.h"
-#include "pdm_array.h"
-#include "pdm_dconnectivity_transform.h"
+#include "pdm_printf.h"
+#include "pdm_priv.h"
+#include "pdm_unique.h"
 
 
 /*----------------------------------------------------------------------------
@@ -71,17 +65,7 @@ extern "C" {
  * Public function definitions
  *============================================================================*/
 
-/**
- *
- * \brief Compress the connectivity of a graph, ie remove the multiple arcs connecting
- *        the same two nodes (if any) and remove occurence of the current line
- *
- * \param [in]    n_node            (local) number of nodes in the graph
- * \param [inout] dual_graph_idx    Node to node connectivity indexes (size=n_node+1)
- * \param [in] dual_graph_n         Original number of connected nodes (size=n_node)
- * \param [inout] dual_graph        Node to node connectivity (size=dual_graph_idx[n_node])
- *
- */
+
 void
 PDM_para_graph_compress_connectivity_dual
 (
@@ -141,17 +125,7 @@ const int         *dual_graph_n,
   }
 }
 
-/**
- *
- * \brief Compress the connectivity of a graph, ie remove the multiple arcs connecting
- *        the same two nodes (if any).
- *
- * \param [in]    n_node            (local) number of nodes in the graph
- * \param [inout] dual_graph_idx    Node to node connectivity indexes (size=n_node+1)
- * \param [in] dual_graph_n         Original number of connected nodes (size=n_node)
- * \param [inout] dual_graph        Node to node connectivity (size=dual_graph_idx[n_node])
- *
- */
+
 void
 PDM_para_graph_compress_connectivity
 (
@@ -194,32 +168,7 @@ const int         *dual_graph_n,
   }
 }
 
-/**
- *
- * \brief Compute in parallel the dual graph of an unstructured graph represented
- *        by its arc (edges of the graph) to node (vertices of the graph) connectivity.
- *        Arc and edge terminology is employed to avoid confusion with geometric entities
- *        such as vertices, edges, etc.
- *        Usually for a CFD mesh, the nodes of the graph are the cells of the mesh
- *        and the arcs of the graph are thus the faces of the mesh.
- *
- *        The dual graph computed by this function is the node to node connectivity
- *        as know as adjacency list, requested by graph partitioners.
- *
- *        Additively, this function computes the node to arc connectivity if
- *        compute_node_to_arc is true.
- *
- * \param [in]   comm               PDM_MPI communicator
- * \param [in]   graph_node_distrib distribution of nodes over the procs (size=n_rank+1)
- * \param [in]   graph_arc_distrib  distribution of arcs  over the procs (size=n_rank+1)
- * \param [in]   darc_to_node       Arc to node connectivity (size=2*dn_arc)
- * \param [out]  dual_graph_idx     Node to node connectivity indexes (size=dn_node+1)
- * \param [out]  dual_graph         Node to node connectivity (size=dual_graph_idx[dn_node])
- * \param [in]   compute_dnode_to_arc Compute or not node to arc connectivity
- * \param [out]  dnode_to_arc_idx   Node to arc connectivity indexes (size=dn_node+1)
- * \param [out]  dnode_to_arc       Node to arc connectivity (size=dnode_to_arc_idx[dn_node])
- *
- */
+
 void
 PDM_para_graph_dual_from_arc2node
 (
@@ -300,31 +249,6 @@ const int              compute_dnode_to_arc,
     }
 
   }
-
-  if( 0 == 1){
-    printf("dnode_ln_to_gn::");
-    for(int i = 0; i < dn_arc_int; ++i){
-      printf(PDM_FMT_G_NUM" ", dnode_ln_to_gn[i]);
-    }
-    printf("\n");
-
-    printf("node_strid::");
-    for(int i = 0; i < dn_arc_int; ++i){
-      printf("%d ", node_strid[i]);
-    }
-    printf("\n");
-
-    printf("dopposite_node::");
-    for(int i = 0; i < idx_data_node ; ++i){
-      printf(PDM_FMT_G_NUM" ", dopposite_node[i]);
-    }
-    printf("\n");
-
-    printf("idx_data_node ::%d\n", idx_data_node );
-    printf("dn_arc_int    ::%d\n", dn_arc_int);
-    printf("dn_arc        ::%d\n", dn_arc);
-  }
-
 
   PDM_realloc(node_strid     ,node_strid     ,     dn_arc_int    ,int);
   PDM_realloc(dnode_ln_to_gn ,dnode_ln_to_gn , dn_arc_int    ,PDM_g_num_t);
@@ -551,16 +475,8 @@ const int              compute_dnode_to_arc,
         printf("\n");
       }
     }
-
-    // _dnode_to_arc_idx[0] = 0;
-    // for(int i_node = 0; i_node < n_node_block; ++i_node){
-    //   _dnode_to_arc_idx[i_node+1] = _dnode_to_arc_idx[i_node] + node_to_arc_n[i_node];
-    // }
     PDM_free(node_to_arc_n);
-
   }
-
-  // abort();
 
   /*
    * Exchange is done we can free direclty memory
@@ -576,23 +492,7 @@ const int              compute_dnode_to_arc,
   PDM_part_to_block_free (ptb_dual);
 }
 
-/**
- *
- * \brief Compute in parallel the dual graph of an unstructured graph represented
- *        by its node (vertices of the graph) to arc (edges of the graph) connectivity.
- *        Arc and edge terminology is employed to avoid confusion with geometric entities
- *        such as vertices, edges, etc.
- *        Usually for a CFD mesh, the nodes of the graph are the cells of the mesh
- *        and the arcs of the graph are thus the faces of the mesh.
- *
- * \param [in]   comm               PDM_MPI communicator
- * \param [in]   graph_node_distrib distribution of nodes over the procs (size=n_rank+1)
- * \param [in]   graph_arc_distrib  distribution of arcs  over the procs (size=n_rank+1)
- * \param [in]   dnode_arc_idx      Node to arc connectivity indexes (size=dn_node+1)
- * \param [in]   dnode_arc          Node to arc connectivity (size=dnode_to_arc_idx[dn_node])
- * \param [out]  dual_graph_idx     Node to node connectivity indexes (size=dn_node+1)
- * \param [out]  dual_graph         Node to node connectivity (size=dual_graph_idx[dn_node])
- */
+
 void
 PDM_para_graph_dual_from_node2arc
 (
@@ -736,23 +636,7 @@ const PDM_g_num_t     *dnode_arc,
   PDM_free(darc_to_node);
 }
 
-/**
- *
- * \brief Compute in parallel the dual graph of an unstructured graph represented
- *        by its node (vertices of the graph) to arc (edges of the graph) connectivity.
- *        Arc and edge terminology is employed to avoid confusion with geometric entities
- *        such as vertices, edges, etc.
- *        Usually for a CFD mesh, the nodes of the graph are the cells of the mesh
- *        and the arcs of the graph are thus the faces of the mesh.
- *
- * \param [in]   comm               PDM_MPI communicator
- * \param [in]   graph_node_distrib distribution of nodes over the procs (size=n_rank+1)
- * \param [in]   graph_arc_distrib  distribution of arcs  over the procs (size=n_rank+1)
- * \param [in]   dnode_arc_idx      Node to arc connectivity indexes (size=dn_node+1)
- * \param [in]   dnode_arc          Node to arc connectivity (size=dnode_to_arc_idx[dn_node])
- * \param [out]  dual_graph_idx     Node to node connectivity indexes (size=dn_node+1)
- * \param [out]  dual_graph         Node to node connectivity (size=dual_graph_idx[dn_node])
- */
+
 void
 PDM_para_graph_dual_from_combine_connectivity
 (
@@ -777,8 +661,8 @@ const PDM_g_num_t   *dface_vtx,
   int dn_cell = cell_distrib[i_rank+1] - cell_distrib[i_rank];
   // int dn_face = face_distrib[i_rank+1] - face_distrib[i_rank];
 
-  int*         dcell_vtx_idx;
-  PDM_g_num_t* dcell_vtx;
+  int*         dcell_vtx_idx = NULL;
+  PDM_g_num_t* dcell_vtx     = NULL;
 
   /*
    *  Call generic function to deduce the induce connectivity
@@ -794,18 +678,8 @@ const PDM_g_num_t   *dface_vtx,
                 ( int         **) &dcell_vtx_idx,
                 ( PDM_g_num_t **) &dcell_vtx);
 
-  // int *dcell_vtx_n;
- // PDM_malloc(dcell_vtx_n, dn_cell ,int);
-  // for(int i_entity = 0; i_entity < dn_cell; ++i_entity) {
-  //   dcell_vtx_n[i_entity] = dcell_vtx_idx[i_entity+1] - dcell_vtx_idx[i_entity];
-  // }
-  // PDM_log_trace_array_int (dcell_vtx_n  , dn_cell               , "dcell_vtx_n::");
-  // PDM_log_trace_array_int (dcell_vtx_idx, dn_cell+1             , "dcell_vtx_idx::");
-  // PDM_log_trace_array_long(dcell_vtx    , dcell_vtx_idx[dn_cell], "dcell_vtx::");
-  //PDM_free(dcell_vtx_n);
-
-  int*         dvtx_cell_idx;
-  PDM_g_num_t* dvtx_cell;
+  int*         dvtx_cell_idx = NULL;
+  PDM_g_num_t* dvtx_cell     = NULL;
   PDM_dconnectivity_transpose(comm,
                                cell_distrib,
                                vtx_distrib,
@@ -814,17 +688,6 @@ const PDM_g_num_t   *dface_vtx,
                                1,
                                &dvtx_cell_idx,
                                &dvtx_cell);
-
-  // int dn_vtx = vtx_distrib[i_rank+1] - vtx_distrib[i_rank];
-  // int *dvtx_cell_n;
- // PDM_malloc(dvtx_cell_n, dn_vtx ,int);
-  // for(int i_entity = 0; i_entity < dn_vtx; ++i_entity) {
-  //   dvtx_cell_n[i_entity] = dvtx_cell_idx[i_entity+1] - dvtx_cell_idx[i_entity];
-  // }
-  // PDM_log_trace_array_int (dvtx_cell_n  , dn_vtx               , "dvtx_cell_n::");
-  // PDM_log_trace_array_int (dvtx_cell_idx, dn_vtx+1             , "dvtx_cell_idx::");
-  // PDM_log_trace_array_long(dvtx_cell    , dvtx_cell_idx[dn_vtx], "dvtx_cell::");
-  //PDM_free(dvtx_cell_n);
 
   /*
    * Call the standard fonction : arc = vtx , node = cell
@@ -858,70 +721,10 @@ const PDM_g_num_t   *dface_vtx,
     // assert(_dual_graph[i_entity] >= 0);
     // assert(_dual_graph[i_entity] <  cell_distrib[n_rank]-1);
   }
-  // int *_dual_graph_n;
- // PDM_malloc(_dual_graph_n, dn_cell ,int);
-  // for(int i_entity = 0; i_entity < dn_cell; ++i_entity) {
-  //   _dual_graph_n[i_entity] = _dual_graph_idx[i_entity+1] - _dual_graph_idx[i_entity];
-  // }
 
-  // PDM_log_trace_array_int (_dual_graph_n  , dn_cell                 , "PDM_para_graph_dual_from_combine_connectivity::_dual_graph_n::");
-  // PDM_log_trace_array_int (_dual_graph_idx, dn_cell+1               , "PDM_para_graph_dual_from_combine_connectivity::dual_graph_idx::");
-  // PDM_log_trace_array_long(_dual_graph    , _dual_graph_idx[dn_cell], "PDM_para_graph_dual_from_combine_connectivity::dual_graph::");
-
-  /*
-   * Patch
-   */
-  // int *_dual_comp_graph_idx;
- // PDM_malloc(_dual_comp_graph_idx, dn_cell ,int);
-  // PDM_g_num_t *_dual_comp_graph;
- // PDM_malloc(_dual_comp_graph, _dual_graph_idx[dn_cell] ,PDM_g_num_t);
-
-  // _dual_comp_graph_idx[0] = 0;
-  // for(int i_entity = 0; i_entity < dn_cell; ++i_entity) {
-  //   PDM_g_num_t g_num = i_entity + cell_distrib[i_rank];
-  //   _dual_comp_graph_idx[i_entity+1] = _dual_comp_graph_idx[i_entity];
-  //   for(int j = _dual_graph_idx[i_entity]; j < _dual_graph_idx[i_entity+1]; ++j) {
-  //     if(_dual_graph[j] != g_num-1) {
-  //       _dual_comp_graph[_dual_comp_graph_idx[i_entity+1]++] = _dual_graph[j];
-  //     }
-  //   }
-  // }
-
-  // PDM_log_trace_array_int (_dual_graph_n  , dn_cell                 , "PDM_para_graph_dual_from_combine_connectivity::_dual_graph_n::");
-  // PDM_log_trace_array_int (_dual_comp_graph_idx, dn_cell+1               , "PDM_para_graph_dual_from_combine_connectivity::_dual_comp_graph_idx::");
-  // PDM_log_trace_array_long(_dual_comp_graph    , _dual_comp_graph_idx[dn_cell], "PDM_para_graph_dual_from_combine_connectivity::_dual_comp_graph::");
-
-  /*
-   * Realloc
-   */
-  //PDM_free(_dual_graph);
-  //PDM_free(_dual_graph_idx);
-
-  //PDM_realloc(// _dual_comp_graph ,// _dual_comp_graph , _dual_comp_graph_idx[dn_cell] ,PDM_g_num_t);
-
-  // *dual_graph_idx = _dual_comp_graph_idx;
-  // *dual_graph     = _dual_comp_graph;
-
-
-  //PDM_free(_dual_graph_n);
 }
 
-/**
- *
- * \brief Call the chosen graph partitioner to split the dual graph
- *
- * \param [in]   split_method       Choice of the graph partitioner
- * \param [in]   graph_node_distrib distribution of nodes over the procs (size=n_rank+1)
- * \param [in]   dual_graph_idx     Node to node connectivity indexes (size=dn_node+1)
- * \param [in]   dual_graph         Node to node connectivity (size=dual_graph_idx[dn_node])
- * \param [in]   node_weight        Weight associated to each node of the graph or NULL
- * \param [in]   arc_weight         Weight associated to each arc of the graph or NULL
- * \param [in]   n_part             Total number of partitions to produce
- * \param [in]   part_fraction      Fraction of (weighted) vertex wanted on each part (Metis only)
-                                    or NULL for homogeneous sizes (size = n_part)
- * \param [out]  node_part_id       Attributed partition number for each node (size=dn_node)
- * \param [in]   comm               PDM_MPI communicator
- */
+
 void
 PDM_para_graph_split
 (

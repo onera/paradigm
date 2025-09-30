@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <fenv.h>
 
 #include "pdm.h"
 #include "pdm_config.h"
@@ -14,9 +15,8 @@
 #include "pdm_dcube_gen.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
+#include "pdm_mem_tool.h"
 #include "pdm_part_coarse_mesh.h"
-#include "pdm_coarse_mesh_aniso_agglo.h"
-#include <fenv.h>
 
 /*============================================================================
  * Type definitions
@@ -152,16 +152,24 @@ int main(int argc, char *argv[])
   /*
    *  Set default values
    */
-  PDM_plugin_load();
-
-  feenableexcept(FE_DIVBYZERO | FE_OVERFLOW | FE_INVALID);
+  // PDM_plugin_load();
 
   PDM_g_num_t        n_vtx_seg     = 10;
   double             length        = 1.;
   int                n_part        = 1;
   int                post          = 0;
   int                use_multipart = 0;
-  PDM_part_split_t method  = PDM_PART_SPLIT_HILBERT;
+
+#ifdef PDM_HAVE_PTSCOTCH
+ PDM_part_split_t  method  = PDM_PART_SPLIT_PTSCOTCH;
+  const char *agglo_method = "PDM_COARSE_MESH_SCOTCH";
+#else
+#ifdef PDM_HAVE_PARMETIS
+  PDM_part_split_t method  =  PDM_PART_SPLIT_PARMETIS;
+  const char *agglo_method = "PDM_COARSE_MESH_METIS";
+#endif
+#endif
+
 
   /*
    *  Read args
@@ -191,35 +199,30 @@ int main(int argc, char *argv[])
   /*
    *  Init
    */
-
-  struct timeval t_elaps_debut;
-
   int i_rank;
   int n_rank;
 
   PDM_MPI_Init(&argc, &argv);
-  PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &i_rank);
-  PDM_MPI_Comm_size(PDM_MPI_COMM_WORLD, &n_rank);
+  PDM_MPI_Comm     comm = PDM_MPI_COMM_WORLD;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
 
   int           dn_cell;
   int           dn_face;
   int           dn_vtx;
   int           n_face_group;
-  PDM_g_num_t  *dface_cell = NULL;
-  int          *dface_vtx_idx = NULL;
-  PDM_g_num_t  *dface_vtx = NULL;
-  double       *dvtx_coord = NULL;
+  int           dface_vtx_size;
+  int           dface_group_size;
+  PDM_g_num_t  *dface_cell      = NULL;
+  int          *dface_vtx_idx   = NULL;
+  PDM_g_num_t  *dface_vtx       = NULL;
+  double       *dvtx_coord      = NULL;
   int          *dface_group_idx = NULL;
-  PDM_g_num_t  *dface_group = NULL;
-  int           dface_vtxL;
-  int           dFaceGroupL;
+  PDM_g_num_t  *dface_group     = NULL;
 
   /*
    *  Create distributed cube
    */
-
-  PDM_MPI_Comm     comm = PDM_MPI_COMM_WORLD;
-
   PDM_dcube_t* dcube = PDM_dcube_gen_init(comm,
                                           n_vtx_seg,
                                           length,
@@ -233,8 +236,8 @@ int main(int argc, char *argv[])
                          &dn_cell,
                          &dn_face,
                          &dn_vtx,
-                         &dface_vtxL,
-                         &dFaceGroupL);
+                         &dface_vtx_size,
+                         &dface_group_size);
 
   PDM_dcube_gen_data_get(dcube,
                           &dface_cell,
@@ -244,62 +247,17 @@ int main(int argc, char *argv[])
                           &dface_group_idx,
                           &dface_group);
 
-  if (dbg_part_dcube) {
-
-    PDM_printf("[%i] n_face_group    : %i\n", i_rank, n_face_group);
-    PDM_printf("[%i] dn_cell        : %i\n", i_rank, dn_cell);
-    PDM_printf("[%i] dn_face        : %i\n", i_rank, dn_face);
-    PDM_printf("[%i] dn_vtx         : %i\n", i_rank, dn_vtx);
-
-    PDM_printf("[%i] dface_cell     : ", i_rank);
-    for (int i = 0; i < 2 * dn_face; i++)
-      PDM_printf(" "PDM_FMT_G_NUM, dface_cell[i]);
-    PDM_printf("\n");
-
-    PDM_printf("[%i] dface_vtx_idx   : ", i_rank);
-    for (int i = 0; i < dn_face + 1; i++)
-      PDM_printf(" %i", dface_vtx_idx[i]);
-    PDM_printf("\n");
-
-    PDM_printf("[%i] dface_vtx      : ", i_rank);
-    for (int i = 0; i < dface_vtx_idx[dn_face]; i++)
-      PDM_printf(" "PDM_FMT_G_NUM, dface_vtx[i]);
-    PDM_printf("\n");
-
-    PDM_printf("[%i] dvtx_coord     : ", i_rank);
-    for (int i = 0; i < 3*dn_vtx; i++)
-      PDM_printf(" %12.5e", dvtx_coord[i]);
-    PDM_printf("\n");
-
-    PDM_printf("[%i] dface_group_idx : ", i_rank);
-    for (int i = 0; i < n_face_group + 1; i++)
-      PDM_printf(" %i", dface_group_idx[i]);
-    PDM_printf("\n");
-
-    PDM_printf("[%i] dface_group    : ", i_rank);
-    for (int i = 0; i < dface_group_idx[n_face_group]; i++)
-      PDM_printf(" "PDM_FMT_G_NUM, dface_group[i]);
-    PDM_printf("\n");
-
-  }
-  // int ppart_id = 0;
-
-  if (time_and_stat && !use_multipart) {
-    gettimeofday(&t_elaps_debut, NULL);
-  }
-
   /*
    *  Create mesh partitions
    */
-
   int have_dcell_part = 0;
 
-  int *dcell_part;
-  PDM_malloc(dcell_part,dn_cell,int);
   int *renum_properties_cell = NULL;
   int *renum_properties_face = NULL;
   int n_property_cell = 0;
   int n_property_face = 0;
+  int *dcell_part = NULL;
+  PDM_malloc(dcell_part, dn_cell, int);
 
   PDM_part_t *ppart = PDM_part_create(comm,
                                       method,
@@ -361,18 +319,6 @@ int main(int argc, char *argv[])
     PDM_printf("[%i]   - cpu_sys building graph           : %12.5e\n", i_rank, cpu_sys[1]);
     PDM_printf("[%i]   - cpu_sys splitting graph          : %12.5e\n", i_rank, cpu_sys[2]);
     PDM_printf("[%i]   - cpu_sys building mesh partitions : %12.5e\n", i_rank, cpu_sys[3]);
-
-    struct timeval t_elaps_fin;
-    gettimeofday(&t_elaps_fin, NULL);
-
-    long tranche_elapsed = (t_elaps_fin.tv_usec + 1000000 * t_elaps_fin.tv_sec) -
-                           (t_elaps_debut.tv_usec + 1000000 *
-                            t_elaps_debut.tv_sec);
-    long tranche_elapsed_max = tranche_elapsed;
-    double t_elapsed = (double) tranche_elapsed_max/1000000.;
-
-    PDM_printf("[%i]   - TEMPS DANS PART_CUBE  : %12.5e\n", i_rank,  t_elapsed);
-
   }
 
   int n_tpart = 0;
@@ -404,14 +350,13 @@ int main(int argc, char *argv[])
   }
 
   // int cmId;
-  const int  have_cell_tag = 0;
-  const int  have_face_tag = 0;
-  const int  have_vtx_tag = 0;
+  const int  have_cell_tag    = 0;
+  const int  have_face_tag    = 0;
+  const int  have_vtx_tag     = 0;
   const int  have_cell_weight = 0;
   const int  have_face_weight = 0;
-  const int  have_face_group = 0;
+  const int  have_face_group  = 0;
 
-  const char* agglo_method = "PDM_COARSE_MESH_ANISO_AGGLO";
   PDM_coarse_mesh_t *cm = PDM_part_coarse_mesh_create (PDM_MPI_COMM_WORLD,
                                                        agglo_method,
                                                        "PDM_PART_RENUM_CELL_NONE",
@@ -529,9 +474,10 @@ int main(int argc, char *argv[])
                                face_part_bound);
   }
 
+  // Si paradigma
   // isFirstagglo, isAnisotropic, dimension, goalCard, minCard, maxCard, checks, verbose
-  int option_aniso[8] = {1, 1, 3, 20, 4, 12, 1, 1};
-  PDM_part_coarse_mesh_add_option_anisotropic(cm, option_aniso);
+  // int option_aniso[8] = {1, 1, 3, 20, 4, 12, 1, 1};
+  // PDM_part_coarse_mesh_add_option_anisotropic(cm, option_aniso);
 
 
   PDM_part_coarse_mesh_compute (cm);

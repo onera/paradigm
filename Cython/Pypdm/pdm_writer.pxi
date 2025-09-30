@@ -1,7 +1,7 @@
 cdef extern from "pdm_io.h":
 
   ctypedef enum PDM_io_kind_t:
-  
+
     PDM_IO_KIND_MPIIO_EO   = 0
     PDM_IO_KIND_MPIIO_IP   = 1
     PDM_IO_KIND_MPI_SIMPLE = 2
@@ -41,7 +41,7 @@ cdef extern from "pdm_writer.h":
     PDM_WRITER_POLY_3D  = PDM_MESH_NODAL_POLY_3D
 
 
-  ctypedef enum PDM_writer_fmt_fic_t: 
+  ctypedef enum PDM_writer_fmt_fic_t:
     PDM_WRITER_FMT_BIN   = 0
     PDM_WRITER_FMT_ASCII = 1
 
@@ -68,7 +68,7 @@ cdef extern from "pdm_writer.h":
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-  
+
   PDM_writer_t * PDM_writer_create(char                   *fmt,
                                    PDM_writer_fmt_fic_t    fmt_fic,
                                    PDM_writer_topology_t  topologie,
@@ -123,7 +123,7 @@ cdef extern from "pdm_writer.h":
                                     int      n_elt,
                                     PDM_l_num_t   *connec,
                                     PDM_g_num_t   *numabs)
-  
+
 
   void PDM_writer_geom_bloc_poly2d_set(PDM_writer_t  *cs,
                                        int            id_geom,
@@ -133,7 +133,7 @@ cdef extern from "pdm_writer.h":
                                        PDM_l_num_t   *connec_idx,
                                        PDM_l_num_t   *connec,
                                        PDM_g_num_t   *numabs)
-  
+
   void PDM_writer_geom_bloc_poly3d_set(PDM_writer_t  *cs,
                                        int            id_geom,
                                        int            id_bloc,
@@ -145,7 +145,7 @@ cdef extern from "pdm_writer.h":
                                        PDM_l_num_t   *cellfac_idx,
                                        PDM_l_num_t   *cellfac,
                                        PDM_g_num_t   *numabs)
-  
+
   void PDM_writer_geom_cell3d_cellface_add(PDM_writer_t *cs,
                                            int           id_geom,
                                            int           id_part,
@@ -158,7 +158,7 @@ cdef extern from "pdm_writer.h":
                                            PDM_l_num_t  *cell_face_nb,
                                            PDM_l_num_t  *cell_face,
                                            PDM_g_num_t  *numabs)
-  
+
 
   void PDM_writer_geom_cell2d_cellface_add(PDM_writer_t *cs,
                                            int           id_geom,
@@ -173,7 +173,7 @@ cdef extern from "pdm_writer.h":
                                            PDM_l_num_t  *cell_face,
                                            PDM_g_num_t  *numabs)
 
-  
+
   void PDM_writer_geom_faces_facesom_add(PDM_writer_t *cs,
                                          int     id_geom,
                                          int     id_part,
@@ -183,55 +183,55 @@ cdef extern from "pdm_writer.h":
                                          PDM_l_num_t  *face_som,
                                          PDM_g_num_t  *numabs)
 
-  
+
   void PDM_writer_geom_write(PDM_writer_t *cs, int id_geom)
 
-  
+
   void PDM_writer_geom_data_free(PDM_writer_t *cs, int id_geom)
-  
+
 
   void PDM_writer_geom_free(PDM_writer_t *cs, int id_geom)
 
-  
+
   int PDM_writer_var_create(PDM_writer_t         *cs,
                             PDM_writer_status_t   st_dep_tps,
                             PDM_writer_var_dim_t  dim,
                             PDM_writer_var_loc_t  loc,
                             char                 *nom_var)
-  
+
   void PDM_writer_name_map_add(PDM_writer_t *cs,
                                char   *public_name,
                                char   *private_name)
-  
+
   void PDM_writer_var_write(PDM_writer_t *cs, int id_var)
-  
+
   void PDM_writer_var_set(PDM_writer_t  *cs,
                           int           id_var,
                           int           id_geom,
                           int           id_part,
                           PDM_real_t   *val)
-  
+
   void PDM_writer_var_data_free(PDM_writer_t *cs,
                                 int           id_var)
-  
+
   void PDM_writer_var_free(PDM_writer_t *cs, int id_var)
-  
-  # void PDM_writer_fmt_add(char                  *name,            
-  #                         PDM_writer_fct_t       create_fct,      
-  #                         PDM_writer_fct_t       free_fct,        
-  #                         PDM_writer_fct_t       beg_step_fct,    
-  #                         PDM_writer_fct_t       end_step_fct,    
-  #                         PDM_writer_geom_fct_t  geom_create_fct, 
-  #                         PDM_writer_geom_fct_t  geom_write_fct,  
-  #                         PDM_writer_geom_fct_t  geom_free_fct,   
-  #                         PDM_writer_var_fct_t   var_create_fct,  
-  #                         PDM_writer_var_fct_t   var_write_fct,   
+
+  # void PDM_writer_fmt_add(char                  *name,
+  #                         PDM_writer_fct_t       create_fct,
+  #                         PDM_writer_fct_t       free_fct,
+  #                         PDM_writer_fct_t       beg_step_fct,
+  #                         PDM_writer_fct_t       end_step_fct,
+  #                         PDM_writer_geom_fct_t  geom_create_fct,
+  #                         PDM_writer_geom_fct_t  geom_write_fct,
+  #                         PDM_writer_geom_fct_t  geom_free_fct,
+  #                         PDM_writer_var_fct_t   var_create_fct,
+  #                         PDM_writer_var_fct_t   var_write_fct,
   #                         PDM_writer_var_fct_t   var_free_fct)
-  
+
   # void PDM_writer_fmt_free ()
-  
+
   void PDM_writer_geom_data_reset(PDM_writer_t *cs, int     id_geom)
- 
+
 # ------------------------------------------------------------------
 
 cdef class Writer:
@@ -256,6 +256,7 @@ cdef class Writer:
                char                  *options):
       """
       __init__(fmt, fmt_fic, topologie, st_reprise, rep_sortie, nom_sortie, comm, acces, prop_noeuds_actifs, options)
+
       Create a Writer object.
 
       Parameters:
@@ -436,7 +437,7 @@ cdef class Writer:
                                <PDM_real_t *> coords.data,
                                <PDM_g_num_t *> numabs.data,
                                PDM_OWNERSHIP_USER)
-  
+
 
   def geom_faces_facevtx_add(self,
                              int     id_geom,
@@ -521,7 +522,7 @@ cdef class Writer:
 
       PDM_writer_geom_write(self._wt, id_geom)
 
-  
+
   def geom_data_free(self, int id_geom):
       """
       geom_data_free(id_geom)
@@ -531,7 +532,7 @@ cdef class Writer:
       Parameters:
         id_geom (int) : Geometry identifier
       """
-  
+
       PDM_writer_geom_data_free(self._wt, id_geom)
 
 
@@ -573,7 +574,7 @@ cdef class Writer:
         loc        (PDM_writer_var_loc_t) :  Variable's location
         nom_var    (str                 ) :  Name of the variable
       """
-  
+
       return PDM_writer_var_create(self._wt,
                                    st_dep_tps,
                                    dim,
@@ -591,7 +592,7 @@ cdef class Writer:
         public_name (str) : Public variable name
         pivate_name (str) : Private variable name
       """
-  
+
       PDM_writer_name_map_add(self._wt,
                               public_name,
                               private_name)
@@ -604,7 +605,7 @@ cdef class Writer:
       Parameters:
         id_var (int) : Variable identifier
       """
-  
+
       PDM_writer_var_write(self._wt, id_var)
 
 
@@ -625,7 +626,7 @@ cdef class Writer:
         id_part (int)                  : Partition identifier
         val (numpy array of double_t) : Variable values
       """
-  
+
       PDM_writer_var_set(self._wt,
                          id_var,
                          id_geom,
@@ -634,7 +635,7 @@ cdef class Writer:
 
   def var_data_free(self,
                     int           id_var):
-  
+
       """
       var_data_free(id_var)
       Free variable data arrays

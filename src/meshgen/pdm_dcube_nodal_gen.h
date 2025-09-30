@@ -24,10 +24,10 @@
 */
 
 #include "pdm.h"
-#include "pdm_mesh_nodal.h"
 #include "pdm_dmesh_nodal.h"
-#include "pdm_ho_ordering.h"
 #include "pdm_domain_interface.h"
+#include "pdm_mesh_nodal.h"
+#include "pdm_mpi.h"
 
 /*=============================================================================
  * Macro definitions

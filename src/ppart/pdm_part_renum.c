@@ -7,38 +7,28 @@
  *  System headers
  *----------------------------------------------------------------------------*/
 
-#include <math.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <assert.h>
-#include <time.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-
+#include <time.h>
 
 /*----------------------------------------------------------------------------
  *  Local headers
  *----------------------------------------------------------------------------*/
 
-#include "pdm.h"
-#include "pdm_mpi.h"
-#include "pdm_fortran_to_c_string.h"
-#include "pdm_priv.h"
-#include "pdm_config.h"
-#include "pdm_part.h"
-#include "pdm_part_priv.h"
-#include "pdm_timer.h"
-
-#include "pdm_part_geom.h"
 #include "pdm_part_renum.h"
-#include "pdm_hilbert.h"
-#include "pdm_geom_elem.h"
-#include "pdm_sort.h"
-#include "pdm_cuthill.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
-#include "pdm_order.h"
+#include "pdm.h"
 #include "pdm_array.h"
-// #include "pdm_logging.h"
+#include "pdm_cuthill.h"
+#include "pdm_geom_elem.h"
+#include "pdm_hilbert.h"
+#include "pdm_mem_tool.h"
+#include "pdm_order.h"
+#include "pdm_part_priv.h"
+#include "pdm_printf.h"
+#include "pdm_priv.h"
+#include "pdm_sort.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -1358,14 +1348,6 @@ const int idx
 }
 
 
-/**
- *
- * \brief Get the number of renumbering cell methods
- *
- * \return Number of methods
- *
- */
-
 int
 PDM_part_n_renum_method_cell_get
 (
@@ -1380,14 +1362,6 @@ void
 }
 
 
-/**
- *
- * \brief Get the number of renumbering face methods
- *
- * \return Name of the method
- *
- */
-
 int
 PDM_part_n_renum_method_face_get
 (
@@ -1401,15 +1375,6 @@ void
   return n_renum_methods[PDM_MESH_ENTITY_FACE];
 }
 
-/**
- *
- * \brief Add a new method for cell renumbering
- *
- * \param [in]      name           Mesh entity to renumber
- * \param [in]      renum_fct      Renumbering function
- *
- */
-
 int
 PDM_part_renum_method_cell_add
 (
@@ -1422,14 +1387,6 @@ PDM_part_renum_method_cell_add
                                      renum_fct);
 }
 
-/**
- *
- * \brief Add a new method for face renumbering
- *
- * \param [in]      name           Mesh entity to renumber
- * \param [in]      renum_fct      Renumbering function
- *
- */
 
 int
 PDM_part_renum_method_face_add
@@ -1443,14 +1400,6 @@ PDM_part_renum_method_face_add
                                      renum_fct);
 }
 
-/**
- *
- * \brief Add a new method for face renumbering
- *
- * \param [in]      name           Mesh entity to renumber
- * \param [in]      renum_fct      Renumbering function
- *
- */
 
 int
 PDM_part_renum_method_edge_add
@@ -1464,14 +1413,6 @@ PDM_part_renum_method_edge_add
                                      renum_fct);
 }
 
-/**
- *
- * \brief Add a new method for face renumbering
- *
- * \param [in]      name           Mesh entity to renumber
- * \param [in]      renum_fct      Renumbering function
- *
- */
 
 int
 PDM_part_renum_method_vtx_add
@@ -1485,12 +1426,25 @@ PDM_part_renum_method_vtx_add
                                      renum_fct);
 }
 
+const char *
+PDM_part_renum_method_vtx_name_get
+(
+const int idx
+)
+{
+  if (renum_methods[PDM_MESH_ENTITY_VTX] == NULL) {
+    PDM_part_renum_method_load_local();
+  }
 
-/**
- *
- * \brief Load local renumbering methods
- *
- */
+  if (idx >= n_renum_methods[PDM_MESH_ENTITY_VTX]) {
+    return NULL;
+  }
+
+  _renum_method_t *method_ptr = renum_methods[PDM_MESH_ENTITY_VTX][idx];
+
+  return method_ptr->name;
+}
+
 
 void
 PDM_part_renum_method_load_local
@@ -1545,14 +1499,6 @@ void
 }
 
 
-/**
- *
- * \brief Perform cell renumbering
- *
- * \param [in,out]  part       part structure
- *
- */
-
 void
 PDM_part_renum_cell
 (
@@ -1578,16 +1524,6 @@ PDM_part_renum_cell
 
 }
 
-
-/**
- *
- * \brief Get name of the face renumbering method
- *
- * \param [in]  idx     Index of the method
- *
- * \return Name of the method (NULL otherwise)
- *
- */
 
 void
 PDM_part_renum_method_face_name_get_cf
@@ -1627,13 +1563,6 @@ const int idx
 }
 
 
-/**
- *
- * \brief Perform mesh entities renumbering
- *
- * \param [in,out]  part       part structure
- *
- */
 
 void
 PDM_part_renum_face
@@ -1658,13 +1587,6 @@ PDM_part_renum_face
   }
 }
 
-/**
- *
- * \brief Perform mesh entities renumbering
- *
- * \param [in,out]  part       part structure
- *
- */
 
 void
 PDM_part_renum_edge
@@ -1689,13 +1611,7 @@ PDM_part_renum_edge
   }
 }
 
-/**
- *
- * \brief Perform mesh entities renumbering
- *
- * \param [in,out]  part       part structure
- *
- */
+
 
 void
 PDM_part_renum_vtx
@@ -1721,14 +1637,7 @@ PDM_part_renum_vtx
 }
 
 
-/**
- *
- * \brief Perform cells renumbering from a new order
- *
- * \param [in,out]  part        Current partition
- * \param [in]      new_to_old_order    NewOrder
- *
- */
+
 void
 PDM_part_reorder_cell
 (
@@ -1794,14 +1703,7 @@ PDM_part_reorder_cell
 }
 
 
-/**
- *
- * \brief Perform faces renumbering from a new order
- *
- * \param [in,out]  part        Current partition
- * \param [in]      new_to_old_order    NewOrder
- *
- */
+
 void
 PDM_part_reorder_face
 (
@@ -1913,14 +1815,7 @@ int     *new_to_old_order
 
 }
 
-/**
- *
- * \brief Perform vtx renumbering from a new order
- *
- * \param [in,out]  part        Current partition
- * \param [in]      new_to_old_order    NewOrder
- *
- */
+
 void
 PDM_part_reorder_edge
 (
@@ -1992,14 +1887,7 @@ int     *new_to_old_order
   PDM_free(old_to_new_order);
 }
 
-/**
- *
- * \brief Perform vtx renumbering from a new order
- *
- * \param [in,out]  part        Current partition
- * \param [in]      new_to_old_order    NewOrder
- *
- */
+
 void
 PDM_part_reorder_vtx
 (
@@ -2088,14 +1976,7 @@ int     *new_to_old_order
 
 }
 
-/**
- *
- * \brief Perform faces renumbering from a new order
- *
- * \param [in,out]  part        Current partition
- * \param [in]      new_to_old_order    NewOrder
- *
- */
+
 void
 PDM_part_reorder_face_bound
 (
@@ -2130,14 +2011,7 @@ int     *new_to_old_order
 
 
 
-/**
- *
- * \brief Perform faces renumbering from a new order
- *
- * \param [in,out]  part        Current partition
- * \param [in]      new_to_old_order    NewOrder
- *
- */
+
 void
 PDM_part_reorder_edge_bound
 (

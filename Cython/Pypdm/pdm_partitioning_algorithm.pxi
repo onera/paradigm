@@ -49,6 +49,18 @@ cdef extern from "pdm_partitioning_algorithm.h":
                                                  int          ***lnum_owned_entity,
                                                  PDM_MPI_Comm    comm)
 
+    void PDM_part_generate_entity_graph_comm(const PDM_MPI_Comm   comm,
+                                             const PDM_g_num_t   *part_distribution,
+                                             const PDM_g_num_t   *entity_distribution,
+                                             const int            n_part,
+                                             const int           *pn_entity,
+                                             const PDM_g_num_t  **pentity_ln_to_gn,
+                                             const int          **pentity_hint,
+                                                   int         ***pproc_bound_idx,
+                                                   int         ***ppart_bound_idx,
+                                                   int         ***pentity_bound,
+                                                   int         ***pentity_priority)
+
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
@@ -83,8 +95,7 @@ def part_distgroup_to_partgroup(MPI.Comm                                      co
     cdef int **_pgroup
     cdef PDM_g_num_t **_pgroup_ln_to_gn
 
-    PDM_part_distgroup_to_partgroup(
-                                    PDMC,
+    PDM_part_distgroup_to_partgroup(PDMC,
                                     entity_distribution_data,
                                     _n_group,
                                     dgroup_idx_data,
@@ -128,14 +139,14 @@ def part_distgroup_to_partgroup(MPI.Comm                                      co
 
 cdef extern from "pdm_closest_points.h":
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-    void PDM_transform_to_parent_gnum(int           n_part_initial,
-                                      int          *n_elmt_initial,
-                                      PDM_g_num_t **child_ln_to_gn,
-                                      PDM_g_num_t **parent_ln_to_gn,
-                                      int           n_part_to_transform,
-                                      int          *n_elmt_to_transform,
-                                      PDM_g_num_t **gnum_to_transform,
-                                      PDM_MPI_Comm  comm)
+    void PDM_transform_to_parent_gnum(int             n_part_initial,
+                                      int            *n_elmt_initial,
+                                      PDM_g_num_t   **child_ln_to_gn,
+                                      PDM_g_num_t   **parent_ln_to_gn,
+                                      int             n_part_to_transform,
+                                      int            *n_elmt_to_transform,
+                                      PDM_g_num_t   **gnum_to_transform,
+                                      PDM_MPI_Comm    comm)
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 # ===================================================================================
@@ -162,14 +173,14 @@ def transform_to_parent_gnum(list     gnum_to_transform,
 
   cdef MPI.MPI_Comm c_comm = comm.ob_mpi
   cdef PDM_MPI_Comm PDMC   = PDM_MPI_mpi_2_pdm_mpi_comm(&c_comm)
-  PDM_transform_to_parent_gnum(                 n_part_ini,
-                               <const int          *> _pn_elt_in,
-                               <const PDM_g_num_t **> _child_ln_to_gn,
-                               <const PDM_g_num_t **> _parent_ln_to_gn,
-                                                n_part_out,
-                               <const int          *> _pn_elt_out,
-                               <PDM_g_num_t **> _gnum_to_transform,
-                                                PDMC)
+  PDM_transform_to_parent_gnum(n_part_ini,
+        <const int          *> _pn_elt_in,
+        <const PDM_g_num_t **> _child_ln_to_gn,
+        <const PDM_g_num_t **> _parent_ln_to_gn,
+                               n_part_out,
+        <const int          *> _pn_elt_out,
+        <      PDM_g_num_t **> _gnum_to_transform,
+                               PDMC)
 
   free(_pn_elt_out)
   free(_pn_elt_in)
@@ -197,10 +208,10 @@ def part_dcoordinates_to_pcoordinates(MPI.Comm                                  
 
     PDM_part_dcoordinates_to_pcoordinates(PDMC,
                                           n_part,
-                     <const PDM_g_num_t*> vtx_distribution.data,
-                     <const double*>      dvtx_coord.data,
-                     <const int *>        pn_vtx,
-                     <const PDM_g_num_t**>pvtx_ln_to_gn,
+                    <const PDM_g_num_t *> vtx_distribution.data,
+                    <const double      *> dvtx_coord.data,
+                    <const int         *> pn_vtx,
+                    <const PDM_g_num_t**> pvtx_ln_to_gn,
                                           &pvtx_coord);
 
     l_pvtx_coord = list()
@@ -331,7 +342,7 @@ def compute_graph_comm_entity_ownership(int                                     
 
   PDM_compute_graph_comm_entity_ownership(n_part,
                                   <int *> n_entity.data,
-                         <PDM_g_num_t **> _entity_ln_to_gn,
+                   <const PDM_g_num_t **> _entity_ln_to_gn,
                                           &_n_owned_entity,
                                           &_lnum_owned_entity,
                                           PDM_comm)
@@ -346,3 +357,94 @@ def compute_graph_comm_entity_ownership(int                                     
   free(_lnum_owned_entity)
 
   return n_owned_entity, lnum_owned_entity
+
+# ===================================================================================
+def generate_entity_graph_comm(MPI.Comm                                      comm,
+                               NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] part_distribution,
+                               NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] entity_distribution,
+                               list                                          pn_entity,
+                               list                                          pentity_ln_to_gn,
+                               list                                          pentity_hint):
+
+  """
+  generate_entity_graph_comm(comm, part_distribution, entity_distribution, n_part, pn_entity, pentity_ln_to_gn, pentity_hint)
+
+  Parameters:
+    comm                (MPI.Comm)                              : MPI communicator
+    part_distribution   (np.ndarray[np.npy_pdm_gnum_t])         : Distribution of partitions
+    entity_distribution (np.ndarray[np.npy_pdm_gnum_t])         : Distribution of entities
+    pn_entity           (list of int)                           : Number of entities per partition
+    pentity_ln_to_gn    (list of np.ndarray[np.npy_pdm_gnum_t]) : Global IDs of entities
+    pentity_hint        (list of np.ndarray[np.int32_t])        : Can be used to indicate whether (1) or not (0) an entity is potentially
+                                                                  shared with an other partition in order to minimize exchanged data
+
+  Returns:
+    List of dictionaries. For each partition:
+      - ``"np_part_bound_proc_idx"`` (np.ndarray[np.int32_t]) : Indexes of communication information related to the
+                                                                other procs (size = n_rank+1)
+      - ``"np_part_bound_part_idx"`` (np.ndarray[np.int32_t]) : Indexes of communication information related to the
+                                                                other (global id) parts (size = part_distribution[n_rank]+1)
+      - ``"np_part_bound"``          (np.ndarray[np.int32_t]) : 4-tuple communication information:
+                                                                (local id, opposite proc number, opposite part number on opposite proc,
+                                                                local id in the opposite partition)
+                                                                (size = 4*np_part_bound_part_idx[part_distribution[n_rank]])
+      - ``"np_part_priority"``       (np.ndarray[np.int32_t]) : Indicate whether the entity exists only on the current rank (-1) or
+                                                                or the lowest rank index owning the entity.
+                                                                (size = Number of entities per partition in the partition)
+  """
+
+  # > Convert mpi4py -> PDM_MPI
+  cdef MPI.MPI_Comm c_comm = comm.ob_mpi
+  cdef PDM_MPI_Comm PDMC   = PDM_MPI_mpi_2_pdm_mpi_comm(&c_comm)
+
+  cdef int n_rank = comm.Get_size()
+
+  cdef PDM_g_num_t * part_distribution_data   = np_to_gnum_pointer(part_distribution)
+  cdef PDM_g_num_t * entity_distribution_data = NULL
+  if entity_distribution is not None:
+    entity_distribution_data = np_to_gnum_pointer(entity_distribution)
+
+  cdef int _n_part = len(pn_entity)
+  assert len(pentity_ln_to_gn) == _n_part
+
+  cdef int          * _pn_entity        = list_to_int_pointer(pn_entity)
+  cdef PDM_g_num_t ** _pentity_ln_to_gn = np_list_to_gnum_pointers(pentity_ln_to_gn)
+  cdef int         ** _pentity_hint     = NULL
+  if pentity_hint is not None:
+    assert len(pentity_hint) == _n_part
+    _pentity_hint = np_list_to_int_pointers(pentity_hint)
+
+  cdef int **_pproc_bound_idx
+  cdef int **_ppart_bound_idx
+  cdef int **_pentity_bound
+  cdef int **_pentity_priority
+
+  PDM_part_generate_entity_graph_comm(PDMC,
+                                      part_distribution_data,
+                                      entity_distribution_data,
+                                      _n_part,
+                                      _pn_entity,
+               <const PDM_g_num_t **> _pentity_ln_to_gn,
+               <const int         **> _pentity_hint,
+                                      &_pproc_bound_idx,
+                                      &_ppart_bound_idx,
+                                      &_pentity_bound,
+                                      &_pentity_priority)
+
+  list_bound_part = list()
+  for i_part in range(_n_part):
+    dict_bound_part = {'np_part_bound_proc_idx': create_numpy_or_none_i(_pproc_bound_idx [i_part], n_rank + 1),
+                       'np_part_bound_part_idx': create_numpy_or_none_i(_ppart_bound_idx [i_part], part_distribution[n_rank] + 1),
+                       'np_part_bound'         : create_numpy_or_none_i(_pentity_bound   [i_part], 4*_ppart_bound_idx[i_part][part_distribution[n_rank]]),
+                       'np_part_priority'      : create_numpy_or_none_i(_pentity_priority[i_part], pn_entity[i_part])}
+    list_bound_part.append(dict_bound_part)
+
+  free(_pn_entity)
+  free(_pproc_bound_idx)
+  free(_ppart_bound_idx)
+  free(_pentity_bound)
+  free(_pentity_priority)
+  free(_pentity_ln_to_gn)
+  free(_pentity_hint)
+
+  return list_bound_part
