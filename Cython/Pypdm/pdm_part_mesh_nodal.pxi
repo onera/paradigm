@@ -131,6 +131,7 @@ cdef extern from "pdm_part_mesh_nodal_algorithm.h":
 
 cdef extern from "pdm_part_mesh_nodal_geom.h":
     void PDM_part_mesh_nodal_dual_volume_compute(PDM_part_mesh_nodal_t   *pmn,
+                                                 PDM_bool_t               synchronize,
                                                  double                ***dual_vol);
 
 cdef extern from "pdm_part_comm_graph.h":
@@ -662,15 +663,16 @@ def part_mesh_nodal_get_group(PMeshNodal pypmn, PDM_geometry_kind_t geom_kind, i
 
   return np_group_elmt, np_group_ln_to_gn
 
-def part_mesh_nodal_dual_volume(PMeshNodal pypmn):
+def part_mesh_nodal_dual_volume(PMeshNodal pypmn, bint synchronize=True):
   """
 
-      part_mesh_nodal_dual_volume(pypmn)
+      part_mesh_nodal_dual_volume(pypmn, synchronize=True)
 
       Compute dual volumes vertices
 
       Parameters:
-        pypmn (PMeshNodal) : PartMeshNodal or PartMeshNodalCapsule
+        pypmn       (PMeshNodal) : PartMeshNodal or PartMeshNodalCapsule
+        synchronize (bool)       : Enable synchronization at partition boundaries (optional, default=True)
 
       Returns:
         For each part of PartMeshNodal, the dual volume at vertices (len = n_part)
@@ -678,9 +680,13 @@ def part_mesh_nodal_dual_volume(PMeshNodal pypmn):
   # ************************************************************************
   # > Declaration
   cdef double **dual_vol
+  cdef int c_synchronize = PDM_FALSE
+  if synchronize:
+    c_synchronize = PDM_TRUE
   # ************************************************************************
 
   PDM_part_mesh_nodal_dual_volume_compute(pypmn.pmn,
+                             <PDM_bool_t> c_synchronize,
                                           &dual_vol)
 
   n_part = PDM_part_mesh_nodal_n_part_get(pypmn.pmn)
