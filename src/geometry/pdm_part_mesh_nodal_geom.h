@@ -14,6 +14,8 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
+#include "pdm_part_mesh_nodal.h"
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -67,14 +69,16 @@ PDM_compute_dual_volume_simplex
  *
  * \brief Compute dual volumes
  *
- * \param [in]  pmn         Pointer to \ref PDM_part_mesh_nodal_t instance
- * \param [in]  dual_vol    For each part, dual volume for each vertices (synchronise at partition interface)
+ * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t instance
+ * \param [in]  synchronize  Enable synchronization at partition boundaries
+ * \param [in]  dual_vol     For each part, dual volume for each vertex
  *
  */
 void
 PDM_part_mesh_nodal_dual_volume_compute
 (
   PDM_part_mesh_nodal_t   *pmn,
+  PDM_bool_t               synchronize,
   double                ***dual_vol
 );
 

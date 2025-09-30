@@ -128,14 +128,16 @@ PDM_compute_dual_volume_ngon_3d
  *
  * \brief Compute dual volumes
  *
- * \param [in]  pm          Pointer to \ref PDM_part_mesh_t instance
- * \param [in]  dual_vol    For each part, dual volume for each vertices (synchronise at partition interface)
+ * \param [in]  pm           Pointer to \ref PDM_part_mesh_t instance
+ * \param [in]  synchronize  Enable synchronization at partition boundaries
+ * \param [in]  dual_vol     For each part, dual volume for each vertex
  *
  */
 void
 PDM_part_mesh_dual_volume_compute
 (
   PDM_part_mesh_t   *pm,
+  PDM_bool_t         synchronize,
   double          ***out_dual_vol
 );
 
