@@ -13,10 +13,12 @@
  * Standard C library headers
  *----------------------------------------------------------------------------*/
 
-#include "pdm.h"
+#include <stddef.h>
+
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
+#include "pdm.h"
 
 
 /*----------------------------------------------------------------------------*/
@@ -212,6 +214,7 @@ int PDM_MPI_Init(int *argc, char ***argv);
  * PDM_MPI_Comm -> MPI_Comm
  *----------------------------------------------------------------------------*/
 
+void PDM_mpi_purge(PDM_ownership_t comm_ownership);
 int PDM_MPI_Finalize(void);
 
 /*----------------------------------------------------------------------------
@@ -406,11 +409,11 @@ int PDM_MPI_Send(void *buf, int count, PDM_MPI_Datatype datatype, int dest,
              int tag, PDM_MPI_Comm comm);
 
 /*----------------------------------------------------------------------------
- * PDM_MPI_Issend (wrapping de la fonction MPI_Issend)
+ * PDM_MPI_Isend (wrapping de la fonction MPI_Issend)
  *
  *----------------------------------------------------------------------------*/
 
-int PDM_MPI_Issend(const void *buf, int count, PDM_MPI_Datatype datatype, int dest, int tag,
+int PDM_MPI_Isend(const void *buf, int count, PDM_MPI_Datatype datatype, int dest, int tag,
                PDM_MPI_Comm comm, PDM_MPI_Request *request);
 
 
@@ -618,28 +621,28 @@ int PDM_MPI_Ialltoallv(void *sendbuf, int *sendcounts, int *sdispls,
                   PDM_MPI_Comm comm, PDM_MPI_Request *request);
 
 /*----------------------------------------------------------------------------
- * 
+ *
  * PDM_MPI_Partofactiverank()
  *
  *----------------------------------------------------------------------------*/
 
-void PDM_MPI_Partofactiverank(int *sendcounts, 
+void PDM_MPI_Partofactiverank(int *sendcounts,
                              int *recvcounts, PDM_MPI_Comm comm, double* part_active_rank);
 
 /*----------------------------------------------------------------------------
- * 
+ *
  * PDM_MPI_Ialltoallv_p2p (MPI_Ialltoallv in p2p)
  *
  *----------------------------------------------------------------------------*/
 
 int PDM_MPI_Ialltoallv_p2p (void *sendbuf, int *sendcounts, int *sdispls, PDM_MPI_Datatype sendtype,
                             void *recvbuf, int *recvcounts, int *rdispls, PDM_MPI_Datatype recvtype,
-                            PDM_MPI_Comm comm, PDM_MPI_Request **request_s, PDM_MPI_Request **request_r, 
+                            PDM_MPI_Comm comm, PDM_MPI_Request **request_s, PDM_MPI_Request **request_r,
                             int *n_request_s, int *n_request_r);
 
 int PDM_MPI_Ialltoallv_p2p_l (void *sendbuf, int *sendcounts, size_t *sdispls, PDM_MPI_Datatype sendtype,
                             void *recvbuf, int *recvcounts, size_t *rdispls, PDM_MPI_Datatype recvtype,
-                            PDM_MPI_Comm comm, PDM_MPI_Request **request_s, PDM_MPI_Request **request_r, 
+                            PDM_MPI_Comm comm, PDM_MPI_Request **request_s, PDM_MPI_Request **request_r,
                             int *n_request_s, int *n_request_r);
 
 
@@ -651,18 +654,18 @@ int PDM_MPI_Ialltoallv_p2p_l (void *sendbuf, int *sendcounts, size_t *sdispls, P
 int PDM_MPI_Alltoallv_p2p(void *sendbuf, int *sendcounts, int *sdispls, PDM_MPI_Datatype sendtype, void *recvbuf, int *recvcounts,
                           int *rdispls, PDM_MPI_Datatype recvtype, PDM_MPI_Comm comm);
 
-int PDM_MPI_Alltoallv_p2p_l(void *sendbuf, int *sendcounts, size_t *sdispls, PDM_MPI_Datatype sendtype, void *recvbuf, 
+int PDM_MPI_Alltoallv_p2p_l(void *sendbuf, int *sendcounts, size_t *sdispls, PDM_MPI_Datatype sendtype, void *recvbuf,
                             int *recvcounts, size_t *rdispls, PDM_MPI_Datatype recvtype, PDM_MPI_Comm comm);
 
 /*----------------------------------------------------------------------------
- * 
+ *
  * PDM_MPI_Ialltoallv_p2p (wait request for PDM_MPI_Ialltoallv_p2p)
  *
  *----------------------------------------------------------------------------*/
 
 int PDM_MPI_Ialltoallv_p2p_wait (PDM_MPI_Request **request_s,
-                                 PDM_MPI_Request **request_r, 
-                                 int n_request_s, 
+                                 PDM_MPI_Request **request_r,
+                                 int n_request_s,
                                  int n_request_r);
 
 /*----------------------------------------------------------------------------

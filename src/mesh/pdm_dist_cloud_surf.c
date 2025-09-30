@@ -3,46 +3,50 @@
  *----------------------------------------------------------------------------*/
 
 #include <assert.h>
-#include <stdio.h>
 #include <math.h>
-#include <string.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 /*----------------------------------------------------------------------------
  * Local headers
  *----------------------------------------------------------------------------*/
 
-#include "pdm_printf.h"
-#include "pdm_error.h"
 #include "pdm.h"
-#include "pdm_priv.h"
-#include "pdm_mpi.h"
+#include "pdm_array.h"
+#include "pdm_block_to_part.h"
+#include "pdm_box.h"
+#include "pdm_dbbtree.h"
 #include "pdm_dist_cloud_surf_priv.h"
-#include "pdm_dist_cloud_surf.h"
+#include "pdm_error.h"
+#include "pdm_extract_part.h"
+#include "pdm_ho_bezier.h"
+#include "pdm_ho_location.h"
+#include "pdm_ho_ordering.h"
+#include "pdm_line.h"
+#include "pdm_logging.h"
+#include "pdm_mem_tool.h"
 #include "pdm_mesh_nodal.h"
-#include "pdm_part_mesh_nodal.h"
-#include "pdm_part_mesh_nodal_priv.h"
-#include "pdm_part_mesh_nodal_elmts.h"
-#include "pdm_surf_mesh.h"
+#include "pdm_mpi.h"
 #include "pdm_octree.h"
 #include "pdm_para_octree.h"
-#include "pdm_dbbtree.h"
+#include "pdm_part_mesh_nodal.h"
+#include "pdm_part_mesh_nodal_elmts.h"
+#include "pdm_part_mesh_nodal_priv.h"
 #include "pdm_part_to_block.h"
-#include "pdm_block_to_part.h"
-#include "pdm_line.h"
-#include "pdm_triangle.h"
+#include "pdm_part_to_part.h"
 #include "pdm_polygon.h"
-#include "pdm_timer.h"
-#include "pdm_hash_tab.h"
+#include "pdm_printf.h"
+#include "pdm_priv.h"
 #include "pdm_sort.h"
-#include "pdm_logging.h"
-#include "pdm_extract_part.h"
-#include "pdm_vtk.h"
+#include "pdm_surf_mesh.h"
+#include "pdm_timer.h"
+#include "pdm_triangle.h"
 #include "pdm_unique.h"
-#include "pdm_array.h"
-#include "pdm_ho_location.h"
-#include "pdm_ho_bezier.h"
-#include "pdm_ho_ordering.h"
+#include "pdm_vtk.h"
+#include "pdm_dist_cloud_surf.h"
+#include "pdm_dist_cloud_surf_priv.h"
+
 /*----------------------------------------------------------------------------*/
 
 #ifdef	__cplusplus
@@ -183,8 +187,8 @@ _dist_cloud_surf_compute
 
     if (mesh_nodal != NULL) {
       n_vertices      = PDM_part_mesh_nodal_n_vtx_get    (mesh_nodal, i_part);
-      vertices_coords = PDM_part_mesh_nodal_vtx_coord_get(mesh_nodal, i_part);
-      vertices_gnum   = PDM_part_mesh_nodal_vtx_g_num_get(mesh_nodal, i_part);
+      vertices_coords = PDM_part_mesh_nodal_vtx_coord_get(mesh_nodal, i_part, PDM_OWNERSHIP_BAD_VALUE);
+      vertices_gnum   = PDM_part_mesh_nodal_vtx_g_num_get(mesh_nodal, i_part, PDM_OWNERSHIP_BAD_VALUE);
     } else if (surf_mesh != NULL) {
       n_vertices      = PDM_surf_mesh_part_n_vtx_get(surf_mesh, i_part);
       vertices_coords = PDM_surf_mesh_part_vtx_get  (surf_mesh, i_part);
@@ -1117,8 +1121,8 @@ _dist_cloud_surf_compute_optim
 
     if (mesh_nodal != NULL) {
       n_vertices      = PDM_part_mesh_nodal_n_vtx_get    (mesh_nodal, i_part);
-      vertices_coords = PDM_part_mesh_nodal_vtx_coord_get(mesh_nodal, i_part);
-      vertices_gnum   = PDM_part_mesh_nodal_vtx_g_num_get(mesh_nodal, i_part);
+      vertices_coords = PDM_part_mesh_nodal_vtx_coord_get(mesh_nodal, i_part, PDM_OWNERSHIP_BAD_VALUE);
+      vertices_gnum   = PDM_part_mesh_nodal_vtx_g_num_get(mesh_nodal, i_part, PDM_OWNERSHIP_BAD_VALUE);
     } else if (surf_mesh != NULL) {
       n_vertices      = PDM_surf_mesh_part_n_vtx_get    (surf_mesh, i_part);
       vertices_coords = PDM_surf_mesh_part_vtx_get      (surf_mesh, i_part);
@@ -1220,7 +1224,7 @@ _dist_cloud_surf_compute_optim
 
       const double *vtx_coord = NULL;
       if (mesh_nodal != NULL) {
-        vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(mesh_nodal, i_part);
+        vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(mesh_nodal, i_part, PDM_OWNERSHIP_BAD_VALUE);
       }
 
       int idx = 0;
@@ -1640,16 +1644,20 @@ _dist_cloud_surf_compute_optim
 
         if (mesh_nodal != NULL) {
           n_vtx        = PDM_part_mesh_nodal_n_vtx_get    (mesh_nodal, i_part);
-          vtx_coord    = PDM_part_mesh_nodal_vtx_coord_get(mesh_nodal, i_part);
-          vtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(mesh_nodal, i_part);
+          vtx_coord    = PDM_part_mesh_nodal_vtx_coord_get(mesh_nodal, i_part, PDM_OWNERSHIP_BAD_VALUE);
+          vtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(mesh_nodal, i_part, PDM_OWNERSHIP_BAD_VALUE);
         }
 
         PDM_part_mesh_nodal_coord_set(_pmn,
                                       i_part,
                                       n_vtx,
                                       vtx_coord,
-                                      vtx_ln_to_gn,
                                       PDM_OWNERSHIP_USER);
+
+        PDM_part_mesh_nodal_vtx_gnum_set(_pmn,
+                                         i_part,
+                                         vtx_ln_to_gn,
+                                         PDM_OWNERSHIP_USER);
       }
 
       PDM_extract_part_part_nodal_set(extrp, _pmn);
@@ -1731,7 +1739,7 @@ _dist_cloud_surf_compute_optim
     }
 
     int     pextract_n_vtx     = PDM_part_mesh_nodal_n_vtx_get    (extract_pmn, 0);
-    double *pextract_vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(extract_pmn, 0);
+    double *pextract_vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(extract_pmn, 0, PDM_OWNERSHIP_BAD_VALUE);
 
 
     PDM_Mesh_nodal_elt_t *elt_type  = NULL;
@@ -2279,10 +2287,6 @@ _dist_cloud_surf_compute_optim
         PDM_free(_pmn->vtx[i_part]);
       }
       PDM_free(_pmn->vtx         );
-      PDM_free(_pmn->n_vol       );
-      PDM_free(_pmn->n_surf      );
-      PDM_free(_pmn->n_ridge     );
-      PDM_free(_pmn->n_corner    );
       PDM_free(_pmn->section_kind);
       PDM_free(_pmn->section_id  );
       PDM_free(_pmn              );

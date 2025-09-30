@@ -2,44 +2,31 @@
  * Standard C library headers
  *----------------------------------------------------------------------------*/
 
-#include <stdlib.h>
-#include <string.h>
 #include <assert.h>
-#include <math.h>
-#include <float.h>
+#include <stdlib.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
-#include "pdm_mpi.h"
-#include "pdm.h"
-#include "pdm_priv.h"
-#include "pdm_sort.h"
-#include "pdm_binary_search.h"
-#include "pdm_sort.h"
-#include "pdm_part_to_block.h"
-#include "pdm_block_to_part.h"
-#include "pdm_part_to_part.h"
-#include "pdm_timer.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
-#include "pdm_array.h"
-#include "pdm_gnum.h"
 #include "pdm_dmesh_extract.h"
-#include "pdm_dmesh_nodal.h"
-#include "pdm_dmesh_nodal_priv.h"
-#include "pdm_dmesh_nodal_elmts_priv.h"
-#include "pdm_dmesh_extract_priv.h"
+#include "pdm.h"
+#include "pdm_block_to_part.h"
 #include "pdm_dconnectivity_transform.h"
-#include "pdm_vtk.h"
-#include "pdm_logging.h"
 #include "pdm_distrib.h"
-#include "pdm_gnum_location.h"
-#include "pdm_unique.h"
+#include "pdm_dmesh_extract_priv.h"
+#include "pdm_dmesh_nodal.h"
+#include "pdm_dmesh_nodal_elmts.h"
+#include "pdm_dmesh_nodal_elmts_priv.h"
+#include "pdm_dmesh_nodal_priv.h"
 #include "pdm_dmesh_priv.h"
+#include "pdm_logging.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mpi.h"
+#include "pdm_part_to_block.h"
 #include "pdm_partitioning_algorithm.h"
 #include "pdm_partitioning_nodal_algorithm.h"
+#include "pdm_priv.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -393,7 +380,7 @@ _dmesh_extract_3d
                                              &dme->distrib_extract                 [PDM_MESH_ENTITY_FACE],
                                              &dme->parent_extract_gnum             [PDM_MESH_ENTITY_FACE]);
 
-  dme->dmesh_extract->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE] = PDM_TRUE;
+  dme->dmesh_extract->owner_connectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE] = PDM_OWNERSHIP_KEEP;
   dme->dmesh_extract->dn_face = dme->distrib_extract[PDM_MESH_ENTITY_FACE][i_rank+1] - dme->distrib_extract[PDM_MESH_ENTITY_FACE][i_rank];
 
   if(from_face_edge == 1) {
@@ -410,7 +397,7 @@ _dmesh_extract_3d
                                                      &dme->distrib_extract                 [PDM_MESH_ENTITY_EDGE],
                                                      &dme->parent_extract_gnum             [PDM_MESH_ENTITY_EDGE]);
 
-    dme->dmesh_extract->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] = PDM_TRUE;
+    dme->dmesh_extract->owner_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] = PDM_OWNERSHIP_KEEP;
 
     // edge_vtx
     distrib_edge = PDM_compute_entity_distribution(dme->comm, dn_edge);
@@ -443,7 +430,7 @@ _dmesh_extract_3d
                                                      &dme->distrib_extract                 [PDM_MESH_ENTITY_VTX],
                                                      &dme->parent_extract_gnum             [PDM_MESH_ENTITY_VTX]);
 
-    dme->dmesh_extract->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX] = PDM_TRUE;
+    dme->dmesh_extract->owner_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX] = PDM_OWNERSHIP_KEEP;
     PDM_free(dme->dmesh_extract->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_VTX]);
     dme->dmesh_extract->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_VTX] = NULL;
     if(dedge_vtx_idx == NULL)  {
@@ -463,7 +450,7 @@ _dmesh_extract_3d
                                                      &dme->distrib_extract                 [PDM_MESH_ENTITY_VTX],
                                                      &dme->parent_extract_gnum             [PDM_MESH_ENTITY_VTX]);
 
-    dme->dmesh_extract->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_FACE_VTX] = PDM_TRUE;
+    dme->dmesh_extract->owner_connectivity[PDM_CONNECTIVITY_TYPE_FACE_VTX] = PDM_OWNERSHIP_KEEP;
  }
 
   dme->dmesh_extract->dn_face = dme->distrib_extract[PDM_MESH_ENTITY_FACE][i_rank+1] - dme->distrib_extract[PDM_MESH_ENTITY_FACE][i_rank];
@@ -555,7 +542,7 @@ _dmesh_extract_2d
                                                &dme->distrib_extract                 [PDM_MESH_ENTITY_EDGE],
                                                &dme->parent_extract_gnum             [PDM_MESH_ENTITY_EDGE]);
 
-    dme->dmesh_extract->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] = PDM_TRUE;
+    dme->dmesh_extract->owner_connectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE] = PDM_OWNERSHIP_KEEP;
 
     // edge_vtx
     distrib_edge = PDM_compute_entity_distribution(dme->comm, dn_edge);
@@ -588,7 +575,7 @@ _dmesh_extract_2d
                                                      &dme->distrib_extract                 [PDM_MESH_ENTITY_VTX],
                                                      &dme->parent_extract_gnum             [PDM_MESH_ENTITY_VTX]);
 
-    dme->dmesh_extract->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX] = PDM_TRUE;
+    dme->dmesh_extract->owner_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX] = PDM_OWNERSHIP_KEEP;
     PDM_free(dme->dmesh_extract->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_VTX]);
     dme->dmesh_extract->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_VTX] = NULL;
     if(dedge_vtx_idx == NULL)  {
@@ -610,7 +597,7 @@ _dmesh_extract_2d
                                                &dme->distrib_extract                 [PDM_MESH_ENTITY_VTX],
                                                &dme->parent_extract_gnum             [PDM_MESH_ENTITY_VTX]);
 
-    dme->dmesh_extract->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_FACE_VTX] = PDM_TRUE;
+    dme->dmesh_extract->owner_connectivity[PDM_CONNECTIVITY_TYPE_FACE_VTX] = PDM_OWNERSHIP_KEEP;
  }
 
   dme->dmesh_extract->dn_face = dme->distrib_extract[PDM_MESH_ENTITY_FACE][i_rank+1] - dme->distrib_extract[PDM_MESH_ENTITY_FACE][i_rank];
@@ -673,7 +660,7 @@ _dmesh_extract_1d
                                              dme->n_selected,
                                              dme->selected_gnum,
                                              distrib_edge,
-                                             dedge_vtx_idx,
+                                             _dedge_vtx_idx,
                                              dedge_vtx,
                                              &dme->distrib_extract                 [PDM_MESH_ENTITY_EDGE],
                                              &dme->parent_extract_gnum             [PDM_MESH_ENTITY_EDGE],
@@ -683,7 +670,7 @@ _dmesh_extract_1d
                                              &dme->distrib_extract                 [PDM_MESH_ENTITY_VTX],
                                              &dme->parent_extract_gnum             [PDM_MESH_ENTITY_VTX]);
 
-  dme->dmesh_extract->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX] = PDM_TRUE;
+  dme->dmesh_extract->owner_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX] = PDM_OWNERSHIP_KEEP;
   PDM_free(dme->dmesh_extract->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_VTX]);
   dme->dmesh_extract->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_VTX] = NULL;
   if(dedge_vtx_idx == NULL)  {
@@ -871,8 +858,6 @@ _dmesh_extract_nodal
 
 }
 
-
-
 /*=============================================================================
  * Public function definitions
  *============================================================================*/
@@ -994,16 +979,7 @@ PDM_dmesh_extract_compute
 }
 
 
-/**
- *
- * \brief Set the extract number
- *
- * \param [in]   dme                  PDM_dmesh_extract_t
- * \param [in]   entity_type          Entity kind to be extracted (\ref PDM_mesh_entities_t)
- * \param [in]   n_selected           Number of entity to select
- * \param [in]   selected_gnum        List of global id to extract
- *
- */
+
 void
 PDM_dmesh_extract_selected_gnum_set
 (
@@ -1020,15 +996,7 @@ PDM_dmesh_extract_selected_gnum_set
 }
 
 
-/**
- *
- * \brief Set the dn_entity of entity_type
- *
- * \param [in]   dme                  PDM_dmesh_extract_t
- * \param [in]   entity_type          Entity kind (\ref PDM_mesh_entities_t)
- * \param [in]   dn_entity            Number of entity in current process
- *
- */
+
 void
 PDM_dmesh_extract_dn_entity_set
 (
@@ -1041,14 +1009,7 @@ PDM_dmesh_extract_dn_entity_set
 }
 
 
-/**
- *
- * \brief Set vertices coordinates
- *
- * \param [in]   dme           PDM_dmesh_extract_t
- * \param [in]   dvtx_coord    Distributed vertex coordinates (size = 3 * dn_vtx )
- *
- */
+
 void
 PDM_dmesh_extract_vtx_coord_set
 (
@@ -1059,17 +1020,7 @@ PDM_dmesh_extract_vtx_coord_set
   PDM_dmesh_vtx_coord_set(dme->dmesh, dvtx_coord, PDM_OWNERSHIP_USER);
 }
 
-/**
- *
- * \brief Set mesh bound for one bound_type
- *
- * \param [in]   dme           PDM_dmesh_extract_t
- * \param [in]   bound_type    Bound kind (\ref PDM_bound_type_t)
- * \param [in]   n_bound       Number of bound in for bound_type
- * \param [in]   connect       Connectivity between group and entity (size = connect_idx[n_bound])
- * \param [in]   connect_idx   Connectivity index between group and entity (size = n_bound+1)
- *
- */
+
 void
 PDM_dmesh_extract_dmesh_bound_set
 (
@@ -1084,16 +1035,7 @@ PDM_dmesh_extract_dmesh_bound_set
 }
 
 
-/**
- *
- * \brief Set connectivity by kind (\ref PDM_connectivity_type_t )
- *
- * \param [in]   dme                  PDM_dmesh_extract_t
- * \param [in]   connectivity_type    Connectivity kind (\ref PDM_connectivity_type_t)
- * \param [in]   dconnect             Connectivity (size = dconnect_idx[dn_entity])
- * \param [in]   dconnect_idx         Connectivity (size = dn_entity+1)
- *
- */
+
 void
 PDM_dmesh_extract_dconnectivity_set
 (
@@ -1110,14 +1052,7 @@ PDM_dmesh_extract_dconnectivity_set
                              PDM_OWNERSHIP_USER);
 }
 
-/**
- *
- * \brief Set a dmesh object correspond to extraction
- *
- * \param [in]   dme                  PDM_dmesh_extract_t
- * \param [out]  dmesh                PDM_dmesh_t who need to be extracted
- *
- */
+
 void
 PDM_dmesh_extract_dmesh_set
 (
@@ -1129,14 +1064,7 @@ PDM_dmesh_extract_dmesh_set
 }
 
 
-/**
- *
- * \brief Get a dmesh object correspond to extraction
- *
- * \param [in]   dme                  PDM_dmesh_extract_t
- * \param [out]  dmesh_nodal          PDM_dmesh_nodal_t who need to be extracted
- *
- */
+
 void
 PDM_dmesh_extract_dmesh_nodal_set
 (
@@ -1147,15 +1075,7 @@ PDM_dmesh_extract_dmesh_nodal_set
   dme->dmesh_nodal = dmesh_nodal;
 }
 
-/**
- *
- * \brief Get a dmesh object correspond to extraction
- *
- * \param [in]   dme                  PDM_dmesh_extract_t
- * \param [out]  dmesh_extract        Current extraction direclty inside a PDM_dmesh_t
- * \param [in]   ownership            KEEP or USER
- *
- */
+
 void
 PDM_dmesh_extract_dmesh_get
 (
@@ -1168,15 +1088,7 @@ PDM_dmesh_extract_dmesh_get
   dme->dmesh_extract_ownership = ownership;
 }
 
-/**
- *
- * \brief Get a dmesh object correspond to extraction
- *
- * \param [in]   dme                  PDM_dmesh_extract_t
- * \param [out]  dmesh_nodal_extract  Current extraction direclty inside a PDM_dmesh_nodal_t
- * \param [in]   ownership            KEEP or USER
- *
- */
+
 void
 PDM_dmesh_extract_dmesh_nodal_get
 (
@@ -1189,17 +1101,7 @@ PDM_dmesh_extract_dmesh_nodal_get
   dme->dmesh_extract_ownership = ownership;
 }
 
-/**
- *
- * \brief Get the redistributed parent_gnum (in block frame)
- *
- * \param [in]   dme                  PDM_dmesh_extract_t
- * \param [in]   entity_type          Entity type (cell, face, edge, vtx)
- * \param [out]  dn_entity            Size of block of current entity
- * \param [out]  parent_gnum          Parent gnum redistributed
- * \param [in]   ownership            KEEP or USER
- *
- */
+
 void
 PDM_dmesh_extract_parent_gnum_get
 (
@@ -1223,16 +1125,7 @@ PDM_dmesh_extract_parent_gnum_get
 }
 
 
-/**
- *
- * \brief Get the block_to_part associated to extraction
- *
- * \param [in]   dme                  PDM_dmesh_extract_t
- * \param [in]   entity_type          Entity type (cell, face, edge, vtx)
- * \param [out]  btp                  block_to_part to transfert data to extract block
- * \param [in]   ownership            KEEP or USER
- *
- */
+
 void
 PDM_dmesh_extract_btp_get
 (
@@ -1247,17 +1140,6 @@ PDM_dmesh_extract_btp_get
 }
 
 
-/**
- *
- * \brief Get the block_to_part associated to extraction for each group
- *
- * \param [in]   dme                  PDM_dmesh_extract_t
- * \param [in]   i_group              No of group
- * \param [in]   bound_type           Bound type (cell, face, edge, vtx)
- * \param [out]  btp                  block_to_part to transfert data to extract block
- * \param [in]   ownership            KEEP or USER
- *
- */
 void
 PDM_dmesh_extract_btp_group_get
 (
@@ -1273,13 +1155,6 @@ PDM_dmesh_extract_btp_group_get
 }
 
 
-/**
- *
- * \brief Free structure
- *
- * \param [in]   dme                  PDM_dmesh_extract_t
- *
- */
 void
 PDM_dmesh_extract_free
 (

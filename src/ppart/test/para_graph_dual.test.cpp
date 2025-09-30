@@ -1,9 +1,11 @@
+#include <stddef.h>
+#include "doctest/doctest.h"
 #include "doctest/extensions/doctest_mpi.h"
 #include "pdm.h"
 #include "pdm_doctest.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mpi.h"
 #include "pdm_para_graph_dual.h"
-#include "pdm_priv.h"
-
 
 
 MPI_TEST_CASE("[pdm_para_graph_dual] - 1p - dual from arc2node", 1) {

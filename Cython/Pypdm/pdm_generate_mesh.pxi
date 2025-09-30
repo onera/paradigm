@@ -163,7 +163,7 @@ def generate_mesh_rectangle_ngon(MPI.Comm             comm,
       - ``"pn_face"``        (`list` of `int`)                        : Number of faces
       - ``"pvtx_coord"``     (`list` of `np.ndarray[np.double_t]`)    : Vertex coordinates
       - ``"pedge_vtx"``      (`list` of `np.ndarray[np.int32_t]`)     : Edge->vertex connectivity
-      - ``"pface_edge_idx"`` (`list` of `np.ndarray[np.int32_t]`)     : Index of face->edge connectivity
+      - ``"pface_edge_idx"`` (`list` of `np.ndarray[np.int32_t]`)     : Index of face->edge and face->vtx connectivities
       - ``"pface_edge"``     (`list` of `np.ndarray[np.int32_t]`)     : Face->edge connectivity
       - ``"pface_vtx"``      (`list` of `np.ndarray[np.int32_t]`)     : Face->vertex connectivity
       - ``"pvtx_ln_to_gn"``  (`list` of `np.ndarray[npy_pdm_gnum_t]`) : Vertex global ids
@@ -286,52 +286,52 @@ def generate_mesh_parallelepiped_ngon(MPI.Comm             comm,
                                       int                  n_part,
                                       PDM_split_dual_t     part_method):
   """
-  generate_mesh_rectangle_ngon(comm, elt_type, order, ho_ordering, xmin, ymin, zmin, lengthx, lengthy, lengthz, n_x, n_y, n_z, n_part, part_method)
+  generate_mesh_parallelepiped_ngon(comm, elt_type, order, ho_ordering, xmin, ymin, zmin, lengthx, lengthy, lengthz, n_x, n_y, n_z, n_part, part_method)
 
   Create a partitioned parallelepiped mesh (3D) with descending connectivities
 
   Parameters:
-    comm          (MPI.Comm)         : MPI communicator
-    elt_type      (int)              : Element type
-    order         (int)              : Element order
-    ho_ordering   (str)              : Ordering format
-    xmin          (double)           : Minimal x-coordinate
-    ymin          (double)           : Minimal y-coordinate
-    zmin          (double)           : Minimal z-coordinate
-    lengthx       (double)           : Length of the rectangle in the x-direction
-    lengthy       (double)           : Length of the rectangle in the y-direction
-    lengthz       (double)           : Length of the rectangle in the z-direction
-    n_x           (int)              : Number of points in the x-direction
-    n_y           (int)              : Number of points in the y-direction
-    n_z           (int)              : Number of points in the z-direction
-    n_part        (int)              : Number of partitions
-    part_method   (int)              : Partitioning method
+    comm          (MPI.Comm) : MPI communicator
+    elt_type      (int)      : Element type
+    order         (int)      : Element order
+    ho_ordering   (str)      : Ordering format
+    xmin          (double)   : Minimal x-coordinate
+    ymin          (double)   : Minimal y-coordinate
+    zmin          (double)   : Minimal z-coordinate
+    lengthx       (double)   : Length of the rectangle in the x-direction
+    lengthy       (double)   : Length of the rectangle in the y-direction
+    lengthz       (double)   : Length of the rectangle in the z-direction
+    n_x           (int)      : Number of points in the x-direction
+    n_y           (int)      : Number of points in the y-direction
+    n_z           (int)      : Number of points in the z-direction
+    n_part        (int)      : Number of partitions
+    part_method   (int)      : Partitioning method
 
   Returns:
-    A dictionary containing:
-      - `pn_vtx`                 : Number of vertices
-      - `pn_edge`                : Number of edges
-      - `pn_face`                : Number of faces
-      - `pn_cell`                : Number of cells
-      - `pvtx_coord`             : Vertex coordinates
-      - `pedge_vtx`              : Edge->vertex connectivity
-      - `pface_edge_idx`         : Index of face->edge connectivity
-      - `pface_edge`             : Face->edge connectivity
-      - `pface_vtx`              : Face->vertex connectivity
-      - `pcell_face_idx`         : Index of cell->face connectivity
-      - `pcell_face`             : Cell->face connectivity
-      - `pvtx_ln_to_gn`          : Vertex global number
-      - `pedge_ln_to_gn`         : Edge global number
-      - `pface_ln_to_gn`         : Face global number
-      - `pcell_ln_to_gn`         : Cell global number
-      - `pn_surface`             : Number of surfaces
-      - `psurface_face_idx`      : Surface->face connectivity index
-      - `psurface_face`          : Surface->face connectivity
-      - `psurface_face_ln_to_gn` : Surface->face connectivity with global numbers
-      - `pn_ridge`               : Number of ridges
-      - `pridge_edge_idx`        : Ridge->edge connectivity index
-      - `pridge_edge`            : Ridge->edge connectivity
-      - `pridge_edge_ln_to_gn`   : Ridge->edge connectivity with global numbers
+    Dictionary
+      - ``"pn_vtx"``                 (`list` of `int`)                        : Number of vertices
+      - ``"pn_edge"``                (`list` of `int`)                        : Number of edges
+      - ``"pn_face"``                (`list` of `int`)                        : Number of faces
+      - ``"pn_cell"``                (`list` of `int`)                        : Number of cells
+      - ``"pvtx_coord"``             (`list` of `np.ndarray[np.double_t]`)    : Vertex coordinates
+      - ``"pedge_vtx"``              (`np.ndarray[np.int32_t]`)               : Edge->vertex connectivity
+      - ``"pface_edge_idx"``         (`np.ndarray[np.int32_t]`)               : Index of face->edge and face->vtx connectivities
+      - ``"pface_edge"``             (`np.ndarray[np.int32_t]`)               : Face->edge connectivity
+      - ``"pface_vtx"``              (`np.ndarray[np.int32_t]`)               : Face->vertex connectivity
+      - ``"pcell_face_idx"``         (`np.ndarray[np.int32_t]`)               : Index of cell->face connectivity
+      - ``"pcell_face"``             (`np.ndarray[np.int32_t]`)               : Cell->face connectivity
+      - ``"pvtx_ln_to_gn"``          (`list` of `np.ndarray[npy_pdm_gnum_t]`) : Vertex global number
+      - ``"pedge_ln_to_gn"``         (`list` of `np.ndarray[npy_pdm_gnum_t]`) : Edge global number
+      - ``"pface_ln_to_gn"``         (`list` of `np.ndarray[npy_pdm_gnum_t]`) : Face global number
+      - ``"pcell_ln_to_gn"``         (`list` of `np.ndarray[npy_pdm_gnum_t]`) : Cell global number
+      - ``"pn_surface"``             (`list` of `int`)                        : Number of surfaces
+      - ``"psurface_face_idx"``      (`np.ndarray[np.int32_t]`)               : Surface->face connectivity index
+      - ``"psurface_face"``          (`np.ndarray[np.int32_t]`)               : Surface->face connectivity
+      - ``"psurface_face_ln_to_gn"`` (`list` of `np.ndarray[npy_pdm_gnum_t]`) : Surface->face connectivity with global numbers
+      - ``"pn_ridge"``               (`list` of `int`)                        : Number of ridges
+      - ``"pridge_edge_idx"``        (`np.ndarray[np.int32_t]`)               : Ridge->edge connectivity index
+      - ``"pridge_edge"``            (`np.ndarray[np.int32_t]`)               : Ridge->edge connectivity
+      - ``"pridge_edge_ln_to_gn"``   (`list` of `np.ndarray[npy_pdm_gnum_t]`) : Ridge->edge connectivity with global numbers
   """
 
   # Convert mpi4py -> PDM_MPI
@@ -439,25 +439,25 @@ def generate_mesh_parallelepiped_ngon(MPI.Comm             comm,
     # Array
     pvtx_coord.append(create_numpy_d(_pvtx_coord[i_part], 3*pn_vtx[i_part]))
 
-    pedge_vtx.append(create_numpy_i(_pedge_vtx[i_part], 2*pn_edge[i_part]))
-    pface_edge_idx.append(create_numpy_i(_pface_edge_idx[i_part], pn_face[i_part] + 1))
-    pface_edge.append(create_numpy_i(_pface_edge[i_part], pface_edge_idx[i_part][pn_face[i_part]]))
-    pface_vtx.append(create_numpy_or_none_i(_pface_vtx[i_part], pface_edge_idx[i_part][pn_face[i_part]]))
-    pcell_face_idx.append(create_numpy_i(_pcell_face_idx[i_part], pn_cell[i_part] + 1))
-    pcell_face.append(create_numpy_i(_pcell_face[i_part], pcell_face_idx[i_part][pn_cell[i_part]]))
+    pedge_vtx.append     (create_numpy_i        (_pedge_vtx     [i_part], 2*pn_edge[i_part]))
+    pface_edge_idx.append(create_numpy_i        (_pface_edge_idx[i_part], pn_face[i_part] + 1))
+    pface_edge.append    (create_numpy_i        (_pface_edge    [i_part], pface_edge_idx[i_part][pn_face[i_part]]))
+    pface_vtx.append     (create_numpy_or_none_i(_pface_vtx     [i_part], pface_edge_idx[i_part][pn_face[i_part]]))
+    pcell_face_idx.append(create_numpy_i        (_pcell_face_idx[i_part], pn_cell[i_part] + 1))
+    pcell_face.append    (create_numpy_i        (_pcell_face    [i_part], pcell_face_idx[i_part][pn_cell[i_part]]))
 
-    psurface_face_idx.append(create_numpy_or_none_i(_psurface_face_idx[i_part], pn_surface[i_part] + 1))
-    psurface_face.append(create_numpy_or_none_i(_psurface_face[i_part], psurface_face_idx[i_part][pn_surface[i_part]]))
-    pridge_edge_idx.append(create_numpy_or_none_i(_pridge_edge_idx[i_part], pn_ridge[i_part] + 1))
-    pridge_edge.append(create_numpy_or_none_i(_pridge_edge[i_part], pridge_edge_idx[i_part][pn_ridge[i_part]]))
+    psurface_face_idx.     append(create_numpy_or_none_i(_psurface_face_idx     [i_part], pn_surface[i_part] + 1))
+    psurface_face.         append(create_numpy_or_none_i(_psurface_face         [i_part], psurface_face_idx[i_part][pn_surface[i_part]]))
+    psurface_face_ln_to_gn.append(create_numpy_g        (_psurface_face_ln_to_gn[i_part], psurface_face_idx[i_part][pn_surface[i_part]]))
+
+    pridge_edge_idx.     append(create_numpy_or_none_i(_pridge_edge_idx     [i_part], pn_ridge[i_part] + 1))
+    pridge_edge.         append(create_numpy_or_none_i(_pridge_edge         [i_part], pridge_edge_idx[i_part][pn_ridge[i_part]]))
+    pridge_edge_ln_to_gn.append(create_numpy_g        (_pridge_edge_ln_to_gn[i_part], pridge_edge_idx[i_part][pn_ridge[i_part]]))
 
     pvtx_ln_to_gn.append(create_numpy_g(_pvtx_ln_to_gn[i_part], pn_vtx[i_part]))
     pedge_ln_to_gn.append(create_numpy_g(_pedge_ln_to_gn[i_part], pn_edge[i_part]))
     pface_ln_to_gn.append(create_numpy_g(_pface_ln_to_gn[i_part], pn_face[i_part]))
     pcell_ln_to_gn.append(create_numpy_g(_pcell_ln_to_gn[i_part], pn_cell[i_part]))
-
-    psurface_face_ln_to_gn.append(create_numpy_g(_psurface_face_ln_to_gn[i_part], pn_surface[i_part]))
-    pridge_edge_ln_to_gn.append(create_numpy_g(_pridge_edge_ln_to_gn[i_part], pn_ridge[i_part]))
 
   # Free
   free(_pn_vtx                );

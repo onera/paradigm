@@ -1,26 +1,19 @@
 #include <math.h>
-#include <sys/time.h>
-#include <time.h>
-#include <sys/resource.h>
-#include <unistd.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include <assert.h>
-
-#include <pdm_mpi.h>
 
 #include "pdm.h"
-#include "pdm_config.h"
-#include "pdm_priv.h"
-#include "pdm_part.h"
+#include "pdm_io.h"
+#include "pdm_mem_tool.h"
 #include "pdm_mesh_location.h"
-#include "pdm_sphere_surf_gen.h"
-#include "pdm_printf.h"
-#include "pdm_logging.h"
-#include "pdm_error.h"
+#include "pdm_mesh_nodal.h"
+#include "pdm_mpi.h"
+#include "pdm_part.h"
+#include "pdm_part_mesh_nodal.h"
 #include "pdm_part_to_part.h"
-#include "pdm_vtk.h"
+#include "pdm_printf.h"
+#include "pdm_sphere_surf_gen.h"
 #include "pdm_writer.h"
 
 /*============================================================================
@@ -655,8 +648,11 @@ int main(int argc, char *argv[])
                                   ipart,
                                   pn_vtx[ipart],
                                   pvtx_coord[ipart],
-                                  pvtx_ln_to_gn[ipart],
                                   PDM_OWNERSHIP_USER);
+    PDM_part_mesh_nodal_vtx_gnum_set(mesh_nodal,
+                                     ipart,
+                                     pvtx_ln_to_gn[ipart],
+                                     PDM_OWNERSHIP_USER);
 
     int         *parent_num          = NULL;
     PDM_g_num_t *parent_entity_g_num = NULL;

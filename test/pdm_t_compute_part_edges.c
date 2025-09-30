@@ -1,38 +1,14 @@
-#include <math.h>
-#include <sys/time.h>
-#include <time.h>
-#include <sys/resource.h>
-#include <unistd.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 
 #include "pdm.h"
-#include "pdm_config.h"
+#include "pdm_dcube_nodal_gen.h"
+#include "pdm_mem_tool.h"
 #include "pdm_mpi.h"
-#include "pdm_partitioning_algorithm.h"
-#include "pdm_para_graph_dual.h"
-#include "pdm_dmesh_nodal_to_dmesh.h"
-#include "pdm_dmesh_nodal_elements_utils.h"
-#include "pdm_dconnectivity_transform.h"
-#include "pdm_part_connectivity_transform.h"
-#include "pdm_dcube_gen.h"
 #include "pdm_multipart.h"
+#include "pdm_partitioning_algorithm.h"
 #include "pdm_printf.h"
-#include "pdm_sort.h"
-#include "pdm_gnum.h"
-#include "pdm_part_to_part.h"
-#include "pdm_part_to_block.h"
-#include "pdm_distrib.h"
-#include "pdm_error.h"
-#include "pdm_vtk.h"
-#include "pdm_dmesh.h"
-#include "pdm_unique.h"
-#include "pdm_part_geom.h"
-#include "pdm_surf_mesh.h"
-#include "pdm_logging.h"
-#include "pdm_priv.h"
 
 /*============================================================================
  * Type definitions
@@ -95,10 +71,9 @@ _read_args(int            argc,
 
   while (i < argc) {
 
-    if (strcmp(argv[i], "-h") == 0)
+    if (strcmp(argv[i], "-h") == 0) {
       _usage(EXIT_SUCCESS);
-
-    else if (strcmp(argv[i], "-n") == 0) {
+    } else if (strcmp(argv[i], "-n") == 0) {
       i++;
       if (i >= argc)
         _usage(EXIT_FAILURE);
@@ -106,33 +81,29 @@ _read_args(int            argc,
         long _n_vtx_seg = atol(argv[i]);
         *n_vtx_seg = (PDM_g_num_t) _n_vtx_seg;
       }
-    }
-    else if (strcmp(argv[i], "-l") == 0) {
+    } else if (strcmp(argv[i], "-l") == 0) {
       i++;
-      if (i >= argc)
+      if (i >= argc) {
         _usage(EXIT_FAILURE);
-      else
+      } else {
         *length = atof(argv[i]);
-    }
-    else if (strcmp(argv[i], "-n_part") == 0) {
+      }
+    } else if (strcmp(argv[i], "-n_part") == 0) {
       i++;
-      if (i >= argc)
+      if (i >= argc) {
         _usage(EXIT_FAILURE);
-      else {
+      } else {
         *n_part = atoi(argv[i]);
       }
-    }
-    else if (strcmp(argv[i], "-post") == 0) {
+    } else if (strcmp(argv[i], "-post") == 0) {
       *post = 1;
-    }
-    else if (strcmp(argv[i], "-pt-scotch") == 0) {
+    } else if (strcmp(argv[i], "-pt-scotch") == 0) {
       *part_method = 2;
-    }
-    else if (strcmp(argv[i], "-parmetis") == 0) {
+    } else if (strcmp(argv[i], "-parmetis") == 0) {
       *part_method = 1;
-    }
-    else
+    } else {
       _usage(EXIT_FAILURE);
+    }
     i++;
   }
 }
@@ -146,16 +117,17 @@ _read_args(int            argc,
 
 int main(int argc, char *argv[])
 {
+  PDM_MPI_Init(&argc, &argv);
+  PDM_MPI_Comm comm = PDM_MPI_COMM_WORLD;
 
   /*
    *  Set default values
    */
-
-  PDM_g_num_t        n_vtx_seg = 10;
-  double             length    = 1.;
-  int                n_part    = 1;
-  int                post      = 0;
-  PDM_split_dual_t part_method  = PDM_SPLIT_DUAL_WITH_HILBERT;
+  PDM_g_num_t        n_vtx_seg   = 10;
+  double             length      = 1.;
+  int                n_part      = 1;
+  int                post        = 0;
+  PDM_split_dual_t   part_method = PDM_SPLIT_DUAL_WITH_HILBERT;
 
   /*
    *  Read args
@@ -173,82 +145,23 @@ int main(int argc, char *argv[])
    */
   int i_rank;
   int n_rank;
-
-  PDM_MPI_Init(&argc, &argv);
-  PDM_MPI_Comm comm = PDM_MPI_COMM_WORLD;
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
-  int           dn_cell;
-  int           dn_face;
-  int           dn_vtx;
-  int           n_face_group;
-  PDM_g_num_t  *dface_cell = NULL;
-  int          *dface_vtx_idx = NULL;
-  PDM_g_num_t  *dface_vtx = NULL;
-  double       *dvtx_coord = NULL;
-  int          *dface_group_idx = NULL;
-  PDM_g_num_t  *dface_group = NULL;
-  int           dface_vtxL;
-  int           dFaceGroupL;
-
-  PDM_dcube_t* dcube = PDM_dcube_gen_init(comm,
-                                          n_vtx_seg,
-                                          length,
-                                          0.,
-                                          0.,
-                                          0.,
-                                          PDM_OWNERSHIP_KEEP);
-
-  PDM_dcube_gen_dim_get(dcube,
-                        &n_face_group,
-                        &dn_cell,
-                        &dn_face,
-                        &dn_vtx,
-                        &dface_vtxL,
-                        &dFaceGroupL);
-
-  PDM_dcube_gen_data_get(dcube,
-                         &dface_cell,
-                         &dface_vtx_idx,
-                         &dface_vtx,
-                         &dvtx_coord,
-                         &dface_group_idx,
-                         &dface_group);
-
-  /*
-   * Create dmesh
-   */
-  PDM_dmesh_t* dm = PDM_dmesh_create(PDM_OWNERSHIP_KEEP,
-                                     dn_cell,
-                                     dn_face,
-                                     0, // dn_edge
-                                     dn_vtx,
-                                     comm);
-
-  PDM_dmesh_vtx_coord_set(dm,
-                          dvtx_coord,
-                          PDM_OWNERSHIP_USER);
-
-
-  PDM_dmesh_connectivity_set(dm,
-                             PDM_CONNECTIVITY_TYPE_FACE_VTX,
-                             dface_vtx,
-                             dface_vtx_idx,
-                             PDM_OWNERSHIP_USER);
-
-  PDM_dmesh_connectivity_set(dm,
-                             PDM_CONNECTIVITY_TYPE_FACE_CELL,
-                             dface_cell,
-                             NULL,
-                             PDM_OWNERSHIP_USER);
-
-  PDM_dmesh_bound_set(dm,
-                      PDM_BOUND_TYPE_FACE,
-                      n_face_group,
-                      dface_group,
-                      dface_group_idx,
-                      PDM_OWNERSHIP_USER);
+  int n_vtx_for_3d = n_vtx_seg;
+  PDM_dcube_nodal_t* dcube = PDM_dcube_nodal_gen_create(comm,
+                                                        n_vtx_seg,
+                                                        n_vtx_seg,
+                                                        n_vtx_for_3d,
+                                                        length,
+                                                        0.,
+                                                        0.,
+                                                        0.,
+                                                        PDM_MESH_NODAL_HEXA8,
+                                                        1,
+                                                        PDM_OWNERSHIP_KEEP);
+  PDM_dcube_nodal_gen_build (dcube);
+  PDM_dmesh_nodal_t* dmn = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube);
 
   /*
    * Partitionnement
@@ -256,16 +169,16 @@ int main(int argc, char *argv[])
   int n_domain = 1;
   int n_part_domains = n_part;
   PDM_multipart_t *mpart = PDM_multipart_create(n_domain,
-						   &n_part_domains,
-						   PDM_FALSE,
-						   part_method,
-						   PDM_PART_SIZE_HOMOGENEOUS,
-						   NULL,
-						   comm,
-						   PDM_OWNERSHIP_KEEP);
+                                                &n_part_domains,
+                                                PDM_FALSE,
+                                                part_method,
+                                                PDM_PART_SIZE_HOMOGENEOUS,
+                                                NULL,
+                                                comm,
+                                                PDM_OWNERSHIP_KEEP);
 
   PDM_multipart_set_reordering_options(mpart, -1, "PDM_PART_RENUM_CELL_NONE", NULL, "PDM_PART_RENUM_FACE_NONE");
-  PDM_multipart_dmesh_set(mpart, 0, dm);
+  PDM_multipart_dmesh_nodal_set(mpart, 0, dmn);
   PDM_multipart_compute(mpart);
 
   /*
@@ -411,15 +324,13 @@ int main(int argc, char *argv[])
   PDM_free(pvtx_ln_to_gn);
 
   PDM_multipart_free(mpart);
-  PDM_dcube_gen_free(dcube);
-  PDM_dmesh_free(dm);
+  PDM_dcube_nodal_gen_free(dcube);
 
   if (i_rank == 0) {
     printf("-- End\n");
     fflush(stdout);
   }
   PDM_MPI_Finalize();
-
 
   return 0;
 }

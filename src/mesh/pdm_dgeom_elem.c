@@ -2,26 +2,20 @@
  * Standard C library headers
  *----------------------------------------------------------------------------*/
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <math.h>
-#include <float.h>
-#include <assert.h>
+#include <stdio.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
-#include "pdm_priv.h"
-#include "pdm_polygon.h"
-#include "pdm_plane.h"
-#include "pdm_dgeom_elem.h"
 #include "pdm_block_to_part.h"
-#include "pdm_plane.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
-#include "pdm_distrib.h"
 #include "pdm_dconnectivity_transform.h"
+#include "pdm_distrib.h"
+#include "pdm_mem_tool.h"
+#include "pdm_plane.h"
+#include "pdm_priv.h"
+#include "pdm_dgeom_elem.h"
 
 #ifdef __cplusplus
 extern "C" {

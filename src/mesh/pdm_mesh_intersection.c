@@ -1,53 +1,55 @@
 /*----------------------------------------------------------------------------
  *  System headers
  *----------------------------------------------------------------------------*/
-#include <math.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <assert.h>
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 /*----------------------------------------------------------------------------
  *  Local headers
  *----------------------------------------------------------------------------*/
 
-#include "pdm.h"
-#include "pdm_priv.h"
-#include "pdm_mpi.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
-#include "pdm_mesh_intersection_priv.h"
 #include "pdm_mesh_intersection.h"
-#include "pdm_timer.h"
-#include "pdm_part_to_block.h"
-#include "pdm_block_to_part.h"
-#include "pdm_sort.h"
+#include "pdm_mesh_intersection_priv.h"
+#include "pdm.h"
 #include "pdm_array.h"
-#include "pdm_logging.h"
-#include "pdm_distrib.h"
 #include "pdm_binary_search.h"
-#include "pdm_part_mesh.h"
-#include "pdm_part_mesh_priv.h"
+#include "pdm_block_to_part.h"
+#include "pdm_box.h"
+#include "pdm_box_priv.h"
+#include "pdm_dbbtree.h"
+#include "pdm_error.h"
 #include "pdm_extract_part.h"
 #include "pdm_extract_part_priv.h"
-#include "pdm_part_to_part.h"
-#include "pdm_part_connectivity_transform.h"
-#include "pdm_vtk.h"
-#include "pdm_writer.h"
-#include "pdm_gnum.h"
-#include "pdm_box_priv.h"
-#include "pdm_unique.h"
-#include "pdm_triangulate.h"
 #include "pdm_geom_elem.h"
+#include "pdm_gnum.h"
+#include "pdm_io.h"
 #include "pdm_line.h"
+#include "pdm_logging.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mesh_nodal.h"
+#include "pdm_mpi.h"
+#include "pdm_order.h"
+#include "pdm_part_connectivity_transform.h"
+#include "pdm_part_mesh.h"
+#include "pdm_part_mesh_nodal.h"
+#include "pdm_part_mesh_nodal_elmts.h"
+#include "pdm_part_mesh_nodal_priv.h"
+#include "pdm_part_mesh_nodal_to_part_mesh.h"
+#include "pdm_part_mesh_priv.h"
+#include "pdm_part_to_block.h"
+#include "pdm_part_to_part.h"
 #include "pdm_plane.h"
 #include "pdm_polygon.h"
 #include "pdm_predicate.h"
-#include "pdm_order.h"
-#include "pdm_part_mesh_nodal.h"
-#include "pdm_part_mesh_nodal_priv.h"
-#include "pdm_dmesh_nodal_to_dmesh.h"
-#include "pdm_part_mesh_nodal_to_part_mesh.h"
+#include "pdm_priv.h"
+#include "pdm_sort.h"
+#include "pdm_triangulate.h"
+#include "pdm_unique.h"
+#include "pdm_vtk.h"
+#include "pdm_writer.h"
 
 #include "pdm_mesh_intersection_surf_surf_atomic.h"
 #include "pdm_mesh_intersection_vol_vol_atomic.h"
@@ -1436,24 +1438,7 @@ _create_extract_part_nodal
   PDM_part_mesh_nodal_t *mesh_nodal = mi->mesh_nodal[i_mesh];
   const int dim_mesh = mi->dim_mesh[i_mesh];
 
-  PDM_geometry_kind_t geom_kind = PDM_GEOMETRY_KIND_MAX;
-  switch (dim_mesh) {
-  case 1:
-    geom_kind = PDM_GEOMETRY_KIND_RIDGE;
-    break;
-  case 2:
-    geom_kind = PDM_GEOMETRY_KIND_SURFACIC;
-    break;
-  case 3:
-    geom_kind = PDM_GEOMETRY_KIND_VOLUMIC;
-    break;
-  default:
-    PDM_error(__FILE__, __LINE__, 0, "invalid dimension %d\n", dim_mesh);
-  }
-
   int n_part       = mi->n_part_mesh[i_mesh];
-  int n_section    = 0;
-  int *sections_id = NULL;
   PDM_part_mesh_nodal_elmts_t *pmne = NULL;
   if (mesh_nodal != NULL) {
     switch (dim_mesh) {
@@ -1471,8 +1456,6 @@ _create_extract_part_nodal
     }
 
     assert(n_part == PDM_part_mesh_nodal_n_part_get(mesh_nodal));
-    n_section   = PDM_part_mesh_nodal_n_section_in_geom_kind_get  (mesh_nodal, geom_kind);
-    sections_id = PDM_part_mesh_nodal_sections_id_in_geom_kind_get(mesh_nodal, geom_kind);
   }
 
   PDM_part_mesh_nodal_elmts_extend_to_encompassing_comm(comm,
@@ -1524,27 +1507,17 @@ _create_extract_part_nodal
 
     if (mesh_nodal != NULL) {
       n_vtx = PDM_part_mesh_nodal_n_vtx_get(mesh_nodal, i_part);
-      vtx_coord    = (double      *) PDM_part_mesh_nodal_vtx_coord_get(mesh_nodal, i_part);
-      vtx_ln_to_gn = (PDM_g_num_t *) PDM_part_mesh_nodal_vtx_g_num_get(mesh_nodal, i_part);
+      vtx_coord    = (double      *) PDM_part_mesh_nodal_vtx_coord_get(mesh_nodal, i_part, PDM_OWNERSHIP_BAD_VALUE);
+      vtx_ln_to_gn = (PDM_g_num_t *) PDM_part_mesh_nodal_vtx_g_num_get(mesh_nodal, i_part, PDM_OWNERSHIP_BAD_VALUE);
     }
-
-    int part_n_elt = 0;
-    for (int isection = 0; isection < n_section; isection++) {
-      int id_section_in_geom_kind = sections_id[isection];
-      int id_section = PDM_part_mesh_nodal_section_id_from_geom_kind_get(mesh_nodal,
-                                                                         geom_kind,
-                                                                         id_section_in_geom_kind);
-
-      part_n_elt += PDM_part_mesh_nodal_section_n_elt_get(mesh_nodal,
-                                                          id_section,
-                                                          i_part);
-    }
-
 
     PDM_part_mesh_nodal_coord_set(_pmn,
                                   i_part,
                                   n_vtx,
                                   vtx_coord,
+                                  PDM_OWNERSHIP_USER);
+    PDM_part_mesh_nodal_vtx_gnum_set(_pmn,
+                                  i_part,
                                   vtx_ln_to_gn,
                                   PDM_OWNERSHIP_USER);
   }
@@ -1571,10 +1544,6 @@ _create_extract_part_nodal
       PDM_free(_pmn->vtx[i_part]);
     }
     PDM_free(_pmn->vtx         );
-    PDM_free(_pmn->n_vol       );
-    PDM_free(_pmn->n_surf      );
-    PDM_free(_pmn->n_ridge     );
-    PDM_free(_pmn->n_corner    );
     PDM_free(_pmn->section_kind);
     PDM_free(_pmn->section_id  );
     PDM_free(_pmn              );
@@ -2131,9 +2100,7 @@ _build_ptp
           user_elt_ln_to_gn_a[ipart][i] = elt_ln_to_gn[ielt];
         }
       }
-
-    }
-    else {
+    } else {
       user_n_elt_a[ipart] = 0;
       user_elt_ln_to_gn_a[ipart] = NULL;
     }
@@ -2186,8 +2153,7 @@ _build_ptp
       user_n_elt_b[ipart] = PDM_part_mesh_n_entity_get(mi->mesh[1],
                                                        ipart,
                                                        entity_type[1]);
-    }
-    else if (mi->mesh_nodal[1] != NULL) {
+    } else if (mi->mesh_nodal[1] != NULL) {
       PDM_geometry_kind_t geom_kind = PDM_GEOMETRY_KIND_MAX;
       switch (mi->dim_mesh[1]) {
       case 1:
@@ -2218,8 +2184,7 @@ _build_ptp
                                                                      id_section,
                                                                      ipart);
       }
-    }
-    else {
+    } else {
       user_n_elt_b[ipart] = 0;
     }
   }
@@ -2262,6 +2227,15 @@ _build_ptp
 
     PDM_part_to_part_iexch_wait(mi->ptp, request_volume);
   }
+
+  // Setup n_entity
+  int n_part_a = 0;
+  int n_part_b = 0;
+  PDM_part_to_part_n_part_and_n_elt_get(mi->ptp,
+                                        &n_part_a,
+                                        &n_part_b,
+                                        &mi->n_elt_a,
+                                        &mi->n_elt_b);
 
   PDM_free(user_n_elt_a);
   PDM_free(user_n_elt_b);
@@ -3381,7 +3355,7 @@ _mesh_intersection_vol_line
         vtx_coordB[3*i_vtx1+2],
       };
 
-      int n_intersect = 0;
+      // int n_intersect = 0;
       int lface = 0;
       for(int idx_face = cellA_faceA_idx[i_cell]; idx_face < cellA_faceA_idx[i_cell+1]; idx_face++) {
         int i_face = PDM_ABS(cellA_faceA[idx_face])-1;
@@ -3398,9 +3372,9 @@ _mesh_intersection_vol_line
                                                        ray_direction,
                                                        &intersection_coord[3*lface]);
         // printf("intersection_stat[%i] = %i \n", lface, intersection_stat[lface]);
-        if (intersection_stat[lface] == PDM_POLYGON_INSIDE) {
-          n_intersect++;
-        }
+        // if (intersection_stat[lface] == PDM_POLYGON_INSIDE) {
+        //   n_intersect++;
+        // }
         lface++;
       } /* End face_vtx loop */
 
@@ -5654,19 +5628,12 @@ PDM_mesh_intersection_compute
     PDM_box_set_destroy (&boxes_mesh[0]);
     PDM_box_set_destroy (&boxes_mesh[1]);
 
-  }
-
-  else {
-
-    // if (mi->mesh_nodal[0] != NULL ||
-    //     mi->mesh_nodal[1] != NULL) {
-    //   PDM_error(__FILE__, __LINE__, 0, "Nodal version not implemented yet\n");
-    // }
+  } else {
 
     if(mi->dim_mesh[0] == 3 && mi->dim_mesh[1] == 3) {
-        _mesh_intersection_vol_vol(mi,
-                                   redistribute_box_a_to_box_b_idx,
-                                   redistribute_box_a_to_box_b);
+      _mesh_intersection_vol_vol(mi,
+                                 redistribute_box_a_to_box_b_idx,
+                                 redistribute_box_a_to_box_b);
     } else if(mi->dim_mesh[0] == 3 && mi->dim_mesh[1] == 2) {
       // On suppose que l'utilisateur met A = Vol et B = Surf
       _mesh_intersection_vol_surf(mi,
@@ -5925,14 +5892,6 @@ PDM_mesh_intersection_free
   PDM_free(mi);
 }
 
-/**
- * \brief Get part_to_part object to exchange data between the intersected meshes
- *
- * \param [in ] mi         Pointer to \ref PDM_mesh_intersection_t object
- * \param [out] ptp        Pointer to \ref PDM_part_to_part_t object
- * \param [in ] ownership  Ownership for ptp
- *
- */
 
 void
 PDM_mesh_intersection_part_to_part_get
@@ -5940,47 +5899,52 @@ PDM_mesh_intersection_part_to_part_get
  PDM_mesh_intersection_t  *mi,
  PDM_part_to_part_t      **ptp,
  PDM_ownership_t           ownership
- )
+)
 {
   *ptp = mi->ptp;
-  mi->ptp_ownership = ownership;
+  if(ownership != PDM_OWNERSHIP_BAD_VALUE) {
+    mi->ptp_ownership = ownership;
+  }
 }
 
 
 
-void
+int
 PDM_mesh_intersection_result_from_a_get
 (
        PDM_mesh_intersection_t  *mi,
- const int                       ipart,
+ const int                       i_part,
        int                     **elt_a_elt_b_idx,
        PDM_g_num_t             **elt_a_elt_b,
        double                  **elt_a_elt_b_volume
  )
 {
-  assert(ipart < mi->n_part_mesh[0]);
+  assert(i_part < mi->n_part_mesh[0]);
 
-  *elt_a_elt_b_idx    = mi->elt_a_elt_b_idx   [ipart];
-  *elt_a_elt_b        = mi->elt_a_elt_b       [ipart];
-  *elt_a_elt_b_volume = mi->elt_a_elt_b_volume[ipart];
+  *elt_a_elt_b_idx    = mi->elt_a_elt_b_idx   [i_part];
+  *elt_a_elt_b        = mi->elt_a_elt_b       [i_part];
+  *elt_a_elt_b_volume = mi->elt_a_elt_b_volume[i_part];
 
   mi->tag_elt_a_elt_b_get = 1;
+
+  return mi->n_elt_a[i_part];
 }
 
 
-void
+int
 PDM_mesh_intersection_result_from_b_get
 (
        PDM_mesh_intersection_t  *mi,
- const int                       ipart,
+ const int                       i_part,
        double                  **elt_b_elt_a_volume
  )
 {
-  assert(ipart < mi->n_part_mesh[1]);
+  assert(i_part < mi->n_part_mesh[1]);
 
-  *elt_b_elt_a_volume = mi->elt_b_elt_a_volume[ipart];
+  *elt_b_elt_a_volume = mi->elt_b_elt_a_volume[i_part];
 
   mi->tag_elt_b_elt_a_get = 1;
+  return mi->n_elt_b[i_part];
 }
 
 

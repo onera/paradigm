@@ -1,24 +1,13 @@
-#include <math.h>
-#include <sys/time.h>
-#include <time.h>
-#include <sys/resource.h>
-#include <unistd.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 #include <float.h>
 
-#include "pdm.h"
-#include "pdm_priv.h"
-
+#include "pdm_line.h"
 #include "pdm_plane.h"
 #include "pdm_polygon.h"
 #include "pdm_predicate.h"
-
-
-
-
+#include "pdm_priv.h"
 
 static void
 _compute_bounds_and_normal

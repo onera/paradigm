@@ -1,31 +1,21 @@
 /*----------------------------------------------------------------------------
  *  System headers
  *----------------------------------------------------------------------------*/
-#include <sys/resource.h>
-
-#include <math.h>
-#include <stdlib.h>
 #include <stdio.h>
-#include <assert.h>
-#include <string.h>
+#include <stdlib.h>
 
 /*----------------------------------------------------------------------------
  *  Local headers
  *----------------------------------------------------------------------------*/
 
+#include "pdm_point_cloud_gen.h"
 #include "pdm.h"
-#include "pdm_priv.h"
-#include "pdm_mpi.h"
-#include "pdm_printf.h"
+#include "pdm_distrib.h"
 #include "pdm_error.h"
 #include "pdm_gnum.h"
-#include "pdm_timer.h"
-#include "pdm_sort.h"
-#include "pdm_array.h"
-#include "pdm_logging.h"
-#include "pdm_distrib.h"
-
-#include "pdm_point_cloud_gen.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mpi.h"
+#include "pdm_priv.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -54,26 +44,6 @@ extern "C"
 /*=============================================================================
  * Public function definitions
  *============================================================================*/
-
-/**
- *
- * \brief Generate a uniformly random point cloud inside a cuboid.
- *
- * \param [in]   comm                   MPI Communicator id
- * \param [in]   seed                   Random seed
- * \param [in]   gn_pts                 Global number of points in the cloud
- * \param [in]   geometric_g_num        Compute global ids from coordinates
- * \param [in]   x_min                  X-coordinate of the first cuboid corner
- * \param [in]   y_min                  Y-coordinate of the first cuboid corner
- * \param [in]   z_min                  Z-coordinate of the first cuboid corner
- * \param [in]   x_max                  X-coordinate of the opposite cuboid corner
- * \param [in]   y_max                  Y-coordinate of the opposite cuboid corner
- * \param [in]   z_max                  Z-coordinate of the opposite cuboid corner
- * \param [out]  ln_pts                 Local number of points in the cloud
- * \param [out]  coord                  XYZ-coordinates of the local points
- * \param [out]  g_num                  Global ids of the local points
- *
- */
 
 void
 PDM_point_cloud_gen_random
@@ -212,28 +182,6 @@ PDM_dpoint_cloud_gen_random
 }
 
 
-
-
-/**
- *
- * \brief Generate a cartesian point cloud inside a cuboid.
- *
- * \param [in]   comm                   MPI Communicator id
- * \param [in]   nx                     Number of points in X-direction
- * \param [in]   ny                     Number of points in Y-direction
- * \param [in]   nz                     Number of points in Z-direction
- * \param [in]   x_min                  X-coordinate of the first cuboid corner
- * \param [in]   y_min                  Y-coordinate of the first cuboid corner
- * \param [in]   z_min                  Z-coordinate of the first cuboid corner
- * \param [in]   x_max                  X-coordinate of the opposite cuboid corner
- * \param [in]   y_max                  Y-coordinate of the opposite cuboid corner
- * \param [in]   z_max                  Z-coordinate of the opposite cuboid corner
- * \param [out]  n_pts                  Local number of points in the cloud
- * \param [out]  pts_coord              XYZ-coordinates of the local points
- * \param [out]  pts_ln_to_gn           Global ids of the local points
- *
- */
-
 void
 PDM_point_cloud_gen_cartesian
 (
@@ -350,3 +298,7 @@ PDM_dpoint_cloud_gen_cartesian
   *dpts_coord  = _pts_coord;
   *distrib_pts = distrib;
 }
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */

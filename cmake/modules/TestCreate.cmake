@@ -19,24 +19,10 @@ endfunction()
 
 function(test_create names n_procs LIST_TEST LIST_NRANK)
 
-  # NB: Faire le passage dans le -genv de MPI n'est pas équivalent à faire l'export avant ...
-  set (MPIEXEC_GENV_COMMAND      "")
-  set (MPIEXEC_GENV_PRELOAD      "")
-  set (MPIEXEC_GENV_PRELOAD_PATH "")
-  if (CMAKE_BUILD_TYPE STREQUAL "Sanitize")
-    execute_process(COMMAND gcc -print-file-name=libasan.so OUTPUT_VARIABLE PRELOAD_ASAN  OUTPUT_STRIP_TRAILING_WHITESPACE) 
-    # set(MPIEXEC_PREGENV_PRELOAD "-g env LD_PRELOAD ${PRELOAD_ASAN}") 
- 
-    set(MPIEXEC_GENV_COMMAND      "-genv")
-    set(MPIEXEC_GENV_PRELOAD      "LD_PRELOAD")
-    set(MPIEXEC_GENV_PRELOAD_PATH "${PRELOAD_ASAN}:${PDM_BINARY_DLCLOSE_DIR}/libdlclose.so")
- 
-  endif()
-
   set (command_test "")
 
   set (MPIEXEC_SPLIT "")
- 
+
   set (str_name "")
   set (str_n_proc "")
   set (str_sep "")
@@ -44,7 +30,7 @@ function(test_create names n_procs LIST_TEST LIST_NRANK)
   foreach(_name _n_proc IN ZIP_LISTS names n_procs)
     get_filename_component(_name_base ${_name} NAME_WE)
     get_filename_component(_name_ext ${_name} LAST_EXT)
-    
+
     set (PRE_EXE "")
     set (POST_EXE "")
 
@@ -73,7 +59,7 @@ function(test_create names n_procs LIST_TEST LIST_NRANK)
       if (NOT LAPACK_FOUND AND BLAS_FOUND)
         target_link_libraries(${_name_base} BLAS::BLAS)
       endif()
- 
+
     elseif (("${_name_ext}" STREQUAL ".f90") OR ("${_name_ext}" STREQUAL ".F90"))
       set (str_name "${str_name}${str_sep}${_name_base}")
       add_executable(${_name_base} ${_name})
@@ -99,11 +85,11 @@ function(test_create names n_procs LIST_TEST LIST_NRANK)
       set (PRE_EXE "${Python_EXECUTABLE}")
       set (POST_EXE ".py")
     else ()
-      message (FATAL_ERROR "unknown extension file ${_name_ext} ${_name}") 
+      message (FATAL_ERROR "unknown extension file ${_name_ext} ${_name}")
     endif()
-      
+
     if (NOT test_name)
-      set (test_name ${_name_base})    
+      set (test_name ${_name_base})
     endif()
 
     list (APPEND target_exe ${_name_base})
@@ -111,7 +97,7 @@ function(test_create names n_procs LIST_TEST LIST_NRANK)
     set (MPIEXEC_SPLIT ":")
     set (str_sep ":")
   endforeach()
-  
+
   add_test (${test_name} ${MPIEXEC} ${command_test} ${MPIEXEC_POSTFLAGS})
 
   set (${LIST_TEST} ${${LIST_TEST}} PARENT_SCOPE)
@@ -121,6 +107,7 @@ function(test_create names n_procs LIST_TEST LIST_NRANK)
 
   if (CMAKE_BUILD_TYPE STREQUAL "Sanitize")
     list(APPEND LIST_TEST_ENV "LSAN_OPTIONS=suppressions=${PDM_SOURCE_DIR}/script/asan/asan.supp")
+    list(APPEND LIST_TEST_ENV "UBSAN_OPTIONS=print_stacktrace=1:halt_on_error=0")
   endif()
 
   if(DEFINED ENV{PATH})
@@ -163,21 +150,6 @@ function(test_c_create name n_proc LIST_TEST LIST_NRANK)
    endif()
    #endif()
 
-   # NB: Faire le passage dans le -genv de MPI n'est pas équivalent à faire l'export avant ...
-   set (MPIEXEC_GENV_COMMAND      "")
-   set (MPIEXEC_GENV_PRELOAD      "")
-   set (MPIEXEC_GENV_PRELOAD_PATH "")
-   if (CMAKE_BUILD_TYPE STREQUAL "Sanitize")
-     execute_process(COMMAND gcc -print-file-name=libasan.so OUTPUT_VARIABLE PRELOAD_ASAN OUTPUT_STRIP_TRAILING_WHITESPACE)
-     # set(MPIEXEC_PREGENV_PRELOAD "-genv LD_PRELOAD ${PRELOAD_ASAN}")
-
-     set(MPIEXEC_GENV_COMMAND      "-genv")
-     set(MPIEXEC_GENV_PRELOAD      "LD_PRELOAD")
-     set(MPIEXEC_GENV_PRELOAD_PATH "${PRELOAD_ASAN}:${PDM_BINARY_DLCLOSE_DIR}/libdlclose.so")
-
-   endif()
-
-
    install(TARGETS ${name} RUNTIME DESTINATION bin)
 
    add_test (${name} ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${n_proc}
@@ -201,6 +173,7 @@ function(test_c_create name n_proc LIST_TEST LIST_NRANK)
     # set(PYTHON_TEST_ENV "LD_PRELOAD=${PYTHON_TEST_ENV1} ${CMAKE_BINARY_DIR}/script/asan/fake_dlclose/libdlclose.so")
     # list(APPEND LIST_TEST_ENV "${PYTHON_TEST_ENV}")
     list(APPEND LIST_TEST_ENV "LSAN_OPTIONS=suppressions=${PDM_SOURCE_DIR}/script/asan/asan.supp")
+    list(APPEND LIST_TEST_ENV "UBSAN_OPTIONS=print_stacktrace=1:halt_on_error=0")
   endif()
 
   if(DEFINED ENV{PATH})
@@ -242,24 +215,6 @@ function(test_fortran_create name n_proc LIST_TEST LIST_NRANK)
     target_link_libraries(${name} BLAS::BLAS)
   endif()
 
-
-
-  # NB: Faire le passage dans le -genv de MPI n'est pas équivalent à faire l'export avant ...
-  set (MPIEXEC_GENV_COMMAND      "")
-  set (MPIEXEC_GENV_PRELOAD      "")
-  set (MPIEXEC_GENV_PRELOAD_PATH "")
-  if (CMAKE_BUILD_TYPE STREQUAL "Sanitize")
-    execute_process(COMMAND gcc -print-file-name=libasan.so OUTPUT_VARIABLE PRELOAD_ASAN OUTPUT_STRIP_TRAILING_WHITESPACE)
-    # set(MPIEXEC_PREGENV_PRELOAD "-genv LD_PRELOAD ${PRELOAD_ASAN}")
-
-    set(MPIEXEC_GENV_COMMAND      "-genv")
-    set(MPIEXEC_GENV_PRELOAD      "LD_PRELOAD")
-    set(MPIEXEC_GENV_PRELOAD_PATH "${PRELOAD_ASAN}:${PDM_BINARY_DLCLOSE_DIR}/libdlclose.so")
-
-  endif()
-
-
-
   install(TARGETS ${name} RUNTIME DESTINATION bin)
   add_test (${name} ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${n_proc}
             ${MPIEXEC_PREFLAGS}
@@ -281,6 +236,7 @@ function(test_fortran_create name n_proc LIST_TEST LIST_NRANK)
     # list(APPEND LIST_TEST_ENV "${PYTHON_TEST_ENV}")
 
     list(APPEND LIST_TEST_ENV "LSAN_OPTIONS=suppressions=${PDM_SOURCE_DIR}/script/asan/asan.supp")
+    list(APPEND LIST_TEST_ENV "UBSAN_OPTIONS=print_stacktrace=1:halt_on_error=0")
   endif()
 
   if(DEFINED ENV{PATH})
@@ -301,26 +257,17 @@ function(test_python_create name n_proc LIST_TEST LIST_NRANK)
   add_custom_target(${name}
                       DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${name}.py)
 
-  # NB: Faire le passage dans le -genv de MPI n'est pas équivalent à faire l'export avant ...
-  set (MPIEXEC_GENV_COMMAND      "")
-  set (MPIEXEC_GENV_PRELOAD      "")
-  set (MPIEXEC_GENV_PRELOAD_PATH "")
-  if (CMAKE_BUILD_TYPE STREQUAL "Sanitize")
-    execute_process(COMMAND gcc -print-file-name=libasan.so OUTPUT_VARIABLE PRELOAD_ASAN OUTPUT_STRIP_TRAILING_WHITESPACE)
-     # set(MPIEXEC_PREGENV_PRELOAD "-genv LD_PRELOAD ${PRELOAD_ASAN}")
-
-    set(MPIEXEC_GENV_COMMAND      "-genv")
-    set(MPIEXEC_GENV_PRELOAD      "LD_PRELOAD")
-    set(MPIEXEC_GENV_PRELOAD_PATH "${PRELOAD_ASAN}:${PDM_BINARY_DLCLOSE_DIR}/libdlclose.so")
-  endif()
-
   add_test (${name} ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${n_proc}
             ${MPIEXEC_PREFLAGS}
             ${MPIEXEC_GENV_COMMAND}
             ${MPIEXEC_GENV_PRELOAD}
             ${MPIEXEC_GENV_PRELOAD_PATH}
-            python ${CMAKE_CURRENT_BINARY_DIR}/${name}.py
+            ${Python_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/${name}.py
             ${MPIEXEC_POSTFLAGS})
+
+  if (TARGET Pypdm)
+    add_dependencies(${name} Pypdm)
+  endif ()
 
   add_test_pdm_run (${name} ${n_proc} ${LIST_TEST} ${LIST_NRANK})
     set (${LIST_TEST} ${${LIST_TEST}} PARENT_SCOPE)
@@ -333,6 +280,7 @@ function(test_python_create name n_proc LIST_TEST LIST_NRANK)
     # set(PYTHON_TEST_ENV "LD_PRELOAD=${PYTHON_TEST_ENV1} ${CMAKE_BINARY_DIR}/script/asan/fake_dlclose/libdlclose.so")
     # list(APPEND LIST_TEST_ENV "${PYTHON_TEST_ENV}")
     list(APPEND LIST_TEST_ENV "LSAN_OPTIONS=suppressions=${PDM_SOURCE_DIR}/script/asan/asan.supp")
+    list(APPEND LIST_TEST_ENV "UBSAN_OPTIONS=print_stacktrace=1:halt_on_error=0")
   endif()
 
   if(DEFINED ENV{PYTHONPATH})
@@ -398,6 +346,7 @@ function(test_cpp_unit_create name n_proc LIST_TEST LIST_NRANK)
     # list(APPEND LIST_TEST_ENV "${PYTHON_TEST_ENV}")
 
     list(APPEND LIST_TEST_ENV "LSAN_OPTIONS=suppressions=${PDM_SOURCE_DIR}/script/asan/asan.supp")
+    list(APPEND LIST_TEST_ENV "UBSAN_OPTIONS=print_stacktrace=1:halt_on_error=0")
   endif()
 
   if (LIST_TEST_ENV)
@@ -434,6 +383,7 @@ function(test_cpp_create name n_proc LIST_TEST LIST_NRANK)
     # set(PYTHON_TEST_ENV "LD_PRELOAD=${PYTHON_TEST_ENV1} ${CMAKE_BINARY_DIR}/script/asan/fake_dlclose/libdlclose.so")
     # list(APPEND LIST_TEST_ENV "${PYTHON_TEST_ENV}")
     list(APPEND LIST_TEST_ENV "LSAN_OPTIONS=suppressions=${PDM_SOURCE_DIR}/script/asan/asan.supp")
+    list(APPEND LIST_TEST_ENV "UBSAN_OPTIONS=print_stacktrace=1:halt_on_error=0")
   endif()
 
   if (LIST_TEST_ENV)

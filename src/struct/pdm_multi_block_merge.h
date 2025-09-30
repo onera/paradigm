@@ -9,13 +9,14 @@
  * Standard C library headers
  *----------------------------------------------------------------------------*/
 
+#include <stddef.h>
+
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
 #include "pdm_mpi.h"
-#include "pdm_io.h"
 
 /*=============================================================================
  * Macro definition
@@ -124,40 +125,6 @@ PDM_multi_block_merge_exch_and_update
  int                     **merge_block_stride,
  PDM_g_num_t             **merge_block_data
 );
-
-// void
-// PDM_multi_block_merge_reorder_block_hilbert
-// (
-//  PDM_multi_block_merge_t  *mbm,
-//  double                   *block_coord,
-//  double                   *padd_coord
-// );
-
-// PDM_g_num_t*
-// PDM_multi_block_merge_compute_old_to_new
-// (
-//  PDM_multi_block_merge_t  *mbm
-// );
-
-// void
-// PDM_multi_block_merge_get_old_to_new
-// (
-//  PDM_multi_block_merge_t  *mbm,
-//  int                **dold_to_new_idx,
-//  PDM_g_num_t        **dold_to_new
-// );
-
-// int
-// PDM_multi_block_merge_get_n_block
-// (
-//  PDM_multi_block_merge_t  *mbm
-// );
-
-// PDM_g_num_t*
-// PDM_multi_block_merge_get_parent_blk_g_num
-// (
-//  PDM_multi_block_merge_t  *mbm
-// );
 
 /**
  * \brief Create a redistribute structure

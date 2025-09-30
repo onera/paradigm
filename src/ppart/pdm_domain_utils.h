@@ -84,10 +84,6 @@ PDM_offset_ln_to_gn_by_domain
   int              sens
 );
 
-
-
-
-
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

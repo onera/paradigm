@@ -2,40 +2,37 @@
  * Standard C library headers
  *----------------------------------------------------------------------------*/
 
+#include <assert.h>
+#include <float.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
-#include <math.h>
-#include <float.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
-
-#include "pdm_mpi.h"
+#include "pdm_dbbtree.h"
 #include "pdm.h"
-#include "pdm_morton.h"
-#include "pdm_mpi.h"
-#include "pdm_box.h"
-#include "pdm_sort.h"
 #include "pdm_array.h"
-#include "pdm_hash_tab.h"
+#include "pdm_binary_search.h"
+#include "pdm_block_to_part.h"
+#include "pdm_box.h"
 #include "pdm_box_priv.h"
 #include "pdm_box_tree.h"
-#include "pdm_dbbtree.h"
-#include "pdm_dbbtree_priv.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
-#include "pdm_priv.h"
-#include "pdm_distrib.h"
-#include "pdm_vtk.h"
-#include "pdm_part_to_block.h"
-#include "pdm_block_to_part.h"
 #include "pdm_box_tree_priv.h"
-#include "pdm_timer.h"
+#include "pdm_dbbtree_priv.h"
+#include "pdm_distrib.h"
+#include "pdm_hash_tab.h"
 #include "pdm_logging.h"
-#include "pdm_binary_search.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mpi.h"
+#include "pdm_part_geom.h"
+#include "pdm_part_to_block.h"
+#include "pdm_printf.h"
+#include "pdm_priv.h"
+#include "pdm_sort.h"
 #include "pdm_unique.h"
+#include "pdm_vtk.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -47,10 +44,6 @@ extern "C" {
 /*=============================================================================
  * Macro definitions
  *============================================================================*/
-
-#define _MIN(a,b)   ((a) < (b) ?  (a) : (b))  /* Minimum of a et b */
-
-#define _MAX(a,b)   ((a) > (b) ?  (a) : (b))  /* Maximum of a et b */
 
 /*============================================================================
  * Type
@@ -168,7 +161,7 @@ _update_bt_statistics
   bts->dim = dim;
 
   for (i = 0; i < 3; i++)
-    bts->mem_required[i] = _MAX(bts->mem_required[i], mem_required[i]);
+    bts->mem_required[i] = PDM_MAX(bts->mem_required[i], mem_required[i]);
 }
 
 
@@ -1286,9 +1279,8 @@ PDM_dbbtree_boxes_set_with_init_location
 
     for (int i = 0; i < n_boxes; i++) {
       for (int k1 = 0; k1 < _dbbt->dim; k1++) {
-        gExtents[k1]   = _MIN (gExtents[k1], extents2[s_extents * i + k1]);
-        gExtents[_dbbt->dim+k1] = _MAX (gExtents[_dbbt->dim+k1], extents2[s_extents * i
-                                                                          + _dbbt->dim + k1]);
+        gExtents[k1]   = PDM_MIN (gExtents[k1], extents2[s_extents * i + k1]);
+        gExtents[_dbbt->dim+k1] = PDM_MAX (gExtents[_dbbt->dim+k1], extents2[s_extents * i + _dbbt->dim + k1]);
       }
     }
 
@@ -1610,9 +1602,8 @@ PDM_dbbtree_boxes_set_for_intersect_line
 
     for (int i = 0; i < n_boxes; i++) {
       for (int k1 = 0; k1 < _dbbt->dim; k1++) {
-        gExtents[k1]   = _MIN (gExtents[k1], extents2[s_extents * i + k1]);
-        gExtents[_dbbt->dim+k1] = _MAX (gExtents[_dbbt->dim+k1], extents2[s_extents * i
-                                                                          + _dbbt->dim + k1]);
+        gExtents[k1]   = PDM_MIN (gExtents[k1], extents2[s_extents * i + k1]);
+        gExtents[_dbbt->dim+k1] = PDM_MAX (gExtents[_dbbt->dim+k1], extents2[s_extents * i + _dbbt->dim + k1]);
       }
     }
 
@@ -2243,7 +2234,7 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
 
     // identify ranks to be copied
     double threshold_n_req = RANK_COPY_threshold*mean_n_requests;
-    int max_copied_ranks   = (int) _MAX (1, RANK_COPY_max_copies*lComm);
+    int max_copied_ranks   = (int) PDM_MAX (1, RANK_COPY_max_copies*lComm);
 
     n_copied_ranks = 0;
     PDM_malloc(copied_ranks, max_copied_ranks, int);
@@ -3638,7 +3629,7 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get_async
 
     // identify ranks to be copied
     double threshold_n_req = RANK_COPY_threshold*mean_n_requests;
-    int max_copied_ranks   = (int) _MAX (1, RANK_COPY_max_copies*lComm);
+    int max_copied_ranks   = (int) PDM_MAX (1, RANK_COPY_max_copies*lComm);
 
     n_copied_ranks = 0;
     PDM_malloc(copied_ranks, max_copied_ranks, int);

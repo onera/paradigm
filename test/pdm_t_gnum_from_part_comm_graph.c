@@ -6,40 +6,26 @@
  * Standard C library headers
  *----------------------------------------------------------------------------*/
 
-#include <assert.h>
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
-#include <stdbool.h>
+#include <string.h>
 
 /*----------------------------------------------------------------------------
  * Header for the current file
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
-#include "pdm_priv.h"
-#include "pdm_mpi.h"
-#include "pdm_config.h"
-#include "pdm_printf.h"
-#include "pdm_binary_search.h"
-#include "pdm_sort.h"
-#include "pdm_array.h"
-#include "pdm_timer.h"
 #include "pdm_distrib.h"
-#include "pdm_gnum.h"
-#include "pdm_part_to_part.h"
-#include "pdm_part_to_block.h"
-#include "pdm_para_octree.h"
-#include "pdm_closest_points.h"
-#include "pdm_dist_cloud_surf.h"
-
-#include "pdm_extract_part.h"
-#include "pdm_vtk.h"
 #include "pdm_generate_mesh.h"
-#include "pdm_partitioning_algorithm.h"
-#include "pdm_logging.h"
-#include "pdm_distant_neighbor.h"
+#include "pdm_gnum.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mesh_nodal.h"
+#include "pdm_mpi.h"
 #include "pdm_part_comm_graph.h"
+#include "pdm_partitioning_algorithm.h"
+#include "pdm_printf.h"
+#include "pdm_vtk.h"
+#include "pdm_priv.h"
 
 /*============================================================================
  * Macro definitions
@@ -193,9 +179,6 @@ _generate_gnum
   PDM_gnum_free(gnum);
 }
 
-
-
-
 /*=============================================================================
  * Test-specific function definitions
  *============================================================================*/
@@ -210,12 +193,12 @@ int main(int argc, char *argv[])
 {
   PDM_MPI_Init(&argc, &argv);
 
-  PDM_g_num_t n_vtx_seg               = 30;
-  double      length                  = 1.;
-  double      zero_x                  = -length/2;
-  double      zero_y                  = -length/2;
-  double      zero_z                  = -length/2;
-  int         n_part                  = 1;
+  PDM_g_num_t n_vtx_seg = 30;
+  double      length    = 1.;
+  double      zero_x    = -length/2;
+  double      zero_y    = -length/2;
+  double      zero_z    = -length/2;
+  int         n_part    = 1;
 
   _read_args(argc,
              argv,
@@ -226,9 +209,8 @@ int main(int argc, char *argv[])
    * Generate a cube
    */
   PDM_MPI_Comm comm = PDM_MPI_COMM_WORLD;
-  int n_rank;
+
   int i_rank;
-  PDM_MPI_Comm_size(comm, &n_rank);
   PDM_MPI_Comm_rank(comm, &i_rank);
 
   int n_g_part = 0;
@@ -324,6 +306,7 @@ int main(int argc, char *argv[])
   PDM_part_comm_graph_t *pgc_vtx = PDM_part_comm_graph_create(n_part,
                                                               pn_vtx_bound,
                                                               pvtx_bound,
+                                                              PDM_OWNERSHIP_USER,
                                                               comm);
   PDM_free(pn_vtx_bound);
 
@@ -353,6 +336,7 @@ int main(int argc, char *argv[])
   PDM_part_comm_graph_t *pgc_edge = PDM_part_comm_graph_create(n_part,
                                                                pn_edge_bound,
                                                                pedge_bound,
+                                                               PDM_OWNERSHIP_USER,
                                                                comm);
   PDM_free(pn_edge_bound);
 
@@ -384,6 +368,7 @@ int main(int argc, char *argv[])
   PDM_part_comm_graph_t *pgc_face = PDM_part_comm_graph_create(n_part,
                                                                pn_face_bound,
                                                                pface_bound,
+                                                               PDM_OWNERSHIP_USER,
                                                                comm);
   PDM_free(pn_face_bound);
 
@@ -463,7 +448,6 @@ int main(int argc, char *argv[])
   }
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    // PDM_log_trace_array_long(pnew_vtx_ln_to_gn[i_part], pn_vtx[i_part], "pnew_vtx_ln_to_gn : ");
     free(pnew_vtx_ln_to_gn[i_part]);
   }
   free(pnew_vtx_ln_to_gn);
@@ -592,7 +576,6 @@ int main(int argc, char *argv[])
   PDM_free(pface_bound_part_idx);
   PDM_free(pface_bound         );
   PDM_free(pinternal_face_priority);
-
 
   for (int i_part = 0; i_part < n_part; i_part++) {
     PDM_free(pvtx_coord            [i_part]);

@@ -224,18 +224,19 @@ PDM_mesh_intersection_part_to_part_get
  * \brief Get intersection result for the a point of view
  *
  * \param [in ] mi                 Pointer to \ref PDM_mesh_intersection_t object
- * \param [out] ipart              Partition index
+ * \param [out] i_part             Partition index
  * \param [out] elt_a_elt_b_idx    Index of list of intersected B elements for each A element 
  * \param [out] elt_a_elt_b        List of intersected B elements for each A element 
  * \param [out] elt_a_elt_b_volume Volume of each intersection 
  *
+ * \return Number of element in partition of mesh A
  */
 
-void
+int
 PDM_mesh_intersection_result_from_a_get
 (
        PDM_mesh_intersection_t  *mi,
- const int                       ipart,
+ const int                       i_part,
        int                     **elt_a_elt_b_idx,
        PDM_g_num_t             **elt_a_elt_b,
        double                  **elt_a_elt_b_volume
@@ -249,18 +250,19 @@ PDM_mesh_intersection_result_from_a_get
  * TODO: Do as PDM_mesh_intersection_result_from_a_get
  *
  * \param [in ] mi                 Pointer to \ref PDM_mesh_intersection_t object
- * \param [out] ipart              Partition index
+ * \param [out] i_part             Partition index
  * \param [out] elt_a_elt_b_idx    Index of list of intersected B elements for each A element 
  * \param [out] elt_a_elt_b        List of intersected B elements for each A element 
  * \param [out] elt_a_elt_b_volume Volume of each intersection 
  *
+ * \return Number of element in partition of mesh B
  */
 
-void
+int
 PDM_mesh_intersection_result_from_b_get
 (
        PDM_mesh_intersection_t  *mi,
- const int                       ipart,
+ const int                       i_part,
        double                  **elt_b_elt_a_volume
  );
 

@@ -55,7 +55,7 @@ typedef enum {
 
 /**
  *
- * \brief Create a part extension structure
+ * \brief Create a Part Extension structure
  *
  * \param [in] n_domain      Number of domains
  * \param [in] n_part        Number of partitions per domain

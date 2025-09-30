@@ -1,28 +1,32 @@
-#include <math.h>
-#include <sys/time.h>
-#include <time.h>
-#include <sys/resource.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+
+/*----------------------------------------------------------------------------
+ * Standard C library headers
+ *----------------------------------------------------------------------------*/
+
 #include <assert.h>
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/time.h>
+
+/*----------------------------------------------------------------------------
+ * Header for the current file
+ *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
-#include "pdm_config.h"
-#include "pdm_mpi.h"
-#include "pdm_partitioning_algorithm.h"
-#include "pdm_para_graph_dual.h"
-#include "pdm_dmesh_nodal_to_dmesh.h"
-#include "pdm_dmesh_nodal_elements_utils.h"
 #include "pdm_dconnectivity_transform.h"
-#include "pdm_part_connectivity_transform.h"
 #include "pdm_dcube_gen.h"
-#include "pdm_printf.h"
-#include "pdm_sort.h"
 #include "pdm_distrib.h"
-#include "pdm_error.h"
+#include "pdm_dmesh_nodal_elements_utils.h"
+#include "pdm_dmesh_nodal_to_dmesh.h"
 #include "pdm_logging.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mpi.h"
+#include "pdm_para_graph_dual.h"
+#include "pdm_part_connectivity_transform.h"
+#include "pdm_partitioning_algorithm.h"
+#include "pdm_printf.h"
 #include "pdm_priv.h"
 
 /*============================================================================
@@ -613,12 +617,12 @@ int main(int argc, char *argv[])
   int           dn_face;
   int           dn_vtx;
   int           n_face_group;
-  PDM_g_num_t  *dface_cell = NULL;
-  int          *dface_vtx_idx = NULL;
-  PDM_g_num_t  *dface_vtx = NULL;
-  double       *dvtx_coord = NULL;
+  PDM_g_num_t  *dface_cell      = NULL;
+  int          *dface_vtx_idx   = NULL;
+  PDM_g_num_t  *dface_vtx       = NULL;
+  double       *dvtx_coord      = NULL;
   int          *dface_group_idx = NULL;
-  PDM_g_num_t  *dface_group = NULL;
+  PDM_g_num_t  *dface_group     = NULL;
   int           dface_vtxL;
   int           dFaceGroupL;
 
@@ -651,46 +655,6 @@ int main(int argc, char *argv[])
                           &dvtx_coord,
                           &dface_group_idx,
                           &dface_group);
-
-  if (0 == 1) {
-
-    PDM_printf("[%i] n_face_group    : %i\n", i_rank, n_face_group);
-    PDM_printf("[%i] dn_cell        : %i\n", i_rank, dn_cell);
-    PDM_printf("[%i] dn_face        : %i\n", i_rank, dn_face);
-    PDM_printf("[%i] dn_vtx         : %i\n", i_rank, dn_vtx);
-
-    PDM_printf("[%i] dface_cell     : ", i_rank);
-    for (int i = 0; i < 2 * dn_face; i++)
-      PDM_printf(" "PDM_FMT_G_NUM, dface_cell[i]);
-    PDM_printf("\n");
-
-    PDM_printf("[%i] dface_vtx_idx   : ", i_rank);
-    for (int i = 0; i < dn_face + 1; i++)
-      PDM_printf(" %i", dface_vtx_idx[i]);
-    PDM_printf("\n");
-
-    PDM_printf("[%i] dface_vtx      : ", i_rank);
-    for (int i = 0; i < dface_vtx_idx[dn_face]; i++)
-      PDM_printf(" "PDM_FMT_G_NUM, dface_vtx[i]);
-    PDM_printf("\n");
-
-    PDM_printf("[%i] dvtx_coord     : ", i_rank);
-    for (int i = 0; i < 3*dn_vtx; i++)
-      PDM_printf(" %12.5e", dvtx_coord[i]);
-    PDM_printf("\n");
-
-    PDM_printf("[%i] dface_group_idx : ", i_rank);
-    for (int i = 0; i < n_face_group + 1; i++)
-      PDM_printf(" %i", dface_group_idx[i]);
-    PDM_printf("\n");
-
-    PDM_printf("[%i] dface_group    : ", i_rank);
-    for (int i = 0; i < dface_group_idx[n_face_group]; i++)
-      PDM_printf(" "PDM_FMT_G_NUM, dface_group[i]);
-    PDM_printf("\n");
-
-  }
-
   /*
    *  Create mesh partitions
    */
@@ -704,13 +668,13 @@ int main(int argc, char *argv[])
    */
   int n_edge_elt_tot = dface_vtx_idx[dn_face];
   PDM_g_num_t *tmp_dface_edge;
-  PDM_malloc(tmp_dface_edge,     n_edge_elt_tot    ,PDM_g_num_t);
-  int *tmp_parent_elmt_pos;
-  PDM_malloc(tmp_parent_elmt_pos,     n_edge_elt_tot    ,int        );
-  int *tmp_dface_edge_vtx_idx;
-  PDM_malloc(tmp_dface_edge_vtx_idx, ( n_edge_elt_tot + 1) ,int        );
+  int         *tmp_parent_elmt_pos;
+  int         *tmp_dface_edge_vtx_idx;
   PDM_g_num_t *tmp_dface_edge_vtx;
-  PDM_malloc(tmp_dface_edge_vtx, 2 * n_edge_elt_tot    ,PDM_g_num_t);
+  PDM_malloc(tmp_dface_edge        ,     n_edge_elt_tot    , PDM_g_num_t);
+  PDM_malloc(tmp_parent_elmt_pos   ,     n_edge_elt_tot    , int        );
+  PDM_malloc(tmp_dface_edge_vtx_idx, ( n_edge_elt_tot + 1) , int        );
+  PDM_malloc(tmp_dface_edge_vtx    , 2 * n_edge_elt_tot    , PDM_g_num_t);
 
   int n_elmt_current = 0;
   int n_edge_current = 0;
@@ -778,20 +742,6 @@ int main(int argc, char *argv[])
     PDM_log_trace_array_long(dface_edge, dface_edge_idx[dn_face], "dface_edge::");
   }
 
-  // int flags = PDM_PART_FACE_CELL|PDM_PART_CELL_FACE;
-  // printf("PDM_HASFLAG(flags, PDM_PART_FACE_CELL) :: %d\n", PDM_HASFLAG(flags, PDM_PART_FACE_CELL) );
-  // printf("PDM_HASFLAG(flags, PDM_PART_CELL_FACE) :: %d\n", PDM_HASFLAG(flags, PDM_PART_CELL_FACE) );
-  // printf("PDM_HASFLAG(flags, PDM_PART_FACE_VTX) :: %d\n" , PDM_HASFLAG(flags, PDM_PART_FACE_VTX) );
-  // printf("x::PDM_HASFLAG(flags, PDM_PART_FACE_VTX) :: %x\n", PDM_PART_FACE_VTX);
-
-  gettimeofday(&t_elaps_debut, NULL);
-
-  // printf("part_distribution::\n");
-  // for(int i_part = 0; i_part < n_rank+1; ++i_part){
-  //   printf("%d ", part_distribution[i_part]);
-  // }
-  // printf("\n");
-
   /*
    * Compute dual graph
    */
@@ -809,80 +759,20 @@ int main(int argc, char *argv[])
                     (int        **) &dcell_face_idx,
                     (PDM_g_num_t**) &dcell_face);
 
-  // Test graph creation from cell_face connectivity
-  if (0 == 1) {
-
-    if (0 == 1) {
-      printf("dcell_face_idx :");
-      for (int i =0; i < dn_cell+1; i++)
-        printf(" %d", dcell_face_idx[i]);
-      printf("\n");
-
-      printf("dcell_face:: %d \n", dn_cell);
-      for(int i = 0; i < dn_cell; ++i){
-        printf("Local cell %d :", i);
-        for(int j = dcell_face_idx[i]; j < dcell_face_idx[i+1]; ++j){
-          printf(" "PDM_FMT_G_NUM"", dcell_face[j]);
-        }
-        PDM_printf("\n");
-      }
-    }
-
-    PDM_free(dual_graph_idx);
-    PDM_free(dual_graph);
-    dual_graph_idx = NULL;
-    dual_graph = NULL;
-
-    PDM_para_graph_dual_from_node2arc(comm,
-                                      cell_distribution,
-                                      face_distribution,
-                                      dcell_face_idx,
-                                      dcell_face,
-                      (PDM_g_num_t**) &dual_graph_idx,
-                      (PDM_g_num_t**) &dual_graph);
-  }
-
   if (post) {
     PDM_log_trace_array_long(dual_graph_idx, dn_cell+1              , "pdm_t_partitioning_dcube::dual_graph_idx::");
     PDM_log_trace_array_long(dual_graph    , dual_graph_idx[dn_cell], "pdm_t_partitioning_dcube::dual_graph::");
   }
 
-  //PDM_free(dual_graph_idx);
-  //PDM_free(dual_graph);
-  // mpirun -np 2 ./paradigm/test/pdm_t_partitioning_dcube -n 23 -n_part 1 -parmetis
-  // PDM_para_graph_dual_from_combine_connectivity(comm,
-  //                                               cell_distribution,
-  //                                               face_distribution,
-  //                                               vtx_distribution,
-  //                                               dcell_face_idx,
-  //                                               dcell_face,
-  //                                               dface_vtx_idx,
-  //                                               dface_vtx,
-  //                              (PDM_g_num_t**) &dual_graph_idx,
-  //                              (PDM_g_num_t**) &dual_graph);
-
   /*
    * Split it !!! CAUTION dn_cell can be different of the size of dual graph !!!
    */
-  // printf("PDM_split_graph\n");
-  int *cell_part;
-  PDM_malloc(cell_part,dn_cell ,int);
-  int *dcell_weight;
-  PDM_malloc(dcell_weight,dn_cell ,int);
+  int *cell_part    = NULL;
+  int *dcell_weight = NULL;
+  PDM_malloc(cell_part   , dn_cell, int);
+  PDM_malloc(dcell_weight, dn_cell, int);
   for(int i = 0; i < dn_cell; ++i){
     dcell_weight[i] = dual_graph_idx[i+1] - dual_graph_idx[i];
-  }
-
-  if( 0 == 1 ){
-    printf("n_cell_block:: %d \n", dn_cell);
-    for(int i = 0; i < dn_cell; ++i){
-      printf(" dual_graph_idx = "PDM_FMT_G_NUM" ---> \n", dual_graph_idx[i]);
-      for(int i_data = dual_graph_idx[i]; i_data < dual_graph_idx[i+1]; ++i_data){
-        // printf("%d ", dual_graph[i_data]);
-        printf("\t dual_graph[%d] = "PDM_FMT_G_NUM" \n", i_data, dual_graph[i_data]);
-      }
-      printf("\n");
-    }
   }
 
   int tn_part = part_distribution[n_rank];
@@ -911,14 +801,6 @@ int main(int argc, char *argv[])
                         cell_part,
                         comm);
 
-  // abort();
-  if (0 == 1){
-    printf("cell_part[%d]::", dn_cell);
-    for(int i = 0; i < dn_cell; ++i){
-      printf("%d ", cell_part[i]);
-    }
-    printf("\n");
-  }
   if (part_frac != NULL){
     PDM_free(part_frac);
   }
@@ -943,23 +825,6 @@ int main(int argc, char *argv[])
                                     (int ** )  &pn_cell,
                             (PDM_g_num_t ***)  &pcell_ln_to_gn,
                                                 NULL);
-  /*
-   * Tentative extented partition
-   */
-  // PDM_g_num_t** pcell_ln_to_gn_extented;
-  // int*          pn_cell_extented;
-
-  // PDM_extend_mesh(comm,
-  //                 part_distribution,
-  //                 cell_distribution,
-  //                 cell_part,
-  //                 n_res_part,
-  //                 dual_graph_idx,
-  //                 dual_graph,
-  //                 pn_cell,
-  //                 pcell_ln_to_gn,
-  //                &pn_cell_extented,
-  //                &pcell_ln_to_gn_extented);
 
   // pn_cell        = pn_cell_extented;
   // pcell_ln_to_gn = pcell_ln_to_gn_extented;
@@ -1000,39 +865,9 @@ int main(int argc, char *argv[])
             (const int ** )  pcell_face,
             (      int ***) &pface_cell);
 
-  // int *face_cell_idx;
-  // PDM_malloc(face_cell_idx, (pn_faces[0] + 1 ) ,int);
-  // int *face_cell;
-  // PDM_malloc(face_cell, (2 * pn_faces[0] ) ,int);
-  // int idx = 0;
-  // face_cell_idx[0] = 0;
-  // for(int i_face = 0; i_face < pn_faces[0]; ++i_face) {
-  //   face_cell_idx[i_face+1] = face_cell_idx[i_face];
-  //   if(pface_cell[0][2*i_face + 1 ] == 0) {
-  //     face_cell_idx[i_face+1]++;
-  //     face_cell[idx++] = pface_cell[0][2*i_face];
-  //   } else {
-  //     face_cell_idx[i_face+1] += 2;
-  //     face_cell[idx++] = pface_cell[0][2*i_face  ];
-  //     face_cell[idx++] = pface_cell[0][2*i_face+1];
-  //   }
-  // }
-
-  // PDM_log_trace_array_int(pface_cell[0]    ,  2 * pn_faces[0]    , "pface_cell::");
-  // PDM_log_trace_array_int(pcell_face_idx[0], pn_cell[0]+1                 , "pcell_face_idx::");
-  // PDM_log_trace_array_int(pcell_face[0]    , pcell_face_idx[0][pn_cell[0]], "pcell_face::");
-
-  // printf("pn_faces[0] = % i  \n", pn_faces[0]);
-  // printf("pn_cell[0]  = % i  \n",pn_cell[0] );
-  // PDM_log_trace_array_int(face_cell_idx, pn_faces[0]+1, "face_cell_idx::");
-  // PDM_log_trace_array_int(face_cell, face_cell_idx[pn_faces[0]], "face_cell::");
-  //PDM_free(face_cell_idx);
-  //PDM_free(face_cell);
-
   /*
    * Generate vtx
    */
-
   int** pface_vtx_idx;
   int** pface_vtx;
   int*  pn_vtx;
@@ -1126,20 +961,6 @@ int main(int argc, char *argv[])
                                   pface_edge,
                                   &pedge_face_idx,
                                   &pedge_face);
-
-  if (0 == 1){
-    for (int i_part=0; i_part < n_res_part; i_part++){
-      PDM_printf("[%i] generated edge_face part %i [%i]: \n", i_rank, i_part, pn_edge[i_part]);
-      for (int iedge=0 ; iedge < pn_edge[i_part]; iedge++) {
-        PDM_printf(" [%i] -> ", iedge);
-        for( int idx_face = pedge_face_idx[i_part][iedge]; idx_face < pedge_face_idx[i_part][iedge+1]; ++idx_face ) {
-          PDM_printf(" %i ", pedge_face[i_part][idx_face]);
-        }
-        PDM_printf("\n");
-      }
-    }
-  }
-
 
   /*
    *  Boundary condition (face group )
@@ -1240,10 +1061,6 @@ int main(int argc, char *argv[])
   }
   PDM_free(face_is_bnd);
 
-
-  // Attention on veut garder l'orientation donc il y a un signe dans le face_cell / cell_face
-  // Reflechir sur les connectivité d'edge également ...
-
   /*
    * Free
    */
@@ -1311,7 +1128,6 @@ int main(int argc, char *argv[])
 
   PDM_free(dface_edge_idx);
   PDM_free(dface_edge);
-
 
   PDM_dcube_gen_free(dcube);
 

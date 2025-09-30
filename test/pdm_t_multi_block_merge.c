@@ -1,29 +1,22 @@
-#include <math.h>
-#include <sys/time.h>
-#include <time.h>
-#include <sys/resource.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "pdm.h"
-#include "pdm_config.h"
-#include "pdm_mpi.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
-#include "pdm_logging.h"
-#include "pdm_priv.h"
-#include "pdm_gnum.h"
 #include "pdm_array.h"
-#include "pdm_vtk.h"
-#include "pdm_distrib.h"
 #include "pdm_dcube_nodal_gen.h"
-#include "pdm_multi_block_merge.h"
-#include "pdm_dconnectivity_transform.h"
-#include "pdm_partitioning_algorithm.h"
+#include "pdm_dmesh_nodal.h"
 #include "pdm_domain_interface.h"
+#include "pdm_logging.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mesh_nodal.h"
+#include "pdm_mpi.h"
+#include "pdm_multi_block_merge.h"
+#include "pdm_partitioning_algorithm.h"
+#include "pdm_printf.h"
+#include "pdm_vtk.h"
+#include "pdm_priv.h"
 
 /*============================================================================
  * Type definitions
@@ -84,27 +77,26 @@ _read_args(int            argc,
 
   while (i < argc) {
 
-    if (strcmp(argv[i], "-h") == 0)
+    if (strcmp(argv[i], "-h") == 0) {
       _usage(EXIT_SUCCESS);
-
-    else if (strcmp(argv[i], "-n") == 0) {
+    } else if (strcmp(argv[i], "-n") == 0) {
       i++;
-      if (i >= argc)
+      if (i >= argc) {
         _usage(EXIT_FAILURE);
-      else {
+      } else {
         long _n_vtx_seg = atol(argv[i]);
         *n_vtx_seg = (PDM_g_num_t) _n_vtx_seg;
       }
-    }
-    else if (strcmp(argv[i], "-l") == 0) {
+    } else if (strcmp(argv[i], "-l") == 0) {
       i++;
-      if (i >= argc)
+      if (i >= argc) {
         _usage(EXIT_FAILURE);
-      else
+      } else {
         *length = atof(argv[i]);
-    }
-    else
+      }
+    } else {
       _usage(EXIT_FAILURE);
+    }
     i++;
   }
 }
@@ -122,8 +114,8 @@ int main(int argc, char *argv[])
    *  Set default values
    */
 
-  PDM_g_num_t        n_vtx_seg = 4;
-  double             length  = 1.;
+  PDM_g_num_t n_vtx_seg = 4;
+  double      length    = 1.;
 
   /*
    *  Read args
@@ -147,24 +139,20 @@ int main(int argc, char *argv[])
   int n_block = 2;
 
   PDM_dcube_nodal_t* dcube1 = PDM_dcube_nodal_gen_create(comm,
-                                                        n_vtx_seg,
-                                                        n_vtx_seg,
-                                                        n_vtx_seg,
-                                                        length,
-                                                        0.,
-                                                        0.,
-                                                        0.,
-                                                        PDM_MESH_NODAL_HEXA8,
-                                                        1,
-                                                        PDM_OWNERSHIP_KEEP);
+                                                         n_vtx_seg,
+                                                         n_vtx_seg,
+                                                         n_vtx_seg,
+                                                         length,
+                                                         0.,
+                                                         0.,
+                                                         0.,
+                                                         PDM_MESH_NODAL_HEXA8,
+                                                         1,
+                                                         PDM_OWNERSHIP_KEEP);
 
   PDM_dcube_nodal_gen_build (dcube1);
 
   PDM_dmesh_nodal_t*  dmn1 = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube1);
-  /*
-   * Define distribution of cell
-   */
-  // PDM_dmesh_nodal_dump_vtk(dmn1, PDM_GEOMETRY_KIND_VOLUMIC, "out_volumic_dcube1_");
 
   /*
    * Define distibution of vtx
@@ -205,7 +193,6 @@ int main(int argc, char *argv[])
   PDM_malloc(dface_vtx_idx  , n_block, int         *);
   PDM_malloc(dface_vtx      , n_block, PDM_g_num_t *);
 
-
   PDM_dmesh_nodal_t* dmn[] = {dmn1, dmn2};
   for (int i_block = 0; i_block < n_block; i_block++) {
     PDM_DMesh_nodal_section_group_elmt_get(dmn[i_block],
@@ -223,6 +210,7 @@ int main(int argc, char *argv[])
     dface_vtx[i_block] = PDM_DMesh_nodal_section_std_get(dmn[i_block], PDM_GEOMETRY_KIND_SURFACIC, 0, PDM_OWNERSHIP_BAD_VALUE);
 
   }
+
   // LAZY SETUP : we assume that we have only 2 blocks of same size to have same distribution :)
   assert (n_block == 2);
   int jn_size  = dgroup_elmt_idx[0][4] - dgroup_elmt_idx[0][3];
@@ -231,14 +219,17 @@ int main(int argc, char *argv[])
   PDM_malloc(interface_face_ids, 2*jn_size, PDM_g_num_t);
   PDM_malloc(interface_face_dom, 2*jn_size, int        );
   for (int i=0; i < jn_size; i++) {
-    interface_face_ids[2*i]   = dgroup_elmt[0][dgroup_elmt_idx[0][3]+i];
+    interface_face_ids[2*i  ] = dgroup_elmt[0][dgroup_elmt_idx[0][3]+i];
     interface_face_ids[2*i+1] = dgroup_elmt[1][dgroup_elmt_idx[0][2]+i];
-    interface_face_dom[2*i]   = 0;
+    interface_face_dom[2*i  ] = 0;
     interface_face_dom[2*i+1] = 1;
   }
 
-  PDM_domain_interface_t *dom_intrf = PDM_domain_interface_create(
-      1, n_block, PDM_DOMAIN_INTERFACE_MULT_YES, PDM_OWNERSHIP_KEEP, comm);
+  PDM_domain_interface_t *dom_intrf = PDM_domain_interface_create(1,
+                                                                  n_block,
+                                                                  PDM_DOMAIN_INTERFACE_MULT_YES,
+                                                                  PDM_OWNERSHIP_KEEP,
+                                                                  comm);
   PDM_domain_interface_set(dom_intrf, PDM_BOUND_TYPE_FACE, &jn_size, &interface_face_ids, &interface_face_dom);
   //Apparement bug en 2d !!
   PDM_domain_interface_translate_face2vtx(dom_intrf, dn_vtx, dn_face, dface_vtx_idx, dface_vtx);
@@ -247,8 +238,11 @@ int main(int argc, char *argv[])
   int         *graph_vtx_idx = NULL;
   PDM_g_num_t *graph_vtx_ids = NULL;
   int         *graph_vtx_dom = NULL;
-  int graph_vtx_dn = PDM_domain_interface_get_as_graph(dom_intrf, PDM_BOUND_TYPE_VTX,
-      &graph_vtx_idx, &graph_vtx_ids, &graph_vtx_dom);
+  int graph_vtx_dn = PDM_domain_interface_get_as_graph(dom_intrf,
+                                                       PDM_BOUND_TYPE_VTX,
+                                                       &graph_vtx_idx,
+                                                       &graph_vtx_ids,
+                                                       &graph_vtx_dom);
   if(1 == 0) {
     PDM_log_trace_array_int(graph_vtx_idx , graph_vtx_dn+1             , "vtx graph idx"  );
     PDM_log_trace_array_long(graph_vtx_ids, graph_vtx_idx[graph_vtx_dn], "vtx graph gnums");
@@ -326,39 +320,6 @@ int main(int argc, char *argv[])
                  (void * )   dvtx_coord,
                              NULL,
                  (void **)   &dmerge_vtx_coord);
-
-
-  //
-  //
-  //
-  // PDM_multi_block_merge_exch(mbm_elt,
-  //                            3 * sizeof(double),
-  //                            PDM_STRIDE_CST_INTERLACED,
-  //                            stride_one,
-  //                (void * )   dcell_vtx,
-  //                            NULL,
-  //                (void **)   &dmerge_dcell_vtx);
-
-
-  // origin_cell get_orgin_block (size= n_dmerge_cell)
-
-  // orgin_vtx = 4 * s_orgini_cell
-
-  // origin = 
-
-  // Creer dans PDM_multi_block_merge une fonction qui applique la nouvelle numerotation
-  // à un tableau contenant des références à l'ancienne numerotation  
-  //
-  // Transformer indication numerotation en doublon / numabs origin
-  //
-  // PDM_multi_block_merge_apply_array(mbm,
-  //                            size_dmerge_dcell_vtx,
-  //                            dmerge_vtx_origi_block,
-  //                            dmerge_dcell_vtx,
-  //                            dmerge_dcell_new_vtx);
-
-
-
   PDM_free(dvtx_coord);
 
   /*
@@ -556,7 +517,6 @@ int main(int argc, char *argv[])
   PDM_free(block_elmt_distrib_idx);
   PDM_free(n_selected);
   PDM_free(n_elmt_selected);
-
 
   PDM_dcube_nodal_gen_free(dcube1);
   PDM_dcube_nodal_gen_free(dcube2);

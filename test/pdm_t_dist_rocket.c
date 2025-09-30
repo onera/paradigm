@@ -1,27 +1,21 @@
+
 #include <math.h>
-#include <sys/time.h>
-#include <time.h>
-#include <sys/resource.h>
-#include <unistd.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include <assert.h>
+#include <time.h>
 
 #include "pdm.h"
-#include "pdm_priv.h"
-
-#include "pdm_mpi.h"
-#include "pdm_config.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
-#include "pdm_gnum.h"
-#include "pdm_dist_cloud_surf.h"
-#include "pdm_timer.h"
-#include "pdm_part.h"
-#include "pdm_geom_elem.h"
 #include "pdm_dcube_gen.h"
+#include "pdm_dist_cloud_surf.h"
+#include "pdm_error.h"
+#include "pdm_geom_elem.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mpi.h"
 #include "pdm_mpi_node_first_rank.h"
+#include "pdm_part.h"
+#include "pdm_printf.h"
+#include "pdm_priv.h"
 
 /*============================================================================
  * Type definitions
@@ -411,12 +405,6 @@ _gen_cloud_grid
 
   PDM_part_free (ppart);
 }
-
-
-
-
-
-
 
 
 static void
@@ -929,7 +917,7 @@ _get_connectivity
     int _n_vtx;
     int _n_proc;
     int _n_t_part;
-    int _sFace_edge;
+    int _s_face_edge;
     int _s_edge_vtx;
     int _s_edge_group;
     int _n_edge_group2;
@@ -942,12 +930,12 @@ _get_connectivity
                            &_n_vtx,
                            &_n_proc,
                            &_n_t_part,
-                           &_sFace_edge,
+                           &_s_face_edge,
                            &_s_edge_vtx,
                            &_s_edge_group,
                            &_n_edge_group2);
 
-    int         *_faceTag;
+    int         *_face_tag;
     int         *_face_edge_idx;
     int         *_face_edge;
     PDM_g_num_t *_face_ln_to_gn;
@@ -968,7 +956,7 @@ _get_connectivity
 
     PDM_part_part_val_get (ppart,
                            ipart,
-                           &_faceTag,
+                           &_face_tag,
                            &_face_edge_idx,
                            &_face_edge,
                            &_face_ln_to_gn,
@@ -998,14 +986,14 @@ _get_connectivity
 
     /* Faces */
     (*n_face)[ipart] = _n_face;
-    PDM_malloc((*face_edge_idx)[ipart], _n_face + 1, int        );
-    PDM_malloc((*face_edge    )[ipart], _sFace_edge, int        );
-    PDM_malloc((*face_vtx_idx )[ipart], _n_face + 1, int        );
-    PDM_malloc((*face_vtx     )[ipart], _sFace_edge, int        );
-    PDM_malloc((*face_ln_to_gn)[ipart], _n_face    , PDM_g_num_t);
+    PDM_malloc((*face_edge_idx)[ipart], _n_face + 1 , int        );
+    PDM_malloc((*face_edge    )[ipart], _s_face_edge, int        );
+    PDM_malloc((*face_vtx_idx )[ipart], _n_face + 1 , int        );
+    PDM_malloc((*face_vtx     )[ipart], _s_face_edge, int        );
+    PDM_malloc((*face_ln_to_gn)[ipart], _n_face     , PDM_g_num_t);
 
     memcpy ((*face_edge_idx)[ipart], _face_edge_idx, (_n_face + 1) * sizeof(int        ));
-    memcpy ((*face_edge    )[ipart], _face_edge    , _sFace_edge   * sizeof(int        ));
+    memcpy ((*face_edge    )[ipart], _face_edge    , _s_face_edge  * sizeof(int        ));
     memcpy ((*face_vtx_idx )[ipart], _face_edge_idx, (_n_face + 1) * sizeof(int        ));
     memcpy ((*face_ln_to_gn)[ipart], _face_ln_to_gn, _n_face       * sizeof(PDM_g_num_t));
 
@@ -1073,7 +1061,7 @@ _get_connectivity
       int *_edges = _face_edge + idx;
       int *_vertices = _face_vtx + idx;
 
-      int edge_cur = _edges[0];
+      int edge_cur = PDM_ABS(_edges[0]);
       int vtx_deb =  _edge_vtx[2*(edge_cur - 1)];
       _vertices[0] = vtx_deb;
       int vtx_cur =  _edge_vtx[2*(edge_cur - 1) + 1];
@@ -1085,13 +1073,14 @@ _get_connectivity
 
         for (int j = vtx_edge_idx[vtx_cur - 1]; j <  vtx_edge_idx[vtx_cur]; j++) {
           for (int k = 0; k < __n_edge; k++) {
-            if ((_edges[k] == vtx_edge[j]) && (_edges[k] != edge_cur)) {
-              edge_cur = _edges[k];
-              if (_edge_vtx[2*(_edges[k]-1)] == vtx_cur) {
-                vtx_cur = _edge_vtx[2*(_edges[k]-1) + 1];
+            int i_edge = PDM_ABS(_edges[k]);
+            if ((i_edge == vtx_edge[j]) && (i_edge != edge_cur)) {
+              edge_cur = i_edge;
+              if (_edge_vtx[2*(i_edge-1)] == vtx_cur) {
+                vtx_cur = _edge_vtx[2*(i_edge-1) + 1];
               }
               else {
-                vtx_cur = _edge_vtx[2*(_edges[k]-1)];
+                vtx_cur = _edge_vtx[2*(i_edge-1)];
               }
               find_vtx = 1;
               break;
@@ -1208,8 +1197,8 @@ _gen_src_mesh
     PDM_part_split_t part_method  = PDM_PART_SPLIT_HILBERT;
 
     int n_property_face = 0;
-    int *renum_properties_face = NULL;
     int n_property_edge = 0;
+    int *renum_properties_face = NULL;
     int *renum_properties_edge = NULL;
 
     PDM_part_t *ppart = PDM_part_create (comm,

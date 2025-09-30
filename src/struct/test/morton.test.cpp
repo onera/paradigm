@@ -1,14 +1,11 @@
-#include <vector>
-#include <numeric>
+#include <stdio.h>
+#include "doctest/doctest.h"
 #include "doctest/extensions/doctest_mpi.h"
-#include "pdm.h"
-#include "pdm_doctest.h"
-#include "pdm_unique.h"
-#include "pdm_logging.h"
+#include "pdm_mem_tool.h"
 #include "pdm_morton.h"
+#include "pdm_mpi.h"
 #include "pdm_part_to_block.h"
-#include "pdm_priv.h"
-
+#include "stdbool.h"
 
 TEST_CASE("[pdm_morton] - PDM_morton_encode") {
 
@@ -89,8 +86,6 @@ TEST_CASE("[pdm_morton] - PDM_morton_encode") {
 
     _Bool res1 = PDM_morton_a_gt_b(code1, code1);
 
-    printf("res1 = %i \n", (int)res1);
-
     CHECK(res1 == 0);
 
     code2.L    = 13;
@@ -100,7 +95,6 @@ TEST_CASE("[pdm_morton] - PDM_morton_encode") {
 
     _Bool res2 = PDM_morton_a_gt_b(code1, code2);
     _Bool res3 = PDM_morton_a_gt_b(code2, code1);
-    printf("res2 = %i \n", (int)res2);
 
     CHECK(res2 == 1);
     CHECK(res3 == 0);
@@ -155,8 +149,8 @@ MPI_TEST_CASE("[pdm_morton] - PDM_morton_local_sort", 1) {
 
   int n_pts = 4;
 
-  int dim = 3;
-  double extents[2*dim];
+  static int dim = 3;
+  double extents[6];
 
   PDM_morton_get_coord_extents(dim, n_pts, coords, extents, pdm_comm);
   PDM_extents_conformize(dim, extents, 1e-3);

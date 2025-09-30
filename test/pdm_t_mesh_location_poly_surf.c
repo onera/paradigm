@@ -1,30 +1,23 @@
-#include <math.h>
-#include <sys/time.h>
-#include <time.h>
-#include <sys/resource.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <assert.h>
 
-#include <pdm_mpi.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "pdm.h"
-#include "pdm_config.h"
-#include "pdm_priv.h"
-#include "pdm_part.h"
-#include "pdm_poly_surf_gen.h"
-#include "pdm_point_cloud_gen.h"
-#include "pdm_mesh_location.h"
-#include "pdm_geom_elem.h"
-#include "pdm_gnum.h"
-#include "pdm_mpi_node_first_rank.h"
-#include "pdm_printf.h"
 #include "pdm_error.h"
-#include "pdm_distrib.h"
-#include "pdm_vtk.h"
+#include "pdm_gnum.h"
 #include "pdm_logging.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mesh_location.h"
+#include "pdm_mpi.h"
+#include "pdm_mpi_node_first_rank.h"
+#include "pdm_part.h"
+#include "pdm_part_to_part.h"
+#include "pdm_point_cloud_gen.h"
+#include "pdm_poly_surf_gen.h"
+#include "pdm_printf.h"
+#include "pdm_priv.h"
+#include "pdm_vtk.h"
 
 /*============================================================================
  * Type definitions
@@ -577,7 +570,7 @@ _get_connectivity
       int *_edges = _face_edge + idx;
       int *_vertices = _face_vtx + idx;
 
-      int edge_cur = _edges[0];
+      int edge_cur = PDM_ABS(_edges[0]);
       int vtx_deb =  _edge_vtx[2*(edge_cur - 1)];
       _vertices[0] = vtx_deb;
       int vtx_cur =  _edge_vtx[2*(edge_cur - 1) + 1];
@@ -589,13 +582,14 @@ _get_connectivity
 
         for (int j = vtx_edge_idx[vtx_cur - 1]; j <  vtx_edge_idx[vtx_cur]; j++) {
           for (int k = 0; k < __n_edge; k++) {
-            if ((_edges[k] == vtx_edge[j]) && (_edges[k] != edge_cur)) {
-              edge_cur = _edges[k];
-              if (_edge_vtx[2*(_edges[k]-1)] == vtx_cur) {
-                vtx_cur = _edge_vtx[2*(_edges[k]-1) + 1];
+            int i_edge = PDM_ABS(_edges[k]);
+            if ((i_edge == vtx_edge[j]) && (i_edge != edge_cur)) {
+              edge_cur = i_edge;
+              if (_edge_vtx[2*(i_edge-1)] == vtx_cur) {
+                vtx_cur = _edge_vtx[2*(i_edge-1) + 1];
               }
               else {
-                vtx_cur = _edge_vtx[2*(_edges[k]-1)];
+                vtx_cur = _edge_vtx[2*(i_edge-1)];
               }
               find_vtx = 1;
               break;

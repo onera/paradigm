@@ -14,9 +14,7 @@
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
-#include "pdm.h"
 #include "pdm_mesh_nodal.h"
-#include "pdm_hash_tab.h"
 
 /*=============================================================================
  * Macro definition

@@ -60,6 +60,7 @@ program testf
   integer                              :: n_vtx
   integer                              :: n_face
   integer                              :: n_cell
+  integer                              :: geom_kind
 
   integer                              :: i, ifac, isom, tmp(6)
   integer                              :: fid = 13
@@ -162,8 +163,14 @@ action='read')
    0,                                           & !- INDICE DE PARTITION DU MAILLAGE NODAL
    n_vtx,                                       & !- NOMBRE DE SOMMETS
    vtx_coord,                                   & !- COORDONNEES DES SOMMETS
+   PDM_OWNERSHIP_USER)                            !- OWNERSHIP
+
+  call PDM_part_mesh_nodal_vtx_gnum_set         &
+  (mesh,                                        & !- IDENTIFICATEUR OBJET MAILLAGE NODAL
+   0,                                           & !- INDICE DE PARTITION DU MAILLAGE NODAL
    vtx_ln_to_gn,                                & !- NUMEROTATION ABSOLUE DES SOMMETS
    PDM_OWNERSHIP_USER)                            !- OWNERSHIP
+
 
   if (i_rank .eq. 0) then
     write(*, *) "-- Set cell-face connectivity"
@@ -188,8 +195,11 @@ action='read')
   end if
 
   ! Récupération de la connectivité du maillage
+  geom_kind = PDM_part_mesh_nodal_principal_geom_kind_get(mesh)
+
   call pdm_part_mesh_nodal_cell_vtx_connect_get & !-
-  (mesh,                                        & !- IDENTIFICATEUR OBJET LOCALISATEUR
+  (mesh,                                        & !- IDENTIFICATEUR OBJET MAILLAGE NODAL
+   geom_kind,                                   & !- DIMENSION PRINCIPALE
    0,                                           & !- INDICE DE PARTITION DU MAILLAGE NODAL
    tmp_cell_vtx_idx,                            & !- ADRESSES DES NUMEROS DE SOMMETS PAR CELLULE
    tmp_cell_vtx)                                  !- NUMEROS DE SOMMETS PAR CELLULE
@@ -228,6 +238,11 @@ action='read')
    0,                                           & !- INDICE DE PARTITION DU MAILLAGE NODAL
    n_vtx,                                       & !- NOMBRE DE SOMMETS
    vtx_coord,                                   & !- COORDONNEES DES SOMMETS
+   PDM_OWNERSHIP_USER)                            !- OWNERSHIP
+
+  call PDM_part_mesh_nodal_vtx_gnum_set         &
+  (mesh,                                        & !- IDENTIFICATEUR OBJET MAILLAGE NODAL
+   0,                                           & !- INDICE DE PARTITION DU MAILLAGE NODAL
    vtx_ln_to_gn,                                & !- NUMEROTATION ABSOLUE DES SOMMETS
    PDM_OWNERSHIP_USER)                            !- OWNERSHIP
 

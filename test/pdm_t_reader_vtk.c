@@ -1,29 +1,19 @@
-#include <math.h>
-#include <sys/time.h>
-#include <time.h>
-#include <sys/resource.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <assert.h>
 
-#include <pdm_mpi.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "pdm.h"
-#include "pdm_config.h"
-#include "pdm_priv.h"
-#include "pdm_part.h"
-#include "pdm_vtk.h"
-#include "pdm_multipart.h"
-#include "pdm_writer.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
-#include "pdm_logging.h"
-#include "pdm_dmesh_nodal.h"
-#include "pdm_part_mesh_nodal.h"
-#include "pdm_dmesh_nodal_priv.h"
 #include "pdm_block_to_part.h"
+#include "pdm_config.h"
+#include "pdm_dmesh_nodal.h"
+#include "pdm_dmesh_nodal_priv.h"
+#include "pdm_io.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mpi.h"
+#include "pdm_multipart.h"
+#include "pdm_part_mesh_nodal.h"
+#include "pdm_printf.h"
+#include "pdm_vtk.h"
 #include "pdm_writer.h"
 
 /*============================================================================
@@ -218,7 +208,7 @@ int main(int argc, char *argv[])
     PDM_malloc(pvtx_ln_to_gn,n_part, PDM_g_num_t *);
     for (int i = 0; i < n_part; i++) {
       pn_vtx[i] = PDM_part_mesh_nodal_n_vtx_get(pmn, i);
-      pvtx_ln_to_gn[i] = PDM_part_mesh_nodal_vtx_g_num_get(pmn, i);
+      pvtx_ln_to_gn[i] = PDM_part_mesh_nodal_vtx_g_num_get(pmn, i, PDM_OWNERSHIP_BAD_VALUE);
     }
 
     PDM_g_num_t *distrib_vtx = PDM_dmesh_nodal_vtx_distrib_get(dmn);

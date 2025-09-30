@@ -1,25 +1,17 @@
 #include <math.h>
-#include <sys/time.h>
-#include <time.h>
-#include <sys/resource.h>
-#include <unistd.h>
-#include <stdlib.h>
+#include "pdm_mpi.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include <assert.h>
-
-#include <pdm_mpi.h>
 
 #include "pdm.h"
-#include "pdm_config.h"
-#include "pdm_priv.h"
-#include "pdm_distrib.h"
 #include "pdm_dist_cloud_surf.h"
+#include "pdm_distrib.h"
 #include "pdm_gnum.h"
-
-#include "pdm_vtk.h"
+#include "pdm_mem_tool.h"
 #include "pdm_printf.h"
-#include "pdm_error.h"
+#include "pdm_priv.h"
+#include "pdm_vtk.h"
 
 /*============================================================================
  * Type definitions
@@ -250,7 +242,6 @@ int main(int argc, char *argv[])
   /*
    *  Read args
    */
-
   _read_args(argc,
              argv,
              &gn_src,
@@ -262,16 +253,13 @@ int main(int argc, char *argv[])
   /*
    *  Init
    */
-
   int i_rank;
-  int n_rank;
 
   PDM_MPI_Init (&argc, &argv);
 
   PDM_MPI_Comm comm = PDM_MPI_COMM_WORLD;
 
   PDM_MPI_Comm_rank (comm, &i_rank);
-  PDM_MPI_Comm_size (comm, &n_rank);
 
   /*
    *  Create lines
@@ -292,9 +280,6 @@ int main(int argc, char *argv[])
               &line_g_num,
               &line_vtx_idx,
               &line_vtx);
-
-
-
 
   /*
    *  Create target point cloud
@@ -424,9 +409,6 @@ int main(int argc, char *argv[])
 
   }
 
-
-
-
   PDM_dist_cloud_surf_dump_times(dist);
   PDM_dist_cloud_surf_free (dist);
 
@@ -438,7 +420,6 @@ int main(int argc, char *argv[])
   PDM_free(vtx_g_num);
   PDM_free(pts_coord);
   PDM_free(pts_g_num);
-
 
   PDM_MPI_Finalize();
 

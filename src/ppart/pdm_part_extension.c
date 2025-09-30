@@ -2,34 +2,35 @@
  * Standard C library headers
  *----------------------------------------------------------------------------*/
 
-#include <stdlib.h>
-#include <string.h>
 #include <assert.h>
 #include <math.h>
-#include <float.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
-#include "pdm_mpi.h"
-#include "pdm.h"
-#include "pdm_distant_neighbor.h"
-#include "pdm_logging.h"
-#include "pdm_unique.h"
-#include "pdm_binary_search.h"
-#include "pdm_order.h"
-#include "pdm_error.h"
 #include "pdm_part_extension.h"
-#include "pdm_part_to_part.h"
+#include "pdm.h"
+#include "pdm_array.h"
 #include "pdm_block_to_part.h"
-#include "pdm_part_to_block.h"
-#include "pdm_part_extension_priv.h"
+#include "pdm_distrib.h"
+#include "pdm_domain_interface.h"
+#include "pdm_domain_utils.h"
+#include "pdm_error.h"
+#include "pdm_logging.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mesh_nodal.h"
+#include "pdm_mpi.h"
 #include "pdm_part_connectivity_transform.h"
 #include "pdm_part_extension_algorithm.h"
-#include "pdm_domain_utils.h"
-#include "pdm_distrib.h"
-#include "pdm_array.h"
+#include "pdm_part_extension_priv.h"
+#include "pdm_part_priv.h"
+#include "pdm_part_to_block.h"
+#include "pdm_part_to_part.h"
+#include "pdm_priv.h"
+#include "pdm_rotation.h"
 #include "pdm_vtk.h"
 
 #ifdef __cplusplus
@@ -828,21 +829,20 @@ _compute_other_part_domain_interface
     PDM_malloc(pface_vtx     , part_ext->n_domain, int         **);
 
     for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
-      PDM_malloc(pn_vtx          [i_domain], part_ext->n_domain, int          );
-      PDM_malloc(pn_edge         [i_domain], part_ext->n_domain, int          );
-      PDM_malloc(pn_face         [i_domain], part_ext->n_domain, int          );
-      PDM_malloc(pvtx_ln_to_gn   [i_domain], part_ext->n_domain, PDM_g_num_t *);
-      PDM_malloc(pedge_ln_to_gn  [i_domain], part_ext->n_domain, PDM_g_num_t *);
-      PDM_malloc(pface_ln_to_gn  [i_domain], part_ext->n_domain, PDM_g_num_t *);
-      PDM_malloc(pedge_vtx_idx   [i_domain], part_ext->n_domain, int         *);
-      PDM_malloc(pedge_vtx       [i_domain], part_ext->n_domain, int         *);
+      PDM_malloc(pn_vtx          [i_domain], part_ext->n_part[i_domain], int          );
+      PDM_malloc(pn_edge         [i_domain], part_ext->n_part[i_domain], int          );
+      PDM_malloc(pn_face         [i_domain], part_ext->n_part[i_domain], int          );
+      PDM_malloc(pvtx_ln_to_gn   [i_domain], part_ext->n_part[i_domain], PDM_g_num_t *);
+      PDM_malloc(pedge_ln_to_gn  [i_domain], part_ext->n_part[i_domain], PDM_g_num_t *);
+      PDM_malloc(pface_ln_to_gn  [i_domain], part_ext->n_part[i_domain], PDM_g_num_t *);
+      PDM_malloc(pedge_vtx_idx   [i_domain], part_ext->n_part[i_domain], int         *);
+      PDM_malloc(pedge_vtx       [i_domain], part_ext->n_part[i_domain], int         *);
       if(have_edge == 1) {
-        PDM_malloc(pface_edge_idx[i_domain], part_ext->n_domain, int         *);
-        PDM_malloc(pface_edge    [i_domain], part_ext->n_domain, int         *);
-      }
-      else {
-        PDM_malloc(pface_vtx_idx [i_domain], part_ext->n_domain, int         *);
-        PDM_malloc(pface_vtx     [i_domain], part_ext->n_domain, int         *);
+        PDM_malloc(pface_edge_idx[i_domain], part_ext->n_part[i_domain], int         *);
+        PDM_malloc(pface_edge    [i_domain], part_ext->n_part[i_domain], int         *);
+      } else {
+        PDM_malloc(pface_vtx_idx [i_domain], part_ext->n_part[i_domain], int         *);
+        PDM_malloc(pface_vtx     [i_domain], part_ext->n_part[i_domain], int         *);
       }
 
       for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
@@ -1749,12 +1749,12 @@ _setup_domain_interface_in_block_frame
   PDM_malloc(pface_ln_to_gn, part_ext->n_domain, PDM_g_num_t **);
 
   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
-    PDM_malloc(pn_vtx        [i_domain], part_ext->n_domain, int          );
-    PDM_malloc(pn_edge       [i_domain], part_ext->n_domain, int          );
-    PDM_malloc(pn_face       [i_domain], part_ext->n_domain, int          );
-    PDM_malloc(pvtx_ln_to_gn [i_domain], part_ext->n_domain, PDM_g_num_t *);
-    PDM_malloc(pedge_ln_to_gn[i_domain], part_ext->n_domain, PDM_g_num_t *);
-    PDM_malloc(pface_ln_to_gn[i_domain], part_ext->n_domain, PDM_g_num_t *);
+    PDM_malloc(pn_vtx        [i_domain], part_ext->n_part[i_domain], int          );
+    PDM_malloc(pn_edge       [i_domain], part_ext->n_part[i_domain], int          );
+    PDM_malloc(pn_face       [i_domain], part_ext->n_part[i_domain], int          );
+    PDM_malloc(pvtx_ln_to_gn [i_domain], part_ext->n_part[i_domain], PDM_g_num_t *);
+    PDM_malloc(pedge_ln_to_gn[i_domain], part_ext->n_part[i_domain], PDM_g_num_t *);
+    PDM_malloc(pface_ln_to_gn[i_domain], part_ext->n_part[i_domain], PDM_g_num_t *);
 
     for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
       pn_vtx        [i_domain][i_part] = part_ext->parts[i_domain][i_part].n_vtx;
@@ -2008,11 +2008,11 @@ _build_bound_graph
   if(part_ext->extend_type == PDM_EXTEND_FROM_VTX) {
     bound_type = PDM_BOUND_TYPE_VTX;
     for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
-      PDM_malloc(pn_entity1           [i_domain], part_ext->n_domain, int          );
-      PDM_malloc(pentity1_ln_to_gn    [i_domain], part_ext->n_domain, PDM_g_num_t *);
-      PDM_malloc(pentity1_bnd_proc_idx[i_domain], part_ext->n_domain, int         *);
-      PDM_malloc(pentity1_bnd_part_idx[i_domain], part_ext->n_domain, int         *);
-      PDM_malloc(pentity1_bnd         [i_domain], part_ext->n_domain, int         *);
+      PDM_malloc(pn_entity1           [i_domain], part_ext->n_part[i_domain], int          );
+      PDM_malloc(pentity1_ln_to_gn    [i_domain], part_ext->n_part[i_domain], PDM_g_num_t *);
+      PDM_malloc(pentity1_bnd_proc_idx[i_domain], part_ext->n_part[i_domain], int         *);
+      PDM_malloc(pentity1_bnd_part_idx[i_domain], part_ext->n_part[i_domain], int         *);
+      PDM_malloc(pentity1_bnd         [i_domain], part_ext->n_part[i_domain], int         *);
       for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
         pn_entity1           [i_domain][i_part] = part_ext->parts[i_domain][i_part].n_vtx;
         pentity1_ln_to_gn    [i_domain][i_part] = part_ext->parts[i_domain][i_part].vtx_ln_to_gn;
@@ -2024,11 +2024,11 @@ _build_bound_graph
   } else if(part_ext->extend_type == PDM_EXTEND_FROM_EDGE) {
     bound_type = PDM_BOUND_TYPE_EDGE;
     for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
-      PDM_malloc(pn_entity1           [i_domain], part_ext->n_domain, int          );
-      PDM_malloc(pentity1_ln_to_gn    [i_domain], part_ext->n_domain, PDM_g_num_t *);
-      PDM_malloc(pentity1_bnd_proc_idx[i_domain], part_ext->n_domain, int         *);
-      PDM_malloc(pentity1_bnd_part_idx[i_domain], part_ext->n_domain, int         *);
-      PDM_malloc(pentity1_bnd         [i_domain], part_ext->n_domain, int         *);
+      PDM_malloc(pn_entity1           [i_domain], part_ext->n_part[i_domain], int          );
+      PDM_malloc(pentity1_ln_to_gn    [i_domain], part_ext->n_part[i_domain], PDM_g_num_t *);
+      PDM_malloc(pentity1_bnd_proc_idx[i_domain], part_ext->n_part[i_domain], int         *);
+      PDM_malloc(pentity1_bnd_part_idx[i_domain], part_ext->n_part[i_domain], int         *);
+      PDM_malloc(pentity1_bnd         [i_domain], part_ext->n_part[i_domain], int         *);
       for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
         pn_entity1           [i_domain][i_part] = part_ext->parts[i_domain][i_part].n_edge;
         pentity1_ln_to_gn    [i_domain][i_part] = part_ext->parts[i_domain][i_part].edge_ln_to_gn;
@@ -2040,11 +2040,11 @@ _build_bound_graph
   } else if(part_ext->extend_type == PDM_EXTEND_FROM_FACE) {
     bound_type = PDM_BOUND_TYPE_FACE;
     for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
-      PDM_malloc(pn_entity1           [i_domain], part_ext->n_domain, int          );
-      PDM_malloc(pentity1_ln_to_gn    [i_domain], part_ext->n_domain, PDM_g_num_t *);
-      PDM_malloc(pentity1_bnd_proc_idx[i_domain], part_ext->n_domain, int         *);
-      PDM_malloc(pentity1_bnd_part_idx[i_domain], part_ext->n_domain, int         *);
-      PDM_malloc(pentity1_bnd         [i_domain], part_ext->n_domain, int         *);
+      PDM_malloc(pn_entity1           [i_domain], part_ext->n_part[i_domain], int          );
+      PDM_malloc(pentity1_ln_to_gn    [i_domain], part_ext->n_part[i_domain], PDM_g_num_t *);
+      PDM_malloc(pentity1_bnd_proc_idx[i_domain], part_ext->n_part[i_domain], int         *);
+      PDM_malloc(pentity1_bnd_part_idx[i_domain], part_ext->n_part[i_domain], int         *);
+      PDM_malloc(pentity1_bnd         [i_domain], part_ext->n_part[i_domain], int         *);
       for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
         pn_entity1           [i_domain][i_part] = part_ext->parts[i_domain][i_part].n_face;
         pentity1_ln_to_gn    [i_domain][i_part] = part_ext->parts[i_domain][i_part].face_ln_to_gn;
@@ -2113,132 +2113,6 @@ _build_bound_graph
   part_ext->pinit_entity_bound_to_pentity_bound_interface = pentity_bound_to_pentity_bound_interface;
 
 }
-
-
-static
-void
-_build_rotation_matrix
-(
-  double  *rotation_direction,
-  double   rotation_angle,
-  int      sgn_itrf,
-  double **rotation_matrix
-)
-{
-  double angle = -sgn_itrf*rotation_angle;
-
-  if (PDM_ABS(rotation_direction[0])>1e-15 &&
-      PDM_ABS(rotation_direction[1])<1e-15 &&
-      PDM_ABS(rotation_direction[2])<1e-15) {
-    rotation_matrix[0][0] = 1.;
-    rotation_matrix[0][1] = 0.;
-    rotation_matrix[0][2] = 0.;
-
-    rotation_matrix[1][0] = 0.;
-    rotation_matrix[1][1] = cos(angle);
-    rotation_matrix[1][2] =-sin(angle);
-
-    rotation_matrix[2][0] = 0.;
-    rotation_matrix[2][1] = sin(angle);
-    rotation_matrix[2][2] = cos(angle);
-  }
-  else if (PDM_ABS(rotation_direction[0])<1e-15 &&
-           PDM_ABS(rotation_direction[1])>1e-15 &&
-           PDM_ABS(rotation_direction[2])<1e-15) {
-    rotation_matrix[0][0] = cos(angle);
-    rotation_matrix[0][1] = 0.;
-    rotation_matrix[0][2] = sin(angle);
-
-    rotation_matrix[1][0] = 0.;
-    rotation_matrix[1][1] = 1.;
-    rotation_matrix[1][2] = 0.;
-
-    rotation_matrix[2][0] =-sin(angle);
-    rotation_matrix[2][1] = 0.;
-    rotation_matrix[2][2] = cos(angle);
-  }
-  else if (PDM_ABS(rotation_direction[0])<1e-15 &&
-           PDM_ABS(rotation_direction[1])<1e-15 &&
-           PDM_ABS(rotation_direction[2])>1e-15) {
-    rotation_matrix[0][0] = cos(angle);
-    rotation_matrix[0][1] =-sin(angle);
-    rotation_matrix[0][2] = 0.;
-
-    rotation_matrix[1][0] = sin(angle);
-    rotation_matrix[1][1] = cos(angle);
-    rotation_matrix[1][2] = 0.;
-
-    rotation_matrix[2][0] = 0.;
-    rotation_matrix[2][1] = 0.;
-    rotation_matrix[2][2] = 1.;
-  }
-  else {
-    PDM_error(__FILE__, __LINE__, 0, "Don't know how to build rotation matrix around axis (%.3f,%.3f,%.3f)\n",
-                                  rotation_direction[0],
-                                  rotation_direction[1],
-                                  rotation_direction[2]);
-  }
-}
-
-
-static
-void
-_build_homogeneous_matrix
-(
-  double **rotation_matrix,
-  double  *rotation_center,
-  double **homogeneous_matrix
-)
-{
-  double apply_center_matrix[3] = {0, 0., 0.};
-
-  for (int i=0; i<3; ++i) {
-    apply_center_matrix[i] = rotation_matrix[0][i]*rotation_center[0]
-                           + rotation_matrix[1][i]*rotation_center[1]
-                           + rotation_matrix[2][i]*rotation_center[2];
-
-    homogeneous_matrix[i][0] = rotation_matrix[i][0];
-    homogeneous_matrix[i][1] = rotation_matrix[i][1];
-    homogeneous_matrix[i][2] = rotation_matrix[i][2];
-    homogeneous_matrix[i][3] = rotation_center[i] - apply_center_matrix[i];
-  }
-
-  homogeneous_matrix[3][0] = 0.;
-  homogeneous_matrix[3][1] = 0.;
-  homogeneous_matrix[3][2] = 0.;
-  homogeneous_matrix[3][3] = 1.;
-}
-
-
-static
-void
-_apply_homogeneous_matrix
-(
-  double **homogeneous_matrix,
-  double  *vector
-)
-{
-
-  double _vector[4] = {0., 0., 0., 0.};
-  double _result[4] = {0., 0., 0., 0.};
-
-  _vector[0] = vector[0];
-  _vector[1] = vector[1];
-  _vector[2] = vector[2];
-  _vector[3] = 1.;
-
-  for (int i=0; i<4; ++i) {
-    _result[i] = homogeneous_matrix[0][i]*_vector[0]
-               + homogeneous_matrix[1][i]*_vector[1]
-               + homogeneous_matrix[2][i]*_vector[2]
-               + homogeneous_matrix[3][i]*_vector[3];
-  }
-
-  for (int i=0; i<3; ++i) {
-    vector[i] = _result[i];
-  }
-}
-
 
 static
 void
@@ -2352,6 +2226,7 @@ double              ***pvtx_extended_coords_out
     }
   }
 
+  double tmp[3];
   for(int i_part = 0; i_part < part_ext->ln_part_tot; ++i_part) {
     for(int i_vtx = 0; i_vtx < pn_vtx_extended[i_part]; ++i_vtx) {
       int i_interface   = PDM_ABS (_pvtx_extended_to_pvtx_itrf[i_part][i_vtx]);
@@ -2362,20 +2237,18 @@ double              ***pvtx_extended_coords_out
         }
       }
       if(i_interface != 0 && rotation_direction[PDM_ABS(i_interface)-1] != NULL) {
+        PDM_rotation_apply_axis_angle_and_rotation_center(rotation_direction[PDM_ABS(i_interface)-1],
+                                                          rotation_angle    [PDM_ABS(i_interface)-1],
+                                                          rotation_center   [PDM_ABS(i_interface)-1],
+                                                          (PDM_bool_t)(sgn_interface<1),
+                                                          &pextract_vtx_coords[i_part][3*i_vtx],
+                                                          1,
+                                                          tmp);
+                                                          // &pextract_vtx_coords[i_part][3*i_vtx]);
+        pextract_vtx_coords[i_part][3*i_vtx+0] = tmp[0];
+        pextract_vtx_coords[i_part][3*i_vtx+1] = tmp[1];
+        pextract_vtx_coords[i_part][3*i_vtx+2] = tmp[2];
 
-        // > Build matrix
-        _build_rotation_matrix(rotation_direction[PDM_ABS(i_interface-1)],
-                               rotation_angle    [PDM_ABS(i_interface-1)],
-                               sgn_interface,
-                               rotation_matrix   [PDM_ABS(i_interface-1)]);
-
-        _build_homogeneous_matrix(rotation_matrix   [PDM_ABS(i_interface-1)],
-                                  rotation_center   [PDM_ABS(i_interface-1)],
-                                  homogeneous_matrix[PDM_ABS(i_interface-1)]);
-
-        // > Apply matrix
-        _apply_homogeneous_matrix(homogeneous_matrix[PDM_ABS(i_interface-1)],
-                                 &pextract_vtx_coords[i_part][3*i_vtx]);
       }
     }
 
@@ -2513,7 +2386,6 @@ _part_extension_3d
 
   int **pcell_alrdy_sent = NULL;
   PDM_malloc(pcell_alrdy_sent, part_ext->ln_part_tot, int *);
-
   int lpart = 0;
   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
     for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
@@ -8085,4 +7957,3 @@ PDM_part_extension_group_set
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-

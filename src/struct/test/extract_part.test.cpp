@@ -1,26 +1,101 @@
-#include <vector>
+#include <stdio.h>
+#include "doctest/doctest.h"
 #include "doctest/extensions/doctest_mpi.h"
 #include "pdm.h"
-#include "pdm_doctest.h"
-#include "pdm_extract_part.h"
-#include "pdm_priv.h"
-#include "pdm_logging.h"
-#include "pdm_error.h"
-
 #include "pdm_array.h"
-#include "pdm_generate_mesh.h"
-#include "pdm_poly_vol_gen.h"
-#include "pdm_multipart.h"
+#include "pdm_config.h"
 #include "pdm_distrib.h"
+#include "pdm_dmesh.h"
+#include "pdm_error.h"
+#include "pdm_extract_part.h"
+#include "pdm_generate_mesh.h"
+#include "pdm_logging.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mesh_nodal.h"
+#include "pdm_mpi.h"
+#include "pdm_multipart.h"
+#include "pdm_part_mesh_nodal.h"
+#include "pdm_part_mesh_nodal_elmts.h"
+#include "pdm_poly_vol_gen.h"
+#include "pdm_priv.h"
+
+
+static void
+_add_dummy_groups
+(
+  PDM_part_mesh_nodal_t *pmn,
+  PDM_geometry_kind_t    geom_kind,
+  int                    n_group
+)
+{
+  PDM_part_mesh_nodal_elmts_t *pmne = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(pmn, geom_kind);
+
+  int n_group_init = PDM_part_mesh_nodal_elmts_n_group_get(pmne);
+
+  if (n_group_init != 0) {
+    return;
+  }
+
+  PDM_part_mesh_nodal_elmts_n_group_set(pmne, n_group);
+
+  int         **group_elt          = NULL;
+  PDM_g_num_t **group_elt_ln_to_gn = NULL;
+  PDM_malloc(group_elt,          n_group, int         *);
+  PDM_malloc(group_elt_ln_to_gn, n_group, PDM_g_num_t *);
+
+  int n_part = PDM_part_mesh_nodal_n_part_get(pmn);
+
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    int n_elt = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, i_part);
+
+    PDM_g_num_t *g_num = PDM_part_mesh_nodal_elmts_g_num_get_from_part(pmne,
+                                                                       i_part,
+                                                                       PDM_OWNERSHIP_KEEP);
+    int *group_elt_n = PDM_array_zeros_int(n_group);
+    for (int i_elt = 0; i_elt < n_elt; i_elt++) {
+      int i_group = g_num[i_elt] % n_group;
+      group_elt_n[i_group]++;
+    }
+
+    for (int i_group = 0; i_group < n_group; i_group++) {
+      PDM_malloc(group_elt         [i_group], group_elt_n[i_group], int        );
+      PDM_malloc(group_elt_ln_to_gn[i_group], group_elt_n[i_group], PDM_g_num_t);
+      group_elt_n[i_group] = 0;
+    }
+
+    for (int i_elt = 0; i_elt < n_elt; i_elt++) {
+      int i_group = g_num[i_elt] % n_group;
+      group_elt         [i_group][group_elt_n[i_group]] = i_elt+1;
+      group_elt_ln_to_gn[i_group][group_elt_n[i_group]] = 1 + (g_num[i_elt] - 1) / n_group;
+      group_elt_n[i_group]++;
+    }
+
+    for (int i_group = 0; i_group < n_group; i_group++) {
+      PDM_part_mesh_nodal_elmts_group_set(pmne,
+                                          i_part,
+                                          i_group,
+                                          group_elt_n       [i_group],
+                                          group_elt         [i_group],
+                                          group_elt_ln_to_gn[i_group],
+                                          PDM_OWNERSHIP_KEEP);
+    } // End loop on groups
+
+    PDM_free(group_elt_n);
+
+  } // End loop on parts
+
+  PDM_free(group_elt         );
+  PDM_free(group_elt_ln_to_gn);
+}
 
 
 static PDM_part_mesh_nodal_t *
 _generate_mesh
 (
- PDM_MPI_Comm         comm,
- PDM_Mesh_nodal_elt_t elt_type,
- int                  n_part
- )
+  PDM_MPI_Comm         comm,
+  PDM_Mesh_nodal_elt_t elt_type,
+  int                  n_part
+)
 {
   PDM_g_num_t      n_vtx_seg   = 5;
   PDM_split_dual_t part_method = PDM_SPLIT_DUAL_WITH_HILBERT;
@@ -190,8 +265,11 @@ _generate_mesh
                                     i_part,
                                     n_vtx,
                                     vtx_coord,
-                                    vtx_ln_to_gn,
                                     PDM_OWNERSHIP_KEEP);
+      PDM_part_mesh_nodal_vtx_gnum_set(pmn,
+                                       i_part,
+                                       vtx_ln_to_gn,
+                                       PDM_OWNERSHIP_KEEP);
 
       PDM_part_mesh_nodal_cell3d_cellface_add(pmn,
                                               i_part,
@@ -206,6 +284,8 @@ _generate_mesh
                                               PDM_OWNERSHIP_KEEP);
     }
     PDM_multipart_free(mpart);
+
+    _add_dummy_groups(pmn, PDM_GEOMETRY_KIND_VOLUMIC, 3);
 
     return pmn;
   }
@@ -228,21 +308,25 @@ _generate_mesh
                                          part_method);
     }
     else {
-      return PDM_generate_mesh_parallelepiped(comm,
-                                              elt_type,
-                                              1,
-                                              NULL,
-                                              0.,
-                                              0.,
-                                              0.,
-                                              1.,
-                                              1.,
-                                              1.,
-                                              n_vtx_seg,
-                                              n_vtx_seg,
-                                              n_vtx_seg,
-                                              n_part,
-                                              part_method);
+      PDM_part_mesh_nodal_t *pmn = PDM_generate_mesh_parallelepiped(comm,
+                                                                    elt_type,
+                                                                    1,
+                                                                    NULL,
+                                                                    0.,
+                                                                    0.,
+                                                                    0.,
+                                                                    1.,
+                                                                    1.,
+                                                                    1.,
+                                                                    n_vtx_seg,
+                                                                    n_vtx_seg,
+                                                                    n_vtx_seg,
+                                                                    n_part,
+                                                                    part_method);
+
+      _add_dummy_groups(pmn, PDM_GEOMETRY_KIND_VOLUMIC, 3);
+
+      return pmn;
     }
   }
 }
@@ -250,13 +334,13 @@ _generate_mesh
 static void
 _get_extracted
 (
- PDM_MPI_Comm                   comm,
- PDM_part_mesh_nodal_elmts_t   *pmne,
- int                            n_part,
- int                            empty_extraction,
- int                          **out_n_extract,
- int                         ***out_extract_lnum
- )
+  PDM_MPI_Comm                   comm,
+  PDM_part_mesh_nodal_elmts_t   *pmne,
+  int                            n_part,
+  int                            empty_extraction,
+  int                          **out_n_extract,
+  int                         ***out_extract_lnum
+)
 {
   int i_rank, n_rank;
   PDM_MPI_Comm_rank(comm, &i_rank);
@@ -340,14 +424,14 @@ _get_extracted
 static void
 _get_targets
 (
- PDM_MPI_Comm                   comm,
- PDM_part_mesh_nodal_elmts_t   *pmne,
- int                            n_part_in,
- int                            n_part_out,
- int                            empty_extraction,
- int                          **n_target,
- PDM_g_num_t                 ***target_gnum
- )
+  PDM_MPI_Comm                   comm,
+  PDM_part_mesh_nodal_elmts_t   *pmne,
+  int                            n_part_in,
+  int                            n_part_out,
+  int                            empty_extraction,
+  int                          **n_target,
+  PDM_g_num_t                 ***target_gnum
+)
 {
   int i_rank, n_rank;
   PDM_MPI_Comm_rank(comm, &i_rank);
@@ -418,10 +502,10 @@ _get_targets
 static void
 _check_groups
 (
- PDM_part_mesh_nodal_elmts_t *pmne,
- int                          n_part_in,
- PDM_part_mesh_nodal_elmts_t *extract_pmne,
- int                          n_part_out
+  PDM_part_mesh_nodal_elmts_t *pmne,
+  int                          n_part_in,
+  PDM_part_mesh_nodal_elmts_t *extract_pmne,
+  int                          n_part_out
 )
 {
   if (pmne == NULL) {
@@ -431,6 +515,7 @@ _check_groups
 
   int n_group         = PDM_part_mesh_nodal_elmts_n_group_get(pmne);
   int extract_n_group = PDM_part_mesh_nodal_elmts_n_group_get(extract_pmne);
+
   CHECK(n_group == extract_n_group);
 
   if (n_group == 0) return;

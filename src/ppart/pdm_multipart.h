@@ -30,12 +30,12 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
-#include "pdm_mpi.h"
 #include "pdm_dmesh.h"
 #include "pdm_dmesh_nodal.h"
-#include "pdm_part_mesh_nodal.h"
-#include "pdm_part_mesh.h"
 #include "pdm_domain_interface.h"
+#include "pdm_mpi.h"
+#include "pdm_part_mesh.h"
+#include "pdm_part_mesh_nodal.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -58,11 +58,11 @@ typedef struct _pdm_multipart_t PDM_multipart_t;
 
 /**
  * \enum PDM_part_size_t
- * \brief Use homogeneous or heterogeneous partition sizes (only for ParMetis method)
+ * \brief Use homogeneous or heterogeneous partition sizes (only for ParMETIS method)
  */
 typedef enum {
   PDM_PART_SIZE_HOMOGENEOUS   = 1, /*!< All requested partition have the same size */
-  PDM_PART_SIZE_HETEROGENEOUS = 2, /*!< Each requested partition can have a portion (within 0. and 1.) of the mesh */
+  PDM_PART_SIZE_HETEROGENEOUS = 2, /*!< Each requested partition can have a portion (between 0 and 1) of the mesh */
 } PDM_part_size_t;
 
 /*=============================================================================
@@ -79,7 +79,7 @@ typedef enum {
  *
  * \param [in]   n_domain         Number of domains in the original mesh
  * \param [in]   n_part           Number of partition per rank in each domain
- * \param [in]   merge_domains    Merge or not the domains before splitting
+ * \param [in]   merge_domains    Merge or not the domains before splitting (*Not implemented*)
  * \param [in]   split_method     Choice of library used to split the mesh
  * \param [in]   part_size_method Choice of homogeneous or heterogeneous partitions
  * \param [in]   part_fraction    Weight (in %) of each partition in heterogeneous case (i.e. if \p part_size_method is set to \p PDM_PART_SIZE_HETEROGENEOUS)
@@ -210,8 +210,7 @@ PDM_multipart_renum_method_set
  * \param [in]   multipart             Pointer to \ref PDM_multipart_t instance
  * \param [in]   i_domain              Id of domain which parameters apply (or -1 for all domains)
  * \param [in]   renum_cell_method     Choice of renumbering method for cells
- * \param [in]   renum_cell_properties Parameters used by cache-blocking method :
- *                                     [*n_cell_per_cache_wanted*, *is_asynchronous*, *is_vectorisation*, *n_vect_face*, *split_method*]
+ * \param [in]   renum_cell_properties Renumbering parameters for chosen method (can be *NULL*, check out \verbatim embed:rst:inline :ref:`this page<renumbering>` \endverbatim for more details)
  * \param [in]   renum_face_method     Choice of renumbering method for faces
  *
  */
@@ -239,6 +238,47 @@ void PDM_multipart_set_reordering_options_vtx
  PDM_multipart_t *multipart,
  const int        i_domain,
  const char      *renum_vtx_method
+);
+
+
+/**
+ *
+ * \brief Set the destination parts
+ *
+ * \param [in]   multipart   Pointer to \ref PDM_multipart_t instance
+ * \param [in]   i_domain    Domain identifier
+ * \param [in]   dpart_id    Destination parts (0-based)
+ * \param [in]   ownership   Ownership for \p dpart_id
+ *
+ */
+void
+PDM_multipart_dpart_id_set
+(
+  PDM_multipart_t *multipart,
+  int              i_domain,
+  int             *dpart_id,
+  PDM_ownership_t  ownership
+);
+
+
+/**
+ *
+ * \brief Get the destination parts
+ *
+ * \param [in]   multipart   Pointer to \ref PDM_multipart_t instance
+ * \param [in]   i_domain    Domain identifier
+ * \param [out]  dpart_id    Destination parts (0-based)
+ * \param [in]   ownership   Ownership for \p dpart_id
+ *
+ * \return Number of block-distributed entities
+ */
+int
+PDM_multipart_dpart_id_get
+(
+  PDM_multipart_t  *multipart,
+  int               i_domain,
+  int             **dpart_id,
+  PDM_ownership_t   ownership
 );
 
 
@@ -280,16 +320,17 @@ const int                     i_domain,
  * \param [in]  multipart             Pointer to \ref PDM_multipart_t instance
  * \param [in]  i_domain              Id of domain
  * \param [out] pmesh                 Partitioned mesh
+ * \param [in]  ownership             Who is responsible to free retrieved data ?
  *
  */
-
-// void
-// PDM_multipart_get_part_mesh
-// (
-//        PDM_multipart_t  *multipart,
-//  const int               i_domain,
-//        PDM_part_mesh_t **pmesh
-// );
+void
+PDM_multipart_get_part_mesh
+(
+       PDM_multipart_t  *multipart,
+ const int               i_domain,
+       PDM_part_mesh_t **pmesh,
+       PDM_ownership_t   ownership
+);
 
 /**
  * \brief Specify interface between domain (see \ref PDM_multidomain_interface)
@@ -472,9 +513,9 @@ const int                   i_part,
  * \param [in]  i_domain              Id of domain
  * \param [in]  i_part                Id of part
  * \param [in]  entity_type           Entity kind
- * \param [out] entity_color          Entity color (only for specific renumbering option )
+ * \param [out] entity_color          Entity color (only for specific renumbering option, size = n_entity)
  * \param [in]  ownership             Ownership for \p entity_color
- *  *
+ *
  * \return Number of entities
  */
 int
@@ -672,6 +713,21 @@ PDM_multipart_stat_get
  int              *bound_part_faces_min,
  int              *bound_part_faces_max,
  int              *bound_part_faces_sum
+);
+
+/**
+ * \brief Return number of block-distributed leading entities in a given domain
+ *
+ * \param [in] multipart  Pointer to \ref PDM_multipart instance
+ * \param [in] i_domain   Domain identifier
+ *
+ * \return Number of block-distributed entities
+ */
+int
+PDM_multipart_dn_node_get
+(
+  PDM_multipart_t  *multipart,
+  int               i_domain
 );
 
 /*----------------------------------------------------------------------------*/

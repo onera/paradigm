@@ -1,20 +1,15 @@
-#include <math.h>
-#include <sys/time.h>
-#include <time.h>
-#include <sys/resource.h>
-#include <unistd.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
+#include <sys/time.h>
 
 #include "pdm.h"
-#include "pdm_config.h"
-#include "pdm_mpi.h"
-#include "pdm_part.h"
 #include "pdm_dcube_gen.h"
-#include "pdm_printf.h"
 #include "pdm_error.h"
 #include "pdm_global_mean.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mpi.h"
+#include "pdm_part.h"
+#include "pdm_printf.h"
 #include "pdm_priv.h"
 
 /*============================================================================
@@ -136,11 +131,11 @@ int main(int argc, char *argv[])
    *  Set default values
    */
 
-  PDM_g_num_t        n_vtx_seg = 10;
-  double             length  = 1.;
-  int                n_part   = 1;
-  int                post    = 0;
-  PDM_part_split_t method  = PDM_PART_SPLIT_HILBERT;
+  PDM_g_num_t      n_vtx_seg = 10;
+  double           length    = 1.;
+  int              n_part    = 1;
+  int              post      = 0;
+  PDM_part_split_t method    = PDM_PART_SPLIT_HILBERT;
 
   /*
    *  Read args
@@ -160,31 +155,29 @@ int main(int argc, char *argv[])
 
   struct timeval t_elaps_debut;
 
-  int i_rank;
-  int numProcs;
 
   PDM_MPI_Init(&argc, &argv);
-  PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &i_rank);
-  PDM_MPI_Comm_size(PDM_MPI_COMM_WORLD, &numProcs);
 
   int           dn_cell;
   int           dn_face;
   int           dn_vtx;
   int           n_face_group;
-  PDM_g_num_t *dface_cell = NULL;
-  int          *dface_vtx_idx = NULL;
-  PDM_g_num_t *dface_vtx = NULL;
-  double       *dvtx_coord = NULL;
+  PDM_g_num_t  *dface_cell      = NULL;
+  int          *dface_vtx_idx   = NULL;
+  PDM_g_num_t  *dface_vtx       = NULL;
+  double       *dvtx_coord      = NULL;
   int          *dface_group_idx = NULL;
-  PDM_g_num_t *dface_group = NULL;
-  int           dface_vtxL;
-  int           dFaceGroupL;
+  PDM_g_num_t  *dface_group     = NULL;
+  int           dface_vtx_l;
+  int           dface_group_l;
 
   /*
    *  Create distributed cube
    */
-
   PDM_MPI_Comm     comm = PDM_MPI_COMM_WORLD;
+
+  int i_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
 
   PDM_dcube_t* dcube = PDM_dcube_gen_init(comm,
                                           n_vtx_seg,
@@ -195,20 +188,20 @@ int main(int argc, char *argv[])
                                           PDM_OWNERSHIP_KEEP);
 
   PDM_dcube_gen_dim_get(dcube,
-                         &n_face_group,
-                         &dn_cell,
-                         &dn_face,
-                         &dn_vtx,
-                         &dface_vtxL,
-                         &dFaceGroupL);
+                        &n_face_group,
+                        &dn_cell,
+                        &dn_face,
+                        &dn_vtx,
+                        &dface_vtx_l,
+                        &dface_group_l);
 
   PDM_dcube_gen_data_get(dcube,
-                          &dface_cell,
-                          &dface_vtx_idx,
-                          &dface_vtx,
-                          &dvtx_coord,
-                          &dface_group_idx,
-                          &dface_group);
+                         &dface_cell,
+                         &dface_vtx_idx,
+                         &dface_vtx,
+                         &dvtx_coord,
+                         &dface_group_idx,
+                         &dface_group);
 
   if (0 == 1) {
 
@@ -255,11 +248,11 @@ int main(int argc, char *argv[])
   /*
    *  Create mesh partitions
    */
+  int *dcell_part = NULL;
+  PDM_malloc(dcell_part, dn_cell, int);
 
   int have_dcell_part = 0;
 
-  int *dcell_part;
-  PDM_malloc(dcell_part, dn_cell, int);
   int *renum_properties_cell = NULL;
   int *renum_properties_face = NULL;
   int n_property_cell = 0;
@@ -295,10 +288,10 @@ int main(int argc, char *argv[])
                                       dface_group_idx,
                                       dface_group);
 
-  double  *elapsed = NULL;
-  double  *cpu = NULL;
+  double  *elapsed  = NULL;
+  double  *cpu      = NULL;
   double  *cpu_user = NULL;
-  double  *cpu_sys = NULL;
+  double  *cpu_sys  = NULL;
 
   PDM_part_time_get(ppart,
                     &elapsed,
@@ -366,23 +359,23 @@ int main(int argc, char *argv[])
                           &sface_group,
                           &n_faceGroup2);
 
-    int          *cell_tag;
-    int          *cell_face_idx;
-    int          *cell_face;
+    int         *cell_tag;
+    int         *cell_face_idx;
+    int         *cell_face;
     PDM_g_num_t *cell_ln_to_gn;
-    int          *face_tag;
-    int          *face_cell;
-    int          *face_vtx_idx;
-    int          *face_vtx;
+    int         *face_tag;
+    int         *face_cell;
+    int         *face_vtx_idx;
+    int         *face_vtx;
     PDM_g_num_t *face_ln_to_gn;
-    int          *face_part_bound_proc_idx;
-    int          *face_part_bound_part_idx;
-    int          *face_part_bound;
-    int          *vtx_tag;
-    double       *vtx;
+    int         *face_part_bound_proc_idx;
+    int         *face_part_bound_part_idx;
+    int         *face_part_bound;
+    int         *vtx_tag;
+    double      *vtx;
     PDM_g_num_t *vtx_ln_to_gn;
-    int          *face_group_idx;
-    int          *face_group;
+    int         *face_group_idx;
+    int         *face_group;
     PDM_g_num_t *face_group_ln_to_gn;
 
     PDM_part_part_val_get(ppart,
@@ -409,7 +402,7 @@ int main(int argc, char *argv[])
     int n_cell_vtx = 0;
     for (int i = 0; i < n_cell; i++) {
       for (int j = cell_face_idx[i]; j < cell_face_idx[i+1]; j++) {
-        int face = cell_face[j] - 1;
+        int face = PDM_ABS(cell_face[j]) - 1;
         n_cell_vtx += face_vtx_idx[face+1] - face_vtx_idx[face];
       }
     }
@@ -444,23 +437,23 @@ int main(int argc, char *argv[])
                           &sface_group,
                           &n_faceGroup2);
 
-    int          *cell_tag;
-    int          *cell_face_idx;
-    int          *cell_face;
+    int         *cell_tag;
+    int         *cell_face_idx;
+    int         *cell_face;
     PDM_g_num_t *cell_ln_to_gn;
-    int          *face_tag;
-    int          *face_cell;
-    int          *face_vtx_idx;
-    int          *face_vtx;
+    int         *face_tag;
+    int         *face_cell;
+    int         *face_vtx_idx;
+    int         *face_vtx;
     PDM_g_num_t *face_ln_to_gn;
-    int          *face_part_bound_proc_idx;
-    int          *face_part_bound_part_idx;
-    int          *face_part_bound;
-    int          *vtx_tag;
-    double       *vtx;
+    int         *face_part_bound_proc_idx;
+    int         *face_part_bound_part_idx;
+    int         *face_part_bound;
+    int         *vtx_tag;
+    double      *vtx;
     PDM_g_num_t *vtx_ln_to_gn;
-    int          *face_group_idx;
-    int          *face_group;
+    int         *face_group_idx;
+    int         *face_group;
     PDM_g_num_t *face_group_ln_to_gn;
 
     PDM_part_part_val_get(ppart,
@@ -487,7 +480,7 @@ int main(int argc, char *argv[])
     int n_cell_vtx = 0;
     for (int i = 0; i < n_cell; i++) {
       for (int j = cell_face_idx[i]; j < cell_face_idx[i+1]; j++) {
-        int face = cell_face[j] - 1;
+        int face = PDM_ABS(cell_face[j]) - 1;
         for (int k = face_vtx_idx[face]; k < face_vtx_idx[face+1]; k++) {
           int iVtx = face_vtx[k] - 1;
           cell_vtx_gnum[i_part][n_cell_vtx++] = vtx_ln_to_gn[iVtx];
@@ -532,23 +525,23 @@ int main(int argc, char *argv[])
                           &sface_group,
                           &n_faceGroup2);
 
-    int          *cell_tag;
-    int          *cell_face_idx;
-    int          *cell_face;
+    int         *cell_tag;
+    int         *cell_face_idx;
+    int         *cell_face;
     PDM_g_num_t *cell_ln_to_gn;
-    int          *face_tag;
-    int          *face_cell;
-    int          *face_vtx_idx;
-    int          *face_vtx;
+    int         *face_tag;
+    int         *face_cell;
+    int         *face_vtx_idx;
+    int         *face_vtx;
     PDM_g_num_t *face_ln_to_gn;
-    int          *face_part_bound_proc_idx;
-    int          *face_part_bound_part_idx;
-    int          *face_part_bound;
-    int          *vtx_tag;
-    double       *vtx;
+    int         *face_part_bound_proc_idx;
+    int         *face_part_bound_part_idx;
+    int         *face_part_bound;
+    int         *vtx_tag;
+    double      *vtx;
     PDM_g_num_t *vtx_ln_to_gn;
-    int          *face_group_idx;
-    int          *face_group;
+    int         *face_group_idx;
+    int         *face_group;
     PDM_g_num_t *face_group_ln_to_gn;
 
     PDM_part_part_val_get(ppart,
@@ -575,7 +568,7 @@ int main(int argc, char *argv[])
     int n_cell_vtx = 0;
     for (int i = 0; i < n_cell; i++) {
       for (int j = cell_face_idx[i]; j < cell_face_idx[i+1]; j++) {
-        int face = cell_face[j] - 1;
+        int face = PDM_ABS(cell_face[j]) - 1;
         n_cell_vtx += face_vtx_idx[face+1] - face_vtx_idx[face];
       }
     }
@@ -587,7 +580,7 @@ int main(int argc, char *argv[])
     n_cell_vtx = 0;
     for (int i = 0; i < n_cell; i++) {
       for (int j = cell_face_idx[i]; j < cell_face_idx[i+1]; j++) {
-        int face = cell_face[j] - 1;
+        int face = PDM_ABS(cell_face[j]) - 1;
         for (int k = face_vtx_idx[face]; k < face_vtx_idx[face+1]; k++) {
           int i_vtx = face_vtx[k] - 1;
           for (int l = 0; l < 3; l++) {
@@ -635,23 +628,23 @@ int main(int argc, char *argv[])
                           &sface_group,
                           &n_faceGroup2);
 
-    int          *cell_tag;
-    int          *cell_face_idx;
-    int          *cell_face;
+    int         *cell_tag;
+    int         *cell_face_idx;
+    int         *cell_face;
     PDM_g_num_t *cell_ln_to_gn;
-    int          *face_tag;
-    int          *face_cell;
-    int          *face_vtx_idx;
-    int          *face_vtx;
+    int         *face_tag;
+    int         *face_cell;
+    int         *face_vtx_idx;
+    int         *face_vtx;
     PDM_g_num_t *face_ln_to_gn;
-    int          *face_part_bound_proc_idx;
-    int          *face_part_bound_part_idx;
-    int          *face_part_bound;
-    int          *vtx_tag;
-    double       *vtx;
+    int         *face_part_bound_proc_idx;
+    int         *face_part_bound_part_idx;
+    int         *face_part_bound;
+    int         *vtx_tag;
+    double      *vtx;
     PDM_g_num_t *vtx_ln_to_gn;
-    int          *face_group_idx;
-    int          *face_group;
+    int         *face_group_idx;
+    int         *face_group;
     PDM_g_num_t *face_group_ln_to_gn;
 
     PDM_part_part_val_get(ppart,
@@ -678,7 +671,7 @@ int main(int argc, char *argv[])
     int n_cell_vtx = 0;
     for (int i = 0; i < n_cell; i++) {
       for (int j = cell_face_idx[i]; j < cell_face_idx[i+1]; j++) {
-        int face = cell_face[j] - 1;
+        int face = PDM_ABS(cell_face[j]) - 1;
         n_cell_vtx += face_vtx_idx[face+1] - face_vtx_idx[face];
       }
     }

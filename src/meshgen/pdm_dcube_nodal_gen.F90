@@ -21,46 +21,50 @@
 
 module pdm_dcube_nodal_gen
 
+  use iso_c_binding
   use pdm
 
   implicit none
 
-  interface PDM_dcube_nodal_gen_create ; module procedure &
-  PDM_dcube_nodal_gen_create_
-  end interface
+  contains
 
-  interface PDM_dcube_nodal_gen_build ; module procedure &
-  PDM_dcube_nodal_gen_build_
-  end interface
+  subroutine PDM_dcube_nodal_gen_create(dcube,     &
+                                        f_comm,    &
+                                        n_x,       &
+                                        n_y,       &
+                                        n_z,       &
+                                        length,    &
+                                        xmin,      &
+                                        ymin,      &
+                                        zmin,      &
+                                        elt_type,  &
+                                        order,     &
+                                        ownership)
+    ! Create a distributed nodal cube mesh
+    implicit none
 
-  interface PDM_dcube_nodal_gen_dmesh_nodal_get ; module procedure &
-  PDM_dcube_nodal_gen_dmesh_nodal_get_
-  end interface
+    type (c_ptr), intent(out) :: dcube     ! Pointer to PDM_dcube_nodal_t instance
+    integer,      intent(in)  :: f_comm    ! Communicator
+    integer,      intent(in)  :: n_x       ! Number of elements in x-direction
+    integer,      intent(in)  :: n_y       ! Number of elements in y-direction
+    integer,      intent(in)  :: n_z       ! Number of elements in z-direction
+    real(8),      intent(in)  :: length    ! Length of cube side
+    real(8),      intent(in)  :: xmin      ! Minimal x-coordinate
+    real(8),      intent(in)  :: ymin      ! Minimal y-coordinate
+    real(8),      intent(in)  :: zmin      ! Minimal z-coordinate
+    integer,      intent(in)  :: elt_type  ! Element type
+    integer,      intent(in)  :: order     ! Element order
+    integer,      intent(in)  :: ownership ! instance ownership
 
-  private :: PDM_dcube_nodal_gen_create_
-  private :: PDM_dcube_nodal_gen_build_
-  private :: PDM_dcube_nodal_gen_dmesh_nodal_get_
+    integer(c_int)             :: c_comm
+    integer(c_int)             :: c_n_x, c_n_y, c_n_z
+    integer(c_int)             :: c_elt_type, c_order, c_ownership
+    real(c_double)             :: c_length
+    real(c_double)             :: c_xmin, c_ymin, c_zmin
 
-  interface
 
-    !>
-    !!
-    !! \brief Create a distributed nodal cube mesh
-    !!
-    !! \param [in]   comm           Communicator
-    !! \param [in]   n_x            Number of elements in x-direction
-    !! \param [in]   n_y            Number of elements in y-direction
-    !! \param [in]   n_z            Number of elements in z-direction
-    !! \param [in]   length         Length of cube side
-    !! \param [in]   xmin           Minimal x-coordinate
-    !! \param [in]   ymin           Minimal y-coordinate
-    !! \param [in]   zmin           Minimal z-coordinate
-    !! \param [in]   elt_type       Element type
-    !! \param [in]   order          Element order
-    !! \param [in]   ownership      Object ownership
-    !!
-
-    function PDM_dcube_nodal_gen_create_cf (comm,      &
+    interface
+      function PDM_dcube_nodal_gen_create_c(comm,      &
                                             n_x,       &
                                             n_y,       &
                                             n_z,       &
@@ -71,192 +75,156 @@ module pdm_dcube_nodal_gen
                                             elt_type,  &
                                             order,     &
                                             ownership) &
-      result(dcube) &
-      bind (c, name = 'PDM_dcube_nodal_gen_create')
+        result(dcube) &
+        bind (c, name = 'PDM_dcube_nodal_gen_create')
 
-      use iso_c_binding
-      implicit none
+        use iso_c_binding
+        implicit none
 
-      integer(c_int), value :: comm
-      integer(c_int), value :: n_x, n_y, n_z
-      integer(c_int), value :: elt_type, order, ownership
+        integer(c_int), value :: comm
+        integer(c_int), value :: n_x, n_y, n_z
+        integer(c_int), value :: elt_type, order, ownership
 
-      real(c_double), value :: length
-      real(c_double), value :: xmin, ymin, zmin
+        real(c_double), value :: length
+        real(c_double), value :: xmin, ymin, zmin
 
-      type (c_ptr) :: dcube
+        type (c_ptr) :: dcube
 
-    end function PDM_dcube_nodal_gen_create_cf
+      end function PDM_dcube_nodal_gen_create_c
+    end interface
 
-    !>
-    !!
-    !! \brief Build a \ref PDM_dcube_nodal_t structure
-    !!
-    !! \param [in] dcube           Pointer to \ref PDM_dcube_nodal_t object
-    !!
+    c_comm = PDM_MPI_Comm_f2c(f_comm)
 
-    function PDM_dcube_nodal_gen_build_cf(dcube) &
+    c_n_x       = n_x
+    c_n_y       = n_y
+    c_n_z       = n_z
+    c_length    = length
+    c_xmin      = xmin
+    c_ymin      = ymin
+    c_zmin      = zmin
+    c_elt_type  = elt_type
+    c_order     = order
+    c_ownership = ownership
 
-      result(dmn) &
-      bind (c, name = 'PDM_dcube_nodal_gen_build')
+    dcube = PDM_dcube_nodal_gen_create_c(c_comm,     &
+                                         c_n_x,      &
+                                         c_n_y,      &
+                                         c_n_z,      &
+                                         c_length,   &
+                                         c_xmin,     &
+                                         c_ymin,     &
+                                         c_zmin,     &
+                                         c_elt_type, &
+                                         c_order,    &
+                                         c_ownership)
 
-      use iso_c_binding
-      implicit none
-
-      type (c_ptr), value  :: dcube
-      type (c_ptr)         :: dmn
-
-    end function PDM_dcube_nodal_gen_build_cf
-
-    !>
-    !!
-    !! \brief Get the \ref PDM_dmesh_nodal_t associated to a \ref PDM_dcube_nodal_t
-    !!
-    !! \param [in] dcube           Pointer to \ref PDM_dcube_nodal_t object
-    !!
-
-    function PDM_dcube_nodal_gen_dmesh_nodal_get_cf(dcube) &
-
-      result(dmn) &
-      bind (c, name = 'PDM_dcube_nodal_gen_dmesh_nodal_get')
-
-      use iso_c_binding
-      implicit none
-
-      type (c_ptr), value  :: dcube
-      type (c_ptr)         :: dmn
-
-    end function PDM_dcube_nodal_gen_dmesh_nodal_get_cf
+  end subroutine PDM_dcube_nodal_gen_create
 
 
-    subroutine PDM_dcube_nodal_gen_random_factor_set(dcube, &
-                                                     random_factor) &
-    bind (c, name="PDM_dcube_nodal_gen_random_factor_set")
-      use iso_c_binding
-      implicit none
 
-      type (c_ptr),   value :: dcube
-      real(c_double), value :: random_factor
+  subroutine PDM_dcube_nodal_gen_random_factor_set(dcube,         &
+                                                   random_factor)
+    ! Set randomization factor
+    implicit none
 
-    end subroutine PDM_dcube_nodal_gen_random_factor_set
+    type(c_ptr), intent(in) :: dcube         ! Pointer to PDM_dcube_nodal_t instance
+    real(8),     intent(in) :: random_factor ! Randomization factor (between 0 and 1)
 
-    !>
-    !!
-    !! \brief Free the structure
-    !!
-    !! \param [in]   dcube   Pointer to \ref PDM_dcube_nodal_t object
-    !!
+    interface
+      subroutine PDM_dcube_nodal_gen_random_factor_set_c(dcube,         &
+                                                         random_factor) &
+      bind (c, name="PDM_dcube_nodal_gen_random_factor_set")
+        use iso_c_binding
+        implicit none
 
-    subroutine PDM_dcube_nodal_gen_free (dcube) &
-    bind(c, name='PDM_dcube_nodal_gen_free')
+        type (c_ptr),   value :: dcube
+        real(c_double), value :: random_factor
 
-      use iso_c_binding
-      implicit none
+      end subroutine PDM_dcube_nodal_gen_random_factor_set_c
+    end interface
 
-      type (c_ptr), value :: dcube
-    end subroutine PDM_dcube_nodal_gen_free
+    call PDM_dcube_nodal_gen_random_factor_set_c(dcube, &
+                                                 random_factor)
 
-  end interface
+  end subroutine PDM_dcube_nodal_gen_random_factor_set
 
-  contains
 
-    ! Create a distributed nodal cube mesh
 
-    subroutine PDM_dcube_nodal_gen_create_(dcube,     &
-                                           f_comm,    &
-                                           n_x,       &
-                                           n_y,       &
-                                           n_z,       &
-                                           length,    &
-                                           xmin,      &
-                                           ymin,      &
-                                           zmin,      &
-                                           elt_type,  &
-                                           order,     &
-                                           ownership)
+  subroutine PDM_dcube_nodal_gen_build(dcube, &
+                                       dmn)
 
-      use iso_c_binding
-      implicit none
+    ! Generate the mesh
+    implicit none
 
-      integer,              intent(in) :: f_comm    ! Communicator
-      integer,              intent(in) :: n_x       ! Number of elements in x-direction
-      integer,              intent(in) :: n_y       ! Number of elements in y-direction
-      integer,              intent(in) :: n_z       ! Number of elements in z-direction
-      integer,              intent(in) :: elt_type  ! Element type
-      integer,              intent(in) :: order     ! Element order
-      integer,              intent(in) :: ownership ! Object ownership
+    type(c_ptr), intent(in)  :: dcube ! Pointer to PDM_dcube_nodal_t instance
+    type(c_ptr), intent(out) :: dmn   ! Pointer to PDM_mesh_nodal_t instance
 
-      double precision,     intent(in) :: length    ! Length of cube side
-      double precision,     intent(in) :: xmin      ! Minimal x-coordinate
-      double precision,     intent(in) :: ymin      ! Minimal y-coordinate
-      double precision,     intent(in) :: zmin      ! Minimal z-coordinate
+    interface
+      function PDM_dcube_nodal_gen_build_c(dcube) result(dmn) &
+        bind (c, name = 'PDM_dcube_nodal_gen_build')
 
-      integer(c_int) :: c_comm
-      integer(c_int) :: c_n_x, c_n_y, c_n_z
-      integer(c_int) :: c_elt_type, c_order, c_ownership
+        use iso_c_binding
+        implicit none
 
-      real(c_double) :: c_length
-      real(c_double) :: c_xmin, c_ymin, c_zmin
+        type (c_ptr), value  :: dcube
+        type (c_ptr)         :: dmn
 
-      type (c_ptr)   :: dcube                        ! Pointer to \ref PDM_dcube_nodal_t object
+      end function PDM_dcube_nodal_gen_build_c
+    end interface
 
-      c_comm = PDM_MPI_Comm_f2c(f_comm)
+    dmn = PDM_dcube_nodal_gen_build_c(dcube)
 
-      c_n_x       = n_x
-      c_n_y       = n_y
-      c_n_z       = n_z
-      c_length    = length
-      c_xmin      = xmin
-      c_ymin      = ymin
-      c_zmin      = zmin
-      c_elt_type  = elt_type
-      c_order     = order
-      c_ownership = ownership
+  end subroutine PDM_dcube_nodal_gen_build
 
-      dcube = PDM_dcube_nodal_gen_create_cf(c_comm,     &
-                                            c_n_x,      &
-                                            c_n_y,      &
-                                            c_n_z,      &
-                                            c_length,   &
-                                            c_xmin,     &
-                                            c_ymin,     &
-                                            c_zmin,     &
-                                            c_elt_type, &
-                                            c_order,    &
-                                            c_ownership)
 
-    end subroutine PDM_dcube_nodal_gen_create_
 
-    ! Build a \ref PDM_dcube_nodal_t structure
+  subroutine PDM_dcube_nodal_gen_dmesh_nodal_get(dcube, &
+                                                 dmn)
 
-    subroutine PDM_dcube_nodal_gen_build_(dcube, &
-                                          dmn)
+    ! Get the PDM_dmesh_nodal_t associated to a PDM_dcube_nodal_t
+    implicit none
 
-      use iso_c_binding
-      implicit none
+    type(c_ptr), intent(in)  :: dcube ! Pointer to PDM_dcube_nodal_t instance
+    type(c_ptr), intent(out) :: dmn   ! Pointer to PDM_mesh_nodal_t instance
 
-      type(c_ptr), value   :: dcube ! Pointer to \ref PDM_dcube_nodal_t object
+    interface
+      function PDM_dcube_nodal_gen_dmesh_nodal_get_c(dcube) result(dmn) &
+        bind (c, name = 'PDM_dcube_nodal_gen_dmesh_nodal_get')
 
-      type (c_ptr)         :: dmn   ! Pointer to \ref PDM_mesh_nodal_t object
+        use iso_c_binding
+        implicit none
 
-      dmn = PDM_dcube_nodal_gen_build_cf(dcube)
+        type (c_ptr), value  :: dcube
+        type (c_ptr)         :: dmn
 
-    end subroutine PDM_dcube_nodal_gen_build_
+      end function PDM_dcube_nodal_gen_dmesh_nodal_get_c
+    end interface
 
-    ! Get the \ref PDM_dmesh_nodal_t associated to a \ref PDM_dcube_nodal_t
+    dmn = PDM_dcube_nodal_gen_dmesh_nodal_get_c(dcube)
 
-    subroutine PDM_dcube_nodal_gen_dmesh_nodal_get_(dcube, &
-                                                    dmn)
+  end subroutine PDM_dcube_nodal_gen_dmesh_nodal_get
 
-      use iso_c_binding
-      implicit none
 
-      type(c_ptr), value   :: dcube ! Pointer to \ref PDM_dcube_nodal_t object
+  
+  subroutine PDM_dcube_nodal_gen_free(dcube)
+    ! Free a PDM_dcube_nodal_gen_t instance
+    implicit none
 
-      type (c_ptr)         :: dmn   ! Pointer to \ref PDM_mesh_nodal_t object
+    type (c_ptr), intent(inout) :: dcube
 
-      dmn = PDM_dcube_nodal_gen_dmesh_nodal_get_cf(dcube)
+    interface
+      subroutine PDM_dcube_nodal_gen_free_c(dcube) &
+        bind(c, name='PDM_dcube_nodal_gen_free')
 
-    end subroutine PDM_dcube_nodal_gen_dmesh_nodal_get_
+        use iso_c_binding
+        implicit none
+
+        type (c_ptr), value :: dcube
+      end subroutine PDM_dcube_nodal_gen_free_c
+    end interface
+
+    call PDM_dcube_nodal_gen_free_c(dcube)
+
+  end subroutine PDM_dcube_nodal_gen_free
 
 end module pdm_dcube_nodal_gen

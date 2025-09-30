@@ -5,10 +5,8 @@
 #ifndef __PDM_H__
 #define __PDM_H__
 
-#include <stdio.h>
 #include <limits.h>
 #include "pdm_config.h"
-#include "pdm_mpi.h"
 
 /*=============================================================================
  * Macro definitions
@@ -325,7 +323,7 @@ typedef enum {
   PDM_SPLIT_DUAL_WITH_PARMETIS = 1, /*!< Use the <a href="https://github.com/KarypisLab/ParMETIS">ParMETIS</a> graph partitioning library */
   PDM_SPLIT_DUAL_WITH_PTSCOTCH = 2, /*!< Use the <a href="https://gitlab.inria.fr/scotch/scotch">PT-Scotch</a> graph partitioning library */
   PDM_SPLIT_DUAL_WITH_HILBERT  = 3, /*!< Use in-house method based on the <a href="https://en.wikipedia.org/wiki/Hilbert_curve">Hilbert space-filling</a> curve */
-  PDM_SPLIT_DUAL_WITH_IMPLICIT = 4  /*!< Split into contiguous chunks of global ids */
+  PDM_SPLIT_DUAL_WITH_IMPLICIT = 4  /*!< Split into contiguous chunks of global IDs */
 } PDM_split_dual_t;
 
 /**
@@ -348,16 +346,14 @@ typedef enum {
  *
  */
 typedef enum {
-
-  PDM_ISO_SURFACE_KIND_FIELD    = 0,
-  PDM_ISO_SURFACE_KIND_PLANE    = 1,
-  PDM_ISO_SURFACE_KIND_SPHERE   = 2,
-  PDM_ISO_SURFACE_KIND_ELLIPSE  = 3,
-  PDM_ISO_SURFACE_KIND_QUADRIC  = 4,
-  PDM_ISO_SURFACE_KIND_HEART    = 5,
-  PDM_ISO_SURFACE_KIND_FUNCTION = 6,
-  PDM_ISO_SURFACE_KIND_MAX      = 7
-
+  PDM_ISO_SURFACE_KIND_FIELD    = 0, /*!< (\c Isosurface.FIELD in Python).     Isosurface follows given partitioned (or block-distributed) field */
+  PDM_ISO_SURFACE_KIND_PLANE    = 1, /*!< (\c Isosurface.PLANE in Python).     Isosurface follows the plane of equation (4 coefficients) : \n \f$\scriptsize\phi(x,y,z) = \texttt{coeff[0]} \cdot x + \texttt{coeff[1]} \cdot y + \texttt{coeff[2]} \cdot z - \texttt{coeff[3]}\f$                                                                                                                                                                           */
+  PDM_ISO_SURFACE_KIND_SPHERE   = 2, /*!< (\c Isosurface.SPHERE in Python).    Isosurface follows the sphere of equation (4 coefficients) : \n \f$\scriptsize\phi(x,y,z) = (x - \texttt{coeff[0]})^2 + (y - \texttt{coeff[1]})^2 + (z - \texttt{coeff[2]})^2 - \texttt{coeff[3]}^2\f$                                                                                                                                                                        */
+  PDM_ISO_SURFACE_KIND_ELLIPSE  = 3, /*!< (\c Isosurface.ELLIPSE in Python).   Isosurface follows the ellipse of equation (7 coefficients) : \n \f$\scriptsize\phi(x,y,z) = \left(\frac{x - \texttt{coeff[0]}}{\texttt{coeff[3]}}\right)^2 + \left(\frac{y - \texttt{coeff[1]}}{\texttt{coeff[4]}}\right)^2 + \left(\frac{z - \texttt{coeff[2]}}{\texttt{coeff[5]}}\right)^2 - \texttt{coeff[6]}^2\f$                                                        */
+  PDM_ISO_SURFACE_KIND_QUADRIC  = 4, /*!< (\c Isosurface.QUADRIC in Python).   Isosurface follows the quadric of equation (10 coefficients) : \n \f$\scriptsize\phi(x,y,z) = \texttt{coeff[6]} \left(\frac{x - \texttt{coeff[0]}}{\texttt{coeff[3]}}\right)^2 + \texttt{coeff[7]} \left(\frac{y - \texttt{coeff[1]}}{\texttt{coeff[4]}}\right)^2 + \texttt{coeff[8]} \left(\frac{z - \texttt{coeff[2]}}{\texttt{coeff[5]}}\right)^2 - \texttt{coeff[9]}^2\f$ */
+  PDM_ISO_SURFACE_KIND_HEART    = 5, /*!< (\c Isosurface.HEART in Python).     Isosurface follows a heart-shaped function                          */
+  PDM_ISO_SURFACE_KIND_FUNCTION = 6, /*!< (\c Isosurface.FUNCTION in Python).  Isosurface follows a user-defined function                          */
+  PDM_ISO_SURFACE_KIND_MAX      = 7  /*!< Enumerator to list the number of iso-surface kinds available */
 } PDM_iso_surface_kind_t;
 
 typedef enum {
@@ -370,9 +366,9 @@ typedef enum {
 
 typedef enum {
 
-  PDM_EXTRACT_PART_KIND_LOCAL         = 0, /*!< Extraction local                    */
-  PDM_EXTRACT_PART_KIND_REEQUILIBRATE = 1, /*!< Requilibrate and reform partition   */
-  PDM_EXTRACT_PART_KIND_FROM_TARGET   = 2, /*!< Extract into target specify by user */
+  PDM_EXTRACT_PART_KIND_LOCAL         = 0, /*!< The entities of interest are selected locally and are extracted in place */
+  PDM_EXTRACT_PART_KIND_REEQUILIBRATE = 1, /*!< The entities of interest are selected locally and are redistributed according to the chosen partitioning method */
+  PDM_EXTRACT_PART_KIND_FROM_TARGET   = 2, /*!< The requested target entities are fetched from their location in the input mesh */
 } PDM_extract_part_kind_t;
 
 typedef enum {
@@ -441,6 +437,16 @@ PDM_geometry_kind_t
 PDM_entity_type_to_geometry_kind
 (
  PDM_mesh_entities_t   entity_type
+);
+
+/**
+ * \brief Helper to get entity type according to a dimension
+ *
+ */
+PDM_mesh_entities_t
+PDM_dimension_to_entity_type
+(
+  const int dim
 );
 
 /**

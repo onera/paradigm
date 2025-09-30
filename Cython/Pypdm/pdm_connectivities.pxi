@@ -76,11 +76,11 @@ cdef extern from "pdm_part_connectivity_transform.h":
                                                int ***entity2_entity1_idx,
                                                int ***entity2_entity1)
     # ------------------------------------------------------------------
-    void PDM_part_connectivity_to_connectity_idx(const int    n_part,
-                                                const int   *n_entity1,
-                                                      int  **entity1_entity2_in,
-                                                      int ***entity1_entity2_idx,
-                                                      int ***entity1_entity2)
+    void PDM_part_connectivity_to_connectivity_idx(const int    n_part,
+                                                   const int   *n_entity1,
+                                                         int  **entity1_entity2_in,
+                                                         int ***entity1_entity2_idx,
+                                                         int ***entity1_entity2)
     # ------------------------------------------------------------------
 
 cdef extern from "pdm_part_connectivity_transform.h":
@@ -118,7 +118,7 @@ def decompose_std_elmt_faces(PDM_Mesh_nodal_elt_t                          elt_t
                                  _PDM_MESH_NODAL_TRIA3    : 3,
                                  _PDM_MESH_NODAL_QUAD4    : 4,
                                  _PDM_MESH_NODAL_TETRA4   : 12,
-                                 _PDM_MESH_NODAL_PYRAMID5 : 16}   
+                                 _PDM_MESH_NODAL_PYRAMID5 : 16}
     # > General infos
     cdef int n_elt            = elt_vtx.size // elt_type_to_n_vtx[elt_type];
     cdef int order            = 1;
@@ -156,7 +156,7 @@ def decompose_std_elmt_faces(PDM_Mesh_nodal_elt_t                          elt_t
                              _elmt_cell_face_idx,
                              _elmt_cell_face,
                              _elmt_parent_elt)
-                                  
+
 
     np_elmt_face_vtx_idx = create_numpy_i(_elmt_face_vtx_idx, n_elt*elt_type_to_n_face[elt_type] +1)
     np_elmt_face_vtx     = create_numpy_g(_elmt_face_vtx    , n_elt*elt_type_to_nsum_vtx_face[elt_type])
@@ -166,13 +166,29 @@ def decompose_std_elmt_faces(PDM_Mesh_nodal_elt_t                          elt_t
     return np_elmt_face_vtx_idx, np_elmt_face_vtx
 
 # ------------------------------------------------------------------------
-def dconnectivity_transpose(MPI.Comm comm,
-                            NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1]    entity1_distrib,
-                            NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1]    entity2_distrib,
-                            NPY.ndarray[int           , mode='c', ndim=1]    dentity1_entity2_idx,
-                            NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1]    dentity1_entity2,
-                            bint                                             is_signed):
-                                  
+def dconnectivity_transpose(MPI.Comm                                      comm,
+                            NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] entity1_distrib,
+                            NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] entity2_distrib,
+                            NPY.ndarray[int           , mode='c', ndim=1] dentity1_entity2_idx,
+                            NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] dentity1_entity2,
+                            bint                                          is_signed):
+    """
+    dconnectivity_transpose(comm, entity1_distrib, entity2_distrib, dentity1_entity2_idx, dentity1_entity2, is_signed)
+
+    Transpose **dentity1_entity2** connectivity to get **dentity2_entity3** connectivity
+
+    Parameters:
+        comm                 (MPI.Comm)                   : MPI communicator
+        entity1_distrib      (np.ndarray[npy_pdm_gnum_t]) : Distribution of entity1
+        entity2_distrib      (np.ndarray[npy_pdm_gnum_t]) : Distribution of entity1
+        dentity1_entity2_idx (np.ndarray[np.int32_t])     : Index of entity1->entity2 connectivity
+        dentity1_entity2     (np.ndarray[npy_pdm_gnum_t]) : Entity1->entity2 connectivity
+        is_signed            (bool)                       : If connectivity is signed
+
+    Returns:
+        - Index of entity2->entity1 connectivity (np.ndarray[np.int12_t])
+        - Entity2->entity1 connectivity          (np.ndarray[npy_pdm_gnum_t])
+    """
     ## entity2_distrib can be recomputed if allocated but entity2_distrib[0] = -1
     # TODO : manage case entity1_distrib recomputed
     # > Convert mpi4py -> PDM_MPI
@@ -201,7 +217,7 @@ def dconnectivity_transpose(MPI.Comm comm,
                          <int>  is_signed,
                               &_dentity2_entity1_idx,
                               &_dentity2_entity1)
-    
+
     dn_entity2 = entity2_distrib[comm.Get_rank()+1] - entity2_distrib[comm.Get_rank()]
 
     np_dentity2_entity1_idx = create_numpy_i(_dentity2_entity1_idx, dn_entity2 + 1)
@@ -215,7 +231,21 @@ def dfacecell_to_dcellface(MPI.Comm comm,
                            NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] face_distri,
                            NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] cell_distri,
                            NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] dface_cell):
+    """
+    dfacecell_to_dcellface(comm, face_distri, cell_distri, dface_cell)
 
+    Shortcut to PDM_dconnectivity_transpose for facecell like connectivity
+
+    Parameters:
+        comm        (MPI.Comm)                   : MPI communicator
+        face_distri (np.ndarray[npy_pdm_gnum_t]) : Distribution of faces
+        cell_distri (np.ndarray[npy_pdm_gnum_t]) : Distribution of cells
+        dface_cell  (np.ndarray[npy_pdm_gnum_t]) : Face->cell connectivity (size = 2*dn_face : cell_left/cell_right)
+
+    Returns:
+        - Index of cell->face connectivity (`np.ndarray[np.int32_t]`)
+        - Cell->face connectivity          (`np.ndarray[npy_pdm_gnum_t]`)
+    """
     i_rank = comm.Get_rank()
     n_rank = comm.Get_size()
 
@@ -254,6 +284,21 @@ def dcellface_to_dfacecell(MPI.Comm comm,
                            NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] cell_distri,
                            NPY.ndarray[NPY.int32_t,    mode='c', ndim=1] dcell_face_idx,
                            NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] dcell_face):
+    """
+    dcellface_to_dfacecell(comm, face_distri, cell_distri, dcell_face_idx, dcell_face)
+
+    Shortcut to PDM_dconnectivity_transpose for facecell like connectivity
+
+    Parameters:
+        comm           (MPI.Comm)                   : MPI communicator
+        face_distri    (np.ndarray[npy_pdm_gnum_t]) : Distribution of faces
+        cell_distri    (np.ndarray[npy_pdm_gnum_t]) : Distribution of cells
+        dcell_face_idx (np.ndarray[np.int32_t])     : Index of cell->face connectivity
+        dcell_face     (np.ndarray[npy_pdm_gnum_t]) : Cell->face connectivity
+
+    Returns:
+        Face->cell connectivity (`np.ndarray[npy_pdm_gnum_t]`,  size = 2*dn_face : cell_left/cell_right)
+    """
     i_rank = comm.Get_rank()
     n_rank = comm.Get_size()
 
@@ -284,33 +329,48 @@ def dcellface_to_dfacecell(MPI.Comm comm,
     return np_dface_cell
 
 # ------------------------------------------------------------------------
-def combine_connectivity(NPY.ndarray[int, mode='c', ndim=1]    entity1_entity2_idx,
-                         NPY.ndarray[int, mode='c', ndim=1]    entity1_entity2,
-                         NPY.ndarray[int, mode='c', ndim=1]    entity2_entity3_idx,
-                         NPY.ndarray[int, mode='c', ndim=1]    entity2_entity3):
+def combine_connectivity(NPY.ndarray[int, mode='c', ndim=1] entity1_entity2_idx,
+                         NPY.ndarray[int, mode='c', ndim=1] entity1_entity2,
+                         NPY.ndarray[int, mode='c', ndim=1] entity2_entity3_idx,
+                         NPY.ndarray[int, mode='c', ndim=1] entity2_entity3):
+    """
+    combine_connectivity(entity1_entity2_idx, entity1_entity2, entity2_entity3_idx, entity2_entity3)
+
+    Combine **entity1_entity2** and **entity2_entity3** connectivities to get **entity1_entity3**
+
+    Parameters:
+        entity1_entity2_idx (np.ndarray[np.int32_t]) : Connectivity index between entity1 and entity2 (size = n_entity1 + 1)
+        entity1_entity2     (np.ndarray[np.int32_t]) : Connectivity between entity1 and entity2 (size = entity1_entity2_idx[n_entity1])
+        entity2_entity3_idx (np.ndarray[np.int32_t]) : Connectivity index between entity2 and entity3 (size = n_entity2 + 1)
+        entity2_entity3     (np.ndarray[np.int32_t]) : Connectivity between entity2 and entity3 (size = entity2_entity3_idx[n_entity2] )
+
+    Returns:
+        - Index of **entity1_entity3** connectivity (`np.ndarray[np.int32_t]`)
+        - **entity1_entity3** connectivity          (`np.ndarray[np.int32_t]`)
+    """
 
     assert_single_dim_np(entity1_entity2, NPY.int32, entity1_entity2_idx[-1])
     assert_single_dim_np(entity2_entity3, NPY.int32, entity2_entity3_idx[-1])
-    
+
     cdef int n_entity1 = entity1_entity2_idx.size -1
-    
+
     cdef int *_entity1_entity2_idx
     assert entity1_entity2_idx is not None
     _entity1_entity2_idx = <int *> entity1_entity2_idx.data
-    
+
     cdef int *_entity1_entity2
     _entity1_entity2 = <int *> entity1_entity2.data
-    
+
     cdef int *_entity2_entity3_idx
     assert entity1_entity2_idx is not None
     _entity2_entity3_idx = <int *> entity2_entity3_idx.data
-    
+
     cdef int *_entity2_entity3
     _entity2_entity3 = <int *> entity2_entity3.data
-    
+
     cdef int *_entity1_entity3_idx = NULL
     cdef int *_entity1_entity3     = NULL
-    
+
     PDM_combine_connectivity( n_entity1,
                               _entity1_entity2_idx,
                               _entity1_entity2,
@@ -318,23 +378,42 @@ def combine_connectivity(NPY.ndarray[int, mode='c', ndim=1]    entity1_entity2_i
                               _entity2_entity3,
                              &_entity1_entity3_idx,
                              &_entity1_entity3)
-    
+
     assert _entity1_entity3_idx != NULL
-    
+
     np_entity1_entity3_idx = create_numpy_i(_entity1_entity3_idx, n_entity1 + 1)
     np_entity1_entity3     = create_numpy_i(_entity1_entity3, np_entity1_entity3_idx[n_entity1])
-    
+
     return np_entity1_entity3_idx, np_entity1_entity3
 
 # ------------------------------------------------------------------------
-def dconnectivity_combine(MPI.Comm comm,
-                          NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1]    entity1_distrib,
-                          NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1]    entity2_distrib,
-                          NPY.ndarray[int           , mode='c', ndim=1]    dentity1_entity2_idx,
-                          NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1]    dentity1_entity2,
-                          NPY.ndarray[int           , mode='c', ndim=1]    dentity2_entity3_idx,
-                          NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1]    dentity2_entity3,
-                          bint                                             is_signed):
+def dconnectivity_combine(MPI.Comm                                      comm,
+                          NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] entity1_distrib,
+                          NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] entity2_distrib,
+                          NPY.ndarray[int           , mode='c', ndim=1] dentity1_entity2_idx,
+                          NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] dentity1_entity2,
+                          NPY.ndarray[int           , mode='c', ndim=1] dentity2_entity3_idx,
+                          NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] dentity2_entity3,
+                          bint                                          is_signed):
+    """
+    dconnectivity_combine(comm, entity1_distrib, entity2_distrib, dentity1_entity2_idx, dentity1_entity2, dentity2_entity3_idx, dentity2_entity3, is_signed)
+
+    Combine **dentity1_entity2** and **dentity2_entity3** connectivities to get **dentity1_entity3**
+
+    Parameters:
+        comm                 (MPI.Comm)                   : MPI communicator
+        entity1_distrib      (np.ndarray[npy_pdm_gnum_t]) : Distribution of entity1
+        entity2_distrib      (np.ndarray[npy_pdm_gnum_t]) : Distribution of entity1
+        dentity1_entity2_idx (np.ndarray[np.int32_t])     : Index of entity1->entity2 connectivity
+        dentity1_entity2     (np.ndarray[npy_pdm_gnum_t]) : Entity1->entity2 connectivity
+        dentity2_entity3_idx (np.ndarray[np.int32_t])     : Index of entity2->entity3 connectivity
+        dentity2_entity3     (np.ndarray[npy_pdm_gnum_t]) : Entity2->entity3 connectivity
+        is_signed            (bool)                       : If connectivity is signed
+
+    Returns:
+        - Index of entity1->entity3 connectivity (np.ndarray[np.int32_t])
+        - Entity1->entity3 connectivity          (np.ndarray[npy_pdm_gnum_t])
+    """
     # > Convert mpi4py -> PDM_MPI
     cdef MPI.MPI_Comm c_comm = comm.ob_mpi
     cdef PDM_MPI_Comm PDMC   = PDM_MPI_mpi_2_pdm_mpi_comm(&c_comm)
@@ -363,32 +442,45 @@ def dconnectivity_combine(MPI.Comm comm,
 def connectivity_transpose(NPY.int                               n_entity2, # We have to pass n_entity2 to manage empty tabs and gap numerbering
                            NPY.ndarray[int, mode='c', ndim=1]    entity1_entity2_idx,
                            NPY.ndarray[int, mode='c', ndim=1]    entity1_entity2):
-    
+    """
+    connectivity_transpose(n_entity2, entity1_entity2_idx, entity1_entity2)
+
+    Transpose connectivity **entity1_entity2** to get **entity2_entity1**
+
+    Parameters:
+        n_entity2           (int)                    : Number of entity2
+        entity1_entity2_idx (np.ndarray[np.int32_t]) : Connectivity index between entity1 and entity2 (size = n_entity1 + 1)
+        entity1_entity2     (np.ndarray[np.int32_t]) : Connectivity between entity1 and entity2 (size = entity1_entity2_idx[n_entity1])
+
+    Returns:
+        - Index of **entity2_entity1** connectivity (`np.ndarray[np.int32_t]`)
+        - **entity2_entity1** connectivity          (`np.ndarray[np.int32_t]`)
+    """
     assert_single_dim_np(entity1_entity2, NPY.int32, entity1_entity2_idx[-1])
-    
+
     cdef int n_entity1 = entity1_entity2_idx.size -1
-    
+
     cdef int *_entity1_entity2_idx
     assert entity1_entity2_idx is not None
     _entity1_entity2_idx = <int *> entity1_entity2_idx.data
-    
+
     cdef int *_entity1_entity2 = <int *> entity1_entity2.data
-    
+
     cdef int *_entity2_entity1_idx = NULL
     cdef int *_entity2_entity1     = NULL
-    
+
     PDM_connectivity_transpose(      n_entity1,
                                <int> n_entity2,
                                      _entity1_entity2_idx,
                                      _entity1_entity2,
                                     &_entity2_entity1_idx,
                                     &_entity2_entity1)
-    
+
     assert _entity2_entity1_idx != NULL
-    
+
     np_entity2_entity1_idx = create_numpy_i(_entity2_entity1_idx, n_entity2 + 1)
     np_entity2_entity1     = create_numpy_i(_entity2_entity1, np_entity2_entity1_idx[n_entity2])
-    
+
     return np_entity2_entity1_idx, np_entity2_entity1
 
 # ------------------------------------------------------------------------
@@ -397,20 +489,20 @@ def part_connectivity_transpose(list   n_entity2, # We have to pass n_entity2 to
                                 list   l_entity1_entity2):
 
     assert(len(n_entity2) == len(l_entity1_entity2_idx) == len(l_entity1_entity2))
-    
+
     cdef int n_part = len(n_entity2)
-    
+
     n_entity1 = [entity1_entity2_idx.size -1 for entity1_entity2_idx in l_entity1_entity2_idx]
     cdef int* _n_entity1 = list_to_int_pointer(n_entity1)
-    
+
     cdef int* _n_entity2 = list_to_int_pointer(n_entity2)
-    
+
     cdef int** _entity1_entity2_idx = np_list_to_int_pointers(l_entity1_entity2_idx)
     cdef int** _entity1_entity2     = np_list_to_int_pointers(l_entity1_entity2)
 
     _entity2_entity1_idx = <int **> malloc(n_part * sizeof(int *))
     _entity2_entity1     = <int **> malloc(n_part * sizeof(int *))
-    
+
     PDM_part_connectivity_transpose( n_part,
                                      _n_entity1,
                                      _n_entity2,
@@ -418,61 +510,73 @@ def part_connectivity_transpose(list   n_entity2, # We have to pass n_entity2 to
                                      _entity1_entity2,
                                     &_entity2_entity1_idx,
                                     &_entity2_entity1)
-    
+
     l_np_entity2_entity1_idx = list()
     l_np_entity2_entity1     = list()
-    
+
     for i_part in range(n_part):
-        
+
         assert _entity2_entity1_idx[i_part] != NULL
-        
+
         np_entity2_entity1_idx = create_numpy_i(_entity2_entity1_idx[i_part], _n_entity2[i_part] + 1)
         np_entity2_entity1     = create_numpy_i(_entity2_entity1[i_part], np_entity2_entity1_idx[_n_entity2[i_part]])
-        
+
         l_np_entity2_entity1_idx.append(np_entity2_entity1_idx)
         l_np_entity2_entity1.append(np_entity2_entity1)
-    
+
     free(_n_entity1)
     free(_n_entity2)
     free(_entity1_entity2_idx)
     free(_entity1_entity2)
     free(_entity2_entity1_idx)
     free(_entity2_entity1)
-    
+
     return l_np_entity2_entity1_idx, l_np_entity2_entity1
 
 # ------------------------------------------------------------------------
-def part_connectivity_to_connectity_idx(list   n_entity1,
-                                        list   l_entity1_entity2_in):
+def part_connectivity_to_connectivity_idx(list   n_entity1,
+                                          list   l_entity1_entity2_in):
+    """
+    part_connectivity_to_connectivity_idx(n_entity1, l_entity1_entity2_in)
 
+    Convert implicit pair connectivity, to a connectivity with index. Useful for converting face_cell or edge_vtx
+
+    Parameters:
+        n_entity1            (list of int)                    : Number of entity1 for each part
+        l_entity1_entity2_in (list of np.ndarray[np.int32_t]) : Implicit **entity1_entity2** connectivity
+
+    Returns:
+        - Index of explicit **entity1_entity2** connectivity (`list` of `np.ndarray[np.int32_t]`)
+        - Explicit **entity1_entity2** connectivity          (`list` of `np.ndarray[np.int32_t]`)
+    """
     assert(len(n_entity1) == len(l_entity1_entity2_in))
-    
+
     cdef int n_part = len(n_entity1)
 
     cdef int* _n_entity1 = list_to_int_pointer(n_entity1)
-    
+
     cdef int** _entity1_entity2_in = np_list_to_int_pointers(l_entity1_entity2_in)
 
     _entity1_entity2_idx = <int **> malloc(n_part * sizeof(int *))
     _entity1_entity2     = <int **> malloc(n_part * sizeof(int *))
-    
-    
-    PDM_part_connectivity_to_connectity_idx( n_part,
+
+
+    PDM_part_connectivity_to_connectivity_idx( n_part,
                                              _n_entity1,
                                              _entity1_entity2_in,
                                             &_entity1_entity2_idx,
                                             &_entity1_entity2)
-    
+
     l_np_entity1_entity2_idx = list()
     l_np_entity1_entity2     = list()
-    
+
     for i_part in range(n_part):
-        
+
         assert _entity1_entity2_idx[i_part] != NULL
-        
+
         np_entity1_entity2_idx = create_numpy_i(_entity1_entity2_idx[i_part], _n_entity1[i_part] + 1)
         np_entity1_entity2     = create_numpy_i(_entity1_entity2[i_part], np_entity1_entity2_idx[_n_entity1[i_part]])
-        
+
         l_np_entity1_entity2_idx.append(np_entity1_entity2_idx)
         l_np_entity1_entity2.append(np_entity1_entity2)
 
@@ -480,14 +584,26 @@ def part_connectivity_to_connectity_idx(list   n_entity1,
     free(_entity1_entity2_in)
     free(_entity1_entity2_idx)
     free(_entity1_entity2)
-    
+
     return l_np_entity1_entity2_idx, l_np_entity1_entity2
 
 # ------------------------------------------------------------------------
 def compute_face_vtx_from_face_and_edge(NPY.ndarray[int, mode='c', ndim=1] face_edge_idx,
                                         NPY.ndarray[int, mode='c', ndim=1] face_edge,
                                         NPY.ndarray[int, mode='c', ndim=1] edge_vtx):
+    """
+    compute_face_vtx_from_face_and_edge(face_edge_idx, face_edge, edge_vtx)
 
+    Generate face->vtx connectivity from (*signed*) face->edge and edge->vtx connectivities
+
+    Parameters:
+        face_edge_idx (np.ndarray[np.int32_t]) : Index for face->edge connectivity
+        face_edge     (np.ndarray[np.int32_t]) : Face->edge connectivity
+        edge_vtx      (np.ndarray[np.int32_t]) : Edge->vtx connectivity
+
+    Returns:
+        Face->vtx connectivity (`np.ndarray[np.int32_t]`)
+    """
     cdef int *face_vtx = NULL
 
     cdef int *_face_edge_idx = <int *> face_edge_idx.data

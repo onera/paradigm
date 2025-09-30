@@ -7,8 +7,9 @@ endif()
 
 if(PDM_ENABLE_DOC)
     find_package(Doxygen 1.8.9 REQUIRED)
-    find_package(Sphinx 3 REQUIRED)
+    find_package(Sphinx 6 REQUIRED)
     find_package(Breathe REQUIRED)
+    include(check_python_module)
 
     #------------------------------------------------------------------------------
     # Build doxygen documentation
@@ -26,6 +27,13 @@ if(PDM_ENABLE_DOC)
         message(FATAL_ERROR "Breathe is needed to build the documentation.")
     endif()
 
+    # Check that the required Sphinx extensions are available
+    if (PDM_ENABLE_FORTRAN)
+      check_python_module(sphinxfortran REQUIRED)
+    endif()
+    check_python_module(sphinx_copybutton REQUIRED)
+    check_python_module(sphinx_design REQUIRED)
+
     set(DOXYFILE_IN ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in)
     set(DOXYFILE_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
     set(SPHINX_IN ${CMAKE_CURRENT_SOURCE_DIR}/sphinx/conf.py.in)
@@ -34,14 +42,16 @@ if(PDM_ENABLE_DOC)
     set(DOXYGEN_INDEX_FILE ${CMAKE_CURRENT_BINARY_DIR}/xml/index.xml)
     if (NOT PDM_ENABLE_EXTENSION_PDMA)
       set(COMMENT_NOT_PDMA_RST ".. ")
-    endif ()  
+    endif ()
 
     configure_file(${DOXYFILE_IN} ${DOXYFILE_OUT} @ONLY)
     configure_file(${SPHINX_IN} ${SPHINX_OUT} @ONLY)
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/sphinx/source/user_manual/util/index.rst.in ${CMAKE_CURRENT_SOURCE_DIR}/sphinx/source/user_manual/util/index.rst @ONLY)
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/sphinx/source/user_manual/mesh_transform/index.rst.in ${CMAKE_CURRENT_SOURCE_DIR}/sphinx/source/user_manual/mesh_transform/index.rst @ONLY)
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/sphinx/source/user_manual/partitioning/renumbering.rst.in ${CMAKE_CURRENT_SOURCE_DIR}/sphinx/source/user_manual/partitioning/renumbering.rst @ONLY)
     if (PDM_ENABLE_EXTENSION_PDMA)
       configure_file(${CMAKE_CURRENT_SOURCE_DIR}/sphinx/source/user_manual/mesh_transform/mesh_deform.rst.in ${CMAKE_CURRENT_SOURCE_DIR}/sphinx/source/user_manual/mesh_transform/mesh_deform.rst @ONLY)
-      configure_file(${CMAKE_CURRENT_SOURCE_DIR}/sphinx/source/user_manual/mesh_transform/mesh_eval.rst.in ${CMAKE_CURRENT_SOURCE_DIR}/sphinx/source/user_manual/mesh_transform/mesh_eval.rst @ONLY)
+      configure_file(${CMAKE_CURRENT_SOURCE_DIR}/sphinx/source/user_manual/util/mesh_eval.rst.in ${CMAKE_CURRENT_SOURCE_DIR}/sphinx/source/user_manual/util/mesh_eval.rst @ONLY)
     endif()
 
     if (PDM_ENABLE_SHARED)
@@ -60,7 +70,7 @@ if(PDM_ENABLE_DOC)
 
     add_custom_command(OUTPUT ${DOXYGEN_INDEX_FILE}
                        COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYFILE_OUT}
-                       MAIN_DEPENDENCY ${DOXYFILE_OUT} 
+                       MAIN_DEPENDENCY ${DOXYFILE_OUT}
                        COMMENT "Generating API documentation with Doxygen"
                        DEPENDS ${DOXYGEN_DEP} # NB : trying to do documentation after module generation
                        VERBATIM)
@@ -86,6 +96,7 @@ if(PDM_ENABLE_DOC)
       execute_process(COMMAND gcc -print-file-name=libasan.so OUTPUT_VARIABLE PRELOAD_ASAN OUTPUT_STRIP_TRAILING_WHITESPACE)
       set(DOC_PRELOAD "LD_PRELOAD=${PRELOAD_ASAN}")
       set(RUN_LSAN "LSAN_OPTIONS=suppressions=${PROJECT_SOURCE_DIR}/external/paradigm/script/asan/asan.supp")
+      set(RUN_UBSAN "UBSAN_OPTIONS=print_stacktrace=1:halt_on_error=0")
     endif()
 
     # Only regenerate Sphinx when:
@@ -93,11 +104,28 @@ if(PDM_ENABLE_DOC)
     # - Our doc files have been updated
     # - The Sphinx config has been updated
 
+
+    # Generate Release Notes page for Sphinx doc from ChangeLog text file
+    IF (NOT Python_EXECUTABLE)
+      find_package(Python)
+    ENDIF()
+
+    set(CHANGELOG_FILE ${PROJECT_SOURCE_DIR}/ChangeLog)
+    set(SPHINX_RELEASE_NOTES ${SPHINX_SOURCE}/changelog.rst)
+    IF (Python_EXECUTABLE)
+      add_custom_command(OUTPUT ${SPHINX_RELEASE_NOTES}
+                         COMMAND ${CMAKE_COMMAND} -E env ${DOC_PYTHONPATH} env MPI4PY_RC_INITIALIZE=False env ${DOC_PRELOAD} env ${RUN_LSAN} env ${RUN_UBSAN}
+                         ${Python_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/gen_release_notes.py -i ${CHANGELOG_FILE} -o ${SPHINX_RELEASE_NOTES} -p ${SPHINX_SOURCE}
+                         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/gen_release_notes.py ${CHANGELOG_FILE}
+                         COMMENT "Generating Release Notes page")
+    ENDIF()
     #file (COPY ${CMAKE_CURRENT_SOURCE_DIR}/sphinx DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
     file(GLOB_RECURSE SOURCES_SPHINX
-      ${CMAKE_CURRENT_SOURCE_DIR}/sphinx/source/*.rst
+      ${SPHINX_SOURCE}/*.rst
     )
+
+    list(APPEND SOURCES_SPHINX ${SPHINX_RELEASE_NOTES})
 
     #foreach(_src IN ITEMS ${SOURCES_SPHINX})
     #  file(RELATIVE_PATH F_BASENAME ${CMAKE_CURRENT_SOURCE_DIR} ${_src})
@@ -105,15 +133,15 @@ if(PDM_ENABLE_DOC)
     #endforeach()
 
     add_custom_command(OUTPUT ${SPHINX_INDEX_FILE}
-                       COMMAND ${CMAKE_COMMAND} -E env ${DOC_PYTHONPATH} env ${DOC_PRELOAD} env ${RUN_LSAN}
-                         ${SPHINX_EXECUTABLE} -b html 
+                       COMMAND ${CMAKE_COMMAND} -E env ${DOC_PYTHONPATH} env MPI4PY_RC_INITIALIZE=False env ${DOC_PRELOAD} env ${RUN_LSAN} env ${RUN_UBSAN}
+                         ${SPHINX_EXECUTABLE} -b html
                          -Q # Remove to have complete log file
                          -w ${CMAKE_CURRENT_BINARY_DIR}/sphinx_build_warnings.log
                          # Tell Breathe where to find the Doxygen output
                          -Dbreathe_projects.cwipi=${CMAKE_CURRENT_BINARY_DIR}/xml
                          ${SPHINX_SOURCE} ${SPHINX_BUILD} > ${CMAKE_CURRENT_BINARY_DIR}/sphinx.log 2>&1
                        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-                       DEPENDS 
+                       DEPENDS
                        # Other docs files you want to track should go here (or in some variable)
                        ${DOXYGEN_INDEX_FILE}
                        ${SOURCES_SPHINX}

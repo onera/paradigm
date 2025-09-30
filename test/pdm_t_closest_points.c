@@ -1,31 +1,20 @@
 #include <math.h>
-#include <sys/time.h>
-#include <time.h>
-#include <sys/resource.h>
-#include <unistd.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 
 #include "pdm.h"
-#include "pdm_priv.h"
-
-#include "pdm_mpi.h"
-#include "pdm_config.h"
-#include "pdm_part_to_block.h"
-#include "pdm_part_to_part.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
-#include "pdm_gnum.h"
-#include "pdm_distrib.h"
-#include "pdm_point_cloud_gen.h"
-#include "pdm_closest_points.h"
-#include "pdm_version.h"
-#include "pdm_mesh_nodal.h"
-#include "pdm_vtk.h"
-#include "pdm_logging.h"
 #include "pdm_array.h"
+#include "pdm_closest_points.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mesh_nodal.h"
+#include "pdm_mpi.h"
+#include "pdm_part_to_part.h"
+#include "pdm_point_cloud_gen.h"
+#include "pdm_printf.h"
+#include "pdm_priv.h"
+#include "pdm_version.h"
+#include "pdm_vtk.h"
 
 /*============================================================================
  * Macro definitions
@@ -73,11 +62,11 @@ _usage
  *
  * \param [in]    argc   Number of arguments
  * \param [in]    argv   Arguments
- * \param [inout] nClosest   Number of closest points
- * \param [inout] nSrc   Number of Source points
- * \param [inout] nTgt   Number of Target points
- * \param [inout] ls     Low scalability
- * \param [inout] length Length of domains
+ * \param [inout] n_closest   Number of closest points
+ * \param [inout] n_src        Number of Source points
+ * \param [inout] n_tgt        Number of Target points
+ * \param [inout] ls          Low scalability
+ * \param [inout] length      Length of domains
  *
  */
 
@@ -86,9 +75,9 @@ _read_args
 (
  int            argc,
  char         **argv,
- int           *nClosest,
- PDM_g_num_t   *nSrc,
- PDM_g_num_t   *nTgt,
+ int           *n_closest,
+ PDM_g_num_t   *n_src,
+ PDM_g_num_t   *n_tgt,
  double        *radius,
  int           *visu
  )
@@ -108,7 +97,7 @@ _read_args
         _usage(EXIT_FAILURE);
       }
       else {
-        *nClosest = atoi(argv[i]);
+        *n_closest = atoi(argv[i]);
       }
     }
 
@@ -118,8 +107,8 @@ _read_args
         _usage(EXIT_FAILURE);
       }
       else {
-        long _nSrc = atol(argv[i]);
-        *nSrc = (PDM_g_num_t) _nSrc;
+        long _n_src = atol(argv[i]);
+        *n_src = (PDM_g_num_t) _n_src;
       }
     }
 
@@ -129,8 +118,8 @@ _read_args
         _usage(EXIT_FAILURE);
       }
       else {
-        long _nTgt = atol(argv[i]);
-        *nTgt = (PDM_g_num_t) _nTgt;
+        long _n_tgt = atol(argv[i]);
+        *n_tgt = (PDM_g_num_t) _n_tgt;
       }
     }
 
@@ -264,12 +253,8 @@ main
                               &n_tgt,
                               &tgt_coord,
                               &tgt_g_num);
-  // n_tgt = n_src;
-  // tgt_coord = src_coord;
-  // tgt_g_num = src_g_num;
 
-
-  PDM_closest_point_t* clsp = PDM_closest_points_create (PDM_MPI_COMM_WORLD,
+  PDM_closest_point_t* clsp = PDM_closest_points_create (comm,
                                                          n_closest_points,
                                                          PDM_OWNERSHIP_KEEP);
 
@@ -303,26 +288,6 @@ main
                           &closest_src_gnum,
                           &closest_src_dist);
 
-
-  if (0 == 1) {
-    printf("\n\n============================\n\n");
-
-    for (int i = 0; i < n_tgt; i++) {
-      printf("Target point #%d ("PDM_FMT_G_NUM") [%f, %f, %f]\n", i, tgt_g_num[i],
-             tgt_coord[3*i], tgt_coord[3*i+1], tgt_coord[3*i+2]);
-      for (int j = 0; j < n_closest_points; j++)
-        printf("\t%d:\t"PDM_FMT_G_NUM"\t%f\n",
-               j+1,
-               closest_src_gnum[n_closest_points*i + j],
-               closest_src_dist[n_closest_points*i + j]);
-      printf("\n\n");
-    }
-
-
-    printf("============================\n\n");
-  }
-
-
   /* Check ptp */
   if (1) {
     PDM_part_to_part_t *ptp = NULL;
@@ -341,22 +306,11 @@ main
                                                        (const PDM_g_num_t **) &closest_src_gnum,
                                                        comm);
 
-    // PDM_log_trace_connectivity_long(tgt_to_src_idx,
-    //                                 closest_src_gnum,
-    //                                 n_tgt,
-    //                                 "closest_src_gnum : ");
-
     int         **come_from_idx;
     PDM_g_num_t **come_from;
     PDM_part_to_part_gnum1_come_from_get(ptp,
                                          &come_from_idx,
                                          &come_from);
-
-    // PDM_log_trace_connectivity_long(come_from_idx[0],
-    //                                 come_from[0],
-    //                                 n_tgt,
-    //                                 "come_from        : ");
-
 
     double **recv_coord = NULL;
     int request = -1;
@@ -373,8 +327,7 @@ main
             (      void ***) &recv_coord,
                              &request);
       PDM_part_to_part_iexch_wait(ptp, request);
-    }
-    else {
+    } else {
       PDM_part_to_part_reverse_iexch(ptp2,
                                      PDM_MPI_COMM_KIND_P2P,
                                      PDM_STRIDE_CST_INTERLACED,
@@ -490,29 +443,19 @@ main
     PDM_free(tgt_field);
   }
 
-
-
-
   PDM_closest_points_free (clsp);
 
-
-
-
-
   /* Free */
-
   PDM_free(src_coord);
   PDM_free(src_g_num);
   PDM_free(tgt_coord);
   PDM_free(tgt_g_num);
 
   if (i_rank == 0) {
-
     PDM_printf ("-- End\n");
-
   }
 
-  PDM_MPI_Barrier (PDM_MPI_COMM_WORLD);
+  PDM_MPI_Barrier (comm);
 
   PDM_MPI_Finalize ();
 

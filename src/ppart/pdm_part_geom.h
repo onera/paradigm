@@ -14,7 +14,6 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
-#include "pdm_part.h"
 #include "pdm_mpi.h"
 
 /*----------------------------------------------------------------------------*/
@@ -46,6 +45,23 @@ typedef enum {
  * Public function definitions
  *============================================================================*/
 
+/**
+ *
+ * \brief Compute cell centers of block-distributed cells
+ *
+ * \param [in]  comm            MPI Communicator
+ * \param [in]  dn_cell         Number of cells in the current process
+ * \param [in]  dcell_face_idx  Index for cell->face connectivity
+ * \param [in]  dcell_face      Block-distributed cell->face connectivity (global IDs)
+ * \param [in]  dface_vtx_idx   Index for face->vtx connectivity
+ * \param [in]  dface_vtx       Block-distributed face->vertex connectivity (global IDs)
+ * \param [in]  distrib_face    Face distribution (size = n_rank + 1)
+ * \param [in]  dvtx_coord      Coordinates of vertices
+ * \param [in]  distrib_vtx     Vertex distribution (size = n_rank + 1)
+ *
+ * \param [out] cell_center   Cell centers
+ *
+ */
 void
 PDM_dcompute_cell_center
 (

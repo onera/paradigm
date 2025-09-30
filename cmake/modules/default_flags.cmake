@@ -29,12 +29,12 @@ if (CMAKE_Fortran_COMPILER_ID STREQUAL "GNU")
   endif()
 
   set (CMAKE_Fortran_FLAGS_RELEASE         "-O3")
-  set (CMAKE_Fortran_FLAGS_DEBUG           "-O0 -g -fcheck=bounds -fbacktrace")
+  set (CMAKE_Fortran_FLAGS_DEBUG           "-O0 -g -ffpe-trap=invalid,zero,overflow -fcheck=bounds -fbacktrace")
   set (CMAKE_Fortran_FLAGS_PROFILING       "-O3 -pg")
   set (CMAKE_Fortran_FLAGS_RELWITHDEBINFO  "-O3 -g")
   set (CMAKE_Fortran_FLAGS_MINSIZEREL      "-O2 -g")
-  set (CMAKE_Fortran_FLAGS_SANITIZE        "-O0 -g -fcheck=bounds -fbacktrace -fsanitize=address -fno-omit-frame-pointer")
-  set (CMAKE_Fortran_FLAGS_COVERAGE        "-O0 -g -fcheck=bounds -fbacktrace")
+  set (CMAKE_Fortran_FLAGS_SANITIZE        "-O0 -g -ffpe-trap=invalid,zero,overflow -fcheck=bounds -fbacktrace -fsanitize=address -fno-omit-frame-pointer")
+  set (CMAKE_Fortran_FLAGS_COVERAGE        "-O0 -g -ffpe-trap=invalid,zero,overflow -fcheck=bounds -fbacktrace")
 
   set (FORTRAN_LIBRARIES                   )
   set (FORTRAN_LIBRARIES_FLAG              )
@@ -203,7 +203,7 @@ if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
   set (CMAKE_C_FLAGS_PROFILING       "-O3 -pg")
   set (CMAKE_C_FLAGS_RELWITHDEBINFO  "-O3 -g")
   set (CMAKE_C_FLAGS_MINSIZEREL      "-O2 -g")
-  set (CMAKE_C_FLAGS_SANITIZE        "-O0 -g -fsanitize=address -fno-omit-frame-pointer -Wall -Wextra")
+  set (CMAKE_C_FLAGS_SANITIZE        "-O0 -g -fsanitize=address,float-divide-by-zero,shift,integer-divide-by-zero -fno-omit-frame-pointer -Wall -Wextra")
   set (CMAKE_C_FLAGS_COVERAGE        "-O0 -g --coverage") # --coverage equivalent to -fprofile-arcs -ftest-coverage for recent compilers
 
 elseif (CMAKE_C_COMPILER_ID STREQUAL "Intel")
@@ -358,7 +358,7 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   set (CMAKE_CXX_FLAGS_PROFILING       "-O3 -pg")
   set (CMAKE_CXX_FLAGS_RELWITHDEBINFO  "-O3 -g")
   set (CMAKE_CXX_FLAGS_MINSIZEREL      "-O2 -g")
-  set (CMAKE_CXX_FLAGS_SANITIZE        "-O0 -g -fsanitize=address -fno-omit-frame-pointer -Wall -Wextra ")
+  set (CMAKE_CXX_FLAGS_SANITIZE        "-O0 -g -fsanitize=address,float-divide-by-zero,shift,integer-divide-by-zero -fno-omit-frame-pointer -Wall -Wextra ")
   set (CMAKE_CXX_FLAGS_COVERAGE        "-O0 -g --coverage") # --coverage equivalent to -fprofile-arcs -ftest-coverage for recent compilers
 
   set (CXX_LIBRARIES          stdc++)

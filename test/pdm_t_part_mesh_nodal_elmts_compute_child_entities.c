@@ -1,29 +1,22 @@
-#include <math.h>
-#include <sys/time.h>
-#include <time.h>
-#include <sys/resource.h>
-#include <unistd.h>
-#include <stdlib.h>
+#include "pdm_mpi.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include <assert.h>
-
-#include <pdm_mpi.h>
 
 #include "pdm.h"
-#include "pdm_config.h"
-#include "pdm_priv.h"
-#include "pdm_error.h"
-#include "pdm_printf.h"
-#include "pdm_logging.h"
-
-#include "pdm_multipart.h"
 #include "pdm_dcube_nodal_gen.h"
 #include "pdm_dmesh_nodal.h"
+#include "pdm_logging.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mesh_nodal.h"
+#include "pdm_multipart.h"
+#include "pdm_part_mesh_nodal.h"
+#include "pdm_part_mesh_nodal_elmts.h"
 #include "pdm_part_mesh_nodal_elmts_utils.h"
-#include "pdm_writer_priv.h"
+#include "pdm_printf.h"
 #include "pdm_vtk.h"
-#include "pdm_array.h"
+#include "pdm_writer.h"
+#include "pdm_writer_priv.h"
 
 /**
  *
@@ -147,7 +140,7 @@ int main(int argc, char *argv[])
   PDM_split_dual_t     split_method         = PDM_SPLIT_DUAL_WITH_HILBERT;
   PDM_bool_t           compute_parent_child = PDM_FALSE;
   int                  verbose              = 0;
-  PDM_bool_t           no_child_pmne        = 0;
+  PDM_bool_t           no_child_pmne        = PDM_FALSE;
 
   _read_args(argc,
              argv,
@@ -456,8 +449,8 @@ int main(int argc, char *argv[])
     PDM_malloc(pcell_ln_to_gn, n_part, PDM_g_num_t *);
 
     for (int i_part = 0; i_part < n_part; i_part++) {
-      pvtx_coord    [i_part] = PDM_part_mesh_nodal_vtx_coord_get(pmn, i_part);
-      pvtx_ln_to_gn [i_part] = PDM_part_mesh_nodal_vtx_g_num_get(pmn, i_part);
+      pvtx_coord    [i_part] = PDM_part_mesh_nodal_vtx_coord_get(pmn, i_part, PDM_OWNERSHIP_BAD_VALUE);
+      pvtx_ln_to_gn [i_part] = PDM_part_mesh_nodal_vtx_g_num_get(pmn, i_part, PDM_OWNERSHIP_BAD_VALUE);
 
       if (mesh_dimension == 3) {
         PDM_part_mesh_nodal_elmts_t *pmne_vol = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(pmn, PDM_GEOMETRY_KIND_VOLUMIC);

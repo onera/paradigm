@@ -1,14 +1,16 @@
-#include "doctest/extensions/doctest_mpi.h"
+#include <math.h>
+#include <stddef.h>
 #include <limits>
 #include <vector>
-#include <stdbool.h>
+#include "doctest/doctest.h"
+#include "doctest/extensions/doctest_mpi.h"
 #include "pdm.h"
-#include "pdm_priv.h"
-#include "pdm_doctest.h"
+#include "pdm_box.h"
 #include "pdm_dbbtree.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mpi.h"
 #include "pdm_priv.h"
 
-// #define HUGE_VAL 1.0e+30
 
 MPI_TEST_CASE("[pdm_dbbtree] simple test",1) {
 

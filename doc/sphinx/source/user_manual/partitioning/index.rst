@@ -6,40 +6,48 @@ Partitioning
 
 .. container:: toc-cards
 
-  .. container:: card
+  .. card:: Multipart
+    :link: multipart
+    :link-type: ref
 
-    :ref:`Multipart <multipart>`
-      Multi-domain mesh partitioning
-
-
-  .. container:: card
-
-    :ref:`Extract part <extract_part>`
-      Extraction and redistribution of mesh partitions
+    Multi-domain mesh partitioning
 
 
-  .. container:: card
 
-    :ref:`Connectivity transformation <connec_transform>`
-      Utilities for processing unstructured mesh connectivities (partitioned and distributed)
+  .. card:: Extract part
+    :link: extract_part
+    :link-type: ref
 
-  .. container:: card
+    Extraction and redistribution of mesh partitions
 
-    :ref:`Part extension <part_extension>`
-      Generate extended mesh partitions
 
-Enumerators
------------
 
-Here we present enumerators that are usefull for the features detailed in this section.
+  .. card:: Part extension
+    :link: part_extension
+    :link-type: ref
 
-.. doxygenenum:: PDM_connectivity_type_t
+    Generate extended mesh partitions
 
-.. doxygenenum:: PDM_mesh_entities_t
 
-* renumbering?
-* agglomeration?
-* domain interfaces/joints?
+
+  .. card:: Renumbering
+    :link: renumbering
+    :link-type: ref
+
+    Optimize memory layout to improve performance
+
+|
+
+.. Enumerators
+.. -----------
+
+.. Here we present enumerators that are usefull for the features detailed in this section.
+
+.. .. doxygenenum:: PDM_connectivity_type_t
+
+.. * renumbering?
+.. * agglomeration?
+.. * domain interfaces/joints?
 
 
 .. toctree::
@@ -49,6 +57,6 @@ Here we present enumerators that are usefull for the features detailed in this s
 
    multipart
    extract_part
-   connec_transform
    part_extension
+   renumbering
 

@@ -24,12 +24,13 @@
 #include <stdlib.h>
 
 #include "pdm.h"
-#include "pdm_mpi.h"
-#include "pdm_error.h"
 #include "pdm_distrib.h"
-#include "pdm_mesh_nodal.h"
+#include "pdm_dmesh.h"
+#include "pdm_dmesh_nodal.h"
+#include "pdm_error.h"
 #include "pdm_isosurface.h"
 #include "pdm_isosurface_priv.h"
+#include "pdm_mpi.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -208,8 +209,8 @@ PDM_isosurface_dmesh_set
 
   for (int i_entity = entity_type; i_entity < PDM_MESH_ENTITY_MAX; i_entity++) {
     PDM_g_num_t *distrib = NULL;
-    PDM_dmesh_distrib_get     (dmesh, i_entity, &distrib);
-    PDM_isosurface_distrib_set(isos,  i_entity,  distrib);
+    PDM_dmesh_distrib_get     (dmesh, (PDM_mesh_entities_t) i_entity, &distrib);
+    PDM_isosurface_distrib_set(isos,  (PDM_mesh_entities_t) i_entity,  distrib);
   }
 
   // Cells

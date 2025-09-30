@@ -31,33 +31,31 @@
 #include <assert.h>
 #include <limits.h>
 #include <math.h>
-#include <string.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <stdbool.h>
+#include <string.h>
 
 /*----------------------------------------------------------------------------
  *  Local headers
  *----------------------------------------------------------------------------*/
 
-#include "pdm_priv.h"
-#include "pdm_mpi.h"
-#include "pdm_box_priv.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
-#include "pdm_sort.h"
+#include "pdm_box_tree.h"
 #include "pdm_array.h"
+#include "pdm_box_priv.h"
+#include "pdm_box_tree_priv.h"
+#include "pdm_convex.h"
+#include "pdm_error.h"
 #include "pdm_logging.h"
+#include "pdm_mem_tool.h"
 #include "pdm_morton.h"
-#include "pdm_vtk.h"
-#include "pdm_plane.h"
-#include "pdm_mesh_nodal.h"
-#include "pdm_linear_programming.h"
-#include "pdm_binary_search.h"
-#include "pdm_unique.h"
-
+#include "pdm_mpi.h"
 #include "pdm_point_tree_seq.h"
 #include "pdm_point_tree_seq_priv.h"
+#include "pdm_printf.h"
+#include "pdm_priv.h"
+#include "pdm_sort.h"
+#include "pdm_vtk.h"
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -83,8 +81,6 @@ extern "C" {
 /*=============================================================================
  * Static global variables
  *============================================================================*/
-
-static int iappel = 0;
 
 /*============================================================================
  * Private function definitions
@@ -3470,7 +3466,7 @@ double  *box_extents
   }
 
   // Undefined case
-  return PDM_lp_intersect_volume_box(n_planes, plane_pt, n, box_extents);
+  return PDM_intersect_convex_volume_box(n_planes, plane_pt, n, box_extents);
 }
 
 /*============================================================================
@@ -4817,9 +4813,6 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get
   int *visited_boxes = NULL;
   PDM_malloc(visited_boxes, n_boxes, int); // A optimiser
 
-  size_t n_node = 0;
-  size_t n_node_vid = 0;
-
   double extents2[2*dim];
 
   for (int i = 0; i < n_pts; i++) {
@@ -4850,10 +4843,6 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get
 
       if (curr_node->n_boxes == 0)
         continue;
-
-      n_node++;
-      if (curr_node->n_boxes == 0)
-        n_node_vid++;
 
       double min_dist2 = min_dist2_stack[pos_stack];
 
@@ -4919,10 +4908,6 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get
     }
 
   }
-
-
-  //printf ("[%d] Parours arbre : %ld \n", iappel, n_node);
-  iappel+=1;
 
   for (int i = 0; i < n_pts; i++) {
     _pts_box_idx[i+1] += _pts_box_idx[i];
@@ -5132,9 +5117,6 @@ _box_tree_closest_upper_bound_dist_boxes_impl
     }
 
   }
-
-  //printf ("[%d] Parours arbre : %ld \n", iappel, n_node);
-  iappel+=1;
 
   for (int i = 0; i < n_pts; i++) {
     _pts_box_idx[i+1] += _pts_box_idx[i];

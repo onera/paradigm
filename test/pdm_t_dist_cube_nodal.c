@@ -1,34 +1,16 @@
-#include <math.h>
-#include <sys/time.h>
-#include <time.h>
-#include <sys/resource.h>
-#include <unistd.h>
-#include <stdlib.h>
+
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 
 #include "pdm.h"
-#include "pdm_config.h"
-#include "pdm_mpi.h"
-#include "pdm_partitioning_algorithm.h"
-#include "pdm_dmesh_nodal_to_dmesh.h"
-#include "pdm_dmesh_nodal_elements_utils.h"
-#include "pdm_dconnectivity_transform.h"
-#include "pdm_part_connectivity_transform.h"
 #include "pdm_dcube_nodal_gen.h"
+#include "pdm_dmesh_nodal.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mesh_nodal.h"
+#include "pdm_mpi.h"
 #include "pdm_multipart.h"
 #include "pdm_printf.h"
-#include "pdm_sort.h"
-#include "pdm_gnum.h"
-#include "pdm_error.h"
-#include "pdm_extract_part.h"
-#include "pdm_vtk.h"
-#include "pdm_dmesh.h"
-#include "pdm_logging.h"
-#include "pdm_priv.h"
-#include "pdm_gnum_location.h"
-#include "pdm_distrib.h"
 
 /*============================================================================
  * Type definitions
@@ -198,7 +180,6 @@ int main(int argc, char *argv[])
                                                          PDM_OWNERSHIP_KEEP);
   PDM_dcube_nodal_gen_build (dcube);
 
-
   PDM_dmesh_nodal_t* dmn = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube);
   PDM_dmesh_nodal_generate_distribution(dmn);
 
@@ -231,106 +212,10 @@ int main(int argc, char *argv[])
   PDM_part_mesh_nodal_t *pmesh_nodal = NULL;
   PDM_multipart_get_part_mesh_nodal(mpart_id, 0, &pmesh_nodal, PDM_OWNERSHIP_KEEP);
 
-  /*
-   * Extract part to select the bnd to compute distance
-   */
-  // int n_part_out = 1;
-  // int dim_extract = PDM_Mesh_nodal_elt_dim_get(elt_type)-1;
-  // PDM_extract_part_t* extrp = PDM_extract_part_create(dim_extract,
-  //                                                     n_part,
-  //                                                     n_part_out,
-  //                                                     PDM_EXTRACT_PART_KIND_LOCAL,
-  //                                                     PDM_SPLIT_DUAL_WITH_PTSCOTCH,
-  //                                                     PDM_TRUE, // compute_child_gnum
-  //                                                     PDM_OWNERSHIP_KEEP,
-  //                                                     comm);
-  // PDM_part_mesh_nodal_elmts_t *pmne = NULL;
-  // if(dim_extract == 2) {
-  //   pmne = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(pmesh_nodal, PDM_GEOMETRY_KIND_SURFACIC);
-  // } else {
-  //   pmne = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(pmesh_nodal, PDM_GEOMETRY_KIND_RIDGE);
-  // }
-  // PDM_extract_part_part_nodal_set(extrp, pmne);
-
-
-  int  *pn_selected    = NULL;
-  int **selected_l_num = NULL;
-  PDM_malloc(pn_selected   , n_part, int  );
-  PDM_malloc(selected_l_num, n_part, int *);
-  // for(int i_part = 0; i_part < n_part; ++i_part) {
-
-  //   PDM_g_num_t *vtx_ln_to_gn  = NULL;
-  //   PDM_g_num_t *cell_ln_to_gn = NULL;
-  //   double      *vtx_coord     = NULL;
-
-  //   int n_vtx  = PDM_multipart_part_ln_to_gn_get(mpart_id, 0, i_part, PDM_MESH_ENTITY_VTX,  &vtx_ln_to_gn , PDM_OWNERSHIP_KEEP);
-  //   int n_cell = PDM_multipart_part_ln_to_gn_get(mpart_id, 0, i_part, PDM_MESH_ENTITY_CELL, &cell_ln_to_gn, PDM_OWNERSHIP_KEEP);
-  //   PDM_multipart_part_vtx_coord_get(mpart_id, 0, i_part, &vtx_coord, PDM_OWNERSHIP_KEEP);
-
-  //   PDM_extract_part_part_set(extrp,
-  //                             i_part,
-  //                             n_cell,
-  //                             0,
-  //                             0, // pn_edge[i_part],
-  //                             n_vtx,
-  //                             NULL, // pcell_face_idx[i_part],
-  //                             NULL, // pcell_face[i_part],
-  //                             NULL, // pface_edge_idx[i_part],
-  //                             NULL, // pface_edge[i_part],
-  //                             NULL, // pedge_vtx[i_part],
-  //                             NULL, // pface_vtx_idx[i_part],
-  //                             NULL, // pface_vtx[i_part],
-  //                             cell_ln_to_gn,
-  //                             NULL,
-  //                             NULL, //pedge_ln_to_gn[i_part],
-  //                             vtx_ln_to_gn,
-  //                             vtx_coord);
-
-  //   /*
-  //    * Extract group
-  //    */
-  //   int n_group = PDM_part_mesh_nodal_elmts_n_group_get(pmne);
-  //   assert(n_group > 0);
-  //   int i_group_extract = 5;
-
-  //   int  n_group_elmt = 0;
-  //   int         *group_elmt     = 0;
-  //   PDM_g_num_t *group_ln_to_gn = 0;
-  //   PDM_part_mesh_nodal_elmts_group_get(pmne,
-  //                                       i_part,
-  //                                       i_group_extract,
-  //                                       &n_group_elmt,
-  //                                       &group_elmt,
-  //                                       &group_ln_to_gn);
-  //   pn_selected   [i_part] = n_group_elmt;
-  //   selected_l_num[i_part] = group_elmt;
-
-  //   PDM_log_trace_array_int(group_elmt, n_group_elmt, "group_elmt :");
-
-  //   PDM_extract_part_selected_lnum_set(extrp,
-  //                                      i_part,
-  //                                      pn_selected[i_part],
-  //                                      selected_l_num[i_part]);
-
-
-  // }
-
-
-  // PDM_extract_part_compute(extrp);
-
-
-  // // PDM_part_mesh_nodal_elmts_t* extract_pmne = NULL;
-  // // PDM_extract_part_part_mesh_nodal_get(extrp, &extract_pmne, PDM_OWNERSHIP_KEEP);
-
-  // PDM_extract_part_free(extrp);
-
   PDM_multipart_free(mpart_id);
 
   PDM_dcube_nodal_gen_free(dcube);
   PDM_part_mesh_nodal_free(pmesh_nodal);
-
-  PDM_free(pn_selected);
-  PDM_free(selected_l_num);
 
   if (i_rank == 0) {
     printf("-- End\n");
@@ -340,7 +225,6 @@ int main(int argc, char *argv[])
   PDM_MPI_Finalize();
 
   return 0;
-
 }
 
 

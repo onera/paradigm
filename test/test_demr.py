@@ -118,10 +118,6 @@ extrp = PDM.ExtractPart(dim,
 extrp.selected_lnum_set(0, np.array(select_edge).astype(np.intc))
 
 extrp.part_set(0,
-               0, # n_cell
-               0, # n_face
-               n_edge,
-               n_vtx,
                None, # cell_face_idx
                None, # cell_face
                None, # face_edge_idx

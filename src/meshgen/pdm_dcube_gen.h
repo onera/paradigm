@@ -6,6 +6,7 @@
 #define __PDM_DCUBE_GEN_H__
 
 #include "pdm.h"
+#include "pdm_mpi.h"
 
 /*=============================================================================
  * Macro definitions
@@ -131,4 +132,4 @@ PDM_dcube_gen_free
 }
 #endif /* __cplusplus */
 
-#endif  /* __PDM_PART_DCUBE_H__ */
+#endif  /* __PDM_DCUBE_GEN_H__ */

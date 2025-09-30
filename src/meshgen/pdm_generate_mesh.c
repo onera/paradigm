@@ -1,32 +1,30 @@
 /*----------------------------------------------------------------------------
  *  System headers
  *----------------------------------------------------------------------------*/
-#include <math.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <assert.h>
+#include <stdio.h>
 #include <string.h>
 
 /*----------------------------------------------------------------------------
  *  Local headers
  *----------------------------------------------------------------------------*/
-
 #include "pdm_generate_mesh.h"
-
 #include "pdm.h"
-#include "pdm_priv.h"
-#include "pdm_mpi.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
-#include "pdm_multipart.h"
-#include "pdm_part_mesh.h"
-#include "pdm_part_mesh_nodal.h"
+#include "pdm_array.h"
+#include "pdm_dcube_nodal_gen.h"
 #include "pdm_dmesh_nodal.h"
+#include "pdm_error.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mpi.h"
+#include "pdm_multipart.h"
+#include "pdm_part_connectivity_transform.h"
+#include "pdm_part_mesh_nodal.h"
+#include "pdm_priv.h"
+#include "pdm_reader_gamma.h"
+#include "pdm_reader_stl.h"
 #include "pdm_sphere_surf_gen.h"
 #include "pdm_sphere_vol_gen.h"
-#include "pdm_dcube_nodal_gen.h"
-#include "pdm_part_connectivity_transform.h"
-#include "pdm_array.h"
+#include "pdm_vtk.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -417,29 +415,118 @@ _generate_mesh_parallelepiped
 
 }
 
-/*=============================================================================
- * Public function definitions
- *============================================================================*/
 
 /**
  *
- * \brief Create a partitionned sphere mesh (2D).
- *
- * \param [in]  elt_type    Mesh element type
- * \param [in]  order       Mesh element order
- * \param [in]  ho_ordering High order nodes ordering type
- * \param [in]  radius      Radius of the sphere
- * \param [in]  center_x    x-coordinate of the sphere center
- * \param [in]  center_y    y-coordinate of the sphere center
- * \param [in]  center_z    z-coordinate of the sphere center
- * \param [in]  n_u         Number of points in longitude
- * \param [in]  n_v         Number of points in latitude
- * \param [in]  n_part      Number of mesh partitions
- * \param [in]  part_method Mesh partitionning method
- *
- * \return PDM_part_mesh_nodal_t
+ * \brief  Get file extension from its name
  *
  */
+// https://stackoverflow.com/questions/5309471/getting-file-extension-in-c
+static const char *
+_get_file_extension
+(
+  const char *filename
+)
+{
+  const char *dot = strrchr(filename, '.');
+  if (!dot || dot == filename) {
+    return "";
+  }
+  else {
+    return dot + 1;
+  }
+}
+
+
+static int
+_read_mesh_file
+(
+  const PDM_MPI_Comm        comm,
+  const int                 n_part,
+  const PDM_split_dual_t    part_method,
+  const char               *filename,
+        PDM_dmesh_nodal_t **out_dmn,
+        PDM_multipart_t   **out_mpart
+)
+{
+  // Get file extension
+  const char *file_extension = _get_file_extension(filename);
+
+  // Use appropriate reader
+  if (strcmp(file_extension, "stl") == 0) {
+    // STL
+    *out_dmn = PDM_reader_stl_dmesh_nodal(comm,
+                                          filename);
+  }
+
+  else if (strcmp(file_extension, "mesh") == 0) {
+    // GAMMA
+    *out_dmn = PDM_reader_gamma_dmesh_nodal(comm,
+                                            filename,
+                                            0,
+                                            0);
+  }
+
+  else if (strcmp(file_extension, "vtk") == 0) {
+    // VTK
+    int          n_vtx_field      = 0;
+    char       **vtx_field_name   = NULL;
+    PDM_data_t  *vtx_field_type   = NULL;
+    int         *vtx_field_stride = NULL;
+    void       **vtx_field_value  = NULL;
+    int          n_elt_field      = 0;
+    char       **elt_field_name   = NULL;
+    PDM_data_t  *elt_field_type   = NULL;
+    int         *elt_field_stride = NULL;
+    void       **elt_field_value  = NULL;
+    *out_dmn = PDM_vtk_read_to_dmesh_nodal(comm,
+                                            filename,
+                                            &n_vtx_field,
+                                            &vtx_field_name,
+                                            &vtx_field_type,
+                                            &vtx_field_stride,
+                                            &vtx_field_value,
+                                            &n_elt_field,
+                                            &elt_field_name,
+                                            &elt_field_type,
+                                            &elt_field_stride,
+                                            &elt_field_value);
+    for (int i_field = 0; i_field < n_vtx_field; i_field++) {
+      PDM_free(vtx_field_name [i_field]);
+      PDM_free(vtx_field_value[i_field]);
+    }
+    for (int i_field = 0; i_field < n_elt_field; i_field++) {
+      PDM_free(elt_field_name [i_field]);
+      PDM_free(elt_field_value[i_field]);
+    }
+    PDM_free(vtx_field_name  );
+    PDM_free(vtx_field_type  );
+    PDM_free(vtx_field_stride);
+    PDM_free(vtx_field_value );
+    PDM_free(elt_field_name  );
+    PDM_free(elt_field_type  );
+    PDM_free(elt_field_stride);
+    PDM_free(elt_field_value );
+  }
+
+  else {
+    return 1;
+  }
+
+  // Partition mesh
+  _dmn_to_multipart(comm,
+                    part_method,
+                    n_part,
+                    *out_dmn,
+                    out_mpart);
+
+  return 0;
+}
+
+
+/*=============================================================================
+ * Public function definitions
+ *============================================================================*/
 
 PDM_part_mesh_nodal_t *
 PDM_generate_mesh_sphere
@@ -491,18 +578,6 @@ PDM_generate_mesh_sphere
 
 }
 
-/**
- *
- * \brief Create a simple partitionned sphere mesh (2D).
- *
- * \param [in]   comm        MPI communicator
- * \param [out]  n_vtx       Number of vertices
- * \param [out]  n_elt       Number of elements
- * \param [out]  coords      Array of vertex coordinates
- * \param [out]  elt_vtx_idx Index array of the element vertex connectivity
- * \param [out]  elt_vtx     Array of the element vertex connectivity
- *
- */
 
 void
 PDM_generate_mesh_sphere_simplified
@@ -578,30 +653,6 @@ PDM_generate_mesh_sphere_simplified
 
 }
 
-/**
- *
- * \brief Create a partitionned ball mesh (3D).
- *
- * \param [in]  comm            MPI communicator
- * \param [in]  elt_type        Mesh element type
- * \param [in]  order           Mesh element order
- * \param [in]  ho_ordering     High order nodes ordering type
- * \param [in]  radius          Radius of the ball
- * \param [in]  hole_radius     Radius of the hole of the ball
- * \param [in]  center_x        x-coordinate of the ball center
- * \param [in]  center_y        y-coordinate of the ball center
- * \param [in]  center_z        z-coordinate of the ball center
- * \param [in]  n_x             Number of vertices on segments in x-direction
- * \param [in]  n_y             Number of vertices on segments in y-direction
- * \param [in]  n_z             Number of vertices on segments in z-direction
- * \param [in]  n_layer         Number of extrusion layers
- * \param [in]  geometric_ratio Geometric ratio for layer thickness
- * \param [in]  n_part          Number of mesh partitions
- * \param [in]  part_method     Mesh partitionning method
- *
- * \return PDM_part_mesh_t or PDM_part_mesh_nodal_t
- *
- */
 
 PDM_part_mesh_nodal_t *
 PDM_generate_mesh_ball
@@ -660,18 +711,6 @@ PDM_generate_mesh_ball
 
 }
 
-/**
- *
- * \brief Create a simple partitionned ball mesh (3D).
- *
- * \param [in]   comm        MPI communicator
- * \param [out]  n_vtx       Number of vertices
- * \param [out]  n_elt       Number of elements
- * \param [out]  coords      Array of vertex coordinates
- * \param [out]  elt_vtx_idx Index array of the element vertex connectivity
- * \param [out]  elt_vtx     Array of the element vertex connectivity
- *
- */
 
 void
 PDM_generate_mesh_ball_simplified
@@ -745,27 +784,6 @@ PDM_generate_mesh_ball_simplified
   PDM_part_mesh_nodal_free(pmn);
 }
 
-/**
- *
- * \brief Create a partitionned rectangle mesh (2D).
- *
- * \param [in]  comm        MPI communicator
- * \param [in]  elt_type    Mesh element type
- * \param [in]  order       Mesh element order
- * \param [in]  ho_ordering High order nodes ordering type
- * \param [in]  xmin        x-coordinate of the rctangle minimum corner
- * \param [in]  ymin        y-coordinate of the rctangle minimum corner
- * \param [in]  zmin        z-coordinate of the rctangle minimum corner
- * \param [in]  lengthx     Length of the rectangle in the x-direction
- * \param [in]  lengthy     Length of the rectangle in the y-direction
- * \param [in]  n_x         Number of points in the x-direction
- * \param [in]  n_y         Number of points in the y-direction
- * \param [in]  n_part      Number of mesh partitions
- * \param [in]  part_method Mesh partitionning method
- *
- * \return PDM_part_mesh_t or PDM_part_mesh_nodal_t
- *
- */
 
 PDM_part_mesh_nodal_t *
 PDM_generate_mesh_rectangle
@@ -818,19 +836,6 @@ PDM_generate_mesh_rectangle
   return pmn;
 }
 
-/**
- *
- * \brief Create a simple partitionned rectangle mesh (2D).
- *
- * \param [in]   comm        MPI communicator
- * \param [in]   n_vtx_seg   Number of vertices along each side of the rectangle
- * \param [out]  n_vtx       Number of vertices
- * \param [out]  n_elt       Number of elements
- * \param [out]  coords      Array of vertex coordinates
- * \param [out]  elt_vtx_idx Index array of the element vertex connectivity
- * \param [out]  elt_vtx     Array of the element vertex connectivity
- *
- */
 
 void
 PDM_generate_mesh_rectangle_simplified
@@ -909,29 +914,6 @@ PDM_generate_mesh_rectangle_simplified
 
 }
 
-/**
- *
- * \brief Create a partitionned parallelepiped mesh (3D).
- *
- * \param [in]  comm        MPI communicator
- * \param [in]  elt_type    Mesh element type
- * \param [in]  order       Mesh element order
- * \param [in]  ho_ordering High order nodes ordering type
- * \param [in]  xmin        x-coordinate of the rctangle minimum corner
- * \param [in]  ymin        y-coordinate of the rctangle minimum corner
- * \param [in]  zmin        z-coordinate of the rctangle minimum corner
- * \param [in]  lengthx     Length of the rectangle in the x-direction
- * \param [in]  lengthy     Length of the rectangle in the y-direction
- * \param [in]  lengthz     Length of the rectangle in the z-direction
- * \param [in]  n_x         Number of points in the x-direction
- * \param [in]  n_y         Number of points in the y-direction
- * \param [in]  n_z         Number of points in the z-direction
- * \param [in]  n_part      Number of mesh partitions
- * \param [in]  part_method Mesh partitionning method
- *
- * \return PDM_part_mesh_t or PDM_part_mesh_nodal_t
- *
- */
 
 PDM_part_mesh_nodal_t *
 PDM_generate_mesh_parallelepiped
@@ -987,19 +969,6 @@ PDM_generate_mesh_parallelepiped
   return pmn;
 }
 
-/**
- *
- * \brief Create a simple partitionned parallelepiped mesh (3D).
- *
- * \param [in]   comm        MPI communicator
- * \param [in]   n_vtx_seg   Number of vertices along each side of the parallelepiped
- * \param [out]  n_vtx       Number of vertices
- * \param [out]  n_elt       Number of elements
- * \param [out]  coords      Array of vertex coordinates
- * \param [out]  elt_vtx_idx Index array of the element vertex connectivity
- * \param [out]  elt_vtx     Array of the element vertex connectivity
- *
- */
 
 void
 PDM_generate_mesh_parallelepiped_simplified
@@ -1070,7 +1039,6 @@ PDM_generate_mesh_parallelepiped_simplified
   PDM_multipart_free(mpart);
   PDM_part_mesh_nodal_free(pmn);
 }
-
 
 
 void
@@ -1302,8 +1270,8 @@ PDM_generate_mesh_sphere_ngon
     }
 
     PDM_compute_face_vtx_from_face_and_edge((*pn_face)[ipart],
-                                            (*pface_edge_idx)[ipart], 
-                                            (*pface_edge)[ipart], 
+                                            (*pface_edge_idx)[ipart],
+                                            (*pface_edge)[ipart],
                                             (*pedge_vtx)[ipart],
                                             &(*pface_vtx)[ipart]);
 
@@ -1458,8 +1426,8 @@ PDM_generate_mesh_ball_ngon
     }
 
     PDM_compute_face_vtx_from_face_and_edge((*pn_face)[ipart],
-                                            (*pface_edge_idx)[ipart], 
-                                            (*pface_edge)[ipart], 
+                                            (*pface_edge_idx)[ipart],
+                                            (*pface_edge)[ipart],
                                             (*pedge_vtx)[ipart],
                                             &(*pface_vtx)[ipart]);
 
@@ -1634,8 +1602,8 @@ PDM_generate_mesh_parallelepiped_ngon
     }
 
     PDM_compute_face_vtx_from_face_and_edge((*pn_face)[ipart],
-                                            (*pface_edge_idx)[ipart], 
-                                            (*pface_edge)[ipart], 
+                                            (*pface_edge_idx)[ipart],
+                                            (*pface_edge)[ipart],
                                             (*pedge_vtx)[ipart],
                                             &(*pface_vtx)[ipart]);
 
@@ -1666,6 +1634,84 @@ PDM_generate_mesh_parallelepiped_ngon
 
 }
 
+
+
+PDM_part_mesh_nodal_t *
+PDM_generate_mesh_nodal_from_file
+(
+  const PDM_MPI_Comm      comm,
+  const int               n_part,
+  const PDM_split_dual_t  part_method,
+  const char             *filename
+)
+{
+  // Read and partition mesh
+  PDM_dmesh_nodal_t *dmn   = NULL;
+  PDM_multipart_t   *mpart = NULL;
+
+  int error = _read_mesh_file(comm,
+                              n_part,
+                              part_method,
+                              filename,
+                              &dmn,
+                              &mpart);
+
+  if (error == 1) {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_generate_mesh_nodal_from_file: Unknown mesh format %s\n", filename);
+  }
+
+  // Retrieve partitioned mesh
+  PDM_part_mesh_nodal_t *pmn = NULL;
+  PDM_multipart_get_part_mesh_nodal(mpart,
+                                    0,
+                                    &pmn,
+                                    PDM_OWNERSHIP_USER);
+
+  // Free memory
+  PDM_DMesh_nodal_free(dmn);
+  PDM_multipart_free(mpart);
+
+  return pmn;
+}
+
+
+
+PDM_part_mesh_t *
+PDM_generate_mesh_from_file
+(
+  const PDM_MPI_Comm      comm,
+  const int               n_part,
+  const PDM_split_dual_t  part_method,
+  const char             *filename
+)
+{
+  // Read and partition mesh
+  PDM_dmesh_nodal_t *dmn   = NULL;
+  PDM_multipart_t   *mpart = NULL;
+  int error = _read_mesh_file(comm,
+                              n_part,
+                              part_method,
+                              filename,
+                              &dmn,
+                              &mpart);
+
+  if (error == 1) {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_generate_mesh_from_file: Unknown mesh format %s\n", filename);
+  }
+
+  // Retrieve partitioned mesh
+  PDM_part_mesh_t *pmesh = NULL;
+  PDM_multipart_get_part_mesh(mpart,
+                              0,
+                              &pmesh,
+                              PDM_OWNERSHIP_USER);
+
+  // Free memory
+  PDM_DMesh_nodal_free(dmn);
+  PDM_multipart_free(mpart);
+
+  return pmesh;
+}
 
 
 #ifdef __cplusplus

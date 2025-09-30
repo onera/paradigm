@@ -3,20 +3,15 @@
  *  Standar headers
  *----------------------------------------------------------------------------*/
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
-
 /*----------------------------------------------------------------------------
  *  Local headers
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
 #include "pdm_error.h"
-#include "pdm_part.h"
+#include "pdm_part_coarse_mesh_priv.h"
 #include "pdm_part_renum.h"
-#include "pdm_part_coarse_mesh.h"
-
+#include "pdm_writer.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -210,6 +205,36 @@ PDM_entity_type_to_geometry_kind
 }
 
 
+PDM_mesh_entities_t
+PDM_dimension_to_entity_type
+(
+  const int dim
+)
+{
+  switch (dim) {
+
+    case 3: {
+      return PDM_MESH_ENTITY_CELL;
+    }
+    case 2: {
+      return PDM_MESH_ENTITY_FACE;
+    }
+    case 1: {
+      return PDM_MESH_ENTITY_EDGE;
+    }
+    case 0: {
+      return PDM_MESH_ENTITY_VTX;
+    }
+    default: {
+      PDM_error(__FILE__, __LINE__, 0, "Invalid dimension %d\n", dim);
+    }
+
+  }
+
+  return PDM_MESH_ENTITY_MAX;
+}
+
+
 PDM_connectivity_type_t
 PDM_entity_pair_to_connectivity_type
 (
@@ -384,6 +409,7 @@ void
 
  PDM_part_renum_method_purge();
  PDM_coarse_mesh_method_purge();
+ PDM_writer_fmt_free();
 
 }
 

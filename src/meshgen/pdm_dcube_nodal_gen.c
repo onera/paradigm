@@ -1,24 +1,28 @@
-#include <stddef.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+/*----------------------------------------------------------------------------
+ * Standard C library headers
+ *----------------------------------------------------------------------------*/
 #include <assert.h>
+#include <math.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-#include "pdm_part.h"
-#include "pdm_dmesh_nodal_priv.h"
+/*----------------------------------------------------------------------------
+ *  Header for the current file
+ *----------------------------------------------------------------------------*/
 #include "pdm_dcube_nodal_gen.h"
+#include "pdm_array.h"
 #include "pdm_dcube_nodal_gen_priv.h"
+#include "pdm_distrib.h"
+#include "pdm_dmesh_nodal_elmts.h"
+#include "pdm_dmesh_nodal_elmts_priv.h"
+#include "pdm_dmesh_nodal_priv.h"
 #include "pdm_domain_interface.h"
 #include "pdm_domain_interface_priv.h"
-#include "pdm_ho_ordering.h"
-#include "pdm_mpi.h"
-#include "pdm_distrib.h"
-#include "pdm_array.h"
-#include "pdm_printf.h"
 #include "pdm_error.h"
-#include "pdm_priv.h"
 #include "pdm_logging.h"
-#include "pdm_binary_search.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mpi.h"
 
 /*============================================================================
  * Type definitions
@@ -2228,17 +2232,6 @@ _gen_poly2d
  * Public function definitions
  *============================================================================*/
 
-
-/**
- *
- * \brief Get the \ref PDM_dmesh_nodal_t associated to a \ref PDM_dcube_nodal_t
- *
- * \param [in]  dcube      Pointer to \ref PDM_dcube_nodal_t object
- *
- * \return   Pointer to the associated \ref PDM_dmesh_nodal_t object
- *
- */
-
 PDM_dmesh_nodal_t *
 PDM_dcube_nodal_gen_dmesh_nodal_get
 (
@@ -2247,28 +2240,6 @@ PDM_dcube_nodal_gen_dmesh_nodal_get
 {
   return dcube->dmesh_nodal;
 }
-
-
-
-/**
- *
- * \brief Initialize a \ref PDM_dcube_nodal_t structure
- *
- * \param [in]   comm           MPI communicator
- * \param [in]   n_vtx_x        Number of vertices on segments in x-direction
- * \param [in]   n_vtx_y        Number of vertices on segments in y-direction
- * \param [in]   n_vtx_z        Number of vertices on segments in z-direction
- * \param [in]   length         Segment length
- * \param [in]   zero_x         X-coordinate of the origin
- * \param [in]   zero_y         Y-coordinate of the origin
- * \param [in]   zero_z         Z-coordinate of the origin
- * \param [in]   t_elt          Element type
- * \param [in]   order          Element order
- * \param [in]   owner          Ownership
- *
- * \return   Pointer to new \ref PDM_dcube_nodal_t object
- *
- */
 
 PDM_dcube_nodal_t *
 PDM_dcube_nodal_gen_create
@@ -2319,15 +2290,6 @@ PDM_dcube_nodal_gen_create
 }
 
 
-
-/**
- *
- * \brief Free a \ref PDM_dcube_nodal_t structure
- *
- * \param [in]  dcube      Pointer to \ref PDM_dcube_nodal_t object
- *
- */
-
 void
 PDM_dcube_nodal_gen_free
 (
@@ -2338,9 +2300,9 @@ PDM_dcube_nodal_gen_free
     return;
   }
 
-  if (dcube->distrib_bar  != NULL)PDM_free(dcube->distrib_bar);
-  if (dcube->distrib_quad != NULL)PDM_free(dcube->distrib_quad);
-  if (dcube->distrib_hexa != NULL)PDM_free(dcube->distrib_hexa);
+  PDM_free(dcube->distrib_bar);
+  PDM_free(dcube->distrib_quad);
+  PDM_free(dcube->distrib_hexa);
 
   if (dcube->owner == PDM_OWNERSHIP_KEEP) {
     /* Si l'utilisateur fait le get il doit liberer le dmesh_nodal */
@@ -2351,36 +2313,16 @@ PDM_dcube_nodal_gen_free
 }
 
 
-
-/**
- *
- * \brief Set the HO-ordering for a \ref PDM_dcube_nodal_t structure
- *
- * \param [in]  dcube      Pointer to \ref PDM_dcube_nodal_t object
- * \param [in]  ordering   Name of the HO-ordering
- *
- */
-
-void PDM_dcube_nodal_gen_ordering_set
+void
+PDM_dcube_nodal_gen_ordering_set
 (
  PDM_dcube_nodal_t *dcube,
  const char        *ordering
 )
 {
-  dcube->ordering = (char *) ordering;
+  dcube->ordering = ordering;
 }
 
-
-
-/**
- *
- * \brief Build a \ref PDM_dcube_nodal_t structure
- *
- * \param [in]  dcube      Pointer to \ref PDM_dcube_nodal_t object
- *
- * \return   Pointer to the associated \ref PDM_dmesh_nodal_t object
- *
- */
 
 PDM_dmesh_nodal_t *
 PDM_dcube_nodal_gen_build
@@ -2744,7 +2686,7 @@ PDM_dcube_nodal_cart_topo
   *dom_intrf = PDM_domain_interface_create(n_interface,
                                            n_domain,
                                            PDM_DOMAIN_INTERFACE_MULT_NO,
-                                           owner,
+                                           PDM_OWNERSHIP_KEEP,
                                            comm);
   PDM_domain_interface_t* _dom_intrf = *dom_intrf;
 
@@ -2918,10 +2860,6 @@ PDM_dcube_nodal_cart_topo
   _dom_intrf->is_result[PDM_BOUND_TYPE_VTX] = 1;
 
 }
-
-
-
-
 
 void
 PDM_generate_lines
@@ -3124,21 +3062,17 @@ PDM_generate_cart_topo_lines
 }
 
 
-
-/**
- * \brief Set randomization factor
- *
- * \param [in]  dcube          Pointer to \ref PDM_dcube_nodal_t object
- * \param [in]  random_factor  Randomization factor (between 0 and 1)
- *
- */
-
 void
 PDM_dcube_nodal_gen_random_factor_set
 (
  PDM_dcube_nodal_t *dcube,
  double             random_factor
- )
+)
 {
   dcube->random_factor = random_factor;
 }
+
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */

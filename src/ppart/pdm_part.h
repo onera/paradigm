@@ -5,7 +5,6 @@
 #ifndef __PDM_PART_H__
 #define __PDM_PART_H__
 
-#include <stdio.h>
 #include "pdm.h"
 #include "pdm_mpi.h"
 /*=============================================================================
@@ -209,7 +208,8 @@ const  int    i_part,
  *
  */
 
-void PDM_part_part_val_get
+void
+PDM_part_part_val_get
 (
 PDM_part_t          *ppart,
 const int            i_part,
@@ -247,7 +247,8 @@ const int            i_part,
  *
  */
 
-void PDM_part_part_color_get
+void
+PDM_part_part_color_get
 (
 PDM_part_t          *ppart,
 const int            i_part,

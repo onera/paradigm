@@ -43,14 +43,17 @@ cdef extern from "pdm_mesh_intersection.h":
                                                 PDM_part_to_part_t      **ptp,
                                                 PDM_ownership_t           ownership);
 
-    void PDM_mesh_intersection_result_from_a_get(PDM_mesh_intersection_t  *mi,
+    int PDM_mesh_intersection_result_from_a_get(PDM_mesh_intersection_t   *mi,
                                                  const int                 ipart,
                                                  int                     **elt_a_elt_b_idx,
                                                  PDM_g_num_t             **elt_a_elt_b,
                                                  double                  **elt_a_elt_b_weight);
 
+    void PDM_mesh_intersection_mesh_nodal_set(PDM_mesh_intersection_t  *mi,
+                                              int                       i_mesh,
+                                              PDM_part_mesh_nodal_t    *mesh);
 
-    void PDM_mesh_intersection_result_from_b_get(PDM_mesh_intersection_t  *mi,
+    int PDM_mesh_intersection_result_from_b_get(PDM_mesh_intersection_t  *mi,
                                                  const int                 ipart,
                                                  double                  **elt_b_elt_a_weight);
     void PDM_mesh_intersection_free(PDM_mesh_intersection_t* mi);
@@ -106,13 +109,16 @@ cdef class MeshIntersection:
         self._n_entity_a    = NPY.zeros(n_part_mesh_a, dtype='int32', order='C')
         self._n_entity_b    = NPY.zeros(n_part_mesh_b, dtype='int32', order='C')
 
-        PDM_mesh_intersection_n_part_set(self._mi,
-                                         0,
-                                         n_part_mesh_a)
+    # ------------------------------------------------------------------
+    def n_part_set(self,
+                   int i_mesh,
+                   int n_part_mesh):
+      """
+      """
+      PDM_mesh_intersection_n_part_set(self._mi,
+                                       i_mesh,
+                                       n_part_mesh)
 
-        PDM_mesh_intersection_n_part_set(self._mi,
-                                         1,
-                                         n_part_mesh_b)
     # ------------------------------------------------------------------
     def part_set(self,
                  int                                           i_mesh,
@@ -190,6 +196,13 @@ cdef class MeshIntersection:
                     <PDM_g_num_t *>  vtx_ln_to_gn .data,
                     <double      *>  coords       .data)
 
+    # ------------------------------------------------------------------
+    def part_nodal_set(self,
+                       int        i_mesh,
+                       PMeshNodal pypmn):
+        """
+        """
+        PDM_mesh_intersection_mesh_nodal_set(self._mi, i_mesh, pypmn.pmn)
 
     # ------------------------------------------------------------------
     def compute(self):
@@ -218,18 +231,19 @@ cdef class MeshIntersection:
       cdef int         *a_to_b_idx
       cdef PDM_g_num_t *a_to_b
       cdef double      *a_to_b_weight
+      cdef int          n_elt_a
       # ************************************************************************
       # > Get
-      PDM_mesh_intersection_result_from_a_get(self._mi,
-                                              i_part,
-                                              &a_to_b_idx,
-                                              &a_to_b,
-                                              &a_to_b_weight)
+      n_elt_a = PDM_mesh_intersection_result_from_a_get(self._mi,
+                                                        i_part,
+                                                        &a_to_b_idx,
+                                                        &a_to_b,
+                                                        &a_to_b_weight)
 
       return {
-        "a_to_b_idx"    : create_numpy_i(a_to_b_idx,    self._n_entity_a[i_part] +1),
-        "a_to_b"        : create_numpy_g(a_to_b,        a_to_b_idx[self._n_entity_a[i_part] ]),
-        "a_to_b_weight" : create_numpy_d(a_to_b_weight, a_to_b_idx[self._n_entity_a[i_part] ])
+        "a_to_b_idx"    : create_numpy_i(a_to_b_idx,    n_elt_a+1),
+        "a_to_b"        : create_numpy_g(a_to_b,        a_to_b_idx[n_elt_a]),
+        "a_to_b_weight" : create_numpy_d(a_to_b_weight, a_to_b_idx[n_elt_a])
       }
 
     # ------------------------------------------------------------------
@@ -238,12 +252,13 @@ cdef class MeshIntersection:
       """
       # ************************************************************************
       # > Declaration
+      cdef int     n_elt_b
       cdef double *b_to_a_weight
       # ************************************************************************
       # > Get
-      PDM_mesh_intersection_result_from_b_get(self._mi,
-                                              i_part,
-                                              &b_to_a_weight)
+      n_elt_b = PDM_mesh_intersection_result_from_b_get(self._mi,
+                                                        i_part,
+                                                        &b_to_a_weight)
 
       # get nb of elt_b in part #i_part
       n_b = 0#!!!

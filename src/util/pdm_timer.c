@@ -27,10 +27,9 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm_timer.h"
-#include "pdm_printf.h"
+#include "pdm_config.h"
 #include "pdm_error.h"
-#include "pdm.h"
-#include "pdm_priv.h"
+#include "pdm_mem_tool.h"
 
 /*----------------------------------------------------------------------------*/
 

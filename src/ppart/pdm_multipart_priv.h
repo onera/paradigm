@@ -13,6 +13,8 @@
 #include "pdm_dmesh_priv.h"
 #include "pdm_dmesh_nodal_priv.h"
 #include "pdm_dmesh_nodal_to_dmesh.h"
+#include "pdm_part_mesh.h"
+#include "pdm_part_mesh_nodal.h"
 #include "pdm_part_priv.h"
 #include "pdm_timer.h"
 
@@ -86,6 +88,10 @@ struct _pdm_multipart_t {
   PDM_dmesh_nodal_t          **dmeshes_nodal;
   PDM_dmesh_nodal_to_dmesh_t **dmn_to_dm;
 
+  int                        **dpart_id;
+  PDM_ownership_t             *ownership_dpart_id;
+
+
   PDM_MPI_Comm                 comm;             // MPI communicator
   PDM_ownership_t              owner;            // Which have the responsabilities of results
 
@@ -99,6 +105,7 @@ struct _pdm_multipart_t {
                                                  //   (size = sum n_part[i]), if heterogeneous
   /* Partitioned meshes */
   _part_mesh_t                *pmeshes;          // Partitioned meshes structures (size=n_domain)
+  PDM_ownership_t             *ownership_pmeshes;
 
   /* Timers */
   PDM_timer_t *timer_all;   /*!< Timer */

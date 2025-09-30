@@ -3,31 +3,26 @@
  *  Standar headers
  *----------------------------------------------------------------------------*/
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <assert.h>
+#include <stdio.h>
 
 /*----------------------------------------------------------------------------
  *  Local headers
  *----------------------------------------------------------------------------*/
 
-#include "pdm.h"
-#include "pdm_priv.h"
-#include "pdm_error.h"
 #include "pdm_part_geom.h"
-#include "pdm_hilbert.h"
-#include "pdm_sort.h"
-#include "pdm_geom_elem.h"
-#include "pdm_binary_search.h"
-#include "pdm_block_to_part.h"
-#include "pdm_part_to_block.h"
-#include "pdm_printf.h"
-#include "pdm_distrib.h"
-#include "pdm_logging.h"
-#include "pdm_vtk.h"
-#include "pdm_partitioning_algorithm.h"
-#include "pdm_dgeom_elem.h"
+#include "pdm.h"
 #include "pdm_array.h"
+#include "pdm_block_to_part.h"
+#include "pdm_dgeom_elem.h"
+#include "pdm_distrib.h"
+#include "pdm_error.h"
+#include "pdm_hilbert.h"
+#include "pdm_mem_tool.h"
+#include "pdm_part_to_block.h"
+#include "pdm_partitioning_algorithm.h"
+#include "pdm_priv.h"
+#include "pdm_sort.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -48,25 +43,9 @@ extern "C" {
  * Private function definitions
  *============================================================================*/
 
-/**
- *
- * \brief Compute cell center of elements
- *
- * \param [in]  comm         MPI Communicator
- * \param [in]  dn_cell       Number of cells in the current process
- * \param [in]  dn_face       Number of faces in the current process
- * \param [in]  dn_vtx        Number of vertices in the current process
- * \param [in]  dcell_face_idx Index of cell_face
- * \param [in]  dcell_face    cell face connectivity in the current process
- * \param [in]  dface_vtx_idx  Index of face_vtx
- * \param [in]  dface_vtx     face vertex connectivity in the current process
- * \param [in]  distrib_face    face distribution
- * \param [in]  dvtx_coord    coordinates of vertices
- * \param [in]  distrib_vtx     Vertex distribution
- *
- * \param [out] cell_center   Cell centers
- *
- */
+/*=============================================================================
+ * Public function definitions
+ *============================================================================*/
 
 void
 PDM_dcompute_cell_center
@@ -86,9 +65,6 @@ PDM_dcompute_cell_center
   int i_rank, n_rank;
   PDM_MPI_Comm_rank (comm, &i_rank);
   PDM_MPI_Comm_size (comm, &n_rank);
-
-  /*PDM_log_trace_array_long (distrib_face, n_rank+1, "distrib_face : ");
-    PDM_log_trace_array_long (distrib_vtx,  n_rank+1, "distrib_vtx  : ");*/
 
   int dn_face = (int) (distrib_face[i_rank+1] - distrib_face[i_rank]);
 
@@ -113,12 +89,6 @@ PDM_dcompute_cell_center
                                                            &pface_vtx_idx,
                                                            &pface_vtx);
   PDM_free(dface_ln_to_gn);
-
-  /*PDM_log_trace_connectivity_long(dface_vtx_idx, dface_vtx, dn_face, "dface_vtx : ");
-  PDM_log_trace_connectivity_int (pface_vtx_idx, pface_vtx, dn_face, "pface_vtx : ");
-  for (int i = 0; i < pn_vtx; i++) {
-    log_trace("vtx %d -> "PDM_FMT_G_NUM"\n", i+1, pvtx_ln_to_gn[i]);
-  }*/
 
   double** tmp_pvtx_coord = NULL;
   PDM_part_dcoordinates_to_pcoordinates(comm,
@@ -168,9 +138,7 @@ PDM_dcompute_cell_center
                                                    comm);
   PDM_free(dface_center);
 }
-/*=============================================================================
- * Public function definitions
- *============================================================================*/
+
 
 void
 PDM_part_entity_geom
@@ -249,31 +217,6 @@ PDM_part_entity_geom
   PDM_free(hilbert_codes);
 }
 
-/**
- *
- * \brief Perform geomtric patitionning
- *
- * \param [in]   method         Geometric method
- * \param [in]   n_part          Number of partition to build on this process
- * \param [in]   comm           Communicator
- * \param [in]   dn_cell         Number of distributed cells
- * \param [in]   dn_face         Number of distributed faces
- * \param [in]   dn_vtx          Number of distributed vertices
- * \param [in]   dcell_face_idx   Distributed cell face connectivity index or NULL
- *                              (size : dn_cell + 1, numbering : 0 to n-1)
- * \param [in]   dcell_face      Distributed cell face connectivity or NULL
- *                              (size : dface_vtx_idx[dn_cell], numbering : 1 to n)
- * \param [in]   dcell_weight    Cell weight (size : n_cell) or NULL
- * \param [in]   dface_vtx_idx    Distributed face to vertex connectivity index
- *                              (size : dn_face + 1, numbering : 0 to n-1)
- * \param [in]   dface_vtx       Distributed face to vertex connectivity
- *                              (size : dface_vtx_idx[dn_face], numbering : 1 to n)
- * \param [in]   dvtx_coord      Distributed vertex coordinates
- *                              (size : 3*dn_vtx)
- * \param [inout]   dcell_part      Distributed cell partitioning
- *                              (size = dn_cell)
- *
- */
 
 void
 PDM_part_geom

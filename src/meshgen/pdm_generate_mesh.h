@@ -2,6 +2,8 @@
 #define __PDM_GENERATE_MESH_H__
 
 #include "pdm.h"
+#include "pdm_mesh_nodal.h"
+#include "pdm_mpi.h"
 #include "pdm_part_mesh.h"
 #include "pdm_part_mesh_nodal.h"
 
@@ -29,21 +31,21 @@ extern "C" {
  * \param [in]   comm        MPI communicator
  * \param [out]  n_vtx       Number of vertices
  * \param [out]  n_elt       Number of elements
- * \param [out]  coords      Array of vertex coordinates
- * \param [out]  elt_vtx_idx Index array of the element vertex connectivity
- * \param [out]  elt_vtx     Array of the element vertex connectivity
+ * \param [out]  coords      Vertex coordinates
+ * \param [out]  elt_vtx_idx Index of the element vertex connectivity
+ * \param [out]  elt_vtx     Element vertex connectivity
  *
  */
 
 void
 PDM_generate_mesh_sphere_simplified
 (
- const PDM_MPI_Comm   comm,
- int                 *n_vtx,
- int                 *n_elt,
- double             **coords,
- int                **elt_vtx_idx,
- int                **elt_vtx
+  const PDM_MPI_Comm   comm,
+  int                 *n_vtx,
+  int                 *n_elt,
+  double             **coords,
+  int                **elt_vtx_idx,
+  int                **elt_vtx
 );
 
 /**
@@ -54,22 +56,22 @@ PDM_generate_mesh_sphere_simplified
  * \param [in]   n_vtx_seg   Number of vertices along each side of the rectangle
  * \param [out]  n_vtx       Number of vertices
  * \param [out]  n_elt       Number of elements
- * \param [out]  coords      Array of vertex coordinates
- * \param [out]  elt_vtx_idx Index array of the element vertex connectivity
- * \param [out]  elt_vtx     Array of the element vertex connectivity
+ * \param [out]  coords      Vertex coordinates
+ * \param [out]  elt_vtx_idx Index of the element vertex connectivity
+ * \param [out]  elt_vtx     Element vertex connectivity
  *
  */
 
 void
 PDM_generate_mesh_rectangle_simplified
 (
- const PDM_MPI_Comm   comm,
- const PDM_g_num_t    n_vtx_seg,
- int                 *n_vtx,
- int                 *n_elt,
- double             **coords,
- int                **elt_vtx_idx,
- int                **elt_vtx
+  const PDM_MPI_Comm   comm,
+  const PDM_g_num_t    n_vtx_seg,
+  int                 *n_vtx,
+  int                 *n_elt,
+  double             **coords,
+  int                **elt_vtx_idx,
+  int                **elt_vtx
 );
 
 /**
@@ -79,21 +81,21 @@ PDM_generate_mesh_rectangle_simplified
  * \param [in]   comm        MPI communicator
  * \param [out]  n_vtx       Number of vertices
  * \param [out]  n_elt       Number of elements
- * \param [out]  coords      Array of vertex coordinates
- * \param [out]  elt_vtx_idx Index array of the element vertex connectivity
- * \param [out]  elt_vtx     Array of the element vertex connectivity
+ * \param [out]  coords      Vertex coordinates
+ * \param [out]  elt_vtx_idx Index of the element vertex connectivity
+ * \param [out]  elt_vtx     Element vertex connectivity
  *
  */
 
 void
 PDM_generate_mesh_ball_simplified
 (
- const PDM_MPI_Comm   comm,
- int                 *n_vtx,
- int                 *n_elt,
- double             **coords,
- int                **elt_vtx_idx,
- int                **elt_vtx
+  const PDM_MPI_Comm   comm,
+  int                 *n_vtx,
+  int                 *n_elt,
+  double             **coords,
+  int                **elt_vtx_idx,
+  int                **elt_vtx
 );
 
 /**
@@ -104,22 +106,22 @@ PDM_generate_mesh_ball_simplified
  * \param [in]   n_vtx_seg   Number of vertices along each side of the parallelepiped
  * \param [out]  n_vtx       Number of vertices
  * \param [out]  n_elt       Number of elements
- * \param [out]  coords      Array of vertex coordinates
- * \param [out]  elt_vtx_idx Index array of the element vertex connectivity
- * \param [out]  elt_vtx     Array of the element vertex connectivity
+ * \param [out]  coords      Vertex coordinates
+ * \param [out]  elt_vtx_idx Index of the element vertex connectivity
+ * \param [out]  elt_vtx     Element vertex connectivity
  *
  */
 
 void
 PDM_generate_mesh_parallelepiped_simplified
 (
- const PDM_MPI_Comm   comm,
- const PDM_g_num_t    n_vtx_seg,
- int                 *n_vtx,
- int                 *n_elt,
- double             **coords,
- int                **elt_vtx_idx,
- int                **elt_vtx
+  const PDM_MPI_Comm   comm,
+  const PDM_g_num_t    n_vtx_seg,
+  int                 *n_vtx,
+  int                 *n_elt,
+  double             **coords,
+  int                **elt_vtx_idx,
+  int                **elt_vtx
 );
 
 /**
@@ -139,25 +141,25 @@ PDM_generate_mesh_parallelepiped_simplified
  * \param [in]  n_part      Number of mesh partitions
  * \param [in]  part_method Mesh partitioning method
  *
- * \return PDM_part_mesh_nodal_t
+ * \return \ref PDM_part_mesh_nodal_t instance
  *
  */
 
 PDM_part_mesh_nodal_t *
 PDM_generate_mesh_sphere
 (
- const PDM_MPI_Comm           comm,
- const PDM_Mesh_nodal_elt_t   elt_type,
- const int                    order,
- const char                  *ho_ordering,
- const double                 radius,
- const double                 center_x,
- const double                 center_y,
- const double                 center_z,
- const PDM_g_num_t            n_u,
- const PDM_g_num_t            n_v,
- const int                    n_part,
- const PDM_split_dual_t       part_method
+  const PDM_MPI_Comm           comm,
+  const PDM_Mesh_nodal_elt_t   elt_type,
+  const int                    order,
+  const char                  *ho_ordering,
+  const double                 radius,
+  const double                 center_x,
+  const double                 center_y,
+  const double                 center_z,
+  const PDM_g_num_t            n_u,
+  const PDM_g_num_t            n_v,
+  const int                    n_part,
+  const PDM_split_dual_t       part_method
 );
 
 /**
@@ -178,26 +180,26 @@ PDM_generate_mesh_sphere
  * \param [in]  n_part      Number of mesh partitions
  * \param [in]  part_method Mesh partitioning method
  *
- * \return PDM_part_mesh_t or PDM_part_mesh_nodal_t
+ * \return \ref PDM_part_mesh_nodal_t instance
  *
  */
 
 PDM_part_mesh_nodal_t *
 PDM_generate_mesh_rectangle
 (
- const PDM_MPI_Comm      comm,
- PDM_Mesh_nodal_elt_t    elt_type,
- int                     order,
- const char             *ho_ordering,
- double                  xmin,
- double                  ymin,
- double                  zmin,
- double                  lengthx,
- double                  lengthy,
- PDM_g_num_t             n_x,
- PDM_g_num_t             n_y,
- const int               n_part,
- const PDM_split_dual_t  part_method
+  const PDM_MPI_Comm      comm,
+  PDM_Mesh_nodal_elt_t    elt_type,
+  int                     order,
+  const char             *ho_ordering,
+  double                  xmin,
+  double                  ymin,
+  double                  zmin,
+  double                  lengthx,
+  double                  lengthy,
+  PDM_g_num_t             n_x,
+  PDM_g_num_t             n_y,
+  const int               n_part,
+  const PDM_split_dual_t  part_method
 );
 
 /**
@@ -221,29 +223,29 @@ PDM_generate_mesh_rectangle
  * \param [in]  n_part          Number of mesh partitions
  * \param [in]  part_method     Mesh partitioning method
  *
- * \return PDM_part_mesh_t or PDM_part_mesh_nodal_t
+ * \return \ref PDM_part_mesh_nodal_t instance
  *
  */
 
 PDM_part_mesh_nodal_t *
 PDM_generate_mesh_ball
 (
- const PDM_MPI_Comm      comm,
- PDM_Mesh_nodal_elt_t    elt_type,
- int                     order,
- const char             *ho_ordering,
- const double            radius,
- const double            hole_radius,
- const double            center_x,
- const double            center_y,
- const double            center_z,
- const PDM_g_num_t       n_x,
- const PDM_g_num_t       n_y,
- const PDM_g_num_t       n_z,
- const PDM_g_num_t       n_layer,
- const double            geometric_ratio,
- const int               n_part,
- const PDM_split_dual_t  part_method
+  const PDM_MPI_Comm      comm,
+  PDM_Mesh_nodal_elt_t    elt_type,
+  int                     order,
+  const char             *ho_ordering,
+  const double            radius,
+  const double            hole_radius,
+  const double            center_x,
+  const double            center_y,
+  const double            center_z,
+  const PDM_g_num_t       n_x,
+  const PDM_g_num_t       n_y,
+  const PDM_g_num_t       n_z,
+  const PDM_g_num_t       n_layer,
+  const double            geometric_ratio,
+  const int               n_part,
+  const PDM_split_dual_t  part_method
 );
 
 /**
@@ -266,28 +268,28 @@ PDM_generate_mesh_ball
  * \param [in]  n_part      Number of mesh partitions
  * \param [in]  part_method Mesh partitioning method
  *
- * \return PDM_part_mesh_t or PDM_part_mesh_nodal_t
+ * \return \ref PDM_part_mesh_nodal_t instance
  *
  */
 
 PDM_part_mesh_nodal_t *
 PDM_generate_mesh_parallelepiped
 (
- const PDM_MPI_Comm      comm,
- PDM_Mesh_nodal_elt_t    elt_type,
- int                     order,
- const char             *ho_ordering,
- double                  xmin,
- double                  ymin,
- double                  zmin,
- double                  lengthx,
- double                  lengthy,
- double                  lengthz,
- PDM_g_num_t             n_x,
- PDM_g_num_t             n_y,
- PDM_g_num_t             n_z,
- const int               n_part,
- const PDM_split_dual_t  part_method
+  const PDM_MPI_Comm      comm,
+  PDM_Mesh_nodal_elt_t    elt_type,
+  int                     order,
+  const char             *ho_ordering,
+  double                  xmin,
+  double                  ymin,
+  double                  zmin,
+  double                  lengthx,
+  double                  lengthy,
+  double                  lengthz,
+  PDM_g_num_t             n_x,
+  PDM_g_num_t             n_y,
+  PDM_g_num_t             n_z,
+  const int               n_part,
+  const PDM_split_dual_t  part_method
 );
 
 
@@ -312,7 +314,7 @@ PDM_generate_mesh_parallelepiped
  * \param [out]  pn_face        Number of faces (size = \p n_part)
  * \param [out]  pvtx_coord     Vertex coordinates (for each part, size = \p pn_vtx)
  * \param [out]  pedge_vtx      Edge->vertex connectivity (for each part, size = 2 * \p pn_edge)
- * \param [out]  pface_edge_idx Index of face->edge connectivity (for each part, size = \p pn_face + 1)
+ * \param [out]  pface_edge_idx Index of face->edge and face->vtx connectivities (for each part, size = \p pn_face + 1)
  * \param [out]  pface_edge     Face->edge connectivity (for each part, size = \p face_edge_idx[\p pn_face])
  * \param [out]  pface_vtx      Face->vertex connectivity (for each part, size = \p face_edge_idx[\p pn_face])
  * \param [out]  pvtx_ln_to_gn  Vertex global ids (for each part, size = \p pn_vtx)
@@ -329,29 +331,29 @@ PDM_generate_mesh_parallelepiped
 void
 PDM_generate_mesh_rectangle_ngon
 (
- const PDM_MPI_Comm            comm,
- const PDM_Mesh_nodal_elt_t    elt_type,
- const double                  xmin,
- const double                  ymin,
- const double                  zmin,
- const double                  lengthx,
- const double                  lengthy,
- const PDM_g_num_t             n_x,
- const PDM_g_num_t             n_y,
- const int                     n_part,
- const PDM_split_dual_t        part_method,
- const double                  random_factor,
- int                         **pn_vtx,
- int                         **pn_edge,
- int                         **pn_face,
- double                     ***pvtx_coord,
- int                        ***pedge_vtx,
- int                        ***pface_edge_idx,
- int                        ***pface_edge,
- int                        ***pface_vtx,
- PDM_g_num_t                ***pvtx_ln_to_gn,
- PDM_g_num_t                ***pedge_ln_to_gn,
- PDM_g_num_t                ***pface_ln_to_gn
+  const PDM_MPI_Comm            comm,
+  const PDM_Mesh_nodal_elt_t    elt_type,
+  const double                  xmin,
+  const double                  ymin,
+  const double                  zmin,
+  const double                  lengthx,
+  const double                  lengthy,
+  const PDM_g_num_t             n_x,
+  const PDM_g_num_t             n_y,
+  const int                     n_part,
+  const PDM_split_dual_t        part_method,
+  const double                  random_factor,
+  int                         **pn_vtx,
+  int                         **pn_edge,
+  int                         **pn_face,
+  double                     ***pvtx_coord,
+  int                        ***pedge_vtx,
+  int                        ***pface_edge_idx,
+  int                        ***pface_edge,
+  int                        ***pface_vtx,
+  PDM_g_num_t                ***pvtx_ln_to_gn,
+  PDM_g_num_t                ***pedge_ln_to_gn,
+  PDM_g_num_t                ***pface_ln_to_gn
 );
 
 /**
@@ -387,29 +389,29 @@ PDM_generate_mesh_rectangle_ngon
 void
 PDM_generate_mesh_sphere_ngon
 (
- const PDM_MPI_Comm           comm,
- const PDM_Mesh_nodal_elt_t   elt_type,
- const int                    order,
- const char                  *ho_ordering,
- const double                 radius,
- const double                 center_x,
- const double                 center_y,
- const double                 center_z,
- const PDM_g_num_t            n_u,
- const PDM_g_num_t            n_v,
- const int                    n_part,
- const PDM_split_dual_t       part_method,
- int                         **pn_vtx,
- int                         **pn_edge,
- int                         **pn_face,
- double                     ***pvtx_coord,
- int                        ***pedge_vtx,
- int                        ***pface_edge_idx,
- int                        ***pface_edge,
- int                        ***pface_vtx,
- PDM_g_num_t                ***pvtx_ln_to_gn,
- PDM_g_num_t                ***pedge_ln_to_gn,
- PDM_g_num_t                ***pface_ln_to_gn
+  const PDM_MPI_Comm           comm,
+  const PDM_Mesh_nodal_elt_t   elt_type,
+  const int                    order,
+  const char                  *ho_ordering,
+  const double                 radius,
+  const double                 center_x,
+  const double                 center_y,
+  const double                 center_z,
+  const PDM_g_num_t            n_u,
+  const PDM_g_num_t            n_v,
+  const int                    n_part,
+  const PDM_split_dual_t       part_method,
+  int                         **pn_vtx,
+  int                         **pn_edge,
+  int                         **pn_face,
+  double                     ***pvtx_coord,
+  int                        ***pedge_vtx,
+  int                        ***pface_edge_idx,
+  int                        ***pface_edge,
+  int                        ***pface_vtx,
+  PDM_g_num_t                ***pvtx_ln_to_gn,
+  PDM_g_num_t                ***pedge_ln_to_gn,
+  PDM_g_num_t                ***pface_ln_to_gn
 );
 
 /**
@@ -435,60 +437,64 @@ PDM_generate_mesh_sphere_ngon
  * \param [out] pn_vtx                    Number of vertices
  * \param [out] pn_edge                   Number of edges
  * \param [out] pn_face                   Number of faces
+ * \param [out] pn_cell                   Number of cells
  * \param [out] pvtx_coord                Vertex coordinates
  * \param [out] pedge_vtx                 Edge->vertex connectivity
  * \param [out] pface_edge_idx            Index of face->edge connectivity
  * \param [out] pface_edge                Face->edge connectivity
  * \param [out] pface_vtx                 Face->vertex connectivity
- * \param [out] pvtx_ln_to_gn             Vertex global number
- * \param [out] pedge_ln_to_gn            Edge global number
- * \param [out] pface_ln_to_gn            Face global number
+ * \param [out] pcell_face_idx            Index of cell->face connectivity
+ * \param [out] pcell_face                Cell->face connectivity
+ * \param [out] pvtx_ln_to_gn             Vertex global IDs
+ * \param [out] pedge_ln_to_gn            Edge global IDs
+ * \param [out] pface_ln_to_gn            Face global IDs
+ * \param [out] pcell_ln_to_gn            Cell global IDs
  * \param [out] pn_surface                Number of surfaces
  * \param [out] psurface_face_idx         Surface->face connectivity index
  * \param [out] psurface_face             Surface->face connectivity
- * \param [out] psurface_face_ln_to_gn    Surface->face connectivity with global numbers
+ * \param [out] psurface_face_ln_to_gn    Surface->face connectivity with global IDs
  *
  */
 
 void
 PDM_generate_mesh_ball_ngon
 (
- const PDM_MPI_Comm            comm,
- PDM_Mesh_nodal_elt_t          elt_type,
- int                           order,
- const char                   *ho_ordering,
- const double                  radius,
- const double                  hole_radius,
- const double                  center_x,
- const double                  center_y,
- const double                  center_z,
- const PDM_g_num_t             n_x,
- const PDM_g_num_t             n_y,
- const PDM_g_num_t             n_z,
- const PDM_g_num_t             n_layer,
- const double                  geometric_ratio,
- const int                     n_part,
- const PDM_split_dual_t        part_method,
- int                         **pn_vtx,
- int                         **pn_edge,
- int                         **pn_face,
- int                         **pn_cell,
- double                     ***pvtx_coord,
- int                        ***pedge_vtx,
- int                        ***pface_edge_idx,
- int                        ***pface_edge,
- int                        ***pface_vtx,
- int                        ***pcell_face_idx,
- int                        ***pcell_face,
- PDM_g_num_t                ***pvtx_ln_to_gn,
- PDM_g_num_t                ***pedge_ln_to_gn,
- PDM_g_num_t                ***pface_ln_to_gn,
- PDM_g_num_t                ***pcell_ln_to_gn,
- int                         **pn_surface,
- int                        ***psurface_face_idx,
- int                        ***psurface_face,
- PDM_g_num_t                ***psurface_face_ln_to_gn
- );
+  const PDM_MPI_Comm            comm,
+  PDM_Mesh_nodal_elt_t          elt_type,
+  int                           order,
+  const char                   *ho_ordering,
+  const double                  radius,
+  const double                  hole_radius,
+  const double                  center_x,
+  const double                  center_y,
+  const double                  center_z,
+  const PDM_g_num_t             n_x,
+  const PDM_g_num_t             n_y,
+  const PDM_g_num_t             n_z,
+  const PDM_g_num_t             n_layer,
+  const double                  geometric_ratio,
+  const int                     n_part,
+  const PDM_split_dual_t        part_method,
+  int                         **pn_vtx,
+  int                         **pn_edge,
+  int                         **pn_face,
+  int                         **pn_cell,
+  double                     ***pvtx_coord,
+  int                        ***pedge_vtx,
+  int                        ***pface_edge_idx,
+  int                        ***pface_edge,
+  int                        ***pface_vtx,
+  int                        ***pcell_face_idx,
+  int                        ***pcell_face,
+  PDM_g_num_t                ***pvtx_ln_to_gn,
+  PDM_g_num_t                ***pedge_ln_to_gn,
+  PDM_g_num_t                ***pface_ln_to_gn,
+  PDM_g_num_t                ***pcell_ln_to_gn,
+  int                         **pn_surface,
+  int                        ***psurface_face_idx,
+  int                        ***psurface_face,
+  PDM_g_num_t                ***psurface_face_ln_to_gn
+);
 
 /**
  *
@@ -498,82 +504,130 @@ PDM_generate_mesh_ball_ngon
  * \param [in]  elt_type                  Mesh element type
  * \param [in]  order                     Mesh element order
  * \param [in]  ho_ordering               High order nodes ordering type
- * \param [in]  radius                    Radius of the ball
- * \param [in]  hole_radius               Radius of the hole of the ball
- * \param [in]  center_x                  x-coordinate of the ball center
- * \param [in]  center_y                  y-coordinate of the ball center
- * \param [in]  center_z                  z-coordinate of the ball center
- * \param [in]  n_x                       Number of vertices on segments in x-direction
- * \param [in]  n_y                       Number of vertices on segments in y-direction
- * \param [in]  n_z                       Number of vertices on segments in z-direction
- * \param [in]  n_layer                   Number of extrusion layers
- * \param [in]  geometric_ratio           Geometric ratio for layer thickness
+ * \param [in]  xmin                      Minimal x-coordinate
+ * \param [in]  ymin                      Minimal y-coordinate
+ * \param [in]  zmin                      Minimal z-coordinate
+ * \param [in]  lengthx                   Length of the rectangle in the x-direction
+ * \param [in]  lengthy                   Length of the rectangle in the y-direction
+ * \param [in]  lengthz                   Length of the rectangle in the z-direction
+ * \param [in]  n_x                       Number of points in the x-direction
+ * \param [in]  n_y                       Number of points in the y-direction
+ * \param [in]  n_z                       Number of points in the z-direction
  * \param [in]  n_part                    Number of mesh partitions
  * \param [in]  part_method               Mesh partitioning method
  * \param [out] pn_vtx                    Number of vertices
  * \param [out] pn_edge                   Number of edges
  * \param [out] pn_face                   Number of faces
+ * \param [out] pn_cell                   Number of cells
  * \param [out] pvtx_coord                Vertex coordinates
  * \param [out] pedge_vtx                 Edge->vertex connectivity
- * \param [out] pface_edge_idx            Index of face->edge connectivity
+ * \param [out] pface_edge_idx            Index of face->edge and face->vtx connectivities
  * \param [out] pface_edge                Face->edge connectivity
  * \param [out] pface_vtx                 Face->vertex connectivity
- * \param [out] pvtx_ln_to_gn             Vertex global number
- * \param [out] pedge_ln_to_gn            Edge global number
- * \param [out] pface_ln_to_gn            Face global number
+ * \param [out] pcell_face_idx            Index of cell->face connectivity
+ * \param [out] pcell_face                Cell->face connectivity
+ * \param [out] pvtx_ln_to_gn             Vertex global IDs
+ * \param [out] pedge_ln_to_gn            Edge global IDs
+ * \param [out] pface_ln_to_gn            Face global IDs
+ * \param [out] pcell_ln_to_gn            Cell global IDs
  * \param [out] pn_surface                Number of surfaces
  * \param [out] psurface_face_idx         Surface->face connectivity index
  * \param [out] psurface_face             Surface->face connectivity
- * \param [out] psurface_face_ln_to_gn    Surface->face connectivity with global numbers
+ * \param [out] psurface_face_ln_to_gn    Surface->face connectivity with global IDs
  * \param [out] pn_ridge                  Number of ridges
  * \param [out] pridge_edge_idx           Ridge->edge connectivity index
  * \param [out] pridge_edge               Ridge->edge connectivity
- * \param [out] pridge_edge_ln_to_gn      Ridge->edge connectivity with global numbers
+ * \param [out] pridge_edge_ln_to_gn      Ridge->edge connectivity with global IDs
  *
  */
 
 void
 PDM_generate_mesh_parallelepiped_ngon
 (
- const PDM_MPI_Comm            comm,
- PDM_Mesh_nodal_elt_t          elt_type,
- int                           order,
- const char                   *ho_ordering,
- const double                  xmin,
- const double                  ymin,
- const double                  zmin,
- const double                  lengthx,
- const double                  lengthy,
- const double                  lengthz,
- const PDM_g_num_t             n_x,
- const PDM_g_num_t             n_y,
- const PDM_g_num_t             n_z,
- const int                     n_part,
- const PDM_split_dual_t        part_method,
- int                         **pn_vtx,
- int                         **pn_edge,
- int                         **pn_face,
- int                         **pn_cell,
- double                     ***pvtx_coord,
- int                        ***pedge_vtx,
- int                        ***pface_edge_idx,
- int                        ***pface_edge,
- int                        ***pface_vtx,
- int                        ***pcell_face_idx,
- int                        ***pcell_face,
- PDM_g_num_t                ***pvtx_ln_to_gn,
- PDM_g_num_t                ***pedge_ln_to_gn,
- PDM_g_num_t                ***pface_ln_to_gn,
- PDM_g_num_t                ***pcell_ln_to_gn,
- int                         **pn_surface,
- int                        ***psurface_face_idx,
- int                        ***psurface_face,
- PDM_g_num_t                ***psurface_face_ln_to_gn,
- int                         **pn_ridge,
- int                        ***pridge_edge_idx,
- int                        ***pridge_edge,
- PDM_g_num_t                ***pridge_edge_ln_to_gn
- );
+  const PDM_MPI_Comm            comm,
+  PDM_Mesh_nodal_elt_t          elt_type,
+  int                           order,
+  const char                   *ho_ordering,
+  const double                  xmin,
+  const double                  ymin,
+  const double                  zmin,
+  const double                  lengthx,
+  const double                  lengthy,
+  const double                  lengthz,
+  const PDM_g_num_t             n_x,
+  const PDM_g_num_t             n_y,
+  const PDM_g_num_t             n_z,
+  const int                     n_part,
+  const PDM_split_dual_t        part_method,
+  int                         **pn_vtx,
+  int                         **pn_edge,
+  int                         **pn_face,
+  int                         **pn_cell,
+  double                     ***pvtx_coord,
+  int                        ***pedge_vtx,
+  int                        ***pface_edge_idx,
+  int                        ***pface_edge,
+  int                        ***pface_vtx,
+  int                        ***pcell_face_idx,
+  int                        ***pcell_face,
+  PDM_g_num_t                ***pvtx_ln_to_gn,
+  PDM_g_num_t                ***pedge_ln_to_gn,
+  PDM_g_num_t                ***pface_ln_to_gn,
+  PDM_g_num_t                ***pcell_ln_to_gn,
+  int                         **pn_surface,
+  int                        ***psurface_face_idx,
+  int                        ***psurface_face,
+  PDM_g_num_t                ***psurface_face_ln_to_gn,
+  int                         **pn_ridge,
+  int                        ***pridge_edge_idx,
+  int                        ***pridge_edge,
+  PDM_g_num_t                ***pridge_edge_ln_to_gn
+);
+
+
+
+/**
+ * \brief Read and partition a mesh from a file
+ *
+ * Supports ASCII files in STL, VTK and GAMMA (.mesh) format
+ *
+ * \param [in] comm         MPI Communicator
+ * \param [in] n_part       Number of partitions on current MPI rank
+ * \param [in] part_method  Partitioning method
+ * \param [in] filename     File name
+ *
+ * \return \ref PDM_part_mesh_nodal_t instance
+ */
+PDM_part_mesh_nodal_t *
+PDM_generate_mesh_nodal_from_file
+(
+  const PDM_MPI_Comm      comm,
+  const int               n_part,
+  const PDM_split_dual_t  part_method,
+  const char             *filename
+);
+
+
+/**
+ * \brief Read and partition a mesh from a file
+ *
+ * Supports ASCII files in STL, VTK and GAMMA (.mesh) format
+ *
+ * \param [in] comm         MPI Communicator
+ * \param [in] n_part       Number of partitions on current MPI rank
+ * \param [in] part_method  Partitioning method
+ * \param [in] filename     File name
+ *
+ * \return \ref PDM_part_mesh_t instance
+ */
+PDM_part_mesh_t *
+PDM_generate_mesh_from_file
+(
+  const PDM_MPI_Comm      comm,
+  const int               n_part,
+  const PDM_split_dual_t  part_method,
+  const char             *filename
+);
 
 #ifdef __cplusplus
 }

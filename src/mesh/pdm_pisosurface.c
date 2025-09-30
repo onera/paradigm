@@ -18,19 +18,23 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
+/*----------------------------------------------------------------------------
+ *  System headers
+ *----------------------------------------------------------------------------*/
+#include <stdio.h>
 #include <stdlib.h>
 
 /*----------------------------------------------------------------------------
  *  Local headers
  *----------------------------------------------------------------------------*/
 #include "pdm.h"
-#include "pdm_mpi.h"
-#include "pdm_error.h"
-#include "pdm_mesh_nodal.h"
 #include "pdm_array.h"
+#include "pdm_error.h"
 #include "pdm_isosurface.h"
 #include "pdm_isosurface_priv.h"
-#include "pdm_priv.h"
+#include "pdm_mem_tool.h"
+#include "pdm_part_mesh.h"
+#include "pdm_part_mesh_nodal.h"
 
 /*----------------------------------------------------------------------------*/
 

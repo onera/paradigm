@@ -1,38 +1,33 @@
-#include <math.h>
-#include <sys/time.h>
-#include <time.h>
-#include <sys/resource.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include <assert.h>
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/time.h>
 
 #include "pdm.h"
-#include "pdm_config.h"
-#include "pdm_mpi.h"
-#include "pdm_part.h"
-#include "pdm_dcube_nodal_gen.h"
-#include "pdm_dmesh_nodal_to_dmesh.h"
-#include "pdm_dmesh_nodal_priv.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
-#include "pdm_geom_elem.h"
 #include "pdm_priv.h"
 #include "pdm_dconnectivity_transform.h"
-#include "pdm_partitioning_algorithm.h"
-#include "pdm_vtk.h"
-#include "pdm_logging.h"
+#include "pdm_dcube_nodal_gen.h"
 #include "pdm_distrib.h"
-
+#include "pdm_dmesh_nodal.h"
+#include "pdm_dmesh_nodal_elmts_priv.h"
+#include "pdm_dmesh_nodal_priv.h"
+#include "pdm_error.h"
+#include "pdm_ho_ordering.h"
 #include "pdm_lagrange_to_bezier.h"
+#include "pdm_logging.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mesh_nodal.h"
+#include "pdm_mpi.h"
+#include "pdm_part.h"
+#include "pdm_partitioning_algorithm.h"
+#include "pdm_printf.h"
+#include "pdm_vtk.h"
+
 /*============================================================================
  * Type definitions
  *============================================================================*/
-
-#define _MIN(a,b) ((a) < (b) ? (a) : (b))
-#define _MAX(a,b) ((a) > (b) ? (a) : (b))
-
 
 /*============================================================================
  * Private function definitions
@@ -543,8 +538,8 @@ _bezier_bounding_boxes
       for (int k = 0; k < n_nodes; k++) {
         for (int j = 0; j < 3; j++) {
           elt_coord[3*idx2 + j] = bezier_coord[3*k + j];//lagrange_coord[3*k + j];//
-          _min[j] = _MIN(_min[j], bezier_coord[3*k + j]);
-          _max[j] = _MAX(_max[j], bezier_coord[3*k + j]);
+          _min[j] = PDM_MIN(_min[j], bezier_coord[3*k + j]);
+          _max[j] = PDM_MAX(_max[j], bezier_coord[3*k + j]);
         }
         elt_vtx[n_nodes*i + ijk_to_vtk[k]] = ++idx2;
       }
@@ -805,39 +800,7 @@ int main(int argc, char *argv[])
   PDM_g_num_t *vtx_distrib = PDM_dmesh_nodal_vtx_distrib_get(dmn);
   int dn_vtx = vtx_distrib[i_rank+1] - vtx_distrib[i_rank];
   double *dvtx_coord  = PDM_DMesh_nodal_vtx_get(dmn, PDM_OWNERSHIP_BAD_VALUE);
-  // double amplitude = 0.1;//0.07;
-  // double frequence = 4.;
 
-  // if (1) {
-  //   for (int i = 0; i < dn_vtx; i++) {
-  //     double x = (dvtx_coord[3*i    ] - 0.5) / length;
-  //     double y = (dvtx_coord[3*i + 1] - 0.5) / length;
-  //     double z = (dvtx_coord[3*i + 2] - 0.5) / length;
-
-  //     //double scale = length * pow(2, order-1);
-
-  //     if (dim == 2) {
-  //       //dvtx_coord[3*i + 2] = scale * (pow(x, order) + pow(y, order));
-  //       dvtx_coord[3*i + 2] = length * (x*x + y*y);
-  //     } else {
-  //       dvtx_coord[3*i    ] += amplitude*length*cos(frequence*y);
-  //       dvtx_coord[3*i + 1] += amplitude*length*cos(frequence*z);
-  //       dvtx_coord[3*i + 2] += amplitude*length*cos(frequence*x);
-  //     }
-  //   }
-
-  //   if (1) {
-  //     for (int i = 0; i < dn_vtx; i++) {
-  //       double x = dvtx_coord[3*i  ];
-  //       double y = dvtx_coord[3*i+1];
-  //       double z = dvtx_coord[3*i+2];
-
-  //       for (int j = 0; j < 3; j++) {
-  //         dvtx_coord[3*i+j] = R[j][0]*x + R[j][1]*y + R[j][2]*z;
-  //       }
-  //     }
-  //   }
-  // }
   _deformation(length,
                nx,
                dn_vtx,
@@ -853,10 +816,8 @@ int main(int argc, char *argv[])
       _bezier_bounding_boxes(dmn, order, PDM_GEOMETRY_KIND_RIDGE,    "out_ridge");
 
       /* Reorder */
-      PDM_dmesh_nodal_reorder (dmn,
-                               "PDM_HO_ORDERING_VTK");
+      PDM_dmesh_nodal_reorder (dmn, "PDM_HO_ORDERING_VTK");
     }
-
 
     if (dim == 3) {
       _dmesh_nodal_dump_vtk(dmn, order, PDM_GEOMETRY_KIND_VOLUMIC, "out_volumic");

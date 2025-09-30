@@ -110,19 +110,11 @@ struct _pdm_mesh_intersection_t {
 
   PDM_extract_part_t *extrp_mesh[2];
 
-  // _ol_mesh_t  *olMeshA;       /*!< Overlay Mesh A */
-  // _ol_mesh_t  *olMeshB;       /*!< Overlay Mesh B */
-
   PDM_timer_t *timer;
-
-
-  double times_elapsed[NTIMER]; /*!< Elapsed time */
-
-  double times_cpu[NTIMER];     /*!< CPU time */
-
-  double times_cpu_u[NTIMER];  /*!< User CPU time */
-
-  double times_cpu_s[NTIMER];  /*!< System CPU time */
+  double times_elapsed[NTIMER]; /*!< Elapsed time    */
+  double times_cpu    [NTIMER]; /*!< CPU time        */
+  double times_cpu_u  [NTIMER]; /*!< User CPU time   */
+  double times_cpu_s  [NTIMER]; /*!< System CPU time */
 
 
   /* Results */
@@ -144,12 +136,13 @@ struct _pdm_mesh_intersection_t {
   PDM_ownership_t     ptp_ownership;
   PDM_part_to_part_t *ptp;
 
-
-
-
   /* vol_vol */
   int     tetraisation_pt_type;
   double *tetraisation_pt_coord;
+
+  /* Output helper (fortran and python) */
+  int *n_elt_a;
+  int *n_elt_b;
 
   /* debug */
   double local_vol_A_B;

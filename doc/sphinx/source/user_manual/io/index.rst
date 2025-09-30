@@ -1,4 +1,4 @@
-.. _io:
+.. _parallel_io:
 
 
 ############
@@ -7,26 +7,29 @@ Parallel I/O
 
 .. container:: toc-cards
 
-  .. container:: card
+  .. card:: IO
+    :link: io
+    :link-type: ref
 
-    :ref:`MPI-IO <mpi_io>`
-      MPI-IO wrappings to read/write files in parallel
+    MPI-IO wrappings to read/write files in parallel
 
-  .. container:: card
 
-    :ref:`Writer <writer>`
-      Writer
 
-  .. container:: card
+  .. card:: Writer
+    :link: writer
+    :link-type: ref
 
-    :ref:`GMF-IO <gmf_io>`
-      Gamma Mesh Format pseudo-parallel IO
+    API for writing meshes and solutions in parallel
+
+
+|
+
+|
 
 .. toctree::
-  :caption: Communication graphs
+  :caption: Parallel IO
   :maxdepth: 1
   :hidden:
 
-  mpi_io
+  io
   writer
-  gmf_io

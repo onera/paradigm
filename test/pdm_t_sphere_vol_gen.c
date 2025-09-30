@@ -1,41 +1,28 @@
-#include <math.h>
-#include <sys/time.h>
-#include <time.h>
-#include <sys/resource.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "pdm.h"
-#include "pdm_config.h"
-#include "pdm_mpi.h"
-#include "pdm_part.h"
-#include "pdm_sphere_vol_gen.h"
-#include "pdm_sphere_surf_gen.h"
-#include "pdm_dmesh_nodal_to_dmesh.h"
-#include "pdm_dmesh_nodal_priv.h"
-#include "pdm_printf.h"
-#include "pdm_error.h"
-#include "pdm_geom_elem.h"
-#include "pdm_priv.h"
 #include "pdm_dconnectivity_transform.h"
-#include "pdm_partitioning_algorithm.h"
-#include "pdm_vtk.h"
-#include "pdm_logging.h"
 #include "pdm_distrib.h"
+#include "pdm_dmesh_nodal.h"
+#include "pdm_dmesh_nodal_elmts_priv.h"
+#include "pdm_dmesh_nodal_priv.h"
 #include "pdm_ho_ordering.h"
-
-
+#include "pdm_mem_tool.h"
+#include "pdm_mesh_nodal.h"
+#include "pdm_mpi.h"
+#include "pdm_partitioning_algorithm.h"
+#include "pdm_printf.h"
+#include "pdm_sphere_surf_gen.h"
+#include "pdm_sphere_vol_gen.h"
+#include "pdm_vtk.h"
+#include "pdm_priv.h"
 
 /*============================================================================
  * Type definitions
  *============================================================================*/
-
-#define _MIN(a,b) ((a) < (b) ? (a) : (b))
-#define _MAX(a,b) ((a) > (b) ? (a) : (b))
-
 
 /*============================================================================
  * Private function definitions

@@ -1,26 +1,20 @@
-#include <math.h>
-#include <sys/time.h>
-#include <time.h>
-#include <sys/resource.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <assert.h>
 
-#include <pdm_mpi.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "pdm.h"
 #include "pdm_config.h"
-#include "pdm_priv.h"
-#include "pdm_part.h"
-#include "pdm_reader_gamma.h"
+#include "pdm_dmesh_nodal.h"
+#include "pdm_io.h"
+#include "pdm_mem_tool.h"
+#include "pdm_mpi.h"
 #include "pdm_multipart.h"
 #include "pdm_part_connectivity_transform.h"
-#include "pdm_writer.h"
 #include "pdm_printf.h"
-#include "pdm_error.h"
-#include "pdm_logging.h"
+#include "pdm_reader_gamma.h"
+#include "pdm_writer.h"
+#include "pdm_priv.h"
 
 
 /*============================================================================
@@ -131,13 +125,9 @@ int main(int argc, char *argv[])
    */
   PDM_MPI_Comm comm = PDM_MPI_COMM_WORLD;
   int i_rank;
-  int n_rank;
 
   PDM_MPI_Init(&argc, &argv);
   PDM_MPI_Comm_rank(comm, &i_rank);
-  PDM_MPI_Comm_size(comm, &n_rank);
-
-
 
   PDM_dmesh_nodal_t *dmn = PDM_reader_gamma_dmesh_nodal(comm,
                                                         filename,
@@ -166,13 +156,6 @@ int main(int argc, char *argv[])
   PDM_DMesh_nodal_free(dmn);
 
   if (visu) {
-    // PDM_dmesh_nodal_dump_vtk(dmn,
-    //                          PDM_GEOMETRY_KIND_VOLUMIC,
-    //                          "dmn_reader_gamma_vol_");
-
-
-
-
 
     PDM_writer_t *id_cs = PDM_writer_create("Ensight",
                                             PDM_WRITER_FMT_BIN,
@@ -214,8 +197,8 @@ int main(int argc, char *argv[])
 
     for (int i_part = 0; i_part < n_part; i_part++) {
 
-      int *cell_face_idx;
-      int *cell_face;
+      int *cell_face_idx = NULL;
+      int *cell_face     = NULL;
       int n_cell = PDM_multipart_part_connectivity_get(mpart,
                                                        0,
                                                        i_part,
@@ -224,8 +207,8 @@ int main(int argc, char *argv[])
                                                        &cell_face,
                                                        PDM_OWNERSHIP_KEEP);
 
-      int *face_vtx_idx;
-      int *face_vtx;
+      int *face_vtx_idx = NULL;
+      int *face_vtx     = NULL;
       int n_face = PDM_multipart_part_connectivity_get(mpart,
                                                        0,
                                                        i_part,
@@ -234,13 +217,11 @@ int main(int argc, char *argv[])
                                                        &face_vtx,
                                                        PDM_OWNERSHIP_KEEP);
 
-
-
       if (face_vtx == NULL) {
         use_edge = 1;
 
-        int *face_edge;
-        int *face_edge_idx;
+        int *face_edge     = NULL;
+        int *face_edge_idx = NULL;
         PDM_multipart_part_connectivity_get(mpart,
                                             0,
                                             i_part,
@@ -249,8 +230,8 @@ int main(int argc, char *argv[])
                                             &face_edge,
                                             PDM_OWNERSHIP_KEEP);
 
-        int *edge_vtx;
-        int *edge_vtx_idx;
+        int *edge_vtx     = NULL;
+        int *edge_vtx_idx = NULL;
         PDM_multipart_part_connectivity_get(mpart,
                                             0,
                                             i_part,
@@ -265,19 +246,18 @@ int main(int argc, char *argv[])
                                                 face_edge,
                                                 edge_vtx,
                                                 &pface_vtx[i_part]);
-      }
-      else {
+      } else {
         pface_vtx_idx[i_part] = face_vtx_idx;
         pface_vtx    [i_part] = face_vtx;
       }
 
-      double *vtx_coord;
+      double *vtx_coord = NULL;
       int n_vtx = PDM_multipart_part_vtx_coord_get(mpart,
                                                    0,
                                                    i_part,
                                                    &vtx_coord,
                                                    PDM_OWNERSHIP_KEEP);
-      PDM_g_num_t *cell_ln_to_gn;
+      PDM_g_num_t *cell_ln_to_gn = NULL;
       PDM_multipart_part_ln_to_gn_get(mpart,
                                       0,
                                       i_part,
@@ -285,7 +265,7 @@ int main(int argc, char *argv[])
                                       &cell_ln_to_gn,
                                       PDM_OWNERSHIP_KEEP);
 
-      PDM_g_num_t *face_ln_to_gn;
+      PDM_g_num_t *face_ln_to_gn = NULL;
       PDM_multipart_part_ln_to_gn_get(mpart,
                                       0,
                                       i_part,
@@ -293,7 +273,7 @@ int main(int argc, char *argv[])
                                       &face_ln_to_gn,
                                       PDM_OWNERSHIP_KEEP);
 
-      PDM_g_num_t *vtx_ln_to_gn;
+      PDM_g_num_t *vtx_ln_to_gn = NULL;
       PDM_multipart_part_ln_to_gn_get(mpart,
                                       0,
                                       i_part,
@@ -373,9 +353,7 @@ int main(int argc, char *argv[])
     PDM_writer_free(id_cs);
   }
 
-
   PDM_multipart_free(mpart);
-
 
   if (i_rank == 0) {
     PDM_printf ("-- End\n");
