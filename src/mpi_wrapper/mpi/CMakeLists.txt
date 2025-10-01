@@ -13,6 +13,7 @@ endif(MPI_Fortran_COMPILER)
 
 file(GLOB_RECURSE SOURCES
      pdm_mpi.c
+     pdm_mpi_extended.c
      pdm_mpi_ext_dependencies.c
      ../pdm_mpi.h
      ../pdm_mpi_ext_dependencies.h
