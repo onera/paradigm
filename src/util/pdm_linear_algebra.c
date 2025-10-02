@@ -229,7 +229,8 @@ static void _compute_orthogonal_complement
   PDM_CROSS_PRODUCT (v, w, u);
 }
 
-
+#if defined(PDM_HAVE_MKL) || defined(PDM_HAVE_LAPACK)
+#else
 /*
  * Compute a unit-length eigenvector for eigenvalue val0
  */
@@ -362,7 +363,7 @@ static void _compute_eigvec1
   }
 
 }
-
+#endif
 
 /*=============================================================================
  * Public function definitions
@@ -781,13 +782,55 @@ PDM_linear_algebra_linsolve_gauss
 
 
 
-PDM_GCC_SUPPRESS_WARNING_POP
 
 
 void
-PDM_linear_algebra_eigv_3x3_sym
+PDM_linear_algebra_eig_sym2
 (
-  double a  [6],
+  double a[3],
+  double val[2],
+  double vec[4]
+)
+{
+#if defined(PDM_HAVE_MKL) || defined(PDM_HAVE_LAPACK)
+int info = 0;
+
+double M[4] = {a[0], a[1],
+               a[1], a[2]};
+int n = 2;
+int lwork = 2*n - 1;
+double work[8];
+
+dsyev_("V",
+       "U",
+       &n,
+       M,
+       &n,
+       val,
+       work,
+       &lwork,
+       &info);
+
+if (info != 0) {
+  printf("!! a = [%f %f %f] info != 0\n", a[0], a[1], a[2]);
+}
+assert(info == 0);
+
+if (vec != NULL) {
+  memcpy(vec, M, sizeof(double) * 4);
+}
+#else
+  PDM_error(__FILE__, __LINE__, 0, "PDM_linear_algebra_eig_sym2 needs LAPACK\n");
+#endif
+}
+
+
+PDM_GCC_SUPPRESS_WARNING_POP
+
+void
+PDM_linear_algebra_eig_sym3
+(
+  double a[6],
   double val[3],
   double vec[9]
 )
@@ -958,7 +1001,7 @@ PDM_GCC_SUPPRESS_WARNING_POP
 
   if (0) {
     double b[6];
-    PDM_sym_tensor_from_eig(val, vec, b);
+    PDM_sym_tensor_from_eig3(val, vec, b);
     printf("b: %f %f %f %f %f %f\n", b[0], b[1], b[2], b[3], b[4], b[5]);
     printf("check: %f %f %f %f %f %f\n",
           b[0] - a[0], b[1] - a[1], b[2] - a[2],
@@ -967,45 +1010,61 @@ PDM_GCC_SUPPRESS_WARNING_POP
 }
 
 
-void // inline ??
-PDM_sym_tensor_from_eig
+extern inline void
+PDM_sym_tensor_from_eig2
 (
-  const double *eig_val,
-  const double *eig_vec,
-  double       *a
+  double *eig_val,
+  double *eig_vec,
+  double *a
 )
 {
-  //l0*s0^2 + l1*s3^2 + l2*s6^2
+  a[0] =
+    eig_val[0]*eig_vec[0]*eig_vec[0] +
+    eig_val[1]*eig_vec[2]*eig_vec[2];
+
+  a[1] =
+    eig_val[0]*eig_vec[0]*eig_vec[1] +
+    eig_val[1]*eig_vec[2]*eig_vec[3];
+
+  a[2] =
+    eig_val[0]*eig_vec[1]*eig_vec[1] +
+    eig_val[1]*eig_vec[3]*eig_vec[3];
+}
+
+
+extern inline void
+PDM_sym_tensor_from_eig3
+(
+  double *eig_val,
+  double *eig_vec,
+  double *a
+)
+{
   a[0] =
     eig_val[0]*eig_vec[0]*eig_vec[0] +
     eig_val[1]*eig_vec[3]*eig_vec[3] +
     eig_val[2]*eig_vec[6]*eig_vec[6];
 
-  //l0*s0*s1 + l1*s3*s4 + l2*s6*s7
   a[1] =
     eig_val[0]*eig_vec[0]*eig_vec[1] +
     eig_val[1]*eig_vec[3]*eig_vec[4] +
     eig_val[2]*eig_vec[6]*eig_vec[7];
 
-  //l0*s0*s2 + l1*s3*s5 + l2*s6*s8
   a[2] =
     eig_val[0]*eig_vec[0]*eig_vec[2] +
     eig_val[1]*eig_vec[3]*eig_vec[5] +
     eig_val[2]*eig_vec[6]*eig_vec[8];
 
-  //l0*s1^2 + l1*s4^2 + l2*s7^2
   a[3] =
     eig_val[0]*eig_vec[1]*eig_vec[1] +
     eig_val[1]*eig_vec[4]*eig_vec[4] +
     eig_val[2]*eig_vec[7]*eig_vec[7];
 
-  //l0*s1*s2 + l1*s4*s5 + l2*s7*s8
   a[4] =
     eig_val[0]*eig_vec[1]*eig_vec[2] +
     eig_val[1]*eig_vec[4]*eig_vec[5] +
     eig_val[2]*eig_vec[7]*eig_vec[8];
 
-  //l0*s2^2 + l1*s5^2 + l2*s8^2
   a[5] =
     eig_val[0]*eig_vec[2]*eig_vec[2] +
     eig_val[1]*eig_vec[5]*eig_vec[5] +

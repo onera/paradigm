@@ -131,6 +131,26 @@ PDM_linear_algebra_linsolve_gauss
 
 
 /**
+ * \brief Compute the eigenvalues and eigenvectors of a 2x2 symmetric matrix.
+ *
+ * (Only the upper triangular part of matrix A is specified.)
+ * The eigenvalues are sorted in ascending order.
+ *
+ * \param a   [in]   Upper triangular part of the symmetric matrix (A[0,0], A[0,1], A[1,1])
+ * \param val [out]  Eigenvalues
+ * \param vec [out]  Eigenvectors (vec[2*i:2*(i+1)] is the i-th eigenvector)
+ *
+ */
+
+ void PDM_linear_algebra_eig_sym2
+ (
+   double a[3],
+   double val[2],
+   double vec[4]
+ );
+
+
+/**
  * \brief Compute the eigenvalues and eigenvectors of a 3x3 symmetric matrix.
  *
  * (Only the upper triangular part of matrix A is specified.)
@@ -142,7 +162,7 @@ PDM_linear_algebra_linsolve_gauss
  *
  */
 
-void PDM_linear_algebra_eigv_3x3_sym
+void PDM_linear_algebra_eig_sym3
 (
   double a[6],
   double val[3],
@@ -150,12 +170,35 @@ void PDM_linear_algebra_eigv_3x3_sym
 );
 
 
-void //inline ?
-PDM_sym_tensor_from_eig
+/**
+ * \brief Reassemble a 2x2 symmetric tensor from its eigendecomposition
+ *
+ * \param [in]  eig_val  Eigenvalues (size = 2)
+ * \param [in]  eig_vec  Eigenvectors (size = 4, stored in row-major order)
+ * \param [out] a        Symmetric tensor in compact, upper-triangle form (size = 4)
+ */
+void
+PDM_sym_tensor_from_eig2
 (
-  const double *eig_val,
-  const double *eig_vec,
-  double       *a
+  double *eig_val,
+  double *eig_vec,
+  double *a
+);
+
+
+/**
+ * \brief Reassemble a 3x3 symmetric tensor from its eigendecomposition
+ *
+ * \param [in]  eig_val  Eigenvalues (size = 3)
+ * \param [in]  eig_vec  Eigenvectors (size = 9, stored in row-major order)
+ * \param [out] a        Symmetric tensor in compact, upper-triangle form (size = 6)
+ */
+void
+PDM_sym_tensor_from_eig3
+(
+  double *eig_val,
+  double *eig_vec,
+  double *a
 );
 
 #ifdef  __cplusplus
