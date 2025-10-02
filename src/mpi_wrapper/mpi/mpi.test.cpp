@@ -108,6 +108,53 @@ MPI_TEST_CASE("[PDM_MPI_Alltoallv_p2p]", 2) {
 }
 
 
+MPI_TEST_CASE("[PDM_MPI_Alltoallv_l]", 2) {
+
+  PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
+  int i_rank;
+  int n_rank;
+  PDM_MPI_Comm_rank (pdm_comm, &i_rank);
+  PDM_MPI_Comm_size (pdm_comm, &n_rank);
+
+  std::vector<std::vector<int>>    send_buf = {{1, 2, 3}, {-1, -2, -3}};
+  std::vector<std::vector<int>>    send_n   = {{1, 2   }, {3, 0   }};
+  std::vector<std::vector<size_t>> send_idx = {{0, 1   }, {0, 3   }};
+
+  std::vector<int> recv_n(n_rank);
+  PDM_MPI_Alltoall(send_n[i_rank].data(), 1, PDM_MPI_INT,
+                   recv_n        .data(), 1, PDM_MPI_INT,
+                   pdm_comm);
+
+  std::vector<size_t> recv_idx(n_rank+1, 0);
+  for(int i = 0; i < n_rank; ++i) {
+    recv_idx[i+1] = recv_idx[i] + recv_n[i];
+  }
+
+  std::vector<int> recv_buf(recv_idx[n_rank], -10000);
+  PDM_MPI_Alltoallv_l(send_buf[i_rank].data(),
+                      send_n  [i_rank].data(),
+                      send_idx[i_rank].data(),
+                      PDM_MPI_INT,
+                      recv_buf.data(),
+                      recv_n  .data(),
+                      recv_idx.data(),
+                      PDM_MPI_INT,
+                      pdm_comm);
+
+  static int recv_buf_expected_p0[4] = {1, -1, -2, -3};
+  static int recv_buf_expected_p1[2] = {2, 3};
+
+  MPI_CHECK_EQ_C_ARRAY(0, recv_buf.data(), recv_buf_expected_p0, 4);
+  MPI_CHECK_EQ_C_ARRAY(1, recv_buf.data(), recv_buf_expected_p1, 2);
+
+  if(0 == 1) {
+    PDM_log_trace_array_int(recv_buf.data(), recv_idx[n_rank], "recv_buf :");
+  }
+
+}
+
+
+
 MPI_TEST_CASE("[PDM_MPI_Alltoallv_p2p_l]", 2) {
 
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);

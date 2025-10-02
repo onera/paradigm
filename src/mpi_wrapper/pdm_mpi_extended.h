@@ -408,46 +408,6 @@ PDM_MPI_Ialltoallv_p2p_rma
   PDM_MPI_Request  **out_requests
 );
 
-/**
- * @brief Emulates MPI_Ialltoallv for very large data transfers using non-blocking P2P messages and size_t offsets.
- *
- * This is the Large-Offset (L) version of the non-blocking P2P all-to-all communication, designed to handle cases
- * where the buffer displacements exceed the limits of a standard 32-bit integer (e.g., for data structures larger than 2GB).
- * It uses @a size_t for displacement arrays (@a sdispls and @a rdispls). Communication still relies on dynamic non-blocking
- * P2P sends and receives.
- *
- * \param sendbuf        The send buffer.
- * \param sendcounts     An array of integers specifying the number of elements to send to each rank.
- * \param sdispls        An array of size_t specifying the **displacement** in @a sendbuf for each message (Large offset).
- * \param sendtype       The datatype of send buffer elements.
- * \param recvbuf        The receive buffer.
- * \param recvcounts     An array of integers specifying the number of elements to receive from each rank.
- * \param rdispls        An array of size_t specifying the **displacement** in @a recvbuf for each message (Large offset).
- * \param recvtype       The datatype of receive buffer elements.
- * \param comm           The communicator.
- * \param request_s      A pointer to a PDM_MPI_Request array that will be allocated and filled with the send requests.
- * \param request_r      A pointer to a PDM_MPI_Request array that will be allocated and filled with the receive requests.
- * \param n_request_s    A pointer to an integer that will be filled with the total number of send requests.
- * \param n_request_r    A pointer to an integer that will be filled with the total number of receive requests.
- * \return PDM_SUCCESS or an error code from the underlying MPI calls.
- */
-int
-PDM_MPI_Ialltoallv_p2p_l
-(
-  void              *sendbuf,
-  int               *sendcounts,
-  size_t            *sdispls,
-  PDM_MPI_Datatype   sendtype,
-  void              *recvbuf,
-  int               *recvcounts,
-  size_t            *rdispls,
-  PDM_MPI_Datatype   recvtype,
-  PDM_MPI_Comm       comm,
-  PDM_MPI_Request  **request_s,
-  PDM_MPI_Request  **request_r,
-  int               *n_request_s,
-  int               *n_request_r
-);
 
 
 /**
