@@ -241,6 +241,28 @@ PDM_MPI_Recvs_init
   PDM_MPI_Request  **out_requests
 );
 
+/**
+ * @brief Calculates the global proportion of "active" processes based on communication counts.
+ *
+ * An active process is defined as any rank in the communicator for which the provided
+ * @a sendcounts or @a recvcounts arrays indicate a non-zero transfer.
+ * * The function determines this count locally by iterating over the provided arrays.
+ * It then calculates the local proportion (n_active_rank / total_size) and uses
+ * PDM_MPI_Allreduce (with the MAX operation) to ensure that the final, correct proportion
+ * (which should be identical on all ranks) is distributed back to all processes.
+ *
+ * This function is typically used in performance metrics or to optimize collective
+ * operations based on the communication sparsity defined by the counts arrays (e.g., in an Alltoallv).
+ *
+ * @note It is assumed that the @a sendcounts and @a recvcounts arrays are globally consistent
+ * (i.e., they hold the full communication matrix counts) across all participating ranks.
+ *
+ * \param sendcounts       An array of integers of size 'size' where sendcounts[i] specifies the number of elements sent to rank i.
+ * \param recvcounts       An array of integers of size 'size' where recvcounts[i] specifies the number of elements received from rank i.
+ * \param comm             The communicator (e.g., PDM_MPI_COMM_WORLD).
+ * \param part_active_rank A pointer to a double that will be filled with the global proportion
+ * of active ranks (n_active / size), which is identical on all ranks after the Allreduce.
+ */
 void
 PDM_MPI_Partofactiverank
 (
