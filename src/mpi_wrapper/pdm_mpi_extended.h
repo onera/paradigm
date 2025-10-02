@@ -83,8 +83,6 @@ PDM_MPI_Sends_init
         PDM_MPI_Request  **out_requests
 );
 
-
-
 /**
  * \brief Initializes and starts multiple non-blocking send operations to selected processes.
  *
@@ -252,26 +250,6 @@ PDM_MPI_Partofactiverank
   double       *part_active_rank
 );
 
-int
-PDM_MPI_Ialltoallv_p2p_l
-(
-  void              *sendbuf,
-  int               *sendcounts,
-  size_t            *sdispls,
-  PDM_MPI_Datatype   sendtype,
-  void              *recvbuf,
-  int               *recvcounts,
-  size_t            *rdispls,
-  PDM_MPI_Datatype   recvtype,
-  PDM_MPI_Comm       comm,
-  PDM_MPI_Request  **request_s,
-  PDM_MPI_Request  **request_r,
-  int               *n_request_s,
-  int               *n_request_r
-);
-
-
-
 /**
  * @brief Performs a non-blocking all-to-all communication for a selected, sparse set of ranks using P2P messages.
  *
@@ -371,8 +349,29 @@ PDM_MPI_Ialltoallv_p2p
   PDM_MPI_Request  **out_requests
 );
 
-
-
+/**
+ * @brief Emulates MPI_Ialltoallv using non-blocking One-Sided (RMA) communication via MPI_Rget.
+ *
+ * This function performs an **asynchronous, non-blocking** all-to-all communication based on the
+ * Remote Memory Access (RMA) paradigm, specifically by using **MPI_Rget** operations.
+ *
+ * For every rank from which the local process expects to receive data (@a recvcounts > 0),
+ * an `MPI_Rget` is posted to pull data from the remote process's exposed memory window
+ * (@a send_win) into the local receive buffer (@a recvbuf). The operation is non-blocking,
+ * and the returned requests must be completed using `PDM_MPI_Wait` or equivalent synchronization
+ * before the received data can be accessed and before the RMA epoch ends.
+ *
+ * \param send_win       The MPI Window handle (PDM_MPI_Win) on the **target** process from which data will be retrieved.
+ * \param target_disp    An array of integers specifying the **displacement** (offset) in the remote target window (@a send_win) for the start of the data retrieval from each rank.
+ * \param recvbuf        The local receive buffer where the data will be placed (origin buffer of the Rget).
+ * \param recvcounts     An array of integers specifying the number of elements to **receive** (retrieve) from each rank.
+ * \param rdispls        An array of integers specifying the **displacement** in the local @a recvbuf for each received message.
+ * \param recvtype       The datatype of receive buffer elements and the type used for the target window access.
+ * \param comm           The communicator.
+ * \param n_send_recv_request A pointer to an integer that will be filled with the total number of allocated `MPI_Rget` requests (equal to the number of non-zero entries in @a recvcounts).
+ * \param out_requests   A pointer to a PDM_MPI_Request array that will be allocated and filled with the non-blocking `MPI_Rget` requests.
+ * @return PDM_SUCCESS or an error code from the underlying MPI calls.
+ */
 int
 PDM_MPI_Ialltoallv_p2p_rma
 (
@@ -387,7 +386,100 @@ PDM_MPI_Ialltoallv_p2p_rma
   PDM_MPI_Request  **out_requests
 );
 
+/**
+ * @brief Emulates MPI_Ialltoallv for very large data transfers using non-blocking P2P messages and size_t offsets.
+ *
+ * This is the Large-Offset (L) version of the non-blocking P2P all-to-all communication, designed to handle cases
+ * where the buffer displacements exceed the limits of a standard 32-bit integer (e.g., for data structures larger than 2GB).
+ * It uses @a size_t for displacement arrays (@a sdispls and @a rdispls). Communication still relies on dynamic non-blocking
+ * P2P sends and receives.
+ *
+ * \param sendbuf        The send buffer.
+ * \param sendcounts     An array of integers specifying the number of elements to send to each rank.
+ * \param sdispls        An array of size_t specifying the **displacement** in @a sendbuf for each message (Large offset).
+ * \param sendtype       The datatype of send buffer elements.
+ * \param recvbuf        The receive buffer.
+ * \param recvcounts     An array of integers specifying the number of elements to receive from each rank.
+ * \param rdispls        An array of size_t specifying the **displacement** in @a recvbuf for each message (Large offset).
+ * \param recvtype       The datatype of receive buffer elements.
+ * \param comm           The communicator.
+ * \param request_s      A pointer to a PDM_MPI_Request array that will be allocated and filled with the send requests.
+ * \param request_r      A pointer to a PDM_MPI_Request array that will be allocated and filled with the receive requests.
+ * \param n_request_s    A pointer to an integer that will be filled with the total number of send requests.
+ * \param n_request_r    A pointer to an integer that will be filled with the total number of receive requests.
+ * \return PDM_SUCCESS or an error code from the underlying MPI calls.
+ */
+int
+PDM_MPI_Ialltoallv_p2p_l
+(
+  void              *sendbuf,
+  int               *sendcounts,
+  size_t            *sdispls,
+  PDM_MPI_Datatype   sendtype,
+  void              *recvbuf,
+  int               *recvcounts,
+  size_t            *rdispls,
+  PDM_MPI_Datatype   recvtype,
+  PDM_MPI_Comm       comm,
+  PDM_MPI_Request  **request_s,
+  PDM_MPI_Request  **request_r,
+  int               *n_request_s,
+  int               *n_request_r
+);
 
+
+/**
+ * @brief Performs a standard blocking All-to-all communication with variable counts and large (size_t) displacements.
+ *
+ * This function serves as the **Large-Offset (L) wrapper** around the native MPI_Alltoallv (or equivalent MPI_Ialltoallv/Wait)
+ * but uses @a size_t for the displacement arrays (@a sdispls, @a rdispls) to support extremely large data transfers
+ * that exceed the limitations of standard integer displacement arrays. The underlying implementation will typically
+ * rely on a specialized MPI function (like MPI_Ialltoallv with custom datatype offsets or MPIX_Alltoallv_ll) if available,
+ * or fall back to an internal large-offset P2P emulation. The call is blocking.
+ *
+ * \param sendbuf        The send buffer.
+ * \param sendcounts     An array of integers specifying the number of elements to send to each rank.
+ * \param sdispls        An array of size_t specifying the **displacement** in @a sendbuf for each message (Large offset).
+ * \param sendtype       The datatype of send buffer elements.
+ * \param recvbuf        The receive buffer.
+ * \param recvcounts     An array of integers specifying the number of elements to receive from each rank.
+ * \param rdispls        An array of size_t specifying the **displacement** in @a recvbuf for each message (Large offset).
+ * \param recvtype       The datatype of receive buffer elements.
+ * \param comm           The communicator.
+ * \return PDM_SUCCESS or an error code from the underlying MPI calls.
+ */
+int
+PDM_MPI_Alltoallv_l
+(
+  void             *sendbuf,
+  int              *sendcounts,
+  size_t           *sdispls,
+  PDM_MPI_Datatype  sendtype,
+  void             *recvbuf,
+  int              *recvcounts,
+  size_t           *rdispls,
+  PDM_MPI_Datatype  recvtype,
+  PDM_MPI_Comm      comm
+);
+
+/**
+ * @brief Emulates MPI_Alltoallv using blocking P2P messages.
+ *
+ * This function performs a **blocking** all-to-all communication by manually posting point-to-point (P2P) sends and receives.
+ * The function returns only after all data has been safely sent and received. It is typically used for debugging or to
+ * bypass potential performance issues with native collective implementations in sparse communication scenarios.
+ *
+ * \param sendbuf        The send buffer.
+ * \param sendcounts     An array of integers specifying the number of elements to send to each rank.
+ * \param sdispls        An array of integers specifying the displacement in @a sendbuf for each message.
+ * \param sendtype       The datatype of send buffer elements.
+ * \param recvbuf        The receive buffer.
+ * \param recvcounts     An array of integers specifying the number of elements to receive from each rank.
+ * \param rdispls        An array of integers specifying the displacement in @a recvbuf for each message.
+ * \param recvtype       The datatype of receive buffer elements.
+ * \param comm           The communicator.
+ * \return PDM_SUCCESS or an error code from the underlying MPI calls.
+ */
 int
 PDM_MPI_Alltoallv_p2p
 (
@@ -402,6 +494,25 @@ PDM_MPI_Alltoallv_p2p
   PDM_MPI_Comm      comm
 );
 
+
+/**
+ * @brief Emulates MPI_Alltoallv for very large data transfers using blocking P2P messages and size_t offsets.
+ *
+ * This is the Large-Offset (L) version of the blocking P2P all-to-all communication. It uses @a size_t for
+ * displacement arrays (@a sdispls and @a rdispls) to support extremely large buffers or complex memory layouts
+ * where 32-bit integer offsets are insufficient. The operation is blocking, returning only after all transfers are complete.
+ *
+ * \param sendbuf        The send buffer.
+ * \param sendcounts     An array of integers specifying the number of elements to send to each rank.
+ * \param sdispls        An array of size_t specifying the **displacement** in @a sendbuf for each message (Large offset).
+ * \param sendtype       The datatype of send buffer elements.
+ * \param recvbuf        The receive buffer.
+ * \param recvcounts     An array of integers specifying the number of elements to receive from each rank.
+ * \param rdispls        An array of size_t specifying the **displacement** in @a recvbuf for each message (Large offset).
+ * \param recvtype       The datatype of receive buffer elements.
+ * \param comm           The communicator.
+ * \return PDM_SUCCESS or an error code from the underlying MPI calls.
+ */
 int
 PDM_MPI_Alltoallv_p2p_l
 (
@@ -416,8 +527,28 @@ PDM_MPI_Alltoallv_p2p_l
   PDM_MPI_Comm      comm
 );
 
-
-
+/**
+ * @brief Initializes a persistent P2P communication for AlltoallV exchanges.
+ *
+ * This function sets up the structure for a repeated all-to-all communication using non-blocking P2P persistent requests
+ * (based on MPI_Send_init/MPI_Recv_init). The actual data transfer must be initiated later using PDM_MPI_Start/PDM_MPI_Startall
+ * and completed with PDM_MPI_Wait/PDM_MPI_Waitall. This is highly efficient when the communication pattern (counts and displacements)
+ * remains constant across multiple steps.
+ *
+ * \param sendbuf        The send buffer.
+ * \param sendcounts     An array of integers specifying the number of elements to send to each rank.
+ * \param sdispls        An array of integers specifying the displacement in @a sendbuf for each message.
+ * \param sendtype       The datatype of send buffer elements.
+ * \param recvbuf        The receive buffer.
+ * \param recvcounts     An array of integers specifying the number of elements to receive from each rank.
+ * \param rdispls        An array of integers specifying the displacement in @a recvbuf for each message.
+ * \param recvtype       The datatype of receive buffer elements.
+ * \param tag            The message tag for P2P persistent communication.
+ * \param comm           The communicator.
+ * \param n_send_recv_request A pointer to an integer that will be filled with the total number of allocated persistent requests.
+ * \param requests       A pointer to a PDM_MPI_Request array that will be allocated and filled with the persistent requests.
+ * \return PDM_SUCCESS or an error code from the underlying MPI calls.
+ */
 int
 PDM_MPI_Alltoallv_p2p_init
 (
@@ -434,22 +565,6 @@ PDM_MPI_Alltoallv_p2p_init
   int               *n_send_recv_request,
   PDM_MPI_Request  **requests
 );
-
-
-int
-PDM_MPI_Alltoallv_l
-(
-  void             *sendbuf,
-  int              *sendcounts,
-  size_t           *sdispls,
-  PDM_MPI_Datatype  sendtype,
-  void             *recvbuf,
-  int              *recvcounts,
-  size_t           *rdispls,
-  PDM_MPI_Datatype  recvtype,
-  PDM_MPI_Comm      comm
-);
-
 
 /*----------------------------------------------------------------------------*/
 
