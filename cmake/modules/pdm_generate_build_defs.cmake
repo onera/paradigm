@@ -30,7 +30,6 @@ else()
   string(REPLACE "#MPI_Wrapper" "" pdm_build_defs_file ${pdm_build_defs_file})
 endif ()
 
-
 file(WRITE ${CMAKE_BINARY_DIR}/pdm_Build.defs.in "${pdm_build_defs_file}")
 
 configure_file(${CMAKE_BINARY_DIR}/pdm_Build.defs.in "${CMAKE_CURRENT_BINARY_DIR}/pdm_Build.defs")

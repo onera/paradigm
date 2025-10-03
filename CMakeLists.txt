@@ -4,7 +4,7 @@
 cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 cmake_policy(SET CMP0074 NEW) # force find_package to take <PackageName>_ROOT variables into account
 
-if(NOT DEFINED PROJECT_ROOT)
+if (NOT DEFINED PROJECT_ROOT)
   set(PROJECT_ROOT ${CMAKE_SOURCE_DIR} CACHE PATH "Root directory, where the submodules are populated")
 endif()
 
@@ -21,12 +21,9 @@ include(${CMAKE_MODULE_PATH}/version.cmake)
 include(${CMAKE_MODULE_PATH}/find_subdir.cmake)
 project(PDM VERSION ${PDM_DEF_VERSION_MAJOR} LANGUAGES Fortran C CXX)
 
-# A recuperer depuis git ? --> Fail on recup la 2.1 --> A discuter avec Romain/Julien/Bérenger
-
 set(PDM_VERSION "${PDM_VERSION_MAJOR}.${PDM_VERSION_MINOR}.${PDM_VERSION_PATCH}")
 
-## Compiler flags
-### C++ standard
+## C++ standard
 set(SUPPORTED_CXX_STANDARDS 11 14 17 20)
 
 #------------------------------------------------------------------------------
@@ -42,12 +39,11 @@ endif()
 # ------------------------------------------------------------------------------
 # Dependencies
 # ------------------------------------------------------------------------------
-## System dependencies ##
 if (NOT TARGET MPI::MPI_CXX)
   find_package(MPI REQUIRED COMPONENTS Fortran CXX)
 endif()
 if (PDM_ENABLE_PYTHON_BINDINGS)
-  if(NOT TARGET Python::Python OR NOT TARGET Python::NumPy)
+  if (NOT TARGET Python::Python OR NOT TARGET Python::NumPy)
     find_package(Python 3.8 REQUIRED COMPONENTS Development NumPy)
   endif()
   if (NOT TARGET Mpi4Py::Mpi4Py)
@@ -62,12 +58,11 @@ find_package(Doxygen)
 # ------------------------------------------------------------------------------
 # Features
 # ------------------------------------------------------------------------------
-
 option(PDM_ENABLE_EXTENSION_PDMA     "Enable advanced functionalities extension" OFF)
 option(PDM_ENABLE_LONG_G_NUM         "Enable long for global number"             ON )
 option(PDM_ENABLE_SHARED             "Build Shared Libraries"                    ON )
 option(PDM_ENABLE_STATIC             "Build Static Libraries"                    OFF)
-if(PDM_ENABLE_EXTENSION_PDMA)
+if (PDM_ENABLE_EXTENSION_PDMA)
   option(PDM_ENABLE_ANISO_AGGLO      "Enable anisotropic agglomeration"          ON )
 endif()
 
@@ -84,9 +79,9 @@ option(PDM_ENABLE_TRAINING           "Enable training Jupyter Notebooks"        
 
 if (PDM_ENABLE_LONG_G_NUM)
   set(PDM_LONG_G_NUM 1)
-endif ()
+endif()
 
-if(PDM_ENABLE_EXTENSION_PDMA AND PDM_ENABLE_ANISO_AGGLO)
+if (PDM_ENABLE_EXTENSION_PDMA AND PDM_ENABLE_ANISO_AGGLO)
   set (PDM_HAVE_ANISO_AGGLO ON)
 endif()
 
@@ -101,17 +96,16 @@ if (PDM_ENABLE_PYTHON_BINDINGS)
   endif()
   find_package(Python REQUIRED COMPONENTS Interpreter Development NumPy)
   find_package(Mpi4Py REQUIRED)
-  # include(UseCython)
 endif()
 
 if (PDM_ENABLE_CUDA)
   enable_language(CUDA)
-endif ()
+endif()
 
 if (PDM_ENABLE_BLASLAPACK)
   find_package(BLAS)
   find_package(LAPACK)
-endif ()
+endif()
 
 if (PTSCOTCH_FOUND)
   set (PDM_HAVE_PTSCOTCH ON)
@@ -129,12 +123,12 @@ endif()
 set (install_configs "")
 configure_file(pdm_config.h.in "${CMAKE_CURRENT_BINARY_DIR}/pdm_config.h")
 list (APPEND install_configs ${CMAKE_CURRENT_BINARY_DIR}/pdm_config.h)
-if(PDM_ENABLE_Fortran)
+if (PDM_ENABLE_Fortran)
   if ("${CMAKE_CURRENT_BINARY_DIR}/pdm_config.h" IS_NEWER_THAN "${CMAKE_CURRENT_BINARY_DIR}/pdm_configf.h")
     include (FortranizeFile)
     fortranize ("${CMAKE_CURRENT_BINARY_DIR}/pdm_config.h")
     list (APPEND install_configs ${CMAKE_CURRENT_BINARY_DIR}/pdm_configf.h)
-  endif ()
+  endif()
 endif()
 
 #------------------------------------------------------------------------------
@@ -147,7 +141,7 @@ add_subdirectory(script)
 # Compilation
 # ------------------------------------------------------------------------------
 set(src_dir ${PROJECT_SOURCE_DIR}/src)
-if(PDM_ENABLE_EXTENSION_PDMA)
+if (PDM_ENABLE_EXTENSION_PDMA)
   set(pdma_dir     ${PROJECT_SOURCE_DIR}/extensions/paradigma)
   set(pdma_src_dir ${pdma_dir}/src)
 endif()
@@ -162,7 +156,7 @@ file(GLOB_RECURSE all_src_fortran_files
 
 get_all_subdirectories(PDM_SUBDIRS ${src_dir})
 
-if(PDM_ENABLE_EXTENSION_PDMA)
+if (PDM_ENABLE_EXTENSION_PDMA)
   file(GLOB_RECURSE pdma_sources
     CONFIGURE_DEPENDS "${pdma_src_dir}/*.cxx" "${pdma_src_dir}/*.cpp" "${pdma_src_dir}/*.c"
   )
@@ -180,10 +174,10 @@ set(src_files ${all_src_files})
 list(FILTER src_files EXCLUDE REGEX ".*\\.test\\.cpp$")
 
 set(LIB_TYPES "")
-if(PDM_ENABLE_STATIC)
+if (PDM_ENABLE_STATIC)
   list(APPEND LIB_TYPES STATIC)
 endif()
-if(PDM_ENABLE_SHARED)
+if (PDM_ENABLE_SHARED)
   list(APPEND LIB_TYPES SHARED)
 endif()
 
@@ -255,7 +249,7 @@ endif()
 get_target_property(PDM_INC pdm INCLUDE_DIRECTORIES)
 get_target_property(PDM_LIB pdm LINK_LIBRARIES)
 
-if(PDM_ENABLE_Fortran)
+if (PDM_ENABLE_Fortran)
   add_library(pdmf OBJECT ${all_src_fortran_files})
   set_target_properties(pdmf PROPERTIES Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/modules)
   target_include_directories(pdmf PUBLIC ${PDM_INC})
@@ -279,7 +273,7 @@ foreach(lib_type IN LISTS LIB_TYPES)
   target_include_directories(pdm_${lib_type} PUBLIC ${PDM_INC})
   target_link_libraries(pdm_${lib_type}      PUBLIC ${PDM_LIB})
 
-  if(PDM_ENABLE_Fortran)
+  if (PDM_ENABLE_Fortran)
     add_library(pdmf_${lib_type} ${lib_type} $<TARGET_OBJECTS:pdmf>)
     add_dependencies(pdmf_${lib_type} pdmf)
     set_target_properties(pdmf_${lib_type} PROPERTIES OUTPUT_NAME "pdmf")
@@ -303,7 +297,7 @@ endif()
 # ----------------------------------------------------------------------
 # Unit test
 # ----------------------------------------------------------------------
-if(PDM_ENABLE_UNIT_TEST)
+if (PDM_ENABLE_UNIT_TEST)
   include(FetchContent)
   FetchContent_Declare(
     doctest
@@ -311,7 +305,7 @@ if(PDM_ENABLE_UNIT_TEST)
     GIT_TAG        v2.4.11
   )
   FetchContent_GetProperties(doctest)
-  if(NOT doctest_POPULATED)
+  if (NOT doctest_POPULATED)
     FetchContent_Populate(doctest)
     add_subdirectory(${doctest_SOURCE_DIR} ${doctest_BINARY_DIR})
   endif()
@@ -323,12 +317,12 @@ endif()
 include(CTest)
 if (PDM_ENABLE_TESTS)
   add_subdirectory(test)
-  if(PDM_ENABLE_EXTENSION_PDMA)
+  if (PDM_ENABLE_EXTENSION_PDMA)
     add_subdirectory(extensions/paradigma/test)
   endif()
 endif()
 
-# pdm_run
+# Configure pdm_run
 string(REPLACE ";" " " PDM_LIST_TEST  "${PDM_LIST_TEST}")
 string(REPLACE ";" " " PDM_LIST_NRANK "${PDM_LIST_NRANK}")
 
@@ -346,10 +340,10 @@ if (CMAKE_BUILD_TYPE STREQUAL "Sanitize")
 
   if (PDM_ENABLE_DOC)
     message(FATAL_ERROR "Documention can not be built in Sanitize CMAKE_BUILD_TYPE")
-  endif ()
+  endif()
 endif()
 
-if(DEFINED ENV{PYTHONPATH})
+if (DEFINED ENV{PYTHONPATH})
   set (PDM_RUN_PYTHONPATH "PYTHONPATH=${PROJECT_BINARY_DIR}/Cython:$ENV{PYTHONPATH}")
 else()
   set (PDM_RUN_PYTHONPATH "PYTHONPATH=${PROJECT_BINARY_DIR}/Cython")
@@ -364,14 +358,6 @@ configure_file(${PROJECT_SOURCE_DIR}/script/pdm_launch.in "${PROJECT_BINARY_DIR}
 configure_file(${PROJECT_SOURCE_DIR}/script/pdm_launch_python.in "${PROJECT_BINARY_DIR}/pdm_launch_python"
                @ONLY)
 
-# Je comprends pas encore pourquoi on a besoin de ca (Je reporte pour l'instant pour pas oublier) :
-# configure_file(${PROJECT_SOURCE_DIR}/script/pdm_run.in "${PROJECT_BINARY_DIR}/test/pdm_run"
-#                @ONLY)
-# if(PDM_ENABLE_EXTENSION_PDMA)
-#  configure_file(${PROJECT_SOURCE_DIR}/script/pdm_run.in "${PROJECT_BINARY_DIR}/extensions/paradigma/test/pdm_run"
-#                @ONLY)
-# endif()
-
 if (PDM_ENABLE_TRAINING)
   add_subdirectory(training)
 endif()
@@ -384,12 +370,11 @@ add_subdirectory(doc)
 # ----------------------------------------------------------------------
 # Summary
 # ----------------------------------------------------------------------
-if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
   include(FeatureSummary)
   feature_summary(WHAT ALL)
 endif()
 include(pdm_generate_build_defs)
-# ----------------------------------------------------------------------
 
 # ----------------------------------------------------------------------
 # Install
@@ -431,7 +416,7 @@ file(GLOB_RECURSE all_headers "${CMAKE_SOURCE_DIR}/src/*.h")
 set(install_headers ${all_headers})
 list(FILTER install_headers EXCLUDE REGEX ".*\\_priv\\.h$")
 
-if(PDM_ENABLE_Fortran)
+if (PDM_ENABLE_Fortran)
   install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/modules DESTINATION include)
 endif()
 
