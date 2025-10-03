@@ -374,7 +374,6 @@ if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
   include(FeatureSummary)
   feature_summary(WHAT ALL)
 endif()
-include(pdm_generate_build_defs)
 
 # ----------------------------------------------------------------------
 # Install
@@ -422,3 +421,23 @@ endif()
 
 install(FILES ${install_headers} DESTINATION include)
 install(FILES ${install_configs} DESTINATION include)
+
+configure_file(
+  "${CMAKE_CURRENT_SOURCE_DIR}/cmake/templates/pdmConfig.cmake.in"
+  pdmConfig.cmake
+  @ONLY
+)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/pdmConfig.cmake"
+  DESTINATION lib/cmake/pdm
+)
+
+configure_file(
+  "${CMAKE_CURRENT_SOURCE_DIR}/cmake/templates/pdmConfigVersion.cmake.in"
+  pdmConfigVersion.cmake
+  @ONLY
+)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/pdmConfigVersion.cmake"
+  DESTINATION lib/cmake/pdm
+)
+
+include(pdm_generate_build_defs)
