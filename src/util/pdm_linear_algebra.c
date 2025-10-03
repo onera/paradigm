@@ -798,8 +798,8 @@ int info = 0;
 double M[4] = {a[0], a[1],
                a[1], a[2]};
 int n = 2;
-int lwork = 2*n - 1;
-double work[8];
+int lwork = 3*n - 1;
+double work[5];
 
 dsyev_("V",
        "U",
