@@ -20,6 +20,7 @@
 #include <iostream>
 #include <functional>
 #include <iomanip>
+#include <cstring>
 
 #if defined (PDM_HAVE_GETRUSAGE)
 #include <sys/time.h>
@@ -69,10 +70,12 @@ struct _pdm_timer_event_t {
 
   // Node Statistics
   long   n_call = 0;
-  double t1     = 0.;             // Start time of the active call
-  double t_run_inclusive = 0.;    // Total inclusive time
-  double t_run_exclusive = 0.;    // Exclusive time (calculated at dump)
-  double t_children_sum  = 0.;    // Sum of children's inclusive times
+  double t1     = 0.;          // Start time of the active call
+  double t_run_inclusive = 0.; // Total inclusive time
+  double t_run_exclusive = 0.; // Exclusive time (calculated at dump)
+  double t_children_sum  = 0.; // Sum of children's inclusive times
+  double t_sync_entry    = 0.; // Synchronization wait time at the start (Entry Barrier Overhead)
+  double t_sync_exit     = 0.; // Synchronization wait time at the end (Exit Barrier Overhead)
 
   // Recursion Management
   int    is_active_count = 0;
@@ -157,58 +160,88 @@ calculate_max_widths(_pdm_timer_event_t& node, int current_indent_length, size_t
 
 
 /**
- * @brief Traverses the tree for hierarchical and aligned console printing.
+ * @brief Formats a single timer line (event statistics) into an aligned string.
  */
-void traverse_and_print_aligned(_pdm_timer_event_t& node, int depth, size_t name_width, int time_width, int ncall_width) {
+std::string format_timer_line(_pdm_timer_event_t& node,
+                              const std::string& indented_name,
+                              size_t name_width,
+                              int time_width,
+                              int ncall_width) {
+
+    // 1. Calculate Exclusive Time
+    double children_time_sum = 0.0;
+    for (auto& child_name : node.child_insertion_order) {
+      children_time_sum += node.children.at(child_name)->t_run_inclusive;
+    }
+    double t_exclusive = node.t_run_inclusive - children_time_sum;
+
+    std::stringstream ss;
+
+    // --- Column 1: Event Name (with Indentation) ---
+    ss << std::left << std::setw(name_width) << indented_name;
+
+    // --- Column 2: N_Call ---
+    ss << std::right << std::setw(ncall_width) << node.n_call;
+
+    // --- Column 3: T_Inclusive ---
+    ss << " |"
+       << std::right << std::setw(time_width)
+       << std::fixed << std::setprecision(6)
+       << node.t_run_inclusive;
+
+    // --- Column 4: T_Exclusive ---
+    ss << " |"
+       << std::right << std::setw(time_width)
+       << std::fixed << std::setprecision(6)
+       << t_exclusive;
+
+    // --- Column 5: T_Sync_Entry ---
+    ss << " |"
+       << std::right << std::setw(time_width)
+       << std::fixed << std::setprecision(6)
+       << node.t_sync_entry;
+
+    // --- Column 6: T_Sync_Exit ---
+    ss << " |"
+       << std::right << std::setw(time_width)
+       << std::fixed << std::setprecision(6)
+       << node.t_sync_exit;
+
+    return ss.str();
+}
+
+/**
+ * @brief Traverses the tree recursively, formats lines, and collects them in a vector.
+ */
+void traverse_and_print_aligned(_pdm_timer_event_t& node,
+                                int depth,
+                                size_t name_width,
+                                int time_width,
+                                int ncall_width,
+                                std::vector<std::string>& lines) {
 
   if (node.event_name == "__ROOT__") {
     for (auto& child_name : node.child_insertion_order) {
-      traverse_and_print_aligned(*node.children.at(child_name), depth, name_width, time_width, ncall_width);
+      traverse_and_print_aligned(*node.children.at(child_name), depth, name_width, time_width, ncall_width, lines);
     }
     return;
   }
 
-  // 1. Calculate Exclusive Time
-  double children_time_sum = 0.0;
-  for (auto& child_name : node.child_insertion_order) {
-    children_time_sum += node.children.at(child_name)->t_run_inclusive;
-  }
-  double t_exclusive = node.t_run_inclusive - children_time_sum;
-
-  // 2. Display
-
-  // --- Column 1: Event Name (with Indentation) ---
+  // 1. Format the name with indentation
   std::string indent = "";
   for (int i = 0; i < depth; ++i) {
     indent += "  |";
   }
   std::string indented_name = indent + node.event_name;
 
-  std::cout << std::left << std::setw(name_width) << indented_name;
-
-  // --- Column 2: N_Call ---
-  std::cout << std::right << std::setw(ncall_width) << node.n_call;
-
-  // --- Column 3: T_Inclusive ---
-  std::cout << " |"
-            << std::right << std::setw(time_width)
-            << std::fixed << std::setprecision(6)
-            << node.t_run_inclusive;
-
-  // --- Column 4: T_Exclusive ---
-  std::cout << " |"
-            << std::right << std::setw(time_width)
-            << std::fixed << std::setprecision(6)
-            << t_exclusive;
-
-  std::cout << std::endl;
+  // 2. Format the line using the dedicated function and store it
+  lines.push_back(format_timer_line(node, indented_name, name_width, time_width, ncall_width));
 
   // 3. Recurse (using the insertion order)
   for (auto& child_name : node.child_insertion_order) {
-    traverse_and_print_aligned(*node.children.at(child_name), depth + 1, name_width, time_width, ncall_width);
+    traverse_and_print_aligned(*node.children.at(child_name), depth + 1, name_width, time_width, ncall_width, lines);
   }
 }
-
 
 /**
  * @brief Collects all nodes into a single vector for flat mode printing.
@@ -236,7 +269,6 @@ void calculate_exclusive_and_dump(_pdm_timer_event_t& node, int indent, FILE* fp
 
     // --- Calculate Exclusive Time ---
     double children_time_sum = 0.0;
-    // Iterate using the guaranteed insertion order
     for (auto& child_name : node.child_insertion_order) {
       children_time_sum += node.children.at(child_name)->t_run_inclusive;
     }
@@ -257,7 +289,13 @@ void calculate_exclusive_and_dump(_pdm_timer_event_t& node, int indent, FILE* fp
     fprintf(fp, "\"t_inclusive\": %12.5e,\n", node.t_run_inclusive);
 
     for (int i = 0; i < (indent * 2) + 2; ++i) fprintf(fp, " ");
-    fprintf(fp, "\"t_exclusive\": %12.5e", node.t_run_exclusive);
+    fprintf(fp, "\"t_exclusive\": %12.5e,\n", node.t_run_exclusive);
+
+    for (int i = 0; i < (indent * 2) + 2; ++i) fprintf(fp, " ");
+    fprintf(fp, "\"t_sync_entry\": %12.5e,\n", node.t_sync_entry); // Entry
+
+    for (int i = 0; i < (indent * 2) + 2; ++i) fprintf(fp, " ");
+    fprintf(fp, "\"t_sync_exit\": %12.5e", node.t_sync_exit); // Exit
 
     // Add children if present
     if (!node.children.empty()) {
@@ -266,7 +304,6 @@ void calculate_exclusive_and_dump(_pdm_timer_event_t& node, int indent, FILE* fp
       fprintf(fp, "\"children\": [\n");
 
       bool current_level_first_child = true;
-      // Recursive call using the insertion order
       for (auto& child_name : node.child_insertion_order) {
         calculate_exclusive_and_dump(*node.children.at(child_name), indent + 2, fp, current_level_first_child);
       }
@@ -313,18 +350,13 @@ PDM_timer_start
 )
 {
   std::string current_name(name);
-
-  if (force_synchro == 1) {
-    PDM_MPI_Barrier(timer->comm);
-  }
-
   _pdm_timer_event_t* parent_node = get_active_parent(timer);
   _pdm_timer_event_t* event_ptr;
 
-  // Check existence locally in the parent's children map.
+  // 1. Get or create the node
   if (parent_node->children.count(current_name) == 0) {
 
-    // --- CRUCIAL: Record the insertion order first ---
+    // Record the insertion order
     parent_node->child_insertion_order.push_back(current_name);
 
     // Allocation via unique_ptr
@@ -335,13 +367,21 @@ PDM_timer_start
     event_ptr->event_name = current_name;
     event_ptr->parent_name = parent_node->event_name;
   } else {
-    // If the child exists (repeated or looped call), retrieve it.
+    // If the child exists, retrieve it.
     event_ptr = parent_node->children.at(current_name).get();
   }
 
+  // 2. Measure and execute Entry Barrier
+  if (force_synchro == 1) {
+    double t_sync_start = PDM_MPI_Wtime();
+    PDM_MPI_Barrier(timer->comm);
+    // Accumulate the synchronization wait time at entry
+    event_ptr->t_sync_entry += (PDM_MPI_Wtime() - t_sync_start);
+  }
+
+  // 3. Time and Stack Management
   _pdm_timer_event_t& event = *event_ptr;
 
-  // Time and Stack Management
   if (event.is_active_count == 0) {
     event.t1 = PDM_MPI_Wtime();
   }
@@ -376,39 +416,57 @@ PDM_timer_end
     return;
   }
 
-  // 2. Retirer l'événement de la pile
+  // Pop the finished event from the stack
   timer->call_stack.pop_back();
 
-  // 3. Récupérer le n?ud parent (le nouveau sommet de la pile)
+  // Retrieve the new parent node
   _pdm_timer_event_t* parent_node = get_active_parent(timer);
 
+  // NEW: Measure and execute Exit Barrier
   if (force_synchro == 1) {
+    double t_sync_start = PDM_MPI_Wtime();
     PDM_MPI_Barrier(timer->comm);
+    // Accumulate the synchronization wait time at exit
+    current_node->t_sync_exit += (PDM_MPI_Wtime() - t_sync_start);
   }
+
   current_node->is_active_count--;
 
-  if (current_node->is_active_count == 0) { // Fin du bloc externe
+  if (current_node->is_active_count == 0) {
     double dt = PDM_MPI_Wtime() - current_node->t1;
     current_node->t_run_inclusive += dt;
 
-    // 4. Mettre à jour le temps des enfants pour le parent (nécessaire pour le calcul exclusif du parent)
+    // Update parent's children sum
     parent_node->t_children_sum += dt;
   }
 }
 
 
-void PDM_timer_print(PDM_timer_t *timer, int mode) {
+/**
+ * @brief Generates the full formatted report string (header + lines) for logging.
+ * The returned string must be freed by the user using PDM_timer_free_string.
+ * NOTE: The user is responsible for freeing the returned char* using the dedicated function.
+ * * @param timer The timer instance.
+ * @param mode 0: Hierarchical (Indented). 1: Flat/Raw (All nodes, non-indented).
+ * @return Dynamically allocated C-string containing the full report.
+ */
+char* PDM_timer_get_report_string(PDM_timer_t *timer, int mode) {
+  std::stringstream report_stream;
   if (timer->root_event.children.empty()) {
-    std::cout << "PDM_TIMER: No events recorded." << std::endl;
-    return;
+    report_stream << "PDM_TIMER: No events recorded.\n";
+    // Return a copy of the stringstream content
+    std::string temp_str = report_stream.str();
+    char *cstr = new char[temp_str.length() + 1];
+    std::strcpy(cstr, temp_str.c_str());
+    return cstr;
   }
 
   // --- Phase 1: Calculate Dynamic Widths ---
-  size_t max_name_width = 11; // Min width for "Event Name"
+  size_t max_name_width = 11;
 
-  if (mode == 0) { // Hierarchical Mode
+  if (mode == 0) {
     calculate_max_widths(timer->root_event, 0, max_name_width);
-  } else { // Flat/Raw Mode
+  } else {
     std::vector<_pdm_timer_event_t*> all_nodes;
     collect_all_nodes(&timer->root_event, all_nodes);
     for(auto* node : all_nodes) {
@@ -421,60 +479,76 @@ void PDM_timer_print(PDM_timer_t *timer, int mode) {
   const size_t MAX_COL_LIMIT = 80;
   max_name_width = std::min(max_name_width + 2, MAX_COL_LIMIT);
 
-  // Fixed widths for numeric columns
   const int N_CALL_COL_WIDTH = 10;
   const int TIME_COL_WIDTH = 18;
+  const int TOTAL_WIDTH = max_name_width + N_CALL_COL_WIDTH + (TIME_COL_WIDTH * 4) + 8;
 
-  const int TOTAL_WIDTH = max_name_width + N_CALL_COL_WIDTH + (TIME_COL_WIDTH * 2) + 4;
+  // --- Phase 2: Build Header ---
 
-  // --- Phase 2: Print Header and Content ---
-
-  std::cout << "\n" << std::string(TOTAL_WIDTH, '=') << "\n";
-  std::cout << "PDM TIMER REPORT (" << (mode == 1 ? "FLAT/RAW MODE" : "HIERARCHICAL MODE") << ")\n";
-  std::cout << std::string(TOTAL_WIDTH, '=') << "\n";
+  report_stream << "\n" << std::string(TOTAL_WIDTH, '=') << "\n";
+  report_stream << "PDM TIMER REPORT (" << (mode == 1 ? "FLAT/RAW MODE" : "HIERARCHICAL MODE") << ")\n";
+  report_stream << std::string(TOTAL_WIDTH, '=') << "\n";
 
   // Column Header
-  std::cout << std::left << std::setw(max_name_width) << "Event Name (Path)";
-  std::cout << std::right << std::setw(N_CALL_COL_WIDTH) << "Calls";
-  std::cout << " |" << std::right << std::setw(TIME_COL_WIDTH) << "Time Inclusive (s)";
-  std::cout << " |" << std::right << std::setw(TIME_COL_WIDTH) << "Time Exclusive (s)";
-  std::cout << "\n" << std::string(TOTAL_WIDTH, '-') << "\n";
+  report_stream << std::left << std::setw(max_name_width) << "Event Name (Path)";
+  report_stream << std::right << std::setw(N_CALL_COL_WIDTH) << "Calls";
+  report_stream << " |" << std::right << std::setw(TIME_COL_WIDTH) << "Time Inclusive (s)";
+  report_stream << " |" << std::right << std::setw(TIME_COL_WIDTH) << "Time Exclusive (s)";
+  report_stream << " |" << std::right << std::setw(TIME_COL_WIDTH) << "Entry Wait (s)";
+  report_stream << " |" << std::right << std::setw(TIME_COL_WIDTH) << "Exit Wait (s)";
+  report_stream << "\n" << std::string(TOTAL_WIDTH, '-') << "\n";
+
+  // --- Phase 3: Build Content Lines ---
+
+  std::vector<std::string> content_lines;
 
   if (mode == 0) { // Hierarchical Mode
     for (auto& child_name : timer->root_event.child_insertion_order) {
-      traverse_and_print_aligned(*timer->root_event.children.at(child_name), 0, max_name_width, TIME_COL_WIDTH, N_CALL_COL_WIDTH);
+      traverse_and_print_aligned(*timer->root_event.children.at(child_name), 0, max_name_width, TIME_COL_WIDTH, N_CALL_COL_WIDTH, content_lines);
     }
   } else { // Flat/Raw Mode
     std::vector<_pdm_timer_event_t*> all_nodes;
     collect_all_nodes(&timer->root_event, all_nodes);
 
     for(auto* node : all_nodes) {
-      // Recalculate stats
-      double children_time_sum = 0.0;
-      for (auto& child_name : node->child_insertion_order) {
-        children_time_sum += node->children.at(child_name)->t_run_inclusive;
-      }
-      double t_exclusive = node->t_run_inclusive - children_time_sum;
-
-      // Display
-      std::cout << std::left << std::setw(max_name_width) << node->event_name;
-      std::cout << std::right << std::setw(N_CALL_COL_WIDTH) << node->n_call;
-      std::cout << " |"
-                << std::right << std::setw(TIME_COL_WIDTH)
-                << std::fixed << std::setprecision(6)
-                << node->t_run_inclusive;
-      std::cout << " |"
-                << std::right << std::setw(TIME_COL_WIDTH)
-                << std::fixed << std::setprecision(6)
-                << t_exclusive;
-      std::cout << std::endl;
+      // For flat mode, the indented name is just the event name (no prefix)
+      content_lines.push_back(format_timer_line(*node, node->event_name, max_name_width, TIME_COL_WIDTH, N_CALL_COL_WIDTH));
     }
   }
 
-  std::cout << std::string(TOTAL_WIDTH, '=') << "\n";
+  // Append all content lines
+  for(const auto& line : content_lines) {
+    report_stream << line << "\n";
+  }
+
+  // --- Phase 4: Finalize and Return ---
+
+  report_stream << std::string(TOTAL_WIDTH, '=') << "\n";
+
+  // Convert std::string to C-string (char*) for the C API
+  std::string final_str = report_stream.str();
+  char *cstr = new char[final_str.length() + 1];
+  std::strcpy(cstr, final_str.c_str());
+  return cstr;
+}
+
+/**
+ * @brief Helper function to free the memory allocated by PDM_timer_get_report_string.
+ * The C API requires the user to free memory allocated in the C++ layer.
+ */
+void PDM_timer_free_string(char* str) {
+  delete[] str;
 }
 
 
+/**
+ * @brief Prints the call tree to the console using the string builder function.
+ */
+void PDM_timer_print(PDM_timer_t *timer, int mode) {
+  char* report_str = PDM_timer_get_report_string(timer, mode);
+  std::cout << report_str;
+  PDM_timer_free_string(report_str); // Important: Free the dynamically allocated memory
+}
 
 
 /**
