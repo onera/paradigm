@@ -597,7 +597,7 @@ PDM_timer_end
 /**
  * @brief Fonction interne unifiée pour générer le rapport (déléguée).
  */
-char*
+std::stringstream
 _pdm_timer_generate_report
 (
         PDM_timer_t*                               timer,
@@ -680,10 +680,7 @@ _pdm_timer_generate_report
   // --- Phase 4: Finalisation ---
   report_stream << std::string(TOTAL_WIDTH, '=') << "\n";
 
-  std::string final_str = report_stream.str();
-  char *cstr = new char[final_str.length() + 1];
-  std::strcpy(cstr, final_str.c_str());
-  return cstr;
+  return report_stream;
 }
 
 
@@ -691,7 +688,7 @@ _pdm_timer_generate_report
  * @brief Generates the full formatted report string (header + lines) for logging.
  * The returned string must be freed by the user using PDM_timer_free_string.
  * NOTE: The user is responsible for freeing the returned char* using the dedicated function.
- * * @param timer The timer instance.
+ * @param timer The timer instance.
  * @param mode 0: Hierarchical (Indented). 1: Flat/Raw (All nodes, non-indented).
  * @return Dynamically allocated C-string containing the full report.
  */
@@ -704,18 +701,16 @@ PDM_timer_get_report_string
 {
   int i_rank = -1;
   PDM_MPI_Comm_rank(timer->comm, &i_rank);
+
   std::string title = "LOCAL Rank " + std::to_string(i_rank);
-  return _pdm_timer_generate_report(timer, mode, nullptr, title);
-}
+  std::stringstream report_stream = _pdm_timer_generate_report(timer, mode, nullptr, title);
+  std::string       final_str     = report_stream.str();
 
-/**
- * @brief Helper function to free the memory allocated by PDM_timer_get_report_string.
- * The C API requires the user to free memory allocated in the C++ layer.
- */
-void PDM_timer_free_string(char* str) {
-  delete[] str;
-}
+  char *cstr = NULL;
+  PDM_malloc(cstr, final_str.length() + 1, char);
 
+  return cstr;
+}
 
 /**
  * @brief Prints the call tree to the console using the string builder function.
@@ -729,7 +724,23 @@ PDM_timer_print
 {
   char* report_str = PDM_timer_get_report_string(timer, mode);
   std::cout << report_str;
-  PDM_timer_free_string(report_str); // Important: Free the dynamically allocated memory
+  PDM_free(report_str);
+}
+
+
+/**
+ * @brief Prints the call tree to the console using the string builder function.
+ */
+void
+PDM_timer_log
+(
+  PDM_timer_t *timer,
+  int          mode
+)
+{
+  char* report_str = PDM_timer_get_report_string(timer, mode);
+  log_trace("%s", report_str);
+  PDM_free(report_str);
 }
 
 
@@ -762,6 +773,128 @@ PDM_timer_dump_json
   fprintf(fp, "}\n");
 
   fclose(fp);
+}
+
+
+/**
+ * @brief Parcourt l'arbre local, utilise les statistiques globales (si disponibles)
+ * et sérialise la hiérarchie au format JSON.
+ */
+void
+dump_global_hierarchical_json
+(
+       _pdm_timer_event_t&                        node,
+       int                                        indent,
+       FILE*                                      fp,
+       bool&                                      first_child,
+ const std::map<std::string, _pdm_global_stat_t>* global_stats // Pointeur vers les stats agrégées
+)
+{
+  if (node.event_name != "__ROOT__") {
+    if (!first_child) {
+      fprintf(fp, ",\n");
+    }
+    first_child = false;
+
+    // Trouver les statistiques globales correspondantes (g_rec)
+    const _pdm_global_stat_t* g_rec = nullptr;
+    bool is_global_found = false;
+
+    if (global_stats) {
+      auto it = global_stats->find(node.path_name);
+      if (it != global_stats->end()) {
+        g_rec = &(it->second);
+        is_global_found = true;
+      }
+    }
+
+    // --- JSON Serialization ---
+    std::string current_indent(indent * 2, ' ');
+    std::string inner_indent((indent * 2) + 2, ' ');
+
+    fprintf(fp, "%s{\n", current_indent.c_str());
+
+    // Nom
+    fprintf(fp, "%s\"name\": \"%s\",\n", inner_indent.c_str(), node.event_name.c_str());
+    fprintf(fp, "%s\"path_name\": \"%s\",\n", inner_indent.c_str(), node.path_name.c_str());
+
+    // Utilisation des données agrégées (g_rec)
+    long n_call = is_global_found ? g_rec->n_call : node.n_call;
+    fprintf(fp, "%s\"n_call\": %ld,\n", inner_indent.c_str(), n_call);
+
+    // Exportation des 14 valeurs globales (Mean/Min/Max pour 4 métriques)
+
+    // T_Inclusive
+    fprintf(fp, "%s\"t_inclusive_mean\": %12.5e,\n" , inner_indent.c_str(), is_global_found ? g_rec->t_mean_run_inclusive : 0.0);
+    fprintf(fp, "%s\"t_inclusive_min\": %12.5e,\n"  , inner_indent.c_str(), is_global_found ? g_rec->t_min_run_inclusive  : 0.0);
+    fprintf(fp, "%s\"r_inclusive_min\": %d,\n"      , inner_indent.c_str(), is_global_found ? g_rec->rank_min_inclusive   : -1 );
+    fprintf(fp, "%s\"t_inclusive_max\": %12.5e,\n"  , inner_indent.c_str(), is_global_found ? g_rec->t_max_run_inclusive  : 0.0);
+    fprintf(fp, "%s\"r_inclusive_max\": %d,\n"      , inner_indent.c_str(), is_global_found ? g_rec->rank_max_inclusive   : -1 );
+    fprintf(fp, "%s\"t_exclusive_mean\": %12.5e,\n" , inner_indent.c_str(), is_global_found ? g_rec->t_mean_run_exclusive : 0.0);
+    fprintf(fp, "%s\"t_sync_entry_mean\": %12.5e,\n", inner_indent.c_str(), is_global_found ? g_rec->t_mean_sync_entry    : 0.0);
+    fprintf(fp, "%s\"t_sync_exit_mean\": %12.5e"    , inner_indent.c_str(), is_global_found ? g_rec->t_mean_sync_exit     : 0.0);
+
+    // Add children if present
+    if (!node.children.empty()) {
+      // Rajouter une virgule si on a des enfants
+      fprintf(fp, ",\n");
+      fprintf(fp, "%s\"children\": [\n", inner_indent.c_str());
+
+      bool current_level_first_child = true;
+      for (auto& child_name : node.child_insertion_order) {
+        dump_global_hierarchical_json(*node.children.at(child_name), indent + 1, fp, current_level_first_child, global_stats);
+      }
+      fprintf(fp, "\n");
+      fprintf(fp, "%s]", inner_indent.c_str());
+    }
+
+    fprintf(fp, "\n");
+    fprintf(fp, "%s}", current_indent.c_str());
+  }
+}
+
+
+void
+PDM_timer_gather_dump_json
+(
+        PDM_timer_t *timer,
+  const char        *filename
+)
+{
+  if(timer->is_gather == 0) {
+    PDM_timer_gather(timer);
+  }
+
+  int i_rank = -1;
+  PDM_MPI_Comm_rank(timer->comm, &i_rank);
+
+  if(i_rank != 0) {
+    return; // Only rank 0 export data
+  }
+
+  // A completer ici
+  FILE *fp = fopen(filename, "w");
+  if (!fp) {
+    fprintf(stderr, "PDM_TIMER ERROR: Could not open file for JSON dump: %s \n", filename);
+    return;
+  }
+
+  // 2. Écrire l'en-tête JSON
+  fprintf(fp, "{\n");
+  fprintf(fp, "  \"profiling_data_aggregated\": [\n");
+
+  // 3. Lancer la récursion sur l'arbre local avec les stats globales
+  bool first_event = true;
+  for (auto& child_name : timer->root_event.child_insertion_order) {
+    dump_global_hierarchical_json(*timer->root_event.children.at(child_name), 1, fp, first_event, &timer->gflat_timer);
+  }
+
+  // 4. Écrire le pied de page JSON
+  fprintf(fp, "\n  ]\n");
+  fprintf(fp, "}\n");
+
+  fclose(fp);
+
 }
 
 
@@ -863,9 +996,9 @@ PDM_timer_gather
 
   if(0 == 1) {
     printf("n_send_path = %i \n", n_send_path);
-    PDM_log_trace_array_int   (g_data.data(), 1 * n_g_data_recv, "g_data ::");
-    PDM_log_trace_array_double(g_time.data(), 6 * n_g_data_recv, "g_time ::");
-    PDM_log_trace_array_double(send_buffer_time.data(), 6 * n_send, "send_buffer_time ::");
+    PDM_log_trace_array_int   (g_data.data()          , 1 * n_g_data_recv, "g_data           ::");
+    PDM_log_trace_array_double(g_time.data()          , 6 * n_g_data_recv, "g_time           ::");
+    PDM_log_trace_array_double(send_buffer_time.data(), 6 * n_send       , "send_buffer_time ::");
   }
 
   // Create flat profile and reduce all data
@@ -949,13 +1082,6 @@ PDM_timer_gather
     g_record.t_mean_sync_exit     = g_record.t_sum_sync_exit  / n_rank;
   }
 
-  std::string title = "AGGREGATED GLOBAL (All Ranks)";
-  char* full = _pdm_timer_generate_report(timer, 0, &gflat_timer, title);
-
-  log_trace("%s", full);
-
-  delete [] full;
-
   PDM_free(gn_send_time);
   PDM_free(gn_send_path_data    );
   PDM_free(gn_send_data         );
@@ -983,16 +1109,16 @@ PDM_timer_gather_dump
   PDM_MPI_Comm_rank(timer->comm, &i_rank);
   if(i_rank == 0) {
     std::string title = "AGGREGATED GLOBAL (All Ranks)";
-    char* full = _pdm_timer_generate_report(timer, 0, &timer->gflat_timer, title);
+    std::stringstream report_stream = _pdm_timer_generate_report(timer, 0, &timer->gflat_timer, title);
+    std::string       final_str     = report_stream.str();
 
     FILE *fp = fopen(filename, "w");
     if (!fp) {
       PDM_error(__FILE__, __LINE__, 0, "PDM_TIMER ERROR: Could not open file for dump: %s \n", filename);
       return;
     }
-    fprintf(fp, "%s", full);
+    fprintf(fp, "%s", final_str.c_str());
     fclose(fp);
-    delete[] full;
   }
 }
 
