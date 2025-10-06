@@ -210,133 +210,145 @@ calculate_max_widths(_pdm_timer_event_t& node, int current_indent_length, size_t
   }
 }
 
-// [HELPER] Formate une seule valeur de temps avec rang optionnel et précision réduite
 std::string format_condensed_value(double time, int rank) {
-    std::stringstream ss;
-    // Utiliser une précision de 4 décimales pour un bon équilibre entre compacité et information
-    ss << std::fixed << std::setprecision(4) << time;
-    if (rank != -1) {
-        ss << "[" << rank << "]";
-    }
-    return ss.str();
+  std::stringstream ss;
+  ss << std::fixed << std::setprecision(4) << time;
+  if (rank != -1) {
+    ss << "[" << rank << "]";
+  }
+  return ss.str();
 }
 
-/**
- * @brief Génère la chaîne de statistique complète MEAN/MIN[R]/MAX[R] pour une métrique.
- */
-std::string format_full_condensed_stat(double t_mean,
-                                       double t_min, int r_min,
-                                       double t_max, int r_max,
-                                       int width)
+std::string
+format_full_condensed_stat
+(
+  double t_mean,
+  double t_min,
+  int    r_min,
+  double t_max,
+  int    r_max,
+  int    width
+)
 {
-    std::string mean_str = format_condensed_value(t_mean, -1);
-    std::string min_str  = format_condensed_value(t_min, r_min);
-    std::string max_str  = format_condensed_value(t_max, r_max);
+  std::string mean_str = format_condensed_value(t_mean, -1);
+  std::string min_str  = format_condensed_value(t_min, r_min);
+  std::string max_str  = format_condensed_value(t_max, r_max);
 
-    std::string content = mean_str + "/" + min_str + "/" + max_str;
+  std::string content = mean_str + "/" + min_str + "/" + max_str;
 
-    // Assurer l'alignement à droite dans la largeur donnée
-    std::stringstream ss_final;
-    // Note: Si le contenu est plus large que 'width', l'alignement peut être cassé.
-    ss_final << std::right << std::setw(width) << content;
-
-    return ss_final.str();
+  // Assurer l'alignement à droite dans la largeur donnée
+  std::stringstream ss_final;
+  ss_final << std::right << std::setw(width) << content;
+  return ss_final.str();
 }
 
-std::string format_timer_line_main(
-    _pdm_timer_event_t& node,
-    const std::string& indented_name,
-    size_t name_width,
-    int time_width,
-    int ncall_width,
-    const std::map<std::string, _pdm_global_stat_t>* global_stats
-) {
-    std::stringstream ss;
-    const _pdm_global_stat_t* g_rec = nullptr;
-    bool is_global_report = false;
+std::string
+format_timer_line_main
+(
+       _pdm_timer_event_t&                        node,
+ const std::string&                               indented_name,
+       size_t                                     name_width,
+       int                                        time_width,
+       int                                        ncall_width,
+ const std::map<std::string, _pdm_global_stat_t>* global_stats
+)
+{
+  std::stringstream ss;
+  const _pdm_global_stat_t* g_rec = nullptr;
+  bool is_global_report = false;
 
-    if (global_stats && global_stats->count(node.path_name)) {
-        g_rec = &global_stats->at(node.path_name);
-        is_global_report = true;
-    }
+  if (global_stats && global_stats->count(node.path_name)) {
+    g_rec = &global_stats->at(node.path_name);
+    is_global_report = true;
+  }
 
-    // --- 1. Event Name & Calls ---
-    ss << std::left << std::setw(name_width) << indented_name;
+  // --- 1. Event Name & Calls ---
+  ss << std::left << std::setw(name_width) << indented_name;
 
-    long n_call_to_display = is_global_report ? g_rec->n_call : node.n_call;
-    ss << std::right << std::setw(ncall_width) << n_call_to_display;
+  long n_call_to_display = is_global_report ? g_rec->n_call : node.n_call;
+  ss << std::right << std::setw(ncall_width) << n_call_to_display;
 
-    ss << " |"; // Séparateur
+  ss << " |"; // Séparateur
 
-    // --- 2. Basculement Local vs Global ---
-    if (is_global_report) {
+  // --- 2. Basculement Local vs Global ---
+  if (is_global_report) {
 
-        // --- COLONNES GLOBAL COMPACTES (MEAN/MIN[R]/MAX[R]) ---
+    // --- COLONNES GLOBAL COMPACTES (MEAN/MIN[R]/MAX[R]) ---
+    // T_Inclusive
+    ss << std::right << format_full_condensed_stat(g_rec->t_mean_run_inclusive,
+                                                   g_rec->t_min_run_inclusive, g_rec->rank_min_inclusive,
+                                                   g_rec->t_max_run_inclusive, g_rec->rank_max_inclusive,
+                                                   time_width);
 
-        // T_Inclusive
-        ss << std::right << format_full_condensed_stat(g_rec->t_mean_run_inclusive,
-                                                       g_rec->t_min_run_inclusive, g_rec->rank_min_inclusive,
-                                                       g_rec->t_max_run_inclusive, g_rec->rank_max_inclusive,
-                                                       time_width);
+    // T_Exclusive
+    ss << " |" << std::right << format_full_condensed_stat(g_rec->t_mean_run_exclusive,
+                                                           g_rec->t_min_run_exclusive, g_rec->rank_min_exclusive,
+                                                           g_rec->t_max_run_exclusive, g_rec->rank_max_exclusive,
+                                                           time_width);
 
-        // T_Exclusive
-        ss << " |" << std::right << format_full_condensed_stat(g_rec->t_mean_run_exclusive,
-                                                               g_rec->t_min_run_exclusive, g_rec->rank_min_exclusive,
-                                                               g_rec->t_max_run_exclusive, g_rec->rank_max_exclusive,
-                                                               time_width);
+    // T_Sync_Entry
+    ss << " |" << std::right << format_full_condensed_stat(g_rec->t_mean_sync_entry,
+                                                           g_rec->t_min_sync_entry, g_rec->rank_min_sync_entry,
+                                                           g_rec->t_max_sync_entry, g_rec->rank_max_sync_entry,
+                                                           time_width);
 
-        // T_Sync_Entry
-        ss << " |" << std::right << format_full_condensed_stat(g_rec->t_mean_sync_entry,
-                                                               g_rec->t_min_sync_entry, g_rec->rank_min_sync_entry,
-                                                               g_rec->t_max_sync_entry, g_rec->rank_max_sync_entry,
-                                                               time_width);
+    // T_Sync_Exit
+    ss << " |" << std::right << format_full_condensed_stat(g_rec->t_mean_sync_exit,
+                                                           g_rec->t_min_sync_exit, g_rec->rank_min_sync_exit,
+                                                           g_rec->t_max_sync_exit, g_rec->rank_max_sync_exit,
+                                                           time_width);
 
-        // T_Sync_Exit
-        ss << " |" << std::right << format_full_condensed_stat(g_rec->t_mean_sync_exit,
-                                                               g_rec->t_min_sync_exit, g_rec->rank_min_sync_exit,
-                                                               g_rec->t_max_sync_exit, g_rec->rank_max_sync_exit,
-                                                               time_width);
+  } else {
 
+    // --- COLONNES LOCALES (Standard - 4 colonnes) ---
+    double t_exclusive_local = node.t_run_inclusive - node.t_children_sum;
+    if (t_exclusive_local < 0) t_exclusive_local = 0;
 
-    } else {
+    // T_Inclusive
+    ss << std::right << std::setw(time_width) << std::fixed << std::setprecision(6) << node.t_run_inclusive;
 
-        // --- COLONNES LOCALES (Standard - 4 colonnes) ---
+    // T_Exclusive
+    ss << " |" << std::right << std::setw(time_width) << std::fixed << std::setprecision(6) << t_exclusive_local;
 
-        double t_exclusive_local = node.t_run_inclusive - node.t_children_sum;
-        if (t_exclusive_local < 0) t_exclusive_local = 0;
+    // T_Sync_Entry
+    ss << " |" << std::right << std::setw(time_width) << std::fixed << std::setprecision(6) << node.t_sync_entry;
 
-        // T_Inclusive
-        ss << std::right << std::setw(time_width) << std::fixed << std::setprecision(6) << node.t_run_inclusive;
+    // T_Sync_Exit
+    ss << " |" << std::right << std::setw(time_width) << std::fixed << std::setprecision(6) << node.t_sync_exit;
+  }
 
-        // T_Exclusive
-        ss << " |" << std::right << std::setw(time_width) << std::fixed << std::setprecision(6) << t_exclusive_local;
-
-        // T_Sync_Entry
-        ss << " |" << std::right << std::setw(time_width) << std::fixed << std::setprecision(6) << node.t_sync_entry;
-
-        // T_Sync_Exit
-        ss << " |" << std::right << std::setw(time_width) << std::fixed << std::setprecision(6) << node.t_sync_exit;
-    }
-
-    return ss.str();
+  return ss.str();
 }
 
 /**
  * @brief Collects all nodes into a single vector for flat mode printing.
  */
-void collect_all_nodes(_pdm_timer_event_t* n, std::vector<_pdm_timer_event_t*>& all_nodes) {
-  if (n->event_name != "__ROOT__") {
-    all_nodes.push_back(n);
+void
+collect_all_nodes
+(
+  _pdm_timer_event_t*               node,
+  std::vector<_pdm_timer_event_t*>& all_nodes
+)
+{
+  if (node->event_name != "__ROOT__") {
+    all_nodes.push_back(node);
   }
-  for (auto& child_name : n->child_insertion_order) {
-    collect_all_nodes(n->children.at(child_name).get(), all_nodes);
+  for (auto& child_name : node->child_insertion_order) {
+    collect_all_nodes(node->children.at(child_name).get(), all_nodes);
   }
 }
 
 
-void traverse_and_add_lines(
-    _pdm_timer_event_t& node, int depth, size_t name_width, int time_width, int ncall_width,
-    const std::map<std::string, _pdm_global_stat_t>* global_stats, std::vector<std::string>& lines
+void
+traverse_and_add_lines
+(
+        _pdm_timer_event_t&                        node,
+        int                                        depth,
+        size_t                                     name_width,
+        int                                        time_width,
+        int                                        ncall_width,
+  const std::map<std::string, _pdm_global_stat_t>* global_stats,
+        std::vector<std::string>&                  lines
 )
 {
   // Ignorer le n?ud racine, mais continuer à parcourir ses enfants
@@ -368,7 +380,15 @@ void traverse_and_add_lines(
 /**
  * @brief Recursively calculates exclusive time and dumps to JSON (using insertion order).
  */
-void calculate_exclusive_and_dump(_pdm_timer_event_t& node, int indent, FILE* fp, bool& first_child) {
+void
+calculate_exclusive_and_dump
+(
+  _pdm_timer_event_t& node,
+  int                 indent,
+  FILE*               fp,
+  bool&               first_child
+)
+{
 
   if (node.event_name != "__ROOT__") {
     if (!first_child) {
@@ -572,8 +592,8 @@ char* _pdm_timer_generate_report(
     max_name_width = std::min(max_name_width + 2, (size_t)80);
 
     const int N_CALL_COL_WIDTH = 10;
-    const int TIME_COL_WIDTH = 18;
-    const int NUM_TIME_COLS = 4; // T_INC, T_EXC, T_SE, T_SX
+    const int TIME_COL_WIDTH   = 35;
+    const int NUM_TIME_COLS    = 4; // T_INC, T_EXC, T_SE, T_SX
 
     const int TOTAL_WIDTH = max_name_width + N_CALL_COL_WIDTH + (TIME_COL_WIDTH * NUM_TIME_COLS) + (NUM_TIME_COLS * 2) + 2;
 
@@ -590,16 +610,16 @@ char* _pdm_timer_generate_report(
     // En-têtes des 4 métriques de temps
     if (is_global_report) {
         // En-tête condensé
-        report_stream << " |" << std::right << std::setw(TIME_COL_WIDTH) << "T_INCLUSIVE MEAN/MIN[R]/MAX[R] (s)";
-        report_stream << " |" << std::right << std::setw(TIME_COL_WIDTH) << "T_EXCLUSIVE MEAN/MIN[R]/MAX[R] (s)";
+        report_stream << " |" << std::right << std::setw(TIME_COL_WIDTH) << "T_INCLUSIVE  MEAN/MIN[R]/MAX[R] (s)";
+        report_stream << " |" << std::right << std::setw(TIME_COL_WIDTH) << "T_EXCLUSIVE  MEAN/MIN[R]/MAX[R] (s)";
         report_stream << " |" << std::right << std::setw(TIME_COL_WIDTH) << "T_SYNC_ENTRY MEAN/MIN[R]/MAX[R] (s)";
-        report_stream << " |" << std::right << std::setw(TIME_COL_WIDTH) << "T_SYNC_EXIT MEAN/MIN[R]/MAX[R] (s)";
+        report_stream << " |" << std::right << std::setw(TIME_COL_WIDTH) << "T_SYNC_EXIT  MEAN/MIN[R]/MAX[R] (s)";
     } else {
         // En-tête local standard
-        report_stream << " |" << std::right << std::setw(TIME_COL_WIDTH) << "T_INCLUSIVE (s)";
-        report_stream << " |" << std::right << std::setw(TIME_COL_WIDTH) << "T_EXCLUSIVE (s)";
+        report_stream << " |" << std::right << std::setw(TIME_COL_WIDTH) << "T_INCLUSIVE  (s)";
+        report_stream << " |" << std::right << std::setw(TIME_COL_WIDTH) << "T_EXCLUSIVE  (s)";
         report_stream << " |" << std::right << std::setw(TIME_COL_WIDTH) << "T_SYNC_ENTRY (s)";
-        report_stream << " |" << std::right << std::setw(TIME_COL_WIDTH) << "T_SYNC_EXIT (s)";
+        report_stream << " |" << std::right << std::setw(TIME_COL_WIDTH) << "T_SYNC_EXIT  (s)";
     }
 
     report_stream << "\n" << std::string(TOTAL_WIDTH, '-') << "\n";
@@ -612,24 +632,21 @@ char* _pdm_timer_generate_report(
         traverse_and_add_lines(*timer->root_event.children.at(child_name), 0, max_name_width, TIME_COL_WIDTH, N_CALL_COL_WIDTH, global_stats, content_lines);
       }
     } else { // Flat/Raw Mode
-        std::vector<_pdm_timer_event_t*> all_nodes;
-        collect_all_nodes(&timer->root_event, all_nodes);
+      std::vector<_pdm_timer_event_t*> all_nodes;
+      collect_all_nodes(&timer->root_event, all_nodes);
 
-        // La largeur de l'espace vide pour aligner les stats MIN/MAX en mode plat
-        const int EMPTY_COL_WIDTH = max_name_width + N_CALL_COL_WIDTH + 2;
-        std::string empty_prefix = std::string(EMPTY_COL_WIDTH, ' ');
+      // La largeur de l'espace vide pour aligner les stats MIN/MAX en mode plat
+      const int EMPTY_COL_WIDTH = max_name_width + N_CALL_COL_WIDTH + 2;
+      std::string empty_prefix = std::string(EMPTY_COL_WIDTH, ' ');
 
-        for(auto* node : all_nodes) {
-
-            // Trouver le record global
-            const _pdm_global_stat_t* g_rec = nullptr;
-            bool is_global_report_found = (global_stats && global_stats->count(node->path_name));
-
-            // Ligne Principale (MEAN ou Local)
-            content_lines.push_back(
-                format_timer_line_main(*node, node->event_name, max_name_width, TIME_COL_WIDTH, N_CALL_COL_WIDTH, global_stats)
-            );
-        }
+      for(auto* node : all_nodes) {
+        content_lines.push_back(format_timer_line_main(*node,
+                                                       node->event_name,
+                                                       max_name_width,
+                                                       TIME_COL_WIDTH,
+                                                       N_CALL_COL_WIDTH,
+                                                       global_stats));
+      }
     }
 
     for(const auto& line : content_lines) {
@@ -747,16 +764,6 @@ void collect_timer(_pdm_timer_event_t* node, std::map<std::string, _pdm_timer_ev
   }
 }
 
-
-int
-get_serialize_timer_event_size
-(
-  _pdm_timer_event_t* node
-)
-{
-  return (int) (sizeof(int) + 5 * sizeof(double));
-}
-
 void
 PDM_timer_gather
 (
@@ -774,7 +781,6 @@ PDM_timer_gather
   int n_send        = lflat_timer.size();
   int n_send_path   = 0;
   for (auto& path_and_timer : lflat_timer) {
-    std::cout << path_and_timer.first << std::endl;
     n_send_path += path_and_timer.first.size()+1;
   }
 
@@ -876,7 +882,7 @@ PDM_timer_gather
       // double lt1 = g_time[6*idx_read];
       double lt_run_inclusive = g_time[6*idx_read+1];
       double lt_run_exclusive = g_time[6*idx_read+2];
-      double lt_children_sum  = g_time[6*idx_read+3];
+      // double lt_children_sum  = g_time[6*idx_read+3];
       double lt_sync_entry    = g_time[6*idx_read+4];
       double lt_sync_exit     = g_time[6*idx_read+5];
 
@@ -942,19 +948,19 @@ PDM_timer_gather
     g_record.t_mean_sync_exit     = g_record.t_sum_sync_exit  / n_rank;
   }
 
-  // for (auto& pair : lflat_timer) {
-  //   std::cout << "lflat_timer = " << pair.first << " -> " << pair.first.size() << std::endl;
-  // }
-
   std::string title = "AGGREGATED GLOBAL (All Ranks)";
   char* full = _pdm_timer_generate_report(timer, 0, &gflat_timer, title);
 
   log_trace("%s", full);
 
+  delete [] full;
+
+  PDM_free(gn_send_time);
   PDM_free(gn_send_path_data    );
   PDM_free(gn_send_data         );
   PDM_free(gn_send_path_data_idx);
   PDM_free(gn_send_data_idx     );
+  PDM_free(gn_send_time_idx     );
 
   free(gn_send_path_data);
 }
