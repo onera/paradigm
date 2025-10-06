@@ -13,6 +13,7 @@
 #include <time.h>
 #include "pdm_config.h"
 
+#include <map>
 #include <unordered_map>
 #include <string>
 #include <vector>
@@ -21,6 +22,7 @@
 #include <functional>
 #include <iomanip>
 #include <cstring>
+#include <cmath>
 
 #if defined (PDM_HAVE_GETRUSAGE)
 #include <sys/time.h>
@@ -35,6 +37,8 @@
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
+#include "pdm_array.h"
+#include "pdm_logging.h"
 #include "pdm_mpi.h"
 #include "pdm_timer.h"
 #include "pdm_config.h"
@@ -61,6 +65,7 @@ extern "C" {
 struct _pdm_timer_event_t {
   std::string event_name;
   std::string parent_name;
+  std::string path_name;
 
   // Order list: Stores keys in the order they were first inserted (crucial for Call Tree sequence)
   std::vector<std::string> child_insertion_order;
@@ -69,8 +74,8 @@ struct _pdm_timer_event_t {
   std::unordered_map<std::string, std::unique_ptr<_pdm_timer_event_t>> children;
 
   // Node Statistics
-  long   n_call = 0;
-  double t1     = 0.;          // Start time of the active call
+  long   n_call          = 0;
+  double t1              = 0.; // Start time of the active call
   double t_run_inclusive = 0.; // Total inclusive time
   double t_run_exclusive = 0.; // Exclusive time (calculated at dump)
   double t_children_sum  = 0.; // Sum of children's inclusive times
@@ -84,6 +89,53 @@ struct _pdm_timer_event_t {
   _pdm_timer_event_t(_pdm_timer_event_t const&) = delete;
   _pdm_timer_event_t& operator=(_pdm_timer_event_t const&) = delete;
 };
+
+  // double t_adim               = 0.;
+struct _pdm_global_stat_t {
+  long   n_call              = 0;
+  double t_sum_inclusive     = 0.0;
+  double t_sum_exclusive     = 0.0;
+  double t_sum_sync_entry    = 0.0;
+  double t_sum_sync_exit     = 0.0;
+
+  double t_mean_run_inclusive = 0.0;
+  double t_mean_run_exclusive = 0.0;
+  double t_mean_sync_entry    = 0.0;
+  double t_mean_sync_exit     = 0.0;
+
+  // --- Min Inclusive
+  double t_min_run_inclusive = HUGE_VAL;
+  int    rank_min_inclusive  = -1;
+
+  // --- Max Inclusive
+  double t_max_run_inclusive = 0.0;
+  int    rank_max_inclusive  = -1;
+
+  // --- Min Exclusive
+  double t_min_run_exclusive = HUGE_VAL;
+  int    rank_min_exclusive  = -1;
+
+  // --- Max Exclusive
+  double t_max_run_exclusive = 0.0;
+  int    rank_max_exclusive  = -1;
+
+  // --- Min Sync Entry
+  double t_min_sync_entry    = HUGE_VAL;
+  int    rank_min_sync_entry = -1;
+
+  // --- Max Sync Entry
+  double t_max_sync_entry    = 0.0;
+  int    rank_max_sync_entry = -1;
+
+  // --- Min Sync Exit
+  double t_min_sync_exit    = HUGE_VAL;
+  int    rank_min_sync_exit = -1;
+
+  // --- Max Sync Exit
+  double t_max_sync_exit    = 0.0;
+  int    rank_max_sync_exit = -1;
+};
+
 
 struct _pdm_timer_t {
 
@@ -335,7 +387,7 @@ PDM_timer_create2
   // Init root to begin stack
   timer->root_event.event_name  = "__ROOT__";
   timer->root_event.parent_name = "__NONE__";
-
+  timer->root_event.path_name   = "";
   return timer;
 }
 
@@ -364,8 +416,9 @@ PDM_timer_start
     event_ptr = parent_node->children.at(current_name).get();
 
     // Initialization
-    event_ptr->event_name = current_name;
+    event_ptr->event_name  = current_name;
     event_ptr->parent_name = parent_node->event_name;
+    event_ptr->path_name   = parent_node->path_name + "/" + current_name;
   } else {
     // If the child exists, retrieve it.
     event_ptr = parent_node->children.at(current_name).get();
@@ -544,7 +597,13 @@ void PDM_timer_free_string(char* str) {
 /**
  * @brief Prints the call tree to the console using the string builder function.
  */
-void PDM_timer_print(PDM_timer_t *timer, int mode) {
+void
+PDM_timer_print
+(
+  PDM_timer_t *timer,
+  int          mode
+)
+{
   char* report_str = PDM_timer_get_report_string(timer, mode);
   std::cout << report_str;
   PDM_timer_free_string(report_str); // Important: Free the dynamically allocated memory
@@ -582,16 +641,240 @@ PDM_timer_dump_json
   fclose(fp);
 }
 
+/**
+ * @brief Fonction récursive pour parcourir l'arbre et construire la map (Path -> Pointeur).
+ * * @param node Le n?ud courant (commence à la racine ou à un enfant direct de la racine).
+ * @param output_map La map à remplir.
+ */
+void collect_timer(_pdm_timer_event_t* node, std::map<std::string, _pdm_timer_event_t*>& output_map) {
+
+  if (node->event_name != "__ROOT__") {
+    output_map[node->path_name] = node;
+  }
+
+  // Parcours récursif de tous les enfants dans l'ordre d'insertion
+  for (auto& child_name : node->child_insertion_order) {
+    collect_timer(node->children.at(child_name).get(), output_map);
+  }
+}
+
+
+int
+get_serialize_timer_event_size
+(
+  _pdm_timer_event_t* node
+)
+{
+  return (int) (sizeof(int) + 5 * sizeof(double));
+}
+
+void
+PDM_timer_gather
+(
+  PDM_timer_t *timer
+)
+{
+  int i_rank, n_rank;
+  PDM_MPI_Comm_rank(timer->comm, &i_rank);
+  PDM_MPI_Comm_size(timer->comm, &n_rank);
+
+  // Collect all data with tmp dict base on path
+  std::map<std::string, _pdm_timer_event_t*> lflat_timer;
+  collect_timer(&(timer->root_event), lflat_timer);
+
+  int n_send        = lflat_timer.size();
+  int n_send_path   = 0;
+  for (auto& path_and_timer : lflat_timer) {
+    std::cout << path_and_timer.first << std::endl;
+    n_send_path += path_and_timer.first.size()+1;
+  }
+
+
+  std::vector<char>   send_buffer_path(    n_send_path);
+  std::vector<int>    send_buffer_data(    n_send      );
+  std::vector<double> send_buffer_time(6 * n_send      );
+
+  int idx_write = 0;
+  for (auto& path_and_timer : lflat_timer) {
+    auto& path = path_and_timer.first;
+
+    send_buffer_path.insert(send_buffer_path.end(), path.begin(), path.end());
+    send_buffer_path.push_back('\0');
+
+    auto& event = path_and_timer.second;
+    send_buffer_data[  idx_write  ] = event->n_call;
+    send_buffer_time[6*idx_write  ] = event->t1;
+    send_buffer_time[6*idx_write+1] = event->t_run_inclusive;
+    send_buffer_time[6*idx_write+2] = event->t_run_exclusive;
+    send_buffer_time[6*idx_write+3] = event->t_children_sum;
+    send_buffer_time[6*idx_write+4] = event->t_sync_entry;
+    send_buffer_time[6*idx_write+5] = event->t_sync_exit;
+    idx_write++;
+  }
+
+  int *gn_send_data = PDM_array_zeros_int(n_rank);
+  int *gn_send_time = PDM_array_zeros_int(n_rank);
+  PDM_MPI_Gather(&n_send      , 1, PDM_MPI_INT,
+                  gn_send_data, 1, PDM_MPI_INT,
+                  0,
+                  timer->comm);
+
+  int *gn_send_path_data = PDM_array_zeros_int(n_rank);;
+  PDM_MPI_Gather(&n_send_path      , 1, PDM_MPI_INT,
+                  gn_send_path_data, 1, PDM_MPI_INT,
+                  0,
+                  timer->comm);
+
+  int *gn_send_path_data_idx = NULL;
+  int *gn_send_data_idx      = NULL;
+  int *gn_send_time_idx      = NULL;
+
+  int n_g_data_recv      = 0;
+  int n_g_data_path_recv = 0;
+  if(i_rank == 0) {
+    gn_send_path_data_idx = PDM_array_new_idx_from_sizes_int(gn_send_path_data, n_rank);
+    gn_send_data_idx      = PDM_array_new_idx_from_sizes_int(gn_send_data     , n_rank);
+    gn_send_time_idx      = PDM_array_new_idx_from_sizes_int(gn_send_data     , n_rank);
+    n_g_data_recv      = gn_send_data_idx     [n_rank];
+    n_g_data_path_recv = gn_send_path_data_idx[n_rank];
+
+    for(int i = 0; i < n_rank; ++i) {
+      gn_send_time[i] = gn_send_data[i] * 6;
+    }
+    for(int i = 0; i < n_rank+1; ++i) {
+      gn_send_time_idx[i] *= 6;
+    }
+
+  }
+
+  std::vector<char>   g_path(    n_g_data_path_recv);
+  std::vector<int>    g_data(    n_g_data_recv     );
+  std::vector<double> g_time(6 * n_g_data_recv     );
+
+  PDM_MPI_Gatherv(send_buffer_path.data(), 1, PDM_MPI_CHAR,
+                  g_path          .data(), gn_send_path_data, gn_send_path_data_idx, PDM_MPI_CHAR,
+                  0,
+                  timer->comm);
+
+  PDM_MPI_Gatherv(send_buffer_data.data(), n_send, PDM_MPI_INT,
+                  g_data          .data(), gn_send_data, gn_send_data_idx, PDM_MPI_INT,
+                  0,
+                  timer->comm);
+
+  PDM_MPI_Gatherv(send_buffer_time.data(), 6 * n_send, PDM_MPI_DOUBLE,
+                  g_time          .data(), gn_send_time, gn_send_time_idx, PDM_MPI_DOUBLE,
+                  0,
+                  timer->comm);
+
+  if(i_rank == 0) {
+    std::cout << std::string(g_path.data()) << std::endl;
+  }
+
+  printf("n_send_path = %i \n", n_send_path);
+
+  PDM_log_trace_array_int   (g_data.data(), 1 * n_g_data_recv, "g_data ::");
+  PDM_log_trace_array_double(g_time.data(), 6 * n_g_data_recv, "g_time ::");
+  PDM_log_trace_array_double(send_buffer_time.data(), 6 * n_send, "send_buffer_time ::");
+
+  // Create flat profile and reduce all data
+  int idx_read_path = 0;
+  int idx_read      = 0;
+  std::map<std::string, _pdm_global_stat_t> gflat_timer;
+  for(int t_rank = 0; t_rank < n_rank; ++t_rank) {
+
+    for(int i = 0; i < gn_send_data[i]; ++i) {
+      const char* path_start = g_path.data() + idx_read_path;
+      std::string path(path_start);
+      idx_read_path += path.length() + 1;
+
+      long ln_call = g_data[idx_read];
+      // double lt1 = g_time[6*idx_read];
+      double lt_run_inclusive = g_time[6*idx_read+1];
+      double lt_run_exclusive = g_time[6*idx_read+2];
+      double lt_children_sum  = g_time[6*idx_read+3];
+      double lt_sync_entry    = g_time[6*idx_read+4];
+      double lt_sync_exit     = g_time[6*idx_read+5];
+
+      _pdm_global_stat_t& g_record = gflat_timer[path];
+
+      g_record.n_call           += ln_call;
+      g_record.t_sum_inclusive  += lt_run_inclusive;
+      g_record.t_sum_exclusive  += lt_run_exclusive;
+      g_record.t_sum_sync_entry += lt_sync_entry;
+      g_record.t_sum_sync_exit  += lt_sync_exit;
+
+      // MIN/MAX (t_run_inclusive)
+      if(lt_run_inclusive < g_record.t_min_run_inclusive) {
+        g_record.t_min_run_inclusive = lt_run_inclusive;
+        g_record.rank_min_inclusive  = t_rank;
+      }
+      if(lt_run_inclusive > g_record.t_max_run_inclusive) {
+        g_record.t_max_run_inclusive = lt_run_inclusive;
+        g_record.rank_max_inclusive  = t_rank;
+      }
+
+      // MIN/MAX (t_run_exclusive)
+      if(lt_run_exclusive < g_record.t_min_run_exclusive) {
+        g_record.t_min_run_exclusive = lt_run_exclusive;
+        g_record.rank_min_exclusive  = t_rank;
+      }
+      if(lt_run_exclusive > g_record.t_max_run_exclusive) {
+        g_record.t_max_run_exclusive = lt_run_exclusive;
+        g_record.rank_max_exclusive  = t_rank;
+      }
+
+      // MIN/MAX (t_sync_entry)
+      if(lt_sync_entry < g_record.t_min_sync_entry) {
+        g_record.t_min_sync_entry = lt_sync_entry;
+        g_record.rank_min_sync_entry = t_rank;
+      }
+      if(lt_sync_entry > g_record.t_max_sync_entry) {
+        g_record.t_max_sync_entry = lt_sync_entry;
+        g_record.rank_max_sync_entry = t_rank;
+      }
+
+      // MIN/MAX (t_sync_exit)
+      if(lt_sync_exit < g_record.t_min_sync_exit) {
+        g_record.t_min_sync_exit = lt_sync_exit;
+        g_record.rank_min_sync_exit = t_rank;
+      }
+      if(lt_sync_exit > g_record.t_max_sync_exit) {
+        g_record.t_max_sync_exit = lt_sync_exit;
+        g_record.rank_max_sync_exit = t_rank;
+      }
+
+      idx_read++;
+    }
+  }
+
+  // All data is computed, finalise mean
+  for (auto& pair : gflat_timer) {
+    _pdm_global_stat_t& g_record = pair.second;
+    g_record.t_mean_run_inclusive = g_record.t_sum_inclusive  / n_rank;
+    g_record.t_mean_run_exclusive = g_record.t_sum_exclusive  / n_rank;
+    g_record.t_mean_sync_entry    = g_record.t_sum_sync_entry / n_rank;
+    g_record.t_mean_sync_exit     = g_record.t_sum_sync_exit  / n_rank;
+  }
+
+
+
+  PDM_free(gn_send_path_data    );
+  PDM_free(gn_send_data         );
+  PDM_free(gn_send_path_data_idx);
+  PDM_free(gn_send_data_idx     );
+
+  free(gn_send_path_data);
+}
+
+
 void
 PDM_timer_free2
 (
-        PDM_timer_t *timer
+  PDM_timer_t *timer
 )
 {
   delete timer;
 }
-
-
 
 
 // OLD
