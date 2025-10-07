@@ -30,31 +30,6 @@ extern "C" {
  * Type definitions
  *============================================================================*/
 
-#define PARA_OCTREE_NTIMER 12
-
-/**
- * \enum _ol_timer_step_t
- *
- */
-
-typedef enum {
-
-  BEGIN                         = 0,
-  BUILD_ORDER_POINTS            = 1,
-  BUILD_BLOCK_PARTITION         = 2,
-  BUILD_LOCAL_NODES             = 3,
-  BUILD_LOCAL_NEIGHBOURS_STEP1  = 4,
-  BUILD_LOCAL_NEIGHBOURS_STEP2  = 5,
-  BUILD_LOCAL_NEIGHBOURS_STEP3  = 6,
-  BUILD_LOCAL_NEIGHBOURS        = 7,
-  BUILD_DISTANT_NEIGHBOURS      = 8,
-  BUILD_EXPLICIT_NODES          = 9,
-  BUILD_TOTAL                   = 10,
-  END                           = 11,
-
-} _ol_timer_step_t;
-
-
 /**
  * \struct _heap_t
  * \brief  Heap used to recursively subdivide nodes
@@ -208,14 +183,6 @@ typedef struct  {
   int *part_boundary_elt;     /*!< Partitioning boundary elements description (proc number + element number) */
 
   PDM_timer_t *timer; /*!< Timer */
-
-  double times_elapsed[PARA_OCTREE_NTIMER]; /*!< Elapsed time */
-
-  double times_cpu[PARA_OCTREE_NTIMER];     /*!< CPU time */
-
-  double times_cpu_u[PARA_OCTREE_NTIMER];  /*!< User CPU time */
-
-  double times_cpu_s[PARA_OCTREE_NTIMER];  /*!< System CPU time */
 
   int neighboursToBuild;
 

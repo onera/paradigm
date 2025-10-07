@@ -6,6 +6,8 @@
 #define __PDM_TIMER_H__
 
 /*----------------------------------------------------------------------------*/
+#include "pdm_mpi.h"
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -28,95 +30,56 @@ typedef struct _pdm_timer_t PDM_timer_t;
  * Interfaces des fonctions publiques
  *============================================================================*/
 
-/*----------------------------------------------------------------------------
- * Creation d'un objet timer
- *
- * return
- *   timer
- *
- *----------------------------------------------------------------------------*/
+PDM_timer_t*
+PDM_timer_create
+(
+  PDM_MPI_Comm comm
+);
 
-PDM_timer_t *PDM_timer_create(void);
 
-/*----------------------------------------------------------------------------
- * Reinitialisation des compteurs de temps
- *
- * parameters :
- *   timer            <-- Timer
- * return
- *----------------------------------------------------------------------------*/
+void
+PDM_timer_start
+(
+        PDM_timer_t *timer,
+  const char        *name,
+        int          force_synchro
+);
 
-void PDM_timer_init(PDM_timer_t *timer);
 
-/*----------------------------------------------------------------------------
- * Reprend la mesure du temps ecoule
- *
- * parameters :
- *   timer            <-- Timer
- * return
- *----------------------------------------------------------------------------*/
+void
+PDM_timer_end
+(
+        PDM_timer_t *timer,
+  const char        *name,
+        int          force_synchro
+);
 
-void PDM_timer_resume(PDM_timer_t *timer);
+void
+PDM_timer_gather
+(
+  PDM_timer_t *timer
+);
 
-/*----------------------------------------------------------------------------
- * Suspend la mesure du temps ecoule
- *
- * parameters :
- *   timer            <-- Timer
- * return
- *----------------------------------------------------------------------------*/
+void
+PDM_timer_gather_dump
+(
+  PDM_timer_t *timer,
+  char        *filename
+);
 
-void PDM_timer_hang_on(PDM_timer_t *timer);
+char* PDM_timer_get_report_string(PDM_timer_t *timer, int mode);
 
-/*----------------------------------------------------------------------------
- * Retourne le temps CPU en secondes
- *
- * parameters :
- *   timer            <-- Timer
- * return
- *----------------------------------------------------------------------------*/
+void
+PDM_timer_dump
+(
+        PDM_timer_t *timer
+);
 
-double PDM_timer_cpu(PDM_timer_t *timer);
-
-/*----------------------------------------------------------------------------
- * Retourne le temps CPU utilisateur en secondes
- *
- * parameters :
- *   timer            <-- Timer
- * return
- *----------------------------------------------------------------------------*/
-
-double PDM_timer_cpu_user(PDM_timer_t *timer);
-
-/*----------------------------------------------------------------------------
- * Retourne le temps CPU systeme en secondes
- *
- * parameters :
- *   timer            <-- Timer
- * return
- *----------------------------------------------------------------------------*/
-
-double PDM_timer_cpu_sys(PDM_timer_t *timer);
-
-/*----------------------------------------------------------------------------
- * Retourne le temps elaps en secondes
- *
- * parameters :
- *   timer            <-- Timer
- * return
- *----------------------------------------------------------------------------*/
-
-double PDM_timer_elapsed(PDM_timer_t *timer);
-
-/*----------------------------------------------------------------------------
- * Destruction d'un objet timer
- *
- * parameters :
- *   timer            <-- Timer
- *
- *----------------------------------------------------------------------------*/
-
-void PDM_timer_free(PDM_timer_t *timer);
+void
+PDM_timer_free
+(
+        PDM_timer_t *timer
+);
 
 #ifdef __cplusplus
 }

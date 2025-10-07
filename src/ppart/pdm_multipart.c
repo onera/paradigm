@@ -1433,6 +1433,7 @@ const double            *part_fraction,
       int              **node_part
 )
 {
+  PDM_timer_start(multipart->timer, "multipart:build_dual", 0);
   int verbose = 0;
 
   int i_rank;
@@ -1465,8 +1466,6 @@ const double            *part_fraction,
      split_method == PDM_SPLIT_DUAL_WITH_IMPLICIT) {
     compute_dual = 0;
   }
-  // Start dualgraph build timer
-  PDM_timer_resume(multipart->timer);
 
   PDM_g_num_t *dual_graph_idx = NULL;
   PDM_g_num_t *dual_graph     = NULL;
@@ -1480,12 +1479,8 @@ const double            *part_fraction,
 
 
 
-  // End dualgraph build timer
-  PDM_timer_hang_on(multipart->timer);
-  multipart->times_elapsed[TIMER_MPART_BUILD] = PDM_timer_elapsed(multipart->timer);
-  multipart->times_cpu    [TIMER_MPART_BUILD] = PDM_timer_cpu(multipart->timer);
-  multipart->times_cpu_u  [TIMER_MPART_BUILD] = PDM_timer_cpu_user(multipart->timer);
-  multipart->times_cpu_s  [TIMER_MPART_BUILD] = PDM_timer_cpu_sys(multipart->timer);
+  PDM_timer_end(multipart->timer, "multipart:build_dual", 0);
+  PDM_timer_start(multipart->timer, "multipart:graph_split", 0);
 
 
   int dn_node = distrib_node[i_rank+1] - distrib_node[i_rank];
@@ -1521,9 +1516,6 @@ const double            *part_fraction,
     PDM_free(displ);
   }
 
-  // Start dualgraph split timer
-  PDM_timer_resume(multipart->timer);
-
   if (split_method == PDM_SPLIT_DUAL_WITH_HILBERT) {
     _split_graph_hilbert(comm,
                          dmesh,
@@ -1546,12 +1538,6 @@ const double            *part_fraction,
                           _node_part,
                           comm);
   }
-  // End dualgraph build timer
-  PDM_timer_hang_on(multipart->timer);
-  multipart->times_elapsed[TIMER_MPART_SPLIT] = PDM_timer_elapsed(multipart->timer)  - multipart->times_elapsed[TIMER_MPART_BUILD];
-  multipart->times_cpu    [TIMER_MPART_SPLIT] = PDM_timer_cpu(multipart->timer)      - multipart->times_cpu    [TIMER_MPART_BUILD];
-  multipart->times_cpu_u  [TIMER_MPART_SPLIT] = PDM_timer_cpu_user(multipart->timer) - multipart->times_cpu_u  [TIMER_MPART_BUILD];
-  multipart->times_cpu_s  [TIMER_MPART_SPLIT] = PDM_timer_cpu_sys(multipart->timer)  - multipart->times_cpu_s  [TIMER_MPART_BUILD];
 
 
   // PDM_log_trace_array_int (_node_part, dn_node, "_node_part :: ");
@@ -1564,6 +1550,8 @@ const double            *part_fraction,
   }
 
   *node_part = _node_part;
+
+  PDM_timer_end(multipart->timer, "multipart:graph_split", 0);
 
   return distrib_partition;
 }
@@ -2453,10 +2441,6 @@ _run_ppart_domain
 
   pmeshes->tn_part = (int) distrib_partition[n_rank];
 
-
-  // Start construct partionned mesh timer
-  PDM_timer_resume(multipart->timer);
-
   /*
    * Deduce node_ln_to_gn
    */
@@ -2890,13 +2874,6 @@ _run_ppart_domain
   PDM_free(pinternal_vtx_bound_part_idx);
   PDM_free(pinternal_vtx_bound);
 
-  // End construct partitionned mesh timer
-  PDM_timer_hang_on(multipart->timer);
-  multipart->times_elapsed[TIMER_MPART_MESH] = PDM_timer_elapsed(multipart->timer)  - multipart->times_elapsed[TIMER_MPART_SPLIT];
-  multipart->times_cpu    [TIMER_MPART_MESH] = PDM_timer_cpu(multipart->timer)      - multipart->times_cpu    [TIMER_MPART_SPLIT];
-  multipart->times_cpu_u  [TIMER_MPART_MESH] = PDM_timer_cpu_user(multipart->timer) - multipart->times_cpu_u  [TIMER_MPART_SPLIT];
-  multipart->times_cpu_s  [TIMER_MPART_MESH] = PDM_timer_cpu_sys(multipart->timer)  - multipart->times_cpu_s  [TIMER_MPART_SPLIT];
-
   if(own_edge_distrib == 1) {
     PDM_free(edge_distrib);
   }
@@ -3024,14 +3001,7 @@ PDM_multipart_create
   }
 
   // Initialise timers
-  multipart->timer     = PDM_timer_create();
-  multipart->timer_all = PDM_timer_create();
-  for (int i = 0; i < NTIMER_MPART; i++) {
-    multipart->times_elapsed[i] = 0.;
-    multipart->times_cpu[i]     = 0.;
-    multipart->times_cpu_u[i]   = 0.;
-    multipart->times_cpu_s[i]   = 0.;
-  }
+  multipart->timer     = PDM_timer_create(multipart->comm);
 
   return (PDM_multipart_t *) multipart;
 }
@@ -3308,9 +3278,7 @@ PDM_multipart_compute
   PDM_MPI_Comm_rank(multipart->comm, &i_rank);
   PDM_MPI_Comm_size(multipart->comm, &n_rank);
 
-
-  // Start all timer
-  PDM_timer_resume(multipart->timer_all);
+  PDM_timer_start(multipart->timer, "multipart:full", 0);
 
   /*
    * Step 1 : Split the graph (If we have a dmesh_nodal and prepare the dmesh before the treatment for faces and elements are the same)
@@ -3324,8 +3292,6 @@ PDM_multipart_compute
     // 1. Generate global numerotation using all blocks
     // 2. Call the partitionner once on the global numbering
   } else {
-    PDM_timer_t *timer = PDM_timer_create();
-    double cum_elapsed_time = 0;
     int *starting_part_idx =  PDM_array_new_idx_from_sizes_int(multipart->n_part, multipart->n_domain);
 
     // int is_by_elt = 0;
@@ -3338,7 +3304,6 @@ PDM_multipart_compute
         PDM_split_dual_t split_method = multipart->split_method;
         int n_part = multipart->n_part[i_domain];
         _part_mesh_t* pmesh = &(multipart->pmeshes[i_domain]);
-
 
         const double* part_fraction      = &multipart->part_fraction[starting_part_idx[i_domain]];
         PDM_part_size_t part_size_method = multipart->part_size_method;
@@ -3393,10 +3358,6 @@ PDM_multipart_compute
 
         int n_part = multipart->n_part[i_domain];
 
-
-        if (0 && i_rank == 0)
-          PDM_printf("Running partitioning for block %i...\n", i_domain+1);
-        PDM_timer_resume(timer);
         _run_ppart_domain(multipart,
                           _dmesh,
                           NULL,
@@ -3407,29 +3368,12 @@ PDM_multipart_compute
                           part_size_method,
                           part_fraction,
                           comm);
-        PDM_timer_hang_on(timer);
-        if (0 && i_rank == 0)
-          PDM_printf("...completed (elapsed time : %f)\n", PDM_timer_elapsed(timer) - cum_elapsed_time);
-        cum_elapsed_time = PDM_timer_elapsed(timer);
       }
     }
-    PDM_timer_free(timer);
-
     PDM_free(starting_part_idx);
   }
 
-  // End all timer
-  PDM_timer_hang_on(multipart->timer_all);
-  multipart->times_elapsed[TIMER_MPART_ALL] = PDM_timer_elapsed(multipart->timer_all);
-  multipart->times_cpu    [TIMER_MPART_ALL] = PDM_timer_cpu(multipart->timer_all);
-  multipart->times_cpu_u  [TIMER_MPART_ALL] = PDM_timer_cpu_user(multipart->timer_all);
-  multipart->times_cpu_s  [TIMER_MPART_ALL] = PDM_timer_cpu_sys(multipart->timer_all);
-
-  // Free timer
-  PDM_timer_free(multipart->timer_all);
-  multipart->timer_all = NULL;
-  PDM_timer_free(multipart->timer);
-  multipart->timer = NULL;
+  PDM_timer_end(multipart->timer, "multipart:full", 0);
 }
 
 
@@ -4052,39 +3996,11 @@ PDM_multipart_time_get
   if (!(i_domain < multipart->n_domain)) {
     PDM_error("Domain identifier %d is not compatible with %d total domains.", i_domain, multipart->n_domain);
   }
-
-  *elapsed  = multipart->times_elapsed;
-  *cpu      = multipart->times_cpu;
-  *cpu_user = multipart->times_cpu_u;
-  *cpu_sys  = multipart->times_cpu_s;
-
-  int debug = 0;
-  if (debug) {
-
-    int i_rank, n_rank;
-    PDM_MPI_Comm_rank(multipart->comm, &i_rank);
-    PDM_MPI_Comm_size(multipart->comm, &n_rank);
-
-    double g_times_elapsed_min[NTIMER_MPART] = {0., 0., 0., 0.};
-    double g_times_elapsed_max[NTIMER_MPART] = {0., 0., 0., 0.};
-    double g_times_elapsed_mean[NTIMER_MPART] = {0., 0., 0., 0.};
-
-    PDM_MPI_Allreduce(multipart->times_elapsed, g_times_elapsed_min,  4, PDM_MPI_DOUBLE, PDM_MPI_MIN, multipart->comm);
-    PDM_MPI_Allreduce(multipart->times_elapsed, g_times_elapsed_max,  4, PDM_MPI_DOUBLE, PDM_MPI_MAX, multipart->comm);
-    PDM_MPI_Allreduce(multipart->times_elapsed, g_times_elapsed_mean, 4, PDM_MPI_DOUBLE, PDM_MPI_SUM, multipart->comm);
-
-    for (int i = 0; i < NTIMER_MPART; i++) {
-      g_times_elapsed_mean[i] /= n_rank;
-    }
-
-    if (i_rank == 0) {
-      PDM_printf("multipart_total_time %12.5e %12.5e %12.5e\n",       g_times_elapsed_mean[0], g_times_elapsed_min[0], g_times_elapsed_max[0]);
-      PDM_printf("multipart_build_graph_time %12.5e %12.5e %12.5e\n", g_times_elapsed_mean[1], g_times_elapsed_min[1], g_times_elapsed_max[1]);
-      PDM_printf("multipart_split_graph_time %12.5e %12.5e %12.5e\n", g_times_elapsed_mean[2], g_times_elapsed_min[2], g_times_elapsed_max[2]);
-      PDM_printf("multipart_mesh_time %12.5e %12.5e %12.5e\n",        g_times_elapsed_mean[3], g_times_elapsed_min[3], g_times_elapsed_max[3]);
-    }
-  } // end debug
-
+  abort();
+  *elapsed  = NULL; // multipart->times_elapsed;
+  *cpu      = NULL; // multipart->times_cpu;
+  *cpu_user = NULL; // multipart->times_cpu_u;
+  *cpu_sys  = NULL; // multipart->times_cpu_s;
 }
 
 
@@ -4095,10 +4011,6 @@ PDM_multipart_free
 )
 {
   // Free timer
-  if (multipart->timer_all != NULL) {
-    PDM_timer_free(multipart->timer_all);
-    multipart->timer_all = NULL;
-  }
   if (multipart->timer != NULL) {
     PDM_timer_free(multipart->timer);
     multipart->timer = NULL;

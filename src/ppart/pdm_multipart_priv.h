@@ -30,16 +30,6 @@ extern "C" {
  * Type
  *============================================================================*/
 
-// Amount of timer steps
-#define NTIMER_MPART 4
-
-// Step detail
-#define TIMER_MPART_ALL   0
-#define TIMER_MPART_BUILD 1
-#define TIMER_MPART_SPLIT 2
-#define TIMER_MPART_MESH  3
-
-
 /**
  * \struct _part_mesh_t
  * \brief  This private structure stores partioned meshes obtained on a given
@@ -108,33 +98,7 @@ struct _pdm_multipart_t {
 
 
   /* Timers */
-  PDM_timer_t *timer_all;   /*!< Timer */
   PDM_timer_t *timer;       /*!< Timer */
-
-  double times_elapsed [4]; /*!< Elapsed times :
-                             - Total,
-                             - build dualgraph,
-                             - split graph
-                             - build meshes partition */
-
-  double times_cpu[4];      /*!< CPU times :
-                               - Total,
-                               - build dualgraph,
-                               - split graph
-                               - build meshes partition */
-
-  double times_cpu_u[4];    /*!< User CPU times :
-                               - Total,
-                               - build dualgraph,
-                               - split graph
-                               - build meshes partition */
-
-  double times_cpu_s[4];    /*!< Systeme CPU times :
-                                - Total,
-                                - build dualgraph,
-                                - split graph
-                                - build meshes partition */
-
 
 };
 

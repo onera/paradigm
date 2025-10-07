@@ -674,14 +674,8 @@ PDM_mesh_location_create
   ml->method = PDM_MESH_LOCATION_OCTREE;
   // ml->method = PDM_MESH_LOCATION_DBBTREE;
 
-  ml->timer = PDM_timer_create ();
+  ml->timer = PDM_timer_create(ml->comm);
 
-  for (int i = 0; i < NTIMER_MESH_LOCATION; i++) {
-    ml->times_elapsed[i] = 0.;
-    ml->times_cpu[i]     = 0.;
-    ml->times_cpu_u[i]   = 0.;
-    ml->times_cpu_s[i]   = 0.;
-  }
 
   ml->owner = owner;
 
@@ -1675,85 +1669,85 @@ PDM_mesh_location_dump_times
 PDM_mesh_location_t *ml
 )
 {
+  abort();
+  // double t1 = ml->times_elapsed[END] - ml->times_elapsed[BEGIN];
+  // double t2 = ml->times_cpu[END] - ml->times_cpu[BEGIN];
 
-  double t1 = ml->times_elapsed[END] - ml->times_elapsed[BEGIN];
-  double t2 = ml->times_cpu[END] - ml->times_cpu[BEGIN];
+  // double t1max;
+  // PDM_MPI_Allreduce (&t1, &t1max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, ml->comm);
 
-  double t1max;
-  PDM_MPI_Allreduce (&t1, &t1max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, ml->comm);
+  // double t2max;
+  // PDM_MPI_Allreduce (&t2, &t2max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, ml->comm);
 
-  double t2max;
-  PDM_MPI_Allreduce (&t2, &t2max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, ml->comm);
+  // double t_elaps_max[NTIMER_MESH_LOCATION];
+  // PDM_MPI_Allreduce (ml->times_elapsed,
+  //                    t_elaps_max,
+  //                    NTIMER_MESH_LOCATION,
+  //                    PDM_MPI_DOUBLE,
+  //                    PDM_MPI_MAX,
+  //                    ml->comm);
 
-  double t_elaps_max[NTIMER_MESH_LOCATION];
-  PDM_MPI_Allreduce (ml->times_elapsed,
-                     t_elaps_max,
-                     NTIMER_MESH_LOCATION,
-                     PDM_MPI_DOUBLE,
-                     PDM_MPI_MAX,
-                     ml->comm);
+  // double t_cpu_max[NTIMER_MESH_LOCATION];
+  // PDM_MPI_Allreduce (ml->times_cpu,
+  //                    t_cpu_max, NTIMER_MESH_LOCATION,
+  //                    PDM_MPI_DOUBLE,
+  //                    PDM_MPI_MAX,
+  //                    ml->comm);
 
-  double t_cpu_max[NTIMER_MESH_LOCATION];
-  PDM_MPI_Allreduce (ml->times_cpu,
-                     t_cpu_max, NTIMER_MESH_LOCATION,
-                     PDM_MPI_DOUBLE,
-                     PDM_MPI_MAX,
-                     ml->comm);
+  // int rank;
+  // PDM_MPI_Comm_rank (ml->comm, &rank);
 
-  int rank;
-  PDM_MPI_Comm_rank (ml->comm, &rank);
+  // if (rank == 0) {
 
-  if (rank == 0) {
+  //   PDM_printf( "mesh_location timer : all (elapsed and cpu) :                                   "
+  //               " %12.5es %12.5es\n",
+  //               t1max, t2max);
 
-    PDM_printf( "mesh_location timer : all (elapsed and cpu) :                                   "
-                " %12.5es %12.5es\n",
-                t1max, t2max);
+  //   PDM_printf( "mesh_location timer : build bounding boxes (elapsed and cpu)                    "
+  //               " %12.5es %12.5es\n",
+  //               t_elaps_max[BUILD_BOUNDING_BOXES],
+  //               t_cpu_max[BUILD_BOUNDING_BOXES]);
 
-    PDM_printf( "mesh_location timer : build bounding boxes (elapsed and cpu)                    "
-                " %12.5es %12.5es\n",
-                t_elaps_max[BUILD_BOUNDING_BOXES],
-                t_cpu_max[BUILD_BOUNDING_BOXES]);
+  //   PDM_printf( "mesh_location timer : store connectivity (elapsed and cpu) :                    "
+  //               " %12.5es %12.5es\n",
+  //               t_elaps_max[STORE_CONNECTIVITY],
+  //               t_cpu_max[STORE_CONNECTIVITY]);
 
-    PDM_printf( "mesh_location timer : store connectivity (elapsed and cpu) :                    "
-                " %12.5es %12.5es\n",
-                t_elaps_max[STORE_CONNECTIVITY],
-                t_cpu_max[STORE_CONNECTIVITY]);
+  //   PDM_printf( "mesh_location timer : extract entities of interest (elapsed and cpu) :          "
+  //               " %12.5es %12.5es\n",
+  //               t_elaps_max[EXTRACT_ENTITIES_OF_INTEREST],
+  //               t_cpu_max[EXTRACT_ENTITIES_OF_INTEREST]);
 
-    PDM_printf( "mesh_location timer : extract entities of interest (elapsed and cpu) :          "
-                " %12.5es %12.5es\n",
-                t_elaps_max[EXTRACT_ENTITIES_OF_INTEREST],
-                t_cpu_max[EXTRACT_ENTITIES_OF_INTEREST]);
+  //   PDM_printf( "mesh_location timer : build trees + search candidates (elapsed and cpu) :       "
+  //               " %12.5es %12.5es\n",
+  //               t_elaps_max[SEARCH_CANDIDATES],
+  //               t_cpu_max[SEARCH_CANDIDATES]);
 
-    PDM_printf( "mesh_location timer : build trees + search candidates (elapsed and cpu) :       "
-                " %12.5es %12.5es\n",
-                t_elaps_max[SEARCH_CANDIDATES],
-                t_cpu_max[SEARCH_CANDIDATES]);
+  //   PDM_printf( "mesh_location timer : load balancing (elapsed and cpu) :                        "
+  //               " %12.5es %12.5es\n",
+  //               t_elaps_max[LOAD_BALANCING],
+  //               t_cpu_max[LOAD_BALANCING]);
 
-    PDM_printf( "mesh_location timer : load balancing (elapsed and cpu) :                        "
-                " %12.5es %12.5es\n",
-                t_elaps_max[LOAD_BALANCING],
-                t_cpu_max[LOAD_BALANCING]);
+  //   PDM_printf( "mesh_location timer : compute elementary locations (elapsed and cpu) :          "
+  //               " %12.5es %12.5es\n",
+  //               t_elaps_max[COMPUTE_ELEMENTARY_LOCATIONS],
+  //               t_cpu_max[COMPUTE_ELEMENTARY_LOCATIONS]);
 
-    PDM_printf( "mesh_location timer : compute elementary locations (elapsed and cpu) :          "
-                " %12.5es %12.5es\n",
-                t_elaps_max[COMPUTE_ELEMENTARY_LOCATIONS],
-                t_cpu_max[COMPUTE_ELEMENTARY_LOCATIONS]);
+  //   PDM_printf( "mesh_location timer : merge location data (elapsed and cpu) :                   "
+  //               " %12.5es %12.5es\n",
+  //               t_elaps_max[MERGE_LOCATION_DATA],
+  //               t_cpu_max[MERGE_LOCATION_DATA]);
 
-    PDM_printf( "mesh_location timer : merge location data (elapsed and cpu) :                   "
-                " %12.5es %12.5es\n",
-                t_elaps_max[MERGE_LOCATION_DATA],
-                t_cpu_max[MERGE_LOCATION_DATA]);
+  //   PDM_printf( "mesh_location timer : transfer to initial partitions (elapsed and cpu) :        "
+  //               " %12.5es %12.5es\n",
+  //               t_elaps_max[TRANSFER_TO_INITIAL_PARTITIONS],
+  //               t_cpu_max[TRANSFER_TO_INITIAL_PARTITIONS]);
 
-    PDM_printf( "mesh_location timer : transfer to initial partitions (elapsed and cpu) :        "
-                " %12.5es %12.5es\n",
-                t_elaps_max[TRANSFER_TO_INITIAL_PARTITIONS],
-                t_cpu_max[TRANSFER_TO_INITIAL_PARTITIONS]);
-
-    PDM_printf( "mesh_location timer : finalize transfer to initial partition (elapsed and cpu) :"
-                " %12.5es %12.5es\n",
-                t_elaps_max[FINALIZE_TRANSFER_TO_INITIAL_PARTITIONS],
-                t_cpu_max[FINALIZE_TRANSFER_TO_INITIAL_PARTITIONS]);
-  }
+  //   PDM_printf( "mesh_location timer : finalize transfer to initial partition (elapsed and cpu) :"
+  //               " %12.5es %12.5es\n",
+  //               t_elaps_max[FINALIZE_TRANSFER_TO_INITIAL_PARTITIONS],
+  //               t_cpu_max[FINALIZE_TRANSFER_TO_INITIAL_PARTITIONS]);
+  // }
 }
 
 
@@ -1789,36 +1783,14 @@ PDM_mesh_location_compute
   PDM_MPI_Comm_rank (ml->comm, &i_rank);
   PDM_MPI_Comm_size (ml->comm, &n_rank);
 
-
   PDM_malloc(ml->points_in_elements, ml->n_point_cloud, _points_in_element_t);
-
-
-  double b_t_elapsed;
-  double b_t_cpu;
-  double b_t_cpu_u;
-  double b_t_cpu_s;
-
-  double e_t_elapsed;
-  double e_t_cpu;
-  double e_t_cpu_u;
-  double e_t_cpu_s;
 
   /*
    *  Compute global extents of source mesh
    *  -------------------------------------
    */
-
-  PDM_MPI_Barrier (ml->comm);
-  ml->times_elapsed[BEGIN] = PDM_timer_elapsed (ml->timer);
-  ml->times_cpu    [BEGIN] = PDM_timer_cpu     (ml->timer);
-  ml->times_cpu_u  [BEGIN] = PDM_timer_cpu_user(ml->timer);
-  ml->times_cpu_s  [BEGIN] = PDM_timer_cpu_sys (ml->timer);
-
-  b_t_elapsed = ml->times_elapsed[BEGIN];
-  b_t_cpu     = ml->times_cpu    [BEGIN];
-  b_t_cpu_u   = ml->times_cpu_u  [BEGIN];
-  b_t_cpu_s   = ml->times_cpu_s  [BEGIN];
-  PDM_timer_resume(ml->timer);
+  PDM_timer_start(ml->timer, "mesh_location:FULL", 0);
+  PDM_timer_start(ml->timer, "mesh_location:BUILD_BOUNDING_BOXES", 0);
 
   /* Infer geometry kind from part mesh_nodal */
   int mesh_dimension;
@@ -1984,57 +1956,19 @@ PDM_mesh_location_compute
   PDM_MPI_Allreduce(l_mesh_extents+3, g_mesh_extents+3, 3,
                     PDM_MPI_DOUBLE, PDM_MPI_MAX, ml->comm);
 
-
-  PDM_MPI_Barrier (ml->comm);
-  PDM_timer_hang_on(ml->timer);
-  e_t_elapsed = PDM_timer_elapsed (ml->timer);
-  e_t_cpu     = PDM_timer_cpu     (ml->timer);
-  e_t_cpu_u   = PDM_timer_cpu_user(ml->timer);
-  e_t_cpu_s   = PDM_timer_cpu_sys (ml->timer);
-
-  ml->times_elapsed[BUILD_BOUNDING_BOXES] += e_t_elapsed - b_t_elapsed;
-  ml->times_cpu    [BUILD_BOUNDING_BOXES] += e_t_cpu     - b_t_cpu;
-  ml->times_cpu_u  [BUILD_BOUNDING_BOXES] += e_t_cpu_u   - b_t_cpu_u;
-  ml->times_cpu_s  [BUILD_BOUNDING_BOXES] += e_t_cpu_s   - b_t_cpu_s;
-
-  b_t_elapsed = e_t_elapsed;
-  b_t_cpu     = e_t_cpu;
-  b_t_cpu_u   = e_t_cpu_u;
-  b_t_cpu_s   = e_t_cpu_s;
-  PDM_timer_resume(ml->timer);
-
+  PDM_timer_end(ml->timer, "mesh_location:BUILD_BOUNDING_BOXES", 0);
 
   /*
    *  Store cell vertex connectivity
    *  ------------------------------
    */
-
+  PDM_timer_start(ml->timer, "mesh_location:STORE_CONNECTIVITY", 0);
   _store_cell_vtx(ml, geom_kind);
-
-
-  PDM_MPI_Barrier (ml->comm);
-  PDM_timer_hang_on(ml->timer);
-  e_t_elapsed = PDM_timer_elapsed (ml->timer);
-  e_t_cpu     = PDM_timer_cpu     (ml->timer);
-  e_t_cpu_u   = PDM_timer_cpu_user(ml->timer);
-  e_t_cpu_s   = PDM_timer_cpu_sys (ml->timer);
-
-  ml->times_elapsed[STORE_CONNECTIVITY] += e_t_elapsed - b_t_elapsed;
-  ml->times_cpu    [STORE_CONNECTIVITY] += e_t_cpu     - b_t_cpu;
-  ml->times_cpu_u  [STORE_CONNECTIVITY] += e_t_cpu_u   - b_t_cpu_u;
-  ml->times_cpu_s  [STORE_CONNECTIVITY] += e_t_cpu_s   - b_t_cpu_s;
-
-  b_t_elapsed = e_t_elapsed;
-  b_t_cpu     = e_t_cpu;
-  b_t_cpu_u   = e_t_cpu_u;
-  b_t_cpu_s   = e_t_cpu_s;
-  PDM_timer_resume(ml->timer);
-
+  PDM_timer_end(ml->timer, "mesh_location:STORE_CONNECTIVITY", 0);
 
   PDM_mpi_comm_kind_t comm_kind = PDM_MPI_COMM_KIND_COLLECTIVE;
   int *req_pts_proj_coord = PDM_array_const_int(ml->n_point_cloud, -1);
   int *req_pts_dist2      = PDM_array_const_int(ml->n_point_cloud, -1);
-
 
   if (dbg_enabled && ml->mesh_nodal != NULL) {
     PDM_part_mesh_nodal_dump_vtk(ml->mesh_nodal,
@@ -2094,13 +2028,7 @@ PDM_mesh_location_compute
   /* Big loop on point clouds */
   for (int icloud = 0; icloud < ml->n_point_cloud; icloud++) {
 
-    PDM_MPI_Barrier (ml->comm);
-    PDM_timer_hang_on(ml->timer);
-    b_t_elapsed = PDM_timer_elapsed(ml->timer);
-    b_t_cpu     = PDM_timer_cpu(ml->timer);
-    b_t_cpu_u   = PDM_timer_cpu_user(ml->timer);
-    b_t_cpu_s   = PDM_timer_cpu_sys(ml->timer);
-    PDM_timer_resume(ml->timer);
+    PDM_timer_start(ml->timer, "mesh_location:EXTRACT_ENTITIES_OF_INTEREST", 0);
 
     if (dbg_enabled) {
       log_trace("Point cloud %d\n", icloud);
@@ -2671,24 +2599,9 @@ PDM_mesh_location_compute
       }
     }
 
+    PDM_timer_end(ml->timer, "mesh_location:EXTRACT_ENTITIES_OF_INTEREST", 0);
 
-    PDM_MPI_Barrier (ml->comm);
-    PDM_timer_hang_on(ml->timer);
-    e_t_elapsed = PDM_timer_elapsed (ml->timer);
-    e_t_cpu     = PDM_timer_cpu     (ml->timer);
-    e_t_cpu_u   = PDM_timer_cpu_user(ml->timer);
-    e_t_cpu_s   = PDM_timer_cpu_sys (ml->timer);
-
-    ml->times_elapsed[EXTRACT_ENTITIES_OF_INTEREST] += e_t_elapsed - b_t_elapsed;
-    ml->times_cpu    [EXTRACT_ENTITIES_OF_INTEREST] += e_t_cpu     - b_t_cpu;
-    ml->times_cpu_u  [EXTRACT_ENTITIES_OF_INTEREST] += e_t_cpu_u   - b_t_cpu_u;
-    ml->times_cpu_s  [EXTRACT_ENTITIES_OF_INTEREST] += e_t_cpu_s   - b_t_cpu_s;
-
-    b_t_elapsed = e_t_elapsed;
-    b_t_cpu     = e_t_cpu;
-    b_t_cpu_u   = e_t_cpu_u;
-    b_t_cpu_s   = e_t_cpu_s;
-    PDM_timer_resume(ml->timer);
+    PDM_timer_start(ml->timer, "mesh_location:SEARCH_CANDIDATES", 0);
 
     /*
      *  Location : search candidates
@@ -2950,24 +2863,8 @@ PDM_mesh_location_compute
     PDM_free(dpts_coord);
 
 
-    PDM_MPI_Barrier(ml->comm);
-    PDM_timer_hang_on(ml->timer);
-    e_t_elapsed = PDM_timer_elapsed (ml->timer);
-    e_t_cpu     = PDM_timer_cpu     (ml->timer);
-    e_t_cpu_u   = PDM_timer_cpu_user(ml->timer);
-    e_t_cpu_s   = PDM_timer_cpu_sys (ml->timer);
-
-    ml->times_elapsed[SEARCH_CANDIDATES] += e_t_elapsed - b_t_elapsed;
-    ml->times_cpu    [SEARCH_CANDIDATES] += e_t_cpu     - b_t_cpu;
-    ml->times_cpu_u  [SEARCH_CANDIDATES] += e_t_cpu_u   - b_t_cpu_u;
-    ml->times_cpu_s  [SEARCH_CANDIDATES] += e_t_cpu_s   - b_t_cpu_s;
-
-    b_t_elapsed = e_t_elapsed;
-    b_t_cpu     = e_t_cpu;
-    b_t_cpu_u   = e_t_cpu_u;
-    b_t_cpu_s   = e_t_cpu_s;
-    PDM_timer_resume(ml->timer);
-
+    PDM_timer_end(ml->timer, "mesh_location:SEARCH_CANDIDATES", 0);
+    PDM_timer_start(ml->timer, "mesh_location:LOAD_BALANCING", 0);
 
     if (dbg_enabled) {
       log_trace("before compression\n");
@@ -3142,24 +3039,8 @@ PDM_mesh_location_compute
     }
 
 
-    PDM_MPI_Barrier (ml->comm);
-    PDM_timer_hang_on(ml->timer);
-    e_t_elapsed = PDM_timer_elapsed (ml->timer);
-    e_t_cpu     = PDM_timer_cpu     (ml->timer);
-    e_t_cpu_u   = PDM_timer_cpu_user(ml->timer);
-    e_t_cpu_s   = PDM_timer_cpu_sys (ml->timer);
-
-    ml->times_elapsed[LOAD_BALANCING] += e_t_elapsed - b_t_elapsed;
-    ml->times_cpu    [LOAD_BALANCING] += e_t_cpu     - b_t_cpu;
-    ml->times_cpu_u  [LOAD_BALANCING] += e_t_cpu_u   - b_t_cpu_u;
-    ml->times_cpu_s  [LOAD_BALANCING] += e_t_cpu_s   - b_t_cpu_s;
-
-    b_t_elapsed = e_t_elapsed;
-    b_t_cpu     = e_t_cpu;
-    b_t_cpu_u   = e_t_cpu_u;
-    b_t_cpu_s   = e_t_cpu_s;
-    PDM_timer_resume(ml->timer);
-    // PDM_MPI_Barrier (ml->comm);
+    PDM_timer_end(ml->timer, "mesh_location:LOAD_BALANCING", 0);
+    PDM_timer_start(ml->timer, "mesh_location:COMPUTE_ELEMENTARY_LOCATIONS", 0);
 
     /* Perform elementary point locations */
     double **pelt_pts_distance2   = NULL;
@@ -3194,24 +3075,8 @@ PDM_mesh_location_compute
     PDM_extract_part_free(extrp);
     PDM_free(delt_init_location2);
 
-    PDM_MPI_Barrier (ml->comm);
-    PDM_timer_hang_on(ml->timer);
-    e_t_elapsed = PDM_timer_elapsed(ml->timer);
-    e_t_cpu     = PDM_timer_cpu(ml->timer);
-    e_t_cpu_u   = PDM_timer_cpu_user(ml->timer);
-    e_t_cpu_s   = PDM_timer_cpu_sys(ml->timer);
-
-    ml->times_elapsed[COMPUTE_ELEMENTARY_LOCATIONS] += e_t_elapsed - b_t_elapsed;
-    ml->times_cpu    [COMPUTE_ELEMENTARY_LOCATIONS] += e_t_cpu - b_t_cpu;
-    ml->times_cpu_u  [COMPUTE_ELEMENTARY_LOCATIONS] += e_t_cpu_u - b_t_cpu_u;
-    ml->times_cpu_s  [COMPUTE_ELEMENTARY_LOCATIONS] += e_t_cpu_s - b_t_cpu_s;
-
-    b_t_elapsed = e_t_elapsed;
-    b_t_cpu     = e_t_cpu;
-    b_t_cpu_u   = e_t_cpu_u;
-    b_t_cpu_s   = e_t_cpu_s;
-    PDM_timer_resume(ml->timer);
-
+    PDM_timer_end(ml->timer, "mesh_location:COMPUTE_ELEMENTARY_LOCATIONS", 0);
+    PDM_timer_end(ml->timer, "mesh_location:MERGE_LOCATION_DATA", 0);
 
 
     /*
@@ -3513,24 +3378,8 @@ PDM_mesh_location_compute
 
     PDM_block_to_part_free(btp_pts_gnum_geom_to_user);
 
-    PDM_MPI_Barrier (ml->comm);
-    PDM_timer_hang_on(ml->timer);
-    e_t_elapsed = PDM_timer_elapsed(ml->timer);
-    e_t_cpu     = PDM_timer_cpu(ml->timer);
-    e_t_cpu_u   = PDM_timer_cpu_user(ml->timer);
-    e_t_cpu_s   = PDM_timer_cpu_sys(ml->timer);
-
-    ml->times_elapsed[MERGE_LOCATION_DATA] += e_t_elapsed - b_t_elapsed;
-    ml->times_cpu    [MERGE_LOCATION_DATA] += e_t_cpu - b_t_cpu;
-    ml->times_cpu_u  [MERGE_LOCATION_DATA] += e_t_cpu_u - b_t_cpu_u;
-    ml->times_cpu_s  [MERGE_LOCATION_DATA] += e_t_cpu_s - b_t_cpu_s;
-
-    b_t_elapsed = e_t_elapsed;
-    b_t_cpu     = e_t_cpu;
-    b_t_cpu_u   = e_t_cpu_u;
-    b_t_cpu_s   = e_t_cpu_s;
-    PDM_timer_resume(ml->timer);
-
+    PDM_timer_end(ml->timer, "mesh_location:MERGE_LOCATION_DATA", 0);
+    PDM_timer_start(ml->timer, "mesh_location:TRANSFER_TO_INITIAL_PARTITIONS", 0);
 
     /*
      *  Transfer location data from elt (current frame) to elt (user frame)
@@ -4024,24 +3873,7 @@ PDM_mesh_location_compute
       PDM_part_to_part_free(ptp_elt);
     }
 
-
-    PDM_MPI_Barrier (ml->comm);
-    PDM_timer_hang_on(ml->timer);
-    e_t_elapsed = PDM_timer_elapsed(ml->timer);
-    e_t_cpu     = PDM_timer_cpu(ml->timer);
-    e_t_cpu_u   = PDM_timer_cpu_user(ml->timer);
-    e_t_cpu_s   = PDM_timer_cpu_sys(ml->timer);
-
-    ml->times_elapsed[TRANSFER_TO_INITIAL_PARTITIONS] += e_t_elapsed - b_t_elapsed;
-    ml->times_cpu    [TRANSFER_TO_INITIAL_PARTITIONS] += e_t_cpu - b_t_cpu;
-    ml->times_cpu_u  [TRANSFER_TO_INITIAL_PARTITIONS] += e_t_cpu_u - b_t_cpu_u;
-    ml->times_cpu_s  [TRANSFER_TO_INITIAL_PARTITIONS] += e_t_cpu_s - b_t_cpu_s;
-
-    b_t_elapsed = e_t_elapsed;
-    b_t_cpu     = e_t_cpu;
-    b_t_cpu_u   = e_t_cpu_u;
-    b_t_cpu_s   = e_t_cpu_s;
-    PDM_timer_resume(ml->timer);
+    PDM_timer_end(ml->timer, "mesh_location:TRANSFER_TO_INITIAL_PARTITIONS", 0);
 
     /* Free memory */
     PDM_free(final_elt_pts_distance  );
@@ -4116,6 +3948,9 @@ PDM_mesh_location_compute
     PDM_part_mesh_nodal_elmts_free(pmne);
   }
 
+
+  PDM_timer_start(ml->timer, "mesh_location:FINALIZE_TRANSFER_TO_INITIAL_PARTITIONS", 0);
+
   for (int icloud = 0; icloud < ml->n_point_cloud; icloud++) {
     if (ml->ptp[icloud] != NULL) {
       if (req_pts_proj_coord[icloud] != -1) {
@@ -4128,28 +3963,10 @@ PDM_mesh_location_compute
     }
   }
 
-  PDM_MPI_Barrier (ml->comm);
-  PDM_timer_hang_on(ml->timer);
-  e_t_elapsed = PDM_timer_elapsed(ml->timer);
-  e_t_cpu     = PDM_timer_cpu(ml->timer);
-  e_t_cpu_u   = PDM_timer_cpu_user(ml->timer);
-  e_t_cpu_s   = PDM_timer_cpu_sys(ml->timer);
-
-  ml->times_elapsed[FINALIZE_TRANSFER_TO_INITIAL_PARTITIONS] = e_t_elapsed - b_t_elapsed;
-  ml->times_cpu    [FINALIZE_TRANSFER_TO_INITIAL_PARTITIONS] = e_t_cpu - b_t_cpu;
-  ml->times_cpu_u  [FINALIZE_TRANSFER_TO_INITIAL_PARTITIONS] = e_t_cpu_u - b_t_cpu_u;
-  ml->times_cpu_s  [FINALIZE_TRANSFER_TO_INITIAL_PARTITIONS] = e_t_cpu_s - b_t_cpu_s;
-
-  b_t_elapsed = e_t_elapsed;
-  b_t_cpu     = e_t_cpu;
-  b_t_cpu_u   = e_t_cpu_u;
-  b_t_cpu_s   = e_t_cpu_s;
-  PDM_timer_resume(ml->timer);
+  PDM_timer_end(ml->timer, "mesh_location:FINALIZE_TRANSFER_TO_INITIAL_PARTITIONS", 0);
 
   PDM_free(req_pts_proj_coord);
   PDM_free(req_pts_dist2);
-
-
 
   for (int ipart = 0; ipart < n_part; ipart++) {
     PDM_free(elt_extents[ipart]);
@@ -4159,13 +3976,7 @@ PDM_mesh_location_compute
   PDM_free(elt_g_num);
   PDM_free(pn_elt);
 
-  PDM_MPI_Barrier (ml->comm);
-  PDM_timer_hang_on(ml->timer);
-  ml->times_elapsed[END] = PDM_timer_elapsed (ml->timer);
-  ml->times_cpu    [END] = PDM_timer_cpu     (ml->timer);
-  ml->times_cpu_u  [END] = PDM_timer_cpu_user(ml->timer);
-  ml->times_cpu_s  [END] = PDM_timer_cpu_sys (ml->timer);
-  PDM_timer_resume(ml->timer);
+  PDM_timer_start(ml->timer, "mesh_location:FULL", 0);
 
 }
 

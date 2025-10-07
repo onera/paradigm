@@ -316,14 +316,7 @@ PDM_closest_points_create
   closest->src_cloud = NULL;
   closest->tgt_cloud = NULL;
 
-  closest->timer = PDM_timer_create ();
-
-  for (int i = 0; i < NTIMER; i++) {
-    closest->times_elapsed[i] = 0.;
-    closest->times_cpu[i] = 0.;
-    closest->times_cpu_u[i] = 0.;
-    closest->times_cpu_s[i] = 0.;
-  }
+  closest->timer = PDM_timer_create(closest->comm);
 
   closest->ptp = NULL;
   closest->ptp_ownership = PDM_OWNERSHIP_KEEP;
@@ -404,13 +397,7 @@ PDM_closest_points_compute
 PDM_closest_point_t *cls
 )
 {
-
-  cls->times_elapsed[BEGIN] = PDM_timer_elapsed(cls->timer);
-  cls->times_cpu[BEGIN]     = PDM_timer_cpu(cls->timer);
-  cls->times_cpu_u[BEGIN]   = PDM_timer_cpu_user(cls->timer);
-  cls->times_cpu_s[BEGIN]   = PDM_timer_cpu_sys(cls->timer);
-
-  PDM_timer_resume(cls->timer);
+  PDM_timer_start(cls->timer, "closest_points:FULL", 0);
 
   int i_rank;
   int n_rank;
@@ -592,14 +579,7 @@ PDM_closest_point_t *cls
 
   }
 
-  PDM_timer_hang_on(cls->timer);
-
-  cls->times_elapsed[END] = PDM_timer_elapsed(cls->timer);
-  cls->times_cpu[END]     = PDM_timer_cpu(cls->timer);
-  cls->times_cpu_u[END]   = PDM_timer_cpu_user(cls->timer);
-  cls->times_cpu_s[END]   = PDM_timer_cpu_sys(cls->timer);
-
-  PDM_timer_resume(cls->timer);
+  PDM_timer_end(cls->timer, "closest_points:FULL", 0);
 }
 
 
@@ -789,23 +769,22 @@ PDM_closest_points_dump_times
 PDM_closest_point_t  *cls
 )
 {
-  double t1 = cls->times_elapsed[END] - cls->times_elapsed[BEGIN];
-  double t2 = cls->times_cpu[END] - cls->times_cpu[BEGIN];
+  // double t1 = cls->times_elapsed[END] - cls->times_elapsed[BEGIN];
+  // double t2 = cls->times_cpu    [END] - cls->times_cpu    [BEGIN];
 
-  double t1max;
-  PDM_MPI_Allreduce (&t1, &t1max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, cls->comm);
+  // double t1max;
+  // PDM_MPI_Allreduce (&t1, &t1max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, cls->comm);
 
-  double t2max;
-  PDM_MPI_Allreduce (&t2, &t2max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, cls->comm);
+  // double t2max;
+  // PDM_MPI_Allreduce (&t2, &t2max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, cls->comm);
 
-  int rank;
-  PDM_MPI_Comm_rank (cls->comm, &rank);
+  // int rank;
+  // PDM_MPI_Comm_rank (cls->comm, &rank);
 
-  if (rank == 0) {
-
-    PDM_printf( "closest_points timer : all (elapsed and cpu) : %12.5es %12.5es\n",
-                t1max, t2max);
-  }
+  // if (rank == 0) {
+  //   PDM_printf( "closest_points timer : all (elapsed and cpu) : %12.5es %12.5es\n", t1max, t2max);
+  // }
+  abort();
 }
 
 

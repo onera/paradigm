@@ -57,12 +57,6 @@ struct _PDM_io_file_t {
   int              rang;               /* Rang MSG */
   int              n_rangs;            /* Nombre de rangs MSG  */
 
-  PDM_timer_t     *timer_fichier;      /* Mesure des temps d'acces
-                                            aux fichiers  */
-  PDM_timer_t     *timer_swap_endian;  /* Mesure des temps de swap */
-  PDM_timer_t     *timer_total;        /* Mesure des temps de swap */
-  PDM_timer_t     *timer_distribution; /* Mesure des temps de distribution
-                                             des donnees */
   PDM_file_seq_t  *PDM_file_seq;       /* Fichier sequentiel */
   PDM_file_par_t  *PDM_file_par;       /* Fichier parallele */
 
@@ -595,15 +589,6 @@ PDM_io_open
   PDM_malloc(*unite, 1, PDM_io_file_t);
   PDM_io_file_t *nouveau_fichier = *unite;
 
-  /* Initialisation des timer */
-
-  nouveau_fichier->timer_fichier = PDM_timer_create();
-  nouveau_fichier->timer_distribution = PDM_timer_create();
-  nouveau_fichier->timer_swap_endian = PDM_timer_create();
-  nouveau_fichier->timer_total = PDM_timer_create();
-
-  PDM_timer_resume(nouveau_fichier->timer_total);
-
   nouveau_fichier->mode             = mode;
   nouveau_fichier->acces            = acces;
   nouveau_fichier->fmt_t            = fmt;
@@ -806,9 +791,6 @@ PDM_io_open
   else if ((int_endian != 1) && (endian == PDM_IO_LITTLEENDIAN)) {
     nouveau_fichier->swap_endian = 1;
   }
-
-
-  PDM_timer_hang_on(nouveau_fichier->timer_total);
 }
 
 
@@ -897,16 +879,7 @@ PDM_io_global_read
       PDM_error("Unhandled text format");
     }
 
-    PDM_timer_t *timer_total = fichier->timer_total;
-    PDM_timer_t *timer_swap_endian = fichier->timer_swap_endian;
-    PDM_timer_t *timer_fichier = fichier->timer_fichier;
-
-    PDM_timer_resume(timer_total);
-
-    PDM_timer_resume(timer_fichier);
-
     /* Lecture */
-
     int n_donnees_lues = 0;
     if (fichier->PDM_file_seq != NULL) {
       PDM_g_num_t n_donnees_lues_gnum = PDM_file_seq_read(fichier->PDM_file_seq,
@@ -955,20 +928,15 @@ PDM_io_global_read
                     PDM_MPI_BYTE, 0, fichier->comm);
     }
 
-    PDM_timer_hang_on(timer_fichier);
 
     /* Swap endian */
 
     if (fichier->swap_endian) {
-      PDM_timer_resume(timer_swap_endian);
       PDM_io_swap_endian(taille_donnee,
                          n_donnees,
                          donnees,
                    donnees);
-      PDM_timer_hang_on(timer_swap_endian);
     }
-
-    PDM_timer_hang_on(timer_total);
   }
 
   else
@@ -1005,16 +973,7 @@ PDM_io_global_write
 
   if (fichier != NULL) {
 
-    PDM_timer_t *timer_total = fichier->timer_total;
-    PDM_timer_t *timer_fichier = fichier->timer_fichier;
-    PDM_timer_t *timer_swap_endian = fichier->timer_swap_endian;
-
-    PDM_timer_resume(timer_total);
-    PDM_timer_resume(timer_fichier);
-
     /* Ecriture globale - ecriture native */
-
-
     if (fichier->fmt_t == PDM_IO_FMT_TXT) {
 
       unsigned char* _donnees = (unsigned char*) donnees;
@@ -1108,7 +1067,6 @@ PDM_io_global_write
 
         if (fichier->swap_endian) {
 
-          PDM_timer_resume(timer_swap_endian);
 
           PDM_malloc(_donnees, taille_donnee * n_donnees, unsigned char);
 
@@ -1117,7 +1075,6 @@ PDM_io_global_write
                              donnees,
                              _donnees);
 
-          PDM_timer_hang_on(timer_swap_endian);
 
         }
 
@@ -1158,7 +1115,6 @@ PDM_io_global_write
 
           if (fichier->swap_endian) {
 
-            PDM_timer_resume(timer_swap_endian);
 
             PDM_malloc(_donnees, taille_donnee * n_donnees_shortint, unsigned char);
 
@@ -1167,7 +1123,6 @@ PDM_io_global_write
                                donnees,
                                _donnees);
 
-            PDM_timer_hang_on(timer_swap_endian);
 
           }
 
@@ -1193,8 +1148,6 @@ PDM_io_global_write
         }
       }
     }
-    PDM_timer_hang_on(timer_fichier);
-    PDM_timer_hang_on(timer_total);
   }
   else
     err_code = 1;
@@ -1223,17 +1176,9 @@ PDM_io_par_interlaced_read
   PDM_g_num_t *index = NULL;
 
   if (fichier != NULL) {
-
-    PDM_timer_t *timer_total = fichier->timer_total;
-    PDM_timer_t *timer_swap_endian = fichier->timer_fichier;
-    PDM_timer_t *timer_distribution = fichier->timer_distribution;
-    PDM_timer_t *timer_fichier = fichier->timer_fichier;
-
     if (fichier->fmt_t == PDM_IO_FMT_TXT) {
       PDM_error("Unsupported text format");
     }
-
-    PDM_timer_resume(timer_total);
 
     /* Acces sequentiel : sortie en erreur */
 
@@ -1242,14 +1187,12 @@ PDM_io_par_interlaced_read
     /*   PDM_error("Erreur PDM_io_par_interlaced_read :" */
     /*           " Fonction indisponible en mode sequentiel\n"); */
     /*   abort(); */
-
     /* } */
 
     /* Processus unique : tri local et appel a une ecriture globale */
 
     if (fichier->n_rangs == 1) {
 
-      PDM_timer_resume(timer_distribution);
 
       int            _n_donnees_buff = 0;
       int            n_octet = 0;
@@ -1292,16 +1235,10 @@ PDM_io_par_interlaced_read
 				PDM_error("Unknown PDM_stride_t");
 			}
 
-      PDM_timer_hang_on(timer_distribution);
-      PDM_timer_hang_on(timer_total);
-
       PDM_io_global_read(fichier,
                                taille_donnee,
                                _n_donnees_buff,
                                buffer);
-
-      PDM_timer_resume(timer_total);
-      PDM_timer_resume(timer_distribution);
 
       if (t_n_composantes == PDM_STRIDE_VAR_INTERLACED) {
         int k = 0;
@@ -1325,7 +1262,6 @@ PDM_io_par_interlaced_read
 
       PDM_free(buffer);
 
-      PDM_timer_hang_on(timer_distribution);
     }
 
     /* Cas general : Echanges MPI pour prise en compte de
@@ -1334,7 +1270,6 @@ PDM_io_par_interlaced_read
 
     else {
 
-      PDM_timer_resume(timer_distribution);
 
       /*----------------------------------------------------------
        *  Determination des rangs actifs qui accedent reellement
@@ -1554,7 +1489,6 @@ PDM_io_par_interlaced_read
 
       }
 
-      PDM_timer_hang_on(timer_distribution);
 
       /*---------------------------------------------------------
        * Lecture parallele des blocs
@@ -1562,7 +1496,6 @@ PDM_io_par_interlaced_read
        * si acces sequentiel
        *---------------------------------------------------------*/
 
-      PDM_timer_resume(timer_fichier);
 
       int max_n_donnees_bloc = n_donnees_bloc;
 
@@ -1665,7 +1598,6 @@ PDM_io_par_interlaced_read
 	break;
       }
 
-      PDM_timer_hang_on(timer_fichier);
 
       PDM_free(n_donnees_blocs);
 
@@ -1673,7 +1605,6 @@ PDM_io_par_interlaced_read
        * Distribution suivant l'indirection
        *------------------------------------*/
 
-      PDM_timer_resume(timer_distribution);
 
       /* Ordonnancement du buffer pour envoi alltoall */
 
@@ -1864,13 +1795,11 @@ PDM_io_par_interlaced_read
         PDM_free(donnees_tmp);
       }
 
-      PDM_timer_hang_on(timer_distribution);
 
       /* Endianness */
 
       if (fichier->swap_endian) {
 
-        PDM_timer_resume(timer_swap_endian);
         PDM_g_num_t l_donnees = 0;
         if (t_n_composantes == PDM_STRIDE_VAR_INTERLACED) {
           l_donnees = 0;
@@ -1886,10 +1815,8 @@ PDM_io_par_interlaced_read
                      l_donnees,
                      donnees,
                      donnees);
-        PDM_timer_hang_on(timer_swap_endian);
       }
 
-      PDM_timer_resume(timer_distribution);
 
       PDM_free(n_donnees_rangs);       /* n_rangs */
 
@@ -1910,13 +1837,10 @@ PDM_io_par_interlaced_read
         PDM_free(n_composantes_recues);
       }
 
-      PDM_timer_hang_on(timer_distribution);
     }
-    PDM_timer_hang_on(timer_total);
-  }
-
-  else
+  } else {
     err_code = 1;
+  }
 
   if (err_code){
     PDM_error("PDM_io_par_interlaced_read: invalid file");
@@ -1948,21 +1872,12 @@ PDM_io_par_block_read
                 "Unsupported text format");
     }
 
-    PDM_timer_t *timer_total = fichier->timer_total;
-    PDM_timer_t *timer_distribution = fichier->timer_distribution;
-    PDM_timer_t *timer_fichier = fichier->timer_fichier;
-    PDM_timer_t *timer_swap_endian = fichier->timer_swap_endian;
-
-    PDM_timer_resume(timer_total);
-
     /* En acces purement sequentiel sortie en erreur */
-
     /* if (fichier->acces == PDM_IO_KIND_SEQ) { */
 
     /*   PDM_error("Erreur PDM_io_par_block_read :" */
     /*           " Fonction indisponible en acces sequentiel (PDM_IO_KIND_SEQ) \n"); */
     /*   abort(); */
-
     /* } */
 
     if (fichier->n_rangs == 1) {
@@ -1978,20 +1893,11 @@ PDM_io_par_block_read
         l_donnees = _n_composantes * n_donnees;
       }
 
-      PDM_timer_hang_on(timer_total);
-
       PDM_io_global_read(fichier,
                                taille_donnee,
                                l_donnees,
                                donnees);
-
-      PDM_timer_resume(timer_total);
-
-    }
-
-    else {
-
-      PDM_timer_resume(timer_distribution);
+    } else {
 
       PDM_l_num_t n_donnees_bloc_actif = 0;
       PDM_g_num_t debut_bloc_actif    = 0;
@@ -2158,13 +2064,11 @@ PDM_io_par_block_read
         }
       }
 
-      PDM_timer_hang_on(timer_distribution);
 
       /*----------------------------------------------------------
        *  Lecture du buffer
        *----------------------------------------------------------*/
 
-      PDM_timer_resume(timer_fichier);
 
       switch (fichier->acces) {
 
@@ -2292,20 +2196,16 @@ PDM_io_par_block_read
       if (donnees != buffer)
         PDM_free(buffer);
 
-      PDM_timer_hang_on(timer_fichier);
 
       /* Liberation memoire */
 
-      PDM_timer_resume(timer_distribution);
 
-      PDM_timer_hang_on(timer_distribution);
     }
 
     /* Endianness */
 
     if (fichier->swap_endian) {
 
-      PDM_timer_resume(timer_swap_endian);
       PDM_g_num_t l_donnees = 0;
       if (t_n_composantes == PDM_STRIDE_VAR_INTERLACED) {
         l_donnees = 0;
@@ -2322,14 +2222,10 @@ PDM_io_par_block_read
                          donnees,
                          donnees);
 
-      PDM_timer_hang_on(timer_swap_endian);
     }
-
-    PDM_timer_hang_on(timer_total);
-  }
-
-  else
+  } else {
     err_code = 1;
+  }
 
   if (err_code){
     PDM_error("Invalid file");
@@ -2357,24 +2253,14 @@ PDM_io_par_interlaced_write
 
   if (fichier != NULL) {
 
-
-    PDM_timer_t *timer_total = fichier->timer_total;
-    PDM_timer_t *timer_distribution = fichier->timer_distribution;
-    PDM_timer_t *timer_swap_endian = fichier->timer_swap_endian;
-    PDM_timer_t *timer_fichier = fichier->timer_fichier;
-
     PDM_l_num_t _taille_donnee = taille_donnee;
     if (fichier->fmt_t == PDM_IO_FMT_TXT) {
       _taille_donnee = sizeof(char);
     }
 
-    PDM_timer_resume(timer_total);
-
     /* Processus unique : tri local et appel a une ecriture globale */
-
     if (fichier->n_rangs == 1) {
 
-      PDM_timer_resume(timer_distribution);
 
       int            _n_donnees = 0;
       unsigned char* _donnees = (unsigned char*) donnees;
@@ -2431,9 +2317,6 @@ PDM_io_par_interlaced_write
           }
         }
       }
-
-      PDM_timer_hang_on(timer_distribution);
-      PDM_timer_hang_on(timer_total);
 
       if (fichier->fmt_t == PDM_IO_FMT_TXT) {
 
@@ -2554,14 +2437,12 @@ PDM_io_par_interlaced_write
 
         if (fichier->swap_endian) {
 
-          PDM_timer_resume(timer_swap_endian);
 
           PDM_io_swap_endian(taille_donnee,
                              _n_donnees,
                              buffer,
                              buffer);
 
-          PDM_timer_hang_on(timer_swap_endian);
 
         }
 
@@ -2570,15 +2451,7 @@ PDM_io_par_interlaced_write
                             _n_donnees,
                             buffer);
       }
-
-      PDM_timer_resume(timer_total);
-      PDM_free(buffer);
-
-    }
-
-    else {
-
-      PDM_timer_resume(timer_distribution);
+    } else {
 
       /*----------------------------------------------------------
        *  Determination des rangs actifs qui accedent reellement
@@ -3116,24 +2989,20 @@ PDM_io_par_interlaced_write
       PDM_free(blocs_alltoall);
       PDM_free(n_donnees_rangs);
 
-      PDM_timer_hang_on(timer_distribution);
 
       /*----------------------------------------------------------
        *  Ecriture du buffer
        *----------------------------------------------------------*/
 
-      PDM_timer_resume(timer_fichier);
 
       if (fichier->swap_endian && fichier->rang_actif) {
 
-        PDM_timer_resume(timer_swap_endian);
 
         PDM_io_swap_endian(_taille_donnee,
                            n_donnees_bloc,
                            buffer,
                            buffer);
 
-        PDM_timer_hang_on(timer_swap_endian);
 
       }
 
@@ -3219,11 +3088,9 @@ PDM_io_par_interlaced_write
         break;
       }
 
-      PDM_timer_hang_on(timer_fichier);
 
       /* Liberation memoire */
 
-      PDM_timer_resume(timer_distribution);
 
       if (buffer != NULL)
         PDM_free(buffer);
@@ -3231,14 +3098,10 @@ PDM_io_par_interlaced_write
       PDM_free(n_donnees_blocs);       /* n_rangs */
       PDM_free(num_absolue_recues);    /* n_donnees_buffer */
 
-      PDM_timer_hang_on(timer_distribution);
     }
-
-    PDM_timer_hang_on(timer_total);
-  }
-
-  else
+  } else {
     err_code = 1;
+  }
 
   if (err_code){
     PDM_error("Invalid file");
@@ -3267,15 +3130,7 @@ PDM_io_par_block_write
     if (fichier->fmt_t == PDM_IO_FMT_TXT) {
       PDM_error("Unsupported text format");
     }
-
-    PDM_timer_t *timer_total = fichier->timer_total;
-    PDM_timer_t *timer_distribution = fichier->timer_distribution;
-    PDM_timer_t *timer_fichier = fichier->timer_fichier;
-    PDM_timer_t *timer_swap_endian = fichier->timer_swap_endian;
-
     void *_donnees = (void *) donnees;
-
-    PDM_timer_resume(timer_total);
 
     if (fichier->n_rangs == 1) {
 
@@ -3290,19 +3145,15 @@ PDM_io_par_block_write
         l_donnees = _n_composantes * n_donnees;
       }
 
-      PDM_timer_hang_on(timer_total);
-
       if (fichier->swap_endian) {
 
         PDM_malloc(_donnees,l_donnees * taille_donnee,unsigned char);
 
-        PDM_timer_resume(timer_swap_endian);
 
         PDM_io_swap_endian(taille_donnee,
                            l_donnees,
                            donnees,
                            _donnees);
-        PDM_timer_hang_on(timer_swap_endian);
 
       }
 
@@ -3314,13 +3165,8 @@ PDM_io_par_block_write
       if (fichier->swap_endian) {
         PDM_free(_donnees);
       }
-      PDM_timer_resume(timer_total);
+    } else {
 
-    }
-
-    else {
-
-      PDM_timer_resume(timer_distribution);
 
       PDM_l_num_t n_donnees_bloc_actif = 0;
       PDM_g_num_t debut_bloc_actif    = 0;
@@ -3506,13 +3352,11 @@ PDM_io_par_block_write
 
       PDM_free(n_donnees_traitees_rangs);
 
-      PDM_timer_hang_on(timer_distribution);
 
       /*----------------------------------------------------------
        *  Ecriture du buffer
        *----------------------------------------------------------*/
 
-      PDM_timer_resume(timer_fichier);
 
       switch (fichier->acces) {
 
@@ -3526,7 +3370,6 @@ PDM_io_par_block_write
 
           if (fichier->swap_endian) {
 
-            PDM_timer_resume(timer_swap_endian);
 
             if (buffer == donnees) {
               PDM_malloc(_buffer, taille_donnee * n_donnees_bloc_actif, unsigned char);
@@ -3537,7 +3380,6 @@ PDM_io_par_block_write
                                buffer,
                                _buffer);
 
-            PDM_timer_hang_on(timer_swap_endian);
 
           }
 
@@ -3583,7 +3425,6 @@ PDM_io_par_block_write
 
             if (fichier->swap_endian) {
 
-              PDM_timer_resume(timer_swap_endian);
 
               if (buffer == donnees) {
                 PDM_malloc(_buffer,taille_donnee * n_donnees_bloc_actif,unsigned char);
@@ -3594,7 +3435,6 @@ PDM_io_par_block_write
                                  buffer,
                                  _buffer);
 
-              PDM_timer_hang_on(timer_swap_endian);
 
             }
 
@@ -3644,7 +3484,6 @@ PDM_io_par_block_write
 
             if (fichier->swap_endian) {
 
-              PDM_timer_resume(timer_swap_endian);
 
               if (buffer == donnees) {
                 PDM_malloc(_buffer, taille_donnee * n_donnees_bloc_actif, unsigned char);
@@ -3655,7 +3494,6 @@ PDM_io_par_block_write
                                  buffer,
                                  _buffer);
 
-              PDM_timer_hang_on(timer_swap_endian);
 
             }
 
@@ -3681,23 +3519,18 @@ PDM_io_par_block_write
 	break;
       }
 
-      PDM_timer_hang_on(timer_fichier);
 
       /* Liberation memoire */
 
-      PDM_timer_resume(timer_distribution);
 
-      PDM_timer_hang_on(timer_distribution);
     }
 
     if (buffer != donnees)
       PDM_free(buffer);
 
-    PDM_timer_hang_on(timer_total);
-  }
-
-  else
+  } else {
     err_code = 1;
+  }
 
   if (err_code){
     PDM_error("Invalid file");
@@ -3713,13 +3546,6 @@ PDM_io_close
   int err_code = 0;
 
   if (fichier != NULL) {
-
-    PDM_timer_t *timer_total = fichier->timer_total;
-    PDM_timer_t *timer_fichier = fichier->timer_fichier;
-
-    PDM_timer_resume(timer_total);
-    PDM_timer_resume(timer_fichier);
-
     if (fichier->PDM_file_seq != NULL)  {
       PDM_file_seq_close(fichier->PDM_file_seq);
       PDM_free(fichier->PDM_file_seq);
@@ -3767,10 +3593,6 @@ PDM_io_close
         PDM_free(fichier_backup);
       }
     }
-
-    PDM_timer_hang_on(timer_fichier);
-    PDM_timer_hang_on(timer_total);
-
   }
 
   else {
@@ -3801,14 +3623,6 @@ PDM_io_free
   if (fichier != NULL) {
 
     PDM_free(fichier->nom);
-
-    PDM_timer_free(fichier->timer_fichier);
-
-    PDM_timer_free(fichier->timer_distribution);
-
-    PDM_timer_free(fichier->timer_swap_endian);
-
-    PDM_timer_free(fichier->timer_total);
 
     if (fichier->rangs_actifs != NULL) {
       PDM_free(fichier->rangs_actifs);
@@ -3849,13 +3663,12 @@ PDM_io_get_timer_fichier
   int err_code = 0;
 
   if (fichier != NULL) {
-    PDM_timer_t *timer = fichier->timer_fichier;
-    *t_cpu = PDM_timer_cpu(timer);
-    *t_elapsed = PDM_timer_elapsed(timer);
-  }
-
-  else
+    // PDM_timer_t *timer = fichier->timer_fichier;
+    // *t_cpu = PDM_timer_cpu(timer);
+    // *t_elapsed = PDM_timer_elapsed(timer);
+  } else {
     err_code = 1;
+  }
 
   if (err_code){
     PDM_error("Invalid file");
@@ -3874,14 +3687,12 @@ PDM_io_timer_distrib_get
   int err_code = 0;
 
   if (fichier != NULL) {
-
-    PDM_timer_t *timer = fichier->timer_distribution;
-    *t_cpu = PDM_timer_cpu(timer);
-    *t_elapsed = PDM_timer_elapsed(timer);
-  }
-
-  else
+    // PDM_timer_t *timer = fichier->timer_distribution;
+    *t_cpu     = 0.; // PDM_timer_cpu(timer);
+    *t_elapsed = 0.; // PDM_timer_elapsed(timer);
+  } else {
     err_code = 1;
+  }
 
   if (err_code){
     PDM_error("Invalid file");
@@ -3901,13 +3712,12 @@ PDM_io_timer_swap_endian_get
 
   if (fichier != NULL) {
 
-    PDM_timer_t *timer = fichier->timer_swap_endian;
-    *t_cpu = PDM_timer_cpu(timer);
-    *t_elapsed = PDM_timer_elapsed(timer);
-  }
-
-  else
+    // PDM_timer_t *timer = fichier->timer_swap_endian;
+    // *t_cpu = PDM_timer_cpu(timer);
+    // *t_elapsed = PDM_timer_elapsed(timer);
+  } else {
     err_code = 1;
+  }
 
   if (err_code){
     PDM_error("Invalid file");
@@ -3927,13 +3737,13 @@ PDM_io_timer_total_get
 
   if (fichier != NULL) {
 
-    PDM_timer_t *timer = fichier->timer_total;
-    *t_cpu = PDM_timer_cpu(timer);
-    *t_elapsed = PDM_timer_elapsed(timer);
+    // PDM_timer_t *timer = fichier->timer_total;
+    // *t_cpu = PDM_timer_cpu(timer);
+    // *t_elapsed = PDM_timer_elapsed(timer);
 
-  }
-  else
+  } else {
     err_code = 1;
+  }
 
   if (err_code){
     PDM_error("Invalid file");
@@ -4218,15 +4028,8 @@ PDM_io_n_data_get
 
   if (fichier != NULL) {
 
-
-    PDM_timer_t *timer_total = fichier->timer_total;
-    PDM_timer_t *timer_distribution = fichier->timer_distribution;
-
-    PDM_timer_resume(timer_total);
-
     if (fichier->n_rangs == 1) {
 
-      PDM_timer_resume(timer_distribution);
 
       int _n_donnees = 0;
 
@@ -4242,7 +4045,6 @@ PDM_io_n_data_get
         _n_donnees = n_donnees * n_composantes[0];
       }
 
-      PDM_timer_hang_on(timer_distribution);
 
       t_n_donnees = (PDM_g_num_t) _n_donnees;
 
@@ -4250,7 +4052,6 @@ PDM_io_n_data_get
 
     else {
 
-      PDM_timer_resume(timer_distribution);
 
       /*----------------------------------------------------------
        *  Determination des rangs actifs qui accedent reellement
@@ -4463,18 +4264,9 @@ PDM_io_n_data_get
 
 
       }
-
-      PDM_timer_hang_on(timer_distribution);
-
       PDM_free(n_donnees_rangs);
-
     }
-
-    PDM_timer_hang_on(timer_total);
-
-  }
-
-  else {
+  } else {
     err_code = 1;
   }
 

@@ -9,6 +9,7 @@
 #include "pdm_mpi.h"
 #include "pdm_part_mesh_nodal.h"
 #include "pdm_surf_mesh.h"
+#include "pdm_timer.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -249,6 +250,12 @@ PDM_dist_cloud_surf_dump_times
   PDM_dist_cloud_surf_t  *dist
 );
 
+void
+PDM_dist_cloud_surf_timer_set
+(
+  PDM_dist_cloud_surf_t  *dist,
+  PDM_timer_t            *timer
+);
 
 
 /**

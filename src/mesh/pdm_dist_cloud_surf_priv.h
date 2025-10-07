@@ -28,30 +28,9 @@ extern "C" {
  * Type
  *============================================================================*/
 
-#define NTIMER 8
-
 /*============================================================================
  * Type definitions
  *============================================================================*/
-
-/**
- * \enum _ol_timer_step_t
- *
- */
-
-typedef enum {
-
-  BEGIN                         = 0,
-  UPPER_BOUND_DIST              = 1,
-  CANDIDATE_SELECTION           = 2,
-  LOAD_BALANCING_ELEM_DIST      = 3,
-  COMPUTE_ELEM_DIST             = 4,
-  RESULT_TRANSMISSION           = 5,
-  END                           = 6,
-  BBTREE_CREATE                 = 7,
-
-} _ol_timer_step_t;
-
 
 /**
  * \struct PDM_dist_cloud_surf_t
@@ -89,30 +68,19 @@ struct _pdm_dist_cloud_surf_t {
   PDM_surf_mesh_t  *surf_mesh;               /*!< Surface mesh pointer */
   PDM_surf_mesh_t  *_surf_mesh;              /*!< Surface mesh pointer */
 
-  // PDM_Mesh_nodal_t*  mesh_nodal;             /*!< Surface mesh identifier */
-  PDM_part_mesh_nodal_t*  mesh_nodal;       /*!< Nodal mesh identifier */
+  PDM_part_mesh_nodal_t*  mesh_nodal;        /*!< Nodal mesh identifier */
 
   _points_cloud_t *points_cloud;             /*!< Point clouds */
 
   PDM_timer_t *timer;                        /*!< Timer */
 
-  double times_elapsed[NTIMER];              /*!< Elapsed time */
-
-  double times_cpu[NTIMER];                  /*!< CPU time */
-
-  double times_cpu_u[NTIMER];                /*!< User CPU time */
-
-  double times_cpu_s[NTIMER];                /*!< System CPU time */
-
-
-} ;
+};
 
 /*=============================================================================
  * Static global variables
  *============================================================================*/
-#undef NTIMER
 
-#ifdef __cplusplus
+#ifdef  __cplusplus
 }
 #endif /* __cplusplus */
 

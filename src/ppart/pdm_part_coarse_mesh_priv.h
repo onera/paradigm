@@ -31,24 +31,21 @@ extern "C" {
 
 typedef struct  {
 
-  _part_t      *part;        //Coarse mesh
+  _part_t      *part;                        /*!< Coarse mesh */
 
-  int           n_coarse_cell_wanted;    /*!< Number Cell wanted for agglomeration     */
+  int           n_coarse_cell_wanted;        /*!< Number Cell wanted for agglomeration     */
 
-  // int *cell_weight;    /*!< Integer weight for graoh partitionning  */
-  // int *face_weight;    /*!< Number Cell wanted for agglomeration     */
+  int *coarse_cell_cell_idx;                 /*!< Array of indexes of the connected partitions (size : n_coarse_cell + 1) */
 
-  int *coarse_cell_cell_idx;    //Array of indexes of the connected partitions (size : n_coarse_cell + 1)
+  int *coarse_cell_cell;                     /*!< Partitioning array (size : coarse_cell_cell_idx[n_coarse_cell]) */
 
-  int *coarse_cell_cell;       //Partitioning array (size : coarse_cell_cell_idx[n_coarse_cell])
+  int *coarse_face_group_to_fine_face_group; /*!< Coarse face group - fine face group connectivity (size = face_group_idx[n_face_group]) */
 
-  int *coarse_face_group_to_fine_face_group; //Coarse face group - fine face group connectivity (size = face_group_idx[n_face_group])
+  int *coarse_face_to_fine_face;             /*!< Coarse face - fine face connectivity (size = nCoarseFace) */
 
-  int *coarse_face_to_fine_face; //Coarse face - fine face connectivity (size = nCoarseFace)
+  int *coarse_vtx_to_fine_vtx;               /*!< Coarse vertex - fine vertex connectivity (size = nCoarseVtx) */
 
-  int *coarse_vtx_to_fine_vtx;   //Coarse vertex - fine vertex connectivity (size = nCoarseVtx)
-
-  void *specific_data;       /*!< Specific data      */
+  void *specific_data;                       /*!< Specific data      */
 
 } _coarse_part_t;
 
@@ -102,45 +99,15 @@ struct _coarse_mesh_t {
   const int* renum_properties_face;           /*!< Renumbering faces properties  */
 
   //TIMER
-
   PDM_timer_t *timer;             /*!< Timer */
 
-  double times_elapsed [18];          /*!< Elapsed times :
-                                      - Total,
-                                      - build dualgraph,
-                                      - split graph
-                                      - build meshes partition */
-
-  double times_cpu[18];             /*!< CPU times :
-                                      - Total,
-                                      - build dualgraph,
-                                      - split graph
-                                      - build meshes partition */
-
-  double times_cpu_u[18];           /*!< User CPU times :
-                                      - Total,
-                                      - build dualgraph,
-                                      - split graph
-                                      - build meshes partition */
-
-  double times_cpu_s[18];          /*!< Systeme CPU times :
-                                      - Total,
-                                      - build dualgraph,
-                                      - split graph
-                                      - build meshes partition */
-
-
   /* Communicator */
-
   PDM_MPI_Comm  comm;   /*!< Communicator */
 
-  _part_t        **part_ini;               /*!< Partition: fine mesh                            */
+  _part_t        **part_ini;               /*!< Partition: fine mesh    */
+  _coarse_part_t **part_res;               /*!< Partition: coarse mesh  */
 
-  _coarse_part_t **part_res;               //Coarse mesh
-
-
-
-} ;
+};
 
 
 /**
@@ -161,7 +128,6 @@ typedef void (*PDM_coarse_mesh_fct_t) (struct _coarse_mesh_t  *cm,
  * \brief coarse mesh method
  *
  */
-
 typedef struct _renum_method_t {
 
   char                  *name;  /*!< Name of method          */
@@ -180,8 +146,9 @@ typedef struct _renum_method_t {
  * \brief Return an initialized coarse part object
  *
  */
-
-static inline _coarse_part_t *
+static
+inline
+_coarse_part_t*
 _coarse_part_create
 (
 void
@@ -191,17 +158,12 @@ void
   PDM_malloc(cp, 1, _coarse_part_t);
   cp->part = _part_create();
 
-  cp->coarse_cell_cell = NULL;
-
-  cp->coarse_cell_cell_idx = NULL;
-
+  cp->coarse_cell_cell                     = NULL;
+  cp->coarse_cell_cell_idx                 = NULL;
   cp->coarse_face_group_to_fine_face_group = NULL;
-
-  cp->coarse_face_to_fine_face = NULL;
-
-  cp->coarse_vtx_to_fine_vtx = NULL;
-
-  cp->specific_data = NULL;
+  cp->coarse_face_to_fine_face             = NULL;
+  cp->coarse_vtx_to_fine_vtx               = NULL;
+  cp->specific_data                        = NULL;
 
   return cp;
 
@@ -226,9 +188,9 @@ void
 int
 PDM_coarse_mesh_method_add
 (
- const char                 *name,     /*!< Name          */
- PDM_coarse_mesh_fct_t       fct       /*!< Function      */
- );
+  const char                   *name,
+        PDM_coarse_mesh_fct_t   fct
+);
 
 
 /**
@@ -243,8 +205,8 @@ PDM_coarse_mesh_method_add
 int
 PDM_coarse_mesh_method_idx_get
 (
-const char *name
- );
+  const char *name
+);
 
 
 /**
@@ -259,16 +221,16 @@ const char *name
 void
 PDM_coarse_mesh_method_name_get_cf
 (
- const int  idx,
- char      *name,
- int       *l_name
- );
+  const int  idx,
+  char      *name,
+  int       *l_name
+);
 
 char *
 PDM_coarse_mesh_method_name_get
 (
-const int id
- );
+  const int id
+);
 
 
 /**
@@ -278,11 +240,10 @@ const int id
  * \return Number of methods
  *
  */
-
 int
 PDM_coarse_mesh_method_n_get
 (
-void
+  void
 );
 
 
@@ -291,41 +252,22 @@ void
  * \brief Purge coarse mesh methods catalog
  *
  */
-
 void
 PDM_coarse_mesh_method_purge
 (
-void
- );
-
+  void
+);
 
 /**
  *
  * \brief Load local coarse mesh methods
  *
  */
-
 void
 PDM_coarse_mesh_method_load_local
 (
-void
- );
-
-
-/**
- *
- * \brief Return coarse mesh object from its identifier
- *
- * \param [in]   cmId        Coarse mesh identifier
- *
- */
-
-// _coarse_mesh_t *
-// PDM_part_coarse_mesh_get_from_id
-// (
-//  int  cmId
-//  );
-
+  void
+);
 
 #ifdef	__cplusplus
 }

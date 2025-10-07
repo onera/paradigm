@@ -31,7 +31,6 @@
 #include "pdm_printf.h"
 #include "pdm_priv.h"
 #include "pdm_sort.h"
-#include "pdm_timer.h"
 
 
 /*=============================================================================
@@ -42,24 +41,6 @@
  * Type
  *============================================================================*/
 
-/**
- * \enum _ptb_timer_step_t
- *
- */
-
-typedef enum {
-
-  MALLOC_ACTIVE_RANKS    = 0, // Initialisation step in Part-to-Block creation
-  GENERATE_DISTRIB       = 1, // Block-distribution generation step in Part-to-Block creation
-  BINARY_SEARCH          = 2, // Binary search step in Part-to-Block creation
-  CREATE_EXCHANGE        = 3, // Collective communication step in Part-to-Block creation
-  BLOCK_POST             = 4, // Post-processing step in Part-to-Block creation
-  GLOBAL_WEIGHTS         = 5, // Global weight computation step in Part-to-Block creation
-  CREATE_FROM_DISTRIB    = 6, // Part-to-Block creation from provided distribution
-  CREATE_GEOM            = 7, // Geometric Part-to-Block creation
-  DATA_EXCHANGE          = 8  // Collective communication step in Part-to-Block data exchange
-
-} _ptb_timer_step_t;
 
 /*=============================================================================
  * Static global variables
@@ -86,23 +67,6 @@ static const int _sampling_factors[4] = {1, /* OD */
  *  https://stackoverflow.com/questions/1856599/when-to-use-static-keyword-before-global-variables
  */
 
-// Store timers
-PDM_timer_t *t_timer[NTIMER_PTB] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
-
-// Timer step by step
-double t_elaps[NTIMER_PTB] = {0., 0., 0., 0., 0., 0., 0., 0., 0.};
-double t_cpu[NTIMER_PTB] = {0., 0., 0., 0., 0., 0., 0., 0., 0.};
-
-int min_exch_rank[2] = {INT_MAX, INT_MAX};
-int max_exch_rank[2] = {-1, -1};
-
-unsigned long long exch_data[2] = {0, 0};
-
-// Number of Part-to-Block instances in a run
-int n_ptb = 0;
-
-// Number of create Part-to-Block instances
-int n_ptb_open = 0;
 
 /*=============================================================================
  * Static function definitions
@@ -179,7 +143,6 @@ _counting_sort_long
  * \param [inout]   ptb          Part to block structure
  *
  */
-
 static void
 _active_ranks
 (
@@ -304,10 +267,6 @@ _distrib_data
  int                  user_distrib
 )
 {
-  double t1_elaps = PDM_timer_elapsed(t_timer[GENERATE_DISTRIB]);
-  double t1_cpu   = PDM_timer_cpu    (t_timer[GENERATE_DISTRIB]);
-  PDM_timer_resume(t_timer[GENERATE_DISTRIB]);
-
   PDM_g_num_t _id_max     = 0;
   PDM_g_num_t _id_max_max = 0;
 
@@ -322,10 +281,7 @@ _distrib_data
     }
   }
 
-
-
   if(user_distrib == 0) {
-
     PDM_MPI_Allreduce (&_id_max,
                        &_id_max_max,
                        1,
@@ -366,10 +322,7 @@ _distrib_data
 
         }
       }
-
-    }
-
-    else {
+    } else {
       const int dim = 2;
       const int  n_active_ranks = ptb->n_active_ranks;
       const int  sampling_factor = _sampling_factors[dim];
@@ -424,17 +377,6 @@ _distrib_data
     }
   }
 
-  PDM_timer_hang_on(t_timer[GENERATE_DISTRIB]);
-  double t2_elaps = PDM_timer_elapsed(t_timer[GENERATE_DISTRIB]);
-  double t2_cpu   = PDM_timer_cpu    (t_timer[GENERATE_DISTRIB]);
-
-  t_elaps[GENERATE_DISTRIB] += (t2_elaps - t1_elaps);
-  t_cpu  [GENERATE_DISTRIB] += (t2_cpu   - t1_cpu  );
-
-  double t3_elaps = PDM_timer_elapsed(t_timer[BINARY_SEARCH]);
-  double t3_cpu   = PDM_timer_cpu    (t_timer[BINARY_SEARCH]);
-  PDM_timer_resume(t_timer[BINARY_SEARCH]);
-
   PDM_malloc(ptb->n_send_data, ptb->s_comm, int);
   PDM_malloc(ptb->n_recv_data, ptb->s_comm, int);
 
@@ -442,7 +384,6 @@ _distrib_data
   PDM_malloc(ptb->dest_proc, ptb->n_elt_proc, int);
 
   /* Calcul du nombre de donnees a envoyer a chaque procesus */
-
   for (int i = 0; i < ptb->s_comm; i++) {
     ptb->n_send_data[i] = 0;
   }
@@ -463,17 +404,6 @@ _distrib_data
       ptb->n_send_data[iproc] += 1;
     }
   }
-
-  PDM_timer_hang_on(t_timer[BINARY_SEARCH]);
-  double t4_elaps = PDM_timer_elapsed(t_timer[BINARY_SEARCH]);
-  double t4_cpu   = PDM_timer_cpu    (t_timer[BINARY_SEARCH]);
-
-  t_elaps[BINARY_SEARCH] += (t4_elaps - t3_elaps);
-  t_cpu  [BINARY_SEARCH] += (t4_cpu   - t3_cpu  );
-
-  double t5_elaps = PDM_timer_elapsed(t_timer[CREATE_EXCHANGE]);
-  double t5_cpu   = PDM_timer_cpu    (t_timer[CREATE_EXCHANGE]);
-  PDM_timer_resume(t_timer[CREATE_EXCHANGE]);
 
   PDM_MPI_Alltoall (ptb->n_send_data, 1, PDM_MPI_INT,
                     ptb->n_recv_data, 1, PDM_MPI_INT,
@@ -531,9 +461,7 @@ _distrib_data
                       ptb->i_recv_data,
                       PDM__PDM_MPI_G_NUM,
                       ptb->comm);
-  }
-
-  else {
+  } else {
 
     PDM_MPI_Alltoallv_p2p(send_gnum,
                           ptb->n_send_data,
@@ -548,17 +476,6 @@ _distrib_data
   }
 
   PDM_free(send_gnum);
-
-  PDM_timer_hang_on(t_timer[CREATE_EXCHANGE]);
-  double t6_elaps = PDM_timer_elapsed(t_timer[CREATE_EXCHANGE]);
-  double t6_cpu   = PDM_timer_cpu    (t_timer[CREATE_EXCHANGE]);
-
-  t_elaps[CREATE_EXCHANGE] += (t6_elaps - t5_elaps);
-  t_cpu  [CREATE_EXCHANGE] += (t6_cpu   - t5_cpu  );
-
-  double t7_elaps = PDM_timer_elapsed(t_timer[BLOCK_POST]);
-  double t7_cpu   = PDM_timer_cpu    (t_timer[BLOCK_POST]);
-  PDM_timer_resume(t_timer[BLOCK_POST]);
 
   /*
    * Sort
@@ -665,13 +582,6 @@ _distrib_data
       ptb->idx_partial[i] = idx_in_partial_block;
     }
   }
-
-  PDM_timer_hang_on(t_timer[BLOCK_POST]);
-  double t8_elaps = PDM_timer_elapsed(t_timer[BLOCK_POST]);
-  double t8_cpu   = PDM_timer_cpu    (t_timer[BLOCK_POST]);
-
-  t_elaps[BLOCK_POST] += (t8_elaps - t7_elaps);
-  t_cpu  [BLOCK_POST] += (t8_cpu   - t7_cpu  );
 }
 
 static
@@ -1421,20 +1331,6 @@ _ptb_create
  PDM_MPI_Comm                  comm
 )
 {
-  if (n_ptb == 0) {
-    t_timer[MALLOC_ACTIVE_RANKS] = PDM_timer_create (); // Warning : unused for now because negligable
-    t_timer[GENERATE_DISTRIB   ] = PDM_timer_create ();
-    t_timer[BINARY_SEARCH      ] = PDM_timer_create ();
-    t_timer[CREATE_EXCHANGE    ] = PDM_timer_create ();
-    t_timer[BLOCK_POST         ] = PDM_timer_create ();
-    t_timer[GLOBAL_WEIGHTS     ] = PDM_timer_create ();
-    t_timer[DATA_EXCHANGE      ] = PDM_timer_create ();
-    t_timer[CREATE_FROM_DISTRIB] = PDM_timer_create ();
-    t_timer[CREATE_GEOM        ] = PDM_timer_create ();
-  }
-  n_ptb++;
-  n_ptb_open++;
-
   PDM_part_to_block_t *ptb;
   PDM_malloc(ptb, 1, PDM_part_to_block_t);
 
@@ -2253,387 +2149,9 @@ _post_treatment_reverse
   }
 }
 
-
-
-
-
 /*=============================================================================
  * Public function definitions
  *============================================================================*/
-
-/**
- *
- * \brief Reset global statistic
- *
- */
-
-void
-PDM_part_to_block_global_statistic_reset
-(
-  void
-)
-{
-  for (int i = 0; i < NTIMER_PTB; i++) {
-    t_elaps[i] = 0;
-    t_cpu[i] = 0;
-  }
-
-  for (int i = 0; i < 2; i++) {
-    min_exch_rank[i] = INT_MAX;
-    max_exch_rank[i] = -1;
-    exch_data[i] = 0;
-  }
-}
-
-
-/**
- *
- * \brief Get global timer in part to block
- *
- * \param [in]   comm                 MPI communicator
- * \param [out]  min_exch_rank_send   Global min part of ranks used to send
- * \param [out]  min_exch_rank_recv   Global min part of ranks used to receive
- * \param [out]  max_exch_rank_send   Global max part of ranks used to send
- * \param [out]  max_exch_rank_recv   Global max part of ranks used to receive
- * \param [out]  min_exch_data_send   Global min sent data for a rank
- * \param [out]  min_exch_data_recv   Global min received data for a rank
- * \param [out]  max_exch_data_send   Global max sent data for a rank
- * \param [out]  max_exch_data_recv   Global max received data for a rank
- *
- */
-
-void
-PDM_part_to_block_global_statistic_get
-(
- PDM_MPI_Comm comm,
- int *min_exch_rank_send,
- int *min_exch_rank_recv,
- int *max_exch_rank_send,
- int *max_exch_rank_recv,
- unsigned long long *min_exch_data_send,
- unsigned long long *min_exch_data_recv,
- unsigned long long *max_exch_data_send,
- unsigned long long *max_exch_data_recv
-)
-{
-  unsigned long long max_exch_data[2];
-  unsigned long long min_exch_data[2];
-
-  PDM_MPI_Allreduce (exch_data, min_exch_data, 2,
-                     PDM_MPI_UNSIGNED_LONG_LONG, PDM_MPI_MIN, comm);
-
-  PDM_MPI_Allreduce (exch_data, max_exch_data, 2,
-                     PDM_MPI_UNSIGNED_LONG_LONG, PDM_MPI_MAX, comm);
-
-  *min_exch_data_send = min_exch_data[0];
-  *min_exch_data_recv = min_exch_data[1];
-  *max_exch_data_send = max_exch_data[0];
-  *max_exch_data_recv = max_exch_data[1];
-
-
-  int max_max_exch_rank[2];
-  int min_min_exch_rank[2];
-
-  PDM_MPI_Allreduce (min_exch_rank, min_min_exch_rank, 2,
-                     PDM_MPI_INT, PDM_MPI_MIN, comm);
-
-  PDM_MPI_Allreduce (max_exch_rank, max_max_exch_rank, 2,
-                     PDM_MPI_INT, PDM_MPI_MAX, comm);
-
-  *min_exch_rank_send = min_min_exch_rank[0];
-  *min_exch_rank_recv = min_min_exch_rank[1];
-  *max_exch_rank_send = max_max_exch_rank[0];
-  *max_exch_rank_recv = max_max_exch_rank[1];
-
-}
-
-
-/**
- *
- * \brief Get global timer in part to block
- *
- * \param [in]   comm              MPI communicator
- * \param [out]  min_elaps         Min elapsed time
- * \param [out]  max_elaps         Max elapsed time
- * \param [out]  min_cpu           Min cpu time
- * \param [out]  max_cpu           Max cpu time
- * \param [out]  min_elaps_create  Global min elapsed for create function
- * \param [out]  max_elaps_create  Global max elapsed for create function
- * \param [out]  min_cpu_create    Global min cpu for create function
- * \param [out]  max_cpu_create    Global max cpu for create function
- * \param [out]  min_elaps_create2 Global min elapsed for create2 function
- * \param [out]  max_elaps_create2 Global max elapsed for create2 function
- * \param [out]  min_cpu_create2   Global min cpu for create2 function
- * \param [out]  max_cpu_create2   Global max cpu for create2 function
- * \param [out]  min_elaps_exch    Global min elapsed for exch function
- * \param [out]  max_elaps_exch    Global max elapsed for exch function
- * \param [out]  min_cpu_exch      Global min cpu for exch function
- * \param [out]  max_cpu_exch      Global max cpu for exch function
- *
- */
-
-void
-PDM_part_to_block_global_timer_get
-(
- PDM_MPI_Comm comm,
- double       *min_elaps_create,
- double       *max_elaps_create,
- double       *min_cpu_create,
- double       *max_cpu_create,
- double       *min_elaps_create2,
- double       *max_elaps_create2,
- double       *min_cpu_create2,
- double       *max_cpu_create2,
- double       *min_elaps_exch,
- double       *max_elaps_exch,
- double       *min_cpu_exch,
- double       *max_cpu_exch
-)
-{
-
-  double min_elaps[NTIMER_PTB];
-  double max_elaps[NTIMER_PTB];
-  double min_cpu[NTIMER_PTB];
-  double max_cpu[NTIMER_PTB];
-
-  PDM_MPI_Allreduce (t_elaps, min_elaps, NTIMER_PTB,
-                     PDM_MPI_DOUBLE, PDM_MPI_MIN, comm);
-
-  PDM_MPI_Allreduce (t_elaps, max_elaps, NTIMER_PTB,
-                     PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
-
-  PDM_MPI_Allreduce (t_cpu, min_cpu, NTIMER_PTB,
-                     PDM_MPI_DOUBLE, PDM_MPI_MIN, comm);
-
-  PDM_MPI_Allreduce (t_cpu, max_cpu, NTIMER_PTB,
-                     PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
-
-  // Part-to-Block creation with block-distribution generation
-  *min_elaps_create  = min_elaps[MALLOC_ACTIVE_RANKS] + min_elaps[GENERATE_DISTRIB] + min_elaps[BINARY_SEARCH] + min_elaps[CREATE_EXCHANGE] + min_elaps[BLOCK_POST] + min_elaps[GLOBAL_WEIGHTS];
-  *max_elaps_create  = max_elaps[MALLOC_ACTIVE_RANKS] + max_elaps[GENERATE_DISTRIB] + max_elaps[BINARY_SEARCH] + max_elaps[CREATE_EXCHANGE] + max_elaps[BLOCK_POST] + max_elaps[GLOBAL_WEIGHTS];
-  *min_cpu_create    = min_cpu[MALLOC_ACTIVE_RANKS]   + min_cpu[GENERATE_DISTRIB]   + min_cpu[BINARY_SEARCH]   + min_cpu[CREATE_EXCHANGE]   + min_cpu[BLOCK_POST]   + min_cpu[GLOBAL_WEIGHTS]  ;
-  *max_cpu_create    = max_cpu[MALLOC_ACTIVE_RANKS]   + max_cpu[GENERATE_DISTRIB]   + max_cpu[BINARY_SEARCH]   + max_cpu[CREATE_EXCHANGE]   + max_cpu[BLOCK_POST]   + max_cpu[GLOBAL_WEIGHTS]  ;
-  // Part-to-Block creation with user provided block-distribution
-  *min_elaps_create2 = min_elaps[CREATE_FROM_DISTRIB];
-  *max_elaps_create2 = max_elaps[CREATE_FROM_DISTRIB];
-  *min_cpu_create2   = min_cpu[CREATE_FROM_DISTRIB];
-  *max_cpu_create2   = max_cpu[CREATE_FROM_DISTRIB];
-  // Warning : Geometric Part-to-Block creation is not outputed while exchanges are counted
-  // Data exchange
-  *min_elaps_exch    = min_elaps[DATA_EXCHANGE];
-  *max_elaps_exch    = max_elaps[DATA_EXCHANGE];
-  *min_cpu_exch      = min_cpu[DATA_EXCHANGE];
-  *max_cpu_exch      = max_cpu[DATA_EXCHANGE];
-
-}
-
-/**
- *
- * \brief Global write part-to-block step timer
- *
- * \param [in]  comm            MPI communicator
- * \param [in]  filename        File name
- *
- */
-
-void
-PDM_part_to_block_time_per_step_dump
-(
- PDM_MPI_Comm  comm,
- const char   *filename
-)
-{
-  // Write in parallel
-  PDM_io_file_t *writer = NULL;
-  PDM_l_num_t    ierr;
-
-  PDM_io_open(filename,
-              PDM_IO_FMT_BIN,
-              PDM_IO_SUFF_MAN,
-              "",
-              PDM_IO_BACKUP_OFF,
-              PDM_IO_KIND_MPI_SIMPLE,
-              PDM_IO_MOD_APPEND,
-              PDM_IO_NATIVE,
-              comm,
-              -1.,
-              &writer,
-              &ierr);
-
-  // MPI
-  int n_rank = 0;
-  PDM_MPI_Comm_size (comm, &n_rank);
-
-  // Create timer statistics
-  double min_elaps[NTIMER_PTB];
-  double mean_elaps[NTIMER_PTB];
-  double max_elaps[NTIMER_PTB];
-  double min_cpu[NTIMER_PTB];
-  double mean_cpu[NTIMER_PTB];
-  double max_cpu[NTIMER_PTB];
-
-  PDM_MPI_Allreduce (t_elaps, min_elaps, NTIMER_PTB,
-                     PDM_MPI_DOUBLE, PDM_MPI_MIN, comm);
-
-  PDM_MPI_Allreduce (t_elaps, mean_elaps, NTIMER_PTB,
-                     PDM_MPI_DOUBLE, PDM_MPI_SUM, comm);
-
-  PDM_MPI_Allreduce (t_elaps, max_elaps, NTIMER_PTB,
-                     PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
-
-  PDM_MPI_Allreduce (t_cpu, min_cpu, NTIMER_PTB,
-                     PDM_MPI_DOUBLE, PDM_MPI_MIN, comm);
-
-  PDM_MPI_Allreduce (t_cpu, mean_cpu, NTIMER_PTB,
-                     PDM_MPI_DOUBLE, PDM_MPI_SUM, comm);
-
-  PDM_MPI_Allreduce (t_cpu, max_cpu, NTIMER_PTB,
-                     PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
-
-  for (int i_step = 0; i_step < NTIMER_PTB; i_step++) {
-    min_elaps[i_step]  /= n_ptb_open;
-    mean_elaps[i_step] /= n_ptb_open;
-    max_elaps[i_step]  /= n_ptb_open;
-
-    min_cpu[i_step]  /= n_ptb_open;
-    mean_cpu[i_step] /= n_ptb_open;
-    max_cpu[i_step]  /= n_ptb_open;
-
-    mean_elaps[i_step] /= n_rank;
-    mean_cpu[i_step]   /= n_rank;
-  } // end loop on timed steps
-
-  // Global write times
-  size_t s_buffer = 436; // buffer size for %.5f + 1
-  char *buffer;
-  PDM_malloc(buffer, s_buffer, char);
-
-  for (int i = 0; i < (int) s_buffer; i++) {
-    buffer[i] = '\0';
-  }
-
-  sprintf(buffer, "generate_distrib elaps %.5f %.5f %.5f cpu %.5f %.5f %.5f\n", min_elaps[GENERATE_DISTRIB], mean_elaps[GENERATE_DISTRIB], max_elaps[GENERATE_DISTRIB], min_cpu[GENERATE_DISTRIB], mean_cpu[GENERATE_DISTRIB], max_cpu[GENERATE_DISTRIB]);
-
-  sprintf(buffer + strlen(buffer), "binary_search elaps %.5f %.5f %.5f cpu %.5f %.5f %.5f\n", min_elaps[BINARY_SEARCH], mean_elaps[BINARY_SEARCH], max_elaps[BINARY_SEARCH], min_cpu[BINARY_SEARCH], mean_cpu[BINARY_SEARCH], max_cpu[BINARY_SEARCH]);
-
-  sprintf(buffer + strlen(buffer), "create_exchange elaps %.5f %.5f %.5f cpu %.5f %.5f %.5f\n", min_elaps[CREATE_EXCHANGE], mean_elaps[CREATE_EXCHANGE], max_elaps[CREATE_EXCHANGE], min_cpu[CREATE_EXCHANGE], mean_cpu[CREATE_EXCHANGE], max_cpu[CREATE_EXCHANGE]);
-
-  sprintf(buffer + strlen(buffer), "block_post elaps %.5f %.5f %.5f cpu %.5f %.5f %.5f\n", min_elaps[BLOCK_POST], mean_elaps[BLOCK_POST], max_elaps[BLOCK_POST], min_cpu[BLOCK_POST], mean_cpu[BLOCK_POST], max_cpu[BLOCK_POST]);
-
-  sprintf(buffer + strlen(buffer), "global_weights elaps %.5f %.5f %.5f cpu %.5f %.5f %.5f\n", min_elaps[GLOBAL_WEIGHTS], mean_elaps[GLOBAL_WEIGHTS], max_elaps[GLOBAL_WEIGHTS], min_cpu[GLOBAL_WEIGHTS], mean_cpu[GLOBAL_WEIGHTS], max_cpu[GLOBAL_WEIGHTS]);
-
-  // Warning : Geometric Part-to-Block creation is not outputed while exchanges are counted
-  sprintf(buffer + strlen(buffer), "data_exchange elaps %.5f %.5f %.5f cpu %.5f %.5f %.5f\n", min_elaps[DATA_EXCHANGE], mean_elaps[DATA_EXCHANGE], max_elaps[DATA_EXCHANGE], min_cpu[DATA_EXCHANGE], mean_cpu[DATA_EXCHANGE], max_cpu[DATA_EXCHANGE]);
-
-  PDM_io_global_write(writer,
-                      (PDM_l_num_t) sizeof(char),
-                      (PDM_l_num_t) s_buffer,
-                      buffer);
-
-  PDM_free(buffer);
-
-  // Finalize parallel write
-  PDM_io_close(writer);
-  PDM_io_free(writer);
-}
-
-/**
- *
- * \brief Write in parallel communication graph
- *
- * \param [in]  ptb             Part-to-Block structure
- * \param [in]  filename        File name
- *
- */
-
-void
-PDM_part_to_block_comm_graph_dump
-(
- PDM_part_to_block_t *ptb,
- const char          *filename
-)
-{
-  // Write in parallel
-  PDM_io_file_t *writer = NULL;
-  PDM_l_num_t    ierr;
-
-  PDM_io_open(filename,
-              PDM_IO_FMT_BIN,
-              PDM_IO_SUFF_MAN,
-              "",
-              PDM_IO_BACKUP_OFF,
-              PDM_IO_KIND_MPI_SIMPLE,
-              PDM_IO_MOD_WRITE,
-              PDM_IO_NATIVE,
-              ptb->comm,
-              -1.,
-              &writer,
-              &ierr);
-
-  // Create a node identifier
-  PDM_MPI_Comm shared_comm = PDM_MPI_COMM_WORLD;
-
-  PDM_MPI_Comm_split_type(ptb->comm, PDM_MPI_SPLIT_SHARED, &shared_comm);
-
-  int i_shared_rank = 0;
-  PDM_MPI_Comm_rank(shared_comm, &i_shared_rank);
-
-  int bcast_buffer = 0;
-  if (i_shared_rank == 0) {
-    bcast_buffer = ptb->i_rank;
-  }
-  PDM_MPI_Bcast(&bcast_buffer, 1, PDM_MPI_INT32_T, 0, shared_comm);
-
-  // Block write i_rank, node and number of send data
-  int s_buffer = ptb->s_comm * 11 + 40 + 2 + 1; // (10 + 1 space) * n_rank + chaine + space + \n + 1
-  char *buffer;
-  PDM_malloc(buffer, s_buffer, char);
-
-  for (int i = 0; i < (int) s_buffer; i++) {
-    buffer[i] = '\0';
-  }
-
-  sprintf(buffer, "i_rank %10d\nnode %10d\nn_send", ptb->i_rank, bcast_buffer);
-
-  for (int j_rank = 0; j_rank < ptb->s_comm; j_rank++) {
-    sprintf(buffer + strlen(buffer), " %10d", ptb->n_send_data[j_rank]);
-  } // end loop on n_rank
-  sprintf(buffer + strlen(buffer), " \n");
-
-  PDM_l_num_t one = 1;
-  PDM_g_num_t i_rank_gnum = (PDM_g_num_t) (ptb->i_rank+1);
-  PDM_io_par_interlaced_write(writer,
-                              PDM_STRIDE_VAR_INTERLACED,
-                              (PDM_l_num_t *) &s_buffer,
-                              (PDM_l_num_t) sizeof(char),
-                              one,
-                              &i_rank_gnum,
-                              (const void *) buffer);
-
-  PDM_free(buffer);
-
-  // Finalize parallel write
-  PDM_io_close(writer);
-  PDM_io_free(writer);
-}
-
-
-/**
- *
- * \brief Create a partitioning to block redistribution
- *
- * \param [in]   t_distrib       Distribution type
- * \param [in]   t_post          Post processing type
- * \param [in]   part_active_node  Part of active nodes (\ref PDM_writer_BLOCK_DISTRIB_PART_OF_NODE mode)
- * \param [in]   gnum_elt        Element global number
- * \param [in]   weight          Weight of elements (or NULL)
- * \param [in]   n_elt           Local number of elements
- * \param [in]   n_part          Number of partition
- * \param [in]   comm            MPI communicator
- *
- * \return   Initialized PDM_part_to_block_t
- *
- */
 
 PDM_part_to_block_t *
 PDM_part_to_block_create
@@ -2672,58 +2190,12 @@ PDM_part_to_block_create
   /*
    * Compute global weight for each element
    */
-  double t1_elaps = PDM_timer_elapsed(t_timer[GLOBAL_WEIGHTS]);
-  double t1_cpu   = PDM_timer_cpu    (t_timer[GLOBAL_WEIGHTS]);
-  PDM_timer_resume(t_timer[GLOBAL_WEIGHTS]);
-
   if (ptb->weight != NULL) {// && ptb->t_post == PDM_PART_TO_BLOCK_POST_MERGE) {
     _compute_global_weights (ptb);
   }
 
-  PDM_timer_hang_on(t_timer[GLOBAL_WEIGHTS]);
-  double t2_elaps = PDM_timer_elapsed(t_timer[GLOBAL_WEIGHTS]);
-  double t2_cpu   = PDM_timer_cpu    (t_timer[GLOBAL_WEIGHTS]);
-
-  t_elaps[GLOBAL_WEIGHTS] += (t2_elaps - t1_elaps);
-  t_cpu  [GLOBAL_WEIGHTS] += (t2_cpu   - t1_cpu  );
-
-  int n_rank_recv = 0;
-  int n_rank_send = 0;
-
-  for (int i = 0; i < ptb->s_comm; i++) {
-    if (ptb->i_rank != i && ptb->n_recv_data[i] > 0) {
-      n_rank_recv += 1;
-    }
-    if (ptb->i_rank != i && ptb->n_send_data[i] > 0) {
-      n_rank_send += 1;
-    }
-  }
-
-  max_exch_rank[0] = PDM_MAX(max_exch_rank[0], n_rank_send);
-  max_exch_rank[1] = PDM_MAX(max_exch_rank[1], n_rank_recv);
-  min_exch_rank[0] = PDM_MIN(min_exch_rank[0], n_rank_send);
-  min_exch_rank[1] = PDM_MIN(min_exch_rank[1], n_rank_recv);
-
   return (PDM_part_to_block_t *) ptb;
 }
-
-
-/**
- *
- * \brief Create a partitioning to block redistribution
- *
- * \param [in]   t_distrib       Distribution type
- * \param [in]   t_post          Post processing type
- * \param [in]   part_active_node  Part of active nodes (\ref PDM_writer_BLOCK_DISTRIB_PART_OF_NODE mode)
- * \param [in]   gnum_elt        Element global number
- * \param [in]   weight          Weight of elements (or NULL)
- * \param [in]   n_elt           Local number of elements
- * \param [in]   n_part          Number of partition
- * \param [in]   comm            MPI communicator
- *
- * \return   Initialized PDM_part_to_block_t
- *
- */
 
 PDM_part_to_block_t *
 PDM_part_to_block_create_from_distrib
@@ -2741,9 +2213,6 @@ PDM_part_to_block_create_from_distrib
   /*
    * Common creation
    */
-
-  // Warning : timing of _ptb_create not considered because induces issues
-
   PDM_part_to_block_t* ptb = _ptb_create(t_distrib,
                                          t_post,
                                          part_active_node,
@@ -2752,10 +2221,6 @@ PDM_part_to_block_create_from_distrib
                                          n_elt,
                                          n_part,
                                          comm);
-
-  double t1_elaps = PDM_timer_elapsed(t_timer[CREATE_FROM_DISTRIB]);
-  double t1_cpu = PDM_timer_cpu(t_timer[CREATE_FROM_DISTRIB]);
-  PDM_timer_resume(t_timer[CREATE_FROM_DISTRIB]);
 
   for(int i_rank = 0; i_rank < ptb->s_comm+1; i_rank++){
     ptb->data_distrib_index[i_rank] = data_distrib_index[i_rank];
@@ -2766,51 +2231,9 @@ PDM_part_to_block_create_from_distrib
    */
   _distrib_data (ptb, 1);
 
-  PDM_timer_hang_on(t_timer[CREATE_FROM_DISTRIB]);
-  double t2_elaps = PDM_timer_elapsed(t_timer[CREATE_FROM_DISTRIB]);
-  double t2_cpu   = PDM_timer_cpu    (t_timer[CREATE_FROM_DISTRIB]);
-
-  t_elaps[CREATE_FROM_DISTRIB] += (t2_elaps - t1_elaps);
-  t_cpu  [CREATE_FROM_DISTRIB] += (t2_cpu   - t1_cpu);
-
-  int n_rank_recv = 0;
-  int n_rank_send = 0;
-
-
-  for (int i = 0; i < ptb->s_comm; i++) {
-    if (ptb->i_rank != i && ptb->n_recv_data[i] > 0) {
-      n_rank_recv += 1;
-    }
-    if (ptb->i_rank != i && ptb->n_send_data[i] > 0) {
-      n_rank_send += 1;
-    }
-  }
-
-  max_exch_rank[0] = PDM_MAX(max_exch_rank[0], n_rank_send);
-  max_exch_rank[1] = PDM_MAX(max_exch_rank[1], n_rank_recv);
-  min_exch_rank[0] = PDM_MIN(min_exch_rank[0], n_rank_send);
-  min_exch_rank[1] = PDM_MIN(min_exch_rank[1], n_rank_recv);
-
   return (PDM_part_to_block_t *) ptb;
 }
 
-
-/**
- *
- * \brief Create a partitioning to block redistribution
- *
- * \param [in]   t_distrib       Distribution type
- * \param [in]   t_post          Post processing type
- * \param [in]   part_active_node  Part of active nodes (\ref PDM_writer_BLOCK_DISTRIB_PART_OF_NODE mode)
- * \param [in]   gnum_elt        Element global number
- * \param [in]   weight          Weight of elements (or NULL)
- * \param [in]   n_elt           Local number of elements
- * \param [in]   n_part          Number of partition
- * \param [in]   comm            MPI communicator
- *
- * \return   Initialized PDM_part_to_block_t
- *
- */
 
 PDM_part_to_block_t *
 PDM_part_to_block_geom_create
@@ -2830,9 +2253,6 @@ PDM_part_to_block_geom_create
   /*
    * Common creation
    */
-
-  // Warning : timing of _ptb_create not considered because induces issues
-
   PDM_part_to_block_t* ptb = _ptb_create(t_distrib,
                                          t_post,
                                          part_active_node,
@@ -2841,10 +2261,6 @@ PDM_part_to_block_geom_create
                                          n_elt,
                                          n_part,
                                          comm);
-
-  double t1_elaps = PDM_timer_elapsed(t_timer[CREATE_GEOM]);
-  double t1_cpu = PDM_timer_cpu(t_timer[CREATE_GEOM]);
-  PDM_timer_resume(t_timer[CREATE_GEOM]);
 
   if(geom_kind == PDM_PART_GEOM_HILBERT ) {
     _distrib_data_hilbert(ptb, pvtx_coords, weight);
@@ -2859,42 +2275,8 @@ PDM_part_to_block_geom_create
     _compute_global_weights (ptb);
   }
 
-  int n_rank_recv = 0;
-  int n_rank_send = 0;
-
-  for (int i = 0; i < ptb->s_comm; i++) {
-    if (ptb->i_rank != i && ptb->n_recv_data[i] > 0) {
-      n_rank_recv += 1;
-    }
-    if (ptb->i_rank != i && ptb->n_send_data[i] > 0) {
-      n_rank_send += 1;
-    }
-  }
-
-  max_exch_rank[0] = PDM_MAX(max_exch_rank[0], n_rank_send);
-  max_exch_rank[1] = PDM_MAX(max_exch_rank[1], n_rank_recv);
-  min_exch_rank[0] = PDM_MIN(min_exch_rank[0], n_rank_send);
-  min_exch_rank[1] = PDM_MIN(min_exch_rank[1], n_rank_recv);
-
-  PDM_timer_hang_on(t_timer[CREATE_GEOM]);
-  double t2_elaps = PDM_timer_elapsed(t_timer[CREATE_GEOM] );
-  double t2_cpu = PDM_timer_cpu(t_timer[CREATE_GEOM]);
-
-  t_elaps[CREATE_GEOM] += (t2_elaps - t1_elaps);
-  t_cpu[CREATE_GEOM] += (t2_cpu - t1_cpu);
-
   return (PDM_part_to_block_t *) ptb;
 }
-
-/**
- *
- * \brief Return number of active ranks
- *
- * \param [in]   ptb          Part to block structure
- *
- * \return Number of active ranks
- *
- */
 
 int
 PDM_part_to_block_n_active_ranks_get
@@ -2905,17 +2287,6 @@ PDM_part_to_block_n_active_ranks_get
   return ptb->n_active_ranks;
 }
 
-
-/**
- *
- * \brief Return if current rank is active
- *
- * \param [in]   ptb          Part to block structure
- *
- * \return  if current rank is active
- *
- */
-
 int
 PDM_part_to_block_is_active_rank
 (
@@ -2924,17 +2295,6 @@ PDM_part_to_block_is_active_rank
 {
   return ptb->is_my_rank_active;
 }
-
-
-/**
- *
- * \brief Return active ranks
- *
- * \param [in]   ptb          Part to block structure
- *
- * \return  active ranks
- *
- */
 
 int *
 PDM_part_to_block_active_ranks_get
@@ -2945,17 +2305,6 @@ PDM_part_to_block_active_ranks_get
   return ptb->active_ranks;
 }
 
-
-/**
- *
- * \brief Return number of element in the current process
- *
- * \param [in]   ptb          Part to block structure
- *
- * \return Number of element in the current process
- *
- */
-
 int
 PDM_part_to_block_n_elt_block_get
 (
@@ -2964,17 +2313,6 @@ PDM_part_to_block_n_elt_block_get
 {
   return ptb->n_elt_block;
 }
-
-
-/**
- *
- * \brief Return global numbers of element in the current process
- *
- * \param [in]   ptb          Part to block structure
- *
- * \return  Global numbers
- *
- */
 
 PDM_g_num_t *
 PDM_part_to_block_block_gnum_get
@@ -2985,16 +2323,6 @@ PDM_part_to_block_block_gnum_get
   return ptb->block_gnum;
 }
 
-/**
- *
- * \brief Return numbers of occurence of each gnum element in the current process
- *
- * \param [in]   ptb          Part to block structure
- *
- * \return  Global numbers counter
- *
- */
-
 int *
 PDM_part_to_block_block_gnum_count_get
 (
@@ -3003,21 +2331,6 @@ PDM_part_to_block_block_gnum_count_get
 {
   return ptb->block_gnum_count;
 }
-
-
-/**
- *
- * \brief Initialize a data exchange
- *
- * \param [in]   ptb          Part to block structure
- * \param [in]   s_data       Data size
- * \param [in]   t_stride     Stride type
- * \param [in]   var_stride   Variable stride (size = n_part) only for \ref PDM_writer_STRIDE_VAR
- * \param [in]   cst_stride   Stride only for \ref PDM_writer_STRIDE_CST
- *
- * \return       Size of highest block
- *
- */
 
 int
 PDM_part_to_block_exch
@@ -3032,11 +2345,6 @@ PDM_part_to_block_exch
  void               **block_data
 )
 {
-
-  double t1_elaps = PDM_timer_elapsed(t_timer[DATA_EXCHANGE]);
-  double t1_cpu = PDM_timer_cpu(t_timer[DATA_EXCHANGE]);
-  PDM_timer_resume(t_timer[DATA_EXCHANGE]);
-
   if ((ptb->t_post == PDM_PART_TO_BLOCK_POST_MERGE) &&
       (t_stride ==  PDM_STRIDE_CST_INTERLACED)) {
     PDM_error("PDM_writer_STRIDE_CST is not compatible PDM_writer_POST_MERGE post");
@@ -3128,7 +2436,6 @@ PDM_part_to_block_exch
     PDM_free(_i_send_buffer);
     PDM_free(_i_recv_buffer);
   } else {
-
     PDM_MPI_Alltoallv_p2p_l(send_buffer,
                             n_send_buffer,
                             i_send_buffer,
@@ -3139,17 +2446,6 @@ PDM_part_to_block_exch
                             mpi_type,
                             ptb->comm);
 
-  }
-
-
-  /*
-   * Statistics
-   */
-  for (int i = 0; i < ptb->s_comm; i++) {
-    if (ptb->i_rank != i) {
-      exch_data[1] += n_recv_buffer[i];
-      exch_data[0] += n_send_buffer[i];
-    }
   }
 
   PDM_free(send_buffer);
@@ -3170,29 +2466,8 @@ PDM_part_to_block_exch
   PDM_free(recv_buffer);
   PDM_MPI_Type_free(&mpi_type);
 
-  PDM_timer_hang_on(t_timer[DATA_EXCHANGE]);
-  double t2_elaps = PDM_timer_elapsed(t_timer[DATA_EXCHANGE]);
-  double t2_cpu   = PDM_timer_cpu    (t_timer[DATA_EXCHANGE]);
-
-  t_elaps[DATA_EXCHANGE] += (t2_elaps - t1_elaps);
-  t_cpu  [DATA_EXCHANGE] += (t2_cpu   - t1_cpu  );
-
   return s_block_data;
 }
-
-/**
- *
- * \brief Initialize a data exchange
- *
- * \param [in]   ptb          Part to block structure
- * \param [in]   s_data       Data size
- * \param [in]   t_stride     Stride type
- * \param [in]   var_stride   Variable stride (size = n_part) only for \ref PDM_writer_STRIDE_VAR
- * \param [in]   cst_stride   Stride only for \ref PDM_writer_STRIDE_CST
- *
- * \return       Size of highest block
- *
- */
 
 void
 PDM_part_to_block_reverse_exch
@@ -3272,7 +2547,6 @@ PDM_part_to_block_reverse_exch
   /*
    * Data exchange
    */
-
   if (ptb->p2p_factor < ptb->part_active_rank) {
 
     int *_i_send_buffer = NULL;
@@ -3298,7 +2572,6 @@ PDM_part_to_block_reverse_exch
     PDM_free(_i_send_buffer);
     PDM_free(_i_recv_buffer);
   } else {
-
     PDM_MPI_Alltoallv_p2p_l(send_buffer,
                             n_send_buffer,
                             i_send_buffer,
@@ -3309,7 +2582,6 @@ PDM_part_to_block_reverse_exch
                             mpi_type,
                             ptb->comm);
   }
-
 
   _post_treatment_reverse(ptb,
                           s_data,
@@ -3331,20 +2603,6 @@ PDM_part_to_block_reverse_exch
   PDM_free(n_send_buffer);
   PDM_free(n_recv_buffer);
 }
-
-/**
- *
- * \brief Initialize a data exchange
- *
- * \param [in]   ptb          Part to block structure
- * \param [in]   s_data       Data size
- * \param [in]   t_stride     Stride type
- * \param [in]   var_stride   Variable stride (size = n_part) only for \ref PDM_writer_STRIDE_VAR
- * \param [in]   cst_stride   Stride only for \ref PDM_writer_STRIDE_CST
- *
- * \return       Size of highest block
- *
- */
 
 void
 PDM_part_to_block_iexch
@@ -3488,8 +2746,6 @@ PDM_part_to_block_iexch
                        ptb->comm,
                        &ptb->request_mpi[request_id]);
   } else if (k_comm == PDM_MPI_COMM_KIND_WIN_RMA) {
-
-    // double t1 = PDM_MPI_Wtime();
     PDM_MPI_Win_fence(0, ptb->win_send[request_id]);
     PDM_MPI_Win_fence(0, ptb->win_recv[request_id]);
     PDM_MPI_Get_ialltoallv(ptb->win_send[request_id],
@@ -3513,21 +2769,6 @@ PDM_part_to_block_iexch
   ptb->wait_status[request_id] = 0;
 }
 
-
-
-/**
- *
- * \brief Initialize a data exchange
- *
- * \param [in]   ptb          Part to block structure
- * \param [in]   s_data       Data size
- * \param [in]   t_stride     Stride type
- * \param [in]   var_stride   Variable stride (size = n_part) only for \ref PDM_writer_STRIDE_VAR
- * \param [in]   cst_stride   Stride only for \ref PDM_writer_STRIDE_CST
- *
- * \return       Size of highest block
- *
- */
 
 void
 PDM_part_to_block_reverse_iexch
@@ -3672,8 +2913,6 @@ PDM_part_to_block_reverse_iexch
                        ptb->comm,
                        &ptb->request_mpi[request_id]);
   } else if (k_comm == PDM_MPI_COMM_KIND_WIN_RMA) {
-
-    // double t1 = PDM_MPI_Wtime();
     PDM_MPI_Win_fence(0, ptb->win_send[request_id]);
     PDM_MPI_Win_fence(0, ptb->win_recv[request_id]);
     PDM_MPI_Get_ialltoallv(ptb->win_send[request_id],
@@ -3687,8 +2926,6 @@ PDM_part_to_block_reverse_iexch
                            i_recv_buffer,
                            mpi_type,
                            ptb->comm);
-    // double dt = PDM_MPI_Wtime() - t1;
-    // log_trace("PDM_MPI_Get_ialltoallv + fence dt = %12.5e \n", dt);
   } else {
     printf ("Error PDM_part_to_block_iexch : k_comm = %i is not implemented yet \n", k_comm);
     abort();
@@ -3697,15 +2934,6 @@ PDM_part_to_block_reverse_iexch
   ptb->wait_status[request_id] = 0;
 }
 
-/**
- *
- * \brief Wait for an exchange
- *
- * \param [in]   ptb          Part to block structure
- * \param [in]   request_id   Internal id of the current exchange
- *
- * \return       Size of highest block
- */
 int
 PDM_part_to_block_iexch_wait
 (
@@ -3795,16 +3023,6 @@ PDM_part_to_block_iexch_wait
 }
 
 
-
-/**
- *
- * \brief Wait for an exchange
- *
- * \param [in]   ptb          Part to block structure
- * \param [in]   request_id   Internal id of the current exchange
- *
- * \return       Size of highest block
- */
 void
 PDM_part_to_block_reverse_iexch_wait
 (
@@ -3893,19 +3111,7 @@ PDM_part_to_block_reverse_iexch_wait
 
 }
 
-/**
- *
- * \brief Initialize a data exchange
- *
- * \param [in]   ptb          Part to block structure
- * \param [in]   s_data       Data size
- * \param [in]   t_stride     Stride type
- * \param [in]   var_stride   Variable stride (size = n_part) only for \ref PDM_writer_STRIDE_VAR
- * \param [in]   cst_stride   Stride only for \ref PDM_writer_STRIDE_CST
- *
- * \return       Size of highest block
- *
- */
+
 int
 PDM_part_to_block_async_exch
 (
@@ -4033,14 +3239,6 @@ PDM_part_to_block_async_exch
 }
 
 
-/**
- *
- * \brief Wait for an exchange
- *
- * \param [in]   ptb          Part to block structure
- * \param [in]   request_id   Internal id of the current exchange
- *
- */
 void
 PDM_part_to_block_async_wait
 (
@@ -4048,8 +3246,6 @@ PDM_part_to_block_async_wait
  int                  request_id
 )
 {
-  // printf("PDM_part_to_block_async_wait::request_id::%d \n", request_id);
-
   assert(ptb->wait_status[request_id] == 0);
 
   int code = PDM_MPI_Wait(&ptb->request_mpi[request_id]);
@@ -4057,19 +3253,8 @@ PDM_part_to_block_async_wait
 
   ptb->wait_status[request_id] = 1;
   PDM_MPI_Type_free(&ptb->mpi_type[request_id]);
-
 }
 
-/**
- *
- * \brief Get the raw exchange buffer and stride and deallocate memory
- *
- * \param [in]   ptb          Part to block structure
- * \param [in]   request_id   Internal id of the current exchange
- * \param [out]  block_stride Block stride
- * \param [out]  block_data   Block data
- *
- */
 int
 PDM_part_to_block_asyn_get_raw
 (
@@ -4109,17 +3294,6 @@ PDM_part_to_block_asyn_get_raw
 
 }
 
-
-/**
- *
- * \brief Post-treatment of the recv buffer
- *
- * \param [in]   ptb          Part to block structure
- * \param [in]   request_id   Internal id of the current exchange
- * \param [out]  block_stride Block stride
- * \param [out]  block_data   Block data
- *
- */
 int
 PDM_part_to_block_asyn_post_treatment
 (
@@ -4182,14 +3356,6 @@ PDM_part_to_block_asyn_post_treatment
 }
 
 
-/**
- *
- * \brief Free a part to block structure
- *
- * \param [inout] ptb         Part to block structure
- *
- * \return       NULL
- */
 PDM_part_to_block_t *
 PDM_part_to_block_free
 (
@@ -4239,10 +3405,6 @@ PDM_part_to_block_free
     ptb->order = NULL;
   }
 
-  // if ((ptb->t_post != PDM_PART_TO_BLOCK_POST_NOTHING) && (ptb->block_gnum != NULL)) {
-  //  PDM_free(ptb->block_gnum);
-  //   ptb->block_gnum = NULL;
-  // }
   if ((ptb->t_post != PDM_PART_TO_BLOCK_POST_NOTHING      ) &&
       (ptb->t_post != PDM_PART_TO_BLOCK_POST_MERGE_UNIFORM) && (ptb->block_gnum != NULL)) {
     PDM_free(ptb->block_gnum);
@@ -4302,31 +3464,8 @@ PDM_part_to_block_free
 
   PDM_free(ptb);
 
-  n_ptb--;
-  if (n_ptb == 0) {
-    PDM_timer_free(t_timer[MALLOC_ACTIVE_RANKS   ]);
-    PDM_timer_free(t_timer[GENERATE_DISTRIB      ]);
-    PDM_timer_free(t_timer[BINARY_SEARCH         ]);
-    PDM_timer_free(t_timer[CREATE_EXCHANGE       ]);
-    PDM_timer_free(t_timer[BLOCK_POST            ]);
-    PDM_timer_free(t_timer[GLOBAL_WEIGHTS        ]);
-    PDM_timer_free(t_timer[CREATE_FROM_DISTRIB   ]);
-    PDM_timer_free(t_timer[CREATE_GEOM           ]);
-    PDM_timer_free(t_timer[DATA_EXCHANGE         ]);
-  }
-
   return NULL;
 }
-
-
-/**
- *
- * \brief Return block distribution index
- *
- * \param [in] ptb         Part to block structure
- *
- * \return  Distribution (size = communicator size + 1)
- */
 
 PDM_g_num_t *
 PDM_part_to_block_distrib_index_get
@@ -4337,15 +3476,6 @@ PDM_part_to_block_distrib_index_get
   return ptb->data_distrib_index;
 }
 
-
-/**
- *
- * \brief Return processus destination
- *
- * \param [in] ptb         Part to block structure
- *
- * \return  Destination (size = sum of partition elements)
- */
 
 PDM_l_num_t *
 PDM_part_to_block_destination_get
@@ -4408,20 +3538,6 @@ PDM_part_to_block_adapt_partial_block_to_block
   return _block_distrib_idx;
 }
 
-
-
-
-
-/**
- *
- * \brief Return global weights of element in the current process
- *
- * \param [in]   ptb          Part to block structure
- *
- * \return  Global weights
- *
- */
-
 double **
 PDM_part_to_block_global_weight_get
 (
@@ -4432,17 +3548,6 @@ PDM_part_to_block_global_weight_get
 }
 
 
-
-/**
- *
- * \brief Get number of MPI ranks
- *
- * \param [in]   ptb          Part to block structure
- *
- * \return  Number of MPI ranks
- *
- */
-
 int
 PDM_part_to_block_n_ranks_get
 (
@@ -4451,17 +3556,6 @@ PDM_part_to_block_n_ranks_get
 {
   return ptb->s_comm;
 }
-
-
-/**
- *
- * \brief Return total number of element in the current process (summed over all partitions)
- *
- * \param [in]   ptb          Part to block structure
- *
- * \return Total number of element in the current process
- *
- */
 
 int
 PDM_part_to_block_n_elt_proc_get

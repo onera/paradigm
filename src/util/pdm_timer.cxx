@@ -188,9 +188,6 @@ get_active_parent
 }
 
 
-/**
- * @brief Traverses the tree to calculate max width for the name column.
- */
 static
 void
 calculate_max_widths(_pdm_timer_event_t& node, int current_indent_length, size_t& max_name_width) {
@@ -214,7 +211,7 @@ calculate_max_widths(_pdm_timer_event_t& node, int current_indent_length, size_t
   }
 }
 
-
+static
 void
 collect_timer
 (
@@ -233,7 +230,14 @@ collect_timer
   }
 }
 
-std::string format_condensed_value(double time, int rank) {
+static
+std::string
+format_condensed_value
+(
+  double time,
+  int    rank
+)
+{
   std::stringstream ss;
   ss << std::fixed << std::setprecision(4) << time;
   if (rank != -1) {
@@ -242,6 +246,7 @@ std::string format_condensed_value(double time, int rank) {
   return ss.str();
 }
 
+static
 std::string
 format_full_condensed_stat
 (
@@ -343,9 +348,7 @@ format_timer_line_main
   return ss.str();
 }
 
-/**
- * @brief Collects all nodes into a single vector for flat mode printing.
- */
+static
 void
 collect_all_nodes
 (
@@ -361,7 +364,7 @@ collect_all_nodes
   }
 }
 
-
+static
 void
 traverse_and_add_lines
 (
@@ -400,9 +403,7 @@ traverse_and_add_lines
   }
 }
 
-/**
- * @brief Recursively calculates exclusive time and dumps to JSON (using insertion order).
- */
+static
 void
 calculate_exclusive_and_dump
 (
@@ -469,12 +470,174 @@ calculate_exclusive_and_dump
   }
 }
 
+
+static
+std::stringstream
+_pdm_timer_generate_report
+(
+        PDM_timer_t*                               timer,
+        int                                        mode,
+  const std::map<std::string, _pdm_global_stat_t>* global_stats,
+  const std::string&                               report_title
+)
+{
+  std::stringstream report_stream;
+
+  // --- Phase 1: Détermination du contexte et des largeurs ---
+  bool is_global_report = (global_stats != nullptr);
+
+  size_t max_name_width = 11;
+  calculate_max_widths(timer->root_event, 0, max_name_width);
+  max_name_width = std::min(max_name_width + 2, (size_t)80);
+
+  const int N_CALL_COL_WIDTH = 10;
+  const int TIME_COL_WIDTH   = 35;
+  const int NUM_TIME_COLS    = 4; // T_INC, T_EXC, T_SE, T_SX
+
+  const int TOTAL_WIDTH = max_name_width + N_CALL_COL_WIDTH + (TIME_COL_WIDTH * NUM_TIME_COLS) + (NUM_TIME_COLS * 2) + 2;
+
+  // --- Phase 2: Construction de l'En-tête ---
+  report_stream << "\n" << std::string(TOTAL_WIDTH, '=') << "\n";
+  report_stream << "PDM TIMER REPORT (" << report_title << ", "
+                << (mode == 1 ? "FLAT/RAW MODE" : "HIERARCHICAL MODE") << ")\n";
+  report_stream << std::string(TOTAL_WIDTH, '=') << "\n";
+
+  // En-tête des colonnes
+  report_stream << std::left << std::setw(max_name_width) << "Event Name (Path)";
+  report_stream << std::right << std::setw(N_CALL_COL_WIDTH) << "Calls";
+
+  // En-têtes des 4 métriques de temps
+  if (is_global_report) {
+    // En-tête condensé
+    report_stream << " |" << std::right << std::setw(TIME_COL_WIDTH) << "T_INCLUSIVE  MEAN/MIN[R]/MAX[R] (s)";
+    report_stream << " |" << std::right << std::setw(TIME_COL_WIDTH) << "T_EXCLUSIVE  MEAN/MIN[R]/MAX[R] (s)";
+    report_stream << " |" << std::right << std::setw(TIME_COL_WIDTH) << "T_SYNC_ENTRY MEAN/MIN[R]/MAX[R] (s)";
+    report_stream << " |" << std::right << std::setw(TIME_COL_WIDTH) << "T_SYNC_EXIT  MEAN/MIN[R]/MAX[R] (s)";
+  } else {
+    // En-tête local standard
+    report_stream << " |" << std::right << std::setw(TIME_COL_WIDTH) << "T_INCLUSIVE  (s)";
+    report_stream << " |" << std::right << std::setw(TIME_COL_WIDTH) << "T_EXCLUSIVE  (s)";
+    report_stream << " |" << std::right << std::setw(TIME_COL_WIDTH) << "T_SYNC_ENTRY (s)";
+    report_stream << " |" << std::right << std::setw(TIME_COL_WIDTH) << "T_SYNC_EXIT  (s)";
+  }
+
+  report_stream << "\n" << std::string(TOTAL_WIDTH, '-') << "\n";
+
+  // --- Phase 3: Parcours et Ajout des Lignes ---
+  std::vector<std::string> content_lines;
+
+  if (mode == 0) { // Hierarchical Mode
+    for (auto& child_name : timer->root_event.child_insertion_order) {
+      traverse_and_add_lines(*timer->root_event.children.at(child_name), 0, max_name_width, TIME_COL_WIDTH, N_CALL_COL_WIDTH, global_stats, content_lines);
+    }
+  } else { // Flat/Raw Mode
+    std::vector<_pdm_timer_event_t*> all_nodes;
+    collect_all_nodes(&timer->root_event, all_nodes);
+
+    // La largeur de l'espace vide pour aligner les stats MIN/MAX en mode plat
+    const int EMPTY_COL_WIDTH = max_name_width + N_CALL_COL_WIDTH + 2;
+    std::string empty_prefix = std::string(EMPTY_COL_WIDTH, ' ');
+
+    for(auto* node : all_nodes) {
+      content_lines.push_back(format_timer_line_main(*node,
+                                                     node->event_name,
+                                                     max_name_width,
+                                                     TIME_COL_WIDTH,
+                                                     N_CALL_COL_WIDTH,
+                                                     global_stats));
+    }
+  }
+
+  for(const auto& line : content_lines) {
+    report_stream << line << "\n";
+  }
+
+  // --- Phase 4: Finalisation ---
+  report_stream << std::string(TOTAL_WIDTH, '=') << "\n";
+
+  return report_stream;
+}
+
+static
+void
+dump_global_hierarchical_json
+(
+       _pdm_timer_event_t&                        node,
+       int                                        indent,
+       FILE*                                      fp,
+       bool&                                      first_child,
+ const std::map<std::string, _pdm_global_stat_t>* global_stats // Pointeur vers les stats agrégées
+)
+{
+  if (node.event_name != "__ROOT__") {
+    if (!first_child) {
+      fprintf(fp, ",\n");
+    }
+    first_child = false;
+
+    // Trouver les statistiques globales correspondantes (g_rec)
+    const _pdm_global_stat_t* g_rec = nullptr;
+    bool is_global_found = false;
+
+    if (global_stats) {
+      auto it = global_stats->find(node.path_name);
+      if (it != global_stats->end()) {
+        g_rec = &(it->second);
+        is_global_found = true;
+      }
+    }
+
+    // --- JSON Serialization ---
+    std::string current_indent(indent * 2, ' ');
+    std::string inner_indent((indent * 2) + 2, ' ');
+
+    fprintf(fp, "%s{\n", current_indent.c_str());
+
+    // Nom
+    fprintf(fp, "%s\"name\": \"%s\",\n", inner_indent.c_str(), node.event_name.c_str());
+    fprintf(fp, "%s\"path_name\": \"%s\",\n", inner_indent.c_str(), node.path_name.c_str());
+
+    // Utilisation des données agrégées (g_rec)
+    long n_call = is_global_found ? g_rec->n_call : node.n_call;
+    fprintf(fp, "%s\"n_call\": %ld,\n", inner_indent.c_str(), n_call);
+
+    // Exportation des 14 valeurs globales (Mean/Min/Max pour 4 métriques)
+
+    // T_Inclusive
+    fprintf(fp, "%s\"t_inclusive_mean\": %12.5e,\n" , inner_indent.c_str(), is_global_found ? g_rec->t_mean_run_inclusive : 0.0);
+    fprintf(fp, "%s\"t_inclusive_min\": %12.5e,\n"  , inner_indent.c_str(), is_global_found ? g_rec->t_min_run_inclusive  : 0.0);
+    fprintf(fp, "%s\"r_inclusive_min\": %d,\n"      , inner_indent.c_str(), is_global_found ? g_rec->rank_min_inclusive   : -1 );
+    fprintf(fp, "%s\"t_inclusive_max\": %12.5e,\n"  , inner_indent.c_str(), is_global_found ? g_rec->t_max_run_inclusive  : 0.0);
+    fprintf(fp, "%s\"r_inclusive_max\": %d,\n"      , inner_indent.c_str(), is_global_found ? g_rec->rank_max_inclusive   : -1 );
+    fprintf(fp, "%s\"t_exclusive_mean\": %12.5e,\n" , inner_indent.c_str(), is_global_found ? g_rec->t_mean_run_exclusive : 0.0);
+    fprintf(fp, "%s\"t_sync_entry_mean\": %12.5e,\n", inner_indent.c_str(), is_global_found ? g_rec->t_mean_sync_entry    : 0.0);
+    fprintf(fp, "%s\"t_sync_exit_mean\": %12.5e"    , inner_indent.c_str(), is_global_found ? g_rec->t_mean_sync_exit     : 0.0);
+
+    // Add children if present
+    if (!node.children.empty()) {
+      // Rajouter une virgule si on a des enfants
+      fprintf(fp, ",\n");
+      fprintf(fp, "%s\"children\": [\n", inner_indent.c_str());
+
+      bool current_level_first_child = true;
+      for (auto& child_name : node.child_insertion_order) {
+        dump_global_hierarchical_json(*node.children.at(child_name), indent + 1, fp, current_level_first_child, global_stats);
+      }
+      fprintf(fp, "\n");
+      fprintf(fp, "%s]", inner_indent.c_str());
+    }
+
+    fprintf(fp, "\n");
+    fprintf(fp, "%s}", current_indent.c_str());
+  }
+}
+
 /*============================================================================
  * Definition des fonctions publiques
  *============================================================================*/
 
 PDM_timer_t*
-PDM_timer_create2
+PDM_timer_create
 (
   PDM_MPI_Comm comm
 )
@@ -489,7 +652,6 @@ PDM_timer_create2
   timer->root_event.path_name   = "";
   return timer;
 }
-
 
 
 void
@@ -594,104 +756,6 @@ PDM_timer_end
 }
 
 
-/**
- * @brief Fonction interne unifiée pour générer le rapport (déléguée).
- */
-std::stringstream
-_pdm_timer_generate_report
-(
-        PDM_timer_t*                               timer,
-        int                                        mode,
-  const std::map<std::string, _pdm_global_stat_t>* global_stats,
-  const std::string&                               report_title
-)
-{
-  std::stringstream report_stream;
-
-  // --- Phase 1: Détermination du contexte et des largeurs ---
-  bool is_global_report = (global_stats != nullptr);
-
-  size_t max_name_width = 11;
-  calculate_max_widths(timer->root_event, 0, max_name_width);
-  max_name_width = std::min(max_name_width + 2, (size_t)80);
-
-  const int N_CALL_COL_WIDTH = 10;
-  const int TIME_COL_WIDTH   = 35;
-  const int NUM_TIME_COLS    = 4; // T_INC, T_EXC, T_SE, T_SX
-
-  const int TOTAL_WIDTH = max_name_width + N_CALL_COL_WIDTH + (TIME_COL_WIDTH * NUM_TIME_COLS) + (NUM_TIME_COLS * 2) + 2;
-
-  // --- Phase 2: Construction de l'En-tête ---
-  report_stream << "\n" << std::string(TOTAL_WIDTH, '=') << "\n";
-  report_stream << "PDM TIMER REPORT (" << report_title << ", "
-                << (mode == 1 ? "FLAT/RAW MODE" : "HIERARCHICAL MODE") << ")\n";
-  report_stream << std::string(TOTAL_WIDTH, '=') << "\n";
-
-  // En-tête des colonnes
-  report_stream << std::left << std::setw(max_name_width) << "Event Name (Path)";
-  report_stream << std::right << std::setw(N_CALL_COL_WIDTH) << "Calls";
-
-  // En-têtes des 4 métriques de temps
-  if (is_global_report) {
-    // En-tête condensé
-    report_stream << " |" << std::right << std::setw(TIME_COL_WIDTH) << "T_INCLUSIVE  MEAN/MIN[R]/MAX[R] (s)";
-    report_stream << " |" << std::right << std::setw(TIME_COL_WIDTH) << "T_EXCLUSIVE  MEAN/MIN[R]/MAX[R] (s)";
-    report_stream << " |" << std::right << std::setw(TIME_COL_WIDTH) << "T_SYNC_ENTRY MEAN/MIN[R]/MAX[R] (s)";
-    report_stream << " |" << std::right << std::setw(TIME_COL_WIDTH) << "T_SYNC_EXIT  MEAN/MIN[R]/MAX[R] (s)";
-  } else {
-    // En-tête local standard
-    report_stream << " |" << std::right << std::setw(TIME_COL_WIDTH) << "T_INCLUSIVE  (s)";
-    report_stream << " |" << std::right << std::setw(TIME_COL_WIDTH) << "T_EXCLUSIVE  (s)";
-    report_stream << " |" << std::right << std::setw(TIME_COL_WIDTH) << "T_SYNC_ENTRY (s)";
-    report_stream << " |" << std::right << std::setw(TIME_COL_WIDTH) << "T_SYNC_EXIT  (s)";
-  }
-
-  report_stream << "\n" << std::string(TOTAL_WIDTH, '-') << "\n";
-
-  // --- Phase 3: Parcours et Ajout des Lignes ---
-  std::vector<std::string> content_lines;
-
-  if (mode == 0) { // Hierarchical Mode
-    for (auto& child_name : timer->root_event.child_insertion_order) {
-      traverse_and_add_lines(*timer->root_event.children.at(child_name), 0, max_name_width, TIME_COL_WIDTH, N_CALL_COL_WIDTH, global_stats, content_lines);
-    }
-  } else { // Flat/Raw Mode
-    std::vector<_pdm_timer_event_t*> all_nodes;
-    collect_all_nodes(&timer->root_event, all_nodes);
-
-    // La largeur de l'espace vide pour aligner les stats MIN/MAX en mode plat
-    const int EMPTY_COL_WIDTH = max_name_width + N_CALL_COL_WIDTH + 2;
-    std::string empty_prefix = std::string(EMPTY_COL_WIDTH, ' ');
-
-    for(auto* node : all_nodes) {
-      content_lines.push_back(format_timer_line_main(*node,
-                                                     node->event_name,
-                                                     max_name_width,
-                                                     TIME_COL_WIDTH,
-                                                     N_CALL_COL_WIDTH,
-                                                     global_stats));
-    }
-  }
-
-  for(const auto& line : content_lines) {
-    report_stream << line << "\n";
-  }
-
-  // --- Phase 4: Finalisation ---
-  report_stream << std::string(TOTAL_WIDTH, '=') << "\n";
-
-  return report_stream;
-}
-
-
-/**
- * @brief Generates the full formatted report string (header + lines) for logging.
- * The returned string must be freed by the user using PDM_timer_free_string.
- * NOTE: The user is responsible for freeing the returned char* using the dedicated function.
- * @param timer The timer instance.
- * @param mode 0: Hierarchical (Indented). 1: Flat/Raw (All nodes, non-indented).
- * @return Dynamically allocated C-string containing the full report.
- */
 char*
 PDM_timer_get_report_string
 (
@@ -712,9 +776,7 @@ PDM_timer_get_report_string
   return cstr;
 }
 
-/**
- * @brief Prints the call tree to the console using the string builder function.
- */
+
 void
 PDM_timer_print
 (
@@ -728,9 +790,6 @@ PDM_timer_print
 }
 
 
-/**
- * @brief Prints the call tree to the console using the string builder function.
- */
 void
 PDM_timer_log
 (
@@ -744,9 +803,6 @@ PDM_timer_log
 }
 
 
-/**
- * @brief Génère un dump JSON de l'arbre de calls (Local seulement).
- */
 void
 PDM_timer_dump_json
 (
@@ -773,84 +829,6 @@ PDM_timer_dump_json
   fprintf(fp, "}\n");
 
   fclose(fp);
-}
-
-
-/**
- * @brief Parcourt l'arbre local, utilise les statistiques globales (si disponibles)
- * et sérialise la hiérarchie au format JSON.
- */
-void
-dump_global_hierarchical_json
-(
-       _pdm_timer_event_t&                        node,
-       int                                        indent,
-       FILE*                                      fp,
-       bool&                                      first_child,
- const std::map<std::string, _pdm_global_stat_t>* global_stats // Pointeur vers les stats agrégées
-)
-{
-  if (node.event_name != "__ROOT__") {
-    if (!first_child) {
-      fprintf(fp, ",\n");
-    }
-    first_child = false;
-
-    // Trouver les statistiques globales correspondantes (g_rec)
-    const _pdm_global_stat_t* g_rec = nullptr;
-    bool is_global_found = false;
-
-    if (global_stats) {
-      auto it = global_stats->find(node.path_name);
-      if (it != global_stats->end()) {
-        g_rec = &(it->second);
-        is_global_found = true;
-      }
-    }
-
-    // --- JSON Serialization ---
-    std::string current_indent(indent * 2, ' ');
-    std::string inner_indent((indent * 2) + 2, ' ');
-
-    fprintf(fp, "%s{\n", current_indent.c_str());
-
-    // Nom
-    fprintf(fp, "%s\"name\": \"%s\",\n", inner_indent.c_str(), node.event_name.c_str());
-    fprintf(fp, "%s\"path_name\": \"%s\",\n", inner_indent.c_str(), node.path_name.c_str());
-
-    // Utilisation des données agrégées (g_rec)
-    long n_call = is_global_found ? g_rec->n_call : node.n_call;
-    fprintf(fp, "%s\"n_call\": %ld,\n", inner_indent.c_str(), n_call);
-
-    // Exportation des 14 valeurs globales (Mean/Min/Max pour 4 métriques)
-
-    // T_Inclusive
-    fprintf(fp, "%s\"t_inclusive_mean\": %12.5e,\n" , inner_indent.c_str(), is_global_found ? g_rec->t_mean_run_inclusive : 0.0);
-    fprintf(fp, "%s\"t_inclusive_min\": %12.5e,\n"  , inner_indent.c_str(), is_global_found ? g_rec->t_min_run_inclusive  : 0.0);
-    fprintf(fp, "%s\"r_inclusive_min\": %d,\n"      , inner_indent.c_str(), is_global_found ? g_rec->rank_min_inclusive   : -1 );
-    fprintf(fp, "%s\"t_inclusive_max\": %12.5e,\n"  , inner_indent.c_str(), is_global_found ? g_rec->t_max_run_inclusive  : 0.0);
-    fprintf(fp, "%s\"r_inclusive_max\": %d,\n"      , inner_indent.c_str(), is_global_found ? g_rec->rank_max_inclusive   : -1 );
-    fprintf(fp, "%s\"t_exclusive_mean\": %12.5e,\n" , inner_indent.c_str(), is_global_found ? g_rec->t_mean_run_exclusive : 0.0);
-    fprintf(fp, "%s\"t_sync_entry_mean\": %12.5e,\n", inner_indent.c_str(), is_global_found ? g_rec->t_mean_sync_entry    : 0.0);
-    fprintf(fp, "%s\"t_sync_exit_mean\": %12.5e"    , inner_indent.c_str(), is_global_found ? g_rec->t_mean_sync_exit     : 0.0);
-
-    // Add children if present
-    if (!node.children.empty()) {
-      // Rajouter une virgule si on a des enfants
-      fprintf(fp, ",\n");
-      fprintf(fp, "%s\"children\": [\n", inner_indent.c_str());
-
-      bool current_level_first_child = true;
-      for (auto& child_name : node.child_insertion_order) {
-        dump_global_hierarchical_json(*node.children.at(child_name), indent + 1, fp, current_level_first_child, global_stats);
-      }
-      fprintf(fp, "\n");
-      fprintf(fp, "%s]", inner_indent.c_str());
-    }
-
-    fprintf(fp, "\n");
-    fprintf(fp, "%s}", current_indent.c_str());
-  }
 }
 
 
@@ -894,7 +872,6 @@ PDM_timer_gather_dump_json
   fprintf(fp, "}\n");
 
   fclose(fp);
-
 }
 
 
@@ -1124,241 +1101,13 @@ PDM_timer_gather_dump
 
 
 void
-PDM_timer_free2
+PDM_timer_free
 (
   PDM_timer_t *timer
 )
 {
   delete timer;
 }
-
-
-// OLD
-
-/*----------------------------------------------------------------------------
- * Creation d'un objet timer
- *
- * return
- *   timer
- *
- *----------------------------------------------------------------------------*/
-PDM_timer_t*
-PDM_timer_create
-(
-  void
-)
-{
-  PDM_timer_t *timer;
-
-  PDM_malloc(timer, 1, PDM_timer_t);
-  PDM_timer_init(timer);
-
-  return timer;
-}
-
-/*----------------------------------------------------------------------------
- * Debut la mesure du temps ecoule
- *
- * parameters :
- *   timer            <-- Timer
- * return
- *----------------------------------------------------------------------------*/
-
-void PDM_timer_init(PDM_timer_t *timer)
-{
-#if defined (PDM_HAVE_GETRUSAGE)
-  timer->t_cpu_u = 0.;
-  timer->t_cpu_s = 0.;
-#endif
-  timer->t_cpu = 0.;
-  timer->t_elapsed = 0.;
-  timer->indic = 0;
-}
-
-/*----------------------------------------------------------------------------
- * Reprend la mesure du temps ecoule
- *
- * parameters :
- *   timer            <-- Timer
- * return
- *----------------------------------------------------------------------------*/
-
-void PDM_timer_resume(PDM_timer_t *timer)
-{
-  if (timer->indic) {
-    PDM_error(__FILE__, __LINE__, 0, "Erreur PDM_timer_reprise : \n"
-            "La mesure d'une tranche est deja en cours\n");
-    exit(EXIT_FAILURE);
-  }
-#if defined (PDM_HAVE_GETRUSAGE)
- {
-   struct rusage  usage;
-
-   if (getrusage(RUSAGE_SELF, &usage) == 0) {
-     timer->t_cpu_u_debut = usage.ru_utime.tv_sec + usage.ru_utime.tv_usec * 1.e-6;
-     timer->t_cpu_s_debut = usage.ru_stime.tv_sec + usage.ru_stime.tv_usec * 1.e-6;
-     timer->t_cpu_debut   = timer->t_cpu_u_debut + timer->t_cpu_s_debut;
-   }
- }
-#else
-  timer->t_cpu_debut = clock();
-#endif
-  gettimeofday(&(timer->t_elaps_debut), NULL);
-  timer->indic = 1;
-}
-
-/*----------------------------------------------------------------------------
- * Suspend la mesure du temps ecoule et incremente le temps ecoule
- *
- * parameters :
- *   timer            <-- Timer
- * return
- *----------------------------------------------------------------------------*/
-
-void PDM_timer_hang_on(PDM_timer_t *timer)
-{
-
-  if (!timer->indic) {
-    PDM_error(__FILE__, __LINE__, 0, "Erreur PDM_timer_suspend : \n"
-            "La mesure de temps n'a pas ete declenchee par PDM_timer_reprise\n");
-    exit(EXIT_FAILURE);
-  }
-
-  /* Recuperation du temps CPU et elaps courant */
-
-  struct timeval t_elaps_fin;
-  gettimeofday(&t_elaps_fin, NULL);
-
-  /* Ajout de la tranche mesuree au temps cumule */
-
-  long tranche_elapsed = (t_elaps_fin.tv_usec + 1000000 * t_elaps_fin.tv_sec) -
-                         (timer->t_elaps_debut.tv_usec + 1000000 *
-                          timer->t_elaps_debut.tv_sec);
-
-  double tranche_elapsed_max = (double) tranche_elapsed;
-  timer->t_elapsed += tranche_elapsed_max/1000000.;
-
-#if defined (PDM_HAVE_GETRUSAGE)
- {
-   struct rusage  usage;
-
-   if (getrusage(RUSAGE_SELF, &usage) == 0) {
-     timer->t_cpu_u += usage.ru_utime.tv_sec + usage.ru_utime.tv_usec * 1.e-6 - timer->t_cpu_u_debut;
-     timer->t_cpu_s += usage.ru_stime.tv_sec + usage.ru_stime.tv_usec * 1.e-6 - timer->t_cpu_s_debut;
-     timer->t_cpu    = timer->t_cpu_u + timer->t_cpu_s;
-   }
- }
-#else
-  clock_t t_cpu_fin = clock();
-  double tranche_cpu = (double) (t_cpu_fin - timer->t_cpu_debut);
-  double tranche_cpu_max = tranche_cpu;
-  timer->t_cpu += tranche_cpu_max/CLOCKS_PER_SEC;
-#endif
-  timer->indic = 0;
-}
-
-/*----------------------------------------------------------------------------
- * Retourne le temps CPU en secondes
- *
- * parameters :
- *   timer            <-- Timer
- * return
- *----------------------------------------------------------------------------*/
-
-double PDM_timer_cpu(PDM_timer_t *timer)
-{
-  if (timer->indic) {
-    PDM_error(__FILE__, __LINE__, 0, "Erreur PDM_timer_get_cpu : \n"
-            "Mesure d'une tranche en cours : faire appel a PDM_timer_suspend avant "
-            "PDM_timer_get_cpu\n");
-    exit(EXIT_FAILURE);
-  }
-  return timer->t_cpu;
-}
-
-/*----------------------------------------------------------------------------
- * Retourne le temps CPU user en secondes (-1 si indisponible)
- *
- * parameters :
- *   timer            <-- Timer
- * return
- *----------------------------------------------------------------------------*/
-
-double PDM_timer_cpu_user(PDM_timer_t *timer)
-{
-  if (timer->indic) {
-    PDM_error(__FILE__, __LINE__, 0, "Erreur PDM_timer_get_cpu_user : \n"
-            "Mesure d'une tranche en cours : faire appel a PDM_timer_suspend avant "
-            "PDM_timer_get_cpu\n");
-    exit(EXIT_FAILURE);
-  }
-#if defined (PDM_HAVE_GETRUSAGE)
-  return timer->t_cpu_u;
-#else
-  return -1.;
-#endif
-}
-
-/*----------------------------------------------------------------------------
- * Retourne le temps CPU systeme en secondes (-1 si indisponible)
- *
- * parameters :
- *   timer            <-- Timer
- * return
- *----------------------------------------------------------------------------*/
-
-double PDM_timer_cpu_sys(PDM_timer_t *timer)
-{
-  if (timer->indic) {
-    PDM_error(__FILE__, __LINE__, 0, "Erreur PDM_timer_get_cpu_user : \n"
-            "Mesure d'une tranche en cours : faire appel a PDM_timer_suspend avant "
-            "PDM_timer_get_cpu\n");
-    exit(EXIT_FAILURE);
-  }
-#if defined (PDM_HAVE_GETRUSAGE)
-  return timer->t_cpu_s;
-#else
-  return -1.;
-#endif
-}
-
-/*----------------------------------------------------------------------------
- * Retourne le temps elaps en secondes
- *
- * parameters :
- *   timer            <-- Timer
- * return
- *----------------------------------------------------------------------------*/
-
-double PDM_timer_elapsed(PDM_timer_t *timer)
-{
-  if (timer->indic) {
-    PDM_error(__FILE__, __LINE__, 0, "Erreur PDM_timer_get_elapsed : \n"
-            "Mesure d'une tranche en cours : faire appel a PDM_timer_suspend avant "
-            "PDM_timer_get_elapsed\n");
-    exit(EXIT_FAILURE);
-  }
-  return timer->t_elapsed;
-}
-
-/*----------------------------------------------------------------------------
- * Destruction d'un objet timer
- *
- * parameters :
- *   timer            <-- Timer
- *
- *----------------------------------------------------------------------------*/
-
-void PDM_timer_free(PDM_timer_t *timer)
-{
-  PDM_free(timer);
-}
-
-
-
-
-
-
 
 #ifdef __cplusplus
 }

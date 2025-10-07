@@ -2855,7 +2855,7 @@ const  int         i_part,
  * Public function definitions
  *============================================================================*/
 
-PDM_part_t *
+PDM_part_t*
 PDM_part_create
 (
  const PDM_MPI_Comm           comm,
@@ -2893,11 +2893,10 @@ PDM_part_create
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
-
   PDM_part_renum_method_load_local();
 
   _PDM_part_t *_ppart;
-  PDM_malloc(_ppart,1,_PDM_part_t);
+  PDM_malloc(_ppart, 1, _PDM_part_t);
 
   char *use_multipart_var;
   _ppart->use_multipart = 0;
@@ -2938,18 +2937,11 @@ PDM_part_create
     /*
      * Build ppart structure
      */
-
-    _ppart->timer = PDM_timer_create();
-    for (int i = 0; i < 4; i++) {
-      _ppart->times_elapsed[i] = 0.;
-      _ppart->times_cpu[i] = 0.;
-      _ppart->times_cpu_u[i] = 0.;
-      _ppart->times_cpu_s[i] = 0.;
-    }
-    PDM_timer_resume(_ppart->timer);
+    _ppart->timer = PDM_timer_create(_ppart->comm);
+    PDM_timer_start(_ppart->timer, "ppart:total", 0);
+    PDM_timer_start(_ppart->timer, "ppart:build_dual_graph", 0);
 
     /* Local dimensions */
-
     _ppart->dn_vtx       = dn_vtx;
     _ppart->dn_cell      = dn_cell;
     _ppart->dn_face      = dn_face;
@@ -3120,57 +3112,34 @@ PDM_part_create
      * Build dual graph
      */
 
-    if (dcell_face != NULL)
+    if (dcell_face != NULL) {
       _dual_graph_from_cell_face(_ppart);
-    else if (dface_cell != NULL)
+    } else if (dface_cell != NULL) {
       _dual_graph_from_face_cell(_ppart);
-    else {
+    } else {
       PDM_printf("PDM_part_part_create error : dcell_face and dface_cell are undefined, define one of two\n");
       exit(1);
     }
 
-    int itime = 1;
-    PDM_timer_hang_on(_ppart->timer);
-    _ppart->times_elapsed[itime] = PDM_timer_elapsed(_ppart->timer);
-    _ppart->times_cpu[itime]     = PDM_timer_cpu(_ppart->timer);
-    _ppart->times_cpu_u[itime]   = PDM_timer_cpu_user(_ppart->timer);
-    _ppart->times_cpu_s[itime]   = PDM_timer_cpu_sys(_ppart->timer);
-    itime += 1;
+    PDM_timer_end(_ppart->timer, "ppart:build_dual_graph", 0);
 
     /*
      * Graph partitioning
      */
+    PDM_timer_start(_ppart->timer, "ppart:split_graph", 0);
 
-    PDM_timer_resume(_ppart->timer);
-
-    int *cell_part;
-
+    int *cell_part = NULL;
     if (have_dcell_part == 0) {
-      PDM_malloc(cell_part,dn_cell ,int);
-      _split(_ppart,
-             cell_part);
+      PDM_malloc(cell_part, dn_cell, int);
+      _split(_ppart, cell_part);
       for (int i = 0; i < dn_cell; i++) {
         dcell_part[i] = cell_part[i];
       }
-    }
-
-    else {
+    } else {
       cell_part = (int *) _ppart->_dcell_part;
     }
 
-    if (1 == 0) {
-      PDM_printf("cell_part : ");
-      for (int i = 0; i <dn_cell; i++)
-        PDM_printf(" %d", cell_part[i]);
-      PDM_printf("\n");
-    }
-
-    PDM_timer_hang_on(_ppart->timer);
-    _ppart->times_elapsed[itime] = PDM_timer_elapsed(_ppart->timer);
-    _ppart->times_cpu[itime]     = PDM_timer_cpu(_ppart->timer);
-    _ppart->times_cpu_u[itime]   = PDM_timer_cpu_user(_ppart->timer);
-    _ppart->times_cpu_s[itime]   = PDM_timer_cpu_sys(_ppart->timer);
-    itime += 1;
+    PDM_timer_end(_ppart->timer, "ppart:split_graph", 0);
 
     /*
      * Cell distribution to build local connectivities
@@ -3182,7 +3151,7 @@ PDM_part_create
      *     - face_ln_to_gn  : ok
      */
 
-    PDM_timer_resume(_ppart->timer);
+    PDM_timer_start(_ppart->timer, "ppart:build_mesh_partition", 0);
 
     _distrib_cell(_ppart,
                   cell_part);
@@ -3238,23 +3207,7 @@ PDM_part_create
 
     _distrib_face_groups(_ppart);
 
-    PDM_timer_hang_on(_ppart->timer);
-    _ppart->times_elapsed[itime] = PDM_timer_elapsed(_ppart->timer);
-    _ppart->times_cpu[itime]     = PDM_timer_cpu(_ppart->timer);
-    _ppart->times_cpu_u[itime]   = PDM_timer_cpu_user(_ppart->timer);
-    _ppart->times_cpu_s[itime]   = PDM_timer_cpu_sys(_ppart->timer);
-
-    _ppart->times_elapsed[0]     = _ppart->times_elapsed[itime];
-    _ppart->times_cpu[0]         = _ppart->times_cpu[itime];
-    _ppart->times_cpu_u[0]       = _ppart->times_cpu_u[itime];
-    _ppart->times_cpu_s[0]       = _ppart->times_cpu_s[itime];
-
-    for (int i = itime; i > 1; i--) {
-      _ppart->times_elapsed[i] -= _ppart->times_elapsed[i-1];
-      _ppart->times_cpu[i]     -= _ppart->times_cpu[i-1];
-      _ppart->times_cpu_u[i]   -= _ppart->times_cpu_u[i-1];
-      _ppart->times_cpu_s[i]   -= _ppart->times_cpu_s[i-1];
-    }
+    PDM_timer_end(_ppart->timer, "ppart:build_mesh_partition", 0);
 
     if (_ppart->dcell_face_idx != NULL)
       PDM_free(_ppart->dcell_face_idx);
@@ -3300,6 +3253,7 @@ PDM_part_create
       PDM_free(_ppart->ddual_graph);
     _ppart->ddual_graph = NULL;
 
+    PDM_timer_end(_ppart->timer, "ppart:total", 0);
   }
 
   return (PDM_part_t *) _ppart;
@@ -3594,10 +3548,11 @@ PDM_part_time_get
 {
   _PDM_part_t *_ppart = (_PDM_part_t *) ppart;
 
-  *elapsed  = _ppart->times_elapsed;
-  *cpu      = _ppart->times_cpu;
-  *cpu_user = _ppart->times_cpu_u;
-  *cpu_sys  = _ppart->times_cpu_s;
+  abort();
+  *elapsed  = NULL; // _ppart->times_elapsed;
+  *cpu      = NULL; // _ppart->times_cpu;
+  *cpu_user = NULL; // _ppart->times_cpu_u;
+  *cpu_sys  = NULL; // _ppart->times_cpu_s;
 }
 
 
