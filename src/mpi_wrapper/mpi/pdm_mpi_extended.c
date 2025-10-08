@@ -777,7 +777,6 @@ PDM_MPI_Alltoallv_l
   int size;
   MPI_Comm_size(comm, &size);
 
-  INT_MAX;
   int coeff = 4;
   int large = 0;
   if ((sdispls[size-1] > (size_t) (INT_MAX/coeff)) || (rdispls[size-1] > (size_t) (INT_MAX/coeff))) {
@@ -812,7 +811,8 @@ PDM_MPI_Alltoallv_l
 
     PDM_free(_sdispls);
     PDM_free(_rdispls);
-  } else {
+  }
+  else {
 
     MPI_Request *request_r;
     MPI_Request *request_s;
