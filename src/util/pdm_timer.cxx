@@ -640,9 +640,14 @@ PDM_timer_t*
 PDM_timer_create
 (
   PDM_MPI_Comm comm
+);
+PDM_timer_t*
+PDM_timer_create
+(
+  PDM_MPI_Comm comm
 )
 {
-  PDM_timer_t *timer = new PDM_timer_t();
+  PDM_timer_t *timer = new PDM_timer_t(); // This is done like this to emulate C and have portability with C
 
   timer->comm = comm;
 
@@ -653,7 +658,13 @@ PDM_timer_create
   return timer;
 }
 
-
+void
+PDM_timer_start
+(
+    PDM_timer_t *timer,
+    const char  *name,
+    int          force_synchro
+);
 void
 PDM_timer_start
 (
