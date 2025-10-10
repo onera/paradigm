@@ -43,12 +43,19 @@ MPI_TEST_CASE("[pdm_timer] - 2p",2) {
 
   PDM_timer_end  (timer, "compute"  , 1);
 
-  char filename[999];
-  sprintf(filename, "profiling_%i.json", i_rank);
-  PDM_timer_dump_json(timer, filename);
+  // char filename[999];
+  // sprintf(filename, "profiling_%i.json", i_rank);
+  // PDM_timer_dump_json(timer, filename);
 
-  sprintf(filename, "debug.log", i_rank);
-  PDM_timer_gather_dump(timer, filename);
+  // sprintf(filename, "debug.log", i_rank);
+  // PDM_timer_gather_dump(timer, filename);
+
+  if(i_rank == 0) {
+    PDM_timer_print(timer, 0);
+    PDM_timer_print(timer, 1);
+  }
+  // PDM_timer_log(timer, 0);
+  // PDM_timer_log(timer, 1);
 
 
   // get_time_from_path(timer, this_part, path)

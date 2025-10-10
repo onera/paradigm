@@ -1825,7 +1825,7 @@ PDM_doctree_dump_times
   PDM_doctree_t   *doct
 )
 {
-  PDM_timer_gather(doct->timer);
+  // PDM_timer_gather(doct->timer);
   abort(); // TODO
 }
 

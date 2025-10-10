@@ -133,6 +133,36 @@ PDM_timer_end
 );
 
 /**
+ * @brief Aggregates data and prints the profiling report in current process to the standard output.
+ *
+ * @par Report Modes
+ * The report format is controlled by the \p mode parameter:
+ * - **mode = 0 (Hierarchical):** The report preserves the call structure, indenting child events
+ * under their parents. This is ideal for analyzing call flow and identifying top-level consumers.
+ * - **mode = 1 (Flat):** The report lists all unique events alphabetically by their full path name
+ * (e.g., "Main/Kernel/Loop"), ignoring the call hierarchy for a concise overview of every measured function.
+ *
+ * @param timer[in] The timer context structure (\c PDM_timer_t*)
+ * @param mode [in] An integer specifying the output format:
+ * - \c 0: Hierarchical Report (default)
+ * - \c 1: Flat Report (by path name)
+ */
+void
+PDM_timer_print
+(
+    PDM_timer_t *timer,
+    int          mode
+);
+
+
+void
+PDM_timer_log
+(
+  PDM_timer_t *timer,
+  int          mode
+);
+
+/**
  * @brief Exports the **local**, per-process profiling data to a JSON file.
  *
  * This function serializes the full hierarchical tree of timed events recorded by
@@ -239,13 +269,38 @@ PDM_timer_free
         PDM_timer_t *timer
 );
 
-
-// A passer privé
-char* PDM_timer_get_report_string(PDM_timer_t *timer, int mode);
-void
-PDM_timer_gather
+/**
+ * @brief Generates and returns the local, per-process profiling report as a dynamically allocated string.
+ *
+ * This utility function calls the internal reporting engine to format the local event
+ * data into a human-readable text report. This report reflects the exact times and
+ * call stack structure observed by the calling process (rank).
+ *
+ * @par Memory Management
+ * The function returns a newly allocated C-style string (`char*`). **The caller is
+ * responsible for freeing this memory** using the appropriate deallocation function
+ * (typically \c PDM_free() or \c free()) to prevent memory leaks.
+ *
+ * @par Report Modes
+ * The structure of the generated report is controlled by the \p mode parameter:
+ * - \c 0 (Hierarchical): The report displays the event timing data in a hierarchical,
+ * indented format, mirroring the call stack of the process.
+ * - \c 1 (Flat): The report lists all unique events alphabetically by their full path
+ * name, providing a flat view of the function costs.
+ *
+ * @param[in] timer The timer context structure (\c PDM_timer_t*) containing the local event tree.
+ * @param[in] mode An integer specifying the output format:
+ * - \c 0: Hierarchical Report (default)
+ * - \c 1: Flat Report (by path name)
+ *
+ * @return A dynamically allocated C-string (\c char*) containing the formatted local report. Returns \c NULL or an empty string on allocation failure.
+ *
+ */
+char*
+PDM_timer_get_report_string
 (
-  PDM_timer_t *timer
+    PDM_timer_t *timer,
+    int          mode
 );
 
 #ifdef __cplusplus
