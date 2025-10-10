@@ -2278,6 +2278,7 @@ PDM_dist_cloud_surf_create
   }
 
   dist->timer = PDM_timer_create(dist->comm);
+  dist->external_timer = 0;
 
   return dist;
 }
@@ -2290,8 +2291,16 @@ PDM_dist_cloud_surf_timer_set
   PDM_timer_t            *timer
 )
 {
+  if(dist->external_timer == 1) {
+    return;
+  }
+  if(timer == NULL) {
+    PDM_error(__FILE__, __LINE__, 0, "timer is NULL \n");
+  }
   PDM_timer_free(dist->timer);
+
   dist->timer = timer;
+  dist->external_timer = 1;
 }
 
 
@@ -2718,7 +2727,9 @@ PDM_dist_cloud_surf_free
 
   PDM_free(dist->points_cloud);
 
-  // PDM_timer_free(dist->timer);
+  if(dist->external_timer == 0) {
+    PDM_timer_free(dist->timer);
+  }
 
   if (dist->_surf_mesh != NULL) {
     if (dist->surf_mesh != NULL) {
@@ -2753,66 +2764,7 @@ PDM_dist_cloud_surf_dump_times
  PDM_dist_cloud_surf_t  *dist
 )
 {
-  abort();
-  // double t1 = dist->times_elapsed[END] - dist->times_elapsed[BEGIN];
-  // double t2 = dist->times_cpu    [END] - dist->times_cpu    [BEGIN];
-
-  // double t1max;
-  // PDM_MPI_Allreduce (&t1, &t1max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, dist->comm);
-
-  // double t2max;
-  // PDM_MPI_Allreduce (&t2, &t2max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, dist->comm);
-
-  // double t_elaps_max[NTIMER];
-  // PDM_MPI_Allreduce (dist->times_elapsed, t_elaps_max, NTIMER, PDM_MPI_DOUBLE, PDM_MPI_MAX, dist->comm);
-
-  // double t_cpu_max[NTIMER];
-  // PDM_MPI_Allreduce (dist->times_cpu, t_cpu_max, NTIMER, PDM_MPI_DOUBLE, PDM_MPI_MAX, dist->comm);
-
-  // //-->>
-  // double t_elaps_min[NTIMER];
-  // PDM_MPI_Allreduce (dist->times_elapsed, t_elaps_min, NTIMER, PDM_MPI_DOUBLE, PDM_MPI_MIN, dist->comm);
-
-  // double t_cpu_min[NTIMER];
-  // PDM_MPI_Allreduce (dist->times_cpu, t_cpu_min, NTIMER, PDM_MPI_DOUBLE, PDM_MPI_MIN, dist->comm);
-  // //<<--
-
-  // int rank;
-  // PDM_MPI_Comm_rank (dist->comm, &rank);
-
-  // if (rank == 0) {
-
-
-  //   PDM_printf( "distance timer : all                  (elapsed and cpu) : %12.5es %12.5es\n",
-  //               t1max, t2max);
-  //   PDM_printf( "distance timer : Upper bound distance (elapsed and cpu) :"
-  //               " %12.5es %12.5es\n",
-  //               t_elaps_max[UPPER_BOUND_DIST],
-  //               t_cpu_max[UPPER_BOUND_DIST]);
-  //   PDM_printf( "distance timer : Bbtree building      (elapsed and cpu) :"
-  //               " %12.5es %12.5es\n",
-  //               t_elaps_max[BBTREE_CREATE],
-  //               t_cpu_max[BBTREE_CREATE]);
-  //   PDM_printf( "distance timer : Candidate selection  (elapsed and cpu) :"
-  //               " %12.5es %12.5es\n",
-  //               t_elaps_max[CANDIDATE_SELECTION],
-  //               t_cpu_max[CANDIDATE_SELECTION]);
-  //   PDM_printf( "distance timer : Load balacing of elementary computations of distance"
-  //               " from the points to the candidates  (elapsed and cpu) :"
-  //               " %12.5es %12.5es\n",
-  //               t_elaps_max[LOAD_BALANCING_ELEM_DIST],
-  //               t_cpu_max[LOAD_BALANCING_ELEM_DIST]);
-  //   PDM_printf( "distance timer : Computations of the distance"
-  //               " from the points to the candidates    (elapsed and cpu) :"
-  //               " %12.5es %12.5es\n",
-  //               t_elaps_max[COMPUTE_ELEM_DIST],
-  //               t_cpu_max[COMPUTE_ELEM_DIST]);
-  //   PDM_printf( "distance timer : Results exchange     (elapsed and cpu) :"
-  //               " %12.5es %12.5es\n",
-  //               t_elaps_max[RESULT_TRANSMISSION],
-  //               t_cpu_max[RESULT_TRANSMISSION]);
-  //   PDM_printf_flush();
-  // }
+  PDM_timer_gather_dump(dist->timer, NULL);
 }
 
 

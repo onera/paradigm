@@ -154,7 +154,21 @@ PDM_timer_print
     int          mode
 );
 
-
+/**
+ * @brief Aggregates data and log the profiling report in current process to the paradigm logger
+ *
+ * @par Report Modes
+ * The report format is controlled by the \p mode parameter:
+ * - **mode = 0 (Hierarchical):** The report preserves the call structure, indenting child events
+ * under their parents. This is ideal for analyzing call flow and identifying top-level consumers.
+ * - **mode = 1 (Flat):** The report lists all unique events alphabetically by their full path name
+ * (e.g., "Main/Kernel/Loop"), ignoring the call hierarchy for a concise overview of every measured function.
+ *
+ * @param timer[in] The timer context structure (\c PDM_timer_t*)
+ * @param mode [in] An integer specifying the output format:
+ * - \c 0: Hierarchical Report (default)
+ * - \c 1: Flat Report (by path name)
+ */
 void
 PDM_timer_log
 (

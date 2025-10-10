@@ -17,7 +17,6 @@
 #include "pdm_printf.h"
 #include "pdm_priv.h"
 #include "pdm_writer.h"
-#include "pdm_timer.h"
 
 /*============================================================================
  * Type definitions
@@ -255,10 +254,6 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
-  PDM_timer_t *timer = PDM_timer_create(PDM_MPI_COMM_WORLD);
-
-  PDM_timer_start(timer, "PDM_part_create", 1);
-
 
   PDM_part_t *ppart = PDM_part_create(PDM_MPI_COMM_WORLD,
                                       method,
@@ -290,44 +285,11 @@ int main(int argc, char *argv[])
 
   PDM_free(dcell_part);
 
-  PDM_timer_end(timer, "PDM_part_create", 1);
-
-  PDM_timer_start(timer, "compute gnum", 1);
-
-
-  PDM_timer_start(timer, "PDM_dist_cloud_surf_create - step 1", 1);
-
-
-  if(i_rank == 1) {
-    sleep(2);
-  }
-
-  PDM_timer_start(timer, "PDM_dist_cloud_surf_create - step 2-1", 1);
-
-  if(i_rank == 0) {
-    sleep(4);
-  }
-
-  PDM_timer_end(timer, "PDM_dist_cloud_surf_create - step 2-1", 1);
-
-  PDM_timer_start(timer, "PDM_dist_cloud_surf_create - step 2-2", 1);
-
-  /*PDM_free(dface_cell); */
-  /*PDM_free(dface_vtx_idx); */
-  /*PDM_free(dface_vtx); */
-  /*PDM_free(dvtx_coord); */
-  /*PDM_free(dface_group_idx); */
-  /*PDM_free(dface_group); */
-
   int n_point_cloud = 1;
   PDM_dist_cloud_surf_t* dist = PDM_dist_cloud_surf_create (PDM_MESH_NATURE_MESH_SETTED,
                                                             n_point_cloud,
                                                             PDM_MPI_COMM_WORLD,
                                                             PDM_OWNERSHIP_KEEP);
-
-  PDM_dist_cloud_surf_timer_set(dist, timer);
-
-  PDM_timer_end(timer, "PDM_dist_cloud_surf_create - step 2-2", 1);
 
   int **select_face   = NULL;
   int  *n_select_face = NULL;
@@ -367,8 +329,6 @@ int main(int argc, char *argv[])
     printf("-- mesh dist set\n");
     fflush(stdout);
   }
-
-  PDM_timer_end(timer, "PDM_dist_cloud_surf_create - step 1", 1);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
 
@@ -573,11 +533,6 @@ int main(int argc, char *argv[])
     }
 
   }
-
-  PDM_timer_end(timer, "compute gnum", 1);
-
-  PDM_timer_start(timer, "dist_cloud_surf", 1);
-
 
   PDM_MPI_Allreduce (&n_g_face_loc, &n_g_face, 1,
                      PDM__PDM_MPI_G_NUM, PDM_MPI_MAX,
@@ -1100,21 +1055,9 @@ int main(int argc, char *argv[])
   PDM_gnum_free(gen_gnum_face);
   PDM_gnum_free(gen_gnum_vtx);
 
-  PDM_timer_end(timer, "dist_cloud_surf", 1);
-
-  PDM_timer_dump_json(timer, "toto.json");
-  // PDM_timer_dump_json(timer, "toto.json");
-
-
-  PDM_timer_gather_dump(timer, "timer_dist_cloud.md");
-  PDM_timer_gather_dump_json(timer, "timer_dist_cloud.json");
-
-  // PDM_timer_dump(timer);
-  PDM_timer_free(timer);
-
   PDM_MPI_Finalize();
 
-   if (i_rank == 0) {
+  if (i_rank == 0) {
     printf("-- End\n");
     fflush(stdout);
   }

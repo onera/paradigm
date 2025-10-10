@@ -568,7 +568,8 @@ _timer_gather
 
       _pdm_global_stat_t& g_record = gflat_timer[path];
 
-      g_record.n_call           += ln_call;
+      // g_record.n_call           += ln_call; // All ranks have same execution
+      g_record.n_call            = ln_call; // All ranks have same execution
       g_record.t_sum_inclusive  += lt_run_inclusive;
       g_record.t_sum_exclusive  += lt_run_exclusive;
       g_record.t_sum_sync_entry += lt_sync_entry;
@@ -1083,7 +1084,6 @@ PDM_timer_gather_dump_json
     return; // Only rank 0 export data
   }
 
-  // A completer ici
   FILE *fp = fopen(filename, "w");
   if (!fp) {
     fprintf(stderr, "PDM_TIMER ERROR: Could not open file for JSON dump: %s \n", filename);
@@ -1127,13 +1127,17 @@ PDM_timer_gather_dump
     std::stringstream report_stream = _pdm_timer_generate_report(timer, 0, &timer->gflat_timer, title);
     std::string       final_str     = report_stream.str();
 
-    FILE *fp = fopen(filename, "w");
-    if (!fp) {
-      PDM_error(__FILE__, __LINE__, 0, "PDM_TIMER ERROR: Could not open file for dump: %s \n", filename);
-      return;
+    if(filename != NULL) {
+      FILE *fp = fopen(filename, "w");
+      if (!fp) {
+        PDM_error(__FILE__, __LINE__, 0, "PDM_TIMER ERROR: Could not open file for dump: %s \n", filename);
+        return;
+      }
+      fprintf(fp, "%s", final_str.c_str());
+      fclose(fp);
+    } else {
+      std:: cout << final_str;
     }
-    fprintf(fp, "%s", final_str.c_str());
-    fclose(fp);
   }
 }
 

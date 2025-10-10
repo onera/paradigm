@@ -73,6 +73,7 @@ struct _pdm_dist_cloud_surf_t {
   _points_cloud_t *points_cloud;             /*!< Point clouds */
 
   PDM_timer_t *timer;                        /*!< Timer */
+  int          external_timer;
 
 };
 

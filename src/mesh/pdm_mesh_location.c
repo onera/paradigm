@@ -1669,87 +1669,8 @@ PDM_mesh_location_dump_times
 PDM_mesh_location_t *ml
 )
 {
-  abort();
-  // double t1 = ml->times_elapsed[END] - ml->times_elapsed[BEGIN];
-  // double t2 = ml->times_cpu[END] - ml->times_cpu[BEGIN];
-
-  // double t1max;
-  // PDM_MPI_Allreduce (&t1, &t1max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, ml->comm);
-
-  // double t2max;
-  // PDM_MPI_Allreduce (&t2, &t2max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, ml->comm);
-
-  // double t_elaps_max[NTIMER_MESH_LOCATION];
-  // PDM_MPI_Allreduce (ml->times_elapsed,
-  //                    t_elaps_max,
-  //                    NTIMER_MESH_LOCATION,
-  //                    PDM_MPI_DOUBLE,
-  //                    PDM_MPI_MAX,
-  //                    ml->comm);
-
-  // double t_cpu_max[NTIMER_MESH_LOCATION];
-  // PDM_MPI_Allreduce (ml->times_cpu,
-  //                    t_cpu_max, NTIMER_MESH_LOCATION,
-  //                    PDM_MPI_DOUBLE,
-  //                    PDM_MPI_MAX,
-  //                    ml->comm);
-
-  // int rank;
-  // PDM_MPI_Comm_rank (ml->comm, &rank);
-
-  // if (rank == 0) {
-
-  //   PDM_printf( "mesh_location timer : all (elapsed and cpu) :                                   "
-  //               " %12.5es %12.5es\n",
-  //               t1max, t2max);
-
-  //   PDM_printf( "mesh_location timer : build bounding boxes (elapsed and cpu)                    "
-  //               " %12.5es %12.5es\n",
-  //               t_elaps_max[BUILD_BOUNDING_BOXES],
-  //               t_cpu_max[BUILD_BOUNDING_BOXES]);
-
-  //   PDM_printf( "mesh_location timer : store connectivity (elapsed and cpu) :                    "
-  //               " %12.5es %12.5es\n",
-  //               t_elaps_max[STORE_CONNECTIVITY],
-  //               t_cpu_max[STORE_CONNECTIVITY]);
-
-  //   PDM_printf( "mesh_location timer : extract entities of interest (elapsed and cpu) :          "
-  //               " %12.5es %12.5es\n",
-  //               t_elaps_max[EXTRACT_ENTITIES_OF_INTEREST],
-  //               t_cpu_max[EXTRACT_ENTITIES_OF_INTEREST]);
-
-  //   PDM_printf( "mesh_location timer : build trees + search candidates (elapsed and cpu) :       "
-  //               " %12.5es %12.5es\n",
-  //               t_elaps_max[SEARCH_CANDIDATES],
-  //               t_cpu_max[SEARCH_CANDIDATES]);
-
-  //   PDM_printf( "mesh_location timer : load balancing (elapsed and cpu) :                        "
-  //               " %12.5es %12.5es\n",
-  //               t_elaps_max[LOAD_BALANCING],
-  //               t_cpu_max[LOAD_BALANCING]);
-
-  //   PDM_printf( "mesh_location timer : compute elementary locations (elapsed and cpu) :          "
-  //               " %12.5es %12.5es\n",
-  //               t_elaps_max[COMPUTE_ELEMENTARY_LOCATIONS],
-  //               t_cpu_max[COMPUTE_ELEMENTARY_LOCATIONS]);
-
-  //   PDM_printf( "mesh_location timer : merge location data (elapsed and cpu) :                   "
-  //               " %12.5es %12.5es\n",
-  //               t_elaps_max[MERGE_LOCATION_DATA],
-  //               t_cpu_max[MERGE_LOCATION_DATA]);
-
-  //   PDM_printf( "mesh_location timer : transfer to initial partitions (elapsed and cpu) :        "
-  //               " %12.5es %12.5es\n",
-  //               t_elaps_max[TRANSFER_TO_INITIAL_PARTITIONS],
-  //               t_cpu_max[TRANSFER_TO_INITIAL_PARTITIONS]);
-
-  //   PDM_printf( "mesh_location timer : finalize transfer to initial partition (elapsed and cpu) :"
-  //               " %12.5es %12.5es\n",
-  //               t_elaps_max[FINALIZE_TRANSFER_TO_INITIAL_PARTITIONS],
-  //               t_cpu_max[FINALIZE_TRANSFER_TO_INITIAL_PARTITIONS]);
-  // }
+  PDM_timer_gather_dump(ml->timer, NULL);
 }
-
 
 /**
  *
@@ -1988,6 +1909,7 @@ PDM_mesh_location_compute
                                     octree_points_in_leaf_max,
                                     octree_build_leaf_neighbours,
                                     ml->comm);
+    PDM_para_octree_timer_set(octree, ml->timer);
 
     for (int i_part = 0; i_part < n_part; i_part++) {
       int          n_vtx        = 0;
@@ -2659,6 +2581,7 @@ PDM_mesh_location_compute
 
           /* Build parallel octree */
           if (use_shared_tree == 0) {
+            PDM_para_octree_timer_set(octree, ml->timer);
             PDM_para_octree_build(octree, NULL);
           }
           else {
@@ -3076,7 +2999,7 @@ PDM_mesh_location_compute
     PDM_free(delt_init_location2);
 
     PDM_timer_end(ml->timer, "mesh_location:COMPUTE_ELEMENTARY_LOCATIONS", 0);
-    PDM_timer_end(ml->timer, "mesh_location:MERGE_LOCATION_DATA", 0);
+    PDM_timer_start(ml->timer, "mesh_location:MERGE_LOCATION_DATA", 0);
 
 
     /*
@@ -3976,7 +3899,7 @@ PDM_mesh_location_compute
   PDM_free(elt_g_num);
   PDM_free(pn_elt);
 
-  PDM_timer_start(ml->timer, "mesh_location:FULL", 0);
+  PDM_timer_end(ml->timer, "mesh_location:FULL", 0);
 
 }
 

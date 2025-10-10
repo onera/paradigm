@@ -3664,8 +3664,8 @@ PDM_io_get_timer_fichier
 
   if (fichier != NULL) {
     // PDM_timer_t *timer = fichier->timer_fichier;
-    // *t_cpu = PDM_timer_cpu(timer);
-    // *t_elapsed = PDM_timer_elapsed(timer);
+    *t_cpu     = 0.; // PDM_timer_cpu(timer);
+    *t_elapsed = 0.; // PDM_timer_elapsed(timer);
   } else {
     err_code = 1;
   }
@@ -3711,10 +3711,9 @@ PDM_io_timer_swap_endian_get
   int err_code = 0;
 
   if (fichier != NULL) {
-
     // PDM_timer_t *timer = fichier->timer_swap_endian;
-    // *t_cpu = PDM_timer_cpu(timer);
-    // *t_elapsed = PDM_timer_elapsed(timer);
+    *t_cpu     = 0.; // PDM_timer_cpu(timer);
+    *t_elapsed = 0.; // PDM_timer_elapsed(timer);
   } else {
     err_code = 1;
   }
@@ -3736,11 +3735,9 @@ PDM_io_timer_total_get
   int err_code = 0;
 
   if (fichier != NULL) {
-
     // PDM_timer_t *timer = fichier->timer_total;
-    // *t_cpu = PDM_timer_cpu(timer);
-    // *t_elapsed = PDM_timer_elapsed(timer);
-
+    *t_cpu     = 0.; // PDM_timer_cpu(timer);
+    *t_elapsed = 0.; // PDM_timer_elapsed(timer);
   } else {
     err_code = 1;
   }

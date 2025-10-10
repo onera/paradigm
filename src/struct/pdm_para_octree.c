@@ -7113,7 +7113,8 @@ PDM_para_octree_create
   octree->copy_requests.req_pts = NULL;
   octree->copy_requests.req_exp = NULL;
 
-  octree->timer = PDM_timer_create(octree->comm);
+  octree->timer          = PDM_timer_create(octree->comm);
+  octree->external_timer = 0;
 
   octree->shared_among_nodes = 0;
   octree->n_shm_ranks        = 0;
@@ -7248,7 +7249,9 @@ PDM_para_octree_free
   PDM_para_octree_free_copies (octree);
   PDM_para_octree_free_shm    (octree);
 
-  PDM_timer_free (_octree->timer);
+  if(_octree->external_timer == 0) {
+    PDM_timer_free(_octree->timer);
+  }
 
   PDM_free(_octree);
 }
@@ -11385,78 +11388,9 @@ PDM_para_octree_dump_times
  const PDM_para_octree_t *octree
 )
 {
-  abort();
-  // _pdm_para_octree_t *_octree = (_pdm_para_octree_t *) octree;
-
-  // double t1 = _octree->times_elapsed[END] - _octree->times_elapsed[BEGIN];
-  // double t2 = _octree->times_cpu[END] - _octree->times_cpu[BEGIN];
-
-  // double t1max;
-  // PDM_MPI_Allreduce (&t1, &t1max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, _octree->comm);
-
-  // double t2max;
-  // PDM_MPI_Allreduce (&t2, &t2max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, _octree->comm);
-
-  // double t_elaps_max[PARA_OCTREE_NTIMER];
-  // PDM_MPI_Allreduce (_octree->times_elapsed, t_elaps_max, PARA_OCTREE_NTIMER, PDM_MPI_DOUBLE, PDM_MPI_MAX, _octree->comm);
-
-  // double t_cpu_max[PARA_OCTREE_NTIMER];
-  // PDM_MPI_Allreduce (_octree->times_cpu, t_cpu_max, PARA_OCTREE_NTIMER, PDM_MPI_DOUBLE, PDM_MPI_MAX, _octree->comm);
-
-  // int rank;
-  // PDM_MPI_Comm_rank (_octree->comm, &rank);
-
-  // if (rank == 0) {
-
-  //   PDM_printf( "PDM_para_octree timer : all (elapsed and cpu)                                           :"
-  //               " %12.5es %12.5es\n",
-  //               t1max, t2max);
-  //   PDM_printf( "PDM_para_octree timer : build octree : total (elapsed and cpu)                          :"
-  //               " %12.5es %12.5es\n",
-  //               t_elaps_max[BUILD_TOTAL],
-  //               t_cpu_max[BUILD_TOTAL]);
-  //   PDM_printf( "PDM_para_octree timer : build octree : step order points (elapsed and cpu)              :"
-  //               " %12.5es %12.5es\n",
-  //               t_elaps_max[BUILD_ORDER_POINTS],
-  //               t_cpu_max[BUILD_ORDER_POINTS]);
-  //   PDM_printf( "PDM_para_octree timer : build octree : step block partition (elapsed and cpu)           :"
-  //               " %12.5es %12.5es\n",
-  //               t_elaps_max[BUILD_BLOCK_PARTITION],
-  //               t_cpu_max[BUILD_BLOCK_PARTITION]);
-  //   PDM_printf( "PDM_para_octree timer : build octree : step local nodes (elapsed and cpu)               :"
-  //               " %12.5es %12.5es\n",
-  //               t_elaps_max[BUILD_LOCAL_NODES],
-  //               t_cpu_max[BUILD_LOCAL_NODES]);
-  //   PDM_printf( "PDM_para_octree timer : build octree : step local neighbours (elapsed and cpu)          :"
-  //               " %12.5es %12.5es\n",
-  //               t_elaps_max[BUILD_LOCAL_NEIGHBOURS],
-  //               t_cpu_max[BUILD_LOCAL_NEIGHBOURS]);
-  //   PDM_printf( "PDM_para_octree timer : build octree : step local neighbours - step 1 (elapsed and cpu) :"
-  //               " %12.5es %12.5es\n",
-  //               t_elaps_max[BUILD_LOCAL_NEIGHBOURS_STEP1],
-  //               t_cpu_max[BUILD_LOCAL_NEIGHBOURS_STEP1]);
-  //   PDM_printf( "PDM_para_octree timer : build octree : step local neighbours - step 2 (elapsed and cpu) :"
-  //               " %12.5es %12.5es\n",
-  //               t_elaps_max[BUILD_LOCAL_NEIGHBOURS_STEP2],
-  //               t_cpu_max[BUILD_LOCAL_NEIGHBOURS_STEP2]);
-  //   PDM_printf( "PDM_para_octree timer : build octree : step local neighbours - step 3 (elapsed and cpu) :"
-  //               " %12.5es %12.5es\n",
-  //               t_elaps_max[BUILD_LOCAL_NEIGHBOURS_STEP3],
-  //               t_cpu_max[BUILD_LOCAL_NEIGHBOURS_STEP3]);
-  //   PDM_printf( "PDM_para_octree timer : build octree : step distant neighbours (elapsed and cpu)        :"
-  //               " %12.5es %12.5es\n",
-  //               t_elaps_max[BUILD_DISTANT_NEIGHBOURS],
-  //               t_cpu_max[BUILD_DISTANT_NEIGHBOURS]);
-
-  //   PDM_printf( "PDM_para_octree timer : build octree : build explicit nodes (elapsed and cpu)           :"
-  //               " %12.5es %12.5es\n",
-  //               t_elaps_max[BUILD_EXPLICIT_NODES],
-  //               t_cpu_max[BUILD_EXPLICIT_NODES]);
-
-  // }
-
+  _pdm_para_octree_t *_octree = (_pdm_para_octree_t *) octree;
+  PDM_timer_gather_dump(_octree->timer, NULL);
 }
-
 
 /**
  *
@@ -11471,22 +11405,6 @@ PDM_para_octree_dump_times
  * \param [out]  pts_in_box_coord       Coordinates of points located in boxes
  *
  */
-
-#define NTIMER_PIB 8
-
-typedef enum {
-  PIB_BEGIN,
-  PIB_REDISTRIBUTE,
-  PIB_COPIES,
-  PIB_EXCHANGE,
-  PIB_LOCAL,
-  PIB_PTB,
-  PIB_BTP,
-  PIB_TOTAL
-} _pib_step_t;
-
-#define PIB_TIME_FMT "%f" //"12.5e"
-
 void
 PDM_para_octree_points_inside_boxes_block_frame
 (
@@ -11498,12 +11416,12 @@ PDM_para_octree_points_inside_boxes_block_frame
  int                     **dbox_pts_n,
  PDM_g_num_t             **dbox_pts_g_num,
  double                  **dbox_pts_coord
- )
- {
-  int dbg_enabled = 0;
+)
+{
+  int   dbg_enabled      = 0;
   float f_copy_threshold = 1.05;
-  float f_max_copy = 0.05;
-  int   a_max_copy = 5;
+  float f_max_copy       = 0.05;
+  int   a_max_copy       = 5;
 
   char *env_var = NULL;
   env_var = getenv ("OCTREE_COPY_THRESHOLD");
@@ -11543,7 +11461,6 @@ PDM_para_octree_points_inside_boxes_block_frame
   if (dbg_enabled) printf("[%d] n_boxes = %d\n", i_rank, n_boxes);
 
   PDM_timer_start(_octree->timer, "para_octree:pib", 0);
-  PDM_timer_start(_octree->timer, "para_octree:pib_redistribute", 0);
 
   PDM_morton_code_t *box_corners = NULL;
   double d[3], s[3];
@@ -11716,7 +11633,6 @@ PDM_para_octree_points_inside_boxes_block_frame
     }
     PDM_free(box_corners);
 
-    PDM_timer_end(_octree->timer, "para_octree:pib_redistribute", 0);
     PDM_timer_start(_octree->timer, "para_octree:pib_copies", 0);
 
     //-->>
@@ -14308,5 +14224,26 @@ PDM_para_octree_neighbor_get
   *part_boundary_elt_idx = _octree->part_boundary_elt_idx;
   *part_boundary_elt     = _octree->part_boundary_elt;
 
+}
+
+void
+PDM_para_octree_timer_set
+(
+ const PDM_para_octree_t *octree,
+       PDM_timer_t       *timer
+)
+{
+  _pdm_para_octree_t *_octree = (_pdm_para_octree_t *) octree;
+  if(_octree->external_timer == 1) {
+    return;
+  }
+
+  if(timer == NULL) {
+    PDM_error(__FILE__, __LINE__, 0, "timer is NULL \n");
+  }
+
+  PDM_timer_free(_octree->timer);
+  _octree->timer = timer;
+  _octree->external_timer = 1;
 }
 

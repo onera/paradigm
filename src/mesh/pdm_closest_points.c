@@ -430,6 +430,7 @@ PDM_closest_point_t *cls
                                                      build_leaf_neighbours,
                                                      cls->comm);
 
+  PDM_para_octree_timer_set (octree, cls->timer);
 
   /* Set source point clouds */
   for (int i_part = 0; i_part < cls->src_cloud->n_part; i_part++) {
@@ -443,14 +444,11 @@ PDM_closest_point_t *cls
   /* Build parallel octree */
   PDM_para_octree_build (octree, NULL);
 
-  if (0) {
-    PDM_para_octree_dump_times (octree);
-  }
-
   /* Concatenate partitions */
   int n_tgt = 0;
-  for (int i_part = 0; i_part < cls->tgt_cloud->n_part; i_part++)
+  for (int i_part = 0; i_part < cls->tgt_cloud->n_part; i_part++) {
     n_tgt += cls->tgt_cloud->n_points[i_part];
+  }
 
   double      *tgt_coord        = NULL;
   PDM_g_num_t *tgt_g_num        = NULL;
@@ -769,22 +767,7 @@ PDM_closest_points_dump_times
 PDM_closest_point_t  *cls
 )
 {
-  // double t1 = cls->times_elapsed[END] - cls->times_elapsed[BEGIN];
-  // double t2 = cls->times_cpu    [END] - cls->times_cpu    [BEGIN];
-
-  // double t1max;
-  // PDM_MPI_Allreduce (&t1, &t1max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, cls->comm);
-
-  // double t2max;
-  // PDM_MPI_Allreduce (&t2, &t2max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, cls->comm);
-
-  // int rank;
-  // PDM_MPI_Comm_rank (cls->comm, &rank);
-
-  // if (rank == 0) {
-  //   PDM_printf( "closest_points timer : all (elapsed and cpu) : %12.5es %12.5es\n", t1max, t2max);
-  // }
-  abort();
+  PDM_timer_gather_dump(cls->timer, NULL);
 }
 
 

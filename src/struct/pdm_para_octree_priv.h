@@ -182,7 +182,8 @@ typedef struct  {
   int *part_boundary_elt_idx; /*!< Index for part_boundary_elt (size=\ref n_part_boundary_elt + 1 */
   int *part_boundary_elt;     /*!< Partitioning boundary elements description (proc number + element number) */
 
-  PDM_timer_t *timer; /*!< Timer */
+  PDM_timer_t *timer;          /*!< Timer */
+  int          external_timer;
 
   int neighboursToBuild;
 
