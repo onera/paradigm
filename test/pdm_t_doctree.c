@@ -252,7 +252,7 @@ char *argv[]
     PDM_free(box_pts    );
     PDM_free(pts_coord  );
   }
-
+  PDM_doctree_dump_times(doct);
 
   PDM_doctree_free(doct);
 

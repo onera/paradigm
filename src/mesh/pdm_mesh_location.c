@@ -58,34 +58,6 @@
  * Type definitions
  *============================================================================*/
 
-/**
- * \enum _ml_timer_step_t
- *
- */
-
-typedef enum {
-
-  BEGIN                                   = 0,
-  BUILD_BOUNDING_BOXES                    = 1,
-  STORE_CONNECTIVITY                      = 2,
-  EXTRACT_ENTITIES_OF_INTEREST            = 3,
-  SEARCH_CANDIDATES                       = 4,
-  LOAD_BALANCING                          = 5,
-  COMPUTE_ELEMENTARY_LOCATIONS            = 6,
-  MERGE_LOCATION_DATA                     = 7,
-  TRANSFER_TO_INITIAL_PARTITIONS          = 8,
-  FINALIZE_TRANSFER_TO_INITIAL_PARTITIONS = 9,
-  END                                     = 10
-
-} _ml_timer_step_t;
-
-
-struct _pdm_mpi_double_int_t {
-  double val;
-  int    rank;
-};
-typedef struct _pdm_mpi_double_int_t PDM_MPI_double_int_t;
-
 /*============================================================================
  * Global variable
  *============================================================================*/
@@ -93,48 +65,6 @@ typedef struct _pdm_mpi_double_int_t PDM_MPI_double_int_t;
 /*=============================================================================
  * Private function definitions
  *============================================================================*/
-
-
-// static
-// void
-// end_timer_and_log_from_dt(const char* msg, PDM_MPI_Comm comm, double delta_t){
-
-//   int n_rank;
-//   int i_rank;
-
-//   PDM_MPI_Comm_size(comm, &n_rank);
-//   PDM_MPI_Comm_rank(comm, &i_rank);
-
-//   PDM_MPI_double_int_t l_info;
-
-//   l_info.val  = delta_t;
-//   l_info.rank = i_rank;
-
-//   PDM_MPI_double_int_t g_max_info;
-//   PDM_MPI_double_int_t g_min_info;
-
-
-//   PDM_MPI_Allreduce (&l_info,
-//                      &g_max_info,
-//                      1,
-//                      PDM_MPI_DOUBLE_INT,
-//                      PDM_MPI_MAXLOC,
-//                      comm);
-
-//   PDM_MPI_Allreduce (&l_info,
-//                      &g_min_info,
-//                      1,
-//                      PDM_MPI_DOUBLE_INT,
-//                      PDM_MPI_MINLOC,
-//                      comm);
-
-//   log_trace("[%i] %s : duration min/max -> %12.5e [on rank = %i] %12.5e [on rank = %i] \n",
-//            n_rank, msg, g_min_info.val, g_min_info.rank, g_max_info.val, g_max_info.rank);
-//   if(i_rank == 0) {
-//     printf("[%i] %s : duration min/max -> %12.5e [on rank = %i] %12.5e [on rank = %i] \n",
-//            n_rank, msg, g_min_info.val, g_min_info.rank, g_max_info.val, g_max_info.rank);
-//   }
-// }
 
 
 /**
@@ -162,7 +92,6 @@ _store_cell_vtx
                                                &ml->cell_vtx_idx[ipart],
                                                &ml->cell_vtx    [ipart]);
     }
-
   }
 }
 
@@ -1950,8 +1879,6 @@ PDM_mesh_location_compute
   /* Big loop on point clouds */
   for (int icloud = 0; icloud < ml->n_point_cloud; icloud++) {
 
-    PDM_timer_start(ml->timer, "mesh_location:EXTRACT_ENTITIES_OF_INTEREST", 0);
-
     if (dbg_enabled) {
       log_trace("Point cloud %d\n", icloud);
     }
@@ -1967,6 +1894,8 @@ PDM_mesh_location_compute
 
     int use_extracted_pts = 0;
     PDM_g_num_t l_n_pts[2] = {0, 0};
+
+    PDM_timer_start(ml->timer, "mesh_location:EXTRACT_ENTITIES_OF_INTEREST", 0);
 
     if (ml->method != PDM_MESH_LOCATION_LOCATE_ALL_TGT) {
       PDM_malloc(n_select_pts,     pcloud->n_part, int  );
@@ -2089,6 +2018,7 @@ PDM_mesh_location_compute
           PDM_malloc(pcloud->dist2           [ipart], 0, double     );
         }
 
+        PDM_timer_end(ml->timer, "mesh_location:EXTRACT_ENTITIES_OF_INTEREST", 0);
         continue; // move on the next point cloud
       }
 
@@ -2522,7 +2452,6 @@ PDM_mesh_location_compute
     }
 
     PDM_timer_end(ml->timer, "mesh_location:EXTRACT_ENTITIES_OF_INTEREST", 0);
-
     PDM_timer_start(ml->timer, "mesh_location:SEARCH_CANDIDATES", 0);
 
     /*

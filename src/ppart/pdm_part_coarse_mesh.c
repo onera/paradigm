@@ -105,75 +105,70 @@ _coarse_mesh_create
  const int           have_cell_weight,
  const int           have_face_weight,
  const int           have_face_group
-
- )
+)
 {
-   PDM_coarse_mesh_t *cm;
-   PDM_malloc(cm, 1, PDM_coarse_mesh_t);
+  PDM_coarse_mesh_t *cm;
+  PDM_malloc(cm, 1, PDM_coarse_mesh_t);
 
-   cm->n_part = n_part;
-   cm->comm  = comm;
+  cm->n_part = n_part;
+  cm->comm  = comm;
 
-   int _method = PDM_coarse_mesh_method_idx_get(method);
+  int _method = PDM_coarse_mesh_method_idx_get(method);
 
    if (_method == -1) {
      PDM_error("'%s' is an unknown coarse mesh method", method);
    }
 
-   cm->method = _method;
+  cm->method = _method;
 
-   /* Reordering */
-   _method = PDM_part_renum_method_cell_idx_get(renum_cell_method);
+  /* Reordering */
+  _method = PDM_part_renum_method_cell_idx_get(renum_cell_method);
 
-   if (_method == -1) {
-     PDM_error("'%s' is an unknown renumbering cell method", renum_cell_method);
-   }
+  if (_method == -1) {
+    PDM_error("'%s' is an unknown renumbering cell method", renum_cell_method);
+  }
 
-   cm->renum_cell_method = _method;
+  cm->renum_cell_method = _method;
 
-   _method = PDM_part_renum_method_face_idx_get(renum_face_method);
+  _method = PDM_part_renum_method_face_idx_get(renum_face_method);
 
-   if (_method == -1) {
-     PDM_error("'%s' is an unknown renumbering face method", renum_face_method);
-   }
-   cm->renum_face_method = _method;
+  if (_method == -1) {
+    PDM_error("'%s' is an unknown renumbering face method", renum_face_method);
+  }
+  cm->renum_face_method = _method;
 
-   cm->n_property_cell        = n_property_cell;
-   cm->renum_properties_cell  = renum_properties_cell;
-   cm->n_property_face        = n_property_face;
-   cm->renum_properties_face  = renum_properties_face;
+  cm->n_property_cell        = n_property_cell;
+  cm->renum_properties_cell  = renum_properties_cell;
+  cm->n_property_face        = n_property_face;
+  cm->renum_properties_face  = renum_properties_face;
 
+  cm->n_total_part = n_total_part;
 
-   cm->n_total_part = n_total_part;
+  cm->n_face_group = n_face_group;
 
-   cm->n_face_group = n_face_group;
+  cm->have_cell_tag    = have_cell_tag;
+  cm->have_face_tag    = have_face_tag;
+  cm->have_vtx_tag     = have_vtx_tag;
+  cm->have_cell_weight = have_cell_weight;
+  cm->have_face_weight = have_face_weight;
+  cm->have_face_group  = have_face_group;
 
-   cm->have_cell_tag    = have_cell_tag;
-   cm->have_face_tag    = have_face_tag;
-   cm->have_vtx_tag     = have_vtx_tag;
-   cm->have_cell_weight = have_cell_weight;
-   cm->have_face_weight = have_face_weight;
-   cm->have_face_group  = have_face_group;
+  PDM_malloc(cm->part_ini, n_part, _part_t *); //On déclare un tableau de partitions
 
-   PDM_malloc(cm->part_ini, n_part, _part_t *); //On déclare un tableau de partitions
+  PDM_malloc(cm->part_res, n_part, _coarse_part_t *);
 
-   PDM_malloc(cm->part_res, n_part, _coarse_part_t *);
+  cm->specific_data = NULL;
+  cm->specific_func = NULL;
 
-   cm->specific_data = NULL;
-   cm->specific_func = NULL;
-
-   for (int i = 0; i < n_part; i++) {
-     cm->part_ini[i] = _part_create();
-
-     cm->part_res[i] = _coarse_part_create();
-
-     cm->part_res[i]->part->n_face_group = cm->n_face_group;
-
-   }
+  for (int i = 0; i < n_part; i++) {
+   cm->part_ini[i] = _part_create();
+   cm->part_res[i] = _coarse_part_create();
+   cm->part_res[i]->part->n_face_group = cm->n_face_group;
+  }
 
   cm->timer = PDM_timer_create(cm->comm);
 
-   return cm;
+  return cm;
 }
 
 /**
@@ -3595,7 +3590,8 @@ PDM_part_coarse_mesh_free
 
 
 
-void PDM_part_coarse_mesh_time_get
+void
+PDM_part_coarse_mesh_time_get
 (
  PDM_coarse_mesh_t  *cm,
  double            **elapsed,
@@ -3604,13 +3600,22 @@ void PDM_part_coarse_mesh_time_get
  double            **cpu_sys
 )
 {
-  abort();
-  *elapsed  = NULL; // cm->times_elapsed;
-  *cpu      = NULL; // cm->times_cpu;
-  *cpu_user = NULL; // cm->times_cpu_u;
-  *cpu_sys  = NULL; // cm->times_cpu_s;
+  PDM_UNUSED(cm);
+  PDM_UNUSED(elapsed);
+  PDM_UNUSED(cpu);
+  PDM_UNUSED(cpu_user);
+  PDM_UNUSED(cpu_sys);
+  PDM_error(__FILE__, __LINE__, 0, "PDM_part_coarse_mesh_time_get is deprecated, use PDM_part_coarse_mesh_dump_times instead \n");
 }
 
+void
+PDM_part_coarse_mesh_dump_times
+(
+ PDM_coarse_mesh_t  *cm
+)
+{
+  PDM_timer_gather_dump(cm->timer, NULL);
+}
 
 
 void

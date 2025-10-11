@@ -2937,7 +2937,7 @@ PDM_part_create
     /*
      * Build ppart structure
      */
-    _ppart->timer = PDM_timer_create(_ppart->comm);
+    _ppart->timer = PDM_timer_create(comm);
     PDM_timer_start(_ppart->timer, "ppart:total", 0);
     PDM_timer_start(_ppart->timer, "ppart:build_dual_graph", 0);
 
@@ -3546,13 +3546,22 @@ PDM_part_time_get
  double     **cpu_sys
 )
 {
-  _PDM_part_t *_ppart = (_PDM_part_t *) ppart;
+  PDM_UNUSED(ppart);
+  PDM_UNUSED(elapsed);
+  PDM_UNUSED(cpu);
+  PDM_UNUSED(cpu_user);
+  PDM_UNUSED(cpu_sys);
+  PDM_error(__FILE__, __LINE__, 0, "PDM_part_time_get is deprecated, use PDM_part_dump_times instead \n");
+}
 
-  abort();
-  *elapsed  = NULL; // _ppart->times_elapsed;
-  *cpu      = NULL; // _ppart->times_cpu;
-  *cpu_user = NULL; // _ppart->times_cpu_u;
-  *cpu_sys  = NULL; // _ppart->times_cpu_s;
+void
+PDM_part_dump_times
+(
+ PDM_part_t  *ppart
+)
+{
+  _PDM_part_t *_ppart = (_PDM_part_t *) ppart;
+  PDM_timer_gather_dump(_ppart->timer, NULL);
 }
 
 

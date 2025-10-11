@@ -2451,6 +2451,7 @@ PDM_io_par_interlaced_write
                             _n_donnees,
                             buffer);
       }
+      PDM_free(buffer);
     } else {
 
       /*----------------------------------------------------------

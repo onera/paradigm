@@ -303,7 +303,8 @@ PDM_doctree_build
     have_pts_init_location = 1;
   }
 
-  PDM_timer_end(doct->timer, "doctree:build:REDISTRIBUTE_PTS_HILBERT", 0);
+  PDM_timer_end  (doct->timer, "doctree:build:REDISTRIBUTE_PTS_HILBERT", 0);
+  PDM_timer_start(doct->timer, "doctree:build:BUILD_COARSE_TREE_AND_EXTRACT", 0);
 
   /*
    * Step 2 : Build local coarse tree

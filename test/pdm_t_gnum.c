@@ -321,20 +321,7 @@ _create_split_mesh
 
   PDM_free(dcell_part);
 
-  double  *elapsed = NULL;
-  double  *cpu = NULL;
-  double  *cpu_user = NULL;
-  double  *cpu_sys = NULL;
-
-  PDM_part_time_get (ppart,
-                     &elapsed,
-                     &cpu,
-                     &cpu_user,
-                     &cpu_sys);
-
-  if (i_rank == 0)
-    PDM_printf("[%d] Temps dans ppart %d : %12.5e\n",
-           i_rank, imesh, elapsed[0]);
+  PDM_part_dump_times(ppart);
 
   /* Statistiques */
 

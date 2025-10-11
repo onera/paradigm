@@ -180,8 +180,6 @@ _create_split_mesh
  int              *n_edge_group
 )
 {
-  struct timeval t_elaps_debut;
-
   int i_rank;
   int n_rank;
 
@@ -219,8 +217,6 @@ _create_split_mesh
 
   ++init_random;
 
-  gettimeofday(&t_elaps_debut, NULL);
-
   PDM_poly_surf_gen (pdm_mpi_comm,
                      xmin,
                      xmax,
@@ -245,19 +241,6 @@ _create_split_mesh
                      n_edge_group,
                      &dedge_group_idx,
                      &dedge_group);
-
-  struct timeval t_elaps_fin;
-
-  gettimeofday (&t_elaps_fin, NULL);
-
-  long tranche_elapsed = (t_elaps_fin.tv_usec + 1000000 * t_elaps_fin.tv_sec) -
-    (t_elaps_debut.tv_usec + 1000000 *
-     t_elaps_debut.tv_sec);
-  long tranche_elapsed_max = tranche_elapsed;
-  double t_elapsed = (double) tranche_elapsed_max/1000000.;
-  if (i_rank == 0)
-    PDM_printf("[%d] Temps dans creeMaillagePolygone2D %d : %12.5e\n",
-           i_rank, imesh, t_elapsed);
 
   if (0 == 1) {
 
@@ -352,21 +335,7 @@ _create_split_mesh
 
   PDM_free(dcell_part);
 
-  double *elapsed  = NULL;
-  double *cpu      = NULL;
-  double *cpu_user = NULL;
-  double *cpu_sys  = NULL;
-
-  PDM_part_time_get (ppart,
-                     &elapsed,
-                     &cpu,
-                     &cpu_user,
-                     &cpu_sys);
-
-  if (i_rank == 0)
-    PDM_printf("[%d] Temps dans ppart %d : %12.5e\n",
-           i_rank, imesh, elapsed[0]);
-
+  PDM_part_dump_times(ppart);
 
   PDM_free(dvtx_coord);
   PDM_free(dface_vtx_idx);
