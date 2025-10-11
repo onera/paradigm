@@ -474,18 +474,6 @@ PDM_block_to_part_create
 
   PDM_free(requested_data);
 
-  int n_rank_recv = 0;
-  int n_rank_send = 0;
-
-  for (int i = 0; i < btp->n_rank; i++) {
-    if (btp->i_rank != i && btp->distributed_data_n[i] > 0) {
-      n_rank_recv += 1;
-    }
-    if (btp->i_rank != i && btp->requested_data_n[i] > 0) {
-      n_rank_send += 1;
-    }
-  }
-
   return (PDM_block_to_part_t *) btp;
 }
 

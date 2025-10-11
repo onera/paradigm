@@ -955,7 +955,7 @@ PDM_timer_end
 
   _pdm_timer_event_t* current_node = timer->call_stack.back();
   if (current_node->event_name != current_name) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_TIMER ERROR: PDM_timer_end (%s) called but active timer is %s \n", name, current_node->event_name);
+    PDM_error(__FILE__, __LINE__, 0, "PDM_TIMER ERROR: PDM_timer_end (%s) called but active timer is %s \n", name, current_node->event_name.c_str());
     return;
   }
 
