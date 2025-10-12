@@ -4108,10 +4108,18 @@ const int                           id_part,
 {
   if (pmne->numabs == NULL) {
     PDM_malloc(pmne->numabs, pmne->n_part, PDM_g_num_t*);
-    int is_not_parent_num = (PDM_part_mesh_nodal_elmts_parent_num_get(pmne, pmne->sections_id[0], 0, PDM_OWNERSHIP_KEEP) == NULL);
+    int is_not_parent_num = 0;
     for (int i = 0; i < pmne->n_part; i++) {
       for (int i1 = 0; i1 < pmne->n_section; i1++) {
-        assert (is_not_parent_num == (PDM_part_mesh_nodal_elmts_parent_num_get(pmne, pmne->sections_id[i1], i, PDM_OWNERSHIP_KEEP) == NULL));
+        is_not_parent_num = (PDM_part_mesh_nodal_elmts_parent_num_get(pmne, pmne->sections_id[i1], i, PDM_OWNERSHIP_KEEP) == NULL);
+      }
+      // Check
+      for (int i1 = 0; i1 < pmne->n_section; i1++) {
+        int lis_not_parent_num = (PDM_part_mesh_nodal_elmts_parent_num_get(pmne, pmne->sections_id[i1], i, PDM_OWNERSHIP_KEEP) == NULL);
+        if(is_not_parent_num != lis_not_parent_num) {
+          PDM_error(__FILE__, __LINE__, 0, "PDM_part_mesh_nodal_elmts_g_num_get_from_part have strange mix of parent_num : is_not_parent_num = %i / current_scetion = %i (lis_not_parent_num=%i) \n",
+                    is_not_parent_num, i1, lis_not_parent_num);
+        }
       }
     }
 
