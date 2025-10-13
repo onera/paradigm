@@ -48,23 +48,23 @@ PDM_MPI_Sends_init
         int               *sendcounts,
         int               *sdispls,
         PDM_MPI_Datatype   datatype,
-        int                n_active_send,
-        int               *active_send,
+        int                n_tgt_rank,
+        int               *tgt_rank,
         int                tag,
         PDM_MPI_Comm       comm,
         PDM_MPI_Request  **out_requests
 )
 {
   PDM_MPI_Request *requests = NULL;
-  PDM_malloc(requests, n_active_send, PDM_MPI_Request);
+  PDM_malloc(requests, n_tgt_rank, PDM_MPI_Request);
 
   int size_send_type;
   MPI_Type_size(datatype, &size_send_type);
 
   int code = MPI_SUCCESS;
-  for (int i = 0; i < n_active_send; i++) {
+  for (int i = 0; i < n_tgt_rank; i++) {
     void *buf = (void *) ((unsigned char*) sendbuf + sdispls[i] * size_send_type);
-    int t_rank = active_send[i];
+    int t_rank = tgt_rank[i];
     code = MPI_Send_init(buf,
                          sendcounts[i],
                          datatype,
@@ -90,23 +90,23 @@ PDM_MPI_Isends
         int               *sendcounts,
         int               *sdispls,
         PDM_MPI_Datatype   datatype,
-        int                n_active_send,
-        int               *active_send,
+        int                n_tgt_rank,
+        int               *tgt_rank,
         int                tag,
         PDM_MPI_Comm       comm,
         PDM_MPI_Request  **out_requests
 )
 {
   PDM_MPI_Request *requests = NULL;
-  PDM_malloc(requests, n_active_send, PDM_MPI_Request);
+  PDM_malloc(requests, n_tgt_rank, PDM_MPI_Request);
 
   int size_send_type;
   MPI_Type_size(datatype, &size_send_type);
 
   int code = MPI_SUCCESS;
-  for (int i = 0; i < n_active_send; i++) {
+  for (int i = 0; i < n_tgt_rank; i++) {
     void *buf = (void *) ((unsigned char*) sendbuf + sdispls[i] * size_send_type);
-    int t_rank = active_send[i];
+    int t_rank = tgt_rank[i];
     code = MPI_Isend(buf,
                      sendcounts[i],
                      datatype,
@@ -131,23 +131,23 @@ PDM_MPI_Recvs_init
         int               *recvcounts,
         int               *rdispls,
         PDM_MPI_Datatype   datatype,
-        int                n_active_recv,
-        int               *active_recv,
+        int                n_src_rank,
+        int               *src_rank,
         int                tag,
         PDM_MPI_Comm       comm,
         PDM_MPI_Request  **out_requests
 )
 {
   PDM_MPI_Request *requests = NULL;
-  PDM_malloc(requests, n_active_recv, PDM_MPI_Request);
+  PDM_malloc(requests, n_src_rank, PDM_MPI_Request);
 
   int size_recv_type;
   MPI_Type_size(datatype, &size_recv_type);
 
   int code = MPI_SUCCESS;
-  for (int i = 0; i < n_active_recv; i++) {
+  for (int i = 0; i < n_src_rank; i++) {
     void *buf = (void *) ((unsigned char*) recvbuf + rdispls[i] * size_recv_type);
-    int t_rank = active_recv[i];
+    int t_rank = src_rank[i];
     code = MPI_Recv_init(buf,
                          recvcounts[i],
                          datatype,
@@ -171,23 +171,23 @@ PDM_MPI_Irecvs
         int               *recvcounts,
         int               *rdispls,
         PDM_MPI_Datatype   datatype,
-        int                n_active_recv,
-        int               *active_recv,
+        int                n_src_rank,
+        int               *src_rank,
         int                tag,
         PDM_MPI_Comm       comm,
         PDM_MPI_Request  **out_requests
 )
 {
   PDM_MPI_Request *requests = NULL;
-  PDM_malloc(requests, n_active_recv, PDM_MPI_Request);
+  PDM_malloc(requests, n_src_rank, PDM_MPI_Request);
 
   int size_recv_type;
   MPI_Type_size(datatype, &size_recv_type);
 
   int code = MPI_SUCCESS;
-  for (int i = 0; i < n_active_recv; i++) {
+  for (int i = 0; i < n_src_rank; i++) {
     void *buf = (void *) ((unsigned char*) recvbuf + rdispls[i] * size_recv_type);
-    int t_rank = active_recv[i];
+    int t_rank = src_rank[i];
     code = MPI_Irecv(buf,
                      recvcounts[i],
                      datatype,

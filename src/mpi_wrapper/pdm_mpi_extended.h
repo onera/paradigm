@@ -44,18 +44,18 @@ extern "C" {
  * MPI_Start, and completed with functions like MPI_Waitall or MPI_Testall.
  *
  * \param[in]  sendbuf        Send buffer
- * \param[in]  sendcounts     Number of elements to send to each active destination process (size = \p n_active_send)
- * \param[in]  sdispls        Displacement (relative to \p sendbuf) to the data relative to each active destination process (size = \p n_active_send)
+ * \param[in]  sendcounts     Number of elements to send to each active destination process (size = \p n_tgt_rank)
+ * \param[in]  sdispls        Displacement (relative to \p sendbuf) to the data relative to each active destination process (size = \p n_tgt_rank)
  * \param[in]  datatype       Type of the data elements in \p sendbuf
- * \param[in]  n_active_send  Number of active destination processes
- * \param[in]  active_send    Ranks in \p comm of active destination processes (size = \p n_send_rank)
+ * \param[in]  n_tgt_rank     Number of active destination processes
+ * \param[in]  tgt_rank       Ranks in \p comm of active destination processes (size = \p n_send_rank)
  * \param[in]  tag            Message tag to be used for the send operations
  * \param[in]  comm           MPI communicator
  * \param[out] out_requests   MPI requests
  *
  * \return An MPI error code. PDM_MPI_SUCCESS on success, otherwise an error code.
  *
- * \pre The arrays sendcounts, sdispls, and active_send must be allocated and correctly sized (at least n_active_send).
+ * \pre The arrays sendcounts, sdispls, and tgt_rank must be allocated and correctly sized (at least n_tgt_rank).
  * \post A non-null pointer to an array of MPI requests is returned via out_requests, which must be freed by the user after communication is complete.
  *
  * \see PDM_MPI_Recvs_init for the corresponding receive operation.
@@ -68,8 +68,8 @@ PDM_MPI_Sends_init
         int               *sendcounts,
         int               *sdispls,
         PDM_MPI_Datatype   datatype,
-        int                n_active_send,
-        int               *active_send,
+        int                n_tgt_rank,
+        int               *tgt_rank,
         int                tag,
         PDM_MPI_Comm       comm,
         PDM_MPI_Request  **out_requests
@@ -83,18 +83,18 @@ PDM_MPI_Sends_init
  * The function allocates an array of MPI requests and initiates a separate `MPI_Isend` for each active destination, but unlike `PDM_MPI_Sends_init`, it does not create persistent requests.
  *
  * \param[in]  sendbuf        Send buffer
- * \param[in]  sendcounts     Number of elements to send to each active destination process (size = \p n_active_send)
- * \param[in]  sdispls        Displacement (relative to \p sendbuf) to the data relative to each active destination process (size = \p n_active_send)
+ * \param[in]  sendcounts     Number of elements to send to each active destination process (size = \p n_tgt_rank)
+ * \param[in]  sdispls        Displacement (relative to \p sendbuf) to the data relative to each active destination process (size = \p n_tgt_rank)
  * \param[in]  datatype       Type of the data elements in \p sendbuf
- * \param[in]  n_active_send  Number of active destination processes
- * \param[in]  active_send    Ranks in \p comm of active destination processes (size = \p n_send_rank)
+ * \param[in]  n_tgt_rank     Number of active destination processes
+ * \param[in]  tgt_rank       Ranks in \p comm of active destination processes (size = \p n_send_rank)
  * \param[in]  tag            Message tag to be used for the send operations
  * \param[in]  comm           MPI communicator
  * \param[out] out_requests   MPI requests
  *
  * \return An MPI error code. MPI_SUCCESS on success, otherwise an error code.
  *
- * \pre The arrays sendcounts, sdispls, and active_send must be allocated and correctly sized (at least n_active_send).
+ * \pre The arrays sendcounts, sdispls, and tgt_rank must be allocated and correctly sized (at least n_tgt_rank).
  * \post A non-null pointer to an array of MPI requests is returned via out_requests, which must be freed by the user after communication is completed (e.g., with MPI_Waitall).
  *
  * \see PDM_MPI_Sends_init for persistent requests.
@@ -108,8 +108,8 @@ PDM_MPI_Isends
         int               *sendcounts,
         int               *sdispls,
         PDM_MPI_Datatype   datatype,
-        int                n_active_send,
-        int               *active_send,
+        int                n_tgt_rank,
+        int               *tgt_rank,
         int                tag,
         PDM_MPI_Comm       comm,
         PDM_MPI_Request  **out_requests
@@ -124,18 +124,18 @@ PDM_MPI_Isends
  * The function allocates an array of MPI requests and initiates a separate `MPI_Irecv` for each active source.
  *
  * \param[out] recvbuf        Receive buffer
- * \param[in]  recvcounts     Number of elements to receive from each active source process (size = \p n_active_recv)
- * \param[in]  rdispls        Displacement (relative to \p recvbuf) to the data relative to each active source process (size = \p n_active_recv)
+ * \param[in]  recvcounts     Number of elements to receive from each active source process (size = \p n_src_rank)
+ * \param[in]  rdispls        Displacement (relative to \p recvbuf) to the data relative to each active source process (size = \p n_src_rank)
  * \param[in]  datatype       Type of the data elements in \p recvbuf
- * \param[in]  n_active_recv  Number of active source processes
- * \param[in]  active_recv    Ranks in \p comm of active source processes (size = \p n_active_recv)
+ * \param[in]  n_src_rank     Number of active source processes
+ * \param[in]  src_rank       Ranks in \p comm of active source processes (size = \p n_src_rank)
  * \param[in]  tag            Message tag to be used for the receive operations
  * \param[in]  comm           MPI communicator
  * \param[out] out_requests   MPI requests
  *
  * \return An MPI error code. MPI_SUCCESS on success, otherwise an error code.
  *
- * \pre The arrays recvcounts, sdispls, and active_recv must be allocated and correctly sized (at least n_active_recv).
+ * \pre The arrays recvcounts, sdispls, and src_rank must be allocated and correctly sized (at least n_src_rank).
  * \post A non-null pointer to an array of MPI requests is returned via out_requests, which must be freed by the user after communication is completed (e.g., with MPI_Waitall).
  *
  * \see PDM_MPI_Recvs_init for persistent requests.
@@ -149,8 +149,8 @@ PDM_MPI_Irecvs
         int               *recvcounts,
         int               *rdispls,
         PDM_MPI_Datatype   datatype,
-        int                n_active_recv,
-        int               *active_recv,
+        int                n_src_rank,
+        int               *src_rank,
         int                tag,
         PDM_MPI_Comm       comm,
         PDM_MPI_Request  **out_requests
@@ -170,11 +170,11 @@ PDM_MPI_Irecvs
  * MPI_Start, and completed with functions like MPI_Waitall or MPI_Testall.
  *
  * \param[in]  recvbuf        Receive buffer
- * \param[in]  recvcounts     Number of elements to receive from each active source process (size = \p n_active_recv)
- * \param[in]  rdispls        Displacement (relative to \p recvbuf) to the data relative to each active source process (size = \p n_active_recv)
+ * \param[in]  recvcounts     Number of elements to receive from each active source process (size = \p n_src_rank)
+ * \param[in]  rdispls        Displacement (relative to \p recvbuf) to the data relative to each active source process (size = \p n_src_rank)
  * \param[in]  datatype       Type of the data elements in \p recvbuf
- * \param[in]  n_active_recv  Number of active source processes
- * \param[in]  active_recv    Ranks in \p comm of active source processes (size = \p n_active_recv)
+ * \param[in]  n_src_rank     Number of active source processes
+ * \param[in]  src_rank       Ranks in \p comm of active source processes (size = \p n_src_rank)
  * \param[in]  tag            Message tag to be used for the receive operations
  * \param[in]  comm           MPI communicator
  * \param[out] out_requests   MPI requests
@@ -182,7 +182,7 @@ PDM_MPI_Irecvs
  *
  * \return An MPI error code. MPI_SUCCESS on success, otherwise an error code.
  *
- * \pre The arrays recvcounts, rdispls, and active_recv must be allocated and correctly sized (at least n_active_recv).
+ * \pre The arrays recvcounts, rdispls, and src_rank must be allocated and correctly sized (at least n_src_rank).
  * \post A non-null pointer to an array of MPI requests is returned via out_requests, which must be freed by the user after communication is complete.
  *
  * \see PDM_MPI_Sends_init for the corresponding send operation.
@@ -195,8 +195,8 @@ PDM_MPI_Recvs_init
   int               *recvcounts,
   int               *rdispls,
   PDM_MPI_Datatype   datatype,
-  int                n_active_recv,
-  int               *active_recv,
+  int                n_src_rank,
+  int               *src_rank,
   int                tag,
   PDM_MPI_Comm       comm,
   PDM_MPI_Request  **out_requests
