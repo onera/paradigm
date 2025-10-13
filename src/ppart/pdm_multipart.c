@@ -67,6 +67,7 @@
 #include "pdm_part_to_block.h"
 #include "pdm_partitioning_algorithm.h"
 #include "pdm_partitioning_nodal_algorithm.h"
+#include "pdm_part_mesh_nodal_algorithm.h"
 #include "pdm_printf.h"
 #include "pdm_priv.h"
 #include "pdm_sort.h"
@@ -710,6 +711,11 @@ _compute_part_mesh_nodal_3d
   PDM_free(pvtx_coord);
   PDM_free(pn_vtx);
 
+  /* Create part_comm_graph with gnum */
+  PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(pmn, PDM_MESH_ENTITY_FACE);
+  PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(pmn, PDM_MESH_ENTITY_EDGE);
+  PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(pmn, PDM_MESH_ENTITY_VTX);
+
   return pmn;
 }
 
@@ -911,6 +917,11 @@ _compute_part_mesh_nodal_2d
   PDM_free(pvtx_ln_to_gn);
   PDM_free(pvtx_coord);
   PDM_free(pn_vtx);
+
+  /* Create part_comm_graph with gnum */
+  PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(pmn, PDM_MESH_ENTITY_EDGE);
+  PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(pmn, PDM_MESH_ENTITY_VTX);
+
   return pmn;
 }
 
@@ -1059,6 +1070,10 @@ _compute_part_mesh_nodal_1d
   PDM_free(pvtx_ln_to_gn);
   PDM_free(pvtx_coord);
   PDM_free(pn_vtx);
+
+  /* Create part_comm_graph with gnum */
+  PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(pmn, PDM_MESH_ENTITY_VTX);
+
   return pmn;
 }
 

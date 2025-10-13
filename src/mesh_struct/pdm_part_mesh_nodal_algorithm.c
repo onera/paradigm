@@ -970,10 +970,6 @@ PDM_part_mesh_nodal_compute_straddling_entities
                                             &pedge_graph,
                                              NULL);
 
-      for (int i_part=0; i_part<pmn->n_part; ++i_part) {
-        PDM_free(unique_edge_vtx_idx[i_part]);
-      }
-      PDM_free(unique_edge_vtx_idx);
       PDM_free(pn_vtx_graph);
       PDM_free(pvtx_graph);
 
@@ -988,7 +984,10 @@ PDM_part_mesh_nodal_compute_straddling_entities
       PDM_part_mesh_nodal_part_comm_graph_set(pmn, pcg_edge, PDM_MESH_ENTITY_EDGE, PDM_OWNERSHIP_KEEP);
     }
 
-
+    for (int i_part=0; i_part<pmn->n_part; ++i_part) {
+      PDM_free(unique_edge_vtx_idx[i_part]);
+    }
+    PDM_free(unique_edge_vtx_idx);
 
     if (debug_visu==1) {
       PDM_part_mesh_nodal_dump_vtk(pmn, PDM_GEOMETRY_KIND_RIDGE, "edge_detected");

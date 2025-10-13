@@ -4106,12 +4106,23 @@ const int                           id_part,
       PDM_ownership_t               ownership
 )
 {
+  // Mandatory
+  if (pmne->n_section == 0 || pmne->n_part == 0) {
+    return NULL;
+  }
+
   if (pmne->numabs == NULL) {
     PDM_malloc(pmne->numabs, pmne->n_part, PDM_g_num_t*);
-    int is_not_parent_num = (PDM_part_mesh_nodal_elmts_parent_num_get(pmne, pmne->sections_id[0], 0, PDM_OWNERSHIP_KEEP) == NULL);
-    for (int i = 0; i < pmne->n_part; i++) {
-      for (int i1 = 0; i1 < pmne->n_section; i1++) {
-        assert (is_not_parent_num == (PDM_part_mesh_nodal_elmts_parent_num_get(pmne, pmne->sections_id[i1], i, PDM_OWNERSHIP_KEEP) == NULL));
+    // Safe because we early exit if n_section == 0
+    int is_not_parent_num = (PDM_part_mesh_nodal_elmts_parent_num_get(pmne, pmne->sections_id[0], 0 /*i_part*/, PDM_OWNERSHIP_KEEP) == NULL);
+    for (int i_part = 0; i_part < pmne->n_part; i_part++) {
+      // Check
+      for (int i_section = 0; i_section < pmne->n_section; i_section++) {
+        int lis_not_parent_num = (PDM_part_mesh_nodal_elmts_parent_num_get(pmne, pmne->sections_id[i_section], i_part, PDM_OWNERSHIP_KEEP) == NULL);
+        if(is_not_parent_num != lis_not_parent_num) {
+          PDM_error(__FILE__, __LINE__, 0, "PDM_part_mesh_nodal_elmts_g_num_get_from_part have strange mix of parent_num : is_not_parent_num = %i / current_section = %i (lis_not_parent_num=%i) \n",
+                    is_not_parent_num, i_section, lis_not_parent_num);
+        }
       }
     }
 

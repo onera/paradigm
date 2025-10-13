@@ -290,6 +290,13 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] part_comm_graph from gnum", 2) {
                                                                 1., 1., 1., // x/y/z length
                                                                 3, 3, 3, // x/y/z n vertices
                                                                 1, PDM_SPLIT_DUAL_WITH_HILBERT); // part options
+  // Oups ! We suppress pcg !
+  PDM_part_comm_graph_free(pmn->pcg[PDM_MESH_ENTITY_VTX ]);
+  PDM_part_comm_graph_free(pmn->pcg[PDM_MESH_ENTITY_EDGE]);
+  PDM_part_comm_graph_free(pmn->pcg[PDM_MESH_ENTITY_FACE]);
+  pmn->pcg[PDM_MESH_ENTITY_VTX ] = NULL;
+  pmn->pcg[PDM_MESH_ENTITY_EDGE] = NULL;
+  pmn->pcg[PDM_MESH_ENTITY_FACE] = NULL;
 
   PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(pmn, PDM_MESH_ENTITY_VTX);
   std::vector<std::vector<int>> expected_graph = {{10, 1, 1, 1,
