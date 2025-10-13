@@ -139,23 +139,6 @@ struct _pdm_global_stat_t {
 
 struct _pdm_timer_t {
 
-  double  t_cpu;                   /* Temps CPU cumule */
-  double  t_elapsed;               /* Temps elapsed cumule */
-#if defined (PDM_HAVE_GETRUSAGE)
-  double  t_cpu_u;                 /* Temps CPU utilisateur */
-  double  t_cpu_s;                 /* Temps CPU system */
-  double  t_cpu_debut;
-  double  t_cpu_u_debut;
-  double  t_cpu_s_debut;
-#else
-  clock_t t_cpu_debut;             /* Marque de debut de mesure
-                                      du temps CPU */
-#endif
-  struct timeval t_elaps_debut;    /* Marque de debut de mesure
-                                      du temps elapsed */
-  int     indic;                   /* Indique si une mesure d'une tranche est en cours */
-
-
   PDM_MPI_Comm comm;
   int exclusive_time_computed = 0;
   _pdm_timer_event_t root_event;
@@ -176,7 +159,7 @@ struct _pdm_timer_t {
  */
 static
 _pdm_timer_event_t*
-get_active_parent
+_get_active_parent
 (
   PDM_timer_t *timer
 )
@@ -191,10 +174,10 @@ get_active_parent
 
 static
 void
-calculate_max_widths(_pdm_timer_event_t& node, int current_indent_length, size_t& max_name_width) {
+_calculate_max_widths(_pdm_timer_event_t& node, int current_indent_length, size_t& max_name_width) {
   if (node.event_name == "__ROOT__") {
     for (auto& child_name : node.child_insertion_order) {
-      calculate_max_widths(*node.children.at(child_name), current_indent_length, max_name_width);
+      _calculate_max_widths(*node.children.at(child_name), current_indent_length, max_name_width);
     }
     return;
   }
@@ -208,13 +191,13 @@ calculate_max_widths(_pdm_timer_event_t& node, int current_indent_length, size_t
 
   // Recurse
   for (auto& child_name : node.child_insertion_order) {
-    calculate_max_widths(*node.children.at(child_name), current_indent_length + 3, max_name_width);
+    _calculate_max_widths(*node.children.at(child_name), current_indent_length + 3, max_name_width);
   }
 }
 
 static
 void
-collect_timer
+_collect_timer
 (
   _pdm_timer_event_t*                         node,
   std::map<std::string, _pdm_timer_event_t*>& output_map
@@ -227,13 +210,13 @@ collect_timer
 
   // Parcours récursif de tous les enfants dans l'ordre d'insertion
   for (auto& child_name : node->child_insertion_order) {
-    collect_timer(node->children.at(child_name).get(), output_map);
+    _collect_timer(node->children.at(child_name).get(), output_map);
   }
 }
 
 static
 std::string
-format_condensed_value
+_format_condensed_value
 (
   double time,
   int    rank
@@ -249,7 +232,7 @@ format_condensed_value
 
 static
 std::string
-format_full_condensed_stat
+_format_full_condensed_stat
 (
   double t_mean,
   double t_min,
@@ -259,9 +242,9 @@ format_full_condensed_stat
   int    width
 )
 {
-  std::string mean_str = format_condensed_value(t_mean, -1);
-  std::string min_str  = format_condensed_value(t_min, r_min);
-  std::string max_str  = format_condensed_value(t_max, r_max);
+  std::string mean_str = _format_condensed_value(t_mean, -1);
+  std::string min_str  = _format_condensed_value(t_min, r_min);
+  std::string max_str  = _format_condensed_value(t_max, r_max);
 
   std::string content = mean_str + "/" + min_str + "/" + max_str;
 
@@ -272,7 +255,7 @@ format_full_condensed_stat
 }
 
 std::string
-format_timer_line_main
+_format_timer_line_main
 (
        _pdm_timer_event_t&                        node,
  const std::string&                               indented_name,
@@ -304,28 +287,28 @@ format_timer_line_main
 
     // --- COLONNES GLOBAL COMPACTES (MEAN/MIN[R]/MAX[R]) ---
     // T_Inclusive
-    ss << std::right << format_full_condensed_stat(g_rec->t_mean_run_inclusive,
-                                                   g_rec->t_min_run_inclusive, g_rec->rank_min_inclusive,
-                                                   g_rec->t_max_run_inclusive, g_rec->rank_max_inclusive,
-                                                   time_width);
+    ss << std::right << _format_full_condensed_stat(g_rec->t_mean_run_inclusive,
+                                                    g_rec->t_min_run_inclusive, g_rec->rank_min_inclusive,
+                                                    g_rec->t_max_run_inclusive, g_rec->rank_max_inclusive,
+                                                    time_width);
 
     // T_Exclusive
-    ss << " |" << std::right << format_full_condensed_stat(g_rec->t_mean_run_exclusive,
-                                                           g_rec->t_min_run_exclusive, g_rec->rank_min_exclusive,
-                                                           g_rec->t_max_run_exclusive, g_rec->rank_max_exclusive,
-                                                           time_width);
+    ss << " |" << std::right << _format_full_condensed_stat(g_rec->t_mean_run_exclusive,
+                                                            g_rec->t_min_run_exclusive, g_rec->rank_min_exclusive,
+                                                            g_rec->t_max_run_exclusive, g_rec->rank_max_exclusive,
+                                                            time_width);
 
     // T_Sync_Entry
-    ss << " |" << std::right << format_full_condensed_stat(g_rec->t_mean_sync_entry,
-                                                           g_rec->t_min_sync_entry, g_rec->rank_min_sync_entry,
-                                                           g_rec->t_max_sync_entry, g_rec->rank_max_sync_entry,
-                                                           time_width);
+    ss << " |" << std::right << _format_full_condensed_stat(g_rec->t_mean_sync_entry,
+                                                            g_rec->t_min_sync_entry, g_rec->rank_min_sync_entry,
+                                                            g_rec->t_max_sync_entry, g_rec->rank_max_sync_entry,
+                                                            time_width);
 
     // T_Sync_Exit
-    ss << " |" << std::right << format_full_condensed_stat(g_rec->t_mean_sync_exit,
-                                                           g_rec->t_min_sync_exit, g_rec->rank_min_sync_exit,
-                                                           g_rec->t_max_sync_exit, g_rec->rank_max_sync_exit,
-                                                           time_width);
+    ss << " |" << std::right << _format_full_condensed_stat(g_rec->t_mean_sync_exit,
+                                                            g_rec->t_min_sync_exit, g_rec->rank_min_sync_exit,
+                                                            g_rec->t_max_sync_exit, g_rec->rank_max_sync_exit,
+                                                            time_width);
 
   } else {
 
@@ -351,7 +334,7 @@ format_timer_line_main
 
 static
 void
-collect_all_nodes
+_collect_all_nodes
 (
   _pdm_timer_event_t*               node,
   std::vector<_pdm_timer_event_t*>& all_nodes
@@ -361,13 +344,13 @@ collect_all_nodes
     all_nodes.push_back(node);
   }
   for (auto& child_name : node->child_insertion_order) {
-    collect_all_nodes(node->children.at(child_name).get(), all_nodes);
+    _collect_all_nodes(node->children.at(child_name).get(), all_nodes);
   }
 }
 
 static
 void
-traverse_and_add_lines
+_traverse_and_add_lines
 (
         _pdm_timer_event_t&                        node,
         int                                        depth,
@@ -381,7 +364,7 @@ traverse_and_add_lines
   // Ignorer le n?ud racine, mais continuer à parcourir ses enfants
   if (node.event_name == "__ROOT__") {
     for (auto& child_name : node.child_insertion_order) {
-      traverse_and_add_lines(*node.children.at(child_name), depth, name_width, time_width, ncall_width, global_stats, lines);
+      _traverse_and_add_lines(*node.children.at(child_name), depth, name_width, time_width, ncall_width, global_stats, lines);
     }
     return;
   }
@@ -395,12 +378,12 @@ traverse_and_add_lines
 
   // 2. Formater et ajouter la seule ligne (Local ou Global Condensé: MEAN/MIN[R]/MAX[R])
   lines.push_back(
-    format_timer_line_main(node, indented_name, name_width, time_width, ncall_width, global_stats)
+    _format_timer_line_main(node, indented_name, name_width, time_width, ncall_width, global_stats)
   );
 
   // 3. Parcourir les enfants
   for (auto& child_name : node.child_insertion_order) {
-    traverse_and_add_lines(*node.children.at(child_name), depth + 1, name_width, time_width, ncall_width, global_stats, lines);
+    _traverse_and_add_lines(*node.children.at(child_name), depth + 1, name_width, time_width, ncall_width, global_stats, lines);
   }
 }
 
@@ -456,7 +439,7 @@ _timer_gather
 
   // Collect all data with tmp dict base on path
   std::map<std::string, _pdm_timer_event_t*> lflat_timer;
-  collect_timer(&(timer->root_event), lflat_timer);
+  _collect_timer(&(timer->root_event), lflat_timer);
 
   int n_send        = lflat_timer.size();
   int n_send_path   = 0;
@@ -717,7 +700,7 @@ _pdm_timer_generate_report
   bool is_global_report = (global_stats != nullptr);
 
   size_t max_name_width = 11;
-  calculate_max_widths(timer->root_event, 0, max_name_width);
+  _calculate_max_widths(timer->root_event, 0, max_name_width);
   max_name_width = std::min(max_name_width + 2, (size_t)80);
 
   const int N_CALL_COL_WIDTH = 10;
@@ -758,23 +741,23 @@ _pdm_timer_generate_report
 
   if (mode == 0) { // Hierarchical Mode
     for (auto& child_name : timer->root_event.child_insertion_order) {
-      traverse_and_add_lines(*timer->root_event.children.at(child_name), 0, max_name_width, TIME_COL_WIDTH, N_CALL_COL_WIDTH, global_stats, content_lines);
+      _traverse_and_add_lines(*timer->root_event.children.at(child_name), 0, max_name_width, TIME_COL_WIDTH, N_CALL_COL_WIDTH, global_stats, content_lines);
     }
   } else { // Flat/Raw Mode
     std::vector<_pdm_timer_event_t*> all_nodes;
-    collect_all_nodes(&timer->root_event, all_nodes);
+    _collect_all_nodes(&timer->root_event, all_nodes);
 
     // La largeur de l'espace vide pour aligner les stats MIN/MAX en mode plat
     const int EMPTY_COL_WIDTH = max_name_width + N_CALL_COL_WIDTH + 2;
     std::string empty_prefix = std::string(EMPTY_COL_WIDTH, ' ');
 
     for(auto* node : all_nodes) {
-      content_lines.push_back(format_timer_line_main(*node,
-                                                     node->event_name,
-                                                     max_name_width,
-                                                     TIME_COL_WIDTH,
-                                                     N_CALL_COL_WIDTH,
-                                                     global_stats));
+      content_lines.push_back(_format_timer_line_main(*node,
+                                                      node->event_name,
+                                                      max_name_width,
+                                                      TIME_COL_WIDTH,
+                                                      N_CALL_COL_WIDTH,
+                                                      global_stats));
     }
   }
 
@@ -790,7 +773,7 @@ _pdm_timer_generate_report
 
 static
 void
-dump_global_hierarchical_json
+_dump_global_hierarchical_json
 (
        _pdm_timer_event_t&                        node,
        int                                        indent,
@@ -851,7 +834,7 @@ dump_global_hierarchical_json
 
       bool current_level_first_child = true;
       for (auto& child_name : node.child_insertion_order) {
-        dump_global_hierarchical_json(*node.children.at(child_name), indent + 1, fp, current_level_first_child, global_stats);
+        _dump_global_hierarchical_json(*node.children.at(child_name), indent + 1, fp, current_level_first_child, global_stats);
       }
       fprintf(fp, "\n");
       fprintf(fp, "%s]", inner_indent.c_str());
@@ -892,7 +875,7 @@ PDM_timer_start
 )
 {
   std::string current_name(name);
-  _pdm_timer_event_t* parent_node = get_active_parent(timer);
+  _pdm_timer_event_t* parent_node = _get_active_parent(timer);
   _pdm_timer_event_t* event_ptr;
 
   // 1. Get or create the node
@@ -963,7 +946,7 @@ PDM_timer_end
   timer->call_stack.pop_back();
 
   // Retrieve the new parent node
-  _pdm_timer_event_t* parent_node = get_active_parent(timer);
+  _pdm_timer_event_t* parent_node = _get_active_parent(timer);
 
   // NEW: Measure and execute Exit Barrier
   if (force_synchro == 1) {
@@ -1097,7 +1080,7 @@ PDM_timer_gather_dump_json
   // 3. Lancer la récursion sur l'arbre local avec les stats globales
   bool first_event = true;
   for (auto& child_name : timer->root_event.child_insertion_order) {
-    dump_global_hierarchical_json(*timer->root_event.children.at(child_name), 1, fp, first_event, &timer->gflat_timer);
+    _dump_global_hierarchical_json(*timer->root_event.children.at(child_name), 1, fp, first_event, &timer->gflat_timer);
   }
 
   // 4. Écrire le pied de page JSON
