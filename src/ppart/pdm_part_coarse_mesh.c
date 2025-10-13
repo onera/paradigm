@@ -1706,7 +1706,7 @@ _coarse_grid_compute
 
 
   int *dual_graph_idx = NULL;
-  int *dual_graph    = NULL;
+  int *dual_graph     = NULL;
 
   PDM_part_graph_compute_from_face_cell(part_ini,
                                (int **) &dual_graph_idx,

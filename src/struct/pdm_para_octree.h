@@ -475,8 +475,8 @@ PDM_para_octree_neighbor_get
  *
  * \brief Add external timer
  *
- * \param [in]   octree             Pointer to octree structure
- * \param [in]   timer              Timer
+ * \param [in]   octree  Pointer to octree structure
+ * \param [in]   timer   Pointer to \ref PDM_timer_t object
  *
  */
 void

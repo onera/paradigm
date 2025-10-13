@@ -303,7 +303,7 @@ PDM_doctree_build
     have_pts_init_location = 1;
   }
 
-  PDM_timer_end  (doct->timer, "doctree:build:REDISTRIBUTE_PTS_HILBERT", 0);
+  PDM_timer_end  (doct->timer, "doctree:build:REDISTRIBUTE_PTS_HILBERT"     , 0);
   PDM_timer_start(doct->timer, "doctree:build:BUILD_COARSE_TREE_AND_EXTRACT", 0);
 
   /*
@@ -365,7 +365,7 @@ PDM_doctree_build
 
 
   PDM_timer_end  (doct->timer, "doctree:build:BUILD_COARSE_TREE_AND_EXTRACT", 0);
-  PDM_timer_start(doct->timer, "doctree:build:BUILD_BBOX_COARSE", 0);
+  PDM_timer_start(doct->timer, "doctree:build:BUILD_BBOX_COARSE"            , 0);
 
   /*
    * Equilibrate among nodes/numa - To reduce memory footprint we set up data in shared memory
@@ -488,8 +488,7 @@ PDM_doctree_build
   PDM_free(init_location_proc);
 
 
-  PDM_timer_end(doct->timer, "doctree:build:BUILD_BBOX_COARSE", 0);
-
+  PDM_timer_end  (doct->timer, "doctree:build:BUILD_BBOX_COARSE"     , 0);
   PDM_timer_start(doct->timer, "doctree:build:BBOX_COARSE_SOLICITATE", 0);
 
   int* coarse_tree_box_to_box_idx = NULL;
@@ -513,7 +512,7 @@ PDM_doctree_build
     abort();
   }
 
-  PDM_timer_end  (doct->timer, "doctree:build:BBOX_COARSE_SOLICITATE", 0);
+  PDM_timer_end  (doct->timer, "doctree:build:BBOX_COARSE_SOLICITATE"      , 0);
   PDM_timer_start(doct->timer, "doctree:build:EQUILIBRATE_WITH_SOLICITATON", 0);
 
   /*
@@ -1188,7 +1187,7 @@ PDM_doctree_build
   //PDM_free(equi_pts_gnum);
   PDM_free(equi_n_pts);
 
-  PDM_timer_end(doct->timer, "doctree:build:BUILD_LOCAL_TREE", 0);
+  PDM_timer_end  (doct->timer, "doctree:build:BUILD_LOCAL_TREE"       , 0);
   PDM_timer_start(doct->timer, "doctree:build:BUILD_SHARED_LOCAL_TREE", 0);
 
   /*
@@ -1210,7 +1209,7 @@ PDM_doctree_build
   PDM_point_tree_seq_free(doct->local_tree);
   doct->local_tree = NULL;
 
-  PDM_timer_end(doct->timer, "doctree:build:BUILD_SHARED_LOCAL_TREE", 0);
+  PDM_timer_end  (doct->timer, "doctree:build:BUILD_SHARED_LOCAL_TREE", 0);
   PDM_timer_start(doct->timer, "doctree:build:UPDATE_SOLICITATION_WAIT", 0);
 
   /*
@@ -1273,8 +1272,8 @@ PDM_doctree_build
   PDM_free(coarse_tree_box_to_box_idx);
   PDM_free(coarse_tree_box_to_box);
 
-  PDM_timer_end(doct->timer, "doctree:build:UPDATE_SOLICITATION_WAIT", 0);
-  PDM_timer_start(doct->timer, "doctree:build:LOCAL_SOLICITATE", 0);
+  PDM_timer_end  (doct->timer, "doctree:build:UPDATE_SOLICITATION_WAIT", 0);
+  PDM_timer_start(doct->timer, "doctree:build:LOCAL_SOLICITATE"        , 0);
 
   /*
    * Finalize solicitation

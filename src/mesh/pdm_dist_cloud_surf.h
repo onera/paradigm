@@ -250,6 +250,14 @@ PDM_dist_cloud_surf_dump_times
   PDM_dist_cloud_surf_t  *dist
 );
 
+/**
+ *
+ * \brief Add external timer
+ *
+ * \param [in]  dist    Pointer to \ref PDM_dist_cloud_surf_t instance
+ * \param [in]  timer   Pointer to \ref PDM_timer_t object
+ *
+ */
 void
 PDM_dist_cloud_surf_timer_set
 (

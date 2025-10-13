@@ -3001,7 +3001,7 @@ PDM_multipart_create
   }
 
   // Initialise timers
-  multipart->timer     = PDM_timer_create(multipart->comm);
+  multipart->timer = PDM_timer_create(multipart->comm);
 
   return (PDM_multipart_t *) multipart;
 }

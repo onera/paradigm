@@ -1,7 +1,3 @@
-/*============================================================================
- * Mesure des temps CPU et elapsed
- *============================================================================*/
-
 /*----------------------------------------------------------------------------
  * Standard C library headers
  *----------------------------------------------------------------------------*/
@@ -174,7 +170,13 @@ _get_active_parent
 
 static
 void
-_calculate_max_widths(_pdm_timer_event_t& node, int current_indent_length, size_t& max_name_width) {
+_calculate_max_widths
+(
+  _pdm_timer_event_t& node,
+  int                 current_indent_length,
+  size_t&             max_name_width
+)
+{
   if (node.event_name == "__ROOT__") {
     for (auto& child_name : node.child_insertion_order) {
       _calculate_max_widths(*node.children.at(child_name), current_indent_length, max_name_width);
@@ -361,7 +363,7 @@ _traverse_and_add_lines
         std::vector<std::string>&                  lines
 )
 {
-  // Ignorer le n?ud racine, mais continuer à parcourir ses enfants
+  // Ignorer le noeud racine, mais continuer à parcourir ses enfants
   if (node.event_name == "__ROOT__") {
     for (auto& child_name : node.child_insertion_order) {
       _traverse_and_add_lines(*node.children.at(child_name), depth, name_width, time_width, ncall_width, global_stats, lines);
@@ -686,7 +688,7 @@ _dump_json
 
 static
 std::stringstream
-_pdm_timer_generate_report
+_generate_report
 (
         PDM_timer_t*                               timer,
         int                                        mode,
@@ -979,7 +981,7 @@ PDM_timer_get_report_string
   PDM_MPI_Comm_rank(timer->comm, &i_rank);
 
   std::string title = "LOCAL Rank " + std::to_string(i_rank);
-  std::stringstream report_stream = _pdm_timer_generate_report(timer, mode, nullptr, title);
+  std::stringstream report_stream = _generate_report(timer, mode, nullptr, title);
   std::string       final_str     = report_stream.str();
 
   char *cstr = NULL;
@@ -1107,7 +1109,7 @@ PDM_timer_gather_dump
   PDM_MPI_Comm_rank(timer->comm, &i_rank);
   if(i_rank == 0) {
     std::string title = "AGGREGATED GLOBAL (All Ranks)";
-    std::stringstream report_stream = _pdm_timer_generate_report(timer, 0, &timer->gflat_timer, title);
+    std::stringstream report_stream = _generate_report(timer, 0, &timer->gflat_timer, title);
     std::string       final_str     = report_stream.str();
 
     if(filename != NULL) {
