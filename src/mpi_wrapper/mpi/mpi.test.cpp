@@ -323,34 +323,26 @@ MPI_TEST_CASE("[PDM_MPI_Send_init/PDM_MPI_Recv_init]", 2) {
   const int TAG      = 99;
 
   // --- 1. Définition des tampons ---
-  // P0 envoie [10, 11, 12] et P1 reçoit
-  // P1 envoie [20, 21, 22] et P0 reçoit
   std::vector<int> send_data_p0 = {10, 11, 12};
   std::vector<int> send_data_p1 = {20, 21, 22};
 
-  // Tampons de réception (taille maximum nécessaire)
   std::vector<int> recv_data(MSG_SIZE, -1);
 
   PDM_MPI_Request send_request = PDM_MPI_REQUEST_NULL;
   PDM_MPI_Request recv_request = PDM_MPI_REQUEST_NULL;
 
-  // --- 2. Initialisation des communications persistantes (Send_init/Recv_init) ---
   if (i_rank == 0) {
-    // P0: Envoie à P1, Reçoit de P1
-
-    // P0 envoie à P1
+    // P0 send to P1
     PDM_MPI_Send_init(send_data_p0.data(), MSG_SIZE, PDM_MPI_INT, 1, TAG, pdm_comm, &send_request);
 
-    // P0 reçoit de P1
+    // P0 receive from P1
     PDM_MPI_Recv_init(recv_data.data(), MSG_SIZE, PDM_MPI_INT, 1, TAG, pdm_comm, &recv_request);
 
   } else { // i_rank == 1
-    // P1: Reçoit de P0, Envoie à P0
-
-    // P1 reçoit de P0
+    // P1 send to P0
     PDM_MPI_Recv_init(recv_data.data(), MSG_SIZE, PDM_MPI_INT, 0, TAG, pdm_comm, &recv_request);
 
-    // P1 envoie à P0
+    // P1 receive from P0
     PDM_MPI_Send_init(send_data_p1.data(), MSG_SIZE, PDM_MPI_INT, 0, TAG, pdm_comm, &send_request);
   }
 
@@ -360,32 +352,24 @@ MPI_TEST_CASE("[PDM_MPI_Send_init/PDM_MPI_Recv_init]", 2) {
   MPI_CHECK(0, recv_request != PDM_MPI_REQUEST_NULL);
   MPI_CHECK(1, recv_request != PDM_MPI_REQUEST_NULL);
 
-  // --- 3. Démarrage des communications (Start) ---
-
-  // Démarrage de la communication de réception (essentiel avant le Start du Send)
+  // --- 3. Start communication ---
   PDM_MPI_Start(&recv_request);
-
-  // Démarrage de la communication d'envoi
   PDM_MPI_Start(&send_request);
 
-  // --- 4. Attente des communications (Wait) ---
-
-  // Attente de l'envoi et de la réception
+  // --- 4. Waiting completion of send and recv ---
   PDM_MPI_Wait(&send_request);
   PDM_MPI_Wait(&recv_request);
 
-  // --- 5. Vérification des résultats ---
-
+  // --- 5. Check results ---
   std::vector<int> expected_recv_p0 = {20, 21, 22}; // P0 reçoit de P1
   std::vector<int> expected_recv_p1 = {10, 11, 12}; // P1 reçoit de P0
 
   MPI_CHECK_EQ_C_ARRAY(0, recv_data.data(), expected_recv_p0.data(), MSG_SIZE);
   MPI_CHECK_EQ_C_ARRAY(1, recv_data.data(), expected_recv_p1.data(), MSG_SIZE);
 
-  // --- 6. Libération des requêtes persistantes (Très important) ---
-
-  // PDM_MPI_Request_free doit être appelée pour nettoyer la requête persistante
-  // Une fois libérée, la requête doit être PDM_MPI_REQUEST_NULL
+  // --- 6. Free persistent request ---
+  // PDM_MPI_Request_free need to be called to free properly persistent request
+  // After, the request must be equal to PDM_MPI_REQUEST_NULL
   PDM_MPI_Request_free(&send_request);
   PDM_MPI_Request_free(&recv_request);
 
@@ -407,50 +391,43 @@ MPI_TEST_CASE("[PDM_MPI_Alltoallv_p2p_init]", 2) {
     const int MSG_SIZE = 3;
     const int TAG      = 99;
 
-    // --- 1. Définition des données et des buffers ---
-    // Les données à envoyer par P0 (vers P1) : {10, 11, 12}
-    // Les données à envoyer par P1 (vers P0) : {20, 21, 22}
+    // --- 1. Define data and buffers ---
+    // Data send by P0 (to P1) : {10, 11, 12}
+    // Data send by P1 (to P0) : {20, 21, 22}
 
-    // Le buffer d'envoi global doit contenir toutes les données à envoyer.
-    // Pour P0, il envoie 3 ints à P1, P0 n'envoie rien à P0.
-    // Pour P1, il envoie 3 ints à P0, P1 n'envoie rien à P1.
+    // The initial send buffer should contain all the data !
+    // For P0, we send 3 ints to P1, P0 send nothing to P0.
+    // For P1, we send 3 ints to P0, P1 send nothing to P1.
     std::vector<int> send_data(MSG_SIZE, 0);
 
-    // Les données reçues par P0 (de P1) : {20, 21, 22}
-    // Les données reçues par P1 (de P0) : {10, 11, 12}
+    // Recv data by P0 (from P1) : {20, 21, 22}
+    // Recv data by P1 (from P0) : {10, 11, 12}
     std::vector<int> recv_data(MSG_SIZE, -1);
 
-    // --- 2. Définition des compteurs et déplacements AlltoallV ---
-    // P0 envoie 3 à P1 (rank 1), reçoit 3 de P1 (rank 1)
-    // P1 envoie 3 à P0 (rank 0), reçoit 3 de P0 (rank 0)
+    // --- 2. Define count et displacement for alltoallv ---
+    // P0 send 3 data to P1, receive 3 from P1
+    // P1 send 3 data to P0, receive 3 from P0
     std::vector<int> sendcounts(n_rank, 0);
     std::vector<int> recvcounts(n_rank, 0);
     std::vector<int> sdispls(n_rank, 0);
     std::vector<int> rdispls(n_rank, 0);
 
-    // Logique pour les deux processus:
     if (i_rank == 0) {
-      // P0 envoie 3 éléments à P1 (index 1)
       sendcounts[1] = MSG_SIZE;
-      // P0 reçoit 3 éléments de P1 (index 1)
       recvcounts[1] = MSG_SIZE;
-      // Remplissage du buffer d'envoi de P0 (ce qu'il envoie à P1)
       send_data = {10, 11, 12};
     } else { // i_rank == 1
-      // P1 envoie 3 éléments à P0 (index 0)
       sendcounts[0] = MSG_SIZE;
-      // P1 reçoit 3 éléments de P0 (index 0)
       recvcounts[0] = MSG_SIZE;
-      // Remplissage du buffer d'envoi de P1 (ce qu'il envoie à P0)
       send_data = {20, 21, 22};
     }
 
-    // Déplacements (simples car une seule communication pour ce cas):
+    // Define displacement - Trivial
     sdispls[0] = 0; sdispls[1] = 0;
     rdispls[0] = 0; rdispls[1] = 0;
 
-    // --- 3. Initialisation des requêtes persistantes ---
-    int n_requests_expected = 2; // 1 Send + 1 Recv par processus = 2 requêtes
+    // --- 3. Init persistent request
+    int n_requests_expected = 2; // 1 Send + 1 Recv by proces = 2 requests
     int n_requests_actual   = 0;
     PDM_MPI_Request *requests = NULL;
 
@@ -467,19 +444,16 @@ MPI_TEST_CASE("[PDM_MPI_Alltoallv_p2p_init]", 2) {
                                &n_requests_actual,
                                &requests);
 
-    // Vérification que le nombre correct de requêtes a été initialisé
     CHECK(n_requests_actual == n_requests_expected);
 
-    // --- 6. Vérification des résultats ---
-    std::vector<int> expected_recv_p0 = {20, 21, 22}; // P0 reçoit de P1
-    std::vector<int> expected_recv_p1 = {10, 11, 12}; // P1 reçoit de P0
+    // --- 6. Results validation ---
+    std::vector<int> expected_recv_p0 = {20, 21, 22};
+    std::vector<int> expected_recv_p1 = {10, 11, 12};
 
     for(int iter = 0; iter < 5; ++iter) {
 
-      // --- 4. Démarrage des communications (Startall) ---
       PDM_MPI_Startall(n_requests_actual, requests);
 
-      // --- 5. Attente des communications (Waitall) ---
       PDM_MPI_Waitall(n_requests_actual, requests);
 
       MPI_CHECK_EQ_C_ARRAY(0, recv_data.data(), expected_recv_p0.data(), MSG_SIZE);
@@ -499,12 +473,10 @@ MPI_TEST_CASE("[PDM_MPI_Alltoallv_p2p_init]", 2) {
 
     }
 
-    // --- 7. Libération des requêtes persistantes ---
     for (int i = 0; i < n_requests_actual; ++i) {
       PDM_MPI_Request_free(&requests[i]);
     }
 
-    // Libération du tableau de pointeurs
     PDM_free(requests);
 }
 
@@ -517,18 +489,17 @@ MPI_TEST_CASE("[PDM_MPI_Partofactiverank]", 4) {
     PDM_MPI_Comm_rank(pdm_comm, &i_rank);
     PDM_MPI_Comm_size(pdm_comm, &n_rank);
 
-    // --- SCÉNARIO 1 : Moitié des rangs actifs (2 sur 4) ---
-    // Les rangs 0 et 1 sont actifs. Les rangs 2 et 3 sont inactifs.
-    // Taux d'actifs attendu : 2 / 4 = 0.5
-    std::vector<int> sendcounts1(n_rank, 0); // Les envois
-    std::vector<int> recvcounts1(n_rank, 0); // Les réceptions
+    // --- SCÉNARIO 1 : Half of ranks is active (2 sur 4) ---
+    // Rank 0 et 1 is active. Rank 2 et 3 sont inactive.
+    std::vector<int> sendcounts1(n_rank, 0);
+    std::vector<int> recvcounts1(n_rank, 0);
     double part_active_rank1 = 0.0;
 
     // Rangs 0 et 1 actifs :
     if (i_rank == 0) {
-      sendcounts1[1] = 5; // P0 envoie à P1
+      sendcounts1[1] = 5;
     } else if (i_rank == 1) {
-      recvcounts1[0] = 5; // P1 reçoit de P0
+      recvcounts1[0] = 5;
     }
 
     // Appel de la fonction
@@ -539,20 +510,20 @@ MPI_TEST_CASE("[PDM_MPI_Partofactiverank]", 4) {
 
     CHECK(part_active_rank1 == doctest::Approx(0.25).epsilon(0.01));
 
-    // --- SCÉNARIO 2 : Tous les rangs actifs (4 sur 4) ---
+    // --- SCÉNARIO 2 : All ranks is actives (4 sur 4) ---
     std::vector<int> sendcounts2(n_rank, 0);
     std::vector<int> recvcounts2(n_rank, 0);
     double part_active_rank2 = 0.0;
 
     // Rangs 0, 1, 2, 3 actifs :
     if (i_rank == 0) {
-        sendcounts2[1] = 1; // Envoi
+      sendcounts2[1] = 1;
     } else if (i_rank == 1) {
-        recvcounts2[0] = 1; // Réception
+      recvcounts2[0] = 1;
     } else if (i_rank == 2) {
-        sendcounts2[3] = 1; // Envoi
+      sendcounts2[3] = 1;
     } else if (i_rank == 3) {
-        recvcounts2[2] = 1; // Réception
+      recvcounts2[2] = 1;
     }
 
     // Appel de la fonction
@@ -563,10 +534,7 @@ MPI_TEST_CASE("[PDM_MPI_Partofactiverank]", 4) {
 
     CHECK(part_active_rank2 == doctest::Approx(0.25).epsilon(0.01));
 
-    // --- SCÉNARIO 3 : Un seul rang actif (1 sur 4) ---
-    // Seul le rang 0 est actif (il a un envoi > 0). Les autres sont inactifs.
-    // Taux d'actifs attendu : 1 / 4 = 0.25
-
+    // --- SCÉNARIO 3 : One rank is active actif (1 sur 4) ---
     std::vector<int> sendcounts3(n_rank, 0);
     std::vector<int> recvcounts3(n_rank, 0);
     double part_active_rank3 = 0.0;
@@ -576,7 +544,6 @@ MPI_TEST_CASE("[PDM_MPI_Partofactiverank]", 4) {
       sendcounts3[1] = 1;
     }
 
-    // Appel de la fonction
     PDM_MPI_Partofactiverank(sendcounts3.data(),
                              recvcounts3.data(),
                              pdm_comm,
