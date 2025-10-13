@@ -2740,16 +2740,6 @@ PDM_dist_cloud_surf_free
   PDM_free(dist);
 }
 
-// void
-// PDM_dist_cloud_surf_timer_set
-// (
-//  PDM_dist_cloud_surf_t  *dist,
-//  PDM_timer_t            *timer
-// )
-// {
-//   dist->timer = timer;
-// }
-
 /**
  *
  * \brief  Dump elapsed an CPU time
