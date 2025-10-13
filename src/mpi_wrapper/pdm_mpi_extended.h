@@ -247,8 +247,8 @@ PDM_MPI_Partofactiverank
  * \param[in]  recvcounts           Number of elements to receive from each source process (size = \p n_src_rank)
  * \param[in]  rdispls              Displacement (relative to \p recvbuf) to the data relative to each source process (size = \p n_src_rank)
  * \param[in]  recvtype             Type of the data elements in \p recvbuf
- * \param[in]  n_src_rank          Number of source processes
- * \param[in]  src_rank            Ranks in \p comm of source processes (size = \p n_src_rank)
+ * \param[in]  n_src_rank           Number of source processes
+ * \param[in]  src_rank             Ranks in \p comm of source processes (size = \p n_src_rank)
  * \param[in]  tag                  The message tag for P2P communication
  * \param[in]  comm                 MPI communicator
  * \param[out] n_send_recv_request  Total number of MPI requests
@@ -376,9 +376,7 @@ PDM_MPI_Ialltoallv_p2p_rma
  *
  * This function serves as the **Large-Offset (L) wrapper** around the native MPI_Alltoallv (or equivalent MPI_Ialltoallv/Wait)
  * but uses size_t for the displacement arrays (sdispls, rdispls) to support extremely large data transfers
- * that exceed the limitations of standard integer displacement arrays. The underlying implementation will typically
- * rely on a specialized MPI function (like MPI_Ialltoallv with custom datatype offsets or MPIX_Alltoallv_ll) if available,
- * or fall back to an internal large-offset P2P emulation. The call is blocking.
+ * that exceed the limitations of standard integer displacement arrays. The call is blocking.
  *
  * \param[in]  sendbuf     Send buffer
  * \param[in]  sendcounts  Number of elements to send to each rank
