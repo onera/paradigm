@@ -480,7 +480,7 @@ MPI_TEST_CASE("[PDM_MPI_Alltoallv_p2p_init]", 2) {
 }
 
 
-MPI_TEST_CASE("[PDM_MPI_Partofactiverank]", 4) {
+MPI_TEST_CASE("[PDM_MPI_part_of_active_rank]", 4) {
 
     PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
     int i_rank;
@@ -500,10 +500,10 @@ MPI_TEST_CASE("[PDM_MPI_Partofactiverank]", 4) {
       recvcounts1[0] = 5;
     }
 
-    PDM_MPI_Partofactiverank(sendcounts1.data(),
-                             recvcounts1.data(),
-                             pdm_comm,
-                             &part_active_rank1);
+    PDM_MPI_part_of_active_rank(sendcounts1.data(),
+                                recvcounts1.data(),
+                                pdm_comm,
+                                &part_active_rank1);
 
     CHECK(part_active_rank1 == doctest::Approx(0.25).epsilon(0.01));
 
@@ -522,7 +522,7 @@ MPI_TEST_CASE("[PDM_MPI_Partofactiverank]", 4) {
       recvcounts2[2] = 1;
     }
 
-    PDM_MPI_Partofactiverank(sendcounts2.data(),
+    PDM_MPI_part_of_active_rank(sendcounts2.data(),
                              recvcounts2.data(),
                              pdm_comm,
                              &part_active_rank2);
@@ -539,10 +539,10 @@ MPI_TEST_CASE("[PDM_MPI_Partofactiverank]", 4) {
       sendcounts3[1] = 1;
     }
 
-    PDM_MPI_Partofactiverank(sendcounts3.data(),
-                             recvcounts3.data(),
-                             pdm_comm,
-                             &part_active_rank3);
+    PDM_MPI_part_of_active_rank(sendcounts3.data(),
+                                recvcounts3.data(),
+                                pdm_comm,
+                                &part_active_rank3);
     CHECK(part_active_rank3 == doctest::Approx(0.25).epsilon(0.01));
 }
 
