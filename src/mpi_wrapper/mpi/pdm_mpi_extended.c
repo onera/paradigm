@@ -205,7 +205,7 @@ PDM_MPI_Irecvs
 }
 
 void
-PDM_MPI_Partofactiverank
+PDM_MPI_part_of_active_rank
 (
   int          *sendcounts,
   int          *recvcounts,

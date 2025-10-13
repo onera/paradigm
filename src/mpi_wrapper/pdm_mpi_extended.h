@@ -220,7 +220,7 @@ PDM_MPI_Recvs_init
  * \param [out] part_active_rank  Global proportion of active ranks (between 0 and 1)
  */
 void
-PDM_MPI_Partofactiverank
+PDM_MPI_part_of_active_rank
 (
   int          *sendcounts,
   int          *recvcounts,

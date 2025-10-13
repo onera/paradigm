@@ -523,10 +523,10 @@ _distrib_data
 
   PDM_malloc(ptb->sorted_recv_gnum, ptb->tn_recv_data, PDM_g_num_t);
 
-  PDM_MPI_Partofactiverank (ptb->n_send_data,
-                            ptb->n_recv_data,
-                            ptb->comm,
-                            &(ptb->part_active_rank));
+  PDM_MPI_part_of_active_rank(ptb->n_send_data,
+                              ptb->n_recv_data,
+                              ptb->comm,
+                              &(ptb->part_active_rank));
 
   if (ptb->p2p_factor < ptb->part_active_rank) {
 
@@ -843,10 +843,10 @@ _distrib_data_hilbert
   PDM_malloc(ptb->sorted_recv_gnum, ptb->tn_recv_data, PDM_g_num_t       );
   PDM_malloc(sorted_recv_codes    , ptb->tn_recv_data, PDM_hilbert_code_t);
 
-  PDM_MPI_Partofactiverank (ptb->n_send_data,
-                            ptb->n_recv_data,
-                            ptb->comm,
-                            &(ptb->part_active_rank));
+  PDM_MPI_part_of_active_rank(ptb->n_send_data,
+                              ptb->n_recv_data,
+                              ptb->comm,
+                              &(ptb->part_active_rank));
 
   if (ptb->p2p_factor < ptb->part_active_rank) {
     PDM_MPI_Alltoallv(send_gnum,
@@ -1144,10 +1144,10 @@ _distrib_data_morton
   PDM_malloc(ptb->sorted_recv_gnum, ptb->tn_recv_data, PDM_g_num_t      );
   PDM_malloc(sorted_recv_codes    , ptb->tn_recv_data, PDM_morton_code_t);
 
-  PDM_MPI_Partofactiverank (ptb->n_send_data,
-                            ptb->n_recv_data,
-                            ptb->comm,
-                            &(ptb->part_active_rank));
+  PDM_MPI_part_of_active_rank(ptb->n_send_data,
+                              ptb->n_recv_data,
+                              ptb->comm,
+                              &(ptb->part_active_rank));
 
   if (ptb->p2p_factor < ptb->part_active_rank) {
 
