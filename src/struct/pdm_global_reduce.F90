@@ -112,7 +112,7 @@ contains
   integer, intent(in) :: f_comm
   type (c_ptr)        :: gre
 
-  integer(c_int)      :: c_comm
+  type(c_ptr)         :: c_comm
 
   interface
     function PDM_global_reduce_create_c (n_part, &
@@ -124,7 +124,7 @@ contains
       implicit none
 
       integer(c_int), value :: n_part
-      integer(c_int), value :: comm
+      type(c_ptr),    value :: comm
 
       type (c_ptr)          :: gre
 

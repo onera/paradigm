@@ -185,7 +185,7 @@ module pdm_dmesh_nodal
       use iso_c_binding
       implicit none
 
-      integer(c_int),  value :: comm
+      type(c_ptr),     value :: comm
       integer(c_int),  value :: mesh_dimension
 #ifdef PDM_LONG_G_NUM
       integer(c_long), value :: n_vtx
@@ -545,7 +545,7 @@ module pdm_dmesh_nodal
     integer(PDM_l_num_s), intent(in) :: n_edge
 #endif
 
-  integer(c_int) :: c_comm
+  type(c_ptr) :: c_comm
 
   c_comm = PDM_MPI_Comm_f2c(f_comm)
 

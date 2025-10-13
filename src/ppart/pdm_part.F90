@@ -171,7 +171,7 @@ interface
     implicit none
 
     type(c_ptr)            :: ppart
-    integer(c_int), value  :: comm
+    type(c_ptr), value     :: comm
     integer(c_int), value  :: split_method
     character(kind=c_char) :: renum_cell_method(*)
     character(kind=c_char) :: renum_face_method(*)
@@ -531,7 +531,7 @@ interface
     implicit none
 
     type(c_ptr)           :: cm
-    integer(c_int), value :: comm
+    type(c_ptr), value    :: comm
     character(c_char)     :: method(*)
     character(c_char)     :: renum_cell_method(*)
     character(c_char)     :: renum_face_method(*)
@@ -1094,7 +1094,7 @@ contains
     type(c_ptr)                        :: c_dvtx_tag
     type(c_ptr)                        :: c_dface_group_idx
     type(c_ptr)                        :: c_dface_group
-    integer(c_int)                     :: c_comm
+    type(c_ptr)                        :: c_comm
 
 
     if (have_dCellPart .and. associated(dCellPart)) then
@@ -1868,7 +1868,7 @@ contains
     logical, intent(in)                :: have_face_weight
     logical, intent(in)                :: have_face_group
 
-    integer(c_int)                     :: c_comm
+    type(c_ptr)                        :: c_comm
     integer(c_int)                     :: c_n_property_cell
     type(c_ptr)                        :: c_renum_properties_cell
     integer(c_int)                     :: c_n_property_face

@@ -81,7 +81,7 @@ int *part,
 const PDM_MPI_Comm comm
 )
 {
-  MPI_Comm mpi_comm = *((MPI_Comm *) PDM_MPI_2_mpi_comm (comm));
+  MPI_Comm mpi_comm = PDM_MPI_2_mpi_comm(comm);
   int i_rank = 0;
   PDM_MPI_Comm_rank (comm, &i_rank);
 
@@ -304,7 +304,7 @@ int *part
   SCOTCH_Strat strat;
   int ierr = 0;
 
-  MPI_Comm mpi_comm = *((MPI_Comm *) PDM_MPI_2_mpi_comm (comm));
+  MPI_Comm mpi_comm = PDM_MPI_2_mpi_comm(comm);
 
   ierr = SCOTCH_dgraphInit (&graph, mpi_comm);
   if (ierr) {

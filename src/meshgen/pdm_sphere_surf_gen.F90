@@ -64,7 +64,7 @@ module pdm_sphere_surf_gen
     type(PDM_pointer_array_t), pointer:: pface_vtx
     type(PDM_pointer_array_t), pointer:: pface_ln_to_gn
 
-    integer(c_int)                    :: c_comm
+    type(c_ptr)                       :: c_comm
     type(c_ptr)                       :: c_pn_vtx
     type(c_ptr)                       :: c_pn_face
     type(c_ptr)                       :: cc_pvtx_coord
@@ -99,7 +99,7 @@ module pdm_sphere_surf_gen
         use iso_c_binding
         implicit none
 
-        integer(c_int),  value :: comm
+        type(c_ptr),     value :: comm
 #ifdef PDM_LONG_G_NUM
         integer(c_long), value :: n
 #else

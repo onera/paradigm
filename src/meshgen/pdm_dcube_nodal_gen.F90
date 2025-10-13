@@ -56,7 +56,7 @@ module pdm_dcube_nodal_gen
     integer,      intent(in)  :: order     ! Element order
     integer,      intent(in)  :: ownership ! instance ownership
 
-    integer(c_int)             :: c_comm
+    type(c_ptr)                :: c_comm
     integer(c_int)             :: c_n_x, c_n_y, c_n_z
     integer(c_int)             :: c_elt_type, c_order, c_ownership
     real(c_double)             :: c_length
@@ -81,7 +81,7 @@ module pdm_dcube_nodal_gen
         use iso_c_binding
         implicit none
 
-        integer(c_int), value :: comm
+        type(c_ptr), value    :: comm
         integer(c_int), value :: n_x, n_y, n_z
         integer(c_int), value :: elt_type, order, ownership
 

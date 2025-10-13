@@ -68,7 +68,7 @@ int PDM_MPI_Finalize (void)
  * PDM_MPI_Comm -> MPI_Comm
  *----------------------------------------------------------------------------*/
 
-void *PDM_MPI_2_mpi_comm(PDM_MPI_Comm pdm_mpi_comm)
+MPI_Comm PDM_MPI_2_mpi_comm(PDM_MPI_Comm pdm_mpi_comm)
 {
   PDM_UNUSED(pdm_mpi_comm);
 

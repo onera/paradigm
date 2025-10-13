@@ -121,7 +121,7 @@ module pdm_gnum_location
 
     integer(c_int)      :: c_n_part_in
     integer(c_int)      :: c_n_part_out
-    integer(c_int)      :: c_comm
+    type(c_ptr)         :: c_comm
     integer(c_int)      :: c_owner
 
     interface
@@ -136,7 +136,7 @@ module pdm_gnum_location
 
         integer(c_int), value :: n_part_in
         integer(c_int), value :: n_part_out
-        integer(c_int), value :: comm
+        type(c_ptr),    value :: comm
         integer(c_int), value :: owner
         type (c_ptr)          :: gloc
 

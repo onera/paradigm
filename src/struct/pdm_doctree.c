@@ -1181,9 +1181,9 @@ PDM_doctree_build
   PDM_mpi_win_shared_t* wshared_entity_gnum          = NULL;
   PDM_mpi_win_shared_t* wshared_entity_init_location = NULL;
 
-  PDM_MPI_Request req_entity_gnum          = -1;
-  PDM_MPI_Request req_entity_coord         = -1;
-  PDM_MPI_Request req_entity_init_location = -1;
+  PDM_MPI_Request req_entity_gnum          = PDM_MPI_REQUEST_NULL;
+  PDM_MPI_Request req_entity_coord         = PDM_MPI_REQUEST_NULL;
+  PDM_MPI_Request req_entity_init_location = PDM_MPI_REQUEST_NULL;
 
   PDM_g_num_t *send_g_num         = NULL;
   double      *send_extents       = NULL;

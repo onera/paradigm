@@ -64,9 +64,9 @@ _free_async_alltoall
  const int           request
 )
 {
-  ptp->async_alltoall_subrequest[3 * request]     = -1;
-  ptp->async_alltoall_subrequest[3 * request + 1] = -1;
-  ptp->async_alltoall_subrequest[3 * request + 2] = -1;
+  ptp->async_alltoall_subrequest [2 * request    ] = -1;
+  ptp->async_alltoall_subrequest [2 * request + 1] = -1;
+  ptp->async_alltoall_mpi_request[    request    ] = PDM_MPI_REQUEST_NULL;
   ptp->async_alltoall_free[ptp->async_alltoall_n_free++] = request;
 }
 
@@ -223,28 +223,30 @@ _check_async_alltoall_alloc
 {
   if (ptp->async_alltoall_l_array == 0) {
     ptp->async_alltoall_l_array    = 10;
-    PDM_malloc(ptp->async_alltoall_free      ,     ptp->async_alltoall_l_array, int);
-    PDM_malloc(ptp->async_alltoall_subrequest, 3 * ptp->async_alltoall_l_array, int);
+    PDM_malloc(ptp->async_alltoall_free       ,     ptp->async_alltoall_l_array, int            );
+    PDM_malloc(ptp->async_alltoall_subrequest , 2 * ptp->async_alltoall_l_array, int            );
+    PDM_malloc(ptp->async_alltoall_mpi_request,     ptp->async_alltoall_l_array, PDM_MPI_Request);
 
     for (int i = 0; i < ptp->async_alltoall_l_array; i++) {
       ptp->async_alltoall_free[ptp->async_alltoall_n_free++] = ptp->async_alltoall_l_array -1 - i;
-      ptp->async_alltoall_subrequest[3*i]   = -1;
-      ptp->async_alltoall_subrequest[3*i+1] = -1;
-      ptp->async_alltoall_subrequest[3*i+2] = -1;
+      ptp->async_alltoall_subrequest [2*i]   = -1;
+      ptp->async_alltoall_subrequest [2*i+1] = -1;
+      ptp->async_alltoall_mpi_request[  i  ] = PDM_MPI_REQUEST_NULL;
     }
   }
 
   if (ptp->async_alltoall_n_free == 0) {
     const int pre_val = ptp->async_alltoall_l_array;
     ptp->async_alltoall_l_array   *= 2;
-    PDM_realloc(ptp->async_alltoall_free      , ptp->async_alltoall_free      ,     ptp->async_alltoall_l_array, int);
-    PDM_realloc(ptp->async_alltoall_subrequest, ptp->async_alltoall_subrequest, 3 * ptp->async_alltoall_l_array, int);
+    PDM_realloc(ptp->async_alltoall_free       , ptp->async_alltoall_free       ,     ptp->async_alltoall_l_array, int            );
+    PDM_realloc(ptp->async_alltoall_subrequest , ptp->async_alltoall_subrequest , 2 * ptp->async_alltoall_l_array, int            );
+    PDM_realloc(ptp->async_alltoall_mpi_request, ptp->async_alltoall_mpi_request,     ptp->async_alltoall_l_array, PDM_MPI_Request);
 
     for (int i = pre_val; i < ptp->async_alltoall_l_array; i++) {
       ptp->async_alltoall_free[ptp->async_alltoall_n_free++] = i;
-      ptp->async_alltoall_subrequest[3*i]   = -1;
-      ptp->async_alltoall_subrequest[3*i+1] = -1;
-      ptp->async_alltoall_subrequest[3*i+2] = -1;
+      ptp->async_alltoall_subrequest [2*i]   = -1;
+      ptp->async_alltoall_subrequest [2*i+1] = -1;
+      ptp->async_alltoall_mpi_request[  i  ] = PDM_MPI_REQUEST_NULL;
     }
   }
 }
@@ -1062,8 +1064,8 @@ _alltotall_stride_var_iexch
   int request_recv = _find_open_async_recv_exch    (ptp);
 
   int _request = *request;
-  ptp->async_alltoall_subrequest[3 * _request]     = request_send;
-  ptp->async_alltoall_subrequest[3 * _request + 1] = request_recv;
+  ptp->async_alltoall_subrequest[2 * _request    ] = request_send;
+  ptp->async_alltoall_subrequest[2 * _request + 1] = request_recv;
 
   int            **_part1_to_part2_stride  = (int           **) part1_stride;
   unsigned char  **_part1_to_part2_data    = (unsigned char **) part1_data;
@@ -1318,7 +1320,7 @@ _alltotall_stride_var_iexch
   //                    recv_rank_idx,
   //                    PDM_MPI_UNSIGNED_CHAR,
   //                    ptp->comm,
-  //                    &(ptp->async_alltoall_subrequest[3 * _request + 2]));
+  //                    &(ptp->async_alltoall_mpi_request[_request]));
   PDM_MPI_Alltoallv(send_buffer,
                      send_rank_n,
                      send_rank_idx,
@@ -1389,10 +1391,10 @@ _alltotall_stride_var_wait_and_post
 )
 {
 
-  // PDM_MPI_Wait (&(ptp->async_alltoall_subrequest[3 * request + 2]));
+  // PDM_MPI_Wait (&(ptp->async_alltoall_mpi_request[request]));
 
-  int request_send = ptp->async_alltoall_subrequest[3 * request];
-  int request_recv = ptp->async_alltoall_subrequest[3 * request + 1];
+  int request_send = ptp->async_alltoall_subrequest[2 * request    ];
+  int request_recv = ptp->async_alltoall_subrequest[2 * request + 1];
 
   size_t s_data  = ptp->async_recv_s_data[request_recv];
 
@@ -3201,12 +3203,12 @@ PDM_part_to_part_ialltoall
   int request_recv = _find_open_async_recv_exch (ptp);
 
   int _request = *request;
-  ptp->async_alltoall_subrequest[3 * _request]     = request_send;
-  ptp->async_alltoall_subrequest[3 * _request + 1] = request_recv;
+  ptp->async_alltoall_subrequest[2 * _request    ] = request_send;
+  ptp->async_alltoall_subrequest[2 * _request + 1] = request_recv;
 
-  ptp->async_send_s_data[request_send]      = s_data;
-  ptp->async_send_cst_stride[request_send]  = cst_stride;
-  ptp->async_send_tag[request_send]         = -1;
+  ptp->async_send_s_data    [request_send] = s_data;
+  ptp->async_send_cst_stride[request_send] = cst_stride;
+  ptp->async_send_tag       [request_send] = -1;
   PDM_malloc(ptp->async_send_request [request_send], ptp->n_active_rank_send, PDM_MPI_Request);
   PDM_malloc(ptp->async_n_send_buffer[request_send], ptp->n_rank            , int            );
   PDM_malloc(ptp->async_i_send_buffer[request_send], ptp->n_rank + 1        , int            );
@@ -3235,9 +3237,9 @@ PDM_part_to_part_ialltoall
     }
   }
 
-  ptp->async_recv_s_data[request_recv]      = s_data;
-  ptp->async_recv_cst_stride[request_recv]  = cst_stride;
-  ptp->async_recv_tag[request_recv]         = -1;
+  ptp->async_recv_s_data    [request_recv] = s_data;
+  ptp->async_recv_cst_stride[request_recv] = cst_stride;
+  ptp->async_recv_tag       [request_recv] = -1;
 
   PDM_malloc(ptp->async_recv_part2_data[request_recv], ptp->n_part2, void *);
   memcpy(ptp->async_recv_part2_data[request_recv], ref_part2_data, sizeof (void *) * ptp->n_part2);
@@ -3254,7 +3256,8 @@ PDM_part_to_part_ialltoall
 
   PDM_MPI_Ialltoallv (ptp->async_send_buffer[request_send], ptp->async_n_send_buffer[request_send], ptp->async_i_send_buffer[request_send], PDM_MPI_UNSIGNED_CHAR,
                       ptp->async_recv_buffer[request_recv], ptp->async_n_recv_buffer[request_recv], ptp->async_i_recv_buffer[request_recv], PDM_MPI_UNSIGNED_CHAR,
-                      ptp->comm, &(ptp->async_alltoall_subrequest[3 * _request + 2]));
+                      ptp->comm,
+                      &(ptp->async_alltoall_mpi_request[_request]));
 
 }
 
@@ -3266,10 +3269,10 @@ PDM_part_to_part_ialltoall_wait
 )
 {
 
-  PDM_MPI_Wait (&(ptp->async_alltoall_subrequest[3 * request + 2]));
+  PDM_MPI_Wait (&(ptp->async_alltoall_mpi_request[request]));
 
-  int request_send = ptp->async_alltoall_subrequest[3 * request];
-  int request_recv = ptp->async_alltoall_subrequest[3 * request + 1];
+  int request_send = ptp->async_alltoall_subrequest[2 * request    ];
+  int request_recv = ptp->async_alltoall_subrequest[2 * request + 1];
 
   size_t s_data  = ptp->async_recv_s_data[request_recv];
   int cst_stride = ptp->async_recv_cst_stride[request_recv];
@@ -3315,8 +3318,8 @@ PDM_part_to_part_reverse_ialltoall
   int request_recv = _find_open_async_recv_exch (ptp);
 
   int _request = *request;
-  ptp->async_alltoall_subrequest[3 * _request]     = request_send;
-  ptp->async_alltoall_subrequest[3 * _request + 1] = request_recv;
+  ptp->async_alltoall_subrequest[2 * _request    ] = request_send;
+  ptp->async_alltoall_subrequest[2 * _request + 1] = request_recv;
 
   ptp->async_send_s_data[request_send]      = s_data;
   ptp->async_send_cst_stride[request_send]  = cst_stride;
@@ -3372,7 +3375,7 @@ PDM_part_to_part_reverse_ialltoall
 
   PDM_MPI_Ialltoallv (ptp->async_send_buffer[request_send], ptp->async_n_send_buffer[request_send], ptp->async_i_send_buffer[request_send], PDM_MPI_UNSIGNED_CHAR,
                       ptp->async_recv_buffer[request_recv], ptp->async_n_recv_buffer[request_recv], ptp->async_i_recv_buffer[request_recv], PDM_MPI_UNSIGNED_CHAR,
-                      ptp->comm, &(ptp->async_alltoall_subrequest[3 * _request + 2]));
+                      ptp->comm, &(ptp->async_alltoall_mpi_request[_request]));
 
 }
 
@@ -3384,10 +3387,10 @@ PDM_part_to_part_reverse_ialltoall_wait
 )
 {
 
-  PDM_MPI_Wait (&(ptp->async_alltoall_subrequest[3 * request + 2]));
+  PDM_MPI_Wait (&(ptp->async_alltoall_mpi_request[request]));
 
-  int request_send = ptp->async_alltoall_subrequest[3 * request];
-  int request_recv = ptp->async_alltoall_subrequest[3 * request + 1];
+  int request_send = ptp->async_alltoall_subrequest[2 * request    ];
+  int request_recv = ptp->async_alltoall_subrequest[2 * request + 1];
 
   size_t s_data  = ptp->async_recv_s_data    [request_recv];
   int cst_stride = ptp->async_recv_cst_stride[request_recv];
@@ -5422,6 +5425,7 @@ PDM_part_to_part_free
   if (ptp->async_alltoall_l_array > 0) {
     PDM_free(ptp->async_alltoall_free);
     PDM_free(ptp->async_alltoall_subrequest);
+    PDM_free(ptp->async_alltoall_mpi_request);
   }
 
   ptp->async_exch_n_free  = 0;

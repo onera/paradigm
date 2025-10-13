@@ -509,7 +509,7 @@ module pdm_isosurface
     integer, intent(in) :: mesh_dimension ! Dimension of source mesh (2 or 3)
     type(c_ptr)         :: isos           ! PDM_isosurface_t instance
 
-    integer(c_int)      :: c_comm
+    type(c_ptr)         :: c_comm
 
     interface
       function PDM_isosurface_create_cf (comm,           &
@@ -520,7 +520,7 @@ module pdm_isosurface
         use iso_c_binding
         implicit none
 
-        integer(c_int), value :: comm
+        type(c_ptr), value    :: comm
         integer(c_int), value :: mesh_dimension
         type(c_ptr)           :: isos
 

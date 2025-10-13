@@ -71,7 +71,7 @@ module pdm_dcube_gen
       use iso_c_binding
       implicit none
 
-      integer(c_int), value :: comm
+      type(c_ptr), value    :: comm
       integer(c_int), value :: owner
 
 #ifdef PDM_LONG_G_NUM
@@ -217,7 +217,7 @@ end subroutine PDM_dcube_gen_data_get_cf
       double precision,     intent(in) :: zero_x, zero_y, zero_z
       type (c_ptr)                     :: dcube
 
-      integer(c_int)               :: c_comm
+      type(c_ptr)                  :: c_comm
       integer(c_int)               :: c_owner
 #ifdef PDM_LONG_G_NUM
       integer (c_long)             :: c_n_vtx_seg

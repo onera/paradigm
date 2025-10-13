@@ -128,7 +128,7 @@ module pdm_part_mesh_nodal
     integer,     intent(in)  :: n_part         ! Number of partition on the current process
     integer,     intent(in)  :: f_comm         ! MPI communicator
 
-    integer(c_int)           :: c_comm
+    type(c_ptr)              :: c_comm
 
     interface
       function PDM_part_mesh_nodal_create_c (mesh_dimension, n_part, c_comm) result(mesh) &
@@ -137,7 +137,7 @@ module pdm_part_mesh_nodal
         implicit none
         integer(c_int), value :: mesh_dimension
         integer(c_int), value :: n_part
-        integer(c_int), value :: c_comm
+        type(c_ptr), value    :: c_comm
         type(c_ptr)           :: mesh
       end function PDM_part_mesh_nodal_create_c
     end interface
