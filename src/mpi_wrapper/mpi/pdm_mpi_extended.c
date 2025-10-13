@@ -169,7 +169,7 @@ PDM_MPI_Irecvs
 (
   const void              *recvbuf,
         int               *recvcounts,
-        int               *sdispls,
+        int               *rdispls,
         PDM_MPI_Datatype   datatype,
         int                n_active_recv,
         int               *active_recv,
@@ -186,7 +186,7 @@ PDM_MPI_Irecvs
 
   int code = MPI_SUCCESS;
   for (int i = 0; i < n_active_recv; i++) {
-    void *buf = (void *) ((unsigned char*) recvbuf + sdispls[i] * size_recv_type);
+    void *buf = (void *) ((unsigned char*) recvbuf + rdispls[i] * size_recv_type);
     int t_rank = active_recv[i];
     code = MPI_Irecv(buf,
                      recvcounts[i],

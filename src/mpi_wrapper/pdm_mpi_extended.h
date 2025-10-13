@@ -43,15 +43,15 @@ extern "C" {
  * requests. The communication must be started later using functions like
  * MPI_Start, and completed with functions like MPI_Waitall or MPI_Testall.
  *
- * \param[in]  sendbuf       Pointer to the start of the send buffer.
- * \param[in]  sendcounts    Array of size n_active_send, where sendcounts[i] is the number of elements to send to the i-th active destination.
- * \param[in]  sdispls       Array of size n_active_send, where sdispls[i] is the displacement from sendbuf to the starting element for the i-th active destination.
- * \param[in]  datatype      Type of the data elements in the send buffer.
- * \param[in]  n_active_send Number of active destination processes.
- * \param[in]  active_send   Array of size n_active_send, containing the ranks of the destination processes.
- * \param[in]  tag           Message tag to be used for the send operations.
- * \param[in]  comm          MPI communicator to be used.
- * \param[out] out_requests  Pointer to a pointer that will be set to the dynamically allocated array of MPI requests.
+ * \param[in]  sendbuf        Send buffer
+ * \param[in]  sendcounts     Number of elements to send to each active destination process (size = \p n_active_send)
+ * \param[in]  sdispls        Displacement (relative to \p sendbuf) to the data relative to each active destination process (size = \p n_active_send)
+ * \param[in]  datatype       Type of the data elements in \p sendbuf
+ * \param[in]  n_active_send  Number of active destination processes
+ * \param[in]  active_send    Ranks in \p comm of active destination processes (size = \p n_send_rank)
+ * \param[in]  tag            Message tag to be used for the send operations
+ * \param[in]  comm           MPI communicator
+ * \param[out] out_requests   MPI requests
  *
  * \return An MPI error code. PDM_MPI_SUCCESS on success, otherwise an error code.
  *
@@ -82,15 +82,15 @@ PDM_MPI_Sends_init
  *
  * The function allocates an array of MPI requests and initiates a separate `MPI_Isend` for each active destination, but unlike `PDM_MPI_Sends_init`, it does not create persistent requests.
  *
- * \param[in]  sendbuf       Pointer to the start of the send buffer.
- * \param[in]  sendcounts    Array of size n_active_send, where sendcounts[i] is the number of elements to send to the i-th active destination.
- * \param[in]  sdispls       Array of size n_active_send, where sdispls[i] is the displacement from sendbuf to the starting element for the i-th active destination.
- * \param[in]  datatype      Type of the data elements in the send buffer.
- * \param[in]  n_active_send Number of active destination processes.
- * \param[in]  active_send   Array of size n_active_send, containing the ranks of the destination processes.
- * \param[in]  tag           Message tag to be used for the send operations.
- * \param[in]  comm          MPI communicator to be used.
- * \param[out] out_requests  Pointer to a pointer that will be set to the dynamically allocated array of non-blocking requests.
+ * \param[in]  sendbuf        Send buffer
+ * \param[in]  sendcounts     Number of elements to send to each active destination process (size = \p n_active_send)
+ * \param[in]  sdispls        Displacement (relative to \p sendbuf) to the data relative to each active destination process (size = \p n_active_send)
+ * \param[in]  datatype       Type of the data elements in \p sendbuf
+ * \param[in]  n_active_send  Number of active destination processes
+ * \param[in]  active_send    Ranks in \p comm of active destination processes (size = \p n_send_rank)
+ * \param[in]  tag            Message tag to be used for the send operations
+ * \param[in]  comm           MPI communicator
+ * \param[out] out_requests   MPI requests
  *
  * \return An MPI error code. MPI_SUCCESS on success, otherwise an error code.
  *
@@ -123,15 +123,15 @@ PDM_MPI_Isends
  *
  * The function allocates an array of MPI requests and initiates a separate `MPI_Irecv` for each active source.
  *
- * \param[out] recvbuf       Pointer to the start of the receive buffer.
- * \param[in]  recvcounts    Array of size n_active_recv, where recvcounts[i] is the number of elements to receive from the i-th active source.
- * \param[in]  sdispls       Array of size n_active_recv, where sdispls[i] is the displacement from recvbuf to the starting element for the i-th active source.
- * \param[in]  datatype      Type of the data elements in the receive buffer.
- * \param[in]  n_active_recv Number of active source processes.
- * \param[in]  active_recv   Array of size n_active_recv, containing the ranks of the source processes.
- * \param[in]  tag           Message tag to be used for the receive operations.
- * \param[in]  comm          MPI communicator to be used.
- * \param[out] out_requests  Pointer to a pointer that will be set to the dynamically allocated array of non-blocking requests.
+ * \param[out] recvbuf        Receive buffer
+ * \param[in]  recvcounts     Number of elements to receive from each active source process (size = \p n_active_recv)
+ * \param[in]  rdispls        Displacement (relative to \p recvbuf) to the data relative to each active source process (size = \p n_active_recv)
+ * \param[in]  datatype       Type of the data elements in \p recvbuf
+ * \param[in]  n_active_recv  Number of active source processes
+ * \param[in]  active_recv    Ranks in \p comm of active source processes (size = \p n_active_recv)
+ * \param[in]  tag            Message tag to be used for the receive operations
+ * \param[in]  comm           MPI communicator
+ * \param[out] out_requests   MPI requests
  *
  * \return An MPI error code. MPI_SUCCESS on success, otherwise an error code.
  *
@@ -147,7 +147,7 @@ PDM_MPI_Irecvs
 (
   const void              *recvbuf,
         int               *recvcounts,
-        int               *sdispls,
+        int               *rdispls,
         PDM_MPI_Datatype   datatype,
         int                n_active_recv,
         int               *active_recv,
@@ -169,15 +169,16 @@ PDM_MPI_Irecvs
  * requests. The communication must be started later using functions like
  * MPI_Start, and completed with functions like MPI_Waitall or MPI_Testall.
  *
- * \param[in]  recvbuf       Pointer to the start of the receive buffer.
- * \param[in]  recvcounts    Array of size n_active_recv, where recvcounts[i] is the number of elements to receive from the i-th active source.
- * \param[in]  rdispls       Array of size n_active_recv, where rdispls[i] is the displacement from recvbuf to the starting element for the i-th active source.
- * \param[in]  datatype      Type of the data elements in the receive buffer.
- * \param[in]  n_active_recv Number of active source processes.
- * \param[in]  active_recv   Array of size n_active_recv, containing the ranks of the source processes.
- * \param[in]  tag           Message tag to be used for the receive operations.
- * \param[in]  comm          MPI communicator to be used.
- * \param[out] out_requests  Pointer to a pointer that will be set to the dynamically allocated array of MPI requests.
+ * \param[in]  recvbuf        Receive buffer
+ * \param[in]  recvcounts     Number of elements to receive from each active source process (size = \p n_active_recv)
+ * \param[in]  rdispls        Displacement (relative to \p recvbuf) to the data relative to each active source process (size = \p n_active_recv)
+ * \param[in]  datatype       Type of the data elements in \p recvbuf
+ * \param[in]  n_active_recv  Number of active source processes
+ * \param[in]  active_recv    Ranks in \p comm of active source processes (size = \p n_active_recv)
+ * \param[in]  tag            Message tag to be used for the receive operations
+ * \param[in]  comm           MPI communicator
+ * \param[out] out_requests   MPI requests
+
  *
  * \return An MPI error code. MPI_SUCCESS on success, otherwise an error code.
  *
@@ -236,22 +237,23 @@ PDM_MPI_Partofactiverank
  * communicator's ranks. The function returns an array of requests that must be waited on
  * (e.g., with PDM_MPI_Waitall) to ensure the completion of the communication.
  *
- * \param[in] sendbuf              The send buffer.
- * \param[in] sendcounts           An array of integers specifying the number of elements to send to each rank in send_rank.
- * \param[in] sdispls              An array of integers specifying the displacement in sendbuf for each message.
- * \param[in] sendtype             The datatype of send buffer elements.
- * \param[in] n_send_rank          The number of ranks to send to.
- * \param[in] send_rank            An array of integers containing the ranks to send to.
- * \param[out] recvbuf             The receive buffer.
- * \param[in] recvcounts           An array of integers specifying the number of elements to receive from each rank in recv_rank.
- * \param[in] rdispls              An array of integers specifying the displacement in recvbuf for each message.
- * \param[in] recvtype             The datatype of receive buffer elements.
- * \param[in] n_recv_rank          The number of ranks to receive from.
- * \param[in] recv_rank            An array of integers containing the ranks to receive from.
- * \param[in] tag                  The message tag for P2P communication.
- * \param[in] comm                 The communicator.
- * \param[out] n_send_recv_request A pointer to an integer that will be filled with the total number of requests.
- * \param[out] out_requests        A pointer to a PDM_MPI_Request array that will be allocated and filled with the requests.
+ * \param[in]  sendbuf              Send buffer
+ * \param[in]  sendcounts           Number of elements to send to each destination process (size = \p n_send_rank)
+ * \param[in]  sdispls              Displacement (relative to \p sendbuf) to the data relative to each destination process (size = \p n_send_rank)
+ * \param[in]  sendtype             Type of the data elements in \p sendbuf
+ * \param[in]  n_send_rank          Number of destination processes
+ * \param[in]  send_rank            Ranks in \p comm of destination processes (size = \p n_send_rank)
+ * \param[out] recvbuf              Receive buffer
+ * \param[in]  recvcounts           Number of elements to receive from each source process (size = \p n_recv_rank)
+ * \param[in]  rdispls              Displacement (relative to \p recvbuf) to the data relative to each source process (size = \p n_recv_rank)
+ * \param[in]  recvtype             Type of the data elements in \p recvbuf
+ * \param[in]  n_recv_rank          Number of source processes
+ * \param[in]  recv_rank            Ranks in \p comm of source processes (size = \p n_recv_rank)
+ * \param[in]  tag                  The message tag for P2P communication
+ * \param[in]  comm                 MPI communicator
+ * \param[out] n_send_recv_request  Total number of MPI requests
+ * \param[out] out_requests         MPI requests
+ *
  * \return PDM_SUCCESS or an error code from the underlying MPI calls.
  */
 int
@@ -287,22 +289,24 @@ PDM_MPI_Ialltoallv_select_p2p
  * This function is useful for scenarios where a native collective may not be optimal
  * (e.g., for sparse communication patterns or debugging).
  *
- * \param[in]  sendbuf             The send buffer.
- * \param[in]  sendcounts          An array of integers specifying the number of elements to send to each rank.
- * \param[in]  sdispls             An array of integers specifying the displacement in sendbuf for each message.
- * \param[in]  sendtype            The datatype of send buffer elements.
- * \param[in]  n_send_rank         (Optional) The number of ranks to send to. Used only if send_rank is not NULL.
- * \param[in]  send_rank           (Optional) An array of integers containing the ranks to send to. If NULL, a dense check on sendcounts is performed.
- * \param[out] recvbuf             The receive buffer.
- * \param[in]  recvcounts          An array of integers specifying the number of elements to receive from each rank.
- * \param[in]  rdispls             An array of integers specifying the displacement in recvbuf for each message.
- * \param[in]  recvtype            The datatype of receive buffer elements.
- * \param[in]  n_recv_rank         (Optional) The number of ranks to receive from. Used only if recv_rank is not NULL.
- * \param[in]  recv_rank           (Optional) An array of integers containing the ranks to receive from. If NULL, a dense check on recvcounts is performed.
- * \param[in]  tag                 The message tag for P2P communication.
- * \param[in]  comm                The communicator.
- * \param[out] n_send_recv_request A pointer to an integer that will be filled with the total number of requests.
- * \param[out] out_requests        A pointer to a PDM_MPI_Request array that will be allocated and filled with the requests.
+ * \param[in]  sendbuf              Send buffer
+ * \param[in]  sendcounts           Number of elements to send to each destination process (size = \p n_send_rank if provided, else size of \p comm)
+ * \param[in]  sdispls              Displacement (relative to \p sendbuf) to the data relative to each destination process (size = \p n_send_rank if provided, else size of \p comm)
+ * \param[in]  sendtype             Type of the data elements in \p sendbuf
+ * \param[in]  n_send_rank          (Optional) Number of destination processes (only used if \p send_rank is not NULL)
+ * \param[in]  send_rank            (Optional) Ranks in \p comm of destination processes (size = \p n_send_rank if provided, else size of \p comm)
+ *                                  If NULL, a dense check on \p sendcounts is performed.
+ * \param[out] recvbuf              Receive buffer
+ * \param[in]  recvcounts           Number of elements to receive from each source process (size = \p n_recv_rank if provided, else size of \p comm)
+ * \param[in]  rdispls              Displacement (relative to \p recvbuf) to the data relative to each source process (size = \p n_recv_rank if provided, else size of \p comm)
+ * \param[in]  recvtype             Type of the data elements in \p recvbuf
+ * \param[in]  n_recv_rank          (Optional) Number of source processes (only used if \p recv_rank is not NULL)
+ * \param[in]  recv_rank            (Optional) Ranks in \p comm of source processes (size = \p n_recv_rank if provided, else size of \p comm)
+ *                                  If NULL, a dense check on \p recvcounts is performed.
+ * \param[in]  tag                  The message tag for P2P communication
+ * \param[in]  comm                 MPI communicator
+ * \param[out] n_send_recv_request  Total number of MPI requests
+ * \param[out] out_requests         MPI requests
  *
  * \return PDM_SUCCESS or an error code from the underlying MPI calls.
  */
@@ -339,16 +343,17 @@ PDM_MPI_Ialltoallv_p2p
  * and the returned requests must be completed using `PDM_MPI_Wait` or equivalent synchronization
  * before the received data can be accessed and before the RMA epoch ends.
  *
- * \param[in]  send_win            The MPI Window handle (PDM_MPI_Win) on the **target** process from which data will be retrieved.
- * \param[in]  target_disp         An array of integers specifying the **displacement** (offset) in the remote target window (send_win) for the start of the data retrieval from each rank.
- * \param[out] recvbuf             The local receive buffer where the data will be placed (origin buffer of the Rget).
- * \param[in]  recvcounts          An array of integers specifying the number of elements to **receive** (retrieve) from each rank.
- * \param[in]  rdispls             An array of integers specifying the **displacement** in the local recvbuf for each received message.
- * \param[in]  recvtype            The datatype of receive buffer elements and the type used for the target window access.
- * \param[in]  comm                The communicator.
- * \param[out] n_send_recv_request A pointer to an integer that will be filled with the total number of allocated `MPI_Rget` requests (equal to the number of non-zero entries in recvcounts).
- * \param[out] out_requests        A pointer to a PDM_MPI_Request array that will be allocated and filled with the non-blocking `MPI_Rget` requests.
- * @return PDM_SUCCESS or an error code from the underlying MPI calls.
+ * \param[in]  send_win             MPI Window handle (\ref PDM_MPI_Win) on the *target* process from which data will be retrieved
+ * \param[in]  target_disp          Displacement in the remote target window (\p send_win) to the start of the data retrieved from each rank
+ * \param[out] recvbuf              Local receive buffer where the data will be placed (origin buffer of the Rget)
+ * \param[in]  recvcounts           Number of elements to receive from each rank
+ * \param[in]  rdispls              Displacement in the local (\p recvbuf) to the start of each received message
+ * \param[in]  recvtype             Type of the data elements in \p recvbuf and used for the target window access
+ * \param[in]  comm                 MPI communicator
+ * \param[out] n_send_recv_request  Total number of allocated MPI_Rget requests (equal to the number of non-zero entries in \p recvcounts)
+ * \param[out] out_requests         Non-blocking MPI_Rget requests
+ *
+ * \return PDM_SUCCESS or an error code from the underlying MPI calls.
  */
 int
 PDM_MPI_Ialltoallv_p2p_rma
@@ -375,15 +380,16 @@ PDM_MPI_Ialltoallv_p2p_rma
  * rely on a specialized MPI function (like MPI_Ialltoallv with custom datatype offsets or MPIX_Alltoallv_ll) if available,
  * or fall back to an internal large-offset P2P emulation. The call is blocking.
  *
- * \param[in]  sendbuf        The send buffer.
- * \param[in]  sendcounts     An array of integers specifying the number of elements to send to each rank.
- * \param[in]  sdispls        An array of size_t specifying the **displacement** in sendbuf for each message (Large offset).
- * \param[in]  sendtype       The datatype of send buffer elements.
- * \param[out] recvbuf        The receive buffer.
- * \param[in]  recvcounts     An array of integers specifying the number of elements to receive from each rank.
- * \param[in]  rdispls        An array of size_t specifying the **displacement** in recvbuf for each message (Large offset).
- * \param[in]  recvtype       The datatype of receive buffer elements.
- * \param[in]  comm           The communicator.
+ * \param[in]  sendbuf     Send buffer
+ * \param[in]  sendcounts  Number of elements to send to each rank
+ * \param[in]  sdispls     Displacement in \p sendbuf to the start of each message (*large* offset)
+ * \param[in]  sendtype    The datatype of send buffer elements
+ * \param[out] recvbuf     Receive buffer
+ * \param[in]  recvcounts  Number of elements to receive from each rank
+ * \param[in]  rdispls     Displacement in \p recvbuf to the start of each message (*large* offset)
+ * \param[in]  recvtype    The datatype of receive buffer elements
+ * \param[in]  comm        MPI communicator
+ *
  * \return PDM_SUCCESS or an error code from the underlying MPI calls.
  */
 int
@@ -407,15 +413,16 @@ PDM_MPI_Alltoallv_l
  * The function returns only after all data has been safely sent and received. It is typically used for debugging or to
  * bypass potential performance issues with native collective implementations in sparse communication scenarios.
  *
- * \param[in]  sendbuf        The send buffer.
- * \param[in]  sendcounts     An array of integers specifying the number of elements to send to each rank.
- * \param[in]  sdispls        An array of integers specifying the displacement in sendbuf for each message.
- * \param[in]  sendtype       The datatype of send buffer elements.
- * \param[out] recvbuf        The receive buffer.
- * \param[in]  recvcounts     An array of integers specifying the number of elements to receive from each rank.
- * \param[in]  rdispls        An array of integers specifying the displacement in recvbuf for each message.
- * \param[in]  recvtype       The datatype of receive buffer elements.
- * \param[in]  comm           The communicator.
+ * \param[in]  sendbuf     Send buffer
+ * \param[in]  sendcounts  Number of elements to send to each rank
+ * \param[in]  sdispls     Displacement in \p sendbuf to the start of each message
+ * \param[in]  sendtype    The datatype of send buffer elements
+ * \param[out] recvbuf     Receive buffer
+ * \param[in]  recvcounts  Number of elements to receive from each rank
+ * \param[in]  rdispls     Displacement in \p recvbuf to the start of each message
+ * \param[in]  recvtype    The datatype of receive buffer elements
+ * \param[in]  comm        MPI  communicator
+ *
  * \return PDM_SUCCESS or an error code from the underlying MPI calls.
  */
 int
@@ -440,15 +447,16 @@ PDM_MPI_Alltoallv_p2p
  * displacement arrays (sdispls and rdispls) to support extremely large buffers or complex memory layouts
  * where 32-bit integer offsets are insufficient. The operation is blocking, returning only after all transfers are complete.
  *
- * \param[in]  sendbuf        The send buffer.
- * \param[in]  sendcounts     An array of integers specifying the number of elements to send to each rank.
- * \param[in]  sdispls        An array of size_t specifying the **displacement** in sendbuf for each message (Large offset).
- * \param[in]  sendtype       The datatype of send buffer elements.
- * \param[out] recvbuf        The receive buffer.
- * \param[in]  recvcounts     An array of integers specifying the number of elements to receive from each rank.
- * \param[in]  rdispls        An array of size_t specifying the **displacement** in recvbuf for each message (Large offset).
- * \param[in]  recvtype       The datatype of receive buffer elements.
- * \param[in]  comm           The communicator.
+ * \param[in]  sendbuf     Send buffer
+ * \param[in]  sendcounts  Number of elements to send to each rank
+ * \param[in]  sdispls     Displacement in \p sendbuf to the start of each message (*large* offset)
+ * \param[in]  sendtype    The datatype of send buffer elements
+ * \param[out] recvbuf     Receive buffer
+ * \param[in]  recvcounts  Number of elements to receive from each rank
+ * \param[in]  rdispls     Displacement in \p recvbuf to the start of each message (*large* offset)
+ * \param[in]  recvtype    The datatype of receive buffer elements
+ * \param[in]  comm        MPI communicator
+ *
  * \return PDM_SUCCESS or an error code from the underlying MPI calls.
  */
 int
@@ -473,18 +481,19 @@ PDM_MPI_Alltoallv_p2p_l
  * and completed with PDM_MPI_Wait/PDM_MPI_Waitall. This is highly efficient when the communication pattern (counts and displacements)
  * remains constant across multiple steps.
  *
- * \param[in]  sendbuf             The send buffer.
- * \param[in]  sendcounts          An array of integers specifying the number of elements to send to each rank.
- * \param[in]  sdispls             An array of integers specifying the displacement in sendbuf for each message.
- * \param[in]  sendtype            The datatype of send buffer elements.
- * \param[out] recvbuf             The receive buffer.
- * \param[in]  recvcounts          An array of integers specifying the number of elements to receive from each rank.
- * \param[in]  rdispls             An array of integers specifying the displacement in recvbuf for each message.
- * \param[in]  recvtype            The datatype of receive buffer elements.
- * \param[in]  tag                 The message tag for P2P persistent communication.
- * \param[in]  comm                MPI communicator.
- * \param[out] n_send_recv_request A pointer to an integer that will be filled with the total number of allocated persistent requests.
- * \param[out] requests            A pointer to a PDM_MPI_Request array that will be allocated and filled with the persistent requests.
+ * \param[in]  sendbuf              Send buffer
+ * \param[in]  sendcounts           Number of elements to send to each rank
+ * \param[in]  sdispls              Displacement in \p sendbuf to the start of each message
+ * \param[in]  sendtype             The datatype of send buffer elements
+ * \param[out] recvbuf              Receive buffer
+ * \param[in]  recvcounts           Number of elements to receive from each rank
+ * \param[in]  rdispls              Displacement in \p recvbuf to the start of each message
+ * \param[in]  recvtype             The datatype of receive buffer elements
+ * \param[in]  tag                  The message tag for P2P persistent communication
+ * \param[in]  comm                 MPI communicator
+ * \param[out] n_send_recv_request  Total number of allocated persistent requests
+ * \param[out] requests             MPI requests for persistent communications
+ *
  * \return PDM_SUCCESS or an error code from the underlying MPI calls.
  */
 int
