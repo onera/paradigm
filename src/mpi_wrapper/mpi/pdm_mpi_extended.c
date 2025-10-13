@@ -244,14 +244,14 @@ PDM_MPI_Ialltoallv_select_p2p
   int               *sendcounts,
   int               *sdispls,
   PDM_MPI_Datatype   sendtype,
-  int                n_send_rank,
-  int               *send_rank,
+  int                n_tgt_rank,
+  int               *tgt_rank,
   void              *recvbuf,
   int               *recvcounts,
   int               *rdispls,
   PDM_MPI_Datatype   recvtype,
-  int                n_recv_rank,
-  int               *recv_rank,
+  int                n_src_rank,
+  int               *src_rank,
   int                tag,
   PDM_MPI_Comm       comm,
   int               *n_send_recv_request,
@@ -260,7 +260,7 @@ PDM_MPI_Ialltoallv_select_p2p
 {
 
   PDM_MPI_Request *requests = NULL;
-  int n_request = n_recv_rank + n_send_rank;
+  int n_request = n_src_rank + n_tgt_rank;
   PDM_malloc(requests, n_request, PDM_MPI_Request);
 
   int size_send_type;
@@ -270,9 +270,9 @@ PDM_MPI_Ialltoallv_select_p2p
 
   int code = MPI_SUCCESS;
   n_request = 0;
-  for (int i = 0; i < n_recv_rank; i++) {
+  for (int i = 0; i < n_src_rank; i++) {
     void *buf = (void *) ((unsigned char*) recvbuf + rdispls[i] * size_recv_type);
-    int t_rank = recv_rank[i];
+    int t_rank = src_rank[i];
     code = MPI_Irecv(buf,
                      recvcounts[i],
                      recvtype,
@@ -286,9 +286,9 @@ PDM_MPI_Ialltoallv_select_p2p
     }
   }
 
-  for (int i = 0; i < n_send_rank; i++) {
+  for (int i = 0; i < n_tgt_rank; i++) {
     void *buf = (void *) ((unsigned char*) sendbuf + sdispls[i] * size_send_type);
-    int t_rank = send_rank[i];
+    int t_rank = tgt_rank[i];
     code = MPI_Isend(buf,
                      sendcounts[i],
                      sendtype,
@@ -319,14 +319,14 @@ PDM_MPI_Ialltoallv_p2p
   int               *sendcounts,
   int               *sdispls,
   PDM_MPI_Datatype   sendtype,
-  int                n_send_rank,
-  int               *send_rank,
+  int                n_tgt_rank,
+  int               *tgt_rank,
   void              *recvbuf,
   int               *recvcounts,
   int               *rdispls,
   PDM_MPI_Datatype   recvtype,
-  int                n_recv_rank,
-  int               *recv_rank,
+  int                n_src_rank,
+  int               *src_rank,
   int                tag,
   PDM_MPI_Comm       comm,
   int               *n_send_recv_request,
@@ -338,20 +338,20 @@ PDM_MPI_Ialltoallv_p2p
   int n_rank;
   MPI_Comm_size(comm, &n_rank);
 
-  // Short-cut if send_rank and recv_rank is specified
-  if(send_rank != NULL && recv_rank != NULL) {
+  // Short-cut if tgt_rank and src_rank is specified
+  if(tgt_rank != NULL && src_rank != NULL) {
     return PDM_MPI_Ialltoallv_select_p2p(sendbuf,
                                          sendcounts,
                                          sdispls,
                                          sendtype,
-                                         n_send_rank,
-                                         send_rank,
+                                         n_tgt_rank,
+                                         tgt_rank,
                                          recvbuf,
                                          recvcounts,
                                          rdispls,
                                          recvtype,
-                                         n_recv_rank,
-                                         recv_rank,
+                                         n_src_rank,
+                                         src_rank,
                                          tag,
                                          comm,
                                          n_send_recv_request,

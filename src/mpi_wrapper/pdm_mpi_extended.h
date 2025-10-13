@@ -48,7 +48,7 @@ extern "C" {
  * \param[in]  sdispls        Displacement (relative to \p sendbuf) to the data relative to each active destination process (size = \p n_tgt_rank)
  * \param[in]  datatype       Type of the data elements in \p sendbuf
  * \param[in]  n_tgt_rank     Number of active destination processes
- * \param[in]  tgt_rank       Ranks in \p comm of active destination processes (size = \p n_send_rank)
+ * \param[in]  tgt_rank       Ranks in \p comm of active destination processes (size = \p n_tgt_rank)
  * \param[in]  tag            Message tag to be used for the send operations
  * \param[in]  comm           MPI communicator
  * \param[out] out_requests   MPI requests
@@ -87,7 +87,7 @@ PDM_MPI_Sends_init
  * \param[in]  sdispls        Displacement (relative to \p sendbuf) to the data relative to each active destination process (size = \p n_tgt_rank)
  * \param[in]  datatype       Type of the data elements in \p sendbuf
  * \param[in]  n_tgt_rank     Number of active destination processes
- * \param[in]  tgt_rank       Ranks in \p comm of active destination processes (size = \p n_send_rank)
+ * \param[in]  tgt_rank       Ranks in \p comm of active destination processes (size = \p n_tgt_rank)
  * \param[in]  tag            Message tag to be used for the send operations
  * \param[in]  comm           MPI communicator
  * \param[out] out_requests   MPI requests
@@ -238,17 +238,17 @@ PDM_MPI_Partofactiverank
  * (e.g., with PDM_MPI_Waitall) to ensure the completion of the communication.
  *
  * \param[in]  sendbuf              Send buffer
- * \param[in]  sendcounts           Number of elements to send to each destination process (size = \p n_send_rank)
- * \param[in]  sdispls              Displacement (relative to \p sendbuf) to the data relative to each destination process (size = \p n_send_rank)
+ * \param[in]  sendcounts           Number of elements to send to each destination process (size = \p n_tgt_rank)
+ * \param[in]  sdispls              Displacement (relative to \p sendbuf) to the data relative to each destination process (size = \p n_tgt_rank)
  * \param[in]  sendtype             Type of the data elements in \p sendbuf
- * \param[in]  n_send_rank          Number of destination processes
- * \param[in]  send_rank            Ranks in \p comm of destination processes (size = \p n_send_rank)
+ * \param[in]  n_tgt_rank           Number of destination processes
+ * \param[in]  tgt_rank             Ranks in \p comm of destination processes (size = \p n_tgt_rank)
  * \param[out] recvbuf              Receive buffer
- * \param[in]  recvcounts           Number of elements to receive from each source process (size = \p n_recv_rank)
- * \param[in]  rdispls              Displacement (relative to \p recvbuf) to the data relative to each source process (size = \p n_recv_rank)
+ * \param[in]  recvcounts           Number of elements to receive from each source process (size = \p n_src_rank)
+ * \param[in]  rdispls              Displacement (relative to \p recvbuf) to the data relative to each source process (size = \p n_src_rank)
  * \param[in]  recvtype             Type of the data elements in \p recvbuf
- * \param[in]  n_recv_rank          Number of source processes
- * \param[in]  recv_rank            Ranks in \p comm of source processes (size = \p n_recv_rank)
+ * \param[in]  n_src_rank          Number of source processes
+ * \param[in]  src_rank            Ranks in \p comm of source processes (size = \p n_src_rank)
  * \param[in]  tag                  The message tag for P2P communication
  * \param[in]  comm                 MPI communicator
  * \param[out] n_send_recv_request  Total number of MPI requests
@@ -263,14 +263,14 @@ PDM_MPI_Ialltoallv_select_p2p
   int               *sendcounts,
   int               *sdispls,
   PDM_MPI_Datatype   sendtype,
-  int                n_send_rank,
-  int               *send_rank,
+  int                n_tgt_rank,
+  int               *tgt_rank,
   void              *recvbuf,
   int               *recvcounts,
   int               *rdispls,
   PDM_MPI_Datatype   recvtype,
-  int                n_recv_rank,
-  int               *recv_rank,
+  int                n_src_rank,
+  int               *src_rank,
   int                tag,
   PDM_MPI_Comm       comm,
   int               *n_send_recv_request,
@@ -283,25 +283,25 @@ PDM_MPI_Ialltoallv_select_p2p
  *
  * This function provides a flexible implementation of a non-blocking all-to-all communication.
  * It dynamically posts non-blocking P2P sends and receives based on non-zero entries in the
- * sendcounts and recvcounts arrays. If explicit rank lists are provided (send_rank/recv_rank),
+ * sendcounts and recvcounts arrays. If explicit rank lists are provided (tgt_rank/src_rank),
  * it delegates to the more specialized PDM_MPI_Ialltoallv_select_p2p function. Otherwise, it
  * assumes a dense communication pattern and iterates through all ranks of the communicator.
  * This function is useful for scenarios where a native collective may not be optimal
  * (e.g., for sparse communication patterns or debugging).
  *
  * \param[in]  sendbuf              Send buffer
- * \param[in]  sendcounts           Number of elements to send to each destination process (size = \p n_send_rank if provided, else size of \p comm)
- * \param[in]  sdispls              Displacement (relative to \p sendbuf) to the data relative to each destination process (size = \p n_send_rank if provided, else size of \p comm)
+ * \param[in]  sendcounts           Number of elements to send to each destination process (size = \p n_tgt_rank if provided, else size of \p comm)
+ * \param[in]  sdispls              Displacement (relative to \p sendbuf) to the data relative to each destination process (size = \p n_tgt_rank if provided, else size of \p comm)
  * \param[in]  sendtype             Type of the data elements in \p sendbuf
- * \param[in]  n_send_rank          (Optional) Number of destination processes (only used if \p send_rank is not NULL)
- * \param[in]  send_rank            (Optional) Ranks in \p comm of destination processes (size = \p n_send_rank if provided, else size of \p comm)
+ * \param[in]  n_tgt_rank           (Optional) Number of destination processes (only used if \p tgt_rank is not NULL)
+ * \param[in]  tgt_rank             (Optional) Ranks in \p comm of destination processes (size = \p n_tgt_rank if provided, else size of \p comm)
  *                                  If NULL, a dense check on \p sendcounts is performed.
  * \param[out] recvbuf              Receive buffer
- * \param[in]  recvcounts           Number of elements to receive from each source process (size = \p n_recv_rank if provided, else size of \p comm)
- * \param[in]  rdispls              Displacement (relative to \p recvbuf) to the data relative to each source process (size = \p n_recv_rank if provided, else size of \p comm)
+ * \param[in]  recvcounts           Number of elements to receive from each source process (size = \p n_src_rank if provided, else size of \p comm)
+ * \param[in]  rdispls              Displacement (relative to \p recvbuf) to the data relative to each source process (size = \p n_src_rank if provided, else size of \p comm)
  * \param[in]  recvtype             Type of the data elements in \p recvbuf
- * \param[in]  n_recv_rank          (Optional) Number of source processes (only used if \p recv_rank is not NULL)
- * \param[in]  recv_rank            (Optional) Ranks in \p comm of source processes (size = \p n_recv_rank if provided, else size of \p comm)
+ * \param[in]  n_src_rank           (Optional) Number of source processes (only used if \p src_rank is not NULL)
+ * \param[in]  src_rank             (Optional) Ranks in \p comm of source processes (size = \p n_src_rank if provided, else size of \p comm)
  *                                  If NULL, a dense check on \p recvcounts is performed.
  * \param[in]  tag                  The message tag for P2P communication
  * \param[in]  comm                 MPI communicator
@@ -317,14 +317,14 @@ PDM_MPI_Ialltoallv_p2p
   int               *sendcounts,
   int               *sdispls,
   PDM_MPI_Datatype   sendtype,
-  int                n_send_rank,
-  int               *send_rank,
+  int                n_tgt_rank,
+  int               *tgt_rank,
   void              *recvbuf,
   int               *recvcounts,
   int               *rdispls,
   PDM_MPI_Datatype   recvtype,
-  int                n_recv_rank,
-  int               *recv_rank,
+  int                n_src_rank,
+  int               *src_rank,
   int                tag,
   PDM_MPI_Comm       comm,
   int               *n_send_recv_request,
