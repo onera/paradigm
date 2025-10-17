@@ -52,8 +52,8 @@ typedef struct _pdm_global_point_mean_t PDM_global_point_mean_t;
 PDM_global_point_mean_t*
 PDM_global_mean_create
 (
- const int n_part,
- const PDM_MPI_Comm comm
+  const int n_part,
+  const PDM_MPI_Comm comm
 );
 
 
@@ -71,10 +71,10 @@ PDM_global_mean_create
 void
 PDM_global_mean_set
 (
-       PDM_global_point_mean_t *gmean,
- const int                      i_part,
- const int                      n_point,
- const PDM_g_num_t             *numabs
+        PDM_global_point_mean_t *gmean,
+  const int                      i_part,
+  const int                      n_point,
+  const PDM_g_num_t             *numabs
 );
 
 
@@ -89,7 +89,7 @@ PDM_global_mean_set
 void
 PDM_global_mean_free
 (
- PDM_global_point_mean_t *gmean
+  PDM_global_point_mean_t *gmean
 );
 
 
@@ -109,12 +109,12 @@ PDM_global_mean_free
 void
 PDM_global_mean_field_set
 (
- PDM_global_point_mean_t  *gmean,
- const int                 i_part,
- const int                 stride,
- const double             *local_field,
- const double             *local_weight,
- double                   *global_mean_field_ptr
+  PDM_global_point_mean_t  *gmean,
+  const int                 i_part,
+  const int                 stride,
+  const double             *local_field,
+  const double             *local_weight,
+  double                   *global_mean_field_ptr
 );
 
 
@@ -129,7 +129,7 @@ PDM_global_mean_field_set
 void
 PDM_global_mean_field_compute
 (
- PDM_global_point_mean_t *gmean
+  PDM_global_point_mean_t *gmean
 );
 
 
