@@ -1762,7 +1762,9 @@ PDM_part_mesh_nodal_n_group_get
 )
 {
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
-  assert(pmne != NULL);
+  if (pmne == NULL) {
+    return 0;
+  }
   return PDM_part_mesh_nodal_elmts_n_group_get(pmne);
 }
 
