@@ -10,23 +10,23 @@
  *  Local headers
  *----------------------------------------------------------------------------*/
 
-#include "pdm_part_mesh_nodal.h"
-#include "pdm_part_mesh_nodal_priv.h"
 #include "pdm.h"
 #include "pdm_array.h"
+#include "pdm_binary_search.h"
 #include "pdm_error.h"
+#include "pdm_gnum.h"
+#include "pdm_logging.h"
 #include "pdm_mem_tool.h"
 #include "pdm_mesh_nodal_priv.h"
 #include "pdm_mpi.h"
-#include "pdm_part_mesh_nodal_elmts_priv.h"
-#include "pdm_priv.h"
-#include "pdm_vtk.h"
-#include "pdm_logging.h"
-#include "pdm_gnum.h"
 #include "pdm_order.h"
-#include "pdm_binary_search.h"
-#include "pdm_sort.h"
 #include "pdm_part_comm_graph.h"
+#include "pdm_part_mesh_nodal.h"
+#include "pdm_part_mesh_nodal_elmts_priv.h"
+#include "pdm_part_mesh_nodal_priv.h"
+#include "pdm_priv.h"
+#include "pdm_sort.h"
+#include "pdm_vtk.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -336,7 +336,6 @@ PDM_part_mesh_nodal_add_part_mesh_nodal_elmts
     PDM_realloc(pmn->section_kind ,pmn->section_kind , pmn->s_section,PDM_geometry_kind_t);
     PDM_realloc(pmn->section_id   ,pmn->section_id   , pmn->s_section,int                );
   }
-
 
   for (int i = 0; i < n_section; i++) {
     int _id_section = pmn->n_section++;
@@ -850,9 +849,9 @@ PDM_part_mesh_nodal_free
 void
 PDM_part_mesh_nodal_dump_vtk
 (
-  PDM_part_mesh_nodal_t *pmn,
-  PDM_geometry_kind_t    geom_kind,
-  const char            *filename_pattern
+        PDM_part_mesh_nodal_t *pmn,
+        PDM_geometry_kind_t    geom_kind,
+  const char                  *filename_pattern
 )
 {
   CHECK_PMN(pmn)
@@ -1298,7 +1297,7 @@ PDM_part_mesh_nodal_section_poly3d_cell_vtx_connect_get
 void
 PDM_part_mesh_nodal_reset
 (
- PDM_part_mesh_nodal_t *pmn
+  PDM_part_mesh_nodal_t *pmn
 )
 {
   CHECK_PMN(pmn)
@@ -1417,7 +1416,7 @@ PDM_part_mesh_nodal_partial_free
 int
 PDM_part_mesh_nodal_is_set_coord_from_parent
 (
- PDM_part_mesh_nodal_t *pmn
+  PDM_part_mesh_nodal_t *pmn
 )
 {
   CHECK_PMN(pmn)
