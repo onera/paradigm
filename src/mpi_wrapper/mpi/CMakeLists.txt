@@ -16,6 +16,7 @@ file(GLOB_RECURSE SOURCES
      pdm_mpi_extended.c
      pdm_mpi_ext_dependencies.c
      ../pdm_mpi.h
+     ../pdm_mpi_extended.h
      ../pdm_mpi_ext_dependencies.h
      ../../pdm.h
      ../../pdm_priv.h)
@@ -61,6 +62,7 @@ endif (PARMETIS_FOUND)
 set (LIST_HEADER "")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/../pdm_mpi.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/../pdm_mpi_ext_dependencies.h")
+list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/../pdm_mpi_extended.h")
 
 # Options du link
 # ---------------
