@@ -36,8 +36,28 @@ extern "C" {
 #endif /* __cplusplus */
 
 /*============================================================================
- * Fortran function header
+ * Macro definition
  *============================================================================*/
+
+#define CHECK_PMNE(pmne)                                                            \
+  if ((pmne) == NULL) {                                                             \
+    PDM_error(__FILE__, __LINE__, 0, "Undefined Part Mesh Nodal Elmts instance\n"); \
+  }
+
+#define CHECK_PMN(pmn)                                                        \
+  if ((pmn) == NULL) {                                                        \
+    PDM_error(__FILE__, __LINE__, 0, "Undefined Part Mesh Nodal instance\n"); \
+  }
+
+#define CHECK_GEOM_KIND(geom_kind, expected)                                                                   \
+  if ((geom_kind) != (expected)) {                                                                             \
+    PDM_error(__FILE__, __LINE__, 0, "Invalid geom_kind (expected %d but got %d)\n", (expected), (geom_kind)); \
+  }
+
+#define CHECK_I_PART(pmn, i_part)                                                          \
+  if ((i_part) < 0 || (i_part) >= (pmn)->n_part) {                                           \
+    PDM_error(__FILE__, __LINE__, 0, "Invalid i_part (%d / %d)", (i_part), (pmn)->n_part); \
+  }
 
 /*============================================================================
  * Local macro definitions
@@ -91,19 +111,26 @@ _get_from_geometry_kind
   PDM_geometry_kind_t    geom_kind
 )
 {
+  PDM_geometry_kind_t principal_geom_kind = PDM_part_mesh_nodal_principal_geom_kind_get(pmn);
+
+  if (principal_geom_kind > geom_kind) {
+    PDM_error(__FILE__, __LINE__, 0, "Invalid geom_kind (expected >= %d but got %d)\n", principal_geom_kind, geom_kind);
+  }
+
   PDM_part_mesh_nodal_elmts_t* pmne = NULL;
-  if(geom_kind == PDM_GEOMETRY_KIND_VOLUMIC){
-    assert(pmn->mesh_dimension == 3);
+  if (geom_kind == PDM_GEOMETRY_KIND_VOLUMIC) {
     pmne = pmn->volumic;
-  } else if( geom_kind == PDM_GEOMETRY_KIND_SURFACIC){
-    assert(pmn->mesh_dimension >= 2);
+  }
+  else if (geom_kind == PDM_GEOMETRY_KIND_SURFACIC) {
     pmne = pmn->surfacic;
-  } else if( geom_kind == PDM_GEOMETRY_KIND_RIDGE){
-    assert(pmn->mesh_dimension >= 1);
+  }
+  else if (geom_kind == PDM_GEOMETRY_KIND_RIDGE) {
     pmne = pmn->ridge;
-  } else if( geom_kind == PDM_GEOMETRY_KIND_CORNER){
+  }
+  else if (geom_kind == PDM_GEOMETRY_KIND_CORNER) {
     pmne = pmn->corner;
-  } else {
+  }
+  else {
     PDM_error(__FILE__, __LINE__, 0, "Bad geom_kind in _get_from_geometry_kind \n");
   }
   return pmne;
@@ -162,9 +189,8 @@ PDM_part_mesh_nodal_coord_set
         PDM_ownership_t        owner
 )
 {
-  if (id_part >= pmn->n_part) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad part identifier\n");
-  }
+  CHECK_PMN   (pmn)
+  CHECK_I_PART(pmn, id_part)
 
   PDM_Mesh_nodal_vtx_t *vtx = pmn->vtx[id_part];
 
@@ -190,9 +216,8 @@ PDM_part_mesh_nodal_vtx_gnum_set
         PDM_ownership_t        owner
 )
 {
-  if (id_part >= pmn->n_part) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad part identifier\n");
-  }
+  CHECK_PMN   (pmn)
+  CHECK_I_PART(pmn, id_part)
 
   PDM_Mesh_nodal_vtx_t *vtx = pmn->vtx[id_part];
 
@@ -219,14 +244,8 @@ PDM_part_mesh_nodal_coord_from_parent_set
   const PDM_ownership_t        ownership
 )
 {
-
-  if (pmn == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
-  }
-
-  if (id_part >= pmn->n_part) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad part identifier\n");
-  }
+  CHECK_PMN   (pmn)
+  CHECK_I_PART(pmn, id_part)
 
   PDM_Mesh_nodal_vtx_t *vtx = pmn->vtx[id_part];
 
@@ -279,8 +298,14 @@ PDM_part_mesh_nodal_add_part_mesh_nodal_elmts
     return;
   }
 
-  assert(pmn->n_part == pmne->n_part);
-  assert(pmn->mesh_dimension >= pmne->mesh_dimension);
+  if (pmn->n_part != pmne->n_part) {
+    PDM_error(__FILE__, __LINE__, 0, "pmn and pmne must have the same number of parts (%d / %d)\n", pmn->n_part, pmne->n_part);
+  }
+
+  if (pmne->mesh_dimension > pmn->mesh_dimension) {
+    PDM_error(__FILE__, __LINE__, 0, "pmne dimension (%d) must be <= pmn dimension (%d)\n", pmne->mesh_dimension, pmn->mesh_dimension);
+  }
+
   PDM_geometry_kind_t geom_kind = PDM_GEOMETRY_KIND_MAX;
   if(pmne->mesh_dimension == 3) {
     pmn->volumic = pmne;
@@ -330,6 +355,8 @@ PDM_part_mesh_nodal_part_comm_graph_set
   PDM_ownership_t        ownership
 )
 {
+  CHECK_PMN(pmn)
+
   pmn->pcg[entity_type] = pcg;
   if (ownership==PDM_OWNERSHIP_USER || ownership==PDM_OWNERSHIP_KEEP) {
     pmn->pcg_ownership[entity_type] = ownership;
@@ -346,6 +373,7 @@ PDM_part_mesh_nodal_part_comm_graph_get
   PDM_ownership_t         ownership
 )
 {
+  CHECK_PMN(pmn)
   *pcg = pmn->pcg[entity_type];
   if (ownership!=PDM_OWNERSHIP_BAD_VALUE) {
     pmn->pcg_ownership[entity_type] = ownership;
@@ -359,6 +387,7 @@ PDM_part_mesh_nodal_mesh_dimension_get
   PDM_part_mesh_nodal_t *pmn
 )
 {
+  CHECK_PMN(pmn)
   return pmn->mesh_dimension;
 }
 
@@ -369,6 +398,7 @@ PDM_part_mesh_nodal_n_part_get
   PDM_part_mesh_nodal_t *pmn
 )
 {
+  CHECK_PMN(pmn)
   return pmn->n_part;
 }
 
@@ -380,9 +410,8 @@ PDM_part_mesh_nodal_n_vtx_get
   const int                    id_part
 )
 {
-  if (id_part >= pmn->n_part) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad part identifier\n");
-  }
+  CHECK_PMN   (pmn)
+  CHECK_I_PART(pmn, id_part)
 
   PDM_Mesh_nodal_vtx_t *vtx = pmn->vtx[id_part];
   return vtx->n_vtx;
@@ -397,9 +426,8 @@ PDM_part_mesh_nodal_vtx_coord_get
         PDM_ownership_t        ownership
 )
 {
-  if (id_part >= pmn->n_part) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad part identifier\n");
-  }
+  CHECK_PMN   (pmn)
+  CHECK_I_PART(pmn, id_part)
 
   PDM_Mesh_nodal_vtx_t *vtx = pmn->vtx[id_part];
 
@@ -419,9 +447,8 @@ PDM_part_mesh_nodal_vtx_g_num_get
         PDM_ownership_t        ownership
 )
 {
-  if (id_part >= pmn->n_part) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad part identifier\n");
-  }
+  CHECK_PMN   (pmn)
+  CHECK_I_PART(pmn, id_part)
 
   PDM_Mesh_nodal_vtx_t *vtx = pmn->vtx[id_part];
 
@@ -439,11 +466,10 @@ PDM_part_mesh_nodal_n_section_in_geom_kind_get
   PDM_geometry_kind_t    geom_kind
 )
 {
-  if (pmn == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad part mesh nodal identifier\n");
-  }
+  CHECK_PMN(pmn)
+
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
-  if(pmne){
+  if (pmne) {
     return pmne->n_section;
   }
   else {
@@ -459,11 +485,10 @@ PDM_part_mesh_nodal_sections_id_in_geom_kind_get
  PDM_geometry_kind_t    geom_kind
 )
 {
-  if (pmn == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad part mesh nodal identifier\n");
-  }
+  CHECK_PMN(pmn)
+
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
-  if(pmne){
+  if (pmne) {
     return pmne->sections_id;
   }
   else {
@@ -479,10 +504,12 @@ PDM_part_mesh_nodal_section_elt_type_get
   const int                    i_section
 )
 {
+  CHECK_PMN(pmn)
+
   PDM_geometry_kind_t geom_kind;
   int                 id_section;
   PDM_part_mesh_nodal_section_id_and_geom_kind_get(pmn,
-                                                  i_section,
+                                                   i_section,
                                                   &geom_kind,
                                                   &id_section);
 
@@ -500,8 +527,10 @@ PDM_part_mesh_nodal_section_in_geom_kind_elt_type_get
   const int                    id_section
 )
 {
+  CHECK_PMN(pmn)
+
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
-  assert(pmne != NULL);
+  CHECK_PMNE(pmne)
   return PDM_part_mesh_nodal_elmts_section_type_get(pmne, id_section);
 }
 
@@ -513,6 +542,8 @@ PDM_part_mesh_nodal_section_add
   const PDM_Mesh_nodal_elt_t   t_elt
 )
 {
+  CHECK_PMN(pmn)
+
   PDM_geometry_kind_t geom_kind = PDM_Mesh_nodal_geom_kind_from_elt_type(t_elt);
 
   if( _get_from_geometry_kind(pmn, geom_kind) == NULL) {
@@ -540,7 +571,7 @@ PDM_part_mesh_nodal_section_add
 
 
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
-  assert(pmne != NULL);
+  CHECK_PMNE(pmne)
   int id_section = PDM_part_mesh_nodal_elmts_add(pmne, t_elt);
 
   if (pmn->n_section >= pmn->s_section) {
@@ -571,6 +602,9 @@ PDM_part_mesh_nodal_section_std_set
         PDM_ownership_t        owner
 )
 {
+  CHECK_PMN   (pmn)
+  CHECK_I_PART(pmn, id_part)
+
   PDM_geometry_kind_t geom_kind;
   int                 id_section;
   PDM_part_mesh_nodal_section_id_and_geom_kind_get(pmn,
@@ -579,7 +613,7 @@ PDM_part_mesh_nodal_section_std_set
                                                   &id_section);
 
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
-  assert(pmne != NULL);
+  CHECK_PMNE(pmne)
   PDM_part_mesh_nodal_elmts_std_set(pmne, id_section, id_part, n_elt, connec, numabs, parent_num, parent_entity_g_num, owner);
 }
 
@@ -600,6 +634,9 @@ PDM_part_mesh_nodal_section_std_ho_set
         PDM_ownership_t        owner
 )
 {
+  CHECK_PMN   (pmn)
+  CHECK_I_PART(pmn, id_part)
+
   PDM_geometry_kind_t geom_kind;
   int                 id_section;
   PDM_part_mesh_nodal_section_id_and_geom_kind_get(pmn,
@@ -608,7 +645,7 @@ PDM_part_mesh_nodal_section_std_ho_set
                                                   &id_section);
 
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
-  assert(pmne != NULL);
+  CHECK_PMNE(pmne)
   PDM_part_mesh_nodal_elmts_std_ho_set(pmne,
                                        id_section,
                                        id_part,
@@ -631,6 +668,9 @@ PDM_part_mesh_nodal_section_n_elt_get
   const int                     id_part
 )
 {
+  CHECK_PMN   (pmn)
+  CHECK_I_PART(pmn, id_part)
+
   PDM_geometry_kind_t geom_kind;
   int                 id_section;
   PDM_part_mesh_nodal_section_id_and_geom_kind_get(pmn,
@@ -639,7 +679,7 @@ PDM_part_mesh_nodal_section_n_elt_get
                                                   &id_section);
 
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
-  assert(pmne != NULL);
+  CHECK_PMNE(pmne)
   return PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne, id_section, id_part);
 }
 
@@ -657,6 +697,9 @@ PDM_part_mesh_nodal_section_std_get
         PDM_ownership_t         ownership
 )
 {
+  CHECK_PMN   (pmn)
+  CHECK_I_PART(pmn, id_part)
+
   PDM_geometry_kind_t geom_kind;
   int                 id_section;
   PDM_part_mesh_nodal_section_id_and_geom_kind_get(pmn,
@@ -665,9 +708,10 @@ PDM_part_mesh_nodal_section_std_get
                                                   &id_section);
 
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
-  assert(pmne != NULL);
+  CHECK_PMNE(pmne)
   PDM_part_mesh_nodal_elmts_section_std_get(pmne, id_section, id_part, connec, numabs, parent_num, parent_entity_g_num, ownership);
 }
+
 
 void
 PDM_part_mesh_nodal_section_std_ho_get
@@ -684,6 +728,9 @@ PDM_part_mesh_nodal_section_std_ho_get
         PDM_ownership_t         ownership
 )
 {
+  CHECK_PMN   (pmn)
+  CHECK_I_PART(pmn, id_part)
+
   PDM_geometry_kind_t geom_kind;
   int                 id_section;
   PDM_part_mesh_nodal_section_id_and_geom_kind_get(pmn,
@@ -692,7 +739,7 @@ PDM_part_mesh_nodal_section_std_ho_get
                                                   &id_section);
 
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
-  assert(pmne != NULL);
+  CHECK_PMNE(pmne)
   PDM_part_mesh_nodal_elmts_section_std_ho_get(pmne,
                                                id_section,
                                                id_part,
@@ -715,6 +762,9 @@ PDM_part_mesh_nodal_section_parent_num_get
         PDM_ownership_t         ownership
 )
 {
+  CHECK_PMN   (pmn)
+  CHECK_I_PART(pmn, id_part)
+
   PDM_geometry_kind_t geom_kind;
   int                 id_section;
   PDM_part_mesh_nodal_section_id_and_geom_kind_get(pmn,
@@ -723,7 +773,7 @@ PDM_part_mesh_nodal_section_parent_num_get
                                                   &id_section);
 
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
-  assert(pmne != NULL);
+  CHECK_PMNE(pmne)
   return PDM_part_mesh_nodal_elmts_parent_num_get(pmne, id_section, id_part, ownership);
 }
 
@@ -737,6 +787,9 @@ PDM_part_mesh_nodal_g_num_get
         PDM_ownership_t         ownership
 )
 {
+  CHECK_PMN   (pmn)
+  CHECK_I_PART(pmn, id_part)
+
   PDM_geometry_kind_t geom_kind;
   int                 id_section;
   PDM_part_mesh_nodal_section_id_and_geom_kind_get(pmn,
@@ -745,9 +798,10 @@ PDM_part_mesh_nodal_g_num_get
                                                   &id_section);
 
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
-  assert(pmne != NULL);
+  CHECK_PMNE(pmne)
   return PDM_part_mesh_nodal_elmts_g_num_get(pmne, id_section, id_part, ownership);
 }
+
 
 void
 PDM_part_mesh_nodal_free
@@ -755,6 +809,10 @@ PDM_part_mesh_nodal_free
   PDM_part_mesh_nodal_t* pmn
 )
 {
+  if (pmn == NULL) {
+    return;
+  }
+
   // volumic
   PDM_part_mesh_nodal_elmts_free(pmn->volumic);
 
@@ -797,6 +855,8 @@ PDM_part_mesh_nodal_dump_vtk
   const char            *filename_pattern
 )
 {
+  CHECK_PMN(pmn)
+
   int i_rank = -1;
   PDM_MPI_Comm_rank(pmn->comm, &i_rank);
 
@@ -913,6 +973,7 @@ PDM_part_mesh_nodal_dump_vtk
   }
 }
 
+
 void
 PDM_part_mesh_nodal_section_elt_extents_compute
 (
@@ -923,6 +984,9 @@ PDM_part_mesh_nodal_section_elt_extents_compute
         double                *extents
 )
 {
+  CHECK_PMN   (pmn)
+  CHECK_I_PART(pmn, i_part)
+
   PDM_geometry_kind_t geom_kind;
   int                 id_section;
   PDM_part_mesh_nodal_section_id_and_geom_kind_get(pmn,
@@ -931,7 +995,7 @@ PDM_part_mesh_nodal_section_elt_extents_compute
                                                   &id_section);
 
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
-  assert(pmne != NULL);
+  CHECK_PMNE(pmne)
 
   double *vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmn, i_part, PDM_OWNERSHIP_BAD_VALUE);
 
@@ -953,6 +1017,9 @@ PDM_part_mesh_nodal_section_elt_center_compute
   const PDM_ownership_t        ownership
 )
 {
+  CHECK_PMN   (pmn)
+  CHECK_I_PART(pmn, i_part)
+
   PDM_geometry_kind_t geom_kind;
   int                 id_section;
   PDM_part_mesh_nodal_section_id_and_geom_kind_get(pmn,
@@ -961,7 +1028,7 @@ PDM_part_mesh_nodal_section_elt_center_compute
                                                   &id_section);
 
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
-  assert(pmne != NULL);
+  CHECK_PMNE(pmne)
 
   double *vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmn, i_part, PDM_OWNERSHIP_BAD_VALUE);
 
@@ -985,6 +1052,9 @@ PDM_part_mesh_nodal_section_elt_center_get
         PDM_ownership_t        ownership
 )
 {
+  CHECK_PMN   (pmn)
+  CHECK_I_PART(pmn, i_part)
+
   PDM_geometry_kind_t geom_kind;
   int                 id_section;
   PDM_part_mesh_nodal_section_id_and_geom_kind_get(pmn,
@@ -993,10 +1063,11 @@ PDM_part_mesh_nodal_section_elt_center_get
                                                   &id_section);
 
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
-  assert(pmne != NULL);
+  CHECK_PMNE(pmne)
 
   return PDM_part_mesh_nodal_elmts_elt_center_get(pmne, id_section, i_part, ownership);
 }
+
 
 void
 PDM_part_mesh_nodal_section_elt_center_reset
@@ -1006,6 +1077,9 @@ PDM_part_mesh_nodal_section_elt_center_reset
   const int                    i_part
 )
 {
+  CHECK_PMN   (pmn)
+  CHECK_I_PART(pmn, i_part)
+
   PDM_geometry_kind_t geom_kind;
   int                 id_section;
   PDM_part_mesh_nodal_section_id_and_geom_kind_get(pmn,
@@ -1014,7 +1088,7 @@ PDM_part_mesh_nodal_section_elt_center_reset
                                                   &id_section);
 
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
-  assert(pmne != NULL);
+  CHECK_PMNE(pmne)
 
   PDM_part_mesh_nodal_elmts_elt_center_reset(pmne, id_section, i_part);
 }
@@ -1034,16 +1108,19 @@ PDM_part_mesh_nodal_section_poly2d_set
         PDM_ownership_t        owner
 )
 {
+  CHECK_PMN   (pmn)
+  CHECK_I_PART(pmn, id_part)
+
   PDM_geometry_kind_t geom_kind;
   int                 id_section;
   PDM_part_mesh_nodal_section_id_and_geom_kind_get(pmn,
                                                    i_section,
                                                   &geom_kind,
                                                   &id_section);
-  assert(geom_kind == PDM_GEOMETRY_KIND_SURFACIC);
+  CHECK_GEOM_KIND(geom_kind, PDM_GEOMETRY_KIND_SURFACIC);
 
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
-  assert(pmne != NULL);
+  CHECK_PMNE(pmne)
   PDM_part_mesh_nodal_elmts_section_poly2d_set(pmne,
                                                id_section,
                                                id_part,
@@ -1067,16 +1144,19 @@ PDM_part_mesh_nodal_section_poly2d_get
         PDM_ownership_t         ownership
 )
 {
+  CHECK_PMN   (pmn)
+  CHECK_I_PART(pmn, id_part)
+
   PDM_geometry_kind_t geom_kind;
   int                 id_section;
   PDM_part_mesh_nodal_section_id_and_geom_kind_get(pmn,
                                                    i_section,
                                                   &geom_kind,
                                                   &id_section);
-  assert(geom_kind == PDM_GEOMETRY_KIND_SURFACIC);
+  CHECK_GEOM_KIND(geom_kind, PDM_GEOMETRY_KIND_SURFACIC);
 
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
-  assert(pmne != NULL);
+  CHECK_PMNE(pmne)
   PDM_part_mesh_nodal_elmts_section_poly2d_get(pmne,
                                                id_section,
                                                id_part,
@@ -1105,16 +1185,19 @@ PDM_part_mesh_nodal_section_poly3d_set
         PDM_ownership_t        owner
 )
 {
+  CHECK_PMN   (pmn)
+  CHECK_I_PART(pmn, id_part)
+
   PDM_geometry_kind_t geom_kind;
   int                 id_section;
   PDM_part_mesh_nodal_section_id_and_geom_kind_get(pmn,
                                                    i_section,
                                                   &geom_kind,
                                                   &id_section);
-  assert(geom_kind == PDM_GEOMETRY_KIND_VOLUMIC);
+  CHECK_GEOM_KIND(geom_kind, PDM_GEOMETRY_KIND_VOLUMIC);
 
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
-  assert(pmne != NULL);
+  CHECK_PMNE(pmne)
   PDM_part_mesh_nodal_elmts_section_poly3d_set(pmne,
                                                id_section,
                                                id_part,
@@ -1150,16 +1233,19 @@ const int                     id_part,
       PDM_ownership_t         ownership
 )
 {
+  CHECK_PMN   (pmn)
+  CHECK_I_PART(pmn, id_part)
+
   PDM_geometry_kind_t geom_kind;
   int                 id_section;
   PDM_part_mesh_nodal_section_id_and_geom_kind_get(pmn,
                                                    i_section,
                                                   &geom_kind,
                                                   &id_section);
-  assert(geom_kind == PDM_GEOMETRY_KIND_VOLUMIC);
+  CHECK_GEOM_KIND(geom_kind, PDM_GEOMETRY_KIND_VOLUMIC);
 
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
-  assert(pmne != NULL);
+  CHECK_PMNE(pmne)
   PDM_part_mesh_nodal_elmts_section_poly3d_get(pmne,
                                                id_section,
                                                id_part,
@@ -1187,16 +1273,19 @@ PDM_part_mesh_nodal_section_poly3d_cell_vtx_connect_get
         PDM_ownership_t         ownership
 )
 {
+  CHECK_PMN   (pmn)
+  CHECK_I_PART(pmn, id_part)
+
   PDM_geometry_kind_t geom_kind;
   int                 id_section;
   PDM_part_mesh_nodal_section_id_and_geom_kind_get(pmn,
                                                    i_section,
                                                   &geom_kind,
                                                   &id_section);
-  assert(geom_kind == PDM_GEOMETRY_KIND_VOLUMIC);
+  CHECK_GEOM_KIND(geom_kind, PDM_GEOMETRY_KIND_VOLUMIC);
 
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
-  assert(pmne != NULL);
+  CHECK_PMNE(pmne)
   PDM_part_mesh_nodal_elmts_section_poly3d_cell_vtx_connect_get(pmne,
                                                                 id_section,
                                                                 id_part,
@@ -1212,6 +1301,8 @@ PDM_part_mesh_nodal_reset
  PDM_part_mesh_nodal_t *pmn
 )
 {
+  CHECK_PMN(pmn)
+
   for (PDM_geometry_kind_t geom_kind = (PDM_geometry_kind_t) 0; geom_kind < PDM_GEOMETRY_KIND_MAX; geom_kind++) {
     PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
 
@@ -1247,6 +1338,8 @@ PDM_part_mesh_nodal_g_num_in_section_compute
   const PDM_ownership_t        ownership
 )
 {
+  CHECK_PMN(pmn)
+
   PDM_geometry_kind_t geom_kind;
   int                 id_section;
   PDM_part_mesh_nodal_section_id_and_geom_kind_get(pmn,
@@ -1255,7 +1348,7 @@ PDM_part_mesh_nodal_g_num_in_section_compute
                                                   &id_section);
 
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
-  assert(pmne != NULL);
+  CHECK_PMNE(pmne)
 
   PDM_part_mesh_nodal_elmts_g_num_in_section_compute(pmne,
                                                      id_section,
@@ -1271,8 +1364,11 @@ PDM_part_mesh_nodal_n_elmts_get
   const int                    id_part
 )
 {
+  CHECK_PMN   (pmn)
+  CHECK_I_PART(pmn, id_part)
+
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
-  assert(pmne != NULL);
+  CHECK_PMNE(pmne)
 
   return PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, id_part);
 }
@@ -1287,8 +1383,11 @@ PDM_part_mesh_nodal_g_num_get_from_part
         PDM_ownership_t        ownership
 )
 {
+  CHECK_PMN   (pmn)
+  CHECK_I_PART(pmn, id_part)
+
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
-  assert(pmne != NULL);
+  CHECK_PMNE(pmne)
 
   return PDM_part_mesh_nodal_elmts_g_num_get_from_part(pmne, id_part, ownership);
 }
@@ -1300,6 +1399,10 @@ PDM_part_mesh_nodal_partial_free
   PDM_part_mesh_nodal_t *pmn
 )
 {
+  if (pmn == NULL) {
+    return;
+  }
+
   for (PDM_geometry_kind_t geom_kind = (PDM_geometry_kind_t)  0; geom_kind < PDM_GEOMETRY_KIND_MAX; geom_kind++) {
     PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
 
@@ -1317,9 +1420,7 @@ PDM_part_mesh_nodal_is_set_coord_from_parent
  PDM_part_mesh_nodal_t *pmn
 )
 {
-  if (pmn == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
-  }
+  CHECK_PMN(pmn)
 
   return pmn->is_vtx_def_from_parent;
 }
@@ -1334,6 +1435,9 @@ PDM_part_mesh_nodal_section_g_num_get
         PDM_ownership_t        ownership
 )
 {
+  CHECK_PMN   (pmn)
+  CHECK_I_PART(pmn, id_part)
+
   PDM_geometry_kind_t geom_kind;
   int                 id_section;
   PDM_part_mesh_nodal_section_id_and_geom_kind_get(pmn,
@@ -1342,7 +1446,7 @@ PDM_part_mesh_nodal_section_g_num_get
                                                   &id_section);
 
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
-  assert(pmne != NULL);
+  CHECK_PMNE(pmne)
 
   return PDM_part_mesh_nodal_elmts_section_g_num_get(pmne, id_section, id_part, ownership);
 }
@@ -1356,8 +1460,11 @@ PDM_part_mesh_nodal_num_elmt_parent_to_local_get
   const int                     id_part
 )
 {
+  CHECK_PMN   (pmn)
+  CHECK_I_PART(pmn, id_part)
+
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
-  assert(pmne != NULL);
+  CHECK_PMNE(pmne)
   return PDM_part_mesh_nodal_elmts_num_elmt_parent_to_local_get(pmne, id_part);
 }
 
@@ -1371,6 +1478,9 @@ PDM_part_mesh_nodal_section_elmt_to_entity_get
         PDM_ownership_t        ownership
 )
 {
+  CHECK_PMN   (pmn)
+  CHECK_I_PART(pmn, id_part)
+
   PDM_geometry_kind_t geom_kind;
   int                 id_section;
   PDM_part_mesh_nodal_section_id_and_geom_kind_get(pmn,
@@ -1379,7 +1489,7 @@ PDM_part_mesh_nodal_section_elmt_to_entity_get
                                                    &id_section);
 
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
-  assert(pmne != NULL);
+  CHECK_PMNE(pmne)
 
   return PDM_part_mesh_nodal_elmts_section_elmt_to_entity_get(pmne,
                                                               id_section,
@@ -1400,8 +1510,11 @@ PDM_part_mesh_nodal_group_get
         PDM_ownership_t         ownership
 )
 {
+  CHECK_PMN   (pmn)
+  CHECK_I_PART(pmn, i_part)
+
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
-  assert(pmne != NULL);
+  CHECK_PMNE(pmne)
   PDM_part_mesh_nodal_elmts_group_get(pmne,
                                       i_part,
                                       i_group,
@@ -1420,8 +1533,11 @@ PDM_part_mesh_nodal_compute_sections_idx
   const int               id_part
 )
 {
+  CHECK_PMN   (pmn)
+  CHECK_I_PART(pmn, id_part)
+
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
-  assert(pmne != NULL);
+  CHECK_PMNE(pmne)
   return PDM_part_mesh_nodal_elmts_compute_sections_idx(pmne, id_part);
 }
 
@@ -1433,9 +1549,8 @@ PDM_part_mesh_nodal_vertices_parent_get
   const int                    id_part
 )
 {
-  if (id_part >= pmn->n_part) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad part identifier\n");
-  }
+  CHECK_PMN   (pmn)
+  CHECK_I_PART(pmn, id_part)
 
   PDM_Mesh_nodal_vtx_t *vtx = pmn->vtx[id_part];
 
@@ -1450,17 +1565,14 @@ PDM_part_mesh_nodal_vertices_g_num_parent_get
   const int                     id_part
 )
 {
-  if (pmn == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
-  }
-
-  if (id_part >= pmn->n_part) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad part identifier\n");
-  }
+  CHECK_PMN   (pmn)
+  CHECK_I_PART(pmn, id_part)
 
   PDM_Mesh_nodal_vtx_t *vtx = pmn->vtx[id_part];
 
-  assert(vtx->parent != NULL);
+  if (vtx->parent == NULL) {
+    PDM_error(__FILE__, __LINE__, 0, "Undefined parent vertices\n");
+  }
 
   return vtx->parent->_numabs;
 }
@@ -1482,6 +1594,9 @@ PDM_part_mesh_nodal_cell3d_cellface_add
   const PDM_ownership_t        ownership
 )
 {
+  CHECK_PMN   (pmn)
+  CHECK_I_PART(pmn, id_part)
+
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, PDM_GEOMETRY_KIND_VOLUMIC);
 
   if (pmne == NULL) {
@@ -1538,6 +1653,9 @@ PDM_part_mesh_nodal_face2d_faceedge_add
   const PDM_ownership_t        ownership
 )
 {
+  CHECK_PMN   (pmn)
+  CHECK_I_PART(pmn, id_part)
+
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, PDM_GEOMETRY_KIND_SURFACIC);
 
   if (pmne == NULL) {
@@ -1593,6 +1711,9 @@ PDM_part_mesh_nodal_cells_cellvtx_add
   const PDM_ownership_t        ownership
 )
 {
+  CHECK_PMN   (pmn)
+  CHECK_I_PART(pmn, id_part)
+
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, PDM_GEOMETRY_KIND_VOLUMIC);
 
   if (pmne == NULL) {
@@ -1643,6 +1764,9 @@ PDM_part_mesh_nodal_faces_facevtx_add
   const PDM_ownership_t        ownership
 )
 {
+  CHECK_PMN   (pmn)
+  CHECK_I_PART(pmn, id_part)
+
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, PDM_GEOMETRY_KIND_SURFACIC);
 
   if (pmne == NULL) {
@@ -1690,6 +1814,8 @@ PDM_part_mesh_nodal_section_id_and_geom_kind_get
         int                   *id_section_in_geom_kind
 )
 {
+  CHECK_PMN(pmn)
+
   if (i_section >= pmn->n_section) {
     PDM_error(__FILE__, __LINE__, 0, "i_section (%d) > n_section (%d)\n", i_section, pmn->n_section);
   }
@@ -1707,6 +1833,8 @@ PDM_part_mesh_nodal_section_id_from_geom_kind_get
   const int                    id_section_in_geom_kind
 )
 {
+  CHECK_PMN(pmn)
+
   int i_section = 0;
 
   for (i_section = 0; i_section < pmn->n_section; i_section++) {
@@ -1726,7 +1854,7 @@ PDM_part_mesh_nodal_n_section_get
   PDM_part_mesh_nodal_t *pmn
 )
 {
-  assert(pmn != NULL);
+  CHECK_PMN(pmn)
 
   return pmn->n_section;
 }
@@ -1738,7 +1866,7 @@ PDM_part_mesh_nodal_sections_id_get
  PDM_part_mesh_nodal_t *pmn
 )
 {
-  assert(pmn != NULL);
+  CHECK_PMN(pmn)
 
   return pmn->section_id;
 }
@@ -1752,8 +1880,10 @@ PDM_part_mesh_nodal_n_group_set
   const int                    n_group
 )
 {
+  CHECK_PMN(pmn)
+
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
-  assert(pmne != NULL);
+  CHECK_PMNE(pmne)
   PDM_part_mesh_nodal_elmts_n_group_set(pmne, n_group);
 }
 
@@ -1771,8 +1901,11 @@ PDM_part_mesh_nodal_group_set
         PDM_ownership_t        ownership
 )
 {
+  CHECK_PMN   (pmn)
+  CHECK_I_PART(pmn, i_part)
+
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
-  assert(pmne != NULL);
+  CHECK_PMNE(pmne)
   PDM_part_mesh_nodal_elmts_group_set(pmne,
                                       i_part,
                                       i_group,
@@ -1790,6 +1923,8 @@ PDM_part_mesh_nodal_n_group_get
   PDM_geometry_kind_t    geom_kind
 )
 {
+  CHECK_PMN(pmn)
+
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
   if (pmne == NULL) {
     // There is no mesh, hence no groups
@@ -1806,6 +1941,7 @@ PDM_part_mesh_nodal_part_mesh_nodal_elmts_get
   PDM_geometry_kind_t     geom_kind
 )
 {
+  CHECK_PMN(pmn)
   return _get_from_geometry_kind(pmn, geom_kind);
 }
 
@@ -1816,6 +1952,8 @@ PDM_part_mesh_nodal_principal_geom_kind_get
   PDM_part_mesh_nodal_t *pmn
 )
 {
+  CHECK_PMN(pmn)
+
   switch (pmn->mesh_dimension) {
   case 3:
     return PDM_GEOMETRY_KIND_VOLUMIC;
@@ -1853,10 +1991,7 @@ PDM_part_mesh_nodal_cell_vtx_connect_get
     return 0;
   }
 
-  int n_part = PDM_part_mesh_nodal_n_part_get(pmn);
-  if (i_part >= n_part) {
-    PDM_error(__FILE__, __LINE__, 0, "Invalid i_part (%d / %d)\n", i_part, n_part);
-  }
+  CHECK_I_PART(pmn, i_part)
 
   PDM_part_mesh_nodal_elmts_t *pmne = _get_from_geometry_kind(pmn,
                                                               geom_kind);
