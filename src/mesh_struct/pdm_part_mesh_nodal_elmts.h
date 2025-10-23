@@ -46,8 +46,9 @@ typedef struct _pdm_part_mesh_nodal_elmts_t PDM_part_mesh_nodal_elmts_t;
 /**
  * \brief Create a Mesh nodal structure
  *
- * \param [in]   n_part   Number of partition on the current process
- * \param [in]   comm     MPI communicator
+ * \param [in]   mesh_dimension Dimension of the mesh
+ * \param [in]   n_part         Number of partition on the current process
+ * \param [in]   comm           MPI communicator
  *
  * \return       New mesh nodal handle
  *
@@ -55,9 +56,9 @@ typedef struct _pdm_part_mesh_nodal_elmts_t PDM_part_mesh_nodal_elmts_t;
 PDM_part_mesh_nodal_elmts_t*
 PDM_part_mesh_nodal_elmts_create
 (
-const int          mesh_dimension,
-const int          n_part,
-const PDM_MPI_Comm comm
+  const int          mesh_dimension,
+  const int          n_part,
+  const PDM_MPI_Comm comm
 );
 
 /**
@@ -72,8 +73,8 @@ const PDM_MPI_Comm comm
 int
 PDM_part_mesh_nodal_elmts_add
 (
-      PDM_part_mesh_nodal_elmts_t *pmne,
-const PDM_Mesh_nodal_elt_t         t_elt
+        PDM_part_mesh_nodal_elmts_t *pmne,
+  const PDM_Mesh_nodal_elt_t         t_elt
 );
 
 /**
@@ -85,7 +86,7 @@ const PDM_Mesh_nodal_elt_t         t_elt
 void
 PDM_part_mesh_nodal_elmts_free
 (
- PDM_part_mesh_nodal_elmts_t *pmne
+  PDM_part_mesh_nodal_elmts_t *pmne
 );
 
 /**
@@ -105,15 +106,15 @@ PDM_part_mesh_nodal_elmts_free
 void
 PDM_part_mesh_nodal_elmts_std_set
 (
-      PDM_part_mesh_nodal_elmts_t *pmne,
-const int                          id_section,
-const int                          id_part,
-const int                          n_elt,
-const int                         *connec,
-const PDM_g_num_t                 *numabs,
-const int                         *parent_num,
-const PDM_g_num_t                 *parent_entity_g_num,
-      PDM_ownership_t              owner
+        PDM_part_mesh_nodal_elmts_t *pmne,
+  const int                          id_section,
+  const int                          id_part,
+  const int                          n_elt,
+  const int                         *connec,
+  const PDM_g_num_t                 *numabs,
+  const int                         *parent_num,
+  const PDM_g_num_t                 *parent_entity_g_num,
+        PDM_ownership_t              owner
 );
 
 /**
@@ -135,17 +136,17 @@ const PDM_g_num_t                 *parent_entity_g_num,
 void
 PDM_part_mesh_nodal_elmts_std_ho_set
 (
-      PDM_part_mesh_nodal_elmts_t *pmne,
-const int                          id_section,
-const int                          id_part,
-const int                          n_elt,
-const int                         *connec,
-const PDM_g_num_t                 *numabs,
-const int                         *parent_num,
-const PDM_g_num_t                 *parent_entity_g_num,
-const int                          order,
-const char                        *ho_ordering,
-      PDM_ownership_t              owner
+        PDM_part_mesh_nodal_elmts_t *pmne,
+  const int                          id_section,
+  const int                          id_part,
+  const int                          n_elt,
+  const int                         *connec,
+  const PDM_g_num_t                 *numabs,
+  const int                         *parent_num,
+  const PDM_g_num_t                 *parent_entity_g_num,
+  const int                          order,
+  const char                        *ho_ordering,
+        PDM_ownership_t              owner
 );
 
 /**
@@ -164,15 +165,15 @@ const char                        *ho_ordering,
 void
 PDM_part_mesh_nodal_elmts_section_poly2d_set
 (
-      PDM_part_mesh_nodal_elmts_t *pmne,
-const int                          id_section,
-const int                          id_part,
-const int                          n_elt,
-const int                         *connec_idx,
-const int                         *connec,
-const PDM_g_num_t                 *numabs,
-const int                         *parent_num,
-      PDM_ownership_t              owner
+        PDM_part_mesh_nodal_elmts_t *pmne,
+  const int                          id_section,
+  const int                          id_part,
+  const int                          n_elt,
+  const int                         *connec_idx,
+  const int                         *connec,
+  const PDM_g_num_t                 *numabs,
+  const int                         *parent_num,
+        PDM_ownership_t              owner
 );
 
 /**
@@ -194,20 +195,20 @@ const int                         *parent_num,
 void
 PDM_part_mesh_nodal_elmts_section_poly3d_set
 (
-      PDM_part_mesh_nodal_elmts_t *pmne,
-const int                          id_section,
-const int                          id_part,
-const int                          n_elt,
-const int                          n_face,
-const int                         *facvtx_idx,
-const int                         *facvtx,
-const PDM_g_num_t                 *face_ln_to_gn,
-const int                         *cellfac_idx,
-const int                         *cellfac,
-const PDM_g_num_t                 *numabs,
-const int                         *parent_num,
-const PDM_g_num_t                 *parent_entity_g_num,
-      PDM_ownership_t              owner
+        PDM_part_mesh_nodal_elmts_t *pmne,
+  const int                          id_section,
+  const int                          id_part,
+  const int                          n_elt,
+  const int                          n_face,
+  const int                         *facvtx_idx,
+  const int                         *facvtx,
+  const PDM_g_num_t                 *face_ln_to_gn,
+  const int                         *cellfac_idx,
+  const int                         *cellfac,
+  const PDM_g_num_t                 *numabs,
+  const int                         *parent_num,
+  const PDM_g_num_t                 *parent_entity_g_num,
+        PDM_ownership_t              owner
 );
 
 
@@ -227,14 +228,14 @@ const PDM_g_num_t                 *parent_entity_g_num,
 void
 PDM_part_mesh_nodal_elmts_section_std_get
 (
-      PDM_part_mesh_nodal_elmts_t  *pmne,
-const int                           id_section,
-const int                           id_part,
-      int                         **connec,
-      PDM_g_num_t                 **numabs,
-      int                         **parent_num,
-      PDM_g_num_t                 **parent_entity_g_num,
-      PDM_ownership_t               ownership
+        PDM_part_mesh_nodal_elmts_t  *pmne,
+  const int                           id_section,
+  const int                           id_part,
+        int                         **connec,
+        PDM_g_num_t                 **numabs,
+        int                         **parent_num,
+        PDM_g_num_t                 **parent_entity_g_num,
+        PDM_ownership_t               ownership
 );
 
 /**
@@ -255,16 +256,16 @@ const int                           id_part,
 void
 PDM_part_mesh_nodal_elmts_section_std_ho_get
 (
-      PDM_part_mesh_nodal_elmts_t  *pmne,
-const int                           id_section,
-const int                           id_part,
-      int                         **connec,
-      PDM_g_num_t                 **numabs,
-      int                         **parent_num,
-      PDM_g_num_t                 **parent_entity_g_num,
-      int                          *order,
-const char                        **ho_ordering,
-      PDM_ownership_t               ownership
+        PDM_part_mesh_nodal_elmts_t  *pmne,
+  const int                           id_section,
+  const int                           id_part,
+        int                         **connec,
+        PDM_g_num_t                 **numabs,
+        int                         **parent_num,
+        PDM_g_num_t                 **parent_entity_g_num,
+        int                          *order,
+  const char                        **ho_ordering,
+        PDM_ownership_t               ownership
 );
 
 /**
@@ -280,12 +281,12 @@ const char                        **ho_ordering,
 void
 PDM_part_mesh_nodal_elmts_section_poly2d_get
 (
-       PDM_part_mesh_nodal_elmts_t  *pmne,
- const int                           id_section,
- const int                           id_part,
-       int                         **connec_idx,
-       int                         **connec,
-       PDM_ownership_t               ownership
+        PDM_part_mesh_nodal_elmts_t  *pmne,
+  const int                           id_section,
+  const int                           id_part,
+        int                         **connec_idx,
+        int                         **connec,
+        PDM_ownership_t               ownership
 );
 
 /**
@@ -302,12 +303,12 @@ PDM_part_mesh_nodal_elmts_section_poly2d_get
 void
 PDM_part_mesh_nodal_elmts_section_poly3d_cell_vtx_connect_get
 (
-       PDM_part_mesh_nodal_elmts_t  *pmne,
- const int                           id_section,
- const int                           id_part,
-       int                         **cell_vtx_idx,
-       int                         **cell_vtx,
-       PDM_ownership_t               ownership
+        PDM_part_mesh_nodal_elmts_t  *pmne,
+  const int                           id_section,
+  const int                           id_part,
+        int                         **cell_vtx_idx,
+        int                         **cell_vtx,
+        PDM_ownership_t               ownership
 );
 
 /**
@@ -331,19 +332,19 @@ PDM_part_mesh_nodal_elmts_section_poly3d_cell_vtx_connect_get
 void
 PDM_part_mesh_nodal_elmts_section_poly3d_get
 (
-      PDM_part_mesh_nodal_elmts_t  *pmne,
-const int                           id_section,
-const int                           id_part,
-      int                          *n_face,
-      PDM_g_num_t                 **face_ln_to_gn,
-      int                         **face_vtx_idx,
-      int                         **face_vtx,
-      PDM_g_num_t                 **numabs,
-      int                         **cell_face_idx,
-      int                         **cell_face,
-      int                         **parent_num,
-      PDM_g_num_t                 **parent_entity_g_num,
-      PDM_ownership_t               ownership
+        PDM_part_mesh_nodal_elmts_t  *pmne,
+  const int                           id_section,
+  const int                           id_part,
+        int                          *n_face,
+        PDM_g_num_t                 **face_ln_to_gn,
+        int                         **face_vtx_idx,
+        int                         **face_vtx,
+        PDM_g_num_t                 **numabs,
+        int                         **cell_face_idx,
+        int                         **cell_face,
+        int                         **parent_num,
+        PDM_g_num_t                 **parent_entity_g_num,
+        PDM_ownership_t               ownership
 );
 
 /**
@@ -359,9 +360,9 @@ const int                           id_part,
 int
 PDM_part_mesh_nodal_elmts_section_n_elt_get
 (
-      PDM_part_mesh_nodal_elmts_t *pmne,
-const int                          id_section,
-const int                          id_part
+        PDM_part_mesh_nodal_elmts_t *pmne,
+  const int                          id_section,
+  const int                          id_part
 );
 
 /**
@@ -375,7 +376,7 @@ const int                          id_part
 int
 PDM_part_mesh_nodal_elmts_n_section_get
 (
- PDM_part_mesh_nodal_elmts_t *pmne
+  PDM_part_mesh_nodal_elmts_t *pmne
 );
 
 /**
@@ -404,8 +405,8 @@ PDM_part_mesh_nodal_elmts_sections_id_get
 PDM_Mesh_nodal_elt_t
 PDM_part_mesh_nodal_elmts_section_type_get
 (
-      PDM_part_mesh_nodal_elmts_t *pmne,
-const int                          id_section
+        PDM_part_mesh_nodal_elmts_t *pmne,
+  const int                          id_section
 );
 
 
@@ -423,10 +424,10 @@ const int                          id_section
 int *
 PDM_part_mesh_nodal_elmts_parent_num_get
 (
-      PDM_part_mesh_nodal_elmts_t *pmne,
-const int                          id_section,
-const int                          id_part,
-      PDM_ownership_t              ownership
+        PDM_part_mesh_nodal_elmts_t *pmne,
+  const int                          id_section,
+  const int                          id_part,
+        PDM_ownership_t              ownership
 );
 
 /**
@@ -443,10 +444,10 @@ const int                          id_part,
 PDM_g_num_t *
 PDM_part_mesh_nodal_elmts_g_num_get
 (
-      PDM_part_mesh_nodal_elmts_t *pmne,
-const int                          id_section,
-const int                          id_part,
-      PDM_ownership_t              ownership
+        PDM_part_mesh_nodal_elmts_t *pmne,
+  const int                          id_section,
+  const int                          id_part,
+        PDM_ownership_t              ownership
 );
 
 /**
@@ -470,7 +471,7 @@ const int                          id_part,
  * \return Pointer to \ref PDM_part_mesh_nodal_t object
  *
  */
-PDM_part_mesh_nodal_elmts_t*
+PDM_part_mesh_nodal_elmts_t *
 PDM_part_mesh_nodal_elmts_create_from_part3d
 (
   const int                n_part,
@@ -506,7 +507,7 @@ PDM_part_mesh_nodal_elmts_create_from_part3d
  *
  * \return Pointer to \ref PDM_part_mesh_nodal_t object
  */
-PDM_part_mesh_nodal_elmts_t*
+PDM_part_mesh_nodal_elmts_t *
 PDM_part_mesh_nodal_elmts_create_from_part2d
 (
   const int                n_part,
@@ -535,12 +536,12 @@ PDM_part_mesh_nodal_elmts_create_from_part2d
 void
 PDM_part_mesh_nodal_elmts_elt_extents_compute
 (
-       PDM_part_mesh_nodal_elmts_t *pmne,
- const int                          id_section,
- const int                          id_part,
- const double                       tolerance,
-       double                      *vtx_coord,
-       double                      *extents
+        PDM_part_mesh_nodal_elmts_t *pmne,
+  const int                          id_section,
+  const int                          id_part,
+  const double                       tolerance,
+        double                      *vtx_coord,
+        double                      *extents
 );
 
 /**
@@ -557,12 +558,12 @@ PDM_part_mesh_nodal_elmts_elt_extents_compute
 void
 PDM_part_mesh_nodal_elmts_elt_center_compute
 (
-       PDM_part_mesh_nodal_elmts_t *pmne,
- const int                          id_section,
- const int                          id_part,
- const int                          n_vtx,
-       double                      *vtx_coord,
- const PDM_ownership_t              ownership
+        PDM_part_mesh_nodal_elmts_t *pmne,
+  const int                          id_section,
+  const int                          id_part,
+  const int                          n_vtx,
+        double                      *vtx_coord,
+  const PDM_ownership_t              ownership
 );
 
 /**
@@ -579,10 +580,10 @@ PDM_part_mesh_nodal_elmts_elt_center_compute
 const double *
 PDM_part_mesh_nodal_elmts_elt_center_get
 (
-       PDM_part_mesh_nodal_elmts_t *pmne,
- const int                          id_section,
- const int                          id_part,
-       PDM_ownership_t              ownership
+        PDM_part_mesh_nodal_elmts_t *pmne,
+  const int                          id_section,
+  const int                          id_part,
+        PDM_ownership_t              ownership
 );
 
 /**
@@ -596,9 +597,9 @@ PDM_part_mesh_nodal_elmts_elt_center_get
 void
 PDM_part_mesh_nodal_elmts_elt_center_reset
 (
-       PDM_part_mesh_nodal_elmts_t *pmne,
- const int                          id_section,
- const int                          id_part
+        PDM_part_mesh_nodal_elmts_t *pmne,
+  const int                          id_section,
+  const int                          id_part
 );
 
 /**
@@ -612,7 +613,7 @@ PDM_part_mesh_nodal_elmts_elt_center_reset
 void
 PDM_part_mesh_nodal_elmts_reset
 (
- PDM_part_mesh_nodal_elmts_t *pmne
+  PDM_part_mesh_nodal_elmts_t *pmne
 );
 
 /**
@@ -627,9 +628,9 @@ PDM_part_mesh_nodal_elmts_reset
 void
 PDM_part_mesh_nodal_elmts_g_num_in_section_compute
 (
-      PDM_part_mesh_nodal_elmts_t  *pmne,
-const int                           id_section,
-const PDM_ownership_t               ownership
+        PDM_part_mesh_nodal_elmts_t  *pmne,
+  const int                           id_section,
+  const PDM_ownership_t               ownership
 );
 
 /**
@@ -645,8 +646,8 @@ const PDM_ownership_t               ownership
 int
 PDM_part_mesh_nodal_elmts_n_elmts_get
 (
-      PDM_part_mesh_nodal_elmts_t  *pmne,
-const int                           id_part
+        PDM_part_mesh_nodal_elmts_t  *pmne,
+  const int                           id_part
 );
 
 /**
@@ -663,9 +664,9 @@ const int                           id_part
 PDM_g_num_t *
 PDM_part_mesh_nodal_elmts_g_num_get_from_part
 (
-      PDM_part_mesh_nodal_elmts_t  *pmne,
-const int                           id_part,
-      PDM_ownership_t               ownership
+        PDM_part_mesh_nodal_elmts_t  *pmne,
+  const int                           id_part,
+        PDM_ownership_t               ownership
 );
 
 /**
@@ -676,11 +677,10 @@ const int                           id_part,
  * \return      NULL
  *
  */
-
 void
 PDM_part_mesh_nodal_elmts_partial_free
 (
-PDM_part_mesh_nodal_elmts_t *pmne
+  PDM_part_mesh_nodal_elmts_t *pmne
 );
 
 /**
@@ -697,10 +697,10 @@ PDM_part_mesh_nodal_elmts_t *pmne
 PDM_g_num_t *
 PDM_part_mesh_nodal_elmts_section_g_num_get
 (
-      PDM_part_mesh_nodal_elmts_t  *pmne,
-const int                           id_section,
-const int                           id_part,
-      PDM_ownership_t               ownership
+        PDM_part_mesh_nodal_elmts_t  *pmne,
+  const int                           id_section,
+  const int                           id_part,
+        PDM_ownership_t               ownership
 );
 
 /**
@@ -715,8 +715,8 @@ const int                           id_part,
 int *
 PDM_part_mesh_nodal_elmts_num_elmt_parent_to_local_get
 (
-      PDM_part_mesh_nodal_elmts_t  *pmne,
-const int                           id_part
+        PDM_part_mesh_nodal_elmts_t  *pmne,
+  const int                           id_part
 );
 
 /**
@@ -742,18 +742,18 @@ const int                           id_part
 void
 PDM_part_mesh_elmts_nodal_cell3d_cellface_add
 (
-      PDM_part_mesh_nodal_elmts_t  *pmne,
-const int                           id_part,
-const int                           n_cell,
-const int                           n_face,
-const int                          *face_vtx_idx,
-const int                          *face_vtx,
-const PDM_g_num_t                  *face_ln_to_gn,
-const int                          *cell_face_idx,
-const int                          *cell_face,
-const PDM_g_num_t                  *cell_ln_to_gn,
-      PDM_Mesh_nodal_vtx_t        **vtx,
-const PDM_ownership_t               ownership
+        PDM_part_mesh_nodal_elmts_t  *pmne,
+  const int                           id_part,
+  const int                           n_cell,
+  const int                           n_face,
+  const int                          *face_vtx_idx,
+  const int                          *face_vtx,
+  const PDM_g_num_t                  *face_ln_to_gn,
+  const int                          *cell_face_idx,
+  const int                          *cell_face,
+  const PDM_g_num_t                  *cell_ln_to_gn,
+        PDM_Mesh_nodal_vtx_t        **vtx,
+  const PDM_ownership_t               ownership
 );
 
 /**
@@ -777,16 +777,16 @@ const PDM_ownership_t               ownership
 void
 PDM_part_mesh_nodal_elmts_face2d_faceedge_add
 (
-      PDM_part_mesh_nodal_elmts_t  *pmne,
-const int                           id_part,
-const int                           n_face,
-const int                           n_edge,
-const int                          *edge_vtx,
-const int                          *face_edge_idx,
-const int                          *face_edge,
-const PDM_g_num_t                  *face_ln_to_gn,
-const int                           n_vtx,
-const PDM_ownership_t               ownership
+        PDM_part_mesh_nodal_elmts_t  *pmne,
+  const int                           id_part,
+  const int                           n_face,
+  const int                           n_edge,
+  const int                          *edge_vtx,
+  const int                          *face_edge_idx,
+  const int                          *face_edge,
+  const PDM_g_num_t                  *face_ln_to_gn,
+  const int                           n_vtx,
+  const PDM_ownership_t               ownership
 );
 
 /**
@@ -808,13 +808,13 @@ const PDM_ownership_t               ownership
 void
 PDM_part_mesh_nodal_elmts_cells_cellvtx_add
 (
-      PDM_part_mesh_nodal_elmts_t  *pmne,
-const int                           id_part,
-const int                           n_cell,
-const int                          *cell_vtx_idx,
-const int                          *cell_vtx,
-const PDM_g_num_t                  *numabs,
-const PDM_ownership_t               ownership
+        PDM_part_mesh_nodal_elmts_t  *pmne,
+  const int                           id_part,
+  const int                           n_cell,
+  const int                          *cell_vtx_idx,
+  const int                          *cell_vtx,
+  const PDM_g_num_t                  *numabs,
+  const PDM_ownership_t               ownership
 );
 
 /**
@@ -836,13 +836,13 @@ const PDM_ownership_t               ownership
 void
 PDM_part_mesh_nodal_elmts_faces_facevtx_add
 (
-      PDM_part_mesh_nodal_elmts_t  *pmne,
-const int                           id_part,
-const int                           n_face,
-const int                          *face_vtx_idx,
-const int                          *face_vtx,
-const PDM_g_num_t                  *numabs,
-const PDM_ownership_t               ownership
+        PDM_part_mesh_nodal_elmts_t  *pmne,
+  const int                           id_part,
+  const int                           n_face,
+  const int                          *face_vtx_idx,
+  const int                          *face_vtx,
+  const PDM_g_num_t                  *numabs,
+  const PDM_ownership_t               ownership
 );
 
 /**
@@ -859,9 +859,9 @@ const PDM_ownership_t               ownership
 void
 PDM_part_mesh_nodal_elmts_extend_to_encompassing_comm
 (
- const PDM_MPI_Comm                  comm,
- const int                           n_part,
-       PDM_part_mesh_nodal_elmts_t **pmne
+  const PDM_MPI_Comm                  comm,
+  const int                           n_part,
+        PDM_part_mesh_nodal_elmts_t **pmne
 );
 
 /**
@@ -872,11 +872,11 @@ PDM_part_mesh_nodal_elmts_extend_to_encompassing_comm
  *
  * \return Index of sections (size=n_sections)
  */
-int*
+int *
 PDM_part_mesh_nodal_elmts_compute_sections_idx
 (
- PDM_part_mesh_nodal_elmts_t  *pmne,
- const int                     id_part
+  PDM_part_mesh_nodal_elmts_t  *pmne,
+  const int                     id_part
 );
 
 
@@ -894,13 +894,13 @@ PDM_part_mesh_nodal_elmts_compute_sections_idx
 void
 PDM_part_mesh_nodal_elmts_group_get
 (
-       PDM_part_mesh_nodal_elmts_t   *pmne,
- const int                            i_part,
- const int                            i_group,
-       int                           *n_group_elmt,
-       int                          **group_elmt,
-       PDM_g_num_t                  **group_ln_to_gn,
-       PDM_ownership_t                ownership_group
+        PDM_part_mesh_nodal_elmts_t   *pmne,
+  const int                            i_part,
+  const int                            i_group,
+        int                           *n_group_elmt,
+        int                          **group_elmt,
+        PDM_g_num_t                  **group_ln_to_gn,
+        PDM_ownership_t                ownership_group
 );
 
 /**
@@ -917,13 +917,13 @@ PDM_part_mesh_nodal_elmts_group_get
 void
 PDM_part_mesh_nodal_elmts_group_set
 (
-       PDM_part_mesh_nodal_elmts_t  *pmne,
- const int                           i_part,
- const int                           i_group,
-       int                           n_group_elmt,
-       int                          *group_elmt,
-       PDM_g_num_t                  *group_ln_to_gn,
-       PDM_ownership_t               ownership_group
+        PDM_part_mesh_nodal_elmts_t  *pmne,
+  const int                           i_part,
+  const int                           i_group,
+        int                           n_group_elmt,
+        int                          *group_elmt,
+        PDM_g_num_t                  *group_ln_to_gn,
+        PDM_ownership_t               ownership_group
 );
 
 /**
@@ -935,8 +935,8 @@ PDM_part_mesh_nodal_elmts_group_set
 void
 PDM_part_mesh_nodal_elmts_n_group_set
 (
-       PDM_part_mesh_nodal_elmts_t  *pmne,
- const int                           n_group
+        PDM_part_mesh_nodal_elmts_t  *pmne,
+  const int                           n_group
 );
 
 /**
@@ -950,7 +950,7 @@ PDM_part_mesh_nodal_elmts_n_group_set
 int
 PDM_part_mesh_nodal_elmts_n_group_get
 (
-       PDM_part_mesh_nodal_elmts_t  *pmne
+  PDM_part_mesh_nodal_elmts_t  *pmne
 );
 
 /**
@@ -988,11 +988,11 @@ PDM_part_mesh_nodal_elmts_cell_vtx_connect_get
 void
 PDM_part_mesh_nodal_elmts_section_elt_to_entity_set
 (
-      PDM_part_mesh_nodal_elmts_t *pmne,
-const int                          id_section,
-const int                          id_part,
-      int                         *elt_to_entity,
-      PDM_ownership_t              ownership
+        PDM_part_mesh_nodal_elmts_t *pmne,
+  const int                          id_section,
+  const int                          id_part,
+        int                         *elt_to_entity,
+        PDM_ownership_t              ownership
 );
 
 
@@ -1008,10 +1008,10 @@ const int                          id_part,
 int *
 PDM_part_mesh_nodal_elmts_section_elmt_to_entity_get
 (
-      PDM_part_mesh_nodal_elmts_t *pmne,
-const int                          id_section,
-const int                          id_part,
-      PDM_ownership_t              ownership
+        PDM_part_mesh_nodal_elmts_t *pmne,
+  const int                          id_section,
+  const int                          id_part,
+        PDM_ownership_t              ownership
 );
 
 #ifdef __cplusplus
