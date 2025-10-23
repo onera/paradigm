@@ -20,6 +20,7 @@
 #include "pdm_dmesh_nodal_elmts_priv.h"
 #include "pdm_dmesh_nodal_priv.h"
 #include "pdm_dmesh_priv.h"
+#include "pdm_error.h"
 #include "pdm_logging.h"
 #include "pdm_mem_tool.h"
 #include "pdm_mpi.h"
@@ -34,6 +35,16 @@ extern "C" {
 } /* Fake brace to force back Emacs auto-indentation back to column 0 */
 #endif
 #endif /* __cplusplus */
+
+/*============================================================================
+ * Local macro definitions
+ *============================================================================*/
+
+#define CHECK_INSTANCE(dme) \
+  if ((dme) == NULL) { \
+    PDM_error(__FILE__, __LINE__, 0, "Error : Invalid PDM_dmesh_extract_t instance\n"); \
+  }
+
 
 /*============================================================================
  * Local structure definitions
@@ -911,8 +922,8 @@ PDM_dmesh_extract_compute
  PDM_dmesh_extract_t *dme
 )
 {
-  int i_rank;
-  PDM_MPI_Comm_rank(dme->comm, &i_rank);
+  CHECK_INSTANCE(dme);
+
   if(dme->dmesh_shared == NULL){
     // Synchronize dmesh
     PDM_g_num_t _dn_cell = dme->dmesh->dn_cell;
@@ -990,6 +1001,7 @@ PDM_dmesh_extract_selected_gnum_set
 )
 {
   PDM_UNUSED(entity_type);
+  CHECK_INSTANCE(dme);
   dme->n_selected    = n_selected;
   dme->selected_gnum = selected_gnum;
 
@@ -1005,6 +1017,7 @@ PDM_dmesh_extract_dn_entity_set
  int                  dn_entity
 )
 {
+  CHECK_INSTANCE(dme);
   PDM_dmesh_dn_entity_set(dme->dmesh, entity_type, dn_entity);
 }
 
@@ -1017,6 +1030,7 @@ PDM_dmesh_extract_vtx_coord_set
  double              *dvtx_coord
 )
 {
+  CHECK_INSTANCE(dme);
   PDM_dmesh_vtx_coord_set(dme->dmesh, dvtx_coord, PDM_OWNERSHIP_USER);
 }
 
@@ -1031,6 +1045,7 @@ PDM_dmesh_extract_dmesh_bound_set
  int                 *connect_idx
 )
 {
+  CHECK_INSTANCE(dme);
   PDM_dmesh_bound_set(dme->dmesh, bound_type, n_bound, connect, connect_idx, PDM_OWNERSHIP_USER);
 }
 
@@ -1045,6 +1060,7 @@ PDM_dmesh_extract_dconnectivity_set
        int                     *dconnect_idx
 )
 {
+  CHECK_INSTANCE(dme);
   PDM_dmesh_connectivity_set(dme->dmesh,
                              connectivity_type,
                              dconnect,
@@ -1060,6 +1076,7 @@ PDM_dmesh_extract_dmesh_set
  PDM_dmesh_t             *dmesh
 )
 {
+  CHECK_INSTANCE(dme);
   dme->dmesh_shared = dmesh;
 }
 
@@ -1072,6 +1089,7 @@ PDM_dmesh_extract_dmesh_nodal_set
  PDM_dmesh_nodal_t       *dmesh_nodal
 )
 {
+  CHECK_INSTANCE(dme);
   dme->dmesh_nodal = dmesh_nodal;
 }
 
@@ -1084,6 +1102,7 @@ PDM_dmesh_extract_dmesh_get
  PDM_ownership_t          ownership
 )
 {
+  CHECK_INSTANCE(dme);
   *dmesh_extract = dme->dmesh_extract;
   dme->dmesh_extract_ownership = ownership;
 }
@@ -1097,6 +1116,7 @@ PDM_dmesh_extract_dmesh_nodal_get
  PDM_ownership_t          ownership
 )
 {
+  CHECK_INSTANCE(dme);
   *dmesh_nodal_extract = dme->dmesh_nodal_extract;
   dme->dmesh_extract_ownership = ownership;
 }
@@ -1112,6 +1132,7 @@ PDM_dmesh_extract_parent_gnum_get
  PDM_ownership_t          ownership
 )
 {
+  CHECK_INSTANCE(dme);
   if(dme->distrib_extract[entity_type] != NULL){
     int i_rank;
     PDM_MPI_Comm_rank(dme->comm, &i_rank);
@@ -1129,12 +1150,13 @@ PDM_dmesh_extract_parent_gnum_get
 void
 PDM_dmesh_extract_btp_get
 (
- PDM_dmesh_extract_t     *dme,
- PDM_mesh_entities_t      entity_type,
- PDM_block_to_part_t    **btp,
- PDM_ownership_t          ownership
+  PDM_dmesh_extract_t     *dme,
+  PDM_mesh_entities_t      entity_type,
+  PDM_block_to_part_t    **btp,
+  PDM_ownership_t          ownership
 )
 {
+  CHECK_INSTANCE(dme);
   *btp = dme->btp_entity_to_extract_entity[entity_type];
   dme->btp_ownership[entity_type] = ownership;
 }
@@ -1143,13 +1165,14 @@ PDM_dmesh_extract_btp_get
 void
 PDM_dmesh_extract_btp_group_get
 (
- PDM_dmesh_extract_t     *dme,
- int                      i_group,
- PDM_bound_type_t         bound_type,
- PDM_block_to_part_t    **btp,
- PDM_ownership_t          ownership
+  PDM_dmesh_extract_t     *dme,
+  int                      i_group,
+  PDM_bound_type_t         bound_type,
+  PDM_block_to_part_t    **btp,
+  PDM_ownership_t          ownership
 )
 {
+  CHECK_INSTANCE(dme);
   *btp = dme->btp_bound_entity_to_extract_entity[bound_type][i_group];
   dme->btp_bound_ownership[bound_type][i_group] = ownership;
 }
