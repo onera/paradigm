@@ -55,7 +55,7 @@ extern "C" {
   }
 
 #define CHECK_I_PART(pmn, i_part)                                                          \
-  if ((i_part) < 0 || (i_part) >= (pmn)->n_part) {                                           \
+  if ((i_part) < 0 || (i_part) >= (pmn)->n_part) {                                         \
     PDM_error(__FILE__, __LINE__, 0, "Invalid i_part (%d / %d)", (i_part), (pmn)->n_part); \
   }
 
@@ -131,7 +131,7 @@ _get_from_geometry_kind
     pmne = pmn->corner;
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0, "Bad geom_kind in _get_from_geometry_kind \n");
+    PDM_error(__FILE__, __LINE__, 0, "Invalid geom_kind %d\n", geom_kind);
   }
   return pmne;
 }
