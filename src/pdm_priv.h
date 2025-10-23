@@ -125,7 +125,7 @@ enum {X, Y, Z};
 #define PDM_DOT_PRODUCT_2D(vect1, vect2) \
   ((vect1)[X] * (vect2)[X] + (vect1)[Y] * (vect2)[Y])
 
-#define PDM_VT_M_V_PRODUCT(mat, vect)                                     \
+#define PDM_VT_M_V_PRODUCT(mat, vect) \
   ((vect)[0] * ((mat)[0] * (vect)[0] + (mat)[1] * (vect)[1] + (mat)[2] * (vect)[2]) + \
    (vect)[1] * ((mat)[1] * (vect)[0] + (mat)[3] * (vect)[1] + (mat)[4] * (vect)[2]) + \
    (vect)[2] * ((mat)[2] * (vect)[0] + (mat)[4] * (vect)[1] + (mat)[5] * (vect)[2]))

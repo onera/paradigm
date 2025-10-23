@@ -327,6 +327,20 @@ cdef class PartMeshNodal:
                                       np_to_gnum_pointer(group_ln_to_gn),
                                       PDM_OWNERSHIP_USER)
 
+    def get_n_group(self, PDM_geometry_kind_t geom_kind):
+      """
+      get_n_group(geom_kind)
+
+      Get group number for given ``geom_kind``
+
+      Parameters:
+        geom_kind (PDM_geometry_kind_t) : Geometry kind (volume, surface, ridge or corner)
+
+      Returns:
+        Number of groups
+      """
+      return part_mesh_nodal_n_group_get(self, geom_kind)
+
     def to_view_capsule(self):
       """
       """
