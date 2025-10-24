@@ -52,6 +52,11 @@ extern "C" {
     PDM_error(__FILE__, __LINE__, 0, "Invalid i_part (%d / %d)", (i_part), (pmne)->n_part); \
   }
 
+#define CHECK_BLOCK(block)                                                \
+  if ((block) == NULL) {                                                  \
+    PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n"); \
+  }
+
 /*============================================================================
  * Type definitions
  *============================================================================*/
@@ -1237,9 +1242,6 @@ PDM_part_mesh_nodal_elmts_add
   const PDM_Mesh_nodal_elt_t         t_elt
 )
 {
-  if (pmne == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad pmne nodal identifier\n");
-  }
   CHECK_PMNE(pmne)
 
   int elt_dim = PDM_Mesh_nodal_elt_dim_get(t_elt);
@@ -1455,16 +1457,13 @@ PDM_part_mesh_nodal_elmts_std_set
         PDM_ownership_t              owner
 )
 {
-
   CHECK_PMNE(pmne)
 
   int _id_section = id_section - PDM_BLOCK_ID_BLOCK_STD;
 
   PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_section];
 
-  if (block == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
-  }
+  CHECK_BLOCK(block);
 
   if (id_part >= block->n_part) {
     PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big (%d / %d)\n", id_part, block->n_part);
@@ -1568,9 +1567,7 @@ PDM_part_mesh_nodal_elmts_section_std_get
 
   PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_section];
 
-  if (block == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
-  }
+  CHECK_BLOCK(block);
 
   if (id_part >= block->n_part) {
     PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
@@ -1618,9 +1615,7 @@ PDM_part_mesh_nodal_elmts_section_std_ho_get
 
   PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_section];
 
-  if (block == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
-  }
+  CHECK_BLOCK(block);
 
   if (id_part >= block->n_part) {
     PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big (%d / %d)\n", id_part, block->n_part);
@@ -1668,9 +1663,7 @@ PDM_part_mesh_nodal_elmts_section_poly2d_set
 
   PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[_id_section];
 
-  if (block == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
-  }
+  CHECK_BLOCK(block);
 
   if (id_part >= block->n_part) {
     PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
@@ -1734,9 +1727,7 @@ PDM_part_mesh_nodal_elmts_section_poly3d_set
 
   PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[_id_section];
 
-  if (block == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
-  }
+  CHECK_BLOCK(block);
 
   if (id_part >= block->n_part) {
     PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
@@ -1816,9 +1807,7 @@ PDM_part_mesh_nodal_elmts_section_poly2d_get
 
   PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[_id_section];
 
-  if (block == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
-  }
+  CHECK_BLOCK(block);
 
   if (id_part >= block->n_part) {
     PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
@@ -1852,9 +1841,7 @@ PDM_part_mesh_nodal_elmts_section_poly3d_cell_vtx_connect_get
 
   PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[_id_section];
 
-  if (block == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
-  }
+  CHECK_BLOCK(block);
 
   if (id_part >= block->n_part) {
     PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
@@ -1896,9 +1883,7 @@ PDM_part_mesh_nodal_elmts_section_poly3d_get
 
   PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[_id_section];
 
-  if (block == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
-  }
+  CHECK_BLOCK(block);
 
   if (id_part >= block->n_part) {
     PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
@@ -1990,9 +1975,7 @@ PDM_part_mesh_nodal_elmts_section_n_elt_get
 
     PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[_id_section];
 
-    if (block == NULL) {
-      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
-    }
+    CHECK_BLOCK(block);
 
     if (id_part >= block->n_part) {
       PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big (%d / %d)\n", id_part, block->n_part);
@@ -2007,9 +1990,7 @@ PDM_part_mesh_nodal_elmts_section_n_elt_get
 
     PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[_id_section];
 
-    if (block == NULL) {
-      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
-    }
+    CHECK_BLOCK(block);
 
     if (id_part >= block->n_part) {
       PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big (%d / %d)\n", id_part, block->n_part);
@@ -2024,9 +2005,7 @@ PDM_part_mesh_nodal_elmts_section_n_elt_get
 
     PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_section];
 
-    if (block == NULL) {
-      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
-    }
+    CHECK_BLOCK(block);
 
     if (id_part >= block->n_part) {
       PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big (%d / %d)\n", id_part, block->n_part);
@@ -2162,9 +2141,7 @@ PDM_part_mesh_nodal_elmts_parent_num_get
       if (block->parent_num_owner != PDM_OWNERSHIP_USER) block->parent_num_owner  = ownership;
     }
 
-    if (block == NULL) {
-      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
-    }
+    CHECK_BLOCK(block);
 
     if (id_part >= block->n_part) {
       PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
@@ -2186,9 +2163,7 @@ PDM_part_mesh_nodal_elmts_parent_num_get
       if (block->parent_num_owner != PDM_OWNERSHIP_USER) block->parent_num_owner  = ownership;
     }
 
-    if (block == NULL) {
-      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
-    }
+    CHECK_BLOCK(block);
 
     if (id_part >= block->n_part) {
       PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
@@ -2210,9 +2185,7 @@ PDM_part_mesh_nodal_elmts_parent_num_get
       if (block->parent_num_owner != PDM_OWNERSHIP_USER) block->parent_num_owner  = ownership;
     }
 
-    if (block == NULL) {
-      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
-    }
+    CHECK_BLOCK(block);
 
     if (id_part >= block->n_part) {
       PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
@@ -2253,9 +2226,7 @@ const int                          id_part,
       if (block->numabs_owner            != PDM_OWNERSHIP_USER) block->numabs_owner = ownership;
     }
 
-    if (block == NULL) {
-      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
-    }
+    CHECK_BLOCK(block);
 
     if (id_part >= block->n_part) {
       PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
@@ -2277,9 +2248,7 @@ const int                          id_part,
       if (block->numabs_owner            != PDM_OWNERSHIP_USER) block->numabs_owner = ownership;
     }
 
-    if (block == NULL) {
-      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
-    }
+    CHECK_BLOCK(block);
 
     if (id_part >= block->n_part) {
       PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
@@ -2301,9 +2270,7 @@ const int                          id_part,
       if (block->numabs_owner            != PDM_OWNERSHIP_USER) block->numabs_owner = ownership;
     }
 
-    if (block == NULL) {
-      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
-    }
+    CHECK_BLOCK(block);
 
     if (id_part >= block->n_part) {
       PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
@@ -3211,9 +3178,7 @@ PDM_part_mesh_nodal_elmts_elt_extents_compute
 
     PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[_id_section];
 
-    if (block == NULL) {
-      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
-    }
+    CHECK_BLOCK(block);
 
     n_elt = block->n_elt[id_part];
     cell_vtx_idx = block->_cellvtx_idx[id_part];
@@ -3227,9 +3192,7 @@ PDM_part_mesh_nodal_elmts_elt_extents_compute
 
     PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[_id_section];
 
-    if (block == NULL) {
-      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
-    }
+    CHECK_BLOCK(block);
 
     n_elt = block->n_elt[id_part];
     cell_vtx_idx = block->_connec_idx[id_part];
@@ -3243,9 +3206,7 @@ PDM_part_mesh_nodal_elmts_elt_extents_compute
 
     PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_section];
 
-    if (block == NULL) {
-      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
-    }
+    CHECK_BLOCK(block);
 
     n_elt = block->n_elt[id_part];
     cell_vtx = block->_connec[id_part];
@@ -3417,9 +3378,7 @@ PDM_part_mesh_nodal_elmts_elt_center_compute
 
     PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[_id_section];
 
-    if (block == NULL) {
-      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
-    }
+    CHECK_BLOCK(block);
 
     block->cell_centers_owner = ownership;
 
@@ -3476,9 +3435,7 @@ PDM_part_mesh_nodal_elmts_elt_center_compute
 
     PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[_id_section];
 
-    if (block == NULL) {
-      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
-    }
+    CHECK_BLOCK(block);
 
     block->cell_centers_owner = ownership;
 
@@ -3533,9 +3490,7 @@ PDM_part_mesh_nodal_elmts_elt_center_compute
 
     PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_section];
 
-    if (block == NULL) {
-      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
-    }
+    CHECK_BLOCK(block);
 
     block->cell_centers_owner = ownership;
 
@@ -3785,9 +3740,7 @@ PDM_part_mesh_nodal_elmts_elt_center_reset
 
     PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[_id_section];
 
-    if (block == NULL) {
-      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
-    }
+    CHECK_BLOCK(block);
 
     if (block->cell_centers_to_compute == NULL) {
       PDM_malloc(block->cell_centers_to_compute, block->n_part, int);
@@ -3806,9 +3759,7 @@ PDM_part_mesh_nodal_elmts_elt_center_reset
 
     PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[_id_section];
 
-    if (block == NULL) {
-      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
-    }
+    CHECK_BLOCK(block);
 
     if (block->cell_centers_to_compute == NULL) {
       PDM_malloc(block->cell_centers_to_compute, block->n_part, int);
@@ -3828,10 +3779,7 @@ PDM_part_mesh_nodal_elmts_elt_center_reset
 
     PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_section];
 
-    if (block == NULL) {
-      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
-    }
-
+    CHECK_BLOCK(block);
 
     if (block->cell_centers_to_compute == NULL) {
       PDM_malloc(block->cell_centers_to_compute, block->n_part, int);
@@ -3927,9 +3875,7 @@ PDM_part_mesh_nodal_elmts_g_num_in_section_compute
 
     PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[_id_section];
 
-    if (block == NULL) {
-      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
-    }
+    CHECK_BLOCK(block);
 
     block->numabs_int_owner = ownership;
 
@@ -3957,9 +3903,7 @@ PDM_part_mesh_nodal_elmts_g_num_in_section_compute
 
     PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[_id_section];
 
-    if (block == NULL) {
-      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
-    }
+    CHECK_BLOCK(block);
 
     block->numabs_int_owner = ownership;
 
@@ -3986,9 +3930,7 @@ PDM_part_mesh_nodal_elmts_g_num_in_section_compute
 
     PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_section];
 
-    if (block == NULL) {
-      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
-    }
+    CHECK_BLOCK(block);
 
     block->numabs_int_owner = ownership;
 
@@ -4193,9 +4135,7 @@ PDM_part_mesh_nodal_elmts_section_g_num_get
       if (block->numabs_int_owner != PDM_OWNERSHIP_USER) block->numabs_int_owner = ownership;
     }
 
-    if (block == NULL) {
-      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
-    }
+    CHECK_BLOCK(block);
 
     return block->numabs_int[id_part];
   }
@@ -4211,9 +4151,7 @@ PDM_part_mesh_nodal_elmts_section_g_num_get
       if (block->numabs_int_owner != PDM_OWNERSHIP_USER) block->numabs_int_owner = ownership;
     }
 
-    if (block == NULL) {
-      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
-    }
+    CHECK_BLOCK(block);
 
     return block->numabs_int[id_part];
   }
@@ -4229,10 +4167,7 @@ PDM_part_mesh_nodal_elmts_section_g_num_get
       if (block->numabs_int_owner != PDM_OWNERSHIP_USER) block->numabs_int_owner = ownership;
     }
 
-    if (block == NULL) {
-      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
-    }
-
+    CHECK_BLOCK(block);
     return block->numabs_int[id_part];
   }
 }
