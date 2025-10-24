@@ -492,12 +492,41 @@ PDM_part_mesh_nodal_free
   PDM_part_mesh_nodal_t* pmn
 );
 
+
+/**
+ * \brief Export the current nodal mesh in vtk format with scalar fields attached to elements and vertices
+ *
+ * \param [in]  pmn              Pointer to \ref PDM_part_mesh_nodal_t instance
+ * \param [in]  geom_kind        Geometry kind (corner, ridge, surface or volume)
+ * \param [in]  filename_patter  Pattern for file naming (the function will append i_rank and i_part to this current pattern)
+ * \param [in]  n_elt_field      Number of fields attached to elements
+ * \param [in]  elt_field_name   Names of fields attached to elements
+ * \param [in]  elt_field        Values of fields attached to elements (for each field, size = n_part)
+ * \param [in]  n_vtx_field      Number of fields attached to vertices
+ * \param [in]  vtx_field_name   Names of fields attached to vertices
+ * \param [in]  vtx_field        Values of fields attached to vertices (for each field, size = n_part)
+ *
+ */
+void
+PDM_part_mesh_nodal_dump_vtk_with_fields
+(
+        PDM_part_mesh_nodal_t  *pmn,
+        PDM_geometry_kind_t     geom_kind,
+  const char                   *filename_pattern,
+  const int                     n_elt_field,
+  const char                   *elt_field_name[],
+  const double                **elt_field     [],
+  const int                     n_vtx_field,
+  const char                   *vtx_field_name[],
+  const double                **vtx_field     []
+);
+
 /**
  * \brief Export the current nodal mesh in vtk format
  *
- * \param [in]  pmn             Pointer to \ref PDM_part_mesh_nodal_t instance
- * \param [in]  geom_kind       Geometry kind (corner, ridge, surface or volume)
- * \param [in]  filename_patter Pattern for file naming (the function will append i_rank and i_part to this current pattern)
+ * \param [in]  pmn              Pointer to \ref PDM_part_mesh_nodal_t instance
+ * \param [in]  geom_kind        Geometry kind (corner, ridge, surface or volume)
+ * \param [in]  filename_patter  Pattern for file naming (the function will append i_rank and i_part to this current pattern)
  *
  */
 void

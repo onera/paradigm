@@ -847,11 +847,17 @@ PDM_part_mesh_nodal_free
 
 
 void
-PDM_part_mesh_nodal_dump_vtk
+PDM_part_mesh_nodal_dump_vtk_with_fields
 (
-        PDM_part_mesh_nodal_t *pmn,
-        PDM_geometry_kind_t    geom_kind,
-  const char                  *filename_pattern
+        PDM_part_mesh_nodal_t  *pmn,
+        PDM_geometry_kind_t     geom_kind,
+  const char                   *filename_pattern,
+  const int                     n_elt_field,
+  const char                   *elt_field_name[],
+  const double                **elt_field     [],
+  const int                     n_vtx_field,
+  const char                   *vtx_field_name[],
+  const double                **vtx_field     []
 )
 {
   CHECK_PMN(pmn)
@@ -901,7 +907,7 @@ PDM_part_mesh_nodal_dump_vtk
     PDM_malloc(elt_section, n_elt_tot, double              );
     PDM_malloc(elt_entity,  n_elt_tot, double              );
 
-    int n_field = 3;
+    int _n_elt_field = n_elt_field + 3;
 
     int idx = 0;
     for (int i_section = 0; i_section < n_section; ++i_section) {
@@ -935,14 +941,33 @@ PDM_part_mesh_nodal_dump_vtk
           elt_entity[i_parent] = _elt_to_entity[i_elt];
         }
         else {
-          n_field = 2;
+          _n_elt_field = n_elt_field + 2;
         }
         idx++;
       }
     }
 
-    const char   *field_name[] = {"groud_id", "section_id", "elt_to_entity"};
-    const double *field_val [] = {elt_group, elt_section, elt_entity};
+    const char   *_elt_field_name[n_elt_field+3];
+    const double *_elt_field     [n_elt_field+3];
+    for (int i_field = 0; i_field < n_elt_field; i_field++) {
+      _elt_field_name[i_field] = elt_field_name[i_field];
+      _elt_field     [i_field] = elt_field     [i_field][i_part];
+    }
+    _elt_field_name[n_elt_field  ] = "groud_id";
+    _elt_field     [n_elt_field  ] = elt_group;
+    _elt_field_name[n_elt_field+1] = "section_id";
+    _elt_field     [n_elt_field+1] = elt_section;
+    if (_n_elt_field > n_elt_field + 2) {
+      _elt_field_name[n_elt_field+2] = "elt_to_entity";
+      _elt_field     [n_elt_field+2] = elt_entity;
+    }
+
+    const char   *_vtx_field_name[n_vtx_field];
+    const double *_vtx_field     [n_vtx_field];
+    for (int i_field = 0; i_field < n_vtx_field; i_field++) {
+      _vtx_field_name[i_field] = vtx_field_name[i_field];
+      _vtx_field     [i_field] = vtx_field     [i_field][i_part];
+    }
 
     char filename[999];
     sprintf(filename, "%s_%d_%d.vtk", filename_pattern, i_part, i_rank);
@@ -955,12 +980,12 @@ PDM_part_mesh_nodal_dump_vtk
                                     elt_vtx_idx,
                                     elt_vtx,
                                     elt_g_num,
-                                    n_field,
-                                    field_name,
-                                    field_val,
-                                    0,
-                                    NULL,
-                                    NULL);
+                                    _n_elt_field,
+                                    _elt_field_name,
+                                    _elt_field,
+                                    n_vtx_field,
+                                    _vtx_field_name,
+                                    _vtx_field);
 
     PDM_free(elt_group  );
     PDM_free(elt_g_num  );
@@ -970,6 +995,27 @@ PDM_part_mesh_nodal_dump_vtk
     PDM_free(elt_vtx_idx);
     PDM_free(elt_vtx    );
   }
+}
+
+
+
+void
+PDM_part_mesh_nodal_dump_vtk
+(
+        PDM_part_mesh_nodal_t *pmn,
+        PDM_geometry_kind_t    geom_kind,
+  const char                  *filename_pattern
+)
+{
+  PDM_part_mesh_nodal_dump_vtk_with_fields(pmn,
+                                           geom_kind,
+                                           filename_pattern,
+                                           0,
+                                           NULL,
+                                           NULL,
+                                           0,
+                                           NULL,
+                                           NULL);
 }
 
 
