@@ -3403,12 +3403,12 @@ PDM_part_mesh_nodal_elmts_elt_center_compute
       PDM_malloc(block->cell_centers[id_part], 3*block->n_elt[id_part], double);
     }
 
-    double *volume;
-    double *characteristicLength;
-    int    *isDegenerated;
-    PDM_malloc(volume,               block->n_elt[id_part], double);
-    PDM_malloc(characteristicLength, block->n_elt[id_part], double);
-    PDM_malloc(isDegenerated,        block->n_elt[id_part], int   );
+    double *volume         = NULL;
+    double *charac_length  = NULL;
+    int    *is_degenerated = NULL;
+    PDM_malloc(volume        , block->n_elt[id_part], double);
+    PDM_malloc(charac_length , block->n_elt[id_part], double);
+    PDM_malloc(is_degenerated, block->n_elt[id_part], int   );
 
     PDM_geom_elem_polyhedra_properties(0,
                                        block->n_elt[id_part],
@@ -3421,11 +3421,11 @@ PDM_part_mesh_nodal_elmts_elt_center_compute
                                        vtx_coord,
                                        volume,
                                        block->cell_centers[id_part],
-                                       characteristicLength,
-                                       isDegenerated);
+                                       charac_length,
+                                       is_degenerated);
     PDM_free(volume);
-    PDM_free(characteristicLength);
-    PDM_free(isDegenerated);
+    PDM_free(charac_length);
+    PDM_free(is_degenerated);
   }
 
   /* Polygons */
@@ -3463,12 +3463,12 @@ PDM_part_mesh_nodal_elmts_elt_center_compute
       PDM_malloc(block->cell_centers[id_part], 3*block->n_elt[id_part], double);
     }
 
-    double *surface_vector;
-    double *characteristicLength;
-    int    *isDegenerated;
-    PDM_malloc(surface_vector,       3*block->n_elt[id_part], double);
-    PDM_malloc(characteristicLength,   block->n_elt[id_part], double);
-    PDM_malloc(isDegenerated,          block->n_elt[id_part], int   );
+    double *surface_vector = NULL;
+    double *charac_length  = NULL;
+    int    *is_degenerated = NULL;
+    PDM_malloc(surface_vector, 3 * block->n_elt[id_part], double);
+    PDM_malloc(charac_length ,     block->n_elt[id_part], double);
+    PDM_malloc(is_degenerated,     block->n_elt[id_part], int   );
 
     PDM_geom_elem_polygon_properties(block->n_elt[id_part],
                                      block->_connec_idx[id_part],
@@ -3476,11 +3476,11 @@ PDM_part_mesh_nodal_elmts_elt_center_compute
                                      vtx_coord,
                                      surface_vector,
                                      block->cell_centers[id_part],
-                                     characteristicLength,
-                                     isDegenerated);
+                                     charac_length,
+                                     is_degenerated);
     PDM_free(surface_vector);
-    PDM_free(characteristicLength);
-    PDM_free(isDegenerated);
+    PDM_free(charac_length);
+    PDM_free(is_degenerated);
   }
 
   /* Standard elements */
@@ -3515,10 +3515,10 @@ PDM_part_mesh_nodal_elmts_elt_center_compute
       PDM_malloc(block->cell_centers[id_part], 3*block->n_elt[id_part], double);
     }
 
-    double *characteristicLength;
-    int    *isDegenerated;
-    PDM_malloc(characteristicLength, block->n_elt[id_part], double);
-    PDM_malloc(isDegenerated,        block->n_elt[id_part], int   );
+    double *charac_length  = NULL;
+    int    *is_degenerated = NULL;
+    PDM_malloc(charac_length , block->n_elt[id_part], double);
+    PDM_malloc(is_degenerated, block->n_elt[id_part], int   );
 
     switch (block->t_elt) {
     case PDM_MESH_NODAL_POINT:
@@ -3536,8 +3536,8 @@ PDM_part_mesh_nodal_elmts_elt_center_compute
                                      vtx_coord,
                                      length,
                                      block->cell_centers[id_part],
-                                     characteristicLength,
-                                     isDegenerated);
+                                     charac_length,
+                                     is_degenerated);
       PDM_free(length);
       break;
     }
@@ -3551,8 +3551,8 @@ PDM_part_mesh_nodal_elmts_elt_center_compute
                                     vtx_coord,
                                     surface_vector,
                                     block->cell_centers[id_part],
-                                    characteristicLength,
-                                    isDegenerated);
+                                    charac_length,
+                                    is_degenerated);
       PDM_free(surface_vector);
       break;
     }
@@ -3565,8 +3565,8 @@ PDM_part_mesh_nodal_elmts_elt_center_compute
                                     vtx_coord,
                                     surface_vector,
                                     block->cell_centers[id_part],
-                                    characteristicLength,
-                                    isDegenerated);
+                                    charac_length,
+                                    is_degenerated);
       PDM_free(surface_vector);
       break;
     }
@@ -3580,8 +3580,8 @@ PDM_part_mesh_nodal_elmts_elt_center_compute
                                      vtx_coord,
                                      volume,
                                      block->cell_centers[id_part],
-                                     characteristicLength,
-                                     isDegenerated);
+                                     charac_length,
+                                     is_degenerated);
       PDM_free(volume);
       break;
     }
@@ -3596,8 +3596,8 @@ PDM_part_mesh_nodal_elmts_elt_center_compute
                                        vtx_coord,
                                        volume,
                                        block->cell_centers[id_part],
-                                       characteristicLength,
-                                       isDegenerated);
+                                       charac_length,
+                                       is_degenerated);
       PDM_free(volume);
       break;
     }
@@ -3612,8 +3612,8 @@ PDM_part_mesh_nodal_elmts_elt_center_compute
                                      vtx_coord,
                                      volume,
                                      block->cell_centers[id_part],
-                                     characteristicLength,
-                                     isDegenerated);
+                                     charac_length,
+                                     is_degenerated);
       PDM_free(volume);
       break;
     }
@@ -3628,8 +3628,8 @@ PDM_part_mesh_nodal_elmts_elt_center_compute
                                     vtx_coord,
                                     volume,
                                     block->cell_centers[id_part],
-                                    characteristicLength,
-                                    isDegenerated);
+                                    charac_length,
+                                    is_degenerated);
       PDM_free(volume);
       break;
     }
@@ -3646,8 +3646,8 @@ PDM_part_mesh_nodal_elmts_elt_center_compute
     }//end switch t_elt
 
 
-    PDM_free(characteristicLength);
-    PDM_free(isDegenerated);
+    PDM_free(charac_length);
+    PDM_free(is_degenerated);
   }
 
 }
@@ -4815,22 +4815,22 @@ PDM_part_mesh_nodal_elmts_face2d_faceedge_add
     }
   }
 
-  pmne->prepa_blocks->n_tria_proc           += n_tria;
-  pmne->prepa_blocks->n_quad_proc           += n_quad;
-  pmne->prepa_blocks->n_poly2d_proc         += n_poly2d;
-  pmne->prepa_blocks->add_etat[id_part]      = 1;
-  pmne->prepa_blocks->n_cell[id_part]        = n_face;
-  pmne->prepa_blocks->n_face[id_part]        = n_edge;
-  pmne->prepa_blocks->n_vtx[id_part]         = n_vtx;
-  pmne->prepa_blocks->n_tria[id_part]        = n_tria;
-  pmne->prepa_blocks->n_quad[id_part]        = n_quad;
-  pmne->prepa_blocks->n_poly2d[id_part]      = n_poly2d;
+  pmne->prepa_blocks->n_tria_proc              += n_tria;
+  pmne->prepa_blocks->n_quad_proc              += n_quad;
+  pmne->prepa_blocks->n_poly2d_proc            += n_poly2d;
+  pmne->prepa_blocks->add_etat       [id_part] = 1;
+  pmne->prepa_blocks->n_cell         [id_part] = n_face;
+  pmne->prepa_blocks->n_face         [id_part] = n_edge;
+  pmne->prepa_blocks->n_vtx          [id_part] = n_vtx;
+  pmne->prepa_blocks->n_tria         [id_part] = n_tria;
+  pmne->prepa_blocks->n_quad         [id_part] = n_quad;
+  pmne->prepa_blocks->n_poly2d       [id_part] = n_poly2d;
   pmne->prepa_blocks->l_connec_poly2d[id_part] = l_connec_poly2d;
-  pmne->prepa_blocks->face_vtx[id_part]      = (PDM_l_num_t *) edge_vtx;
-  pmne->prepa_blocks->cell_face_idx[id_part] = (PDM_l_num_t *) face_edge_idx;
-  pmne->prepa_blocks->cell_face[id_part]     = (PDM_l_num_t *) face_edge;
-  pmne->prepa_blocks->numabs[id_part]        = (PDM_g_num_t *) face_ln_to_gn;
-  pmne->prepa_blocks->add_etat[id_part]      = 1;
+  pmne->prepa_blocks->face_vtx       [id_part] = (PDM_l_num_t *) edge_vtx;
+  pmne->prepa_blocks->cell_face_idx  [id_part] = (PDM_l_num_t *) face_edge_idx;
+  pmne->prepa_blocks->cell_face      [id_part] = (PDM_l_num_t *) face_edge;
+  pmne->prepa_blocks->numabs         [id_part] = (PDM_g_num_t *) face_ln_to_gn;
+  pmne->prepa_blocks->add_etat       [id_part] = 1;
 
   /* Creation des blocs si toutes les parts sont remplies */
 
@@ -4872,7 +4872,7 @@ PDM_part_mesh_nodal_elmts_face2d_faceedge_add
 
     for (int i_part = 0; i_part < pmne->n_part; i_part++) {
 
-      PDM_l_num_t n_cell_courant = pmne->prepa_blocks->n_cell[i_part];
+      PDM_l_num_t  n_cell_courant = pmne->prepa_blocks->n_cell[i_part];
       PDM_l_num_t *num_cell_parent_to_local_courant = pmne->num_elmt_parent_to_local[i_part];
       PDM_l_num_t *face_som_courant = pmne->prepa_blocks->face_vtx[i_part];
       PDM_l_num_t *cell_face_idx_courant = pmne->prepa_blocks->cell_face_idx[i_part];
