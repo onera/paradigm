@@ -57,6 +57,11 @@ extern "C" {
     PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n"); \
   }
 
+#define CHECK_GROUP(pmne, i_group)                                                             \
+  if ((i_group) < 0 || (i_group) >= (pmne)->n_group) {                                         \
+    PDM_error(__FILE__, __LINE__, 0, "Invalid i_group (%d / %d)", (i_group), (pmne)->n_group); \
+  }
+
 /*============================================================================
  * Type definitions
  *============================================================================*/
@@ -1254,24 +1259,23 @@ PDM_part_mesh_nodal_elmts_add
 
   switch (t_elt) {
 
-  // TO DO : HO??
-  case PDM_MESH_NODAL_POINT    :
-  case PDM_MESH_NODAL_BAR2     :
-  case PDM_MESH_NODAL_TRIA3    :
-  case PDM_MESH_NODAL_QUAD4    :
-  case PDM_MESH_NODAL_TETRA4   :
-  case PDM_MESH_NODAL_PYRAMID5 :
-  case PDM_MESH_NODAL_PRISM6   :
-  case PDM_MESH_NODAL_HEXA8    :
-  case PDM_MESH_NODAL_BARHO    :
-  case PDM_MESH_NODAL_TRIAHO   :
-  case PDM_MESH_NODAL_BARHO_BEZIER    :
-  case PDM_MESH_NODAL_TRIAHO_BEZIER   :
-  case PDM_MESH_NODAL_QUADHO   :
-  case PDM_MESH_NODAL_TETRAHO  :
-  case PDM_MESH_NODAL_PYRAMIDHO:
-  case PDM_MESH_NODAL_PRISMHO  :
-  case PDM_MESH_NODAL_HEXAHO   :
+  case PDM_MESH_NODAL_POINT        :
+  case PDM_MESH_NODAL_BAR2         :
+  case PDM_MESH_NODAL_TRIA3        :
+  case PDM_MESH_NODAL_QUAD4        :
+  case PDM_MESH_NODAL_TETRA4       :
+  case PDM_MESH_NODAL_PYRAMID5     :
+  case PDM_MESH_NODAL_PRISM6       :
+  case PDM_MESH_NODAL_HEXA8        :
+  case PDM_MESH_NODAL_BARHO        :
+  case PDM_MESH_NODAL_TRIAHO       :
+  case PDM_MESH_NODAL_BARHO_BEZIER :
+  case PDM_MESH_NODAL_TRIAHO_BEZIER:
+  case PDM_MESH_NODAL_QUADHO       :
+  case PDM_MESH_NODAL_TETRAHO      :
+  case PDM_MESH_NODAL_PYRAMIDHO    :
+  case PDM_MESH_NODAL_PRISMHO      :
+  case PDM_MESH_NODAL_HEXAHO       :
     {
       /* Mise a jour du tableau de stockage */
 
@@ -1442,7 +1446,6 @@ PDM_part_mesh_nodal_elmts_add
 }
 
 
-
 void
 PDM_part_mesh_nodal_elmts_std_set
 (
@@ -1503,6 +1506,7 @@ PDM_part_mesh_nodal_elmts_std_set
   block->ho_ordering = NULL;
 }
 
+
 void
 PDM_part_mesh_nodal_elmts_std_ho_set
 (
@@ -1544,6 +1548,7 @@ PDM_part_mesh_nodal_elmts_std_ho_set
   }
   // block->ho_ordering = ho_ordering;
 }
+
 
 void
 PDM_part_mesh_nodal_elmts_section_std_get
@@ -1647,7 +1652,6 @@ PDM_part_mesh_nodal_elmts_section_poly2d_set
         PDM_ownership_t              owner
 )
 {
-
   CHECK_PMNE(pmne)
 
   int _id_section = id_section - PDM_BLOCK_ID_BLOCK_POLY2D;
@@ -1673,10 +1677,6 @@ PDM_part_mesh_nodal_elmts_section_poly2d_set
     if (block->elt_vtx_owner    != PDM_OWNERSHIP_USER) block->elt_vtx_owner     = owner;
   }
 
-  /* for (int i = 0; i < n_elt; i++) { */
-  /*   n_elt_abs = PDM_MAX(n_elt_abs, numabs[i]); */
-  /* } */
-
   if (parent_num != NULL) {
     if (block->_parent_num == NULL) {
       PDM_malloc(block->_parent_num, block->n_part, int *);
@@ -1687,6 +1687,7 @@ PDM_part_mesh_nodal_elmts_section_poly2d_set
     block->_parent_num[id_part] = (int *) parent_num;
   }
 }
+
 
 void
 PDM_part_mesh_nodal_elmts_section_poly3d_set
@@ -1707,7 +1708,6 @@ PDM_part_mesh_nodal_elmts_section_poly3d_set
         PDM_ownership_t              owner
 )
 {
-
   CHECK_PMNE(pmne)
 
   int _id_section = id_section - PDM_BLOCK_ID_BLOCK_POLY3D;
@@ -1748,10 +1748,6 @@ PDM_part_mesh_nodal_elmts_section_poly3d_set
                                   &(block->_cellvtx_idx[id_part]),
                                   &(block->_cellvtx[id_part]));
 
-  /* for (int i = 0; i < n_elt; i++) { */
-  /*   pmne->n_elt_abs = PDM_MAX (pmne->n_elt_abs, numabs[i]); */
-  /* } */
-
   if (parent_num != NULL) {
     if (block->_parent_num == NULL) {
       PDM_malloc(block->_parent_num, block->n_part, int *);
@@ -1771,8 +1767,8 @@ PDM_part_mesh_nodal_elmts_section_poly3d_set
     }
     block->_parent_entity_g_num[id_part] = (PDM_g_num_t *) parent_entity_g_num;
   }
-
 }
+
 
 void
 PDM_part_mesh_nodal_elmts_section_poly2d_get
@@ -1785,7 +1781,6 @@ PDM_part_mesh_nodal_elmts_section_poly2d_get
         PDM_ownership_t               ownership
 )
 {
-
   CHECK_PMNE(pmne)
 
   int _id_section = id_section - PDM_BLOCK_ID_BLOCK_POLY2D;
@@ -1804,6 +1799,7 @@ PDM_part_mesh_nodal_elmts_section_poly2d_get
   }
 }
 
+
 void
 PDM_part_mesh_nodal_elmts_section_poly3d_cell_vtx_connect_get
 (
@@ -1815,7 +1811,6 @@ PDM_part_mesh_nodal_elmts_section_poly3d_cell_vtx_connect_get
         PDM_ownership_t               ownership
 )
 {
-
   CHECK_PMNE(pmne)
 
   int _id_section = id_section - PDM_BLOCK_ID_BLOCK_POLY3D;
@@ -1834,7 +1829,6 @@ PDM_part_mesh_nodal_elmts_section_poly3d_cell_vtx_connect_get
     if (block->elt_vtx_owner != PDM_OWNERSHIP_USER) block->elt_vtx_owner = ownership;
   }
 }
-
 
 
 void
@@ -1894,7 +1888,6 @@ PDM_part_mesh_nodal_elmts_section_poly3d_get
 }
 
 
-
 PDM_Mesh_nodal_elt_t
 PDM_part_mesh_nodal_elmts_section_type_get
 (
@@ -1910,26 +1903,20 @@ PDM_part_mesh_nodal_elmts_section_type_get
     t_elt = PDM_MESH_NODAL_POLY_3D;
     const PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[id_section];
 
-    CHECK_BLOCK (block)
+    CHECK_BLOCK(block)
 
     t_elt = block->t_elt;
   }
-
   else if (id_section < PDM_BLOCK_ID_BLOCK_POLY3D) {
-
     t_elt = PDM_MESH_NODAL_POLY_2D;
-
   }
-
   else {
-
     t_elt = PDM_MESH_NODAL_POLY_3D;
-
   }
 
   return t_elt;
-
 }
+
 
 int
 PDM_part_mesh_nodal_elmts_section_n_elt_get
@@ -2230,8 +2217,6 @@ const int                          id_part,
 
   return _g_num;
 }
-
-
 
 
 PDM_part_mesh_nodal_elmts_t *
@@ -2757,7 +2742,6 @@ PDM_part_mesh_nodal_elmts_create_from_part3d
 }
 
 
-
 PDM_part_mesh_nodal_elmts_t *
 PDM_part_mesh_nodal_elmts_create_from_part2d
 (
@@ -2824,7 +2808,6 @@ PDM_part_mesh_nodal_elmts_create_from_part2d
     prepa_blocks->n_tria_proc             += n_tria;
     prepa_blocks->n_quad_proc             += n_quad;
     prepa_blocks->n_poly2d_proc           += n_poly2d;
-    // prepa_blocks->add_etat       [i_part]  = 1;
     prepa_blocks->n_cell         [i_part] = n_face[i_part];
     prepa_blocks->n_tria         [i_part] = n_tria;
     prepa_blocks->n_quad         [i_part] = n_quad;
@@ -3089,7 +3072,6 @@ PDM_part_mesh_nodal_elmts_create_from_part2d
 }
 
 
-
 void
 PDM_part_mesh_nodal_elmts_elt_extents_compute
 (
@@ -3163,7 +3145,6 @@ PDM_part_mesh_nodal_elmts_elt_extents_compute
 
     order = block->order;
 
-    // TO DO : support HO elt (-> Bézier to compute bboxes?)
     n_vtx_elt = PDM_Mesh_nodal_n_vtx_elt_get (block->t_elt, order);
 
     if (order > 1                                   &&
@@ -3296,16 +3277,11 @@ PDM_part_mesh_nodal_elmts_elt_extents_compute
 
   } // End of loop on elements
 
-  if (lagrange_coord != NULL) {
-    PDM_free(lagrange_coord);
-  }
-  if (bezier_coord != NULL) {
-    PDM_free(bezier_coord);
-  }
-  if (matrix != NULL) {
-    PDM_free(matrix);
-  }
+  PDM_free(lagrange_coord);
+  PDM_free(bezier_coord);
+  PDM_free(matrix);
 }
+
 
 void
 PDM_part_mesh_nodal_elmts_elt_center_compute
@@ -3602,8 +3578,8 @@ PDM_part_mesh_nodal_elmts_elt_center_compute
     PDM_free(charac_length);
     PDM_free(is_degenerated);
   }
-
 }
+
 
 const double *
 PDM_part_mesh_nodal_elmts_elt_center_get
@@ -3674,6 +3650,7 @@ PDM_part_mesh_nodal_elmts_elt_center_get
 
   return elt_centers;
 }
+
 
 void
 PDM_part_mesh_nodal_elmts_elt_center_reset
@@ -3748,6 +3725,7 @@ PDM_part_mesh_nodal_elmts_elt_center_reset
   }
 }
 
+
 void
 PDM_part_mesh_nodal_elmts_reset
 (
@@ -3777,19 +3755,16 @@ PDM_part_mesh_nodal_elmts_reset
     PDM_free(pmne->sections_poly3d);
   }
 
-  pmne->n_section_std              = 0;
-  pmne->n_section_poly2d           = 0;
-  pmne->n_section_poly3d           = 0;
+  pmne->n_section_std    = 0;
+  pmne->n_section_poly2d = 0;
+  pmne->n_section_poly3d = 0;
 
-  pmne->sections_std               = NULL;
-  pmne->sections_poly2d            = NULL;
-  pmne->sections_poly3d            = NULL;
-  if (pmne->sections_id != NULL) {
-    PDM_free(pmne->sections_id);
-  }
-  pmne->sections_id              = NULL;
-  pmne->n_section                = 0;
-  pmne->prepa_blocks             = NULL;
+  pmne->sections_std    = NULL;
+  pmne->sections_poly2d = NULL;
+  pmne->sections_poly3d = NULL;
+  PDM_free(pmne->sections_id);
+  pmne->n_section    = 0;
+  pmne->prepa_blocks = NULL;
 
   if (pmne->num_elmt_parent_to_local != NULL) {
     for (int i_part = 0; i_part < pmne->n_part; i_part++) {
@@ -3941,6 +3916,7 @@ PDM_part_mesh_nodal_elmts_g_num_in_section_compute
   PDM_gnum_free (gnum_gen);
 }
 
+
 int
 PDM_part_mesh_nodal_elmts_n_elmts_get
 (
@@ -3953,6 +3929,7 @@ PDM_part_mesh_nodal_elmts_n_elmts_get
 
   return pmne->n_elmts[id_part];
 }
+
 
 PDM_g_num_t *
 PDM_part_mesh_nodal_elmts_g_num_get_from_part
@@ -4038,6 +4015,7 @@ PDM_part_mesh_nodal_elmts_g_num_get_from_part
   return pmne->numabs[id_part];
 }
 
+
 void
 PDM_part_mesh_nodal_elmts_partial_free
 (
@@ -4063,6 +4041,7 @@ PDM_part_mesh_nodal_elmts_partial_free
     }
   }
 }
+
 
 PDM_g_num_t *
 PDM_part_mesh_nodal_elmts_section_g_num_get
@@ -4130,6 +4109,7 @@ PDM_part_mesh_nodal_elmts_section_g_num_get
   }
 }
 
+
 int *
 PDM_part_mesh_nodal_elmts_num_elmt_parent_to_local_get
 (
@@ -4147,6 +4127,7 @@ PDM_part_mesh_nodal_elmts_num_elmt_parent_to_local_get
     return NULL;
   }
 }
+
 
 void
 PDM_part_mesh_elmts_nodal_cell3d_cellface_add
@@ -4689,6 +4670,7 @@ PDM_part_mesh_elmts_nodal_cell3d_cellface_add
   }
 }
 
+
 void
 PDM_part_mesh_nodal_elmts_face2d_faceedge_add
 (
@@ -5050,6 +5032,7 @@ PDM_part_mesh_nodal_elmts_face2d_faceedge_add
   }
 }
 
+
 void
 PDM_part_mesh_nodal_elmts_cells_cellvtx_add
 (
@@ -5402,22 +5385,6 @@ PDM_part_mesh_nodal_elmts_cells_cellvtx_add
 }
 
 
-/**
- * \brief  Add some 2D faces from face vertex connectivity.
- *
- * For each face, this function searchs the type of the cell (tetrahedra, hexahedra, ...)
- * and stores it in the corresponding block. \ref ind_num gives the indirection
- * between old and new numbering.
- *
- * \param [in]  pmne           Pointer to \ref PDM_part_mesh_nodal_elmts object
- * \param [in]  id_part        Partition identifier
- * \param [in]  n_face         Number of polygon
- * \param [in]  face_vtx_idx   Index of edge vertex connectivity
- * \param [in]  face_vtx       Edge vertex connectivity
- * \param [in]  ownership      Ownership
- *
- */
-
 void
 PDM_part_mesh_nodal_elmts_faces_facevtx_add
 (
@@ -5711,6 +5678,7 @@ PDM_part_mesh_nodal_elmts_faces_facevtx_add
   }
 }
 
+
 void
 PDM_part_mesh_nodal_elmts_extend_to_encompassing_comm
 (
@@ -5914,9 +5882,7 @@ PDM_part_mesh_nodal_elmts_extend_to_encompassing_comm
   PDM_free(block_type);
   PDM_free(block_order);
   PDM_free(block_len_ho_ordering);
-  if (char_buf != NULL) {
-    PDM_free(char_buf);
-  }
+  PDM_free(char_buf);
 }
 
 
@@ -5957,6 +5923,7 @@ PDM_part_mesh_nodal_elmts_n_group_set
   }
 }
 
+
 void
 PDM_part_mesh_nodal_elmts_group_set
 (
@@ -5971,6 +5938,7 @@ PDM_part_mesh_nodal_elmts_group_set
 {
   CHECK_PMNE  (pmne)
   CHECK_I_PART(pmne, i_part)
+  CHECK_GROUP (pmne, i_group)
 
   pmne->n_group_elmt  [i_part][i_group] = n_group_elmt;
   pmne->group_elmt    [i_part][i_group] = group_elmt;
@@ -5978,6 +5946,7 @@ PDM_part_mesh_nodal_elmts_group_set
 
   pmne->ownership_group[i_part][i_group] = ownership_group;
 }
+
 
 void
 PDM_part_mesh_nodal_elmts_group_get
@@ -5993,6 +5962,7 @@ PDM_part_mesh_nodal_elmts_group_get
 {
   CHECK_PMNE  (pmne)
   CHECK_I_PART(pmne, i_part)
+  CHECK_GROUP (pmne, i_group)
 
   *n_group_elmt   = pmne->n_group_elmt  [i_part][i_group];
   *group_elmt     = pmne->group_elmt    [i_part][i_group];
@@ -6002,6 +5972,7 @@ PDM_part_mesh_nodal_elmts_group_get
     pmne->ownership_group[i_part][i_group] = ownership_group;
   }
 }
+
 
 int
 PDM_part_mesh_nodal_elmts_n_group_get

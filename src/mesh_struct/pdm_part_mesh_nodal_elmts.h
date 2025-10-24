@@ -44,13 +44,13 @@ typedef struct _pdm_part_mesh_nodal_elmts_t PDM_part_mesh_nodal_elmts_t;
  *============================================================================*/
 
 /**
- * \brief Create a Mesh nodal structure
+ * \brief Create a PDM_part_mesh_nodal_elmts_t structure
  *
  * \param [in]   mesh_dimension Dimension of the mesh
  * \param [in]   n_part         Number of partition on the current process
  * \param [in]   comm           MPI communicator
  *
- * \return       New mesh nodal handle
+ * \return  New \ref PDM_part_mesh_nodal_elmts_t instance
  *
  */
 PDM_part_mesh_nodal_elmts_t*
