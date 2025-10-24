@@ -61,10 +61,6 @@ extern "C" {
  * Type definitions
  *============================================================================*/
 
-/*----------------------------------------------------------------------------
- * Maximum number of blocks depending of block type
- *----------------------------------------------------------------------------*/
-
 /*============================================================================
  * Global variable
  *============================================================================*/
@@ -125,7 +121,7 @@ static
 PDM_Mesh_nodal_block_std_t *
 _block_std_free
 (
- PDM_Mesh_nodal_block_std_t *_block_std
+  PDM_Mesh_nodal_block_std_t *_block_std
 )
 {
 
@@ -193,7 +189,7 @@ static
 void
 _block_poly2d_free_partial
 (
- PDM_Mesh_nodal_block_poly2d_t *_block_poly2d
+  PDM_Mesh_nodal_block_poly2d_t *_block_poly2d
 )
 {
 
@@ -250,7 +246,7 @@ static
 PDM_Mesh_nodal_block_poly2d_t *
 _block_poly2d_free
 (
- PDM_Mesh_nodal_block_poly2d_t *_block_poly2d
+  PDM_Mesh_nodal_block_poly2d_t *_block_poly2d
 )
 {
   _block_poly2d_free_partial(_block_poly2d);
@@ -309,8 +305,8 @@ static
 void
 _block_poly3d_free_partial
 (
- PDM_Mesh_nodal_block_poly3d_t *_block_poly3d
- )
+  PDM_Mesh_nodal_block_poly3d_t *_block_poly3d
+)
 {
 
   if (_block_poly3d->_facvtx_idx != NULL) {
@@ -411,8 +407,8 @@ static
 PDM_Mesh_nodal_block_poly3d_t *
 _block_poly3d_free
 (
- PDM_Mesh_nodal_block_poly3d_t *_block_poly3d
- )
+  PDM_Mesh_nodal_block_poly3d_t *_block_poly3d
+)
 {
   _block_poly3d_free_partial(_block_poly3d);
 
@@ -463,8 +459,6 @@ _block_poly3d_free
 }
 
 
-
-
 /**
  *
  * \brief Update blocks identifier list
@@ -472,10 +466,11 @@ _block_poly3d_free
  * \param [inout]  mesh        Mesh
  */
 
-static void
+static
+void
 _update_elmt_sections_id
 (
- PDM_part_mesh_nodal_elmts_t *pmne
+  PDM_part_mesh_nodal_elmts_t *pmne
 )
 {
   int n_section = 0;
@@ -528,18 +523,17 @@ _update_elmt_sections_id
  *   \param[out] tetra_vtx   Tetrahedron connectivity
  *
  */
-
-static void
+static
+void
 _connec_tetra
 (
- const double *vtx_coord,
-       int    *tria_vtx,
-       int     tetra_vtx[]
+  const double *vtx_coord,
+        int    *tria_vtx,
+        int     tetra_vtx[]
 )
 {
 
   /* Initialization */
-
   tetra_vtx[0] = tria_vtx[0];
   tetra_vtx[1] = tria_vtx[1];
   tetra_vtx[2] = tria_vtx[2];
@@ -585,13 +579,14 @@ _connec_tetra
  *
  */
 
-static void
+static
+void
 _connec_prism
 (
- const double *vtx_coord,
-       int    *tria_vtx,
-       int    *quad_vtx,
-       int     prism_vtx[]
+  const double *vtx_coord,
+        int    *tria_vtx,
+        int    *quad_vtx,
+        int     prism_vtx[]
 )
 {
 
@@ -601,7 +596,6 @@ _connec_prism
     prism_vtx[i] = tria_vtx[i];
 
   /* Orientation des faces */
-
   const double *_coords = vtx_coord;
 
   double c[6];
@@ -699,13 +693,14 @@ _connec_prism
  *
  */
 
-static void
+static
+void
 _connec_pyramid
 (
- const double  *vtx_coord,
-       int     *tria_vtx,
-       int     *quad_vtx,
-       int      pyramid_vtx[]
+  const double  *vtx_coord,
+        int     *tria_vtx,
+        int     *quad_vtx,
+        int      pyramid_vtx[]
 )
 {
 
@@ -792,12 +787,13 @@ _connec_pyramid
  *
  */
 
-static void
+static
+void
 _connec_hexa
 (
- const double  *vtx_coord,
-       int     *quad_vtx,
-       int      hexa_vtx[]
+  const double  *vtx_coord,
+        int     *quad_vtx,
+        int      hexa_vtx[]
 )
 {
 
@@ -969,14 +965,15 @@ _connec_hexa
 
 
 /* A reprendre! */
-static int
+static
+int
 _binary_search
 (
- const PDM_l_num_t  elem,
- const PDM_l_num_t  array[],
- const PDM_l_num_t  n,
- PDM_bool_t        *in_array
- )
+  const PDM_l_num_t  elem,
+  const PDM_l_num_t  array[],
+  const PDM_l_num_t  n,
+        PDM_bool_t  *in_array
+)
 {
   int l = 0;
   int r = n;
@@ -1011,17 +1008,19 @@ _binary_search
 }
 
 
-static void _compute_cell_vtx_connectivity
+static
+void
+_compute_cell_vtx_connectivity
 (
- const PDM_l_num_t   n_cell,
- const PDM_l_num_t   n_face,
- const PDM_l_num_t  *face_vtx_idx,
- const PDM_l_num_t  *face_vtx,
- const PDM_l_num_t  *cell_face_idx,
- const PDM_l_num_t  *cell_face,
- PDM_l_num_t       **cell_vtx_idx,
- PDM_l_num_t       **cell_vtx
- )
+  const PDM_l_num_t   n_cell,
+  const PDM_l_num_t   n_face,
+  const PDM_l_num_t  *face_vtx_idx,
+  const PDM_l_num_t  *face_vtx,
+  const PDM_l_num_t  *cell_face_idx,
+  const PDM_l_num_t  *cell_face,
+        PDM_l_num_t **cell_vtx_idx,
+        PDM_l_num_t **cell_vtx
+)
 {
   PDM_UNUSED(n_face);
 
@@ -1093,7 +1092,8 @@ static void _compute_cell_vtx_connectivity
   PDM_realloc(*cell_vtx, *cell_vtx, _cell_vtx_idx[n_cell], PDM_l_num_t);
 }
 
-inline static
+inline
+static
 PDM_Mesh_nodal_elt_t
 _type_cell_3D
 (
@@ -1101,8 +1101,8 @@ _type_cell_3D
  const int    *cell_face,
  const int    *face_vtx_idx,
  const int    *face_vtx,
- int           tria_vtx[],
- int           quad_vtx[]
+       int     tria_vtx[],
+       int     quad_vtx[]
 )
 {
 
@@ -1463,8 +1463,7 @@ PDM_part_mesh_nodal_elmts_std_set
 
   PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_section];
 
-  CHECK_BLOCK(block);
-
+  CHECK_BLOCK (block)
   CHECK_I_PART(block, id_part)
 
   /* Mapping */
@@ -1565,11 +1564,8 @@ PDM_part_mesh_nodal_elmts_section_std_get
 
   PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_section];
 
-  CHECK_BLOCK(block);
-
-  if (id_part >= block->n_part) {
-    PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
-  }
+  CHECK_BLOCK (block)
+  CHECK_I_PART(block, id_part)
 
   *connec     = block->_connec[id_part];
   *numabs     = block->_numabs[id_part];
@@ -1613,7 +1609,7 @@ PDM_part_mesh_nodal_elmts_section_std_ho_get
 
   PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_section];
 
-  CHECK_BLOCK(block);
+  CHECK_BLOCK (block)
   CHECK_I_PART(block, id_part)
 
   *connec = block->_connec[id_part];
@@ -1658,11 +1654,8 @@ PDM_part_mesh_nodal_elmts_section_poly2d_set
 
   PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[_id_section];
 
-  CHECK_BLOCK(block);
-
-  if (id_part >= block->n_part) {
-    PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
-  }
+  CHECK_BLOCK (block)
+  CHECK_I_PART(block, id_part)
 
   /* Mapping */
   pmne->n_elmts[id_part] += -block->n_elt[id_part];
@@ -1722,11 +1715,8 @@ PDM_part_mesh_nodal_elmts_section_poly3d_set
 
   PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[_id_section];
 
-  CHECK_BLOCK(block);
-
-  if (id_part >= block->n_part) {
-    PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
-  }
+  CHECK_BLOCK (block)
+  CHECK_I_PART(block, id_part)
 
   pmne->n_elmts[id_part] += -block->n_elt[id_part];
   pmne->n_elmts[id_part] += n_elt;
@@ -1802,11 +1792,8 @@ PDM_part_mesh_nodal_elmts_section_poly2d_get
 
   PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[_id_section];
 
-  CHECK_BLOCK(block);
-
-  if (id_part >= block->n_part) {
-    PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
-  }
+  CHECK_BLOCK (block)
+  CHECK_I_PART(block, id_part)
 
   *connec_idx = block->_connec_idx[id_part];
   *connec     = block->_connec[id_part];
@@ -1836,11 +1823,8 @@ PDM_part_mesh_nodal_elmts_section_poly3d_cell_vtx_connect_get
 
   PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[_id_section];
 
-  CHECK_BLOCK(block);
-
-  if (id_part >= block->n_part) {
-    PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
-  }
+  CHECK_BLOCK (block)
+  CHECK_I_PART(block, id_part)
 
   *cell_vtx_idx = block->_cellvtx_idx[id_part];
   *cell_vtx     = block->_cellvtx[id_part];
@@ -1878,11 +1862,8 @@ PDM_part_mesh_nodal_elmts_section_poly3d_get
 
   PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[_id_section];
 
-  CHECK_BLOCK(block);
-
-  if (id_part >= block->n_part) {
-    PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
-  }
+  CHECK_BLOCK (block)
+  CHECK_I_PART(block, id_part)
 
   *n_face              = block->n_face        [id_part];
   *face_vtx_idx        = block->_facvtx_idx   [id_part];
@@ -1929,9 +1910,7 @@ PDM_part_mesh_nodal_elmts_section_type_get
     t_elt = PDM_MESH_NODAL_POLY_3D;
     const PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[id_section];
 
-    if (block == NULL) {
-      PDM_error (__FILE__, __LINE__, 0, "Bad block identifier\n");
-    }
+    CHECK_BLOCK (block)
 
     t_elt = block->t_elt;
   }
@@ -3146,11 +3125,12 @@ PDM_part_mesh_nodal_elmts_elt_extents_compute
 
     PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[_id_section];
 
-    CHECK_BLOCK(block);
+    CHECK_BLOCK (block)
+    CHECK_I_PART(block, id_part)
 
-    n_elt = block->n_elt[id_part];
+    n_elt        = block->n_elt       [id_part];
     cell_vtx_idx = block->_cellvtx_idx[id_part];
-    cell_vtx     = block->_cellvtx[id_part];
+    cell_vtx     = block->_cellvtx    [id_part];
   }
 
   /* Polygons */
@@ -3160,11 +3140,12 @@ PDM_part_mesh_nodal_elmts_elt_extents_compute
 
     PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[_id_section];
 
-    CHECK_BLOCK(block);
+    CHECK_BLOCK (block)
+    CHECK_I_PART(block, id_part)
 
-    n_elt = block->n_elt[id_part];
+    n_elt        = block->n_elt      [id_part];
     cell_vtx_idx = block->_connec_idx[id_part];
-    cell_vtx     = block->_connec[id_part];
+    cell_vtx     = block->_connec    [id_part];
   }
 
   /* Standard elements */
@@ -3174,9 +3155,10 @@ PDM_part_mesh_nodal_elmts_elt_extents_compute
 
     PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_section];
 
-    CHECK_BLOCK(block);
+    CHECK_BLOCK(block)
+    CHECK_I_PART(block, id_part)
 
-    n_elt = block->n_elt[id_part];
+    n_elt    = block->n_elt  [id_part];
     cell_vtx = block->_connec[id_part];
 
     order = block->order;
@@ -3346,7 +3328,8 @@ PDM_part_mesh_nodal_elmts_elt_center_compute
 
     PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[_id_section];
 
-    CHECK_BLOCK(block);
+    CHECK_BLOCK (block)
+    CHECK_I_PART(block, id_part)
 
     block->cell_centers_owner = ownership;
 
@@ -3403,7 +3386,8 @@ PDM_part_mesh_nodal_elmts_elt_center_compute
 
     PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[_id_section];
 
-    CHECK_BLOCK(block);
+    CHECK_BLOCK (block)
+    CHECK_I_PART(block, id_part)
 
     block->cell_centers_owner = ownership;
 
@@ -3458,7 +3442,8 @@ PDM_part_mesh_nodal_elmts_elt_center_compute
 
     PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_section];
 
-    CHECK_BLOCK(block);
+    CHECK_BLOCK (block)
+    CHECK_I_PART(block, id_part)
 
     block->cell_centers_owner = ownership;
 
@@ -3706,7 +3691,8 @@ PDM_part_mesh_nodal_elmts_elt_center_reset
 
     PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[_id_section];
 
-    CHECK_BLOCK(block);
+    CHECK_BLOCK (block)
+    CHECK_I_PART(block, id_part)
 
     if (block->cell_centers_to_compute == NULL) {
       PDM_malloc(block->cell_centers_to_compute, block->n_part, int);
@@ -3725,7 +3711,8 @@ PDM_part_mesh_nodal_elmts_elt_center_reset
 
     PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[_id_section];
 
-    CHECK_BLOCK(block);
+    CHECK_BLOCK (block)
+    CHECK_I_PART(block, id_part)
 
     if (block->cell_centers_to_compute == NULL) {
       PDM_malloc(block->cell_centers_to_compute, block->n_part, int);
@@ -3745,7 +3732,8 @@ PDM_part_mesh_nodal_elmts_elt_center_reset
 
     PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_section];
 
-    CHECK_BLOCK(block);
+    CHECK_BLOCK (block)
+    CHECK_I_PART(block, id_part)
 
     if (block->cell_centers_to_compute == NULL) {
       PDM_malloc(block->cell_centers_to_compute, block->n_part, int);
@@ -3841,7 +3829,7 @@ PDM_part_mesh_nodal_elmts_g_num_in_section_compute
 
     PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[_id_section];
 
-    CHECK_BLOCK(block);
+    CHECK_BLOCK(block)
 
     block->numabs_int_owner = ownership;
 
@@ -3869,7 +3857,7 @@ PDM_part_mesh_nodal_elmts_g_num_in_section_compute
 
     PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[_id_section];
 
-    CHECK_BLOCK(block);
+    CHECK_BLOCK(block)
 
     block->numabs_int_owner = ownership;
 
@@ -3896,7 +3884,7 @@ PDM_part_mesh_nodal_elmts_g_num_in_section_compute
 
     PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_section];
 
-    CHECK_BLOCK(block);
+    CHECK_BLOCK(block)
 
     block->numabs_int_owner = ownership;
 
@@ -4096,12 +4084,13 @@ PDM_part_mesh_nodal_elmts_section_g_num_get
 
     PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[_id_section];
 
+    CHECK_BLOCK (block)
+    CHECK_I_PART(block, id_part)
+
     // ownership
     if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
       if (block->numabs_int_owner != PDM_OWNERSHIP_USER) block->numabs_int_owner = ownership;
     }
-
-    CHECK_BLOCK(block);
 
     return block->numabs_int[id_part];
   }
@@ -4112,12 +4101,13 @@ PDM_part_mesh_nodal_elmts_section_g_num_get
 
     PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[_id_section];
 
+    CHECK_BLOCK (block)
+    CHECK_I_PART(block, id_part)
+
     // ownership
     if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
       if (block->numabs_int_owner != PDM_OWNERSHIP_USER) block->numabs_int_owner = ownership;
     }
-
-    CHECK_BLOCK(block);
 
     return block->numabs_int[id_part];
   }
@@ -4128,12 +4118,14 @@ PDM_part_mesh_nodal_elmts_section_g_num_get
 
     PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_section];
 
+    CHECK_BLOCK (block)
+    CHECK_I_PART(block, id_part)
+
     // ownership
     if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
       if (block->numabs_int_owner != PDM_OWNERSHIP_USER) block->numabs_int_owner = ownership;
     }
 
-    CHECK_BLOCK(block);
     return block->numabs_int[id_part];
   }
 }
@@ -4229,7 +4221,7 @@ PDM_part_mesh_elmts_nodal_cell3d_cellface_add
   }
 
   if (pmne->prepa_blocks->t_add != 1) {
-    PDM_error(__FILE__, __LINE__, 0, "Erreur Cs_geom_cell3d_cell_face_add : Un autre type d'ajout est en cours\n");
+    PDM_error(__FILE__, __LINE__, 0, "Error PDM_part_mesh_elmts_nodal_cell3d_cellface_add : Another type of elements is currently is still in progress \n");
     abort();
   }
 
@@ -4759,7 +4751,7 @@ PDM_part_mesh_nodal_elmts_face2d_faceedge_add
   }
 
   if (pmne->prepa_blocks->t_add != 2) {
-    PDM_error(__FILE__, __LINE__, 0, "Erreur Cs_geom_cell2d_cell_face_add : Un autre type d'ajout est en cours\n");
+    PDM_error(__FILE__, __LINE__, 0, "Error in PDM_part_mesh_nodal_elmts_face2d_faceedge_add : Another type of elements is currently is still in progress \n");
     abort();
   }
 
@@ -5119,7 +5111,7 @@ PDM_part_mesh_nodal_elmts_cells_cellvtx_add
   }
 
   if (pmne->prepa_blocks->t_add != 1) {
-    PDM_error(__FILE__, __LINE__, 0, "Erreur Cs_geom_cells_cellvtx_add : Un autre type d'ajout est en cours\n");
+    PDM_error(__FILE__, __LINE__, 0, "Error in PDM_part_mesh_nodal_elmts_cells_cellvtx_add : Another type of elements is currently is still in progress \n");
     abort();
   }
 
@@ -5482,7 +5474,7 @@ PDM_part_mesh_nodal_elmts_faces_facevtx_add
   }
 
   if (pmne->prepa_blocks->t_add != 3) {
-    PDM_error(__FILE__, __LINE__, 0, "Erreur Cs_geom_cell2d_cell_face_add : Un autre type d'ajout est en cours\n");
+    PDM_error(__FILE__, __LINE__, 0, "Error in PDM_part_mesh_nodal_elmts_cells_cellvtx_add : Another type of elements is currently is still in progress \n");
     abort();
   }
 
