@@ -1465,9 +1465,7 @@ PDM_part_mesh_nodal_elmts_std_set
 
   CHECK_BLOCK(block);
 
-  if (id_part >= block->n_part) {
-    PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big (%d / %d)\n", id_part, block->n_part);
-  }
+  CHECK_I_PART(block, id_part)
 
   /* Mapping */
   pmne->n_elmts [id_part] += -block->n_elt[id_part];
@@ -1616,10 +1614,7 @@ PDM_part_mesh_nodal_elmts_section_std_ho_get
   PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_section];
 
   CHECK_BLOCK(block);
-
-  if (id_part >= block->n_part) {
-    PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big (%d / %d)\n", id_part, block->n_part);
-  }
+  CHECK_I_PART(block, id_part)
 
   *connec = block->_connec[id_part];
   *numabs = block->_numabs[id_part];
@@ -1975,11 +1970,8 @@ PDM_part_mesh_nodal_elmts_section_n_elt_get
 
     PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[_id_section];
 
-    CHECK_BLOCK(block);
-
-    if (id_part >= block->n_part) {
-      PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big (%d / %d)\n", id_part, block->n_part);
-    }
+    CHECK_BLOCK(block)
+    CHECK_I_PART(block, id_part)
 
     return block->n_elt[id_part];
   }
@@ -1990,11 +1982,8 @@ PDM_part_mesh_nodal_elmts_section_n_elt_get
 
     PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[_id_section];
 
-    CHECK_BLOCK(block);
-
-    if (id_part >= block->n_part) {
-      PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big (%d / %d)\n", id_part, block->n_part);
-    }
+    CHECK_BLOCK(block)
+    CHECK_I_PART(block, id_part)
 
     return block->n_elt[id_part];
   }
@@ -2005,11 +1994,8 @@ PDM_part_mesh_nodal_elmts_section_n_elt_get
 
     PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_section];
 
-    CHECK_BLOCK(block);
-
-    if (id_part >= block->n_part) {
-      PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big (%d / %d)\n", id_part, block->n_part);
-    }
+    CHECK_BLOCK(block)
+    CHECK_I_PART(block, id_part)
 
     return block->n_elt[id_part];
   }
@@ -2141,11 +2127,8 @@ PDM_part_mesh_nodal_elmts_parent_num_get
       if (block->parent_num_owner != PDM_OWNERSHIP_USER) block->parent_num_owner  = ownership;
     }
 
-    CHECK_BLOCK(block);
-
-    if (id_part >= block->n_part) {
-      PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
-    }
+    CHECK_BLOCK (block)
+    CHECK_I_PART(block, id_part)
 
     if (block->_parent_num != NULL) {
       _parent_num = block->_parent_num[id_part];
@@ -2163,11 +2146,8 @@ PDM_part_mesh_nodal_elmts_parent_num_get
       if (block->parent_num_owner != PDM_OWNERSHIP_USER) block->parent_num_owner  = ownership;
     }
 
-    CHECK_BLOCK(block);
-
-    if (id_part >= block->n_part) {
-      PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
-    }
+    CHECK_BLOCK (block)
+    CHECK_I_PART(block, id_part)
 
     if (block->_parent_num != NULL) {
       _parent_num = block->_parent_num[id_part];
@@ -2185,11 +2165,8 @@ PDM_part_mesh_nodal_elmts_parent_num_get
       if (block->parent_num_owner != PDM_OWNERSHIP_USER) block->parent_num_owner  = ownership;
     }
 
-    CHECK_BLOCK(block);
-
-    if (id_part >= block->n_part) {
-      PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
-    }
+    CHECK_BLOCK (block)
+    CHECK_I_PART(block, id_part)
 
     if (block->_parent_num != NULL) {
       _parent_num = block->_parent_num[id_part];
@@ -2226,11 +2203,8 @@ const int                          id_part,
       if (block->numabs_owner            != PDM_OWNERSHIP_USER) block->numabs_owner = ownership;
     }
 
-    CHECK_BLOCK(block);
-
-    if (id_part >= block->n_part) {
-      PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
-    }
+    CHECK_BLOCK (block)
+    CHECK_I_PART(block, id_part)
 
     if (block->_numabs != NULL) {
       _g_num = block->_numabs[id_part];
@@ -2248,11 +2222,8 @@ const int                          id_part,
       if (block->numabs_owner            != PDM_OWNERSHIP_USER) block->numabs_owner = ownership;
     }
 
-    CHECK_BLOCK(block);
-
-    if (id_part >= block->n_part) {
-      PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
-    }
+    CHECK_BLOCK (block)
+    CHECK_I_PART(block, id_part)
 
     if (block->_numabs != NULL) {
       _g_num = block->_numabs[id_part];
@@ -2270,11 +2241,8 @@ const int                          id_part,
       if (block->numabs_owner            != PDM_OWNERSHIP_USER) block->numabs_owner = ownership;
     }
 
-    CHECK_BLOCK(block);
-
-    if (id_part >= block->n_part) {
-      PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
-    }
+    CHECK_BLOCK (block)
+    CHECK_I_PART(block, id_part)
 
     if (block->_numabs != NULL) {
       _g_num = block->_numabs[id_part];
@@ -3677,9 +3645,8 @@ PDM_part_mesh_nodal_elmts_elt_center_get
       if (block->cell_centers_owner            != PDM_OWNERSHIP_USER) block->cell_centers_owner = ownership;
     }
 
-    if (block == NULL) {
-      PDM_error (__FILE__, __LINE__, 0, "Bad block identifier\n");
-    }
+    CHECK_BLOCK (block)
+    CHECK_I_PART(block, id_part)
 
     if (block->cell_centers != NULL) {
       elt_centers = block->cell_centers[id_part];
@@ -3697,9 +3664,8 @@ PDM_part_mesh_nodal_elmts_elt_center_get
       if (block->cell_centers_owner            != PDM_OWNERSHIP_USER) block->cell_centers_owner = ownership;
     }
 
-    if (block == NULL) {
-      PDM_error (__FILE__, __LINE__, 0, "Bad block identifier\n");
-    }
+    CHECK_BLOCK (block)
+    CHECK_I_PART(block, id_part)
 
     if (block->cell_centers != NULL) {
       elt_centers = block->cell_centers[id_part];
@@ -6301,9 +6267,9 @@ PDM_part_mesh_nodal_elmts_section_elt_to_entity_set
   if (id_section < PDM_BLOCK_ID_BLOCK_POLY2D) {
 
     PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[id_section];
-    if (block == NULL) {
-      PDM_error (__FILE__, __LINE__, 0, "Bad block identifier\n");
-    }
+
+    CHECK_BLOCK (block)
+    CHECK_I_PART(block, id_part)
 
     if (block->_elt_to_entity == NULL) {
       PDM_malloc(block->_elt_to_entity, pmne->n_part, int *);
@@ -6316,9 +6282,9 @@ PDM_part_mesh_nodal_elmts_section_elt_to_entity_set
   else if (id_section < PDM_BLOCK_ID_BLOCK_POLY3D) {
 
     PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[id_section - PDM_BLOCK_ID_BLOCK_POLY2D];
-    if (block == NULL) {
-      PDM_error (__FILE__, __LINE__, 0, "Bad block identifier\n");
-    }
+
+    CHECK_BLOCK (block)
+    CHECK_I_PART(block, id_part)
 
     if (block->_elt_to_entity == NULL) {
       PDM_malloc(block->_elt_to_entity, pmne->n_part, int *);
@@ -6331,9 +6297,9 @@ PDM_part_mesh_nodal_elmts_section_elt_to_entity_set
   else {
 
     PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[id_section - PDM_BLOCK_ID_BLOCK_POLY3D];
-    if (block == NULL) {
-      PDM_error (__FILE__, __LINE__, 0, "Bad block identifier\n");
-    }
+
+    CHECK_BLOCK (block)
+    CHECK_I_PART(block, id_part)
 
     if (block->_elt_to_entity == NULL) {
       PDM_malloc(block->_elt_to_entity, pmne->n_part, int *);
@@ -6362,9 +6328,9 @@ PDM_part_mesh_nodal_elmts_section_elmt_to_entity_get
   if (id_section < PDM_BLOCK_ID_BLOCK_POLY2D) {
 
     PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[id_section];
-    if (block == NULL) {
-      PDM_error (__FILE__, __LINE__, 0, "Bad block identifier\n");
-    }
+
+    CHECK_BLOCK (block)
+    CHECK_I_PART(block, id_part)
 
     if (block->_elt_to_entity != NULL) {
       elt_to_entity = block->_elt_to_entity[id_part];
@@ -6378,9 +6344,9 @@ PDM_part_mesh_nodal_elmts_section_elmt_to_entity_get
   else if (id_section < PDM_BLOCK_ID_BLOCK_POLY3D) {
 
     PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[id_section - PDM_BLOCK_ID_BLOCK_POLY2D];
-    if (block == NULL) {
-      PDM_error (__FILE__, __LINE__, 0, "Bad block identifier\n");
-    }
+
+    CHECK_BLOCK (block)
+    CHECK_I_PART(block, id_part)
 
     if (block->_elt_to_entity != NULL) {
       elt_to_entity = block->_elt_to_entity[id_part];
@@ -6394,9 +6360,9 @@ PDM_part_mesh_nodal_elmts_section_elmt_to_entity_get
   else {
 
     PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[id_section - PDM_BLOCK_ID_BLOCK_POLY3D];
-    if (block == NULL) {
-      PDM_error (__FILE__, __LINE__, 0, "Bad block identifier\n");
-    }
+
+    CHECK_BLOCK (block)
+    CHECK_I_PART(block, id_part)
 
     if (block->_elt_to_entity != NULL) {
       elt_to_entity = block->_elt_to_entity[id_part];
