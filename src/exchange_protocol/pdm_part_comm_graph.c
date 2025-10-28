@@ -1989,6 +1989,148 @@ PDM_part_comm_graph_all_reduce
 
 
 void
+PDM_part_comm_graph_selected_entity1_to_selected_entity2
+(
+  int                     *n_selected_entity1,
+  int                    **selected_entity1,
+  int                    **entity1_entity2_idx,
+  int                    **entity1_entity2,
+  PDM_part_comm_graph_t   *pcg_entity2,
+  int                    **out_n_entity2,
+  int                   ***out_selected_entity2
+)
+{
+  if (pcg_entity2 == NULL) {
+    PDM_error(__FILE__, __LINE__, 0, "Part Comm Graph is NULL\n");
+  }
+
+  int n_part = pcg_entity2->n_part;
+
+  PDM_malloc(*out_n_entity2,        n_part, int  );
+  PDM_malloc(*out_selected_entity2, n_part, int *);
+
+  int  *n_entity2        = *out_n_entity2;
+  int **selected_entity2 = *out_selected_entity2;
+
+
+  int **entity2_flag = NULL;
+  PDM_malloc(entity2_flag, n_part, int *);
+  for (int i_part = 0; i_part < n_part; i_part++) {
+
+    /* Compute upper bound for n_entity2 */
+    int n_entity2_ub = 0;
+    if (selected_entity1 == NULL) {
+      // Account for all entities1
+      for (int idx_entity2 = 0; idx_entity2 < entity1_entity2_idx[i_part][n_selected_entity1[i_part]]; idx_entity2++) {
+        n_entity2_ub = PDM_MAX(n_entity2_ub, PDM_ABS(entity1_entity2[i_part][idx_entity2]));
+      }
+    }
+    else {
+      // Only account for subset of entities1
+      for (int idx_entity1 = 0; idx_entity1 < n_selected_entity1[i_part]; idx_entity1++) {
+        int i_entity1 = selected_entity1[i_part][idx_entity1] - 1;
+        for (int idx_entity2 = entity1_entity2_idx[i_part][i_entity1]; idx_entity2 < entity1_entity2_idx[i_part][i_entity1+1]; idx_entity2++) {
+          n_entity2_ub = PDM_MAX(n_entity2_ub, PDM_ABS(entity1_entity2[i_part][idx_entity2]));
+        }
+      }
+    }
+
+    int *graph_entity2 = NULL;
+    int graph_entity2_n = PDM_part_comm_graph_entity_graph_get(pcg_entity2,
+                                                               i_part,
+                                                              &graph_entity2,
+                                                               PDM_OWNERSHIP_BAD_VALUE);
+    for (int idx_entity2 = 0; idx_entity2 < graph_entity2_n; idx_entity2++) {
+      n_entity2_ub = PDM_MAX(n_entity2_ub, graph_entity2[4*idx_entity2]);
+    }
+
+
+
+    /* Flag entities2 incident to *local* entities1 */
+    entity2_flag[i_part] = PDM_array_zeros_int(n_entity2_ub);
+
+    n_entity2[i_part] = 0;
+    PDM_malloc(selected_entity2[i_part], n_entity2_ub, int);
+
+    for (int idx_entity1 = 0; idx_entity1 < n_selected_entity1[i_part]; idx_entity1++) {
+
+      int i_entity1 = (selected_entity1 == NULL) ? idx_entity1 : selected_entity1[i_part][idx_entity1] - 1;
+
+      for (int idx_entity2 = entity1_entity2_idx[i_part][i_entity1]; idx_entity2 < entity1_entity2_idx[i_part][i_entity1+1]; idx_entity2++) {
+        int i_entity2 = entity1_entity2[i_part][idx_entity2] - 1;
+
+        if (entity2_flag[i_part][i_entity2] == 0) {
+          entity2_flag    [i_part][i_entity2] = 1;
+          selected_entity2[i_part][n_entity2[i_part]++] = i_entity2 + 1;
+        }
+      }
+    } // End loop on entities1
+
+  } // End loop on parts
+
+
+  /* Synchronize part boundaries */
+  /* Possible optimizations :
+   *  - create "sub" Part Comm Graph restricted to vertices incident to current pmne
+   *  - exchange in PDM_STRIDE_VAR_INTERLACED to filter out vertices not incident to current pmne
+   */
+  int **send_flag = NULL;
+  PDM_malloc(send_flag, n_part, int *);
+  for (int i_part = 0; i_part < n_part; i_part++) {
+
+    int *graph_entity2 = NULL;
+    int graph_entity2_n = PDM_part_comm_graph_entity_graph_get(pcg_entity2,
+                                                               i_part,
+                                                              &graph_entity2,
+                                                               PDM_OWNERSHIP_BAD_VALUE);
+
+    PDM_malloc(send_flag[i_part], graph_entity2_n, int);
+    for (int idx_entity2 = 0; idx_entity2 < graph_entity2_n; idx_entity2++) {
+      int i_entity2 = graph_entity2[4*idx_entity2] - 1;
+      send_flag[i_part][idx_entity2] = entity2_flag[i_part][i_entity2];
+    }
+  } // End loop on parts
+
+  int **recv_flag = NULL;
+  PDM_part_comm_graph_exch(pcg_entity2,
+                           sizeof(int),
+                           PDM_STRIDE_CST_INTERLACED,
+                           1,
+                           NULL,
+                (void  **) send_flag,
+                           NULL,
+                (void ***) &recv_flag);
+
+
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    int *graph_entity2 = NULL;
+    int graph_entity2_n = PDM_part_comm_graph_entity_graph_get(pcg_entity2,
+                                                               i_part,
+                                                              &graph_entity2,
+                                                               PDM_OWNERSHIP_BAD_VALUE);
+
+    for (int idx_entity2 = 0; idx_entity2 < graph_entity2_n; idx_entity2++) {
+      int i_entity2 = graph_entity2[4*idx_entity2] - 1;
+      if (recv_flag[i_part][idx_entity2] && !entity2_flag[i_part][i_entity2]) {
+        selected_entity2[i_part][n_entity2[i_part]++] = i_entity2 + 1;
+      }
+    }
+    PDM_free(send_flag   [i_part]);
+    PDM_free(recv_flag   [i_part]);
+    PDM_free(entity2_flag[i_part]);
+
+    PDM_realloc(selected_entity2[i_part], (*out_selected_entity2)[i_part], n_entity2[i_part], int);
+
+  } // End loop on parts
+  PDM_free(send_flag);
+  PDM_free(recv_flag);
+  PDM_free(entity2_flag);
+}
+
+
+
+
+void
 PDM_part_comm_graph_free
 (
  PDM_part_comm_graph_t* pcg

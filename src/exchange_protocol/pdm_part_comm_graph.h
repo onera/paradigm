@@ -327,6 +327,31 @@ PDM_part_comm_graph_entity_nuplet_get
   PDM_ownership_t         ownership
 );
 
+
+/**
+ * \brief Get selected of entities2 from list selected entities1
+ *
+ * \param [in]  n_selected_entity1    Number of selected entities1
+ * \param [in]  selected_entity1      Local IDs of selected entities1 (1-based) (if NULL, assume all IDs from 1 to n_selected_entity1)
+ * \param [in]  entity1_entity2_idx   Index for entity1->entity2 connectivity
+ * \param [in]  entity1_entity2       Entity1->entity2 connectivity
+ * \param [in]  pcg_entity2           \ref PDM_part_comm_graph_t instance for entities2
+ * \param [out] out_n_entity2         Number of selected entities2
+ * \param [out] out_selected_entity2  Local IDs of selected entities1 (1-based) (if NULL, assume all IDs from 1 to n_selected_entity1)
+ *
+ */
+void
+PDM_part_comm_graph_selected_entity1_to_selected_entity2
+(
+  int                     *n_selected_entity1,
+  int                    **selected_entity1,
+  int                    **entity1_entity2_idx,
+  int                    **entity1_entity2,
+  PDM_part_comm_graph_t   *pcg_entity2,
+  int                    **out_n_entity2,
+  int                   ***out_selected_entity2
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
