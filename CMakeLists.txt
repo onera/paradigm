@@ -219,7 +219,6 @@ endif()
 target_link_libraries(pdm
 PUBLIC
   MPI::MPI_CXX
-  m
 )
 
 if (PTSCOTCH_FOUND)
