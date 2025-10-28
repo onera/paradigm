@@ -1996,7 +1996,7 @@ PDM_part_comm_graph_selected_entity1_to_selected_entity2
   int                    **entity1_entity2_idx,
   int                    **entity1_entity2,
   PDM_part_comm_graph_t   *pcg_entity2,
-  int                    **out_n_entity2,
+  int                    **out_n_selected_entity2,
   int                   ***out_selected_entity2
 )
 {
@@ -2006,11 +2006,11 @@ PDM_part_comm_graph_selected_entity1_to_selected_entity2
 
   int n_part = pcg_entity2->n_part;
 
-  PDM_malloc(*out_n_entity2,        n_part, int  );
-  PDM_malloc(*out_selected_entity2, n_part, int *);
+  PDM_malloc(*out_n_selected_entity2, n_part, int  );
+  PDM_malloc(*out_selected_entity2,   n_part, int *);
 
-  int  *n_entity2        = *out_n_entity2;
-  int **selected_entity2 = *out_selected_entity2;
+  int  *n_selected_entity2 = *out_n_selected_entity2;
+  int **selected_entity2   = *out_selected_entity2;
 
 
   int **entity2_flag = NULL;
@@ -2049,7 +2049,7 @@ PDM_part_comm_graph_selected_entity1_to_selected_entity2
     /* Flag entities2 incident to *local* entities1 */
     entity2_flag[i_part] = PDM_array_zeros_int(n_entity2_ub);
 
-    n_entity2[i_part] = 0;
+    n_selected_entity2[i_part] = 0;
     PDM_malloc(selected_entity2[i_part], n_entity2_ub, int);
 
     for (int idx_entity1 = 0; idx_entity1 < n_selected_entity1[i_part]; idx_entity1++) {
@@ -2061,7 +2061,7 @@ PDM_part_comm_graph_selected_entity1_to_selected_entity2
 
         if (entity2_flag[i_part][i_entity2] == 0) {
           entity2_flag    [i_part][i_entity2] = 1;
-          selected_entity2[i_part][n_entity2[i_part]++] = i_entity2 + 1;
+          selected_entity2[i_part][n_selected_entity2[i_part]++] = i_entity2 + 1;
         }
       }
     } // End loop on entities1
@@ -2112,14 +2112,15 @@ PDM_part_comm_graph_selected_entity1_to_selected_entity2
     for (int idx_entity2 = 0; idx_entity2 < graph_entity2_n; idx_entity2++) {
       int i_entity2 = graph_entity2[4*idx_entity2] - 1;
       if (recv_flag[i_part][idx_entity2] && !entity2_flag[i_part][i_entity2]) {
-        selected_entity2[i_part][n_entity2[i_part]++] = i_entity2 + 1;
+        entity2_flag[i_part][i_entity2] = 1;
+        selected_entity2[i_part][n_selected_entity2[i_part]++] = i_entity2 + 1;
       }
     }
     PDM_free(send_flag   [i_part]);
     PDM_free(recv_flag   [i_part]);
     PDM_free(entity2_flag[i_part]);
 
-    PDM_realloc(selected_entity2[i_part], (*out_selected_entity2)[i_part], n_entity2[i_part], int);
+    PDM_realloc(selected_entity2[i_part], (*out_selected_entity2)[i_part], n_selected_entity2[i_part], int);
 
   } // End loop on parts
   PDM_free(send_flag);
