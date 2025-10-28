@@ -15,6 +15,7 @@
 
 #include "pdm.h"
 #include "pdm_mpi.h"
+#include "pdm_part_comm_graph.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -326,6 +327,25 @@ PDM_part_geom_cell_center
   int     **pedge_vtx,
   double  **pvtx_coord,
   double ***cell_center
+);
+
+// TODO: Doxygen
+void
+PDM_part_geom_vtx_normal_vtx
+(
+  PDM_MPI_Comm             comm,   // redundant with pcgs
+  int                      n_part, // redundant with pcgs
+  int                      dimension,
+  int                     *n_selected_elt,
+  int                    **selected_elt,
+  int                    **elt_vtx_idx,
+  int                    **elt_vtx,
+  PDM_part_comm_graph_t   *pcg_elt,
+  int                     *n_selected_vtx,
+  int                    **selected_vtx,
+  double                 **vtx_coord,
+  PDM_part_comm_graph_t   *pcg_vtx,
+  double                ***out_selected_vtx_normal
 );
 
 #ifdef __cplusplus

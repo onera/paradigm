@@ -10,6 +10,7 @@
 #include "pdm_logging.h"
 #include "pdm_mem_tool.h"
 #include "pdm_part_comm_graph.h"
+#include "pdm_part_geom.h"
 #include "pdm_printf.h"
 #include "pdm_vtk.h"
 #include "pdm.h"
@@ -183,6 +184,35 @@ main
                  mesh_path,
                 &pmn);
 
+  // Deform
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    int     n_vtx     = PDM_part_mesh_nodal_n_vtx_get    (pmn, i_part);
+    double *vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmn, i_part, PDM_OWNERSHIP_BAD_VALUE);
+
+    if (dim == 2) {
+      for (int i_vtx = 0; i_vtx < n_vtx; i_vtx++) {
+        double x = vtx_coord[3*i_vtx];
+        double y = vtx_coord[3*i_vtx+1];
+        vtx_coord[3*i_vtx  ] += sin(0.5*y);
+        vtx_coord[3*i_vtx+1] += cos(0.5*x);
+      }
+    }
+    else {
+      for (int i_vtx = 0; i_vtx < n_vtx; i_vtx++) {
+        double x = vtx_coord[3*i_vtx  ];
+        double y = vtx_coord[3*i_vtx+1];
+        double z = vtx_coord[3*i_vtx+2];
+
+        double a = 0.5*x;
+        double c = cos(a);
+        double s = sin(a);
+
+        vtx_coord[3*i_vtx+1] = c*y - s*z;
+        vtx_coord[3*i_vtx+2] = s*y + c*z;
+      }
+    }
+  }
+
   /* Select elements in group 1 of dimension dim-1 */
   PDM_geometry_kind_t geom_kind = PDM_part_mesh_nodal_principal_geom_kind_get(pmn) + 1;
   int i_group = PDM_part_mesh_nodal_n_group_get(pmn, geom_kind) - 1;
@@ -234,45 +264,92 @@ main
                                                           &n_selected_vtx,
                                                           &selected_vtx);
 
+  /* Get element Part Comm Graph */
+  PDM_mesh_entities_t entity_type = PDM_dimension_to_entity_type(dim-1);
+  PDM_part_comm_graph_t *pcg_elt = NULL;
+  PDM_part_mesh_nodal_part_comm_graph_get(pmn,
+                                          entity_type,
+                                          &pcg_elt,
+                                          PDM_OWNERSHIP_BAD_VALUE);
+  /* Compute vertex normals */
+  double **vtx_coord = NULL;
+  PDM_malloc(vtx_coord, n_part, double *);
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    vtx_coord[i_part] = PDM_part_mesh_nodal_vtx_coord_get(pmn, i_part, PDM_OWNERSHIP_BAD_VALUE);
+  }
+
+  double **selected_vtx_normal = NULL;
+  PDM_part_geom_vtx_normal_vtx(comm,
+                               n_part,
+                               dim-1,
+                               n_selected_elt,
+                               selected_elt,
+                               elt_vtx_idx,
+                               elt_vtx,
+                               pcg_elt,
+                               n_selected_vtx,
+                               selected_vtx,
+                               vtx_coord,
+                               pcg_vtx,
+                               &selected_vtx_normal);
+
   /* Visualize */
   if (visu) {
+
     PDM_part_mesh_nodal_dump_vtk(pmn, geom_kind-1, "pcg_group_vtx_mesh");
     PDM_part_mesh_nodal_dump_vtk(pmn, geom_kind,   "pcg_group_vtx_elt");
 
     for (int i_part = 0; i_part < n_part; i_part++) {
 
-      double *vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmn, i_part, PDM_OWNERSHIP_BAD_VALUE);
+      PDM_log_trace_array_int(selected_vtx[i_part], n_selected_vtx[i_part], "selected_vtx : ");
+
 
       double *coord = NULL;
       PDM_malloc(coord, n_selected_vtx[i_part] * 3, double);
       for (int i = 0; i < n_selected_vtx[i_part]; i++) {
         int i_vtx = selected_vtx[i_part][i] - 1;
-        memcpy(&coord[3*i], &vtx_coord[3*i_vtx], sizeof(double) * 3);
+        memcpy(&coord[3*i], &vtx_coord[i_part][3*i_vtx], sizeof(double) * 3);
       }
 
       char name[99];
       sprintf(name, "pcg_group_vtx_%d.vtk", i_rank*n_part+i_part);
-      PDM_vtk_write_point_cloud(name,
-                                n_selected_vtx[i_part],
-                                coord,
-                                NULL,
-                                selected_vtx[i_part]);
+
+      const char   *vector_name [] = {"normal"};
+      const double *vector_value[] = {selected_vtx_normal[i_part]};
+
+      PDM_vtk_write_point_cloud_with_field(name,
+                                           n_selected_vtx[i_part],
+                                           coord,
+                                           NULL,
+                                           selected_vtx[i_part],
+                                           0,
+                                           NULL,
+                                           NULL,
+                                           1,
+                                           vector_name,
+                                           vector_value,
+                                           0,
+                                           NULL,
+                                           NULL);
       PDM_free(coord);
     }
   }
 
   /* Finalize */
   for (int i_part = 0; i_part < n_part; i_part++) {
-    PDM_free(elt_vtx_idx [i_part]);
-    PDM_free(elt_vtx     [i_part]);
-    PDM_free(selected_vtx[i_part]);
+    PDM_free(elt_vtx_idx        [i_part]);
+    PDM_free(elt_vtx            [i_part]);
+    PDM_free(selected_vtx       [i_part]);
+    PDM_free(selected_vtx_normal[i_part]);
   }
+  PDM_free(vtx_coord     );
   PDM_free(elt_vtx_idx   );
   PDM_free(elt_vtx       );
   PDM_free(n_selected_vtx);
   PDM_free(  selected_vtx);
   PDM_free(n_selected_elt);
   PDM_free(  selected_elt);
+  PDM_free(selected_vtx_normal);
   PDM_part_mesh_nodal_free(pmn);
 
   PDM_MPI_Finalize();

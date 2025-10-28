@@ -10,8 +10,6 @@
  *  Local headers
  *----------------------------------------------------------------------------*/
 
-#include "pdm_part_geom.h"
-#include "pdm.h"
 #include "pdm_array.h"
 #include "pdm_block_to_part.h"
 #include "pdm_dgeom_elem.h"
@@ -19,10 +17,13 @@
 #include "pdm_error.h"
 #include "pdm_hilbert.h"
 #include "pdm_mem_tool.h"
+#include "pdm_part_comm_graph.h"
+#include "pdm_part_geom.h"
 #include "pdm_part_to_block.h"
 #include "pdm_partitioning_algorithm.h"
 #include "pdm_priv.h"
 #include "pdm_sort.h"
+#include "pdm.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -42,6 +43,66 @@ extern "C" {
 /*============================================================================
  * Private function definitions
  *============================================================================*/
+
+static inline void
+_compute_edge_normal
+(
+  int     elt_vtx_n,
+  int    *elt_vtx,
+  double *vtx_coord,
+  double *normal
+)
+{
+  if (elt_vtx_n != 2) { // TODO: remonter ce check pour le sortir de la boucle
+    PDM_error(__FILE__, __LINE__, 0, "1D elements with more than 2 vertices are not supported\n");
+  }
+
+  int i_vtx0 = elt_vtx[0] - 1;
+  int i_vtx1 = elt_vtx[1] - 1;
+
+  normal[0] = vtx_coord[3*i_vtx1+1] - vtx_coord[3*i_vtx0+1];
+  normal[1] = vtx_coord[3*i_vtx0  ] - vtx_coord[3*i_vtx1  ];
+  normal[2] = 0;
+}
+
+
+static inline void
+_compute_face_normal
+(
+  int     elt_vtx_n,
+  int    *elt_vtx,
+  double *vtx_coord,
+  double *normal
+)
+{
+  // TODO: faire une implem générique pour tous les polygones
+  if (elt_vtx_n != 3 && elt_vtx_n != 4) {
+    PDM_error(__FILE__, __LINE__, 0, "2D elements with less than 3 or more than 4 vertices are not *yet* supported\n");
+  }
+
+  for (int i = 0; i < 3; i++) {
+    normal[i] = 0;
+  }
+
+  for (int i_tri = 0; i_tri < elt_vtx_n-2; i_tri++) {
+    int i_vtx0 = elt_vtx[i_tri      ] - 1;
+    int i_vtx1 = elt_vtx[i_tri+1    ] - 1;
+    int i_vtx2 = elt_vtx[elt_vtx_n-1] - 1;
+
+    double vec_1[3], vec_2[3];
+    for (int i = 0; i < 3; i++) {
+      vec_1[i] = vtx_coord[3*i_vtx1+i] - vtx_coord[3*i_vtx0+i];
+      vec_2[i] = vtx_coord[3*i_vtx2+i] - vtx_coord[3*i_vtx0+i];
+    }
+
+    double tri_normal[3];
+    PDM_CROSS_PRODUCT(tri_normal, vec_1, vec_2);
+
+    for (int i = 0; i < 3; i++) {
+      normal[i] += 0.5*tri_normal[i];
+    }
+  }
+}
 
 /*=============================================================================
  * Public function definitions
@@ -1032,6 +1093,239 @@ PDM_part_geom_cell_center
   }
 
   *cell_center = entity_center;
+}
+
+
+void
+PDM_part_geom_vtx_normal_vtx
+(
+  PDM_MPI_Comm             comm,   // redundant with pcgs
+  int                      n_part, // redundant with pcgs
+  int                      dimension,
+  int                     *n_selected_elt,
+  int                    **selected_elt,
+  int                    **elt_vtx_idx,
+  int                    **elt_vtx,
+  PDM_part_comm_graph_t   *pcg_elt,
+  int                     *n_selected_vtx,
+  int                    **selected_vtx,
+  double                 **vtx_coord,
+  PDM_part_comm_graph_t   *pcg_vtx,
+  double                ***out_selected_vtx_normal
+)
+{
+  // TODO: Make sure both pcg have the same communicator and n_part
+  // => Add accessors to PDM_part_comm_graph?
+
+  int i_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+
+  /* Compute normals */
+  void (*_compute_elt_normal) (int, int *, double *, double *) = NULL;
+  if (dimension == 1) {
+    _compute_elt_normal = &_compute_edge_normal;
+  }
+  else if (dimension == 2) {
+    _compute_elt_normal = &_compute_face_normal;
+  }
+  else {
+    PDM_error(__FILE__, __LINE__, 0, "Invalid dimension (expected 1 or 2 but got %d)\n", dimension);
+  }
+
+
+  PDM_malloc(*out_selected_vtx_normal, n_part, double *);
+
+  int    **send_stride = NULL;
+  double **send_normal = NULL;
+  PDM_malloc(send_stride, n_part, int    *);
+  PDM_malloc(send_normal, n_part, double *);
+
+  int **all_vtx_to_selected_vtx = NULL;
+  PDM_malloc(all_vtx_to_selected_vtx, n_part, int *);
+
+  for (int i_part = 0; i_part < n_part; i_part++) {
+
+    (*out_selected_vtx_normal)[i_part] = PDM_array_zeros_double(n_selected_vtx[i_part] * 3);
+
+    double *vtx_normal = (*out_selected_vtx_normal)[i_part];
+
+    // Get indirection from all vertices to selected vertices
+    int n_elt = 0;
+    int n_vtx = 0;
+    if (selected_elt == NULL) {
+      // Account for all entities1
+      n_elt = n_selected_elt[i_part];
+      for (int idx_vtx = 0; idx_vtx < elt_vtx_idx[i_part][n_selected_elt[i_part]]; idx_vtx++) {
+        n_vtx = PDM_MAX(n_vtx, elt_vtx[i_part][idx_vtx]);
+      }
+    }
+    else {
+      // Only account for subset of entities1
+      for (int idx_elt = 0; idx_elt < n_selected_elt[i_part]; idx_elt++) {
+        int i_elt = selected_elt[i_part][idx_elt] - 1;
+        n_elt = PDM_MAX(n_elt, selected_elt[i_part][idx_elt]);
+        for (int idx_vtx = elt_vtx_idx[i_part][i_elt]; idx_vtx < elt_vtx_idx[i_part][i_elt+1]; idx_vtx++) {
+          n_vtx = PDM_MAX(n_vtx, elt_vtx[i_part][idx_vtx]);
+        }
+      }
+    }
+
+    for (int idx_vtx = 0; idx_vtx < n_selected_vtx[i_part]; idx_vtx++) {
+      n_vtx = PDM_MAX(n_vtx, selected_vtx[i_part][idx_vtx]);
+    }
+
+    all_vtx_to_selected_vtx[i_part] = PDM_array_const_int(n_vtx, -1);
+    for (int idx_vtx = 0; idx_vtx < n_selected_vtx[i_part]; idx_vtx++) {
+      int i_vtx = selected_vtx[i_part][idx_vtx] - 1;
+      all_vtx_to_selected_vtx[i_part][i_vtx] = idx_vtx;
+    }
+
+
+    int *elt_is_ghost = PDM_array_zeros_int(n_elt);
+    const int *graph_elt_owner = PDM_part_comm_graph_owner_get(pcg_elt, i_part);
+
+    int *graph_elt = NULL;
+    int n_graph_elt = PDM_part_comm_graph_entity_graph_get(pcg_elt,
+                                                           i_part,
+                                                          &graph_elt,
+                                                           PDM_OWNERSHIP_BAD_VALUE);
+
+    for (int idx_elt = 0; idx_elt < n_graph_elt; idx_elt++) {
+      if (!graph_elt_owner[idx_elt]) {
+        int i_elt = graph_elt[4*idx_elt] - 1;
+        if (i_elt < n_elt) {
+          elt_is_ghost[i_elt] = 1;
+        }
+      }
+    }
+
+
+    // Compute element normals and add contribution to incident vertices
+    // At this point, the normal vectors are scaled by the elements measure
+    for (int idx_elt = 0; idx_elt < n_selected_elt[i_part]; idx_elt++) {
+
+      int i_elt = (selected_elt == NULL) ? idx_elt : selected_elt[i_part][idx_elt] - 1;
+
+      // Ignore if ghost element
+      if (elt_is_ghost[i_elt]) {
+        continue;
+      }
+
+      double elt_normal[3];
+      _compute_elt_normal(elt_vtx_idx[i_part][i_elt+1] - elt_vtx_idx[i_part][i_elt],
+                          &elt_vtx[i_part][elt_vtx_idx[i_part][i_elt]],
+                          vtx_coord[i_part],
+                          elt_normal);
+
+      for (int idx_vtx = elt_vtx_idx[i_part][i_elt]; idx_vtx < elt_vtx_idx[i_part][i_elt+1]; idx_vtx++) {
+        int i_vtx = elt_vtx[i_part][idx_vtx] - 1;
+        int i_selected_vtx = all_vtx_to_selected_vtx[i_part][i_vtx];
+        if (i_selected_vtx < 0) {
+          PDM_error(__FILE__, __LINE__, 0, "Vertex %d of part %d is not selected (rank %d).\n", i_vtx, i_part, i_rank);
+        }
+
+        for (int i = 0; i < 3; i++) {
+          vtx_normal[3*i_selected_vtx+i] += elt_normal[i]; // TODO: scale by fraction of dual measure?
+        }
+      }
+    } // End loop on elements
+    PDM_free(elt_is_ghost);
+
+    // Prepare send buffer for inter-partition synchronization
+    int *graph_vtx = NULL;
+    int graph_vtx_n = PDM_part_comm_graph_entity_graph_get(pcg_vtx,
+                                                           i_part,
+                                                          &graph_vtx,
+                                                           PDM_OWNERSHIP_BAD_VALUE);
+
+    PDM_malloc(send_stride[i_part], graph_vtx_n,     int   );
+    PDM_malloc(send_normal[i_part], graph_vtx_n * 3, double);
+    int idx_write = 0;
+    for (int idx_vtx = 0; idx_vtx < graph_vtx_n; idx_vtx++) {
+      int i_vtx = graph_vtx[4*idx_vtx] - 1;
+      int i_selected_vtx = all_vtx_to_selected_vtx[i_part][i_vtx];
+      if (i_selected_vtx < 0) {
+        send_stride[i_part][idx_vtx] = 0;
+      }
+      else {
+        send_stride[i_part][idx_vtx] = 1;
+        for (int i = 0; i < 3; i++) {
+          send_normal[i_part][idx_write++] = vtx_normal[3*i_selected_vtx+i];
+        }
+      }
+    }
+
+  } // End loop on parts
+
+
+  /* Synchronize part boundaries */
+  int    **recv_stride = NULL;
+  double **recv_normal = NULL;
+  PDM_part_comm_graph_exch(pcg_vtx,
+                           sizeof(double) * 3,
+                           PDM_STRIDE_VAR_INTERLACED,
+                           1,
+                           send_stride,
+                (void  **) send_normal,
+                           &recv_stride,
+                (void ***) &recv_normal);
+
+
+  for (int i_part = 0; i_part < n_part; i_part++) {
+
+    double *vtx_normal = (*out_selected_vtx_normal)[i_part];
+
+    int *graph_vtx = NULL;
+    int graph_vtx_n = PDM_part_comm_graph_entity_graph_get(pcg_vtx,
+                                                           i_part,
+                                                          &graph_vtx,
+                                                           PDM_OWNERSHIP_BAD_VALUE);
+
+    // Add remote contributions
+    int idx_read = 0;
+    for (int idx_vtx = 0; idx_vtx < graph_vtx_n; idx_vtx++) {
+      int i_vtx = graph_vtx[4*idx_vtx] - 1;
+      int i_selected_vtx = all_vtx_to_selected_vtx[i_part][i_vtx];
+      if (i_selected_vtx >= 0) {
+        if (recv_stride[i_part][idx_vtx] != 1) {
+          PDM_error(__FILE__, __LINE__, 0, "Inconsistent group_vtx between ranks %d and %d, part %d and %d\n",
+                     i_rank, graph_vtx[4*idx_vtx+1],
+                     i_part, graph_vtx[4*idx_vtx+2]);
+        }
+        for (int i = 0; i < 3; i++) {
+          vtx_normal[3*i_selected_vtx+i] += recv_normal[i_part][idx_read++];
+        }
+      }
+    }
+
+    // Normalize (or don't if you want to be scaled by dual measure)
+    for (int i_vtx = 0; i_vtx < n_selected_vtx[i_part]; i_vtx++) {
+      double magnitude = PDM_MODULE(&vtx_normal[3*i_vtx]);
+      if (magnitude <= 0) {
+        PDM_error(__FILE__, __LINE__, 0, "Singular vertex %d in part %d of rank %d\n", selected_vtx[i_part][i_vtx], i_part, i_rank);
+      }
+      double inv_magnitude = 1./magnitude;
+      for (int i = 0; i < 3; i++) {
+        vtx_normal[3*i_vtx+i] *= inv_magnitude;
+      }
+    }
+
+    PDM_free(all_vtx_to_selected_vtx[i_part]);
+
+    PDM_free(send_stride[i_part]);
+    PDM_free(send_normal[i_part]);
+    PDM_free(recv_stride[i_part]);
+    PDM_free(recv_normal[i_part]);
+  } // End loop on parts
+
+
+  // Free memory
+  PDM_free(all_vtx_to_selected_vtx);
+
+  PDM_free(send_stride);
+  PDM_free(send_normal);
+  PDM_free(recv_stride);
+  PDM_free(recv_normal);
 }
 
 
