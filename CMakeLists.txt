@@ -211,9 +211,15 @@ foreach(subdir IN LISTS PDMA_SUBDIRS)
   )
 endforeach()
 
+find_library(MATH_LIBRARY m)
+if(MATH_LIBRARY)
+  target_link_libraries(pdm PRIVATE ${MATH_LIBRARY})
+endif()
+
 target_link_libraries(pdm
 PUBLIC
   MPI::MPI_CXX
+  m
 )
 
 if (PTSCOTCH_FOUND)
