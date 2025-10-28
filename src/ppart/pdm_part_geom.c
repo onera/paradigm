@@ -1152,6 +1152,7 @@ PDM_part_geom_vtx_normal_vtx
     // Get indirection from all vertices to selected vertices
     int n_elt = 0;
     int n_vtx = 0;
+    // This is a bit complicated for just getting the total number of vtx => just pass it as an input?
     if (selected_elt == NULL) {
       // Account for all entities1
       n_elt = n_selected_elt[i_part];
@@ -1172,6 +1173,16 @@ PDM_part_geom_vtx_normal_vtx
 
     for (int idx_vtx = 0; idx_vtx < n_selected_vtx[i_part]; idx_vtx++) {
       n_vtx = PDM_MAX(n_vtx, selected_vtx[i_part][idx_vtx]);
+    }
+
+    int *graph_vtx = NULL;
+    int n_graph_vtx = PDM_part_comm_graph_entity_graph_get(pcg_vtx,
+                                                           i_part,
+                                                          &graph_vtx,
+                                                           PDM_OWNERSHIP_BAD_VALUE);
+
+    for (int idx_vtx = 0; idx_vtx < n_graph_vtx; idx_vtx++) {
+      n_vtx = PDM_MAX(n_vtx, graph_vtx[4*idx_vtx]);
     }
 
     all_vtx_to_selected_vtx[i_part] = PDM_array_const_int(n_vtx, -1);
@@ -1232,16 +1243,10 @@ PDM_part_geom_vtx_normal_vtx
     PDM_free(elt_is_ghost);
 
     // Prepare send buffer for inter-partition synchronization
-    int *graph_vtx = NULL;
-    int graph_vtx_n = PDM_part_comm_graph_entity_graph_get(pcg_vtx,
-                                                           i_part,
-                                                          &graph_vtx,
-                                                           PDM_OWNERSHIP_BAD_VALUE);
-
-    PDM_malloc(send_stride[i_part], graph_vtx_n,     int   );
-    PDM_malloc(send_normal[i_part], graph_vtx_n * 3, double);
+    PDM_malloc(send_stride[i_part], n_graph_vtx,     int   );
+    PDM_malloc(send_normal[i_part], n_graph_vtx * 3, double);
     int idx_write = 0;
-    for (int idx_vtx = 0; idx_vtx < graph_vtx_n; idx_vtx++) {
+    for (int idx_vtx = 0; idx_vtx < n_graph_vtx; idx_vtx++) {
       int i_vtx = graph_vtx[4*idx_vtx] - 1;
       int i_selected_vtx = all_vtx_to_selected_vtx[i_part][i_vtx];
       if (i_selected_vtx < 0) {

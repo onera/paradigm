@@ -25,10 +25,10 @@ int exit_code
   PDM_printf
     ("\n"
      "  Usage: \n\n"
-     "  -mesh_path  Mesh path.\n\n"
-     "  -dim        Mesh dimension.\n\n"
-     "  -visu       Enable outputs.\n\n"
-     "  -h          This message.\n\n");
+     "  -in   <str>  Path to mesh file.\n\n"
+     "  -dim  <int>  Mesh dimension.\n\n"
+     "  -visu        Enable outputs.\n\n"
+     "  -h           This message.\n\n");
   exit(exit_code);
 }
 
@@ -52,7 +52,7 @@ _read_args
     if (strcmp(argv[i], "-h") == 0) {
       _usage(EXIT_SUCCESS);
     }
-    else if (strcmp(argv[i], "-mesh_path") == 0) {
+    else if (strcmp(argv[i], "-in") == 0) {
       i++;
       if (i >= argc)
         _usage(EXIT_FAILURE);
@@ -215,6 +215,14 @@ main
 
   /* Select elements in group 1 of dimension dim-1 */
   PDM_geometry_kind_t geom_kind = PDM_part_mesh_nodal_principal_geom_kind_get(pmn) + 1;
+
+  if (geom_kind == PDM_GEOMETRY_KIND_RIDGE) {
+    dim = 2;
+  }
+  else {
+    dim = 3;
+  }
+
   int i_group = PDM_part_mesh_nodal_n_group_get(pmn, geom_kind) - 1;
 
   int  *n_selected_elt = NULL;
@@ -300,9 +308,6 @@ main
     PDM_part_mesh_nodal_dump_vtk(pmn, geom_kind,   "pcg_group_vtx_elt");
 
     for (int i_part = 0; i_part < n_part; i_part++) {
-
-      PDM_log_trace_array_int(selected_vtx[i_part], n_selected_vtx[i_part], "selected_vtx : ");
-
 
       double *coord = NULL;
       PDM_malloc(coord, n_selected_vtx[i_part] * 3, double);
