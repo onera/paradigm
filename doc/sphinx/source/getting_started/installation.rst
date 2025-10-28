@@ -61,7 +61,7 @@ Defines the optimization and debugging level.
 
     CMAKE_BUILD_TYPE=<TYPE> (default: Release)
 
-Common options are: :code:`None`, :code:`Debug`, :code:`Release`, :code:`RelWithDebInfo`, :code:`MinSizeRel`.
+Common options are: :code:`Debug`, :code:`Release`, :code:`RelWithDebInfo`, :code:`MinSizeRel`, :code:`Sanitize`.
 
 **Installation prefix**
 
