@@ -35,13 +35,13 @@ set_source_files_properties(${_pyx_file} PROPERTIES CYTHON_IS_CXX FALSE)
 cython_add_module (Pypdm
                    PYX_SOURCES "${_pyx_file}"
                    INCLUDE_DIRECTORIES ${include_dirs}
-                   DEPENDS ${SOURCE_PXI} pdm_SHARED)
+                   DEPENDS ${SOURCE_PXI} pdm_shared)
 
 set_target_properties(Pypdm PROPERTIES PREFIX "") # do not prefix by lib
 
 set_target_properties(Pypdm PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/")
 
-target_link_libraries(Pypdm PRIVATE pdm_SHARED)
+target_link_libraries(Pypdm PRIVATE pdm_shared)
 
 set (SITE_PACKAGES_PDM "${CMAKE_INSTALL_PREFIX}/lib/python${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}/site-packages/Pypdm")
 

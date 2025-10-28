@@ -266,25 +266,27 @@ endif()
 
 foreach(lib_type IN LISTS LIB_TYPES)
 
-  add_library(pdm_${lib_type} ${lib_type} $<TARGET_OBJECTS:pdm>)
-  add_dependencies(pdm_${lib_type} pdm)
-  set_target_properties(pdm_${lib_type} PROPERTIES OUTPUT_NAME "pdm")
+  string(TOLOWER "${lib_type}" lib_type_lower)
 
-  target_include_directories(pdm_${lib_type} PUBLIC ${PDM_INC})
-  target_link_libraries(pdm_${lib_type}      PUBLIC ${PDM_LIB})
+  add_library(pdm_${lib_type_lower} ${lib_type} $<TARGET_OBJECTS:pdm>)
+  add_dependencies(pdm_${lib_type_lower} pdm)
+  set_target_properties(pdm_${lib_type_lower} PROPERTIES OUTPUT_NAME "pdm")
+
+  target_include_directories(pdm_${lib_type_lower} PUBLIC ${PDM_INC})
+  target_link_libraries(pdm_${lib_type_lower}      PUBLIC ${PDM_LIB})
 
   if (PDM_ENABLE_Fortran)
-    add_library(pdmf_${lib_type} ${lib_type} $<TARGET_OBJECTS:pdmf>)
-    add_dependencies(pdmf_${lib_type} pdmf)
-    set_target_properties(pdmf_${lib_type} PROPERTIES OUTPUT_NAME "pdmf")
+    add_library(pdmf_${lib_type_lower} ${lib_type} $<TARGET_OBJECTS:pdmf>)
+    add_dependencies(pdmf_${lib_type_lower} pdmf)
+    set_target_properties(pdmf_${lib_type_lower} PROPERTIES OUTPUT_NAME "pdmf")
 
-    target_include_directories(pdmf_${lib_type} PUBLIC ${PDMF_INC})
-    target_link_libraries(pdmf_${lib_type}      PUBLIC ${PDMF_LIB})
+    target_include_directories(pdmf_${lib_type_lower} PUBLIC ${PDMF_INC})
+    target_link_libraries(pdmf_${lib_type_lower}      PUBLIC ${PDMF_LIB})
 
-    add_dependencies(pdmf_${lib_type} pdm_${lib_type})
-    target_link_libraries(pdmf_${lib_type}
+    add_dependencies(pdmf_${lib_type_lower} pdm_${lib_type_lower})
+    target_link_libraries(pdmf_${lib_type_lower}
       PUBLIC
-        pdm_${lib_type}
+        pdm_${lib_type_lower}
     )
   endif()
 
@@ -381,19 +383,19 @@ endif()
 set (_targets "")
 if (PDM_ENABLE_Fortran)
   if (PDM_ENABLE_STATIC)
-    list (APPEND _targets pdmf_STATIC)
+    list (APPEND _targets pdmf_static)
   endif()
   if (PDM_ENABLE_SHARED)
-    list (APPEND _targets pdmf_SHARED)
+    list (APPEND _targets pdmf_shared)
   endif()
 endif()
 
 if (PDM_ENABLE_STATIC)
-  list (APPEND _targets pdm_STATIC)
+  list (APPEND _targets pdm_static)
 endif()
 
 if (PDM_ENABLE_SHARED)
-  list (APPEND _targets pdm_SHARED)
+  list (APPEND _targets pdm_shared)
 endif()
 
 foreach(_target IN ITEMS ${_targets})

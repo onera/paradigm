@@ -17,15 +17,15 @@ file (COPY ${CMAKE_CURRENT_SOURCE_DIR}/utils DESTINATION ${CMAKE_CURRENT_BINARY_
 
 
 if (PDM_ENABLE_SHARED)
-    set(JUPYTEXT_DEP pdm_SHARED)
+    set(JUPYTEXT_DEP pdm_shared)
 else ()
-    set(JUPYTEXT_DEP pdm_STATIC)
+    set(JUPYTEXT_DEP pdm_static)
 endif()
 if(PDM_ENABLE_Fortran)
   if (PDM_ENABLE_SHARED)
-      set(JUPYTEXT_DEP ${JUPYTEXT_DEP} pdmf_SHARED)
+      set(JUPYTEXT_DEP ${JUPYTEXT_DEP} pdmf_shared)
   else ()
-      set(JUPYTEXT_DEP ${JUPYTEXT_DEP} pdmf_STATIC)
+      set(JUPYTEXT_DEP ${JUPYTEXT_DEP} pdmf_static)
   endif()
 endif()
 
