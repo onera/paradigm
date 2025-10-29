@@ -700,35 +700,7 @@ _set_mesh_nodal
                                               cell_face    [ipart],
                                               cell_ln_to_gn[ipart],
                                               PDM_OWNERSHIP_KEEP);
-      // PDM_part_mesh_nodal_section_poly3d_set(pmn,
-      //                                        i_section,
-      //                                        ipart,
-      //                                        n_cell       [ipart],
-      //                                        n_face       [ipart],
-      //                                        face_vtx_idx [ipart],
-      //                                        face_vtx     [ipart],
-      //                                        face_ln_to_gn[ipart],
-      //                                        cell_face_idx[ipart],
-      //                                        cell_face    [ipart],
-      //                                        cell_ln_to_gn[ipart],
-      //                                        NULL,
-      //                                        NULL,
-      //                                        PDM_OWNERSHIP_KEEP);
     }
-
-    // PDM_part_mesh_nodal_elmts_t *pmne = PDM_part_mesh_nodal_elmts_create_from_part3d(n_part,
-    //                                                           (const int          *) n_cell,
-    //                                                           (const int          *) n_face,
-    //                                                           (const int         **) face_vtx_idx,
-    //                                                           (const int         **) face_vtx,
-    //                                                           (const PDM_g_num_t **) face_ln_to_gn,
-    //                                                           (const int         **) cell_face_idx,
-    //                                                           (const int         **) cell_face,
-    //                                                           (const double      **) vtx_coord,
-    //                                                           (const PDM_g_num_t **) cell_ln_to_gn,
-    //                                                                                  mi->comm);
-
-    // PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmne, PDM_OWNERSHIP_KEEP);
 
     PDM_free(n_cell       );
     PDM_free(n_face       );
@@ -741,66 +713,7 @@ _set_mesh_nodal
     PDM_free(cell_ln_to_gn);
   }
 
-  // if (1) {
-  //   /* Fix orientation if necessary */
-  //   PDM_part_mesh_nodal_elmts_t *pmne = pmn->volumic;
-
-  //   int n_part = PDM_part_mesh_nodal_n_part_get(pmn);
-
-  //   int n_section = PDM_part_mesh_nodal_elmts_n_section_get(pmne);
-
-  //   int *sections_id = PDM_part_mesh_nodal_elmts_sections_id_get(pmne);
-
-  //   for (int ipart = 0; ipart < n_part; ipart++) {
-
-  //     double *vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmn, ipart);
-
-  //     for (int isection = 0; isection < n_section; isection++) {
-  //       int id_section = sections_id[isection];
-
-  //       PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(pmne,
-  //                                                                               id_section);
-
-  //       int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne,
-  //                                                               id_section,
-  //                                                               ipart);
-
-  //       double *volume;
-  //       PDM_malloc(volume, n_elt, double);
-  //       double *center;
-  //       PDM_malloc(center, n_elt * 3, double);
-
-  //       switch (t_elt) {
-
-  //         case PDM_MESH_NODAL_PYRAMID5: {
-  //           int         *connec;
-  //           PDM_g_num_t *numabs;
-  //           int         *parent_num;
-  //           PDM_g_num_t *parent_entity_g_num;
-  //           PDM_part_mesh_nodal_elmts_section_std_get(pmne,
-  //                                                     id_section,
-  //                                                     ipart,
-  //                                                     &connec,
-  //                                                     &numabs,
-  //                                                     &parent_num,
-  //                                                     &parent_entity_g_num);
-
-  //           PDM_geom_e
-
-  //           break;
-  //         }
-
-  //         default:
-  //           break;
-  //       }
-
-  //     }
-  //   }
-  // }
-
-
-
-  if (1 == 1) {
+  if (0 == 1) {
     char filename[999];
     sprintf(filename, "check_pmn_%d", i_mesh);
     PDM_part_mesh_nodal_dump_vtk(pmn, PDM_GEOMETRY_KIND_VOLUMIC, filename);
