@@ -1,77 +1,10 @@
 # --------------------------
 # Construction des Tests
 # --------------------------
-
-if (MPI_C_COMPILER)
-    set(CMAKE_C_COMPILER ${MPI_C_COMPILER})
-endif()
-
-if (MPI_CXX_COMPILER)
-  set(CMAKE_CXX_COMPILER ${MPI_CXX_COMPILER})
-endif()
-
-if (MPI_Fortran_COMPILER)
-    set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
-endif()
-
-unset(LINK_LIBRARIES)
-
-if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
-  if (PDM_ENABLE_STATIC)
-    if (PDM_ENABLE_EXTENSION_PDMA)
-      list(APPEND LINK_LIBRARIES
-         pdmaf_static)
-    endif()
-    list(APPEND LINK_LIBRARIES pdmf_static)
-    if (PDM_ENABLE_EXTENSION_PDMA)
-      list(APPEND LINK_LIBRARIES
-         pdmaf_static)
-    endif()
-  else ()
-    if (PDM_ENABLE_EXTENSION_PDMA)
-      list(APPEND LINK_LIBRARIES
-         pdmaf_shared)
-    endif()
-    list(APPEND LINK_LIBRARIES pdmf_shared)
-    if (PDM_ENABLE_EXTENSION_PDMA)
-      list(APPEND LINK_LIBRARIES
-         pdmaf_shared)
-    endif()
-  endif()
-endif()
-
-if (PDM_ENABLE_STATIC)
- if (PDM_ENABLE_EXTENSION_PDMA)
-  list(APPEND LINK_LIBRARIES
-       pdma_static)
- endif()
- list(APPEND LINK_LIBRARIES
-      pdm_static
-      pdm_mpi_static
-      ${COMMON_LIBRARIES})
- if (PDM_ENABLE_EXTENSION_PDMA)
-  list(APPEND LINK_LIBRARIES
-       pdma_static)
- endif()
-else ()
- list(APPEND LINK_LIBRARIES
-      pdm_shared
-      pdm_mpi_shared ${COMMON_LIBRARIES})
- if (PDM_ENABLE_EXTENSION_PDMA)
-  list(APPEND LINK_LIBRARIES
-       pdma_shared)
- endif()
-endif()
-
-if (OPENMP_FOUND)
-  list(APPEND LINK_LIBRARIES ${OpenMP_C_FLAGS})
-endif()
-
-if (PDM_ENABLE_CUDA)
-  list(APPEND LINK_LIBRARIES pdm_gpu)
-endif()
-
-get_target_property(PDM_INC pdm INCLUDE_DIRECTORIES)
+# > A gerer, attention a Robin
+# if (PDM_ENABLE_CUDA)
+#   list(APPEND LINK_LIBRARIES pdm_gpu)
+# endif()
 
 file (COPY ${CMAKE_CURRENT_SOURCE_DIR}/meshes DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 if (PDM_ENABLE_EXTENSION_PDMA)
@@ -112,9 +45,9 @@ if(PDM_ENABLE_UNIT_TEST)
   test_cpp_unit_create(pdm_t_unit_test ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRANK SOURCES ${__test_files} )
 endif()
 
-if (PDM_HAVE_PARMETIS OR PDM_HAVE_PTSCOTCH)
+if (PARMETIS_FOUND OR PTSCOTCH_FOUND)
   test_c_create (pdm_t_plane_agglo 2  PDM_LIST_TEST PDM_LIST_NRANK)
-  if (PDM_HAVE_PARMETIS)
+  if (PARMETIS_FOUND)
     test_c_create (pdm_t_partitioning_dcube ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRANK)
     test_c_create (pdm_t_part_dcube_agglo ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRANK)
   endif()
@@ -310,7 +243,7 @@ if (PDM_ENABLE_PYTHON_BINDINGS)
    endif()
 endif()
 
-if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
+if(PDM_ENABLE_Fortran)
   test_fortran_create (pdm_t_closest_points_f             2 PDM_LIST_TEST PDM_LIST_NRANK)
   test_fortran_create (pdm_t_mesh_location_f              1 PDM_LIST_TEST PDM_LIST_NRANK)
   test_fortran_create (pdm_t_part_to_block_f              1 PDM_LIST_TEST PDM_LIST_NRANK)
@@ -342,7 +275,8 @@ if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
   test_fortran_create (pdm_t_isosurface_nodal_f           1 PDM_LIST_TEST PDM_LIST_NRANK)
 endif()
 
+
 add_subdirectory(tutorial)
 
-set (PDM_LIST_TEST ${PDM_LIST_TEST} PARENT_SCOPE )
+set (PDM_LIST_TEST  ${PDM_LIST_TEST}  PARENT_SCOPE )
 set (PDM_LIST_NRANK ${PDM_LIST_NRANK} PARENT_SCOPE )

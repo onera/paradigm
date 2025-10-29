@@ -22,9 +22,9 @@
 program testf
 
   use pdm
-#ifdef PDM_HAVE_FORTRAN_MPI_MODULE  
+#ifdef PDM_HAVE_FORTRAN_MPI_MODULE
   use mpi
-#endif  
+#endif
   use pdm_pointer_array
   use pdm_block_to_part
   use iso_c_binding
@@ -32,9 +32,9 @@ program testf
 
   implicit none
 
-#ifndef PDM_HAVE_FORTRAN_MPI_MODULE  
+#ifndef PDM_HAVE_FORTRAN_MPI_MODULE
   include "mpif.h"
-#endif  
+#endif
 
   !-----------------------------------------------------------
   integer, parameter                    :: comm = MPI_COMM_WORLD

@@ -75,7 +75,7 @@ if(PDM_ENABLE_DOC)
                        DEPENDS ${DOXYGEN_DEP} # NB : trying to do documentation after module generation
                        VERBATIM)
 
-    add_custom_target(doxygen ALL DEPENDS ${DOXYGEN_INDEX_FILE} pdm)
+    add_custom_target(doxygen ALL DEPENDS ${DOXYGEN_INDEX_FILE})
 
 
     #------------------------------------------------------------------------------
