@@ -6,6 +6,7 @@ cdef extern from "pdm_part_mesh_nodal.h":
       pass
     ctypedef struct PDM_part_mesh_nodal_elmts_t:
       pass
+
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
     PDM_part_mesh_nodal_t* PDM_part_mesh_nodal_create(int          mesh_dimension,
@@ -115,9 +116,19 @@ cdef extern from "pdm_part_mesh_nodal.h":
 
     void PDM_part_mesh_nodal_free( PDM_part_mesh_nodal_t* pmn);
 
+    void PDM_part_mesh_nodal_part_comm_graph_get(
+          PDM_part_mesh_nodal_t   *pmn,
+          PDM_mesh_entities_t      entity_type,
+          PDM_part_comm_graph_t  **pcg,
+          PDM_ownership_t          ownership);
+
 cdef extern from "pdm_part_mesh_nodal_geom.h":
     void PDM_part_mesh_nodal_dual_volume_compute(PDM_part_mesh_nodal_t   *pmn,
                                                  double                ***dual_vol);
+
+cdef extern from "pdm_part_comm_graph.h":
+  ctypedef struct PDM_part_comm_graph_t:
+    pass
 
 # ------------------------------------------------------------------
 cdef class PartMeshNodal:
@@ -147,6 +158,7 @@ cdef class PartMeshNodal:
         self.keep_alive = []
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
         self.n_rank = comm.Get_size()
+        self.py_comm = comm
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -158,6 +170,34 @@ cdef class PartMeshNodal:
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
         self.pmn = PDM_part_mesh_nodal_create(mesh_dimension, n_part, PDMC)
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
+
+    def part_comm_graph_get(self,
+                            PDM_mesh_entities_t entity_type):
+        """
+        part_comm_graph_get(entity_type)
+
+        Returns a \ref PDM_part_comm_graph_t python object
+
+        Parameters:
+          entity_type (PDM_mesh_entities_t) : type of entity (vertex, cell, edge)
+        """
+
+        cdef PDM_part_comm_graph_t *pcg
+
+
+
+        PDM_part_mesh_nodal_part_comm_graph_get(
+          self.pmn,
+          entity_type,
+          &pcg,
+          PDM_OWNERSHIP_USER # FIXME: doesn't compile with BAD_VALUE
+        )
+
+        py_caps = PyCapsule_New(&pcg, NULL, NULL)
+        # self.ptp_objects[entity_type] = PartCommGraphCapsule(py_caps, self.py_comm) # The free is inside the class
+        # return self.ptp_objects[entity_type]
+        return PartCommGraphCapsule(py_caps, self.py_comm) # The free is inside the class
+
 
     def set_coordinates(self,
                         id_part,
