@@ -261,3 +261,99 @@ MPI_TEST_CASE("[pdm_part_geom] vtx normals from edges", 2) {
   PDM_part_comm_graph_free(pcg_edge);
   PDM_part_comm_graph_free(pcg_vtx);
 }
+
+
+MPI_TEST_CASE("[pdm_part_geom] vtx normals from faces", 1) {
+
+  /**
+   *  2 x-------x 4
+   *    |       |
+   *    |       |
+   *  1 x-------x 3
+   *
+   *   in XY plane, but rotated by 45° around Z
+   *
+   */
+
+  PDM_MPI_Comm comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
+
+  int i_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+
+  int n_part = 1;
+  int dimension = 2;
+
+  // > Mesh definition
+  int    n_face = 1;
+  int    n_vtx  = 4;
+  std::vector<int   > vface_vtx_idx = {0,4};
+  std::vector<int   > vface_vtx     = {1,3,4,2};
+  std::vector<double> vcoord        = {0., 0., 0.,
+                                       1., 1., 0.,
+                                       0., 0., 1.,
+                                       1., 1., 1.};
+
+  // int    face_vtx_idx[2] = {0,4};
+  int    *face_vtx_idx = vface_vtx_idx.data();
+  int    *face_vtx     = vface_vtx    .data();
+  double *coord        = vcoord       .data();
+
+  // > Part comm graph definition
+  int  n_face_graph = 0;
+  int *face_graph   = NULL;
+  PDM_part_comm_graph_t *pcg_face = PDM_part_comm_graph_create(
+    n_part,
+   &n_face_graph,
+   &face_graph,
+    PDM_OWNERSHIP_USER,
+    comm
+  );
+
+  int  n_vtx_graph = 0;
+  int *vtx_graph   = NULL;
+  PDM_part_comm_graph_t *pcg_vtx = PDM_part_comm_graph_create(
+    n_part,
+   &n_vtx_graph,
+   &vtx_graph,
+    PDM_OWNERSHIP_USER,
+    comm
+  );
+
+
+
+  int n_selected_face = n_face;
+  int n_selected_vtx  = n_vtx;
+  double **vtx_normal = NULL;
+  PDM_part_geom_vtx_normal_compute(
+    comm,
+    n_part,
+    dimension,
+    &n_selected_face,
+    NULL,
+   &face_vtx_idx,
+   &face_vtx,
+    pcg_face,
+   &n_selected_vtx,
+    NULL,
+   &coord,
+    pcg_vtx,
+   &vtx_normal
+  );
+
+  std::vector<double> expected_vtx_normal = {-0.707107, 0.707107, 0.,
+                                             -0.707107, 0.707107, 0.,
+                                             -0.707107, 0.707107, 0.,
+                                             -0.707107, 0.707107, 0.};
+
+  for (int i_vtx=0; i_vtx<n_selected_vtx; ++i_vtx) {
+    CHECK(vtx_normal[0][3*i_vtx  ] == doctest::Approx(expected_vtx_normal[3*i_vtx  ]).epsilon(0.00001));
+    CHECK(vtx_normal[0][3*i_vtx+1] == doctest::Approx(expected_vtx_normal[3*i_vtx+1]).epsilon(0.00001));
+    CHECK(vtx_normal[0][3*i_vtx+2] == doctest::Approx(expected_vtx_normal[3*i_vtx+2]).epsilon(0.00001));
+  }
+
+  free(vtx_normal[0]);
+  free(vtx_normal);
+
+  PDM_part_comm_graph_free(pcg_face);
+  PDM_part_comm_graph_free(pcg_vtx);
+}
