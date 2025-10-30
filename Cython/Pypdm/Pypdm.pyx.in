@@ -16,11 +16,7 @@ cimport numpy as NPY
 
 from mpi4py cimport MPI
 
-# ctypedef MPI.Datatype MPI_Datatype
-# ctypedef MPI.Op MPI_Op
-
 # -----------------------------------------------------------------
-
 cdef extern from "pdm_config.h":
     # trick from: https://stackoverflow.com/questions/5697479/how-can-a-defined-c-value-be-exposed-to-python-in-a-cython-module
     cdef int _PDM_VERSION_MAKOR "PDM_VERSION_MAJOR"
