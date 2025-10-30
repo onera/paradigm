@@ -72,14 +72,16 @@ cdef class PartCommGraphCapsule:
 
   """
   cdef PDM_part_comm_graph_t *pcg
-  cdef MPI.Comm               py_comm
   cdef dict                   request_data
 
 
-  def __cinit__(self, object caps, MPI.Comm comm):
+  def __cinit__(self, object caps):
     self.pcg      = <PDM_part_comm_graph_t *> PyCapsule_GetPointer(caps, NULL);
     self.request_data = dict()
 
+  def get_entity_graph(self, int i_part):
+
+    return entity_graph_get(self, i_part)
 
 # ========================================================================
 # ------------------------------------------------------------------------
