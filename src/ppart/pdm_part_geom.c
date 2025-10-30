@@ -1178,8 +1178,22 @@ PDM_part_geom_vtx_normal_compute
       }
     }
 
-    for (int idx_vtx = 0; idx_vtx < n_selected_vtx[i_part]; idx_vtx++) {
-      n_vtx = PDM_MAX(n_vtx, selected_vtx[i_part][idx_vtx]);
+    if (selected_vtx == NULL) {
+      if (n_selected_vtx[i_part] < n_vtx) {
+        PDM_error(
+          __FILE__, __LINE__, 0,
+          "Element connectivity has vtx id > n_selected_vtx (%d > %d) for partition n°%d\n",
+          n_vtx,
+          n_selected_vtx[i_part],
+          i_part
+        );
+      }
+      n_vtx = PDM_MAX(n_vtx, n_selected_vtx[i_part]);
+    }
+    else {
+      for (int idx_vtx = 0; idx_vtx < n_selected_vtx[i_part]; idx_vtx++) {
+        n_vtx = PDM_MAX(n_vtx, selected_vtx[i_part][idx_vtx]);
+      }
     }
 
     int *graph_vtx = NULL;
@@ -1194,7 +1208,7 @@ PDM_part_geom_vtx_normal_compute
 
     all_vtx_to_selected_vtx[i_part] = PDM_array_const_int(n_vtx, -1);
     for (int idx_vtx = 0; idx_vtx < n_selected_vtx[i_part]; idx_vtx++) {
-      int i_vtx = selected_vtx[i_part][idx_vtx] - 1;
+      int i_vtx = (selected_vtx == NULL) ? idx_vtx : selected_vtx[i_part][idx_vtx] - 1;
       all_vtx_to_selected_vtx[i_part][i_vtx] = idx_vtx;
     }
 
@@ -1239,11 +1253,13 @@ PDM_part_geom_vtx_normal_compute
         int i_vtx = elt_vtx[i_part][idx_vtx] - 1;
         int i_selected_vtx = all_vtx_to_selected_vtx[i_part][i_vtx];
         if (i_selected_vtx < 0) {
-          PDM_error(__FILE__, __LINE__, 0, "Vertex %d of part %d is not selected (rank %d).\n", i_vtx, i_part, i_rank);
+          // PDM_error(__FILE__, __LINE__, 0, "Vertex %d of part %d is not selected (rank %d).\n", i_vtx, i_part, i_rank); //juste ignore it ?
         }
+        else {
 
-        for (int i = 0; i < 3; i++) {
-          vtx_normal[3*i_selected_vtx+i] += elt_normal[i]; // TODO: scale by fraction of dual measure?
+          for (int i = 0; i < 3; i++) {
+            vtx_normal[3*i_selected_vtx+i] += elt_normal[i]; // TODO: scale by fraction of dual measure?
+          }
         }
       }
     } // End loop on elements
@@ -1313,12 +1329,14 @@ PDM_part_geom_vtx_normal_compute
     // Normalize (or don't if you want to be scaled by dual measure)
     for (int i_vtx = 0; i_vtx < n_selected_vtx[i_part]; i_vtx++) {
       double magnitude = PDM_MODULE(&vtx_normal[3*i_vtx]);
-      if (magnitude <= 0) {
-        PDM_error(__FILE__, __LINE__, 0, "Singular vertex %d in part %d of rank %d\n", selected_vtx[i_part][i_vtx], i_part, i_rank);
+      if (magnitude <= 0) { // can happen if vertice is not referenced by edge
+        // PDM_error(__FILE__, __LINE__, 0, "Singular vertex %d in part %d of rank %d\n", selected_vtx[i_part][i_vtx], i_part, i_rank);
       }
-      double inv_magnitude = 1./magnitude;
-      for (int i = 0; i < 3; i++) {
-        vtx_normal[3*i_vtx+i] *= inv_magnitude;
+      else {
+        double inv_magnitude = 1./magnitude;
+        for (int i = 0; i < 3; i++) {
+          vtx_normal[3*i_vtx+i] *= inv_magnitude;
+        }
       }
     }
 

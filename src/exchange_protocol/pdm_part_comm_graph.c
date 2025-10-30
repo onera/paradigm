@@ -446,7 +446,7 @@ _create
     }
   }
 
-  pcg->nuplet_size    = nuplet_size;
+  pcg->nuplet_size = nuplet_size;
   PDM_malloc(pcg->pentity_nuplet, n_part, int *);
   if(pentity_nuplet != NULL) {
     for (int i_part = 0; i_part < n_part; i_part++) {

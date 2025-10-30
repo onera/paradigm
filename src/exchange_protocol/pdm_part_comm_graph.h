@@ -327,7 +327,6 @@ PDM_part_comm_graph_entity_nuplet_get
   PDM_ownership_t         ownership
 );
 
-
 /**
  * \brief Get selected of entities2 from list selected entities1
  *
