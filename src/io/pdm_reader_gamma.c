@@ -404,7 +404,6 @@ PDM_reader_gamma_dmesh_nodal
       }
 
       // ---- Fix orientation for quads
-      // ---- TODO : Add volume check to reorient if needed
       int n_quad_flipped = 0;
 
       for (PDM_g_num_t i=0; i<gn_quad; i++) {
