@@ -287,19 +287,19 @@ main
   }
 
   double **selected_vtx_normal = NULL;
-  PDM_part_geom_vtx_normal_vtx(comm,
-                               n_part,
-                               dim-1,
-                               n_selected_elt,
-                               selected_elt,
-                               elt_vtx_idx,
-                               elt_vtx,
-                               pcg_elt,
-                               n_selected_vtx,
-                               selected_vtx,
-                               vtx_coord,
-                               pcg_vtx,
-                               &selected_vtx_normal);
+  PDM_part_geom_vtx_normal_compute(comm,
+                                   n_part,
+                                   dim-1,
+                                   n_selected_elt,
+                                   selected_elt,
+                                   elt_vtx_idx,
+                                   elt_vtx,
+                                   pcg_elt,
+                                   n_selected_vtx,
+                                   selected_vtx,
+                                   vtx_coord,
+                                   pcg_vtx,
+                                   &selected_vtx_normal);
 
   /* Visualize */
   if (visu) {

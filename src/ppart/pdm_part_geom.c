@@ -1097,7 +1097,7 @@ PDM_part_geom_cell_center
 
 
 void
-PDM_part_geom_vtx_normal_vtx
+PDM_part_geom_vtx_normal_compute
 (
   PDM_MPI_Comm             comm,   // redundant with pcgs
   int                      n_part, // redundant with pcgs
