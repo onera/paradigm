@@ -2323,6 +2323,37 @@ REAL PDM_predicate_orient2d
 }
 
 
+/**
+ *
+ * \brief Determine the orientation of quad ABCD.
+ *
+ * This function assumes that all points lie in the z=0 plane.
+ *
+ * \param [in]   pa   Point A
+ * \param [in]   pb   Point B
+ * \param [in]   pc   Point C
+ * \param [in]   pd   Point D
+ *
+ * \return Twice the signed area of quad ABCD
+ *
+ */
+
+REAL PDM_predicate_orient2d_quad
+(
+  REAL *pa,
+  REAL *pb,
+  REAL *pc,
+  REAL *pd
+)
+{
+  // ---- We break the quad into two sub triangle
+  REAL surf1 = PDM_predicate_orient2d(pa, pb, pc);
+  REAL surf2 = PDM_predicate_orient2d(pa, pc, pd);
+
+  return surf1 + surf2;
+}
+
+
 
 /**
  *

@@ -398,22 +398,41 @@ PDM_reader_gamma_dmesh_nodal
           gtria_vtx[3*i+1] = tmp;
         }
       }
-      // ---- Fix orientation for quads
-      // ---- TODO : Add volume check to reorient if needed
-      for (PDM_g_num_t i=0; i<gn_quad; i++) {
-        PDM_g_num_t *tv  = gquad_vtx + 4*i;
-        PDM_g_num_t  tmp = tv[0];
-
-        gquad_vtx[4*i  ] = tv[3];
-        gquad_vtx[4*i+3] = tmp;
-
-        tmp              = tv[1];
-        gquad_vtx[4*i+1] = gquad_vtx[4*i+2];
-        gquad_vtx[4*i+2] = tmp; 
-      }
 
       if (0) {
         printf("flipped %d triangles / "PDM_FMT_G_NUM"\n", n_tria_flipped, gn_tria);
+      }
+
+      // ---- Fix orientation for quads
+      // ---- TODO : Add volume check to reorient if needed
+      int n_quad_flipped = 0;
+
+      for (PDM_g_num_t i=0; i<gn_quad; i++) {
+        PDM_g_num_t *tv = gquad_vtx + 4*i;
+
+        double surf = PDM_predicate_orient2d_quad(gvtx_coord + 3*(tv[0] - 1),
+                                                  gvtx_coord + 3*(tv[1] - 1),
+                                                  gvtx_coord + 3*(tv[2] - 1),
+                                                  gvtx_coord + 3*(tv[3] - 1)
+        );
+
+        if (surf < 0) {
+          n_quad_flipped++;
+
+          PDM_g_num_t  tmp = tv[0];
+
+          gquad_vtx[4*i  ] = tv[3];
+          gquad_vtx[4*i+3] = tmp;
+
+          tmp              = tv[1];
+          gquad_vtx[4*i+1] = gquad_vtx[4*i+2];
+          gquad_vtx[4*i+2] = tmp;           
+        }
+
+      }
+
+      if (0) {
+        printf("flipped %d quadrilaterals / "PDM_FMT_G_NUM"\n", n_quad_flipped, gn_quad);
       }
     }
 
