@@ -40,6 +40,14 @@ extern "C" {
  * Local macro definitions
  *============================================================================*/
 
+#define CHECK_ELT_SIZE(dimension, i_elt, elt_vtx_n) \
+  if (dimension==1 && elt_vtx_n != 2) { \
+    PDM_error(__FILE__, __LINE__, 0, "1D elements with more than 2 vertices are not supported, element %d has %d\n", i_elt, elt_vtx_n); \
+  } \
+  else if (dimension==2 && elt_vtx_n != 3 && elt_vtx_n != 4) { \
+    PDM_error(__FILE__, __LINE__, 0, "Only 2D elements with 3 or 4 vertices are supported for new, element %d has %d\n", i_elt, elt_vtx_n); \
+  }
+
 /*============================================================================
  * Private function definitions
  *============================================================================*/
@@ -53,16 +61,14 @@ _compute_edge_normal
   double *normal
 )
 {
-  if (elt_vtx_n != 2) { // TODO: remonter ce check pour le sortir de la boucle
-    PDM_error(__FILE__, __LINE__, 0, "1D elements with more than 2 vertices are not supported\n");
-  }
+  PDM_UNUSED(elt_vtx_n);
 
   int i_vtx0 = elt_vtx[0] - 1;
   int i_vtx1 = elt_vtx[1] - 1;
 
   normal[0] = vtx_coord[3*i_vtx1+1] - vtx_coord[3*i_vtx0+1];
   normal[1] = vtx_coord[3*i_vtx0  ] - vtx_coord[3*i_vtx1  ];
-  normal[2] = 0;
+  normal[2] = 0.;
 }
 
 
@@ -75,13 +81,8 @@ _compute_face_normal
   double *normal
 )
 {
-  // TODO: faire une implem générique pour tous les polygones
-  if (elt_vtx_n != 3 && elt_vtx_n != 4) {
-    PDM_error(__FILE__, __LINE__, 0, "2D elements with less than 3 or more than 4 vertices are not *yet* supported\n");
-  }
-
   for (int i = 0; i < 3; i++) {
-    normal[i] = 0;
+    normal[i] = 0.;
   }
 
   for (int i_tri = 0; i_tri < elt_vtx_n-2; i_tri++) {
@@ -1129,7 +1130,7 @@ PDM_part_geom_vtx_normal_compute
     _compute_elt_normal = &_compute_face_normal;
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0, "Invalid dimension (expected 1 or 2 but got %d)\n", dimension);
+    PDM_error(__FILE__, __LINE__, 0, "Invalid dimension (expected 1 or 2, got %d)\n", dimension);
   }
 
 
@@ -1156,6 +1157,10 @@ PDM_part_geom_vtx_normal_compute
     if (selected_elt == NULL) {
       // Account for all entities1
       n_elt = n_selected_elt[i_part];
+      for (int i_elt = 0; i_elt < n_elt; i_elt++) {
+        int elt_vtx_n = elt_vtx_idx[i_part][i_elt+1]-elt_vtx_idx[i_part][i_elt];
+        CHECK_ELT_SIZE(dimension, i_elt, elt_vtx_n)
+      }
       for (int idx_vtx = 0; idx_vtx < elt_vtx_idx[i_part][n_selected_elt[i_part]]; idx_vtx++) {
         n_vtx = PDM_MAX(n_vtx, elt_vtx[i_part][idx_vtx]);
       }
@@ -1165,6 +1170,8 @@ PDM_part_geom_vtx_normal_compute
       for (int idx_elt = 0; idx_elt < n_selected_elt[i_part]; idx_elt++) {
         int i_elt = selected_elt[i_part][idx_elt] - 1;
         n_elt = PDM_MAX(n_elt, selected_elt[i_part][idx_elt]);
+        int elt_vtx_n = elt_vtx_idx[i_part][i_elt+1]-elt_vtx_idx[i_part][i_elt];
+        CHECK_ELT_SIZE(dimension, i_elt, elt_vtx_n)
         for (int idx_vtx = elt_vtx_idx[i_part][i_elt]; idx_vtx < elt_vtx_idx[i_part][i_elt+1]; idx_vtx++) {
           n_vtx = PDM_MAX(n_vtx, elt_vtx[i_part][idx_vtx]);
         }

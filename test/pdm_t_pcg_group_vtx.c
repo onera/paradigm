@@ -216,12 +216,7 @@ main
   /* Select elements in group 1 of dimension dim-1 */
   PDM_geometry_kind_t geom_kind = PDM_part_mesh_nodal_principal_geom_kind_get(pmn) + 1;
 
-  if (geom_kind == PDM_GEOMETRY_KIND_RIDGE) {
-    dim = 2;
-  }
-  else {
-    dim = 3;
-  }
+  dim = geom_kind == PDM_GEOMETRY_KIND_RIDGE ? 2 : 3;
 
   int i_group = PDM_part_mesh_nodal_n_group_get(pmn, geom_kind) - 1;
 
