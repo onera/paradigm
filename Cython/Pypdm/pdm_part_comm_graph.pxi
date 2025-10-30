@@ -49,8 +49,8 @@ cdef extern from "pdm_part_comm_graph.h":
   # # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
   void PDM_part_comm_graph_all_reduce(
     PDM_part_comm_graph_t   *pcg,
-    MPI.Datatype             datatype,
-    MPI.Op                   op,
+    PDM_MPI_Datatype         datatype,
+    PDM_MPI_Op               op,
     unsigned char          **pdata);
 
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -320,10 +320,10 @@ def exch(PyPartCommGraph pypcg,
                     s_data,
                     _stride_t,
                     _stride_cst,
-   <const int  **>  _send_entity_stride,
-   <const void **>  _send_entity_data,
-         <int  ***> &_recv_entity_stride,
-         <void ***> &_recv_entity_data)
+        <int  ** >  _send_entity_stride,
+        <void ** >  _send_entity_data,
+        <int  ***> &_recv_entity_stride,
+        <void ***> &_recv_entity_data)
 
 
 
@@ -358,14 +358,14 @@ def all_reduce(PyPartCommGraph pypcg,
   Add doc
   """
   # FIXME: modification in-place <= il faut que je recupère ce tableau....
-
-
   cdef void **_pdata = np_list_to_void_pointers(pdata)
+  cdef PDM_MPI_Datatype c_datatype = <MPI_Datatype> datatype.ob_mpi
+  cdef PDM_MPI_Op       c_op       = <MPI_Op      > op.ob_mpi
 
   PDM_part_comm_graph_all_reduce(
     pypcg.pcg,
-    datatype,
-    op,
+    c_datatype,
+    c_op,
     < unsigned char **> &_pdata)
 
 # ------------------------------------------------------------------------
