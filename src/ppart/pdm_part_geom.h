@@ -330,7 +330,7 @@ PDM_part_geom_cell_center
 );
 
 /**
- * \brief Compute vertices normals.
+ * \brief Compute unit vertex normals.
  *
  * \note For edge elements, normal is computed in the XY plane
  *
@@ -345,7 +345,7 @@ PDM_part_geom_cell_center
  * \param [in]   selected_vtx    Local IDs of selected vertices (optional, size = \p n_part or NULL)
  * \param [in]   pvtx_coord      Vertex coordinates (size = \p n_part)
  * \param [in]   pcg_vtx         Vertex \ref PDM_part_comm_graph object
- * \param [out]  vtx_normal      Vertices normal (size = \p n_part, for each part, size = 3 * \p n_selected_vtx)
+ * \param [out]  vtx_normal      Unit vertex normals (size = \p n_part, for each part, size = 3 * \p n_selected_vtx)
  */
 void
 PDM_part_geom_vtx_normal_compute
