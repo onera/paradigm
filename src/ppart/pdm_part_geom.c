@@ -18,6 +18,7 @@
 #include "pdm_hilbert.h"
 #include "pdm_mem_tool.h"
 #include "pdm_part_comm_graph.h"
+#include "pdm_part_comm_graph_priv.h"
 #include "pdm_part_geom.h"
 #include "pdm_part_to_block.h"
 #include "pdm_partitioning_algorithm.h"
@@ -1115,8 +1116,20 @@ PDM_part_geom_vtx_normal_compute
   double                ***out_selected_vtx_normal
 )
 {
-  // TODO: Make sure both pcg have the same communicator and n_part
-  // => Add accessors to PDM_part_comm_graph?
+  /**
+   * Make sure both pcg have the same communicator and n_part
+   */
+  if (pcg_elt->n_part != pcg_vtx->n_part) {
+    PDM_error(__FILE__, __LINE__, 0, "pcg_elt and pcg_vtx has different n_part (%d and %d)\n",
+      pcg_elt->n_part,
+      pcg_vtx->n_part
+    );
+  }
+  int is_same_comm = 0;
+  MPI_Comm_compare(pcg_elt->comm, pcg_vtx->comm, &is_same_comm);
+  if (is_same_comm != MPI_IDENT) {
+    PDM_error(__FILE__, __LINE__, 0, "pcg_elt and pcg_vtx has different comm\n");
+  }
 
   int i_rank;
   PDM_MPI_Comm_rank(comm, &i_rank);

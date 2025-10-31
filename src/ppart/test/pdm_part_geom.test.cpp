@@ -320,7 +320,6 @@ MPI_TEST_CASE("[pdm_part_geom] vtx normals from faces", 1) {
   );
 
 
-
   int n_selected_face = n_face;
   int n_selected_vtx  = n_vtx;
   double **vtx_normal = NULL;
