@@ -2323,6 +2323,22 @@ REAL PDM_predicate_orient2d
 }
 
 
+REAL PDM_predicate_orient2d_quad
+(
+  REAL *pa,
+  REAL *pb,
+  REAL *pc,
+  REAL *pd
+)
+{
+  // ---- We break the quad into two sub triangle
+  REAL surf1 = PDM_predicate_orient2d(pa, pb, pc);
+  REAL surf2 = PDM_predicate_orient2d(pa, pc, pd);
+
+  return surf1 + surf2;
+}
+
+
 
 /**
  *
