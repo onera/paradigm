@@ -136,6 +136,7 @@ function(test_c_create name n_proc LIST_TEST LIST_NRANK)
   if(PDM_ENABLE_SHARED)
     target_link_libraries(${name} PRIVATE pdm_shared)
   endif()
+  target_link_libraries(${name} PRIVATE ${LINK_LIBRARIES}) # Only for cwipi that use test_c_create
 
   install(TARGETS ${name} RUNTIME DESTINATION bin)
 
