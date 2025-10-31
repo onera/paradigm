@@ -82,6 +82,7 @@ _compute_face_normal
   double *normal
 )
 {
+  // TODO: generalise to other types of elements besides TRI and QUAD
   for (int i = 0; i < 3; i++) {
     normal[i] = 0.;
   }
@@ -1101,8 +1102,8 @@ PDM_part_geom_cell_center
 void
 PDM_part_geom_vtx_normal_compute
 (
-  PDM_MPI_Comm             comm,   // redundant with pcgs
-  int                      n_part, // redundant with pcgs
+  PDM_MPI_Comm             comm,
+  int                      n_part,
   int                      dimension,
   int                     *n_selected_elt,
   int                    **selected_elt,
@@ -1119,8 +1120,11 @@ PDM_part_geom_vtx_normal_compute
   /**
    * Make sure both pcg have the same communicator and n_part
    */
-  if (pcg_elt->n_part != pcg_vtx->n_part) {
-    PDM_error(__FILE__, __LINE__, 0, "pcg_elt and pcg_vtx has different n_part (%d and %d)\n",
+  if (pcg_elt->n_part != pcg_vtx->n_part ||
+               n_part != pcg_vtx->n_part ||
+      pcg_elt->n_part !=          n_part) {
+    PDM_error(__FILE__, __LINE__, 0, "n_part, pcg_elt->n_part and pcg_vtx->n_part are different (%d, %d and %d)\n",
+      n_part,
       pcg_elt->n_part,
       pcg_vtx->n_part
     );
@@ -1129,6 +1133,10 @@ PDM_part_geom_vtx_normal_compute
   MPI_Comm_compare(pcg_elt->comm, pcg_vtx->comm, &is_same_comm);
   if (is_same_comm != MPI_IDENT) {
     PDM_error(__FILE__, __LINE__, 0, "pcg_elt and pcg_vtx has different comm\n");
+  }
+  MPI_Comm_compare(comm, pcg_vtx->comm, &is_same_comm);
+  if (is_same_comm != MPI_IDENT) {
+    PDM_error(__FILE__, __LINE__, 0, "comm and pcg_vtx->comm are different\n");
   }
 
   int i_rank;

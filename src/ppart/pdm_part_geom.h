@@ -332,7 +332,7 @@ PDM_part_geom_cell_center
 /**
  * \brief Compute unit vertex normals.
  *
- * \note For edge elements, normal is computed in the XY plane
+ * \warning For edge elements, normal is computed in the XY plane
  *
  * \param [in]   comm            MPI communicator
  * \param [in]   n_part          Number of partitions
@@ -350,8 +350,8 @@ PDM_part_geom_cell_center
 void
 PDM_part_geom_vtx_normal_compute
 (
-  PDM_MPI_Comm             comm,   // redundant with pcgs
-  int                      n_part, // redundant with pcgs
+  PDM_MPI_Comm             comm,
+  int                      n_part,
   int                      dimension,
   int                     *n_selected_elt,
   int                    **selected_elt,
