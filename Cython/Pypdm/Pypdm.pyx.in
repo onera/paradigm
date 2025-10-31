@@ -15,8 +15,8 @@ cimport cython
 cimport numpy as NPY
 
 from mpi4py cimport MPI
-# -----------------------------------------------------------------
 
+# -----------------------------------------------------------------
 cdef extern from "pdm_config.h":
     # trick from: https://stackoverflow.com/questions/5697479/how-can-a-defined-c-value-be-exposed-to-python-in-a-cython-module
     cdef int _PDM_VERSION_MAKOR "PDM_VERSION_MAJOR"
@@ -221,15 +221,42 @@ cdef extern from "pdm_part_to_part.h":
        PDM_PART_TO_PART_DATA_DEF_ORDER_GNUM1_COME_FROM = 3
 
 
-
-
 def Finalize ():
     PDM_Finalize
 
+
+cdef extern from "mpi.h":
+  ctypedef struct MPI_Request:
+    pass
+  ctypedef struct MPI_Win:
+    pass
+  ctypedef struct MPI_Comm:
+    pass
+  ctypedef struct MPI_Datatype:
+    pass
+  ctypedef struct MPI_File:
+    pass
+  ctypedef struct MPI_Group:
+    pass
+  ctypedef struct MPI_Op:
+    pass
+
+# ----------------------------------------------------------------------
+# Section: Définition de vos types PDM_ (Alias)
+# On utilise les types MPI déclarés ci-dessus pour créer les alias PDM_.
+cdef:
+  ctypedef MPI_Request  PDM_MPI_Request
+  ctypedef MPI_Win      PDM_MPI_Win
+  ctypedef MPI_Comm     PDM_MPI_Comm
+  ctypedef MPI_Datatype PDM_MPI_Datatype
+  ctypedef MPI_File     PDM_MPI_File
+  ctypedef MPI_Group    PDM_MPI_Group
+  ctypedef MPI_Op       PDM_MPI_Op
+
 cdef extern from "pdm_mpi.h":
-    ctypedef int PDM_MPI_Comm
     PDM_MPI_Comm PDM_MPI_mpi_2_pdm_mpi_comm(void *pt_comm)
     int PDM_MPI_Finalize()
+
 # -----------------------------------------------------------------
 
 _PDM_MESH_ENTITY_CELL = PDM_MESH_ENTITY_CELL
