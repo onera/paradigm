@@ -2321,6 +2321,17 @@ PDM_MPI_setup_dist_graph_from_neighbor_in
                                      comm_dist_graph_out);
 }
 
+int
+PDM_MPI_Comm_compare
+(
+  PDM_MPI_Comm  comm1,
+  PDM_MPI_Comm  comm2,
+  int          *result
+)
+{
+  return MPI_Comm_compare(comm1, comm2, result);
+}
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

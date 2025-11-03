@@ -1130,11 +1130,11 @@ PDM_part_geom_vtx_normal_compute
     );
   }
   int is_same_comm = 0;
-  MPI_Comm_compare(pcg_elt->comm, pcg_vtx->comm, &is_same_comm);
+  PDM_MPI_Comm_compare(pcg_elt->comm, pcg_vtx->comm, &is_same_comm);
   if (is_same_comm != MPI_IDENT) {
     PDM_error(__FILE__, __LINE__, 0, "pcg_elt and pcg_vtx has different comm\n");
   }
-  MPI_Comm_compare(comm, pcg_vtx->comm, &is_same_comm);
+  PDM_MPI_Comm_compare(comm, pcg_vtx->comm, &is_same_comm);
   if (is_same_comm != MPI_IDENT) {
     PDM_error(__FILE__, __LINE__, 0, "comm and pcg_vtx->comm are different\n");
   }
