@@ -5,6 +5,7 @@
 
 #include <assert.h>
 #include <stdio.h>
+#include <string.h>
 
 /*----------------------------------------------------------------------------
  *  Local headers
@@ -59,17 +60,35 @@ _compute_edge_normal
   int     elt_vtx_n,
   int    *elt_vtx,
   double *vtx_coord,
+  double *plane_normal,
   double *normal
 )
 {
   PDM_UNUSED(elt_vtx_n);
 
-  int i_vtx0 = elt_vtx[0] - 1;
-  int i_vtx1 = elt_vtx[1] - 1;
+  if (plane_normal==NULL) { // Normal in XY plane
+    int i_vtx0 = elt_vtx[0] - 1;
+    int i_vtx1 = elt_vtx[1] - 1;
 
-  normal[0] = vtx_coord[3*i_vtx1+1] - vtx_coord[3*i_vtx0+1];
-  normal[1] = vtx_coord[3*i_vtx0  ] - vtx_coord[3*i_vtx1  ];
-  normal[2] = 0.;
+    normal[0] = vtx_coord[3*i_vtx1+1] - vtx_coord[3*i_vtx0+1];
+    normal[1] = vtx_coord[3*i_vtx0  ] - vtx_coord[3*i_vtx1  ];
+    normal[2] = 0.;
+  }
+  else { // Normal as cross product of edge and edge plane normal
+    int i_vtx0 = elt_vtx[0] - 1;
+    int i_vtx1 = elt_vtx[1] - 1;
+    double edge_dir[3] = {vtx_coord[3*i_vtx1  ]-vtx_coord[3*i_vtx0  ],
+                          vtx_coord[3*i_vtx1+1]-vtx_coord[3*i_vtx0+1],
+                          vtx_coord[3*i_vtx1+2]-vtx_coord[3*i_vtx0+2]};
+    PDM_CROSS_PRODUCT(normal, plane_normal, edge_dir);
+
+    double magnitude = PDM_MODULE(normal);
+    double inv_magnitude = 1./magnitude;
+    for (int i = 0; i < 3; i++) {
+      normal[i] *= inv_magnitude;
+    }
+  }
+
 }
 
 
@@ -79,9 +98,12 @@ _compute_face_normal
   int     elt_vtx_n,
   int    *elt_vtx,
   double *vtx_coord,
+  double *plane_normal,
   double *normal
 )
 {
+  PDM_UNUSED(plane_normal);
+
   // TODO: generalise to other types of elements besides TRI and QUAD
   for (int i = 0; i < 3; i++) {
     normal[i] = 0.;
@@ -1109,6 +1131,7 @@ PDM_part_geom_vtx_normal_compute
   int                    **selected_elt,
   int                    **elt_vtx_idx,
   int                    **elt_vtx,
+  double                 **elt_plane_normal,
   PDM_part_comm_graph_t   *pcg_elt,
   int                     *n_selected_vtx,
   int                    **selected_vtx,
@@ -1143,7 +1166,7 @@ PDM_part_geom_vtx_normal_compute
   PDM_MPI_Comm_rank(comm, &i_rank);
 
   /* Compute normals */
-  void (*_compute_elt_normal) (int, int *, double *, double *) = NULL;
+  void (*_compute_elt_normal) (int, int *, double *, double *, double *) = NULL;
   if (dimension == 1) {
     _compute_elt_normal = &_compute_edge_normal;
   }
@@ -1164,6 +1187,11 @@ PDM_part_geom_vtx_normal_compute
 
   int **all_vtx_to_selected_vtx = NULL;
   PDM_malloc(all_vtx_to_selected_vtx, n_part, int *);
+
+  double *_elt_plane_normal = NULL;
+  if (dimension==1 && elt_plane_normal!=NULL) {
+    PDM_malloc(_elt_plane_normal, 3, double);
+  }
 
   for (int i_part = 0; i_part < n_part; i_part++) {
 
@@ -1265,9 +1293,13 @@ PDM_part_geom_vtx_normal_compute
       }
 
       double elt_normal[3];
+      if (dimension==1 && elt_plane_normal!=NULL) {
+        memcpy(_elt_plane_normal, &elt_plane_normal[i_part][3*i_elt], 3*sizeof(double));
+      }
       _compute_elt_normal(elt_vtx_idx[i_part][i_elt+1] - elt_vtx_idx[i_part][i_elt],
                           &elt_vtx[i_part][elt_vtx_idx[i_part][i_elt]],
                           vtx_coord[i_part],
+                         _elt_plane_normal,
                           elt_normal);
 
       for (int idx_vtx = elt_vtx_idx[i_part][i_elt]; idx_vtx < elt_vtx_idx[i_part][i_elt+1]; idx_vtx++) {
@@ -1305,6 +1337,9 @@ PDM_part_geom_vtx_normal_compute
     }
 
   } // End loop on parts
+  if (dimension==1 && elt_plane_normal!=NULL) {
+    PDM_free(_elt_plane_normal);
+  }
 
 
   /* Synchronize part boundaries */

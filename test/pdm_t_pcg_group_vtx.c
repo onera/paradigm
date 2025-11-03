@@ -290,6 +290,7 @@ main
                                    selected_elt,
                                    elt_vtx_idx,
                                    elt_vtx,
+                                   NULL,
                                    pcg_elt,
                                    n_selected_vtx,
                                    selected_vtx,
