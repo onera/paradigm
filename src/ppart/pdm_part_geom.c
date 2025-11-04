@@ -81,14 +81,7 @@ _compute_edge_normal
                           vtx_coord[3*i_vtx1+1]-vtx_coord[3*i_vtx0+1],
                           vtx_coord[3*i_vtx1+2]-vtx_coord[3*i_vtx0+2]};
     PDM_CROSS_PRODUCT(normal, plane_normal, edge_dir);
-
-    double magnitude = PDM_MODULE(normal);
-    double inv_magnitude = 1./magnitude;
-    for (int i = 0; i < 3; i++) {
-      normal[i] *= inv_magnitude;
-    }
   }
-
 }
 
 
@@ -1353,7 +1346,7 @@ PDM_part_geom_vtx_normal_compute
     // Normalize (or don't if you want to be scaled by dual measure)
     for (int i_vtx = 0; i_vtx < n_selected_vtx[i_part]; i_vtx++) {
       double magnitude = PDM_MODULE(&vtx_normal[3*i_vtx]);
-      if (magnitude > 0) { // ignore vertices not referenced by edge
+      if (magnitude > 0) { // ignore vertices not referenced by element
         double inv_magnitude = 1./magnitude;
         for (int i = 0; i < 3; i++) {
           vtx_normal[3*i_vtx+i] *= inv_magnitude;

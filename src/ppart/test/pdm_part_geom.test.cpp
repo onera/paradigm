@@ -31,7 +31,7 @@ MPI_TEST_CASE("[pdm_part_geom] vtx normals from edges", 2) {
    *          3  (1)  2
    *
    * Note:
-   *   - edge 2 and 3 of rank 0 are the same that edge 1 and 2 of rank 1 (respectively)
+   *   - edge 2 and 3 of rank 0 are the same as edge 1 and 2 of rank 1 (respectively)
    *   - this conf test the owner tricks (can occur in non-manifold conf)
    */
 
