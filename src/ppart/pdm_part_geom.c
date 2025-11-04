@@ -1270,11 +1270,7 @@ PDM_part_geom_vtx_normal_compute
       for (int idx_vtx = elt_vtx_idx[i_part][i_elt]; idx_vtx < elt_vtx_idx[i_part][i_elt+1]; idx_vtx++) {
         int i_vtx = elt_vtx[i_part][idx_vtx] - 1;
         int i_selected_vtx = all_vtx_to_selected_vtx[i_part][i_vtx];
-        if (i_selected_vtx < 0) {
-          // PDM_error(__FILE__, __LINE__, 0, "Vertex %d of part %d is not selected (rank %d).\n", i_vtx, i_part, i_rank); //juste ignore it ?
-        }
-        else {
-
+        if (i_selected_vtx >= 0) { // ignore unselected vertices
           for (int i = 0; i < 3; i++) {
             vtx_normal[3*i_selected_vtx+i] += elt_normal[i]; // TODO: scale by fraction of dual measure?
           }
@@ -1357,10 +1353,7 @@ PDM_part_geom_vtx_normal_compute
     // Normalize (or don't if you want to be scaled by dual measure)
     for (int i_vtx = 0; i_vtx < n_selected_vtx[i_part]; i_vtx++) {
       double magnitude = PDM_MODULE(&vtx_normal[3*i_vtx]);
-      if (magnitude <= 0) { // can happen if vertice is not referenced by edge
-        // PDM_error(__FILE__, __LINE__, 0, "Singular vertex %d in part %d of rank %d\n", selected_vtx[i_part][i_vtx], i_part, i_rank);
-      }
-      else {
+      if (magnitude > 0) { // ignore vertices not referenced by edge
         double inv_magnitude = 1./magnitude;
         for (int i = 0; i < 3; i++) {
           vtx_normal[3*i_vtx+i] *= inv_magnitude;
