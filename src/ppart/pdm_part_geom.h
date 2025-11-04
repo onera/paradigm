@@ -330,7 +330,7 @@ PDM_part_geom_cell_center
 );
 
 /**
- * \brief Compute unit vertex normals.
+ * \brief Compute unit vertex normals for selected vertices from selected element.
  *
  * \warning For edge elements, normal is computed in the XY plane or as the cross product
  * between a plane normal defined at edge (through \ref elt_plane_normal argument)
