@@ -24,6 +24,7 @@
 #include "pdm_part_mesh_nodal_algorithm.h"
 #include "pdm_unique.h"
 #include "pdm_part_comm_graph.h"
+#include "pdm_part_comm_graph_algorithm.h"
 #include "pdm_priv.h"
 #include "pdm_mem_tool.h"
 #include "pdm_logging.h"

@@ -12,6 +12,7 @@
 #include "pdm_mpi.h"
 #include "pdm_multipart.h"
 #include "pdm_part_comm_graph.h"
+#include "pdm_part_comm_graph_algorithm.h"
 #include "pdm_part_extension_algorithm.h"
 #include "pdm_printf.h"
 #include "pdm_priv.h"
@@ -168,7 +169,7 @@ int main
              &periodic_j,
              &rotation,
              &visu);
-             
+
   /* Initialize MPI */
   PDM_MPI_Init(&argc, &argv);
   PDM_MPI_Comm comm = PDM_MPI_COMM_WORLD;
@@ -256,10 +257,10 @@ int main
                                                                             (n_domain > 1),
                                                                             PDM_OWNERSHIP_KEEP,
                                                                             comm);
-  
+
   int          *itrf_dn  = NULL;
   PDM_g_num_t **itrf_ids = NULL;
-  int         **itrf_dom = NULL;  
+  int         **itrf_dom = NULL;
   PDM_domain_interface_get(dom_itrf,
                            PDM_BOUND_TYPE_VTX,
                            &itrf_dn,
@@ -273,7 +274,7 @@ int main
   for (int i_dom = 0; i_dom < n_domain; i_dom++) {
     PDM_malloc(n_vtx       [i_dom], n_part_per_domain[i_dom], int          );
     PDM_malloc(vtx_ln_to_gn[i_dom], n_part_per_domain[i_dom], PDM_g_num_t *);
-  
+
     for (int i_part = 0; i_part < n_part_per_domain[i_dom]; i_part++) {
       n_vtx       [i_dom][i_part] = PDM_part_mesh_nodal_n_vtx_get    (pmn[i_dom], i_part);
       vtx_ln_to_gn[i_dom][i_part] = PDM_part_mesh_nodal_vtx_g_num_get(pmn[i_dom], i_part, PDM_OWNERSHIP_KEEP);
@@ -292,7 +293,7 @@ int main
                                              n_vtx,
                                              vtx_ln_to_gn,
                                              pdom_itrf);
-  
+
   PDM_domain_interface_free(dom_itrf);
 
   /* Get vtx_part_bound */
@@ -351,7 +352,7 @@ int main
   int **unified_vtx_graph   = NULL;
   PDM_malloc(n_unified_vtx_graph, ln_part, int  );
   PDM_malloc(unified_vtx_graph,   ln_part, int *);
-  int j_part = 0; 
+  int j_part = 0;
   for (int i_dom = 0; i_dom < n_domain; i_dom++) {
     for (int i_part = 0; i_part < n_part_per_domain[i_dom]; i_part++) {
 
@@ -375,7 +376,7 @@ int main
       if (visu) {
         log_trace("j_part %d, unified graph in quadruplets :\n", j_part);
         for (int k = 0; k < n_unified_vtx_graph[j_part]; k++) {
-          log_trace("%4d %2d %2d %4d  itrf %d\n", 
+          log_trace("%4d %2d %2d %4d  itrf %d\n",
                     unified_vtx_graph[j_part][4*k  ],
                     unified_vtx_graph[j_part][4*k+1],
                     unified_vtx_graph[j_part][4*k+2],
@@ -434,7 +435,7 @@ int main
                                                                  i_part,
                                                                  &pedge_vtx_idx[j_part],
                                                                  &pedge_vtx    [j_part]);
-      
+
       j_part++;
     }
   }
@@ -457,12 +458,12 @@ int main
                                          &unified_edge_itrf);
 
   if (visu) {
-    j_part = 0; 
+    j_part = 0;
     for (int i_dom = 0; i_dom < n_domain; i_dom++) {
       for (int i_part = 0; i_part < n_part_per_domain[i_dom]; i_part++) {
         log_trace("j_part %d, unified edge graph in quadruplets :\n", j_part);
         for (int i = 0; i < n_unified_edge_graph[j_part]; i++) {
-          log_trace("%4d %2d %2d %4d through interface %d\n", 
+          log_trace("%4d %2d %2d %4d through interface %d\n",
                     unified_edge_graph[j_part][4*i  ],
                     unified_edge_graph[j_part][4*i+1],
                     unified_edge_graph[j_part][4*i+2],
@@ -490,10 +491,10 @@ int main
     double **recv_data = NULL;
     PDM_malloc(send_data, ln_part, double *);
 
-    j_part = 0; 
+    j_part = 0;
     for (int i_dom = 0; i_dom < n_domain; i_dom++) {
       for (int i_part = 0; i_part < n_part_per_domain[i_dom]; i_part++) {
-        
+
         double *vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmn[i_dom], i_part, PDM_OWNERSHIP_KEEP);
 
         PDM_malloc(send_data[j_part], n_unified_edge_graph[j_part] * 3 * 2, double);
@@ -519,7 +520,7 @@ int main
       }
     }
 
-    PDM_part_comm_graph_exch(pcg_edge, 
+    PDM_part_comm_graph_exch(pcg_edge,
                              sizeof(double) * 3 * 2,
                              PDM_STRIDE_CST_INTERLACED,
                              1,
@@ -528,7 +529,7 @@ int main
                              NULL,
                   (void ***) &recv_data);
 
-    j_part = 0; 
+    j_part = 0;
     for (int i_dom = 0; i_dom < n_domain; i_dom++) {
       for (int i_part = 0; i_part < n_part_per_domain[i_dom]; i_part++) {
 
@@ -557,7 +558,7 @@ int main
         const char *elt_field_name [] = {"itrf", "opp_rank", "opp_part", "opp_lnum", "is_owner"};
         const int  *elt_field_value[] = {unified_edge_itrf[j_part], opp_rank, opp_part, opp_lnum, is_owner};
 
-        PDM_vtk_write_std_elements(name, 
+        PDM_vtk_write_std_elements(name,
                                    2*n_unified_edge_graph[j_part],
                                    recv_data[j_part],
                                    NULL,

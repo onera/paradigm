@@ -1079,6 +1079,16 @@ PDM_MPI_setup_dist_graph_from_neighbor_in
   PDM_MPI_Comm  *comm_dist_graph_out
 );
 
+/*----------------------------------------------------------------------------
+ * PDM_MPI_Comm_compare (wrapping de la fonction PDM_MPI_Comm_compare)
+ *----------------------------------------------------------------------------*/
+int
+PDM_MPI_Comm_compare
+(
+  PDM_MPI_Comm  comm1,
+  PDM_MPI_Comm  comm2,
+  int          *result
+);
 
 /*----------------------------------------------------------------------------
  * PDM_mpi_Win_allocate_shared_get
@@ -1106,7 +1116,7 @@ int PDM_mpi_win_shared_sync(PDM_mpi_win_shared_t* win);
  *----------------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------------
- * PDM_MPI_Get_ialltoallv (Implemtation of alltoall like with window )
+ * PDM_MPI_Get_ialltoallv (Implementation of alltoall like with window )
  *----------------------------------------------------------------------------*/
 int PDM_MPI_Get_ialltoallv(PDM_MPI_Win       win_send,
                            PDM_MPI_Win       win_recv,
