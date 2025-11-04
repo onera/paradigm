@@ -1372,7 +1372,7 @@ PDM_part_geom_vtx_normal_compute
       int i_selected_vtx = all_vtx_to_selected_vtx[i_part][i_vtx];
       if (i_selected_vtx >= 0) {
         if (recv_stride[i_part][idx_vtx] != 1) {
-          PDM_error(__FILE__, __LINE__, 0, "Inconsistent group_vtx between ranks %d and %d, part %d and %d\n",
+          PDM_error(__FILE__, __LINE__, 0, "Inconsistent selected_vtx between ranks %d and %d, part %d and %d\n",
                      i_rank, graph_vtx[4*idx_vtx+1],
                      i_part, graph_vtx[4*idx_vtx+2]);
         }

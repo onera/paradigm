@@ -134,7 +134,7 @@ MPI_TEST_CASE("[pdm_part_geom] vtx normals from edges", 2) {
     int n_selected_edge = 1;
     int n_selected_vtx  = n_vtx;
     std::vector<std::vector<int>> vselected_edge = {{3},
-                                                    {2}}; // what if it is not same edge selected ?
+                                                    {2}};
     int *selected_edge = vselected_edge[i_rank].data();
 
     double **vtx_normal = NULL;
@@ -179,7 +179,7 @@ MPI_TEST_CASE("[pdm_part_geom] vtx normals from edges", 2) {
     int n_selected_edge = n_edge;
     int n_selected_vtx  = 2;
     std::vector<std::vector<int>> vselected_vtx = {{2,1},
-                                                   {1,3}}; // what if it is not same vtx selected ?
+                                                   {1,3}};
     int *selected_vtx = vselected_vtx[i_rank].data();
 
     double **vtx_normal = NULL;
@@ -219,11 +219,11 @@ MPI_TEST_CASE("[pdm_part_geom] vtx normals from edges", 2) {
   SUBCASE("partial edge and vtx") {
 
     int n_selected_edge = 1;
-    int n_selected_vtx  = 2;
+    int n_selected_vtx  = 1;
     std::vector<std::vector<int>> vselected_edge = {{3},
-                                                    {2}}; // what if it is not same edge selected ?
+                                                    {2}};
     std::vector<std::vector<int>> vselected_vtx = {{2,1},
-                                                   {1,3}}; // what if it is not same vtx selected ?
+                                                   {1,3}};
     int *selected_edge = vselected_edge[i_rank].data();
     int *selected_vtx  = vselected_vtx [i_rank].data();
 
