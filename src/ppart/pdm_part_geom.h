@@ -346,7 +346,8 @@ PDM_part_geom_cell_center
  * \param [in]   pcg_elt          Element \ref PDM_part_comm_graph object
  * \param [in]   n_selected_vtx   Number of selected vertices (size = \p n_part)
  * \param [in]   selected_vtx     Local IDs of selected vertices (optional, size = \p n_part or NULL)
- * \param [in]   pvtx_coord       Vertex coordinates (size = \p n_part)
+ * \param [in]   n_vtx            Number of vertices (size = \p n_part)
+ * \param [in]   vtx_coord        Vertex coordinates (size = \p n_part)
  * \param [in]   pcg_vtx          Vertex \ref PDM_part_comm_graph object
  * \param [out]  vtx_normal       Unit vertex normals (size = \p n_part, for each part, size = 3 * \p n_selected_vtx)
  */
@@ -364,6 +365,7 @@ PDM_part_geom_vtx_normal_compute
   PDM_part_comm_graph_t   *pcg_elt,
   int                     *n_selected_vtx,
   int                    **selected_vtx,
+  int                     *n_vtx,
   double                 **vtx_coord,
   PDM_part_comm_graph_t   *pcg_vtx,
   double                ***out_selected_vtx_normal

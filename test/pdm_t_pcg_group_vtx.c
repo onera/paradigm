@@ -276,9 +276,12 @@ main
                                           &pcg_elt,
                                           PDM_OWNERSHIP_BAD_VALUE);
   /* Compute vertex normals */
+  int     *n_vtx     = NULL;
   double **vtx_coord = NULL;
+  PDM_malloc(n_vtx    , n_part, int     );
   PDM_malloc(vtx_coord, n_part, double *);
   for (int i_part = 0; i_part < n_part; i_part++) {
+    n_vtx    [i_part] = PDM_part_mesh_nodal_n_vtx_get    (pmn, i_part);
     vtx_coord[i_part] = PDM_part_mesh_nodal_vtx_coord_get(pmn, i_part, PDM_OWNERSHIP_BAD_VALUE);
   }
 
@@ -294,6 +297,7 @@ main
                                    pcg_elt,
                                    n_selected_vtx,
                                    selected_vtx,
+                                   n_vtx,
                                    vtx_coord,
                                    pcg_vtx,
                                    &selected_vtx_normal);
@@ -344,6 +348,7 @@ main
     PDM_free(selected_vtx       [i_part]);
     PDM_free(selected_vtx_normal[i_part]);
   }
+  PDM_free(n_vtx         );
   PDM_free(vtx_coord     );
   PDM_free(elt_vtx_idx   );
   PDM_free(elt_vtx       );

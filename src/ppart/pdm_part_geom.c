@@ -1135,6 +1135,7 @@ PDM_part_geom_vtx_normal_compute
   PDM_part_comm_graph_t   *pcg_elt,
   int                     *n_selected_vtx,
   int                    **selected_vtx,
+  int                     *n_vtx,
   double                 **vtx_coord,
   PDM_part_comm_graph_t   *pcg_vtx,
   double                ***out_selected_vtx_normal
@@ -1199,19 +1200,14 @@ PDM_part_geom_vtx_normal_compute
 
     double *vtx_normal = (*out_selected_vtx_normal)[i_part];
 
-    // Get indirection from all vertices to selected vertices
+    // > Get element number
     int n_elt = 0;
-    int n_vtx = 0;
-    // This is a bit complicated for just getting the total number of vtx => just pass it as an input?
     if (selected_elt == NULL) {
       // Account for all entities1
       n_elt = n_selected_elt[i_part];
       for (int i_elt = 0; i_elt < n_elt; i_elt++) {
         int elt_vtx_n = elt_vtx_idx[i_part][i_elt+1]-elt_vtx_idx[i_part][i_elt];
         CHECK_ELT_SIZE(dimension, i_elt, elt_vtx_n)
-      }
-      for (int idx_vtx = 0; idx_vtx < elt_vtx_idx[i_part][n_selected_elt[i_part]]; idx_vtx++) {
-        n_vtx = PDM_MAX(n_vtx, elt_vtx[i_part][idx_vtx]);
       }
     }
     else {
@@ -1221,41 +1217,10 @@ PDM_part_geom_vtx_normal_compute
         n_elt = PDM_MAX(n_elt, selected_elt[i_part][idx_elt]);
         int elt_vtx_n = elt_vtx_idx[i_part][i_elt+1]-elt_vtx_idx[i_part][i_elt];
         CHECK_ELT_SIZE(dimension, i_elt, elt_vtx_n)
-        for (int idx_vtx = elt_vtx_idx[i_part][i_elt]; idx_vtx < elt_vtx_idx[i_part][i_elt+1]; idx_vtx++) {
-          n_vtx = PDM_MAX(n_vtx, elt_vtx[i_part][idx_vtx]);
-        }
       }
     }
 
-    if (selected_vtx == NULL) {
-      if (n_selected_vtx[i_part] < n_vtx) {
-        PDM_error(
-          __FILE__, __LINE__, 0,
-          "Element connectivity has vtx id > n_selected_vtx (%d > %d) for partition n°%d\n",
-          n_vtx,
-          n_selected_vtx[i_part],
-          i_part
-        );
-      }
-      n_vtx = PDM_MAX(n_vtx, n_selected_vtx[i_part]);
-    }
-    else {
-      for (int idx_vtx = 0; idx_vtx < n_selected_vtx[i_part]; idx_vtx++) {
-        n_vtx = PDM_MAX(n_vtx, selected_vtx[i_part][idx_vtx]);
-      }
-    }
-
-    int *graph_vtx = NULL;
-    int n_graph_vtx = PDM_part_comm_graph_entity_graph_get(pcg_vtx,
-                                                           i_part,
-                                                          &graph_vtx,
-                                                           PDM_OWNERSHIP_BAD_VALUE);
-
-    for (int idx_vtx = 0; idx_vtx < n_graph_vtx; idx_vtx++) {
-      n_vtx = PDM_MAX(n_vtx, graph_vtx[4*idx_vtx]);
-    }
-
-    all_vtx_to_selected_vtx[i_part] = PDM_array_const_int(n_vtx, -1);
+    all_vtx_to_selected_vtx[i_part] = PDM_array_const_int(n_vtx[i_part], -1);
     for (int idx_vtx = 0; idx_vtx < n_selected_vtx[i_part]; idx_vtx++) {
       int i_vtx = (selected_vtx == NULL) ? idx_vtx : selected_vtx[i_part][idx_vtx] - 1;
       all_vtx_to_selected_vtx[i_part][i_vtx] = idx_vtx;
@@ -1318,7 +1283,14 @@ PDM_part_geom_vtx_normal_compute
     } // End loop on elements
     PDM_free(elt_is_ghost);
 
+
     // Prepare send buffer for inter-partition synchronization
+    int *graph_vtx = NULL;
+    int n_graph_vtx = PDM_part_comm_graph_entity_graph_get(pcg_vtx,
+                                                           i_part,
+                                                          &graph_vtx,
+                                                           PDM_OWNERSHIP_BAD_VALUE);
+
     PDM_malloc(send_stride[i_part], n_graph_vtx,     int   );
     PDM_malloc(send_normal[i_part], n_graph_vtx * 3, double);
     int idx_write = 0;

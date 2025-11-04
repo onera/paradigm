@@ -105,6 +105,7 @@ MPI_TEST_CASE("[pdm_part_geom] vtx normals from edges", 2) {
       pcg_edge,
      &n_selected_vtx,
       NULL,
+     &n_vtx,
      &coord,
       pcg_vtx,
      &vtx_normal
@@ -150,6 +151,7 @@ MPI_TEST_CASE("[pdm_part_geom] vtx normals from edges", 2) {
       pcg_edge,
      &n_selected_vtx,
       NULL,
+     &n_vtx,
      &coord,
       pcg_vtx,
      &vtx_normal
@@ -195,6 +197,7 @@ MPI_TEST_CASE("[pdm_part_geom] vtx normals from edges", 2) {
       pcg_edge,
      &n_selected_vtx,
      &selected_vtx,
+     &n_vtx,
      &coord,
       pcg_vtx,
      &vtx_normal
@@ -240,6 +243,7 @@ MPI_TEST_CASE("[pdm_part_geom] vtx normals from edges", 2) {
       pcg_edge,
      &n_selected_vtx,
      &selected_vtx,
+     &n_vtx,
      &coord,
       pcg_vtx,
      &vtx_normal
@@ -343,6 +347,7 @@ MPI_TEST_CASE("[pdm_part_geom] vtx normals from faces", 1) {
     pcg_face,
    &n_selected_vtx,
     NULL,
+   &n_vtx,
    &coord,
     pcg_vtx,
    &vtx_normal
@@ -429,6 +434,7 @@ MPI_TEST_CASE("[pdm_part_geom] vtx normals from edge normal", 1) {
     pcg_edge,
    &n_vtx,
     NULL,
+   &n_vtx,
    &coord,
     pcg_vtx,
    &vtx_normal
