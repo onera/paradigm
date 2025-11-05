@@ -162,7 +162,6 @@ cdef class PartMeshNodal:
         self.keep_alive = []
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
         self.n_rank = comm.Get_size()
-        self.py_comm = comm
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -338,13 +337,11 @@ cdef class PartMeshNodal:
       return part_mesh_nodal_dim_get(self)
 
     def part_comm_graph_get(self,
-                      PDM_mesh_entities_t entity_type):
-
+                            PDM_mesh_entities_t entity_type):
       return get_part_comm_graph(self, entity_type)
 
     def compute_part_comm_graph_from_gnum(self,
-        PDM_mesh_entities_t entity_type):
-
+                                          PDM_mesh_entities_t entity_type):
       return compute_pcg_from_gnum(self,entity_type)
 
     # ------------------------------------------------------------------------
