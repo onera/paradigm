@@ -60,16 +60,15 @@ extern "C" {
  * \return 0 if converged, 1 else
  *
  */
-
 int
 PDM_linear_algebra_svd
 (
- const int     n_row,
- const int     n_col,
-       double *a,
-       double *w,
-       double *v
- );
+  const int     n_row,
+  const int     n_col,
+        double *a,
+        double *w,
+        double *v
+);
 
 
 /**
@@ -91,17 +90,16 @@ PDM_linear_algebra_svd
  * \return 0 if SVD converged, 1 else
  *
  */
-
 int
 PDM_linear_algebra_linsolve_svd
 (
- const int     n_row,
- const int     n_col,
- const int     stride,
- const double  tol,
-       double *a,
-       double *b,
-       double *x
+  const int     n_row,
+  const int     n_col,
+  const int     stride,
+  const double  tol,
+        double *a,
+        double *b,
+        double *x
 );
 
 
@@ -119,15 +117,14 @@ PDM_linear_algebra_linsolve_svd
  *
  * \return 1 if A is singular, 0 else
  */
-
 int
 PDM_linear_algebra_linsolve_gauss
 (
- const int     n,
- const int     stride,
-       double *A,
-       double *x
- );
+  const int     n,
+  const int     stride,
+        double *A,
+        double *x
+);
 
 
 /**
@@ -141,13 +138,12 @@ PDM_linear_algebra_linsolve_gauss
  * \param vec [out]  Eigenvectors (vec[2*i:2*(i+1)] is the i-th eigenvector)
  *
  */
-
- void PDM_linear_algebra_eig_sym2
- (
-   double a[3],
-   double val[2],
-   double vec[4]
- );
+void PDM_linear_algebra_eig_sym2
+(
+  double a[3],
+  double val[2],
+  double vec[4]
+);
 
 
 /**
@@ -161,7 +157,6 @@ PDM_linear_algebra_linsolve_gauss
  * \param vec [out]  Eigenvectors (vec[3*i:3*(i+1)] is the i-th eigenvector)
  *
  */
-
 void PDM_linear_algebra_eig_sym3
 (
   double a[6],
