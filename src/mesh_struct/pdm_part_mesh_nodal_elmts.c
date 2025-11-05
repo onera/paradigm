@@ -3957,30 +3957,29 @@ PDM_part_mesh_nodal_elmts_face2d_faceedge_add
   int we_have_elts[3];
   PDM_MPI_Allreduce(i_have_elts, we_have_elts, 3, PDM_MPI_INT, PDM_MPI_SUM, pmne->comm);
 
-  int id_tria = -1;
-  int id_quad = -1;
-  int id_poly = -1;
 
+  // Add sections
+  int id_tria;
+  int id_quad;
+  int id_poly;
   if (we_have_elts[0] > 0) {
     id_tria = PDM_part_mesh_nodal_elmts_add(pmne, PDM_MESH_NODAL_TRIA3);
   }
-
   if (we_have_elts[1] > 0) {
     id_quad = PDM_part_mesh_nodal_elmts_add(pmne, PDM_MESH_NODAL_QUAD4);
   }
-
   if (we_have_elts[2] > 0) {
     id_poly = PDM_part_mesh_nodal_elmts_add(pmne, PDM_MESH_NODAL_POLY_2D);
   }
 
 
-
+  /* Determine whether face_edge connectivity is signed */
   int _is_signed = 0;
   for (int i_part = 0; i_part < pmne->n_part; i_part++) {
 
-    PDM_l_num_t  _n_face          = pmne->prepa_blocks->n_cell       [i_part];
-    PDM_l_num_t *_face_edge_idx   = pmne->prepa_blocks->cell_face_idx[i_part];
-    PDM_l_num_t *_face_edge       = pmne->prepa_blocks->cell_face    [i_part];
+    PDM_l_num_t  _n_face        = pmne->prepa_blocks->n_cell       [i_part];
+    PDM_l_num_t *_face_edge_idx = pmne->prepa_blocks->cell_face_idx[i_part];
+    PDM_l_num_t *_face_edge     = pmne->prepa_blocks->cell_face    [i_part];
 
     for (int i = 0; i < _face_edge_idx[_n_face]; i++) {
       if (_face_edge[i] < 0) {
@@ -3988,7 +3987,6 @@ PDM_part_mesh_nodal_elmts_face2d_faceedge_add
         break;
       }
     }
-
   }
 
   int is_signed;
@@ -4014,7 +4012,6 @@ PDM_part_mesh_nodal_elmts_face2d_faceedge_add
     n_quad = pmne->prepa_blocks->n_quad  [i_part];
     n_poly = pmne->prepa_blocks->n_poly2d[i_part];
     l_connec_poly = pmne->prepa_blocks->l_connec_poly2d[i_part];
-
 
     PDM_l_num_t *tria_vtx     = NULL;
     PDM_l_num_t *quad_vtx     = NULL;
@@ -4050,7 +4047,7 @@ PDM_part_mesh_nodal_elmts_face2d_faceedge_add
     }
 
 
-    // Generate face->connectivity
+    // Generate face->vtx connectivity
     int *_face_vtx = NULL;
     for (int i_face = 0; i_face < _n_face; i_face++) {
       _face_edge_idx[i_face+1] -= adjust;
@@ -4085,18 +4082,21 @@ PDM_part_mesh_nodal_elmts_face2d_faceedge_add
       int *_elt_vtx = NULL;
 
       if (_n_edge == 3) {
+        // Triangle
         tria_to_parent[i_tria] = i_face;
         tria_ln_to_gn [i_tria] = _face_ln_to_gn[i_face];
         _elt_vtx = &tria_vtx[3*i_tria];
         _parent_to_local[i_face] = i_tria++;
       }
       else if (_n_edge == 4) {
+        // Quadrangle
         quad_to_parent[i_quad] = i_face;
         quad_ln_to_gn [i_quad] = _face_ln_to_gn[i_face];
         _elt_vtx = &quad_vtx[4*i_quad];
         _parent_to_local[i_face] = i_quad++;
       }
       else {
+        // Polygon
         poly_to_parent[i_poly] = i_face;
         poly_ln_to_gn [i_poly] = _face_ln_to_gn[i_face];
         _elt_vtx = &poly_vtx[poly_vtx_idx[i_poly]];
