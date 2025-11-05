@@ -6038,6 +6038,8 @@ PDM_part_mesh_nodal_elmts_cell_vtx_connect_get
 )
 {
   if (pmne == NULL) {
+    *cell_vtx_idx = NULL;
+    *cell_vtx     = NULL;
     return 0;
   }
 
