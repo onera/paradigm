@@ -63,8 +63,6 @@ typedef struct _pdm_exchange_helper_t PDM_exchange_helper_t;
  * \see PDM_exchange_helper_free to destroy the object.
  */
 PDM_exchange_helper_t *
-PDM_exchange_helper_create(const PDM_MPI_Comm comm, int n_request_init);
-PDM_exchange_helper_t *
 PDM_exchange_helper_create
 (
   const PDM_MPI_Comm    comm,
