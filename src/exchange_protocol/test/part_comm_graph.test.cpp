@@ -102,7 +102,7 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2p", 2) {
   static int expected_recv_buffer2_p0[6] = {12, 30, 13, 31, 14, 32};
   static int expected_recv_buffer2_p1[6] = {11, 20, 12, 21, 13, 22};
 
-  // Asyncrhonous
+  // Asynchronous
   int n_try = 4;
   for(int i_try = 0; i_try < n_try; ++i_try) {
     for(int i = 0; i < n_entity_bound; ++i) {
@@ -303,7 +303,7 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2p - Persistent exchange", 2) {
   // int n_elt1 = vn_elt[i_rank];
   int n_part = 1;
 
-  /* Graphe comm */
+  /* Communication graph */
   std::vector<int> vn_entity_bound = {3, 3};
   std::vector<std::vector<int>> ventity_bound = {{3, 1, 1, 1,
                                                   6, 1, 1, 5,

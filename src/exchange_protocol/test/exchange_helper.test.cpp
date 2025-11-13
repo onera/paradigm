@@ -18,7 +18,7 @@ MPI_TEST_CASE("[PDM_exchange_helper] - Create ", 2) {
   PDM_MPI_Comm_rank (pdm_comm, &i_rank);
   PDM_MPI_Comm_size (pdm_comm, &n_rank);
 
-  PDM_exchange_helper_t* exch_helper = PDM_exchange_helper_create(pdm_comm, 1);
+  PDM_exchange_helper_t* exch_helper = PDM_exchange_helper_create(pdm_comm);
 
   std::vector<std::vector<int>> send_buffer = {{1 ,  2,  3,  4, 5},
                                                {10, 20, 30, 40   }};
@@ -100,7 +100,7 @@ MPI_TEST_CASE("[PDM_exchange_helper] - Exch ", 2) {
   PDM_MPI_Comm_rank (pdm_comm, &i_rank);
   PDM_MPI_Comm_size (pdm_comm, &n_rank);
 
-  PDM_exchange_helper_t* exch_helper = PDM_exchange_helper_create(pdm_comm, 10);
+  PDM_exchange_helper_t* exch_helper = PDM_exchange_helper_create(pdm_comm);
 
   std::vector<std::vector<int>> send_buffer = {{1 ,  2,  3,  4, 5},
                                                {10, 20, 30, 40   }};

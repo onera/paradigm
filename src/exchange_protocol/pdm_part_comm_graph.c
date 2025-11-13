@@ -788,7 +788,7 @@ _create
   }
 
   /* Deleguate to exch_helper for Asynchronous and persitent exchange */
-  pcg->exch_h = PDM_exchange_helper_create(comm, 10);
+  pcg->exch_h = PDM_exchange_helper_create(comm);
 
 
   return pcg;

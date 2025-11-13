@@ -11,14 +11,14 @@
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
-#include "pdm_exchange_helper.h"
 #include "pdm.h"
 #include "pdm_array.h"
 #include "pdm_error.h"
+#include "pdm_exchange_helper.h"
+#include "pdm_exchange_helper_priv.h"
 #include "pdm_logging.h"
 #include "pdm_mem_tool.h"
 #include "pdm_mpi.h"
-#include "pdm_exchange_helper_priv.h"
 #include "pdm_priv.h"
 
 #ifdef __cplusplus
@@ -49,16 +49,12 @@ static
 int
 _get_next_tag
 (
-  PDM_exchange_helper_t *exch_helper,
-  PDM_mpi_comm_kind_t    k_comm
+  PDM_exchange_helper_t *exch_helper
 )
 {
-  int tag = -10000;
-  if (k_comm == PDM_MPI_COMM_KIND_P2P) {
-    tag  = exch_helper->seed_tag;
-    tag += (exch_helper->next_tag++);
-    tag %= exch_helper->max_tag;
-  }
+  int tag = exch_helper->seed_tag;
+  tag += (exch_helper->next_tag++);
+  tag %= exch_helper->max_tag;
   return tag;
 }
 
@@ -241,15 +237,14 @@ _synchro_rma_begin
 PDM_exchange_helper_t *
 PDM_exchange_helper_create
 (
-  const PDM_MPI_Comm    comm,
-        int             n_request_init
+  const PDM_MPI_Comm    comm
 )
 {
   PDM_exchange_helper_t *exch_helper = NULL;
   PDM_malloc(exch_helper, 1, PDM_exchange_helper_t);
 
   PDM_MPI_Comm_dup(comm, &exch_helper->comm);
-  exch_helper->n_request = n_request_init;
+  exch_helper->n_request = 10;
 
   PDM_malloc(exch_helper->requests_status, exch_helper->n_request, _exch_helper_status_t  );
   PDM_malloc(exch_helper->is_persistent  , exch_helper->n_request, int                    );
@@ -317,7 +312,7 @@ PDM_exchange_helper_create
   void  *max_tag_tmp;
   int    flag = 0;
 
-  // Mandatory to call with PDM_MPI_COMM_WORLD becuase only this one keep attributes (openMPI implemntation for exemple)
+  // Mandatory to call with PDM_MPI_COMM_WORLD because only this one keeps attributes (openMPI implementation for example)
   PDM_MPI_Comm_get_attr_tag_ub(PDM_MPI_COMM_WORLD, &max_tag_tmp, &flag);
   exch_helper->max_tag  = (long) (*((int *) max_tag_tmp));
   exch_helper->seed_tag = 1;
@@ -406,7 +401,6 @@ PDM_exchange_helper_iexch
   int n_rank;
   PDM_MPI_Comm_size(exch_helper->comm, &n_rank);
 
-  int tag        = _get_next_tag          (exch_helper, k_comm);
   int request_id = _find_available_request(exch_helper);
 
   int s_data_tot = s_data * cst_stride;
@@ -442,6 +436,7 @@ PDM_exchange_helper_iexch
                                 exch_helper->comm,
                                 &exch_helper->sub_requests[request_id][0]);
   } else if (k_comm == PDM_MPI_COMM_KIND_P2P) {
+    int tag = _get_next_tag(exch_helper);
     PDM_MPI_Ialltoallv_p2p(send_buffer,
                            send_n,
                            send_idx,
@@ -506,28 +501,6 @@ PDM_exchange_helper_iexch
   return request_id;
 }
 
-// A réfléchir pour appeler plus facilement les IAlltoall
-// int
-// PDM_exchange_helper_exch_init
-// (
-//   PDM_exchange_helper_t *exch_helper,
-//   PDM_mpi_comm_kind_t    k_comm,
-//   size_t                 s_data,
-//   int                    cst_stride,
-//   int                    n_send_rank,
-//   int                   *send_rank,
-//   int                   *send_idx,
-//   int                   *send_n,
-//   void                  *send_buffer,
-//   int                    n_recv_rank,
-//   int                   *recv_rank,
-//   int                   *recv_idx,
-//   int                   *recv_n,
-//   void                  *recv_buffer
-// );
-// Si le send_rank ou le recv_rank est NULL --> Alltoall classique
-// Sinon on peut faire du ISend/Irecv plus fin
-
 int
 PDM_exchange_helper_exch_init
 (
@@ -546,7 +519,6 @@ PDM_exchange_helper_exch_init
   int n_rank;
   PDM_MPI_Comm_size(exch_helper->comm, &n_rank);
 
-  int tag        = _get_next_tag          (exch_helper, k_comm);
   int request_id = _find_available_request(exch_helper);
 
   int s_data_tot = s_data * cst_stride;
@@ -572,6 +544,7 @@ PDM_exchange_helper_exch_init
     PDM_error(__FILE__, __LINE__, 0,
               "Error PDM_exchange_helper_exch not yet implemented with k_comm = %i\n", k_comm);
   } else if(k_comm == PDM_MPI_COMM_KIND_P2P) {
+    int tag = _get_next_tag(exch_helper);
     PDM_MPI_Alltoallv_p2p_init(send_buffer,
                                send_n,
                                send_idx,
