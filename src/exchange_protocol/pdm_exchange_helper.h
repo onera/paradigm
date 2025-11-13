@@ -121,7 +121,7 @@ PDM_exchange_helper_exch
  * \param[in]     recv_n Array of data counts to be received from each source.
  * \param[out]    recv_buffer Pointer to the data buffer for receiving.
  *
- * \return An ID for the non-blocking request, to be used with wait/free functions.
+ * \return An ID for the non-blocking request, to be used with wait function.
  *
  * \see PDM_exchange_helper_exch_wait to complete the operation.
  */
@@ -326,7 +326,6 @@ PDM_exchange_helper_exch_free
  *
  * \param[in,out] exch_helper A pointer to the exchange helper object to be freed.
  *
- * \see PDM_exchange_helper_create to create the object.
  */
 void
 PDM_exchange_helper_free
