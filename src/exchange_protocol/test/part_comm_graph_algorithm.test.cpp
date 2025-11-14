@@ -15,7 +15,25 @@
 
 MPI_TEST_CASE("[PDM_part_comm_graph_entity1_to_entity2] - 1 part - 2p", 2) {
 
-  // Correspond to a QUAD of n_vtx_seg = 3
+  // Corresponds to a QUAD of n_vtx_seg = 3
+  /*
+
+       p0                 p1
+           6                 6
+     3 |+++++++| 6     3 |+++++++| 6
+       |       |         |       |
+   3   |       |  7  2   |       |   7
+       |   4   |         |   4   |
+     2 |+++++++| 5     2 |+++++++| 5
+       |       |         |       |
+   1   |       |  5  1   |       |   5
+       |       |         |       |
+     1 |+++++++| 4     1 |+++++++| 4
+           2                 3
+
+  */
+
+
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
   int n_part = 1;
 
@@ -35,8 +53,8 @@ MPI_TEST_CASE("[PDM_part_comm_graph_entity1_to_entity2] - 1 part - 2p", 2) {
   std::vector<std::vector<int>> ventity2_entity1_idx = {{0, 2, 4, 6, 8, 10, 12, 14},
                                                         {0, 2, 4, 6, 8, 10, 12, 14}};
 
-  std::vector<std::vector<int>> ventity2_entity1 = {{1, 2, 4, 1, 2, 3, 2, 5, 5, 4, 3, 6, 6, 5},
-                                                    {2, 1, 3, 2, 4, 1, 2, 5, 5, 4, 3, 6, 6, 5}};
+  std::vector<std::vector<int>> ventity2_entity1 = {{1, 2,   4, 1,   2, 3,   2, 5,   5, 4,   3, 6,   6, 5},
+                                                    {2, 1,   3, 2,   4, 1,   2, 5,   5, 4,   3, 6,   6, 5}};
 
   int n_entity_bound       = vn_entity_bound     [i_rank];
   int *entity_bound        = ventity_bound       [i_rank].data();
@@ -61,12 +79,12 @@ MPI_TEST_CASE("[PDM_part_comm_graph_entity1_to_entity2] - 1 part - 2p", 2) {
                                          &pentity2_graph,
                                          NULL);
 
-  int pn_entity2_graph_expected = 2;
+  int pn_entity2_graph_expected = 2; // nombre de faces de bords attendu
 
   CHECK(pn_entity2_graph_expected == pn_entity2_graph[0]);
 
-  static int entity_bound_reorder_p0[8] = {5, 1, 1, 1, 7, 1, 1, 2};
-  static int entity_bound_reorder_p1[8] = {1, 0, 1, 5, 2, 0, 1, 7};
+  static int entity_bound_reorder_p0[8] = {5, 1, 1, 1,   7, 1, 1, 2};
+  static int entity_bound_reorder_p1[8] = {1, 0, 1, 5,   2, 0, 1, 7};
 
   MPI_CHECK_EQ_C_ARRAY(0, pentity2_graph[0], entity_bound_reorder_p0, 8);
   MPI_CHECK_EQ_C_ARRAY(1, pentity2_graph[0], entity_bound_reorder_p1, 8);
@@ -90,6 +108,22 @@ MPI_TEST_CASE("[PDM_part_comm_graph_entity1_to_entity2] - 1 part - 2p", 2) {
 MPI_TEST_CASE("[PDM_part_comm_graph_entity1_to_entity2] - 1 part - 2p - revert sens", 2) {
 
   // Correspond to a QUAD of n_vtx_seg = 3
+
+/*
+       p0                 p1
+           6                 6
+     3 |+++++++| 6     3 |+++++++| 6
+       |       |         |       |
+   3   |       |  7  2   |       |   7
+       |   4   |         |   4   |
+     2 |+++++++| 5     2 |+++++++| 5
+       |       |         |       |
+   1   |       |  5  1   |       |   5
+       |       |         |       |
+     1 |+++++++| 4     1 |+++++++| 4
+           2                 3
+
+*/
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
   int n_part = 1;
 
@@ -109,12 +143,13 @@ MPI_TEST_CASE("[PDM_part_comm_graph_entity1_to_entity2] - 1 part - 2p - revert s
   std::vector<std::vector<int>> ventity2_entity1_idx = {{0, 2, 4, 6, 8, 10, 12, 14},
                                                         {0, 2, 4, 6, 8, 10, 12, 14}};
 
-  // std::vector<std::vector<int>> ventity2_entity1 = {{1, 2, 4, 1, 2, 3, 2, 5, 5, 4, 3, 6, 6, 5},
-  //                                                   {2, 1, 3, 2, 4, 1, 2, 5, 5, 4, 3, 6, 6, 5}};
+  // std::vector<std::vector<int>> ventity2_entity1 = {{1, 2,   4, 1,   2, 3,   2, 5,   5, 4,   3, 6,   6, 5},
+  //                                                   {2, 1,   3, 2,   4, 1,   2, 5,   5, 4,   3, 6,   6, 5}};
 
-  //                                                                        |----|      |----|
-  std::vector<std::vector<int>> ventity2_entity1 = {{1, 2, 4, 1, 2, 3, 2, 5, 4, 5, 3, 6, 5, 6},
-                                                    {2, 1, 3, 2, 4, 1, 2, 5, 5, 4, 3, 6, 6, 5}};
+                                                                                 /*inverted        inverted   */
+  //                                                                                |----|          |----|
+  std::vector<std::vector<int>> ventity2_entity1 = {{1, 2,   4, 1,   2, 3,   2, 5,   4, 5,   3, 6,   5, 6},
+                                                    {2, 1,   3, 2,   4, 1,   2, 5,   5, 4,   3, 6,   6, 5}};
 
   int n_entity_bound       = vn_entity_bound     [i_rank];
   int *entity_bound        = ventity_bound       [i_rank].data();
@@ -143,8 +178,8 @@ MPI_TEST_CASE("[PDM_part_comm_graph_entity1_to_entity2] - 1 part - 2p - revert s
 
   CHECK(pn_entity2_graph_expected == pn_entity2_graph[0]);
 
-  static int entity_bound_reorder_p0[8] = {5, 1, 1, -1, 7, 1, 1, -2};
-  static int entity_bound_reorder_p1[8] = {1, 0, 1, -5, 2, 0, 1, -7};
+  static int entity_bound_reorder_p0[8] = {5, 1, 1, -1,   7, 1, 1, -2};
+  static int entity_bound_reorder_p1[8] = {1, 0, 1, -5,   2, 0, 1, -7};
 
   MPI_CHECK_EQ_C_ARRAY(0, pentity2_graph[0], entity_bound_reorder_p0, 8);
   MPI_CHECK_EQ_C_ARRAY(1, pentity2_graph[0], entity_bound_reorder_p1, 8);
@@ -168,7 +203,39 @@ MPI_TEST_CASE("[PDM_part_comm_graph_entity1_to_entity2] - 1 part - 2p - revert s
 
 MPI_TEST_CASE("[PDM_part_comm_graph_entity1_to_entity2] - 1 part - 2p - 3D ", 2) {
 
-  // Correspond to a HEXA of n_vtx_seg = 3
+
+  // Corresponds to a HEXA of n_vtx_seg = 3
+  // here we only represent the boundary between the 2 parts
+  //
+
+  //              --------- +18              9+--------
+  //                       /|                /|
+  //                      / |               / |
+  //                  15 /  |              /  |
+  //              ----- +   |            6+---|---
+  //                   /|   |            /|   |
+  //                  / |17 |           / | 4 |
+  //              12 /- |-- +17        /  |  8+-------
+  //             -- +   |  /|        3+-- |--/|--
+  //                |   | / |         |   | / |
+  //                |15 |/  |         | 2 |/  |
+  //             -- |-- +14 |         |  5+-- |----
+  //                |  /|   |         |  /|   |
+  //                | / |16 |         | / | 3 |
+  //             11 |/ -| --+16       |/  |  7+-------
+  //            --- +   |  /         2+-- |- /----
+  //                |   | /           | 1 | /
+  //                |14 |/            |   |/
+  //   x          --|-- +             |  4+------
+  //   ^  y         |  /13            |  /
+  //   | +          | /               | /
+  //   |/           |/                |/
+  //   +--->z   --- +                1+------
+  //              10
+
+  //                        z=0.5 plane
+  // all normals of boundary faces are z-positive
+
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
   int n_part = 1;
 
@@ -176,42 +243,43 @@ MPI_TEST_CASE("[PDM_part_comm_graph_entity1_to_entity2] - 1 part - 2p - 3D ", 2)
   PDM_MPI_Comm_rank(pdm_comm, &i_rank);
 
   // Keep for debug
-  std::vector<std::vector<double>> vvtx_coords = {{0.0, 0.0, 0.0,
-                                                   0.5, 0.0, 0.0,
-                                                   1.0, 0.0, 0.0,
-                                                   0.0, 0.5, 0.0,
-                                                   0.5, 0.5, 0.0,
-                                                   1.0, 0.5, 0.0,
-                                                   0.0, 1.0, 0.0,
-                                                   0.5, 1.0, 0.0,
-                                                   1.0, 1.0, 0.0,
-                                                   0.0, 0.0, 0.5,
-                                                   0.5, 0.0, 0.5,
-                                                   1.0, 0.0, 0.5,
-                                                   0.0, 0.5, 0.5,
-                                                   0.5, 0.5, 0.5,
-                                                   1.0, 0.5, 0.5,
-                                                   0.0, 1.0, 0.5,
-                                                   0.5, 1.0, 0.5,
-                                                   1.0, 1.0, 0.5 },
-                                                  {0.0, 0.0, 0.5,
-                                                   0.5, 0.0, 0.5,
-                                                   1.0, 0.0, 0.5,
-                                                   0.0, 0.5, 0.5,
-                                                   0.5, 0.5, 0.5,
-                                                   1.0, 0.5, 0.5,
-                                                   0.0, 1.0, 0.5,
-                                                   0.5, 1.0, 0.5,
-                                                   1.0, 1.0, 0.5,
-                                                   0.0, 0.0, 1.0,
-                                                   0.5, 0.0, 1.0,
-                                                   1.0, 0.0, 1.0,
-                                                   0.0, 0.5, 1.0,
-                                                   0.5, 0.5, 1.0,
-                                                   1.0, 0.5, 1.0,
-                                                   0.0, 1.0, 1.0,
-                                                   0.5, 1.0, 1.0,
-                                                   1.0, 1.0, 1.0}};
+  std::vector<std::vector<double>> vvtx_coords = {{0.0, 0.0, 0.0,    /*1*/
+                                                   0.5, 0.0, 0.0,    /*2*/
+                                                   1.0, 0.0, 0.0,    /*3*/
+                                                   0.0, 0.5, 0.0,    /*4*/
+                                                   0.5, 0.5, 0.0,    /*5*/
+                                                   1.0, 0.5, 0.0,    /*6*/
+                                                   0.0, 1.0, 0.0,    /*7*/
+                                                   0.5, 1.0, 0.0,    /*8*/
+                                                   1.0, 1.0, 0.0,    /*9*/
+                                                   0.0, 0.0, 0.5,    /*10*/
+                                                   0.5, 0.0, 0.5,    /*11*/
+                                                   1.0, 0.0, 0.5,    /*12*/
+                                                   0.0, 0.5, 0.5,    /*13*/
+                                                   0.5, 0.5, 0.5,    /*14*/
+                                                   1.0, 0.5, 0.5,    /*15*/
+                                                   0.0, 1.0, 0.5,    /*16*/
+                                                   0.5, 1.0, 0.5,    /*17*/
+                                                   1.0, 1.0, 0.5 },  /*18*/
+
+                                                  {0.0, 0.0, 0.5,    /*1*/
+                                                   0.5, 0.0, 0.5,    /*2*/
+                                                   1.0, 0.0, 0.5,    /*3*/
+                                                   0.0, 0.5, 0.5,    /*4*/
+                                                   0.5, 0.5, 0.5,    /*5*/
+                                                   1.0, 0.5, 0.5,    /*6*/
+                                                   0.0, 1.0, 0.5,    /*7*/
+                                                   0.5, 1.0, 0.5,    /*8*/
+                                                   1.0, 1.0, 0.5,    /*9*/
+                                                   0.0, 0.0, 1.0,    /*10*/
+                                                   0.5, 0.0, 1.0,    /*11*/
+                                                   1.0, 0.0, 1.0,    /*12*/
+                                                   0.0, 0.5, 1.0,    /*13*/
+                                                   0.5, 0.5, 1.0,    /*14*/
+                                                   1.0, 0.5, 1.0,    /*15*/
+                                                   0.0, 1.0, 1.0,    /*16*/
+                                                   0.5, 1.0, 1.0,    /*17*/
+                                                   1.0, 1.0, 1.0}};  /*18*/
 
   std::vector<int> vn_entity_bound = {9 ,  9};
   std::vector<int> vn_entity1      = {18, 18};
@@ -235,48 +303,51 @@ MPI_TEST_CASE("[PDM_part_comm_graph_entity1_to_entity2] - 1 part - 2p - 3D ", 2)
                                                   8, 0, 1, 17,
                                                   9, 0, 1, 18}};
 
+
+  /* ici les entity2 sont des quads -> donc composés de 4 noeuds à chaque fois*/
   std::vector<std::vector<int>> ventity2_entity1_idx = {{0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64, 68, 72, 76, 80},
                                                         {0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64, 68, 72, 76, 80}};
 
-  std::vector<std::vector<int>> ventity2_entity1 = {{2, 1, 4, 5,
-                                                     2, 5, 6, 3,
-                                                     1, 2, 11, 10,
-                                                     7, 8, 5, 4,
-                                                     1, 10, 13, 4,
-                                                     11, 2, 3, 12,
-                                                     8, 9, 6, 5,
-                                                     11, 2, 5, 14,
-                                                     14, 5, 4, 13,
-                                                     12, 3, 6, 15,
-                                                     15, 6, 5, 14,
-                                                     4, 13, 16, 7,
-                                                     14, 5, 8, 17,
-                                                     14, 13, 10, 11,
-                                                     17, 8, 7, 16,
-                                                     15, 6, 9, 18,
-                                                     15, 14, 11, 12,
-                                                     18, 9, 8, 17,
-                                                     17, 16, 13, 14,
-                                                     18, 17, 14, 15},
-                                                    {5, 4, 1, 2,
-                                                     6, 5, 2, 3,
-                                                     8, 7, 4, 5,
-                                                     11, 10, 1, 2,
-                                                     9, 8, 5, 6,
-                                                     4, 1, 10, 13,
-                                                     12, 11, 2, 3,
-                                                     11, 2, 5, 14,
-                                                     14, 5, 4, 13,
-                                                     15, 12, 3, 6,
-                                                     15, 6, 5, 14,
-                                                     16, 7, 4, 13,
-                                                     14, 5, 8, 17,
-                                                     14, 13, 10, 11,
-                                                     17, 8, 7, 16,
-                                                     18, 15, 6, 9,
-                                                     15, 14, 11, 12,
-                                                     18, 9, 8, 17,
-                                                     17, 16, 13, 14,
+  std::vector<std::vector<int>> ventity2_entity1 = {{2, 1, 4, 5,      /*1 */
+                                                     2, 5, 6, 3,      /*2 */
+                                                     1, 2, 11, 10,    /*3 */
+                                                     7, 8, 5, 4,      /*4 */
+                                                     1, 10, 13, 4,    /*5 */
+                                                     11, 2, 3, 12,    /*6 */
+                                                     8, 9, 6, 5,      /*7 */
+                                                     11, 2, 5, 14,    /*8 */
+                                                     14, 5, 4, 13,    /*9 */
+                                                     12, 3, 6, 15,    /*10 */
+                                                     15, 6, 5, 14,    /*11 */
+                                                     4, 13, 16, 7,    /*12 */
+                                                     14, 5, 8, 17,    /*13 */
+                                                     14, 13, 10, 11,  /*14  bound*/
+                                                     17, 8, 7, 16,    /*15 */
+                                                     15, 6, 9, 18,    /*16 */
+                                                     15, 14, 11, 12,  /*17  bound*/
+                                                     18, 9, 8, 17,    /*18 */
+                                                     17, 16, 13, 14,  /*19  bound*/
+                                                     18, 17, 14, 15}, /*20  bound*/
+
+                                                    {5, 4, 1, 2,      /*1   bound*/
+                                                     6, 5, 2, 3,      /*2   bound*/
+                                                     8, 7, 4, 5,      /*3   bound*/
+                                                     11, 10, 1, 2,    /*4*/
+                                                     9, 8, 5, 6,      /*5   bound*/
+                                                     4, 1, 10, 13,    /*6*/
+                                                     12, 11, 2, 3,    /*7*/
+                                                     11, 2, 5, 14,    /*8*/
+                                                     14, 5, 4, 13,    /*9*/
+                                                     15, 12, 3, 6,    /*10*/
+                                                     15, 6, 5, 14,    /*11*/
+                                                     16, 7, 4, 13,    /*12*/
+                                                     14, 5, 8, 17,    /*13*/
+                                                     14, 13, 10, 11,  /*14*/
+                                                     17, 8, 7, 16,    /*15*/
+                                                     18, 15, 6, 9,    /*16*/
+                                                     15, 14, 11, 12,  /*17*/
+                                                     18, 9, 8, 17,    /*18*/
+                                                     17, 16, 13, 14,  /*19*/
                                                      18, 17, 14, 15}};
 
   int n_entity_bound       = vn_entity_bound     [i_rank];
@@ -302,12 +373,12 @@ MPI_TEST_CASE("[PDM_part_comm_graph_entity1_to_entity2] - 1 part - 2p - 3D ", 2)
                                          &pentity2_graph,
                                          NULL);
 
-  int pn_entity2_graph_expected = 4;
+  int pn_entity2_graph_expected = 4; // nombre de faces de bords attendu
 
   CHECK(pn_entity2_graph_expected == pn_entity2_graph[0]);
 
-  static int entity_bound_reorder_p0[16] = {14, 1, 1,  1, 17, 1, 1,  2, 19, 1, 1,  3, 20, 1, 1, 5};
-  static int entity_bound_reorder_p1[16] = { 1, 0, 1, 14,  2, 0, 1, 17,  3, 0, 1, 19,  5, 0, 1,20};
+  static int entity_bound_reorder_p0[16] = {14, 1, 1,  1,   17, 1, 1,  2,   19, 1, 1,  3,   20, 1, 1, 5};
+  static int entity_bound_reorder_p1[16] = { 1, 0, 1, 14,    2, 0, 1, 17,    3, 0, 1, 19,    5, 0, 1,20};
 
   MPI_CHECK_EQ_C_ARRAY(0, pentity2_graph[0], entity_bound_reorder_p0, 16);
   MPI_CHECK_EQ_C_ARRAY(1, pentity2_graph[0], entity_bound_reorder_p1, 16);
@@ -362,7 +433,40 @@ MPI_TEST_CASE("[PDM_part_comm_graph_entity1_to_entity2] - 1 part - 2p - 3D ", 2)
 
 MPI_TEST_CASE("[PDM_part_comm_graph_entity1_to_entity2] - 1 part - 2p - 3D - revert face_vtx", 2) {
 
+
   // Correspond to a HEXA of n_vtx_seg = 3
+
+  // here we only represent the boundary between the 2 parts
+  //
+
+  //              --------- +18              9+--------
+  //                       /|                /|
+  //                      / |               / |
+  //                  15 /  |              /  |
+  //              ----- +   |            6+---|---
+  //                   /|   |            /|   |
+  //                  / |17 |           / | 4 |
+  //              12 /- |-- +17        /  |  8+-------
+  //             -- +   |  /|        3+-- |--/|--
+  //                |   | / |         |   | / |
+  //                |15 |/  |         | 2 |/  |
+  //             -- |-- +14 |         |  5+-- |----
+  //                |  /|   |         |  /|   |
+  //                | / |16 |         | / | 3 |
+  //             11 |/ -| --+16       |/  |  7+-------
+  //            --- +   |  /         2+-- |- /----
+  //                |   | /           | 1 | /
+  //                |14 |/            |   |/
+  //   x          --|-- +             |  4+------
+  //   ^  y         |  /13            |  /
+  //   | +          | /               | /
+  //   |/           |/                |/
+  //   +--->z   --- +                1+------
+  //              10
+
+  //                        z=0.5 plane
+  // p1 : all normals of boundary faces are z-negative
+  // p2 :  "    "     "     "      "     "  z-positive
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
   int n_part = 1;
 
