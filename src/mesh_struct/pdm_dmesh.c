@@ -730,7 +730,7 @@ PDM_dmesh_find_topological_ridges
   }
 
   int n_max_nuplet;
-  PDM_MPI_Allreduce(&_n_max_nuplet, &n_max_nuplet, 1, PDM_MPI_INT, PDM_MAX, comm);
+  PDM_MPI_Allreduce(&_n_max_nuplet, &n_max_nuplet, 1, PDM_MPI_INT, PDM_MPI_MAX, comm);
 
   PDM_g_num_t *edge_group  = NULL;
   int         *pridge_edge = NULL;
