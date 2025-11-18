@@ -104,6 +104,7 @@ cdef extern from "pdm.h":
         PDM_OWNERSHIP_KEEP                 = 0
         PDM_OWNERSHIP_USER                 = 1
         PDM_OWNERSHIP_UNGET_RESULT_IS_FREE = 2
+        PDM_OWNERSHIP_BAD_VALUE            = 3
 
     ctypedef enum PDM_extract_part_kind_t:
         PDM_EXTRACT_PART_KIND_LOCAL         = 0
