@@ -261,8 +261,8 @@ PDM_dist_cloud_surf_dump_times
 void
 PDM_dist_cloud_surf_timer_set
 (
-  PDM_dist_cloud_surf_t  *dist,
-  PDM_timer_t            *timer
+  PDM_dist_cloud_surf_t *dist,
+  PDM_timer_t           *timer
 );
 
 

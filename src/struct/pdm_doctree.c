@@ -1209,7 +1209,7 @@ PDM_doctree_build
   PDM_point_tree_seq_free(doct->local_tree);
   doct->local_tree = NULL;
 
-  PDM_timer_end  (doct->timer, "doctree:build:BUILD_SHARED_LOCAL_TREE", 0);
+  PDM_timer_end  (doct->timer, "doctree:build:BUILD_SHARED_LOCAL_TREE" , 0);
   PDM_timer_start(doct->timer, "doctree:build:UPDATE_SOLICITATION_WAIT", 0);
 
   /*
@@ -1237,14 +1237,11 @@ PDM_doctree_build
   PDM_free(send_entity_idx);
   PDM_free(recv_entity_idx);
 
-  PDM_g_num_t *shared_entity_gnum          = PDM_mpi_win_shared_get(wshared_entity_gnum );
-  double      *shared_entity_coord         = PDM_mpi_win_shared_get(wshared_entity_coord);
-  // int         *shared_entity_init_location = PDM_mpi_win_shared_get(wshared_entity_init_location);
+  PDM_g_num_t *shared_entity_gnum  = PDM_mpi_win_shared_get(wshared_entity_gnum );
+  double      *shared_entity_coord = PDM_mpi_win_shared_get(wshared_entity_coord);
 
   PDM_g_num_t* distrib_search = PDM_compute_uniform_entity_distribution(doct->comm_shared, n_tot_recv_shared);
   int  dn_shared_box = distrib_search[i_rank_in_shm+1] - distrib_search[i_rank_in_shm];
-
-  // PDM_log_trace_array_long(shared_entity_gnum, n_tot_recv_shared, "shared_entity_gnum :");
 
   if(0 == 1) {
     char filename[999];

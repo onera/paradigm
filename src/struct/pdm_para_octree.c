@@ -14229,8 +14229,8 @@ PDM_para_octree_neighbor_get
 void
 PDM_para_octree_timer_set
 (
- const PDM_para_octree_t *octree,
-       PDM_timer_t       *timer
+  const PDM_para_octree_t *octree,
+        PDM_timer_t       *timer
 )
 {
   _pdm_para_octree_t *_octree = (_pdm_para_octree_t *) octree;

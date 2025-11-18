@@ -3611,7 +3611,7 @@ PDM_part_coarse_mesh_time_get
 void
 PDM_part_coarse_mesh_dump_times
 (
- PDM_coarse_mesh_t  *cm
+  PDM_coarse_mesh_t  *cm
 )
 {
   PDM_timer_gather_dump(cm->timer, NULL);
@@ -3800,5 +3800,4 @@ void
   }
 
 }
-
 
