@@ -721,10 +721,13 @@ PDM_dmesh_find_topological_ridges
                                              PDM_OWNERSHIP_USER);
 
 
-  int n_max_nuplet = 0;
+  int _n_max_nuplet = 0;
   for(int i = 0; i < dn_edge; ++i) {
-    n_max_nuplet = PDM_MAX(n_max_nuplet, dedge_face_idx[i+1] - dedge_face_idx[i]);
+    _n_max_nuplet = PDM_MAX(_n_max_nuplet, dedge_face_idx[i+1] - dedge_face_idx[i]);
   }
+
+  int n_max_nuplet;
+  PDM_MPI_Allreduce(&_n_max_nuplet, &n_max_nuplet, 1, PDM_MPI_INT, PDM_MAX, comm);
 
   PDM_g_num_t *edge_group   = NULL;
   int         *pridge_edge  = NULL;
