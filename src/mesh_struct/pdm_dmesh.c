@@ -610,6 +610,8 @@ PDM_dmesh_find_topological_ridges
     PDM_log_trace_array_long(dedge_face  , dedge_face_idx[dn_edge], "dedge_face::"  );
     PDM_log_trace_connectivity_long(dedge_face_idx, dedge_face  , dn_edge, "dedge_face::"  );
   }
+  PDM_free(edge_distrib);
+  PDM_free(dedge_vtx_idx);
 
 
   PDM_part_to_block_t* ptb = PDM_part_to_block_create_from_distrib(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
@@ -627,7 +629,7 @@ PDM_dmesh_find_topological_ridges
   PDM_malloc(pface_group_n, dgroup_face_idx[n_group_face], int);
   for(int i_group = 0; i_group < n_group_face; ++i_group) {
     for(int idx_face = dgroup_face_idx[i_group]; idx_face < dgroup_face_idx[i_group+1]; ++idx_face) {
-      pface_group  [idx_face] = (i_group+1);
+      pface_group  [idx_face] = i_group + 1;
       pface_group_n[idx_face] = 1;
     }
   }
@@ -637,7 +639,7 @@ PDM_dmesh_find_topological_ridges
     PDM_log_trace_array_int (pface_group_n, dgroup_face_idx[n_group_face], "pface_group_n ::");
   }
 
-  int *dface_group   = NULL;
+  int *dface_group       = NULL;
   int *tmp_dface_group_n = NULL;
   PDM_part_to_block_exch(ptb,
                          sizeof(int),
@@ -674,8 +676,8 @@ PDM_dmesh_find_topological_ridges
                          PDM_STRIDE_VAR_INTERLACED,
                          dface_group_n,
                          dface_group,
-             (int ***)   &tmp_dextract_face_group_n,
-             (void ***)  &tmp_dextract_face_group);
+             (int  ***) &tmp_dextract_face_group_n,
+             (void ***) &tmp_dextract_face_group);
   int *dextract_face_group_n = tmp_dextract_face_group_n[0];
   int *dextract_face_group   = tmp_dextract_face_group  [0];
   PDM_free(tmp_dextract_face_group_n);
@@ -707,8 +709,9 @@ PDM_dmesh_find_topological_ridges
   PDM_free(dedge_face_group_tmp);
   PDM_free(dextract_face_group);
   PDM_block_to_part_free(btp);
+  PDM_free(dedge_face);
 
-  PDM_free(distrib_extract_face );
+  PDM_free(distrib_extract_face);
 
   /*
    * Prepare gnum
@@ -729,52 +732,50 @@ PDM_dmesh_find_topological_ridges
   int n_max_nuplet;
   PDM_MPI_Allreduce(&_n_max_nuplet, &n_max_nuplet, 1, PDM_MPI_INT, PDM_MAX, comm);
 
-  PDM_g_num_t *edge_group   = NULL;
-  int         *pridge_edge  = NULL;
+  PDM_g_num_t *edge_group  = NULL;
+  int         *pridge_edge = NULL;
   PDM_malloc(pridge_edge, dn_edge, int);
 
-  /* For each ridge keep the link with the face group associated */
+  /* For each ridge keep the link with the face groups associated */
   int *pridge_face_group_idx = NULL;
   int *pridge_face_group     = NULL;
   PDM_malloc(pridge_face_group_idx, dn_edge+1             , int);
   PDM_malloc(pridge_face_group    , n_max_nuplet * dn_edge, int);
 
-  int          dn_ridge     = 0;
-
   PDM_gnum_set_parents_nuplet(gen_gnum, n_max_nuplet);
 
-  PDM_g_num_t *edge_doublet = NULL;
-  PDM_malloc(edge_doublet, n_max_nuplet * dn_edge, PDM_g_num_t);
+  PDM_g_num_t *edge_nuplet = NULL;
+  PDM_malloc(edge_nuplet, n_max_nuplet * dn_edge, PDM_g_num_t);
 
   int *group_list = NULL;
   PDM_malloc(group_list, n_max_nuplet, int);
   int idx_write = 0;
   pridge_face_group_idx[0] = 0;
+
+  int dn_ridge = 0;
   for(int i = 0; i < dn_edge; ++i) {
 
     int beg     = dedge_face_idx[i];
     int n_strid = dedge_face_idx[i+1] - beg;
 
-    for(int k = 0; k < n_max_nuplet; ++k) {
-      group_list[k] = 10000000;
-    }
-
     for(int k = 0; k < n_strid; ++k) {
       group_list[k] = dedge_face_group[beg+k];
     }
 
-    // PDM_sort_int(group_list, NULL, n_strid);
     int n_unique = PDM_inplace_unique(group_list, 0, n_strid-1);
 
-    if(n_strid != 1 && n_unique == 1) {
+    // If only one incident face or strictly more than 2 incident groups
+    // then the current edge is on a ridge 
+    if (n_strid != 1 && n_unique == 1) {
       continue;
     }
 
+    // Store incident face groups into a nuplet that will be later hashed into edge groups
     for(int k = 0; k < n_unique; ++k) {
-      edge_doublet[n_max_nuplet*idx_write+k] = group_list[k];
+      edge_nuplet[n_max_nuplet*idx_write+k] = group_list[k];
     }
     for(int k = n_unique; k < n_max_nuplet; ++k) {
-      edge_doublet[n_max_nuplet*idx_write+k] = -1;
+      edge_nuplet[n_max_nuplet*idx_write+k] = -1;
     }
 
 
@@ -783,22 +784,18 @@ PDM_dmesh_find_topological_ridges
       pridge_face_group[pridge_face_group_idx[dn_ridge+1]++] = group_list[k];
     }
 
-    // Cas 1 : 1 neihbor -> A ridge
-    if(n_strid == 1) {
-      pridge_edge[dn_ridge++] = i;
-    } else if(n_unique > 1) {
-      pridge_edge[dn_ridge++] = i;
-    }
+    pridge_edge[dn_ridge++] = i;
     idx_write++;
   }
   PDM_free(dedge_face_group);
   PDM_free(group_list);
+  PDM_free(dedge_face_idx);
 
-  PDM_realloc(pridge_face_group_idx ,pridge_face_group_idx ,                    (dn_ridge+1) ,int);
-  PDM_realloc(pridge_face_group     ,pridge_face_group     , pridge_face_group_idx[dn_ridge] ,int);
 
-  PDM_gnum_set_from_parents(gen_gnum, 0, dn_ridge, edge_doublet);
-  // PDM_gnum_set_parents_nuplet(gen_gnum, 2);
+  PDM_realloc(pridge_face_group_idx, pridge_face_group_idx,                       dn_ridge+1, int);
+  PDM_realloc(pridge_face_group,     pridge_face_group,     pridge_face_group_idx[dn_ridge],  int);
+
+  PDM_gnum_set_from_parents(gen_gnum, 0, dn_ridge, edge_nuplet);
 
   PDM_gnum_compute(gen_gnum);
   edge_group = PDM_gnum_get(gen_gnum, 0);
@@ -814,9 +811,9 @@ PDM_dmesh_find_topological_ridges
   int n_group_ridge = 0;
   PDM_MPI_Allreduce(&_n_group_ridge, &n_group_ridge, 1, PDM_MPI_INT, PDM_MPI_MAX, comm);
 
-  PDM_free(edge_doublet);
+  PDM_free(edge_nuplet);
   /*
-   * Hook edge
+   * Hook edges
    */
   PDM_g_num_t *dridge_vtx = NULL;
   PDM_malloc(dridge_vtx, 2 * dn_ridge, PDM_g_num_t);
@@ -826,9 +823,10 @@ PDM_dmesh_find_topological_ridges
     dridge_vtx[2*i+1] = dedge_vtx[2*i_edge+1];
   }
   PDM_free(pridge_edge);
+  PDM_free(dedge_vtx);
 
   /*
-   * Re-création des groupes
+   * Create edge groups
    */
   int *dgroup_edge_n = NULL;
   PDM_malloc(dgroup_edge_n, n_group_ridge, int);
@@ -863,6 +861,8 @@ PDM_dmesh_find_topological_ridges
     int idx = dgroup_edge_idx[i_group] + dgroup_edge_n[i_group]++;
     dgroup_edge[idx] = distrib_ridge[i_rank] + i + 1;
   }
+  PDM_free(dgroup_edge_n);
+
 
   if(0 == 1) {
     PDM_log_trace_array_int(dgroup_edge_idx, n_group_ridge+1, "dgroup_edge_idx ::");
@@ -901,7 +901,7 @@ PDM_dmesh_find_topological_ridges
   PDM_block_to_part_free(btp_vtx);
 
 
-  /* Fix output */
+  /* Set output */
   *out_distrib_ridge   = distrib_ridge;
   *out_dridge_vtx      = dridge_vtx_parent;
   *out_n_group_ridge   = n_group_ridge;
@@ -910,17 +910,6 @@ PDM_dmesh_find_topological_ridges
 
   *out_dridge_face_group_idx = pridge_face_group_idx;
   *out_dridge_face_group     = pridge_face_group;
-
-  /*
-   * Free
-   */
-  PDM_free(dgroup_edge_n );
-  PDM_free(edge_distrib  );
-  PDM_free(dedge_vtx_idx );
-  PDM_free(dedge_vtx     );
-  PDM_free(dedge_face_idx);
-  PDM_free(dedge_face    );
-
 }
 
 
