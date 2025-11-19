@@ -229,7 +229,8 @@ PDM_part_comm_graph_entity_graph_get
 
 /**
  *
- * \brief Get entity nuplets
+ * \brief Inplace reduce value on current graph. Allow synchronisation.
+ *        Only PDM_MPI_DOUBLE and PDM_MPI_INT are allowed
  *
  * \param [in]     pcg            Pointer to \ref PDM_part_comm_graph_t instance
  * \param [in]     datatype       Mpi datatype (PDM_MPI_DOUBLE/PDM_MPI_INT)
