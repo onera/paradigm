@@ -46,7 +46,7 @@ def test_constructor():
   else:
     assert (recv_data[0] == np.array([1, 2, 3])).all()
 
-  # > Constant stride
+  # > Variable stride
   recv_stri, recv_data = pcg.exch(send_data_v, send_stri_v)
 
   if i_rank == 0:
