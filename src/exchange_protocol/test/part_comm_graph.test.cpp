@@ -7,6 +7,7 @@
 #include "pdm_logging.h"
 #include "pdm_mem_tool.h"
 #include "pdm_part_comm_graph.h"
+#include "pdm_part_comm_graph_algorithm.h"
 #include "pdm_sort.h"
 #include "pdm_vtk.h"
 #include <functional>
