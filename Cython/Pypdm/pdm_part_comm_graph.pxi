@@ -199,7 +199,7 @@ cdef class PartCommGraph:
     """
     """
 
-  def _dealloc__(self):
+  def __dealloc__(self):
     """
     """
     PDM_part_comm_graph_free(self.pcg)
