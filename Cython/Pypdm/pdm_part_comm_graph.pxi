@@ -70,6 +70,8 @@ cdef class PartCommGraph:
   cdef PDM_part_comm_graph_t *pcg
   cdef MPI.Comm               py_comm
 
+  cdef int                    _n_part
+  cdef int                    _nuplet_size
   cdef int                   *_pn_entity_graph
   cdef int                  **_pentity_graph
   cdef int                  **_pentity_nuplet
@@ -153,7 +155,7 @@ cdef class PartCommGraph:
 
     obj._nuplet_size = 0
     for i_part in range(obj._n_part):
-      obj._nuplet_size = pentity_nuplet.size // obj._pn_entity_graph[i_part]
+      obj._nuplet_size = pentity_nuplet[i_part].size // obj._pn_entity_graph[i_part]
 
     obj.pcg = PDM_part_comm_graph_with_nuplet_create(obj._n_part,
                                                       obj._pn_entity_graph,
@@ -169,7 +171,7 @@ cdef class PartCommGraph:
 
   def exch(self,
            list send_entity_data,
-           int  send_entity_stride=1,
+           send_entity_stride=1,
            bint interlaced_str=True):
     return exch(self, send_entity_data, send_entity_stride, interlaced_str)
 
@@ -214,7 +216,7 @@ ctypedef fused PyPartCommGraph:
 # ------------------------------------------------------------------------
 def exch(PyPartCommGraph pypcg,
          list            send_entity_data,
-         int             send_entity_stride=1,
+                         send_entity_stride=1,
          bint            interlaced_str=True):
   """
     exch(send_entity_data, send_entity_stride, interlaced_str)
@@ -241,10 +243,6 @@ def exch(PyPartCommGraph pypcg,
     _stride_cst = send_entity_stride
   elif isinstance(send_entity_stride, list):
     _stride_t = PDM_STRIDE_VAR_INTERLACED
-
-    #FIXME: recuperer la size de la data à envoyer ?
-    # assert len(send_entity_stride) == pypcg.
-
     _send_entity_stride = np_list_to_int_pointers(send_entity_stride)
   else:
     raise ValueError("Invalid stride in pcg ech")
@@ -276,12 +274,12 @@ def exch(PyPartCommGraph pypcg,
       np_part2_stride = create_numpy_i(_recv_entity_stride[i_part], strid_size)
       dim_np = np_part2_stride.sum()
 
-      np_part2_data = create_numpy(_send_entity_data[i_part], npy_type, dim_np)
+      np_part2_data = create_numpy(_recv_entity_data[i_part], npy_type, dim_np)
 
       lnp_part_strid.append(np_part2_stride)
       lnp_part_data .append(np_part2_data)
 
-    elif PDM_STRIDE_CST_INTERLACED:
+    elif _stride_t == PDM_STRIDE_CST_INTERLACED:
       dim_np  = pypcg._pn_entity_graph[i_part] * _stride_cst
       np_part2_data = create_numpy(_recv_entity_data[i_part], npy_type, dim_np)
 
