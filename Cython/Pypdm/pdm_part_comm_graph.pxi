@@ -53,7 +53,7 @@ cdef extern from "pdm_part_comm_graph.h":
 # ------------------------------------------------------------------------
 cdef class PartCommGraphCapsule:
   """
-
+     PartCommGraphCapsule: Interface for pdm_part_comm_graph
   """
   cdef PDM_part_comm_graph_t *pcg
 
@@ -85,10 +85,10 @@ cdef class PartCommGraph:
     Create a new :py:class`PartCommGraph` instance
 
     Parameters:
-      comm (MPI.Comm) : MPI communicator
-      n_part (int) : Number of partitions
-      pn_entity_grpah (int*) : Number of bound (size = \p n_part)
-      pentity_graph   (int**) : Graph comm identifier (size = 4 * \p pn_entity_graph[i_part]):
+      comm            (MPI.Comm) : MPI communicator
+      n_part          (int)      : Number of partitions
+      pn_entity_grpah (int*)     : Number of bound (size = \p n_part)
+      pentity_graph   (int**)    : Graph comm identifier (size = 4 * \p pn_entity_graph[i_part]):
         For each entity :
           - entity local number (1-based)
           - Connected process   (0-based)
@@ -147,16 +147,13 @@ cdef class PartCommGraph:
                                                       self._pentity_nuplet,
                                                       PDM_OWNERSHIP_USER,
                                          <PDM_bool_t> is_signed,
-                                         PDMC)
+                                                      PDMC)
 
 
   def exch(self,
            list send_entity_data,
            int  send_entity_stride=1,
            bint interlaced_str=True):
-    """
-    Add doc
-    """
     return exch(self, send_entity_data, send_entity_stride, interlaced_str)
 
   def owner_get(self, int i_part):
@@ -174,10 +171,9 @@ cdef class PartCommGraph:
     return entity_graph_get(self, i_part)
 
   def all_reduce(self,
-      MPI.Datatype    datatype,
-      MPI.Op          op,
-      list pdata
-      ):
+                 MPI.Datatype    datatype,
+                 MPI.Op          op,
+                 list            pdata):
     """
     Add doc
     """
@@ -205,13 +201,24 @@ def exch(PyPartCommGraph pypcg,
          int             send_entity_stride=1,
          bint            interlaced_str=True):
   """
-  Add doc
+    exch(send_entity_data, send_entity_stride, interlaced_str)
+
+    Exchange data between graph comm with synchronous blocking exchange
+
+    Parameters:
+      send_entity_data   (list)                      : Graph data for each part
+      send_entity_stride (`int` or `list, optional`) : Stride of Part1 data
+      interlaced_str    (bool, optional)             : Is the data interlaced? (default = **True**)
+
+    Returns :
+      - Recv stride (same dtype as ``send_entity_stride`` )
+      - Recv data   (`list` of same dtype as ``send_entity_data``)
   """
 
   cdef int request_exch
   cdef PDM_stride_t _stride_t
 
-  cdef int _stride_cst = 0
+  cdef int   _stride_cst = 0
   cdef int** _send_entity_stride = NULL
   if isinstance(send_entity_stride, int):
     _stride_t = PDM_STRIDE_CST_INTERLACED if interlaced_str else PDM_STRIDE_CST_INTERLEAVED
@@ -232,8 +239,8 @@ def exch(PyPartCommGraph pypcg,
   cdef size_t s_data   = ref_dtype.itemsize
   cdef size_t npy_type = ref_dtype.num
 
-  cdef int**   _recv_entity_stride = NULL;
-  cdef void** _recv_entity_data   = NULL;
+  cdef int  **_recv_entity_stride = NULL
+  cdef void **_recv_entity_data   = NULL
 
   PDM_part_comm_graph_exch(pypcg.pcg,
                            s_data,
@@ -244,7 +251,30 @@ def exch(PyPartCommGraph pypcg,
                <int  ***> &_recv_entity_stride,
                <void ***> &_recv_entity_data)
 
+  lnp_part_strid = list()
+  lnp_part_data  = list()
+  for i_part in range(pypcg._n_part):
+    if _stride_t == PDM_STRIDE_VAR_INTERLACED:
+      strid_size = pypcg._pn_entity_graph[i_part]
 
+      np_part2_stride = create_numpy_i(_recv_entity_stride[i_part], strid_size)
+      dim_np = np_part2_stride.sum()
+
+      np_part2_data = create_numpy(_send_entity_data[i_part], npy_type, dim_np)
+
+      lnp_part_strid.append(np_part2_stride)
+      lnp_part_data .append(np_part2_data)
+
+    elif PDM_STRIDE_CST_INTERLACED:
+      dim_np  = pypcg._pn_entity_graph[i_part] * _stride_cst
+      np_part2_data = create_numpy(_recv_entity_data[i_part], npy_type, dim_np)
+
+      lnp_part_data .append(np_part2_data)
+
+  if _stride_t == PDM_STRIDE_VAR_INTERLACED:
+    free(_recv_entity_stride)
+  free(_recv_entity_data)
+  return lnp_part_strid, lnp_part_data
 
 # ------------------------------------------------------------------------
 def entity_graph_get(PyPartCommGraph pypcg, int i_part):
@@ -259,13 +289,12 @@ def entity_graph_get(PyPartCommGraph pypcg, int i_part):
   """
   cdef int *entity_graph = NULL
 
-  cdef n_entity = PDM_part_comm_graph_entity_graph_get(
-     pypcg.pcg,
-     i_part,
-    &entity_graph,
-     PDM_OWNERSHIP_USER)
+  cdef n_entity = PDM_part_comm_graph_entity_graph_get(pypcg.pcg,
+                                                       i_part,
+                                                       &entity_graph,
+                                                       PDM_OWNERSHIP_USER)
 
-  return create_numpy_i(entity_graph, n_entity)
+  return create_numpy_i(entity_graph, 4 * n_entity)
 
 # ------------------------------------------------------------------------
 def all_reduce(PyPartCommGraph pypcg,
