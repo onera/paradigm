@@ -76,18 +76,16 @@ cdef class PartCommGraph:
 
   def __init__(self,
                MPI.Comm    comm,
-               int         n_part,
-               list        pn_entity_graph,
                list        pentity_graph):
     """
-    __init__(comm, n_part)
+    __init__(comm, n_part, pn_entity_graph, pentity_graph)
 
     Create a new :py:class`PartCommGraph` instance
 
     Parameters:
       comm            (MPI.Comm) : MPI communicator
       n_part          (int)      : Number of partitions
-      pn_entity_grpah (int*)     : Number of bound (size = \p n_part)
+      pn_entity_graph (int*)     : Number of bound (size = \p n_part)
       pentity_graph   (int**)    : Graph comm identifier (size = 4 * \p pn_entity_graph[i_part]):
         For each entity :
           - entity local number (1-based)
@@ -102,53 +100,72 @@ cdef class PartCommGraph:
     cdef MPI.MPI_Comm c_comm = comm.ob_mpi
     cdef PDM_MPI_Comm PDMC   = PDM_MPI_mpi_2_pdm_mpi_comm(<void *> &c_comm)
 
-    self._pn_entity_graph = list_to_int_pointer(pn_entity_graph)
+    self._n_part          = len(pentity_graph)
+    self._pn_entity_graph = list_to_int_pointer([g.size // 4 for g in pentity_graph])
     self._pentity_graph   = np_list_to_int_pointers(pentity_graph)
-
-    self._n_part = n_part
+    self._pentity_nuplet  = NULL
 
     self.pcg =  PDM_part_comm_graph_create(self._n_part,
                                   <int *>  self._pn_entity_graph,
                                   <int **> self._pentity_graph,
-                                  PDM_OWNERSHIP_USER,
-                                  PDMC)
+                                           PDM_OWNERSHIP_USER,
+                                           PDMC)
 
-  def with_nuplet_create(self,
-                         MPI.Comm comm,
-                         int      n_part,
-                         list     pn_entity_graph,
-                         list     pentity_graph,
-                         int      nuplet_size,
-                         list     pentity_nuplet,
-                         bint     is_signed):
+  @classmethod
+  def nuplet_create(cls,
+                    MPI.Comm comm,
+                    list     pentity_graph,
+                    list     pentity_nuplet,
+                    bint     is_signed):
     """
-    Add doc
+    nuplet_create(comm, pentity_graph, pentity_nuplet, is_signed)
+
+    An alternative constructor (classmethod) that create a PDM_part_comm_graph object from graph and nuplet.
+
+    Parameters:
+      comm            (MPI.Comm) : MPI communicator
+      pentity_graph   (int**)    : Graph comm identifier (size = 4 * \p pn_entity_graph[i_part]):
+        For each entity :
+          - entity local number (1-based)
+          - Connected process   (0-based)
+          - Connected partition on the connected process (1-based)
+          - Connected entity local number in the connected partition (1-based)
+      pentity_nuplet (list of np.ndarray[in])     : Additional nuplets (size = \p nuplet_size * \p pn_entity_graph[i_part])
+      is_signed      (int**)    : Use signed nuplets
+
     """
-    self.py_comm  = comm
+    cdef PartCommGraph obj = PartCommGraph.__new__(PartCommGraph)
+
+    obj.py_comm  = comm
 
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
     # > Convert mpi4py -> PDM_MPI ... FIXME: what is happening here ?
     cdef MPI.MPI_Comm c_comm = comm.ob_mpi
     cdef PDM_MPI_Comm PDMC   = PDM_MPI_mpi_2_pdm_mpi_comm(<void *> &c_comm)
 
-    self._pn_entity_graph = list_to_int_pointer(pn_entity_graph)
-    self._pentity_graph   = np_list_to_int_pointers(pentity_graph)
+    obj._pentity_graph  = NULL
+    obj._pentity_nuplet = NULL
 
-    self._pentity_nuplet  = np_list_to_int_pointers(pentity_nuplet)
-    self._nuplet_size     = nuplet_size
+    obj._n_part = len(pentity_graph)
+    obj._pn_entity_graph = list_to_int_pointer([g.size // 4 for g in pentity_graph])
+    obj._pentity_graph   = np_list_to_int_pointers(pentity_graph)
+    obj._pentity_nuplet  = np_list_to_int_pointers(pentity_nuplet)
 
-    self._n_part = n_part
+    obj._nuplet_size = 0
+    for i_part in range(obj._n_part):
+      obj._nuplet_size = pentity_nuplet.size // obj._pn_entity_graph[i_part]
 
-    self.pcg = PDM_part_comm_graph_with_nuplet_create(self._n_part,
-                                                      self._pn_entity_graph,
-                                                      self._pentity_graph,
+    obj.pcg = PDM_part_comm_graph_with_nuplet_create(obj._n_part,
+                                                      obj._pn_entity_graph,
+                                                      obj._pentity_graph,
                                                       PDM_OWNERSHIP_USER,
-                                                      self._nuplet_size,
-                                                      self._pentity_nuplet,
+                                                      obj._nuplet_size,
+                                                      obj._pentity_nuplet,
                                                       PDM_OWNERSHIP_USER,
                                          <PDM_bool_t> is_signed,
                                                       PDMC)
 
+    return obj
 
   def exch(self,
            list send_entity_data,
@@ -158,7 +175,6 @@ cdef class PartCommGraph:
 
   def owner_get(self, int i_part):
     """
-    Add doc
     """
     cdef int* owner = PDM_part_comm_graph_owner_get(self.pcg,i_part) #returns an int*
 
@@ -166,7 +182,6 @@ cdef class PartCommGraph:
 
   def entity_graph_get(self, int i_part):
     """
-    Add doc
     """
     return entity_graph_get(self, i_part)
 
@@ -175,20 +190,21 @@ cdef class PartCommGraph:
                  MPI.Op          op,
                  list            pdata):
     """
-    Add doc
     """
     all_reduce(self, datatype, op, pdata)
 
   def entity_nuplet_get(self):
     """
-    Add doc
     """
 
   def _dealloc__(self):
     """
-    Add doc
     """
     PDM_part_comm_graph_free(self.pcg)
+    free(self._pn_entity_graph)
+    free(self._pentity_graph  )
+    if self._pentity_nuplet != NULL:
+      free(self._pentity_nuplet )
 
 # ------------------------------------------------------------------------
 ctypedef fused PyPartCommGraph:
@@ -302,9 +318,15 @@ def all_reduce(PyPartCommGraph pypcg,
                MPI.Op          op,
                list            pdata):
   """
-  Add doc
+  all_reduce(datatype, op, pdata)
+
+    Parameters:
+      datatype (MPI.Datatype)                     : Mpi datatype (MPI_DOUBLE/MPI_INT)
+      op       (MPI.Op)                           : Reduction operation kind (SUM/MIN/MAX)
+      pdata    (`list` of `np.ndarray[datatype]`) : Data buffer, value is modified inplace
+
   """
-  # FIXME: modification in-place <= il faut que je recupère ce tableau....
+  # FIXME: datatype est en trop dans l'API python
   cdef void **_pdata = np_list_to_void_pointers(pdata)
   cdef PDM_MPI_Datatype c_datatype = <MPI_Datatype> datatype.ob_mpi
   cdef PDM_MPI_Op       c_op       = <MPI_Op      > op.ob_mpi
