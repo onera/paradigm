@@ -180,7 +180,8 @@ cdef class PartCommGraph:
     """
     cdef int* owner = PDM_part_comm_graph_owner_get(self.pcg,i_part) #returns an int*
 
-    return create_numpy_i(owner, self._pn_entity_graph[i_part])
+    np_owner = create_numpy_i(owner, self._pn_entity_graph[i_part], flag_owndata=False)
+    return NPY.copy(np_owner)
 
   def entity_graph_get(self, int i_part):
     """
