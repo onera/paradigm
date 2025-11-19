@@ -286,9 +286,12 @@ def exch(PyPartCommGraph pypcg,
 
       lnp_part_data .append(np_part2_data)
 
+  free(_send_entity_data)
   if _stride_t == PDM_STRIDE_VAR_INTERLACED:
+    free(_send_entity_stride)
     free(_recv_entity_stride)
   free(_recv_entity_data)
+
   return lnp_part_strid, lnp_part_data
 
 # ------------------------------------------------------------------------
