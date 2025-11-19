@@ -121,10 +121,9 @@ cdef extern from "pdm_part_mesh_nodal.h":
                                                  PDM_part_comm_graph_t **pcg,
                                                  PDM_ownership_t         ownership);
 
-    void PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(
-      PDM_part_mesh_nodal_t  *pmn,
-      PDM_mesh_entities_t     entity_type
-    );
+cdef extern from "pdm_part_mesh_nodal_algorithm.h":
+    void PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(PDM_part_mesh_nodal_t  *pmn,
+                                                               PDM_mesh_entities_t     entity_type);
 
 cdef extern from "pdm_part_mesh_nodal_geom.h":
     void PDM_part_mesh_nodal_dual_volume_compute(PDM_part_mesh_nodal_t   *pmn,
