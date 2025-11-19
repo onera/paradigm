@@ -121,6 +121,11 @@ cdef extern from "pdm_part_mesh_nodal.h":
                                                  PDM_part_comm_graph_t **pcg,
                                                  PDM_ownership_t         ownership);
 
+    void PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(
+      PDM_part_mesh_nodal_t  *pmn,
+      PDM_mesh_entities_t     entity_type
+    );
+
 cdef extern from "pdm_part_mesh_nodal_geom.h":
     void PDM_part_mesh_nodal_dual_volume_compute(PDM_part_mesh_nodal_t   *pmn,
                                                  double                ***dual_vol);
@@ -332,6 +337,16 @@ cdef class PartMeshNodal:
       """
       return part_mesh_nodal_dim_get(self)
 
+    def part_comm_graph_get(self,
+                      PDM_mesh_entities_t entity_type):
+
+      return get_part_comm_graph(self, entity_type)
+
+    def compute_part_comm_graph_from_gnum(self,
+        PDM_mesh_entities_t entity_type):
+
+      return compute_pcg_from_gnum(self,entity_type)
+
     # ------------------------------------------------------------------------
     def __dealloc__(self):
       """
@@ -447,6 +462,12 @@ cdef class PartMeshNodalCapsule:
     """
     return part_mesh_nodal_get_group(self, geom_kind, i_part, i_group)
 
+  def compute_part_comm_graph_from_gnum(self,
+        PDM_mesh_entities_t entity_type):
+
+    return compute_pcg_from_gnum(self,entity_type)
+
+
   def __dealloc__(self):
     """
     """
@@ -457,6 +478,14 @@ ctypedef fused PMeshNodal:
   PartMeshNodal
   PartMeshNodalCapsule
 
+
+def compute_pcg_from_gnum(PMeshNodal          pypmn,
+                          PDM_mesh_entities_t entity_type):
+  """
+  Add doc
+  """
+
+  return PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(pypmn.pmn,entity_type)
 
 def get_part_comm_graph(PMeshNodal          pypmn,
                         PDM_mesh_entities_t entity_type):
