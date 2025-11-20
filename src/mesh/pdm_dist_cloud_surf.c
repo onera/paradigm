@@ -580,13 +580,6 @@ _dist_cloud_surf_compute
      *  Compute element-point distances from SOURCE point-of-view
      *******************************************************************/
 
-    // PDM_timer_hang_on(dist->timer);
-    // b_t_elapsed = PDM_timer_elapsed(dist->timer);
-    // b_t_cpu     = PDM_timer_cpu(dist->timer);
-    // b_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
-    // b_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
-    // PDM_timer_resume(dist->timer);
-
     int n_elt_block = PDM_part_to_block_n_elt_block_get (ptb);
     PDM_g_num_t *block_elt_g_num = PDM_part_to_block_block_gnum_get (ptb);
     PDM_g_num_t *block_elt_g_num_full = PDM_part_to_block_block_gnum_get (ptb_elt);
