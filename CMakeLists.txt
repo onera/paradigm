@@ -40,7 +40,7 @@ endif()
 # Dependencies
 # ------------------------------------------------------------------------------
 if (NOT TARGET MPI::MPI_CXX)
-  find_package(MPI REQUIRED COMPONENTS Fortran CXX)
+  find_package(MPI REQUIRED COMPONENTS CXX)
 endif()
 if (PDM_ENABLE_PYTHON_BINDINGS)
   if (NOT TARGET Python::Python OR NOT TARGET Python::NumPy)
@@ -255,6 +255,9 @@ get_target_property(PDM_INC pdm INCLUDE_DIRECTORIES)
 get_target_property(PDM_LIB pdm LINK_LIBRARIES)
 
 if (PDM_ENABLE_Fortran)
+  if (NOT TARGET MPI::MPI_Fortran)
+    find_package(MPI REQUIRED COMPONENTS Fortran)
+  endif()
   add_library(pdmf OBJECT ${all_src_fortran_files})
   set_target_properties(pdmf PROPERTIES Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/modules)
   target_include_directories(pdmf PUBLIC ${PDM_INC})
