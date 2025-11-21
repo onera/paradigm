@@ -1032,7 +1032,7 @@ PDM_part_comm_graph_concatenate
 
 
   /**
-   * Create concatenate pcg arrays
+   * Count number of concatenated graph entities
    */
   int  *concat_n_entity_graph = NULL;
   int **concat_pentity_graph  = NULL;
@@ -1046,35 +1046,49 @@ PDM_part_comm_graph_concatenate
   for (int i_part=0; i_part<n_part; ++i_part) {
 
     concat_n_entity_graph[i_part] = 0;
-    concat_pentity_graph[i_part] = NULL;
-    if (concat_nuplet_size>0) {
-      concat_pentity_nuplet[i_part] = NULL;
+
+    for (int i_pcg=0; i_pcg<n_pcg; ++i_pcg) {
+      int *entity_graph  = NULL;
+      int n_entity_graph = PDM_part_comm_graph_entity_graph_get(pcgs[i_pcg],
+                                                                i_part,
+                                                               &entity_graph,
+                                                                PDM_OWNERSHIP_BAD_VALUE);
+
+      concat_n_entity_graph[i_part] += n_entity_graph;
     }
+  }
+
+
+  /**
+   * Create concatenate pcg arrays
+   */
+  for (int i_part=0; i_part<n_part; ++i_part) {
+
+    PDM_malloc(concat_pentity_graph[i_part], 4*concat_n_entity_graph[i_part], int);
+    if (concat_nuplet_size>0) {
+      PDM_malloc(concat_pentity_nuplet[i_part], concat_nuplet_size*concat_n_entity_graph[i_part], int);
+    }
+    concat_n_entity_graph[i_part] = 0;
 
     for (int i_pcg=0; i_pcg<n_pcg; ++i_pcg) {
 
-      int *entity_graph   = NULL;
-      int *entity_nuplet  = NULL;
-      int n_entity_graph = PDM_part_comm_graph_entity_graph_get(
-        pcgs[i_pcg],
-        i_part,
-       &entity_graph,
-        PDM_OWNERSHIP_BAD_VALUE
-      );
-      PDM_part_comm_graph_entity_nuplet_get(
-        pcgs[i_pcg],
-        i_part,
-       &entity_nuplet,
-        PDM_OWNERSHIP_BAD_VALUE
-      );
+      int *entity_graph  = NULL;
+      int *entity_nuplet = NULL;
+      int n_entity_graph = PDM_part_comm_graph_entity_graph_get(pcgs[i_pcg],
+                                                                i_part,
+                                                               &entity_graph,
+                                                                PDM_OWNERSHIP_BAD_VALUE);
+      PDM_part_comm_graph_entity_nuplet_get(pcgs[i_pcg],
+                                            i_part,
+                                           &entity_nuplet,
+                                            PDM_OWNERSHIP_BAD_VALUE);
 
       int _concat_n_entity_graph = concat_n_entity_graph[i_part] + n_entity_graph;
 
-      PDM_realloc(concat_pentity_graph[i_part], concat_pentity_graph[i_part], 4*_concat_n_entity_graph, int);
       memcpy(&concat_pentity_graph[i_part][4*concat_n_entity_graph[i_part]], entity_graph, 4*n_entity_graph*sizeof(int));
 
       if (concat_nuplet_size>0) {
-        PDM_realloc(concat_pentity_nuplet[i_part], concat_pentity_nuplet[i_part], _concat_n_entity_graph * concat_nuplet_size, int);
+
         if (pcgs[i_pcg]->nuplet_size == concat_nuplet_size) {
           memcpy(&concat_pentity_nuplet[i_part][concat_n_entity_graph[i_part]], entity_nuplet, n_entity_graph*sizeof(int));
         }
@@ -1093,12 +1107,9 @@ PDM_part_comm_graph_concatenate
             i_write++;
           }
         }
-
       }
-
       concat_n_entity_graph[i_part] += n_entity_graph;
     }
-
   }
 
 
@@ -1107,26 +1118,22 @@ PDM_part_comm_graph_concatenate
    */
   PDM_part_comm_graph_t *pcg = NULL;
   if (concat_nuplet_size>0) {
-    pcg = PDM_part_comm_graph_with_nuplet_create(
-      n_part,
-      concat_n_entity_graph,
-      concat_pentity_graph,
-      PDM_OWNERSHIP_KEEP,
-      concat_nuplet_size,
-      concat_pentity_nuplet,
-      PDM_OWNERSHIP_KEEP,
-      concat_is_signed,
-      comm
-    );
+    pcg = PDM_part_comm_graph_with_nuplet_create(n_part,
+                                                 concat_n_entity_graph,
+                                                 concat_pentity_graph,
+                                                 PDM_OWNERSHIP_KEEP,
+                                                 concat_nuplet_size,
+                                                 concat_pentity_nuplet,
+                                                 PDM_OWNERSHIP_KEEP,
+                                                 concat_is_signed,
+                                                 comm);
   }
   else {
-    pcg = PDM_part_comm_graph_create(
-      n_part,
-      concat_n_entity_graph,
-      concat_pentity_graph,
-      PDM_OWNERSHIP_KEEP,
-      comm
-    );
+    pcg = PDM_part_comm_graph_create(n_part,
+                                     concat_n_entity_graph,
+                                     concat_pentity_graph,
+                                     PDM_OWNERSHIP_KEEP,
+                                     comm);
   }
 
 
