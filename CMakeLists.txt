@@ -421,7 +421,7 @@ foreach(_target IN ITEMS ${_targets})
   add_library(pdm::${_target} ALIAS ${_target})
 endforeach()
 
-file(GLOB_RECURSE all_headers "${CMAKE_SOURCE_DIR}/src/*.h")
+file(GLOB_RECURSE all_headers CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h")
 set(install_headers ${all_headers})
 list(FILTER install_headers EXCLUDE REGEX ".*\\_priv\\.h$")
 
