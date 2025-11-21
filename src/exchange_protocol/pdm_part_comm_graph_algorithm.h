@@ -128,6 +128,27 @@ PDM_part_comm_graph_selected_entity1_to_selected_entity2
   int                   ***out_selected_entity2
 );
 
+
+
+
+/**
+ * \brief Create an unique part_comm_graph from multiple ones.
+ *
+ * \param [in] comm  MPI communicator
+ * \param [in] n_pcg Number of PDM_part_comm_graph_t objects to concatenate
+ * \param [in] pcgs  PDM_part_comm_graph_t objects to concatenate
+ *
+ * \return Initialized concatenated \ref PDM_part_comm_graph_t instance
+ *
+ */
+PDM_part_comm_graph_t *
+PDM_part_comm_graph_concatenate
+(
+  PDM_MPI_Comm            comm,
+  int                     n_pcg,
+  PDM_part_comm_graph_t **pcgs
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
