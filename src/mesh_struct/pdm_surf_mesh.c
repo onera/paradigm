@@ -320,38 +320,6 @@ PDM_surf_mesh_part_vtx_g_num_get
   return part->vtx_ln_to_gn;
 }
 
-
-const PDM_g_num_t *
-PDM_surf_mesh_part_edge_g_num_get
-(
- PDM_surf_mesh_t      *mesh,
- int                   i_part
-)
-{
-  assert (mesh != NULL);
-
-  PDM_surf_part_t *part  = mesh->part[i_part];
-
-  return part->edgeLnToGn;
-}
-
-
-const int *
-PDM_surf_mesh_part_face_edge_get
-(
- PDM_surf_mesh_t      *mesh,
- int                   i_part
-)
-{
-  assert (mesh != NULL);
-
-  PDM_surf_part_t *part  = mesh->part[i_part];
-
-  return part->faceEdge;
-}
-
-
-
 const int *
 PDM_surf_mesh_part_face_vtx_get
 (
@@ -380,22 +348,6 @@ PDM_surf_mesh_part_face_vtx_idx_get
 
   return part->face_vtx_idx;
 }
-
-const int *
-PDM_surf_mesh_part_face_edge_idx_get
-(
- PDM_surf_mesh_t      *mesh,
- int                   i_part
-)
-{
-  assert (mesh != NULL);
-
-  PDM_surf_part_t *part  = mesh->part[i_part];
-
-  return part->faceEdgeIdx;
-}
-
-
 
 const double *
 PDM_surf_mesh_part_vtx_get

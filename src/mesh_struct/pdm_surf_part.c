@@ -50,38 +50,26 @@ extern "C" {
 PDM_surf_part_t *
 PDM_surf_part_create
 (
-const int          n_face,
-const int         *face_vtx_idx,
-const int         *face_vtx,
-const PDM_g_num_t *face_ln_to_gn,
-const int          n_vtx,
-const double      *coords,
-const PDM_g_num_t *vtx_ln_to_gn
+  const int          n_face,
+  const int         *face_vtx_idx,
+  const int         *face_vtx,
+  const PDM_g_num_t *face_ln_to_gn,
+  const int          n_vtx,
+  const double      *coords,
+  const PDM_g_num_t *vtx_ln_to_gn
 )
 {
   PDM_surf_part_t *_part;
   PDM_malloc(_part, 1 ,PDM_surf_part_t);
 
-  _part->n_face               = n_face;
-  _part->nGhostFace           = 0;
-  _part->nTotalFace           = n_face;
-  _part->sface_vtx            = face_vtx_idx[n_face];
-  _part->face_vtx_idx         = face_vtx_idx;
-  _part->face_vtx             = face_vtx;
-  _part->faceEdgeIdx          = NULL;
-  _part->faceEdge             = NULL;
-  _part->face_ln_to_gn        = face_ln_to_gn;
-  _part->n_vtx                = n_vtx;
-  _part->coords               = coords;
-  _part->vtxEdgeIdx           = NULL;
-  _part->vtxEdge              = NULL;
-  _part->vtx_ln_to_gn         = vtx_ln_to_gn;
-  _part->edgeFace             = NULL;
-  _part->edgeVtx              = NULL;
-  _part->edgeLnToGn           = NULL;
-  _part->carLgthVtx           = NULL;
-  _part->faceNormal           = NULL;
-  _part->extents              = NULL;
+  _part->n_face        = n_face;
+  _part->face_vtx_idx  = face_vtx_idx;
+  _part->face_vtx      = face_vtx;
+  _part->face_ln_to_gn = face_ln_to_gn;
+  _part->n_vtx         = n_vtx;
+  _part->coords        = coords;
+  _part->vtx_ln_to_gn  = vtx_ln_to_gn;
+  _part->extents       = NULL;
 
   return _part;
 }
@@ -98,33 +86,10 @@ PDM_surf_part_free
   if (part != NULL) {
     part->face_vtx_idx = NULL;
     part->face_vtx = NULL;
-    if (part->faceEdgeIdx != NULL)
-      PDM_free(part->faceEdgeIdx);
-    if (part->faceEdge != NULL)
-      PDM_free(part->faceEdge);
 
     part->face_ln_to_gn = NULL;
     part->coords = NULL;
-    if (part->vtxEdgeIdx != NULL)
-      PDM_free(part->vtxEdgeIdx);
-    if (part->vtxEdge != NULL)
-      PDM_free(part->vtxEdge);
     part->vtx_ln_to_gn = NULL;
-
-    if (part->edgeFace != NULL)
-      PDM_free(part->edgeFace);
-
-    if (part->edgeVtx != NULL)
-      PDM_free(part->edgeVtx);
-
-    if (part->edgeLnToGn != NULL)
-      PDM_free(part->edgeLnToGn);
-
-    if (part->carLgthVtx != NULL)
-      PDM_free(part->carLgthVtx);
-
-    if (part->faceNormal != NULL)
-      PDM_free(part->faceNormal);
 
     if (part->extents != NULL)
       PDM_free(part->extents);

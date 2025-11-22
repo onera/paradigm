@@ -226,41 +226,6 @@ PDM_surf_mesh_part_vtx_g_num_get
  int                   i_part
 );
 
-
-/**
- * \brief Return Edge global number
- *
- * \param [in]  mesh       Mesh object
- * \param [in]  i_part      Part number
- *
- * \return  Edge global number
- */
-
-const PDM_g_num_t *
-PDM_surf_mesh_part_edge_g_num_get
-(
- PDM_surf_mesh_t      *mesh,
- int                   i_part
-);
-
-
-/**
- * \brief Return Face to edge connectivity
- *
- * \param [in]  mesh       Mesh object
- * \param [in]  i_part      Part number
- *
- * \return    Face to edge connectivity
- */
-
-const int *
-PDM_surf_mesh_part_face_edge_get
-(
- PDM_surf_mesh_t      *mesh,
- int                   i_part
-);
-
-
 /**
  * \brief Return Face to vertex connectivity
  *
@@ -293,24 +258,6 @@ PDM_surf_mesh_part_face_vtx_idx_get
  PDM_surf_mesh_t      *mesh,
  int                   i_part
 );
-
-
-/**
- * \brief Return Face to edge connectivity index
- *
- * \param [in]  mesh       Mesh object
- * \param [in]  i_part      Part number
- *
- * \return    Face to edge connectivity index
- */
-
-const int *
-PDM_surf_mesh_part_face_edge_idx_get
-(
- PDM_surf_mesh_t      *mesh,
- int                   i_part
-);
-
 
 /**
  * \brief Return vertex coordinates
