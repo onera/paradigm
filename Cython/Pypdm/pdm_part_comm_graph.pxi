@@ -79,12 +79,12 @@ cdef class PartCommGraph:
   cdef int                    _n_part
   cdef int                    _nuplet_size
   cdef int                   *_pn_entity_graph
-  cdef int                  **_pentity_graph
-  cdef int                  **_pentity_nuplet
 
   def __init__(self,
                MPI.Comm    comm,
-               list        pentity_graph):
+               list        pentity_graph,
+               list        pentity_nuplet=None,
+               bint        is_signed=True):
     """
     __init__(comm, pentity_graph)
 
@@ -98,6 +98,8 @@ cdef class PartCommGraph:
           - Connected process   (0-based)
           - Connected partition on the connected process (1-based)
           - Connected entity local number in the connected partition (1-based)
+      pentity_nuplet (list of np.ndarray[in]) : Additional nuplets (size = \p nuplet_size * \p pn_entity_graph[i_part])
+      is_signed      (int**)                  : Use signed nuplets
     """
 
     self.py_comm  = comm
@@ -106,72 +108,36 @@ cdef class PartCommGraph:
     cdef MPI.MPI_Comm c_comm = comm.ob_mpi
     cdef PDM_MPI_Comm PDMC   = PDM_MPI_mpi_2_pdm_mpi_comm(<void *> &c_comm)
 
+    cdef int **_pentity_graph  = NULL
+    cdef int **_pentity_nuplet = NULL
+
     self._n_part          = len(pentity_graph)
     self._pn_entity_graph = list_to_int_pointer([g.size // 4 for g in pentity_graph])
-    self._pentity_graph   = np_list_to_int_pointers(pentity_graph)
-    self._pentity_nuplet  = NULL
+    _pentity_graph        = np_list_to_int_pointers(pentity_graph)
 
-    self.pcg =  PDM_part_comm_graph_create(self._n_part,
-                                  <int *>  self._pn_entity_graph,
-                                  <int **> self._pentity_graph,
-                                           PDM_OWNERSHIP_USER,
-                                           PDMC)
+    if pentity_nuplet is None:
+      self.pcg =  PDM_part_comm_graph_create(self._n_part,
+                                    <int *>  self._pn_entity_graph,
+                                    <int **> _pentity_graph,
+                                             PDM_OWNERSHIP_USER,
+                                             PDMC)
+    else:
+      _pentity_nuplet = np_list_to_int_pointers(pentity_nuplet)
+      self._nuplet_size = 0
+      for i_part in range(self._n_part):
+        self._nuplet_size = pentity_nuplet[i_part].size // self._pn_entity_graph[i_part]
 
-  @classmethod
-  def nuplet_create(cls,
-                    MPI.Comm comm,
-                    list     pentity_graph,
-                    list     pentity_nuplet,
-                    bint     is_signed):
-    """
-    nuplet_create(comm, pentity_graph, pentity_nuplet, is_signed)
-
-    An alternative constructor (classmethod) that create a PDM_part_comm_graph object from graph and nuplet.
-
-    Parameters:
-      comm            (MPI.Comm) : MPI communicator
-      pentity_graph   (int**)    : Graph comm identifier (size = 4 * \p pn_entity_graph[i_part]):
-        For each entity :
-          - entity local number (1-based)
-          - Connected process   (0-based)
-          - Connected partition on the connected process (1-based)
-          - Connected entity local number in the connected partition (1-based)
-      pentity_nuplet (list of np.ndarray[in])     : Additional nuplets (size = \p nuplet_size * \p pn_entity_graph[i_part])
-      is_signed      (int**)    : Use signed nuplets
-
-    """
-    cdef PartCommGraph obj = PartCommGraph.__new__(PartCommGraph)
-
-    obj.py_comm  = comm
-
-    # ::::::::::::::::::::::::::::::::::::::::::::::::::
-    # > Convert mpi4py -> PDM_MPI ... FIXME: what is happening here ?
-    cdef MPI.MPI_Comm c_comm = comm.ob_mpi
-    cdef PDM_MPI_Comm PDMC   = PDM_MPI_mpi_2_pdm_mpi_comm(<void *> &c_comm)
-
-    obj._pentity_graph  = NULL
-    obj._pentity_nuplet = NULL
-
-    obj._n_part = len(pentity_graph)
-    obj._pn_entity_graph = list_to_int_pointer([g.size // 4 for g in pentity_graph])
-    obj._pentity_graph   = np_list_to_int_pointers(pentity_graph)
-    obj._pentity_nuplet  = np_list_to_int_pointers(pentity_nuplet)
-
-    obj._nuplet_size = 0
-    for i_part in range(obj._n_part):
-      obj._nuplet_size = pentity_nuplet[i_part].size // obj._pn_entity_graph[i_part]
-
-    obj.pcg = PDM_part_comm_graph_with_nuplet_create(obj._n_part,
-                                                      obj._pn_entity_graph,
-                                                      obj._pentity_graph,
-                                                      PDM_OWNERSHIP_USER,
-                                                      obj._nuplet_size,
-                                                      obj._pentity_nuplet,
-                                                      PDM_OWNERSHIP_USER,
-                                         <PDM_bool_t> is_signed,
-                                                      PDMC)
-
-    return obj
+      self.pcg = PDM_part_comm_graph_with_nuplet_create(self._n_part,
+                                                        self._pn_entity_graph,
+                                                        _pentity_graph,
+                                                        PDM_OWNERSHIP_USER,
+                                                        self._nuplet_size,
+                                                        _pentity_nuplet,
+                                                        PDM_OWNERSHIP_USER,
+                                           <PDM_bool_t> is_signed,
+                                                        PDMC)
+      free(_pentity_nuplet)
+    free(_pentity_graph)
 
   def exch(self,
            list send_entity_data,
@@ -206,13 +172,13 @@ cdef class PartCommGraph:
       i_part (int) : Partition identifier
 
     Returns:
-      Graph comm identifier (size = 4 * \p pn_entity_graph[i_part]):
+      Graph comm identifier (`np.array[np.int]`):
         For each entity :
           - entity local number (1-based)
           - Connected process   (0-based)
           - Connected partition on the connected process (1-based)
           - Connected entity local number in the connected partition (1-based)
-      (`np.array[np.int]`)
+
     """
     return entity_graph_get(self, i_part)
 
@@ -247,9 +213,6 @@ cdef class PartCommGraph:
     """
     PDM_part_comm_graph_free(self.pcg)
     free(self._pn_entity_graph)
-    free(self._pentity_graph  )
-    if self._pentity_nuplet != NULL:
-      free(self._pentity_nuplet )
 
 # ------------------------------------------------------------------------
 ctypedef fused PyPartCommGraph:

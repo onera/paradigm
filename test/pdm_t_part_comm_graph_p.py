@@ -58,7 +58,7 @@ def test_constructor():
 
 
 def test_constructor_with_nuplet():
-  pcg = PDM.PartCommGraph.nuplet_create(comm, entity_graph, entity_nuplet, 0)
+  pcg = PDM.PartCommGraph(comm, entity_graph, entity_nuplet, 0)
   owner = pcg.owner_get(0)
 
   if i_rank == 0:
