@@ -13,7 +13,6 @@
 #include "pdm_mpi.h"
 #include "pdm.h"
 #include "pdm_surf_part.h"
-#include "pdm_graph_bound.h"
 
 /*=============================================================================
  * Macro definitions
@@ -40,25 +39,17 @@ extern "C" {
 
 struct _pdm_surf_mesh_t{
 
-  PDM_MPI_Comm    comm;   /*!< MPI communicator of mesh */
-  PDM_g_num_t  nGFace; /*!< Global number of faces     */
-  PDM_g_num_t  nGVtx;  /*!< Global number of vertices  */
-  PDM_g_num_t  nGEdge;  /*!< Global number of edges  */
-  int         nGPart; /*!< Number of global partitions */
-  int         n_part;  /*!< Number of local partitions */
-  double      gMinCarLgthVtx; /*!< Global min
-                                   of caracteristic length vertex */
-  double      gMaxCarLgthVtx; /*!< Global max
-                                   of caracteristic length vertex */
-  PDM_surf_part_t   **part;   /*!< Mesh partition             */
+  PDM_MPI_Comm        comm;           /*!< MPI communicator of mesh */
+  PDM_g_num_t         nGFace;         /*!< Global number of faces     */
+  PDM_g_num_t         nGVtx;          /*!< Global number of vertices  */
+  PDM_g_num_t         nGEdge;         /*!< Global number of edges  */
+  int                 nGPart;         /*!< Number of global partitions */
+  int                 n_part;         /*!< Number of local partitions */
+  double              gMinCarLgthVtx; /*!< Global min of caracteristic length vertex */
+  double              gMaxCarLgthVtx; /*!< Global max of caracteristic length vertex */
+  PDM_surf_part_t   **part;           /*!< Mesh partition             */
 
-  PDM_graph_bound_t *interPartEdgeGraph; /*!< Inter partition edges graph */
-  PDM_graph_bound_t *interPartVtxGraph;  /*!< Inter partition vertices graph */
-
-  PDM_part_bound_t **vtxPartBound; /*!< pointer on bounding vertices of each part */
-  PDM_part_bound_t **edgePartBound; /*!< pointer on bounding edges of each part */
-
-} ;
+};
 
 /*=============================================================================
  * Static global variables

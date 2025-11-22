@@ -18,7 +18,7 @@ cdef extern from "pdm_mesh_intersection.h":
                                           const int                n_part);
 
     void PDM_mesh_intersection_part_set(PDM_mesh_intersection_t  *mi,
-                                        PDM_ol_mesh_t             i_mesh,
+                                        int                       i_mesh,
                                         int                       i_part,
                                         int                       n_cell,
                                         int                       n_face,
@@ -177,7 +177,7 @@ cdef class MeshIntersection:
       cdef int* face_vtx_idx_data  = np_to_int_pointer(face_vtx_idx )
       cdef int* face_vtx_data      = np_to_int_pointer(face_vtx     )
       PDM_mesh_intersection_part_set(self._mi,
-                    <PDM_ol_mesh_t>  i_mesh,
+                                     i_mesh,
                                      i_part,
                                      n_cell,
                                      n_face,

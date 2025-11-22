@@ -88,54 +88,6 @@ PDM_surf_part_free
 );
 
 
-/**
- * \brief Compute partition edge entities
- *
- * This function defines edges of an initial partition and
- * computes edge connectivities
- *
- * \param [in]  part      Partition to compute
- *
- */
-
-void
-PDM_surf_part_build_edges
-(
-PDM_surf_part_t *part
-);
-
-
-/**
- * \brief Return face_ln_to_gn
- *
- *
- * \param [in]  part      Partition to compute
- *
- */
-
-const PDM_g_num_t *
-PDM_surf_part_faceLnToGn_get
-(
-PDM_surf_part_t *part
-);
-
-/**
- * \brief Dump a surf_part_t object
- *
- * This function dumps a PDM_surf_part_t structure
- *
- * \param [in]  part       to dump
- *
- */
-
-void
-PDM_surf_part_dump
-(
-PDM_surf_part_t *part
-);
-
-
-
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

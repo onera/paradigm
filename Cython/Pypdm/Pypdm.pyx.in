@@ -490,11 +490,13 @@ cdef PDM_g_num_t* np_to_gnum_pointer(NPY.ndarray[npy_pdm_gnum_t] array):
   if array is not None:
     ptr = <PDM_g_num_t*> array.data
   return ptr
+
 cdef int* np_to_int_pointer(NPY.ndarray[NPY.int32_t] array):
   cdef int* ptr = NULL
   if array is not None:
     ptr = <int*> array.data
   return ptr
+
 cdef double* np_to_double_pointer(NPY.ndarray[double] array):
   cdef double* ptr = NULL
   if array is not None:
@@ -693,10 +695,6 @@ include "pdm_closest_points.pxi"
 # PDM_laplacian_smoothing :
 # --------------------
 include "pdm_laplacian_smoothing.pxi"
-
-# PDM_overlay :
-# --------------------
-include "pdm_overlay.pxi"
 
 # PDM_dcube_gen :
 # --------------------

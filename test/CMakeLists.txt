@@ -152,7 +152,6 @@ test_c_create (pdm_t_mesh_location_multisection   ${MPIEXEC_MAX_NUMPROCS} PDM_LI
 test_c_create (pdm_t_mesh_location_poly_surf      ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_mesh_location_from_file                            2 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_mesh_location_ho                                   2 PDM_LIST_TEST PDM_LIST_NRANK)
-test_c_create (pdm_t_plane_meshes_intersect                             2 PDM_LIST_TEST PDM_LIST_NRANK)
 
 test_c_create (pdm_t_field_cell_to_vtx       1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_field_cell_to_vtx_nodal 1 PDM_LIST_TEST PDM_LIST_NRANK)
@@ -176,8 +175,6 @@ test_c_create (pdm_t_mesh_intersection_surf_line 1 PDM_LIST_TEST PDM_LIST_NRANK)
 
 test_c_create (pdm_t_edge_upwind_and_downwind    1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_edge_upwind_and_downwind_2d 1 PDM_LIST_TEST PDM_LIST_NRANK)
-test_c_create (pdm_t_overlay_from_vol_mesh       1 PDM_LIST_TEST PDM_LIST_NRANK)
-test_c_create (pdm_t_plane_intersect_unit        2 PDM_LIST_TEST PDM_LIST_NRANK)
 
 # geometrees
 test_c_create (pdm_t_par_octree                ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRANK)
@@ -191,7 +188,6 @@ test_c_create (pdm_t_par_octree_shared         ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_
 
 # algo
 test_c_create (pdm_t_closest_points                 ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRANK)
-test_c_create (pdm_t_plane_meshes_intersect_unit                          1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_intersect_line_box                                   1 PDM_LIST_TEST PDM_LIST_NRANK)
 
 test_c_create (pdm_t_closest_points_1_point 1 PDM_LIST_TEST PDM_LIST_NRANK)
@@ -258,7 +254,6 @@ if(PDM_ENABLE_Fortran)
   test_fortran_create (pdm_t_block_to_part_f              1 PDM_LIST_TEST PDM_LIST_NRANK)
   test_fortran_create (pdm_t_dcube_gen_f                  1 PDM_LIST_TEST PDM_LIST_NRANK)
   test_fortran_create (pdm_t_dcube_nodal_gen_f            2 PDM_LIST_TEST PDM_LIST_NRANK)
-  test_fortran_create (pdm_t_plane_intersect_unit_f       1 PDM_LIST_TEST PDM_LIST_NRANK)
   test_fortran_create (pdm_t_global_reduce_f              2 PDM_LIST_TEST PDM_LIST_NRANK)
   test_fortran_create (pdm_t_dist_f                       2 PDM_LIST_TEST PDM_LIST_NRANK)
   test_fortran_create (pdm_t_gnum_f                       2 PDM_LIST_TEST PDM_LIST_NRANK)
