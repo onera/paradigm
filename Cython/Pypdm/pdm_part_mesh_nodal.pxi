@@ -337,11 +337,28 @@ cdef class PartMeshNodal:
 
     def part_comm_graph_get(self,
                             PDM_mesh_entities_t entity_type):
+      """
+      part_comm_graph_get(entity_type)
+
+      Returns a \ref PDM_part_comm_graph_t python object
+
+      Parameters:
+       entity_type (PDM_mesh_entities_t) : type of entity (vertex, cell, edge)
+      """
       return get_part_comm_graph(self, entity_type)
 
     def compute_part_comm_graph_from_gnum(self,
                                           PDM_mesh_entities_t entity_type):
-      return compute_pcg_from_gnum(self,entity_type)
+
+      """
+      compute_part_comm_graph_from_gnum(entity_type)
+
+      Compute internal part_comm_graph from part_mesh_nodal entity global ids.
+
+      Parameters:
+        entity_type (PDM_mesh_entities_t) : type of entity (vertex, edge, face, cell)
+      """
+      compute_pcg_from_gnum(self, entity_type)
 
     # ------------------------------------------------------------------------
     def __dealloc__(self):
@@ -362,10 +379,8 @@ cdef class PartMeshNodalCapsule:
   def __cinit__(self, object caps):
     """
     """
-    # print("DistributedMeshNodalCapsule", PyCapsule_GetName(caps))
     cdef PDM_part_mesh_nodal_t* caps_pmn = <PDM_part_mesh_nodal_t *> PyCapsule_GetPointer(caps, NULL)
     self.pmn = caps_pmn;
-
 
   def part_comm_graph_get(self, PDM_mesh_entities_t entity_type):
     return get_part_comm_graph(self, entity_type)
@@ -459,9 +474,8 @@ cdef class PartMeshNodalCapsule:
     return part_mesh_nodal_get_group(self, geom_kind, i_part, i_group)
 
   def compute_part_comm_graph_from_gnum(self,
-        PDM_mesh_entities_t entity_type):
-
-    return compute_pcg_from_gnum(self,entity_type)
+                                        PDM_mesh_entities_t entity_type):
+    compute_pcg_from_gnum(self, entity_type)
 
 
   def __dealloc__(self):
@@ -477,22 +491,10 @@ ctypedef fused PMeshNodal:
 
 def compute_pcg_from_gnum(PMeshNodal          pypmn,
                           PDM_mesh_entities_t entity_type):
-  """
-  Add doc
-  """
-
-  return PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(pypmn.pmn,entity_type)
+  PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(pypmn.pmn, entity_type)
 
 def get_part_comm_graph(PMeshNodal          pypmn,
                         PDM_mesh_entities_t entity_type):
-  """
-  part_comm_graph_get(entity_type)
-
-  Returns a \ref PDM_part_comm_graph_t python object
-
-  Parameters:
-    entity_type (PDM_mesh_entities_t) : type of entity (vertex, cell, edge)
-  """
   cdef PDM_part_comm_graph_t *pcg
 
   PDM_part_mesh_nodal_part_comm_graph_get(pypmn.pmn,

@@ -109,32 +109,16 @@ def test_with_part_mesh_nodal():
                         1,
                         np.ones(1).astype(np.double),
                         comm)
-
-  renum_cell = bytes("PDM_PART_RENUM_CELL_NONE", 'ascii')
-  renum_face = bytes("PDM_PART_RENUM_FACE_NONE", 'ascii')
-  mpart.reordering_set(-1, # i_domain
-                        renum_cell,
-                        None,
-                        renum_face)
-
   mpart.dmesh_nodal_set(i_domain, dmn)
-
   mpart.compute()
 
   pmn = mpart.part_mesh_nodal_get(i_domain)
-
-  # print(pmn.n_part_get())
 
   pcg_vtx = pmn.part_comm_graph_get(PDM._PDM_MESH_ENTITY_VTX)
 
   entity_graph = pcg_vtx.get_entity_graph(i_part)
 
   print(entity_graph)
-  # modulo 4 les infos contenues sont :
-  # 4k + 0. numero d'entité (num loc) <- pointList
-  # 4k + 1. target rank <-P0N0
-  # 4k + 2. target part (1 based)
-  # 4k + 3. target entity number <- pointlistdonor
   print("iloc i_copy_rank  i_copy_rank_part   i_copy_rank_loc")
   for i in range(int(entity_graph.size//4)):
     print(entity_graph[4*i],"            ", entity_graph[4*i+1],"              ",entity_graph[4*i+2],"               ", entity_graph[4*i+3])

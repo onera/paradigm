@@ -63,6 +63,12 @@ cdef class PartCommGraphCapsule:
   def get_entity_graph(self, int i_part):
     return entity_graph_get(self, i_part)
 
+  def exch(self,
+           list send_entity_data,
+           send_entity_stride=1,
+           bint interlaced_str=True):
+    return exch(self, send_entity_data, send_entity_stride, interlaced_str)
+
 # ========================================================================
 # ------------------------------------------------------------------------
 cdef class PartCommGraph:
@@ -80,14 +86,12 @@ cdef class PartCommGraph:
                MPI.Comm    comm,
                list        pentity_graph):
     """
-    __init__(comm, n_part, pn_entity_graph, pentity_graph)
+    __init__(comm, pentity_graph)
 
     Create a new :py:class`PartCommGraph` instance
 
     Parameters:
       comm            (MPI.Comm) : MPI communicator
-      n_part          (int)      : Number of partitions
-      pn_entity_graph (int*)     : Number of bound (size = \p n_part)
       pentity_graph   (int**)    : Graph comm identifier (size = 4 * \p pn_entity_graph[i_part]):
         For each entity :
           - entity local number (1-based)
@@ -177,6 +181,15 @@ cdef class PartCommGraph:
 
   def owner_get(self, int i_part):
     """
+    owner_get(i_part)
+
+    Get the owner array computed inside the structure, useful to manage reduction of array for example
+
+    Parameters:
+      i_part (int) : Partition identifier
+
+    Returns:
+      Owner array, 0 is not owner, 1 is owner  (`np.array[np.int]`)
     """
     cdef int* owner = PDM_part_comm_graph_owner_get(self.pcg,i_part) #returns an int*
 
@@ -185,6 +198,21 @@ cdef class PartCommGraph:
 
   def entity_graph_get(self, int i_part):
     """
+    entity_graph_get(i_part)
+
+    Get entity graph
+
+    Parameters:
+      i_part (int) : Partition identifier
+
+    Returns:
+      Graph comm identifier (size = 4 * \p pn_entity_graph[i_part]):
+        For each entity :
+          - entity local number (1-based)
+          - Connected process   (0-based)
+          - Connected partition on the connected process (1-based)
+          - Connected entity local number in the connected partition (1-based)
+      (`np.array[np.int]`)
     """
     return entity_graph_get(self, i_part)
 
@@ -193,12 +221,26 @@ cdef class PartCommGraph:
                  MPI.Op          op,
                  list            pdata):
     """
+    all_reduce(datatype, op, pdata)
+
+      Parameters:
+        datatype (MPI.Datatype)                     : Mpi datatype (MPI_DOUBLE/MPI_INT)
+        op       (MPI.Op)                           : Reduction operation kind (SUM/MIN/MAX)
+        pdata    (`list` of `np.ndarray[datatype]`) : Data buffer, value is modified inplace
+
     """
     all_reduce(self, datatype, op, pdata)
 
-  def entity_nuplet_get(self):
+  def entity_nuplet_get(self, i_part):
     """
+    entity_nuplet_get(i_part)
+
+    Get entity nuplet
+
+    Parameters:
+      i_part (int) : Partition identifier
     """
+    return entity_nuplet_get(self, i_part)
 
   def __dealloc__(self):
     """
@@ -296,15 +338,6 @@ def exch(PyPartCommGraph pypcg,
 
 # ------------------------------------------------------------------------
 def entity_graph_get(PyPartCommGraph pypcg, int i_part):
-  """
-  entity_graph_get(i_part)
-    Parameters:
-      i_part (int) : partition identifier
-
-    Returns:
-      Graph comm identifier (`int *`)
-
-  """
   cdef int *entity_graph = NULL
 
   cdef n_entity = PDM_part_comm_graph_entity_graph_get(pypcg.pcg,
@@ -319,16 +352,6 @@ def all_reduce(PyPartCommGraph pypcg,
                MPI.Datatype    datatype,
                MPI.Op          op,
                list            pdata):
-  """
-  all_reduce(datatype, op, pdata)
-
-    Parameters:
-      datatype (MPI.Datatype)                     : Mpi datatype (MPI_DOUBLE/MPI_INT)
-      op       (MPI.Op)                           : Reduction operation kind (SUM/MIN/MAX)
-      pdata    (`list` of `np.ndarray[datatype]`) : Data buffer, value is modified inplace
-
-  """
-  # FIXME: datatype est en trop dans l'API python
   cdef void **_pdata = np_list_to_void_pointers(pdata)
   cdef PDM_MPI_Datatype c_datatype = <MPI_Datatype> datatype.ob_mpi
   cdef PDM_MPI_Op       c_op       = <MPI_Op      > op.ob_mpi
@@ -340,16 +363,13 @@ def all_reduce(PyPartCommGraph pypcg,
 
 # ------------------------------------------------------------------------
 def entity_nuplet_get(PyPartCommGraph pypcg, int i_part):
-  """
-  Add doc
-  """
   cdef int *entity_nuplet = NULL
   cdef int  n_entity
   cdef int  size_of_nuplet
 
-  n_entity = PDM_part_comm_graph_entity_nuplet_get(pypcg.pcg,
-                                                   i_part,
-                                                   &entity_nuplet,
-                                                   PDM_OWNERSHIP_USER)
+  nuplet_size = PDM_part_comm_graph_entity_nuplet_get(pypcg.pcg,
+                                                      i_part,
+                                                      &entity_nuplet,
+                                                      PDM_OWNERSHIP_USER)
 
   return create_numpy_i(entity_nuplet, pypcg._pn_entity_graph[i_part] * pypcg._nuplet_size)
