@@ -1083,8 +1083,6 @@ PDM_part_comm_graph_concatenate
                                            &entity_nuplet,
                                             PDM_OWNERSHIP_BAD_VALUE);
 
-      int _concat_n_entity_graph = concat_n_entity_graph[i_part] + n_entity_graph;
-
       memcpy(&concat_pentity_graph[i_part][4*concat_n_entity_graph[i_part]], entity_graph, 4*n_entity_graph*sizeof(int));
 
       if (concat_nuplet_size>0) {
