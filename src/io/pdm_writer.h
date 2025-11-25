@@ -868,6 +868,312 @@ PDM_writer_geom_data_reset
  const int     id_geom
  );
 
+
+/**
+ * \brief Get pointer to the parent \ref PDM_writer_t instance
+ *
+ * \param [in] geom \ref PDM_writer_geom_t instance
+ *
+ * \return \ref PDM_writer_t instance
+ */
+PDM_writer_t *
+PDM_writer_geom_writer_get
+(
+  PDM_writer_geom_t *geom
+);
+
+
+/**
+ * \brief Get pointer to the associated \ref PDM_part_mesh_nodal_t instance
+ *
+ * \param [in] geom \ref PDM_writer_geom_t instance
+ *
+ * \return \ref PDM_part_mesh_nodal_t instance
+ */
+PDM_part_mesh_nodal_t *
+PDM_writer_geom_mesh_nodal_get
+(
+  PDM_writer_geom_t *geom
+);
+
+
+/**
+ * \brief Get the format description of a geometry
+ *
+ * \param [in] geom \ref PDM_writer_geom_t instance
+ *
+ * \return Format description
+ */
+void *
+PDM_writer_geom_fmt_get
+(
+  PDM_writer_geom_t *geom
+);
+
+
+/**
+ * \brief Get the name of a geometry
+ *
+ * \param [in] geom \ref PDM_writer_geom_t instance
+ *
+ * \return Name
+ */
+char *
+PDM_writer_geom_name_get
+(
+  PDM_writer_geom_t *geom
+);
+
+
+/**
+ * \brief Get MPI communicator
+ *
+ * \param [in] geom \ref PDM_writer_t instance
+ *
+ * \return MPI Communicator
+ */
+PDM_MPI_Comm
+PDM_writer_comm_get
+(
+  PDM_writer_t *wrt
+);
+
+
+
+/**
+ * \brief Get pointer to the parent \ref PDM_writer_t instance
+ *
+ * \param [in] var \ref PDM_writer_var_t instance
+ *
+ * \return \ref PDM_writer_t instance
+ */
+PDM_writer_t *
+PDM_writer_var_writer_get
+(
+  PDM_writer_var_t *var
+);
+
+
+/**
+ * \brief Get the format description of a variable
+ *
+ * \param [in] var \ref PDM_writer_var_t instance
+ *
+ * \return Format description
+ */
+void *
+PDM_writer_var_fmt_get
+(
+  PDM_writer_var_t *var
+);
+
+
+/**
+ * \brief Get the name of a variable
+ *
+ * \param [in] var \ref PDM_writer_var_t instance
+ *
+ * \return Name
+ */
+char *
+PDM_writer_var_name_get
+(
+  PDM_writer_var_t *var
+);
+
+/**
+ * \brief Get the private name of a variable
+ *
+ * \param [in] var \ref PDM_writer_var_t instance
+ *
+ * \return Private name
+ */
+char *
+PDM_writer_var_private_name_get
+(
+  PDM_writer_var_t *var
+);
+
+/**
+ * \brief Get the dimension of a variable
+ *
+ * \param [in] var \ref PDM_writer_var_t instance
+ *
+ * \return Dimension
+ */
+PDM_writer_var_dim_t
+PDM_writer_var_dim_get
+(
+  PDM_writer_var_t *var
+);
+
+/**
+ * \brief Get the time dependency status of a variable
+ *
+ * \param [in] var \ref PDM_writer_var_t instance
+ *
+ * \return Time dependency status
+ */
+PDM_writer_status_t
+PDM_writer_var_time_dep_status_get
+(
+  PDM_writer_var_t *var
+);
+
+/**
+ * \brief Get the location of a variable
+ *
+ * \param [in] var \ref PDM_writer_var_t instance
+ *
+ * \return Location
+ */
+PDM_writer_var_loc_t
+PDM_writer_var_loc_get
+(
+  PDM_writer_var_t *var
+);
+
+/**
+ * \brief Get the values of a variable
+ *
+ * \param [in] var    \ref PDM_writer_var_t instance
+ * \param [in] i_geom Geometry identifier
+ *
+ * \return Array of values (size = n_part)
+ */
+double **
+PDM_writer_var_val_get
+(
+  PDM_writer_var_t *var,
+  int               i_geom
+);
+
+/**
+ * \brief Get the number of options
+ *
+ * \param [in] wrt \ref PDM_writer_t instance
+ *
+ * \return Number of options
+ */
+int
+PDM_writer_n_options_get
+(
+  PDM_writer_t *wrt
+);
+
+/**
+ * \brief Get the name of an option
+ *
+ * \param [in] wrt      \ref PDM_writer_t instance
+ * \param [in] i_option Option identifier
+ *
+ * \return Name of the option
+ */
+char *
+PDM_writer_option_name_get
+(
+  PDM_writer_t *wrt,
+  int           i_option
+);
+
+/**
+ * \brief Get the value of an option
+ *
+ * \param [in] wrt      \ref PDM_writer_t instance
+ * \param [in] i_option Option identifier
+ *
+ * \return Value of the option
+ */
+char *
+PDM_writer_option_value_get
+(
+  PDM_writer_t *wrt,
+  int           i_option
+);
+
+/**
+ * \brief Get the output format
+ *
+ * \param [in] wrt \ref PDM_writer_t instance
+ *
+ * \return Output format
+ */
+void *
+PDM_writer_out_fmt_get
+(
+  PDM_writer_t *wrt
+);
+
+/**
+ * \brief Get the output directory
+ *
+ * \param [in] wrt \ref PDM_writer_t instance
+ *
+ * \return Output directory
+ */
+char *
+PDM_writer_out_dir_get
+(
+  PDM_writer_t *wrt
+);
+
+/**
+ * \brief Get the number of variables
+ *
+ * \param [in] wrt \ref PDM_writer_t instance
+ *
+ * \return Number of variables
+ */
+int
+PDM_writer_n_var_get
+(
+  PDM_writer_t *wrt
+);
+
+
+/**
+ * \brief Get a variable
+ *
+ * \param [in] wrt \ref PDM_writer_t instance
+ *
+ * \return Pointer to \ref PDM_writer_var_t instance
+ */
+PDM_writer_var_t *
+PDM_writer_var_get
+(
+  PDM_writer_t *wrt,
+  int           i_var
+);
+
+
+/**
+ * \brief Get the number of geometries
+ *
+ * \param [in] wrt \ref PDM_writer_t instance
+ *
+ * \return Number of geometries
+ */
+int
+PDM_writer_n_geom_get
+(
+  PDM_writer_t *wrt
+);
+
+/**
+ * \brief Get a geometry
+ *
+ * \param [in] wrt \ref PDM_writer_t instance
+ *
+ * \return Pointer to \ref PDM_writer_geom_t instance
+ */
+PDM_writer_geom_t *
+PDM_writer_geom_get
+(
+  PDM_writer_t *wrt,
+  int           i_geom
+);
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

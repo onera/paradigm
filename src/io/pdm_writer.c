@@ -2371,6 +2371,246 @@ PDM_writer_geom_data_reset
   }
 }
 
+
+PDM_writer_t *
+PDM_writer_geom_writer_get
+(
+  PDM_writer_geom_t *geom
+)
+{
+  return geom->_cs;
+}
+
+
+PDM_part_mesh_nodal_t *
+PDM_writer_geom_mesh_nodal_get
+(
+  PDM_writer_geom_t *geom
+)
+{
+  return geom->mesh_nodal;
+}
+
+
+void *
+PDM_writer_geom_fmt_get
+(
+  PDM_writer_geom_t *geom
+)
+{
+  return geom->geom_fmt;
+}
+
+
+char *
+PDM_writer_geom_name_get
+(
+  PDM_writer_geom_t *geom
+)
+{
+  return geom->nom_geom;
+}
+
+
+PDM_MPI_Comm
+PDM_writer_comm_get
+(
+  PDM_writer_t *wrt
+)
+{
+  return wrt->pdm_mpi_comm;
+}
+
+
+PDM_writer_t *
+PDM_writer_var_writer_get
+(
+  PDM_writer_var_t *var
+)
+{
+  return var->_cs;
+}
+
+
+void *
+PDM_writer_var_fmt_get
+(
+  PDM_writer_var_t *var
+)
+{
+  return var->var_fmt;
+}
+
+
+char *
+PDM_writer_var_name_get
+(
+  PDM_writer_var_t *var
+)
+{
+  return var->nom_var;
+}
+
+
+char *
+PDM_writer_var_private_name_get
+(
+  PDM_writer_var_t *var
+)
+{
+  return var->private_name;
+}
+
+
+PDM_writer_var_dim_t
+PDM_writer_var_dim_get
+(
+  PDM_writer_var_t *var
+)
+{
+  return var->dim;
+}
+
+
+PDM_writer_status_t
+PDM_writer_var_time_dep_status_get
+(
+  PDM_writer_var_t *var
+)
+{
+  return var->st_dep_tps;
+}
+
+
+PDM_writer_var_loc_t
+PDM_writer_var_loc_get
+(
+  PDM_writer_var_t *var
+)
+{
+  return var->loc;
+}
+
+
+double **
+PDM_writer_var_val_get
+(
+  PDM_writer_var_t *var,
+  int               i_geom
+)
+{
+  return var->_val[i_geom];
+}
+
+
+int
+PDM_writer_n_options_get
+(
+  PDM_writer_t *wrt
+)
+{
+  return wrt->n_options;
+}
+
+
+char *
+PDM_writer_option_name_get
+(
+  PDM_writer_t *wrt,
+  int           i_option
+)
+{
+  if (i_option < 0 || i_option >= wrt->n_options) {
+    PDM_error(__FILE__, __LINE__, 0, "Error : invalid option %d / %d\n", i_option, wrt->n_options);
+  }
+  return wrt->options[i_option].nom;
+}
+
+
+char *
+PDM_writer_option_value_get
+(
+  PDM_writer_t *wrt,
+  int           i_option
+)
+{
+  if (i_option < 0 || i_option >= wrt->n_options) {
+    PDM_error(__FILE__, __LINE__, 0, "Error : invalid option #%d / %d\n", i_option, wrt->n_options);
+  }
+  return wrt->options[i_option].val;
+}
+
+
+void *
+PDM_writer_out_fmt_get
+(
+  PDM_writer_t *wrt
+)
+{
+  return wrt->sortie_fmt;
+}
+
+
+char *
+PDM_writer_out_dir_get
+(
+  PDM_writer_t *wrt
+)
+{
+  return wrt->rep_sortie;
+}
+
+
+int
+PDM_writer_n_var_get
+(
+  PDM_writer_t *wrt
+)
+{
+  return wrt->var_tab->n_var;
+}
+
+
+PDM_writer_var_t *
+PDM_writer_var_get
+(
+  PDM_writer_t *wrt,
+  int           i_var
+)
+{
+  int n_var = PDM_writer_n_var_get(wrt);
+  if (i_var < 0 || i_var >= n_var) {
+    PDM_error(__FILE__, __LINE__, 0, "Error : invalid i_var : %d / %d\n", i_var, n_var);
+  }
+  return wrt->var_tab->var[i_var];
+}
+
+
+int
+PDM_writer_n_geom_get
+(
+  PDM_writer_t *wrt
+)
+{
+  return wrt->geom_tab->n_geom;
+}
+
+
+PDM_writer_geom_t *
+PDM_writer_geom_get
+(
+  PDM_writer_t *wrt,
+  int           i_geom
+)
+{
+  int n_geom = PDM_writer_n_geom_get(wrt);
+  if (i_geom < 0 || i_geom >= n_geom) {
+    PDM_error(__FILE__, __LINE__, 0, "Error : invalid i_geom : %d / %d\n", i_geom, n_geom);
+  }
+  return wrt->geom_tab->geom[i_geom];
+}
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
