@@ -942,6 +942,45 @@ PDM_part_mesh_nodal_elmts_section_elmt_to_entity_get
         PDM_ownership_t              ownership
 );
 
+
+
+/**
+ * \brief Transform groud_id information to group inside a \ref PDM_part_mesh_nodal_elmts_t
+ *
+ * \param [in]  pmne          Pointer to \ref PDM_part_mesh_nodal_elmts_t object
+ * \param [out]  out_group_id Identifier for all elements in current \ref PDM_part_mesh_nodal_elmts_t
+ *                            that follows the natural order of the elements (size = n_part)
+ *                            For each part size is : PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, i_part);
+ *                            Value is between [0, n_group-1]
+ *
+ */
+void
+PDM_part_mesh_nodal_elmts_group_to_group_id
+(
+  PDM_part_mesh_nodal_elmts_t   *pmne,
+  int                         ***out_group_id
+);
+
+/**
+ * \brief Transform groud_id information to group inside a \ref PDM_part_mesh_nodal_elmts_t
+ *
+ * \param [in]  pmne      Pointer to \ref PDM_part_mesh_nodal_elmts_t object
+ * \param [in]  n_group   Number of groups
+ * \param [in]  group_id  Identifier for all elements in current \ref PDM_part_mesh_nodal_elmts_t
+ *                        that follows the natural order of the elements (size = n_part)
+ *                        For each part size is : PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, i_part);
+ *                        Value is between [0, n_group-1]
+ *
+ */
+void
+PDM_part_mesh_nodal_elmts_group_id_to_group
+(
+  PDM_part_mesh_nodal_elmts_t     *pmne,
+  int                              n_group,
+  int                            **group_id
+);
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

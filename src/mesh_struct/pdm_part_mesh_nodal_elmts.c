@@ -5472,3 +5472,102 @@ PDM_part_mesh_nodal_elmts_section_elmt_to_entity_get
 
   return elt_to_entity;
 }
+
+void
+PDM_part_mesh_nodal_elmts_group_to_group_id
+(
+  PDM_part_mesh_nodal_elmts_t   *pmne,
+  int                         ***out_group_id
+)
+{
+  CHECK_PMNE  (pmne)
+
+  int n_part = pmne->n_part;
+
+  int **group_id = NULL;
+  PDM_malloc(group_id, n_part, int *);
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+
+    int n_elmt  = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, i_part);
+    int n_group = PDM_part_mesh_nodal_elmts_n_group_get(pmne);
+
+    PDM_malloc(group_id[i_part], n_elmt, int);
+
+    for(int i_group = 0; i_group < n_group; ++i_group) {
+
+      int          n_group_elmt   = 0;
+      int         *group_elmt     = 0;
+      PDM_g_num_t *group_ln_to_gn = 0;
+      PDM_part_mesh_nodal_elmts_group_get(pmne,
+                                          i_part,
+                                          i_group,
+                                          &n_group_elmt,
+                                          &group_elmt,
+                                          &group_ln_to_gn,
+                                          PDM_OWNERSHIP_KEEP);
+
+      for(int idx_group = 0; idx_group < n_group_elmt; ++idx_group) {
+        int i_elt = group_elmt[idx_group]-1;
+        group_id[i_part][i_elt] = i_group;
+      }
+    }
+  }
+
+  *out_group_id = group_id;
+}
+
+
+void
+PDM_part_mesh_nodal_elmts_group_id_to_group
+(
+  PDM_part_mesh_nodal_elmts_t     *pmne,
+  int                              n_group,
+  int                            **group_id
+)
+{
+  CHECK_PMNE  (pmne)
+
+  int n_part = pmne->n_part;
+
+  /*
+   * Set n_group in structure (not yet done normaly)
+   */
+  PDM_part_mesh_nodal_elmts_n_group_set(pmne, n_group);
+
+  /*
+   * Loop over part and fill structure
+   */
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+
+    int n_elmt  = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, i_part);
+    int* group_elt_n = PDM_array_zeros_int(n_group);
+    for(int i_elt = 0; i_elt < n_elmt; ++i_elt) {
+      group_elt_n[group_id[i_part][i_elt]]++;
+    }
+
+    int **group_elmt = NULL;
+    PDM_malloc(group_elmt, n_group, int *);
+    for(int i_group = 0; i_group < n_group; ++i_group) {
+      PDM_malloc(group_elmt[i_group], group_elt_n[i_group], int);
+      group_elt_n[i_group] = 0;
+    }
+
+    for(int i_elt = 0; i_elt < n_elmt; ++i_elt) {
+      int i_group   = group_id[i_part][i_elt];
+      group_elmt[i_group][group_elt_n[i_group]++] = i_elt+1;
+    }
+
+    for(int i_group = 0; i_group < n_group; ++i_group) {
+      PDM_part_mesh_nodal_elmts_group_set(pmne,
+                                          i_part,
+                                          i_group,
+                                          group_elt_n[i_group],
+                                          group_elmt [i_group],
+                                          NULL,
+                                          PDM_OWNERSHIP_KEEP);
+    }
+
+    PDM_free(group_elt_n);
+    PDM_free(group_elmt);
+  }
+}
