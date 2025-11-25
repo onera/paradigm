@@ -5536,7 +5536,6 @@ PDM_part_mesh_nodal_elmts_group_to_tag
                 "PDM_part_mesh_nodal_elmts_group_to_tag - Several elements are more than one group associated (n_elmt_with_different_group=%i, n_elmt = %d) \n",
                 n_elmt_with_different_group, n_elmt);
     }
-
   }
 
   *out_tag = tag;
@@ -5554,6 +5553,23 @@ PDM_part_mesh_nodal_elmts_tag_to_group
   CHECK_PMNE  (pmne)
 
   int n_part = pmne->n_part;
+
+  /*
+   * Auto-detect the number of group
+   */
+  if(n_group < 0) {
+    int max_tag = -1;
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      int n_elmt  = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, i_part);
+      for(int i_elt = 0; i_elt < n_elmt; ++i_elt) {
+        max_tag = PDM_MAX(max_tag, tag[i_part][i_elt]);
+      }
+    }
+    int gmax_tag = -1;
+    PDM_MPI_Allreduce (&max_tag, &gmax_tag, 1, PDM_MPI_INT, PDM_MPI_MAX, pmne->comm);
+
+    n_group = max_tag+1;
+  }
 
   /*
    * Set n_group in structure (not yet done normaly)

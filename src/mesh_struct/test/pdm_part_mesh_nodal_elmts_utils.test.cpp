@@ -354,43 +354,82 @@ MPI_TEST_CASE("[PDM_part_mesh_nodal_elmts] - PDM_part_mesh_nodal_elmts_group_to_
 
   // TO KEEP if you want to check that we correclty an abort because group is not define
   // PDM_part_mesh_nodal_elmts_t *pmne      = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(pmn, PDM_GEOMETRY_KIND_VOLUMIC );
-  // int **group_vol = NULL;
-  // PDM_part_mesh_nodal_elmts_group_to_tag(pmne, &group_vol);
-  // std::vector<std::vector<int>> expected_group_vol = {{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
+  // int **volume_tag = NULL;
+  // PDM_part_mesh_nodal_elmts_group_to_tag(pmne, &volume_tag);
+  // std::vector<std::vector<int>> expected_volume_tag = {{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
 
   // for(int i_part = 0; i_part < n_part; ++i_part) {
   //   int n_elmts = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, 0);
   //   if(0 == 1) {
-  //     PDM_log_trace_array_int(group_vol[i_part], n_elmts, "group_vol ::");
+  //     PDM_log_trace_array_int(volume_tag[i_part], n_elmts, "volume_tag ::");
   //   }
-
-  //   MPI_CHECK_EQ_C_ARRAY(0, group_vol[i_part], expected_group_vol[i_part].data(), n_elmts);
-
-  //   PDM_free(group_vol[i_part]);
+  //   MPI_CHECK_EQ_C_ARRAY(0, volume_tag[i_part], expected_volume_tag[i_part].data(), n_elmts);
+  //   PDM_free(volume_tag[i_part]);
   // }
-  // PDM_free(group_vol);
+  // PDM_free(volume_tag);
 
   PDM_part_mesh_nodal_elmts_t *pmne_surf = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(pmn, PDM_GEOMETRY_KIND_SURFACIC);
-  std::vector<std::vector<int>> expected_group_surf = {{0, 0, 0, 0, 0, 0, 0, 0, 0,
+  std::vector<std::vector<int>> expected_tag_surface = {{0, 0, 0, 0, 0, 0, 0, 0, 0,
                                                         1, 1, 1, 1, 1, 1, 1, 1, 1,
                                                         2, 2, 2, 2, 2, 2, 2, 2, 2,
                                                         3, 3, 3, 3, 3, 3, 3, 3, 3,
                                                         4, 4, 4, 4, 4, 4, 4, 4, 4,
                                                         5, 5, 5, 5, 5, 5, 5, 5, 5}};
 
-  int **group_surf = NULL;
-  PDM_part_mesh_nodal_elmts_group_to_tag(pmne_surf, &group_surf);
+  int **tag_surface = NULL;
+  PDM_part_mesh_nodal_elmts_group_to_tag(pmne_surf, &tag_surface);
   for(int i_part = 0; i_part < n_part; ++i_part) {
     int n_elmts = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne_surf, 0);
     if(0 == 1) {
-      PDM_log_trace_array_int(group_surf[i_part], n_elmts, "group_surf ::");
+      PDM_log_trace_array_int(tag_surface[i_part], n_elmts, "tag_surface ::");
     }
 
-    MPI_CHECK_EQ_C_ARRAY(0, group_surf[i_part], expected_group_surf[i_part].data(), n_elmts);
+    MPI_CHECK_EQ_C_ARRAY(0, tag_surface[i_part], expected_tag_surface[i_part].data(), n_elmts);
 
-    PDM_free(group_surf[i_part]);
+    PDM_free(tag_surface[i_part]);
   }
-  PDM_free(group_surf);
+  PDM_free(tag_surface);
+
+  PDM_part_mesh_nodal_elmts_t *pmne = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(pmn, PDM_GEOMETRY_KIND_VOLUMIC );
+
+  int **volume_tag = NULL;
+  PDM_malloc(volume_tag, n_part, int *);
+
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    int n_elmts = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, 0);
+    PDM_malloc(volume_tag[i_part], n_elmts, int);
+
+    for(int i = 0; i < n_elmts; ++i) {
+      volume_tag[i_part][i] = (i+1) % 10;
+    }
+    if(0 == 1) {
+      PDM_log_trace_array_int(volume_tag[i_part], n_elmts, "volume_tag ::");
+    }
+  }
+
+  PDM_part_mesh_nodal_elmts_tag_to_group(pmne,
+                                         -1,
+                                         volume_tag);
+
+  int n_group_vol = PDM_part_mesh_nodal_elmts_n_group_get(pmne);
+
+  CHECK(n_group_vol == 10);
+
+  int **tag_volume_check = NULL;
+  PDM_part_mesh_nodal_elmts_group_to_tag(pmne, &tag_volume_check);
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    int n_elmts = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, 0);
+    MPI_CHECK_EQ_C_ARRAY(0, tag_volume_check[i_part], volume_tag[i_part], n_elmts);
+  }
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    PDM_free(volume_tag      [i_part]);
+    PDM_free(tag_volume_check[i_part]);
+  }
+  PDM_free(volume_tag);
+  PDM_free(tag_volume_check);
 
   PDM_part_mesh_nodal_free(pmn);
 }
