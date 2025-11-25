@@ -13,6 +13,7 @@
 #include "pdm_part_mesh_nodal.h"
 #include "pdm_part_mesh_nodal_elmts.h"
 #include "pdm_part_mesh_nodal_elmts_utils.h"
+#include "pdm_logging.h"
 
 static PDM_part_mesh_nodal_t *
 _generate_mesh
@@ -339,3 +340,59 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal_elmts_utils] - part_mesh_nodal_elmts_compute
   PDM_part_mesh_nodal_free(pmn);
 }
 
+
+
+MPI_TEST_CASE("[PDM_part_mesh_nodal_elmts] - PDM_part_mesh_nodal_elmts_group_to_tag", 1) {
+
+  PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
+
+  PDM_Mesh_nodal_elt_t elt_type = PDM_MESH_NODAL_HEXA8;
+
+  /* Generate mesh */
+  PDM_part_mesh_nodal_t *pmn = _generate_mesh(pdm_comm, elt_type);
+
+  PDM_part_mesh_nodal_elmts_t *pmne      = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(pmn, PDM_GEOMETRY_KIND_VOLUMIC );
+  PDM_part_mesh_nodal_elmts_t *pmne_surf = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(pmn, PDM_GEOMETRY_KIND_SURFACIC);
+
+  int **group_vol = NULL;
+  PDM_part_mesh_nodal_elmts_group_to_tag(pmne, &group_vol);
+
+  // Child -> parent
+  std::vector<std::vector<int>> expected_group_vol = {{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
+
+  int n_part = 1;
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    int n_elmts = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, 0);
+    if(0 == 1) {
+      PDM_log_trace_array_int(group_vol[i_part], n_elmts, "group_vol ::");
+    }
+
+    MPI_CHECK_EQ_C_ARRAY(0, group_vol[i_part], expected_group_vol[i_part].data(), n_elmts);
+
+    PDM_free(group_vol[i_part]);
+  }
+  PDM_free(group_vol);
+
+  std::vector<std::vector<int>> expected_group_surf = {{0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                                        1, 1, 1, 1, 1, 1, 1, 1, 1,
+                                                        2, 2, 2, 2, 2, 2, 2, 2, 2,
+                                                        3, 3, 3, 3, 3, 3, 3, 3, 3,
+                                                        4, 4, 4, 4, 4, 4, 4, 4, 4,
+                                                        5, 5, 5, 5, 5, 5, 5, 5, 5}};
+
+  int **group_surf = NULL;
+  PDM_part_mesh_nodal_elmts_group_to_tag(pmne_surf, &group_surf);
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    int n_elmts = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne_surf, 0);
+    if(0 == 1) {
+      PDM_log_trace_array_int(group_surf[i_part], n_elmts, "group_surf ::");
+    }
+
+    MPI_CHECK_EQ_C_ARRAY(0, group_surf[i_part], expected_group_surf[i_part].data(), n_elmts);
+
+    PDM_free(group_surf[i_part]);
+  }
+  PDM_free(group_surf);
+
+  PDM_part_mesh_nodal_free(pmn);
+}

@@ -5474,7 +5474,7 @@ PDM_part_mesh_nodal_elmts_section_elmt_to_entity_get
 }
 
 void
-PDM_part_mesh_nodal_elmts_group_to_group_id
+PDM_part_mesh_nodal_elmts_group_to_tag
 (
   PDM_part_mesh_nodal_elmts_t   *pmne,
   int                         ***out_group_id
@@ -5492,6 +5492,10 @@ PDM_part_mesh_nodal_elmts_group_to_group_id
     int n_group = PDM_part_mesh_nodal_elmts_n_group_get(pmne);
 
     PDM_malloc(group_id[i_part], n_elmt, int);
+
+    for(int i = 0; i < n_elmt; ++i) {
+      group_id[i_part][i] = -1;
+    }
 
     for(int i_group = 0; i_group < n_group; ++i_group) {
 
@@ -5518,7 +5522,7 @@ PDM_part_mesh_nodal_elmts_group_to_group_id
 
 
 void
-PDM_part_mesh_nodal_elmts_group_id_to_group
+PDM_part_mesh_nodal_elmts_tag_to_group
 (
   PDM_part_mesh_nodal_elmts_t     *pmne,
   int                              n_group,
