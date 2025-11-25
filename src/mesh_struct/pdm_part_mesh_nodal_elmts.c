@@ -5497,6 +5497,9 @@ PDM_part_mesh_nodal_elmts_group_to_tag
       tag[i_part][i] = -1;
     }
 
+    int n_elmt_tag                  = 0;
+    int elt_group_is_multiple       = 0;
+    int n_elmt_with_different_group = 0;
     for(int i_group = 0; i_group < n_group; ++i_group) {
 
       int          n_group_elmt   = 0;
@@ -5512,9 +5515,28 @@ PDM_part_mesh_nodal_elmts_group_to_tag
 
       for(int idx_group = 0; idx_group < n_group_elmt; ++idx_group) {
         int i_elt = group_elmt[idx_group]-1;
-        tag[i_part][i_elt] = i_group;
+        if(tag[i_part][i_elt] == -1) {
+          tag[i_part][i_elt] = i_group;
+        } else {
+          elt_group_is_multiple = 1;
+          n_elmt_with_different_group++;
+        }
+        n_elmt_tag += 1;
       }
     }
+
+    if(n_elmt_tag != n_elmt) {
+      PDM_error(__FILE__, __LINE__, 0,
+                "PDM_part_mesh_nodal_elmts_group_to_tag - All elements from PDM_part_mesh_nodal_elmts are not in groups for dimension %d (n_elmt_tag = %d, n_elmt = %d)\n",
+                pmne->mesh_dimension, n_elmt_tag, n_elmt);
+    }
+
+    if(elt_group_is_multiple == 1) {
+      PDM_error(__FILE__, __LINE__, 0,
+                "PDM_part_mesh_nodal_elmts_group_to_tag - Several elements are more than one group associated (n_elmt_with_different_group=%i, n_elmt = %d) \n",
+                n_elmt_with_different_group, n_elmt);
+    }
+
   }
 
   *out_tag = tag;

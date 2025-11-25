@@ -350,29 +350,27 @@ MPI_TEST_CASE("[PDM_part_mesh_nodal_elmts] - PDM_part_mesh_nodal_elmts_group_to_
 
   /* Generate mesh */
   PDM_part_mesh_nodal_t *pmn = _generate_mesh(pdm_comm, elt_type);
-
-  PDM_part_mesh_nodal_elmts_t *pmne      = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(pmn, PDM_GEOMETRY_KIND_VOLUMIC );
-  PDM_part_mesh_nodal_elmts_t *pmne_surf = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(pmn, PDM_GEOMETRY_KIND_SURFACIC);
-
-  int **group_vol = NULL;
-  PDM_part_mesh_nodal_elmts_group_to_tag(pmne, &group_vol);
-
-  // Child -> parent
-  std::vector<std::vector<int>> expected_group_vol = {{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
-
   int n_part = 1;
-  for(int i_part = 0; i_part < n_part; ++i_part) {
-    int n_elmts = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, 0);
-    if(0 == 1) {
-      PDM_log_trace_array_int(group_vol[i_part], n_elmts, "group_vol ::");
-    }
 
-    MPI_CHECK_EQ_C_ARRAY(0, group_vol[i_part], expected_group_vol[i_part].data(), n_elmts);
+  // TO KEEP if you want to check that we correclty an abort because group is not define
+  // PDM_part_mesh_nodal_elmts_t *pmne      = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(pmn, PDM_GEOMETRY_KIND_VOLUMIC );
+  // int **group_vol = NULL;
+  // PDM_part_mesh_nodal_elmts_group_to_tag(pmne, &group_vol);
+  // std::vector<std::vector<int>> expected_group_vol = {{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
 
-    PDM_free(group_vol[i_part]);
-  }
-  PDM_free(group_vol);
+  // for(int i_part = 0; i_part < n_part; ++i_part) {
+  //   int n_elmts = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, 0);
+  //   if(0 == 1) {
+  //     PDM_log_trace_array_int(group_vol[i_part], n_elmts, "group_vol ::");
+  //   }
 
+  //   MPI_CHECK_EQ_C_ARRAY(0, group_vol[i_part], expected_group_vol[i_part].data(), n_elmts);
+
+  //   PDM_free(group_vol[i_part]);
+  // }
+  // PDM_free(group_vol);
+
+  PDM_part_mesh_nodal_elmts_t *pmne_surf = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(pmn, PDM_GEOMETRY_KIND_SURFACIC);
   std::vector<std::vector<int>> expected_group_surf = {{0, 0, 0, 0, 0, 0, 0, 0, 0,
                                                         1, 1, 1, 1, 1, 1, 1, 1, 1,
                                                         2, 2, 2, 2, 2, 2, 2, 2, 2,
