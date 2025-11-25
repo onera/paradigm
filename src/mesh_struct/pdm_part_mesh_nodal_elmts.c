@@ -5477,24 +5477,24 @@ void
 PDM_part_mesh_nodal_elmts_group_to_tag
 (
   PDM_part_mesh_nodal_elmts_t   *pmne,
-  int                         ***out_group_id
+  int                         ***out_tag
 )
 {
   CHECK_PMNE  (pmne)
 
   int n_part = pmne->n_part;
 
-  int **group_id = NULL;
-  PDM_malloc(group_id, n_part, int *);
+  int **tag = NULL;
+  PDM_malloc(tag, n_part, int *);
   for(int i_part = 0; i_part < n_part; ++i_part) {
 
     int n_elmt  = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, i_part);
     int n_group = PDM_part_mesh_nodal_elmts_n_group_get(pmne);
 
-    PDM_malloc(group_id[i_part], n_elmt, int);
+    PDM_malloc(tag[i_part], n_elmt, int);
 
     for(int i = 0; i < n_elmt; ++i) {
-      group_id[i_part][i] = -1;
+      tag[i_part][i] = -1;
     }
 
     for(int i_group = 0; i_group < n_group; ++i_group) {
@@ -5512,12 +5512,12 @@ PDM_part_mesh_nodal_elmts_group_to_tag
 
       for(int idx_group = 0; idx_group < n_group_elmt; ++idx_group) {
         int i_elt = group_elmt[idx_group]-1;
-        group_id[i_part][i_elt] = i_group;
+        tag[i_part][i_elt] = i_group;
       }
     }
   }
 
-  *out_group_id = group_id;
+  *out_tag = tag;
 }
 
 
@@ -5526,7 +5526,7 @@ PDM_part_mesh_nodal_elmts_tag_to_group
 (
   PDM_part_mesh_nodal_elmts_t     *pmne,
   int                              n_group,
-  int                            **group_id
+  int                            **tag
 )
 {
   CHECK_PMNE  (pmne)
@@ -5546,7 +5546,7 @@ PDM_part_mesh_nodal_elmts_tag_to_group
     int n_elmt  = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, i_part);
     int* group_elt_n = PDM_array_zeros_int(n_group);
     for(int i_elt = 0; i_elt < n_elmt; ++i_elt) {
-      group_elt_n[group_id[i_part][i_elt]]++;
+      group_elt_n[tag[i_part][i_elt]]++;
     }
 
     int **group_elmt = NULL;
@@ -5557,7 +5557,7 @@ PDM_part_mesh_nodal_elmts_tag_to_group
     }
 
     for(int i_elt = 0; i_elt < n_elmt; ++i_elt) {
-      int i_group   = group_id[i_part][i_elt];
+      int i_group = tag[i_part][i_elt];
       group_elmt[i_group][group_elt_n[i_group]++] = i_elt+1;
     }
 
