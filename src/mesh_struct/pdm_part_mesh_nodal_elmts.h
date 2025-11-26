@@ -945,7 +945,7 @@ PDM_part_mesh_nodal_elmts_section_elmt_to_entity_get
 
 
 /**
- * \brief Transform groud_id information to group inside a \ref PDM_part_mesh_nodal_elmts_t
+ * \brief Transform group information inside a \ref PDM_part_mesh_nodal_elmts_t to tag for all elements
  *
  * \param [in]  pmne     Pointer to \ref PDM_part_mesh_nodal_elmts_t object
  * \param [out] out_tag  Identifier for all elements in current \ref PDM_part_mesh_nodal_elmts_t
@@ -962,10 +962,10 @@ PDM_part_mesh_nodal_elmts_group_to_tag
 );
 
 /**
- * \brief Transform groud_id information to group inside a \ref PDM_part_mesh_nodal_elmts_t
+ * \brief Transform tag for all elements into group information inside a \ref PDM_part_mesh_nodal_elmts_t
  *
  * \param [in]  pmne      Pointer to \ref PDM_part_mesh_nodal_elmts_t object
- * \param [in]  n_group   Number of groups
+ * \param [in]  n_group   Number of groups, if the specify n_group is negative, n_group is automaticly compute
  * \param [in]  tag       Identifier for all elements in current \ref PDM_part_mesh_nodal_elmts_t
  *                        that follows the natural order of the elements (size = n_part)
  *                        For each part size is : PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, i_part);

@@ -1320,6 +1320,48 @@ PDM_part_mesh_nodal_part_comm_graph_get
 
 
 
+/**
+ * \brief Transform group information inside a \ref PDM_part_mesh_nodal_t to tag for all elements
+ *
+ *
+ * \param [in]  pmne      Pointer to \ref PDM_part_mesh_nodal_t object
+ * \param [in]  geom_kind Geometry kind (corner, ridge, surface or volume)
+ * \param [out] out_tag   Identifier for all elements in current \ref PDM_part_mesh_nodal_t
+ *                        that follows the natural order of the elements (size = n_part)
+ *                        For each part size is : PDM_part_mesh_nodal_n_elmts_get(pmne, geom_kind, i_part);
+ *                        Value is between [0, n_group-1]
+ *
+ */
+void
+PDM_part_mesh_nodal_group_to_tag
+(
+  PDM_part_mesh_nodal_t   *pmn,
+  PDM_geometry_kind_t      geom_kind,
+  int                   ***out_tag
+);
+
+/**
+ * \brief Transform tag for all elements into group information inside a \ref PDM_part_mesh_nodal_t
+ *
+ * \param [in]  pmne      Pointer to \ref PDM_part_mesh_nodal_t object
+ * \param [in]  geom_kind Geometry kind (corner, ridge, surface or volume)
+ * \param [in]  n_group   Number of groups, if the specify n_group is negative, n_group is automaticly compute
+ * \param [in]  tag       Identifier for all elements in current \ref PDM_part_mesh_nodal_elmts_t
+ *                        that follows the natural order of the elements (size = n_part)
+ *                        For each part size is : PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, i_part);
+ *                        Value is between [0, n_group-1]
+ *
+ */
+void
+PDM_part_mesh_nodal_tag_to_group
+(
+        PDM_part_mesh_nodal_t  *pmn,
+        PDM_geometry_kind_t     geom_kind,
+        int                     n_group,
+        int                   **tag
+);
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
