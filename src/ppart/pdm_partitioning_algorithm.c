@@ -1808,7 +1808,9 @@ PDM_part_generate_entity_graph_comm
         int is_distant_bound = 1;
         if( opp_rank == i_rank ){
           if( opp_part == i_part ) {
-            is_distant_bound = 0;
+            if ( i_entity == _part_data[3*idx_part+2] ) {
+              is_distant_bound = 0;
+            }
           }
         }
 
