@@ -293,12 +293,11 @@ foreach(lib_type IN LISTS LIB_TYPES)
       PUBLIC
         pdm_${lib_type_lower}
     )
-
-    set_target_properties(pdm_${lib_type_lower} PROPERTIES
-     INTERFACE_LINK_LIBRARIES ""
-    )
-
   endif()
+
+  set_target_properties(pdm_${lib_type_lower} PROPERTIES
+    INTERFACE_LINK_LIBRARIES ""
+  )
 
 endforeach()
 
