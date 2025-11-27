@@ -377,7 +377,7 @@ MPI_TEST_CASE("[PDM_part_mesh_nodal_elmts] - PDM_part_mesh_nodal_elmts_group_to_
                                                         5, 5, 5, 5, 5, 5, 5, 5, 5}};
 
   int **tag_surface = NULL;
-  PDM_part_mesh_nodal_elmts_group_to_tag(pmne_surf, &tag_surface);
+  PDM_part_mesh_nodal_elmts_group_to_tag(pmne_surf, PDM_FALSE, NULL, &tag_surface);
   for(int i_part = 0; i_part < n_part; ++i_part) {
     int n_elmts = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne_surf, 0);
     if(0 == 1) {
@@ -410,6 +410,7 @@ MPI_TEST_CASE("[PDM_part_mesh_nodal_elmts] - PDM_part_mesh_nodal_elmts_group_to_
 
   PDM_part_mesh_nodal_elmts_tag_to_group(pmne,
                                          -1,
+                                         NULL,
                                          volume_tag);
 
   int n_group_vol = PDM_part_mesh_nodal_elmts_n_group_get(pmne);
@@ -417,7 +418,7 @@ MPI_TEST_CASE("[PDM_part_mesh_nodal_elmts] - PDM_part_mesh_nodal_elmts_group_to_
   CHECK(n_group_vol == 10);
 
   int **tag_volume_check = NULL;
-  PDM_part_mesh_nodal_elmts_group_to_tag(pmne, &tag_volume_check);
+  PDM_part_mesh_nodal_elmts_group_to_tag(pmne, PDM_FALSE, NULL, &tag_volume_check);
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
     int n_elmts = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, 0);

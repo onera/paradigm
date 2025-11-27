@@ -1324,12 +1324,14 @@ PDM_part_mesh_nodal_part_comm_graph_get
  * \brief Transform group information inside a \ref PDM_part_mesh_nodal_t to tag for all elements
  *
  *
- * \param [in]  pmne      Pointer to \ref PDM_part_mesh_nodal_t object
- * \param [in]  geom_kind Geometry kind (corner, ridge, surface or volume)
- * \param [out] out_tag   Identifier for all elements in current \ref PDM_part_mesh_nodal_t
- *                        that follows the natural order of the elements (size = n_part)
- *                        For each part size is : PDM_part_mesh_nodal_n_elmts_get(pmne, geom_kind, i_part);
- *                        Value is between [0, n_group-1]
+ * \param [in]  pmne            Pointer to \ref PDM_part_mesh_nodal_t object
+ * \param [in]  geom_kind       Geometry kind (corner, ridge, surface or volume)
+ * \param [in]  allow_multiple  Allow or not that one element can be reference 0 exactly or more than once. If PDM_FALSE, out_tag_idx will be NULL
+ * \param [out] out_tag_idx     Identifier index if allow_multiple is PDM_TRUE
+ * \param [out] out_tag         Identifier for all elements in current \ref PDM_part_mesh_nodal_t
+ *                              that follows the natural order of the elements (size = n_part)
+ *                              For each part size is : n_elmts or out_tag_idx[n_elmts]
+ *                              Value is between [0, n_group-1]
  *
  */
 void
@@ -1337,6 +1339,8 @@ PDM_part_mesh_nodal_group_to_tag
 (
   PDM_part_mesh_nodal_t   *pmn,
   PDM_geometry_kind_t      geom_kind,
+  PDM_bool_t               allow_multiple,
+  int                   ***out_tag_idx,
   int                   ***out_tag
 );
 
@@ -1346,19 +1350,21 @@ PDM_part_mesh_nodal_group_to_tag
  * \param [in]  pmne      Pointer to \ref PDM_part_mesh_nodal_t object
  * \param [in]  geom_kind Geometry kind (corner, ridge, surface or volume)
  * \param [in]  n_group   Number of groups, if the specify n_group is negative, n_group is automaticly compute
+ * \param [in]  tag_idx   Identifier index or NULL if no multiplicity in element tag
  * \param [in]  tag       Identifier for all elements in current \ref PDM_part_mesh_nodal_elmts_t
  *                        that follows the natural order of the elements (size = n_part)
- *                        For each part size is : PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, i_part);
+ *                        For each part size is : n_elmts or out_tag_idx[n_elmts]
  *                        Value is between [0, n_group-1]
  *
  */
 void
 PDM_part_mesh_nodal_tag_to_group
 (
-        PDM_part_mesh_nodal_t  *pmn,
-        PDM_geometry_kind_t     geom_kind,
-        int                     n_group,
-        int                   **tag
+  PDM_part_mesh_nodal_t  *pmn,
+  PDM_geometry_kind_t     geom_kind,
+  int                     n_group,
+  int                   **tag_idx,
+  int                   **tag
 );
 
 
