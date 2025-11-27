@@ -1934,6 +1934,17 @@ PDM_writer_cst_global_var_set
 
 }
 
+void
+PDM_writer_out_fmt_set
+(
+ PDM_writer_t      *cs,
+ void              *out_fmt            
+)
+{
+  CHECK_WRITER(cs)
+  cs->sortie_fmt =  out_fmt ;
+}
+
 
 int
 PDM_writer_var_create
@@ -2360,6 +2371,17 @@ PDM_writer_geom_fmt_get
   return geom->geom_fmt;
 }
 
+void 
+PDM_writer_geom_fmt_set
+(
+  PDM_writer_geom_t *geom,
+  void              *geom_fmt
+)
+{
+  CHECK_GEOM(geom)
+  geom->geom_fmt = geom_fmt;
+}
+
 
 char *
 PDM_writer_geom_name_get
@@ -2402,6 +2424,17 @@ PDM_writer_var_fmt_get
 {
   CHECK_VAR(var)
   return var->var_fmt;
+}
+
+void *
+PDM_writer_var_fmt_set
+(
+  PDM_writer_var_t *var,
+  void             *var_fmt
+)
+{
+  CHECK_VAR(var)
+  var->var_fmt = var_fmt ; 
 }
 
 

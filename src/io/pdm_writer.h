@@ -840,6 +840,23 @@ PDM_writer_fmt_add
  const PDM_writer_var_fct_t   var_free_fct     /*!< Customize \ref PDM_writer_t_free function for the format   */
 );
 
+/**
+ *
+ * \brief Sets the output format
+ *
+ * This function sets the output format for \ef PDM_writer_t instance
+ *
+ * \param [in]  cs              Pointer to \ref PDM_writer_t instance
+ * \param [in]  out_fmt         Pointer to output format
+**/
+
+void
+PDM_writer_out_fmt_set
+(
+ PDM_writer_t *cs,
+ void         *out_fmt
+);
+
 
 /**
  * \brief Free format
@@ -910,6 +927,20 @@ PDM_writer_geom_fmt_get
   PDM_writer_geom_t *geom
 );
 
+/**
+ * \brief Set the format description of a geometry
+ *
+ * \param [in] geom \ref PDM_writer_geom_t instance
+ * \param [in] geom_fmt geometry format instance
+ *
+ */
+void 
+PDM_writer_geom_fmt_set
+(
+  PDM_writer_geom_t *geom,
+  void              *geom_fmt
+);
+
 
 /**
  * \brief Get the name of a geometry
@@ -965,6 +996,19 @@ void *
 PDM_writer_var_fmt_get
 (
   PDM_writer_var_t *var
+);
+
+/**
+ * \brief Set the format description of a variable
+ *
+ * \param [in] var \ref PDM_writer_var_t instance
+ *
+ */
+void *
+PDM_writer_var_fmt_set
+(
+  PDM_writer_var_t *var,
+  void             *var_fmt
 );
 
 
