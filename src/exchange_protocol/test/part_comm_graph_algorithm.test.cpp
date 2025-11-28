@@ -757,13 +757,11 @@ MPI_TEST_CASE("[PDM_part_comm_graph_concatenate] - 1 part - 1 perio - 2p", 2) {
   int n_entity_intra = vn_entity_intra[i_rank];
   int *entity_intra  = ventity_intra  [i_rank].data();
 
-  PDM_part_comm_graph_t *pcg_intra = PDM_part_comm_graph_create(
-    n_part,
-    &n_entity_intra,
-    &entity_intra,
-    PDM_OWNERSHIP_USER,
-    pdm_comm
-  );
+  PDM_part_comm_graph_t *pcg_intra = PDM_part_comm_graph_create(n_part,
+                                                               &n_entity_intra,
+                                                               &entity_intra,
+                                                               PDM_OWNERSHIP_USER,
+                                                               pdm_comm);
 
   /* Comm graph perio*/
   std::vector<int> vn_entity_perio = {8, 8};
@@ -790,24 +788,20 @@ MPI_TEST_CASE("[PDM_part_comm_graph_concatenate] - 1 part - 1 perio - 2p", 2) {
   int *entity_perio      = ventity_perio     [i_rank].data();
   int *entity_perio_nplt = ventity_perio_nplt[i_rank].data();
 
-  PDM_part_comm_graph_t *pcg_perio = PDM_part_comm_graph_with_nuplet_create(
-    n_part,
-    &n_entity_perio,
-    &entity_perio,
-    PDM_OWNERSHIP_USER,
-    1,
-    &entity_perio_nplt,
-    PDM_OWNERSHIP_USER,
-    PDM_TRUE,
-    pdm_comm
-  );
+  PDM_part_comm_graph_t *pcg_perio = PDM_part_comm_graph_with_nuplet_create(n_part,
+                                                                           &n_entity_perio,
+                                                                           &entity_perio,
+                                                                            PDM_OWNERSHIP_USER,
+                                                                            1,
+                                                                           &entity_perio_nplt,
+                                                                            PDM_OWNERSHIP_USER,
+                                                                            PDM_TRUE,
+                                                                            pdm_comm);
 
   PDM_part_comm_graph_t *pcgs[2] = {pcg_intra, pcg_perio};
-  PDM_part_comm_graph_t *pcg_full = PDM_part_comm_graph_concatenate(
-    pdm_comm,
-    2,
-    pcgs
-  );
+  PDM_part_comm_graph_t *pcg_full = PDM_part_comm_graph_concatenate(pdm_comm,
+                                                                    2,
+                                                                    pcgs);
 
   /* Comm graph */
   std::vector<int> vn_entity_full = {12, 12};
@@ -844,18 +838,14 @@ MPI_TEST_CASE("[PDM_part_comm_graph_concatenate] - 1 part - 1 perio - 2p", 2) {
 
   int *entity_full      = NULL;
   int *entity_full_nplt = NULL;
-  int n_entity_full = PDM_part_comm_graph_entity_graph_get(
-    pcg_full,
-    0,
-   &entity_full,
-    PDM_OWNERSHIP_BAD_VALUE
-  );
-  PDM_part_comm_graph_entity_nuplet_get(
-    pcg_full,
-    0,
-   &entity_full_nplt,
-    PDM_OWNERSHIP_BAD_VALUE
-  );
+  int n_entity_full = PDM_part_comm_graph_entity_graph_get(pcg_full,
+                                                           0,
+                                                          &entity_full,
+                                                           PDM_OWNERSHIP_BAD_VALUE);
+  PDM_part_comm_graph_entity_nuplet_get(pcg_full,
+                                        0,
+                                       &entity_full_nplt,
+                                        PDM_OWNERSHIP_BAD_VALUE);
 
   int *expected_entity_full      = ventity_full     [i_rank].data();
   int *expected_entity_full_nplt = ventity_full_nplt[i_rank].data();

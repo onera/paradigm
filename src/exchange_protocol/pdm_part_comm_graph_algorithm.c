@@ -1087,23 +1087,18 @@ PDM_part_comm_graph_concatenate
 
       if (concat_nuplet_size>0) {
 
-        if (pcgs[i_pcg]->nuplet_size == concat_nuplet_size) {
-          memcpy(&concat_pentity_nuplet[i_part][concat_n_entity_graph[i_part]], entity_nuplet, n_entity_graph*sizeof(int));
-        }
-        else if (pcgs[i_pcg]->nuplet_size < concat_nuplet_size) {
-          int i_write = concat_n_entity_graph[i_part];
+        int i_write = concat_n_entity_graph[i_part];
 
-          for (int i_entity=0; i_entity<n_entity_graph; i_entity++) {
+        for (int i_entity=0; i_entity<n_entity_graph; i_entity++) {
 
-            for (int i_nuplet=0; i_nuplet<pcgs[i_pcg]->nuplet_size; i_nuplet++) {
-              concat_pentity_nuplet[i_part][concat_nuplet_size*i_write+i_nuplet] = entity_nuplet[pcgs[i_pcg]->nuplet_size*i_entity + i_nuplet];
-            }
-            for (int i_nuplet=pcgs[i_pcg]->nuplet_size; i_nuplet<concat_nuplet_size; i_nuplet++) {
-              concat_pentity_nuplet[i_part][concat_nuplet_size*i_write+i_nuplet] = 0;
-            }
-
-            i_write++;
+          for (int i_nuplet=0; i_nuplet<pcgs[i_pcg]->nuplet_size; i_nuplet++) {
+            concat_pentity_nuplet[i_part][concat_nuplet_size*i_write+i_nuplet] = entity_nuplet[pcgs[i_pcg]->nuplet_size*i_entity + i_nuplet];
           }
+          for (int i_nuplet=pcgs[i_pcg]->nuplet_size; i_nuplet<concat_nuplet_size; i_nuplet++) {
+            concat_pentity_nuplet[i_part][concat_nuplet_size*i_write+i_nuplet] = 0;
+          }
+
+          i_write++;
         }
       }
       concat_n_entity_graph[i_part] += n_entity_graph;
@@ -1135,10 +1130,10 @@ PDM_part_comm_graph_concatenate
   }
 
 
-  free(concat_n_entity_graph);
-  free(concat_pentity_graph);
+  PDM_free(concat_n_entity_graph);
+  PDM_free(concat_pentity_graph);
   if (concat_nuplet_size>0) {
-    free(concat_pentity_nuplet);
+    PDM_free(concat_pentity_nuplet);
   }
 
   return pcg;
