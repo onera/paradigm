@@ -402,6 +402,8 @@ _create
   pcg->n_active_rank_send = 0;
   pcg->n_active_rank_recv = 0;
 
+  pcg->is_signed = is_signed;
+
   int n_rank;
   int i_rank;
   PDM_MPI_Comm_size(comm, &n_rank);

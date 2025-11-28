@@ -666,3 +666,196 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - selected_entity1_to_selected_entity2 - 2p
 
   PDM_part_comm_graph_free(pcg_vtx);
 }
+
+
+
+
+MPI_TEST_CASE("[PDM_part_comm_graph_concatenate] - 1 part - 1 perio - 2p", 2) {
+  PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
+
+  int i_rank;
+  PDM_MPI_Comm_rank(pdm_comm, &i_rank);
+
+  /*
+   *              9 +---+---+---+ 12
+   *                |           |
+   *              5 +   rank 1  + 8
+   *                |           |
+   *                +---+---+---+
+   *                1   2   3   4
+   * interface -1                   interface +1
+   *                9  10  11  12
+   *                +---+---+---+
+   *                |           |
+   *              5 +   rank 0  + 8
+   *                |           |
+   *              1 +---+---+---+ 4
+   *
+   * --- rank 0 ---
+   *  1 -> (0, 1,  4) through interface -1
+   *
+   *  4 -> (0, 1,  1) through interface  1
+   *
+   *  5 -> (0, 1,  8) through interface -1
+   *
+   *  8 -> (0, 1,  5) through interface  1
+   *
+   *  9 -> (1, 1,  1) through interface 0
+   *    -> (0, 1, 12) through interface -1
+   *    -> (1, 1,  4) through interface -1
+   *
+   * 10 -> (1, 1,  2) through interface 0
+   *
+   * 11 -> (1, 1,  3) through interface 0
+   *
+   * 12 -> (1, 1,  4) through interface 0
+   * 12 -> (0, 1,  9) through interface 1
+   * 12 -> (1, 1,  1) through interface 1
+   *
+   * owners : 1, 5, 9, 10, 11, 12
+   *
+   *
+   * --- rank 1 ---
+   *  1 -> (0, 1,  9) through interface 0
+   *    -> (1, 1,  4) through interface -1
+   *    -> (0, 1, 12) through interface -1
+   *
+   *  2 -> (0, 1, 10) through interface 0
+   *
+   *  3 -> (0, 1, 11) through interface 0
+   *
+   *  4 -> (0, 1, 12) through interface 0
+   *    -> (1, 1,  1) through interface 1
+   *    -> (0, 1,  9) through interface 1
+   *
+   *  5 -> (1, 1,  8) through interface -1
+   *
+   *  8 -> (1, 1,  5) through interface  1
+   *
+   *  9 -> (1, 1, 12) through interface -1
+   *
+   * 12 -> (1, 1,  9) through interface  1
+   *
+   * owners : 5, 9
+   *
+   */
+
+  /* Part */
+  int n_part = 1;
+
+  /* Comm graph intra*/
+  std::vector<int> vn_entity_intra = {4, 4};
+  std::vector<std::vector<int>> ventity_intra = {{9,  1, 1,  1,
+                                                  10, 1, 1,  2,
+                                                  11, 1, 1,  3,
+                                                  12, 1, 1,  4},
+                                                 {1,  0, 1,  9,
+                                                  2,  0, 1, 10,
+                                                  3,  0, 1, 11,
+                                                  4,  0, 1, 12}};
+
+  int n_entity_intra = vn_entity_intra[i_rank];
+  int *entity_intra  = ventity_intra  [i_rank].data();
+
+  PDM_part_comm_graph_t *pcg_intra = PDM_part_comm_graph_create(n_part,
+                                                               &n_entity_intra,
+                                                               &entity_intra,
+                                                               PDM_OWNERSHIP_USER,
+                                                               pdm_comm);
+
+  /* Comm graph perio*/
+  std::vector<int> vn_entity_perio = {8, 8};
+  std::vector<std::vector<int>> ventity_perio = {{1,  0, 1,  4,
+                                                  4,  0, 1,  1,
+                                                  5,  0, 1,  8,
+                                                  8,  0, 1,  5,
+                                                  9,  0, 1, 12,
+                                                  9,  1, 1,  4,
+                                                  12, 0, 1,  9,
+                                                  12, 1, 1,  1},
+                                                 {1,  1, 1,  4,
+                                                  1,  0, 1, 12,
+                                                  4,  1, 1,  1,
+                                                  4,  0, 1,  9,
+                                                  5,  1, 1,  8,
+                                                  8,  1, 1,  5,
+                                                  9,  1, 1, 12,
+                                                  12, 1, 1,  9}};
+  std::vector<std::vector<int>> ventity_perio_nplt = {{-1,  1, -1, 1, -1, -1,  1, 1},
+                                                      {-1, -1,  1, 1, -1,  1, -1, 1}};
+
+  int n_entity_perio     = vn_entity_perio   [i_rank];
+  int *entity_perio      = ventity_perio     [i_rank].data();
+  int *entity_perio_nplt = ventity_perio_nplt[i_rank].data();
+
+  PDM_part_comm_graph_t *pcg_perio = PDM_part_comm_graph_with_nuplet_create(n_part,
+                                                                           &n_entity_perio,
+                                                                           &entity_perio,
+                                                                            PDM_OWNERSHIP_USER,
+                                                                            1,
+                                                                           &entity_perio_nplt,
+                                                                            PDM_OWNERSHIP_USER,
+                                                                            PDM_TRUE,
+                                                                            pdm_comm);
+
+  PDM_part_comm_graph_t *pcgs[2] = {pcg_intra, pcg_perio};
+  PDM_part_comm_graph_t *pcg_full = PDM_part_comm_graph_concatenate(pdm_comm,
+                                                                    2,
+                                                                    pcgs);
+
+  /* Comm graph */
+  std::vector<int> vn_entity_full = {12, 12};
+  std::vector<std::vector<int>> ventity_full = {{
+    9,  1, 1,  1,
+    10, 1, 1,  2,
+    11, 1, 1,  3,
+    12, 1, 1,  4,
+    1,  0, 1,  4,
+    4,  0, 1,  1,
+    5,  0, 1,  8,
+    8,  0, 1,  5,
+    9,  0, 1, 12,
+    9,  1, 1,  4,
+    12, 0, 1,  9,
+    12, 1, 1,  1
+  },
+  {
+    1,  0, 1,  9,
+    2,  0, 1, 10,
+    3,  0, 1, 11,
+    4,  0, 1, 12,
+    1,  1, 1,  4,
+    1,  0, 1, 12,
+    4,  1, 1,  1,
+    4,  0, 1,  9,
+    5,  1, 1,  8,
+    8,  1, 1,  5,
+    9,  1, 1, 12,
+    12, 1, 1,  9
+  }};
+  std::vector<std::vector<int>> ventity_full_nplt = {{0, 0,  0, 0, -1,  1, -1, 1, -1, -1,  1, 1},
+                                                     {0, 0, 0,  0, -1, -1,  1, 1, -1,  1, -1, 1}};
+
+  int *entity_full      = NULL;
+  int *entity_full_nplt = NULL;
+  int n_entity_full = PDM_part_comm_graph_entity_graph_get(pcg_full,
+                                                           0,
+                                                          &entity_full,
+                                                           PDM_OWNERSHIP_BAD_VALUE);
+  PDM_part_comm_graph_entity_nuplet_get(pcg_full,
+                                        0,
+                                       &entity_full_nplt,
+                                        PDM_OWNERSHIP_BAD_VALUE);
+
+  int *expected_entity_full      = ventity_full     [i_rank].data();
+  int *expected_entity_full_nplt = ventity_full_nplt[i_rank].data();
+
+  MPI_CHECK_EQ_C_ARRAY(0, entity_full     , expected_entity_full     , 4*n_entity_full);
+  MPI_CHECK_EQ_C_ARRAY(0, entity_full_nplt, expected_entity_full_nplt,   n_entity_full);
+  MPI_CHECK_EQ_C_ARRAY(1, entity_full     , expected_entity_full     , 4*n_entity_full);
+  MPI_CHECK_EQ_C_ARRAY(1, entity_full_nplt, expected_entity_full_nplt,   n_entity_full);
+
+  PDM_part_comm_graph_free(pcg_intra);
+  PDM_part_comm_graph_free(pcg_perio);
+  PDM_part_comm_graph_free(pcg_full);
+}

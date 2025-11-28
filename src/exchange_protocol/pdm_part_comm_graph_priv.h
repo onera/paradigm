@@ -45,6 +45,7 @@ struct _pdm_part_comm_graph_t {
   PDM_MPI_Comm      comm;
   int               n_part;
   int               n_g_part;
+  int               is_signed;
 
   int              *n_entity_graph;
   int             **pentity_graph;
