@@ -295,10 +295,6 @@ foreach(lib_type IN LISTS LIB_TYPES)
     )
   endif()
 
-  set_target_properties(pdm_${lib_type_lower} PROPERTIES
-    INTERFACE_LINK_LIBRARIES ""
-  )
-
 endforeach()
 
 if (PDM_ENABLE_PYTHON_BINDINGS)
@@ -441,6 +437,13 @@ configure_file(
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/pdmConfig.cmake"
   DESTINATION lib/cmake/pdm
 )
+
+
+install(FILES
+  ${PROJECT_SOURCE_DIR}/cmake/modules/FindPTScotch.cmake
+  ${PROJECT_SOURCE_DIR}/cmake/modules/FindParMETIS.cmake
+  DESTINATION lib/cmake )
+
 
 configure_file(
   "${CMAKE_CURRENT_SOURCE_DIR}/cmake/templates/pdmConfigVersion.cmake.in"
