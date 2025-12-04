@@ -438,6 +438,13 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/pdmConfig.cmake"
   DESTINATION lib/cmake/pdm
 )
 
+
+install(FILES
+  ${PROJECT_SOURCE_DIR}/cmake/modules/FindPTScotch.cmake
+  ${PROJECT_SOURCE_DIR}/cmake/modules/FindParMETIS.cmake
+  DESTINATION lib/cmake )
+
+
 configure_file(
   "${CMAKE_CURRENT_SOURCE_DIR}/cmake/templates/pdmConfigVersion.cmake.in"
   pdmConfigVersion.cmake
