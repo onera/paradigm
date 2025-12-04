@@ -969,7 +969,7 @@ PDM_part_mesh_nodal_elmts_group_to_tag
  * \brief Transform tag for all elements into group information inside a \ref PDM_part_mesh_nodal_elmts_t
  *
  * \param [in]  pmne      Pointer to \ref PDM_part_mesh_nodal_elmts_t object
- * \param [in]  n_group   Number of groups, if the specify n_group is negative, n_group is automaticly compute
+ * \param [in]  n_group   Number of groups, if the specify n_group is negative, n_group is automatically compute
  * \param [in]  tag_idx   Identifier index or NULL if no multiplicity in element tag
  * \param [in]  tag       Identifier for all elements in current \ref PDM_part_mesh_nodal_elmts_t
  *                        that follows the natural order of the elements (size = n_part)

@@ -2058,7 +2058,7 @@ PDM_part_mesh_nodal_group_to_tag
   int                   ***out_tag
 )
 {
-  CHECK_PMN   (pmn)
+  CHECK_PMN(pmn)
 
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
   CHECK_PMNE(pmne)
@@ -2077,7 +2077,7 @@ PDM_part_mesh_nodal_tag_to_group
   int                   **tag
 )
 {
-  CHECK_PMN   (pmn)
+  CHECK_PMN(pmn)
 
   PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
   CHECK_PMNE(pmne)

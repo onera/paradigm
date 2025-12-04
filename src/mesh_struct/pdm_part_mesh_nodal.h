@@ -1307,7 +1307,6 @@ PDM_part_mesh_nodal_part_comm_graph_set
  * \param [in]   entity_type Entity type (vertex, edge, face or cell)
  * \param [out]  pcg         Pointer to \ref PDM_part_comm_graph_t instance
  * \param [in]   ownership   part_mesh_nodal ownership on returned part_comm_graph
- *
  */
 void
 PDM_part_mesh_nodal_part_comm_graph_get
@@ -1332,7 +1331,6 @@ PDM_part_mesh_nodal_part_comm_graph_get
  *                              that follows the natural order of the elements (size = n_part)
  *                              For each part size is : n_elmts or out_tag_idx[n_elmts]
  *                              Value is between [0, n_group-1]
- *
  */
 void
 PDM_part_mesh_nodal_group_to_tag
@@ -1349,13 +1347,12 @@ PDM_part_mesh_nodal_group_to_tag
  *
  * \param [in]  pmne      Pointer to \ref PDM_part_mesh_nodal_t object
  * \param [in]  geom_kind Geometry kind (corner, ridge, surface or volume)
- * \param [in]  n_group   Number of groups, if the specify n_group is negative, n_group is automaticly compute
+ * \param [in]  n_group   Number of groups, if the specify n_group is negative, n_group is automatically compute
  * \param [in]  tag_idx   Identifier index or NULL if no multiplicity in element tag
  * \param [in]  tag       Identifier for all elements in current \ref PDM_part_mesh_nodal_elmts_t
  *                        that follows the natural order of the elements (size = n_part)
  *                        For each part size is : n_elmts or out_tag_idx[n_elmts]
  *                        Value is between [0, n_group-1]
- *
  */
 void
 PDM_part_mesh_nodal_tag_to_group
