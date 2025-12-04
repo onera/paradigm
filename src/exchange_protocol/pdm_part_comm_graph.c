@@ -1073,12 +1073,12 @@ PDM_part_comm_graph_exch_free
 int
 PDM_part_comm_graph_exch_one_way_raw_init
 (
- PDM_part_comm_graph_t      *pcg,
- PDM_exchange_direction_t    direction,
- size_t                      s_data,
- int                         cst_stride,
- int                        *raw_buffer,
- int                         tag
+  PDM_part_comm_graph_t      *pcg,
+  PDM_exchange_direction_t    direction,
+  size_t                      s_data,
+  int                         cst_stride,
+  int                        *raw_buffer,
+  int                         tag
 )
 {
   int *send_or_recv_idx = NULL;
@@ -1123,12 +1123,12 @@ PDM_part_comm_graph_exch_one_way_raw_init
 int
 PDM_part_comm_graph_iexch_one_way_raw
 (
- PDM_part_comm_graph_t      *pcg,
- PDM_exchange_direction_t    direction,
- size_t                      s_data,
- int                         cst_stride,
- int                        *raw_buffer,
- int                         tag
+  PDM_part_comm_graph_t      *pcg,
+  PDM_exchange_direction_t    direction,
+  size_t                      s_data,
+  int                         cst_stride,
+  int                        *raw_buffer,
+  int                         tag
 )
 {
   int *send_or_recv_idx = NULL;
@@ -1148,7 +1148,7 @@ PDM_part_comm_graph_iexch_one_way_raw
     send_or_recv_n   = pcg->active_recv_n;
   } else {
     PDM_error(__FILE__, __LINE__, 0,
-              "Error PDM_part_comm_graph_exch_one_way_raw_init not yet implemented with direction = %i\n", direction);
+              "Error PDM_part_comm_graph_iexch_one_way_raw not yet implemented with direction = %i\n", direction);
   }
 
   int request_id = PDM_exchange_helper_iexch_one_way(pcg->exch_h,
@@ -1173,8 +1173,8 @@ PDM_part_comm_graph_iexch_one_way_raw
 void
 PDM_part_comm_graph_exch_one_way_raw_start
 (
- PDM_part_comm_graph_t      *pcg,
- int                         request_id
+  PDM_part_comm_graph_t      *pcg,
+  int                         request_id
 )
 {
   PDM_exchange_helper_exch_start(pcg->exch_h, request_id);
@@ -1193,8 +1193,8 @@ PDM_part_comm_graph_exch_one_way_raw_wait
 void
 PDM_part_comm_graph_exch_one_way_raw_free
 (
- PDM_part_comm_graph_t      *pcg,
- int                         request_id
+  PDM_part_comm_graph_t      *pcg,
+  int                         request_id
 )
 {
   pcg->exch_h->send_buffer  [request_id] = NULL;

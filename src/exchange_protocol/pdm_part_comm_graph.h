@@ -282,14 +282,14 @@ PDM_part_comm_graph_part_to_recv_buffer_get
  * Buffer are filled with part_to_send or part_to_recv buffer \see PDM_part_comm_graph_part_to_send_buffer_get and
  * PDM_part_comm_graph_part_to_recv_buffer_get
  *
- * \param[in,out] pcg The communication graph object, which contains all communication
- *                     topology information (ranks, counts, etc.).
- * \param[in]     direction Specifies the direction of the exchange: either send or receive.
- * \param[in]     s_data The size of a single data element in bytes.
+ * \param[in,out] pcg        \ref PDM_part_comm_graph_t structure, which contains all communication
+ *                           topology information (ranks, counts, etc.).
+ * \param[in]     direction  Specifies the direction of the exchange: either send or receive.
+ * \param[in]     s_data     The size of a single data element in bytes.
  * \param[in]     cst_stride The stride for non-contiguous data within the buffer.
  * \param[in,out] raw_buffer A pointer to the buffer containing the raw data to be sent or
- *                received. The content of this buffer should not be modified until the communication is complete.
- * \param[in]     tag The MPI message tag to be used for the exchange.
+ *                           received. The content of this buffer should not be modified until the communication is complete.
+ * \param[in]     tag        The MPI message tag to be used for the exchange.
  * \return An integer ID for the persistent request on success, or a negative value on failure.
  *
  * \see PDM_part_comm_graph_exch_one_way_raw_start
@@ -298,12 +298,12 @@ PDM_part_comm_graph_part_to_recv_buffer_get
 int
 PDM_part_comm_graph_exch_one_way_raw_init
 (
- PDM_part_comm_graph_t      *pcg,
- PDM_exchange_direction_t    direction,
- size_t                      s_data,
- int                         cst_stride,
- int                        *raw_buffer,
- int                         tag
+  PDM_part_comm_graph_t      *pcg,
+  PDM_exchange_direction_t    direction,
+  size_t                      s_data,
+  int                         cst_stride,
+  int                        *raw_buffer,
+  int                         tag
 );
 
 /**
@@ -316,14 +316,14 @@ PDM_part_comm_graph_exch_one_way_raw_init
  * Buffer are filled with part_to_send or part_to_recv buffer \see PDM_part_comm_graph_part_to_send_buffer_get and
  * PDM_part_comm_graph_part_to_recv_buffer_get
  *
- * \param[in,out] pcg The communication graph object, which contains all communication
- *                     topology information (ranks, counts, etc.).
- * \param[in]     direction Specifies the direction of the exchange: either send or receive.
+ * \param[in,out] pcg        \ref PDM_part_comm_graph_t structure, which contains all communication
+ *                           topology information (ranks, counts, etc.).
+ * \param[in]     direction  Specifies the direction of the exchange: either send or receive.
  * \param[in]     s_data The size of a single data element in bytes.
  * \param[in]     cst_stride The stride for non-contiguous data within the buffer.
  * \param[in,out] raw_buffer A pointer to the buffer containing the raw data to be sent or
- *                received. The content of this buffer should not be modified until the communication is complete.
- * \param[in]     tag The MPI message tag to be used for the exchange.
+ *                           received. The content of this buffer should not be modified until the communication is complete.
+ * \param[in]     tag        The MPI message tag to be used for the exchange.
  * \return An integer ID for the persistent request on success, or a negative value on failure.
  *
  * \see PDM_part_comm_graph_exch_one_way_raw_wait
@@ -331,12 +331,12 @@ PDM_part_comm_graph_exch_one_way_raw_init
 int
 PDM_part_comm_graph_iexch_one_way_raw
 (
- PDM_part_comm_graph_t      *pcg,
- PDM_exchange_direction_t    direction,
- size_t                      s_data,
- int                         cst_stride,
- int                        *raw_buffer,
- int                         tag
+  PDM_part_comm_graph_t      *pcg,
+  PDM_exchange_direction_t    direction,
+  size_t                      s_data,
+  int                         cst_stride,
+  int                        *raw_buffer,
+  int                         tag
 );
 
 /**
@@ -346,9 +346,9 @@ PDM_part_comm_graph_iexch_one_way_raw
  * previously initialized persistent request ID. The function returns immediately
  * and the communication proceeds in the background.
  *
- * \param[in,out] pcg The communication graph object.
+ * \param[in,out] pcg        \ref PDM_part_comm_graph_t structure.
  * \param[in]     request_id The ID of the persistent request to be started, as
- *                returned by PDM_part_comm_graph_exch_one_way_raw_init.
+ *                           returned by PDM_part_comm_graph_exch_one_way_raw_init.
  *
  * \see PDM_part_comm_graph_exch_one_way_raw_init
  * \see PDM_part_comm_graph_exch_one_way_raw_wait
@@ -356,8 +356,8 @@ PDM_part_comm_graph_iexch_one_way_raw
 void
 PDM_part_comm_graph_exch_one_way_raw_start
 (
- PDM_part_comm_graph_t      *pcg,
- int                         request_id
+  PDM_part_comm_graph_t      *pcg,
+  int                         request_id
 );
 
 /**
@@ -368,7 +368,7 @@ PDM_part_comm_graph_exch_one_way_raw_start
  * ensure all data has been successfully sent or received before reusing
  * the communication buffers.
  *
- * \param[in,out] pcg The communication graph object.
+ * \param[in,out] pcg        \ref PDM_part_comm_graph_t structure.
  * \param[in]     request_id The ID of the request to wait for.
  *
  * \see PDM_part_comm_graph_exch_one_way_raw_start
@@ -390,7 +390,7 @@ PDM_part_comm_graph_exch_one_way_raw_wait
  * \pre The communication associated with request_id must be completed
  * (e.g., via PDM_part_comm_graph_exch_one_way_raw_wait) before freeing it.
  *
- * \param[in,out] pcg The communication graph object.
+ * \param[in,out] pcg        \ref PDM_part_comm_graph_t structure.
  * \param[in]     request_id The ID of the request to be freed.
  *
  * \see PDM_part_comm_graph_exch_one_way_raw_init
@@ -398,8 +398,8 @@ PDM_part_comm_graph_exch_one_way_raw_wait
 void
 PDM_part_comm_graph_exch_one_way_raw_free
 (
- PDM_part_comm_graph_t      *pcg,
- int                         request_id
+  PDM_part_comm_graph_t      *pcg,
+  int                         request_id
 );
 
 /**
