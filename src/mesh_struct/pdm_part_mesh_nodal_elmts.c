@@ -5482,7 +5482,7 @@ PDM_part_mesh_nodal_elmts_group_to_tag
   int                         ***out_tag
 )
 {
-  CHECK_PMNE  (pmne)
+  CHECK_PMNE(pmne)
 
   int n_part = pmne->n_part;
 
@@ -5599,7 +5599,7 @@ PDM_part_mesh_nodal_elmts_tag_to_group
   int                            **tag
 )
 {
-  CHECK_PMNE  (pmne)
+  CHECK_PMNE(pmne)
 
   int n_part = pmne->n_part;
 
