@@ -1322,7 +1322,6 @@ PDM_part_mesh_nodal_part_comm_graph_get
 /**
  * \brief Transform group information inside a \ref PDM_part_mesh_nodal_t to tag for all elements
  *
- *
  * \param [in]  pmne            Pointer to \ref PDM_part_mesh_nodal_t object
  * \param [in]  geom_kind       Geometry kind (corner, ridge, surface or volume)
  * \param [in]  allow_multiple  Allow or not that one element can be reference 0 exactly or more than once. If PDM_FALSE, out_tag_idx will be NULL
