@@ -324,13 +324,13 @@ PDM_exchange_helper_create
   return exch_helper;
 }
 
+
 void
-PDM_exchange_helper_exch
+PDM_exchange_helper_mpi_type_exch
 (
   PDM_exchange_helper_t *exch_helper,
   PDM_mpi_comm_kind_t    k_comm,
-  int                    cst_stride,
-  size_t                 s_data,
+  PDM_MPI_Datatype       mpi_type,
   int                   *send_idx,
   int                   *send_n,
   void                  *send_buffer,
@@ -339,12 +339,6 @@ PDM_exchange_helper_exch
   void                  *recv_buffer
 )
 {
-  int s_data_tot = s_data * cst_stride;
-
-  PDM_MPI_Datatype mpi_type;
-  PDM_MPI_Type_create_contiguous(s_data_tot, PDM_MPI_BYTE, &mpi_type);
-  PDM_MPI_Type_commit(&mpi_type);
-
   if(k_comm == PDM_MPI_COMM_KIND_COLLECTIVE && exch_helper->topo_kind == PDM_MPI_COMM_UNDEFINED) {
     PDM_MPI_Alltoallv(send_buffer,
                       send_n,
@@ -379,6 +373,39 @@ PDM_exchange_helper_exch
     PDM_error(__FILE__, __LINE__, 0,
               "Error PDM_exchange_helper_exch not yet implemented with k_comm = %i\n", k_comm);
   }
+}
+
+
+void
+PDM_exchange_helper_exch
+(
+  PDM_exchange_helper_t *exch_helper,
+  PDM_mpi_comm_kind_t    k_comm,
+  int                    cst_stride,
+  size_t                 s_data,
+  int                   *send_idx,
+  int                   *send_n,
+  void                  *send_buffer,
+  int                   *recv_idx,
+  int                   *recv_n,
+  void                  *recv_buffer
+)
+{
+  int s_data_tot = s_data * cst_stride;
+
+  PDM_MPI_Datatype mpi_type;
+  PDM_MPI_Type_create_contiguous(s_data_tot, PDM_MPI_BYTE, &mpi_type);
+  PDM_MPI_Type_commit(&mpi_type);
+
+  PDM_exchange_helper_mpi_type_exch(exch_helper,
+                                    k_comm,
+                                    mpi_type,
+                                    send_idx,
+                                    send_n,
+                                    send_buffer,
+                                    recv_idx,
+                                    recv_n,
+                                    recv_buffer);
 
   PDM_MPI_Type_free(&mpi_type);
 }

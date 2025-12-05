@@ -68,6 +68,39 @@ PDM_exchange_helper_create
   const PDM_MPI_Comm    comm
 );
 
+
+/**
+ * \brief Performs a blocking exchange of data between processes.
+ *
+ * This function handles both sending and receiving data in a single,
+ * blocking call. It is typically used for `all-to-all` or `point-to-point`
+ * exchanges where the sending and receiving data sizes and indices are
+ * known beforehand.
+ *
+ * \param[in,out] exch_helper The initialized exchange helper object.
+ * \param[in]     k_comm      The communication kind (e.g., all-to-all, point-to-point).
+ * \param[in]     mpi_type    An predefinid mpi type see \ref PDM_MPI_Datatype
+ * \param[in]     send_idx    Array of destination ranks for sending data.
+ * \param[in]     send_n      Array of data counts to be sent to each destination.
+ * \param[in]     send_buffer Pointer to the data buffer for sending.
+ * \param[in]     recv_idx    Array of source ranks for receiving data.
+ * \param[in]     recv_n      Array of data counts to be received from each source.
+ * \param[out]    recv_buffer Pointer to the data buffer for receiving.
+ */
+void
+PDM_exchange_helper_mpi_type_exch
+(
+  PDM_exchange_helper_t *exch_helper,
+  PDM_mpi_comm_kind_t    k_comm,
+  PDM_MPI_Datatype       mpi_type,
+  int                   *send_idx,
+  int                   *send_n,
+  void                  *send_buffer,
+  int                   *recv_idx,
+  int                   *recv_n,
+  void                  *recv_buffer
+);
+
 /**
  * \brief Performs a blocking exchange of data between processes.
  *
