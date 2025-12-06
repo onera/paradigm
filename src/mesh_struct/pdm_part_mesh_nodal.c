@@ -380,6 +380,38 @@ PDM_part_mesh_nodal_part_comm_graph_get
 }
 
 
+void
+PDM_part_mesh_nodal_part_comm_graph_vtx_set
+(
+  PDM_part_mesh_nodal_t *pmn,
+  PDM_part_comm_graph_t *pcg,
+  PDM_ownership_t        ownership
+)
+{
+  CHECK_PMN(pmn)
+
+  pmn->pcg_vtx = pcg;
+  if (ownership==PDM_OWNERSHIP_USER || ownership==PDM_OWNERSHIP_KEEP) {
+    pmn->pcg_vtx_ownership = ownership;
+  }
+}
+
+
+void
+PDM_part_mesh_nodal_part_comm_graph_vtx_get
+(
+  PDM_part_mesh_nodal_t  *pmn,
+  PDM_part_comm_graph_t **pcg,
+  PDM_ownership_t         ownership
+)
+{
+  CHECK_PMN(pmn)
+  *pcg = pmn->pcg_vtx;
+  if (ownership!=PDM_OWNERSHIP_BAD_VALUE) {
+    pmn->pcg_vtx_ownership = ownership;
+  }
+}
+
 int
 PDM_part_mesh_nodal_mesh_dimension_get
 (
@@ -837,6 +869,10 @@ PDM_part_mesh_nodal_free
     if (pmn->pcg_ownership[geom_kind]==PDM_OWNERSHIP_KEEP) {
       PDM_part_comm_graph_free(pmn->pcg[geom_kind]);
     }
+  }
+
+  if (pmn->pcg_vtx_ownership == PDM_OWNERSHIP_KEEP) {
+    PDM_part_comm_graph_free(pmn->pcg_vtx);
   }
 
   PDM_free(pmn->section_kind);

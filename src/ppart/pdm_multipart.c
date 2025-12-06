@@ -712,9 +712,10 @@ _compute_part_mesh_nodal_3d
   PDM_free(pn_vtx);
 
   /* Create part_comm_graph with gnum */
-  PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(pmn, PDM_MESH_ENTITY_FACE);
-  PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(pmn, PDM_MESH_ENTITY_EDGE);
-  PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(pmn, PDM_MESH_ENTITY_VTX);
+  PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(pmn, PDM_GEOMETRY_KIND_SURFACIC);
+  PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(pmn, PDM_GEOMETRY_KIND_RIDGE);
+  PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(pmn, PDM_GEOMETRY_KIND_CORNER);
+  PDM_part_mesh_nodal_vtx_part_comm_graph_compute_from_gnum(pmn);
 
   return pmn;
 }
@@ -919,8 +920,9 @@ _compute_part_mesh_nodal_2d
   PDM_free(pn_vtx);
 
   /* Create part_comm_graph with gnum */
-  PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(pmn, PDM_MESH_ENTITY_EDGE);
-  PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(pmn, PDM_MESH_ENTITY_VTX);
+  PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(pmn, PDM_GEOMETRY_KIND_RIDGE);
+  PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(pmn, PDM_GEOMETRY_KIND_CORNER);
+  PDM_part_mesh_nodal_vtx_part_comm_graph_compute_from_gnum(pmn);
 
   return pmn;
 }

@@ -317,6 +317,20 @@ PDM_part_mesh_nodal_elmts_sections_local_decompose_edges
 );
 
 
+void
+PDM_part_mesh_nodal_elmts_sections_local_decompose_vtx
+(
+  PDM_part_mesh_nodal_elmts_t   *pmne,
+  int                          **vtx_tag,
+  int                          **out_n_decompose_elmt_vtx,
+  int                         ***out_elmt_vtx_idx,
+  int                         ***out_elmt_vtx_vtx_idx,
+  int                         ***out_elmt_vtx_vtx,
+  int                         ***out_parent_elmt,
+  int                         ***out_parent_elmt_position
+);
+
+
 /**
  * \brief Decompose locally a standard element section into faces (single partition).
  *

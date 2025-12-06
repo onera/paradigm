@@ -48,6 +48,39 @@ extern "C" {
 /* Tables for decomposing standard elments in edges and faces */
 // https://cgns.github.io/CGNS_docs_current/sids/conv.html
 
+static const int vtx_vtx_vtx[] = {
+  0
+};
+
+static const int bar_vtx_vtx[] = {
+  0, 1
+};
+
+static const int tria_vtx_vtx[] = {
+  0, 1, 2
+};
+
+static const int quad_vtx_vtx[] = {
+  0, 1, 2, 3
+};
+
+static const int tetra_vtx_vtx[] = {
+  0, 1, 2, 3
+};
+
+static const int pyramid_vtx_vtx[] = {
+  0, 1, 2, 3, 4
+};
+
+static const int prism_vtx_vtx[] = {
+  0, 1, 2, 3, 4, 5
+};
+
+static const int hexa_vtx_vtx[] = {
+  0, 1, 2, 3, 4, 5, 6, 7
+};
+
+
 static const int bar_edge_vtx[] = {
   0, 1
 };
@@ -918,6 +951,63 @@ PDM_edge_vtx_per_elmt
   return PDM_n_edge_elt_per_elmt(t_elt);
 }
 
+
+int
+PDM_vtx_vtx_per_elmt
+(
+  PDM_Mesh_nodal_elt_t   t_elt,
+  const int            **vtx_vtx
+)
+{
+  switch (t_elt) {
+    case PDM_MESH_NODAL_POINT: {
+      *vtx_vtx = vtx_vtx_vtx;
+      break;
+    }
+    case PDM_MESH_NODAL_BAR2:
+    case PDM_MESH_NODAL_BARHO:
+    case PDM_MESH_NODAL_BARHO_BEZIER: {
+      *vtx_vtx = bar_vtx_vtx;
+      break;
+    }
+    case PDM_MESH_NODAL_TRIA3:
+    case PDM_MESH_NODAL_TRIAHO:
+    case PDM_MESH_NODAL_TRIAHO_BEZIER: {
+      *vtx_vtx = tria_vtx_vtx;
+      break;
+    }
+    case PDM_MESH_NODAL_QUAD4:
+    case PDM_MESH_NODAL_QUADHO: {
+      *vtx_vtx = quad_vtx_vtx;
+      break;
+    }
+    case PDM_MESH_NODAL_TETRA4:
+    case PDM_MESH_NODAL_TETRAHO: {
+      *vtx_vtx = tetra_vtx_vtx;
+      break;
+    }
+    case PDM_MESH_NODAL_PYRAMID5:
+    case PDM_MESH_NODAL_PYRAMIDHO: {
+      *vtx_vtx = pyramid_vtx_vtx;
+      break;
+    }
+    case PDM_MESH_NODAL_PRISM6:
+    case PDM_MESH_NODAL_PRISMHO: {
+      *vtx_vtx = prism_vtx_vtx;
+      break;
+    }
+    case PDM_MESH_NODAL_HEXA8:
+    case PDM_MESH_NODAL_HEXAHO: {
+      *vtx_vtx = hexa_vtx_vtx;
+      break;
+    }
+    default : {
+      PDM_error(__FILE__, __LINE__, 0, "PDM_vtx_vtx_per_elmt : Invalid t_elt %d\n", t_elt);
+    }
+  }
+
+  return PDM_Mesh_nodal_n_vtx_elt_get(t_elt, 1);
+}
 
 
 /**

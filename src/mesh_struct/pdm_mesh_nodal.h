@@ -123,6 +123,14 @@ PDM_Mesh_nodal_n_vtx_elt_get
   const int            order
 );
 
+
+int
+PDM_vtx_vtx_per_elmt
+(
+  PDM_Mesh_nodal_elt_t   t_elt,
+  const int            **vtx_vtx
+);
+
 /**
  * \brief Get if the element is consider as HO or not
  *
