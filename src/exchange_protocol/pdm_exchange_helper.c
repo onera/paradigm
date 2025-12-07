@@ -81,8 +81,15 @@ _find_available_request
 
   PDM_realloc(exch_helper->send_buffer    , exch_helper->send_buffer    , n_new_request, void                  *);
   PDM_realloc(exch_helper->recv_buffer    , exch_helper->recv_buffer    , n_new_request, void                  *);
-  PDM_realloc(exch_helper->recv_n         , exch_helper->recv_n         , n_new_request, int                   *);
-  PDM_realloc(exch_helper->recv_idx       , exch_helper->recv_idx       , n_new_request, int                   *);
+
+  PDM_realloc(exch_helper->send_data_idx  , exch_helper->send_data_idx  , n_new_request, int                   *);
+  PDM_realloc(exch_helper->send_data_n    , exch_helper->send_data_n    , n_new_request, int                   *);
+  PDM_realloc(exch_helper->recv_data_idx  , exch_helper->recv_data_idx  , n_new_request, int                   *);
+  PDM_realloc(exch_helper->recv_data_n    , exch_helper->recv_data_n    , n_new_request, int                   *);
+  PDM_realloc(exch_helper->recv_stride_idx, exch_helper->recv_stride_idx, n_new_request, int                   *);
+
+  PDM_realloc(exch_helper->rma_recv_n     , exch_helper->rma_recv_n     , n_new_request, int                   *);
+  PDM_realloc(exch_helper->rma_recv_idx   , exch_helper->rma_recv_idx   , n_new_request, int                   *);
 
   PDM_realloc(exch_helper->win_send       , exch_helper->win_send       , n_new_request, PDM_MPI_Win            );
   PDM_realloc(exch_helper->win_recv       , exch_helper->win_recv       , n_new_request, PDM_MPI_Win            );
@@ -115,8 +122,15 @@ _find_available_request
 
     exch_helper->send_buffer    [i] = NULL;
     exch_helper->recv_buffer    [i] = NULL;
-    exch_helper->recv_n         [i] = NULL;
-    exch_helper->recv_idx       [i] = NULL;
+
+    exch_helper->send_data_idx  [i] = NULL;
+    exch_helper->send_data_n    [i] = NULL;
+    exch_helper->recv_data_idx  [i] = NULL;
+    exch_helper->recv_data_n    [i] = NULL;
+    exch_helper->recv_stride_idx[i] = NULL;
+
+    exch_helper->rma_recv_n     [i] = NULL;
+    exch_helper->rma_recv_idx   [i] = NULL;
 
     exch_helper->win_send       [i] = PDM_MPI_WIN_NULL;
     exch_helper->win_recv       [i] = PDM_MPI_WIN_NULL;
@@ -252,8 +266,15 @@ PDM_exchange_helper_create
   PDM_malloc(exch_helper->n_sub_requests , exch_helper->n_request, int                    );
   PDM_malloc(exch_helper->send_buffer    , exch_helper->n_request, void                  *);
   PDM_malloc(exch_helper->recv_buffer    , exch_helper->n_request, void                  *);
-  PDM_malloc(exch_helper->recv_n         , exch_helper->n_request, int                   *);
-  PDM_malloc(exch_helper->recv_idx       , exch_helper->n_request, int                   *);
+
+  PDM_malloc(exch_helper->send_data_idx  , exch_helper->n_request, int                   *);
+  PDM_malloc(exch_helper->send_data_n    , exch_helper->n_request, int                   *);
+  PDM_malloc(exch_helper->recv_data_idx  , exch_helper->n_request, int                   *);
+  PDM_malloc(exch_helper->recv_data_n    , exch_helper->n_request, int                   *);
+  PDM_malloc(exch_helper->recv_stride_idx, exch_helper->n_request, int                   *);
+
+  PDM_malloc(exch_helper->rma_recv_n     , exch_helper->n_request, int                   *);
+  PDM_malloc(exch_helper->rma_recv_idx   , exch_helper->n_request, int                   *);
 
   // RMA
   PDM_malloc(exch_helper->win_send       , exch_helper->n_request, PDM_MPI_Win            );
@@ -285,8 +306,13 @@ PDM_exchange_helper_create
     exch_helper->sub_requests   [i] = NULL;
     exch_helper->send_buffer    [i] = NULL;
     exch_helper->recv_buffer    [i] = NULL;
-    exch_helper->recv_n         [i] = NULL;
-    exch_helper->recv_idx       [i] = NULL;
+    exch_helper->send_data_idx  [i] = NULL;
+    exch_helper->send_data_n    [i] = NULL;
+    exch_helper->recv_data_idx  [i] = NULL;
+    exch_helper->recv_data_n    [i] = NULL;
+    exch_helper->recv_stride_idx[i] = NULL;
+    exch_helper->rma_recv_n     [i] = NULL;
+    exch_helper->rma_recv_idx   [i] = NULL;
     exch_helper->win_send       [i] = PDM_MPI_WIN_NULL;
     exch_helper->win_recv       [i] = PDM_MPI_WIN_NULL;
     exch_helper->group_send     [i] = PDM_MPI_GROUP_NULL;
@@ -492,8 +518,7 @@ PDM_exchange_helper_iexch
                  recv_n,
                  request_id);
 
-    _synchro_rma_begin(exch_helper,
-                       request_id);
+    _synchro_rma_begin(exch_helper, request_id);
 
     /*
      * Once the `post` and `start` epochs are established, data transfers can be launched.
@@ -598,9 +623,9 @@ PDM_exchange_helper_exch_init
     /*
      * Keep information to fake persitent
      */
-     exch_helper->recv_buffer[request_id] = recv_buffer;
-     exch_helper->recv_n     [request_id] = recv_n;
-     exch_helper->recv_idx   [request_id] = recv_idx;
+     exch_helper->recv_buffer [request_id] = recv_buffer;
+     exch_helper->rma_recv_n  [request_id] = recv_n;
+     exch_helper->rma_recv_idx[request_id] = recv_idx;
 
   } else {
     PDM_error(__FILE__, __LINE__, 0,
@@ -633,12 +658,12 @@ PDM_exchange_helper_exch_start
 
     PDM_free(exch_helper->sub_requests  [request_id]);
 
-    PDM_MPI_Ialltoallv_p2p_rma(exch_helper->win_send   [request_id],
-                               exch_helper->target_disp[request_id],
-                               exch_helper->recv_buffer[request_id],
-                               exch_helper->recv_n     [request_id],
-                               exch_helper->recv_idx   [request_id],
-                               exch_helper->mpi_type   [request_id],
+    PDM_MPI_Ialltoallv_p2p_rma(exch_helper->win_send    [request_id],
+                               exch_helper->target_disp [request_id],
+                               exch_helper->recv_buffer [request_id],
+                               exch_helper->rma_recv_n  [request_id],
+                               exch_helper->rma_recv_idx[request_id],
+                               exch_helper->mpi_type    [request_id],
                                exch_helper->comm,
                                &exch_helper->n_sub_requests[request_id],
                                &exch_helper->sub_requests  [request_id]);
@@ -727,11 +752,11 @@ PDM_exchange_helper_exch_free
   /*
    * Reset all pointer to avoid undefined behavior
    */
-  // PDM_free(exch_helper->recv_n  [request_id]);
-  // PDM_free(exch_helper->recv_idx[request_id]);
+  // PDM_free(exch_helper->rma_recv_n  [request_id]);
+  // PDM_free(exch_helper->rma_recv_idx[request_id]);
 
-  exch_helper->recv_n  [request_id] = NULL;
-  exch_helper->recv_idx[request_id] = NULL;
+  exch_helper->rma_recv_n  [request_id] = NULL;
+  exch_helper->rma_recv_idx[request_id] = NULL;
 
   exch_helper->k_comm  [request_id] = PDM_MPI_COMM_KIND_INVALID;
 
@@ -882,8 +907,15 @@ PDM_exchange_helper_free
   PDM_free(exch_helper->sub_requests   );
   PDM_free(exch_helper->send_buffer    );
   PDM_free(exch_helper->recv_buffer    );
-  PDM_free(exch_helper->recv_n         );
-  PDM_free(exch_helper->recv_idx       );
+
+  PDM_free(exch_helper->send_data_idx  );
+  PDM_free(exch_helper->send_data_n    );
+  PDM_free(exch_helper->recv_data_idx  );
+  PDM_free(exch_helper->recv_data_n    );
+  PDM_free(exch_helper->recv_stride_idx);
+
+  PDM_free(exch_helper->rma_recv_n     );
+  PDM_free(exch_helper->rma_recv_idx   );
 
   PDM_free(exch_helper->win_send       );
   PDM_free(exch_helper->win_recv       );

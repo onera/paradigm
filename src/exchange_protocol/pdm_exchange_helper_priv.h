@@ -59,9 +59,16 @@ struct _pdm_exchange_helper_t {
   void                   **send_buffer;
   void                   **recv_buffer;
 
+  /* Store array for variable stride - only links */
+  int                    **send_data_idx;
+  int                    **send_data_n;
+  int                    **recv_data_idx;
+  int                    **recv_data_n;
+  int                    **recv_stride_idx; /* Necessary for post-treatment */
+
   /* Very specific to RMA, allowing RMA + API Persistent */
-  int                    **recv_n;
-  int                    **recv_idx;
+  int                    **rma_recv_n;
+  int                    **rma_recv_idx;
 
   PDM_MPI_Win             *win_send;
   PDM_MPI_Win             *win_recv;
