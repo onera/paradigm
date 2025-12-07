@@ -15,7 +15,7 @@ Schematicaly, the following layers are used in ParaDiGM to perform pointwise dat
 1. The exchange protocol structure is in charge of establishing the *communication graph*, which is the list of connected
    processes and the number of data to send (and receive) to (and from) each connected process.
    This graph is created from input data such as global ids or (rank, part, local_id) adresses.
-   The exchange protocol structure also reorder input data into sending buffers, to sort it accoring to destination process,
+   The exchange protocol structure also reorder input data into sending and receiving buffers, to sort it accoring to destination process,
    and do the opposite opperation once data is received.
 2. The **exchange helper** structure provides unified APIs that allows to switch between several MPI exchange modes:
    blocking or non-blocking, point-to-point or collective or one sided, persistant or oneshot, etc.
