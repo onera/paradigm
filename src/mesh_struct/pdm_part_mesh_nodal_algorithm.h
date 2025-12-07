@@ -33,6 +33,20 @@ extern "C" {
  * Types definition
  *============================================================================*/
 
+
+/**
+ *
+ * \brief Compute internal part_comm_graph from vertices entity global ids.
+ *
+ * \param [in]   pmn         Pointer to \ref PDM_part_mesh_nodal_t instance
+ *
+ */
+void
+PDM_part_mesh_nodal_vtx_part_comm_graph_compute_from_gnum
+(
+  PDM_part_mesh_nodal_t *pmn
+);
+
 /**
  *
  * \brief Compute internal part_comm_graph from part_mesh_nodal entity global ids.
@@ -45,7 +59,7 @@ void
 PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum
 (
   PDM_part_mesh_nodal_t *pmn,
-  PDM_mesh_entities_t    entity_type
+  PDM_geometry_kind_t    geom_kind
 );
 
 /**

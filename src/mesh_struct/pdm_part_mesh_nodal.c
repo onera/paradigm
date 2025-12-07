@@ -350,15 +350,15 @@ PDM_part_mesh_nodal_part_comm_graph_set
 (
   PDM_part_mesh_nodal_t *pmn,
   PDM_part_comm_graph_t *pcg,
-  PDM_mesh_entities_t    entity_type,
+  PDM_geometry_kind_t    geom_kind,
   PDM_ownership_t        ownership
 )
 {
   CHECK_PMN(pmn)
 
-  pmn->pcg[entity_type] = pcg;
+  pmn->pcg[geom_kind] = pcg;
   if (ownership==PDM_OWNERSHIP_USER || ownership==PDM_OWNERSHIP_KEEP) {
-    pmn->pcg_ownership[entity_type] = ownership;
+    pmn->pcg_ownership[geom_kind] = ownership;
   }
 }
 
@@ -367,15 +367,15 @@ void
 PDM_part_mesh_nodal_part_comm_graph_get
 (
   PDM_part_mesh_nodal_t  *pmn,
-  PDM_mesh_entities_t     entity_type,
+  PDM_geometry_kind_t     geom_kind,
   PDM_part_comm_graph_t **pcg,
   PDM_ownership_t         ownership
 )
 {
   CHECK_PMN(pmn)
-  *pcg = pmn->pcg[entity_type];
+  *pcg = pmn->pcg[geom_kind];
   if (ownership!=PDM_OWNERSHIP_BAD_VALUE) {
-    pmn->pcg_ownership[entity_type] = ownership;
+    pmn->pcg_ownership[geom_kind] = ownership;
   }
 }
 

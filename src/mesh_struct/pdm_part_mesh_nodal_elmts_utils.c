@@ -980,7 +980,6 @@ PDM_part_mesh_nodal_std_decompose_local_vtx
        int                  *parent_elmt_position
 )
 {
-  log_trace("PDM_part_mesh_nodal_std_decompose_local_vtx \n");
   PDM_UNUSED(parent_num);
 
   int parent_node_std[8] = {0, 1, 2, 3, 4, 5, 6, 7};
@@ -999,20 +998,17 @@ PDM_part_mesh_nodal_std_decompose_local_vtx
     return;
   }
 
-  // int n_vtx_elt = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
-
-
-  int *_current_elmt_vtx_vtx_idx = elmt_vtx_vtx_idx    + *n_vtx_current;
+  int *_current_elmt_vtx_vtx_idx = elmt_vtx_vtx_idx      + *n_vtx_current;
   int *_parent_elmt_position      = parent_elmt_position + *n_vtx_current;
   int *_parent_elmt               = parent_elmt          + *n_vtx_current;
-  int *_elmt_cell_vtx_idx        = elmt_cell_vtx_idx   + *n_elt_current;
+  int *_elmt_cell_vtx_idx         = elmt_cell_vtx_idx    + *n_elt_current;
+
+  int n_vtx_of_elt = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
 
   int i_parent = *n_elt_current;
   int idx_vtx = 0;
 
   for (int i_elt = 0; i_elt < n_elt; i_elt++) {
-
-    log_trace("i_elt = %i \n", i_elt);
 
     i_parent++;
     _elmt_cell_vtx_idx[i_elt+1] = _elmt_cell_vtx_idx[i_elt];
@@ -1022,10 +1018,9 @@ PDM_part_mesh_nodal_std_decompose_local_vtx
       if (vtx_tag != NULL) {
         int ignore_vtx = 0;
         int i_vtx = elt_vtx_vtx[j_vtx];
-        i_vtx = connectivity_elmt_vtx[n_vtx_elt*i_elt + _parent_node[i_vtx]] - 1;
+        i_vtx = connectivity_elmt_vtx[n_vtx_of_elt*i_elt + _parent_node[i_vtx]] - 1;
         if (vtx_tag[i_vtx] == 0) {
           ignore_vtx = 1;
-          break;
         }
 
         if (ignore_vtx) {
@@ -1038,7 +1033,7 @@ PDM_part_mesh_nodal_std_decompose_local_vtx
 
       _current_elmt_vtx_vtx_idx[idx_vtx+1] = _current_elmt_vtx_vtx_idx[idx_vtx];
       int i_vtx = elt_vtx_vtx[j_vtx];
-      elmt_vtx_vtx[_current_elmt_vtx_vtx_idx[idx_vtx+1]++] = connectivity_elmt_vtx[n_vtx_elt*i_elt + _parent_node[i_vtx]];
+      elmt_vtx_vtx[_current_elmt_vtx_vtx_idx[idx_vtx+1]++] = connectivity_elmt_vtx[n_vtx_of_elt*i_elt + _parent_node[i_vtx]];
       assert(_elmt_cell_vtx_idx[i_elt+1] == *n_vtx_current + idx_vtx);
       _elmt_cell_vtx_idx[i_elt+1]++;
 
@@ -1188,10 +1183,6 @@ PDM_part_mesh_nodal_elmts_sections_local_decompose_edges
     int n_edge_current = 0;
 
     n_decompose_elmt_edge[i_part] = n_elmt_edge;
-
-    // printf("n_elmt          = %i \n", n_elmt);
-    // printf("n_elmt_edge     = %i \n", n_elmt_edge);
-    // printf("n_elmt_edge_vtx = %i \n", n_elmt_edge_vtx);
 
     elmt_edge_idx       [i_part] = NULL;
     elmt_edge_vtx_idx   [i_part] = NULL;
@@ -1376,9 +1367,9 @@ PDM_part_mesh_nodal_elmts_sections_local_decompose_vtx
 
     n_decompose_elmt_vtx[i_part] = n_elmt_vtx;
 
-    elmt_vtx_idx       [i_part] = NULL;
-    elmt_vtx_vtx_idx   [i_part] = NULL;
-    elmt_vtx_vtx       [i_part] = NULL;
+    elmt_vtx_idx        [i_part] = NULL;
+    elmt_vtx_vtx_idx    [i_part] = NULL;
+    elmt_vtx_vtx        [i_part] = NULL;
     parent_elmt         [i_part] = NULL;
     parent_elmt_position[i_part] = NULL;
 
@@ -1387,8 +1378,6 @@ PDM_part_mesh_nodal_elmts_sections_local_decompose_vtx
     PDM_malloc(elmt_vtx_vtx        [i_part], n_elmt_vtx_vtx, int);
     PDM_malloc(parent_elmt         [i_part], n_elmt_vtx    , int);
     PDM_malloc(parent_elmt_position[i_part], n_elmt_vtx    , int);
-
-    log_trace("n_section = %i \n", n_section);
 
     elmt_vtx_idx       [i_part][0] = 0;
     elmt_vtx_vtx_idx   [i_part][0] = 0;
@@ -1411,7 +1400,7 @@ PDM_part_mesh_nodal_elmts_sections_local_decompose_vtx
       }
       else {
 
-        int order = 0;
+        int order = -1;
 
         int         *elt_vtx             = NULL;
         PDM_g_num_t *elt_ln_to_gn        = NULL;
@@ -1421,17 +1410,34 @@ PDM_part_mesh_nodal_elmts_sections_local_decompose_vtx
         int *_parent_node = NULL;
 
         if(PDM_Mesh_nodal_elmt_is_ho(t_elt) == 1) {
-          PDM_error(__FILE__, __LINE__, 0, "High order mesh not handled yet\n");
+          const char *ho_ordering = NULL;
+          PDM_part_mesh_nodal_elmts_section_std_ho_get(pmne,
+                                                       id_section,
+                                                       i_part,
+                                                       &elt_vtx,
+                                                       &elt_ln_to_gn,
+                                                       &_parent_num,
+                                                       &parent_entity_g_num,
+                                                       &order,
+                                                       &ho_ordering,
+                                                       PDM_OWNERSHIP_BAD_VALUE);
+          PDM_Mesh_nodal_ho_parent_node(t_elt,
+                                        order,
+                                        ho_ordering,
+                                        parent_node);
+          _parent_node = parent_node;
         }
-
-        PDM_part_mesh_nodal_elmts_section_std_get(pmne,
-                                                  id_section,
-                                                  i_part,
-                                                  &elt_vtx,
-                                                  &elt_ln_to_gn,
-                                                  &_parent_num,
-                                                  &parent_entity_g_num,
-                                                  PDM_OWNERSHIP_BAD_VALUE);
+        else {
+          order = 1;
+          PDM_part_mesh_nodal_elmts_section_std_get(pmne,
+                                                    id_section,
+                                                    i_part,
+                                                    &elt_vtx,
+                                                    &elt_ln_to_gn,
+                                                    &_parent_num,
+                                                    &parent_entity_g_num,
+                                                    PDM_OWNERSHIP_BAD_VALUE);
+        }
 
         PDM_part_mesh_nodal_std_decompose_local_vtx(t_elt,
                                                     n_elt,
@@ -1442,16 +1448,14 @@ PDM_part_mesh_nodal_elmts_sections_local_decompose_vtx
                                                     &n_vtx_current,
                                                     elt_vtx,
                                                     parent_num,
-                                                    elmt_vtx_vtx_idx   [i_part],
-                                                    elmt_vtx_vtx       [i_part],
-                                                    elmt_vtx_idx       [i_part],
+                                                    elmt_vtx_vtx_idx    [i_part],
+                                                    elmt_vtx_vtx        [i_part],
+                                                    elmt_vtx_idx        [i_part],
                                                     parent_elmt         [i_part],
                                                     parent_elmt_position[i_part]);
 
       }
     } // End loop on sections
-
-    log_trace("n_vtx_current = %i \n", n_vtx_current);
 
     n_decompose_elmt_vtx[i_part] = n_vtx_current;
 

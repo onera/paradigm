@@ -190,12 +190,12 @@ PDM_part_mesh_nodal_dual_volume_compute
     PDM_free(elt_vtx);
     PDM_free(vtx_coord);
 
-    if(pmn->pcg[PDM_MESH_ENTITY_VTX] == NULL) {
-      PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(pmn, PDM_MESH_ENTITY_VTX);
+    if(pmn->pcg_vtx == NULL) {
+      PDM_part_mesh_nodal_vtx_part_comm_graph_compute_from_gnum(pmn);
     }
 
     // Synchro volume :
-    PDM_part_comm_graph_all_reduce(pmn->pcg[PDM_MESH_ENTITY_VTX],
+    PDM_part_comm_graph_all_reduce(pmn->pcg_vtx,
                                    PDM_MPI_DOUBLE,
                                    PDM_MPI_SUM,
              (unsigned char **)    *dual_vol);
