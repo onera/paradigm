@@ -1324,8 +1324,8 @@ PDM_part_mesh_nodal_part_comm_graph_get
  *
  * \param [in]  pmne            Pointer to \ref PDM_part_mesh_nodal_t object
  * \param [in]  geom_kind       Geometry kind (corner, ridge, surface or volume)
- * \param [in]  allow_multiple  Allow or not that one element can be reference 0 exactly or more than once. If PDM_FALSE, out_tag_idx will be NULL
- * \param [out] out_tag_idx     Identifier index if allow_multiple is PDM_TRUE
+ * \param [in]  allow_multiple  If PDM_TRUE allows that one element can be referenced by more than one group or not referenced at all
+ * \param [out] out_tag_idx     Identifier index if allow_multiple is PDM_TRUE, else NULL
  * \param [out] out_tag         Identifier for all elements in current \ref PDM_part_mesh_nodal_t
  *                              that follows the natural order of the elements (size = n_part)
  *                              For each part size is : n_elmts or out_tag_idx[n_elmts]

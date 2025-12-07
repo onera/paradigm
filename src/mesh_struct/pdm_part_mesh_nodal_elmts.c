@@ -5586,7 +5586,7 @@ PDM_part_mesh_nodal_elmts_group_to_tag
     }
     PDM_free(tag_idx);
   }
-  *out_tag     = tag;
+  *out_tag = tag;
 }
 
 
