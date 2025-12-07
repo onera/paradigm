@@ -235,6 +235,38 @@ PDM_dimension_to_entity_type
 }
 
 
+
+PDM_geometry_kind_t
+PDM_dimension_to_geometry_kind_type
+(
+  const int dim
+)
+{
+  switch (dim) {
+
+    case 3: {
+      return PDM_GEOMETRY_KIND_VOLUMIC;
+    }
+    case 2: {
+      return PDM_GEOMETRY_KIND_SURFACIC;
+    }
+    case 1: {
+      return PDM_GEOMETRY_KIND_RIDGE;
+    }
+    case 0: {
+      return PDM_GEOMETRY_KIND_CORNER;
+    }
+    default: {
+      PDM_error(__FILE__, __LINE__, 0, "Invalid dimension %d\n", dim);
+    }
+
+  }
+
+  return PDM_GEOMETRY_KIND_MAX;
+}
+
+
+
 PDM_connectivity_type_t
 PDM_entity_pair_to_connectivity_type
 (
