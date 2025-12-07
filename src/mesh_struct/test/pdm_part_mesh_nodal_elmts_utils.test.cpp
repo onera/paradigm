@@ -370,11 +370,11 @@ MPI_TEST_CASE("[PDM_part_mesh_nodal_elmts] - PDM_part_mesh_nodal_elmts_group_to_
 
   PDM_part_mesh_nodal_elmts_t *pmne_surf = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(pmn, PDM_GEOMETRY_KIND_SURFACIC);
   std::vector<std::vector<int>> expected_tag_surface = {{0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                                        1, 1, 1, 1, 1, 1, 1, 1, 1,
-                                                        2, 2, 2, 2, 2, 2, 2, 2, 2,
-                                                        3, 3, 3, 3, 3, 3, 3, 3, 3,
-                                                        4, 4, 4, 4, 4, 4, 4, 4, 4,
-                                                        5, 5, 5, 5, 5, 5, 5, 5, 5}};
+                                                         1, 1, 1, 1, 1, 1, 1, 1, 1,
+                                                         2, 2, 2, 2, 2, 2, 2, 2, 2,
+                                                         3, 3, 3, 3, 3, 3, 3, 3, 3,
+                                                         4, 4, 4, 4, 4, 4, 4, 4, 4,
+                                                         5, 5, 5, 5, 5, 5, 5, 5, 5}};
 
   int **tag_surface = NULL;
   PDM_part_mesh_nodal_elmts_group_to_tag(pmne_surf, PDM_FALSE, NULL, &tag_surface);
@@ -390,7 +390,7 @@ MPI_TEST_CASE("[PDM_part_mesh_nodal_elmts] - PDM_part_mesh_nodal_elmts_group_to_
   }
   PDM_free(tag_surface);
 
-  PDM_part_mesh_nodal_elmts_t *pmne = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(pmn, PDM_GEOMETRY_KIND_VOLUMIC );
+  PDM_part_mesh_nodal_elmts_t *pmne = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(pmn, PDM_GEOMETRY_KIND_VOLUMIC);
 
   int **volume_tag = NULL;
   PDM_malloc(volume_tag, n_part, int *);
@@ -425,12 +425,108 @@ MPI_TEST_CASE("[PDM_part_mesh_nodal_elmts] - PDM_part_mesh_nodal_elmts_group_to_
     MPI_CHECK_EQ_C_ARRAY(0, tag_volume_check[i_part], volume_tag[i_part], n_elmts);
   }
 
+
+  /*
+   * Manage cases with allow_multiple :
+   *   - We need to modify group first then test features
+   */
+  // int n_group_vol = PDM_part_mesh_nodal_n_group_get(pmn, PDM_GEOMETRY_KIND_VOLUMIC);
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    PDM_free(volume_tag      [i_part]);
-    PDM_free(tag_volume_check[i_part]);
+    for(int i_group = 0; i_group < n_group_vol; ++i_group) {
+      int          n_group_elmt   = 0;
+      int         *group_elmt     = NULL;
+      PDM_g_num_t *group_ln_to_gn = NULL;
+      PDM_part_mesh_nodal_group_get(pmn,
+                                    PDM_GEOMETRY_KIND_VOLUMIC,
+                                    i_part,
+                                    i_group,
+                                    &n_group_elmt,
+                                    &group_elmt,
+                                    &group_ln_to_gn,
+                                    PDM_OWNERSHIP_USER);
+      PDM_free(group_elmt);
+      PDM_free(group_ln_to_gn);
+    }
+  }
+
+  int n_group_vol_partial = 5;
+  PDM_part_mesh_nodal_elmts_n_group_set(pmne, n_group_vol_partial);
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    int n_elmts = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, 0);
+
+    int *n_group_elmt = PDM_array_zeros_int(n_group_vol_partial);
+    for(int i = 0; i < n_elmts; ++i) {
+      if(volume_tag[i_part][i] < n_group_vol_partial) {
+        n_group_elmt[volume_tag[i_part][i]]++;
+      }
+    }
+
+    int **group_elmt = NULL;
+    PDM_malloc(group_elmt, n_group_vol_partial, int *);
+    for(int i_group = 0; i_group < n_group_vol_partial; ++i_group) {
+      group_elmt[i_group] = PDM_array_zeros_int(n_group_elmt[i_group]);
+      n_group_elmt[i_group] = 0;
+    }
+
+    for(int i = 0; i < n_elmts; ++i) {
+      if(volume_tag[i_part][i] < n_group_vol_partial) {
+        int t_group   = volume_tag[i_part][i];
+        int idx_write = n_group_elmt[t_group]++;
+        group_elmt[t_group][idx_write] = i + 1;
+      }
+    }
+
+    for(int i_group = 0; i_group < n_group_vol_partial; ++i_group) {
+      PDM_part_mesh_nodal_group_set(pmn,
+                                    PDM_GEOMETRY_KIND_VOLUMIC,
+                                    i_part,
+                                    i_group,
+                                    n_group_elmt[i_group],
+                                    group_elmt  [i_group],
+                                    NULL,
+                                    PDM_OWNERSHIP_KEEP);
+    }
+
+    if(0 == 1) {
+      PDM_log_trace_array_int(volume_tag[i_part], n_elmts, "volume_tag ::");
+      PDM_log_trace_array_int(n_group_elmt, n_group_vol_partial, "n_group_elmt ::");
+    }
+
+    PDM_free(n_group_elmt);
+    PDM_free(group_elmt);
+  }
+
+  int **tag_volume_multiple_check_idx = NULL;
+  int **tag_volume_multiple_check     = NULL;
+  PDM_part_mesh_nodal_elmts_group_to_tag(pmne, PDM_TRUE, &tag_volume_multiple_check_idx, &tag_volume_multiple_check);
+
+  int expected_volume_multiple_check_idx[28] = {0, 1, 2, 3, 4, 4, 4, 4, 4, 4, 5, 6, 7, 8, 9, 9, 9, 9, 9, 9, 10, 11, 12, 13, 14, 14, 14, 14};
+  int expected_volume_multiple_check    [14] = {1, 2, 3, 4, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4};
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    int n_elmts = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, 0);
+
+    if(0 == 1) {
+      PDM_log_trace_array_int(tag_volume_multiple_check_idx[i_part], n_elmts+1                                     , "tag_volume_multiple_check_idx ::");
+      PDM_log_trace_array_int(tag_volume_multiple_check    [i_part], tag_volume_multiple_check_idx[i_part][n_elmts], "tag_volume_multiple_check     ::");
+    }
+
+    MPI_CHECK_EQ_C_ARRAY(0, tag_volume_multiple_check_idx[i_part], expected_volume_multiple_check_idx, n_elmts);
+    MPI_CHECK_EQ_C_ARRAY(0, tag_volume_multiple_check    [i_part], expected_volume_multiple_check    , expected_volume_multiple_check_idx[n_elmts]);
+
+  }
+
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    PDM_free(volume_tag                   [i_part]);
+    PDM_free(tag_volume_check             [i_part]);
+    PDM_free(tag_volume_multiple_check_idx[i_part]);
+    PDM_free(tag_volume_multiple_check    [i_part]);
   }
   PDM_free(volume_tag);
   PDM_free(tag_volume_check);
+  PDM_free(tag_volume_multiple_check_idx);
+  PDM_free(tag_volume_multiple_check);
 
   PDM_part_mesh_nodal_free(pmn);
 }
