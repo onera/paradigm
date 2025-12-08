@@ -2048,6 +2048,44 @@ PDM_part_mesh_nodal_cell_vtx_connect_get
 }
 
 
+void
+PDM_part_mesh_nodal_group_to_tag
+(
+  PDM_part_mesh_nodal_t   *pmn,
+  PDM_geometry_kind_t      geom_kind,
+  PDM_bool_t               allow_multiple,
+  int                   ***out_tag_idx,
+  int                   ***out_tag
+)
+{
+  CHECK_PMN(pmn)
+
+  PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
+  CHECK_PMNE(pmne)
+
+  PDM_part_mesh_nodal_elmts_group_to_tag(pmne, allow_multiple, out_tag_idx, out_tag);
+
+}
+
+void
+PDM_part_mesh_nodal_tag_to_group
+(
+  PDM_part_mesh_nodal_t  *pmn,
+  PDM_geometry_kind_t     geom_kind,
+  int                     n_group,
+  int                   **tag_idx,
+  int                   **tag
+)
+{
+  CHECK_PMN(pmn)
+
+  PDM_part_mesh_nodal_elmts_t* pmne = _get_from_geometry_kind(pmn, geom_kind);
+  CHECK_PMNE(pmne)
+
+  PDM_part_mesh_nodal_elmts_tag_to_group(pmne, n_group, tag_idx, tag);
+}
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

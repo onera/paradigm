@@ -942,6 +942,51 @@ PDM_part_mesh_nodal_elmts_section_elmt_to_entity_get
         PDM_ownership_t              ownership
 );
 
+
+
+/**
+ * \brief Transform group information inside a \ref PDM_part_mesh_nodal_elmts_t to tag for all elements
+ *
+ * \param [in]  pmne            Pointer to \ref PDM_part_mesh_nodal_elmts_t object
+ * \param [in]  allow_multiple  If PDM_TRUE allows that one element can be referenced by more than one group or not referenced at all
+ * \param [out] out_tag_idx     Identifier index if allow_multiple is PDM_TRUE, else NULL
+ * \param [out] out_tag         Identifier for all elements in current \ref PDM_part_mesh_nodal_elmts_t
+ *                              that follows the natural order of the elements (size = n_part)
+ *                              For each part size is : n_elmts or out_tag_idx[n_elmts]
+ *                              Value is between [0, n_group-1]
+ *
+ */
+void
+PDM_part_mesh_nodal_elmts_group_to_tag
+(
+  PDM_part_mesh_nodal_elmts_t   *pmne,
+  PDM_bool_t                     allow_multiple,
+  int                         ***out_tag_idx,
+  int                         ***out_tag
+);
+
+/**
+ * \brief Transform tag for all elements into group information inside a \ref PDM_part_mesh_nodal_elmts_t
+ *
+ * \param [in]  pmne      Pointer to \ref PDM_part_mesh_nodal_elmts_t object
+ * \param [in]  n_group   Number of groups, if the specify n_group is negative, n_group is automatically compute
+ * \param [in]  tag_idx   Identifier index or NULL if no multiplicity in element tag
+ * \param [in]  tag       Identifier for all elements in current \ref PDM_part_mesh_nodal_elmts_t
+ *                        that follows the natural order of the elements (size = n_part)
+ *                        For each part size is : n_elmts or out_tag_idx[n_elmts]
+ *                        Value is between [0, n_group-1]
+ *
+ */
+void
+PDM_part_mesh_nodal_elmts_tag_to_group
+(
+  PDM_part_mesh_nodal_elmts_t     *pmne,
+  int                              n_group,
+  int                            **tag_idx,
+  int                            **tag
+);
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

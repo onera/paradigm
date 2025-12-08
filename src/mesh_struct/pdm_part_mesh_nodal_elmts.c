@@ -5041,10 +5041,17 @@ PDM_part_mesh_nodal_elmts_n_group_set
 
   pmne->n_group = n_group;
   for(int i_part = 0; i_part < pmne->n_part; ++i_part) {
-    PDM_malloc(pmne->n_group_elmt   [i_part], n_group, int              );
-    PDM_malloc(pmne->group_elmt     [i_part], n_group, int             *);
-    PDM_malloc(pmne->group_ln_to_gn [i_part], n_group, PDM_g_num_t     *);
-    PDM_malloc(pmne->ownership_group[i_part], n_group, PDM_ownership_t  );
+    if(pmne->n_group_elmt[i_part] == NULL) {
+      PDM_malloc(pmne->n_group_elmt   [i_part], n_group, int              );
+      PDM_malloc(pmne->group_elmt     [i_part], n_group, int             *);
+      PDM_malloc(pmne->group_ln_to_gn [i_part], n_group, PDM_g_num_t     *);
+      PDM_malloc(pmne->ownership_group[i_part], n_group, PDM_ownership_t  );
+    } else {
+      PDM_realloc(pmne->n_group_elmt   [i_part], pmne->n_group_elmt   [i_part], n_group, int              );
+      PDM_realloc(pmne->group_elmt     [i_part], pmne->group_elmt     [i_part], n_group, int             *);
+      PDM_realloc(pmne->group_ln_to_gn [i_part], pmne->group_ln_to_gn [i_part], n_group, PDM_g_num_t     *);
+      PDM_realloc(pmne->ownership_group[i_part], pmne->ownership_group[i_part], n_group, PDM_ownership_t  );
+    }
 
     for(int i_group = 0; i_group < pmne->n_group; ++i_group) {
       pmne->n_group_elmt   [i_part][i_group] = 0;
@@ -5471,4 +5478,226 @@ PDM_part_mesh_nodal_elmts_section_elmt_to_entity_get
   }
 
   return elt_to_entity;
+}
+
+void
+PDM_part_mesh_nodal_elmts_group_to_tag
+(
+  PDM_part_mesh_nodal_elmts_t   *pmne,
+  PDM_bool_t                     allow_multiple,
+  int                         ***out_tag_idx,
+  int                         ***out_tag
+)
+{
+  CHECK_PMNE(pmne)
+
+  int n_part = pmne->n_part;
+
+  int **tag     = NULL;
+  int **tag_idx = NULL;
+  PDM_malloc(tag    , n_part, int *);
+  PDM_malloc(tag_idx, n_part, int *);
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+
+    int n_elmt  = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, i_part);
+    int n_group = PDM_part_mesh_nodal_elmts_n_group_get(pmne);
+
+    int *tag_n = PDM_array_zeros_int(n_elmt);
+
+    for(int i_group = 0; i_group < n_group; ++i_group) {
+
+      int          n_group_elmt   = 0;
+      int         *group_elmt     = 0;
+      PDM_g_num_t *group_ln_to_gn = 0;
+      PDM_part_mesh_nodal_elmts_group_get(pmne,
+                                          i_part,
+                                          i_group,
+                                          &n_group_elmt,
+                                          &group_elmt,
+                                          &group_ln_to_gn,
+                                          PDM_OWNERSHIP_KEEP);
+
+      for(int idx_group = 0; idx_group < n_group_elmt; ++idx_group) {
+        int i_elt = group_elmt[idx_group]-1;
+        tag_n[i_elt]++;
+      }
+    }
+
+    if(allow_multiple == PDM_FALSE) {
+
+      int n_elmt_tag                  = 0;
+      int elt_group_is_multiple       = 0;
+      int n_elmt_with_different_group = 0;
+      for(int i = 0; i < n_elmt; ++i) {
+        if(tag_n[i] == 1) {
+          n_elmt_tag += 1;
+        } else if(tag_n[i] > 1) {
+          elt_group_is_multiple = 1;
+          n_elmt_with_different_group++;
+        }
+      }
+
+      if(n_elmt_tag != n_elmt) {
+        PDM_error(__FILE__, __LINE__, 0,
+                  "PDM_part_mesh_nodal_elmts_group_to_tag - All elements from PDM_part_mesh_nodal_elmts are not in groups for dimension %d (n_elmt_tag = %d, n_elmt = %d)\n",
+                  pmne->mesh_dimension, n_elmt_tag, n_elmt);
+      }
+
+      if(elt_group_is_multiple == 1) {
+        PDM_error(__FILE__, __LINE__, 0,
+                  "PDM_part_mesh_nodal_elmts_group_to_tag - Several elements are more than one group associated (n_elmt_with_different_group=%i, n_elmt = %d) \n",
+                  n_elmt_with_different_group, n_elmt);
+      }
+    }
+
+    PDM_malloc(tag_idx[i_part], n_elmt+1, int);
+    int *_tag_idx = tag_idx[i_part];
+
+    _tag_idx[0] = 0;
+    for(int i = 0; i < n_elmt; ++i) {
+      _tag_idx[i+1] = _tag_idx[i] + tag_n[i];
+      tag_n[i] = 0;
+    }
+
+    PDM_malloc(tag[i_part], _tag_idx[n_elmt], int);
+
+    for(int i_group = 0; i_group < n_group; ++i_group) {
+
+      int          n_group_elmt   = 0;
+      int         *group_elmt     = 0;
+      PDM_g_num_t *group_ln_to_gn = 0;
+      PDM_part_mesh_nodal_elmts_group_get(pmne,
+                                          i_part,
+                                          i_group,
+                                          &n_group_elmt,
+                                          &group_elmt,
+                                          &group_ln_to_gn,
+                                          PDM_OWNERSHIP_KEEP);
+
+      for(int idx_group = 0; idx_group < n_group_elmt; ++idx_group) {
+        int i_elt = group_elmt[idx_group]-1;
+        int idx_write = _tag_idx[i_elt] + tag_n[i_elt]++;
+        tag[i_part][idx_write] = i_group;
+      }
+    }
+
+    free(tag_n);
+
+  }
+
+  if(allow_multiple == PDM_TRUE) {
+    *out_tag_idx = tag_idx;
+  } else {
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      PDM_free(tag_idx[i_part]);
+    }
+    PDM_free(tag_idx);
+  }
+  *out_tag = tag;
+}
+
+
+void
+PDM_part_mesh_nodal_elmts_tag_to_group
+(
+  PDM_part_mesh_nodal_elmts_t     *pmne,
+  int                              n_group,
+  int                            **tag_idx,
+  int                            **tag
+)
+{
+  CHECK_PMNE(pmne)
+
+  int n_part = pmne->n_part;
+
+  int allow_multiple = 0;
+  if(tag_idx != NULL) {
+    allow_multiple = 0;
+  }
+
+  /*
+   * Auto-detect the number of group
+   */
+  if(n_group < 0) {
+    int max_tag = -1;
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      int n_elmt  = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, i_part);
+
+      if(allow_multiple == 0) {
+        for(int i_elt = 0; i_elt < n_elmt; ++i_elt) {
+          max_tag = PDM_MAX(max_tag, tag[i_part][i_elt]);
+        }
+      } else {
+        for(int i_elt = 0; i_elt < n_elmt; ++i_elt) {
+          for(int idx = tag_idx[i_part][i_elt]; idx < tag_idx[i_part][i_elt+1]; ++idx) {
+            max_tag = PDM_MAX(max_tag, tag[i_part][idx]);
+          }
+        }
+      }
+    }
+    int gmax_tag = -1;
+    PDM_MPI_Allreduce (&max_tag, &gmax_tag, 1, PDM_MPI_INT, PDM_MPI_MAX, pmne->comm);
+
+    n_group = max_tag+1;
+  }
+
+  /*
+   * Set n_group in structure (not yet done normaly)
+   */
+  PDM_part_mesh_nodal_elmts_n_group_set(pmne, n_group);
+
+  /*
+   * Loop over part and fill structure
+   */
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+
+    int n_elmt  = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, i_part);
+    int* group_elt_n = PDM_array_zeros_int(n_group);
+
+    if(allow_multiple == 0) {
+      for(int i_elt = 0; i_elt < n_elmt; ++i_elt) {
+        group_elt_n[tag[i_part][i_elt]]++;
+      }
+    } else {
+      for(int i_elt = 0; i_elt < n_elmt; ++i_elt) {
+        for(int idx = tag_idx[i_part][i_elt]; idx < tag_idx[i_part][i_elt+1]; ++idx) {
+          group_elt_n[tag[i_part][idx]]++;
+        }
+      }
+    }
+
+    int **group_elmt = NULL;
+    PDM_malloc(group_elmt, n_group, int *);
+    for(int i_group = 0; i_group < n_group; ++i_group) {
+      PDM_malloc(group_elmt[i_group], group_elt_n[i_group], int);
+      group_elt_n[i_group] = 0;
+    }
+
+    if(allow_multiple == 0) {
+      for(int i_elt = 0; i_elt < n_elmt; ++i_elt) {
+        int i_group = tag[i_part][i_elt];
+        group_elmt[i_group][group_elt_n[i_group]++] = i_elt+1;
+      }
+    } else {
+      for(int i_elt = 0; i_elt < n_elmt; ++i_elt) {
+        for(int idx = tag_idx[i_part][i_elt]; idx < tag_idx[i_part][i_elt+1]; ++idx) {
+          int i_group = tag[i_part][idx];
+          group_elmt[i_group][group_elt_n[i_group]++] = i_elt+1;
+        }
+      }
+    }
+
+    for(int i_group = 0; i_group < n_group; ++i_group) {
+      PDM_part_mesh_nodal_elmts_group_set(pmne,
+                                          i_part,
+                                          i_group,
+                                          group_elt_n[i_group],
+                                          group_elmt [i_group],
+                                          NULL,
+                                          PDM_OWNERSHIP_KEEP);
+    }
+
+    PDM_free(group_elt_n);
+    PDM_free(group_elmt);
+  }
 }
