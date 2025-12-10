@@ -327,6 +327,7 @@ def all_reduce(PyPartCommGraph pypcg,
                                  c_datatype,
                                  c_op,
               <unsigned char **> _pdata)
+  free(_pdata)
 
 # ------------------------------------------------------------------------
 def entity_nuplet_get(PyPartCommGraph pypcg, int i_part):
