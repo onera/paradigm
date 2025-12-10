@@ -1,3 +1,11 @@
+## [2.7.1] - 2025-12-17
+### Added
+### Changed
+### Deprecated
+### Removed
+### Fixed
+- PDM_part_mesh_nodal: Orientation consistency for 2D nodal meshes reconstructed from face->edge connectivity
+- PDM_box_tree: fix vectorization issue with icx
 ## [2.7.0] - 2025-09-27
 ### Added
 - PDM_convex: New file for convex geometry computations (eg. point-in-convex-hull query)
