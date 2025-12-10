@@ -518,10 +518,6 @@ _exch_strid_var
   PDM_free(recv_data_n);
   PDM_free(send_stride);
 
-  /* Panic verbose */
-  // PDM_g_num_t* recv_buffer_dbg = (PDM_g_num_t *) recv_buffer;
-  // PDM_log_trace_array_long(recv_buffer_dbg, recv_buff_size/s_data, "recv_buffer_dbg ::");
-
   /* Post-treatment stride + allocation */
   _post_recv_strid_var(pcg,
                        s_data_tot,
