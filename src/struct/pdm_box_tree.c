@@ -920,13 +920,14 @@ _node_intersect_box_3d(PDM_morton_code_t  morton_code,
                        const double   min_box[3],
                        const double   max_box[3])
 {
-  int  i;
-  double  min_oct[3], max_oct[3];
+  double min_oct[3], max_oct[3];
 
-  for (i = 0; i < 3; i++) {
-    min_oct[i] = (double)morton_code.X[i];
-    max_oct[i] = (double)(morton_code.X[i] + 1);
-  }
+  min_oct[0] = (double) morton_code.X[0];
+  max_oct[0] = (double)(morton_code.X[0] + 1);
+  min_oct[1] = (double) morton_code.X[1];
+  max_oct[1] = (double)(morton_code.X[1] + 1);
+  min_oct[2] = (double) morton_code.X[2];
+  max_oct[2] = (double)(morton_code.X[2] + 1);
 
   /* printf ("min_oct : %12.5e %12.5e %12.5e\n", min_oct[0], min_oct[1], min_oct[2]); */
   /* printf ("max_oct : %12.5e %12.5e %12.5e\n", max_oct[0], max_oct[1], max_oct[2]); */
@@ -950,13 +951,12 @@ _node_intersect_box_2d(PDM_morton_code_t  morton_code,
                        const double   min_box[2],
                        const double   max_box[2])
 {
-  int  i;
-  double  min_oct[2], max_oct[2];
+  double min_oct[2], max_oct[2];
 
-  for (i = 0; i < 2; i++) {
-    min_oct[i] = (double)morton_code.X[i];
-    max_oct[i] = (double)(morton_code.X[i] + 1);
-  }
+  min_oct[0] = (double) morton_code.X[0];
+  max_oct[0] = (double)(morton_code.X[0] + 1);
+  min_oct[1] = (double) morton_code.X[1];
+  max_oct[1] = (double)(morton_code.X[1] + 1);
 
   if (   min_box[0] > max_oct[0] || min_oct[0] > max_box[0]
 	 || min_box[1] > max_oct[1] || min_oct[1] > max_box[1])
