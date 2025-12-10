@@ -183,7 +183,6 @@ cdef class PartCommGraph:
     return entity_graph_get(self, i_part)
 
   def all_reduce(self,
-                 MPI.Datatype    datatype,
                  MPI.Op          op,
                  list            pdata):
     """
@@ -195,7 +194,7 @@ cdef class PartCommGraph:
         pdata    (`list` of `np.ndarray[datatype]`) : Data buffer, value is modified inplace
 
     """
-    all_reduce(self, datatype, op, pdata)
+    all_reduce(self, op, pdata)
 
   def entity_nuplet_get(self, i_part):
     """
@@ -312,17 +311,22 @@ def entity_graph_get(PyPartCommGraph pypcg, int i_part):
 
 # ------------------------------------------------------------------------
 def all_reduce(PyPartCommGraph pypcg,
-               MPI.Datatype    datatype,
                MPI.Op          op,
                list            pdata):
   cdef void **_pdata = np_list_to_void_pointers(pdata)
-  cdef PDM_MPI_Datatype c_datatype = <MPI_Datatype> datatype.ob_mpi
   cdef PDM_MPI_Op       c_op       = <MPI_Op      > op.ob_mpi
+  cdef MPI.Datatype mpi_dtype
+  ref_dtype = recover_dtype(pdata, pypcg.py_comm)
+  mpi_dtype = MPI._typedict.get(ref_dtype.char)
+  # > This one not working, it seems it give a special type
+  # from mpi4py.util.dtlib import from_numpy_dtype
+  # mpi_dtype = from_numpy_dtype(ref_dtype)
+  cdef PDM_MPI_Datatype c_datatype = <MPI_Datatype> mpi_dtype.ob_mpi
 
   PDM_part_comm_graph_all_reduce(pypcg.pcg,
                                  c_datatype,
                                  c_op,
-              <unsigned char **> &_pdata)
+              <unsigned char **> _pdata)
 
 # ------------------------------------------------------------------------
 def entity_nuplet_get(PyPartCommGraph pypcg, int i_part):
