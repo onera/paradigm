@@ -186,7 +186,7 @@ cdef class PartCommGraph:
                  MPI.Op          op,
                  list            pdata):
     """
-    all_reduce(datatype, op, pdata)
+    all_reduce(op, pdata)
 
       Parameters:
         op       (MPI.Op)                           : Reduction operation kind (SUM/MIN/MAX)
