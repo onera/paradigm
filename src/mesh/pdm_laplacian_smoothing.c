@@ -73,9 +73,6 @@ PDM_laplacian_smoothing_fields
         double                **p_vtx_field
 )
 {
-  int i_rank;
-  PDM_MPI_Comm_rank(comm, &i_rank);
-
   // Generate edge part comm graph if not provided
   int has_pcg_edge = 1;
   if (pcg_edge == NULL) {
@@ -107,9 +104,12 @@ PDM_laplacian_smoothing_fields
     }
   }
 
-  // Prepare to disable ghost edges to avoid in-place modification of user edge weights
-  int **is_edge_bound = NULL;
-  PDM_malloc(is_edge_bound, n_part, int *);
+  // Prepare to disable ghost edges without in-place modification of user edge weights
+  // Could be a function of part_comm_graph ? with a simple getter
+  int  *p_n_edge_lap = NULL;
+  int **p_edge_lap   = NULL;
+  PDM_malloc(p_n_edge_lap, n_part, int  );
+  PDM_malloc(p_edge_lap,   n_part, int *);
   for (int i_part = 0; i_part < n_part; i_part++) {
     const int *edge_bound_owner = PDM_part_comm_graph_owner_get(pcg_edge, i_part);
 
@@ -119,26 +119,27 @@ PDM_laplacian_smoothing_fields
                                                             &edge_bound,
                                                             PDM_OWNERSHIP_BAD_VALUE);
 
-    is_edge_bound[i_part] = PDM_array_zeros_int(p_n_edge[i_part]);
+    PDM_malloc(p_edge_lap[i_part], p_n_edge[i_part], int);
+    p_n_edge_lap[i_part] = 0;
     for (int i_bnd = 0; i_bnd < n_edge_bound; i_bnd++) {
       if (edge_bound_owner[i_bnd] == 0) {
         int i_edge = edge_bound[4*i_bnd] - 1;
-        is_edge_bound[i_part][i_edge] = 1;
+        p_edge_lap[i_part][p_n_edge_lap[i_part]++] = i_edge+1;
       }
     }
+    PDM_realloc(p_edge_lap[i_part], p_edge_lap[i_part], p_n_edge_lap[i_part], int);
   }
 
   // Pre-compute vertex weights
   double **p_vtx_weight = NULL;
   PDM_malloc(p_vtx_weight, n_part, double *);
   for (int i_part = 0; i_part < n_part; i_part++) {
-    p_vtx_weight[i_part] = PDM_array_const_double(p_n_edge[i_part], 0.);
-    for (int i_edge = 0; i_edge < p_n_edge[i_part]; i_edge++) {
-      if (is_edge_bound[i_part][i_edge] == 0) {
-        for (int i = 0; i < 2; i++) {
-          int i_vtx = p_edge_vtx[i_part][2*i_edge+i] - 1;
-          p_vtx_weight[i_part][i_vtx] += p_edge_weight[i_part][i_edge];
-        }
+    p_vtx_weight[i_part] = PDM_array_const_double(p_n_vtx[i_part], 0.);
+    for (int i_edge_lap = 0; i_edge_lap < p_n_edge_lap[i_part]; i_edge_lap++) {
+      int i_edge = p_edge_lap[i_part][i_edge_lap] - 1;
+      for (int i = 0; i < 2; i++) {
+        int i_vtx = p_edge_vtx[i_part][2*i_edge+i] - 1;
+        p_vtx_weight[i_part][i_vtx] += p_edge_weight[i_part][i_edge];
       }
     }
   }
@@ -174,7 +175,8 @@ PDM_laplacian_smoothing_fields
       }
 
       // Laplacian with damping
-      for (int i_edge = 0; i_edge < p_n_edge[i_part]; i_edge++) {
+      for (int i_edge_lap = 0; i_edge_lap < p_n_edge_lap[i_part]; i_edge_lap++) {
+        int i_edge = p_edge_lap[i_part][i_edge_lap] - 1;
         for (int i = 0; i < 2; i++) {
           int i_vtx = p_edge_vtx[i_part][2*i_edge+ i     ] - 1;
           int j_vtx = p_edge_vtx[i_part][2*i_edge+(i+1)%2] - 1;
@@ -204,8 +206,8 @@ PDM_laplacian_smoothing_fields
 
     // Reset previous values on vtx group
     if (p_n_vtx_frozen  != NULL) {
-    assert(p_vtx_frozen != NULL);
-    for (int i_part = 0; i_part < n_part; i_part++) {
+      assert(p_vtx_frozen != NULL);
+      for (int i_part = 0; i_part < n_part; i_part++) {
         for (int i_vtx_frozen = 0; i_vtx_frozen < p_n_vtx_frozen[i_part]; i_vtx_frozen++) {
           int i_vtx = p_vtx_frozen[i_part][i_vtx_frozen]-1;
           for (int i_stride = 0; i_stride < stride; i_stride++) {
@@ -255,13 +257,14 @@ PDM_laplacian_smoothing_fields
     PDM_free(p_edge_weight);
   }
   for (int i_part = 0; i_part < n_part; i_part++) {
-    PDM_free(field_tmp    [i_part]);
-    PDM_free(p_vtx_weight [i_part]);
-    PDM_free(is_edge_bound[i_part]);
+    PDM_free(field_tmp   [i_part]);
+    PDM_free(p_vtx_weight[i_part]);
+    PDM_free(p_edge_lap  [i_part]);
   }
-  PDM_free(field_tmp    );
-  PDM_free(p_vtx_weight );
-  PDM_free(is_edge_bound);
+  PDM_free(field_tmp   );
+  PDM_free(p_vtx_weight);
+  PDM_free(p_edge_lap  );
+  PDM_free(p_n_edge_lap);
 }
 
 #ifdef __cplusplus

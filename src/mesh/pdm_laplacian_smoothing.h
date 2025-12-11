@@ -41,7 +41,8 @@ extern "C" {
 
  /**
  *
- * \brief Apply Laplacian smoothing to strided fields (interlaced)
+ * \brief Apply Laplacian smoothing to strided fields (interlaced).
+ *        If no weight is provided, default unity weights are used.
  *
  * \param [in]     comm             MPI communicator
  * \param [in]     n_part           Number of partition on current process
