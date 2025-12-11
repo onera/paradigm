@@ -86,7 +86,7 @@ cdef class PartCommGraph:
                list        pentity_nuplet=None,
                bint        is_signed=True):
     """
-    __init__(comm, pentity_graph)
+    __init__(comm, pentity_graph, pentity_nuplet=None, is_signed=True)
 
     Create a new :py:class`PartCommGraph` instance
 
@@ -189,7 +189,6 @@ cdef class PartCommGraph:
     all_reduce(datatype, op, pdata)
 
       Parameters:
-        datatype (MPI.Datatype)                     : Mpi datatype (MPI_DOUBLE/MPI_INT)
         op       (MPI.Op)                           : Reduction operation kind (SUM/MIN/MAX)
         pdata    (`list` of `np.ndarray[datatype]`) : Data buffer, value is modified inplace
 
@@ -224,7 +223,7 @@ def exch(PyPartCommGraph pypcg,
                          send_entity_stride=1,
          bint            interlaced_str=True):
   """
-    exch(send_entity_data, send_entity_stride, interlaced_str)
+    exch(send_entity_data, send_entity_stride=1, interlaced_str=True)
 
     Exchange data between graph comm with synchronous blocking exchange
 
