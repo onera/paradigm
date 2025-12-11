@@ -111,7 +111,7 @@ API
 .. dropdown:: Non-blocking exchanges
 
   Non-blocking exchanges can be either oneshot or persistent (see above).
-  In both cases, started exchange must be waited with the ``PDM_exchange_helper_exch_wait`` function.
+  In both cases, you must wait for the started exchange with the ``PDM_exchange_helper_exch_wait`` function.
 
   .. dropdown:: Oneshot
 
