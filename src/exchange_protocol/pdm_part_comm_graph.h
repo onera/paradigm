@@ -250,6 +250,26 @@ PDM_part_comm_graph_all_reduce
  *
  * \brief Get entity nuplets
  *
+ * \param [in]     pcg            Pointer to \ref PDM_part_comm_graph_t instance
+ * \param [in]     datatype       Mpi datatype (PDM_MPI_DOUBLE/PDM_MPI_INT)
+ * \param [in]     op             Reduction operation kind (SUM/MIN/MAX)
+ * \param [in]     stride         Data stride (interlaced values)
+ * \param [in/out] pdata          Buffer of data to synchronise (size = n_entity)
+ */
+void
+PDM_part_comm_graph_all_reduce_strided
+(
+  PDM_part_comm_graph_t   *pcg,
+  PDM_MPI_Datatype         datatype,
+  PDM_MPI_Op               op,
+  int                      stride,
+  unsigned char          **pdata
+);
+
+/**
+ *
+ * \brief Get entity nuplets
+ *
  * \param [in]  pcg            Pointer to \ref PDM_part_comm_graph_t instance
  * \param [in]  i_part         Partition identifier
  * \param [out] entity_nuplet  Entity nuplets (size = nuplet_size * n_entity_graph)

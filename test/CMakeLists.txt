@@ -157,6 +157,8 @@ test_c_create (pdm_t_plane_meshes_intersect                             2 PDM_LI
 test_c_create (pdm_t_field_cell_to_vtx       1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_field_cell_to_vtx_nodal 1 PDM_LIST_TEST PDM_LIST_NRANK)
 
+test_c_create (pdm_t_laplacian_smoothing 2 PDM_LIST_TEST PDM_LIST_NRANK)
+
 # io
 test_c_create (pdm_t_writer_ensight_3d               ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_writer_ensight_moving_mesh_3d   ${MPIEXEC_MAX_NUMPROCS} PDM_LIST_TEST PDM_LIST_NRANK)
