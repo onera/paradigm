@@ -104,6 +104,7 @@ cdef extern from "pdm.h":
         PDM_OWNERSHIP_KEEP                 = 0
         PDM_OWNERSHIP_USER                 = 1
         PDM_OWNERSHIP_UNGET_RESULT_IS_FREE = 2
+        PDM_OWNERSHIP_BAD_VALUE            = 3
 
     ctypedef enum PDM_extract_part_kind_t:
         PDM_EXTRACT_PART_KIND_LOCAL         = 0
@@ -478,7 +479,7 @@ cdef int* list_to_int_pointer(list data):
   for i,d in enumerate(data):
     array[i] = <int> d
   return array
-  
+
 cdef double* list_to_double_pointer(list data):
   cdef double* array = <double *> malloc(len(data) * sizeof(double))
   for i,d in enumerate(data):
@@ -579,6 +580,10 @@ include "pdm_dmesh.pxi"
 # PDM_dmesh_nodal :
 # ----------------
 include "pdm_dmesh_nodal.pxi"
+
+# PDM_part_comm_graph :
+# ----------------
+include "pdm_part_comm_graph.pxi"
 
 # PDM_part_dmesh_nodal :
 # ----------------

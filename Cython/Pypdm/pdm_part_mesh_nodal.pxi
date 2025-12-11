@@ -6,6 +6,7 @@ cdef extern from "pdm_part_mesh_nodal.h":
       pass
     ctypedef struct PDM_part_mesh_nodal_elmts_t:
       pass
+
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
     PDM_part_mesh_nodal_t* PDM_part_mesh_nodal_create(int          mesh_dimension,
@@ -115,9 +116,22 @@ cdef extern from "pdm_part_mesh_nodal.h":
 
     void PDM_part_mesh_nodal_free( PDM_part_mesh_nodal_t* pmn);
 
+    void PDM_part_mesh_nodal_part_comm_graph_get(PDM_part_mesh_nodal_t  *pmn,
+                                                 PDM_mesh_entities_t     entity_type,
+                                                 PDM_part_comm_graph_t **pcg,
+                                                 PDM_ownership_t         ownership);
+
+cdef extern from "pdm_part_mesh_nodal_algorithm.h":
+    void PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(PDM_part_mesh_nodal_t  *pmn,
+                                                               PDM_mesh_entities_t     entity_type);
+
 cdef extern from "pdm_part_mesh_nodal_geom.h":
     void PDM_part_mesh_nodal_dual_volume_compute(PDM_part_mesh_nodal_t   *pmn,
                                                  double                ***dual_vol);
+
+cdef extern from "pdm_part_comm_graph.h":
+  ctypedef struct PDM_part_comm_graph_t:
+    pass
 
 # ------------------------------------------------------------------
 cdef class PartMeshNodal:
@@ -158,6 +172,9 @@ cdef class PartMeshNodal:
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
         self.pmn = PDM_part_mesh_nodal_create(mesh_dimension, n_part, PDMC)
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
+
+
+
 
     def set_coordinates(self,
                         id_part,
@@ -318,6 +335,31 @@ cdef class PartMeshNodal:
       """
       return part_mesh_nodal_dim_get(self)
 
+    def part_comm_graph_get(self,
+                            PDM_mesh_entities_t entity_type):
+      """
+      part_comm_graph_get(entity_type)
+
+      Returns a \ref PDM_part_comm_graph_t python object
+
+      Parameters:
+       entity_type (PDM_mesh_entities_t) : type of entity (vertex, cell, edge)
+      """
+      return get_part_comm_graph(self, entity_type)
+
+    def compute_part_comm_graph_from_gnum(self,
+                                          PDM_mesh_entities_t entity_type):
+
+      """
+      compute_part_comm_graph_from_gnum(entity_type)
+
+      Compute internal part_comm_graph from part_mesh_nodal entity global ids.
+
+      Parameters:
+        entity_type (PDM_mesh_entities_t) : type of entity (vertex, edge, face, cell)
+      """
+      compute_pcg_from_gnum(self, entity_type)
+
     # ------------------------------------------------------------------------
     def __dealloc__(self):
       """
@@ -337,9 +379,11 @@ cdef class PartMeshNodalCapsule:
   def __cinit__(self, object caps):
     """
     """
-    # print("DistributedMeshNodalCapsule", PyCapsule_GetName(caps))
     cdef PDM_part_mesh_nodal_t* caps_pmn = <PDM_part_mesh_nodal_t *> PyCapsule_GetPointer(caps, NULL)
     self.pmn = caps_pmn;
+
+  def part_comm_graph_get(self, PDM_mesh_entities_t entity_type):
+    return get_part_comm_graph(self, entity_type)
 
   def dim_get(self):
     return part_mesh_nodal_dim_get(self)
@@ -429,6 +473,11 @@ cdef class PartMeshNodalCapsule:
     """
     return part_mesh_nodal_get_group(self, geom_kind, i_part, i_group)
 
+  def compute_part_comm_graph_from_gnum(self,
+                                        PDM_mesh_entities_t entity_type):
+    compute_pcg_from_gnum(self, entity_type)
+
+
   def __dealloc__(self):
     """
     """
@@ -438,6 +487,23 @@ cdef class PartMeshNodalCapsule:
 ctypedef fused PMeshNodal:
   PartMeshNodal
   PartMeshNodalCapsule
+
+
+def compute_pcg_from_gnum(PMeshNodal          pypmn,
+                          PDM_mesh_entities_t entity_type):
+  PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(pypmn.pmn, entity_type)
+
+def get_part_comm_graph(PMeshNodal          pypmn,
+                        PDM_mesh_entities_t entity_type):
+  cdef PDM_part_comm_graph_t *pcg
+
+  PDM_part_mesh_nodal_part_comm_graph_get(pypmn.pmn,
+                                          entity_type,
+                                          &pcg,
+                                          PDM_OWNERSHIP_BAD_VALUE)
+
+  py_caps = PyCapsule_New(pcg, NULL, NULL)
+  return PartCommGraphCapsule(py_caps) # The free is inside the class
 
 def part_mesh_nodal_vtx_g_num_get(PMeshNodal pypmn, int i_part):
   """
