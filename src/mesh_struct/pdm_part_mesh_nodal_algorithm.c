@@ -716,7 +716,7 @@ PDM_part_mesh_nodal_compute_straddling_entities
 
   int **_tag_vtx_n = NULL;
   int **_tag_vtx   = NULL;
-  PDM_part_comm_graph_gather_strided_data(pmn->pcg[PDM_MESH_ENTITY_VTX],
+  PDM_part_comm_graph_gather_strided_data(pmn->pcg_vtx,
                                           1*sizeof(int),
                                           PDM_STRIDE_CST_INTERLACED,
                                           n_vtx,
@@ -985,7 +985,7 @@ PDM_part_mesh_nodal_compute_straddling_entities
       PDM_malloc(pn_vtx_graph, pmn->n_part, int  );
       PDM_malloc(pvtx_graph  , pmn->n_part, int *);
       for (int i_part=0; i_part<pmn->n_part; ++i_part) {
-        pn_vtx_graph[i_part] = PDM_part_comm_graph_entity_graph_get(pmn->pcg[PDM_MESH_ENTITY_VTX],
+        pn_vtx_graph[i_part] = PDM_part_comm_graph_entity_graph_get(pmn->pcg_vtx,
                                                                     i_part,
                                                                    &pvtx_graph[i_part],
                                                                     PDM_OWNERSHIP_BAD_VALUE);
