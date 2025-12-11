@@ -52,8 +52,9 @@ struct _pdm_part_mesh_nodal_t {
   PDM_part_mesh_nodal_elmts_t       *ridge;
   PDM_part_mesh_nodal_elmts_t       *corner;
 
-  PDM_ownership_t                    pcg_ownership[PDM_GEOMETRY_KIND_MAX];
   PDM_part_comm_graph_t             *pcg          [PDM_GEOMETRY_KIND_MAX];
+  PDM_ownership_t                    pcg_ownership[PDM_GEOMETRY_KIND_MAX];
+
   PDM_part_comm_graph_t             *pcg_vtx;
   PDM_ownership_t                    pcg_vtx_ownership;
 
