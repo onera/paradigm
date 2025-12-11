@@ -437,7 +437,6 @@ _gnum_to_pcg
   PDM_free(entity_part_bound_priority);
   PDM_free(part_distribution);
 
-
   // Build part comm graph
   *out_pcg = PDM_part_comm_graph_create(n_part,
                                         n_entity_part_bound,

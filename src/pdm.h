@@ -449,9 +449,8 @@ PDM_dimension_to_entity_type
   const int dim
 );
 
-
 /**
- * \brief Helper to get entity type according to a dimension
+ * \brief Helper to get geometry kind according to a dimension
  *
  */
 PDM_geometry_kind_t

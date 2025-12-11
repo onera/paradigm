@@ -1297,7 +1297,7 @@ PDM_part_mesh_nodal_cell_vtx_connect_get
  *
  * \param [in]  pmn         Pointer to \ref PDM_part_mesh_nodal_t instance
  * \param [in]  pcg         Pointer to \ref PDM_part_comm_graph_t instance
- * \param [in]  entity_type Entity type (vertex, edge, face or cell)
+ * \param [in]  geom_kind   Geometry kind (see \ref PDM_geometry_kind_t )
  * \param [in]  ownership   part_mesh_nodal ownership on given part_comm_graph
  *
  */
@@ -1316,7 +1316,7 @@ PDM_part_mesh_nodal_part_comm_graph_set
  * \brief Get part_mesh_nodal's part_comm_graph
  *
  * \param [in]   pmn         Pointer to \ref PDM_part_mesh_nodal_t instance
- * \param [in]   entity_type Entity type (vertex, edge, face or cell)
+ * \param [in]   geom_kind   Geometry kind (see \ref PDM_geometry_kind_t )
  * \param [out]  pcg         Pointer to \ref PDM_part_comm_graph_t instance
  * \param [in]   ownership   part_mesh_nodal ownership on returned part_comm_graph
  */
@@ -1346,7 +1346,6 @@ PDM_part_mesh_nodal_part_comm_graph_vtx_set
   PDM_ownership_t        ownership
 );
 
-
 /**
  *
  * \brief Get part_mesh_nodal's part_comm_graph for vertices
@@ -1362,7 +1361,6 @@ PDM_part_mesh_nodal_part_comm_graph_vtx_get
   PDM_part_comm_graph_t **pcg,
   PDM_ownership_t         ownership
 );
-
 
 /**
  * \brief Transform group information inside a \ref PDM_part_mesh_nodal_t to tag for all elements

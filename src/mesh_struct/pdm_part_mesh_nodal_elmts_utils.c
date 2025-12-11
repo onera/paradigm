@@ -1327,18 +1327,18 @@ PDM_part_mesh_nodal_elmts_sections_local_decompose_vtx
 {
   assert(pmne != NULL);
 
-  int  *n_decompose_elmt_vtx = NULL;
-  int **elmt_vtx_idx         = NULL;
-  int **elmt_vtx_vtx_idx     = NULL;
-  int **elmt_vtx_vtx         = NULL;
+  int  *n_decompose_elmt_vtx  = NULL;
+  int **elmt_vtx_idx          = NULL;
+  int **elmt_vtx_vtx_idx      = NULL;
+  int **elmt_vtx_vtx          = NULL;
   int **parent_elmt           = NULL;
   int **parent_elmt_position  = NULL;
-  PDM_malloc(n_decompose_elmt_vtx , pmne->n_part, int  );
-  PDM_malloc(elmt_vtx_idx         , pmne->n_part, int *);
-  PDM_malloc(elmt_vtx_vtx_idx     , pmne->n_part, int *);
-  PDM_malloc(elmt_vtx_vtx         , pmne->n_part, int *);
-  PDM_malloc(parent_elmt          , pmne->n_part, int *);
-  PDM_malloc(parent_elmt_position , pmne->n_part, int *);
+  PDM_malloc(n_decompose_elmt_vtx, pmne->n_part, int  );
+  PDM_malloc(elmt_vtx_idx        , pmne->n_part, int *);
+  PDM_malloc(elmt_vtx_vtx_idx    , pmne->n_part, int *);
+  PDM_malloc(elmt_vtx_vtx        , pmne->n_part, int *);
+  PDM_malloc(parent_elmt         , pmne->n_part, int *);
+  PDM_malloc(parent_elmt_position, pmne->n_part, int *);
 
   int  n_section  = PDM_part_mesh_nodal_elmts_n_section_get  (pmne);
   int *section_id = PDM_part_mesh_nodal_elmts_sections_id_get(pmne);

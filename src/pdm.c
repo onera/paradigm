@@ -212,7 +212,6 @@ PDM_dimension_to_entity_type
 )
 {
   switch (dim) {
-
     case 3: {
       return PDM_MESH_ENTITY_CELL;
     }
@@ -228,7 +227,6 @@ PDM_dimension_to_entity_type
     default: {
       PDM_error(__FILE__, __LINE__, 0, "Invalid dimension %d\n", dim);
     }
-
   }
 
   return PDM_MESH_ENTITY_MAX;
@@ -243,7 +241,6 @@ PDM_dimension_to_geometry_kind_type
 )
 {
   switch (dim) {
-
     case 3: {
       return PDM_GEOMETRY_KIND_VOLUMIC;
     }
@@ -259,7 +256,6 @@ PDM_dimension_to_geometry_kind_type
     default: {
       PDM_error(__FILE__, __LINE__, 0, "Invalid dimension %d\n", dim);
     }
-
   }
 
   return PDM_GEOMETRY_KIND_MAX;
