@@ -1314,7 +1314,7 @@ PDM_part_comm_graph_exch_one_way_raw_init
   PDM_exchange_direction_t    direction,
   size_t                      s_data,
   int                         cst_stride,
-  int                        *raw_buffer,
+  void                       *raw_buffer,
   int                         tag
 )
 {
@@ -1364,7 +1364,7 @@ PDM_part_comm_graph_iexch_one_way_raw
   PDM_exchange_direction_t    direction,
   size_t                      s_data,
   int                         cst_stride,
-  int                        *raw_buffer,
+  void                       *raw_buffer,
   int                         tag
 )
 {
