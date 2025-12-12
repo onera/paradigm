@@ -426,10 +426,12 @@ main
 
   /* Generate edge weights */
   double **pedge_weight = NULL;
-  PDM_malloc(pedge_weight, n_part, double *);
-  for (int i_part = 0; i_part < n_part; i_part++) {
-    pedge_weight[i_part] = PDM_array_const_double(pn_edge[i_part], 1.);
-  }
+  PDM_laplacian_smoothing_idw_weights_compute(n_part,
+                                              pvtx_coord,
+                                              pn_edge,
+                                              pedge_vtx,
+                                              2,
+                                              &pedge_weight);
 
   /* Laplacian smoothing with tolerance, groups, pcg_edge, weights and strided fields */
   PDM_laplacian_smoothing_fields(comm,

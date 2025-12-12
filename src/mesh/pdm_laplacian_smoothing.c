@@ -20,6 +20,7 @@
 #include "pdm_part_comm_graph.h"
 #include "pdm_part_comm_graph_algorithm.h"
 #include "pdm_mem_tool.h"
+#include "pdm_error.h"
 #include "pdm_laplacian_smoothing.h"
 
 #ifdef __cplusplus
@@ -52,6 +53,59 @@ extern "C" {
 /*=============================================================================
  * Public function definitions
  *============================================================================*/
+
+void PDM_laplacian_smoothing_idw_weights_compute
+(
+  int       n_part,
+  double  **p_vtx_coord,
+  int      *p_n_edge,
+  int     **p_edge_vtx,
+  int       exponent,
+  double ***out_p_edge_weight
+)
+{
+  double **p_edge_weight = NULL;
+  PDM_malloc(p_edge_weight, n_part, double *);
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    PDM_malloc(p_edge_weight[i_part], p_n_edge[i_part], double);
+    for (int i_edge = 0; i_edge < p_n_edge[i_part]; i_edge++) {
+      int i_vtx = p_edge_vtx[i_part][2*i_edge  ] - 1;
+      int j_vtx = p_edge_vtx[i_part][2*i_edge+1] - 1;
+      double v[3];
+      for (int i = 0; i < 3; i++) {
+        v[i] = p_vtx_coord[i_part][3*j_vtx+i] - p_vtx_coord[i_part][3*i_vtx+i];
+      }
+      p_edge_weight[i_part][i_edge] = PDM_MODULE(v);
+      p_edge_weight[i_part][i_edge] = 1./pow(p_edge_weight[i_part][i_edge], exponent);
+    }
+  }
+  *out_p_edge_weight = p_edge_weight;
+}
+
+void PDM_laplacian_smoothing_beltrami_weights_compute
+(
+  int       n_part,
+  int      *p_n_vtx,
+  double  **p_vtx_coord,
+  int      *p_n_elt,
+  int     **p_elt_vtx_idx,
+  int     **p_elt_vtx,
+  int      *p_n_edge,
+  int     **p_edge_vtx,
+  double ***out_p_edge_weight
+)
+{
+  PDM_UNUSED(n_part);
+  PDM_UNUSED(p_n_vtx);
+  PDM_UNUSED(p_vtx_coord);
+  PDM_UNUSED(p_n_elt);
+  PDM_UNUSED(p_elt_vtx_idx);
+  PDM_UNUSED(p_elt_vtx);
+  PDM_UNUSED(p_n_edge);
+  PDM_UNUSED(p_edge_vtx);
+  PDM_UNUSED(out_p_edge_weight);
+  PDM_error(__FILE__, __LINE__, 0, "Beltrami weights not implemented yet\n");
+}
 
 void
 PDM_laplacian_smoothing_fields
