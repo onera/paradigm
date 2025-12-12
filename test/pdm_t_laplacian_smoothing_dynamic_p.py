@@ -58,9 +58,13 @@ p_vtx_coord_part = mpart.vtx_coord_get(i_domain,
                                        i_part)
 p_vtx_coord = [p_vtx_coord_part]
 p_nvtx = [p_vtx_coord[0].shape[0]//3]
+_, face_edge = mpart.connectivity_get(i_domain,
+                                      i_part,
+                                      PDM._PDM_CONNECTIVITY_TYPE_FACE_EDGE)
+p_face_edge = [face_edge]
 _, edge_vtx = mpart.connectivity_get(i_domain,
-                                                i_part,
-                                                PDM._PDM_CONNECTIVITY_TYPE_EDGE_VTX)
+                                     i_part,
+                                     PDM._PDM_CONNECTIVITY_TYPE_EDGE_VTX)
 p_edge_vtx_idx = [2*np.arange(edge_vtx.shape[0]//2+1, dtype=np.int32)]
 p_edge_vtx     = [edge_vtx]
 
@@ -88,10 +92,10 @@ eps     = 1e15;
 while (iter < n_iter and eps > tol):
 
   # Generate edge weights
-  exponent = 2
-  p_edge_weight = PDM.compute_idw_weights(p_vtx_coord,
-                                          p_edge_vtx,
-                                          exponent)
+  p_edge_weight = PDM.compute_cotangent_weights(p_vtx_coord,
+                                                p_face_edge,
+                                                p_edge_vtx,
+                                                pcg_edge)
 
   # Laplacian smoothing
   eps = PDM.laplacian_smoothing_fields_one_iteration(comm,

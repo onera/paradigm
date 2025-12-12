@@ -232,6 +232,7 @@ void PDM_laplacian_smoothing_idw_weights_compute
   double ***out_p_edge_weight
 )
 {
+  // Compute IDW weights
   double **p_edge_weight = NULL;
   PDM_malloc(p_edge_weight, n_part, double *);
   for (int i_part = 0; i_part < n_part; i_part++) {
@@ -247,33 +248,62 @@ void PDM_laplacian_smoothing_idw_weights_compute
       p_edge_weight[i_part][i_edge] = 1./pow(p_edge_weight[i_part][i_edge], exponent);
     }
   }
+
+  // Output
   *out_p_edge_weight = p_edge_weight;
 }
 
-//void PDM_laplacian_smoothing_beltrami_weights_compute
-//(
-//  int       n_part,
-//  int      *p_n_vtx,
-//  double  **p_vtx_coord,
-//  int      *p_n_elt,
-//  int     **p_elt_vtx_idx,
-//  int     **p_elt_vtx,
-//  int      *p_n_edge,
-//  int     **p_edge_vtx,
-//  double ***out_p_edge_weight
-//)
-//{
-//  PDM_UNUSED(n_part);
-//  PDM_UNUSED(p_n_vtx);
-//  PDM_UNUSED(p_vtx_coord);
-//  PDM_UNUSED(p_n_elt);
-//  PDM_UNUSED(p_elt_vtx_idx);
-//  PDM_UNUSED(p_elt_vtx);
-//  PDM_UNUSED(p_n_edge);
-//  PDM_UNUSED(p_edge_vtx);
-//  PDM_UNUSED(out_p_edge_weight);
-//  PDM_error(__FILE__, __LINE__, 0, "Beltrami weights not implemented yet\n");
-//}
+void PDM_laplacian_smoothing_cotangent_weights_compute
+(
+  int                      n_part,
+  double                 **p_vtx_coord,
+  int                     *p_n_face,
+  int                    **p_face_edge,
+  int                     *p_n_edge,
+  int                    **p_edge_vtx,
+  PDM_part_comm_graph_t   *pcg_edge,
+  double                ***out_p_edge_weight
+)
+{
+  // Compute cotangent weights
+  double u[3], v[3], w[3];
+  double **p_edge_weight = NULL;
+  PDM_malloc(p_edge_weight, n_part, double *);
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    p_edge_weight[i_part] = PDM_array_const_double(p_n_edge[i_part], 0.);
+    for (int i_face = 0; i_face < p_n_face[i_part]; i_face++) {
+      for (int i = 0; i < 3; i++) {
+        int i_edge      = PDM_ABS(p_face_edge[i_part][3*i_face+ i     ])-1;
+        int i_edge_next = PDM_ABS(p_face_edge[i_part][3*i_face+(i+1)%3])-1;
+        int i_vtx1 = p_edge_vtx[i_part][2*i_edge  ]-1;
+        int i_vtx2 = p_edge_vtx[i_part][2*i_edge+1]-1;
+        if (p_face_edge[i_part][3*i_face+i] < 0) {
+          i_vtx1 = p_edge_vtx[i_part][2*i_edge+1]-1;
+          i_vtx2 = p_edge_vtx[i_part][2*i_edge  ]-1;
+        }
+        int i_vtx3 = p_edge_vtx[i_part][2*i_edge_next]-1;
+        if (i_vtx3 == i_vtx1 || i_vtx3 == i_vtx2) {
+          i_vtx3 = p_edge_vtx[i_part][2*i_edge_next+1]-1;
+        }
+        for (int k = 0; k < 3; k++) {
+          u[k] = p_vtx_coord[i_part][3*i_vtx3+k] - p_vtx_coord[i_part][3*i_vtx2+k];
+          v[k] = p_vtx_coord[i_part][3*i_vtx1+k] - p_vtx_coord[i_part][3*i_vtx2+k];
+        }
+        PDM_CROSS_PRODUCT(w, u, v);
+        p_edge_weight[i_part][i_edge] += 0.5*PDM_DOT_PRODUCT(u, v)/(1e-16 + PDM_MODULE(w));
+      }
+    }
+  }
+
+  // Synchronize edge weights
+  PDM_part_comm_graph_all_reduce(pcg_edge,
+                                 PDM_MPI_DOUBLE,
+                                 PDM_MPI_SUM,
+              (unsigned char **) p_edge_weight);
+
+  // Output
+  *out_p_edge_weight = p_edge_weight;
+}
 
 void
 PDM_laplacian_smoothing_fields

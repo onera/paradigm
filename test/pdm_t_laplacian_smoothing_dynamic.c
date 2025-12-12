@@ -276,8 +276,10 @@ main
                                                  PDM_OWNERSHIP_KEEP);
 
   int     *pn_vtx     = NULL;
+  int     *pn_face    = NULL;
   int     *pn_edge    = NULL;
   double **pvtx_coord = NULL;
+  int    **pface_edge = NULL;
   int    **pedge_vtx  = NULL;
   PDM_malloc(pn_vtx,     n_part, int     );
   PDM_malloc(pn_edge,    n_part, int     );
@@ -297,6 +299,22 @@ main
                                    &edge_vtx_idx,
                                    PDM_OWNERSHIP_USER);
     PDM_free(edge_vtx_idx);
+  }
+
+  if (dim == 2) {
+    PDM_malloc(pn_face,    n_part, int  );
+    PDM_malloc(pface_edge, n_part, int *);
+    for (int i_part = 0; i_part < n_part; i_part++) {
+      pn_face[i_part] = PDM_part_mesh_n_entity_get(pmesh, i_part, PDM_MESH_ENTITY_FACE);
+      int *face_edge_idx = NULL;
+      PDM_part_mesh_connectivity_get(pmesh,
+                                     i_part,
+                                     PDM_CONNECTIVITY_TYPE_FACE_EDGE,
+                                     &pface_edge[i_part],
+                                     &face_edge_idx,
+                                     PDM_OWNERSHIP_USER);
+      PDM_free(face_edge_idx);
+    }
   }
 
   PDM_part_mesh_nodal_to_part_mesh_free(pmn_to_pm);
@@ -358,12 +376,25 @@ main
 
     /* Generate edge weights */
     double **pedge_weight = NULL;
-    PDM_laplacian_smoothing_idw_weights_compute(n_part,
-                                                pvtx_coord,
-                                                pn_edge,
-                                                pedge_vtx,
-                                                2,
-                                                &pedge_weight);
+    if (dim == 3) {
+      PDM_laplacian_smoothing_idw_weights_compute(n_part,
+                                                  pvtx_coord,
+                                                  pn_edge,
+                                                  pedge_vtx,
+                                                  2,
+                                                  &pedge_weight);
+    }
+    else
+    {
+      PDM_laplacian_smoothing_cotangent_weights_compute(n_part,
+                                                        pvtx_coord,
+                                                        pn_face,
+                                                        pface_edge,
+                                                        pn_edge,
+                                                        pedge_vtx,
+                                                        pcg_edge,
+                                                        &pedge_weight);
+    }
 
     /* Laplacian smoothing */
     PDM_laplacian_smoothing_fields_one_iteration(comm,
@@ -406,7 +437,13 @@ main
   PDM_free(pvtx_coord_prev);
   PDM_part_mesh_nodal_free(pmn);
   PDM_part_comm_graph_free(pcg_edge);
-
+  if (dim == 2) {
+    for (int i_part = 0; i_part < n_part; i_part++) {
+      PDM_free(pface_edge[i_part]);
+    }
+    PDM_free(pn_face   );
+    PDM_free(pface_edge);
+  }
   PDM_MPI_Finalize();
 
   return EXIT_SUCCESS;

@@ -7,15 +7,14 @@ cdef extern from "pdm_laplacian_smoothing.h":
                                                    int       exponent,
                                                    double ***out_p_edge_weight);
 
-  #void PDM_laplacian_smoothing_beltrami_weights_compute(int       n_part,
-  #                                                      int      *p_n_vtx,
-  #                                                      double  **p_vtx_coord,
-  #                                                      int      *p_n_elt,
-  #                                                      int     **p_elt_vtx_idx,
-  #                                                      int     **p_elt_vtx,
-  #                                                      int      *p_n_edge,
-  #                                                      int     **p_edge_vtx,
-  #                                                      double ***out_p_edge_weight);
+  void PDM_laplacian_smoothing_cotangent_weights_compute(int                      n_part,
+                                                         double                 **p_vtx_coord,
+                                                         int                     *p_n_face,
+                                                         int                    **p_face_edge,
+                                                         int                     *p_n_edge,
+                                                         int                    **p_edge_vtx,
+                                                         PDM_part_comm_graph_t   *pcg_edge,
+                                                         double                ***out_p_edge_weight);
 
   void PDM_laplacian_smoothing_fields(const PDM_MPI_Comm            comm,
                                             int                     n_part,
@@ -92,6 +91,60 @@ def compute_idw_weights(list p_vtx_coord,
 
   # Free
   free(n_edge         )
+  free(c_p_edge_vtx   )
+  free(c_p_vtx_coord  )
+  free(c_p_edge_weight)
+
+  return p_edge_weight
+
+def compute_cotangent_weights(list p_vtx_coord,
+                              list p_face_edge,
+                              list p_edge_vtx,
+                              PyPartCommGraph pypcg_edge):
+  """
+  Compute cotangent edge weights for triangular meshes.
+
+  Parameters:
+    p_vtx_coord   (list           ) : Vertex coordinates (size=n_part)
+    p_face_edge   (list           ) : Face→edge connectivity (size=n_part)
+    p_edge_vtx    (list           ) : Edge→vertex connectivity (size=n_part)
+    pypcg_edge    (PyPartCommGraph) : Edge part comm graph or None
+
+  Returns:
+    p_edge_weight (list           ) : Edge weight (size=n_part)
+  """
+
+  # Get sizes
+  cdef int  n_part = len(p_vtx_coord)
+  cdef int *n_face = <int *> malloc(sizeof(int) * n_part)
+  cdef int *n_edge = <int *> malloc(sizeof(int) * n_part)
+  for i_part in range(n_part):
+    n_face[i_part] = len(p_face_edge[i_part])//3
+    n_edge[i_part] = len(p_edge_vtx [i_part])//2
+
+  # Convert
+  cdef double **c_p_vtx_coord = np_list_to_double_pointers(p_vtx_coord)
+  cdef int    **c_p_face_edge = np_list_to_int_pointers(p_face_edge)
+  cdef int    **c_p_edge_vtx  = np_list_to_int_pointers(p_edge_vtx)
+
+  cdef double **c_p_edge_weight
+  PDM_laplacian_smoothing_cotangent_weights_compute(n_part,
+                                                    c_p_vtx_coord,
+                                                    n_face,
+                                                    c_p_face_edge,
+                                                    n_edge,
+                                                    c_p_edge_vtx,
+                                                    pypcg_edge.pcg,
+                                                    &c_p_edge_weight)
+
+  p_edge_weight = list()
+  for i_part in range(n_part):
+    p_edge_weight.append(create_numpy_or_none_d(c_p_edge_weight[i_part], n_edge[i_part]))
+
+  # Free
+  free(n_face         )
+  free(n_edge         )
+  free(c_p_face_edge  )
   free(c_p_edge_vtx   )
   free(c_p_vtx_coord  )
   free(c_p_edge_weight)

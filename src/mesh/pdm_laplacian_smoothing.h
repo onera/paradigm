@@ -62,30 +62,28 @@ extern "C" {
 
 /**
  *
- * \brief Compute Beltrami (cotangent) edge weights.
+ * \brief Compute cotangent edge weights for triangular meshes.
  *
  * \param [in]  n_part            Number of partition on current process
- * \param [in]  p_n_vtx           Number of vertices (size = \p n_part)
  * \param [in]  p_vtx_coord       Vertex coordinates (size = \p n_part, for each part size = 3 * \p p_n_vtx [i_part])
- * \param [in]  p_n_elt           Number of elements (size = \p n_part)
- * \param [in]  p_elt_vtx_idx     Index of element→vertex connectivity (size = \p n_part, for each part size = \p p_n_elt [i_part]+1)
- * \param [in]  p_elt_vtx         Element→vertex connectivity (size = \p n_part, for each part size = \p p_elt_vtx_idx [i_part][\p p_n_elt [i_part]])
+ * \param [in]  p_n_face          Number of faces (size = \p n_part)
+ * \param [in]  p_face_edge       Face→vertex connectivity (size = \p n_part, for each part size = 3 * \p p_n_face [i_part]])
  * \param [in]  p_n_edge          Number of edges (size = \p n_part)
  * \param [in]  p_edge_vtx        Edge→vertex connectivity (size = \p n_part, for each part size = 2 * \p p_n_edge [i_part])
+ * \param [in]  pcg_edge          Pointer to \ref PDM_part_comm_graph_t instance for edges or NULL
  * \param [out] out_p_edge_weight Edge weight (size = \p n_part, for each part size = \p p_n_edge [i_part])
  */
-//void PDM_laplacian_smoothing_beltrami_weights_compute
-//(
-//  int       n_part,
-//  int      *p_n_vtx,
-//  double  **p_vtx_coord,
-//  int      *p_n_elt,
-//  int     **p_elt_vtx_idx,
-//  int     **p_elt_vtx,
-//  int      *p_n_edge,
-//  int     **p_edge_vtx,
-//  double ***out_p_edge_weight
-//);
+void PDM_laplacian_smoothing_cotangent_weights_compute
+(
+  int                      n_part,
+  double                 **p_vtx_coord,
+  int                     *p_n_face,
+  int                    **p_face_edge,
+  int                     *p_n_edge,
+  int                    **p_edge_vtx,
+  PDM_part_comm_graph_t   *pcg_edge,
+  double                ***out_p_edge_weight
+);
 
 /**
  *
