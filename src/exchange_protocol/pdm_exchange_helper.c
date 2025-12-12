@@ -897,6 +897,10 @@ PDM_exchange_helper_free
 )
 {
   for(int i_req = 0; i_req < exch_helper->n_request; ++i_req) {
+    if(exch_helper->requests_status[i_req] != EXCHANGE_HELPER_STATUS_FREE) {
+      PDM_error(__FILE__, __LINE__, 0,
+                "Error PDM_exchange_helper_free have a unfreed request = %i\n", i_req);
+    }
     for(int i = 0; i < exch_helper->n_sub_requests[i_req]; ++i) {
       PDM_MPI_Request_free(&exch_helper->sub_requests[i_req][i]);
     }
