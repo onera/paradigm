@@ -33,6 +33,22 @@ cdef extern from "pdm_laplacian_smoothing.h":
                                             int                     stride,
                                             double                **p_vtx_field);
 
+  double PDM_laplacian_smoothing_fields_one_iteration(const PDM_MPI_Comm            comm,
+                                                            int                     n_part,
+                                                            int                    *p_n_vtx,
+                                                            PDM_part_comm_graph_t  *pcg_vtx,
+                                                            int                    *p_n_vtx_frozen,
+                                                            int                   **p_vtx_frozen,
+                                                            int                    *p_n_edge,
+                                                            int                   **p_edge_vtx,
+                                                            double                **p_edge_weight,
+                                                            PDM_part_comm_graph_t  *pcg_edge,
+                                                            double                  damping,
+                                                            double                  tol,
+                                                            int                     stride,
+                                                            double                **p_vtx_field_prev,
+                                                            double                **p_vtx_field_current);
+
 cdef extern from "pdm_part_comm_graph.h":
   ctypedef struct PDM_part_comm_graph_t:
     pass
@@ -166,3 +182,90 @@ def laplacian_smoothing_fields(MPI.Comm        comm,
   free(c_p_edge_weight)
   free(c_p_vtx_frozen )
   free(c_p_vtx_field  )
+
+def laplacian_smoothing_fields_one_iteration(MPI.Comm        comm,
+                                             list            p_vtx_frozen,
+                                             PyPartCommGraph pypcg_vtx,
+                                             list            p_edge_vtx,
+                                             list            p_edge_weight,
+                                             PyPartCommGraph pypcg_edge,
+                                             float           damping,
+                                             int             n_iter,
+                                             float           tol,
+                                             int             stride,
+                                             list            p_vtx_field_prev,
+                                             list            p_vtx_field_current):
+  """
+  Apply one iteration of Laplacian smoothing to strided fields (interlaced).
+
+  Parameters:
+    comm                (MPI.Comm       ) : MPI communicator
+    p_vtx_frozen        (list           ) : Frozen vertex list (size=n_part)
+    pypcg_vtx           (PyPartCommGraph) : Vertex part comm graph
+    p_edge_vtx          (list           ) : Edge→vertex connectivity (size=n_part)
+    p_edge_weight       (list           ) : Edge weights (size=n_part) or None
+    pypcg_edge          (PyPartCommGraph) : Edge part comm graph or None
+    damping             (float          ) : Damping constant (between 0. and 1.)
+    tol                 (float          ) : Relative tolerance for convergence (ignored if negative)
+    stride              (int            ) : Field stride (interlaced values)
+    p_vtx_field_prev    (list           ) : Previous fields (size=n_part)
+    p_vtx_field_current (list           ) : Current fields (size=n_part)
+
+  Returns:
+    eps                 (float          ) : Maximal absolute relative variation of fields (if tol is positive)
+  """
+
+  # Convert mpi4py -> PDM_MPI
+  cdef MPI.MPI_Comm c_comm   = comm.ob_mpi
+  cdef PDM_MPI_Comm PDM_comm = PDM_MPI_mpi_2_pdm_mpi_comm(<void *> &c_comm)
+
+  # Get sizes
+  cdef int  n_part = len(p_vtx_field_prev)
+  cdef int *n_vtx  = <int *> malloc(sizeof(int) * n_part)
+  cdef int *n_edge = <int *> malloc(sizeof(int) * n_part)
+  for i_part in range(n_part):
+    n_vtx [i_part] = len(p_vtx_field_prev[i_part])//stride
+    n_edge[i_part] = len(p_edge_vtx[i_part])//2
+
+  # Convert
+  cdef int    **c_p_edge_vtx          = np_list_to_int_pointers(p_edge_vtx)
+  cdef double **c_p_vtx_field_prev    = np_list_to_double_pointers(p_vtx_field_prev)
+  cdef double **c_p_vtx_field_current = np_list_to_double_pointers(p_vtx_field_current)
+  cdef double **c_p_edge_weight       = np_list_to_double_pointers(p_edge_weight)
+
+  cdef int  *n_vtx_frozen   = NULL
+  cdef int **c_p_vtx_frozen = NULL
+  if p_vtx_frozen is not None:
+    n_vtx_frozen = <int *> malloc(sizeof(int) * n_part)
+    for i_part in range(n_part):
+      n_vtx_frozen[i_part] = len(p_vtx_frozen[i_part])
+    c_p_vtx_frozen = np_list_to_int_pointers(p_vtx_frozen)
+
+  cdef double eps
+  eps = PDM_laplacian_smoothing_fields_one_iteration(PDM_comm,
+                                                     n_part,
+                                                     n_vtx,
+                                                     pypcg_vtx.pcg,
+                                                     n_vtx_frozen,
+                                                     c_p_vtx_frozen,
+                                                     n_edge,
+                                                     c_p_edge_vtx,
+                                                     c_p_edge_weight,
+                                                     pypcg_edge.pcg,
+                                                     damping,
+                                                     tol,
+                                                     stride,
+                                                     c_p_vtx_field_prev,
+                                                     c_p_vtx_field_current)
+
+  # Free
+  free(n_vtx          )
+  free(n_edge         )
+  free(n_vtx_frozen   )
+  free(c_p_edge_vtx   )
+  free(c_p_edge_weight)
+  free(c_p_vtx_frozen )
+  free(c_p_vtx_field_prev   )
+  free(c_p_vtx_field_current)
+
+  return eps

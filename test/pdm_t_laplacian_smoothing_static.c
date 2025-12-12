@@ -330,7 +330,7 @@ main
                                              vtx_field);
   }
 
-  /* Get Vtx Part Comm Graph */
+  /* Generate vtx pcg */
   PDM_part_comm_graph_t *pcg_vtx = NULL;
   PDM_part_mesh_nodal_part_comm_graph_get(pmn,
                                           PDM_MESH_ENTITY_VTX,
@@ -354,7 +354,7 @@ main
                                  1,
                                  pvtx_field);
 
-  /* Generate field */
+  /* Generate field again */
   for (int i_part = 0; i_part < n_part; i_part++) {
     for (int i_vtx = 0; i_vtx < pn_vtx[i_part]; i_vtx++) {
       double x = pvtx_coord[i_part][3*i_vtx  ];
@@ -381,12 +381,16 @@ main
                                  1,
                                  pvtx_field);
 
-  /* Generate strided fields */
-  double **pvtx_coord_tmp = NULL;
-  PDM_malloc(pvtx_coord_tmp, n_part, double *);
-  for (int i_part = 0; i_part < n_part; i_part++) {
-    PDM_malloc(pvtx_coord_tmp[i_part], 3 * pn_vtx[i_part], double);
-    memcpy(pvtx_coord_tmp[i_part], pvtx_coord[i_part], sizeof(double) * 3 * pn_vtx[i_part]);
+  if (visu) {
+    PDM_part_mesh_nodal_dump_vtk_with_fields(pmn,
+                                             geom_kind,
+                                             "laplacian_final",
+                                             0,
+                                             NULL,
+                                             NULL,
+                                             1,
+                                             vtx_field_name,
+                                             vtx_field);
   }
 
   /* Generate vtx group */
@@ -433,6 +437,14 @@ main
                                               2,
                                               &pedge_weight);
 
+  /* Generate strided fields */
+  double **pvtx_coord_tmp = NULL;
+  PDM_malloc(pvtx_coord_tmp, n_part, double *);
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    PDM_malloc(pvtx_coord_tmp[i_part], 3 * pn_vtx[i_part], double);
+    memcpy(pvtx_coord_tmp[i_part], pvtx_coord[i_part], sizeof(double) * 3 * pn_vtx[i_part]);
+  }
+
   /* Laplacian smoothing with tolerance, groups, pcg_edge, weights and strided fields */
   PDM_laplacian_smoothing_fields(comm,
                                  n_part,
@@ -449,18 +461,6 @@ main
                                  -1.,
                                  3,
                                  pvtx_coord_tmp);
-
-  if (visu) {
-    PDM_part_mesh_nodal_dump_vtk_with_fields(pmn,
-                                             geom_kind,
-                                             "laplacian_final",
-                                             0,
-                                             NULL,
-                                             NULL,
-                                             1,
-                                             vtx_field_name,
-                                             vtx_field);
-  }
 
   /* Finalize */
   for (int i_part = 0; i_part < n_part; i_part++) {

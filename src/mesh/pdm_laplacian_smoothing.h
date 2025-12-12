@@ -128,6 +128,48 @@ PDM_laplacian_smoothing_fields
         double                **p_vtx_field
 );
 
+/**
+ *
+ * \brief Apply one iteration of Laplacian smoothing to strided fields (interlaced).
+ *
+ * \param [in]     comm                MPI communicator
+ * \param [in]     n_part              Number of partition on current process
+ * \param [in]     p_n_vtx             Number of vertices (size = \p n_part)
+ * \param [in]     pcg_vtx             Pointer to \ref PDM_part_comm_graph_t instance for vertices
+ * \param [in]     p_n_vtx_frozen      Number of frozen vertices (size = \p n_part) or NULL
+ * \param [in]     p_vtx_frozen        Local ID of frozen vertices (size = \p n_part, for each part size = \p p_n_vtx_frozen [i_part]) or NULL
+ * \param [in]     p_n_edge            Number of edges (size = \p n_part)
+ * \param [in]     p_edge_vtx          Edge→vertex connectivity (size = \p n_part, for each part size = 2 * \p p_n_edge [i_part])
+ * \param [in]     p_edge_weight       Edge weight (size = \p n_part, for each part size = \p p_n_edge [i_part])
+ * \param [in]     pcg_edge            Pointer to \ref PDM_part_comm_graph_t instance for edges
+ * \param [in]     damping             Damping constant (between 0. and 1.)
+ * \param [in]     tol                 Relative tolerance for convergence (ignored if negative)
+ * \param [in]     stride              Field stride (interlaced values)
+ * \param [in/out] p_vtx_field_prev    Previous fields (size = \p n_part, for each part size = \p p_n_vtx [i_part])
+ * \param [in/out] p_vtx_field_current Current fields (size = \p n_part, for each part size = \p p_n_vtx [i_part])
+ *
+ * \return         Maximal absolute relative variation of fields (if tol is positive)
+ */
+double
+PDM_laplacian_smoothing_fields_one_iteration
+(
+  const PDM_MPI_Comm            comm,
+        int                     n_part,
+        int                    *p_n_vtx,
+        PDM_part_comm_graph_t  *pcg_vtx,
+        int                    *p_n_vtx_frozen,
+        int                   **p_vtx_frozen,
+        int                    *p_n_edge,
+        int                   **p_edge_vtx,
+        double                **p_edge_weight,
+        PDM_part_comm_graph_t  *pcg_edge,
+        double                  damping,
+        double                  tol,
+        int                     stride,
+        double                **p_vtx_field_prev,
+        double                **p_vtx_field_current
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

@@ -12,12 +12,12 @@ n_rank = comm.size
 # Generate block-distributed parallelepided mesh
 n_x      = 6
 n_y      = 3
-n_z      = 2
+n_z      = 1
 lengthx  = 1.
 xmin     = 0.
 ymin     = 0.
 zmin     = 0.
-elt_type = PDM._PDM_MESH_NODAL_TETRA4
+elt_type = PDM._PDM_MESH_NODAL_TRIA3
 order    = 1
 dcube = PDM.DCubeNodalGenerator(n_x,
                                 n_y,
@@ -54,47 +54,84 @@ mpart.compute()
 
 pmn = mpart.part_mesh_nodal_get(i_domain)
 
-p_vtx_coord = [mpart.vtx_coord_get(i_domain,
-                                   i_part)]
-p_vtx_frozen = [np.array([i+1 for i in range(p_vtx_coord[0].shape[0]//3) if p_vtx_coord[0][3*i] < 0.4], dtype=np.int32)]
+p_vtx_coord_part = mpart.vtx_coord_get(i_domain,
+                                       i_part)
+p_vtx_coord = [p_vtx_coord_part]
+p_nvtx = [p_vtx_coord[0].shape[0]//3]
 _, edge_vtx = mpart.connectivity_get(i_domain,
-                                     i_part,
-                                     PDM._PDM_CONNECTIVITY_TYPE_EDGE_VTX)
-p_edge_vtx  = [edge_vtx]
+                                                i_part,
+                                                PDM._PDM_CONNECTIVITY_TYPE_EDGE_VTX)
+p_edge_vtx_idx = [2*np.arange(edge_vtx.shape[0]//2+1, dtype=np.int32)]
+p_edge_vtx     = [edge_vtx]
+
 pcg_vtx = pmn.part_comm_graph_get(PDM._PDM_MESH_ENTITY_VTX)
 
-# Generate weights
-exponent = 2
-p_edge_weight = PDM.compute_idw_weights(p_vtx_coord,
-                                        p_edge_vtx,
-                                        exponent)
+# Generate strided field
+p_vtx_field = [np.copy(p_vtx_coord_part)]
 
-# Apply Laplacian
+# Apply Laplacian without tolerance
 damping = 0.9
 n_iter  = 30
 tol     = -0.1
 PDM.laplacian_smoothing_fields(comm,
-                               p_vtx_frozen,
+                               None,
                                pcg_vtx,
                                p_edge_vtx,
-                               p_edge_weight,
+                               None,
                                None,
                                damping,
                                n_iter,
                                tol,
                                3,
-                               p_vtx_coord)
+                               p_vtx_field)
 
-# Apply Laplacian
+# Generate strided field again
+p_vtx_field[0][:] = p_vtx_coord_part[:]
+
+# Apply Laplacian with tolerance
 damping = 0.9
 n_iter  = 30
-tol     = -0.1
+tol     = 0.1
 PDM.laplacian_smoothing_fields(comm,
                                None,
                                pcg_vtx,
                                p_edge_vtx,
                                None,
                                None,
+                               damping,
+                               n_iter,
+                               tol,
+                               3,
+                               p_vtx_field)
+
+# Generate vtx group
+p_vtx_frozen = [np.array([i+1 for i in range(p_vtx_coord[0].shape[0]//3) if p_vtx_coord[0][3*i] < 0.4], dtype=np.int32)]
+
+# Generate edge pcg
+pcg_edge = PDM.pcg_entity1_to_entity2(pcg_vtx,
+                                      p_nvtx,
+                                      p_edge_vtx_idx,
+                                      p_edge_vtx)
+
+# Generate edge weights
+exponent = 2
+p_edge_weight = PDM.compute_idw_weights(p_vtx_coord,
+                                        p_edge_vtx,
+                                        exponent)
+
+# Generate strided field again
+p_vtx_field[0][:] = p_vtx_coord_part[:]
+
+# Apply Laplacian with tolerance, groups, pcg_edge and weights
+damping = 0.9
+n_iter  = 30
+tol     = 0.1
+PDM.laplacian_smoothing_fields(comm,
+                               p_vtx_frozen,
+                               pcg_vtx,
+                               p_edge_vtx,
+                               p_edge_weight,
+                               pcg_edge,
                                damping,
                                n_iter,
                                tol,
