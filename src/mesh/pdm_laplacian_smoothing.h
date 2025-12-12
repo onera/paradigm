@@ -41,7 +41,7 @@ extern "C" {
 
 /**
  *
- * \brief Compute Inverse Distance Weighting-like edge weights
+ * \brief Compute Inverse Distance Weighting-like edge weights.
  *
  * \param [in]  n_part            Number of partition on current process
  * \param [in]  p_vtx_coord       Vertex coordinates (size = \p n_part, for each part size = 3 * \p p_n_vtx [i_part])
@@ -62,7 +62,7 @@ extern "C" {
 
 /**
  *
- * \brief Compute Beltrami (cotangent) edge weights
+ * \brief Compute Beltrami (cotangent) edge weights.
  *
  * \param [in]  n_part            Number of partition on current process
  * \param [in]  p_n_vtx           Number of vertices (size = \p n_part)
@@ -74,18 +74,18 @@ extern "C" {
  * \param [in]  p_edge_vtx        Edge→vertex connectivity (size = \p n_part, for each part size = 2 * \p p_n_edge [i_part])
  * \param [out] out_p_edge_weight Edge weight (size = \p n_part, for each part size = \p p_n_edge [i_part])
  */
-void PDM_laplacian_smoothing_beltrami_weights_compute
-(
-  int       n_part,
-  int      *p_n_vtx,
-  double  **p_vtx_coord,
-  int      *p_n_elt,
-  int     **p_elt_vtx_idx,
-  int     **p_elt_vtx,
-  int      *p_n_edge,
-  int     **p_edge_vtx,
-  double ***out_p_edge_weight
-);
+//void PDM_laplacian_smoothing_beltrami_weights_compute
+//(
+//  int       n_part,
+//  int      *p_n_vtx,
+//  double  **p_vtx_coord,
+//  int      *p_n_elt,
+//  int     **p_elt_vtx_idx,
+//  int     **p_elt_vtx,
+//  int      *p_n_edge,
+//  int     **p_edge_vtx,
+//  double ***out_p_edge_weight
+//);
 
 /**
  *
@@ -95,9 +95,9 @@ void PDM_laplacian_smoothing_beltrami_weights_compute
  * \param [in]     comm             MPI communicator
  * \param [in]     n_part           Number of partition on current process
  * \param [in]     p_n_vtx          Number of vertices (size = \p n_part)
+ * \param [in]     pcg_vtx          Pointer to \ref PDM_part_comm_graph_t instance for vertices
  * \param [in]     p_n_vtx_frozen   Number of frozen vertices (size = \p n_part) or NULL
  * \param [in]     p_vtx_frozen     Local ID of frozen vertices (size = \p n_part, for each part size = \p p_n_vtx_frozen [i_part]) or NULL
- * \param [in]     pcg_vtx          Pointer to \ref PDM_part_comm_graph_t instance for vertices
  * \param [in]     p_n_edge         Number of edges (size = \p n_part)
  * \param [in]     p_edge_vtx       Edge→vertex connectivity (size = \p n_part, for each part size = 2 * \p p_n_edge [i_part])
  * \param [in]     p_edge_weight    Edge weight (size = \p n_part, for each part size = \p p_n_edge [i_part]) or NULL
@@ -114,9 +114,9 @@ PDM_laplacian_smoothing_fields
   const PDM_MPI_Comm            comm,
         int                     n_part,
         int                    *p_n_vtx,
+        PDM_part_comm_graph_t  *pcg_vtx,
         int                    *p_n_vtx_frozen,
         int                   **p_vtx_frozen,
-        PDM_part_comm_graph_t  *pcg_vtx,
         int                    *p_n_edge,
         int                   **p_edge_vtx,
         double                **p_edge_weight,

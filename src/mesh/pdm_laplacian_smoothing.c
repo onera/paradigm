@@ -82,30 +82,30 @@ void PDM_laplacian_smoothing_idw_weights_compute
   *out_p_edge_weight = p_edge_weight;
 }
 
-void PDM_laplacian_smoothing_beltrami_weights_compute
-(
-  int       n_part,
-  int      *p_n_vtx,
-  double  **p_vtx_coord,
-  int      *p_n_elt,
-  int     **p_elt_vtx_idx,
-  int     **p_elt_vtx,
-  int      *p_n_edge,
-  int     **p_edge_vtx,
-  double ***out_p_edge_weight
-)
-{
-  PDM_UNUSED(n_part);
-  PDM_UNUSED(p_n_vtx);
-  PDM_UNUSED(p_vtx_coord);
-  PDM_UNUSED(p_n_elt);
-  PDM_UNUSED(p_elt_vtx_idx);
-  PDM_UNUSED(p_elt_vtx);
-  PDM_UNUSED(p_n_edge);
-  PDM_UNUSED(p_edge_vtx);
-  PDM_UNUSED(out_p_edge_weight);
-  PDM_error(__FILE__, __LINE__, 0, "Beltrami weights not implemented yet\n");
-}
+//void PDM_laplacian_smoothing_beltrami_weights_compute
+//(
+//  int       n_part,
+//  int      *p_n_vtx,
+//  double  **p_vtx_coord,
+//  int      *p_n_elt,
+//  int     **p_elt_vtx_idx,
+//  int     **p_elt_vtx,
+//  int      *p_n_edge,
+//  int     **p_edge_vtx,
+//  double ***out_p_edge_weight
+//)
+//{
+//  PDM_UNUSED(n_part);
+//  PDM_UNUSED(p_n_vtx);
+//  PDM_UNUSED(p_vtx_coord);
+//  PDM_UNUSED(p_n_elt);
+//  PDM_UNUSED(p_elt_vtx_idx);
+//  PDM_UNUSED(p_elt_vtx);
+//  PDM_UNUSED(p_n_edge);
+//  PDM_UNUSED(p_edge_vtx);
+//  PDM_UNUSED(out_p_edge_weight);
+//  PDM_error(__FILE__, __LINE__, 0, "Beltrami weights not implemented yet\n");
+//}
 
 void
 PDM_laplacian_smoothing_fields
@@ -113,9 +113,9 @@ PDM_laplacian_smoothing_fields
   const PDM_MPI_Comm            comm,
         int                     n_part,
         int                    *p_n_vtx,
+        PDM_part_comm_graph_t  *pcg_vtx,
         int                    *p_n_vtx_frozen,
         int                   **p_vtx_frozen,
-        PDM_part_comm_graph_t  *pcg_vtx,
         int                    *p_n_edge,
         int                   **p_edge_vtx,
         double                **p_edge_weight,
