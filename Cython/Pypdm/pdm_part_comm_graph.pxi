@@ -69,6 +69,11 @@ cdef class PartCommGraphCapsule:
            bint interlaced_str=True):
     return exch(self, send_entity_data, send_entity_stride, interlaced_str)
 
+  def __dealloc__(self):
+    """
+    """
+    PDM_part_comm_graph_free(self.pcg)
+
 # ========================================================================
 # ------------------------------------------------------------------------
 cdef class PartCommGraph:

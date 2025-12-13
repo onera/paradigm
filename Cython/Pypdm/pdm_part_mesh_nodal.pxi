@@ -500,7 +500,7 @@ def get_part_comm_graph(PMeshNodal          pypmn,
   PDM_part_mesh_nodal_part_comm_graph_get(pypmn.pmn,
                                           entity_type,
                                           &pcg,
-                                          PDM_OWNERSHIP_BAD_VALUE)
+                                          PDM_OWNERSHIP_USER)
 
   py_caps = PyCapsule_New(pcg, NULL, NULL)
   return PartCommGraphCapsule(py_caps) # The free is inside the class
