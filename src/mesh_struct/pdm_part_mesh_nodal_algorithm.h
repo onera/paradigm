@@ -41,7 +41,7 @@ extern "C" {
  *
  */
 void
-PDM_part_mesh_nodal_vtx_part_comm_graph_compute_from_gnum
+PDM_part_mesh_nodal_part_comm_graph_vtx_compute_from_gnum
 (
   PDM_part_mesh_nodal_t *pmn
 );

@@ -450,7 +450,7 @@ _gnum_to_pcg
 
 
 void
-PDM_part_mesh_nodal_vtx_part_comm_graph_compute_from_gnum
+PDM_part_mesh_nodal_part_comm_graph_vtx_compute_from_gnum
 (
   PDM_part_mesh_nodal_t *pmn
 )
@@ -598,7 +598,7 @@ PDM_part_mesh_nodal_complete_part_comm_graph
    *  Compute the pcg of vertices with gnum
    */
   if(pmn->pcg_vtx == NULL) {
-    PDM_part_mesh_nodal_vtx_part_comm_graph_compute_from_gnum(pmn);
+    PDM_part_mesh_nodal_part_comm_graph_vtx_compute_from_gnum(pmn);
   }
 
   /*
@@ -704,7 +704,7 @@ PDM_part_mesh_nodal_compute_straddling_entities
    * Exchange local information to reduce it globally
    */
   if (pmn->pcg_vtx == NULL) {
-    PDM_part_mesh_nodal_vtx_part_comm_graph_compute_from_gnum(pmn);
+    PDM_part_mesh_nodal_part_comm_graph_vtx_compute_from_gnum(pmn);
   }
 
 

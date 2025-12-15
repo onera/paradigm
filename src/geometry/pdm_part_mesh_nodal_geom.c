@@ -191,7 +191,7 @@ PDM_part_mesh_nodal_dual_volume_compute
     PDM_free(vtx_coord);
 
     if(pmn->pcg_vtx == NULL) {
-      PDM_part_mesh_nodal_vtx_part_comm_graph_compute_from_gnum(pmn);
+      PDM_part_mesh_nodal_part_comm_graph_vtx_compute_from_gnum(pmn);
     }
 
     // Synchro volume :

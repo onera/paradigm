@@ -1069,7 +1069,7 @@ _compute_part_mesh_nodal_1d
   PDM_free(pn_vtx);
 
   /* Create part_comm_graph with gnum */
-  PDM_part_mesh_nodal_vtx_part_comm_graph_compute_from_gnum(pmn);
+  PDM_part_mesh_nodal_part_comm_graph_vtx_compute_from_gnum (pmn);
 
   return pmn;
 }

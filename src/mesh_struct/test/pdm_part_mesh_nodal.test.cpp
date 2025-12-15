@@ -299,7 +299,7 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] part_comm_graph from gnum", 2) {
   pmn->pcg[PDM_GEOMETRY_KIND_RIDGE   ] = NULL;
   pmn->pcg[PDM_GEOMETRY_KIND_SURFACIC] = NULL;
 
-  PDM_part_mesh_nodal_vtx_part_comm_graph_compute_from_gnum(pmn);
+  PDM_part_mesh_nodal_part_comm_graph_vtx_compute_from_gnum(pmn);
   std::vector<std::vector<int>> expected_graph = {{10, 1, 1, 1,
                                                    11, 1, 1, 2,
                                                    12, 1, 1, 3,
