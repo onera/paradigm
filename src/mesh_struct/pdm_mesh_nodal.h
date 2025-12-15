@@ -125,7 +125,7 @@ PDM_Mesh_nodal_n_vtx_elt_get
  * \brief Return vtx->vtx connectivity of a standard elements decomposed into vertices
  *
  * \param [in]  t_elt    Standard element type
- * \param [out] vtx_vtx  Edge->vertex connectivity
+ * \param [out] vtx_vtx  vertex->vertex connectivity
  *
  * \return Number of vertices per element
  */
