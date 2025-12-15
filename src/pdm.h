@@ -454,7 +454,7 @@ PDM_dimension_to_entity_type
  *
  */
 PDM_geometry_kind_t
-PDM_dimension_to_geometry_kind_type
+PDM_dimension_to_geometry_kind
 (
   const int dim
 );
