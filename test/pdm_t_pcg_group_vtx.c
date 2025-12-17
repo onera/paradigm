@@ -252,10 +252,9 @@ main
 
   /* Get vertex Part Comm Graph */
   PDM_part_comm_graph_t *pcg_vtx = NULL;
-  PDM_part_mesh_nodal_part_comm_graph_get(pmn,
-                                          PDM_MESH_ENTITY_VTX,
-                                          &pcg_vtx,
-                                          PDM_OWNERSHIP_BAD_VALUE);
+  PDM_part_mesh_nodal_part_comm_graph_vtx_get(pmn,
+                                              &pcg_vtx,
+                                              PDM_OWNERSHIP_BAD_VALUE);
 
   /* Deduce selected vertices */
   int  *n_selected_vtx = NULL;
@@ -272,7 +271,7 @@ main
   PDM_mesh_entities_t entity_type = PDM_dimension_to_entity_type(dim-1);
   PDM_part_comm_graph_t *pcg_elt = NULL;
   PDM_part_mesh_nodal_part_comm_graph_get(pmn,
-                                          entity_type,
+                                          geom_kind,
                                           &pcg_elt,
                                           PDM_OWNERSHIP_BAD_VALUE);
   /* Compute vertex normals */

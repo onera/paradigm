@@ -105,7 +105,6 @@ PDM_Mesh_nodal_is_3D_element
   PDM_Mesh_nodal_elt_t type
 );
 
-
 /**
  * \brief Get the number of vertices of an element type
  *
@@ -115,12 +114,26 @@ PDM_Mesh_nodal_is_3D_element
  * \return       Number of vertices
  *
  */
-
 int
 PDM_Mesh_nodal_n_vtx_elt_get
 (
-  PDM_Mesh_nodal_elt_t type,
-  const int            order
+        PDM_Mesh_nodal_elt_t type,
+  const int                  order
+);
+
+/**
+ * \brief Return vtx->vtx connectivity of a standard elements decomposed into vertices
+ *
+ * \param [in]  t_elt    Standard element type
+ * \param [out] vtx_vtx  vertex->vertex connectivity
+ *
+ * \return Number of vertices per element
+ */
+int
+PDM_vtx_vtx_per_elmt
+(
+  PDM_Mesh_nodal_elt_t   t_elt,
+  const int            **vtx_vtx
 );
 
 /**

@@ -962,6 +962,92 @@ PDM_part_mesh_nodal_std_decompose_local_edges
 
 
 void
+PDM_part_mesh_nodal_std_decompose_local_vtx
+(
+       PDM_Mesh_nodal_elt_t  t_elt,
+       int                   n_elt,
+       int                   order,
+       int                  *parent_node,
+       int                  *vtx_tag,
+       int                  *n_elt_current,
+       int                  *n_vtx_current,
+ const int                  *connectivity_elmt_vtx,
+ const int                  *parent_num,
+       int                  *elmt_vtx_vtx_idx,
+       int                  *elmt_vtx_vtx,
+       int                  *elmt_cell_vtx_idx,
+       int                  *parent_elmt,
+       int                  *parent_elmt_position
+)
+{
+  PDM_UNUSED(parent_num);
+
+  int parent_node_std[8] = {0, 1, 2, 3, 4, 5, 6, 7};
+
+  int *_parent_node;
+  if (parent_node == NULL) {
+    _parent_node = parent_node_std;
+  } else {
+    _parent_node = parent_node;
+  }
+
+  const int *elt_vtx_vtx = NULL;
+  int n_vtx_elt = PDM_vtx_vtx_per_elmt(t_elt, &elt_vtx_vtx);
+
+  if (n_vtx_elt <= 0 || elt_vtx_vtx == NULL) {
+    return;
+  }
+
+  int *_current_elmt_vtx_vtx_idx = elmt_vtx_vtx_idx      + *n_vtx_current;
+  int *_parent_elmt_position      = parent_elmt_position + *n_vtx_current;
+  int *_parent_elmt               = parent_elmt          + *n_vtx_current;
+  int *_elmt_cell_vtx_idx         = elmt_cell_vtx_idx    + *n_elt_current;
+
+  int n_vtx_of_elt = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, order);
+
+  int i_parent = *n_elt_current;
+  int idx_vtx = 0;
+
+  for (int i_elt = 0; i_elt < n_elt; i_elt++) {
+
+    i_parent++;
+    _elmt_cell_vtx_idx[i_elt+1] = _elmt_cell_vtx_idx[i_elt];
+
+    for (int j_vtx = 0; j_vtx < n_vtx_elt; j_vtx++) {
+
+      if (vtx_tag != NULL) {
+        int ignore_vtx = 0;
+        int i_vtx = elt_vtx_vtx[j_vtx];
+        i_vtx = connectivity_elmt_vtx[n_vtx_of_elt*i_elt + _parent_node[i_vtx]] - 1;
+        if (vtx_tag[i_vtx] == 0) {
+          ignore_vtx = 1;
+        }
+
+        if (ignore_vtx) {
+          continue;
+        }
+      }
+
+      _parent_elmt_position[idx_vtx] = j_vtx;
+      _parent_elmt         [idx_vtx] = i_parent;
+
+      _current_elmt_vtx_vtx_idx[idx_vtx+1] = _current_elmt_vtx_vtx_idx[idx_vtx];
+      int i_vtx = elt_vtx_vtx[j_vtx];
+      elmt_vtx_vtx[_current_elmt_vtx_vtx_idx[idx_vtx+1]++] = connectivity_elmt_vtx[n_vtx_of_elt*i_elt + _parent_node[i_vtx]];
+      assert(_elmt_cell_vtx_idx[i_elt+1] == *n_vtx_current + idx_vtx);
+      _elmt_cell_vtx_idx[i_elt+1]++;
+
+      idx_vtx++;
+    }
+  }
+
+  *n_elt_current += n_elt;
+  *n_vtx_current += idx_vtx;
+}
+
+
+
+void
 PDM_part_mesh_nodal_poly2d_decompose_local_edges
 (
        int                   n_elt,
@@ -1098,10 +1184,6 @@ PDM_part_mesh_nodal_elmts_sections_local_decompose_edges
 
     n_decompose_elmt_edge[i_part] = n_elmt_edge;
 
-    // printf("n_elmt          = %i \n", n_elmt);
-    // printf("n_elmt_edge     = %i \n", n_elmt_edge);
-    // printf("n_elmt_edge_vtx = %i \n", n_elmt_edge_vtx);
-
     elmt_edge_idx       [i_part] = NULL;
     elmt_edge_vtx_idx   [i_part] = NULL;
     elmt_edge_vtx       [i_part] = NULL;
@@ -1230,7 +1312,167 @@ PDM_part_mesh_nodal_elmts_sections_local_decompose_edges
 }
 
 
+void
+PDM_part_mesh_nodal_elmts_sections_local_decompose_vtx
+(
+  PDM_part_mesh_nodal_elmts_t   *pmne,
+  int                          **vtx_tag,
+  int                          **out_n_decompose_elmt_vtx,
+  int                         ***out_elmt_vtx_idx,
+  int                         ***out_elmt_vtx_vtx_idx,
+  int                         ***out_elmt_vtx_vtx,
+  int                         ***out_parent_elmt,
+  int                         ***out_parent_elmt_position
+)
+{
+  assert(pmne != NULL);
 
+  int  *n_decompose_elmt_vtx  = NULL;
+  int **elmt_vtx_idx          = NULL;
+  int **elmt_vtx_vtx_idx      = NULL;
+  int **elmt_vtx_vtx          = NULL;
+  int **parent_elmt           = NULL;
+  int **parent_elmt_position  = NULL;
+  PDM_malloc(n_decompose_elmt_vtx, pmne->n_part, int  );
+  PDM_malloc(elmt_vtx_idx        , pmne->n_part, int *);
+  PDM_malloc(elmt_vtx_vtx_idx    , pmne->n_part, int *);
+  PDM_malloc(elmt_vtx_vtx        , pmne->n_part, int *);
+  PDM_malloc(parent_elmt         , pmne->n_part, int *);
+  PDM_malloc(parent_elmt_position, pmne->n_part, int *);
+
+  int  n_section  = PDM_part_mesh_nodal_elmts_n_section_get  (pmne);
+  int *section_id = PDM_part_mesh_nodal_elmts_sections_id_get(pmne);
+
+  int parent_node[8];
+  for(int i_part = 0; i_part < pmne->n_part; ++i_part) {
+    int n_elmt = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, i_part);
+
+    int *_vtx_tag = NULL;
+    if (vtx_tag != NULL) {
+      _vtx_tag = vtx_tag[i_part];
+    }
+
+    int n_elmt_vtx     = 0;
+    int n_elmt_vtx_vtx = 0;
+
+    /* Count to evaluate size of elmt_vtx_vtx and elmt_vtx_vtx */
+    for (int i_section = 0; i_section < pmne->n_section_std; i_section++) {
+      int n_elt_section = pmne->sections_std[i_section]->n_elt[i_part];
+      n_elmt_vtx     += n_elt_section * PDM_Mesh_nodal_n_vtx_elt_get(pmne->sections_std[i_section]->t_elt, 0);
+      n_elmt_vtx_vtx += n_elt_section * PDM_Mesh_nodal_n_vtx_elt_get(pmne->sections_std[i_section]->t_elt, 0);
+    }
+
+    int n_elt_current = 0;
+    int n_vtx_current = 0;
+
+    n_decompose_elmt_vtx[i_part] = n_elmt_vtx;
+
+    elmt_vtx_idx        [i_part] = NULL;
+    elmt_vtx_vtx_idx    [i_part] = NULL;
+    elmt_vtx_vtx        [i_part] = NULL;
+    parent_elmt         [i_part] = NULL;
+    parent_elmt_position[i_part] = NULL;
+
+    PDM_malloc(elmt_vtx_idx        [i_part], n_elmt + 1    , int);
+    PDM_malloc(elmt_vtx_vtx_idx    [i_part], n_elmt_vtx + 1, int);
+    PDM_malloc(elmt_vtx_vtx        [i_part], n_elmt_vtx_vtx, int);
+    PDM_malloc(parent_elmt         [i_part], n_elmt_vtx    , int);
+    PDM_malloc(parent_elmt_position[i_part], n_elmt_vtx    , int);
+
+    elmt_vtx_idx       [i_part][0] = 0;
+    elmt_vtx_vtx_idx   [i_part][0] = 0;
+    for (int i_section = 0; i_section < n_section; i_section++) {
+      int id_section = section_id[i_section];
+      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(pmne, id_section);
+
+      int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne, id_section, i_part);
+
+      int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(pmne,
+                                                                 id_section,
+                                                                 i_part,
+                                                                 PDM_OWNERSHIP_BAD_VALUE);
+
+      if (t_elt == PDM_MESH_NODAL_POLY_2D) {
+        PDM_error(__FILE__, __LINE__, 0, "Poly2d not handled yet\n");
+      }
+      else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
+        PDM_error(__FILE__, __LINE__, 0, "Poly3d not handled yet\n");
+      }
+      else {
+
+        int order = -1;
+
+        int         *elt_vtx             = NULL;
+        PDM_g_num_t *elt_ln_to_gn        = NULL;
+        int         *_parent_num         = NULL;
+        PDM_g_num_t *parent_entity_g_num = NULL;
+
+        int *_parent_node = NULL;
+
+        if(PDM_Mesh_nodal_elmt_is_ho(t_elt) == 1) {
+          const char *ho_ordering = NULL;
+          PDM_part_mesh_nodal_elmts_section_std_ho_get(pmne,
+                                                       id_section,
+                                                       i_part,
+                                                       &elt_vtx,
+                                                       &elt_ln_to_gn,
+                                                       &_parent_num,
+                                                       &parent_entity_g_num,
+                                                       &order,
+                                                       &ho_ordering,
+                                                       PDM_OWNERSHIP_BAD_VALUE);
+          PDM_Mesh_nodal_ho_parent_node(t_elt,
+                                        order,
+                                        ho_ordering,
+                                        parent_node);
+          _parent_node = parent_node;
+        }
+        else {
+          order = 1;
+          PDM_part_mesh_nodal_elmts_section_std_get(pmne,
+                                                    id_section,
+                                                    i_part,
+                                                    &elt_vtx,
+                                                    &elt_ln_to_gn,
+                                                    &_parent_num,
+                                                    &parent_entity_g_num,
+                                                    PDM_OWNERSHIP_BAD_VALUE);
+        }
+
+        PDM_part_mesh_nodal_std_decompose_local_vtx(t_elt,
+                                                    n_elt,
+                                                    order,
+                                                    _parent_node,
+                                                    _vtx_tag,
+                                                    &n_elt_current,
+                                                    &n_vtx_current,
+                                                    elt_vtx,
+                                                    parent_num,
+                                                    elmt_vtx_vtx_idx    [i_part],
+                                                    elmt_vtx_vtx        [i_part],
+                                                    elmt_vtx_idx        [i_part],
+                                                    parent_elmt         [i_part],
+                                                    parent_elmt_position[i_part]);
+
+      }
+    } // End loop on sections
+
+    n_decompose_elmt_vtx[i_part] = n_vtx_current;
+
+    PDM_realloc(elmt_vtx_vtx_idx[i_part], elmt_vtx_vtx_idx[i_part], n_vtx_current+1,                          int);
+    PDM_realloc(elmt_vtx_vtx    [i_part], elmt_vtx_vtx    [i_part], elmt_vtx_vtx_idx[i_part][n_vtx_current], int);
+
+
+  } // End loop on parts
+
+  *out_n_decompose_elmt_vtx      = n_decompose_elmt_vtx;
+  *out_elmt_vtx_idx              = elmt_vtx_idx;
+  *out_elmt_vtx_vtx_idx          = elmt_vtx_vtx_idx;
+  *out_elmt_vtx_vtx              = elmt_vtx_vtx;
+  *out_parent_elmt               = parent_elmt;
+  *out_parent_elmt_position      = parent_elmt_position;
+
+}
 
 void
 PDM_part_mesh_nodal_std_decompose_local_faces
@@ -1597,6 +1839,10 @@ PDM_part_mesh_nodal_elmts_compute_child_parent
 
   if (pmne_child == NULL) {
     switch (child_entity_type) {
+      case PDM_MESH_ENTITY_VTX: {
+        dim_child = 0;
+        break;
+      }
       case PDM_MESH_ENTITY_EDGE: {
         dim_child = 1;
         break;
@@ -1657,6 +1903,10 @@ PDM_part_mesh_nodal_elmts_compute_child_parent
     }
     case 1: {
       _decompose = &PDM_part_mesh_nodal_elmts_sections_local_decompose_edges;
+      break;
+    }
+    case 0: {
+      _decompose = &PDM_part_mesh_nodal_elmts_sections_local_decompose_vtx;
       break;
     }
     default : {

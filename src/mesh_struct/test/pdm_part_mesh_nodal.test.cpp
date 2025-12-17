@@ -291,14 +291,15 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] part_comm_graph from gnum", 2) {
                                                                 3, 3, 3, // x/y/z n vertices
                                                                 1, PDM_SPLIT_DUAL_WITH_HILBERT); // part options
   // Oups ! We suppress pcg !
-  PDM_part_comm_graph_free(pmn->pcg[PDM_MESH_ENTITY_VTX ]);
-  PDM_part_comm_graph_free(pmn->pcg[PDM_MESH_ENTITY_EDGE]);
-  PDM_part_comm_graph_free(pmn->pcg[PDM_MESH_ENTITY_FACE]);
-  pmn->pcg[PDM_MESH_ENTITY_VTX ] = NULL;
-  pmn->pcg[PDM_MESH_ENTITY_EDGE] = NULL;
-  pmn->pcg[PDM_MESH_ENTITY_FACE] = NULL;
+  PDM_part_comm_graph_free(pmn->pcg_vtx);
+  PDM_part_comm_graph_free(pmn->pcg[PDM_GEOMETRY_KIND_CORNER  ]);
+  PDM_part_comm_graph_free(pmn->pcg[PDM_GEOMETRY_KIND_RIDGE   ]);
+  PDM_part_comm_graph_free(pmn->pcg[PDM_GEOMETRY_KIND_SURFACIC]);
+  pmn->pcg[PDM_GEOMETRY_KIND_CORNER  ] = NULL;
+  pmn->pcg[PDM_GEOMETRY_KIND_RIDGE   ] = NULL;
+  pmn->pcg[PDM_GEOMETRY_KIND_SURFACIC] = NULL;
 
-  PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(pmn, PDM_MESH_ENTITY_VTX);
+  PDM_part_mesh_nodal_part_comm_graph_vtx_compute_from_gnum(pmn);
   std::vector<std::vector<int>> expected_graph = {{10, 1, 1, 1,
                                                    11, 1, 1, 2,
                                                    12, 1, 1, 3,
@@ -319,7 +320,7 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] part_comm_graph from gnum", 2) {
                                                    9, 0, 1, 18,}};
 
   PDM_part_comm_graph_t *pcg_vtx = NULL;
-  PDM_part_mesh_nodal_part_comm_graph_get(pmn, PDM_MESH_ENTITY_VTX, &pcg_vtx, PDM_OWNERSHIP_BAD_VALUE);
+  PDM_part_mesh_nodal_part_comm_graph_vtx_get(pmn, &pcg_vtx, PDM_OWNERSHIP_BAD_VALUE);
 
   int *computed_graph = NULL;
   int n_entity = PDM_part_comm_graph_entity_graph_get(pcg_vtx, 0, &computed_graph, PDM_OWNERSHIP_BAD_VALUE);
@@ -328,15 +329,15 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] part_comm_graph from gnum", 2) {
   CHECK_EQ_C_ARRAY(computed_graph, expected_graph[i_rank], 4 * n_entity);
 
   // > Ridge and surfacic pcg will be empty because no internal elements
-  PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(pmn, PDM_MESH_ENTITY_EDGE);
+  PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(pmn, PDM_GEOMETRY_KIND_RIDGE);
   PDM_part_comm_graph_t *pcg_ridge = NULL;
-  PDM_part_mesh_nodal_part_comm_graph_get(pmn, PDM_MESH_ENTITY_EDGE, &pcg_ridge, PDM_OWNERSHIP_BAD_VALUE);
+  PDM_part_mesh_nodal_part_comm_graph_get(pmn, PDM_GEOMETRY_KIND_RIDGE, &pcg_ridge, PDM_OWNERSHIP_BAD_VALUE);
   n_entity = PDM_part_comm_graph_entity_graph_get(pcg_ridge, 0, &computed_graph, PDM_OWNERSHIP_BAD_VALUE);
   CHECK(n_entity==0);
 
-  PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(pmn, PDM_MESH_ENTITY_FACE);
+  PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(pmn, PDM_GEOMETRY_KIND_SURFACIC);
   PDM_part_comm_graph_t *pcg_surfacic = NULL;
-  PDM_part_mesh_nodal_part_comm_graph_get(pmn, PDM_MESH_ENTITY_FACE, &pcg_surfacic, PDM_OWNERSHIP_BAD_VALUE);
+  PDM_part_mesh_nodal_part_comm_graph_get(pmn, PDM_GEOMETRY_KIND_SURFACIC, &pcg_surfacic, PDM_OWNERSHIP_BAD_VALUE);
   n_entity = PDM_part_comm_graph_entity_graph_get(pcg_surfacic, 0, &computed_graph, PDM_OWNERSHIP_BAD_VALUE);
   CHECK(n_entity==0);
 
@@ -364,7 +365,7 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] PDM_part_mesh_nodal_complete_part_comm_grap
 
   PDM_part_comm_graph_t *pcg_edge = NULL;
   PDM_part_mesh_nodal_part_comm_graph_get(pmn,
-                                          PDM_MESH_ENTITY_EDGE,
+                                          PDM_GEOMETRY_KIND_RIDGE,
                                           &pcg_edge,
                                           PDM_OWNERSHIP_KEEP);
 
@@ -380,7 +381,7 @@ MPI_TEST_CASE("[pdm_part_mesh_nodal] PDM_part_mesh_nodal_complete_part_comm_grap
 
   PDM_part_comm_graph_t *pcg_face = NULL;
   PDM_part_mesh_nodal_part_comm_graph_get(pmn,
-                                          PDM_MESH_ENTITY_FACE,
+                                          PDM_GEOMETRY_KIND_SURFACIC,
                                           &pcg_face,
                                           PDM_OWNERSHIP_USER);
 
