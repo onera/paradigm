@@ -1240,14 +1240,14 @@ PDM_part_mesh_nodal_part_mesh_nodal_elmts_get
 );
 
 /**
- * \brief Get the substructure \ref PDM_part_mesh_nodal_elmts_t at leading dimension of the current \ref PDM_part_mesh_nodal_t
+ * \brief Get the substructure \ref PDM_part_mesh_nodal_elmts_t at principal dimension of the current \ref PDM_part_mesh_nodal_t
  *
  * \param [in]  pmn        Pointer to \ref PDM_part_mesh_nodal_t instance
  *
- * \return  \ref PDM_part_mesh_nodal_elmts_t of leading dimension
+ * \return  \ref PDM_part_mesh_nodal_elmts_t of principal dimension
  */
 PDM_part_mesh_nodal_elmts_t*
-PDM_part_mesh_nodal_part_mesh_nodal_elmts_leading_dim_get
+PDM_part_mesh_nodal_part_mesh_nodal_elmts_principal_dim_get
 (
   PDM_part_mesh_nodal_t  *pmn
 );

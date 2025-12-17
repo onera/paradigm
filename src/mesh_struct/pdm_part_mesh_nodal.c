@@ -1992,7 +1992,7 @@ PDM_part_mesh_nodal_part_mesh_nodal_elmts_get
 
 
 PDM_part_mesh_nodal_elmts_t*
-PDM_part_mesh_nodal_part_mesh_nodal_elmts_leading_dim_get
+PDM_part_mesh_nodal_part_mesh_nodal_elmts_principal_dim_get
 (
   PDM_part_mesh_nodal_t  *pmn
 )
