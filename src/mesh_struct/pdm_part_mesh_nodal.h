@@ -1239,6 +1239,18 @@ PDM_part_mesh_nodal_part_mesh_nodal_elmts_get
   PDM_geometry_kind_t    geom_kind
 );
 
+/**
+ * \brief Get the substructure \ref PDM_part_mesh_nodal_elmts_t at principal dimension of the current \ref PDM_part_mesh_nodal_t
+ *
+ * \param [in]  pmn        Pointer to \ref PDM_part_mesh_nodal_t instance
+ *
+ * \return  \ref PDM_part_mesh_nodal_elmts_t of principal dimension
+ */
+PDM_part_mesh_nodal_elmts_t*
+PDM_part_mesh_nodal_part_mesh_nodal_elmts_principal_dim_get
+(
+  PDM_part_mesh_nodal_t  *pmn
+);
 
 /**
  * \brief Return the geometry kind of highest dimension

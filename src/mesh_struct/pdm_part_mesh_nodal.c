@@ -1991,6 +1991,20 @@ PDM_part_mesh_nodal_part_mesh_nodal_elmts_get
 }
 
 
+PDM_part_mesh_nodal_elmts_t*
+PDM_part_mesh_nodal_part_mesh_nodal_elmts_principal_dim_get
+(
+  PDM_part_mesh_nodal_t  *pmn
+)
+{
+  CHECK_PMN(pmn)
+
+  PDM_geometry_kind_t leading_dim_kind = PDM_part_mesh_nodal_principal_geom_kind_get(pmn);
+
+  return _get_from_geometry_kind(pmn, leading_dim_kind);
+}
+
+
 PDM_geometry_kind_t
 PDM_part_mesh_nodal_principal_geom_kind_get
 (
