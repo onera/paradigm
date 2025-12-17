@@ -5701,3 +5701,13 @@ PDM_part_mesh_nodal_elmts_tag_to_group
     PDM_free(group_elmt);
   }
 }
+
+int
+PDM_part_mesh_nodal_elmts_n_part_get
+(
+  PDM_part_mesh_nodal_elmts_t     *pmne
+)
+{
+  CHECK_PMNE(pmne)
+  return pmne->n_part;
+}

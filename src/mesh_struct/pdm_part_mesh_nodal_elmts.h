@@ -986,6 +986,19 @@ PDM_part_mesh_nodal_elmts_tag_to_group
   int                            **tag
 );
 
+/**
+ * \brief  Return number of partitions
+ *
+ * \param [in]  pmn       Pointer to \ref PDM_part_mesh_nodal_elmts_t instance
+ *
+ * \return  Number of partitions
+ *
+ */
+int
+PDM_part_mesh_nodal_elmts_n_part_get
+(
+  PDM_part_mesh_nodal_elmts_t     *pmne
+);
 
 #ifdef __cplusplus
 }
