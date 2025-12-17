@@ -56,9 +56,11 @@ cdef class PartCommGraphCapsule:
      PartCommGraphCapsule: Interface for pdm_part_comm_graph
   """
   cdef PDM_part_comm_graph_t *pcg
+  cdef PDM_ownership_t        ownership
 
-  def __cinit__(self, object caps):
+  def __cinit__(self, object caps, PDM_ownership_t ownership):
     self.pcg = <PDM_part_comm_graph_t *> PyCapsule_GetPointer(caps, NULL);
+    self.ownership = ownership
 
   def get_entity_graph(self, int i_part):
     return entity_graph_get(self, i_part)
@@ -68,6 +70,12 @@ cdef class PartCommGraphCapsule:
            send_entity_stride=1,
            bint interlaced_str=True):
     return exch(self, send_entity_data, send_entity_stride, interlaced_str)
+
+  def __dealloc__(self):
+    """
+    """
+    if self.ownership == PDM_OWNERSHIP_KEEP:
+      PDM_part_comm_graph_free(self.pcg)
 
 # ========================================================================
 # ------------------------------------------------------------------------

@@ -503,7 +503,7 @@ def get_part_comm_graph(PMeshNodal          pypmn,
                                           PDM_OWNERSHIP_BAD_VALUE)
 
   py_caps = PyCapsule_New(pcg, NULL, NULL)
-  return PartCommGraphCapsule(py_caps) # The free is inside the class
+  return PartCommGraphCapsule(py_caps, PDM_OWNERSHIP_BAD_VALUE) # Free is done by PDM_part_mesh_nodal
 
 def part_mesh_nodal_vtx_g_num_get(PMeshNodal pypmn, int i_part):
   """
