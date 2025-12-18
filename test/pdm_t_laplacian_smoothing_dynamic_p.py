@@ -97,6 +97,11 @@ while (iter < n_iter and eps > tol):
                                                 p_edge_vtx,
                                                 pcg_edge)
 
+  # Swap current and previous fields
+  tmp_swap         = p_vtx_coord
+  p_vtx_coord_prev = p_vtx_coord
+  p_vtx_coord      = tmp_swap
+
   # Laplacian smoothing
   eps = PDM.laplacian_smoothing_fields_one_iteration(comm,
                                  p_vtx_frozen,

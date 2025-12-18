@@ -123,11 +123,19 @@ static double _compute_laplacian_smoothing
         double                **p_vtx_field_current
 )
 {
+
+  // Check pointers
+  if (p_n_vtx_frozen != NULL) {
+    if (p_vtx_frozen == NULL) {
+      PDM_error(__FILE__, __LINE__, 0, "p_vtx_frozen is NULL\n");
+    }
+  }
+
   for (int i_part = 0; i_part < n_part; i_part++) {
 
     // Init fields
     for (int i_val = 0; i_val < stride * p_n_vtx[i_part]; i_val++) {
-      p_vtx_field_current[i_part][i_val] = 0.;
+      p_vtx_field_current[i_part][i_val] = (1.0 - damping) * p_vtx_field_prev[i_part][i_val];
     }
 
     // Laplacian with damping
@@ -181,7 +189,6 @@ static double _compute_laplacian_smoothing
 
   // Reset previous values on frozen vtx
   if (p_n_vtx_frozen != NULL) {
-    assert(p_vtx_frozen != NULL);
     for (int i_part = 0; i_part < n_part; i_part++) {
       for (int i_vtx_frozen = 0; i_vtx_frozen < p_n_vtx_frozen[i_part]; i_vtx_frozen++) {
         int i_vtx = p_vtx_frozen[i_part][i_vtx_frozen]-1;
@@ -191,11 +198,6 @@ static double _compute_laplacian_smoothing
       }
     }
   }
-
-  // Swap current and previous fields
-  double **tmp_swap   = p_vtx_field_prev;
-  p_vtx_field_prev    = p_vtx_field_current;
-  p_vtx_field_current = tmp_swap;
 
   // Check for convergence
   double eps = HUGE_VAL;
@@ -383,6 +385,11 @@ PDM_laplacian_smoothing_fields
   double **field_prev    = field_tmp;
 
   while (iter < n_iter && eps > tol) {
+
+    // Swap current and previous fields
+    double **tmp_swap = field_prev;
+    field_prev        = field_current;
+    field_current     = tmp_swap;
 
     // Laplacian smoothing
     eps = _compute_laplacian_smoothing(comm,

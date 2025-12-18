@@ -248,7 +248,7 @@ PDM_part_comm_graph_all_reduce
 
 /**
  *
- * \brief Get entity nuplets
+ * \brief Reduce a strided field
  *
  * \param [in]     pcg            Pointer to \ref PDM_part_comm_graph_t instance
  * \param [in]     datatype       Mpi datatype (PDM_MPI_DOUBLE/PDM_MPI_INT)

@@ -67,8 +67,7 @@ extern "C" {
  * \param [in]  n_part            Number of partition on current process
  * \param [in]  p_vtx_coord       Vertex coordinates (size = \p n_part, for each part size = 3 * \p p_n_vtx [i_part])
  * \param [in]  p_n_face          Number of faces (size = \p n_part)
- * \param [in]  p_face_edge       Face→vertex connectivity (size = \p n_part, for each part size = 3 * \p p_n_face [i_part]])
- * \param [in]  p_n_edge          Number of edges (size = \p n_part)
+ * \param [in]  p_face_edge       Face→edge connectivity (size = \p n_part, for each part size = 3 * \p p_n_face [i_part]]) * \param [in]  p_n_edge          Number of edges (size = \p n_part)
  * \param [in]  p_edge_vtx        Edge→vertex connectivity (size = \p n_part, for each part size = 2 * \p p_n_edge [i_part])
  * \param [in]  pcg_edge          Pointer to \ref PDM_part_comm_graph_t instance for edges or NULL
  * \param [out] out_p_edge_weight Edge weight (size = \p n_part, for each part size = \p p_n_edge [i_part])

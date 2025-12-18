@@ -372,6 +372,9 @@ main
   int    iter = 0;
   double eps  = HUGE_VAL;
 
+  double **field_current = pvtx_coord;
+  double **field_prev    = pvtx_coord_prev;
+
   while (iter < n_iter && eps > tol) {
 
     /* Generate edge weights */
@@ -396,6 +399,11 @@ main
                                                         &pedge_weight);
     }
 
+    /* Swap current and previous fields */
+    double **tmp_swap = field_prev;
+    field_prev        = field_current;
+    field_current     = tmp_swap;
+
     /* Laplacian smoothing */
     PDM_laplacian_smoothing_fields_one_iteration(comm,
                                                  n_part,
@@ -410,8 +418,8 @@ main
                                                  damping,
                                                  tol,
                                                  3,
-                                                 pvtx_coord_prev,
-                                                 pvtx_coord);
+                                                 field_prev,
+                                                 field_current);
     iter++;
 
     /* Free */
