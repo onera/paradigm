@@ -457,9 +457,11 @@ PDM_predicate_exactinit()
 py_mem_domain = 42440
 # -----------------------------------------------------------------
 cdef assert_single_dim_np(NPY.ndarray tab, dtype, int size=-1):
-  assert isinstance(tab, NPY.ndarray) and (tab.ndim == 1 or (tab.ndim == 2 and (tab.shape[0] <= 1 or tab.shape[1] <= 1))) and tab.dtype == dtype
+  assert isinstance(tab, NPY.ndarray), "Provided object is not a ndarray"
+  assert (tab.ndim == 1 or (tab.ndim == 2 and (tab.shape[0] <= 1 or tab.shape[1] <= 1))), f"Wrong array dimension: expected 1"
+  assert tab.dtype == dtype, f"Wrong array dtype: expected {dtype}, got {tab.dtype}"
   if size >= 0:
-    assert tab.size == size
+    assert tab.size == size, f"Wrong array size : expected {size}, got {tab.size}"
 
 cdef recover_dtype(list np_array_list, MPI.Comm py_comm):
   """ Check that numpy dtype is consistent across all partitions and return it """
