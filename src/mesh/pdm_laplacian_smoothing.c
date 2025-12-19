@@ -96,6 +96,7 @@ static void _compute_vertex_weights
   // Synchronize vertex weights
   PDM_part_comm_graph_all_reduce(pcg_vtx,
                                  PDM_MPI_DOUBLE,
+                                 1,
                                  PDM_MPI_SUM,
               (unsigned char **) p_vtx_weight);
 
@@ -172,11 +173,11 @@ static double _compute_laplacian_smoothing
   }
 
   // Synchronize fields
-  PDM_part_comm_graph_all_reduce_strided(pcg_vtx,
-                                         PDM_MPI_DOUBLE,
-                                         PDM_MPI_SUM,
-                                         stride,
-                      (unsigned char **) p_vtx_field_current);
+  PDM_part_comm_graph_all_reduce(pcg_vtx,
+                                 PDM_MPI_DOUBLE,
+                                 stride,
+                                 PDM_MPI_SUM,
+              (unsigned char **) p_vtx_field_current);
 
   // Normalize fields
   for (int i_part = 0; i_part < n_part; i_part++) {
@@ -301,6 +302,7 @@ void PDM_laplacian_smoothing_cotangent_weights_compute
   // Synchronize edge weights
   PDM_part_comm_graph_all_reduce(pcg_edge,
                                  PDM_MPI_DOUBLE,
+                                 1,
                                  PDM_MPI_SUM,
               (unsigned char **) p_edge_weight);
 

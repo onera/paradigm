@@ -380,6 +380,7 @@ PDM_part_mesh_dual_volume_compute
   // Synchro volume :
   PDM_part_comm_graph_all_reduce(pm->pcg[PDM_MESH_ENTITY_VTX],
                                  PDM_MPI_DOUBLE,
+                                 1,
                                  PDM_MPI_SUM,
           (unsigned char **)    *out_dual_vol);
 

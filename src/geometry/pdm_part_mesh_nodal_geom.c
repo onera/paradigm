@@ -197,6 +197,7 @@ PDM_part_mesh_nodal_dual_volume_compute
     // Synchro volume :
     PDM_part_comm_graph_all_reduce(pmn->pcg_vtx,
                                    PDM_MPI_DOUBLE,
+                                   1,
                                    PDM_MPI_SUM,
              (unsigned char **)    *dual_vol);
 

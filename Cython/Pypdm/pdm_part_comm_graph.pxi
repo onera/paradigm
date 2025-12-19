@@ -38,6 +38,7 @@ cdef extern from "pdm_part_comm_graph.h":
 
   void PDM_part_comm_graph_all_reduce(PDM_part_comm_graph_t   *pcg,
                                       PDM_MPI_Datatype         datatype,
+                                      int                      stride,
                                       PDM_MPI_Op               op,
                                       unsigned char          **pdata);
 
@@ -199,17 +200,19 @@ cdef class PartCommGraph:
     return entity_graph_get(self, i_part)
 
   def all_reduce(self,
+                 int             stride,
                  MPI.Op          op,
                  list            pdata):
     """
-    all_reduce(op, pdata)
+    all_reduce(stride, op, pdata)
 
       Parameters:
+        stride   (int)                              : Constant data stride
         op       (MPI.Op)                           : Reduction operation kind (SUM/MIN/MAX)
         pdata    (`list` of `np.ndarray[datatype]`) : Data buffer, value is modified inplace
 
     """
-    all_reduce(self, op, pdata)
+    all_reduce(self, stride, op, pdata)
 
   def entity_nuplet_get(self, i_part):
     """
@@ -326,6 +329,7 @@ def entity_graph_get(PyPartCommGraph pypcg, int i_part):
 
 # ------------------------------------------------------------------------
 def all_reduce(PyPartCommGraph pypcg,
+               int             stride,
                MPI.Op          op,
                list            pdata):
   cdef void **_pdata = np_list_to_void_pointers(pdata)
@@ -340,6 +344,7 @@ def all_reduce(PyPartCommGraph pypcg,
 
   PDM_part_comm_graph_all_reduce(pypcg.pcg,
                                  c_datatype,
+                                 stride,
                                  c_op,
               <unsigned char **> _pdata)
   free(_pdata)

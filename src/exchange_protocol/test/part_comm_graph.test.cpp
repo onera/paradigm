@@ -189,6 +189,7 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2p - allreduce ", 2) {
 
   PDM_part_comm_graph_all_reduce(pcg,
                                  PDM_MPI_INT,
+                                 1,
                                  PDM_MPI_MAX,
             ( unsigned char **)  &pdata);
 
@@ -209,6 +210,7 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2p - allreduce ", 2) {
 
   PDM_part_comm_graph_all_reduce(pcg,
                                  PDM_MPI_INT,
+                                 1,
                                  PDM_MPI_MIN,
             ( unsigned char **)  &pdata);
 
@@ -229,6 +231,7 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2p - allreduce ", 2) {
 
   PDM_part_comm_graph_all_reduce(pcg,
                                  PDM_MPI_INT,
+                                 1,
                                  PDM_MPI_SUM,
             ( unsigned char **)  &pdata);
 
@@ -251,11 +254,11 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2p - allreduce ", 2) {
     vpdata_strided[i_rank][i] = i_rank+1;
   }
 
-  PDM_part_comm_graph_all_reduce_strided(pcg,
-                                         PDM_MPI_INT,
-                                         PDM_MPI_SUM,
-                                         2,
-                    ( unsigned char **)  &pdata_strided);
+  PDM_part_comm_graph_all_reduce(pcg,
+                                 PDM_MPI_INT,
+                                 2,
+                                 PDM_MPI_SUM,
+             ( unsigned char **) &pdata_strided);
 
   if(0 == 1) {
     PDM_log_trace_array_int(pdata_strided, 2*vn_elt[i_rank], "pdata_strided ::");
