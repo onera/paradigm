@@ -136,7 +136,7 @@ static double _compute_laplacian_smoothing
 
     // Init fields
     for (int i_val = 0; i_val < stride * p_n_vtx[i_part]; i_val++) {
-      p_vtx_field_current[i_part][i_val] = 0;
+      p_vtx_field_current[i_part][i_val] = 0.;
     }
 
     // Laplacian with damping
@@ -145,7 +145,7 @@ static double _compute_laplacian_smoothing
         int i_vtx = p_edge_vtx[i_part][2*i_edge+ i     ] - 1;
         int j_vtx = p_edge_vtx[i_part][2*i_edge+(i+1)%2] - 1;
         for (int i_stride = 0; i_stride < stride; i_stride++) {
-          p_vtx_field_current[i_part][stride*i_vtx+i_stride] += damping * p_edge_weight[i_part][i_edge] * p_vtx_field_prev[i_part][stride*j_vtx+i_stride];
+          p_vtx_field_current[i_part][stride*i_vtx+i_stride] += (1.-damping) * p_edge_weight[i_part][i_edge] * p_vtx_field_prev[i_part][stride*j_vtx+i_stride];
         }
       }
     }
@@ -164,7 +164,7 @@ static double _compute_laplacian_smoothing
           int i_vtx = p_edge_vtx[i_part][2*i_edge+ i     ] - 1;
           int j_vtx = p_edge_vtx[i_part][2*i_edge+(i+1)%2] - 1;
           for (int i_stride = 0; i_stride < stride; i_stride++) {
-            p_vtx_field_current[i_part][stride*i_vtx+i_stride] -= damping * p_edge_weight[i_part][i_edge] * p_vtx_field_prev[i_part][stride*j_vtx+i_stride];
+            p_vtx_field_current[i_part][stride*i_vtx+i_stride] -= (1.-damping) * p_edge_weight[i_part][i_edge] * p_vtx_field_prev[i_part][stride*j_vtx+i_stride];
           }
         }
       }
@@ -184,7 +184,7 @@ static double _compute_laplacian_smoothing
     for (int i_vtx = 0; i_vtx < p_n_vtx[i_part]; i_vtx++) {
       for (int i_stride = 0; i_stride < stride; i_stride++) {
         p_vtx_field_current[i_part][stride*i_vtx+i_stride] /= p_vtx_weight[i_part][i_vtx];
-        p_vtx_field_current[i_part][stride*i_vtx+i_stride] += (1.0 - damping) * p_vtx_field_prev[i_part][stride*i_vtx+i_stride];
+        p_vtx_field_current[i_part][stride*i_vtx+i_stride] += damping * p_vtx_field_prev[i_part][stride*i_vtx+i_stride];
       }
     }
   }
@@ -290,8 +290,8 @@ void PDM_laplacian_smoothing_cotangent_weights_compute
           i_vtx3 = p_edge_vtx[i_part][2*i_edge_next+1]-1;
         }
         for (int k = 0; k < 3; k++) {
-          u[k] = p_vtx_coord[i_part][3*i_vtx3+k] - p_vtx_coord[i_part][3*i_vtx2+k];
-          v[k] = p_vtx_coord[i_part][3*i_vtx1+k] - p_vtx_coord[i_part][3*i_vtx2+k];
+          u[k] = p_vtx_coord[i_part][3*i_vtx1+k] - p_vtx_coord[i_part][3*i_vtx3+k];
+          v[k] = p_vtx_coord[i_part][3*i_vtx2+k] - p_vtx_coord[i_part][3*i_vtx3+k];
         }
         PDM_CROSS_PRODUCT(w, u, v);
         p_edge_weight[i_part][i_edge] += 0.5*PDM_DOT_PRODUCT(u, v)/(1e-16 + PDM_MODULE(w));
