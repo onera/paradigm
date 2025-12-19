@@ -332,10 +332,9 @@ main
 
   /* Generate vtx pcg */
   PDM_part_comm_graph_t *pcg_vtx = NULL;
-  PDM_part_mesh_nodal_part_comm_graph_get(pmn,
-                                          PDM_MESH_ENTITY_VTX,
-                                          &pcg_vtx,
-                                          PDM_OWNERSHIP_KEEP);
+  PDM_part_mesh_nodal_part_comm_graph_vtx_get(pmn,
+                                              &pcg_vtx,
+                                              PDM_OWNERSHIP_KEEP);
 
   /* Laplacian smoothing without tolerance */
   PDM_laplacian_smoothing_fields(comm,

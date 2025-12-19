@@ -321,10 +321,9 @@ main
 
   /* Generate vtx pcg */
   PDM_part_comm_graph_t *pcg_vtx = NULL;
-  PDM_part_mesh_nodal_part_comm_graph_get(pmn,
-                                          PDM_MESH_ENTITY_VTX,
-                                          &pcg_vtx,
-                                          PDM_OWNERSHIP_KEEP);
+  PDM_part_mesh_nodal_part_comm_graph_vtx_get(pmn,
+                                              &pcg_vtx,
+                                              PDM_OWNERSHIP_KEEP);
 
   /* Generate vtx group */
   int  *pn_vtx_frozen = NULL;

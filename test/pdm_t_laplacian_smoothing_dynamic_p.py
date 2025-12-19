@@ -68,7 +68,7 @@ _, edge_vtx = mpart.connectivity_get(i_domain,
 p_edge_vtx_idx = [2*np.arange(edge_vtx.shape[0]//2+1, dtype=np.int32)]
 p_edge_vtx     = [edge_vtx]
 
-pcg_vtx = pmn.part_comm_graph_get(PDM._PDM_MESH_ENTITY_VTX)
+pcg_vtx = pmn.part_comm_graph_vtx_get()
 
 # Generate tmp fields array
 p_vtx_coord_prev = [np.copy(p_vtx_coord_part)]
