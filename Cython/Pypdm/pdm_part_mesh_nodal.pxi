@@ -399,13 +399,17 @@ cdef class PartMeshNodalCapsule:
   # ************************************************************************
   # > Class attributes
   cdef PDM_part_mesh_nodal_t* pmn
+  cdef PDM_ownership_t        ownership
   # ************************************************************************
   # ------------------------------------------------------------------------
-  def __cinit__(self, object caps):
+  def __cinit__(self,
+                object          caps,
+                PDM_ownership_t ownership = PDM_OWNERSHIP_KEEP):
     """
     """
     cdef PDM_part_mesh_nodal_t* caps_pmn = <PDM_part_mesh_nodal_t *> PyCapsule_GetPointer(caps, NULL)
-    self.pmn = caps_pmn;
+    self.pmn = caps_pmn
+    self.ownership = ownership
 
   def part_comm_graph_get(self, PDM_mesh_entities_t entity_type):
     return get_part_comm_graph(self, entity_type)
@@ -505,11 +509,11 @@ cdef class PartMeshNodalCapsule:
                                         PDM_mesh_entities_t entity_type):
     compute_pcg_from_gnum(self, entity_type)
 
-
   def __dealloc__(self):
     """
     """
-    PDM_part_mesh_nodal_free(self.pmn)
+    if self.ownership == PDM_OWNERSHIP_KEEP:
+      PDM_part_mesh_nodal_free(self.pmn)
 
 
 ctypedef fused PMeshNodal:

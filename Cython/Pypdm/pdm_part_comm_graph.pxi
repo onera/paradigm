@@ -67,8 +67,10 @@ cdef class PartCommGraphCapsule:
   cdef PDM_part_comm_graph_t *pcg
   cdef PDM_ownership_t        ownership
 
-  def __cinit__(self, object caps, PDM_ownership_t ownership):
-    self.pcg = <PDM_part_comm_graph_t *> PyCapsule_GetPointer(caps, NULL);
+  def __cinit__(self,
+                object          caps,
+                PDM_ownership_t ownership = PDM_OWNERSHIP_KEEP):
+    self.pcg = <PDM_part_comm_graph_t *> PyCapsule_GetPointer(caps, NULL)
     self.ownership = ownership
 
   def get_entity_graph(self, int i_part):
