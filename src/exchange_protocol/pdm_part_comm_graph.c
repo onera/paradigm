@@ -1081,6 +1081,7 @@ PDM_part_comm_graph_all_reduce
 (
   PDM_part_comm_graph_t   *pcg,
   PDM_MPI_Datatype         datatype,
+  int                      stride,
   PDM_MPI_Op               op,
   unsigned char          **pdata
 )
@@ -1099,6 +1100,9 @@ PDM_part_comm_graph_all_reduce
 
   int s_data = 0;
   PDM_MPI_Type_size(datatype, &s_data);
+
+  int _stride = (stride >= 0) ? stride : 1;
+  s_data *= _stride;
 
   for (int i_part = 0; i_part < n_part; ++i_part) {
 
@@ -1131,21 +1135,30 @@ PDM_part_comm_graph_all_reduce
         // We suppose that current value already init
         for(int i = 0; i < pcg->n_entity_graph[i_part]; ++i) {
           int i_entity = pcg->pentity_graph[i_part][4*i]-1;
-          _pdata[i_part][i_entity] += _recv_data[i_part][i];
+          for (int j = 0; j < _stride; j++) {
+            _pdata[i_part][_stride*i_entity+j] += _recv_data[i_part][_stride*i+j];
+          }
         }
       } else if (op == PDM_MPI_MAX) {
         for(int i = 0; i < pcg->n_entity_graph[i_part]; ++i) {
           int i_entity = pcg->pentity_graph[i_part][4*i]-1;
-          _pdata[i_part][i_entity] = PDM_MAX(_pdata[i_part][i_entity], _recv_data[i_part][i]);
+          for (int j = 0; j < _stride; j++) {
+            _pdata[i_part][_stride*i_entity+j] = PDM_MAX(_pdata    [i_part][_stride*i_entity+j],
+                                                         _recv_data[i_part][_stride*i       +j]);
+          }
         }
       } else if (op == PDM_MPI_MIN) {
         for(int i = 0; i < pcg->n_entity_graph[i_part]; ++i) {
           int i_entity = pcg->pentity_graph[i_part][4*i]-1;
-          _pdata[i_part][i_entity] = PDM_MIN(_pdata[i_part][i_entity], _recv_data[i_part][i]);
+          for (int j = 0; j < _stride; j++) {
+            _pdata[i_part][_stride*i_entity+j] = PDM_MIN(_pdata    [i_part][_stride*i_entity+j],
+                                                         _recv_data[i_part][_stride*i       +j]);
+          }
         }
       }
     }
-  } else if (datatype == PDM_MPI_INT) {
+  }
+  else if (datatype == PDM_MPI_INT) {
     int **_pdata     = (int **) pdata;
     int **_recv_data = (int **) recv_data;
     for (int i_part = 0; i_part < n_part; ++i_part) {
@@ -1153,21 +1166,30 @@ PDM_part_comm_graph_all_reduce
         // We suppose that current value already init
         for(int i = 0; i < pcg->n_entity_graph[i_part]; ++i) {
           int i_entity = pcg->pentity_graph[i_part][4*i]-1;
-          _pdata[i_part][i_entity] += _recv_data[i_part][i];
+          for (int j = 0; j < _stride; j++) {
+            _pdata[i_part][_stride*i_entity+j] += _recv_data[i_part][_stride*i+j];
+          }
         }
       } else if (op == PDM_MPI_MAX) {
         for(int i = 0; i < pcg->n_entity_graph[i_part]; ++i) {
           int i_entity = pcg->pentity_graph[i_part][4*i]-1;
-          _pdata[i_part][i_entity] = PDM_MAX(_pdata[i_part][i_entity], _recv_data[i_part][i]);
+          for (int j = 0; j < _stride; j++) {
+            _pdata[i_part][_stride*i_entity+j] = PDM_MAX(_pdata    [i_part][_stride*i_entity+j],
+                                                         _recv_data[i_part][_stride*i       +j]);
+          }
         }
       } else if (op == PDM_MPI_MIN) {
         for(int i = 0; i < pcg->n_entity_graph[i_part]; ++i) {
           int i_entity = pcg->pentity_graph[i_part][4*i]-1;
-          _pdata[i_part][i_entity] = PDM_MIN(_pdata[i_part][i_entity], _recv_data[i_part][i]);
+          for (int j = 0; j < _stride; j++) {
+            _pdata[i_part][_stride*i_entity+j] = PDM_MIN(_pdata    [i_part][_stride*i_entity+j],
+                                                         _recv_data[i_part][_stride*i       +j]);
+          }
         }
       }
     }
-  } else {
+  }
+  else {
     PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_all_reduce only available for PDM_MPI_DOUBLE / PDM_MPI_INT \n");
   }
 

@@ -62,7 +62,7 @@ def test_constructor():
   else:
     pdata = [np.ones(10, dtype=np.int32)]
 
-  pcg.all_reduce(MPI.SUM, pdata)
+  pcg.all_reduce(1, MPI.SUM, pdata)
   if i_rank == 0:
     assert( pdata == np.array([1, 1, 2, 1, 1, 2, 1, 1, 2, 1])).all()
   else:

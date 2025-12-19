@@ -121,6 +121,10 @@ cdef extern from "pdm_part_mesh_nodal.h":
                                                  PDM_part_comm_graph_t **pcg,
                                                  PDM_ownership_t         ownership);
 
+    void PDM_part_mesh_nodal_part_comm_graph_vtx_get(PDM_part_mesh_nodal_t  *pmn,
+                                                     PDM_part_comm_graph_t **pcg,
+                                                     PDM_ownership_t         ownership);
+
 cdef extern from "pdm_part_mesh_nodal_algorithm.h":
     void PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(PDM_part_mesh_nodal_t  *pmn,
                                                                PDM_mesh_entities_t     entity_type);
@@ -340,12 +344,18 @@ cdef class PartMeshNodal:
       """
       part_comm_graph_get(entity_type)
 
-      Returns a \ref PDM_part_comm_graph_t python object
+      Returns a :py:class:`PartCommGraph` python object
 
       Parameters:
        entity_type (PDM_mesh_entities_t) : type of entity (vertex, cell, edge)
       """
       return get_part_comm_graph(self, entity_type)
+
+    def part_comm_graph_vtx_get(self):
+      """
+      Returns a :py:class:`PartCommGraph` python object associated to the vertices
+      """
+      return get_part_comm_graph_vtx(self)
 
     def compute_part_comm_graph_from_gnum(self,
                                           PDM_mesh_entities_t entity_type):
@@ -384,6 +394,9 @@ cdef class PartMeshNodalCapsule:
 
   def part_comm_graph_get(self, PDM_mesh_entities_t entity_type):
     return get_part_comm_graph(self, entity_type)
+
+  def part_comm_graph_vtx_get(self):
+    return get_part_comm_graph_vtx(self)
 
   def dim_get(self):
     return part_mesh_nodal_dim_get(self)
@@ -504,6 +517,17 @@ def get_part_comm_graph(PMeshNodal          pypmn,
 
   py_caps = PyCapsule_New(pcg, NULL, NULL)
   return PartCommGraphCapsule(py_caps, PDM_OWNERSHIP_BAD_VALUE) # Free is done by PDM_part_mesh_nodal
+
+def get_part_comm_graph_vtx(PMeshNodal pypmn):
+  cdef PDM_part_comm_graph_t *pcg
+
+  PDM_part_mesh_nodal_part_comm_graph_vtx_get(pypmn.pmn,
+                                              &pcg,
+                                              PDM_OWNERSHIP_BAD_VALUE)
+
+  py_caps = PyCapsule_New(pcg, NULL, NULL)
+  return PartCommGraphCapsule(py_caps, PDM_OWNERSHIP_BAD_VALUE) # Free is done by PDM_part_mesh_nodal
+
 
 def part_mesh_nodal_vtx_g_num_get(PMeshNodal pypmn, int i_part):
   """

@@ -189,6 +189,7 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2p - allreduce ", 2) {
 
   PDM_part_comm_graph_all_reduce(pcg,
                                  PDM_MPI_INT,
+                                 1,
                                  PDM_MPI_MAX,
             ( unsigned char **)  &pdata);
 
@@ -209,6 +210,7 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2p - allreduce ", 2) {
 
   PDM_part_comm_graph_all_reduce(pcg,
                                  PDM_MPI_INT,
+                                 1,
                                  PDM_MPI_MIN,
             ( unsigned char **)  &pdata);
 
@@ -229,6 +231,7 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2p - allreduce ", 2) {
 
   PDM_part_comm_graph_all_reduce(pcg,
                                  PDM_MPI_INT,
+                                 1,
                                  PDM_MPI_SUM,
             ( unsigned char **)  &pdata);
 
@@ -241,6 +244,31 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 2p - allreduce ", 2) {
 
   MPI_CHECK_EQ_C_ARRAY(0, pdata, expexted_sum_int_p0,  9);
   MPI_CHECK_EQ_C_ARRAY(1, pdata, expexted_sum_int_p1, 12);
+
+  // ------------------ SUM / INT STRIDED ----------
+  std::vector<std::vector<int>> vpdata_strided = {{1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2},
+                                                  {2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3}};
+  int *pdata_strided = vpdata_strided[i_rank].data();
+
+  for(int i = 0; i < 2*vn_elt[i_rank]; ++i) {
+    vpdata_strided[i_rank][i] = i_rank+1;
+  }
+
+  PDM_part_comm_graph_all_reduce(pcg,
+                                 PDM_MPI_INT,
+                                 2,
+                                 PDM_MPI_SUM,
+             ( unsigned char **) &pdata_strided);
+
+  if(0 == 1) {
+    PDM_log_trace_array_int(pdata_strided, 2*vn_elt[i_rank], "pdata_strided ::");
+  }
+
+  int expexted_sum_int_strided_p0[18] = {1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 3, 3,};
+  int expexted_sum_int_strided_p1[24] = {3, 3, 2, 2, 2, 2, 2, 2, 3, 3, 2, 2, 2, 2, 2, 2, 3, 3, 2, 2, 2, 2, 2, 2};
+
+  MPI_CHECK_EQ_C_ARRAY(0, pdata_strided, expexted_sum_int_strided_p0, 18);
+  MPI_CHECK_EQ_C_ARRAY(1, pdata_strided, expexted_sum_int_strided_p1, 24);
 
   PDM_part_comm_graph_free(pcg);
 

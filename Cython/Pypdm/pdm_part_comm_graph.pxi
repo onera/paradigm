@@ -38,6 +38,7 @@ cdef extern from "pdm_part_comm_graph.h":
 
   void PDM_part_comm_graph_all_reduce(PDM_part_comm_graph_t   *pcg,
                                       PDM_MPI_Datatype         datatype,
+                                      int                      stride,
                                       PDM_MPI_Op               op,
                                       unsigned char          **pdata);
 
@@ -48,6 +49,14 @@ cdef extern from "pdm_part_comm_graph.h":
 
   PDM_part_comm_graph_t* PDM_part_comm_graph_free(PDM_part_comm_graph_t* pcg);
 
+cdef extern from "pdm_part_comm_graph_algorithm.h":
+
+  void PDM_part_comm_graph_entity1_to_part_comm_graph_entity2(PDM_part_comm_graph_t   *ptpgc_entity1,
+                                                              int                     *pn_entity1,
+                                                              int                     *pn_entity2,
+                                                              int                    **entity2_entity1_idx,
+                                                              int                    **entity2_entity1,
+                                                              PDM_part_comm_graph_t  **out_ptpgc_entity2)
 
 # ========================================================================
 # ------------------------------------------------------------------------
@@ -191,17 +200,19 @@ cdef class PartCommGraph:
     return entity_graph_get(self, i_part)
 
   def all_reduce(self,
+                 int             stride,
                  MPI.Op          op,
                  list            pdata):
     """
-    all_reduce(op, pdata)
+    all_reduce(stride, op, pdata)
 
       Parameters:
+        stride   (int)                              : Constant data stride
         op       (MPI.Op)                           : Reduction operation kind (SUM/MIN/MAX)
         pdata    (`list` of `np.ndarray[datatype]`) : Data buffer, value is modified inplace
 
     """
-    all_reduce(self, op, pdata)
+    all_reduce(self, stride, op, pdata)
 
   def entity_nuplet_get(self, i_part):
     """
@@ -318,6 +329,7 @@ def entity_graph_get(PyPartCommGraph pypcg, int i_part):
 
 # ------------------------------------------------------------------------
 def all_reduce(PyPartCommGraph pypcg,
+               int             stride,
                MPI.Op          op,
                list            pdata):
   cdef void **_pdata = np_list_to_void_pointers(pdata)
@@ -332,6 +344,7 @@ def all_reduce(PyPartCommGraph pypcg,
 
   PDM_part_comm_graph_all_reduce(pypcg.pcg,
                                  c_datatype,
+                                 stride,
                                  c_op,
               <unsigned char **> _pdata)
   free(_pdata)
@@ -348,3 +361,46 @@ def entity_nuplet_get(PyPartCommGraph pypcg, int i_part):
                                                       PDM_OWNERSHIP_USER)
 
   return create_numpy_i(entity_nuplet, pypcg._pn_entity_graph[i_part] * pypcg._nuplet_size)
+
+# ------------------------------------------------------------------------
+def pcg_entity1_to_entity2(PyPartCommGraph pypcg_entity1,
+                           list            pn_entity1,
+                           list            entity2_entity1_idx,
+                           list            entity2_entity1):
+  """
+  Returns a \ref PDM_part_comm_graph_t python object
+
+  Parameters:
+    pypcg_entity1       (PyPartCommGraph) : \ref PDM_part_comm_graph_t structure for entity1
+    pn_entity1          (list           ) : Number of entity1 (size = n_part)
+    entity2_entity1_idx (list           ) : Connectivity index (size = \p pn_entity2 + 1)
+    entity2_entity1     (list           ) : Connectivity array (size = \p entity2_entity1_idx[\p pn_entity2] )
+  """
+
+  cdef int  *_pn_entity1 = NULL
+  cdef int  *_pn_entity2 = NULL
+  cdef int **_entity2_entity1_idx = NULL
+  cdef int **_entity2_entity1     = NULL
+
+  pn_entity2 = [part_entity2_entity1_idx.size -1 for part_entity2_entity1_idx in entity2_entity1_idx]
+
+  _pn_entity1 = list_to_int_pointer(pn_entity1)
+  _pn_entity2 = list_to_int_pointer(pn_entity2)
+  _entity2_entity1_idx = np_list_to_int_pointers(entity2_entity1_idx)
+  _entity2_entity1     = np_list_to_int_pointers(entity2_entity1)
+
+  cdef PDM_part_comm_graph_t *_out_ptpgc_entity2 = NULL;
+  PDM_part_comm_graph_entity1_to_part_comm_graph_entity2(pypcg_entity1.pcg,
+                                                         _pn_entity1,
+                                                         _pn_entity2,
+                                                         _entity2_entity1_idx,
+                                                         _entity2_entity1,
+                                                         &_out_ptpgc_entity2)
+
+  free(_pn_entity1)
+  free(_pn_entity2)
+  free(_entity2_entity1_idx)
+  free(_entity2_entity1)
+
+  py_caps = PyCapsule_New(_out_ptpgc_entity2, NULL, NULL)
+  return PartCommGraphCapsule(py_caps, PDM_OWNERSHIP_KEEP)
