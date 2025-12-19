@@ -5636,9 +5636,9 @@ PDM_part_mesh_nodal_elmts_tag_to_group
       }
     }
     int gmax_tag = -1;
-    PDM_MPI_Allreduce (&max_tag, &gmax_tag, 1, PDM_MPI_INT, PDM_MPI_MAX, pmne->comm);
+    PDM_MPI_Allreduce(&max_tag, &gmax_tag, 1, PDM_MPI_INT, PDM_MPI_MAX, pmne->comm);
 
-    n_group = max_tag+1;
+    n_group = gmax_tag+1;
   }
 
   /*
