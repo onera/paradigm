@@ -135,7 +135,7 @@ static double _compute_laplacian_smoothing
 
     // Init fields
     for (int i_val = 0; i_val < stride * p_n_vtx[i_part]; i_val++) {
-      p_vtx_field_current[i_part][i_val] = (1.0 - damping) * p_vtx_field_prev[i_part][i_val];
+      p_vtx_field_current[i_part][i_val] = 0;
     }
 
     // Laplacian with damping
@@ -183,6 +183,7 @@ static double _compute_laplacian_smoothing
     for (int i_vtx = 0; i_vtx < p_n_vtx[i_part]; i_vtx++) {
       for (int i_stride = 0; i_stride < stride; i_stride++) {
         p_vtx_field_current[i_part][stride*i_vtx+i_stride] /= p_vtx_weight[i_part][i_vtx];
+        p_vtx_field_current[i_part][stride*i_vtx+i_stride] += (1.0 - damping) * p_vtx_field_prev[i_part][stride*i_vtx+i_stride];
       }
     }
   }
