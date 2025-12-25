@@ -407,9 +407,9 @@ PDM_part_comm_graph_entity1_to_entity2
       int i_entity2  = _pentity2_graph[3*idx+2]-1;
 
       send_n[i_proc_opp] += 6;
-
       for(int idx_entity2 = entity2_entity1_idx[i_part][i_entity2]; idx_entity2 < entity2_entity1_idx[i_part][i_entity2+1]; ++idx_entity2) {
         int i_entity1 = PDM_ABS(entity2_entity1[i_part][idx_entity2])-1;
+        int found = 0;
         for(int idx_graph = _entity1_to_graph_comm_idx[i_entity1]; idx_graph < _entity1_to_graph_comm_idx[i_entity1+1]; ++idx_graph) {
           int idx_bound = _entity1_to_graph_comm[idx_graph];
 
@@ -423,8 +423,9 @@ PDM_part_comm_graph_entity1_to_entity2
                                             &pentity2_nuplet[i_part][nuplet_size*idx]) == 0);
           }
 
-          if(t_proc == i_proc_opp && t_part == i_part_opp && same_nuplet) {
+          if(t_proc == i_proc_opp && t_part == i_part_opp && found == 0 && same_nuplet) {
             send_n[i_proc_opp] += 2;
+            found = 1;
           }
         }
       }
