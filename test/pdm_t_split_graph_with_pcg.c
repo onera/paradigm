@@ -15,6 +15,7 @@
 #include "pdm_part_mesh_nodal.h"
 #include "pdm_part_mesh_nodal_algorithm.h"
 #include "pdm_partitioning_algorithm.h"
+#include "pdm_unique.h"
 #include "pdm_printf.h"
 #include "pdm_priv.h"
 
@@ -192,6 +193,15 @@ _part_split
    *   - Only compute node global numbering ?
    */
 
+  /*
+   * En noeuds centrés, pas besoin de synchronisés les arcs (car il sont deja commun a chaque partition connectés)
+   * On peu eviter les échanges sur les arc en mettant pcg_arc == NULL
+   * De la même manière en cellules centrés, à priori pas besoin de syncho les celluls, on peut faire pcg_node == NULL
+   */
+
+  /*
+   * En cellule centré, le pcg_node == NULL => A gerer
+   */
   PDM_gen_gnum_t *gen_gnum_node = PDM_gnum_create(3, 1, PDM_TRUE, 1e-6, comm, PDM_OWNERSHIP_USER);
   PDM_gnum_set_from_part_comm_graph(gen_gnum_node,
                                     n_node,
@@ -207,24 +217,29 @@ _part_split
   /*
    *
    */
-  int         **send_node_n   = NULL;
-  PDM_g_num_t **send_node     = NULL;
-  int         **send_weight   = NULL;
-  int         **is_owner_node = NULL;
-  PDM_malloc(send_node_n  , n_part, int         *);
-  PDM_malloc(send_node    , n_part, PDM_g_num_t *);
-  PDM_malloc(is_owner_node, n_part, int         *);
+  int         **send_node_n     = NULL;
+  PDM_g_num_t **send_node       = NULL;
+  int         **send_weight     = NULL;
+  int         **send_arc_node_n = NULL;
+  PDM_g_num_t **send_arc_node   = NULL;
+  int         **send_arc_weight = NULL;
+  int         **is_owner_node   = NULL;
+  PDM_malloc(send_node_n    , n_part, int         *);
+  PDM_malloc(send_node      , n_part, PDM_g_num_t *);
+  PDM_malloc(send_weight    , n_part, int         *);
+  PDM_malloc(send_arc_node_n, n_part, int         *);
+  PDM_malloc(send_arc_node  , n_part, PDM_g_num_t *);
+  PDM_malloc(send_arc_weight, n_part, int         *);
+  PDM_malloc(is_owner_node  , n_part, int         *);
 
   PDM_g_num_t l_shift    = 0;
   int         n_tot_node = 0;
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    int *node_graph = NULL;
-    int n_node_graph = PDM_part_comm_graph_entity_graph_get(pcg_node,
-                                                            i_part,
-                                                            &node_graph,
-                                                            PDM_OWNERSHIP_BAD_VALUE);
-
-    const int *is_owner = PDM_part_comm_graph_owner_get(pcg_node, i_part);
+    int *arc_graph = NULL;
+    int n_arc_graph = PDM_part_comm_graph_entity_graph_get(pcg_arc,
+                                                           i_part,
+                                                           &arc_graph,
+                                                           PDM_OWNERSHIP_BAD_VALUE);
 
     int *_node_arc_idx = node_arc_idx[i_part];
     int *_node_arc     = node_arc    [i_part];
@@ -234,6 +249,12 @@ _part_split
     /*
      * Shift computation
      */
+    int *node_graph = NULL;
+    int n_node_graph = PDM_part_comm_graph_entity_graph_get(pcg_node,
+                                                            i_part,
+                                                            &node_graph,
+                                                            PDM_OWNERSHIP_BAD_VALUE);
+    const int *is_owner = PDM_part_comm_graph_owner_get(pcg_node, i_part);
     is_owner_node[i_part] = PDM_array_const_int(n_node[i_part], 1);
     l_shift    += n_node[i_part];
     n_tot_node += n_node[i_part];
@@ -261,6 +282,12 @@ _part_split
       }
     }
 
+    PDM_malloc(send_arc_node_n[i_part], n_arc_graph, int);
+    for(int i_graph_arc = 0; i_graph_arc < n_arc_graph; ++i_graph_arc) {
+      int i_arc = arc_graph[4*i_graph_arc]-1;
+      send_arc_node_n[i_part][i_graph_arc] = _arc_node_idx[i_arc+1] - _arc_node_idx[i_arc];
+    }
+
     /*
      * Allocate
      */
@@ -273,6 +300,16 @@ _part_split
     }
     PDM_malloc(send_node  [i_part], send_node_idx[n_node_graph], PDM_g_num_t);
     PDM_malloc(send_weight[i_part], send_node_idx[n_node_graph], int        );
+
+    int *send_arc_node_idx = NULL;
+    PDM_malloc(send_arc_node_idx, n_node_graph+1, int);
+    send_arc_node_idx[0] = 0;
+    for(int i_graph_node = 0; i_graph_node < n_node_graph; ++i_graph_node) {
+      send_arc_node_idx[i_graph_node+1] = send_arc_node_idx[i_graph_node] + send_arc_node_n[i_part][i_graph_node];
+      send_arc_node_n  [i_part][i_graph_node] = 0;
+    }
+    PDM_malloc(send_arc_node  [i_part], send_arc_node_idx[n_node_graph], PDM_g_num_t);
+    PDM_malloc(send_arc_weight[i_part], send_arc_node_idx[n_node_graph], int        );
 
     /*
      * Fill
@@ -292,6 +329,18 @@ _part_split
         }
       }
     }
+
+    for(int i_graph_arc = 0; i_graph_arc < n_arc_graph; ++i_graph_arc) {
+      int i_arc = arc_graph[4*i_graph_arc]-1;
+      for(int idx_node = _arc_node_idx[i_arc]; idx_node < _arc_node_idx[i_arc+1]; ++idx_node) {
+        int i_node = _arc_node[idx_node]-1;
+        int idx_write = send_arc_node_idx[i_graph_arc] + send_arc_node_n[i_part][i_graph_arc]++;
+        send_arc_node  [i_part][idx_write] = pnode_ln_to_gn[i_part][i_node];
+        send_arc_weight[i_part][idx_write] = arc_weight    [i_part][i_arc];
+      }
+    }
+
+    PDM_free(send_arc_node_idx);
     PDM_free(send_node_idx);
   }
 
@@ -328,6 +377,39 @@ _part_split
                            &recv_node_n,
                 (void ***) &recv_weight);
 
+
+  int         **recv_arc_node_n = NULL;
+  PDM_g_num_t **recv_arc_node   = NULL;
+  PDM_part_comm_graph_exch(pcg_arc,
+                           sizeof(PDM_g_num_t),
+                           PDM_STRIDE_VAR_INTERLACED,
+                           1,
+                           send_arc_node_n,
+                 (void **) send_arc_node,
+                           &recv_arc_node_n,
+                (void ***) &recv_arc_node);
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    PDM_free(send_arc_node  [i_part]);
+    PDM_free(send_arc_node_n[i_part]);
+    PDM_free(recv_arc_node_n[i_part]);
+  }
+  PDM_free(send_arc_node  );
+  PDM_free(send_arc_node_n);
+  PDM_free(recv_arc_node_n);
+
+  int **recv_arc_weight = NULL;
+  PDM_part_comm_graph_exch(pcg_arc,
+                           sizeof(int),
+                           PDM_STRIDE_VAR_INTERLACED,
+                           1,
+                           send_arc_node_n,
+                 (void **) send_arc_weight,
+                           &recv_arc_node_n,
+                (void ***) &recv_arc_weight);
+
+
+
   PDM_g_num_t g_shift = 0;
   PDM_MPI_Exscan(&l_shift, &g_shift, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, comm);
 
@@ -346,6 +428,7 @@ _part_split
     int *_node_arc_idx = node_arc_idx[i_part];
     int *_node_arc     = node_arc    [i_part];
     int *_arc_node_idx = arc_node_idx[i_part];
+    int *_arc_node     = arc_node    [i_part];
 
     // Rebuild dual graph and update into gnum
     for(int i_node = 0; i_node < n_node[i_part]; ++i_node) {
@@ -371,6 +454,21 @@ _part_split
       max_size += recv_node_n[i_part][i_graph_node];
     }
 
+    int *arc_graph = NULL;
+    int n_arc_graph = PDM_part_comm_graph_entity_graph_get(pcg_arc,
+                                                           i_part,
+                                                           &arc_graph,
+                                                           PDM_OWNERSHIP_BAD_VALUE);
+
+    for(int i_graph_arc = 0; i_graph_arc < n_arc_graph; ++i_graph_arc) {
+      int i_arc = arc_graph[4*i_graph_arc]-1;
+      for(int idx_node = _arc_node_idx[i_arc]; idx_node < _arc_node_idx[i_arc+1]; ++idx_node) {
+        int i_node = _arc_node[idx_node]-1;
+        node_node_n[shift_part+i_node] += recv_arc_node_n[i_part][i_graph_arc];
+      }
+      max_size += recv_arc_node_n[i_part][i_graph_arc];
+    }
+
     shift_part += n_node[i_part];
   }
 
@@ -380,9 +478,12 @@ _part_split
   int *node_node_idx = NULL;
   PDM_malloc(node_node_idx, n_tot_node, int);
 
+  int max_node_node = 0;
   node_node_idx[0] = 0;
   for(int i = 0; i < n_tot_node; ++i) {
     node_node_idx[i+1] = node_node_idx[i] + node_node_n[i];
+    max_node_node = PDM_MAX(max_node_node, node_node_n[i]);
+    node_node_n[i] = 0;
   }
 
   /*
@@ -433,24 +534,71 @@ _part_split
       }
     }
 
+    int *arc_graph = NULL;
+    int n_arc_graph = PDM_part_comm_graph_entity_graph_get(pcg_arc,
+                                                           i_part,
+                                                           &arc_graph,
+                                                           PDM_OWNERSHIP_BAD_VALUE);
+
+    idx_read = 0;
+    for(int i_graph_arc = 0; i_graph_arc < n_arc_graph; ++i_graph_arc) {
+      int i_arc = arc_graph[4*i_graph_arc]-1;
+      for(int idx_node = _arc_node_idx[i_arc]; idx_node < _arc_node_idx[i_arc+1]; ++idx_node) {
+        int i_node = _arc_node[idx_node]-1;
+        for(int j = 0; j < recv_arc_node_n[i_part][i_graph_arc]; ++j) {
+          int idx_write = node_node_idx[shift_part+i_node] + node_node_n[shift_part+i_node]++;
+          gnode_node [idx_write] = recv_node  [i_part][idx_read+j];
+          garc_weight[idx_write] = recv_weight[i_part][idx_read+j];
+        }
+      }
+      idx_read += recv_arc_node_n[i_part][i_graph_arc];
+    }
+
     shift_part += n_node[i_part];
   }
 
   PDM_free(node_node_n);
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    PDM_free(recv_node  [i_part]);
-    PDM_free(recv_node_n[i_part]);
-    PDM_free(recv_weight[i_part]);
+    PDM_free(recv_arc_node  [i_part]);
+    PDM_free(recv_arc_node_n[i_part]);
+    PDM_free(recv_arc_weight[i_part]);
   }
-  PDM_free(recv_node_n);
-  PDM_free(recv_node  );
-  PDM_free(recv_weight);
+  PDM_free(recv_arc_node_n);
+  PDM_free(recv_arc_node  );
+  PDM_free(recv_arc_weight);
+
+  /*
+   * At this stage we have dual graph but :
+   *   - Not unique
+   *   - Not sorted
+   *   - Not compacted (with owner / not owner)
+   */
+  int *order = NULL;
+  PDM_malloc(order, max_node_node, int);
+  for(int i_node = 0; i_node < n_tot_node; ++i_node) {
+
+    int beg   = node_node_idx[i_node  ];
+    int end   = node_node_idx[i_node+1];
+    int n_adj = end - beg;
+
+    for(int j = 0; j < n_adj; ++j) {
+      order[j] = j;
+    }
+
+    // PDM_sort_long(&gnode_node[beg], order, n_adj);
+    PDM_inplace_unique_long(&gnode_node[beg], order, 0, n_adj-1);
+
+    // Tassage + move weight
+
+  }
 
 
   // A renvoyer
   PDM_free(gnode_node);
   PDM_free(garc_weight);
+
+  PDM_free(order);
 
   // for(int i_part = 0; i_part < n_part; ++i_part) {
 
