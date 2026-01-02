@@ -14,10 +14,12 @@
 #include "pdm_part_connectivity_transform.h"
 #include "pdm_part_mesh_nodal.h"
 #include "pdm_part_mesh_nodal_algorithm.h"
+#include "pdm_part_mesh_nodal_to_part_mesh.h"
 #include "pdm_partitioning_algorithm.h"
-#include "pdm_unique.h"
 #include "pdm_printf.h"
 #include "pdm_priv.h"
+#include "pdm_sort.h"
+#include "pdm_unique.h"
 
 /*============================================================================
  * Macro definitions
@@ -181,10 +183,7 @@ _part_split
   int                   **node_weight,
   int                   **arc_weight,
   PDM_part_comm_graph_t  *pcg_node,
-  PDM_part_comm_graph_t  *pcg_arc,
-  PDM_split_dual_t        split_method,
-  int                   **ppart_id_idx,
-  int                   **ppart_id
+  PDM_part_comm_graph_t  *pcg_arc
 )
 {
   /*
@@ -394,12 +393,8 @@ _part_split
                 (void ***) &recv_node);
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    PDM_free(send_node  [i_part]);
-    PDM_free(send_node_n[i_part]);
     PDM_free(recv_node_n[i_part]);
   }
-  PDM_free(send_node  );
-  PDM_free(send_node_n);
   PDM_free(recv_node_n);
 
   int **recv_weight = NULL;
@@ -411,6 +406,15 @@ _part_split
                  (void **) send_weight,
                            &recv_node_n,
                 (void ***) &recv_weight);
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    PDM_free(send_node  [i_part]);
+    PDM_free(send_node_n[i_part]);
+    PDM_free(send_weight[i_part]);
+  }
+  PDM_free(send_node  );
+  PDM_free(send_node_n);
+  PDM_free(send_weight);
 
 
   int         **recv_arc_node_n = NULL;
@@ -424,13 +428,10 @@ _part_split
                            &recv_arc_node_n,
                 (void ***) &recv_arc_node);
 
+
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    PDM_free(send_arc_node  [i_part]);
-    PDM_free(send_arc_node_n[i_part]);
     PDM_free(recv_arc_node_n[i_part]);
   }
-  PDM_free(send_arc_node  );
-  PDM_free(send_arc_node_n);
   PDM_free(recv_arc_node_n);
 
   int **recv_arc_weight = NULL;
@@ -444,6 +445,22 @@ _part_split
                 (void ***) &recv_arc_weight);
 
 
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    PDM_free(send_arc_node  [i_part]);
+    PDM_free(send_arc_node_n[i_part]);
+    PDM_free(send_arc_weight[i_part]);
+  }
+  PDM_free(send_arc_node  );
+  PDM_free(send_arc_node_n);
+  PDM_free(send_arc_weight);
+
+
+  // for(int i_part = 0; i_part < n_part; ++i_part) {
+  //   PDM_free(recv_arc_node_n[i_part]);
+  //   PDM_free(recv_arc_weight[i_part]);
+  // }
+  // PDM_free(recv_arc_node_n);
+  // PDM_free(recv_arc_weight);
 
   PDM_g_num_t g_shift = 0;
   PDM_MPI_Exscan(&l_shift, &g_shift, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, comm);
@@ -456,14 +473,17 @@ _part_split
 
   int max_size   = 0;
   int shift_part = 0;
-  int *node_node_n = NULL;
-  PDM_malloc(node_node_n, n_tot_node, int);
+  int *node_node_n = PDM_array_zeros_int(n_tot_node);
   for(int i_part = 0; i_part < n_part; ++i_part) {
 
-    int *_node_arc_idx = node_arc_idx[i_part];
-    int *_node_arc     = node_arc    [i_part];
-    int *_arc_node_idx = arc_node_idx[i_part];
-    int *_arc_node     = arc_node    [i_part];
+    int  n_arc_graph   = pn_arc_graph [i_part];
+    int  n_node_graph  = pn_node_graph[i_part];
+    int *_arc_graph    = parc_graph   [i_part];
+    int *_node_graph   = pnode_graph  [i_part];
+    int *_node_arc_idx = node_arc_idx [i_part];
+    int *_node_arc     = node_arc     [i_part];
+    int *_arc_node_idx = arc_node_idx [i_part];
+    int *_arc_node     = arc_node     [i_part];
 
     // Rebuild dual graph and update into gnum
     for(int i_node = 0; i_node < n_node[i_part]; ++i_node) {
@@ -477,26 +497,14 @@ _part_split
       }
     }
 
-    int *node_graph = NULL;
-    int n_node_graph = PDM_part_comm_graph_entity_graph_get(pcg_node,
-                                                            i_part,
-                                                            &node_graph,
-                                                            PDM_OWNERSHIP_BAD_VALUE);
-
     for(int i_graph_node = 0; i_graph_node < n_node_graph; ++i_graph_node) {
-      int i_node = node_graph[4*i_graph_node]-1;
+      int i_node = _node_graph[4*i_graph_node]-1;
       node_node_n[shift_part+i_node] += recv_node_n[i_part][i_graph_node];
       max_size += recv_node_n[i_part][i_graph_node];
     }
 
-    int *arc_graph = NULL;
-    int n_arc_graph = PDM_part_comm_graph_entity_graph_get(pcg_arc,
-                                                           i_part,
-                                                           &arc_graph,
-                                                           PDM_OWNERSHIP_BAD_VALUE);
-
     for(int i_graph_arc = 0; i_graph_arc < n_arc_graph; ++i_graph_arc) {
-      int i_arc = arc_graph[4*i_graph_arc]-1;
+      int i_arc = _arc_graph[4*i_graph_arc]-1;
       for(int idx_node = _arc_node_idx[i_arc]; idx_node < _arc_node_idx[i_arc+1]; ++idx_node) {
         int i_node = _arc_node[idx_node]-1;
         node_node_n[shift_part+i_node] += recv_arc_node_n[i_part][i_graph_arc];
@@ -511,7 +519,7 @@ _part_split
    * Count
    */
   int *node_node_idx = NULL;
-  PDM_malloc(node_node_idx, n_tot_node, int);
+  PDM_malloc(node_node_idx, n_tot_node+1, int);
 
   int max_node_node = 0;
   node_node_idx[0] = 0;
@@ -531,10 +539,14 @@ _part_split
   shift_part = 0;
   for(int i_part = 0; i_part < n_part; ++i_part) {
 
-    int *_node_arc_idx = node_arc_idx[i_part];
-    int *_node_arc     = node_arc    [i_part];
-    int *_arc_node_idx = arc_node_idx[i_part];
-    int *_arc_node     = arc_node    [i_part];
+    int  n_arc_graph   = pn_arc_graph [i_part];
+    int  n_node_graph  = pn_node_graph[i_part];
+    int *_arc_graph    = parc_graph   [i_part];
+    int *_node_graph   = pnode_graph  [i_part];
+    int *_node_arc_idx = node_arc_idx [i_part];
+    int *_node_arc     = node_arc     [i_part];
+    int *_arc_node_idx = arc_node_idx [i_part];
+    int *_arc_node     = arc_node     [i_part];
 
     // Rebuild dual graph and update into gnum
     for(int i_node = 0; i_node < n_node[i_part]; ++i_node) {
@@ -552,15 +564,9 @@ _part_split
       }
     }
 
-    int *node_graph = NULL;
-    int n_node_graph = PDM_part_comm_graph_entity_graph_get(pcg_node,
-                                                            i_part,
-                                                            &node_graph,
-                                                            PDM_OWNERSHIP_BAD_VALUE);
-
     int idx_read = 0;
     for(int i_graph_node = 0; i_graph_node < n_node_graph; ++i_graph_node) {
-      int i_node = node_graph[4*i_graph_node]-1;
+      int i_node = _node_graph[4*i_graph_node]-1;
       for(int j = 0; j < recv_node_n[i_part][i_graph_node]; ++j) {
         int idx_write = node_node_idx[shift_part+i_node] + node_node_n[shift_part+i_node]++;
         gnode_node [idx_write] = recv_node  [i_part][idx_read];
@@ -569,15 +575,10 @@ _part_split
       }
     }
 
-    int *arc_graph = NULL;
-    int n_arc_graph = PDM_part_comm_graph_entity_graph_get(pcg_arc,
-                                                           i_part,
-                                                           &arc_graph,
-                                                           PDM_OWNERSHIP_BAD_VALUE);
-
+    /* From arc */
     idx_read = 0;
     for(int i_graph_arc = 0; i_graph_arc < n_arc_graph; ++i_graph_arc) {
-      int i_arc = arc_graph[4*i_graph_arc]-1;
+      int i_arc = _arc_graph[4*i_graph_arc]-1;
       for(int idx_node = _arc_node_idx[i_arc]; idx_node < _arc_node_idx[i_arc+1]; ++idx_node) {
         int i_node = _arc_node[idx_node]-1;
         for(int j = 0; j < recv_arc_node_n[i_part][i_graph_arc]; ++j) {
@@ -595,13 +596,24 @@ _part_split
   PDM_free(node_node_n);
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
+    PDM_free(recv_node      [i_part]);
+    PDM_free(recv_node_n    [i_part]);
+    PDM_free(recv_weight    [i_part]);
     PDM_free(recv_arc_node  [i_part]);
     PDM_free(recv_arc_node_n[i_part]);
     PDM_free(recv_arc_weight[i_part]);
   }
+  PDM_free(recv_node      );
+  PDM_free(recv_node_n    );
+  PDM_free(recv_weight    );
   PDM_free(recv_arc_node_n);
   PDM_free(recv_arc_node  );
   PDM_free(recv_arc_weight);
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    PDM_free(is_owner_node[i_part]);
+  }
+  PDM_free(is_owner_node);
 
   /*
    * At this stage we have dual graph but :
@@ -632,37 +644,9 @@ _part_split
   // A renvoyer
   PDM_free(gnode_node);
   PDM_free(garc_weight);
+  PDM_free(node_node_idx);
 
   PDM_free(order);
-
-  // for(int i_part = 0; i_part < n_part; ++i_part) {
-
-  //   for(int i_arc = 0; i_arc < n_arc[i_part]; ++i_arc) {
-  //     int i_node1 = arc_node[2*i_arc  ]-1;
-  //     int i_node2 = arc_node[2*i_arc+1]-1;
-
-  //     // We need to have symetric weight on graph
-  //     int pos11 = PDM_binary_search_int(i_node1+1, &node_node[node_node_idx[i_node1]], n_adj_node1);
-  //     int pos12 = PDM_binary_search_int(i_node1+1, &node_node[node_node_idx[i_node2]], n_adj_node2);
-  //     int pos21 = PDM_binary_search_int(i_node2+1, &node_node[node_node_idx[i_node1]], n_adj_node1);
-  //     int pos22 = PDM_binary_search_int(i_node2+1, &node_node[node_node_idx[i_node2]], n_adj_node2);
-
-  //     node_node_weight[beg1+pos1] += arc_weight[i_arc];
-  //     node_node_weight[beg2+pos2] += arc_weight[i_arc];
-
-  //   }
-
-  // }
-
-
-  /*
-   * Synchronise node weight
-   */
-
-  /*
-   * Synchronise arc weight
-   */
-
 
   // int *part_id = NULL;
   // PDM_malloc(part_id, n_vtx_owner, int);
@@ -722,7 +706,6 @@ main
              argv,
              &n_vtx_a,
              &post);
-
 
   PDM_part_mesh_nodal_t* pmn = _generate_mesh(comm, n_vtx_a);
 
@@ -786,8 +769,132 @@ main
   /*
    * Graph assembly
    */
+  PDM_part_mesh_nodal_to_part_mesh_t* pmn_to_pm = PDM_part_mesh_nodal_to_part_mesh_create(pmn,
+                                                                                          PDM_FALSE,
+                                                                                          PDM_OWNERSHIP_USER);
+
+  // Connectivities
+  int dim = 2;
+  PDM_part_mesh_t *pm = NULL;
+  PDM_part_mesh_nodal_to_part_mesh_g_nums_enable(pmn_to_pm, PDM_MESH_ENTITY_VTX );
+  PDM_part_mesh_nodal_to_part_mesh_g_nums_enable(pmn_to_pm, PDM_MESH_ENTITY_EDGE);
+  if(dim == 3) {
+    PDM_part_mesh_nodal_to_part_mesh_connectivity_enable(pmn_to_pm,
+                                                         PDM_CONNECTIVITY_TYPE_CELL_FACE);
+    PDM_part_mesh_nodal_to_part_mesh_connectivity_enable(pmn_to_pm,
+                                                         PDM_CONNECTIVITY_TYPE_FACE_VTX);
+  } else {
+    PDM_part_mesh_nodal_to_part_mesh_connectivity_enable(pmn_to_pm,
+                                                         PDM_CONNECTIVITY_TYPE_FACE_EDGE);
+    PDM_part_mesh_nodal_to_part_mesh_connectivity_enable(pmn_to_pm,
+                                                         PDM_CONNECTIVITY_TYPE_EDGE_VTX);
+  }
+
+  PDM_part_mesh_nodal_to_part_mesh_compute(pmn_to_pm);
+
+  PDM_part_mesh_nodal_to_part_mesh_part_mesh_get(pmn_to_pm,
+                                                 &pm,
+                                                 PDM_OWNERSHIP_USER);
+
+  PDM_part_mesh_nodal_to_part_mesh_free(pmn_to_pm);
+
+  // Hook
+  PDM_part_mesh_part_comm_graph_compute_from_gnum(pm, PDM_MESH_ENTITY_VTX );
+  PDM_part_mesh_part_comm_graph_compute_from_gnum(pm, PDM_MESH_ENTITY_EDGE);
 
 
+  int  *pn_node       = NULL;
+  int  *pn_arc        = NULL;
+  int **pselect_node  = NULL;
+  int **pnode_arc_idx = NULL;
+  int **pnode_arc     = NULL;
+  int **parc_node_idx = NULL;
+  int **parc_node     = NULL;
+  int **pnode_weight  = NULL;
+  int **parc_weight   = NULL;
+
+  PDM_malloc(pn_node      , n_part, int  );
+  PDM_malloc(pn_arc       , n_part, int  );
+  PDM_malloc(pselect_node , n_part, int *);
+  // PDM_malloc(pnode_arc_idx, n_part, int *);
+  // PDM_malloc(pnode_arc    , n_part, int *);
+  PDM_malloc(parc_node_idx, n_part, int *);
+  PDM_malloc(parc_node    , n_part, int *);
+  PDM_malloc(pnode_weight , n_part, int *);
+  PDM_malloc(parc_weight  , n_part, int *);
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    pn_node[i_part] = PDM_part_mesh_n_entity_get(pm, i_part, PDM_MESH_ENTITY_VTX );
+    pn_arc [i_part] = PDM_part_mesh_n_entity_get(pm, i_part, PDM_MESH_ENTITY_EDGE);
+
+    PDM_part_mesh_connectivity_get(pm,
+                                   i_part,
+                                   PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                   &parc_node    [i_part],
+                                   &parc_node_idx[i_part],
+                                   PDM_OWNERSHIP_KEEP);
+
+    if(parc_node_idx[i_part] == NULL) {
+      PDM_malloc(parc_node_idx[i_part], pn_arc[i_part] + 1, int);
+      for(int i = 0; i < pn_arc[i_part]+1; ++i) {
+        parc_node_idx[i_part][i] = 2*i;
+      }
+    }
+
+    PDM_malloc(pnode_weight[i_part], pn_node[i_part], int);
+    PDM_malloc(parc_weight [i_part], pn_arc [i_part], int);
+
+    for(int i = 0; i < pn_node[i_part]; ++i) {
+      pnode_weight[i_part][i] = 1;
+    }
+    for(int i = 0; i < pn_arc[i_part]; ++i) {
+      parc_weight[i_part][i] = 1;
+    }
+  }
+
+  // Transpose
+  PDM_part_connectivity_transpose(n_part,
+                                  pn_arc,
+                                  pn_node,
+                                  parc_node_idx,
+                                  parc_node,
+                                  &pnode_arc_idx,
+                                  &pnode_arc);
+
+
+  PDM_part_comm_graph_t *pcg_node = NULL;
+  PDM_part_mesh_part_comm_graph_get(pm,
+                                    PDM_MESH_ENTITY_VTX,
+                                    &pcg_node,
+                                    PDM_OWNERSHIP_KEEP);
+
+  PDM_part_comm_graph_t *pcg_arc = NULL;
+  PDM_part_mesh_part_comm_graph_get(pm,
+                                    PDM_MESH_ENTITY_EDGE,
+                                    &pcg_arc,
+                                    PDM_OWNERSHIP_KEEP);
+
+  _part_split(comm,
+              n_part,
+              pn_node,
+              pn_arc,
+              pselect_node,
+              pnode_arc_idx,
+              pnode_arc,
+              parc_node_idx,
+              parc_node,
+              pnode_weight,
+              parc_weight,
+              pcg_node,
+              pcg_arc);
+
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    PDM_free(pnode_arc_idx[i_part]);
+    PDM_free(pnode_arc    [i_part]);
+    PDM_free(pnode_weight [i_part]);
+    PDM_free(parc_weight  [i_part]);
+  }
 
   /* Free all */
   for(int i_part = 0; i_part < n_part; ++i_part) {
@@ -803,7 +910,18 @@ main
   PDM_free(pn_elt);
   PDM_free(pn_vtx);
 
+  PDM_free(pn_node      );
+  PDM_free(pn_arc       );
+  PDM_free(pselect_node );
+  PDM_free(pnode_arc_idx);
+  PDM_free(pnode_arc    );
+  PDM_free(parc_node_idx);
+  PDM_free(parc_node    );
+  PDM_free(pnode_weight );
+  PDM_free(parc_weight  );
 
+
+  PDM_part_mesh_free(pm);
   PDM_part_mesh_nodal_free(pmn);
 
   if (i_rank == 0) {
