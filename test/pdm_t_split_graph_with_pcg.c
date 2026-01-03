@@ -204,6 +204,68 @@ _part_split
    * De la même manière en cellules centrés, à priori pas besoin de syncho les celluls, on peut faire pcg_node == NULL
    */
 
+  if(select_node != NULL) {
+    int *pn_select_node = NULL;
+    PDM_malloc(pn_select_node, n_part, int  );
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      pn_select_node[i_part] = 0;
+      for(int i = 0; i < n_node[i_part]; ++i) {
+        if(select_node[i_part][i] == 1) {
+          pn_select_node[i_part]++;
+        }
+      }
+    }
+    PDM_free(pn_select_node);
+  }
+
+  PDM_part_comm_graph_t *pcg_subnode = NULL;
+  if(select_node != NULL) {
+    // We need to recreate part_comm_graph but for subset :
+    //   1/ On echange les selected avant
+    //   2/ On filtre localement et on refait le part_comm_graph
+    PDM_part_comm_graph_all_reduce(pcg_node,
+                                   PDM_MPI_INT,
+                                   PDM_MPI_MAX,
+               (unsigned char **)  select_node);
+
+    int  *pn_sub_node_graph = NULL;
+    int **psub_node_graph   = NULL;
+
+    PDM_malloc(pn_sub_node_graph, n_part, int  );
+    PDM_malloc(psub_node_graph  , n_part, int *);
+
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+
+      int *node_graph = NULL;
+      int n_node_graph = PDM_part_comm_graph_entity_graph_get(pcg_node,
+                                                              i_part,
+                                                              &node_graph,
+                                                              PDM_OWNERSHIP_BAD_VALUE);
+
+      pn_sub_node_graph[i_part] = 0;
+      PDM_malloc(psub_node_graph[i_part], 4 * n_node_graph, int);
+      for(int i = 0; i < n_node_graph; ++i) {
+        int i_node = node_graph[4*i]-1;
+        if(select_node[i_part][i_node] == 1) {
+          psub_node_graph[i_part][4*pn_sub_node_graph[i_part]  ] = node_graph[4*i  ];
+          psub_node_graph[i_part][4*pn_sub_node_graph[i_part]+1] = node_graph[4*i+1];
+          psub_node_graph[i_part][4*pn_sub_node_graph[i_part]+2] = node_graph[4*i+2];
+          psub_node_graph[i_part][4*pn_sub_node_graph[i_part]+3] = node_graph[4*i+3];
+          pn_sub_node_graph[i_part]++;
+        }
+      }
+    }
+
+    pcg_subnode = PDM_part_comm_graph_create(n_part,
+                                             pn_sub_node_graph,
+                                             psub_node_graph,
+                                             PDM_OWNERSHIP_KEEP,
+                                             comm);
+    PDM_free(pn_sub_node_graph);
+    PDM_free(psub_node_graph  );
+  }
+
+
   /*
    * Manage empty cases / special cases
    */
@@ -680,12 +742,13 @@ _part_split
 
 
   // A renvoyer
+  PDM_free(node_node_idx);
   PDM_free(gnode_node);
   PDM_free(garc_weight);
-  PDM_free(node_node_idx);
+  PDM_free(distrib_node );
+
   PDM_free(lorder);
   PDM_free(lweight);
-
   for(int i_part = 0; i_part < n_part; ++i_part) {
     PDM_free(pnode_ln_to_gn[i_part]);
   }
@@ -695,7 +758,6 @@ _part_split
   PDM_free(pnode_graph  );
   PDM_free(pn_arc_graph );
   PDM_free(parc_graph   );
-  PDM_free(distrib_node );
 }
 
 /*============================================================================
@@ -840,7 +902,7 @@ main
 
   PDM_malloc(pn_node      , n_part, int  );
   PDM_malloc(pn_arc       , n_part, int  );
-  PDM_malloc(pselect_node , n_part, int *);
+  // PDM_malloc(pselect_node , n_part, int *);
   // PDM_malloc(pnode_arc_idx, n_part, int *);
   // PDM_malloc(pnode_arc    , n_part, int *);
   PDM_malloc(parc_node_idx, n_part, int *);
@@ -966,7 +1028,7 @@ main
 
   PDM_free(pn_node      );
   PDM_free(pn_arc       );
-  PDM_free(pselect_node );
+  // PDM_free(pselect_node );
   PDM_free(pnode_arc_idx);
   PDM_free(pnode_arc    );
   PDM_free(parc_node_idx);
