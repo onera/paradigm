@@ -17,6 +17,7 @@
 
 #include "pdm.h"
 #include "pdm_mpi.h"
+#include "pdm_part_comm_graph.h"
 
 /*=============================================================================
  * Macro definitions
@@ -82,7 +83,8 @@ PDM_part_assembly_dual_graph
   int                   **arc_weight,
   PDM_part_comm_graph_t  *pcg_node,
   PDM_part_comm_graph_t  *pcg_arc,
-  int                   **out_gnode_node_idx,
+  int                    *out_n_tot_node,
+  PDM_g_num_t           **out_gnode_node_idx,
   PDM_g_num_t           **out_gnode_node,
   int                   **out_garc_weight,
   PDM_g_num_t           **out_distrib_node

@@ -11,6 +11,14 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
+#include "pdm_array.h"
+#include "pdm_distrib.h"
+#include "pdm_gnum.h"
+#include "pdm_logging.h"
+#include "pdm_mem_tool.h"
+#include "pdm_part_graph_dual.h"
+#include "pdm_priv.h"
+#include "pdm_unique.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -58,7 +66,8 @@ PDM_part_assembly_dual_graph
   int                   **arc_weight,
   PDM_part_comm_graph_t  *pcg_node,
   PDM_part_comm_graph_t  *pcg_arc,
-  int                   **out_gnode_node_idx,
+  int                    *out_n_tot_node,
+  PDM_g_num_t           **out_gnode_node_idx,
   PDM_g_num_t           **out_gnode_node,
   int                   **out_garc_weight,
   PDM_g_num_t           **out_distrib_node
@@ -491,8 +500,8 @@ PDM_part_assembly_dual_graph
   /*
    * Count
    */
-  int *node_node_idx = NULL;
-  PDM_malloc(node_node_idx, n_tot_node+1, int);
+  PDM_g_num_t *node_node_idx = NULL;
+  PDM_malloc(node_node_idx, n_tot_node+1, PDM_g_num_t);
 
   int max_node_node = 0;
   node_node_idx[0] = 0;
@@ -668,6 +677,7 @@ PDM_part_assembly_dual_graph
   /*
    * Fix output
    */
+  *out_n_tot_node     = n_tot_node;
   *out_gnode_node_idx = node_node_idx;
   *out_gnode_node     = gnode_node;
   *out_garc_weight    = garc_weight;

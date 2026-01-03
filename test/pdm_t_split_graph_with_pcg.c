@@ -13,7 +13,9 @@
 #include "pdm_mem_tool.h"
 #include "pdm_mpi.h"
 #include "pdm_multipart.h"
+#include "pdm_para_graph_dual.h"
 #include "pdm_part_connectivity_transform.h"
+#include "pdm_part_graph_dual.h"
 #include "pdm_part_mesh_nodal.h"
 #include "pdm_part_mesh_nodal_algorithm.h"
 #include "pdm_part_mesh_nodal_to_part_mesh.h"
@@ -399,7 +401,8 @@ main
   /*
    * Tester avec cell_vtx + vtx_cell aussi -> Shortcut for mesh adaptation + quality
    */
-  int         *gnode_node_idx = NULL;
+  int          n_tot_node     = 0;
+  PDM_g_num_t *gnode_node_idx = NULL;
   PDM_g_num_t *gnode_node     = NULL;
   int         *garc_weight    = NULL;
   PDM_g_num_t *distrib_node   = NULL;
@@ -416,10 +419,30 @@ main
                                parc_weight,
                                pcg_node,
                                pcg_arc,
+                               &n_tot_node,
                                &gnode_node_idx,
                                &gnode_node,
                                &garc_weight,
                                &distrib_node);
+
+  for(int i = 0; i < gnode_node_idx[n_tot_node]; ++i) {
+    gnode_node[i] -= 1;
+  }
+
+  int *node_part_id = NULL;
+  PDM_malloc(node_part_id, n_tot_node, int);
+  PDM_para_graph_split(PDM_SPLIT_DUAL_WITH_PTSCOTCH,
+                       distrib_node,
+                       gnode_node_idx,
+                       gnode_node,
+                       NULL,
+                       NULL, // garc_weight,
+                       n_part,
+                       NULL,
+                       node_part_id,
+                       comm);
+
+  PDM_log_trace_array_int(node_part_id, n_tot_node, "node_part_id ::");
 
   PDM_free(gnode_node_idx);
   PDM_free(gnode_node    );
