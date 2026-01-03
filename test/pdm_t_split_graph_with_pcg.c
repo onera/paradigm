@@ -7,7 +7,9 @@
 #include "pdm.h"
 #include "pdm_array.h"
 #include "pdm_dcube_nodal_gen.h"
+#include "pdm_distrib.h"
 #include "pdm_gnum.h"
+#include "pdm_logging.h"
 #include "pdm_mem_tool.h"
 #include "pdm_mpi.h"
 #include "pdm_multipart.h"
@@ -186,6 +188,10 @@ _part_split
   PDM_part_comm_graph_t  *pcg_arc
 )
 {
+  int i_rank;
+  int n_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
   /*
    * To avoid to much computation, we directly pre-alloc the node-node :
    *   - We need to know size with shared node (only owner will take graph)
@@ -211,8 +217,6 @@ _part_split
   PDM_malloc(pnode_graph  , n_part, int *);
   PDM_malloc(parc_graph   , n_part, int *);
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    pn_arc_graph [i_part] = 0;
-
     if(pcg_node != NULL) {
       pn_node_graph[i_part] = PDM_part_comm_graph_entity_graph_get(pcg_node,
                                                                    i_part,
@@ -234,8 +238,6 @@ _part_split
     }
   }
 
-
-
   /*
    * En cellule centré, le pcg_node == NULL => A gerer
    */
@@ -253,6 +255,12 @@ _part_split
     pnode_ln_to_gn[i_part] = PDM_gnum_get(gen_gnum_node, i_part);
   }
   PDM_gnum_free(gen_gnum_node);
+
+  PDM_g_num_t* distrib_node = PDM_compute_uniform_entity_distribution_from_partition(comm,
+                                                                                     n_part,
+                                                                                     n_node,
+                                                              (const PDM_g_num_t **) pnode_ln_to_gn);
+
 
   /*
    *
@@ -336,14 +344,14 @@ _part_split
     PDM_malloc(send_weight[i_part], send_node_idx[n_node_graph], int        );
 
     int *send_arc_node_idx = NULL;
-    PDM_malloc(send_arc_node_idx, n_node_graph+1, int);
+    PDM_malloc(send_arc_node_idx, n_arc_graph+1, int);
     send_arc_node_idx[0] = 0;
-    for(int i_graph_node = 0; i_graph_node < n_node_graph; ++i_graph_node) {
-      send_arc_node_idx[i_graph_node+1] = send_arc_node_idx[i_graph_node] + send_arc_node_n[i_part][i_graph_node];
-      send_arc_node_n  [i_part][i_graph_node] = 0;
+    for(int i_graph_arc = 0; i_graph_arc < n_arc_graph; ++i_graph_arc) {
+      send_arc_node_idx[i_graph_arc+1] = send_arc_node_idx[i_graph_arc] + send_arc_node_n[i_part][i_graph_arc];
+      send_arc_node_n  [i_part][i_graph_arc] = 0;
     }
-    PDM_malloc(send_arc_node  [i_part], send_arc_node_idx[n_node_graph], PDM_g_num_t);
-    PDM_malloc(send_arc_weight[i_part], send_arc_node_idx[n_node_graph], int        );
+    PDM_malloc(send_arc_node  [i_part], send_arc_node_idx[n_arc_graph], PDM_g_num_t);
+    PDM_malloc(send_arc_weight[i_part], send_arc_node_idx[n_arc_graph], int        );
 
     /*
      * Fill
@@ -454,16 +462,11 @@ _part_split
   PDM_free(send_arc_node_n);
   PDM_free(send_arc_weight);
 
-
-  // for(int i_part = 0; i_part < n_part; ++i_part) {
-  //   PDM_free(recv_arc_node_n[i_part]);
-  //   PDM_free(recv_arc_weight[i_part]);
-  // }
-  // PDM_free(recv_arc_node_n);
-  // PDM_free(recv_arc_weight);
-
-  PDM_g_num_t g_shift = 0;
-  PDM_MPI_Exscan(&l_shift, &g_shift, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, comm);
+  /*
+   * Compute global shift
+   */
+  // PDM_g_num_t g_shift = 0;
+  // PDM_MPI_Exscan(&l_shift, &g_shift, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, comm);
 
   /*
    * Node are by construction ordered by increasing gnum numbering
@@ -508,8 +511,8 @@ _part_split
       for(int idx_node = _arc_node_idx[i_arc]; idx_node < _arc_node_idx[i_arc+1]; ++idx_node) {
         int i_node = _arc_node[idx_node]-1;
         node_node_n[shift_part+i_node] += recv_arc_node_n[i_part][i_graph_arc];
+        max_size += recv_arc_node_n[i_part][i_graph_arc];
       }
-      max_size += recv_arc_node_n[i_part][i_graph_arc];
     }
 
     shift_part += n_node[i_part];
@@ -583,8 +586,8 @@ _part_split
         int i_node = _arc_node[idx_node]-1;
         for(int j = 0; j < recv_arc_node_n[i_part][i_graph_arc]; ++j) {
           int idx_write = node_node_idx[shift_part+i_node] + node_node_n[shift_part+i_node]++;
-          gnode_node [idx_write] = recv_node  [i_part][idx_read+j];
-          garc_weight[idx_write] = recv_weight[i_part][idx_read+j];
+          gnode_node [idx_write] = recv_arc_node  [i_part][idx_read+j];
+          garc_weight[idx_write] = recv_arc_weight[i_part][idx_read+j];
         }
       }
       idx_read += recv_arc_node_n[i_part][i_graph_arc];
@@ -621,23 +624,58 @@ _part_split
    *   - Not sorted
    *   - Not compacted (with owner / not owner)
    */
-  int *order = NULL;
-  PDM_malloc(order, max_node_node, int);
+  int *lorder  = NULL;
+  int *lweight = NULL;
+  PDM_malloc(lorder , max_node_node, int);
+  PDM_malloc(lweight, max_node_node, int);
+
+  int idx_read  = 0;
+  int idx_write = 0;
   for(int i_node = 0; i_node < n_tot_node; ++i_node) {
 
-    int beg   = node_node_idx[i_node  ];
+    int beg   = idx_read;
     int end   = node_node_idx[i_node+1];
     int n_adj = end - beg;
 
     for(int j = 0; j < n_adj; ++j) {
-      order[j] = j;
+      lorder[j] = j;
     }
 
-    // PDM_sort_long(&gnode_node[beg], order, n_adj);
-    PDM_inplace_unique_long(&gnode_node[beg], order, 0, n_adj-1);
+    int n_unique = PDM_inplace_unique_long_and_order(&gnode_node[beg], lorder, 0, n_adj-1);
+
+    // Copy weight (mandatory because we copy in place)
+    for(int i = 0; i < n_adj; ++i) {
+      lweight[i] = garc_weight[beg+i];
+    }
 
     // Tassage + move weight
+    PDM_g_num_t gnum = i_node + distrib_node[i_rank] + 1;
+    for(int i = 0; i < n_unique; ++i) {
+      if(gnode_node[beg+i] != gnum) {
+        gnode_node [idx_write] = gnode_node[beg+i];
+        garc_weight[idx_write] = lweight[lorder[i]];
+        idx_write++;
+      }
+    }
 
+    idx_read = node_node_idx[i_node+1];
+
+    node_node_idx[i_node+1] = node_node_idx[i_node] + n_unique - 1;
+
+  }
+
+  PDM_realloc(gnode_node , gnode_node , node_node_idx[n_tot_node], PDM_g_num_t);
+  PDM_realloc(garc_weight, garc_weight, node_node_idx[n_tot_node], int        );
+
+  if(1 == 1) {
+    log_trace("gnode_node ----- \n");
+    for(int i = 0; i < n_tot_node; ++i) {
+      log_trace("ln_to_gn = "PDM_FMT_G_NUM" \n", distrib_node[i_rank]+i+1);
+      for(int j = node_node_idx[i]; j < node_node_idx[i+1]; ++j) {
+        log_trace(""PDM_FMT_G_NUM" (%i) ", gnode_node[j], garc_weight[j]);
+      }
+      log_trace("\n");
+    }
   }
 
 
@@ -645,22 +683,8 @@ _part_split
   PDM_free(gnode_node);
   PDM_free(garc_weight);
   PDM_free(node_node_idx);
-
-  PDM_free(order);
-
-  // int *part_id = NULL;
-  // PDM_malloc(part_id, n_vtx_owner, int);
-  // double *part_fraction = NULL;
-  // PDM_para_graph_split(split_method,
-  //                      vtx_distrib,
-  //                      gvtx_vtx_idx,
-  //                      gvtx_vtx,
-  //                      vtx_weight,
-  //                      gvtx_vtx_weight,
-  //                      n_rank, // Number of partition
-  //                      part_fraction,
-  //                      part_id,
-  //                      mawr->comm);
+  PDM_free(lorder);
+  PDM_free(lweight);
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
     PDM_free(pnode_ln_to_gn[i_part]);
@@ -671,6 +695,7 @@ _part_split
   PDM_free(pnode_graph  );
   PDM_free(pn_arc_graph );
   PDM_free(parc_graph   );
+  PDM_free(distrib_node );
 }
 
 /*============================================================================
@@ -834,6 +859,8 @@ main
                                    &parc_node_idx[i_part],
                                    PDM_OWNERSHIP_KEEP);
 
+    double *vtx_coords = PDM_part_mesh_nodal_vtx_coord_get(pmn, i_part, PDM_OWNERSHIP_BAD_VALUE);
+
     if(parc_node_idx[i_part] == NULL) {
       PDM_malloc(parc_node_idx[i_part], pn_arc[i_part] + 1, int);
       for(int i = 0; i < pn_arc[i_part]+1; ++i) {
@@ -850,6 +877,30 @@ main
     for(int i = 0; i < pn_arc[i_part]; ++i) {
       parc_weight[i_part][i] = 1;
     }
+
+    // This is stupid but why not
+    double vdir[3] = {1., 0., 0.};
+    for(int i = 0; i < pn_arc[i_part]; ++i) {
+      int i_vtx1 = parc_node[i_part][2*i  ]-1;
+      int i_vtx2 = parc_node[i_part][2*i+1]-1;
+
+      double v[3] = {vtx_coords[3*i_vtx2  ] - vtx_coords[3*i_vtx1  ],
+                     vtx_coords[3*i_vtx2+1] - vtx_coords[3*i_vtx1+1],
+                     vtx_coords[3*i_vtx2+2] - vtx_coords[3*i_vtx1+2]};
+      double mod = PDM_MODULE(v);
+      v[0] = v[0] / mod;
+      v[1] = v[1] / mod;
+      v[2] = v[2] / mod;
+
+      double vdot = PDM_DOT_PRODUCT(vdir, v);
+      int idot = (int) ( PDM_ABS(vdot) * 10) ;
+
+      log_trace("i_arc = %i / i_vtx1 = %i / i_vtx2 = %i --> idot = %i (%12.5e) \n ", i, i_vtx1, i_vtx2, idot, vdot);
+
+      parc_weight[i_part][i] += idot;
+    }
+
+    PDM_log_trace_array_int(parc_weight[i_part], pn_arc[i_part], "parc_weight ::");
   }
 
   // Transpose
@@ -874,6 +925,9 @@ main
                                     &pcg_arc,
                                     PDM_OWNERSHIP_KEEP);
 
+  /*
+   * Tester avec cell_vtx + vtx_cell aussi -> Shortcut for mesh adaptation + quality
+   */
   _part_split(comm,
               n_part,
               pn_node,
