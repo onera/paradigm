@@ -85,11 +85,47 @@ PDM_part_assembly_dual_graph
    */
 
   /*
+   * Manage empty cases / special cases
+   */
+  int  *pn_node_graph = NULL;
+  int  *pn_arc_graph  = NULL;
+  int **pnode_graph   = NULL;
+  int **parc_graph    = NULL;
+
+  PDM_malloc(pn_node_graph, n_part, int  );
+  PDM_malloc(pn_arc_graph , n_part, int  );
+  PDM_malloc(pnode_graph  , n_part, int *);
+  PDM_malloc(parc_graph   , n_part, int *);
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    if(pcg_node != NULL) {
+      pn_node_graph[i_part] = PDM_part_comm_graph_entity_graph_get(pcg_node,
+                                                                   i_part,
+                                                                   &pnode_graph[i_part],
+                                                                   PDM_OWNERSHIP_BAD_VALUE);
+    } else {
+      pn_node_graph[i_part] = 0;
+      pnode_graph  [i_part] = NULL;
+    }
+
+    if(pcg_arc != NULL) {
+      pn_arc_graph[i_part] = PDM_part_comm_graph_entity_graph_get(pcg_arc,
+                                                                  i_part,
+                                                                  &parc_graph[i_part],
+                                                                  PDM_OWNERSHIP_BAD_VALUE);
+    } else {
+      pn_arc_graph[i_part] = 0;
+      parc_graph  [i_part] = NULL;
+    }
+  }
+
+  /*
    * En noeuds centrés, pas besoin de synchronisés les arcs (car il sont deja commun a chaque partition connectés)
    * On peu eviter les échanges sur les arc en mettant pcg_arc == NULL
    * De la même manière en cellules centrés, à priori pas besoin de syncho les celluls, on peut faire pcg_node == NULL
    */
   PDM_part_comm_graph_t *pcg_subnode = NULL;
+  PDM_g_num_t** pnode_ln_to_gn = NULL;
+  PDM_malloc(pnode_ln_to_gn, n_part, PDM_g_num_t *);
   if(select_node != NULL) {
 
     int  *pn_select_node   = NULL;
@@ -107,7 +143,6 @@ PDM_part_assembly_dual_graph
         }
       }
     }
-    PDM_free(pn_select_node);
 
     // We need to recreate part_comm_graph but for subset :
     //   1/ On echange les selected avant
@@ -155,81 +190,57 @@ PDM_part_assembly_dual_graph
     PDM_part_comm_graph_reorder(pcg_subnode,
                                 pnode_old_to_new);
 
+    /* Generate gnum only on subset */
+    PDM_gen_gnum_t *gen_gnum_node = PDM_gnum_create(3, 1, PDM_TRUE, 1e-6, comm, PDM_OWNERSHIP_KEEP);
 
-    PDM_free(pn_sub_node_graph);
-    PDM_free(psub_node_graph  );
-  }
-
-  /*
-   * Manage empty cases / special cases
-   */
-  int  *pn_node_graph = NULL;
-  int  *pn_arc_graph  = NULL;
-  int **pnode_graph   = NULL;
-  int **parc_graph    = NULL;
-
-  PDM_malloc(pn_node_graph, n_part, int  );
-  PDM_malloc(pn_arc_graph , n_part, int  );
-  PDM_malloc(pnode_graph  , n_part, int *);
-  PDM_malloc(parc_graph   , n_part, int *);
-  for(int i_part = 0; i_part < n_part; ++i_part) {
-    if(pcg_node != NULL) {
-      pn_node_graph[i_part] = PDM_part_comm_graph_entity_graph_get(pcg_node,
-                                                                   i_part,
-                                                                   &pnode_graph[i_part],
-                                                                   PDM_OWNERSHIP_BAD_VALUE);
-    } else {
-      pn_node_graph[i_part] = 0;
-      pnode_graph  [i_part] = NULL;
-    }
-
-    if(pcg_arc != NULL) {
-      pn_arc_graph[i_part] = PDM_part_comm_graph_entity_graph_get(pcg_arc,
-                                                                  i_part,
-                                                                  &parc_graph[i_part],
-                                                                  PDM_OWNERSHIP_BAD_VALUE);
-    } else {
-      pn_arc_graph[i_part] = 0;
-      parc_graph  [i_part] = NULL;
-    }
-  }
-
-  /*
-   * En cellule centré, le pcg_node == NULL => A gerer
-   */
-  PDM_gen_gnum_t *gen_gnum_node = PDM_gnum_create(3, 1, PDM_TRUE, 1e-6, comm, PDM_OWNERSHIP_USER);
-
-  // if(pcg_node == NULL) {
-  // } else
-  PDM_gnum_set_from_part_comm_graph(gen_gnum_node,
-                                    n_node,
-                                    pcg_node);
-  PDM_gnum_compute(gen_gnum_node);
-  PDM_g_num_t** pnode_ln_to_gn = NULL;
-  PDM_malloc(pnode_ln_to_gn, n_part, PDM_g_num_t *);
-  for(int i_part = 0; i_part < n_part; ++i_part) {
-    pnode_ln_to_gn[i_part] = PDM_gnum_get(gen_gnum_node, i_part);
-    // PDM_log_trace_array_long(pnode_ln_to_gn[i_part], n_node[i_part], "pnode_ln_to_gn ::");
-  }
-  PDM_gnum_free(gen_gnum_node);
-
-
-
-  PDM_g_num_t **psub_node_ln_to_gn = NULL;
-
-  if(select_node != NULL) {
+    PDM_gnum_set_from_part_comm_graph(gen_gnum_node,
+                                      pn_select_node,
+                                      pcg_subnode);
+    PDM_gnum_compute(gen_gnum_node);
     for(int i_part = 0; i_part < n_part; ++i_part) {
+      PDM_malloc(pnode_ln_to_gn[i_part], n_node[i_part], PDM_g_num_t);
+
+      PDM_g_num_t* psub_node_ln_to_gn = PDM_gnum_get(gen_gnum_node, i_part);
+
+      /* Hack here - We put -1 on non selected entities */
       int idx_read = 0;
       for(int i = 0; i < n_node[i_part]; ++i) {
         if(select_node[i_part][i] == 0) {
           pnode_ln_to_gn[i_part][i] = -1;
         } else {
-          pnode_ln_to_gn[i_part][i] = psub_node_ln_to_gn[i_part][idx_read++];
+          pnode_ln_to_gn[i_part][i] = psub_node_ln_to_gn[idx_read++];
         }
       }
+      PDM_free(pnode_old_to_new[i_part]);
+      if(0 == 1) {
+        PDM_log_trace_array_long(pnode_ln_to_gn[i_part], n_node[i_part], "pnode_ln_to_gn ::");
+      }
     }
-  }
+    PDM_free(pnode_old_to_new);
+    PDM_gnum_free(gen_gnum_node);
 
+    PDM_part_comm_graph_free(pcg_subnode);
+
+    PDM_free(pn_sub_node_graph);
+    PDM_free(psub_node_graph  );
+    PDM_free(pn_select_node);
+  } else {
+
+    /*
+     * En cellule centré, le pcg_node == NULL => A gerer
+     */
+    PDM_gen_gnum_t *gen_gnum_node = PDM_gnum_create(3, 1, PDM_TRUE, 1e-6, comm, PDM_OWNERSHIP_USER);
+
+    PDM_gnum_set_from_part_comm_graph(gen_gnum_node,
+                                      n_node,
+                                      pcg_node);
+    PDM_gnum_compute(gen_gnum_node);
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      pnode_ln_to_gn[i_part] = PDM_gnum_get(gen_gnum_node, i_part);
+      // PDM_log_trace_array_long(pnode_ln_to_gn[i_part], n_node[i_part], "pnode_ln_to_gn ::");
+    }
+    PDM_gnum_free(gen_gnum_node);
+  }
 
   /*
    *
@@ -260,9 +271,10 @@ PDM_part_assembly_dual_graph
       }
     }
   } else {
+    log_trace(" ooooooo \n");
     for(int i_part = 0; i_part < n_part; ++i_part) {
       for(int i = 0; i < n_node[i_part]; ++i) {
-        if(is_owner_node[i_part][i] == 1 || select_node[i_part][i] == 1) {
+        if(is_owner_node[i_part][i] == 1 && select_node[i_part][i] == 1) {
           is_owner_node[i_part][i] = n_tot_node++;
         } else {
           is_owner_node[i_part][i] = -1;
@@ -270,6 +282,8 @@ PDM_part_assembly_dual_graph
       }
     }
   }
+
+  log_trace("n_tot_node = %i \n", n_tot_node);
 
   PDM_g_num_t* distrib_node = PDM_compute_entity_distribution(comm, n_tot_node);
 
@@ -308,9 +322,9 @@ PDM_part_assembly_dual_graph
       if(is_owner[i_graph_node] == 1) {
         continue;
       }
-      // if(pnode_ln_to_gn[i_part][i_node] == -1) { // Donc pas selectioné
-      //   continue;
-      // }
+      if(pnode_ln_to_gn[i_part][i_node] == -1) { // Donc pas selectioné
+        continue;
+      }
 
       for(int idx_arc = _node_arc_idx[i_node]; idx_arc < _node_arc_idx[i_node+1]; ++idx_arc) {
         int i_arc = _node_arc[idx_arc] - 1;
@@ -677,7 +691,7 @@ PDM_part_assembly_dual_graph
   PDM_realloc(gnode_node , gnode_node , node_node_idx[n_tot_node], PDM_g_num_t);
   PDM_realloc(garc_weight, garc_weight, node_node_idx[n_tot_node], int        );
 
-  if(0 == 1) {
+  if(1 == 1) {
     log_trace("gnode_node ----- \n");
     for(int i = 0; i < n_tot_node; ++i) {
       log_trace("ln_to_gn = "PDM_FMT_G_NUM" \n", distrib_node[i_rank]+i+1);

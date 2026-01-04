@@ -313,13 +313,34 @@ main
 
   PDM_malloc(pn_node      , n_part, int  );
   PDM_malloc(pn_arc       , n_part, int  );
-  // PDM_malloc(pselect_node , n_part, int *);
   // PDM_malloc(pnode_arc_idx, n_part, int *);
   // PDM_malloc(pnode_arc    , n_part, int *);
   PDM_malloc(parc_node_idx, n_part, int *);
   PDM_malloc(parc_node    , n_part, int *);
   PDM_malloc(pnode_weight , n_part, int *);
   PDM_malloc(parc_weight  , n_part, int *);
+
+  int with_select = 1;
+  if(with_select == 1) {
+    PDM_malloc(pselect_node, n_part, int *);
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      pn_node[i_part] = PDM_part_mesh_n_entity_get(pm, i_part, PDM_MESH_ENTITY_VTX );
+      PDM_malloc(pselect_node[i_part], pn_node[i_part], int);
+      double *vtx_coords = PDM_part_mesh_nodal_vtx_coord_get(pmn, i_part, PDM_OWNERSHIP_BAD_VALUE);
+
+      for(int i = 0; i < pn_node[i_part]; ++i) {
+        if( (vtx_coords[3*i  ] > -0.25 && vtx_coords[3*i  ] < 0.25) &&
+            (vtx_coords[3*i+1] > -0.25 && vtx_coords[3*i+1] < 0.25)){
+          pselect_node[i_part][i] = 1;
+        } else {
+          pselect_node[i_part][i] = 0;
+        }
+      }
+
+      PDM_log_trace_array_int(pselect_node[i_part], pn_node[i_part], "pselect_node ::");
+    }
+  }
+
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
     pn_node[i_part] = PDM_part_mesh_n_entity_get(pm, i_part, PDM_MESH_ENTITY_VTX );
@@ -521,6 +542,7 @@ main
     PDM_free(part_to_graph[i_part]);
   }
   PDM_free(part_to_graph);
+  PDM_free(node_part_id);
 
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
@@ -544,9 +566,14 @@ main
   PDM_free(pn_elt);
   PDM_free(pn_vtx);
 
+  if(with_select == 1) {
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      PDM_free(pselect_node[i_part]);
+    }
+  }
   PDM_free(pn_node      );
   PDM_free(pn_arc       );
-  // PDM_free(pselect_node );
+  PDM_free(pselect_node );
   PDM_free(pnode_arc_idx);
   PDM_free(pnode_arc    );
   PDM_free(parc_node_idx);
