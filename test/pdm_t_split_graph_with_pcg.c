@@ -437,7 +437,7 @@ main
                        gnode_node,
                        NULL,
                        NULL, // garc_weight,
-                       n_part,
+                       n_rank,
                        NULL,
                        node_part_id,
                        comm);
