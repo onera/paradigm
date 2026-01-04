@@ -91,6 +91,31 @@ PDM_part_assembly_dual_graph
   int                  ***out_part_to_graph
 );
 
+
+/**
+ *
+ * \brief Transfer partition IDs from one entity type to another via majority vote
+ * \param [in]    n_part               Number of partitions on current process
+ * \param [in]    pn_entity1           Number of source entities (size = \p n_part)
+ * \param [in]    entity1_part_id      Partition IDs of source entities (size = \p n_part, \p entity1_part_id[i] size = \p pn_entity1[i])
+ * \param [in]    pn_entity2           Number of target entities (size = \p n_part)
+ * \param [in]    pentity2_entity1_idx Index for target to source adjacency (size = \p n_part, size = \p pn_entity2[i] + 1)
+ * \param [in]    pentity2_entity1     Adjacency from target to source (1-based, can be signed)
+ * \param [out]   out_entity2_part_id  Resulting partition IDs for target entities
+ *
+ */
+void
+PDM_transfer_entity1_part_id_to_entity2_part_id
+(
+  int    n_part,
+  int   *pn_entity1,
+  int  **entity1_part_id,
+  int   *pn_entity2,
+  int  **pentity2_entity1_idx,
+  int  **pentity2_entity1,
+  int ***out_entity2_part_id
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

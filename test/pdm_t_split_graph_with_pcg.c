@@ -171,83 +171,6 @@ _generate_mesh
   return pmesh_nodal;
 }
 
-static
-void
-PDM_transfer_entity1_part_id_to_entity2_part_id
-(
-  PDM_MPI_Comm    comm,
-  int             n_part,
-  int            *pn_entity1,
-  int           **entity1_part_id,
-  int            *pn_entity2,
-  int           **pentity2_entity1_idx,
-  int           **pentity2_entity1,
-  int          ***out_entity2_part_id
-)
-{
-  int max_connectivity = 0;
-  for(int i_part = 0; i_part < n_part; ++i_part) {
-    for(int i_entity2 = 0; i_entity2 < pn_entity1[i_part]; ++i_entity2) {
-      max_connectivity = PDM_MAX(max_connectivity, pentity2_entity1_idx[i_part][i_entity2+1] - pentity2_entity1_idx[i_part][i_entity2]);
-    }
-  }
-
-  int *lpart_id = NULL;
-  PDM_malloc(lpart_id, max_connectivity, int);
-
-  int **entity2_part_id = NULL;
-  PDM_malloc(entity2_part_id, n_part, int *);
-  for(int i_part = 0; i_part < n_part; ++i_part) {
-
-    PDM_malloc(entity2_part_id[i_part], pn_entity2[i_part], int);
-
-
-    for(int i_entity2 = 0; i_entity2 < pn_entity2[i_part]; ++i_entity2) {
-
-      int n_adj = pentity2_entity1_idx[i_part][i_entity2+1] - pentity2_entity1_idx[i_part][i_entity2];
-
-      int idx_write = 0;
-      for(int idx_entity2 = pentity2_entity1_idx[i_part][i_entity2]; idx_entity2 < pentity2_entity1_idx[i_part][i_entity2+1]; ++idx_entity2) {
-        int i_entity1 = PDM_ABS(pentity2_entity1[i_part][idx_entity2])-1;
-        lpart_id[idx_write++] = entity1_part_id[i_part][i_entity1];
-      }
-
-      PDM_sort_int(lpart_id, NULL, n_adj);
-
-      int current_id    = lpart_id[0];
-      int winner_id     = lpart_id[0];
-      int current_count = 0;
-      int max_count     = 0;
-      for(int i = 0; i < n_adj; ++i) {
-        if(lpart_id[i] == current_id) {
-          current_count++;
-        } else {
-          if (current_count > max_count) {
-            max_count = current_count;
-            winner_id = current_id;
-          }
-          current_id = lpart_id[i];
-          current_count = 1;
-        }
-      }
-      // Last
-      if (current_count > max_count) {
-        winner_id = current_id;
-      }
-      entity2_part_id[i_part][i_entity2] = winner_id;
-      log_trace("%i winner_id = %i \n", i_entity2, winner_id);
-
-      // PDM_log_trace_array_int(lpart_id, n_adj, "lpart_id ::");
-
-    }
-  }
-
-  PDM_free(lpart_id);
-
-  *out_entity2_part_id = entity2_part_id;
-
-}
-
 /*============================================================================
  * Public function definitions
  *============================================================================*/
@@ -397,7 +320,7 @@ main
   PDM_malloc(pnode_weight , n_part, int *);
   PDM_malloc(parc_weight  , n_part, int *);
 
-  int with_select = 1;
+  int with_select = 0;
   if(with_select == 1) {
     PDM_malloc(pselect_node, n_part, int *);
     for(int i_part = 0; i_part < n_part; ++i_part) {
@@ -595,8 +518,7 @@ main
    * Update delt_id
    */
   int **elt_id = NULL;
-  PDM_transfer_entity1_part_id_to_entity2_part_id(comm,
-                                                  n_part,
+  PDM_transfer_entity1_part_id_to_entity2_part_id(n_part,
                                                   pn_node,
                                                   vtx_id,
                                                   pn_elt,
