@@ -368,12 +368,18 @@ main
       double vdot = PDM_DOT_PRODUCT(vdir, v);
       int idot = (int) ( PDM_ABS(vdot) * 10) ;
 
-      log_trace("i_arc = %i / i_vtx1 = %i / i_vtx2 = %i --> idot = %i (%12.5e) \n ", i, i_vtx1, i_vtx2, idot, vdot);
+      if(PDM_ABS(vdot) > 0.9999) {
+        idot = 100;
+      } else {
+        idot = 0;
+      }
+
+      // log_trace("i_arc = %i / i_vtx1 = %i / i_vtx2 = %i --> idot = %i (%12.5e) \n ", i, i_vtx1, i_vtx2, idot, vdot);
 
       parc_weight[i_part][i] += idot;
     }
 
-    PDM_log_trace_array_int(parc_weight[i_part], pn_arc[i_part], "parc_weight ::");
+    // PDM_log_trace_array_int(parc_weight[i_part], pn_arc[i_part], "parc_weight ::");
   }
 
   // Transpose
@@ -401,11 +407,12 @@ main
   /*
    * Tester avec cell_vtx + vtx_cell aussi -> Shortcut for mesh adaptation + quality
    */
-  int          n_tot_node     = 0;
-  PDM_g_num_t *gnode_node_idx = NULL;
-  PDM_g_num_t *gnode_node     = NULL;
-  int         *garc_weight    = NULL;
-  PDM_g_num_t *distrib_node   = NULL;
+  int           n_tot_node     = 0;
+  PDM_g_num_t  *gnode_node_idx = NULL;
+  PDM_g_num_t  *gnode_node     = NULL;
+  int          *garc_weight    = NULL;
+  PDM_g_num_t  *distrib_node   = NULL;
+  int         **part_to_graph  = NULL;
   PDM_part_assembly_dual_graph(comm,
                                n_part,
                                pn_node,
@@ -423,7 +430,8 @@ main
                                &gnode_node_idx,
                                &gnode_node,
                                &garc_weight,
-                               &distrib_node);
+                               &distrib_node,
+                               &part_to_graph);
 
   for(int i = 0; i < gnode_node_idx[n_tot_node]; ++i) {
     gnode_node[i] -= 1;
@@ -436,13 +444,13 @@ main
                        gnode_node_idx,
                        gnode_node,
                        NULL,
-                       NULL, // garc_weight,
+                       garc_weight,
                        n_rank,
                        NULL,
                        node_part_id,
                        comm);
 
-  PDM_log_trace_array_int(node_part_id, n_tot_node, "node_part_id ::");
+  // PDM_log_trace_array_int(node_part_id, n_tot_node, "node_part_id ::");
 
   PDM_free(gnode_node_idx);
   PDM_free(gnode_node    );
@@ -454,19 +462,65 @@ main
   // Bon dans tous les cas on essayera de ce rammener au entités principale
 
   // Synchro color and deconcatenate
+  double **vtx_id = NULL;
+  double **elt_id = NULL;
+  PDM_malloc(vtx_id, n_part, double *);
+  PDM_malloc(elt_id, n_part, double *);
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    // Owner and select information
-    // On met -1 partout
-    // for(int i_node)
-    // On met la coleur deduite !
-    // on échange via le pcg
+
+    PDM_malloc(vtx_id[i_part], pn_node[i_part], double);
+    PDM_malloc(elt_id[i_part], pn_elt[i_part], double);
+
+    for(int i = 0; i < pn_elt[i_part]; ++i) {
+      elt_id[i_part][i] = i_rank;
+    }
+
+    for(int i = 0; i < pn_node[i_part]; ++i) {
+      int l_node = part_to_graph[i_part][i];
+      if(l_node != -1) {
+        vtx_id[i_part][i] = node_part_id[l_node];
+      }
+    }
   }
+
+
+  PDM_part_comm_graph_all_reduce(pcg_node,
+                                 PDM_MPI_DOUBLE,
+                                 PDM_MPI_MAX,
+             (unsigned char **)  vtx_id);
+
+
+
+  const char    *elt_field_name [] = {"elt_id"};
+  double       **elt_field      [] = {elt_id};
+  const char    *field_vtx_name [] = {"vtx_id"};
+  double       **field_vtx      [] = {vtx_id};
+  char filename[999];
+  sprintf(filename, "repart_pmn");
+  PDM_part_mesh_nodal_dump_vtk_with_fields(pmn,
+                                           PDM_GEOMETRY_KIND_SURFACIC,
+                                           filename,
+                                           1,
+                                           elt_field_name,
+                 (const double ***)        elt_field,
+                                           1,
+                                           field_vtx_name,
+                 (const double ***)        field_vtx);
 
   // Passage node -> cell (si besoin)
 
 
   // Splitting
-
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    PDM_free(vtx_id[i_part]);
+    PDM_free(elt_id[i_part]);
+  }
+  PDM_free(vtx_id);
+  PDM_free(elt_id);
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    PDM_free(part_to_graph[i_part]);
+  }
+  PDM_free(part_to_graph);
 
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
@@ -499,7 +553,6 @@ main
   PDM_free(parc_node    );
   PDM_free(pnode_weight );
   PDM_free(parc_weight  );
-
 
   PDM_part_mesh_free(pm);
   PDM_part_mesh_nodal_free(pmn);

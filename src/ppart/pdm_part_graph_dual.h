@@ -87,7 +87,8 @@ PDM_part_assembly_dual_graph
   PDM_g_num_t           **out_gnode_node_idx,
   PDM_g_num_t           **out_gnode_node,
   int                   **out_garc_weight,
-  PDM_g_num_t           **out_distrib_node
+  PDM_g_num_t           **out_distrib_node,
+  int                  ***out_part_to_graph
 );
 
 #ifdef __cplusplus
