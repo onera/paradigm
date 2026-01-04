@@ -171,6 +171,83 @@ _generate_mesh
   return pmesh_nodal;
 }
 
+static
+void
+PDM_transfer_entity1_part_id_to_entity2_part_id
+(
+  PDM_MPI_Comm    comm,
+  int             n_part,
+  int            *pn_entity1,
+  int           **entity1_part_id,
+  int            *pn_entity2,
+  int           **pentity2_entity1_idx,
+  int           **pentity2_entity1,
+  int          ***out_entity2_part_id
+)
+{
+  int max_connectivity = 0;
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    for(int i_entity2 = 0; i_entity2 < pn_entity1[i_part]; ++i_entity2) {
+      max_connectivity = PDM_MAX(max_connectivity, pentity2_entity1_idx[i_part][i_entity2+1] - pentity2_entity1_idx[i_part][i_entity2]);
+    }
+  }
+
+  int *lpart_id = NULL;
+  PDM_malloc(lpart_id, max_connectivity, int);
+
+  int **entity2_part_id = NULL;
+  PDM_malloc(entity2_part_id, n_part, int *);
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+
+    PDM_malloc(entity2_part_id[i_part], pn_entity2[i_part], int);
+
+
+    for(int i_entity2 = 0; i_entity2 < pn_entity2[i_part]; ++i_entity2) {
+
+      int n_adj = pentity2_entity1_idx[i_part][i_entity2+1] - pentity2_entity1_idx[i_part][i_entity2];
+
+      int idx_write = 0;
+      for(int idx_entity2 = pentity2_entity1_idx[i_part][i_entity2]; idx_entity2 < pentity2_entity1_idx[i_part][i_entity2+1]; ++idx_entity2) {
+        int i_entity1 = PDM_ABS(pentity2_entity1[i_part][idx_entity2])-1;
+        lpart_id[idx_write++] = entity1_part_id[i_part][i_entity1];
+      }
+
+      PDM_sort_int(lpart_id, NULL, n_adj);
+
+      int current_id    = lpart_id[0];
+      int winner_id     = lpart_id[0];
+      int current_count = 0;
+      int max_count     = 0;
+      for(int i = 0; i < n_adj; ++i) {
+        if(lpart_id[i] == current_id) {
+          current_count++;
+        } else {
+          if (current_count > max_count) {
+            max_count = current_count;
+            winner_id = current_id;
+          }
+          current_id = lpart_id[i];
+          current_count = 1;
+        }
+      }
+      // Last
+      if (current_count > max_count) {
+        winner_id = current_id;
+      }
+      entity2_part_id[i_part][i_entity2] = winner_id;
+      log_trace("%i winner_id = %i \n", i_entity2, winner_id);
+
+      // PDM_log_trace_array_int(lpart_id, n_adj, "lpart_id ::");
+
+    }
+  }
+
+  PDM_free(lpart_id);
+
+  *out_entity2_part_id = entity2_part_id;
+
+}
+
 /*============================================================================
  * Public function definitions
  *============================================================================*/
@@ -483,39 +560,66 @@ main
   // Bon dans tous les cas on essayera de ce rammener au entités principale
 
   // Synchro color and deconcatenate
-  double **vtx_id = NULL;
-  double **elt_id = NULL;
-  PDM_malloc(vtx_id, n_part, double *);
-  PDM_malloc(elt_id, n_part, double *);
+  double **dvtx_id = NULL;
+  int    **vtx_id  = NULL;
+  PDM_malloc(dvtx_id, n_part, double *);
+  PDM_malloc(vtx_id , n_part, int    *);
   for(int i_part = 0; i_part < n_part; ++i_part) {
 
-    PDM_malloc(vtx_id[i_part], pn_node[i_part], double);
-    PDM_malloc(elt_id[i_part], pn_elt[i_part], double);
-
-    for(int i = 0; i < pn_elt[i_part]; ++i) {
-      elt_id[i_part][i] = i_rank;
-    }
+    PDM_malloc(dvtx_id[i_part], pn_node[i_part], double);
+    PDM_malloc( vtx_id[i_part], pn_node[i_part], int   );
 
     for(int i = 0; i < pn_node[i_part]; ++i) {
       int l_node = part_to_graph[i_part][i];
       if(l_node != -1) {
-        vtx_id[i_part][i] = node_part_id[l_node];
+        dvtx_id[i_part][i] = node_part_id[l_node];
+        vtx_id [i_part][i] = node_part_id[l_node];
+      } else {
+        dvtx_id[i_part][i] = -1;
+        vtx_id [i_part][i] = -1;
       }
     }
   }
 
-
+  /* Synchronise all processor */
   PDM_part_comm_graph_all_reduce(pcg_node,
                                  PDM_MPI_DOUBLE,
                                  PDM_MPI_MAX,
+             (unsigned char **)  dvtx_id);
+  PDM_part_comm_graph_all_reduce(pcg_node,
+                                 PDM_MPI_INT,
+                                 PDM_MPI_MAX,
              (unsigned char **)  vtx_id);
 
+  /*
+   * Update delt_id
+   */
+  int **elt_id = NULL;
+  PDM_transfer_entity1_part_id_to_entity2_part_id(comm,
+                                                  n_part,
+                                                  pn_node,
+                                                  vtx_id,
+                                                  pn_elt,
+                                                  pelt_vtx_idx,
+                                                  pelt_vtx,
+                                                  &elt_id);
 
 
-  const char    *elt_field_name [] = {"elt_id"};
-  double       **elt_field      [] = {elt_id};
-  const char    *field_vtx_name [] = {"vtx_id"};
-  double       **field_vtx      [] = {vtx_id};
+  double **delt_id = NULL;
+  PDM_malloc(delt_id, n_part, double *);
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    PDM_malloc( delt_id[i_part], pn_elt[i_part], double   );
+
+    for(int i = 0; i < pn_elt[i_part]; ++i) {
+      delt_id[i_part][i] = elt_id[i_part][i];
+    }
+  }
+
+
+  const char    *elt_field_name [] = {"delt_id"};
+  double       **elt_field      [] = {delt_id};
+  const char    *field_vtx_name [] = {"dvtx_id"};
+  double       **field_vtx      [] = {dvtx_id};
   char filename[999];
   sprintf(filename, "repart_pmn");
   PDM_part_mesh_nodal_dump_vtk_with_fields(pmn,
@@ -533,11 +637,13 @@ main
 
   // Splitting
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    PDM_free(vtx_id[i_part]);
-    PDM_free(elt_id[i_part]);
+    PDM_free(vtx_id [i_part]);
+    PDM_free(elt_id [i_part]);
+    PDM_free(delt_id[i_part]);
   }
   PDM_free(vtx_id);
   PDM_free(elt_id);
+  PDM_free(delt_id);
   for(int i_part = 0; i_part < n_part; ++i_part) {
     PDM_free(part_to_graph[i_part]);
   }

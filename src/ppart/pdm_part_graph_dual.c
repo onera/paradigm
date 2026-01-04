@@ -369,6 +369,9 @@ PDM_part_assembly_dual_graph
       if(is_owner[i_graph_node] == 1) {
         continue;
       }
+      if(pnode_ln_to_gn[i_part][i_node] == -1) { // Donc pas selectioné
+        continue;
+      }
       for(int idx_arc = _node_arc_idx[i_node]; idx_arc < _node_arc_idx[i_node+1]; ++idx_arc) {
         int i_arc = _node_arc[idx_arc] - 1;
         for(int idx_node = _arc_node_idx[i_arc]; idx_node < _arc_node_idx[i_arc+1]; ++idx_node) {
@@ -675,7 +678,7 @@ PDM_part_assembly_dual_graph
     // Tassage + move weight
     PDM_g_num_t gnum = i_node + distrib_node[i_rank] + 1;
     for(int i = 0; i < n_unique; ++i) {
-      if(gnode_node[beg+i] != gnum || gnode_node[beg+i] == -1) {
+      if(gnode_node[beg+i] != gnum && gnode_node[beg+i] != -1) {
         gnode_node [idx_write] = gnode_node[beg+i];
         garc_weight[idx_write] = lweight[lorder[i]];
         idx_write++;
@@ -691,7 +694,7 @@ PDM_part_assembly_dual_graph
   PDM_realloc(gnode_node , gnode_node , node_node_idx[n_tot_node], PDM_g_num_t);
   PDM_realloc(garc_weight, garc_weight, node_node_idx[n_tot_node], int        );
 
-  if(1 == 1) {
+  if(0 == 1) {
     log_trace("gnode_node ----- \n");
     for(int i = 0; i < n_tot_node; ++i) {
       log_trace("ln_to_gn = "PDM_FMT_G_NUM" \n", distrib_node[i_rank]+i+1);
