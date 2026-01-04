@@ -121,10 +121,77 @@ _part_mesh_nodal_to_part_mesh
   return pm;
 }
 
+static
+void
+_warmup_node_centered
+(
+  PDM_part_mesh_t   *pm,
+  int              **out_pn_node,
+  int              **out_pn_arc,
+  int             ***out_parc_node_idx,
+  int             ***out_parc_node,
+  int             ***out_pnode_weight,
+  int             ***out_parc_weight
+)
+{
+  int n_part = PDM_part_mesh_n_part_get(pm);
+
+  int  *pn_node       = NULL;
+  int  *pn_arc        = NULL;
+  int **parc_node_idx = NULL;
+  int **parc_node     = NULL;
+  int **pnode_weight  = NULL;
+  int **parc_weight   = NULL;
+  PDM_malloc(pn_node      , n_part, int  );
+  PDM_malloc(pn_arc       , n_part, int  );
+  PDM_malloc(parc_node_idx, n_part, int *);
+  PDM_malloc(parc_node    , n_part, int *);
+  PDM_malloc(pnode_weight , n_part, int *);
+  PDM_malloc(parc_weight  , n_part, int *);
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    pn_node[i_part] = PDM_part_mesh_n_entity_get(pm, i_part, PDM_MESH_ENTITY_VTX );
+    pn_arc [i_part] = PDM_part_mesh_n_entity_get(pm, i_part, PDM_MESH_ENTITY_EDGE);
+
+    PDM_part_mesh_connectivity_get(pm,
+                                   i_part,
+                                   PDM_CONNECTIVITY_TYPE_EDGE_VTX,
+                                   &parc_node    [i_part],
+                                   &parc_node_idx[i_part],
+                                   PDM_OWNERSHIP_KEEP);
+
+    if(parc_node_idx[i_part] == NULL) {
+      PDM_malloc(parc_node_idx[i_part], pn_arc[i_part] + 1, int);
+      for(int i = 0; i < pn_arc[i_part]+1; ++i) {
+        parc_node_idx[i_part][i] = 2*i;
+      }
+    }
+
+    PDM_malloc(pnode_weight[i_part], pn_node[i_part], int);
+    PDM_malloc(parc_weight [i_part], pn_arc [i_part], int);
+
+    for(int i = 0; i < pn_node[i_part]; ++i) {
+      pnode_weight[i_part][i] = 1;
+    }
+    for(int i = 0; i < pn_arc[i_part]; ++i) {
+      parc_weight[i_part][i] = 1;
+    }
+  }
+
+  *out_pn_node       = pn_node;
+  *out_pn_arc        = pn_arc;
+  *out_parc_node_idx = parc_node_idx;
+  *out_parc_node     = parc_node;
+  *out_pnode_weight  = pnode_weight;
+  *out_parc_weight   = parc_weight;
+}
+
 
 MPI_TEST_CASE("[PDM_part_assembly_dual_graph] Full vtx_centered ", 2) {
 
-  int n_vtx_a = 5;
+  int n_rank;
+  PDM_MPI_Comm_size(test_comm, &n_rank);
+
+  int n_vtx_a = 4;
   PDM_part_mesh_nodal_t* pmn = _generate_mesh(test_comm, n_vtx_a);
 
   PDM_part_mesh_t* pm = _part_mesh_nodal_to_part_mesh(2, pmn);
@@ -143,44 +210,13 @@ MPI_TEST_CASE("[PDM_part_assembly_dual_graph] Full vtx_centered ", 2) {
   int **parc_node     = NULL;
   int **pnode_weight  = NULL;
   int **parc_weight   = NULL;
-
-  PDM_malloc(pn_node      , n_part, int  );
-  PDM_malloc(pn_arc       , n_part, int  );
-  PDM_malloc(parc_node_idx, n_part, int *);
-  PDM_malloc(parc_node    , n_part, int *);
-  PDM_malloc(pnode_weight , n_part, int *);
-  PDM_malloc(parc_weight  , n_part, int *);
-  for(int i_part = 0; i_part < n_part; ++i_part) {
-    pn_node[i_part] = PDM_part_mesh_n_entity_get(pm, i_part, PDM_MESH_ENTITY_VTX );
-    pn_arc [i_part] = PDM_part_mesh_n_entity_get(pm, i_part, PDM_MESH_ENTITY_EDGE);
-
-    PDM_part_mesh_connectivity_get(pm,
-                                   i_part,
-                                   PDM_CONNECTIVITY_TYPE_EDGE_VTX,
-                                   &parc_node    [i_part],
-                                   &parc_node_idx[i_part],
-                                   PDM_OWNERSHIP_KEEP);
-
-    double *vtx_coords = PDM_part_mesh_nodal_vtx_coord_get(pmn, i_part, PDM_OWNERSHIP_BAD_VALUE);
-
-    if(parc_node_idx[i_part] == NULL) {
-      PDM_malloc(parc_node_idx[i_part], pn_arc[i_part] + 1, int);
-      for(int i = 0; i < pn_arc[i_part]+1; ++i) {
-        parc_node_idx[i_part][i] = 2*i;
-      }
-    }
-
-    PDM_malloc(pnode_weight[i_part], pn_node[i_part], int);
-    PDM_malloc(parc_weight [i_part], pn_arc [i_part], int);
-
-    for(int i = 0; i < pn_node[i_part]; ++i) {
-      pnode_weight[i_part][i] = 1;
-    }
-    for(int i = 0; i < pn_arc[i_part]; ++i) {
-      parc_weight[i_part][i] = 1;
-    }
-
-  }
+  _warmup_node_centered(pm,
+                        &pn_node,
+                        &pn_arc,
+                        &parc_node_idx,
+                        &parc_node,
+                        &pnode_weight,
+                        &parc_weight);
 
   // Transpose
   PDM_part_connectivity_transpose(n_part,
@@ -231,6 +267,39 @@ MPI_TEST_CASE("[PDM_part_assembly_dual_graph] Full vtx_centered ", 2) {
                                &distrib_node,
                                &part_to_graph);
 
+  if(0 == 1) {
+    PDM_log_trace_array_long(gnode_node_idx,       n_tot_node                , "gnode_node_idx ::");
+    PDM_log_trace_array_long(gnode_node    , (int) gnode_node_idx[n_tot_node], "gnode_node     ::");
+    PDM_log_trace_array_long(gnode_weight  ,       n_tot_node                , "gnode_weight   ::");
+    PDM_log_trace_array_int (garc_weight   , (int) gnode_node_idx[n_tot_node], "garc_weight    ::");
+    PDM_log_trace_array_long(distrib_node  ,       n_rank+1                  , "distrib_node   ::");
+  }
+
+  PDM_g_num_t expected_p0_gnode_node_idx[10] = {0, 6, 10, 14, 20, 26, 30, 33, 37, 41};
+  PDM_g_num_t expected_p0_gnode_node    [43] = {1, 3, 4, 12, 13, 15, 0, 4, 5, 13, 3, 6, 14, 15, 0, 2, 4, 6, 7, 15, 0, 1, 3, 5, 7, 8, 1, 4, 8, 9, 2, 3, 7, 3, 4, 6, 8, 4, 5, 7, 9, 5, 8};
+  PDM_g_num_t expected_p0_gnode_weight  [10] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+  PDM_g_num_t expected_p0_garc_weight   [43] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+  PDM_g_num_t expected_p0_distrib_node  [3 ] = {0, 10, 16};
+
+  PDM_g_num_t expected_p1_gnode_node_idx[6 ] = {0, 2, 6, 10, 13, 17};
+  PDM_g_num_t expected_p1_gnode_node    [23] = {11, 14, 10, 12, 14, 15, 0, 11, 13, 15, 0, 1, 12, 2, 10, 11, 15, 0, 2, 3, 11, 12, 14};
+  PDM_g_num_t expected_p1_gnode_weight  [6 ] = {1, 1, 1, 1, 1, 1};
+  PDM_g_num_t expected_p1_garc_weight   [23] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+  PDM_g_num_t expected_p1_distrib_node  [3 ] = {0, 10, 16};
+
+  MPI_CHECK_EQ_C_ARRAY(0, expected_p0_gnode_node_idx, gnode_node_idx, 10);
+  MPI_CHECK_EQ_C_ARRAY(0, expected_p0_gnode_node    , gnode_node    , 43);
+  MPI_CHECK_EQ_C_ARRAY(0, expected_p0_gnode_weight  , gnode_weight  , 10);
+  MPI_CHECK_EQ_C_ARRAY(0, expected_p0_garc_weight   , garc_weight   , 43);
+  MPI_CHECK_EQ_C_ARRAY(0, expected_p0_distrib_node  , distrib_node  , 3 );
+
+  MPI_CHECK_EQ_C_ARRAY(1, expected_p1_gnode_node_idx, gnode_node_idx, 6 );
+  MPI_CHECK_EQ_C_ARRAY(1, expected_p1_gnode_node    , gnode_node    , 23);
+  MPI_CHECK_EQ_C_ARRAY(1, expected_p1_gnode_weight  , gnode_weight  , 6 );
+  MPI_CHECK_EQ_C_ARRAY(1, expected_p1_garc_weight   , garc_weight   , 23);
+  MPI_CHECK_EQ_C_ARRAY(1, expected_p1_distrib_node  , distrib_node  , 3 );
+
+
   PDM_free(gnode_node_idx);
   PDM_free(gnode_node    );
   PDM_free(gnode_weight  );
@@ -257,12 +326,8 @@ MPI_TEST_CASE("[PDM_part_assembly_dual_graph] Full vtx_centered ", 2) {
   PDM_free(pnode_weight );
   PDM_free(parc_weight  );
 
-
-
-
   PDM_part_mesh_nodal_free(pmn);
   PDM_part_mesh_free(pm);
-
 }
 
 
