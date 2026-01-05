@@ -60,6 +60,7 @@ extern "C" {
  * \param [in]    pcg_arc                Communication graph for arcs. Required if \p pcg_node is NULL.
  * \param [out]   out_gnode_node_idx     Output CSR index for the global dual graph (size = total_n_node + 1)
  * \param [out]   out_gnode_node         Output CSR adjacency (global numbering)
+ * \param [out]   out_gnode_weight       Output node weights for the dual graph
  * \param [out]   out_garc_weight        Output edge weights for the dual graph
  * \param [out]   out_distrib_node       Global distribution of nodes across ranks (size = n_rank + 1)
  *
@@ -86,6 +87,7 @@ PDM_part_assembly_dual_graph
   int                    *out_n_tot_node,
   PDM_g_num_t           **out_gnode_node_idx,
   PDM_g_num_t           **out_gnode_node,
+  int                   **out_gnode_weight,
   int                   **out_garc_weight,
   PDM_g_num_t           **out_distrib_node,
   int                  ***out_part_to_graph

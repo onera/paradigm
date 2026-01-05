@@ -18,6 +18,7 @@
 #include "pdm_mem_tool.h"
 #include "pdm_part_graph_dual.h"
 #include "pdm_priv.h"
+#include "pdm_sort.h"
 #include "pdm_unique.h"
 
 #ifdef __cplusplus
@@ -69,6 +70,7 @@ PDM_part_assembly_dual_graph
   int                    *out_n_tot_node,
   PDM_g_num_t           **out_gnode_node_idx,
   PDM_g_num_t           **out_gnode_node,
+  int                   **out_gnode_weight,
   int                   **out_garc_weight,
   PDM_g_num_t           **out_distrib_node,
   int                  ***out_part_to_graph
@@ -282,8 +284,6 @@ PDM_part_assembly_dual_graph
       }
     }
   }
-
-  log_trace("n_tot_node = %i \n", n_tot_node);
 
   PDM_g_num_t* distrib_node = PDM_compute_entity_distribution(comm, n_tot_node);
 
@@ -552,12 +552,32 @@ PDM_part_assembly_dual_graph
   }
 
   /*
+   * Manage node_weight
+   */
+  int *gnode_weight = NULL;
+  if(node_weight != NULL) {
+    PDM_malloc(gnode_weight, n_tot_node, int);
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      for(int i_node = 0; i_node < n_node[i_part]; ++i_node) {
+        int l_node = is_owner_node[i_part][i_node];
+        if(l_node == -1) {
+          continue;
+        }
+        if(pnode_ln_to_gn[i_part][i_node] == -1) { // Donc pas selectioné
+          continue;
+        }
+        gnode_weight[l_node] = node_weight[i_part][i_node];
+      }
+    }
+  }
+
+  /*
    * Fill
    */
-  PDM_g_num_t *gnode_node  = NULL;
-  int         *garc_weight = NULL;
-  PDM_malloc(gnode_node , max_size, PDM_g_num_t);
-  PDM_malloc(garc_weight, max_size, int        );
+  PDM_g_num_t *gnode_node   = NULL;
+  int         *garc_weight  = NULL;
+  PDM_malloc(gnode_node  , max_size  , PDM_g_num_t);
+  PDM_malloc(garc_weight , max_size  , int        );
   for(int i_part = 0; i_part < n_part; ++i_part) {
 
     int  n_arc_graph   = pn_arc_graph [i_part];
@@ -708,6 +728,15 @@ PDM_part_assembly_dual_graph
   }
 
   /*
+   * Shift to zero
+   */
+  for(int i = 0; i < n_tot_node; ++i) {
+    for(int j = node_node_idx[i]; j < node_node_idx[i+1]; ++j) {
+      gnode_node[j] -= 1;
+    }
+  }
+
+  /*
    * Free
    */
   PDM_free(lorder);
@@ -727,6 +756,7 @@ PDM_part_assembly_dual_graph
   *out_n_tot_node     = n_tot_node;
   *out_gnode_node_idx = node_node_idx;
   *out_gnode_node     = gnode_node;
+  *out_gnode_weight   = gnode_weight;
   *out_garc_weight    = garc_weight;
   *out_distrib_node   = distrib_node;
   *out_part_to_graph  = is_owner_node;
