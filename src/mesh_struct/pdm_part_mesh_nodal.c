@@ -2149,7 +2149,7 @@ PDM_part_mesh_nodal_cell_vtx_connect_get
 )
 {
   if (pmn == NULL) {
-    *cell_vtx_idx = NULL;
+    *cell_vtx_idx = PDM_array_zeros_int(1);
     *cell_vtx     = NULL;
     return 0;
   }
