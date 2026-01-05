@@ -76,6 +76,8 @@ PDM_part_assembly_dual_graph
   int                  ***out_part_to_graph
 )
 {
+  PDM_UNUSED(n_arc); // Unused because size is implicit
+
   int i_rank;
   int n_rank;
   PDM_MPI_Comm_rank(comm, &i_rank);
@@ -256,7 +258,7 @@ PDM_part_assembly_dual_graph
     PDM_gnum_compute(gen_gnum_node);
     for(int i_part = 0; i_part < n_part; ++i_part) {
       pnode_ln_to_gn[i_part] = PDM_gnum_get(gen_gnum_node, i_part);
-      PDM_log_trace_array_long(pnode_ln_to_gn[i_part], n_node[i_part], "pnode_ln_to_gn ::");
+      // PDM_log_trace_array_long(pnode_ln_to_gn[i_part], n_node[i_part], "pnode_ln_to_gn ::");
     }
     PDM_gnum_free(gen_gnum_node);
   }
@@ -404,8 +406,6 @@ PDM_part_assembly_dual_graph
       for(int idx_node = _arc_node_idx[i_arc]; idx_node < _arc_node_idx[i_arc+1]; ++idx_node) {
         int i_node = PDM_ABS(_arc_node[idx_node])-1;
         int idx_write = send_arc_node_idx[i_graph_arc] + send_arc_node_n[i_part][i_graph_arc]++;
-        log_trace("idx_write = %i (%i) \n", idx_write, send_arc_node_idx[n_arc_graph]);
-        log_trace("pnode_ln_to_gn[%i] = %i \n", i_node, i_node);
         send_arc_node  [i_part][idx_write] = pnode_ln_to_gn[i_part][i_node];
         send_arc_weight[i_part][idx_write] = arc_weight    [i_part][i_arc];
       }

@@ -337,7 +337,7 @@ main
         }
       }
 
-      PDM_log_trace_array_int(pselect_node[i_part], pn_node[i_part], "pselect_node ::");
+      // PDM_log_trace_array_int(pselect_node[i_part], pn_node[i_part], "pselect_node ::");
     }
   }
 
