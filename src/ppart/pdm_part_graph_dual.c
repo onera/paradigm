@@ -789,7 +789,6 @@ void
 PDM_transfer_entity1_part_id_to_entity2_part_id
 (
   int    n_part,
-  int   *pn_entity1,
   int  **entity1_part_id,
   int   *pn_entity2,
   int  **pentity2_entity1_idx,
@@ -799,7 +798,7 @@ PDM_transfer_entity1_part_id_to_entity2_part_id
 {
   int max_connectivity = 0;
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    for(int i_entity2 = 0; i_entity2 < pn_entity1[i_part]; ++i_entity2) {
+    for(int i_entity2 = 0; i_entity2 < pn_entity2[i_part]; ++i_entity2) {
       max_connectivity = PDM_MAX(max_connectivity, pentity2_entity1_idx[i_part][i_entity2+1] - pentity2_entity1_idx[i_part][i_entity2]);
     }
   }

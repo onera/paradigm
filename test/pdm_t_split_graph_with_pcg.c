@@ -517,12 +517,19 @@ main
                                  PDM_MPI_MAX,
              (unsigned char **)  vtx_id);
 
+  if(0 == 1) { // Usefull to setup unit test easily
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      PDM_log_trace_array_int(vtx_id[i_part], pn_node[i_part], "vtx_id ::");
+      PDM_log_trace_array_int(pelt_vtx_idx[i_part], pn_elt[i_part]+1, "pelt_vtx_idx ::");
+      PDM_log_trace_array_int(pelt_vtx[i_part], pelt_vtx_idx[i_part][pn_elt[i_part]], "pelt_vtx ::");
+    }
+  }
+
   /*
    * Update delt_id
    */
   int **elt_id = NULL;
   PDM_transfer_entity1_part_id_to_entity2_part_id(n_part,
-                                                  pn_node,
                                                   vtx_id,
                                                   pn_elt,
                                                   pelt_vtx_idx,
@@ -540,27 +547,24 @@ main
     }
   }
 
+  if(post) {
+    const char    *elt_field_name [] = {"delt_id"};
+    double       **elt_field      [] = {delt_id};
+    const char    *field_vtx_name [] = {"dvtx_id"};
+    double       **field_vtx      [] = {dvtx_id};
+    char filename[999];
+    sprintf(filename, "repart_pmn");
+    PDM_part_mesh_nodal_dump_vtk_with_fields(pmn,
+                                             PDM_GEOMETRY_KIND_SURFACIC,
+                                             filename,
+                                             1,
+                                             elt_field_name,
+                   (const double ***)        elt_field,
+                                             1,
+                                             field_vtx_name,
+                   (const double ***)        field_vtx);
+  }
 
-  const char    *elt_field_name [] = {"delt_id"};
-  double       **elt_field      [] = {delt_id};
-  const char    *field_vtx_name [] = {"dvtx_id"};
-  double       **field_vtx      [] = {dvtx_id};
-  char filename[999];
-  sprintf(filename, "repart_pmn");
-  PDM_part_mesh_nodal_dump_vtk_with_fields(pmn,
-                                           PDM_GEOMETRY_KIND_SURFACIC,
-                                           filename,
-                                           1,
-                                           elt_field_name,
-                 (const double ***)        elt_field,
-                                           1,
-                                           field_vtx_name,
-                 (const double ***)        field_vtx);
-
-  // Passage node -> cell (si besoin)
-
-
-  // Splitting
   for(int i_part = 0; i_part < n_part; ++i_part) {
     PDM_free(vtx_id [i_part]);
     PDM_free(elt_id [i_part]);
