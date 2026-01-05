@@ -640,7 +640,7 @@ MPI_TEST_CASE("[PDM_part_assembly_dual_graph] Full cell_centered ", 2) {
                                &distrib_node,
                                &part_to_graph);
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_long(gnode_node_idx,       n_tot_node+1              , "gnode_node_idx ::");
     PDM_log_trace_array_long(gnode_node    , (int) gnode_node_idx[n_tot_node], "gnode_node     ::");
     PDM_log_trace_array_int (gnode_weight  ,       n_tot_node                , "gnode_weight   ::");
