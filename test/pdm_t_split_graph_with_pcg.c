@@ -567,10 +567,12 @@ main
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
     PDM_free(vtx_id [i_part]);
+    PDM_free(dvtx_id[i_part]);
     PDM_free(elt_id [i_part]);
     PDM_free(delt_id[i_part]);
   }
   PDM_free(vtx_id);
+  PDM_free(dvtx_id);
   PDM_free(elt_id);
   PDM_free(delt_id);
   for(int i_part = 0; i_part < n_part; ++i_part) {
