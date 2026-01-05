@@ -28,7 +28,7 @@ _generate_mesh
 )
 {
   int              n_part       = 1;
-  PDM_split_dual_t split_method = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
+  PDM_split_dual_t split_method = PDM_SPLIT_DUAL_WITH_PARMETIS;
 
   /* Warmup */
   PDM_dcube_nodal_t* dcube = PDM_dcube_nodal_gen_create(pdm_comm,
@@ -336,28 +336,28 @@ MPI_TEST_CASE("[PDM_part_assembly_dual_graph] Full vtx_centered ", 2) {
   MPI_CHECK(0, n_tot_node == 10);
   MPI_CHECK(1, n_tot_node == 6 );
 
-  PDM_g_num_t expected_p0_gnode_node_idx[11] = {0, 6, 10, 14, 20, 26, 30, 33, 37, 41, 43};
-  PDM_g_num_t expected_p0_gnode_node    [43] = {1, 3, 4, 12, 13, 15, 0, 4, 5, 13, 3, 6, 14, 15, 0, 2, 4, 6, 7, 15, 0, 1, 3, 5, 7, 8, 1, 4, 8, 9, 2, 3, 7, 3, 4, 6, 8, 4, 5, 7, 9, 5, 8};
+  PDM_g_num_t expected_p0_gnode_node_idx[11] = {0, 2, 6, 10, 13, 17, 23, 29, 33, 39, 42 };
+  PDM_g_num_t expected_p0_gnode_node    [42] = {1, 4, 0, 2, 4, 5, 1, 3, 5, 6, 2, 6, 10, 0, 1, 5, 7, 1, 2, 4, 6, 7, 8, 2, 3, 5, 8, 10, 11, 4, 5, 8, 9, 5, 6, 7, 9, 11, 13, 7, 8, 13};
   PDM_g_num_t expected_p0_gnode_weight  [10] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-  PDM_g_num_t expected_p0_garc_weight   [43] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+  PDM_g_num_t expected_p0_garc_weight   [42] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
   PDM_g_num_t expected_p0_distrib_node  [3 ] = {0, 10, 16};
 
-  PDM_g_num_t expected_p1_gnode_node_idx[7 ] = {0, 2, 6, 10, 13, 17, 23};
-  PDM_g_num_t expected_p1_gnode_node    [23] = {11, 14, 10, 12, 14, 15, 0, 11, 13, 15, 0, 1, 12, 2, 10, 11, 15, 0, 2, 3, 11, 12, 14};
+  PDM_g_num_t expected_p1_gnode_node_idx[7 ] = {0, 4, 10, 14, 18, 22, 24};
+  PDM_g_num_t expected_p1_gnode_node    [24] = {3, 6, 11, 12, 6, 8, 10, 12, 13, 14, 10, 11, 14, 15, 8, 9, 11, 14, 11, 12, 13, 15, 12, 14};
   PDM_g_num_t expected_p1_gnode_weight  [6 ] = {1, 1, 1, 1, 1, 1};
-  PDM_g_num_t expected_p1_garc_weight   [23] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+  PDM_g_num_t expected_p1_garc_weight   [24] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
   PDM_g_num_t expected_p1_distrib_node  [3 ] = {0, 10, 16};
 
   MPI_CHECK_EQ_C_ARRAY(0, expected_p0_gnode_node_idx, gnode_node_idx, 11);
-  MPI_CHECK_EQ_C_ARRAY(0, expected_p0_gnode_node    , gnode_node    , 43);
+  MPI_CHECK_EQ_C_ARRAY(0, expected_p0_gnode_node    , gnode_node    , 42);
   MPI_CHECK_EQ_C_ARRAY(0, expected_p0_gnode_weight  , gnode_weight  , 10);
-  MPI_CHECK_EQ_C_ARRAY(0, expected_p0_garc_weight   , garc_weight   , 43);
+  MPI_CHECK_EQ_C_ARRAY(0, expected_p0_garc_weight   , garc_weight   , 42);
   MPI_CHECK_EQ_C_ARRAY(0, expected_p0_distrib_node  , distrib_node  , 3 );
 
   MPI_CHECK_EQ_C_ARRAY(1, expected_p1_gnode_node_idx, gnode_node_idx, 7 );
-  MPI_CHECK_EQ_C_ARRAY(1, expected_p1_gnode_node    , gnode_node    , 23);
+  MPI_CHECK_EQ_C_ARRAY(1, expected_p1_gnode_node    , gnode_node    , 24);
   MPI_CHECK_EQ_C_ARRAY(1, expected_p1_gnode_weight  , gnode_weight  , 6 );
-  MPI_CHECK_EQ_C_ARRAY(1, expected_p1_garc_weight   , garc_weight   , 23);
+  MPI_CHECK_EQ_C_ARRAY(1, expected_p1_garc_weight   , garc_weight   , 24);
   MPI_CHECK_EQ_C_ARRAY(1, expected_p1_distrib_node  , distrib_node  , 3 );
 
 
@@ -640,7 +640,7 @@ MPI_TEST_CASE("[PDM_part_assembly_dual_graph] Full cell_centered ", 2) {
                                &distrib_node,
                                &part_to_graph);
 
-  if(0 == 1) {
+  if(1 == 1) {
     PDM_log_trace_array_long(gnode_node_idx,       n_tot_node+1              , "gnode_node_idx ::");
     PDM_log_trace_array_long(gnode_node    , (int) gnode_node_idx[n_tot_node], "gnode_node     ::");
     PDM_log_trace_array_int (gnode_weight  ,       n_tot_node                , "gnode_weight   ::");
@@ -651,14 +651,14 @@ MPI_TEST_CASE("[PDM_part_assembly_dual_graph] Full cell_centered ", 2) {
   MPI_CHECK(0, n_tot_node == 9);
   MPI_CHECK(1, n_tot_node == 9);
 
-  PDM_g_num_t expected_p0_gnode_node_idx[10] = {0, 3, 6, 8, 10, 12, 15, 17, 20, 21};
-  PDM_g_num_t expected_p0_gnode_node    [21] = {1, 5, 17, 0, 2, 14, 1, 7, 4, 16, 3, 5, 0, 4, 6, 5, 7, 2, 6, 8, 7};
+  PDM_g_num_t expected_p0_gnode_node_idx[10] = {0, 1, 4, 6, 9, 11, 13, 16, 19, 21 };
+  PDM_g_num_t expected_p0_gnode_node    [21] = {1, 0, 2, 5, 1, 3, 2, 4, 7, 3, 9, 1, 6, 5, 7, 8, 3, 6, 10, 6, 13};
   PDM_g_num_t expected_p0_gnode_weight  [9 ] = {1, 1, 1, 1, 1, 1, 1, 1, 1};
   PDM_g_num_t expected_p0_garc_weight   [21] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
   PDM_g_num_t expected_p0_distrib_node  [3 ] = {0, 9, 18};
 
-  PDM_g_num_t expected_p1_gnode_node_idx[10] = {0, 1, 4, 6, 9, 11, 13, 15, 18, 21};
-  PDM_g_num_t expected_p1_gnode_node    [21] = {10, 9, 11, 15, 10, 12, 11, 13, 17, 12, 14, 1, 13, 10, 16, 3, 15, 17, 0, 12, 16};
+  PDM_g_num_t expected_p1_gnode_node_idx[10] = {0, 2, 5, 8, 10, 12, 15, 17, 20, 21};
+  PDM_g_num_t expected_p1_gnode_node    [21] = {4, 11, 7, 11, 14, 9, 10, 12, 11, 16, 8, 14, 10, 13, 15, 14, 16, 12, 15, 17, 16};
   PDM_g_num_t expected_p1_gnode_weight  [9 ] = {1, 1, 1, 1, 1, 1, 1, 1, 1 };
   PDM_g_num_t expected_p1_garc_weight   [21] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
   PDM_g_num_t expected_p1_distrib_node  [3 ] = {0, 9, 18};
