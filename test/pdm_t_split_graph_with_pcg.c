@@ -431,6 +431,7 @@ main
   int           n_tot_node     = 0;
   PDM_g_num_t  *gnode_node_idx = NULL;
   PDM_g_num_t  *gnode_node     = NULL;
+  int          *gnode_weight   = NULL;
   int          *garc_weight    = NULL;
   PDM_g_num_t  *distrib_node   = NULL;
   int         **part_to_graph  = NULL;
@@ -450,13 +451,14 @@ main
                                &n_tot_node,
                                &gnode_node_idx,
                                &gnode_node,
+                               &gnode_weight,
                                &garc_weight,
                                &distrib_node,
                                &part_to_graph);
 
-  for(int i = 0; i < gnode_node_idx[n_tot_node]; ++i) {
-    gnode_node[i] -= 1;
-  }
+  // for(int i = 0; i < gnode_node_idx[n_tot_node]; ++i) {
+  //   gnode_node[i] -= 1;
+  // }
 
   int *node_part_id = NULL;
   PDM_malloc(node_part_id, n_tot_node, int);
@@ -464,7 +466,7 @@ main
                        distrib_node,
                        gnode_node_idx,
                        gnode_node,
-                       NULL,
+                       gnode_weight,
                        garc_weight,
                        n_rank,
                        NULL,
@@ -475,6 +477,7 @@ main
 
   PDM_free(gnode_node_idx);
   PDM_free(gnode_node    );
+  PDM_free(gnode_weight  );
   PDM_free(garc_weight   );
   PDM_free(distrib_node  );
 

@@ -328,7 +328,7 @@ MPI_TEST_CASE("[PDM_part_assembly_dual_graph] Full vtx_centered ", 2) {
   if(0 == 1) {
     PDM_log_trace_array_long(gnode_node_idx,       n_tot_node                , "gnode_node_idx ::");
     PDM_log_trace_array_long(gnode_node    , (int) gnode_node_idx[n_tot_node], "gnode_node     ::");
-    PDM_log_trace_array_long(gnode_weight  ,       n_tot_node                , "gnode_weight   ::");
+    PDM_log_trace_array_int (gnode_weight  ,       n_tot_node                , "gnode_weight   ::");
     PDM_log_trace_array_int (garc_weight   , (int) gnode_node_idx[n_tot_node], "garc_weight    ::");
     PDM_log_trace_array_long(distrib_node  ,       n_rank+1                  , "distrib_node   ::");
   }
@@ -480,7 +480,7 @@ MPI_TEST_CASE("[PDM_part_assembly_dual_graph] Full cell_centered ", 2) {
   if(1 == 1) {
     PDM_log_trace_array_long(gnode_node_idx,       n_tot_node                , "gnode_node_idx ::");
     PDM_log_trace_array_long(gnode_node    , (int) gnode_node_idx[n_tot_node], "gnode_node     ::");
-    PDM_log_trace_array_long(gnode_weight  ,       n_tot_node                , "gnode_weight   ::");
+    PDM_log_trace_array_int (gnode_weight  ,       n_tot_node                , "gnode_weight   ::");
     PDM_log_trace_array_int (garc_weight   , (int) gnode_node_idx[n_tot_node], "garc_weight    ::");
     PDM_log_trace_array_long(distrib_node  ,       n_rank+1                  , "distrib_node   ::");
   }
