@@ -742,7 +742,7 @@ PDM_part_assembly_dual_graph
       }
       log_trace("\n");
     }
-    PDM_log_trace_connectivity_long(node_node_idx, gnode_node, n_tot_node, "node_node ::");
+    PDM_log_trace_connectivity_dual(node_node_idx, gnode_node, n_tot_node, "node_node ::");
   }
 
   /*
