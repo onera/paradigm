@@ -707,8 +707,6 @@ MPI_TEST_CASE("[PDM_part_assembly_dual_graph] Full cell_centered ", 2) {
 }
 
 
-// Same but with pcg_node == NULL (cell centered)
-
 MPI_TEST_CASE("[PDM_transfer_entity1_part_id_to_entity2_part_id] ", 2) {
 
   int i_rank;
