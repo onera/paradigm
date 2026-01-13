@@ -330,6 +330,35 @@ PDM_exchange_helper_exch_wait
 );
 
 /**
+ * \brief Checks the completion status of a multi-segment exchange request.
+ *
+ * This function queries the status of a specific exchange request which may
+ * consist of multiple underlying MPI sub-requests. It mimics the behavior of
+ * \ref MPI_Testall: it returns 1 only if all sub-communications associated
+ * with the \p request_id have completed.
+ *
+ * If the status is not \ref EXCHANGE_HELPER_STATUS_ONGOING, it returns 1 immediately.
+ * Otherwise, it iterates through all sub-requests to progress the communication
+ * and verify their status.
+ *
+ * \param[in,out] exch_helper \ref PDM_exchange_helper_t structure managing the requests.
+ * \param[in]     request_id  The ID of the composite request to check.
+ *
+ * \return An integer acting as a boolean flag:
+ * - 1 if all sub-requests are completed (or if the request was already finished).
+ * - 0 if at least one sub-request is still pending.
+ *
+ * \note Calling this function helps progress the MPI communication engine for
+ * all pending sub-requests within the specified exchange.
+ */
+int
+PDM_exchange_helper_exch_test
+(
+  PDM_exchange_helper_t *exch_helper,
+  int                    request_id
+);
+
+/**
  * \brief Frees a persistent communication request.
  *
  * This function releases all resources associated with a specific

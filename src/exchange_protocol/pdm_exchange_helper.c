@@ -726,6 +726,29 @@ PDM_exchange_helper_exch_wait
   }
 }
 
+
+int
+PDM_exchange_helper_exch_test
+(
+  PDM_exchange_helper_t *exch_helper,
+  int                    request_id
+)
+{
+  if(exch_helper->requests_status[request_id] != EXCHANGE_HELPER_STATUS_ONGOING) {
+    return 1;
+  }
+
+  int all_complete = 1;
+  for(int i = 0; i < exch_helper->n_sub_requests[request_id]; ++i) {
+    int flag = 0;
+    PDM_MPI_Test(&exch_helper->sub_requests[request_id][i], &flag);
+    if(flag == 0) {
+      all_complete = 1;
+    }
+  }
+  return all_complete;
+}
+
 void
 PDM_exchange_helper_exch_free
 (
