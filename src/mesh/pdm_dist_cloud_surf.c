@@ -1728,19 +1728,17 @@ _dist_cloud_surf_compute_optim
       PDM_free(part_elt_extents);
     }
 
-    PDM_part_mesh_nodal_t       *extract_pmn  = NULL;
-    PDM_part_mesh_nodal_elmts_t *extract_pmne = NULL;
+    PDM_part_mesh_nodal_t       *extract_pmn        = NULL;
+    PDM_part_mesh_nodal_elmts_t *extract_pmne       = NULL;
+    double                      *pextract_vtx_coord = NULL;
     if (pmne != NULL) {
       PDM_extract_part_part_mesh_nodal_get(extrp,
                                            &extract_pmn,
                                            PDM_OWNERSHIP_KEEP);
       extract_pmne = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(extract_pmn,
                                                                    geom_kind);
+      pextract_vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(extract_pmn, 0, PDM_OWNERSHIP_BAD_VALUE);
     }
-
-    int     pextract_n_vtx     = PDM_part_mesh_nodal_n_vtx_get    (extract_pmn, 0);
-    double *pextract_vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(extract_pmn, 0, PDM_OWNERSHIP_BAD_VALUE);
-
 
     PDM_Mesh_nodal_elt_t *elt_type  = NULL;
     int                  *elt_order = NULL;
@@ -1988,11 +1986,15 @@ _dist_cloud_surf_compute_optim
         }
 
       }
+      PDM_extract_part_vtx_coord_get(extrp, 0, &pextract_vtx_coord, PDM_OWNERSHIP_BAD_VALUE);
+
     }
 
     assert(pn_extract_face == n_extract_boxes);
 
     if(dbg_enabled) {
+
+      int  pextract_n_vtx = PDM_part_mesh_nodal_n_vtx_get(extract_pmn, 0);
       char filename[999];
       int i_rank;
       PDM_MPI_Comm_rank (comm, &i_rank);
