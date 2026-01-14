@@ -170,6 +170,7 @@ PDM_part_assembly_dual_graph
     //   2/ On filtre localement et on refait le part_comm_graph
     PDM_part_comm_graph_all_reduce(pcg_node,
                                    PDM_MPI_INT,
+                                   1,
                                    PDM_MPI_MAX,
                (unsigned char **)  select_node);
 
