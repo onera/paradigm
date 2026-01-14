@@ -510,10 +510,12 @@ main
   /* Synchronise all processor */
   PDM_part_comm_graph_all_reduce(pcg_node,
                                  PDM_MPI_DOUBLE,
+                                 1,
                                  PDM_MPI_MAX,
              (unsigned char **)  dvtx_id);
   PDM_part_comm_graph_all_reduce(pcg_node,
                                  PDM_MPI_INT,
+                                 1,
                                  PDM_MPI_MAX,
              (unsigned char **)  vtx_id);
 
