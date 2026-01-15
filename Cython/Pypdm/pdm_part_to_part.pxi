@@ -295,7 +295,7 @@ cdef class PartToPart:
                         list part1_to_part2_triplet):
     """
     from_triplet(comm, part1_ln_to_gn, n_elt2, part1_to_part2_idx, part1_to_part2_triplet_idx, part1_to_part2_triplet)
-    
+
     An alternative constructor (classmethod) that create a PDM_part_to_part object from part2 triplet.
 
     Parameters:
@@ -306,7 +306,7 @@ cdef class PartToPart:
       part1_to_part2_triplet_idx (`list` of `np.ndarray[np.int32_t]`)     : Index for Part2 triplets
       part1_to_part2             (`list` of `np.ndarray[npy_pdm_gnum_t]`) : Part1→Part2 mapping (i_rank, i_part, lnum) triplet
     """
-    
+
     cdef PartToPart obj = PartToPart.__new__(PartToPart)
     obj.py_comm                = comm
     cdef MPI.MPI_Comm c_comm   = comm.ob_mpi

@@ -60,16 +60,15 @@ extern "C" {
  * \return 0 if converged, 1 else
  *
  */
-
 int
 PDM_linear_algebra_svd
 (
- const int     n_row,
- const int     n_col,
-       double *a,
-       double *w,
-       double *v
- );
+  const int     n_row,
+  const int     n_col,
+        double *a,
+        double *w,
+        double *v
+);
 
 
 /**
@@ -91,17 +90,16 @@ PDM_linear_algebra_svd
  * \return 0 if SVD converged, 1 else
  *
  */
-
 int
 PDM_linear_algebra_linsolve_svd
 (
- const int     n_row,
- const int     n_col,
- const int     stride,
- const double  tol,
-       double *a,
-       double *b,
-       double *x
+  const int     n_row,
+  const int     n_col,
+  const int     stride,
+  const double  tol,
+        double *a,
+        double *b,
+        double *x
 );
 
 
@@ -119,15 +117,33 @@ PDM_linear_algebra_linsolve_svd
  *
  * \return 1 if A is singular, 0 else
  */
-
 int
 PDM_linear_algebra_linsolve_gauss
 (
- const int     n,
- const int     stride,
-       double *A,
-       double *x
- );
+  const int     n,
+  const int     stride,
+        double *A,
+        double *x
+);
+
+
+/**
+ * \brief Compute the eigenvalues and eigenvectors of a 2x2 symmetric matrix.
+ *
+ * (Only the upper triangular part of matrix A is specified.)
+ * The eigenvalues are sorted in ascending order.
+ *
+ * \param a   [in]   Upper triangular part of the symmetric matrix (A[0,0], A[0,1], A[1,1])
+ * \param val [out]  Eigenvalues
+ * \param vec [out]  Eigenvectors (vec[2*i:2*(i+1)] is the i-th eigenvector)
+ *
+ */
+void PDM_linear_algebra_eig_sym2
+(
+  double a[3],
+  double val[2],
+  double vec[4]
+);
 
 
 /**
@@ -141,18 +157,47 @@ PDM_linear_algebra_linsolve_gauss
  * \param vec [out]  Eigenvectors (vec[3*i:3*(i+1)] is the i-th eigenvector)
  *
  */
-
-void PDM_linear_algebra_eigv_3x3_sym
+void PDM_linear_algebra_eig_sym3
 (
- double a[6],
- double val[3],
- double vec[9]
- );
+  double a[6],
+  double val[3],
+  double vec[9]
+);
+
+
+/**
+ * \brief Reassemble a 2x2 symmetric tensor from its eigendecomposition
+ *
+ * \param [in]  eig_val  Eigenvalues (size = 2)
+ * \param [in]  eig_vec  Eigenvectors (size = 4, stored in row-major order)
+ * \param [out] a        Symmetric tensor in compact, upper-triangle form (A[0,0], A[0,1], A[1,1], size = 4)
+ */
+void
+PDM_sym_tensor_from_eig2
+(
+  double *eig_val,
+  double *eig_vec,
+  double *a
+);
+
+
+/**
+ * \brief Reassemble a 3x3 symmetric tensor from its eigendecomposition
+ *
+ * \param [in]  eig_val  Eigenvalues (size = 3)
+ * \param [in]  eig_vec  Eigenvectors (size = 9, stored in row-major order)
+ * \param [out] a        Symmetric tensor in compact, upper-triangle form (A[0,0], A[0,1], A[0,2], A[1,1], A[1,2], A[2,2], size = 6)
+ */
+void
+PDM_sym_tensor_from_eig3
+(
+  double *eig_val,
+  double *eig_vec,
+  double *a
+);
 
 #ifdef  __cplusplus
 }
 #endif
 
 #endif // PDM_LINEAR_ALGEBRA_H
-
-

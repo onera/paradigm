@@ -131,6 +131,7 @@ cdef extern from "pdm_part_mesh_nodal_algorithm.h":
 
 cdef extern from "pdm_part_mesh_nodal_geom.h":
     void PDM_part_mesh_nodal_dual_volume_compute(PDM_part_mesh_nodal_t   *pmn,
+                                                 PDM_bool_t               synchronize,
                                                  double                ***dual_vol);
 
 cdef extern from "pdm_part_comm_graph.h":
@@ -326,6 +327,20 @@ cdef class PartMeshNodal:
                                       np_to_gnum_pointer(group_ln_to_gn),
                                       PDM_OWNERSHIP_USER)
 
+    def get_n_group(self, PDM_geometry_kind_t geom_kind):
+      """
+      get_n_group(geom_kind)
+
+      Get group number for given ``geom_kind``
+
+      Parameters:
+        geom_kind (PDM_geometry_kind_t) : Geometry kind (volume, surface, ridge or corner)
+
+      Returns:
+        Number of groups
+      """
+      return part_mesh_nodal_n_group_get(self, geom_kind)
+
     def to_view_capsule(self):
       """
       """
@@ -384,13 +399,17 @@ cdef class PartMeshNodalCapsule:
   # ************************************************************************
   # > Class attributes
   cdef PDM_part_mesh_nodal_t* pmn
+  cdef PDM_ownership_t        ownership
   # ************************************************************************
   # ------------------------------------------------------------------------
-  def __cinit__(self, object caps):
+  def __cinit__(self,
+                object          caps,
+                PDM_ownership_t ownership = PDM_OWNERSHIP_KEEP):
     """
     """
     cdef PDM_part_mesh_nodal_t* caps_pmn = <PDM_part_mesh_nodal_t *> PyCapsule_GetPointer(caps, NULL)
-    self.pmn = caps_pmn;
+    self.pmn = caps_pmn
+    self.ownership = ownership
 
   def part_comm_graph_get(self, PDM_mesh_entities_t entity_type):
     return get_part_comm_graph(self, entity_type)
@@ -490,11 +509,11 @@ cdef class PartMeshNodalCapsule:
                                         PDM_mesh_entities_t entity_type):
     compute_pcg_from_gnum(self, entity_type)
 
-
   def __dealloc__(self):
     """
     """
-    PDM_part_mesh_nodal_free(self.pmn)
+    if self.ownership == PDM_OWNERSHIP_KEEP:
+      PDM_part_mesh_nodal_free(self.pmn)
 
 
 ctypedef fused PMeshNodal:
@@ -662,15 +681,16 @@ def part_mesh_nodal_get_group(PMeshNodal pypmn, PDM_geometry_kind_t geom_kind, i
 
   return np_group_elmt, np_group_ln_to_gn
 
-def part_mesh_nodal_dual_volume(PMeshNodal pypmn):
+def part_mesh_nodal_dual_volume(PMeshNodal pypmn, bint synchronize=True):
   """
 
-      part_mesh_nodal_dual_volume(pypmn)
+      part_mesh_nodal_dual_volume(pypmn, synchronize=True)
 
       Compute dual volumes vertices
 
       Parameters:
-        pypmn (PMeshNodal) : PartMeshNodal or PartMeshNodalCapsule
+        pypmn       (PMeshNodal) : PartMeshNodal or PartMeshNodalCapsule
+        synchronize (bool)       : Enable synchronization at partition boundaries (optional, default=True)
 
       Returns:
         For each part of PartMeshNodal, the dual volume at vertices (len = n_part)
@@ -678,9 +698,13 @@ def part_mesh_nodal_dual_volume(PMeshNodal pypmn):
   # ************************************************************************
   # > Declaration
   cdef double **dual_vol
+  cdef int c_synchronize = PDM_FALSE
+  if synchronize:
+    c_synchronize = PDM_TRUE
   # ************************************************************************
 
   PDM_part_mesh_nodal_dual_volume_compute(pypmn.pmn,
+                             <PDM_bool_t> c_synchronize,
                                           &dual_vol)
 
   n_part = PDM_part_mesh_nodal_n_part_get(pypmn.pmn)

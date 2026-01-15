@@ -104,26 +104,42 @@ enum {X, Y, Z};
  * Dot product
  */
 
-#define PDM_DOT_PRODUCT(vect1, vect2)                                   \
-    ((vect1)[X] * (vect2)[X] + (vect1)[Y] * (vect2)[Y] + (vect1)[Z] * (vect2)[Z])
+#define PDM_DOT_PRODUCT_2D(vect1, vect2) \
+  ((vect1)[X] * (vect2)[X] + (vect1)[Y] * (vect2)[Y])
+
+#define PDM_DOT_PRODUCT(vect1, vect2) \
+  ((vect1)[X] * (vect2)[X] + (vect1)[Y] * (vect2)[Y] + (vect1)[Z] * (vect2)[Z])
 
 /**
  * Module
  */
 
-#define PDM_MODULE(vect)                                                \
+#define PDM_MODULE_2D(vect) \
+  (sqrt((vect)[X] * (vect)[X] + (vect)[Y] * (vect)[Y]))
+
+#define PDM_MODULE(vect) \
   (sqrt((vect)[X] * (vect)[X] + (vect)[Y] * (vect)[Y] + (vect)[Z] * (vect)[Z]))
 
+/**
+ * Cross product
+ */
+
 #define PDM_CROSS_PRODUCT(prod_vect, vect1, vect2)  \
-    ((prod_vect)[X] = (vect1)[Y] * (vect2)[Z] - (vect2)[Y] * (vect1)[Z], \
-     (prod_vect)[Y] = (vect2)[X] * (vect1)[Z] - (vect1)[X] * (vect2)[Z], \
-     (prod_vect)[Z] = (vect1)[X] * (vect2)[Y] - (vect2)[X] * (vect1)[Y])
+  ((prod_vect)[X] = (vect1)[Y] * (vect2)[Z] - (vect2)[Y] * (vect1)[Z], \
+   (prod_vect)[Y] = (vect2)[X] * (vect1)[Z] - (vect1)[X] * (vect2)[Z], \
+   (prod_vect)[Z] = (vect1)[X] * (vect2)[Y] - (vect2)[X] * (vect1)[Y])
+
+/**
+ * Other
+ */
 
 #define PDM_DETERMINANT2X2(vect1, vect2) \
-    ((vect1)[X] * (vect2)[Y] - (vect2)[X] * (vect1)[Y] )
+  ((vect1)[X] * (vect2)[Y] - (vect2)[X] * (vect1)[Y] )
 
-#define PDM_DOT_PRODUCT_2D(vect1, vect2) \
-    ((vect1)[X] * (vect2)[X] + (vect1)[Y] * (vect2)[Y])
+#define PDM_VT_M_V_PRODUCT(mat, vect) \
+  ((vect)[0] * ((mat)[0] * (vect)[0] + (mat)[1] * (vect)[1] + (mat)[2] * (vect)[2]) + \
+   (vect)[1] * ((mat)[1] * (vect)[0] + (mat)[3] * (vect)[1] + (mat)[4] * (vect)[2]) + \
+   (vect)[2] * ((mat)[2] * (vect)[0] + (mat)[4] * (vect)[1] + (mat)[5] * (vect)[2]))
 
 #define PDM_PI 3.1415926535897931
 

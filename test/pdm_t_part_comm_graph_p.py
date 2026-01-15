@@ -140,6 +140,3 @@ def test_with_part_mesh_nodal():
 test_constructor()
 test_constructor_with_nuplet()
 test_with_part_mesh_nodal()
-
-
-

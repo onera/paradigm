@@ -338,11 +338,12 @@ PDM_part_geom_cell_center
  *
  * \param [in]   comm             MPI communicator
  * \param [in]   n_part           Number of partitions
+ * \param [in]   dimension        Element dimension
  * \param [in]   n_selected_elt   Number of selected elements (size = \p n_part)
  * \param [in]   selected_elt     Local IDs of selected elements (optional, size = \p n_part or NULL)
  * \param [in]   elt_vtx_idx      Index for Element->Vtx connectivity (size = \p n_part, for each part, size = \p n_selected_elt + 1)
  * \param [in]   elt_vtx          Element->Vtx connectivity (size = \p n_part, for each part, size = \p elt_vtx_idx[\p n_selected_elt])
- * \param [in]   elt_plane_normal Element plane normal (size = \p n_part, for each part, size = \p elt_vtx_idx[\p n_selected_elt])
+ * \param [in]   elt_plane_normal Element plane normal (size = \p n_part, for each part, size = \p n_selected_elt)
  * \param [in]   pcg_elt          Element \ref PDM_part_comm_graph object
  * \param [in]   n_selected_vtx   Number of selected vertices (size = \p n_part)
  * \param [in]   selected_vtx     Local IDs of selected vertices (optional, size = \p n_part or NULL)
