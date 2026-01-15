@@ -76,6 +76,9 @@ cdef class PartCommGraphCapsule:
   def get_entity_graph(self, int i_part):
     return entity_graph_get(self, i_part)
 
+  def get_entity_nuplet(self, int i_part):
+    return entity_nuplet_get(self, i_part)
+
   def exch(self,
            list send_entity_data,
            send_entity_stride=1,
@@ -353,16 +356,25 @@ def all_reduce(PyPartCommGraph pypcg,
 
 # ------------------------------------------------------------------------
 def entity_nuplet_get(PyPartCommGraph pypcg, int i_part):
+  cdef int *entity_graph  = NULL
   cdef int *entity_nuplet = NULL
   cdef int  n_entity
   cdef int  size_of_nuplet
 
+  n_entity = PDM_part_comm_graph_entity_graph_get(pypcg.pcg,
+                                                  i_part,
+                                                  &entity_graph,
+                                                  PDM_OWNERSHIP_USER)
   nuplet_size = PDM_part_comm_graph_entity_nuplet_get(pypcg.pcg,
                                                       i_part,
                                                       &entity_nuplet,
                                                       PDM_OWNERSHIP_USER)
 
-  return create_numpy_i(entity_nuplet, pypcg._pn_entity_graph[i_part] * pypcg._nuplet_size)
+  np_entity_nuplet = None
+  if (entity_nuplet != NULL):
+    np_entity_nuplet = create_numpy_i(entity_nuplet, n_entity * nuplet_size)
+
+  return np_entity_nuplet
 
 # ------------------------------------------------------------------------
 def pcg_entity1_to_entity2(PyPartCommGraph pypcg_entity1,
