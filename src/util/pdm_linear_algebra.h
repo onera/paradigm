@@ -170,7 +170,7 @@ void PDM_linear_algebra_eig_sym3
  *
  * \param [in]  eig_val  Eigenvalues (size = 2)
  * \param [in]  eig_vec  Eigenvectors (size = 4, stored in row-major order)
- * \param [out] a        Symmetric tensor in compact, upper-triangle form (size = 4)
+ * \param [out] a        Symmetric tensor in compact, upper-triangle form (A[0,0], A[0,1], A[1,1], size = 4)
  */
 void
 PDM_sym_tensor_from_eig2
@@ -186,7 +186,7 @@ PDM_sym_tensor_from_eig2
  *
  * \param [in]  eig_val  Eigenvalues (size = 3)
  * \param [in]  eig_vec  Eigenvectors (size = 9, stored in row-major order)
- * \param [out] a        Symmetric tensor in compact, upper-triangle form (size = 6)
+ * \param [out] a        Symmetric tensor in compact, upper-triangle form (A[0,0], A[0,1], A[0,2], A[1,1], A[1,2], A[2,2], size = 6)
  */
 void
 PDM_sym_tensor_from_eig3
