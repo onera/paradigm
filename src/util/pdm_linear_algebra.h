@@ -140,7 +140,7 @@ PDM_linear_algebra_linsolve_gauss
  */
 void PDM_linear_algebra_eig_sym2
 (
-  double a[3],
+  double a  [3],
   double val[2],
   double vec[4]
 );
@@ -159,9 +159,9 @@ void PDM_linear_algebra_eig_sym2
  */
 void PDM_linear_algebra_eig_sym3
 (
-  double a[6],
-  double val[3],
-  double vec[9]
+  const double a  [6],
+        double val[3],
+        double vec[9]
 );
 
 
