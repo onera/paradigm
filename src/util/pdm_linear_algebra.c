@@ -200,6 +200,8 @@ static void svbksb
  *
  ************************************************/
 
+#if defined(PDM_HAVE_MKL) || defined(PDM_HAVE_LAPACK)
+#else
 /*
  * Robustly compute a right-handed orthonormal set {u, v, w}
  * The vector w is assumed to be unit-length.
@@ -229,8 +231,6 @@ static void _compute_orthogonal_complement
   PDM_CROSS_PRODUCT (v, w, u);
 }
 
-#if defined(PDM_HAVE_MKL) || defined(PDM_HAVE_LAPACK)
-#else
 /*
  * Compute a unit-length eigenvector for eigenvalue val0
  */
@@ -830,9 +830,9 @@ PDM_GCC_SUPPRESS_WARNING_POP
 void
 PDM_linear_algebra_eig_sym3
 (
-  double a[6],
-  double val[3],
-  double vec[9]
+  const double a[6],
+        double val[3],
+        double vec[9]
 )
 {
 

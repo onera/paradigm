@@ -159,7 +159,7 @@ void PDM_linear_algebra_eig_sym2
  */
 void PDM_linear_algebra_eig_sym3
 (
-  double a[6],
+  const double a[6],
   double val[3],
   double vec[9]
 );
