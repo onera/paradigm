@@ -209,8 +209,8 @@ static void svbksb
 static void _compute_orthogonal_complement
 (
  const double *w,
- double       *u,
- double       *v
+       double *u,
+       double *v
  )
 {
   if (PDM_ABS(w[0]) > PDM_ABS(w[1])) {
@@ -787,38 +787,38 @@ PDM_linear_algebra_linsolve_gauss
 void
 PDM_linear_algebra_eig_sym2
 (
-  double a[3],
+  double a  [3],
   double val[2],
   double vec[4]
 )
 {
 #if defined(PDM_HAVE_MKL) || defined(PDM_HAVE_LAPACK)
-int info = 0;
+  int info = 0;
 
-double M[4] = {a[0], a[1],
-               a[1], a[2]};
-int n = 2;
-int lwork = 3*n - 1;
-double work[5];
+  double M[4] = {a[0], a[1],
+                 a[1], a[2]};
+  int n = 2;
+  int lwork = 3*n - 1;
+  double work[5];
 
-dsyev_("V",
-       "U",
-       &n,
-       M,
-       &n,
-       val,
-       work,
-       &lwork,
-       &info);
+  dsyev_("V",
+         "U",
+         &n,
+         M,
+         &n,
+         val,
+         work,
+         &lwork,
+         &info);
 
-if (info != 0) {
-  printf("!! a = [%f %f %f] info != 0\n", a[0], a[1], a[2]);
-}
-assert(info == 0);
+  if (info != 0) {
+    printf("!! a = [%f %f %f] info != 0\n", a[0], a[1], a[2]);
+  }
+  assert(info == 0);
 
-if (vec != NULL) {
-  memcpy(vec, M, sizeof(double) * 4);
-}
+  if (vec != NULL) {
+    memcpy(vec, M, sizeof(double) * 4);
+  }
 #else
   PDM_error(__FILE__, __LINE__, 0, "PDM_linear_algebra_eig_sym2 needs LAPACK\n");
 #endif
@@ -847,7 +847,7 @@ PDM_linear_algebra_eig_sym3
   double work[8];
 
   // printf("!! a (Avant) = [%f %f %f %f %f %f] info != 0\n", a[0], a[1], a[2], m[3], m[4], m[5]);
-  dsyev_ ("V",
+  dsyev_("V",
          "U",
          &n,
          M,
