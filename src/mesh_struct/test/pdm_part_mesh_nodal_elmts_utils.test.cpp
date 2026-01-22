@@ -359,7 +359,7 @@ MPI_TEST_CASE("[PDM_part_mesh_nodal_elmts] - PDM_part_mesh_nodal_elmts_group_to_
   // std::vector<std::vector<int>> expected_volume_tag = {{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
 
   // for(int i_part = 0; i_part < n_part; ++i_part) {
-  //   int n_elmts = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, 0);
+  //   int n_elmts = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, i_part);
   //   if(0 == 1) {
   //     PDM_log_trace_array_int(volume_tag[i_part], n_elmts, "volume_tag ::");
   //   }
@@ -379,7 +379,7 @@ MPI_TEST_CASE("[PDM_part_mesh_nodal_elmts] - PDM_part_mesh_nodal_elmts_group_to_
   int **tag_surface = NULL;
   PDM_part_mesh_nodal_elmts_group_to_tag(pmne_surf, PDM_FALSE, NULL, &tag_surface);
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    int n_elmts = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne_surf, 0);
+    int n_elmts = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne_surf, i_part);
     if(0 == 1) {
       PDM_log_trace_array_int(tag_surface[i_part], n_elmts, "tag_surface ::");
     }
@@ -395,9 +395,8 @@ MPI_TEST_CASE("[PDM_part_mesh_nodal_elmts] - PDM_part_mesh_nodal_elmts_group_to_
   int **volume_tag = NULL;
   PDM_malloc(volume_tag, n_part, int *);
 
-
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    int n_elmts = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, 0);
+    int n_elmts = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, i_part);
     PDM_malloc(volume_tag[i_part], n_elmts, int);
 
     for(int i = 0; i < n_elmts; ++i) {
@@ -421,7 +420,7 @@ MPI_TEST_CASE("[PDM_part_mesh_nodal_elmts] - PDM_part_mesh_nodal_elmts_group_to_
   PDM_part_mesh_nodal_elmts_group_to_tag(pmne, PDM_FALSE, NULL, &tag_volume_check);
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    int n_elmts = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, 0);
+    int n_elmts = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, i_part);
     MPI_CHECK_EQ_C_ARRAY(0, tag_volume_check[i_part], volume_tag[i_part], n_elmts);
   }
 
@@ -452,7 +451,7 @@ MPI_TEST_CASE("[PDM_part_mesh_nodal_elmts] - PDM_part_mesh_nodal_elmts_group_to_
   int n_group_vol_partial = 5;
   PDM_part_mesh_nodal_elmts_n_group_set(pmne, n_group_vol_partial);
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    int n_elmts = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, 0);
+    int n_elmts = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, i_part);
 
     int *n_group_elmt = PDM_array_zeros_int(n_group_vol_partial);
     for(int i = 0; i < n_elmts; ++i) {
@@ -504,7 +503,7 @@ MPI_TEST_CASE("[PDM_part_mesh_nodal_elmts] - PDM_part_mesh_nodal_elmts_group_to_
   int expected_volume_multiple_check    [14] = {1, 2, 3, 4, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4};
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    int n_elmts = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, 0);
+    int n_elmts = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, i_part);
 
     if(0 == 1) {
       PDM_log_trace_array_int(tag_volume_multiple_check_idx[i_part], n_elmts+1                                     , "tag_volume_multiple_check_idx ::");
@@ -529,4 +528,111 @@ MPI_TEST_CASE("[PDM_part_mesh_nodal_elmts] - PDM_part_mesh_nodal_elmts_group_to_
   PDM_free(tag_volume_multiple_check);
 
   PDM_part_mesh_nodal_free(pmn);
+}
+
+
+
+
+MPI_TEST_CASE("[PDM_part_mesh_nodal_elmts] - PDM_part_mesh_nodal_elmts_group_to_tag - allow multiple", 1) {
+
+  PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
+
+  PDM_Mesh_nodal_elt_t elt_type = PDM_MESH_NODAL_HEXA8;
+
+  /* Generate mesh */
+  PDM_part_mesh_nodal_t *pmn = _generate_mesh(pdm_comm, elt_type);
+  int n_part = 1;
+
+  PDM_part_mesh_nodal_elmts_t *pmne = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(pmn, PDM_GEOMETRY_KIND_VOLUMIC);
+
+  int **volume_tag     = NULL;
+  int **volume_tag_idx = NULL;
+  PDM_malloc(volume_tag    , n_part, int *);
+  PDM_malloc(volume_tag_idx, n_part, int *);
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    int n_elmts = PDM_part_mesh_nodal_elmts_n_elmts_get(pmne, i_part);
+    PDM_malloc(volume_tag_idx[i_part], n_elmts+1, int);
+
+    int* volume_tag_n = PDM_array_zeros_int(n_elmts);
+    for(int i = 0; i < n_elmts; ++i) {
+      if((i+1) % 4 == 0) {
+        volume_tag_n[i]++;
+      }
+    }
+
+    volume_tag_idx[i_part][0] = 0;
+    for(int i = 0; i < n_elmts; ++i) {
+      volume_tag_idx[i_part][i+1] = volume_tag_idx[i_part][i] + volume_tag_n[i];
+      volume_tag_n[i] = 0;
+    }
+
+    if(0 == 1) {
+      PDM_log_trace_array_int(volume_tag_idx[i_part], n_elmts+1, "volume_tag_idx ::");
+    }
+
+    PDM_malloc(volume_tag[i_part], volume_tag_idx[i_part][n_elmts], int);
+
+    for(int i = 0; i < n_elmts; ++i) {
+      int tag = (i+1) / 4;
+      if((i+1) % 4 == 0) {
+        int idx_write = volume_tag_idx[i_part][i] + volume_tag_n[i]++;
+        volume_tag[i_part][idx_write] = tag-1;
+      }
+    }
+
+    if(0 == 1) {
+      PDM_log_trace_array_int(volume_tag[i_part], volume_tag_idx[i_part][n_elmts], "volume_tag ::");
+    }
+
+    PDM_free(volume_tag_n);
+  }
+
+  PDM_part_mesh_nodal_elmts_tag_to_group(pmne,
+                                         -1,
+                                         volume_tag_idx,
+                                         volume_tag);
+
+  int n_group_vol = PDM_part_mesh_nodal_elmts_n_group_get(pmne);
+  int  *n_group_elmt = NULL;
+  int **group_elmt   = NULL;
+  PDM_malloc(n_group_elmt, n_group_vol, int  );
+  PDM_malloc(group_elmt  , n_group_vol, int *);
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    for(int i_group = 0; i_group < n_group_vol; ++i_group) {
+      PDM_g_num_t *group_ln_to_gn = NULL;
+      PDM_part_mesh_nodal_group_get(pmn,
+                                    PDM_GEOMETRY_KIND_VOLUMIC,
+                                    i_part,
+                                    i_group,
+                                    &n_group_elmt[i_group],
+                                    &group_elmt  [i_group],
+                                    &group_ln_to_gn,
+                                    PDM_OWNERSHIP_KEEP);
+      if(0 == 1) {
+        PDM_log_trace_array_int(group_elmt[i_group], n_group_elmt[i_group], "group_elmt ::");
+      }
+    }
+  }
+
+  CHECK(n_group_vol == 6);
+  CHECK(group_elmt[0][0] == 4 );
+  CHECK(group_elmt[1][0] == 8 );
+  CHECK(group_elmt[2][0] == 12);
+  CHECK(group_elmt[3][0] == 16);
+  CHECK(group_elmt[4][0] == 20);
+  CHECK(group_elmt[5][0] == 24);
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    PDM_free(volume_tag_idx[i_part]);
+    PDM_free(volume_tag    [i_part]);
+  }
+  PDM_free(volume_tag_idx);
+  PDM_free(volume_tag    );
+  PDM_free(n_group_elmt);
+  PDM_free(group_elmt  );
+
+  PDM_part_mesh_nodal_free(pmn);
+
 }
