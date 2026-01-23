@@ -5612,7 +5612,7 @@ PDM_part_mesh_nodal_elmts_tag_to_group
 
   int allow_multiple = 0;
   if(tag_idx != NULL) {
-    allow_multiple = 0;
+    allow_multiple = 1;
   }
 
   /*
