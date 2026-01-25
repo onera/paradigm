@@ -830,9 +830,9 @@ PDM_GCC_SUPPRESS_WARNING_POP
 void
 PDM_linear_algebra_eig_sym3
 (
-  const double a[6],
-        double val[3],
-        double vec[9]
+  double a  [6],
+  double val[3],
+  double vec[9]
 )
 {
 
