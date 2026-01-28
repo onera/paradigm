@@ -772,6 +772,96 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - selected_entity1_to_selected_entity2 - 2p
   PDM_part_comm_graph_free(pcg_vtx);
 }
 
+MPI_TEST_CASE("[PDM_part_comm_graph_filter] - 2p", 2) {
+  PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
+  int i_rank;
+  PDM_MPI_Comm_rank(pdm_comm, &i_rank);
+
+  std::vector<int> n_graph_ini_l = {4, 6};
+  std::vector<std::vector<int>> graph_ini_l = {{ 9, 1, 1,  1,
+                                                10, 1, 1,  2,
+                                                12, 1, 1,  4,
+                                                11, 1, 1,  3},
+                                               {1,  0, 1,  9,
+                                                2,  0, 1, 10,
+                                                8,  1, 1,  2,
+                                                3,  0, 1, 11,
+                                                2,  1, 1,  8,
+                                                4,  0, 1, 12}};
+
+
+  int n_graph_ini = n_graph_ini_l[i_rank];
+  int *graph_ini  = graph_ini_l  [i_rank].data();
+
+  PDM_part_comm_graph_t *pcg_ini = PDM_part_comm_graph_create(1,
+                                                              &n_graph_ini,
+                                                              &graph_ini,
+                                                              PDM_OWNERSHIP_USER,
+                                                              pdm_comm);
+
+
+  /*
+  No conflicts :: entry is flagged False on both sides
+  */
+  std::vector<std::vector<int>> flag_l = {{1,0,0,1}, {1,0,1,1,1,0}};
+  const int *flag = flag_l[i_rank].data();
+
+  PDM_part_comm_graph_t *pcg_sub = PDM_part_comm_graph_filter(pcg_ini, &flag, 0);
+
+
+
+  int *sub_graph      = NULL;
+  int n_sub_graph = PDM_part_comm_graph_entity_graph_get(pcg_sub, 0, &sub_graph, PDM_OWNERSHIP_KEEP);
+
+  std::vector<std::vector<int>> expt_sub_graph_l = {{ 9, 1, 1,  1,
+                                                     11, 1, 1,  3},
+                                                    { 1, 0, 1,  9,
+                                                      8, 1, 1,  2,
+                                                      3, 0, 1, 11,
+                                                      2, 1, 1,  8}};
+
+
+  int *expt_sub_graph = expt_sub_graph_l[i_rank].data();
+  CHECK(n_sub_graph == std::vector<int>{2,4}[i_rank]);
+  MPI_CHECK_EQ_C_ARRAY(0, sub_graph, expt_sub_graph, 4*n_sub_graph);
+  MPI_CHECK_EQ_C_ARRAY(1, sub_graph, expt_sub_graph, 4*n_sub_graph);
+
+  PDM_part_comm_graph_free(pcg_sub);
+
+  /*
+  Conflicts :: entry is flagged False on only one side
+  */
+  flag_l = {{1,0,1,1}, {1,1,1,1,1,0}};
+  flag = flag_l[i_rank].data();
+
+  SUBCASE("Combine OR") {
+    // With combine OR, entry is kept if one of both sides is True --> everything is kept
+    pcg_sub = PDM_part_comm_graph_filter(pcg_ini, &flag, 0);
+
+    n_sub_graph = PDM_part_comm_graph_entity_graph_get(pcg_sub, 0, &sub_graph, PDM_OWNERSHIP_KEEP);
+
+    expt_sub_graph = graph_ini_l[i_rank].data();
+
+    CHECK(n_sub_graph == std::vector<int>{4,6}[i_rank]);
+    MPI_CHECK_EQ_C_ARRAY(0, sub_graph, expt_sub_graph, 4*n_sub_graph);
+    MPI_CHECK_EQ_C_ARRAY(1, sub_graph, expt_sub_graph, 4*n_sub_graph);
+  }
+  SUBCASE("Combine AND") {
+    // With combine AND, entry is kept if both sides are True --> same results than first case
+    pcg_sub = PDM_part_comm_graph_filter(pcg_ini, &flag, 1);
+
+    n_sub_graph = PDM_part_comm_graph_entity_graph_get(pcg_sub, 0, &sub_graph, PDM_OWNERSHIP_KEEP);
+
+    expt_sub_graph = expt_sub_graph_l[i_rank].data();
+
+    CHECK(n_sub_graph == std::vector<int>{2,4}[i_rank]);
+    MPI_CHECK_EQ_C_ARRAY(0, sub_graph, expt_sub_graph, 4*n_sub_graph);
+    MPI_CHECK_EQ_C_ARRAY(1, sub_graph, expt_sub_graph, 4*n_sub_graph);
+  }
+  PDM_part_comm_graph_free(pcg_sub);
+
+  PDM_part_comm_graph_free(pcg_ini);
+}
 
 MPI_TEST_CASE("[PDM_part_comm_graph_concatenate] - 1 part - 1 perio - 2p", 2) {
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);

@@ -165,6 +165,14 @@ PDM_part_comm_graph_split
   PDM_part_comm_graph_t **split_pcgs
 );
 
+PDM_part_comm_graph_t*
+PDM_part_comm_graph_filter
+(
+  PDM_part_comm_graph_t   *pcg,
+  const int              **flag,
+  const int                both
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
