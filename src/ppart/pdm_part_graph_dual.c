@@ -45,9 +45,61 @@ extern "C" {
 /*=============================================================================
  * Static function definitions
  *============================================================================*/
-
 static int
 connectivity_filter(
+  int  n_entity1,
+  int* entity1_to_entity2_idx,
+  int* entity1_to_entity2,
+  int* entity1_flag,
+  int* entity2_flag,
+  int **sub_entity1_to_entity2_idx,
+  int **sub_entity1_to_entity2
+)
+{
+  // Count number of selected entity1
+  int sub_n_entity1 = 0;
+  for (int i = 0; i < n_entity1; ++i) {
+    sub_n_entity1 += (entity1_flag[i] == 1);
+  }
+
+  int* _sub_entity1_to_entity2_idx = NULL;
+  int* _sub_entity1_to_entity2 = NULL;
+
+  // Idx array
+  PDM_malloc(_sub_entity1_to_entity2_idx, sub_n_entity1+1, int);
+  _sub_entity1_to_entity2_idx[0] = 0;
+  int idx_write = 0;
+  for(int i = 0; i < n_entity1; ++i) {
+    if(entity1_flag[i] == 1) {
+      int len = 0;
+      for (int j = entity1_to_entity2_idx[i]; j < entity1_to_entity2_idx[i+1]; ++j) {
+        int entity2 = PDM_ABS(entity1_to_entity2[j]) - 1;
+        len += (entity2_flag[entity2] == 1);
+      }
+      _sub_entity1_to_entity2_idx[idx_write+1] = _sub_entity1_to_entity2_idx[idx_write] + len;
+      idx_write++;
+    }
+  }
+  PDM_malloc(_sub_entity1_to_entity2, _sub_entity1_to_entity2_idx[sub_n_entity1], int);
+  idx_write = 0;
+  for(int i = 0; i < n_entity1; ++i) {
+    if(entity1_flag[i] == 1) {
+      for (int j = entity1_to_entity2_idx[i]; j < entity1_to_entity2_idx[i+1]; ++j) {
+        int entity2 = PDM_ABS (entity1_to_entity2[j]) - 1;
+        if (entity2_flag[entity2] == 1) {
+          _sub_entity1_to_entity2[idx_write++] = entity1_to_entity2[j];
+        } 
+      }
+    }
+  }
+  *sub_entity1_to_entity2_idx = _sub_entity1_to_entity2_idx;
+  *sub_entity1_to_entity2 = _sub_entity1_to_entity2;
+
+  return sub_n_entity1;
+}
+
+static int
+connectivity_filter_and_renum(
   int  n_entity1,
   int* entity1_to_entity2_idx,
   int* entity1_to_entity2,
@@ -756,18 +808,16 @@ PDM_part_assembly_dual_graph
 {
 
   int  *sub_n_node   = NULL;
-  int  *sub_n_arc    = NULL;
 
   int **node_old_to_new = NULL;
-  int **arc_old_to_new  = NULL;
 
   int **sub_node_arc_idx = NULL;
   int **sub_node_arc     = NULL;
-  int **sub_arc_node_idx = NULL;
+
+  int **sub_arc_node_idx = arc_node_idx;
   int **sub_arc_node     = NULL;
 
   int **sub_node_weight = NULL;
-  int **sub_arc_weight  = NULL;
 
   PDM_part_comm_graph_t *sub_pcg_node = NULL;
   PDM_part_comm_graph_t *sub_pcg_arc = NULL;
@@ -784,19 +834,14 @@ PDM_part_assembly_dual_graph
 
     // Compute old to new
     PDM_malloc(node_old_to_new, n_part, int *);
-    PDM_malloc(arc_old_to_new,  n_part, int *);
 
     PDM_malloc(sub_n_node,       n_part, int  );
-    PDM_malloc(sub_n_arc,        n_part, int  );
     PDM_malloc(sub_node_arc_idx, n_part, int *);
     PDM_malloc(sub_node_arc,     n_part, int *);
-    PDM_malloc(sub_arc_node_idx, n_part, int *);
+
     PDM_malloc(sub_arc_node,     n_part, int *);
     if (node_weight != NULL) {
       PDM_malloc(sub_node_weight,  n_part, int *);
-    }
-    if (arc_weight != NULL) {
-      PDM_malloc(sub_arc_weight,   n_part, int *);
     }
 
     int** select_arc = NULL;
@@ -819,6 +864,7 @@ PDM_part_assembly_dual_graph
 
 
 
+      // Compute node old to new
       PDM_malloc(node_old_to_new[i_part], n_node[i_part], int);
       int count = 0;
       for(int i = 0; i < n_node[i_part]; ++i) {
@@ -827,55 +873,39 @@ PDM_part_assembly_dual_graph
           node_old_to_new[i_part][i] = count++;
         }
       }
-      PDM_malloc(arc_old_to_new[i_part],  n_arc[i_part],  int);
-      count = 0;
-      for(int i = 0; i < n_arc[i_part]; ++i) {
-        arc_old_to_new[i_part][i] = -1;
-        if(select_arc[i_part][i] == 1) {
-          arc_old_to_new[i_part][i] = count++;
-        }
-      }
       //PDM_log_trace_array_int(node_old_to_new[i_part], n_node[i_part], "node_old_to_new ::");
-      //PDM_log_trace_array_int(arc_old_to_new[i_part],  n_arc[i_part],  "arc_old_to_new ::");
 
 
       sub_n_node[i_part] = connectivity_filter(n_node[i_part],
                                                node_arc_idx[i_part],
                                                node_arc[i_part],
                                                select_node[i_part],
-                                               arc_old_to_new[i_part],
+                                               select_arc[i_part],
                                               &sub_node_arc_idx[i_part],
                                               &sub_node_arc[i_part]);
 
       //PDM_log_trace_connectivity_int(node_arc_idx[i_part], node_arc[i_part], n_node[i_part], "old");
       //PDM_log_trace_connectivity_int(sub_node_arc_idx[i_part], sub_node_arc[i_part], sub_n_node[i_part], "new");
 
-      // Possible optimization : we probably don't need to filter
-      // the arcs, but we need at least to renumber vertices
-      // Indeed nodes will not try to access to "dead" arcs (because node->arc is filtered)
-      //   NB : if we keep same size for arcs list, we don't need to renumber arc ids as well
-      //        (we just remove dead nodes whole connectivity)
 
-      sub_n_arc[i_part] = connectivity_filter(n_arc[i_part],
-                                              arc_node_idx[i_part],
-                                              arc_node[i_part],
-                                              select_arc[i_part],
-                                              node_old_to_new[i_part],
-                                             &sub_arc_node_idx[i_part],
-                                             &sub_arc_node[i_part]);
-      
-      //log_trace("ARCS\n");
+      // For arcs->node, filtering is not needed : we just update the nodes indices with new ids
+      // OK because removed arc will not be accessed from nodes
+      int size = arc_node_idx[i_part][n_arc[i_part]];
+      PDM_malloc(sub_arc_node[i_part], size, int);
+      for (int j = 0; j < size; ++j) {
+        int old = arc_node[i_part][j] - 1;
+        sub_arc_node[i_part][j] = node_old_to_new[i_part][old] + 1;
+      }
       //PDM_log_trace_connectivity_int(arc_node_idx[i_part], arc_node[i_part], n_arc[i_part], "old");
-      //PDM_log_trace_connectivity_int(sub_arc_node_idx[i_part], sub_arc_node[i_part], sub_n_arc[i_part], "new");
+      //PDM_log_trace_connectivity_int(arc_node_idx[i_part], sub_arc_node[i_part], n_arc[i_part], "new");
+
 
       // Filter weights
       if (node_weight != NULL) {
         sub_node_weight[i_part] = PDM_array_copy_if_int(n_node[i_part], node_weight[i_part], select_node[i_part]);
       }
-      if (arc_weight != NULL) {
-        sub_arc_weight[i_part] = PDM_array_copy_if_int(n_arc[i_part], arc_weight[i_part], select_arc[i_part]);
-      }
     }
+
 
     // Filter comm graphs
     if (pcg_node != NULL) {
@@ -884,7 +914,6 @@ PDM_part_assembly_dual_graph
     }
     if (pcg_arc != NULL) {
       sub_pcg_arc = pcg_filter(n_part, pcg_arc, select_arc);
-      PDM_part_comm_graph_reorder(sub_pcg_arc, arc_old_to_new);
     }
     for (int i_part = 0; i_part < n_part; i_part++) {
       PDM_free(select_arc[i_part]);
@@ -894,15 +923,12 @@ PDM_part_assembly_dual_graph
   }
   else {
     sub_n_node = n_node;
-    sub_n_arc = n_arc;
     
     sub_node_arc_idx = node_arc_idx;
     sub_node_arc = node_arc;
-    sub_arc_node_idx = arc_node_idx;
     sub_arc_node = arc_node;
 
     sub_node_weight = node_weight;
-    sub_arc_weight = arc_weight;
 
     sub_pcg_node = pcg_node;
     sub_pcg_arc  = pcg_arc;
@@ -912,13 +938,13 @@ PDM_part_assembly_dual_graph
   _PDM_part_assembly_dual_graph(comm,
                                 n_part,
                                 sub_n_node,
-                                sub_n_arc,
+                                n_arc,
                                 sub_node_arc_idx,
                                 sub_node_arc,
                                 sub_arc_node_idx,
                                 sub_arc_node,
                                 sub_node_weight,
-                                sub_arc_weight,
+                                arc_weight,
                                 sub_pcg_node,
                                 sub_pcg_arc,
                                 out_n_tot_node,
@@ -949,9 +975,7 @@ PDM_part_assembly_dual_graph
   if (select_node != NULL) {
     for (int i_part = 0; i_part < n_part; ++i_part) {
       PDM_free(node_old_to_new[i_part]);
-      PDM_free(arc_old_to_new[i_part]);
 
-      PDM_free(sub_arc_node_idx[i_part]);
       PDM_free(sub_arc_node[i_part]);
       PDM_free(sub_node_arc_idx[i_part]);
       PDM_free(sub_node_arc[i_part]);
@@ -959,24 +983,15 @@ PDM_part_assembly_dual_graph
       if (node_weight != NULL) {
         PDM_free(sub_node_weight[i_part]);
       }
-      if (arc_weight != NULL) {
-        PDM_free(sub_arc_weight[i_part]);
-      }
     }
     PDM_free(node_old_to_new);
-    PDM_free(arc_old_to_new);
 
-    PDM_free(sub_n_arc);
     PDM_free(sub_n_node);
-    PDM_free(sub_arc_node_idx);
     PDM_free(sub_arc_node);
     PDM_free(sub_node_arc_idx);
     PDM_free(sub_node_arc);
     if (node_weight != NULL) {
       PDM_free(sub_node_weight);
-    }
-    if (arc_weight != NULL) {
-      PDM_free(sub_arc_weight);
     }
     PDM_part_comm_graph_free(sub_pcg_node);
     PDM_part_comm_graph_free(sub_pcg_arc);
