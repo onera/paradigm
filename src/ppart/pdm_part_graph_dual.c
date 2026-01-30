@@ -45,6 +45,9 @@ extern "C" {
 /*=============================================================================
  * Static function definitions
  *============================================================================*/
+
+ /* Filter a connectivity array: remove whole block if entity1_flag is False,
+   and remove elements for which entity2_flag is False within each block */
 static int
 connectivity_filter(
   int  n_entity1,
@@ -98,61 +101,7 @@ connectivity_filter(
   return sub_n_entity1;
 }
 
-static int
-connectivity_filter_and_renum(
-  int  n_entity1,
-  int* entity1_to_entity2_idx,
-  int* entity1_to_entity2,
-  int* entity1_flag,
-  int* entity2_old_to_new,
-  int **sub_entity1_to_entity2_idx,
-  int **sub_entity1_to_entity2
-)
-{
-  // Count number of selected entity1
-  int sub_n_entity1 = 0;
-  for (int i = 0; i < n_entity1; ++i) {
-    sub_n_entity1 += (entity1_flag[i] == 1);
-  }
-
-  int* _sub_entity1_to_entity2_idx = NULL;
-  int* _sub_entity1_to_entity2 = NULL;
-
-  // Idx array
-  PDM_malloc(_sub_entity1_to_entity2_idx, sub_n_entity1+1, int);
-  _sub_entity1_to_entity2_idx[0] = 0;
-  int idx_write = 0;
-  for(int i = 0; i < n_entity1; ++i) {
-    if(entity1_flag[i] == 1) {
-      int len = 0;
-      for (int j = entity1_to_entity2_idx[i]; j < entity1_to_entity2_idx[i+1]; ++j) {
-        int entity2 = PDM_ABS(entity1_to_entity2[j]) - 1;
-        len += (entity2_old_to_new[entity2] > -1);
-      }
-      _sub_entity1_to_entity2_idx[idx_write+1] = _sub_entity1_to_entity2_idx[idx_write] + len;
-      idx_write++;
-    }
-  }
-  PDM_malloc(_sub_entity1_to_entity2, _sub_entity1_to_entity2_idx[sub_n_entity1], int);
-  idx_write = 0;
-  for(int i = 0; i < n_entity1; ++i) {
-    if(entity1_flag[i] == 1) {
-      for (int j = entity1_to_entity2_idx[i]; j < entity1_to_entity2_idx[i+1]; ++j) {
-        int entity2 = PDM_ABS (entity1_to_entity2[j]) - 1;
-        int sign    = PDM_SIGN(entity1_to_entity2[j]);
-        int new_entity2 = entity2_old_to_new[entity2];
-        if (new_entity2 > -1) {
-          _sub_entity1_to_entity2[idx_write++] = sign*(new_entity2 + 1);
-        } 
-      }
-    }
-  }
-  *sub_entity1_to_entity2_idx = _sub_entity1_to_entity2_idx;
-  *sub_entity1_to_entity2 = _sub_entity1_to_entity2;
-
-  return sub_n_entity1;
-}
-
+ /* Wraps part_comm_graph_filter to use a mask of size n_elts (instead of n_graph_elts) */
 static PDM_part_comm_graph_t*
 pcg_filter(
   int n_part,
@@ -902,7 +851,7 @@ PDM_part_assembly_dual_graph
 
       // Filter weights
       if (node_weight != NULL) {
-        sub_node_weight[i_part] = PDM_array_copy_if_int(n_node[i_part], node_weight[i_part], select_node[i_part]);
+        PDM_array_copy_if_int(n_node[i_part], node_weight[i_part], select_node[i_part], &sub_node_weight[i_part]);
       }
     }
 
