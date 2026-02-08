@@ -33,6 +33,20 @@ extern "C" {
 
 typedef struct _pdm_part_comm_graph_t PDM_part_comm_graph_t;
 
+/**
+ * \enum PDM_part_comm_graph_owner_kind_t
+ *
+ * \brief Owner kind computation
+ */
+typedef enum {
+
+  PDM_PART_COMM_GRAPH_OWNER_KIND_LEXICOGRAPHIC             = 0, /*!< Classic lexicographic                            */
+  PDM_PART_COMM_GRAPH_OWNER_KIND_LEXICOGRAPHIC_WITH_NUPLET = 1, /*!< Classic lexicographic and take nuplet            */
+  PDM_PART_COMM_GRAPH_OWNER_KIND_HASH                      = 2, /*!< Hash to better owner repartition                 */
+  PDM_PART_COMM_GRAPH_OWNER_KIND_HASH_WITH_NUPLET          = 3, /*!< Hash to better owner repartition and take nuplet */
+  PDM_PART_COMM_GRAPH_OWNER_KIND_USER_DEFINED              = 4, /*!< Give by the user                                 */
+} PDM_part_comm_graph_owner_kind_t;
+
 
 /*============================================================================
  * Public function definitions
@@ -653,6 +667,22 @@ PDM_part_comm_graph_log_trace
 (
   PDM_part_comm_graph_t *pcg,
   const char*            header
+);
+
+/*
+ * \brief Compute owner for all entity of the current \ref PDM_part_comm_graph_t, modify inplace
+ *
+ * \param [in]  pcg         Pointer to \ref PDM_part_comm_graph_t instance
+ * \param [in]  owner_kind  Owner kind
+ * \param [in]  user_owner  Array of user owner (only if owner_kind == PDM_PART_COMM_GRAPH_OWNER_KIND_HASH_WITH_NUPLET) else NULL
+ *
+ */
+void
+PDM_part_comm_graph_owner_compute
+(
+  PDM_part_comm_graph_t             *pcg,
+  PDM_part_comm_graph_owner_kind_t   owner_kind,
+  int                              **user_owner
 );
 
 #ifdef __cplusplus

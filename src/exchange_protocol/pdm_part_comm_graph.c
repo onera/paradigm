@@ -72,6 +72,83 @@
  * Static function definitions
  *============================================================================*/
 
+/**
+ *  \brief Compare lexicographically two nuplets of same size (in absolute value)
+ *
+ *  \return -1 if a > b, 0 if a == b, 1 if a < b
+ */
+static inline int
+_compare_nuplets_abs
+(
+  const int size,
+  const int a[],
+  const int b[]
+)
+{
+  for (int i = 0; i < size; i++) {
+    if (PDM_ABS(a[i]) < PDM_ABS(b[i])) {
+      return 1;
+    }
+    if (PDM_ABS(a[i]) > PDM_ABS(b[i])) {
+      return -1;
+    }
+  }
+  return 0;
+}
+
+static
+void
+_compute_lexicographic_owner
+(
+  PDM_part_comm_graph_t *pcg
+)
+{
+  int i_rank = -1;
+  PDM_MPI_Comm_rank(pcg->comm, &i_rank);
+
+  for(int i_part = 0; i_part < pcg->n_part; ++i_part) {
+    int n_entity_graph = pcg->n_entity_graph[i_part];
+
+    int *lbound_entity = NULL;
+    PDM_malloc(lbound_entity, n_entity_graph, int);
+
+    for(int idx_entity = 0; idx_entity < n_entity_graph; ++idx_entity) {
+      lbound_entity[idx_entity] = pcg->pentity_graph[i_part][4*idx_entity];
+      pcg->bound_owner[i_part][idx_entity] = -1;
+    }
+
+    int n_unique = PDM_inplace_unique(lbound_entity, 0, n_entity_graph-1);
+
+    int *lowner = PDM_array_const_int(n_unique, -1);
+    for(int idx_entity = 0; idx_entity < n_entity_graph; ++idx_entity) {
+      int l_entity = pcg->pentity_graph[i_part][4*idx_entity];
+      int pos = PDM_binary_search_int(l_entity, lbound_entity, n_unique);
+
+      pcg->bound_owner[i_part][idx_entity] = pos; // Stockage temporaire
+
+      int my_location[3] = {i_rank, i_part+1, l_entity};
+
+      if(lowner[pos] != 0) {
+        if (_compare_nuplets_abs(3, my_location, &pcg->pentity_graph[i_part][4*idx_entity+1]) >= 0) {
+          lowner[pos] = 1;
+        }
+        else {
+          lowner[pos] = 0;
+        }
+      }
+    }
+
+    /* Last loop to fill */
+    for(int idx_entity = 0; idx_entity < n_entity_graph; ++idx_entity) {
+      int pos = pcg->bound_owner[i_part][idx_entity];
+      pcg->bound_owner[i_part][idx_entity] = lowner[pos];
+    }
+
+    PDM_free(lowner);
+    PDM_free(lbound_entity);
+  }
+}
+
 static
 void
 _allocate_send_buffer_strid_cst
@@ -565,32 +642,6 @@ _exch_strid_var
   PDM_MPI_Type_free(&mpi_type);
 }
 
-
-/**
- *  \brief Compare lexicographically two nuplets of same size (in absolute value)
- *
- *  \return -1 if a > b, 0 if a == b, 1 if a < b
- */
-static inline int
-_compare_nuplets_abs
-(
-  const int size,
-  const int a[],
-  const int b[]
-)
-{
-  for (int i = 0; i < size; i++) {
-    if (PDM_ABS(a[i]) < PDM_ABS(b[i])) {
-      return 1;
-    }
-    if (PDM_ABS(a[i]) > PDM_ABS(b[i])) {
-      return -1;
-    }
-  }
-  return 0;
-}
-
-
 static PDM_part_comm_graph_t *
 _create
 (
@@ -877,50 +928,13 @@ _create
   PDM_malloc(pcg->bound_owner, n_part, int *);
   for(int i_part = 0; i_part < n_part; ++i_part) {
     int n_entity_graph = pn_entity_graph[i_part];
-
     PDM_malloc(pcg->bound_owner[i_part], n_entity_graph, int);
-    int *lbound_entity = NULL;
-    PDM_malloc(lbound_entity, n_entity_graph, int);
-
-    for(int idx_entity = 0; idx_entity < n_entity_graph; ++idx_entity) {
-      lbound_entity[idx_entity] = pentity_graph[i_part][4*idx_entity];
-      pcg->bound_owner[i_part][idx_entity] = -1;
-    }
-
-    int n_unique = PDM_inplace_unique(lbound_entity, 0, n_entity_graph-1);
-
-    int *lowner = PDM_array_const_int(n_unique, -1);
-    for(int idx_entity = 0; idx_entity < n_entity_graph; ++idx_entity) {
-      int l_entity = pentity_graph[i_part][4*idx_entity];
-      int pos = PDM_binary_search_int(l_entity, lbound_entity, n_unique);
-
-      pcg->bound_owner[i_part][idx_entity] = pos; // Stockage temporaire
-
-      int my_location[3] = {i_rank, i_part+1, l_entity};
-
-      if(lowner[pos] != 0) {
-        if (_compare_nuplets_abs(3, my_location, &pentity_graph[i_part][4*idx_entity+1]) >= 0) {
-          lowner[pos] = 1;
-        }
-        else {
-          lowner[pos] = 0;
-        }
-      }
-    }
-
-    /* Last loop to fill */
-    for(int idx_entity = 0; idx_entity < n_entity_graph; ++idx_entity) {
-      int pos = pcg->bound_owner[i_part][idx_entity];
-      pcg->bound_owner[i_part][idx_entity] = lowner[pos];
-    }
-
-    PDM_free(lowner);
-    PDM_free(lbound_entity);
   }
 
   /* Deleguate to exch_helper for Asynchronous and persitent exchange */
   pcg->exch_h = PDM_exchange_helper_create(comm);
 
+  PDM_part_comm_graph_owner_compute(pcg, PDM_PART_COMM_GRAPH_OWNER_KIND_LEXICOGRAPHIC, NULL);
 
   return pcg;
 }
@@ -2094,7 +2108,6 @@ PDM_part_comm_graph_free
   PDM_free(pcg);
 }
 
-
 void
 PDM_part_comm_graph_log_trace
 (
@@ -2133,4 +2146,35 @@ PDM_part_comm_graph_log_trace
       log_trace(" | owner = %d\n", pcg_owner[  i_entity  ]);
     } // end loop on graph entities
   } // end loop on partitions
+}
+
+void
+PDM_part_comm_graph_owner_compute
+(
+  PDM_part_comm_graph_t             *pcg,
+  PDM_part_comm_graph_owner_kind_t   owner_kind,
+  int                              **user_owner
+)
+{
+  if(owner_kind == PDM_PART_COMM_GRAPH_OWNER_KIND_LEXICOGRAPHIC) {
+    _compute_lexicographic_owner(pcg);
+  } else if(owner_kind == PDM_PART_COMM_GRAPH_OWNER_KIND_LEXICOGRAPHIC_WITH_NUPLET) {
+    PDM_error("Not implemented for PDM_PART_COMM_GRAPH_OWNER_KIND_LEXICOGRAPHIC_WITH_NUPLET");
+  } else if(owner_kind == PDM_PART_COMM_GRAPH_OWNER_KIND_HASH) {
+    PDM_error("Not implemented for PDM_PART_COMM_GRAPH_OWNER_KIND_HASH");
+  } else if(owner_kind == PDM_PART_COMM_GRAPH_OWNER_KIND_HASH_WITH_NUPLET) {
+    PDM_error("Not implemented for PDM_PART_COMM_GRAPH_OWNER_KIND_HASH_WITH_NUPLET");
+  } else if(owner_kind == PDM_PART_COMM_GRAPH_OWNER_KIND_USER_DEFINED) {
+
+    if(user_owner == NULL) {
+      PDM_error(__FILE__, __LINE__, 0, "Owner_kind=PDM_PART_COMM_GRAPH_OWNER_KIND_USER_DEFINED but user_owner is NULL");
+    }
+    for(int i_part = 0; i_part < pcg->n_part; ++i_part) {
+      for(int i = 0; i < pcg->n_entity_graph[i_part]; ++i) {
+        pcg->bound_owner[i_part][i] = user_owner[i_part][i];
+      }
+    }
+  } else {
+    PDM_error("Not implemented for %i", owner_kind);
+  }
 }
