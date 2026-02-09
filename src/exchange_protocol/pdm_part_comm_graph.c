@@ -96,6 +96,27 @@ _compare_nuplets_abs
   return 0;
 }
 
+
+static inline int
+_compare_nuplets
+(
+  const int size,
+  const int a[],
+  const int b[]
+)
+{
+  for (int i = 0; i < size; i++) {
+    if (a[i] < b[i]) {
+      return 1;
+    }
+    if (a[i] > b[i]) {
+      return -1;
+    }
+  }
+  return 0;
+}
+
+
 static
 void
 _compute_lexicographic_owner
@@ -147,6 +168,90 @@ _compute_lexicographic_owner
     PDM_free(lowner);
     PDM_free(lbound_entity);
   }
+}
+
+
+
+static
+void
+_compute_lexicographic_with_nuplet_owner
+(
+  PDM_part_comm_graph_t *pcg
+)
+{
+  int i_rank = -1;
+  PDM_MPI_Comm_rank(pcg->comm, &i_rank);
+
+  int nuplet_size = pcg->nuplet_size;
+  int stride      = 3 + nuplet_size;
+
+  /*
+   * Compute owner
+   */
+  int *cur_location = NULL;
+  int *opp_location = NULL;
+  PDM_malloc(cur_location, stride, int);
+  PDM_malloc(opp_location, stride, int);
+
+  for(int i_part = 0; i_part < pcg->n_part; ++i_part) {
+    int n_entity_graph = pcg->n_entity_graph[i_part];
+
+    int *lbound_entity = NULL;
+    PDM_malloc(lbound_entity, n_entity_graph, int);
+
+    for(int idx_entity = 0; idx_entity < n_entity_graph; ++idx_entity) {
+      lbound_entity[idx_entity] = pcg->pentity_graph[i_part][4*idx_entity];
+      pcg->bound_owner[i_part][idx_entity] = -1;
+    }
+
+    int n_unique = PDM_inplace_unique(lbound_entity, 0, n_entity_graph-1);
+
+    int *lowner = PDM_array_const_int(n_unique, -1);
+    for(int idx_entity = 0; idx_entity < n_entity_graph; ++idx_entity) {
+      int l_entity = pcg->pentity_graph[i_part][4*idx_entity];
+      int pos = PDM_binary_search_int(l_entity, lbound_entity, n_unique);
+
+      pcg->bound_owner[i_part][idx_entity] = pos; // Stockage temporaire
+
+      for (int i = 0; i < nuplet_size; i++) {
+        cur_location[i] = pcg->pentity_nuplet[i_part][nuplet_size*idx_entity+i];
+      }
+      cur_location[nuplet_size+0] = i_rank;
+      cur_location[nuplet_size+1] = i_part+1;
+      cur_location[nuplet_size+2] = PDM_ABS(l_entity);
+
+      for (int i = 0; i < nuplet_size; i++) {
+        opp_location[i] = - pcg->pentity_nuplet[i_part][nuplet_size*idx_entity+i]; // Forcement l'opposé
+      }
+      opp_location[nuplet_size+0] = pcg->pentity_graph[i_part][4*idx_entity+1];
+      opp_location[nuplet_size+1] = pcg->pentity_graph[i_part][4*idx_entity+2];
+      opp_location[nuplet_size+2] = PDM_ABS(pcg->pentity_graph[i_part][4*idx_entity+3]);
+
+      // PDM_log_trace_array_int(cur_location, stride, "cur_location :: ");
+      // PDM_log_trace_array_int(opp_location, stride, "opp_location :: ");
+
+      if(lowner[pos] != 0) {
+        if (_compare_nuplets(stride, cur_location, opp_location) >= 0) {
+          lowner[pos] = 1;
+        }
+        else {
+          lowner[pos] = 0;
+        }
+      }
+    }
+
+    /* Last loop to fill */
+    for(int idx_entity = 0; idx_entity < n_entity_graph; ++idx_entity) {
+      int pos = pcg->bound_owner[i_part][idx_entity];
+      pcg->bound_owner[i_part][idx_entity] = lowner[pos];
+    }
+
+    PDM_free(lowner);
+    PDM_free(lbound_entity);
+  }
+
+  PDM_free(cur_location);
+  PDM_free(opp_location);
 }
 
 static
@@ -2159,7 +2264,7 @@ PDM_part_comm_graph_owner_compute
   if(owner_kind == PDM_PART_COMM_GRAPH_OWNER_KIND_LEXICOGRAPHIC) {
     _compute_lexicographic_owner(pcg);
   } else if(owner_kind == PDM_PART_COMM_GRAPH_OWNER_KIND_LEXICOGRAPHIC_WITH_NUPLET) {
-    PDM_error("Not implemented for PDM_PART_COMM_GRAPH_OWNER_KIND_LEXICOGRAPHIC_WITH_NUPLET");
+    _compute_lexicographic_with_nuplet_owner(pcg);
   } else if(owner_kind == PDM_PART_COMM_GRAPH_OWNER_KIND_HASH) {
     PDM_error("Not implemented for PDM_PART_COMM_GRAPH_OWNER_KIND_HASH");
   } else if(owner_kind == PDM_PART_COMM_GRAPH_OWNER_KIND_HASH_WITH_NUPLET) {
@@ -2167,7 +2272,7 @@ PDM_part_comm_graph_owner_compute
   } else if(owner_kind == PDM_PART_COMM_GRAPH_OWNER_KIND_USER_DEFINED) {
 
     if(user_owner == NULL) {
-      PDM_error(__FILE__, __LINE__, 0, "Owner_kind=PDM_PART_COMM_GRAPH_OWNER_KIND_USER_DEFINED but user_owner is NULL");
+      PDM_error("Owner_kind=PDM_PART_COMM_GRAPH_OWNER_KIND_USER_DEFINED but user_owner is NULL");
     }
     for(int i_part = 0; i_part < pcg->n_part; ++i_part) {
       for(int i = 0; i < pcg->n_entity_graph[i_part]; ++i) {

@@ -1231,33 +1231,85 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 1 perio - 2p", 2) {
                                                   8,  1, 1,  5,
                                                   9,  1, 1, 12,
                                                   12, 1, 1,  9}};
-  std::vector<std::vector<int>> ventity_interface = {{-1,  1, -1, 1, 0, -1, -1, 0,  0, 0,  1, 1},
-                                                     { 0, -1, -1, 0, 0,  0,  1, 1, -1, 1, -1, 1}};
 
-  int n_entity_bound = vn_entity_bound  [i_rank];
-  int *entity_bound  = ventity_bound    [i_rank].data();
-  int *entity_nuplet = ventity_interface[i_rank].data();
+  SUBCASE("Interface direct ") {
+    std::vector<std::vector<int>> ventity_interface = {{-1,  1, -1, 1, 0, -1, -1, 0,  0, 0,  1, 1},
+                                                       { 0, -1, -1, 0, 0,  0,  1, 1, -1, 1, -1, 1}};
 
-  PDM_part_comm_graph_t *pcg = PDM_part_comm_graph_with_nuplet_create(n_part,
-                                                                      &n_entity_bound,
-                                                                      &entity_bound,
-                                                                      PDM_OWNERSHIP_USER,
-                                                                      1,
-                                                                      &entity_nuplet,
-                                                                      PDM_OWNERSHIP_USER,
-                                                                      PDM_TRUE,
-                                                                      pdm_comm);
+    int n_entity_bound = vn_entity_bound  [i_rank];
+    int *entity_bound  = ventity_bound    [i_rank].data();
+    int *entity_nuplet = ventity_interface[i_rank].data();
 
-  const int* lowner_bound = PDM_part_comm_graph_owner_get(pcg, 0);
-  // PDM_log_trace_array_int(lowner_bound, n_entity_bound, "lowner_bound ::");
+    PDM_part_comm_graph_t *pcg = PDM_part_comm_graph_with_nuplet_create(n_part,
+                                                                        &n_entity_bound,
+                                                                        &entity_bound,
+                                                                        PDM_OWNERSHIP_USER,
+                                                                        1,
+                                                                        &entity_nuplet,
+                                                                        PDM_OWNERSHIP_USER,
+                                                                        PDM_TRUE,
+                                                                        pdm_comm);
 
-  static int lowner_bound_expected_p0[12] = {1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 0, 0};
-  static int lowner_bound_expected_p1[12] = {0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0};
+    const int* lowner_bound = PDM_part_comm_graph_owner_get(pcg, 0);
 
-  MPI_CHECK_EQ_C_ARRAY(0, lowner_bound, lowner_bound_expected_p0, n_entity_bound);
-  MPI_CHECK_EQ_C_ARRAY(1, lowner_bound, lowner_bound_expected_p1, n_entity_bound);
+    // PDM_log_trace_array_int(lowner_bound, n_entity_bound, "lowner_bound ::");
 
-  PDM_part_comm_graph_free(pcg);
+    static int lowner_bound_expected_p0[12] = {1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 0, 0};
+    static int lowner_bound_expected_p1[12] = {0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0};
+
+    MPI_CHECK_EQ_C_ARRAY(0, lowner_bound, lowner_bound_expected_p0, n_entity_bound);
+    MPI_CHECK_EQ_C_ARRAY(1, lowner_bound, lowner_bound_expected_p1, n_entity_bound);
+
+    PDM_part_comm_graph_free(pcg);
+  }
+
+  SUBCASE("Interface indirect ") {
+    std::vector<std::vector<int>> ventity_interface = {{1,  -1, 1, -1, 0, 1, 1, 0,  0, 0,  -1, -1},
+                                                       { 0, 1, 1, 0, 0,  0,  -1, -1, 1, -1, 1, -1}};
+
+    int n_entity_bound = vn_entity_bound  [i_rank];
+    int *entity_bound  = ventity_bound    [i_rank].data();
+    int *entity_nuplet = ventity_interface[i_rank].data();
+
+    PDM_part_comm_graph_t *pcg = PDM_part_comm_graph_with_nuplet_create(n_part,
+                                                                        &n_entity_bound,
+                                                                        &entity_bound,
+                                                                        PDM_OWNERSHIP_USER,
+                                                                        1,
+                                                                        &entity_nuplet,
+                                                                        PDM_OWNERSHIP_USER,
+                                                                        PDM_TRUE,
+                                                                        pdm_comm);
+
+    const int* lowner_bound = PDM_part_comm_graph_owner_get(pcg, 0);
+
+    if(0 == 1) {
+      PDM_log_trace_array_int(lowner_bound, n_entity_bound, "lowner_bound ::");
+    }
+
+    static int lowner_bound_expected_p0[12] = {1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 0, 0};
+    static int lowner_bound_expected_p1[12] = {0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0};
+
+    MPI_CHECK_EQ_C_ARRAY(0, lowner_bound, lowner_bound_expected_p0, n_entity_bound);
+    MPI_CHECK_EQ_C_ARRAY(1, lowner_bound, lowner_bound_expected_p1, n_entity_bound);
+
+    PDM_part_comm_graph_owner_compute(pcg, PDM_PART_COMM_GRAPH_OWNER_KIND_LEXICOGRAPHIC_WITH_NUPLET, NULL);
+
+    static int lowner_bound_nuplet_expected_p0[12] = {0, 1, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1};
+    static int lowner_bound_nuplet_expected_p1[12] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1};
+
+    MPI_CHECK_EQ_C_ARRAY(0, lowner_bound, lowner_bound_nuplet_expected_p0, n_entity_bound);
+    MPI_CHECK_EQ_C_ARRAY(1, lowner_bound, lowner_bound_nuplet_expected_p1, n_entity_bound);
+
+    if(0 == 1) {
+      PDM_log_trace_array_int(lowner_bound, n_entity_bound, "lowner_bound (indirect) ::");
+    }
+
+    PDM_part_comm_graph_free(pcg);
+
+  }
+
+
 }
 
 
