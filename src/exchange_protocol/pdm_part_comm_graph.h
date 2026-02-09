@@ -685,6 +685,34 @@ PDM_part_comm_graph_owner_compute
   int                              **user_owner
 );
 
+
+/**
+ *
+ * \brief Check if the owner are correct : only one owner among all partition / procs
+ *
+ * \param [in]  pcg         Pointer to \ref PDM_part_comm_graph_t instance
+ */
+void
+PDM_part_comm_graph_owner_check
+(
+  PDM_part_comm_graph_t             *pcg
+);
+
+
+/**
+ *
+ * \brief Print statistics for the current \ref PDM_part_comm_graph_t :
+ *           - Min/Max partners
+ *           - Min/Max/Mean for owner / not owner repartition
+ *
+ * \param [in]  pcg         Pointer to \ref PDM_part_comm_graph_t instance
+ */
+void
+PDM_part_comm_graph_owner_statistics
+(
+  PDM_part_comm_graph_t             *pcg
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
