@@ -2348,8 +2348,21 @@ PDM_part_comm_graph_owner_check
   for(int i_part = 0; i_part < pcg->n_part; ++i_part) {
 
     for(int i = 0; i < pcg->n_entity_graph[i_part]; ++i) {
+
+      int l_entity = PDM_ABS(pcg->pentity_graph[i_part][4*i]);
+
+      int t_rank   = pcg->pentity_graph[i_part][4*i+1];
+      int t_part   = pcg->pentity_graph[i_part][4*i+2];
+      int t_entity = PDM_ABS(pcg->pentity_graph[i_part][4*i+3]);
+
+      // In periodic case, we can have same owner
+      int is_same = 0;
+      if(i_rank == t_rank && i_part+1 == t_part && l_entity == t_entity) {
+        is_same = 1;
+      }
+
       if(pcg->bound_owner[i_part][i] == 1) {
-        if(owner_opp[i_part][i] == 1) {
+        if(is_same == 0 && owner_opp[i_part][i] == 1) {
           PDM_error("PDM_part_comm_graph_owner_check : 2 owner for same entity : i_rank=%i/i_part=%i/i=%i", i_rank, i_part, i);
         }
       }

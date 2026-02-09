@@ -1025,26 +1025,44 @@ MPI_TEST_CASE("[PDM_part_comm_graph] - 1 part - 3p", 3) {
   int  n_entity_bound = vn_entity_bound[i_rank];
   int *entity_bound   = ventity_bound  [i_rank].data();
 
-  PDM_part_comm_graph_t* pcg = PDM_part_comm_graph_create(n_part,
-                                                          &n_entity_bound,
-                                                          &entity_bound,
-                                                          PDM_OWNERSHIP_USER,
-                                                          pdm_comm);
+  int n_owner_kind = 3;
+  PDM_part_comm_graph_owner_kind_t owner_kind[3] = {PDM_PART_COMM_GRAPH_OWNER_KIND_LEXICOGRAPHIC,
+                                                    PDM_PART_COMM_GRAPH_OWNER_KIND_HASH,
+                                                    PDM_PART_COMM_GRAPH_OWNER_KIND_USER_DEFINED};
 
-  const int* lowner_bound = PDM_part_comm_graph_owner_get(pcg, 0);
+  static int lowner_bound_expected_p0[3][6] = {{1, 1, 1, 1, 1, 1   }, {0, 0, 0, 0, 1, 0   }, {0, 0, 0, 0, 1, 0   }};
+  static int lowner_bound_expected_p1[3][7] = {{0, 0, 0, 0, 1, 1, 1}, {1, 1, 1, 1, 1, 0, 0}, {1, 1, 1, 1, 1, 0, 0}};
+  static int lowner_bound_expected_p2[3][7] = {{0, 0, 0, 0, 0, 0, 0}, {1, 0, 0, 0, 1, 0, 1}, {1, 0, 0, 0, 1, 0, 1}};
 
-  // PDM_log_trace_array_int(lowner_bound, n_entity_bound, "lowner_bound ::");
+  for(int i_owner = 0; i_owner < n_owner_kind; ++i_owner) {
 
-  static int lowner_bound_expected_p0[6] = {1, 1, 1, 1, 1, 1};
-  static int lowner_bound_expected_p1[7] = {0, 0, 0, 0, 1, 1, 1 };
-  static int lowner_bound_expected_p2[7] = {0, 0, 0, 0, 0, 0, 0};
+    int *lowner_bound_user = NULL;
+    if(i_rank == 0) {
+      lowner_bound_user = lowner_bound_expected_p0[i_owner];
+    } else if(i_rank == 1) {
+      lowner_bound_user = lowner_bound_expected_p1[i_owner];
+    } else {
+      lowner_bound_user = lowner_bound_expected_p2[i_owner];
+    }
 
-  MPI_CHECK_EQ_C_ARRAY(0, lowner_bound, lowner_bound_expected_p0, n_entity_bound);
-  MPI_CHECK_EQ_C_ARRAY(1, lowner_bound, lowner_bound_expected_p1, n_entity_bound);
-  MPI_CHECK_EQ_C_ARRAY(2, lowner_bound, lowner_bound_expected_p2, n_entity_bound);
+    PDM_part_comm_graph_t* pcg = PDM_part_comm_graph_create(n_part,
+                                                            &n_entity_bound,
+                                                            &entity_bound,
+                                                            PDM_OWNERSHIP_USER,
+                                                            pdm_comm);
 
+    PDM_part_comm_graph_owner_compute(pcg, owner_kind[i_owner], &lowner_bound_user);
 
-  PDM_part_comm_graph_free(pcg);
+    const int* lowner_bound = PDM_part_comm_graph_owner_get(pcg, 0);
+
+    // PDM_log_trace_array_int(lowner_bound, n_entity_bound, "lowner_bound ::");
+
+    MPI_CHECK_EQ_C_ARRAY(0, lowner_bound, lowner_bound_expected_p0[i_owner], n_entity_bound);
+    MPI_CHECK_EQ_C_ARRAY(1, lowner_bound, lowner_bound_expected_p1[i_owner], n_entity_bound);
+    MPI_CHECK_EQ_C_ARRAY(2, lowner_bound, lowner_bound_expected_p2[i_owner], n_entity_bound);
+
+    PDM_part_comm_graph_free(pcg);
+  }
 
 }
 
