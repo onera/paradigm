@@ -122,7 +122,7 @@ _pdm_hash_any_size(const int n, const int values[])
   // Suite de nombres premiers larges pour éviter les résonances
   const int n_primes = 9;
   static const unsigned int primes[9] = {73856093, 19349663, 83492791, 4256233, 2160517,
-                                        12582917, 50331653, 100663319, 201326611};
+                                         12582917, 50331653, 100663319, 201326611};
 
   unsigned int h = 0;
   for (int i = 0; i < n; i++) {
@@ -151,81 +151,27 @@ _compare_nuplets_hash_abs
   } else if (h_local < h_distant) {
     i_win = -1;
   } else {
-    // Cas extrêmement rare de collision de hash :
-    // On retombe sur la comparaison classique en tie-breaker
+    // Cas extrêmement rare de collision de hash : On retombe sur la comparaison classique en tie-breaker
     i_win = _compare_nuplets_abs(size, a, b);
   }
   return i_win;
 }
 
+typedef int (*PDM_owner_compare_f)(int stride, const int *a, const int *b);
 
 static
 void
-_compute_lexicographic_owner
+_compute_owner_gen
 (
-  PDM_part_comm_graph_t *pcg
+  PDM_part_comm_graph_t *pcg,
+  int                    nuplet_size,
+  PDM_owner_compare_f    compare_func
 )
 {
   int i_rank = -1;
   PDM_MPI_Comm_rank(pcg->comm, &i_rank);
 
-  for(int i_part = 0; i_part < pcg->n_part; ++i_part) {
-    int n_entity_graph = pcg->n_entity_graph[i_part];
-
-    int *lbound_entity = NULL;
-    PDM_malloc(lbound_entity, n_entity_graph, int);
-
-    for(int idx_entity = 0; idx_entity < n_entity_graph; ++idx_entity) {
-      lbound_entity[idx_entity] = pcg->pentity_graph[i_part][4*idx_entity];
-      pcg->bound_owner[i_part][idx_entity] = -1;
-    }
-
-    int n_unique = PDM_inplace_unique(lbound_entity, 0, n_entity_graph-1);
-
-    int *lowner = PDM_array_const_int(n_unique, -1);
-    for(int idx_entity = 0; idx_entity < n_entity_graph; ++idx_entity) {
-      int l_entity = pcg->pentity_graph[i_part][4*idx_entity];
-      int pos = PDM_binary_search_int(l_entity, lbound_entity, n_unique);
-
-      pcg->bound_owner[i_part][idx_entity] = pos; // Stockage temporaire
-
-      int my_location[3] = {i_rank, i_part+1, l_entity};
-
-      if(lowner[pos] != 0) {
-        if (_compare_nuplets_abs(3, my_location, &pcg->pentity_graph[i_part][4*idx_entity+1]) >= 0) {
-          lowner[pos] = 1;
-        }
-        else {
-          lowner[pos] = 0;
-        }
-      }
-    }
-
-    /* Last loop to fill */
-    for(int idx_entity = 0; idx_entity < n_entity_graph; ++idx_entity) {
-      int pos = pcg->bound_owner[i_part][idx_entity];
-      pcg->bound_owner[i_part][idx_entity] = lowner[pos];
-    }
-
-    PDM_free(lowner);
-    PDM_free(lbound_entity);
-  }
-}
-
-
-
-static
-void
-_compute_lexicographic_with_nuplet_owner
-(
-  PDM_part_comm_graph_t *pcg
-)
-{
-  int i_rank = -1;
-  PDM_MPI_Comm_rank(pcg->comm, &i_rank);
-
-  int nuplet_size = pcg->nuplet_size;
-  int stride      = 3 + nuplet_size;
+  int stride = 3 + nuplet_size; // nuplet_size is extern to manage with / without nuplet cases for ownership
 
   /*
    * Compute owner
@@ -273,7 +219,7 @@ _compute_lexicographic_with_nuplet_owner
       // PDM_log_trace_array_int(opp_location, stride, "opp_location :: ");
 
       if(lowner[pos] != 0) {
-        if (_compare_nuplets(stride, cur_location, opp_location) >= 0) {
+        if (compare_func(stride, cur_location, opp_location) >= 0) {
           lowner[pos] = 1;
         }
         else {
@@ -2357,16 +2303,14 @@ PDM_part_comm_graph_owner_compute
 )
 {
   if(owner_kind == PDM_PART_COMM_GRAPH_OWNER_KIND_LEXICOGRAPHIC) {
-    _compute_lexicographic_owner(pcg);
+    _compute_owner_gen(pcg, 0, _compare_nuplets_abs);
   } else if(owner_kind == PDM_PART_COMM_GRAPH_OWNER_KIND_LEXICOGRAPHIC_WITH_NUPLET) {
-    _compute_lexicographic_with_nuplet_owner(pcg);
+    _compute_owner_gen(pcg, pcg->nuplet_size, _compare_nuplets);
   } else if(owner_kind == PDM_PART_COMM_GRAPH_OWNER_KIND_HASH) {
-    PDM_error("Not implemented for PDM_PART_COMM_GRAPH_OWNER_KIND_HASH");
     _compute_hash_owner(pcg);
   } else if(owner_kind == PDM_PART_COMM_GRAPH_OWNER_KIND_HASH_WITH_NUPLET) {
-    PDM_error("Not implemented for PDM_PART_COMM_GRAPH_OWNER_KIND_HASH_WITH_NUPLET");
+    _compute_owner_gen(pcg, pcg->nuplet_size, _compare_nuplets_hash_abs);
   } else if(owner_kind == PDM_PART_COMM_GRAPH_OWNER_KIND_USER_DEFINED) {
-
     if(user_owner == NULL) {
       PDM_error("Owner_kind=PDM_PART_COMM_GRAPH_OWNER_KIND_USER_DEFINED but user_owner is NULL");
     }
@@ -2378,6 +2322,8 @@ PDM_part_comm_graph_owner_compute
   } else {
     PDM_error("Not implemented for %i", owner_kind);
   }
+
+  PDM_part_comm_graph_owner_check(pcg);
 }
 
 void
