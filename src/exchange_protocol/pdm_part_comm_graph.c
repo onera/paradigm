@@ -1177,8 +1177,12 @@ PDM_part_comm_graph_with_nuplet_create
   int max_nuplet_size;
   PDM_MPI_Allreduce(&nuplet_size, &max_nuplet_size, 1, PDM_MPI_INT, PDM_MPI_MAX, comm);
 
-  if (min_nuplet_size != max_nuplet_size) {
+  if(min_nuplet_size != max_nuplet_size) {
     PDM_error("All ranks must have the same nuplet_size");
+  }
+
+  if(min_nuplet_size < 0) {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_create_with_nuplet : nuplet_size should be > 0 \n");
   }
 
   return _create(n_part,
