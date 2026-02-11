@@ -39,12 +39,11 @@ typedef struct _pdm_part_comm_graph_t PDM_part_comm_graph_t;
  * \brief Owner kind computation
  */
 typedef enum {
-
-  PDM_PART_COMM_GRAPH_OWNER_KIND_LEXICOGRAPHIC             = 0, /*!< Classic lexicographic                            */
-  PDM_PART_COMM_GRAPH_OWNER_KIND_LEXICOGRAPHIC_WITH_NUPLET = 1, /*!< Classic lexicographic and take nuplet            */
-  PDM_PART_COMM_GRAPH_OWNER_KIND_HASH                      = 2, /*!< Hash to better owner repartition                 */
-  PDM_PART_COMM_GRAPH_OWNER_KIND_HASH_WITH_NUPLET          = 3, /*!< Hash to better owner repartition and take nuplet */
-  PDM_PART_COMM_GRAPH_OWNER_KIND_USER_DEFINED              = 4, /*!< Give by the user                                 */
+  PDM_PART_COMM_GRAPH_OWNER_KIND_LEXICOGRAPHIC             = 0, /*!< Lexicographic order (i_rank, i_part, i_entity)                                                   */
+  PDM_PART_COMM_GRAPH_OWNER_KIND_LEXICOGRAPHIC_WITH_NUPLET = 1, /*!< Lexicographic order with nuplet first (0-uplet, 1-uplet, ..., n_uplet, i_rank, i_part, i_entity) */
+  PDM_PART_COMM_GRAPH_OWNER_KIND_HASH                      = 2, /*!< Hash to better owner repartition                                                                 */
+  PDM_PART_COMM_GRAPH_OWNER_KIND_HASH_WITH_NUPLET          = 3, /*!< Hash to better owner repartition and take nuplet                                                 */
+  PDM_PART_COMM_GRAPH_OWNER_KIND_USER_DEFINED              = 4, /*!< Given by the user                                                                                */
 } PDM_part_comm_graph_owner_kind_t;
 
 
@@ -670,11 +669,11 @@ PDM_part_comm_graph_log_trace
 );
 
 /*
- * \brief Compute owner for all entity of the current \ref PDM_part_comm_graph_t, modify inplace
+ * \brief Compute owner for all entity of the current \ref PDM_part_comm_graph_t, owner array is modify inplace
  *
- * \param [in]  pcg         Pointer to \ref PDM_part_comm_graph_t instance
- * \param [in]  owner_kind  Owner kind
- * \param [in]  user_owner  Array of user owner (only if owner_kind == PDM_PART_COMM_GRAPH_OWNER_KIND_HASH_WITH_NUPLET) else NULL
+ * \param [in] pcg        Pointer to \ref PDM_part_comm_graph_t instance
+ * \param [in] owner_kind Owner kind
+ * \param [in] user_owner Array of user owner (only if owner_kind == PDM_PART_COMM_GRAPH_OWNER_KIND_HASH_WITH_NUPLET) else NULL
  *
  */
 void
@@ -688,29 +687,29 @@ PDM_part_comm_graph_owner_compute
 
 /**
  *
- * \brief Check if the owner are correct : only one owner among all partition / procs
+ * \brief Check owner validity (only one owner among all partition / procs)
  *
- * \param [in]  pcg         Pointer to \ref PDM_part_comm_graph_t instance
+ * \param [in]  pcg Pointer to \ref PDM_part_comm_graph_t instance
  */
 void
 PDM_part_comm_graph_owner_check
 (
-  PDM_part_comm_graph_t             *pcg
+  PDM_part_comm_graph_t *pcg
 );
 
 
 /**
  *
  * \brief Print statistics for the current \ref PDM_part_comm_graph_t :
- *           - Min/Max partners
- *           - Min/Max/Mean for owner / not owner repartition
+ *           - Min/Max number of processor connected by the graphs
+ *           - Min/Max/Mean number of owner (in percent of total graphe) : to have an idea of the repartition of owner
  *
- * \param [in]  pcg         Pointer to \ref PDM_part_comm_graph_t instance
+ * \param [in] pcg Pointer to \ref PDM_part_comm_graph_t instance
  */
 void
 PDM_part_comm_graph_owner_statistics
 (
-  PDM_part_comm_graph_t             *pcg
+  PDM_part_comm_graph_t *pcg
 );
 
 #ifdef __cplusplus
