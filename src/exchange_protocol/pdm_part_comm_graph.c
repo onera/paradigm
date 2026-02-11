@@ -73,11 +73,17 @@
  *============================================================================*/
 
 /**
- *  \brief Compare lexicographically two nuplets of same size (in absolute value)
+ * \brief Compare lexicographically two nuplets of the same size using absolute values.
  *
- *  \return -1 if a > b, 0 if a == b, 1 if a < b
+ * \param[in] size   Number of elements in each nuplet.
+ * \param[in] a      First nuplet to compare.
+ * \param[in] b      Second nuplet to compare.
+ *
+ * \return -1 if |a| > |b|, 0 if |a| == |b|, 1 if |a| < |b|
  */
-static inline int
+static
+inline
+int
 _compare_nuplets_abs
 (
   const int size,
@@ -96,8 +102,18 @@ _compare_nuplets_abs
   return 0;
 }
 
-
-static inline int
+/**
+ * \brief Compare lexicographically two nuplets of the same size.
+ *
+ * \param[in] size   Number of elements in each nuplet.
+ * \param[in] a      First nuplet to compare.
+ * \param[in] b      Second nuplet to compare.
+ *
+ * \return -1 if a > b, 0 if a == b, 1 if a < b
+ */
+static
+inline
+int
 _compare_nuplets
 (
   const int size,
@@ -116,7 +132,21 @@ _compare_nuplets
   return 0;
 }
 
-static inline int
+/**
+ * \brief Generate a 31-bit hash from an array of integers.
+ *
+ * Computes a hash value using a set of large primes and bit-rotation to ensure
+ * uniform distribution and minimize collisions, even for large input arrays.
+ * The hash is computed using the absolute values of the input to ensure symmetry.
+ *
+ * \param[in] n       Number of elements in the array.
+ * \param[in] values  Array of integers to hash.
+ *
+ * \return A positive 31-bit integer hash.
+ */
+static
+inline
+int
 _pdm_hash_any_size(const int n, const int values[])
 {
   // Suite de nombres premiers larges pour éviter les résonances
@@ -134,8 +164,23 @@ _pdm_hash_any_size(const int n, const int values[])
   return (int)(h & 0x7FFFFFFF);
 }
 
-
-static inline int
+/**
+ * \brief Compare two nuplets based on their hash values for load balancing.
+ *
+ * Uses \ref _pdm_hash_any_size to compare nuplets. This strategy is used to
+ * homogenize the distribution of owners across the MPI communicator. In case
+ * of hash collision, a lexicographical tie-breaker using absolute values is used.
+ *
+ * \param[in] size   Number of elements in each nuplet.
+ * \param[in] a      First nuplet to compare.
+ * \param[in] b      Second nuplet to compare.
+ *
+ * \return 1 if hash(a) > hash(b), -1 if hash(a) > hash(b).
+ * If hashes are equal, follows \ref _compare_nuplets_abs return rules.
+ */
+static
+inline
+int
 _compare_nuplets_hash_abs
 (
   const int size,
@@ -146,9 +191,9 @@ _compare_nuplets_hash_abs
   uint32_t h_local   = _pdm_hash_any_size(size, a);
   uint32_t h_distant = _pdm_hash_any_size(size, b);
   int i_win = 0;
-  if (h_local > h_distant) {
+  if (h_local < h_distant) {
     i_win = 1;
-  } else if (h_local < h_distant) {
+  } else if (h_local > h_distant) {
     i_win = -1;
   } else {
     // Cas extrêmement rare de collision de hash : On retombe sur la comparaison classique en tie-breaker
