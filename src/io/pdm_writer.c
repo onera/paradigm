@@ -2371,7 +2371,7 @@ PDM_writer_geom_fmt_get
   return geom->geom_fmt;
 }
 
-void 
+void
 PDM_writer_geom_fmt_set
 (
   PDM_writer_geom_t *geom,
@@ -2426,7 +2426,7 @@ PDM_writer_var_fmt_get
   return var->var_fmt;
 }
 
-void *
+void
 PDM_writer_var_fmt_set
 (
   PDM_writer_var_t *var,
@@ -2434,7 +2434,7 @@ PDM_writer_var_fmt_set
 )
 {
   CHECK_VAR(var)
-  var->var_fmt = var_fmt ; 
+  var->var_fmt = var_fmt;
 }
 
 

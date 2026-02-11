@@ -934,7 +934,7 @@ PDM_writer_geom_fmt_get
  * \param [in] geom_fmt geometry format instance
  *
  */
-void 
+void
 PDM_writer_geom_fmt_set
 (
   PDM_writer_geom_t *geom,
@@ -1004,7 +1004,7 @@ PDM_writer_var_fmt_get
  * \param [in] var \ref PDM_writer_var_t instance
  *
  */
-void *
+void
 PDM_writer_var_fmt_set
 (
   PDM_writer_var_t *var,
