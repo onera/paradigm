@@ -69,6 +69,13 @@ extern "C" {
     PDM_error(__FILE__, __LINE__, 0, "Error : invalid id_var (%d / %d)\n", \
                                      (id_var), (wrt)->var_tab->n_var);     \
   }
+
+#define CHECK_I_OPTION(wrt, i_option)                                     \
+  if ((i_option) < 0 || (i_option) >= (wrt)->n_options) {                 \
+    PDM_error(__FILE__, __LINE__, 0, "Error : invalid option #%d / %d\n", \
+                                      (i_option), (wrt)->n_options);      \
+  }
+
 /*============================================================================
  * Definition des types locaux
  *============================================================================*/
@@ -2435,9 +2442,7 @@ PDM_writer_option_name_get
 )
 {
   CHECK_WRITER(wrt)
-  if (i_option < 0 || i_option >= wrt->n_options) {
-    PDM_error(__FILE__, __LINE__, 0, "Error : invalid option %d / %d\n", i_option, wrt->n_options);
-  }
+  CHECK_I_OPTION(wrt, i_option)
   return wrt->options[i_option].nom;
 }
 
@@ -2450,9 +2455,7 @@ PDM_writer_option_value_get
 )
 {
   CHECK_WRITER(wrt)
-  if (i_option < 0 || i_option >= wrt->n_options) {
-    PDM_error(__FILE__, __LINE__, 0, "Error : invalid option #%d / %d\n", i_option, wrt->n_options);
-  }
+  CHECK_I_OPTION(wrt, i_option)
   return wrt->options[i_option].val;
 }
 
