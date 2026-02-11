@@ -184,6 +184,10 @@ PDM_reader_gamma_dmesh_nodal
 
   int dim = 0;
 
+  PDM_bool_t have_read_key[PDM_MESH_NODAL_N_ELEMENT_TYPES + 1];
+  for (int key = 0; key <= (int) PDM_MESH_NODAL_N_ELEMENT_TYPES; key++) {
+    have_read_key[key] = PDM_FALSE;
+  }
 
   PDM_g_num_t gn_vtx   = 0;
   PDM_g_num_t gn_edge  = 0;
@@ -234,10 +238,12 @@ PDM_reader_gamma_dmesh_nodal
       if (strstr(line, IO_keys[PDM_INRIA_IO_KEY_DIM]) != NULL) {
         // Get dimension
         fscanf(f, "%d", &dim);
+        have_read_key[PDM_INRIA_IO_KEY_DIM] = PDM_FALSE;
       }
 
 
-      else if (strstr(line, IO_keys[PDM_MESH_NODAL_POINT]) != NULL) {
+      else if (strstr(line, IO_keys[PDM_MESH_NODAL_POINT]) != NULL &&
+               have_read_key[PDM_MESH_NODAL_POINT] == PDM_FALSE) {
         // Get vertices
         long _gn_vtx;
         fscanf(f, "%ld", &_gn_vtx);
@@ -254,10 +260,12 @@ PDM_reader_gamma_dmesh_nodal
           }
           fscanf(f, "%d", &gvtx_tag[i]);
         }
+        have_read_key[PDM_MESH_NODAL_POINT] = PDM_TRUE;
       }
 
 
-      else if (strstr(line, IO_keys[PDM_MESH_NODAL_BAR2]) != NULL) {
+      else if (strstr(line, IO_keys[PDM_MESH_NODAL_BAR2]) != NULL &&
+               have_read_key[PDM_MESH_NODAL_BAR2] == PDM_FALSE) {
         // Get edges
         long _gn_edge;
         fscanf(f, "%ld", &_gn_edge);
@@ -271,10 +279,12 @@ PDM_reader_gamma_dmesh_nodal
           }
           fscanf(f, "%d", &gedge_group[i]);
         }
+        have_read_key[PDM_MESH_NODAL_BAR2] = PDM_TRUE;
       }
 
 
-      else if (strstr(line, IO_keys[PDM_MESH_NODAL_TRIA3]) != NULL) {
+      else if (strstr(line, IO_keys[PDM_MESH_NODAL_TRIA3]) != NULL &&
+               have_read_key[PDM_MESH_NODAL_TRIA3] == PDM_FALSE) {
         // Get triangles
         long _gn_tria;
         fscanf(f, "%ld", &_gn_tria);
@@ -288,10 +298,12 @@ PDM_reader_gamma_dmesh_nodal
           }
           fscanf(f, "%d", &gtria_group[i]);
         }
+        have_read_key[PDM_MESH_NODAL_TRIA3] = PDM_TRUE;
       }
 
 
-      else if (strstr(line, IO_keys[PDM_MESH_NODAL_TETRA4]) != NULL) {
+      else if (strstr(line, IO_keys[PDM_MESH_NODAL_TETRA4]) != NULL &&
+               have_read_key[PDM_MESH_NODAL_TETRA4] == PDM_FALSE) {
         // Get tetrahedra
         long _gn_tetra;
         fscanf(f, "%ld", &_gn_tetra);
@@ -305,10 +317,12 @@ PDM_reader_gamma_dmesh_nodal
           }
           fscanf(f, "%d", &gtetra_group[i]);
         }
+        have_read_key[PDM_MESH_NODAL_TETRA4] = PDM_TRUE;
       }
 
 
-      else if (strstr(line, IO_keys[PDM_MESH_NODAL_PYRAMID5]) != NULL) {
+      else if (strstr(line, IO_keys[PDM_MESH_NODAL_PYRAMID5]) != NULL &&
+               have_read_key[PDM_MESH_NODAL_PYRAMID5] == PDM_FALSE) {
         // Get pyramids
         long _gn_pyra;
         fscanf(f, "%ld", &_gn_pyra);
@@ -322,10 +336,12 @@ PDM_reader_gamma_dmesh_nodal
           }
           fscanf(f, "%d", &gpyra_group[i]);
         }
+        have_read_key[PDM_MESH_NODAL_PYRAMID5] = PDM_TRUE;
       }
 
 
-      else if (strstr(line, IO_keys[PDM_MESH_NODAL_PRISM6]) != NULL) {
+      else if (strstr(line, IO_keys[PDM_MESH_NODAL_PRISM6]) != NULL &&
+               have_read_key[PDM_MESH_NODAL_PRISM6] == PDM_FALSE) {
         // Get prisms
         long _gn_prism;
         fscanf(f, "%ld", &_gn_prism);
@@ -339,10 +355,12 @@ PDM_reader_gamma_dmesh_nodal
           }
           fscanf(f, "%d", &gprism_group[i]);
         }
+        have_read_key[PDM_MESH_NODAL_PRISM6] = PDM_TRUE;
       }
 
 
-      else if (strstr(line, IO_keys[PDM_MESH_NODAL_HEXA8]) != NULL) {
+      else if (strstr(line, IO_keys[PDM_MESH_NODAL_HEXA8]) != NULL &&
+               have_read_key[PDM_MESH_NODAL_HEXA8] == PDM_FALSE) {
         // Get hexahedra
         long _gn_hexa;
         fscanf(f, "%ld", &_gn_hexa);
@@ -356,10 +374,12 @@ PDM_reader_gamma_dmesh_nodal
           }
           fscanf(f, "%d", &ghexa_group[i]);
         }
+        have_read_key[PDM_MESH_NODAL_HEXA8] = PDM_TRUE;
       }
 
 
-      else if (strstr(line, IO_keys[PDM_MESH_NODAL_QUAD4]) != NULL) {
+      else if (strstr(line, IO_keys[PDM_MESH_NODAL_QUAD4]) != NULL &&
+               have_read_key[PDM_MESH_NODAL_QUAD4] == PDM_FALSE) {
         // Get quads
         long _gn_quad;
         fscanf(f, "%ld", &_gn_quad);
@@ -374,6 +394,7 @@ PDM_reader_gamma_dmesh_nodal
           }
           fscanf(f, "%d", &gquad_group[i_quad]);
         }
+        have_read_key[PDM_MESH_NODAL_QUAD4] = PDM_TRUE;
       }
 
 
@@ -425,7 +446,7 @@ PDM_reader_gamma_dmesh_nodal
 
           tmp              = tv[1];
           gquad_vtx[4*i+1] = gquad_vtx[4*i+2];
-          gquad_vtx[4*i+2] = tmp;           
+          gquad_vtx[4*i+2] = tmp;
         }
 
       }
