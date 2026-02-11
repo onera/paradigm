@@ -59,13 +59,13 @@ extern "C" {
   }
 
 #define CHECK_ID_GEOM(wrt, id_geom)                                         \
-  if ((id_geom) >= (wrt)->geom_tab->n_geom) {                               \
+  if ((id_geom) < 0 || (id_geom) >= (wrt)->geom_tab->n_geom) {              \
     PDM_error(__FILE__, __LINE__, 0, "Error : invalid id_geom (%d / %d)\n", \
                                      (id_geom), (wrt)->geom_tab->n_geom);   \
   }
 
 #define CHECK_ID_VAR(wrt, id_var)                                          \
-  if ((id_var) >= (wrt)->var_tab->n_var) {                                 \
+  if ((id_var) < 0 || (id_var) >= (wrt)->var_tab->n_var) {                 \
     PDM_error(__FILE__, __LINE__, 0, "Error : invalid id_var (%d / %d)\n", \
                                      (id_var), (wrt)->var_tab->n_var);     \
   }
@@ -2501,10 +2501,7 @@ PDM_writer_var_get
 )
 {
   CHECK_WRITER(wrt)
-  int n_var = PDM_writer_n_var_get(wrt);
-  if (i_var < 0 || i_var >= n_var) {
-    PDM_error(__FILE__, __LINE__, 0, "Error : invalid i_var : %d / %d\n", i_var, n_var);
-  }
+  CHECK_ID_VAR(wrt, i_var)
   return wrt->var_tab->var[i_var];
 }
 
@@ -2528,10 +2525,7 @@ PDM_writer_geom_get
 )
 {
   CHECK_WRITER(wrt)
-  int n_geom = PDM_writer_n_geom_get(wrt);
-  if (i_geom < 0 || i_geom >= n_geom) {
-    PDM_error(__FILE__, __LINE__, 0, "Error : invalid i_geom : %d / %d\n", i_geom, n_geom);
-  }
+  CHECK_ID_GEOM(wrt, i_geom)
   return wrt->geom_tab->geom[i_geom];
 }
 
