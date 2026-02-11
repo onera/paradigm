@@ -1164,7 +1164,7 @@ PDM_writer_geom_set_from_mesh_nodal
   /* Initialisation de la structure PDM_writer_geom_t */
 
   //_geom_init(geom, n_part, cs->pdm_mpi_comm);
-  geom->mesh_nodal  = mesh;
+  geom->mesh_nodal = mesh;
 
   geom->s_section = 10;
   if (geom->section_owner != NULL) {
@@ -1851,9 +1851,9 @@ PDM_writer_cst_global_var_create
 void
 PDM_writer_cst_global_var_set
 (
- PDM_writer_t               *cs,
- const int                   id_var,
- const double                val_var
+ PDM_writer_t *cs,
+ const int     id_var,
+ const double  val_var
 )
 {
   CHECK_WRITER(cs)
@@ -1868,12 +1868,12 @@ PDM_writer_cst_global_var_set
 void
 PDM_writer_out_fmt_set
 (
- PDM_writer_t      *cs,
- void              *out_fmt            
+ PDM_writer_t *cs,
+ void         *out_fmt
 )
 {
   CHECK_WRITER(cs)
-  cs->sortie_fmt =  out_fmt ;
+  cs->sortie_fmt = out_fmt ;
 }
 
 
