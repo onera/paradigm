@@ -673,7 +673,7 @@ PDM_part_comm_graph_log_trace
  *
  * \param [in] pcg        Pointer to \ref PDM_part_comm_graph_t instance
  * \param [in] owner_kind Owner kind
- * \param [in] user_owner Array of user owner (only if owner_kind == PDM_PART_COMM_GRAPH_OWNER_KIND_HASH_WITH_NUPLET) else NULL
+ * \param [in] user_owner Array of user owner (only if owner_kind == PDM_PART_COMM_GRAPH_OWNER_KIND_HASH_WITH_NUPLET) else NULL, the array is copy
  *
  */
 void
