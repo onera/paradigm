@@ -22,6 +22,7 @@ cdef extern from "pdm_reader_gamma.h":
                              double    *fields)
 
     void PDM_write_gamma_matsym(char   *filename,
+                                int     dim,
                                 int     n_vtx,
                                 double *fields)
 
@@ -77,11 +78,13 @@ def write_solb(char *filename,
 
 
 def write_matsym_solb(char *filename,
+                      int dim,
                       int n_vtx,
                       NPY.ndarray[NPY.double_t, mode='c', ndim=1] field):
   """
   """
   PDM_write_gamma_matsym(filename,
+                         dim,
                          n_vtx,
               <double *> field.data)
 

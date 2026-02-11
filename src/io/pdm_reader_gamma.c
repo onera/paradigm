@@ -1310,6 +1310,7 @@ void
 PDM_write_gamma_matsym
 (
   const char   *filename,
+  const int     dim,
   const int     n_vtx,
   const double *fields
 )
@@ -1319,23 +1320,32 @@ PDM_write_gamma_matsym
 
   fprintf(f, "MeshVersionFormatted 2\n");
   fprintf(f, "# rank %d\n\n", 0);
-  fprintf(f, "Dimension\n3\n\n");
+  fprintf(f, "Dimension\n%d\n\n", dim);
   fprintf(f, "SolAtVertices\n%d\n", n_vtx);
 
   fprintf(f, "1 3 \n");
-  for (int i = 0; i < n_vtx; i++) {
-    // for(int i_field = 0; i_field < 6; ++i_field) {
-    //   fprintf(f, "%20.16lf ", fields[6*i+i_field]);
-    // }
-    // fprintf(f, " \n");
-    fprintf(f, "%20.16lf %20.16lf %20.16lf %20.16lf %20.16lf %20.16lf\n",
-            fields[6*i+0],
-            fields[6*i+1],
-            fields[6*i+3],
-            fields[6*i+2],
-            fields[6*i+4],
-            fields[6*i+5]);
+  if (dim == 2) {
+    for (int i = 0; i < n_vtx; i++) {
+      fprintf(f, "%20.16lf %20.16lf %20.16lf\n",
+              fields[3*i+0],
+              fields[3*i+1],
+              fields[3*i+2]);
+    }
+  }
+  else if (dim == 3) {
+    for (int i = 0; i < n_vtx; i++) {
+      fprintf(f, "%20.16lf %20.16lf %20.16lf %20.16lf %20.16lf %20.16lf\n",
+              fields[6*i+0],
+              fields[6*i+1],
+              fields[6*i+3],
+              fields[6*i+2],
+              fields[6*i+4],
+              fields[6*i+5]);
 
+    }
+  }
+  else {
+    PDM_error(__FILE__, __LINE__, 0, "Invalid dimension %d (expected 2 or 3)\n", dim);
   }
   fprintf(f, "End\n");
   fclose(f);

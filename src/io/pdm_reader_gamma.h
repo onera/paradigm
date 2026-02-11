@@ -89,10 +89,19 @@ PDM_read_gamma_sol
 );
 
 
+/**
+ * \brief Write symmetric tensors in Gamma Mesh Format
+ *
+ * \param [in]  filename  Solution file name
+ * \param [in]  dim       Spatial dimension (2 or 3)
+ * \param [in]  n_vtx     Number of tensors
+ * \param [out] fields    Tensors (size = \p n_vtx * \p dim * \p (dim + 1) / 2)
+ */
 void
 PDM_write_gamma_matsym
 (
   const char   *filename,
+  const int     dim,
   const int     n_vtx,
   const double *fields
 );
