@@ -19,6 +19,7 @@
 #include "pdm_order.h"
 #include "pdm_part_comm_graph.h"
 #include "pdm_part_comm_graph_priv.h"
+#include "pdm_exchange_helper_priv.h"
 #include "pdm_priv.h"
 #include "pdm_sort.h"
 #include "pdm_unique.h"
@@ -49,25 +50,33 @@ extern "C" {
 
 static
 void
-_prepare_send_strid_cst
+_allocate_send_buffer_strid_cst
+(
+  PDM_part_comm_graph_t   *pcg,
+  size_t                   s_data,
+  int                      cst_stride,
+  unsigned char          **send_buffer
+)
+{
+  int n_rank;
+  PDM_MPI_Comm_size(pcg->comm, &n_rank);
+
+  int send_buff_size = s_data * cst_stride * pcg->send_idx[n_rank];
+  PDM_malloc(*send_buffer, send_buff_size, unsigned char);
+}
+
+static
+void
+_fill_send_strid_cst
 (
  PDM_part_comm_graph_t   *pcg,
  size_t                   s_data,
  int                      cst_stride,
  void                   **send_entity_data,
- unsigned char          **send_buffer
+ unsigned char           *send_buffer
 )
 {
-
-  int n_rank;
-  PDM_MPI_Comm_size(pcg->comm, &n_rank);
-
   int s_data_tot = s_data * cst_stride;
-
-  int send_buff_size = s_data * cst_stride * pcg->send_idx[n_rank];
-  unsigned char *_send_buffer = NULL;
-  PDM_malloc(_send_buffer, send_buff_size, unsigned char);
-
   unsigned char **_send_entity_data = (unsigned char **) send_entity_data;
 
   for(int i_part = 0; i_part < pcg->n_part; ++i_part) {
@@ -75,40 +84,109 @@ _prepare_send_strid_cst
       for(int k = 0; k < s_data_tot; ++k) {
         int idx_read  = i * s_data_tot + k;
         int idx_write = pcg->part_to_send_buffer[i_part][i] * s_data * cst_stride + k;
-        _send_buffer[idx_write] = _send_entity_data[i_part][idx_read];
+        send_buffer[idx_write] = _send_entity_data[i_part][idx_read];
       }
     }
   }
+}
+
+static
+void
+_prepare_send_strid_cst
+(
+  PDM_part_comm_graph_t   *pcg,
+  size_t                   s_data,
+  int                      cst_stride,
+  void                   **send_entity_data,
+  unsigned char          **send_buffer
+)
+{
+  unsigned char *_send_buffer = NULL;
+  _allocate_send_buffer_strid_cst(pcg, s_data, cst_stride, &_send_buffer);
+  _fill_send_strid_cst(pcg, s_data, cst_stride, send_entity_data, _send_buffer);
+
   *send_buffer = _send_buffer;
+}
+
+static
+void
+_allocate_recv_buffer_strid_cst
+(
+  PDM_part_comm_graph_t   *pcg,
+  size_t                   s_data,
+  int                      cst_stride,
+  unsigned char          **recv_buffer
+)
+{
+  int n_rank;
+  PDM_MPI_Comm_size(pcg->comm, &n_rank);
+
+  int recv_buff_size = s_data * cst_stride * pcg->recv_idx[n_rank];
+  PDM_malloc(*recv_buffer, recv_buff_size, unsigned char);
 }
 
 
 static
 void
-_post_recv_strid_cst
+_allocate_recv_strid_cst
 (
- PDM_part_comm_graph_t   *pcg,
- size_t                   s_data,
- int                      cst_stride,
- unsigned char           *recv_buffer,
- void                  ***recv_entity_data
+  PDM_part_comm_graph_t   *pcg,
+  size_t                   s_data,
+  int                      cst_stride,
+  unsigned char         ***recv_entity_data
+
 )
 {
   int s_data_tot = s_data * cst_stride;
 
   unsigned char **_recv_entity_data = NULL;
   PDM_malloc(_recv_entity_data, pcg->n_part, unsigned char *);
-  *recv_entity_data = (void **) _recv_entity_data;
   for(int i_part = 0; i_part < pcg->n_part; ++i_part) {
     _recv_entity_data[i_part] = malloc(pcg->n_entity_graph[i_part] * s_data_tot * sizeof(unsigned char));
+  }
+
+  *recv_entity_data = _recv_entity_data;
+}
+
+static
+void
+_fill_recv_strid_cst
+(
+  PDM_part_comm_graph_t   *pcg,
+  size_t                   s_data,
+  int                      cst_stride,
+  unsigned char          **recv_entity_data,
+  unsigned char           *recv_buffer
+)
+{
+  int s_data_tot = s_data * cst_stride;
+  for(int i_part = 0; i_part < pcg->n_part; ++i_part) {
     for(int i = 0; i < pcg->n_entity_graph[i_part]; ++i) {
       for(int k = 0; k < s_data_tot; ++k) {
         int idx_write = i * s_data_tot + k;
         int idx_read  = pcg->part_to_recv_buffer[i_part][i] * s_data * cst_stride + k;
-        _recv_entity_data[i_part][idx_write] = recv_buffer[idx_read];
+        recv_entity_data[i_part][idx_write] = recv_buffer[idx_read];
       }
     }
   }
+}
+
+static
+void
+_post_recv_strid_cst
+(
+  PDM_part_comm_graph_t   *pcg,
+  size_t                   s_data,
+  int                      cst_stride,
+  unsigned char           *recv_buffer,
+  void                  ***recv_entity_data
+)
+{
+  unsigned char **_recv_entity_data = NULL;
+  _allocate_recv_strid_cst(pcg, s_data, cst_stride, &_recv_entity_data);
+  _fill_recv_strid_cst    (pcg, s_data, cst_stride, _recv_entity_data, recv_buffer);
+
+  *recv_entity_data = (void **) _recv_entity_data;
 }
 
 static
@@ -138,9 +216,9 @@ _exch_strid_cst
                           send_entity_data,
                           &send_buffer);
 
-  int recv_buff_size = s_data * cst_stride * pcg->recv_idx[n_rank];
   unsigned char *recv_buffer = NULL;
-  PDM_malloc(recv_buffer, recv_buff_size, unsigned char);
+  _allocate_recv_buffer_strid_cst(pcg, s_data, cst_stride, &recv_buffer);
+
   PDM_MPI_Alltoallv(send_buffer,
                     pcg->send_n,
                     pcg->send_idx,
@@ -164,56 +242,57 @@ _exch_strid_cst
   PDM_MPI_Type_free(&mpi_type);
 }
 
-
 static
 void
-_exch_strid_var
+_allocate_send_strid
 (
- PDM_part_comm_graph_t   *pcg,
- size_t                   s_data,
- int                    **send_entity_stride,
- void                   **send_entity_data,
- int                   ***recv_entity_stride,
- void                  ***recv_entity_data
+  PDM_part_comm_graph_t   *pcg,
+  int                    **send_stride
 )
 {
   int n_rank;
   PDM_MPI_Comm_size(pcg->comm, &n_rank);
+  PDM_malloc(*send_stride, pcg->send_idx[n_rank], int);
+}
 
-  int s_data_tot = s_data;
-
-  PDM_MPI_Datatype mpi_type;
-  PDM_MPI_Type_create_contiguous(s_data_tot, PDM_MPI_BYTE, &mpi_type);
-  PDM_MPI_Type_commit(&mpi_type);
-
-  /* Exchange stride */
-  int  *send_stride = NULL;
-  PDM_malloc(send_stride, pcg->send_idx[n_rank], int);
+static
+void
+_fill_send_strid
+(
+  PDM_part_comm_graph_t   *pcg,
+  int                    **send_entity_stride,
+  int                     *send_stride
+)
+{
   for(int i_part = 0; i_part < pcg->n_part; ++i_part) {
     for(int i = 0; i < pcg->n_entity_graph[i_part]; ++i) {
       int idx_write = pcg->part_to_send_buffer[i_part][i];
       send_stride[idx_write] = send_entity_stride[i_part][i];
     }
   }
+}
 
-  int *recv_stride = NULL;
-  PDM_malloc(recv_stride, pcg->recv_idx[n_rank], int);
-  PDM_MPI_Alltoallv(send_stride,
-                    pcg->send_n,
-                    pcg->send_idx,
-                    PDM_MPI_INT,
-                    recv_stride,
-                    pcg->recv_n,
-                    pcg->recv_idx,
-                    PDM_MPI_INT,
-                    pcg->comm);
+static
+void
+_post_send_strid_and_fill_send_buffer
+(
+  PDM_part_comm_graph_t   *pcg,
+  int                      s_data_tot,
+  int                     *send_stride,
+  int                     *recv_stride,
+  int                    **send_entity_stride,
+  void                   **send_entity_data,
+  int                    **out_recv_stride_idx,
+  int                    **out_send_data_idx,
+  int                    **out_send_data_n,
+  int                    **out_recv_data_idx,
+  int                    **out_recv_data_n,
+  unsigned char          **out_send_buffer
+)
+{
+  int n_rank;
+  PDM_MPI_Comm_size(pcg->comm, &n_rank);
 
-  if(0 == 1) {
-    PDM_log_trace_array_int(send_stride, pcg->send_idx[n_rank], "send_stride ::");
-    PDM_log_trace_array_int(recv_stride, pcg->recv_idx[n_rank], "recv_stride ::");
-  }
-
-  /* Exchange data */
   int *send_stride_idx = NULL;
   PDM_malloc(send_stride_idx, pcg->send_idx[n_rank]+1, int);
   send_stride_idx[0] = 0;
@@ -279,30 +358,32 @@ _exch_strid_var
   }
   PDM_free(send_stride_idx);
 
-  int recv_buff_size = recv_data_idx[n_rank] * s_data_tot;
-  unsigned char  *recv_buffer = NULL;
-  PDM_malloc(recv_buffer, recv_buff_size, unsigned char);
+  *out_recv_stride_idx = recv_stride_idx;
+  *out_send_data_idx   = send_data_idx;
+  *out_send_data_n     = send_data_n;
+  *out_recv_data_idx   = recv_data_idx;
+  *out_recv_data_n     = recv_data_n;
+  *out_send_buffer     = send_buffer;
 
-  PDM_MPI_Alltoallv(send_buffer,
-                    send_data_n,
-                    send_data_idx,
-                    mpi_type,
-                    recv_buffer,
-                    recv_data_n,
-                    recv_data_idx,
-                    mpi_type,
-                    pcg->comm);
-  PDM_free(send_buffer);
+}
 
-  /* Panic verbose */
-  // PDM_g_num_t* recv_buffer_dbg = (PDM_g_num_t *) recv_buffer;
-  // PDM_log_trace_array_long(recv_buffer_dbg, recv_buff_size/s_data, "recv_buffer_dbg ::");
 
-  /* Post-traitement stride */
+static
+void
+_post_recv_strid_var
+(
+  PDM_part_comm_graph_t    *pcg,
+  int                       s_data_tot,
+  int                      *recv_stride,
+  int                    ***recv_entity_stride,
+  void                   ***recv_entity_data
+)
+{
   int           **_recv_entity_stride = NULL;
   unsigned char **_recv_entity_data   = NULL;
   PDM_malloc(_recv_entity_stride, pcg->n_part, int           *);
   PDM_malloc(_recv_entity_data  , pcg->n_part, unsigned char *);
+
   *recv_entity_stride =           _recv_entity_stride;
   *recv_entity_data   = (void **) _recv_entity_data;
 
@@ -321,7 +402,20 @@ _exch_strid_var
       PDM_log_trace_array_int(_recv_entity_stride[i_part], pcg->n_entity_graph[i_part], "_recv_entity_stride :");
     }
   }
+}
 
+static
+void
+_post_recv_buffer_strid_var
+(
+  PDM_part_comm_graph_t    *pcg,
+  int                       s_data_tot,
+  int                      *recv_stride_idx,
+  unsigned char            *recv_buffer,
+  int                     **recv_entity_stride,
+  unsigned char           **recv_entity_data
+)
+{
   /*
    * Post-treatment buffer
    */
@@ -329,26 +423,120 @@ _exch_strid_var
     int idx_write = 0;
     for(int i = 0; i < pcg->n_entity_graph[i_part]; ++i) {
       int idx_buffer = pcg->part_to_recv_buffer[i_part][i];
-      for(int j = 0; j < _recv_entity_stride[i_part][i]; ++j) {
+      for(int j = 0; j < recv_entity_stride[i_part][i]; ++j) {
         for(int k = 0; k < s_data_tot; ++k) {
           int idx_read  = (recv_stride_idx[idx_buffer] + j) * s_data_tot + k;
-          _recv_entity_data[i_part][(idx_write+j)*s_data_tot + k] = recv_buffer[idx_read];
+          recv_entity_data[i_part][(idx_write+j)*s_data_tot + k] = recv_buffer[idx_read];
         }
       }
-      idx_write += _recv_entity_stride[i_part][i];
+      idx_write += recv_entity_stride[i_part][i];
     }
   }
+}
 
-  PDM_free(recv_buffer);
-  PDM_free(recv_stride_idx);
 
+static
+void
+_exch_strid_var
+(
+ PDM_part_comm_graph_t   *pcg,
+ size_t                   s_data,
+ int                    **send_entity_stride,
+ void                   **send_entity_data,
+ int                   ***recv_entity_stride,
+ void                  ***recv_entity_data
+)
+{
+  int n_rank;
+  PDM_MPI_Comm_size(pcg->comm, &n_rank);
+
+  int s_data_tot = s_data;
+
+  PDM_MPI_Datatype mpi_type;
+  PDM_MPI_Type_create_contiguous(s_data_tot, PDM_MPI_BYTE, &mpi_type);
+  PDM_MPI_Type_commit(&mpi_type);
+
+  /* Exchange stride */
+  int  *send_stride = NULL;
+  _allocate_send_strid(pcg, &send_stride);
+  _fill_send_strid    (pcg, send_entity_stride, send_stride);
+
+  int *recv_stride = NULL;
+  PDM_malloc(recv_stride, pcg->recv_idx[n_rank], int);
+  PDM_MPI_Alltoallv(send_stride,
+                    pcg->send_n,
+                    pcg->send_idx,
+                    PDM_MPI_INT,
+                    recv_stride,
+                    pcg->recv_n,
+                    pcg->recv_idx,
+                    PDM_MPI_INT,
+                    pcg->comm);
+
+  if(0 == 1) {
+    PDM_log_trace_array_int(send_stride, pcg->send_idx[n_rank], "send_stride ::");
+    PDM_log_trace_array_int(recv_stride, pcg->recv_idx[n_rank], "recv_stride ::");
+  }
+
+  /* Exchange data */
+  int           *recv_stride_idx = NULL;
+  int           *send_data_idx   = NULL;
+  int           *send_data_n     = NULL;
+  int           *recv_data_idx   = NULL;
+  int           *recv_data_n     = NULL;
+  unsigned char *send_buffer     = NULL;
+  _post_send_strid_and_fill_send_buffer(pcg,
+                                        s_data_tot,
+                                        send_stride,
+                                        recv_stride,
+                                        send_entity_stride,
+                                        send_entity_data,
+                                        &recv_stride_idx,
+                                        &send_data_idx,
+                                        &send_data_n,
+                                        &recv_data_idx,
+                                        &recv_data_n,
+                                        &send_buffer);
+
+  int recv_buff_size = recv_data_idx[n_rank] * s_data_tot;
+  unsigned char  *recv_buffer = NULL;
+  PDM_malloc(recv_buffer, recv_buff_size, unsigned char);
+
+  PDM_MPI_Alltoallv(send_buffer,
+                    send_data_n,
+                    send_data_idx,
+                    mpi_type,
+                    recv_buffer,
+                    recv_data_n,
+                    recv_data_idx,
+                    mpi_type,
+                    pcg->comm);
+  PDM_free(send_buffer);
   PDM_free(send_data_idx);
   PDM_free(recv_data_idx);
   PDM_free(send_data_n);
   PDM_free(recv_data_n);
-
   PDM_free(send_stride);
+
+  /* Post-treatment stride + allocation */
+  _post_recv_strid_var(pcg,
+                       s_data_tot,
+                       recv_stride,
+                       recv_entity_stride,
+                       recv_entity_data);
   PDM_free(recv_stride);
+
+  /* Post-traitement stride */
+  unsigned char **_recv_entity_data = (unsigned char **) *recv_entity_data;
+  _post_recv_buffer_strid_var(pcg,
+                              s_data_tot,
+                              recv_stride_idx,
+                              recv_buffer,
+                              *recv_entity_stride,
+                              _recv_entity_data);
+
+  PDM_free(recv_buffer);
+  PDM_free(recv_stride_idx);
 
   PDM_MPI_Type_free(&mpi_type);
 }
@@ -628,20 +816,38 @@ _create
   pcg->recv_n   = recv_n;
 
   /* Compute p2p array */
-  PDM_malloc(pcg->active_rank_send, pcg->n_active_rank_send, int);
+  PDM_malloc(pcg->active_rank_send, n_rank, int);
   PDM_malloc(pcg->active_rank_recv, pcg->n_active_rank_recv, int);
+
+  PDM_malloc(pcg->active_send_idx, n_rank, int);
+  PDM_malloc(pcg->active_send_n  , n_rank, int);
+  PDM_malloc(pcg->active_recv_idx, n_rank, int);
+  PDM_malloc(pcg->active_recv_n  , n_rank, int);
 
   pcg->n_active_rank_send = 0;
   pcg->n_active_rank_recv = 0;
 
   for(int i = 0; i < n_rank; ++i) {
     if(send_n[i] > 0) {
-      pcg->active_rank_send[pcg->n_active_rank_send++] = i;
+      pcg->active_send_idx [pcg->n_active_rank_send] = send_idx[i];
+      pcg->active_send_n   [pcg->n_active_rank_send] = send_n  [i];
+      pcg->active_rank_send[pcg->n_active_rank_send] = i;
+      pcg->n_active_rank_send++;
     }
     if(recv_n[i] > 0) {
-      pcg->active_rank_recv[pcg->n_active_rank_recv++] = i;
+      pcg->active_recv_idx [pcg->n_active_rank_recv] = recv_idx[i];
+      pcg->active_recv_n   [pcg->n_active_rank_recv] = recv_n  [i];
+      pcg->active_rank_recv[pcg->n_active_rank_recv] = i;
+      pcg->n_active_rank_recv++;
     }
   }
+
+  PDM_realloc(pcg->active_rank_send, pcg->active_rank_send, pcg->n_active_rank_send, int);
+  PDM_realloc(pcg->active_rank_recv, pcg->active_rank_recv, pcg->n_active_rank_recv, int);
+  PDM_realloc(pcg->active_send_idx , pcg->active_send_idx , pcg->n_active_rank_send, int);
+  PDM_realloc(pcg->active_send_n   , pcg->active_send_n   , pcg->n_active_rank_send, int);
+  PDM_realloc(pcg->active_recv_idx , pcg->active_recv_idx , pcg->n_active_rank_recv, int);
+  PDM_realloc(pcg->active_recv_n   , pcg->active_recv_n   , pcg->n_active_rank_recv, int);
 
   /*
    * Compute owner
@@ -690,6 +896,10 @@ _create
     PDM_free(lowner);
     PDM_free(lbound_entity);
   }
+
+  /* Deleguate to exch_helper for Asynchronous and persitent exchange */
+  pcg->exch_h = PDM_exchange_helper_create(comm);
+
 
   return pcg;
 }
@@ -776,7 +986,6 @@ PDM_part_comm_graph_exch
                     send_entity_data,
                     recv_entity_data);
   } else if (t_stride == PDM_STRIDE_VAR_INTERLACED) {
-
     _exch_strid_var(pcg,
                     s_data,
                     send_entity_stride,
@@ -788,6 +997,448 @@ PDM_part_comm_graph_exch
   }
 
 }
+
+
+int
+PDM_part_comm_graph_iexch
+(
+  PDM_part_comm_graph_t   *pcg,
+  PDM_mpi_comm_kind_t      kcomm,
+  size_t                   s_data,
+  PDM_stride_t             t_stride,
+  int                      cst_stride,
+  int                    **send_entity_stride,
+  void                   **send_entity_data,
+  int                   ***recv_entity_stride,
+  void                  ***recv_entity_data
+)
+{
+  int n_rank;
+  PDM_MPI_Comm_size(pcg->comm, &n_rank);
+
+  int s_data_tot = s_data;
+  if(t_stride == PDM_STRIDE_CST_INTERLACED) {
+    s_data_tot = s_data * cst_stride;
+  }
+
+  PDM_MPI_Datatype mpi_type;
+  PDM_MPI_Type_create_contiguous(s_data_tot, PDM_MPI_BYTE, &mpi_type);
+  PDM_MPI_Type_commit(&mpi_type);
+
+  int request_id = -1;
+
+  if(t_stride == PDM_STRIDE_CST_INTERLACED) {
+    unsigned char *send_buffer = NULL;
+    _allocate_send_buffer_strid_cst(pcg, s_data, cst_stride, &send_buffer);
+
+    unsigned char *recv_buffer = NULL;
+    _allocate_recv_buffer_strid_cst(pcg, s_data, cst_stride, &recv_buffer);
+
+    // Hook internal send_buffer et send_entity_data
+    _fill_send_strid_cst(pcg,
+                         s_data,
+                         cst_stride,
+                         send_entity_data,
+                         send_buffer);
+
+    request_id = PDM_exchange_helper_iexch(pcg->exch_h,
+                                           kcomm,
+                                           s_data,
+                                           cst_stride,
+                                           pcg->send_idx,
+                                           pcg->send_n,
+                                           send_buffer,
+                                           pcg->recv_idx,
+                                           pcg->recv_n,
+                                           recv_buffer);
+
+    pcg->exch_h->send_buffer  [request_id] = send_buffer;
+    pcg->exch_h->recv_buffer  [request_id] = recv_buffer;
+
+    unsigned char **_recv_entity_data = NULL;
+    _allocate_recv_strid_cst(pcg, s_data, cst_stride, &_recv_entity_data);
+    *recv_entity_data = (void **) _recv_entity_data;
+
+    pcg->exch_h->t_stride     [request_id] = t_stride;
+    pcg->exch_h->s_data       [request_id] = s_data;
+    pcg->exch_h->cst_stride   [request_id] = cst_stride;
+    pcg->exch_h->p_send_stride[request_id] = send_entity_stride;
+    pcg->exch_h->p_send_data  [request_id] = send_entity_data;
+    if(recv_entity_stride != NULL) {
+      pcg->exch_h->p_recv_stride[request_id] = (*recv_entity_stride);
+    }
+    pcg->exch_h->p_recv_data  [request_id] = (*recv_entity_data);
+  } else if (t_stride == PDM_STRIDE_VAR_INTERLACED) {
+
+    int  *send_stride = NULL;
+    _allocate_send_strid(pcg, &send_stride);
+    _fill_send_strid    (pcg, send_entity_stride, send_stride);
+
+    int *recv_stride = NULL;
+    PDM_malloc(recv_stride, pcg->recv_idx[n_rank], int);
+
+    /* Strid exchange : blocking */
+    PDM_exchange_helper_mpi_type_exch(pcg->exch_h,
+                                      kcomm,
+                                      PDM_MPI_INT,
+                                      pcg->send_idx,
+                                      pcg->send_n,
+                                      send_stride,
+                                      pcg->recv_idx,
+                                      pcg->recv_n,
+                                      recv_stride);
+
+    if(0 == 1) {
+      PDM_log_trace_array_int(send_stride, pcg->send_idx[n_rank], "send_stride ::");
+      PDM_log_trace_array_int(recv_stride, pcg->recv_idx[n_rank], "recv_stride ::");
+    }
+
+    /* Exchange data */
+    int           *recv_stride_idx = NULL;
+    int           *send_data_idx   = NULL;
+    int           *send_data_n     = NULL;
+    int           *recv_data_idx   = NULL;
+    int           *recv_data_n     = NULL;
+    unsigned char *send_buffer     = NULL;
+    _post_send_strid_and_fill_send_buffer(pcg,
+                                          s_data_tot,
+                                          send_stride,
+                                          recv_stride,
+                                          send_entity_stride,
+                                          send_entity_data,
+                                          &recv_stride_idx,
+                                          &send_data_idx,
+                                          &send_data_n,
+                                          &recv_data_idx,
+                                          &recv_data_n,
+                                          &send_buffer);
+    PDM_free(send_stride);
+
+    int recv_buff_size = recv_data_idx[n_rank] * s_data_tot;
+    unsigned char  *recv_buffer = NULL;
+    PDM_malloc(recv_buffer, recv_buff_size, unsigned char);
+
+    request_id = PDM_exchange_helper_iexch(pcg->exch_h,
+                                           kcomm,
+                                           s_data,
+                                           1, //
+                                           send_data_idx,
+                                           send_data_n,
+                                           send_buffer,
+                                           recv_data_idx,
+                                           recv_data_n,
+                                           recv_buffer);
+
+    _post_recv_strid_var(pcg,
+                         s_data_tot,
+                         recv_stride,
+                         recv_entity_stride,
+                         recv_entity_data);
+    PDM_free(recv_stride);
+
+    pcg->exch_h->send_buffer    [request_id] = send_buffer;
+    pcg->exch_h->recv_buffer    [request_id] = recv_buffer;
+
+    pcg->exch_h->recv_stride_idx[request_id] = recv_stride_idx;
+    pcg->exch_h->send_data_idx  [request_id] = send_data_idx;
+    pcg->exch_h->send_data_n    [request_id] = send_data_n;
+    pcg->exch_h->recv_data_idx  [request_id] = recv_data_idx;
+    pcg->exch_h->recv_data_n    [request_id] = recv_data_n;
+
+    pcg->exch_h->t_stride       [request_id] = t_stride;
+    pcg->exch_h->s_data         [request_id] = s_data;
+    pcg->exch_h->cst_stride     [request_id] = cst_stride;
+    pcg->exch_h->p_send_stride  [request_id] = send_entity_stride;
+    pcg->exch_h->p_send_data    [request_id] = send_entity_data;
+    pcg->exch_h->p_recv_stride  [request_id] = (*recv_entity_stride);
+    pcg->exch_h->p_recv_data    [request_id] = (*recv_entity_data);
+
+  } else {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_iexch, wrong t_stride \n");
+  }
+
+  PDM_MPI_Type_free(&mpi_type);
+
+  return request_id;
+}
+
+
+int
+PDM_part_comm_graph_exch_init
+(
+  PDM_part_comm_graph_t   *pcg,
+  PDM_mpi_comm_kind_t      kcomm,
+  size_t                   s_data,
+  PDM_stride_t             t_stride,
+  int                      cst_stride,
+  int                    **send_entity_stride,
+  void                   **send_entity_data,
+  int                   ***recv_entity_stride,
+  void                  ***recv_entity_data
+)
+{
+  PDM_UNUSED(recv_entity_stride);
+
+  int request_id = -1;
+  if(t_stride == PDM_STRIDE_CST_INTERLACED) {
+    unsigned char *send_buffer = NULL;
+    _allocate_send_buffer_strid_cst(pcg, s_data, cst_stride, &send_buffer);
+
+    unsigned char *recv_buffer = NULL;
+    _allocate_recv_buffer_strid_cst(pcg, s_data, cst_stride, &recv_buffer);
+
+    request_id = PDM_exchange_helper_exch_init(pcg->exch_h,
+                                               kcomm,
+                                               s_data,
+                                               cst_stride,
+                                               pcg->send_idx,
+                                               pcg->send_n,
+                                               send_buffer,
+                                               pcg->recv_idx,
+                                               pcg->recv_n,
+                                               recv_buffer);
+
+    pcg->exch_h->send_buffer  [request_id] = send_buffer;
+    pcg->exch_h->recv_buffer  [request_id] = recv_buffer;
+
+    unsigned char **_recv_entity_data = NULL;
+    _allocate_recv_strid_cst(pcg, s_data, cst_stride, &_recv_entity_data);
+    *recv_entity_data = (void **) _recv_entity_data;
+
+    pcg->exch_h->t_stride     [request_id] = t_stride;
+    pcg->exch_h->s_data       [request_id] = s_data;
+    pcg->exch_h->cst_stride   [request_id] = cst_stride;
+    pcg->exch_h->p_send_stride[request_id] = send_entity_stride;
+    pcg->exch_h->p_send_data  [request_id] = send_entity_data;
+    pcg->exch_h->p_recv_data  [request_id] = (*recv_entity_data);
+  } else if (t_stride == PDM_STRIDE_VAR_INTERLACED) {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_exch_init, not yet implemented for variable stride \n");
+  } else {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_iexch, wrong t_stride \n");
+  }
+
+  return request_id;
+}
+
+void
+PDM_part_comm_graph_exch_start
+(
+  PDM_part_comm_graph_t   *pcg,
+  int                      request_id
+)
+{
+  if(pcg->exch_h->t_stride[request_id] == PDM_STRIDE_CST_INTERLACED) {
+    // Hook internal send_buffer et send_entity_data
+    _fill_send_strid_cst(pcg,
+                         pcg->exch_h->s_data     [request_id],
+                         pcg->exch_h->cst_stride [request_id],
+                         pcg->exch_h->p_send_data[request_id],
+                         pcg->exch_h->send_buffer[request_id]);
+  }
+  else if (pcg->exch_h->t_stride[request_id] == PDM_STRIDE_VAR_INTERLACED) {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_exch_start, PDM_STRIDE_VAR_INTERLACED not implemented \n");
+  }
+  else {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_exch_start, wrong t_stride \n");
+  }
+
+  PDM_exchange_helper_exch_start(pcg->exch_h, request_id);
+}
+
+
+void
+PDM_part_comm_graph_exch_wait
+(
+  PDM_part_comm_graph_t   *pcg,
+  int                      request_id
+)
+{
+  PDM_exchange_helper_exch_wait(pcg->exch_h, request_id);
+
+  unsigned char **_precv_data = (unsigned char **) pcg->exch_h->p_recv_data[request_id];
+  if(pcg->exch_h->t_stride[request_id] == PDM_STRIDE_CST_INTERLACED) {
+    _fill_recv_strid_cst(pcg,
+                         pcg->exch_h->s_data     [request_id],
+                         pcg->exch_h->cst_stride [request_id],
+                         _precv_data,
+                         pcg->exch_h->recv_buffer[request_id]);
+  }
+  else if (pcg->exch_h->t_stride[request_id] == PDM_STRIDE_VAR_INTERLACED) {
+
+    int **_precv_stri = (int **) pcg->exch_h->p_recv_stride[request_id];
+    _post_recv_buffer_strid_var(pcg,
+                                pcg->exch_h->s_data         [request_id],
+                                pcg->exch_h->recv_stride_idx[request_id],
+                                pcg->exch_h->recv_buffer    [request_id],
+                                _precv_stri,
+                                _precv_data);
+
+    PDM_free(pcg->exch_h->recv_stride_idx[request_id]);
+    PDM_free(pcg->exch_h->send_data_idx  [request_id]);
+    PDM_free(pcg->exch_h->send_data_n    [request_id]);
+    PDM_free(pcg->exch_h->recv_data_idx  [request_id]);
+    PDM_free(pcg->exch_h->recv_data_n    [request_id]);
+
+  }
+  else {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_exch_wait, wrong t_stride \n");
+  }
+
+  if(pcg->exch_h->is_persistent[request_id] == 0) {
+    PDM_part_comm_graph_exch_free(pcg, request_id);
+  }
+
+}
+
+
+void
+PDM_part_comm_graph_exch_free
+(
+  PDM_part_comm_graph_t   *pcg,
+  int                      request_id
+)
+{
+  PDM_exchange_helper_exch_free(pcg->exch_h, request_id);
+
+  PDM_free(pcg->exch_h->send_buffer[request_id]);
+  PDM_free(pcg->exch_h->recv_buffer[request_id]);
+
+}
+
+
+
+int
+PDM_part_comm_graph_exch_one_way_raw_init
+(
+  PDM_part_comm_graph_t      *pcg,
+  PDM_exchange_direction_t    direction,
+  size_t                      s_data,
+  int                         cst_stride,
+  void                       *raw_buffer,
+  int                         tag
+)
+{
+  int *send_or_recv_idx = NULL;
+  int *send_or_recv_n   = NULL;
+  int  n_active_rank    = 0;
+  int *active_rank      = 0;
+
+  if(direction == PDM_EXCHANGE_DIRECTION_SEND) {
+    n_active_rank    = pcg->n_active_rank_send;
+    active_rank      = pcg->active_rank_send;
+    send_or_recv_idx = pcg->active_send_idx;
+    send_or_recv_n   = pcg->active_send_n;
+  } else if (direction == PDM_EXCHANGE_DIRECTION_RECV) {
+    n_active_rank    = pcg->n_active_rank_recv;
+    active_rank      = pcg->active_rank_recv;
+    send_or_recv_idx = pcg->active_recv_idx;
+    send_or_recv_n   = pcg->active_recv_n;
+  } else {
+    PDM_error(__FILE__, __LINE__, 0,
+              "Error PDM_part_comm_graph_exch_one_way_raw_init not yet implemented with direction = %i\n", direction);
+  }
+
+  int request_id = PDM_exchange_helper_exch_one_way_init(pcg->exch_h,
+                                                         direction,
+                                                         s_data,
+                                                         cst_stride,
+                                                         n_active_rank,
+                                                         active_rank,
+                                                         send_or_recv_idx,
+                                                         send_or_recv_n,
+                                                         tag,
+                                                         raw_buffer);
+
+  pcg->exch_h->send_buffer  [request_id] = raw_buffer;
+  pcg->exch_h->s_data       [request_id] = s_data;
+  pcg->exch_h->cst_stride   [request_id] = cst_stride;
+
+  return request_id;
+}
+
+
+int
+PDM_part_comm_graph_iexch_one_way_raw
+(
+  PDM_part_comm_graph_t      *pcg,
+  PDM_exchange_direction_t    direction,
+  size_t                      s_data,
+  int                         cst_stride,
+  void                       *raw_buffer,
+  int                         tag
+)
+{
+  int *send_or_recv_idx = NULL;
+  int *send_or_recv_n   = NULL;
+  int  n_active_rank    = 0;
+  int *active_rank      = 0;
+
+  if(direction == PDM_EXCHANGE_DIRECTION_SEND) {
+    n_active_rank    = pcg->n_active_rank_send;
+    active_rank      = pcg->active_rank_send;
+    send_or_recv_idx = pcg->active_send_idx;
+    send_or_recv_n   = pcg->active_send_n;
+  } else if (direction == PDM_EXCHANGE_DIRECTION_RECV) {
+    n_active_rank    = pcg->n_active_rank_recv;
+    active_rank      = pcg->active_rank_recv;
+    send_or_recv_idx = pcg->active_recv_idx;
+    send_or_recv_n   = pcg->active_recv_n;
+  } else {
+    PDM_error(__FILE__, __LINE__, 0,
+              "Error PDM_part_comm_graph_iexch_one_way_raw not yet implemented with direction = %i\n", direction);
+  }
+
+  int request_id = PDM_exchange_helper_iexch_one_way(pcg->exch_h,
+                                                     direction,
+                                                     s_data,
+                                                     cst_stride,
+                                                     n_active_rank,
+                                                     active_rank,
+                                                     send_or_recv_idx,
+                                                     send_or_recv_n,
+                                                     tag,
+                                                     raw_buffer);
+
+  pcg->exch_h->send_buffer  [request_id] = raw_buffer;
+  pcg->exch_h->s_data       [request_id] = s_data;
+  pcg->exch_h->cst_stride   [request_id] = cst_stride;
+
+  return request_id;
+}
+
+
+void
+PDM_part_comm_graph_exch_one_way_raw_start
+(
+  PDM_part_comm_graph_t      *pcg,
+  int                         request_id
+)
+{
+  PDM_exchange_helper_exch_start(pcg->exch_h, request_id);
+}
+
+void
+PDM_part_comm_graph_exch_one_way_raw_wait
+(
+  PDM_part_comm_graph_t   *pcg,
+  int                      request_id
+)
+{
+  PDM_exchange_helper_exch_wait(pcg->exch_h, request_id);
+}
+
+void
+PDM_part_comm_graph_exch_one_way_raw_free
+(
+  PDM_part_comm_graph_t      *pcg,
+  int                         request_id
+)
+{
+  pcg->exch_h->send_buffer  [request_id] = NULL;
+
+  PDM_exchange_helper_exch_free(pcg->exch_h, request_id);
+}
+
 
 const int*
 PDM_part_comm_graph_owner_get
@@ -1204,6 +1855,27 @@ PDM_part_comm_graph_all_reduce
 
 
 void
+PDM_part_comm_graph_part_to_send_buffer_get
+(
+  PDM_part_comm_graph_t   *pcg,
+  int                   ***out_part_to_send_buffer
+)
+{
+  *out_part_to_send_buffer = pcg->part_to_send_buffer;
+}
+
+
+void
+PDM_part_comm_graph_part_to_recv_buffer_get
+(
+  PDM_part_comm_graph_t   *pcg,
+  int                   ***part_to_recv_buffer
+)
+{
+  *part_to_recv_buffer = pcg->part_to_recv_buffer;
+}
+
+void
 PDM_part_comm_graph_free
 (
  PDM_part_comm_graph_t* pcg
@@ -1229,6 +1901,10 @@ PDM_part_comm_graph_free
   PDM_free(pcg->recv_n);
   PDM_free(pcg->active_rank_send);
   PDM_free(pcg->active_rank_recv);
+  PDM_free(pcg->active_send_idx);
+  PDM_free(pcg->active_send_n  );
+  PDM_free(pcg->active_recv_idx);
+  PDM_free(pcg->active_recv_n  );
 
   if (pcg->owner_graph == PDM_OWNERSHIP_KEEP) {
     for (int i_part = 0; i_part < pcg->n_part; i_part++) {
@@ -1243,6 +1919,7 @@ PDM_part_comm_graph_free
     }
   }
   PDM_free(pcg->pentity_nuplet);
+  PDM_exchange_helper_free(pcg->exch_h);
 
   PDM_free(pcg);
 }

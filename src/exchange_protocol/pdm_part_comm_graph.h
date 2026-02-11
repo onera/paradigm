@@ -136,6 +136,274 @@ PDM_part_comm_graph_exch
 
 /**
  *
+ * \brief Start exchange data between graph comm with asyncrhonous exchange,
+ *        after this call you need to use PDM_part_comm_graph_exch_start and wait.
+ *        When you finish, you need to free the persistent exchange with PDM_part_comm_graph_exch_free
+ * \param [in]   pcg                 \ref PDM_part_comm_graph_t structure
+ * \param [in]   kcomm               Kind of MPI communication
+ * \param [in]   s_data              Data size
+ * \param [in]   t_stride            Kind of stride (see \ref PDM_stride_t)
+ * \param [in]   cst_stride          Constant stride
+ * \param [in]   send_entity_stride  Stride of send data (following pentity_graph)
+ * \param [in]   send_entity_data    Send data           (following pentity_graph)
+ * \param [out]  recv_entity_stride  Stride of recv data (following pentity_graph)
+ * \param [out]  recv_entity_data    Recv data           (following pentity_graph)
+ *
+ * \return Request id
+ *
+ */
+int
+PDM_part_comm_graph_iexch
+(
+ PDM_part_comm_graph_t   *pcg,
+ PDM_mpi_comm_kind_t      kcomm,
+ size_t                   s_data,
+ PDM_stride_t             t_stride,
+ int                      cst_stride,
+ int                    **send_entity_stride,
+ void                   **send_entity_data,
+ int                   ***recv_entity_stride,
+ void                  ***recv_entity_data
+);
+
+/**
+ *
+ * \brief Prepare exchange data between graph comm with persistent exchange,
+ *        after this call you need to use PDM_part_comm_graph_exch_start and wait.
+ *        When you finish, you need to free the persistent exchange with PDM_part_comm_graph_exch_free
+ * \param [in]   pcg                 \ref PDM_part_comm_graph_t structure
+ * \param [in]   kcomm               Kind of MPI communication
+ * \param [in]   s_data              Data size
+ * \param [in]   t_stride            Kind of stride (see \ref PDM_stride_t)
+ * \param [in]   cst_stride          Constant stride
+ * \param [in]   send_entity_stride  Stride of send data (following pentity_graph)
+ * \param [in]   send_entity_data    Send data           (following pentity_graph)
+ * \param [out]  recv_entity_stride  Stride of recv data (following pentity_graph)
+ * \param [out]  recv_entity_data    Recv data           (following pentity_graph)
+ *
+ * \return Request id
+ *
+ */
+int
+PDM_part_comm_graph_exch_init
+(
+ PDM_part_comm_graph_t   *pcg,
+ PDM_mpi_comm_kind_t      kcomm,
+ size_t                   s_data,
+ PDM_stride_t             t_stride,
+ int                      cst_stride,
+ int                    **send_entity_stride,
+ void                   **send_entity_data,
+ int                   ***recv_entity_stride,
+ void                  ***recv_entity_data
+);
+
+/**
+ *
+ * \brief Start exchange ( initalize by PDM_part_comm_graph_exch_init )
+ * \param [in]   pcg                 \ref PDM_part_comm_graph_t structure
+ * \param [in]   request_id          Request id
+ *
+ */
+void
+PDM_part_comm_graph_exch_start
+(
+  PDM_part_comm_graph_t   *pcg,
+  int                      request_id
+);
+
+
+/**
+ *
+ * \brief Wait exchange ( initalize by PDM_part_comm_graph_exch_init and launch by PDM_part_comm_graph_exch_start )
+ * \param [in]   pcg                 \ref PDM_part_comm_graph_t structure
+ * \param [in]   request_id          Request id
+ *
+ */
+void
+PDM_part_comm_graph_exch_wait
+(
+  PDM_part_comm_graph_t   *pcg,
+  int                      request_id
+);
+
+
+/**
+ *
+ * \brief Free persistent exchange ( initalize by PDM_part_comm_graph_exch_init )
+ * \param [in]   pcg                 \ref PDM_part_comm_graph_t structure
+ * \param [in]   request_id          Request id
+ *
+ */
+void
+PDM_part_comm_graph_exch_free
+(
+  PDM_part_comm_graph_t   *pcg,
+  int                      request_id
+);
+
+
+/**
+ *
+ * \brief Get internal indirection to fill send buffer throw MPI from user data layout
+ * \param [in]   pcg                 \ref PDM_part_comm_graph_t structure
+ * \param [in]   part_to_send_buffer Indirection table to fill directly send buffer
+ *
+ */
+void
+PDM_part_comm_graph_part_to_send_buffer_get
+(
+  PDM_part_comm_graph_t   *pcg,
+  int                   ***out_part_to_send_buffer
+);
+
+/**
+ *
+ * \brief Get internal indirection to fill recv buffer throw MPI from user data layout
+ * \param [in]   pcg                 \ref PDM_part_comm_graph_t structure
+ * \param [in]   part_to_recv_buffer Indirection table to fill directly recv buffer
+ *
+ */
+void
+PDM_part_comm_graph_part_to_recv_buffer_get
+(
+  PDM_part_comm_graph_t   *pcg,
+  int                   ***part_to_recv_buffer
+);
+
+/**
+ * \brief Initializes a persistent one-way, non-blocking communication request using raw data.
+ *
+ * This function prepares a persistent communication request for a one-way exchange
+ * (either send or receive) using a pre-defined communication graph. The raw data
+ * refers to the fact that the function uses the buffer directly without complex
+ * indexing. The communication itself is not started, but is ready to be initiated
+ * by a call to PDM_part_comm_graph_exch_one_way_raw_start.
+ * Buffer are filled with part_to_send or part_to_recv buffer \see PDM_part_comm_graph_part_to_send_buffer_get and
+ * PDM_part_comm_graph_part_to_recv_buffer_get
+ *
+ * \param[in,out] pcg        \ref PDM_part_comm_graph_t structure, which contains all communication
+ *                           topology information (ranks, counts, etc.).
+ * \param[in]     direction  Specifies the direction of the exchange: either send or receive.
+ * \param[in]     s_data     The size of a single data element in bytes.
+ * \param[in]     cst_stride The stride for non-contiguous data within the buffer.
+ * \param[in,out] raw_buffer A pointer to the buffer containing the raw data to be sent or
+ *                           received. The content of this buffer should not be modified until the communication is complete.
+ * \param[in]     tag        The MPI message tag to be used for the exchange.
+ * \return An integer ID for the persistent request on success, or a negative value on failure.
+ *
+ * \see PDM_part_comm_graph_exch_one_way_raw_start
+ * \see PDM_part_comm_graph_exch_one_way_raw_wait
+ */
+int
+PDM_part_comm_graph_exch_one_way_raw_init
+(
+  PDM_part_comm_graph_t      *pcg,
+  PDM_exchange_direction_t    direction,
+  size_t                      s_data,
+  int                         cst_stride,
+  void                       *raw_buffer,
+  int                         tag
+);
+
+/**
+ * \brief Initializes a asyncrhonous one-way, non-blocking communication request using raw data.
+ *
+ * This function prepares a asynchronous communication request for a one-way exchange
+ * (either send or receive) using a pre-defined communication graph. The raw data
+ * refers to the fact that the function uses the buffer directly without complex
+ * indexing.
+ * Buffer are filled with part_to_send or part_to_recv buffer \see PDM_part_comm_graph_part_to_send_buffer_get and
+ * PDM_part_comm_graph_part_to_recv_buffer_get
+ *
+ * \param[in,out] pcg        \ref PDM_part_comm_graph_t structure, which contains all communication
+ *                           topology information (ranks, counts, etc.).
+ * \param[in]     direction  Specifies the direction of the exchange: either send or receive.
+ * \param[in]     s_data The size of a single data element in bytes.
+ * \param[in]     cst_stride The stride for non-contiguous data within the buffer.
+ * \param[in,out] raw_buffer A pointer to the buffer containing the raw data to be sent or
+ *                           received. The content of this buffer should not be modified until the communication is complete.
+ * \param[in]     tag        The MPI message tag to be used for the exchange.
+ * \return An integer ID for the persistent request on success, or a negative value on failure.
+ *
+ * \see PDM_part_comm_graph_exch_one_way_raw_wait
+ */
+int
+PDM_part_comm_graph_iexch_one_way_raw
+(
+  PDM_part_comm_graph_t      *pcg,
+  PDM_exchange_direction_t    direction,
+  size_t                      s_data,
+  int                         cst_stride,
+  void                       *raw_buffer,
+  int                         tag
+);
+
+/**
+ * \brief Starts a persistent one-way communication request.
+ *
+ * This function initiates the non-blocking communication associated with a
+ * previously initialized persistent request ID. The function returns immediately
+ * and the communication proceeds in the background.
+ *
+ * \param[in,out] pcg        \ref PDM_part_comm_graph_t structure.
+ * \param[in]     request_id The ID of the persistent request to be started, as
+ *                           returned by PDM_part_comm_graph_exch_one_way_raw_init.
+ *
+ * \see PDM_part_comm_graph_exch_one_way_raw_init
+ * \see PDM_part_comm_graph_exch_one_way_raw_wait
+ */
+void
+PDM_part_comm_graph_exch_one_way_raw_start
+(
+  PDM_part_comm_graph_t      *pcg,
+  int                         request_id
+);
+
+/**
+ * \brief Waits for a persistent/asyncrhonous one-way communication request to complete.
+ *
+ * This function blocks the calling process until the non-blocking communication
+ * associated with the given request ID has finished. It must be called to
+ * ensure all data has been successfully sent or received before reusing
+ * the communication buffers.
+ *
+ * \param[in,out] pcg        \ref PDM_part_comm_graph_t structure.
+ * \param[in]     request_id The ID of the request to wait for.
+ *
+ * \see PDM_part_comm_graph_exch_one_way_raw_start
+ */
+void
+PDM_part_comm_graph_exch_one_way_raw_wait
+(
+  PDM_part_comm_graph_t   *pcg,
+  int                      request_id
+);
+
+/**
+ * \brief Frees all resources associated with a persistent communication request.
+ *
+ * This function releases the memory and resources allocated for a specific
+ * persistent request. It should be called when a request is no longer needed
+ * to prevent memory leaks.
+ *
+ * \pre The communication associated with request_id must be completed
+ * (e.g., via PDM_part_comm_graph_exch_one_way_raw_wait) before freeing it.
+ *
+ * \param[in,out] pcg        \ref PDM_part_comm_graph_t structure.
+ * \param[in]     request_id The ID of the request to be freed.
+ *
+ * \see PDM_part_comm_graph_exch_one_way_raw_init
+ */
+void
+PDM_part_comm_graph_exch_one_way_raw_free
+(
+  PDM_part_comm_graph_t      *pcg,
+  int                         request_id
+);
+
+/**
+ *
  * \brief Get the owner array computed inside the structure, useful to manage reduction of array for example
  * \param [in]   pcg           \ref PDM_part_comm_graph_t structure
  * \param [in]   i_part        Id of current partition

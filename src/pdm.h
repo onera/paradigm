@@ -143,15 +143,20 @@ typedef enum {
 
 typedef enum {
 
-  PDM_MPI_COMM_KIND_P2P                                = 0, /*!< Peer-to-peer (MPI_issend/MPI_irecv) */
-  PDM_MPI_COMM_KIND_COLLECTIVE                         = 1, /*!< Collective communications (MPI_Ialltoall, ...) */
-  PDM_MPI_COMM_KIND_NEIGHBOR_COLLECTIVE                = 2, /*!< Neighborhood communcations (MPI_I_neighbor_alltoall, ...) */
-  PDM_MPI_COMM_KIND_WIN_SHARED_AND_P2P                 = 3, /*!< Shared windows (MPI_Put, MPI_GET, ...) */
-  PDM_MPI_COMM_KIND_WIN_SHARED_AND_COLLECTIVE          = 4, /*!< Shared windows (MPI_Put, MPI_GET, ...) */
-  PDM_MPI_COMM_KIND_WIN_SHARED_AND_NEIGHBOR_COLLECTIVE = 5, /*!< Shared windows (MPI_Put, MPI_GET, ...) */
-  PDM_MPI_COMM_KIND_WIN_RMA                            = 6  /*!< RMA windows (MPI_Put, MPI_GET, ...) */
+  PDM_MPI_COMM_KIND_P2P        = 0, /*!< Peer-to-peer (MPI_Isend/MPI_Irecv) */
+  PDM_MPI_COMM_KIND_COLLECTIVE = 1, /*!< Collective communications (MPI_Ialltoall, ...) */
+  PDM_MPI_COMM_KIND_WIN_RMA    = 2, /*!< RMA windows (MPI_Put, MPI_GET, ...) */
+  /** \cond INTERNAL_USE */
+  PDM_MPI_COMM_KIND_INVALID    = 3  /*!< Initial state, not for users */
+  /** \endcond */
 
 } PDM_mpi_comm_kind_t;
+
+
+typedef enum {
+  PDM_EXCHANGE_DIRECTION_SEND = 0, /*!< Trigger a MPI_Send like communication */
+  PDM_EXCHANGE_DIRECTION_RECV = 1, /*!< Trigger a MPI_Recv like communication */
+} PDM_exchange_direction_t;
 
 
 /**
