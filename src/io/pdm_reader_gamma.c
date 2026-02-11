@@ -1082,12 +1082,39 @@ PDM_write_meshb
   const double       *vtx_coords
 )
 {
+  /* Retrieve the spatial dimension */
+  int dimension = 2;
+
+  // Automatically 3D if there are elements of dimension > 2
+  for (PDM_Mesh_nodal_elt_t t_elt = PDM_MESH_NODAL_TETRA4; t_elt < PDM_MESH_NODAL_N_ELEMENT_TYPES; t_elt++) {
+    if (n_elt_table[t_elt] > 0) {
+      dimension = 3;
+      break;
+    }
+  }
+
+  if (dimension == 2) {
+    // The mesh has no elements of dimension > 2, check if it lies in the xy-plane.
+    // Otherwise, the spatial dimension is really 3.
+    double min_z =  HUGE_VAL;
+    double max_z = -HUGE_VAL;
+    for (int i_vtx = 0; i_vtx < n_elt_table[PDM_MESH_NODAL_POINT]; i_vtx++) {
+      min_z = PDM_MIN(min_z, vtx_coords[3*i_vtx+2]);
+      max_z = PDM_MAX(max_z, vtx_coords[3*i_vtx+2]);
+    }
+
+    if (max_z > min_z) {
+      dimension = 3;
+    }
+  }
+
+
   // Write file
   FILE *f = fopen(filename, "w");
 
   fprintf(f, "MeshVersionFormatted 2\n");
   fprintf(f, "# rank %d\n\n", 0);
-  fprintf(f, "%s\n3\n\n", IO_keys[PDM_INRIA_IO_KEY_DIM]);
+  fprintf(f, "%s\n%d\n\n", IO_keys[PDM_INRIA_IO_KEY_DIM], dimension);
 
   // ---- Write vertices
   int  n_vtx    = n_elt_table[PDM_MESH_NODAL_POINT];
@@ -1097,11 +1124,10 @@ PDM_write_meshb
     fprintf(f, "%s\n%d\n", IO_keys[PDM_MESH_NODAL_POINT], n_vtx);
 
     for (int i = 0; i < n_vtx; i++) {
-      fprintf(f, "%20.16lf %20.16lf %20.16lf %i\n",
-      vtx_coords[3*i  ],
-      vtx_coords[3*i+1],
-      vtx_coords[3*i+2],
-      vtx_tags[i]);
+      for (int j = 0; j < dimension; j++) {
+        fprintf(f, "%20.16lf ", vtx_coords[3*i+j]);
+      }
+      fprintf(f, "%i\n", vtx_tags[i]);
     }
   }
 
