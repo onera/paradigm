@@ -2269,7 +2269,7 @@ PDM_writer_geom_writer_get
 
 
 PDM_part_mesh_nodal_t *
-PDM_writer_geom_mesh_nodal_get
+PDM_writer_geom_part_mesh_nodal_get
 (
   PDM_writer_geom_t *geom
 )
