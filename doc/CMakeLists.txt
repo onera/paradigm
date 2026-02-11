@@ -31,6 +31,12 @@ if(PDM_ENABLE_DOC)
     if (PDM_ENABLE_FORTRAN)
       check_python_module(sphinxfortran REQUIRED)
     endif()
+
+    # Python executable is needed to call check_python_module
+    IF (NOT Python_EXECUTABLE)
+      find_package(Python)
+    ENDIF()
+
     check_python_module(sphinx_copybutton REQUIRED)
     check_python_module(sphinx_design REQUIRED)
 
@@ -105,10 +111,6 @@ if(PDM_ENABLE_DOC)
     # - The Sphinx config has been updated
 
 
-    # Generate Release Notes page for Sphinx doc from ChangeLog text file
-    IF (NOT Python_EXECUTABLE)
-      find_package(Python)
-    ENDIF()
 
     set(CHANGELOG_FILE ${PROJECT_SOURCE_DIR}/ChangeLog)
     set(SPHINX_RELEASE_NOTES ${SPHINX_SOURCE}/changelog.rst)
