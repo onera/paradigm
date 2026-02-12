@@ -211,6 +211,23 @@ int* PDM_array_new_size_from_idx_int(const int *idx_array, const int size) {
   return size_array;
 }
 
+/* Allocate new array and copy values for which mask is True (!=0) */
+int PDM_array_copy_if_int(const int size_in, const int* array_in, const int* mask, int** array_out) {
+  int size_out = 0;
+  for (int i = 0; i < size_in; ++i) {
+    if (mask[i]) {
+      size_out++;
+    }
+  }
+  PDM_malloc(*array_out, size_out, int);
+  size_out = 0;
+  for (int i = 0; i < size_in; ++i) {
+    if (mask[i]) {
+      (*array_out)[size_out++] = array_in[i];
+    }
+  }
+  return size_out;
+}
 
 /* Utils functions compararing arrays */
 
