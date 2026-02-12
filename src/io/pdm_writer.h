@@ -886,7 +886,7 @@ PDM_writer_geom_data_reset
 
 
 /**
- * \brief Get pointer to the parent \ref PDM_writer_t instance
+ * \brief Get pointer to the parent \ref PDM_writer_t instance associated to a given variable
  *
  * \param [in] geom \ref PDM_writer_geom_t instance
  *
