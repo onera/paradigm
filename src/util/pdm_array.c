@@ -228,6 +228,22 @@ int PDM_array_copy_if_int(const int size_in, const int* array_in, const int* mas
   }
   return size_out;
 }
+int PDM_array_copy_if_gnum(const int size_in, const PDM_g_num_t* array_in, const int* mask, PDM_g_num_t** array_out) {
+  int size_out = 0;
+  for (int i = 0; i < size_in; ++i) {
+    if (mask[i]) {
+      size_out++;
+    }
+  }
+  PDM_malloc(*array_out, size_out, PDM_g_num_t);
+  size_out = 0;
+  for (int i = 0; i < size_in; ++i) {
+    if (mask[i]) {
+      (*array_out)[size_out++] = array_in[i];
+    }
+  }
+  return size_out;
+}
 
 /* Utils functions compararing arrays */
 
