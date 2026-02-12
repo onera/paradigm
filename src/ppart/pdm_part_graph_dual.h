@@ -71,26 +71,26 @@ extern "C" {
 void
 PDM_part_assembly_dual_graph
 (
-  PDM_MPI_Comm            comm,
-  int                     n_part,
-  int                    *n_node,
-  int                    *n_arc,
-  int                   **select_node,
-  int                   **node_arc_idx,
-  int                   **node_arc,
-  int                   **arc_node_idx,
-  int                   **arc_node,
-  int                   **node_weight,
-  int                   **arc_weight,
-  PDM_part_comm_graph_t  *pcg_node,
-  PDM_part_comm_graph_t  *pcg_arc,
-  int                    *out_n_tot_node,
-  PDM_g_num_t           **out_gnode_node_idx,
-  PDM_g_num_t           **out_gnode_node,
-  int                   **out_gnode_weight,
-  int                   **out_garc_weight,
-  PDM_g_num_t           **out_distrib_node,
-  int                  ***out_part_to_graph
+  PDM_MPI_Comm             comm,
+  int                      n_part,
+  int                     *n_node,
+  int                     *n_arc,
+  int                    **select_node,
+  int                    **node_arc_idx,
+  int                    **node_arc,
+  int                    **arc_node_idx,
+  int                    **arc_node,
+  int                    **node_weight,
+  int                    **arc_weight,
+  PDM_part_comm_graph_t   *pcg_node,
+  PDM_part_comm_graph_t   *pcg_arc,
+  int                     *out_n_tot_node,
+  PDM_g_num_t            **out_gnode_node_idx,
+  PDM_g_num_t            **out_gnode_node,
+  int                    **out_gnode_weight,
+  int                    **out_garc_weight,
+  PDM_g_num_t            **out_distrib_node,
+  int                   ***out_part_to_graph
 );
 
 
