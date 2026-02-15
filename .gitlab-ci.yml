@@ -150,7 +150,7 @@ build:
     - elif [[ "${COMPILER}" == "gcc@15" ]]; then
     -   source /tmp_user/juno/sonics/dist/socle_cfd7/source_gcc15_cython3.sh # socle 7 + gcc 15 + Cython 3
     - elif [[ "${COMPILER}" == "intel-llvm@2025" ]]; then
-    -   module load socle-cfd/7.0-intel2510-impi
+    -   source /tmp_user/juno/sonics/dist/socle_cfd7_intel/source.sh
     - else
     -   source /tmp_user/juno/sonics/dist/source_juno_all.sh --compiler=$COMPILER --mpi=$MPI_LIB
     - fi
@@ -280,7 +280,7 @@ unit_test:
     - elif [[ "${COMPILER}" == "gcc@15" ]]; then
     -   source /tmp_user/juno/sonics/dist/socle_cfd7/source_gcc15_cython3.sh # socle 7 + gcc 15 + Cython 3
     - elif [[ "${COMPILER}" == "intel-llvm@2025" ]]; then
-    -   module load socle-cfd/7.0-intel2510-impi
+    -   source /tmp_user/juno/sonics/dist/socle_cfd7_intel/source.sh
     - else
     -   source /tmp_user/juno/sonics/dist/source_juno_all.sh --compiler=$COMPILER --mpi=$MPI_LIB
     - fi
