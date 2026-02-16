@@ -456,16 +456,13 @@ _compute_part_mesh_nodal_3d
 (
  PDM_dmesh_nodal_t *dmn,
  _part_mesh_t      *pm,
- int                n_part,
- PDM_ownership_t    ownership
+ int                n_part
 )
 {
   int i_rank;
   int n_rank;
   PDM_MPI_Comm_rank(dmn->comm, &i_rank);
   PDM_MPI_Comm_size(dmn->comm, &n_rank);
-
-  PDM_UNUSED(ownership);
 
   /*
    * Rebuild the volumic part from cell
@@ -722,11 +719,9 @@ _compute_part_mesh_nodal_2d
 (
  PDM_dmesh_nodal_t *dmn,
  _part_mesh_t      *pm,
- int                n_part,
- PDM_ownership_t    ownership
+ int                n_part
 )
 {
-  PDM_UNUSED(ownership);
   int i_rank;
   int n_rank;
   PDM_MPI_Comm_rank(dmn->comm, &i_rank);
@@ -927,11 +922,9 @@ _compute_part_mesh_nodal_1d
 (
  PDM_dmesh_nodal_t *dmn,
  _part_mesh_t      *pm,
- int                n_part,
- PDM_ownership_t    ownership
+ int                n_part
 )
 {
-  PDM_UNUSED(ownership);
   int i_rank;
   int n_rank;
   PDM_MPI_Comm_rank(dmn->comm, &i_rank);
@@ -3026,8 +3019,10 @@ PDM_multipart_create
     multipart->ownership_dpart_id[i_dom] = PDM_OWNERSHIP_KEEP;
   }
 
-  PDM_malloc(multipart->pmeshes          , multipart->n_domain, _part_mesh_t   );
-  PDM_malloc(multipart->ownership_pmeshes, multipart->n_domain, PDM_ownership_t);
+  PDM_malloc(multipart->pmeshes              , multipart->n_domain, _part_mesh_t           );
+  PDM_malloc(multipart->ownership_pmeshes    , multipart->n_domain, PDM_ownership_t        );
+  PDM_malloc(multipart->pmesh_nodal          , multipart->n_domain, PDM_part_mesh_nodal_t *);
+  PDM_malloc(multipart->ownership_pmesh_nodal, multipart->n_domain, PDM_ownership_t        );
 
   int _renum_cell_method = PDM_part_renum_method_cell_idx_get("PDM_PART_RENUM_CELL_NONE");
   int _renum_face_method = PDM_part_renum_method_face_idx_get("PDM_PART_RENUM_FACE_NONE");
@@ -3035,7 +3030,8 @@ PDM_multipart_create
   int _renum_vtx_method  = PDM_part_renum_method_vtx_idx_get ("PDM_PART_RENUM_VTX_NONE" );
   for (int i_dom = 0; i_dom < multipart->n_domain; i_dom++) {
 
-    multipart->ownership_pmeshes[i_dom] = PDM_OWNERSHIP_KEEP;
+    multipart->ownership_pmeshes    [i_dom] = PDM_OWNERSHIP_KEEP;
+    multipart->ownership_pmesh_nodal[i_dom] = PDM_OWNERSHIP_KEEP;
 
     multipart->pmeshes[i_dom].renum_method[PDM_MESH_ENTITY_CELL] = _renum_cell_method;
     multipart->pmeshes[i_dom].renum_method[PDM_MESH_ENTITY_FACE] = _renum_face_method;
@@ -3489,15 +3485,18 @@ PDM_ownership_t         ownership
   else {
     int n_part = multipart->n_part[i_domain];
     if(dmesh_nodal->mesh_dimension == 3){
-      *pmesh_nodal = _compute_part_mesh_nodal_3d(dmesh_nodal, pmesh, n_part, ownership);
+      *pmesh_nodal = _compute_part_mesh_nodal_3d(dmesh_nodal, pmesh, n_part);
     } else if(dmesh_nodal->mesh_dimension == 2){
-      *pmesh_nodal = _compute_part_mesh_nodal_2d(dmesh_nodal, pmesh, n_part, ownership);
+      *pmesh_nodal = _compute_part_mesh_nodal_2d(dmesh_nodal, pmesh, n_part);
     } else if(dmesh_nodal->mesh_dimension == 1){
-      *pmesh_nodal = _compute_part_mesh_nodal_1d(dmesh_nodal, pmesh, n_part, ownership);
+      *pmesh_nodal = _compute_part_mesh_nodal_1d(dmesh_nodal, pmesh, n_part);
     } else {
       PDM_error(__FILE__, __LINE__, 0, "PDM_multipart_compute_part_mesh_nodal error : Bad dmesh_nodal dimension \n");
     }
   }
+
+  multipart->pmesh_nodal          [i_domain] = *pmesh_nodal;
+  multipart->ownership_pmesh_nodal[i_domain] = ownership;
 }
 
 
@@ -4146,6 +4145,10 @@ PDM_multipart_free
       PDM_part_mesh_free(multipart->pmeshes[i_domain].pmesh);
     }
 
+    if (multipart->ownership_pmesh_nodal[i_domain] == PDM_OWNERSHIP_KEEP) {
+      PDM_part_mesh_nodal_free(multipart->pmesh_nodal[i_domain]);
+    }
+
     if(multipart->dmeshes[i_domain] != NULL ) {
       if(multipart->is_owner_dmeshes[i_domain] == PDM_TRUE) {
         PDM_dmesh_free(multipart->dmeshes[i_domain]);
@@ -4168,6 +4171,8 @@ PDM_multipart_free
   PDM_free(multipart->is_owner_dmeshes);
   PDM_free(multipart->n_part);
   PDM_free(multipart->ownership_pmeshes);
+  PDM_free(multipart->pmesh_nodal);
+  PDM_free(multipart->ownership_pmesh_nodal);
   PDM_free(multipart->dpart_id);
   PDM_free(multipart->ownership_dpart_id);
 

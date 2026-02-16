@@ -106,6 +106,9 @@ struct _pdm_multipart_t {
   /* Partitioned meshes */
   _part_mesh_t                *pmeshes;          // Partitioned meshes structures (size=n_domain)
   PDM_ownership_t             *ownership_pmeshes;
+  PDM_part_mesh_nodal_t      **pmesh_nodal;
+  PDM_ownership_t             *ownership_pmesh_nodal;
+
 
   /* Timers */
   PDM_timer_t *timer_all;   /*!< Timer */
