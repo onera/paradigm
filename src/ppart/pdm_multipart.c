@@ -3031,7 +3031,7 @@ PDM_multipart_create
   for (int i_dom = 0; i_dom < multipart->n_domain; i_dom++) {
 
     multipart->ownership_pmeshes    [i_dom] = PDM_OWNERSHIP_KEEP;
-    multipart->ownership_pmesh_nodal[i_dom] = PDM_OWNERSHIP_KEEP;
+    multipart->ownership_pmesh_nodal[i_dom] = PDM_OWNERSHIP_BAD_VALUE;
 
     multipart->pmeshes[i_dom].renum_method[PDM_MESH_ENTITY_CELL] = _renum_cell_method;
     multipart->pmeshes[i_dom].renum_method[PDM_MESH_ENTITY_FACE] = _renum_face_method;
