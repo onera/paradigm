@@ -328,104 +328,6 @@ int main(int argc, char *argv[])
     }
 
 
-
-
-
-
-
-
-    // if (visu) {
-    //   PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_section_elt_type_get(pmn, 0);
-
-    //   for (int j = 0; j < n_part; j++) {
-
-    //     double *val;
-    //     PDM_malloc(val,pn_vtx[j],double);
-
-    //     for (int i = 0; i < n_vtx_field; i++) {
-    //       for (int k = 0; k < vtx_field_stride[i]; k++) {
-    //         char filename2[999];
-    //         sprintf(filename2, "vtx_field_%d_comp_%d_part_%d_rank_%d.vtk", i, k, j, i_rank);
-
-    //         double *vtx_coord = PDM_part_mesh_nodal_vtx_coord_get(pmn, j);
-
-    //         if (vtx_field_type[i] == PDM_DOUBLE) {
-    //           double *pvf = (double *) pvtx_field[i][j];
-    //           for (int l = 0; l < pn_vtx[j]; l++) {
-    //             val[l] = pvf[vtx_field_stride[i]*l + k];
-    //           }
-    //         }
-    //         if (vtx_field_type[i] == PDM_INT) {
-    //           int *pvf = (int *) pvtx_field[i][j];
-    //           for (int l = 0; l < pn_vtx[j]; l++) {
-    //             val[l] = pvf[vtx_field_stride[i]*l + k];
-    //           }
-    //         }
-
-    //         int n_elt = PDM_part_mesh_nodal_section_n_elt_get(pmn, 0, j);
-
-
-    //         if (t_elt == PDM_MESH_NODAL_POLY_2D) {
-    //           int *connec_idx;
-    //           int *connec;
-    //           PDM_part_mesh_nodal_section_poly2d_get(pmn,
-    //                                                  0,
-    //                                                  j,
-    //                                                  &connec_idx,
-    //                                                  &connec);
-    //           PDM_vtk_write_polydata_field(filename2,
-    //                                        pn_vtx[j],
-    //                                        vtx_coord,
-    //                                        pvtx_ln_to_gn[j],
-    //                                        n_elt,
-    //                                        connec_idx,
-    //                                        connec,
-    //                                        NULL,
-    //                                        NULL, NULL,
-    //                                        vtx_field_name[i],
-    //                                        (const double *) val);
-    //         }
-    //         else if (t_elt != PDM_MESH_NODAL_POLY_3D) {
-    //           int          *connec;
-    //           PDM_g_num_t  *numabs;
-    //           int          *parent_num;
-    //           PDM_g_num_t  *parent_entity_g_num;
-    //           int           order;
-    //           const char   *ho_ordering;
-    //           PDM_part_mesh_nodal_section_std_ho_get(pmn,
-    //                                                  0,
-    //                                                  j,
-    //                                                  &connec,
-    //                                                  &numabs,
-    //                                                  &parent_num,
-    //                                                  &parent_entity_g_num,
-    //                                                  &order,
-    //                                                  &ho_ordering);
-
-    //           PDM_vtk_write_std_elements_ho_with_vtx_field(filename2,
-    //                                                        order,
-    //                                                        pn_vtx[j],
-    //                                                        vtx_coord,
-    //                                                        NULL,//pvtx_ln_to_gn[j],
-    //                                                        t_elt,
-    //                                                        n_elt,
-    //                                                        connec,
-    //                                                        NULL,
-    //                                                        0,
-    //                                                        NULL,
-    //                                                        NULL,
-    //                                                        1,
-    //                                        (const char **) &vtx_field_name[i],
-    //                                      (const double **) &val);
-    //         }
-    //       }
-    //     }
-
-    //    PDM_free(val);
-    //   }
-    // }
-
-
     PDM_free(pn_vtx);
     PDM_free(pvtx_ln_to_gn);
 
@@ -448,8 +350,6 @@ int main(int argc, char *argv[])
 
   PDM_DMesh_nodal_free(dmn);
   PDM_multipart_free(mpart);
-  PDM_part_mesh_nodal_free(pmn);
-
 
 
 
