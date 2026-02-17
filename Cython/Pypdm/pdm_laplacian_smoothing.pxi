@@ -100,15 +100,15 @@ def compute_idw_weights(list p_vtx_coord,
 def compute_cotangent_weights(list p_vtx_coord,
                               list p_face_edge,
                               list p_edge_vtx,
-                              PyPartCommGraph pypcg_edge):
+                              PartCommGraph pypcg_edge):
   """
   Compute cotangent edge weights for triangular meshes.
 
   Parameters:
-    p_vtx_coord   (list           ) : Vertex coordinates (size=n_part)
-    p_face_edge   (list           ) : Face→edge connectivity (size=n_part)
-    p_edge_vtx    (list           ) : Edge→vertex connectivity (size=n_part)
-    pypcg_edge    (PyPartCommGraph) : Edge part comm graph or None
+    p_vtx_coord   (list         ) : Vertex coordinates (size=n_part)
+    p_face_edge   (list         ) : Face→edge connectivity (size=n_part)
+    p_edge_vtx    (list         ) : Edge→vertex connectivity (size=n_part)
+    pypcg_edge    (PartCommGraph): Edge part comm graph or None
 
   Returns:
     p_edge_weight (list           ) : Edge weight (size=n_part)
@@ -153,10 +153,10 @@ def compute_cotangent_weights(list p_vtx_coord,
 
 def laplacian_smoothing_fields(MPI.Comm        comm,
                                list            p_vtx_frozen,
-                               PyPartCommGraph pypcg_vtx,
+                               PartCommGraph pypcg_vtx,
                                list            p_edge_vtx,
                                list            p_edge_weight,
-                               PyPartCommGraph pypcg_edge,
+                               PartCommGraph pypcg_edge,
                                float           damping,
                                int             n_iter,
                                float           tol,
@@ -166,17 +166,17 @@ def laplacian_smoothing_fields(MPI.Comm        comm,
   Apply laplacian smoothing to strided fields (interlaced).
 
   Parameters:
-    comm          (MPI.Comm       ) : MPI communicator
-    p_vtx_frozen  (list           ) : Frozen vertex list (size=n_part)
-    pypcg_vtx     (PyPartCommGraph) : Vertex part comm graph
-    p_edge_vtx    (list           ) : Edge→vertex connectivity (size=n_part)
-    p_edge_weight (list           ) : Edge weights (size=n_part) or None
-    pypcg_edge    (PyPartCommGraph) : Edge part comm graph or None
-    damping       (float          ) : Damping constant (between 0. and 1.)
-    n_iter        (int            ) : Number of smoothing iterations
-    tol           (float          ) : Relative tolerance for convergence (ignored if negative)
-    stride        (int            ) : Field stride (interlaced values)
-    p_vtx_field   (list           ) : Fields (size=n_part)
+    comm          (MPI.Comm     ) : MPI communicator
+    p_vtx_frozen  (list         ) : Frozen vertex list (size=n_part)
+    pypcg_vtx     (PartCommGraph) : Vertex part comm graph
+    p_edge_vtx    (list         ) : Edge→vertex connectivity (size=n_part)
+    p_edge_weight (list         ) : Edge weights (size=n_part) or None
+    pypcg_edge    (PartCommGraph) : Edge part comm graph or None
+    damping       (float        ) : Damping constant (between 0. and 1.)
+    n_iter        (int          ) : Number of smoothing iterations
+    tol           (float        ) : Relative tolerance for convergence (ignored if negative)
+    stride        (int          ) : Field stride (interlaced values)
+    p_vtx_field   (list         ) : Fields (size=n_part)
   """
 
   # Convert mpi4py -> PDM_MPI
@@ -236,36 +236,36 @@ def laplacian_smoothing_fields(MPI.Comm        comm,
   free(c_p_vtx_frozen )
   free(c_p_vtx_field  )
 
-def laplacian_smoothing_fields_one_iteration(MPI.Comm        comm,
-                                             list            p_vtx_frozen,
-                                             PyPartCommGraph pypcg_vtx,
-                                             list            p_edge_vtx,
-                                             list            p_edge_weight,
-                                             PyPartCommGraph pypcg_edge,
-                                             float           damping,
-                                             int             n_iter,
-                                             float           tol,
-                                             int             stride,
-                                             list            p_vtx_field_prev,
-                                             list            p_vtx_field_current):
+def laplacian_smoothing_fields_one_iteration(MPI.Comm      comm,
+                                             list          p_vtx_frozen,
+                                             PartCommGraph pypcg_vtx,
+                                             list          p_edge_vtx,
+                                             list          p_edge_weight,
+                                             PartCommGraph pypcg_edge,
+                                             float         damping,
+                                             int           n_iter,
+                                             float         tol,
+                                             int           stride,
+                                             list          p_vtx_field_prev,
+                                             list          p_vtx_field_current):
   """
   Apply one iteration of Laplacian smoothing to strided fields (interlaced).
 
   Parameters:
-    comm                (MPI.Comm       ) : MPI communicator
-    p_vtx_frozen        (list           ) : Frozen vertex list (size=n_part)
-    pypcg_vtx           (PyPartCommGraph) : Vertex part comm graph
-    p_edge_vtx          (list           ) : Edge→vertex connectivity (size=n_part)
-    p_edge_weight       (list           ) : Edge weights (size=n_part) or None
-    pypcg_edge          (PyPartCommGraph) : Edge part comm graph or None
-    damping             (float          ) : Damping constant (between 0. and 1.)
-    tol                 (float          ) : Relative tolerance for convergence (ignored if negative)
-    stride              (int            ) : Field stride (interlaced values)
-    p_vtx_field_prev    (list           ) : Previous fields (size=n_part)
-    p_vtx_field_current (list           ) : Current fields (size=n_part)
+    comm                (MPI.Comm     ) : MPI communicator
+    p_vtx_frozen        (list         ) : Frozen vertex list (size=n_part)
+    pypcg_vtx           (PartCommGraph) : Vertex part comm graph
+    p_edge_vtx          (list         ) : Edge→vertex connectivity (size=n_part)
+    p_edge_weight       (list         ) : Edge weights (size=n_part) or None
+    pypcg_edge          (PartCommGraph) : Edge part comm graph or None
+    damping             (float        ) : Damping constant (between 0. and 1.)
+    tol                 (float        ) : Relative tolerance for convergence (ignored if negative)
+    stride              (int          ) : Field stride (interlaced values)
+    p_vtx_field_prev    (list         ) : Previous fields (size=n_part)
+    p_vtx_field_current (list         ) : Current fields (size=n_part)
 
   Returns:
-    eps                 (float          ) : Maximal absolute relative variation of fields (if tol is positive)
+    eps                 (float        ) : Maximal absolute relative variation of fields (if tol is positive)
   """
 
   # Convert mpi4py -> PDM_MPI

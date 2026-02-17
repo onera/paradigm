@@ -375,9 +375,8 @@ cdef class PartMeshNodal:
                                               entity_type,
                                               &pcg,
                                               PDM_OWNERSHIP_BAD_VALUE)
-
-      py_caps = PyCapsule_New(pcg, NULL, NULL)
-      return PartCommGraphCapsule(py_caps, PDM_OWNERSHIP_BAD_VALUE) # Free is done by PDM_part_mesh_nodal
+      # JC TODO ownership ?
+      return PartCommGraph.from_ptr(pcg, None) # Free is done by PDM_part_mesh_nodal TODO comm
 
     def part_comm_graph_vtx_get(self):
       """
@@ -389,8 +388,8 @@ cdef class PartMeshNodal:
                                                   &pcg,
                                                   PDM_OWNERSHIP_BAD_VALUE)
 
-      py_caps = PyCapsule_New(pcg, NULL, NULL)
-      return PartCommGraphCapsule(py_caps, PDM_OWNERSHIP_BAD_VALUE) # Free is done by PDM_part_mesh_nodal
+      # JC TODO comm + ownership
+      return PartCommGraph.from_ptr(pcg, None) # Free is done by PDM_part_mesh_nodal
 
     def compute_part_comm_graph_from_gnum(self,
                                           PDM_mesh_entities_t entity_type):

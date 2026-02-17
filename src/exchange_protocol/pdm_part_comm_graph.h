@@ -403,6 +403,18 @@ PDM_part_comm_graph_exch_one_way_raw_free
 );
 
 /**
+ * \brief Get number of partitions registered in part_comm_graph structure
+ * \param [in]   pcg           \ref PDM_part_comm_graph_t structure
+ *
+ * \return   Number of partitions for current process (int)
+ */
+int
+PDM_part_comm_graph_n_part_get
+(
+  PDM_part_comm_graph_t *pcg
+);
+
+/**
  *
  * \brief Get the owner array computed inside the structure, useful to manage reduction of array for example
  * \param [in]   pcg           \ref PDM_part_comm_graph_t structure
