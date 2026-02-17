@@ -2393,7 +2393,7 @@ PDM_part_mesh_nodal_dump_gamma
 
     PDM_part_mesh_nodal_g_num_in_section_compute(pmn,
                                                  i_section,
-                                                 PDM_OWNERSHIP_KEEP); // sure about this?
+                                                 PDM_OWNERSHIP_KEEP);
 
     for (int i_part = 0; i_part < n_part; i_part++) {
       int n_elt = PDM_part_mesh_nodal_section_n_elt_get(pmn, i_section, i_part);

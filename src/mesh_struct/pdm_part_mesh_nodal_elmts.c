@@ -2960,129 +2960,57 @@ PDM_part_mesh_nodal_elmts_g_num_in_section_compute
 {
   CHECK_PMNE(pmne)
 
-  PDM_gen_gnum_t *gnum_gen = PDM_gnum_create (3,
-                                              pmne->n_part,
-                                              PDM_FALSE,
-                                              1e-3,
-                                              pmne->comm,
-                                              PDM_OWNERSHIP_USER); /* The result is getted and you are owner */
-
-  if (id_section >= PDM_BLOCK_ID_BLOCK_POLY3D) {
-
-    int _id_section = id_section - PDM_BLOCK_ID_BLOCK_POLY3D;
-
-    PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[_id_section];
-
-    CHECK_BLOCK(block)
-
-    block->numabs_int_owner = ownership;
-
-    if (block->numabs_int == NULL) {
-      PDM_malloc(block->numabs_int, block->n_part, PDM_g_num_t *);
-      for (int i = 0; i < block->n_part; i++) {
-        block->numabs_int[i] = NULL;
-      }
-    }
-    else {
-      PDM_gnum_free(gnum_gen);
-      return;
-    }
-
-    for (int i = 0; i < block->n_part; i++) {
-      PDM_gnum_set_from_parents(gnum_gen, i, block->n_elt[i], block->_numabs[i]);
-    }
-
-  }
-
-  else if (id_section >= PDM_BLOCK_ID_BLOCK_POLY2D) {
-
-    int _id_section = id_section - PDM_BLOCK_ID_BLOCK_POLY2D;
-
-
-    PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[_id_section];
-
-    CHECK_BLOCK(block)
-
-    block->numabs_int_owner = ownership;
-
-    if (block->numabs_int == NULL) {
-      PDM_malloc(block->numabs_int, block->n_part, PDM_g_num_t *);
-      for (int i = 0; i < block->n_part; i++) {
-        block->numabs_int[i] = NULL;
-      }
-    }
-    else {
-      PDM_gnum_free(gnum_gen);
-      return;
-    }
-
-    for (int i = 0; i < block->n_part; i++) {
-      PDM_gnum_set_from_parents(gnum_gen, i, block->n_elt[i], block->_numabs[i]);
-    }
-
-  }
-
-  else {
-
-    int _id_section = id_section;
-
-    PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_section];
-
-    CHECK_BLOCK(block)
-
-    block->numabs_int_owner = ownership;
-
-    if (block->numabs_int == NULL) {
-      PDM_malloc(block->numabs_int, block->n_part, PDM_g_num_t *);
-      for (int i = 0; i < block->n_part; i++) {
-        block->numabs_int[i] = NULL;
-      }
-    }
-    else {
-      PDM_gnum_free(gnum_gen);
-      return;
-    }
-
-    for (int i = 0; i < block->n_part; i++) {
-      PDM_gnum_set_from_parents(gnum_gen, i, block->n_elt[i], block->_numabs[i]);
-    }
-
-  }
-
-  PDM_gnum_compute (gnum_gen);
-
-  if (id_section >= PDM_BLOCK_ID_BLOCK_POLY3D) {
-    int _id_section = id_section - PDM_BLOCK_ID_BLOCK_POLY3D;
-
-    PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[_id_section];
-
-    for (int i = 0; i < block->n_part; i++) {
-      block->numabs_int[i] = (PDM_g_num_t *) PDM_gnum_get(gnum_gen, i);
-    }
-  }
-
-  else if (id_section >= PDM_BLOCK_ID_BLOCK_POLY2D) {
-    int _id_section = id_section - PDM_BLOCK_ID_BLOCK_POLY2D;
-
-    PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[_id_section];
-
-    for (int i = 0; i < block->n_part; i++) {
-      block->numabs_int[i] = (PDM_g_num_t *) PDM_gnum_get(gnum_gen, i);
-    }
-  }
-
-  else {
-
-    int _id_section = id_section;
-
-    PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_section];
-
-    for (int i = 0; i < block->n_part; i++) {
-      block->numabs_int[i] = (PDM_g_num_t *) PDM_gnum_get(gnum_gen, i);
-    }
-  }
-
+#define GENERATE_GNUM_IN_SECTION(section)                                       \
+  CHECK_BLOCK(block)                                                            \
+  if (block->numabs_int != NULL) {                                              \
+    /* Already computed (ignore ownership) */                                   \
+    return;                                                                     \
+  }                                                                             \
+  PDM_malloc(block->numabs_int, block->n_part, PDM_g_num_t *);                  \
+  for (int i = 0; i < block->n_part; i++) {                                     \
+    block->numabs_int[i] = NULL;                                                \
+  }                                                                             \
+  block->numabs_int_owner = ownership;                                          \
+                                                                                \
+  PDM_gen_gnum_t *gnum_gen = PDM_gnum_create(3,                                 \
+                                             pmne->n_part,                      \
+                                             PDM_FALSE,                         \
+                                             1e-3,                              \
+                                             pmne->comm,                        \
+                                             PDM_OWNERSHIP_USER);               \
+  for (int i = 0; i < block->n_part; i++) {                                     \
+    PDM_gnum_set_from_parents(gnum_gen, i, block->n_elt[i], block->_numabs[i]); \
+  }                                                                             \
+                                                                                \
+  PDM_gnum_compute(gnum_gen);                                                   \
+                                                                                \
+  for (int i = 0; i < block->n_part; i++) {                                     \
+    block->numabs_int[i] = (PDM_g_num_t *) PDM_gnum_get(gnum_gen, i);           \
+  }                                                                             \
+                                                                                \
   PDM_gnum_free(gnum_gen);
+
+
+  if (id_section >= PDM_BLOCK_ID_BLOCK_POLY3D) {
+    // Polyhedral section
+    int _id_section = id_section - PDM_BLOCK_ID_BLOCK_POLY3D;
+    PDM_Mesh_nodal_block_poly3d_t *block = pmne->sections_poly3d[_id_section];
+    GENERATE_GNUM_IN_SECTION(block)
+  }
+  else if (id_section >= PDM_BLOCK_ID_BLOCK_POLY2D) {
+    // Polygonal section
+    int _id_section = id_section - PDM_BLOCK_ID_BLOCK_POLY2D;
+    PDM_Mesh_nodal_block_poly2d_t *block = pmne->sections_poly2d[_id_section];
+    GENERATE_GNUM_IN_SECTION(block)
+  }
+  else {
+    // Standard section
+    int _id_section = id_section;
+    PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[_id_section];
+    GENERATE_GNUM_IN_SECTION(block)
+  }
+
+#undef GENERATE_GNUM_IN_SECTION
 }
 
 
