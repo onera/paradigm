@@ -1448,6 +1448,15 @@ PDM_part_comm_graph_n_part_get
   return pcg->n_part;
 }
 
+PDM_MPI_Comm
+PDM_part_comm_graph_comm_get
+(
+  PDM_part_comm_graph_t  *pcg
+)
+{
+  return pcg->comm;
+}
+
 const int*
 PDM_part_comm_graph_owner_get
 (

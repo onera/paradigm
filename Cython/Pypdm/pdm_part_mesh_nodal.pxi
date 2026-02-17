@@ -376,7 +376,7 @@ cdef class PartMeshNodal:
                                               &pcg,
                                               PDM_OWNERSHIP_BAD_VALUE)
       # JC TODO ownership ?
-      return PartCommGraph.from_ptr(pcg, None) # Free is done by PDM_part_mesh_nodal TODO comm
+      return PartCommGraph.from_ptr(pcg) # Free is done by PDM_part_mesh_nodal
 
     def part_comm_graph_vtx_get(self):
       """
@@ -388,8 +388,8 @@ cdef class PartMeshNodal:
                                                   &pcg,
                                                   PDM_OWNERSHIP_BAD_VALUE)
 
-      # JC TODO comm + ownership
-      return PartCommGraph.from_ptr(pcg, None) # Free is done by PDM_part_mesh_nodal
+      # JC TODO ownership ?
+      return PartCommGraph.from_ptr(pcg) # Free is done by PDM_part_mesh_nodal
 
     def compute_part_comm_graph_from_gnum(self,
                                           PDM_mesh_entities_t entity_type):

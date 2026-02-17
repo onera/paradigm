@@ -5119,6 +5119,15 @@ PDM_part_to_part_n_ranks_get
   return ptp->n_rank;
 }
 
+PDM_MPI_Comm
+PDM_part_to_part_comm_get
+(
+ PDM_part_to_part_t    *ptp
+)
+{
+  return ptp->comm;
+}
+
 #ifdef __cplusplus
 }
 #endif

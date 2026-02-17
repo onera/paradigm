@@ -107,6 +107,7 @@ cdef extern from "pdm_part_to_part.h":
                                                  int              ***part1_to_part2_idx);
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
+    PDM_MPI_Comm PDM_part_to_part_comm_get(PDM_part_to_part_t *ptp);
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     PDM_part_to_part_t *PDM_part_to_part_free(PDM_part_to_part_t *ptp);
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -121,7 +122,6 @@ cdef class PartToPart:
   cdef PDM_part_to_part_t         *ptp
   
   cdef dict                        request_data
-  cdef MPI.Comm                    py_comm
 
   DATA_DEF_ORDER_PART1           = _PDM_PART_TO_PART_DATA_DEF_ORDER_PART1
   DATA_DEF_ORDER_PART1_TO_PART2  = _PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2
@@ -153,9 +153,7 @@ cdef class PartToPart:
     assert(len(part1_to_part2_idx) == n_part1)
 
     # > Convert input data
-    self.py_comm               = comm
-    cdef MPI.MPI_Comm c_comm   = comm.ob_mpi
-    cdef PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&c_comm)
+    cdef PDM_MPI_Comm pdm_comm = py_comm_to_pdm_comm(comm)
 
     cdef int* n_elt1 = list_to_int_pointer([array.size for array in part1_ln_to_gn])
     cdef int* n_elt2 = list_to_int_pointer([array.size for array in part2_ln_to_gn])
@@ -183,11 +181,10 @@ cdef class PartToPart:
 
   # ------------------------------------------------------------------------
   @staticmethod
-  cdef from_ptr(PDM_part_to_part_t* ptr, py_comm):
+  cdef from_ptr(PDM_part_to_part_t* ptr):
 
     cdef PartToPart obj = PartToPart.__new__(PartToPart)
 
-    obj.py_comm  = py_comm
     obj.ptp      = ptr
     obj.request_data = dict()
 
@@ -216,9 +213,7 @@ cdef class PartToPart:
     """
 
     cdef PartToPart obj = PartToPart.__new__(PartToPart)
-    obj.py_comm                = comm
-    cdef MPI.MPI_Comm c_comm   = comm.ob_mpi
-    cdef PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&c_comm)
+    cdef PDM_MPI_Comm pdm_comm = py_comm_to_pdm_comm(comm)
 
     n_part1 = len(part1_ln_to_gn)
     n_part2 = len(n_elt2)
@@ -504,7 +499,10 @@ def iexch(PartToPart                   pyptp,
 
   cdef void** _part1_data   = np_list_to_void_pointers(part1_data)
 
-  ref_dtype = recover_dtype(part1_data, pyptp.py_comm)
+  cdef PDM_MPI_Comm pdm_comm = PDM_part_to_part_comm_get(pyptp.ptp)
+  py_comm = pdm_comm_to_py_comm(pdm_comm)
+  
+  ref_dtype = recover_dtype(part1_data, py_comm)
   cdef size_t s_data   = ref_dtype.itemsize
   cdef size_t npy_type = ref_dtype.num
 
@@ -649,8 +647,10 @@ def reverse_iexch(PartToPart                pyptp,
 
   cdef void** _part2_data   = np_list_to_void_pointers(part2_data)
 
+  cdef PDM_MPI_Comm pdm_comm = PDM_part_to_part_comm_get(pyptp.ptp)
+  py_comm = pdm_comm_to_py_comm(pdm_comm)
 
-  ref_dtype = recover_dtype(part2_data, pyptp.py_comm)
+  ref_dtype = recover_dtype(part2_data, py_comm)
   cdef size_t s_data   = ref_dtype.itemsize
   cdef size_t npy_type = ref_dtype.num
 

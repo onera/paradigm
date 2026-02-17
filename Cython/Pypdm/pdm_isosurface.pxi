@@ -263,7 +263,6 @@ cdef class Isosurface:
   cdef PDM_isosurface_t *_isos
 
   # cdef list keep_alive
-  cdef MPI.Comm py_comm
   cdef int      i_rank
   cdef int      n_rank
   cdef dict ptp_entity
@@ -301,7 +300,6 @@ cdef class Isosurface:
     cdef MPI.MPI_Comm c_comm   = comm.ob_mpi
     cdef PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&c_comm)
 
-    self.py_comm = comm
     self.i_rank  = comm.Get_rank()
     self.n_rank  = comm.Get_size()
 
@@ -888,7 +886,7 @@ cdef class Isosurface:
       PDM_isosurface_part_to_part_get(self._isos, id_iso, entity_type,
                                      &ptp,
                                       PDM_OWNERSHIP_USER)
-      self.ptp_entity[id_iso][entity_type] = PartToPart.from_ptr(ptp, self.py_comm)
+      self.ptp_entity[id_iso][entity_type] = PartToPart.from_ptr(ptp)
       return self.ptp_entity[id_iso][entity_type]
 
   def pparent_lnum_get(self, id_iso, i_part, entity_type):

@@ -63,7 +63,6 @@ cdef class ClosestPoints:
   cdef int* src_n_points
   cdef int* tgt_n_points
   cdef int n_closest
-  cdef MPI.Comm py_comm
   # ************************************************************************
 
   # ------------------------------------------------------------------------
@@ -83,7 +82,6 @@ cdef class ClosestPoints:
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
-    self.py_comm = comm
     self._rank = comm.Get_rank()
     self._size = comm.Get_size()
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -263,7 +261,7 @@ cdef class ClosestPoints:
     PDM_closest_points_part_to_part_get(self._cls,
                                         &ptpc,
                                         PDM_OWNERSHIP_USER)
-    return PartToPart.from_ptr(ptpc, self.py_comm) # The free is inside the class
+    return PartToPart.from_ptr(ptpc) # The free is inside the class
 
   # ------------------------------------------------------------------------
   def dump_times(self):

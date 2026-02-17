@@ -548,6 +548,20 @@ PDM_part_comm_graph_entity_nuplet_get
   PDM_ownership_t         ownership
 );
 
+/**
+ *
+ * \brief Get internal communicator
+ *
+ * \param [in]  pcg            Pointer to \ref PDM_part_comm_graph_t instance
+ *
+ * \return MPICommunicator
+ */
+PDM_MPI_Comm
+PDM_part_comm_graph_comm_get
+(
+  PDM_part_comm_graph_t  *pcg
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

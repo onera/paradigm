@@ -15,6 +15,7 @@ cimport cython
 cimport numpy as NPY
 
 from mpi4py cimport MPI
+from mpi4py cimport libmpi
 
 # -----------------------------------------------------------------
 cdef extern from "pdm_config.h":
@@ -252,6 +253,7 @@ cdef:
 
 cdef extern from "pdm_mpi.h":
     PDM_MPI_Comm PDM_MPI_mpi_2_pdm_mpi_comm(void *pt_comm)
+    MPI_Comm PDM_MPI_2_mpi_comm(PDM_MPI_Comm pdm_mpi_comm)
     int PDM_MPI_Finalize()
 
 # -----------------------------------------------------------------
@@ -570,6 +572,17 @@ cdef create_numpy_or_none_g(PDM_g_num_t* array, int size, bint flag_owndata=True
 
 cdef create_numpy_or_none_d(double* array, int size, bint flag_owndata=True):
     return create_numpy_or_none(<void *> array, NPY.NPY_DOUBLE, size, flag_owndata)
+
+cdef PDM_MPI_Comm py_comm_to_pdm_comm(MPI.Comm py_comm):
+  cdef MPI.MPI_Comm c_comm   = py_comm.ob_mpi
+  cdef PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&c_comm)
+  return pdm_comm
+
+cdef pdm_comm_to_py_comm(PDM_MPI_Comm pdm_comm):
+  cdef MPI_Comm c_comm = PDM_MPI_2_mpi_comm(pdm_comm)
+  cdef int f_comm = libmpi.MPI_Comm_c2f(<MPI_Comm> c_comm)
+  return MPI.Comm.f2py(f_comm)
+
 
 def MPI_Finalize():
     return PDM_MPI_Finalize()

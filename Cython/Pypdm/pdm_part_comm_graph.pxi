@@ -48,6 +48,7 @@ cdef extern from "pdm_part_comm_graph.h":
                                             int                   **entity_nuplet,
                                             PDM_ownership_t         ownership);
 
+  PDM_MPI_Comm PDM_part_comm_graph_comm_get(PDM_part_comm_graph_t* pcg);
   PDM_part_comm_graph_t* PDM_part_comm_graph_free(PDM_part_comm_graph_t* pcg);
 
 cdef extern from "pdm_part_comm_graph_algorithm.h":
@@ -64,7 +65,6 @@ cdef extern from "pdm_part_comm_graph_algorithm.h":
 cdef class PartCommGraph:
 
   cdef PDM_part_comm_graph_t *pcg
-  cdef MPI.Comm               py_comm
 
   def __init__(self,
                MPI.Comm    comm,
@@ -87,12 +87,8 @@ cdef class PartCommGraph:
       pentity_nuplet (list of np.ndarray[in]) : Additional nuplets (size = \p nuplet_size * \p pn_entity_graph[i_part])
       is_signed      (int**)                  : Use signed nuplets
     """
-
-    self.py_comm  = comm
-
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
-    cdef MPI.MPI_Comm c_comm = comm.ob_mpi
-    cdef PDM_MPI_Comm PDMC   = PDM_MPI_mpi_2_pdm_mpi_comm(<void *> &c_comm)
+    cdef PDM_MPI_Comm PDMC   = py_comm_to_pdm_comm(comm)
 
     cdef int **_pentity_graph  = NULL
     cdef int **_pentity_nuplet = NULL
@@ -126,11 +122,9 @@ cdef class PartCommGraph:
     free(_pentity_graph)
 
   @staticmethod
-  cdef from_ptr(PDM_part_comm_graph_t* ptr, py_comm):
+  cdef from_ptr(PDM_part_comm_graph_t* ptr):
     cdef PartCommGraph obj = PartCommGraph.__new__(PartCommGraph)
-    obj.py_comm  = py_comm
     obj.pcg      = ptr
-
     return obj
 
   def exch(self,
@@ -168,7 +162,9 @@ cdef class PartCommGraph:
 
     cdef void** _send_entity_data = np_list_to_void_pointers(send_entity_data)
 
-    ref_dtype = recover_dtype(send_entity_data, self.py_comm)
+    cdef PDM_MPI_Comm pdm_comm = PDM_part_comm_graph_comm_get(self.pcg)
+    py_comm = pdm_comm_to_py_comm(pdm_comm)
+    ref_dtype = recover_dtype(send_entity_data, py_comm)
     cdef size_t s_data   = ref_dtype.itemsize
     cdef size_t npy_type = ref_dtype.num
 
@@ -286,7 +282,9 @@ cdef class PartCommGraph:
     cdef void **_pdata = np_list_to_void_pointers(pdata)
     cdef PDM_MPI_Op       c_op       = <MPI_Op      > op.ob_mpi
     cdef MPI.Datatype mpi_dtype
-    ref_dtype = recover_dtype(pdata, self.py_comm)
+    cdef PDM_MPI_Comm pdm_comm = PDM_part_comm_graph_comm_get(self.pcg)
+    py_comm = pdm_comm_to_py_comm(pdm_comm)
+    ref_dtype = recover_dtype(pdata, py_comm)
     mpi_dtype = MPI._typedict.get(ref_dtype.char)
     # > This one not working, it seems it give a special type
     # from mpi4py.util.dtlib import from_numpy_dtype
@@ -378,4 +376,4 @@ def pcg_entity1_to_entity2(PartCommGraph pypcg_entity1,
   free(_entity2_entity1_idx)
   free(_entity2_entity1)
 
-  return PartCommGraph.from_ptr(_out_ptpgc_entity2, None) #TODO retrive comm
+  return PartCommGraph.from_ptr(_out_ptpgc_entity2)
