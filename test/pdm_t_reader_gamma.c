@@ -153,9 +153,10 @@ int main(int argc, char *argv[])
     PDM_multipart_get_part_mesh_nodal(mpart,
                                       0,
                                       &pmn,
-                                      PDM_OWNERSHIP_KEEP);
+                                      PDM_OWNERSHIP_USER);
     PDM_part_mesh_nodal_dump_gamma(pmn,
                                    "reader_gamma_out.mesh");
+    PDM_part_mesh_nodal_free(pmn);
 
     /* Write in Ensight Gold format */
     PDM_writer_t *id_cs = PDM_writer_create("Ensight",
