@@ -700,7 +700,7 @@ cdef class Isosurface:
     PDM_isosurface_dgroup_set(self._isos, entity_type,
                               group_entity_idx_data, group_entity_data)
 
-  def dmesh_set(self, DMesh dmesh):
+  def dmesh_set(self, DistributedMesh dmesh):
     """
     dmesh_set(dmesh)
 
@@ -711,7 +711,7 @@ cdef class Isosurface:
     """
     PDM_isosurface_dmesh_set(self._isos, dmesh._dm)
 
-  def dmesh_nodal_set(self, DMeshNodal dmesh_nodal):
+  def dmesh_nodal_set(self, DistributedMeshNodal dmesh_nodal):
     """
     dmesh_nodal_set(dmesh_nodal)
 

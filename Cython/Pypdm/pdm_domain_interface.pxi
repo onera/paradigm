@@ -477,7 +477,6 @@ cdef class DomInterfaceCapsule:
     """
        Use the free method of PDM Lib
     """
-    # print("DistributedMeshNodalCapsule::__dealloc__")
     PDM_domain_interface_free(self.dom_intrf)
 
 

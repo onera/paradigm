@@ -290,8 +290,7 @@ cdef class MultiPart:
         PDM_multipart_free(self._mtp)
 
     # ------------------------------------------------------------------
-    def dmesh_set(self, int i_domain,
-                        DMesh dmesh): # DMesh = DistributedMeshCapsule or DistributedMesh
+    def dmesh_set(self, int i_domain, DistributedMesh dmesh):
       """
       dmesh_set(i_domain, dmesh)
 
@@ -299,15 +298,14 @@ cdef class MultiPart:
 
       Parameters:
         i_domain (int)               : Domain identifier
-        dmesh    (:py:class:`DMesh`) : Distributed mesh structure
+        dmesh    (:py:class:`DistributedMesh`) : Distributed mesh structure
       """
       PDM_multipart_dmesh_set(self._mtp,
                               i_domain,
                               dmesh._dm)
 
     # ------------------------------------------------------------------
-    def dmesh_nodal_set(self, int i_domain,
-                              DMeshNodal dmn):
+    def dmesh_nodal_set(self, int i_domain, DistributedMeshNodal dmn):
       """
       dmesh_nodal_set(i_domain, dmn)
 
@@ -316,7 +314,7 @@ cdef class MultiPart:
 
       Parameters:
         i_domain (int)                    : Domain identifier
-        dmn      (:py:class:`DMeshNodal`) : Distributed nodal mesh structure
+        dmn      (:py:class:`DistributedMeshNodal`) : Distributed nodal mesh structure
       """
       PDM_multipart_dmesh_nodal_set(self._mtp,
                                     i_domain,
