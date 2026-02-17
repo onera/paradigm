@@ -888,8 +888,7 @@ cdef class Isosurface:
       PDM_isosurface_part_to_part_get(self._isos, id_iso, entity_type,
                                      &ptp,
                                       PDM_OWNERSHIP_USER)
-      py_caps_ptp = PyCapsule_New(ptp, NULL, NULL)
-      self.ptp_entity[id_iso][entity_type] = PartToPartCapsule(py_caps_ptp, self.py_comm)
+      self.ptp_entity[id_iso][entity_type] = PartToPart.from_ptr(ptp, self.py_comm)
       return self.ptp_entity[id_iso][entity_type]
 
   def pparent_lnum_get(self, id_iso, i_part, entity_type):

@@ -198,8 +198,8 @@ cdef class MeshIntersection:
 
     # ------------------------------------------------------------------
     def part_nodal_set(self,
-                       int        i_mesh,
-                       PMeshNodal pypmn):
+                       int           i_mesh,
+                       PartMeshNodal pypmn):
         """
         """
         PDM_mesh_intersection_mesh_nodal_set(self._mi, i_mesh, pypmn.pmn)
@@ -218,9 +218,7 @@ cdef class MeshIntersection:
       PDM_mesh_intersection_part_to_part_get(self._mi,
                                              &ptpc,
                                              PDM_OWNERSHIP_USER)
-
-      py_caps = PyCapsule_New(ptpc, NULL, NULL)
-      return PartToPartCapsule(py_caps, self.py_comm) # The free is inside the class
+      return PartToPart.from_ptr(ptpc, self.py_comm) # The free is inside the class
 
     # ------------------------------------------------------------------
     def a_to_b_get(self, int i_part):

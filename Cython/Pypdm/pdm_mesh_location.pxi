@@ -735,9 +735,7 @@ cdef class MeshLocation:
                                        i_point_cloud,
                                        &ptpc,
                                        PDM_OWNERSHIP_USER)
-
-    py_caps = PyCapsule_New(ptpc, NULL, NULL)
-    return PartToPartCapsule(py_caps, self.py_comm) # The free is inside the class
+    return PartToPart.from_ptr(ptpc, self.py_comm) # The free is inside the class
 
   # ------------------------------------------------------------------------
   def dump_times(self):

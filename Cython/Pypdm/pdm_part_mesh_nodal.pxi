@@ -178,7 +178,12 @@ cdef class PartMeshNodal:
         self.pmn = PDM_part_mesh_nodal_create(mesh_dimension, n_part, PDMC)
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
-
+    @staticmethod
+    cdef from_ptr(PDM_part_mesh_nodal_t* ptr):
+      # Take ownership on structure
+      cdef PartMeshNodal obj = PartMeshNodal.__new__(PartMeshNodal)
+      obj.pmn = ptr
+      return obj
 
 
     def set_coordinates(self,
@@ -339,7 +344,7 @@ cdef class PartMeshNodal:
       Returns:
         Number of groups
       """
-      return part_mesh_nodal_n_group_get(self, geom_kind)
+      return PDM_part_mesh_nodal_n_group_get(self.pmn, geom_kind)
 
     def to_view_capsule(self):
       """
@@ -352,7 +357,7 @@ cdef class PartMeshNodal:
 
       Returns: Mesh dimension (0, 1, 2 or 3)
       """
-      return part_mesh_nodal_dim_get(self)
+      return PDM_part_mesh_nodal_mesh_dimension_get(self.pmn)
 
     def part_comm_graph_get(self,
                             PDM_mesh_entities_t entity_type):
@@ -364,13 +369,28 @@ cdef class PartMeshNodal:
       Parameters:
        entity_type (PDM_mesh_entities_t) : type of entity (vertex, cell, edge)
       """
-      return get_part_comm_graph(self, entity_type)
+      cdef PDM_part_comm_graph_t *pcg
+
+      PDM_part_mesh_nodal_part_comm_graph_get(self.pmn,
+                                              entity_type,
+                                              &pcg,
+                                              PDM_OWNERSHIP_BAD_VALUE)
+
+      py_caps = PyCapsule_New(pcg, NULL, NULL)
+      return PartCommGraphCapsule(py_caps, PDM_OWNERSHIP_BAD_VALUE) # Free is done by PDM_part_mesh_nodal
 
     def part_comm_graph_vtx_get(self):
       """
       Returns a :py:class:`PartCommGraph` python object associated to the vertices
       """
-      return get_part_comm_graph_vtx(self)
+      cdef PDM_part_comm_graph_t *pcg
+
+      PDM_part_mesh_nodal_part_comm_graph_vtx_get(self.pmn,
+                                                  &pcg,
+                                                  PDM_OWNERSHIP_BAD_VALUE)
+
+      py_caps = PyCapsule_New(pcg, NULL, NULL)
+      return PartCommGraphCapsule(py_caps, PDM_OWNERSHIP_BAD_VALUE) # Free is done by PDM_part_mesh_nodal
 
     def compute_part_comm_graph_from_gnum(self,
                                           PDM_mesh_entities_t entity_type):
@@ -383,7 +403,177 @@ cdef class PartMeshNodal:
       Parameters:
         entity_type (PDM_mesh_entities_t) : type of entity (vertex, edge, face, cell)
       """
-      compute_pcg_from_gnum(self, entity_type)
+      PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(self.pmn, entity_type)
+
+
+
+    def n_part_get(self):
+      return PDM_part_mesh_nodal_n_part_get(self.pmn)
+
+    def coord_get(self, i_part):
+      """
+      coord_get(i_part)
+
+      Get coordinates of mesh vertices
+
+      Parameters:
+        i_part (int) : Partition identifier
+
+      Returns:
+        Vertex coordinates (`np.array[np.double_t]`)
+      """
+      cdef double *vtx_coords = NULL
+      vtx_coords = PDM_part_mesh_nodal_vtx_coord_get(self.pmn, i_part, PDM_OWNERSHIP_USER)
+
+      n_vtx = PDM_part_mesh_nodal_n_vtx_get(self.pmn, i_part)
+
+      return create_numpy_d(vtx_coords, 3 * n_vtx, True)
+
+    def vtx_g_num_get(self, i_part):
+      """
+      vtx_g_num_get(i_part)
+
+      Get global IDs of mesh vertices
+
+      Parameters:
+        i_part (int) : Partition identifier
+
+      Returns:
+        Vertex global IDs (`np.array[np.npy_pdm_gnum_t]`)
+      """
+      cdef PDM_g_num_t *vtx_ln_to_gn = NULL
+      vtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(self.pmn, i_part, PDM_OWNERSHIP_USER)
+
+      n_vtx = PDM_part_mesh_nodal_n_vtx_get(self.pmn, i_part)
+
+      return create_numpy_g(vtx_ln_to_gn, n_vtx, True)
+
+    def get_sections(self, PDM_geometry_kind_t geom_kind, int i_part):
+      """
+      get_sections(geom_kind, i_part)
+
+      Get all standard sections (one partition)
+
+      Parameters:
+        geom_kind (PDM_geometry_kind_t) : Geometry kind (volume, surface, ridge or corner)
+        i_part    (int)                 : Partition identifier
+
+      Returns:
+        List of sections. Each section is represented as a dictionary
+
+          - ``"pdm_type"``               (`int`)                        : Element type
+          - ``"np_connec"``              (`np.ndarray[np.int32_t]`)     : Connectivity
+          - ``"np_numabs"``              (`np.ndarray[npy_pdm_gnum_t]`) : Element global ids
+          - ``"np_parent_num"``          (`np.ndarray[np.int32_t]`)     : Element parent local ids
+          - ``"np_parent_entity_g_num"`` (`np.ndarray[npy_pdm_gnum_t]`) : Element parent global ids
+      """
+      # ************************************************************************
+      # > Declaration
+      cdef int                   n_section
+      cdef int                   n_vtx_per_elmt
+      cdef int                   n_elmt_in_section
+      cdef int                  *section_id
+      cdef int                  *parent_num
+      cdef int                  *elt2entity
+      cdef int                  *connec
+      cdef PDM_g_num_t          *numabs
+      cdef PDM_g_num_t          *parent_entity_g_num
+      cdef double               *vtx_coord
+      cdef PDM_Mesh_nodal_elt_t  t_elmt
+      cdef NPY.npy_intp          dim
+      # ************************************************************************
+
+      n_section  = PDM_part_mesh_nodal_n_section_in_geom_kind_get  (self.pmn, geom_kind)
+      section_id = PDM_part_mesh_nodal_sections_id_in_geom_kind_get(self.pmn, geom_kind)
+
+      sections = []
+      for i_section in range(n_section):
+        id_section_in_geom_kind = section_id[i_section]
+        id_section = PDM_part_mesh_nodal_section_id_from_geom_kind_get(self.pmn,
+                                                                      geom_kind,
+                                                                      id_section_in_geom_kind)
+
+        t_elmt = PDM_part_mesh_nodal_section_elt_type_get(self.pmn, id_section)
+        assert(t_elmt != PDM_MESH_NODAL_POLY_2D)
+        assert(t_elmt != PDM_MESH_NODAL_POLY_3D)
+
+        n_elmt_in_section = PDM_part_mesh_nodal_section_n_elt_get(self.pmn, id_section, i_part)
+
+        PDM_part_mesh_nodal_section_std_get(self.pmn, id_section, i_part, &connec, &numabs, &parent_num, &parent_entity_g_num, PDM_OWNERSHIP_USER)
+        elt2entity = PDM_part_mesh_nodal_section_elmt_to_entity_get(self.pmn, id_section, i_part, PDM_OWNERSHIP_USER)
+
+        n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get(t_elmt, 1)
+
+        np_connec     = create_numpy_i(connec,     n_elmt_in_section*n_vtx_per_elmt)
+        np_parent_num = None
+        if(parent_num != NULL):
+          np_parent_num = create_numpy_i(parent_num, n_elmt_in_section)
+
+        np_elt_entity = None
+        if elt2entity != NULL:
+          np_elt_entity = create_numpy_i(elt2entity, n_elmt_in_section)
+        np_numabs = create_numpy_g(numabs, n_elmt_in_section)
+
+        np_parent_entity_g_num = None
+        if(parent_entity_g_num != NULL):
+          np_parent_entity_g_num = create_numpy_g(parent_entity_g_num, n_elmt_in_section)
+
+        sections.append({"n_elmt"                 : n_elmt_in_section,
+                        "pdm_type"               : t_elmt,
+                        "np_connec"              : np_connec,
+                        "np_parent_num"          : np_parent_num,
+                        "np_element_to_entity"   : np_elt_entity,
+                        "np_numabs"              : np_numabs,
+                        "np_parent_entity_g_num" : np_parent_entity_g_num})
+
+      return sections
+
+
+    def get_group(self, PDM_geometry_kind_t geom_kind, int i_part, int i_group):
+      """
+      get_group(geom_kind, i_part, i_group)
+
+      Get partition group
+
+      Parameters:
+        geom_kind (PDM_geometry_kind_t) : Geometry kind (volume, surface, ridge or corner)
+        i_part    (int)                 : Partition identifier
+        i_group   (int)                 : Group identifier
+
+      Returns:
+        Tuple
+
+          - ``"group_elmt"``             (`np.ndarray[np.int32_t]`)     : Connectivity group elements
+          - ``"group_ln_to_gn"``         (`np.ndarray[npy_pdm_gnum_t]`) : Group-specific element global IDs
+      """
+      # ************************************************************************
+      # > Declaration
+      cdef int                   n_group_elmt
+      cdef int                  *group_elmt
+      cdef PDM_g_num_t          *group_ln_to_gn
+      # ************************************************************************
+
+
+      PDM_part_mesh_nodal_group_get(self.pmn,
+                                    geom_kind,
+                                    i_part,
+                                    i_group,
+                                    &n_group_elmt,
+                                    &group_elmt,
+                                    &group_ln_to_gn,
+                                    PDM_OWNERSHIP_USER);
+
+      np_group_elmt = None
+      if(group_elmt != NULL):
+        np_group_elmt = create_numpy_i(group_elmt, n_group_elmt)
+
+      np_group_ln_to_gn = None
+      if(group_ln_to_gn != NULL):
+        np_group_ln_to_gn = create_numpy_g(group_ln_to_gn, n_group_elmt)
+
+      return np_group_elmt, np_group_ln_to_gn
+
+
 
     # ------------------------------------------------------------------------
     def __dealloc__(self):
@@ -393,295 +583,7 @@ cdef class PartMeshNodal:
 
 
 # ------------------------------------------------------------------
-cdef class PartMeshNodalCapsule:
-  """
-  """
-  # ************************************************************************
-  # > Class attributes
-  cdef PDM_part_mesh_nodal_t* pmn
-  cdef PDM_ownership_t        ownership
-  # ************************************************************************
-  # ------------------------------------------------------------------------
-  def __cinit__(self,
-                object          caps,
-                PDM_ownership_t ownership = PDM_OWNERSHIP_KEEP):
-    """
-    """
-    cdef PDM_part_mesh_nodal_t* caps_pmn = <PDM_part_mesh_nodal_t *> PyCapsule_GetPointer(caps, NULL)
-    self.pmn = caps_pmn
-    self.ownership = ownership
-
-  def part_comm_graph_get(self, PDM_mesh_entities_t entity_type):
-    return get_part_comm_graph(self, entity_type)
-
-  def part_comm_graph_vtx_get(self):
-    return get_part_comm_graph_vtx(self)
-
-  def dim_get(self):
-    return part_mesh_nodal_dim_get(self)
-
-  def n_part_get(self):
-    return part_mesh_nodal_n_part_get(self)
-
-  def coord_get(self, i_part):
-    """
-    coord_get(i_part)
-
-    Get coordinates of mesh vertices
-
-    Parameters:
-      i_part (int) : Partition identifier
-
-    Returns:
-      Vertex coordinates (`np.array[np.double_t]`)
-    """
-    return part_mesh_nodal_vtx_coord_get(self, i_part)
-
-  def vtx_g_num_get(self, i_part):
-    """
-    vtx_g_num_get(i_part)
-
-    Get global IDs of mesh vertices
-
-    Parameters:
-      i_part (int) : Partition identifier
-
-    Returns:
-      Vertex global IDs (`np.array[np.npy_pdm_gnum_t]`)
-    """
-    return part_mesh_nodal_vtx_g_num_get(self, i_part)
-
-  def get_sections(self, PDM_geometry_kind_t geom_kind, int i_part):
-    """
-    get_sections(geom_kind, i_part)
-
-    Get all standard sections (one partition)
-
-    Parameters:
-      geom_kind (PDM_geometry_kind_t) : Geometry kind (volume, surface, ridge or corner)
-      i_part    (int)                 : Partition identifier
-
-    Returns:
-      List of sections. Each section is represented as a dictionary
-
-        - ``"pdm_type"``               (`int`)                        : Element type
-        - ``"np_connec"``              (`np.ndarray[np.int32_t]`)     : Connectivity
-        - ``"np_numabs"``              (`np.ndarray[npy_pdm_gnum_t]`) : Element global ids
-        - ``"np_parent_num"``          (`np.ndarray[np.int32_t]`)     : Element parent local ids
-        - ``"np_parent_entity_g_num"`` (`np.ndarray[npy_pdm_gnum_t]`) : Element parent global ids
-    """
-    return part_mesh_nodal_get_sections(self, geom_kind, i_part)
-
-  def get_n_group(self, PDM_geometry_kind_t geom_kind):
-    """
-    get_n_group(geom_kind)
-
-    Get group number for given ``geom_kind``
-
-    Parameters:
-      geom_kind (PDM_geometry_kind_t) : Geometry kind (volume, surface, ridge or corner)
-
-    Returns:
-      Number of groups
-    """
-    return part_mesh_nodal_n_group_get(self, geom_kind)
-
-  def get_group(self, PDM_geometry_kind_t geom_kind, int i_part, int i_group):
-    """
-    get_group(geom_kind, i_part, i_group)
-
-    Get partition group
-
-    Parameters:
-      geom_kind (PDM_geometry_kind_t) : Geometry kind (volume, surface, ridge or corner)
-      i_part    (int)                 : Partition identifier
-      i_group   (int)                 : Group identifier
-
-    Returns:
-      Tuple
-
-        - ``"group_elmt"``             (`np.ndarray[np.int32_t]`)     : Connectivity group elements
-        - ``"group_ln_to_gn"``         (`np.ndarray[npy_pdm_gnum_t]`) : Group-specific element global IDs
-    """
-    return part_mesh_nodal_get_group(self, geom_kind, i_part, i_group)
-
-  def compute_part_comm_graph_from_gnum(self,
-                                        PDM_mesh_entities_t entity_type):
-    compute_pcg_from_gnum(self, entity_type)
-
-  def __dealloc__(self):
-    """
-    """
-    if self.ownership == PDM_OWNERSHIP_KEEP:
-      PDM_part_mesh_nodal_free(self.pmn)
-
-
-ctypedef fused PMeshNodal:
-  PartMeshNodal
-  PartMeshNodalCapsule
-
-
-def compute_pcg_from_gnum(PMeshNodal          pypmn,
-                          PDM_mesh_entities_t entity_type):
-  PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(pypmn.pmn, entity_type)
-
-def get_part_comm_graph(PMeshNodal          pypmn,
-                        PDM_mesh_entities_t entity_type):
-  cdef PDM_part_comm_graph_t *pcg
-
-  PDM_part_mesh_nodal_part_comm_graph_get(pypmn.pmn,
-                                          entity_type,
-                                          &pcg,
-                                          PDM_OWNERSHIP_BAD_VALUE)
-
-  py_caps = PyCapsule_New(pcg, NULL, NULL)
-  return PartCommGraphCapsule(py_caps, PDM_OWNERSHIP_BAD_VALUE) # Free is done by PDM_part_mesh_nodal
-
-def get_part_comm_graph_vtx(PMeshNodal pypmn):
-  cdef PDM_part_comm_graph_t *pcg
-
-  PDM_part_mesh_nodal_part_comm_graph_vtx_get(pypmn.pmn,
-                                              &pcg,
-                                              PDM_OWNERSHIP_BAD_VALUE)
-
-  py_caps = PyCapsule_New(pcg, NULL, NULL)
-  return PartCommGraphCapsule(py_caps, PDM_OWNERSHIP_BAD_VALUE) # Free is done by PDM_part_mesh_nodal
-
-
-def part_mesh_nodal_vtx_g_num_get(PMeshNodal pypmn, int i_part):
-  """
-  Get vertex global numbering for partition i_part
-  """
-  cdef PDM_g_num_t *vtx_ln_to_gn = NULL
-  vtx_ln_to_gn = PDM_part_mesh_nodal_vtx_g_num_get(pypmn.pmn, i_part, PDM_OWNERSHIP_USER)
-
-  n_vtx = PDM_part_mesh_nodal_n_vtx_get(pypmn.pmn, i_part)
-
-  return create_numpy_g(vtx_ln_to_gn, n_vtx, True)
-
-
-def part_mesh_nodal_vtx_coord_get(PMeshNodal pypmn, int i_part):
-  """
-  Get vertex coordinates for partition i_part
-  """
-
-  cdef double *vtx_coords = NULL
-  vtx_coords = PDM_part_mesh_nodal_vtx_coord_get(pypmn.pmn, i_part, PDM_OWNERSHIP_USER)
-
-  n_vtx = PDM_part_mesh_nodal_n_vtx_get(pypmn.pmn, i_part)
-
-  return create_numpy_d(vtx_coords, 3 * n_vtx, True)
-
-
-def part_mesh_nodal_dim_get(PMeshNodal pypmn):
-  return PDM_part_mesh_nodal_mesh_dimension_get(pypmn.pmn)
-
-
-def part_mesh_nodal_n_part_get(PMeshNodal pypmn):
-  return PDM_part_mesh_nodal_n_part_get(pypmn.pmn)
-
-
-def part_mesh_nodal_get_sections(PMeshNodal pypmn, PDM_geometry_kind_t geom_kind, int i_part):
-  """
-  """
-  # ************************************************************************
-  # > Declaration
-  cdef int                   n_section
-  cdef int                   n_vtx_per_elmt
-  cdef int                   n_elmt_in_section
-  cdef int                  *section_id
-  cdef int                  *parent_num
-  cdef int                  *elt2entity
-  cdef int                  *connec
-  cdef PDM_g_num_t          *numabs
-  cdef PDM_g_num_t          *parent_entity_g_num
-  cdef double               *vtx_coord
-  cdef PDM_Mesh_nodal_elt_t  t_elmt
-  cdef NPY.npy_intp          dim
-  # ************************************************************************
-
-  n_section  = PDM_part_mesh_nodal_n_section_in_geom_kind_get  (pypmn.pmn, geom_kind)
-  section_id = PDM_part_mesh_nodal_sections_id_in_geom_kind_get(pypmn.pmn, geom_kind)
-
-  sections = []
-  for i_section in range(n_section):
-    id_section_in_geom_kind = section_id[i_section]
-    id_section = PDM_part_mesh_nodal_section_id_from_geom_kind_get(pypmn.pmn,
-                                                                   geom_kind,
-                                                                   id_section_in_geom_kind)
-
-    t_elmt = PDM_part_mesh_nodal_section_elt_type_get(pypmn.pmn, id_section)
-    assert(t_elmt != PDM_MESH_NODAL_POLY_2D)
-    assert(t_elmt != PDM_MESH_NODAL_POLY_3D)
-
-    n_elmt_in_section = PDM_part_mesh_nodal_section_n_elt_get(pypmn.pmn, id_section, i_part)
-
-    PDM_part_mesh_nodal_section_std_get(pypmn.pmn, id_section, i_part, &connec, &numabs, &parent_num, &parent_entity_g_num, PDM_OWNERSHIP_USER)
-    elt2entity = PDM_part_mesh_nodal_section_elmt_to_entity_get(pypmn.pmn, id_section, i_part, PDM_OWNERSHIP_USER)
-
-    n_vtx_per_elmt = PDM_Mesh_nodal_n_vtx_elt_get(t_elmt, 1)
-
-    np_connec     = create_numpy_i(connec,     n_elmt_in_section*n_vtx_per_elmt)
-    np_parent_num = None
-    if(parent_num != NULL):
-      np_parent_num = create_numpy_i(parent_num, n_elmt_in_section)
-
-    np_elt_entity = None
-    if elt2entity != NULL:
-      np_elt_entity = create_numpy_i(elt2entity, n_elmt_in_section)
-    np_numabs = create_numpy_g(numabs, n_elmt_in_section)
-
-    np_parent_entity_g_num = None
-    if(parent_entity_g_num != NULL):
-      np_parent_entity_g_num = create_numpy_g(parent_entity_g_num, n_elmt_in_section)
-
-    sections.append({"n_elmt"                 : n_elmt_in_section,
-                     "pdm_type"               : t_elmt,
-                     "np_connec"              : np_connec,
-                     "np_parent_num"          : np_parent_num,
-                     "np_element_to_entity"   : np_elt_entity,
-                     "np_numabs"              : np_numabs,
-                     "np_parent_entity_g_num" : np_parent_entity_g_num})
-
-  return sections
-
-def part_mesh_nodal_n_group_get(PMeshNodal pypmn, PDM_geometry_kind_t geom_kind):
-  """
-  """
-  return PDM_part_mesh_nodal_n_group_get(pypmn.pmn,
-                                         geom_kind)
-
-def part_mesh_nodal_get_group(PMeshNodal pypmn, PDM_geometry_kind_t geom_kind, int i_part, int i_group):
-  """
-  """
-  # ************************************************************************
-  # > Declaration
-  cdef int                   n_group_elmt
-  cdef int                  *group_elmt
-  cdef PDM_g_num_t          *group_ln_to_gn
-  # ************************************************************************
-
-
-  PDM_part_mesh_nodal_group_get(pypmn.pmn,
-                                geom_kind,
-                                i_part,
-                                i_group,
-                                &n_group_elmt,
-                                &group_elmt,
-                                &group_ln_to_gn,
-                                PDM_OWNERSHIP_USER);
-
-  np_group_elmt = None
-  if(group_elmt != NULL):
-    np_group_elmt = create_numpy_i(group_elmt, n_group_elmt)
-
-  np_group_ln_to_gn = None
-  if(group_ln_to_gn != NULL):
-    np_group_ln_to_gn = create_numpy_g(group_ln_to_gn, n_group_elmt)
-
-  return np_group_elmt, np_group_ln_to_gn
-
-def part_mesh_nodal_dual_volume(PMeshNodal pypmn, bint synchronize=True):
+def part_mesh_nodal_dual_volume(PartMeshNodal pypmn, bint synchronize=True):
   """
 
       part_mesh_nodal_dual_volume(pypmn, synchronize=True)
@@ -689,7 +591,7 @@ def part_mesh_nodal_dual_volume(PMeshNodal pypmn, bint synchronize=True):
       Compute dual volumes vertices
 
       Parameters:
-        pypmn       (PMeshNodal) : PartMeshNodal or PartMeshNodalCapsule
+        pypmn       (PartMeshNodal) : PartMeshNodal
         synchronize (bool)       : Enable synchronization at partition boundaries (optional, default=True)
 
       Returns:

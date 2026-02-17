@@ -5,9 +5,5 @@ from .Pypdm import DistributedMeshNodal
 from .Pypdm import DistributedMeshNodalCapsule
 from .Pypdm import PartCommGraph
 from .Pypdm import PartCommGraphCapsule
-from .Pypdm import PartMeshNodal
-from .Pypdm import PartMeshNodalCapsule
 
-from .Pypdm import PartToPart
-from .Pypdm import PartToPartCapsule
 from .Pypdm import __version__

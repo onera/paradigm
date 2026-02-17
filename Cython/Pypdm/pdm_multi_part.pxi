@@ -569,7 +569,7 @@ cdef class MultiPart:
         i_domain (int) : Domain identifier
 
       Returns:
-        Partitioned nodal mesh object (:py:class:`PartMeshNodalCapsule`)
+        Partitioned nodal mesh object (:py:class:`PartMeshNodal`)
       """
       cdef PDM_part_mesh_nodal_t *pmesh_nodal
       PDM_multipart_get_part_mesh_nodal(self._mtp, i_domain, &pmesh_nodal, PDM_OWNERSHIP_USER)
@@ -577,8 +577,7 @@ cdef class MultiPart:
         return None
       else:
         #See pdm_part_mesh_nodal.pxi
-        py_caps = PyCapsule_New(pmesh_nodal, NULL, NULL);
-        return PartMeshNodalCapsule(py_caps)
+        return PartMeshNodal.from_ptr(pmesh_nodal)
 
     # ------------------------------------------------------------------
     def hyper_plane_color_get(self, int i_domain, int i_part):
