@@ -119,6 +119,7 @@ cdef class PartCommGraph:
                                            <PDM_bool_t> is_signed,
                                                         PDMC)
       free(_pentity_nuplet)
+    free(_pn_entity_graph)
     free(_pentity_graph)
 
   @staticmethod
