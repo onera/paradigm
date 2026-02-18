@@ -34,7 +34,7 @@ dcube.compute()
 
 dmn = dcube.get_dmesh_nodal()
 
-PDM.generate_distribution(dmn)
+dmn.generate_distribution()
 
 # Create partitioning object
 n_domain_before = 1
