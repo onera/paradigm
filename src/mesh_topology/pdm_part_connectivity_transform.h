@@ -320,6 +320,37 @@ PDM_graph_compress
   int *graph
 );
 
+/**
+ *
+ * \brief Filter a connectivity \p entity1_to_entity2 based on flags on both entity types
+ *
+ * This function creates a sub-connectivity by keeping only entity1 having \p entity1_flag set to 1,
+ * and within those, keeping only connections to entity2 having \p entity2_flag set to 1.
+ * Arrays \p sub_entity1_to_entity2_idx and \p sub_entity1_to_entity2 are allocated
+ * within the function and must be freed by the user.
+ *
+ * \param [in]  n_entity1                  Number of initial entity1
+ * \param [in]  entity1_to_entity2_idx     Initial connectivity index (size = \p n_entity1 + 1)
+ * \param [in]  entity1_to_entity2         Initial connectivity (size = \p entity1_to_entity2_idx[\p n_entity1])
+ * \param [in]  entity1_flag               Filter flag for entity1 (1 to keep, 0 to skip, size = \p n_entity1)
+ * \param [in]  entity2_flag               Filter flag for entity2 (1 to keep, 0 to skip, size = max(\p entity1_to_entity2))
+ * \param [out] sub_entity1_to_entity2_idx Filtered connectivity index (size = return_value + 1)
+ * \param [out] sub_entity1_to_entity2     Filtered connectivity (size = (*\p sub_entity1_to_entity2_idx)[return_value])
+ *
+ * \return Number of entity1 kept in the filtered connectivity
+ */
+int
+PDM_connectivity_filter
+(
+  int   n_entity1,
+  int  *entity1_to_entity2_idx,
+  int  *entity1_to_entity2,
+  int  *entity1_flag,
+  int  *entity2_flag,
+  int **sub_entity1_to_entity2_idx,
+  int **sub_entity1_to_entity2
+);
+
 #ifdef  __cplusplus
 }
 #endif
