@@ -454,9 +454,8 @@ _create_dparent_num_corner
 static PDM_part_mesh_nodal_t*
 _compute_part_mesh_nodal_3d
 (
- PDM_dmesh_nodal_t *dmn,
- _part_mesh_t      *pm,
- int                n_part
+  PDM_dmesh_nodal_t *dmn,
+  _part_mesh_t      *pm
 )
 {
   int i_rank;
@@ -464,8 +463,10 @@ _compute_part_mesh_nodal_3d
   PDM_MPI_Comm_rank(dmn->comm, &i_rank);
   PDM_MPI_Comm_size(dmn->comm, &n_rank);
 
+  int n_part = PDM_part_mesh_n_part_get(pm->pmesh);
+
   /*
-   * Rebuild the volumic part from cell
+   * Rebuild the volume part
    */
   int          *pn_cell        = NULL;
   int          *pn_face        = NULL;
@@ -718,8 +719,7 @@ static PDM_part_mesh_nodal_t*
 _compute_part_mesh_nodal_2d
 (
  PDM_dmesh_nodal_t *dmn,
- _part_mesh_t      *pm,
- int                n_part
+ _part_mesh_t      *pm
 )
 {
   int i_rank;
@@ -727,8 +727,10 @@ _compute_part_mesh_nodal_2d
   PDM_MPI_Comm_rank(dmn->comm, &i_rank);
   PDM_MPI_Comm_size(dmn->comm, &n_rank);
 
+  int n_part = PDM_part_mesh_n_part_get(pm->pmesh);
+
   /*
-   * Rebuild the volumic part from cell
+   * Rebuild the surface part
    */
   int          *pn_face        = NULL;
   PDM_g_num_t **pface_ln_to_gn = NULL;
@@ -921,8 +923,7 @@ static PDM_part_mesh_nodal_t*
 _compute_part_mesh_nodal_1d
 (
  PDM_dmesh_nodal_t *dmn,
- _part_mesh_t      *pm,
- int                n_part
+ _part_mesh_t      *pm
 )
 {
   int i_rank;
@@ -930,8 +931,10 @@ _compute_part_mesh_nodal_1d
   PDM_MPI_Comm_rank(dmn->comm, &i_rank);
   PDM_MPI_Comm_size(dmn->comm, &n_rank);
 
+  int n_part = PDM_part_mesh_n_part_get(pm->pmesh);
+
   /*
-   * Rebuild the volumic part from cell
+   * Rebuild the line part
    */
   int          *pn_edge        = NULL;
   PDM_g_num_t **pedge_ln_to_gn = NULL;
@@ -3030,6 +3033,7 @@ PDM_multipart_create
   int _renum_vtx_method  = PDM_part_renum_method_vtx_idx_get ("PDM_PART_RENUM_VTX_NONE" );
   for (int i_dom = 0; i_dom < multipart->n_domain; i_dom++) {
 
+    multipart->pmesh_nodal          [i_dom] = NULL;
     multipart->ownership_pmeshes    [i_dom] = PDM_OWNERSHIP_KEEP;
     multipart->ownership_pmesh_nodal[i_dom] = PDM_OWNERSHIP_BAD_VALUE;
 
@@ -3477,26 +3481,46 @@ PDM_ownership_t         ownership
   CHECK_INSTANCE(multipart);
   CHECK_I_DOMAIN(multipart, i_domain);
 
-  _part_mesh_t      *pmesh       = &(multipart->pmeshes    [i_domain]);
-  PDM_dmesh_nodal_t *dmesh_nodal = multipart->dmeshes_nodal[i_domain];
-  if (dmesh_nodal == NULL) {
-    *pmesh_nodal = NULL;
+  if (multipart->pmesh_nodal[i_domain] != NULL) {
+
+    // Part Mesh Nodal has already been built, just get it
+    *pmesh_nodal = multipart->pmesh_nodal[i_domain];
+    if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
+      multipart->ownership_pmesh_nodal[i_domain] = ownership;
+    }
+
   }
   else {
-    int n_part = multipart->n_part[i_domain];
-    if(dmesh_nodal->mesh_dimension == 3){
-      *pmesh_nodal = _compute_part_mesh_nodal_3d(dmesh_nodal, pmesh, n_part);
-    } else if(dmesh_nodal->mesh_dimension == 2){
-      *pmesh_nodal = _compute_part_mesh_nodal_2d(dmesh_nodal, pmesh, n_part);
-    } else if(dmesh_nodal->mesh_dimension == 1){
-      *pmesh_nodal = _compute_part_mesh_nodal_1d(dmesh_nodal, pmesh, n_part);
-    } else {
+
+    PDM_dmesh_nodal_t *dmesh_nodal = multipart->dmeshes_nodal[i_domain];
+
+    if (dmesh_nodal == NULL) {
+      PDM_error(__FILE__, __LINE__, 0, "NULL dmesh_nodal\n");
+    }
+
+    _part_mesh_t *pmesh = &(multipart->pmeshes[i_domain]);
+
+    // Build the Part Mesh Nodal
+    if (dmesh_nodal->mesh_dimension == 3) {
+      *pmesh_nodal = _compute_part_mesh_nodal_3d(dmesh_nodal, pmesh);
+    }
+    else if (dmesh_nodal->mesh_dimension == 2) {
+      *pmesh_nodal = _compute_part_mesh_nodal_2d(dmesh_nodal, pmesh);
+    }
+    else if (dmesh_nodal->mesh_dimension == 1) {
+      *pmesh_nodal = _compute_part_mesh_nodal_1d(dmesh_nodal, pmesh);
+    }
+    else {
       PDM_error(__FILE__, __LINE__, 0, "PDM_multipart_compute_part_mesh_nodal error : Bad dmesh_nodal dimension \n");
     }
-  }
 
-  multipart->pmesh_nodal          [i_domain] = *pmesh_nodal;
-  multipart->ownership_pmesh_nodal[i_domain] = ownership;
+    if (ownership == PDM_OWNERSHIP_BAD_VALUE) {
+      PDM_error(__FILE__, __LINE__, 0, "Invalid ownership (expected KEEP or USER)\n");
+    }
+
+    multipart->pmesh_nodal          [i_domain] = *pmesh_nodal;
+    multipart->ownership_pmesh_nodal[i_domain] = ownership;
+  }
 }
 
 

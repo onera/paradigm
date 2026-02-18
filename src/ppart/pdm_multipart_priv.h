@@ -45,7 +45,7 @@ extern "C" {
 
 /**
  * \struct _part_mesh_t
- * \brief  This private structure stores partionned meshes obtained on a given
+ * \brief  This private structure stores partioned meshes obtained on a given
  *         domain.
  */
 typedef struct {
