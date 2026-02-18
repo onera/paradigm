@@ -2408,7 +2408,7 @@ PDM_part_mesh_nodal_dump_gamma
                                                                  PDM_OWNERSHIP_BAD_VALUE);
 
       for (int i_elt = 0; i_elt < n_elt; i_elt++) {
-        _max_elt_g_num[i_section] = PDM_MAX(_max_elt_g_num[i_section], (int) g_num[i_elt]);
+        _max_elt_g_num[i_section] = PDM_MAX(_max_elt_g_num[i_section], g_num[i_elt]);
       } // End loop on elements
     } // End loop on parts
 
@@ -2649,7 +2649,7 @@ PDM_part_mesh_nodal_dump_gamma
   if (i_rank == 0) {
     int _gn_elt[PDM_MESH_NODAL_N_ELEMENT_TYPES];
     for (PDM_Mesh_nodal_elt_t t_elt = PDM_MESH_NODAL_POINT; t_elt < PDM_MESH_NODAL_N_ELEMENT_TYPES; t_elt++) {
-      _gn_elt[t_elt] = (int) gn_elt[t_elt];
+      _gn_elt[t_elt] = (int) gn_elt[t_elt]; // sic
     }
 
     PDM_write_meshb(filename,
