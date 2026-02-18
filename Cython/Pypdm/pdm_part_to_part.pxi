@@ -366,10 +366,9 @@ cdef class PartToPart:
     cdef int request_exch
     cdef PDM_stride_t _stride_t
 
-    cdef int n_part1, n_part2
+    cdef int n_part1
     cdef int* n_elt1
-    cdef int* n_elt2
-    PDM_part_to_part_n_part_and_n_elt_get(self.ptp, &n_part1, &n_part2, &n_elt1, &n_elt2)
+    PDM_part_to_part_n_part_and_n_elt_get(self.ptp, &n_part1, NULL, &n_elt1, NULL)
 
     cdef int   _part1_stride_cst = 0
     cdef int** _part1_stride     = NULL
@@ -534,10 +533,9 @@ cdef class PartToPart:
     cdef int         **gnum1_come_from_idx = NULL;
     cdef PDM_g_num_t **gnum1_come_from     = NULL;
 
-    cdef int n_part1, n_part2
-    cdef int* n_elt1
+    cdef int  n_part2
     cdef int* n_elt2
-    PDM_part_to_part_n_part_and_n_elt_get(self.ptp, &n_part1, &n_part2, &n_elt1, &n_elt2)
+    PDM_part_to_part_n_part_and_n_elt_get(self.ptp, NULL, &n_part2, NULL, &n_elt2)
 
     if isinstance(part2_stride, int):
       _stride_t = PDM_STRIDE_CST_INTERLACED if interlaced_str else PDM_STRIDE_CST_INTERLEAVED
