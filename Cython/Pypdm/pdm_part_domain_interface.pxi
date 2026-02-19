@@ -74,22 +74,20 @@ cdef class PartDomainInterface:
   # > Class attributes
   cdef PDM_part_domain_interface_t *pdi
   cdef object keep_alive
-  cdef PDM_ownership_t ownership
+  cdef int own_data
   # ************************************************************************
   def __cinit__(self,
                 int                                           n_interface,
                 int                                           n_domain,
                 NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] n_part,
                 bint                                          multidomain_interface,
-                MPI.Comm                                      comm,
-                PDM_ownership_t                               ownership = PDM_OWNERSHIP_KEEP):
+                MPI.Comm                                      comm):
 
     """
     """
     cdef MPI.MPI_Comm c_comm = comm.ob_mpi
     cdef PDM_MPI_Comm PDMC   = PDM_MPI_mpi_2_pdm_mpi_comm(<void *> &c_comm)
     self.keep_alive = list()
-    self.ownership = ownership
 
     cdef _multidomain_interface = PDM_DOMAIN_INTERFACE_MULT_YES if multidomain_interface else PDM_DOMAIN_INTERFACE_MULT_NO
     self.pdi = PDM_part_domain_interface_create(n_interface,
@@ -98,6 +96,7 @@ cdef class PartDomainInterface:
                                                 _multidomain_interface,
                                                 PDM_OWNERSHIP_USER,
                                                 PDMC)
+    self.own_data = True
 
   # ------------------------------------------------------------------------
   def interface_set(self,
@@ -166,5 +165,5 @@ cdef class PartDomainInterface:
   def __dealloc__(self):
     """
     """
-    if self.ownership == PDM_OWNERSHIP_KEEP:
+    if self.own_data:
       PDM_part_domain_interface_free(self.pdi)
