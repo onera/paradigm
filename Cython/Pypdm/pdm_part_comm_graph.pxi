@@ -7,7 +7,7 @@ cdef extern from "pdm_part_comm_graph.h":
                                                     int              *pn_entity_graph,
                                                     int             **pentity_graph,
                                                     PDM_ownership_t   ownership,
-                                                    PDM_MPI_Comm      comm);
+                                                    PDM_MPI_Comm      comm)
 
   PDM_part_comm_graph_t* PDM_part_comm_graph_with_nuplet_create(int               n_part,
                                                                 int              *pn_entity_graph,
@@ -17,7 +17,7 @@ cdef extern from "pdm_part_comm_graph.h":
                                                                 int             **pentity_nuplet,
                                                                 PDM_ownership_t   ownership_nuplet,
                                                                 PDM_bool_t        is_signed,
-                                                                PDM_MPI_Comm      comm);
+                                                                PDM_MPI_Comm      comm)
 
   void PDM_part_comm_graph_exch(PDM_part_comm_graph_t   *pcg,
                                 size_t                   s_data,
@@ -26,30 +26,30 @@ cdef extern from "pdm_part_comm_graph.h":
                                 int                    **send_entity_stride,
                                 void                   **send_entity_data,
                                 int                   ***recv_entity_stride,
-                                void                  ***recv_entity_data);
+                                void                  ***recv_entity_data)
 
-  int PDM_part_comm_graph_n_part_get(PDM_part_comm_graph_t *pcg);
+  int PDM_part_comm_graph_n_part_get(PDM_part_comm_graph_t *pcg)
   int* PDM_part_comm_graph_owner_get(PDM_part_comm_graph_t *pcg,
-                                     int                    i_part);
+                                     int                    i_part)
 
   int PDM_part_comm_graph_entity_graph_get(PDM_part_comm_graph_t  *pcg,
                                            int                     i_part,
                                            int                   **entity_graph,
-                                           PDM_ownership_t         ownership);
+                                           PDM_ownership_t         ownership)
 
   void PDM_part_comm_graph_all_reduce(PDM_part_comm_graph_t   *pcg,
                                       PDM_MPI_Datatype         datatype,
                                       int                      stride,
                                       PDM_MPI_Op               op,
-                                      unsigned char          **pdata);
+                                      unsigned char          **pdata)
 
   int PDM_part_comm_graph_entity_nuplet_get(PDM_part_comm_graph_t  *pcg,
                                             int                     i_part,
                                             int                   **entity_nuplet,
-                                            PDM_ownership_t         ownership);
+                                            PDM_ownership_t         ownership)
 
-  PDM_MPI_Comm PDM_part_comm_graph_comm_get(PDM_part_comm_graph_t* pcg);
-  PDM_part_comm_graph_t* PDM_part_comm_graph_free(PDM_part_comm_graph_t* pcg);
+  PDM_MPI_Comm PDM_part_comm_graph_comm_get(PDM_part_comm_graph_t* pcg)
+  PDM_part_comm_graph_t* PDM_part_comm_graph_free(PDM_part_comm_graph_t* pcg)
 
 cdef extern from "pdm_part_comm_graph_algorithm.h":
 
@@ -234,7 +234,7 @@ cdef class PartCommGraph:
                                                           i_part,
                                                           &dummy,
                                                           PDM_OWNERSHIP_BAD_VALUE)
-    
+
     cdef int* owner = PDM_part_comm_graph_owner_get(self.pcg,i_part) #returns an int*
 
     np_owner = create_numpy_i(owner, pn_entity, flag_owndata=False)
@@ -364,7 +364,7 @@ def pcg_entity1_to_entity2(PartCommGraph pypcg_entity1,
   _entity2_entity1_idx = np_list_to_int_pointers(entity2_entity1_idx)
   _entity2_entity1     = np_list_to_int_pointers(entity2_entity1)
 
-  cdef PDM_part_comm_graph_t *_out_ptpgc_entity2 = NULL;
+  cdef PDM_part_comm_graph_t *_out_ptpgc_entity2 = NULL
   PDM_part_comm_graph_entity1_to_part_comm_graph_entity2(pypcg_entity1.pcg,
                                                          _pn_entity1,
                                                          _pn_entity2,

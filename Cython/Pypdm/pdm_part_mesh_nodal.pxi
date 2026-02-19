@@ -32,12 +32,11 @@ cdef extern from "pdm_part_mesh_nodal.h":
 
     double* PDM_part_mesh_nodal_vtx_coord_get(PDM_part_mesh_nodal_t *pmn,
                                               int                    id_part,
-                                              PDM_ownership_t        owner);
-
+                                              PDM_ownership_t        owner)
 
     PDM_g_num_t* PDM_part_mesh_nodal_vtx_g_num_get(PDM_part_mesh_nodal_t *pmn,
                                                    int                    id_part,
-                                                   PDM_ownership_t        owner);
+                                                   PDM_ownership_t        owner)
 
     int PDM_part_mesh_nodal_n_section_in_geom_kind_get(PDM_part_mesh_nodal_t *pmn,
                                                        PDM_geometry_kind_t    geom_kind)
@@ -109,30 +108,30 @@ cdef extern from "pdm_part_mesh_nodal.h":
                                        int                    *n_group_elmt,
                                        int                   **group_elmt,
                                        PDM_g_num_t           **group_ln_to_gn,
-                                       PDM_ownership_t         ownership);
+                                       PDM_ownership_t         ownership)
 
     int PDM_part_mesh_nodal_n_group_get(PDM_part_mesh_nodal_t  *pmn,
-                                        PDM_geometry_kind_t     geom_kind);
+                                        PDM_geometry_kind_t     geom_kind)
 
-    void PDM_part_mesh_nodal_free( PDM_part_mesh_nodal_t* pmn);
+    void PDM_part_mesh_nodal_free( PDM_part_mesh_nodal_t* pmn)
 
     void PDM_part_mesh_nodal_part_comm_graph_get(PDM_part_mesh_nodal_t  *pmn,
                                                  PDM_mesh_entities_t     entity_type,
                                                  PDM_part_comm_graph_t **pcg,
-                                                 PDM_ownership_t         ownership);
+                                                 PDM_ownership_t         ownership)
 
     void PDM_part_mesh_nodal_part_comm_graph_vtx_get(PDM_part_mesh_nodal_t  *pmn,
                                                      PDM_part_comm_graph_t **pcg,
-                                                     PDM_ownership_t         ownership);
+                                                     PDM_ownership_t         ownership)
 
 cdef extern from "pdm_part_mesh_nodal_algorithm.h":
     void PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(PDM_part_mesh_nodal_t  *pmn,
-                                                               PDM_mesh_entities_t     entity_type);
+                                                               PDM_mesh_entities_t     entity_type)
 
 cdef extern from "pdm_part_mesh_nodal_geom.h":
     void PDM_part_mesh_nodal_dual_volume_compute(PDM_part_mesh_nodal_t   *pmn,
                                                  PDM_bool_t               synchronize,
-                                                 double                ***dual_vol);
+                                                 double                ***dual_vol)
 
 cdef extern from "pdm_part_comm_graph.h":
   ctypedef struct PDM_part_comm_graph_t:
@@ -418,8 +417,6 @@ cdef class PartMeshNodal:
       """
       PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(self.pmn, entity_type)
 
-
-
     def n_part_get(self):
       return PDM_part_mesh_nodal_n_part_get(self.pmn)
 
@@ -566,7 +563,6 @@ cdef class PartMeshNodal:
       cdef PDM_g_num_t          *group_ln_to_gn
       # ************************************************************************
 
-
       PDM_part_mesh_nodal_group_get(self.pmn,
                                     geom_kind,
                                     i_part,
@@ -574,7 +570,7 @@ cdef class PartMeshNodal:
                                     &n_group_elmt,
                                     &group_elmt,
                                     &group_ln_to_gn,
-                                    PDM_OWNERSHIP_USER);
+                                    PDM_OWNERSHIP_USER)
 
       np_group_elmt = None
       if(group_elmt != NULL):

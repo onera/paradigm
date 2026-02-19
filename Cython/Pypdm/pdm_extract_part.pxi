@@ -10,20 +10,20 @@ cdef extern from "pdm_extract_part.h":
                                               PDM_split_dual_t        split_dual_method,
                                               PDM_bool_t              compute_child_gnum,
                                               PDM_ownership_t         ownership,
-                                              PDM_MPI_Comm            comm);
-  void PDM_extract_part_compute(PDM_extract_part_t        *extrp);
+                                              PDM_MPI_Comm            comm)
+  void PDM_extract_part_compute(PDM_extract_part_t        *extrp)
   void PDM_extract_part_selected_lnum_set(PDM_extract_part_t       *extrp,
                                           int                       i_part,
                                           int                       n_extract,
                                           int                      *extract_lnum,
-                                          PDM_ownership_t           ownership);
+                                          PDM_ownership_t           ownership)
 
   void PDM_extract_part_target_set(PDM_extract_part_t       *extrp,
                                    int                       i_part,
                                    int                       n_target,
                                    PDM_g_num_t              *target_gnum,
                                    int                      *target_location,
-                                   PDM_ownership_t           ownership);
+                                   PDM_ownership_t           ownership)
 
   void PDM_extract_part_part_set(PDM_extract_part_t        *extrp,
                                  int                       i_part,
@@ -42,45 +42,45 @@ cdef extern from "pdm_extract_part.h":
                                  PDM_g_num_t              *face_ln_to_gn,
                                  PDM_g_num_t              *edge_ln_to_gn,
                                  PDM_g_num_t              *vtx_ln_to_gn,
-                                 double                   *vtx_coord);
+                                 double                   *vtx_coord)
 
   int PDM_extract_part_n_entity_get(PDM_extract_part_t       *extrp,
                                     int                       i_part_out,
-                                    PDM_mesh_entities_t       entity_type);
+                                    PDM_mesh_entities_t       entity_type)
 
   int PDM_extract_part_connectivity_get(PDM_extract_part_t        *extrp,
                                         int                        i_part_out,
                                         PDM_connectivity_type_t    connectivity_type,
                                         int                      **connect,
                                         int                      **connect_idx,
-                                        PDM_ownership_t           ownership);
+                                        PDM_ownership_t           ownership)
   int PDM_extract_part_ln_to_gn_get(PDM_extract_part_t        *extrp,
                                     int                        i_part_out,
                                     PDM_mesh_entities_t        entity_type,
                                     PDM_g_num_t              **pentity_ln_to_gn,
-                                    PDM_ownership_t            ownership);
+                                    PDM_ownership_t            ownership)
 
   int PDM_extract_part_parent_ln_to_gn_get(PDM_extract_part_t        *extrp,
                                            int                        i_part_out,
                                            PDM_mesh_entities_t        entity_type,
                                            PDM_g_num_t              **parent_entity_ln_to_gn,
-                                           PDM_ownership_t            ownership);
+                                           PDM_ownership_t            ownership)
 
   int PDM_extract_part_vtx_coord_get(PDM_extract_part_t         *extrp,
                                      int                        i_part_out,
                                      double                   **pvtx_coord,
-                                     PDM_ownership_t            ownership);
+                                     PDM_ownership_t            ownership)
 
   void PDM_extract_part_part_to_part_get(       PDM_extract_part_t   *extrp,
                                          const  PDM_mesh_entities_t   entity_type,
                                                 PDM_part_to_part_t  **ptp,
-                                                PDM_ownership_t       ownership);
+                                                PDM_ownership_t       ownership)
 
-  void PDM_extract_part_free(PDM_extract_part_t  *extrp);
+  void PDM_extract_part_free(PDM_extract_part_t  *extrp)
 
   void PDM_extract_part_n_group_set(PDM_extract_part_t        *extrp,
                                     PDM_bound_type_t           bound_type,
-                                    int                        n_group);
+                                    int                        n_group)
 
   void PDM_extract_part_part_group_set(PDM_extract_part_t        *extrp,
                                        int                       i_part,
@@ -88,14 +88,14 @@ cdef extern from "pdm_extract_part.h":
                                        PDM_bound_type_t          bound_type,
                                        int                       n_group_entity,
                                        int                      *group_entity,
-                                       PDM_g_num_t              *group_entity_ln_to_gn);
+                                       PDM_g_num_t              *group_entity_ln_to_gn)
 
 
   void PDM_extract_part_part_to_part_group_get(PDM_extract_part_t   *extrp,
                                                PDM_bound_type_t      bound_type,
                                                int                   i_group,
                                                PDM_part_to_part_t  **ptp,
-                                               PDM_ownership_t       ownership);
+                                               PDM_ownership_t       ownership)
 
   void PDM_extract_part_group_get(PDM_extract_part_t   *extrp,
                                   PDM_bound_type_t      bound_type,
@@ -105,7 +105,7 @@ cdef extern from "pdm_extract_part.h":
                                   int                 **pextract_group_entity,
                                   PDM_g_num_t         **pextract_group_entity_ln_to_gn,
                                   PDM_g_num_t         **pextract_group_entity_parent_ln_to_gn,
-                                  PDM_ownership_t       ownership);
+                                  PDM_ownership_t       ownership)
 
   # Not wrapped :
   # PDM_extract_part_part_nodal_set
@@ -173,7 +173,7 @@ cdef class ExtractPart:
                                            split_dual_method,
                                            compute_child_gnum,
                                            PDM_OWNERSHIP_USER,
-                                           PDM_MPI_mpi_2_pdm_mpi_comm (<void *> &c_comm));
+                                           PDM_MPI_mpi_2_pdm_mpi_comm (<void *> &c_comm))
 
   # ------------------------------------------------------------------
   def selected_lnum_set(self,
@@ -367,7 +367,7 @@ cdef class ExtractPart:
                                     bound_type,
                                     n_group_entity,
                    <int        * >  np_group_entity.data,
-                   <PDM_g_num_t* >  np_group_entity_ln_to_gn.data);
+                   <PDM_g_num_t* >  np_group_entity_ln_to_gn.data)
 
   # ------------------------------------------------------------------
   def compute(self):
