@@ -370,7 +370,10 @@ cdef class PartMeshNodal:
       """
       self.keep_alive.append(pypcg)
 
-      return set_part_comm_graph(self, pypcg, geom_kind)
+      PDM_part_mesh_nodal_part_comm_graph_set(self.pmn,
+                                              pypcg.pcg,
+                                              geom_kind,
+                                              PDM_OWNERSHIP_USER)
 
     def part_comm_graph_vtx_set(self,
                                 PartCommGraph pypcg):
@@ -385,7 +388,9 @@ cdef class PartMeshNodal:
       """
       self.keep_alive.append(pypcg)
 
-      return set_part_comm_graph_vtx(self, pypcg)
+      PDM_part_mesh_nodal_part_comm_graph_vtx_set(self.pmn,
+                                                  pypcg.pcg,
+                                                  PDM_OWNERSHIP_USER)
 
     def get_n_group(self, PDM_geometry_kind_t geom_kind):
       """
@@ -631,10 +636,10 @@ cdef class PartMeshNodal:
       return np_group_elmt, np_group_ln_to_gn
 
     def tag_to_group(self,
-                   PDM_geometry_kind_t geom_kind,
-                   int                 n_group,
-                   list                tag_idx,
-                   list                tag):
+                     PDM_geometry_kind_t geom_kind,
+                     int                 n_group,
+                     list                np_tag_idx,
+                     list                np_tag):
 
       """
       tag_to_group(geom_kind, n_group, tag_idx, tag)
@@ -647,7 +652,12 @@ cdef class PartMeshNodal:
         tag_idx   (list)                : Identifier index
         tag       (list)                : Identifier
       """
-      tag_to_group(self, geom_kind, n_group, tag_idx, tag)
+      cdef int **tag_idx = NULL
+      if np_tag_idx is not None:
+        np_list_to_int_pointers(np_tag_idx)
+      cdef int **tag = np_list_to_int_pointers(np_tag)
+
+      PDM_part_mesh_nodal_tag_to_group(self.pmn, geom_kind, n_group, tag_idx, tag)
 
     # ------------------------------------------------------------------------
     def __dealloc__(self):
