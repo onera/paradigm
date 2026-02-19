@@ -363,6 +363,7 @@ cdef class PartMeshNodal:
            and capsule does not influence memory (PartMeshNodal must stay alive in Python)
         2/ capsule destroy C object (capsule must stay alive in Python)
         3/ capsule has own_data option: if True, PartMeshNodal does the free, else user must do it
+      For now, first option is being implemented, future needs may change this choice !
       """
       return PyCapsule_New(self.pmn, NULL, NULL)
 
