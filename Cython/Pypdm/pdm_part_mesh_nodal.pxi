@@ -189,10 +189,10 @@ cdef class PartMeshNodal:
       obj.own_data = own_data
       return obj
 
-    @classmethod
-    def from_caps(cls, pmn_caps, bint own_data=True):
+    @staticmethod
+    def from_caps(pmn_caps, bint own_data=True):
       cdef PDM_part_mesh_nodal_t *pmn = <PDM_part_mesh_nodal_t *> PyCapsule_GetPointer(pmn_caps, NULL)
-      return cls.from_ptr(pmn, own_data=own_data)
+      return PartMeshNodal.from_ptr(pmn, own_data=own_data)
 
     def set_coordinates(self,
                         id_part,
