@@ -113,8 +113,8 @@ cdef class PartCommGraph:
       _pentity_nuplet = np_list_to_int_pointers(pentity_nuplet)
       self.keep_alive.append(pentity_nuplet)
       for i_part in range(_n_part):
-        if self._pn_entity_graph[i_part]!=0:
-          self._nuplet_size = pentity_nuplet[i_part].size // self._pn_entity_graph[i_part]
+        if _pn_entity_graph[i_part]!=0:
+          _nuplet_size = pentity_nuplet[i_part].size // _pn_entity_graph[i_part]
 
 
       self.pcg = PDM_part_comm_graph_with_nuplet_create(_n_part,
