@@ -68,12 +68,10 @@ cdef class PartCommGraph:
   cdef object                 keep_alive
 
   def __init__(self,
-               MPI.Comm        comm,
-               list            pentity_graph,
-               list            pentity_nuplet=None,
-               bint            is_signed=True,
-               PDM_ownership_t graph_owner =PDM_OWNERSHIP_USER,
-               PDM_ownership_t nuplet_owner=PDM_OWNERSHIP_USER):
+               MPI.Comm comm,
+               list     pentity_graph,
+               list     pentity_nuplet=None,
+               bint     is_signed=True):
     """
     __init__(comm, pentity_graph, pentity_nuplet=None, is_signed=True)
 
@@ -107,7 +105,7 @@ cdef class PartCommGraph:
       self.pcg =  PDM_part_comm_graph_create(_n_part,
                                              _pn_entity_graph,
                                     <int **> _pentity_graph,
-                                             graph_owner,
+                                             PDM_OWNERSHIP_USER,
                                              PDMC)
     else:
       _pentity_nuplet = np_list_to_int_pointers(pentity_nuplet)
@@ -120,10 +118,10 @@ cdef class PartCommGraph:
       self.pcg = PDM_part_comm_graph_with_nuplet_create(_n_part,
                                                         _pn_entity_graph,
                                                         _pentity_graph,
-                                                        graph_owner,
+                                                        PDM_OWNERSHIP_USER,
                                                         _nuplet_size,
                                                         _pentity_nuplet,
-                                                        nuplet_owner,
+                                                        PDM_OWNERSHIP_USER,
                                            <PDM_bool_t> is_signed,
                                                         PDMC)
       free(_pentity_nuplet)
