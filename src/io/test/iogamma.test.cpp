@@ -103,6 +103,9 @@ MPI_TEST_CASE("[PDM_io_gamma_reader] - Read and write", 2) {
 
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
 
+	int i_rank;
+	PDM_MPI_Comm_rank(pdm_comm, &i_rank);
+
 	const char *filename_in_2d = PDM_MESH_DIR"mixed_elements_2d.mesh";
 	const char *filename_in_3d = PDM_MESH_DIR"mixed_elements_3d.mesh";
 
@@ -141,9 +144,13 @@ MPI_TEST_CASE("[PDM_io_gamma_reader] - Read and write", 2) {
 	PDM_part_mesh_nodal_dump_gamma(mesh, filename_out);
 
 	// Check
-	// TODO
+	if (i_rank == 0) {
+		int err = PDM_io_utils_diff_files(filename_in, filename_out);
 
-	remove(filename_out);
+		CHECK(err == 0);
+
+		remove(filename_out);
+	}
 
 	PDM_part_mesh_nodal_free(mesh);
 }
