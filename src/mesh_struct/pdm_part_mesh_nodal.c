@@ -2367,12 +2367,13 @@ PDM_part_mesh_nodal_dump_gamma
   PDM_g_num_t  gn_elt[PDM_MESH_NODAL_N_ELEMENT_TYPES];
   for (PDM_Mesh_nodal_elt_t t_elt = PDM_MESH_NODAL_BAR2; t_elt < PDM_MESH_NODAL_N_ELEMENT_TYPES; t_elt++) {
 
+    gn_elt[t_elt] = 0;
+
     if (!_is_supported_type_gamma(t_elt)) {
       continue;
     }
 
     pn_elt[t_elt] = PDM_array_zeros_int(n_part);
-    gn_elt[t_elt] = 0;
   }
 
   /* Count section by section */
