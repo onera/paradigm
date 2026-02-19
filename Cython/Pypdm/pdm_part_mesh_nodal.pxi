@@ -148,6 +148,7 @@ cdef class PartMeshNodal:
     cdef PDM_part_mesh_nodal_t *pmn
     cdef object keep_alive
     cdef int n_rank
+    cdef int own_data
     # ************************************************************************
     # ------------------------------------------------------------------------
     def __init__(self, MPI.Comm    comm,
@@ -176,15 +177,22 @@ cdef class PartMeshNodal:
 
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
         self.pmn = PDM_part_mesh_nodal_create(mesh_dimension, n_part, PDMC)
+        self.own_data = True
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
     @staticmethod
-    cdef from_ptr(PDM_part_mesh_nodal_t* ptr):
+    cdef from_ptr(PDM_part_mesh_nodal_t* ptr, bint own_data=True):
       # Take ownership on structure
       cdef PartMeshNodal obj = PartMeshNodal.__new__(PartMeshNodal)
       obj.pmn = ptr
+      obj.keep_alive = []
+      obj.own_data = own_data
       return obj
 
+    @classmethod
+    def from_caps(cls, pmn_caps, bint own_data=True):
+      cdef PDM_part_mesh_nodal_t *pmn = <PDM_part_mesh_nodal_t *> PyCapsule_GetPointer(pmn_caps, NULL)
+      return PartMeshNodal.from_ptr(pmn, own_data=own_data)
 
     def set_coordinates(self,
                         id_part,
@@ -349,7 +357,14 @@ cdef class PartMeshNodal:
     def to_view_capsule(self):
       """
       """
-      return PyCapsule_New(self.pmn, NULL, NULL);
+      """
+      Note: 3 options pour la gestion mémoire ici:
+        1/ keep_alive de l'objet cython PartMeshNodal qui s'occupe du free et la capsule ne gère pas la mémoire
+           (le PartMeshNodal doit rester en vie dans le python)
+        2/ la capsule s'occupe de détruire l'objet C (la capsule doit rester en vie dans le python)
+        3/ la capsule a une option d'own_data: si True, le PartMeshNodal s'occupe du free, sinon l'utilisateur
+      """
+      return PyCapsule_New(self.pmn, NULL, NULL)
 
     def dim_get(self):
       """
@@ -576,7 +591,8 @@ cdef class PartMeshNodal:
     def __dealloc__(self):
       """
       """
-      PDM_part_mesh_nodal_free(self.pmn)
+      if self.own_data:
+        PDM_part_mesh_nodal_free(self.pmn)
 
 
 # ------------------------------------------------------------------
