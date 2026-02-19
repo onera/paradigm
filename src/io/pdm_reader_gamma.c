@@ -10,22 +10,23 @@
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
-#include "pdm_reader_gamma.h"
-#include "pdm.h"
 #include "pdm_array.h"
 #include "pdm_block_to_block.h"
 #include "pdm_dconnectivity_transform.h"
 #include "pdm_distrib.h"
-#include "pdm_dmesh_nodal.h"
-#include "pdm_dmesh_nodal_elmts.h"
 #include "pdm_dmesh_nodal_elmts_priv.h"
+#include "pdm_dmesh_nodal_elmts.h"
 #include "pdm_dmesh_nodal_priv.h"
+#include "pdm_dmesh_nodal.h"
 #include "pdm_error.h"
 #include "pdm_logging.h"
+#include "pdm_io_utils.h"
 #include "pdm_mem_tool.h"
 #include "pdm_mesh_nodal.h"
 #include "pdm_predicate.h"
 #include "pdm_priv.h"
+#include "pdm_reader_gamma.h"
+#include "pdm.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -77,9 +78,9 @@ extern "C" {
 
 static void _shift_groups
 (
- const int  n_elt,
+  const int  n_elt,
        int *elt_group
- )
+)
 {
   int min_group = INT_MAX;
 
@@ -1113,7 +1114,7 @@ PDM_write_meshb
   FILE *f = fopen(filename, "w");
 
   fprintf(f, "MeshVersionFormatted 2\n");
-  fprintf(f, "# rank %d\n\n", 0);
+  fprintf(f, "# %s\n\n", PDM_io_utils_file_name_from_path(filename));
   fprintf(f, "%s\n%d\n\n", IO_keys[PDM_INRIA_IO_KEY_DIM], dimension);
 
   // ---- Write vertices
