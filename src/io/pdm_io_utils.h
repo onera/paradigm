@@ -68,6 +68,26 @@ PDM_io_utils_file_name_from_path
   const char *path
 );
 
+
+/**
+ * \brief Compare two files line by line
+ *
+ * \param [in] filename1 Path to first file
+ * \param [in] filename2 Path to second file
+ *
+ * \return (1-based) number of first different line if the files differ,
+ *          0 if the files are identical
+ *         -1 if the first file could not be opened
+ *         -2 if the first file could not be opened
+ */
+int
+PDM_io_utils_diff_files
+(
+  const char *filename1,
+  const char *filename2
+);
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
