@@ -24,6 +24,15 @@ cdef extern from "pdm_part_mesh_nodal.h":
                                           PDM_g_num_t           *numabs,
                                           PDM_ownership_t        owner)
 
+    void PDM_part_mesh_nodal_part_comm_graph_set(PDM_part_mesh_nodal_t *pmn,
+                                                 PDM_part_comm_graph_t *pcg,
+                                                 PDM_geometry_kind_t    geom_kind,
+                                                 PDM_ownership_t        ownership)
+
+    void PDM_part_mesh_nodal_part_comm_graph_vtx_set(PDM_part_mesh_nodal_t *pmn,
+                                                     PDM_part_comm_graph_t *pcg,
+                                                     PDM_ownership_t        ownership)
+
     int PDM_part_mesh_nodal_n_part_get(PDM_part_mesh_nodal_t *pmn)
     int PDM_part_mesh_nodal_mesh_dimension_get( PDM_part_mesh_nodal_t *pmn)
 
@@ -123,6 +132,12 @@ cdef extern from "pdm_part_mesh_nodal.h":
     void PDM_part_mesh_nodal_part_comm_graph_vtx_get(PDM_part_mesh_nodal_t  *pmn,
                                                      PDM_part_comm_graph_t **pcg,
                                                      PDM_ownership_t         ownership)
+
+    void PDM_part_mesh_nodal_tag_to_group(PDM_part_mesh_nodal_t  *pmn,
+                                          PDM_geometry_kind_t     geom_kind,
+                                          int                     n_group,
+                                          int                   **tag_idx,
+                                          int                   **tag)
 
 cdef extern from "pdm_part_mesh_nodal_algorithm.h":
     void PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(PDM_part_mesh_nodal_t  *pmn,
@@ -338,6 +353,39 @@ cdef class PartMeshNodal:
                                       np_to_int_pointer(group_elmt),
                                       np_to_gnum_pointer(group_ln_to_gn),
                                       PDM_OWNERSHIP_USER)
+
+
+    def part_comm_graph_set(self,
+                            PartCommGraph       pypcg,
+                            PDM_geometry_kind_t geom_kind):
+      """
+      part_comm_graph_set(pcg, geom_kind)
+
+      Set a :py:class:`PartCommGraph` into PDM_part_mesh_nodal_t instance
+      for given geometry_kind
+
+      Parameters:
+        pcg       (PDM_part_comm_graph_t) : Part comm graph instance
+        geom_kind (PDM_geometry_kind_t)   : geometry kind (corner, ridge, face)
+      """
+      self.keep_alive.append(pypcg)
+
+      return set_part_comm_graph(self, pypcg, geom_kind)
+
+    def part_comm_graph_vtx_set(self,
+                                PartCommGraph pypcg):
+      """
+      part_comm_graph_vtx_set(pcg)
+
+      Set a :py:class:`PartCommGraph` into PDM_part_mesh_nodal_t instance
+      for vertices
+
+      Parameters:
+        pcg (PDM_part_comm_graph_t) : Part comm graph instance
+      """
+      self.keep_alive.append(pypcg)
+
+      return set_part_comm_graph_vtx(self, pypcg)
 
     def get_n_group(self, PDM_geometry_kind_t geom_kind):
       """
@@ -582,7 +630,24 @@ cdef class PartMeshNodal:
 
       return np_group_elmt, np_group_ln_to_gn
 
+    def tag_to_group(self,
+                   PDM_geometry_kind_t geom_kind,
+                   int                 n_group,
+                   list                tag_idx,
+                   list                tag):
 
+      """
+      tag_to_group(geom_kind, n_group, tag_idx, tag)
+
+      Transform tag for all elements into group information inside a \ref PDM_part_mesh_nodal_t.
+
+      Parameters:
+        geom_kind (PDM_geometry_kind_t) : type of entity (corner, ridge, face, cell)
+        n_group   (int)                 : Number of groups
+        tag_idx   (list)                : Identifier index
+        tag       (list)                : Identifier
+      """
+      tag_to_group(self, geom_kind, n_group, tag_idx, tag)
 
     # ------------------------------------------------------------------------
     def __dealloc__(self):
