@@ -65,12 +65,15 @@ cdef extern from "pdm_part_comm_graph_algorithm.h":
 cdef class PartCommGraph:
 
   cdef PDM_part_comm_graph_t *pcg
+  cdef object                 keep_alive
 
   def __init__(self,
-               MPI.Comm    comm,
-               list        pentity_graph,
-               list        pentity_nuplet=None,
-               bint        is_signed=True):
+               MPI.Comm        comm,
+               list            pentity_graph,
+               list            pentity_nuplet=None,
+               bint            is_signed=True,
+               PDM_ownership_t graph_owner =PDM_OWNERSHIP_USER,
+               PDM_ownership_t nuplet_owner=PDM_OWNERSHIP_USER):
     """
     __init__(comm, pentity_graph, pentity_nuplet=None, is_signed=True)
 
@@ -89,6 +92,7 @@ cdef class PartCommGraph:
     """
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
     cdef PDM_MPI_Comm PDMC   = py_comm_to_pdm_comm(comm)
+    self.keep_alive = []
 
     cdef int **_pentity_graph  = NULL
     cdef int **_pentity_nuplet = NULL
@@ -96,26 +100,30 @@ cdef class PartCommGraph:
     _n_part          = len(pentity_graph)
     cdef int* _pn_entity_graph = list_to_int_pointer([g.size // 4 for g in pentity_graph])
     _pentity_graph        = np_list_to_int_pointers(pentity_graph)
+    self.keep_alive.append(pentity_graph)
 
     _nuplet_size = 0
     if pentity_nuplet is None:
       self.pcg =  PDM_part_comm_graph_create(_n_part,
                                              _pn_entity_graph,
                                     <int **> _pentity_graph,
-                                             PDM_OWNERSHIP_USER,
+                                             graph_owner,
                                              PDMC)
     else:
       _pentity_nuplet = np_list_to_int_pointers(pentity_nuplet)
+      self.keep_alive.append(pentity_nuplet)
       for i_part in range(_n_part):
-        _nuplet_size = pentity_nuplet[i_part].size // _pn_entity_graph[i_part]
+        if self._pn_entity_graph[i_part]!=0:
+          self._nuplet_size = pentity_nuplet[i_part].size // self._pn_entity_graph[i_part]
+
 
       self.pcg = PDM_part_comm_graph_with_nuplet_create(_n_part,
                                                         _pn_entity_graph,
                                                         _pentity_graph,
-                                                        PDM_OWNERSHIP_USER,
+                                                        graph_owner,
                                                         _nuplet_size,
                                                         _pentity_nuplet,
-                                                        PDM_OWNERSHIP_USER,
+                                                        nuplet_owner,
                                            <PDM_bool_t> is_signed,
                                                         PDMC)
       free(_pentity_nuplet)
@@ -316,7 +324,7 @@ cdef class PartCommGraph:
     n_entity = PDM_part_comm_graph_entity_graph_get(self.pcg,
                                                     i_part,
                                                     &entity_graph,
-                                                    PDM_OWNERSHIP_USER)
+                                                    PDM_OWNERSHIP_BAD_VALUE)
     nuplet_size = PDM_part_comm_graph_entity_nuplet_get(self.pcg,
                                                         i_part,
                                                         &entity_nuplet,
