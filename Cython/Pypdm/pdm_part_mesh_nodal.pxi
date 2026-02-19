@@ -358,11 +358,11 @@ cdef class PartMeshNodal:
       """
       """
       """
-      Note: 3 options pour la gestion mémoire ici:
-        1/ keep_alive de l'objet cython PartMeshNodal qui s'occupe du free et la capsule ne gère pas la mémoire
-           (le PartMeshNodal doit rester en vie dans le python)
-        2/ la capsule s'occupe de détruire l'objet C (la capsule doit rester en vie dans le python)
-        3/ la capsule a une option d'own_data: si True, le PartMeshNodal s'occupe du free, sinon l'utilisateur
+      Note: 3 options for memory management here:
+        1/ keep_alive of PartMeshNodal cython object which will free the PDM_part_mesh_nodal_t instance
+           and capsule does not influence memory (PartMeshNodal must staying alive in Python)
+        2/ capsule destroy C object (capsule must staying alive in Python)
+        3/ capsule has own_data option: if True, PartMeshNodal do the free, else user must do it
       """
       return PyCapsule_New(self.pmn, NULL, NULL)
 
