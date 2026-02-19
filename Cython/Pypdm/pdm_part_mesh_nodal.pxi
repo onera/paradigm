@@ -362,7 +362,9 @@ cdef class PartMeshNodal:
       part_comm_graph_set(pcg, geom_kind)
 
       Set a :py:class:`PartCommGraph` into PDM_part_mesh_nodal_t instance
-      for given geometry_kind
+      for given geometry_kind.
+
+      Note that given PartCommGraph object remains owner of his PDM_part_comm_graph_t instance.
 
       Parameters:
         pcg       (PDM_part_comm_graph_t) : Part comm graph instance
@@ -654,10 +656,13 @@ cdef class PartMeshNodal:
       """
       cdef int **tag_idx = NULL
       if np_tag_idx is not None:
-        np_list_to_int_pointers(np_tag_idx)
+        tag_idx = np_list_to_int_pointers(np_tag_idx)
       cdef int **tag = np_list_to_int_pointers(np_tag)
 
       PDM_part_mesh_nodal_tag_to_group(self.pmn, geom_kind, n_group, tag_idx, tag)
+
+      free(tag_idx)
+      free(tag)
 
     # ------------------------------------------------------------------------
     def __dealloc__(self):
