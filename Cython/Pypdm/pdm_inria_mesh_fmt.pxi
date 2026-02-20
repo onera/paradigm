@@ -101,15 +101,11 @@ def read_solb(char *filename,
 def meshb_to_dmesh_nodal(char *filename, MPI.Comm comm, int fix_orientation_2d, int fix_orientation_3d):
   """
   """
-  cdef PDM_dmesh_nodal_t* dmn
   cdef MPI.MPI_Comm c_comm   = comm.ob_mpi
   cdef PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&c_comm)
 
-  dmn = PDM_reader_gamma_dmesh_nodal(pdm_comm, filename, fix_orientation_2d, fix_orientation_3d)
-
-  py_caps = PyCapsule_New(dmn, NULL, NULL);
-
-  return DistributedMeshNodalCapsule(py_caps) # The free is inside the class
+  cdef PDM_dmesh_nodal_t* dmn = PDM_reader_gamma_dmesh_nodal(pdm_comm, filename, fix_orientation_2d, fix_orientation_3d)
+  return DistributedMeshNodal.from_ptr(dmn) # The free is inside the class
 
 
 def read_sol_at_vertices(char *filename):

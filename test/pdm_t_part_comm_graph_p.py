@@ -105,7 +105,7 @@ def test_with_part_mesh_nodal():
 
   dmn = dcube.get_dmesh_nodal()
 
-  PDM.generate_distribution(dmn)
+  dmn.generate_distribution()
 
   # Create partitioning object
   n_domain_before = 1 # fixed
@@ -127,7 +127,7 @@ def test_with_part_mesh_nodal():
 
   pcg_vtx = pmn.part_comm_graph_get(PDM._PDM_MESH_ENTITY_VTX)
 
-  entity_graph = pcg_vtx.get_entity_graph(i_part)
+  entity_graph = pcg_vtx.entity_graph_get(i_part)
 
   print(entity_graph)
   print("iloc i_copy_rank  i_copy_rank_part   i_copy_rank_loc")

@@ -403,6 +403,18 @@ PDM_part_comm_graph_exch_one_way_raw_free
 );
 
 /**
+ * \brief Get number of partitions registered in part_comm_graph structure
+ * \param [in]   pcg           \ref PDM_part_comm_graph_t structure
+ *
+ * \return   Number of partitions for current process (int)
+ */
+int
+PDM_part_comm_graph_n_part_get
+(
+  PDM_part_comm_graph_t *pcg
+);
+
+/**
  *
  * \brief Get the owner array computed inside the structure, useful to manage reduction of array for example
  * \param [in]   pcg           \ref PDM_part_comm_graph_t structure
@@ -534,6 +546,20 @@ PDM_part_comm_graph_entity_nuplet_get
   int                     i_part,
   int                   **entity_nuplet,
   PDM_ownership_t         ownership
+);
+
+/**
+ *
+ * \brief Get internal communicator
+ *
+ * \param [in]  pcg            Pointer to \ref PDM_part_comm_graph_t instance
+ *
+ * \return MPICommunicator
+ */
+PDM_MPI_Comm
+PDM_part_comm_graph_comm_get
+(
+  PDM_part_comm_graph_t  *pcg
 );
 
 #ifdef __cplusplus

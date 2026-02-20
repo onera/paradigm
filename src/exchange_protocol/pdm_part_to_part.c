@@ -4960,10 +4960,14 @@ PDM_part_to_part_n_part_and_n_elt_get
  )
 {
   assert(ptp != NULL);
-  *n_part1 = ptp->n_part1;
-  *n_part2 = ptp->n_part2;
-  *n_elt1  = ptp->n_elt1;
-  *n_elt2  = ptp->n_elt2;
+  if (n_part1 != NULL)
+    *n_part1 = ptp->n_part1;
+  if (n_part2 != NULL) 
+    *n_part2 = ptp->n_part2;
+  if (n_elt1 != NULL) 
+    *n_elt1  = ptp->n_elt1;
+  if (n_elt2 != NULL) 
+    *n_elt2  = ptp->n_elt2;
 }
 
 
@@ -5117,6 +5121,15 @@ PDM_part_to_part_n_ranks_get
 )
 {
   return ptp->n_rank;
+}
+
+PDM_MPI_Comm
+PDM_part_to_part_comm_get
+(
+ PDM_part_to_part_t    *ptp
+)
+{
+  return ptp->comm;
 }
 
 #ifdef __cplusplus

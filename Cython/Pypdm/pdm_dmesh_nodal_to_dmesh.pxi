@@ -77,7 +77,7 @@ cdef class DMeshNodalToDMesh:
                                                      PDM_OWNERSHIP_USER) # Python take ownership);
 
   # ------------------------------------------------------------------------
-  def add_dmesh_nodal(self, int i_mesh, DMeshNodal dmn):
+  def add_dmesh_nodal(self, int i_mesh, DistributedMeshNodal dmn):
     """
     """
     self.keep_alive.append(dmn)
@@ -101,10 +101,7 @@ cdef class DMeshNodalToDMesh:
     cdef PDM_dmesh_t* dm
     # ************************************************************************
     PDM_dmesh_nodal_to_dmesh_get_dmesh(self.dmn_to_dm, i_mesh, &dm)
-
-    py_caps = PyCapsule_New(dm, NULL, NULL);
-
-    return DistributedMeshCapsule(py_caps) # The free is inside the class
+    return DistributedMesh.from_ptr(dm) # The free is inside the class
 
   # ------------------------------------------------------------------------
   def __dealloc__(self):

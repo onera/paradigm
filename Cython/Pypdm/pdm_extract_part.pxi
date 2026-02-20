@@ -123,7 +123,6 @@ cdef class ExtractPart:
   # --------------------------------------------------------------------------
   # > Class attributes
   cdef PDM_extract_part_t* _extrp
-  cdef MPI.Comm py_comm
   cdef dict ptp_objects
   cdef dict ptp_group_objects
   cdef list keep_alive
@@ -166,7 +165,6 @@ cdef class ExtractPart:
     self.ptp_group_objects = dict()
     self.keep_alive  = list()
 
-    self.py_comm = comm
     cdef MPI.MPI_Comm c_comm = comm.ob_mpi
     self._extrp =  PDM_extract_part_create(dim,
                                            n_part_in,
@@ -534,8 +532,7 @@ cdef class ExtractPart:
                                          entity_type,
                                         &ptpc,
                                          PDM_OWNERSHIP_USER)
-      py_caps = PyCapsule_New(ptpc, NULL, NULL);
-      self.ptp_objects[entity_type] = PartToPartCapsule(py_caps, self.py_comm) # The free is inside the class
+      self.ptp_objects[entity_type] = PartToPart.from_ptr(ptpc) # The free is inside the class
       return self.ptp_objects[entity_type]
 
   # ------------------------------------------------------------------
@@ -566,8 +563,7 @@ cdef class ExtractPart:
                                                i_group,
                                               &ptpc,
                                                PDM_OWNERSHIP_USER)
-      py_caps = PyCapsule_New(ptpc, NULL, NULL);
-      self.ptp_group_objects[(i_group, bound_type)] = PartToPartCapsule(py_caps, self.py_comm) # The free is inside the class
+      self.ptp_group_objects[(i_group, bound_type)] = PartToPart.from_ptr(ptpc) # The free is inside the class
       return self.ptp_group_objects[(i_group, bound_type)]
 
   # ------------------------------------------------------------------

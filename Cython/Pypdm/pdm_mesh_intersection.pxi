@@ -66,7 +66,6 @@ cdef class MeshIntersection:
     # ************************************************************************
     # > Class attributes
     cdef PDM_mesh_intersection_t* _mi
-    cdef MPI.Comm py_comm
     cdef dict     ptp_objects
     cdef list     keep_alive
     cdef int      _dim_mesh_a
@@ -91,8 +90,7 @@ cdef class MeshIntersection:
         self.keep_alive  = list()
 
         # Convert mpi4py -> PDM_MPI
-        self.py_comm = comm
-        cdef MPI.MPI_Comm c_comm   = self.py_comm.ob_mpi
+        cdef MPI.MPI_Comm c_comm   = comm.ob_mpi
         cdef PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&c_comm)
 
         self._mi = PDM_mesh_intersection_create(intersection_kind,
@@ -198,8 +196,8 @@ cdef class MeshIntersection:
 
     # ------------------------------------------------------------------
     def part_nodal_set(self,
-                       int        i_mesh,
-                       PMeshNodal pypmn):
+                       int           i_mesh,
+                       PartMeshNodal pypmn):
         """
         """
         PDM_mesh_intersection_mesh_nodal_set(self._mi, i_mesh, pypmn.pmn)
@@ -218,9 +216,7 @@ cdef class MeshIntersection:
       PDM_mesh_intersection_part_to_part_get(self._mi,
                                              &ptpc,
                                              PDM_OWNERSHIP_USER)
-
-      py_caps = PyCapsule_New(ptpc, NULL, NULL)
-      return PartToPartCapsule(py_caps, self.py_comm) # The free is inside the class
+      return PartToPart.from_ptr(ptpc) # The free is inside the class
 
     # ------------------------------------------------------------------
     def a_to_b_get(self, int i_part):
