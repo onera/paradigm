@@ -2799,8 +2799,6 @@ PDM_domain_interface_translate_entity1_entity2
         /* Add opposite contribution */
         for(int j = _dentity2_entity1_idx[i_entity2]; j < _dentity2_entity1_idx[i_entity2+1]; ++j) {
 
-          PDM_calloc(l_interface_n, n_interface, int);
-
           int idx = part_stride_idx[i_domain][j];
           for(int k = 0; k < part_stride[i_domain][j]; ++k) {
             int t_itrf = PDM_ABS(part_data_intno[i_domain][idx+k])-1;
@@ -3399,10 +3397,16 @@ PDM_domain_interface_translate_entity1_entity2
         }
 
       }
+      PDM_free(og_conn1);
+      PDM_free(og_conn2);
     }
 
     idx_read      += n_conflict_keys;
     idx_read_data += conflict_data_idx[n_conflict_keys];
+
+    PDM_free(_inv_order1);
+    PDM_free(_inv_order2);
+    PDM_free(conflict_sort_ordr);
   }
 
 
