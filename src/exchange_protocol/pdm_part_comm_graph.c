@@ -614,7 +614,10 @@ _create
   pcg->nuplet_size = nuplet_size;
   PDM_malloc(pcg->pentity_nuplet, n_part, int *);
   for (int i_part = 0; i_part < n_part; i_part++) {
-    if(pentity_nuplet != NULL) {
+    pcg->pentity_nuplet[i_part] = NULL;
+  }
+  if(pentity_nuplet != NULL) {
+    for (int i_part = 0; i_part < n_part; i_part++) {
       if(owner_nuplet == PDM_OWNERSHIP_BAD_VALUE) { // We need to copy
         PDM_malloc(pcg->pentity_nuplet[i_part], nuplet_size * pn_entity_graph[i_part], int);
         for(int i = 0; i < nuplet_size * pn_entity_graph[i_part]; ++i) {
@@ -624,9 +627,6 @@ _create
       } else {
         pcg->pentity_nuplet[i_part] = pentity_nuplet[i_part];
       }
-    }
-    else {
-      pcg->pentity_nuplet[i_part] = NULL;
     }
   }
 
