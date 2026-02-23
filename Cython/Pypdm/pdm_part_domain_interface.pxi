@@ -13,7 +13,7 @@ cdef extern from "pdm_part_domain_interface.h":
                                                                   int                         *n_part,
                                                                   PDM_domain_interface_mult_t  multidomain_interface,
                                                                   PDM_ownership_t              ownership,
-                                                                  PDM_MPI_Comm                 comm);
+                                                                  PDM_MPI_Comm                 comm)
 
     void PDM_part_domain_interface_set(PDM_part_domain_interface_t  *dom_intrf,
                                        PDM_bound_type_t              interface_kind,
@@ -26,7 +26,7 @@ cdef extern from "pdm_part_domain_interface.h":
                                        int                          *interface_sens,
                                        int                          *interface_ids,
                                        int                          *interface_ids_idx,
-                                       int                          *interface_dom);
+                                       int                          *interface_dom)
 
     void PDM_part_domain_interface_get(PDM_part_domain_interface_t   *dom_intrf,
                                        PDM_bound_type_t               interface_kind,
@@ -39,32 +39,32 @@ cdef extern from "pdm_part_domain_interface.h":
                                        int                          **interface_sens,
                                        int                          **interface_ids,
                                        int                          **interface_ids_idx,
-                                       int                          **interface_dom);
+                                       int                          **interface_dom)
 
-    int PDM_part_domain_interface_n_interface_get(PDM_part_domain_interface_t   *dom_intrf);
+    int PDM_part_domain_interface_n_interface_get(PDM_part_domain_interface_t   *dom_intrf)
 
     int PDM_part_domain_interface_exist_get(PDM_part_domain_interface_t  *dom_intrf,
-                                            PDM_bound_type_t              interface_kind);
+                                            PDM_bound_type_t              interface_kind)
 
-    void PDM_part_domain_interface_free(PDM_part_domain_interface_t  *dom_intrf);
+    void PDM_part_domain_interface_free(PDM_part_domain_interface_t  *dom_intrf)
     void PDM_part_domain_interface_translation_set(PDM_part_domain_interface_t  *dom_intrf,
                                                    int                           i_interface,
-                                                   double                       *vect);
+                                                   double                       *vect)
 
     void PDM_part_domain_interface_rotation_set(PDM_part_domain_interface_t  *dom_intrf,
                                                 int                           i_interface,
                                                 double                       *direction,
                                                 double                       *center,
-                                                double                        angle);
+                                                double                        angle)
     void PDM_part_domain_interface_translation_get(PDM_part_domain_interface_t  *dom_intrf,
                                                    int                           i_interface,
-                                                   double                      **vect);
+                                                   double                      **vect)
 
     void PDM_part_domain_interface_rotation_get(PDM_part_domain_interface_t  *dom_intrf,
                                                 int                           i_interface,
                                                 double                      **direction,
                                                 double                      **center,
-                                                double                       *angle);
+                                                double                       *angle)
 
 
 cdef class PartDomainInterface:
@@ -74,6 +74,7 @@ cdef class PartDomainInterface:
   # > Class attributes
   cdef PDM_part_domain_interface_t *pdi
   cdef object keep_alive
+  cdef int own_data
   # ************************************************************************
   def __cinit__(self,
                 int                                           n_interface,
@@ -81,6 +82,7 @@ cdef class PartDomainInterface:
                 NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] n_part,
                 bint                                          multidomain_interface,
                 MPI.Comm                                      comm):
+
     """
     """
     cdef MPI.MPI_Comm c_comm = comm.ob_mpi
@@ -94,6 +96,7 @@ cdef class PartDomainInterface:
                                                 _multidomain_interface,
                                                 PDM_OWNERSHIP_USER,
                                                 PDMC)
+    self.own_data = True
 
   # ------------------------------------------------------------------------
   def interface_set(self,
@@ -127,7 +130,7 @@ cdef class PartDomainInterface:
                   <int         *> interface_sens.data,
                   <int         *> interface_ids.data,
                   <int         *> interface_ids_idx.data,
-                  <int         *> interface_dom.data);
+                  <int         *> interface_dom.data)
 
   # ------------------------------------------------------------------------
   def translation_set(self,
@@ -153,8 +156,14 @@ cdef class PartDomainInterface:
                                 <double *> center.data,
                                            angle)
 
+  def to_view_capsule(self):
+    """
+    """
+    return PyCapsule_New(self.pdi, NULL, NULL)
+
   # ------------------------------------------------------------------------
   def __dealloc__(self):
     """
     """
-    PDM_part_domain_interface_free(self.pdi)
+    if self.own_data:
+      PDM_part_domain_interface_free(self.pdi)

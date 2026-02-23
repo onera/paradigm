@@ -24,6 +24,15 @@ cdef extern from "pdm_part_mesh_nodal.h":
                                           PDM_g_num_t           *numabs,
                                           PDM_ownership_t        owner)
 
+    void PDM_part_mesh_nodal_part_comm_graph_set(PDM_part_mesh_nodal_t *pmn,
+                                                 PDM_part_comm_graph_t *pcg,
+                                                 PDM_geometry_kind_t    geom_kind,
+                                                 PDM_ownership_t        ownership)
+
+    void PDM_part_mesh_nodal_part_comm_graph_vtx_set(PDM_part_mesh_nodal_t *pmn,
+                                                     PDM_part_comm_graph_t *pcg,
+                                                     PDM_ownership_t        ownership)
+
     int PDM_part_mesh_nodal_n_part_get(PDM_part_mesh_nodal_t *pmn)
     int PDM_part_mesh_nodal_mesh_dimension_get( PDM_part_mesh_nodal_t *pmn)
 
@@ -32,12 +41,11 @@ cdef extern from "pdm_part_mesh_nodal.h":
 
     double* PDM_part_mesh_nodal_vtx_coord_get(PDM_part_mesh_nodal_t *pmn,
                                               int                    id_part,
-                                              PDM_ownership_t        owner);
-
+                                              PDM_ownership_t        owner)
 
     PDM_g_num_t* PDM_part_mesh_nodal_vtx_g_num_get(PDM_part_mesh_nodal_t *pmn,
                                                    int                    id_part,
-                                                   PDM_ownership_t        owner);
+                                                   PDM_ownership_t        owner)
 
     int PDM_part_mesh_nodal_n_section_in_geom_kind_get(PDM_part_mesh_nodal_t *pmn,
                                                        PDM_geometry_kind_t    geom_kind)
@@ -109,30 +117,36 @@ cdef extern from "pdm_part_mesh_nodal.h":
                                        int                    *n_group_elmt,
                                        int                   **group_elmt,
                                        PDM_g_num_t           **group_ln_to_gn,
-                                       PDM_ownership_t         ownership);
+                                       PDM_ownership_t         ownership)
 
     int PDM_part_mesh_nodal_n_group_get(PDM_part_mesh_nodal_t  *pmn,
-                                        PDM_geometry_kind_t     geom_kind);
+                                        PDM_geometry_kind_t     geom_kind)
 
-    void PDM_part_mesh_nodal_free( PDM_part_mesh_nodal_t* pmn);
+    void PDM_part_mesh_nodal_free( PDM_part_mesh_nodal_t* pmn)
 
     void PDM_part_mesh_nodal_part_comm_graph_get(PDM_part_mesh_nodal_t  *pmn,
                                                  PDM_mesh_entities_t     entity_type,
                                                  PDM_part_comm_graph_t **pcg,
-                                                 PDM_ownership_t         ownership);
+                                                 PDM_ownership_t         ownership)
 
     void PDM_part_mesh_nodal_part_comm_graph_vtx_get(PDM_part_mesh_nodal_t  *pmn,
                                                      PDM_part_comm_graph_t **pcg,
-                                                     PDM_ownership_t         ownership);
+                                                     PDM_ownership_t         ownership)
+
+    void PDM_part_mesh_nodal_tag_to_group(PDM_part_mesh_nodal_t  *pmn,
+                                          PDM_geometry_kind_t     geom_kind,
+                                          int                     n_group,
+                                          int                   **tag_idx,
+                                          int                   **tag)
 
 cdef extern from "pdm_part_mesh_nodal_algorithm.h":
     void PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(PDM_part_mesh_nodal_t  *pmn,
-                                                               PDM_mesh_entities_t     entity_type);
+                                                               PDM_mesh_entities_t     entity_type)
 
 cdef extern from "pdm_part_mesh_nodal_geom.h":
     void PDM_part_mesh_nodal_dual_volume_compute(PDM_part_mesh_nodal_t   *pmn,
                                                  PDM_bool_t               synchronize,
-                                                 double                ***dual_vol);
+                                                 double                ***dual_vol)
 
 cdef extern from "pdm_part_comm_graph.h":
   ctypedef struct PDM_part_comm_graph_t:
@@ -340,6 +354,46 @@ cdef class PartMeshNodal:
                                       np_to_gnum_pointer(group_ln_to_gn),
                                       PDM_OWNERSHIP_USER)
 
+
+    def part_comm_graph_set(self,
+                            PartCommGraph       pypcg,
+                            PDM_geometry_kind_t geom_kind):
+      """
+      part_comm_graph_set(pcg, geom_kind)
+
+      Set a :py:class:`PartCommGraph` into PDM_part_mesh_nodal_t instance
+      for given geometry_kind.
+
+      Note that given PartCommGraph object remains owner of his PDM_part_comm_graph_t instance.
+
+      Parameters:
+        pcg       (PDM_part_comm_graph_t) : Part comm graph instance
+        geom_kind (PDM_geometry_kind_t)   : geometry kind (corner, ridge, face)
+      """
+      self.keep_alive.append(pypcg)
+
+      PDM_part_mesh_nodal_part_comm_graph_set(self.pmn,
+                                              pypcg.pcg,
+                                              geom_kind,
+                                              PDM_OWNERSHIP_USER)
+
+    def part_comm_graph_vtx_set(self,
+                                PartCommGraph pypcg):
+      """
+      part_comm_graph_vtx_set(pcg)
+
+      Set a :py:class:`PartCommGraph` into PDM_part_mesh_nodal_t instance
+      for vertices
+
+      Parameters:
+        pcg (PDM_part_comm_graph_t) : Part comm graph instance
+      """
+      self.keep_alive.append(pypcg)
+
+      PDM_part_mesh_nodal_part_comm_graph_vtx_set(self.pmn,
+                                                  pypcg.pcg,
+                                                  PDM_OWNERSHIP_USER)
+
     def get_n_group(self, PDM_geometry_kind_t geom_kind):
       """
       get_n_group(geom_kind)
@@ -417,8 +471,6 @@ cdef class PartMeshNodal:
         entity_type (PDM_mesh_entities_t) : type of entity (vertex, edge, face, cell)
       """
       PDM_part_mesh_nodal_part_comm_graph_compute_from_gnum(self.pmn, entity_type)
-
-
 
     def n_part_get(self):
       return PDM_part_mesh_nodal_n_part_get(self.pmn)
@@ -566,7 +618,6 @@ cdef class PartMeshNodal:
       cdef PDM_g_num_t          *group_ln_to_gn
       # ************************************************************************
 
-
       PDM_part_mesh_nodal_group_get(self.pmn,
                                     geom_kind,
                                     i_part,
@@ -574,7 +625,7 @@ cdef class PartMeshNodal:
                                     &n_group_elmt,
                                     &group_elmt,
                                     &group_ln_to_gn,
-                                    PDM_OWNERSHIP_USER);
+                                    PDM_OWNERSHIP_USER)
 
       np_group_elmt = None
       if(group_elmt != NULL):
@@ -586,7 +637,32 @@ cdef class PartMeshNodal:
 
       return np_group_elmt, np_group_ln_to_gn
 
+    def tag_to_group(self,
+                     PDM_geometry_kind_t geom_kind,
+                     int                 n_group,
+                     list                np_tag_idx,
+                     list                np_tag):
 
+      """
+      tag_to_group(geom_kind, n_group, tag_idx, tag)
+
+      Transform tag for all elements into group information inside a \ref PDM_part_mesh_nodal_t.
+
+      Parameters:
+        geom_kind (PDM_geometry_kind_t) : type of entity (corner, ridge, face, cell)
+        n_group   (int)                 : Number of groups
+        tag_idx   (list)                : Identifier index
+        tag       (list)                : Identifier
+      """
+      cdef int **tag_idx = NULL
+      if np_tag_idx is not None:
+        tag_idx = np_list_to_int_pointers(np_tag_idx)
+      cdef int **tag = np_list_to_int_pointers(np_tag)
+
+      PDM_part_mesh_nodal_tag_to_group(self.pmn, geom_kind, n_group, tag_idx, tag)
+
+      free(tag_idx)
+      free(tag)
 
     # ------------------------------------------------------------------------
     def __dealloc__(self):

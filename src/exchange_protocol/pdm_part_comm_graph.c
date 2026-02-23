@@ -583,12 +583,10 @@ _create
 {
   PDM_part_comm_graph_t *pcg = NULL;
   PDM_malloc(pcg, 1, PDM_part_comm_graph_t);
+  memset(pcg, 0, sizeof(PDM_part_comm_graph_t));
 
   pcg->comm   = comm;
   pcg->n_part = n_part;
-
-  pcg->n_active_rank_send = 0;
-  pcg->n_active_rank_recv = 0;
 
   pcg->is_signed = is_signed;
 
@@ -615,6 +613,9 @@ _create
 
   pcg->nuplet_size = nuplet_size;
   PDM_malloc(pcg->pentity_nuplet, n_part, int *);
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    pcg->pentity_nuplet[i_part] = NULL;
+  }
   if(pentity_nuplet != NULL) {
     for (int i_part = 0; i_part < n_part; i_part++) {
       if(owner_nuplet == PDM_OWNERSHIP_BAD_VALUE) { // We need to copy
