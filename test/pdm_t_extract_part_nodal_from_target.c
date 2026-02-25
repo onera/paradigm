@@ -398,7 +398,7 @@ _gen_mesh
     PDM_multipart_get_part_mesh_nodal(mpart,
                                       0,
                                       &pmn,
-                                      PDM_OWNERSHIP_KEEP);
+                                      PDM_OWNERSHIP_USER);
   }
 
   PDM_DMesh_nodal_free(dmn);

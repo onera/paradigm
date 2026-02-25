@@ -781,7 +781,6 @@ PDM_generate_mesh_ball_simplified
   // free
   PDM_DMesh_nodal_free(dmn);
   PDM_multipart_free(mpart);
-  PDM_part_mesh_nodal_free(pmn);
 }
 
 
@@ -1037,7 +1036,6 @@ PDM_generate_mesh_parallelepiped_simplified
   // free
   PDM_DMesh_nodal_free(dmn);
   PDM_multipart_free(mpart);
-  PDM_part_mesh_nodal_free(pmn);
 }
 
 

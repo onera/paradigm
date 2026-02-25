@@ -286,7 +286,7 @@ int main(int argc, char *argv[])
   PDM_free(n_part_domains);
 
   PDM_part_mesh_nodal_t* pmsh_nodal = NULL;
-  PDM_multipart_get_part_mesh_nodal(mpart, 0, &pmsh_nodal, PDM_OWNERSHIP_KEEP); // Ownership keep is mandatory in C
+  PDM_multipart_get_part_mesh_nodal(mpart, 0, &pmsh_nodal, PDM_OWNERSHIP_USER);
 
   PDM_multipart_free(mpart);
 

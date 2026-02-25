@@ -585,7 +585,6 @@ int main(int argc, char *argv[])
 
 
   /* Free memory */
-  PDM_part_mesh_nodal_free(pmn);
   PDM_dcube_nodal_gen_free(dcube);
   PDM_multipart_free(mpart);
 

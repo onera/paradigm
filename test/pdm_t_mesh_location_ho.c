@@ -389,7 +389,7 @@ _gen_mesh
   PDM_multipart_compute(*mpart);
 
   PDM_part_mesh_nodal_t *pmn = NULL;
-  PDM_multipart_get_part_mesh_nodal(*mpart, 0, &pmn, PDM_OWNERSHIP_KEEP);
+  PDM_multipart_get_part_mesh_nodal(*mpart, 0, &pmn, PDM_OWNERSHIP_USER);
 
   PDM_dcube_nodal_gen_free(dcube);
 
