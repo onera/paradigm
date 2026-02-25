@@ -13,13 +13,14 @@ cdef extern from "pdm_reader_gamma.h":
                                                     int            fix_orientation_3d)
 
     void PDM_write_gamma_sol(char   *filename,
+                             int     dim,
                              int     n_vtx,
                              int     n_field,
-                             double    *fields)
+                             double *fields)
     void PDM_read_gamma_sol(char   *filename,
                              int     n_vtx,
                              int     n_field,
-                             double    *fields)
+                             double *fields)
 
     void PDM_write_gamma_matsym(char   *filename,
                                 int     dim,
@@ -66,12 +67,15 @@ def write_meshb(char                                           *filename,
 
 
 def write_solb(char *filename,
+               int dim,
                int n_vtx,
                int n_field,
                NPY.ndarray[NPY.double_t, mode='c', ndim=1] field):
   """
+  Write scalar fields in Gamma Mesh Format
   """
   PDM_write_gamma_sol(filename,
+                      dim,
                       n_vtx,
                       n_field,
            <double *> field.data)
@@ -82,6 +86,7 @@ def write_matsym_solb(char *filename,
                       int n_vtx,
                       NPY.ndarray[NPY.double_t, mode='c', ndim=1] field):
   """
+  Write symmetric tensors in Gamma Mesh Format
   """
   PDM_write_gamma_matsym(filename,
                          dim,

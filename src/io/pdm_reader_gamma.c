@@ -1276,6 +1276,7 @@ void
 PDM_write_gamma_sol
 (
   const char   *filename,
+  const int     dim,
   const int     n_vtx,
   const int     n_field,
   const double *fields
@@ -1286,7 +1287,7 @@ PDM_write_gamma_sol
   FILE *f = fopen(filename, "w");
 
   fprintf(f, "MeshVersionFormatted 2\n");
-  fprintf(f, "Dimension\n3\n\n");
+  fprintf(f, "Dimension\n%d\n\n", dim);
   fprintf(f, "SolAtVertices\n%d\n", n_vtx);
 
   fprintf(f, "%i ", n_field);
