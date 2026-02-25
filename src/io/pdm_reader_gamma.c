@@ -1114,7 +1114,6 @@ PDM_write_meshb
   FILE *f = fopen(filename, "w");
 
   fprintf(f, "MeshVersionFormatted 2\n");
-  fprintf(f, "# %s\n\n", PDM_io_utils_file_name_from_path(filename));
   fprintf(f, "%s\n%d\n\n", IO_keys[PDM_INRIA_IO_KEY_DIM], dimension);
 
   // ---- Write vertices
@@ -1287,7 +1286,6 @@ PDM_write_gamma_sol
   FILE *f = fopen(filename, "w");
 
   fprintf(f, "MeshVersionFormatted 2\n");
-  fprintf(f, "# %s\n\n", PDM_io_utils_file_name_from_path(filename));
   fprintf(f, "Dimension\n3\n\n");
   fprintf(f, "SolAtVertices\n%d\n", n_vtx);
 
@@ -1320,7 +1318,6 @@ PDM_write_gamma_matsym
   FILE *f = fopen(filename, "w");
 
   fprintf(f, "MeshVersionFormatted 2\n");
-  fprintf(f, "# %s\n\n", PDM_io_utils_file_name_from_path(filename));
   fprintf(f, "Dimension\n%d\n\n", dim);
   fprintf(f, "SolAtVertices\n%d\n", n_vtx);
 
