@@ -2865,6 +2865,15 @@ _extract_part
 
     int **pextract_connectivity_idx = NULL;
     int **pextract_connectivity     = NULL;
+    // These one already computed, but will be recomputed by function
+    for (int i = 0; i < extrp->n_part_in; i++) {
+      PDM_free(extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VTX][i]);
+      PDM_free(extrp->pextract_entity_ln_to_gn[PDM_MESH_ENTITY_VTX][i]);
+      // PDM_free(extrp->pextract_n_entity[PDM_MESH_ENTITY_VTX][i]); // NOT THIS ONE (points to input data)
+    }
+    PDM_free(extrp->pextract_entity_parent_ln_to_gn[PDM_MESH_ENTITY_VTX]);
+    PDM_free(extrp->pextract_entity_ln_to_gn[PDM_MESH_ENTITY_VTX]);
+    PDM_free(extrp->pextract_n_entity[PDM_MESH_ENTITY_VTX]);
     _extract_and_local_renum_entity1_entity2(extrp->comm,
                                              extrp->compute_child_gnum,
                                              extrp->n_part_in,
@@ -2885,10 +2894,12 @@ _extract_part
     for (int i = 0; i < extrp->n_part_in; i++) {
       PDM_free(pvtx_vtx_idx[i]);
       PDM_free(pextract_connectivity_idx[i]);
+      PDM_free(pextract_connectivity[i]);
     }
     PDM_free(pvtx_vtx_idx);
     PDM_free(pvtx_vtx);
     PDM_free(pextract_connectivity_idx);
+    PDM_free(pextract_connectivity);
   }
 
   int  *n_extract_vtx    = extrp->pextract_n_entity          [PDM_MESH_ENTITY_VTX];
