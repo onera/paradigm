@@ -2648,13 +2648,8 @@ PDM_part_mesh_nodal_dump_gamma
 
   /* Write mesh */
   if (i_rank == 0) {
-    int _gn_elt[PDM_MESH_NODAL_N_ELEMENT_TYPES];
-    for (PDM_Mesh_nodal_elt_t t_elt = PDM_MESH_NODAL_POINT; t_elt < PDM_MESH_NODAL_N_ELEMENT_TYPES; t_elt++) {
-      _gn_elt[t_elt] = (int) gn_elt[t_elt]; // sic
-    }
-
     PDM_write_meshb(filename,
-                    _gn_elt,
+                    gn_elt,
                     gelt_tag,
                     gelt_vtx,
                     gvtx_coord);

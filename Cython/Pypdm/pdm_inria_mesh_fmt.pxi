@@ -1,7 +1,7 @@
 
 cdef extern from "pdm_reader_gamma.h":
     void PDM_write_meshb(char           *filename,
-                         int            *n_elt_table,
+                         PDM_g_num_t    *n_elt_table,
                          int           **tag_table,
                          PDM_g_num_t   **vtx_connect_table,
                          double          *vtx_coords
@@ -32,11 +32,11 @@ cdef extern from "pdm_reader_gamma.h":
                                        int     **field_stride,
                                        double ***field_values)
 
-def write_meshb(char                                        *filename,
-                NPY.ndarray[NPY.int32_t, mode ='c', ndim=1]  n_elt_table,
-                list                                         tag_table,
-                list                                         vtx_connect_table,
-                NPY.ndarray[NPY.double_t, mode ='c', ndim=1] vtx_coords):
+def write_meshb(char                                           *filename,
+                NPY.ndarray[npy_pdm_gnum_t, mode ='c', ndim=1]  n_elt_table,
+                list                                            tag_table,
+                list                                            vtx_connect_table,
+                NPY.ndarray[NPY.double_t, mode ='c', ndim=1]    vtx_coords):
     """
     """
     # ---- Variable initialization
@@ -59,7 +59,7 @@ def write_meshb(char                                        *filename,
         vtx_connect_buffer[idx] = <PDM_g_num_t *> vtx_connect_temp.data
 
     PDM_write_meshb(filename,
-                    <int *> n_elt_table.data,
+                    <PDM_g_num_t *> n_elt_table.data,
                     tag_buffer,
                     vtx_connect_buffer,
                     <double *> vtx_coords.data)

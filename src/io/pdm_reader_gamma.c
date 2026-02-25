@@ -1077,7 +1077,7 @@ void
 PDM_write_meshb
 (
   const char         *filename,
-  const int          *n_elt_table,
+  const PDM_g_num_t  *n_elt_table,
         int         **tag_table,
         PDM_g_num_t **vtx_connect_table,
   const double       *vtx_coords
