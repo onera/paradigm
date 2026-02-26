@@ -322,8 +322,8 @@ API
 
       .. ifconfig:: enable_python_doc == 'ON'
 
-        .. automethod:: Pypdm.Pypdm.PartMeshNodalCapsule.coord_get
-        .. automethod:: Pypdm.Pypdm.PartMeshNodalCapsule.vtx_g_num_get
+        .. automethod:: Pypdm.Pypdm.PartMeshNodal.coord_get
+        .. automethod:: Pypdm.Pypdm.PartMeshNodal.vtx_g_num_get
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -419,7 +419,7 @@ API
 
         .. ifconfig:: enable_python_doc == 'ON'
 
-          .. automethod:: Pypdm.Pypdm.PartMeshNodalCapsule.get_sections
+          .. automethod:: Pypdm.Pypdm.PartMeshNodal.get_sections
 
         .. ifconfig:: enable_python_doc == 'OFF'
 
@@ -456,8 +456,8 @@ API
 
       .. ifconfig:: enable_python_doc == 'ON'
 
-        .. automethod:: Pypdm.Pypdm.PartMeshNodalCapsule.get_n_group
-        .. automethod:: Pypdm.Pypdm.PartMeshNodalCapsule.get_group
+        .. automethod:: Pypdm.Pypdm.PartMeshNodal.get_n_group
+        .. automethod:: Pypdm.Pypdm.PartMeshNodal.get_group
 
       .. ifconfig:: enable_python_doc == 'OFF'
 
