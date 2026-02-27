@@ -1407,6 +1407,19 @@ PDM_part_mesh_nodal_tag_to_group
 );
 
 
+/**
+ * \brief Export a \ref PDM_part_mesh_nodal_t in Inria mesh format
+ *
+ * \param [in] pmn      \ref PDM_part_mesh_nodal_t instance
+ * \param [in] filename Output file name
+ */
+void
+PDM_part_mesh_nodal_dump_gamma
+(
+  PDM_part_mesh_nodal_t *pmn,
+  const char            *filename
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

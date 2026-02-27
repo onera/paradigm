@@ -1,10 +1,14 @@
 #include <iostream>
+#include <stdio.h>
 
 #include "doctest/doctest.h"
 #include "doctest/extensions/doctest_mpi.h"
 
 #include "pdm_mem_tool.h"
 #include "pdm_predicate.h"
+#include "pdm_generate_mesh.h"
+#include "pdm_io_utils.h"
+#include "pdm_part_mesh_nodal.h"
 
 // =======================================================================================
 #define FILL_TRIA3_VTX_COORD(vtx_coord) \
@@ -93,3 +97,60 @@ MPI_TEST_CASE("[PDM_io_gamma_reader] - element orientation", 1) {
 
 #undef FILL_TRIA3_VTX_COORD
 #undef FILL_QUAD4_VTX_COORD
+
+
+MPI_TEST_CASE("[PDM_io_gamma_reader] - Read and write", 2) {
+
+  PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
+
+	int i_rank;
+	PDM_MPI_Comm_rank(pdm_comm, &i_rank);
+
+	const char *filename_in_2d = PDM_MESH_DIR"mixed_elements_2d.mesh";
+	const char *filename_in_3d = PDM_MESH_DIR"mixed_elements_3d.mesh";
+
+
+	PDM_split_dual_t part_method = PDM_SPLIT_DUAL_WITH_HILBERT;
+
+	const char *filename_in;
+	int n_part;
+	SUBCASE("2D") {
+		filename_in = filename_in_2d;
+		SUBCASE("n_part = 1") {
+			n_part = 1;
+		}
+		SUBCASE("n_part = 2") {
+			n_part = 2;
+		}
+	}
+	SUBCASE("3D") {
+		filename_in = filename_in_3d;
+		SUBCASE("n_part = 1") {
+			n_part = 1;
+		}
+		SUBCASE("n_part = 2") {
+			n_part = 2;
+		}
+	}
+
+	// Load and split mesh
+	PDM_part_mesh_nodal_t *mesh = PDM_generate_mesh_nodal_from_file(pdm_comm,
+		                                                              n_part,
+																																	part_method,
+																																	filename_in);
+
+  // Re-write mesh
+	const char *filename_out = PDM_io_utils_file_name_from_path(filename_in);
+	PDM_part_mesh_nodal_dump_gamma(mesh, filename_out);
+
+	// Check
+	if (i_rank == 0) {
+		int err = PDM_io_utils_diff_files(filename_in, filename_out);
+
+		CHECK(err == 0);
+
+		remove(filename_out);
+	}
+
+	PDM_part_mesh_nodal_free(mesh);
+}

@@ -105,6 +105,8 @@ int main(int argc, char *argv[])
 
   if (visu) {
 
+    PDM_part_mesh_nodal_dump_gamma(pmn, "generate_mesh_sphere_tria3.mesh");
+
     char filename[999];
     sprintf(filename, "sphere_mesh_%2.2d.vtk", i_rank);
 
@@ -169,6 +171,8 @@ int main(int argc, char *argv[])
 
     if (visu) {
 
+      PDM_part_mesh_nodal_dump_gamma(pmn, "generate_mesh_ball_tetra4.mesh");
+
       char filename[999];
       sprintf(filename, "ball_mesh_%2.2d.vtk", i_rank);
 
@@ -227,12 +231,6 @@ int main(int argc, char *argv[])
                                     &elt_vtx);
 
   if (visu) {
-    log_trace("n_vtx : %d\n", n_vtx);
-    log_trace("n_elt : %d\n", n_elt);
-    PDM_log_trace_array_double(coords, 3*n_vtx, "coords : ");
-    PDM_log_trace_array_int(elt_vtx_idx, n_elt + 1, "elt_vtx_idx : ");
-    PDM_log_trace_array_int(elt_vtx, elt_vtx_idx[n_elt], "elt_vtx : ");
-
     char filename[999];
     sprintf(filename, "ball_mesh_simplified_%2.2d.vtk", i_rank);
 
@@ -293,14 +291,6 @@ int main(int argc, char *argv[])
                                          &elt_vtx_idx,
                                          &elt_vtx);
 
-  if (visu) {
-    log_trace("n_vtx : %d\n", n_vtx);
-    log_trace("n_elt : %d\n", n_elt);
-    PDM_log_trace_array_double(coords, 3*n_vtx, "coords : ");
-    PDM_log_trace_array_int(elt_vtx_idx, n_elt + 1, "elt_vtx_idx : ");
-    PDM_log_trace_array_int(elt_vtx, elt_vtx_idx[n_elt], "elt_vtx : ");
-  }
-
   // free
   PDM_free(coords     );
   PDM_free(elt_vtx_idx);
@@ -324,6 +314,8 @@ int main(int argc, char *argv[])
                                          PDM_SPLIT_DUAL_WITH_HILBERT);
 
   if (visu) {
+
+    PDM_part_mesh_nodal_dump_gamma(pmn, "generate_mesh_parallelepiped_pyramid5.mesh");
 
     char filename[999];
     sprintf(filename, "parallelepiped_mesh_%2.2d.vtk", i_rank);
@@ -383,12 +375,6 @@ int main(int argc, char *argv[])
                                               &elt_vtx);
 
   if (visu) {
-    log_trace("n_vtx : %d\n", n_vtx);
-    log_trace("n_elt : %d\n", n_elt);
-    PDM_log_trace_array_double(coords, 3*n_vtx, "coords : ");
-    PDM_log_trace_array_int(elt_vtx_idx, n_elt + 1, "elt_vtx_idx : ");
-    PDM_log_trace_array_int(elt_vtx, elt_vtx_idx[n_elt], "elt_vtx : ");
-
     char filename[999];
     sprintf(filename, "parallelepiped_mesh_simplified_%2.2d.vtk", i_rank);
 
@@ -430,6 +416,9 @@ int main(int argc, char *argv[])
                                           PDM_MESH_DIR"bunny1k.vtk");
 
   if (visu) {
+
+    PDM_part_mesh_nodal_dump_gamma(pmn, "generate_mesh_bunny.mesh");
+
     PDM_part_mesh_nodal_dump_vtk(pmn,
                                  PDM_GEOMETRY_KIND_SURFACIC,
                                  "generate_mesh_bunny1k");

@@ -24,7 +24,9 @@
 #include "pdm_part_mesh_nodal.h"
 #include "pdm_part_mesh_nodal_elmts_priv.h"
 #include "pdm_part_mesh_nodal_priv.h"
+#include "pdm_part_to_block.h"
 #include "pdm_priv.h"
+#include "pdm_reader_gamma.h"
 #include "pdm_sort.h"
 #include "pdm_vtk.h"
 
@@ -134,6 +136,32 @@ _get_from_geometry_kind
     PDM_error(__FILE__, __LINE__, 0, "Invalid geom_kind %d\n", geom_kind);
   }
   return pmne;
+}
+
+
+static PDM_bool_t
+_is_supported_type_gamma
+(
+  PDM_Mesh_nodal_elt_t t_elt
+)
+{
+  if (t_elt == PDM_MESH_NODAL_POINT) {
+    // Corners are treated separately
+    return PDM_FALSE;
+  }
+
+  if (t_elt == PDM_MESH_NODAL_POLY_2D ||
+      t_elt == PDM_MESH_NODAL_POLY_3D) {
+    // Inria mesh format does not support general polytopes
+    return PDM_FALSE;
+  }
+
+  if (PDM_Mesh_nodal_elmt_is_ho(t_elt)) {
+    // High-order elements are not supported yet
+    return PDM_FALSE;
+  }
+
+  return PDM_TRUE;
 }
 
 /*=============================================================================
@@ -2203,6 +2231,437 @@ PDM_part_mesh_nodal_tag_to_group
   PDM_part_mesh_nodal_elmts_tag_to_group(pmne, n_group, tag_idx, tag);
 }
 
+
+void
+PDM_part_mesh_nodal_dump_gamma
+(
+  PDM_part_mesh_nodal_t *pmn,
+  const char            *filename
+)
+{
+  int i_rank, n_rank;
+  PDM_MPI_Comm_rank(pmn->comm, &i_rank);
+  PDM_MPI_Comm_size(pmn->comm, &n_rank);
+
+  int n_part = PDM_part_mesh_nodal_n_part_get(pmn);
+
+  /* Gather vertices on rank 0 */
+  int          *pn_vtx     = NULL;
+  double      **pvtx_coord = NULL;
+  int         **pvtx_tag   = NULL;
+  PDM_g_num_t **pvtx_g_num = NULL;
+  PDM_malloc(pn_vtx,     n_part, int          );
+  PDM_malloc(pvtx_coord, n_part, double      *);
+  PDM_malloc(pvtx_tag,   n_part, int         *);
+  PDM_malloc(pvtx_g_num, n_part, PDM_g_num_t *);
+
+  PDM_g_num_t _max_vtx_g_num = 0;
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    pn_vtx    [i_part] = PDM_part_mesh_nodal_n_vtx_get    (pmn, i_part);
+    pvtx_coord[i_part] = PDM_part_mesh_nodal_vtx_coord_get(pmn, i_part, PDM_OWNERSHIP_BAD_VALUE);
+    pvtx_g_num[i_part] = PDM_part_mesh_nodal_vtx_g_num_get(pmn, i_part, PDM_OWNERSHIP_BAD_VALUE);
+
+    pvtx_tag[i_part] = PDM_array_zeros_int(pn_vtx[i_part]);
+
+    for (int i_vtx = 0; i_vtx < pn_vtx[i_part]; i_vtx++) {
+      _max_vtx_g_num = PDM_MAX(_max_vtx_g_num, pvtx_g_num[i_part][i_vtx]);
+    }
+  }
+
+  PDM_g_num_t gn_vtx;
+  PDM_MPI_Allreduce(&_max_vtx_g_num, &gn_vtx, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, pmn->comm);
+
+
+  // Corners
+  int n_group_corner = PDM_part_mesh_nodal_n_group_get(pmn, PDM_GEOMETRY_KIND_CORNER);
+  if (n_group_corner > 0) {
+    PDM_part_mesh_nodal_elmts_t *pmne_corner = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(pmn, PDM_GEOMETRY_KIND_CORNER);
+
+    for (int i_part = 0; i_part < n_part; i_part++) {
+      int *corner_vtx_idx = NULL;
+      int *corner_vtx     = NULL;
+      PDM_part_mesh_nodal_elmts_cell_vtx_connect_get(pmne_corner,
+                                                     i_part,
+                                                     &corner_vtx_idx,
+                                                     &corner_vtx);
+
+      for (int i_group = 0; i_group < n_group_corner; i_group++) {
+        int          n_elt = 0;
+        int         *l_num = NULL;
+        PDM_g_num_t *g_num = NULL;
+        PDM_part_mesh_nodal_elmts_group_get(pmne_corner,
+                                            i_part,
+                                            i_group,
+                                            &n_elt,
+                                            &l_num,
+                                            &g_num,
+                                            PDM_OWNERSHIP_BAD_VALUE);
+        for (int idx_elt = 0; idx_elt < n_elt; idx_elt++) {
+          int i_elt = l_num[idx_elt] - 1;
+          int i_vtx = corner_vtx[i_elt] - 1;
+          if (pvtx_tag[i_part][i_vtx] == 0) {
+            pvtx_tag[i_part][i_vtx] = i_group + 1;
+          }
+          else {
+            PDM_error(__FILE__, __LINE__, 0, "Vertex referenced by more than one corners\n");
+          }
+        }
+      } // End loop on groups
+      PDM_free(corner_vtx_idx);
+      PDM_free(corner_vtx);
+    } // End loop on parts
+  }
+
+  PDM_g_num_t *distrib_vtx = NULL;
+  PDM_malloc(distrib_vtx, n_rank+1, PDM_g_num_t);
+  distrib_vtx[0] = 0;
+  for (int i = 1; i <= n_rank; i++) {
+    distrib_vtx[i] = gn_vtx;
+  }
+
+  PDM_part_to_block_t *ptb_vtx = PDM_part_to_block_create_from_distrib(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                                       PDM_PART_TO_BLOCK_POST_CLEANUP,
+                                                                       1.,
+                                                                       pvtx_g_num,
+                                                                       distrib_vtx,
+                                                                       pn_vtx,
+                                                                       n_part,
+                                                                       pmn->comm);
+
+  double *gvtx_coord = NULL;
+  PDM_part_to_block_exch(ptb_vtx,
+                         3 * sizeof(double),
+                         PDM_STRIDE_CST_INTERLACED,
+                         1,
+                         NULL,
+               (void **) pvtx_coord,
+                         NULL,
+               (void **) &gvtx_coord);
+
+  int *gvtx_tag = NULL;
+  PDM_part_to_block_exch(ptb_vtx,
+                         sizeof(int),
+                         PDM_STRIDE_CST_INTERLACED,
+                         1,
+                         NULL,
+               (void **) pvtx_tag,
+                         NULL,
+               (void **) &gvtx_tag);
+
+  PDM_part_to_block_free(ptb_vtx);
+  PDM_free(distrib_vtx);
+  PDM_free(pn_vtx);
+  PDM_free(pvtx_coord);
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    PDM_free(pvtx_tag[i_part]);
+  }
+  PDM_free(pvtx_tag);
+
+
+  /**
+   * Gather elements on rank 0
+   */
+
+  /* Initialize counters by element type */
+  int         *pn_elt[PDM_MESH_NODAL_N_ELEMENT_TYPES];
+  PDM_g_num_t  gn_elt[PDM_MESH_NODAL_N_ELEMENT_TYPES];
+  for (PDM_Mesh_nodal_elt_t t_elt = PDM_MESH_NODAL_BAR2; t_elt < PDM_MESH_NODAL_N_ELEMENT_TYPES; t_elt++) {
+
+    gn_elt[t_elt] = 0;
+
+    if (!_is_supported_type_gamma(t_elt)) {
+      continue;
+    }
+
+    pn_elt[t_elt] = PDM_array_zeros_int(n_part);
+  }
+
+  /* Count section by section */
+  int n_section = PDM_part_mesh_nodal_n_section_get(pmn);
+
+  PDM_g_num_t *_max_elt_g_num = NULL;
+  PDM_malloc(_max_elt_g_num, n_section, PDM_g_num_t);
+
+  for (int i_section = 0; i_section < n_section; i_section++) {
+
+    _max_elt_g_num[i_section] = 0;
+
+    PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_section_elt_type_get(pmn, i_section);
+
+    if (!_is_supported_type_gamma(t_elt)) {
+      continue;
+    }
+
+    PDM_part_mesh_nodal_g_num_in_section_compute(pmn,
+                                                 i_section,
+                                                 PDM_OWNERSHIP_KEEP);
+
+    for (int i_part = 0; i_part < n_part; i_part++) {
+      int n_elt = PDM_part_mesh_nodal_section_n_elt_get(pmn, i_section, i_part);
+
+      // Increment local number of elements of current type
+      pn_elt[t_elt][i_part] += n_elt;
+
+      // Get local largest global ID for current section
+      PDM_g_num_t *g_num = PDM_part_mesh_nodal_section_g_num_get(pmn,
+                                                                 i_section,
+                                                                 i_part,
+                                                                 PDM_OWNERSHIP_BAD_VALUE);
+
+      for (int i_elt = 0; i_elt < n_elt; i_elt++) {
+        _max_elt_g_num[i_section] = PDM_MAX(_max_elt_g_num[i_section], g_num[i_elt]);
+      } // End loop on elements
+    } // End loop on parts
+
+  } // End loop on sections
+
+  PDM_g_num_t *gn_elt_section = NULL;
+  PDM_malloc(gn_elt_section, n_section, PDM_g_num_t);
+  PDM_MPI_Allreduce(_max_elt_g_num, gn_elt_section, n_section, PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, pmn->comm);
+  PDM_free(_max_elt_g_num);
+
+  PDM_g_num_t **pelt_vtx  [PDM_MESH_NODAL_N_ELEMENT_TYPES];
+  int         **pelt_tag  [PDM_MESH_NODAL_N_ELEMENT_TYPES];
+  PDM_g_num_t **pelt_g_num[PDM_MESH_NODAL_N_ELEMENT_TYPES];
+  for (PDM_Mesh_nodal_elt_t t_elt = PDM_MESH_NODAL_POINT; t_elt < PDM_MESH_NODAL_N_ELEMENT_TYPES; t_elt++) {
+
+    if (!_is_supported_type_gamma(t_elt)) {
+      continue;
+    }
+
+    int n_vtx_per_elt = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, 1);
+
+    PDM_malloc(pelt_vtx  [t_elt], n_part, PDM_g_num_t *);
+    PDM_malloc(pelt_tag  [t_elt], n_part, int         *);
+    PDM_malloc(pelt_g_num[t_elt], n_part, PDM_g_num_t *);
+    for (int i_part = 0; i_part < n_part; i_part++) {
+      PDM_malloc(pelt_vtx  [t_elt][i_part], n_vtx_per_elt * pn_elt[t_elt][i_part], PDM_g_num_t);
+      PDM_malloc(pelt_tag  [t_elt][i_part],                 pn_elt[t_elt][i_part], int        );
+      PDM_malloc(pelt_g_num[t_elt][i_part],                 pn_elt[t_elt][i_part], PDM_g_num_t);
+      pn_elt[t_elt][i_part] = 0;
+    } // End loop on parts
+  } // End loop on element types
+
+  /* Merge sections with same element type */
+  PDM_g_num_t *g_num_offset_section = NULL;
+  PDM_malloc(g_num_offset_section, n_section, PDM_g_num_t);
+
+  for (int i_section = 0; i_section < n_section; i_section++) {
+
+    PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_section_elt_type_get(pmn, i_section);
+
+    if (!_is_supported_type_gamma(t_elt)) {
+      continue;
+    }
+
+    int n_vtx_per_elt = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, 1);
+
+    g_num_offset_section[i_section] = gn_elt[t_elt];
+    gn_elt[t_elt] += gn_elt_section[i_section];
+
+    for (int i_part = 0; i_part < n_part; i_part++) {
+      int n_elt = PDM_part_mesh_nodal_section_n_elt_get(pmn, i_section, i_part);
+
+      int         *connec       = NULL;
+      PDM_g_num_t *_g_num       = NULL;
+      int         *parent_l_num = NULL;
+      PDM_g_num_t *parent_g_num = NULL;
+      PDM_part_mesh_nodal_section_std_get(pmn,
+                                          i_section,
+                                          i_part,
+                                          &connec,
+                                          &_g_num,
+                                          &parent_l_num,
+                                          &parent_g_num,
+                                          PDM_OWNERSHIP_BAD_VALUE);
+
+      PDM_g_num_t *g_num = PDM_part_mesh_nodal_section_g_num_get(pmn,
+                                                                 i_section,
+                                                                 i_part,
+                                                                 PDM_OWNERSHIP_BAD_VALUE);
+
+      for (int i_elt = 0; i_elt < n_elt; i_elt++) {
+        for (int i = 0; i < n_vtx_per_elt; i++) {
+          int i_vtx = connec[n_vtx_per_elt*i_elt + i] - 1;
+          pelt_vtx[t_elt][i_part][n_vtx_per_elt*pn_elt[t_elt][i_part] + i] = pvtx_g_num[i_part][i_vtx];
+        }
+        pelt_g_num[t_elt][i_part][pn_elt[t_elt][i_part]] = g_num_offset_section[i_section] + g_num[i_elt];
+        pn_elt[t_elt][i_part]++;
+      } // End loop on elements
+
+      pn_elt[t_elt][i_part] = 0;
+    } // End loop on parts
+
+  } // End loop on sections
+  PDM_free(pvtx_g_num);
+  PDM_free(g_num_offset_section);
+  PDM_free(gn_elt_section);
+
+
+  /* Element tags */
+  int dimension = PDM_part_mesh_nodal_mesh_dimension_get(pmn);
+
+  for (int i_dim = 1; i_dim <= dimension; i_dim++) {
+    PDM_mesh_entities_t entity_type = PDM_dimension_to_entity_type(i_dim);
+    PDM_geometry_kind_t geom_kind   = PDM_entity_type_to_geometry_kind(entity_type);
+
+    int n_group = PDM_part_mesh_nodal_n_group_get(pmn, geom_kind);
+
+    PDM_part_mesh_nodal_elmts_t *pmne = PDM_part_mesh_nodal_part_mesh_nodal_elmts_get(pmn, geom_kind);
+
+    // Convert groups to 0-based tags
+    int **dim_elt_tag_idx = NULL;
+    int **dim_elt_tag     = NULL;
+    if (n_group == 0) {
+      PDM_malloc(dim_elt_tag, n_part, int *);
+      for (int i_part = 0; i_part < n_part; i_part++) {
+        int n_elt = PDM_part_mesh_nodal_n_elmts_get(pmn, geom_kind, i_part);
+        dim_elt_tag[i_part] = PDM_array_const_int(n_elt, 1);
+      }
+    }
+    else {
+      PDM_part_mesh_nodal_group_to_tag(pmn,
+                                       geom_kind,
+                                       PDM_FALSE,
+                                       &dim_elt_tag_idx,
+                                       &dim_elt_tag);
+    }
+
+
+    int  dim_n_section   = PDM_part_mesh_nodal_elmts_n_section_get(pmne);
+    int *dim_section_ids = PDM_part_mesh_nodal_elmts_sections_id_get(pmne);
+
+    for (int i_part = 0; i_part < n_part; i_part++) {
+
+      int offset = 0;
+      for (int i_section = 0; i_section < dim_n_section; i_section++) {
+
+        int id_section = dim_section_ids[i_section];
+
+        PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_section_type_get(pmne, id_section);
+
+        int n_elt = PDM_part_mesh_nodal_elmts_section_n_elt_get(pmne,
+                                                                id_section,
+                                                                i_part);
+
+        if (!_is_supported_type_gamma(t_elt)) {
+          offset += n_elt;
+          continue;
+        }
+
+        int *parent_num = PDM_part_mesh_nodal_elmts_parent_num_get(pmne,
+                                                                   id_section,
+                                                                   i_part,
+                                                                   PDM_OWNERSHIP_BAD_VALUE);
+
+        if (parent_num == NULL) {
+          for (int i_elt = 0; i_elt < n_elt; i_elt++) {
+            pelt_tag[t_elt][i_part][pn_elt[t_elt][i_part]++] = 1 + dim_elt_tag[i_part][offset + i_elt];
+          }
+        }
+        else {
+          for (int i_elt = 0; i_elt < n_elt; i_elt++) {
+            pelt_tag[t_elt][i_part][pn_elt[t_elt][i_part]++] = 1 + dim_elt_tag[i_part][parent_num[i_elt]];
+          }
+        }
+
+        offset += n_elt;
+      } // End loop on sections
+
+      PDM_free(dim_elt_tag[i_part]);
+
+    } // End loop on parts
+
+    PDM_free(dim_elt_tag);
+
+  } // End loop on dimensions
+
+
+  /* Gather elements type by type */
+  PDM_g_num_t *gelt_vtx[PDM_MESH_NODAL_N_ELEMENT_TYPES];
+  int         *gelt_tag[PDM_MESH_NODAL_N_ELEMENT_TYPES];
+
+  for (PDM_Mesh_nodal_elt_t t_elt = PDM_MESH_NODAL_BAR2; t_elt < PDM_MESH_NODAL_N_ELEMENT_TYPES; t_elt++) {
+
+    gelt_vtx[t_elt] = NULL;
+    gelt_tag[t_elt] = NULL;
+
+    if (!_is_supported_type_gamma(t_elt)) {
+      continue;
+    }
+
+    int n_vtx_per_elt = PDM_Mesh_nodal_n_vtx_elt_get(t_elt, 1);
+
+    PDM_g_num_t *distrib_elt = NULL;
+    PDM_malloc(distrib_elt, n_rank+1, PDM_g_num_t);
+    distrib_elt[0] = 0;
+    for (int i = 1; i <= n_rank; i++) {
+      distrib_elt[i] = gn_elt[t_elt];
+    }
+
+    PDM_part_to_block_t *ptb_elt = PDM_part_to_block_create_from_distrib(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                                         PDM_PART_TO_BLOCK_POST_CLEANUP,
+                                                                         1.,
+                                                                         pelt_g_num[t_elt],
+                                                                         distrib_elt,
+                                                                         pn_elt[t_elt],
+                                                                         n_part,
+                                                                         pmn->comm);
+
+    // Connectivity
+    PDM_part_to_block_exch(ptb_elt,
+                           n_vtx_per_elt * sizeof(PDM_g_num_t),
+                           PDM_STRIDE_CST_INTERLACED,
+                           1,
+                           NULL,
+                 (void **) pelt_vtx[t_elt],
+                           NULL,
+                 (void **) &gelt_vtx[t_elt]);
+
+    // Tags
+    PDM_part_to_block_exch(ptb_elt,
+                           sizeof(int),
+                           PDM_STRIDE_CST_INTERLACED,
+                           1,
+                           NULL,
+                 (void **) pelt_tag[t_elt],
+                           NULL,
+                 (void **) &gelt_tag[t_elt]);
+
+    PDM_part_to_block_free(ptb_elt);
+    PDM_free(distrib_elt);
+    for (int i_part = 0; i_part < n_part; i_part++) {
+      PDM_free(pelt_vtx  [t_elt][i_part]);
+      PDM_free(pelt_tag  [t_elt][i_part]);
+      PDM_free(pelt_g_num[t_elt][i_part]);
+    }
+    PDM_free(pelt_vtx  [t_elt]);
+    PDM_free(pelt_tag  [t_elt]);
+    PDM_free(pelt_g_num[t_elt]);
+    PDM_free(pn_elt    [t_elt]);
+  } // End loop on element types
+
+  // Vertices
+  gn_elt  [PDM_MESH_NODAL_POINT] = gn_vtx;
+  gelt_tag[PDM_MESH_NODAL_POINT] = gvtx_tag;
+
+
+  /* Write mesh */
+  if (i_rank == 0) {
+    PDM_write_meshb(filename,
+                    gn_elt,
+                    gelt_tag,
+                    gelt_vtx,
+                    gvtx_coord);
+  }
+
+  for (PDM_Mesh_nodal_elt_t t_elt = PDM_MESH_NODAL_BAR2; t_elt < PDM_MESH_NODAL_N_ELEMENT_TYPES; t_elt++) {
+    PDM_free(gelt_tag[t_elt]);
+    PDM_free(gelt_vtx[t_elt]);
+  }
+  PDM_free(gvtx_coord);
+  PDM_free(gvtx_tag);
+}
 
 #ifdef __cplusplus
 }

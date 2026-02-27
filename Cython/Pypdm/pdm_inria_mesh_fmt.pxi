@@ -1,7 +1,7 @@
 
 cdef extern from "pdm_reader_gamma.h":
     void PDM_write_meshb(char           *filename,
-                         int            *n_elt_table,
+                         PDM_g_num_t    *n_elt_table,
                          int           **tag_table,
                          PDM_g_num_t   **vtx_connect_table,
                          double          *vtx_coords
@@ -13,15 +13,17 @@ cdef extern from "pdm_reader_gamma.h":
                                                     int            fix_orientation_3d)
 
     void PDM_write_gamma_sol(char   *filename,
+                             int     dim,
                              int     n_vtx,
                              int     n_field,
-                             double    *fields)
+                             double *fields)
     void PDM_read_gamma_sol(char   *filename,
                              int     n_vtx,
                              int     n_field,
-                             double    *fields)
+                             double *fields)
 
     void PDM_write_gamma_matsym(char   *filename,
+                                int     dim,
                                 int     n_vtx,
                                 double *fields)
 
@@ -31,11 +33,13 @@ cdef extern from "pdm_reader_gamma.h":
                                        int     **field_stride,
                                        double ***field_values)
 
-def write_meshb(char                                        *filename,
-                NPY.ndarray[NPY.int32_t, mode ='c', ndim=1]  n_elt_table,
-                list                                         tag_table,
-                list                                         vtx_connect_table,
-                NPY.ndarray[NPY.double_t, mode ='c', ndim=1] vtx_coords):
+writer_gamma_new_api = True
+
+def write_meshb(char                                           *filename,
+                NPY.ndarray[npy_pdm_gnum_t, mode ='c', ndim=1]  n_elt_table,
+                list                                            tag_table,
+                list                                            vtx_connect_table,
+                NPY.ndarray[NPY.double_t, mode ='c', ndim=1]    vtx_coords):
     """
     """
     # ---- Variable initialization
@@ -58,30 +62,36 @@ def write_meshb(char                                        *filename,
         vtx_connect_buffer[idx] = <PDM_g_num_t *> vtx_connect_temp.data
 
     PDM_write_meshb(filename,
-                    <int *> n_elt_table.data,
+                    <PDM_g_num_t *> n_elt_table.data,
                     tag_buffer,
                     vtx_connect_buffer,
                     <double *> vtx_coords.data)
 
 
 def write_solb(char *filename,
+               int dim,
                int n_vtx,
                int n_field,
                NPY.ndarray[NPY.double_t, mode='c', ndim=1] field):
   """
+  Write scalar fields in Gamma Mesh Format
   """
   PDM_write_gamma_sol(filename,
+                      dim,
                       n_vtx,
                       n_field,
            <double *> field.data)
 
 
 def write_matsym_solb(char *filename,
+                      int dim,
                       int n_vtx,
                       NPY.ndarray[NPY.double_t, mode='c', ndim=1] field):
   """
+  Write symmetric tensors in Gamma Mesh Format
   """
   PDM_write_gamma_matsym(filename,
+                         dim,
                          n_vtx,
               <double *> field.data)
 
