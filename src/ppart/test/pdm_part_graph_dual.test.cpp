@@ -259,15 +259,15 @@ MPI_TEST_CASE("[PDM_part_assembly_dual_graph] Full vtx_centered ", 2) {
    * Arc  = edges
    */
   int n_part = PDM_part_mesh_nodal_n_part_get(pmn);
-  int  *pn_node       = NULL;
-  int  *pn_arc        = NULL;
-  int **pselect_node  = NULL;
-  int **pnode_arc_idx = NULL;
-  int **pnode_arc     = NULL;
-  int **parc_node_idx = NULL;
-  int **parc_node     = NULL;
-  int **pnode_weight  = NULL;
-  int **parc_weight   = NULL;
+  int  *pn_node           = NULL;
+  int  *pn_arc            = NULL;
+  int **pis_selected_node = NULL;
+  int **pnode_arc_idx     = NULL;
+  int **pnode_arc         = NULL;
+  int **parc_node_idx     = NULL;
+  int **parc_node         = NULL;
+  int **pnode_weight      = NULL;
+  int **parc_weight       = NULL;
   _warmup_node_centered(pm,
                         &pn_node,
                         &pn_arc,
@@ -308,7 +308,7 @@ MPI_TEST_CASE("[PDM_part_assembly_dual_graph] Full vtx_centered ", 2) {
                                n_part,
                                pn_node,
                                pn_arc,
-                               pselect_node,
+                               pis_selected_node,
                                pnode_arc_idx,
                                pnode_arc,
                                parc_node_idx,
@@ -379,7 +379,7 @@ MPI_TEST_CASE("[PDM_part_assembly_dual_graph] Full vtx_centered ", 2) {
   }
   PDM_free(pn_node      );
   PDM_free(pn_arc       );
-  PDM_free(pselect_node );
+  PDM_free(pis_selected_node);
   PDM_free(pnode_arc_idx);
   PDM_free(pnode_arc    );
   PDM_free(parc_node_idx);
@@ -407,15 +407,15 @@ MPI_TEST_CASE("[PDM_part_assembly_dual_graph] select vtx_centered ", 2) {
    * Arc  = edges
    */
   int n_part = PDM_part_mesh_nodal_n_part_get(pmn);
-  int  *pn_node       = NULL;
-  int  *pn_arc        = NULL;
-  int **pselect_node  = NULL;
-  int **pnode_arc_idx = NULL;
-  int **pnode_arc     = NULL;
-  int **parc_node_idx = NULL;
-  int **parc_node     = NULL;
-  int **pnode_weight  = NULL;
-  int **parc_weight   = NULL;
+  int  *pn_node           = NULL;
+  int  *pn_arc            = NULL;
+  int **pis_selected_node = NULL;
+  int **pnode_arc_idx     = NULL;
+  int **pnode_arc         = NULL;
+  int **parc_node_idx     = NULL;
+  int **parc_node         = NULL;
+  int **pnode_weight      = NULL;
+  int **parc_weight       = NULL;
   _warmup_node_centered(pm,
                         &pn_node,
                         &pn_arc,
@@ -445,17 +445,17 @@ MPI_TEST_CASE("[PDM_part_assembly_dual_graph] select vtx_centered ", 2) {
                                     &pcg_arc,
                                     PDM_OWNERSHIP_KEEP);
 
-  PDM_malloc(pselect_node, n_part, int *);
+  PDM_malloc(pis_selected_node, n_part, int *);
   for(int i_part = 0; i_part < n_part; ++i_part) {
     pn_node[i_part] = PDM_part_mesh_n_entity_get(pm, i_part, PDM_MESH_ENTITY_VTX );
-    PDM_malloc(pselect_node[i_part], pn_node[i_part], int);
+    PDM_malloc(pis_selected_node[i_part], pn_node[i_part], int);
     double *vtx_coords = PDM_part_mesh_nodal_vtx_coord_get(pmn, i_part, PDM_OWNERSHIP_BAD_VALUE);
     for(int i = 0; i < pn_node[i_part]; ++i) {
       if( (vtx_coords[3*i  ] > -0.25 && vtx_coords[3*i  ] < 0.25) &&
           (vtx_coords[3*i+1] > -0.25 && vtx_coords[3*i+1] < 0.25)){
-        pselect_node[i_part][i] = 1;
+        pis_selected_node[i_part][i] = 1;
       } else {
-        pselect_node[i_part][i] = 0;
+        pis_selected_node[i_part][i] = 0;
       }
     }
   }
@@ -471,7 +471,7 @@ MPI_TEST_CASE("[PDM_part_assembly_dual_graph] select vtx_centered ", 2) {
                                n_part,
                                pn_node,
                                pn_arc,
-                               pselect_node,
+                               pis_selected_node,
                                pnode_arc_idx,
                                pnode_arc,
                                parc_node_idx,
@@ -535,15 +535,15 @@ MPI_TEST_CASE("[PDM_part_assembly_dual_graph] select vtx_centered ", 2) {
   }
   PDM_free(part_to_graph);
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    PDM_free(pnode_arc_idx[i_part]);
-    PDM_free(pnode_arc    [i_part]);
-    PDM_free(pnode_weight [i_part]);
-    PDM_free(parc_weight  [i_part]);
-    PDM_free(pselect_node [i_part]);
+    PDM_free(pnode_arc_idx    [i_part]);
+    PDM_free(pnode_arc        [i_part]);
+    PDM_free(pnode_weight     [i_part]);
+    PDM_free(parc_weight      [i_part]);
+    PDM_free(pis_selected_node[i_part]);
   }
-  PDM_free(pn_node      );
-  PDM_free(pn_arc       );
-  PDM_free(pselect_node );
+  PDM_free(pn_node          );
+  PDM_free(pn_arc           );
+  PDM_free(pis_selected_node);
   PDM_free(pnode_arc_idx);
   PDM_free(pnode_arc    );
   PDM_free(parc_node_idx);
@@ -574,15 +574,15 @@ MPI_TEST_CASE("[PDM_part_assembly_dual_graph] Full cell_centered ", 2) {
    * Arc  = edges
    */
   int n_part = PDM_part_mesh_nodal_n_part_get(pmn);
-  int  *pn_node       = NULL;
-  int  *pn_arc        = NULL;
-  int **pselect_node  = NULL;
-  int **pnode_arc_idx = NULL;
-  int **pnode_arc     = NULL;
-  int **parc_node_idx = NULL;
-  int **parc_node     = NULL;
-  int **pnode_weight  = NULL;
-  int **parc_weight   = NULL;
+  int  *pn_node           = NULL;
+  int  *pn_arc            = NULL;
+  int **pis_selected_node = NULL;
+  int **pnode_arc_idx     = NULL;
+  int **pnode_arc         = NULL;
+  int **parc_node_idx     = NULL;
+  int **parc_node         = NULL;
+  int **pnode_weight      = NULL;
+  int **parc_weight       = NULL;
   _warmup_cell_centered(pm,
                         &pn_node,
                         &pn_arc,
@@ -623,7 +623,7 @@ MPI_TEST_CASE("[PDM_part_assembly_dual_graph] Full cell_centered ", 2) {
                                n_part,
                                pn_node,
                                pn_arc,
-                               pselect_node,
+                               pis_selected_node,
                                pnode_arc_idx,
                                pnode_arc,
                                parc_node_idx,
@@ -692,9 +692,9 @@ MPI_TEST_CASE("[PDM_part_assembly_dual_graph] Full cell_centered ", 2) {
     PDM_free(pnode_weight [i_part]);
     PDM_free(parc_weight  [i_part]);
   }
-  PDM_free(pn_node      );
-  PDM_free(pn_arc       );
-  PDM_free(pselect_node );
+  PDM_free(pn_node          );
+  PDM_free(pn_arc           );
+  PDM_free(pis_selected_node);
   PDM_free(pnode_arc_idx);
   PDM_free(pnode_arc    );
   PDM_free(parc_node_idx);

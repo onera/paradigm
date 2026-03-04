@@ -742,7 +742,7 @@ PDM_part_assembly_dual_graph
   int                      n_part,
   int                     *n_node,
   int                     *n_arc,
-  int                    **select_node,
+  int                    **is_selected_node,
   int                    **node_arc_idx,
   int                    **node_arc,
   int                    **arc_node_idx,
@@ -776,14 +776,14 @@ PDM_part_assembly_dual_graph
   PDM_part_comm_graph_t *sub_pcg_node = NULL;
   PDM_part_comm_graph_t *sub_pcg_arc  = NULL;
 
-  if (select_node != NULL) {
+  if (is_selected_node != NULL) {
 
     if(pcg_node != NULL) {
       PDM_part_comm_graph_all_reduce(pcg_node,
                                      PDM_MPI_INT,
                                      1,
                                      PDM_MPI_MAX,
-                 (unsigned char **)  select_node);
+                 (unsigned char **)  is_selected_node);
     }
 
     // Compute old to new
@@ -807,7 +807,7 @@ PDM_part_assembly_dual_graph
       for (int i_arc = 0; i_arc < n_arc[i_part]; ++i_arc) {
         for (int j=arc_node_idx[i_part][i_arc]; j < arc_node_idx[i_part][i_arc+1]; ++j) {
           int i_node = arc_node[i_part][j];
-          if (select_node[i_part][i_node-1] == 0) {
+          if (is_selected_node[i_part][i_node-1] == 0) {
             select_arc[i_part][i_arc] = 0;
             break;
           }
@@ -821,7 +821,7 @@ PDM_part_assembly_dual_graph
       int count = 0;
       for(int i = 0; i < n_node[i_part]; ++i) {
         node_old_to_new[i_part][i] = -1;
-        if(select_node[i_part][i] == 1) {
+        if(is_selected_node[i_part][i] == 1) {
           node_old_to_new[i_part][i] = count++;
         }
       }
@@ -829,7 +829,7 @@ PDM_part_assembly_dual_graph
       sub_n_node[i_part] = _connectivity_filter(n_node           [i_part],
                                                 node_arc_idx     [i_part],
                                                 node_arc         [i_part],
-                                                select_node      [i_part],
+                                                is_selected_node [i_part],
                                                 select_arc       [i_part],
                                                 &sub_node_arc_idx[i_part],
                                                 &sub_node_arc    [i_part]);
@@ -856,13 +856,13 @@ PDM_part_assembly_dual_graph
 
       // Filter weights
       if (node_weight != NULL) {
-        PDM_array_copy_if_int(n_node[i_part], node_weight[i_part], select_node[i_part], &sub_node_weight[i_part]);
+        PDM_array_copy_if_int(n_node[i_part], node_weight[i_part], is_selected_node[i_part], &sub_node_weight[i_part]);
       }
     }
 
     // Filter comm graphs
     if (pcg_node != NULL) {
-      sub_pcg_node = _pcg_filter(n_part, pcg_node, select_node);
+      sub_pcg_node = _pcg_filter(n_part, pcg_node, is_selected_node);
       PDM_part_comm_graph_reorder(sub_pcg_node, node_old_to_new);
     }
     if (pcg_arc != NULL) {
@@ -908,7 +908,7 @@ PDM_part_assembly_dual_graph
                             out_distrib_node,
                             out_part_to_graph);
 
-  if (select_node != NULL) {
+  if (is_selected_node != NULL) {
     // Update out_part_to_graph to make it full
     for (int i_part = 0; i_part < n_part; ++i_part) {
       int* _sub_part_to_graph = (*out_part_to_graph)[i_part];
@@ -925,7 +925,7 @@ PDM_part_assembly_dual_graph
     }
   }
 
-  if (select_node != NULL) {
+  if (is_selected_node != NULL) {
     for (int i_part = 0; i_part < n_part; ++i_part) {
       PDM_free(node_old_to_new[i_part]);
 

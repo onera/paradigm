@@ -49,7 +49,7 @@ extern "C" {
  * \param [in]    n_part                 Number of partition on current process
  * \param [in]    n_node                 Number of nodes in each partition (size = \p n_part)
  * \param [in]    n_arc                  Number of arcs in each partition (size = \p n_part)
- * \param [in]    select_node            Filter for nodes to include in the graph (size = \p n_part, \p select_node[i_part] size = \p n_node[i_part]). If NULL, all nodes are used.
+ * \param [in]    is_selected_node       Filter for nodes to include in the graph (0 or 1) (size = \p n_part, \p is_selected_node [i_part] size = \p n_node[i_part]). If NULL, all nodes are used.
  * \param [in]    node_arc_idx           Index for node to arc adjacency (size = \p n_part, \p node_arc_idx[i_part] size = \p n_node[i_part] + 1)
  * \param [in]    node_arc               Adjacency from node to arc (size = \p n_part, \p node_arc[i_part] size = \p node_arc_idx[i_part][n_node])
  * \param [in]    arc_node_idx           Index for arc to node adjacency (size = \p n_part, \p arc_node_idx[i_part] size = \p n_arc[i_part] + 1)
@@ -63,6 +63,7 @@ extern "C" {
  * \param [out]   out_gnode_weight       Output node weights for the dual graph
  * \param [out]   out_garc_weight        Output edge weights for the dual graph
  * \param [out]   out_distrib_node       Global distribution of nodes across ranks (size = n_rank + 1)
+ * \param [out]   out_part_to_graph      For all partition, the indirection between the partition and the graph. Mandatory to transfer information between graph and partition  (size = n_part and for each part size=pn_node)
  *
  * \details This function builds a dual graph where nodes are connected if they share an arc.
  * It resolves interfaces using \p pcg_node or \p pcg_arc to exchange global identifiers.
@@ -75,7 +76,7 @@ PDM_part_assembly_dual_graph
   int                      n_part,
   int                     *n_node,
   int                     *n_arc,
-  int                    **select_node,
+  int                    **is_selected_node,
   int                    **node_arc_idx,
   int                    **node_arc,
   int                    **arc_node_idx,
