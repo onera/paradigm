@@ -486,33 +486,22 @@ main
   // Bon dans tous les cas on essayera de ce rammener au entités principale
 
   // Synchro color and deconcatenate
-  double **dvtx_id = NULL;
-  int    **vtx_id  = NULL;
-  PDM_malloc(dvtx_id, n_part, double *);
+  int **vtx_id  = NULL;
   PDM_malloc(vtx_id , n_part, int    *);
   for(int i_part = 0; i_part < n_part; ++i_part) {
 
-    PDM_malloc(dvtx_id[i_part], pn_node[i_part], double);
     PDM_malloc( vtx_id[i_part], pn_node[i_part], int   );
 
     for(int i = 0; i < pn_node[i_part]; ++i) {
       int l_node = part_to_graph[i_part][i];
       if(l_node != -1) {
-        dvtx_id[i_part][i] = node_part_id[l_node];
         vtx_id [i_part][i] = node_part_id[l_node];
       } else {
-        dvtx_id[i_part][i] = -1;
         vtx_id [i_part][i] = -1;
       }
     }
   }
 
-  /* Synchronise all processor */
-  PDM_part_comm_graph_all_reduce(pcg_node,
-                                 PDM_MPI_DOUBLE,
-                                 1,
-                                 PDM_MPI_MAX,
-             (unsigned char **)  dvtx_id);
   PDM_part_comm_graph_all_reduce(pcg_node,
                                  PDM_MPI_INT,
                                  1,
@@ -539,17 +528,29 @@ main
                                                   &elt_id);
 
 
-  double **delt_id = NULL;
-  PDM_malloc(delt_id, n_part, double *);
-  for(int i_part = 0; i_part < n_part; ++i_part) {
-    PDM_malloc( delt_id[i_part], pn_elt[i_part], double   );
-
-    for(int i = 0; i < pn_elt[i_part]; ++i) {
-      delt_id[i_part][i] = elt_id[i_part][i];
-    }
-  }
 
   if(post) {
+
+    double **delt_id = NULL;
+    double **dvtx_id = NULL;
+
+    PDM_malloc(delt_id, n_part, double *);
+    PDM_malloc(dvtx_id, n_part, double *);
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      PDM_malloc(delt_id[i_part], pn_elt [i_part], double);
+      PDM_malloc(dvtx_id[i_part], pn_node[i_part], double);
+
+      for(int i = 0; i < pn_elt[i_part]; ++i) {
+        delt_id[i_part][i] = elt_id[i_part][i];
+      }
+    }
+
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      for(int i = 0; i < pn_node[i_part]; ++i) {
+        dvtx_id[i_part][i] = vtx_id[i_part][i];
+      }
+    }
+
     const char    *elt_field_name [] = {"delt_id"};
     double       **elt_field      [] = {delt_id};
     const char    *field_vtx_name [] = {"dvtx_id"};
@@ -565,18 +566,23 @@ main
                                              1,
                                              field_vtx_name,
                    (const double ***)        field_vtx);
+
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      PDM_free(delt_id[i_part]);
+      PDM_free(dvtx_id[i_part]);
+    }
+    PDM_free(delt_id);
+    PDM_free(dvtx_id);
+
+
   }
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
     PDM_free(vtx_id [i_part]);
-    PDM_free(dvtx_id[i_part]);
     PDM_free(elt_id [i_part]);
-    PDM_free(delt_id[i_part]);
   }
   PDM_free(vtx_id);
-  PDM_free(dvtx_id);
   PDM_free(elt_id);
-  PDM_free(delt_id);
   for(int i_part = 0; i_part < n_part; ++i_part) {
     PDM_free(part_to_graph[i_part]);
   }
