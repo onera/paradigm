@@ -13,14 +13,16 @@
 #include "pdm.h"
 #include "pdm_array.h"
 #include "pdm_distrib.h"
+#include "pdm_error.h"
 #include "pdm_gnum.h"
 #include "pdm_logging.h"
 #include "pdm_mem_tool.h"
+#include "pdm_part_comm_graph_algorithm.h"
+#include "pdm_part_connectivity_transform.h"
 #include "pdm_part_graph_dual.h"
 #include "pdm_priv.h"
 #include "pdm_sort.h"
 #include "pdm_unique.h"
-#include "pdm_part_comm_graph_algorithm.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -731,6 +733,32 @@ _part_assembly_dual_graph
   *out_part_to_graph  = is_owner_node;
 }
 
+static
+int
+_have_parray
+(
+  PDM_MPI_Comm    comm,
+  int             n_part,
+  int           **array
+
+)
+{
+  int have_array   = 0;
+  int g_have_array = 0;
+
+  if(array != NULL) {
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      if(array[i_part] != NULL) {
+        have_array = 1;
+      }
+    }
+  }
+
+  PDM_MPI_Allreduce(&have_array, &g_have_array, 1, PDM_MPI_INT, PDM_MPI_MAX, comm);
+
+  return g_have_array;
+}
+
 /*=============================================================================
  * Public function definitions
  *============================================================================*/
@@ -743,10 +771,10 @@ PDM_part_assembly_dual_graph
   int                     *n_node,
   int                     *n_arc,
   int                    **is_selected_node,
-  int                    **node_arc_idx,
-  int                    **node_arc,
-  int                    **arc_node_idx,
-  int                    **arc_node,
+  int                    **node_arc_idx_in,
+  int                    **node_arc_in,
+  int                    **arc_node_idx_in,
+  int                    **arc_node_in,
   int                    **node_weight,
   int                    **arc_weight,
   PDM_part_comm_graph_t   *pcg_node,
@@ -761,8 +789,49 @@ PDM_part_assembly_dual_graph
 )
 {
 
-  int  *sub_n_node   = NULL;
+  int have_arc_node = _have_parray(comm, n_part, arc_node_idx_in);
+  int have_node_arc = _have_parray(comm, n_part, node_arc_idx_in);
 
+  int **node_arc_idx = NULL;
+  int **node_arc     = NULL;
+  int **arc_node_idx = NULL;
+  int **arc_node     = NULL;
+
+  if(have_arc_node == 0) {
+    if(have_node_arc != 1) {
+      PDM_error(__FILE__, __LINE__, 0, "PDM_part_assembly_dual_graph - Missing node_arc and arc_node is NULL \n");
+    }
+
+    PDM_part_connectivity_transpose(n_part,
+                                    n_node,
+                                    n_arc,
+                                    node_arc_idx_in,
+                                    node_arc_in,
+                                    &arc_node_idx,
+                                    &arc_node);
+  } else {
+    arc_node_idx = arc_node_idx_in;
+    arc_node     = arc_node_in;
+  }
+
+  if(have_node_arc == 0) {
+    if(have_arc_node != 1) {
+      PDM_error(__FILE__, __LINE__, 0, "PDM_part_assembly_dual_graph - Missing arc_node and node_arc is NULL \n");
+    }
+
+    PDM_part_connectivity_transpose(n_part,
+                                    n_arc,
+                                    n_node,
+                                    arc_node_idx_in,
+                                    arc_node_in,
+                                    &node_arc_idx,
+                                    &node_arc);
+  } else {
+    node_arc_idx = node_arc_idx_in;
+    node_arc     = node_arc_in;
+  }
+
+  int  *sub_n_node      = NULL;
   int **node_old_to_new = NULL;
 
   int **sub_node_arc_idx = NULL;
@@ -813,8 +882,6 @@ PDM_part_assembly_dual_graph
           }
         }
       }
-
-
 
       // Compute node old to new
       PDM_malloc(node_old_to_new[i_part], n_node[i_part], int);
@@ -948,6 +1015,28 @@ PDM_part_assembly_dual_graph
     }
     PDM_part_comm_graph_free(sub_pcg_node);
     PDM_part_comm_graph_free(sub_pcg_arc);
+  }
+
+
+  /*
+   * Manage free if user give only one connectivity
+   */
+  if(have_node_arc == 0) {
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      PDM_free(node_arc_idx[i_part]);
+      PDM_free(node_arc    [i_part]);
+    }
+    PDM_free(node_arc_idx);
+    PDM_free(node_arc    );
+  }
+
+  if(have_arc_node == 0) {
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      PDM_free(arc_node_idx[i_part]);
+      PDM_free(arc_node    [i_part]);
+    }
+    PDM_free(arc_node_idx);
+    PDM_free(arc_node    );
   }
 
 }

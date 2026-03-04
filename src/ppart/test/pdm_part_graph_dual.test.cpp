@@ -619,6 +619,7 @@ MPI_TEST_CASE("[PDM_part_assembly_dual_graph] Full cell_centered ", 2) {
   int          *garc_weight    = NULL;
   PDM_g_num_t  *distrib_node   = NULL;
   int         **part_to_graph  = NULL;
+  // Let test if NULL connectivity is set, the function will be automaticly recompute it
   PDM_part_assembly_dual_graph(test_comm,
                                n_part,
                                pn_node,
@@ -626,8 +627,8 @@ MPI_TEST_CASE("[PDM_part_assembly_dual_graph] Full cell_centered ", 2) {
                                pis_selected_node,
                                pnode_arc_idx,
                                pnode_arc,
-                               parc_node_idx,
-                               parc_node,
+                               NULL, // parc_node_idx,
+                               NULL, // parc_node,
                                pnode_weight,
                                parc_weight,
                                pcg_node,
