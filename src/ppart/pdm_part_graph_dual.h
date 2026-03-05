@@ -68,6 +68,7 @@ extern "C" {
  * \details This function builds a dual graph where nodes are connected if they share an arc.
  * It resolves interfaces using \p pcg_node or \p pcg_arc to exchange global identifiers.
  * The resulting graph is sorted, unique, and formatted for partitioners like ParMETIS or PT-SCOTCH.
+ * We can specify node_arc==NULL or arc_node==NULL, the function will automaticly recompute the missing connectivity
  */
 void
 PDM_part_assembly_dual_graph
