@@ -26,7 +26,7 @@ default:
 
 init_repo:
   variables:
-    SCHEDULER_PARAMETERS: "--partition=intel --cpus-per-task=1 --ntasks=24 --node=1-1 --time=00:10:00"
+    SCHEDULER_PARAMETERS: "--partition=intel --cpus-per-task=1 --ntasks=24 --nodes=1-1 --time=00:10:00"
   stage: init
   script: # explicitly load modules one by one, so that if one fails, it will be easy to identify
     - INIT_ORIGINAL_FOLDER=$(pwd)
@@ -130,7 +130,7 @@ build:
             - "Debug"
   variables:
     MATRIX_KEY: _${COMPILER}_${MPI_LIB}_GNUM64_${GNUM64}_BUILD_${BUILD_TYPE}_PDMA_${PDMA}
-    SCHEDULER_PARAMETERS: "--partition=intel --cpus-per-task=1 --ntasks=12 --node=1-1 --time=$BUILD_MAX_DURATION"
+    SCHEDULER_PARAMETERS: "--partition=intel --cpus-per-task=1 --ntasks=12 --nodes=1-1 --time=$BUILD_MAX_DURATION"
   stage: build
   before_script:
     - module purge
@@ -251,7 +251,7 @@ unit_test:
             - "Debug"
   variables:
     MATRIX_KEY: _${COMPILER}_${MPI_LIB}_GNUM64_${GNUM64}_BUILD_${BUILD_TYPE}_PDMA_${PDMA}
-    SCHEDULER_PARAMETERS: "--partition=intel --cpus-per-task=1 --ntasks=20 --node=1-1 --time=$TESTS_MAX_DURATION"
+    SCHEDULER_PARAMETERS: "--partition=intel --cpus-per-task=1 --ntasks=20 --nodes=1-1 --time=$TESTS_MAX_DURATION"
   stage: test
   before_script:
     - module purge
@@ -317,7 +317,7 @@ fake_install:
     PDMA: "ON"
     BUILD_TYPE: "Release"
     MATRIX_KEY: _${COMPILER}_${MPI_LIB}_GNUM64_${GNUM64}_BUILD_${BUILD_TYPE}_PDMA_${PDMA}
-    SCHEDULER_PARAMETERS: "--partition=intel --cpus-per-task=1 --ntasks=12 --node=1-1 --time=$BUILD_MAX_DURATION"
+    SCHEDULER_PARAMETERS: "--partition=intel --cpus-per-task=1 --ntasks=12 --nodes=1-1 --time=$BUILD_MAX_DURATION"
   before_script:
     - module purge
     - echo "compilo = $COMPILER"
@@ -343,7 +343,7 @@ pages:
   rules:
     - if: $CI_COMMIT_BRANCH == "dev"
   variables:
-    SCHEDULER_PARAMETERS: "--partition=intel --cpus-per-task=1 --ntasks=6 --node=1-1 --time=$BUILD_MAX_DURATION"
+    SCHEDULER_PARAMETERS: "--partition=intel --cpus-per-task=1 --ntasks=6 --nodes=1-1 --time=$BUILD_MAX_DURATION"
   before_script:
     - ''
   script:
