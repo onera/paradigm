@@ -762,13 +762,14 @@ cdef class Isosurface:
                                                 PDM_OWNERSHIP_USER)
     if connectivity_type==PDM_CONNECTIVITY_TYPE_EDGE_VTX:
       connectivity_size = 2*n_entity
+      np_connectivity_idx = None
     elif connectivity_type==PDM_CONNECTIVITY_TYPE_FACE_VTX:
       connectivity_size = connectivity_idx[n_entity]
+      np_connectivity_idx = create_numpy_i(connectivity_idx, n_entity+1       , flag_owndata=True)
     else:
       raise ValueError(f"PDM_isosurface_t: has no connectivity of type {connectivity_type}")
 
-    np_connectivity_idx = create_numpy_i(connectivity_idx, n_entity+1       , flag_owndata=True)
-    np_connectivity     = create_numpy_i(connectivity    , connectivity_size, flag_owndata=True)
+    np_connectivity = create_numpy_i(connectivity, connectivity_size, flag_owndata=True)
 
     return np_connectivity_idx, np_connectivity
 
