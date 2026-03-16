@@ -633,7 +633,7 @@ cdef class PartToPart:
 
       if(_part1_stride != NULL):
 
-        strid_size = n_elt1[i_part]
+        strid_size = part1_to_part2_idx[i_part][n_elt1[i_part]]
 
         np_part1_stride = create_numpy_i(_part1_stride[i_part], strid_size)
         dim_np = np_part1_stride.sum()
