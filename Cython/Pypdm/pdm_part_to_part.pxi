@@ -256,6 +256,18 @@ cdef class PartToPart:
 
 
   # --------------------------------------------------------------------
+  def get_part1_to_part2_idx(self):
+    cdef int   n_part1, n_part2
+    cdef int*  n_elt1
+    cdef int** part1_to_part2_idx
+
+    PDM_part_to_part_n_part_get(self.ptp, &n_part1, &n_part2)
+    PDM_part_to_part_part1_to_part2_idx_get(self.ptp, &n_elt1, &part1_to_part2_idx)
+
+    return [create_numpy_i(part1_to_part2_idx[i_part], n_elt1[i_part]+1, flag_owndata=False).copy() \
+            for i_part in range(n_part1)]
+
+  # --------------------------------------------------------------------
   def get_referenced_lnum2(self):
     """
     Get referenced Part2 elements
