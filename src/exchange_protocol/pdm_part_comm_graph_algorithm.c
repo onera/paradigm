@@ -1003,6 +1003,100 @@ PDM_part_comm_graph_selected_entity1_to_selected_entity2
 }
 
 
+PDM_part_comm_graph_t*
+PDM_part_comm_graph_filter
+(
+  PDM_part_comm_graph_t   *pcg,
+  const int              **flag,
+  const int                both
+)
+{
+
+  int **recv_data = NULL;
+  PDM_part_comm_graph_exch(pcg,
+                           sizeof(int),
+                           PDM_STRIDE_CST_INTERLACED,
+                           1,
+                           NULL,
+              (void **)    flag,
+                           NULL,
+              (void ***)   &recv_data);
+
+
+  int  *n_sub_graph = NULL;
+  int **sub_graph   = NULL;
+  PDM_malloc(n_sub_graph, pcg->n_part, int  );
+  PDM_malloc(sub_graph  , pcg->n_part, int *);
+
+
+  for(int i_part = 0; i_part < pcg->n_part; ++i_part) {
+
+    int *graph = NULL;
+    int n_graph = PDM_part_comm_graph_entity_graph_get(pcg,
+                                                       i_part,
+                                                       &graph,
+                                                       PDM_OWNERSHIP_BAD_VALUE);
+    // both = 1 ---> garde l'entrée si both true
+    // both = 0 ---> garde l'entrée si au moins un true
+    n_sub_graph[i_part] = 0;
+    if (both == 1) {
+      for (int i = 0; i < n_graph; ++i) {
+        if (flag[i_part][i] == 1 && recv_data[i_part][i] == 1)
+          n_sub_graph[i_part]++;
+      }
+    }
+    else {
+      for (int i = 0; i < n_graph; ++i) {
+        if (flag[i_part][i] == 1 || recv_data[i_part][i] == 1)
+          n_sub_graph[i_part]++;
+      }
+    }
+
+
+    PDM_malloc(sub_graph[i_part], 4 * n_sub_graph[i_part], int);
+
+    n_sub_graph[i_part] = 0;
+    if (both == 1) {
+      for (int i = 0; i < n_graph; ++i) {
+        if (flag[i_part][i] == 1 && recv_data[i_part][i] == 1) {
+          sub_graph[i_part][4*n_sub_graph[i_part]  ] = graph[4*i  ];
+          sub_graph[i_part][4*n_sub_graph[i_part]+1] = graph[4*i+1];
+          sub_graph[i_part][4*n_sub_graph[i_part]+2] = graph[4*i+2];
+          sub_graph[i_part][4*n_sub_graph[i_part]+3] = graph[4*i+3];
+
+          n_sub_graph[i_part]++;
+        }
+      }
+    }
+    else {
+      for (int i = 0; i < n_graph; ++i) {
+        if (flag[i_part][i] == 1 || recv_data[i_part][i] == 1) {
+          sub_graph[i_part][4*n_sub_graph[i_part]  ] = graph[4*i  ];
+          sub_graph[i_part][4*n_sub_graph[i_part]+1] = graph[4*i+1];
+          sub_graph[i_part][4*n_sub_graph[i_part]+2] = graph[4*i+2];
+          sub_graph[i_part][4*n_sub_graph[i_part]+3] = graph[4*i+3];
+
+          n_sub_graph[i_part]++;
+        }
+      }
+    }
+    PDM_free(recv_data[i_part]);
+  }
+  PDM_free(recv_data);
+
+  PDM_MPI_Comm comm = PDM_part_comm_graph_comm_get(pcg);
+  PDM_part_comm_graph_t* sub_pcg = PDM_part_comm_graph_create(pcg->n_part,
+                                                              n_sub_graph,
+                                                              sub_graph,
+                                                              PDM_OWNERSHIP_KEEP,
+                                                              comm);
+
+  PDM_free(sub_graph);
+  PDM_free(n_sub_graph);
+  return sub_pcg;
+
+}
+
 PDM_part_comm_graph_t *
 PDM_part_comm_graph_concatenate
 (
@@ -1138,6 +1232,123 @@ PDM_part_comm_graph_concatenate
   }
 
   return pcg;
+}
+
+
+void
+PDM_part_comm_graph_split
+(
+  PDM_part_comm_graph_t   *pcg,
+  const int                n_tag,
+  const int              **entity_tag,
+  PDM_part_comm_graph_t ***pcgs
+)
+{
+  PDM_MPI_Comm comm        = PDM_part_comm_graph_comm_get(pcg);
+  int          n_part      = PDM_part_comm_graph_n_part_get(pcg);
+  int          nuplet_size = PDM_part_comm_graph_entity_nuplet_size_get(pcg);
+  int          is_signed   = PDM_part_comm_graph_entity_is_signed_get(pcg);
+
+  int  **split_n_entity_graph = NULL;
+  int ***split_entity_graph = NULL;
+  int ***split_entity_nuplt = NULL;
+  PDM_calloc(split_n_entity_graph, n_tag, int  *);
+  PDM_malloc(split_entity_graph  , n_tag, int **);
+  if (nuplet_size>0) {
+    PDM_malloc(split_entity_nuplt, n_tag, int **);
+  }
+  for (int i_tag = 0; i_tag < n_tag; ++i_tag) {
+    PDM_calloc(split_n_entity_graph[i_tag], n_part, int  );
+    PDM_malloc(split_entity_graph  [i_tag], n_part, int *);
+    if (nuplet_size>0) {
+      PDM_malloc(split_entity_nuplt[i_tag], n_part, int *);
+    }
+  }
+
+  for (int i_part=0; i_part<n_part; ++i_part) {
+    int *entity_graph = NULL;
+    int *entity_nuplt = NULL;
+    int n_entity = PDM_part_comm_graph_entity_graph_get(pcg,
+                                                        i_part,
+                                                        &entity_graph,
+                                                        PDM_OWNERSHIP_BAD_VALUE);
+
+    PDM_part_comm_graph_entity_nuplet_get(pcg,
+                                          i_part,
+                                          &entity_nuplt,
+                                          PDM_OWNERSHIP_BAD_VALUE );
+
+    for (int i_tag = 0; i_tag < n_tag; ++i_tag) {
+      PDM_malloc(split_entity_graph[i_tag][i_part], 4*n_entity, int);
+      if (nuplet_size>0) {
+        PDM_malloc(split_entity_nuplt[i_tag][i_part], n_entity, int);
+      }
+    }
+
+    for (int i_entity=0; i_entity<n_entity; ++i_entity) {
+      int tag = entity_tag[i_part][i_entity];
+      log_trace("i_entity = %d, tag = %d\n", i_entity, tag);
+      if (tag<0) {
+        PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_split: tag[i_part=%d][i_entity=%d] = %d, but should be >0", i_part, i_entity, tag);
+      }
+      if (tag>=n_tag) {
+        PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_split: tag[i_part=%d][i_entity=%d] = %d, but should be < n_tag (= %d)", i_part, i_entity, tag, n_tag);
+      }
+      int i_write = split_n_entity_graph[tag][i_part];
+
+      split_entity_graph[tag][i_part][4*i_write  ] = entity_graph[4*i_entity  ];
+      split_entity_graph[tag][i_part][4*i_write+1] = entity_graph[4*i_entity+1];
+      split_entity_graph[tag][i_part][4*i_write+2] = entity_graph[4*i_entity+2];
+      split_entity_graph[tag][i_part][4*i_write+3] = entity_graph[4*i_entity+3];
+
+      if (nuplet_size>0) {
+        for (int i_nuplet=0; i_nuplet<nuplet_size; ++i_nuplet) {
+          split_entity_nuplt[tag][i_part][nuplet_size*i_write+i_nuplet] = entity_nuplt[nuplet_size*i_entity+i_nuplet];
+        }
+      }
+
+      split_n_entity_graph[tag][i_part]++;
+
+    }
+  }
+
+  PDM_part_comm_graph_t **split_pcgs = NULL;
+  PDM_malloc(split_pcgs, n_tag, PDM_part_comm_graph_t *);
+
+  for (int tag = 0; tag < n_tag; ++tag) {
+    if (nuplet_size>0) {
+      split_pcgs[tag] = PDM_part_comm_graph_with_nuplet_create(n_part,
+                                                               split_n_entity_graph[tag],
+                                                               split_entity_graph[tag],
+                                                               PDM_OWNERSHIP_KEEP,
+                                                               nuplet_size,
+                                                               split_entity_nuplt[tag],
+                                                               PDM_OWNERSHIP_KEEP,
+                                                               is_signed,
+                                                               comm);
+    }
+    else {
+      split_pcgs[tag] = PDM_part_comm_graph_create(n_part,
+                                                   split_n_entity_graph[tag],
+                                                   split_entity_graph[tag],
+                                                   PDM_OWNERSHIP_KEEP,
+                                                   comm);
+    }
+  }
+
+  *pcgs = split_pcgs;
+
+  for (int i_tag = 0; i_tag < n_tag; ++i_tag) {
+    PDM_free(split_n_entity_graph[i_tag]);
+    PDM_free(split_entity_graph  [i_tag]);
+    if (nuplet_size>0) {
+      PDM_free(split_entity_nuplt[i_tag]);
+    }
+  }
+  PDM_free(split_n_entity_graph);
+  PDM_free(split_entity_graph);
+  PDM_free(split_entity_nuplt);
+
 }
 
 

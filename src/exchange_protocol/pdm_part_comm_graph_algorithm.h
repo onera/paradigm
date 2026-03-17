@@ -149,6 +149,46 @@ PDM_part_comm_graph_concatenate
   PDM_part_comm_graph_t **pcgs
 );
 
+/**
+ * \brief Remove entries in a part_comm_graph object
+ *
+ * \param [in] pcg   Initial PDM_part_comm_graph_t object
+ * \param [in] flag  List of n_part arrays of size n_entity_graph[i_part] each,
+ *                   indicating if entity is selected or not
+ * \param [in] both  If True, keep entry if both sides are flagged True;
+ *                   otherwise, keep entry if at least one side is flagged True.
+ *
+ * \return Output \ref PDM_part_comm_graph_t instance
+ *
+ */
+PDM_part_comm_graph_t*
+PDM_part_comm_graph_filter
+(
+  PDM_part_comm_graph_t   *pcg,
+  const int              **flag,
+  const int                both
+);
+
+
+/**
+ * \brief Split part_comm_graph into n_tag part_comm_graph objects
+ *
+ * \param [in   ] pcg         Initial PDM_part_comm_graph_t object
+ * \param [in   ] n_tag       Number of tags
+ * \param [in   ] entity_tag  List of n_part arrays of size n_entity_graph[i_part] each,
+ *                            indicating the ID (0-based) of the output pcg
+ * \param [inout] pcgs        Initial PDM_part_comm_graph_t object
+ *
+ */
+void
+PDM_part_comm_graph_split
+(
+  PDM_part_comm_graph_t   *pcg,
+  const int                n_tag,
+  const int              **entity_tag,
+  PDM_part_comm_graph_t ***pcgs
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

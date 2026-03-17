@@ -530,6 +530,34 @@ PDM_part_comm_graph_all_reduce
 
 /**
  *
+ * \brief Get information about if nuplet is signed
+ *
+ * \param [in] pcg Pointer to \ref PDM_part_comm_graph_t instance
+ *
+ * \return Nuplet is signed info
+ */
+int
+PDM_part_comm_graph_entity_is_signed_get
+(
+  PDM_part_comm_graph_t  *pcg
+);
+
+/**
+ *
+ * \brief Get nuplet size
+ *
+ * \param [in] pcg Pointer to \ref PDM_part_comm_graph_t instance
+ *
+ * \return Size of nuplet
+ */
+int
+PDM_part_comm_graph_entity_nuplet_size_get
+(
+  PDM_part_comm_graph_t  *pcg
+);
+
+/**
+ *
  * \brief Get entity nuplets
  *
  * \param [in]  pcg            Pointer to \ref PDM_part_comm_graph_t instance
