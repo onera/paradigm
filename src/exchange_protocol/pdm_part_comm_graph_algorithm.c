@@ -1276,7 +1276,7 @@ PDM_part_comm_graph_split
     PDM_part_comm_graph_entity_nuplet_get(pcg,
                                           i_part,
                                           &entity_nuplt,
-                                          PDM_OWNERSHIP_BAD_VALUE );
+                                          PDM_OWNERSHIP_BAD_VALUE);
 
     for (int i_tag = 0; i_tag < n_tag; ++i_tag) {
       PDM_malloc(split_entity_graph[i_tag][i_part], 4*n_entity, int);

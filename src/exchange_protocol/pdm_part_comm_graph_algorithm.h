@@ -173,11 +173,11 @@ PDM_part_comm_graph_filter
 /**
  * \brief Split part_comm_graph into n_tag part_comm_graph objects
  *
- * \param [in   ] pcg         Initial PDM_part_comm_graph_t object
- * \param [in   ] n_tag       Number of tags
- * \param [in   ] entity_tag  List of n_part arrays of size n_entity_graph[i_part] each,
- *                            indicating the ID (0-based) of the output pcg
- * \param [inout] pcgs        Initial PDM_part_comm_graph_t object
+ * \param [in ] pcg         Initial PDM_part_comm_graph_t object
+ * \param [in ] n_tag       Number of tags
+ * \param [in ] entity_tag  List of n_part arrays of size n_entity_graph[i_part] each,
+ *                          indicating the ID (0-based) of the output pcg
+ * \param [out] pcgs        Initial PDM_part_comm_graph_t object
  *
  */
 void
