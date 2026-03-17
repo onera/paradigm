@@ -265,6 +265,7 @@ cdef class Isosurface:
   # cdef list keep_alive
   cdef int      i_rank
   cdef int      n_rank
+  cdef list     n_group
   cdef dict ptp_entity
   cdef dict user_defined_field_function
   cdef list got_parent_idx
@@ -302,6 +303,7 @@ cdef class Isosurface:
 
     self.i_rank  = comm.Get_rank()
     self.n_rank  = comm.Get_size()
+    self.n_group = [-1 for j in range(PDM_MESH_ENTITY_MAX)]
 
     self._isos = PDM_isosurface_create(pdm_comm,
                                        mesh_dim)
@@ -527,6 +529,22 @@ cdef class Isosurface:
                                 entity_type,
                                 ln_to_gn_data)
 
+  def n_group_set(self, entity_type, n_group):
+    """
+    n_group_set(entity_type, n_group)
+
+    Set number of groups for the specified entity_type.
+
+    Parameters:
+      entity_type  (PDM_mesh_entities_t) :  Type of mesh entity
+      n_group      (int) : Number of groups
+    """
+
+    self.n_group[entity_type] = n_group
+    PDM_isosurface_n_group_set(self._isos,
+                               entity_type,
+                               n_group)
+
   def pgroup_set(self,                               i_part,
                                                      entity_type,
        NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] group_entity_idx,
@@ -544,9 +562,6 @@ cdef class Isosurface:
       group_entity     (np.ndarray[np.int_t])       : Group entities
       group_ln_to_gn   (np.ndarray[npy_pdm_gnum_t]) : Group entities global ids
     """
-    # self.keep_alive.append(group_entity_idx)
-    # self.keep_alive.append(group_entity)
-    # self.keep_alive.append(group_ln_to_gn)
 
     cdef int         *group_entity_idx_data = np_to_int_pointer (group_entity_idx)
     cdef int         *group_entity_data     = np_to_int_pointer (group_entity)
@@ -554,9 +569,14 @@ cdef class Isosurface:
 
     cdef int n_group = group_entity_idx.size - 1
 
-    PDM_isosurface_n_group_set(self._isos,
-                               entity_type,
-                               n_group)
+    n_group_last = self.n_group[entity_type]
+    if (n_group_last != -1) and (n_group_last != n_group):
+      msg = f"Number of provided groups ({n_group}) does not match the number" \
+            f" of registered groups ({n_group_last}) for entity {entity_type}"
+      raise ValueError(msg)
+
+    # Fow now, let this set to not break existing scripts
+    self.n_group_set(entity_type, n_group)
 
     PDM_isosurface_pgroup_set(self._isos, i_part,
                               entity_type,
