@@ -1100,7 +1100,7 @@ PDM_part_mesh_nodal_dump_vtk_with_fields
     }
 
     char filename[999];
-    sprintf(filename, "%s_%d_%d.vtk", filename_pattern, i_part, i_rank);
+    sprintf(filename, "%s_%d_%d.vtk", filename_pattern, i_rank, i_part);
     PDM_vtk_write_unstructured_grid(filename,
                                     pn_vtx,
                                     pvtx_coord,
