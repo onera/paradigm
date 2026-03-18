@@ -134,6 +134,11 @@ Refer to [FindMPI](https://cmake.org/cmake/help/latest/module/FindMPI.html) in t
 
 </details>
 
+## Quick start
+
+Examples of use can be found in the ``test`` and ``training`` directories and in the [documentation](#documentation).
+
+
 ## Issues ##
 
 Issues can be reported directly in the [Issues](https://gitlab.onera.net/numerics/mesh/paradigm/-/issues) section.
