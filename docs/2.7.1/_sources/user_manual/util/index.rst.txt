@@ -1,0 +1,42 @@
+.. _util:
+
+#####
+Utils
+#####
+
+.. container:: toc-cards
+
+  .. card:: Rotations
+    :link: rotation
+    :link-type: ref
+
+    Services handling 3D rigid body rotations
+
+
+
+  .. card:: Connectivity transformation
+    :link: connec_transform
+    :link-type: ref
+
+    Utilities for processing unstructured mesh connectivities (partitioned and block-distributed)
+
+
+
+  .. card:: Mesh Evaluation Utils
+    :link: mesh_eval
+    :link-type: ref
+
+    Mesh analysis utilities
+
+|
+
+|
+
+.. toctree::
+  :caption: Util
+  :maxdepth: 1
+  :hidden:
+
+  rot
+  connec_transform
+  mesh_eval

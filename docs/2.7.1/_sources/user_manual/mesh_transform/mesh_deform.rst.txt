@@ -1,0 +1,243 @@
+.. _mesh_deform:
+
+Mesh Deform
+===========
+
+Description
+"""""""""""
+
+**Mesh deform** is a service for deforming a point cloud by interpolating the given deformation of a surface mesh.
+
+
+API
+"""
+
+.. dropdown:: Initialization
+
+
+  .. tab-set::
+    :sync-group: language
+
+    .. tab-item:: C
+      :sync: C
+
+      .. doxygenfunction:: PDM_mesh_deform_create
+
+
+
+    .. tab-item:: Fortran
+      :sync: Fortran
+
+      .. ifconfig:: enable_fortran_doc == 'ON'
+
+        .. f:autosubroutine:: PDM_mesh_deform_create
+
+      .. ifconfig:: enable_fortran_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+
+
+
+    .. tab-item:: Python
+      :sync: Python
+
+      .. ifconfig:: enable_python_doc == 'ON'
+
+        .. py:class:: MeshDeform
+
+          .. automethod:: Pypdm.Pypdm.MeshDeform.__init__
+
+      .. ifconfig:: enable_python_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+
+
+
+
+.. dropdown:: Set inputs
+
+
+  .. tab-set::
+    :sync-group: language
+
+    .. tab-item:: C
+      :sync: C
+
+      .. doxygenfunction:: PDM_mesh_deform_surf_part_set
+      .. doxygenfunction:: PDM_mesh_deform_cloud_part_set
+
+
+
+    .. tab-item:: Fortran
+      :sync: Fortran
+
+      .. ifconfig:: enable_fortran_doc == 'ON'
+
+        .. f:autosubroutine:: PDM_mesh_deform_create
+        .. f:autosubroutine:: PDM_mesh_deform_create
+
+      .. ifconfig:: enable_fortran_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+
+
+
+    .. tab-item:: Python
+      :sync: Python
+
+      .. ifconfig:: enable_python_doc == 'ON'
+
+        .. automethod:: Pypdm.Pypdm.MeshDeform.surf_part_set
+        .. automethod:: Pypdm.Pypdm.MeshDeform.cloud_part_set
+
+      .. ifconfig:: enable_python_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+
+
+
+
+.. dropdown:: Perform deformation
+
+
+  .. tab-set::
+    :sync-group: language
+
+    .. tab-item:: C
+      :sync: C
+
+      .. doxygenfunction:: PDM_mesh_deform_compute
+      .. doxygenfunction:: PDM_mesh_deform_cloud_displ_finalize
+      .. doxygenfunction:: PDM_mesh_deform_dump_times
+
+
+
+    .. tab-item:: Fortran
+      :sync: Fortran
+
+      .. ifconfig:: enable_fortran_doc == 'ON'
+
+        .. f:autosubroutine:: PDM_mesh_deform_compute
+        .. f:autosubroutine:: PDM_mesh_deform_cloud_displ_finalize
+        .. f:autosubroutine:: PDM_mesh_deform_dump_times
+
+      .. ifconfig:: enable_fortran_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+
+
+
+    .. tab-item:: Python
+      :sync: Python
+
+      .. ifconfig:: enable_python_doc == 'ON'
+
+        .. automethod:: Pypdm.Pypdm.MeshDeform.compute
+        .. automethod:: Pypdm.Pypdm.MeshDeform.cloud_displ_finalize
+        .. automethod:: Pypdm.Pypdm.MeshDeform.dump_times
+
+      .. ifconfig:: enable_python_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+
+
+
+
+.. dropdown:: Get outputs
+
+
+  .. tab-set::
+    :sync-group: language
+
+    .. tab-item:: C
+      :sync: C
+
+      .. doxygenfunction:: PDM_mesh_deform_n_aux_geom_get
+      .. doxygenfunction:: PDM_mesh_deform_cloud_block_n_points_get
+      .. doxygenfunction:: PDM_mesh_deform_cloud_block_buffer_size_get
+      .. doxygenfunction:: PDM_mesh_deform_cloud_block_buffer_from_surf_get
+      .. doxygenfunction:: PDM_mesh_deform_cloud_block_get
+      .. doxygenfunction:: PDM_mesh_deform_cloud_n_points_part_get
+      .. doxygenfunction:: PDM_mesh_deform_cloud_displ_part_get
+
+
+
+    .. tab-item:: Fortran
+      :sync: Fortran
+
+      .. ifconfig:: enable_fortran_doc == 'ON'
+
+        .. f:autofunction::   PDM_mesh_deform_n_aux_geom_get
+        .. f:autosubroutine:: PDM_mesh_deform_cloud_block_n_points_get
+        .. f:autosubroutine:: PDM_mesh_deform_cloud_block_buffer_size_get
+        .. f:autosubroutine:: PDM_mesh_deform_cloud_block_buffer_from_surf_get
+        .. f:autosubroutine:: PDM_mesh_deform_cloud_block_get
+        .. f:autosubroutine:: PDM_mesh_deform_cloud_n_points_part_get
+        .. f:autosubroutine:: PDM_mesh_deform_cloud_displ_part_get
+
+      .. ifconfig:: enable_fortran_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+
+
+
+    .. tab-item:: Python
+      :sync: Python
+
+      .. ifconfig:: enable_python_doc == 'ON'
+
+        .. automethod:: Pypdm.Pypdm.MeshDeform.cloud_n_points_part_get
+        .. automethod:: Pypdm.Pypdm.MeshDeform.cloud_displ_part_get
+        .. automethod:: Pypdm.Pypdm.MeshDeform.n_aux_geom
+        .. automethod:: Pypdm.Pypdm.MeshDeform.cloud_block_n_points
+        .. automethod:: Pypdm.Pypdm.MeshDeform.cloud_block_buffer_from_surf_get
+        .. automethod:: Pypdm.Pypdm.MeshDeform.cloud_block_get
+
+      .. ifconfig:: enable_python_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_python_interface>` to enable the Python API)
+
+
+
+
+.. dropdown:: Finalization
+
+  .. tab-set::
+    :sync-group: language
+
+    .. tab-item:: C
+      :sync: C
+
+      .. doxygenfunction:: PDM_mesh_deform_free
+
+
+
+    .. tab-item:: Fortran
+      :sync: Fortran
+
+      .. ifconfig:: enable_fortran_doc == 'ON'
+
+        .. f:autosubroutine:: PDM_mesh_deform_free
+
+      .. ifconfig:: enable_fortran_doc == 'OFF'
+
+        .. warning::
+          Unavailable (refer to the :ref:`installation guide <enable_fortran_interface>` to enable the Fortran API)
+
+
+
+    .. tab-item:: Python
+      :sync: Python
+
+      |python_gc|
+
+
+
