@@ -156,7 +156,7 @@ _iso_surface_kind_n_coeff
     case PDM_ISO_SURFACE_KIND_SPHERE:
       return 4;
     case PDM_ISO_SURFACE_KIND_ELLIPSE:
-      return 6;
+      return 7;
     case PDM_ISO_SURFACE_KIND_QUADRIC:
       return 10;
     default:
