@@ -257,8 +257,8 @@ module pdm_isosurface
     !
     ! .. note:: Admissible values for ``extract_kind`` are:
     !
-    !  - PDM_EXTRACT_PART_KIND_REEQUILIBRATE: the iso-surface is evenly redistributed (Default kind)
-    !  - PDM_EXTRACT_PART_KIND_LOCAL: the iso-surface is not redistributed (same partitioning as the input mesh)
+    !  - PDM_EXTRACT_PART_KIND_REEQUILIBRATE: the iso-surface is evenly redistributed.
+    !  - PDM_EXTRACT_PART_KIND_LOCAL: the iso-surface is not redistributed (same partitioning as the input mesh). This is the default kind.
     implicit none
 
     type(c_ptr) :: isos                 ! PDM_isosurface_t instance

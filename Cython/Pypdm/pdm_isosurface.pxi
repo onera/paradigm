@@ -619,8 +619,8 @@ cdef class Isosurface:
 
     .. note:: Admissible values for ``extract_kind`` are:
     
-      - PDM_EXTRACT_PART_KIND_REEQUILIBRATE: the iso-surface is evenly redistributed (Default kind)
-      - PDM_EXTRACT_PART_KIND_LOCAL: the iso-surface is not redistributed (same partitioning as the input mesh)      
+      - PDM_EXTRACT_PART_KIND_REEQUILIBRATE: the iso-surface is evenly redistributed
+      - PDM_EXTRACT_PART_KIND_LOCAL: the iso-surface is not redistributed (same partitioning as the input mesh). This is the default kind. 
 
     Parameters:
       extract_kind (PDM_extract_part_kind_t) : Redistribution :ref:`kind <PDM_extract_part_kind_t>`

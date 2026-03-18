@@ -537,8 +537,8 @@ PDM_isosurface_dfield_set
  * \param [in]  part_method     Partitioning method (only used if \p extract_kind is set to PDM_EXTRACT_PART_KIND_REEQUILIBRATE)
  *
  * \note Admissible values for \p extract_kind are:
- *   - \ref PDM_EXTRACT_PART_KIND_REEQUILIBRATE: the iso-surface is evenly redistributed (Default kind)
- *   - \ref PDM_EXTRACT_PART_KIND_LOCAL: the iso-surface is not redistributed (same partitioning as the input mesh)
+ *   - \ref PDM_EXTRACT_PART_KIND_REEQUILIBRATE: the iso-surface is evenly redistributed.
+ *   - \ref PDM_EXTRACT_PART_KIND_LOCAL: the iso-surface is not redistributed (same partitioning as the input mesh). This is the default kind.
  *
  */
 
