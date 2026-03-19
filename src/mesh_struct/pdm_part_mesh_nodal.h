@@ -1329,6 +1329,24 @@ PDM_part_mesh_nodal_part_comm_graph_get
   PDM_ownership_t         ownership
 );
 
+
+/**
+ *
+ * \brief Free part_mesh_nodal's part_comm_graph
+ *
+ * \note passing geom_kind with PDM_GEOMETRY_KIND_MAX, will free all geom_kind part_mesh_nodals
+ *
+ * \param [in] pmn       Pointer to \ref PDM_part_mesh_nodal_t instance
+ * \param [in] geom_kind Geometry kind (see \ref PDM_geometry_kind_t )
+ */
+void
+PDM_part_mesh_nodal_part_comm_graph_free
+(
+  PDM_part_mesh_nodal_t  *pmn,
+  PDM_geometry_kind_t     geom_kind
+);
+
+
 /**
  *
  * \brief Set part_comm_graph onto part_mesh_nodal struct for vertices
@@ -1361,6 +1379,20 @@ PDM_part_mesh_nodal_part_comm_graph_vtx_get
   PDM_part_comm_graph_t **pcg,
   PDM_ownership_t         ownership
 );
+
+
+/**
+ *
+ * \brief Free vertex part_mesh_nodal's part_comm_graph
+ *
+ * \param [in] pmn Pointer to \ref PDM_part_mesh_nodal_t instance
+ */
+void
+PDM_part_mesh_nodal_part_comm_graph_vtx_free
+(
+  PDM_part_mesh_nodal_t  *pmn
+);
+
 
 /**
  * \brief Transform group information inside a \ref PDM_part_mesh_nodal_t to tag for all elements
