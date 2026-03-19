@@ -128,9 +128,6 @@ PDM_part_comm_graph_selected_entity1_to_selected_entity2
   int                   ***out_selected_entity2
 );
 
-
-
-
 /**
  * \brief Create an unique part_comm_graph from multiple ones.
  *
@@ -148,27 +145,6 @@ PDM_part_comm_graph_concatenate
   int                     n_pcg,
   PDM_part_comm_graph_t **pcgs
 );
-
-/**
- * \brief Remove entries in a part_comm_graph object
- *
- * \param [in] pcg   Initial PDM_part_comm_graph_t object
- * \param [in] flag  List of n_part arrays of size n_entity_graph[i_part] each,
- *                   indicating if entity is selected or not
- * \param [in] both  If True, keep entry if both sides are flagged True;
- *                   otherwise, keep entry if at least one side is flagged True.
- *
- * \return Output \ref PDM_part_comm_graph_t instance
- *
- */
-PDM_part_comm_graph_t*
-PDM_part_comm_graph_filter
-(
-  PDM_part_comm_graph_t   *pcg,
-  const int              **flag,
-  const int                both
-);
-
 
 /**
  * \brief Split part_comm_graph into n_tag part_comm_graph objects
