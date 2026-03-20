@@ -598,9 +598,9 @@ cdef class Isosurface:
     Set reequilibrate strategy and repartionning tool.
 
     .. note:: Admissible values for ``extract_kind`` are:
-    
+
       - PDM_EXTRACT_PART_KIND_REEQUILIBRATE: the iso-surface is evenly redistributed (Default kind)
-      - PDM_EXTRACT_PART_KIND_LOCAL: the iso-surface is not redistributed (same partitioning as the input mesh)      
+      - PDM_EXTRACT_PART_KIND_LOCAL: the iso-surface is not redistributed (same partitioning as the input mesh)
 
     Parameters:
       extract_kind (PDM_extract_part_kind_t) : Redistribution :ref:`kind <PDM_extract_part_kind_t>`
@@ -760,12 +760,12 @@ cdef class Isosurface:
                                                &connectivity_idx,
                                                &connectivity,
                                                 PDM_OWNERSHIP_USER)
-    if connectivity_type==PDM_CONNECTIVITY_TYPE_EDGE_VTX:
-      connectivity_size = 2*n_entity
+    if connectivity_type == PDM_CONNECTIVITY_TYPE_EDGE_VTX:
+      connectivity_size   = 2*n_entity
       np_connectivity_idx = None
-    elif connectivity_type==PDM_CONNECTIVITY_TYPE_FACE_VTX:
-      connectivity_size = connectivity_idx[n_entity]
-      np_connectivity_idx = create_numpy_i(connectivity_idx, n_entity+1       , flag_owndata=True)
+    elif connectivity_type == PDM_CONNECTIVITY_TYPE_FACE_VTX:
+      connectivity_size   = connectivity_idx[n_entity]
+      np_connectivity_idx = create_numpy_i(connectivity_idx, n_entity+1, flag_owndata=True)
     else:
       raise ValueError(f"PDM_isosurface_t: has no connectivity of type {connectivity_type}")
 
