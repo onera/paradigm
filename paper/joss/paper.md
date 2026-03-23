@@ -63,24 +63,24 @@ Originally branched from the **CWIPI** [@Quemerais2026] coupling library, ParaDi
 In the era of exascale computing, numerical simulation faces a critical shift. In **Computational Fluid Dynamics (CFD)**, mesh management can no longer rely on centralized or semi-distributed approaches. Integrating distributed mesh capabilities into existing production solvers often encounters major architectural and performance barriers.
 
 ### From Static to Dynamic and Repetitive Geometry
-Geometric algorithms, once confined to pre-processing, are now required repeatedly within the solver's main execution loop. Modern studies involve evolving meshes, driven either by **moving bodies** or **Dynamic Mesh Adaptation (AMR)**. Whether computing wall distances for turbulence modeling or performing mesh repartitioning, these operations must deliver turnaround times of the same **order of magnitude as a solver iteration**. Failing to meet this constraint critically penalizes the overall simulation wall-clock time.
+Geometric algorithms, once confined to pre-processing, are now required repeatedly within the solver's main execution loop. Modern studies involve evolving meshes, driven either by **moving bodies** or **Dynamic Mesh Adaptation**. Whether computing wall distances for turbulence modeling or performing mesh repartitioning, these operations must deliver turnaround times of the same **order of magnitude as a solver iteration**. Failing to meet this constraint critically penalizes the overall simulation wall-clock time.
 
 ### The Challenge of Dynamic Load Balancing
-A further bottleneck lies in data distribution: the initial partition provided to geometric algorithms is typically the one optimized for physical computation, which is often **sub-optimal for geometric operations**. Without internal dynamic load-balancing, these operations create computation imbalances and memory bottlenecks, compromising the **execution of simulations** at a very large scale.
+A further bottleneck lies in data distribution: the initial partition provided to geometric algorithms is typically optimized for physical computation, which is often **sub-optimal for geometric operations**. Without internal dynamic load-balancing, these operations create computation imbalances and memory bottlenecks, compromising the **execution of simulations** at a very large scale.
 
 ### Limitations of Current Solutions
 Existing geometric frameworks frequently impose constraints that hinder their adoption:
+
 * **Rigid Data Structures:** Unlike heavy frameworks (Trilinos [@Heroux2005], Arcane [@Grospellier2017]), **ParaDiGM** does not enforce complex object hierarchies. This **non-intrusive** "Progressive Framework" approach allows adoption without a deep refactoring of the host solver.
 * **Monolithic Data Models:** Unlike platforms such as *Salome* (MED format) [@Ribes2007], **ParaDiGM** relies on simple **CSR arrays**, avoiding software overhead and memory peaks critical for optimized solvers.
 
 ### The ParaDiGM Approach: A Progressive Middleware
 **ParaDiGM** is a **Software Development Kit (SDK)** rather than a standalone application. Unlike tools like **Gmsh**[@Geuzaine2009], it is not intended for mesh generation from **CAD** models. Its role begins **as soon as a first mesh is obtained**: it provides solvers with the low-level functions needed to distribute, partition, and manipulate discretized meshes in a parallel fashion.
 
-!
-! Ajouter l'image des fonctionnalités
-!
+![Example of a simulation chain using the features offered by ParaDiGM.\label{fig:features}](features.png)
 
 Its philosophy is built on three pillars:
+
 1.  **Interoperability and Agnosticism:** Ensuring full compatibility with legacy languages (Fortran, C) and modern environments (Python/NumPy) for a wide variety of numerical methods (Finite Volumes, Finite Elements, SPH).
 2.  **Hybrid Partitioning Strategy:** ParaDiGM unifies third-party solutions (e.g., **PT-Scotch**[@Chevalier2008], **ParMetis**[@Karypsis1997]) while supplementing them with native high-performance algorithms like **Space Filling Curves (SFC)** for frequent repartitioning.
 3.  **Total Distribution and Geometric Performance:** By ensuring homogeneous load distribution, the framework has enabled the development of highly efficient algorithms, such as **distributed point cloud location**[@Andrieu2026], achieving performance levels compatible with solver iteration frequencies.
@@ -90,6 +90,7 @@ Its philosophy is built on three pillars:
 A major challenge for modern numerical simulation is the transition from CPU-based algorithms to implementations optimized for **GPU architectures**. To this end, recent work has been conducted to port ParaDiGM’s most critical components to these accelerators [@Cazalbou2024].
 
 These developments, intended to be industrialized and integrated into a future version, focus on:
+
 * **Hybrid Parallel Octrees:** The construction and traversal of search trees (octrees) are generally the most memory-intensive and time-consuming steps in geometric algorithms.
 * **CPU/GPU Optimization:** By offloading these massive data structures to GPUs, ParaDiGM aims to drastically reduce turnaround times for location operations while maintaining the load balance essential for exascale performance.
 
