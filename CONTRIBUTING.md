@@ -33,4 +33,4 @@ To maintain a clean and readable codebase, ParaDiGM follows professional standar
   }
   
 ## Attribution
-By contributing, you agree that your contributions will be licensed under the project's [LICENSE](LICENSE) (e.g., LGPL). All contributors will be acknowledged in the documentation.
+By contributing, you agree that your contributions will be licensed under the project's [LICENSE](LICENSE) (LGPL). All contributors will be acknowledged in the documentation.
