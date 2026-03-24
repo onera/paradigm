@@ -123,7 +123,7 @@ The contributions to this software are listed according to the CRediT taxonomy:
 - **C. Benazet**: Software, Validation
 - **J. Coulet**: Software, Validation
 - **B. Berthoul**: Software
-- **N. Dellinger**: Software
+- **N. Dellinger**: Software, Validation
 - **T. Hennion**: Software, Validation
 
 # References
