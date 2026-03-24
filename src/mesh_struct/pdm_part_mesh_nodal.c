@@ -421,17 +421,17 @@ PDM_part_mesh_nodal_part_comm_graph_free
              i_geom_kind<PDM_GEOMETRY_KIND_MAX; i_geom_kind++) {
       if (pmn->pcg_ownership[i_geom_kind] == PDM_OWNERSHIP_KEEP) {
         PDM_part_comm_graph_free(pmn->pcg[i_geom_kind]);
-        pmn->pcg          [i_geom_kind] = NULL;
-        pmn->pcg_ownership[i_geom_kind] = PDM_OWNERSHIP_BAD_VALUE;
       }
+      pmn->pcg          [i_geom_kind] = NULL;
+      pmn->pcg_ownership[i_geom_kind] = PDM_OWNERSHIP_BAD_VALUE;
     }
   }
   else {
     if (pmn->pcg_ownership[geom_kind] == PDM_OWNERSHIP_KEEP) {
       PDM_part_comm_graph_free(pmn->pcg[geom_kind]);
-      pmn->pcg          [geom_kind] = NULL;
-      pmn->pcg_ownership[geom_kind] = PDM_OWNERSHIP_BAD_VALUE;
     }
+    pmn->pcg          [geom_kind] = NULL;
+    pmn->pcg_ownership[geom_kind] = PDM_OWNERSHIP_BAD_VALUE;
   }
 }
 
@@ -478,9 +478,9 @@ PDM_part_mesh_nodal_part_comm_graph_vtx_free
   CHECK_PMN(pmn)
   if (pmn->pcg_vtx_ownership == PDM_OWNERSHIP_KEEP) {
     PDM_part_comm_graph_free(pmn->pcg_vtx);
-    pmn->pcg_vtx = NULL;
-    pmn->pcg_vtx_ownership = PDM_OWNERSHIP_BAD_VALUE;
   }
+  pmn->pcg_vtx = NULL;
+  pmn->pcg_vtx_ownership = PDM_OWNERSHIP_BAD_VALUE;
 }
 
 
