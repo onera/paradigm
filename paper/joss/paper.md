@@ -27,6 +27,10 @@ authors:
     orcid: 0009-0007-8251-1152
     affiliation: "2" 
 
+  - name: Julien Coulet
+#    orcid: 
+    affiliation: "2" 
+
   - name: Berenger Berthoul
 #    orcid: 
     affiliation: "2" 
@@ -34,6 +38,10 @@ authors:
   - name: Nicolas Dellinger
     orcid: 0000-0002-0843-6509
     affiliation: "3" 
+
+  - name: Thomas Hennion
+#    orcid: 
+    affiliation: "1" 
 
 
 affiliations:
@@ -108,13 +116,15 @@ The authors also wish to thank BPI France, the Directorate General for Civil Avi
 
 The contributions to this software are listed according to the CRediT taxonomy:
 
-- **E. Quémerais**: Conceptualization, Methodology, Software, Validation, Writing – Review & Editing, Project Administration, Funding Acquisition, Supervision  
-- **B. Andrieu**: Software, Validation, Writing – Original Draft  
+- **E. Quémerais**: Conceptualization, Methodology, Software, Validation, Writing – Review & Editing, Project Administration, Funding Acquisition, Supervision
+- **B. Andrieu**: Software, Validation, Writing – Original Draft
+- **B. Maugars**: Software, Validation
+- **K. Hoogveld**: Software, Validation, Writing – Original Draft
 - **C. Benazet**: Software, Validation
+- **J. Coulet**: Software, Validation
 - **B. Berthoul**: Software
 - **N. Dellinger**: Software
-- **K. Hoogveld**: Software, Validation, Writing – Original Draft
-- **B. Maugars**: Software, Validation  
+- **T. Hennion**: Software, Validation
 
 # References
 
