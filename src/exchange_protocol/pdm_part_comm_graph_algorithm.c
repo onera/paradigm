@@ -1158,7 +1158,7 @@ PDM_part_comm_graph_split
   int  **split_n_entity_graph = NULL;
   int ***split_entity_graph = NULL;
   int ***split_entity_nuplt = NULL;
-  PDM_calloc(split_n_entity_graph, n_color, int  *);
+  PDM_malloc(split_n_entity_graph, n_color, int  *);
   PDM_malloc(split_entity_graph  , n_color, int **);
   if (nuplet_size>0) {
     PDM_malloc(split_entity_nuplt, n_color, int **);
@@ -1193,7 +1193,6 @@ PDM_part_comm_graph_split
 
     for (int i_entity=0; i_entity<n_entity; ++i_entity) {
       int color = entity_color[i_part][i_entity];
-      log_trace("i_entity = %d, color = %d\n", i_entity, color);
       if (color<0) {
         PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_split: color[i_part=%d][i_entity=%d] = %d, but should be >0", i_part, i_entity, color);
       }
@@ -1202,15 +1201,14 @@ PDM_part_comm_graph_split
       }
       int i_write = split_n_entity_graph[color][i_part];
 
-      split_entity_graph[color][i_part][4*i_write  ] = entity_graph[4*i_entity  ];
-      split_entity_graph[color][i_part][4*i_write+1] = entity_graph[4*i_entity+1];
-      split_entity_graph[color][i_part][4*i_write+2] = entity_graph[4*i_entity+2];
-      split_entity_graph[color][i_part][4*i_write+3] = entity_graph[4*i_entity+3];
+      memcpy(&split_entity_graph[color][i_part][4*i_write],
+             &entity_graph[4*i_entity],
+             4 * sizeof(int));
 
       if (nuplet_size>0) {
-        for (int i_nuplet=0; i_nuplet<nuplet_size; ++i_nuplet) {
-          split_entity_nuplt[color][i_part][nuplet_size*i_write+i_nuplet] = entity_nuplt[nuplet_size*i_entity+i_nuplet];
-        }
+        memcpy(&split_entity_nuplt[color][i_part][nuplet_size*i_write],
+               &entity_nuplt[nuplet_size*i_entity],
+               nuplet_size * sizeof(int));
       }
 
       split_n_entity_graph[color][i_part]++;
