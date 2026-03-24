@@ -28,8 +28,8 @@ authors:
     affiliation: "2"
 
   - name: Julien Coulet
-#    orcid: 
-    affiliation: "2" 
+    orcid: 0000-0002-1073-0141
+    affiliation: "2"
 
   - name: Berenger Berthoul
 #    orcid: 
