@@ -24,8 +24,8 @@ authors:
     affiliation: "1" 
 
   - name: Clement Benazet
-    orcid: 0009-0007-8251-1152
-    affiliation: "2" 
+#    orcid:
+    affiliation: "2"
 
   - name: Julien Coulet
 #    orcid: 
@@ -64,7 +64,7 @@ bibliography: paper.bib
 
 **ParaDiGM** (**Para**llel **Di**stributed **G**eneral **M**esh) is an open-source C library (LGPL) designed to overcome the technological bottlenecks associated with geometric data handling and mesh manipulation in massively parallel numerical simulations. As High-Performance Computing (HPC) enters the exascale era, managing meshes exceeding 100 billion elements has become a primary hurdle. ParaDiGM surmounts these limitations through a fully distributed architecture capable of scaling beyond 10,000 cores.
 
-Originally branched from the **CWIPI** [@Quemerais2026] coupling library, ParaDiGM provides high-performance geometric services—such as parallel wall distance computation, point cloud location, and dynamic repartitioning—to **ONERA**’s production suite, including **CEDRE** [@Refloch2011], **elsA** [@Cambier2011], **SoNiCS**[@lienhardt2025], and **MoDeTheC**[@Dellinger2024]. By generalizing the **Partitioned** and **Distributed View** concepts, it ensures that every stage of the computation remains memory-balanced. With native APIs for **C/C++**, **Fortran**, and **Python/NumPy**, ParaDiGM acts as a versatile middleware for aerospace research and large-scale computational physics.
+Originally branched from the **CWIPI** [@Quemerais2026] coupling library, ParaDiGM provides high-performance geometric services—such as parallel wall distance computation, point cloud location, and dynamic repartitioning—to **ONERA**’s production suite, including **CEDRE** [@Refloch2011], **elsA** [@Cambier2011], **SoNiCS** [@lienhardt2025], and **MoDeTheC** [@Dellinger2024]. By generalizing the **Partitioned** and **Distributed View** concepts, it ensures that every stage of the computation remains memory-balanced. With native APIs for **C/C++**, **Fortran**, and **Python/NumPy**, ParaDiGM acts as a versatile middleware for aerospace research and large-scale computational physics.
 
 ## Statement of Need
 
@@ -83,15 +83,15 @@ Existing geometric frameworks frequently impose constraints that hinder their ad
 * **Monolithic Data Models:** Unlike platforms such as *Salome* (MED format) [@Ribes2007], **ParaDiGM** relies on simple **CSR arrays**, avoiding software overhead and memory peaks critical for optimized solvers.
 
 ### The ParaDiGM Approach: A Progressive Middleware
-**ParaDiGM** is a **Software Development Kit (SDK)** rather than a standalone application. Unlike tools like **Gmsh**[@Geuzaine2009], it is not intended for mesh generation from **CAD** models. Its role begins **as soon as a first mesh is obtained**: it provides solvers with the low-level functions needed to distribute, partition, and manipulate discretized meshes in a parallel fashion.
+**ParaDiGM** is a **Software Development Kit (SDK)** rather than a standalone application. Unlike tools like **Gmsh** [@Geuzaine2009], it is not intended for mesh generation from **CAD** models. Its role begins **as soon as a first mesh is obtained**: it provides solvers with the low-level functions needed to distribute, partition, and manipulate discretized meshes in a parallel fashion.
 
 ![Example of a simulation chain using the features offered by ParaDiGM.\label{fig:features}](features.png)
 
 Its philosophy is built on three pillars:
 
 1.  **Interoperability and Agnosticism:** Ensuring full compatibility with legacy languages (Fortran, C) and modern environments (Python/NumPy) for a wide variety of numerical methods (Finite Volumes, Finite Elements, SPH).
-2.  **Hybrid Partitioning Strategy:** ParaDiGM unifies third-party solutions (e.g., **PT-Scotch**[@Chevalier2008], **ParMetis**[@Karypsis1997]) while supplementing them with native high-performance algorithms like **Space Filling Curves (SFC)** for frequent repartitioning.
-3.  **Total Distribution and Geometric Performance:** By ensuring homogeneous load distribution, the framework has enabled the development of highly efficient algorithms, such as **distributed point cloud location**[@Andrieu2026], achieving performance levels compatible with solver iteration frequencies.
+2.  **Hybrid Partitioning Strategy:** ParaDiGM unifies third-party solutions (e.g., **PT-Scotch** [@Chevalier2008], **ParMetis** [@Karypis1997]) while supplementing them with native high-performance algorithms like **Space Filling Curves (SFC)** for frequent repartitioning.
+3.  **Total Distribution and Geometric Performance:** By ensuring homogeneous load distribution, the framework has enabled the development of highly efficient algorithms, such as **distributed point cloud location** [@Andrieu2026], achieving performance levels compatible with solver iteration frequencies.
 
 ## Ongoing Work and Future Challenges
 
