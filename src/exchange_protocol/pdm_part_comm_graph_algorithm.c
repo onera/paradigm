@@ -1144,10 +1144,10 @@ PDM_part_comm_graph_concatenate
 void
 PDM_part_comm_graph_split
 (
-  PDM_part_comm_graph_t   *pcg,
-  const int                n_tag,
-  const int              **entity_tag,
-  PDM_part_comm_graph_t ***pcgs
+  PDM_part_comm_graph_t  *pcg,
+  const int               n_color,
+  const int             **entity_color,
+  PDM_part_comm_graph_t **split_pcgs
 )
 {
   PDM_MPI_Comm comm        = PDM_part_comm_graph_comm_get(pcg);
@@ -1158,16 +1158,16 @@ PDM_part_comm_graph_split
   int  **split_n_entity_graph = NULL;
   int ***split_entity_graph = NULL;
   int ***split_entity_nuplt = NULL;
-  PDM_calloc(split_n_entity_graph, n_tag, int  *);
-  PDM_malloc(split_entity_graph  , n_tag, int **);
+  PDM_calloc(split_n_entity_graph, n_color, int  *);
+  PDM_malloc(split_entity_graph  , n_color, int **);
   if (nuplet_size>0) {
-    PDM_malloc(split_entity_nuplt, n_tag, int **);
+    PDM_malloc(split_entity_nuplt, n_color, int **);
   }
-  for (int i_tag = 0; i_tag < n_tag; ++i_tag) {
-    PDM_calloc(split_n_entity_graph[i_tag], n_part, int  );
-    PDM_malloc(split_entity_graph  [i_tag], n_part, int *);
+  for (int i_color = 0; i_color < n_color; ++i_color) {
+    PDM_calloc(split_n_entity_graph[i_color], n_part, int  );
+    PDM_malloc(split_entity_graph  [i_color], n_part, int *);
     if (nuplet_size>0) {
-      PDM_malloc(split_entity_nuplt[i_tag], n_part, int *);
+      PDM_malloc(split_entity_nuplt[i_color], n_part, int *);
     }
   }
 
@@ -1184,71 +1184,66 @@ PDM_part_comm_graph_split
                                           &entity_nuplt,
                                           PDM_OWNERSHIP_BAD_VALUE);
 
-    for (int i_tag = 0; i_tag < n_tag; ++i_tag) {
-      PDM_malloc(split_entity_graph[i_tag][i_part], 4*n_entity, int);
+    for (int i_color = 0; i_color < n_color; ++i_color) {
+      PDM_malloc(split_entity_graph[i_color][i_part], 4*n_entity, int);
       if (nuplet_size>0) {
-        PDM_malloc(split_entity_nuplt[i_tag][i_part], n_entity, int);
+        PDM_malloc(split_entity_nuplt[i_color][i_part], n_entity, int);
       }
     }
 
     for (int i_entity=0; i_entity<n_entity; ++i_entity) {
-      int tag = entity_tag[i_part][i_entity];
-      log_trace("i_entity = %d, tag = %d\n", i_entity, tag);
-      if (tag<0) {
-        PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_split: tag[i_part=%d][i_entity=%d] = %d, but should be >0", i_part, i_entity, tag);
+      int color = entity_color[i_part][i_entity];
+      log_trace("i_entity = %d, color = %d\n", i_entity, color);
+      if (color<0) {
+        PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_split: color[i_part=%d][i_entity=%d] = %d, but should be >0", i_part, i_entity, color);
       }
-      if (tag>=n_tag) {
-        PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_split: tag[i_part=%d][i_entity=%d] = %d, but should be < n_tag (= %d)", i_part, i_entity, tag, n_tag);
+      if (color>=n_color) {
+        PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_split: color[i_part=%d][i_entity=%d] = %d, but should be < n_color (= %d)", i_part, i_entity, color, n_color);
       }
-      int i_write = split_n_entity_graph[tag][i_part];
+      int i_write = split_n_entity_graph[color][i_part];
 
-      split_entity_graph[tag][i_part][4*i_write  ] = entity_graph[4*i_entity  ];
-      split_entity_graph[tag][i_part][4*i_write+1] = entity_graph[4*i_entity+1];
-      split_entity_graph[tag][i_part][4*i_write+2] = entity_graph[4*i_entity+2];
-      split_entity_graph[tag][i_part][4*i_write+3] = entity_graph[4*i_entity+3];
+      split_entity_graph[color][i_part][4*i_write  ] = entity_graph[4*i_entity  ];
+      split_entity_graph[color][i_part][4*i_write+1] = entity_graph[4*i_entity+1];
+      split_entity_graph[color][i_part][4*i_write+2] = entity_graph[4*i_entity+2];
+      split_entity_graph[color][i_part][4*i_write+3] = entity_graph[4*i_entity+3];
 
       if (nuplet_size>0) {
         for (int i_nuplet=0; i_nuplet<nuplet_size; ++i_nuplet) {
-          split_entity_nuplt[tag][i_part][nuplet_size*i_write+i_nuplet] = entity_nuplt[nuplet_size*i_entity+i_nuplet];
+          split_entity_nuplt[color][i_part][nuplet_size*i_write+i_nuplet] = entity_nuplt[nuplet_size*i_entity+i_nuplet];
         }
       }
 
-      split_n_entity_graph[tag][i_part]++;
+      split_n_entity_graph[color][i_part]++;
 
     }
   }
 
-  PDM_part_comm_graph_t **split_pcgs = NULL;
-  PDM_malloc(split_pcgs, n_tag, PDM_part_comm_graph_t *);
-
-  for (int tag = 0; tag < n_tag; ++tag) {
+  for (int color = 0; color < n_color; ++color) {
     if (nuplet_size>0) {
-      split_pcgs[tag] = PDM_part_comm_graph_with_nuplet_create(n_part,
-                                                               split_n_entity_graph[tag],
-                                                               split_entity_graph[tag],
-                                                               PDM_OWNERSHIP_KEEP,
-                                                               nuplet_size,
-                                                               split_entity_nuplt[tag],
-                                                               PDM_OWNERSHIP_KEEP,
-                                                               is_signed,
-                                                               comm);
+      split_pcgs[color] = PDM_part_comm_graph_with_nuplet_create(n_part,
+                                                                 split_n_entity_graph[color],
+                                                                 split_entity_graph[color],
+                                                                 PDM_OWNERSHIP_KEEP,
+                                                                 nuplet_size,
+                                                                 split_entity_nuplt[color],
+                                                                 PDM_OWNERSHIP_KEEP,
+                                                                 is_signed,
+                                                                 comm);
     }
     else {
-      split_pcgs[tag] = PDM_part_comm_graph_create(n_part,
-                                                   split_n_entity_graph[tag],
-                                                   split_entity_graph[tag],
-                                                   PDM_OWNERSHIP_KEEP,
-                                                   comm);
+      split_pcgs[color] = PDM_part_comm_graph_create(n_part,
+                                                     split_n_entity_graph[color],
+                                                     split_entity_graph[color],
+                                                     PDM_OWNERSHIP_KEEP,
+                                                     comm);
     }
   }
 
-  *pcgs = split_pcgs;
-
-  for (int i_tag = 0; i_tag < n_tag; ++i_tag) {
-    PDM_free(split_n_entity_graph[i_tag]);
-    PDM_free(split_entity_graph  [i_tag]);
+  for (int i_color = 0; i_color < n_color; ++i_color) {
+    PDM_free(split_n_entity_graph[i_color]);
+    PDM_free(split_entity_graph  [i_color]);
     if (nuplet_size>0) {
-      PDM_free(split_entity_nuplt[i_tag]);
+      PDM_free(split_entity_nuplt[i_color]);
     }
   }
   PDM_free(split_n_entity_graph);

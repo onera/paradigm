@@ -1032,10 +1032,11 @@ MPI_TEST_CASE("[PDM_part_comm_graph_split] - 1 part - 1 perio - 2p", 2) {
   }
 
   PDM_part_comm_graph_t **split_pcgs = NULL;
+  PDM_malloc(split_pcgs, 2, PDM_part_comm_graph_t *);
   PDM_part_comm_graph_split(pcg_full,
                             2,
               (const int**) &entity_tag,
-                            &split_pcgs);
+                            split_pcgs);
   PDM_free(entity_tag);
 
   /* Comm graph intra*/
