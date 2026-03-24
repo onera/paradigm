@@ -1152,8 +1152,8 @@ PDM_part_comm_graph_split
 {
   PDM_MPI_Comm comm        = PDM_part_comm_graph_comm_get(pcg);
   int          n_part      = PDM_part_comm_graph_n_part_get(pcg);
-  int          nuplet_size = PDM_part_comm_graph_entity_nuplet_size_get(pcg);
-  int          is_signed   = PDM_part_comm_graph_entity_is_signed_get(pcg);
+  int          nuplet_size = PDM_part_comm_graph_nuplet_size(pcg);
+  int          is_signed   = PDM_part_comm_graph_is_signed(pcg);
 
   int  **split_n_entity_graph = NULL;
   int ***split_entity_graph = NULL;

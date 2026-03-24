@@ -478,7 +478,7 @@ PDM_part_comm_graph_gather_strided_data
  *
  * \brief Free \ref PDM_part_comm_graph_t structure
  *
- * \param pcg               \ref PDM_part_comm_graph_t structure
+ * \param pcg \ref PDM_part_comm_graph_t structure
  *
  */
 void
@@ -530,16 +530,16 @@ PDM_part_comm_graph_all_reduce
 
 /**
  *
- * \brief Get information about if nuplet is signed
+ * \brief Return true (1) if graph description is signed, else false (0)
  *
  * \param [in] pcg Pointer to \ref PDM_part_comm_graph_t instance
  *
  * \return Nuplet is signed info
  */
 int
-PDM_part_comm_graph_entity_is_signed_get
+PDM_part_comm_graph_is_signed
 (
-  PDM_part_comm_graph_t  *pcg
+  PDM_part_comm_graph_t *pcg
 );
 
 /**
@@ -551,9 +551,9 @@ PDM_part_comm_graph_entity_is_signed_get
  * \return Size of nuplet
  */
 int
-PDM_part_comm_graph_entity_nuplet_size_get
+PDM_part_comm_graph_nuplet_size
 (
-  PDM_part_comm_graph_t  *pcg
+  PDM_part_comm_graph_t *pcg
 );
 
 /**
