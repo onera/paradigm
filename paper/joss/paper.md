@@ -16,8 +16,8 @@ authors:
     affiliation: "1" 
 
   - name: Bruno Maugars
-#    orcid: 
-    affiliation: "2" 
+    orcid: 0000-0001-6709-9701
+    affiliation: "2"
 
   - name: Karmijn Hoogveld
     orcid: 0009-0007-8251-1152
