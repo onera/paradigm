@@ -227,7 +227,7 @@ _part_assembly_dual_graph
   PDM_malloc(pnode_ln_to_gn, n_part, PDM_g_num_t *);
 
 
-  PDM_gen_gnum_t *gen_gnum_node = PDM_gnum_create(3, 1, PDM_TRUE, 1e-6, comm, PDM_OWNERSHIP_USER);
+  PDM_gen_gnum_t *gen_gnum_node = PDM_gnum_create(3, n_part, PDM_TRUE, 1e-6, comm, PDM_OWNERSHIP_USER);
 
   PDM_gnum_set_from_part_comm_graph(gen_gnum_node,
                                     n_node,
