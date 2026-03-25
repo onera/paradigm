@@ -40,8 +40,8 @@ authors:
     affiliation: "3" 
 
   - name: Thomas Hennion
-#    orcid: 
-    affiliation: "1" 
+    orcid: 0009-0007-1661-900X
+    affiliation: "1"
 
 
 affiliations:
