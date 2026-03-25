@@ -577,9 +577,6 @@ cdef class Isosurface:
             f" of registered groups ({n_group_last}) for entity {entity_type}"
       raise ValueError(msg)
 
-    # Fow now, let this set to not break existing scripts
-    self.n_group_set(entity_type, n_group)
-
     PDM_isosurface_pgroup_set(self._isos, i_part,
                               entity_type,
                               group_entity_idx_data,
