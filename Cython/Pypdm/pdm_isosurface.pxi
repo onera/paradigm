@@ -265,9 +265,11 @@ cdef class Isosurface:
   # cdef list keep_alive
   cdef int      i_rank
   cdef int      n_rank
+  cdef list     n_group
   cdef dict ptp_entity
   cdef dict user_defined_field_function
   cdef list got_parent_idx
+  cdef list keep_alive
 
   FIELD    = _PDM_ISO_SURFACE_KIND_FIELD
   PLANE    = _PDM_ISO_SURFACE_KIND_PLANE
@@ -294,7 +296,7 @@ cdef class Isosurface:
       mesh_dim (int)      : Entry mesh dimension
       comm     (MPI.Comm) : MPI communicator
     """
-    # self.keep_alive  = list()
+    self.keep_alive  = list()
 
     # > Convert mpi4py -> PDM_MPI
     cdef MPI.MPI_Comm c_comm   = comm.ob_mpi
@@ -302,6 +304,7 @@ cdef class Isosurface:
 
     self.i_rank  = comm.Get_rank()
     self.n_rank  = comm.Get_size()
+    self.n_group = [-1 for j in range(PDM_MESH_ENTITY_MAX)]
 
     self._isos = PDM_isosurface_create(pdm_comm,
                                        mesh_dim)
@@ -471,8 +474,7 @@ cdef class Isosurface:
       connectivity_idx  (np.ndarray[np.int32_t])  : Connectivity index
       connectivity      (np.ndarray[np.int32_t])  : Connectivity
     """
-    # self.keep_alive.append(connectivity_idx)
-    # self.keep_alive.append(connectivity)
+    self.keep_alive.extend([connectivity_idx, connectivity])
 
     cdef int n_entity = 0
     if connectivity_type == _PDM_CONNECTIVITY_TYPE_EDGE_VTX:
@@ -500,7 +502,7 @@ cdef class Isosurface:
       i_part      (int)                     : Partition id
       coordinates (np.ndarray[np.double_t]) : Coordinates
     """
-    # self.keep_alive.append(coordinates)
+    self.keep_alive.append(coordinates)
 
     cdef int     n_vtx      = coordinates.size // 3
     cdef double *coord_data = np_to_double_pointer(coordinates)
@@ -520,12 +522,28 @@ cdef class Isosurface:
       entity_type (PDM_mesh_entities_t)        : Entity type
       ln_to_gn    (np.ndarray[npy_pdm_gnum_t]) : Global ids
     """
-    # self.keep_alive.append(ln_to_gn)
+    self.keep_alive.append(ln_to_gn)
     cdef PDM_g_num_t *ln_to_gn_data = np_to_gnum_pointer(ln_to_gn)
 
     PDM_isosurface_ln_to_gn_set(self._isos, i_part,
                                 entity_type,
                                 ln_to_gn_data)
+
+  def n_group_set(self, entity_type, n_group):
+    """
+    n_group_set(entity_type, n_group)
+
+    Set number of groups for the specified entity_type.
+
+    Parameters:
+      entity_type  (PDM_mesh_entities_t) :  Type of mesh entity
+      n_group      (int) : Number of groups
+    """
+
+    self.n_group[entity_type] = n_group
+    PDM_isosurface_n_group_set(self._isos,
+                               entity_type,
+                               n_group)
 
   def pgroup_set(self,                               i_part,
                                                      entity_type,
@@ -544,19 +562,20 @@ cdef class Isosurface:
       group_entity     (np.ndarray[np.int_t])       : Group entities
       group_ln_to_gn   (np.ndarray[npy_pdm_gnum_t]) : Group entities global ids
     """
-    # self.keep_alive.append(group_entity_idx)
-    # self.keep_alive.append(group_entity)
-    # self.keep_alive.append(group_ln_to_gn)
 
     cdef int         *group_entity_idx_data = np_to_int_pointer (group_entity_idx)
     cdef int         *group_entity_data     = np_to_int_pointer (group_entity)
     cdef PDM_g_num_t *group_ln_to_gn_data   = np_to_gnum_pointer(group_ln_to_gn)
 
+    self.keep_alive.extend([group_entity_idx, group_entity, group_ln_to_gn])
+
     cdef int n_group = group_entity_idx.size - 1
 
-    PDM_isosurface_n_group_set(self._isos,
-                               entity_type,
-                               n_group)
+    n_group_last = self.n_group[entity_type]
+    if (n_group_last != -1) and (n_group_last != n_group):
+      msg = f"Number of provided groups ({n_group}) does not match the number" \
+            f" of registered groups ({n_group_last}) for entity {entity_type}"
+      raise ValueError(msg)
 
     PDM_isosurface_pgroup_set(self._isos, i_part,
                               entity_type,
@@ -587,6 +606,7 @@ cdef class Isosurface:
     Parameters:
       part_mesh_nodal (PDM_part_mesh_nodal) : PDM_part_mesh_nodal
     """
+    self.keep_alive.append(part_mesh_nodal)
     PDM_isosurface_part_mesh_nodal_set(self._isos, part_mesh_nodal.pmn)
 
   def redistribution_set(self,
@@ -598,9 +618,9 @@ cdef class Isosurface:
     Set reequilibrate strategy and repartionning tool.
 
     .. note:: Admissible values for ``extract_kind`` are:
-
-      - PDM_EXTRACT_PART_KIND_REEQUILIBRATE: the iso-surface is evenly redistributed (Default kind)
-      - PDM_EXTRACT_PART_KIND_LOCAL: the iso-surface is not redistributed (same partitioning as the input mesh)
+    
+      - PDM_EXTRACT_PART_KIND_REEQUILIBRATE: the iso-surface is evenly redistributed
+      - PDM_EXTRACT_PART_KIND_LOCAL: the iso-surface is not redistributed (same partitioning as the input mesh). This is the default kind.
 
     Parameters:
       extract_kind (PDM_extract_part_kind_t) : Redistribution :ref:`kind <PDM_extract_part_kind_t>`
@@ -622,6 +642,7 @@ cdef class Isosurface:
       field  (np.ndarray[np.double_t]) : Field
     """
     cdef double *field_data = np_to_double_pointer(field)
+    self.keep_alive.append(field)
 
     PDM_isosurface_pfield_set(self._isos, id_iso, i_part, field_data)
 
@@ -641,6 +662,7 @@ cdef class Isosurface:
     """
     cdef int         *connec_idx_data = np_to_int_pointer (connectivity_idx)
     cdef PDM_g_num_t *connec_data     = np_to_gnum_pointer(connectivity)
+    self.keep_alive.extend([connectivity_idx, connectivity])
 
     PDM_isosurface_dconnectivity_set(self._isos, connectivity_type,
                                      connec_idx_data, connec_data)
@@ -656,6 +678,7 @@ cdef class Isosurface:
       coordinates (np.ndarray[np.double_t]) : Distributed coordinates
     """
     cdef double *coord_data = np_to_double_pointer(coordinates)
+    self.keep_alive.append(coordinates)
 
     PDM_isosurface_dvtx_coord_set(self._isos, coord_data)
 
@@ -670,6 +693,7 @@ cdef class Isosurface:
       distribution (np.ndarray[npy_pdm_gnum_t]) : Entity distribution
     """
     cdef PDM_g_num_t *distrib_data = np_to_gnum_pointer(distribution)
+    self.keep_alive.append(distribution)
 
     PDM_isosurface_distrib_set(self._isos, entity_type, distrib_data)
 
@@ -688,6 +712,7 @@ cdef class Isosurface:
     """
     cdef int         *group_entity_idx_data = np_to_int_pointer (group_entity_idx)
     cdef PDM_g_num_t *group_entity_data     = np_to_gnum_pointer(group_entity)
+    self.keep_alive.extend([group_entity_idx, group_entity])
 
     cdef int n_group = group_entity_idx.size - 1
 
@@ -707,6 +732,7 @@ cdef class Isosurface:
     Parameters:
       dmesh (PDM_dmesh) : PDM_dmesh
     """
+    self.keep_alive.append(dmesh)
     PDM_isosurface_dmesh_set(self._isos, dmesh._dm)
 
   def dmesh_nodal_set(self, DistributedMeshNodal dmesh_nodal):
@@ -718,6 +744,7 @@ cdef class Isosurface:
     Parameters:
       dmesh_nodal (PDM_dmesh_nodal) : PDM_dmesh_nodal
     """
+    self.keep_alive.append(dmesh_nodal)
     PDM_isosurface_dmesh_nodal_set(self._isos, dmesh_nodal.dmn)
 
   def dfield_set(self,                            id_iso,
@@ -732,6 +759,7 @@ cdef class Isosurface:
       coordinates (np.ndarray[np.double_t]) : Field
     """
     cdef double *field_data = np_to_double_pointer(field)
+    self.keep_alive.append(field)
 
     PDM_isosurface_dfield_set(self._isos, id_iso, field_data)
 

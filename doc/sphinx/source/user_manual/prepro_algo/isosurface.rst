@@ -158,6 +158,7 @@ API
             .. automethod:: Pypdm.Pypdm.Isosurface.pconnectivity_set
             .. automethod:: Pypdm.Pypdm.Isosurface.pcoordinates_set
             .. automethod:: Pypdm.Pypdm.Isosurface.ln_to_gn_set
+            .. automethod:: Pypdm.Pypdm.Isosurface.n_group_set
             .. automethod:: Pypdm.Pypdm.Isosurface.pgroup_set
 
             .. automethod:: Pypdm.Pypdm.Isosurface.part_mesh_set
@@ -170,6 +171,7 @@ API
             .. automethod:: Pypdm.Pypdm.Isosurface.dconnectivity_set
             .. automethod:: Pypdm.Pypdm.Isosurface.dcoordinates_set
             .. automethod:: Pypdm.Pypdm.Isosurface.distribution_set
+            .. automethod:: Pypdm.Pypdm.Isosurface.n_group_set
             .. automethod:: Pypdm.Pypdm.Isosurface.dgroup_set
 
             .. automethod:: Pypdm.Pypdm.Isosurface.dmesh_set
