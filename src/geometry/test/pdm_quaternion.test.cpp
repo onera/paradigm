@@ -4,18 +4,21 @@
 #include "pdm_priv.h"
 #include "pdm_printf.h"
 #include "pdm_quaternion.h"
+#include "pdm_quaternion_priv.h"
 
 static const double EPS = 8*__DBL_EPSILON__;
 static const double DEG2RAD = M_PI/180.;
 
 MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_set", 1) {
-    double q[4];
+    _pdm_quaternion_t _q;
+    PDM_quaternion* q = (PDM_quaternion*)&_q;
     PDM_quaternion_set(0.,1.,2.,3.,q);
     CHECK(PDM_quaternion_equal(q,0.,1.,2.,3.,EPS));
 }
 
 MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_equal", 1) {
-    double q[4];
+    _pdm_quaternion_t _q;
+    PDM_quaternion* q = (PDM_quaternion*)&_q;
     PDM_quaternion_set(0.,1.,2.,3.,q);
     CHECK( PDM_quaternion_equal(q,0.,1.,2.,3.,EPS));
     CHECK(!PDM_quaternion_equal(q,1.,1.,2.,3.,EPS));
@@ -25,15 +28,18 @@ MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_equal", 1) {
 }
 
 MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_set_identity", 1) {
-    double q[4];
+    _pdm_quaternion_t _q;
+    PDM_quaternion* q = (PDM_quaternion*)&_q;
     PDM_quaternion_set(0.,1.,2.,3.,q);
     PDM_quaternion_set_identity(q);
     CHECK(PDM_quaternion_equal(q,1.,0.,0.,0.,EPS));
 }
 
 MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_conjugate", 1) {
-    double q[4];
-    double qt[4];
+    _pdm_quaternion_t _q;
+    PDM_quaternion* q = (PDM_quaternion*)&_q;
+    _pdm_quaternion_t _qt;
+    PDM_quaternion* qt = (PDM_quaternion*)&_qt;
     PDM_quaternion_set(0.,1.,2.,3.,q);
     PDM_quaternion_set(3.,2.,1.,0.,qt);
     PDM_quaternion_conjugate(q,qt);
@@ -41,30 +47,33 @@ MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_conjugate", 1) {
 }
 
 MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_norm", 1) {
-    double q[4];
+    _pdm_quaternion_t _q;
+    PDM_quaternion* q = (PDM_quaternion*)&_q;
     PDM_quaternion_set(0.,3.,4.,0.,q);
     double norm = PDM_quaternion_norm(q);
     CHECK(PDM_ABS(norm-5.)<__DBL_EPSILON__);
 }
 
 MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_normalize", 1) {
-    double q[4];
+    _pdm_quaternion_t _q;
+    PDM_quaternion* q = (PDM_quaternion*)&_q;
     PDM_quaternion_set(0.,3.,4.,0.,q);
     PDM_quaternion_normalize(q);
     double norm = PDM_quaternion_norm(q);
     CHECK(PDM_ABS(norm-1.)<__DBL_EPSILON__);
 
-    q[0] = 2.;
-    q[1] = 0.;
-    q[2] = 0.;
-    q[3] = 0.;
+    _q.q[0] = 2.;
+    _q.q[1] = 0.;
+    _q.q[2] = 0.;
+    _q.q[3] = 0.;
     PDM_quaternion_normalize(q);
     CHECK(PDM_quaternion_equal(q,1.,0.,0.,0.,EPS));
 }
 
 MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_rotate", 1) {
     // rotation of 120deg of axis 1,1,1 (i->k,k->j,j->i)
-    double q[4];
+    _pdm_quaternion_t _q;
+    PDM_quaternion* q = (PDM_quaternion*)&_q;
     PDM_quaternion_set(-.5,.5,.5,.5,q);
     double vector[9] = {1.,0.,0.,
                         0.,1.,0.,
@@ -77,7 +86,8 @@ MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_rotate", 1) {
     PDM_quaternion_rotate(q,vector,3,out_vect);
     CHECK_EQ_C_ARRAY_FLOAT(out_vect,exp_vect,9,EPS);
 
-    double qt[4];
+    _pdm_quaternion_t _qt;
+    PDM_quaternion* qt = (PDM_quaternion*)&_qt;
     PDM_quaternion_set(-.5,-.5,-.5,-.5,qt);
     double exp_vect_2[9] = {0.,1.,0.,
                             0.,0.,1.,
@@ -89,7 +99,8 @@ MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_rotate", 1) {
 MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_rotate 2", 1) {
     // rotation of 90 deg around y-axis
     double sin_45 = .5*sqrt(2.);
-    double q[4];
+    _pdm_quaternion_t _q;
+    PDM_quaternion* q = (PDM_quaternion*)&_q;
     PDM_quaternion_set(sin_45,0.,sin_45,0.,q);
     double vector[3] = {1.,2.,3.};
     double out_vect[3];
@@ -99,11 +110,14 @@ MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_rotate 2", 1) {
 
 }
 
-    
+
 MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_compose", 1) {
-    double q1[4];
-    double q2[4];
-    double q_out[4];
+    _pdm_quaternion_t _q1;
+    PDM_quaternion* q1 = (PDM_quaternion*)&_q1;
+    _pdm_quaternion_t _q2;
+    PDM_quaternion* q2 = (PDM_quaternion*)&_q2;
+    _pdm_quaternion_t _q_out;
+    PDM_quaternion* q_out = (PDM_quaternion*)&_q_out;
     PDM_quaternion_set(0.,0.,0.,0.,q1);
     PDM_quaternion_set(1.,2.,3.,4.,q2);
     PDM_quaternion_set(0.,0.,0.,0.,q_out);
@@ -117,11 +131,16 @@ MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_compose", 1) {
 }
 
 MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_compose 2", 1) {
-    double q1[4];
-    double qi[4];
-    double qj[4];
-    double qk[4];
-    double q_out[4];
+    _pdm_quaternion_t _q1;
+    PDM_quaternion* q1 = (PDM_quaternion*)&_q1;
+    _pdm_quaternion_t _qi;
+    PDM_quaternion* qi = (PDM_quaternion*)&_qi;
+    _pdm_quaternion_t _qj;
+    PDM_quaternion* qj = (PDM_quaternion*)&_qj;
+    _pdm_quaternion_t _qk;
+    PDM_quaternion* qk = (PDM_quaternion*)&_qk;
+    _pdm_quaternion_t _q_out;
+    PDM_quaternion* q_out = (PDM_quaternion*)&_q_out;
     PDM_quaternion_set(1.,0.,0.,0.,q1);
     PDM_quaternion_set(0.,1.,0.,0.,qi);
     PDM_quaternion_set(0.,0.,1.,0.,qj);
@@ -163,11 +182,12 @@ MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_compose 2", 1) {
     CHECK(PDM_quaternion_equal(q_out,-qi[0],-qi[1],-qi[2],-qi[3],EPS));
     PDM_quaternion_compose(qk,qk,q_out);
     CHECK(PDM_quaternion_equal(q_out,-q1[0],-q1[1],-q1[2],-q1[3],EPS));
-    
+
 }
 
 MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_from_two_vectors", 1) {
-    double q[4];
+    _pdm_quaternion_t _q;
+    PDM_quaternion* q = (PDM_quaternion*)&_q;
     PDM_quaternion_set(0.,0.,0.,0.,q);
     double v1[3] = {1.,0.,0.};
     double v2[3] = {0.,1.,0.};
@@ -181,7 +201,8 @@ MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_from_two_vectors", 1) {
 }
 
 MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_from_axis_angle", 1) {
-    double q[4];
+    _pdm_quaternion_t _q;
+    PDM_quaternion* q = (PDM_quaternion*)&_q;
     PDM_quaternion_set(0.,0.,0.,0.,q);
     double axis[3] = {1.,1.,1.};
     double angle = 120.*M_PI/180.;
@@ -197,7 +218,8 @@ MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_from_axis_angle", 1) {
 }
 
 MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_from_axis_angle 2", 1) {
-    double q[4];
+    _pdm_quaternion_t _q;
+    PDM_quaternion* q = (PDM_quaternion*)&_q;
     PDM_quaternion_set(0.,0.,0.,0.,q);
     double angle;
     double axes[75] = {
@@ -346,7 +368,8 @@ MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_from_axis_angle 2", 1) {
 }
 
 MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_from_euler_angles", 1) {
-    double q[4];
+    _pdm_quaternion_t _q;
+    PDM_quaternion* q = (PDM_quaternion*)&_q;
     PDM_quaternion_set(0.,0.,0.,0.,q);
     double sin_45 = .5*sqrt(2.);
     PDM_bool_t intrinsic = PDM_TRUE;
@@ -368,7 +391,8 @@ MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_from_euler_angles", 1) {
 }
 
 MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_from_euler_angles 2", 1) {
-    double q[4];
+    _pdm_quaternion_t _q;
+    PDM_quaternion* q = (PDM_quaternion*)&_q;
     PDM_quaternion_set(0.,0.,0.,0.,q);
     PDM_bool_t intrinsic = PDM_TRUE;
     int order[3] = {2,1,0};
@@ -458,7 +482,7 @@ MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_from_euler_angles 2", 1) {
         0.007596123493895969,
         0.07892647901187541,
         0.08682408883346517,
-        0.09406091491321403 
+        0.09406091491321403
     };
     double v2[27] = {
        -0.09406091491321403,
@@ -503,7 +527,8 @@ MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_from_euler_angles 2", 1) {
 }
 
 MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_from_rotation_matrix", 1) {
-    double q[4];
+    _pdm_quaternion_t _q;
+    PDM_quaternion* q = (PDM_quaternion*)&_q;
     PDM_quaternion_set(0.,0.,0.,0.,q);
     double ang_x,ang_y,ang_z;
     PDM_bool_t intrinsic = PDM_TRUE;
@@ -539,7 +564,8 @@ MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_from_rotation_matrix", 1) 
 }
 
 MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_to_axis_angle", 1) {
-    double q[4];
+    _pdm_quaternion_t _q;
+    PDM_quaternion* q = (PDM_quaternion*)&_q;
     PDM_quaternion_set(0.,0.,0.,0.,q);
     double axis[3],expec_axis[3];
     double angle,out_angle;
@@ -595,7 +621,8 @@ MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_to_axis_angle", 1) {
 }
 
 MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_to_euler_angles", 1) {
-    double q[4];
+    _pdm_quaternion_t _q;
+    PDM_quaternion* q = (PDM_quaternion*)&_q;
     PDM_quaternion_set(0.,0.,0.,0.,q);
     PDM_bool_t intrinsic = PDM_TRUE;
     int order[3] = {2,1,0};
@@ -618,8 +645,10 @@ MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_to_euler_angles", 1) {
 }
 
 MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_to_rotation_matrix", 1) {
-    double q[4];
-    double q_out[4];
+    _pdm_quaternion_t _q;
+    PDM_quaternion* q = (PDM_quaternion*)&_q;
+    _pdm_quaternion_t _q_out;
+    PDM_quaternion* q_out = (PDM_quaternion*)&_q_out;
     PDM_quaternion_set(0.,0.,0.,0.,q);
     PDM_quaternion_set(0.,0.,0.,0.,q_out);
     PDM_bool_t intrinsic = PDM_TRUE;
