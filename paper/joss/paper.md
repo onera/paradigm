@@ -32,8 +32,8 @@ authors:
     affiliation: "2"
 
   - name: Berenger Berthoul
-#    orcid: 
-    affiliation: "2" 
+    orcid: 0009-0001-0142-7669
+    affiliation: "2"
 
   - name: Nicolas Dellinger
     orcid: 0000-0002-0843-6509
