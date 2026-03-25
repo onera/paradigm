@@ -1548,6 +1548,26 @@ PDM_part_comm_graph_entity_graph_get
 
 
 int
+PDM_part_comm_graph_is_signed
+(
+  PDM_part_comm_graph_t *pcg
+)
+{
+  return pcg->is_signed;
+}
+
+
+int
+PDM_part_comm_graph_nuplet_size
+(
+  PDM_part_comm_graph_t *pcg
+)
+{
+  return pcg->nuplet_size;
+}
+
+
+int
 PDM_part_comm_graph_entity_nuplet_get
 (
   PDM_part_comm_graph_t  *pcg,

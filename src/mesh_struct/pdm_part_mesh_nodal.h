@@ -483,7 +483,7 @@ PDM_part_mesh_nodal_add_part_mesh_nodal_elmts
 /**
  * \brief Free a \ref PDM_part_mesh_nodal_t instance
  *
- * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t instance
+ * \param [in] pmn Pointer to \ref PDM_part_mesh_nodal_t instance
  *
  */
 void
@@ -830,9 +830,9 @@ PDM_part_mesh_nodal_g_num_get_from_part
 /**
  * \brief Free partially a \ref PDM_part_mesh_nodal_t instance
  *
- * \param [in]  pmn          Pointer to \ref PDM_part_mesh_nodal_t instance
+ * \param [in] pmn Pointer to \ref PDM_part_mesh_nodal_t instance
  *
- * \return      NULL
+ * \return NULL
  *
  */
 void
@@ -1329,6 +1329,24 @@ PDM_part_mesh_nodal_part_comm_graph_get
   PDM_ownership_t         ownership
 );
 
+
+/**
+ *
+ * \brief Free the internal part_comm_graph of the specified mesh entity
+ *
+ * \note If PDM_GEOMETRY_KIND_MAX is provided, the function is called for all values of PDM_geometry_kind_t
+ *
+ * \param [in] pmn       Pointer to \ref PDM_part_mesh_nodal_t instance
+ * \param [in] geom_kind Geometry kind (see \ref PDM_geometry_kind_t )
+ */
+void
+PDM_part_mesh_nodal_part_comm_graph_free
+(
+  PDM_part_mesh_nodal_t  *pmn,
+  PDM_geometry_kind_t     geom_kind
+);
+
+
 /**
  *
  * \brief Set part_comm_graph onto part_mesh_nodal struct for vertices
@@ -1361,6 +1379,20 @@ PDM_part_mesh_nodal_part_comm_graph_vtx_get
   PDM_part_comm_graph_t **pcg,
   PDM_ownership_t         ownership
 );
+
+
+/**
+ *
+ * \brief Free the internal vertex part_comm_graph
+ *
+ * \param [in] pmn Pointer to \ref PDM_part_mesh_nodal_t instance
+ */
+void
+PDM_part_mesh_nodal_part_comm_graph_vtx_free
+(
+  PDM_part_mesh_nodal_t  *pmn
+);
+
 
 /**
  * \brief Transform group information inside a \ref PDM_part_mesh_nodal_t to tag for all elements

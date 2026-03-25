@@ -478,7 +478,7 @@ PDM_part_comm_graph_gather_strided_data
  *
  * \brief Free \ref PDM_part_comm_graph_t structure
  *
- * \param pcg               \ref PDM_part_comm_graph_t structure
+ * \param pcg \ref PDM_part_comm_graph_t structure
  *
  */
 void
@@ -526,6 +526,34 @@ PDM_part_comm_graph_all_reduce
   int                      stride,
   PDM_MPI_Op               op,
   unsigned char          **pdata
+);
+
+/**
+ *
+ * \brief Return true (1) if graph description is signed, else false (0)
+ *
+ * \param [in] pcg Pointer to \ref PDM_part_comm_graph_t instance
+ *
+ * \return Nuplet is signed info
+ */
+int
+PDM_part_comm_graph_is_signed
+(
+  PDM_part_comm_graph_t *pcg
+);
+
+/**
+ *
+ * \brief Get nuplet size
+ *
+ * \param [in] pcg Pointer to \ref PDM_part_comm_graph_t instance
+ *
+ * \return Size of nuplet
+ */
+int
+PDM_part_comm_graph_nuplet_size
+(
+  PDM_part_comm_graph_t *pcg
 );
 
 /**

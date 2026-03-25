@@ -409,6 +409,34 @@ PDM_part_mesh_nodal_part_comm_graph_get
 
 
 void
+PDM_part_mesh_nodal_part_comm_graph_free
+(
+  PDM_part_mesh_nodal_t *pmn,
+  PDM_geometry_kind_t    geom_kind
+)
+{
+  CHECK_PMN(pmn)
+  if (geom_kind==PDM_GEOMETRY_KIND_MAX) {
+    for (int i_geom_kind=PDM_GEOMETRY_KIND_VOLUMIC;
+             i_geom_kind<PDM_GEOMETRY_KIND_MAX; i_geom_kind++) {
+      if (pmn->pcg_ownership[i_geom_kind] == PDM_OWNERSHIP_KEEP) {
+        PDM_part_comm_graph_free(pmn->pcg[i_geom_kind]);
+      }
+      pmn->pcg          [i_geom_kind] = NULL;
+      pmn->pcg_ownership[i_geom_kind] = PDM_OWNERSHIP_BAD_VALUE;
+    }
+  }
+  else {
+    if (pmn->pcg_ownership[geom_kind] == PDM_OWNERSHIP_KEEP) {
+      PDM_part_comm_graph_free(pmn->pcg[geom_kind]);
+    }
+    pmn->pcg          [geom_kind] = NULL;
+    pmn->pcg_ownership[geom_kind] = PDM_OWNERSHIP_BAD_VALUE;
+  }
+}
+
+
+void
 PDM_part_mesh_nodal_part_comm_graph_vtx_set
 (
   PDM_part_mesh_nodal_t *pmn,
@@ -439,6 +467,22 @@ PDM_part_mesh_nodal_part_comm_graph_vtx_get
     pmn->pcg_vtx_ownership = ownership;
   }
 }
+
+
+void
+PDM_part_mesh_nodal_part_comm_graph_vtx_free
+(
+  PDM_part_mesh_nodal_t  *pmn
+)
+{
+  CHECK_PMN(pmn)
+  if (pmn->pcg_vtx_ownership == PDM_OWNERSHIP_KEEP) {
+    PDM_part_comm_graph_free(pmn->pcg_vtx);
+  }
+  pmn->pcg_vtx = NULL;
+  pmn->pcg_vtx_ownership = PDM_OWNERSHIP_BAD_VALUE;
+}
+
 
 int
 PDM_part_mesh_nodal_mesh_dimension_get
@@ -893,15 +937,8 @@ PDM_part_mesh_nodal_free
     PDM_free(pmn->vtx);
   }
 
-  for (int geom_kind=0; geom_kind<PDM_GEOMETRY_KIND_MAX; ++geom_kind) {
-    if (pmn->pcg_ownership[geom_kind]==PDM_OWNERSHIP_KEEP) {
-      PDM_part_comm_graph_free(pmn->pcg[geom_kind]);
-    }
-  }
-
-  if (pmn->pcg_vtx_ownership == PDM_OWNERSHIP_KEEP) {
-    PDM_part_comm_graph_free(pmn->pcg_vtx);
-  }
+  PDM_part_mesh_nodal_part_comm_graph_free(pmn, PDM_GEOMETRY_KIND_MAX);
+  PDM_part_mesh_nodal_part_comm_graph_vtx_free(pmn);
 
   PDM_free(pmn->section_kind);
   PDM_free(pmn->section_id);
@@ -1100,7 +1137,7 @@ PDM_part_mesh_nodal_dump_vtk_with_fields
     }
 
     char filename[999];
-    sprintf(filename, "%s_%d_%d.vtk", filename_pattern, i_part, i_rank);
+    sprintf(filename, "%s_%d_%d.vtk", filename_pattern, i_rank, i_part);
     PDM_vtk_write_unstructured_grid(filename,
                                     pn_vtx,
                                     pvtx_coord,

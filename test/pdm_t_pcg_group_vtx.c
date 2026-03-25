@@ -268,7 +268,6 @@ main
                                                           &selected_vtx);
 
   /* Get element Part Comm Graph */
-  PDM_mesh_entities_t entity_type = PDM_dimension_to_entity_type(dim-1);
   PDM_part_comm_graph_t *pcg_elt = NULL;
   PDM_part_mesh_nodal_part_comm_graph_get(pmn,
                                           geom_kind,

@@ -128,9 +128,6 @@ PDM_part_comm_graph_selected_entity1_to_selected_entity2
   int                   ***out_selected_entity2
 );
 
-
-
-
 /**
  * \brief Create an unique part_comm_graph from multiple ones.
  *
@@ -147,6 +144,25 @@ PDM_part_comm_graph_concatenate
   PDM_MPI_Comm            comm,
   int                     n_pcg,
   PDM_part_comm_graph_t **pcgs
+);
+
+/**
+ * \brief Split part_comm_graph into n_color part_comm_graph objects
+ *
+ * \param [in   ] pcg          Initial PDM_part_comm_graph_t object
+ * \param [in   ] n_color      Number of colors
+ * \param [in   ] entity_color List of n_part arrays of size n_entity_graph[i_part] each,
+ *                             indicating the ID (0-based) of the output pcg
+ * \param [inout] split_pcgs   Splitted part_comm_graph objects (size=n_color, must be allocated first)
+ *
+ */
+void
+PDM_part_comm_graph_split
+(
+  PDM_part_comm_graph_t  *pcg,
+  const int               n_color,
+  const int             **entity_color,
+  PDM_part_comm_graph_t **split_pcgs
 );
 
 #ifdef __cplusplus

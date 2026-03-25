@@ -1141,6 +1141,116 @@ PDM_part_comm_graph_concatenate
 }
 
 
+void
+PDM_part_comm_graph_split
+(
+  PDM_part_comm_graph_t  *pcg,
+  const int               n_color,
+  const int             **entity_color,
+  PDM_part_comm_graph_t **split_pcgs
+)
+{
+  PDM_MPI_Comm comm        = PDM_part_comm_graph_comm_get(pcg);
+  int          n_part      = PDM_part_comm_graph_n_part_get(pcg);
+  int          nuplet_size = PDM_part_comm_graph_nuplet_size(pcg);
+  int          is_signed   = PDM_part_comm_graph_is_signed(pcg);
+
+  int  **split_n_entity_graph = NULL;
+  int ***split_entity_graph = NULL;
+  int ***split_entity_nuplt = NULL;
+  PDM_malloc(split_n_entity_graph, n_color, int  *);
+  PDM_malloc(split_entity_graph  , n_color, int **);
+  if (nuplet_size>0) {
+    PDM_malloc(split_entity_nuplt, n_color, int **);
+  }
+  for (int i_color = 0; i_color < n_color; ++i_color) {
+    PDM_calloc(split_n_entity_graph[i_color], n_part, int  );
+    PDM_malloc(split_entity_graph  [i_color], n_part, int *);
+    if (nuplet_size>0) {
+      PDM_malloc(split_entity_nuplt[i_color], n_part, int *);
+    }
+  }
+
+  for (int i_part=0; i_part<n_part; ++i_part) {
+    int *entity_graph = NULL;
+    int *entity_nuplt = NULL;
+    int n_entity = PDM_part_comm_graph_entity_graph_get(pcg,
+                                                        i_part,
+                                                        &entity_graph,
+                                                        PDM_OWNERSHIP_BAD_VALUE);
+
+    PDM_part_comm_graph_entity_nuplet_get(pcg,
+                                          i_part,
+                                          &entity_nuplt,
+                                          PDM_OWNERSHIP_BAD_VALUE);
+
+    for (int i_color = 0; i_color < n_color; ++i_color) {
+      PDM_malloc(split_entity_graph[i_color][i_part], 4*n_entity, int);
+      if (nuplet_size>0) {
+        PDM_malloc(split_entity_nuplt[i_color][i_part], n_entity, int);
+      }
+    }
+
+    for (int i_entity=0; i_entity<n_entity; ++i_entity) {
+      int color = entity_color[i_part][i_entity];
+      if (color<0) {
+        PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_split: color[i_part=%d][i_entity=%d] = %d, but should be >0", i_part, i_entity, color);
+      }
+      if (color>=n_color) {
+        PDM_error(__FILE__, __LINE__, 0, "PDM_part_comm_graph_split: color[i_part=%d][i_entity=%d] = %d, but should be < n_color (= %d)", i_part, i_entity, color, n_color);
+      }
+      int i_write = split_n_entity_graph[color][i_part];
+
+      memcpy(&split_entity_graph[color][i_part][4*i_write],
+             &entity_graph[4*i_entity],
+             4 * sizeof(int));
+
+      if (nuplet_size>0) {
+        memcpy(&split_entity_nuplt[color][i_part][nuplet_size*i_write],
+               &entity_nuplt[nuplet_size*i_entity],
+               nuplet_size * sizeof(int));
+      }
+
+      split_n_entity_graph[color][i_part]++;
+
+    }
+  }
+
+  for (int color = 0; color < n_color; ++color) {
+    if (nuplet_size>0) {
+      split_pcgs[color] = PDM_part_comm_graph_with_nuplet_create(n_part,
+                                                                 split_n_entity_graph[color],
+                                                                 split_entity_graph[color],
+                                                                 PDM_OWNERSHIP_KEEP,
+                                                                 nuplet_size,
+                                                                 split_entity_nuplt[color],
+                                                                 PDM_OWNERSHIP_KEEP,
+                                                                 is_signed,
+                                                                 comm);
+    }
+    else {
+      split_pcgs[color] = PDM_part_comm_graph_create(n_part,
+                                                     split_n_entity_graph[color],
+                                                     split_entity_graph[color],
+                                                     PDM_OWNERSHIP_KEEP,
+                                                     comm);
+    }
+  }
+
+  for (int i_color = 0; i_color < n_color; ++i_color) {
+    PDM_free(split_n_entity_graph[i_color]);
+    PDM_free(split_entity_graph  [i_color]);
+    if (nuplet_size>0) {
+      PDM_free(split_entity_nuplt[i_color]);
+    }
+  }
+  PDM_free(split_n_entity_graph);
+  PDM_free(split_entity_graph);
+  PDM_free(split_entity_nuplt);
+
+}
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

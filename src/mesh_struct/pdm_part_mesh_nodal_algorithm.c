@@ -558,6 +558,7 @@ PDM_part_mesh_nodal_part_comm_graph_deduce_from_vtx
                                                          entity2_vtx_idx,
                                                          entity2_vtx,
                                                          &pmn->pcg[mesh_entity]);
+  pmn->pcg_ownership[mesh_entity] = PDM_OWNERSHIP_KEEP;
 
   for(int i_part = 0; i_part < pmn->n_part; ++i_part) {
     PDM_free(entity2_vtx_idx[i_part]);
@@ -591,7 +592,7 @@ PDM_part_mesh_nodal_complete_part_comm_graph
   PDM_MPI_Allreduce(&have_vtx_gnum, &have_g_vtx_gnum, 1, PDM_MPI_INT, PDM_MPI_MIN, pmn->comm);
 
   if (pmn->pcg_vtx == NULL && have_g_vtx_gnum == 0) {
-    PDM_error (__FILE__, __LINE__, 0, "PDM_part_mesh_nodal_complete_part_comm_graph: pmn->pcg_vtx !=NULL or gnum for vertices is mandatory in order to deduce other \n");
+    PDM_error(__FILE__, __LINE__, 0, "PDM_part_mesh_nodal_complete_part_comm_graph: pmn->pcg_vtx !=NULL or gnum for vertices is mandatory in order to deduce other \n");
   }
 
   /*
