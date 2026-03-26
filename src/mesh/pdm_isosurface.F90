@@ -1178,6 +1178,45 @@ module pdm_isosurface
   end subroutine PDM_isosurface_set_tolerance
 
 
+  function PDM_isosurface_pn_entity_get(isos,            &
+                                        id_isosurface,   &
+                                        i_part,          &
+                                        entity_type)     &
+                                        result(n_entity)
+    ! Get number of iso-surface entities
+    implicit none
+
+    type(c_ptr), intent(in) :: isos          ! PDM_isosurface_t instance
+    integer,     intent(in) :: id_isosurface ! Iso-surface identifier
+    integer,     intent(in) :: i_part        ! Partition identifier
+    integer,     intent(in) :: entity_type   ! Entity type
+    integer                 :: n_entity      ! Number of entities
+
+    interface
+      function PDM_isosurface_pn_entity_get_cf(isos,            &
+                                               id_isosurface,   &
+                                               i_part,          &
+                                               entity_type)     &
+                                               result(n_entity) &
+        bind(c, name='PDM_isosurface_pn_entity_get')
+        use iso_c_binding
+        implicit none
+        type(c_ptr),    value :: isos
+        integer(c_int), value :: id_isosurface
+        integer(c_int), value :: i_part
+        integer(c_int), value :: entity_type
+        integer(c_int)        :: n_entity
+      end function PDM_isosurface_pn_entity_get_cf
+    end interface
+
+    n_entity = PDM_isosurface_pn_entity_get_cf(isos,          &
+                                               id_isosurface, &
+                                               i_part,        &
+                                               entity_type)
+
+  end function PDM_isosurface_pn_entity_get
+
+
   subroutine PDM_isosurface_pconnectivity_get (isos,              &
                                                id_isosurface,     &
                                                i_part,            &
@@ -1481,6 +1520,40 @@ module pdm_isosurface
 
 
   end subroutine PDM_isosurface_pgroup_get
+
+
+  function PDM_isosurface_dn_entity_get(isos,             &
+                                        id_isosurface,    &
+                                        entity_type)      &
+                                        result(dn_entity)
+    ! Get number of iso-surface block-distributed entities
+    implicit none
+
+    type(c_ptr), intent(in) :: isos          ! PDM_isosurface_t instance
+    integer,     intent(in) :: id_isosurface ! Iso-surface identifier
+    integer,     intent(in) :: entity_type   ! Entity type
+    integer                 :: dn_entity     ! Number of entities
+
+    interface
+      function PDM_isosurface_dn_entity_get_cf(isos,             &
+                                               id_isosurface,    &
+                                               entity_type)      &
+                                               result(dn_entity) &
+        bind(c, name='PDM_isosurface_dn_entity_get')
+        use iso_c_binding
+        implicit none
+        type(c_ptr),    value :: isos
+        integer(c_int), value :: id_isosurface
+        integer(c_int), value :: entity_type
+        integer(c_int)        :: dn_entity
+      end function PDM_isosurface_dn_entity_get_cf
+    end interface
+
+    dn_entity = PDM_isosurface_dn_entity_get_cf(isos,          &
+                                                id_isosurface, &
+                                                entity_type)
+
+  end function PDM_isosurface_dn_entity_get
 
 
   subroutine PDM_isosurface_dconnectivity_get (isos,              &

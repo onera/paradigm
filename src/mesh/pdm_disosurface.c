@@ -377,12 +377,32 @@ PDM_isosurface_dfield_set
   _iso->dfield = dfield;
 }
 
+int
+PDM_isosurface_dn_entity_get
+(
+  PDM_isosurface_t    *isos,
+  int                  id_isosurface,
+  PDM_mesh_entities_t  entity_type
+)
+{
+  CHECK_IS_NOT_PART(isos);
+
+  PDM_ISOSURFACE_CHECK_ID      (isos, id_isosurface);
+  PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_isosurface);
+
+  PDM_ISOSURFACE_CHECK_ENTITY_TYPE(entity_type);
+
+  _isosurface_t *_iso = &isos->isosurfaces[id_isosurface];
+
+  return _iso->iso_dn_entity[entity_type];
+}
+
 
 int
 PDM_isosurface_dconnectivity_get
 (
   PDM_isosurface_t         *isos,
-  int                       id_iso,
+  int                       id_isosurface,
   PDM_connectivity_type_t   connectivity_type,
   int                     **dconnect_idx,
   PDM_g_num_t             **dconnect,
@@ -391,10 +411,10 @@ PDM_isosurface_dconnectivity_get
 {
   CHECK_IS_NOT_PART(isos);
 
-  PDM_ISOSURFACE_CHECK_ID      (isos, id_iso);
-  PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_iso);
+  PDM_ISOSURFACE_CHECK_ID      (isos, id_isosurface);
+  PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_isosurface);
 
-  _isosurface_t *_iso = &isos->isosurfaces[id_iso];
+  _isosurface_t *_iso = &isos->isosurfaces[id_isosurface];
 
   int n_entity = 0;
 

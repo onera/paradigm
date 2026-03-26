@@ -630,7 +630,27 @@ PDM_isosurface_dump_times
  *   - PDM_isosurface_n_part_get ???
  */
 
+/**
+ *
+ * \brief Get number of iso-surface entities
+ *
+ * \param [in] isos          \ref PDM_isosurface_t instance
+ * \param [in] id_isosurface Iso-surface identifier
+ * \param [in] i_part        Partition identifier
+ * \param [in] entity_type   Entity type
+ *
+ * \return Number of entities
+ *
+ */
 
+int
+PDM_isosurface_pn_entity_get
+(
+  PDM_isosurface_t    *isos,
+  int                  id_isosurface,
+  int                  i_part,
+  PDM_mesh_entities_t  entity_type
+);
 
 /**
  *
@@ -753,6 +773,26 @@ PDM_isosurface_pgroup_get
 // Sorties en part_mesh_nodal ?
 
 // Block-distributed
+
+/**
+ *
+ * \brief Get number of iso-surface block-distributed entities
+ *
+ * \param [in] isos          \ref PDM_isosurface_t instance
+ * \param [in] id_isosurface Iso-surface identifier
+ * \param [in] entity_type   Entity type
+ *
+ * \return Number of entities
+ *
+ */
+
+int
+PDM_isosurface_dn_entity_get
+(
+  PDM_isosurface_t    *isos,
+  int                  id_isosurface,
+  PDM_mesh_entities_t  entity_type
+);
 
 /**
  *

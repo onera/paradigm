@@ -113,6 +113,11 @@ cdef extern from "pdm_isosurface.h":
   void PDM_isosurface_compute(PDM_isosurface_t *isos,
                               int               id_isosurface);
 
+  int PDM_isosurface_pn_entity_get(PDM_isosurface_t    *isos,
+                                   int                  id_isosurface,
+                                   int                  i_part,
+                                   PDM_mesh_entities_t  entity_type);
+
   int PDM_isosurface_pconnectivity_get(PDM_isosurface_t         *isos,
                                        int                       id_isosurface,
                                        int                       i_part,
@@ -149,6 +154,10 @@ cdef extern from "pdm_isosurface.h":
                                               PDM_mesh_entities_t   entity_type,
                                               int                 **isovalue_entity_idx,
                                               PDM_ownership_t       ownership);
+
+  int PDM_isosurface_dn_entity_get(PDM_isosurface_t    *isos,
+                                   int                  id_isosurface,
+                                   PDM_mesh_entities_t  entity_type);
 
   int PDM_isosurface_dconnectivity_get(PDM_isosurface_t         *isos,
                                        int                       id_isosurface,
@@ -765,6 +774,22 @@ cdef class Isosurface:
 
 
   # > Partitioned getter API
+  def pn_entity_get(self, id_iso, i_part, entity_type):
+    """
+    pn_entity_get(id_iso, i_part, entity_type)
+
+    Get number of iso-surface entities.
+
+    Parameters:
+      id_iso      (int)                 : Isosurface id
+      i_part      (int)                 : Partition id
+      entity_type (PDM_mesh_entities_t) : Entity type
+
+    Returns:
+      Number of entities (int)
+    """
+    return PDM_isosurface_pn_entity_get(self._isos, id_iso, i_part, entity_type)
+
   def pconnectivity_get(self, id_iso, i_part, connectivity_type):
     """
     pconnectivity_get(id_iso, i_part, connectivity_type)
@@ -1022,6 +1047,21 @@ cdef class Isosurface:
 
 
   # > Distributed getter API
+  def dn_entity_get(self, id_iso, entity_type):
+    """
+    dn_entity_get(id_iso, entity_type)
+
+    Get number of iso-surface block-distributed entities.
+
+    Parameters:
+      id_iso      (int)                 : Isosurface id
+      entity_type (PDM_mesh_entities_t) : Entity type
+
+    Returns:
+      Number of entities (int)
+    """
+    return PDM_isosurface_dn_entity_get(self._isos, id_iso, entity_type)
+
   def dconnectivity_get(self, id_iso, connectivity_type):
     """
     dconnectivity_get(id_iso, connectivity_type)

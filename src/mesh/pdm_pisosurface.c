@@ -570,6 +570,28 @@ PDM_isosurface_pparent_weight_get
 
 
 int
+PDM_isosurface_pn_entity_get
+(
+  PDM_isosurface_t    *isos,
+  int                  id_isosurface,
+  int                  i_part,
+  PDM_mesh_entities_t  entity_type
+)
+{
+  CHECK_IS_NOT_DIST(isos);
+
+  PDM_ISOSURFACE_CHECK_ID      (isos, id_isosurface);
+  PDM_ISOSURFACE_CHECK_COMPUTED(isos, id_isosurface);
+
+  CHECK_I_PART_GET(isos, i_part);
+
+  _isosurface_t *_iso = &isos->isosurfaces[id_isosurface];
+
+  return _iso->iso_n_entity[entity_type][i_part];
+}
+
+
+int
 PDM_isosurface_pconnectivity_get
 (
   PDM_isosurface_t         *isos,
