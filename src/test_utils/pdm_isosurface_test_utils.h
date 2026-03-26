@@ -120,6 +120,7 @@ PDM_isosurface_test_utils_gen_mesh
   int                   randomize,
   PDM_Mesh_nodal_elt_t  elt_type,
   int                   generate_edges,
+  int                   use_groups,
   PDM_multipart_t     **mpart,
   PDM_part_mesh_t      *pmesh,
   PDM_dmesh_t         **out_dmesh

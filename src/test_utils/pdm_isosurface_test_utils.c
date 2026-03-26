@@ -486,6 +486,7 @@ PDM_isosurface_test_utils_gen_mesh
   int                   randomize,
   PDM_Mesh_nodal_elt_t  elt_type,
   int                   generate_edges,
+  int                   use_groups,
   PDM_multipart_t     **mpart,
   PDM_part_mesh_t      *pmesh,
   PDM_dmesh_t         **out_dmesh
@@ -626,13 +627,14 @@ PDM_isosurface_test_utils_gen_mesh
                                PDM_OWNERSHIP_KEEP);
 
 
-
-    PDM_dmesh_bound_set(dmesh,
-                        PDM_BOUND_TYPE_FACE,
-                        n_face_group,
-                        dface_group,
-                        dface_group_idx,
-                        PDM_OWNERSHIP_KEEP);
+    if (use_groups) {
+      PDM_dmesh_bound_set(dmesh,
+                          PDM_BOUND_TYPE_FACE,
+                          n_face_group,
+                          dface_group,
+                          dface_group_idx,
+                          PDM_OWNERSHIP_KEEP);
+    }
 
     PDM_dmesh_compute_distributions(dmesh);
 

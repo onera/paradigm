@@ -102,6 +102,7 @@ int main
                                      randomize,
                                      elt_type,
                                      generate_edges,
+                                     use_groups,
                                     &mpart,
                                      pmesh,
                                     &dmesh);
