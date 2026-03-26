@@ -24,7 +24,7 @@ authors:
     affiliation: "1" 
 
   - name: Clement Benazet
-#    orcid:
+    orcid: 0009-0004-0280-0770
     affiliation: "2"
 
   - name: Julien Coulet
