@@ -234,8 +234,8 @@ PDM_timer_dump_json
 void
 PDM_timer_gather_dump
 (
-  PDM_timer_t *timer,
-  char        *filename
+        PDM_timer_t *timer,
+  const char        *filename
 );
 
 /**

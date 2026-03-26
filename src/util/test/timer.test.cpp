@@ -20,6 +20,9 @@ MPI_TEST_CASE("[pdm_timer] - 2p",2) {
   PDM_MPI_Comm_rank (pdm_comm, &i_rank);
   PDM_MPI_Comm_size (pdm_comm, &n_rank);
 
+  /*
+   * Example with mulitple level (depth > 1)
+   */
   PDM_timer_t* timer = PDM_timer_create(pdm_comm);
 
   PDM_timer_start(timer, "compute"  , 1);
@@ -28,10 +31,14 @@ MPI_TEST_CASE("[pdm_timer] - 2p",2) {
 
   PDM_timer_start(timer, "sub_step1", 1);
 
+  // New Level
+  PDM_timer_start(timer, "sub_sub_step1", 1);
+
   if(i_rank == 0) {
     sleep(1.);
   }
 
+  PDM_timer_end  (timer, "sub_sub_step1", 1);
   PDM_timer_end  (timer, "sub_step1", 1);
 
   PDM_timer_start(timer, "sub_step2", 1);
@@ -43,25 +50,38 @@ MPI_TEST_CASE("[pdm_timer] - 2p",2) {
 
   PDM_timer_end  (timer, "compute"  , 1);
 
-  // char filename[999];
-  // sprintf(filename, "profiling_%i.json", i_rank);
-  // PDM_timer_dump_json(timer, filename);
+  /*
+   * Multiple dump possibilities
+   */
+  // 1 file per proc - json (to be post-treat after)
+  char filename[999];
+  sprintf(filename, "profiling_%i.json", i_rank);
+  PDM_timer_dump_json(timer, filename);
 
-  // sprintf(filename, "debug.log", i_rank);
-  // PDM_timer_gather_dump(timer, filename);
+  // 1 file - All gather
+  const char* filename_gather = "profiling_gather.log";
+  PDM_timer_gather_dump(timer, filename_gather);
+
+  // Same but in stdout
+  PDM_timer_gather_dump(timer, NULL);
 
   if(i_rank == 0) {
+    // Print timer - Hierarchical view
     PDM_timer_print(timer, 0);
+    // Print timer - Flat view
     PDM_timer_print(timer, 1);
   }
   // PDM_timer_log(timer, 0);
   // PDM_timer_log(timer, 1);
 
+  PDM_timer_gather_dump_json(timer, "profiling_gather.json");
 
-  // get_time_from_path(timer, this_part, path)
-  // orig = get_current_root  (timer, ....)
+  remove(filename);
 
+  if(i_rank == 0) {
+    remove("profiling_gather.log");
+    remove("profiling_gather.json");
+  }
 
   PDM_timer_free(timer);
-
 }
