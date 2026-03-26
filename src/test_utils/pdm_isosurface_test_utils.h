@@ -141,6 +141,7 @@ PDM_isosurface_test_utils_gen_mesh_nodal
   PDM_g_num_t             n_vtx_seg,
   int                     randomize,
   PDM_Mesh_nodal_elt_t    elt_type,
+  int                     use_groups,
   PDM_part_mesh_nodal_t **out_pmn,
   PDM_dmesh_nodal_t     **out_dmn
 );

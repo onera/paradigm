@@ -937,6 +937,7 @@ PDM_isosurface_test_utils_gen_mesh_nodal
   PDM_g_num_t             n_vtx_seg,
   int                     randomize,
   PDM_Mesh_nodal_elt_t    elt_type,
+  int                     use_groups,
   PDM_part_mesh_nodal_t **out_pmn,
   PDM_dmesh_nodal_t     **out_dmn
 )
@@ -989,6 +990,28 @@ PDM_isosurface_test_utils_gen_mesh_nodal
   }
 
   assert(dmn != NULL);
+
+  if (!use_groups) {
+    // Strip dmn from its surface groups
+    int          n_group;
+    int         *dgroup_elmt_idx;
+    PDM_g_num_t *dgroup_elmt;
+    PDM_DMesh_nodal_section_group_elmt_get(dmn,
+                                           PDM_GEOMETRY_KIND_SURFACIC,
+                                           &n_group,
+                                           &dgroup_elmt_idx,
+                                           &dgroup_elmt,
+                                           PDM_OWNERSHIP_USER);
+    PDM_free(dgroup_elmt_idx);
+    PDM_free(dgroup_elmt);
+
+    PDM_DMesh_nodal_section_group_elmt_set(dmn,
+                                           PDM_GEOMETRY_KIND_SURFACIC,
+                                           0,
+                                           NULL,
+                                           NULL,
+                                           PDM_OWNERSHIP_USER);
+  }
 
   // if (dim == 3) {
   //   PDM_dmesh_nodal_dump_vtk(dmn, PDM_GEOMETRY_KIND_VOLUMIC, "dmn_vol");

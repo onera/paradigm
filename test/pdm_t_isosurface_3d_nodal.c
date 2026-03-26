@@ -104,6 +104,7 @@ int main(int argc, char *argv[])
                                            n_vtx_seg,
                                            randomize,
                                            elt_type,
+                                           use_groups,
                                            &pmn,
                                            &dmn);
 
