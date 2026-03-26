@@ -55,6 +55,7 @@ int main(int argc, char *argv[])
   int                   use_part_mesh  = 0;
   int                   generate_edges = 0;
   int                   local          = 0;
+  int                   use_groups     = 0;
 
   PDM_isosurface_test_utils_read_args(argc,
                                       argv,
@@ -69,7 +70,8 @@ int main(int argc, char *argv[])
                                      &n_vtx_seg,
                                      &use_part_mesh,
                                      &generate_edges,
-                                     &local);
+                                     &local,
+                                     &use_groups);
 
   assert(PDM_Mesh_nodal_elt_dim_get(elt_type) == 2);
 

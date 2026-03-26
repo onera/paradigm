@@ -2391,13 +2391,11 @@ _isosurface_ngon_single_part
       *out_isovalue_face_idx   = PDM_array_zeros_int(n_isovalues + 1);
     }
 
-    // if (face_tag != NULL) {
-      *out_iso_n_edge          = 0;
-      *out_iso_edge_parent_idx = PDM_array_zeros_int(1);
-      PDM_malloc(*out_iso_edge_parent, 0, int);
-      PDM_malloc(*out_iso_edge_vtx   , 0, int);
-      *out_isovalue_edge_idx   = PDM_array_zeros_int(n_isovalues + 1);
-    // }
+    *out_iso_n_edge          = 0;
+    *out_iso_edge_parent_idx = PDM_array_zeros_int(1);
+    PDM_malloc(*out_iso_edge_parent, 0, int);
+    PDM_malloc(*out_iso_edge_vtx   , 0, int);
+    *out_isovalue_edge_idx   = PDM_array_zeros_int(n_isovalues + 1);
 
     return;
   }
@@ -2464,8 +2462,8 @@ _isosurface_ngon_single_part
   int *isovalue_edge_idx = NULL;
 
   int iso_n_edge = 0;
-    PDM_malloc(isovalue_edge_idx, n_isovalues + 1, int);
-    isovalue_edge_idx[0] = 0;
+  PDM_malloc(isovalue_edge_idx, n_isovalues + 1, int);
+  isovalue_edge_idx[0] = 0;
   if (face_tag != NULL) {
     for (int i_face = 0; i_face < n_face; i_face++) {
       s_iso_edge += n_isovalues * (face_tag[i_face] > 0);
@@ -2704,16 +2702,14 @@ _isosurface_ngon_single_part
     *out_isovalue_face_idx = isovalue_face_idx;
   }
 
-  if (face_tag != NULL) { // TODO dim 2
-    *out_iso_n_edge          = iso_n_edge;
-    *out_iso_edge_parent_idx = NULL;
-    *out_iso_edge_parent     = NULL;
-    *out_iso_edge_vtx        = NULL;
-    PDM_realloc(iso_edge_parent_idx, *out_iso_edge_parent_idx,   iso_n_edge + 1                      , int);
-    PDM_realloc(iso_edge_parent    , *out_iso_edge_parent    , (*out_iso_edge_parent_idx)[iso_n_edge], int);
-    PDM_realloc(iso_edge_vtx       , *out_iso_edge_vtx       ,   iso_n_edge * 2                      , int);
-    *out_isovalue_edge_idx = isovalue_edge_idx;
-  }
+  *out_iso_n_edge          = iso_n_edge;
+  *out_iso_edge_parent_idx = NULL;
+  *out_iso_edge_parent     = NULL;
+  *out_iso_edge_vtx        = NULL;
+  PDM_realloc(iso_edge_parent_idx, *out_iso_edge_parent_idx,   iso_n_edge + 1                      , int);
+  PDM_realloc(iso_edge_parent    , *out_iso_edge_parent    , (*out_iso_edge_parent_idx)[iso_n_edge], int);
+  PDM_realloc(iso_edge_vtx       , *out_iso_edge_vtx       ,   iso_n_edge * 2                      , int);
+  *out_isovalue_edge_idx = isovalue_edge_idx;
 }
 
 
@@ -4009,26 +4005,24 @@ PDM_isosurface_ngon_algo
 
 
     // Groups
-    if (n_surface > 0) {
-      PDM_array_reset_int(iso_edge_group_n, n_surface, 0);
-      for (int i_edge = 0; i_edge < iso_n_edge[i_part]; i_edge++) {
-        int i_face = iso_edge_parent[i_part][iso_edge_parent_idx[i_part][i_edge]] - 1;
-        assert(face_tag[i_face] > 0);
-        iso_edge_group_n[face_tag[i_face]-1]++;
-      }
-
-      iso_edge_group_idx [i_part] = PDM_array_new_idx_from_sizes_int(iso_edge_group_n, n_surface);
-      PDM_malloc(iso_edge_group_lnum[i_part], iso_edge_group_idx[i_part][n_surface], int);
-      PDM_array_reset_int(iso_edge_group_n, n_surface, 0);
-      for (int i_edge = 0; i_edge < iso_n_edge[i_part]; i_edge++) {
-        int i_face    = iso_edge_parent[i_part][iso_edge_parent_idx[i_part][i_edge]] - 1;
-        int i_surface = face_tag[i_face]-1;
-        // TODO: handle case with face on multiple surfaces?
-        iso_edge_group_lnum[i_part][iso_edge_group_idx[i_part][i_surface] + iso_edge_group_n[i_surface]] = i_edge+1;
-        iso_edge_group_n[i_surface]++;
-      }
-      PDM_free(face_tag);
+    PDM_array_reset_int(iso_edge_group_n, n_surface, 0);
+    for (int i_edge = 0; i_edge < iso_n_edge[i_part]; i_edge++) {
+      int i_face = iso_edge_parent[i_part][iso_edge_parent_idx[i_part][i_edge]] - 1;
+      assert(face_tag[i_face] > 0);
+      iso_edge_group_n[face_tag[i_face]-1]++;
     }
+
+    iso_edge_group_idx [i_part] = PDM_array_new_idx_from_sizes_int(iso_edge_group_n, n_surface);
+    PDM_malloc(iso_edge_group_lnum[i_part], iso_edge_group_idx[i_part][n_surface], int);
+    PDM_array_reset_int(iso_edge_group_n, n_surface, 0);
+    for (int i_edge = 0; i_edge < iso_n_edge[i_part]; i_edge++) {
+      int i_face    = iso_edge_parent[i_part][iso_edge_parent_idx[i_part][i_edge]] - 1;
+      int i_surface = face_tag[i_face]-1;
+      // TODO: handle case with face on multiple surfaces?
+      iso_edge_group_lnum[i_part][iso_edge_group_idx[i_part][i_surface] + iso_edge_group_n[i_surface]] = i_edge+1;
+      iso_edge_group_n[i_surface]++;
+    }
+    PDM_free(face_tag);
 
     // If local extraction, apply indirection to parent_lnum arrays
     if (isos->extract_kind == PDM_EXTRACT_PART_KIND_LOCAL) {
@@ -4140,49 +4134,47 @@ PDM_isosurface_ngon_algo
   }
 
 
-  if (n_surface > 0) {
-    PDM_g_num_t **iso_edge_group_parent_gnum = NULL;
-    PDM_malloc(iso_edge_group_parent_gnum, isos->iso_n_part, PDM_g_num_t *);
-    for (int i_part = 0; i_part < isos->iso_n_part; i_part++) {
-      PDM_malloc(iso_edge_group_parent_gnum[i_part], iso_edge_group_idx[i_part][n_surface], PDM_g_num_t);
-      PDM_malloc(iso_edge_group_gnum       [i_part], iso_edge_group_idx[i_part][n_surface], PDM_g_num_t);
-      for (int i = 0; i < iso_edge_group_idx[i_part][n_surface]; i++) {
-        iso_edge_group_parent_gnum[i_part][i] = iso_edge_gnum[i_part][iso_edge_group_lnum[i_part][i] - 1];
-      }
+  PDM_g_num_t **iso_edge_group_parent_gnum = NULL;
+  PDM_malloc(iso_edge_group_parent_gnum, isos->iso_n_part, PDM_g_num_t *);
+  for (int i_part = 0; i_part < isos->iso_n_part; i_part++) {
+    PDM_malloc(iso_edge_group_parent_gnum[i_part], iso_edge_group_idx[i_part][n_surface], PDM_g_num_t);
+    PDM_malloc(iso_edge_group_gnum       [i_part], iso_edge_group_idx[i_part][n_surface], PDM_g_num_t);
+    for (int i = 0; i < iso_edge_group_idx[i_part][n_surface]; i++) {
+      iso_edge_group_parent_gnum[i_part][i] = iso_edge_gnum[i_part][iso_edge_group_lnum[i_part][i] - 1];
     }
-
-    for (int i_surface = 0; i_surface < n_surface; i_surface++) {
-      PDM_gen_gnum_t *gen_gnum = PDM_gnum_create(3,  // unused,
-                                                 isos->iso_n_part,
-                                                 PDM_FALSE,
-                                                 1., // unused,
-                                                 isos->comm,
-                                                 PDM_OWNERSHIP_KEEP);
-
-      for (int i_part = 0; i_part < isos->iso_n_part; i_part++) {
-        PDM_gnum_set_from_parents(gen_gnum,
-                                  i_part,
-                                  iso_edge_group_idx[i_part][i_surface+1] - iso_edge_group_idx[i_part][i_surface],
-                                  &iso_edge_group_parent_gnum[i_part][iso_edge_group_idx[i_part][i_surface]]);
-      }
-
-      PDM_gnum_set_parents_nuplet(gen_gnum, 1);
-      PDM_gnum_compute(gen_gnum);
-
-
-      for (int i_part = 0; i_part < isos->iso_n_part; i_part++) {
-        PDM_g_num_t *gnum = PDM_gnum_get(gen_gnum, i_part);
-        memcpy(iso_edge_group_gnum[i_part] + iso_edge_group_idx[i_part][i_surface],
-               gnum,
-               sizeof(PDM_g_num_t) * (iso_edge_group_idx[i_part][i_surface+1] - iso_edge_group_idx[i_part][i_surface]));
-      }
-      PDM_gnum_free(gen_gnum);
-    }
-    for (int i_part = 0; i_part < isos->iso_n_part; i_part++) {
-      PDM_free(iso_edge_group_parent_gnum[i_part]);
-    }
-    PDM_free(iso_edge_group_parent_gnum);
   }
+
+  for (int i_surface = 0; i_surface < n_surface; i_surface++) {
+    PDM_gen_gnum_t *gen_gnum = PDM_gnum_create(3,  // unused,
+                                               isos->iso_n_part,
+                                               PDM_FALSE,
+                                               1., // unused,
+                                               isos->comm,
+                                               PDM_OWNERSHIP_KEEP);
+
+    for (int i_part = 0; i_part < isos->iso_n_part; i_part++) {
+      PDM_gnum_set_from_parents(gen_gnum,
+                                i_part,
+                                iso_edge_group_idx[i_part][i_surface+1] - iso_edge_group_idx[i_part][i_surface],
+                                &iso_edge_group_parent_gnum[i_part][iso_edge_group_idx[i_part][i_surface]]);
+    }
+
+    PDM_gnum_set_parents_nuplet(gen_gnum, 1);
+    PDM_gnum_compute(gen_gnum);
+
+
+    for (int i_part = 0; i_part < isos->iso_n_part; i_part++) {
+      PDM_g_num_t *gnum = PDM_gnum_get(gen_gnum, i_part);
+      memcpy(iso_edge_group_gnum[i_part] + iso_edge_group_idx[i_part][i_surface],
+             gnum,
+             sizeof(PDM_g_num_t) * (iso_edge_group_idx[i_part][i_surface+1] - iso_edge_group_idx[i_part][i_surface]));
+    }
+    PDM_gnum_free(gen_gnum);
+  }
+  for (int i_part = 0; i_part < isos->iso_n_part; i_part++) {
+    PDM_free(iso_edge_group_parent_gnum[i_part]);
+  }
+  PDM_free(iso_edge_group_parent_gnum);
 
   if (measure_time) {
     t_end = PDM_MPI_Wtime();
@@ -4204,7 +4196,7 @@ PDM_isosurface_ngon_algo
     _iso->iso_entity_parent_gnum[PDM_MESH_ENTITY_VTX] = iso_vtx_parent_gnum;
   }
   _iso->iso_entity_parent_lnum[PDM_MESH_ENTITY_VTX] = iso_vtx_parent;
-  _iso->iso_vtx_coord         = iso_vtx_coord;
+  _iso->iso_vtx_coord = iso_vtx_coord;
 
   // Edges
   _iso->iso_n_entity         [PDM_MESH_ENTITY_EDGE] = iso_n_edge;

@@ -58,6 +58,7 @@ int main
   int                   use_part_mesh  = 0;
   int                   generate_edges = 0;
   int                   local          = 0;
+  int                   use_groups     = 0;
 
   PDM_isosurface_test_utils_read_args(argc,
                                       argv,
@@ -72,7 +73,8 @@ int main
                                       &n_vtx_seg,
                                       &use_part_mesh,
                                       &generate_edges,
-                                      &local);
+                                      &local,
+                                      &use_groups);
 
   if (isovalues == NULL) {
     n_isovalues = 1;
@@ -203,6 +205,7 @@ int main
   if (n_part > 0) {
     // Partitioned
     if (use_part_mesh) {
+      // TODO use `use_groups`
       PDM_isosurface_part_mesh_set(isos, pmesh);
     }
     else {
@@ -344,37 +347,40 @@ int main
                                     PDM_MESH_ENTITY_VTX,
                                     vtx_ln_to_gn);
 
-        // Groups
-        int          n_surface             = 0;
-        int         *surface_face_idx      = NULL;
-        int         *surface_face          = NULL;
-        PDM_g_num_t *surface_face_ln_to_gn = NULL;
-        PDM_multipart_group_get(mpart,
-                                0,
-                                i_part,
-                                PDM_MESH_ENTITY_FACE,
-                                &n_surface,
-                                &surface_face_idx,
-                                &surface_face,
-                                &surface_face_ln_to_gn,
-                                PDM_OWNERSHIP_KEEP);
-
-        PDM_isosurface_n_group_set(isos,
-                                   PDM_MESH_ENTITY_FACE,
-                                   n_surface);
-
-        PDM_isosurface_pgroup_set(isos,
+        if (use_groups) {
+          // Groups
+          int          n_surface             = 0;
+          int         *surface_face_idx      = NULL;
+          int         *surface_face          = NULL;
+          PDM_g_num_t *surface_face_ln_to_gn = NULL;
+          PDM_multipart_group_get(mpart,
+                                  0,
                                   i_part,
                                   PDM_MESH_ENTITY_FACE,
-                                  surface_face_idx,
-                                  surface_face,
-                                  surface_face_ln_to_gn);
+                                  &n_surface,
+                                  &surface_face_idx,
+                                  &surface_face,
+                                  &surface_face_ln_to_gn,
+                                  PDM_OWNERSHIP_KEEP);
+
+          PDM_isosurface_n_group_set(isos,
+                                     PDM_MESH_ENTITY_FACE,
+                                     n_surface);
+
+          PDM_isosurface_pgroup_set(isos,
+                                    i_part,
+                                    PDM_MESH_ENTITY_FACE,
+                                    surface_face_idx,
+                                    surface_face,
+                                    surface_face_ln_to_gn);
+        }
       }
     }
   }
   else {
     // Block-distributed
     if (use_part_mesh) {
+      // TODO use `use_groups`
       PDM_isosurface_dmesh_set(isos, dmesh);
     }
     else {
@@ -446,14 +452,16 @@ int main
                                           &dsurface_face_idx,
                                           PDM_OWNERSHIP_KEEP);
 
-      PDM_isosurface_n_group_set(isos,
-                                 PDM_MESH_ENTITY_FACE,
-                                 n_surface);
+      if (use_groups) {
+        PDM_isosurface_n_group_set(isos,
+                                   PDM_MESH_ENTITY_FACE,
+                                   n_surface);
 
-      PDM_isosurface_dgroup_set(isos,
-                                PDM_MESH_ENTITY_FACE,
-                                dsurface_face_idx,
-                                dsurface_face);
+        PDM_isosurface_dgroup_set(isos,
+                                  PDM_MESH_ENTITY_FACE,
+                                  dsurface_face_idx,
+                                  dsurface_face);
+      }
     }
   }
 

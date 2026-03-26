@@ -615,7 +615,7 @@ PDM_part_distgroup_to_partgroup
   /*
    * Compute the groups distribution - Mandatory to have the link between rank and group
    */
-  PDM_g_num_t* *groups_distribution;
+  PDM_g_num_t **groups_distribution;
   PDM_malloc(groups_distribution, n_group, PDM_g_num_t *);
 
   for(int i_group = 0; i_group < n_group; ++i_group) {
@@ -627,7 +627,10 @@ PDM_part_distgroup_to_partgroup
    * Create exchange protocol
    *    - dgroup contains the absolute number of faces that contains the boundary conditions -> A kind of ln_to_gn
    */
-  int dgroup_tot_size = dgroup_idx[n_group];
+  int dgroup_tot_size = 0;
+  if (n_group > 0) {
+    dgroup_tot_size = dgroup_idx[n_group];
+  }
 
   PDM_part_to_block_t *ptb_group = NULL;
   PDM_g_num_t* _entity_distribution = NULL;
@@ -641,7 +644,8 @@ PDM_part_distgroup_to_partgroup
                                                       &dgroup_tot_size,
                                                       1,
                                                       comm);
-  } else {
+  }
+  else {
 
     double *weights;
     PDM_malloc(weights, dgroup_tot_size, double);

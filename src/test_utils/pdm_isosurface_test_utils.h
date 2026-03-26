@@ -83,7 +83,8 @@ PDM_isosurface_test_utils_read_args
   PDM_g_num_t           *n_vtx_seg,
   int                   *use_part_mesh,
   int                   *generate_edges,
-  int                   *local
+  int                   *local,
+  int                   *use_groups
 );
 
 
