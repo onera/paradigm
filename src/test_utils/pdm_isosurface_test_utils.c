@@ -256,13 +256,13 @@ _eval_cos
 
 
 static PDM_g_num_t
-_gn_entity_compute
+_gn_entity_compute_part
 (
- PDM_isosurface_t    *isos,
- int                  id_iso,
- int                  n_part,
- PDM_mesh_entities_t  entity_type,
- PDM_MPI_Comm         comm
+  PDM_isosurface_t    *isos,
+  int                  id_iso,
+  int                  n_part,
+  PDM_mesh_entities_t  entity_type,
+  PDM_MPI_Comm         comm
 )
 {
   PDM_g_num_t lmax = 0;
@@ -283,6 +283,25 @@ _gn_entity_compute
   PDM_MPI_Allreduce(&lmax, &gmax, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, comm);
 
   return gmax;
+}
+
+
+static PDM_g_num_t
+_gn_entity_compute_dist
+(
+  PDM_isosurface_t    *isos,
+  int                  id_iso,
+  PDM_mesh_entities_t  entity_type,
+  PDM_MPI_Comm         comm
+)
+{
+  _isosurface_t *_iso = &isos->isosurfaces[id_iso];
+  PDM_g_num_t dn_entity = (PDM_g_num_t) _iso->iso_dn_entity[entity_type];
+
+  PDM_g_num_t gn_entity;
+  PDM_MPI_Allreduce(&dn_entity, &gn_entity, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, isos->comm);
+
+  return gn_entity;
 }
 
 
@@ -1876,22 +1895,15 @@ PDM_isosurface_test_utils_isosurface_size_get
   PDM_MPI_Comm_rank(comm, &n_rank);
 
   if (n_part > 0) {
-    *gn_iso_vtx  = _gn_entity_compute(isos, id_iso, n_part, PDM_MESH_ENTITY_VTX,  comm);
-    *gn_iso_edge = _gn_entity_compute(isos, id_iso, n_part, PDM_MESH_ENTITY_EDGE, comm);
-    *gn_iso_face = _gn_entity_compute(isos, id_iso, n_part, PDM_MESH_ENTITY_FACE, comm);
+    *gn_iso_vtx  = _gn_entity_compute_part(isos, id_iso, n_part, PDM_MESH_ENTITY_VTX,  comm);
+    *gn_iso_edge = _gn_entity_compute_part(isos, id_iso, n_part, PDM_MESH_ENTITY_EDGE, comm);
+    *gn_iso_face = _gn_entity_compute_part(isos, id_iso, n_part, PDM_MESH_ENTITY_FACE, comm);
 
   }
   else {
-    PDM_g_num_t *distrib = NULL;
-
-    PDM_isosurface_distrib_get(isos, id_iso, PDM_MESH_ENTITY_VTX, &distrib);
-    *gn_iso_vtx = distrib[n_rank];
-
-    PDM_isosurface_distrib_get(isos, id_iso, PDM_MESH_ENTITY_EDGE, &distrib);
-    *gn_iso_edge = distrib[n_rank];
-
-    PDM_isosurface_distrib_get(isos, id_iso, PDM_MESH_ENTITY_FACE, &distrib);
-    *gn_iso_face = distrib[n_rank];
+    *gn_iso_vtx  = _gn_entity_compute_dist(isos, id_iso, PDM_MESH_ENTITY_VTX,  comm);
+    *gn_iso_edge = _gn_entity_compute_dist(isos, id_iso, PDM_MESH_ENTITY_EDGE, comm);
+    *gn_iso_face = _gn_entity_compute_dist(isos, id_iso, PDM_MESH_ENTITY_FACE, comm);
   }
 
 }

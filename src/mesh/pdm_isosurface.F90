@@ -1756,63 +1756,6 @@ module pdm_isosurface
 
   end subroutine PDM_isosurface_dvtx_coord_get
 
-
-  subroutine PDM_isosurface_distrib_get (isos,          &
-                                         id_isosurface, &
-                                         entity_type,   &
-                                         n_entity,      &
-                                         distribution)
-    ! Get block distribution.
-    implicit none
-
-    type(c_ptr)                        :: isos            ! PDM_isosurface_t instance
-    integer, intent(in)                :: id_isosurface   ! Iso-surface identifier
-    integer, intent(in)                :: entity_type     ! Type of mesh entity
-    integer                            :: n_entity        ! Number of entity
-    integer(kind=pdm_g_num_s), pointer :: distribution(:) ! Entity distribution
-
-    integer(c_int) :: c_id_isosurface
-    integer(c_int) :: c_entity_type
-    type(c_ptr)    :: c_distribution
-    integer(c_int) :: c_n_entity
-
-    interface
-      function PDM_isosurface_distrib_get_cf (isos,          &
-                                              id_isosurface, &
-                                              entity_type,   &
-                                              distribution)  &
-                                       result(n_entity)      &
-      bind(c, name='PDM_isosurface_distrib_get')
-
-        use iso_c_binding
-        implicit none
-
-        type(c_ptr),    value :: isos
-        integer(c_int), value :: id_isosurface
-        integer(c_int), value :: entity_type
-        type(c_ptr)           :: distribution
-        integer(c_int)        :: n_entity
-
-      end function
-    end interface
-
-    c_id_isosurface = id_isosurface
-    c_entity_type   = entity_type
-
-    c_n_entity = PDM_isosurface_distrib_get_cf (isos,            &
-                                                c_id_isosurface, &
-                                                c_entity_type,   &
-                                                c_distribution)
-
-    n_entity = c_n_entity
-
-    call c_f_pointer(c_distribution, &
-                     distribution,   &
-                     [n_entity])
-
-  end subroutine PDM_isosurface_distrib_get
-
-
   subroutine PDM_isosurface_dgroup_get (isos,              &
                                         id_isosurface,     &
                                         entity_type,       &

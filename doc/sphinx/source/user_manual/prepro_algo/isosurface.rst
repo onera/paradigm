@@ -407,7 +407,6 @@ API
           .. doxygenfunction:: PDM_isosurface_dn_entity_get
           .. doxygenfunction:: PDM_isosurface_dconnectivity_get
           .. doxygenfunction:: PDM_isosurface_dvtx_coord_get
-          .. doxygenfunction:: PDM_isosurface_distrib_get
           .. doxygenfunction:: PDM_isosurface_dgroup_get
           .. doxygenfunction:: PDM_isosurface_dparent_weight_get
           .. doxygenfunction:: PDM_isosurface_disovalue_entity_get
@@ -441,7 +440,6 @@ API
             .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_dn_entity_get
             .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_dconnectivity_get
             .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_dvtx_coord_get
-            .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_distrib_get
             .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_dgroup_get
             .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_dparent_weight_get
             .. f:autosubroutine:: pdm_isosurface/PDM_isosurface_disovalue_entity_get
@@ -480,7 +478,6 @@ API
             .. automethod:: Pypdm.Pypdm.Isosurface.dn_entity_get
             .. automethod:: Pypdm.Pypdm.Isosurface.dconnectivity_get
             .. automethod:: Pypdm.Pypdm.Isosurface.dcoordinates_get
-            .. automethod:: Pypdm.Pypdm.Isosurface.distribution_get
             .. automethod:: Pypdm.Pypdm.Isosurface.dgroup_get
             .. automethod:: Pypdm.Pypdm.Isosurface.dparent_weight_get
             .. automethod:: Pypdm.Pypdm.Isosurface.disovalue_entity_get
