@@ -23,7 +23,7 @@ authors:
     orcid: 0009-0007-8251-1152
     affiliation: "1" 
 
-  - name: Clement Benazet
+  - name: Clément Benazet
     orcid: 0009-0004-0280-0770
     affiliation: "2"
 
