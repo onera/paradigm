@@ -14235,13 +14235,14 @@ PDM_para_octree_timer_set
 {
   _pdm_para_octree_t *_octree = (_pdm_para_octree_t *) octree;
   if(_octree->external_timer == 1) {
-    return;
+    PDM_error(__FILE__, __LINE__, 0, "external_timer already define \n");
   }
 
   if(timer == NULL) {
     PDM_error(__FILE__, __LINE__, 0, "timer is NULL \n");
   }
 
+  // Free the existing timer (internal)
   PDM_timer_free(_octree->timer);
   _octree->timer = timer;
   _octree->external_timer = 1;
