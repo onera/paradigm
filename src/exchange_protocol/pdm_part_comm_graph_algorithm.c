@@ -1024,9 +1024,10 @@ PDM_part_comm_graph_filter
 
   int  *n_sub_graph = NULL;
   int **sub_graph   = NULL;
+  int **sub_nuplet  = NULL;
   PDM_malloc(n_sub_graph, pcg->n_part, int  );
   PDM_malloc(sub_graph  , pcg->n_part, int *);
-
+  PDM_malloc(sub_nuplet , pcg->n_part, int *);
 
   for(int i_part = 0; i_part < pcg->n_part; ++i_part) {
 
@@ -1051,8 +1052,14 @@ PDM_part_comm_graph_filter
       }
     }
 
+    int *entity_nuplet = NULL;
+    int nuplet_size = PDM_part_comm_graph_entity_nuplet_get(pcg,
+                                                            i_part,
+                                                            &entity_nuplet,
+                                                            PDM_OWNERSHIP_BAD_VALUE);
 
-    PDM_malloc(sub_graph[i_part], 4 * n_sub_graph[i_part], int);
+    PDM_malloc(sub_graph [i_part], 4           * n_sub_graph[i_part], int);
+    PDM_malloc(sub_nuplet[i_part], nuplet_size * n_sub_graph[i_part], int);
 
     n_sub_graph[i_part] = 0;
     if (both == 1) {
@@ -1062,6 +1069,12 @@ PDM_part_comm_graph_filter
           sub_graph[i_part][4*n_sub_graph[i_part]+1] = graph[4*i+1];
           sub_graph[i_part][4*n_sub_graph[i_part]+2] = graph[4*i+2];
           sub_graph[i_part][4*n_sub_graph[i_part]+3] = graph[4*i+3];
+
+          if(nuplet_size > 0) {
+            for(int k = 0; k < nuplet_size; ++k) {
+              sub_nuplet[i_part][nuplet_size*n_sub_graph[i_part]+k] = entity_nuplet[nuplet_size*i+k];
+            }
+          }
 
           n_sub_graph[i_part]++;
         }
@@ -1075,6 +1088,11 @@ PDM_part_comm_graph_filter
           sub_graph[i_part][4*n_sub_graph[i_part]+2] = graph[4*i+2];
           sub_graph[i_part][4*n_sub_graph[i_part]+3] = graph[4*i+3];
 
+          if(nuplet_size > 0) {
+            for(int k = 0; k < nuplet_size; ++k) {
+              sub_nuplet[i_part][nuplet_size*n_sub_graph[i_part]+k] = entity_nuplet[nuplet_size*i+k];
+            }
+          }
           n_sub_graph[i_part]++;
         }
       }
@@ -1083,16 +1101,32 @@ PDM_part_comm_graph_filter
   }
   PDM_free(recv_data);
   
-  PDM_part_comm_graph_t* sub_pcg = PDM_part_comm_graph_create(pcg->n_part,
-                                                              n_sub_graph,
-                                                              sub_graph,
-                                                              PDM_OWNERSHIP_KEEP,
-                                                              pcg->comm);
+  PDM_part_comm_graph_t* sub_pcg = NULL;
+  if(pcg->nuplet_size == 0) {
+    sub_pcg = PDM_part_comm_graph_create(pcg->n_part,
+                                         n_sub_graph,
+                                         sub_graph,
+                                         PDM_OWNERSHIP_KEEP,
+                                         pcg->comm);
+    for(int i_part = 0; i_part < pcg->n_part; ++i_part) {
+      PDM_free(sub_nuplet[i_part]);
+    }
+  } else {
+    sub_pcg = PDM_part_comm_graph_with_nuplet_create(pcg->n_part,
+                                                     n_sub_graph,
+                                                     sub_graph,
+                                                     PDM_OWNERSHIP_KEEP,
+                                                     pcg->nuplet_size,
+                                                     sub_nuplet,
+                                                     PDM_OWNERSHIP_KEEP,
+                                                     pcg->is_signed,
+                                                     pcg->comm);
+  }
 
   PDM_free(sub_graph);
   PDM_free(n_sub_graph);
+  PDM_free(sub_nuplet);
   return sub_pcg;
-
 }
 
 PDM_part_comm_graph_t *

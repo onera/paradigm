@@ -789,9 +789,20 @@ MPI_TEST_CASE("[PDM_part_comm_graph_filter] - 2p", 2) {
                                                 2,  1, 1,  8,
                                                 4,  0, 1, 12}};
 
+  std::vector<std::vector<int>> nuplet_ini_l = {{ 1,
+                                                 1,
+                                                 2,
+                                                 2},
+                                                {1,
+                                                 1,
+                                                 1,
+                                                 2,
+                                                 1,
+                                                 2}};
 
   int n_graph_ini = n_graph_ini_l[i_rank];
   int *graph_ini  = graph_ini_l  [i_rank].data();
+  int *nuplet_ini = nuplet_ini_l [i_rank].data();
 
   PDM_part_comm_graph_t *pcg_ini = PDM_part_comm_graph_create(1,
                                                               &n_graph_ini,
@@ -800,6 +811,16 @@ MPI_TEST_CASE("[PDM_part_comm_graph_filter] - 2p", 2) {
                                                               pdm_comm);
 
 
+  PDM_part_comm_graph_t *pcg_with_nuplet_ini = PDM_part_comm_graph_with_nuplet_create(1,
+                                                                                      &n_graph_ini,
+                                                                                      &graph_ini,
+                                                                                      PDM_OWNERSHIP_USER,
+                                                                                      1,
+                                                                                      &nuplet_ini,
+                                                                                      PDM_OWNERSHIP_USER,
+                                                                                      PDM_FALSE,
+                                                                                      pdm_comm);
+
   /*
   No conflicts :: entry is flagged False on both sides
   */
@@ -807,6 +828,8 @@ MPI_TEST_CASE("[PDM_part_comm_graph_filter] - 2p", 2) {
   const int *flag = flag_l[i_rank].data();
 
   PDM_part_comm_graph_t *pcg_sub = PDM_part_comm_graph_filter(pcg_ini, &flag, 0);
+
+  PDM_part_comm_graph_t *pcg_with_nuplet_sub = PDM_part_comm_graph_filter(pcg_with_nuplet_ini, &flag, 0);
 
 
 
@@ -820,6 +843,8 @@ MPI_TEST_CASE("[PDM_part_comm_graph_filter] - 2p", 2) {
                                                       3, 0, 1, 11,
                                                       2, 1, 1,  8}};
 
+  std::vector<std::vector<int>> expt_sub_nuplet_l = {{1, 2},
+                                                     {1, 1, 2, 1}};
 
   int *expt_sub_graph = expt_sub_graph_l[i_rank].data();
   CHECK(n_sub_graph == std::vector<int>{2,4}[i_rank]);
@@ -827,6 +852,23 @@ MPI_TEST_CASE("[PDM_part_comm_graph_filter] - 2p", 2) {
   MPI_CHECK_EQ_C_ARRAY(1, sub_graph, expt_sub_graph, 4*n_sub_graph);
 
   PDM_part_comm_graph_free(pcg_sub);
+
+  /* Check for nuplet */
+  n_sub_graph = PDM_part_comm_graph_entity_graph_get(pcg_with_nuplet_sub, 0, &sub_graph, PDM_OWNERSHIP_KEEP);
+
+  int *sub_nuplet = NULL;
+  int nuplet_size_sub = PDM_part_comm_graph_entity_nuplet_get(pcg_with_nuplet_sub, 0, &sub_nuplet, PDM_OWNERSHIP_KEEP);
+
+  CHECK(n_sub_graph == std::vector<int>{2,4}[i_rank]);
+  MPI_CHECK_EQ_C_ARRAY(0, sub_graph, expt_sub_graph, 4*n_sub_graph);
+  MPI_CHECK_EQ_C_ARRAY(1, sub_graph, expt_sub_graph, 4*n_sub_graph);
+
+  int *expt_sub_nuplet = expt_sub_nuplet_l[i_rank].data();
+  CHECK(nuplet_size_sub == 1);
+  MPI_CHECK_EQ_C_ARRAY(0, sub_nuplet, expt_sub_nuplet, nuplet_size_sub*n_sub_graph);
+  MPI_CHECK_EQ_C_ARRAY(1, sub_nuplet, expt_sub_nuplet, nuplet_size_sub*n_sub_graph);
+
+  PDM_part_comm_graph_free(pcg_with_nuplet_sub);
 
   /*
   Conflicts :: entry is flagged False on only one side
@@ -861,6 +903,7 @@ MPI_TEST_CASE("[PDM_part_comm_graph_filter] - 2p", 2) {
   PDM_part_comm_graph_free(pcg_sub);
 
   PDM_part_comm_graph_free(pcg_ini);
+  PDM_part_comm_graph_free(pcg_with_nuplet_ini);
 }
 
 MPI_TEST_CASE("[PDM_part_comm_graph_concatenate] - 1 part - 1 perio - 2p", 2) {
