@@ -167,6 +167,13 @@ _part_assembly_dual_graph
 {
   PDM_UNUSED(n_arc); // Unused because size is implicit
 
+  int have_arc_weight  = (arc_weight  == NULL) ? 0 : 1;
+  int have_node_weight = (node_weight == NULL) ? 0 : 1;
+  int g_have_arc_weight  = 0;
+  int g_have_node_weight = 0;
+  PDM_MPI_Allreduce(&have_arc_weight , &g_have_arc_weight , 1, PDM_MPI_INT, PDM_MPI_MAX, comm);
+  PDM_MPI_Allreduce(&have_node_weight, &g_have_node_weight, 1, PDM_MPI_INT, PDM_MPI_MAX, comm);
+
   int i_rank;
   int n_rank;
   PDM_MPI_Comm_rank(comm, &i_rank);
@@ -344,8 +351,8 @@ _part_assembly_dual_graph
       send_arc_node_idx[i_graph_arc+1] = send_arc_node_idx[i_graph_arc] + send_arc_node_n[i_part][i_graph_arc];
       send_arc_node_n  [i_part][i_graph_arc] = 0;
     }
-    PDM_malloc(send_arc_node  [i_part], send_arc_node_idx[n_arc_graph], PDM_g_num_t);
-    PDM_malloc(send_arc_weight[i_part], send_arc_node_idx[n_arc_graph], int        );
+    PDM_malloc(send_arc_node  [i_part],                     send_arc_node_idx[n_arc_graph], PDM_g_num_t);
+    PDM_malloc(send_arc_weight[i_part], g_have_arc_weight * send_arc_node_idx[n_arc_graph], int        );
 
     /*
      * Fill
@@ -361,7 +368,9 @@ _part_assembly_dual_graph
           int i_node2 = PDM_ABS(_arc_node[idx_node])-1;
           int idx_write = send_node_idx[i_graph_node] + send_node_n[i_part][i_graph_node]++;
           send_node  [i_part][idx_write] = pnode_ln_to_gn[i_part][i_node2];
-          send_weight[i_part][idx_write] = arc_weight    [i_part][i_arc];
+          if(g_have_arc_weight == 1) {
+            send_weight[i_part][idx_write] = arc_weight[i_part][i_arc];
+          }
         }
       }
     }
@@ -372,7 +381,9 @@ _part_assembly_dual_graph
         int i_node = PDM_ABS(_arc_node[idx_node])-1;
         int idx_write = send_arc_node_idx[i_graph_arc] + send_arc_node_n[i_part][i_graph_arc]++;
         send_arc_node  [i_part][idx_write] = pnode_ln_to_gn[i_part][i_node];
-        send_arc_weight[i_part][idx_write] = arc_weight    [i_part][i_arc];
+        if(g_have_arc_weight == 1) {
+          send_arc_weight[i_part][idx_write] = arc_weight[i_part][i_arc];
+        }
       }
     }
 
@@ -394,20 +405,23 @@ _part_assembly_dual_graph
                            &recv_node_n,
                 (void ***) &recv_node);
 
-  for(int i_part = 0; i_part < n_part; ++i_part) {
-    PDM_free(recv_node_n[i_part]);
-  }
-  PDM_free(recv_node_n);
-
   int **recv_weight = NULL;
-  PDM_part_comm_graph_exch(pcg_node,
-                           sizeof(int),
-                           PDM_STRIDE_VAR_INTERLACED,
-                           1,
-                           send_node_n,
-                 (void **) send_weight,
-                           &recv_node_n,
-                (void ***) &recv_weight);
+
+  if(g_have_node_weight == 1) {
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      PDM_free(recv_node_n[i_part]);
+    }
+    PDM_free(recv_node_n);
+
+    PDM_part_comm_graph_exch(pcg_node,
+                             sizeof(int),
+                             PDM_STRIDE_VAR_INTERLACED,
+                             1,
+                             send_node_n,
+                   (void **) send_weight,
+                             &recv_node_n,
+                  (void ***) &recv_weight);
+  }
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
     PDM_free(send_node  [i_part]);
@@ -417,7 +431,6 @@ _part_assembly_dual_graph
   PDM_free(send_node  );
   PDM_free(send_node_n);
   PDM_free(send_weight);
-
 
   int         **recv_arc_node_n = NULL;
   PDM_g_num_t **recv_arc_node   = NULL;
@@ -430,22 +443,24 @@ _part_assembly_dual_graph
                            &recv_arc_node_n,
                 (void ***) &recv_arc_node);
 
-
-  for(int i_part = 0; i_part < n_part; ++i_part) {
-    PDM_free(recv_arc_node_n[i_part]);
-  }
-  PDM_free(recv_arc_node_n);
-
   int **recv_arc_weight = NULL;
-  PDM_part_comm_graph_exch(pcg_arc,
-                           sizeof(int),
-                           PDM_STRIDE_VAR_INTERLACED,
-                           1,
-                           send_arc_node_n,
-                 (void **) send_arc_weight,
-                           &recv_arc_node_n,
-                (void ***) &recv_arc_weight);
 
+  if(g_have_arc_weight == 1) {
+
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      PDM_free(recv_arc_node_n[i_part]);
+    }
+    PDM_free(recv_arc_node_n);
+
+    PDM_part_comm_graph_exch(pcg_arc,
+                             sizeof(int),
+                             PDM_STRIDE_VAR_INTERLACED,
+                             1,
+                             send_arc_node_n,
+                   (void **) send_arc_weight,
+                             &recv_arc_node_n,
+                  (void ***) &recv_arc_weight);
+  }
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
     PDM_free(send_arc_node  [i_part]);
@@ -531,7 +546,7 @@ _part_assembly_dual_graph
    * Manage node_weight
    */
   int *gnode_weight = NULL;
-  if(node_weight != NULL) {
+  if(g_have_node_weight == 1) {
     PDM_malloc(gnode_weight, n_tot_node, int);
     for(int i_part = 0; i_part < n_part; ++i_part) {
       for(int i_node = 0; i_node < n_node[i_part]; ++i_node) {
@@ -549,8 +564,10 @@ _part_assembly_dual_graph
    */
   PDM_g_num_t *gnode_node  = NULL;
   int         *garc_weight = NULL;
-  PDM_malloc(gnode_node  , max_size, PDM_g_num_t);
-  PDM_malloc(garc_weight , max_size, int        );
+  PDM_malloc(gnode_node, max_size, PDM_g_num_t);
+  if(g_have_arc_weight == 1) {
+    PDM_malloc(garc_weight, max_size, int);
+  }
   for(int i_part = 0; i_part < n_part; ++i_part) {
 
     int  n_arc_graph   = pn_arc_graph [i_part];
@@ -574,7 +591,9 @@ _part_assembly_dual_graph
           int i_node2 = PDM_ABS(_arc_node[idx_node])-1;
           int idx_write = node_node_idx[l_node] + node_node_n[l_node]++;
           gnode_node [idx_write] = pnode_ln_to_gn[i_part][i_node2];
-          garc_weight[idx_write] = arc_weight    [i_part][i_arc];
+          if(g_have_arc_weight == 1) {
+            garc_weight[idx_write] = arc_weight    [i_part][i_arc];
+          }
         }
       }
     }
@@ -590,7 +609,9 @@ _part_assembly_dual_graph
       for(int j = 0; j < recv_node_n[i_part][i_graph_node]; ++j) {
         int idx_write = node_node_idx[l_node] + node_node_n[l_node]++;
         gnode_node [idx_write] = recv_node  [i_part][idx_read];
-        garc_weight[idx_write] = recv_weight[i_part][idx_read];
+        if(g_have_arc_weight == 1) {
+          garc_weight[idx_write] = recv_weight[i_part][idx_read];
+        }
         idx_read++;
       }
     }
@@ -608,7 +629,9 @@ _part_assembly_dual_graph
         for(int j = 0; j < recv_arc_node_n[i_part][i_graph_arc]; ++j) {
           int idx_write = node_node_idx[l_node] + node_node_n[l_node]++;
           gnode_node [idx_write] = recv_arc_node  [i_part][idx_read+j];
-          garc_weight[idx_write] = recv_arc_weight[i_part][idx_read+j];
+          if(g_have_arc_weight == 1) {
+            garc_weight[idx_write] = recv_arc_weight[i_part][idx_read+j];
+          }
         }
       }
       idx_read += recv_arc_node_n[i_part][i_graph_arc];
@@ -658,8 +681,10 @@ _part_assembly_dual_graph
     int n_unique = PDM_inplace_unique_long_and_order(&gnode_node[beg], lorder, 0, n_adj-1);
 
     // Copy weight (mandatory because we copy in place)
-    for(int i = 0; i < n_adj; ++i) {
-      lweight[i] = garc_weight[beg+i];
+    if(g_have_arc_weight == 1) {
+      for(int i = 0; i < n_adj; ++i) {
+        lweight[i] = garc_weight[beg+i];
+      }
     }
 
     // Tassage + move weight
@@ -667,7 +692,9 @@ _part_assembly_dual_graph
     for(int i = 0; i < n_unique; ++i) {
       if(gnode_node[beg+i] != gnum && gnode_node[beg+i] != -1) {
         gnode_node [idx_write] = gnode_node[beg+i];
-        garc_weight[idx_write] = lweight[lorder[i]];
+        if(g_have_arc_weight == 1) {
+          garc_weight[idx_write] = lweight[lorder[i]];
+        }
         idx_write++;
       }
     }
@@ -679,7 +706,9 @@ _part_assembly_dual_graph
   }
 
   PDM_realloc(gnode_node , gnode_node , node_node_idx[n_tot_node], PDM_g_num_t);
-  PDM_realloc(garc_weight, garc_weight, node_node_idx[n_tot_node], int        );
+  if(g_have_arc_weight == 1) {
+    PDM_realloc(garc_weight, garc_weight, node_node_idx[n_tot_node], int        );
+  }
 
   if(0 == 1) {
     log_trace("gnode_node ----- \n");
