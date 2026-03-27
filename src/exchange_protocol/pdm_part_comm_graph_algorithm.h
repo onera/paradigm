@@ -174,7 +174,7 @@ PDM_part_comm_graph_split
  * \param [in] both  If True, keep entry if both sides are flagged True;
  *                   otherwise, keep entry if at least one side is flagged True.
  *
- * \return Output \ref PDM_part_comm_graph_t instance
+ * \return \ref PDM_part_comm_graph_t instance
  *
  */
 PDM_part_comm_graph_t*
