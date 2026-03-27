@@ -62,16 +62,16 @@ bibliography: paper.bib
 
 ## Summary 
 
-**ParaDiGM** (**Para**llel **Di**stributed **G**eneral **M**esh) is an open-source C library (LGPL) designed to overcome the technological bottlenecks associated with geometric data handling and mesh manipulation in massively parallel numerical simulations. As High-Performance Computing (HPC) enters the exascale era, managing meshes exceeding 100 billion elements has become a primary hurdle. ParaDiGM surmounts these limitations through a fully distributed architecture capable of scaling beyond 10,000 cores.
+**ParaDiGM** (**Para**llel **Di**stributed **G**eneral **M**esh) is an open-source C library (LGPL) designed to overcome the technological bottlenecks associated with geometric data handling and mesh manipulation in massively parallel numerical simulations. While historically branched from the **CWIPI** [@Quemerais2026] coupling library, ParaDiGM has evolved into a standalone infrastructure upon which **CWIPI** now relies for all its distributed geometric computations.
 
-Originally branched from the **CWIPI** [@Quemerais2026] coupling library, ParaDiGM provides high-performance geometric services—such as parallel wall distance computation, point cloud location, and dynamic repartitioning—to **ONERA**’s production suite, including **CEDRE** [@Refloch2011], **elsA** [@Cambier2011], **SoNiCS** [@lienhardt2025], and **MoDeTheC** [@Dellinger2024]. By generalizing the **Partitioned** and **Distributed View** concepts, it ensures that every stage of the computation remains memory-balanced. With native APIs for **C/C++**, **Fortran**, and **Python/NumPy**, ParaDiGM acts as a versatile middleware for aerospace research and large-scale computational physics.
+As a high-performance middleware, ParaDiGM provides essential geometric services—such as parallel wall distance computation, point cloud location, and dynamic repartitioning—to various **numerical simulation and pre-processing software**, including **CEDRE** [@Refloch2011], **elsA** [@Cambier2013], **SoNiCS** [@lienhardt2025], **MoDeTheC** [@Dellinger2024] and **Maia** [@Coulet2026]. By generalizing the **Partitioned** and **Distributed View** concepts, it ensures that every stage of the computation remains memory-balanced, even for meshes exceeding 100 billion elements. With native APIs for **C/C++**, **Fortran**, and **Python/NumPy**, ParaDiGM serves as a versatile infrastructure for aerospace research and large-scale computational physics in the exascale era.
 
 ## Statement of Need
 
 In the era of exascale computing, numerical simulation faces a critical shift. In **Computational Fluid Dynamics (CFD)**, mesh management can no longer rely on centralized or semi-distributed approaches. Integrating distributed mesh capabilities into existing production solvers often encounters major architectural and performance barriers.
 
 ### From Static to Dynamic and Repetitive Geometry
-Geometric algorithms, once confined to pre-processing, are now required repeatedly within the solver's main execution loop. Modern studies involve evolving meshes, driven either by **moving bodies** or **Dynamic Mesh Adaptation**. Whether computing wall distances for turbulence modeling or performing mesh repartitioning, these operations must deliver turnaround times of the same **order of magnitude as a solver iteration**. Failing to meet this constraint critically penalizes the overall simulation wall-clock time.
+Geometric algorithms, once confined to pre-processing, are now required repeatedly within the solver's main execution loop. Modern studies involve evolving meshes, driven either by **moving bodies** or **Dynamic Mesh Adaptation**. Whether computing wall distances for turbulence modeling or performing mesh repartitioning, these operations must deliver execution times of the same order of magnitude as a solver iteration. Failing to meet this constraint creates a performance bottleneck that severely penalizes the overall simulation efficiency.
 
 ### The Challenge of Dynamic Load Balancing
 A further bottleneck lies in data distribution: the initial partition provided to geometric algorithms is typically optimized for physical computation, which is often **sub-optimal for geometric operations**. Without internal dynamic load-balancing, these operations create computation imbalances and memory bottlenecks, compromising the **execution of simulations** at a very large scale.
@@ -79,7 +79,7 @@ A further bottleneck lies in data distribution: the initial partition provided t
 ### Limitations of Current Solutions
 Existing geometric frameworks frequently impose constraints that hinder their adoption:
 
-* **Rigid Data Structures:** Unlike heavy frameworks (Trilinos [@Heroux2005], Arcane [@Grospellier2017]), **ParaDiGM** does not enforce complex object hierarchies. This **non-intrusive** "Progressive Framework" approach allows adoption without a deep refactoring of the host solver.
+* **Rigid Data Structures:** Unlike heavy frameworks (Trilinos [@Heroux2005], Arcane [@Grospellier2009]), **ParaDiGM** does not enforce complex object hierarchies. This **non-intrusive** "Progressive Framework" approach allows adoption without a deep refactoring of the host solver.
 * **Monolithic Data Models:** Unlike platforms such as *Salome* (MED format) [@Ribes2007], **ParaDiGM** relies on simple **CSR arrays**, avoiding software overhead and memory peaks critical for optimized solvers.
 
 ### The ParaDiGM Approach: A Progressive Middleware
