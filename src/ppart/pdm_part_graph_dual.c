@@ -643,10 +643,12 @@ _part_assembly_dual_graph
   for(int i_part = 0; i_part < n_part; ++i_part) {
     PDM_free(recv_node      [i_part]);
     PDM_free(recv_node_n    [i_part]);
-    PDM_free(recv_weight    [i_part]);
     PDM_free(recv_arc_node  [i_part]);
     PDM_free(recv_arc_node_n[i_part]);
-    PDM_free(recv_arc_weight[i_part]);
+    if(g_have_arc_weight == 1){
+      PDM_free(recv_weight    [i_part]);
+      PDM_free(recv_arc_weight[i_part]);
+    }
   }
   PDM_free(recv_node      );
   PDM_free(recv_node_n    );
