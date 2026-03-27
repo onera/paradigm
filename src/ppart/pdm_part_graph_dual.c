@@ -148,10 +148,10 @@ _part_assembly_dual_graph
   int                      n_part,
   int                     *n_node,
   int                     *n_arc,
-  int                    **node_arc_idx,
-  int                    **node_arc,
-  int                    **arc_node_idx,
-  int                    **arc_node,
+  int                    **in_node_arc_idx,
+  int                    **in_node_arc,
+  int                    **in_arc_node_idx,
+  int                    **in_arc_node,
   int                    **node_weight,
   int                    **arc_weight,
   PDM_part_comm_graph_t   *pcg_node,
@@ -167,8 +167,56 @@ _part_assembly_dual_graph
 {
   PDM_UNUSED(n_arc); // Unused because size is implicit
 
-  int have_arc_weight  = (arc_weight  == NULL) ? 0 : 1;
-  int have_node_weight = (node_weight == NULL) ? 0 : 1;
+  /*
+   * Multiple cases need to be manage :
+   *   - node_arc && arc_node are provided by user
+   *   - node_arc || arc_node are provided by user
+   *   - arc_node are provided but not arc_node_idx. arc_node_idx is almost always 0, 2, 4, ...
+   */
+  int **node_arc_idx = in_node_arc_idx;
+  int **node_arc     = in_node_arc;
+  int **arc_node_idx = in_arc_node_idx;
+  int **arc_node     = in_arc_node;
+
+  int node_arc_is_computed     = 0;
+  int arc_node_is_computed     = 0;
+  int arc_node_idx_is_computed = 0;
+
+  if(in_arc_node_idx == NULL) {
+    /*
+     * Most of the time arc_node_idx is an implicit array of stride 2
+     */
+    PDM_malloc(arc_node_idx, n_part, int *);
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      arc_node_idx[i_part] = PDM_array_new_idx_from_const_stride_int(2, n_arc[i_part]);
+    }
+    arc_node_idx_is_computed = 1;
+  }
+
+  if(in_arc_node_idx == NULL) {
+    PDM_part_connectivity_transpose(n_part,
+                                    n_node,
+                                    n_arc,
+                                    node_arc_idx,
+                                    node_arc,
+                                    &arc_node_idx,
+                                    &arc_node);
+    arc_node_is_computed = 1;
+  }
+
+  if(in_node_arc_idx == NULL) {
+    PDM_part_connectivity_transpose(n_part,
+                                    n_arc,
+                                    n_node,
+                                    arc_node_idx,
+                                    arc_node,
+                                    &node_arc_idx,
+                                    &node_arc);
+    node_arc_is_computed = 1;
+  }
+
+  int have_arc_weight    = (arc_weight  == NULL) ? 0 : 1;
+  int have_node_weight   = (node_weight == NULL) ? 0 : 1;
   int g_have_arc_weight  = 0;
   int g_have_node_weight = 0;
   PDM_MPI_Allreduce(&have_arc_weight , &g_have_arc_weight , 1, PDM_MPI_INT, PDM_MPI_MAX, comm);
@@ -750,6 +798,34 @@ _part_assembly_dual_graph
 
   if(internal_pcg_node == 1) {
     PDM_part_comm_graph_free(pcg_node);
+  }
+
+  /*
+   * Free all array due to interface / optional argument
+   */
+  if(arc_node_idx_is_computed) {
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      PDM_free(arc_node_idx[i_part]);
+    }
+    PDM_free(arc_node_idx);
+  }
+
+  if(node_arc_is_computed) {
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      PDM_free(node_arc_idx[i_part]);
+      PDM_free(node_arc    [i_part]);
+    }
+    PDM_free(node_arc);
+    PDM_free(node_arc_idx);
+  }
+
+  if(arc_node_is_computed) {
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      PDM_free(arc_node_idx[i_part]);
+      PDM_free(arc_node    [i_part]);
+    }
+    PDM_free(arc_node);
+    PDM_free(arc_node_idx);
   }
 
   /*
