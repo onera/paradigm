@@ -108,7 +108,11 @@ This evolution will ensure that ParaDiGM remains a state-of-the-art infrastructu
 
 The authors would like to thank the following people for their contributions to the development, testing, and dissemination of the ParaDiGM library within the community:
 
-Sébastien Bourasseau, Nicolas Lantos, Niels Guilbert, Alain Hervault, Julien Magnenet, Lucas Manueco, Lionel Matuszewski, Yacine Mezemate, Bertrand Michel, Christina Paulin, Christophe Peyret, and Julien Vanharen (ONERA, France); Jérôme Esbrat, Victor Pacotte, and Bruno Peres (EOLEN); Mickael Philit (Safran, France).
+Sébastien Bourasseau¹, Nicolas Lantos¹, Niels Guilbert¹, Alain Hervault¹, Julien Magnenet¹, Lucas Manueco¹, Lionel Matuszewski¹, Yacine Mezemate¹, Bertrand Michel¹, Christina Paulin¹, Christophe Peyret¹, Julien Vanharen¹, Jérôme Esbrat², Victor Pacotte², Bruno Peres² and Mickael Philit³.
+
+¹ ONERA
+² EOLEN
+³ Safran
 
 The authors also wish to thank BPI France, the Directorate General for Civil Aviation (DGAC), and the General Scientific Directorate of ONERA for their financial support.
 
@@ -116,15 +120,15 @@ The authors also wish to thank BPI France, the Directorate General for Civil Avi
 
 The contributions to this software are listed according to the CRediT taxonomy:
 
-- **E. Quémerais**: Conceptualization, Methodology, Software, Validation, Writing – Review & Editing, Project Administration, Funding Acquisition, Supervision
-- **B. Andrieu**: Software, Validation, Writing – Original Draft
-- **B. Maugars**: Software, Validation
-- **K. Hoogveld**: Software, Validation, Writing – Original Draft
-- **C. Benazet**: Software, Validation
-- **J. Coulet**: Software, Validation
-- **B. Berthoul**: Software
-- **N. Dellinger**: Software, Validation
-- **T. Hennion**: Software, Validation
+- **Eric Quémerais**: Conceptualization, Methodology, Software, Validation, Writing – Review & Editing, Project Administration, Funding Acquisition, Supervision
+- **Bastien Andrieu**: Software, Validation, Writing – Original Draft
+- **Bruno Maugars**: Software, Validation
+- **Karmijn Hoogveld**: Software, Validation, Writing – Original Draft
+- **Clément Benazet**: Software, Validation
+- **Juien Coulet**: Software, Validation
+- **Bérenger Berthoul**: Software
+- **Nicolas Dellinger**: Software, Validation
+- **Thomas Hennion**: Software, Validation
 
 # References
 
