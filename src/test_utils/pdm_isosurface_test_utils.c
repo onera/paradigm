@@ -304,6 +304,36 @@ _gn_entity_compute_dist
 }
 
 
+/**
+ * \brief Strip a PDM_dmesh_nodal_t from its surface groups
+ */
+static void
+_remove_surf_groups_nodal
+(
+  PDM_dmesh_nodal_t *dmn
+)
+{
+  int          n_group;
+  int         *dgroup_elmt_idx;
+  PDM_g_num_t *dgroup_elmt;
+  PDM_DMesh_nodal_section_group_elmt_get(dmn,
+                                         PDM_GEOMETRY_KIND_SURFACIC,
+                                         &n_group,
+                                         &dgroup_elmt_idx,
+                                         &dgroup_elmt,
+                                         PDM_OWNERSHIP_USER);
+  PDM_free(dgroup_elmt_idx);
+  PDM_free(dgroup_elmt);
+
+  PDM_DMesh_nodal_section_group_elmt_set(dmn,
+                                         PDM_GEOMETRY_KIND_SURFACIC,
+                                         0,
+                                         NULL,
+                                         NULL,
+                                         PDM_OWNERSHIP_USER);
+}
+
+
 static
 void
 _usage
@@ -512,6 +542,10 @@ PDM_isosurface_test_utils_gen_mesh
                                                           filename,
                                                           0,
                                                           0);
+
+    if (!use_groups) {
+      _remove_surf_groups_nodal(dmn);
+    }
 
     if (0) {
       if (dim==3) {
@@ -768,6 +802,10 @@ PDM_isosurface_test_utils_gen_mesh
 
     PDM_dmesh_nodal_t *dmn = PDM_dcube_nodal_gen_dmesh_nodal_get(dcube);
 
+    if (!use_groups) {
+      _remove_surf_groups_nodal(dmn);
+    }
+
     PDM_dmesh_nodal_generate_distribution(dmn);
 
     if (n_part > 0) {
@@ -995,25 +1033,7 @@ PDM_isosurface_test_utils_gen_mesh_nodal
   assert(dmn != NULL);
 
   if (!use_groups) {
-    // Strip dmn from its surface groups
-    int          n_group;
-    int         *dgroup_elmt_idx;
-    PDM_g_num_t *dgroup_elmt;
-    PDM_DMesh_nodal_section_group_elmt_get(dmn,
-                                           PDM_GEOMETRY_KIND_SURFACIC,
-                                           &n_group,
-                                           &dgroup_elmt_idx,
-                                           &dgroup_elmt,
-                                           PDM_OWNERSHIP_USER);
-    PDM_free(dgroup_elmt_idx);
-    PDM_free(dgroup_elmt);
-
-    PDM_DMesh_nodal_section_group_elmt_set(dmn,
-                                           PDM_GEOMETRY_KIND_SURFACIC,
-                                           0,
-                                           NULL,
-                                           NULL,
-                                           PDM_OWNERSHIP_USER);
+    _remove_surf_groups_nodal(dmn);
   }
 
   // if (dim == 3) {
