@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
   int                   use_part_mesh  = 0; // garder?
   int                   generate_edges = 0; // garder?
   int                   local          = 0;
-  int                   use_groups     = 0; // TODO: use it!
+  int                   use_groups     = 0;
 
   PDM_isosurface_test_utils_read_args(argc,
                                       argv,
