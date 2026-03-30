@@ -278,8 +278,9 @@ _gn_entity_compute_part
     }
   }
 
+  PDM_MPI_Comm comm = PDM_isosurface_comm_get(isos);
   PDM_g_num_t gmax;
-  PDM_MPI_Allreduce(&lmax, &gmax, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, isos->comm);
+  PDM_MPI_Allreduce(&lmax, &gmax, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, comm);
 
   return gmax;
 }
@@ -293,11 +294,11 @@ _gn_entity_compute_dist
   PDM_mesh_entities_t  entity_type
 )
 {
-  _isosurface_t *_iso = &isos->isosurfaces[id_iso];
-  PDM_g_num_t dn_entity = (PDM_g_num_t) _iso->iso_dn_entity[entity_type];
+  PDM_g_num_t dn_entity = (PDM_g_num_t) PDM_isosurface_dn_entity_get(isos, id_iso, entity_type);
 
+  PDM_MPI_Comm comm = PDM_isosurface_comm_get(isos);
   PDM_g_num_t gn_entity;
-  PDM_MPI_Allreduce(&dn_entity, &gn_entity, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, isos->comm);
+  PDM_MPI_Allreduce(&dn_entity, &gn_entity, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, comm);
 
   return gn_entity;
 }

@@ -871,29 +871,6 @@ PDM_isosurface_dvtx_coord_get
 );
 
 
-/**
- *
- * \brief Get block distribution
- *
- * \param [in]  isos          \ref PDM_isosurface_t instance
- * \param [in]  id_isosurface Iso-surface identifier
- * \param [in]  entity_type   Entity type
- * \param [out] distribution  Entity distribution
- *
- * \return Number of entities
- *
- */
-
-int
-PDM_isosurface_distrib_get
-(
-  PDM_isosurface_t     *isos,
-  int                   id_isosurface,
-  PDM_mesh_entities_t   entity_type,
-  PDM_g_num_t         **distribution
-);
-
-
 // Groups
 
 /**
@@ -1086,6 +1063,21 @@ PDM_isosurface_part_to_part_get
   PDM_mesh_entities_t   entity_type,
   PDM_part_to_part_t  **ptp,
   PDM_ownership_t       ownership
+);
+
+
+/**
+ * \brief Get internal communicator
+ *
+ * \param [in] isos \ref PDM_isosurface_t instance
+ *
+ * \return MPI Communicator
+ */
+
+PDM_MPI_Comm
+PDM_isosurface_comm_get
+(
+  PDM_isosurface_t *isos
 );
 
 
