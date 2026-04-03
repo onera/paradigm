@@ -1,5 +1,3 @@
-import warnings
-
 cdef extern from "pdm_part_to_part.h":
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     # > Wrapping of Ppart Structure
@@ -7,16 +5,17 @@ cdef extern from "pdm_part_to_part.h":
         pass
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
+    # > Creation
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-    PDM_part_to_part_t *PDM_part_to_part_create(PDM_g_num_t   **gnum_elt1,
-                                                int            *n_elt1,
-                                                int             n_part1,
-                                                PDM_g_num_t   **gnum_elt2,
-                                                int            *n_elt2,
-                                                int             n_part2,
-                                                int           **part1_to_part2_idx,
-                                                PDM_g_num_t   **part1_to_part2,
-                                                PDM_MPI_Comm    comm);
+    PDM_part_to_part_t *PDM_part_to_part_create(const PDM_g_num_t   **gnum_elt1,
+                                                const int            *n_elt1,
+                                                const int             n_part1,
+                                                const PDM_g_num_t   **gnum_elt2,
+                                                const int            *n_elt2,
+                                                const int             n_part2,
+                                                const int           **part1_to_part2_idx,
+                                                const PDM_g_num_t   **part1_to_part2,
+                                                const PDM_MPI_Comm    comm)
     PDM_part_to_part_t *PDM_part_to_part_create_from_num2_triplet(const PDM_g_num_t   **gnum_elt1,
                                                                   const int            *n_elt1,
                                                                   const int             n_part1,
@@ -25,91 +24,82 @@ cdef extern from "pdm_part_to_part.h":
                                                                   const int           **part1_to_part2_idx,
                                                                   const int           **part1_to_part2_triplet_idx,
                                                                   const int           **part1_to_part2_triplet,
-                                                                  const PDM_MPI_Comm    comm);
+                                                                  const PDM_MPI_Comm    comm)
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
+    # > Exch functions
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-    void PDM_part_to_part_iexch(PDM_part_to_part_t                *ptp,
-                                const PDM_mpi_comm_kind_t          k_comm,
-                                const PDM_stride_t                 t_stride,
-                                const PDM_part_to_part_data_def_t  t_part1_data_def,
-                                const int                          cst_stride,
-                                const size_t                       s_data,
-                                const int                        **part1_stride,
-                                const void                       **part1_data,
-                                int                             ***part2_stride,
-                                void                            ***part2_data,
-                                int                               *request);
-    # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    void PDM_part_to_part_iexch        (PDM_part_to_part_t                *ptp,
+                                        const PDM_mpi_comm_kind_t          k_comm,
+                                        const PDM_stride_t                 t_stride,
+                                        const PDM_part_to_part_data_def_t  t_part1_data_def,
+                                        const int                          cst_stride,
+                                        const size_t                       s_data,
+                                        const int                        **part1_stride,
+                                        const void                       **part1_data,
+                                        int                             ***part2_stride,
+                                        void                            ***part2_data,
+                                        int                               *request)
+    void PDM_part_to_part_reverse_iexch(PDM_part_to_part_t                *ptp,
+                                        const PDM_mpi_comm_kind_t          k_comm,
+                                        const PDM_stride_t                 t_stride,
+                                        const PDM_part_to_part_data_def_t  t_part2_data_def,
+                                        const int                          cst_stride,
+                                        const size_t                       s_data,
+                                        const int                        **part2_stride,
+                                        const void                       **part2_data,
+                                        int                             ***part1_stride,
+                                        void                            ***part1_data,
+                                        int                               *request)
 
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-    void PDM_part_to_part_iexch_wait(PDM_part_to_part_t                *ptp,
-                                     const int                          request);
+
+    # > Wait functions
+    # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    void PDM_part_to_part_iexch_wait        (PDM_part_to_part_t *ptp,
+                                             const int           request)
+    void PDM_part_to_part_reverse_iexch_wait(PDM_part_to_part_t *ptp,
+                                             const int           request)
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
+    # > Various getters
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-    void PDM_part_to_part_gnum1_come_from_get(PDM_part_to_part_t *ptp,
-                                              int              ***gnum1_come_from_idx,
-                                              PDM_g_num_t      ***gnum1_come_from);
-    # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    void PDM_part_to_part_n_part_get(PDM_part_to_part_t *ptp,
+                                     int                *n_part1,
+                                     int                *n_part2)
 
-    # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    void PDM_part_to_part_n_part_and_n_elt_get(PDM_part_to_part_t *ptp,
+                                               int                *n_part1,
+                                               int                *n_part2,
+                                               int               **n_elt1,
+                                               int               **n_elt2)
+
+    void PDM_part_to_part_gnum1_come_from_get(PDM_part_to_part_t   *ptp,
+                                              int                ***gnum1_come_from_idx,
+                                              PDM_g_num_t        ***gnum1_come_from)
+
     void PDM_part_to_part_ref_lnum2_get(PDM_part_to_part_t   *ptp,
                                         int                 **n_ref_lnum2,
-                                        int                ***ref_lnum2);
-    # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+                                        int                ***ref_lnum2)
 
-    # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     void PDM_part_to_part_unref_lnum2_get(PDM_part_to_part_t   *ptp,
                                           int                 **n_unref_lnum2,
-                                          int                ***unref_lnum2);
-    # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+                                          int                ***unref_lnum2)
 
-
-    # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-    void PDM_part_to_part_reverse_iexch(PDM_part_to_part_t             *ptp,
-                                        PDM_mpi_comm_kind_t             k_comm,
-                                        PDM_stride_t                    t_stride,
-                                        PDM_part_to_part_data_def_t     t_part2_data_def,
-                                        int                             cst_stride,
-                                        size_t                          s_data,
-                                        int                           **part2_stride,
-                                        void                          **part2_data,
-                                        int                          ***part1_stride,
-                                        void                         ***part1_data,
-                                        int                            *request);
-    # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-    # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-    void PDM_part_to_part_reverse_iexch_wait(PDM_part_to_part_t                *ptp,
-                                             const int                          request);
-    # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-    # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-    void PDM_part_to_part_n_part_get( PDM_part_to_part_t *ptp    ,
-                                      int                *n_part1,
-                                      int                *n_part2);
-    void PDM_part_to_part_n_part_and_n_elt_get( PDM_part_to_part_t *ptp    ,
-                                                int                *n_part1,
-                                                int                *n_part2,
-                                                int               **n_elt1 ,
-                                                int               **n_elt2 );
-
-    # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-    # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-    # WARNING : do not wrap PDM_part_to_part_part1_to_part2_(single_part_)get or
+    # WARNING : do not wrap PDM_part_to_part_part1_to_part2_(single_part_)get
     # because part1_to_part2 can be NULL (if PtP is created from triplets)
     # or can reference invalid memory (if pointer is free after creation)
     # PDM_part_to_part_part1_to_part2_idx_get is safe because PtP structure owns this memory
-    void PDM_part_to_part_part1_to_part2_idx_get(PDM_part_to_part_t *ptp               ,
-                                                 int               **n_elt1            ,
-                                                 int              ***part1_to_part2_idx);
+    void PDM_part_to_part_part1_to_part2_idx_get(PDM_part_to_part_t   *ptp,
+                                                 int                 **n_elt1,
+                                                 int                ***part1_to_part2_idx)
+
+    PDM_MPI_Comm PDM_part_to_part_comm_get(PDM_part_to_part_t *ptp)
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-    PDM_MPI_Comm PDM_part_to_part_comm_get(PDM_part_to_part_t *ptp);
+    # > Free
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-    PDM_part_to_part_t *PDM_part_to_part_free(PDM_part_to_part_t *ptp);
+    PDM_part_to_part_t *PDM_part_to_part_free(PDM_part_to_part_t *ptp)
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
@@ -119,9 +109,8 @@ cdef extern from "pdm_part_to_part.h":
 cdef class PartToPart:
   # ************************************************************************
   # > Class attributes
-  cdef PDM_part_to_part_t         *ptp
-  
-  cdef dict                        request_data
+  cdef PDM_part_to_part_t *ptp
+  cdef dict                request_data
 
   DATA_DEF_ORDER_PART1           = _PDM_PART_TO_PART_DATA_DEF_ORDER_PART1
   DATA_DEF_ORDER_PART1_TO_PART2  = _PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2
@@ -150,7 +139,8 @@ cdef class PartToPart:
     n_part2 = len(part2_ln_to_gn)
     self.request_data = dict()
 
-    assert(len(part1_to_part2_idx) == n_part1)
+    assert len(part1_to_part2_idx) == len(part1_to_part2) == n_part1, \
+      "part1_ln_to_gn, part1_to_part2_idx and part1_to_part2 lists must have same lenght"
 
     # > Convert input data
     cdef PDM_MPI_Comm pdm_comm = py_comm_to_pdm_comm(comm)
@@ -218,7 +208,11 @@ cdef class PartToPart:
     n_part1 = len(part1_ln_to_gn)
     n_part2 = len(n_elt2)
 
-    assert(len(part1_to_part2_idx) == n_part1)
+    assert len(part1_to_part2_idx) == len(part1_to_part2_triplet) == n_part1, \
+      "part1_ln_to_gn, part1_to_part2_idx and part1_to_part2_triplet lists must have same lenght"
+    if part1_to_part2_triplet_idx is not None:
+      assert len(part1_to_part2_triplet_idx) == n_part1, \
+        "part1_to_part2_triplet_idx and part1_to_part2_triplet lists must have same lenght"
 
     cdef int* _n_elt1 = list_to_int_pointer([array.size for array in part1_ln_to_gn])
     cdef int* _n_elt2 = list_to_int_pointer(n_elt2)
@@ -275,18 +269,13 @@ cdef class PartToPart:
     Returns:
       Referenced Part2 elements (1-based local ids) (`list` of `np.ndarray[np_int32_t]`)
     """
-    cdef int  *n_ref_lnum2 = NULL;
-    cdef int **ref_lnum2   = NULL;
+    cdef int  *n_ref_lnum2 = NULL
+    cdef int **ref_lnum2   = NULL
     cdef int n_part1, n_part2
     PDM_part_to_part_n_part_get(self.ptp, &n_part1, &n_part2)
-    PDM_part_to_part_ref_lnum2_get(self.ptp,
-                                  &n_ref_lnum2,
-                                  &ref_lnum2);
-    lnp_ref_lnum2 = list()
-    for i_part in range(n_part2):
-      np_ref_lnum2_id = create_numpy_i(ref_lnum2[i_part], n_ref_lnum2[i_part], flag_owndata=False)
-      lnp_ref_lnum2.append(NPY.copy(np_ref_lnum2_id))
-    return lnp_ref_lnum2
+    PDM_part_to_part_ref_lnum2_get(self.ptp, &n_ref_lnum2, &ref_lnum2)
+    return [create_numpy_i(ref_lnum2[i_part], n_ref_lnum2[i_part], flag_owndata=False).copy() \
+            for i_part in range(n_part2)]
 
   # --------------------------------------------------------------------
   def get_unreferenced_lnum2(self):
@@ -296,18 +285,13 @@ cdef class PartToPart:
     Returns:
       Unreferenced Part2 elements (1-based local ids) (`list` of `np.ndarray[np_int32_t]`)
     """
-    cdef int  *n_unref_lnum2 = NULL;
-    cdef int **unref_lnum2   = NULL;
+    cdef int  *n_unref_lnum2 = NULL
+    cdef int **unref_lnum2   = NULL
     cdef int n_part1, n_part2
     PDM_part_to_part_n_part_get(self.ptp, &n_part1, &n_part2)
-    PDM_part_to_part_unref_lnum2_get(self.ptp,
-                                  &n_unref_lnum2,
-                                  &unref_lnum2);
-    lnp_unref_lnum2 = list()
-    for i_part in range(n_part2):
-      np_unref_lnum2_id = create_numpy_i(unref_lnum2[i_part], n_unref_lnum2[i_part], flag_owndata=False)
-      lnp_unref_lnum2.append(NPY.copy(np_unref_lnum2_id))
-    return lnp_unref_lnum2
+    PDM_part_to_part_unref_lnum2_get(self.ptp, &n_unref_lnum2, &unref_lnum2)
+    return [create_numpy_i(unref_lnum2[i_part], n_unref_lnum2[i_part], flag_owndata=False).copy() \
+            for i_part in range(n_part2)]
 
   # --------------------------------------------------------------------
   def get_gnum1_come_from(self):
@@ -320,19 +304,16 @@ cdef class PartToPart:
         - ``"come_from"``     (`list` of `np.ndarray[npy_pdm_gnum_t]`) : Part2→Part1 mapping (global ids)
     """
     # Needed to get the sizes n_ref_lnum2
-    cdef int  *n_ref_lnum2 = NULL;
-    cdef int **ref_lnum2   = NULL;
+    cdef int  *n_ref_lnum2 = NULL
+    cdef int **ref_lnum2   = NULL
     cdef int n_part1, n_part2
     PDM_part_to_part_n_part_get(self.ptp, &n_part1, &n_part2)
-    PDM_part_to_part_ref_lnum2_get(self.ptp,
-                                  &n_ref_lnum2,
-                                  &ref_lnum2);
+    PDM_part_to_part_ref_lnum2_get(self.ptp, &n_ref_lnum2, &ref_lnum2)
 
     cdef int         **gnum1_come_from_idx = NULL
     cdef PDM_g_num_t **gnum1_come_from     = NULL
-    PDM_part_to_part_gnum1_come_from_get(self.ptp,
-                                        &gnum1_come_from_idx,
-                                        &gnum1_come_from)
+    PDM_part_to_part_gnum1_come_from_get(self.ptp, &gnum1_come_from_idx, &gnum1_come_from)
+
     come_from_l = list()
     for i_part in range(n_part2):
       n_ref = n_ref_lnum2[i_part]
@@ -343,12 +324,12 @@ cdef class PartToPart:
     return come_from_l
 
   # --------------------------------------------------------------------
-  def iexch(                            self,
+  def iexch(self,
             PDM_mpi_comm_kind_t         k_comm,
             PDM_part_to_part_data_def_t t_part1_data_def,
             list                        part1_data,
-            part1_stride=1,
-            bint interlaced_str=True):
+                                        part1_stride=1,
+            bint                        interlaced_str=True):
     """
     iexch(k_comm, t_part1_data_def, part1_data, part1_stride=1, interlaced_str=True)
 
@@ -382,6 +363,10 @@ cdef class PartToPart:
     cdef int* n_elt1
     PDM_part_to_part_n_part_and_n_elt_get(self.ptp, &n_part1, NULL, &n_elt1, NULL)
 
+    # To check stride size (part1_to_part2 case)
+    cdef int** part1_to_part2_idx = NULL
+    PDM_part_to_part_part1_to_part2_idx_get(self.ptp, &n_elt1, &part1_to_part2_idx)
+
     cdef int   _part1_stride_cst = 0
     cdef int** _part1_stride     = NULL
     if isinstance(part1_stride, int):
@@ -390,8 +375,14 @@ cdef class PartToPart:
     elif isinstance(part1_stride, list):
       _stride_t = PDM_STRIDE_VAR_INTERLACED
       assert len(part1_stride) == n_part1
+
       for i_part in range(n_part1):
-        assert_single_dim_np(part1_stride[i_part], NPY.int32, n_elt1[i_part])
+        if t_part1_data_def == self.DATA_DEF_ORDER_PART1:
+          expt_n_elt = n_elt1[i_part]
+        elif t_part1_data_def == self.DATA_DEF_ORDER_PART1_TO_PART2:
+          expt_n_elt = part1_to_part2_idx[i_part][n_elt1[i_part]]
+        assert_single_dim_np(part1_stride[i_part], NPY.int32, expt_n_elt)
+
       _part1_stride = np_list_to_int_pointers(part1_stride)
     else:
       raise ValueError("Invalid stride in PtB exchange")
@@ -405,20 +396,20 @@ cdef class PartToPart:
     cdef size_t s_data   = ref_dtype.itemsize
     cdef size_t npy_type = ref_dtype.num
 
-    cdef int**  _part2_stride = NULL;
-    cdef void** _part2_data   = NULL;
+    cdef int**  _part2_stride = NULL
+    cdef void** _part2_data   = NULL
     PDM_part_to_part_iexch(self.ptp,
-                          k_comm,
-                          _stride_t,
-                          t_part1_data_def,
-                          _part1_stride_cst,
-                          s_data,
+                           k_comm,
+                           _stride_t,
+                           t_part1_data_def,
+                           _part1_stride_cst,
+                           s_data,
           <const int ** >  _part1_stride,
           <const void **>  _part1_data,
                           &_part2_stride,
-                <void ***> &_part2_data,
+               <void ***> &_part2_data,
                           &request_exch)
-    self.request_data[request_exch] = [<uintptr_t> _part2_stride, <uintptr_t> _part2_data, _part1_stride_cst, npy_type]
+    self.request_data[request_exch] = (False, <uintptr_t> _part2_stride, <uintptr_t> _part2_data, _part1_stride_cst, npy_type)
 
 
 
@@ -442,23 +433,22 @@ cdef class PartToPart:
       - Part2 stride (same dtype as ``part1_stride`` in :py:func:`iexch`)
       - Part2 data   (`list` of same dtype as ``part1_data`` in :py:func:`iexch`)
     """
+    cdef uintptr_t _part2_stride_id, _part2_data_id
+    is_reverse, _part2_stride_id, _part2_data_id, cst_stride, npy_type = self.request_data.pop(request_id)
+
+    if is_reverse:
+      raise ValueError("Provided request id was created by ``reverse_iexch`` and must be waited with ``reverse_wait`` function")
+
     PDM_part_to_part_iexch_wait(self.ptp, request_id)
 
     cdef int         **gnum1_come_from_idx = NULL
     cdef PDM_g_num_t **gnum1_come_from     = NULL
-    PDM_part_to_part_gnum1_come_from_get(self.ptp,
-                                        &gnum1_come_from_idx,
-                                        &gnum1_come_from)
+    PDM_part_to_part_gnum1_come_from_get(self.ptp, &gnum1_come_from_idx, &gnum1_come_from)
 
-    cdef int  *n_ref_lnum2 = NULL;
-    cdef int **ref_lnum2   = NULL;
-    PDM_part_to_part_ref_lnum2_get(self.ptp,
-                                  &n_ref_lnum2,
-                                  &ref_lnum2);
+    cdef int  *n_ref_lnum2 = NULL
+    cdef int **ref_lnum2   = NULL
+    PDM_part_to_part_ref_lnum2_get(self.ptp, &n_ref_lnum2, &ref_lnum2)
 
-    requested = self.request_data.pop(request_id)
-    cdef uintptr_t _part2_stride_id = requested[0]
-    cdef uintptr_t _part2_data_id   = requested[1]
     cdef int**  _part2_stride = <int**> _part2_stride_id
     cdef void** _part2_data = <void **> _part2_data_id
     cdef NPY.npy_intp dim_np
@@ -469,31 +459,21 @@ cdef class PartToPart:
 
     lnp_part_strid = list()
     lnp_part_data  = list()
-    cdef size_t npy_type = requested[3]
     for i_part in range(n_part2):
+      strid_size = gnum1_come_from_idx[i_part][n_ref_lnum2[i_part]]
 
-      if(_part2_stride != NULL):
-
-        strid_size = gnum1_come_from_idx[i_part][n_ref_lnum2[i_part]]
-
+      if _part2_stride == NULL: # Cst stride
+        dim_np = strid_size * cst_stride
+      else: # Var stride
         np_part2_stride = create_numpy_i(_part2_stride[i_part], strid_size)
+        lnp_part_strid.append(np_part2_stride)
         dim_np = np_part2_stride.sum()
 
-        np_part2_data = create_numpy(_part2_data[i_part], npy_type, dim_np)
-
-        lnp_part_strid.append(np_part2_stride)
-        lnp_part_data .append(np_part2_data)
-
-      else:
-        cst_stride = requested[2]
-        dim_np  = gnum1_come_from_idx[i_part][n_ref_lnum2[i_part]] * cst_stride
-        np_part2_data = create_numpy(_part2_data[i_part], npy_type, dim_np)
-
-        lnp_part_data .append(np_part2_data)
+      np_part2_data = create_numpy(_part2_data[i_part], npy_type, dim_np)
+      lnp_part_data.append(np_part2_data)
 
     free(_part2_stride)
     free(_part2_data)
-
 
     return lnp_part_strid, lnp_part_data
 
@@ -503,8 +483,8 @@ cdef class PartToPart:
                     PDM_mpi_comm_kind_t         k_comm,
                     PDM_part_to_part_data_def_t t_part2_data_def,
                     list                        part2_data,
-                    part2_stride=1,
-                    bint interlaced_str=True):
+                                                part2_stride=1,
+                    bint                        interlaced_str=True):
     """
     reverse_iexch(k_comm, t_part2_data_def, part2_data, part2_stride=1, interlaced_str=True)
 
@@ -536,14 +516,13 @@ cdef class PartToPart:
     cdef int   _part2_stride_cst = 0
     cdef int** _part2_stride = NULL
 
-    # To check stride size
-    cdef int   n_elt       = 0;
-    cdef int  *n_ref_lnum2 = NULL;
-    cdef int **ref_lnum2   = NULL;
-
     # To check stride size (gnum_come_from case)
-    cdef int         **gnum1_come_from_idx = NULL;
-    cdef PDM_g_num_t **gnum1_come_from     = NULL;
+    cdef int          *n_ref_lnum2         = NULL
+    cdef int         **ref_lnum2           = NULL
+    cdef int         **gnum1_come_from_idx = NULL
+    cdef PDM_g_num_t **gnum1_come_from     = NULL
+    PDM_part_to_part_ref_lnum2_get(self.ptp, &n_ref_lnum2, &ref_lnum2)
+    PDM_part_to_part_gnum1_come_from_get(self.ptp, &gnum1_come_from_idx, &gnum1_come_from)
 
     cdef int  n_part2
     cdef int* n_elt2
@@ -557,21 +536,13 @@ cdef class PartToPart:
       _stride_t = PDM_STRIDE_VAR_INTERLACED
       assert len(part2_stride) == n_part2
 
-      PDM_part_to_part_ref_lnum2_get(self.ptp,
-                                    &n_ref_lnum2,
-                                    &ref_lnum2);
-
       for i_part in range(n_part2):
-        if (t_part2_data_def==PDM_PART_TO_PART_DATA_DEF_ORDER_PART1_TO_PART2):
-          n_elt = n_ref_lnum2[i_part]
-        elif(t_part2_data_def==PDM_PART_TO_PART_DATA_DEF_ORDER_GNUM1_COME_FROM):
-          PDM_part_to_part_gnum1_come_from_get(self.ptp,
-                                              &gnum1_come_from_idx,
-                                              &gnum1_come_from);
-          n_elt = gnum1_come_from_idx[i_part][n_ref_lnum2[i_part]]
-        else :
-          n_elt = n_elt2[i_part]
-        assert_single_dim_np(part2_stride[i_part], NPY.int32, n_elt)
+        if t_part2_data_def == self.DATA_DEF_ORDER_PART2:
+          expt_n_elt = n_elt2[i_part]
+        elif t_part2_data_def == self.DATA_DEF_ORDER_GNUM1_COME_FROM:
+          expt_n_elt = gnum1_come_from_idx[i_part][n_ref_lnum2[i_part]]
+        assert_single_dim_np(part2_stride[i_part], NPY.int32, expt_n_elt)
+
       _part2_stride = np_list_to_int_pointers(part2_stride)
     else:
       raise ValueError("Invalid stride in PtB exchange")
@@ -585,21 +556,21 @@ cdef class PartToPart:
     cdef size_t s_data   = ref_dtype.itemsize
     cdef size_t npy_type = ref_dtype.num
 
-    cdef int**  _part1_stride = NULL;
-    cdef void** _part1_data   = NULL;
+    cdef int**  _part1_stride = NULL
+    cdef void** _part1_data   = NULL
     PDM_part_to_part_reverse_iexch(self.ptp,
-                                  k_comm,
-                                  _stride_t,
-                                  t_part2_data_def,
-                                  _part2_stride_cst,
-                                  s_data,
+                                   k_comm,
+                                   _stride_t,
+                                   t_part2_data_def,
+                                   _part2_stride_cst,
+                                   s_data,
                   <const int ** >  _part2_stride,
                   <const void **>  _part2_data,
                                   &_part1_stride,
-                        <void ***> &_part1_data,
+                       <void ***> &_part1_data,
                                   &request_exch)
 
-    self.request_data[request_exch] = [<uintptr_t> _part1_stride, <uintptr_t> _part1_data, _part2_stride_cst, npy_type]
+    self.request_data[request_exch] = (True, <uintptr_t> _part1_stride, <uintptr_t> _part1_data, _part2_stride_cst, npy_type)
 
     if _stride_t == PDM_STRIDE_VAR_INTERLACED:
       free(_part2_stride)
@@ -621,14 +592,13 @@ cdef class PartToPart:
       - Part1 stride (same dtype as ``part2_stride`` in :py:func:`reverse_iexch`)
       - Part1 data   (`list` of same dtype as ``part2_data`` in :py:func:`reverse_iexch`)
     """
-    PDM_part_to_part_reverse_iexch_wait(self.ptp, request_id)
+    cdef uintptr_t _part1_stride_id, _part1_data_id
+    is_reverse, _part1_stride_id, _part1_data_id, cst_stride, npy_type = self.request_data.pop(request_id)
 
-    requested = self.request_data.pop(request_id)
-    cdef uintptr_t _part1_stride_id = requested[0]
-    cdef uintptr_t _part1_data_id   = requested[1]
-    cdef int**  _part1_stride = <int**> _part1_stride_id
-    cdef void** _part1_data = <void **> _part1_data_id
-    cdef NPY.npy_intp dim_np
+    if not is_reverse:
+      raise ValueError("Provided request id was created by ``iexch`` and must be waited with ``wait`` function")
+
+    PDM_part_to_part_reverse_iexch_wait(self.ptp, request_id)
 
     cdef int   n_part1, n_part2
     cdef int*  n_elt1
@@ -636,43 +606,27 @@ cdef class PartToPart:
     PDM_part_to_part_n_part_get(self.ptp, &n_part1, &n_part2)
     PDM_part_to_part_part1_to_part2_idx_get(self.ptp, &n_elt1, &part1_to_part2_idx)
 
+    cdef int**  _part1_stride = <int**> _part1_stride_id
+    cdef void** _part1_data = <void **> _part1_data_id
+    cdef NPY.npy_intp dim_np
+
     lnp_part_strid = list()
     lnp_part_data  = list()
-    cdef size_t npy_type = requested[3]
-
-
     for i_part in range(n_part1):
+      strid_size = part1_to_part2_idx[i_part][n_elt1[i_part]]
 
-      if(_part1_stride != NULL):
-
-        strid_size = part1_to_part2_idx[i_part][n_elt1[i_part]]
-
+      if _part1_stride == NULL: # Cst stride
+        dim_np = strid_size * cst_stride
+      else: # Var stride
         np_part1_stride = create_numpy_i(_part1_stride[i_part], strid_size)
-        dim_np = np_part1_stride.sum()
-        # print("dim_np : ", dim_np)
-        # print("np_part1_stride : ", np_part1_stride)
-
-        np_part1_data = create_numpy(_part1_data[i_part], npy_type, dim_np)
-
         lnp_part_strid.append(np_part1_stride)
-        lnp_part_data .append(np_part1_data)
-        free(_part1_data)
-        free(_part1_stride)
+        dim_np = np_part1_stride.sum()
 
-      else:
-        cst_stride = requested[2]
-        dim_np  = part1_to_part2_idx[i_part][n_elt1[i_part]] * cst_stride
+      np_part1_data = create_numpy(_part1_data[i_part], npy_type, dim_np)
+      lnp_part_data.append(np_part1_data)
 
-
-        np_part1_data = create_numpy(_part1_data[i_part], npy_type, dim_np)
-
-        lnp_part_data .append(np_part1_data)
-
-        free(_part1_data)
-
-        if(_part1_stride != NULL):
-          free(_part1_stride)
-
+    free(_part1_data)
+    free(_part1_stride)
 
     return lnp_part_strid, lnp_part_data
 
