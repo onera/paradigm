@@ -401,56 +401,6 @@ PDM_quaternion_from_two_vectors
   }
 }
 
-// void
-// PDM_quaternion_squared_from_two_vectors
-// (
-//   const double* vector_1,
-//   const double* vector_2,
-//         double  qt_sq_out[4]
-// )
-// {
-//   double normsq_1 = vector_1[0]*vector_1[0]+vector_1[1]*vector_1[1]+vector_1[2]*vector_1[2];
-//   double normsq_2 = vector_2[0]*vector_2[0]+vector_2[1]*vector_2[1]+vector_2[2]*vector_2[2];
-//   double norm_1 = sqrt(vector_1[0]*vector_1[0]+vector_1[1]*vector_1[1]+vector_1[2]*vector_1[2]);
-//   double norm_2 = sqrt(vector_2[0]*vector_2[0]+vector_2[1]*vector_2[1]+vector_2[2]*vector_2[2]);
-//   double dot = PDM_DOT_PRODUCT(vector_1,vector_2);
-//   double cross[3];
-//   PDM_CROSS_PRODUCT(cross,vector_1,vector_2);
-
-//   if (PDM_ABS(dot) > norm_1*norm_2-QUATERNION_EPS) {
-//     // printf("NOT IMPLEMENTED\n");
-//     if (dot > 0.) { // parallel vectors
-//       PDM_quaternion_set_identity(qt_sq_out);
-//     }
-//     else { // opposite vectors
-//       double z_axis[3] = {0., 0., 1.};
-//       double dot2 = PDM_DOT_PRODUCT(vector_1,z_axis);
-//       if (PDM_ABS(dot2) > norm_1 - QUATERNION_EPS) { // vector 1 is z_axis
-//         qt_sq_out[0] = 0.;
-//         qt_sq_out[1] = 0.;
-//         qt_sq_out[2] = 1.;
-//         qt_sq_out[3] = 0.;
-//       }
-//       else { // vector != z_axis -> rotation around z-axis
-//         qt_sq_out[0] = 0.;
-//         qt_sq_out[1] = 0.;
-//         qt_sq_out[2] = 0.;
-//         qt_sq_out[3] = 1.;
-//       }
-//     }
-//   }else{
-//     qt_sq_out[0] = normsq_1*normsq_2+dot*dot+2*sqrt(normsq_1*normsq_2)*dot;
-//     qt_sq_out[1] = cross[0]*cross[0];
-//     qt_sq_out[2] = cross[1]*cross[1];
-//     qt_sq_out[3] = cross[2]*cross[2];
-//     double len = qt_sq_out[0]+qt_sq_out[1]+qt_sq_out[2]+qt_sq_out[3];
-//     qt_sq_out[0] = qt_sq_out[0]/len;
-//     qt_sq_out[1] = qt_sq_out[1]/len;
-//     qt_sq_out[2] = qt_sq_out[2]/len;
-//     qt_sq_out[3] = qt_sq_out[3]/len;
-//   }
-// }
-
 void
 PDM_quaternion_from_axis_angle
 (
@@ -697,49 +647,8 @@ PDM_quaternion_from_homogeneous_matrix
   rot_matrix[3*2+1] = homogeneous_matrix[4*2+1];
   rot_matrix[3*2+2] = homogeneous_matrix[4*2+2];
   PDM_quaternion_from_rotation_matrix(rot_matrix,qt);
-  // double tr = homogeneous_matrix[4*0+0]+homogeneous_matrix[4*1+1]+homogeneous_matrix[4*2+2];
-  // double tmp;
-  // if (PDM_ABS(tr) > QUATERNION_EPS){
-  //   tmp = sqrt(1+tr)*2.;
-  //   qt_out[0]    = .25*tmp;
-  //   qt_out[1] = (homogeneous_matrix[4*2+1]-homogeneous_matrix[4*1+2])/tmp;
-  //   qt_out[2] = (homogeneous_matrix[4*0+2]-homogeneous_matrix[4*2+0])/tmp;
-  //   qt_out[3] = (homogeneous_matrix[4*1+0]-homogeneous_matrix[4*0+1])/tmp;
-  // }
-  // else if ((homogeneous_matrix[4*0+0]>homogeneous_matrix[4*1+1]) & (homogeneous_matrix[4*0+0]>homogeneous_matrix[4*2+2])){
-  //   tmp = sqrt(1+homogeneous_matrix[4*0+0]-homogeneous_matrix[4*1+1]-homogeneous_matrix[4*2+2])*2.;
-  //   qt_out[0]    = (homogeneous_matrix[4*2+1]-homogeneous_matrix[4*1+2])/tmp;
-  //   qt_out[1] = .25*tmp;
-  //   qt_out[2] = (homogeneous_matrix[4*1+0]+homogeneous_matrix[4*0+1])/tmp;
-  //   qt_out[3] = (homogeneous_matrix[4*2+0]+homogeneous_matrix[4*0+2])/tmp;
-  // }
-  // else if (homogeneous_matrix[4*1+1]>homogeneous_matrix[4*2+2]){
-  //   tmp  = sqrt(1+homogeneous_matrix[4*1+1] - homogeneous_matrix[4*0+0] - homogeneous_matrix[4*2+2]) * 2;
-  //   qt_out[0]    = (homogeneous_matrix[4*0+2] - homogeneous_matrix[4*2+0]) / tmp;
-  //   qt_out[1] = (homogeneous_matrix[4*0+1] + homogeneous_matrix[4*1+0]) / tmp;
-  //   qt_out[2] = 0.25 * tmp;
-  //   qt_out[3] = (homogeneous_matrix[4*1+2] + homogeneous_matrix[4*2+1]) / tmp;
-  // } else {
-  //   tmp = sqrt(1.0 + homogeneous_matrix[4*2+2] - homogeneous_matrix[4*0+0] - homogeneous_matrix[4*1+1]) * 2;
-  //   qt_out[0]    = (homogeneous_matrix[4*1+0] - homogeneous_matrix[4*0+1]) / tmp;
-  //   qt_out[1] = (homogeneous_matrix[4*0+2] + homogeneous_matrix[4*2+0]) / tmp;
-  //   qt_out[2] = (homogeneous_matrix[4*1+2] + homogeneous_matrix[4*2+1]) / tmp;
-  //   qt_out[3] = 0.25 * tmp;
-  // }
-}
 
-// void
-// PDM_quaternion_from_twist
-// (
-//   const twist* t,
-//         double qt[4]
-// )
-// {
-//   qt[0] = t->quaternion[0];
-//   qt[1] = t->quaternion[1];
-//   qt[2] = t->quaternion[2];
-//   qt[3] = t->quaternion[3];
-// }
+}
 
 /*----------------------------------------------------------------------------
  *  PDM_quaternion_t TO OTHER FORMATS
