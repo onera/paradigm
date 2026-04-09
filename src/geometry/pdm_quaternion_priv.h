@@ -10,12 +10,11 @@ extern "C" {
  * Type
  *============================================================================*/
 
-typedef struct {
+struct _pdm_quaternion_t {
 
     double q[4];
     double q_squared[4];
-
-} _pdm_quaternion_t;
+};
 
 /**
  * \struct _pdm_twist_t
@@ -24,12 +23,12 @@ typedef struct {
  *
  */
 
-typedef struct {
+// struct _pdm_twist_t {
 
-  _pdm_quaternion_t quaternion;
-  double            translation[3];
+//   _pdm_quaternion_t quaternion;
+//   double            translation[3];
 
-} _pdm_twist_t;
+// };
 
 
 /*=============================================================================

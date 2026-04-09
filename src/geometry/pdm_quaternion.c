@@ -54,11 +54,10 @@ _PDM_quaternion_compute_squared
   PDM_quaternion* qt
 )
 {
-  _pdm_quaternion_t* _qt = (_pdm_quaternion_t*) qt;
-  _qt->q_squared[0] = _qt->q[0] * _qt->q[0];
-  _qt->q_squared[1] = _qt->q[1] * _qt->q[1];
-  _qt->q_squared[2] = _qt->q[2] * _qt->q[2];
-  _qt->q_squared[3] = _qt->q[3] * _qt->q[3];
+  qt->q_squared[0] = qt->q[0] * qt->q[0];
+  qt->q_squared[1] = qt->q[1] * qt->q[1];
+  qt->q_squared[2] = qt->q[2] * qt->q[2];
+  qt->q_squared[3] = qt->q[3] * qt->q[3];
 }
 
 void
@@ -71,11 +70,10 @@ PDM_quaternion_set
         PDM_quaternion* qt
 )
 {
-  _pdm_quaternion_t* _qt = (_pdm_quaternion_t*) qt;
-  _qt->q[0] = w;
-  _qt->q[1] = v1;
-  _qt->q[2] = v2;
-  _qt->q[3] = v3;
+  qt->q[0] = w;
+  qt->q[1] = v1;
+  qt->q[2] = v2;
+  qt->q[3] = v3;
   _PDM_quaternion_compute_squared(qt);
 }
 
@@ -86,15 +84,14 @@ PDM_quaternion_set_identity
   PDM_quaternion* qt
 )
 {
-  _pdm_quaternion_t* _qt = (_pdm_quaternion_t*) qt;
-  _qt->q[0] = 1.;
-  _qt->q[1] = 0.;
-  _qt->q[2] = 0.;
-  _qt->q[3] = 0.;
-  _qt->q_squared[0] = 1.;
-  _qt->q_squared[1] = 0.;
-  _qt->q_squared[2] = 0.;
-  _qt->q_squared[3] = 0.;
+  qt->q[0] = 1.;
+  qt->q[1] = 0.;
+  qt->q[2] = 0.;
+  qt->q[3] = 0.;
+  qt->q_squared[0] = 1.;
+  qt->q_squared[1] = 0.;
+  qt->q_squared[2] = 0.;
+  qt->q_squared[3] = 0.;
 }
 
 void
@@ -103,12 +100,11 @@ PDM_quaternion_print
   const PDM_quaternion* qt
 )
 {
-  _pdm_quaternion_t* _qt = (_pdm_quaternion_t*) qt;
   PDM_printf("qt = [%12.5e %12.5e %12.5e %12.5e]\n",
-    _qt->q[0],
-    _qt->q[1],
-    _qt->q[2],
-    _qt->q[3]);
+    qt->q[0],
+    qt->q[1],
+    qt->q[2],
+    qt->q[3]);
   }
 
   void
@@ -118,16 +114,14 @@ PDM_quaternion_print
     PDM_quaternion* qt_out
   )
   {
-  _pdm_quaternion_t* _qt     = (_pdm_quaternion_t*) qt;
-  _pdm_quaternion_t* _qt_out = (_pdm_quaternion_t*) qt_out;
-  _qt_out->q[0] =  _qt->q[0];
-  _qt_out->q[1] = -_qt->q[1];
-  _qt_out->q[2] = -_qt->q[2];
-  _qt_out->q[3] = -_qt->q[3];
-  _qt_out->q_squared[0] = _qt->q_squared[0];
-  _qt_out->q_squared[1] = _qt->q_squared[1];
-  _qt_out->q_squared[2] = _qt->q_squared[2];
-  _qt_out->q_squared[3] = _qt->q_squared[3];
+  qt_out->q[0] =  qt->q[0];
+  qt_out->q[1] = -qt->q[1];
+  qt_out->q[2] = -qt->q[2];
+  qt_out->q[3] = -qt->q[3];
+  qt_out->q_squared[0] = qt->q_squared[0];
+  qt_out->q_squared[1] = qt->q_squared[1];
+  qt_out->q_squared[2] = qt->q_squared[2];
+  qt_out->q_squared[3] = qt->q_squared[3];
 }
 
 double
@@ -136,8 +130,7 @@ PDM_quaternion_norm
   const PDM_quaternion* qt
 )
 {
-  _pdm_quaternion_t* _qt = (_pdm_quaternion_t*) qt;
-  return sqrt(_qt->q_squared[0] +_qt->q_squared[1] +_qt->q_squared[2] +_qt->q_squared[3]);
+  return sqrt(qt->q_squared[0] +qt->q_squared[1] +qt->q_squared[2] +qt->q_squared[3]);
 }
 
 void
@@ -146,17 +139,16 @@ PDM_quaternion_normalize
   PDM_quaternion* qt
 )
 {
-  _pdm_quaternion_t* _qt = (_pdm_quaternion_t*) qt;
   double inv_len    = 1. / PDM_quaternion_norm(qt);
-  double inv_len_sq = 1. / (_qt->q_squared[0] +_qt->q_squared[1] +_qt->q_squared[2] +_qt->q_squared[3]);
-  _qt->q[0] *= inv_len;
-  _qt->q[1] *= inv_len;
-  _qt->q[2] *= inv_len;
-  _qt->q[3] *= inv_len;
-  _qt->q_squared[0] *= inv_len_sq;
-  _qt->q_squared[1] *= inv_len_sq;
-  _qt->q_squared[2] *= inv_len_sq;
-  _qt->q_squared[3] *= inv_len_sq;
+  double inv_len_sq = 1. / (qt->q_squared[0] +qt->q_squared[1] +qt->q_squared[2] +qt->q_squared[3]);
+  qt->q[0] *= inv_len;
+  qt->q[1] *= inv_len;
+  qt->q[2] *= inv_len;
+  qt->q[3] *= inv_len;
+  qt->q_squared[0] *= inv_len_sq;
+  qt->q_squared[1] *= inv_len_sq;
+  qt->q_squared[2] *= inv_len_sq;
+  qt->q_squared[3] *= inv_len_sq;
 }
 
 void
@@ -167,19 +159,16 @@ PDM_quaternion_compose
   PDM_quaternion* qt_out
 )
 {
-  _pdm_quaternion_t* _qt_1   = (_pdm_quaternion_t*) qt_1;
-  _pdm_quaternion_t* _qt_2   = (_pdm_quaternion_t*) qt_2;
-  _pdm_quaternion_t* _qt_out = (_pdm_quaternion_t*) qt_out;
   // buffering data in case where qt_1==qt_out or qt_2==qt_out
   double w,v1,v2,v3;
-  w  = _qt_1->q[0] * _qt_2->q[0] - _qt_1->q[1] * _qt_2->q[1] - _qt_1->q[2] * _qt_2->q[2] - _qt_1->q[3] * _qt_2->q[3];
-  v1 = _qt_1->q[1] * _qt_2->q[0] + _qt_1->q[0] * _qt_2->q[1] + _qt_1->q[2] * _qt_2->q[3] - _qt_1->q[3] * _qt_2->q[2];
-  v2 = _qt_1->q[0] * _qt_2->q[2] - _qt_1->q[1] * _qt_2->q[3] + _qt_1->q[2] * _qt_2->q[0] + _qt_1->q[3] * _qt_2->q[1];
-  v3 = _qt_1->q[0] * _qt_2->q[3] + _qt_1->q[1] * _qt_2->q[2] - _qt_1->q[2] * _qt_2->q[1] + _qt_1->q[3] * _qt_2->q[0] ;
-  _qt_out->q[0] = w ;
-  _qt_out->q[1] = v1;
-  _qt_out->q[2] = v2;
-  _qt_out->q[3] = v3;
+  w  = qt_1->q[0] * qt_2->q[0] - qt_1->q[1] * qt_2->q[1] - qt_1->q[2] * qt_2->q[2] - qt_1->q[3] * qt_2->q[3];
+  v1 = qt_1->q[1] * qt_2->q[0] + qt_1->q[0] * qt_2->q[1] + qt_1->q[2] * qt_2->q[3] - qt_1->q[3] * qt_2->q[2];
+  v2 = qt_1->q[0] * qt_2->q[2] - qt_1->q[1] * qt_2->q[3] + qt_1->q[2] * qt_2->q[0] + qt_1->q[3] * qt_2->q[1];
+  v3 = qt_1->q[0] * qt_2->q[3] + qt_1->q[1] * qt_2->q[2] - qt_1->q[2] * qt_2->q[1] + qt_1->q[3] * qt_2->q[0] ;
+  qt_out->q[0] = w ;
+  qt_out->q[1] = v1;
+  qt_out->q[2] = v2;
+  qt_out->q[3] = v3;
   _PDM_quaternion_compute_squared(qt_out);
   // _qt_out->q_squared[0] = w  * w;
   // _qt_out->q_squared[1] = v1 * v1;
@@ -199,11 +188,10 @@ PDM_quaternion_equal
 )
 {
 
-  _pdm_quaternion_t* _qt = (_pdm_quaternion_t*) qt;
-  return (PDM_bool_t) ((PDM_ABS(_qt->q[0] - w ) < epsilon) && \
-  (PDM_ABS(_qt->q[1] - v0) < epsilon) && \
-  (PDM_ABS(_qt->q[2] - v1) < epsilon) && \
-  (PDM_ABS(_qt->q[3] - v2) < epsilon));
+  return (PDM_bool_t) ((PDM_ABS(qt->q[0] - w ) < epsilon) && \
+  (PDM_ABS(qt->q[1] - v0) < epsilon) && \
+  (PDM_ABS(qt->q[2] - v1) < epsilon) && \
+  (PDM_ABS(qt->q[3] - v2) < epsilon));
 }
 
 PDM_bool_t
@@ -214,8 +202,7 @@ PDM_quaternion_equal_quaternion
         double          epsilon
 )
 {
-  _pdm_quaternion_t* _qt_2 = (_pdm_quaternion_t*) qt_2;
-  return PDM_quaternion_equal(qt_1,_qt_2->q[0],_qt_2->q[1],_qt_2->q[2],_qt_2->q[3],epsilon);
+  return PDM_quaternion_equal(qt_1,qt_2->q[0],qt_2->q[1],qt_2->q[2],qt_2->q[3],epsilon);
 }
 
 
@@ -232,17 +219,16 @@ PDM_quaternion_rotate
   double*         vector_out
 )
 {
-  _pdm_quaternion_t* _qt = (_pdm_quaternion_t*) qt;
-  double ww = _qt->q_squared[0];
-  double xx = _qt->q_squared[1];
-  double yy = _qt->q_squared[2];
-  double zz = _qt->q_squared[3];
-  double wx = _qt->q[0] * _qt->q[1];
-  double wy = _qt->q[0] * _qt->q[2];
-  double wz = _qt->q[0] * _qt->q[3];
-  double xy = _qt->q[1] * _qt->q[2];
-  double xz = _qt->q[1] * _qt->q[3];
-  double yz = _qt->q[2] * _qt->q[3];
+  double ww = qt->q_squared[0];
+  double xx = qt->q_squared[1];
+  double yy = qt->q_squared[2];
+  double zz = qt->q_squared[3];
+  double wx = qt->q[0] * qt->q[1];
+  double wy = qt->q[0] * qt->q[2];
+  double wz = qt->q[0] * qt->q[3];
+  double xy = qt->q[1] * qt->q[2];
+  double xz = qt->q[1] * qt->q[3];
+  double yz = qt->q[2] * qt->q[3];
 
   for (int i = 0; i < n_samp; i++) {
     vector_out[3*i+0] =   ww*vector[3*i+0] + 2*wy*vector[3*i+2] - 2*wz*vector[3*i+1] +   xx*vector[3*i+0] +\
@@ -264,18 +250,16 @@ PDM_quaternion_rotate_derivative
   double* vector_output_der
 )
 {
-  _pdm_quaternion_t* _qt     = (_pdm_quaternion_t*) qt;
-  _pdm_quaternion_t* _qt_der = (_pdm_quaternion_t*) qt_der;
-  double ww_der = 2*_qt->q[0] * _qt_der->q[0];
-  double xx_der = 2*_qt->q[1] * _qt_der->q[1];
-  double yy_der = 2*_qt->q[2] * _qt_der->q[2];
-  double zz_der = 2*_qt->q[3] * _qt_der->q[3];
-  double wx_der = _qt_der->q[0] * _qt->q[1] + _qt->q[0] * _qt_der->q[1];
-  double wy_der = _qt_der->q[0] * _qt->q[2] + _qt->q[0] * _qt_der->q[2];
-  double wz_der = _qt_der->q[0] * _qt->q[3] + _qt->q[0] * _qt_der->q[3];
-  double xy_der = _qt_der->q[1] * _qt->q[2] + _qt->q[1] * _qt_der->q[2];
-  double xz_der = _qt_der->q[1] * _qt->q[3] + _qt->q[1] * _qt_der->q[3];
-  double yz_der = _qt_der->q[2] * _qt->q[3] + _qt->q[2] * _qt_der->q[3];
+  double ww_der = 2*qt->q[0] * qt_der->q[0];
+  double xx_der = 2*qt->q[1] * qt_der->q[1];
+  double yy_der = 2*qt->q[2] * qt_der->q[2];
+  double zz_der = 2*qt->q[3] * qt_der->q[3];
+  double wx_der = qt_der->q[0] * qt->q[1] + qt->q[0] * qt_der->q[1];
+  double wy_der = qt_der->q[0] * qt->q[2] + qt->q[0] * qt_der->q[2];
+  double wz_der = qt_der->q[0] * qt->q[3] + qt->q[0] * qt_der->q[3];
+  double xy_der = qt_der->q[1] * qt->q[2] + qt->q[1] * qt_der->q[2];
+  double xz_der = qt_der->q[1] * qt->q[3] + qt->q[1] * qt_der->q[3];
+  double yz_der = qt_der->q[2] * qt->q[3] + qt->q[2] * qt_der->q[3];
 
   for (int i = 0; i < n_samp; i++) {
     vector_output_der[3*i+0] =   ww_der*vector[3*i+0] + 2*wy_der*vector[3*i+2] - 2*wz_der*vector[3*i+1] +   xx_der*vector[3*i+0] +\
@@ -301,14 +285,14 @@ PDM_quaternion_slerp_from_two_vectors
         double* out
 )
 {
-  _pdm_quaternion_t qt;
-  PDM_quaternion_from_two_vectors(vector_1,vector_2,(PDM_quaternion*)&qt);
+  PDM_quaternion qt;
+  PDM_quaternion_from_two_vectors(vector_1,vector_2,&qt);
   double axis[3];
   double angle;
-  PDM_quaternion_to_axis_angle((PDM_quaternion*)&qt,axis,&angle);
+  PDM_quaternion_to_axis_angle(&qt,axis,&angle);
   for (int i = 0; i < n_samp; i++) {
-    PDM_quaternion_from_axis_angle(axis,t[i]*angle,(PDM_quaternion*)&qt);
-    PDM_quaternion_rotate((PDM_quaternion*)&qt,vector_1,1,&out[3*i]);
+    PDM_quaternion_from_axis_angle(axis,t[i]*angle,&qt);
+    PDM_quaternion_rotate(&qt,vector_1,1,&out[3*i]);
   }
 }
 
@@ -322,17 +306,17 @@ PDM_quaternion_slerp_from_two_vectors_derivative
         double* out
 )
 {
-  _pdm_quaternion_t qt;
-  _pdm_quaternion_t qt_der;
-  PDM_quaternion_from_two_vectors(vector_1,vector_2,(PDM_quaternion*)&qt);
+  PDM_quaternion qt;
+  PDM_quaternion qt_der;
+  PDM_quaternion_from_two_vectors(vector_1,vector_2,&qt);
   double axis[3];
   double axis_der[3] = {0,0,0};
   double angle;
-  PDM_quaternion_to_axis_angle((PDM_quaternion*)&qt,axis,&angle);
+  PDM_quaternion_to_axis_angle(&qt,axis,&angle);
   for (int i = 0; i < n_samp; i++) {
-    PDM_quaternion_from_axis_angle(axis,t[i]*angle,(PDM_quaternion*)&qt);
-    PDM_quaternion_from_axis_angle_derivative(axis,t[i]*angle,axis_der,angle,(PDM_quaternion*)&qt_der);
-    PDM_quaternion_rotate_derivative((PDM_quaternion*)&qt,(PDM_quaternion*)&qt_der,vector_1,1,&out[3*i]);
+    PDM_quaternion_from_axis_angle(axis,t[i]*angle,&qt);
+    PDM_quaternion_from_axis_angle_derivative(axis,t[i]*angle,axis_der,angle,&qt_der);
+    PDM_quaternion_rotate_derivative(&qt,&qt_der,vector_1,1,&out[3*i]);
   }
 }
 
@@ -350,7 +334,6 @@ PDM_quaternion_from_two_vectors
         PDM_quaternion* qt_out
 )
 {
-  _pdm_quaternion_t* _qt_out = (_pdm_quaternion_t*) qt_out;
   double normsq_1 = vector_1[0]*vector_1[0] + vector_1[1]*vector_1[1] + vector_1[2]*vector_1[2];
   double normsq_2 = vector_2[0]*vector_2[0] + vector_2[1]*vector_2[1] + vector_2[2]*vector_2[2];
   double norm_1 = sqrt(vector_1[0]*vector_1[0] + vector_1[1]*vector_1[1] + vector_1[2]*vector_1[2]);
@@ -367,36 +350,36 @@ PDM_quaternion_from_two_vectors
       double z_axis[3] = {0., 0., 1.};
       double dot2 = PDM_DOT_PRODUCT(vector_1,z_axis);
       if (PDM_ABS(dot2) > norm_1 - QUATERNION_EPS) { // vector 1 is z_axis
-        _qt_out->q[0] = 0.;
-        _qt_out->q[1] = 0.;
-        _qt_out->q[2] = 1.;
-        _qt_out->q[3] = 0.;
-        _qt_out->q_squared[0] = 0.;
-        _qt_out->q_squared[1] = 0.;
-        _qt_out->q_squared[2] = 1.;
-        _qt_out->q_squared[3] = 0.;
+        qt_out->q[0] = 0.;
+        qt_out->q[1] = 0.;
+        qt_out->q[2] = 1.;
+        qt_out->q[3] = 0.;
+        qt_out->q_squared[0] = 0.;
+        qt_out->q_squared[1] = 0.;
+        qt_out->q_squared[2] = 1.;
+        qt_out->q_squared[3] = 0.;
       }
       else { // vector != z_axis -> rotation around z-axis
-        _qt_out->q[0] = 0.;
-        _qt_out->q[1] = 0.;
-        _qt_out->q[2] = 0.;
-        _qt_out->q[3] = 1.;
-        _qt_out->q_squared[0] = 0.;
-        _qt_out->q_squared[1] = 0.;
-        _qt_out->q_squared[2] = 0.;
-        _qt_out->q_squared[3] = 1.;
+        qt_out->q[0] = 0.;
+        qt_out->q[1] = 0.;
+        qt_out->q[2] = 0.;
+        qt_out->q[3] = 1.;
+        qt_out->q_squared[0] = 0.;
+        qt_out->q_squared[1] = 0.;
+        qt_out->q_squared[2] = 0.;
+        qt_out->q_squared[3] = 1.;
       }
     }
   }
   else {
-    _qt_out->q[0] = sqrt(normsq_1*normsq_2)+dot;
-    _qt_out->q[1] = cross[0];
-    _qt_out->q[2] = cross[1];
-    _qt_out->q[3] = cross[2];
-    _qt_out->q_squared[0] = normsq_1*normsq_2+dot*dot+2*sqrt(normsq_1*normsq_2)*dot;
-    _qt_out->q_squared[1] = cross[0]*cross[0];
-    _qt_out->q_squared[2] = cross[1]*cross[1];
-    _qt_out->q_squared[3] = cross[2]*cross[2];
+    qt_out->q[0] = sqrt(normsq_1*normsq_2)+dot;
+    qt_out->q[1] = cross[0];
+    qt_out->q[2] = cross[1];
+    qt_out->q[3] = cross[2];
+    qt_out->q_squared[0] = normsq_1*normsq_2+dot*dot+2*sqrt(normsq_1*normsq_2)*dot;
+    qt_out->q_squared[1] = cross[0]*cross[0];
+    qt_out->q_squared[2] = cross[1]*cross[1];
+    qt_out->q_squared[3] = cross[2]*cross[2];
     PDM_quaternion_normalize(qt_out);
   }
 }
@@ -409,19 +392,18 @@ PDM_quaternion_from_axis_angle
         PDM_quaternion* qt_out
 )
 {
-  _pdm_quaternion_t* _qt_out = (_pdm_quaternion_t*) qt_out;
-  _qt_out->q[0] = cos(0.5*angle);
-  _qt_out->q_squared[0] = _qt_out->q[0] * _qt_out->q[0];
+  qt_out->q[0] = cos(0.5*angle);
+  qt_out->q_squared[0] = qt_out->q[0] * qt_out->q[0];
   double c         = sin(0.5*angle);
   double c_squared = c*c;
   double axis_invnorm = 1./sqrt(PDM_DOT_PRODUCT(axis,axis));
   double axis_invnorm_sq = 1./PDM_DOT_PRODUCT(axis,axis);
-  _qt_out->q[1] = c*axis[0]*axis_invnorm;
-  _qt_out->q[2] = c*axis[1]*axis_invnorm;
-  _qt_out->q[3] = c*axis[2]*axis_invnorm;
-  _qt_out->q_squared[1] = c_squared*axis[0]*axis[0]*axis_invnorm_sq;
-  _qt_out->q_squared[2] = c_squared*axis[1]*axis[1]*axis_invnorm_sq;
-  _qt_out->q_squared[3] = c_squared*axis[2]*axis[2]*axis_invnorm_sq;
+  qt_out->q[1] = c*axis[0]*axis_invnorm;
+  qt_out->q[2] = c*axis[1]*axis_invnorm;
+  qt_out->q[3] = c*axis[2]*axis_invnorm;
+  qt_out->q_squared[1] = c_squared*axis[0]*axis[0]*axis_invnorm_sq;
+  qt_out->q_squared[2] = c_squared*axis[1]*axis[1]*axis_invnorm_sq;
+  qt_out->q_squared[3] = c_squared*axis[2]*axis[2]*axis_invnorm_sq;
 }
 
 void
@@ -433,17 +415,16 @@ PDM_quaternion_from_axis_angle_derivative(
         PDM_quaternion* qt_out
 )
 {
-  _pdm_quaternion_t* _qt_out = (_pdm_quaternion_t*) qt_out;
   double c     =      sin(0.5*angle);
   double c_der =  0.5*cos(0.5*angle)*angle_der;
-  _qt_out->q[0]         = -0.5*sin(0.5*angle)*angle_der;
+  qt_out->q[0]         = -0.5*sin(0.5*angle)*angle_der;
 
   double ax_sq_norm = PDM_DOT_PRODUCT(axis,axis);
   double axis_invnorm     = 1./sqrt(ax_sq_norm);
   double axis_invnorm_der = -(axis[0]*axis_der[0]+axis[1]*axis_der[1]+axis[2]*axis_der[2])/(ax_sq_norm*sqrt(ax_sq_norm));
-  _qt_out->q[1] = c_der*axis[0]*axis_invnorm + c*axis_der[0]*axis_invnorm+c*axis[0]*axis_invnorm_der;
-  _qt_out->q[2] = c_der*axis[1]*axis_invnorm + c*axis_der[1]*axis_invnorm+c*axis[1]*axis_invnorm_der;
-  _qt_out->q[3] = c_der*axis[2]*axis_invnorm + c*axis_der[2]*axis_invnorm+c*axis[2]*axis_invnorm_der;
+  qt_out->q[1] = c_der*axis[0]*axis_invnorm + c*axis_der[0]*axis_invnorm+c*axis[0]*axis_invnorm_der;
+  qt_out->q[2] = c_der*axis[1]*axis_invnorm + c*axis_der[1]*axis_invnorm+c*axis[1]*axis_invnorm_der;
+  qt_out->q[3] = c_der*axis[2]*axis_invnorm + c*axis_der[2]*axis_invnorm+c*axis[2]*axis_invnorm_der;
 
   // TODO: improve precision of squared part
   _PDM_quaternion_compute_squared(qt_out);
@@ -457,12 +438,11 @@ PDM_quaternion_from_axis_aligned_rotation
   PDM_quaternion* qt_out
 )
 {
-  _pdm_quaternion_t* _qt_out = (_pdm_quaternion_t*) qt_out;
-  _qt_out->q[0] = cos(angle*0.5);
-  _qt_out->q[1] = 0.;
-  _qt_out->q[2] = 0.;
-  _qt_out->q[3] = 0.;
-  _qt_out->q[axis_ind+1] = sin(angle*0.5);
+  qt_out->q[0] = cos(angle*0.5);
+  qt_out->q[1] = 0.;
+  qt_out->q[2] = 0.;
+  qt_out->q[3] = 0.;
+  qt_out->q[axis_ind+1] = sin(angle*0.5);
 
   _PDM_quaternion_compute_squared(qt_out);
 }
@@ -504,12 +484,11 @@ PDM_quaternion_from_axis_aligned_symmetry
         PDM_quaternion* qt
 )
 {
-  _pdm_quaternion_t* _qt = (_pdm_quaternion_t*) qt;
-  _qt->q[0] = 0.;
-  _qt->q[1] = 0.;
-  _qt->q[2] = 0.;
-  _qt->q[3] = 0.;
-  _qt->q[axis_ind+1] = 1.;
+  qt->q[0] = 0.;
+  qt->q[1] = 0.;
+  qt->q[2] = 0.;
+  qt->q[3] = 0.;
+  qt->q[axis_ind+1] = 1.;
 
   _PDM_quaternion_compute_squared(qt);
 }
@@ -554,13 +533,13 @@ PDM_quaternion_from_euler_angles
 {
   double angles[3] = {ang_x,ang_y,ang_z};
   PDM_quaternion_set_identity(qt);
-  _pdm_quaternion_t q_curr;
+  PDM_quaternion q_curr;
   for (size_t i = 0; i < 3; i++) {
-    PDM_quaternion_from_axis_aligned_rotation(angles[order[i]],order[i],(PDM_quaternion*)&q_curr);
+    PDM_quaternion_from_axis_aligned_rotation(angles[order[i]],order[i],&q_curr);
     if ( intrinsic ) {
-      PDM_quaternion_compose(qt,(PDM_quaternion*)&q_curr,qt);
+      PDM_quaternion_compose(qt,&q_curr,qt);
     }else {
-      PDM_quaternion_compose((PDM_quaternion*)&q_curr,qt,qt);
+      PDM_quaternion_compose(&q_curr,qt,qt);
     }
   }
 }
@@ -572,60 +551,59 @@ PDM_quaternion_from_rotation_matrix
         PDM_quaternion* qt
 )
 {
-  _pdm_quaternion_t* _qt = (_pdm_quaternion_t*) qt;
   double tr = rotation_matrix[3*0+0]+rotation_matrix[3*1+1]+rotation_matrix[3*2+2];
   double inv_tmp;
   if (PDM_ABS(tr) > QUATERNION_EPS){
     inv_tmp = 0.5/sqrt(1+tr);
-    _qt->q[0] = .5*sqrt(1+tr);
-    _qt->q[1] = (rotation_matrix[3*2+1]-rotation_matrix[3*1+2])*inv_tmp;
-    _qt->q[2] = (rotation_matrix[3*0+2]-rotation_matrix[3*2+0])*inv_tmp;
-    _qt->q[3] = (rotation_matrix[3*1+0]-rotation_matrix[3*0+1])*inv_tmp;
+    qt->q[0] = .5*sqrt(1+tr);
+    qt->q[1] = (rotation_matrix[3*2+1]-rotation_matrix[3*1+2])*inv_tmp;
+    qt->q[2] = (rotation_matrix[3*0+2]-rotation_matrix[3*2+0])*inv_tmp;
+    qt->q[3] = (rotation_matrix[3*1+0]-rotation_matrix[3*0+1])*inv_tmp;
 
     inv_tmp = 0.25/PDM_ABS(1+tr);
-    _qt->q_squared[0] = .25*PDM_ABS(1+tr);
-    _qt->q_squared[1] = (rotation_matrix[3*2+1]-rotation_matrix[3*1+2])*(rotation_matrix[3*2+1]-rotation_matrix[3*1+2])*inv_tmp;
-    _qt->q_squared[2] = (rotation_matrix[3*0+2]-rotation_matrix[3*2+0])*(rotation_matrix[3*0+2]-rotation_matrix[3*2+0])*inv_tmp;
-    _qt->q_squared[3] = (rotation_matrix[3*1+0]-rotation_matrix[3*0+1])*(rotation_matrix[3*1+0]-rotation_matrix[3*0+1])*inv_tmp;
+    qt->q_squared[0] = .25*PDM_ABS(1+tr);
+    qt->q_squared[1] = (rotation_matrix[3*2+1]-rotation_matrix[3*1+2])*(rotation_matrix[3*2+1]-rotation_matrix[3*1+2])*inv_tmp;
+    qt->q_squared[2] = (rotation_matrix[3*0+2]-rotation_matrix[3*2+0])*(rotation_matrix[3*0+2]-rotation_matrix[3*2+0])*inv_tmp;
+    qt->q_squared[3] = (rotation_matrix[3*1+0]-rotation_matrix[3*0+1])*(rotation_matrix[3*1+0]-rotation_matrix[3*0+1])*inv_tmp;
   }
   else if ((rotation_matrix[3*0+0]>rotation_matrix[3*1+1]) & (rotation_matrix[3*0+0]>rotation_matrix[3*2+2])){
     inv_tmp = .5/sqrt(1+rotation_matrix[3*0+0]-rotation_matrix[3*1+1]-rotation_matrix[3*2+2]);
-    _qt->q[0] = (rotation_matrix[3*2+1]-rotation_matrix[3*1+2])*inv_tmp;
-    _qt->q[1] = .5*sqrt(1+rotation_matrix[3*0+0]-rotation_matrix[3*1+1]-rotation_matrix[3*2+2]);
-    _qt->q[2] = (rotation_matrix[3*1+0]+rotation_matrix[3*0+1])*inv_tmp;
-    _qt->q[3] = (rotation_matrix[3*2+0]+rotation_matrix[3*0+2])*inv_tmp;
+    qt->q[0] = (rotation_matrix[3*2+1]-rotation_matrix[3*1+2])*inv_tmp;
+    qt->q[1] = .5*sqrt(1+rotation_matrix[3*0+0]-rotation_matrix[3*1+1]-rotation_matrix[3*2+2]);
+    qt->q[2] = (rotation_matrix[3*1+0]+rotation_matrix[3*0+1])*inv_tmp;
+    qt->q[3] = (rotation_matrix[3*2+0]+rotation_matrix[3*0+2])*inv_tmp;
 
     inv_tmp = .25/PDM_ABS(1+rotation_matrix[3*0+0]-rotation_matrix[3*1+1]-rotation_matrix[3*2+2]);
-    _qt->q_squared[0] = (rotation_matrix[3*2+1]-rotation_matrix[3*1+2])*(rotation_matrix[3*2+1]-rotation_matrix[3*1+2])*inv_tmp;
-    _qt->q_squared[1] = .25*PDM_ABS(1+rotation_matrix[3*0+0]-rotation_matrix[3*1+1]-rotation_matrix[3*2+2]);
-    _qt->q_squared[2] = (rotation_matrix[3*1+0]+rotation_matrix[3*0+1])*(rotation_matrix[3*1+0]+rotation_matrix[3*0+1])*inv_tmp;
-    _qt->q_squared[3] = (rotation_matrix[3*2+0]+rotation_matrix[3*0+2])*(rotation_matrix[3*2+0]+rotation_matrix[3*0+2])*inv_tmp;
+    qt->q_squared[0] = (rotation_matrix[3*2+1]-rotation_matrix[3*1+2])*(rotation_matrix[3*2+1]-rotation_matrix[3*1+2])*inv_tmp;
+    qt->q_squared[1] = .25*PDM_ABS(1+rotation_matrix[3*0+0]-rotation_matrix[3*1+1]-rotation_matrix[3*2+2]);
+    qt->q_squared[2] = (rotation_matrix[3*1+0]+rotation_matrix[3*0+1])*(rotation_matrix[3*1+0]+rotation_matrix[3*0+1])*inv_tmp;
+    qt->q_squared[3] = (rotation_matrix[3*2+0]+rotation_matrix[3*0+2])*(rotation_matrix[3*2+0]+rotation_matrix[3*0+2])*inv_tmp;
   }
   else if (rotation_matrix[3*1+1]>rotation_matrix[3*2+2]){
     inv_tmp  = .5/sqrt(1+rotation_matrix[3*1+1] - rotation_matrix[3*0+0] - rotation_matrix[3*2+2]);
-    _qt->q[0] = (rotation_matrix[3*0+2] - rotation_matrix[3*2+0])*(rotation_matrix[3*0+2] - rotation_matrix[3*2+0])*inv_tmp;
-    _qt->q[1] = (rotation_matrix[3*0+1] + rotation_matrix[3*1+0])*(rotation_matrix[3*0+1] + rotation_matrix[3*1+0])*inv_tmp;
-    _qt->q[2] = 0.5*sqrt(1+rotation_matrix[3*1+1] - rotation_matrix[3*0+0] - rotation_matrix[3*2+2]);
-    _qt->q[3] = (rotation_matrix[3*1+2] + rotation_matrix[3*2+1])*(rotation_matrix[3*1+2] + rotation_matrix[3*2+1])*inv_tmp;
+    qt->q[0] = (rotation_matrix[3*0+2] - rotation_matrix[3*2+0])*(rotation_matrix[3*0+2] - rotation_matrix[3*2+0])*inv_tmp;
+    qt->q[1] = (rotation_matrix[3*0+1] + rotation_matrix[3*1+0])*(rotation_matrix[3*0+1] + rotation_matrix[3*1+0])*inv_tmp;
+    qt->q[2] = 0.5*sqrt(1+rotation_matrix[3*1+1] - rotation_matrix[3*0+0] - rotation_matrix[3*2+2]);
+    qt->q[3] = (rotation_matrix[3*1+2] + rotation_matrix[3*2+1])*(rotation_matrix[3*1+2] + rotation_matrix[3*2+1])*inv_tmp;
 
     inv_tmp  = .25/PDM_ABS(1+rotation_matrix[3*1+1] - rotation_matrix[3*0+0] - rotation_matrix[3*2+2]);
-    _qt->q_squared[0] = (rotation_matrix[3*0+2] - rotation_matrix[3*2+0])*(rotation_matrix[3*0+2] - rotation_matrix[3*2+0])*inv_tmp;
-    _qt->q_squared[1] = (rotation_matrix[3*0+1] + rotation_matrix[3*1+0])*(rotation_matrix[3*0+1] + rotation_matrix[3*1+0])*inv_tmp;
-    _qt->q_squared[2] = .25*PDM_ABS(1+rotation_matrix[3*1+1] - rotation_matrix[3*0+0] - rotation_matrix[3*2+2]);
-    _qt->q_squared[3] = (rotation_matrix[3*1+2] + rotation_matrix[3*2+1])*(rotation_matrix[3*1+2] + rotation_matrix[3*2+1])*inv_tmp;
+    qt->q_squared[0] = (rotation_matrix[3*0+2] - rotation_matrix[3*2+0])*(rotation_matrix[3*0+2] - rotation_matrix[3*2+0])*inv_tmp;
+    qt->q_squared[1] = (rotation_matrix[3*0+1] + rotation_matrix[3*1+0])*(rotation_matrix[3*0+1] + rotation_matrix[3*1+0])*inv_tmp;
+    qt->q_squared[2] = .25*PDM_ABS(1+rotation_matrix[3*1+1] - rotation_matrix[3*0+0] - rotation_matrix[3*2+2]);
+    qt->q_squared[3] = (rotation_matrix[3*1+2] + rotation_matrix[3*2+1])*(rotation_matrix[3*1+2] + rotation_matrix[3*2+1])*inv_tmp;
   }
   else {
     inv_tmp = .5/sqrt(1.0 + rotation_matrix[3*2+2] - rotation_matrix[3*0+0] - rotation_matrix[3*1+1]);
-    _qt->q[0] = (rotation_matrix[3*1+0] - rotation_matrix[3*0+1])*inv_tmp;
-    _qt->q[1] = (rotation_matrix[3*0+2] + rotation_matrix[3*2+0])*inv_tmp;
-    _qt->q[2] = (rotation_matrix[3*1+2] + rotation_matrix[3*2+1])*inv_tmp;
-    _qt->q[3] = .5*sqrt(1.0 + rotation_matrix[3*2+2] - rotation_matrix[3*0+0] - rotation_matrix[3*1+1]);
+    qt->q[0] = (rotation_matrix[3*1+0] - rotation_matrix[3*0+1])*inv_tmp;
+    qt->q[1] = (rotation_matrix[3*0+2] + rotation_matrix[3*2+0])*inv_tmp;
+    qt->q[2] = (rotation_matrix[3*1+2] + rotation_matrix[3*2+1])*inv_tmp;
+    qt->q[3] = .5*sqrt(1.0 + rotation_matrix[3*2+2] - rotation_matrix[3*0+0] - rotation_matrix[3*1+1]);
 
     inv_tmp = .25/PDM_ABS(1.0 + rotation_matrix[3*2+2] - rotation_matrix[3*0+0] - rotation_matrix[3*1+1]);
-    _qt->q_squared[0] = (rotation_matrix[3*1+0] - rotation_matrix[3*0+1])*(rotation_matrix[3*1+0] - rotation_matrix[3*0+1])*inv_tmp;
-    _qt->q_squared[1] = (rotation_matrix[3*0+2] + rotation_matrix[3*2+0])*(rotation_matrix[3*0+2] + rotation_matrix[3*2+0])*inv_tmp;
-    _qt->q_squared[2] = (rotation_matrix[3*1+2] + rotation_matrix[3*2+1])*(rotation_matrix[3*1+2] + rotation_matrix[3*2+1])*inv_tmp;
-    _qt->q_squared[3] = .25*PDM_ABS(1.0 + rotation_matrix[3*2+2] - rotation_matrix[3*0+0] - rotation_matrix[3*1+1]);
+    qt->q_squared[0] = (rotation_matrix[3*1+0] - rotation_matrix[3*0+1])*(rotation_matrix[3*1+0] - rotation_matrix[3*0+1])*inv_tmp;
+    qt->q_squared[1] = (rotation_matrix[3*0+2] + rotation_matrix[3*2+0])*(rotation_matrix[3*0+2] + rotation_matrix[3*2+0])*inv_tmp;
+    qt->q_squared[2] = (rotation_matrix[3*1+2] + rotation_matrix[3*2+1])*(rotation_matrix[3*1+2] + rotation_matrix[3*2+1])*inv_tmp;
+    qt->q_squared[3] = .25*PDM_ABS(1.0 + rotation_matrix[3*2+2] - rotation_matrix[3*0+0] - rotation_matrix[3*1+1]);
   }
 }
 
@@ -662,7 +640,6 @@ PDM_quaternion_to_axis_angle
         double* angle
 )
 {
-  _pdm_quaternion_t* _qt = (_pdm_quaternion_t*) qt;
   // Prefer positive axis components
   int n_comp_neg = 0;
   int n_comp_neg_opp = 0;
@@ -674,14 +651,14 @@ PDM_quaternion_to_axis_angle
   if (axis[2] >  QUATERNION_EPS)  n_comp_neg_opp += 1;
   double sign = 1.;
   if (n_comp_neg_opp < n_comp_neg) sign = -1.;
-  (*angle) = sign * 2.0 * acos(_qt->q[0]);
-  double divider = sign*sqrt(1.0 - _qt->q_squared[0]);
+  (*angle) = sign * 2.0 * acos(qt->q[0]);
+  double divider = sign*sqrt(1.0 - qt->q_squared[0]);
 
   if(PDM_ABS(divider) > QUATERNION_EPS) {
     // Calculate the axis
-    axis[0] = _qt->q[1] / divider;
-    axis[1] = _qt->q[2] / divider;
-    axis[2] = _qt->q[3] / divider;
+    axis[0] = qt->q[1] / divider;
+    axis[1] = qt->q[2] / divider;
+    axis[2] = qt->q[3] / divider;
   } else {
     // Arbitrary normalized axis
     axis[0] = 1.;
@@ -701,7 +678,6 @@ PDM_quaternion_to_euler_angles
         double*         ang_z
 )
 {
-  _pdm_quaternion_t* _qt = (_pdm_quaternion_t*) qt;
   int i = intrinsic ? order[2] : order[0];
   int j = order[1];
   int k = intrinsic ? order[0] : order[2];
@@ -710,7 +686,7 @@ PDM_quaternion_to_euler_angles
       k = 3-i-j;
   }
   double sign = (i-j)*(j-k)*(k-i)/2;
-  double quat[4] = {_qt->q[1],_qt->q[2],_qt->q[3],_qt->q[0]};
+  double quat[4] = {qt->q[1],qt->q[2],qt->q[3],qt->q[0]};
   double a,b,c,d;
   if (symmetric){
       a = quat[3];
@@ -779,16 +755,15 @@ PDM_quaternion_to_rotation_matrix
         double*         rotation_matrix
 )
 {
-  _pdm_quaternion_t* _qt = (_pdm_quaternion_t*) qt;
-  rotation_matrix[3*0+0] = 1 - 2 * _qt->q_squared[2]     - 2 * _qt->q_squared[3]    ;
-  rotation_matrix[3*0+1] =     2 * _qt->q[1] * _qt->q[2] - 2 * _qt->q[3] * _qt->q[0];
-  rotation_matrix[3*0+2] =     2 * _qt->q[1] * _qt->q[3] + 2 * _qt->q[2] * _qt->q[0];
-  rotation_matrix[3*1+0] =     2 * _qt->q[1] * _qt->q[2] + 2 * _qt->q[3] * _qt->q[0];
-  rotation_matrix[3*1+1] = 1 - 2 * _qt->q_squared[3]     - 2 * _qt->q_squared[1]    ;
-  rotation_matrix[3*1+2] =     2 * _qt->q[2] * _qt->q[3] - 2 * _qt->q[1] * _qt->q[0];
-  rotation_matrix[3*2+0] =     2 * _qt->q[1] * _qt->q[3] - 2 * _qt->q[2] * _qt->q[0];
-  rotation_matrix[3*2+1] =     2 * _qt->q[2] * _qt->q[3] + 2 * _qt->q[1] * _qt->q[0];
-  rotation_matrix[3*2+2] = 1 - 2 * _qt->q_squared[1]     - 2 * _qt->q_squared[2]    ;
+  rotation_matrix[3*0+0] = 1 - 2 * qt->q_squared[2]     - 2 * qt->q_squared[3]    ;
+  rotation_matrix[3*0+1] =     2 * qt->q[1] * qt->q[2] - 2 * qt->q[3] * qt->q[0];
+  rotation_matrix[3*0+2] =     2 * qt->q[1] * qt->q[3] + 2 * qt->q[2] * qt->q[0];
+  rotation_matrix[3*1+0] =     2 * qt->q[1] * qt->q[2] + 2 * qt->q[3] * qt->q[0];
+  rotation_matrix[3*1+1] = 1 - 2 * qt->q_squared[3]     - 2 * qt->q_squared[1]    ;
+  rotation_matrix[3*1+2] =     2 * qt->q[2] * qt->q[3] - 2 * qt->q[1] * qt->q[0];
+  rotation_matrix[3*2+0] =     2 * qt->q[1] * qt->q[3] - 2 * qt->q[2] * qt->q[0];
+  rotation_matrix[3*2+1] =     2 * qt->q[2] * qt->q[3] + 2 * qt->q[1] * qt->q[0];
+  rotation_matrix[3*2+2] = 1 - 2 * qt->q_squared[1]     - 2 * qt->q_squared[2]    ;
 }
 
 void
