@@ -212,6 +212,8 @@ test_c_create (pdm_t_isosurface_3d_ngon  1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_triangulate        1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_mesh_reorient_geom 3 PDM_LIST_TEST PDM_LIST_NRANK)
 
+test_c_create (pdm_t_split_graph_with_pcg 1 PDM_LIST_TEST PDM_LIST_NRANK)
+
 # misc
 test_c_create (pdm_t_newton_ho    1 PDM_LIST_TEST PDM_LIST_NRANK)
 test_c_create (pdm_t_svd          1 PDM_LIST_TEST PDM_LIST_NRANK)

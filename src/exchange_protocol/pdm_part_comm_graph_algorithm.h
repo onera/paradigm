@@ -165,6 +165,26 @@ PDM_part_comm_graph_split
   PDM_part_comm_graph_t **split_pcgs
 );
 
+/**
+ * \brief Remove entries in a part_comm_graph object
+ *
+ * \param [in] pcg   Initial PDM_part_comm_graph_t object
+ * \param [in] flag  List of n_part arrays of size n_entity_graph[i_part] each,
+ *                   indicating if entity is selected or not
+ * \param [in] both  If True, keep entry if both sides are flagged True;
+ *                   otherwise, keep entry if at least one side is flagged True.
+ *
+ * \return \ref PDM_part_comm_graph_t instance
+ *
+ */
+PDM_part_comm_graph_t*
+PDM_part_comm_graph_filter
+(
+  PDM_part_comm_graph_t   *pcg,
+  const int              **flag,
+  const int                both
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

@@ -1,0 +1,1148 @@
+/*----------------------------------------------------------------------------
+ * Standard C library headers
+ *----------------------------------------------------------------------------*/
+
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+/*----------------------------------------------------------------------------
+ *  Header for the current file
+ *----------------------------------------------------------------------------*/
+
+#include "pdm.h"
+#include "pdm_array.h"
+#include "pdm_distrib.h"
+#include "pdm_error.h"
+#include "pdm_gnum.h"
+#include "pdm_logging.h"
+#include "pdm_mem_tool.h"
+#include "pdm_part_comm_graph_algorithm.h"
+#include "pdm_part_connectivity_transform.h"
+#include "pdm_part_graph_dual.h"
+#include "pdm_priv.h"
+#include "pdm_sort.h"
+#include "pdm_unique.h"
+
+#ifdef __cplusplus
+extern "C" {
+#if 0
+} /* Fake brace to force back Emacs auto-indentation back to column 0 */
+#endif
+#endif /* __cplusplus */
+
+
+/*=============================================================================
+ * Macro definitions
+ *============================================================================*/
+
+/*============================================================================
+ * Type
+ *============================================================================*/
+
+/*=============================================================================
+ * Static global variables
+ *============================================================================*/
+
+/*=============================================================================
+ * Static function definitions
+ *============================================================================*/
+
+ /* Filter a connectivity array: remove whole block if entity1_flag is False,
+   and remove elements for which entity2_flag is False within each block */
+static
+int
+_connectivity_filter
+(
+  int   n_entity1,
+  int  *entity1_to_entity2_idx,
+  int  *entity1_to_entity2,
+  int  *entity1_flag,
+  int  *entity2_flag,
+  int **sub_entity1_to_entity2_idx,
+  int **sub_entity1_to_entity2
+)
+{
+  // Count number of selected entity1
+  int sub_n_entity1 = 0;
+  for (int i = 0; i < n_entity1; ++i) {
+    sub_n_entity1 += (entity1_flag[i] == 1);
+  }
+
+  int* _sub_entity1_to_entity2_idx = NULL;
+  int* _sub_entity1_to_entity2 = NULL;
+
+  // Idx array
+  PDM_malloc(_sub_entity1_to_entity2_idx, sub_n_entity1+1, int);
+  _sub_entity1_to_entity2_idx[0] = 0;
+  int idx_write = 0;
+  for(int i = 0; i < n_entity1; ++i) {
+    if(entity1_flag[i] == 1) {
+      int len = 0;
+      for (int j = entity1_to_entity2_idx[i]; j < entity1_to_entity2_idx[i+1]; ++j) {
+        int entity2 = PDM_ABS(entity1_to_entity2[j]) - 1;
+        len += (entity2_flag[entity2] == 1);
+      }
+      _sub_entity1_to_entity2_idx[idx_write+1] = _sub_entity1_to_entity2_idx[idx_write] + len;
+      idx_write++;
+    }
+  }
+  PDM_malloc(_sub_entity1_to_entity2, _sub_entity1_to_entity2_idx[sub_n_entity1], int);
+  idx_write = 0;
+  for(int i = 0; i < n_entity1; ++i) {
+    if(entity1_flag[i] == 1) {
+      for (int j = entity1_to_entity2_idx[i]; j < entity1_to_entity2_idx[i+1]; ++j) {
+        int entity2 = PDM_ABS (entity1_to_entity2[j]) - 1;
+        if (entity2_flag[entity2] == 1) {
+          _sub_entity1_to_entity2[idx_write++] = entity1_to_entity2[j];
+        } 
+      }
+    }
+  }
+  *sub_entity1_to_entity2_idx = _sub_entity1_to_entity2_idx;
+  *sub_entity1_to_entity2 = _sub_entity1_to_entity2;
+
+  return sub_n_entity1;
+}
+
+/* Wraps part_comm_graph_filter to use a mask of size n_elts (instead of n_graph_elts) */
+static
+PDM_part_comm_graph_t*
+_pcg_filter
+(
+  int                     n_part,
+  PDM_part_comm_graph_t  *pcg,
+  int                   **mask
+)
+{
+  int** flag;
+  PDM_malloc(flag, n_part, int*);
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    int* graph = NULL;
+    int n_graph = PDM_part_comm_graph_entity_graph_get(pcg,
+                                                       i_part,
+                                                      &graph,
+                                                       PDM_OWNERSHIP_BAD_VALUE);
+    PDM_malloc(flag[i_part], n_graph, int);
+    for (int j = 0; j < n_graph; ++j) {
+      int i_node = graph[4*j] - 1;
+      flag[i_part][j] = mask[i_part][i_node];
+    }
+  }
+  PDM_part_comm_graph_t* sub_pcg = PDM_part_comm_graph_filter(pcg, (const int**) flag, 0);
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    PDM_free(flag[i_part]);
+  }
+  PDM_free(flag);
+
+  return sub_pcg;
+}
+
+static
+void
+_part_assembly_dual_graph
+(
+  PDM_MPI_Comm             comm,
+  int                      n_part,
+  int                     *n_node,
+  int                     *n_arc,
+  int                    **node_arc_idx,
+  int                    **node_arc,
+  int                    **arc_node_idx,
+  int                    **arc_node,
+  int                    **node_weight,
+  int                    **arc_weight,
+  PDM_part_comm_graph_t   *pcg_node,
+  PDM_part_comm_graph_t   *pcg_arc,
+  int                     *out_n_tot_node,
+  PDM_g_num_t            **out_gnode_node_idx,
+  PDM_g_num_t            **out_gnode_node,
+  int                    **out_gnode_weight,
+  int                    **out_garc_weight,
+  PDM_g_num_t            **out_distrib_node,
+  int                   ***out_part_to_graph
+)
+{
+  PDM_UNUSED(n_arc); // Unused because size is implicit
+
+  int have_arc_weight  = (arc_weight  == NULL) ? 0 : 1;
+  int have_node_weight = (node_weight == NULL) ? 0 : 1;
+  int g_have_arc_weight  = 0;
+  int g_have_node_weight = 0;
+  PDM_MPI_Allreduce(&have_arc_weight , &g_have_arc_weight , 1, PDM_MPI_INT, PDM_MPI_MAX, comm);
+  PDM_MPI_Allreduce(&have_node_weight, &g_have_node_weight, 1, PDM_MPI_INT, PDM_MPI_MAX, comm);
+
+  int i_rank;
+  int n_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+
+  // Empty pcg is allowed for nodes only; create empty if needed
+  int internal_pcg_node = 0;
+  if(pcg_node == NULL) {
+    internal_pcg_node = 1;
+    int  *pn_node_graph = NULL;
+    int **pnode_graph   = NULL;
+    PDM_malloc(pn_node_graph, n_part, int  );
+    PDM_malloc(pnode_graph  , n_part, int *);
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      pn_node_graph[i_part] = 0;
+      PDM_malloc(pnode_graph[i_part], 4 * pn_node_graph[i_part], int);
+    }
+
+    pcg_node = PDM_part_comm_graph_create(n_part,
+                                          pn_node_graph,
+                                          pnode_graph,
+                                          PDM_OWNERSHIP_KEEP,
+                                          comm);
+
+    PDM_free(pn_node_graph);
+    PDM_free(pnode_graph);
+  }
+  assert (pcg_arc != NULL);
+
+  int  *pn_node_graph = NULL;
+  int  *pn_arc_graph  = NULL;
+  int **pnode_graph   = NULL;
+  int **parc_graph    = NULL;
+
+  PDM_malloc(pn_node_graph, n_part, int  );
+  PDM_malloc(pn_arc_graph , n_part, int  );
+  PDM_malloc(pnode_graph  , n_part, int *);
+  PDM_malloc(parc_graph   , n_part, int *);
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    pn_node_graph[i_part] = PDM_part_comm_graph_entity_graph_get(pcg_node,
+                                                                 i_part,
+                                                                 &pnode_graph[i_part],
+                                                                 PDM_OWNERSHIP_BAD_VALUE);
+
+    pn_arc_graph[i_part] = PDM_part_comm_graph_entity_graph_get(pcg_arc,
+                                                                i_part,
+                                                                &parc_graph[i_part],
+                                                                PDM_OWNERSHIP_BAD_VALUE);
+  }
+
+  /*
+   * En noeuds centrés, pas besoin de synchronisés les arcs (car il sont deja commun a chaque partition connectés)
+   * On peu eviter les échanges sur les arc en mettant pcg_arc == NULL
+   * De la même manière en cellules centrés, à priori pas besoin de syncho les celluls, on peut faire pcg_node == NULL
+   */
+  PDM_g_num_t** pnode_ln_to_gn = NULL;
+  PDM_malloc(pnode_ln_to_gn, n_part, PDM_g_num_t *);
+
+
+  PDM_gen_gnum_t *gen_gnum_node = PDM_gnum_create(3, n_part, PDM_TRUE, 1e-6, comm, PDM_OWNERSHIP_USER);
+
+  PDM_gnum_set_from_part_comm_graph(gen_gnum_node,
+                                    n_node,
+                                    pcg_node);
+  PDM_gnum_compute(gen_gnum_node);
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    pnode_ln_to_gn[i_part] = PDM_gnum_get(gen_gnum_node, i_part);
+  }
+  PDM_gnum_free(gen_gnum_node);
+
+  /*
+   *
+   */
+  int **is_owner_node = NULL;
+  PDM_malloc(is_owner_node, n_part, int *);
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    const int *is_owner = PDM_part_comm_graph_owner_get(pcg_node, i_part);
+    is_owner_node[i_part] = PDM_array_const_int(n_node[i_part], 1);
+    int  n_node_graph  = pn_node_graph[i_part];
+    int *_node_graph   = pnode_graph  [i_part];
+    for(int i_graph_node = 0; i_graph_node < n_node_graph; ++i_graph_node) {
+      int i_node = _node_graph[4*i_graph_node]-1;
+      is_owner_node[i_part][i_node] = is_owner[i_graph_node];
+    }
+  }
+
+  int n_tot_node = 0;
+  // Hack here : we use is_owner as old_to_new (Caution, this contains shift for partition also)
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    for(int i = 0; i < n_node[i_part]; ++i) {
+      if(is_owner_node[i_part][i] == 1) {
+        is_owner_node[i_part][i] = n_tot_node++;
+      } else {
+        is_owner_node[i_part][i] = -1;
+      }
+    }
+  }
+
+  /* So far we created: a gnum value for nodes + an array of size n_node
+     storing if node is owner (>=0 value == counter of owners) or not (-1)
+
+     Now we will exchange :
+     - for nodes in graph but non owner : list of connected nodes gnum (pcg_node) (+ arc weight)
+     - for arcs in graph : list of composing nodes gnum (pcg_arc) (+ arc weight)
+  */
+
+  PDM_g_num_t* distrib_node = PDM_compute_entity_distribution(comm, n_tot_node);
+
+  int         **send_node_n     = NULL;
+  PDM_g_num_t **send_node       = NULL;
+  int         **send_weight     = NULL;
+  int         **send_arc_node_n = NULL;
+  PDM_g_num_t **send_arc_node   = NULL;
+  int         **send_arc_weight = NULL;
+  PDM_malloc(send_node_n    , n_part, int         *);
+  PDM_malloc(send_node      , n_part, PDM_g_num_t *);
+  PDM_malloc(send_weight    , n_part, int         *);
+  PDM_malloc(send_arc_node_n, n_part, int         *);
+  PDM_malloc(send_arc_node  , n_part, PDM_g_num_t *);
+  PDM_malloc(send_arc_weight, n_part, int         *);
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+
+    int  n_arc_graph   = pn_arc_graph [i_part];
+    int  n_node_graph  = pn_node_graph[i_part];
+    int *_arc_graph    = parc_graph   [i_part];
+    int *_node_graph   = pnode_graph  [i_part];
+    int *_node_arc_idx = node_arc_idx [i_part];
+    int *_node_arc     = node_arc     [i_part];
+    int *_arc_node_idx = arc_node_idx [i_part];
+    int *_arc_node     = arc_node     [i_part];
+
+    const int *is_owner = PDM_part_comm_graph_owner_get(pcg_node, i_part);
+
+    /*
+     * Count
+     */
+    PDM_malloc(send_node_n[i_part], n_node_graph, int);
+    for(int i_graph_node = 0; i_graph_node < n_node_graph; ++i_graph_node) {
+      int i_node = _node_graph[4*i_graph_node]-1;
+      send_node_n[i_part][i_graph_node] = 0;
+      if(is_owner[i_graph_node] == 1) {
+        continue;
+      }
+      for(int idx_arc = _node_arc_idx[i_node]; idx_arc < _node_arc_idx[i_node+1]; ++idx_arc) {
+        int i_arc = PDM_ABS(_node_arc[idx_arc]) - 1;
+        send_node_n[i_part][i_graph_node] += _arc_node_idx[i_arc+1] - _arc_node_idx[i_arc];
+      }
+    }
+
+    PDM_malloc(send_arc_node_n[i_part], n_arc_graph, int);
+    for(int i_graph_arc = 0; i_graph_arc < n_arc_graph; ++i_graph_arc) {
+      int i_arc = _arc_graph[4*i_graph_arc]-1;
+      send_arc_node_n[i_part][i_graph_arc] = _arc_node_idx[i_arc+1] - _arc_node_idx[i_arc];
+    }
+
+    /*
+     * Allocate
+     */
+    int *send_node_idx = NULL;
+    PDM_malloc(send_node_idx, n_node_graph+1, int);
+    send_node_idx[0] = 0;
+    for(int i_graph_node = 0; i_graph_node < n_node_graph; ++i_graph_node) {
+      send_node_idx[i_graph_node+1] = send_node_idx[i_graph_node] + send_node_n[i_part][i_graph_node];
+      send_node_n  [i_part][i_graph_node] = 0;
+    }
+    PDM_malloc(send_node  [i_part], send_node_idx[n_node_graph], PDM_g_num_t);
+    PDM_malloc(send_weight[i_part], send_node_idx[n_node_graph], int        );
+
+    int *send_arc_node_idx = NULL;
+    PDM_malloc(send_arc_node_idx, n_arc_graph+1, int);
+    send_arc_node_idx[0] = 0;
+    for(int i_graph_arc = 0; i_graph_arc < n_arc_graph; ++i_graph_arc) {
+      send_arc_node_idx[i_graph_arc+1] = send_arc_node_idx[i_graph_arc] + send_arc_node_n[i_part][i_graph_arc];
+      send_arc_node_n  [i_part][i_graph_arc] = 0;
+    }
+    PDM_malloc(send_arc_node  [i_part],                     send_arc_node_idx[n_arc_graph], PDM_g_num_t);
+    PDM_malloc(send_arc_weight[i_part], g_have_arc_weight * send_arc_node_idx[n_arc_graph], int        );
+
+    /*
+     * Fill
+     */
+    for(int i_graph_node = 0; i_graph_node < n_node_graph; ++i_graph_node) {
+      int i_node = _node_graph[4*i_graph_node]-1;
+      if(is_owner[i_graph_node] == 1) {
+        continue;
+      }
+      for(int idx_arc = _node_arc_idx[i_node]; idx_arc < _node_arc_idx[i_node+1]; ++idx_arc) {
+        int i_arc = PDM_ABS(_node_arc[idx_arc]) - 1;
+        for(int idx_node = _arc_node_idx[i_arc]; idx_node < _arc_node_idx[i_arc+1]; ++idx_node) {
+          int i_node2 = PDM_ABS(_arc_node[idx_node])-1;
+          int idx_write = send_node_idx[i_graph_node] + send_node_n[i_part][i_graph_node]++;
+          send_node  [i_part][idx_write] = pnode_ln_to_gn[i_part][i_node2];
+          if(g_have_arc_weight == 1) {
+            send_weight[i_part][idx_write] = arc_weight[i_part][i_arc];
+          }
+        }
+      }
+    }
+
+    for(int i_graph_arc = 0; i_graph_arc < n_arc_graph; ++i_graph_arc) {
+      int i_arc = _arc_graph[4*i_graph_arc]-1;
+      for(int idx_node = _arc_node_idx[i_arc]; idx_node < _arc_node_idx[i_arc+1]; ++idx_node) {
+        int i_node = PDM_ABS(_arc_node[idx_node])-1;
+        int idx_write = send_arc_node_idx[i_graph_arc] + send_arc_node_n[i_part][i_graph_arc]++;
+        send_arc_node  [i_part][idx_write] = pnode_ln_to_gn[i_part][i_node];
+        if(g_have_arc_weight == 1) {
+          send_arc_weight[i_part][idx_write] = arc_weight[i_part][i_arc];
+        }
+      }
+    }
+
+    PDM_free(send_arc_node_idx);
+    PDM_free(send_node_idx);
+  }
+
+  /*
+   * Exchange
+   */
+  int         **recv_node_n = NULL;
+  PDM_g_num_t **recv_node   = NULL;
+  PDM_part_comm_graph_exch(pcg_node,
+                           sizeof(PDM_g_num_t),
+                           PDM_STRIDE_VAR_INTERLACED,
+                           1,
+                           send_node_n,
+                 (void **) send_node,
+                           &recv_node_n,
+                (void ***) &recv_node);
+
+  int **recv_weight = NULL;
+
+  if(g_have_node_weight == 1) {
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      PDM_free(recv_node_n[i_part]);
+    }
+    PDM_free(recv_node_n);
+
+    PDM_part_comm_graph_exch(pcg_node,
+                             sizeof(int),
+                             PDM_STRIDE_VAR_INTERLACED,
+                             1,
+                             send_node_n,
+                   (void **) send_weight,
+                             &recv_node_n,
+                  (void ***) &recv_weight);
+  }
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    PDM_free(send_node  [i_part]);
+    PDM_free(send_node_n[i_part]);
+    PDM_free(send_weight[i_part]);
+  }
+  PDM_free(send_node  );
+  PDM_free(send_node_n);
+  PDM_free(send_weight);
+
+  int         **recv_arc_node_n = NULL;
+  PDM_g_num_t **recv_arc_node   = NULL;
+  PDM_part_comm_graph_exch(pcg_arc,
+                           sizeof(PDM_g_num_t),
+                           PDM_STRIDE_VAR_INTERLACED,
+                           1,
+                           send_arc_node_n,
+                 (void **) send_arc_node,
+                           &recv_arc_node_n,
+                (void ***) &recv_arc_node);
+
+  int **recv_arc_weight = NULL;
+
+  if(g_have_arc_weight == 1) {
+
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      PDM_free(recv_arc_node_n[i_part]);
+    }
+    PDM_free(recv_arc_node_n);
+
+    PDM_part_comm_graph_exch(pcg_arc,
+                             sizeof(int),
+                             PDM_STRIDE_VAR_INTERLACED,
+                             1,
+                             send_arc_node_n,
+                   (void **) send_arc_weight,
+                             &recv_arc_node_n,
+                  (void ***) &recv_arc_weight);
+  }
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    PDM_free(send_arc_node  [i_part]);
+    PDM_free(send_arc_node_n[i_part]);
+    PDM_free(send_arc_weight[i_part]);
+  }
+  PDM_free(send_arc_node  );
+  PDM_free(send_arc_node_n);
+  PDM_free(send_arc_weight);
+
+  /*
+   * Node are by construction ordered by increasing gnum numbering
+   *   - We compute dual graph and shift properly
+   *   - Add also weight if any
+   */
+  int max_size   = 0;
+  int *node_node_n = PDM_array_zeros_int(n_tot_node);
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+
+    int  n_arc_graph   = pn_arc_graph [i_part];
+    int  n_node_graph  = pn_node_graph[i_part];
+    int *_arc_graph    = parc_graph   [i_part];
+    int *_node_graph   = pnode_graph  [i_part];
+    int *_node_arc_idx = node_arc_idx [i_part];
+    int *_node_arc     = node_arc     [i_part];
+    int *_arc_node_idx = arc_node_idx [i_part];
+    int *_arc_node     = arc_node     [i_part];
+
+    // Rebuild dual graph and update into gnum
+    // Internal nodes
+    for(int i_node = 0; i_node < n_node[i_part]; ++i_node) {
+      int l_node = is_owner_node[i_part][i_node];
+      if(l_node == -1) {
+        continue;
+      }
+      for(int idx_arc = _node_arc_idx[i_node]; idx_arc < _node_arc_idx[i_node+1]; ++idx_arc) {
+        int i_arc = PDM_ABS(_node_arc[idx_arc])-1;
+        node_node_n[l_node] += (_arc_node_idx[i_arc+1] - _arc_node_idx[i_arc]);
+        max_size += _arc_node_idx[i_arc+1] - _arc_node_idx[i_arc];
+      }
+    }
+    // Boundary nodes if owner (use recv data)
+    for(int i_graph_node = 0; i_graph_node < n_node_graph; ++i_graph_node) {
+      int i_node = _node_graph[4*i_graph_node]-1;
+      int l_node = is_owner_node[i_part][i_node];
+      if(l_node == -1) {
+        continue;
+      }
+      node_node_n[l_node] += recv_node_n[i_part][i_graph_node];
+      max_size += recv_node_n[i_part][i_graph_node];
+    }
+
+    // For boundaty arcs: add received data only to internal / owned nodes
+    for(int i_graph_arc = 0; i_graph_arc < n_arc_graph; ++i_graph_arc) {
+      int i_arc = _arc_graph[4*i_graph_arc]-1;
+      for(int idx_node = _arc_node_idx[i_arc]; idx_node < _arc_node_idx[i_arc+1]; ++idx_node) {
+        int i_node = PDM_ABS(_arc_node[idx_node])-1;
+        int l_node = is_owner_node[i_part][i_node];
+        if(l_node == -1) {
+          continue;
+        }
+        node_node_n[l_node] += recv_arc_node_n[i_part][i_graph_arc];
+        max_size += recv_arc_node_n[i_part][i_graph_arc];
+      }
+    }
+  }
+
+  /*
+   * Count
+   */
+  PDM_g_num_t *node_node_idx = NULL;
+  PDM_malloc(node_node_idx, n_tot_node+1, PDM_g_num_t);
+
+  int max_node_node = 0;
+  node_node_idx[0] = 0;
+  for(int i = 0; i < n_tot_node; ++i) {
+    node_node_idx[i+1] = node_node_idx[i] + node_node_n[i];
+    max_node_node = PDM_MAX(max_node_node, node_node_n[i]);
+    node_node_n[i] = 0;
+  }
+
+  /*
+   * Manage node_weight
+   */
+  int *gnode_weight = NULL;
+  if(g_have_node_weight == 1) {
+    PDM_malloc(gnode_weight, n_tot_node, int);
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      for(int i_node = 0; i_node < n_node[i_part]; ++i_node) {
+        int l_node = is_owner_node[i_part][i_node];
+        if(l_node == -1) {
+          continue;
+        }
+        gnode_weight[l_node] = node_weight[i_part][i_node];
+      }
+    }
+  }
+
+  /*
+   * Fill
+   */
+  PDM_g_num_t *gnode_node  = NULL;
+  int         *garc_weight = NULL;
+  PDM_malloc(gnode_node, max_size, PDM_g_num_t);
+  if(g_have_arc_weight == 1) {
+    PDM_malloc(garc_weight, max_size, int);
+  }
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+
+    int  n_arc_graph   = pn_arc_graph [i_part];
+    int  n_node_graph  = pn_node_graph[i_part];
+    int *_arc_graph    = parc_graph   [i_part];
+    int *_node_graph   = pnode_graph  [i_part];
+    int *_node_arc_idx = node_arc_idx [i_part];
+    int *_node_arc     = node_arc     [i_part];
+    int *_arc_node_idx = arc_node_idx [i_part];
+    int *_arc_node     = arc_node     [i_part];
+
+    // Rebuild dual graph and update into gnum
+    for(int i_node = 0; i_node < n_node[i_part]; ++i_node) {
+      int l_node = is_owner_node[i_part][i_node];
+      if(l_node == -1) {
+        continue;
+      }
+      for(int idx_arc = _node_arc_idx[i_node]; idx_arc < _node_arc_idx[i_node+1]; ++idx_arc) {
+        int i_arc = PDM_ABS(_node_arc[idx_arc])-1;
+        for(int idx_node = _arc_node_idx[i_arc]; idx_node < _arc_node_idx[i_arc+1]; ++idx_node) {
+          int i_node2 = PDM_ABS(_arc_node[idx_node])-1;
+          int idx_write = node_node_idx[l_node] + node_node_n[l_node]++;
+          gnode_node [idx_write] = pnode_ln_to_gn[i_part][i_node2];
+          if(g_have_arc_weight == 1) {
+            garc_weight[idx_write] = arc_weight    [i_part][i_arc];
+          }
+        }
+      }
+    }
+
+    int idx_read = 0;
+    for(int i_graph_node = 0; i_graph_node < n_node_graph; ++i_graph_node) {
+      int i_node = _node_graph[4*i_graph_node]-1;
+      int l_node = is_owner_node[i_part][i_node];
+      if(l_node == -1) {
+        idx_read += recv_node_n[i_part][i_graph_node];
+        continue;
+      }
+      for(int j = 0; j < recv_node_n[i_part][i_graph_node]; ++j) {
+        int idx_write = node_node_idx[l_node] + node_node_n[l_node]++;
+        gnode_node [idx_write] = recv_node  [i_part][idx_read];
+        if(g_have_arc_weight == 1) {
+          garc_weight[idx_write] = recv_weight[i_part][idx_read];
+        }
+        idx_read++;
+      }
+    }
+
+    /* From arc */
+    idx_read = 0;
+    for(int i_graph_arc = 0; i_graph_arc < n_arc_graph; ++i_graph_arc) {
+      int i_arc = _arc_graph[4*i_graph_arc]-1;
+      for(int idx_node = _arc_node_idx[i_arc]; idx_node < _arc_node_idx[i_arc+1]; ++idx_node) {
+        int i_node = PDM_ABS(_arc_node[idx_node])-1;
+        int l_node = is_owner_node[i_part][i_node];
+        if(l_node == -1) {
+          continue;
+        }
+        for(int j = 0; j < recv_arc_node_n[i_part][i_graph_arc]; ++j) {
+          int idx_write = node_node_idx[l_node] + node_node_n[l_node]++;
+          gnode_node [idx_write] = recv_arc_node  [i_part][idx_read+j];
+          if(g_have_arc_weight == 1) {
+            garc_weight[idx_write] = recv_arc_weight[i_part][idx_read+j];
+          }
+        }
+      }
+      idx_read += recv_arc_node_n[i_part][i_graph_arc];
+    }
+  }
+
+  PDM_free(node_node_n);
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    PDM_free(recv_node      [i_part]);
+    PDM_free(recv_node_n    [i_part]);
+    PDM_free(recv_arc_node  [i_part]);
+    PDM_free(recv_arc_node_n[i_part]);
+    if(g_have_arc_weight == 1){
+      PDM_free(recv_weight    [i_part]);
+      PDM_free(recv_arc_weight[i_part]);
+    }
+  }
+  PDM_free(recv_node      );
+  PDM_free(recv_node_n    );
+  PDM_free(recv_weight    );
+  PDM_free(recv_arc_node_n);
+  PDM_free(recv_arc_node  );
+  PDM_free(recv_arc_weight);
+
+  /*
+   * At this stage we have dual graph but :
+   *   - Not unique
+   *   - Not sorted
+   *   - Not compacted (with owner / not owner)
+   */
+  int *lorder  = NULL;
+  int *lweight = NULL;
+  PDM_malloc(lorder , max_node_node, int);
+  PDM_malloc(lweight, max_node_node, int);
+
+  int idx_read  = 0;
+  int idx_write = 0;
+  for(int i_node = 0; i_node < n_tot_node; ++i_node) {
+
+    int beg   = idx_read;
+    int end   = node_node_idx[i_node+1];
+    int n_adj = end - beg;
+
+    for(int j = 0; j < n_adj; ++j) {
+      lorder[j] = j;
+    }
+
+    int n_unique = PDM_inplace_unique_long_and_order(&gnode_node[beg], lorder, 0, n_adj-1);
+
+    // Copy weight (mandatory because we copy in place)
+    if(g_have_arc_weight == 1) {
+      for(int i = 0; i < n_adj; ++i) {
+        lweight[i] = garc_weight[beg+i];
+      }
+    }
+
+    // Tassage + move weight
+    PDM_g_num_t gnum = i_node + distrib_node[i_rank] + 1;
+    for(int i = 0; i < n_unique; ++i) {
+      if(gnode_node[beg+i] != gnum && gnode_node[beg+i] != -1) {
+        gnode_node [idx_write] = gnode_node[beg+i];
+        if(g_have_arc_weight == 1) {
+          garc_weight[idx_write] = lweight[lorder[i]];
+        }
+        idx_write++;
+      }
+    }
+
+    idx_read = node_node_idx[i_node+1];
+
+    node_node_idx[i_node+1] = idx_write;
+
+  }
+
+  PDM_realloc(gnode_node , gnode_node , node_node_idx[n_tot_node], PDM_g_num_t);
+  if(g_have_arc_weight == 1) {
+    PDM_realloc(garc_weight, garc_weight, node_node_idx[n_tot_node], int        );
+  }
+
+  if(0 == 1) {
+    log_trace("gnode_node ----- \n");
+    for(int i = 0; i < n_tot_node; ++i) {
+      log_trace("ln_to_gn = "PDM_FMT_G_NUM" \n", distrib_node[i_rank]+i+1);
+      for(int j = node_node_idx[i]; j < node_node_idx[i+1]; ++j) {
+        // log_trace(""PDM_FMT_G_NUM" (%i) ", gnode_node[j], garc_weight[j]);
+        log_trace(""PDM_FMT_G_NUM" ", gnode_node[j]);
+      }
+      log_trace("\n");
+    }
+    PDM_log_trace_connectivity_dual(node_node_idx, gnode_node, n_tot_node, "node_node ::");
+  }
+
+  /*
+   * Shift to zero
+   */
+  for(int i = 0; i < n_tot_node; ++i) {
+    for(int j = node_node_idx[i]; j < node_node_idx[i+1]; ++j) {
+      gnode_node[j] -= 1;
+    }
+  }
+
+  /*
+   * Free
+   */
+  PDM_free(lorder);
+  PDM_free(lweight);
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    PDM_free(pnode_ln_to_gn[i_part]);
+  }
+  PDM_free(pnode_ln_to_gn);
+  PDM_free(pn_node_graph);
+  PDM_free(pnode_graph  );
+  PDM_free(pn_arc_graph );
+  PDM_free(parc_graph   );
+
+  if(internal_pcg_node == 1) {
+    PDM_part_comm_graph_free(pcg_node);
+  }
+
+  /*
+   * Fix output
+   */
+  *out_n_tot_node     = n_tot_node;
+  *out_gnode_node_idx = node_node_idx;
+  *out_gnode_node     = gnode_node;
+  *out_gnode_weight   = gnode_weight;
+  *out_garc_weight    = garc_weight;
+  *out_distrib_node   = distrib_node;
+  *out_part_to_graph  = is_owner_node;
+}
+
+static
+int
+_have_parray
+(
+  PDM_MPI_Comm    comm,
+  int             n_part,
+  int           **array
+
+)
+{
+  int have_array   = 0;
+  int g_have_array = 0;
+
+  if(array != NULL) {
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      if(array[i_part] != NULL) {
+        have_array = 1;
+      }
+    }
+  }
+
+  PDM_MPI_Allreduce(&have_array, &g_have_array, 1, PDM_MPI_INT, PDM_MPI_MAX, comm);
+
+  return g_have_array;
+}
+
+/*=============================================================================
+ * Public function definitions
+ *============================================================================*/
+
+void
+PDM_part_assembly_dual_graph
+(
+  PDM_MPI_Comm             comm,
+  int                      n_part,
+  int                     *n_node,
+  int                     *n_arc,
+  int                    **is_selected_node,
+  int                    **node_arc_idx_in,
+  int                    **node_arc_in,
+  int                    **arc_node_idx_in,
+  int                    **arc_node_in,
+  int                    **node_weight,
+  int                    **arc_weight,
+  PDM_part_comm_graph_t   *pcg_node,
+  PDM_part_comm_graph_t   *pcg_arc,
+  int                     *out_n_tot_node,
+  PDM_g_num_t            **out_gnode_node_idx,
+  PDM_g_num_t            **out_gnode_node,
+  int                    **out_gnode_weight,
+  int                    **out_garc_weight,
+  PDM_g_num_t            **out_distrib_node,
+  int                   ***out_part_to_graph
+)
+{
+
+  int have_arc_node = _have_parray(comm, n_part, arc_node_idx_in);
+  int have_node_arc = _have_parray(comm, n_part, node_arc_idx_in);
+
+  int **node_arc_idx = NULL;
+  int **node_arc     = NULL;
+  int **arc_node_idx = NULL;
+  int **arc_node     = NULL;
+
+  if(have_arc_node == 0) {
+    if(have_node_arc != 1) {
+      PDM_error(__FILE__, __LINE__, 0, "PDM_part_assembly_dual_graph - Missing node_arc and arc_node is NULL \n");
+    }
+
+    PDM_part_connectivity_transpose(n_part,
+                                    n_node,
+                                    n_arc,
+                                    node_arc_idx_in,
+                                    node_arc_in,
+                                    &arc_node_idx,
+                                    &arc_node);
+  } else {
+    arc_node_idx = arc_node_idx_in;
+    arc_node     = arc_node_in;
+  }
+
+  if(have_node_arc == 0) {
+    if(have_arc_node != 1) {
+      PDM_error(__FILE__, __LINE__, 0, "PDM_part_assembly_dual_graph - Missing arc_node and node_arc is NULL \n");
+    }
+
+    PDM_part_connectivity_transpose(n_part,
+                                    n_arc,
+                                    n_node,
+                                    arc_node_idx_in,
+                                    arc_node_in,
+                                    &node_arc_idx,
+                                    &node_arc);
+  } else {
+    node_arc_idx = node_arc_idx_in;
+    node_arc     = node_arc_in;
+  }
+
+  int  *sub_n_node      = NULL;
+  int **node_old_to_new = NULL;
+
+  int **sub_node_arc_idx = NULL;
+  int **sub_node_arc     = NULL;
+
+  int **sub_arc_node_idx = arc_node_idx;
+  int **sub_arc_node     = NULL;
+
+  int **sub_node_weight = NULL;
+
+  PDM_part_comm_graph_t *sub_pcg_node = NULL;
+  PDM_part_comm_graph_t *sub_pcg_arc  = NULL;
+
+  if (is_selected_node != NULL) {
+
+    if(pcg_node != NULL) {
+      PDM_part_comm_graph_all_reduce(pcg_node,
+                                     PDM_MPI_INT,
+                                     1,
+                                     PDM_MPI_MAX,
+                 (unsigned char **)  is_selected_node);
+    }
+
+    // Compute old to new
+    PDM_malloc(node_old_to_new, n_part, int *);
+
+    PDM_malloc(sub_n_node      , n_part, int  );
+    PDM_malloc(sub_node_arc_idx, n_part, int *);
+    PDM_malloc(sub_node_arc    , n_part, int *);
+    PDM_malloc(sub_arc_node    , n_part, int *);
+    if (node_weight != NULL) {
+      PDM_malloc(sub_node_weight,  n_part, int *);
+    }
+
+    int** select_arc = NULL;
+    PDM_malloc(select_arc, n_part, int*);
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+
+      select_arc[i_part] = PDM_array_const_int(n_arc[i_part], 1);
+
+      // If a node is removed, unselect all related arcs
+      for (int i_arc = 0; i_arc < n_arc[i_part]; ++i_arc) {
+        for (int j=arc_node_idx[i_part][i_arc]; j < arc_node_idx[i_part][i_arc+1]; ++j) {
+          int i_node = arc_node[i_part][j];
+          if (is_selected_node[i_part][i_node-1] == 0) {
+            select_arc[i_part][i_arc] = 0;
+            break;
+          }
+        }
+      }
+
+      // Compute node old to new
+      PDM_malloc(node_old_to_new[i_part], n_node[i_part], int);
+      int count = 0;
+      for(int i = 0; i < n_node[i_part]; ++i) {
+        node_old_to_new[i_part][i] = -1;
+        if(is_selected_node[i_part][i] == 1) {
+          node_old_to_new[i_part][i] = count++;
+        }
+      }
+
+      sub_n_node[i_part] = _connectivity_filter(n_node           [i_part],
+                                                node_arc_idx     [i_part],
+                                                node_arc         [i_part],
+                                                is_selected_node [i_part],
+                                                select_arc       [i_part],
+                                                &sub_node_arc_idx[i_part],
+                                                &sub_node_arc    [i_part]);
+      if(0 == 1) {
+        PDM_log_trace_array_int(select_arc     [i_part], n_arc [i_part], "pselect_arc ::");
+        PDM_log_trace_array_int(node_old_to_new[i_part], n_node[i_part], "node_old_to_new ::");
+        PDM_log_trace_connectivity_int(node_arc_idx    [i_part], node_arc    [i_part], n_node    [i_part], "old");
+        PDM_log_trace_connectivity_int(sub_node_arc_idx[i_part], sub_node_arc[i_part], sub_n_node[i_part], "new");
+      }
+
+      // For arcs->node, filtering is not needed : we just update the nodes indices with new ids
+      // OK because removed arc will not be accessed from nodes
+      int size = arc_node_idx[i_part][n_arc[i_part]];
+      PDM_malloc(sub_arc_node[i_part], size, int);
+      for (int j = 0; j < size; ++j) {
+        int old = arc_node[i_part][j] - 1;
+        sub_arc_node[i_part][j] = node_old_to_new[i_part][old] + 1;
+      }
+
+      if(0 == 1) {
+        PDM_log_trace_connectivity_int(arc_node_idx[i_part], arc_node    [i_part], n_arc[i_part], "old");
+        PDM_log_trace_connectivity_int(arc_node_idx[i_part], sub_arc_node[i_part], n_arc[i_part], "new");
+      }
+
+      // Filter weights
+      if (node_weight != NULL) {
+        PDM_array_copy_if_int(n_node[i_part], node_weight[i_part], is_selected_node[i_part], &sub_node_weight[i_part]);
+      }
+    }
+
+    // Filter comm graphs
+    if (pcg_node != NULL) {
+      sub_pcg_node = _pcg_filter(n_part, pcg_node, is_selected_node);
+      PDM_part_comm_graph_reorder(sub_pcg_node, node_old_to_new);
+    }
+    if (pcg_arc != NULL) {
+      sub_pcg_arc = _pcg_filter(n_part, pcg_arc, select_arc);
+    }
+    for (int i_part = 0; i_part < n_part; i_part++) {
+      PDM_free(select_arc[i_part]);
+    }
+    PDM_free(select_arc);
+    
+  }
+  else {
+    sub_n_node = n_node;
+    
+    sub_node_arc_idx = node_arc_idx;
+    sub_node_arc = node_arc;
+    sub_arc_node = arc_node;
+
+    sub_node_weight = node_weight;
+
+    sub_pcg_node = pcg_node;
+    sub_pcg_arc  = pcg_arc;
+
+  }
+
+  _part_assembly_dual_graph(comm,
+                            n_part,
+                            sub_n_node,
+                            n_arc,
+                            sub_node_arc_idx,
+                            sub_node_arc,
+                            sub_arc_node_idx,
+                            sub_arc_node,
+                            sub_node_weight,
+                            arc_weight,
+                            sub_pcg_node,
+                            sub_pcg_arc,
+                            out_n_tot_node,
+                            out_gnode_node_idx,
+                            out_gnode_node,
+                            out_gnode_weight,
+                            out_garc_weight,
+                            out_distrib_node,
+                            out_part_to_graph);
+
+  if (is_selected_node != NULL) {
+    // Update out_part_to_graph to make it full
+    for (int i_part = 0; i_part < n_part; ++i_part) {
+      int* _sub_part_to_graph = (*out_part_to_graph)[i_part];
+      int *_part_to_graph = PDM_array_const_int(n_node[i_part], -1);
+      for (int i = 0; i < n_node[i_part]; ++i) {
+        int newid = node_old_to_new[i_part][i];
+        if (newid >= 0) {
+          _part_to_graph[i] = _sub_part_to_graph[newid];
+        }
+      }
+      // Replace
+      PDM_free(_sub_part_to_graph);
+      (*out_part_to_graph)[i_part] = _part_to_graph;
+    }
+  }
+
+  if (is_selected_node != NULL) {
+    for (int i_part = 0; i_part < n_part; ++i_part) {
+      PDM_free(node_old_to_new[i_part]);
+
+      PDM_free(sub_arc_node[i_part]);
+      PDM_free(sub_node_arc_idx[i_part]);
+      PDM_free(sub_node_arc[i_part]);
+
+      if (node_weight != NULL) {
+        PDM_free(sub_node_weight[i_part]);
+      }
+    }
+    PDM_free(node_old_to_new);
+
+    PDM_free(sub_n_node);
+    PDM_free(sub_arc_node);
+    PDM_free(sub_node_arc_idx);
+    PDM_free(sub_node_arc);
+    if (node_weight != NULL) {
+      PDM_free(sub_node_weight);
+    }
+    PDM_part_comm_graph_free(sub_pcg_node);
+    PDM_part_comm_graph_free(sub_pcg_arc);
+  }
+
+
+  /*
+   * Manage free if user give only one connectivity
+   */
+  if(have_node_arc == 0) {
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      PDM_free(node_arc_idx[i_part]);
+      PDM_free(node_arc    [i_part]);
+    }
+    PDM_free(node_arc_idx);
+    PDM_free(node_arc    );
+  }
+
+  if(have_arc_node == 0) {
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      PDM_free(arc_node_idx[i_part]);
+      PDM_free(arc_node    [i_part]);
+    }
+    PDM_free(arc_node_idx);
+    PDM_free(arc_node    );
+  }
+
+}
+
+
+void
+PDM_transfer_entity1_part_id_to_entity2_part_id
+(
+  int    n_part,
+  int  **entity1_part_id,
+  int   *pn_entity2,
+  int  **pentity2_entity1_idx,
+  int  **pentity2_entity1,
+  int ***out_entity2_part_id
+)
+{
+  int max_connectivity = 0;
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    for(int i_entity2 = 0; i_entity2 < pn_entity2[i_part]; ++i_entity2) {
+      max_connectivity = PDM_MAX(max_connectivity, pentity2_entity1_idx[i_part][i_entity2+1] - pentity2_entity1_idx[i_part][i_entity2]);
+    }
+  }
+
+  int *lpart_id = NULL;
+  PDM_malloc(lpart_id, max_connectivity, int);
+
+  int **entity2_part_id = NULL;
+  PDM_malloc(entity2_part_id, n_part, int *);
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+
+    PDM_malloc(entity2_part_id[i_part], pn_entity2[i_part], int);
+    for(int i_entity2 = 0; i_entity2 < pn_entity2[i_part]; ++i_entity2) {
+
+      int beg = pentity2_entity1_idx[i_part][i_entity2];
+      int end = pentity2_entity1_idx[i_part][i_entity2+1];
+      int n_adj = end - beg;
+
+      int idx_write = 0;
+      for(int idx_entity2 = beg; idx_entity2 < end; ++idx_entity2) {
+        int i_entity1 = PDM_ABS(pentity2_entity1[i_part][idx_entity2])-1;
+        lpart_id[idx_write++] = entity1_part_id[i_part][i_entity1];
+      }
+      PDM_sort_int(lpart_id, NULL, n_adj);
+
+      int current_id    = lpart_id[0];
+      int winner_id     = lpart_id[0];
+      int current_count = 0;
+      int max_count     = 0;
+      for(int i = 0; i < n_adj; ++i) {
+        if(lpart_id[i] == current_id) {
+          current_count++;
+        } else {
+          if (current_count > max_count) {
+            max_count = current_count;
+            winner_id = current_id;
+          }
+          current_id = lpart_id[i];
+          current_count = 1;
+        }
+      }
+      // Last
+      if (current_count > max_count) {
+        winner_id = current_id;
+      }
+      entity2_part_id[i_part][i_entity2] = winner_id;
+    }
+  }
+
+  PDM_free(lpart_id);
+
+  *out_entity2_part_id = entity2_part_id;
+}
+
+
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
