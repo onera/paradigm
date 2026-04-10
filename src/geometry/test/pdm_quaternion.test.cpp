@@ -55,11 +55,9 @@ MPI_TEST_CASE("[pdm_quaternion] - 1p - PDM_quaternion_normalize", 1) {
     double norm = PDM_quaternion_norm(&q);
     CHECK(PDM_ABS(norm-1.)<__DBL_EPSILON__);
 
-    q.q[0] = 2.;
-    q.q[1] = 0.;
-    q.q[2] = 0.;
-    q.q[3] = 0.;
+    PDM_quaternion_set(2.,0.,0.,0.,&q);
     PDM_quaternion_normalize(&q);
+    PDM_quaternion_print(&q);
     CHECK(PDM_quaternion_equal(&q,1.,0.,0.,0.,EPS));
 }
 
