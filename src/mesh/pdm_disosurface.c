@@ -50,7 +50,7 @@ extern "C" {
     (isos)->entry_is_part=0; \
   } \
   else if ((isos)->entry_is_part==1) { \
-    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t already set as partitioned.\n"); \
+    PDM_error(__FILE__, __LINE__, 0, "%s: PDM_isosurface_t already set as partitioned.\n", __func__); \
   }
 
 /*=============================================================================

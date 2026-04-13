@@ -54,19 +54,19 @@ extern "C" {
     (isos)->entry_is_part=1; \
   } \
   else if ((isos)->entry_is_part==0) { \
-    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t already set as distributed.\n"); \
+    PDM_error(__FILE__, __LINE__, 0, "%s: PDM_isosurface_t already set as distributed.\n", __func__); \
   }
 
 #define CHECK_I_PART_SET(isos, i_part) \
   if (i_part >= (isos)->n_part) { \
-    PDM_error(__FILE__, __LINE__, 0, "Invalid i_part (%d / %d).\n", \
-              i_part, (isos)->n_part); \
+    PDM_error(__FILE__, __LINE__, 0, "%s: Invalid i_part (%d / %d).\n", \
+      __func__, i_part, (isos)->n_part); \
   }
 
 #define CHECK_I_PART_GET(isos, i_part) \
   if (i_part >= (isos)->iso_n_part) { \
-    PDM_error(__FILE__, __LINE__, 0, "Invalid i_part (%d / %d).\n", \
-              i_part, (isos)->iso_n_part); \
+    PDM_error(__FILE__, __LINE__, 0, "%s: Invalid i_part (%d / %d).\n", \
+              __func__, i_part, (isos)->iso_n_part); \
   }
 /*=============================================================================
  * Local structure definitions
@@ -736,7 +736,7 @@ PDM_isosurface_pgroup_get
     *group_entity_gnum = _iso->iso_edge_group_gnum[i_part];
   }
   else {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_isosurface_t: has no bounds for entity %d.\n",entity_type);
+    PDM_error(__FILE__, __LINE__, 0, "%s: PDM_isosurface_t: has no bounds for entity %d.\n", __func__, entity_type);
   }
 
   return n_group;
