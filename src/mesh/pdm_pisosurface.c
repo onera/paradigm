@@ -23,6 +23,7 @@
  *----------------------------------------------------------------------------*/
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 /*----------------------------------------------------------------------------
  *  Local headers
@@ -489,8 +490,9 @@ PDM_isosurface_pfield_set
   }
  
   _isosurface_t *_iso = &isos->isosurfaces[id_isosurface];
-  if (_iso->field==NULL) {
+  if (_iso->field == NULL) {
     PDM_malloc(_iso->field, isos->n_part, double *);
+    memset(_iso->field, 0, sizeof(double *) * isos->n_part);
   }
   _iso->field[i_part] = field;
 }
@@ -690,6 +692,10 @@ PDM_isosurface_ln_to_gn_get
   PDM_ISOSURFACE_CHECK_ENTITY_TYPE(entity_type);
 
   _isosurface_t *_iso = &isos->isosurfaces[id_isosurface];
+
+  if (isos->entry_mesh_dim == 2 && entity_type == PDM_MESH_ENTITY_FACE) {
+    PDM_error(__FILE__, __LINE__, 0, "%s: No iso-faces for 2D meshes\n", __func__);
+  }
 
   if (ownership != PDM_OWNERSHIP_BAD_VALUE) {
     _iso->iso_owner_gnum[entity_type][i_part] = ownership;
