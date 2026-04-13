@@ -54,9 +54,8 @@ extern "C" {
 
 typedef struct PDM_isosurface_test_utils_params_t {
 
-  int                   test_matrix;
   char                 *mesh_name;
-  char                 *sol_name;
+  char                 *sol_name; // not used currently
   int                   n_part_in;
   int                   n_part_out;
   int                   n_isovalues;
