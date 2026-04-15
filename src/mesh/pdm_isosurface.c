@@ -3884,6 +3884,15 @@ PDM_isosurface_part_to_part_get
 }
 
 
+PDM_MPI_Comm
+PDM_isosurface_comm_get
+(
+  PDM_isosurface_t *isos
+)
+{
+  return isos->comm;
+}
+
 #ifdef  __cplusplus
 }
 #endif

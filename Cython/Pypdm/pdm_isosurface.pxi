@@ -113,6 +113,11 @@ cdef extern from "pdm_isosurface.h":
   void PDM_isosurface_compute(PDM_isosurface_t *isos,
                               int               id_isosurface);
 
+  int PDM_isosurface_pn_entity_get(PDM_isosurface_t    *isos,
+                                   int                  id_isosurface,
+                                   int                  i_part,
+                                   PDM_mesh_entities_t  entity_type);
+
   int PDM_isosurface_pconnectivity_get(PDM_isosurface_t         *isos,
                                        int                       id_isosurface,
                                        int                       i_part,
@@ -150,6 +155,10 @@ cdef extern from "pdm_isosurface.h":
                                               int                 **isovalue_entity_idx,
                                               PDM_ownership_t       ownership);
 
+  int PDM_isosurface_dn_entity_get(PDM_isosurface_t    *isos,
+                                   int                  id_isosurface,
+                                   PDM_mesh_entities_t  entity_type);
+
   int PDM_isosurface_dconnectivity_get(PDM_isosurface_t         *isos,
                                        int                       id_isosurface,
                                        PDM_connectivity_type_t   connectivity_type,
@@ -168,11 +177,6 @@ cdef extern from "pdm_isosurface.h":
                                     int                id_isosurface,
                                     double           **dvtx_coord,
                                     PDM_ownership_t    ownership);
-
-  void PDM_isosurface_distrib_get(PDM_isosurface_t     *isos,
-                                  int                   id_isosurface,
-                                  PDM_mesh_entities_t   entity_type,
-                                  PDM_g_num_t         **distribution);
 
   int PDM_isosurface_dgroup_get(PDM_isosurface_t     *isos,
                                 int                   id_isosurface,
@@ -765,6 +769,22 @@ cdef class Isosurface:
 
 
   # > Partitioned getter API
+  def pn_entity_get(self, id_iso, i_part, entity_type):
+    """
+    pn_entity_get(id_iso, i_part, entity_type)
+
+    Get number of iso-surface entities.
+
+    Parameters:
+      id_iso      (int)                 : Isosurface id
+      i_part      (int)                 : Partition id
+      entity_type (PDM_mesh_entities_t) : Entity type
+
+    Returns:
+      Number of entities (int)
+    """
+    return PDM_isosurface_pn_entity_get(self._isos, id_iso, i_part, entity_type)
+
   def pconnectivity_get(self, id_iso, i_part, connectivity_type):
     """
     pconnectivity_get(id_iso, i_part, connectivity_type)
@@ -1022,6 +1042,21 @@ cdef class Isosurface:
 
 
   # > Distributed getter API
+  def dn_entity_get(self, id_iso, entity_type):
+    """
+    dn_entity_get(id_iso, entity_type)
+
+    Get number of iso-surface block-distributed entities.
+
+    Parameters:
+      id_iso      (int)                 : Isosurface id
+      entity_type (PDM_mesh_entities_t) : Entity type
+
+    Returns:
+      Number of entities (int)
+    """
+    return PDM_isosurface_dn_entity_get(self._isos, id_iso, entity_type)
+
   def dconnectivity_get(self, id_iso, connectivity_type):
     """
     dconnectivity_get(id_iso, connectivity_type)
@@ -1071,27 +1106,6 @@ cdef class Isosurface:
     np_dcoordinates = create_numpy_d(dcoordinates, 3*dn_vtx, flag_owndata=True)
 
     return np_dcoordinates
-
-  def distribution_get(self, id_iso, entity_type):
-    """
-    distribution_get(id_iso, entity_type)
-
-    Get isosurface entity distribution.
-
-    Parameters:
-      id_iso      (int)                 : Isosurface id
-      entity_type (PDM_mesh_entities_t) : Entity type
-
-    Returns:
-      `np.ndarray[np.npy_pdm_gnum_t]` - Entity distribution
-    """
-    cdef PDM_g_num_t *distrib = NULL
-    PDM_isosurface_distrib_get(self._isos, id_iso, entity_type,
-                              &distrib)
-
-    np_distrib = create_numpy_g(distrib, self.n_rank, flag_owndata=True)
-
-    return np_distrib
 
   def dgroup_get(self, id_iso, entity_type):
     """

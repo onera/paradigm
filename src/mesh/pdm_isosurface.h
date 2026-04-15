@@ -630,7 +630,27 @@ PDM_isosurface_dump_times
  *   - PDM_isosurface_n_part_get ???
  */
 
+/**
+ *
+ * \brief Get number of iso-surface entities
+ *
+ * \param [in] isos          \ref PDM_isosurface_t instance
+ * \param [in] id_isosurface Iso-surface identifier
+ * \param [in] i_part        Partition identifier
+ * \param [in] entity_type   Entity type
+ *
+ * \return Number of entities
+ *
+ */
 
+int
+PDM_isosurface_pn_entity_get
+(
+  PDM_isosurface_t    *isos,
+  int                  id_isosurface,
+  int                  i_part,
+  PDM_mesh_entities_t  entity_type
+);
 
 /**
  *
@@ -756,6 +776,26 @@ PDM_isosurface_pgroup_get
 
 /**
  *
+ * \brief Get number of iso-surface block-distributed entities
+ *
+ * \param [in] isos          \ref PDM_isosurface_t instance
+ * \param [in] id_isosurface Iso-surface identifier
+ * \param [in] entity_type   Entity type
+ *
+ * \return Number of entities
+ *
+ */
+
+int
+PDM_isosurface_dn_entity_get
+(
+  PDM_isosurface_t    *isos,
+  int                  id_isosurface,
+  PDM_mesh_entities_t  entity_type
+);
+
+/**
+ *
  * \brief Get iso-surface block-distributed mesh connectivity
  *
  * \param [in]  isos               \ref PDM_isosurface_t instance
@@ -828,29 +868,6 @@ PDM_isosurface_dvtx_coord_get
   int                id_isosurface,
   double           **dvtx_coord,
   PDM_ownership_t    ownership
-);
-
-
-/**
- *
- * \brief Get block distribution
- *
- * \param [in]  isos          \ref PDM_isosurface_t instance
- * \param [in]  id_isosurface Iso-surface identifier
- * \param [in]  entity_type   Entity type
- * \param [out] distribution  Entity distribution
- *
- * \return Number of entities
- *
- */
-
-int
-PDM_isosurface_distrib_get
-(
-  PDM_isosurface_t     *isos,
-  int                   id_isosurface,
-  PDM_mesh_entities_t   entity_type,
-  PDM_g_num_t         **distribution
 );
 
 
@@ -1046,6 +1063,21 @@ PDM_isosurface_part_to_part_get
   PDM_mesh_entities_t   entity_type,
   PDM_part_to_part_t  **ptp,
   PDM_ownership_t       ownership
+);
+
+
+/**
+ * \brief Get internal communicator
+ *
+ * \param [in] isos \ref PDM_isosurface_t instance
+ *
+ * \return MPI Communicator
+ */
+
+PDM_MPI_Comm
+PDM_isosurface_comm_get
+(
+  PDM_isosurface_t *isos
 );
 
 
