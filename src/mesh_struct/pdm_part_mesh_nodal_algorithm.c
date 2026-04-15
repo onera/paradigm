@@ -522,7 +522,9 @@ PDM_part_mesh_nodal_part_comm_graph_deduce_from_vtx
   }
 
   PDM_part_mesh_nodal_elmts_t* pmne = NULL;
-  if (geom_kind == PDM_GEOMETRY_KIND_SURFACIC) {
+  if (geom_kind == PDM_GEOMETRY_KIND_VOLUMIC) {
+    pmne = pmn->volumic;
+  } else if (geom_kind == PDM_GEOMETRY_KIND_SURFACIC) {
     pmne = pmn->surfacic;
   } else if (geom_kind == PDM_GEOMETRY_KIND_RIDGE) {
     pmne = pmn->ridge;
