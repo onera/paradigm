@@ -111,3 +111,5 @@ The contributions to this software are listed according to the CRediT taxonomy:
 - **Bérenger Berthoul**: Software.
 - **Nicolas Dellinger**: Software, Validation.
 - **Thomas Hennion**: Software, Validation.
+
+# References
