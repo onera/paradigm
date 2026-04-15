@@ -10,19 +10,20 @@
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
-#include "pdm_dcube_nodal_gen.h"
 #include "pdm_array.h"
 #include "pdm_dcube_nodal_gen_priv.h"
+#include "pdm_dcube_nodal_gen.h"
 #include "pdm_distrib.h"
-#include "pdm_dmesh_nodal_elmts.h"
 #include "pdm_dmesh_nodal_elmts_priv.h"
+#include "pdm_dmesh_nodal_elmts.h"
 #include "pdm_dmesh_nodal_priv.h"
-#include "pdm_domain_interface.h"
 #include "pdm_domain_interface_priv.h"
+#include "pdm_domain_interface.h"
 #include "pdm_error.h"
 #include "pdm_logging.h"
 #include "pdm_mem_tool.h"
 #include "pdm_mpi.h"
+#include "pdm_priv.h"
 
 /*============================================================================
  * Type definitions
@@ -2442,9 +2443,9 @@ PDM_dcube_nodal_gen_build
   /*
    * Generate vertices
    */
-  double step_x = dcube->length / (double) (n_vtx_x - 1);
-  double step_y = dcube->length / (double) (n_vtx_y - 1);
-  double step_z = dcube->length / (double) (n_vtx_z - 1);
+  double step_x = dcube->length / (double) PDM_MAX(1, n_vtx_x - 1);
+  double step_y = dcube->length / (double) PDM_MAX(1, n_vtx_y - 1);
+  double step_z = dcube->length / (double) PDM_MAX(1, n_vtx_z - 1);
 
   int randomize = (dcube->random_factor > 0);
 
