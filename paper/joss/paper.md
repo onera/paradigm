@@ -58,7 +58,7 @@ In the era of exascale computing, numerical simulation faces a critical paradigm
 
 Geometric algorithms, once confined to pre-processing, are now required repeatedly within the solver's main execution loop. Modern studies involve evolving meshes, driven either by moving bodies or Dynamic Mesh Adaptation. Whether computing wall distances for turbulence modeling or performing mesh repartitioning, these operations must deliver execution times of the same order of magnitude as a solver iteration — failing to meet this constraint creates a performance bottleneck that severely penalizes overall simulation efficiency. A further challenge lies in data distribution: the initial partition provided to geometric algorithms is typically optimized for physical computation, which is often sub-optimal for geometric operations. Without internal dynamic load balancing, these operations create computation imbalances and memory bottlenecks, compromising simulation execution at very large scale.
 
-# State of Field
+# State of the Field
 
 Several parallel mesh management frameworks exist, each addressing different aspects of distributed geometric computing. General-purpose platforms such as *Trilinos* [@Heroux2005] and *Arcane* [@Grospellier2009] provide rich object hierarchies but impose significant architectural constraints on host solvers. Data exchange platforms such as *Salome* (MED format) [@Ribes2007] rely on monolithic data models that introduce memory overhead incompatible with optimized solvers at scale. Mesh generation tools such as *Gmsh* [@Geuzaine2009] cover the CAD-to-mesh pipeline but do not address the in-solver geometric operations required by modern adaptive simulations.
 
