@@ -56,7 +56,6 @@ int main
 
     // Set fixed parameters
     params.mesh_name = NULL;
-    params.sol_name  = NULL;
     params.n_vtx_seg = 10;
     params.randomize = 0;
     params.elt_type  = PDM_MESH_NODAL_HEXA8;
@@ -121,7 +120,6 @@ int main
 
     // Initialize parameters to their default values
     params.mesh_name      = NULL;
-    params.sol_name       = NULL;
     params.n_part_in      = 1;
     params.n_part_out     = 1;
     params.visu           = 0;
@@ -141,7 +139,6 @@ int main
                                         &params.n_part_in,
                                         &params.n_part_out,
                                         &params.mesh_name,
-                                        &params.sol_name,
                                         &params.visu,
                                         &params.n_isovalues,
                                         &params.isovalues,
@@ -194,7 +191,6 @@ _run_test_3d_ngon
 
 
   char                 *mesh_name      = params.mesh_name;
-  // char                 *sol_name       = params.sol_name;
   int                   n_part_in      = params.n_part_in;
   int                   n_part_out     = params.n_part_out;
   int                   visu           = params.visu;
@@ -327,7 +323,6 @@ _run_test_3d_ngon
   if (n_part_in > 0) {
     // Partitioned
     if (use_part_mesh) {
-      // TODO use `use_groups`
       PDM_isosurface_part_mesh_set(isos, pmesh);
     }
     else {
@@ -502,19 +497,6 @@ _run_test_3d_ngon
   else {
     // Block-distributed
     if (use_part_mesh) {
-      PDM_g_num_t *connect;
-      int         *connect_idx;
-      int n_group = PDM_dmesh_bound_get
-      (
-      dmesh,
-      PDM_BOUND_TYPE_FACE,
-      &connect,
-      &connect_idx,
-      PDM_OWNERSHIP_BAD_VALUE
-      );
-      if (!use_groups && n_group > 0) PDM_error(__FILE__, __LINE__, 0, "!!! n_group = %d\n", n_group);
-
-      // TODO use `use_groups`
       PDM_isosurface_dmesh_set(isos, dmesh);
     }
     else {

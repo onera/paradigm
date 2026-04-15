@@ -347,7 +347,6 @@ _usage
      "  -n_part_in     <n>             Number of input partitions (0 -> block-distributed).\n\n"
      "  -n_part_out    <n>             Number of output partitions.\n\n"
      "  -in            <filename>      Mesh file name (INRIA ASCII Mesh Format).\n\n"
-     "  -sol           <filename>      Solution file name (INRIA ASCII Mesh Format).\n\n"
      "  -visu                          Enable exports for visualization.\n\n"
      "  -n_isovalues   <n>             Number of isovalues.\n\n"
      "  -isovalues     <v1 v2 ... vn>  Isovalues.\n\n"
@@ -371,7 +370,6 @@ PDM_isosurface_test_utils_read_args
   int                   *n_part_in,
   int                   *n_part_out,
   char                 **mesh_name,
-  char                 **sol_name,
   int                   *visu,
   int                   *n_isovalues,
   double               **isovalues,
@@ -420,15 +418,6 @@ PDM_isosurface_test_utils_read_args
       }
       else {
         *mesh_name = argv[i];
-      }
-    }
-
-    else if (strcmp(argv[i], "-sol") == 0) {
-      i++;
-      if (i >= argc)
-        _usage(EXIT_FAILURE);
-      else {
-        *sol_name = argv[i];
       }
     }
 

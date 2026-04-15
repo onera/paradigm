@@ -59,7 +59,6 @@
 
      // Set fixed parameters
      params.mesh_name      = NULL;
-     params.sol_name       = NULL;
      params.n_vtx_seg      = 10;
      params.randomize      = 0;
      params.use_part_mesh  = 0; // irrelevant here
@@ -124,7 +123,6 @@
 
      // Initialize parameters to their default values
      params.mesh_name      = NULL;
-     params.sol_name       = NULL;
      params.n_part_in      = 1;
      params.n_part_out     = 1;
      params.visu           = 0;
@@ -144,7 +142,6 @@
                                          &params.n_part_in,
                                          &params.n_part_out,
                                          &params.mesh_name,
-                                         &params.sol_name,
                                          &params.visu,
                                          &params.n_isovalues,
                                          &params.isovalues,
@@ -197,7 +194,6 @@
 
 
    char                 *mesh_name   = params.mesh_name;
-   // char                 *sol_name    = params.sol_name;
    int                   n_part_in   = params.n_part_in;
    int                   n_part_out  = params.n_part_out;
    int                   n_isovalues = params.n_isovalues;
