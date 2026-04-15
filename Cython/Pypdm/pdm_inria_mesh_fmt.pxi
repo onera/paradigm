@@ -33,8 +33,6 @@ cdef extern from "pdm_reader_gamma.h":
                                        int     **field_stride,
                                        double ***field_values)
 
-writer_gamma_new_api = True
-
 def write_meshb(char                                           *filename,
                 NPY.ndarray[npy_pdm_gnum_t, mode ='c', ndim=1]  n_elt_table,
                 list                                            tag_table,
