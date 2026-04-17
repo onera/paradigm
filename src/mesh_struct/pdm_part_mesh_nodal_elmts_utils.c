@@ -1609,6 +1609,61 @@ PDM_part_mesh_nodal_poly2d_decompose_local_faces
   *n_face_current += n_elt;
 }
 
+void
+PDM_part_mesh_nodal_poly3d_decompose_local_faces
+(
+        int  n_elt,
+        int *n_elt_current,
+        int *n_face_current,
+  const int *cell_face_idx,
+  const int *cell_face,
+  const int *face_vtx_idx,
+  const int *face_vtx,
+        int *elmt_face_vtx_idx,
+        int *elmt_face_vtx,
+        int *elmt_cell_face_idx,
+        int *parent_elmt,
+        int *parent_elmt_position
+)
+{
+  int *_elmt_face_vtx_idx = elmt_face_vtx_idx    + *n_face_current;
+  int *_parent_elmt_position      = parent_elmt_position + *n_face_current;
+  int *_parent_elmt               = parent_elmt          + *n_face_current;
+  int *_elmt_cell_face_idx        = elmt_cell_face_idx   + *n_elt_current;
+  
+  int i_parent = *n_elt_current;
+  int idx_face = 0;
+
+  for (int i_elt = 0; i_elt < n_elt; i_elt++) {
+    i_parent++;
+
+    int n_face = cell_face_idx[i_elt+1] - cell_face_idx[i_elt];
+
+    for (int j = cell_face_idx[i_elt]; j < cell_face_idx[i_elt+1]; j++) {
+
+      _parent_elmt_position[idx_face] = j - cell_face_idx[i_elt];
+      _parent_elmt         [idx_face] = i_parent;
+
+      int face_id = PDM_ABS(cell_face[j]) - 1;
+      int sign    = PDM_SIGN(cell_face[j]);
+
+      // Copy vertices of face
+      int n_vtx = face_vtx_idx[face_id+1] - face_vtx_idx[face_id];
+      int pos = (sign > 0) ? 0 : n_vtx-1;
+      for (int k = face_vtx_idx[face_id]; k < face_vtx_idx[face_id+1]; ++k) {
+        elmt_face_vtx[_elmt_face_vtx_idx[idx_face]+pos] = face_vtx[k];
+        pos += sign; // Advance if > 0, rewind if < 0
+      }
+
+      _elmt_face_vtx_idx[idx_face+1] = _elmt_face_vtx_idx[idx_face] + n_vtx;
+      idx_face++;
+    }
+    _elmt_cell_face_idx[i_elt+1] = _elmt_cell_face_idx[i_elt] + n_face;
+  }
+  *n_elt_current  += n_elt;
+  *n_face_current += idx_face;
+}
+
 
 void
 PDM_part_mesh_nodal_elmts_sections_local_decompose_faces
@@ -1663,10 +1718,18 @@ PDM_part_mesh_nodal_elmts_sections_local_decompose_faces
     }
 
     for (int i_section = 0; i_section < pmne->n_section_poly3d; i_section++) {
-      int _n_face = pmne->sections_poly3d[i_section]->n_face[i_part];
-      n_elmt_face     += pmne->sections_poly3d[i_section]->_cellfac_idx[i_part][_n_face];
-      // n_elmt_face_vtx += pmne->sections_poly3d[i_section]->_facvtx_idx[i_part][_n_face];
-      //???
+      PDM_Mesh_nodal_block_poly3d_t *poly3d = pmne->sections_poly3d[i_section];
+      int* _facvtx_idx  = poly3d->_facvtx_idx[i_part];
+      int* _cellfac_idx = poly3d->_cellfac_idx[i_part];
+      int* _cellfac     = poly3d->_cellfac[i_part];
+      
+      n_elmt_face += _cellfac_idx[poly3d->n_elt[i_part]];
+      for (int i_elt = 0; i_elt < poly3d->n_elt[i_part]; ++i_elt) {
+        for (int j = _cellfac_idx[i_elt]; j < _cellfac_idx[i_elt+1]; ++j) {
+          int i_face = PDM_ABS(_cellfac[j])-1;
+          n_elmt_face_vtx += (_facvtx_idx[i_face+1] - _facvtx_idx[i_face]);
+        }
+      }
     }
 
     for (int i_section = 0; i_section < pmne->n_section_poly2d; i_section++) {
@@ -1736,7 +1799,43 @@ PDM_part_mesh_nodal_elmts_sections_local_decompose_faces
       }
 
       else if (t_elt == PDM_MESH_NODAL_POLY_3D) {
-        PDM_error(__FILE__, __LINE__, 0, "Poly3d not handled yet\n");
+
+        PDM_g_num_t *face_ln_to_gn;
+        PDM_g_num_t *cell_ln_to_gn;
+        PDM_g_num_t *parent_entity_g_num;
+        int *parent_num;
+        int *cell_face_idx = NULL;
+        int *cell_face     = NULL;
+        int *face_vtx_idx  = NULL;
+        int *face_vtx      = NULL;
+        int n_face;
+        
+        PDM_part_mesh_nodal_elmts_section_poly3d_get(pmne,
+                                                     id_section,
+                                                     i_part,
+                                                     &n_face,
+                                                     &face_ln_to_gn,
+                                                     &face_vtx_idx,
+                                                     &face_vtx,
+                                                     &cell_ln_to_gn,
+                                                     &cell_face_idx,
+                                                     &cell_face,
+                                                     &parent_num,
+                                                     &parent_entity_g_num,
+                                                     PDM_OWNERSHIP_KEEP);
+
+        PDM_part_mesh_nodal_poly3d_decompose_local_faces(n_elt,
+                                                         &n_elt_current,
+                                                         &n_face_current,
+                                                         cell_face_idx,
+                                                         cell_face,
+                                                         face_vtx_idx,
+                                                         face_vtx,
+                                                         elmt_face_vtx_idx   [i_part],
+                                                         elmt_face_vtx       [i_part],
+                                                         elmt_face_idx       [i_part],
+                                                         parent_elmt         [i_part],
+                                                         parent_elmt_position[i_part]);
       }
 
       else {
