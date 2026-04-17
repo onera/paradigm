@@ -65,7 +65,7 @@ cdef extern from "pdm_part_mesh_nodal.h":
                                         PDM_Mesh_nodal_elt_t   t_elt)
 
     void PDM_part_mesh_nodal_section_std_set(PDM_part_mesh_nodal_t *pmn,
-                                             int                    id_block,
+                                             int                    i_section,
                                              int                    id_part,
                                              int                    n_elt,
                                              int                   *connec,
@@ -73,6 +73,31 @@ cdef extern from "pdm_part_mesh_nodal.h":
                                              int                   *parent_num,
                                              PDM_g_num_t           *parent_entity_g_num,
                                              PDM_ownership_t        owner)
+
+    void PDM_part_mesh_nodal_section_poly2d_set(PDM_part_mesh_nodal_t *pmn,
+                                                int                    i_section,
+                                                int                    id_part,
+                                                int                    n_elt,
+                                                int                   *connec_idx,
+                                                int                   *connec,
+                                                PDM_g_num_t           *numabs,
+                                                int                   *parent_num,
+                                                PDM_ownership_t        owner)
+
+    void PDM_part_mesh_nodal_section_poly3d_set(PDM_part_mesh_nodal_t *pmn,
+                                                int                    i_section,
+                                                int                    id_part,
+                                                int                    n_elt,
+                                                int                    n_face,
+                                                int                   *facvtx_idx,
+                                                int                   *facvtx,
+                                                PDM_g_num_t           *face_ln_to_gn,
+                                                int                   *cellfac_idx,
+                                                int                   *cellfac,
+                                                PDM_g_num_t           *numabs,
+                                                int                   *parent_num,
+                                                PDM_g_num_t           *parent_entity_g_num,
+                                                PDM_ownership_t        owner)
 
     int PDM_part_mesh_nodal_section_n_elt_get(PDM_part_mesh_nodal_t  *pmn,
                                               int                     id_block,
@@ -283,7 +308,7 @@ cdef class PartMeshNodal:
           elmt_vtx   (`np.ndarray[np.int32_t]`)     : Element connectivity
           numabs     (`np.ndarray[npy_pdm_gnum_t]`) : Global numbering
           parent_num (`np.ndarray[np.int32_t]`)     : Correspondence table with a PartMesh (if any, else None)
-          numabs     (`np.ndarray[npy_pdm_gnum_t]`) : Global numbering
+          parent_entity_g_num (`np.ndarray[npy_pdm_gnum_t]`) : Parent global numbering
           n_elemts   (int)                          : Number of elements in section
         """
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -304,6 +329,91 @@ cdef class PartMeshNodal:
                                             np_to_gnum_pointer(parent_entity_g_num),
                                             PDM_OWNERSHIP_USER)
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
+
+    # ------------------------------------------------------------------------
+    def set_poly2d_section(self,
+                           int                                           id_section,
+                           int                                           id_part,
+                           NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] face_vtx_idx,
+                           NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] face_vtx,
+                           NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] numabs,
+                           NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] parent_num):
+      """
+      Define a polygon 2D section
+
+      Parameters:
+        id_section   (int)                          : id of the section (return by add_section)
+        id_part      (int)                          : id of the part (max = n_part)
+        face_vtx_idx (`np.ndarray[np.int32_t]`)     : Connectivity index array
+        face_vtx     (`np.ndarray[np.int32_t]`)     : Connectivity array
+        numabs       (`np.ndarray[npy_pdm_gnum_t]`) : Global numbering of 2D elements
+        parent_num   (`np.ndarray[np.int32_t]`)     : Correspondence table with a PartMesh (if any, else None)
+      """
+
+      self.keep_alive.append(face_vtx_idx)
+      self.keep_alive.append(face_vtx)
+      self.keep_alive.append(numabs)
+      self.keep_alive.append(parent_num)
+
+      cdef int n_elem = face_vtx_idx.size - 1
+      PDM_part_mesh_nodal_section_poly2d_set(self.pmn,
+                                             id_section,
+                                             id_part,
+                                             n_elem,
+                                             np_to_int_pointer(face_vtx_idx),
+                                             np_to_int_pointer(face_vtx),
+                                             np_to_gnum_pointer(numabs),
+                                             np_to_int_pointer(parent_num),
+                                             PDM_OWNERSHIP_USER)
+
+    # ------------------------------------------------------------------------
+    def set_poly3d_section(self,
+                           int                                           id_section,
+                           int                                           id_part,
+                           NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] face_vtx_idx,
+                           NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] face_vtx,
+                           NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] face_ln_to_gn,
+                           NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] cell_face_idx,
+                           NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] cell_face,
+                           NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] cell_ln_to_gn,
+                           NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] parent_num,
+                           NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] parent_entity_g_num):
+      """
+      Define a polyedric 3D section
+
+      Parameters:
+        id_section          (int)                          : id of the section (return by add_section)
+        id_part             (int)                          : id of the part (max = n_part)
+        face_vtx_idx        (`np.ndarray[np.int32_t]`)     : Connectivity index array for faces
+        face_vtx            (`np.ndarray[np.int32_t]`)     : Connectivity array for faces
+        face_ln_to_gn       (`np.ndarray[npy_pdm_gnum_t]`) : Global numbering of faces
+        cell_face_idx       (`np.ndarray[np.int32_t]`)     : Connectivity index array for cells
+        cell_face           (`np.ndarray[np.int32_t]`)     : Connectivity array for cells
+        cell_ln_to_gn       (`np.ndarray[npy_pdm_gnum_t]`) : Global numbering of cells
+        parent_num          (`np.ndarray[np.int32_t]`)     : Correspondence table with a PartMesh (if any, else None)
+        parent_entity_g_num (`np.ndarray[npy_pdm_gnum_t]`) : Parent global numbering
+      """
+
+      self.keep_alive.extend([face_vtx_idx, face_vtx, face_ln_to_gn, cell_face_idx,
+        cell_face, cell_ln_to_gn, parent_num, parent_entity_g_num])
+
+      cdef int n_elem = cell_face_idx.size - 1
+      cdef int n_face = face_vtx_idx.size - 1
+      PDM_part_mesh_nodal_section_poly3d_set(self.pmn,
+                                             id_section,
+                                             id_part,
+                                             n_elem,
+                                             n_face,
+                                             np_to_int_pointer(face_vtx_idx),
+                                             np_to_int_pointer(face_vtx),
+                                             np_to_gnum_pointer(face_ln_to_gn),
+                                             np_to_int_pointer(cell_face_idx),
+                                             np_to_int_pointer(cell_face),
+                                             np_to_gnum_pointer(cell_ln_to_gn),
+                                             np_to_int_pointer(parent_num),
+                                             np_to_gnum_pointer(parent_entity_g_num),
+                                             PDM_OWNERSHIP_USER)
+
 
     # ------------------------------------------------------------------------
     def n_group_set(self,

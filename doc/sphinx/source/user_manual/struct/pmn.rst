@@ -188,6 +188,8 @@ API
 
           .. automethod:: Pypdm.Pypdm.PartMeshNodal.add_section
           .. automethod:: Pypdm.Pypdm.PartMeshNodal.set_section
+          .. automethod:: Pypdm.Pypdm.PartMeshNodal.set_poly2d_section
+          .. automethod:: Pypdm.Pypdm.PartMeshNodal.set_poly3d_section
 
         .. ifconfig:: enable_python_doc == 'OFF'
 
