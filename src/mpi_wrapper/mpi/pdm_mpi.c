@@ -682,7 +682,9 @@ int PDM_MPI_Wait(PDM_MPI_Request *request)
  *----------------------------------------------------------------------------*/
 int
 PDM_MPI_Waitall(int count, PDM_MPI_Request array_of_requests[]) {
-  int code = MPI_Waitall(count, array_of_requests, MPI_STATUSES_IGNORE);
+PDM_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wstringop-overflow") // Because inside MPI, MPI_STATUSES_IGNORE = (MPI_Status *)1
+  int code = MPI_Waitall(count, array_of_requests, (MPI_Status *) MPI_STATUSES_IGNORE);
+PDM_GCC_SUPPRESS_WARNING_POP
   return code;
 }
 
